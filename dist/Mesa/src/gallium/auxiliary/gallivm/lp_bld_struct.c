@@ -37,36 +37,122 @@
 #include "util/u_debug.h"
 #include "util/u_memory.h"
 
+#include "lp_bld_const.h"
 #include "lp_bld_debug.h"
 #include "lp_bld_struct.h"
 
 
 LLVMValueRef
-lp_build_struct_get_ptr(LLVMBuilderRef builder,
+lp_build_struct_get_ptr(struct gallivm_state *gallivm,
                         LLVMValueRef ptr,
                         unsigned member,
                         const char *name)
 {
    LLVMValueRef indices[2];
    LLVMValueRef member_ptr;
-   indices[0] = LLVMConstInt(LLVMInt32Type(), 0, 0);
-   indices[1] = LLVMConstInt(LLVMInt32Type(), member, 0);
-   member_ptr = LLVMBuildGEP(builder, ptr, indices, Elements(indices), "");
+   assert(LLVMGetTypeKind(LLVMTypeOf(ptr)) == LLVMPointerTypeKind);
+   assert(LLVMGetTypeKind(LLVMGetElementType(LLVMTypeOf(ptr))) == LLVMStructTypeKind);
+   indices[0] = lp_build_const_int32(gallivm, 0);
+   indices[1] = lp_build_const_int32(gallivm, member);
+   member_ptr = LLVMBuildGEP(gallivm->builder, ptr, indices, Elements(indices), "");
    lp_build_name(member_ptr, "%s.%s_ptr", LLVMGetValueName(ptr), name);
    return member_ptr;
 }
 
 
 LLVMValueRef
-lp_build_struct_get(LLVMBuilderRef builder,
+lp_build_struct_get(struct gallivm_state *gallivm,
                     LLVMValueRef ptr,
                     unsigned member,
                     const char *name)
 {
    LLVMValueRef member_ptr;
    LLVMValueRef res;
-   member_ptr = lp_build_struct_get_ptr(builder, ptr, member, name);
-   res = LLVMBuildLoad(builder, member_ptr, "");
+   assert(LLVMGetTypeKind(LLVMTypeOf(ptr)) == LLVMPointerTypeKind);
+   assert(LLVMGetTypeKind(LLVMGetElementType(LLVMTypeOf(ptr))) == LLVMStructTypeKind);
+   member_ptr = lp_build_struct_get_ptr(gallivm, ptr, member, name);
+   res = LLVMBuildLoad(gallivm->builder, member_ptr, "");
    lp_build_name(res, "%s.%s", LLVMGetValueName(ptr), name);
    return res;
+}
+
+
+LLVMValueRef
+lp_build_array_get_ptr(struct gallivm_state *gallivm,
+                       LLVMValueRef ptr,
+                       LLVMValueRef index)
+{
+   LLVMValueRef indices[2];
+   LLVMValueRef element_ptr;
+   assert(LLVMGetTypeKind(LLVMTypeOf(ptr)) == LLVMPointerTypeKind);
+   assert(LLVMGetTypeKind(LLVMGetElementType(LLVMTypeOf(ptr))) == LLVMArrayTypeKind);
+   indices[0] = lp_build_const_int32(gallivm, 0);
+   indices[1] = index;
+   element_ptr = LLVMBuildGEP(gallivm->builder, ptr, indices, Elements(indices), "");
+#ifdef DEBUG
+   lp_build_name(element_ptr, "&%s[%s]",
+                 LLVMGetValueName(ptr), LLVMGetValueName(index));
+#endif
+   return element_ptr;
+}
+
+
+LLVMValueRef
+lp_build_array_get(struct gallivm_state *gallivm,
+                   LLVMValueRef ptr,
+                   LLVMValueRef index)
+{
+   LLVMValueRef element_ptr;
+   LLVMValueRef res;
+   assert(LLVMGetTypeKind(LLVMTypeOf(ptr)) == LLVMPointerTypeKind);
+   assert(LLVMGetTypeKind(LLVMGetElementType(LLVMTypeOf(ptr))) == LLVMArrayTypeKind);
+   element_ptr = lp_build_array_get_ptr(gallivm, ptr, index);
+   res = LLVMBuildLoad(gallivm->builder, element_ptr, "");
+#ifdef DEBUG
+   lp_build_name(res, "%s[%s]", LLVMGetValueName(ptr), LLVMGetValueName(index));
+#endif
+   return res;
+}
+
+
+void
+lp_build_array_set(struct gallivm_state *gallivm,
+                   LLVMValueRef ptr,
+                   LLVMValueRef index,
+                   LLVMValueRef value)
+{
+   LLVMValueRef element_ptr;
+   assert(LLVMGetTypeKind(LLVMTypeOf(ptr)) == LLVMPointerTypeKind);
+   assert(LLVMGetTypeKind(LLVMGetElementType(LLVMTypeOf(ptr))) == LLVMArrayTypeKind);
+   element_ptr = lp_build_array_get_ptr(gallivm, ptr, index);
+   LLVMBuildStore(gallivm->builder, value, element_ptr);
+}
+
+
+LLVMValueRef
+lp_build_pointer_get(LLVMBuilderRef builder,
+                     LLVMValueRef ptr,
+                     LLVMValueRef index)
+{
+   LLVMValueRef element_ptr;
+   LLVMValueRef res;
+   assert(LLVMGetTypeKind(LLVMTypeOf(ptr)) == LLVMPointerTypeKind);
+   element_ptr = LLVMBuildGEP(builder, ptr, &index, 1, "");
+   res = LLVMBuildLoad(builder, element_ptr, "");
+#ifdef DEBUG
+   lp_build_name(res, "%s[%s]", LLVMGetValueName(ptr), LLVMGetValueName(index));
+#endif
+   return res;
+}
+
+
+void
+lp_build_pointer_set(LLVMBuilderRef builder,
+                     LLVMValueRef ptr,
+                     LLVMValueRef index,
+                     LLVMValueRef value)
+{
+   LLVMValueRef element_ptr;
+   element_ptr = LLVMBuildGEP(builder, ptr, &index, 1, "");
+   LLVMBuildStore(builder, value, element_ptr);
 }

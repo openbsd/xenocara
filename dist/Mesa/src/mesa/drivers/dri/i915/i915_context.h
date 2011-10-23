@@ -158,7 +158,7 @@ struct i915_fragment_program
    /* TODO: split between the stored representation of a program and
     * the state used to build that representation.
     */
-   GLcontext *ctx;
+   struct gl_context *ctx;
 
    /* declarations contains the packet header. */
    GLuint declarations[I915_MAX_DECL_INSN * 3 + 1];
@@ -237,7 +237,7 @@ struct i915_hw_state
     * be from a PBO or FBO.  Will have to do this for draw and depth for
     * FBO's...
     */
-   dri_bo *tex_buffer[I915_TEX_UNITS];
+   drm_intel_bo *tex_buffer[I915_TEX_UNITS];
    GLuint tex_offset[I915_TEX_UNITS];
 
 
@@ -261,6 +261,7 @@ struct i915_context
    struct i915_fragment_program *current_program;
 
    struct i915_hw_state state;
+   uint32_t last_draw_offset;
 };
 
 
@@ -318,7 +319,8 @@ do {									\
 /*======================================================================
  * i915_context.c
  */
-extern GLboolean i915CreateContext(const __GLcontextModes * mesaVis,
+extern GLboolean i915CreateContext(int api,
+				   const struct gl_config * mesaVis,
                                    __DRIcontext * driContextPriv,
                                    void *sharedContextPrivate);
 
@@ -335,9 +337,9 @@ extern void i915_print_ureg(const char *msg, GLuint ureg);
  */
 extern void i915InitStateFunctions(struct dd_function_table *functions);
 extern void i915InitState(struct i915_context *i915);
-extern void i915_update_fog(GLcontext * ctx);
-extern void i915_update_stencil(GLcontext * ctx);
-extern void i915_update_provoking_vertex(GLcontext *ctx);
+extern void i915_update_fog(struct gl_context * ctx);
+extern void i915_update_stencil(struct gl_context * ctx);
+extern void i915_update_provoking_vertex(struct gl_context *ctx);
 
 
 /*======================================================================
@@ -357,7 +359,7 @@ extern void i915InitFragProgFuncs(struct dd_function_table *functions);
  * macros used previously:
  */
 static INLINE struct i915_context *
-i915_context(GLcontext * ctx)
+i915_context(struct gl_context * ctx)
 {
    return (struct i915_context *) ctx;
 }

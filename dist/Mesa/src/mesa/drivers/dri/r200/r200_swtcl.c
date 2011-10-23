@@ -75,7 +75,7 @@ do {									\
    rmesa->radeon.swtcl.vertex_attr_count++;					\
 } while (0)
 
-static void r200SetVertexFormat( GLcontext *ctx )
+static void r200SetVertexFormat( struct gl_context *ctx )
 {
    r200ContextPtr rmesa = R200_CONTEXT( ctx );
    TNLcontext *tnl = TNL_CONTEXT(ctx);
@@ -221,7 +221,7 @@ static void r200_predict_emit_size( r200ContextPtr rmesa )
 }
 
 
-static void r200RenderStart( GLcontext *ctx )
+static void r200RenderStart( struct gl_context *ctx )
 {
    r200SetVertexFormat( ctx );
    if (RADEON_DEBUG & RADEON_VERTS)
@@ -234,7 +234,7 @@ static void r200RenderStart( GLcontext *ctx )
  * determine in advance whether or not the hardware can / should do the
  * projection divide or Mesa should do it.
  */
-void r200ChooseVertexState( GLcontext *ctx )
+void r200ChooseVertexState( struct gl_context *ctx )
 {
    r200ContextPtr rmesa = R200_CONTEXT( ctx );
    TNLcontext *tnl = TNL_CONTEXT(ctx);
@@ -286,7 +286,7 @@ void r200ChooseVertexState( GLcontext *ctx )
    }
 }
 
-void r200_swtcl_flush(GLcontext *ctx, uint32_t current_offset)
+void r200_swtcl_flush(struct gl_context *ctx, uint32_t current_offset)
 {
    r200ContextPtr rmesa = R200_CONTEXT(ctx);
    if (RADEON_DEBUG & RADEON_VERTS)
@@ -315,14 +315,13 @@ void r200_swtcl_flush(GLcontext *ctx, uint32_t current_offset)
 /**************************************************************************/
 
 
-static INLINE GLuint reduced_hw_prim( GLcontext *ctx, GLuint prim)
+static INLINE GLuint reduced_hw_prim( struct gl_context *ctx, GLuint prim)
 {
    switch (prim) {
    case GL_POINTS:
-      return (ctx->Point.PointSprite ||
-	 ((ctx->_TriangleCaps & (DD_POINT_SIZE | DD_POINT_ATTEN)) &&
-	 !(ctx->_TriangleCaps & (DD_POINT_SMOOTH)))) ?
-	 R200_VF_PRIM_POINT_SPRITES : R200_VF_PRIM_POINTS;
+      return (((R200_CONTEXT(ctx))->radeon.radeonScreen->drmSupportsPointSprites &&
+              !(ctx->_TriangleCaps & DD_POINT_SMOOTH)) ?
+	 R200_VF_PRIM_POINT_SPRITES : R200_VF_PRIM_POINTS);
    case GL_LINES:
    /* fallthrough */
    case GL_LINE_LOOP:
@@ -336,9 +335,9 @@ static INLINE GLuint reduced_hw_prim( GLcontext *ctx, GLuint prim)
 }
 
 
-static void r200RasterPrimitive( GLcontext *ctx, GLuint hwprim );
-static void r200RenderPrimitive( GLcontext *ctx, GLenum prim );
-static void r200ResetLineStipple( GLcontext *ctx );
+static void r200RasterPrimitive( struct gl_context *ctx, GLuint hwprim );
+static void r200RenderPrimitive( struct gl_context *ctx, GLenum prim );
+static void r200ResetLineStipple( struct gl_context *ctx );
 
 /***********************************************************************
  *                    Emit primitives as inline vertices               *
@@ -568,7 +567,7 @@ static void init_rast_tab( void )
 /*                    Choose render functions                         */
 /**********************************************************************/
 
-void r200ChooseRenderState( GLcontext *ctx )
+void r200ChooseRenderState( struct gl_context *ctx )
 {
    TNLcontext *tnl = TNL_CONTEXT(ctx);
    r200ContextPtr rmesa = R200_CONTEXT(ctx);
@@ -608,9 +607,14 @@ void r200ChooseRenderState( GLcontext *ctx )
 /**********************************************************************/
 
 
-static void r200RasterPrimitive( GLcontext *ctx, GLuint hwprim )
+static void r200RasterPrimitive( struct gl_context *ctx, GLuint hwprim )
 {
    r200ContextPtr rmesa = R200_CONTEXT(ctx);
+
+   radeon_prepare_render(&rmesa->radeon);
+   if (rmesa->radeon.NewGLState)
+      r200ValidateState( ctx );
+
 
    if (rmesa->radeon.swtcl.hw_primitive != hwprim) {
       /* need to disable perspective-correct texturing for point sprites */
@@ -629,7 +633,7 @@ static void r200RasterPrimitive( GLcontext *ctx, GLuint hwprim )
    }
 }
 
-static void r200RenderPrimitive( GLcontext *ctx, GLenum prim )
+static void r200RenderPrimitive( struct gl_context *ctx, GLenum prim )
 {
    r200ContextPtr rmesa = R200_CONTEXT(ctx);
    rmesa->radeon.swtcl.render_primitive = prim;
@@ -637,11 +641,11 @@ static void r200RenderPrimitive( GLcontext *ctx, GLenum prim )
       r200RasterPrimitive( ctx, reduced_hw_prim(ctx, prim) );
 }
 
-static void r200RenderFinish( GLcontext *ctx )
+static void r200RenderFinish( struct gl_context *ctx )
 {
 }
 
-static void r200ResetLineStipple( GLcontext *ctx )
+static void r200ResetLineStipple( struct gl_context *ctx )
 {
    r200ContextPtr rmesa = R200_CONTEXT(ctx);
    R200_STATECHANGE( rmesa, lin );
@@ -673,7 +677,7 @@ static const char *getFallbackString(GLuint bit)
 }
 
 
-void r200Fallback( GLcontext *ctx, GLuint bit, GLboolean mode )
+void r200Fallback( struct gl_context *ctx, GLuint bit, GLboolean mode )
 {
    r200ContextPtr rmesa = R200_CONTEXT(ctx);
    TNLcontext *tnl = TNL_CONTEXT(ctx);
@@ -740,7 +744,7 @@ void r200Fallback( GLcontext *ctx, GLuint bit, GLboolean mode )
  * NV_texture_rectangle).
  */
 void
-r200PointsBitmap( GLcontext *ctx, GLint px, GLint py,
+r200PointsBitmap( struct gl_context *ctx, GLint px, GLint py,
 		  GLsizei width, GLsizei height,
 		  const struct gl_pixelstore_attrib *unpack,
 		  const GLubyte *bitmap )
@@ -915,7 +919,7 @@ r200PointsBitmap( GLcontext *ctx, GLint px, GLint py,
 /*                            Initialization.                         */
 /**********************************************************************/
 
-void r200InitSwtcl( GLcontext *ctx )
+void r200InitSwtcl( struct gl_context *ctx )
 {
    TNLcontext *tnl = TNL_CONTEXT(ctx);
    r200ContextPtr rmesa = R200_CONTEXT(ctx);

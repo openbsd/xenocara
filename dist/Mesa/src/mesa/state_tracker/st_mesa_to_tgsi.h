@@ -30,8 +30,10 @@
 #define ST_MESA_TO_TGSI_H
 
 #include "main/mtypes.h"
-#include "tgsi/tgsi_ureg.h"
 
+#include "pipe/p_compiler.h"
+
+struct ureg_program;
 
 #if defined __cplusplus
 extern "C" {
@@ -42,7 +44,7 @@ struct gl_program;
 
 enum pipe_error
 st_translate_mesa_program(
-   GLcontext *ctx,
+   struct gl_context *ctx,
    uint procType,
    struct ureg_program *ureg,
    const struct gl_program *program,

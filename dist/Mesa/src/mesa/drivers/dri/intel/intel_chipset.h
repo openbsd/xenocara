@@ -67,11 +67,18 @@
 #define PCI_CHIP_G45_G                  0x2E22
 #define PCI_CHIP_G41_G                  0x2E32
 #define PCI_CHIP_B43_G                  0x2E42
+#define PCI_CHIP_B43_G1                 0x2E92
 
 #define PCI_CHIP_ILD_G                  0x0042
 #define PCI_CHIP_ILM_G                  0x0046
 
-#define PCI_CHIP_SANDYBRIDGE		0x0102
+#define PCI_CHIP_SANDYBRIDGE_GT1	0x0102	/* Desktop */
+#define PCI_CHIP_SANDYBRIDGE_GT2	0x0112
+#define PCI_CHIP_SANDYBRIDGE_GT2_PLUS	0x0122
+#define PCI_CHIP_SANDYBRIDGE_M_GT1	0x0106	/* Mobile */
+#define PCI_CHIP_SANDYBRIDGE_M_GT2	0x0116
+#define PCI_CHIP_SANDYBRIDGE_M_GT2_PLUS	0x0126
+#define PCI_CHIP_SANDYBRIDGE_S		0x010A	/* Server */
 
 #define IS_MOBILE(devid)	(devid == PCI_CHIP_I855_GM || \
 				 devid == PCI_CHIP_I915_GM || \
@@ -87,7 +94,8 @@
                                  devid == PCI_CHIP_Q45_G || \
                                  devid == PCI_CHIP_G45_G || \
                                  devid == PCI_CHIP_G41_G || \
-                                 devid == PCI_CHIP_B43_G)
+                                 devid == PCI_CHIP_B43_G || \
+                                 devid == PCI_CHIP_B43_G1)
 #define IS_GM45(devid)          (devid == PCI_CHIP_GM45_GM)
 #define IS_G4X(devid)		(IS_G45(devid) || IS_GM45(devid))
 
@@ -114,7 +122,19 @@
 				 devid == PCI_CHIP_I946_GZ || \
 				 IS_G4X(devid))
 
-#define IS_GEN6(devid)		(devid == PCI_CHIP_SANDYBRIDGE)
+/* Compat macro for intel_decode.c */
+#define IS_IRONLAKE(devid)	IS_GEN5(devid)
+
+#define IS_GT1(devid)		(devid == PCI_CHIP_SANDYBRIDGE_GT1 || \
+				 devid == PCI_CHIP_SANDYBRIDGE_M_GT1 || \
+				 devid == PCI_CHIP_SANDYBRIDGE_S)
+
+#define IS_GT2(devid)		(devid == PCI_CHIP_SANDYBRIDGE_GT2 || \
+				 devid == PCI_CHIP_SANDYBRIDGE_GT2_PLUS	|| \
+				 devid == PCI_CHIP_SANDYBRIDGE_M_GT2 || \
+				 devid == PCI_CHIP_SANDYBRIDGE_M_GT2_PLUS)
+
+#define IS_GEN6(devid)		(IS_GT1(devid) || IS_GT2(devid))
 
 #define IS_965(devid)		(IS_GEN4(devid) || \
 				 IS_G4X(devid) || \

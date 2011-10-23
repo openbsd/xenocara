@@ -46,7 +46,7 @@
 
 
 static void *
-nop_get_pointer(GLcontext *ctx, struct gl_renderbuffer *rb, GLint x, GLint y)
+nop_get_pointer(struct gl_context *ctx, struct gl_renderbuffer *rb, GLint x, GLint y)
 {
    (void) ctx;
    (void) rb;
@@ -62,8 +62,8 @@ nop_get_pointer(GLcontext *ctx, struct gl_renderbuffer *rb, GLint x, GLint y)
 static void
 delete_wrapper(struct gl_renderbuffer *rb)
 {
-   ASSERT(rb->Format == MESA_FORMAT_Z24_S8 ||
-          rb->Format == MESA_FORMAT_S8_Z24);
+   ASSERT(rb->Format == MESA_FORMAT_S8 ||
+          rb->Format == MESA_FORMAT_X8_Z24);
    _mesa_reference_renderbuffer(&rb->Wrapped, NULL);
    free(rb);
 }
@@ -73,7 +73,7 @@ delete_wrapper(struct gl_renderbuffer *rb)
  * Realloc storage for wrapper.
  */
 static GLboolean
-alloc_wrapper_storage(GLcontext *ctx, struct gl_renderbuffer *rb,
+alloc_wrapper_storage(struct gl_context *ctx, struct gl_renderbuffer *rb,
                       GLenum internalFormat, GLuint width, GLuint height)
 {
    /* just pass this on to the wrapped renderbuffer */
@@ -83,12 +83,15 @@ alloc_wrapper_storage(GLcontext *ctx, struct gl_renderbuffer *rb,
    (void) internalFormat;
 
    ASSERT(dsrb->Format == MESA_FORMAT_Z24_S8 ||
-          dsrb->Format == MESA_FORMAT_S8_Z24);
+          dsrb->Format == MESA_FORMAT_Z24_X8 ||
+          dsrb->Format == MESA_FORMAT_S8_Z24 ||
+          dsrb->Format == MESA_FORMAT_X8_Z24);
 
    retVal = dsrb->AllocStorage(ctx, dsrb, dsrb->InternalFormat, width, height);
    if (retVal) {
       rb->Width = width;
       rb->Height = height;
+      rb->RowStride = dsrb->RowStride;
    }
    return retVal;
 }
@@ -101,7 +104,7 @@ alloc_wrapper_storage(GLcontext *ctx, struct gl_renderbuffer *rb,
  */
 
 static void
-get_row_z24(GLcontext *ctx, struct gl_renderbuffer *z24rb, GLuint count,
+get_row_z24(struct gl_context *ctx, struct gl_renderbuffer *z24rb, GLuint count,
             GLint x, GLint y, void *values)
 {
    struct gl_renderbuffer *dsrb = z24rb->Wrapped;
@@ -128,7 +131,7 @@ get_row_z24(GLcontext *ctx, struct gl_renderbuffer *z24rb, GLuint count,
 }
 
 static void
-get_values_z24(GLcontext *ctx, struct gl_renderbuffer *z24rb, GLuint count,
+get_values_z24(struct gl_context *ctx, struct gl_renderbuffer *z24rb, GLuint count,
                const GLint x[], const GLint y[], void *values)
 {
    struct gl_renderbuffer *dsrb = z24rb->Wrapped;
@@ -153,7 +156,7 @@ get_values_z24(GLcontext *ctx, struct gl_renderbuffer *z24rb, GLuint count,
 }
 
 static void
-put_row_z24(GLcontext *ctx, struct gl_renderbuffer *z24rb, GLuint count,
+put_row_z24(struct gl_context *ctx, struct gl_renderbuffer *z24rb, GLuint count,
             GLint x, GLint y, const void *values, const GLubyte *mask)
 {
    struct gl_renderbuffer *dsrb = z24rb->Wrapped;
@@ -204,7 +207,7 @@ put_row_z24(GLcontext *ctx, struct gl_renderbuffer *z24rb, GLuint count,
 }
 
 static void
-put_mono_row_z24(GLcontext *ctx, struct gl_renderbuffer *z24rb, GLuint count,
+put_mono_row_z24(struct gl_context *ctx, struct gl_renderbuffer *z24rb, GLuint count,
                  GLint x, GLint y, const void *value, const GLubyte *mask)
 {
    struct gl_renderbuffer *dsrb = z24rb->Wrapped;
@@ -258,7 +261,7 @@ put_mono_row_z24(GLcontext *ctx, struct gl_renderbuffer *z24rb, GLuint count,
 }
 
 static void
-put_values_z24(GLcontext *ctx, struct gl_renderbuffer *z24rb, GLuint count,
+put_values_z24(struct gl_context *ctx, struct gl_renderbuffer *z24rb, GLuint count,
                const GLint x[], const GLint y[],
                const void *values, const GLubyte *mask)
 {
@@ -311,7 +314,7 @@ put_values_z24(GLcontext *ctx, struct gl_renderbuffer *z24rb, GLuint count,
 }
 
 static void
-put_mono_values_z24(GLcontext *ctx, struct gl_renderbuffer *z24rb,
+put_mono_values_z24(struct gl_context *ctx, struct gl_renderbuffer *z24rb,
                     GLuint count, const GLint x[], const GLint y[],
                     const void *value, const GLubyte *mask)
 {
@@ -346,24 +349,30 @@ put_mono_values_z24(GLcontext *ctx, struct gl_renderbuffer *z24rb,
  * \return new depth renderbuffer
  */
 struct gl_renderbuffer *
-_mesa_new_z24_renderbuffer_wrapper(GLcontext *ctx,
+_mesa_new_z24_renderbuffer_wrapper(struct gl_context *ctx,
                                    struct gl_renderbuffer *dsrb)
 {
    struct gl_renderbuffer *z24rb;
 
    ASSERT(dsrb->Format == MESA_FORMAT_Z24_S8 ||
-          dsrb->Format == MESA_FORMAT_S8_Z24);
+          dsrb->Format == MESA_FORMAT_Z24_X8 ||
+          dsrb->Format == MESA_FORMAT_S8_Z24 ||
+          dsrb->Format == MESA_FORMAT_X8_Z24);
    ASSERT(dsrb->DataType == GL_UNSIGNED_INT_24_8_EXT);
 
-   z24rb = _mesa_new_renderbuffer(ctx, 0);
+   z24rb = ctx->Driver.NewRenderbuffer(ctx, 0);
    if (!z24rb)
       return NULL;
 
+   /* NOTE: need to do manual refcounting here */
    z24rb->Wrapped = dsrb;
+   dsrb->RefCount++;
+
    z24rb->Name = dsrb->Name;
-   z24rb->RefCount = 1;
+   z24rb->RefCount = 0;
    z24rb->Width = dsrb->Width;
    z24rb->Height = dsrb->Height;
+   z24rb->RowStride = dsrb->RowStride;
    z24rb->InternalFormat = GL_DEPTH_COMPONENT24;
    z24rb->Format = MESA_FORMAT_X8_Z24;
    z24rb->_BaseFormat = GL_DEPTH_COMPONENT;
@@ -389,7 +398,7 @@ _mesa_new_z24_renderbuffer_wrapper(GLcontext *ctx,
  */
 
 static void
-get_row_s8(GLcontext *ctx, struct gl_renderbuffer *s8rb, GLuint count,
+get_row_s8(struct gl_context *ctx, struct gl_renderbuffer *s8rb, GLuint count,
            GLint x, GLint y, void *values)
 {
    struct gl_renderbuffer *dsrb = s8rb->Wrapped;
@@ -416,7 +425,7 @@ get_row_s8(GLcontext *ctx, struct gl_renderbuffer *s8rb, GLuint count,
 }
 
 static void
-get_values_s8(GLcontext *ctx, struct gl_renderbuffer *s8rb, GLuint count,
+get_values_s8(struct gl_context *ctx, struct gl_renderbuffer *s8rb, GLuint count,
               const GLint x[], const GLint y[], void *values)
 {
    struct gl_renderbuffer *dsrb = s8rb->Wrapped;
@@ -441,7 +450,7 @@ get_values_s8(GLcontext *ctx, struct gl_renderbuffer *s8rb, GLuint count,
 }
 
 static void
-put_row_s8(GLcontext *ctx, struct gl_renderbuffer *s8rb, GLuint count,
+put_row_s8(struct gl_context *ctx, struct gl_renderbuffer *s8rb, GLuint count,
            GLint x, GLint y, const void *values, const GLubyte *mask)
 {
    struct gl_renderbuffer *dsrb = s8rb->Wrapped;
@@ -492,7 +501,7 @@ put_row_s8(GLcontext *ctx, struct gl_renderbuffer *s8rb, GLuint count,
 }
 
 static void
-put_mono_row_s8(GLcontext *ctx, struct gl_renderbuffer *s8rb, GLuint count,
+put_mono_row_s8(struct gl_context *ctx, struct gl_renderbuffer *s8rb, GLuint count,
                 GLint x, GLint y, const void *value, const GLubyte *mask)
 {
    struct gl_renderbuffer *dsrb = s8rb->Wrapped;
@@ -543,7 +552,7 @@ put_mono_row_s8(GLcontext *ctx, struct gl_renderbuffer *s8rb, GLuint count,
 }
 
 static void
-put_values_s8(GLcontext *ctx, struct gl_renderbuffer *s8rb, GLuint count,
+put_values_s8(struct gl_context *ctx, struct gl_renderbuffer *s8rb, GLuint count,
               const GLint x[], const GLint y[],
               const void *values, const GLubyte *mask)
 {
@@ -596,7 +605,7 @@ put_values_s8(GLcontext *ctx, struct gl_renderbuffer *s8rb, GLuint count,
 }
 
 static void
-put_mono_values_s8(GLcontext *ctx, struct gl_renderbuffer *s8rb, GLuint count,
+put_mono_values_s8(struct gl_context *ctx, struct gl_renderbuffer *s8rb, GLuint count,
                    const GLint x[], const GLint y[],
                    const void *value, const GLubyte *mask)
 {
@@ -630,7 +639,7 @@ put_mono_values_s8(GLcontext *ctx, struct gl_renderbuffer *s8rb, GLuint count,
  * \return new stencil renderbuffer
  */
 struct gl_renderbuffer *
-_mesa_new_s8_renderbuffer_wrapper(GLcontext *ctx, struct gl_renderbuffer *dsrb)
+_mesa_new_s8_renderbuffer_wrapper(struct gl_context *ctx, struct gl_renderbuffer *dsrb)
 {
    struct gl_renderbuffer *s8rb;
 
@@ -638,15 +647,19 @@ _mesa_new_s8_renderbuffer_wrapper(GLcontext *ctx, struct gl_renderbuffer *dsrb)
           dsrb->Format == MESA_FORMAT_S8_Z24);
    ASSERT(dsrb->DataType == GL_UNSIGNED_INT_24_8_EXT);
 
-   s8rb = _mesa_new_renderbuffer(ctx, 0);
+   s8rb = ctx->Driver.NewRenderbuffer(ctx, 0);
    if (!s8rb)
       return NULL;
 
+   /* NOTE: need to do manual refcounting here */
    s8rb->Wrapped = dsrb;
+   dsrb->RefCount++;
+
    s8rb->Name = dsrb->Name;
-   s8rb->RefCount = 1;
+   s8rb->RefCount = 0;
    s8rb->Width = dsrb->Width;
    s8rb->Height = dsrb->Height;
+   s8rb->RowStride = dsrb->RowStride;
    s8rb->InternalFormat = GL_STENCIL_INDEX8_EXT;
    s8rb->Format = MESA_FORMAT_S8;
    s8rb->_BaseFormat = GL_STENCIL_INDEX;
@@ -688,7 +701,7 @@ _mesa_new_s8_renderbuffer_wrapper(GLcontext *ctx, struct gl_renderbuffer *dsrb)
  *                   (either 8-bit or 32-bit)
  */
 void
-_mesa_extract_stencil(GLcontext *ctx,
+_mesa_extract_stencil(struct gl_context *ctx,
                       struct gl_renderbuffer *dsRb,
                       struct gl_renderbuffer *stencilRb)
 {
@@ -737,7 +750,7 @@ _mesa_extract_stencil(GLcontext *ctx,
  * \param stencilRb  the source stencil buffer (either 8-bit or 32-bit)
  */
 void
-_mesa_insert_stencil(GLcontext *ctx,
+_mesa_insert_stencil(struct gl_context *ctx,
                      struct gl_renderbuffer *dsRb,
                      struct gl_renderbuffer *stencilRb)
 {
@@ -793,7 +806,7 @@ _mesa_insert_stencil(GLcontext *ctx,
  * \param stencilRb  the stencil renderbuffer to promote
  */
 void
-_mesa_promote_stencil(GLcontext *ctx, struct gl_renderbuffer *stencilRb)
+_mesa_promote_stencil(struct gl_context *ctx, struct gl_renderbuffer *stencilRb)
 {
    const GLsizei width = stencilRb->Width;
    const GLsizei height = stencilRb->Height;

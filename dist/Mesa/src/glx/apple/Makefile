@@ -38,7 +38,7 @@ SOURCES = \
 	appledri.c \
 	../clientattrib.c \
 	../compsize.c \
-	../glcontextmodes.c \
+	../glxconfig.c \
 	glx_empty.c \
 	glx_error.c \
 	../glx_pbuffer.c \
@@ -49,7 +49,8 @@ SOURCES = \
 	../glxextensions.c \
 	glxreply.c \
 	../pixel.c \
-	../xfont.c
+	../xfont.c \
+	../applegl_glx.c
 
 include $(TOP)/src/mesa/sources.mak
 
@@ -65,7 +66,8 @@ INCLUDES = -I. -Iinclude -I..\
 	-I$(TOP)/include \
 	-I$(TOP)/include/GL/internal \
 	-I$(TOP)/src/mesa \
-	-I$(TOP)/src/mesa/glapi \
+	-I$(TOP)/src/mapi \
+	-I$(TOP)/src/mapi/glapi \
 	$(LIBDRM_CFLAGS) \
 	$(DRI2PROTO_CFLAGS) \
 	$(X11_INCLUDES)

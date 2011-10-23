@@ -56,8 +56,10 @@ extern void r600SetTexOffset(__DRIcontext *pDRICtx, GLint texname,
 			     unsigned long long offset, GLint depth,
 			     GLuint pitch);
 
-extern GLboolean r600ValidateBuffers(GLcontext * ctx);
+extern GLboolean r600ValidateBuffers(struct gl_context * ctx);
 
 extern void r600InitTextureFuncs(radeonContextPtr radeon, struct dd_function_table *functions);
+
+unsigned r600IsFormatRenderable(gl_format mesa_format);
 
 #endif				/* __r600_TEX_H__ */

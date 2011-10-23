@@ -54,9 +54,7 @@
 #include "vbo.h"
 #include "vbo_attrib.h"
 #include "vbo_exec.h"
-#if FEATURE_dlist
 #include "vbo_save.h"
-#endif
 
 
 struct vbo_context {
@@ -87,7 +85,7 @@ struct vbo_context {
 };
 
 
-static INLINE struct vbo_context *vbo_context(GLcontext *ctx) 
+static INLINE struct vbo_context *vbo_context(struct gl_context *ctx) 
 {
    return (struct vbo_context *)(ctx->swtnl_im);
 }
@@ -98,7 +96,7 @@ static INLINE struct vbo_context *vbo_context(GLcontext *ctx)
  * vertex transformation, an NV vertex program or ARB vertex program/shader.
  */
 static INLINE enum vp_mode
-get_program_mode( GLcontext *ctx )
+get_program_mode( struct gl_context *ctx )
 {
    if (!ctx->VertexProgram._Current)
       return VP_NONE;

@@ -27,12 +27,13 @@
 #include "nouveau_driver.h"
 #include "nouveau_context.h"
 #include "nouveau_util.h"
-#include "nouveau_class.h"
+#include "nv_object.xml.h"
+#include "nv04_3d.xml.h"
 #include "nv04_driver.h"
 
 #define COMBINER_SHIFT(in)						\
-	(NV04_MULTITEX_TRIANGLE_COMBINE_COLOR_ARGUMENT##in##_SHIFT	\
-	 - NV04_MULTITEX_TRIANGLE_COMBINE_COLOR_ARGUMENT0_SHIFT)
+	(NV04_MULTITEX_TRIANGLE_COMBINE_COLOR_ARGUMENT##in##__SHIFT	\
+	 - NV04_MULTITEX_TRIANGLE_COMBINE_COLOR_ARGUMENT0__SHIFT)
 #define COMBINER_SOURCE(reg)					\
 	NV04_MULTITEX_TRIANGLE_COMBINE_COLOR_ARGUMENT0_##reg
 #define COMBINER_INVERT					\
@@ -41,9 +42,10 @@
 	NV04_MULTITEX_TRIANGLE_COMBINE_COLOR_ALPHA0
 
 struct combiner_state {
-	GLcontext *ctx;
+	struct gl_context *ctx;
 	int unit;
 	GLboolean alpha;
+	GLboolean premodulate;
 
 	/* GL state */
 	GLenum mode;
@@ -66,6 +68,7 @@ struct combiner_state {
 		(rc)->ctx = ctx;				\
 		(rc)->unit = i;					\
 		(rc)->alpha = __INIT_COMBINER_ALPHA_##chan;	\
+		(rc)->premodulate = c->_NumArgs##chan == 4;	\
 		(rc)->mode = c->Mode##chan;			\
 		(rc)->source = c->Source##chan;			\
 		(rc)->operand = c->Operand##chan;		\
@@ -79,6 +82,9 @@ static uint32_t
 get_input_source(struct combiner_state *rc, int source)
 {
 	switch (source) {
+	case GL_ZERO:
+		return COMBINER_SOURCE(ZERO);
+
 	case GL_TEXTURE:
 		return rc->unit ? COMBINER_SOURCE(TEXTURE1) :
 			COMBINER_SOURCE(TEXTURE0);
@@ -195,11 +201,24 @@ setup_combiner(struct combiner_state *rc)
 		break;
 
 	case GL_ADD:
-		INPUT_ARG(rc, 0, 0, 0);
-		INPUT_SRC(rc, 1, ZERO, INVERT);
-		INPUT_ARG(rc, 2, 1, 0);
-		INPUT_SRC(rc, 3, ZERO, INVERT);
-		UNSIGNED_OP(rc);
+	case GL_ADD_SIGNED:
+		if (rc->premodulate) {
+			INPUT_ARG(rc, 0, 0, 0);
+			INPUT_ARG(rc, 1, 1, 0);
+			INPUT_ARG(rc, 2, 2, 0);
+			INPUT_ARG(rc, 3, 3, 0);
+		} else {
+			INPUT_ARG(rc, 0, 0, 0);
+			INPUT_SRC(rc, 1, ZERO, INVERT);
+			INPUT_ARG(rc, 2, 1, 0);
+			INPUT_SRC(rc, 3, ZERO, INVERT);
+		}
+
+		if (rc->mode == GL_ADD_SIGNED)
+			SIGNED_OP(rc);
+		else
+			UNSIGNED_OP(rc);
+
 		break;
 
 	case GL_INTERPOLATE:
@@ -210,21 +229,13 @@ setup_combiner(struct combiner_state *rc)
 		UNSIGNED_OP(rc);
 		break;
 
-	case GL_ADD_SIGNED:
-		INPUT_ARG(rc, 0, 0, 0);
-		INPUT_SRC(rc, 1, ZERO, INVERT);
-		INPUT_ARG(rc, 2, 1, 0);
-		INPUT_SRC(rc, 3, ZERO, INVERT);
-		SIGNED_OP(rc);
-		break;
-
 	default:
 		assert(0);
 	}
 }
 
 void
-nv04_emit_tex_env(GLcontext *ctx, int emit)
+nv04_emit_tex_env(struct gl_context *ctx, int emit)
 {
 	const int i = emit - NOUVEAU_STATE_TEX_ENV0;
 	struct nouveau_channel *chan = context_chan(ctx);

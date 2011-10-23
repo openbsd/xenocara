@@ -228,12 +228,11 @@ nvgl_wrap_mode(unsigned wrap)
 		return 0x1;
 	case GL_MIRRORED_REPEAT:
 		return 0x2;
+	case GL_CLAMP:
 	case GL_CLAMP_TO_EDGE:
 		return 0x3;
 	case GL_CLAMP_TO_BORDER:
 		return 0x4;
-	case GL_CLAMP:
-		return 0x5;
 	default:
 		assert(0);
 	}
@@ -255,6 +254,25 @@ nvgl_filter_mode(unsigned filter)
 		return 0x5;
 	case GL_LINEAR_MIPMAP_LINEAR:
 		return 0x6;
+	default:
+		assert(0);
+	}
+}
+
+static inline unsigned
+nvgl_texgen_mode(unsigned mode)
+{
+	switch (mode) {
+	case GL_EYE_LINEAR:
+		return 0x2400;
+	case GL_OBJECT_LINEAR:
+		return 0x2401;
+	case GL_SPHERE_MAP:
+		return 0x2402;
+	case GL_NORMAL_MAP:
+		return 0x8511;
+	case GL_REFLECTION_MAP:
+		return 0x8512;
 	default:
 		assert(0);
 	}

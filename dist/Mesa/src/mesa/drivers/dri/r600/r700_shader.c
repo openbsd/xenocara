@@ -38,7 +38,7 @@
 
 #include "r700_shader.h"
 
-void r700ShaderInit(GLcontext * ctx)
+void r700ShaderInit(struct gl_context * ctx)
 {
 }
 
@@ -584,7 +584,11 @@ void cleanup_vfetch_shaderinst(R700_Shader *pShader)
 
 void Clean_Up_Shader(R700_Shader *pShader)
 {
-    FREE(pShader->pProgram);
+    if(NULL != pShader->pProgram)
+    {
+        FREE(pShader->pProgram);
+        pShader->pProgram = NULL;
+    }
 
     R700ShaderInstruction  *pInst;
     R700ShaderInstruction  *pInstToFree;
@@ -596,6 +600,8 @@ void Clean_Up_Shader(R700_Shader *pShader)
         pInst = pInst->pNextInst;
         FREE(pInstToFree);
     };
+    pShader->lstCFInstructions.pHead = NULL;
+
     pInst = pShader->lstALUInstructions.pHead;
     while(NULL != pInst)
     {
@@ -603,6 +609,8 @@ void Clean_Up_Shader(R700_Shader *pShader)
         pInst = pInst->pNextInst;
         FREE(pInstToFree);
     };
+    pShader->lstALUInstructions.pHead = NULL;
+
     pInst = pShader->lstTEXInstructions.pHead;
     while(NULL != pInst)
     {
@@ -610,6 +618,8 @@ void Clean_Up_Shader(R700_Shader *pShader)
         pInst = pInst->pNextInst;
         FREE(pInstToFree);
     };
+    pShader->lstTEXInstructions.pHead = NULL;
+
     pInst = pShader->lstVTXInstructions.pHead;
     while(NULL != pInst)
     {
@@ -617,5 +627,6 @@ void Clean_Up_Shader(R700_Shader *pShader)
         pInst = pInst->pNextInst;
         FREE(pInstToFree);
     };
+    pShader->lstVTXInstructions.pHead = NULL;
 }
 

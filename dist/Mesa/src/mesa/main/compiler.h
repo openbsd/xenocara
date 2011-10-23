@@ -65,9 +65,7 @@ extern "C" {
    typedef unsigned __int8    uint8_t;
    typedef __int16            int16_t;
    typedef unsigned __int16   uint16_t;
-#  ifndef __eglplatform_h_
-     typedef __int32            int32_t;
-#  endif
+   typedef __int32            int32_t;
    typedef unsigned __int32   uint32_t;
    typedef __int64            int64_t;
    typedef unsigned __int64   uint64_t;
@@ -173,7 +171,7 @@ extern "C" {
  * We also need to define a USED attribute, so the optimizer doesn't 
  * inline a static function that we later use in an alias. - ajax
  */
-#if defined(__GNUC__) && (__GNUC__ >= 3) || (defined(__SUNPRO_C) && (__SUNPRO_C >= 0x590))
+#if defined(__GNUC__) || (defined(__SUNPRO_C) && (__SUNPRO_C >= 0x590))
 #  define PUBLIC __attribute__((visibility("default")))
 #  define USED __attribute__((used))
 #else
@@ -196,10 +194,17 @@ extern "C" {
 /**
  * __builtin_expect macros
  */
-#if defined(__GNUC__) && (__GNUC__ < 4) || !defined(__GNUC__)
+#if !defined(__GNUC__)
 #  define __builtin_expect(x, y) x
 #endif
 
+#ifdef __GNUC__
+#define likely(x) __builtin_expect(!!(x), 1)
+#define unlikely(x) __builtin_expect(!!(x), 0)
+#else
+#define likely(x) !!(x)
+#define unlikely(x) !!(x)
+#endif
 
 /**
  * The __FUNCTION__ gcc variable is generally only used for debugging.
@@ -218,6 +223,18 @@ extern "C" {
 #   define __FUNCTION__ "<unknown>"
 #  endif
 # endif
+#endif
+#ifndef __func__
+#  if (__STDC_VERSION__ >= 199901L) || \
+      (defined(__SUNPRO_C) && defined(__C99FEATURES__))
+       /* __func__ is part of C99 */
+#  elif defined(_MSC_VER)
+#    if _MSC_VER >= 1300
+#      define __func__ __FUNCTION__
+#    else
+#      define __func__ "<unknown>"
+#    endif
+#  endif
 #endif
 
 
@@ -311,6 +328,11 @@ static INLINE GLuint CPU_TO_LE32(GLuint x)
 #endif
 #endif
 
+#if (__GNUC__ >= 3)
+#define PRINTFLIKE(f, a) __attribute__ ((format(__printf__, f, a)))
+#else
+#define PRINTFLIKE(f, a)
+#endif
 
 #ifndef NULL
 #define NULL 0
@@ -334,6 +356,10 @@ static INLINE GLuint CPU_TO_LE32(GLuint x)
 
 #ifndef M_E
 #define M_E (2.7182818284590452354)
+#endif
+
+#ifndef M_LOG2E
+#define M_LOG2E     (1.4426950408889634074)
 #endif
 
 #ifndef ONE_DIV_LN2

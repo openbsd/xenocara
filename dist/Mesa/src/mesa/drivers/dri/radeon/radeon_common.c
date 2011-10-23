@@ -171,6 +171,10 @@ void radeonSetCliprects(radeonContextPtr radeon)
 {
 	__DRIdrawable *const drawable = radeon_get_drawable(radeon);
 	__DRIdrawable *const readable = radeon_get_readable(radeon);
+
+	if(drawable == NULL && readable == NULL)
+		return;
+
 	struct radeon_framebuffer *const draw_rfb = drawable->driverPrivate;
 	struct radeon_framebuffer *const read_rfb = readable->driverPrivate;
 	int x_off, y_off;
@@ -201,7 +205,7 @@ void radeonSetCliprects(radeonContextPtr radeon)
 
 
 
-void radeonUpdateScissor( GLcontext *ctx )
+void radeonUpdateScissor( struct gl_context *ctx )
 {
 	radeonContextPtr rmesa = RADEON_CONTEXT(ctx);
 	GLint x = ctx->Scissor.X, y = ctx->Scissor.Y;
@@ -252,7 +256,7 @@ void radeonUpdateScissor( GLcontext *ctx )
  * Scissoring
  */
 
-void radeonScissor(GLcontext* ctx, GLint x, GLint y, GLsizei w, GLsizei h)
+void radeonScissor(struct gl_context* ctx, GLint x, GLint y, GLsizei w, GLsizei h)
 {
 	radeonContextPtr radeon = RADEON_CONTEXT(ctx);
 	if (ctx->Scissor.Enabled) {
@@ -578,7 +582,7 @@ void radeonSwapBuffers(__DRIdrawable * dPriv)
 
 	if (dPriv->driContextPriv && dPriv->driContextPriv->driverPrivate) {
 		radeonContextPtr radeon;
-		GLcontext *ctx;
+		struct gl_context *ctx;
 
 		radeon = (radeonContextPtr) dPriv->driContextPriv->driverPrivate;
 		ctx = radeon->glCtx;
@@ -620,7 +624,7 @@ void radeonCopySubBuffer(__DRIdrawable * dPriv,
 {
 	if (dPriv->driContextPriv && dPriv->driContextPriv->driverPrivate) {
 		radeonContextPtr radeon;
-		GLcontext *ctx;
+		struct gl_context *ctx;
 
 		radeon = (radeonContextPtr) dPriv->driContextPriv->driverPrivate;
 		ctx = radeon->glCtx;
@@ -646,7 +650,7 @@ void radeonCopySubBuffer(__DRIdrawable * dPriv,
  * If so, set the intel->front_buffer_dirty field to true.
  */
 void
-radeon_check_front_buffer_rendering(GLcontext *ctx)
+radeon_check_front_buffer_rendering(struct gl_context *ctx)
 {
 	radeonContextPtr radeon = RADEON_CONTEXT(ctx);
 	const struct gl_framebuffer *fb = ctx->DrawBuffer;
@@ -662,7 +666,7 @@ radeon_check_front_buffer_rendering(GLcontext *ctx)
 }
 
 
-void radeon_draw_buffer(GLcontext *ctx, struct gl_framebuffer *fb)
+void radeon_draw_buffer(struct gl_context *ctx, struct gl_framebuffer *fb)
 {
 	radeonContextPtr radeon = RADEON_CONTEXT(ctx);
 	struct radeon_renderbuffer *rrbDepth = NULL, *rrbStencil = NULL,
@@ -708,7 +712,6 @@ void radeon_draw_buffer(GLcontext *ctx, struct gl_framebuffer *fb)
 		if (fb->_ColorDrawBufferIndexes[0] == BUFFER_FRONT_LEFT) {
 			rrbColor = radeon_renderbuffer(fb->Attachment[BUFFER_FRONT_LEFT].Renderbuffer);
 			radeon->front_cliprects = GL_TRUE;
-			radeon->front_buffer_dirty = GL_TRUE;
 		} else {
 			rrbColor = radeon_renderbuffer(fb->Attachment[BUFFER_BACK_LEFT].Renderbuffer);
 			radeon->front_cliprects = GL_FALSE;
@@ -818,7 +821,7 @@ void radeon_draw_buffer(GLcontext *ctx, struct gl_framebuffer *fb)
 /**
  * Called via glDrawBuffer.
  */
-void radeonDrawBuffer( GLcontext *ctx, GLenum mode )
+void radeonDrawBuffer( struct gl_context *ctx, GLenum mode )
 {
 	if (RADEON_DEBUG & RADEON_DRI)
 		fprintf(stderr, "%s %s\n", __FUNCTION__,
@@ -845,7 +848,7 @@ void radeonDrawBuffer( GLcontext *ctx, GLenum mode )
 	radeon_draw_buffer(ctx, ctx->DrawBuffer);
 }
 
-void radeonReadBuffer( GLcontext *ctx, GLenum mode )
+void radeonReadBuffer( struct gl_context *ctx, GLenum mode )
 {
 	if ((ctx->DrawBuffer != NULL) && (ctx->DrawBuffer->Name == 0)) {
 		struct radeon_context *const rmesa = RADEON_CONTEXT(ctx);
@@ -892,11 +895,11 @@ void radeon_window_moved(radeonContextPtr radeon)
 	}
 }
 
-void radeon_viewport(GLcontext *ctx, GLint x, GLint y, GLsizei width, GLsizei height)
+void radeon_viewport(struct gl_context *ctx, GLint x, GLint y, GLsizei width, GLsizei height)
 {
 	radeonContextPtr radeon = RADEON_CONTEXT(ctx);
 	__DRIcontext *driContext = radeon->dri.context;
-	void (*old_viewport)(GLcontext *ctx, GLint x, GLint y,
+	void (*old_viewport)(struct gl_context *ctx, GLint x, GLint y,
 			     GLsizei w, GLsizei h);
 
 	if (!driContext->driScreenPriv->dri2.enabled)
@@ -1065,7 +1068,7 @@ static INLINE void radeonEmitAtoms(radeonContextPtr radeon, GLboolean emitAll)
 	COMMIT_BATCH();
 }
 
-static GLboolean radeon_revalidate_bos(GLcontext *ctx)
+static GLboolean radeon_revalidate_bos(struct gl_context *ctx)
 {
 	radeonContextPtr radeon = RADEON_CONTEXT(ctx);
 	int ret;
@@ -1105,7 +1108,7 @@ void radeonEmitState(radeonContextPtr radeon)
 }
 
 
-void radeonFlush(GLcontext *ctx)
+void radeonFlush(struct gl_context *ctx)
 {
 	radeonContextPtr radeon = RADEON_CONTEXT(ctx);
 	if (RADEON_DEBUG & RADEON_IOCTL)
@@ -1132,17 +1135,13 @@ flush_front:
 		if (screen->dri2.loader && (screen->dri2.loader->base.version >= 2)
 			&& (screen->dri2.loader->flushFrontBuffer != NULL)) {
 			__DRIdrawable * drawable = radeon_get_drawable(radeon);
-			(*screen->dri2.loader->flushFrontBuffer)(drawable, drawable->loaderPrivate);
 
-			/* Only clear the dirty bit if front-buffer rendering is no longer
-			 * enabled.  This is done so that the dirty bit can only be set in
-			 * glDrawBuffer.  Otherwise the dirty bit would have to be set at
-			 * each of N places that do rendering.  This has worse performances,
-			 * but it is much easier to get correct.
+			/* We set the dirty bit in radeon_prepare_render() if we're
+			 * front buffer rendering once we get there.
 			 */
-			if (!radeon->is_front_buffer_rendering) {
-				radeon->front_buffer_dirty = GL_FALSE;
-			}
+			radeon->front_buffer_dirty = GL_FALSE;
+
+			(*screen->dri2.loader->flushFrontBuffer)(drawable, drawable->loaderPrivate);
 		}
 	}
 }
@@ -1150,7 +1149,7 @@ flush_front:
 /* Make sure all commands have been sent to the hardware and have
  * completed processing.
  */
-void radeonFinish(GLcontext * ctx)
+void radeonFinish(struct gl_context * ctx)
 {
 	radeonContextPtr radeon = RADEON_CONTEXT(ctx);
 	struct gl_framebuffer *fb = ctx->DrawBuffer;
@@ -1332,7 +1331,7 @@ void rcommonBeginBatch(radeonContextPtr rmesa, int n,
 
 }
 
-void radeonUserClear(GLcontext *ctx, GLuint mask)
+void radeonUserClear(struct gl_context *ctx, GLuint mask)
 {
    _mesa_meta_Clear(ctx, mask);
 }

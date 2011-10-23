@@ -56,6 +56,12 @@ _mesa_ClearDepth( GLclampd depth )
 }
 
 
+void GLAPIENTRY
+_mesa_ClearDepthf( GLclampf depth )
+{
+   _mesa_ClearDepth(depth);
+}
+
 
 void GLAPIENTRY
 _mesa_DepthFunc( GLenum func )
@@ -153,7 +159,7 @@ _mesa_DepthBoundsEXT( GLclampd zmin, GLclampd zmax )
  * Initialize the depth buffer attribute group in the given context.
  */
 void
-_mesa_init_depth(GLcontext *ctx)
+_mesa_init_depth(struct gl_context *ctx)
 {
    ctx->Depth.Test = GL_FALSE;
    ctx->Depth.Clear = 1.0;

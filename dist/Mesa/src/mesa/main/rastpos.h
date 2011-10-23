@@ -32,22 +32,18 @@
 #define RASTPOS_H
 
 
-#include "main/mtypes.h"
+#include "compiler.h"
+#include "mfeatures.h"
 
+struct _glapi_table;
+struct gl_context;
 
 #if FEATURE_rastpos
-
-#define _MESA_INIT_RASTPOS_FUNCTIONS(driver, impl) \
-   do {                                            \
-      (driver)->RasterPos = impl ## RasterPos;     \
-   } while (0)
 
 extern void
 _mesa_init_rastpos_dispatch(struct _glapi_table *disp);
 
 #else /* FEATURE_rastpos */
-
-#define _MESA_INIT_RASTPOS_FUNCTIONS(driver, impl) do { } while (0)
 
 static INLINE void
 _mesa_init_rastpos_dispatch(struct _glapi_table *disp)
@@ -57,7 +53,7 @@ _mesa_init_rastpos_dispatch(struct _glapi_table *disp)
 #endif /* FEATURE_rastpos */
 
 extern void 
-_mesa_init_rastpos(GLcontext *ctx);
+_mesa_init_rastpos(struct gl_context *ctx);
 
 /*@}*/
 

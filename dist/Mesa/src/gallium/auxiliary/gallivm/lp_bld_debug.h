@@ -30,10 +30,26 @@
 #define LP_BLD_DEBUG_H
 
 
-#include <llvm-c/Core.h>
+#include "gallivm/lp_bld.h"
 
 #include "pipe/p_compiler.h"
 #include "util/u_string.h"
+
+
+#define GALLIVM_DEBUG_TGSI          (1 << 0)
+#define GALLIVM_DEBUG_IR            (1 << 1)
+#define GALLIVM_DEBUG_ASM           (1 << 2)
+#define GALLIVM_DEBUG_NO_OPT        (1 << 3)
+#define GALLIVM_DEBUG_PERF          (1 << 4)
+#define GALLIVM_DEBUG_NO_BRILINEAR  (1 << 5)
+#define GALLIVM_DEBUG_GC            (1 << 6)
+
+
+#ifdef DEBUG
+extern unsigned gallivm_debug;
+#else
+#define gallivm_debug 0
+#endif
 
 
 static INLINE void
@@ -51,6 +67,10 @@ lp_build_name(LLVMValueRef val, const char *format, ...)
    (void)format;
 #endif
 }
+
+
+void
+lp_debug_dump_value(LLVMValueRef value);
 
 
 boolean

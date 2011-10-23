@@ -93,6 +93,13 @@ struct radeon_renderbuffer
 	GLuint pf_pending;  /**< sequence number of pending flip */
 	GLuint vbl_pending;   /**< vblank sequence number of pending flip */
 	__DRIdrawable *dPriv;
+
+	/* r6xx+ tiling */
+	GLuint tile_config;
+	GLint group_bytes;
+	GLint num_channels;
+	GLint num_banks;
+	GLint r7xx_bank_op;
 };
 
 struct radeon_framebuffer
@@ -152,8 +159,8 @@ struct radeon_state_atom {
         GLuint *cmd;		/* one or more cmd's */
 	GLuint *lastcmd;		/* one or more cmd's */
 	GLboolean dirty;	/* dirty-mark in emit_state_list */
-        int (*check) (GLcontext *, struct radeon_state_atom *atom); /* is this state active? */
-        void (*emit) (GLcontext *, struct radeon_state_atom *atom);
+        int (*check) (struct gl_context *, struct radeon_state_atom *atom); /* is this state active? */
+        void (*emit) (struct gl_context *, struct radeon_state_atom *atom);
 };
 
 struct radeon_hw_state {
@@ -237,6 +244,8 @@ struct radeon_tex_obj {
 	GLuint SQ_TEX_RESOURCE5;
 	GLuint SQ_TEX_RESOURCE6;
 
+    GLuint SQ_TEX_RESOURCE7;
+
 	GLuint SQ_TEX_SAMPLER0;
 	GLuint SQ_TEX_SAMPLER1;
 	GLuint SQ_TEX_SAMPLER2;
@@ -307,7 +316,7 @@ struct radeon_dma {
          * flush must be called before non-active vertex allocations can be
          * performed.
          */
-        void (*flush) (GLcontext *);
+        void (*flush) (struct gl_context *);
 };
 
 /* radeon_swtcl.c
@@ -423,7 +432,7 @@ struct radeon_cmdbuf {
 };
 
 struct radeon_context {
-   GLcontext *glCtx;
+   struct gl_context *glCtx;
    radeonScreenPtr radeonScreen;	/* Screen private DRI data */
 
    /* Texture object bookkeeping
@@ -509,17 +518,17 @@ struct radeon_context {
 
    struct {
 	   void (*get_lock)(radeonContextPtr radeon);
-	   void (*update_viewport_offset)(GLcontext *ctx);
+	   void (*update_viewport_offset)(struct gl_context *ctx);
 	   void (*emit_cs_header)(struct radeon_cs *cs, radeonContextPtr rmesa);
-	   void (*swtcl_flush)(GLcontext *ctx, uint32_t offset);
+	   void (*swtcl_flush)(struct gl_context *ctx, uint32_t offset);
 	   void (*pre_emit_atoms)(radeonContextPtr rmesa);
 	   void (*pre_emit_state)(radeonContextPtr rmesa);
-	   void (*fallback)(GLcontext *ctx, GLuint bit, GLboolean mode);
-	   void (*free_context)(GLcontext *ctx);
+	   void (*fallback)(struct gl_context *ctx, GLuint bit, GLboolean mode);
+	   void (*free_context)(struct gl_context *ctx);
 	   void (*emit_query_finish)(radeonContextPtr radeon);
-	   void (*update_scissor)(GLcontext *ctx);
+	   void (*update_scissor)(struct gl_context *ctx);
 	   unsigned (*check_blit)(gl_format mesa_format);
-	   unsigned (*blit)(GLcontext *ctx,
+	   unsigned (*blit)(struct gl_context *ctx,
                         struct radeon_bo *src_bo,
                         intptr_t src_offset,
                         gl_format src_mesaformat,
@@ -539,6 +548,7 @@ struct radeon_context {
                         unsigned reg_width,
                         unsigned reg_height,
                         unsigned flip_y);
+	   unsigned (*is_format_renderable)(gl_format mesa_format);
    } vtbl;
 };
 
@@ -601,7 +611,7 @@ static INLINE uint32_t radeonPackFloat24(float f)
 
 GLboolean radeonInitContext(radeonContextPtr radeon,
 			    struct dd_function_table* functions,
-			    const __GLcontextModes * glVisual,
+			    const struct gl_config * glVisual,
 			    __DRIcontext * driContextPriv,
 			    void *sharedContextPrivate);
 
@@ -613,5 +623,6 @@ GLboolean radeonMakeCurrent(__DRIcontext * driContextPriv,
 			    __DRIdrawable * driDrawPriv,
 			    __DRIdrawable * driReadPriv);
 extern void radeonDestroyContext(__DRIcontext * driContextPriv);
+void radeon_prepare_render(radeonContextPtr radeon);
 
 #endif

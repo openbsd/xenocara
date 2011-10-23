@@ -33,17 +33,17 @@
 extern void intelCopyBuffer(const __DRIdrawable * dpriv,
                             const drm_clip_rect_t * rect);
 
-extern void intelClearWithBlit(GLcontext * ctx, GLbitfield mask);
+extern GLbitfield intelClearWithBlit(struct gl_context * ctx, GLbitfield mask);
 
 GLboolean
 intelEmitCopyBlit(struct intel_context *intel,
                               GLuint cpp,
                               GLshort src_pitch,
-                              dri_bo *src_buffer,
+                              drm_intel_bo *src_buffer,
                               GLuint src_offset,
 			      uint32_t src_tiling,
                               GLshort dst_pitch,
-                              dri_bo *dst_buffer,
+                              drm_intel_bo *dst_buffer,
                               GLuint dst_offset,
 			      uint32_t dst_tiling,
                               GLshort srcx, GLshort srcy,
@@ -57,7 +57,7 @@ intelEmitImmediateColorExpandBlit(struct intel_context *intel,
 				  GLubyte *src_bits, GLuint src_size,
 				  GLuint fg_color,
 				  GLshort dst_pitch,
-				  dri_bo *dst_buffer,
+				  drm_intel_bo *dst_buffer,
 				  GLuint dst_offset,
 				  uint32_t dst_tiling,
 				  GLshort x, GLshort y,
@@ -69,5 +69,7 @@ void intel_emit_linear_blit(struct intel_context *intel,
 			    drm_intel_bo *src_bo,
 			    unsigned int src_offset,
 			    unsigned int size);
+void intel_set_teximage_alpha_to_one(struct gl_context *ctx,
+				     struct intel_texture_image *intel_image);
 
 #endif

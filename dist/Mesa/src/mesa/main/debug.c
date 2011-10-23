@@ -91,7 +91,6 @@ _mesa_print_state( const char *msg, GLuint state )
 	   (state & _NEW_MODELVIEW)       ? "ctx->ModelView, " : "",
 	   (state & _NEW_PROJECTION)      ? "ctx->Projection, " : "",
 	   (state & _NEW_TEXTURE_MATRIX)  ? "ctx->TextureMatrix, " : "",
-	   (state & _NEW_COLOR_MATRIX)    ? "ctx->ColorMatrix, " : "",
 	   (state & _NEW_ACCUM)           ? "ctx->Accum, " : "",
 	   (state & _NEW_COLOR)           ? "ctx->Color, " : "",
 	   (state & _NEW_DEPTH)           ? "ctx->Depth, " : "",
@@ -105,6 +104,7 @@ _mesa_print_state( const char *msg, GLuint state )
 	   (state & _NEW_POLYGON)         ? "ctx->Polygon, " : "",
 	   (state & _NEW_POLYGONSTIPPLE)  ? "ctx->PolygonStipple, " : "",
 	   (state & _NEW_SCISSOR)         ? "ctx->Scissor, " : "",
+	   (state & _NEW_STENCIL)         ? "ctx->Stencil, " : "",
 	   (state & _NEW_TEXTURE)         ? "ctx->Texture, " : "",
 	   (state & _NEW_TRANSFORM)       ? "ctx->Transform, " : "",
 	   (state & _NEW_VIEWPORT)        ? "ctx->Viewport, " : "",
@@ -120,7 +120,7 @@ void
 _mesa_print_tri_caps( const char *name, GLuint flags )
 {
    _mesa_debug(NULL,
-	   "%s: (0x%x) %s%s%s%s%s%s%s%s%s%s%s%s%s%s%s\n",
+	   "%s: (0x%x) %s%s%s%s%s%s%s%s%s%s%s%s%s\n",
 	   name,
 	   flags,
 	   (flags & DD_FLATSHADE)           ? "flat-shade, " : "",
@@ -133,9 +133,7 @@ _mesa_print_tri_caps( const char *name, GLuint flags )
 	   (flags & DD_TRI_SMOOTH)          ? "tri-smooth, " : "",
 	   (flags & DD_LINE_SMOOTH)         ? "line-smooth, " : "",
 	   (flags & DD_LINE_STIPPLE)        ? "line-stipple, " : "",
-	   (flags & DD_LINE_WIDTH)          ? "line-wide, " : "",
 	   (flags & DD_POINT_SMOOTH)        ? "point-smooth, " : "",
-	   (flags & DD_POINT_SIZE)          ? "point-size, " : "",
 	   (flags & DD_POINT_ATTEN)         ? "point-atten, " : "",
 	   (flags & DD_TRI_CULL_FRONT_BACK) ? "cull-all, " : ""
       );
@@ -233,7 +231,7 @@ static void add_debug_flags( const char *debug )
 
 
 void 
-_mesa_init_debug( GLcontext *ctx )
+_mesa_init_debug( struct gl_context *ctx )
 {
    char *c;
 
@@ -314,7 +312,7 @@ write_texture_image(struct gl_texture_object *texObj,
                               buffer, texObj, img);
 
       /* make filename */
-      sprintf(s, "/tmp/tex%u.l%u.f%u.ppm", texObj->Name, level, face);
+      _mesa_snprintf(s, sizeof(s), "/tmp/tex%u.l%u.f%u.ppm", texObj->Name, level, face);
 
       printf("  Writing image level %u to %s\n", level, s);
       write_ppm(s, buffer, img->Width, img->Height, 4, 0, 1, 2, GL_FALSE);
@@ -356,7 +354,7 @@ write_renderbuffer_image(const struct gl_renderbuffer *rb)
                           format, type, &ctx->DefaultPacking, buffer);
 
    /* make filename */
-   sprintf(s, "/tmp/renderbuffer%u.ppm", rb->Name);
+   _mesa_snprintf(s, sizeof(s), "/tmp/renderbuffer%u.ppm", rb->Name);
 
    printf("  Writing renderbuffer image to %s\n", s);
    write_ppm(s, buffer, rb->Width, rb->Height, 4, 0, 1, 2, GL_TRUE);
@@ -578,7 +576,7 @@ _mesa_dump_stencil_buffer(const char *filename)
  * Quick and dirty function to "print" a texture to stdout.
  */
 void
-_mesa_print_texture(GLcontext *ctx, const struct gl_texture_image *img)
+_mesa_print_texture(struct gl_context *ctx, const struct gl_texture_image *img)
 {
 #if CHAN_TYPE != GL_UNSIGNED_BYTE
    _mesa_problem(NULL, "PrintTexture not supported");

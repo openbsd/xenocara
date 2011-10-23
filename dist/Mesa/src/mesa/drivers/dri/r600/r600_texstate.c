@@ -50,9 +50,11 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include "r700_fragprog.h"
 #include "r700_vertprog.h"
 
-void r600UpdateTextureState(GLcontext * ctx);
+#include "evergreen_tex.h"
 
-void r600UpdateTextureState(GLcontext * ctx)
+void r600UpdateTextureState(struct gl_context * ctx);
+
+void r600UpdateTextureState(struct gl_context * ctx)
 {
 	context_t *context = R700_CONTEXT(ctx);
 	R700_CHIP_CONTEXT *r700 = (R700_CHIP_CONTEXT*)(&context->hw);
@@ -605,17 +607,17 @@ static GLboolean r600GetTexFormat(struct gl_texture_object *tObj, gl_format mesa
 		}
 		break;
 	/* EXT_texture_sRGB */
-	case MESA_FORMAT_SRGBA8:
+	case MESA_FORMAT_SARGB8:
 		SETfield(t->SQ_TEX_RESOURCE1, FMT_8_8_8_8,
 			 SQ_TEX_RESOURCE_WORD1_0__DATA_FORMAT_shift, SQ_TEX_RESOURCE_WORD1_0__DATA_FORMAT_mask);
 
-		SETfield(t->SQ_TEX_RESOURCE4, SQ_SEL_W,
-			 SQ_TEX_RESOURCE_WORD4_0__DST_SEL_X_shift, SQ_TEX_RESOURCE_WORD4_0__DST_SEL_X_mask);
 		SETfield(t->SQ_TEX_RESOURCE4, SQ_SEL_Z,
-			 SQ_TEX_RESOURCE_WORD4_0__DST_SEL_Y_shift, SQ_TEX_RESOURCE_WORD4_0__DST_SEL_Y_mask);
+			 SQ_TEX_RESOURCE_WORD4_0__DST_SEL_X_shift, SQ_TEX_RESOURCE_WORD4_0__DST_SEL_X_mask);
 		SETfield(t->SQ_TEX_RESOURCE4, SQ_SEL_Y,
-			 SQ_TEX_RESOURCE_WORD4_0__DST_SEL_Z_shift, SQ_TEX_RESOURCE_WORD4_0__DST_SEL_Z_mask);
+			 SQ_TEX_RESOURCE_WORD4_0__DST_SEL_Y_shift, SQ_TEX_RESOURCE_WORD4_0__DST_SEL_Y_mask);
 		SETfield(t->SQ_TEX_RESOURCE4, SQ_SEL_X,
+			 SQ_TEX_RESOURCE_WORD4_0__DST_SEL_Z_shift, SQ_TEX_RESOURCE_WORD4_0__DST_SEL_Z_mask);
+		SETfield(t->SQ_TEX_RESOURCE4, SQ_SEL_W,
 			 SQ_TEX_RESOURCE_WORD4_0__DST_SEL_W_shift, SQ_TEX_RESOURCE_WORD4_0__DST_SEL_W_mask);
 		SETbit(t->SQ_TEX_RESOURCE4, SQ_TEX_RESOURCE_WORD4_0__FORCE_DEGAMMA_bit);
 		break;
@@ -705,7 +707,7 @@ void r600SetDepthTexMode(struct gl_texture_object *tObj)
  * \param rmesa Context pointer
  * \param t the r300 texture object
  */
-static GLboolean setup_hardware_state(GLcontext * ctx, struct gl_texture_object *texObj, int unit)
+static GLboolean setup_hardware_state(struct gl_context * ctx, struct gl_texture_object *texObj, int unit)
 {
 	context_t *rmesa = R700_CONTEXT(ctx);
 	radeonTexObj *t = radeon_tex_obj(texObj);
@@ -801,7 +803,7 @@ static GLboolean setup_hardware_state(GLcontext * ctx, struct gl_texture_object 
  *
  * Mostly this means populating the texture object's mipmap tree.
  */
-static GLboolean r600_validate_texture(GLcontext * ctx, struct gl_texture_object *texObj, int unit)
+static GLboolean r600_validate_texture(struct gl_context * ctx, struct gl_texture_object *texObj, int unit)
 {
 	radeonTexObj *t = radeon_tex_obj(texObj);
 
@@ -820,7 +822,7 @@ static GLboolean r600_validate_texture(GLcontext * ctx, struct gl_texture_object
 /**
  * Ensure all enabled and complete textures are uploaded along with any buffers being used.
  */
-GLboolean r600ValidateBuffers(GLcontext * ctx)
+GLboolean r600ValidateBuffers(struct gl_context * ctx)
 {
 	context_t *rmesa = R700_CONTEXT(ctx);
 	struct radeon_renderbuffer *rrb;
@@ -878,6 +880,18 @@ GLboolean r600ValidateBuffers(GLcontext * ctx)
 						  RADEON_GEM_DOMAIN_GTT, 0);
 	}
 
+	pbo = (struct radeon_bo *)r700GetActiveFpShaderConstBo(ctx);
+	if (pbo) {
+		radeon_cs_space_add_persistent_bo(rmesa->radeon.cmdbuf.cs, pbo,
+						  RADEON_GEM_DOMAIN_GTT, 0);
+	}
+
+	pbo = (struct radeon_bo *)r700GetActiveVpShaderConstBo(ctx);
+	if (pbo) {
+		radeon_cs_space_add_persistent_bo(rmesa->radeon.cmdbuf.cs, pbo,
+						  RADEON_GEM_DOMAIN_GTT, 0);
+	}	
+
 	ret = radeon_cs_space_check_with_bo(rmesa->radeon.cmdbuf.cs, first_elem(&rmesa->radeon.dma.reserved)->bo, RADEON_GEM_DOMAIN_GTT, 0);
 	if (ret)
 		return GL_FALSE;
@@ -896,6 +910,12 @@ void r600SetTexOffset(__DRIcontext * pDRICtx, GLint texname,
 
 	if (!tObj)
 		return;
+
+    if(rmesa->radeon.radeonScreen->chip_family >= CHIP_FAMILY_CEDAR)
+    {
+        evergreenSetTexOffset(pDRICtx, texname, offset, depth, pitch);
+        return;
+    }    
 
 	t->image_override = GL_TRUE;
 
@@ -981,6 +1001,7 @@ void r600SetTexBuffer2(__DRIcontext *pDRICtx, GLint target, GLint glx_texture_fo
 	radeonTexObjPtr t;
 	uint32_t pitch_val;
 	uint32_t internalFormat, type, format;
+        gl_format texFormat;
 
 	type = GL_BGRA;
 	format = GL_UNSIGNED_BYTE;
@@ -988,6 +1009,12 @@ void r600SetTexBuffer2(__DRIcontext *pDRICtx, GLint target, GLint glx_texture_fo
 
 	radeon = pDRICtx->driverPrivate;
 	rmesa = pDRICtx->driverPrivate;
+
+    if(rmesa->radeon.radeonScreen->chip_family >= CHIP_FAMILY_CEDAR)
+    {
+        evergreenSetTexBuffer(pDRICtx, target, glx_texture_format, dPriv);
+        return;
+    }   
 
 	rfb = dPriv->driverPrivate;
         texUnit = &radeon->glCtx->Texture.Unit[radeon->glCtx->Texture.CurrentUnit];
@@ -1020,10 +1047,6 @@ void r600SetTexBuffer2(__DRIcontext *pDRICtx, GLint target, GLint glx_texture_fo
 	radeon_miptree_unreference(&t->mt);
 	radeon_miptree_unreference(&rImage->mt);
 
-	_mesa_init_teximage_fields(radeon->glCtx, target, texImage,
-				   rb->base.Width, rb->base.Height, 1, 0, rb->cpp);
-	texImage->RowStride = rb->pitch / rb->cpp;
-
 	rImage->bo = rb->bo;
 	radeon_bo_ref(rImage->bo);
 	t->bo = rb->bo;
@@ -1034,6 +1057,7 @@ void r600SetTexBuffer2(__DRIcontext *pDRICtx, GLint target, GLint glx_texture_fo
 	switch (rb->cpp) {
 	case 4:
 		if (glx_texture_format == __DRI_TEXTURE_FORMAT_RGB) {
+			texFormat = MESA_FORMAT_RGB888;
 			SETfield(t->SQ_TEX_RESOURCE1, FMT_8_8_8_8,
 				 SQ_TEX_RESOURCE_WORD1_0__DATA_FORMAT_shift, SQ_TEX_RESOURCE_WORD1_0__DATA_FORMAT_mask);
 
@@ -1046,6 +1070,7 @@ void r600SetTexBuffer2(__DRIcontext *pDRICtx, GLint target, GLint glx_texture_fo
 			SETfield(t->SQ_TEX_RESOURCE4, SQ_SEL_1,
 				 SQ_TEX_RESOURCE_WORD4_0__DST_SEL_W_shift, SQ_TEX_RESOURCE_WORD4_0__DST_SEL_W_mask);
 		} else {
+			texFormat = MESA_FORMAT_ARGB8888;
 			SETfield(t->SQ_TEX_RESOURCE1, FMT_8_8_8_8,
 				 SQ_TEX_RESOURCE_WORD1_0__DATA_FORMAT_shift, SQ_TEX_RESOURCE_WORD1_0__DATA_FORMAT_mask);
 
@@ -1063,6 +1088,7 @@ void r600SetTexBuffer2(__DRIcontext *pDRICtx, GLint target, GLint glx_texture_fo
 	case 3:
 	default:
 		// FMT_8_8_8 ???
+		texFormat = MESA_FORMAT_RGB888;
 		SETfield(t->SQ_TEX_RESOURCE1, FMT_8_8_8_8,
 			 SQ_TEX_RESOURCE_WORD1_0__DATA_FORMAT_shift, SQ_TEX_RESOURCE_WORD1_0__DATA_FORMAT_mask);
 
@@ -1077,6 +1103,7 @@ void r600SetTexBuffer2(__DRIcontext *pDRICtx, GLint target, GLint glx_texture_fo
 		pitch_val /= 4;
 		break;
 	case 2:
+		texFormat = MESA_FORMAT_RGB565;
 		SETfield(t->SQ_TEX_RESOURCE1, FMT_5_6_5,
 			 SQ_TEX_RESOURCE_WORD1_0__DATA_FORMAT_shift, SQ_TEX_RESOURCE_WORD1_0__DATA_FORMAT_mask);
 
@@ -1091,6 +1118,11 @@ void r600SetTexBuffer2(__DRIcontext *pDRICtx, GLint target, GLint glx_texture_fo
 		pitch_val /= 2;
 		break;
 	}
+
+	_mesa_init_teximage_fields(radeon->glCtx, target, texImage,
+				   rb->base.Width, rb->base.Height, 1, 0,
+				   rb->cpp, texFormat);
+	texImage->RowStride = rb->pitch / rb->cpp;
 
 	pitch_val = (pitch_val + R700_TEXEL_PITCH_ALIGNMENT_MASK)
 		& ~R700_TEXEL_PITCH_ALIGNMENT_MASK;

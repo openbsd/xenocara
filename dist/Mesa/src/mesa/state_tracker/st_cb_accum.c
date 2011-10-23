@@ -38,14 +38,14 @@
 #include "st_context.h"
 #include "st_cb_accum.h"
 #include "st_cb_fbo.h"
-#include "st_public.h"
 #include "st_texture.h"
-#include "st_inlines.h"
 #include "pipe/p_context.h"
 #include "pipe/p_defines.h"
 #include "util/u_inlines.h"
 #include "util/u_tile.h"
 
+
+#if FEATURE_accum
 
 /**
  * For hardware that supports deep color buffers, we could accelerate
@@ -55,7 +55,7 @@
 
 
 void
-st_clear_accum_buffer(GLcontext *ctx, struct gl_renderbuffer *rb)
+st_clear_accum_buffer(struct gl_context *ctx, struct gl_renderbuffer *rb)
 {
    struct st_renderbuffer *acc_strb = st_renderbuffer(rb);
    const GLint xpos = ctx->DrawBuffer->_Xmin;
@@ -96,7 +96,7 @@ st_clear_accum_buffer(GLcontext *ctx, struct gl_renderbuffer *rb)
 
 /** For ADD/MULT */
 static void
-accum_mad(GLcontext *ctx, GLfloat scale, GLfloat bias,
+accum_mad(struct gl_context *ctx, GLfloat scale, GLfloat bias,
           GLint xpos, GLint ypos, GLint width, GLint height,
           struct st_renderbuffer *acc_strb)
 {
@@ -129,7 +129,6 @@ accum_accum(struct st_context *st, GLfloat value,
             struct st_renderbuffer *color_strb)
 {
    struct pipe_context *pipe = st->pipe;
-   struct pipe_screen *screen = pipe->screen;
    struct pipe_transfer *color_trans;
    size_t stride = acc_strb->stride;
    GLubyte *data = acc_strb->data;
@@ -138,14 +137,15 @@ accum_accum(struct st_context *st, GLfloat value,
    if (ST_DEBUG & DEBUG_FALLBACK)
       debug_printf("%s: fallback processing\n", __FUNCTION__);
 
-   color_trans = st_cond_flush_get_tex_transfer(st, color_strb->texture,
-						0, 0, 0,
-						PIPE_TRANSFER_READ, xpos, ypos,
-						width, height);
+   color_trans = pipe_get_transfer(st->pipe,
+                                   color_strb->texture,
+                                   0, 0,
+                                   PIPE_TRANSFER_READ, xpos, ypos,
+                                   width, height);
 
    buf = (GLfloat *) malloc(width * height * 4 * sizeof(GLfloat));
 
-   pipe_get_tile_rgba(color_trans, 0, 0, width, height, buf);
+   pipe_get_tile_rgba(pipe, color_trans, 0, 0, width, height, buf);
 
    switch (acc_strb->format) {
    case PIPE_FORMAT_R16G16B16A16_SNORM:
@@ -166,7 +166,7 @@ accum_accum(struct st_context *st, GLfloat value,
    }
 
    free(buf);
-   screen->tex_transfer_destroy(color_trans);
+   pipe->transfer_destroy(pipe, color_trans);
 }
 
 
@@ -177,7 +177,6 @@ accum_load(struct st_context *st, GLfloat value,
            struct st_renderbuffer *color_strb)
 {
    struct pipe_context *pipe = st->pipe;
-   struct pipe_screen *screen = pipe->screen;
    struct pipe_transfer *color_trans;
    size_t stride = acc_strb->stride;
    GLubyte *data = acc_strb->data;
@@ -187,14 +186,14 @@ accum_load(struct st_context *st, GLfloat value,
    if (ST_DEBUG & DEBUG_FALLBACK)
       debug_printf("%s: fallback processing\n", __FUNCTION__);
 
-   color_trans = st_cond_flush_get_tex_transfer(st, color_strb->texture,
-						0, 0, 0,
-						PIPE_TRANSFER_READ, xpos, ypos,
-						width, height);
+   color_trans = pipe_get_transfer(st->pipe, color_strb->texture,
+                                   0, 0,
+                                   PIPE_TRANSFER_READ, xpos, ypos,
+                                   width, height);
 
    buf = (GLfloat *) malloc(width * height * 4 * sizeof(GLfloat));
 
-   pipe_get_tile_rgba(color_trans, 0, 0, width, height, buf);
+   pipe_get_tile_rgba(pipe, color_trans, 0, 0, width, height, buf);
 
    switch (acc_strb->format) {
    case PIPE_FORMAT_R16G16B16A16_SNORM:
@@ -215,18 +214,17 @@ accum_load(struct st_context *st, GLfloat value,
    }
 
    free(buf);
-   screen->tex_transfer_destroy(color_trans);
+   pipe->transfer_destroy(pipe, color_trans);
 }
 
 
 static void
-accum_return(GLcontext *ctx, GLfloat value,
+accum_return(struct gl_context *ctx, GLfloat value,
              GLint xpos, GLint ypos, GLint width, GLint height,
              struct st_renderbuffer *acc_strb,
              struct st_renderbuffer *color_strb)
 {
-   struct pipe_context *pipe = ctx->st->pipe;
-   struct pipe_screen *screen = pipe->screen;
+   struct pipe_context *pipe = st_context(ctx)->pipe;
    const GLubyte *colormask = ctx->Color.ColorMask[0];
    enum pipe_transfer_usage usage;
    struct pipe_transfer *color_trans;
@@ -243,15 +241,15 @@ accum_return(GLcontext *ctx, GLfloat value,
       usage = PIPE_TRANSFER_READ_WRITE;
    else
       usage = PIPE_TRANSFER_WRITE;
-   
-   color_trans = st_cond_flush_get_tex_transfer(st_context(ctx),
-						color_strb->texture, 0, 0, 0,
-						usage,
-						xpos, ypos,
-						width, height);
+
+   color_trans = pipe_get_transfer(st_context(ctx)->pipe,
+                                   color_strb->texture, 0, 0,
+                                   usage,
+                                   xpos, ypos,
+                                   width, height);
 
    if (usage & PIPE_TRANSFER_READ)
-      pipe_get_tile_rgba(color_trans, 0, 0, width, height, buf);
+      pipe_get_tile_rgba(pipe, color_trans, 0, 0, width, height, buf);
 
    switch (acc_strb->format) {
    case PIPE_FORMAT_R16G16B16A16_SNORM:
@@ -280,17 +278,17 @@ accum_return(GLcontext *ctx, GLfloat value,
       _mesa_problem(NULL, "unexpected format in st_clear_accum_buffer()");
    }
 
-   pipe_put_tile_rgba(color_trans, 0, 0, width, height, buf);
+   pipe_put_tile_rgba(pipe, color_trans, 0, 0, width, height, buf);
 
    free(buf);
-   screen->tex_transfer_destroy(color_trans);
+   pipe->transfer_destroy(pipe, color_trans);
 }
 
 
 static void
-st_Accum(GLcontext *ctx, GLenum op, GLfloat value)
+st_Accum(struct gl_context *ctx, GLenum op, GLfloat value)
 {
-   struct st_context *st = ctx->st;
+   struct st_context *st = st_context(ctx);
    struct st_renderbuffer *acc_strb
      = st_renderbuffer(ctx->DrawBuffer->Attachment[BUFFER_ACCUM].Renderbuffer);
    struct st_renderbuffer *color_strb
@@ -304,9 +302,6 @@ st_Accum(GLcontext *ctx, GLenum op, GLfloat value)
    if(!acc_strb->data)
       return;
    
-   /* make sure color bufs aren't cached */
-   st_flush( st, PIPE_FLUSH_RENDER_CACHE, NULL );
-
    switch (op) {
    case GL_ADD:
       if (value != 0.0F) {
@@ -340,3 +335,5 @@ void st_init_accum_functions(struct dd_function_table *functions)
 {
    functions->Accum = st_Accum;
 }
+
+#endif /* FEATURE_accum */

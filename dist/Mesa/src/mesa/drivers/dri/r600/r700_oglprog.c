@@ -29,7 +29,7 @@
 #include "main/glheader.h"
 #include "main/imports.h"
 
-#include "shader/program.h"
+#include "program/program.h"
 #include "tnl/tnl.h"
 
 #include "r600_context.h"
@@ -40,7 +40,7 @@
 #include "r700_vertprog.h"
 
 
-static void freeVertProgCache(GLcontext *ctx, struct r700_vertex_program_cont *cache)
+static void freeVertProgCache(struct gl_context *ctx, struct r700_vertex_program_cont *cache)
 {
 	struct r700_vertex_program *tmp, *vp = cache->progs;
 
@@ -48,6 +48,12 @@ static void freeVertProgCache(GLcontext *ctx, struct r700_vertex_program_cont *c
 		tmp = vp->next;
 		/* Release DMA region */
 		r600DeleteShader(ctx, vp->shaderbo);
+
+        if(NULL != vp->constbo0)
+        {
+		    r600DeleteShader(ctx, vp->constbo0);
+        }
+
 		/* Clean up */
 		Clean_Up_Assembler(&(vp->r700AsmCode));
 		Clean_Up_Shader(&(vp->r700Shader));
@@ -58,7 +64,7 @@ static void freeVertProgCache(GLcontext *ctx, struct r700_vertex_program_cont *c
 	}
 }
 
-static struct gl_program *r700NewProgram(GLcontext * ctx, 
+static struct gl_program *r700NewProgram(struct gl_context * ctx, 
                                          GLenum target,
 					                     GLuint id)
 {
@@ -79,6 +85,7 @@ static struct gl_program *r700NewProgram(GLcontext * ctx,
                                              &vpc->mesa_program,
 					                         target, 
                                              id);
+        
 	    break;
     case GL_FRAGMENT_PROGRAM_NV:
     case GL_FRAGMENT_PROGRAM_ARB:
@@ -92,6 +99,8 @@ static struct gl_program *r700NewProgram(GLcontext * ctx,
 
         fp->shaderbo   = NULL;
 
+		fp->constbo0   = NULL;
+
 	    break;
     default:
 	    _mesa_problem(ctx, "Bad target in r700NewProgram");
@@ -100,7 +109,7 @@ static struct gl_program *r700NewProgram(GLcontext * ctx,
 	return pProgram;
 }
 
-static void r700DeleteProgram(GLcontext * ctx, struct gl_program *prog)
+static void r700DeleteProgram(struct gl_context * ctx, struct gl_program *prog)
 {
     struct r700_vertex_program_cont *vpc = (struct r700_vertex_program_cont *)prog;
     struct r700_fragment_program * fp;
@@ -121,6 +130,11 @@ static void r700DeleteProgram(GLcontext * ctx, struct gl_program *prog)
 
         r600DeleteShader(ctx, fp->shaderbo);
 
+        if(NULL != fp->constbo0)
+        {
+		    r600DeleteShader(ctx, fp->constbo0);
+        }
+
         /* Clean up */
         Clean_Up_Assembler(&(fp->r700AsmCode));
         Clean_Up_Shader(&(fp->r700Shader));
@@ -133,7 +147,7 @@ static void r700DeleteProgram(GLcontext * ctx, struct gl_program *prog)
 }
 
 static GLboolean
-r700ProgramStringNotify(GLcontext * ctx, GLenum target, struct gl_program *prog)
+r700ProgramStringNotify(struct gl_context * ctx, GLenum target, struct gl_program *prog)
 {
 	struct r700_vertex_program_cont *vpc = (struct r700_vertex_program_cont *)prog;
 	struct r700_fragment_program * fp = (struct r700_fragment_program*)prog;
@@ -145,6 +159,13 @@ r700ProgramStringNotify(GLcontext * ctx, GLenum target, struct gl_program *prog)
 		break;
 	case GL_FRAGMENT_PROGRAM_ARB:
 		r600DeleteShader(ctx, fp->shaderbo);
+
+        if(NULL != fp->constbo0)
+        {
+		    r600DeleteShader(ctx, fp->constbo0);
+		    fp->constbo0   = NULL;
+        }
+
 		Clean_Up_Assembler(&(fp->r700AsmCode));
 		Clean_Up_Shader(&(fp->r700Shader));
 		fp->translated = GL_FALSE;
@@ -157,7 +178,7 @@ r700ProgramStringNotify(GLcontext * ctx, GLenum target, struct gl_program *prog)
 	return GL_TRUE;
 }
 
-static GLboolean r700IsProgramNative(GLcontext * ctx, GLenum target, struct gl_program *prog)
+static GLboolean r700IsProgramNative(struct gl_context * ctx, GLenum target, struct gl_program *prog)
 {
 
 	return GL_TRUE;

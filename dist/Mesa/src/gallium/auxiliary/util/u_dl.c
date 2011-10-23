@@ -38,6 +38,7 @@
 #endif
 
 #include "u_dl.h"
+#include "u_pointer.h"
 
 
 struct util_dl_library *
@@ -58,7 +59,7 @@ util_dl_get_proc_address(struct util_dl_library *library,
                          const char *procname)
 {
 #if defined(PIPE_OS_UNIX)
-   return (util_dl_proc)dlsym((void *)library, procname);
+   return (util_dl_proc) pointer_to_func(dlsym((void *)library, procname));
 #elif defined(PIPE_OS_WINDOWS)
    return (util_dl_proc)GetProcAddress((HMODULE)library, procname);
 #else
@@ -76,5 +77,18 @@ util_dl_close(struct util_dl_library *library)
    FreeLibrary((HMODULE)library);
 #else
    (void)library;
+#endif
+}
+
+
+const char *
+util_dl_error(void)
+{
+#if defined(PIPE_OS_UNIX)
+   return dlerror();
+#elif defined(PIPE_OS_WINDOWS)
+   return "unknown error";
+#else
+   return "unknown error";
 #endif
 }

@@ -28,13 +28,13 @@
 
 #include "glheader.h"
 #include "imports.h"
-#include "shader/program.h"
-#include "shader/prog_parameter.h"
-#include "shader/prog_cache.h"
-#include "shader/prog_instruction.h"
-#include "shader/prog_print.h"
-#include "shader/prog_statevars.h"
-#include "shader/programopt.h"
+#include "program/program.h"
+#include "program/prog_parameter.h"
+#include "program/prog_cache.h"
+#include "program/prog_instruction.h"
+#include "program/prog_print.h"
+#include "program/prog_statevars.h"
+#include "program/programopt.h"
 #include "texenvprogram.h"
 
 
@@ -62,7 +62,7 @@ struct texenvprog_cache_item
 };
 
 static GLboolean
-texenv_doing_secondary_color(GLcontext *ctx)
+texenv_doing_secondary_color(struct gl_context *ctx)
 {
    if (ctx->Light.Enabled &&
        (ctx->Light.Model.ColorControl == GL_SEPARATE_SPECULAR_COLOR))
@@ -98,6 +98,7 @@ struct state_key {
    GLuint fog_enabled:1;
    GLuint fog_mode:2;          /**< FOG_x */
    GLuint inputs_available:12;
+   GLuint num_draw_buffers:4;
 
    /* NOTE: This array of structs must be last! (see "keySize" below) */
    struct {
@@ -306,12 +307,13 @@ static GLuint translate_tex_src_bit( GLbitfield bit )
  * has access to.  The bitmask is later reduced to just those which
  * are actually referenced.
  */
-static GLbitfield get_fp_input_mask( GLcontext *ctx )
+static GLbitfield get_fp_input_mask( struct gl_context *ctx )
 {
    /* _NEW_PROGRAM */
-   const GLboolean vertexShader = (ctx->Shader.CurrentProgram &&
-				   ctx->Shader.CurrentProgram->LinkStatus &&
-                                   ctx->Shader.CurrentProgram->VertexProgram);
+   const GLboolean vertexShader =
+      (ctx->Shader.CurrentVertexProgram &&
+       ctx->Shader.CurrentVertexProgram->LinkStatus &&
+       ctx->Shader.CurrentVertexProgram->VertexProgram);
    const GLboolean vertexProgram = ctx->VertexProgram._Enabled;
    GLbitfield fp_inputs = 0x0;
 
@@ -376,7 +378,7 @@ static GLbitfield get_fp_input_mask( GLcontext *ctx )
        * validation (see additional comments in state.c).
        */
       if (vertexShader)
-         vprog = ctx->Shader.CurrentProgram->VertexProgram;
+         vprog = ctx->Shader.CurrentVertexProgram->VertexProgram;
       else
          vprog = ctx->VertexProgram.Current;
 
@@ -406,7 +408,7 @@ static GLbitfield get_fp_input_mask( GLcontext *ctx )
  * Examine current texture environment state and generate a unique
  * key to identify it.
  */
-static GLuint make_state_key( GLcontext *ctx,  struct state_key *key )
+static GLuint make_state_key( struct gl_context *ctx,  struct state_key *key )
 {
    GLuint i, j;
    GLbitfield inputs_referenced = FRAG_BIT_COL0;
@@ -484,6 +486,9 @@ static GLuint make_state_key( GLcontext *ctx,  struct state_key *key )
       key->fog_mode = translate_fog_mode(ctx->Fog.Mode);
       inputs_referenced |= FRAG_BIT_FOGC; /* maybe */
    }
+
+   /* _NEW_BUFFERS */
+   key->num_draw_buffers = ctx->DrawBuffer->_NumColorDrawBuffers;
 
    key->inputs_available = (inputs_available & inputs_referenced);
 
@@ -659,7 +664,7 @@ static void reserve_temp( struct texenv_fragment_program *p, struct ureg r )
 }
 
 
-static void release_temps(GLcontext *ctx, struct texenv_fragment_program *p )
+static void release_temps(struct gl_context *ctx, struct texenv_fragment_program *p )
 {
    GLuint max_temp = ctx->Const.FragmentProgram.MaxTemps;
 
@@ -903,7 +908,7 @@ static struct ureg get_zero( struct texenv_fragment_program *p )
 
 static void program_error( struct texenv_fragment_program *p, const char *msg )
 {
-   _mesa_problem(NULL, msg);
+   _mesa_problem(NULL, "%s", msg);
    p->error = 1;
 }
 
@@ -1199,11 +1204,14 @@ emit_texenv(struct texenv_fragment_program *p, GLuint unit)
    else
       alpha_saturate = GL_FALSE;
 
-   /* If this is the very last calculation, emit direct to output reg:
+   /* If this is the very last calculation (and various other conditions
+    * are met), emit directly to the color output register.  Otherwise,
+    * emit to a temporary register.
     */
    if (key->separate_specular ||
        unit != p->last_tex_stage ||
        alpha_shift ||
+       key->num_draw_buffers != 1 ||
        rgb_shift)
       dest = get_temp( p );
    else
@@ -1408,7 +1416,7 @@ load_texunit_bumpmap( struct texenv_fragment_program *p, GLuint unit )
  * current texture env/combine mode.
  */
 static void
-create_new_program(GLcontext *ctx, struct state_key *key,
+create_new_program(struct gl_context *ctx, struct state_key *key,
                    struct gl_fragment_program *program)
 {
    struct prog_instruction instBuffer[MAX_INSTRUCTIONS];
@@ -1438,10 +1446,10 @@ create_new_program(GLcontext *ctx, struct state_key *key,
    p.program->Base.Parameters = _mesa_new_parameter_list();
    p.program->Base.InputsRead = 0x0;
 
-   if (ctx->DrawBuffer->_NumColorDrawBuffers == 1)
+   if (key->num_draw_buffers == 1)
       p.program->Base.OutputsWritten = 1 << FRAG_RESULT_COLOR;
    else {
-      for (i = 0; i < ctx->DrawBuffer->_NumColorDrawBuffers; i++)
+      for (i = 0; i < key->num_draw_buffers; i++)
 	 p.program->Base.OutputsWritten |= (1 << (FRAG_RESULT_DATA0 + i));
    }
 
@@ -1458,7 +1466,7 @@ create_new_program(GLcontext *ctx, struct state_key *key,
    p.last_tex_stage = 0;
    release_temps(ctx, &p);
 
-   if (key->enabled_units) {
+   if (key->enabled_units && key->num_draw_buffers) {
       GLboolean needbumpstage = GL_FALSE;
 
       /* Zeroth pass - bump map textures first */
@@ -1493,8 +1501,8 @@ create_new_program(GLcontext *ctx, struct state_key *key,
 
    cf = get_source( &p, SRC_PREVIOUS, 0 );
 
-   for (i = 0; i < ctx->DrawBuffer->_NumColorDrawBuffers; i++) {
-      if (ctx->DrawBuffer->_NumColorDrawBuffers == 1)
+   for (i = 0; i < key->num_draw_buffers; i++) {
+      if (key->num_draw_buffers == 1)
 	 out = make_ureg( PROGRAM_OUTPUT, FRAG_RESULT_COLOR );
       else {
 	 out = make_ureg( PROGRAM_OUTPUT, FRAG_RESULT_DATA0 + i );
@@ -1519,7 +1527,7 @@ create_new_program(GLcontext *ctx, struct state_key *key,
    emit_arith( &p, OPCODE_END, undef, WRITEMASK_XYZW, 0, undef, undef, undef);
 
    if (key->fog_enabled) {
-      /* Pull fog mode from GLcontext, the value in the state key is
+      /* Pull fog mode from struct gl_context, the value in the state key is
        * a reduced value and not what is expected in FogOption
        */
       p.program->FogOption = ctx->Fog.Mode;
@@ -1551,7 +1559,7 @@ create_new_program(GLcontext *ctx, struct state_key *key,
    _mesa_copy_instructions(p.program->Base.Instructions, instBuffer,
                            p.program->Base.NumInstructions);
 
-   if (p.program->FogOption) {
+   if (key->num_draw_buffers && p.program->FogOption) {
       _mesa_append_fog_code(ctx, p.program);
       p.program->FogOption = GL_NONE;
    }
@@ -1583,7 +1591,7 @@ create_new_program(GLcontext *ctx, struct state_key *key,
  * fixed-function texture, fog and color-sum operations.
  */
 struct gl_fragment_program *
-_mesa_get_fixed_func_fragment_program(GLcontext *ctx)
+_mesa_get_fixed_func_fragment_program(struct gl_context *ctx)
 {
    struct gl_fragment_program *prog;
    struct state_key key;

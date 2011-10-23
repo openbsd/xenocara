@@ -27,7 +27,6 @@
 
 #include "i830_context.h"
 #include "main/imports.h"
-#include "texmem.h"
 #include "tnl/tnl.h"
 #include "tnl/t_vertex.h"
 #include "tnl/t_context.h"
@@ -49,21 +48,21 @@ i830InitDriverFunctions(struct dd_function_table *functions)
 extern const struct tnl_pipeline_stage *intel_pipeline[];
 
 GLboolean
-i830CreateContext(const __GLcontextModes * mesaVis,
+i830CreateContext(const struct gl_config * mesaVis,
                   __DRIcontext * driContextPriv,
                   void *sharedContextPrivate)
 {
    struct dd_function_table functions;
    struct i830_context *i830 = CALLOC_STRUCT(i830_context);
    struct intel_context *intel = &i830->intel;
-   GLcontext *ctx = &intel->ctx;
+   struct gl_context *ctx = &intel->ctx;
    if (!i830)
       return GL_FALSE;
 
    i830InitVtbl(i830);
    i830InitDriverFunctions(&functions);
 
-   if (!intelInitContext(intel, mesaVis, driContextPriv,
+   if (!intelInitContext(intel, __DRI_API_OPENGL, mesaVis, driContextPriv,
                          sharedContextPrivate, &functions)) {
       FREE(i830);
       return GL_FALSE;

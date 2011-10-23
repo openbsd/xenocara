@@ -37,6 +37,29 @@
 #include "utils.h"
 
 
+/**
+ * Print message to \c stderr if the \c LIBGL_DEBUG environment variable
+ * is set. 
+ * 
+ * Is called from the drivers.
+ * 
+ * \param f \c printf like format string.
+ */
+void
+__driUtilMessage(const char *f, ...)
+{
+    va_list args;
+
+    if (getenv("LIBGL_DEBUG")) {
+        fprintf(stderr, "libGL: ");
+        va_start(args, f);
+        vfprintf(stderr, f, args);
+        va_end(args);
+        fprintf(stderr, "\n");
+    }
+}
+
+
 unsigned
 driParseDebugString( const char * debug, 
 		     const struct dri_debug_control * control  )
@@ -117,6 +140,7 @@ driGetRendererString( char * buffer, const char * hardware_name,
 
 
 
+#define need_GL_ARB_copy_buffer
 #define need_GL_ARB_draw_buffers
 #define need_GL_ARB_multisample
 #define need_GL_ARB_texture_compression
@@ -141,6 +165,7 @@ driGetRendererString( char * buffer, const char * hardware_name,
 #include "main/remap_helper.h"
 
 static const struct dri_extension all_mesa_extensions[] = {
+   { "GL_ARB_copy_buffer",           GL_ARB_copy_buffer_functions },
    { "GL_ARB_draw_buffers",          GL_ARB_draw_buffers_functions },
    { "GL_ARB_multisample",           GL_ARB_multisample_functions },
    { "GL_ARB_texture_compression",   GL_ARB_texture_compression_functions },
@@ -173,7 +198,7 @@ static const struct dri_extension all_mesa_extensions[] = {
  * we need to add entry-points (via \c driInitSingleExtension) for those
  * new functions here.
  */
-void driInitExtensions( GLcontext * ctx,
+void driInitExtensions( struct gl_context * ctx,
 			const struct dri_extension * extensions_to_enable,
 			GLboolean enable_imaging )
 {
@@ -214,7 +239,7 @@ void driInitExtensions( GLcontext * ctx,
  * 
  * \sa driInitExtensions, _mesa_enable_extension, _mesa_map_function_array
  */
-void driInitSingleExtension( GLcontext * ctx,
+void driInitSingleExtension( struct gl_context * ctx,
 			     const struct dri_extension * ext )
 {
     if ( ext->functions != NULL ) {
@@ -230,9 +255,6 @@ void driInitSingleExtension( GLcontext * ctx,
 /**
  * Utility function used by drivers to test the verions of other components.
  *
- * If one of the version requirements is not met, a message is logged using
- * \c __driUtilMessage.
- *
  * \param driver_name  Name of the driver.  Used in error messages.
  * \param driActual    Actual DRI version supplied __driCreateNewScreen.
  * \param driExpected  Minimum DRI version required by the driver.
@@ -244,7 +266,7 @@ void driInitSingleExtension( GLcontext * ctx,
  * \returns \c GL_TRUE if all version requirements are met.  Otherwise,
  *          \c GL_FALSE is returned.
  * 
- * \sa __driCreateNewScreen, driCheckDriDdxDrmVersions2, __driUtilMessage
+ * \sa __driCreateNewScreen, driCheckDriDdxDrmVersions2
  *
  * \todo
  * Now that the old \c driCheckDriDdxDrmVersions function is gone, this
@@ -315,7 +337,7 @@ driCheckDriDdxDrmVersions2(const char * driver_name,
 				drmActual, drmExpected);
 }
 
-GLboolean driClipRectToFramebuffer( const GLframebuffer *buffer,
+GLboolean driClipRectToFramebuffer( const struct gl_framebuffer *buffer,
 				    GLint *x, GLint *y,
 				    GLsizei *width, GLsizei *height )
 {
@@ -349,14 +371,14 @@ GLboolean driClipRectToFramebuffer( const GLframebuffer *buffer,
 }
 
 /**
- * Creates a set of \c __GLcontextModes that a driver will expose.
+ * Creates a set of \c struct gl_config that a driver will expose.
  * 
- * A set of \c __GLcontextModes will be created based on the supplied
+ * A set of \c struct gl_config will be created based on the supplied
  * parameters.  The number of modes processed will be 2 *
  * \c num_depth_stencil_bits * \c num_db_modes.
  * 
  * For the most part, data is just copied from \c depth_bits, \c stencil_bits,
- * \c db_modes, and \c visType into each \c __GLcontextModes element.
+ * \c db_modes, and \c visType into each \c struct gl_config element.
  * However, the meanings of \c fb_format and \c fb_type require further
  * explanation.  The \c fb_format specifies which color components are in
  * each pixel and what the default order is.  For example, \c GL_RGB specifies
@@ -369,7 +391,7 @@ GLboolean driClipRectToFramebuffer( const GLframebuffer *buffer,
  * 
  * One sublte issue is the combination of \c GL_RGB  or \c GL_BGR and either
  * of the \c GL_UNSIGNED_INT_8_8_8_8 modes.  The resulting mask values in the
- * \c __GLcontextModes structure is \b identical to the \c GL_RGBA or
+ * \c struct gl_config structure is \b identical to the \c GL_RGBA or
  * \c GL_BGRA case, except the \c alphaMask is zero.  This means that, as
  * far as this routine is concerned, \c GL_RGB with \c GL_UNSIGNED_INT_8_8_8_8
  * still uses 32-bits.
@@ -377,7 +399,7 @@ GLboolean driClipRectToFramebuffer( const GLframebuffer *buffer,
  * If in doubt, look at the tables used in the function.
  * 
  * \param ptr_to_modes  Pointer to a pointer to a linked list of
- *                      \c __GLcontextModes.  Upon completion, a pointer to
+ *                      \c struct gl_config.  Upon completion, a pointer to
  *                      the next element to be process will be stored here.
  *                      If the function fails and returns \c GL_FALSE, this
  *                      value will be unmodified, but some elements in the
@@ -483,7 +505,7 @@ driCreateConfigs(GLenum fb_format, GLenum fb_type,
    const uint32_t * masks;
    int index;
    __DRIconfig **configs, **c;
-   __GLcontextModes *modes;
+   struct gl_config *modes;
    unsigned i, j, k, h;
    unsigned num_modes;
    unsigned num_accum_bits = (enable_accum) ? 2 : 1;
@@ -598,9 +620,6 @@ driCreateConfigs(GLenum fb_format, GLenum fb_type,
 		    modes->transparentBlue = GLX_DONT_CARE;
 		    modes->transparentAlpha = GLX_DONT_CARE;
 		    modes->transparentIndex = GLX_DONT_CARE;
-		    modes->visualType = GLX_DONT_CARE;
-		    modes->renderType = GLX_RGBA_BIT;
-		    modes->drawableType = GLX_WINDOW_BIT;
 		    modes->rgbMode = GL_TRUE;
 
 		    if ( db_modes[i] == GLX_NONE ) {
@@ -666,7 +685,7 @@ __DRIconfig **driConcatConfigs(__DRIconfig **a,
 }
 
 #define __ATTRIB(attrib, field) \
-    { attrib, offsetof(__GLcontextModes, field) }
+    { attrib, offsetof(struct gl_config, field) }
 
 static const struct { unsigned int attrib, offset; } attribMap[] = {
     __ATTRIB(__DRI_ATTRIB_BUFFER_SIZE,			rgbBits),
@@ -719,12 +738,18 @@ static const struct { unsigned int attrib, offset; } attribMap[] = {
 
 #define ARRAY_SIZE(a) (sizeof (a) / sizeof ((a)[0]))
 
+
+/**
+ * Return the value of a configuration attribute.  The attribute is
+ * indicated by the index.
+ */
 static int
 driGetConfigAttribIndex(const __DRIconfig *config,
 			unsigned int index, unsigned int *value)
 {
     switch (attribMap[index].attrib) {
     case __DRI_ATTRIB_RENDER_TYPE:
+        /* no support for color index mode */
 	*value = __DRI_ATTRIB_RGBA_BIT;
 	break;
     case __DRI_ATTRIB_CONFIG_CAVEAT:
@@ -736,13 +761,16 @@ driGetConfigAttribIndex(const __DRIconfig *config,
 	    *value = 0;
 	break;
     case __DRI_ATTRIB_SWAP_METHOD:
+        /* XXX no return value??? */
 	break;
 
     case __DRI_ATTRIB_FLOAT_MODE:
+        /* this field is not int-sized */
         *value = config->modes.floatMode;
         break;
 
     default:
+        /* any other int-sized field */
 	*value = *(unsigned int *)
 	    ((char *) &config->modes + attribMap[index].offset);
 	
@@ -752,6 +780,13 @@ driGetConfigAttribIndex(const __DRIconfig *config,
     return GL_TRUE;
 }
 
+
+/**
+ * Get the value of a configuration attribute.
+ * \param attrib  the attribute (one of the _DRI_ATTRIB_x tokens)
+ * \param value  returns the attribute's value
+ * \return 1 for success, 0 for failure
+ */
 int
 driGetConfigAttrib(const __DRIconfig *config,
 		   unsigned int attrib, unsigned int *value)
@@ -765,6 +800,14 @@ driGetConfigAttrib(const __DRIconfig *config,
     return GL_FALSE;
 }
 
+
+/**
+ * Get a configuration attribute name and value, given an index.
+ * \param index  which field of the __DRIconfig to query
+ * \param attrib  returns the attribute name (one of the _DRI_ATTRIB_x tokens)
+ * \param value  returns the attribute's value
+ * \return 1 for success, 0 for failure
+ */
 int
 driIndexConfigAttrib(const __DRIconfig *config, int index,
 		     unsigned int *attrib, unsigned int *value)

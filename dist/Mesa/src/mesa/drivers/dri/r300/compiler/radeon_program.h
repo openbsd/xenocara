@@ -39,7 +39,7 @@
 struct radeon_compiler;
 
 struct rc_src_register {
-	unsigned int File:3;
+	unsigned int File:4;
 
 	/** Negative values may be used for relative addressing. */
 	signed int Index:(RC_REGISTER_INDEX_BITS+1);
@@ -62,6 +62,11 @@ struct rc_dst_register {
 	unsigned int RelAddr:1;
 
 	unsigned int WriteMask:4;
+};
+
+struct rc_presub_instruction {
+	rc_presubtract_op Opcode;
+	struct rc_src_register SrcReg[2];
 };
 
 /**
@@ -108,6 +113,10 @@ struct rc_sub_instruction {
 	/** True if tex instruction should do shadow comparison */
 	unsigned int TexShadow:1;
 	/*@}*/
+
+	/** This holds information about the presubtract operation used by
+	 * this instruction. */
+	struct rc_presub_instruction PreSub;
 };
 
 typedef enum {
@@ -150,54 +159,8 @@ struct rc_program {
 	struct rc_constant_list Constants;
 };
 
-enum {
-	OPCODE_REPL_ALPHA = MAX_RC_OPCODE /**< used in paired instructions */
-};
-
-
-static inline rc_swizzle get_swz(unsigned int swz, rc_swizzle idx)
-{
-	if (idx & 0x4)
-		return idx;
-	return GET_SWZ(swz, idx);
-}
-
-static inline unsigned int combine_swizzles4(unsigned int src,
-		rc_swizzle swz_x, rc_swizzle swz_y, rc_swizzle swz_z, rc_swizzle swz_w)
-{
-	unsigned int ret = 0;
-
-	ret |= get_swz(src, swz_x);
-	ret |= get_swz(src, swz_y) << 3;
-	ret |= get_swz(src, swz_z) << 6;
-	ret |= get_swz(src, swz_w) << 9;
-
-	return ret;
-}
-
-static inline unsigned int combine_swizzles(unsigned int src, unsigned int swz)
-{
-	unsigned int ret = 0;
-
-	ret |= get_swz(src, GET_SWZ(swz, RC_SWIZZLE_X));
-	ret |= get_swz(src, GET_SWZ(swz, RC_SWIZZLE_Y)) << 3;
-	ret |= get_swz(src, GET_SWZ(swz, RC_SWIZZLE_Z)) << 6;
-	ret |= get_swz(src, GET_SWZ(swz, RC_SWIZZLE_W)) << 9;
-
-	return ret;
-}
-
-struct rc_src_register lmul_swizzle(unsigned int swizzle, struct rc_src_register srcreg);
-
-static inline void reset_srcreg(struct rc_src_register* reg)
-{
-	memset(reg, 0, sizeof(struct rc_src_register));
-	reg->Swizzle = RC_SWIZZLE_XYZW;
-}
-
-
 /**
- * A transformation that can be passed to \ref radeonLocalTransform.
+ * A transformation that can be passed to \ref rc_local_transform.
  *
  * The function will be called once for each instruction.
  * It has to either emit the appropriate transformed code for the instruction
@@ -214,10 +177,20 @@ struct radeon_program_transformation {
 	void *userData;
 };
 
-void radeonLocalTransform(
+void rc_local_transform(
 	struct radeon_compiler *c,
-	int num_transformations,
-	struct radeon_program_transformation* transformations);
+	void *user);
+
+void rc_get_used_temporaries(
+	struct radeon_compiler * c,
+	unsigned char * used,
+	unsigned int used_length);
+
+int rc_find_free_temporary_list(
+	struct radeon_compiler * c,
+	unsigned char * used,
+	unsigned int used_length,
+	unsigned int mask);
 
 unsigned int rc_find_free_temporary(struct radeon_compiler * c);
 
@@ -230,4 +203,5 @@ unsigned int rc_recompute_ips(struct radeon_compiler * c);
 
 void rc_print_program(const struct rc_program *prog);
 
+rc_swizzle rc_mask_to_swizzle(unsigned int mask);
 #endif

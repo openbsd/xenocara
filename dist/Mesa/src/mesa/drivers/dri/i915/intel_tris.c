@@ -55,8 +55,8 @@
 #include "i830_context.h"
 #include "i830_reg.h"
 
-static void intelRenderPrimitive(GLcontext * ctx, GLenum prim);
-static void intelRasterPrimitive(GLcontext * ctx, GLenum rprim,
+static void intelRenderPrimitive(struct gl_context * ctx, GLenum prim);
+static void intelRasterPrimitive(struct gl_context * ctx, GLenum rprim,
                                  GLuint hwprim);
 
 static void
@@ -179,8 +179,8 @@ uint32_t *intel_get_prim_space(struct intel_context *intel, unsigned int count)
       /* Start a new VB */
       if (intel->prim.vb == NULL)
 	 intel->prim.vb = malloc(INTEL_VB_SIZE);
-      intel->prim.vb_bo = dri_bo_alloc(intel->bufmgr, "vb",
-				       INTEL_VB_SIZE, 4);
+      intel->prim.vb_bo = drm_intel_bo_alloc(intel->bufmgr, "vb",
+					     INTEL_VB_SIZE, 4);
       intel->prim.start_offset = 0;
       intel->prim.current_offset = 0;
    }
@@ -197,8 +197,8 @@ uint32_t *intel_get_prim_space(struct intel_context *intel, unsigned int count)
 /** Dispatches the accumulated primitive to the batchbuffer. */
 void intel_flush_prim(struct intel_context *intel)
 {
-   dri_bo *aper_array[2];
-   dri_bo *vb_bo;
+   drm_intel_bo *aper_array[2];
+   drm_intel_bo *vb_bo;
    unsigned int offset, count;
    BATCH_LOCALS;
 
@@ -212,7 +212,7 @@ void intel_flush_prim(struct intel_context *intel)
     * flush triggered by emit_state doesn't loop back to flush_prim again.
     */
    vb_bo = intel->prim.vb_bo;
-   dri_bo_reference(vb_bo);
+   drm_intel_bo_reference(vb_bo);
    count = intel->prim.count;
    intel->prim.count = 0;
    offset = intel->prim.start_offset;
@@ -296,7 +296,7 @@ void intel_flush_prim(struct intel_context *intel)
 
    intel->no_batch_wrap = GL_FALSE;
 
-   dri_bo_unreference(vb_bo);
+   drm_intel_bo_unreference(vb_bo);
 }
 
 /**
@@ -315,9 +315,9 @@ void intel_finish_vb(struct intel_context *intel)
    if (intel->prim.vb_bo == NULL)
       return;
 
-   dri_bo_subdata(intel->prim.vb_bo, 0, intel->prim.start_offset,
-		  intel->prim.vb);
-   dri_bo_unreference(intel->prim.vb_bo);
+   drm_intel_bo_subdata(intel->prim.vb_bo, 0, intel->prim.start_offset,
+			intel->prim.vb);
+   drm_intel_bo_unreference(intel->prim.vb_bo);
    intel->prim.vb_bo = NULL;
 }
 
@@ -427,7 +427,7 @@ intel_draw_point(struct intel_context *intel, intelVertexPtr v0)
 static void
 intel_atten_point(struct intel_context *intel, intelVertexPtr v0)
 {
-   GLcontext *ctx = &intel->ctx;
+   struct gl_context *ctx = &intel->ctx;
    GLfloat psz[4], col[4], restore_psz, restore_alpha;
 
    _tnl_get_attr(ctx, v0, _TNL_ATTRIB_POINTSIZE, psz);
@@ -488,9 +488,9 @@ intel_wpos_triangle(struct intel_context *intel,
    __memcpy(v1_wpos, v1, size);
    __memcpy(v2_wpos, v2, size);
 
-   v0_wpos[1] = -v0_wpos[1] + intel->driDrawable->h;
-   v1_wpos[1] = -v1_wpos[1] + intel->driDrawable->h;
-   v2_wpos[1] = -v2_wpos[1] + intel->driDrawable->h;
+   v0_wpos[1] = -v0_wpos[1] + intel->ctx.DrawBuffer->Height;
+   v1_wpos[1] = -v1_wpos[1] + intel->ctx.DrawBuffer->Height;
+   v2_wpos[1] = -v2_wpos[1] + intel->ctx.DrawBuffer->Height;
 
 
    intel_draw_triangle(intel, v0, v1, v2);
@@ -509,8 +509,8 @@ intel_wpos_line(struct intel_context *intel,
    __memcpy(v0_wpos, v0, size);
    __memcpy(v1_wpos, v1, size);
 
-   v0_wpos[1] = -v0_wpos[1] + intel->driDrawable->h;
-   v1_wpos[1] = -v1_wpos[1] + intel->driDrawable->h;
+   v0_wpos[1] = -v0_wpos[1] + intel->ctx.DrawBuffer->Height;
+   v1_wpos[1] = -v1_wpos[1] + intel->ctx.DrawBuffer->Height;
 
    intel_draw_line(intel, v0, v1);
 }
@@ -524,7 +524,7 @@ intel_wpos_point(struct intel_context *intel, intelVertexPtr v0)
    GLfloat *v0_wpos = (GLfloat *)((char *)v0 + offset);
 
    __memcpy(v0_wpos, v0, size);
-   v0_wpos[1] = -v0_wpos[1] + intel->driDrawable->h;
+   v0_wpos[1] = -v0_wpos[1] + intel->ctx.DrawBuffer->Height;
 
    intel_draw_point(intel, v0);
 }
@@ -784,7 +784,7 @@ static void
 intel_fallback_tri(struct intel_context *intel,
                    intelVertex * v0, intelVertex * v1, intelVertex * v2)
 {
-   GLcontext *ctx = &intel->ctx;
+   struct gl_context *ctx = &intel->ctx;
    SWvertex v[3];
 
    if (0)
@@ -805,7 +805,7 @@ static void
 intel_fallback_line(struct intel_context *intel,
                     intelVertex * v0, intelVertex * v1)
 {
-   GLcontext *ctx = &intel->ctx;
+   struct gl_context *ctx = &intel->ctx;
    SWvertex v[2];
 
    if (0)
@@ -824,7 +824,7 @@ static void
 intel_fallback_point(struct intel_context *intel,
 		     intelVertex * v0)
 {
-   GLcontext *ctx = &intel->ctx;
+   struct gl_context *ctx = &intel->ctx;
    SWvertex v[1];
 
    if (0)
@@ -877,7 +877,7 @@ intel_fallback_point(struct intel_context *intel,
 
 
 static void
-intelRenderClippedPoly(GLcontext * ctx, const GLuint * elts, GLuint n)
+intelRenderClippedPoly(struct gl_context * ctx, const GLuint * elts, GLuint n)
 {
    struct intel_context *intel = intel_context(ctx);
    TNLcontext *tnl = TNL_CONTEXT(ctx);
@@ -901,7 +901,7 @@ intelRenderClippedPoly(GLcontext * ctx, const GLuint * elts, GLuint n)
 }
 
 static void
-intelRenderClippedLine(GLcontext * ctx, GLuint ii, GLuint jj)
+intelRenderClippedLine(struct gl_context * ctx, GLuint ii, GLuint jj)
 {
    TNLcontext *tnl = TNL_CONTEXT(ctx);
 
@@ -909,7 +909,7 @@ intelRenderClippedLine(GLcontext * ctx, GLuint ii, GLuint jj)
 }
 
 static void
-intelFastRenderClippedPoly(GLcontext * ctx, const GLuint * elts, GLuint n)
+intelFastRenderClippedPoly(struct gl_context * ctx, const GLuint * elts, GLuint n)
 {
    struct intel_context *intel = intel_context(ctx);
    const GLuint vertsize = intel->vertex_size;
@@ -936,7 +936,7 @@ intelFastRenderClippedPoly(GLcontext * ctx, const GLuint * elts, GLuint n)
 #define ANY_RASTER_FLAGS (DD_TRI_LIGHT_TWOSIDE | DD_TRI_OFFSET | DD_TRI_UNFILLED)
 
 void
-intelChooseRenderState(GLcontext * ctx)
+intelChooseRenderState(struct gl_context * ctx)
 {
    TNLcontext *tnl = TNL_CONTEXT(ctx);
    struct intel_context *intel = intel_context(ctx);
@@ -1049,7 +1049,7 @@ static const GLenum reduced_prim[GL_POLYGON + 1] = {
 
 
 static void
-intelRunPipeline(GLcontext * ctx)
+intelRunPipeline(struct gl_context * ctx)
 {
    struct intel_context *intel = intel_context(ctx);
 
@@ -1079,7 +1079,7 @@ intelRunPipeline(GLcontext * ctx)
 }
 
 static void
-intelRenderStart(GLcontext * ctx)
+intelRenderStart(struct gl_context * ctx)
 {
    struct intel_context *intel = intel_context(ctx);
 
@@ -1089,7 +1089,7 @@ intelRenderStart(GLcontext * ctx)
 }
 
 static void
-intelRenderFinish(GLcontext * ctx)
+intelRenderFinish(struct gl_context * ctx)
 {
    struct intel_context *intel = intel_context(ctx);
 
@@ -1106,7 +1106,7 @@ intelRenderFinish(GLcontext * ctx)
   * primitive.
   */
 static void
-intelRasterPrimitive(GLcontext * ctx, GLenum rprim, GLuint hwprim)
+intelRasterPrimitive(struct gl_context * ctx, GLenum rprim, GLuint hwprim)
 {
    struct intel_context *intel = intel_context(ctx);
 
@@ -1129,7 +1129,7 @@ intelRasterPrimitive(GLcontext * ctx, GLenum rprim, GLuint hwprim)
  /* 
   */
 static void
-intelRenderPrimitive(GLcontext * ctx, GLenum prim)
+intelRenderPrimitive(struct gl_context * ctx, GLenum prim)
 {
    struct intel_context *intel = intel_context(ctx);
 
@@ -1201,14 +1201,14 @@ getFallbackString(GLuint bit)
 void
 intelFallback(struct intel_context *intel, GLbitfield bit, GLboolean mode)
 {
-   GLcontext *ctx = &intel->ctx;
+   struct gl_context *ctx = &intel->ctx;
    TNLcontext *tnl = TNL_CONTEXT(ctx);
    const GLbitfield oldfallback = intel->Fallback;
 
    if (mode) {
       intel->Fallback |= bit;
       if (oldfallback == 0) {
-         intelFlush(ctx);
+         intel_flush(ctx);
          if (INTEL_DEBUG & DEBUG_FALLBACKS)
             fprintf(stderr, "ENTER FALLBACK %x: %s\n",
                     bit, getFallbackString(bit));
@@ -1253,7 +1253,7 @@ union fi
 
 
 void
-intelInitTriFuncs(GLcontext * ctx)
+intelInitTriFuncs(struct gl_context * ctx)
 {
    TNLcontext *tnl = TNL_CONTEXT(ctx);
    static int firsttime = 1;

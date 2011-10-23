@@ -12,6 +12,7 @@
 #define PCI_CHIP_RV380_3150		0x3150
 #define PCI_CHIP_RV380_3152		0x3152
 #define PCI_CHIP_RV380_3154		0x3154
+#define PCI_CHIP_RV380_3155		0x3155
 #define PCI_CHIP_RV380_3E50		0x3E50
 #define PCI_CHIP_RV380_3E54		0x3E54
 #define PCI_CHIP_RS100_4136		0x4136
@@ -399,6 +400,97 @@
 #define PCI_CHIP_RV740_94B5             0x94B5
 #define PCI_CHIP_RV740_94B9             0x94B9
 
+#define PCI_CHIP_CEDAR_68E0             0x68E0
+#define PCI_CHIP_CEDAR_68E1             0x68E1
+#define PCI_CHIP_CEDAR_68E4             0x68E4
+#define PCI_CHIP_CEDAR_68E5             0x68E5
+#define PCI_CHIP_CEDAR_68E8             0x68E8
+#define PCI_CHIP_CEDAR_68E9             0x68E9
+#define PCI_CHIP_CEDAR_68F1             0x68F1
+#define PCI_CHIP_CEDAR_68F2             0x68F2
+#define PCI_CHIP_CEDAR_68F8             0x68F8
+#define PCI_CHIP_CEDAR_68F9             0x68F9
+#define PCI_CHIP_CEDAR_68FE             0x68FE
+
+#define PCI_CHIP_REDWOOD_68C0           0x68C0
+#define PCI_CHIP_REDWOOD_68C1           0x68C1
+#define PCI_CHIP_REDWOOD_68C8           0x68C8
+#define PCI_CHIP_REDWOOD_68C9           0x68C9
+#define PCI_CHIP_REDWOOD_68D8           0x68D8
+#define PCI_CHIP_REDWOOD_68D9           0x68D9
+#define PCI_CHIP_REDWOOD_68DA           0x68DA
+#define PCI_CHIP_REDWOOD_68DE           0x68DE
+
+#define PCI_CHIP_JUNIPER_68A0           0x68A0
+#define PCI_CHIP_JUNIPER_68A1           0x68A1
+#define PCI_CHIP_JUNIPER_68A8           0x68A8
+#define PCI_CHIP_JUNIPER_68A9           0x68A9
+#define PCI_CHIP_JUNIPER_68B0           0x68B0
+#define PCI_CHIP_JUNIPER_68B8           0x68B8
+#define PCI_CHIP_JUNIPER_68B9           0x68B9
+#define PCI_CHIP_JUNIPER_68BA           0x68BA
+#define PCI_CHIP_JUNIPER_68BE           0x68BE
+#define PCI_CHIP_JUNIPER_68BF           0x68BF
+
+#define PCI_CHIP_CYPRESS_6880           0x6880
+#define PCI_CHIP_CYPRESS_6888           0x6888
+#define PCI_CHIP_CYPRESS_6889           0x6889
+#define PCI_CHIP_CYPRESS_688A           0x688A
+#define PCI_CHIP_CYPRESS_6898           0x6898
+#define PCI_CHIP_CYPRESS_6899           0x6899
+#define PCI_CHIP_CYPRESS_689B           0x689B
+#define PCI_CHIP_CYPRESS_689E           0x689E
+
+#define PCI_CHIP_HEMLOCK_689C           0x689C
+#define PCI_CHIP_HEMLOCK_689D           0x689D
+
+#define PCI_CHIP_PALM_9802              0x9802
+#define PCI_CHIP_PALM_9803              0x9803
+#define PCI_CHIP_PALM_9804              0x9804
+#define PCI_CHIP_PALM_9805              0x9805
+#define PCI_CHIP_PALM_9806              0x9806
+#define PCI_CHIP_PALM_9807              0x9807
+
+#define PCI_CHIP_BARTS_6720             0x6720
+#define PCI_CHIP_BARTS_6721             0x6721
+#define PCI_CHIP_BARTS_6722             0x6722
+#define PCI_CHIP_BARTS_6723             0x6723
+#define PCI_CHIP_BARTS_6724             0x6724
+#define PCI_CHIP_BARTS_6725             0x6725
+#define PCI_CHIP_BARTS_6726             0x6726
+#define PCI_CHIP_BARTS_6727             0x6727
+#define PCI_CHIP_BARTS_6728             0x6728
+#define PCI_CHIP_BARTS_6729             0x6729
+#define PCI_CHIP_BARTS_6738             0x6738
+#define PCI_CHIP_BARTS_6739             0x6739
+#define PCI_CHIP_BARTS_673E             0x673E
+
+#define PCI_CHIP_TURKS_6740             0x6740
+#define PCI_CHIP_TURKS_6741             0x6741
+#define PCI_CHIP_TURKS_6742             0x6742
+#define PCI_CHIP_TURKS_6743             0x6743
+#define PCI_CHIP_TURKS_6744             0x6744
+#define PCI_CHIP_TURKS_6745             0x6745
+#define PCI_CHIP_TURKS_6746             0x6746
+#define PCI_CHIP_TURKS_6747             0x6747
+#define PCI_CHIP_TURKS_6748             0x6748
+#define PCI_CHIP_TURKS_6749             0x6749
+#define PCI_CHIP_TURKS_6750             0x6750
+#define PCI_CHIP_TURKS_6758             0x6758
+#define PCI_CHIP_TURKS_6759             0x6759
+
+#define PCI_CHIP_CAICOS_6760            0x6760
+#define PCI_CHIP_CAICOS_6761            0x6761
+#define PCI_CHIP_CAICOS_6762            0x6762
+#define PCI_CHIP_CAICOS_6763            0x6763
+#define PCI_CHIP_CAICOS_6764            0x6764
+#define PCI_CHIP_CAICOS_6765            0x6765
+#define PCI_CHIP_CAICOS_6766            0x6766
+#define PCI_CHIP_CAICOS_6767            0x6767
+#define PCI_CHIP_CAICOS_6768            0x6768
+#define PCI_CHIP_CAICOS_6770            0x6770
+#define PCI_CHIP_CAICOS_6779            0x6779
+
 enum {
    CHIP_FAMILY_R100,
    CHIP_FAMILY_RV100,
@@ -413,9 +505,9 @@ enum {
    CHIP_FAMILY_R350,
    CHIP_FAMILY_RV350,
    CHIP_FAMILY_RV380,
+   CHIP_FAMILY_RS400,
    CHIP_FAMILY_R420,
    CHIP_FAMILY_RV410,
-   CHIP_FAMILY_RS400,
    CHIP_FAMILY_RS600,
    CHIP_FAMILY_RS690,
    CHIP_FAMILY_RS740,
@@ -437,6 +529,15 @@ enum {
    CHIP_FAMILY_RV730,
    CHIP_FAMILY_RV710,
    CHIP_FAMILY_RV740,
+   CHIP_FAMILY_CEDAR,
+   CHIP_FAMILY_REDWOOD,
+   CHIP_FAMILY_JUNIPER,
+   CHIP_FAMILY_CYPRESS,
+   CHIP_FAMILY_HEMLOCK,
+   CHIP_FAMILY_PALM,
+   CHIP_FAMILY_BARTS,
+   CHIP_FAMILY_TURKS,
+   CHIP_FAMILY_CAICOS,
    CHIP_FAMILY_LAST
 };
 

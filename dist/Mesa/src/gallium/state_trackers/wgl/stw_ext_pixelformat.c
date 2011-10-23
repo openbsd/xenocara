@@ -43,6 +43,7 @@
 
 #include "pipe/p_compiler.h"
 #include "util/u_memory.h"
+#include "stw_device.h"
 #include "stw_pixelformat.h"
 
 
@@ -227,12 +228,29 @@ stw_query_attrib(
       break;
 
    case WGL_SAMPLE_BUFFERS_ARB:
-      *pvalue = pfi->numSampleBuffers;
+      *pvalue = 1;
       break;
 
    case WGL_SAMPLES_ARB:
-      *pvalue = pfi->numSamples;
+      *pvalue = pfi->stvis.samples;
       break;
+
+
+   /* WGL_ARB_pbuffer */
+
+   case WGL_MAX_PBUFFER_WIDTH_ARB:
+   case WGL_MAX_PBUFFER_HEIGHT_ARB:
+      *pvalue = stw_dev->max_2d_length;
+      break;
+
+   case WGL_MAX_PBUFFER_PIXELS_ARB:
+      *pvalue = stw_dev->max_2d_length * stw_dev->max_2d_length;
+      break;
+
+   case WGL_DRAW_TO_PBUFFER_ARB:
+      *pvalue = 1;
+      break;
+
 
    default:
       return FALSE;

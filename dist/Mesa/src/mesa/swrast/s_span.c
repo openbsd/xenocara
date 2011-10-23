@@ -33,7 +33,6 @@
 
 #include "main/glheader.h"
 #include "main/colormac.h"
-#include "main/context.h"
 #include "main/macros.h"
 #include "main/imports.h"
 #include "main/image.h"
@@ -58,7 +57,7 @@
  * and glBitmap.
  */
 void
-_swrast_span_default_attribs(GLcontext *ctx, SWspan *span)
+_swrast_span_default_attribs(struct gl_context *ctx, SWspan *span)
 {
    GLchan r, g, b, a;
    /* Z*/
@@ -164,7 +163,7 @@ _swrast_span_default_attribs(GLcontext *ctx, SWspan *span)
  * should have computed attrStart/Step values for FRAG_ATTRIB_WPOS[3]!
  */
 static INLINE void
-interpolate_active_attribs(GLcontext *ctx, SWspan *span, GLbitfield attrMask)
+interpolate_active_attribs(struct gl_context *ctx, SWspan *span, GLbitfield attrMask)
 {
    const SWcontext *swrast = SWRAST_CONTEXT(ctx);
 
@@ -211,7 +210,7 @@ interpolate_active_attribs(GLcontext *ctx, SWspan *span, GLbitfield attrMask)
  * color array.
  */
 static INLINE void
-interpolate_int_colors(GLcontext *ctx, SWspan *span)
+interpolate_int_colors(struct gl_context *ctx, SWspan *span)
 {
    const GLuint n = span->end;
    GLuint i;
@@ -371,7 +370,7 @@ interpolate_float_colors(SWspan *span)
  * Fill in the span.zArray array from the span->z, zStep values.
  */
 void
-_swrast_span_interpolate_z( const GLcontext *ctx, SWspan *span )
+_swrast_span_interpolate_z( const struct gl_context *ctx, SWspan *span )
 {
    const GLuint n = span->end;
    GLuint i;
@@ -461,7 +460,7 @@ _swrast_compute_lambda(GLfloat dsdx, GLfloat dsdy, GLfloat dtdx, GLfloat dtdy,
  * texels with (s/q, t/q, r/q).
  */
 static void
-interpolate_texcoords(GLcontext *ctx, SWspan *span)
+interpolate_texcoords(struct gl_context *ctx, SWspan *span)
 {
    const GLuint maxUnit
       = (ctx->Texture._EnabledCoordUnits > 1) ? ctx->Const.MaxTextureUnits : 1;
@@ -602,7 +601,7 @@ interpolate_texcoords(GLcontext *ctx, SWspan *span)
  * Fill in the arrays->attribs[FRAG_ATTRIB_WPOS] array.
  */
 static INLINE void
-interpolate_wpos(GLcontext *ctx, SWspan *span)
+interpolate_wpos(struct gl_context *ctx, SWspan *span)
 {
    GLfloat (*wpos)[4] = span->array->attribs[FRAG_ATTRIB_WPOS];
    GLuint i;
@@ -636,7 +635,7 @@ interpolate_wpos(GLcontext *ctx, SWspan *span)
  * Apply the current polygon stipple pattern to a span of pixels.
  */
 static INLINE void
-stipple_polygon_span(GLcontext *ctx, SWspan *span)
+stipple_polygon_span(struct gl_context *ctx, SWspan *span)
 {
    GLubyte *mask = span->array->mask;
 
@@ -681,7 +680,7 @@ stipple_polygon_span(GLcontext *ctx, SWspan *span)
  *           GL_FALSE  nothing visible
  */
 static INLINE GLuint
-clip_span( GLcontext *ctx, SWspan *span )
+clip_span( struct gl_context *ctx, SWspan *span )
 {
    const GLint xmin = ctx->DrawBuffer->_Xmin;
    const GLint xmax = ctx->DrawBuffer->_Xmax;
@@ -808,7 +807,7 @@ clip_span( GLcontext *ctx, SWspan *span )
  * Result is float color array (FRAG_ATTRIB_COL0).
  */
 static INLINE void
-add_specular(GLcontext *ctx, SWspan *span)
+add_specular(struct gl_context *ctx, SWspan *span)
 {
    const SWcontext *swrast = SWRAST_CONTEXT(ctx);
    const GLubyte *mask = span->array->mask;
@@ -952,7 +951,7 @@ convert_color_type(SWspan *span, GLenum newType, GLuint output)
  * Apply fragment shader, fragment program or normal texturing to span.
  */
 static INLINE void
-shade_texture_span(GLcontext *ctx, SWspan *span)
+shade_texture_span(struct gl_context *ctx, SWspan *span)
 {
    GLbitfield inputsRead;
 
@@ -971,6 +970,10 @@ shade_texture_span(GLcontext *ctx, SWspan *span)
       if (span->primitive == GL_BITMAP && span->array->ChanType != GL_FLOAT) {
          convert_color_type(span, GL_FLOAT, 0);
       }
+      else {
+         span->array->rgba = (void *) span->array->attribs[FRAG_ATTRIB_COL0];
+      }
+
       if (span->primitive != GL_POINT ||
 	  (span->interpMask & SPAN_RGBA) ||
 	  ctx->Point.PointSprite) {
@@ -1026,7 +1029,7 @@ shade_texture_span(GLcontext *ctx, SWspan *span)
  * to their original values before returning.
  */
 void
-_swrast_write_rgba_span( GLcontext *ctx, SWspan *span)
+_swrast_write_rgba_span( struct gl_context *ctx, SWspan *span)
 {
    const SWcontext *swrast = SWRAST_CONTEXT(ctx);
    const GLuint *colorMask = (GLuint *) ctx->Color.ColorMask;
@@ -1222,8 +1225,21 @@ _swrast_write_rgba_span( GLcontext *ctx, SWspan *span)
             GLchan rgbaSave[MAX_WIDTH][4];
             const GLuint fragOutput = multiFragOutputs ? buf : 0;
 
+            /* set span->array->rgba to colors for render buffer's datatype */
             if (rb->DataType != span->array->ChanType || fragOutput > 0) {
                convert_color_type(span, rb->DataType, fragOutput);
+            }
+            else {
+               if (rb->DataType == GL_UNSIGNED_BYTE) {
+                  span->array->rgba = span->array->rgba8;
+               }
+               else if (rb->DataType == GL_UNSIGNED_SHORT) {
+                  span->array->rgba = (void *) span->array->rgba16;
+               }
+               else {
+                  span->array->rgba = (void *)
+                     span->array->attribs[FRAG_ATTRIB_COL0];
+               }
             }
 
             if (!multiFragOutputs && numBuffers > 1) {
@@ -1232,7 +1248,8 @@ _swrast_write_rgba_span( GLcontext *ctx, SWspan *span)
                       4 * span->end * sizeof(GLchan));
             }
 
-            ASSERT(rb->_BaseFormat == GL_RGBA || rb->_BaseFormat == GL_RGB);
+            ASSERT(rb->_BaseFormat == GL_RGBA || rb->_BaseFormat == GL_RGB ||
+		   rb->_BaseFormat == GL_ALPHA);
 
             if (ctx->Color._LogicOpEnabled) {
                _swrast_logicop_rgba_span(ctx, rb, span);
@@ -1287,7 +1304,7 @@ end:
  * \param rgba  the returned colors
  */
 void
-_swrast_read_rgba_span( GLcontext *ctx, struct gl_renderbuffer *rb,
+_swrast_read_rgba_span( struct gl_context *ctx, struct gl_renderbuffer *rb,
                         GLuint n, GLint x, GLint y, GLenum dstType,
                         GLvoid *rgba)
 {
@@ -1330,7 +1347,11 @@ _swrast_read_rgba_span( GLcontext *ctx, struct gl_renderbuffer *rb,
 
       ASSERT(rb);
       ASSERT(rb->GetRow);
-      ASSERT(rb->_BaseFormat == GL_RGB || rb->_BaseFormat == GL_RGBA);
+      ASSERT(rb->_BaseFormat == GL_RGBA ||
+	     rb->_BaseFormat == GL_RGB ||
+	     rb->_BaseFormat == GL_RG ||
+	     rb->_BaseFormat == GL_RED ||
+	     rb->_BaseFormat == GL_ALPHA);
 
       if (rb->DataType == dstType) {
          rb->GetRow(ctx, rb, length, x + skip, y,
@@ -1355,7 +1376,7 @@ _swrast_read_rgba_span( GLcontext *ctx, struct gl_renderbuffer *rb,
  *                  values array.
  */
 void
-_swrast_get_values(GLcontext *ctx, struct gl_renderbuffer *rb,
+_swrast_get_values(struct gl_context *ctx, struct gl_renderbuffer *rb,
                    GLuint count, const GLint x[], const GLint y[],
                    void *values, GLuint valueSize)
 {
@@ -1391,7 +1412,7 @@ _swrast_get_values(GLcontext *ctx, struct gl_renderbuffer *rb,
  * \param valueSize  size of each value (pixel) in bytes
  */
 void
-_swrast_put_row(GLcontext *ctx, struct gl_renderbuffer *rb,
+_swrast_put_row(struct gl_context *ctx, struct gl_renderbuffer *rb,
                 GLuint count, GLint x, GLint y,
                 const GLvoid *values, GLuint valueSize)
 {
@@ -1426,7 +1447,7 @@ _swrast_put_row(GLcontext *ctx, struct gl_renderbuffer *rb,
  * \param valueSize  size of each value (pixel) in bytes
  */
 void
-_swrast_get_row(GLcontext *ctx, struct gl_renderbuffer *rb,
+_swrast_get_row(struct gl_context *ctx, struct gl_renderbuffer *rb,
                 GLuint count, GLint x, GLint y,
                 GLvoid *values, GLuint valueSize)
 {
@@ -1461,7 +1482,7 @@ _swrast_get_row(GLcontext *ctx, struct gl_renderbuffer *rb,
  * \return pointer to the colors we read.
  */
 void *
-_swrast_get_dest_rgba(GLcontext *ctx, struct gl_renderbuffer *rb,
+_swrast_get_dest_rgba(struct gl_context *ctx, struct gl_renderbuffer *rb,
                       SWspan *span)
 {
    const GLuint pixelSize = RGBA_PIXEL_SIZE(span->array->ChanType);

@@ -37,6 +37,8 @@
 #include "main/mtypes.h"
 #include "main/enums.h"
 
+#include "math/m_xform.h"
+
 #include "tnl/t_context.h"
 #include "tnl/t_vertex.h"
 #include "tnl/t_pipeline.h"
@@ -214,7 +216,7 @@ choose_render(struct intel_context *intel, struct vertex_buffer *VB)
 
 
 static GLboolean
-intel_run_render(GLcontext * ctx, struct tnl_pipeline_stage *stage)
+intel_run_render(struct gl_context * ctx, struct tnl_pipeline_stage *stage)
 {
    struct intel_context *intel = intel_context(ctx);
    TNLcontext *tnl = TNL_CONTEXT(ctx);
@@ -264,7 +266,6 @@ static const struct tnl_pipeline_stage _intel_render_stage = {
 
 const struct tnl_pipeline_stage *intel_pipeline[] = {
    &_tnl_vertex_transform_stage,
-   &_tnl_vertex_cull_stage,
    &_tnl_normal_transform_stage,
    &_tnl_lighting_stage,
    &_tnl_fog_coordinate_stage,

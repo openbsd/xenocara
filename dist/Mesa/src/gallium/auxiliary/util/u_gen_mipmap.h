@@ -37,7 +37,7 @@ extern "C" {
 
    
 struct pipe_context;
-struct pipe_texture;
+struct pipe_resource;
 struct cso_context;
 
 struct gen_mipmap_state;
@@ -59,8 +59,8 @@ util_gen_mipmap_flush( struct gen_mipmap_state *ctx );
 
 extern void
 util_gen_mipmap(struct gen_mipmap_state *ctx,
-                struct pipe_texture *pt,
-                uint face, uint baseLevel, uint lastLevel, uint filter);
+                struct pipe_sampler_view *psv,
+                uint layer, uint baseLevel, uint lastLevel, uint filter);
 
 
 #ifdef __cplusplus

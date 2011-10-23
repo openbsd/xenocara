@@ -47,10 +47,13 @@ extern void r300SetTexOffset(__DRIcontext *pDRICtx, GLint texname,
 			     unsigned long long offset, GLint depth,
 			     GLuint pitch);
 
-extern GLboolean r300ValidateBuffers(GLcontext * ctx);
+extern GLboolean r300ValidateBuffers(struct gl_context * ctx);
 
 extern void r300InitTextureFuncs(radeonContextPtr radeon, struct dd_function_table *functions);
 
 int32_t r300TranslateTexFormat(gl_format mesaFormat);
+
+unsigned r300IsFormatRenderable(gl_format mesaFormat);
+unsigned r500IsFormatRenderable(gl_format mesaFormat);
 
 #endif				/* __r300_TEX_H__ */

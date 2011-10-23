@@ -37,6 +37,8 @@
 #include "main/imports.h"
 #include "main/mtypes.h"
 
+#include "math/m_xform.h"
+
 #include "tnl/t_context.h"
 
 #include "i810screen.h"
@@ -122,7 +124,7 @@ static const GLenum reduced_prim[GL_POLYGON+1] = {
 /**********************************************************************/
 
 
-static GLboolean i810_run_render( GLcontext *ctx,
+static GLboolean i810_run_render( struct gl_context *ctx,
 				  struct tnl_pipeline_stage *stage )
 {
    i810ContextPtr imesa = I810_CONTEXT(ctx);

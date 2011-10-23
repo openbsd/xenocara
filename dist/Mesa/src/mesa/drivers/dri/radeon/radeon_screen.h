@@ -111,7 +111,25 @@ typedef struct radeon_screen {
    int kernel_mm;
    drm_radeon_sarea_t *sarea;	/* Private SAREA data */
    struct radeon_bo_manager *bom;
+
+   /* r6xx+ tiling */
+   GLuint tile_config;
+   GLint group_bytes;
+   GLint num_channels;
+   GLint num_banks;
+   GLint r7xx_bank_op;
 } radeonScreenRec, *radeonScreenPtr;
+
+struct __DRIimageRec {
+   struct radeon_bo *bo;
+   GLenum internal_format;
+   GLuint format;
+   GLenum data_type;
+   int width, height;  /* in pixels */
+   int pitch;          /* in pixels */
+   int cpp;
+   void *data;
+};
 
 #define IS_R100_CLASS(screen) \
 	((screen->chip_flags & RADEON_CLASS_MASK) == RADEON_CLASS_R100)

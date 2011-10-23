@@ -33,20 +33,56 @@
 #include "intel_batchbuffer.h"
 
 static uint32_t
-get_attr_override(struct brw_context *brw, int attr)
+get_attr_override(struct brw_context *brw, int fs_attr, int two_side_color)
 {
-   uint32_t attr_override;
-   int attr_index = 0, i;
+   int attr_index = 0, i, vs_attr;
+   int bfc = 0;
+
+   if (fs_attr <= FRAG_ATTRIB_TEX7)
+      vs_attr = fs_attr;
+   else if (fs_attr == FRAG_ATTRIB_FACE)
+      vs_attr = 0; /* XXX */
+   else if (fs_attr == FRAG_ATTRIB_PNTC)
+      vs_attr = 0; /* XXX */
+   else {
+      assert(fs_attr >= FRAG_ATTRIB_VAR0);
+      vs_attr = fs_attr - FRAG_ATTRIB_VAR0 + VERT_RESULT_VAR0;
+   }
 
    /* Find the source index (0 = first attribute after the 4D position)
     * for this output attribute.  attr is currently a VERT_RESULT_* but should
     * be FRAG_ATTRIB_*.
     */
-   for (i = 0; i < attr; i++) {
+   for (i = 1; i < vs_attr; i++) {
+      if (i == VERT_RESULT_PSIZ)
+	 continue;
       if (brw->vs.prog_data->outputs_written & BITFIELD64_BIT(i))
 	 attr_index++;
    }
-   attr_override = attr_index;
+
+   assert(attr_index < 32);
+
+   if (two_side_color) {
+       if ((brw->vs.prog_data->outputs_written & BITFIELD64_BIT(VERT_RESULT_COL1)) &&
+           (brw->vs.prog_data->outputs_written & BITFIELD64_BIT(VERT_RESULT_BFC1))) {
+           assert(brw->vs.prog_data->outputs_written & BITFIELD64_BIT(VERT_RESULT_COL0));
+           assert(brw->vs.prog_data->outputs_written & BITFIELD64_BIT(VERT_RESULT_BFC0));
+           bfc = 2;
+       } else if ((brw->vs.prog_data->outputs_written & BITFIELD64_BIT(VERT_RESULT_COL0)) &&
+                (brw->vs.prog_data->outputs_written & BITFIELD64_BIT(VERT_RESULT_BFC0)))
+           bfc = 1;
+   }
+
+   if (bfc && (fs_attr <= FRAG_ATTRIB_TEX7 && fs_attr > FRAG_ATTRIB_WPOS)) {
+       if (fs_attr == FRAG_ATTRIB_COL0)
+           attr_index |= (ATTRIBUTE_SWIZZLE_INPUTATTR_FACING << ATTRIBUTE_SWIZZLE_SHIFT);
+       else if (fs_attr == FRAG_ATTRIB_COL1 && bfc == 2) {
+           attr_index++;
+           attr_index |= (ATTRIBUTE_SWIZZLE_INPUTATTR_FACING << ATTRIBUTE_SWIZZLE_SHIFT);
+       } else {
+           attr_index += bfc;
+       }
+   }
 
    return attr_index;
 }
@@ -55,29 +91,85 @@ static void
 upload_sf_state(struct brw_context *brw)
 {
    struct intel_context *intel = &brw->intel;
-   GLcontext *ctx = &intel->ctx;
+   struct gl_context *ctx = &intel->ctx;
    /* CACHE_NEW_VS_PROG */
    uint32_t num_inputs = brw_count_bits(brw->vs.prog_data->outputs_written);
-   /* This should probably be FS inputs read */
-   uint32_t num_outputs = brw_count_bits(brw->vs.prog_data->outputs_written);
-   uint32_t dw1, dw2, dw3, dw4;
+   /* BRW_NEW_FRAGMENT_PROGRAM */
+   uint32_t num_outputs = brw_count_bits(brw->fragment_program->Base.InputsRead);
+   uint32_t dw1, dw2, dw3, dw4, dw16, dw17;
    int i;
    /* _NEW_BUFFER */
    GLboolean render_to_fbo = brw->intel.ctx.DrawBuffer->Name != 0;
    int attr = 0;
+   int urb_start;
+   int two_side_color = (ctx->Light.Enabled && ctx->Light.Model.TwoSide);
+
+   /* _NEW_TRANSFORM */
+   if (ctx->Transform.ClipPlanesEnabled)
+      urb_start = 2;
+   else
+      urb_start = 1;
 
    dw1 =
+      GEN6_SF_SWIZZLE_ENABLE |
       num_outputs << GEN6_SF_NUM_OUTPUTS_SHIFT |
       (num_inputs + 1) / 2 << GEN6_SF_URB_ENTRY_READ_LENGTH_SHIFT |
-      3 << GEN6_SF_URB_ENTRY_READ_OFFSET_SHIFT;
+      urb_start << GEN6_SF_URB_ENTRY_READ_OFFSET_SHIFT;
    dw2 = GEN6_SF_VIEWPORT_TRANSFORM_ENABLE |
       GEN6_SF_STATISTICS_ENABLE;
    dw3 = 0;
    dw4 = 0;
+   dw16 = 0;
+   dw17 = 0;
 
    /* _NEW_POLYGON */
    if ((ctx->Polygon.FrontFace == GL_CCW) ^ render_to_fbo)
       dw2 |= GEN6_SF_WINDING_CCW;
+
+   if (ctx->Polygon.OffsetFill)
+       dw2 |= GEN6_SF_GLOBAL_DEPTH_OFFSET_SOLID;
+
+   if (ctx->Polygon.OffsetLine)
+       dw2 |= GEN6_SF_GLOBAL_DEPTH_OFFSET_WIREFRAME;
+
+   if (ctx->Polygon.OffsetPoint)
+       dw2 |= GEN6_SF_GLOBAL_DEPTH_OFFSET_POINT;
+
+   switch (ctx->Polygon.FrontMode) {
+   case GL_FILL:
+       dw2 |= GEN6_SF_FRONT_SOLID;
+       break;
+
+   case GL_LINE:
+       dw2 |= GEN6_SF_FRONT_WIREFRAME;
+       break;
+
+   case GL_POINT:
+       dw2 |= GEN6_SF_FRONT_POINT;
+       break;
+
+   default:
+       assert(0);
+       break;
+   }
+
+   switch (ctx->Polygon.BackMode) {
+   case GL_FILL:
+       dw2 |= GEN6_SF_BACK_SOLID;
+       break;
+
+   case GL_LINE:
+       dw2 |= GEN6_SF_BACK_WIREFRAME;
+       break;
+
+   case GL_POINT:
+       dw2 |= GEN6_SF_BACK_POINT;
+       break;
+
+   default:
+       assert(0);
+       break;
+   }
 
    /* _NEW_SCISSOR */
    if (ctx->Scissor.Enabled)
@@ -87,7 +179,7 @@ upload_sf_state(struct brw_context *brw)
    if (ctx->Polygon.CullFlag) {
       switch (ctx->Polygon.CullFaceMode) {
       case GL_FRONT:
-	 dw3 |= GEN6_SF_CULL_BOTH;
+	 dw3 |= GEN6_SF_CULL_FRONT;
 	 break;
       case GL_BACK:
 	 dw3 |= GEN6_SF_CULL_BACK;
@@ -113,12 +205,13 @@ upload_sf_state(struct brw_context *brw)
    }
 
    /* _NEW_POINT */
-   if (ctx->Point._Attenuated)
+   if (!(ctx->VertexProgram.PointSizeEnabled ||
+	 ctx->Point._Attenuated))
       dw4 |= GEN6_SF_USE_STATE_POINT_WIDTH;
 
-   dw4 |= U_FIXED(CLAMP(ctx->Point.Size, 0.125, 225.875), 3) <<
+   dw4 |= U_FIXED(CLAMP(ctx->Point.Size, 0.125, 255.875), 3) <<
       GEN6_SF_POINT_WIDTH_SHIFT;
-   if (render_to_fbo)
+   if (ctx->Point.SpriteOrigin == GL_LOWER_LEFT)
       dw1 |= GEN6_SF_POINT_SPRITE_LOWERLEFT;
 
    /* _NEW_LIGHT */
@@ -132,8 +225,21 @@ upload_sf_state(struct brw_context *brw)
 	 (1 << GEN6_SF_TRIFAN_PROVOKE_SHIFT);
    }
 
+   if (ctx->Point.PointSprite) {
+       for (i = 0; i < 8; i++) { 
+	   if (ctx->Point.CoordReplace[i])
+	       dw16 |= (1 << i);
+       }
+   }
+
+   /* flat shading */
+   if (ctx->Light.ShadeModel == GL_FLAT) {
+       dw17 |= ((brw->fragment_program->Base.InputsRead & (FRAG_BIT_COL0 | FRAG_BIT_COL1)) >>
+                ((brw->fragment_program->Base.InputsRead & FRAG_BIT_WPOS) ? 0 : 1));
+   }
+
    BEGIN_BATCH(20);
-   OUT_BATCH(CMD_3D_SF_STATE << 16 | (20 - 2));
+   OUT_BATCH(_3DSTATE_SF << 16 | (20 - 2));
    OUT_BATCH(dw1);
    OUT_BATCH(dw2);
    OUT_BATCH(dw3);
@@ -144,33 +250,28 @@ upload_sf_state(struct brw_context *brw)
    for (i = 0; i < 8; i++) {
       uint32_t attr_overrides = 0;
 
-      /* These should be generating FS inputs read instead of VS
-       * outputs written
-       */
       for (; attr < 64; attr++) {
-	 if (brw->vs.prog_data->outputs_written & BITFIELD64_BIT(attr)) {
-	    attr_overrides |= get_attr_override(brw, attr);
+	 if (brw->fragment_program->Base.InputsRead & BITFIELD64_BIT(attr)) {
+	    attr_overrides |= get_attr_override(brw, attr, two_side_color);
 	    attr++;
 	    break;
 	 }
       }
 
       for (; attr < 64; attr++) {
-	 if (brw->vs.prog_data->outputs_written & BITFIELD64_BIT(attr)) {
-	    attr_overrides |= get_attr_override(brw, attr) << 16;
+	 if (brw->fragment_program->Base.InputsRead & BITFIELD64_BIT(attr)) {
+	    attr_overrides |= get_attr_override(brw, attr, two_side_color) << 16;
 	    attr++;
 	    break;
 	 }
       }
       OUT_BATCH(attr_overrides);
    }
-   OUT_BATCH(0); /* point sprite texcoord bitmask */
-   OUT_BATCH(0); /* constant interp bitmask */
+   OUT_BATCH(dw16); /* point sprite texcoord bitmask */
+   OUT_BATCH(dw17); /* constant interp bitmask */
    OUT_BATCH(0); /* wrapshortest enables 0-7 */
    OUT_BATCH(0); /* wrapshortest enables 8-15 */
    ADVANCE_BATCH();
-
-   intel_batchbuffer_emit_mi_flush(intel->batch);
 }
 
 const struct brw_tracked_state gen6_sf_state = {
@@ -179,8 +280,11 @@ const struct brw_tracked_state gen6_sf_state = {
 		_NEW_POLYGON |
 		_NEW_LINE |
 		_NEW_SCISSOR |
-		_NEW_BUFFERS),
-      .brw   = BRW_NEW_CONTEXT,
+		_NEW_BUFFERS |
+		_NEW_POINT |
+		_NEW_TRANSFORM),
+      .brw   = (BRW_NEW_CONTEXT |
+		BRW_NEW_FRAGMENT_PROGRAM),
       .cache = CACHE_NEW_VS_PROG
    },
    .emit = upload_sf_state,

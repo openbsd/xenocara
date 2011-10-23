@@ -25,10 +25,12 @@
  * 
  **************************************************************************/
 
+#include <stdbool.h>
 #include "main/glheader.h"
 #include "main/macros.h"
 #include "main/mtypes.h"
 #include "main/colormac.h"
+#include "main/renderbuffer.h"
 
 #include "intel_buffers.h"
 #include "intel_fbo.h"
@@ -106,36 +108,12 @@ intel_set_span_functions(struct intel_context *intel,
 #define TAG2(x,y) intel_##x##y##_xRGB8888
 #include "spantmp2.h"
 
-#define LOCAL_DEPTH_VARS						\
-   struct intel_renderbuffer *irb = intel_renderbuffer(rb);		\
-   const GLint yScale = rb->Name ? 1 : -1;				\
-   const GLint yBias = rb->Name ? 0 : rb->Height - 1;			\
-   int minx = 0, miny = 0;						\
-   int maxx = rb->Width;						\
-   int maxy = rb->Height;						\
-   int pitch = irb->region->pitch * irb->region->cpp;			\
-   void *buf = irb->region->buffer->virtual;				\
-   (void)buf; (void)pitch; /* unused for non-gttmap. */			\
-
-#define LOCAL_STENCIL_VARS LOCAL_DEPTH_VARS
-
-/* z16 depthbuffer functions. */
-#define VALUE_TYPE GLushort
-#define WRITE_DEPTH(_x, _y, d) \
-   (*(uint16_t *)(irb->region->buffer->virtual + NO_TILE(_x, _y)) = d)
-#define READ_DEPTH(d, _x, _y) \
-   d = *(uint16_t *)(irb->region->buffer->virtual + NO_TILE(_x, _y))
-#define TAG(x) intel_##x##_z16
-#include "depthtmp.h"
-
-/* z24_s8 and z24_x8 depthbuffer functions. */
-#define VALUE_TYPE GLuint
-#define WRITE_DEPTH(_x, _y, d) \
-   (*(uint32_t *)(irb->region->buffer->virtual + NO_TILE(_x, _y)) = d)
-#define READ_DEPTH(d, _x, _y) \
-   d = *(uint32_t *)(irb->region->buffer->virtual + NO_TILE(_x, _y))
-#define TAG(x) intel_##x##_z24_x8
-#include "depthtmp.h"
+/* a8 color span and pixel functions */
+#define SPANTMP_PIXEL_FMT GL_ALPHA
+#define SPANTMP_PIXEL_TYPE GL_UNSIGNED_BYTE
+#define TAG(x) intel_##x##_A8
+#define TAG2(x,y) intel_##x##y##_A8
+#include "spantmp2.h"
 
 void
 intel_renderbuffer_map(struct intel_context *intel, struct gl_renderbuffer *rb)
@@ -146,6 +124,15 @@ intel_renderbuffer_map(struct intel_context *intel, struct gl_renderbuffer *rb)
       return;
 
    drm_intel_gem_bo_map_gtt(irb->region->buffer);
+
+   rb->Data = irb->region->buffer->virtual;
+   rb->RowStride = irb->region->pitch;
+
+   /* Flip orientation if it's the window system buffer */
+   if (!rb->Name) {
+      rb->Data += rb->RowStride * (irb->region->height - 1) * irb->region->cpp;
+      rb->RowStride = -rb->RowStride;
+   }
 
    intel_set_span_functions(intel, rb);
 }
@@ -163,6 +150,8 @@ intel_renderbuffer_unmap(struct intel_context *intel,
 
    rb->GetRow = NULL;
    rb->PutRow = NULL;
+   rb->Data = NULL;
+   rb->RowStride = 0;
 }
 
 /**
@@ -239,17 +228,19 @@ intel_map_unmap_framebuffer(struct intel_context *intel,
  * Old note: Moved locking out to get reasonable span performance.
  */
 void
-intelSpanRenderStart(GLcontext * ctx)
+intelSpanRenderStart(struct gl_context * ctx)
 {
    struct intel_context *intel = intel_context(ctx);
    GLuint i;
 
-   intelFlush(&intel->ctx);
+   intel_flush(&intel->ctx);
    intel_prepare_render(intel);
 
    for (i = 0; i < ctx->Const.MaxTextureImageUnits; i++) {
       if (ctx->Texture.Unit[i]._ReallyEnabled) {
          struct gl_texture_object *texObj = ctx->Texture.Unit[i]._Current;
+
+         intel_finalize_mipmap_tree(intel, i);
          intel_tex_map_images(intel, intel_texture_object(texObj));
       }
    }
@@ -264,7 +255,7 @@ intelSpanRenderStart(GLcontext * ctx)
  * the above function.
  */
 void
-intelSpanRenderFinish(GLcontext * ctx)
+intelSpanRenderFinish(struct gl_context * ctx)
 {
    struct intel_context *intel = intel_context(ctx);
    GLuint i;
@@ -285,7 +276,7 @@ intelSpanRenderFinish(GLcontext * ctx)
 
 
 void
-intelInitSpanFuncs(GLcontext * ctx)
+intelInitSpanFuncs(struct gl_context * ctx)
 {
    struct swrast_device_driver *swdd = _swrast_GetDeviceDriverReference(ctx);
    swdd->SpanRenderStart = intelSpanRenderStart;
@@ -293,7 +284,7 @@ intelInitSpanFuncs(GLcontext * ctx)
 }
 
 void
-intel_map_vertex_shader_textures(GLcontext *ctx)
+intel_map_vertex_shader_textures(struct gl_context *ctx)
 {
    struct intel_context *intel = intel_context(ctx);
    int i;
@@ -312,7 +303,7 @@ intel_map_vertex_shader_textures(GLcontext *ctx)
 }
 
 void
-intel_unmap_vertex_shader_textures(GLcontext *ctx)
+intel_unmap_vertex_shader_textures(struct gl_context *ctx)
 {
    struct intel_context *intel = intel_context(ctx);
    int i;
@@ -330,6 +321,32 @@ intel_unmap_vertex_shader_textures(GLcontext *ctx)
    }
 }
 
+typedef void (*span_init_func)(struct gl_renderbuffer *rb);
+
+static span_init_func intel_span_init_funcs[MESA_FORMAT_COUNT] =
+{
+   [MESA_FORMAT_A8] = intel_InitPointers_A8,
+   [MESA_FORMAT_RGB565] = intel_InitPointers_RGB565,
+   [MESA_FORMAT_ARGB4444] = intel_InitPointers_ARGB4444,
+   [MESA_FORMAT_ARGB1555] = intel_InitPointers_ARGB1555,
+   [MESA_FORMAT_XRGB8888] = intel_InitPointers_xRGB8888,
+   [MESA_FORMAT_ARGB8888] = intel_InitPointers_ARGB8888,
+   [MESA_FORMAT_SARGB8] = intel_InitPointers_ARGB8888,
+   [MESA_FORMAT_Z16] = _mesa_set_renderbuffer_accessors,
+   [MESA_FORMAT_X8_Z24] = _mesa_set_renderbuffer_accessors,
+   [MESA_FORMAT_S8_Z24] = _mesa_set_renderbuffer_accessors,
+   [MESA_FORMAT_R8] = _mesa_set_renderbuffer_accessors,
+   [MESA_FORMAT_RG88] = _mesa_set_renderbuffer_accessors,
+   [MESA_FORMAT_R16] = _mesa_set_renderbuffer_accessors,
+   [MESA_FORMAT_RG1616] = _mesa_set_renderbuffer_accessors,
+};
+
+bool
+intel_span_supports_format(gl_format format)
+{
+   return intel_span_init_funcs[format] != NULL;
+}
+
 /**
  * Plug in appropriate span read/write functions for the given renderbuffer.
  * These are used for the software fallbacks.
@@ -340,33 +357,6 @@ intel_set_span_functions(struct intel_context *intel,
 {
    struct intel_renderbuffer *irb = (struct intel_renderbuffer *) rb;
 
-   switch (irb->Base.Format) {
-   case MESA_FORMAT_RGB565:
-      intel_InitPointers_RGB565(rb);
-      break;
-   case MESA_FORMAT_ARGB4444:
-      intel_InitPointers_ARGB4444(rb);
-      break;
-   case MESA_FORMAT_ARGB1555:
-      intel_InitPointers_ARGB1555(rb);
-      break;
-   case MESA_FORMAT_XRGB8888:
-      intel_InitPointers_xRGB8888(rb);
-      break;
-   case MESA_FORMAT_ARGB8888:
-      intel_InitPointers_ARGB8888(rb);
-      break;
-   case MESA_FORMAT_Z16:
-      intel_InitDepthPointers_z16(rb);
-      break;
-   case MESA_FORMAT_X8_Z24:
-   case MESA_FORMAT_S8_Z24:
-      intel_InitDepthPointers_z24_x8(rb);
-      break;
-   default:
-      _mesa_problem(NULL,
-		    "Unexpected MesaFormat %d in intelSetSpanFunctions",
-		    irb->Base.Format);
-      break;
-   }
+   assert(intel_span_init_funcs[irb->Base.Format]);
+   intel_span_init_funcs[irb->Base.Format](rb);
 }

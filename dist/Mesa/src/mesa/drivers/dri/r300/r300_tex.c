@@ -185,7 +185,7 @@ static void r300SetTexBorderColor(radeonTexObjPtr t, const GLfloat color[4])
  * next UpdateTextureState
  */
 
-static void r300TexParameter(GLcontext * ctx, GLenum target,
+static void r300TexParameter(struct gl_context * ctx, GLenum target,
 			     struct gl_texture_object *texObj,
 			     GLenum pname, const GLfloat * params)
 {
@@ -243,7 +243,7 @@ static void r300TexParameter(GLcontext * ctx, GLenum target,
 	}
 }
 
-static void r300DeleteTexture(GLcontext * ctx, struct gl_texture_object *texObj)
+static void r300DeleteTexture(struct gl_context * ctx, struct gl_texture_object *texObj)
 {
 	r300ContextPtr rmesa = R300_CONTEXT(ctx);
 	radeonTexObj* t = radeon_tex_obj(texObj);
@@ -284,7 +284,7 @@ static void r300DeleteTexture(GLcontext * ctx, struct gl_texture_object *texObj)
  * allocate the default texture objects.
  * Fixup MaxAnisotropy according to user preference.
  */
-static struct gl_texture_object *r300NewTextureObject(GLcontext * ctx,
+static struct gl_texture_object *r300NewTextureObject(struct gl_context * ctx,
 						      GLuint name,
 						      GLenum target)
 {
@@ -306,6 +306,45 @@ static struct gl_texture_object *r300NewTextureObject(GLcontext * ctx,
 	r300SetTexBorderColor(t, t->base.BorderColor.f);
 
 	return &t->base;
+}
+
+unsigned r300IsFormatRenderable(gl_format mesa_format)
+{
+	switch (mesa_format)
+	{
+		case MESA_FORMAT_RGB565:
+		case MESA_FORMAT_RGBA5551:
+		case MESA_FORMAT_RGBA8888:
+		case MESA_FORMAT_RGB565_REV:
+		case MESA_FORMAT_RGBA8888_REV:
+		case MESA_FORMAT_ARGB4444:
+		case MESA_FORMAT_ARGB1555:
+		case MESA_FORMAT_XRGB8888:
+		case MESA_FORMAT_ARGB8888:
+		case MESA_FORMAT_ARGB4444_REV:
+		case MESA_FORMAT_ARGB1555_REV:
+		case MESA_FORMAT_XRGB8888_REV:
+		case MESA_FORMAT_ARGB8888_REV:
+		case MESA_FORMAT_SRGBA8:
+		case MESA_FORMAT_SARGB8:
+		case MESA_FORMAT_SL8:
+		case MESA_FORMAT_A8:
+		case MESA_FORMAT_L8:
+		case MESA_FORMAT_I8:
+		case MESA_FORMAT_Z16:
+			return 1;
+		default:
+			return 0;
+	}
+}
+
+unsigned r500IsFormatRenderable(gl_format mesa_format)
+{
+	if (mesa_format == MESA_FORMAT_S8_Z24) {
+		return 1;
+	} else {
+		return r300IsFormatRenderable(mesa_format);
+	}
 }
 
 void r300InitTextureFuncs(radeonContextPtr radeon, struct dd_function_table *functions)
@@ -342,6 +381,10 @@ void r300InitTextureFuncs(radeonContextPtr radeon, struct dd_function_table *fun
 	}
 
 	functions->GenerateMipmap = radeonGenerateMipmap;
+
+#if FEATURE_OES_EGL_image
+	functions->EGLImageTargetTexture2D = radeon_image_target_texture_2d;
+#endif
 
 	driInitTextureFormats();
 }

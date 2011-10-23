@@ -33,14 +33,15 @@
 
 #include "main/imports.h"
 #include "main/mtypes.h"
-#include "shader/prog_print.h"
-#include "shader/programopt.h"
+#include "program/prog_print.h"
+#include "program/programopt.h"
 
 #include "pipe/p_context.h"
 #include "pipe/p_defines.h"
 #include "pipe/p_shader_tokens.h"
 #include "draw/draw_context.h"
 #include "tgsi/tgsi_dump.h"
+#include "tgsi/tgsi_ureg.h"
 
 #include "st_debug.h"
 #include "st_context.h"
@@ -65,8 +66,10 @@ st_vp_release_varients( struct st_context *st,
       if (vpv->driver_shader) 
          cso_delete_vertex_shader(st->cso_context, vpv->driver_shader);
       
+#if FEATURE_feedback || FEATURE_rastpos
       if (vpv->draw_shader)
          draw_delete_vertex_shader( st->draw, vpv->draw_shader );
+#endif
       
       if (vpv->tgsi.tokens)
          st_free_tokens(vpv->tgsi.tokens);
@@ -204,17 +207,28 @@ st_translate_vertex_program(struct st_context *st,
    enum pipe_error error;
    unsigned num_outputs;
 
+   _mesa_remove_output_reads(&stvp->Base.Base, PROGRAM_OUTPUT);
+   _mesa_remove_output_reads(&stvp->Base.Base, PROGRAM_VARYING);
+
    ureg = ureg_create( TGSI_PROCESSOR_VERTEX );
    if (ureg == NULL) {
       FREE(vpv);
       return NULL;
    }
 
+   vpv->key = *key;
+
    vpv->num_inputs = stvp->num_inputs;
    num_outputs = stvp->num_outputs;
    if (key->passthrough_edgeflags) {
       vpv->num_inputs++;
       num_outputs++;
+   }
+
+   if (ST_DEBUG & DEBUG_MESA) {
+      _mesa_print_program(&stvp->Base.Base);
+      _mesa_print_program_parameters(st->ctx, &stvp->Base.Base);
+      debug_printf("\n");
    }
 
    error = 
@@ -245,11 +259,6 @@ st_translate_vertex_program(struct st_context *st,
    ureg_destroy( ureg );
 
    vpv->driver_shader = pipe->create_vs_state(pipe, &vpv->tgsi);
-
-   if ((ST_DEBUG & DEBUG_TGSI) && (ST_DEBUG & DEBUG_MESA)) {
-      _mesa_print_program(&stvp->Base.Base);
-      debug_printf("\n");
-   }
 
    if (ST_DEBUG & DEBUG_TGSI) {
       tgsi_dump( vpv->tgsi.tokens, 0 );
@@ -294,6 +303,8 @@ st_translate_fragment_program(struct st_context *st,
    ubyte fs_output_semantic_index[PIPE_MAX_SHADER_OUTPUTS];
    uint fs_num_outputs = 0;
 
+   _mesa_remove_output_reads(&stfp->Base.Base, PROGRAM_OUTPUT);
+
    /*
     * Convert Mesa program inputs to TGSI input register semantics.
     */
@@ -329,17 +340,6 @@ st_translate_fragment_program(struct st_context *st,
             input_semantic_index[slot] = 0;
             interpMode[slot] = TGSI_INTERPOLATE_CONSTANT;
             break;
-         case FRAG_ATTRIB_PNTC:
-            /* This is a hack.  We really need a new semantic label for
-             * point coord.  The draw module needs to know which fragment
-             * shader input is the point coord attribute so that it can set
-             * up the right vertex attribute values.
-             */
-            input_semantic_name[slot] = TGSI_SEMANTIC_GENERIC;
-            input_semantic_index[slot] = 0;
-            interpMode[slot] = TGSI_INTERPOLATE_PERSPECTIVE;
-            break;
-
             /* In most cases, there is nothing special about these
              * inputs, so adopt a convention to use the generic
              * semantic name and the mesa FRAG_ATTRIB_ number as the
@@ -355,6 +355,7 @@ st_translate_fragment_program(struct st_context *st,
              * zero or be restricted to a particular range -- nobody
              * should be building tables based on semantic index.
              */
+         case FRAG_ATTRIB_PNTC:
          case FRAG_ATTRIB_TEX0:
          case FRAG_ATTRIB_TEX1:
          case FRAG_ATTRIB_TEX2:
@@ -371,7 +372,10 @@ st_translate_fragment_program(struct st_context *st,
             assert(attr >= FRAG_ATTRIB_TEX0);
             input_semantic_index[slot] = (attr - FRAG_ATTRIB_TEX0);
             input_semantic_name[slot] = TGSI_SEMANTIC_GENERIC;
-            interpMode[slot] = TGSI_INTERPOLATE_PERSPECTIVE;
+            if (attr == FRAG_ATTRIB_PNTC)
+               interpMode[slot] = TGSI_INTERPOLATE_LINEAR;
+            else
+               interpMode[slot] = TGSI_INTERPOLATE_PERSPECTIVE;
             break;
          }
       }
@@ -396,11 +400,20 @@ st_translate_fragment_program(struct st_context *st,
          outputsWritten &= ~(1 << FRAG_RESULT_DEPTH);
       }
 
+      if (outputsWritten & BITFIELD64_BIT(FRAG_RESULT_STENCIL)) {
+         fs_output_semantic_name[fs_num_outputs] = TGSI_SEMANTIC_STENCIL;
+         fs_output_semantic_index[fs_num_outputs] = 0;
+         outputMapping[FRAG_RESULT_STENCIL] = fs_num_outputs;
+         fs_num_outputs++;
+         outputsWritten &= ~(1 << FRAG_RESULT_STENCIL);
+      }
+
       /* handle remaning outputs (color) */
       for (attr = 0; attr < FRAG_RESULT_MAX; attr++) {
          if (outputsWritten & BITFIELD64_BIT(attr)) {
             switch (attr) {
             case FRAG_RESULT_DEPTH:
+            case FRAG_RESULT_STENCIL:
                /* handled above */
                assert(0);
                break;
@@ -423,6 +436,11 @@ st_translate_fragment_program(struct st_context *st,
    if (ureg == NULL)
       return;
 
+   if (ST_DEBUG & DEBUG_MESA) {
+      _mesa_print_program(&stfp->Base.Base);
+      _mesa_print_program_parameters(st->ctx, &stfp->Base.Base);
+      debug_printf("\n");
+   }
 
    error = 
       st_translate_mesa_program(st->ctx,
@@ -445,30 +463,299 @@ st_translate_fragment_program(struct st_context *st,
    ureg_destroy( ureg );
    stfp->driver_shader = pipe->create_fs_state(pipe, &stfp->tgsi);
 
-   if ((ST_DEBUG & DEBUG_TGSI) && (ST_DEBUG & DEBUG_MESA)) {
-      _mesa_print_program(&stfp->Base.Base);
-      debug_printf("\n");
-   }
-
    if (ST_DEBUG & DEBUG_TGSI) {
       tgsi_dump( stfp->tgsi.tokens, 0/*TGSI_DUMP_VERBOSE*/ );
       debug_printf("\n");
    }
 }
 
+void
+st_translate_geometry_program(struct st_context *st,
+                              struct st_geometry_program *stgp)
+{
+   GLuint inputMapping[GEOM_ATTRIB_MAX];
+   GLuint outputMapping[GEOM_RESULT_MAX];
+   struct pipe_context *pipe = st->pipe;
+   enum pipe_error error;
+   GLuint attr;
+   const GLbitfield inputsRead = stgp->Base.Base.InputsRead;
+   GLuint vslot = 0;
+   GLuint num_generic = 0;
+
+   uint gs_num_inputs = 0;
+   uint gs_builtin_inputs = 0;
+   uint gs_array_offset = 0;
+
+   ubyte gs_output_semantic_name[PIPE_MAX_SHADER_OUTPUTS];
+   ubyte gs_output_semantic_index[PIPE_MAX_SHADER_OUTPUTS];
+   uint gs_num_outputs = 0;
+
+   GLint i;
+   GLuint maxSlot = 0;
+   struct ureg_program *ureg;
+
+   _mesa_remove_output_reads(&stgp->Base.Base, PROGRAM_OUTPUT);
+   _mesa_remove_output_reads(&stgp->Base.Base, PROGRAM_VARYING);
+
+   ureg = ureg_create( TGSI_PROCESSOR_GEOMETRY );
+   if (ureg == NULL) {
+      return;
+   }
+
+   /* which vertex output goes to the first geometry input */
+   vslot = 0;
+
+   memset(inputMapping, 0, sizeof(inputMapping));
+   memset(outputMapping, 0, sizeof(outputMapping));
+
+   /*
+    * Convert Mesa program inputs to TGSI input register semantics.
+    */
+   for (attr = 0; attr < GEOM_ATTRIB_MAX; attr++) {
+      if (inputsRead & (1 << attr)) {
+         const GLuint slot = gs_num_inputs;
+
+         gs_num_inputs++;
+
+         inputMapping[attr] = slot;
+
+         stgp->input_map[slot + gs_array_offset] = vslot - gs_builtin_inputs;
+         stgp->input_to_index[attr] = vslot;
+         stgp->index_to_input[vslot] = attr;
+         ++vslot;
+
+         if (attr != GEOM_ATTRIB_PRIMITIVE_ID) {
+            gs_array_offset += 2;
+         } else
+            ++gs_builtin_inputs;
+
+#if 1
+         debug_printf("input map at %d = %d\n",
+                      slot + gs_array_offset, stgp->input_map[slot + gs_array_offset]);
+#endif
+
+         switch (attr) {
+         case GEOM_ATTRIB_PRIMITIVE_ID:
+            stgp->input_semantic_name[slot] = TGSI_SEMANTIC_PRIMID;
+            stgp->input_semantic_index[slot] = 0;
+            break;
+         case GEOM_ATTRIB_POSITION:
+            stgp->input_semantic_name[slot] = TGSI_SEMANTIC_POSITION;
+            stgp->input_semantic_index[slot] = 0;
+            break;
+         case GEOM_ATTRIB_COLOR0:
+            stgp->input_semantic_name[slot] = TGSI_SEMANTIC_COLOR;
+            stgp->input_semantic_index[slot] = 0;
+            break;
+         case GEOM_ATTRIB_COLOR1:
+            stgp->input_semantic_name[slot] = TGSI_SEMANTIC_COLOR;
+            stgp->input_semantic_index[slot] = 1;
+            break;
+         case GEOM_ATTRIB_FOG_FRAG_COORD:
+            stgp->input_semantic_name[slot] = TGSI_SEMANTIC_FOG;
+            stgp->input_semantic_index[slot] = 0;
+            break;
+         case GEOM_ATTRIB_TEX_COORD:
+            stgp->input_semantic_name[slot] = TGSI_SEMANTIC_GENERIC;
+            stgp->input_semantic_index[slot] = num_generic++;
+            break;
+         case GEOM_ATTRIB_VAR0:
+            /* fall-through */
+         default:
+            stgp->input_semantic_name[slot] = TGSI_SEMANTIC_GENERIC;
+            stgp->input_semantic_index[slot] = num_generic++;
+         }
+      }
+   }
+
+   /* initialize output semantics to defaults */
+   for (i = 0; i < PIPE_MAX_SHADER_OUTPUTS; i++) {
+      gs_output_semantic_name[i] = TGSI_SEMANTIC_GENERIC;
+      gs_output_semantic_index[i] = 0;
+   }
+
+   num_generic = 0;
+   /*
+    * Determine number of outputs, the (default) output register
+    * mapping and the semantic information for each output.
+    */
+   for (attr = 0; attr < GEOM_RESULT_MAX; attr++) {
+      if (stgp->Base.Base.OutputsWritten & (1 << attr)) {
+         GLuint slot;
+
+         slot = gs_num_outputs;
+         gs_num_outputs++;
+         outputMapping[attr] = slot;
+
+         switch (attr) {
+         case GEOM_RESULT_POS:
+            assert(slot == 0);
+            gs_output_semantic_name[slot] = TGSI_SEMANTIC_POSITION;
+            gs_output_semantic_index[slot] = 0;
+            break;
+         case GEOM_RESULT_COL0:
+            gs_output_semantic_name[slot] = TGSI_SEMANTIC_COLOR;
+            gs_output_semantic_index[slot] = 0;
+            break;
+         case GEOM_RESULT_COL1:
+            gs_output_semantic_name[slot] = TGSI_SEMANTIC_COLOR;
+            gs_output_semantic_index[slot] = 1;
+            break;
+         case GEOM_RESULT_SCOL0:
+            gs_output_semantic_name[slot] = TGSI_SEMANTIC_BCOLOR;
+            gs_output_semantic_index[slot] = 0;
+            break;
+         case GEOM_RESULT_SCOL1:
+            gs_output_semantic_name[slot] = TGSI_SEMANTIC_BCOLOR;
+            gs_output_semantic_index[slot] = 1;
+            break;
+         case GEOM_RESULT_FOGC:
+            gs_output_semantic_name[slot] = TGSI_SEMANTIC_FOG;
+            gs_output_semantic_index[slot] = 0;
+            break;
+         case GEOM_RESULT_PSIZ:
+            gs_output_semantic_name[slot] = TGSI_SEMANTIC_PSIZE;
+            gs_output_semantic_index[slot] = 0;
+            break;
+         case GEOM_RESULT_TEX0:
+         case GEOM_RESULT_TEX1:
+         case GEOM_RESULT_TEX2:
+         case GEOM_RESULT_TEX3:
+         case GEOM_RESULT_TEX4:
+         case GEOM_RESULT_TEX5:
+         case GEOM_RESULT_TEX6:
+         case GEOM_RESULT_TEX7:
+            /* fall-through */
+         case GEOM_RESULT_VAR0:
+            /* fall-through */
+         default:
+            assert(slot < Elements(gs_output_semantic_name));
+            /* use default semantic info */
+            gs_output_semantic_name[slot] = TGSI_SEMANTIC_GENERIC;
+            gs_output_semantic_index[slot] = num_generic++;
+         }
+      }
+   }
+
+   assert(gs_output_semantic_name[0] == TGSI_SEMANTIC_POSITION);
+
+   /* find max output slot referenced to compute gs_num_outputs */
+   for (attr = 0; attr < GEOM_RESULT_MAX; attr++) {
+      if (outputMapping[attr] != ~0 && outputMapping[attr] > maxSlot)
+         maxSlot = outputMapping[attr];
+   }
+   gs_num_outputs = maxSlot + 1;
+
+#if 0 /* debug */
+   {
+      GLuint i;
+      printf("outputMapping? %d\n", outputMapping ? 1 : 0);
+      if (outputMapping) {
+         printf("attr -> slot\n");
+         for (i = 0; i < 16;  i++) {
+            printf(" %2d       %3d\n", i, outputMapping[i]);
+         }
+      }
+      printf("slot    sem_name  sem_index\n");
+      for (i = 0; i < gs_num_outputs; i++) {
+         printf(" %2d         %d         %d\n",
+                i,
+                gs_output_semantic_name[i],
+                gs_output_semantic_index[i]);
+      }
+   }
+#endif
+
+   /* free old shader state, if any */
+   if (stgp->tgsi.tokens) {
+      st_free_tokens(stgp->tgsi.tokens);
+      stgp->tgsi.tokens = NULL;
+   }
+   if (stgp->driver_shader) {
+      cso_delete_geometry_shader(st->cso_context, stgp->driver_shader);
+      stgp->driver_shader = NULL;
+   }
+
+   ureg_property_gs_input_prim(ureg, stgp->Base.InputType);
+   ureg_property_gs_output_prim(ureg, stgp->Base.OutputType);
+   ureg_property_gs_max_vertices(ureg, stgp->Base.VerticesOut);
+
+   error  = st_translate_mesa_program(st->ctx,
+                                      TGSI_PROCESSOR_GEOMETRY,
+                                      ureg,
+                                      &stgp->Base.Base,
+                                      /* inputs */
+                                      gs_num_inputs,
+                                      inputMapping,
+                                      stgp->input_semantic_name,
+                                      stgp->input_semantic_index,
+                                      NULL,
+                                      /* outputs */
+                                      gs_num_outputs,
+                                      outputMapping,
+                                      gs_output_semantic_name,
+                                      gs_output_semantic_index,
+                                      FALSE);
+
+
+   stgp->num_inputs = gs_num_inputs;
+   stgp->tgsi.tokens = ureg_get_tokens( ureg, NULL );
+   ureg_destroy( ureg );
+   stgp->driver_shader = pipe->create_gs_state(pipe, &stgp->tgsi);
+
+   if ((ST_DEBUG & DEBUG_TGSI) && (ST_DEBUG & DEBUG_MESA)) {
+      _mesa_print_program(&stgp->Base.Base);
+      debug_printf("\n");
+   }
+
+   if (ST_DEBUG & DEBUG_TGSI) {
+      tgsi_dump(stgp->tgsi.tokens, 0);
+      debug_printf("\n");
+   }
+}
 
 /**
  * Debug- print current shader text
  */
 void
-st_print_shaders(GLcontext *ctx)
+st_print_shaders(struct gl_context *ctx)
 {
-   struct gl_shader_program *shProg = ctx->Shader.CurrentProgram;
-   if (shProg) {
-      GLuint i;
-      for (i = 0; i < shProg->NumShaders; i++) {
-         printf("GLSL shader %u of %u:\n", i, shProg->NumShaders);
-         printf("%s\n", shProg->Shaders[i]->Source);
+   struct gl_shader_program *shProg[3] = {
+      ctx->Shader.CurrentVertexProgram,
+      ctx->Shader.CurrentGeometryProgram,
+      ctx->Shader.CurrentFragmentProgram,
+   };
+   unsigned j;
+
+   for (j = 0; j < 3; j++) {
+      unsigned i;
+
+      if (shProg[j] == NULL)
+	 continue;
+
+      for (i = 0; i < shProg[j]->NumShaders; i++) {
+	 struct gl_shader *sh;
+
+	 switch (shProg[j]->Shaders[i]->Type) {
+	 case GL_VERTEX_SHADER:
+	    sh = (i != 0) ? NULL : shProg[j]->Shaders[i];
+	    break;
+	 case GL_GEOMETRY_SHADER_ARB:
+	    sh = (i != 1) ? NULL : shProg[j]->Shaders[i];
+	    break;
+	 case GL_FRAGMENT_SHADER:
+	    sh = (i != 2) ? NULL : shProg[j]->Shaders[i];
+	    break;
+	 default:
+	    assert(0);
+	    sh = NULL;
+	    break;
+	 }
+
+	 if (sh != NULL) {
+	    printf("GLSL shader %u of %u:\n", i, shProg[j]->NumShaders);
+	    printf("%s\n", sh->Source);
+	 }
       }
    }
 }

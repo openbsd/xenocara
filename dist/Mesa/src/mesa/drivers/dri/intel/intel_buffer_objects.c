@@ -40,16 +40,16 @@
 #include "intel_regions.h"
 
 static GLboolean
-intel_bufferobj_unmap(GLcontext * ctx,
+intel_bufferobj_unmap(struct gl_context * ctx,
                       GLenum target, struct gl_buffer_object *obj);
 
-/** Allocates a new dri_bo to store the data for the buffer object. */
+/** Allocates a new drm_intel_bo to store the data for the buffer object. */
 static void
 intel_bufferobj_alloc_buffer(struct intel_context *intel,
 			     struct intel_buffer_object *intel_obj)
 {
-   intel_obj->buffer = dri_bo_alloc(intel->bufmgr, "bufferobj",
-				    intel_obj->Base.Size, 64);
+   intel_obj->buffer = drm_intel_bo_alloc(intel->bufmgr, "bufferobj",
+					  intel_obj->Base.Size, 64);
 }
 
 /**
@@ -59,7 +59,7 @@ intel_bufferobj_alloc_buffer(struct intel_context *intel,
  * internal structure where somehow shared.
  */
 static struct gl_buffer_object *
-intel_bufferobj_alloc(GLcontext * ctx, GLuint name, GLenum target)
+intel_bufferobj_alloc(struct gl_context * ctx, GLuint name, GLenum target)
 {
    struct intel_buffer_object *obj = CALLOC_STRUCT(intel_buffer_object);
 
@@ -80,7 +80,7 @@ intel_bufferobj_release_region(struct intel_context *intel,
    intel_obj->region->pbo = NULL;
    intel_obj->region = NULL;
 
-   dri_bo_unreference(intel_obj->buffer);
+   drm_intel_bo_unreference(intel_obj->buffer);
    intel_obj->buffer = NULL;
 }
 
@@ -101,7 +101,7 @@ intel_bufferobj_cow(struct intel_context *intel,
  * Called via glDeleteBuffersARB().
  */
 static void
-intel_bufferobj_free(GLcontext * ctx, struct gl_buffer_object *obj)
+intel_bufferobj_free(struct gl_context * ctx, struct gl_buffer_object *obj)
 {
    struct intel_context *intel = intel_context(ctx);
    struct intel_buffer_object *intel_obj = intel_buffer_object(obj);
@@ -120,7 +120,7 @@ intel_bufferobj_free(GLcontext * ctx, struct gl_buffer_object *obj)
       intel_bufferobj_release_region(intel, intel_obj);
    }
    else if (intel_obj->buffer) {
-      dri_bo_unreference(intel_obj->buffer);
+      drm_intel_bo_unreference(intel_obj->buffer);
    }
 
    free(intel_obj);
@@ -136,7 +136,7 @@ intel_bufferobj_free(GLcontext * ctx, struct gl_buffer_object *obj)
  * \return GL_TRUE for success, GL_FALSE if out of memory
  */
 static GLboolean
-intel_bufferobj_data(GLcontext * ctx,
+intel_bufferobj_data(struct gl_context * ctx,
                      GLenum target,
                      GLsizeiptrARB size,
                      const GLvoid * data,
@@ -154,7 +154,7 @@ intel_bufferobj_data(GLcontext * ctx,
       intel_bufferobj_release_region(intel, intel_obj);
 
    if (intel_obj->buffer != NULL) {
-      dri_bo_unreference(intel_obj->buffer);
+      drm_intel_bo_unreference(intel_obj->buffer);
       intel_obj->buffer = NULL;
    }
    free(intel_obj->sys_buffer);
@@ -179,7 +179,7 @@ intel_bufferobj_data(GLcontext * ctx,
          return GL_FALSE;
 
       if (data != NULL)
-	 dri_bo_subdata(intel_obj->buffer, 0, size, data);
+	 drm_intel_bo_subdata(intel_obj->buffer, 0, size, data);
    }
 
    return GL_TRUE;
@@ -193,7 +193,7 @@ intel_bufferobj_data(GLcontext * ctx,
  * Called via glBufferSubDataARB().
  */
 static void
-intel_bufferobj_subdata(GLcontext * ctx,
+intel_bufferobj_subdata(struct gl_context * ctx,
                         GLenum target,
                         GLintptrARB offset,
                         GLsizeiptrARB size,
@@ -201,6 +201,9 @@ intel_bufferobj_subdata(GLcontext * ctx,
 {
    struct intel_context *intel = intel_context(ctx);
    struct intel_buffer_object *intel_obj = intel_buffer_object(obj);
+
+   if (size == 0)
+      return;
 
    assert(intel_obj);
 
@@ -211,22 +214,29 @@ intel_bufferobj_subdata(GLcontext * ctx,
       memcpy((char *)intel_obj->sys_buffer + offset, data, size);
    else {
       /* Flush any existing batchbuffer that might reference this data. */
-      if (drm_intel_bo_busy(intel_obj->buffer) ||
-	  drm_intel_bo_references(intel->batch->buf, intel_obj->buffer)) {
-	 drm_intel_bo *temp_bo;
+      if (intel->gen < 6) {
+	 if (drm_intel_bo_busy(intel_obj->buffer) ||
+	     drm_intel_bo_references(intel->batch->buf, intel_obj->buffer)) {
+	    drm_intel_bo *temp_bo;
 
-	 temp_bo = drm_intel_bo_alloc(intel->bufmgr, "subdata temp", size, 64);
+	    temp_bo = drm_intel_bo_alloc(intel->bufmgr, "subdata temp", size, 64);
 
-	 drm_intel_bo_subdata(temp_bo, 0, size, data);
+	    drm_intel_bo_subdata(temp_bo, 0, size, data);
 
-	 intel_emit_linear_blit(intel,
-				intel_obj->buffer, offset,
-				temp_bo, 0,
-				size);
+	    intel_emit_linear_blit(intel,
+				   intel_obj->buffer, offset,
+				   temp_bo, 0,
+				   size);
 
-	 drm_intel_bo_unreference(temp_bo);
+	    drm_intel_bo_unreference(temp_bo);
+	 } else {
+	    drm_intel_bo_subdata(intel_obj->buffer, offset, size, data);
+	 }
       } else {
-	 dri_bo_subdata(intel_obj->buffer, offset, size, data);
+	 if (drm_intel_bo_references(intel->batch->buf, intel_obj->buffer)) {
+	    intel_batchbuffer_flush(intel->batch);
+	 }
+	 drm_intel_bo_subdata(intel_obj->buffer, offset, size, data);
       }
    }
 }
@@ -236,7 +246,7 @@ intel_bufferobj_subdata(GLcontext * ctx,
  * Called via glGetBufferSubDataARB().
  */
 static void
-intel_bufferobj_get_subdata(GLcontext * ctx,
+intel_bufferobj_get_subdata(struct gl_context * ctx,
                             GLenum target,
                             GLintptrARB offset,
                             GLsizeiptrARB size,
@@ -248,7 +258,7 @@ intel_bufferobj_get_subdata(GLcontext * ctx,
    if (intel_obj->sys_buffer)
       memcpy(data, (char *)intel_obj->sys_buffer + offset, size);
    else
-      dri_bo_get_subdata(intel_obj->buffer, offset, size, data);
+      drm_intel_bo_get_subdata(intel_obj->buffer, offset, size, data);
 }
 
 
@@ -257,7 +267,7 @@ intel_bufferobj_get_subdata(GLcontext * ctx,
  * Called via glMapBufferARB().
  */
 static void *
-intel_bufferobj_map(GLcontext * ctx,
+intel_bufferobj_map(struct gl_context * ctx,
                     GLenum target,
                     GLenum access, struct gl_buffer_object *obj)
 {
@@ -277,7 +287,7 @@ intel_bufferobj_map(GLcontext * ctx,
 
    /* Flush any existing batchbuffer that might reference this data. */
    if (drm_intel_bo_references(intel->batch->buf, intel_obj->buffer))
-      intelFlush(ctx);
+      intel_flush(ctx);
 
    if (intel_obj->region)
       intel_bufferobj_cow(intel, intel_obj);
@@ -319,7 +329,7 @@ intel_bufferobj_map(GLcontext * ctx,
  * and blit it into the real BO at unmap time.
  */
 static void *
-intel_bufferobj_map_range(GLcontext * ctx,
+intel_bufferobj_map_range(struct gl_context * ctx,
 			  GLenum target, GLintptr offset, GLsizeiptr length,
 			  GLbitfield access, struct gl_buffer_object *obj)
 {
@@ -349,7 +359,7 @@ intel_bufferobj_map_range(GLcontext * ctx,
     */
    if (!(access & GL_MAP_UNSYNCHRONIZED_BIT) &&
        drm_intel_bo_references(intel->batch->buf, intel_obj->buffer))
-      intelFlush(ctx);
+      intel_flush(ctx);
 
    if (intel_obj->buffer == NULL) {
       obj->Pointer = NULL;
@@ -363,8 +373,8 @@ intel_bufferobj_map_range(GLcontext * ctx,
        (access & GL_MAP_INVALIDATE_BUFFER_BIT) &&
        drm_intel_bo_busy(intel_obj->buffer)) {
       drm_intel_bo_unreference(intel_obj->buffer);
-      intel_obj->buffer = dri_bo_alloc(intel->bufmgr, "bufferobj",
-				       intel_obj->Base.Size, 64);
+      intel_obj->buffer = drm_intel_bo_alloc(intel->bufmgr, "bufferobj",
+					     intel_obj->Base.Size, 64);
    }
 
    /* If the user is mapping a range of an active buffer object but
@@ -412,7 +422,7 @@ intel_bufferobj_map_range(GLcontext * ctx,
  * would defeat the point.
  */
 static void
-intel_bufferobj_flush_mapped_range(GLcontext *ctx, GLenum target,
+intel_bufferobj_flush_mapped_range(struct gl_context *ctx, GLenum target,
 				   GLintptr offset, GLsizeiptr length,
 				   struct gl_buffer_object *obj)
 {
@@ -424,6 +434,9 @@ intel_bufferobj_flush_mapped_range(GLcontext *ctx, GLenum target,
     * there's no work to do.
     */
    if (intel_obj->range_map_buffer == NULL)
+      return;
+
+   if (length == 0)
       return;
 
    temp_bo = drm_intel_bo_alloc(intel->bufmgr, "range map flush", length, 64);
@@ -443,7 +456,7 @@ intel_bufferobj_flush_mapped_range(GLcontext *ctx, GLenum target,
  * Called via glUnmapBuffer().
  */
 static GLboolean
-intel_bufferobj_unmap(GLcontext * ctx,
+intel_bufferobj_unmap(struct gl_context * ctx,
                       GLenum target, struct gl_buffer_object *obj)
 {
    struct intel_context *intel = intel_context(ctx);
@@ -497,7 +510,7 @@ intel_bufferobj_unmap(GLcontext * ctx,
    return GL_TRUE;
 }
 
-dri_bo *
+drm_intel_bo *
 intel_bufferobj_buffer(struct intel_context *intel,
                        struct intel_buffer_object *intel_obj, GLuint flag)
 {
@@ -531,7 +544,7 @@ intel_bufferobj_buffer(struct intel_context *intel,
 }
 
 static void
-intel_bufferobj_copy_subdata(GLcontext *ctx,
+intel_bufferobj_copy_subdata(struct gl_context *ctx,
 			     struct gl_buffer_object *src,
 			     struct gl_buffer_object *dst,
 			     GLintptr read_offset, GLintptr write_offset,
@@ -546,7 +559,7 @@ intel_bufferobj_copy_subdata(GLcontext *ctx,
       return;
 
    /* If we're in system memory, just map and memcpy. */
-   if (intel_src->sys_buffer || intel_dst->sys_buffer) {
+   if (intel_src->sys_buffer || intel_dst->sys_buffer || intel->gen >= 6) {
       /* The same buffer may be used, but note that regions copied may
        * not overlap.
        */
@@ -569,6 +582,7 @@ intel_bufferobj_copy_subdata(GLcontext *ctx,
 	 intel_bufferobj_unmap(ctx, GL_COPY_READ_BUFFER, src);
 	 intel_bufferobj_unmap(ctx, GL_COPY_WRITE_BUFFER, dst);
       }
+      return;
    }
 
    /* Otherwise, we have real BOs, so blit them. */
@@ -590,7 +604,7 @@ intel_bufferobj_copy_subdata(GLcontext *ctx,
 
 #if FEATURE_APPLE_object_purgeable
 static GLenum
-intel_buffer_purgeable(GLcontext * ctx,
+intel_buffer_purgeable(struct gl_context * ctx,
                        drm_intel_bo *buffer,
                        GLenum option)
 {
@@ -603,7 +617,7 @@ intel_buffer_purgeable(GLcontext * ctx,
 }
 
 static GLenum
-intel_buffer_object_purgeable(GLcontext * ctx,
+intel_buffer_object_purgeable(struct gl_context * ctx,
                               struct gl_buffer_object *obj,
                               GLenum option)
 {
@@ -630,7 +644,7 @@ intel_buffer_object_purgeable(GLcontext * ctx,
 }
 
 static GLenum
-intel_texture_object_purgeable(GLcontext * ctx,
+intel_texture_object_purgeable(struct gl_context * ctx,
                                struct gl_texture_object *obj,
                                GLenum option)
 {
@@ -644,7 +658,7 @@ intel_texture_object_purgeable(GLcontext * ctx,
 }
 
 static GLenum
-intel_render_object_purgeable(GLcontext * ctx,
+intel_render_object_purgeable(struct gl_context * ctx,
                               struct gl_renderbuffer *obj,
                               GLenum option)
 {
@@ -658,7 +672,7 @@ intel_render_object_purgeable(GLcontext * ctx,
 }
 
 static GLenum
-intel_buffer_unpurgeable(GLcontext * ctx,
+intel_buffer_unpurgeable(struct gl_context * ctx,
                          drm_intel_bo *buffer,
                          GLenum option)
 {
@@ -672,7 +686,7 @@ intel_buffer_unpurgeable(GLcontext * ctx,
 }
 
 static GLenum
-intel_buffer_object_unpurgeable(GLcontext * ctx,
+intel_buffer_object_unpurgeable(struct gl_context * ctx,
                                 struct gl_buffer_object *obj,
                                 GLenum option)
 {
@@ -680,7 +694,7 @@ intel_buffer_object_unpurgeable(GLcontext * ctx,
 }
 
 static GLenum
-intel_texture_object_unpurgeable(GLcontext * ctx,
+intel_texture_object_unpurgeable(struct gl_context * ctx,
                                  struct gl_texture_object *obj,
                                  GLenum option)
 {
@@ -694,7 +708,7 @@ intel_texture_object_unpurgeable(GLcontext * ctx,
 }
 
 static GLenum
-intel_render_object_unpurgeable(GLcontext * ctx,
+intel_render_object_unpurgeable(struct gl_context * ctx,
                                 struct gl_renderbuffer *obj,
                                 GLenum option)
 {

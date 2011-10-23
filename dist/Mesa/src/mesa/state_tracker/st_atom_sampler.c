@@ -36,6 +36,7 @@
 
 #include "st_context.h"
 #include "st_cb_texture.h"
+#include "st_format.h"
 #include "st_atom.h"
 #include "pipe/p_context.h"
 #include "pipe/p_defines.h"
@@ -117,37 +118,6 @@ gl_filter_to_img_filter(GLenum filter)
 }
 
 
-static void
-xlate_border_color(const GLfloat *colorIn, GLenum baseFormat, GLfloat *colorOut)
-{
-   switch (baseFormat) {
-   case GL_RGB:
-      colorOut[0] = colorIn[0];
-      colorOut[1] = colorIn[1];
-      colorOut[2] = colorIn[2];
-      colorOut[3] = 1.0F;
-      break;
-   case GL_ALPHA:
-      colorOut[0] = colorOut[1] = colorOut[2] = 0.0;
-      colorOut[3] = colorIn[3];
-      break;
-   case GL_LUMINANCE:
-      colorOut[0] = colorOut[1] = colorOut[2] = colorIn[0];
-      colorOut[3] = 1.0;
-      break;
-   case GL_LUMINANCE_ALPHA:
-      colorOut[0] = colorOut[1] = colorOut[2] = colorIn[0];
-      colorOut[3] = colorIn[3];
-      break;
-   case GL_INTENSITY:
-      colorOut[0] = colorOut[1] = colorOut[2] = colorOut[3] = colorIn[0];
-      break;
-   default:
-      COPY_4V(colorOut, colorIn);
-   }
-}
-
-
 static void 
 update_samplers(struct st_context *st)
 {
@@ -193,10 +163,15 @@ update_samplers(struct st_context *st)
          if (texobj->Target != GL_TEXTURE_RECTANGLE_ARB)
             sampler->normalized_coords = 1;
 
-         sampler->lod_bias = st->ctx->Texture.Unit[su].LodBias;
-         sampler->min_lod = MAX2(0.0f, texobj->MinLod);
-         sampler->max_lod = MIN2(texobj->MaxLevel - texobj->BaseLevel,
-                                 texobj->MaxLod);
+         sampler->lod_bias = st->ctx->Texture.Unit[texUnit].LodBias +
+            texobj->LodBias;
+
+         sampler->min_lod = texobj->BaseLevel + texobj->MinLod;
+         if (sampler->min_lod < texobj->BaseLevel)
+            sampler->min_lod = texobj->BaseLevel;
+
+         sampler->max_lod = MIN2((GLfloat) texobj->MaxLevel,
+                                 (texobj->MaxLod + texobj->BaseLevel));
          if (sampler->max_lod < sampler->min_lod) {
             /* The GL spec doesn't seem to specify what to do in this case.
              * Swap the values.
@@ -207,7 +182,7 @@ update_samplers(struct st_context *st)
             assert(sampler->min_lod <= sampler->max_lod);
          }
 
-         xlate_border_color(texobj->BorderColor.f,
+         st_translate_color(texobj->BorderColor.f,
                             teximg ? teximg->_BaseFormat : GL_RGBA,
                             sampler->border_color);
 

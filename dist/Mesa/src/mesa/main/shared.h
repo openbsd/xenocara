@@ -25,13 +25,14 @@
 #ifndef SHARED_H
 #define SHARED_H
 
+struct gl_context;
 
 struct gl_shared_state *
-_mesa_alloc_shared_state(GLcontext *ctx);
+_mesa_alloc_shared_state(struct gl_context *ctx);
 
 
 void
-_mesa_release_shared_state(GLcontext *ctx, struct gl_shared_state *shared);
+_mesa_release_shared_state(struct gl_context *ctx, struct gl_shared_state *shared);
 
 
 #endif

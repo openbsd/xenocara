@@ -462,6 +462,13 @@
 #define BRW_COMPRESSION_2NDHALF       1
 #define BRW_COMPRESSION_COMPRESSED    2
 
+#define GEN6_COMPRESSION_1Q		0
+#define GEN6_COMPRESSION_2Q		1
+#define GEN6_COMPRESSION_3Q		2
+#define GEN6_COMPRESSION_4Q		3
+#define GEN6_COMPRESSION_1H		0
+#define GEN6_COMPRESSION_2H		2
+
 #define BRW_CONDITIONAL_NONE  0
 #define BRW_CONDITIONAL_Z     1
 #define BRW_CONDITIONAL_NZ    2
@@ -501,6 +508,27 @@
 #define BRW_MASK_ENABLE   0
 #define BRW_MASK_DISABLE  1
 
+/** @{
+ *
+ * Gen6 has replaced "mask enable/disable" with WECtrl, which is
+ * effectively the same but much simpler to think about.  Now, there
+ * are two contributors ANDed together to whether channels are
+ * executed: The predication on the instruction, and the channel write
+ * enable.
+ */
+/**
+ * This is the default value.  It means that a channel's write enable is set
+ * if the per-channel IP is pointing at this instruction.
+ */
+#define BRW_WE_NORMAL		0
+/**
+ * This is used like BRW_MASK_DISABLE, and causes all channels to have
+ * their write enable set.  Note that predication still contributes to
+ * whether the channel actually gets written.
+ */
+#define BRW_WE_ALL		1
+/** @} */
+
 #define BRW_OPCODE_MOV        1
 #define BRW_OPCODE_SEL        2
 #define BRW_OPCODE_NOT        4
@@ -530,6 +558,7 @@
 #define BRW_OPCODE_POP        47
 #define BRW_OPCODE_WAIT       48
 #define BRW_OPCODE_SEND       49
+#define BRW_OPCODE_SENDC      50
 #define BRW_OPCODE_MATH       56
 #define BRW_OPCODE_ADD        64
 #define BRW_OPCODE_MUL        65
@@ -550,6 +579,7 @@
 #define BRW_OPCODE_DP2        87
 #define BRW_OPCODE_DPA2       88
 #define BRW_OPCODE_LINE       89
+#define BRW_OPCODE_PLN        90
 #define BRW_OPCODE_NOP        126
 
 #define BRW_PREDICATE_NONE             0
@@ -599,6 +629,8 @@
 #define BRW_ARF_NOTIFICATION_COUNT    0x90
 #define BRW_ARF_IP                    0xA0
 
+#define BRW_MRF_COMPR4			(1 << 7)
+
 #define BRW_AMASK   0
 #define BRW_IMASK   1
 #define BRW_LMASK   2
@@ -645,13 +677,14 @@
 #define BRW_POLYGON_FACING_BACK       1
 
 #define BRW_MESSAGE_TARGET_NULL               0
-#define BRW_MESSAGE_TARGET_MATH               1
+#define BRW_MESSAGE_TARGET_MATH               1 /* reserved on GEN6 */
 #define BRW_MESSAGE_TARGET_SAMPLER            2
 #define BRW_MESSAGE_TARGET_GATEWAY            3
-#define BRW_MESSAGE_TARGET_DATAPORT_READ      4
-#define BRW_MESSAGE_TARGET_DATAPORT_WRITE     5
+#define BRW_MESSAGE_TARGET_DATAPORT_READ      4 /* sampler cache on GEN6 */
+#define BRW_MESSAGE_TARGET_DATAPORT_WRITE     5 /* render cache on Gen6 */
 #define BRW_MESSAGE_TARGET_URB                6
 #define BRW_MESSAGE_TARGET_THREAD_SPAWNER     7
+#define BRW_MESSAGE_TARGET_CONST_CACHE	      9 /* GEN6 */
 
 #define BRW_SAMPLER_RETURN_FORMAT_FLOAT32     0
 #define BRW_SAMPLER_RETURN_FORMAT_UINT32      2
@@ -678,6 +711,9 @@
 #define BRW_SAMPLER_MESSAGE_SAMPLE_BIAS_GEN5       1
 #define BRW_SAMPLER_MESSAGE_SAMPLE_LOD_GEN5        2
 #define BRW_SAMPLER_MESSAGE_SAMPLE_COMPARE_GEN5    3
+#define BRW_SAMPLER_MESSAGE_SAMPLE_DERIVS_GEN5     4
+#define BRW_SAMPLER_MESSAGE_SAMPLE_BIAS_COMPARE_GEN5 5
+#define BRW_SAMPLER_MESSAGE_SAMPLE_LOD_COMPARE_GEN5 6
 
 /* for GEN5 only */
 #define BRW_SAMPLER_SIMD_MODE_SIMD4X2                   0
@@ -697,10 +733,24 @@
 #define BRW_DATAPORT_DWORD_SCATTERED_BLOCK_8DWORDS   2
 #define BRW_DATAPORT_DWORD_SCATTERED_BLOCK_16DWORDS  3
 
+/* This one stays the same across generations. */
 #define BRW_DATAPORT_READ_MESSAGE_OWORD_BLOCK_READ          0
+/* GEN4 */
 #define BRW_DATAPORT_READ_MESSAGE_OWORD_DUAL_BLOCK_READ     1
-#define BRW_DATAPORT_READ_MESSAGE_DWORD_BLOCK_READ          2
+#define BRW_DATAPORT_READ_MESSAGE_MEDIA_BLOCK_READ          2
 #define BRW_DATAPORT_READ_MESSAGE_DWORD_SCATTERED_READ      3
+/* G45, GEN5 */
+#define G45_DATAPORT_READ_MESSAGE_RENDER_UNORM_READ	    1
+#define G45_DATAPORT_READ_MESSAGE_OWORD_DUAL_BLOCK_READ     2
+#define G45_DATAPORT_READ_MESSAGE_AVC_LOOP_FILTER_READ	    3
+#define G45_DATAPORT_READ_MESSAGE_MEDIA_BLOCK_READ          4
+#define G45_DATAPORT_READ_MESSAGE_DWORD_SCATTERED_READ      6
+/* GEN6 */
+#define GEN6_DATAPORT_READ_MESSAGE_RENDER_UNORM_READ	    1
+#define GEN6_DATAPORT_READ_MESSAGE_OWORD_DUAL_BLOCK_READ     2
+#define GEN6_DATAPORT_READ_MESSAGE_MEDIA_BLOCK_READ          4
+#define GEN6_DATAPORT_READ_MESSAGE_OWORD_UNALIGN_BLOCK_READ  5
+#define GEN6_DATAPORT_READ_MESSAGE_DWORD_SCATTERED_READ      6
 
 #define BRW_DATAPORT_READ_TARGET_DATA_CACHE      0
 #define BRW_DATAPORT_READ_TARGET_RENDER_CACHE    1
@@ -719,6 +769,16 @@
 #define BRW_DATAPORT_WRITE_MESSAGE_RENDER_TARGET_WRITE              4
 #define BRW_DATAPORT_WRITE_MESSAGE_STREAMED_VERTEX_BUFFER_WRITE     5
 #define BRW_DATAPORT_WRITE_MESSAGE_FLUSH_RENDER_CACHE               7
+
+/* GEN6 */
+#define BRW_DATAPORT_WRITE_MESSAGE_DWORD_ATOMIC_WRITE_GEN6		7
+#define BRW_DATAPORT_WRITE_MESSAGE_OWORD_BLOCK_WRITE_GEN6		8
+#define BRW_DATAPORT_WRITE_MESSAGE_OWORD_DUAL_BLOCK_WRITE_GEN6		9
+#define BRW_DATAPORT_WRITE_MESSAGE_MEDIA_BLOCK_WRITE_GEN6		10
+#define BRW_DATAPORT_WRITE_MESSAGE_DWORLD_SCATTERED_WRITE_GEN6		11
+#define BRW_DATAPORT_WRITE_MESSAGE_RENDER_TARGET_WRITE_GEN6		12
+#define BRW_DATAPORT_WRITE_MESSAGE_STREAMED_VB_WRITE_GEN6		13
+#define BRW_DATAPORT_WRITE_MESSAGE_RENDER_TARGET_UNORM_WRITE_GEN6	14
 
 #define BRW_MATH_FUNCTION_INV                              1
 #define BRW_MATH_FUNCTION_LOG                              2
@@ -782,9 +842,9 @@
 #define CMD_BINDING_TABLE_PTRS        0x7801
 # define GEN6_BINDING_TABLE_MODIFY_VS	(1 << 8)
 # define GEN6_BINDING_TABLE_MODIFY_GS	(1 << 9)
-# define GEN6_BINDING_TABLE_MODIFY_PS	(1 << 10)
+# define GEN6_BINDING_TABLE_MODIFY_PS	(1 << 12)
 
-#define CMD_3D_SAMPLER_STATE_POINTERS			0x7802 /* SNB+ */
+#define _3DSTATE_SAMPLER_STATE_POINTERS		0x7802 /* GEN6+ */
 # define PS_SAMPLER_STATE_CHANGE				(1 << 12)
 # define GS_SAMPLER_STATE_CHANGE				(1 << 9)
 # define VS_SAMPLER_STATE_CHANGE				(1 << 8)
@@ -825,27 +885,29 @@
 #define CMD_INDEX_BUFFER              0x780a
 #define CMD_VF_STATISTICS_965          0x780b
 #define CMD_VF_STATISTICS_GM45        0x680b
-#define CMD_3D_CC_STATE_POINTERS      0x780e /* GEN6+ */
+#define _3DSTATE_CC_STATE_POINTERS		0x780e /* GEN6+ */
 
-#define CMD_URB					0x7805 /* GEN6+ */
+#define _3DSTATE_URB				0x7805 /* GEN6+ */
 # define GEN6_URB_VS_SIZE_SHIFT				16
 # define GEN6_URB_VS_ENTRIES_SHIFT			0
-# define GEN6_URB_GS_SIZE_SHIFT				8
-# define GEN6_URB_GS_ENTRIES_SHIFT			0
+# define GEN6_URB_GS_ENTRIES_SHIFT			8
+# define GEN6_URB_GS_SIZE_SHIFT				0
 
-#define CMD_VIEWPORT_STATE_POINTERS			0x780d /* GEN6+ */
+#define _3DSTATE_VIEWPORT_STATE_POINTERS	0x780d /* GEN6+ */
 # define GEN6_CC_VIEWPORT_MODIFY			(1 << 12)
 # define GEN6_SF_VIEWPORT_MODIFY			(1 << 11)
 # define GEN6_CLIP_VIEWPORT_MODIFY			(1 << 10)
 
-#define CMD_3D_SCISSOR_STATE_POINTERS		0x780f /* GEN6+ */
+#define _3DSTATE_SCISSOR_STATE_POINTERS		0x780f /* GEN6+ */
 
-#define CMD_3D_VS_STATE		      0x7810 /* GEN6+ */
+#define _3DSTATE_VS				0x7810 /* GEN6+ */
 /* DW2 */
 # define GEN6_VS_SPF_MODE				(1 << 31)
 # define GEN6_VS_VECTOR_MASK_ENABLE			(1 << 30)
 # define GEN6_VS_SAMPLER_COUNT_SHIFT			27
 # define GEN6_VS_BINDING_TABLE_ENTRY_COUNT_SHIFT	18
+# define GEN6_VS_FLOATING_POINT_MODE_IEEE_754		(0 << 16)
+# define GEN6_VS_FLOATING_POINT_MODE_ALT		(1 << 16)
 /* DW4 */
 # define GEN6_VS_DISPATCH_START_GRF_SHIFT		20
 # define GEN6_VS_URB_READ_LENGTH_SHIFT			11
@@ -856,7 +918,7 @@
 # define GEN6_VS_CACHE_DISABLE				(1 << 1)
 # define GEN6_VS_ENABLE					(1 << 0)
 
-#define CMD_3D_GS_STATE		      0x7811 /* GEN6+ */
+#define _3DSTATE_GS		      		0x7811 /* GEN6+ */
 /* DW2 */
 # define GEN6_GS_SPF_MODE				(1 << 31)
 # define GEN6_GS_VECTOR_MASK_ENABLE			(1 << 30)
@@ -874,9 +936,14 @@
 /* DW6 */
 # define GEN6_GS_ENABLE					(1 << 15)
 
-#define CMD_3D_CLIP_STATE		      0x7812 /* GEN6+ */
+#define _3DSTATE_CLIP				0x7812 /* GEN6+ */
 /* DW1 */
 # define GEN6_CLIP_STATISTICS_ENABLE			(1 << 10)
+/**
+ * Just does cheap culling based on the clip distance.  Bits must be
+ * disjoint with USER_CLIP_CLIP_DISTANCE bits.
+ */
+# define GEN6_USER_CLIP_CULL_DISTANCES_SHIFT		0
 /* DW2 */
 # define GEN6_CLIP_ENABLE				(1 << 31)
 # define GEN6_CLIP_API_OGL				(0 << 30)
@@ -884,6 +951,8 @@
 # define GEN6_CLIP_XY_TEST				(1 << 28)
 # define GEN6_CLIP_Z_TEST				(1 << 27)
 # define GEN6_CLIP_GB_TEST				(1 << 26)
+/** 8-bit field of which user clip distances to clip aganist. */
+# define GEN6_USER_CLIP_CLIP_DISTANCES_SHIFT		16
 # define GEN6_CLIP_MODE_NORMAL				(0 << 13)
 # define GEN6_CLIP_MODE_REJECT_ALL			(3 << 13)
 # define GEN6_CLIP_MODE_ACCEPT_ALL			(4 << 13)
@@ -895,8 +964,9 @@
 /* DW3 */
 # define GEN6_CLIP_MIN_POINT_WIDTH_SHIFT		17
 # define GEN6_CLIP_MAX_POINT_WIDTH_SHIFT		6
+# define GEN6_CLIP_FORCE_ZERO_RTAINDEX			(1 << 5)
 
-#define CMD_3D_SF_STATE				0x7813 /* GEN6+ */
+#define _3DSTATE_SF				0x7813 /* GEN6+ */
 /* DW1 */
 # define GEN6_SF_NUM_OUTPUTS_SHIFT			22
 # define GEN6_SF_SWIZZLE_ENABLE				(1 << 21)
@@ -961,18 +1031,27 @@
 # define ATTRIBUTE_0_CONST_SOURCE_SHIFT			9
 # define ATTRIBUTE_0_SWIZZLE_SHIFT			6
 # define ATTRIBUTE_0_SOURCE_SHIFT			0
+
+# define ATTRIBUTE_SWIZZLE_INPUTATTR                    0
+# define ATTRIBUTE_SWIZZLE_INPUTATTR_FACING             1
+# define ATTRIBUTE_SWIZZLE_INPUTATTR_W                  2
+# define ATTRIBUTE_SWIZZLE_INPUTATTR_FACING_W           3
+# define ATTRIBUTE_SWIZZLE_SHIFT                        6
+
 /* DW16: Point sprite texture coordinate enables */
 /* DW17: Constant interpolation enables */
 /* DW18: attr 0-7 wrap shortest enables */
 /* DW19: attr 8-16 wrap shortest enables */
 
-#define CMD_3D_WM_STATE		      0x7814 /* GEN6+ */
+#define _3DSTATE_WM				0x7814 /* GEN6+ */
 /* DW1: kernel pointer */
 /* DW2 */
 # define GEN6_WM_SPF_MODE				(1 << 31)
 # define GEN6_WM_VECTOR_MASK_ENABLE			(1 << 30)
 # define GEN6_WM_SAMPLER_COUNT_SHIFT			27
 # define GEN6_WM_BINDING_TABLE_ENTRY_COUNT_SHIFT	18
+# define GEN6_WM_FLOATING_POINT_MODE_IEEE_754		(0 << 16)
+# define GEN6_WM_FLOATING_POINT_MODE_ALT		(1 << 16)
 /* DW3: scratch space */
 /* DW4 */
 # define GEN6_WM_STATISTICS_ENABLE			(1 << 31)
@@ -997,7 +1076,7 @@
 # define GEN6_WM_LINE_AA_WIDTH_2_0			(2 << 14)
 # define GEN6_WM_LINE_AA_WIDTH_4_0			(3 << 14)
 # define GEN6_WM_POLYGON_STIPPLE_ENABLE			(1 << 13)
-# define GEN6_WM_LINE_STIPPLE_ENABLE			(1 << 12)
+# define GEN6_WM_LINE_STIPPLE_ENABLE			(1 << 11)
 # define GEN6_WM_OMASK_TO_RENDER_TARGET			(1 << 9)
 # define GEN6_WM_USES_SOURCE_W				(1 << 8)
 # define GEN6_WM_DUAL_SOURCE_BLEND_ENABLE		(1 << 7)
@@ -1027,15 +1106,15 @@
 /* DW7: kernel 1 pointer */
 /* DW8: kernel 2 pointer */
 
-#define CMD_3D_CONSTANT_VS_STATE	      0x7815 /* GEN6+ */
-#define CMD_3D_CONSTANT_GS_STATE	      0x7816 /* GEN6+ */
-#define CMD_3D_CONSTANT_PS_STATE	      0x7817 /* GEN6+ */
+#define _3DSTATE_CONSTANT_VS		      0x7815 /* GEN6+ */
+#define _3DSTATE_CONSTANT_GS		      0x7816 /* GEN6+ */
+#define _3DSTATE_CONSTANT_PS		      0x7817 /* GEN6+ */
 # define GEN6_CONSTANT_BUFFER_3_ENABLE			(1 << 15)
 # define GEN6_CONSTANT_BUFFER_2_ENABLE			(1 << 14)
 # define GEN6_CONSTANT_BUFFER_1_ENABLE			(1 << 13)
 # define GEN6_CONSTANT_BUFFER_0_ENABLE			(1 << 12)
 
-#define CMD_3D_SAMPLE_MASK			0x7818 /* GEN6+ */
+#define _3DSTATE_SAMPLE_MASK			0x7818 /* GEN6+ */
 
 #define CMD_DRAW_RECT                 0x7900
 #define CMD_BLEND_CONSTANT_COLOR      0x7901
@@ -1054,7 +1133,7 @@
 /* DW2: SVB index */
 /* DW3: SVB maximum index */
 
-#define CMD_3D_MULTISAMPLE			0x790d /* SNB+ */
+#define _3DSTATE_MULTISAMPLE			0x790d /* GEN6+ */
 /* DW1 */
 # define MS_PIXEL_LOCATION_CENTER			(0 << 4)
 # define MS_PIXEL_LOCATION_UPPER_LEFT			(1 << 4)

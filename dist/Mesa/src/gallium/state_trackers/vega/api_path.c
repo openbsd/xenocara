@@ -28,19 +28,16 @@
 
 #include "vg_context.h"
 #include "path.h"
-#include "polygon.h"
-#include "paint.h"
+#include "api.h"
 
 #include "pipe/p_context.h"
-#include "util/u_inlines.h"
-#include "util/u_draw_quad.h"
 
-VGPath vgCreatePath(VGint pathFormat,
-                    VGPathDatatype datatype,
-                    VGfloat scale, VGfloat bias,
-                    VGint segmentCapacityHint,
-                    VGint coordCapacityHint,
-                    VGbitfield capabilities)
+VGPath vegaCreatePath(VGint pathFormat,
+                      VGPathDatatype datatype,
+                      VGfloat scale, VGfloat bias,
+                      VGint segmentCapacityHint,
+                      VGint coordCapacityHint,
+                      VGbitfield capabilities)
 {
    struct vg_context *ctx = vg_current_context();
 
@@ -63,7 +60,7 @@ VGPath vgCreatePath(VGint pathFormat,
                               capabilities);
 }
 
-void vgClearPath(VGPath path, VGbitfield capabilities)
+void vegaClearPath(VGPath path, VGbitfield capabilities)
 {
    struct vg_context *ctx = vg_current_context();
    struct path *p = 0;
@@ -77,7 +74,7 @@ void vgClearPath(VGPath path, VGbitfield capabilities)
    path_clear(p, capabilities);
 }
 
-void vgDestroyPath(VGPath p)
+void vegaDestroyPath(VGPath p)
 {
    struct path *path = 0;
    struct vg_context *ctx = vg_current_context();
@@ -91,8 +88,8 @@ void vgDestroyPath(VGPath p)
    path_destroy(path);
 }
 
-void vgRemovePathCapabilities(VGPath path,
-                              VGbitfield capabilities)
+void vegaRemovePathCapabilities(VGPath path,
+                                VGbitfield capabilities)
 {
    struct vg_context *ctx = vg_current_context();
    VGbitfield current;
@@ -109,7 +106,7 @@ void vgRemovePathCapabilities(VGPath path,
                              (~(capabilities & VG_PATH_CAPABILITY_ALL))));
 }
 
-VGbitfield vgGetPathCapabilities(VGPath path)
+VGbitfield vegaGetPathCapabilities(VGPath path)
 {
    struct vg_context *ctx = vg_current_context();
    struct path *p = 0;
@@ -122,7 +119,7 @@ VGbitfield vgGetPathCapabilities(VGPath path)
    return path_capabilities(p);
 }
 
-void vgAppendPath(VGPath dstPath, VGPath srcPath)
+void vegaAppendPath(VGPath dstPath, VGPath srcPath)
 {
    struct vg_context *ctx = vg_current_context();
    struct path *src, *dst;
@@ -142,10 +139,10 @@ void vgAppendPath(VGPath dstPath, VGPath srcPath)
    path_append_path(dst, src);
 }
 
-void vgAppendPathData(VGPath dstPath,
-                      VGint numSegments,
-                      const VGubyte * pathSegments,
-                      const void * pathData)
+void vegaAppendPathData(VGPath dstPath,
+                        VGint numSegments,
+                        const VGubyte * pathSegments,
+                        const void * pathData)
 {
    struct vg_context *ctx = vg_current_context();
    struct path *p = 0;
@@ -185,10 +182,10 @@ void vgAppendPathData(VGPath dstPath,
    path_append_data(p, numSegments, pathSegments, pathData);
 }
 
-void vgModifyPathCoords(VGPath dstPath,
-                        VGint startIndex,
-                        VGint numSegments,
-                        const void * pathData)
+void vegaModifyPathCoords(VGPath dstPath,
+                          VGint startIndex,
+                          VGint numSegments,
+                          const void * pathData)
 {
    struct vg_context *ctx = vg_current_context();
    struct path *p = 0;
@@ -220,7 +217,7 @@ void vgModifyPathCoords(VGPath dstPath,
    path_modify_coords(p, startIndex, numSegments, pathData);
 }
 
-void vgTransformPath(VGPath dstPath, VGPath srcPath)
+void vegaTransformPath(VGPath dstPath, VGPath srcPath)
 {
    struct vg_context *ctx = vg_current_context();
    struct path *src = 0, *dst = 0;
@@ -240,10 +237,10 @@ void vgTransformPath(VGPath dstPath, VGPath srcPath)
    path_transform(dst, src);
 }
 
-VGboolean vgInterpolatePath(VGPath dstPath,
-                            VGPath startPath,
-                            VGPath endPath,
-                            VGfloat amount)
+VGboolean vegaInterpolatePath(VGPath dstPath,
+                              VGPath startPath,
+                              VGPath endPath,
+                              VGfloat amount)
 {
    struct vg_context *ctx = vg_current_context();
    struct path *start = 0, *dst = 0, *end = 0;
@@ -269,9 +266,9 @@ VGboolean vgInterpolatePath(VGPath dstPath,
                            start, end, amount);
 }
 
-VGfloat vgPathLength(VGPath path,
-                     VGint startSegment,
-                     VGint numSegments)
+VGfloat vegaPathLength(VGPath path,
+                       VGint startSegment,
+                       VGint numSegments)
 {
    struct vg_context *ctx = vg_current_context();
    struct path *p = 0;
@@ -302,13 +299,13 @@ VGfloat vgPathLength(VGPath path,
    return path_length(p, startSegment, numSegments);
 }
 
-void vgPointAlongPath(VGPath path,
-                      VGint startSegment,
-                      VGint numSegments,
-                      VGfloat distance,
-                      VGfloat * x, VGfloat * y,
-                      VGfloat * tangentX,
-                      VGfloat * tangentY)
+void vegaPointAlongPath(VGPath path,
+                        VGint startSegment,
+                        VGint numSegments,
+                        VGfloat distance,
+                        VGfloat * x, VGfloat * y,
+                        VGfloat * tangentX,
+                        VGfloat * tangentY)
 {
    struct vg_context *ctx = vg_current_context();
    struct path *p = 0;
@@ -362,11 +359,11 @@ void vgPointAlongPath(VGPath path,
    }
 }
 
-void vgPathBounds(VGPath path,
-                  VGfloat * minX,
-                  VGfloat * minY,
-                  VGfloat * width,
-                  VGfloat * height)
+void vegaPathBounds(VGPath path,
+                    VGfloat * minX,
+                    VGfloat * minY,
+                    VGfloat * width,
+                    VGfloat * height)
 {
    struct vg_context *ctx = vg_current_context();
    struct path *p = 0;
@@ -399,11 +396,11 @@ void vgPathBounds(VGPath path,
    path_bounding_rect(p, minX, minY, width, height);
 }
 
-void vgPathTransformedBounds(VGPath path,
-                             VGfloat * minX,
-                             VGfloat * minY,
-                             VGfloat * width,
-                             VGfloat * height)
+void vegaPathTransformedBounds(VGPath path,
+                               VGfloat * minX,
+                               VGfloat * minY,
+                               VGfloat * width,
+                               VGfloat * height)
 {
    struct vg_context *ctx = vg_current_context();
    struct path *p = 0;
@@ -466,7 +463,7 @@ void vgPathTransformedBounds(VGPath path,
 }
 
 
-void vgDrawPath(VGPath path, VGbitfield paintModes)
+void vegaDrawPath(VGPath path, VGbitfield paintModes)
 {
    struct vg_context *ctx = vg_current_context();
 
@@ -482,6 +479,7 @@ void vgDrawPath(VGPath path, VGbitfield paintModes)
 
    if (path_is_empty((struct path*)path))
       return;
-   path_render((struct path*)path, paintModes);
+   path_render((struct path*)path, paintModes,
+         &ctx->state.vg.path_user_to_surface_matrix);
 }
 

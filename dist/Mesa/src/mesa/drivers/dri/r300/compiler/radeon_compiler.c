@@ -26,7 +26,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "radeon_dataflow.h"
 #include "radeon_program.h"
+#include "radeon_program_pair.h"
+#include "radeon_compiler_util.h"
 
 
 void rc_init(struct radeon_compiler * c)
@@ -50,7 +53,7 @@ void rc_debug(struct radeon_compiler * c, const char * fmt, ...)
 {
 	va_list ap;
 
-	if (!c->Debug)
+	if (!(c->Debug & RC_DBG_LOG))
 		return;
 
 	va_start(ap, fmt);
@@ -84,7 +87,7 @@ void rc_error(struct radeon_compiler * c, const char * fmt, ...)
 		}
 	}
 
-	if (c->Debug) {
+	if (c->Debug & RC_DBG_LOG) {
 		fprintf(stderr, "r300compiler error: ");
 
 		va_start(ap, fmt);
@@ -277,13 +280,13 @@ void rc_transform_fragment_wpos(struct radeon_compiler * c, unsigned wpos, unsig
 
 	inst_mad->U.I.SrcReg[0].File = RC_FILE_TEMPORARY;
 	inst_mad->U.I.SrcReg[0].Index = tempregi;
-	inst_mad->U.I.SrcReg[0].Swizzle = RC_MAKE_SWIZZLE(RC_SWIZZLE_X, RC_SWIZZLE_Y, RC_SWIZZLE_Z, RC_SWIZZLE_ZERO);
+	inst_mad->U.I.SrcReg[0].Swizzle = RC_SWIZZLE_XYZ0;
 
 	inst_mad->U.I.SrcReg[1].File = RC_FILE_CONSTANT;
-	inst_mad->U.I.SrcReg[1].Swizzle = RC_MAKE_SWIZZLE(RC_SWIZZLE_X, RC_SWIZZLE_Y, RC_SWIZZLE_Z, RC_SWIZZLE_ZERO);
+	inst_mad->U.I.SrcReg[1].Swizzle = RC_SWIZZLE_XYZ0;
 
 	inst_mad->U.I.SrcReg[2].File = RC_FILE_CONSTANT;
-	inst_mad->U.I.SrcReg[2].Swizzle = RC_MAKE_SWIZZLE(RC_SWIZZLE_X, RC_SWIZZLE_Y, RC_SWIZZLE_Z, RC_SWIZZLE_ZERO);
+	inst_mad->U.I.SrcReg[2].Swizzle = RC_SWIZZLE_XYZ0;
 
 	if (full_vtransform) {
 		inst_mad->U.I.SrcReg[1].Index = rc_constants_add_state(&c->Program.Constants, RC_STATE_R300_VIEWPORT_SCALE, 0);
@@ -307,3 +310,173 @@ void rc_transform_fragment_wpos(struct radeon_compiler * c, unsigned wpos, unsig
 	}
 }
 
+
+/**
+ * The FACE input in hardware contains 1 if it's a back face, 0 otherwise.
+ * Gallium and OpenGL define it the other way around.
+ *
+ * So let's just negate FACE at the beginning of the shader and rewrite the rest
+ * of the shader to read from the newly allocated temporary.
+ */
+void rc_transform_fragment_face(struct radeon_compiler *c, unsigned face)
+{
+	unsigned tempregi = rc_find_free_temporary(c);
+	struct rc_instruction *inst_add;
+	struct rc_instruction *inst;
+
+	/* perspective divide */
+	inst_add = rc_insert_new_instruction(c, &c->Program.Instructions);
+	inst_add->U.I.Opcode = RC_OPCODE_ADD;
+
+	inst_add->U.I.DstReg.File = RC_FILE_TEMPORARY;
+	inst_add->U.I.DstReg.Index = tempregi;
+	inst_add->U.I.DstReg.WriteMask = RC_MASK_X;
+
+	inst_add->U.I.SrcReg[0].File = RC_FILE_NONE;
+	inst_add->U.I.SrcReg[0].Swizzle = RC_SWIZZLE_1111;
+
+	inst_add->U.I.SrcReg[1].File = RC_FILE_INPUT;
+	inst_add->U.I.SrcReg[1].Index = face;
+	inst_add->U.I.SrcReg[1].Swizzle = RC_SWIZZLE_XXXX;
+	inst_add->U.I.SrcReg[1].Negate = RC_MASK_XYZW;
+
+	for (inst = inst_add->Next; inst != &c->Program.Instructions; inst = inst->Next) {
+		const struct rc_opcode_info * opcode = rc_get_opcode_info(inst->U.I.Opcode);
+		unsigned i;
+
+		for(i = 0; i < opcode->NumSrcRegs; i++) {
+			if (inst->U.I.SrcReg[i].File == RC_FILE_INPUT &&
+			    inst->U.I.SrcReg[i].Index == face) {
+				inst->U.I.SrcReg[i].File = RC_FILE_TEMPORARY;
+				inst->U.I.SrcReg[i].Index = tempregi;
+			}
+		}
+	}
+}
+
+static void reg_count_callback(void * userdata, struct rc_instruction * inst,
+		rc_register_file file, unsigned int index, unsigned int mask)
+{
+	int *max_reg = userdata;
+	if (file == RC_FILE_TEMPORARY)
+		(int)index > *max_reg ? *max_reg = index : 0;
+}
+
+void rc_get_stats(struct radeon_compiler *c, struct rc_program_stats *s)
+{
+	int max_reg = -1;
+	struct rc_instruction * tmp;
+	memset(s, 0, sizeof(*s));
+
+	for(tmp = c->Program.Instructions.Next; tmp != &c->Program.Instructions;
+							tmp = tmp->Next){
+		const struct rc_opcode_info * info;
+		rc_for_all_reads_mask(tmp, reg_count_callback, &max_reg);
+		if (tmp->Type == RC_INSTRUCTION_NORMAL) {
+			if (tmp->U.I.PreSub.Opcode != RC_PRESUB_NONE)
+				s->num_presub_ops++;
+			info = rc_get_opcode_info(tmp->U.I.Opcode);
+		} else {
+			if (tmp->U.P.RGB.Src[RC_PAIR_PRESUB_SRC].Used)
+				s->num_presub_ops++;
+			if (tmp->U.P.Alpha.Src[RC_PAIR_PRESUB_SRC].Used)
+				s->num_presub_ops++;
+			/* Assuming alpha will never be a flow control or
+			 * a tex instruction. */
+			if (tmp->U.P.Alpha.Opcode != RC_OPCODE_NOP)
+				s->num_alpha_insts++;
+			if (tmp->U.P.RGB.Opcode != RC_OPCODE_NOP)
+				s->num_rgb_insts++;
+			info = rc_get_opcode_info(tmp->U.P.RGB.Opcode);
+		}
+		if (info->IsFlowControl)
+			s->num_fc_insts++;
+		if (info->HasTexture)
+			s->num_tex_insts++;
+		s->num_insts++;
+	}
+	s->num_temp_regs = max_reg + 1;
+}
+
+static void print_stats(struct radeon_compiler * c)
+{
+	struct rc_program_stats s;
+
+	rc_get_stats(c, &s);
+
+	if (s.num_insts < 4)
+		return;
+
+	switch (c->type) {
+	case RC_VERTEX_PROGRAM:
+		fprintf(stderr,"~~~~~~~~~ VERTEX PROGRAM ~~~~~~~~\n"
+			       "~%4u Instructions\n"
+			       "~%4u Flow Control Instructions\n"
+			       "~%4u Temporary Registers\n"
+			       "~~~~~~~~~~~~~~ END ~~~~~~~~~~~~~~\n",
+			       s.num_insts, s.num_fc_insts, s.num_temp_regs);
+		break;
+
+	case RC_FRAGMENT_PROGRAM:
+		fprintf(stderr,"~~~~~~~~ FRAGMENT PROGRAM ~~~~~~~\n"
+			       "~%4u Instructions\n"
+			       "~%4u Vector Instructions (RGB)\n"
+			       "~%4u Scalar Instructions (Alpha)\n"
+			       "~%4u Flow Control Instructions\n"
+			       "~%4u Texture Instructions\n"
+			       "~%4u Presub Operations\n"
+			       "~%4u Temporary Registers\n"
+			       "~~~~~~~~~~~~~~ END ~~~~~~~~~~~~~~\n",
+			       s.num_insts, s.num_rgb_insts, s.num_alpha_insts,
+			       s.num_fc_insts, s.num_tex_insts, s.num_presub_ops,
+			       s.num_temp_regs);
+		break;
+	default:
+		assert(0);
+	}
+}
+
+static const char *shader_name[RC_NUM_PROGRAM_TYPES] = {
+	"Vertex Program",
+	"Fragment Program"
+};
+
+void rc_run_compiler_passes(struct radeon_compiler *c, struct radeon_compiler_pass *list)
+{
+	for (unsigned i = 0; list[i].name; i++) {
+		if (list[i].predicate) {
+			list[i].run(c, list[i].user);
+
+			if (c->Error)
+				return;
+
+			if ((c->Debug & RC_DBG_LOG) && list[i].dump) {
+				fprintf(stderr, "%s: after '%s'\n", shader_name[c->type], list[i].name);
+				rc_print_program(&c->Program);
+			}
+		}
+	}
+}
+
+/* Executes a list of compiler passes given in the parameter 'list'. */
+void rc_run_compiler(struct radeon_compiler *c, struct radeon_compiler_pass *list)
+{
+	if (c->Debug & RC_DBG_LOG) {
+		fprintf(stderr, "%s: before compilation\n", shader_name[c->type]);
+		rc_print_program(&c->Program);
+	}
+
+	rc_run_compiler_passes(c, list);
+
+	if (c->Debug & RC_DBG_STATS)
+		print_stats(c);
+}
+
+void rc_validate_final_shader(struct radeon_compiler *c, void *user)
+{
+	/* Check the number of constants. */
+	if (c->Program.Constants.Count > c->max_constants) {
+		rc_error(c, "Too many constants. Max: 256, Got: %i\n",
+			 c->Program.Constants.Count);
+	}
+}

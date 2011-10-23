@@ -7,7 +7,9 @@
  */
 
 /* Texture image control block */
+#define NV50TIC_0_0_SWIZZLE_MASK                                  0x3ffc0000
 #define NV50TIC_0_0_MAPA_MASK                                     0x38000000
+#define NV50TIC_0_0_MAPA_SHIFT                                            27
 #define NV50TIC_0_0_MAPA_ZERO                                     0x00000000
 #define NV50TIC_0_0_MAPA_C0                                       0x10000000
 #define NV50TIC_0_0_MAPA_C1                                       0x18000000
@@ -15,6 +17,7 @@
 #define NV50TIC_0_0_MAPA_C3                                       0x28000000
 #define NV50TIC_0_0_MAPA_ONE                                      0x38000000
 #define NV50TIC_0_0_MAPB_MASK                                     0x07000000
+#define NV50TIC_0_0_MAPB_SHIFT                                            24
 #define NV50TIC_0_0_MAPB_ZERO                                     0x00000000
 #define NV50TIC_0_0_MAPB_C0                                       0x02000000
 #define NV50TIC_0_0_MAPB_C1                                       0x03000000
@@ -22,6 +25,7 @@
 #define NV50TIC_0_0_MAPB_C3                                       0x05000000
 #define NV50TIC_0_0_MAPB_ONE                                      0x07000000
 #define NV50TIC_0_0_MAPG_MASK                                     0x00e00000
+#define NV50TIC_0_0_MAPG_SHIFT                                            21
 #define NV50TIC_0_0_MAPG_ZERO                                     0x00000000
 #define NV50TIC_0_0_MAPG_C0                                       0x00400000
 #define NV50TIC_0_0_MAPG_C1                                       0x00600000
@@ -29,6 +33,7 @@
 #define NV50TIC_0_0_MAPG_C3                                       0x00a00000
 #define NV50TIC_0_0_MAPG_ONE                                      0x00e00000
 #define NV50TIC_0_0_MAPR_MASK                                     0x001c0000
+#define NV50TIC_0_0_MAPR_SHIFT                                            18
 #define NV50TIC_0_0_MAPR_ZERO                                     0x00000000
 #define NV50TIC_0_0_MAPR_C0                                       0x00080000
 #define NV50TIC_0_0_MAPR_C1                                       0x000c0000
@@ -40,24 +45,32 @@
 #define NV50TIC_0_0_TYPEA_SNORM                                   0x00008000
 #define NV50TIC_0_0_TYPEA_SINT                                    0x00018000
 #define NV50TIC_0_0_TYPEA_UINT                                    0x00020000
+#define NV50TIC_0_0_TYPEA_SSCALED                                 0x00028000
+#define NV50TIC_0_0_TYPEA_USCALED                                 0x00030000
 #define NV50TIC_0_0_TYPEA_FLOAT                                   0x00038000
 #define NV50TIC_0_0_TYPEB_MASK                                    0x00007000
 #define NV50TIC_0_0_TYPEB_UNORM                                   0x00002000
 #define NV50TIC_0_0_TYPEB_SNORM                                   0x00001000
 #define NV50TIC_0_0_TYPEB_SINT                                    0x00003000
 #define NV50TIC_0_0_TYPEB_UINT                                    0x00004000
+#define NV50TIC_0_0_TYPEB_SSCALED                                 0x00005000
+#define NV50TIC_0_0_TYPEB_USCALED                                 0x00006000
 #define NV50TIC_0_0_TYPEB_FLOAT                                   0x00007000
 #define NV50TIC_0_0_TYPEG_MASK                                    0x00000e00
 #define NV50TIC_0_0_TYPEG_UNORM                                   0x00000400
 #define NV50TIC_0_0_TYPEG_SNORM                                   0x00000200
 #define NV50TIC_0_0_TYPEG_SINT                                    0x00000600
 #define NV50TIC_0_0_TYPEG_UINT                                    0x00000800
+#define NV50TIC_0_0_TYPEG_SSCALED                                 0x00000a00
+#define NV50TIC_0_0_TYPEG_USCALED                                 0x00000c00
 #define NV50TIC_0_0_TYPEG_FLOAT                                   0x00000e00
 #define NV50TIC_0_0_TYPER_MASK                                    0x000001c0
 #define NV50TIC_0_0_TYPER_UNORM                                   0x00000080
 #define NV50TIC_0_0_TYPER_SNORM                                   0x00000040
 #define NV50TIC_0_0_TYPER_SINT                                    0x000000c0
 #define NV50TIC_0_0_TYPER_UINT                                    0x00000100
+#define NV50TIC_0_0_TYPER_SSCALED                                 0x00000140
+#define NV50TIC_0_0_TYPER_USCALED                                 0x00000180
 #define NV50TIC_0_0_TYPER_FLOAT                                   0x000001c0
 #define NV50TIC_0_0_FMT_MASK                                      0x0000003f
 #define NV50TIC_0_0_FMT_32_32_32_32                               0x00000001
@@ -85,26 +98,44 @@
 #define NV50TIC_0_0_FMT_8_24                                      0x0000002a
 #define NV50TIC_0_0_FMT_32_DEPTH                                  0x0000002f
 #define NV50TIC_0_0_FMT_32_8                                      0x00000030
+#define NV50TIC_0_0_FMT_16_DEPTH                                  0x0000003a
 
 #define NV50TIC_0_1_OFFSET_LOW_MASK                               0xffffffff
 #define NV50TIC_0_1_OFFSET_LOW_SHIFT                                       0
 
-#define NV50TIC_0_2_UNKNOWN_MASK                                  0xffffffff
+#define NV50TIC_0_2_COLORSPACE_SRGB                               0x00000400
+#define NV50TIC_0_2_TARGET_1D                                     0x00000000
+#define NV50TIC_0_2_TARGET_2D                                     0x00004000
+#define NV50TIC_0_2_TARGET_3D                                     0x00008000
+#define NV50TIC_0_2_TARGET_CUBE                                   0x0000c000
+#define NV50TIC_0_2_TARGET_1D_ARRAY                               0x00010000
+#define NV50TIC_0_2_TARGET_2D_ARRAY                               0x00014000
+#define NV50TIC_0_2_TARGET_BUFFER                                 0x00018000
+#define NV50TIC_0_2_TARGET_RECT                                   0x0001c000
+/* #define NV50TIC_0_0_TILE_MODE_LINEAR                           0x00040000 */
+#define NV50TIC_0_2_TILE_MODE_Y_MASK                              0x01c00000
+#define NV50TIC_0_2_TILE_MODE_Y_SHIFT                                     22
+#define NV50TIC_0_2_TILE_MODE_Z_MASK                              0x0e000000
+#define NV50TIC_0_2_TILE_MODE_Z_SHIFT                                     25
+#define NV50TIC_0_2_NORMALIZED_COORDS                             0x80000000
 
 #define NV50TIC_0_3_UNKNOWN_MASK                                  0xffffffff
 
 #define NV50TIC_0_4_WIDTH_MASK                                    0x0000ffff
 #define NV50TIC_0_4_WIDTH_SHIFT                                            0
 
-#define NV50TIC_0_5_DEPTH_MASK                                    0xffff0000
+#define NV50TIC_0_5_LAST_LEVEL_MASK                               0xf0000000
+#define NV50TIC_0_5_LAST_LEVEL_SHIFT                                      28
+#define NV50TIC_0_5_DEPTH_MASK                                    0x0fff0000
 #define NV50TIC_0_5_DEPTH_SHIFT                                           16
 #define NV50TIC_0_5_HEIGHT_MASK                                   0x0000ffff
 #define NV50TIC_0_5_HEIGHT_SHIFT                                           0
-
 #define NV50TIC_0_6_UNKNOWN_MASK                                  0xffffffff
 
-#define NV50TIC_0_7_OFFSET_HIGH_MASK                              0xffffffff
-#define NV50TIC_0_7_OFFSET_HIGH_SHIFT                                      0
+#define NV50TIC_0_7_BASE_LEVEL_MASK                               0x0000000f
+#define NV50TIC_0_7_BASE_LEVEL_SHIFT                                       0
+#define NV50TIC_0_7_MAX_LEVEL_MASK                                0x000000f0
+#define NV50TIC_0_7_MAX_LEVEL_SHIFT                                        4
 
 /* Texture sampler control block */
 #define NV50TSC_1_0_WRAPS_MASK                                   0x00000007

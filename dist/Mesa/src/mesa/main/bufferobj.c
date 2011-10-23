@@ -32,6 +32,7 @@
 
 
 #include "glheader.h"
+#include "enums.h"
 #include "hash.h"
 #include "imports.h"
 #include "image.h"
@@ -46,11 +47,18 @@
 /*#define BOUNDS_CHECK*/
 
 
-#ifdef FEATURE_OES_mapbuffer
+#if FEATURE_OES_mapbuffer
 #define DEFAULT_ACCESS GL_MAP_WRITE_BIT
 #else
 #define DEFAULT_ACCESS (GL_MAP_READ_BIT | GL_MAP_WRITE_BIT)
 #endif
+
+
+/**
+ * Used as a placeholder for buffer objects between glGenBuffers() and
+ * glBindBuffer() so that glIsBuffer() can work correctly.
+ */
+static struct gl_buffer_object DummyBufferObject;
 
 
 /**
@@ -61,7 +69,7 @@
  *           specified context or \c NULL if \c target is invalid.
  */
 static INLINE struct gl_buffer_object **
-get_buffer_target(GLcontext *ctx, GLenum target)
+get_buffer_target(struct gl_context *ctx, GLenum target)
 {
    switch (target) {
    case GL_ARRAY_BUFFER_ARB:
@@ -73,15 +81,16 @@ get_buffer_target(GLcontext *ctx, GLenum target)
    case GL_PIXEL_UNPACK_BUFFER_EXT:
       return &ctx->Unpack.BufferObj;
    case GL_COPY_READ_BUFFER:
-      if (ctx->Extensions.ARB_copy_buffer) {
-         return &ctx->CopyReadBuffer;
-      }
-      break;
+      return &ctx->CopyReadBuffer;
    case GL_COPY_WRITE_BUFFER:
-      if (ctx->Extensions.ARB_copy_buffer) {
-         return &ctx->CopyWriteBuffer;
+      return &ctx->CopyWriteBuffer;
+#if FEATURE_EXT_transform_feedback
+   case GL_TRANSFORM_FEEDBACK_BUFFER:
+      if (ctx->Extensions.EXT_transform_feedback) {
+         return &ctx->TransformFeedback.CurrentBuffer;
       }
       break;
+#endif
    default:
       return NULL;
    }
@@ -97,7 +106,7 @@ get_buffer_target(GLcontext *ctx, GLenum target)
  *           specified context or \c NULL if \c target is invalid.
  */
 static INLINE struct gl_buffer_object *
-get_buffer(GLcontext *ctx, GLenum target)
+get_buffer(struct gl_context *ctx, GLenum target)
 {
    struct gl_buffer_object **bufObj = get_buffer_target(ctx, target);
    if (bufObj)
@@ -141,7 +150,7 @@ simplified_access_mode(GLbitfield access)
  * \sa glBufferSubDataARB, glGetBufferSubDataARB
  */
 static struct gl_buffer_object *
-buffer_object_subdata_range_good( GLcontext * ctx, GLenum target, 
+buffer_object_subdata_range_good( struct gl_context * ctx, GLenum target, 
                                   GLintptrARB offset, GLsizeiptrARB size,
                                   const char *caller )
 {
@@ -187,7 +196,7 @@ buffer_object_subdata_range_good( GLcontext * ctx, GLenum target,
  * Default callback for the \c dd_function_table::NewBufferObject() hook.
  */
 static struct gl_buffer_object *
-_mesa_new_buffer_object( GLcontext *ctx, GLuint name, GLenum target )
+_mesa_new_buffer_object( struct gl_context *ctx, GLuint name, GLenum target )
 {
    struct gl_buffer_object *obj;
 
@@ -205,7 +214,7 @@ _mesa_new_buffer_object( GLcontext *ctx, GLuint name, GLenum target )
  * Default callback for the \c dd_function_table::DeleteBuffer() hook.
  */
 static void
-_mesa_delete_buffer_object( GLcontext *ctx, struct gl_buffer_object *bufObj )
+_mesa_delete_buffer_object( struct gl_context *ctx, struct gl_buffer_object *bufObj )
 {
    (void) ctx;
 
@@ -226,7 +235,7 @@ _mesa_delete_buffer_object( GLcontext *ctx, struct gl_buffer_object *bufObj )
  * Set ptr to bufObj w/ reference counting.
  */
 void
-_mesa_reference_buffer_object(GLcontext *ctx,
+_mesa_reference_buffer_object(struct gl_context *ctx,
                               struct gl_buffer_object **ptr,
                               struct gl_buffer_object *bufObj)
 {
@@ -326,7 +335,7 @@ _mesa_initialize_buffer_object( struct gl_buffer_object *obj,
  * \sa glBufferDataARB, dd_function_table::BufferData.
  */
 static GLboolean
-_mesa_buffer_data( GLcontext *ctx, GLenum target, GLsizeiptrARB size,
+_mesa_buffer_data( struct gl_context *ctx, GLenum target, GLsizeiptrARB size,
 		   const GLvoid * data, GLenum usage,
 		   struct gl_buffer_object * bufObj )
 {
@@ -370,7 +379,7 @@ _mesa_buffer_data( GLcontext *ctx, GLenum target, GLsizeiptrARB size,
  * \sa glBufferSubDataARB, dd_function_table::BufferSubData.
  */
 static void
-_mesa_buffer_subdata( GLcontext *ctx, GLenum target, GLintptrARB offset,
+_mesa_buffer_subdata( struct gl_context *ctx, GLenum target, GLintptrARB offset,
 		      GLsizeiptrARB size, const GLvoid * data,
 		      struct gl_buffer_object * bufObj )
 {
@@ -403,7 +412,7 @@ _mesa_buffer_subdata( GLcontext *ctx, GLenum target, GLintptrARB offset,
  * \sa glBufferGetSubDataARB, dd_function_table::GetBufferSubData.
  */
 static void
-_mesa_buffer_get_subdata( GLcontext *ctx, GLenum target, GLintptrARB offset,
+_mesa_buffer_get_subdata( struct gl_context *ctx, GLenum target, GLintptrARB offset,
 			  GLsizeiptrARB size, GLvoid * data,
 			  struct gl_buffer_object * bufObj )
 {
@@ -430,7 +439,7 @@ _mesa_buffer_get_subdata( GLcontext *ctx, GLenum target, GLintptrARB offset,
  * \sa glMapBufferARB, dd_function_table::MapBuffer
  */
 static void *
-_mesa_buffer_map( GLcontext *ctx, GLenum target, GLenum access,
+_mesa_buffer_map( struct gl_context *ctx, GLenum target, GLenum access,
 		  struct gl_buffer_object *bufObj )
 {
    (void) ctx;
@@ -453,7 +462,7 @@ _mesa_buffer_map( GLcontext *ctx, GLenum target, GLenum access,
  * Called via glMapBufferRange().
  */
 static void *
-_mesa_buffer_map_range( GLcontext *ctx, GLenum target, GLintptr offset,
+_mesa_buffer_map_range( struct gl_context *ctx, GLenum target, GLintptr offset,
                         GLsizeiptr length, GLbitfield access,
                         struct gl_buffer_object *bufObj )
 {
@@ -474,7 +483,7 @@ _mesa_buffer_map_range( GLcontext *ctx, GLenum target, GLintptr offset,
  * Called via glFlushMappedBufferRange().
  */
 static void
-_mesa_buffer_flush_mapped_range( GLcontext *ctx, GLenum target, 
+_mesa_buffer_flush_mapped_range( struct gl_context *ctx, GLenum target, 
                                  GLintptr offset, GLsizeiptr length,
                                  struct gl_buffer_object *obj )
 {
@@ -495,7 +504,7 @@ _mesa_buffer_flush_mapped_range( GLcontext *ctx, GLenum target,
  * \sa glUnmapBufferARB, dd_function_table::UnmapBuffer
  */
 static GLboolean
-_mesa_buffer_unmap( GLcontext *ctx, GLenum target,
+_mesa_buffer_unmap( struct gl_context *ctx, GLenum target,
                     struct gl_buffer_object *bufObj )
 {
    (void) ctx;
@@ -514,7 +523,7 @@ _mesa_buffer_unmap( GLcontext *ctx, GLenum target,
  * Called via glCopyBuffserSubData().
  */
 static void
-_mesa_copy_buffer_subdata(GLcontext *ctx,
+_mesa_copy_buffer_subdata(struct gl_context *ctx,
                           struct gl_buffer_object *src,
                           struct gl_buffer_object *dst,
                           GLintptr readOffset, GLintptr writeOffset,
@@ -544,8 +553,11 @@ _mesa_copy_buffer_subdata(GLcontext *ctx,
  * Initialize the state associated with buffer objects
  */
 void
-_mesa_init_buffer_objects( GLcontext *ctx )
+_mesa_init_buffer_objects( struct gl_context *ctx )
 {
+   memset(&DummyBufferObject, 0, sizeof(DummyBufferObject));
+   DummyBufferObject.RefCount = 1000*1000*1000; /* never delete */
+
    _mesa_reference_buffer_object(ctx, &ctx->Array.ArrayBufferObj,
                                  ctx->Shared->NullBufferObj);
    _mesa_reference_buffer_object(ctx, &ctx->Array.ElementArrayBufferObj,
@@ -559,7 +571,7 @@ _mesa_init_buffer_objects( GLcontext *ctx )
 
 
 void
-_mesa_free_buffer_objects( GLcontext *ctx )
+_mesa_free_buffer_objects( struct gl_context *ctx )
 {
    _mesa_reference_buffer_object(ctx, &ctx->Array.ArrayBufferObj, NULL);
    _mesa_reference_buffer_object(ctx, &ctx->Array.ElementArrayBufferObj, NULL);
@@ -574,7 +586,7 @@ _mesa_free_buffer_objects( GLcontext *ctx )
  * Called by glBindBuffer() and other functions.
  */
 static void
-bind_buffer_object(GLcontext *ctx, GLenum target, GLuint buffer)
+bind_buffer_object(struct gl_context *ctx, GLenum target, GLuint buffer)
 {
    struct gl_buffer_object *oldBufObj;
    struct gl_buffer_object *newBufObj = NULL;
@@ -582,7 +594,7 @@ bind_buffer_object(GLcontext *ctx, GLenum target, GLuint buffer)
 
    bindTarget = get_buffer_target(ctx, target);
    if (!bindTarget) {
-      _mesa_error(ctx, GL_INVALID_ENUM, "glBindBufferARB(target 0x%x)");
+      _mesa_error(ctx, GL_INVALID_ENUM, "glBindBufferARB(target 0x%x)", target);
       return;
    }
 
@@ -603,8 +615,10 @@ bind_buffer_object(GLcontext *ctx, GLenum target, GLuint buffer)
    else {
       /* non-default buffer object */
       newBufObj = _mesa_lookup_bufferobj(ctx, buffer);
-      if (!newBufObj) {
-         /* if this is a new buffer object id, allocate a buffer object now */
+      if (!newBufObj || newBufObj == &DummyBufferObject) {
+         /* If this is a new buffer object id, or one which was generated but
+          * never used before, allocate a buffer object now.
+          */
          ASSERT(ctx->Driver.NewBufferObject);
          newBufObj = ctx->Driver.NewBufferObject(ctx, buffer, target);
          if (!newBufObj) {
@@ -630,7 +644,7 @@ bind_buffer_object(GLcontext *ctx, GLenum target, GLuint buffer)
  * shared state.
  */
 void
-_mesa_update_default_objects_buffer_objects(GLcontext *ctx)
+_mesa_update_default_objects_buffer_objects(struct gl_context *ctx)
 {
    /* Bind the NullBufferObj to remove references to those
     * in the shared context hash table.
@@ -714,7 +728,7 @@ _mesa_validate_pbo_access(GLuint dimensions,
  * \return NULL if error, else pointer to start of data
  */
 const GLvoid *
-_mesa_map_pbo_source(GLcontext *ctx,
+_mesa_map_pbo_source(struct gl_context *ctx,
                      const struct gl_pixelstore_attrib *unpack,
                      const GLvoid *src)
 {
@@ -748,7 +762,7 @@ _mesa_map_pbo_source(GLcontext *ctx,
  * _mesa_unmap_pbo_source().
  */
 const GLvoid *
-_mesa_map_validate_pbo_source(GLcontext *ctx,
+_mesa_map_validate_pbo_source(struct gl_context *ctx,
                               GLuint dimensions,
                               const struct gl_pixelstore_attrib *unpack,
                               GLsizei width, GLsizei height, GLsizei depth,
@@ -784,7 +798,7 @@ _mesa_map_validate_pbo_source(GLcontext *ctx,
  * Counterpart to _mesa_map_pbo_source()
  */
 void
-_mesa_unmap_pbo_source(GLcontext *ctx,
+_mesa_unmap_pbo_source(struct gl_context *ctx,
                        const struct gl_pixelstore_attrib *unpack)
 {
    ASSERT(unpack != &ctx->Pack); /* catch pack/unpack mismatch */
@@ -804,7 +818,7 @@ _mesa_unmap_pbo_source(GLcontext *ctx,
  * \return NULL if error, else pointer to start of data
  */
 void *
-_mesa_map_pbo_dest(GLcontext *ctx,
+_mesa_map_pbo_dest(struct gl_context *ctx,
                    const struct gl_pixelstore_attrib *pack,
                    GLvoid *dest)
 {
@@ -838,7 +852,7 @@ _mesa_map_pbo_dest(GLcontext *ctx,
  * _mesa_unmap_pbo_dest().
  */
 GLvoid *
-_mesa_map_validate_pbo_dest(GLcontext *ctx,
+_mesa_map_validate_pbo_dest(struct gl_context *ctx,
                             GLuint dimensions,
                             const struct gl_pixelstore_attrib *unpack,
                             GLsizei width, GLsizei height, GLsizei depth,
@@ -874,7 +888,7 @@ _mesa_map_validate_pbo_dest(GLcontext *ctx,
  * Counterpart to _mesa_map_pbo_dest()
  */
 void
-_mesa_unmap_pbo_dest(GLcontext *ctx,
+_mesa_unmap_pbo_dest(struct gl_context *ctx,
                      const struct gl_pixelstore_attrib *pack)
 {
    ASSERT(pack != &ctx->Unpack); /* catch pack/unpack mismatch */
@@ -890,7 +904,7 @@ _mesa_unmap_pbo_dest(GLcontext *ctx,
  * Always return NULL for ID 0.
  */
 struct gl_buffer_object *
-_mesa_lookup_bufferobj(GLcontext *ctx, GLuint buffer)
+_mesa_lookup_bufferobj(struct gl_context *ctx, GLuint buffer)
 {
    if (buffer == 0)
       return NULL;
@@ -907,7 +921,7 @@ _mesa_lookup_bufferobj(GLcontext *ctx, GLuint buffer)
  * unbound from all arrays in the current context.
  */
 static void
-unbind(GLcontext *ctx,
+unbind(struct gl_context *ctx,
        struct gl_buffer_object **ptr,
        struct gl_buffer_object *obj)
 {
@@ -984,7 +998,7 @@ _mesa_DeleteBuffersARB(GLsizei n, const GLuint *ids)
          struct gl_array_object *arrayObj = ctx->Array.ArrayObj;
          GLuint j;
 
-         ASSERT(bufObj->Name == ids[i]);
+         ASSERT(bufObj->Name == ids[i] || bufObj == &DummyBufferObject);
 
          if (_mesa_bufferobj_mapped(bufObj)) {
             /* if mapped, unmap it now */
@@ -1025,7 +1039,7 @@ _mesa_DeleteBuffersARB(GLsizei n, const GLuint *ids)
          }
 
          /* The ID is immediately freed for re-use */
-         _mesa_HashRemove(ctx->Shared->BufferObjects, bufObj->Name);
+         _mesa_HashRemove(ctx->Shared->BufferObjects, ids[i]);
          _mesa_reference_buffer_object(ctx, &bufObj, NULL);
       }
    }
@@ -1064,18 +1078,10 @@ _mesa_GenBuffersARB(GLsizei n, GLuint *buffer)
 
    first = _mesa_HashFindFreeKeyBlock(ctx->Shared->BufferObjects, n);
 
-   /* Allocate new, empty buffer objects and return identifiers */
+   /* Insert the ID and pointer to dummy buffer object into hash table */
    for (i = 0; i < n; i++) {
-      struct gl_buffer_object *bufObj;
-      GLuint name = first + i;
-      GLenum target = 0;
-      bufObj = ctx->Driver.NewBufferObject( ctx, name, target );
-      if (!bufObj) {
-         _glthread_UNLOCK_MUTEX(ctx->Shared->Mutex);
-         _mesa_error(ctx, GL_OUT_OF_MEMORY, "glGenBuffersARB");
-         return;
-      }
-      _mesa_HashInsert(ctx->Shared->BufferObjects, first + i, bufObj);
+      _mesa_HashInsert(ctx->Shared->BufferObjects, first + i,
+                       &DummyBufferObject);
       buffer[i] = first + i;
    }
 
@@ -1101,7 +1107,7 @@ _mesa_IsBufferARB(GLuint id)
    bufObj = _mesa_lookup_bufferobj(ctx, id);
    _glthread_UNLOCK_MUTEX(ctx->Shared->Mutex);
 
-   return bufObj ? GL_TRUE : GL_FALSE;
+   return bufObj && bufObj != &DummyBufferObject;
 }
 
 
@@ -1186,6 +1192,9 @@ _mesa_BufferSubDataARB(GLenum target, GLintptrARB offset,
       /* error already recorded */
       return;
    }
+
+   if (size == 0)
+      return;
 
    bufObj->Written = GL_TRUE;
 
@@ -1376,31 +1385,49 @@ _mesa_GetBufferParameterivARB(GLenum target, GLenum pname, GLint *params)
 
    bufObj = get_buffer(ctx, target);
    if (!bufObj) {
-      _mesa_error(ctx, GL_INVALID_ENUM, "GetBufferParameterivARB(target)" );
+      _mesa_error(ctx, GL_INVALID_ENUM, "glGetBufferParameterivARB(target)" );
       return;
    }
    if (!_mesa_is_bufferobj(bufObj)) {
-      _mesa_error(ctx, GL_INVALID_OPERATION, "GetBufferParameterivARB" );
+      _mesa_error(ctx, GL_INVALID_OPERATION, "glGetBufferParameterivARB" );
       return;
    }
 
    switch (pname) {
    case GL_BUFFER_SIZE_ARB:
       *params = (GLint) bufObj->Size;
-      break;
+      return;
    case GL_BUFFER_USAGE_ARB:
       *params = bufObj->Usage;
-      break;
+      return;
    case GL_BUFFER_ACCESS_ARB:
       *params = simplified_access_mode(bufObj->AccessFlags);
-      break;
+      return;
    case GL_BUFFER_MAPPED_ARB:
       *params = _mesa_bufferobj_mapped(bufObj);
-      break;
-   default:
-      _mesa_error(ctx, GL_INVALID_ENUM, "glGetBufferParameterivARB(pname)");
       return;
+   case GL_BUFFER_ACCESS_FLAGS:
+      if (ctx->VersionMajor < 3)
+         goto invalid_pname;
+      *params = bufObj->AccessFlags;
+      return;
+   case GL_BUFFER_MAP_OFFSET:
+      if (ctx->VersionMajor < 3)
+         goto invalid_pname;
+      *params = (GLint) bufObj->Offset;
+      return;
+   case GL_BUFFER_MAP_LENGTH:
+      if (ctx->VersionMajor < 3)
+         goto invalid_pname;
+      *params = (GLint) bufObj->Length;
+      return;
+   default:
+      ; /* fall-through */
    }
+
+invalid_pname:
+   _mesa_error(ctx, GL_INVALID_ENUM, "glGetBufferParameterivARB(pname=%s)",
+               _mesa_lookup_enum_by_nr(pname));
 }
 
 
@@ -1418,31 +1445,49 @@ _mesa_GetBufferParameteri64v(GLenum target, GLenum pname, GLint64 *params)
 
    bufObj = get_buffer(ctx, target);
    if (!bufObj) {
-      _mesa_error(ctx, GL_INVALID_ENUM, "GetBufferParameteri64v(target)" );
+      _mesa_error(ctx, GL_INVALID_ENUM, "glGetBufferParameteri64v(target)" );
       return;
    }
    if (!_mesa_is_bufferobj(bufObj)) {
-      _mesa_error(ctx, GL_INVALID_OPERATION, "GetBufferParameteri64v" );
+      _mesa_error(ctx, GL_INVALID_OPERATION, "glGetBufferParameteri64v" );
       return;
    }
 
    switch (pname) {
    case GL_BUFFER_SIZE_ARB:
       *params = bufObj->Size;
-      break;
+      return;
    case GL_BUFFER_USAGE_ARB:
       *params = bufObj->Usage;
-      break;
+      return;
    case GL_BUFFER_ACCESS_ARB:
       *params = simplified_access_mode(bufObj->AccessFlags);
-      break;
+      return;
+   case GL_BUFFER_ACCESS_FLAGS:
+      if (ctx->VersionMajor < 3)
+         goto invalid_pname;
+      *params = bufObj->AccessFlags;
+      return;
    case GL_BUFFER_MAPPED_ARB:
       *params = _mesa_bufferobj_mapped(bufObj);
-      break;
-   default:
-      _mesa_error(ctx, GL_INVALID_ENUM, "glGetBufferParameteri64v(pname)");
       return;
+   case GL_BUFFER_MAP_OFFSET:
+      if (ctx->VersionMajor < 3)
+         goto invalid_pname;
+      *params = bufObj->Offset;
+      return;
+   case GL_BUFFER_MAP_LENGTH:
+      if (ctx->VersionMajor < 3)
+         goto invalid_pname;
+      *params = bufObj->Length;
+      return;
+   default:
+      ; /* fall-through */
    }
+
+invalid_pname:
+   _mesa_error(ctx, GL_INVALID_ENUM, "glGetBufferParameteri64v(pname=%s)",
+               _mesa_lookup_enum_by_nr(pname));
 }
 
 
@@ -1509,27 +1554,27 @@ _mesa_CopyBufferSubData(GLenum readTarget, GLenum writeTarget,
 
    if (readOffset < 0) {
       _mesa_error(ctx, GL_INVALID_VALUE,
-                  "glCopyBuffserSubData(readOffset = %d)", readOffset);
+                  "glCopyBuffserSubData(readOffset = %d)", (int) readOffset);
       return;
    }
 
    if (writeOffset < 0) {
       _mesa_error(ctx, GL_INVALID_VALUE,
-                  "glCopyBuffserSubData(writeOffset = %d)", writeOffset);
+                  "glCopyBuffserSubData(writeOffset = %d)", (int) writeOffset);
       return;
    }
 
    if (readOffset + size > src->Size) {
       _mesa_error(ctx, GL_INVALID_VALUE,
                   "glCopyBuffserSubData(readOffset + size = %d)",
-                  readOffset, size);
+                  (int) (readOffset + size));
       return;
    }
 
    if (writeOffset + size > dst->Size) {
       _mesa_error(ctx, GL_INVALID_VALUE,
                   "glCopyBuffserSubData(writeOffset + size = %d)",
-                  writeOffset, size);
+                  (int) (writeOffset + size));
       return;
    }
 
@@ -1573,13 +1618,13 @@ _mesa_MapBufferRange(GLenum target, GLintptr offset, GLsizeiptr length,
 
    if (offset < 0) {
       _mesa_error(ctx, GL_INVALID_VALUE,
-                  "glMapBufferRange(offset = %ld)", offset);
+                  "glMapBufferRange(offset = %ld)", (long)offset);
       return NULL;
    }
 
    if (length < 0) {
       _mesa_error(ctx, GL_INVALID_VALUE,
-                  "glMapBufferRange(length = %ld)", length);
+                  "glMapBufferRange(length = %ld)", (long)length);
       return NULL;
    }
 
@@ -1664,13 +1709,13 @@ _mesa_FlushMappedBufferRange(GLenum target, GLintptr offset, GLsizeiptr length)
 
    if (offset < 0) {
       _mesa_error(ctx, GL_INVALID_VALUE,
-                  "glMapBufferRange(offset = %ld)", offset);
+                  "glMapBufferRange(offset = %ld)", (long)offset);
       return;
    }
 
    if (length < 0) {
       _mesa_error(ctx, GL_INVALID_VALUE,
-                  "glMapBufferRange(length = %ld)", length);
+                  "glMapBufferRange(length = %ld)", (long)length);
       return;
    }
 
@@ -1702,8 +1747,8 @@ _mesa_FlushMappedBufferRange(GLenum target, GLintptr offset, GLsizeiptr length)
 
    if (offset + length > bufObj->Length) {
       _mesa_error(ctx, GL_INVALID_VALUE,
-             "glMapBufferRange(offset %ld + length %ld > mapped length %ld)",
-             offset, length, bufObj->Length);
+		  "glMapBufferRange(offset %ld + length %ld > mapped length %ld)",
+		  (long)offset, (long)length, (long)bufObj->Length);
       return;
    }
 
@@ -1716,7 +1761,7 @@ _mesa_FlushMappedBufferRange(GLenum target, GLintptr offset, GLsizeiptr length)
 
 #if FEATURE_APPLE_object_purgeable
 static GLenum
-_mesa_BufferObjectPurgeable(GLcontext *ctx, GLuint name, GLenum option)
+_mesa_BufferObjectPurgeable(struct gl_context *ctx, GLuint name, GLenum option)
 {
    struct gl_buffer_object *bufObj;
    GLenum retval;
@@ -1749,7 +1794,7 @@ _mesa_BufferObjectPurgeable(GLcontext *ctx, GLuint name, GLenum option)
 
 
 static GLenum
-_mesa_RenderObjectPurgeable(GLcontext *ctx, GLuint name, GLenum option)
+_mesa_RenderObjectPurgeable(struct gl_context *ctx, GLuint name, GLenum option)
 {
    struct gl_renderbuffer *bufObj;
    GLenum retval;
@@ -1778,7 +1823,7 @@ _mesa_RenderObjectPurgeable(GLcontext *ctx, GLuint name, GLenum option)
 
 
 static GLenum
-_mesa_TextureObjectPurgeable(GLcontext *ctx, GLuint name, GLenum option)
+_mesa_TextureObjectPurgeable(struct gl_context *ctx, GLuint name, GLenum option)
 {
    struct gl_texture_object *bufObj;
    GLenum retval;
@@ -1859,7 +1904,7 @@ _mesa_ObjectPurgeableAPPLE(GLenum objectType, GLuint name, GLenum option)
 
 
 static GLenum
-_mesa_BufferObjectUnpurgeable(GLcontext *ctx, GLuint name, GLenum option)
+_mesa_BufferObjectUnpurgeable(struct gl_context *ctx, GLuint name, GLenum option)
 {
    struct gl_buffer_object *bufObj;
    GLenum retval;
@@ -1880,7 +1925,7 @@ _mesa_BufferObjectUnpurgeable(GLcontext *ctx, GLuint name, GLenum option)
 
    bufObj->Purgeable = GL_FALSE;
 
-   retval = GL_RETAINED_APPLE;
+   retval = option;
    if (ctx->Driver.BufferObjectUnpurgeable)
       retval = ctx->Driver.BufferObjectUnpurgeable(ctx, bufObj, option);
 
@@ -1889,7 +1934,7 @@ _mesa_BufferObjectUnpurgeable(GLcontext *ctx, GLuint name, GLenum option)
 
 
 static GLenum
-_mesa_RenderObjectUnpurgeable(GLcontext *ctx, GLuint name, GLenum option)
+_mesa_RenderObjectUnpurgeable(struct gl_context *ctx, GLuint name, GLenum option)
 {
    struct gl_renderbuffer *bufObj;
    GLenum retval;
@@ -1910,16 +1955,16 @@ _mesa_RenderObjectUnpurgeable(GLcontext *ctx, GLuint name, GLenum option)
 
    bufObj->Purgeable = GL_FALSE;
 
-   retval = GL_RETAINED_APPLE;
+   retval = option;
    if (ctx->Driver.RenderObjectUnpurgeable)
       retval = ctx->Driver.RenderObjectUnpurgeable(ctx, bufObj, option);
 
-   return option;
+   return retval;
 }
 
 
 static GLenum
-_mesa_TextureObjectUnpurgeable(GLcontext *ctx, GLuint name, GLenum option)
+_mesa_TextureObjectUnpurgeable(struct gl_context *ctx, GLuint name, GLenum option)
 {
    struct gl_texture_object *bufObj;
    GLenum retval;
@@ -1940,7 +1985,7 @@ _mesa_TextureObjectUnpurgeable(GLcontext *ctx, GLuint name, GLenum option)
 
    bufObj->Purgeable = GL_FALSE;
 
-   retval = GL_RETAINED_APPLE;
+   retval = option;
    if (ctx->Driver.TextureObjectUnpurgeable)
       retval = ctx->Driver.TextureObjectUnpurgeable(ctx, bufObj, option);
 
@@ -1989,7 +2034,7 @@ _mesa_ObjectUnpurgeableAPPLE(GLenum objectType, GLuint name, GLenum option)
 
 
 static void
-_mesa_GetBufferObjectParameterivAPPLE(GLcontext *ctx, GLuint name,
+_mesa_GetBufferObjectParameterivAPPLE(struct gl_context *ctx, GLuint name,
                                       GLenum pname, GLint* params)
 {
    struct gl_buffer_object *bufObj;
@@ -2015,7 +2060,7 @@ _mesa_GetBufferObjectParameterivAPPLE(GLcontext *ctx, GLuint name,
 
 
 static void
-_mesa_GetRenderObjectParameterivAPPLE(GLcontext *ctx, GLuint name,
+_mesa_GetRenderObjectParameterivAPPLE(struct gl_context *ctx, GLuint name,
                                       GLenum pname, GLint* params)
 {
    struct gl_renderbuffer *bufObj;
@@ -2041,7 +2086,7 @@ _mesa_GetRenderObjectParameterivAPPLE(GLcontext *ctx, GLuint name,
 
 
 static void
-_mesa_GetTextureObjectParameterivAPPLE(GLcontext *ctx, GLuint name,
+_mesa_GetTextureObjectParameterivAPPLE(struct gl_context *ctx, GLuint name,
                                        GLenum pname, GLint* params)
 {
    struct gl_texture_object *bufObj;

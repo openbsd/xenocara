@@ -29,7 +29,8 @@
 #include "i915_reg.h"
 #include "i915_context.h"
 #include "i915_batch.h"
-#include "i915_reg.h"
+#include "i915_debug.h"
+#include "i915_resource.h"
 
 #include "pipe/p_context.h"
 #include "pipe/p_defines.h"
@@ -50,7 +51,8 @@ static unsigned translate_format( enum pipe_format format )
 static unsigned translate_depth_format( enum pipe_format zformat )
 {
    switch (zformat) {
-   case PIPE_FORMAT_Z24S8_UNORM:
+   case PIPE_FORMAT_Z24X8_UNORM:
+   case PIPE_FORMAT_Z24_UNORM_S8_USCALED:
       return DEPTH_FRMT_24_FIXED_8_OTHER;
    case PIPE_FORMAT_Z16_UNORM:
       return DEPTH_FRMT_16_FIXED;
@@ -84,6 +86,22 @@ framebuffer_size(const struct pipe_framebuffer_state *fb,
    }
 }
 
+static inline uint32_t
+buf_3d_tiling_bits(enum i915_winsys_buffer_tile tiling)
+{
+         uint32_t tiling_bits = 0;
+
+         switch (tiling) {
+         case I915_TILE_Y:
+            tiling_bits |= BUF_3D_TILE_WALK_Y;
+         case I915_TILE_X:
+            tiling_bits |= BUF_3D_TILED_SURFACE;
+         case I915_TILE_NONE:
+            break;
+         }
+
+         return tiling_bits;
+}
 
 /* Push the state into the sarea and/or texture memory.
  */
@@ -109,14 +127,19 @@ i915_emit_hardware_state(struct i915_context *i915 )
                              3
                            ) * 3/2; /* plus 50% margin */
 
-#if 0
-   debug_printf("i915_emit_hardware_state: %d dwords, %d relocs\n", dwords, relocs);
-#endif
-   
+   uintptr_t save_ptr;
+   size_t save_relocs;
+
+   if (I915_DBG_ON(DBG_ATOMS))
+      i915_dump_hardware_dirty(i915, __FUNCTION__);
+
    if(!BEGIN_BATCH(dwords, relocs)) {
       FLUSH_BATCH(NULL);
       assert(BEGIN_BATCH(dwords, relocs));
    }
+
+   save_ptr = (uintptr_t)i915->batch->ptr;
+   save_relocs = i915->batch->relocs;
 
    /* 14 dwords, 0 relocs */
    if (i915->hardware_dirty & I915_HW_INVARIENT)
@@ -167,7 +190,7 @@ i915_emit_hardware_state(struct i915_context *i915 )
       OUT_BATCH(_3DSTATE_LOAD_INDIRECT | 0);
       OUT_BATCH(0);
    }
-   
+
    /* 7 dwords, 1 relocs */
    if (i915->hardware_dirty & I915_HW_IMMEDIATE)
    {
@@ -182,7 +205,7 @@ i915_emit_hardware_state(struct i915_context *i915 )
       
       if(i915->vbo)
          OUT_RELOC(i915->vbo,
-                   INTEL_USAGE_VERTEX,
+                   I915_USAGE_VERTEX,
                    i915->current.immediate[I915_IMMEDIATE_S0]);
       else
          /* FIXME: we should not do this */
@@ -193,7 +216,8 @@ i915_emit_hardware_state(struct i915_context *i915 )
       OUT_BATCH(i915->current.immediate[I915_IMMEDIATE_S5]);
       OUT_BATCH(i915->current.immediate[I915_IMMEDIATE_S6]);
    } 
-   
+
+#if 01
    /* I915_MAX_DYNAMIC dwords, 0 relocs */
    if (i915->hardware_dirty & I915_HW_DYNAMIC) 
    {
@@ -202,7 +226,9 @@ i915_emit_hardware_state(struct i915_context *i915 )
          OUT_BATCH(i915->current.dynamic[i]);
       }
    }
-   
+#endif
+
+#if 01
    /* 8 dwords, 2 relocs */
    if (i915->hardware_dirty & I915_HW_STATIC)
    {
@@ -210,53 +236,44 @@ i915_emit_hardware_state(struct i915_context *i915 )
       struct pipe_surface *depth_surface = i915->framebuffer.zsbuf;
 
       if (cbuf_surface) {
-         unsigned ctile = BUF_3D_USE_FENCE;
-         struct i915_texture *tex = (struct i915_texture *)
-                                    cbuf_surface->texture;
+         struct i915_texture *tex = i915_texture(cbuf_surface->texture);
          assert(tex);
-
-         if (tex && tex->sw_tiled) {
-            ctile = BUF_3D_TILED_SURFACE;
-         }
 
          OUT_BATCH(_3DSTATE_BUF_INFO_CMD);
 
          OUT_BATCH(BUF_3D_ID_COLOR_BACK |
                    BUF_3D_PITCH(tex->stride) |  /* pitch in bytes */
-                   ctile);
+                   buf_3d_tiling_bits(tex->tiling));
 
          OUT_RELOC(tex->buffer,
-                   INTEL_USAGE_RENDER,
-                   cbuf_surface->offset);
+                   I915_USAGE_RENDER,
+                   0);
       }
 
       /* What happens if no zbuf??
        */
       if (depth_surface) {
-         unsigned ztile = BUF_3D_USE_FENCE;
-         struct i915_texture *tex = (struct i915_texture *)
-                                    depth_surface->texture;
+         struct i915_texture *tex = i915_texture(depth_surface->texture);
+         unsigned offset = i915_texture_offset(tex, depth_surface->u.tex.level,
+                                               depth_surface->u.tex.first_layer);
          assert(tex);
-
-         if (tex && tex->sw_tiled) {
-            ztile = BUF_3D_TILED_SURFACE;
-         }
+         assert(offset == 0);
 
          OUT_BATCH(_3DSTATE_BUF_INFO_CMD);
 
          assert(tex);
          OUT_BATCH(BUF_3D_ID_DEPTH |
                    BUF_3D_PITCH(tex->stride) |  /* pitch in bytes */
-                   ztile);
+                   buf_3d_tiling_bits(tex->tiling));
 
          OUT_RELOC(tex->buffer,
-                   INTEL_USAGE_RENDER,
-                   depth_surface->offset);
+                   I915_USAGE_RENDER,
+                   0);
       }
-   
+
       {
          unsigned cformat, zformat = 0;
-      
+
          if (cbuf_surface)
             cformat = cbuf_surface->format;
          else
@@ -275,6 +292,7 @@ i915_emit_hardware_state(struct i915_context *i915 )
                    zformat );
       }
    }
+#endif
 
 #if 01
       /* texture images */
@@ -290,13 +308,13 @@ i915_emit_hardware_state(struct i915_context *i915 )
             OUT_BATCH(enabled);
             for (unit = 0; unit < I915_TEX_UNITS; unit++) {
                if (enabled & (1 << unit)) {
-                  struct intel_buffer *buf = i915->texture[unit]->buffer;
-                  uint offset = 0;
+                  struct i915_texture *texture = i915_texture(i915->fragment_sampler_views[unit]->texture);
+                  struct i915_winsys_buffer *buf = texture->buffer;
                   assert(buf);
 
                   count++;
 
-                  OUT_RELOC(buf, INTEL_USAGE_SAMPLER, offset);
+                  OUT_RELOC(buf, I915_USAGE_SAMPLER, 0);
                   OUT_BATCH(i915->current.texbuffer[unit][0]); /* MS3 */
                   OUT_BATCH(i915->current.texbuffer[unit][1]); /* MS4 */
                }
@@ -313,7 +331,7 @@ i915_emit_hardware_state(struct i915_context *i915 )
    {
       if (i915->current.sampler_enable_nr) {
          int i;
-         
+
          OUT_BATCH( _3DSTATE_SAMPLER_STATE | 
                     (3 * i915->current.sampler_enable_nr) );
 
@@ -330,9 +348,10 @@ i915_emit_hardware_state(struct i915_context *i915 )
    }
 #endif
 
+#if 01
    /* constants */
    /* 2 + I915_MAX_CONSTANT*4 dwords, 0 relocs */
-   if (i915->hardware_dirty & I915_HW_PROGRAM)
+   if (i915->hardware_dirty & I915_HW_CONSTANTS)
    {
       /* Collate the user-defined constants with the fragment shader's
        * immediates according to the constant_flags[] array.
@@ -369,7 +388,9 @@ i915_emit_hardware_state(struct i915_context *i915 )
          }
       }
    }
+#endif
 
+#if 01
    /* Fragment program */
    /* i915->current.program_len dwords, 0 relocs */
    if (i915->hardware_dirty & I915_HW_PROGRAM)
@@ -381,23 +402,44 @@ i915_emit_hardware_state(struct i915_context *i915 )
          OUT_BATCH(i915->fs->program[i]);
       }
    }
+#endif
 
+#if 01
    /* drawing surface size */
    /* 6 dwords, 0 relocs */
+   if (i915->hardware_dirty & I915_HW_STATIC)
    {
       uint w, h;
-      boolean k = framebuffer_size(&i915->framebuffer, &w, &h);
-      (void)k;
-      assert(k);
+      struct pipe_surface *cbuf_surface = i915->framebuffer.cbufs[0];
+      struct i915_texture *tex = i915_texture(cbuf_surface->texture);
+      unsigned x, y;
+      int layer;
+      uint32_t draw_offset;
+      boolean ret;
 
+      ret = framebuffer_size(&i915->framebuffer, &w, &h);
+      assert(ret);
+
+      layer = cbuf_surface->u.tex.first_layer;
+
+      x = tex->image_offset[cbuf_surface->u.tex.level][layer].nblocksx;
+      y = tex->image_offset[cbuf_surface->u.tex.level][layer].nblocksy;
+
+      draw_offset = x | (y << 16);
+
+      /* XXX flush only required when the draw_offset changes! */
+      OUT_BATCH(MI_FLUSH | INHIBIT_FLUSH_RENDER_CACHE);
       OUT_BATCH(_3DSTATE_DRAW_RECT_CMD);
-      OUT_BATCH(0);
-      OUT_BATCH(0);
-      OUT_BATCH(((w - 1) & 0xffff) | ((h - 1) << 16));
-      OUT_BATCH(0);
-      OUT_BATCH(0);
+      OUT_BATCH(DRAW_RECT_DIS_DEPTH_OFS);
+      OUT_BATCH(draw_offset);
+      OUT_BATCH((w - 1 + x) | ((h - 1 + y) << 16));
+      OUT_BATCH(draw_offset);
    }
+#endif
 
+   I915_DBG(DBG_EMIT, "%s: used %d dwords, %d relocs\n", __FUNCTION__,
+            ((uintptr_t)i915->batch->ptr - save_ptr) / 4,
+            i915->batch->relocs - save_relocs);
 
    i915->hardware_dirty = 0;
 }

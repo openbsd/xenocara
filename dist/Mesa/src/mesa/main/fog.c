@@ -27,6 +27,7 @@
 #include "colormac.h"
 #include "context.h"
 #include "fog.h"
+#include "macros.h"
 #include "mtypes.h"
 
 
@@ -177,7 +178,7 @@ _mesa_Fogfv( GLenum pname, const GLfloat *params )
 /*****                      Initialization                        *****/
 /**********************************************************************/
 
-void _mesa_init_fog( GLcontext * ctx )
+void _mesa_init_fog( struct gl_context * ctx )
 {
    /* Fog group */
    ctx->Fog.Enabled = GL_FALSE;

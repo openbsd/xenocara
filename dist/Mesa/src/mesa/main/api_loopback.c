@@ -34,9 +34,9 @@
 #include "api_loopback.h"
 #include "mtypes.h"
 #include "glapi/glapi.h"
-#include "glapi/glapitable.h"
 #include "glapi/glthread.h"
 #include "main/dispatch.h"
+#include "mfeatures.h"
 
 /* KW: A set of functions to convert unusual Color/Normal/Vertex/etc
  * calls to a smaller set of driver-provided formats.  Currently just
@@ -66,16 +66,24 @@
 #define MATERIALFV(a,b,c)           CALL_Materialfv(GET_DISPATCH(), (a,b,c))
 #define RECTF(a,b,c,d)              CALL_Rectf(GET_DISPATCH(), (a,b,c,d))
 
+#define FOGCOORDF(x)                CALL_FogCoordfEXT(GET_DISPATCH(), (x))
+#define SECONDARYCOLORF(a,b,c)      CALL_SecondaryColor3fEXT(GET_DISPATCH(), (a,b,c))
+
 #define ATTRIB1NV(index,x)          CALL_VertexAttrib1fNV(GET_DISPATCH(), (index,x))
 #define ATTRIB2NV(index,x,y)        CALL_VertexAttrib2fNV(GET_DISPATCH(), (index,x,y))
 #define ATTRIB3NV(index,x,y,z)      CALL_VertexAttrib3fNV(GET_DISPATCH(), (index,x,y,z))
 #define ATTRIB4NV(index,x,y,z,w)    CALL_VertexAttrib4fNV(GET_DISPATCH(), (index,x,y,z,w))
+
 #define ATTRIB1ARB(index,x)         CALL_VertexAttrib1fARB(GET_DISPATCH(), (index,x))
 #define ATTRIB2ARB(index,x,y)       CALL_VertexAttrib2fARB(GET_DISPATCH(), (index,x,y))
 #define ATTRIB3ARB(index,x,y,z)     CALL_VertexAttrib3fARB(GET_DISPATCH(), (index,x,y,z))
 #define ATTRIB4ARB(index,x,y,z,w)   CALL_VertexAttrib4fARB(GET_DISPATCH(), (index,x,y,z,w))
-#define FOGCOORDF(x)                CALL_FogCoordfEXT(GET_DISPATCH(), (x))
-#define SECONDARYCOLORF(a,b,c)      CALL_SecondaryColor3fEXT(GET_DISPATCH(), (a,b,c))
+
+#define ATTRIBI_1I(index,x)   CALL_VertexAttribI1iEXT(GET_DISPATCH(), (index,x))
+#define ATTRIBI_1UI(index,x)   CALL_VertexAttribI1uiEXT(GET_DISPATCH(), (index,x))
+#define ATTRIBI_4I(index,x,y,z,w)   CALL_VertexAttribI4iEXT(GET_DISPATCH(), (index,x,y,z,w))
+
+#define ATTRIBI_4UI(index,x,y,z,w)   CALL_VertexAttribI4uiEXT(GET_DISPATCH(), (index,x,y,z,w))
 
 
 #if FEATURE_beginend
@@ -1041,6 +1049,7 @@ loopback_SecondaryColor3ubvEXT_f( const GLubyte *v )
 /*
  * GL_NV_vertex_program:
  * Always loop-back to one of the VertexAttrib[1234]f[v]NV functions.
+ * Note that attribute indexes DO alias conventional vertex attributes.
  */
 
 static void GLAPIENTRY
@@ -1263,6 +1272,7 @@ loopback_VertexAttribs4ubvNV(GLuint index, GLsizei n, const GLubyte *v)
 /*
  * GL_ARB_vertex_program
  * Always loop-back to one of the VertexAttrib[1234]f[v]ARB functions.
+ * Note that attribute indexes do NOT alias conventional attributes.
  */
 
 static void GLAPIENTRY
@@ -1439,6 +1449,49 @@ loopback_VertexAttrib4NuivARB(GLuint index, const GLuint * v)
 {
    ATTRIB4ARB(index, UINT_TO_FLOAT(v[0]), UINT_TO_FLOAT(v[1]),
           UINT_TO_FLOAT(v[2]), UINT_TO_FLOAT(v[3]));
+}
+
+
+
+/**
+ * GL_EXT_gpu_shader / GL 3.0 signed/unsigned integer-valued attributes.
+ * Note that attribute indexes do NOT alias conventional attributes.
+ */
+
+static void GLAPIENTRY
+loopback_VertexAttribI1iv(GLuint index, const GLint *v)
+{
+   ATTRIBI_1I(index, v[0]);
+}
+
+static void GLAPIENTRY
+loopback_VertexAttribI1uiv(GLuint index, const GLuint *v)
+{
+   ATTRIBI_1UI(index, v[0]);
+}
+
+static void GLAPIENTRY
+loopback_VertexAttribI4bv(GLuint index, const GLbyte *v)
+{
+   ATTRIBI_4I(index, v[0], v[1], v[2], v[3]);
+}
+
+static void GLAPIENTRY
+loopback_VertexAttribI4sv(GLuint index, const GLshort *v)
+{
+   ATTRIBI_4I(index, v[0], v[1], v[2], v[3]);
+}
+
+static void GLAPIENTRY
+loopback_VertexAttribI4ubv(GLuint index, const GLubyte *v)
+{
+   ATTRIBI_4UI(index, v[0], v[1], v[2], v[3]);
+}
+
+static void GLAPIENTRY
+loopback_VertexAttribI4usv(GLuint index, const GLushort *v)
+{
+   ATTRIBI_4UI(index, v[0], v[1], v[2], v[3]);
 }
 
 
@@ -1658,6 +1711,14 @@ _mesa_loopback_init_api_table( struct _glapi_table *dest )
    SET_VertexAttrib4NivARB(dest, loopback_VertexAttrib4NivARB);
    SET_VertexAttrib4NusvARB(dest, loopback_VertexAttrib4NusvARB);
    SET_VertexAttrib4NuivARB(dest, loopback_VertexAttrib4NuivARB);
+
+   /* GL_EXT_gpu_shader4, GL 3.0 */
+   SET_VertexAttribI1ivEXT(dest, loopback_VertexAttribI1iv);
+   SET_VertexAttribI1uivEXT(dest, loopback_VertexAttribI1uiv);
+   SET_VertexAttribI4bvEXT(dest, loopback_VertexAttribI4bv);
+   SET_VertexAttribI4svEXT(dest, loopback_VertexAttribI4sv);
+   SET_VertexAttribI4ubvEXT(dest, loopback_VertexAttribI4ubv);
+   SET_VertexAttribI4usvEXT(dest, loopback_VertexAttribI4usv);
 }
 
 

@@ -34,6 +34,8 @@
 
 #include "glheader.h"
 
+struct gl_context;
+
 
 extern void GLAPIENTRY
 _mesa_PixelStorei( GLenum pname, GLint param );
@@ -44,7 +46,7 @@ _mesa_PixelStoref( GLenum pname, GLfloat param );
 
 
 extern void
-_mesa_init_pixelstore( GLcontext *ctx );
+_mesa_init_pixelstore( struct gl_context *ctx );
 
 
 #endif

@@ -38,12 +38,12 @@
 #include "main/macros.h"
 #include "main/enums.h"
 #include "main/ffvertex_prog.h"
-#include "shader/program.h"
-#include "shader/prog_cache.h"
-#include "shader/prog_instruction.h"
-#include "shader/prog_parameter.h"
-#include "shader/prog_print.h"
-#include "shader/prog_statevars.h"
+#include "program/program.h"
+#include "program/prog_cache.h"
+#include "program/prog_instruction.h"
+#include "program/prog_parameter.h"
+#include "program/prog_print.h"
+#include "program/prog_statevars.h"
 
 
 /** Max of number of lights and texture coord units */
@@ -75,6 +75,7 @@ struct state_key {
       unsigned light_attenuated:1;
       unsigned texunit_really_enabled:1;
       unsigned texmat_enabled:1;
+      unsigned coord_replace:1;
       unsigned texgen_enabled:4;
       unsigned texgen_mode0:4;
       unsigned texgen_mode1:4;
@@ -108,7 +109,7 @@ static GLuint translate_texgen( GLboolean enabled, GLenum mode )
 
 
 
-static GLboolean check_active_shininess( GLcontext *ctx,
+static GLboolean check_active_shininess( struct gl_context *ctx,
                                          const struct state_key *key,
                                          GLuint side )
 {
@@ -128,7 +129,7 @@ static GLboolean check_active_shininess( GLcontext *ctx,
 }
 
 
-static void make_state_key( GLcontext *ctx, struct state_key *key )
+static void make_state_key( struct gl_context *ctx, struct state_key *key )
 {
    const struct gl_fragment_program *fp;
    GLuint i;
@@ -224,6 +225,10 @@ static void make_state_key( GLcontext *ctx, struct state_key *key )
 
       if (texUnit->_ReallyEnabled)
 	 key->unit[i].texunit_really_enabled = 1;
+
+      if (ctx->Point.PointSprite)
+	 if (ctx->Point.CoordReplace[i])
+	    key->unit[i].coord_replace = 1;
 
       if (ctx->Texture._TexMatEnabled & ENABLE_TEXMAT(i))
 	 key->unit[i].texmat_enabled = 1;
@@ -1385,6 +1390,9 @@ static void build_texture_transform( struct tnl_program *p )
       if (!(p->state->fragprog_inputs_read & FRAG_BIT_TEX(i)))
 	 continue;
 
+      if (p->state->unit[i].coord_replace)
+  	 continue;
+
       if (p->state->unit[i].texgen_enabled ||
 	  p->state->unit[i].texmat_enabled) {
 
@@ -1630,7 +1638,7 @@ create_new_program( const struct state_key *key,
  * XXX move this into core mesa (main/)
  */
 struct gl_vertex_program *
-_mesa_get_fixed_func_vertex_program(GLcontext *ctx)
+_mesa_get_fixed_func_vertex_program(struct gl_context *ctx)
 {
    struct gl_vertex_program *prog;
    struct state_key key;

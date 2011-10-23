@@ -37,9 +37,10 @@
 #define LP_BLD_CONST_H
 
 
-#include <llvm-c/Core.h>  
+#include "pipe/p_compiler.h"
+#include "gallivm/lp_bld.h"
+#include "gallivm/lp_bld_init.h"
 
-#include <pipe/p_compiler.h>
 
 
 struct lp_type;
@@ -73,36 +74,73 @@ lp_const_eps(struct lp_type type);
 
 
 LLVMValueRef
-lp_build_undef(struct lp_type type);
+lp_build_undef(struct gallivm_state *gallivm, struct lp_type type);
 
 
 LLVMValueRef
-lp_build_zero(struct lp_type type);
+lp_build_zero(struct gallivm_state *gallivm, struct lp_type type);
 
 
 LLVMValueRef
-lp_build_one(struct lp_type type);
+lp_build_one(struct gallivm_state *gallivm, struct lp_type type);
 
 
 LLVMValueRef
-lp_build_const_scalar(struct lp_type type,
-                      double val);
+lp_build_const_elem(struct gallivm_state *gallivm, struct lp_type type,
+                    double val);
+
+LLVMValueRef
+lp_build_const_vec(struct gallivm_state *gallivm, struct lp_type type,
+                   double val);
 
 
 LLVMValueRef
-lp_build_int_const_scalar(struct lp_type type,
-                          long long val);
+lp_build_const_int_vec(struct gallivm_state *gallivm,
+                       struct lp_type type, long long val);
 
 
 LLVMValueRef
-lp_build_const_aos(struct lp_type type, 
+lp_build_const_aos(struct gallivm_state *gallivm, struct lp_type type, 
                    double r, double g, double b, double a, 
                    const unsigned char *swizzle);
 
 
 LLVMValueRef
-lp_build_const_mask_aos(struct lp_type type,
-                        const boolean cond[4]);
+lp_build_const_mask_aos(struct gallivm_state *gallivm,
+                        struct lp_type type,
+                        unsigned mask);
+
+
+static INLINE LLVMValueRef
+lp_build_const_int32(struct gallivm_state *gallivm, int i)
+{
+   return LLVMConstInt(LLVMInt32TypeInContext(gallivm->context), i, 0);
+}
+
+
+static INLINE LLVMValueRef
+lp_build_const_float(struct gallivm_state *gallivm, float x)
+{
+   return LLVMConstReal(LLVMFloatTypeInContext(gallivm->context), x);
+}
+
+
+/** Return constant-valued pointer to int */
+static INLINE LLVMValueRef
+lp_build_const_int_pointer(struct gallivm_state *gallivm, const void *ptr)
+{
+   LLVMTypeRef int_type;
+   LLVMValueRef v;
+
+   /* int type large enough to hold a pointer */
+   int_type = LLVMIntTypeInContext(gallivm->context, 8 * sizeof(void *));
+   v = LLVMConstInt(int_type, (unsigned long long) ptr, 0);
+   v = LLVMBuildIntToPtr(gallivm->builder, v,
+                         LLVMPointerType(int_type, 0),
+                         "cast int to ptr");
+   return v;
+}
+
 
 
 #endif /* !LP_BLD_CONST_H */

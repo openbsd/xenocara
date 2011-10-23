@@ -156,17 +156,28 @@ fs_sse_run( const struct sp_fragment_shader *base,
          case TGSI_SEMANTIC_COLOR:
             {
                uint cbuf = sem_index[i];
+
+               assert(sizeof(quad->output.color[cbuf]) ==
+                      sizeof(machine->Outputs[i]));
+
+               /* copy float[4][4] result */
                memcpy(quad->output.color[cbuf],
-                      &machine->Outputs[i].xyzw[0].f[0],
+                      &machine->Outputs[i],
                       sizeof(quad->output.color[0]) );
             }
             break;
          case TGSI_SEMANTIC_POSITION:
             {
                uint j;
-               for (j = 0; j < 4; j++) {
-                  quad->output.depth[j] = machine->Outputs[0].xyzw[2].f[j];
-               }
+               for (j = 0; j < 4; j++)
+                  quad->output.depth[j] = machine->Outputs[i].xyzw[2].f[j];
+            }
+            break;
+         case TGSI_SEMANTIC_STENCIL:
+            {
+               uint j;
+               for (j = 0; j < 4; j++)
+                  quad->output.stencil[j] = machine->Outputs[i].xyzw[1].f[j];
             }
             break;
          }

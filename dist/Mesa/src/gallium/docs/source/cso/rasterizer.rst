@@ -7,7 +7,7 @@ The rasterizer state controls the rendering of points, lines and triangles.
 Attributes include polygon culling state, line width, line stipple,
 multisample state, scissoring and flat/smooth shading.
 
-Members
+Shading
 -------
 
 flatshade
@@ -46,43 +46,60 @@ There are several important exceptions to the specification of this rule.
   second vertex, not the first. This permits each segment of the fan to have
   a different color.
 
-Other Members
-^^^^^^^^^^^^^
+Polygons
+--------
 
 light_twoside
-    If set, there are per-vertex back-facing colors. :ref:`Draw`
-    uses this state along with the front/back information to set the
-    final vertex colors prior to rasterization.
+^^^^^^^^^^^^^
 
-front_winding
-    Indicates the window order of front-facing polygons, either
-    PIPE_WINDING_CW or PIPE_WINDING_CCW
+If set, there are per-vertex back-facing colors.  The hardware
+(perhaps assisted by :ref:`Draw`) should be set up to use this state
+along with the front/back information to set the final vertex colors
+prior to rasterization.
+
+The frontface vertex shader color output is marked with TGSI semantic
+COLOR[0], and backface COLOR[1].
+
+front_ccw
+    Indicates whether the window order of front-facing polygons is
+    counter-clockwise (TRUE) or clockwise (FALSE).
 
 cull_mode
-    Indicates which polygons to cull, either PIPE_WINDING_NONE (cull no
-    polygons), PIPE_WINDING_CW (cull clockwise-winding polygons),
-    PIPE_WINDING_CCW (cull counter clockwise-winding polygons), or
-    PIPE_WINDING_BOTH (cull all polygons).
+    Indicates which faces of polygons to cull, either PIPE_FACE_NONE
+    (cull no polygons), PIPE_FACE_FRONT (cull front-facing polygons),
+    PIPE_FACE_BACK (cull back-facing polygons), or
+    PIPE_FACE_FRONT_AND_BACK (cull all polygons).
 
-fill_cw
-    Indicates how to fill clockwise polygons, either PIPE_POLYGON_MODE_FILL,
-    PIPE_POLYGON_MODE_LINE or PIPE_POLYGON_MODE_POINT.
-fill_ccw
-    Indicates how to fill counter clockwise polygons, either
-    PIPE_POLYGON_MODE_FILL, PIPE_POLYGON_MODE_LINE or PIPE_POLYGON_MODE_POINT.
+fill_front
+    Indicates how to fill front-facing polygons, either
+    PIPE_POLYGON_MODE_FILL, PIPE_POLYGON_MODE_LINE or
+    PIPE_POLYGON_MODE_POINT.
+fill_back
+    Indicates how to fill back-facing polygons, either
+    PIPE_POLYGON_MODE_FILL, PIPE_POLYGON_MODE_LINE or
+    PIPE_POLYGON_MODE_POINT.
 
 poly_stipple_enable
     Whether polygon stippling is enabled.
 poly_smooth
     Controls OpenGL-style polygon smoothing/antialiasing
-offset_cw
-    If set, clockwise polygons will have polygon offset factors applied
-offset_ccw
-    If set, counter clockwise polygons will have polygon offset factors applied
+
+offset_point
+    If set, point-filled polygons will have polygon offset factors applied
+offset_line
+    If set, line-filled polygons will have polygon offset factors applied
+offset_tri
+    If set, filled polygons will have polygon offset factors applied
+
 offset_units
     Specifies the polygon offset bias
 offset_scale
     Specifies the polygon offset scale
+
+
+
+Lines
+-----
 
 line_width
     The width of lines.
@@ -100,44 +117,79 @@ line_last_pixel
     omits the last pixel to avoid double-drawing pixels at the ends of lines
     when drawing connected lines.
 
+
+Points
+------
+
+sprite_coord_enable
+^^^^^^^^^^^^^^^^^^^
+
+Controls automatic texture coordinate generation for rendering sprite points.
+
+When bit k in the sprite_coord_enable bitfield is set, then generic
+input k to the fragment shader will get an automatically computed
+texture coordinate.
+
+The texture coordinate will be of the form (s, t, 0, 1) where s varies
+from 0 to 1 from left to right while t varies from 0 to 1 according to
+the state of 'sprite_coord_mode' (see below).
+
+If any bit is set, then point_smooth MUST be disabled (there are no
+round sprites) and point_quad_rasterization MUST be true (sprites are
+always rasterized as quads).  Any mismatch between these states should
+be considered a bug in the state-tracker.
+
+This feature is implemented in the :ref:`Draw` module but may also be
+implemented natively by GPUs or implemented with a geometry shader.
+
+
+sprite_coord_mode
+^^^^^^^^^^^^^^^^^
+
+Specifies how the value for each shader output should be computed when drawing
+point sprites. For PIPE_SPRITE_COORD_LOWER_LEFT, the lower-left vertex will
+have coordinates (0,0,0,1). For PIPE_SPRITE_COORD_UPPER_LEFT, the upper-left
+vertex will have coordinates (0,0,0,1).
+This state is used by :ref:`Draw` to generate texcoords.
+
+
+point_quad_rasterization
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+Determines if points should be rasterized according to quad or point
+rasterization rules.
+
+OpenGL actually has quite different rasterization rules for points and
+point sprites - hence this indicates if points should be rasterized as
+points or according to point sprite (which decomposes them into quads,
+basically) rules.
+
+Additionally Direct3D will always use quad rasterization rules for
+points, regardless of whether point sprites are enabled or not.
+
+If this state is enabled, point smoothing and antialiasing are
+disabled. If it is disabled, point sprite coordinates are not
+generated.
+
+.. note::
+
+   Some renderers always internally translate points into quads; this state
+   still affects those renderers by overriding other rasterization state.
+
 point_smooth
     Whether points should be smoothed. Point smoothing turns rectangular
     points into circles or ovals.
 point_size_per_vertex
-    Whether vertices have a point size element.
+    Whether the vertex shader is expected to have a point size output.
+    Undefined behaviour is permitted if there is disagreement between
+    this flag and the actual bound shader.
 point_size
     The size of points, if not specified per-vertex.
-sprite_coord_enable
-    Specifies if a coord has its texture coordinates replaced or not. This
-    is a packed bitfield containing the enable for all coords - if all are 0
-    point sprites are effectively disabled, though points may still be
-    rendered slightly different according to point_quad_rasterization.
-    If any coord is non-zero, point_smooth should be disabled, and
-    point_quad_rasterization enabled.
-    If enabled, the four vertices of the resulting quad will be assigned
-    texture coordinates, according to sprite_coord_mode.
-sprite_coord_mode
-    Specifies how the value for each shader output should be computed when
-    drawing sprites, for each coord which has sprite_coord_enable set.
-    For PIPE_SPRITE_COORD_LOWER_LEFT, the lower left vertex will have
-    coordinate (0,0,0,1).
-    For PIPE_SPRITE_COORD_UPPER_LEFT, the upper-left vertex will have
-    coordinate (0,0,0,1).
-    This state is needed by :ref:`Draw` because that's where each
-    point vertex is converted into four quad vertices.  There's no other
-    place to emit the new vertex texture coordinates which are required for
-    sprite rendering.
-    Note that when geometry shaders are available, this state could be
-    removed.  A special geometry shader defined by the state tracker could
-    convert the incoming points into quads with the proper texture coords.
-point_quad_rasterization
-    This determines if points should be rasterized as quads or points.
-    d3d always uses quad rasterization for points, regardless if point sprites
-    are enabled or not, but OGL has different rules. If point_quad_rasterization
-    is set, point_smooth should be disabled, and points will be rendered as
-    squares even if multisample is enabled.
-    sprite_coord_enable should be zero if point_quad_rasterization is not
-    enabled.
+
+
+
+Other Members
+-------------
 
 scissor
     Whether the scissor test is enabled.

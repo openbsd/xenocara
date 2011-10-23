@@ -33,46 +33,58 @@
 #include "pipe/p_state.h"
 
 
-/**
- * Are s1 and s2 the same surface?
- * Surfaces are basically views into textures so check if the two surfaces
- * name the same part of the same texture.
- */
-static INLINE boolean
-util_same_surface(const struct pipe_surface *s1, const struct pipe_surface *s2)
-{
-   return (s1->texture == s2->texture &&
-           s1->face == s2->face &&
-           s1->level == s2->level &&
-           s1->zslice == s2->zslice);
-}
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 
-
+extern void
+u_surface_default_template(struct pipe_surface *view,
+                           const struct pipe_resource *texture,
+                           unsigned bind);
 
 extern boolean
-util_create_rgba_surface(struct pipe_screen *screen,
-                         uint width, uint height,
-                         struct pipe_texture **textureOut,
+util_create_rgba_surface(struct pipe_context *ctx,
+                         uint width, uint height, uint bind,
+                         struct pipe_resource **textureOut,
                          struct pipe_surface **surfaceOut);
 
 
 extern void
-util_destroy_rgba_surface(struct pipe_texture *texture,
+util_destroy_rgba_surface(struct pipe_resource *texture,
                           struct pipe_surface *surface);
 
 
-extern boolean
-util_framebuffer_state_equal(const struct pipe_framebuffer_state *dst,
-                             const struct pipe_framebuffer_state *src);
 
 extern void
-util_copy_framebuffer_state(struct pipe_framebuffer_state *dst,
-                            const struct pipe_framebuffer_state *src);
-
+util_resource_copy_region(struct pipe_context *pipe,
+                          struct pipe_resource *dst,
+                          unsigned dst_level,
+                          unsigned dst_x, unsigned dst_y, unsigned dst_z,
+                          struct pipe_resource *src,
+                          unsigned src_level,
+                          const struct pipe_box *src_box);
 
 extern void
-util_unreference_framebuffer_state(struct pipe_framebuffer_state *fb);
+util_clear_render_target(struct pipe_context *pipe,
+                         struct pipe_surface *dst,
+                         const float *rgba,
+                         unsigned dstx, unsigned dsty,
+                         unsigned width, unsigned height);
+
+extern void
+util_clear_depth_stencil(struct pipe_context *pipe,
+                         struct pipe_surface *dst,
+                         unsigned clear_flags,
+                         double depth,
+                         unsigned stencil,
+                         unsigned dstx, unsigned dsty,
+                         unsigned width, unsigned height);
+
+
+#ifdef __cplusplus
+}
+#endif
 
 
 #endif /* U_SURFACE_H */

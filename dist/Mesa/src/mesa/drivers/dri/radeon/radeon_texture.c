@@ -32,14 +32,13 @@
 #include "main/glheader.h"
 #include "main/imports.h"
 #include "main/context.h"
-#include "main/convolve.h"
 #include "main/enums.h"
 #include "main/mipmap.h"
 #include "main/texcompress.h"
 #include "main/texstore.h"
 #include "main/teximage.h"
 #include "main/texobj.h"
-#include "main/texgetimage.h"
+#include "drivers/common/meta.h"
 
 #include "xmlpool.h"		/* for symbolic values of enum-type options */
 
@@ -77,7 +76,7 @@ void copy_rows(void* dst, GLuint dststride, const void* src, GLuint srcstride,
 /**
  * Allocate an empty texture image object.
  */
-struct gl_texture_image *radeonNewTextureImage(GLcontext *ctx)
+struct gl_texture_image *radeonNewTextureImage(struct gl_context *ctx)
 {
 	return CALLOC(sizeof(radeon_texture_image));
 }
@@ -85,7 +84,7 @@ struct gl_texture_image *radeonNewTextureImage(GLcontext *ctx)
 /**
  * Free memory associated with this texture image.
  */
-void radeonFreeTexImageData(GLcontext *ctx, struct gl_texture_image *timage)
+void radeonFreeTexImageData(struct gl_context *ctx, struct gl_texture_image *timage)
 {
 	radeon_texture_image* image = get_radeon_texture_image(timage);
 
@@ -155,7 +154,7 @@ void radeon_teximage_unmap(radeon_texture_image *image)
 	}
 }
 
-static void map_override(GLcontext *ctx, radeonTexObj *t)
+static void map_override(struct gl_context *ctx, radeonTexObj *t)
 {
 	radeon_texture_image *img = get_radeon_texture_image(t->base.Image[0][0]);
 
@@ -164,7 +163,7 @@ static void map_override(GLcontext *ctx, radeonTexObj *t)
 	img->base.Data = t->bo->ptr;
 }
 
-static void unmap_override(GLcontext *ctx, radeonTexObj *t)
+static void unmap_override(struct gl_context *ctx, radeonTexObj *t)
 {
 	radeon_texture_image *img = get_radeon_texture_image(t->base.Image[0][0]);
 
@@ -176,7 +175,7 @@ static void unmap_override(GLcontext *ctx, radeonTexObj *t)
 /**
  * Map a validated texture for reading during software rendering.
  */
-void radeonMapTexture(GLcontext *ctx, struct gl_texture_object *texObj)
+void radeonMapTexture(struct gl_context *ctx, struct gl_texture_object *texObj)
 {
 	radeonTexObj* t = radeon_tex_obj(texObj);
 	int face, level;
@@ -214,7 +213,7 @@ void radeonMapTexture(GLcontext *ctx, struct gl_texture_object *texObj)
 	}
 }
 
-void radeonUnmapTexture(GLcontext *ctx, struct gl_texture_object *texObj)
+void radeonUnmapTexture(struct gl_context *ctx, struct gl_texture_object *texObj)
 {
 	radeonTexObj* t = radeon_tex_obj(texObj);
 	int face, level;
@@ -242,7 +241,7 @@ void radeonUnmapTexture(GLcontext *ctx, struct gl_texture_object *texObj)
  * This relies on internal details of _mesa_generate_mipmap, in particular
  * the fact that the memory for recreated texture images is always freed.
  */
-static void radeon_generate_mipmap(GLcontext *ctx, GLenum target,
+static void radeon_generate_mipmap(struct gl_context *ctx, GLenum target,
 				   struct gl_texture_object *texObj)
 {
 	radeonTexObj* t = radeon_tex_obj(texObj);
@@ -274,7 +273,7 @@ static void radeon_generate_mipmap(GLcontext *ctx, GLenum target,
 	
 }
 
-void radeonGenerateMipmap(GLcontext* ctx, GLenum target, struct gl_texture_object *texObj)
+void radeonGenerateMipmap(struct gl_context* ctx, GLenum target, struct gl_texture_object *texObj)
 {
 	radeonContextPtr rmesa = RADEON_CONTEXT(ctx);
 	struct radeon_bo *bo;
@@ -295,9 +294,13 @@ void radeonGenerateMipmap(GLcontext* ctx, GLenum target, struct gl_texture_objec
 		radeon_firevertices(rmesa);
 	}
 
-	radeon_teximage_map(baseimage, GL_FALSE);
-	radeon_generate_mipmap(ctx, target, texObj);
-	radeon_teximage_unmap(baseimage);
+	if (_mesa_meta_check_generate_mipmap_fallback(ctx, target, texObj)) {
+		radeon_teximage_map(baseimage, GL_FALSE);
+		radeon_generate_mipmap(ctx, target, texObj);
+		radeon_teximage_unmap(baseimage);
+	} else {
+		_mesa_meta_GenerateMipmap(ctx, target, texObj);
+	}
 }
 
 
@@ -335,7 +338,7 @@ static gl_format radeonChoose8888TexFormat(radeonContextPtr rmesa,
 		return _dri_texformat_argb8888;
 }
 
-gl_format radeonChooseTextureFormat_mesa(GLcontext * ctx,
+gl_format radeonChooseTextureFormat_mesa(struct gl_context * ctx,
 					 GLint internalFormat,
 					 GLenum format,
 					 GLenum type)
@@ -344,7 +347,7 @@ gl_format radeonChooseTextureFormat_mesa(GLcontext * ctx,
 					 type, 0);
 }
 
-gl_format radeonChooseTextureFormat(GLcontext * ctx,
+gl_format radeonChooseTextureFormat(struct gl_context * ctx,
 				    GLint internalFormat,
 				    GLenum format,
 				    GLenum type, GLboolean fbo)
@@ -547,7 +550,7 @@ gl_format radeonChooseTextureFormat(GLcontext * ctx,
 	case GL_SRGB8_ALPHA8:
 	case GL_COMPRESSED_SRGB:
 	case GL_COMPRESSED_SRGB_ALPHA:
-		return MESA_FORMAT_SRGBA8;
+		return MESA_FORMAT_SARGB8;
 
 	case GL_SLUMINANCE:
 	case GL_SLUMINANCE8:
@@ -558,6 +561,15 @@ gl_format radeonChooseTextureFormat(GLcontext * ctx,
 	case GL_SLUMINANCE8_ALPHA8:
 	case GL_COMPRESSED_SLUMINANCE_ALPHA:
 		return MESA_FORMAT_SLA8;
+
+	case GL_COMPRESSED_SRGB_S3TC_DXT1_EXT:
+		return MESA_FORMAT_SRGB_DXT1;
+	case GL_COMPRESSED_SRGB_ALPHA_S3TC_DXT1_EXT:
+		return MESA_FORMAT_SRGBA_DXT1;
+	case GL_COMPRESSED_SRGB_ALPHA_S3TC_DXT3_EXT:
+		return MESA_FORMAT_SRGBA_DXT3;
+	case GL_COMPRESSED_SRGB_ALPHA_S3TC_DXT5_EXT:
+		return MESA_FORMAT_SRGBA_DXT5;
 
 	default:
 		_mesa_problem(ctx,
@@ -629,7 +641,7 @@ static void teximage_assign_miptree(radeonContextPtr rmesa,
 				"%s Failed to allocate miptree.\n", __func__);
 }
 
-static GLuint * allocate_image_offsets(GLcontext *ctx,
+static GLuint * allocate_image_offsets(struct gl_context *ctx,
 	unsigned alignedWidth,
 	unsigned height,
 	unsigned depth)
@@ -653,7 +665,7 @@ static GLuint * allocate_image_offsets(GLcontext *ctx,
 /**
  * Update a subregion of the given texture image.
  */
-static void radeon_store_teximage(GLcontext* ctx, int dims,
+static void radeon_store_teximage(struct gl_context* ctx, int dims,
 		GLint xoffset, GLint yoffset, GLint zoffset,
 		GLsizei width, GLsizei height, GLsizei depth,
 		GLsizei imageSize,
@@ -664,6 +676,7 @@ static void radeon_store_teximage(GLcontext* ctx, int dims,
 		struct gl_texture_image *texImage,
 		int compressed)
 {
+	radeonContextPtr rmesa = RADEON_CONTEXT(ctx);
 	radeonTexObj *t = radeon_tex_obj(texObj);
 	radeon_texture_image* image = get_radeon_texture_image(texImage);
 
@@ -678,8 +691,7 @@ static void radeon_store_teximage(GLcontext* ctx, int dims,
 		dstRowStride = image->mt->levels[image->mtlevel].rowstride;
 	} else if (t->bo) {
 		/* TFP case */
-		/* TODO */
-		assert(0);
+		dstRowStride = get_texture_image_row_stride(rmesa, texImage->TexFormat, width, 0);
 	} else {
 		dstRowStride = _mesa_format_row_stride(texImage->TexFormat, texImage->Width);
 	}
@@ -746,7 +758,7 @@ static void radeon_store_teximage(GLcontext* ctx, int dims,
  * All glTexImage calls go through this function.
  */
 static void radeon_teximage(
-	GLcontext *ctx, int dims,
+	struct gl_context *ctx, int dims,
 	GLenum target, GLint level,
 	GLint internalFormat,
 	GLint width, GLint height, GLint depth,
@@ -760,8 +772,6 @@ static void radeon_teximage(
 	radeonContextPtr rmesa = RADEON_CONTEXT(ctx);
 	radeonTexObj* t = radeon_tex_obj(texObj);
 	radeon_texture_image* image = get_radeon_texture_image(texImage);
-	GLint postConvWidth = width;
-	GLint postConvHeight = height;
 	GLuint face = _mesa_tex_target_to_face(target);
 
 	radeon_print(RADEON_TEXTURE, RADEON_NORMAL,
@@ -781,23 +791,6 @@ static void radeon_teximage(
 
 
 	t->validated = GL_FALSE;
-
-	if (ctx->_ImageTransferState & IMAGE_CONVOLUTION_BIT) {
-	       _mesa_adjust_image_for_convolution(ctx, dims, &postConvWidth,
-						  &postConvHeight);
-	}
-
-	if (!_mesa_is_format_compressed(texImage->TexFormat)) {
-		GLuint texelBytes = _mesa_get_format_bytes(texImage->TexFormat);
-		/* Minimum pitch of 32 bytes */
-		if (postConvWidth * texelBytes < 32) {
-			postConvWidth = 32 / texelBytes;
-			texImage->RowStride = postConvWidth;
-		}
-		if (!image->mt) {
-			assert(texImage->RowStride == postConvWidth);
-		}
-	}
 
 	/* Mesa core only clears texImage->Data but not image->mt */
 	radeonFreeTexImageData(ctx, texImage);
@@ -840,7 +833,7 @@ static void radeon_teximage(
 	_mesa_unmap_teximage_pbo(ctx, packing);
 }
 
-void radeonTexImage1D(GLcontext * ctx, GLenum target, GLint level,
+void radeonTexImage1D(struct gl_context * ctx, GLenum target, GLint level,
 		      GLint internalFormat,
 		      GLint width, GLint border,
 		      GLenum format, GLenum type, const GLvoid * pixels,
@@ -852,7 +845,7 @@ void radeonTexImage1D(GLcontext * ctx, GLenum target, GLint level,
 		0, format, type, pixels, packing, texObj, texImage, 0);
 }
 
-void radeonTexImage2D(GLcontext * ctx, GLenum target, GLint level,
+void radeonTexImage2D(struct gl_context * ctx, GLenum target, GLint level,
 			   GLint internalFormat,
 			   GLint width, GLint height, GLint border,
 			   GLenum format, GLenum type, const GLvoid * pixels,
@@ -865,7 +858,7 @@ void radeonTexImage2D(GLcontext * ctx, GLenum target, GLint level,
 		0, format, type, pixels, packing, texObj, texImage, 0);
 }
 
-void radeonCompressedTexImage2D(GLcontext * ctx, GLenum target,
+void radeonCompressedTexImage2D(struct gl_context * ctx, GLenum target,
 				     GLint level, GLint internalFormat,
 				     GLint width, GLint height, GLint border,
 				     GLsizei imageSize, const GLvoid * data,
@@ -876,7 +869,7 @@ void radeonCompressedTexImage2D(GLcontext * ctx, GLenum target,
 		imageSize, 0, 0, data, &ctx->Unpack, texObj, texImage, 1);
 }
 
-void radeonTexImage3D(GLcontext * ctx, GLenum target, GLint level,
+void radeonTexImage3D(struct gl_context * ctx, GLenum target, GLint level,
 		      GLint internalFormat,
 		      GLint width, GLint height, GLint depth,
 		      GLint border,
@@ -892,7 +885,7 @@ void radeonTexImage3D(GLcontext * ctx, GLenum target, GLint level,
 /**
  * All glTexSubImage calls go through this function.
  */
-static void radeon_texsubimage(GLcontext* ctx, int dims, GLenum target, int level,
+static void radeon_texsubimage(struct gl_context* ctx, int dims, GLenum target, int level,
 		GLint xoffset, GLint yoffset, GLint zoffset,
 		GLsizei width, GLsizei height, GLsizei depth,
 		GLsizei imageSize,
@@ -946,7 +939,7 @@ static void radeon_texsubimage(GLcontext* ctx, int dims, GLenum target, int leve
 	_mesa_unmap_teximage_pbo(ctx, packing);
 }
 
-void radeonTexSubImage1D(GLcontext * ctx, GLenum target, GLint level,
+void radeonTexSubImage1D(struct gl_context * ctx, GLenum target, GLint level,
 			 GLint xoffset,
 			 GLsizei width,
 			 GLenum format, GLenum type,
@@ -959,7 +952,7 @@ void radeonTexSubImage1D(GLcontext * ctx, GLenum target, GLint level,
 		format, type, pixels, packing, texObj, texImage, 0);
 }
 
-void radeonTexSubImage2D(GLcontext * ctx, GLenum target, GLint level,
+void radeonTexSubImage2D(struct gl_context * ctx, GLenum target, GLint level,
 			 GLint xoffset, GLint yoffset,
 			 GLsizei width, GLsizei height,
 			 GLenum format, GLenum type,
@@ -973,7 +966,7 @@ void radeonTexSubImage2D(GLcontext * ctx, GLenum target, GLint level,
 			   0);
 }
 
-void radeonCompressedTexSubImage2D(GLcontext * ctx, GLenum target,
+void radeonCompressedTexSubImage2D(struct gl_context * ctx, GLenum target,
 				   GLint level, GLint xoffset,
 				   GLint yoffset, GLsizei width,
 				   GLsizei height, GLenum format,
@@ -986,7 +979,7 @@ void radeonCompressedTexSubImage2D(GLcontext * ctx, GLenum target,
 }
 
 
-void radeonTexSubImage3D(GLcontext * ctx, GLenum target, GLint level,
+void radeonTexSubImage3D(struct gl_context * ctx, GLenum target, GLint level,
 			 GLint xoffset, GLint yoffset, GLint zoffset,
 			 GLsizei width, GLsizei height, GLsizei depth,
 			 GLenum format, GLenum type,
@@ -999,61 +992,82 @@ void radeonTexSubImage3D(GLcontext * ctx, GLenum target, GLint level,
 		format, type, pixels, packing, texObj, texImage, 0);
 }
 
-/**
- * Need to map texture image into memory before copying image data,
- * then unmap it.
- */
-static void
-radeon_get_tex_image(GLcontext * ctx, GLenum target, GLint level,
-		     GLenum format, GLenum type, GLvoid * pixels,
-		     struct gl_texture_object *texObj,
-		     struct gl_texture_image *texImage, int compressed)
+unsigned radeonIsFormatRenderable(gl_format mesa_format)
 {
-	radeon_texture_image *image = get_radeon_texture_image(texImage);
+	if (mesa_format == _dri_texformat_argb8888 || mesa_format == _dri_texformat_rgb565 ||
+		mesa_format == _dri_texformat_argb1555 || mesa_format == _dri_texformat_argb4444)
+		return 1;
 
-	radeon_print(RADEON_TEXTURE, RADEON_NORMAL,
-			"%s(%p, tex %p, image %p) compressed %d.\n",
-			__func__, ctx, texObj, image, compressed);
-
-	if (image->mt) {
-		/* Map the texture image read-only */
-		radeon_teximage_map(image, GL_FALSE);
-	} else {
-		/* Image hasn't been uploaded to a miptree yet */
-		assert(image->base.Data);
-	}
-
-	if (compressed) {
-		/* FIXME: this can't work for small textures (mips) which
-		         use different hw stride */
-		_mesa_get_compressed_teximage(ctx, target, level, pixels,
-					      texObj, texImage);
-	} else {
-		_mesa_get_teximage(ctx, target, level, format, type, pixels,
-				   texObj, texImage);
-	}
-     
-	if (image->mt) {
-		radeon_teximage_unmap(image);
+	switch (mesa_format)
+	{
+		case MESA_FORMAT_Z16:
+		case MESA_FORMAT_S8_Z24:
+			return 1;
+		default:
+			return 0;
 	}
 }
 
-void
-radeonGetTexImage(GLcontext * ctx, GLenum target, GLint level,
-		  GLenum format, GLenum type, GLvoid * pixels,
-		  struct gl_texture_object *texObj,
-		  struct gl_texture_image *texImage)
+#if FEATURE_OES_EGL_image
+void radeon_image_target_texture_2d(struct gl_context *ctx, GLenum target,
+				    struct gl_texture_object *texObj,
+				    struct gl_texture_image *texImage,
+				    GLeglImageOES image_handle)
 {
-	radeon_get_tex_image(ctx, target, level, format, type, pixels,
-			     texObj, texImage, 0);
-}
+	radeonContextPtr radeon = RADEON_CONTEXT(ctx);
+	radeonTexObj *t = radeon_tex_obj(texObj);
+	radeon_texture_image *radeonImage = get_radeon_texture_image(texImage);
+	__DRIscreen *screen;
+	__DRIimage *image;
 
-void
-radeonGetCompressedTexImage(GLcontext *ctx, GLenum target, GLint level,
-			    GLvoid *pixels,
-			    struct gl_texture_object *texObj,
-			    struct gl_texture_image *texImage)
-{
-	radeon_get_tex_image(ctx, target, level, 0, 0, pixels,
-			     texObj, texImage, 1);
+	screen = radeon->dri.screen;
+	image = screen->dri2.image->lookupEGLImage(screen, image_handle,
+						   screen->loaderPrivate);
+	if (image == NULL)
+		return;
+
+	radeonFreeTexImageData(ctx, texImage);
+
+	texImage->Width = image->width;
+	texImage->Height = image->height;
+	texImage->Depth = 1;
+	texImage->_BaseFormat = GL_RGBA;
+	texImage->TexFormat = image->format;
+	texImage->RowStride = image->pitch;
+	texImage->InternalFormat = image->internal_format;
+
+	if(t->mt)
+	{
+		radeon_miptree_unreference(&t->mt);
+		t->mt = NULL;
+	}
+
+	/* NOTE: The following is *very* ugly and will probably break. But
+	   I don't know how to deal with it, without creating a whole new
+	   function like radeon_miptree_from_bo() so I'm going with the
+	   easy but error-prone way. */
+
+	radeon_try_alloc_miptree(radeon, t);
+
+	radeonImage->mtface = _mesa_tex_target_to_face(target);
+	radeonImage->mtlevel = 0;
+	radeon_miptree_reference(t->mt, &radeonImage->mt);
+
+	if (t->mt == NULL)
+	{
+		radeon_print(RADEON_TEXTURE, RADEON_VERBOSE,
+			     "%s Failed to allocate miptree.\n", __func__);
+		return;
+	}
+
+	/* Particularly ugly: this is guaranteed to break, if image->bo is
+	   not of the required size for a miptree. */
+	radeon_bo_unref(t->mt->bo);
+	radeon_bo_ref(image->bo);
+	t->mt->bo = image->bo;
+
+	if (!radeon_miptree_matches_image(t->mt, &radeonImage->base,
+					  radeonImage->mtface, 0))
+		fprintf(stderr, "miptree doesn't match image\n");
 }
+#endif

@@ -28,11 +28,11 @@
 #define S_AALINE_H
 
 
-#include "swrast.h"
+#include "main/mtypes.h"
 
 
 extern void
-_swrast_choose_aa_line_function(GLcontext *ctx);
+_swrast_choose_aa_line_function(struct gl_context *ctx);
 
 
 #endif

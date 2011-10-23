@@ -1,7 +1,7 @@
 /* -*- mode: c; tab-width: 8; -*- */
 /* vi: set sw=4 ts=8: */
 /* Reference version of egl.h for EGL 1.4.
- * $Revision: 1.1 $ on $Date: 2010/05/22 20:05:53 $
+ * $Revision: 1.2 $ on $Date: 2011/10/23 13:37:31 $
  */
 
 /*

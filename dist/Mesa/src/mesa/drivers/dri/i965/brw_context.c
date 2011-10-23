@@ -34,8 +34,6 @@
 #include "main/api_noop.h"
 #include "main/macros.h"
 #include "main/simple_list.h"
-#include "shader/shader_api.h"
-
 #include "brw_context.h"
 #include "brw_defines.h"
 #include "brw_draw.h"
@@ -43,39 +41,31 @@
 #include "intel_span.h"
 #include "tnl/t_pipeline.h"
 
-
 /***************************************
  * Mesa's Driver Functions
  ***************************************/
 
-static void brwUseProgram(GLcontext *ctx, GLuint program)
-{
-   _mesa_use_program(ctx, program);
-}
-
-static void brwInitProgFuncs( struct dd_function_table *functions )
-{
-   functions->UseProgram = brwUseProgram;
-}
 static void brwInitDriverFunctions( struct dd_function_table *functions )
 {
    intelInitDriverFunctions( functions );
 
    brwInitFragProgFuncs( functions );
-   brwInitProgFuncs( functions );
    brw_init_queryobj_functions(functions);
 
-   functions->Viewport = intel_viewport;
+   functions->Enable = brw_enable;
+   functions->DepthRange = brw_depth_range;
 }
 
-GLboolean brwCreateContext( const __GLcontextModes *mesaVis,
+GLboolean brwCreateContext( int api,
+			    const struct gl_config *mesaVis,
 			    __DRIcontext *driContextPriv,
 			    void *sharedContextPrivate)
 {
    struct dd_function_table functions;
    struct brw_context *brw = (struct brw_context *) CALLOC_STRUCT(brw_context);
    struct intel_context *intel = &brw->intel;
-   GLcontext *ctx = &intel->ctx;
+   struct gl_context *ctx = &intel->ctx;
+   unsigned i;
 
    if (!brw) {
       printf("%s: failed to alloc context\n", __FUNCTION__);
@@ -85,7 +75,7 @@ GLboolean brwCreateContext( const __GLcontextModes *mesaVis,
    brwInitVtbl( brw );
    brwInitDriverFunctions( &functions );
 
-   if (!intelInitContext( intel, mesaVis, driContextPriv,
+   if (!intelInitContext( intel, api, mesaVis, driContextPriv,
 			  sharedContextPrivate, &functions )) {
       printf("%s: failed to init intel context\n", __FUNCTION__);
       FREE(brw);
@@ -120,8 +110,19 @@ GLboolean brwCreateContext( const __GLcontextModes *mesaVis,
    ctx->Const.MaxPointSizeAA = 255.0;
 
    /* We want the GLSL compiler to emit code that uses condition codes */
-   ctx->Shader.EmitCondCodes = GL_TRUE;
-   ctx->Shader.EmitNVTempInitialization = GL_TRUE;
+   for (i = 0; i <= MESA_SHADER_FRAGMENT; i++) {
+      ctx->ShaderCompilerOptions[i].EmitCondCodes = GL_TRUE;
+      ctx->ShaderCompilerOptions[i].EmitNVTempInitialization = GL_TRUE;
+      ctx->ShaderCompilerOptions[i].EmitNoNoise = GL_TRUE;
+      ctx->ShaderCompilerOptions[i].EmitNoMainReturn = GL_TRUE;
+      ctx->ShaderCompilerOptions[i].EmitNoIndirectInput = GL_TRUE;
+      ctx->ShaderCompilerOptions[i].EmitNoIndirectOutput = GL_TRUE;
+
+      ctx->ShaderCompilerOptions[i].EmitNoIndirectUniform =
+	 (i == MESA_SHADER_FRAGMENT);
+      ctx->ShaderCompilerOptions[i].EmitNoIndirectTemp =
+	 (i == MESA_SHADER_FRAGMENT);
+   }
 
    ctx->Const.VertexProgram.MaxNativeInstructions = (16 * 1024);
    ctx->Const.VertexProgram.MaxAluInstructions = 0;
@@ -150,19 +151,53 @@ GLboolean brwCreateContext( const __GLcontextModes *mesaVis,
       MIN2(ctx->Const.FragmentProgram.MaxNativeParameters,
 	   ctx->Const.FragmentProgram.MaxEnvParams);
 
+   /* Fragment shaders use real, 32-bit twos-complement integers for all
+    * integer types.
+    */
+   ctx->Const.FragmentProgram.LowInt.RangeMin = 31;
+   ctx->Const.FragmentProgram.LowInt.RangeMax = 30;
+   ctx->Const.FragmentProgram.LowInt.Precision = 0;
+   ctx->Const.FragmentProgram.HighInt = ctx->Const.FragmentProgram.MediumInt
+      = ctx->Const.FragmentProgram.LowInt;
+
+   /* Gen6 converts quads to polygon in beginning of 3D pipeline,
+      but we're not sure how it's actually done for vertex order,
+      that affect provoking vertex decision. Always use last vertex
+      convention for quad primitive which works as expected for now. */
+   if (intel->gen == 6)
+       ctx->Const.QuadsFollowProvokingVertexConvention = GL_FALSE;
+
    if (intel->is_g4x || intel->gen >= 5) {
       brw->CMD_VF_STATISTICS = CMD_VF_STATISTICS_GM45;
       brw->CMD_PIPELINE_SELECT = CMD_PIPELINE_SELECT_GM45;
       brw->has_surface_tile_offset = GL_TRUE;
-      brw->has_compr4 = GL_TRUE;
+      if (intel->gen < 6)
+	  brw->has_compr4 = GL_TRUE;
       brw->has_aa_line_parameters = GL_TRUE;
+      brw->has_pln = GL_TRUE;
   } else {
       brw->CMD_VF_STATISTICS = CMD_VF_STATISTICS_965;
       brw->CMD_PIPELINE_SELECT = CMD_PIPELINE_SELECT_965;
    }
 
    /* WM maximum threads is number of EUs times number of threads per EU. */
-   if (intel->gen == 5) {
+   if (intel->gen >= 6) {
+      if (IS_GT2(intel->intelScreen->deviceID)) {
+	 /* This could possibly be 80, but is supposed to require
+	  * disabling of WIZ hashing (bit 6 of GT_MODE, 0x20d0) and a
+	  * GPU reset to change.
+	  */
+	 brw->wm_max_threads = 40;
+	 brw->vs_max_threads = 60;
+	 brw->urb.size = 64;            /* volume 5c.5 section 5.1 */
+	 brw->urb.max_vs_handles = 128; /* volume 2a (see 3DSTATE_URB) */
+      } else {
+	 brw->wm_max_threads = 40;
+	 brw->vs_max_threads = 24;
+	 brw->urb.size = 32;            /* volume 5c.5 section 5.1 */
+	 brw->urb.max_vs_handles = 256; /* volume 2a (see 3DSTATE_URB) */
+      }
+   } else if (intel->gen == 5) {
       brw->urb.size = 1024;
       brw->vs_max_threads = 72;
       brw->wm_max_threads = 12 * 6;
@@ -184,6 +219,9 @@ GLboolean brwCreateContext( const __GLcontextModes *mesaVis,
 
    brw_init_state( brw );
 
+   brw->curbe.last_buf = calloc(1, 4096);
+   brw->curbe.next_buf = calloc(1, 4096);
+
    brw->state.dirty.mesa = ~0;
    brw->state.dirty.brw = ~0;
 
@@ -192,9 +230,12 @@ GLboolean brwCreateContext( const __GLcontextModes *mesaVis,
    ctx->VertexProgram._MaintainTnlProgram = GL_TRUE;
    ctx->FragmentProgram._MaintainTexEnvProgram = GL_TRUE;
 
-   make_empty_list(&brw->query.active_head);
-
    brw_draw_init( brw );
+
+   /* Now that most driver functions are hooked up, initialize some of the
+    * immediate state.
+    */
+   brw_update_cc_vp(brw);
 
    return GL_TRUE;
 }

@@ -32,7 +32,6 @@
 #include "swrast/swrast.h"
 
 #define LOCAL_VARS							\
-	struct gl_framebuffer *fb = ctx->DrawBuffer;			\
 	struct nouveau_surface *s = &to_nouveau_renderbuffer(rb)->surface; \
 	GLuint p;							\
 	(void)p;
@@ -45,12 +44,12 @@
 #define HW_CLIPLOOP() {							\
 	int minx = 0;							\
 	int miny = 0;							\
-	int maxx = fb->Width;						\
-	int maxy = fb->Height;
+	int maxx = rb->Width;						\
+	int maxy = rb->Height;
 
 #define HW_ENDCLIPLOOP() }
 
-#define Y_FLIP(y) (fb->Name ? (y) : rb->Height - 1 - (y))
+#define Y_FLIP(y) (rb->Name ? (y) : rb->Height - 1 - (y))
 
 /* RGB565 span functions */
 #define SPANTMP_PIXEL_FMT GL_RGB
@@ -132,7 +131,7 @@ renderbuffer_map_unmap(struct gl_renderbuffer *rb, GLboolean map)
 }
 
 static void
-texture_unit_map_unmap(GLcontext *ctx, struct gl_texture_unit *u, GLboolean map)
+texture_unit_map_unmap(struct gl_context *ctx, struct gl_texture_unit *u, GLboolean map)
 {
 	if (!u->_ReallyEnabled)
 		return;
@@ -144,38 +143,49 @@ texture_unit_map_unmap(GLcontext *ctx, struct gl_texture_unit *u, GLboolean map)
 }
 
 static void
-span_map_unmap(GLcontext *ctx, GLboolean map)
+framebuffer_map_unmap(struct gl_framebuffer *fb, GLboolean map)
 {
 	int i;
 
-	for (i = 0; i < ctx->DrawBuffer->_NumColorDrawBuffers; i++)
-		renderbuffer_map_unmap(ctx->DrawBuffer->_ColorDrawBuffers[i], map);
+	for (i = 0; i < fb->_NumColorDrawBuffers; i++)
+		renderbuffer_map_unmap(fb->_ColorDrawBuffers[i], map);
 
-	renderbuffer_map_unmap(ctx->DrawBuffer->_ColorReadBuffer, map);
+	renderbuffer_map_unmap(fb->_ColorReadBuffer, map);
 
-	if (ctx->DrawBuffer->_DepthBuffer)
-		renderbuffer_map_unmap(ctx->DrawBuffer->_DepthBuffer->Wrapped, map);
+	if (fb->_DepthBuffer)
+		renderbuffer_map_unmap(fb->_DepthBuffer->Wrapped, map);
+}
+
+static void
+span_map_unmap(struct gl_context *ctx, GLboolean map)
+{
+	int i;
+
+	framebuffer_map_unmap(ctx->DrawBuffer, map);
+
+	if (ctx->ReadBuffer != ctx->DrawBuffer)
+		framebuffer_map_unmap(ctx->ReadBuffer, map);
 
 	for (i = 0; i < ctx->Const.MaxTextureUnits; i++)
 		texture_unit_map_unmap(ctx, &ctx->Texture.Unit[i], map);
 }
 
 static void
-nouveau_span_start(GLcontext *ctx)
+nouveau_span_start(struct gl_context *ctx)
 {
 	nouveau_fallback(ctx, SWRAST);
 	span_map_unmap(ctx, GL_TRUE);
 }
 
 static void
-nouveau_span_finish(GLcontext *ctx)
+nouveau_span_finish(struct gl_context *ctx)
 {
 	span_map_unmap(ctx, GL_FALSE);
 	nouveau_fallback(ctx, HWTNL);
 }
 
 void
-nouveau_span_functions_init(GLcontext *ctx)
+nouveau_span_functions_init(struct gl_context *ctx)
 {
 	struct swrast_device_driver *swdd =
 		_swrast_GetDeviceDriverReference(ctx);

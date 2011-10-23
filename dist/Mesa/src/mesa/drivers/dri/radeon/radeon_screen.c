@@ -41,18 +41,19 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include "main/mtypes.h"
 #include "main/framebuffer.h"
 #include "main/renderbuffer.h"
+#include "main/fbobject.h"
 
 #define STANDALONE_MMIO
 #include "radeon_chipset.h"
 #include "radeon_macros.h"
 #include "radeon_screen.h"
 #include "radeon_common.h"
+#include "radeon_common_context.h"
 #if defined(RADEON_R100)
 #include "radeon_context.h"
 #include "radeon_tex.h"
 #elif defined(RADEON_R200)
 #include "r200_context.h"
-#include "r200_ioctl.h"
 #include "r200_tex.h"
 #elif defined(RADEON_R300)
 #include "r300_context.h"
@@ -214,6 +215,10 @@ static const GLuint __driNConfigOptions = 17;
 
 static int getSwapInfo( __DRIdrawable *dPriv, __DRIswapInfo * sInfo );
 
+#ifndef RADEON_INFO_TILE_CONFIG
+#define RADEON_INFO_TILE_CONFIG 0x6
+#endif
+
 static int
 radeonGetParam(__DRIscreen *sPriv, int param, void *value)
 {
@@ -232,6 +237,9 @@ radeonGetParam(__DRIscreen *sPriv, int param, void *value)
           break;
       case RADEON_PARAM_NUM_Z_PIPES:
           info.request = RADEON_INFO_NUM_Z_PIPES;
+          break;
+      case RADEON_INFO_TILE_CONFIG:
+	  info.request = RADEON_INFO_TILE_CONFIG;
           break;
       default:
           return -EINVAL;
@@ -252,7 +260,7 @@ radeonFillInModes( __DRIscreen *psp,
 		   unsigned stencil_bits, GLboolean have_back_buffer )
 {
     __DRIconfig **configs;
-    __GLcontextModes *m;
+    struct gl_config *m;
     unsigned depth_buffer_factor;
     unsigned back_buffer_factor;
     int i;
@@ -338,12 +346,6 @@ static const __DRItexBufferExtension radeonTexBufferExtension = {
 #endif
 
 #if defined(RADEON_R200)
-static const __DRIallocateExtension r200AllocateExtension = {
-    { __DRI_ALLOCATE, __DRI_ALLOCATE_VERSION },
-    r200AllocateMemoryMESA,
-    r200FreeMemoryMESA,
-    r200GetMemoryOffsetMESA
-};
 
 static const __DRItexOffsetExtension r200texOffsetExtension = {
     { __DRI_TEX_OFFSET, __DRI_TEX_OFFSET_VERSION },
@@ -382,6 +384,203 @@ static const __DRItexBufferExtension r600TexBufferExtension = {
    r600SetTexBuffer2, /* +r6/r7 */
 };
 #endif
+
+static void
+radeonDRI2Flush(__DRIdrawable *drawable)
+{
+    radeonContextPtr rmesa;
+
+    rmesa = (radeonContextPtr) drawable->driContextPriv->driverPrivate;
+    radeonFlush(rmesa->glCtx);
+}
+
+static const struct __DRI2flushExtensionRec radeonFlushExtension = {
+    { __DRI2_FLUSH, __DRI2_FLUSH_VERSION },
+    radeonDRI2Flush,
+    dri2InvalidateDrawable,
+};
+
+static __DRIimage *
+radeon_create_image_from_name(__DRIcontext *context,
+                              int width, int height, int format,
+                              int name, int pitch, void *loaderPrivate)
+{
+   __DRIimage *image;
+   radeonContextPtr radeon = context->driverPrivate;
+
+   if (name == 0)
+      return NULL;
+
+   image = CALLOC(sizeof *image);
+   if (image == NULL)
+      return NULL;
+
+   switch (format) {
+   case __DRI_IMAGE_FORMAT_RGB565:
+      image->format = MESA_FORMAT_RGB565;
+      image->internal_format = GL_RGB;
+      image->data_type = GL_UNSIGNED_BYTE;
+      break;
+   case __DRI_IMAGE_FORMAT_XRGB8888:
+      image->format = MESA_FORMAT_XRGB8888;
+      image->internal_format = GL_RGB;
+      image->data_type = GL_UNSIGNED_BYTE;
+      break;
+   case __DRI_IMAGE_FORMAT_ARGB8888:
+      image->format = MESA_FORMAT_ARGB8888;
+      image->internal_format = GL_RGBA;
+      image->data_type = GL_UNSIGNED_BYTE;
+      break;
+   default:
+      free(image);
+      return NULL;
+   }
+
+   image->data = loaderPrivate;
+   image->cpp = _mesa_get_format_bytes(image->format);
+   image->width = width;
+   image->pitch = pitch;
+   image->height = height;
+
+   image->bo = radeon_bo_open(radeon->radeonScreen->bom,
+                              (uint32_t)name,
+                              image->pitch * image->height * image->cpp,
+                              0,
+                              RADEON_GEM_DOMAIN_VRAM,
+                              0);
+
+   if (image->bo == NULL) {
+      FREE(image);
+      return NULL;
+   }
+
+   return image;
+}
+
+static __DRIimage *
+radeon_create_image_from_renderbuffer(__DRIcontext *context,
+                                      int renderbuffer, void *loaderPrivate)
+{
+   __DRIimage *image;
+   radeonContextPtr radeon = context->driverPrivate;
+   struct gl_renderbuffer *rb;
+   struct radeon_renderbuffer *rrb;
+
+   rb = _mesa_lookup_renderbuffer(radeon->glCtx, renderbuffer);
+   if (!rb) {
+      _mesa_error(radeon->glCtx,
+                  GL_INVALID_OPERATION, "glRenderbufferExternalMESA");
+      return NULL;
+   }
+
+   rrb = radeon_renderbuffer(rb);
+   image = CALLOC(sizeof *image);
+   if (image == NULL)
+      return NULL;
+
+   image->internal_format = rb->InternalFormat;
+   image->format = rb->Format;
+   image->cpp = rrb->cpp;
+   image->data_type = rb->DataType;
+   image->data = loaderPrivate;
+   radeon_bo_ref(rrb->bo);
+   image->bo = rrb->bo;
+
+   image->width = rb->Width;
+   image->height = rb->Height;
+   image->pitch = rrb->pitch / image->cpp;
+
+   return image;
+}
+
+static void
+radeon_destroy_image(__DRIimage *image)
+{
+   radeon_bo_unref(image->bo);
+   FREE(image);
+}
+
+static __DRIimage *
+radeon_create_image(__DRIscreen *screen,
+                    int width, int height, int format,
+                    unsigned int use,
+                    void *loaderPrivate)
+{
+   __DRIimage *image;
+   radeonScreenPtr radeonScreen = screen->private;
+
+   image = CALLOC(sizeof *image);
+   if (image == NULL)
+      return NULL;
+
+   switch (format) {
+   case __DRI_IMAGE_FORMAT_RGB565:
+      image->format = MESA_FORMAT_RGB565;
+      image->internal_format = GL_RGB;
+      image->data_type = GL_UNSIGNED_BYTE;
+      break;
+   case __DRI_IMAGE_FORMAT_XRGB8888:
+      image->format = MESA_FORMAT_XRGB8888;
+      image->internal_format = GL_RGB;
+      image->data_type = GL_UNSIGNED_BYTE;
+      break;
+   case __DRI_IMAGE_FORMAT_ARGB8888:
+      image->format = MESA_FORMAT_ARGB8888;
+      image->internal_format = GL_RGBA;
+      image->data_type = GL_UNSIGNED_BYTE;
+      break;
+   default:
+      free(image);
+      return NULL;
+   }
+
+   image->data = loaderPrivate;
+   image->cpp = _mesa_get_format_bytes(image->format);
+   image->width = width;
+   image->height = height;
+   image->pitch = ((image->cpp * image->width + 255) & ~255) / image->cpp;
+
+   image->bo = radeon_bo_open(radeonScreen->bom,
+                              0,
+                              image->pitch * image->height * image->cpp,
+                              0,
+                              RADEON_GEM_DOMAIN_VRAM,
+                              0);
+
+   if (image->bo == NULL) {
+      FREE(image);
+      return NULL;
+   }
+
+   return image;
+}
+
+static GLboolean
+radeon_query_image(__DRIimage *image, int attrib, int *value)
+{
+   switch (attrib) {
+   case __DRI_IMAGE_ATTRIB_STRIDE:
+      *value = image->pitch * image->cpp;
+      return GL_TRUE;
+   case __DRI_IMAGE_ATTRIB_HANDLE:
+      *value = image->bo->handle;
+      return GL_TRUE;
+   case __DRI_IMAGE_ATTRIB_NAME:
+      radeon_gem_get_kernel_name(image->bo, (uint32_t *) value);
+      return GL_TRUE;
+   default:
+      return GL_FALSE;
+   }
+}
+
+static struct __DRIimageExtensionRec radeonImageExtension = {
+    { __DRI_IMAGE, __DRI_IMAGE_VERSION },
+   radeon_create_image_from_name,
+   radeon_create_image_from_renderbuffer,
+   radeon_destroy_image,
+   radeon_create_image,
+   radeon_query_image
+};
 
 static int radeon_set_screen_flags(radeonScreenPtr screen, int device_id)
 {
@@ -516,6 +715,7 @@ static int radeon_set_screen_flags(radeonScreenPtr screen, int device_id)
    case PCI_CHIP_RV380_3150:
    case PCI_CHIP_RV380_3152:
    case PCI_CHIP_RV380_3154:
+   case PCI_CHIP_RV380_3155:
    case PCI_CHIP_RV380_3E50:
    case PCI_CHIP_RV380_3E54:
       screen->chip_family = CHIP_FAMILY_RV380;
@@ -900,6 +1100,124 @@ static int radeon_set_screen_flags(radeonScreenPtr screen, int device_id)
       screen->chip_flags = RADEON_CHIPSET_TCL;
       break;
 
+    case PCI_CHIP_CEDAR_68E0:
+    case PCI_CHIP_CEDAR_68E1:
+    case PCI_CHIP_CEDAR_68E4:
+    case PCI_CHIP_CEDAR_68E5:
+    case PCI_CHIP_CEDAR_68E8:
+    case PCI_CHIP_CEDAR_68E9:
+    case PCI_CHIP_CEDAR_68F1:
+    case PCI_CHIP_CEDAR_68F2:
+    case PCI_CHIP_CEDAR_68F8:
+    case PCI_CHIP_CEDAR_68F9:
+    case PCI_CHIP_CEDAR_68FE:
+       screen->chip_family = CHIP_FAMILY_CEDAR;
+       screen->chip_flags = RADEON_CHIPSET_TCL;
+       break;
+
+    case PCI_CHIP_REDWOOD_68C0:
+    case PCI_CHIP_REDWOOD_68C1:
+    case PCI_CHIP_REDWOOD_68C8:
+    case PCI_CHIP_REDWOOD_68C9:
+    case PCI_CHIP_REDWOOD_68D8:
+    case PCI_CHIP_REDWOOD_68D9:
+    case PCI_CHIP_REDWOOD_68DA:
+    case PCI_CHIP_REDWOOD_68DE:
+       screen->chip_family = CHIP_FAMILY_REDWOOD;
+       screen->chip_flags = RADEON_CHIPSET_TCL;
+       break;
+
+    case PCI_CHIP_JUNIPER_68A0:
+    case PCI_CHIP_JUNIPER_68A1:
+    case PCI_CHIP_JUNIPER_68A8:
+    case PCI_CHIP_JUNIPER_68A9:
+    case PCI_CHIP_JUNIPER_68B0:
+    case PCI_CHIP_JUNIPER_68B8:
+    case PCI_CHIP_JUNIPER_68B9:
+    case PCI_CHIP_JUNIPER_68BA:
+    case PCI_CHIP_JUNIPER_68BE:
+    case PCI_CHIP_JUNIPER_68BF:
+       screen->chip_family = CHIP_FAMILY_JUNIPER;
+       screen->chip_flags = RADEON_CHIPSET_TCL;
+       break;
+
+    case PCI_CHIP_CYPRESS_6880:
+    case PCI_CHIP_CYPRESS_6888:
+    case PCI_CHIP_CYPRESS_6889:
+    case PCI_CHIP_CYPRESS_688A:
+    case PCI_CHIP_CYPRESS_6898:
+    case PCI_CHIP_CYPRESS_6899:
+    case PCI_CHIP_CYPRESS_689B:
+    case PCI_CHIP_CYPRESS_689E:
+       screen->chip_family = CHIP_FAMILY_CYPRESS;
+       screen->chip_flags = RADEON_CHIPSET_TCL;
+       break;
+
+    case PCI_CHIP_HEMLOCK_689C:
+    case PCI_CHIP_HEMLOCK_689D:
+       screen->chip_family = CHIP_FAMILY_HEMLOCK;
+       screen->chip_flags = RADEON_CHIPSET_TCL;
+       break;
+
+    case PCI_CHIP_PALM_9802:
+    case PCI_CHIP_PALM_9803:
+    case PCI_CHIP_PALM_9804:
+    case PCI_CHIP_PALM_9805:
+    case PCI_CHIP_PALM_9806:
+    case PCI_CHIP_PALM_9807:
+       screen->chip_family = CHIP_FAMILY_PALM;
+       screen->chip_flags = RADEON_CHIPSET_TCL;
+       break;
+
+   case PCI_CHIP_BARTS_6720:
+   case PCI_CHIP_BARTS_6721:
+   case PCI_CHIP_BARTS_6722:
+   case PCI_CHIP_BARTS_6723:
+   case PCI_CHIP_BARTS_6724:
+   case PCI_CHIP_BARTS_6725:
+   case PCI_CHIP_BARTS_6726:
+   case PCI_CHIP_BARTS_6727:
+   case PCI_CHIP_BARTS_6728:
+   case PCI_CHIP_BARTS_6729:
+   case PCI_CHIP_BARTS_6738:
+   case PCI_CHIP_BARTS_6739:
+   case PCI_CHIP_BARTS_673E:
+       screen->chip_family = CHIP_FAMILY_BARTS;
+       screen->chip_flags = RADEON_CHIPSET_TCL;
+       break;
+
+   case PCI_CHIP_TURKS_6740:
+   case PCI_CHIP_TURKS_6741:
+   case PCI_CHIP_TURKS_6742:
+   case PCI_CHIP_TURKS_6743:
+   case PCI_CHIP_TURKS_6744:
+   case PCI_CHIP_TURKS_6745:
+   case PCI_CHIP_TURKS_6746:
+   case PCI_CHIP_TURKS_6747:
+   case PCI_CHIP_TURKS_6748:
+   case PCI_CHIP_TURKS_6749:
+   case PCI_CHIP_TURKS_6750:
+   case PCI_CHIP_TURKS_6758:
+   case PCI_CHIP_TURKS_6759:
+       screen->chip_family = CHIP_FAMILY_TURKS;
+       screen->chip_flags = RADEON_CHIPSET_TCL;
+       break;
+
+   case PCI_CHIP_CAICOS_6760:
+   case PCI_CHIP_CAICOS_6761:
+   case PCI_CHIP_CAICOS_6762:
+   case PCI_CHIP_CAICOS_6763:
+   case PCI_CHIP_CAICOS_6764:
+   case PCI_CHIP_CAICOS_6765:
+   case PCI_CHIP_CAICOS_6766:
+   case PCI_CHIP_CAICOS_6767:
+   case PCI_CHIP_CAICOS_6768:
+   case PCI_CHIP_CAICOS_6770:
+   case PCI_CHIP_CAICOS_6779:
+       screen->chip_family = CHIP_FAMILY_CAICOS;
+       screen->chip_flags = RADEON_CHIPSET_TCL;
+       break;
+
    default:
       fprintf(stderr, "unknown chip id 0x%x, can't guess.\n",
 	      device_id);
@@ -1050,6 +1368,12 @@ radeonCreateScreen( __DRIscreen *sPriv )
    else
 	   screen->chip_flags |= RADEON_CLASS_R600;
 
+   /* set group bytes for r6xx+ */
+   if (screen->chip_family >= CHIP_FAMILY_CEDAR)
+	   screen->group_bytes = 512;
+   else
+	   screen->group_bytes = 256;
+
    screen->cpp = dri_priv->bpp / 8;
    screen->AGPMode = dri_priv->AGPMode;
 
@@ -1078,7 +1402,7 @@ radeonCreateScreen( __DRIscreen *sPriv )
                 return NULL;
         }
         else
-        {
+        {            
             screen->fbLocation = (temp & 0xffff) << 16;
         }
    }
@@ -1186,7 +1510,6 @@ radeonCreateScreen( __DRIscreen *sPriv )
 
    i = 0;
    screen->extensions[i++] = &driCopySubBufferExtension.base;
-   screen->extensions[i++] = &driFrameTrackingExtension.base;
    screen->extensions[i++] = &driReadDrawableExtension;
 
    if ( screen->irq != 0 ) {
@@ -1199,9 +1522,6 @@ radeonCreateScreen( __DRIscreen *sPriv )
 #endif
 
 #if defined(RADEON_R200)
-   if (IS_R200_CLASS(screen))
-      screen->extensions[i++] = &r200AllocateExtension.base;
-
    screen->extensions[i++] = &r200texOffsetExtension.base;
 #endif
 
@@ -1293,6 +1613,114 @@ radeonCreateScreen2(__DRIscreen *sPriv)
    else
 	   screen->chip_flags |= RADEON_CLASS_R600;
 
+   /* r6xx+ tiling, default group bytes */
+   if (screen->chip_family >= CHIP_FAMILY_CEDAR)
+	   screen->group_bytes = 512;
+   else
+	   screen->group_bytes = 256;
+   if (IS_R600_CLASS(screen)) {
+	   if ((sPriv->drm_version.minor >= 6) &&
+	       (screen->chip_family < CHIP_FAMILY_CEDAR)) {
+		   ret = radeonGetParam(sPriv, RADEON_INFO_TILE_CONFIG, &temp);
+		   if (ret)
+			   fprintf(stderr, "failed to get tiling info\n");
+		   else {
+			   screen->tile_config = temp;
+			   screen->r7xx_bank_op = 0;
+			   switch ((screen->tile_config & 0xe) >> 1) {
+			   case 0:
+				   screen->num_channels = 1;
+				   break;
+			   case 1:
+				   screen->num_channels = 2;
+				   break;
+			   case 2:
+				   screen->num_channels = 4;
+				   break;
+			   case 3:
+				   screen->num_channels = 8;
+				   break;
+			   default:
+				   fprintf(stderr, "bad channels\n");
+				   break;
+			   }
+			   switch ((screen->tile_config & 0x30) >> 4) {
+			   case 0:
+				   screen->num_banks = 4;
+				   break;
+			   case 1:
+				   screen->num_banks = 8;
+				   break;
+			   default:
+				   fprintf(stderr, "bad banks\n");
+				   break;
+			   }
+			   switch ((screen->tile_config & 0xc0) >> 6) {
+			   case 0:
+				   screen->group_bytes = 256;
+				   break;
+			   case 1:
+				   screen->group_bytes = 512;
+				   break;
+			   default:
+				   fprintf(stderr, "bad group_bytes\n");
+				   break;
+			   }
+		   }
+	   } else if ((sPriv->drm_version.minor >= 7) &&
+		      (screen->chip_family >= CHIP_FAMILY_CEDAR)) {
+		   ret = radeonGetParam(sPriv, RADEON_INFO_TILE_CONFIG, &temp);
+		   if (ret)
+			   fprintf(stderr, "failed to get tiling info\n");
+		   else {
+			   screen->tile_config = temp;
+			   screen->r7xx_bank_op = 0;
+			   switch (screen->tile_config & 0xf) {
+			   case 0:
+				   screen->num_channels = 1;
+				   break;
+			   case 1:
+				   screen->num_channels = 2;
+				   break;
+			   case 2:
+				   screen->num_channels = 4;
+				   break;
+			   case 3:
+				   screen->num_channels = 8;
+				   break;
+			   default:
+				   fprintf(stderr, "bad channels\n");
+				   break;
+			   }
+			   switch ((screen->tile_config & 0xf0) >> 4) {
+			   case 0:
+				   screen->num_banks = 4;
+				   break;
+			   case 1:
+				   screen->num_banks = 8;
+				   break;
+			   case 2:
+				   screen->num_banks = 16;
+				   break;
+			   default:
+				   fprintf(stderr, "bad banks\n");
+				   break;
+			   }
+			   switch ((screen->tile_config & 0xf00) >> 8) {
+			   case 0:
+				   screen->group_bytes = 256;
+				   break;
+			   case 1:
+				   screen->group_bytes = 512;
+				   break;
+			   default:
+				   fprintf(stderr, "bad group_bytes\n");
+				   break;
+			   }
+		   }
+	   }
+   }
+
    if (IS_R300_CLASS(screen)) {
        ret = radeonGetParam(sPriv, RADEON_PARAM_NUM_GB_PIPES, &temp);
        if (ret) {
@@ -1343,8 +1771,8 @@ radeonCreateScreen2(__DRIscreen *sPriv)
 
    i = 0;
    screen->extensions[i++] = &driCopySubBufferExtension.base;
-   screen->extensions[i++] = &driFrameTrackingExtension.base;
    screen->extensions[i++] = &driReadDrawableExtension;
+   screen->extensions[i++] = &dri2ConfigQueryExtension.base;
 
    if ( screen->irq != 0 ) {
        screen->extensions[i++] = &driSwapControlExtension.base;
@@ -1356,9 +1784,6 @@ radeonCreateScreen2(__DRIscreen *sPriv)
 #endif
 
 #if defined(RADEON_R200)
-   if (IS_R200_CLASS(screen))
-       screen->extensions[i++] = &r200AllocateExtension.base;
-
    screen->extensions[i++] = &r200TexBufferExtension.base;
 #endif
 
@@ -1369,6 +1794,9 @@ radeonCreateScreen2(__DRIscreen *sPriv)
 #if defined(RADEON_R600)
    screen->extensions[i++] = &r600TexBufferExtension.base;
 #endif
+
+   screen->extensions[i++] = &radeonFlushExtension.base;
+   screen->extensions[i++] = &radeonImageExtension.base;
 
    screen->extensions[i++] = NULL;
    sPriv->extensions = screen->extensions;
@@ -1444,7 +1872,7 @@ radeonInitDriver( __DRIscreen *sPriv )
 static GLboolean
 radeonCreateBuffer( __DRIscreen *driScrnPriv,
                     __DRIdrawable *driDrawPriv,
-                    const __GLcontextModes *mesaVis,
+                    const struct gl_config *mesaVis,
                     GLboolean isPixmap )
 {
     radeonScreenPtr screen = (radeonScreenPtr) driScrnPriv->private;
@@ -1552,7 +1980,7 @@ radeonDestroyBuffer(__DRIdrawable *driDrawPriv)
     if (!rfb)
 	return;
     radeon_cleanup_renderbuffers(rfb);
-    _mesa_reference_framebuffer((GLframebuffer **)(&(driDrawPriv->driverPrivate)), NULL);
+    _mesa_reference_framebuffer((struct gl_framebuffer **)(&(driDrawPriv->driverPrivate)), NULL);
 }
 
 
@@ -1561,7 +1989,7 @@ radeonDestroyBuffer(__DRIdrawable *driDrawPriv)
  *
  * \todo maybe fold this into intelInitDriver
  *
- * \return the __GLcontextModes supported by this driver
+ * \return the struct gl_config supported by this driver
  */
 static const __DRIconfig **
 radeonInitScreen(__DRIscreen *psp)
@@ -1611,7 +2039,7 @@ radeonInitScreen(__DRIscreen *psp)
  * This is the driver specific part of the createNewScreen entry point.
  * Called when using DRI2.
  *
- * \return the __GLcontextModes supported by this driver
+ * \return the struct gl_config supported by this driver
  */
 static const
 __DRIconfig **radeonInitScreen2(__DRIscreen *psp)

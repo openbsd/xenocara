@@ -33,6 +33,7 @@
 
 #include "draw_context.h"
 #include "draw_private.h"
+#include "draw_vertex.h"
 
 
 struct draw_context;
@@ -48,7 +49,7 @@ struct draw_varient_input
 
 struct draw_varient_output
 {
-   enum pipe_format format;     /* output format */
+   enum attrib_emit format;     /* output format */
    unsigned vs_output:8;        /* which vertex shader output is this? */
    unsigned offset:24;          /* offset into output vertex */
 };
@@ -80,7 +81,8 @@ struct draw_vs_varient {
    void (*set_buffer)( struct draw_vs_varient *,
                       unsigned i,
                       const void *ptr,
-                      unsigned stride );
+                      unsigned stride,
+                      unsigned max_stride );
 
    void (PIPE_CDECL *run_linear)( struct draw_vs_varient *shader,
                                   unsigned start,
@@ -132,7 +134,8 @@ struct draw_vertex_shader {
    void (*run_linear)( struct draw_vertex_shader *shader,
 		       const float (*input)[4],
 		       float (*output)[4],
-                      const void *constants[PIPE_MAX_CONSTANT_BUFFERS],
+                       const void *constants[PIPE_MAX_CONSTANT_BUFFERS],
+                       const unsigned const_size[PIPE_MAX_CONSTANT_BUFFERS],
 		       unsigned count,
 		       unsigned input_stride,
 		       unsigned output_stride );
@@ -163,18 +166,19 @@ struct draw_vertex_shader *
 draw_create_vs_ppc(struct draw_context *draw,
 		   const struct pipe_shader_state *templ);
 
-struct draw_vertex_shader *
-draw_create_vs_llvm(struct draw_context *draw,
-		    const struct pipe_shader_state *templ);
-
-
 
 struct draw_vs_varient_key;
 struct draw_vertex_shader;
 
-struct draw_vs_varient *draw_vs_varient_aos_sse( struct draw_vertex_shader *vs,
-                                                 const struct draw_vs_varient_key *key );
+struct draw_vs_varient *
+draw_vs_create_varient_aos_sse( struct draw_vertex_shader *vs,
+                                const struct draw_vs_varient_key *key );
 
+#if HAVE_LLVM
+struct draw_vertex_shader *
+draw_create_vs_llvm(struct draw_context *draw,
+		    const struct pipe_shader_state *state);
+#endif
 
 
 /********************************************************************************
@@ -191,8 +195,9 @@ struct translate *draw_vs_get_fetch( struct draw_context *draw,
 struct translate *draw_vs_get_emit( struct draw_context *draw,
                                     struct translate_key *key );
 
-struct draw_vs_varient *draw_vs_varient_generic( struct draw_vertex_shader *vs,
-                                                 const struct draw_vs_varient_key *key );
+struct draw_vs_varient *
+draw_vs_create_varient_generic( struct draw_vertex_shader *vs,
+                                const struct draw_vs_varient_key *key );
 
 
 

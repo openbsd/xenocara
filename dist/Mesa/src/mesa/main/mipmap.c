@@ -288,6 +288,54 @@ do_row(GLenum datatype, GLuint comps, GLint srcWidth,
          dst[i] = (rowA[j] + rowA[k] + rowB[j] + rowB[k]) / 4;
       }
    }
+
+   else if (datatype == GL_SHORT && comps == 4) {
+      GLuint i, j, k;
+      const GLshort(*rowA)[4] = (const GLshort(*)[4]) srcRowA;
+      const GLshort(*rowB)[4] = (const GLshort(*)[4]) srcRowB;
+      GLshort(*dst)[4] = (GLshort(*)[4]) dstRow;
+      for (i = j = 0, k = k0; i < (GLuint) dstWidth;
+           i++, j += colStride, k += colStride) {
+         dst[i][0] = (rowA[j][0] + rowA[k][0] + rowB[j][0] + rowB[k][0]) / 4;
+         dst[i][1] = (rowA[j][1] + rowA[k][1] + rowB[j][1] + rowB[k][1]) / 4;
+         dst[i][2] = (rowA[j][2] + rowA[k][2] + rowB[j][2] + rowB[k][2]) / 4;
+         dst[i][3] = (rowA[j][3] + rowA[k][3] + rowB[j][3] + rowB[k][3]) / 4;
+      }
+   }
+   else if (datatype == GL_SHORT && comps == 3) {
+      GLuint i, j, k;
+      const GLshort(*rowA)[3] = (const GLshort(*)[3]) srcRowA;
+      const GLshort(*rowB)[3] = (const GLshort(*)[3]) srcRowB;
+      GLshort(*dst)[3] = (GLshort(*)[3]) dstRow;
+      for (i = j = 0, k = k0; i < (GLuint) dstWidth;
+           i++, j += colStride, k += colStride) {
+         dst[i][0] = (rowA[j][0] + rowA[k][0] + rowB[j][0] + rowB[k][0]) / 4;
+         dst[i][1] = (rowA[j][1] + rowA[k][1] + rowB[j][1] + rowB[k][1]) / 4;
+         dst[i][2] = (rowA[j][2] + rowA[k][2] + rowB[j][2] + rowB[k][2]) / 4;
+      }
+   }
+   else if (datatype == GL_SHORT && comps == 2) {
+      GLuint i, j, k;
+      const GLshort(*rowA)[2] = (const GLshort(*)[2]) srcRowA;
+      const GLshort(*rowB)[2] = (const GLshort(*)[2]) srcRowB;
+      GLshort(*dst)[2] = (GLshort(*)[2]) dstRow;
+      for (i = j = 0, k = k0; i < (GLuint) dstWidth;
+           i++, j += colStride, k += colStride) {
+         dst[i][0] = (rowA[j][0] + rowA[k][0] + rowB[j][0] + rowB[k][0]) / 4;
+         dst[i][1] = (rowA[j][1] + rowA[k][1] + rowB[j][1] + rowB[k][1]) / 4;
+      }
+   }
+   else if (datatype == GL_SHORT && comps == 1) {
+      GLuint i, j, k;
+      const GLshort *rowA = (const GLshort *) srcRowA;
+      const GLshort *rowB = (const GLshort *) srcRowB;
+      GLshort *dst = (GLshort *) dstRow;
+      for (i = j = 0, k = k0; i < (GLuint) dstWidth;
+           i++, j += colStride, k += colStride) {
+         dst[i] = (rowA[j] + rowA[k] + rowB[j] + rowB[k]) / 4;
+      }
+   }
+
    else if (datatype == GL_FLOAT && comps == 4) {
       GLuint i, j, k;
       const GLfloat(*rowA)[4] = (const GLfloat(*)[4]) srcRowA;
@@ -415,7 +463,7 @@ do_row(GLenum datatype, GLuint comps, GLint srcWidth,
       GLuint i, j, k;
       const GLuint *rowA = (const GLuint *) srcRowA;
       const GLuint *rowB = (const GLuint *) srcRowB;
-      GLfloat *dst = (GLfloat *) dstRow;
+      GLuint *dst = (GLuint *) dstRow;
       for (i = j = 0, k = k0; i < (GLuint) dstWidth;
            i++, j += colStride, k += colStride) {
          dst[i] = (GLfloat)(rowA[j] / 4 + rowA[k] / 4 + rowB[j] / 4 + rowB[k] / 4);
@@ -507,6 +555,37 @@ do_row(GLenum datatype, GLuint comps, GLint srcWidth,
          dst[i] = (alpha << 15) | (blue << 10) | (green << 5) | red;
       }
    }
+   else if (datatype == GL_UNSIGNED_SHORT_5_5_5_1 && comps == 4) {
+      GLuint i, j, k;
+      const GLushort *rowA = (const GLushort *) srcRowA;
+      const GLushort *rowB = (const GLushort *) srcRowB;
+      GLushort *dst = (GLushort *) dstRow;
+      for (i = j = 0, k = k0; i < (GLuint) dstWidth;
+           i++, j += colStride, k += colStride) {
+         const GLint rowAr0 = (rowA[j] >> 11) & 0x1f;
+         const GLint rowAr1 = (rowA[k] >> 11) & 0x1f;
+         const GLint rowBr0 = (rowB[j] >> 11) & 0x1f;
+         const GLint rowBr1 = (rowB[k] >> 11) & 0x1f;
+         const GLint rowAg0 = (rowA[j] >> 6) & 0x1f;
+         const GLint rowAg1 = (rowA[k] >> 6) & 0x1f;
+         const GLint rowBg0 = (rowB[j] >> 6) & 0x1f;
+         const GLint rowBg1 = (rowB[k] >> 6) & 0x1f;
+         const GLint rowAb0 = (rowA[j] >> 1) & 0x1f;
+         const GLint rowAb1 = (rowA[k] >> 1) & 0x1f;
+         const GLint rowBb0 = (rowB[j] >> 1) & 0x1f;
+         const GLint rowBb1 = (rowB[k] >> 1) & 0x1f;
+         const GLint rowAa0 = (rowA[j] & 0x1);
+         const GLint rowAa1 = (rowA[k] & 0x1);
+         const GLint rowBa0 = (rowB[j] & 0x1);
+         const GLint rowBa1 = (rowB[k] & 0x1);
+         const GLint red = (rowAr0 + rowAr1 + rowBr0 + rowBr1) >> 2;
+         const GLint green = (rowAg0 + rowAg1 + rowBg0 + rowBg1) >> 2;
+         const GLint blue = (rowAb0 + rowAb1 + rowBb0 + rowBb1) >> 2;
+         const GLint alpha = (rowAa0 + rowAa1 + rowBa0 + rowBa1) >> 2;
+         dst[i] = (red << 11) | (green << 6) | (blue << 1) | alpha;
+      }
+   }
+
    else if (datatype == GL_UNSIGNED_BYTE_3_3_2 && comps == 3) {
       GLuint i, j, k;
       const GLubyte *rowA = (const GLubyte *) srcRowA;
@@ -606,7 +685,7 @@ do_row_3D(GLenum datatype, GLuint comps, GLint srcWidth,
          FILTER_3D(0);
       }
    }
-   if ((datatype == GL_BYTE) && (comps == 4)) {
+   else if ((datatype == GL_BYTE) && (comps == 4)) {
       DECLARE_ROW_POINTERS(GLbyte, 4);
 
       for (i = j = 0, k = k0; i < (GLuint) dstWidth;
@@ -676,6 +755,44 @@ do_row_3D(GLenum datatype, GLuint comps, GLint srcWidth,
    }
    else if ((datatype == GL_UNSIGNED_SHORT) && (comps == 1)) {
       DECLARE_ROW_POINTERS(GLushort, 1);
+
+      for (i = j = 0, k = k0; i < (GLuint) dstWidth;
+           i++, j += colStride, k += colStride) {
+         FILTER_3D(0);
+      }
+   }
+   else if ((datatype == GL_SHORT) && (comps == 4)) {
+      DECLARE_ROW_POINTERS(GLshort, 4);
+
+      for (i = j = 0, k = k0; i < (GLuint) dstWidth;
+           i++, j += colStride, k += colStride) {
+         FILTER_3D(0);
+         FILTER_3D(1);
+         FILTER_3D(2);
+         FILTER_3D(3);
+      }
+   }
+   else if ((datatype == GL_SHORT) && (comps == 3)) {
+      DECLARE_ROW_POINTERS(GLshort, 3);
+
+      for (i = j = 0, k = k0; i < (GLuint) dstWidth;
+           i++, j += colStride, k += colStride) {
+         FILTER_3D(0);
+         FILTER_3D(1);
+         FILTER_3D(2);
+      }
+   }
+   else if ((datatype == GL_SHORT) && (comps == 2)) {
+      DECLARE_ROW_POINTERS(GLshort, 2);
+
+      for (i = j = 0, k = k0; i < (GLuint) dstWidth;
+           i++, j += colStride, k += colStride) {
+         FILTER_3D(0);
+         FILTER_3D(1);
+      }
+   }
+   else if ((datatype == GL_SHORT) && (comps == 1)) {
+      DECLARE_ROW_POINTERS(GLshort, 1);
 
       for (i = j = 0, k = k0; i < (GLuint) dstWidth;
            i++, j += colStride, k += colStride) {
@@ -910,8 +1027,57 @@ do_row_3D(GLenum datatype, GLuint comps, GLint srcWidth,
          dst[i] = (a << 15) | (b << 10) | (g << 5) | r;
       }
    }
-   else if ((datatype == GL_UNSIGNED_BYTE_3_3_2) && (comps == 3)) {
+   else if ((datatype == GL_UNSIGNED_SHORT_5_5_5_1) && (comps == 4)) {
       DECLARE_ROW_POINTERS0(GLushort);
+
+      for (i = j = 0, k = k0; i < (GLuint) dstWidth;
+           i++, j += colStride, k += colStride) {
+         const GLint rowAr0 = (rowA[j] >> 11) & 0x1f;
+         const GLint rowAr1 = (rowA[k] >> 11) & 0x1f;
+         const GLint rowBr0 = (rowB[j] >> 11) & 0x1f;
+         const GLint rowBr1 = (rowB[k] >> 11) & 0x1f;
+         const GLint rowCr0 = (rowC[j] >> 11) & 0x1f;
+         const GLint rowCr1 = (rowC[k] >> 11) & 0x1f;
+         const GLint rowDr0 = (rowD[j] >> 11) & 0x1f;
+         const GLint rowDr1 = (rowD[k] >> 11) & 0x1f;
+         const GLint rowAg0 = (rowA[j] >> 6) & 0x1f;
+         const GLint rowAg1 = (rowA[k] >> 6) & 0x1f;
+         const GLint rowBg0 = (rowB[j] >> 6) & 0x1f;
+         const GLint rowBg1 = (rowB[k] >> 6) & 0x1f;
+         const GLint rowCg0 = (rowC[j] >> 6) & 0x1f;
+         const GLint rowCg1 = (rowC[k] >> 6) & 0x1f;
+         const GLint rowDg0 = (rowD[j] >> 6) & 0x1f;
+         const GLint rowDg1 = (rowD[k] >> 6) & 0x1f;
+         const GLint rowAb0 = (rowA[j] >> 1) & 0x1f;
+         const GLint rowAb1 = (rowA[k] >> 1) & 0x1f;
+         const GLint rowBb0 = (rowB[j] >> 1) & 0x1f;
+         const GLint rowBb1 = (rowB[k] >> 1) & 0x1f;
+         const GLint rowCb0 = (rowC[j] >> 1) & 0x1f;
+         const GLint rowCb1 = (rowC[k] >> 1) & 0x1f;
+         const GLint rowDb0 = (rowD[j] >> 1) & 0x1f;
+         const GLint rowDb1 = (rowD[k] >> 1) & 0x1f;
+         const GLint rowAa0 = (rowA[j] & 0x1);
+         const GLint rowAa1 = (rowA[k] & 0x1);
+         const GLint rowBa0 = (rowB[j] & 0x1);
+         const GLint rowBa1 = (rowB[k] & 0x1);
+         const GLint rowCa0 = (rowC[j] & 0x1);
+         const GLint rowCa1 = (rowC[k] & 0x1);
+         const GLint rowDa0 = (rowD[j] & 0x1);
+         const GLint rowDa1 = (rowD[k] & 0x1);
+         const GLint r = FILTER_SUM_3D(rowAr0, rowAr1, rowBr0, rowBr1,
+                                       rowCr0, rowCr1, rowDr0, rowDr1);
+         const GLint g = FILTER_SUM_3D(rowAg0, rowAg1, rowBg0, rowBg1,
+                                       rowCg0, rowCg1, rowDg0, rowDg1);
+         const GLint b = FILTER_SUM_3D(rowAb0, rowAb1, rowBb0, rowBb1,
+                                       rowCb0, rowCb1, rowDb0, rowDb1);
+         const GLint a = FILTER_SUM_3D(rowAa0, rowAa1, rowBa0, rowBa1,
+                                       rowCa0, rowCa1, rowDa0, rowDa1);
+
+         dst[i] = (r << 11) | (g << 6) | (b << 1) | a;
+      }
+   }
+   else if ((datatype == GL_UNSIGNED_BYTE_3_3_2) && (comps == 3)) {
+      DECLARE_ROW_POINTERS0(GLubyte);
 
       for (i = j = 0, k = k0; i < (GLuint) dstWidth;
            i++, j += colStride, k += colStride) {
@@ -1005,21 +1171,28 @@ make_2d_mipmap(GLenum datatype, GLuint comps, GLint border,
    const GLint dstRowBytes = bpt * dstRowStride;
    const GLubyte *srcA, *srcB;
    GLubyte *dst;
-   GLint row;
+   GLint row, srcRowStep;
 
    /* Compute src and dst pointers, skipping any border */
    srcA = srcPtr + border * ((srcWidth + 1) * bpt);
-   if (srcHeight > 1) 
+   if (srcHeight > 1 && srcHeight > dstHeight) {
+      /* sample from two source rows */
       srcB = srcA + srcRowBytes;
-   else
+      srcRowStep = 2;
+   }
+   else {
+      /* sample from one source row */
       srcB = srcA;
+      srcRowStep = 1;
+   }
+
    dst = dstPtr + border * ((dstWidth + 1) * bpt);
 
    for (row = 0; row < dstHeightNB; row++) {
       do_row(datatype, comps, srcWidthNB, srcA, srcB,
              dstWidthNB, dst);
-      srcA += 2 * srcRowBytes;
-      srcB += 2 * srcRowBytes;
+      srcA += srcRowStep * srcRowBytes;
+      srcB += srcRowStep * srcRowBytes;
       dst += dstRowBytes;
    }
 
@@ -1497,7 +1670,7 @@ next_mipmap_level_size(GLenum target, GLint border,
  * GL_TEXTURE_CUBE_MAP_POSITIVE/NEGATIVE_X/Y/Z; never GL_TEXTURE_CUBE_MAP.
  */
 void
-_mesa_generate_mipmap(GLcontext *ctx, GLenum target,
+_mesa_generate_mipmap(struct gl_context *ctx, GLenum target,
                       struct gl_texture_object *texObj)
 {
    const struct gl_texture_image *srcImage;
@@ -1581,7 +1754,7 @@ _mesa_generate_mipmap(GLcontext *ctx, GLenum target,
       struct gl_texture_image *dstImage;
       GLint srcWidth, srcHeight, srcDepth;
       GLint dstWidth, dstHeight, dstDepth;
-      GLint border, bytesPerTexel;
+      GLint border;
       GLboolean nextLevel;
 
       /* get src image parameters */
@@ -1617,39 +1790,30 @@ _mesa_generate_mipmap(GLcontext *ctx, GLenum target,
 
       /* initialize new image */
       _mesa_init_teximage_fields(ctx, target, dstImage, dstWidth, dstHeight,
-                                 dstDepth, border, srcImage->InternalFormat);
+                                 dstDepth, border, srcImage->InternalFormat,
+                                 srcImage->TexFormat);
       dstImage->DriverData = NULL;
-      dstImage->TexFormat = srcImage->TexFormat;
       dstImage->FetchTexelc = srcImage->FetchTexelc;
       dstImage->FetchTexelf = srcImage->FetchTexelf;
 
-      /* Alloc new teximage data buffer.
-       * Setup src and dest data pointers.
-       */
-      if (_mesa_is_format_compressed(dstImage->TexFormat)) {
-         GLuint dstCompressedSize = 
-            _mesa_format_image_size(dstImage->TexFormat, dstImage->Width,
-                                    dstImage->Height, dstImage->Depth);
-         ASSERT(dstCompressedSize > 0);
-
-         dstImage->Data = _mesa_alloc_texmemory(dstCompressedSize);
+      /* Alloc new teximage data buffer */
+      {
+         GLuint size = _mesa_format_image_size(dstImage->TexFormat,
+                                               dstWidth, dstHeight, dstDepth);
+         dstImage->Data = _mesa_alloc_texmemory(size);
          if (!dstImage->Data) {
             _mesa_error(ctx, GL_OUT_OF_MEMORY, "generating mipmaps");
             return;
          }
+      }
+
+      /* Setup src and dest data pointers */
+      if (_mesa_is_format_compressed(dstImage->TexFormat)) {
          /* srcData and dstData are already set */
          ASSERT(srcData);
          ASSERT(dstData);
       }
       else {
-         bytesPerTexel = _mesa_get_format_bytes(dstImage->TexFormat);
-         ASSERT(dstWidth * dstHeight * dstDepth * bytesPerTexel > 0);
-         dstImage->Data = _mesa_alloc_texmemory(dstWidth * dstHeight
-                                                * dstDepth * bytesPerTexel);
-         if (!dstImage->Data) {
-            _mesa_error(ctx, GL_OUT_OF_MEMORY, "generating mipmaps");
-            return;
-         }
          srcData = (const GLubyte *) srcImage->Data;
          dstData = (GLubyte *) dstImage->Data;
       }

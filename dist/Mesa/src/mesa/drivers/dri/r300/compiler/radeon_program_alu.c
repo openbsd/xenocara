@@ -36,6 +36,7 @@
 #include "radeon_program_alu.h"
 
 #include "radeon_compiler.h"
+#include "radeon_compiler_util.h"
 
 
 static struct rc_instruction *emit1(
@@ -82,16 +83,6 @@ static struct rc_instruction *emit3(
 	fpi->U.I.SrcReg[1] = SrcReg1;
 	fpi->U.I.SrcReg[2] = SrcReg2;
 	return fpi;
-}
-
-static struct rc_dst_register dstreg(int file, int index)
-{
-	struct rc_dst_register dst;
-	dst.File = file;
-	dst.Index = index;
-	dst.WriteMask = RC_MASK_XYZW;
-	dst.RelAddr = 0;
-	return dst;
 }
 
 static struct rc_dst_register dstregtmpmask(int index, int mask)
@@ -160,9 +151,62 @@ static struct rc_src_register swizzle(struct rc_src_register reg,
 	return swizzled;
 }
 
-static struct rc_src_register scalar(struct rc_src_register reg)
+static struct rc_src_register swizzle_smear(struct rc_src_register reg,
+		rc_swizzle x)
 {
-	return swizzle(reg, RC_SWIZZLE_X, RC_SWIZZLE_X, RC_SWIZZLE_X, RC_SWIZZLE_X);
+	return swizzle(reg, x, x, x, x);
+}
+
+static struct rc_src_register swizzle_xxxx(struct rc_src_register reg)
+{
+	return swizzle_smear(reg, RC_SWIZZLE_X);
+}
+
+static struct rc_src_register swizzle_yyyy(struct rc_src_register reg)
+{
+	return swizzle_smear(reg, RC_SWIZZLE_Y);
+}
+
+static struct rc_src_register swizzle_zzzz(struct rc_src_register reg)
+{
+	return swizzle_smear(reg, RC_SWIZZLE_Z);
+}
+
+static struct rc_src_register swizzle_wwww(struct rc_src_register reg)
+{
+	return swizzle_smear(reg, RC_SWIZZLE_W);
+}
+
+static int is_dst_safe_to_reuse(struct rc_instruction *inst)
+{
+	const struct rc_opcode_info *info = rc_get_opcode_info(inst->U.I.Opcode);
+	unsigned i;
+
+	assert(info->HasDstReg);
+
+	if (inst->U.I.DstReg.File != RC_FILE_TEMPORARY)
+		return 0;
+
+	for (i = 0; i < info->NumSrcRegs; i++) {
+		if (inst->U.I.SrcReg[i].File == RC_FILE_TEMPORARY &&
+		    inst->U.I.SrcReg[i].Index == inst->U.I.DstReg.Index)
+			return 0;
+	}
+
+	return 1;
+}
+
+static struct rc_dst_register try_to_reuse_dst(struct radeon_compiler *c,
+					       struct rc_instruction *inst)
+{
+	unsigned tmp;
+
+	if (is_dst_safe_to_reuse(inst))
+		tmp = inst->U.I.DstReg.Index;
+	else
+		tmp = rc_find_free_temporary(c);
+
+	return dstregtmpmask(tmp, inst->U.I.DstReg.WriteMask);
 }
 
 static void transform_ABS(struct radeon_compiler* c,
@@ -175,18 +219,54 @@ static void transform_ABS(struct radeon_compiler* c,
 	rc_remove_instruction(inst);
 }
 
-static void transform_DP3(struct radeon_compiler* c,
+static void transform_CEIL(struct radeon_compiler* c,
+	struct rc_instruction* inst)
+{
+	/* Assuming:
+	 *     ceil(x) = -floor(-x)
+	 *
+	 * After inlining floor:
+	 *     ceil(x) = -(-x-frac(-x))
+	 *
+	 * After simplification:
+	 *     ceil(x) = x+frac(-x)
+	 */
+
+	struct rc_dst_register dst = try_to_reuse_dst(c, inst);
+	emit1(c, inst->Prev, RC_OPCODE_FRC, 0, dst, negate(inst->U.I.SrcReg[0]));
+	emit2(c, inst->Prev, RC_OPCODE_ADD, inst->U.I.SaturateMode, inst->U.I.DstReg,
+		inst->U.I.SrcReg[0], srcreg(RC_FILE_TEMPORARY, dst.Index));
+	rc_remove_instruction(inst);
+}
+
+static void transform_CLAMP(struct radeon_compiler *c,
+	struct rc_instruction *inst)
+{
+	/* CLAMP dst, src, min, max
+	 *    into:
+	 * MIN tmp, src, max
+	 * MAX dst, tmp, min
+	 */
+	struct rc_dst_register dst = try_to_reuse_dst(c, inst);
+	emit2(c, inst->Prev, RC_OPCODE_MIN, 0, dst,
+		inst->U.I.SrcReg[0], inst->U.I.SrcReg[2]);
+	emit2(c, inst->Prev, RC_OPCODE_MAX, inst->U.I.SaturateMode, inst->U.I.DstReg,
+		srcreg(RC_FILE_TEMPORARY, dst.Index), inst->U.I.SrcReg[1]);
+	rc_remove_instruction(inst);
+}
+
+static void transform_DP2(struct radeon_compiler* c,
 	struct rc_instruction* inst)
 {
 	struct rc_src_register src0 = inst->U.I.SrcReg[0];
 	struct rc_src_register src1 = inst->U.I.SrcReg[1];
-	src0.Negate &= ~RC_MASK_W;
-	src0.Swizzle &= ~(7 << (3 * 3));
-	src0.Swizzle |= RC_SWIZZLE_ZERO << (3 * 3);
-	src1.Negate &= ~RC_MASK_W;
-	src1.Swizzle &= ~(7 << (3 * 3));
-	src1.Swizzle |= RC_SWIZZLE_ZERO << (3 * 3);
-	emit2(c, inst->Prev, RC_OPCODE_DP4, inst->U.I.SaturateMode, inst->U.I.DstReg, src0, src1);
+	src0.Negate &= ~(RC_MASK_Z | RC_MASK_W);
+	src0.Swizzle &= ~(63 << (3 * 2));
+	src0.Swizzle |= (RC_SWIZZLE_ZERO << (3 * 2)) | (RC_SWIZZLE_ZERO << (3 * 3));
+	src1.Negate &= ~(RC_MASK_Z | RC_MASK_W);
+	src1.Swizzle &= ~(63 << (3 * 2));
+	src1.Swizzle |= (RC_SWIZZLE_ZERO << (3 * 2)) | (RC_SWIZZLE_ZERO << (3 * 3));
+	emit2(c, inst->Prev, RC_OPCODE_DP3, inst->U.I.SaturateMode, inst->U.I.DstReg, src0, src1);
 	rc_remove_instruction(inst);
 }
 
@@ -217,10 +297,10 @@ static void transform_DST(struct radeon_compiler* c,
 static void transform_FLR(struct radeon_compiler* c,
 	struct rc_instruction* inst)
 {
-	int tempreg = rc_find_free_temporary(c);
-	emit1(c, inst->Prev, RC_OPCODE_FRC, 0, dstreg(RC_FILE_TEMPORARY, tempreg), inst->U.I.SrcReg[0]);
+	struct rc_dst_register dst = try_to_reuse_dst(c, inst);
+	emit1(c, inst->Prev, RC_OPCODE_FRC, 0, dst, inst->U.I.SrcReg[0]);
 	emit2(c, inst->Prev, RC_OPCODE_ADD, inst->U.I.SaturateMode, inst->U.I.DstReg,
-		inst->U.I.SrcReg[0], negate(srcreg(RC_FILE_TEMPORARY, tempreg)));
+		inst->U.I.SrcReg[0], negate(srcreg(RC_FILE_TEMPORARY, dst.Index)));
 	rc_remove_instruction(inst);
 }
 
@@ -277,26 +357,26 @@ static void transform_LIT(struct radeon_compiler* c,
 			RC_SWIZZLE_ZERO, RC_SWIZZLE_ZERO, RC_SWIZZLE_ZERO, constant_swizzle&3));
 	emit2(c, inst->Prev, RC_OPCODE_MIN, 0,
 		dstregtmpmask(temp, RC_MASK_Z),
-		swizzle(srctemp, RC_SWIZZLE_W, RC_SWIZZLE_W, RC_SWIZZLE_W, RC_SWIZZLE_W),
+		swizzle_wwww(srctemp),
 		negate(srcregswz(RC_FILE_CONSTANT, constant, constant_swizzle)));
 
 	/* tmp.w = Pow(tmp.y, tmp.w) */
 	emit1(c, inst->Prev, RC_OPCODE_LG2, 0,
 		dstregtmpmask(temp, RC_MASK_W),
-		swizzle(srctemp, RC_SWIZZLE_Y, RC_SWIZZLE_Y, RC_SWIZZLE_Y, RC_SWIZZLE_Y));
+		swizzle_yyyy(srctemp));
 	emit2(c, inst->Prev, RC_OPCODE_MUL, 0,
 		dstregtmpmask(temp, RC_MASK_W),
-		swizzle(srctemp, RC_SWIZZLE_W, RC_SWIZZLE_W, RC_SWIZZLE_W, RC_SWIZZLE_W),
-		swizzle(srctemp, RC_SWIZZLE_Z, RC_SWIZZLE_Z, RC_SWIZZLE_Z, RC_SWIZZLE_Z));
+		swizzle_wwww(srctemp),
+		swizzle_zzzz(srctemp));
 	emit1(c, inst->Prev, RC_OPCODE_EX2, 0,
 		dstregtmpmask(temp, RC_MASK_W),
-		swizzle(srctemp, RC_SWIZZLE_W, RC_SWIZZLE_W, RC_SWIZZLE_W, RC_SWIZZLE_W));
+		swizzle_wwww(srctemp));
 
 	/* tmp.z = (tmp.x > 0) ? tmp.w : 0.0 */
 	emit3(c, inst->Prev, RC_OPCODE_CMP, inst->U.I.SaturateMode,
 		dstregtmpmask(temp, RC_MASK_Z),
-		negate(swizzle(srctemp, RC_SWIZZLE_X, RC_SWIZZLE_X, RC_SWIZZLE_X, RC_SWIZZLE_X)),
-		swizzle(srctemp, RC_SWIZZLE_W, RC_SWIZZLE_W, RC_SWIZZLE_W, RC_SWIZZLE_W),
+		negate(swizzle_xxxx(srctemp)),
+		swizzle_wwww(srctemp),
 		builtin_zero);
 
 	/* tmp.x, tmp.y, tmp.w = 1.0, tmp.x, 1.0 */
@@ -310,14 +390,14 @@ static void transform_LIT(struct radeon_compiler* c,
 static void transform_LRP(struct radeon_compiler* c,
 	struct rc_instruction* inst)
 {
-	int tempreg = rc_find_free_temporary(c);
+	struct rc_dst_register dst = try_to_reuse_dst(c, inst);
 
 	emit2(c, inst->Prev, RC_OPCODE_ADD, 0,
-		dstreg(RC_FILE_TEMPORARY, tempreg),
+		dst,
 		inst->U.I.SrcReg[1], negate(inst->U.I.SrcReg[2]));
 	emit3(c, inst->Prev, RC_OPCODE_MAD, inst->U.I.SaturateMode,
 		inst->U.I.DstReg,
-		inst->U.I.SrcReg[0], srcreg(RC_FILE_TEMPORARY, tempreg), inst->U.I.SrcReg[2]);
+		inst->U.I.SrcReg[0], srcreg(RC_FILE_TEMPORARY, dst.Index), inst->U.I.SrcReg[2]);
 
 	rc_remove_instruction(inst);
 }
@@ -325,14 +405,13 @@ static void transform_LRP(struct radeon_compiler* c,
 static void transform_POW(struct radeon_compiler* c,
 	struct rc_instruction* inst)
 {
-	int tempreg = rc_find_free_temporary(c);
-	struct rc_dst_register tempdst = dstreg(RC_FILE_TEMPORARY, tempreg);
-	struct rc_src_register tempsrc = srcreg(RC_FILE_TEMPORARY, tempreg);
+	struct rc_dst_register tempdst = try_to_reuse_dst(c, inst);
+	struct rc_src_register tempsrc = srcreg(RC_FILE_TEMPORARY, tempdst.Index);
 	tempdst.WriteMask = RC_MASK_W;
 	tempsrc.Swizzle = RC_SWIZZLE_WWWW;
 
-	emit1(c, inst->Prev, RC_OPCODE_LG2, 0, tempdst, scalar(inst->U.I.SrcReg[0]));
-	emit2(c, inst->Prev, RC_OPCODE_MUL, 0, tempdst, tempsrc, scalar(inst->U.I.SrcReg[1]));
+	emit1(c, inst->Prev, RC_OPCODE_LG2, 0, tempdst, swizzle_xxxx(inst->U.I.SrcReg[0]));
+	emit2(c, inst->Prev, RC_OPCODE_MUL, 0, tempdst, tempsrc, swizzle_xxxx(inst->U.I.SrcReg[1]));
 	emit1(c, inst->Prev, RC_OPCODE_EX2, inst->U.I.SaturateMode, inst->U.I.DstReg, tempsrc);
 
 	rc_remove_instruction(inst);
@@ -347,11 +426,11 @@ static void transform_RSQ(struct radeon_compiler* c,
 static void transform_SEQ(struct radeon_compiler* c,
 	struct rc_instruction* inst)
 {
-	int tempreg = rc_find_free_temporary(c);
+	struct rc_dst_register dst = try_to_reuse_dst(c, inst);
 
-	emit2(c, inst->Prev, RC_OPCODE_ADD, 0, dstreg(RC_FILE_TEMPORARY, tempreg), inst->U.I.SrcReg[0], negate(inst->U.I.SrcReg[1]));
+	emit2(c, inst->Prev, RC_OPCODE_ADD, 0, dst, inst->U.I.SrcReg[0], negate(inst->U.I.SrcReg[1]));
 	emit3(c, inst->Prev, RC_OPCODE_CMP, inst->U.I.SaturateMode, inst->U.I.DstReg,
-		negate(absolute(srcreg(RC_FILE_TEMPORARY, tempreg))), builtin_zero, builtin_one);
+		negate(absolute(srcreg(RC_FILE_TEMPORARY, dst.Index))), builtin_zero, builtin_one);
 
 	rc_remove_instruction(inst);
 }
@@ -366,11 +445,11 @@ static void transform_SFL(struct radeon_compiler* c,
 static void transform_SGE(struct radeon_compiler* c,
 	struct rc_instruction* inst)
 {
-	int tempreg = rc_find_free_temporary(c);
+	struct rc_dst_register dst = try_to_reuse_dst(c, inst);
 
-	emit2(c, inst->Prev, RC_OPCODE_ADD, 0, dstreg(RC_FILE_TEMPORARY, tempreg), inst->U.I.SrcReg[0], negate(inst->U.I.SrcReg[1]));
+	emit2(c, inst->Prev, RC_OPCODE_ADD, 0, dst, inst->U.I.SrcReg[0], negate(inst->U.I.SrcReg[1]));
 	emit3(c, inst->Prev, RC_OPCODE_CMP, inst->U.I.SaturateMode, inst->U.I.DstReg,
-		srcreg(RC_FILE_TEMPORARY, tempreg), builtin_zero, builtin_one);
+		srcreg(RC_FILE_TEMPORARY, dst.Index), builtin_zero, builtin_one);
 
 	rc_remove_instruction(inst);
 }
@@ -378,11 +457,11 @@ static void transform_SGE(struct radeon_compiler* c,
 static void transform_SGT(struct radeon_compiler* c,
 	struct rc_instruction* inst)
 {
-	int tempreg = rc_find_free_temporary(c);
+	struct rc_dst_register dst = try_to_reuse_dst(c, inst);
 
-	emit2(c, inst->Prev, RC_OPCODE_ADD, 0, dstreg(RC_FILE_TEMPORARY, tempreg), negate(inst->U.I.SrcReg[0]), inst->U.I.SrcReg[1]);
+	emit2(c, inst->Prev, RC_OPCODE_ADD, 0, dst, negate(inst->U.I.SrcReg[0]), inst->U.I.SrcReg[1]);
 	emit3(c, inst->Prev, RC_OPCODE_CMP, inst->U.I.SaturateMode, inst->U.I.DstReg,
-		srcreg(RC_FILE_TEMPORARY, tempreg), builtin_one, builtin_zero);
+		srcreg(RC_FILE_TEMPORARY, dst.Index), builtin_one, builtin_zero);
 
 	rc_remove_instruction(inst);
 }
@@ -390,11 +469,11 @@ static void transform_SGT(struct radeon_compiler* c,
 static void transform_SLE(struct radeon_compiler* c,
 	struct rc_instruction* inst)
 {
-	int tempreg = rc_find_free_temporary(c);
+	struct rc_dst_register dst = try_to_reuse_dst(c, inst);
 
-	emit2(c, inst->Prev, RC_OPCODE_ADD, 0, dstreg(RC_FILE_TEMPORARY, tempreg), negate(inst->U.I.SrcReg[0]), inst->U.I.SrcReg[1]);
+	emit2(c, inst->Prev, RC_OPCODE_ADD, 0, dst, negate(inst->U.I.SrcReg[0]), inst->U.I.SrcReg[1]);
 	emit3(c, inst->Prev, RC_OPCODE_CMP, inst->U.I.SaturateMode, inst->U.I.DstReg,
-		srcreg(RC_FILE_TEMPORARY, tempreg), builtin_zero, builtin_one);
+		srcreg(RC_FILE_TEMPORARY, dst.Index), builtin_zero, builtin_one);
 
 	rc_remove_instruction(inst);
 }
@@ -402,11 +481,11 @@ static void transform_SLE(struct radeon_compiler* c,
 static void transform_SLT(struct radeon_compiler* c,
 	struct rc_instruction* inst)
 {
-	int tempreg = rc_find_free_temporary(c);
+	struct rc_dst_register dst = try_to_reuse_dst(c, inst);
 
-	emit2(c, inst->Prev, RC_OPCODE_ADD, 0, dstreg(RC_FILE_TEMPORARY, tempreg), inst->U.I.SrcReg[0], negate(inst->U.I.SrcReg[1]));
+	emit2(c, inst->Prev, RC_OPCODE_ADD, 0, dst, inst->U.I.SrcReg[0], negate(inst->U.I.SrcReg[1]));
 	emit3(c, inst->Prev, RC_OPCODE_CMP, inst->U.I.SaturateMode, inst->U.I.DstReg,
-		srcreg(RC_FILE_TEMPORARY, tempreg), builtin_one, builtin_zero);
+		srcreg(RC_FILE_TEMPORARY, dst.Index), builtin_one, builtin_zero);
 
 	rc_remove_instruction(inst);
 }
@@ -414,11 +493,49 @@ static void transform_SLT(struct radeon_compiler* c,
 static void transform_SNE(struct radeon_compiler* c,
 	struct rc_instruction* inst)
 {
-	int tempreg = rc_find_free_temporary(c);
+	struct rc_dst_register dst = try_to_reuse_dst(c, inst);
 
-	emit2(c, inst->Prev, RC_OPCODE_ADD, 0, dstreg(RC_FILE_TEMPORARY, tempreg), inst->U.I.SrcReg[0], negate(inst->U.I.SrcReg[1]));
+	emit2(c, inst->Prev, RC_OPCODE_ADD, 0, dst, inst->U.I.SrcReg[0], negate(inst->U.I.SrcReg[1]));
 	emit3(c, inst->Prev, RC_OPCODE_CMP, inst->U.I.SaturateMode, inst->U.I.DstReg,
-		negate(absolute(srcreg(RC_FILE_TEMPORARY, tempreg))), builtin_one, builtin_zero);
+		negate(absolute(srcreg(RC_FILE_TEMPORARY, dst.Index))), builtin_one, builtin_zero);
+
+	rc_remove_instruction(inst);
+}
+
+static void transform_SSG(struct radeon_compiler* c,
+	struct rc_instruction* inst)
+{
+	/* result = sign(x)
+	 *
+	 *   CMP tmp0, -x, 1, 0
+	 *   CMP tmp1, x, 1, 0
+	 *   ADD result, tmp0, -tmp1;
+	 */
+	struct rc_dst_register dst0;
+	unsigned tmp1;
+
+	/* 0 < x */
+	dst0 = try_to_reuse_dst(c, inst);
+	emit3(c, inst->Prev, RC_OPCODE_CMP, 0,
+	      dst0,
+	      negate(inst->U.I.SrcReg[0]),
+	      builtin_one,
+	      builtin_zero);
+
+	/* x < 0 */
+	tmp1 = rc_find_free_temporary(c);
+	emit3(c, inst->Prev, RC_OPCODE_CMP, 0,
+	      dstregtmpmask(tmp1, inst->U.I.DstReg.WriteMask),
+	      inst->U.I.SrcReg[0],
+	      builtin_one,
+	      builtin_zero);
+
+	/* Either both are zero, or one of them is one and the other is zero. */
+	/* result = tmp0 - tmp1 */
+	emit2(c, inst->Prev, RC_OPCODE_ADD, 0,
+	      inst->U.I.DstReg,
+	      srcreg(RC_FILE_TEMPORARY, dst0.Index),
+	      negate(srcreg(RC_FILE_TEMPORARY, tmp1)));
 
 	rc_remove_instruction(inst);
 }
@@ -439,15 +556,15 @@ static void transform_SWZ(struct radeon_compiler* c,
 static void transform_XPD(struct radeon_compiler* c,
 	struct rc_instruction* inst)
 {
-	int tempreg = rc_find_free_temporary(c);
+	struct rc_dst_register dst = try_to_reuse_dst(c, inst);
 
-	emit2(c, inst->Prev, RC_OPCODE_MUL, 0, dstreg(RC_FILE_TEMPORARY, tempreg),
+	emit2(c, inst->Prev, RC_OPCODE_MUL, 0, dst,
 		swizzle(inst->U.I.SrcReg[0], RC_SWIZZLE_Z, RC_SWIZZLE_X, RC_SWIZZLE_Y, RC_SWIZZLE_W),
 		swizzle(inst->U.I.SrcReg[1], RC_SWIZZLE_Y, RC_SWIZZLE_Z, RC_SWIZZLE_X, RC_SWIZZLE_W));
 	emit3(c, inst->Prev, RC_OPCODE_MAD, inst->U.I.SaturateMode, inst->U.I.DstReg,
 		swizzle(inst->U.I.SrcReg[0], RC_SWIZZLE_Y, RC_SWIZZLE_Z, RC_SWIZZLE_X, RC_SWIZZLE_W),
 		swizzle(inst->U.I.SrcReg[1], RC_SWIZZLE_Z, RC_SWIZZLE_X, RC_SWIZZLE_Y, RC_SWIZZLE_W),
-		negate(srcreg(RC_FILE_TEMPORARY, tempreg)));
+		negate(srcreg(RC_FILE_TEMPORARY, dst.Index)));
 
 	rc_remove_instruction(inst);
 }
@@ -458,7 +575,7 @@ static void transform_XPD(struct radeon_compiler* c,
  * no userData necessary.
  *
  * Eliminates the following ALU instructions:
- *  ABS, DPH, DST, FLR, LIT, LRP, POW, SEQ, SFL, SGE, SGT, SLE, SLT, SNE, SUB, SWZ, XPD
+ *  ABS, CEIL, DPH, DST, FLR, LIT, LRP, POW, SEQ, SFL, SGE, SGT, SLE, SLT, SNE, SUB, SWZ, XPD
  * using:
  *  MOV, ADD, MUL, MAD, FRC, DP3, LG2, EX2, CMP
  *
@@ -474,6 +591,9 @@ int radeonTransformALU(
 {
 	switch(inst->U.I.Opcode) {
 	case RC_OPCODE_ABS: transform_ABS(c, inst); return 1;
+	case RC_OPCODE_CEIL: transform_CEIL(c, inst); return 1;
+	case RC_OPCODE_CLAMP: transform_CLAMP(c, inst); return 1;
+	case RC_OPCODE_DP2: transform_DP2(c, inst); return 1;
 	case RC_OPCODE_DPH: transform_DPH(c, inst); return 1;
 	case RC_OPCODE_DST: transform_DST(c, inst); return 1;
 	case RC_OPCODE_FLR: transform_FLR(c, inst); return 1;
@@ -488,6 +608,7 @@ int radeonTransformALU(
 	case RC_OPCODE_SLE: transform_SLE(c, inst); return 1;
 	case RC_OPCODE_SLT: transform_SLT(c, inst); return 1;
 	case RC_OPCODE_SNE: transform_SNE(c, inst); return 1;
+	case RC_OPCODE_SSG: transform_SSG(c, inst); return 1;
 	case RC_OPCODE_SUB: transform_SUB(c, inst); return 1;
 	case RC_OPCODE_SWZ: transform_SWZ(c, inst); return 1;
 	case RC_OPCODE_XPD: transform_XPD(c, inst); return 1;
@@ -506,8 +627,192 @@ static void transform_r300_vertex_ABS(struct radeon_compiler* c,
 	inst->U.I.SrcReg[1].Negate ^= RC_MASK_XYZW;
 }
 
+static void transform_r300_vertex_CMP(struct radeon_compiler* c,
+	struct rc_instruction* inst)
+{
+	/* There is no decent CMP available, so let's rig one up.
+	 * CMP is defined as dst = src0 < 0.0 ? src1 : src2
+	 * The following sequence consumes zero to two temps and two extra slots
+	 * (the second temp and the second slot is consumed by transform_LRP),
+	 * but should be equivalent:
+	 *
+	 * SLT tmp0, src0, 0.0
+	 * LRP dst, tmp0, src1, src2
+	 *
+	 * Yes, I know, I'm a mad scientist. ~ C. & M. */
+	struct rc_dst_register dst = try_to_reuse_dst(c, inst);
+
+	/* SLT tmp0, src0, 0.0 */
+	emit2(c, inst->Prev, RC_OPCODE_SLT, 0,
+		dst,
+		inst->U.I.SrcReg[0], builtin_zero);
+
+	/* LRP dst, tmp0, src1, src2 */
+	transform_LRP(c,
+		emit3(c, inst->Prev, RC_OPCODE_LRP, 0,
+		      inst->U.I.DstReg,
+		      srcreg(RC_FILE_TEMPORARY, dst.Index), inst->U.I.SrcReg[1],  inst->U.I.SrcReg[2]));
+
+	rc_remove_instruction(inst);
+}
+
+static void transform_r300_vertex_DP2(struct radeon_compiler* c,
+	struct rc_instruction* inst)
+{
+	struct rc_instruction *next_inst = inst->Next;
+	transform_DP2(c, inst);
+	next_inst->Prev->U.I.Opcode = RC_OPCODE_DP4;
+}
+
+static void transform_r300_vertex_DP3(struct radeon_compiler* c,
+	struct rc_instruction* inst)
+{
+	struct rc_src_register src0 = inst->U.I.SrcReg[0];
+	struct rc_src_register src1 = inst->U.I.SrcReg[1];
+	src0.Negate &= ~RC_MASK_W;
+	src0.Swizzle &= ~(7 << (3 * 3));
+	src0.Swizzle |= RC_SWIZZLE_ZERO << (3 * 3);
+	src1.Negate &= ~RC_MASK_W;
+	src1.Swizzle &= ~(7 << (3 * 3));
+	src1.Swizzle |= RC_SWIZZLE_ZERO << (3 * 3);
+	emit2(c, inst->Prev, RC_OPCODE_DP4, inst->U.I.SaturateMode, inst->U.I.DstReg, src0, src1);
+	rc_remove_instruction(inst);
+}
+
+static void transform_r300_vertex_fix_LIT(struct radeon_compiler* c,
+	struct rc_instruction* inst)
+{
+	struct rc_dst_register dst = try_to_reuse_dst(c, inst);
+	unsigned constant_swizzle;
+	int constant = rc_constants_add_immediate_scalar(&c->Program.Constants,
+							 0.0000000000000000001,
+							 &constant_swizzle);
+
+	/* MOV dst, src */
+	dst.WriteMask = RC_MASK_XYZW;
+	emit1(c, inst->Prev, RC_OPCODE_MOV, 0,
+		dst,
+		inst->U.I.SrcReg[0]);
+
+	/* MAX dst.y, src, 0.00...001 */
+	emit2(c, inst->Prev, RC_OPCODE_MAX, 0,
+		dstregtmpmask(dst.Index, RC_MASK_Y),
+		srcreg(RC_FILE_TEMPORARY, dst.Index),
+		srcregswz(RC_FILE_CONSTANT, constant, constant_swizzle));
+
+	inst->U.I.SrcReg[0] = srcreg(RC_FILE_TEMPORARY, dst.Index);
+}
+
+static void transform_r300_vertex_SEQ(struct radeon_compiler *c,
+	struct rc_instruction *inst)
+{
+	/* x = y  <==>  x >= y && y >= x */
+	int tmp = rc_find_free_temporary(c);
+
+	/* x <= y */
+	emit2(c, inst->Prev, RC_OPCODE_SGE, 0,
+	      dstregtmpmask(tmp, inst->U.I.DstReg.WriteMask),
+	      inst->U.I.SrcReg[0],
+	      inst->U.I.SrcReg[1]);
+
+	/* y <= x */
+	emit2(c, inst->Prev, RC_OPCODE_SGE, 0,
+	      inst->U.I.DstReg,
+	      inst->U.I.SrcReg[1],
+	      inst->U.I.SrcReg[0]);
+
+	/* x && y  =  x * y */
+	emit2(c, inst->Prev, RC_OPCODE_MUL, 0,
+	      inst->U.I.DstReg,
+	      srcreg(RC_FILE_TEMPORARY, tmp),
+	      srcreg(inst->U.I.DstReg.File, inst->U.I.DstReg.Index));
+
+	rc_remove_instruction(inst);
+}
+
+static void transform_r300_vertex_SNE(struct radeon_compiler *c,
+	struct rc_instruction *inst)
+{
+	/* x != y  <==>  x < y || y < x */
+	int tmp = rc_find_free_temporary(c);
+
+	/* x < y */
+	emit2(c, inst->Prev, RC_OPCODE_SLT, 0,
+	      dstregtmpmask(tmp, inst->U.I.DstReg.WriteMask),
+	      inst->U.I.SrcReg[0],
+	      inst->U.I.SrcReg[1]);
+
+	/* y < x */
+	emit2(c, inst->Prev, RC_OPCODE_SLT, 0,
+	      inst->U.I.DstReg,
+	      inst->U.I.SrcReg[1],
+	      inst->U.I.SrcReg[0]);
+
+	/* x || y  =  max(x, y) */
+	emit2(c, inst->Prev, RC_OPCODE_MAX, 0,
+	      inst->U.I.DstReg,
+	      srcreg(RC_FILE_TEMPORARY, tmp),
+	      srcreg(inst->U.I.DstReg.File, inst->U.I.DstReg.Index));
+
+	rc_remove_instruction(inst);
+}
+
+static void transform_r300_vertex_SGT(struct radeon_compiler* c,
+	struct rc_instruction* inst)
+{
+	/* x > y  <==>  -x < -y */
+	inst->U.I.Opcode = RC_OPCODE_SLT;
+	inst->U.I.SrcReg[0].Negate ^= RC_MASK_XYZW;
+	inst->U.I.SrcReg[1].Negate ^= RC_MASK_XYZW;
+}
+
+static void transform_r300_vertex_SLE(struct radeon_compiler* c,
+	struct rc_instruction* inst)
+{
+	/* x <= y  <==>  -x >= -y */
+	inst->U.I.Opcode = RC_OPCODE_SGE;
+	inst->U.I.SrcReg[0].Negate ^= RC_MASK_XYZW;
+	inst->U.I.SrcReg[1].Negate ^= RC_MASK_XYZW;
+}
+
+static void transform_r300_vertex_SSG(struct radeon_compiler* c,
+	struct rc_instruction* inst)
+{
+	/* result = sign(x)
+	 *
+	 *   SLT tmp0, 0, x;
+	 *   SLT tmp1, x, 0;
+	 *   ADD result, tmp0, -tmp1;
+	 */
+	struct rc_dst_register dst0 = try_to_reuse_dst(c, inst);
+	unsigned tmp1;
+
+	/* 0 < x */
+	dst0 = try_to_reuse_dst(c, inst);
+	emit2(c, inst->Prev, RC_OPCODE_SLT, 0,
+	      dst0,
+	      builtin_zero,
+	      inst->U.I.SrcReg[0]);
+
+	/* x < 0 */
+	tmp1 = rc_find_free_temporary(c);
+	emit2(c, inst->Prev, RC_OPCODE_SLT, 0,
+	      dstregtmpmask(tmp1, inst->U.I.DstReg.WriteMask),
+	      inst->U.I.SrcReg[0],
+	      builtin_zero);
+
+	/* Either both are zero, or one of them is one and the other is zero. */
+	/* result = tmp0 - tmp1 */
+	emit2(c, inst->Prev, RC_OPCODE_ADD, 0,
+	      inst->U.I.DstReg,
+	      srcreg(RC_FILE_TEMPORARY, dst0.Index),
+	      negate(srcreg(RC_FILE_TEMPORARY, tmp1)));
+
+	rc_remove_instruction(inst);
+}
+
 /**
- * For use with radeonLocalTransform, this transforms non-native ALU
+ * For use with rc_local_transform, this transforms non-native ALU
  * instructions of the r300 up to r500 vertex engine.
  */
 int r300_transform_vertex_alu(
@@ -517,10 +822,31 @@ int r300_transform_vertex_alu(
 {
 	switch(inst->U.I.Opcode) {
 	case RC_OPCODE_ABS: transform_r300_vertex_ABS(c, inst); return 1;
-	case RC_OPCODE_DP3: transform_DP3(c, inst); return 1;
+	case RC_OPCODE_CEIL: transform_CEIL(c, inst); return 1;
+	case RC_OPCODE_CLAMP: transform_CLAMP(c, inst); return 1;
+	case RC_OPCODE_CMP: transform_r300_vertex_CMP(c, inst); return 1;
+	case RC_OPCODE_DP2: transform_r300_vertex_DP2(c, inst); return 1;
+	case RC_OPCODE_DP3: transform_r300_vertex_DP3(c, inst); return 1;
 	case RC_OPCODE_DPH: transform_DPH(c, inst); return 1;
 	case RC_OPCODE_FLR: transform_FLR(c, inst); return 1;
+	case RC_OPCODE_LIT: transform_r300_vertex_fix_LIT(c, inst); return 1;
 	case RC_OPCODE_LRP: transform_LRP(c, inst); return 1;
+	case RC_OPCODE_SEQ:
+		if (!c->is_r500) {
+			transform_r300_vertex_SEQ(c, inst);
+			return 1;
+		}
+		return 0;
+	case RC_OPCODE_SFL: transform_SFL(c, inst); return 1;
+	case RC_OPCODE_SGT: transform_r300_vertex_SGT(c, inst); return 1;
+	case RC_OPCODE_SLE: transform_r300_vertex_SLE(c, inst); return 1;
+	case RC_OPCODE_SNE:
+		if (!c->is_r500) {
+			transform_r300_vertex_SNE(c, inst);
+			return 1;
+		}
+		return 0;
+	case RC_OPCODE_SSG: transform_r300_vertex_SSG(c, inst); return 1;
 	case RC_OPCODE_SUB: transform_SUB(c, inst); return 1;
 	case RC_OPCODE_SWZ: transform_SWZ(c, inst); return 1;
 	case RC_OPCODE_XPD: transform_XPD(c, inst); return 1;
@@ -566,20 +892,20 @@ static void sin_approx(
 	unsigned int tempreg = rc_find_free_temporary(c);
 
 	emit2(c, inst->Prev, RC_OPCODE_MUL, 0, dstregtmpmask(tempreg, RC_MASK_XY),
-		swizzle(src, RC_SWIZZLE_X, RC_SWIZZLE_X, RC_SWIZZLE_X, RC_SWIZZLE_X),
+		swizzle_xxxx(src),
 		srcreg(RC_FILE_CONSTANT, constants[0]));
 	emit3(c, inst->Prev, RC_OPCODE_MAD, 0, dstregtmpmask(tempreg, RC_MASK_X),
-		swizzle(srcreg(RC_FILE_TEMPORARY, tempreg), RC_SWIZZLE_Y, RC_SWIZZLE_Y, RC_SWIZZLE_Y, RC_SWIZZLE_Y),
-		absolute(swizzle(src, RC_SWIZZLE_X, RC_SWIZZLE_X, RC_SWIZZLE_X, RC_SWIZZLE_X)),
-		swizzle(srcreg(RC_FILE_TEMPORARY, tempreg), RC_SWIZZLE_X, RC_SWIZZLE_X, RC_SWIZZLE_X, RC_SWIZZLE_X));
+		swizzle_yyyy(srcreg(RC_FILE_TEMPORARY, tempreg)),
+		absolute(swizzle_xxxx(src)),
+		swizzle_xxxx(srcreg(RC_FILE_TEMPORARY, tempreg)));
 	emit3(c, inst->Prev, RC_OPCODE_MAD, 0, dstregtmpmask(tempreg, RC_MASK_Y),
-		swizzle(srcreg(RC_FILE_TEMPORARY, tempreg), RC_SWIZZLE_X, RC_SWIZZLE_X, RC_SWIZZLE_X, RC_SWIZZLE_X),
-		absolute(swizzle(srcreg(RC_FILE_TEMPORARY, tempreg), RC_SWIZZLE_X, RC_SWIZZLE_X, RC_SWIZZLE_X, RC_SWIZZLE_X)),
-		negate(swizzle(srcreg(RC_FILE_TEMPORARY, tempreg), RC_SWIZZLE_X, RC_SWIZZLE_X, RC_SWIZZLE_X, RC_SWIZZLE_X)));
+		swizzle_xxxx(srcreg(RC_FILE_TEMPORARY, tempreg)),
+		absolute(swizzle_xxxx(srcreg(RC_FILE_TEMPORARY, tempreg))),
+		negate(swizzle_xxxx(srcreg(RC_FILE_TEMPORARY, tempreg))));
 	emit3(c, inst->Prev, RC_OPCODE_MAD, 0, dst,
-		swizzle(srcreg(RC_FILE_TEMPORARY, tempreg), RC_SWIZZLE_Y, RC_SWIZZLE_Y, RC_SWIZZLE_Y, RC_SWIZZLE_Y),
-		swizzle(srcreg(RC_FILE_CONSTANT, constants[0]), RC_SWIZZLE_W, RC_SWIZZLE_W, RC_SWIZZLE_W, RC_SWIZZLE_W),
-		swizzle(srcreg(RC_FILE_TEMPORARY, tempreg), RC_SWIZZLE_X, RC_SWIZZLE_X, RC_SWIZZLE_X, RC_SWIZZLE_X));
+		swizzle_yyyy(srcreg(RC_FILE_TEMPORARY, tempreg)),
+		swizzle_wwww(srcreg(RC_FILE_CONSTANT, constants[0])),
+		swizzle_xxxx(srcreg(RC_FILE_TEMPORARY, tempreg)));
 }
 
 /**
@@ -587,17 +913,19 @@ static void sin_approx(
  * using only the basic instructions
  *  MOV, ADD, MUL, MAD, FRC
  */
-int radeonTransformTrigSimple(struct radeon_compiler* c,
+int r300_transform_trig_simple(struct radeon_compiler* c,
 	struct rc_instruction* inst,
 	void* unused)
 {
+	unsigned int constants[2];
+	unsigned int tempreg;
+
 	if (inst->U.I.Opcode != RC_OPCODE_COS &&
 	    inst->U.I.Opcode != RC_OPCODE_SIN &&
 	    inst->U.I.Opcode != RC_OPCODE_SCS)
 		return 0;
 
-	unsigned int constants[2];
-	unsigned int tempreg = rc_find_free_temporary(c);
+	tempreg = rc_find_free_temporary(c);
 
 	sincos_constants(c, constants);
 
@@ -606,62 +934,92 @@ int radeonTransformTrigSimple(struct radeon_compiler* c,
 		/* FRC tmp.x, tmp.x */
 		/* MAD tmp.z, tmp.x, 2*PI, -PI */
 		emit3(c, inst->Prev, RC_OPCODE_MAD, 0, dstregtmpmask(tempreg, RC_MASK_W),
-			swizzle(inst->U.I.SrcReg[0], RC_SWIZZLE_X, RC_SWIZZLE_X, RC_SWIZZLE_X, RC_SWIZZLE_X),
-			swizzle(srcreg(RC_FILE_CONSTANT, constants[1]), RC_SWIZZLE_Z, RC_SWIZZLE_Z, RC_SWIZZLE_Z, RC_SWIZZLE_Z),
-			swizzle(srcreg(RC_FILE_CONSTANT, constants[1]), RC_SWIZZLE_X, RC_SWIZZLE_X, RC_SWIZZLE_X, RC_SWIZZLE_X));
+			swizzle_xxxx(inst->U.I.SrcReg[0]),
+			swizzle_zzzz(srcreg(RC_FILE_CONSTANT, constants[1])),
+			swizzle_xxxx(srcreg(RC_FILE_CONSTANT, constants[1])));
 		emit1(c, inst->Prev, RC_OPCODE_FRC, 0, dstregtmpmask(tempreg, RC_MASK_W),
-			swizzle(srcreg(RC_FILE_TEMPORARY, tempreg), RC_SWIZZLE_W, RC_SWIZZLE_W, RC_SWIZZLE_W, RC_SWIZZLE_W));
+			swizzle_wwww(srcreg(RC_FILE_TEMPORARY, tempreg)));
 		emit3(c, inst->Prev, RC_OPCODE_MAD, 0, dstregtmpmask(tempreg, RC_MASK_W),
-			swizzle(srcreg(RC_FILE_TEMPORARY, tempreg), RC_SWIZZLE_W, RC_SWIZZLE_W, RC_SWIZZLE_W, RC_SWIZZLE_W),
-			swizzle(srcreg(RC_FILE_CONSTANT, constants[1]), RC_SWIZZLE_W, RC_SWIZZLE_W, RC_SWIZZLE_W, RC_SWIZZLE_W),
-			negate(swizzle(srcreg(RC_FILE_CONSTANT, constants[0]), RC_SWIZZLE_Z, RC_SWIZZLE_Z, RC_SWIZZLE_Z, RC_SWIZZLE_Z)));
+			swizzle_wwww(srcreg(RC_FILE_TEMPORARY, tempreg)),
+			swizzle_wwww(srcreg(RC_FILE_CONSTANT, constants[1])),
+			negate(swizzle_zzzz(srcreg(RC_FILE_CONSTANT, constants[0]))));
 
 		sin_approx(c, inst, inst->U.I.DstReg,
-			swizzle(srcreg(RC_FILE_TEMPORARY, tempreg), RC_SWIZZLE_W, RC_SWIZZLE_W, RC_SWIZZLE_W, RC_SWIZZLE_W),
+			swizzle_wwww(srcreg(RC_FILE_TEMPORARY, tempreg)),
 			constants);
 	} else if (inst->U.I.Opcode == RC_OPCODE_SIN) {
 		emit3(c, inst->Prev, RC_OPCODE_MAD, 0, dstregtmpmask(tempreg, RC_MASK_W),
-			swizzle(inst->U.I.SrcReg[0], RC_SWIZZLE_X, RC_SWIZZLE_X, RC_SWIZZLE_X, RC_SWIZZLE_X),
-			swizzle(srcreg(RC_FILE_CONSTANT, constants[1]), RC_SWIZZLE_Z, RC_SWIZZLE_Z, RC_SWIZZLE_Z, RC_SWIZZLE_Z),
-			swizzle(srcreg(RC_FILE_CONSTANT, constants[1]), RC_SWIZZLE_Y, RC_SWIZZLE_Y, RC_SWIZZLE_Y, RC_SWIZZLE_Y));
+			swizzle_xxxx(inst->U.I.SrcReg[0]),
+			swizzle_zzzz(srcreg(RC_FILE_CONSTANT, constants[1])),
+			swizzle_yyyy(srcreg(RC_FILE_CONSTANT, constants[1])));
 		emit1(c, inst->Prev, RC_OPCODE_FRC, 0, dstregtmpmask(tempreg, RC_MASK_W),
-			swizzle(srcreg(RC_FILE_TEMPORARY, tempreg), RC_SWIZZLE_W, RC_SWIZZLE_W, RC_SWIZZLE_W, RC_SWIZZLE_W));
+			swizzle_wwww(srcreg(RC_FILE_TEMPORARY, tempreg)));
 		emit3(c, inst->Prev, RC_OPCODE_MAD, 0, dstregtmpmask(tempreg, RC_MASK_W),
-			swizzle(srcreg(RC_FILE_TEMPORARY, tempreg), RC_SWIZZLE_W, RC_SWIZZLE_W, RC_SWIZZLE_W, RC_SWIZZLE_W),
-			swizzle(srcreg(RC_FILE_CONSTANT, constants[1]), RC_SWIZZLE_W, RC_SWIZZLE_W, RC_SWIZZLE_W, RC_SWIZZLE_W),
-			negate(swizzle(srcreg(RC_FILE_CONSTANT, constants[0]), RC_SWIZZLE_Z, RC_SWIZZLE_Z, RC_SWIZZLE_Z, RC_SWIZZLE_Z)));
+			swizzle_wwww(srcreg(RC_FILE_TEMPORARY, tempreg)),
+			swizzle_wwww(srcreg(RC_FILE_CONSTANT, constants[1])),
+			negate(swizzle_zzzz(srcreg(RC_FILE_CONSTANT, constants[0]))));
 
 		sin_approx(c, inst, inst->U.I.DstReg,
-			swizzle(srcreg(RC_FILE_TEMPORARY, tempreg), RC_SWIZZLE_W, RC_SWIZZLE_W, RC_SWIZZLE_W, RC_SWIZZLE_W),
+			swizzle_wwww(srcreg(RC_FILE_TEMPORARY, tempreg)),
 			constants);
 	} else {
+		struct rc_dst_register dst;
+
 		emit3(c, inst->Prev, RC_OPCODE_MAD, 0, dstregtmpmask(tempreg, RC_MASK_XY),
-			swizzle(inst->U.I.SrcReg[0], RC_SWIZZLE_X, RC_SWIZZLE_X, RC_SWIZZLE_X, RC_SWIZZLE_X),
-			swizzle(srcreg(RC_FILE_CONSTANT, constants[1]), RC_SWIZZLE_Z, RC_SWIZZLE_Z, RC_SWIZZLE_Z, RC_SWIZZLE_Z),
+			swizzle_xxxx(inst->U.I.SrcReg[0]),
+			swizzle_zzzz(srcreg(RC_FILE_CONSTANT, constants[1])),
 			swizzle(srcreg(RC_FILE_CONSTANT, constants[1]), RC_SWIZZLE_X, RC_SWIZZLE_Y, RC_SWIZZLE_Z, RC_SWIZZLE_W));
 		emit1(c, inst->Prev, RC_OPCODE_FRC, 0, dstregtmpmask(tempreg, RC_MASK_XY),
 			srcreg(RC_FILE_TEMPORARY, tempreg));
 		emit3(c, inst->Prev, RC_OPCODE_MAD, 0, dstregtmpmask(tempreg, RC_MASK_XY),
 			srcreg(RC_FILE_TEMPORARY, tempreg),
-			swizzle(srcreg(RC_FILE_CONSTANT, constants[1]), RC_SWIZZLE_W, RC_SWIZZLE_W, RC_SWIZZLE_W, RC_SWIZZLE_W),
-			negate(swizzle(srcreg(RC_FILE_CONSTANT, constants[0]), RC_SWIZZLE_Z, RC_SWIZZLE_Z, RC_SWIZZLE_Z, RC_SWIZZLE_Z)));
+			swizzle_wwww(srcreg(RC_FILE_CONSTANT, constants[1])),
+			negate(swizzle_zzzz(srcreg(RC_FILE_CONSTANT, constants[0]))));
 
-		struct rc_dst_register dst = inst->U.I.DstReg;
+		dst = inst->U.I.DstReg;
 
 		dst.WriteMask = inst->U.I.DstReg.WriteMask & RC_MASK_X;
 		sin_approx(c, inst, dst,
-			swizzle(srcreg(RC_FILE_TEMPORARY, tempreg), RC_SWIZZLE_X, RC_SWIZZLE_X, RC_SWIZZLE_X, RC_SWIZZLE_X),
+			swizzle_xxxx(srcreg(RC_FILE_TEMPORARY, tempreg)),
 			constants);
 
 		dst.WriteMask = inst->U.I.DstReg.WriteMask & RC_MASK_Y;
 		sin_approx(c, inst, dst,
-			swizzle(srcreg(RC_FILE_TEMPORARY, tempreg), RC_SWIZZLE_Y, RC_SWIZZLE_Y, RC_SWIZZLE_Y, RC_SWIZZLE_Y),
+			swizzle_yyyy(srcreg(RC_FILE_TEMPORARY, tempreg)),
 			constants);
 	}
 
 	rc_remove_instruction(inst);
 
 	return 1;
+}
+
+static void r300_transform_SIN_COS_SCS(struct radeon_compiler *c,
+	struct rc_instruction *inst,
+	unsigned srctmp)
+{
+	if (inst->U.I.Opcode == RC_OPCODE_COS) {
+		emit1(c, inst->Prev, RC_OPCODE_COS, inst->U.I.SaturateMode, inst->U.I.DstReg,
+			srcregswz(RC_FILE_TEMPORARY, srctmp, RC_SWIZZLE_WWWW));
+	} else if (inst->U.I.Opcode == RC_OPCODE_SIN) {
+		emit1(c, inst->Prev, RC_OPCODE_SIN, inst->U.I.SaturateMode,
+			inst->U.I.DstReg, srcregswz(RC_FILE_TEMPORARY, srctmp, RC_SWIZZLE_WWWW));
+	} else if (inst->U.I.Opcode == RC_OPCODE_SCS) {
+		struct rc_dst_register moddst = inst->U.I.DstReg;
+
+		if (inst->U.I.DstReg.WriteMask & RC_MASK_X) {
+			moddst.WriteMask = RC_MASK_X;
+			emit1(c, inst->Prev, RC_OPCODE_COS, inst->U.I.SaturateMode, moddst,
+				srcregswz(RC_FILE_TEMPORARY, srctmp, RC_SWIZZLE_WWWW));
+		}
+		if (inst->U.I.DstReg.WriteMask & RC_MASK_Y) {
+			moddst.WriteMask = RC_MASK_Y;
+			emit1(c, inst->Prev, RC_OPCODE_SIN, inst->U.I.SaturateMode, moddst,
+				srcregswz(RC_FILE_TEMPORARY, srctmp, RC_SWIZZLE_WWWW));
+		}
+	}
+
+	rc_remove_instruction(inst);
 }
 
 
@@ -677,48 +1035,67 @@ int radeonTransformTrigScale(struct radeon_compiler* c,
 	struct rc_instruction* inst,
 	void* unused)
 {
-	if (inst->U.I.Opcode != RC_OPCODE_COS &&
-	    inst->U.I.Opcode != RC_OPCODE_SIN &&
-	    inst->U.I.Opcode != RC_OPCODE_SCS)
-		return 0;
-
 	static const float RCP_2PI = 0.15915494309189535;
 	unsigned int temp;
 	unsigned int constant;
 	unsigned int constant_swizzle;
 
+	if (inst->U.I.Opcode != RC_OPCODE_COS &&
+	    inst->U.I.Opcode != RC_OPCODE_SIN &&
+	    inst->U.I.Opcode != RC_OPCODE_SCS)
+		return 0;
+
 	temp = rc_find_free_temporary(c);
 	constant = rc_constants_add_immediate_scalar(&c->Program.Constants, RCP_2PI, &constant_swizzle);
 
 	emit2(c, inst->Prev, RC_OPCODE_MUL, 0, dstregtmpmask(temp, RC_MASK_W),
-		swizzle(inst->U.I.SrcReg[0], RC_SWIZZLE_X, RC_SWIZZLE_X, RC_SWIZZLE_X, RC_SWIZZLE_X),
+		swizzle_xxxx(inst->U.I.SrcReg[0]),
 		srcregswz(RC_FILE_CONSTANT, constant, constant_swizzle));
 	emit1(c, inst->Prev, RC_OPCODE_FRC, 0, dstregtmpmask(temp, RC_MASK_W),
 		srcreg(RC_FILE_TEMPORARY, temp));
 
-	if (inst->U.I.Opcode == RC_OPCODE_COS) {
-		emit1(c, inst->Prev, RC_OPCODE_COS, inst->U.I.SaturateMode, inst->U.I.DstReg,
-			srcregswz(RC_FILE_TEMPORARY, temp, RC_SWIZZLE_WWWW));
-	} else if (inst->U.I.Opcode == RC_OPCODE_SIN) {
-		emit1(c, inst->Prev, RC_OPCODE_SIN, inst->U.I.SaturateMode,
-			inst->U.I.DstReg, srcregswz(RC_FILE_TEMPORARY, temp, RC_SWIZZLE_WWWW));
-	} else if (inst->U.I.Opcode == RC_OPCODE_SCS) {
-		struct rc_dst_register moddst = inst->U.I.DstReg;
+	r300_transform_SIN_COS_SCS(c, inst, temp);
+	return 1;
+}
 
-		if (inst->U.I.DstReg.WriteMask & RC_MASK_X) {
-			moddst.WriteMask = RC_MASK_X;
-			emit1(c, inst->Prev, RC_OPCODE_COS, inst->U.I.SaturateMode, moddst,
-				srcregswz(RC_FILE_TEMPORARY, temp, RC_SWIZZLE_WWWW));
-		}
-		if (inst->U.I.DstReg.WriteMask & RC_MASK_Y) {
-			moddst.WriteMask = RC_MASK_Y;
-			emit1(c, inst->Prev, RC_OPCODE_SIN, inst->U.I.SaturateMode, moddst,
-				srcregswz(RC_FILE_TEMPORARY, temp, RC_SWIZZLE_WWWW));
-		}
-	}
+/**
+ * Transform the trigonometric functions COS, SIN, and SCS
+ * so that the input to COS and SIN is always in the range [-PI, PI].
+ * SCS is replaced by one COS and one SIN instruction.
+ */
+int r300_transform_trig_scale_vertex(struct radeon_compiler *c,
+	struct rc_instruction *inst,
+	void *unused)
+{
+	static const float cons[4] = {0.15915494309189535, 0.5, 6.28318530717959, -3.14159265358979};
+	unsigned int temp;
+	unsigned int constant;
 
-	rc_remove_instruction(inst);
+	if (inst->U.I.Opcode != RC_OPCODE_COS &&
+	    inst->U.I.Opcode != RC_OPCODE_SIN &&
+	    inst->U.I.Opcode != RC_OPCODE_SCS)
+		return 0;
 
+	/* Repeat x in the range [-PI, PI]:
+	 *
+	 *   repeat(x) = frac(x / 2PI + 0.5) * 2PI - PI
+	 */
+
+	temp = rc_find_free_temporary(c);
+	constant = rc_constants_add_immediate_vec4(&c->Program.Constants, cons);
+
+	emit3(c, inst->Prev, RC_OPCODE_MAD, 0, dstregtmpmask(temp, RC_MASK_W),
+		swizzle_xxxx(inst->U.I.SrcReg[0]),
+		srcregswz(RC_FILE_CONSTANT, constant, RC_SWIZZLE_XXXX),
+		srcregswz(RC_FILE_CONSTANT, constant, RC_SWIZZLE_YYYY));
+	emit1(c, inst->Prev, RC_OPCODE_FRC, 0, dstregtmpmask(temp, RC_MASK_W),
+		srcreg(RC_FILE_TEMPORARY, temp));
+	emit3(c, inst->Prev, RC_OPCODE_MAD, 0, dstregtmpmask(temp, RC_MASK_W),
+		srcreg(RC_FILE_TEMPORARY, temp),
+		srcregswz(RC_FILE_CONSTANT, constant, RC_SWIZZLE_ZZZZ),
+		srcregswz(RC_FILE_CONSTANT, constant, RC_SWIZZLE_WWWW));
+
+	r300_transform_SIN_COS_SCS(c, inst, temp);
 	return 1;
 }
 
@@ -737,8 +1114,42 @@ int radeonTransformDeriv(struct radeon_compiler* c,
 	if (inst->U.I.Opcode != RC_OPCODE_DDX && inst->U.I.Opcode != RC_OPCODE_DDY)
 		return 0;
 
-	inst->U.I.SrcReg[1].Swizzle = RC_MAKE_SWIZZLE(RC_SWIZZLE_ONE, RC_SWIZZLE_ONE, RC_SWIZZLE_ONE, RC_SWIZZLE_ONE);
+	inst->U.I.SrcReg[1].Swizzle = RC_SWIZZLE_1111;
 	inst->U.I.SrcReg[1].Negate = RC_MASK_XYZW;
 
 	return 1;
+}
+
+/**
+ * IF Temp[0].x -\
+ * KILP         - > KIL -abs(Temp[0].x)
+ * ENDIF        -/
+ *
+ * This needs to be done in its own pass, because it modifies the instructions
+ * before and after KILP.
+ */
+void rc_transform_KILP(struct radeon_compiler * c, void *user)
+{
+	struct rc_instruction * inst;
+	for (inst = c->Program.Instructions.Next;
+			inst != &c->Program.Instructions; inst = inst->Next) {
+
+		if (inst->U.I.Opcode != RC_OPCODE_KILP)
+			continue;
+
+		inst->U.I.Opcode = RC_OPCODE_KIL;
+
+		if (inst->Prev->U.I.Opcode != RC_OPCODE_IF
+				|| inst->Next->U.I.Opcode != RC_OPCODE_ENDIF) {
+			inst->U.I.SrcReg[0] = negate(builtin_one);
+		} else {
+
+			inst->U.I.SrcReg[0] =
+				negate(absolute(inst->Prev->U.I.SrcReg[0]));
+			/* Remove IF */
+			rc_remove_instruction(inst->Prev);
+			/* Remove ENDIF */
+			rc_remove_instruction(inst->Next);
+		}
+	}
 }

@@ -30,7 +30,6 @@
 #include "main/image.h"
 #include "main/teximage.h"
 #include "main/texstate.h"
-#include "main/mipmap.h"
 
 #include "drivers/common/meta.h"
 
@@ -51,34 +50,20 @@
  * Do the best we can using the blitter.  A future project is to use
  * the texture engine and fragment programs for these copies.
  */
-static const struct intel_region *
-get_teximage_source(struct intel_context *intel, GLenum internalFormat)
+static struct intel_renderbuffer *
+get_teximage_readbuffer(struct intel_context *intel, GLenum internalFormat)
 {
-   struct intel_renderbuffer *irb;
-
    DBG("%s %s\n", __FUNCTION__,
        _mesa_lookup_enum_by_nr(internalFormat));
 
    switch (internalFormat) {
    case GL_DEPTH_COMPONENT:
    case GL_DEPTH_COMPONENT16:
-      irb = intel_get_renderbuffer(intel->ctx.ReadBuffer, BUFFER_DEPTH);
-      if (irb && irb->region && irb->region->cpp == 2)
-         return irb->region;
-      return NULL;
    case GL_DEPTH24_STENCIL8_EXT:
    case GL_DEPTH_STENCIL_EXT:
-      irb = intel_get_renderbuffer(intel->ctx.ReadBuffer, BUFFER_DEPTH);
-      if (irb && irb->region && irb->region->cpp == 4)
-         return irb->region;
-      return NULL;
-   case GL_RGBA:
-   case GL_RGBA8:
-   case GL_RGB:
-   case GL_RGB8:
-      return intel_readbuf_region(intel);
+      return intel_get_renderbuffer(intel->ctx.ReadBuffer, BUFFER_DEPTH);
    default:
-      return NULL;
+      return intel_renderbuffer(intel->ctx.ReadBuffer->_ColorReadBuffer);
    }
 }
 
@@ -91,25 +76,44 @@ do_copy_texsubimage(struct intel_context *intel,
                     GLint dstx, GLint dsty,
                     GLint x, GLint y, GLsizei width, GLsizei height)
 {
-   GLcontext *ctx = &intel->ctx;
-   const struct intel_region *src = get_teximage_source(intel, internalFormat);
+   struct gl_context *ctx = &intel->ctx;
+   struct intel_renderbuffer *irb;
+   bool copy_supported = false;
+   bool copy_supported_with_alpha_override = false;
 
-   if (!intelImage->mt || !src) {
-      if (INTEL_DEBUG & DEBUG_FALLBACKS)
-	 fprintf(stderr, "%s fail %p %p (0x%08x)\n",
-		 __FUNCTION__, intelImage->mt, src, internalFormat);
-      return GL_FALSE;
-   }
-
-   if (intelImage->mt->cpp != src->cpp) {
-      if (INTEL_DEBUG & DEBUG_FALLBACKS)
-	 fprintf(stderr, "%s fail %d vs %d cpp\n",
-		 __FUNCTION__, intelImage->mt->cpp, src->cpp);
-      return GL_FALSE;
-   }
-
-   /* intelFlush(ctx); */
    intel_prepare_render(intel);
+
+   irb = get_teximage_readbuffer(intel, internalFormat);
+   if (!intelImage->mt || !irb || !irb->region) {
+      if (unlikely(INTEL_DEBUG & DEBUG_FALLBACKS))
+	 fprintf(stderr, "%s fail %p %p (0x%08x)\n",
+		 __FUNCTION__, intelImage->mt, irb, internalFormat);
+      return GL_FALSE;
+   }
+
+   copy_supported = intelImage->base.TexFormat == irb->Base.Format;
+
+   /* Converting ARGB8888 to XRGB8888 is trivial: ignore the alpha bits */
+   if (irb->Base.Format == MESA_FORMAT_ARGB8888 &&
+       intelImage->base.TexFormat == MESA_FORMAT_XRGB8888) {
+      copy_supported = true;
+   }
+
+   /* Converting XRGB8888 to ARGB8888 requires setting the alpha bits to 1.0 */
+   if (irb->Base.Format == MESA_FORMAT_XRGB8888 &&
+       intelImage->base.TexFormat == MESA_FORMAT_ARGB8888) {
+      copy_supported_with_alpha_override = true;
+   }
+
+   if (!copy_supported && !copy_supported_with_alpha_override) {
+      if (unlikely(INTEL_DEBUG & DEBUG_FALLBACKS))
+	 fprintf(stderr, "%s mismatched formats %s, %s\n",
+		 __FUNCTION__,
+		 _mesa_get_format_name(intelImage->base.TexFormat),
+		 _mesa_get_format_name(irb->Base.Format));
+      return GL_FALSE;
+   }
+
    {
       drm_intel_bo *dst_bo = intel_region_buffer(intel,
 						 intelImage->mt->region,
@@ -124,42 +128,32 @@ do_copy_texsubimage(struct intel_context *intel,
 				     0,
 				     &image_x, &image_y);
 
-      /* Can't blit to tiled buffers with non-tile-aligned offset. */
+      /* The blitter can't handle Y-tiled buffers. */
       if (intelImage->mt->region->tiling == I915_TILING_Y) {
 	 return GL_FALSE;
       }
 
       if (ctx->ReadBuffer->Name == 0) {
-	 /* reading from a window, adjust x, y */
-	 const __DRIdrawable *dPriv = intel->driReadDrawable;
-	 y = dPriv->y + (dPriv->h - (y + height));
-	 x += dPriv->x;
-
-	 /* Invert the data coming from the source rectangle due to GL
-	  * and hardware disagreeing on where y=0 is.
-	  *
-	  * It appears that our offsets and pitches get mangled
-	  * appropriately by the hardware, and we don't need to adjust them
-	  * on our own.
-	  */
-	 src_pitch = -src->pitch;
+	 /* Flip vertical orientation for system framebuffers */
+	 y = ctx->ReadBuffer->Height - (y + height);
+	 src_pitch = -irb->region->pitch;
       } else {
 	 /* reading from a FBO, y is already oriented the way we like */
-	 src_pitch = src->pitch;
+	 src_pitch = irb->region->pitch;
       }
 
       /* blit from src buffer to texture */
       if (!intelEmitCopyBlit(intel,
 			     intelImage->mt->cpp,
 			     src_pitch,
-			     src->buffer,
+			     irb->region->buffer,
 			     0,
-			     src->tiling,
-			     intelImage->mt->pitch,
+			     irb->region->tiling,
+			     intelImage->mt->region->pitch,
 			     dst_bo,
 			     0,
 			     intelImage->mt->region->tiling,
-			     src->draw_x + x, src->draw_y + y,
+			     irb->region->draw_x + x, irb->region->draw_y + y,
 			     image_x + dstx, image_y + dsty,
 			     width, height,
 			     GL_COPY)) {
@@ -167,12 +161,15 @@ do_copy_texsubimage(struct intel_context *intel,
       }
    }
 
+   if (copy_supported_with_alpha_override)
+      intel_set_teximage_alpha_to_one(ctx, intelImage);
+
    return GL_TRUE;
 }
 
 
 static void
-intelCopyTexImage1D(GLcontext * ctx, GLenum target, GLint level,
+intelCopyTexImage1D(struct gl_context * ctx, GLenum target, GLint level,
                     GLenum internalFormat,
                     GLint x, GLint y, GLsizei width, GLint border)
 {
@@ -212,15 +209,14 @@ intelCopyTexImage1D(GLcontext * ctx, GLenum target, GLint level,
    return;
 
  fail:
-   if (INTEL_DEBUG & DEBUG_FALLBACKS)
-      fprintf(stderr, "%s - fallback to swrast\n", __FUNCTION__);
+   fallback_debug("%s - fallback to swrast\n", __FUNCTION__);
    _mesa_meta_CopyTexImage1D(ctx, target, level, internalFormat, x, y,
                              width, border);
 }
 
 
 static void
-intelCopyTexImage2D(GLcontext * ctx, GLenum target, GLint level,
+intelCopyTexImage2D(struct gl_context * ctx, GLenum target, GLint level,
                     GLenum internalFormat,
                     GLint x, GLint y, GLsizei width, GLsizei height,
                     GLint border)
@@ -261,15 +257,14 @@ intelCopyTexImage2D(GLcontext * ctx, GLenum target, GLint level,
    return;
 
  fail:
-   if (INTEL_DEBUG & DEBUG_FALLBACKS)
-      fprintf(stderr, "%s - fallback to swrast\n", __FUNCTION__);
+   fallback_debug("%s - fallback to swrast\n", __FUNCTION__);
    _mesa_meta_CopyTexImage2D(ctx, target, level, internalFormat, x, y,
                              width, height, border);
 }
 
 
 static void
-intelCopyTexSubImage1D(GLcontext * ctx, GLenum target, GLint level,
+intelCopyTexSubImage1D(struct gl_context * ctx, GLenum target, GLint level,
                        GLint xoffset, GLint x, GLint y, GLsizei width)
 {
    struct gl_texture_unit *texUnit = _mesa_get_current_tex_unit(ctx);
@@ -287,15 +282,14 @@ intelCopyTexSubImage1D(GLcontext * ctx, GLenum target, GLint level,
    if (!do_copy_texsubimage(intel_context(ctx), target,
                             intel_texture_image(texImage),
                             internalFormat, xoffset, 0, x, y, width, 1)) {
-      if (INTEL_DEBUG & DEBUG_FALLBACKS)
-         fprintf(stderr, "%s - fallback to swrast\n", __FUNCTION__);
+      fallback_debug("%s - fallback to swrast\n", __FUNCTION__);
       _mesa_meta_CopyTexSubImage1D(ctx, target, level, xoffset, x, y, width);
    }
 }
 
 
 static void
-intelCopyTexSubImage2D(GLcontext * ctx, GLenum target, GLint level,
+intelCopyTexSubImage2D(struct gl_context * ctx, GLenum target, GLint level,
                        GLint xoffset, GLint yoffset,
                        GLint x, GLint y, GLsizei width, GLsizei height)
 {
@@ -314,8 +308,7 @@ intelCopyTexSubImage2D(GLcontext * ctx, GLenum target, GLint level,
                             internalFormat,
                             xoffset, yoffset, x, y, width, height)) {
 
-      if (INTEL_DEBUG & DEBUG_FALLBACKS)
-         fprintf(stderr, "%s - fallback to swrast\n", __FUNCTION__);
+      fallback_debug("%s - fallback to swrast\n", __FUNCTION__);
       _mesa_meta_CopyTexSubImage2D(ctx, target, level,
                                    xoffset, yoffset, x, y, width, height);
    }

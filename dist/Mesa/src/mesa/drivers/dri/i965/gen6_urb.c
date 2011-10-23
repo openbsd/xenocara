@@ -34,19 +34,25 @@
 static void
 prepare_urb( struct brw_context *brw )
 {
-   brw->urb.nr_vs_entries = 24;
-   if (brw->gs.prog_bo)
-      brw->urb.nr_gs_entries = 4;
-   else
-      brw->urb.nr_gs_entries = 0;
-   /* CACHE_NEW_VS_PROG */
-   brw->urb.vs_size = MIN2(brw->vs.prog_data->urb_entry_size, 1);
+   int nr_vs_entries;
 
-   /* Check that the number of URB rows (8 floats each) allocated is less
-    * than the URB space.
+   /* CACHE_NEW_VS_PROG */
+   brw->urb.vs_size = MAX2(brw->vs.prog_data->urb_entry_size, 1);
+
+   /* Calculate how many VS URB entries fit in the total URB size */
+   nr_vs_entries = (brw->urb.size * 1024) / (brw->urb.vs_size * 128);
+
+   if (nr_vs_entries > brw->urb.max_vs_handles)
+      nr_vs_entries = brw->urb.max_vs_handles;
+
+   /* According to volume 2a, nr_vs_entries must be a multiple of 4. */
+   brw->urb.nr_vs_entries = ROUND_DOWN_TO(nr_vs_entries, 4);
+
+   /* Since we currently don't support Geometry Shaders, we always put the
+    * GS unit in passthrough mode and don't allocate it any URB space.
     */
-   assert((brw->urb.nr_vs_entries +
-	   brw->urb.nr_gs_entries) * brw->urb.vs_size * 8 < 64 * 1024);
+   brw->urb.nr_gs_entries = 0;
+   brw->urb.gs_size = 1; /* Incorrect, but with 0 GS entries it doesn't matter. */
 }
 
 static void
@@ -54,29 +60,26 @@ upload_urb(struct brw_context *brw)
 {
    struct intel_context *intel = &brw->intel;
 
+   assert(brw->urb.nr_vs_entries >= 24);
    assert(brw->urb.nr_vs_entries % 4 == 0);
    assert(brw->urb.nr_gs_entries % 4 == 0);
    /* GS requirement */
    assert(!brw->gs.prog_bo || brw->urb.vs_size < 5);
 
-   intel_batchbuffer_emit_mi_flush(intel->batch);
-
    BEGIN_BATCH(3);
-   OUT_BATCH(CMD_URB << 16 | (3 - 2));
+   OUT_BATCH(_3DSTATE_URB << 16 | (3 - 2));
    OUT_BATCH(((brw->urb.vs_size - 1) << GEN6_URB_VS_SIZE_SHIFT) |
 	     ((brw->urb.nr_vs_entries) << GEN6_URB_VS_ENTRIES_SHIFT));
-   OUT_BATCH(((brw->urb.vs_size - 1) << GEN6_URB_GS_SIZE_SHIFT) |
+   OUT_BATCH(((brw->urb.gs_size - 1) << GEN6_URB_GS_SIZE_SHIFT) |
 	     ((brw->urb.nr_gs_entries) << GEN6_URB_GS_ENTRIES_SHIFT));
    ADVANCE_BATCH();
-
-   intel_batchbuffer_emit_mi_flush(intel->batch);
 }
 
 const struct brw_tracked_state gen6_urb = {
    .dirty = {
       .mesa = 0,
       .brw = BRW_NEW_CONTEXT,
-      .cache = CACHE_NEW_VS_PROG,
+      .cache = (CACHE_NEW_VS_PROG | CACHE_NEW_GS_PROG),
    },
    .prepare = prepare_urb,
    .emit = upload_urb,

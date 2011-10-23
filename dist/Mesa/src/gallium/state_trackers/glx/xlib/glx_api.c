@@ -34,13 +34,6 @@
 #include "GL/glx.h"
 
 #include "xm_api.h"
-#include "main/context.h"
-#include "main/config.h"
-#include "main/macros.h"
-#include "main/imports.h"
-#include "main/version.h"
-#include "state_tracker/st_context.h"
-#include "state_tracker/st_public.h"
 
 
 /* This indicates the client-side GLX API and GLX encoder version. */
@@ -52,9 +45,6 @@
  */
 #define SERVER_MAJOR_VERSION 1
 #define SERVER_MINOR_VERSION 4
-
-/* This is appended onto the glXGetClient/ServerString version strings. */
-#define MESA_GLX_VERSION "Mesa " MESA_VERSION_STRING
 
 /* Who implemented this GLX? */
 #define VENDOR "Brian Paul"
@@ -606,8 +596,8 @@ destroy_visuals_on_display(Display *dpy)
 static int
 close_display_callback(Display *dpy, XExtCodes *codes)
 {
-   destroy_visuals_on_display(dpy);
    xmesa_destroy_buffers_on_display(dpy);
+   destroy_visuals_on_display(dpy);
    return 0;
 }
 
@@ -689,7 +679,7 @@ choose_visual( Display *dpy, int screen, const int *list, GLboolean fbConfig )
    int desiredVisualID = -1;
    int numAux = 0;
 
-   xmesa_init();
+   xmesa_init( dpy );
 
    parselist = list;
 
@@ -1302,9 +1292,9 @@ glXCopyContext( Display *dpy, GLXContext src, GLXContext dst,
    XMesaContext xm_dst = dst->xmesaContext;
    (void) dpy;
    if (MakeCurrent_PrevContext == src) {
-      _mesa_Flush();
+      glFlush();
    }
-   st_copy_context_state( xm_src->st, xm_dst->st, (GLuint) mask );
+   XMesaCopyContext(xm_src, xm_dst, mask);
 }
 
 
@@ -1679,7 +1669,7 @@ glXQueryServerString( Display *dpy, int screen, int name )
 {
    static char version[1000];
    sprintf(version, "%d.%d %s",
-	   SERVER_MAJOR_VERSION, SERVER_MINOR_VERSION, MESA_GLX_VERSION);
+	   SERVER_MAJOR_VERSION, SERVER_MINOR_VERSION, xmesa_get_name());
 
    (void) dpy;
    (void) screen;
@@ -1704,7 +1694,7 @@ glXGetClientString( Display *dpy, int name )
 {
    static char version[1000];
    sprintf(version, "%d.%d %s", CLIENT_MAJOR_VERSION,
-	   CLIENT_MINOR_VERSION, MESA_GLX_VERSION);
+	   CLIENT_MINOR_VERSION, xmesa_get_name());
 
    (void) dpy;
 
@@ -1761,6 +1751,10 @@ glXGetFBConfigs( Display *dpy, int screen, int *nelements )
       }
       for (i = 0; i < *nelements; i++) {
          results[i] = create_glx_visual(dpy, visuals + i);
+         if (!results[i]) {
+            *nelements = i;
+            break;
+         }
       }
       return (GLXFBConfig *) results;
    }

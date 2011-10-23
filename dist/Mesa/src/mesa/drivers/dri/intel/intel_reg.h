@@ -37,6 +37,8 @@
 #define FLUSH_MAP_CACHE				(1 << 0)
 #define INHIBIT_FLUSH_RENDER_CACHE		(1 << 2)
 
+#define MI_FLUSH_DW			(CMD_MI | (0x26 << 23) | 2)
+
 /* Stalls command execution waiting for the given events to have occurred. */
 #define MI_WAIT_FOR_EVENT               (CMD_MI | (0x3 << 23))
 #define MI_WAIT_FOR_PLANE_B_FLIP        (1<<6)
@@ -55,6 +57,11 @@
  * additional flushing control.
  */
 #define _3DSTATE_PIPE_CONTROL		(CMD_3D | (3 << 27) | (2 << 24) | 2)
+#define PIPE_CONTROL_CS_STALL		(1 << 20)
+#define PIPE_CONTROL_GLOBAL_SNAPSHOT_COUNT_RESET	(1 << 19)
+#define PIPE_CONTROL_TLB_INVALIDATE	(1 << 18)
+#define PIPE_CONTROL_SYNC_GFDT		(1 << 17)
+#define PIPE_CONTROL_MEDIA_STATE_CLEAR	(1 << 16)
 #define PIPE_CONTROL_NO_WRITE		(0 << 14)
 #define PIPE_CONTROL_WRITE_IMMEDIATE	(1 << 14)
 #define PIPE_CONTROL_WRITE_DEPTH_COUNT	(2 << 14)
@@ -62,7 +69,14 @@
 #define PIPE_CONTROL_DEPTH_STALL	(1 << 13)
 #define PIPE_CONTROL_WRITE_FLUSH	(1 << 12)
 #define PIPE_CONTROL_INSTRUCTION_FLUSH	(1 << 11)
+#define PIPE_CONTROL_TC_FLUSH		(1 << 10) /* GM45+ only */
+#define PIPE_CONTROL_ISP_DIS		(1 << 9)
 #define PIPE_CONTROL_INTERRUPT_ENABLE	(1 << 8)
+/* GT */
+#define PIPE_CONTROL_VF_CACHE_INVALIDATE	(1 << 4)
+#define PIPE_CONTROL_CONST_CACHE_INVALIDATE	(1 << 3)
+#define PIPE_CONTROL_STATE_CACHE_INVALIDATE	(1 << 2)
+#define PIPE_CONTROL_DEPTH_CACHE_FLUSH		(1 << 0)
 #define PIPE_CONTROL_PPGTT_WRITE	(0 << 2)
 #define PIPE_CONTROL_GLOBAL_GTT_WRITE	(1 << 2)
 
@@ -239,6 +253,7 @@
 #define XY_DST_TILED		(1 << 11)
 
 /* BR13 */
+#define BR13_8			(0x0 << 24)
 #define BR13_565		(0x1 << 24)
 #define BR13_8888		(0x3 << 24)
 

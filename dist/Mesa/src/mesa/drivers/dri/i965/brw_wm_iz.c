@@ -120,38 +120,52 @@ const struct {
  * \param line_aa  AA_NEVER, AA_ALWAYS or AA_SOMETIMES
  * \param lookup  bitmask of IZ_* flags
  */
-void brw_wm_lookup_iz( GLuint line_aa,
-		       GLuint lookup,
-		       GLboolean ps_uses_depth,
-		       struct brw_wm_prog_key *key )
+void brw_wm_lookup_iz(struct intel_context *intel,
+		      struct brw_wm_compile *c)
 {
    GLuint reg = 2;
+   GLboolean kill_stats_promoted_workaround = GL_FALSE;
+   int lookup = c->key.iz_lookup;
+   bool uses_depth = (c->fp->program.Base.InputsRead &
+		      (1 << FRAG_ATTRIB_WPOS)) != 0;
 
    assert (lookup < IZ_BIT_MAX);
-      
-   if (lookup & IZ_PS_COMPUTES_DEPTH_BIT)
-      key->computes_depth = 1;
 
-   if (wm_iz_table[lookup].sd_present || ps_uses_depth) {
-      key->source_depth_reg = reg;
+   /* Crazy workaround in the windowizer, which we need to track in
+    * our register allocation and render target writes.  See the "If
+    * statistics are enabled..." paragraph of 11.5.3.2: Early Depth
+    * Test Cases [Pre-DevGT] of the 3D Pipeline - Windower B-Spec.
+    */
+   if (c->key.stats_wm &&
+       (lookup & IZ_PS_KILL_ALPHATEST_BIT) &&
+       wm_iz_table[lookup].mode == P) {
+      kill_stats_promoted_workaround = GL_TRUE;
+   }
+
+   if (lookup & IZ_PS_COMPUTES_DEPTH_BIT)
+      c->computes_depth = 1;
+
+   if (wm_iz_table[lookup].sd_present || uses_depth ||
+       kill_stats_promoted_workaround) {
+      c->source_depth_reg = reg;
       reg += 2;
    }
 
-   if (wm_iz_table[lookup].sd_to_rt)
-      key->source_depth_to_render_target = 1;
+   if (wm_iz_table[lookup].sd_to_rt || kill_stats_promoted_workaround)
+      c->source_depth_to_render_target = 1;
 
-   if (wm_iz_table[lookup].ds_present || line_aa != AA_NEVER) {
-      key->aa_dest_stencil_reg = reg;
-      key->runtime_check_aads_emit = (!wm_iz_table[lookup].ds_present &&
-				      line_aa == AA_SOMETIMES);
+   if (wm_iz_table[lookup].ds_present || c->key.line_aa != AA_NEVER) {
+      c->aa_dest_stencil_reg = reg;
+      c->runtime_check_aads_emit = (!wm_iz_table[lookup].ds_present &&
+				    c->key.line_aa == AA_SOMETIMES);
       reg++;
    }
 
    if (wm_iz_table[lookup].dd_present) {
-      key->dest_depth_reg = reg;
+      c->dest_depth_reg = reg;
       reg+=2;
    }
 
-   key->nr_depth_regs = (reg+1)/2;
+   c->nr_payload_regs = reg;
 }
 

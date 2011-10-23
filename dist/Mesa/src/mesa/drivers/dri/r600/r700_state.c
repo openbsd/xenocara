@@ -39,9 +39,10 @@
 #include "swrast_setup/swrast_setup.h"
 #include "main/api_arrayelt.h"
 #include "main/framebuffer.h"
+#include "drivers/common/meta.h"
 
-#include "shader/prog_parameter.h"
-#include "shader/prog_statevars.h"
+#include "program/prog_parameter.h"
+#include "program/prog_statevars.h"
 #include "vbo/vbo.h"
 
 #include "r600_context.h"
@@ -51,14 +52,14 @@
 #include "r700_fragprog.h"
 #include "r700_vertprog.h"
 
-void r600UpdateTextureState(GLcontext * ctx);
-static void r700SetClipPlaneState(GLcontext * ctx, GLenum cap, GLboolean state);
-static void r700UpdatePolygonMode(GLcontext * ctx);
-static void r700SetPolygonOffsetState(GLcontext * ctx, GLboolean state);
-static void r700SetStencilState(GLcontext * ctx, GLboolean state);
-static void r700UpdateWindow(GLcontext * ctx, int id);
+void r600UpdateTextureState(struct gl_context * ctx);
+static void r700SetClipPlaneState(struct gl_context * ctx, GLenum cap, GLboolean state);
+static void r700UpdatePolygonMode(struct gl_context * ctx);
+static void r700SetPolygonOffsetState(struct gl_context * ctx, GLboolean state);
+static void r700SetStencilState(struct gl_context * ctx, GLboolean state);
+static void r700UpdateWindow(struct gl_context * ctx, int id);
 
-void r700UpdateShaders(GLcontext * ctx)
+void r700UpdateShaders(struct gl_context * ctx)
 {
     context_t *context = R700_CONTEXT(ctx);
 
@@ -79,7 +80,7 @@ void r700UpdateShaders(GLcontext * ctx)
 /*
  * To correctly position primitives:
  */
-void r700UpdateViewportOffset(GLcontext * ctx) //------------------
+void r700UpdateViewportOffset(struct gl_context * ctx) //------------------
 {
 	context_t *context = R700_CONTEXT(ctx);
 	R700_CHIP_CONTEXT *r700 = (R700_CHIP_CONTEXT*)(&context->hw);
@@ -105,7 +106,7 @@ void r700UpdateViewportOffset(GLcontext * ctx) //------------------
 	radeonUpdateScissor(ctx);
 }
 
-void r700UpdateStateParameters(GLcontext * ctx, GLuint new_state) //--------------------
+void r700UpdateStateParameters(struct gl_context * ctx, GLuint new_state) //--------------------
 {
 	struct r700_fragment_program *fp =
 		(struct r700_fragment_program *)ctx->FragmentProgram._Current;
@@ -129,7 +130,7 @@ void r700UpdateStateParameters(GLcontext * ctx, GLuint new_state) //------------
 /**
  * Called by Mesa after an internal state update.
  */
-static void r700InvalidateState(GLcontext * ctx, GLuint new_state) //-------------------
+static void r700InvalidateState(struct gl_context * ctx, GLuint new_state) //-------------------
 {
     context_t *context = R700_CONTEXT(ctx);
 
@@ -189,7 +190,7 @@ static void r700InvalidateState(GLcontext * ctx, GLuint new_state) //-----------
     context->radeon.NewGLState |= new_state;
 }
 
-static void r700SetDBRenderState(GLcontext * ctx)
+static void r700SetDBRenderState(struct gl_context * ctx)
 {
 	context_t *context = R700_CONTEXT(ctx);
 	R700_CHIP_CONTEXT *r700 = (R700_CHIP_CONTEXT*)(&context->hw);
@@ -244,13 +245,13 @@ static void r700SetDBRenderState(GLcontext * ctx)
 	}
 }
 
-void r700UpdateShaderStates(GLcontext * ctx)
+void r700UpdateShaderStates(struct gl_context * ctx)
 {
 	r700SetDBRenderState(ctx);
 	r600UpdateTextureState(ctx);
 }
 
-static void r700SetDepthState(GLcontext * ctx)
+static void r700SetDepthState(struct gl_context * ctx)
 {
 	struct radeon_renderbuffer *rrb;
 	context_t *context = R700_CONTEXT(ctx);
@@ -319,7 +320,7 @@ static void r700SetDepthState(GLcontext * ctx)
     }
 }
 
-static void r700SetAlphaState(GLcontext * ctx)
+static void r700SetAlphaState(struct gl_context * ctx)
 {
 	context_t *context = R700_CONTEXT(ctx);
 	R700_CHIP_CONTEXT *r700 = (R700_CHIP_CONTEXT*)(&context->hw);
@@ -367,7 +368,7 @@ static void r700SetAlphaState(GLcontext * ctx)
 
 }
 
-static void r700AlphaFunc(GLcontext * ctx, GLenum func, GLfloat ref) //---------------
+static void r700AlphaFunc(struct gl_context * ctx, GLenum func, GLfloat ref) //---------------
 {
 	(void)func;
 	(void)ref;
@@ -375,7 +376,7 @@ static void r700AlphaFunc(GLcontext * ctx, GLenum func, GLfloat ref) //---------
 }
 
 
-static void r700BlendColor(GLcontext * ctx, const GLfloat cf[4]) //----------------
+static void r700BlendColor(struct gl_context * ctx, const GLfloat cf[4]) //----------------
 {
 	context_t *context = R700_CONTEXT(ctx);
 	R700_CHIP_CONTEXT *r700 = (R700_CHIP_CONTEXT*)(&context->hw);
@@ -443,7 +444,7 @@ static int blend_factor(GLenum factor, GLboolean is_src)
 	}
 }
 
-static void r700SetBlendState(GLcontext * ctx)
+static void r700SetBlendState(struct gl_context * ctx)
 {
 	context_t *context = R700_CONTEXT(ctx);
 	R700_CHIP_CONTEXT *r700 = (R700_CHIP_CONTEXT*)(&context->hw);
@@ -575,13 +576,13 @@ static void r700SetBlendState(GLcontext * ctx)
 
 }
 
-static void r700BlendEquationSeparate(GLcontext * ctx,
+static void r700BlendEquationSeparate(struct gl_context * ctx,
 				                      GLenum modeRGB, GLenum modeA) //-----------------
 {
 	r700SetBlendState(ctx);
 }
 
-static void r700BlendFuncSeparate(GLcontext * ctx,
+static void r700BlendFuncSeparate(struct gl_context * ctx,
 				  GLenum sfactorRGB, GLenum dfactorRGB,
 				  GLenum sfactorA, GLenum dfactorA) //------------------------
 {
@@ -636,7 +637,7 @@ static GLuint translate_logicop(GLenum logicop)
  * Used internally to update the r300->hw hardware state to match the
  * current OpenGL state.
  */
-static void r700SetLogicOpState(GLcontext *ctx)
+static void r700SetLogicOpState(struct gl_context *ctx)
 {
 	context_t *context = R700_CONTEXT(ctx);
 	R700_CHIP_CONTEXT *r700 = (R700_CHIP_CONTEXT*)(&R700_CONTEXT(ctx)->hw);
@@ -654,13 +655,13 @@ static void r700SetLogicOpState(GLcontext *ctx)
  * Called by Mesa when an application program changes the LogicOp state
  * via glLogicOp.
  */
-static void r700LogicOpcode(GLcontext *ctx, GLenum logicop)
+static void r700LogicOpcode(struct gl_context *ctx, GLenum logicop)
 {
 	if (RGBA_LOGICOP_ENABLED(ctx))
 		r700SetLogicOpState(ctx);
 }
 
-static void r700UpdateCulling(GLcontext * ctx)
+static void r700UpdateCulling(struct gl_context * ctx)
 {
 	context_t *context = R700_CONTEXT(ctx);
 	R700_CHIP_CONTEXT *r700 = (R700_CHIP_CONTEXT*)(&R700_CONTEXT(ctx)->hw);
@@ -712,7 +713,7 @@ static void r700UpdateCulling(GLcontext * ctx)
 	    r700->PA_SU_SC_MODE_CNTL.u32All ^= FACE_bit;
 }
 
-static void r700UpdateLineStipple(GLcontext * ctx)
+static void r700UpdateLineStipple(struct gl_context * ctx)
 {
 	context_t *context = R700_CONTEXT(ctx);
 	R700_CHIP_CONTEXT *r700 = (R700_CHIP_CONTEXT*)(&R700_CONTEXT(ctx)->hw);
@@ -729,7 +730,7 @@ static void r700UpdateLineStipple(GLcontext * ctx)
     }
 }
 
-static void r700Enable(GLcontext * ctx, GLenum cap, GLboolean state) //------------------
+static void r700Enable(struct gl_context * ctx, GLenum cap, GLboolean state) //------------------
 {
 	context_t *context = R700_CONTEXT(ctx);
 
@@ -793,7 +794,7 @@ static void r700Enable(GLcontext * ctx, GLenum cap, GLboolean state) //---------
 /**
  * Handle glColorMask()
  */
-static void r700ColorMask(GLcontext * ctx,
+static void r700ColorMask(struct gl_context * ctx,
 			  GLboolean r, GLboolean g, GLboolean b, GLboolean a) //------------------
 {
 	context_t *context = R700_CONTEXT(ctx);
@@ -814,7 +815,7 @@ static void r700ColorMask(GLcontext * ctx,
  *
  * \note Mesa already filters redundant calls to this function.
  */
-static void r700DepthFunc(GLcontext * ctx, GLenum func) //--------------------
+static void r700DepthFunc(struct gl_context * ctx, GLenum func) //--------------------
 {
     r700SetDepthState(ctx);
 }
@@ -824,7 +825,7 @@ static void r700DepthFunc(GLcontext * ctx, GLenum func) //--------------------
  *
  * \note Mesa already filters redundant calls to this function.
  */
-static void r700DepthMask(GLcontext * ctx, GLboolean mask) //------------------
+static void r700DepthMask(struct gl_context * ctx, GLboolean mask) //------------------
 {
     r700SetDepthState(ctx);
 }
@@ -834,7 +835,7 @@ static void r700DepthMask(GLcontext * ctx, GLboolean mask) //------------------
  *
  * \note Mesa already filters redundant calls to this function.
  */
-static void r700CullFace(GLcontext * ctx, GLenum mode) //-----------------
+static void r700CullFace(struct gl_context * ctx, GLenum mode) //-----------------
 {
     r700UpdateCulling(ctx);
 }
@@ -842,7 +843,7 @@ static void r700CullFace(GLcontext * ctx, GLenum mode) //-----------------
 /* =============================================================
  * Fog
  */
-static void r700Fogfv(GLcontext * ctx, GLenum pname, const GLfloat * param) //--------------
+static void r700Fogfv(struct gl_context * ctx, GLenum pname, const GLfloat * param) //--------------
 {
 }
 
@@ -851,13 +852,13 @@ static void r700Fogfv(GLcontext * ctx, GLenum pname, const GLfloat * param) //--
  *
  * \note Mesa already filters redundant calls to this function.
  */
-static void r700FrontFace(GLcontext * ctx, GLenum mode) //------------------
+static void r700FrontFace(struct gl_context * ctx, GLenum mode) //------------------
 {
     r700UpdateCulling(ctx);
     r700UpdatePolygonMode(ctx);
 }
 
-static void r700ShadeModel(GLcontext * ctx, GLenum mode) //--------------------
+static void r700ShadeModel(struct gl_context * ctx, GLenum mode) //--------------------
 {
 	context_t *context = R700_CONTEXT(ctx);
 	R700_CHIP_CONTEXT *r700 = (R700_CHIP_CONTEXT*)(&context->hw);
@@ -880,7 +881,7 @@ static void r700ShadeModel(GLcontext * ctx, GLenum mode) //--------------------
 /* =============================================================
  * Point state
  */
-static void r700PointSize(GLcontext * ctx, GLfloat size)
+static void r700PointSize(struct gl_context * ctx, GLfloat size)
 {
 	context_t *context = R700_CONTEXT(ctx);
 	R700_CHIP_CONTEXT *r700 = (R700_CHIP_CONTEXT*)(&context->hw);
@@ -902,7 +903,7 @@ static void r700PointSize(GLcontext * ctx, GLfloat size)
 
 }
 
-static void r700PointParameter(GLcontext * ctx, GLenum pname, const GLfloat * param) //---------------
+static void r700PointParameter(struct gl_context * ctx, GLenum pname, const GLfloat * param) //---------------
 {
 	context_t *context = R700_CONTEXT(ctx);
 	R700_CHIP_CONTEXT *r700 = (R700_CHIP_CONTEXT*)(&context->hw);
@@ -979,7 +980,7 @@ static int translate_stencil_op(int op)
 	return 0;
 }
 
-static void r700SetStencilState(GLcontext * ctx, GLboolean state)
+static void r700SetStencilState(struct gl_context * ctx, GLboolean state)
 {
 	context_t *context = R700_CONTEXT(ctx);
 	R700_CHIP_CONTEXT *r700 = (R700_CHIP_CONTEXT*)(&context->hw);
@@ -1001,7 +1002,7 @@ static void r700SetStencilState(GLcontext * ctx, GLboolean state)
 	}
 }
 
-static void r700StencilFuncSeparate(GLcontext * ctx, GLenum face,
+static void r700StencilFuncSeparate(struct gl_context * ctx, GLenum face,
 				    GLenum func, GLint ref, GLuint mask) //---------------------
 {
 	context_t *context = R700_CONTEXT(ctx);
@@ -1031,7 +1032,7 @@ static void r700StencilFuncSeparate(GLcontext * ctx, GLenum face,
 
 }
 
-static void r700StencilMaskSeparate(GLcontext * ctx, GLenum face, GLuint mask) //--------------
+static void r700StencilMaskSeparate(struct gl_context * ctx, GLenum face, GLuint mask) //--------------
 {
 	context_t *context = R700_CONTEXT(ctx);
 	R700_CHIP_CONTEXT *r700 = (R700_CHIP_CONTEXT*)(&context->hw);
@@ -1049,7 +1050,7 @@ static void r700StencilMaskSeparate(GLcontext * ctx, GLenum face, GLuint mask) /
 
 }
 
-static void r700StencilOpSeparate(GLcontext * ctx, GLenum face,
+static void r700StencilOpSeparate(struct gl_context * ctx, GLenum face,
 				  GLenum fail, GLenum zfail, GLenum zpass) //--------------------
 {
 	context_t *context = R700_CONTEXT(ctx);
@@ -1073,7 +1074,7 @@ static void r700StencilOpSeparate(GLcontext * ctx, GLenum face,
 		 STENCILZPASS_BF_shift, STENCILZPASS_BF_mask);
 }
 
-static void r700UpdateWindow(GLcontext * ctx, int id) //--------------------
+static void r700UpdateWindow(struct gl_context * ctx, int id) //--------------------
 {
 	context_t *context = R700_CONTEXT(ctx);
 	R700_CHIP_CONTEXT *r700 = (R700_CHIP_CONTEXT*)(&context->hw);
@@ -1130,7 +1131,7 @@ static void r700UpdateWindow(GLcontext * ctx, int id) //--------------------
 }
 
 
-static void r700Viewport(GLcontext * ctx,
+static void r700Viewport(struct gl_context * ctx,
                          GLint x,
                          GLint y,
 			 GLsizei width,
@@ -1141,12 +1142,12 @@ static void r700Viewport(GLcontext * ctx,
 	radeon_viewport(ctx, x, y, width, height);
 }
 
-static void r700DepthRange(GLcontext * ctx, GLclampd nearval, GLclampd farval) //-------------
+static void r700DepthRange(struct gl_context * ctx, GLclampd nearval, GLclampd farval) //-------------
 {
 	r700UpdateWindow(ctx, 0);
 }
 
-static void r700LineWidth(GLcontext * ctx, GLfloat widthf) //---------------
+static void r700LineWidth(struct gl_context * ctx, GLfloat widthf) //---------------
 {
     context_t *context = R700_CONTEXT(ctx);
     R700_CHIP_CONTEXT *r700 = (R700_CHIP_CONTEXT*)(&context->hw);
@@ -1160,7 +1161,7 @@ static void r700LineWidth(GLcontext * ctx, GLfloat widthf) //---------------
 	     PA_SU_LINE_CNTL__WIDTH_shift, PA_SU_LINE_CNTL__WIDTH_mask);
 }
 
-static void r700LineStipple(GLcontext *ctx, GLint factor, GLushort pattern)
+static void r700LineStipple(struct gl_context *ctx, GLint factor, GLushort pattern)
 {
     context_t *context = R700_CONTEXT(ctx);
     R700_CHIP_CONTEXT *r700 = (R700_CHIP_CONTEXT*)(&context->hw);
@@ -1172,7 +1173,7 @@ static void r700LineStipple(GLcontext *ctx, GLint factor, GLushort pattern)
     SETfield(r700->PA_SC_LINE_STIPPLE.u32All, 1, AUTO_RESET_CNTL_shift, AUTO_RESET_CNTL_mask);
 }
 
-static void r700SetPolygonOffsetState(GLcontext * ctx, GLboolean state)
+static void r700SetPolygonOffsetState(struct gl_context * ctx, GLboolean state)
 {
 	context_t *context = R700_CONTEXT(ctx);
 	R700_CHIP_CONTEXT *r700 = (R700_CHIP_CONTEXT*)(&context->hw);
@@ -1190,7 +1191,7 @@ static void r700SetPolygonOffsetState(GLcontext * ctx, GLboolean state)
 	}
 }
 
-static void r700PolygonOffset(GLcontext * ctx, GLfloat factor, GLfloat units) //--------------
+static void r700PolygonOffset(struct gl_context * ctx, GLfloat factor, GLfloat units) //--------------
 {
 	context_t *context = R700_CONTEXT(ctx);
 	R700_CHIP_CONTEXT *r700 = (R700_CHIP_CONTEXT*)(&context->hw);
@@ -1220,7 +1221,7 @@ static void r700PolygonOffset(GLcontext * ctx, GLfloat factor, GLfloat units) //
 	r700->PA_SU_POLY_OFFSET_BACK_OFFSET.f32All = constant;
 }
 
-static void r700UpdatePolygonMode(GLcontext * ctx)
+static void r700UpdatePolygonMode(struct gl_context * ctx)
 {
 	context_t *context = R700_CONTEXT(ctx);
 	R700_CHIP_CONTEXT *r700 = (R700_CHIP_CONTEXT*)(&context->hw);
@@ -1275,7 +1276,7 @@ static void r700UpdatePolygonMode(GLcontext * ctx)
 	}
 }
 
-static void r700PolygonMode(GLcontext * ctx, GLenum face, GLenum mode) //------------------
+static void r700PolygonMode(struct gl_context * ctx, GLenum face, GLenum mode) //------------------
 {
 	(void)face;
 	(void)mode;
@@ -1283,11 +1284,11 @@ static void r700PolygonMode(GLcontext * ctx, GLenum face, GLenum mode) //-------
 	r700UpdatePolygonMode(ctx);
 }
 
-static void r700RenderMode(GLcontext * ctx, GLenum mode) //---------------------
+static void r700RenderMode(struct gl_context * ctx, GLenum mode) //---------------------
 {
 }
 
-static void r700ClipPlane( GLcontext *ctx, GLenum plane, const GLfloat *eq )
+static void r700ClipPlane( struct gl_context *ctx, GLenum plane, const GLfloat *eq )
 {
 	context_t *context = R700_CONTEXT(ctx);
 	R700_CHIP_CONTEXT *r700 = (R700_CHIP_CONTEXT*)(&context->hw);
@@ -1305,7 +1306,7 @@ static void r700ClipPlane( GLcontext *ctx, GLenum plane, const GLfloat *eq )
 	r700->ucp[p].PA_CL_UCP_0_W.u32All = ip[3];
 }
 
-static void r700SetClipPlaneState(GLcontext * ctx, GLenum cap, GLboolean state)
+static void r700SetClipPlaneState(struct gl_context * ctx, GLenum cap, GLboolean state)
 {
 	context_t *context = R700_CONTEXT(ctx);
 	R700_CHIP_CONTEXT *r700 = (R700_CHIP_CONTEXT*)(&context->hw);
@@ -1427,7 +1428,7 @@ void r700SetScissor(context_t *context) //---------------
 	r700->viewport[id].enabled = GL_TRUE;
 }
 
-static void r700InitSQConfig(GLcontext * ctx)
+static void r700InitSQConfig(struct gl_context * ctx)
 {
     context_t *context = R700_CONTEXT(ctx);
     R700_CHIP_CONTEXT *r700 = (R700_CHIP_CONTEXT*)(&context->hw);
@@ -1579,7 +1580,16 @@ static void r700InitSQConfig(GLcontext * ctx)
 	    CLEARbit(r700->sq_config.SQ_CONFIG.u32All, VC_ENABLE_bit);
     else
 	    SETbit(r700->sq_config.SQ_CONFIG.u32All, VC_ENABLE_bit);
-    SETbit(r700->sq_config.SQ_CONFIG.u32All, DX9_CONSTS_bit);
+
+    if(GL_TRUE == r700->bShaderUseMemConstant)
+    {
+        CLEARbit(r700->sq_config.SQ_CONFIG.u32All, DX9_CONSTS_bit);
+    }
+    else
+    {
+        SETbit(r700->sq_config.SQ_CONFIG.u32All, DX9_CONSTS_bit);
+    }
+
     SETbit(r700->sq_config.SQ_CONFIG.u32All, ALU_INST_PREFER_VECTOR_bit);
     SETfield(r700->sq_config.SQ_CONFIG.u32All, ps_prio, PS_PRIO_shift, PS_PRIO_mask);
     SETfield(r700->sq_config.SQ_CONFIG.u32All, vs_prio, VS_PRIO_shift, VS_PRIO_mask);
@@ -1625,7 +1635,7 @@ static void r700InitSQConfig(GLcontext * ctx)
  * Assumes that the command buffer and state atoms have been
  * initialized already.
  */
-void r700InitState(GLcontext * ctx) //-------------------
+void r700InitState(struct gl_context * ctx) //-------------------
 {
     context_t *context = R700_CONTEXT(ctx);
     R700_CHIP_CONTEXT *r700 = (R700_CHIP_CONTEXT*)(&context->hw);
@@ -1688,8 +1698,9 @@ void r700InitState(GLcontext * ctx) //-------------------
 	    SETbit(r700->PA_SC_MODE_CNTL.u32All, FORCE_EOV_CNTDWN_ENABLE_bit);
     }
 
-    /* Do scale XY and Z by 1/W0. */
-    r700->bEnablePerspective = GL_TRUE;
+    /* Do scale XY and Z by 1/W0. */   
+    r700->bEnablePerspective = GL_TRUE;    
+
     CLEARbit(r700->PA_CL_VTE_CNTL.u32All, VTX_XY_FMT_bit);
     CLEARbit(r700->PA_CL_VTE_CNTL.u32All, VTX_Z_FMT_bit);
     SETbit(r700->PA_CL_VTE_CNTL.u32All, VTX_W0_FMT_bit);
@@ -1819,7 +1830,7 @@ void r700InitState(GLcontext * ctx) //-------------------
 
 }
 
-void r700InitStateFuncs(struct dd_function_table *functions) //-----------------
+void r700InitStateFuncs(radeonContextPtr radeon, struct dd_function_table *functions)
 {
 	functions->UpdateState = r700InvalidateState;
 	functions->AlphaFunc = r700AlphaFunc;
@@ -1860,8 +1871,12 @@ void r700InitStateFuncs(struct dd_function_table *functions) //-----------------
 
 	functions->Scissor = radeonScissor;
 
-	functions->DrawBuffer		= radeonDrawBuffer;
-	functions->ReadBuffer		= radeonReadBuffer;
+	functions->DrawBuffer = radeonDrawBuffer;
+	functions->ReadBuffer = radeonReadBuffer;
 
+	functions->CopyPixels = _mesa_meta_CopyPixels;
+	functions->DrawPixels = _mesa_meta_DrawPixels;
+	if (radeon->radeonScreen->kernel_mm)
+		functions->ReadPixels = radeonReadPixels;
 }
 

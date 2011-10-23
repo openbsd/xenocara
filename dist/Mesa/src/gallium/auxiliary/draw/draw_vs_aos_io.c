@@ -384,7 +384,7 @@ static void emit_store_R8G8B8A8_UNORM( struct aos_compilation *cp,
 static boolean emit_output( struct aos_compilation *cp,
                             struct x86_reg ptr,
                             struct x86_reg dataXMM, 
-                            unsigned format )
+                            enum attrib_emit format )
 {
    switch (format) {
    case EMIT_1F:
@@ -401,13 +401,11 @@ static boolean emit_output( struct aos_compilation *cp,
       emit_store_R32G32B32A32(cp, ptr, dataXMM);
       break;
    case EMIT_4UB:
-      if (1) {
-         emit_swizzle(cp, dataXMM, dataXMM, SHUF(Z,Y,X,W));
-         emit_store_R8G8B8A8_UNORM(cp, ptr, dataXMM);
-      }
-      else {
-         emit_store_R8G8B8A8_UNORM(cp, ptr, dataXMM);
-      }
+      emit_store_R8G8B8A8_UNORM(cp, ptr, dataXMM);
+      break;
+   case EMIT_4UB_BGRA:
+      emit_swizzle(cp, dataXMM, dataXMM, SHUF(Z,Y,X,W));
+      emit_store_R8G8B8A8_UNORM(cp, ptr, dataXMM);
       break;
    default:
       AOS_ERROR(cp, "unhandled output format");
@@ -424,7 +422,7 @@ boolean aos_emit_outputs( struct aos_compilation *cp )
    unsigned i;
    
    for (i = 0; i < cp->vaos->base.key.nr_outputs; i++) {
-      unsigned format = cp->vaos->base.key.element[i].out.format;
+      enum attrib_emit format = cp->vaos->base.key.element[i].out.format;
       unsigned offset = cp->vaos->base.key.element[i].out.offset;
       unsigned vs_output = cp->vaos->base.key.element[i].out.vs_output;
 

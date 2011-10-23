@@ -36,13 +36,19 @@
 #ifndef _DEBUG_H
 #define _DEBUG_H
 
+#include "glheader.h"
+#include "mfeatures.h"
+
+struct gl_context;
+struct gl_texture_image;
+
 #if _HAVE_FULL_GL
 
 extern void _mesa_print_tri_caps( const char *name, GLuint flags );
 extern void _mesa_print_enable_flags( const char *msg, GLuint flags );
 extern void _mesa_print_state( const char *msg, GLuint state );
 extern void _mesa_print_info( void );
-extern void _mesa_init_debug( GLcontext *ctx );
+extern void _mesa_init_debug( struct gl_context *ctx );
 
 #else
 
@@ -76,6 +82,6 @@ extern void
 _mesa_dump_stencil_buffer(const char *filename);
 
 extern void
-_mesa_print_texture(GLcontext *ctx, const struct gl_texture_image *img);
+_mesa_print_texture(struct gl_context *ctx, const struct gl_texture_image *img);
 
 #endif

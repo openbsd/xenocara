@@ -33,9 +33,9 @@
 static void
 prepare_scissor_state(struct brw_context *brw)
 {
-   GLcontext *ctx = &brw->intel.ctx;
+   struct gl_context *ctx = &brw->intel.ctx;
    const GLboolean render_to_fbo = (ctx->DrawBuffer->Name != 0);
-   struct gen6_scissor_state scissor;
+   struct gen6_scissor_rect scissor;
 
    /* _NEW_SCISSOR | _NEW_BUFFERS | _NEW_VIEWPORT */
 
@@ -46,7 +46,19 @@ prepare_scissor_state(struct brw_context *brw)
     * Note that the hardware's coordinates are inclusive, while Mesa's min is
     * inclusive but max is exclusive.
     */
-   if (render_to_fbo) {
+   if (ctx->DrawBuffer->_Xmin == ctx->DrawBuffer->_Xmax ||
+       ctx->DrawBuffer->_Ymin == ctx->DrawBuffer->_Ymax) {
+      /* If the scissor was out of bounds and got clamped to 0
+       * width/height at the bounds, the subtraction of 1 from
+       * maximums could produce a negative number and thus not clip
+       * anything.  Instead, just provide a min > max scissor inside
+       * the bounds, which produces the expected no rendering.
+       */
+      scissor.xmin = 1;
+      scissor.xmax = 0;
+      scissor.ymin = 1;
+      scissor.ymax = 0;
+   } else if (render_to_fbo) {
       /* texmemory: Y=0=bottom */
       scissor.xmin = ctx->DrawBuffer->_Xmin;
       scissor.xmax = ctx->DrawBuffer->_Xmax - 1;
@@ -63,8 +75,7 @@ prepare_scissor_state(struct brw_context *brw)
 
    drm_intel_bo_unreference(brw->sf.state_bo);
    brw->sf.state_bo = brw_cache_data(&brw->cache, BRW_SF_UNIT,
-				     &scissor, sizeof(scissor),
-				     NULL, 0);
+				     &scissor, sizeof(scissor));
 }
 
 const struct brw_tracked_state gen6_scissor_state = {
@@ -81,11 +92,10 @@ static void upload_scissor_state_pointers(struct brw_context *brw)
    struct intel_context *intel = &brw->intel;
 
    BEGIN_BATCH(2);
-   OUT_BATCH(CMD_3D_SCISSOR_STATE_POINTERS << 16 | (2 - 2));
+   OUT_BATCH(_3DSTATE_SCISSOR_STATE_POINTERS << 16 | (2 - 2));
    OUT_RELOC(brw->sf.state_bo, I915_GEM_DOMAIN_INSTRUCTION, 0, 0);
    ADVANCE_BATCH();
 
-   intel_batchbuffer_emit_mi_flush(intel->batch);
 }
 
 

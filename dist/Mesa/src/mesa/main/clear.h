@@ -27,7 +27,7 @@
 #define CLEAR_H
 
 
-#include "main/mtypes.h"
+#include "glheader.h"
 
 
 extern void GLAPIENTRY
@@ -36,6 +36,13 @@ _mesa_ClearIndex( GLfloat c );
 extern void GLAPIENTRY
 _mesa_ClearColor( GLclampf red, GLclampf green,
                   GLclampf blue, GLclampf alpha );
+
+extern void GLAPIENTRY
+_mesa_ClearColorIiEXT(GLint r, GLint g, GLint b, GLint a);
+
+extern void GLAPIENTRY
+_mesa_ClearColorIuiEXT(GLuint r, GLuint g, GLuint b, GLuint a);
+
 
 extern void GLAPIENTRY
 _mesa_Clear( GLbitfield mask );

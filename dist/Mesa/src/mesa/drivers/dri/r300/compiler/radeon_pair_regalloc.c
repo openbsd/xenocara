@@ -65,6 +65,14 @@ struct regalloc_state {
 
 	struct hardware_register * HwTemporary;
 	unsigned int NumHwTemporaries;
+	/**
+	 * If an instruction is inside of a loop, EndLoop will be the
+	 * IP of the ENDLOOP instruction, and BeginLoop will be the IP
+	 * of the BGNLOOP instruction.  Otherwise, EndLoop and BeginLoop
+	 * will be -1.
+	 */
+	int EndLoop;
+	int BeginLoop;
 };
 
 static void print_live_intervals(struct live_intervals * src)
@@ -159,7 +167,7 @@ static int try_add_live_intervals(struct regalloc_state * s,
 }
 
 static void scan_callback(void * data, struct rc_instruction * inst,
-		rc_register_file file, unsigned int index, unsigned int chan)
+		rc_register_file file, unsigned int index, unsigned int mask)
 {
 	struct regalloc_state * s = data;
 	struct register_info * reg;
@@ -175,30 +183,72 @@ static void scan_callback(void * data, struct rc_instruction * inst,
 		reg->Used = 1;
 		if (file == RC_FILE_INPUT)
 			reg->Live.Start = -1;
+		else if (s->BeginLoop >= 0)
+			reg->Live.Start = s->BeginLoop;
 		else
 			reg->Live.Start = inst->IP;
 		reg->Live.End = inst->IP;
-	} else {
-		if (inst->IP > reg->Live.End)
-			reg->Live.End = inst->IP;
-	}
+	} else if (s->EndLoop >= 0)
+		reg->Live.End = s->EndLoop;
+	else if (inst->IP > reg->Live.End)
+		reg->Live.End = inst->IP;
 }
 
-static void compute_live_intervals(struct regalloc_state * s)
+static void compute_live_intervals(struct radeon_compiler *c,
+				   struct regalloc_state *s)
 {
+	memset(s, 0, sizeof(*s));
+	s->C = c;
+	s->NumHwTemporaries = c->max_temp_regs;
+	s->BeginLoop = -1;
+	s->EndLoop = -1;
+	s->HwTemporary =
+		memory_pool_malloc(&c->Pool,
+				   s->NumHwTemporaries * sizeof(struct hardware_register));
+	memset(s->HwTemporary, 0, s->NumHwTemporaries * sizeof(struct hardware_register));
+
 	rc_recompute_ips(s->C);
 
 	for(struct rc_instruction * inst = s->C->Program.Instructions.Next;
 	    inst != &s->C->Program.Instructions;
 	    inst = inst->Next) {
-		rc_for_all_reads(inst, scan_callback, s);
-		rc_for_all_writes(inst, scan_callback, s);
+
+		/* For all instructions inside of a loop, the ENDLOOP
+		 * instruction is used as the end of the live interval and
+		 * the BGNLOOP instruction is used as the beginning. */
+		if (inst->U.I.Opcode == RC_OPCODE_BGNLOOP && s->EndLoop < 0) {
+			int loops = 1;
+			struct rc_instruction * tmp;
+			s->BeginLoop = inst->IP;
+			for(tmp = inst->Next;
+					tmp != &s->C->Program.Instructions;
+					tmp = tmp->Next) {
+				if (tmp->U.I.Opcode == RC_OPCODE_BGNLOOP) {
+					loops++;
+				} else if (tmp->U.I.Opcode
+							== RC_OPCODE_ENDLOOP) {
+					if(!--loops) {
+						s->EndLoop = tmp->IP;
+						break;
+					}
+				}
+			}
+		}
+
+		if (inst->IP == s->EndLoop) {
+			s->EndLoop = -1;
+			s->BeginLoop = -1;
+		}
+
+		rc_for_all_reads_mask(inst, scan_callback, s);
+		rc_for_all_writes_mask(inst, scan_callback, s);
 	}
 }
 
-static void rewrite_register(struct regalloc_state * s,
+static void remap_register(void * data, struct rc_instruction * inst,
 		rc_register_file * file, unsigned int * index)
 {
+	struct regalloc_state * s = data;
 	const struct register_info * reg;
 
 	if (*file == RC_FILE_TEMPORARY)
@@ -211,74 +261,6 @@ static void rewrite_register(struct regalloc_state * s,
 	if (reg->Allocated) {
 		*file = reg->File;
 		*index = reg->Index;
-	}
-}
-
-static void rewrite_normal_instruction(struct regalloc_state * s, struct rc_sub_instruction * inst)
-{
-	const struct rc_opcode_info * opcode = rc_get_opcode_info(inst->Opcode);
-
-	if (opcode->HasDstReg) {
-		rc_register_file file = inst->DstReg.File;
-		unsigned int index = inst->DstReg.Index;
-
-		rewrite_register(s, &file, &index);
-
-		inst->DstReg.File = file;
-		inst->DstReg.Index = index;
-	}
-
-	for(unsigned int src = 0; src < opcode->NumSrcRegs; ++src) {
-		rc_register_file file = inst->SrcReg[src].File;
-		unsigned int index = inst->SrcReg[src].Index;
-
-		rewrite_register(s, &file, &index);
-
-		inst->SrcReg[src].File = file;
-		inst->SrcReg[src].Index = index;
-	}
-}
-
-static void rewrite_pair_instruction(struct regalloc_state * s, struct rc_pair_instruction * inst)
-{
-	if (inst->RGB.WriteMask) {
-		rc_register_file file = RC_FILE_TEMPORARY;
-		unsigned int index = inst->RGB.DestIndex;
-
-		rewrite_register(s, &file, &index);
-
-		inst->RGB.DestIndex = index;
-	}
-
-	if (inst->Alpha.WriteMask) {
-		rc_register_file file = RC_FILE_TEMPORARY;
-		unsigned int index = inst->Alpha.DestIndex;
-
-		rewrite_register(s, &file, &index);
-
-		inst->Alpha.DestIndex = index;
-	}
-
-	for(unsigned int src = 0; src < 3; ++src) {
-		if (inst->RGB.Src[src].Used) {
-			rc_register_file file = inst->RGB.Src[src].File;
-			unsigned int index = inst->RGB.Src[src].Index;
-
-			rewrite_register(s, &file, &index);
-
-			inst->RGB.Src[src].File = file;
-			inst->RGB.Src[src].Index = index;
-		}
-
-		if (inst->Alpha.Src[src].Used) {
-			rc_register_file file = inst->Alpha.Src[src].File;
-			unsigned int index = inst->Alpha.Src[src].Index;
-
-			rewrite_register(s, &file, &index);
-
-			inst->Alpha.Src[src].File = file;
-			inst->Alpha.Src[src].Index = index;
-		}
 	}
 }
 
@@ -310,10 +292,7 @@ static void do_regalloc(struct regalloc_state * s)
 	for(struct rc_instruction * inst = s->C->Program.Instructions.Next;
 	    inst != &s->C->Program.Instructions;
 	    inst = inst->Next) {
-		if (inst->Type == RC_INSTRUCTION_NORMAL)
-			rewrite_normal_instruction(s, &inst->U.I);
-		else
-			rewrite_pair_instruction(s, &inst->U.P);
+		rc_remap_registers(inst, &remap_register, s);
 	}
 }
 
@@ -332,19 +311,54 @@ static void alloc_input(void * data, unsigned int input, unsigned int hwreg)
 
 }
 
-void rc_pair_regalloc(struct r300_fragment_program_compiler *c, unsigned maxtemps)
+void rc_pair_regalloc(struct radeon_compiler *cc, void *user)
 {
+	struct r300_fragment_program_compiler *c = (struct r300_fragment_program_compiler*)cc;
 	struct regalloc_state s;
 
-	memset(&s, 0, sizeof(s));
-	s.C = &c->Base;
-	s.NumHwTemporaries = maxtemps;
-	s.HwTemporary = memory_pool_malloc(&s.C->Pool, maxtemps*sizeof(struct hardware_register));
-	memset(s.HwTemporary, 0, maxtemps*sizeof(struct hardware_register));
-
-	compute_live_intervals(&s);
+	compute_live_intervals(cc, &s);
 
 	c->AllocateHwInputs(c, &alloc_input, &s);
 
 	do_regalloc(&s);
+}
+
+/* This functions offsets the temporary register indices by the number
+ * of input registers, because input registers are actually temporaries and
+ * should not occupy the same space.
+ *
+ * This pass is supposed to be used to maintain correct allocation of inputs
+ * if the standard register allocation is disabled. */
+void rc_pair_regalloc_inputs_only(struct radeon_compiler *cc, void *user)
+{
+	struct r300_fragment_program_compiler *c = (struct r300_fragment_program_compiler*)cc;
+	struct regalloc_state s;
+	int temp_reg_offset;
+
+	compute_live_intervals(cc, &s);
+
+	c->AllocateHwInputs(c, &alloc_input, &s);
+
+	temp_reg_offset = 0;
+	for (unsigned i = 0; i < RC_REGISTER_MAX_INDEX; i++) {
+		if (s.Input[i].Allocated && temp_reg_offset <= s.Input[i].Index)
+			temp_reg_offset = s.Input[i].Index + 1;
+	}
+
+	if (temp_reg_offset) {
+		for (unsigned i = 0; i < RC_REGISTER_MAX_INDEX; i++) {
+			if (s.Temporary[i].Used) {
+				s.Temporary[i].Allocated = 1;
+				s.Temporary[i].File = RC_FILE_TEMPORARY;
+				s.Temporary[i].Index = i + temp_reg_offset;
+			}
+		}
+
+		/* Rewrite all registers. */
+		for (struct rc_instruction *inst = cc->Program.Instructions.Next;
+		    inst != &cc->Program.Instructions;
+		    inst = inst->Next) {
+			rc_remap_registers(inst, &remap_register, &s);
+		}
+	}
 }

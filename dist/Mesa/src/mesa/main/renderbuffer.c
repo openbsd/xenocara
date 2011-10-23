@@ -46,71 +46,194 @@
 #include "fbobject.h"
 #include "formats.h"
 #include "mtypes.h"
-#include "fbobject.h"
 #include "renderbuffer.h"
-
-#include "rbadaptors.h"
-
-
-/* 32-bit color index format.  Not a public format. */
-#define COLOR_INDEX32 0x424243
 
 
 /*
  * Routines for get/put values in common buffer formats follow.
- * Someday add support for arbitrary row stride to make them more
- * flexible.
  */
+
+/* Returns a bytes per pixel of the DataType in the get/put span
+ * functions for at least a subset of the available combinations a
+ * renderbuffer can have.
+ *
+ * It would be nice to see gl_renderbuffer start talking about a
+ * gl_format instead of a GLenum DataType.
+ */
+static int
+get_datatype_bytes(struct gl_renderbuffer *rb)
+{
+   int component_size;
+
+   switch (rb->DataType) {
+   case GL_FLOAT:
+   case GL_UNSIGNED_INT:
+   case GL_UNSIGNED_INT_24_8_EXT:
+      component_size = 4;
+      break;
+   case GL_UNSIGNED_SHORT:
+      component_size = 2;
+      break;
+   case GL_UNSIGNED_BYTE:
+      component_size = 1;
+      break;
+   default:
+      component_size = 1;
+      assert(0);
+   }
+
+   switch (rb->_BaseFormat) {
+   case GL_DEPTH_COMPONENT:
+   case GL_DEPTH_STENCIL:
+      return component_size;
+   default:
+      return 4 * component_size;
+   }
+}
+
+/* This is commonly used by most of the accessors. */
+static void *
+get_pointer_generic(struct gl_context *ctx, struct gl_renderbuffer *rb,
+		    GLint x, GLint y)
+{
+   if (!rb->Data)
+      return NULL;
+
+   return ((char *) rb->Data +
+	   (y * rb->RowStride + x) * _mesa_get_format_bytes(rb->Format));
+}
+
+/* GetRow() implementation for formats where DataType matches the rb->Format.
+ */
+static void
+get_row_generic(struct gl_context *ctx, struct gl_renderbuffer *rb,
+		GLuint count, GLint x, GLint y, void *values)
+{
+   void *src = rb->GetPointer(ctx, rb, x, y);
+   memcpy(values, src, count * _mesa_get_format_bytes(rb->Format));
+}
+
+/* For the GL_RED/GL_RG/GL_RGB format/DataType combinations (and
+ * GL_LUMINANCE/GL_INTENSITY?), the Put functions are a matter of
+ * storing those initial components of the value per pixel into the
+ * destination.
+ */
+static void
+put_row_generic(struct gl_context *ctx, struct gl_renderbuffer *rb,
+		GLuint count, GLint x, GLint y,
+		const void *values, const GLubyte *mask)
+{
+   void *row = rb->GetPointer(ctx, rb, x, y);
+   int format_bytes = _mesa_get_format_bytes(rb->Format) / sizeof(GLfloat);
+   int datatype_bytes = get_datatype_bytes(rb);
+   unsigned int i;
+
+   if (mask) {
+      for (i = 0; i < count; i++) {
+	 char *dst = (char *) row + i * format_bytes;
+	 const char *src = (const char *) values + i * datatype_bytes;
+
+         if (mask[i]) {
+	    memcpy(dst, src, format_bytes);
+         }
+      }
+   }
+   else {
+      for (i = 0; i < count; i++) {
+	 char *dst = (char *) row + i * format_bytes;
+	 const char *src = (const char *) values + i * datatype_bytes;
+	 memcpy(dst, src, format_bytes);
+      }
+   }
+}
+
+static void
+put_mono_row_generic(struct gl_context *ctx, struct gl_renderbuffer *rb,
+		     GLuint count, GLint x, GLint y,
+		     const void *value, const GLubyte *mask)
+{
+   void *row = rb->GetPointer(ctx, rb, x, y);
+   int format_bytes = _mesa_get_format_bytes(rb->Format) / sizeof(GLfloat);
+   unsigned int i;
+
+   if (mask) {
+      for (i = 0; i < count; i++) {
+	 char *dst = (char *) row + i * format_bytes;
+         if (mask[i]) {
+	    memcpy(dst, value, format_bytes);
+         }
+      }
+   }
+   else {
+      for (i = 0; i < count; i++) {
+	 char *dst = (char *) row + i * format_bytes;
+	 memcpy(dst, value, format_bytes);
+      }
+   }
+}
+
+
+static void
+put_values_generic(struct gl_context *ctx, struct gl_renderbuffer *rb,
+		   GLuint count, const GLint x[], const GLint y[],
+		   const void *values, const GLubyte *mask)
+{
+   int format_bytes = _mesa_get_format_bytes(rb->Format) / sizeof(GLfloat);
+   int datatype_bytes = get_datatype_bytes(rb);
+   unsigned int i;
+
+   for (i = 0; i < count; i++) {
+      if (!mask || mask[i]) {
+	 void *dst = rb->GetPointer(ctx, rb, x[i], y[i]);
+	 const char *src = (const char *) values + i * datatype_bytes;
+	 memcpy(dst, src, format_bytes);
+      }
+   }
+}
+
+
+static void
+put_mono_values_generic(struct gl_context *ctx,
+			struct gl_renderbuffer *rb,
+			GLuint count, const GLint x[], const GLint y[],
+			const void *value, const GLubyte *mask)
+{
+   int format_bytes = _mesa_get_format_bytes(rb->Format) / sizeof(GLfloat);
+   unsigned int i;
+
+   for (i = 0; i < count; i++) {
+      if (!mask || mask[i]) {
+	 void *dst = rb->GetPointer(ctx, rb, x[i], y[i]);
+	 memcpy(dst, value, format_bytes);
+      }
+   }
+}
 
 /**********************************************************************
  * Functions for buffers of 1 X GLubyte values.
  * Typically stencil.
  */
 
-static void *
-get_pointer_ubyte(GLcontext *ctx, struct gl_renderbuffer *rb,
-                  GLint x, GLint y)
-{
-   if (!rb->Data)
-      return NULL;
-   ASSERT(rb->DataType == GL_UNSIGNED_BYTE);
-   /* Can't assert rb->Format since these funcs may be used for serveral
-    * different formats (GL_ALPHA8, GL_STENCIL_INDEX8, etc).
-    */
-   return (GLubyte *) rb->Data + y * rb->Width + x;
-}
-
-
 static void
-get_row_ubyte(GLcontext *ctx, struct gl_renderbuffer *rb, GLuint count,
-              GLint x, GLint y, void *values)
-{
-   const GLubyte *src = (const GLubyte *) rb->Data + y * rb->Width + x;
-   ASSERT(rb->DataType == GL_UNSIGNED_BYTE);
-   memcpy(values, src, count * sizeof(GLubyte));
-}
-
-
-static void
-get_values_ubyte(GLcontext *ctx, struct gl_renderbuffer *rb, GLuint count,
+get_values_ubyte(struct gl_context *ctx, struct gl_renderbuffer *rb, GLuint count,
                  const GLint x[], const GLint y[], void *values)
 {
    GLubyte *dst = (GLubyte *) values;
    GLuint i;
    ASSERT(rb->DataType == GL_UNSIGNED_BYTE);
    for (i = 0; i < count; i++) {
-      const GLubyte *src = (GLubyte *) rb->Data + y[i] * rb->Width + x[i];
+      const GLubyte *src = (GLubyte *) rb->Data + y[i] * rb->RowStride + x[i];
       dst[i] = *src;
    }
 }
 
 
 static void
-put_row_ubyte(GLcontext *ctx, struct gl_renderbuffer *rb, GLuint count,
+put_row_ubyte(struct gl_context *ctx, struct gl_renderbuffer *rb, GLuint count,
               GLint x, GLint y, const void *values, const GLubyte *mask)
 {
    const GLubyte *src = (const GLubyte *) values;
-   GLubyte *dst = (GLubyte *) rb->Data + y * rb->Width + x;
+   GLubyte *dst = (GLubyte *) rb->Data + y * rb->RowStride + x;
    ASSERT(rb->DataType == GL_UNSIGNED_BYTE);
    if (mask) {
       GLuint i;
@@ -127,11 +250,11 @@ put_row_ubyte(GLcontext *ctx, struct gl_renderbuffer *rb, GLuint count,
 
 
 static void
-put_mono_row_ubyte(GLcontext *ctx, struct gl_renderbuffer *rb, GLuint count,
+put_mono_row_ubyte(struct gl_context *ctx, struct gl_renderbuffer *rb, GLuint count,
                    GLint x, GLint y, const void *value, const GLubyte *mask)
 {
    const GLubyte val = *((const GLubyte *) value);
-   GLubyte *dst = (GLubyte *) rb->Data + y * rb->Width + x;
+   GLubyte *dst = (GLubyte *) rb->Data + y * rb->RowStride + x;
    ASSERT(rb->DataType == GL_UNSIGNED_BYTE);
    if (mask) {
       GLuint i;
@@ -151,7 +274,7 @@ put_mono_row_ubyte(GLcontext *ctx, struct gl_renderbuffer *rb, GLuint count,
 
 
 static void
-put_values_ubyte(GLcontext *ctx, struct gl_renderbuffer *rb, GLuint count,
+put_values_ubyte(struct gl_context *ctx, struct gl_renderbuffer *rb, GLuint count,
                  const GLint x[], const GLint y[],
                  const void *values, const GLubyte *mask)
 {
@@ -160,7 +283,7 @@ put_values_ubyte(GLcontext *ctx, struct gl_renderbuffer *rb, GLuint count,
    ASSERT(rb->DataType == GL_UNSIGNED_BYTE);
    for (i = 0; i < count; i++) {
       if (!mask || mask[i]) {
-         GLubyte *dst = (GLubyte *) rb->Data + y[i] * rb->Width + x[i];
+         GLubyte *dst = (GLubyte *) rb->Data + y[i] * rb->RowStride + x[i];
          *dst = src[i];
       }
    }
@@ -168,7 +291,7 @@ put_values_ubyte(GLcontext *ctx, struct gl_renderbuffer *rb, GLuint count,
 
 
 static void
-put_mono_values_ubyte(GLcontext *ctx, struct gl_renderbuffer *rb, GLuint count,
+put_mono_values_ubyte(struct gl_context *ctx, struct gl_renderbuffer *rb, GLuint count,
                       const GLint x[], const GLint y[],
                       const void *value, const GLubyte *mask)
 {
@@ -177,7 +300,7 @@ put_mono_values_ubyte(GLcontext *ctx, struct gl_renderbuffer *rb, GLuint count,
    ASSERT(rb->DataType == GL_UNSIGNED_BYTE);
    for (i = 0; i < count; i++) {
       if (!mask || mask[i]) {
-         GLubyte *dst = (GLubyte *) rb->Data + y[i] * rb->Width + x[i];
+         GLubyte *dst = (GLubyte *) rb->Data + y[i] * rb->RowStride + x[i];
          *dst = val;
       }
    }
@@ -189,48 +312,26 @@ put_mono_values_ubyte(GLcontext *ctx, struct gl_renderbuffer *rb, GLuint count,
  * Typically depth/Z.
  */
 
-static void *
-get_pointer_ushort(GLcontext *ctx, struct gl_renderbuffer *rb,
-                   GLint x, GLint y)
-{
-   if (!rb->Data)
-      return NULL;
-   ASSERT(rb->DataType == GL_UNSIGNED_SHORT);
-   ASSERT(rb->Width > 0);
-   return (GLushort *) rb->Data + y * rb->Width + x;
-}
-
-
 static void
-get_row_ushort(GLcontext *ctx, struct gl_renderbuffer *rb, GLuint count,
-               GLint x, GLint y, void *values)
-{
-   const void *src = rb->GetPointer(ctx, rb, x, y);
-   ASSERT(rb->DataType == GL_UNSIGNED_SHORT);
-   memcpy(values, src, count * sizeof(GLushort));
-}
-
-
-static void
-get_values_ushort(GLcontext *ctx, struct gl_renderbuffer *rb, GLuint count,
+get_values_ushort(struct gl_context *ctx, struct gl_renderbuffer *rb, GLuint count,
                   const GLint x[], const GLint y[], void *values)
 {
    GLushort *dst = (GLushort *) values;
    GLuint i;
    ASSERT(rb->DataType == GL_UNSIGNED_SHORT);
    for (i = 0; i < count; i++) {
-      const GLushort *src = (GLushort *) rb->Data + y[i] * rb->Width + x[i];
+      const GLushort *src = (GLushort *) rb->Data + y[i] * rb->RowStride + x[i];
       dst[i] = *src;
    }
 }
 
 
 static void
-put_row_ushort(GLcontext *ctx, struct gl_renderbuffer *rb, GLuint count,
+put_row_ushort(struct gl_context *ctx, struct gl_renderbuffer *rb, GLuint count,
                GLint x, GLint y, const void *values, const GLubyte *mask)
 {
    const GLushort *src = (const GLushort *) values;
-   GLushort *dst = (GLushort *) rb->Data + y * rb->Width + x;
+   GLushort *dst = (GLushort *) rb->Data + y * rb->RowStride + x;
    ASSERT(rb->DataType == GL_UNSIGNED_SHORT);
    if (mask) {
       GLuint i;
@@ -247,11 +348,11 @@ put_row_ushort(GLcontext *ctx, struct gl_renderbuffer *rb, GLuint count,
 
 
 static void
-put_mono_row_ushort(GLcontext *ctx, struct gl_renderbuffer *rb, GLuint count,
+put_mono_row_ushort(struct gl_context *ctx, struct gl_renderbuffer *rb, GLuint count,
                     GLint x, GLint y, const void *value, const GLubyte *mask)
 {
    const GLushort val = *((const GLushort *) value);
-   GLushort *dst = (GLushort *) rb->Data + y * rb->Width + x;
+   GLushort *dst = (GLushort *) rb->Data + y * rb->RowStride + x;
    ASSERT(rb->DataType == GL_UNSIGNED_SHORT);
    if (mask) {
       GLuint i;
@@ -271,7 +372,7 @@ put_mono_row_ushort(GLcontext *ctx, struct gl_renderbuffer *rb, GLuint count,
 
 
 static void
-put_values_ushort(GLcontext *ctx, struct gl_renderbuffer *rb, GLuint count,
+put_values_ushort(struct gl_context *ctx, struct gl_renderbuffer *rb, GLuint count,
                   const GLint x[], const GLint y[], const void *values,
                   const GLubyte *mask)
 {
@@ -280,7 +381,7 @@ put_values_ushort(GLcontext *ctx, struct gl_renderbuffer *rb, GLuint count,
    ASSERT(rb->DataType == GL_UNSIGNED_SHORT);
    for (i = 0; i < count; i++) {
       if (!mask || mask[i]) {
-         GLushort *dst = (GLushort *) rb->Data + y[i] * rb->Width + x[i];
+         GLushort *dst = (GLushort *) rb->Data + y[i] * rb->RowStride + x[i];
          *dst = src[i];
       }
    }
@@ -288,7 +389,7 @@ put_values_ushort(GLcontext *ctx, struct gl_renderbuffer *rb, GLuint count,
  
 
 static void
-put_mono_values_ushort(GLcontext *ctx, struct gl_renderbuffer *rb,
+put_mono_values_ushort(struct gl_context *ctx, struct gl_renderbuffer *rb,
                        GLuint count, const GLint x[], const GLint y[],
                        const void *value, const GLubyte *mask)
 {
@@ -298,7 +399,7 @@ put_mono_values_ushort(GLcontext *ctx, struct gl_renderbuffer *rb,
       GLuint i;
       for (i = 0; i < count; i++) {
          if (mask[i]) {
-            GLushort *dst = (GLushort *) rb->Data + y[i] * rb->Width + x[i];
+            GLushort *dst = (GLushort *) rb->Data + y[i] * rb->RowStride + x[i];
             *dst = val;
          }
       }
@@ -306,7 +407,7 @@ put_mono_values_ushort(GLcontext *ctx, struct gl_renderbuffer *rb,
    else {
       GLuint i;
       for (i = 0; i < count; i++) {
-         GLushort *dst = (GLushort *) rb->Data + y[i] * rb->Width + x[i];
+         GLushort *dst = (GLushort *) rb->Data + y[i] * rb->RowStride + x[i];
          *dst = val;
       }
    }
@@ -318,31 +419,8 @@ put_mono_values_ushort(GLcontext *ctx, struct gl_renderbuffer *rb,
  * Typically depth/Z or color index.
  */
 
-static void *
-get_pointer_uint(GLcontext *ctx, struct gl_renderbuffer *rb,
-                 GLint x, GLint y)
-{
-   if (!rb->Data)
-      return NULL;
-   ASSERT(rb->DataType == GL_UNSIGNED_INT ||
-          rb->DataType == GL_UNSIGNED_INT_24_8_EXT);
-   return (GLuint *) rb->Data + y * rb->Width + x;
-}
-
-
 static void
-get_row_uint(GLcontext *ctx, struct gl_renderbuffer *rb, GLuint count,
-             GLint x, GLint y, void *values)
-{
-   const void *src = rb->GetPointer(ctx, rb, x, y);
-   ASSERT(rb->DataType == GL_UNSIGNED_INT ||
-          rb->DataType == GL_UNSIGNED_INT_24_8_EXT);
-   memcpy(values, src, count * sizeof(GLuint));
-}
-
-
-static void
-get_values_uint(GLcontext *ctx, struct gl_renderbuffer *rb, GLuint count,
+get_values_uint(struct gl_context *ctx, struct gl_renderbuffer *rb, GLuint count,
                 const GLint x[], const GLint y[], void *values)
 {
    GLuint *dst = (GLuint *) values;
@@ -350,18 +428,18 @@ get_values_uint(GLcontext *ctx, struct gl_renderbuffer *rb, GLuint count,
    ASSERT(rb->DataType == GL_UNSIGNED_INT ||
           rb->DataType == GL_UNSIGNED_INT_24_8_EXT);
    for (i = 0; i < count; i++) {
-      const GLuint *src = (GLuint *) rb->Data + y[i] * rb->Width + x[i];
+      const GLuint *src = (GLuint *) rb->Data + y[i] * rb->RowStride + x[i];
       dst[i] = *src;
    }
 }
 
 
 static void
-put_row_uint(GLcontext *ctx, struct gl_renderbuffer *rb, GLuint count,
+put_row_uint(struct gl_context *ctx, struct gl_renderbuffer *rb, GLuint count,
              GLint x, GLint y, const void *values, const GLubyte *mask)
 {
    const GLuint *src = (const GLuint *) values;
-   GLuint *dst = (GLuint *) rb->Data + y * rb->Width + x;
+   GLuint *dst = (GLuint *) rb->Data + y * rb->RowStride + x;
    ASSERT(rb->DataType == GL_UNSIGNED_INT ||
           rb->DataType == GL_UNSIGNED_INT_24_8_EXT);
    if (mask) {
@@ -379,11 +457,11 @@ put_row_uint(GLcontext *ctx, struct gl_renderbuffer *rb, GLuint count,
 
 
 static void
-put_mono_row_uint(GLcontext *ctx, struct gl_renderbuffer *rb, GLuint count,
+put_mono_row_uint(struct gl_context *ctx, struct gl_renderbuffer *rb, GLuint count,
                   GLint x, GLint y, const void *value, const GLubyte *mask)
 {
    const GLuint val = *((const GLuint *) value);
-   GLuint *dst = (GLuint *) rb->Data + y * rb->Width + x;
+   GLuint *dst = (GLuint *) rb->Data + y * rb->RowStride + x;
    ASSERT(rb->DataType == GL_UNSIGNED_INT ||
           rb->DataType == GL_UNSIGNED_INT_24_8_EXT);
    if (mask) {
@@ -404,7 +482,7 @@ put_mono_row_uint(GLcontext *ctx, struct gl_renderbuffer *rb, GLuint count,
 
 
 static void
-put_values_uint(GLcontext *ctx, struct gl_renderbuffer *rb, GLuint count,
+put_values_uint(struct gl_context *ctx, struct gl_renderbuffer *rb, GLuint count,
                 const GLint x[], const GLint y[], const void *values,
                 const GLubyte *mask)
 {
@@ -414,7 +492,7 @@ put_values_uint(GLcontext *ctx, struct gl_renderbuffer *rb, GLuint count,
           rb->DataType == GL_UNSIGNED_INT_24_8_EXT);
    for (i = 0; i < count; i++) {
       if (!mask || mask[i]) {
-         GLuint *dst = (GLuint *) rb->Data + y[i] * rb->Width + x[i];
+         GLuint *dst = (GLuint *) rb->Data + y[i] * rb->RowStride + x[i];
          *dst = src[i];
       }
    }
@@ -422,7 +500,7 @@ put_values_uint(GLcontext *ctx, struct gl_renderbuffer *rb, GLuint count,
 
 
 static void
-put_mono_values_uint(GLcontext *ctx, struct gl_renderbuffer *rb, GLuint count,
+put_mono_values_uint(struct gl_context *ctx, struct gl_renderbuffer *rb, GLuint count,
                      const GLint x[], const GLint y[], const void *value,
                      const GLubyte *mask)
 {
@@ -432,7 +510,7 @@ put_mono_values_uint(GLcontext *ctx, struct gl_renderbuffer *rb, GLuint count,
           rb->DataType == GL_UNSIGNED_INT_24_8_EXT);
    for (i = 0; i < count; i++) {
       if (!mask || mask[i]) {
-         GLuint *dst = (GLuint *) rb->Data + y[i] * rb->Width + x[i];
+         GLuint *dst = (GLuint *) rb->Data + y[i] * rb->RowStride + x[i];
          *dst = val;
       }
    }
@@ -447,7 +525,7 @@ put_mono_values_uint(GLcontext *ctx, struct gl_renderbuffer *rb, GLuint count,
  */
 
 static void *
-get_pointer_ubyte3(GLcontext *ctx, struct gl_renderbuffer *rb,
+get_pointer_ubyte3(struct gl_context *ctx, struct gl_renderbuffer *rb,
                    GLint x, GLint y)
 {
    ASSERT(rb->Format == MESA_FORMAT_RGB888);
@@ -459,10 +537,11 @@ get_pointer_ubyte3(GLcontext *ctx, struct gl_renderbuffer *rb,
 
 
 static void
-get_row_ubyte3(GLcontext *ctx, struct gl_renderbuffer *rb, GLuint count,
+get_row_ubyte3(struct gl_context *ctx, struct gl_renderbuffer *rb, GLuint count,
                GLint x, GLint y, void *values)
 {
-   const GLubyte *src = (const GLubyte *) rb->Data + 3 * (y * rb->Width + x);
+   const GLubyte *src = ((const GLubyte *) rb->Data) +
+					   3 * (y * rb->RowStride + x);
    GLubyte *dst = (GLubyte *) values;
    GLuint i;
    ASSERT(rb->Format == MESA_FORMAT_RGB888);
@@ -477,7 +556,7 @@ get_row_ubyte3(GLcontext *ctx, struct gl_renderbuffer *rb, GLuint count,
 
 
 static void
-get_values_ubyte3(GLcontext *ctx, struct gl_renderbuffer *rb, GLuint count,
+get_values_ubyte3(struct gl_context *ctx, struct gl_renderbuffer *rb, GLuint count,
                   const GLint x[], const GLint y[], void *values)
 {
    GLubyte *dst = (GLubyte *) values;
@@ -486,7 +565,7 @@ get_values_ubyte3(GLcontext *ctx, struct gl_renderbuffer *rb, GLuint count,
    ASSERT(rb->DataType == GL_UNSIGNED_BYTE);
    for (i = 0; i < count; i++) {
       const GLubyte *src
-         = (GLubyte *) rb->Data + 3 * (y[i] * rb->Width + x[i]);
+         = (GLubyte *) rb->Data + 3 * (y[i] * rb->RowStride + x[i]);
       dst[i * 4 + 0] = src[0];
       dst[i * 4 + 1] = src[1];
       dst[i * 4 + 2] = src[2];
@@ -496,12 +575,12 @@ get_values_ubyte3(GLcontext *ctx, struct gl_renderbuffer *rb, GLuint count,
 
 
 static void
-put_row_ubyte3(GLcontext *ctx, struct gl_renderbuffer *rb, GLuint count,
+put_row_ubyte3(struct gl_context *ctx, struct gl_renderbuffer *rb, GLuint count,
                GLint x, GLint y, const void *values, const GLubyte *mask)
 {
    /* note: incoming values are RGB+A! */
    const GLubyte *src = (const GLubyte *) values;
-   GLubyte *dst = (GLubyte *) rb->Data + 3 * (y * rb->Width + x);
+   GLubyte *dst = (GLubyte *) rb->Data + 3 * (y * rb->RowStride + x);
    GLuint i;
    ASSERT(rb->Format == MESA_FORMAT_RGB888);
    ASSERT(rb->DataType == GL_UNSIGNED_BYTE);
@@ -516,12 +595,12 @@ put_row_ubyte3(GLcontext *ctx, struct gl_renderbuffer *rb, GLuint count,
 
 
 static void
-put_row_rgb_ubyte3(GLcontext *ctx, struct gl_renderbuffer *rb, GLuint count,
+put_row_rgb_ubyte3(struct gl_context *ctx, struct gl_renderbuffer *rb, GLuint count,
                    GLint x, GLint y, const void *values, const GLubyte *mask)
 {
    /* note: incoming values are RGB+A! */
    const GLubyte *src = (const GLubyte *) values;
-   GLubyte *dst = (GLubyte *) rb->Data + 3 * (y * rb->Width + x);
+   GLubyte *dst = (GLubyte *) rb->Data + 3 * (y * rb->RowStride + x);
    GLuint i;
    ASSERT(rb->Format == MESA_FORMAT_RGB888);
    ASSERT(rb->DataType == GL_UNSIGNED_BYTE);
@@ -536,14 +615,14 @@ put_row_rgb_ubyte3(GLcontext *ctx, struct gl_renderbuffer *rb, GLuint count,
 
 
 static void
-put_mono_row_ubyte3(GLcontext *ctx, struct gl_renderbuffer *rb, GLuint count,
+put_mono_row_ubyte3(struct gl_context *ctx, struct gl_renderbuffer *rb, GLuint count,
                     GLint x, GLint y, const void *value, const GLubyte *mask)
 {
    /* note: incoming value is RGB+A! */
    const GLubyte val0 = ((const GLubyte *) value)[0];
    const GLubyte val1 = ((const GLubyte *) value)[1];
    const GLubyte val2 = ((const GLubyte *) value)[2];
-   GLubyte *dst = (GLubyte *) rb->Data + 3 * (y * rb->Width + x);
+   GLubyte *dst = (GLubyte *) rb->Data + 3 * (y * rb->RowStride + x);
    ASSERT(rb->Format == MESA_FORMAT_RGB888);
    ASSERT(rb->DataType == GL_UNSIGNED_BYTE);
    if (!mask && val0 == val1 && val1 == val2) {
@@ -564,7 +643,7 @@ put_mono_row_ubyte3(GLcontext *ctx, struct gl_renderbuffer *rb, GLuint count,
 
 
 static void
-put_values_ubyte3(GLcontext *ctx, struct gl_renderbuffer *rb, GLuint count,
+put_values_ubyte3(struct gl_context *ctx, struct gl_renderbuffer *rb, GLuint count,
                   const GLint x[], const GLint y[], const void *values,
                   const GLubyte *mask)
 {
@@ -575,7 +654,7 @@ put_values_ubyte3(GLcontext *ctx, struct gl_renderbuffer *rb, GLuint count,
    ASSERT(rb->DataType == GL_UNSIGNED_BYTE);
    for (i = 0; i < count; i++) {
       if (!mask || mask[i]) {
-         GLubyte *dst = (GLubyte *) rb->Data + 3 * (y[i] * rb->Width + x[i]);
+         GLubyte *dst = (GLubyte *) rb->Data + 3 * (y[i] * rb->RowStride + x[i]);
          dst[0] = src[i * 4 + 0];
          dst[1] = src[i * 4 + 1];
          dst[2] = src[i * 4 + 2];
@@ -585,7 +664,7 @@ put_values_ubyte3(GLcontext *ctx, struct gl_renderbuffer *rb, GLuint count,
 
 
 static void
-put_mono_values_ubyte3(GLcontext *ctx, struct gl_renderbuffer *rb,
+put_mono_values_ubyte3(struct gl_context *ctx, struct gl_renderbuffer *rb,
                        GLuint count, const GLint x[], const GLint y[],
                        const void *value, const GLubyte *mask)
 {
@@ -598,7 +677,8 @@ put_mono_values_ubyte3(GLcontext *ctx, struct gl_renderbuffer *rb,
    ASSERT(rb->DataType == GL_UNSIGNED_BYTE);
    for (i = 0; i < count; i++) {
       if (!mask || mask[i]) {
-         GLubyte *dst = (GLubyte *) rb->Data + 3 * (y[i] * rb->Width + x[i]);
+         GLubyte *dst = ((GLubyte *) rb->Data) +
+				     3 * (y[i] * rb->RowStride + x[i]);
          dst[0] = val0;
          dst[1] = val1;
          dst[2] = val2;
@@ -612,31 +692,8 @@ put_mono_values_ubyte3(GLcontext *ctx, struct gl_renderbuffer *rb,
  * Typically color buffers.
  */
 
-static void *
-get_pointer_ubyte4(GLcontext *ctx, struct gl_renderbuffer *rb,
-                   GLint x, GLint y)
-{
-   if (!rb->Data)
-      return NULL;
-   ASSERT(rb->DataType == GL_UNSIGNED_BYTE);
-   ASSERT(rb->Format == MESA_FORMAT_RGBA8888);
-   return (GLubyte *) rb->Data + 4 * (y * rb->Width + x);
-}
-
-
 static void
-get_row_ubyte4(GLcontext *ctx, struct gl_renderbuffer *rb, GLuint count,
-               GLint x, GLint y, void *values)
-{
-   const GLubyte *src = (const GLubyte *) rb->Data + 4 * (y * rb->Width + x);
-   ASSERT(rb->DataType == GL_UNSIGNED_BYTE);
-   ASSERT(rb->Format == MESA_FORMAT_RGBA8888);
-   memcpy(values, src, 4 * count * sizeof(GLubyte));
-}
-
-
-static void
-get_values_ubyte4(GLcontext *ctx, struct gl_renderbuffer *rb, GLuint count,
+get_values_ubyte4(struct gl_context *ctx, struct gl_renderbuffer *rb, GLuint count,
                   const GLint x[], const GLint y[], void *values)
 {
    /* treat 4*GLubyte as 1*GLuint */
@@ -645,19 +702,19 @@ get_values_ubyte4(GLcontext *ctx, struct gl_renderbuffer *rb, GLuint count,
    ASSERT(rb->DataType == GL_UNSIGNED_BYTE);
    ASSERT(rb->Format == MESA_FORMAT_RGBA8888);
    for (i = 0; i < count; i++) {
-      const GLuint *src = (GLuint *) rb->Data + (y[i] * rb->Width + x[i]);
+      const GLuint *src = (GLuint *) rb->Data + (y[i] * rb->RowStride + x[i]);
       dst[i] = *src;
    }
 }
 
 
 static void
-put_row_ubyte4(GLcontext *ctx, struct gl_renderbuffer *rb, GLuint count,
+put_row_ubyte4(struct gl_context *ctx, struct gl_renderbuffer *rb, GLuint count,
                GLint x, GLint y, const void *values, const GLubyte *mask)
 {
    /* treat 4*GLubyte as 1*GLuint */
    const GLuint *src = (const GLuint *) values;
-   GLuint *dst = (GLuint *) rb->Data + (y * rb->Width + x);
+   GLuint *dst = (GLuint *) rb->Data + (y * rb->RowStride + x);
    ASSERT(rb->DataType == GL_UNSIGNED_BYTE);
    ASSERT(rb->Format == MESA_FORMAT_RGBA8888);
    if (mask) {
@@ -675,12 +732,12 @@ put_row_ubyte4(GLcontext *ctx, struct gl_renderbuffer *rb, GLuint count,
 
 
 static void
-put_row_rgb_ubyte4(GLcontext *ctx, struct gl_renderbuffer *rb, GLuint count,
+put_row_rgb_ubyte4(struct gl_context *ctx, struct gl_renderbuffer *rb, GLuint count,
                    GLint x, GLint y, const void *values, const GLubyte *mask)
 {
    /* Store RGB values in RGBA buffer */
    const GLubyte *src = (const GLubyte *) values;
-   GLubyte *dst = (GLubyte *) rb->Data + 4 * (y * rb->Width + x);
+   GLubyte *dst = (GLubyte *) rb->Data + 4 * (y * rb->RowStride + x);
    GLuint i;
    ASSERT(rb->DataType == GL_UNSIGNED_BYTE);
    ASSERT(rb->Format == MESA_FORMAT_RGBA8888);
@@ -696,12 +753,12 @@ put_row_rgb_ubyte4(GLcontext *ctx, struct gl_renderbuffer *rb, GLuint count,
 
 
 static void
-put_mono_row_ubyte4(GLcontext *ctx, struct gl_renderbuffer *rb, GLuint count,
+put_mono_row_ubyte4(struct gl_context *ctx, struct gl_renderbuffer *rb, GLuint count,
                     GLint x, GLint y, const void *value, const GLubyte *mask)
 {
    /* treat 4*GLubyte as 1*GLuint */
    const GLuint val = *((const GLuint *) value);
-   GLuint *dst = (GLuint *) rb->Data + (y * rb->Width + x);
+   GLuint *dst = (GLuint *) rb->Data + (y * rb->RowStride + x);
    ASSERT(rb->DataType == GL_UNSIGNED_BYTE);
    ASSERT(rb->Format == MESA_FORMAT_RGBA8888);
    if (!mask && val == 0) {
@@ -729,7 +786,7 @@ put_mono_row_ubyte4(GLcontext *ctx, struct gl_renderbuffer *rb, GLuint count,
 
 
 static void
-put_values_ubyte4(GLcontext *ctx, struct gl_renderbuffer *rb, GLuint count,
+put_values_ubyte4(struct gl_context *ctx, struct gl_renderbuffer *rb, GLuint count,
                   const GLint x[], const GLint y[], const void *values,
                   const GLubyte *mask)
 {
@@ -740,7 +797,7 @@ put_values_ubyte4(GLcontext *ctx, struct gl_renderbuffer *rb, GLuint count,
    ASSERT(rb->Format == MESA_FORMAT_RGBA8888);
    for (i = 0; i < count; i++) {
       if (!mask || mask[i]) {
-         GLuint *dst = (GLuint *) rb->Data + (y[i] * rb->Width + x[i]);
+         GLuint *dst = (GLuint *) rb->Data + (y[i] * rb->RowStride + x[i]);
          *dst = src[i];
       }
    }
@@ -748,7 +805,7 @@ put_values_ubyte4(GLcontext *ctx, struct gl_renderbuffer *rb, GLuint count,
 
 
 static void
-put_mono_values_ubyte4(GLcontext *ctx, struct gl_renderbuffer *rb,
+put_mono_values_ubyte4(struct gl_context *ctx, struct gl_renderbuffer *rb,
                        GLuint count, const GLint x[], const GLint y[],
                        const void *value, const GLubyte *mask)
 {
@@ -759,7 +816,7 @@ put_mono_values_ubyte4(GLcontext *ctx, struct gl_renderbuffer *rb,
    ASSERT(rb->Format == MESA_FORMAT_RGBA8888);
    for (i = 0; i < count; i++) {
       if (!mask || mask[i]) {
-         GLuint *dst = (GLuint *) rb->Data + (y[i] * rb->Width + x[i]);
+         GLuint *dst = (GLuint *) rb->Data + (y[i] * rb->RowStride + x[i]);
          *dst = val;
       }
    }
@@ -771,29 +828,8 @@ put_mono_values_ubyte4(GLcontext *ctx, struct gl_renderbuffer *rb,
  * Typically accum buffer.
  */
 
-static void *
-get_pointer_ushort4(GLcontext *ctx, struct gl_renderbuffer *rb,
-                    GLint x, GLint y)
-{
-   if (!rb->Data)
-      return NULL;
-   ASSERT(rb->DataType == GL_UNSIGNED_SHORT || rb->DataType == GL_SHORT);
-   return (GLushort *) rb->Data + 4 * (y * rb->Width + x);
-}
-
-
 static void
-get_row_ushort4(GLcontext *ctx, struct gl_renderbuffer *rb, GLuint count,
-                GLint x, GLint y, void *values)
-{
-   const GLshort *src = (const GLshort *) rb->Data + 4 * (y * rb->Width + x);
-   ASSERT(rb->DataType == GL_UNSIGNED_SHORT || rb->DataType == GL_SHORT);
-   memcpy(values, src, 4 * count * sizeof(GLshort));
-}
-
-
-static void
-get_values_ushort4(GLcontext *ctx, struct gl_renderbuffer *rb, GLuint count,
+get_values_ushort4(struct gl_context *ctx, struct gl_renderbuffer *rb, GLuint count,
                    const GLint x[], const GLint y[], void *values)
 {
    GLushort *dst = (GLushort *) values;
@@ -801,18 +837,18 @@ get_values_ushort4(GLcontext *ctx, struct gl_renderbuffer *rb, GLuint count,
    ASSERT(rb->DataType == GL_UNSIGNED_SHORT || rb->DataType == GL_SHORT);
    for (i = 0; i < count; i++) {
       const GLushort *src
-         = (GLushort *) rb->Data + 4 * (y[i] * rb->Width + x[i]);
+         = (GLushort *) rb->Data + 4 * (y[i] * rb->RowStride + x[i]);
       dst[i] = *src;
    }
 }
 
 
 static void
-put_row_ushort4(GLcontext *ctx, struct gl_renderbuffer *rb, GLuint count,
+put_row_ushort4(struct gl_context *ctx, struct gl_renderbuffer *rb, GLuint count,
                 GLint x, GLint y, const void *values, const GLubyte *mask)
 {
    const GLushort *src = (const GLushort *) values;
-   GLushort *dst = (GLushort *) rb->Data + 4 * (y * rb->Width + x);
+   GLushort *dst = (GLushort *) rb->Data + 4 * (y * rb->RowStride + x);
    ASSERT(rb->DataType == GL_UNSIGNED_SHORT || rb->DataType == GL_SHORT);
    if (mask) {
       GLuint i;
@@ -832,12 +868,12 @@ put_row_ushort4(GLcontext *ctx, struct gl_renderbuffer *rb, GLuint count,
 
 
 static void
-put_row_rgb_ushort4(GLcontext *ctx, struct gl_renderbuffer *rb, GLuint count,
+put_row_rgb_ushort4(struct gl_context *ctx, struct gl_renderbuffer *rb, GLuint count,
                     GLint x, GLint y, const void *values, const GLubyte *mask)
 {
    /* Put RGB values in RGBA buffer */
    const GLushort *src = (const GLushort *) values;
-   GLushort *dst = (GLushort *) rb->Data + 4 * (y * rb->Width + x);
+   GLushort *dst = (GLushort *) rb->Data + 4 * (y * rb->RowStride + x);
    ASSERT(rb->DataType == GL_UNSIGNED_SHORT || rb->DataType == GL_SHORT);
    if (mask) {
       GLuint i;
@@ -857,14 +893,14 @@ put_row_rgb_ushort4(GLcontext *ctx, struct gl_renderbuffer *rb, GLuint count,
 
 
 static void
-put_mono_row_ushort4(GLcontext *ctx, struct gl_renderbuffer *rb, GLuint count,
+put_mono_row_ushort4(struct gl_context *ctx, struct gl_renderbuffer *rb, GLuint count,
                      GLint x, GLint y, const void *value, const GLubyte *mask)
 {
    const GLushort val0 = ((const GLushort *) value)[0];
    const GLushort val1 = ((const GLushort *) value)[1];
    const GLushort val2 = ((const GLushort *) value)[2];
    const GLushort val3 = ((const GLushort *) value)[3];
-   GLushort *dst = (GLushort *) rb->Data + 4 * (y * rb->Width + x);
+   GLushort *dst = (GLushort *) rb->Data + 4 * (y * rb->RowStride + x);
    ASSERT(rb->DataType == GL_UNSIGNED_SHORT || rb->DataType == GL_SHORT);
    if (!mask && val0 == 0 && val1 == 0 && val2 == 0 && val3 == 0) {
       /* common case for clearing accum buffer */
@@ -885,7 +921,7 @@ put_mono_row_ushort4(GLcontext *ctx, struct gl_renderbuffer *rb, GLuint count,
 
 
 static void
-put_values_ushort4(GLcontext *ctx, struct gl_renderbuffer *rb, GLuint count,
+put_values_ushort4(struct gl_context *ctx, struct gl_renderbuffer *rb, GLuint count,
                    const GLint x[], const GLint y[], const void *values,
                    const GLubyte *mask)
 {
@@ -894,7 +930,8 @@ put_values_ushort4(GLcontext *ctx, struct gl_renderbuffer *rb, GLuint count,
    ASSERT(rb->DataType == GL_UNSIGNED_SHORT || rb->DataType == GL_SHORT);
    for (i = 0; i < count; i++) {
       if (!mask || mask[i]) {
-         GLushort *dst = (GLushort *) rb->Data + 4 * (y[i] * rb->Width + x[i]);
+         GLushort *dst =
+            ((GLushort *) rb->Data) + 4 * (y[i] * rb->RowStride + x[i]);
          dst[0] = src[i * 4 + 0];
          dst[1] = src[i * 4 + 1];
          dst[2] = src[i * 4 + 2];
@@ -905,7 +942,7 @@ put_values_ushort4(GLcontext *ctx, struct gl_renderbuffer *rb, GLuint count,
 
 
 static void
-put_mono_values_ushort4(GLcontext *ctx, struct gl_renderbuffer *rb,
+put_mono_values_ushort4(struct gl_context *ctx, struct gl_renderbuffer *rb,
                         GLuint count, const GLint x[], const GLint y[],
                         const void *value, const GLubyte *mask)
 {
@@ -917,7 +954,8 @@ put_mono_values_ushort4(GLcontext *ctx, struct gl_renderbuffer *rb,
    ASSERT(rb->DataType == GL_UNSIGNED_SHORT || rb->DataType == GL_SHORT);
    for (i = 0; i < count; i++) {
       if (!mask || mask[i]) {
-         GLushort *dst = (GLushort *) rb->Data + 4 * (y[i] * rb->Width + x[i]);
+         GLushort *dst = ((GLushort *) rb->Data) +
+				       4 * (y[i] * rb->RowStride + x[i]);
          dst[0] = val0;
          dst[1] = val1;
          dst[2] = val2;
@@ -926,7 +964,284 @@ put_mono_values_ushort4(GLcontext *ctx, struct gl_renderbuffer *rb,
    }
 }
 
+/**********************************************************************
+ * Functions for MESA_FORMAT_R8.
+ */
+static void
+get_row_r8(struct gl_context *ctx, struct gl_renderbuffer *rb, GLuint count,
+	   GLint x, GLint y, void *values)
+{
+   const GLubyte *src = rb->GetPointer(ctx, rb, x, y);
+   GLuint *dst = values;
+   GLuint i;
 
+   for (i = 0; i < count; i++) {
+      dst[i] = 0xff000000 | src[i];
+   }
+}
+
+static void
+get_values_r8(struct gl_context *ctx, struct gl_renderbuffer *rb, GLuint count,
+	      const GLint x[], const GLint y[], void *values)
+{
+   GLuint *dst = (GLuint *) values;
+   GLuint i;
+
+   for (i = 0; i < count; i++) {
+      const GLubyte *src = rb->GetPointer(ctx, rb, x[i], y[i]);
+      dst[i] = 0xff000000 | *src;
+   }
+}
+
+/**********************************************************************
+ * Functions for MESA_FORMAT_RG88.
+ */
+static void
+get_row_rg88(struct gl_context *ctx, struct gl_renderbuffer *rb, GLuint count,
+	     GLint x, GLint y, void *values)
+{
+   const GLushort *src = rb->GetPointer(ctx, rb, x, y);
+   GLuint *dst = values;
+   GLuint i;
+
+   for (i = 0; i < count; i++) {
+      dst[i] = 0xff000000 | src[i];
+   }
+}
+
+static void
+get_values_rg88(struct gl_context *ctx, struct gl_renderbuffer *rb,
+		GLuint count, const GLint x[], const GLint y[], void *values)
+{
+   GLuint *dst = (GLuint *) values;
+   GLuint i;
+
+   for (i = 0; i < count; i++) {
+      const GLshort *src = rb->GetPointer(ctx, rb, x[i], y[i]);
+      dst[i] = 0xff000000 | *src;
+   }
+}
+
+/**********************************************************************
+ * Functions for MESA_FORMAT_R16.
+ */
+static void
+get_row_r16(struct gl_context *ctx, struct gl_renderbuffer *rb, GLuint count,
+	    GLint x, GLint y, void *values)
+{
+   const GLushort *src = rb->GetPointer(ctx, rb, x, y);
+   GLushort *dst = values;
+   GLuint i;
+
+   for (i = 0; i < count; i++) {
+      dst[i * 4 + RCOMP] = src[i];
+      dst[i * 4 + GCOMP] = 0;
+      dst[i * 4 + BCOMP] = 0;
+      dst[i * 4 + ACOMP] = 0xffff;
+   }
+}
+
+static void
+get_values_r16(struct gl_context *ctx, struct gl_renderbuffer *rb, GLuint count,
+	       const GLint x[], const GLint y[], void *values)
+{
+   GLushort *dst = values;
+   GLuint i;
+
+   for (i = 0; i < count; i++) {
+      const GLushort *src = rb->GetPointer(ctx, rb, x[i], y[i]);
+      dst[i * 4 + RCOMP] = *src;
+      dst[i * 4 + GCOMP] = 0;
+      dst[i * 4 + BCOMP] = 0;
+      dst[i * 4 + ACOMP] = 0xffff;
+   }
+}
+
+/**********************************************************************
+ * Functions for MESA_FORMAT_RG1616.
+ */
+static void
+get_row_rg1616(struct gl_context *ctx, struct gl_renderbuffer *rb, GLuint count,
+	       GLint x, GLint y, void *values)
+{
+   const GLushort *src = rb->GetPointer(ctx, rb, x, y);
+   GLushort *dst = values;
+   GLuint i;
+
+   for (i = 0; i < count; i++) {
+      dst[i * 4 + RCOMP] = src[i * 2];
+      dst[i * 4 + GCOMP] = src[i * 2 + 1];
+      dst[i * 4 + BCOMP] = 0;
+      dst[i * 4 + ACOMP] = 0xffff;
+   }
+}
+
+static void
+get_values_rg1616(struct gl_context *ctx, struct gl_renderbuffer *rb,
+		  GLuint count, const GLint x[], const GLint y[], void *values)
+{
+   GLushort *dst = values;
+   GLuint i;
+
+   for (i = 0; i < count; i++) {
+      const GLshort *src = rb->GetPointer(ctx, rb, x[i], y[i]);
+      dst[i * 4 + RCOMP] = src[0];
+      dst[i * 4 + GCOMP] = src[1];
+      dst[i * 4 + BCOMP] = 0;
+      dst[i * 4 + ACOMP] = 0xffff;
+   }
+}
+
+/**
+ * This is the default software fallback for gl_renderbuffer's span
+ * access functions.
+ *
+ * The assumptions are that rb->Data will be a pointer to (0,0), that pixels
+ * are packed in the type of rb->Format, and that subsequent rows appear
+ * rb->RowStride pixels later.
+ */
+void
+_mesa_set_renderbuffer_accessors(struct gl_renderbuffer *rb)
+{
+   rb->GetPointer = get_pointer_generic;
+   rb->GetRow = get_row_generic;
+
+   switch (rb->Format) {
+   case MESA_FORMAT_RGB888:
+      rb->DataType = GL_UNSIGNED_BYTE;
+      rb->GetPointer = get_pointer_ubyte3;
+      rb->GetRow = get_row_ubyte3;
+      rb->GetValues = get_values_ubyte3;
+      rb->PutRow = put_row_ubyte3;
+      rb->PutRowRGB = put_row_rgb_ubyte3;
+      rb->PutMonoRow = put_mono_row_ubyte3;
+      rb->PutValues = put_values_ubyte3;
+      rb->PutMonoValues = put_mono_values_ubyte3;
+      break;
+
+   case MESA_FORMAT_RGBA8888:
+      rb->DataType = GL_UNSIGNED_BYTE;
+      rb->GetValues = get_values_ubyte4;
+      rb->PutRow = put_row_ubyte4;
+      rb->PutRowRGB = put_row_rgb_ubyte4;
+      rb->PutMonoRow = put_mono_row_ubyte4;
+      rb->PutValues = put_values_ubyte4;
+      rb->PutMonoValues = put_mono_values_ubyte4;
+      break;
+
+   case MESA_FORMAT_R8:
+      rb->DataType = GL_UNSIGNED_BYTE;
+      rb->GetValues = get_values_r8;
+      rb->GetRow = get_row_r8;
+      rb->PutRow = put_row_generic;
+      rb->PutRowRGB = put_row_generic;
+      rb->PutMonoRow = put_mono_row_generic;
+      rb->PutValues = put_values_generic;
+      rb->PutMonoValues = put_mono_values_generic;
+      break;
+
+   case MESA_FORMAT_RG88:
+      rb->DataType = GL_UNSIGNED_BYTE;
+      rb->GetValues = get_values_rg88;
+      rb->GetRow = get_row_rg88;
+      rb->PutRow = put_row_generic;
+      rb->PutRowRGB = put_row_generic;
+      rb->PutMonoRow = put_mono_row_generic;
+      rb->PutValues = put_values_generic;
+      rb->PutMonoValues = put_mono_values_generic;
+      break;
+
+   case MESA_FORMAT_R16:
+      rb->DataType = GL_UNSIGNED_SHORT;
+      rb->GetValues = get_values_r16;
+      rb->GetRow = get_row_r16;
+      rb->PutRow = put_row_generic;
+      rb->PutRowRGB = put_row_generic;
+      rb->PutMonoRow = put_mono_row_generic;
+      rb->PutValues = put_values_generic;
+      rb->PutMonoValues = put_mono_values_generic;
+      break;
+
+   case MESA_FORMAT_RG1616:
+      rb->DataType = GL_UNSIGNED_SHORT;
+      rb->GetValues = get_values_rg1616;
+      rb->GetRow = get_row_rg1616;
+      rb->PutRow = put_row_generic;
+      rb->PutRowRGB = put_row_generic;
+      rb->PutMonoRow = put_mono_row_generic;
+      rb->PutValues = put_values_generic;
+      rb->PutMonoValues = put_mono_values_generic;
+      break;
+
+   case MESA_FORMAT_SIGNED_RGBA_16:
+      rb->DataType = GL_SHORT;
+      rb->GetValues = get_values_ushort4;
+      rb->PutRow = put_row_ushort4;
+      rb->PutRowRGB = put_row_rgb_ushort4;
+      rb->PutMonoRow = put_mono_row_ushort4;
+      rb->PutValues = put_values_ushort4;
+      rb->PutMonoValues = put_mono_values_ushort4;
+      break;
+
+#if 0
+   case MESA_FORMAT_A8:
+      rb->DataType = GL_UNSIGNED_BYTE;
+      rb->GetValues = get_values_alpha8;
+      rb->PutRow = put_row_alpha8;
+      rb->PutRowRGB = NULL;
+      rb->PutMonoRow = put_mono_row_alpha8;
+      rb->PutValues = put_values_alpha8;
+      rb->PutMonoValues = put_mono_values_alpha8;
+      break;
+#endif
+
+   case MESA_FORMAT_S8:
+      rb->DataType = GL_UNSIGNED_BYTE;
+      rb->GetValues = get_values_ubyte;
+      rb->PutRow = put_row_ubyte;
+      rb->PutRowRGB = NULL;
+      rb->PutMonoRow = put_mono_row_ubyte;
+      rb->PutValues = put_values_ubyte;
+      rb->PutMonoValues = put_mono_values_ubyte;
+      break;
+
+   case MESA_FORMAT_Z16:
+      rb->DataType = GL_UNSIGNED_SHORT;
+      rb->GetValues = get_values_ushort;
+      rb->PutRow = put_row_ushort;
+      rb->PutRowRGB = NULL;
+      rb->PutMonoRow = put_mono_row_ushort;
+      rb->PutValues = put_values_ushort;
+      rb->PutMonoValues = put_mono_values_ushort;
+      break;
+
+   case MESA_FORMAT_Z32:
+   case MESA_FORMAT_X8_Z24:
+   case MESA_FORMAT_Z24_X8:
+      rb->DataType = GL_UNSIGNED_INT;
+      rb->GetValues = get_values_uint;
+      rb->PutRow = put_row_uint;
+      rb->PutRowRGB = NULL;
+      rb->PutMonoRow = put_mono_row_uint;
+      rb->PutValues = put_values_uint;
+      rb->PutMonoValues = put_mono_values_uint;
+      break;
+
+   case MESA_FORMAT_Z24_S8:
+   case MESA_FORMAT_S8_Z24:
+      rb->DataType = GL_UNSIGNED_INT_24_8_EXT;
+      rb->GetValues = get_values_uint;
+      rb->PutRow = put_row_uint;
+      rb->PutRowRGB = NULL;
+      rb->PutMonoRow = put_mono_row_uint;
+      rb->PutValues = put_values_uint;
+      rb->PutMonoValues = put_mono_values_uint;
+      break;
+
+   default:
+      break;
+   }
+}
 
 /**
  * This is a software fallback for the gl_renderbuffer->AllocStorage
@@ -943,12 +1258,10 @@ put_mono_values_ushort4(GLcontext *ctx, struct gl_renderbuffer *rb,
  * Get/PutValues functions.
  */
 GLboolean
-_mesa_soft_renderbuffer_storage(GLcontext *ctx, struct gl_renderbuffer *rb,
+_mesa_soft_renderbuffer_storage(struct gl_context *ctx, struct gl_renderbuffer *rb,
                                 GLenum internalFormat,
                                 GLuint width, GLuint height)
 {
-   GLuint pixelSize;
-
    switch (internalFormat) {
    case GL_RGB:
    case GL_R3_G3_B2:
@@ -959,16 +1272,6 @@ _mesa_soft_renderbuffer_storage(GLcontext *ctx, struct gl_renderbuffer *rb,
    case GL_RGB12:
    case GL_RGB16:
       rb->Format = MESA_FORMAT_RGB888;
-      rb->DataType = GL_UNSIGNED_BYTE;
-      rb->GetPointer = get_pointer_ubyte3;
-      rb->GetRow = get_row_ubyte3;
-      rb->GetValues = get_values_ubyte3;
-      rb->PutRow = put_row_ubyte3;
-      rb->PutRowRGB = put_row_rgb_ubyte3;
-      rb->PutMonoRow = put_mono_row_ubyte3;
-      rb->PutValues = put_values_ubyte3;
-      rb->PutMonoValues = put_mono_values_ubyte3;
-      pixelSize = 3 * sizeof(GLubyte);
       break;
    case GL_RGBA:
    case GL_RGBA2:
@@ -980,44 +1283,15 @@ _mesa_soft_renderbuffer_storage(GLcontext *ctx, struct gl_renderbuffer *rb,
    case GL_RGBA12:
 #endif
       rb->Format = MESA_FORMAT_RGBA8888;
-      rb->DataType = GL_UNSIGNED_BYTE;
-      rb->GetPointer = get_pointer_ubyte4;
-      rb->GetRow = get_row_ubyte4;
-      rb->GetValues = get_values_ubyte4;
-      rb->PutRow = put_row_ubyte4;
-      rb->PutRowRGB = put_row_rgb_ubyte4;
-      rb->PutMonoRow = put_mono_row_ubyte4;
-      rb->PutValues = put_values_ubyte4;
-      rb->PutMonoValues = put_mono_values_ubyte4;
-      pixelSize = 4 * sizeof(GLubyte);
       break;
    case GL_RGBA16:
+   case GL_RGBA16_SNORM:
       /* for accum buffer */
       rb->Format = MESA_FORMAT_SIGNED_RGBA_16;
-      rb->DataType = GL_SHORT;
-      rb->GetPointer = get_pointer_ushort4;
-      rb->GetRow = get_row_ushort4;
-      rb->GetValues = get_values_ushort4;
-      rb->PutRow = put_row_ushort4;
-      rb->PutRowRGB = put_row_rgb_ushort4;
-      rb->PutMonoRow = put_mono_row_ushort4;
-      rb->PutValues = put_values_ushort4;
-      rb->PutMonoValues = put_mono_values_ushort4;
-      pixelSize = 4 * sizeof(GLushort);
       break;
 #if 0
    case GL_ALPHA8:
       rb->Format = MESA_FORMAT_A8;
-      rb->DataType = GL_UNSIGNED_BYTE;
-      rb->GetPointer = get_pointer_alpha8;
-      rb->GetRow = get_row_alpha8;
-      rb->GetValues = get_values_alpha8;
-      rb->PutRow = put_row_alpha8;
-      rb->PutRowRGB = NULL;
-      rb->PutMonoRow = put_mono_row_alpha8;
-      rb->PutValues = put_values_alpha8;
-      rb->PutMonoValues = put_mono_values_alpha8;
-      pixelSize = sizeof(GLubyte);
       break;
 #endif
    case GL_STENCIL_INDEX:
@@ -1026,90 +1300,27 @@ _mesa_soft_renderbuffer_storage(GLcontext *ctx, struct gl_renderbuffer *rb,
    case GL_STENCIL_INDEX8_EXT:
    case GL_STENCIL_INDEX16_EXT:
       rb->Format = MESA_FORMAT_S8;
-      rb->DataType = GL_UNSIGNED_BYTE;
-      rb->GetPointer = get_pointer_ubyte;
-      rb->GetRow = get_row_ubyte;
-      rb->GetValues = get_values_ubyte;
-      rb->PutRow = put_row_ubyte;
-      rb->PutRowRGB = NULL;
-      rb->PutMonoRow = put_mono_row_ubyte;
-      rb->PutValues = put_values_ubyte;
-      rb->PutMonoValues = put_mono_values_ubyte;
-      pixelSize = sizeof(GLubyte);
       break;
    case GL_DEPTH_COMPONENT:
    case GL_DEPTH_COMPONENT16:
       rb->Format = MESA_FORMAT_Z16;
-      rb->DataType = GL_UNSIGNED_SHORT;
-      rb->GetPointer = get_pointer_ushort;
-      rb->GetRow = get_row_ushort;
-      rb->GetValues = get_values_ushort;
-      rb->PutRow = put_row_ushort;
-      rb->PutRowRGB = NULL;
-      rb->PutMonoRow = put_mono_row_ushort;
-      rb->PutValues = put_values_ushort;
-      rb->PutMonoValues = put_mono_values_ushort;
-      pixelSize = sizeof(GLushort);
       break;
    case GL_DEPTH_COMPONENT24:
-      rb->DataType = GL_UNSIGNED_INT;
-      rb->GetPointer = get_pointer_uint;
-      rb->GetRow = get_row_uint;
-      rb->GetValues = get_values_uint;
-      rb->PutRow = put_row_uint;
-      rb->PutRowRGB = NULL;
-      rb->PutMonoRow = put_mono_row_uint;
-      rb->PutValues = put_values_uint;
-      rb->PutMonoValues = put_mono_values_uint;
       rb->Format = MESA_FORMAT_X8_Z24;
-      pixelSize = sizeof(GLuint);
       break;
    case GL_DEPTH_COMPONENT32:
-      rb->DataType = GL_UNSIGNED_INT;
-      rb->GetPointer = get_pointer_uint;
-      rb->GetRow = get_row_uint;
-      rb->GetValues = get_values_uint;
-      rb->PutRow = put_row_uint;
-      rb->PutRowRGB = NULL;
-      rb->PutMonoRow = put_mono_row_uint;
-      rb->PutValues = put_values_uint;
-      rb->PutMonoValues = put_mono_values_uint;
       rb->Format = MESA_FORMAT_Z32;
-      pixelSize = sizeof(GLuint);
       break;
    case GL_DEPTH_STENCIL_EXT:
    case GL_DEPTH24_STENCIL8_EXT:
       rb->Format = MESA_FORMAT_Z24_S8;
-      rb->DataType = GL_UNSIGNED_INT_24_8_EXT;
-      rb->GetPointer = get_pointer_uint;
-      rb->GetRow = get_row_uint;
-      rb->GetValues = get_values_uint;
-      rb->PutRow = put_row_uint;
-      rb->PutRowRGB = NULL;
-      rb->PutMonoRow = put_mono_row_uint;
-      rb->PutValues = put_values_uint;
-      rb->PutMonoValues = put_mono_values_uint;
-      pixelSize = sizeof(GLuint);
-      break;
-   case GL_COLOR_INDEX8_EXT:
-   case GL_COLOR_INDEX16_EXT:
-   case COLOR_INDEX32:
-      rb->Format = MESA_FORMAT_CI8;
-      rb->DataType = GL_UNSIGNED_BYTE;
-      rb->GetPointer = get_pointer_ubyte;
-      rb->GetRow = get_row_ubyte;
-      rb->GetValues = get_values_ubyte;
-      rb->PutRow = put_row_ubyte;
-      rb->PutRowRGB = NULL;
-      rb->PutMonoRow = put_mono_row_ubyte;
-      rb->PutValues = put_values_ubyte;
-      rb->PutMonoValues = put_mono_values_ubyte;
-      pixelSize = sizeof(GLubyte);
       break;
    default:
       _mesa_problem(ctx, "Bad internalFormat in _mesa_soft_renderbuffer_storage");
       return GL_FALSE;
    }
+
+   _mesa_set_renderbuffer_accessors(rb);
 
    ASSERT(rb->DataType);
    ASSERT(rb->GetPointer);
@@ -1126,16 +1337,19 @@ _mesa_soft_renderbuffer_storage(GLcontext *ctx, struct gl_renderbuffer *rb,
       rb->Data = NULL;
    }
 
+   rb->RowStride = width;
+
    if (width > 0 && height > 0) {
       /* allocate new buffer storage */
-      rb->Data = malloc(width * height * pixelSize);
+      rb->Data = malloc(width * height * _mesa_get_format_bytes(rb->Format));
 
       if (rb->Data == NULL) {
          rb->Width = 0;
          rb->Height = 0;
+	 rb->RowStride = 0;
          _mesa_error(ctx, GL_OUT_OF_MEMORY,
                      "software renderbuffer allocation (%d x %d x %d)",
-                     width, height, pixelSize);
+                     width, height, _mesa_get_format_bytes(rb->Format));
          return GL_FALSE;
       }
    }
@@ -1166,7 +1380,7 @@ _mesa_soft_renderbuffer_storage(GLcontext *ctx, struct gl_renderbuffer *rb,
 
 
 static GLboolean
-alloc_storage_alpha8(GLcontext *ctx, struct gl_renderbuffer *arb,
+alloc_storage_alpha8(struct gl_context *ctx, struct gl_renderbuffer *arb,
                      GLenum internalFormat, GLuint width, GLuint height)
 {
    ASSERT(arb != arb->Wrapped);
@@ -1193,6 +1407,7 @@ alloc_storage_alpha8(GLcontext *ctx, struct gl_renderbuffer *arb,
 
    arb->Width = width;
    arb->Height = height;
+   arb->RowStride = width;
 
    return GL_TRUE;
 }
@@ -1216,7 +1431,7 @@ delete_renderbuffer_alpha8(struct gl_renderbuffer *arb)
 
 
 static void *
-get_pointer_alpha8(GLcontext *ctx, struct gl_renderbuffer *arb,
+get_pointer_alpha8(struct gl_context *ctx, struct gl_renderbuffer *arb,
                    GLint x, GLint y)
 {
    return NULL;   /* don't allow direct access! */
@@ -1224,11 +1439,11 @@ get_pointer_alpha8(GLcontext *ctx, struct gl_renderbuffer *arb,
 
 
 static void
-get_row_alpha8(GLcontext *ctx, struct gl_renderbuffer *arb, GLuint count,
+get_row_alpha8(struct gl_context *ctx, struct gl_renderbuffer *arb, GLuint count,
                GLint x, GLint y, void *values)
 {
    /* NOTE: 'values' is RGBA format! */
-   const GLubyte *src = (const GLubyte *) arb->Data + y * arb->Width + x;
+   const GLubyte *src = (const GLubyte *) arb->Data + y * arb->RowStride + x;
    GLubyte *dst = (GLubyte *) values;
    GLuint i;
    ASSERT(arb != arb->Wrapped);
@@ -1243,7 +1458,7 @@ get_row_alpha8(GLcontext *ctx, struct gl_renderbuffer *arb, GLuint count,
 
 
 static void
-get_values_alpha8(GLcontext *ctx, struct gl_renderbuffer *arb, GLuint count,
+get_values_alpha8(struct gl_context *ctx, struct gl_renderbuffer *arb, GLuint count,
                   const GLint x[], const GLint y[], void *values)
 {
    GLubyte *dst = (GLubyte *) values;
@@ -1254,18 +1469,18 @@ get_values_alpha8(GLcontext *ctx, struct gl_renderbuffer *arb, GLuint count,
    arb->Wrapped->GetValues(ctx, arb->Wrapped, count, x, y, values);
    /* second, fill in alpha values from this buffer! */
    for (i = 0; i < count; i++) {
-      const GLubyte *src = (GLubyte *) arb->Data + y[i] * arb->Width + x[i];
+      const GLubyte *src = (GLubyte *) arb->Data + y[i] * arb->RowStride + x[i];
       dst[i * 4 + 3] = *src;
    }
 }
 
 
 static void
-put_row_alpha8(GLcontext *ctx, struct gl_renderbuffer *arb, GLuint count,
+put_row_alpha8(struct gl_context *ctx, struct gl_renderbuffer *arb, GLuint count,
                GLint x, GLint y, const void *values, const GLubyte *mask)
 {
    const GLubyte *src = (const GLubyte *) values;
-   GLubyte *dst = (GLubyte *) arb->Data + y * arb->Width + x;
+   GLubyte *dst = (GLubyte *) arb->Data + y * arb->RowStride + x;
    GLuint i;
    ASSERT(arb != arb->Wrapped);
    ASSERT(arb->DataType == GL_UNSIGNED_BYTE);
@@ -1281,11 +1496,11 @@ put_row_alpha8(GLcontext *ctx, struct gl_renderbuffer *arb, GLuint count,
 
 
 static void
-put_row_rgb_alpha8(GLcontext *ctx, struct gl_renderbuffer *arb, GLuint count,
+put_row_rgb_alpha8(struct gl_context *ctx, struct gl_renderbuffer *arb, GLuint count,
                    GLint x, GLint y, const void *values, const GLubyte *mask)
 {
    const GLubyte *src = (const GLubyte *) values;
-   GLubyte *dst = (GLubyte *) arb->Data + y * arb->Width + x;
+   GLubyte *dst = (GLubyte *) arb->Data + y * arb->RowStride + x;
    GLuint i;
    ASSERT(arb != arb->Wrapped);
    ASSERT(arb->DataType == GL_UNSIGNED_BYTE);
@@ -1301,11 +1516,11 @@ put_row_rgb_alpha8(GLcontext *ctx, struct gl_renderbuffer *arb, GLuint count,
 
 
 static void
-put_mono_row_alpha8(GLcontext *ctx, struct gl_renderbuffer *arb, GLuint count,
+put_mono_row_alpha8(struct gl_context *ctx, struct gl_renderbuffer *arb, GLuint count,
                     GLint x, GLint y, const void *value, const GLubyte *mask)
 {
    const GLubyte val = ((const GLubyte *) value)[3];
-   GLubyte *dst = (GLubyte *) arb->Data + y * arb->Width + x;
+   GLubyte *dst = (GLubyte *) arb->Data + y * arb->RowStride + x;
    ASSERT(arb != arb->Wrapped);
    ASSERT(arb->DataType == GL_UNSIGNED_BYTE);
    /* first, pass the call to the wrapped RGB buffer */
@@ -1326,7 +1541,7 @@ put_mono_row_alpha8(GLcontext *ctx, struct gl_renderbuffer *arb, GLuint count,
 
 
 static void
-put_values_alpha8(GLcontext *ctx, struct gl_renderbuffer *arb, GLuint count,
+put_values_alpha8(struct gl_context *ctx, struct gl_renderbuffer *arb, GLuint count,
                   const GLint x[], const GLint y[],
                   const void *values, const GLubyte *mask)
 {
@@ -1339,7 +1554,7 @@ put_values_alpha8(GLcontext *ctx, struct gl_renderbuffer *arb, GLuint count,
    /* second, store alpha in our buffer */
    for (i = 0; i < count; i++) {
       if (!mask || mask[i]) {
-         GLubyte *dst = (GLubyte *) arb->Data + y[i] * arb->Width + x[i];
+         GLubyte *dst = (GLubyte *) arb->Data + y[i] * arb->RowStride + x[i];
          *dst = src[i * 4 + 3];
       }
    }
@@ -1347,7 +1562,7 @@ put_values_alpha8(GLcontext *ctx, struct gl_renderbuffer *arb, GLuint count,
 
 
 static void
-put_mono_values_alpha8(GLcontext *ctx, struct gl_renderbuffer *arb,
+put_mono_values_alpha8(struct gl_context *ctx, struct gl_renderbuffer *arb,
                        GLuint count, const GLint x[], const GLint y[],
                        const void *value, const GLubyte *mask)
 {
@@ -1360,7 +1575,7 @@ put_mono_values_alpha8(GLcontext *ctx, struct gl_renderbuffer *arb,
    /* second, store alpha in our buffer */
    for (i = 0; i < count; i++) {
       if (!mask || mask[i]) {
-         GLubyte *dst = (GLubyte *) arb->Data + y[i] * arb->Width + x[i];
+         GLubyte *dst = (GLubyte *) arb->Data + y[i] * arb->RowStride + x[i];
          *dst = val;
       }
    }
@@ -1374,8 +1589,9 @@ copy_buffer_alpha8(struct gl_renderbuffer* dst, struct gl_renderbuffer* src)
    ASSERT(src->Format == MESA_FORMAT_A8);
    ASSERT(dst->Width == src->Width);
    ASSERT(dst->Height == src->Height);
+   ASSERT(dst->RowStride == src->RowStride);
 
-   memcpy(dst->Data, src->Data, dst->Width * dst->Height * sizeof(GLubyte));
+   memcpy(dst->Data, src->Data, dst->RowStride * dst->Height * sizeof(GLubyte));
 }
 
 
@@ -1389,7 +1605,7 @@ copy_buffer_alpha8(struct gl_renderbuffer* dst, struct gl_renderbuffer* src)
  * direct buffer access is not supported.
  */
 static void *
-nop_get_pointer(GLcontext *ctx, struct gl_renderbuffer *rb, GLint x, GLint y)
+nop_get_pointer(struct gl_context *ctx, struct gl_renderbuffer *rb, GLint x, GLint y)
 {
    return NULL;
 }
@@ -1443,7 +1659,7 @@ _mesa_init_renderbuffer(struct gl_renderbuffer *rb, GLuint name)
  * renderbuffers or window-system renderbuffers.
  */
 struct gl_renderbuffer *
-_mesa_new_renderbuffer(GLcontext *ctx, GLuint name)
+_mesa_new_renderbuffer(struct gl_context *ctx, GLuint name)
 {
    struct gl_renderbuffer *rb = CALLOC_STRUCT(gl_renderbuffer);
    if (rb) {
@@ -1474,7 +1690,7 @@ _mesa_delete_renderbuffer(struct gl_renderbuffer *rb)
  * This would not be used for hardware-based renderbuffers.
  */
 struct gl_renderbuffer *
-_mesa_new_soft_renderbuffer(GLcontext *ctx, GLuint name)
+_mesa_new_soft_renderbuffer(struct gl_context *ctx, GLuint name)
 {
    struct gl_renderbuffer *rb = _mesa_new_renderbuffer(ctx, name);
    if (rb) {
@@ -1497,7 +1713,7 @@ _mesa_new_soft_renderbuffer(GLcontext *ctx, GLuint name)
  * rendering!
  */
 GLboolean
-_mesa_add_color_renderbuffers(GLcontext *ctx, struct gl_framebuffer *fb,
+_mesa_add_color_renderbuffers(struct gl_context *ctx, struct gl_framebuffer *fb,
                               GLuint rgbBits, GLuint alphaBits,
                               GLboolean frontLeft, GLboolean backLeft,
                               GLboolean frontRight, GLboolean backRight)
@@ -1561,7 +1777,7 @@ _mesa_add_color_renderbuffers(GLcontext *ctx, struct gl_framebuffer *fb,
  * rendering!
  */
 GLboolean
-_mesa_add_alpha_renderbuffers(GLcontext *ctx, struct gl_framebuffer *fb,
+_mesa_add_alpha_renderbuffers(struct gl_context *ctx, struct gl_framebuffer *fb,
                               GLuint alphaBits,
                               GLboolean frontLeft, GLboolean backLeft,
                               GLboolean frontRight, GLboolean backRight)
@@ -1645,7 +1861,7 @@ _mesa_add_alpha_renderbuffers(GLcontext *ctx, struct gl_framebuffer *fb,
  * copy the back buffer alpha channel into the front buffer alpha channel.
  */
 void
-_mesa_copy_soft_alpha_renderbuffers(GLcontext *ctx, struct gl_framebuffer *fb)
+_mesa_copy_soft_alpha_renderbuffers(struct gl_context *ctx, struct gl_framebuffer *fb)
 {
    if (fb->Attachment[BUFFER_FRONT_LEFT].Renderbuffer &&
        fb->Attachment[BUFFER_BACK_LEFT].Renderbuffer)
@@ -1669,7 +1885,7 @@ _mesa_copy_soft_alpha_renderbuffers(GLcontext *ctx, struct gl_framebuffer *fb)
  * rendering!
  */
 GLboolean
-_mesa_add_depth_renderbuffer(GLcontext *ctx, struct gl_framebuffer *fb,
+_mesa_add_depth_renderbuffer(struct gl_context *ctx, struct gl_framebuffer *fb,
                              GLuint depthBits)
 {
    struct gl_renderbuffer *rb;
@@ -1717,7 +1933,7 @@ _mesa_add_depth_renderbuffer(GLcontext *ctx, struct gl_framebuffer *fb,
  * rendering!
  */
 GLboolean
-_mesa_add_stencil_renderbuffer(GLcontext *ctx, struct gl_framebuffer *fb,
+_mesa_add_stencil_renderbuffer(struct gl_context *ctx, struct gl_framebuffer *fb,
                                GLuint stencilBits)
 {
    struct gl_renderbuffer *rb;
@@ -1756,7 +1972,7 @@ _mesa_add_stencil_renderbuffer(GLcontext *ctx, struct gl_framebuffer *fb,
  * rendering!
  */
 GLboolean
-_mesa_add_accum_renderbuffer(GLcontext *ctx, struct gl_framebuffer *fb,
+_mesa_add_accum_renderbuffer(struct gl_context *ctx, struct gl_framebuffer *fb,
                              GLuint redBits, GLuint greenBits,
                              GLuint blueBits, GLuint alphaBits)
 {
@@ -1777,7 +1993,7 @@ _mesa_add_accum_renderbuffer(GLcontext *ctx, struct gl_framebuffer *fb,
    }
 
    rb->Format = MESA_FORMAT_SIGNED_RGBA_16;
-   rb->InternalFormat = GL_RGBA16;
+   rb->InternalFormat = GL_RGBA16_SNORM;
    rb->AllocStorage = _mesa_soft_renderbuffer_storage;
    _mesa_add_renderbuffer(fb, BUFFER_ACCUM, rb);
 
@@ -1787,7 +2003,7 @@ _mesa_add_accum_renderbuffer(GLcontext *ctx, struct gl_framebuffer *fb,
 
 
 /**
- * Add a software-based accumulation renderbuffer to the given framebuffer.
+ * Add a software-based aux renderbuffer to the given framebuffer.
  * This is a helper routine for device drivers when creating a
  * window system framebuffer (not a user-created render/framebuffer).
  * Once this function is called, you can basically forget about this
@@ -1797,7 +2013,7 @@ _mesa_add_accum_renderbuffer(GLcontext *ctx, struct gl_framebuffer *fb,
  * NOTE: color-index aux buffers not supported.
  */
 GLboolean
-_mesa_add_aux_renderbuffers(GLcontext *ctx, struct gl_framebuffer *fb,
+_mesa_add_aux_renderbuffers(struct gl_context *ctx, struct gl_framebuffer *fb,
                             GLuint colorBits, GLuint numBuffers)
 {
    GLuint i;
@@ -1816,7 +2032,7 @@ _mesa_add_aux_renderbuffers(GLcontext *ctx, struct gl_framebuffer *fb,
       assert(fb->Attachment[BUFFER_AUX0 + i].Renderbuffer == NULL);
 
       if (!rb) {
-         _mesa_error(ctx, GL_OUT_OF_MEMORY, "Allocating accum buffer");
+         _mesa_error(ctx, GL_OUT_OF_MEMORY, "Allocating aux buffer");
          return GL_FALSE;
       }
 
@@ -1909,8 +2125,6 @@ void
 _mesa_add_renderbuffer(struct gl_framebuffer *fb,
                        GLuint bufferName, struct gl_renderbuffer *rb)
 {
-   GLenum baseFormat;
-
    assert(fb);
    assert(rb);
    assert(bufferName < BUFFER_COUNT);
@@ -1929,26 +2143,6 @@ _mesa_add_renderbuffer(struct gl_framebuffer *fb,
    }
    else {
       assert(!rb->Name);
-   }
-
-   /* If Mesa's compiled with deep color channels (16 or 32 bits / channel)
-    * and the device driver is expecting 8-bit values (GLubyte), we can
-    * use a "renderbuffer adaptor/wrapper" to do the necessary conversions.
-    */
-   baseFormat = _mesa_get_format_base_format(rb->Format);
-   if (baseFormat == GL_RGBA) {
-      if (CHAN_BITS == 16 && rb->DataType == GL_UNSIGNED_BYTE) {
-         GET_CURRENT_CONTEXT(ctx);
-         rb = _mesa_new_renderbuffer_16wrap8(ctx, rb);
-      }
-      else if (CHAN_BITS == 32 && rb->DataType == GL_UNSIGNED_BYTE) {
-         GET_CURRENT_CONTEXT(ctx);
-         rb = _mesa_new_renderbuffer_32wrap8(ctx, rb);
-      }
-      else if (CHAN_BITS == 32 && rb->DataType == GL_UNSIGNED_SHORT) {
-         GET_CURRENT_CONTEXT(ctx);
-         rb = _mesa_new_renderbuffer_32wrap16(ctx, rb);
-      }
    }
 
    fb->Attachment[bufferName].Type = GL_RENDERBUFFER_EXT;
@@ -2033,7 +2227,7 @@ _mesa_reference_renderbuffer(struct gl_renderbuffer **ptr,
  * \return new depth/stencil renderbuffer
  */
 struct gl_renderbuffer *
-_mesa_new_depthstencil_renderbuffer(GLcontext *ctx, GLuint name)
+_mesa_new_depthstencil_renderbuffer(struct gl_context *ctx, GLuint name)
 {
    struct gl_renderbuffer *dsrb;
 

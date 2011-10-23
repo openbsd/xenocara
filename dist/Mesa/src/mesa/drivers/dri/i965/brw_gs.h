@@ -42,10 +42,9 @@
 struct brw_gs_prog_key {
    GLbitfield64 attrs;
    GLuint primitive:4;
-   GLuint hint_gs_always:1;
    GLuint pv_first:1;
    GLuint need_gs_prog:1;
-   GLuint pad:25;
+   GLuint pad:26;
 };
 
 struct brw_gs_compile {
@@ -56,6 +55,7 @@ struct brw_gs_compile {
    struct {
       struct brw_reg R0;
       struct brw_reg vertex[MAX_GS_VERTS];
+      struct brw_reg temp;
    } reg;
 
    /* 3 different ways of expressing vertex size:
@@ -69,8 +69,6 @@ struct brw_gs_compile {
 
 void brw_gs_quads( struct brw_gs_compile *c, struct brw_gs_prog_key *key );
 void brw_gs_quad_strip( struct brw_gs_compile *c, struct brw_gs_prog_key *key );
-void brw_gs_tris( struct brw_gs_compile *c );
 void brw_gs_lines( struct brw_gs_compile *c );
-void brw_gs_points( struct brw_gs_compile *c );
 
 #endif

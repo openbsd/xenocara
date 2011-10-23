@@ -32,54 +32,118 @@
 #include "lp_setup.h"
 #include "draw/draw_context.h"
 
+struct lp_rast_state {
+   struct pipe_rasterizer_state lp_state;
+   struct pipe_rasterizer_state draw_state;
+};
 
-
-void *
-llvmpipe_create_rasterizer_state(struct pipe_context *pipe,
-                                 const struct pipe_rasterizer_state *rast)
+/* State which might be handled in either the draw module or locally.
+ * This function is used to turn that state off in one of the two
+ * places.
+ */
+static void
+clear_flags(struct pipe_rasterizer_state *rast)
 {
-   /* We do nothing special with rasterizer state.
-    * The CSO handle is just a pointer to a pipe_rasterizer_state object.
-    */
-   return mem_dup(rast, sizeof(*rast));
+   rast->light_twoside = 0;
+   rast->offset_tri = 0;
 }
 
 
 
-void
+static void *
+llvmpipe_create_rasterizer_state(struct pipe_context *pipe,
+                                 const struct pipe_rasterizer_state *rast)
+{
+   boolean need_pipeline;
+
+   /* Partition rasterizer state into what we want the draw module to
+    * handle, and what we'll look after ourselves.
+    */
+   struct lp_rast_state *state = MALLOC_STRUCT(lp_rast_state);
+   if (state == NULL)
+      return NULL;
+
+   memcpy(&state->draw_state, rast, sizeof *rast);
+   memcpy(&state->lp_state, rast, sizeof *rast);
+
+   /* We rely on draw module to do unfilled polyons, AA lines and
+    * points and stipple.
+    * 
+    * Over time, reduce this list of conditions, and expand the list
+    * of flags which get cleared in clear_flags().
+    */
+   need_pipeline = (rast->fill_front != PIPE_POLYGON_MODE_FILL ||
+		    rast->fill_back != PIPE_POLYGON_MODE_FILL ||
+		    rast->point_smooth ||
+		    rast->line_smooth ||
+		    rast->line_stipple_enable ||
+		    rast->poly_stipple_enable);
+
+   /* If not using the pipeline, clear out the flags which we can
+    * handle ourselves.  If we *are* using the pipeline, do everything
+    * on the pipeline and clear those flags on our internal copy of
+    * the state.
+    */
+   if (need_pipeline)
+      clear_flags(&state->lp_state);
+   else
+      clear_flags(&state->draw_state);
+
+   return state;
+}
+
+
+
+static void
 llvmpipe_bind_rasterizer_state(struct pipe_context *pipe, void *handle)
 {
    struct llvmpipe_context *llvmpipe = llvmpipe_context(pipe);
-   const struct pipe_rasterizer_state *rasterizer =
-      (const struct pipe_rasterizer_state *) handle;
+   const struct lp_rast_state *state =
+      (const struct lp_rast_state *) handle;
 
-   if (llvmpipe->rasterizer == rasterizer)
-      return;
+   if (state) {
+      llvmpipe->rasterizer = &state->lp_state;
+      draw_set_rasterizer_state(llvmpipe->draw, &state->draw_state, handle);
 
-   /* pass-through to draw module */
-   draw_set_rasterizer_state(llvmpipe->draw, rasterizer, handle);
-
-   llvmpipe->rasterizer = rasterizer;
-
-   /* Note: we can immediately set the triangle state here and
-    * not worry about binning because we handle culling during
-    * triangle setup, not when rasterizing the bins.
-    */
-   if (llvmpipe->rasterizer) {
+      /* XXX: just pass lp_state directly to setup.
+       */
       lp_setup_set_triangle_state( llvmpipe->setup,
-                   llvmpipe->rasterizer->cull_mode,
-                   llvmpipe->rasterizer->front_winding == PIPE_WINDING_CCW,
-                   llvmpipe->rasterizer->scissor);
+				   state->lp_state.cull_face,
+				   state->lp_state.front_ccw,
+				   state->lp_state.scissor,
+				   state->lp_state.gl_rasterization_rules);
+      lp_setup_set_flatshade_first( llvmpipe->setup,
+				    state->lp_state.flatshade_first);
+      lp_setup_set_line_state( llvmpipe->setup,
+			       state->lp_state.line_width);
+      lp_setup_set_point_state( llvmpipe->setup,
+				state->lp_state.point_size,
+				state->lp_state.point_size_per_vertex,
+				state->lp_state.sprite_coord_enable,
+				state->lp_state.sprite_coord_mode);
+   }
+   else {
+      llvmpipe->rasterizer = NULL;
+      draw_set_rasterizer_state(llvmpipe->draw, NULL, handle);      
    }
 
    llvmpipe->dirty |= LP_NEW_RASTERIZER;
 }
 
 
-void llvmpipe_delete_rasterizer_state(struct pipe_context *pipe,
-                                      void *rasterizer)
+static void
+llvmpipe_delete_rasterizer_state(struct pipe_context *pipe,
+                                 void *rasterizer)
 {
    FREE( rasterizer );
 }
 
 
+
+void
+llvmpipe_init_rasterizer_funcs(struct llvmpipe_context *llvmpipe)
+{
+   llvmpipe->pipe.create_rasterizer_state = llvmpipe_create_rasterizer_state;
+   llvmpipe->pipe.bind_rasterizer_state   = llvmpipe_bind_rasterizer_state;
+   llvmpipe->pipe.delete_rasterizer_state = llvmpipe_delete_rasterizer_state;
+}

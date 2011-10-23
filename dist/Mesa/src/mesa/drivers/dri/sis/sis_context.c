@@ -147,7 +147,7 @@ WaitingFor3dIdle(sisContextPtr smesa, int wLen)
    }
 }
 
-void sisReAllocateBuffers(GLcontext *ctx, GLframebuffer *drawbuffer,
+void sisReAllocateBuffers(struct gl_context *ctx, struct gl_framebuffer *drawbuffer,
                           GLuint width, GLuint height)
 {
    sisContextPtr smesa = SIS_CONTEXT(ctx);
@@ -158,11 +158,12 @@ void sisReAllocateBuffers(GLcontext *ctx, GLframebuffer *drawbuffer,
 }
 
 GLboolean
-sisCreateContext( const __GLcontextModes *glVisual,
+sisCreateContext( gl_api api,
+		  const struct gl_config *glVisual,
 		  __DRIcontext *driContextPriv,
                   void *sharedContextPrivate )
 {
-   GLcontext *ctx, *shareCtx;
+   struct gl_context *ctx, *shareCtx;
    __DRIscreen *sPriv = driContextPriv->driScreenPriv;
    sisContextPtr smesa;
    sisScreenPtr sisScreen;
@@ -380,8 +381,8 @@ sisMakeCurrent( __DRIcontext *driContextPriv,
 
       newSisCtx->driDrawable = driDrawPriv;
 
-      drawBuffer = (GLframebuffer *)driDrawPriv->driverPrivate;
-      readBuffer = (GLframebuffer *)driReadPriv->driverPrivate;
+      drawBuffer = (struct gl_framebuffer *)driDrawPriv->driverPrivate;
+      readBuffer = (struct gl_framebuffer *)driReadPriv->driverPrivate;
 
       _mesa_make_current( newSisCtx->glCtx, drawBuffer, readBuffer );
 

@@ -11,6 +11,7 @@
 #include <string.h>
 
 #include "egllog.h"
+#include "eglstring.h"
 #include "eglmutex.h"
 
 #define MAXSTRING 1000
@@ -116,7 +117,7 @@ _eglInitLogger(void)
    log_env = getenv("EGL_LOG_LEVEL");
    if (log_env) {
       for (i = 0; level_strings[i]; i++) {
-         if (strcasecmp(log_env, level_strings[i]) == 0) {
+         if (_eglstrcasecmp(log_env, level_strings[i]) == 0) {
             level = i;
             break;
          }
@@ -150,6 +151,7 @@ _eglLog(EGLint level, const char *fmtStr, ...)
 {
    va_list args;
    char msg[MAXSTRING];
+   int ret;
 
    /* one-time initialization; a little race here is fine */
    if (!logging.initialized)
@@ -161,7 +163,9 @@ _eglLog(EGLint level, const char *fmtStr, ...)
 
    if (logging.logger) {
       va_start(args, fmtStr);
-      vsnprintf(msg, MAXSTRING, fmtStr, args);
+      ret = vsnprintf(msg, MAXSTRING, fmtStr, args);
+      if (ret < 0 || ret >= MAXSTRING)
+         strcpy(msg, "<message truncated>");
       va_end(args);
 
       logging.logger(level, msg);

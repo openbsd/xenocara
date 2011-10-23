@@ -14,12 +14,13 @@
  * The above copyright notice and this permission notice shall be included
  * in all copies or substantial portions of the Software.
  *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
- * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
- * BRIAN PAUL BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN
- * AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
- * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+ * DEALINGS IN THE SOFTWARE.
  */
 
 
@@ -35,20 +36,18 @@
  * a dynamic entry, or the corresponding static entry, in glapi.
  */
 
-#include "remap.h"
-#include "imports.h"
-
-#include "main/dispatch.h"
-
+#include "mfeatures.h"
 
 #if FEATURE_remap_table
 
+#include "remap.h"
+#include "imports.h"
+#include "glapi/glapi.h"
+
+#define MAX_ENTRY_POINTS 16
 
 #define need_MESA_remap_table
 #include "main/remap_helper.h"
-
-#define ARRAY_SIZE(a) (sizeof (a) / sizeof ((a)[0]))
-#define MAX_ENTRY_POINTS 16
 
 
 /* this is global for quick access */
@@ -66,7 +65,7 @@ int driDispatchRemapTable[driDispatchRemapTable_size];
 const char *
 _mesa_get_function_spec(GLint func_index)
 {
-   if (func_index < ARRAY_SIZE(_mesa_function_pool))
+   if (func_index < Elements(_mesa_function_pool))
       return _mesa_function_pool + func_index;
    else
       return NULL;
@@ -185,8 +184,10 @@ _mesa_map_static_functions(void)
  * The remap table needs to be initialized before calling the
  * CALL/GET/SET macros defined in main/dispatch.h.
  */
-void
-_mesa_init_remap_table(void)
+static void
+_mesa_do_init_remap_table(const char *pool,
+			  int size,
+			  const struct gl_function_pool_remap *remap)
 {
    static GLboolean initialized = GL_FALSE;
    GLint i;
@@ -196,13 +197,13 @@ _mesa_init_remap_table(void)
    initialized = GL_TRUE;
 
    /* initialize the remap table */
-   for (i = 0; i < ARRAY_SIZE(driDispatchRemapTable); i++) {
+   for (i = 0; i < size; i++) {
       GLint offset;
       const char *spec;
 
       /* sanity check */
-      ASSERT(i == MESA_remap_table_functions[i].remap_index);
-      spec = _mesa_function_pool + MESA_remap_table_functions[i].pool_index;
+      ASSERT(i == remap[i].remap_index);
+      spec = _mesa_function_pool + remap[i].pool_index;
 
       offset = _mesa_map_function_spec(spec);
       /* store the dispatch offset in the remap table */
@@ -210,6 +211,15 @@ _mesa_init_remap_table(void)
       if (offset < 0)
          _mesa_warning(NULL, "failed to remap index %d", i);
    }
+}
+
+
+void
+_mesa_init_remap_table(void)
+{
+   _mesa_do_init_remap_table(_mesa_function_pool,
+			     driDispatchRemapTable_size,
+			     MESA_remap_table_functions);
 }
 
 

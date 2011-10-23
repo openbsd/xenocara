@@ -32,7 +32,11 @@
 #include "glheader.h"
 #include "imports.h"
 #include "api_arrayelt.h"
+#include "api_exec.h"
 #include "api_loopback.h"
+#if FEATURE_ATI_fragment_shader
+#include "atifragshader.h"
+#endif
 #include "config.h"
 #include "mfeatures.h"
 #if FEATURE_ARB_vertex_buffer_object
@@ -48,20 +52,17 @@
 #include "hash.h"
 #include "image.h"
 #include "light.h"
-#include "dlist.h"
 #include "macros.h"
+#include "pack.h"
 #include "queryobj.h"
 #include "teximage.h"
 #include "mtypes.h"
 #include "varray.h"
 #if FEATURE_ARB_vertex_program || FEATURE_ARB_fragment_program
-#include "shader/arbprogram.h"
+#include "arbprogram.h"
 #endif
 #if FEATURE_NV_vertex_program || FEATURE_NV_fragment_program
-#include "shader/nvprogram.h"
-#endif
-#if FEATURE_ATI_fragment_shader
-#include "shader/atifragshader.h"
+#include "nvprogram.h"
 #endif
 
 #include "math/m_matrix.h"
@@ -77,9 +78,9 @@
 struct gl_list_instruction
 {
    GLuint Size;
-   void (*Execute)( GLcontext *ctx, void *data );
-   void (*Destroy)( GLcontext *ctx, void *data );
-   void (*Print)( GLcontext *ctx, void *data );
+   void (*Execute)( struct gl_context *ctx, void *data );
+   void (*Destroy)( struct gl_context *ctx, void *data );
+   void (*Print)( struct gl_context *ctx, void *data );
 };
 
 
@@ -370,6 +371,16 @@ typedef enum
    OPCODE_UNIFORM_MATRIX34,
    OPCODE_UNIFORM_MATRIX43,
 
+   /* OpenGL 3.0 */
+   OPCODE_UNIFORM_1UI,
+   OPCODE_UNIFORM_2UI,
+   OPCODE_UNIFORM_3UI,
+   OPCODE_UNIFORM_4UI,
+   OPCODE_UNIFORM_1UIV,
+   OPCODE_UNIFORM_2UIV,
+   OPCODE_UNIFORM_3UIV,
+   OPCODE_UNIFORM_4UIV,
+
    /* GL_EXT_framebuffer_blit */
    OPCODE_BLIT_FRAMEBUFFER,
 
@@ -395,6 +406,20 @@ typedef enum
 
    /* GL_EXT_provoking_vertex */
    OPCODE_PROVOKING_VERTEX,
+
+   /* GL_EXT_transform_feedback */
+   OPCODE_BEGIN_TRANSFORM_FEEDBACK,
+   OPCODE_END_TRANSFORM_FEEDBACK,
+
+   /* GL_EXT_texture_integer */
+   OPCODE_CLEARCOLOR_I,
+   OPCODE_CLEARCOLOR_UI,
+   OPCODE_TEXPARAMETER_I,
+   OPCODE_TEXPARAMETER_UI,
+
+   /* GL_EXT_separate_shader_objects */
+   OPCODE_ACTIVE_PROGRAM_EXT,
+   OPCODE_USE_SHADER_PROGRAM_EXT,
 
    /* The following three are meta instructions */
    OPCODE_ERROR,                /* raise compiled-in error */
@@ -482,7 +507,7 @@ make_list(GLuint name, GLuint count)
  * Lookup function to just encapsulate casting.
  */
 static INLINE struct gl_display_list *
-lookup_list(GLcontext *ctx, GLuint list)
+lookup_list(struct gl_context *ctx, GLuint list)
 {
    return (struct gl_display_list *)
       _mesa_HashLookup(ctx->Shared->DisplayList, list);
@@ -499,7 +524,7 @@ is_ext_opcode(OpCode opcode)
 
 /** Destroy an extended opcode instruction */
 static GLint
-ext_opcode_destroy(GLcontext *ctx, Node *node)
+ext_opcode_destroy(struct gl_context *ctx, Node *node)
 {
    const GLint i = node[0].opcode - OPCODE_EXT_0;
    GLint step;
@@ -511,7 +536,7 @@ ext_opcode_destroy(GLcontext *ctx, Node *node)
 
 /** Execute an extended opcode instruction */
 static GLint
-ext_opcode_execute(GLcontext *ctx, Node *node)
+ext_opcode_execute(struct gl_context *ctx, Node *node)
 {
    const GLint i = node[0].opcode - OPCODE_EXT_0;
    GLint step;
@@ -523,7 +548,7 @@ ext_opcode_execute(GLcontext *ctx, Node *node)
 
 /** Print an extended opcode instruction */
 static GLint
-ext_opcode_print(GLcontext *ctx, Node *node)
+ext_opcode_print(struct gl_context *ctx, Node *node)
 {
    const GLint i = node[0].opcode - OPCODE_EXT_0;
    GLint step;
@@ -538,7 +563,7 @@ ext_opcode_print(GLcontext *ctx, Node *node)
  * \param dlist - display list pointer
  */
 void
-_mesa_delete_list(GLcontext *ctx, struct gl_display_list *dlist)
+_mesa_delete_list(struct gl_context *ctx, struct gl_display_list *dlist)
 {
    Node *n, *block;
    GLboolean done;
@@ -670,6 +695,10 @@ _mesa_delete_list(GLcontext *ctx, struct gl_display_list *dlist)
          case OPCODE_UNIFORM_2IV:
          case OPCODE_UNIFORM_3IV:
          case OPCODE_UNIFORM_4IV:
+         case OPCODE_UNIFORM_1UIV:
+         case OPCODE_UNIFORM_2UIV:
+         case OPCODE_UNIFORM_3UIV:
+         case OPCODE_UNIFORM_4UIV:
             free(n[3].data);
             n += InstSize[n[0].opcode];
             break;
@@ -712,7 +741,7 @@ _mesa_delete_list(GLcontext *ctx, struct gl_display_list *dlist)
  * \param list - display list number
  */
 static void
-destroy_list(GLcontext *ctx, GLuint list)
+destroy_list(struct gl_context *ctx, GLuint list)
 {
    struct gl_display_list *dlist;
 
@@ -796,7 +825,7 @@ translate_id(GLsizei n, GLenum type, const GLvoid * list)
  * If we run out of memory, GL_OUT_OF_MEMORY will be recorded.
  */
 static GLvoid *
-unpack_image(GLcontext *ctx, GLuint dimensions,
+unpack_image(struct gl_context *ctx, GLuint dimensions,
              GLsizei width, GLsizei height, GLsizei depth,
              GLenum format, GLenum type, const GLvoid * pixels,
              const struct gl_pixelstore_attrib *unpack)
@@ -848,7 +877,7 @@ unpack_image(GLcontext *ctx, GLuint dimensions,
  * \return pointer to allocated memory (the opcode space)
  */
 static Node *
-dlist_alloc(GLcontext *ctx, OpCode opcode, GLuint bytes)
+dlist_alloc(struct gl_context *ctx, OpCode opcode, GLuint bytes)
 {
    const GLuint numNodes = 1 + (bytes + sizeof(Node) - 1) / sizeof(Node);
    Node *n;
@@ -899,7 +928,7 @@ dlist_alloc(GLcontext *ctx, OpCode opcode, GLuint bytes)
  *         opcode).
  */
 void *
-_mesa_dlist_alloc(GLcontext *ctx, GLuint opcode, GLuint bytes)
+_mesa_dlist_alloc(struct gl_context *ctx, GLuint opcode, GLuint bytes)
 {
    Node *n = dlist_alloc(ctx, (OpCode) opcode, bytes);
    if (n)
@@ -920,11 +949,11 @@ _mesa_dlist_alloc(GLcontext *ctx, GLuint opcode, GLuint bytes)
  * \return  the new opcode number or -1 if error
  */
 GLint
-_mesa_dlist_alloc_opcode(GLcontext *ctx,
+_mesa_dlist_alloc_opcode(struct gl_context *ctx,
                          GLuint size,
-                         void (*execute) (GLcontext *, void *),
-                         void (*destroy) (GLcontext *, void *),
-                         void (*print) (GLcontext *, void *))
+                         void (*execute) (struct gl_context *, void *),
+                         void (*destroy) (struct gl_context *, void *),
+                         void (*print) (struct gl_context *, void *))
 {
    if (ctx->ListExt->NumOpcodes < MAX_DLIST_EXT_OPCODES) {
       const GLuint i = ctx->ListExt->NumOpcodes++;
@@ -949,7 +978,7 @@ _mesa_dlist_alloc_opcode(GLcontext *ctx,
  * \return  pointer to start of instruction space
  */
 static INLINE Node *
-alloc_instruction(GLcontext *ctx, OpCode opcode, GLuint nparams)
+alloc_instruction(struct gl_context *ctx, OpCode opcode, GLuint nparams)
 {
    return dlist_alloc(ctx, opcode, nparams * sizeof(Node));
 }
@@ -1114,7 +1143,7 @@ save_BlendColor(GLfloat red, GLfloat green, GLfloat blue, GLfloat alpha)
    }
 }
 
-static void invalidate_saved_current_state( GLcontext *ctx )
+static void invalidate_saved_current_state( struct gl_context *ctx )
 {
    GLint i;
 
@@ -1533,7 +1562,6 @@ save_ColorTableParameterfv(GLenum target, GLenum pname,
       n[3].f = params[0];
       if (pname == GL_COLOR_TABLE_SGI ||
           pname == GL_POST_CONVOLUTION_COLOR_TABLE_SGI ||
-          pname == GL_POST_COLOR_MATRIX_COLOR_TABLE_SGI ||
           pname == GL_TEXTURE_COLOR_TABLE_SGI) {
          n[4].f = params[1];
          n[5].f = params[2];
@@ -1562,7 +1590,6 @@ save_ColorTableParameteriv(GLenum target, GLenum pname, const GLint *params)
       n[3].i = params[0];
       if (pname == GL_COLOR_TABLE_SGI ||
           pname == GL_POST_CONVOLUTION_COLOR_TABLE_SGI ||
-          pname == GL_POST_COLOR_MATRIX_COLOR_TABLE_SGI ||
           pname == GL_TEXTURE_COLOR_TABLE_SGI) {
          n[4].i = params[1];
          n[5].i = params[2];
@@ -4757,9 +4784,9 @@ save_ExecuteProgramNV(GLenum target, GLuint id, const GLfloat *params)
 
 static void GLAPIENTRY
 save_ProgramParameters4dvNV(GLenum target, GLuint index,
-                            GLuint num, const GLdouble *params)
+                            GLsizei num, const GLdouble *params)
 {
-   GLuint i;
+   GLint i;
    for (i = 0; i < num; i++) {
       save_ProgramEnvParameter4dvARB(target, index + i, params + 4 * i);
    }
@@ -4768,9 +4795,9 @@ save_ProgramParameters4dvNV(GLenum target, GLuint index,
 
 static void GLAPIENTRY
 save_ProgramParameters4fvNV(GLenum target, GLuint index,
-                            GLuint num, const GLfloat *params)
+                            GLsizei num, const GLfloat *params)
 {
-   GLuint i;
+   GLint i;
    for (i = 0; i < num; i++) {
       save_ProgramEnvParameter4fvARB(target, index + i, params + 4 * i);
    }
@@ -5228,7 +5255,7 @@ save_SetFragmentShaderConstantATI(GLuint dst, const GLfloat *value)
 }
 #endif
 
-static void
+static void GLAPIENTRY
 save_Attr1fNV(GLenum attr, GLfloat x)
 {
    GET_CURRENT_CONTEXT(ctx);
@@ -5249,7 +5276,7 @@ save_Attr1fNV(GLenum attr, GLfloat x)
    }
 }
 
-static void
+static void GLAPIENTRY
 save_Attr2fNV(GLenum attr, GLfloat x, GLfloat y)
 {
    GET_CURRENT_CONTEXT(ctx);
@@ -5271,7 +5298,7 @@ save_Attr2fNV(GLenum attr, GLfloat x, GLfloat y)
    }
 }
 
-static void
+static void GLAPIENTRY
 save_Attr3fNV(GLenum attr, GLfloat x, GLfloat y, GLfloat z)
 {
    GET_CURRENT_CONTEXT(ctx);
@@ -5294,7 +5321,7 @@ save_Attr3fNV(GLenum attr, GLfloat x, GLfloat y, GLfloat z)
    }
 }
 
-static void
+static void GLAPIENTRY
 save_Attr4fNV(GLenum attr, GLfloat x, GLfloat y, GLfloat z, GLfloat w)
 {
    GET_CURRENT_CONTEXT(ctx);
@@ -5319,7 +5346,7 @@ save_Attr4fNV(GLenum attr, GLfloat x, GLfloat y, GLfloat z, GLfloat w)
 }
 
 
-static void
+static void GLAPIENTRY
 save_Attr1fARB(GLenum attr, GLfloat x)
 {
    GET_CURRENT_CONTEXT(ctx);
@@ -5340,7 +5367,7 @@ save_Attr1fARB(GLenum attr, GLfloat x)
    }
 }
 
-static void
+static void GLAPIENTRY
 save_Attr2fARB(GLenum attr, GLfloat x, GLfloat y)
 {
    GET_CURRENT_CONTEXT(ctx);
@@ -5362,7 +5389,7 @@ save_Attr2fARB(GLenum attr, GLfloat x, GLfloat y)
    }
 }
 
-static void
+static void GLAPIENTRY
 save_Attr3fARB(GLenum attr, GLfloat x, GLfloat y, GLfloat z)
 {
    GET_CURRENT_CONTEXT(ctx);
@@ -5385,7 +5412,7 @@ save_Attr3fARB(GLenum attr, GLfloat x, GLfloat y, GLfloat z)
    }
 }
 
-static void
+static void GLAPIENTRY
 save_Attr4fARB(GLenum attr, GLfloat x, GLfloat y, GLfloat z, GLfloat w)
 {
    GET_CURRENT_CONTEXT(ctx);
@@ -6051,8 +6078,15 @@ exec_GetAttribLocationARB(GLuint program, const GLchar *name)
    FLUSH_VERTICES(ctx, 0);
    return CALL_GetAttribLocationARB(ctx->Exec, (program, name));
 }
-/* XXX more shader functions needed here */
 
+static GLint GLAPIENTRY
+exec_GetUniformLocationARB(GLuint program, const GLchar *name)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   FLUSH_VERTICES(ctx, 0);
+   return CALL_GetUniformLocationARB(ctx->Exec, (program, name));
+}
+/* XXX more shader functions needed here */
 
 
 #if FEATURE_EXT_framebuffer_blit
@@ -6100,6 +6134,36 @@ save_ProvokingVertexEXT(GLenum mode)
    if (ctx->ExecuteFlag) {
       /*CALL_ProvokingVertexEXT(ctx->Exec, (mode));*/
       _mesa_ProvokingVertexEXT(mode);
+   }
+}
+
+
+/** GL_EXT_transform_feedback */
+static void GLAPIENTRY
+save_BeginTransformFeedback(GLenum mode)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   Node *n;
+   ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
+   n = alloc_instruction(ctx, OPCODE_BEGIN_TRANSFORM_FEEDBACK, 1);
+   if (n) {
+      n[1].e = mode;
+   }
+   if (ctx->ExecuteFlag) {
+      CALL_BeginTransformFeedbackEXT(ctx->Exec, (mode));
+   }
+}
+
+
+/** GL_EXT_transform_feedback */
+static void GLAPIENTRY
+save_EndTransformFeedback(void)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
+   (void) alloc_instruction(ctx, OPCODE_END_TRANSFORM_FEEDBACK, 0);
+   if (ctx->ExecuteFlag) {
+      CALL_EndTransformFeedbackEXT(ctx->Exec, ());
    }
 }
 
@@ -6416,6 +6480,149 @@ save_Uniform4ivARB(GLint location, GLsizei count, const GLint *v)
 }
 
 
+
+static void GLAPIENTRY
+save_Uniform1ui(GLint location, GLuint x)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   Node *n;
+   ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
+   n = alloc_instruction(ctx, OPCODE_UNIFORM_1UI, 2);
+   if (n) {
+      n[1].i = location;
+      n[2].i = x;
+   }
+   if (ctx->ExecuteFlag) {
+      /*CALL_Uniform1ui(ctx->Exec, (location, x));*/
+   }
+}
+
+static void GLAPIENTRY
+save_Uniform2ui(GLint location, GLuint x, GLuint y)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   Node *n;
+   ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
+   n = alloc_instruction(ctx, OPCODE_UNIFORM_2UI, 3);
+   if (n) {
+      n[1].i = location;
+      n[2].i = x;
+      n[3].i = y;
+   }
+   if (ctx->ExecuteFlag) {
+      /*CALL_Uniform2ui(ctx->Exec, (location, x, y));*/
+   }
+}
+
+static void GLAPIENTRY
+save_Uniform3ui(GLint location, GLuint x, GLuint y, GLuint z)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   Node *n;
+   ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
+   n = alloc_instruction(ctx, OPCODE_UNIFORM_3UI, 4);
+   if (n) {
+      n[1].i = location;
+      n[2].i = x;
+      n[3].i = y;
+      n[4].i = z;
+   }
+   if (ctx->ExecuteFlag) {
+      /*CALL_Uniform3ui(ctx->Exec, (location, x, y, z));*/
+   }
+}
+
+static void GLAPIENTRY
+save_Uniform4ui(GLint location, GLuint x, GLuint y, GLuint z, GLuint w)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   Node *n;
+   ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
+   n = alloc_instruction(ctx, OPCODE_UNIFORM_4UI, 5);
+   if (n) {
+      n[1].i = location;
+      n[2].i = x;
+      n[3].i = y;
+      n[4].i = z;
+      n[5].i = w;
+   }
+   if (ctx->ExecuteFlag) {
+      /*CALL_Uniform4ui(ctx->Exec, (location, x, y, z, w));*/
+   }
+}
+
+
+
+static void GLAPIENTRY
+save_Uniform1uiv(GLint location, GLsizei count, const GLuint *v)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   Node *n;
+   ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
+   n = alloc_instruction(ctx, OPCODE_UNIFORM_1UIV, 3);
+   if (n) {
+      n[1].i = location;
+      n[2].i = count;
+      n[3].data = memdup(v, count * 1 * sizeof(*v));
+   }
+   if (ctx->ExecuteFlag) {
+      /*CALL_Uniform1uiv(ctx->Exec, (location, count, v));*/
+   }
+}
+
+static void GLAPIENTRY
+save_Uniform2uiv(GLint location, GLsizei count, const GLuint *v)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   Node *n;
+   ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
+   n = alloc_instruction(ctx, OPCODE_UNIFORM_2UIV, 3);
+   if (n) {
+      n[1].i = location;
+      n[2].i = count;
+      n[3].data = memdup(v, count * 2 * sizeof(*v));
+   }
+   if (ctx->ExecuteFlag) {
+      /*CALL_Uniform2uiv(ctx->Exec, (location, count, v));*/
+   }
+}
+
+static void GLAPIENTRY
+save_Uniform3uiv(GLint location, GLsizei count, const GLuint *v)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   Node *n;
+   ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
+   n = alloc_instruction(ctx, OPCODE_UNIFORM_3UIV, 3);
+   if (n) {
+      n[1].i = location;
+      n[2].i = count;
+      n[3].data = memdup(v, count * 3 * sizeof(*v));
+   }
+   if (ctx->ExecuteFlag) {
+      /*CALL_Uniform3uiv(ctx->Exec, (location, count, v));*/
+   }
+}
+
+static void GLAPIENTRY
+save_Uniform4uiv(GLint location, GLsizei count, const GLuint *v)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   Node *n;
+   ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
+   n = alloc_instruction(ctx, OPCODE_UNIFORM_4UIV, 3);
+   if (n) {
+      n[1].i = location;
+      n[2].i = count;
+      n[3].data = memdup(v, count * 4 * sizeof(*v));
+   }
+   if (ctx->ExecuteFlag) {
+      /*CALL_Uniform4uiv(ctx->Exec, (location, count, v));*/
+   }
+}
+
+
+
 static void GLAPIENTRY
 save_UniformMatrix2fvARB(GLint location, GLsizei count, GLboolean transpose,
                          const GLfloat *m)
@@ -6590,6 +6797,137 @@ save_UniformMatrix4x3fv(GLint location, GLsizei count, GLboolean transpose,
    }
 }
 
+static void GLAPIENTRY
+save_UseShaderProgramEXT(GLenum type, GLuint program)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   Node *n;
+   ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
+   n = alloc_instruction(ctx, OPCODE_USE_SHADER_PROGRAM_EXT, 2);
+   if (n) {
+      n[1].ui = type;
+      n[2].ui = program;
+   }
+   if (ctx->ExecuteFlag) {
+      CALL_UseShaderProgramEXT(ctx->Exec, (type, program));
+   }
+}
+
+static void GLAPIENTRY
+save_ActiveProgramEXT(GLuint program)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   Node *n;
+   ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
+   n = alloc_instruction(ctx, OPCODE_ACTIVE_PROGRAM_EXT, 1);
+   if (n) {
+      n[1].ui = program;
+   }
+   if (ctx->ExecuteFlag) {
+      CALL_ActiveProgramEXT(ctx->Exec, (program));
+   }
+}
+
+/** GL_EXT_texture_integer */
+static void GLAPIENTRY
+save_ClearColorIi(GLint red, GLint green, GLint blue, GLint alpha)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   Node *n;
+   ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
+   n = alloc_instruction(ctx, OPCODE_CLEARCOLOR_I, 4);
+   if (n) {
+      n[1].i = red;
+      n[2].i = green;
+      n[3].i = blue;
+      n[4].i = alpha;
+   }
+   if (ctx->ExecuteFlag) {
+      CALL_ClearColorIiEXT(ctx->Exec, (red, green, blue, alpha));
+   }
+}
+
+/** GL_EXT_texture_integer */
+static void GLAPIENTRY
+save_ClearColorIui(GLuint red, GLuint green, GLuint blue, GLuint alpha)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   Node *n;
+   ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
+   n = alloc_instruction(ctx, OPCODE_CLEARCOLOR_UI, 4);
+   if (n) {
+      n[1].ui = red;
+      n[2].ui = green;
+      n[3].ui = blue;
+      n[4].ui = alpha;
+   }
+   if (ctx->ExecuteFlag) {
+      CALL_ClearColorIuiEXT(ctx->Exec, (red, green, blue, alpha));
+   }
+}
+
+/** GL_EXT_texture_integer */
+static void GLAPIENTRY
+save_TexParameterIiv(GLenum target, GLenum pname, const GLint *params)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   Node *n;
+   ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
+   n = alloc_instruction(ctx, OPCODE_TEXPARAMETER_I, 6);
+   if (n) {
+      n[1].e = target;
+      n[2].e = pname;
+      n[3].i = params[0];
+      n[4].i = params[1];
+      n[5].i = params[2];
+      n[6].i = params[3];
+   }
+   if (ctx->ExecuteFlag) {
+      CALL_TexParameterIivEXT(ctx->Exec, (target, pname, params));
+   }
+}
+
+/** GL_EXT_texture_integer */
+static void GLAPIENTRY
+save_TexParameterIuiv(GLenum target, GLenum pname, const GLuint *params)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   Node *n;
+   ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx);
+   n = alloc_instruction(ctx, OPCODE_TEXPARAMETER_UI, 6);
+   if (n) {
+      n[1].e = target;
+      n[2].e = pname;
+      n[3].ui = params[0];
+      n[4].ui = params[1];
+      n[5].ui = params[2];
+      n[6].ui = params[3];
+   }
+   if (ctx->ExecuteFlag) {
+      CALL_TexParameterIuivEXT(ctx->Exec, (target, pname, params));
+   }
+}
+
+/** GL_EXT_texture_integer */
+static void GLAPIENTRY
+exec_GetTexParameterIiv(GLenum target, GLenum pname, GLint *params)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   FLUSH_VERTICES(ctx, 0);
+   CALL_GetTexParameterIivEXT(ctx->Exec, (target, pname, params));
+}
+
+/** GL_EXT_texture_integer */
+static void GLAPIENTRY
+exec_GetTexParameterIuiv(GLenum target, GLenum pname, GLuint *params)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   FLUSH_VERTICES(ctx, 0);
+   CALL_GetTexParameterIuivEXT(ctx->Exec, (target, pname, params));
+}
+
+
+
 
 
 /**
@@ -6599,7 +6937,7 @@ save_UniformMatrix4x3fv(GLint location, GLsizei count, GLboolean transpose,
  * command that provoked the error.  I don't see this as a problem.
  */
 static void
-save_error(GLcontext *ctx, GLenum error, const char *s)
+save_error(struct gl_context *ctx, GLenum error, const char *s)
 {
    Node *n;
    n = alloc_instruction(ctx, OPCODE_ERROR, 2);
@@ -6614,12 +6952,12 @@ save_error(GLcontext *ctx, GLenum error, const char *s)
  * Compile an error into current display list.
  */
 void
-_mesa_compile_error(GLcontext *ctx, GLenum error, const char *s)
+_mesa_compile_error(struct gl_context *ctx, GLenum error, const char *s)
 {
    if (ctx->CompileFlag)
       save_error(ctx, error, s);
    if (ctx->ExecuteFlag)
-      _mesa_error(ctx, error, s);
+      _mesa_error(ctx, error, "%s", s);
 }
 
 
@@ -6627,7 +6965,7 @@ _mesa_compile_error(GLcontext *ctx, GLenum error, const char *s)
  * Test if ID names a display list.
  */
 static GLboolean
-islist(GLcontext *ctx, GLuint list)
+islist(struct gl_context *ctx, GLuint list)
 {
    if (list > 0 && lookup_list(ctx, list)) {
       return GL_TRUE;
@@ -6651,7 +6989,7 @@ islist(GLcontext *ctx, GLuint list)
  * \param list - display list number
  */
 static void
-execute_list(GLcontext *ctx, GLuint list)
+execute_list(struct gl_context *ctx, GLuint list)
 {
    struct gl_display_list *dlist;
    Node *n;
@@ -6686,7 +7024,7 @@ execute_list(GLcontext *ctx, GLuint list)
       else {
          switch (opcode) {
          case OPCODE_ERROR:
-            _mesa_error(ctx, n[1].e, (const char *) n[2].data);
+            _mesa_error(ctx, n[1].e, "%s", (const char *) n[2].data);
             break;
          case OPCODE_ACCUM:
             CALL_Accum(ctx->Exec, (n[1].e, n[2].f));
@@ -7199,6 +7537,12 @@ execute_list(GLcontext *ctx, GLuint list)
          case OPCODE_PROVOKING_VERTEX:
             CALL_ProvokingVertexEXT(ctx->Exec, (n[1].e));
             break;
+         case OPCODE_BEGIN_TRANSFORM_FEEDBACK:
+            CALL_BeginTransformFeedbackEXT(ctx->Exec, (n[1].e));
+            break;
+         case OPCODE_END_TRANSFORM_FEEDBACK:
+            CALL_EndTransformFeedbackEXT(ctx->Exec, ());
+            break;
          case OPCODE_STENCIL_FUNC:
             CALL_StencilFunc(ctx->Exec, (n[1].e, n[2].i, n[3].ui));
             break;
@@ -7471,6 +7815,12 @@ execute_list(GLcontext *ctx, GLuint list)
 	 case OPCODE_USE_PROGRAM:
 	    CALL_UseProgramObjectARB(ctx->Exec, (n[1].ui));
 	    break;
+	 case OPCODE_USE_SHADER_PROGRAM_EXT:
+	    CALL_UseShaderProgramEXT(ctx->Exec, (n[1].ui, n[2].ui));
+	    break;
+	 case OPCODE_ACTIVE_PROGRAM_EXT:
+	    CALL_ActiveProgramEXT(ctx->Exec, (n[1].ui));
+	    break;
 	 case OPCODE_UNIFORM_1F:
 	    CALL_Uniform1fARB(ctx->Exec, (n[1].i, n[2].f));
 	    break;
@@ -7521,7 +7871,32 @@ execute_list(GLcontext *ctx, GLuint list)
 	 case OPCODE_UNIFORM_4IV:
 	    CALL_Uniform4ivARB(ctx->Exec, (n[1].i, n[2].i, n[3].data));
 	    break;
-
+	 case OPCODE_UNIFORM_1UI:
+	    /*CALL_Uniform1uiARB(ctx->Exec, (n[1].i, n[2].i));*/
+	    break;
+	 case OPCODE_UNIFORM_2UI:
+	    /*CALL_Uniform2uiARB(ctx->Exec, (n[1].i, n[2].i, n[3].i));*/
+	    break;
+	 case OPCODE_UNIFORM_3UI:
+	    /*CALL_Uniform3uiARB(ctx->Exec, (n[1].i, n[2].i, n[3].i, n[4].i));*/
+	    break;
+	 case OPCODE_UNIFORM_4UI:
+	    /*CALL_Uniform4uiARB(ctx->Exec,
+                              (n[1].i, n[2].i, n[3].i, n[4].i, n[5].i));
+            */
+	    break;
+	 case OPCODE_UNIFORM_1UIV:
+	    /*CALL_Uniform1uivARB(ctx->Exec, (n[1].i, n[2].i, n[3].data));*/
+	    break;
+	 case OPCODE_UNIFORM_2UIV:
+	    /*CALL_Uniform2uivARB(ctx->Exec, (n[1].i, n[2].i, n[3].data));*/
+	    break;
+	 case OPCODE_UNIFORM_3UIV:
+	    /*CALL_Uniform3uivARB(ctx->Exec, (n[1].i, n[2].i, n[3].data));*/
+	    break;
+	 case OPCODE_UNIFORM_4UIV:
+	    /*CALL_Uniform4uivARB(ctx->Exec, (n[1].i, n[2].i, n[3].data));*/
+	    break;
 	 case OPCODE_UNIFORM_MATRIX22:
 	    CALL_UniformMatrix2fvARB(ctx->Exec,
                                      (n[1].i, n[2].i, n[3].b, n[4].data));
@@ -7676,6 +8051,35 @@ execute_list(GLcontext *ctx, GLuint list)
             CALL_EvalPoint2(ctx->Exec, (n[1].i, n[2].i));
             break;
 
+         /* GL_EXT_texture_integer */
+         case OPCODE_CLEARCOLOR_I:
+            CALL_ClearColorIiEXT(ctx->Exec, (n[1].i, n[2].i, n[3].i, n[4].i));
+            break;
+         case OPCODE_CLEARCOLOR_UI:
+            CALL_ClearColorIuiEXT(ctx->Exec,
+                                  (n[1].ui, n[2].ui, n[3].ui, n[4].ui));
+            break;
+         case OPCODE_TEXPARAMETER_I:
+            {
+               GLint params[4];
+               params[0] = n[3].i;
+               params[1] = n[4].i;
+               params[2] = n[5].i;
+               params[3] = n[6].i;
+               CALL_TexParameterIivEXT(ctx->Exec, (n[1].e, n[2].e, params));
+            }
+            break;
+         case OPCODE_TEXPARAMETER_UI:
+            {
+               GLuint params[4];
+               params[0] = n[3].ui;
+               params[1] = n[4].ui;
+               params[2] = n[5].ui;
+               params[3] = n[6].ui;
+               CALL_TexParameterIuivEXT(ctx->Exec, (n[1].e, n[2].e, params));
+            }
+            break;
+
          case OPCODE_CONTINUE:
             n = (Node *) n[1].next;
             break;
@@ -7685,9 +8089,9 @@ execute_list(GLcontext *ctx, GLuint list)
          default:
             {
                char msg[1000];
-               sprintf(msg, "Error in execute_list: opcode=%d",
+               _mesa_snprintf(msg, sizeof(msg), "Error in execute_list: opcode=%d",
                              (int) opcode);
-               _mesa_problem(ctx, msg);
+               _mesa_problem(ctx, "%s", msg);
             }
             done = GL_TRUE;
          }
@@ -8662,8 +9066,8 @@ exec_FogCoordPointerEXT(GLenum type, GLsizei stride, const GLvoid *ptr)
 
 /* GL_EXT_multi_draw_arrays */
 static void GLAPIENTRY
-exec_MultiDrawArraysEXT(GLenum mode, GLint * first,
-                        GLsizei * count, GLsizei primcount)
+exec_MultiDrawArraysEXT(GLenum mode, const GLint *first,
+                        const GLsizei *count, GLsizei primcount)
 {
    GET_CURRENT_CONTEXT(ctx);
    FLUSH_VERTICES(ctx, 0);
@@ -8707,9 +9111,15 @@ exec_MultiModeDrawElementsIBM(const GLenum * mode,
  * initialized from _mesa_init_api_defaults and from the active vtxfmt
  * struct.
  */
-void
-_mesa_init_save_table(struct _glapi_table *table)
+struct _glapi_table *
+_mesa_create_save_table(void)
 {
+   struct _glapi_table *table;
+
+   table = _mesa_alloc_dispatch_table(_gloffset_COUNT);
+   if (table == NULL)
+      return NULL;
+
    _mesa_loopback_init_api_table(table);
 
    /* GL 1.0 */
@@ -9177,9 +9587,9 @@ _mesa_init_save_table(struct _glapi_table *table)
    SET_DeleteProgramsNV(table, _mesa_DeletePrograms);
    SET_GenProgramsNV(table, _mesa_GenPrograms);
    SET_IsProgramNV(table, _mesa_IsProgramARB);
-   SET_GetVertexAttribdvNV(table, _mesa_GetVertexAttribdvNV);
-   SET_GetVertexAttribfvNV(table, _mesa_GetVertexAttribfvNV);
-   SET_GetVertexAttribivNV(table, _mesa_GetVertexAttribivNV);
+   SET_GetVertexAttribdvARB(table, _mesa_GetVertexAttribdvARB);
+   SET_GetVertexAttribfvARB(table, _mesa_GetVertexAttribfvARB);
+   SET_GetVertexAttribivARB(table, _mesa_GetVertexAttribivARB);
    SET_GetVertexAttribPointervNV(table, _mesa_GetVertexAttribPointervNV);
    SET_ProgramEnvParameter4dARB(table, save_ProgramEnvParameter4dARB);
    SET_ProgramEnvParameter4dvARB(table, save_ProgramEnvParameter4dvARB);
@@ -9262,12 +9672,13 @@ _mesa_init_save_table(struct _glapi_table *table)
    /* ARB 30/31/32. GL_ARB_shader_objects, GL_ARB_vertex/fragment_shader */
    SET_BindAttribLocationARB(table, exec_BindAttribLocationARB);
    SET_GetAttribLocationARB(table, exec_GetAttribLocationARB);
+   SET_GetUniformLocationARB(table, exec_GetUniformLocationARB);
    /* XXX additional functions need to be implemented here! */
 
    /* 299. GL_EXT_blend_equation_separate */
    SET_BlendEquationSeparateEXT(table, save_BlendEquationSeparateEXT);
 
-   /* GL_EXT_gpu_program_parmaeters */
+   /* GL_EXT_gpu_program_parameters */
 #if FEATURE_ARB_vertex_program || FEATURE_ARB_fragment_program
    SET_ProgramEnvParameters4fvEXT(table, save_ProgramEnvParameters4fvEXT);
    SET_ProgramLocalParameters4fvEXT(table, save_ProgramLocalParameters4fvEXT);
@@ -9282,6 +9693,12 @@ _mesa_init_save_table(struct _glapi_table *table)
    /* ARB 59. GL_ARB_copy_buffer */
    SET_CopyBufferSubData(table, _mesa_CopyBufferSubData); /* no dlist save */
 
+   /* 352. GL_EXT_transform_feedback */
+#if FEATURE_EXT_transform_feedback
+   SET_BeginTransformFeedbackEXT(table, save_BeginTransformFeedback);
+   SET_EndTransformFeedbackEXT(table, save_EndTransformFeedback);
+#endif
+
    /* 364. GL_EXT_provoking_vertex */
    SET_ProvokingVertexEXT(table, save_ProvokingVertexEXT);
 
@@ -9291,18 +9708,48 @@ _mesa_init_save_table(struct _glapi_table *table)
    SET_ObjectUnpurgeableAPPLE(table, _mesa_ObjectUnpurgeableAPPLE);
 #endif
 
+   /* GL_EXT_texture_integer */
+   SET_ClearColorIiEXT(table, save_ClearColorIi);
+   SET_ClearColorIuiEXT(table, save_ClearColorIui);
+   SET_TexParameterIivEXT(table, save_TexParameterIiv);
+   SET_TexParameterIuivEXT(table, save_TexParameterIuiv);
+   SET_GetTexParameterIivEXT(table, exec_GetTexParameterIiv);
+   SET_GetTexParameterIuivEXT(table, exec_GetTexParameterIuiv);
+
+   /* 377. GL_EXT_separate_shader_objects */
+   SET_UseShaderProgramEXT(table, save_UseShaderProgramEXT);
+   SET_ActiveProgramEXT(table, save_ActiveProgramEXT);
+
    /* GL 3.0 */
 #if 0
    SET_ClearBufferiv(table, save_ClearBufferiv);
    SET_ClearBufferuiv(table, save_ClearBufferuiv);
    SET_ClearBufferfv(table, save_ClearBufferfv);
    SET_ClearBufferfi(table, save_ClearBufferfi);
+   SET_Uniform1ui(table, save_Uniform1ui);
+   SET_Uniform2ui(table, save_Uniform2ui);
+   SET_Uniform3ui(table, save_Uniform3ui);
+   SET_Uniform4ui(table, save_Uniform4ui);
+   SET_Uniform1uiv(table, save_Uniform1uiv);
+   SET_Uniform2uiv(table, save_Uniform2uiv);
+   SET_Uniform3uiv(table, save_Uniform3uiv);
+   SET_Uniform4uiv(table, save_Uniform4uiv);
 #else
    (void) save_ClearBufferiv;
    (void) save_ClearBufferuiv;
    (void) save_ClearBufferfv;
    (void) save_ClearBufferfi;
+   (void) save_Uniform1ui;
+   (void) save_Uniform2ui;
+   (void) save_Uniform3ui;
+   (void) save_Uniform4ui;
+   (void) save_Uniform1uiv;
+   (void) save_Uniform2uiv;
+   (void) save_Uniform3uiv;
+   (void) save_Uniform4uiv;
 #endif
+
+   return table;
 }
 
 
@@ -9319,7 +9766,7 @@ enum_string(GLenum k)
  * TODO: many commands aren't handled yet.
  */
 static void GLAPIENTRY
-print_list(GLcontext *ctx, GLuint list)
+print_list(struct gl_context *ctx, GLuint list)
 {
    struct gl_display_list *dlist;
    Node *n;
@@ -9711,7 +10158,7 @@ void _mesa_init_dlist_dispatch(struct _glapi_table *disp)
  * Initialize display list state for given context.
  */
 void
-_mesa_init_display_list(GLcontext *ctx)
+_mesa_init_display_list(struct gl_context *ctx)
 {
    static GLboolean tableInitialized = GL_FALSE;
 
@@ -9741,7 +10188,7 @@ _mesa_init_display_list(GLcontext *ctx)
 
 
 void
-_mesa_free_display_list_data(GLcontext *ctx)
+_mesa_free_display_list_data(struct gl_context *ctx)
 {
    free(ctx->ListExt);
    ctx->ListExt = NULL;

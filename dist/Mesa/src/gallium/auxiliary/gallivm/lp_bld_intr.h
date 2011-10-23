@@ -37,7 +37,8 @@
 #define LP_BLD_INTR_H
 
 
-#include <llvm-c/Core.h>  
+#include "gallivm/lp_bld.h"
+#include "gallivm/lp_bld_init.h"
 
 
 /**
@@ -77,7 +78,7 @@ lp_build_intrinsic_binary(LLVMBuilderRef builder,
 
 
 LLVMValueRef
-lp_build_intrinsic_map(LLVMBuilderRef builder,
+lp_build_intrinsic_map(struct gallivm_state *gallivm,
                        const char *name,
                        LLVMTypeRef ret_type,
                        LLVMValueRef *args,
@@ -85,14 +86,14 @@ lp_build_intrinsic_map(LLVMBuilderRef builder,
 
 
 LLVMValueRef
-lp_build_intrinsic_map_unary(LLVMBuilderRef builder,
+lp_build_intrinsic_map_unary(struct gallivm_state *gallivm,
                              const char *name,
                              LLVMTypeRef ret_type,
                              LLVMValueRef a);
 
 
 LLVMValueRef
-lp_build_intrinsic_map_binary(LLVMBuilderRef builder,
+lp_build_intrinsic_map_binary(struct gallivm_state *gallivm,
                               const char *name,
                               LLVMTypeRef ret_type,
                               LLVMValueRef a,

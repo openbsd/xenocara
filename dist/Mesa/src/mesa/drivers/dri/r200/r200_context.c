@@ -51,7 +51,6 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include "r200_context.h"
 #include "r200_ioctl.h"
 #include "r200_state.h"
-#include "r200_pixel.h"
 #include "r200_tex.h"
 #include "r200_swtcl.h"
 #include "r200_tcl.h"
@@ -72,6 +71,8 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #define need_GL_NV_vertex_program
 #define need_GL_ARB_point_parameters
 #define need_GL_EXT_framebuffer_object
+#define need_GL_OES_EGL_image
+
 #include "main/remap_helper.h"
 
 #define DRIVER_DATE	"20060602"
@@ -81,7 +82,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 /* Return various strings for glGetString().
  */
-static const GLubyte *r200GetString( GLcontext *ctx, GLenum name )
+static const GLubyte *r200GetString( struct gl_context *ctx, GLenum name )
 {
    r200ContextPtr rmesa = R200_CONTEXT(ctx);
    static char buffer[128];
@@ -138,7 +139,9 @@ static const struct dri_extension card_extensions[] =
     { "GL_ATI_texture_mirror_once",        NULL },
     { "GL_MESA_pack_invert",               NULL },
     { "GL_NV_blend_square",                NULL },
-    { "GL_SGIS_generate_mipmap",           NULL },
+#if FEATURE_OES_EGL_image
+    { "GL_OES_EGL_image",                  GL_OES_EGL_image_functions },
+#endif
     { NULL,                                NULL }
 };
 
@@ -266,12 +269,14 @@ static void r200_init_vtbl(radeonContextPtr radeon)
    radeon->vtbl.emit_query_finish = r200_emit_query_finish;
    radeon->vtbl.check_blit = r200_check_blit;
    radeon->vtbl.blit = r200_blit;
+   radeon->vtbl.is_format_renderable = radeonIsFormatRenderable;
 }
 
 
 /* Create the device specific rendering context.
  */
-GLboolean r200CreateContext( const __GLcontextModes *glVisual,
+GLboolean r200CreateContext( gl_api api,
+			     const struct gl_config *glVisual,
 			     __DRIcontext *driContextPriv,
 			     void *sharedContextPrivate)
 {
@@ -279,7 +284,7 @@ GLboolean r200CreateContext( const __GLcontextModes *glVisual,
    radeonScreenPtr screen = (radeonScreenPtr)(sPriv->private);
    struct dd_function_table functions;
    r200ContextPtr rmesa;
-   GLcontext *ctx;
+   struct gl_context *ctx;
    int i;
    int tcl_mode;
 
@@ -324,7 +329,7 @@ GLboolean r200CreateContext( const __GLcontextModes *glVisual,
    _mesa_init_driver_functions(&functions);
    r200InitDriverFuncs(&functions);
    r200InitIoctlFuncs(&functions);
-   r200InitStateFuncs(&functions);
+   r200InitStateFuncs(&rmesa->radeon, &functions);
    r200InitTextureFuncs(&rmesa->radeon, &functions);
    r200InitShaderFuncs(&functions);
    radeonInitQueryObjFunctions(&functions);
@@ -473,7 +478,6 @@ GLboolean r200CreateContext( const __GLcontextModes *glVisual,
    /* XXX these should really go right after _mesa_init_driver_functions() */
    radeon_fbo_init(&rmesa->radeon);
    radeonInitSpanFuncs( ctx );
-   r200InitPixelFuncs( ctx );
    r200InitTnlFuncs( ctx );
    r200InitState( rmesa );
    r200InitSwtcl( ctx );

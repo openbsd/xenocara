@@ -66,6 +66,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #define need_GL_EXT_fog_coord
 #define need_GL_EXT_secondary_color
 #define need_GL_EXT_framebuffer_object
+#define need_GL_OES_EGL_image
 #include "main/remap_helper.h"
 
 #define DRIVER_DATE	"20061018"
@@ -101,7 +102,9 @@ static const struct dri_extension card_extensions[] =
     { "GL_ATI_texture_mirror_once",        NULL },
     { "GL_MESA_ycbcr_texture",             NULL },
     { "GL_NV_blend_square",                NULL },
-    { "GL_SGIS_generate_mipmap",           NULL },
+#if FEATURE_OES_EGL_image
+    { "GL_OES_EGL_image",                  GL_OES_EGL_image_functions },
+#endif
     { NULL,                                NULL }
 };
 
@@ -168,7 +171,7 @@ static void r100_vtbl_pre_emit_state(radeonContextPtr radeon)
    radeon->hw.is_dirty = 1;
 }
 
-static void r100_vtbl_free_context(GLcontext *ctx)
+static void r100_vtbl_free_context(struct gl_context *ctx)
 {
    r100ContextPtr rmesa = R100_CONTEXT(ctx);
    _mesa_vector4f_free( &rmesa->tcl.ObjClean );
@@ -200,20 +203,22 @@ static void r100_init_vtbl(radeonContextPtr radeon)
    radeon->vtbl.emit_query_finish = r100_emit_query_finish;
    radeon->vtbl.check_blit = r100_check_blit;
    radeon->vtbl.blit = r100_blit;
+   radeon->vtbl.is_format_renderable = radeonIsFormatRenderable;
 }
 
 /* Create the device specific context.
  */
 GLboolean
-r100CreateContext( const __GLcontextModes *glVisual,
-                     __DRIcontext *driContextPriv,
-                     void *sharedContextPrivate)
+r100CreateContext( gl_api api,
+		   const struct gl_config *glVisual,
+		   __DRIcontext *driContextPriv,
+		   void *sharedContextPrivate)
 {
    __DRIscreen *sPriv = driContextPriv->driScreenPriv;
    radeonScreenPtr screen = (radeonScreenPtr)(sPriv->private);
    struct dd_function_table functions;
    r100ContextPtr rmesa;
-   GLcontext *ctx;
+   struct gl_context *ctx;
    int i;
    int tcl_mode, fthrottle_mode;
 

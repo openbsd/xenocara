@@ -29,10 +29,10 @@
 #ifndef SS_TRIANGLE_H
 #define SS_TRIANGLE_H
 
-#include "ss_context.h"
+#include "main/mtypes.h"
 
 
-void _swsetup_trifuncs_init( GLcontext *ctx );
-void _swsetup_choose_trifuncs( GLcontext *ctx );
+void _swsetup_trifuncs_init( struct gl_context *ctx );
+void _swsetup_choose_trifuncs( struct gl_context *ctx );
 
 #endif

@@ -32,7 +32,7 @@
 #include "drivers/common/meta.h"
 
 static const GLubyte *
-nouveau_get_string(GLcontext *ctx, GLenum name)
+nouveau_get_string(struct gl_context *ctx, GLenum name)
 {
 	static char buffer[128];
 	char hardware_name[32];
@@ -52,7 +52,7 @@ nouveau_get_string(GLcontext *ctx, GLenum name)
 }
 
 static void
-nouveau_flush(GLcontext *ctx)
+nouveau_flush(struct gl_context *ctx)
 {
 	struct nouveau_context *nctx = to_nouveau_context(ctx);
 	struct nouveau_channel *chan = context_chan(ctx);
@@ -70,13 +70,13 @@ nouveau_flush(GLcontext *ctx)
 }
 
 static void
-nouveau_finish(GLcontext *ctx)
+nouveau_finish(struct gl_context *ctx)
 {
 	nouveau_flush(ctx);
 }
 
 void
-nouveau_clear(GLcontext *ctx, GLbitfield buffers)
+nouveau_clear(struct gl_context *ctx, GLbitfield buffers)
 {
 	struct gl_framebuffer *fb = ctx->DrawBuffer;
 	int x, y, w, h;
@@ -135,4 +135,10 @@ nouveau_driver_functions_init(struct dd_function_table *functions)
 	functions->Flush = nouveau_flush;
 	functions->Finish = nouveau_finish;
 	functions->Clear = nouveau_clear;
+	functions->DrawPixels = _mesa_meta_DrawPixels;
+	functions->CopyPixels = _mesa_meta_CopyPixels;
+	functions->Bitmap = _mesa_meta_Bitmap;
+#if FEATURE_EXT_framebuffer_blit
+	functions->BlitFramebuffer = _mesa_meta_BlitFramebuffer;
+#endif
 }

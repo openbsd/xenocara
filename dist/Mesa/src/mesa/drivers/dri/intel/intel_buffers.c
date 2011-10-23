@@ -88,7 +88,7 @@ intel_check_front_buffer_rendering(struct intel_context *intel)
  * color buffers.
  */
 void
-intel_draw_buffer(GLcontext * ctx, struct gl_framebuffer *fb)
+intel_draw_buffer(struct gl_context * ctx, struct gl_framebuffer *fb)
 {
    struct intel_context *intel = intel_context(ctx);
    struct intel_region *colorRegions[MAX_DRAW_BUFFERS], *depthRegion = NULL;
@@ -231,6 +231,7 @@ intel_draw_buffer(GLcontext * ctx, struct gl_framebuffer *fb)
 
    intel->vtbl.set_draw_region(intel, colorRegions, depthRegion, 
                                fb->_NumColorDrawBuffers);
+   intel->NewGLState |= _NEW_BUFFERS;
 
    /* update viewport since it depends on window size */
 #ifdef I915
@@ -261,7 +262,7 @@ intel_draw_buffer(GLcontext * ctx, struct gl_framebuffer *fb)
 
 
 static void
-intelDrawBuffer(GLcontext * ctx, GLenum mode)
+intelDrawBuffer(struct gl_context * ctx, GLenum mode)
 {
    if ((ctx->DrawBuffer != NULL) && (ctx->DrawBuffer->Name == 0)) {
       struct intel_context *const intel = intel_context(ctx);
@@ -284,7 +285,7 @@ intelDrawBuffer(GLcontext * ctx, GLenum mode)
 
 
 static void
-intelReadBuffer(GLcontext * ctx, GLenum mode)
+intelReadBuffer(struct gl_context * ctx, GLenum mode)
 {
    if ((ctx->DrawBuffer != NULL) && (ctx->DrawBuffer->Name == 0)) {
       struct intel_context *const intel = intel_context(ctx);

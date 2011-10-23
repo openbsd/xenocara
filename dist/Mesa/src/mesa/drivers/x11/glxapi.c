@@ -58,7 +58,6 @@ struct display_dispatch {
 #ifdef GLX_INDIRECT_RENDERING
 
 #include "glapi/glapitable.h"
-#include "glapi/glapidispatch.h"
 
 #define KEYWORD1 PUBLIC
 
@@ -69,10 +68,10 @@ struct display_dispatch {
 #endif
 
 #define DISPATCH(FUNC, ARGS, MESSAGE)		\
-   CALL_ ## FUNC(GET_DISPATCH(), ARGS);
+   GET_DISPATCH()->FUNC ARGS
 
 #define RETURN_DISPATCH(FUNC, ARGS, MESSAGE) 	\
-   return CALL_ ## FUNC(GET_DISPATCH(), ARGS);
+   return GET_DISPATCH()->FUNC ARGS
 
 /* skip normal ones */
 #define _GLAPI_SKIP_NORMAL_ENTRY_POINTS
@@ -1111,31 +1110,6 @@ glXGetAGPOffsetMESA( const GLvoid *pointer )
 }
 
 
-/*** GLX_MESA_allocate_memory */
-
-void PUBLIC *
-glXAllocateMemoryMESA(Display *dpy, int scrn, size_t size,
-                      float readfreq, float writefreq, float priority)
-{
-   /* dummy */
-   return NULL;
-}
-
-void PUBLIC
-glXFreeMemoryMESA(Display *dpy, int scrn, void *pointer)
-{
-   /* dummy */
-}
-
-
-GLuint PUBLIC
-glXGetMemoryOffsetMESA(Display *dpy, int scrn, const void *pointer)
-{
-   /* dummy */
-   return 0;
-}
-
-
 /*** GLX_EXT_texture_from_pixmap */
 
 void PUBLIC
@@ -1386,11 +1360,6 @@ static struct name_address_pair GLX_functions[] = {
 
    /*** GLX_MESA_agp_offset ***/
    { "glXGetAGPOffsetMESA", (__GLXextFuncPtr) glXGetAGPOffsetMESA },
-
-   /*** GLX_MESA_allocate_memory ***/
-   { "glXAllocateMemoryMESA", (__GLXextFuncPtr) glXAllocateMemoryMESA },
-   { "glXFreeMemoryMESA", (__GLXextFuncPtr) glXFreeMemoryMESA },
-   { "glXGetMemoryOffsetMESA", (__GLXextFuncPtr) glXGetMemoryOffsetMESA },
 
    /*** GLX_EXT_texture_from_pixmap ***/
    { "glXBindTexImageEXT", (__GLXextFuncPtr) glXBindTexImageEXT },

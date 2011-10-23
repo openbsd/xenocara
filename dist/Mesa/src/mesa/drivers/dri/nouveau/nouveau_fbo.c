@@ -67,6 +67,7 @@ set_renderbuffer_format(struct gl_renderbuffer *rb, GLenum internalFormat)
 		rb->DataType = GL_UNSIGNED_SHORT;
 		s->cpp = 2;
 		break;
+	case GL_DEPTH_COMPONENT:
 	case GL_DEPTH_COMPONENT24:
 	case GL_STENCIL_INDEX8_EXT:
 	case GL_DEPTH24_STENCIL8_EXT:
@@ -85,7 +86,7 @@ set_renderbuffer_format(struct gl_renderbuffer *rb, GLenum internalFormat)
 }
 
 static GLboolean
-nouveau_renderbuffer_storage(GLcontext *ctx, struct gl_renderbuffer *rb,
+nouveau_renderbuffer_storage(struct gl_context *ctx, struct gl_renderbuffer *rb,
 			     GLenum internalFormat,
 			     GLuint width, GLuint height)
 {
@@ -114,7 +115,7 @@ nouveau_renderbuffer_del(struct gl_renderbuffer *rb)
 }
 
 static struct gl_renderbuffer *
-nouveau_renderbuffer_new(GLcontext *ctx, GLuint name)
+nouveau_renderbuffer_new(struct gl_context *ctx, GLuint name)
 {
 	struct gl_renderbuffer *rb;
 
@@ -132,7 +133,7 @@ nouveau_renderbuffer_new(GLcontext *ctx, GLuint name)
 }
 
 static GLboolean
-nouveau_renderbuffer_dri_storage(GLcontext *ctx, struct gl_renderbuffer *rb,
+nouveau_renderbuffer_dri_storage(struct gl_context *ctx, struct gl_renderbuffer *rb,
 				 GLenum internalFormat,
 				 GLuint width, GLuint height)
 {
@@ -165,7 +166,7 @@ nouveau_renderbuffer_dri_new(GLenum format, __DRIdrawable *drawable)
 }
 
 static struct gl_framebuffer *
-nouveau_framebuffer_new(GLcontext *ctx, GLuint name)
+nouveau_framebuffer_new(struct gl_context *ctx, GLuint name)
 {
 	struct nouveau_framebuffer *nfb;
 
@@ -179,7 +180,7 @@ nouveau_framebuffer_new(GLcontext *ctx, GLuint name)
 }
 
 struct gl_framebuffer *
-nouveau_framebuffer_dri_new(const GLvisual *visual)
+nouveau_framebuffer_dri_new(const struct gl_config *visual)
 {
 	struct nouveau_framebuffer *nfb;
 
@@ -188,12 +189,13 @@ nouveau_framebuffer_dri_new(const GLvisual *visual)
 		return NULL;
 
 	_mesa_initialize_window_framebuffer(&nfb->base, visual);
+	nfb->need_front = !visual->doubleBufferMode;
 
 	return &nfb->base;
 }
 
 static void
-nouveau_bind_framebuffer(GLcontext *ctx, GLenum target,
+nouveau_bind_framebuffer(struct gl_context *ctx, GLenum target,
 			 struct gl_framebuffer *dfb,
 			 struct gl_framebuffer *rfb)
 {
@@ -201,7 +203,7 @@ nouveau_bind_framebuffer(GLcontext *ctx, GLenum target,
 }
 
 static void
-nouveau_framebuffer_renderbuffer(GLcontext *ctx, struct gl_framebuffer *fb,
+nouveau_framebuffer_renderbuffer(struct gl_context *ctx, struct gl_framebuffer *fb,
 				 GLenum attachment, struct gl_renderbuffer *rb)
 {
 	_mesa_framebuffer_renderbuffer(ctx, fb, attachment, rb);
@@ -220,23 +222,22 @@ get_tex_format(struct gl_texture_image *ti)
 	case MESA_FORMAT_RGB565:
 		return GL_RGB5;
 	default:
-		assert(0);
+		return GL_NONE;
 	}
 }
 
 static void
-nouveau_render_texture(GLcontext *ctx, struct gl_framebuffer *fb,
+nouveau_render_texture(struct gl_context *ctx, struct gl_framebuffer *fb,
 		       struct gl_renderbuffer_attachment *att)
 {
 	struct gl_renderbuffer *rb = att->Renderbuffer;
 	struct gl_texture_image *ti =
 		att->Texture->Image[att->CubeMapFace][att->TextureLevel];
-	int ret;
 
 	/* Allocate a renderbuffer object for the texture if we
 	 * haven't already done so. */
 	if (!rb) {
-		rb = nouveau_renderbuffer_new(ctx, 0);
+		rb = nouveau_renderbuffer_new(ctx, ~0);
 		assert(rb);
 
 		rb->AllocStorage = NULL;
@@ -244,9 +245,7 @@ nouveau_render_texture(GLcontext *ctx, struct gl_framebuffer *fb,
 	}
 
 	/* Update the renderbuffer fields from the texture. */
-	ret = set_renderbuffer_format(rb, get_tex_format(ti));
-	assert(ret);
-
+	set_renderbuffer_format(rb, get_tex_format(ti));
 	rb->Width = ti->Width;
 	rb->Height = ti->Height;
 	nouveau_surface_ref(&to_nouveau_teximage(ti)->surface,
@@ -256,23 +255,21 @@ nouveau_render_texture(GLcontext *ctx, struct gl_framebuffer *fb,
 }
 
 static void
-nouveau_finish_render_texture(GLcontext *ctx,
+nouveau_finish_render_texture(struct gl_context *ctx,
 			      struct gl_renderbuffer_attachment *att)
 {
-	struct nouveau_renderbuffer *nrb
-		= to_nouveau_renderbuffer(att->Renderbuffer);
-
 	texture_dirty(att->Texture);
-	nouveau_surface_ref(NULL, &nrb->surface);
 }
 
 void
 nouveau_fbo_functions_init(struct dd_function_table *functions)
 {
+#if FEATURE_EXT_framebuffer_object
 	functions->NewFramebuffer = nouveau_framebuffer_new;
 	functions->NewRenderbuffer = nouveau_renderbuffer_new;
 	functions->BindFramebuffer = nouveau_bind_framebuffer;
 	functions->FramebufferRenderbuffer = nouveau_framebuffer_renderbuffer;
 	functions->RenderTexture = nouveau_render_texture;
 	functions->FinishRenderTexture = nouveau_finish_render_texture;
+#endif
 }

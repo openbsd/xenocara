@@ -34,7 +34,7 @@
 #include "main/macros.h"
 #include "main/enums.h"
 
-#include "shader/program.h"
+#include "program/program.h"
 #include "intel_batchbuffer.h"
 
 #include "brw_defines.h"
@@ -58,6 +58,8 @@ static void brw_gs_alloc_regs( struct brw_gs_compile *c,
       i += c->nr_regs;
    }
 
+   c->reg.temp = brw_vec8_grf(i, 0);
+
    c->prog_data.urb_read_length = c->nr_regs; 
    c->prog_data.total_grf = i;
 }
@@ -69,12 +71,22 @@ static void brw_gs_emit_vue(struct brw_gs_compile *c,
 			    GLuint header)
 {
    struct brw_compile *p = &c->func;
+   struct intel_context *intel = &c->func.brw->intel;
    GLboolean allocate = !last;
+   struct brw_reg temp;
+
+   if (intel->gen < 6)
+       temp = c->reg.R0;
+   else {
+       temp = c->reg.temp;
+       brw_MOV(p, retype(temp, BRW_REGISTER_TYPE_UD),
+	       retype(c->reg.R0, BRW_REGISTER_TYPE_UD));
+   }
 
    /* Overwrite PrimType and PrimStart in the message header, for
     * each vertex in turn:
     */
-   brw_MOV(p, get_element_ud(c->reg.R0, 2), brw_imm_ud(header));
+   brw_MOV(p, get_element_ud(temp, 2), brw_imm_ud(header));
 
    /* Copy the vertex from vertn into m1..mN+1:
     */
@@ -87,9 +99,9 @@ static void brw_gs_emit_vue(struct brw_gs_compile *c,
     * allocated each time.
     */
    brw_urb_WRITE(p, 
-		 allocate ? c->reg.R0 : retype(brw_null_reg(), BRW_REGISTER_TYPE_UD),
+		 allocate ? temp : retype(brw_null_reg(), BRW_REGISTER_TYPE_UD),
 		 0,
-		 c->reg.R0,
+		 temp,
 		 allocate,
 		 1,		/* used */
 		 c->nr_regs + 1, /* msg length */
@@ -98,24 +110,39 @@ static void brw_gs_emit_vue(struct brw_gs_compile *c,
 		 1,		/* writes_complete */
 		 0,		/* urb offset */
 		 BRW_URB_SWIZZLE_NONE);
+
+   if (intel->gen >= 6 && allocate)
+       brw_MOV(p, get_element_ud(c->reg.R0, 0), get_element_ud(temp, 0));
 }
 
 static void brw_gs_ff_sync(struct brw_gs_compile *c, int num_prim)
 {
 	struct brw_compile *p = &c->func;
-	brw_MOV(p, get_element_ud(c->reg.R0, 1), brw_imm_ud(num_prim));
-	brw_ff_sync(p, 
-				c->reg.R0,
-				0,
-				c->reg.R0,
-				1,	
-				1,		/* used */
-				1,  	/* msg length */
-				1,		/* response length */
-				0,		/* eot */
-				1,		/* write compelete */
-				0,		/* urb offset */
-				BRW_URB_SWIZZLE_NONE);
+	struct intel_context *intel = &c->func.brw->intel;
+
+	if (intel->gen < 6) {
+	    brw_MOV(p, get_element_ud(c->reg.R0, 1), brw_imm_ud(num_prim));
+	    brw_ff_sync(p,
+		        c->reg.R0,
+			0,
+			c->reg.R0,
+			1, /* allocate */
+			1, /* response length */
+			0 /* eot */);
+	} else {
+	    brw_MOV(p, retype(c->reg.temp, BRW_REGISTER_TYPE_UD),
+		    retype(c->reg.R0, BRW_REGISTER_TYPE_UD));
+	    brw_MOV(p, get_element_ud(c->reg.temp, 1), brw_imm_ud(num_prim));
+	    brw_ff_sync(p,
+		        c->reg.temp,
+			0,
+			c->reg.temp,
+			1, /* allocate */
+			1, /* response length */
+			0 /* eot */);
+	    brw_MOV(p, get_element_ud(c->reg.R0, 0),
+		    get_element_ud(c->reg.temp, 0));
+	}
 }
 
 
@@ -166,19 +193,6 @@ void brw_gs_quad_strip( struct brw_gs_compile *c, struct brw_gs_prog_key *key )
    }
 }
 
-void brw_gs_tris( struct brw_gs_compile *c )
-{
-   struct intel_context *intel = &c->func.brw->intel;
-
-   brw_gs_alloc_regs(c, 3);
-
-   if (intel->needs_ff_sync)
-	   brw_gs_ff_sync(c, 1);      
-   brw_gs_emit_vue(c, c->reg.vertex[0], 0, ((_3DPRIM_TRILIST << 2) | R02_PRIM_START));
-   brw_gs_emit_vue(c, c->reg.vertex[1], 0, (_3DPRIM_TRILIST << 2));
-   brw_gs_emit_vue(c, c->reg.vertex[2], 1, ((_3DPRIM_TRILIST << 2) | R02_PRIM_END));
-}
-
 void brw_gs_lines( struct brw_gs_compile *c )
 {
    struct intel_context *intel = &c->func.brw->intel;
@@ -190,22 +204,3 @@ void brw_gs_lines( struct brw_gs_compile *c )
    brw_gs_emit_vue(c, c->reg.vertex[0], 0, ((_3DPRIM_LINESTRIP << 2) | R02_PRIM_START));
    brw_gs_emit_vue(c, c->reg.vertex[1], 1, ((_3DPRIM_LINESTRIP << 2) | R02_PRIM_END));
 }
-
-void brw_gs_points( struct brw_gs_compile *c )
-{
-   struct intel_context *intel = &c->func.brw->intel;
-
-   brw_gs_alloc_regs(c, 1);
-
-   if (intel->needs_ff_sync)
-	   brw_gs_ff_sync(c, 1);      
-   brw_gs_emit_vue(c, c->reg.vertex[0], 1, ((_3DPRIM_POINTLIST << 2) | R02_PRIM_START | R02_PRIM_END));
-}
-
-
-
-
-
-
-
-

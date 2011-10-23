@@ -278,7 +278,7 @@ struct brw_aa_line_parameters
    struct header header;
 
    struct {
-      GLuint aa_coverage_scope:8;
+      GLuint aa_coverage_slope:8;
       GLuint pad0:8;
       GLuint aa_coverage_bias:8;
       GLuint pad1:8;
@@ -750,7 +750,7 @@ struct gen6_depth_stencil_state
    } ds1;
 
    struct {
-      GLuint pad0:25;
+      GLuint pad0:26;
       GLuint depth_write_enable:1;
       GLuint depth_test_func:3;
       GLuint pad1:1;
@@ -909,10 +909,12 @@ struct brw_sf_unit_state
 
 };
 
-struct gen6_scissor_state
+struct gen6_scissor_rect
 {
-   GLuint ymin, xmin;
-   GLuint ymax, xmax;
+   GLuint xmin:16;
+   GLuint ymin:16;
+   GLuint xmax:16;
+   GLuint ymax:16;
 };
 
 struct brw_gs_unit_state
@@ -1062,6 +1064,15 @@ struct brw_sampler_default_color {
    GLfloat color[4];
 };
 
+struct gen5_sampler_default_color {
+   uint8_t ub[4];
+   float f[4];
+   uint16_t hf[4];
+   uint16_t us[4];
+   int16_t s[4];
+   uint8_t b[4];
+};
+
 struct brw_sampler_state
 {
    
@@ -1073,7 +1084,7 @@ struct brw_sampler_state
       GLuint mag_filter:3; 
       GLuint mip_filter:2; 
       GLuint base_level:5; 
-      GLuint pad:1;
+      GLuint min_mag_neq:1;
       GLuint lod_preclamp:1; 
       GLuint default_color_mode:1; 
       GLuint pad0:1;
@@ -1085,7 +1096,8 @@ struct brw_sampler_state
       GLuint r_wrap_mode:3; 
       GLuint t_wrap_mode:3; 
       GLuint s_wrap_mode:3; 
-      GLuint pad:3;
+      GLuint cube_control_mode:1;
+      GLuint pad:2;
       GLuint max_lod:10; 
       GLuint min_lod:10; 
    } ss1;
@@ -1099,7 +1111,9 @@ struct brw_sampler_state
    
    struct
    {
-      GLuint pad:19;
+      GLuint non_normalized_coord:1;
+      GLuint pad:12;
+      GLuint address_round:6;
       GLuint max_aniso:3; 
       GLuint chroma_key_mode:1; 
       GLuint chroma_key_index:2; 
@@ -1164,7 +1178,12 @@ struct brw_surface_state
       GLuint cube_neg_y:1; 
       GLuint cube_pos_x:1; 
       GLuint cube_neg_x:1; 
-      GLuint pad:4;
+      GLuint pad:2;
+      /* Required on gen6 for surfaces accessed through render cache messages.
+       */
+      GLuint render_cache_read_write:1;
+      /* Ironlake and newer: instead of replicating one of the texels */
+      GLuint cube_corner_average:1;
       GLuint mipmap_layout_mode:1; 
       GLuint vert_line_stride_ofs:1; 
       GLuint vert_line_stride:1; 
@@ -1210,10 +1229,9 @@ struct brw_surface_state
 
    struct {
       GLuint pad1:16;
-      GLuint llc_mapping:1;
-      GLuint mlc_mapping:1;
+      GLuint cache_control:2;
       GLuint gfdt:1;
-      GLuint gfdt_src:1;
+      GLuint encrypt:1;
       GLuint y_offset:4;
       GLuint pad0:1;
       GLuint x_offset:7;
@@ -1305,13 +1323,14 @@ struct brw_instruction
       GLuint access_mode:1;
       GLuint mask_control:1;
       GLuint dependency_control:2;
-      GLuint compression_control:2;
+      GLuint compression_control:2; /* gen6: quater control */
       GLuint thread_control:2;
       GLuint predicate_control:4;
       GLuint predicate_inverse:1;
       GLuint execution_size:3;
       GLuint destreg__conditionalmod:4; /* destreg - send, conditionalmod - others */
-      GLuint pad0:2;
+      GLuint acc_wr_control:1;
+      GLuint cmpt_control:1;
       GLuint debug_control:1;
       GLuint saturate:1;
    } header;
@@ -1359,7 +1378,7 @@ struct brw_instruction
 	 GLuint dest_writemask:4;
 	 GLuint dest_subreg_nr:1;
 	 GLuint dest_reg_nr:8;
-	 GLuint pad1:2;
+	 GLuint dest_horiz_stride:2;
 	 GLuint dest_address_mode:1;
       } da16;
 
@@ -1373,9 +1392,21 @@ struct brw_instruction
 	 GLuint dest_writemask:4;
 	 GLint dest_indirect_offset:6;
 	 GLuint dest_subreg_nr:3;
-	 GLuint pad1:2;
+	 GLuint dest_horiz_stride:2;
 	 GLuint dest_address_mode:1;
       } ia16;
+
+      struct {
+	 GLuint dest_reg_file:2;
+	 GLuint dest_reg_type:3;
+	 GLuint src0_reg_file:2;
+	 GLuint src0_reg_type:3;
+	 GLuint src1_reg_file:2;
+	 GLuint src1_reg_type:3;
+	 GLuint pad:1;
+
+	 GLint jump_count:16;
+      } branch_gen6;
    } bits1;
 
 
@@ -1522,6 +1553,21 @@ struct brw_instruction
 	 GLuint  pad0:12;
       } if_else;
 
+      struct
+      {
+	 /* Signed jump distance to the ip to jump to if all channels
+	  * are disabled after the break or continue.  It should point
+	  * to the end of the innermost control flow block, as that's
+	  * where some channel could get re-enabled.
+	  */
+	 int jip:16;
+
+	 /* Signed jump distance to the location to resume execution
+	  * of this channel if it's enabled for the break or continue.
+	  */
+	 int uip:16;
+      } break_cont;
+
       struct {
 	 GLuint function:4;
 	 GLuint int_type:1;
@@ -1619,6 +1665,18 @@ struct brw_instruction
 
       struct {
 	 GLuint binding_table_index:8;
+	 GLuint msg_control:3;
+	 GLuint msg_type:3;
+	 GLuint target_cache:2;
+	 GLuint response_length:4;
+	 GLuint msg_length:4;
+	 GLuint msg_target:4;
+	 GLuint pad1:3;
+	 GLuint end_of_thread:1;
+      } dp_read_g4x;
+
+      struct {
+	 GLuint binding_table_index:8;
 	 GLuint msg_control:3;  
 	 GLuint msg_type:3;  
 	 GLuint target_cache:2;    
@@ -1657,8 +1715,36 @@ struct brw_instruction
 	 GLuint end_of_thread:1;
       } dp_write_gen5;
 
+      /* Sandybridge DP for sample cache, constant cache, render cache */
       struct {
-	 GLuint pad:16;
+	 GLuint binding_table_index:8;
+	 GLuint msg_control:5;
+	 GLuint msg_type:3;
+	 GLuint pad0:3;
+	 GLuint header_present:1;
+	 GLuint response_length:5;
+	 GLuint msg_length:4;
+	 GLuint pad1:2;
+	 GLuint end_of_thread:1;
+      } dp_sampler_const_cache;
+
+      struct {
+	 GLuint binding_table_index:8;
+	 GLuint msg_control:3;
+	 GLuint slot_group_select:1;
+	 GLuint pixel_scoreboard_clear:1;
+	 GLuint msg_type:4;
+	 GLuint send_commit_msg:1;
+	 GLuint pad0:1;
+	 GLuint header_present:1;
+	 GLuint response_length:5;
+	 GLuint msg_length:4;
+	 GLuint pad1:2;
+	 GLuint end_of_thread:1;
+      } dp_render_cache;
+
+      struct {
+	 GLuint function_control:16;
 	 GLuint response_length:4;
 	 GLuint msg_length:4;
 	 GLuint msg_target:4;
@@ -1666,8 +1752,9 @@ struct brw_instruction
 	 GLuint end_of_thread:1;
       } generic;
 
+      /* Of this struct, only end_of_thread is not present for gen6. */
       struct {
-	 GLuint pad:19;
+	 GLuint function_control:19;
 	 GLuint header_present:1;
 	 GLuint response_length:5;
 	 GLuint msg_length:4;

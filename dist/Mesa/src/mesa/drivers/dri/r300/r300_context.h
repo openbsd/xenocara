@@ -43,7 +43,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include "radeon_common.h"
 
 #include "main/mtypes.h"
-#include "shader/prog_instruction.h"
+#include "program/prog_instruction.h"
 #include "compiler/radeon_code.h"
 
 struct r300_context;
@@ -463,9 +463,9 @@ struct r300_swtcl_info {
 };
 
 struct r300_vtable {
-	void (* SetupRSUnit)(GLcontext *ctx);
-	void (* SetupFragmentShaderTextures)(GLcontext *ctx, int *tmu_mappings);
-	void (* SetupPixelShader)(GLcontext *ctx);
+	void (* SetupRSUnit)(struct gl_context *ctx);
+	void (* SetupFragmentShaderTextures)(struct gl_context *ctx, int *tmu_mappings);
+	void (* SetupPixelShader)(struct gl_context *ctx);
 };
 
 struct r300_vertex_buffer {
@@ -543,7 +543,8 @@ struct r300_context {
 #define R300_CONTEXT(ctx)		((r300ContextPtr)(ctx->DriverCtx))
 
 extern void r300DestroyContext(__DRIcontext * driContextPriv);
-extern GLboolean r300CreateContext(const __GLcontextModes * glVisual,
+extern GLboolean r300CreateContext(gl_api api,
+				   const struct gl_config * glVisual,
 				   __DRIcontext * driContextPriv,
 				   void *sharedContextPrivate);
 
@@ -551,7 +552,7 @@ extern void r300InitShaderFuncs(struct dd_function_table *functions);
 
 extern void r300InitShaderFunctions(r300ContextPtr r300);
 
-extern void r300InitDraw(GLcontext *ctx);
+extern void r300InitDraw(struct gl_context *ctx);
 
 #define r300PackFloat32 radeonPackFloat32
 #define r300PackFloat24 radeonPackFloat24

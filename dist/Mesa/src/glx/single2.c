@@ -36,7 +36,6 @@
 #include "indirect.h"
 #include "indirect_vertex_array.h"
 #include "glapitable.h"
-#include "glapidispatch.h"
 #include "glapi.h"
 #ifdef USE_XCB
 #include <xcb/xcb.h>
@@ -44,6 +43,9 @@
 #include <X11/Xlib-xcb.h>
 #endif /* USE_XCB */
 
+#if !defined(__GNUC__)
+#  define __builtin_expect(x, y) x
+#endif
 
 /* Used for GL_ARB_transpose_matrix */
 static void
@@ -153,7 +155,7 @@ __indirect_glGetError(void)
  * On success \c GL_TRUE is returned.  Otherwise, \c GL_FALSE is returned.
  */
 static GLboolean
-get_client_data(__GLXcontext * gc, GLenum cap, GLintptr * data)
+get_client_data(struct glx_context * gc, GLenum cap, GLintptr * data)
 {
    GLboolean retval = GL_TRUE;
    __GLXattribute *state = (__GLXattribute *) (gc->client_state_private);
@@ -643,7 +645,7 @@ version_from_string(const char *ver, int *major_version, int *minor_version)
 const GLubyte *
 __indirect_glGetString(GLenum name)
 {
-   __GLXcontext *gc = __glXGetCurrentContext();
+   struct glx_context *gc = __glXGetCurrentContext();
    Display *dpy = gc->currentDpy;
    GLubyte *s = NULL;
 
@@ -834,7 +836,7 @@ __indirect_glIsEnabled(GLenum cap)
 void
 __indirect_glGetPointerv(GLenum pname, void **params)
 {
-   __GLXcontext *gc = __glXGetCurrentContext();
+   struct glx_context *gc = __glXGetCurrentContext();
    __GLXattribute *state = (__GLXattribute *) (gc->client_state_private);
    Display *dpy = gc->currentDpy;
 
@@ -882,7 +884,7 @@ GLboolean
 __indirect_glAreTexturesResident(GLsizei n, const GLuint * textures,
                                  GLboolean * residences)
 {
-   __GLXcontext *const gc = __glXGetCurrentContext();
+   struct glx_context *const gc = __glXGetCurrentContext();
    Display *const dpy = gc->currentDpy;
    GLboolean retval = (GLboolean) 0;
    const GLuint cmdlen = 4 + __GLX_PAD((n * 4));
@@ -938,14 +940,13 @@ GLboolean
 glAreTexturesResidentEXT(GLsizei n, const GLuint * textures,
                          GLboolean * residences)
 {
-   __GLXcontext *const gc = __glXGetCurrentContext();
+   struct glx_context *const gc = __glXGetCurrentContext();
 
    if (gc->isDirect) {
-      return CALL_AreTexturesResident(GET_DISPATCH(),
-                                      (n, textures, residences));
+      return GET_DISPATCH()->AreTexturesResident(n, textures, residences);
    }
    else {
-      __GLXcontext *const gc = __glXGetCurrentContext();
+      struct glx_context *const gc = __glXGetCurrentContext();
       Display *const dpy = gc->currentDpy;
       GLboolean retval = (GLboolean) 0;
       const GLuint cmdlen = 4 + __GLX_PAD((n * 4));

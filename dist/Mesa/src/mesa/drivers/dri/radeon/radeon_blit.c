@@ -48,6 +48,8 @@ unsigned r100_check_blit(gl_format mesa_format)
     case MESA_FORMAT_ARGB4444:
     case MESA_FORMAT_ARGB1555:
     case MESA_FORMAT_A8:
+    case MESA_FORMAT_L8:
+    case MESA_FORMAT_I8:
 	    break;
     default:
 	    return 0;
@@ -103,6 +105,9 @@ static void inline emit_tx_setup(struct r100_context *r100,
     case MESA_FORMAT_ARGB8888:
 	    txformat |= RADEON_TXFORMAT_ARGB8888 | RADEON_TXFORMAT_ALPHA_IN_MAP;
 	    break;
+    case MESA_FORMAT_RGBA8888:
+            txformat |= RADEON_TXFORMAT_RGBA8888 | RADEON_TXFORMAT_ALPHA_IN_MAP;
+            break;
     case MESA_FORMAT_XRGB8888:
 	    txformat |= RADEON_TXFORMAT_ARGB8888;
 	    break;
@@ -116,8 +121,15 @@ static void inline emit_tx_setup(struct r100_context *r100,
 	    txformat |= RADEON_TXFORMAT_ARGB1555 | RADEON_TXFORMAT_ALPHA_IN_MAP;
 	    break;
     case MESA_FORMAT_A8:
+    case MESA_FORMAT_I8:
 	    txformat |= RADEON_TXFORMAT_I8 | RADEON_TXFORMAT_ALPHA_IN_MAP;
 	    break;
+    case MESA_FORMAT_L8:
+            txformat |= RADEON_TXFORMAT_I8;
+            break;
+    case MESA_FORMAT_AL88:
+            txformat |= RADEON_TXFORMAT_AI88 | RADEON_TXFORMAT_ALPHA_IN_MAP;
+            break;
     default:
 	    break;
     }
@@ -177,6 +189,8 @@ static inline void emit_cb_setup(struct r100_context *r100,
 	    dst_format = RADEON_COLOR_FORMAT_ARGB1555;
 	    break;
     case MESA_FORMAT_A8:
+    case MESA_FORMAT_L8:
+    case MESA_FORMAT_I8:
 	    dst_format = RADEON_COLOR_FORMAT_RGB8;
 	    break;
     default:
@@ -307,7 +321,7 @@ static inline void emit_draw_packet(struct r100_context *r100,
  * @param[in] height region height
  * @param[in] flip_y set if y coords of the source image need to be flipped
  */
-unsigned r100_blit(GLcontext *ctx,
+unsigned r100_blit(struct gl_context *ctx,
                    struct radeon_bo *src_bo,
                    intptr_t src_offset,
                    gl_format src_mesaformat,

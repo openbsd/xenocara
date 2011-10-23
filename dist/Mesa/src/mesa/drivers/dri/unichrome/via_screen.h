@@ -76,7 +76,8 @@ typedef struct {
 
 
 extern GLboolean
-viaCreateContext(const __GLcontextModes *mesaVis,
+viaCreateContext(gl_api api,
+		 const struct gl_config *mesaVis,
                  __DRIcontext *driContextPriv,
                  void *sharedContextPrivate);
 

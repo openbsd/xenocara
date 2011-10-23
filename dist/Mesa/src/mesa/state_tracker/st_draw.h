@@ -34,15 +34,20 @@
 #ifndef ST_DRAW_H
 #define ST_DRAW_H
 
-struct _mesa_prim;
+#include "main/compiler.h"
+#include "main/glheader.h"
+#include "main/mtypes.h"
+
 struct _mesa_index_buffer;
+struct _mesa_prim;
+struct st_context;
 
 void st_init_draw( struct st_context *st );
 
 void st_destroy_draw( struct st_context *st );
 
 extern void
-st_draw_vbo(GLcontext *ctx,
+st_draw_vbo(struct gl_context *ctx,
             const struct gl_client_array **arrays,
             const struct _mesa_prim *prims,
             GLuint nr_prims,
@@ -52,7 +57,7 @@ st_draw_vbo(GLcontext *ctx,
             GLuint max_index);
 
 extern void
-st_feedback_draw_vbo(GLcontext *ctx,
+st_feedback_draw_vbo(struct gl_context *ctx,
                      const struct gl_client_array **arrays,
                      const struct _mesa_prim *prims,
                      GLuint nr_prims,

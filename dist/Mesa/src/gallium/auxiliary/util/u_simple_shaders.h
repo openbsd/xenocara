@@ -52,15 +52,18 @@ util_make_vertex_passthrough_shader(struct pipe_context *pipe,
 extern void *
 util_make_fragment_tex_shader_writemask(struct pipe_context *pipe, 
                                         unsigned tex_target,
+                                        unsigned interp_mode,
                                         unsigned writemask);
 
 extern void *
-util_make_fragment_tex_shader(struct pipe_context *pipe, unsigned tex_target);
+util_make_fragment_tex_shader(struct pipe_context *pipe, unsigned tex_target,
+                              unsigned interp_mode);
 
 
 extern void *
 util_make_fragment_tex_shader_writedepth(struct pipe_context *pipe,
-                                         unsigned tex_target);
+                                         unsigned tex_target,
+                                         unsigned interp_mode);
 
 
 extern void *
@@ -68,7 +71,9 @@ util_make_fragment_passthrough_shader(struct pipe_context *pipe);
 
 
 extern void *
-util_make_fragment_clonecolor_shader(struct pipe_context *pipe, int num_cbufs);
+util_make_fragment_cloneinput_shader(struct pipe_context *pipe, int num_cbufs,
+                                     int input_semantic,
+                                     int input_interpolate);
 
 #ifdef __cplusplus
 }

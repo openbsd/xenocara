@@ -86,6 +86,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #define need_GL_EXT_stencil_two_side
 #define need_GL_ATI_separate_stencil
 #define need_GL_NV_vertex_program
+#define need_GL_OES_EGL_image
 
 #include "main/remap_helper.h"
 
@@ -134,7 +135,9 @@ static const struct dri_extension card_extensions[] = {
   {"GL_MESAX_texture_float",		NULL},
   {"GL_NV_blend_square",		NULL},
   {"GL_NV_vertex_program",		GL_NV_vertex_program_functions},
-  {"GL_SGIS_generate_mipmap",		NULL},
+#if FEATURE_OES_EGL_image
+  {"GL_OES_EGL_image",                  GL_OES_EGL_image_functions },
+#endif
   {NULL,				NULL}
   /* *INDENT-ON* */
 };
@@ -220,7 +223,7 @@ static void r300_vtbl_pre_emit_atoms(radeonContextPtr radeon)
 	end_3d(radeon);
 }
 
-static void r300_fallback(GLcontext *ctx, GLuint bit, GLboolean mode)
+static void r300_fallback(struct gl_context *ctx, GLuint bit, GLboolean mode)
 {
 	r300ContextPtr r300 = R300_CONTEXT(ctx);
 	if (mode)
@@ -324,9 +327,15 @@ static void r300_init_vtbl(radeonContextPtr radeon)
 
 	radeon->vtbl.check_blit = r300_check_blit;
 	radeon->vtbl.blit = r300_blit;
+
+	if (radeon->radeonScreen->chip_family >= CHIP_FAMILY_RV515) {
+		radeon->vtbl.is_format_renderable = r500IsFormatRenderable;
+	} else {
+		radeon->vtbl.is_format_renderable = r300IsFormatRenderable;
+	}
 }
 
-static void r300InitConstValues(GLcontext *ctx, radeonScreenPtr screen)
+static void r300InitConstValues(struct gl_context *ctx, radeonScreenPtr screen)
 {
 	r300ContextPtr r300 = R300_CONTEXT(ctx);
 
@@ -370,13 +379,12 @@ static void r300InitConstValues(GLcontext *ctx, radeonScreenPtr screen)
 	ctx->Const.MaxDrawBuffers = 1;
 	ctx->Const.MaxColorAttachments = 1;
 
-	/* currently bogus data */
 	if (r300->options.hw_tcl_enabled) {
-		ctx->Const.VertexProgram.MaxNativeInstructions = VSF_MAX_FRAGMENT_LENGTH / 4;
-		ctx->Const.VertexProgram.MaxNativeAluInstructions = VSF_MAX_FRAGMENT_LENGTH / 4;
-		ctx->Const.VertexProgram.MaxNativeAttribs = 16;	/* r420 */
+		ctx->Const.VertexProgram.MaxNativeInstructions = 255;
+		ctx->Const.VertexProgram.MaxNativeAluInstructions = 255;
+		ctx->Const.VertexProgram.MaxNativeAttribs = 16;
 		ctx->Const.VertexProgram.MaxNativeTemps = 32;
-		ctx->Const.VertexProgram.MaxNativeParameters = 256;	/* r420 */
+		ctx->Const.VertexProgram.MaxNativeParameters = 256;
 		ctx->Const.VertexProgram.MaxNativeAddressRegs = 1;
 	}
 
@@ -435,7 +443,7 @@ static void r300ParseOptions(r300ContextPtr r300, radeonScreenPtr screen)
 	r300->options = options;
 }
 
-static void r300InitGLExtensions(GLcontext *ctx)
+static void r300InitGLExtensions(struct gl_context *ctx)
 {
 	r300ContextPtr r300 = R300_CONTEXT(ctx);
 
@@ -456,7 +464,7 @@ static void r300InitGLExtensions(GLcontext *ctx)
 	if (!r300->radeon.radeonScreen->drmSupportsOcclusionQueries) {
 		_mesa_disable_extension(ctx, "GL_ARB_occlusion_query");
 	}
-	if (r300->radeon.radeonScreen->chip_family >= CHIP_FAMILY_RV350)
+        if (r300->radeon.radeonScreen->chip_family >= CHIP_FAMILY_R420)
   		_mesa_enable_extension(ctx, "GL_ARB_half_float_vertex");
 
 	if (r300->radeon.radeonScreen->chip_family >= CHIP_FAMILY_RV515)
@@ -472,7 +480,8 @@ static void r300InitIoctlFuncs(struct dd_function_table *functions)
 
 /* Create the device specific rendering context.
  */
-GLboolean r300CreateContext(const __GLcontextModes * glVisual,
+GLboolean r300CreateContext(gl_api api,
+			    const struct gl_config * glVisual,
 			    __DRIcontext * driContextPriv,
 			    void *sharedContextPrivate)
 {
@@ -480,7 +489,7 @@ GLboolean r300CreateContext(const __GLcontextModes * glVisual,
 	radeonScreenPtr screen = (radeonScreenPtr) (sPriv->private);
 	struct dd_function_table functions;
 	r300ContextPtr r300;
-	GLcontext *ctx;
+	struct gl_context *ctx;
 
 	assert(glVisual);
 	assert(driContextPriv);
@@ -497,7 +506,7 @@ GLboolean r300CreateContext(const __GLcontextModes * glVisual,
 
 	_mesa_init_driver_functions(&functions);
 	r300InitIoctlFuncs(&functions);
-	r300InitStateFuncs(&functions);
+	r300InitStateFuncs(&r300->radeon, &functions);
 	r300InitTextureFuncs(&r300->radeon, &functions);
 	r300InitShaderFuncs(&functions);
 	radeonInitQueryObjFunctions(&functions);

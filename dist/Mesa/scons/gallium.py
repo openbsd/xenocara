@@ -49,30 +49,35 @@ def symlink(target, source, env):
     os.symlink(os.path.basename(source), target)
 
 def install(env, source, subdir):
-    target_dir = os.path.join(env.Dir('#.').srcnode().abspath, env['build'], subdir)
-    env.Install(target_dir, source)
+    target_dir = os.path.join(env.Dir('#.').srcnode().abspath, env['build_dir'], subdir)
+    return env.Install(target_dir, source)
 
 def install_program(env, source):
-    install(env, source, 'bin')
+    return install(env, source, 'bin')
 
 def install_shared_library(env, sources, version = ()):
-    install_dir = os.path.join(env.Dir('#.').srcnode().abspath, env['build'])
+    targets = []
+    install_dir = os.path.join(env.Dir('#.').srcnode().abspath, env['build_dir'])
     version = tuple(map(str, version))
     if env['SHLIBSUFFIX'] == '.dll':
         dlls = env.FindIxes(sources, 'SHLIBPREFIX', 'SHLIBSUFFIX')
-        install(env, dlls, 'bin')
+        targets += install(env, dlls, 'bin')
         libs = env.FindIxes(sources, 'LIBPREFIX', 'LIBSUFFIX')
-        install(env, libs, 'lib')
+        targets += install(env, libs, 'lib')
     else:
         for source in sources:
             target_dir =  os.path.join(install_dir, 'lib')
             target_name = '.'.join((str(source),) + version)
             last = env.InstallAs(os.path.join(target_dir, target_name), source)
+            targets += last
             while len(version):
                 version = version[:-1]
                 target_name = '.'.join((str(source),) + version)
                 action = SCons.Action.Action(symlink, "$TARGET -> $SOURCE")
                 last = env.Command(os.path.join(target_dir, target_name), last, action) 
+                targets += last
+    return targets
+
 
 def createInstallMethods(env):
     env.AddMethod(install_program, 'InstallProgram')
@@ -98,6 +103,41 @@ def num_jobs():
     return 1
 
 
+def pkg_config_modules(env, name, modules):
+    '''Simple wrapper for pkg-config.'''
+
+    env[name] = False
+
+    if env['platform'] == 'windows':
+        return
+
+    if not env.Detect('pkg-config'):
+        return
+
+    if subprocess.call(["pkg-config", "--exists", ' '.join(modules)]) != 0:
+        return
+
+    # Put -I and -L flags directly into the environment, as these don't affect
+    # the compilation of targets that do not use them
+    try:
+        env.ParseConfig('pkg-config --cflags-only-I --libs-only-L ' + ' '.join(modules))
+    except OSError:
+        return
+
+    # Other flags may affect the compilation of unrelated targets, so store
+    # them with a prefix, (e.g., XXX_CFLAGS, XXX_LIBS, etc)
+    try:
+        flags = env.ParseFlags('!pkg-config --cflags-only-other --libs-only-l --libs-only-other ' + ' '.join(modules))
+    except OSError:
+        return
+    prefix = name.upper() + '_'
+    for flag_name, flag_value in flags.iteritems():
+        env[prefix + flag_name] = flag_value
+
+    env[name] = True
+
+
+
 def generate(env):
     """Common environment generation code"""
 
@@ -110,27 +150,32 @@ def generate(env):
             env['toolchain'] = 'wcesdk'
     env.Tool(env['toolchain'])
 
-    if env['platform'] == 'embedded':
-        # Allow overriding compiler from environment
-        if os.environ.has_key('CC'):
-            env['CC'] = os.environ['CC']
-            # Update CCVERSION to match
-            pipe = SCons.Action._subproc(env, [env['CC'], '--version'],
-                                         stdin = 'devnull',
-                                         stderr = 'devnull',
-                                         stdout = subprocess.PIPE)
-            if pipe.wait() == 0:
-                line = pipe.stdout.readline()
-                match = re.search(r'[0-9]+(\.[0-9]+)+', line)
-                if match:
-                    env['CCVERSION'] = match.group(0)
-            
+    # Allow override compiler and specify additional flags from environment
+    if os.environ.has_key('CC'):
+        env['CC'] = os.environ['CC']
+        # Update CCVERSION to match
+        pipe = SCons.Action._subproc(env, [env['CC'], '--version'],
+                                     stdin = 'devnull',
+                                     stderr = 'devnull',
+                                     stdout = subprocess.PIPE)
+        if pipe.wait() == 0:
+            line = pipe.stdout.readline()
+            match = re.search(r'[0-9]+(\.[0-9]+)+', line)
+            if match:
+                env['CCVERSION'] = match.group(0)
+    if os.environ.has_key('CFLAGS'):
+        env['CCFLAGS'] += SCons.Util.CLVar(os.environ['CFLAGS'])
+    if os.environ.has_key('CXX'):
+        env['CXX'] = os.environ['CXX']
+    if os.environ.has_key('CXXFLAGS'):
+        env['CXXFLAGS'] += SCons.Util.CLVar(os.environ['CXXFLAGS'])
+    if os.environ.has_key('LDFLAGS'):
+        env['LINKFLAGS'] += SCons.Util.CLVar(os.environ['LDFLAGS'])
 
     env['gcc'] = 'gcc' in os.path.basename(env['CC']).split('-')
     env['msvc'] = env['CC'] == 'cl'
 
     # shortcuts
-    debug = env['debug']
     machine = env['machine']
     platform = env['platform']
     x86 = env['machine'] == 'x86'
@@ -138,22 +183,48 @@ def generate(env):
     gcc = env['gcc']
     msvc = env['msvc']
 
+    # Backwards compatability with the debug= profile= options
+    if env['build'] == 'debug':
+        if not env['debug']:
+            print 'scons: warning: debug option is deprecated and will be removed eventually; use instead'
+            print
+            print ' scons build=release'
+            print
+            env['build'] = 'release'
+        if env['profile']:
+            print 'scons: warning: profile option is deprecated and will be removed eventually; use instead'
+            print
+            print ' scons build=profile'
+            print
+            env['build'] = 'profile'
+    if False:
+        # Enforce SConscripts to use the new build variable
+        env.popitem('debug')
+        env.popitem('profile')
+    else:
+        # Backwards portability with older sconscripts
+        if env['build'] in ('debug', 'checked'):
+            env['debug'] = True
+            env['profile'] = False
+        if env['build'] == 'profile':
+            env['debug'] = False
+            env['profile'] = True
+        if env['build'] == 'release':
+            env['debug'] = False
+            env['profile'] = False
+
     # Put build output in a separate dir, which depends on the current
     # configuration. See also http://www.scons.org/wiki/AdvancedBuildExample
     build_topdir = 'build'
     build_subdir = env['platform']
-    if env['llvm']:
-        build_subdir += "-llvm"
     if env['machine'] != 'generic':
         build_subdir += '-' + env['machine']
-    if env['debug']:
-        build_subdir += "-debug"
-    if env['profile']:
-        build_subdir += "-profile"
+    if env['build'] != 'release':
+        build_subdir += '-' +  env['build']
     build_dir = os.path.join(build_topdir, build_subdir)
     # Place the .sconsign file in the build dir too, to avoid issues with
     # different scons versions building the same source file
-    env['build'] = build_dir
+    env['build_dir'] = build_dir
     env.SConsignFile(os.path.join(build_dir, '.sconsign'))
     if 'SCONS_CACHE_DIR' in os.environ:
         print 'scons: Using build cache in %s.' % (os.environ['SCONS_CACHE_DIR'],)
@@ -165,13 +236,16 @@ def generate(env):
     if env.GetOption('num_jobs') <= 1:
         env.SetOption('num_jobs', num_jobs())
 
+    env.Decider('MD5-timestamp')
+    env.SetOption('max_drift', 60)
+
     # C preprocessor options
     cppdefines = []
-    if debug:
+    if env['build'] in ('debug', 'checked'):
         cppdefines += ['DEBUG']
     else:
         cppdefines += ['NDEBUG']
-    if env['profile']:
+    if env['build'] == 'profile':
         cppdefines += ['PROFILE']
     if platform == 'windows':
         cppdefines += [
@@ -192,7 +266,7 @@ def generate(env):
                 '_SCL_SECURE_NO_WARNINGS',
                 '_SCL_SECURE_NO_DEPRECATE',
             ]
-        if debug:
+        if env['build'] in ('debug', 'checked'):
             cppdefines += ['_DEBUG']
     if env['toolchain'] == 'winddk':
         # Mimic WINDDK's builtin flags. See also:
@@ -219,7 +293,7 @@ def generate(env):
             ('__BUILDMACHINE__', 'WinDDK'),
             ('FPO', '0'),
         ]
-        if debug:
+        if env['build'] in ('debug', 'checked'):
             cppdefines += [('DBG', 1)]
     if platform == 'wince':
         cppdefines += [
@@ -255,15 +329,16 @@ def generate(env):
     ccflags = [] # C & C++
     if gcc:
         ccversion = env['CCVERSION']
-        if debug:
-            ccflags += ['-O0', '-g3']
+        if env['build'] == 'debug':
+            ccflags += ['-O0']
         elif ccversion.startswith('4.2.'):
             # gcc 4.2.x optimizer is broken
             print "warning: gcc 4.2.x optimizer is broken -- disabling optimizations"
-            ccflags += ['-O0', '-g3']
+            ccflags += ['-O0']
         else:
-            ccflags += ['-O3', '-g3']
-        if env['profile']:
+            ccflags += ['-O3']
+        ccflags += ['-g3']
+        if env['build'] in ('checked', 'profile'):
             # See http://code.google.com/p/jrfonseca/wiki/Gprof2Dot#Which_options_should_I_pass_to_gcc_when_compiling_for_profiling?
             ccflags += [
                 '-fno-omit-frame-pointer',
@@ -273,28 +348,32 @@ def generate(env):
             ccflags += [
                 '-m32',
                 #'-march=pentium4',
-                #'-mfpmath=sse',
             ]
-            if platform != 'windows':
-                # XXX: -mstackrealign causes stack corruption on MinGW. Ditto
-                # for -mincoming-stack-boundary=2.  Still enable it on other
-                # platforms for now, but we can't rely on it for cross platform
-                # code. We have to use __attribute__((force_align_arg_pointer))
-                # instead.
-                ccflags += [
-                    '-mmmx', '-msse', '-msse2', # enable SIMD intrinsics
-                ]
             if distutils.version.LooseVersion(ccversion) >= distutils.version.LooseVersion('4.2'):
+                # NOTE: We need to ensure stack is realigned given that we
+                # produce shared objects, and have no control over the stack
+                # alignment policy of the application. Therefore we need
+                # -mstackrealign ore -mincoming-stack-boundary=2.
+                #
+                # XXX: We could have SSE without -mstackrealign if we always used
+                # __attribute__((force_align_arg_pointer)), but that's not
+                # always the case.
                 ccflags += [
                     '-mstackrealign', # ensure stack is aligned
+                    '-mmmx', '-msse', '-msse2', # enable SIMD intrinsics
+                    #'-mfpmath=sse',
                 ]
+            if platform in ['windows', 'darwin']:
+                # Workaround http://gcc.gnu.org/bugzilla/show_bug.cgi?id=37216
+                ccflags += ['-fno-common']
         if env['machine'] == 'x86_64':
             ccflags += ['-m64']
+            if platform == 'darwin':
+                ccflags += ['-fno-common']
         # See also:
         # - http://gcc.gnu.org/onlinedocs/gcc/Warning-Options.html
         ccflags += [
             '-Wall',
-            '-Wmissing-field-initializers',
             '-Wno-long-long',
             '-ffast-math',
             '-fmessage-length=0', # be nice to Eclipse
@@ -303,6 +382,10 @@ def generate(env):
             '-Wmissing-prototypes',
             '-std=gnu99',
         ]
+        if distutils.version.LooseVersion(ccversion) >= distutils.version.LooseVersion('4.0'):
+            ccflags += [
+                '-Wmissing-field-initializers',
+            ]
         if distutils.version.LooseVersion(ccversion) >= distutils.version.LooseVersion('4.2'):
             ccflags += [
                 '-Werror=pointer-arith',
@@ -314,7 +397,7 @@ def generate(env):
         # See also:
         # - http://msdn.microsoft.com/en-us/library/19z1t1wy.aspx
         # - cl /?
-        if debug:
+        if env['build'] == 'debug':
             ccflags += [
               '/Od', # disable optimizations
               '/Oi', # enable intrinsic functions
@@ -383,7 +466,7 @@ def generate(env):
     if env['platform'] == 'windows' and msvc:
         # Choose the appropriate MSVC CRT
         # http://msdn.microsoft.com/en-us/library/2kzt1wy3.aspx
-        if env['debug']:
+        if env['build'] in ('debug', 'checked'):
             env.Append(CCFLAGS = ['/MTd'])
             env.Append(SHCCFLAGS = ['/LDd'])
         else:
@@ -415,7 +498,7 @@ def generate(env):
         else:
             env['_LIBFLAGS'] = '-Wl,--start-group ' + env['_LIBFLAGS'] + ' -Wl,--end-group'
     if msvc:
-        if not env['debug']:
+        if env['build'] != 'debug':
             # enable Link-time Code Generation
             linkflags += ['/LTCG']
             env.Append(ARFLAGS = ['/LTCG'])
@@ -454,7 +537,7 @@ def generate(env):
 
             '/entry:DrvEnableDriver',
         ]
-        if env['debug'] or env['profile']:
+        if env['build'] != 'release':
             linkflags += [
                 '/MAP', # http://msdn.microsoft.com/en-us/library/k7xkk3e2.aspx
             ]
@@ -470,6 +553,20 @@ def generate(env):
 
     # Default libs
     env.Append(LIBS = [])
+
+    # Load tools
+    if env['llvm']:
+        env.Tool('llvm')
+        env.Tool('udis86')
+    
+    pkg_config_modules(env, 'x11', ['x11', 'xext'])
+    pkg_config_modules(env, 'drm', ['libdrm'])
+    pkg_config_modules(env, 'drm_intel', ['libdrm_intel'])
+    pkg_config_modules(env, 'drm_radeon', ['libdrm_radeon'])
+    pkg_config_modules(env, 'xorg', ['xorg-server'])
+    pkg_config_modules(env, 'kms', ['libkms'])
+
+    env['dri'] = env['x11'] and env['drm']
 
     # Custom builders and methods
     env.Tool('custom')

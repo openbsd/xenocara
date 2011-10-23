@@ -47,7 +47,7 @@
 } while(0)
 
 static struct gl_framebuffer *
-radeon_new_framebuffer(GLcontext *ctx, GLuint name)
+radeon_new_framebuffer(struct gl_context *ctx, GLuint name)
 {
   return _mesa_new_framebuffer(ctx, name);
 }
@@ -70,7 +70,7 @@ radeon_delete_renderbuffer(struct gl_renderbuffer *rb)
 }
 
 static void *
-radeon_get_pointer(GLcontext *ctx, struct gl_renderbuffer *rb,
+radeon_get_pointer(struct gl_context *ctx, struct gl_renderbuffer *rb,
 		   GLint x, GLint y)
 {
   radeon_print(RADEON_TEXTURE, RADEON_TRACE,
@@ -85,7 +85,7 @@ radeon_get_pointer(GLcontext *ctx, struct gl_renderbuffer *rb,
  * storage for a user-created renderbuffer.
  */
 static GLboolean
-radeon_alloc_renderbuffer_storage(GLcontext * ctx, struct gl_renderbuffer *rb,
+radeon_alloc_renderbuffer_storage(struct gl_context * ctx, struct gl_renderbuffer *rb,
                                  GLenum internalFormat,
                                  GLuint width, GLuint height)
 {
@@ -199,6 +199,48 @@ radeon_alloc_renderbuffer_storage(GLcontext * ctx, struct gl_renderbuffer *rb,
    
 }
 
+#if FEATURE_OES_EGL_image
+static void
+radeon_image_target_renderbuffer_storage(struct gl_context *ctx,
+                                         struct gl_renderbuffer *rb,
+                                         void *image_handle)
+{
+   radeonContextPtr radeon = RADEON_CONTEXT(ctx);
+   struct radeon_renderbuffer *rrb;
+   __DRIscreen *screen;
+   __DRIimage *image;
+
+   screen = radeon->radeonScreen->driScreen;
+   image = screen->dri2.image->lookupEGLImage(screen, image_handle,
+					      screen->loaderPrivate);
+   if (image == NULL)
+      return;
+
+   rrb = radeon_renderbuffer(rb);
+
+   if (ctx->Driver.Flush)
+      ctx->Driver.Flush(ctx); /* +r6/r7 */
+
+   if (rrb->bo)
+      radeon_bo_unref(rrb->bo);
+   rrb->bo = image->bo;
+   radeon_bo_ref(rrb->bo);
+   fprintf(stderr, "image->bo: %p, name: %d, rbs: w %d -> p %d\n", image->bo, image->bo->handle,
+           image->width, image->pitch);
+
+   rrb->cpp = image->cpp;
+   rrb->pitch = image->pitch * image->cpp;
+
+   rb->Format = image->format;
+   rb->InternalFormat = image->internal_format;
+   rb->Width = image->width;
+   rb->Height = image->height;
+   rb->Format = image->format;
+   rb->DataType = image->data_type;
+   rb->_BaseFormat = _mesa_base_fbo_format(radeon->glCtx,
+                                           image->internal_format);
+}
+#endif
 
 /**
  * Called for each hardware renderbuffer when a _window_ is resized.
@@ -206,7 +248,7 @@ radeon_alloc_renderbuffer_storage(GLcontext * ctx, struct gl_renderbuffer *rb,
  * Not used for user-created renderbuffers!
  */
 static GLboolean
-radeon_alloc_window_storage(GLcontext * ctx, struct gl_renderbuffer *rb,
+radeon_alloc_window_storage(struct gl_context * ctx, struct gl_renderbuffer *rb,
                            GLenum internalFormat, GLuint width, GLuint height)
 {
    ASSERT(rb->Name == 0);
@@ -223,7 +265,7 @@ radeon_alloc_window_storage(GLcontext * ctx, struct gl_renderbuffer *rb,
 
 
 static void
-radeon_resize_buffers(GLcontext *ctx, struct gl_framebuffer *fb,
+radeon_resize_buffers(struct gl_context *ctx, struct gl_framebuffer *fb,
 		     GLuint width, GLuint height)
 {
      struct radeon_framebuffer *radeon_fb = (struct radeon_framebuffer*)fb;
@@ -255,7 +297,7 @@ radeon_resize_buffers(GLcontext *ctx, struct gl_framebuffer *fb,
 
 /** Dummy function for gl_renderbuffer::AllocStorage() */
 static GLboolean
-radeon_nop_alloc_storage(GLcontext * ctx, struct gl_renderbuffer *rb,
+radeon_nop_alloc_storage(struct gl_context * ctx, struct gl_renderbuffer *rb,
 			 GLenum internalFormat, GLuint width, GLuint height)
 {
    _mesa_problem(ctx, "radeon_op_alloc_storage should never be called.");
@@ -352,7 +394,7 @@ radeon_create_renderbuffer(gl_format format, __DRIdrawable *driDrawPriv)
 }
 
 static struct gl_renderbuffer *
-radeon_new_renderbuffer(GLcontext * ctx, GLuint name)
+radeon_new_renderbuffer(struct gl_context * ctx, GLuint name)
 {
   struct radeon_renderbuffer *rrb;
 
@@ -376,7 +418,7 @@ radeon_new_renderbuffer(GLcontext * ctx, GLuint name)
 }
 
 static void
-radeon_bind_framebuffer(GLcontext * ctx, GLenum target,
+radeon_bind_framebuffer(struct gl_context * ctx, GLenum target,
                        struct gl_framebuffer *fb, struct gl_framebuffer *fbread)
 {
   radeon_print(RADEON_TEXTURE, RADEON_TRACE,
@@ -393,7 +435,7 @@ radeon_bind_framebuffer(GLcontext * ctx, GLenum target,
 }
 
 static void
-radeon_framebuffer_renderbuffer(GLcontext * ctx,
+radeon_framebuffer_renderbuffer(struct gl_context * ctx,
                                struct gl_framebuffer *fb,
                                GLenum attachment, struct gl_renderbuffer *rb)
 {
@@ -409,88 +451,57 @@ radeon_framebuffer_renderbuffer(GLcontext * ctx,
    radeon_draw_buffer(ctx, fb);
 }
 
-
-/* TODO: According to EXT_fbo spec internal format of texture image
- * once set during glTexImage call, should be preserved when
- * attaching image to renderbuffer. When HW doesn't support
- * rendering to format of attached image, set framebuffer
- * completeness accordingly in radeon_validate_framebuffer (issue #79).
- */
 static GLboolean
-radeon_update_wrapper(GLcontext *ctx, struct radeon_renderbuffer *rrb, 
+radeon_update_wrapper(struct gl_context *ctx, struct radeon_renderbuffer *rrb, 
 		     struct gl_texture_image *texImage)
 {
-	int retry = 0;
-	gl_format texFormat;
-
 	radeon_print(RADEON_TEXTURE, RADEON_TRACE,
-		"%s(%p, rrb %p, texImage %p) \n",
-		__func__, ctx, rrb, texImage);
+		"%s(%p, rrb %p, texImage %p, texFormat %s) \n",
+		__func__, ctx, rrb, texImage, _mesa_get_format_name(texImage->TexFormat));
 
-restart:
-	if (texImage->TexFormat == _dri_texformat_argb8888) {
-		rrb->base.DataType = GL_UNSIGNED_BYTE;
-		DBG("Render to RGBA8 texture OK\n");
+	switch (texImage->TexFormat) {
+		case MESA_FORMAT_RGBA8888:
+		case MESA_FORMAT_RGBA8888_REV:
+		case MESA_FORMAT_ARGB8888:
+		case MESA_FORMAT_ARGB8888_REV:
+		case MESA_FORMAT_XRGB8888:
+		case MESA_FORMAT_XRGB8888_REV:
+		case MESA_FORMAT_RGB565:
+		case MESA_FORMAT_RGB565_REV:
+		case MESA_FORMAT_RGBA5551:
+		case MESA_FORMAT_ARGB1555:
+		case MESA_FORMAT_ARGB1555_REV:
+		case MESA_FORMAT_ARGB4444:
+		case MESA_FORMAT_ARGB4444_REV:
+			rrb->base.DataType = GL_UNSIGNED_BYTE;
+			break;
+		case MESA_FORMAT_Z16:
+			rrb->base.DataType = GL_UNSIGNED_SHORT;
+			break;
+		case MESA_FORMAT_X8_Z24:
+			rrb->base.DataType = GL_UNSIGNED_INT;
+			break;
+		case MESA_FORMAT_S8_Z24:
+			rrb->base.DataType = GL_UNSIGNED_INT_24_8_EXT;
+			break;
 	}
-	else if (texImage->TexFormat == _dri_texformat_rgb565) {
-		rrb->base.DataType = GL_UNSIGNED_BYTE;
-		DBG("Render to RGB5 texture OK\n");
-	}
-	else if (texImage->TexFormat == _dri_texformat_argb1555) {
-		rrb->base.DataType = GL_UNSIGNED_BYTE;
-		DBG("Render to ARGB1555 texture OK\n");
-	}
-	else if (texImage->TexFormat == _dri_texformat_argb4444) {
-		rrb->base.DataType = GL_UNSIGNED_BYTE;
-		DBG("Render to ARGB4444 texture OK\n");
-	}
-	else if (texImage->TexFormat == MESA_FORMAT_Z16) {
-		rrb->base.DataType = GL_UNSIGNED_SHORT;
-		DBG("Render to DEPTH16 texture OK\n");
-	}
-	else if (texImage->TexFormat == MESA_FORMAT_S8_Z24) {
-		rrb->base.DataType = GL_UNSIGNED_INT_24_8_EXT;
-		DBG("Render to DEPTH_STENCIL texture OK\n");
-	}
-	else {
-		/* try redoing the FBO */
-		if (retry == 1) {
-			DBG("Render to texture BAD FORMAT %d\n",
-			    texImage->TexFormat);
-			return GL_FALSE;
-		}
-                /* XXX why is the tex format being set here?
-                 * I think this can be removed.
-                 */
-		texImage->TexFormat = radeonChooseTextureFormat(ctx, texImage->InternalFormat, 0,
-								_mesa_get_format_datatype(texImage->TexFormat),
-								1);
-
-		retry++;
-		goto restart;
-	}
-	
-	texFormat = texImage->TexFormat;
-
-	rrb->base.Format = texFormat;
-
-        rrb->cpp = _mesa_get_format_bytes(texFormat);
+		
+	rrb->cpp = _mesa_get_format_bytes(texImage->TexFormat);
 	rrb->pitch = texImage->Width * rrb->cpp;
+	rrb->base.Format = texImage->TexFormat;
 	rrb->base.InternalFormat = texImage->InternalFormat;
-        rrb->base._BaseFormat = _mesa_base_fbo_format(ctx, rrb->base.InternalFormat);
-
+	rrb->base._BaseFormat = _mesa_base_fbo_format(ctx, rrb->base.InternalFormat);
 	rrb->base.Width = texImage->Width;
 	rrb->base.Height = texImage->Height;
-	
 	rrb->base.Delete = radeon_delete_renderbuffer;
 	rrb->base.AllocStorage = radeon_nop_alloc_storage;
-	
+
 	return GL_TRUE;
 }
 
 
 static struct radeon_renderbuffer *
-radeon_wrap_texture(GLcontext * ctx, struct gl_texture_image *texImage)
+radeon_wrap_texture(struct gl_context * ctx, struct gl_texture_image *texImage)
 {
   const GLuint name = ~0;   /* not significant, but distinct for debugging */
   struct radeon_renderbuffer *rrb;
@@ -519,7 +530,7 @@ radeon_wrap_texture(GLcontext * ctx, struct gl_texture_image *texImage)
   
 }
 static void
-radeon_render_texture(GLcontext * ctx,
+radeon_render_texture(struct gl_context * ctx,
                      struct gl_framebuffer *fb,
                      struct gl_renderbuffer_attachment *att)
 {
@@ -537,9 +548,10 @@ radeon_render_texture(GLcontext * ctx,
 
    ASSERT(newImage);
 
-   if (newImage->Border != 0) {
-      /* Fallback on drawing to a texture with a border, which won't have a
-       * miptree.
+   radeon_image = (radeon_texture_image *)newImage;
+
+   if (!radeon_image->mt || newImage->Border != 0) {
+      /* Fallback on drawing to a texture without a miptree.
        */
       _mesa_reference_renderbuffer(&att->Renderbuffer, NULL);
       _mesa_render_texture(ctx, fb, att);
@@ -570,7 +582,6 @@ radeon_render_texture(GLcontext * ctx,
        rrb->base.RefCount);
 
    /* point the renderbufer's region to the texture image region */
-   radeon_image = (radeon_texture_image *)newImage;
    if (rrb->bo != radeon_image->mt->bo) {
       if (rrb->bo)
   	radeon_bo_unref(rrb->bo);
@@ -599,18 +610,48 @@ radeon_render_texture(GLcontext * ctx,
 }
 
 static void
-radeon_finish_render_texture(GLcontext * ctx,
+radeon_finish_render_texture(struct gl_context * ctx,
                             struct gl_renderbuffer_attachment *att)
 {
 
 }
 static void
-radeon_validate_framebuffer(GLcontext *ctx, struct gl_framebuffer *fb)
+radeon_validate_framebuffer(struct gl_context *ctx, struct gl_framebuffer *fb)
 {
+	radeonContextPtr radeon = RADEON_CONTEXT(ctx);
+	gl_format mesa_format;
+	int i;
+
+	for (i = -2; i < (GLint) ctx->Const.MaxColorAttachments; i++) {
+		struct gl_renderbuffer_attachment *att;
+		if (i == -2) {
+			att = &fb->Attachment[BUFFER_DEPTH];
+		} else if (i == -1) {
+			att = &fb->Attachment[BUFFER_STENCIL];
+		} else {
+			att = &fb->Attachment[BUFFER_COLOR0 + i];
+		}
+
+		if (att->Type == GL_TEXTURE) {
+			mesa_format = att->Texture->Image[att->CubeMapFace][att->TextureLevel]->TexFormat;
+		} else {
+			/* All renderbuffer formats are renderable, but not sampable */
+			continue;
+		}
+
+		if (!radeon->vtbl.is_format_renderable(mesa_format)){
+			fb->_Status = GL_FRAMEBUFFER_UNSUPPORTED;
+			radeon_print(RADEON_TEXTURE, RADEON_TRACE,
+						"%s: HW doesn't support format %s as output format of attachment %d\n",
+						__FUNCTION__, _mesa_get_format_name(mesa_format), i);
+			return;
+		}
+	}
 }
 
 void radeon_fbo_init(struct radeon_context *radeon)
 {
+#if FEATURE_EXT_framebuffer_object
   radeon->glCtx->Driver.NewFramebuffer = radeon_new_framebuffer;
   radeon->glCtx->Driver.NewRenderbuffer = radeon_new_renderbuffer;
   radeon->glCtx->Driver.BindFramebuffer = radeon_bind_framebuffer;
@@ -619,7 +660,14 @@ void radeon_fbo_init(struct radeon_context *radeon)
   radeon->glCtx->Driver.FinishRenderTexture = radeon_finish_render_texture;
   radeon->glCtx->Driver.ResizeBuffers = radeon_resize_buffers;
   radeon->glCtx->Driver.ValidateFramebuffer = radeon_validate_framebuffer;
+#endif
+#if FEATURE_EXT_framebuffer_blit
   radeon->glCtx->Driver.BlitFramebuffer = _mesa_meta_BlitFramebuffer;
+#endif
+#if FEATURE_OES_EGL_image
+  radeon->glCtx->Driver.EGLImageTargetRenderbufferStorage =
+	  radeon_image_target_renderbuffer_storage;
+#endif
 }
 
   

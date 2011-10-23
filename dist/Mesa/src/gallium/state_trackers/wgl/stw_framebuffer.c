@@ -27,23 +27,19 @@
 
 #include <windows.h>
 
-#include "main/context.h"
 #include "pipe/p_format.h"
 #include "pipe/p_screen.h"
 #include "util/u_format.h"
-#include "state_tracker/st_context.h"
-#include "state_tracker/st_public.h"
-
-#ifdef DEBUG
-#include "trace/tr_screen.h"
-#include "trace/tr_texture.h"
-#endif
+#include "util/u_memory.h"
+#include "state_tracker/st_api.h"
 
 #include "stw_icd.h"
 #include "stw_framebuffer.h"
 #include "stw_device.h"
 #include "stw_winsys.h"
 #include "stw_tls.h"
+#include "stw_context.h"
+#include "stw_st.h"
 
 
 /**
@@ -68,14 +64,21 @@ stw_framebuffer_from_hwnd_locked(
 
 /**
  * Destroy this framebuffer. Both stw_dev::fb_mutex and stw_framebuffer::mutex
- * must be held, by this order. Obviously no further access to fb can be done 
- * after this.
+ * must be held, by this order.  If there are still references to the
+ * framebuffer, nothing will happen.
  */
 static INLINE void
 stw_framebuffer_destroy_locked(
    struct stw_framebuffer *fb )
 {
    struct stw_framebuffer **link;
+
+   /* check the reference count */
+   fb->refcnt--;
+   if (fb->refcnt) {
+      pipe_mutex_unlock( fb->mutex );
+      return;
+   }
 
    link = &stw_dev->fb_head;
    while (*link != fb)
@@ -87,8 +90,10 @@ stw_framebuffer_destroy_locked(
    if(fb->shared_surface)
       stw_dev->stw_winsys->shared_surface_close(stw_dev->screen, fb->shared_surface);
 
-   st_unreference_framebuffer(fb->stfb);
+   stw_st_destroy_framebuffer_locked(fb->stfb);
    
+   ReleaseDC(fb->hWnd, fb->hDC);
+
    pipe_mutex_unlock( fb->mutex );
 
    pipe_mutex_destroy( fb->mutex );
@@ -109,26 +114,44 @@ stw_framebuffer_release(
 static INLINE void
 stw_framebuffer_get_size( struct stw_framebuffer *fb )
 {
-   unsigned width, height;
+   LONG width, height;
    RECT client_rect;
    RECT window_rect;
    POINT client_pos;
 
+   /*
+    * Sanity checking.
+    */
+
    assert(fb->hWnd);
-   
-   /* Get the client area size. */
-   GetClientRect( fb->hWnd, &client_rect );
+   assert(fb->width && fb->height);
+   assert(fb->client_rect.right  == fb->client_rect.left + fb->width);
+   assert(fb->client_rect.bottom == fb->client_rect.top  + fb->height);
+
+   /*
+    * Get the client area size.
+    */
+
+   if (!GetClientRect(fb->hWnd, &client_rect)) {
+      return;
+   }
+
    assert(client_rect.left == 0);
    assert(client_rect.top == 0);
-   width = client_rect.right - client_rect.left;
+   width  = client_rect.right  - client_rect.left;
    height = client_rect.bottom - client_rect.top;
 
-   if(width < 1)
-      width = 1;
-   if(height < 1)
-      height = 1;
+   if (width <= 0 || height <= 0) {
+      /*
+       * When the window is minimized GetClientRect will return zeros.  Simply
+       * preserve the current window size, until the window is restored or
+       * maximized again.
+       */
 
-   if(width != fb->width || height != fb->height) {
+      return;
+   }
+
+   if (width != fb->width || height != fb->height) {
       fb->must_resize = TRUE;
       fb->width = width; 
       fb->height = height; 
@@ -136,24 +159,25 @@ stw_framebuffer_get_size( struct stw_framebuffer *fb )
 
    client_pos.x = 0;
    client_pos.y = 0;
-   ClientToScreen(fb->hWnd, &client_pos);
+   if (ClientToScreen(fb->hWnd, &client_pos) &&
+       GetWindowRect(fb->hWnd, &window_rect)) {
+      fb->client_rect.left = client_pos.x - window_rect.left;
+      fb->client_rect.top  = client_pos.y - window_rect.top;
+   }
 
-   GetWindowRect(fb->hWnd, &window_rect);
-
-   fb->client_rect.left = client_pos.x - window_rect.left;
-   fb->client_rect.top =  client_pos.y - window_rect.top;
-   fb->client_rect.right = fb->client_rect.left + fb->width;
-   fb->client_rect.bottom = fb->client_rect.top + fb->height;
+   fb->client_rect.right  = fb->client_rect.left + fb->width;
+   fb->client_rect.bottom = fb->client_rect.top  + fb->height;
 
 #if 0
    debug_printf("\n");
-   debug_printf("%s: client_position = (%i, %i)\n",
+   debug_printf("%s: hwnd = %p\n", __FUNCTION__, fb->hWnd);
+   debug_printf("%s: client_position = (%li, %li)\n",
                 __FUNCTION__, client_pos.x, client_pos.y);
-   debug_printf("%s: window_rect = (%i, %i) - (%i, %i)\n",
+   debug_printf("%s: window_rect = (%li, %li) - (%li, %li)\n",
                 __FUNCTION__,
                 window_rect.left, window_rect.top,
                 window_rect.right, window_rect.bottom);
-   debug_printf("%s: client_rect = (%i, %i) - (%i, %i)\n",
+   debug_printf("%s: client_rect = (%li, %li) - (%li, %li)\n",
                 __FUNCTION__,
                 fb->client_rect.left, fb->client_rect.top,
                 fb->client_rect.right, fb->client_rect.bottom);
@@ -230,14 +254,36 @@ stw_framebuffer_create(
    if (fb == NULL)
       return NULL;
 
-   fb->hDC = hdc;
+   /* Applications use, create, destroy device contexts, so the hdc passed is.  We create our own DC
+    * because we need one for single buffered visuals.
+    */
+   fb->hDC = GetDC(hWnd);
+
    fb->hWnd = hWnd;
    fb->iPixelFormat = iPixelFormat;
 
    fb->pfi = pfi = stw_pixelformat_get_info( iPixelFormat - 1 );
+   fb->stfb = stw_st_create_framebuffer( fb );
+   if (!fb->stfb) {
+      FREE( fb );
+      return NULL;
+   }
 
-   stw_pixelformat_visual(&fb->visual, pfi);
-   
+   fb->refcnt = 1;
+
+   /*
+    * Windows can be sometimes have zero width and or height, but we ensure
+    * a non-zero framebuffer size at all times.
+    */
+
+   fb->must_resize = TRUE;
+   fb->width  = 1;
+   fb->height = 1;
+   fb->client_rect.left   = 0;
+   fb->client_rect.top    = 0;
+   fb->client_rect.right  = fb->client_rect.left + fb->width;
+   fb->client_rect.bottom = fb->client_rect.top  + fb->height;
+
    stw_framebuffer_get_size(fb);
 
    pipe_mutex_init( fb->mutex );
@@ -256,47 +302,31 @@ stw_framebuffer_create(
    return fb;
 }
 
-
-BOOL
-stw_framebuffer_allocate(
+/**
+ * Have ptr reference fb.  The referenced framebuffer should be locked.
+ */
+void
+stw_framebuffer_reference(
+   struct stw_framebuffer **ptr,
    struct stw_framebuffer *fb)
 {
-   assert(fb);
-   
-   if(!fb->stfb) {
-      const struct stw_pixelformat_info *pfi = fb->pfi;
-      enum pipe_format colorFormat, depthFormat, stencilFormat;
+   struct stw_framebuffer *old_fb = *ptr;
 
-      colorFormat = pfi->color_format;
+   if (old_fb == fb)
+      return;
 
-      if(util_format_get_component_bits(pfi->depth_stencil_format, UTIL_FORMAT_COLORSPACE_ZS, 0))
-         depthFormat = pfi->depth_stencil_format;
-      else
-         depthFormat = PIPE_FORMAT_NONE;
-   
-      if(util_format_get_component_bits(pfi->depth_stencil_format, UTIL_FORMAT_COLORSPACE_ZS, 1))
-         stencilFormat = pfi->depth_stencil_format;
-      else
-         stencilFormat = PIPE_FORMAT_NONE;
-   
-      assert(fb->must_resize);
-      assert(fb->width);
-      assert(fb->height);
+   if (fb)
+      fb->refcnt++;
+   if (old_fb) {
+      pipe_mutex_lock(stw_dev->fb_mutex);
 
-      fb->stfb = st_create_framebuffer(
-         &fb->visual,
-         colorFormat,
-         depthFormat,
-         stencilFormat,
-         fb->width,
-         fb->height,
-         (void *) fb );
-      
-      // to notify the context
-      fb->must_resize = TRUE;
+      pipe_mutex_lock(old_fb->mutex);
+      stw_framebuffer_destroy_locked(old_fb);
+
+      pipe_mutex_unlock(stw_dev->fb_mutex);
    }
-   
-   return fb->stfb ? TRUE : FALSE;
+
+   *ptr = fb;
 }
 
 
@@ -318,11 +348,6 @@ stw_framebuffer_update(
     * to know of their existing without using the not very portable PSAPI.
     */
    stw_framebuffer_get_size(fb);
-   
-   if(fb->must_resize) {
-      st_resize_framebuffer(fb->stfb, fb->width, fb->height);
-      fb->must_resize = FALSE;
-   }
 }                      
 
 
@@ -360,24 +385,13 @@ stw_framebuffer_from_hdc_locked(
    HDC hdc )
 {
    HWND hwnd;
-   struct stw_framebuffer *fb;
 
-   /* 
-    * Some applications create and use several HDCs for the same window, so 
-    * looking up the framebuffer by the HDC is not reliable. Use HWND whenever
-    * possible.
-    */ 
    hwnd = WindowFromDC(hdc);
-   if(hwnd)
-      return stw_framebuffer_from_hwnd_locked(hwnd);
-   
-   for (fb = stw_dev->fb_head; fb != NULL; fb = fb->next)
-      if (fb->hDC == hdc) {
-         pipe_mutex_lock(fb->mutex);
-         break;
-      }
+   if (!hwnd) {
+      return NULL;
+   }
 
-   return fb;
+   return stw_framebuffer_from_hwnd_locked(hwnd);
 }
 
 
@@ -482,7 +496,7 @@ DrvPresentBuffers(HDC hdc, PGLPRESENTBUFFERSDATA data)
 {
    struct stw_framebuffer *fb;
    struct pipe_screen *screen;
-   struct pipe_surface *surface;
+   struct pipe_resource *res;
 
    if (!stw_dev)
       return FALSE;
@@ -493,14 +507,7 @@ DrvPresentBuffers(HDC hdc, PGLPRESENTBUFFERSDATA data)
 
    screen = stw_dev->screen;
 
-   surface = (struct pipe_surface *)data->pPrivateData;
-
-#ifdef DEBUG
-   if(stw_dev->trace_running) {
-      screen = trace_screen(screen)->screen;
-      surface = trace_surface(surface)->surface;
-   }
-#endif
+   res = (struct pipe_resource *)data->pPrivateData;
 
    if(data->hSharedSurface != fb->hSharedSurface) {
       if(fb->shared_surface) {
@@ -518,16 +525,17 @@ DrvPresentBuffers(HDC hdc, PGLPRESENTBUFFERSDATA data)
 
    if(fb->shared_surface) {
       stw_dev->stw_winsys->compose(screen,
-                                   surface,
+                                   res,
                                    fb->shared_surface,
                                    &fb->client_rect,
                                    data->PresentHistoryToken);
    }
    else {
-      stw_dev->stw_winsys->present( screen, surface, hdc );
+      stw_dev->stw_winsys->present( screen, res, hdc );
    }
 
    stw_framebuffer_update(fb);
+   stw_notify_current_locked(fb);
 
    stw_framebuffer_release(fb);
 
@@ -543,7 +551,7 @@ DrvPresentBuffers(HDC hdc, PGLPRESENTBUFFERSDATA data)
 BOOL
 stw_framebuffer_present_locked(HDC hdc,
                                struct stw_framebuffer *fb,
-                               struct pipe_surface *surface)
+                               struct pipe_resource *res)
 {
    if(stw_dev->callbacks.wglCbPresentBuffers &&
       stw_dev->stw_winsys->compose) {
@@ -554,8 +562,9 @@ stw_framebuffer_present_locked(HDC hdc,
       data.magic2 = 0;
       data.AdapterLuid = stw_dev->AdapterLuid;
       data.rect = fb->client_rect;
-      data.pPrivateData = (void *)surface;
+      data.pPrivateData = (void *)res;
 
+      stw_notify_current_locked(fb);
       stw_framebuffer_release(fb);
 
       return stw_dev->callbacks.wglCbPresentBuffers(hdc, &data);
@@ -563,17 +572,10 @@ stw_framebuffer_present_locked(HDC hdc,
    else {
       struct pipe_screen *screen = stw_dev->screen;
 
-#ifdef DEBUG
-      if(stw_dev->trace_running) {
-         screen = trace_screen(screen)->screen;
-         surface = trace_surface(surface)->surface;
-      }
-#endif
-
-      stw_dev->stw_winsys->present( screen, surface, hdc );
+      stw_dev->stw_winsys->present( screen, res, hdc );
 
       stw_framebuffer_update(fb);
-
+      stw_notify_current_locked(fb);
       stw_framebuffer_release(fb);
 
       return TRUE;
@@ -586,7 +588,6 @@ DrvSwapBuffers(
    HDC hdc )
 {
    struct stw_framebuffer *fb;
-   struct pipe_surface *surface = NULL;
 
    if (!stw_dev)
       return FALSE;
@@ -600,9 +601,9 @@ DrvSwapBuffers(
       return TRUE;
    }
 
-   st_swapbuffers(fb->stfb, &surface, NULL);
+   stw_flush_current_locked(fb);
 
-   return stw_framebuffer_present_locked(hdc, fb, surface);
+   return stw_st_swap_framebuffer_locked(hdc, fb->stfb);
 }
 
 

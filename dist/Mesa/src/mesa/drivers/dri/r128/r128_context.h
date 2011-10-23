@@ -113,7 +113,7 @@ typedef void (*r128_point_func)( r128ContextPtr,
 
 
 struct r128_context {
-   GLcontext *glCtx;			/* Mesa context */
+   struct gl_context *glCtx;			/* Mesa context */
 
    /* Driver and hardware state management
     */
@@ -224,7 +224,8 @@ struct r128_context {
 		(rmesa->r128Screen->chipset == R128_CARD_TYPE_R128_MOBILITY)
 
 
-extern GLboolean r128CreateContext( const __GLcontextModes *glVisual,
+extern GLboolean r128CreateContext( gl_api api,
+				    const struct gl_config *glVisual,
 				    __DRIcontext *driContextPriv,
                                     void *sharedContextPrivate );
 

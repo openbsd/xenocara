@@ -37,8 +37,8 @@
 #define LP_BLD_STRUCT_H
 
 
-#include <llvm-c/Core.h>  
-#include <llvm-c/Target.h>
+#include "gallivm/lp_bld.h"
+#include "gallivm/lp_bld_init.h"
 
 #include "util/u_debug.h"
 #include "util/u_memory.h"
@@ -57,7 +57,7 @@
  * Get value pointer to a structure member.
  */
 LLVMValueRef
-lp_build_struct_get_ptr(LLVMBuilderRef builder,
+lp_build_struct_get_ptr(struct gallivm_state *gallivm,
                         LLVMValueRef ptr,
                         unsigned member,
                         const char *name);
@@ -66,10 +66,51 @@ lp_build_struct_get_ptr(LLVMBuilderRef builder,
  * Get the value of a structure member.
  */
 LLVMValueRef
-lp_build_struct_get(LLVMBuilderRef builder,
+lp_build_struct_get(struct gallivm_state *gallivm,
                     LLVMValueRef ptr,
                     unsigned member,
                     const char *name);
 
+/**
+ * Get value pointer to an array element.
+ */
+LLVMValueRef
+lp_build_array_get_ptr(struct gallivm_state *gallivm,
+                       LLVMValueRef ptr,
+                       LLVMValueRef index);
+
+/**
+ * Get the value of an array element.
+ */
+LLVMValueRef
+lp_build_array_get(struct gallivm_state *gallivm,
+                   LLVMValueRef ptr,
+                   LLVMValueRef index);
+
+/**
+ * Set the value of an array element.
+ */
+void
+lp_build_array_set(struct gallivm_state *gallivm,
+                   LLVMValueRef ptr,
+                   LLVMValueRef index,
+                   LLVMValueRef value);
+
+/**
+ * Get the value of an array element.
+ */
+LLVMValueRef
+lp_build_pointer_get(LLVMBuilderRef builder,
+                   LLVMValueRef ptr,
+                   LLVMValueRef index);
+
+/**
+ * Set the value of an array element.
+ */
+void
+lp_build_pointer_set(LLVMBuilderRef builder,
+                     LLVMValueRef ptr,
+                     LLVMValueRef index,
+                     LLVMValueRef value);
 
 #endif /* !LP_BLD_STRUCT_H */

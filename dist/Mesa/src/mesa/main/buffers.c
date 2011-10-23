@@ -50,7 +50,7 @@
  * \return  bitmask of BUFFER_BIT_* flags
  */
 static GLbitfield
-supported_buffer_bitmask(const GLcontext *ctx, const struct gl_framebuffer *fb)
+supported_buffer_bitmask(const struct gl_context *ctx, const struct gl_framebuffer *fb)
 {
    GLbitfield mask = 0x0;
 
@@ -355,7 +355,7 @@ _mesa_DrawBuffersARB(GLsizei n, const GLenum *buffers)
  *                  BUFFER_BIT_FRONT_LEFT | BUFFER_BIT_BACK_LEFT).
  */
 void
-_mesa_drawbuffers(GLcontext *ctx, GLuint n, const GLenum *buffers,
+_mesa_drawbuffers(struct gl_context *ctx, GLuint n, const GLenum *buffers,
                   const GLbitfield *destMask)
 {
    struct gl_framebuffer *fb = ctx->DrawBuffer;
@@ -406,7 +406,6 @@ _mesa_drawbuffers(GLcontext *ctx, GLuint n, const GLenum *buffers,
                fb->_ColorDrawBufferIndexes[buf] = bufIndex;
                newState = GL_TRUE;
             }
-            fb->ColorDrawBuffer[buf] = buffers[buf];
             count = buf + 1;
          }
          else {
@@ -415,6 +414,7 @@ _mesa_drawbuffers(GLcontext *ctx, GLuint n, const GLenum *buffers,
                newState = GL_TRUE;
             }
          }
+         fb->ColorDrawBuffer[buf] = buffers[buf];
       }
       /* set remaining outputs to -1 (GL_NONE) */
       while (buf < ctx->Const.MaxDrawBuffers) {
@@ -452,7 +452,7 @@ _mesa_drawbuffers(GLcontext *ctx, GLuint n, const GLenum *buffers,
  * \param bufferIndex  the numerical index corresponding to 'buffer'
  */
 void
-_mesa_readbuffer(GLcontext *ctx, GLenum buffer, GLint bufferIndex)
+_mesa_readbuffer(struct gl_context *ctx, GLenum buffer, GLint bufferIndex)
 {
    struct gl_framebuffer *fb = ctx->ReadBuffer;
 

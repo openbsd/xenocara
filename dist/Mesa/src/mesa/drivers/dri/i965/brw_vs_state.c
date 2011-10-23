@@ -51,7 +51,7 @@ struct brw_vs_unit_key {
 static void
 vs_unit_populate_key(struct brw_context *brw, struct brw_vs_unit_key *key)
 {
-   GLcontext *ctx = &brw->intel.ctx;
+   struct gl_context *ctx = &brw->intel.ctx;
 
    memset(key, 0, sizeof(*key));
 
@@ -79,12 +79,12 @@ vs_unit_populate_key(struct brw_context *brw, struct brw_vs_unit_key *key)
    }
 }
 
-static dri_bo *
+static drm_intel_bo *
 vs_unit_create_from_key(struct brw_context *brw, struct brw_vs_unit_key *key)
 {
    struct intel_context *intel = &brw->intel;
    struct brw_vs_unit_state vs;
-   dri_bo *bo;
+   drm_intel_bo *bo;
 
    memset(&vs, 0, sizeof(vs));
 
@@ -96,7 +96,14 @@ vs_unit_create_from_key(struct brw_context *brw, struct brw_vs_unit_key *key)
     * and those dwords will be written to the second URB handle when we
     * brw_urb_WRITE() results.
     */
-   vs.thread1.single_program_flow = 0;
+   /* Disable single program flow on Ironlake.  We cannot reliably get
+    * all applications working without it.  See:
+    * https://bugs.freedesktop.org/show_bug.cgi?id=29172
+    *
+    * The most notable and reliably failing application is the Humus
+    * demo "CelShading"
+   */
+   vs.thread1.single_program_flow = (intel->gen == 5);
 
    if (intel->gen == 5)
       vs.thread1.binding_table_entry_count = 0; /* hardware requirement */
@@ -154,7 +161,7 @@ vs_unit_create_from_key(struct brw_context *brw, struct brw_vs_unit_key *key)
     */
    vs.vs5.sampler_count = 0;
 
-   if (INTEL_DEBUG & DEBUG_STATS)
+   if (unlikely(INTEL_DEBUG & DEBUG_STATS))
       vs.thread4.stats_enable = 1;
 
    /* Vertex program always enabled:
@@ -167,11 +174,9 @@ vs_unit_create_from_key(struct brw_context *brw, struct brw_vs_unit_key *key)
 			 &vs, sizeof(vs));
 
    /* Emit VS program relocation */
-   dri_bo_emit_reloc(bo,
-		     I915_GEM_DOMAIN_INSTRUCTION, 0,
-		     vs.thread0.grf_reg_count << 1,
-		     offsetof(struct brw_vs_unit_state, thread0),
-		     brw->vs.prog_bo);
+   drm_intel_bo_emit_reloc(bo, offsetof(struct brw_vs_unit_state, thread0),
+			   brw->vs.prog_bo, vs.thread0.grf_reg_count << 1,
+			   I915_GEM_DOMAIN_INSTRUCTION, 0);
 
    return bo;
 }
@@ -182,7 +187,7 @@ static void prepare_vs_unit(struct brw_context *brw)
 
    vs_unit_populate_key(brw, &key);
 
-   dri_bo_unreference(brw->vs.state_bo);
+   drm_intel_bo_unreference(brw->vs.state_bo);
    brw->vs.state_bo = brw_search_cache(&brw->cache, BRW_VS_UNIT,
 				       &key, sizeof(key),
 				       &brw->vs.prog_bo, 1,

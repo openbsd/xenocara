@@ -24,7 +24,6 @@
 
 #include "main/glheader.h"
 #include "main/colormac.h"
-#include "main/context.h"
 #include "main/feedback.h"
 #include "main/macros.h"
 
@@ -35,7 +34,7 @@
 
 
 static void
-feedback_vertex(GLcontext * ctx, const SWvertex * v, const SWvertex * pv)
+feedback_vertex(struct gl_context * ctx, const SWvertex * v, const SWvertex * pv)
 {
    GLfloat win[4];
    const GLfloat *vtc = v->attrib[FRAG_ATTRIB_TEX0];
@@ -54,7 +53,7 @@ feedback_vertex(GLcontext * ctx, const SWvertex * v, const SWvertex * pv)
  * Put triangle in feedback buffer.
  */
 void
-_swrast_feedback_triangle(GLcontext *ctx, const SWvertex *v0,
+_swrast_feedback_triangle(struct gl_context *ctx, const SWvertex *v0,
                           const SWvertex *v1, const SWvertex *v2)
 {
    if (!_swrast_culltriangle(ctx, v0, v1, v2)) {
@@ -76,7 +75,7 @@ _swrast_feedback_triangle(GLcontext *ctx, const SWvertex *v0,
 
 
 void
-_swrast_feedback_line(GLcontext *ctx, const SWvertex *v0,
+_swrast_feedback_line(struct gl_context *ctx, const SWvertex *v0,
                       const SWvertex *v1)
 {
    GLenum token = GL_LINE_TOKEN;
@@ -101,7 +100,7 @@ _swrast_feedback_line(GLcontext *ctx, const SWvertex *v0,
 
 
 void
-_swrast_feedback_point(GLcontext *ctx, const SWvertex *v)
+_swrast_feedback_point(struct gl_context *ctx, const SWvertex *v)
 {
    _mesa_feedback_token(ctx, (GLfloat) (GLint) GL_POINT_TOKEN);
    feedback_vertex(ctx, v, v);
@@ -109,7 +108,7 @@ _swrast_feedback_point(GLcontext *ctx, const SWvertex *v)
 
 
 void
-_swrast_select_triangle(GLcontext *ctx, const SWvertex *v0,
+_swrast_select_triangle(struct gl_context *ctx, const SWvertex *v0,
                         const SWvertex *v1, const SWvertex *v2)
 {
    if (!_swrast_culltriangle(ctx, v0, v1, v2)) {
@@ -123,7 +122,7 @@ _swrast_select_triangle(GLcontext *ctx, const SWvertex *v0,
 
 
 void
-_swrast_select_line(GLcontext *ctx, const SWvertex *v0, const SWvertex *v1)
+_swrast_select_line(struct gl_context *ctx, const SWvertex *v0, const SWvertex *v1)
 {
    const GLfloat zs = 1.0F / ctx->DrawBuffer->_DepthMaxF;
    _mesa_update_hitflag( ctx, v0->attrib[FRAG_ATTRIB_WPOS][2] * zs );
@@ -132,7 +131,7 @@ _swrast_select_line(GLcontext *ctx, const SWvertex *v0, const SWvertex *v1)
 
 
 void
-_swrast_select_point(GLcontext *ctx, const SWvertex *v)
+_swrast_select_point(struct gl_context *ctx, const SWvertex *v)
 {
    const GLfloat zs = 1.0F / ctx->DrawBuffer->_DepthMaxF;
    _mesa_update_hitflag( ctx, v->attrib[FRAG_ATTRIB_WPOS][2] * zs );

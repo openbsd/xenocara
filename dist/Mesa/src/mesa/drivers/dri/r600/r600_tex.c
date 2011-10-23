@@ -276,7 +276,7 @@ static void r600SetTexBorderColor(radeonTexObjPtr t, const GLfloat color[4])
  * next UpdateTextureState
  */
 
-static void r600TexParameter(GLcontext * ctx, GLenum target,
+static void r600TexParameter(struct gl_context * ctx, GLenum target,
 			     struct gl_texture_object *texObj,
 			     GLenum pname, const GLfloat * params)
 {
@@ -332,7 +332,7 @@ static void r600TexParameter(GLcontext * ctx, GLenum target,
 	}
 }
 
-static void r600DeleteTexture(GLcontext * ctx, struct gl_texture_object *texObj)
+static void r600DeleteTexture(struct gl_context * ctx, struct gl_texture_object *texObj)
 {
 	context_t* rmesa = R700_CONTEXT(ctx);
 	radeonTexObj* t = radeon_tex_obj(texObj);
@@ -368,7 +368,7 @@ static void r600DeleteTexture(GLcontext * ctx, struct gl_texture_object *texObj)
  * allocate the default texture objects.
  * Fixup MaxAnisotropy according to user preference.
  */
-static struct gl_texture_object *r600NewTextureObject(GLcontext * ctx,
+static struct gl_texture_object *r600NewTextureObject(struct gl_context * ctx,
 						      GLuint name,
 						      GLenum target)
 {
@@ -390,6 +390,54 @@ static struct gl_texture_object *r600NewTextureObject(GLcontext * ctx,
 	r600SetTexBorderColor(t, t->base.BorderColor.f);
 
 	return &t->base;
+}
+
+unsigned r600IsFormatRenderable(gl_format mesa_format)
+{
+	switch (mesa_format) {
+	case MESA_FORMAT_RGBA8888:
+	case MESA_FORMAT_SIGNED_RGBA8888:
+	case MESA_FORMAT_RGBA8888_REV:
+	case MESA_FORMAT_SIGNED_RGBA8888_REV:
+	case MESA_FORMAT_ARGB8888:
+	case MESA_FORMAT_XRGB8888:
+	case MESA_FORMAT_ARGB8888_REV:
+	case MESA_FORMAT_XRGB8888_REV:
+	case MESA_FORMAT_RGB565:
+	case MESA_FORMAT_RGB565_REV:
+	case MESA_FORMAT_ARGB4444:
+	case MESA_FORMAT_ARGB4444_REV:
+	case MESA_FORMAT_ARGB1555:
+	case MESA_FORMAT_ARGB1555_REV:
+	case MESA_FORMAT_AL88:
+	case MESA_FORMAT_AL88_REV:
+	case MESA_FORMAT_RGB332:
+	case MESA_FORMAT_A8:
+	case MESA_FORMAT_I8:
+	case MESA_FORMAT_CI8:
+	case MESA_FORMAT_L8:
+	case MESA_FORMAT_RGBA_FLOAT32:
+	case MESA_FORMAT_RGBA_FLOAT16:
+	case MESA_FORMAT_ALPHA_FLOAT32:
+	case MESA_FORMAT_ALPHA_FLOAT16:
+	case MESA_FORMAT_LUMINANCE_FLOAT32:
+	case MESA_FORMAT_LUMINANCE_FLOAT16:
+	case MESA_FORMAT_LUMINANCE_ALPHA_FLOAT32:
+	case MESA_FORMAT_LUMINANCE_ALPHA_FLOAT16:
+	case MESA_FORMAT_INTENSITY_FLOAT32: /* X, X, X, X */
+	case MESA_FORMAT_INTENSITY_FLOAT16: /* X, X, X, X */
+	case MESA_FORMAT_X8_Z24:
+	case MESA_FORMAT_S8_Z24:
+	case MESA_FORMAT_Z24_S8:
+	case MESA_FORMAT_Z16:
+	case MESA_FORMAT_Z32:
+	case MESA_FORMAT_SARGB8:
+	case MESA_FORMAT_SLA8:
+	case MESA_FORMAT_SL8:
+		return 1;
+	default:
+		return 0;
+	}
 }
 
 void r600InitTextureFuncs(radeonContextPtr radeon, struct dd_function_table *functions)
@@ -426,6 +474,10 @@ void r600InitTextureFuncs(radeonContextPtr radeon, struct dd_function_table *fun
 	}
 
 	functions->GenerateMipmap = radeonGenerateMipmap;
+
+#if FEATURE_OES_EGL_image
+	functions->EGLImageTargetTexture2D = radeon_image_target_texture_2d;
+#endif
 
 	driInitTextureFormats();
 }

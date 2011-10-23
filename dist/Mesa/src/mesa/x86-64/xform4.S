@@ -30,6 +30,7 @@
 
 .align 16
 .globl _mesa_x86_64_cpuid
+.hidden _mesa_x86_64_cpuid
 _mesa_x86_64_cpuid:
 	pushq	%rbx
 	movl	(%rdi), %eax
@@ -46,6 +47,7 @@ _mesa_x86_64_cpuid:
 
 .align 16
 .globl _mesa_x86_64_transform_points4_general
+.hidden _mesa_x86_64_transform_points4_general
 _mesa_x86_64_transform_points4_general:
 /*
  *	rdi = dest
@@ -53,7 +55,7 @@ _mesa_x86_64_transform_points4_general:
  *	rdx = source
  */
 	movl V4F_COUNT(%rdx), %ecx	/* count */
-	movzx V4F_STRIDE(%rdx), %eax	/* stride */
+	movzbl V4F_STRIDE(%rdx), %eax	/* stride */
 
 	movl %ecx, V4F_COUNT(%rdi)	/* set dest count */
 	movl $4, V4F_SIZE(%rdi)		/* set dest size */
@@ -121,6 +123,7 @@ p4_constants:
 .text
 .align 16
 .globl _mesa_x86_64_transform_points4_3d
+.hidden _mesa_x86_64_transform_points4_3d
 /*
  * this is slower than _mesa_x86_64_transform_points4_general
  * because it ensures that the last matrix row (or is it column?) is 0,0,0,1
@@ -135,7 +138,7 @@ _mesa_x86_64_transform_points4_3d:
 	movaps 16(%rax), %xmm10
 
 	movl V4F_COUNT(%rdx), %ecx	/* count */
-	movzx V4F_STRIDE(%rdx), %eax	/* stride */
+	movzbl V4F_STRIDE(%rdx), %eax	/* stride */
 
 	movl %ecx, V4F_COUNT(%rdi)	/* set dest count */
 	movl $4, V4F_SIZE(%rdi)		/* set dest size */
@@ -192,10 +195,11 @@ p4_3d_done:
 
 .align 16
 .globl _mesa_x86_64_transform_points4_identity
+.hidden _mesa_x86_64_transform_points4_identity
 _mesa_x86_64_transform_points4_identity:
 
 	movl V4F_COUNT(%rdx), %ecx	/* count */
-	movzx V4F_STRIDE(%rdx), %eax	/* stride */
+	movzbl V4F_STRIDE(%rdx), %eax	/* stride */
 
 	movl %ecx, V4F_COUNT(%rdi)	/* set dest count */
 	movl $4, V4F_SIZE(%rdi)		/* set dest size */
@@ -220,10 +224,11 @@ p4_identity_done:
 	
 .align 16
 .globl _mesa_3dnow_transform_points4_3d_no_rot
+.hidden _mesa_3dnow_transform_points4_3d_no_rot
 _mesa_3dnow_transform_points4_3d_no_rot:
 
 	movl V4F_COUNT(%rdx), %ecx	/* count */
-	movzx V4F_STRIDE(%rdx), %eax	/* stride */
+	movzbl V4F_STRIDE(%rdx), %eax	/* stride */
 
 	movl %ecx, V4F_COUNT(%rdi)	/* set dest count */
 	movl $4, V4F_SIZE(%rdi)		/* set dest size */
@@ -284,10 +289,11 @@ p4_3d_no_rot_done:
 	
 .align 16
 .globl _mesa_3dnow_transform_points4_perspective
+.hidden _mesa_3dnow_transform_points4_perspective
 _mesa_3dnow_transform_points4_perspective:
 
 	movl V4F_COUNT(%rdx), %ecx	/* count */
-	movzx V4F_STRIDE(%rdx), %eax	/* stride */
+	movzbl V4F_STRIDE(%rdx), %eax	/* stride */
 
 	movl %ecx, V4F_COUNT(%rdi)	/* set dest count */
 	movl $4, V4F_SIZE(%rdi)		/* set dest size */
@@ -350,10 +356,11 @@ p4_perspective_done:
 
 .align 16
 .globl _mesa_3dnow_transform_points4_2d_no_rot
+.hidden _mesa_3dnow_transform_points4_2d_no_rot
 _mesa_3dnow_transform_points4_2d_no_rot:
 
 	movl V4F_COUNT(%rdx), %ecx	/* count */
-	movzx V4F_STRIDE(%rdx), %eax	/* stride */
+	movzbl V4F_STRIDE(%rdx), %eax	/* stride */
 
 	movl %ecx, V4F_COUNT(%rdi)	/* set dest count */
 	movl $4, V4F_SIZE(%rdi)		/* set dest size */
@@ -405,10 +412,11 @@ p4_2d_no_rot_done:
 	
 .align 16
 .globl _mesa_3dnow_transform_points4_2d
+.hidden _mesa_3dnow_transform_points4_2d
 _mesa_3dnow_transform_points4_2d:
 
 	movl V4F_COUNT(%rdx), %ecx	/* count */
-	movzx V4F_STRIDE(%rdx), %eax	/* stride */
+	movzbl V4F_STRIDE(%rdx), %eax	/* stride */
 
 	movl %ecx, V4F_COUNT(%rdi)	/* set dest count */
 	movl $4, V4F_SIZE(%rdi)		/* set dest size */

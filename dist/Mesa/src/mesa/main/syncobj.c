@@ -59,12 +59,14 @@
 #include "imports.h"
 #include "context.h"
 #include "macros.h"
+#include "get.h"
+#include "dispatch.h"
 
 #if FEATURE_ARB_sync
 #include "syncobj.h"
 
 static struct gl_sync_object *
-_mesa_new_sync_object(GLcontext *ctx, GLenum type)
+_mesa_new_sync_object(struct gl_context *ctx, GLenum type)
 {
    struct gl_sync_object *s = MALLOC_STRUCT(gl_sync_object);
    (void) ctx;
@@ -75,7 +77,7 @@ _mesa_new_sync_object(GLcontext *ctx, GLenum type)
 
 
 static void
-_mesa_delete_sync_object(GLcontext *ctx, struct gl_sync_object *syncObj)
+_mesa_delete_sync_object(struct gl_context *ctx, struct gl_sync_object *syncObj)
 {
    (void) ctx;
    free(syncObj);
@@ -83,7 +85,7 @@ _mesa_delete_sync_object(GLcontext *ctx, struct gl_sync_object *syncObj)
 
 
 static void
-_mesa_fence_sync(GLcontext *ctx, struct gl_sync_object *syncObj,
+_mesa_fence_sync(struct gl_context *ctx, struct gl_sync_object *syncObj,
 		 GLenum condition, GLbitfield flags)
 {
    (void) ctx;
@@ -95,7 +97,7 @@ _mesa_fence_sync(GLcontext *ctx, struct gl_sync_object *syncObj,
 
 
 static void
-_mesa_check_sync(GLcontext *ctx, struct gl_sync_object *syncObj)
+_mesa_check_sync(struct gl_context *ctx, struct gl_sync_object *syncObj)
 {
    (void) ctx;
    (void) syncObj;
@@ -107,7 +109,7 @@ _mesa_check_sync(GLcontext *ctx, struct gl_sync_object *syncObj)
 
 
 static void
-_mesa_wait_sync(GLcontext *ctx, struct gl_sync_object *syncObj,
+_mesa_wait_sync(struct gl_context *ctx, struct gl_sync_object *syncObj,
 		GLbitfield flags, GLuint64 timeout)
 {
    (void) ctx;
@@ -136,11 +138,24 @@ _mesa_init_sync_object_functions(struct dd_function_table *driver)
 }
 
 
+void
+_mesa_init_sync_dispatch(struct _glapi_table *disp)
+{
+   SET_IsSync(disp, _mesa_IsSync);
+   SET_DeleteSync(disp, _mesa_DeleteSync);
+   SET_FenceSync(disp, _mesa_FenceSync);
+   SET_ClientWaitSync(disp, _mesa_ClientWaitSync);
+   SET_WaitSync(disp, _mesa_WaitSync);
+   SET_GetInteger64v(disp, _mesa_GetInteger64v);
+   SET_GetSynciv(disp, _mesa_GetSynciv);
+}
+
+
 /**
  * Allocate/init the context state related to sync objects.
  */
 void
-_mesa_init_sync(GLcontext *ctx)
+_mesa_init_sync(struct gl_context *ctx)
 {
    (void) ctx;
 }
@@ -150,7 +165,7 @@ _mesa_init_sync(GLcontext *ctx)
  * Free the context state related to sync objects.
  */
 void
-_mesa_free_sync_data(GLcontext *ctx)
+_mesa_free_sync_data(struct gl_context *ctx)
 {
    (void) ctx;
 }
@@ -166,7 +181,7 @@ _mesa_validate_sync(struct gl_sync_object *syncObj)
 
 
 void
-_mesa_ref_sync_object(GLcontext *ctx, struct gl_sync_object *syncObj)
+_mesa_ref_sync_object(struct gl_context *ctx, struct gl_sync_object *syncObj)
 {
    _glthread_LOCK_MUTEX(ctx->Shared->Mutex);
    syncObj->RefCount++;
@@ -175,7 +190,7 @@ _mesa_ref_sync_object(GLcontext *ctx, struct gl_sync_object *syncObj)
 
 
 void
-_mesa_unref_sync_object(GLcontext *ctx, struct gl_sync_object *syncObj)
+_mesa_unref_sync_object(struct gl_context *ctx, struct gl_sync_object *syncObj)
 {
    _glthread_LOCK_MUTEX(ctx->Shared->Mutex);
    syncObj->RefCount--;
