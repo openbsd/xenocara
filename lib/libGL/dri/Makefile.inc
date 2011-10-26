@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile.inc,v 1.11 2011/10/23 13:57:36 matthieu Exp $
+# $OpenBSD: Makefile.inc,v 1.12 2011/10/26 21:15:07 matthieu Exp $
 .include <bsd.xconf.mk>
 
 MESA= ${.CURDIR}/../../../../dist/Mesa/src/mesa
@@ -93,9 +93,3 @@ install: $(LIB)
 	${LIB} ${DESTDIR}${DRI_DRIVER_INSTALL_DIR}
 
 .include <bsd.dep.mk>
-
-
-
-
-
-
