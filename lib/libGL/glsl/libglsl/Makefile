@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.2 2011/10/26 21:48:08 matthieu Exp $
+# $OpenBSD: Makefile,v 1.3 2011/10/27 07:07:39 matthieu Exp $
 .include <bsd.xconf.mk>
 
 MESA=	${.CURDIR}/../../../../dist/Mesa/src/mesa
@@ -92,7 +92,7 @@ SRCS=	\
 	$(C_SOURCES) \
 	$(CXX_SOURCES)
 
-OBJS+= $(CXX_SOURCES:.cpp=.so)
+OBJS+= $(C_SOURCES:.c=.so) $(CXX_SOURCES:.cpp=.so)
 
 INCLUDES= \
 	-I${X11BASE}/include/GL \
@@ -116,15 +116,15 @@ clean:
 
 cleandir: clean
 
-# Tweak suffixes: only .cpp is used for C++, 
+# Tweak suffixes: only .cpp is used for C++,
 # ignore .l and .y to avoid rebuilding cpp-{lex,parse}.c
 # which need bison/recent flex.
 .SUFFIXES:
-.SUFFIXES: .out .o .go .po .so .S .s .c .cc .cpp .f  .ln .m4 .m
+.SUFFIXES: .a .so .c .cpp
 
-.cpp.o:
-	@echo "${COMPILE.cc} ${.IMPSRC} -o ${.TARGET}"
-	@${COMPILE.cc} ${.IMPSRC} -o ${.TARGET}.o
+.c.so:
+	@echo "${COMPILE.c} ${PICFLAG} -DPIC ${.IMPSRC} -o ${.TARGET}"
+	@${COMPILE.c} ${PICFLAG} -DPIC ${.IMPSRC} -o ${.TARGET}.o
 	@${LD} -X -r ${.TARGET}.o -o ${.TARGET}
 	@rm -f ${.TARGET}.o
 
