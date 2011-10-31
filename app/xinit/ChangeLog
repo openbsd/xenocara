@@ -1,3 +1,292 @@
+commit 6543a881708a2a410b51bb5644d9123c847a2908
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Sun Jul 24 17:15:10 2011 -0700
+
+    configure.ac: Bump version to 1.3.1
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit b0b9c21b752faab43241665f8fd12e10973e739c
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Fri Jun 17 13:49:11 2011 -0400
+
+    DIST_SUBDIRS is not required when using AM_CONDITIONALs
+    
+    LAUNCHD is an Automake conditional which means that Automake will
+    traverse the launchd directory when running the dist target.
+    http://www.gnu.org/software/automake/manual/automake.html
+    
+    One less variables to maintain.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 120a58116f2e3a223dbb78e0b33d3755eeb8ad5a
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Fri Jun 17 13:39:27 2011 -0400
+
+    Move man pages in the man directory
+    
+    Now that the cpp tool is no longer needed, normalize the man pages build.
+    
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit a81fab654085239ffcc4981b6bdab9fc18ec3d08
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Fri Jun 17 11:15:12 2011 -0400
+
+    Use XORG_MANPAGE_SECTIONS rather than cpprules.in to build man pages
+    
+    As for all other manpages, use sed rather than the C preprocessor
+    from the Imake days.
+    
+    Use SCOMAN Automake variable and groff .if for conditional text
+    We can therefore remove ARCHMANDEFS
+    Remove man page related code from cpprules.in
+    
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 8e6cc68283518bba2820ff0d919aee9d49e3eb59
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Sat May 14 14:11:13 2011 -0700
+
+    launchd: Fix an array-index-out-of-bounds crasher
+    
+    Found-by: GuardMalloc
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit 3b53d7aecb2f3a729c57f2831a3d4b6e1ff1901f
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Thu May 12 20:27:55 2011 -0700
+
+    launchd: Update console redirection to work with libdispatch
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit e6187b0d47722ec364372926d78dfe4e5637bd6c
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Thu May 12 20:08:09 2011 -0700
+
+    launchd Set the correct id for privileged_startx
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit a8de1219942e78db2cd193ffe745535d3c2d84b0
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Wed May 11 17:29:25 2011 -0700
+
+    configure.ac: Fix support for the deprecated --with-launchd-id-prefix
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit 2771fbf28d6ee6cce09df0f245322d60e21795af
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Wed May 11 00:32:51 2011 -0700
+
+    launchd: syslog: Use facility org.x rather than user
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit 4ca120d2d2a73d8a1595f15e04fc365a4ae20e78
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Wed May 11 00:29:03 2011 -0700
+
+    launchd: include config.h
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit c8b40e87f69f5be881725388418d703116af8e5f
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Wed May 11 00:24:45 2011 -0700
+
+    Rename launchd-id-prefix to bundle-id-prefix
+    
+    It's used many other places than just for launchd.
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit 50f1172349dc900da4016c243734ae50691eab6c
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Wed Apr 27 18:10:45 2011 -0700
+
+    launchd: Silence clang static analyzer
+    
+    ../console_redirect.c:67:5: warning: Value stored to 'n' is never read
+        n = kevent(kq, ev, 2, NULL, 0, NULL);
+        ^   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    1 warning generated.
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit 2f15ccc30479d98012e3ddd595fa13c2f58d4a87
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Wed Apr 27 18:08:50 2011 -0700
+
+    privileged_startx: Prefer /usr/bin/mktemp
+    
+    This will avoid accidentally tripping over an incompatible,
+    user-provided GNU flavor mktemp.
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit 4d0f9d2290bde45c0e844ce40f1caa7fb4baae0f
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Tue Apr 26 23:15:13 2011 -0700
+
+    launchd: Brownbag fix string compare
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit 933f0b2980b375cadc58b2ef5669bc34475a7be6
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Tue Apr 26 13:34:57 2011 -0700
+
+    launchd: console_redirect: Actually read and log the remaining data when we get EV_EOF
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit 0881b1f2082b26995c24212e1e54ac4391d23fcd
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Tue Apr 26 13:04:21 2011 -0700
+
+    launchd: Remove dead EXTRA_DIST
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit 2dd7a4b5ac19c0b2be5cc078756d43e42f39231c
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Tue Apr 26 13:01:24 2011 -0700
+
+    launchd: Fix make dist
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit 5f5390886004f785b4338fcff27f287c9aa6cd8c
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Mon Apr 25 23:09:03 2011 -0700
+
+    launchd: Enable stdout/stderr redirection to ASL
+    
+    Don't rely on launchd to do our logging for us.
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+    Reviewed-by: Daniel A. Steffen <dsteffen@apple.com>
+
+commit c6a7f895c8c90b85ed4fd08927c47b0d17ed067a
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Mon Apr 25 22:26:02 2011 -0700
+
+    launchd: Log messages to ASL rather than fprintf
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit 567f59d3f8189b92bc46e2af1260f9340f462bdb
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Mon Apr 25 22:17:25 2011 -0700
+
+    launchd: Reorganized layout of launchd sources
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit 75a969b884296439fb84ca2be8f77d718d7da1e6
+Author: Cyril Brulebois <kibi@debian.org>
+Date:   Sun Mar 6 01:59:13 2011 +0100
+
+    Fix minor typos in startx's comments.
+    
+    Signed-off-by: Cyril Brulebois <kibi@debian.org>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 2d88aba7a84d153c2fc3226eece751395990edc7
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Jan 28 18:50:20 2011 -0800
+
+    Merge adjacent if (timeout) blocks
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Dirk Wallenstein <halsmit@t-online.de>
+
+commit 622a5500e8b19d603592bb1e871633323a3c09da
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Jan 13 11:15:47 2011 -0500
+
+    man: remove trailing spaces and tabs
+    
+    Using s/[ \t]*$//
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 7119d9109ac7fc85b8e97af83aa6d98f9941a998
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jan 12 15:33:42 2011 -0500
+
+    config: remove the workaround for the deprecated AC_HELP_STRING
+    
+    With Autoconf version 2.60, AS_HELP_STRING is always available.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit f4d2e3972e8f1c14cefa649e2da9bb83a06363c6
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jan 12 15:12:08 2011 -0500
+
+    config: remove unrequired AC_SUBST([*_LIBS])
+    
+    This macro is called by PKG_CHECK_MODULES
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 7264d4132b8520069f6f8855cc3847805057d39b
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jan 12 13:33:48 2011 -0500
+
+    config: remove unrequired AC_SUBST([*_CFLAGS])
+    
+    This macro is called by PKG_CHECK_MODULES
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit b2b1cc02fdb141cae7ee18034a6ab5d571b7eb6b
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Jan 7 19:21:20 2011 -0800
+
+    config: replace deprecated AM_CONFIG_HEADER with AC_CONFIG_HEADERS
+    
+    Regroup AC statements under the Autoconf initialization section.
+    Regroup AM statements under the Automake initialization section.
+    Add missing AC_CONFIG_SRCDIR
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit e6e427bbf6f3c9472dcbff1028fded459c803d6e
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Jan 7 19:19:22 2011 -0800
+
+    config: Replace obsolete usage of AC_OUTPUT with AC_CONFIG_FILES
+    
+    Stops configure from running the output generation routines twice
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 6e44c0f269a5f2dced84e7ab3c496605d827ec11
+Author: Tom Doherty <tom@singlesecond.com>
+Date:   Mon Nov 22 21:27:13 2010 +0100
+
+    Minor typo.
+    
+    Signed-off-by: Matthieu Herrb <matthieu.herrb@laas.fr>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit c371f43b69b223ba68e00125e6aa56621a23109b
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Oct 30 17:16:16 2010 -0700
+
+    Add usual set of URLs to README
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit cc92823c61f9f4d31a25d107017198d1e16d4fcf
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Sat Oct 30 16:44:22 2010 -0700

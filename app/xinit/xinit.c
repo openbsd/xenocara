@@ -380,9 +380,8 @@ processTimeout(int timeout, char *string)
             else
                 fprintf(stderr, ".");
             fflush(stderr);
-        }
-        if (timeout)
             sleep(1);
+        }
         if (++i > timeout)
             break;
     }
@@ -620,7 +619,7 @@ shutdown(void)
     if (!processTimeout(10, "X server to shut down"))
         return;
 
-    Errorx("X server slow to shut down, senging KILL signal");
+    Errorx("X server slow to shut down, sending KILL signal");
 
     if (killpg(serverpid, SIGKILL) < 0) {
         if (errno == ESRCH)

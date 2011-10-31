@@ -1,5 +1,29 @@
+The xinit program is used to start the X Window System server and a first
+client program on systems that are not using a display manager such as xdm.
+
 The xinit is not intended for naive users.  Instead, site administrators should
 design user-friendly scripts that present the desired interface when starting
 up X.  The startx script is one such example.  
 
-Note that the sample xinitrc file is NOT installed by default.
+All questions regarding this software should be directed at the
+Xorg mailing list:
+
+        http://lists.freedesktop.org/mailman/listinfo/xorg
+
+Please submit bug reports to the Xorg bugzilla:
+
+        https://bugs.freedesktop.org/enter_bug.cgi?product=xorg
+
+The master development code repository can be found at:
+
+        git://anongit.freedesktop.org/git/xorg/app/xinit
+
+        http://cgit.freedesktop.org/xorg/app/xinit
+
+For patch submission instructions, see:
+
+	http://www.x.org/wiki/Development/Documentation/SubmittingPatches
+
+For more information on the git code manager, see:
+
+        http://wiki.x.org/wiki/GitPage

@@ -27,10 +27,19 @@ XCOMM promote the sale, use or other dealings in this Software without
 XCOMM prior written authorization.
 
 XCOMM Make sure these are owned by root
+
+XCOMM Our usage of mktemp fails with GNU, so prefer /usr/bin to hopefully
+XCOMM get BSD mktemp
+if [ -x /usr/bin/mktemp ] ; then
+    MKTEMP=/usr/bin/mktemp
+else
+    MKTEMP=mktemp
+fi
+
 for dir in /tmp/.ICE-unix /tmp/.X11-unix /tmp/.font-unix ; do
-	# Use mktemp rather than mkdir to avoid possible security issue
-	# if $dir exists and is a symlink
-	if mktemp -d ${dir} >& /dev/null ; then
+	XCOMM Use mktemp rather than mkdir to avoid possible security issue
+	XCOMM if $dir exists and is a symlink
+	if ${MKTEMP} -d ${dir} >& /dev/null ; then
 		chmod 1777 $dir
 		chown root:wheel $dir
 	fi

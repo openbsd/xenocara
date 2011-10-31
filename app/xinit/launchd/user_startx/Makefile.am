@@ -19,58 +19,31 @@
 #  TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 #  PERFORMANCE OF THIS SOFTWARE.
 
-SUBDIRS = man
-if LAUNCHD
-SUBDIRS += launchd
-endif
-
-bin_PROGRAMS = xinit
-bin_SCRIPTS = startx
-
-AM_CFLAGS = $(CWARNFLAGS) $(XINIT_CFLAGS)
-AM_CPPFLAGS = -DXINITDIR=\"$(XINITDIR)\" -DBINDIR=\"$(bindir)\"
-xinit_LDADD = $(XINIT_LIBS)
-
-xinit_SOURCES =	\
-        xinit.c
-
 include $(top_srcdir)/cpprules.in
 
 xinitrcdir = $(XINITDIR)
 
-PROGCPPDEFS = \
-	-DXRDB=@XRDB@ \
-	-DXMODMAP=@XMODMAP@ \
-	-DTWM=@TWM@ \
-	-DXCLOCK=@XCLOCK@ \
-	-DXTERM=@XTERM@ \
-	-DXSERVER=@XSERVER@ \
-	-DXAUTH=@XAUTH@ \
-	-DXINIT=@XINIT@ \
-	-DWM=@WM@ \
-	-DXCONSOLE=@XCONSOLE@
+xinitrc_PROGRAMS = launchd_startx
+
+AM_CPPFLAGS = -I$(srcdir)/.. -DXINITDIR=\"$(xinitrcdir)\" -DBINDIR=\"$(bindir)\"
+
+dist_launchd_startx_SOURCES = \
+	$(srcdir)/../console_redirect.c \
+	launchd_startx.c
 
 CPP_FILES_FLAGS = \
-	-DXINITDIR=$(XINITDIR) $(PROGCPPDEFS) -DLIBDIR=$(libdir) \
-	-DSHELL_CMD=$(SHELL_CMD) $(STARTX_COOKIE_FLAGS) \
-	-D__libexecdir__="$(libexecdir)" \
+	-D__xinitrcdir__="$(xinitrcdir)" \
 	-D__bindir__="$(bindir)" \
 	-DBUNDLE_ID_PREFIX="$(bundleidprefix)"
 
-xinitrc_DATA = xinitrc
+$(bundleidprefix).startx.plist.cpp: startx.plist.cpp
+	cp $< $@
 
-MAINTAINERCLEANFILES = ChangeLog INSTALL
-CLEANFILES = xinitrc startx $(launchagents_DATA)
+launchagents_PRE = $(bundleidprefix).startx.plist.cpp
+launchagents_DATA = $(launchagents_PRE:plist.cpp=plist)
 
-EXTRA_DIST = xinitrc.cpp startx.cpp \
-		autogen.sh
+EXTRA_DIST = startx.plist.cpp
 
-.PHONY: ChangeLog INSTALL
-
-INSTALL:
-	$(INSTALL_CMD)
-
-ChangeLog:
-	$(CHANGELOG_CMD)
-
-dist-hook: ChangeLog INSTALL
+CLEANFILES = \
+	$(launchagents_DATA) \
+	$(bundleidprefix).startx.plist.cpp

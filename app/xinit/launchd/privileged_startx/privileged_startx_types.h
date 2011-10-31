@@ -5,6 +5,6 @@
 #include <config.h>
 #endif
 
-#define BOOTSTRAP_NAME LAUNCHD_ID_PREFIX".privileged_startx"
+#define BOOTSTRAP_NAME BUNDLE_ID_PREFIX".privileged_startx"
 
 #endif

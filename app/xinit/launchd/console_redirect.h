@@ -1,4 +1,4 @@
-/* Copyright (c) 2008 Apple Inc.
+/* Copyright (c) 2011 Apple Inc.
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation files
@@ -26,34 +26,19 @@
  * prior written authorization.
  */
 
-#include <string.h>
-#include <stdio.h>
+#ifndef _XQUARTZ_CONSOLE_REDIRECT_H_
+#define _XQUARTZ_CONSOLE_REDIRECT_H_
 
-#ifndef SCRIPTDIR
-#define SCRIPTDIR="/usr/X11/lib/X11/xinit/privileged_startx.d"
+#include <asl.h>
+
+/* The given fd is replaced with a pipe.  Anything written to it will will be
+ * logged to ASL.
+ */
+int xi_asl_capture_fd(aslclient asl, aslmsg msg, int level, int fd);
+
+/* The given fd is read from and passed along to ASL until all write ends of the
+ * pipe are closed. Once the last writer has closed the pipe, we close our end.
+ */
+int xi_asl_log_fd(aslclient asl, aslmsg msg, int level, int fd);
+
 #endif
-
-static void usage(const char *prog) {
-    fprintf(stderr, "%s: usage\n", prog);
-    fprintf(stderr, "    %s [-d [<script dir>]]\n\n", prog);
-    fprintf(stderr, "              -d: Passed when called from launchd to denote server-mode.\n");
-    fprintf(stderr, "    <script dir>: Directory to use instead of %s\n", SCRIPTDIR);
-}
-
-int client_main(void);
-int server_main(const char *dir);
-
-int main(int argc, char *argv[]) {
-
-    if(argc == 1) {
-        return client_main();
-    } else if(!strncmp(argv[1], "-d", 2)) {
-        if(argc == 2)
-            return server_main(NULL);
-        else if(argc == 3)
-            return server_main(argv[2]);
-    }
-
-    usage(argv[0]);
-    return 1;
-}

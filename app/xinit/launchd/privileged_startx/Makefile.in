@@ -56,12 +56,12 @@ VPATH = @srcdir@
 pkgdatadir = $(datadir)/@PACKAGE@
 pkglibdir = $(libdir)/@PACKAGE@
 pkgincludedir = $(includedir)/@PACKAGE@
-top_builddir = ..
+top_builddir = ../..
 am__cd = CDPATH="$${ZSH_VERSION+.}$(PATH_SEPARATOR)" && cd
 INSTALL = @INSTALL@
-install_sh_DATA = $(install_sh) -c -m 644
-install_sh_PROGRAM = $(install_sh) -c
-install_sh_SCRIPT = $(install_sh) -c
+install_sh_DATA = ${SHELL} $(install_sh) -c -m 644
+install_sh_PROGRAM = ${SHELL} $(install_sh) -c
+install_sh_SCRIPT = ${SHELL} $(install_sh) -c
 INSTALL_HEADER = $(INSTALL_DATA)
 transform = $(program_transform_name)
 NORMAL_INSTALL = :
@@ -76,7 +76,7 @@ DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in \
 	$(top_srcdir)/cpprules.in
 xinitrc_PROGRAMS = privileged_startx$(EXEEXT)
 @TIGER_LAUNCHD_TRUE@am__append_1 = -DTIGER_LAUNCHD
-subdir = privileged_startx
+subdir = launchd/privileged_startx
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/configure.ac
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
@@ -88,8 +88,8 @@ am__installdirs = "$(DESTDIR)$(xinitrcdir)" \
 	"$(DESTDIR)$(privstartxdir)" "$(DESTDIR)$(launchdaemonsdir)"
 xinitrcPROGRAMS_INSTALL = $(INSTALL_PROGRAM)
 PROGRAMS = $(xinitrc_PROGRAMS)
-dist_privileged_startx_OBJECTS = server.$(OBJEXT) client.$(OBJEXT) \
-	privileged_startx.$(OBJEXT)
+dist_privileged_startx_OBJECTS = console_redirect.$(OBJEXT) \
+	server.$(OBJEXT) client.$(OBJEXT) privileged_startx.$(OBJEXT)
 nodist_privileged_startx_OBJECTS = privileged_startxServer.$(OBJEXT) \
 	privileged_startxUser.$(OBJEXT)
 privileged_startx_OBJECTS = $(dist_privileged_startx_OBJECTS) \
@@ -127,7 +127,6 @@ AMTAR = @AMTAR@
 AM_DEFAULT_VERBOSITY = @AM_DEFAULT_VERBOSITY@
 APP_MAN_DIR = @APP_MAN_DIR@
 APP_MAN_SUFFIX = @APP_MAN_SUFFIX@
-ARCHMANDEFS = @ARCHMANDEFS@
 AUTOCONF = @AUTOCONF@
 AUTOHEADER = @AUTOHEADER@
 AUTOMAKE = @AUTOMAKE@
@@ -185,11 +184,13 @@ PATH_SEPARATOR = @PATH_SEPARATOR@
 PKG_CONFIG = @PKG_CONFIG@
 RAWCPP = @RAWCPP@
 RAWCPPFLAGS = @RAWCPPFLAGS@
+SCOMAN = @SCOMAN@
 SED = @SED@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 SHELL_CMD = @SHELL_CMD@
 STARTX_COOKIE_FLAGS = @STARTX_COOKIE_FLAGS@
+STRICT_CFLAGS = @STRICT_CFLAGS@
 STRIP = @STRIP@
 TIGER_LAUNCHD_FALSE = @TIGER_LAUNCHD_FALSE@
 TIGER_LAUNCHD_TRUE = @TIGER_LAUNCHD_TRUE@
@@ -225,6 +226,7 @@ build_alias = @build_alias@
 build_cpu = @build_cpu@
 build_os = @build_os@
 build_vendor = @build_vendor@
+bundleidprefix = @bundleidprefix@
 datadir = @datadir@
 datarootdir = @datarootdir@
 docdir = @docdir@
@@ -241,7 +243,6 @@ infodir = @infodir@
 install_sh = @install_sh@
 launchagentsdir = @launchagentsdir@
 launchdaemonsdir = @launchdaemonsdir@
-launchdidprefix = @launchdidprefix@
 libdir = @libdir@
 libexecdir = @libexecdir@
 localedir = @localedir@
@@ -265,32 +266,16 @@ CPP_SED_MAGIC = $(SED) -e '/^\#  *[0-9][0-9]*  *.*$$/d' \
                        -e '/XSLASHGLOB/s/XSLASHGLOB/\/\*/' \
                        -e '/\@\@$$/s/\@\@$$/\\/'
 
-
-# Strings to replace in man pages
-XORGRELSTRING = @PACKAGE_STRING@
-XORGMANNAME = X Version 11
-MANDEFS = \
-	-D__xorgversion__="\"$(XORGRELSTRING)\" \"$(XORGMANNAME)\"" \
-	-D__appmansuffix__=$(APP_MAN_SUFFIX) \
-	-D__filemansuffix__=$(FILE_MAN_SUFFIX) \
-	-D__libmansuffix__=$(LIB_MAN_SUFFIX) \
-	-D__miscmansuffix__=$(MISC_MAN_SUFFIX) \
-	-D__XSERVERNAME__='$(XSERVERNAME)' \
-	-D__XCONFIGFILE__='$(XCONFIGFILE)' \
-	-D__XCONFIGFILEMAN__='$(XCONFIGFILEMAN)' \
-	-D__xinitdir__=$(XINITDIR) \
-	-D__bindir__=$(bindir) \
-	-DSHELL_CMD=$(SHELL_CMD) $(ARCHMANDEFS)
-
-SUFFIXES = .$(APP_MAN_SUFFIX) .man .cpp
+SUFFIXES = .cpp
 xinitrcdir = $(libdir)/X11/xinit
 privstartxdir = $(xinitrcdir)/privileged_startx.d
 privstartx_SCRIPTS = 10-tmpdirs 20-font_cache
-AM_CPPFLAGS = -DXINITDIR=\"$(xinitrcdir)\" -DSCRIPTDIR=\"$(privstartxdir)\" -DBINDIR=\"$(bindir)\"
+AM_CPPFLAGS = -I$(srcdir)/.. -DXINITDIR=\"$(xinitrcdir)\" -DSCRIPTDIR=\"$(privstartxdir)\" -DBINDIR=\"$(bindir)\"
 CPP_FILES_FLAGS = -DXINITDIR="$(xinitrcdir)" \
 	-DSCRIPTDIR="$(privstartxdir)" -DBINDIR="$(bindir)" \
-	-DLAUNCHD_ID_PREFIX="$(launchdidprefix)" $(am__append_1)
+	-DBUNDLE_ID_PREFIX="$(bundleidprefix)" $(am__append_1)
 dist_privileged_startx_SOURCES = \
+	$(srcdir)/../console_redirect.c \
 	server.c \
 	client.c \
 	privileged_startx.c
@@ -305,17 +290,18 @@ BUILT_SOURCES = \
 	privileged_startxServer.h \
 	privileged_startx.h
 
-launchdaemons_PRE = $(launchdidprefix).privileged_startx.plist.cpp
+launchdaemons_PRE = $(bundleidprefix).privileged_startx.plist.cpp
 launchdaemons_DATA = $(launchdaemons_PRE:plist.cpp=plist)
 CLEANFILES = \
 	$(privstartx_SCRIPTS) \
 	$(BUILT_SOURCES) \
-	$(launchdaemons_DATA)
+	$(launchdaemons_DATA) \
+	$(bundleidprefix).privileged_startx.plist.cpp
 
 EXTRA_DIST = \
 	10-tmpdirs.cpp \
 	20-font_cache.cpp \
-	org.x.privileged_startx.plist.cpp \
+	privileged_startx.plist.cpp \
 	privileged_startx.defs \
 	privileged_startx_types.h
 
@@ -323,7 +309,7 @@ all: $(BUILT_SOURCES)
 	$(MAKE) $(AM_MAKEFLAGS) all-am
 
 .SUFFIXES:
-.SUFFIXES: .$(APP_MAN_SUFFIX) .man .cpp .c .o .obj
+.SUFFIXES: .cpp .c .o .obj
 $(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am $(top_srcdir)/cpprules.in $(am__configure_deps)
 	@for dep in $?; do \
 	  case '$(am__configure_deps)' in \
@@ -333,9 +319,9 @@ $(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am $(top_srcdir
 	      exit 1;; \
 	  esac; \
 	done; \
-	echo ' cd $(top_srcdir) && $(AUTOMAKE) --foreign  privileged_startx/Makefile'; \
+	echo ' cd $(top_srcdir) && $(AUTOMAKE) --foreign  launchd/privileged_startx/Makefile'; \
 	cd $(top_srcdir) && \
-	  $(AUTOMAKE) --foreign  privileged_startx/Makefile
+	  $(AUTOMAKE) --foreign  launchd/privileged_startx/Makefile
 .PRECIOUS: Makefile
 Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 	@case '$?' in \
@@ -406,6 +392,7 @@ distclean-compile:
 	-rm -f *.tab.c
 
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/client.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/console_redirect.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/privileged_startx.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/privileged_startxServer.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/privileged_startxUser.Po@am__quote@
@@ -424,6 +411,20 @@ distclean-compile:
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$<' object='$@' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(COMPILE) -c `$(CYGPATH_W) '$<'`
+
+console_redirect.o: $(srcdir)/../console_redirect.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT console_redirect.o -MD -MP -MF "$(DEPDIR)/console_redirect.Tpo" -c -o console_redirect.o `test -f '$(srcdir)/../console_redirect.c' || echo '$(srcdir)/'`$(srcdir)/../console_redirect.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/console_redirect.Tpo" "$(DEPDIR)/console_redirect.Po"; else rm -f "$(DEPDIR)/console_redirect.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$(srcdir)/../console_redirect.c' object='console_redirect.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o console_redirect.o `test -f '$(srcdir)/../console_redirect.c' || echo '$(srcdir)/'`$(srcdir)/../console_redirect.c
+
+console_redirect.obj: $(srcdir)/../console_redirect.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT console_redirect.obj -MD -MP -MF "$(DEPDIR)/console_redirect.Tpo" -c -o console_redirect.obj `if test -f '$(srcdir)/../console_redirect.c'; then $(CYGPATH_W) '$(srcdir)/../console_redirect.c'; else $(CYGPATH_W) '$(srcdir)/$(srcdir)/../console_redirect.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/console_redirect.Tpo" "$(DEPDIR)/console_redirect.Po"; else rm -f "$(DEPDIR)/console_redirect.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$(srcdir)/../console_redirect.c' object='console_redirect.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o console_redirect.obj `if test -f '$(srcdir)/../console_redirect.c'; then $(CYGPATH_W) '$(srcdir)/../console_redirect.c'; else $(CYGPATH_W) '$(srcdir)/$(srcdir)/../console_redirect.c'; fi`
 uninstall-info-am:
 install-launchdaemonsDATA: $(launchdaemons_DATA)
 	@$(NORMAL_INSTALL)
@@ -492,7 +493,7 @@ distclean-tags:
 	-rm -f TAGS ID GTAGS GRTAGS GSYMS GPATH tags
 
 distdir: $(DISTFILES)
-	$(mkdir_p) $(distdir)/..
+	$(mkdir_p) $(distdir)/../..
 	@srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`; \
 	topsrcdirstrip=`echo "$(top_srcdir)" | sed 's|.|.|g'`; \
 	list='$(DISTFILES)'; for file in $$list; do \
@@ -623,10 +624,7 @@ uninstall-am: uninstall-info-am uninstall-launchdaemonsDATA \
 .cpp:
 	$(AM_V_GEN)$(RAWCPP) $(RAWCPPFLAGS) $(CPP_FILES_FLAGS) < $< | $(CPP_SED_MAGIC) > $@
 
-.man.$(APP_MAN_SUFFIX):
-	$(AM_V_GEN)$(RAWCPP) $(RAWCPPFLAGS) $(MANDEFS) $(EXTRAMANDEFS) < $< | $(CPP_SED_MAGIC) > $@
-
-$(launchdidprefix).privileged_startx.plist.cpp: org.x.privileged_startx.plist.cpp  
+$(bundleidprefix).privileged_startx.plist.cpp: privileged_startx.plist.cpp  
 	cp $< $@
 
 10-tmpdirs: 10-tmpdirs.cpp Makefile

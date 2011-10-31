@@ -53,9 +53,9 @@ pkgincludedir = $(includedir)/@PACKAGE@
 top_builddir = .
 am__cd = CDPATH="$${ZSH_VERSION+.}$(PATH_SEPARATOR)" && cd
 INSTALL = @INSTALL@
-install_sh_DATA = $(install_sh) -c -m 644
-install_sh_PROGRAM = $(install_sh) -c
-install_sh_SCRIPT = $(install_sh) -c
+install_sh_DATA = ${SHELL} $(install_sh) -c -m 644
+install_sh_PROGRAM = ${SHELL} $(install_sh) -c
+install_sh_SCRIPT = ${SHELL} $(install_sh) -c
 INSTALL_HEADER = $(INSTALL_DATA)
 transform = $(program_transform_name)
 NORMAL_INSTALL = :
@@ -66,6 +66,7 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
+@LAUNCHD_TRUE@am__append_1 = launchd
 bin_PROGRAMS = xinit$(EXEEXT)
 DIST_COMMON = README $(am__configure_deps) $(srcdir)/Makefile.am \
 	$(srcdir)/Makefile.in $(srcdir)/config.h.in \
@@ -83,7 +84,6 @@ mkinstalldirs = $(SHELL) $(install_sh) -d
 CONFIG_HEADER = config.h
 CONFIG_CLEAN_FILES =
 am__installdirs = "$(DESTDIR)$(bindir)" "$(DESTDIR)$(bindir)" \
-	"$(DESTDIR)$(appmandir)" "$(DESTDIR)$(launchagentsdir)" \
 	"$(DESTDIR)$(xinitrcdir)"
 binPROGRAMS_INSTALL = $(INSTALL_PROGRAM)
 PROGRAMS = $(bin_PROGRAMS)
@@ -114,12 +114,11 @@ am__vpath_adj = case $$p in \
     *) f=$$p;; \
   esac;
 am__strip_dir = `echo $$p | sed -e 's|^.*/||'`;
-appmanDATA_INSTALL = $(INSTALL_DATA)
-launchagentsDATA_INSTALL = $(INSTALL_DATA)
 xinitrcDATA_INSTALL = $(INSTALL_DATA)
-DATA = $(appman_DATA) $(launchagents_DATA) $(xinitrc_DATA)
+DATA = $(xinitrc_DATA)
 ETAGS = etags
 CTAGS = ctags
+DIST_SUBDIRS = man launchd
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
 distdir = $(PACKAGE)-$(VERSION)
 top_distdir = $(distdir)
@@ -140,7 +139,6 @@ AMTAR = @AMTAR@
 AM_DEFAULT_VERBOSITY = @AM_DEFAULT_VERBOSITY@
 APP_MAN_DIR = @APP_MAN_DIR@
 APP_MAN_SUFFIX = @APP_MAN_SUFFIX@
-ARCHMANDEFS = @ARCHMANDEFS@
 AUTOCONF = @AUTOCONF@
 AUTOHEADER = @AUTOHEADER@
 AUTOMAKE = @AUTOMAKE@
@@ -198,11 +196,13 @@ PATH_SEPARATOR = @PATH_SEPARATOR@
 PKG_CONFIG = @PKG_CONFIG@
 RAWCPP = @RAWCPP@
 RAWCPPFLAGS = @RAWCPPFLAGS@
+SCOMAN = @SCOMAN@
 SED = @SED@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 SHELL_CMD = @SHELL_CMD@
 STARTX_COOKIE_FLAGS = @STARTX_COOKIE_FLAGS@
+STRICT_CFLAGS = @STRICT_CFLAGS@
 STRIP = @STRIP@
 TIGER_LAUNCHD_FALSE = @TIGER_LAUNCHD_FALSE@
 TIGER_LAUNCHD_TRUE = @TIGER_LAUNCHD_TRUE@
@@ -238,6 +238,7 @@ build_alias = @build_alias@
 build_cpu = @build_cpu@
 build_os = @build_os@
 build_vendor = @build_vendor@
+bundleidprefix = @bundleidprefix@
 datadir = @datadir@
 datarootdir = @datarootdir@
 docdir = @docdir@
@@ -254,7 +255,6 @@ infodir = @infodir@
 install_sh = @install_sh@
 launchagentsdir = @launchagentsdir@
 launchdaemonsdir = @launchdaemonsdir@
-launchdidprefix = @launchdidprefix@
 libdir = @libdir@
 libexecdir = @libexecdir@
 localedir = @localedir@
@@ -270,6 +270,7 @@ sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 sysconfdir = @sysconfdir@
 target_alias = @target_alias@
+SUBDIRS = man $(am__append_1)
 bin_SCRIPTS = startx
 AM_CFLAGS = $(CWARNFLAGS) $(XINIT_CFLAGS)
 AM_CPPFLAGS = -DXINITDIR=\"$(XINITDIR)\" -DBINDIR=\"$(bindir)\"
@@ -277,12 +278,6 @@ xinit_LDADD = $(XINIT_LIBS)
 xinit_SOURCES = \
         xinit.c
 
-appmandir = $(APP_MAN_DIR)
-appman_PRE = \
-	startx.man \
-        xinit.man
-
-appman_DATA = $(appman_PRE:man=@APP_MAN_SUFFIX@)
 CPP_SED_MAGIC = $(SED) -e '/^\#  *[0-9][0-9]*  *.*$$/d' \
                        -e '/^\#line  *[0-9][0-9]*  *.*$$/d' \
                        -e '/^[ 	]*XCOMM$$/s/XCOMM/\#/' \
@@ -291,24 +286,7 @@ CPP_SED_MAGIC = $(SED) -e '/^\#  *[0-9][0-9]*  *.*$$/d' \
                        -e '/XSLASHGLOB/s/XSLASHGLOB/\/\*/' \
                        -e '/\@\@$$/s/\@\@$$/\\/'
 
-
-# Strings to replace in man pages
-XORGRELSTRING = @PACKAGE_STRING@
-XORGMANNAME = X Version 11
-MANDEFS = \
-	-D__xorgversion__="\"$(XORGRELSTRING)\" \"$(XORGMANNAME)\"" \
-	-D__appmansuffix__=$(APP_MAN_SUFFIX) \
-	-D__filemansuffix__=$(FILE_MAN_SUFFIX) \
-	-D__libmansuffix__=$(LIB_MAN_SUFFIX) \
-	-D__miscmansuffix__=$(MISC_MAN_SUFFIX) \
-	-D__XSERVERNAME__='$(XSERVERNAME)' \
-	-D__XCONFIGFILE__='$(XCONFIGFILE)' \
-	-D__XCONFIGFILEMAN__='$(XCONFIGFILEMAN)' \
-	-D__xinitdir__=$(XINITDIR) \
-	-D__bindir__=$(bindir) \
-	-DSHELL_CMD=$(SHELL_CMD) $(ARCHMANDEFS)
-
-SUFFIXES = .$(APP_MAN_SUFFIX) .man .cpp
+SUFFIXES = .cpp
 xinitrcdir = $(XINITDIR)
 PROGCPPDEFS = \
 	-DXRDB=@XRDB@ \
@@ -327,23 +305,19 @@ CPP_FILES_FLAGS = \
 	-DSHELL_CMD=$(SHELL_CMD) $(STARTX_COOKIE_FLAGS) \
 	-D__libexecdir__="$(libexecdir)" \
 	-D__bindir__="$(bindir)" \
-	-DLAUNCHD_ID_PREFIX="$(launchdidprefix)"
+	-DBUNDLE_ID_PREFIX="$(bundleidprefix)"
 
-@LAUNCHD_TRUE@launchagents_PRE = $(launchdidprefix).startx.plist.cpp
-@LAUNCHD_TRUE@launchagents_DATA = $(launchagents_PRE:plist.cpp=plist)
-@LAUNCHD_TRUE@SUBDIRS = privileged_startx
-DIST_SUBDIRS = privileged_startx
 xinitrc_DATA = xinitrc
 MAINTAINERCLEANFILES = ChangeLog INSTALL
-CLEANFILES = xinitrc startx $(appman_DATA) $(launchagents_DATA)
-EXTRA_DIST = xinitrc.cpp startx.cpp org.x.startx.plist.cpp $(appman_PRE)	\
+CLEANFILES = xinitrc startx $(launchagents_DATA)
+EXTRA_DIST = xinitrc.cpp startx.cpp \
 		autogen.sh
 
 all: config.h
 	$(MAKE) $(AM_MAKEFLAGS) all-recursive
 
 .SUFFIXES:
-.SUFFIXES: .$(APP_MAN_SUFFIX) .man .cpp .c .o .obj
+.SUFFIXES: .cpp .c .o .obj
 am--refresh:
 	@:
 $(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am $(top_srcdir)/cpprules.in $(am__configure_deps)
@@ -462,40 +436,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(COMPILE) -c `$(CYGPATH_W) '$<'`
 uninstall-info-am:
-install-appmanDATA: $(appman_DATA)
-	@$(NORMAL_INSTALL)
-	test -z "$(appmandir)" || $(mkdir_p) "$(DESTDIR)$(appmandir)"
-	@list='$(appman_DATA)'; for p in $$list; do \
-	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
-	  f=$(am__strip_dir) \
-	  echo " $(appmanDATA_INSTALL) '$$d$$p' '$(DESTDIR)$(appmandir)/$$f'"; \
-	  $(appmanDATA_INSTALL) "$$d$$p" "$(DESTDIR)$(appmandir)/$$f"; \
-	done
-
-uninstall-appmanDATA:
-	@$(NORMAL_UNINSTALL)
-	@list='$(appman_DATA)'; for p in $$list; do \
-	  f=$(am__strip_dir) \
-	  echo " rm -f '$(DESTDIR)$(appmandir)/$$f'"; \
-	  rm -f "$(DESTDIR)$(appmandir)/$$f"; \
-	done
-install-launchagentsDATA: $(launchagents_DATA)
-	@$(NORMAL_INSTALL)
-	test -z "$(launchagentsdir)" || $(mkdir_p) "$(DESTDIR)$(launchagentsdir)"
-	@list='$(launchagents_DATA)'; for p in $$list; do \
-	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
-	  f=$(am__strip_dir) \
-	  echo " $(launchagentsDATA_INSTALL) '$$d$$p' '$(DESTDIR)$(launchagentsdir)/$$f'"; \
-	  $(launchagentsDATA_INSTALL) "$$d$$p" "$(DESTDIR)$(launchagentsdir)/$$f"; \
-	done
-
-uninstall-launchagentsDATA:
-	@$(NORMAL_UNINSTALL)
-	@list='$(launchagents_DATA)'; for p in $$list; do \
-	  f=$(am__strip_dir) \
-	  echo " rm -f '$(DESTDIR)$(launchagentsdir)/$$f'"; \
-	  rm -f "$(DESTDIR)$(launchagentsdir)/$$f"; \
-	done
 install-xinitrcDATA: $(xinitrc_DATA)
 	@$(NORMAL_INSTALL)
 	test -z "$(xinitrcdir)" || $(mkdir_p) "$(DESTDIR)$(xinitrcdir)"
@@ -795,7 +735,7 @@ check: check-recursive
 all-am: Makefile $(PROGRAMS) $(SCRIPTS) $(DATA) config.h
 installdirs: installdirs-recursive
 installdirs-am:
-	for dir in "$(DESTDIR)$(bindir)" "$(DESTDIR)$(bindir)" "$(DESTDIR)$(appmandir)" "$(DESTDIR)$(launchagentsdir)" "$(DESTDIR)$(xinitrcdir)"; do \
+	for dir in "$(DESTDIR)$(bindir)" "$(DESTDIR)$(bindir)" "$(DESTDIR)$(xinitrcdir)"; do \
 	  test -z "$$dir" || $(mkdir_p) "$$dir"; \
 	done
 install: install-recursive
@@ -845,8 +785,7 @@ info: info-recursive
 
 info-am:
 
-install-data-am: install-appmanDATA install-launchagentsDATA \
-	install-xinitrcDATA
+install-data-am: install-xinitrcDATA
 
 install-exec-am: install-binPROGRAMS install-binSCRIPTS
 
@@ -875,9 +814,8 @@ ps: ps-recursive
 
 ps-am:
 
-uninstall-am: uninstall-appmanDATA uninstall-binPROGRAMS \
-	uninstall-binSCRIPTS uninstall-info-am \
-	uninstall-launchagentsDATA uninstall-xinitrcDATA
+uninstall-am: uninstall-binPROGRAMS uninstall-binSCRIPTS \
+	uninstall-info-am uninstall-xinitrcDATA
 
 uninstall-info: uninstall-info-recursive
 
@@ -888,28 +826,20 @@ uninstall-info: uninstall-info-recursive
 	distclean-compile distclean-generic distclean-hdr \
 	distclean-recursive distclean-tags distcleancheck distdir \
 	distuninstallcheck dvi dvi-am html html-am info info-am \
-	install install-am install-appmanDATA install-binPROGRAMS \
-	install-binSCRIPTS install-data install-data-am install-exec \
-	install-exec-am install-info install-info-am \
-	install-launchagentsDATA install-man install-strip \
+	install install-am install-binPROGRAMS install-binSCRIPTS \
+	install-data install-data-am install-exec install-exec-am \
+	install-info install-info-am install-man install-strip \
 	install-xinitrcDATA installcheck installcheck-am installdirs \
 	installdirs-am maintainer-clean maintainer-clean-generic \
 	maintainer-clean-recursive mostlyclean mostlyclean-compile \
 	mostlyclean-generic mostlyclean-recursive pdf pdf-am ps ps-am \
 	tags tags-recursive uninstall uninstall-am \
-	uninstall-appmanDATA uninstall-binPROGRAMS \
-	uninstall-binSCRIPTS uninstall-info-am \
-	uninstall-launchagentsDATA uninstall-xinitrcDATA
+	uninstall-binPROGRAMS uninstall-binSCRIPTS uninstall-info-am \
+	uninstall-xinitrcDATA
 
 
 .cpp:
 	$(AM_V_GEN)$(RAWCPP) $(RAWCPPFLAGS) $(CPP_FILES_FLAGS) < $< | $(CPP_SED_MAGIC) > $@
-
-.man.$(APP_MAN_SUFFIX):
-	$(AM_V_GEN)$(RAWCPP) $(RAWCPPFLAGS) $(MANDEFS) $(EXTRAMANDEFS) < $< | $(CPP_SED_MAGIC) > $@
-
-@LAUNCHD_TRUE@$(launchdidprefix).startx.plist.cpp: org.x.startx.plist.cpp
-@LAUNCHD_TRUE@	cp $< $@
 
 .PHONY: ChangeLog INSTALL
 

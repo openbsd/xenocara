@@ -1,4 +1,4 @@
-/* Copyright (c) 2008 Apple Inc.
+/* Copyright (c) 2008-2011 Apple Inc.
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation files
@@ -27,7 +27,7 @@
  */
 
 #ifdef HAVE_CONFIG_H
-#include <config.h>
+# include "config.h"
 #endif
 
 #include <mach/mach.h>
@@ -45,6 +45,8 @@
 #include <launch.h>
 #include <asl.h>
 #include <errno.h>
+
+#include "console_redirect.h"
 
 #include "privileged_startx.h"
 #include "privileged_startxServer.h"
@@ -90,19 +92,19 @@ static mach_port_t checkin_or_register(char *bname) {
     /* We probably were not started by launchd or the old mach_init */
     kr = mach_port_allocate(mach_task_self(), MACH_PORT_RIGHT_RECEIVE, &mp);
     if (kr != KERN_SUCCESS) {
-        fprintf(stderr, "mach_port_allocate(): %s\n", mach_error_string(kr));
+        asl_log(NULL, NULL, ASL_LEVEL_ERR, "mach_port_allocate(): %s", mach_error_string(kr));
         exit(EXIT_FAILURE);
     }
     
     kr = mach_port_insert_right(mach_task_self(), mp, mp, MACH_MSG_TYPE_MAKE_SEND);
     if (kr != KERN_SUCCESS) {
-        fprintf(stderr, "mach_port_insert_right(): %s\n", mach_error_string(kr));
+        asl_log(NULL, NULL, ASL_LEVEL_ERR, "mach_port_insert_right(): %s", mach_error_string(kr));
         exit(EXIT_FAILURE);
     }
     
     kr = bootstrap_register(bootstrap_port, bname, mp);
     if (kr != KERN_SUCCESS) {
-        fprintf(stderr, "bootstrap_register(): %s\n", mach_error_string(kr));
+        asl_log(NULL, NULL, ASL_LEVEL_ERR, "bootstrap_register(): %s", mach_error_string(kr));
         exit(EXIT_FAILURE);
     }
     
@@ -118,7 +120,10 @@ int server_main(const char *dir) {
     long idle_timeout = DEFAULT_IDLE_TIMEOUT;
 #endif
 
-    launch_data_t config = NULL, checkin = NULL;
+    launch_data_t config = NULL, checkin = NULL, label = NULL;
+    const char *labelstr = BUNDLE_ID_PREFIX".privileged_startx";
+    aslclient aslc;
+
     checkin = launch_data_new_string(LAUNCH_KEY_CHECKIN);
     config = launch_msg(checkin);
     if (!config || launch_data_get_type(config) == LAUNCH_DATA_ERRNO) {
@@ -131,6 +136,15 @@ int server_main(const char *dir) {
         asl_log(NULL, NULL, ASL_LEVEL_DEBUG,
                 "script directory set: %s", script_dir);
     }
+
+    label = launch_data_dict_lookup(config, LAUNCH_JOBKEY_LABEL);
+    if (label) {
+        labelstr = launch_data_get_string(label);
+    }
+
+    aslc = asl_open(labelstr, BUNDLE_ID_PREFIX, ASL_OPT_NO_DELAY);
+    xi_asl_capture_fd(aslc, NULL, ASL_LEVEL_INFO, STDOUT_FILENO);
+    xi_asl_capture_fd(aslc, NULL, ASL_LEVEL_NOTICE, STDERR_FILENO);
 
 #ifdef LAUNCH_JOBKEY_MACHSERVICES
     launch_data_t tmv;
@@ -157,7 +171,7 @@ int server_main(const char *dir) {
 
     mp = launch_data_get_machport(svc);
 #else
-    mp = checkin_or_register(LAUNCHD_ID_PREFIX".privileged_startx");
+    mp = checkin_or_register(BUNDLE_ID_PREFIX".privileged_startx");
 #endif
 
     if (mp == MACH_PORT_NULL) {
@@ -188,7 +202,7 @@ int server_main(const char *dir) {
     kr = mach_msg_server(privileged_startx_server, mxmsgsz, mp, 0);
     if (kr != KERN_SUCCESS) {
         asl_log(NULL, NULL, ASL_LEVEL_ERR,
-                "mach_msg_server(mp): %s\n", mach_error_string(kr));
+                "mach_msg_server(mp): %s", mach_error_string(kr));
         exit(EXIT_FAILURE);
     }
 
@@ -218,7 +232,7 @@ kern_return_t do_privileged_startx(mach_port_t test_port __attribute__((unused))
     ftsp = fts_open((char * const *)path_argv, FTS_PHYSICAL, ftscmp);
     if(!ftsp) {
         asl_log(NULL, NULL, ASL_LEVEL_ERR,
-                "do_privileged_startx: fts_open(%s): %s\n",
+                "do_privileged_startx: fts_open(%s): %s",
                 script_dir, strerror(errno));
         return KERN_FAILURE;
     }
@@ -227,7 +241,7 @@ kern_return_t do_privileged_startx(mach_port_t test_port __attribute__((unused))
     ftsent = fts_read(ftsp);
     if(!ftsent) {
         asl_log(NULL, NULL, ASL_LEVEL_ERR,
-                "do_privileged_startx: fts_read(): %s\n", strerror(errno));
+                "do_privileged_startx: fts_read(): %s", strerror(errno));
         fts_close(ftsp);
         return KERN_FAILURE;
     }
@@ -236,7 +250,7 @@ kern_return_t do_privileged_startx(mach_port_t test_port __attribute__((unused))
     ftsent = fts_children(ftsp, 0);
     if(!ftsent) {
         asl_log(NULL, NULL, ASL_LEVEL_ERR,
-                "do_privileged_startx: fts_children(): %s\n", strerror(errno));
+                "do_privileged_startx: fts_children(): %s", strerror(errno));
         fts_close(ftsp);
         return KERN_FAILURE;
     }
@@ -260,7 +274,7 @@ kern_return_t do_privileged_startx(mach_port_t test_port __attribute__((unused))
             error_code = system(fn_buf);
             if(error_code != 0) {
                 asl_log(NULL, NULL, ASL_LEVEL_ERR,
-                        "do_privileged_startx: %s: exited with status %d\n",
+                        "do_privileged_startx: %s: exited with status %d",
                         fn_buf, error_code);
                 retval = KERN_FAILURE;
             }

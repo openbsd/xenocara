@@ -3,7 +3,7 @@
 <plist version="1.0">
 <dict>
 	<key>Label</key>
-		<string>LAUNCHD_ID_PREFIX.privileged_startx</string>
+		<string>BUNDLE_ID_PREFIX.privileged_startx</string>
 	<key>ProgramArguments</key>
 		<array>
 			<string>XINITDIR/privileged_startx</string>
@@ -16,7 +16,7 @@
 #else
 	<key>MachServices</key>
 		<dict>
-			<key>LAUNCHD_ID_PREFIX.privileged_startx</key>
+			<key>BUNDLE_ID_PREFIX.privileged_startx</key>
 				<true/>
 		</dict>
 	<key>TimeOut</key>

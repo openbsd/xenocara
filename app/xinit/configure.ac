@@ -20,9 +20,14 @@ dnl  PERFORMANCE OF THIS SOFTWARE.
 dnl
 dnl Process this file with autoconf to create configure.
 
+# Initialize Autoconf
 AC_PREREQ([2.60])
-AC_INIT([xinit], [1.3.0],
+AC_INIT([xinit], [1.3.1],
         [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg], [xinit])
+AC_CONFIG_SRCDIR([Makefile.am])
+AC_CONFIG_HEADERS([config.h])
+
+# Initialize Automake
 AM_INIT_AUTOMAKE([foreign dist-bzip2])
 AM_MAINTAINER_MODE
 
@@ -32,13 +37,8 @@ m4_ifndef([XORG_MACROS_VERSION],
 XORG_MACROS_VERSION(1.8)
 XORG_DEFAULT_OPTIONS
 
-AM_CONFIG_HEADER(config.h)
-
 XORG_PROG_RAWCPP
 AC_CANONICAL_HOST
-
-m4_ifdef([AS_HELP_STRING], , [m4_define([AS_HELP_STRING], m4_defn([AC_HELP_STRING]))])
-
 
 # Build options
 DEFAULT_XRDB=xrdb
@@ -115,9 +115,11 @@ AC_ARG_WITH(launchagents-dir,   AS_HELP_STRING([--with-launchagents-dir=PATH], [
 AC_ARG_WITH(launchdaemons-dir,  AS_HELP_STRING([--with-launchdaemons-dir=PATH], [Path to launchd's LaunchDaemonss directory (default: /Library/LaunchDaemons)]),
                                 [ launchdaemonsdir="${withval}" ],
                                 [ launchdaemonsdir="/Library/LaunchDaemons" ])
-AC_ARG_WITH(launchd-id-prefix,  AS_HELP_STRING([--with-launchd-id-prefix=PATH], [Prefix to use for launchd identifiers (default: org.x)]),
-                                [ launchdidprefix="${withval}" ],
-                                [ launchdidprefix="org.x" ])
+AC_ARG_WITH(launchd-id-prefix,  AS_HELP_STRING([--with-launchd-id-prefix=PATH], [Deprecated: Use --with-bundle-id-prefix.]),
+                                [ bundleidprefix="${withval}" ],
+                                [ bundleidprefix="org.x" ])
+AC_ARG_WITH(bundle-id-prefix,  AS_HELP_STRING([--with-bundle-id-prefix=PATH], [Prefix to use for bundle identifiers (default: org.x)]),
+                                [ bundleidprefix="${withval}" ])
 
 if test "x$LAUNCHD" = "xauto"; then
 	unset LAUNCHD
@@ -132,15 +134,18 @@ if test "x$LAUNCHD" = "xyes" ; then
 			TIGER_LAUNCHD=yes
 		;;
 	esac
+        AC_CHECK_FUNC(dispatch_async,
+                              AC_DEFINE([HAVE_LIBDISPATCH], 1, [Define to 1 if you have the libdispatch (GCD) available]),
+                              [])
 else
         launchagentsdir=""
         launchdaemonsdir=""
 fi
 
-AC_DEFINE_UNQUOTED(LAUNCHD_ID_PREFIX, "$launchdidprefix", [Prefix to use for launchd identifiers])
+AC_DEFINE_UNQUOTED(BUNDLE_ID_PREFIX, "$bundleidprefix", [Prefix to use for launchd identifiers])
 AC_SUBST([launchagentsdir])
 AC_SUBST([launchdaemonsdir])
-AC_SUBST([launchdidprefix])
+AC_SUBST([bundleidprefix])
 AM_CONDITIONAL(LAUNCHD, [test "x$LAUNCHD" = "xyes"])
 AM_CONDITIONAL(TIGER_LAUNCHD, [test "x$TIGER_LAUNCHD" = "xyes"])
 
@@ -153,8 +158,6 @@ case $host_os in
         ;;
 esac
 
-AC_SUBST(XINIT_CFLAGS)
-AC_SUBST(XINIT_LIBS)
 
 AC_PATH_PROGS(MCOOKIE, [mcookie], [$MCOOKIE],
   [$PATH:/bin:/usr/bin:/usr/lib:/usr/libexec:/usr/local/bin])
@@ -174,11 +177,10 @@ fi
 AC_SUBST(STARTX_COOKIE_FLAGS)
 
 # Additional substitutions in startx, xinitrc & man pages
-ARCHMANDEFS=""
 SHELL_CMD="/bin/sh"
 XSERVERNAME="Xorg"
 XCONFIGFILE="xorg.conf"
-XCONFIGFILEMAN='${XCONFIGFILE} (__filemansuffix__)'
+XCONFIGFILEMAN='${XCONFIGFILE} (${FILE_MAN_SUFFIX})'
 case $host_os in
     cygwin*)
 	XSERVERNAME="XWin"
@@ -194,11 +196,11 @@ case $host_os in
 	;;
     *sco*)
 	SHELL_CMD="/bin/ksh"
-	ARCHMANDEFS="-D__SCOMAN__"
+	SCOMAN=1
 	;;
 esac
 AC_SUBST(SHELL_CMD)
-AC_SUBST(ARCHMANDEFS)
+AC_SUBST(SCOMAN)
 AC_SUBST(XSERVERNAME)
 AC_SUBST(XCONFIGFILE)
 AC_SUBST(XCONFIGFILEMAN)
@@ -216,5 +218,9 @@ AC_SUBST(XCONSOLE)
 
 AC_SUBST(XINITDIR)
 
-AC_OUTPUT([Makefile])
-AC_OUTPUT([privileged_startx/Makefile])
+AC_CONFIG_FILES([Makefile
+	man/Makefile
+	launchd/Makefile
+	launchd/privileged_startx/Makefile
+	launchd/user_startx/Makefile])
+AC_OUTPUT

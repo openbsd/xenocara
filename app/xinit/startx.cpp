@@ -5,8 +5,8 @@ XCOMM This is just a sample implementation of a slightly less primitive
 XCOMM interface than xinit.  It looks for user .xinitrc and .xserverrc
 XCOMM files, then system xinitrc and xserverrc files, else lets xinit choose
 XCOMM its default.  The system xinitrc should probably do things like check
-XCOMM for .Xresources files and merge them in, startup up a window manager,
-XCOMM and pop a clock and serveral xterms.
+XCOMM for .Xresources files and merge them in, start up a window manager,
+XCOMM and pop a clock and several xterms.
 XCOMM
 XCOMM Site administrators are STRONGLY urged to write nicer versions.
 XCOMM
@@ -21,7 +21,7 @@ XCOMM This allows startx to be placed in a place like /usr/bin or /usr/local/bin
 XCOMM and people may use X without changing their PATH.
 XCOMM Note that we put our own bin directory at the front of the path, and
 XCOMM the standard system path at the back, since if you are using the Xorg
-XCOMM server theres a pretty good chance you want to bias the Xorg clients
+XCOMM server there's a pretty good chance you want to bias the Xorg clients
 XCOMM over the old system's clients.
 
 XCOMM First our compiled path
@@ -83,7 +83,7 @@ serverargs=""
 #ifdef __APPLE__
 
 if [ "x$X11_PREFS_DOMAIN" = x ] ; then
-    export X11_PREFS_DOMAIN=LAUNCHD_ID_PREFIX".X11"
+    export X11_PREFS_DOMAIN=BUNDLE_ID_PREFIX".X11"
 fi
 
 XCOMM Initialize defaults (this will cut down on "safe" error messages)

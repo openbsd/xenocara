@@ -3,14 +3,15 @@
 <plist version="1.0">
 <dict>
 	<key>Label</key>
-		<string>LAUNCHD_ID_PREFIX.startx</string>
+		<string>BUNDLE_ID_PREFIX.startx</string>
 	<key>ProgramArguments</key>
 		<array>
+			<string>__xinitrcdir__/launchd_startx</string>
 			<string>__bindir__/startx</string>
 		</array>
 	<key>Sockets</key>
 		<dict>
-			<key>LAUNCHD_ID_PREFIX:0</key>
+			<key>BUNDLE_ID_PREFIX:0</key>
 				<dict>
 					<key>SecureSocketWithKey</key>
 						<string>DISPLAY</string>

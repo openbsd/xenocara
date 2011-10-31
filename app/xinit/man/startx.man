@@ -1,6 +1,6 @@
 .\"
 .\" Copyright 1993, 1998  The Open Group
-.\" 
+.\"
 .\" Permission to use, copy, modify, distribute, and sell this software and its
 .\" documentation for any purpose is hereby granted without fee, provided that
 .\" the above copyright notice appear in all copies and that both that
@@ -74,7 +74,7 @@ startx -- -dpi 100
 .PP
 startx -- -layout Multihead
 .RE
-#ifdef __SCOMAN__
+.if '__SCOMAN__'' .ig
 .PP
 To determine the client to run,
 .B startx
@@ -90,7 +90,8 @@ looks for the following files, in order:
 .I __xinitdir__/xinitrc
 .RE
 .PP
-#else
+..
+.if !'x.__SCOMAN__'x.' .ig
 .PP
 To determine the client to run,
 .B startx
@@ -102,7 +103,7 @@ the file
 in the
 .I xinit
 library directory.
-#endif
+..
 If command line client options are given, they override this
 behavior and revert to the
 .BR xinit (__appmansuffix__)
@@ -186,7 +187,7 @@ and
 .IR Xsecurity (__miscmansuffix__)
 manual pages for more information on X client/server authentication.
 .SH FILES
-#ifdef __SCOMAN__
+.if '__SCOMAN__'' .ig
 .TP 25
 .I $(HOME)/.startxrc
 Client to run.  Typically a shell script which runs many programs in
@@ -196,7 +197,7 @@ the background.
 Client to use if the user has no
 .I .startxrc
 file.
-#endif
+..
 .TP 25
 .I $(HOME)/.xinitrc
 Client to run.  Typically a shell script which runs many programs in
