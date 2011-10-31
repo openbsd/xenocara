@@ -18,6 +18,7 @@
 #  TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 #  PERFORMANCE OF THIS SOFTWARE.
 
+SUBDIRS = man
 bin_PROGRAMS = sessreg
 
 AM_CFLAGS = $(CWARNFLAGS) $(SESSREG_CFLAGS)
@@ -25,47 +26,6 @@ AM_CFLAGS = $(CWARNFLAGS) $(SESSREG_CFLAGS)
 sessreg_SOURCES =	\
 	sessreg.h	\
         sessreg.c
-
-appman_PRE = sessreg.man
-
-appmandir = $(APP_MAN_DIR)
-
-appman_DATA = $(appman_PRE:man=@APP_MAN_SUFFIX@)
-
-EXTRA_DIST = $(appman_PRE) filenames.sed.c 
-MAINTAINERCLEANFILES = ChangeLog INSTALL
-CLEANFILES = $(appman_DATA) filenames.sed
-
-SED = sed
-
-# Strings to replace in man pages
-XORGRELSTRING = @PACKAGE_STRING@
-  XORGMANNAME = X Version 11
-
-MAN_SUBSTS = -f filenames.sed \
-	-e 's|__vendorversion__|"$(XORGRELSTRING)" "$(XORGMANNAME)"|' \
-	-e 's|__xorgversion__|"$(XORGRELSTRING)" "$(XORGMANNAME)"|' \
-	-e 's|__xservername__|Xorg|g' \
-	-e 's|__xconfigfile__|xorg.conf|g' \
-	-e 's|__projectroot__|$(prefix)|g' \
-	-e 's|__apploaddir__|$(appdefaultdir)|' \
-	-e 's|__appmansuffix__|$(APP_MAN_SUFFIX)|g' \
-	-e 's|__libmansuffix__|$(LIB_MAN_SUFFIX)|g' \
-	-e 's|__adminmansuffix__|$(ADMIN_MAN_SUFFIX)|g' \
-	-e 's|__miscmansuffix__|$(MISC_MAN_SUFFIX)|g' \
-	-e 's|__filemansuffix__|$(FILE_MAN_SUFFIX)|g'
-
-SUFFIXES = .$(APP_MAN_SUFFIX) .man
-
-.man.$(APP_MAN_SUFFIX):
-	$(AM_V_GEN)$(SED) $(MAN_SUBSTS) < $< > $@
-
-sessreg.$(APP_MAN_SUFFIX): filenames.sed
-
-filenames.sed: filenames.sed.c
-	$(AM_V_GEN)$(CPP) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
-	    $(AM_CPPFLAGS) $(CPPFLAGS) $(srcdir)/filenames.sed.c | \
-	    grep 's|__' > $@
 
 if LINT
 ALL_LINT_FLAGS=$(LINT_FLAGS) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
@@ -75,6 +35,7 @@ lint:
 	$(LINT) $(ALL_LINT_FLAGS) $(sessreg_SOURCES)
 endif LINT
 
+MAINTAINERCLEANFILES = ChangeLog INSTALL
 
 .PHONY: ChangeLog INSTALL
 

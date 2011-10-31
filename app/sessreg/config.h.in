@@ -9,6 +9,12 @@
 /* Define to 1 if you have the <memory.h> header file. */
 #undef HAVE_MEMORY_H
 
+/* Define to 1 if you have the `pututline' function. */
+#undef HAVE_PUTUTLINE
+
+/* Define to 1 if you have the <pwd.h> header file. */
+#undef HAVE_PWD_H
+
 /* Define to 1 if you have the <stdint.h> header file. */
 #undef HAVE_STDINT_H
 
@@ -20,6 +26,24 @@
 
 /* Define to 1 if you have the <string.h> header file. */
 #undef HAVE_STRING_H
+
+/* Define to 1 if the system has the type `struct lastlog'. */
+#undef HAVE_STRUCT_LASTLOG
+
+/* Define to 1 if `ut_syslen' is member of `struct utmpx'. */
+#undef HAVE_STRUCT_UTMPX_UT_SYSLEN
+
+/* Define to 1 if `ut_host' is member of `struct utmp'. */
+#undef HAVE_STRUCT_UTMP_UT_HOST
+
+/* Define to 1 if `ut_id' is member of `struct utmp'. */
+#undef HAVE_STRUCT_UTMP_UT_ID
+
+/* Define to 1 if `ut_pid' is member of `struct utmp'. */
+#undef HAVE_STRUCT_UTMP_UT_PID
+
+/* Define to 1 if `ut_type' is member of `struct utmp'. */
+#undef HAVE_STRUCT_UTMP_UT_TYPE
 
 /* Define to 1 if you have the <sys/param.h> header file. */
 #undef HAVE_SYS_PARAM_H
@@ -41,9 +65,6 @@
 
 /* Define to 1 if you have the <utmpx.h> header file. */
 #undef HAVE_UTMPX_H
-
-/* utmpx structure includes ut_syslen field */
-#undef HAVE_UTMPX_UT_SYSLEN
 
 /* Define to 1 if you have the <utmp.h> header file. */
 #undef HAVE_UTMP_H

@@ -1,3 +1,255 @@
+commit 7ac51a652bfb8423604bb1a120568d44516c9de9
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Oct 21 21:09:43 2011 -0700
+
+    sessreg 1.0.7
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit fbe6fa7019309672c311184dd3bce3c25fb578d3
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Sep 26 16:01:40 2011 -0700
+
+    Add const attributes to fix gcc -Wwrite-strings warnings
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 18d68ce74bd810bc09f99a476798b8e4a66ec494
+Author: Ed Schouten <ed@80386.nl>
+Date:   Sun Jun 26 14:04:20 2011 +0200
+
+    Make lastlog work on BSD systems without <lastlog.h>.
+    
+    FreeBSD 8.x and lower have struct lastlog in <utmp.h>. Add a specific
+    Autoconf check for struct lastlog, where we include both <utmp.h> and
+    <lastlog.h>.
+    
+    Also, change NO_LASTLOG to a definition for the opposite; USE_LASTLOG.
+    This is more consistent with USE_UTMP and USE_UTMPX.
+    
+    Signed-off-by: Ed Schouten <ed@80386.nl>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 9e93c5f65a22824f6b4af7ee68944f2226f7efa7
+Author: Ed Schouten <ed@80386.nl>
+Date:   Sun Jun 26 13:50:36 2011 +0200
+
+    Simply define LLOG_FILE and TTYS_FILE unconditionally.
+    
+    It doesn't matter if we define these pathnames, even if we're not going
+    to use them in the code itself. It is already done that way for utmp and
+    wtmp.
+    
+    Signed-off-by: Ed Schouten <ed@80386.nl>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 92d2628e3b1db4b0217d91d532e21018371445bc
+Author: Ed Schouten <ed@80386.nl>
+Date:   Sun Jun 26 10:15:59 2011 +0200
+
+    Fix whitespace inconsistencies.
+    
+    Signed-off-by: Ed Schouten <ed@80386.nl>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 38dd87854f106f6d7a3c8bd8916b65c0d1a87697
+Author: Ed Schouten <ed@80386.nl>
+Date:   Sun Jun 26 09:51:01 2011 +0200
+
+    Just use time_t directly.
+    
+    There is no use for this #define (anymore). We can already assume that
+    any decent system has time_t defined. It has to, otherwise struct utmp
+    and struct utmpx can't even be defined.
+    
+    Signed-off-by: Ed Schouten <ed@80386.nl>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 6675a07badfb688aacbd8fd12ba55e16854ba0ab
+Author: Ed Schouten <ed@80386.nl>
+Date:   Sun Jun 26 09:47:40 2011 +0200
+
+    Only expose the sflag variable when needed.
+    
+    The sflag variable is only used when using BSD-style utmp.
+    
+    Signed-off-by: Ed Schouten <ed@80386.nl>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 6b9a2f7bfa823a3dc0befd039ee08ec1596a3c64
+Author: Ed Schouten <ed@80386.nl>
+Date:   Sun Jun 26 09:43:37 2011 +0200
+
+    Get rid of SYSV definition. Just check for pututline().
+    
+    If the system provides pututline(), we just want to use that, instead of
+    specifically checking for certain operating systems.
+    
+    Signed-off-by: Ed Schouten <ed@80386.nl>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 578b76086edb834aa447ce9aed60c585e44e6cc1
+Author: Ed Schouten <ed@80386.nl>
+Date:   Sat Jun 25 10:35:25 2011 +0200
+
+    Don't forget to include <sys/types.h> before <utmp.h>.
+    
+    Some operating systems (e.g. FreeBSD) require <sys/types.h> to be
+    included before <utmp.h>, because they depend on type definitions such
+    as int32_t, time_t, etc.
+    
+    Signed-off-by: Ed Schouten <ed@80386.nl>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit dd5d4c9721417a21133bb44a0567a041a166bd5e
+Author: Ed Schouten <ed@80386.nl>
+Date:   Fri Jun 24 15:52:18 2011 +0200
+
+    Get rid of bzero() calls. Replace them by memset().
+    
+    bzero() is not part of POSIX; memset() is.
+    
+    Signed-off-by: Ed Schouten <ed@80386.nl>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 301cbd433bb698147e05e7dbfb4de2ce2e0e9cbb
+Author: Ed Schouten <ed@80386.nl>
+Date:   Fri Jun 24 15:46:43 2011 +0200
+
+    Use Autoconf to check for utmp field existence.
+    
+    Don't use the quirky SYSV and __QNX__ definitions to determine whether
+    the utmp fields exist.
+    
+    Signed-off-by: Ed Schouten <ed@80386.nl>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit eb6eb771ff9f53c56bd60f28c5598eee9e2fb9b2
+Author: Ed Schouten <ed@80386.nl>
+Date:   Wed Jun 22 00:36:41 2011 +0200
+
+    Only split off /dev/ instead trimming to last /.
+    
+    This prevents pseudo-terminals with names like /dev/pts/0 from getting
+    trimmed to just 0 instead of pts/0.
+    
+    Signed-off-by: Ed Schouten <ed@80386.nl>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit aad7bed11410413b186e0d5af1783686405b47e6
+Author: Ed Schouten <ed@80386.nl>
+Date:   Wed Jun 22 00:10:17 2011 +0200
+
+    Fix typo in function name check.
+    
+    Signed-off-by: Ed Schouten <ed@80386.nl>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 1e20098384961230c3652078fed09e77b2ba2808
+Author: Ed Schouten <ed@80386.nl>
+Date:   Wed Jun 22 00:09:59 2011 +0200
+
+    Correct whitespace and indentation.
+    
+    Signed-off-by: Ed Schouten <ed@80386.nl>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit ba2ea124ff10cadaf1fc96f7e76372b5400e76d1
+Author: Jon TURNEY <jon.turney@dronecode.org.uk>
+Date:   Mon Mar 14 14:25:22 2011 +0000
+
+    Fix non-srcdir builds
+    
+    Commit 3bb9256b8e3a56b94281ea787c07f080c0a80312 introduces an
+    -I.. which should be -I$(top_builddir) -I$(top_srcdir)
+    
+    Signed-off-by: Jon TURNEY <jon.turney@dronecode.org.uk>
+    Reviewed-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 5a886e2fc5f4b3f062a20f66ee68bad4a0b98ad1
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jan 19 11:20:21 2011 -0500
+
+    config: use AC_CHECK_MEMBERS rather than AC_CHECK_MEMBER
+    
+    Let Autoconf do the work of setting up the #define in config.h.
+    Apply and comment standard sections layout.
+    
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 4eaaa6a84a52b7c60df964102f0fb8d860b00308
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jan 19 10:52:55 2011 -0500
+
+    config: remove AC_CANONICAL_HOST already included by XORG_DEFAULT_OPTIONS
+    
+    Fix some quoting and comments, no functional changes.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 3bb9256b8e3a56b94281ea787c07f080c0a80312
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jan 19 10:06:55 2011 -0500
+
+    config: move man pages into their own directory
+    
+    Use services provided by XORG_MANPAGE_SECTIONS.
+    Use standard Makefile for man pages.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit f9d0aa7ca56c68aee0ba53a9ad9c232c544264b0
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Jan 13 17:15:36 2011 -0500
+
+    man: replace hard coded man page section with substitution strings
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 3ad465bf134560234e75bf421acbe1481bccfde4
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Jan 13 11:15:47 2011 -0500
+
+    man: remove trailing spaces and tabs
+    
+    Using s/[ \t]*$//
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit d3055b5828d5ffd92134de31c44c3d14f6bd283d
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Nov 10 21:08:09 2010 -0800
+
+    config: Remove unnecessary calls from configure.ac
+    
+    AC_PROG_CC & AC_PROG_INSTALL are provided by XORG_DEFAULT_OPTIONS now
+    PKG_CONFIG_MODULES handles AC_SUBST of the CFLAGS & LIBS variables
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 2d33ed0f648314f661aa5e429834a8f886904f94
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Nov 10 21:06:15 2010 -0800
+
+    config: upgrade to util-macros 1.8 for additional man page support
+    
+    Use MAN_SUBST now supplied in XORG_MANPAGE_SECTIONS
+    The value of MAN_SUBST is the same for all X.Org packages.
+    
+    Use AC_PROG_SED now supplied by XORG_DEFAULT_OPTIONS
+    Enables use of platform appropriate version of sed.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 87666632a0f066cb9df3fb4ae258f89f1edb56cc
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Nov 10 21:03:59 2010 -0800
+
+    Sun's copyrights belong to Oracle now
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit 7f1e17aed0027e4040a1fcc96e6319fca36af233
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Thu Jun 3 17:32:57 2010 -0700

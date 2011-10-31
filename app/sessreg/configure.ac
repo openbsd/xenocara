@@ -22,12 +22,10 @@ dnl Process this file with autoconf to create configure.
 
 # Initialize Autoconf
 AC_PREREQ([2.60])
-AC_INIT(sessreg, [1.0.6],
-	[https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],
-	sessreg)
+AC_INIT([sessreg], [1.0.7],
+	[https://bugs.freedesktop.org/enter_bug.cgi?product=xorg], [sessreg])
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_HEADERS([config.h])
-AC_CANONICAL_HOST
 AC_USE_SYSTEM_EXTENSIONS
 AC_SYS_LARGEFILE
 
@@ -35,32 +33,44 @@ AC_SYS_LARGEFILE
 AM_INIT_AUTOMAKE([foreign dist-bzip2])
 AM_MAINTAINER_MODE
 
-# Require xorg-macros: XORG_DEFAULT_OPTIONS
+# Require X.Org macros 1.8 or later for MAN_SUBSTS set by XORG_MANPAGE_SECTIONS
 m4_ifndef([XORG_MACROS_VERSION],
-	  [m4_fatal([must install xorg-macros 1.4 or later before running autoconf/autogen])])
-XORG_MACROS_VERSION(1.4)
+	  [m4_fatal([must install xorg-macros 1.8 or later before running autoconf/autogen])])
+XORG_MACROS_VERSION(1.8)
 XORG_DEFAULT_OPTIONS
 XORG_WITH_LINT
 
-# Checks for programs.
-AC_PROG_CC
-AC_PROG_CC_C99
-AC_PROG_INSTALL
-
 # Checks for header files.
-AC_CHECK_HEADERS([lastlog.h utmp.h utmpx.h sys/param.h])
-AC_CHECK_MEMBER([struct utmpx.ut_syslen],
-		HAVE_SYSLEN=1,
-		HAVE_SYSLEN=0,
-		[#include <utmpx.h>])
-AC_DEFINE_UNQUOTED(HAVE_UTMPX_UT_SYSLEN,$HAVE_SYSLEN,
-		   [utmpx structure includes ut_syslen field])
+AC_CHECK_HEADERS([lastlog.h pwd.h utmp.h utmpx.h sys/param.h])
 
 # Checks for typedefs, structures, and compiler characteristics.
-AC_CHECK_FUNCS([updwtmpx utmpxname])
+AC_CHECK_MEMBERS([
+	struct utmp.ut_host,
+	struct utmp.ut_id,
+	struct utmp.ut_pid,
+	struct utmp.ut_type], [], [], [
+	#include <sys/types.h>
+	#include <utmp.h>
+	])
+AC_CHECK_MEMBERS([struct utmpx.ut_syslen], [], [], [#include <utmpx.h>])
+AC_CHECK_TYPES([
+	struct lastlog], [], [],[
+	#include <sys/types.h>
+	#ifdef HAVE_UTMP_H
+	#include <utmp.h>
+	#endif
+	#ifdef HAVE_LASTLOG_H
+	#include <lastlog.h>
+	#endif
+	])
 
-# Checks for pkg-config packages
+# Checks for library functions.
+AC_CHECK_FUNCS([pututline updwtmpx utmpxname])
+
+# Obtain compiler/linker options for depedencies
 PKG_CHECK_MODULES(SESSREG, xproto)
-AC_SUBST(SESSREG_CFLAGS)
 
-AC_OUTPUT([Makefile])
+AC_CONFIG_FILES([
+	Makefile
+	man/Makefile])
+AC_OUTPUT
