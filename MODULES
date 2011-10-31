@@ -1,4 +1,4 @@
-# $OpenBSD: MODULES,v 1.181 2011/10/31 13:55:10 matthieu Exp $
+# $OpenBSD: MODULES,v 1.182 2011/10/31 14:00:27 matthieu Exp $
 #
 # X.Org maintained modules
 #
@@ -38,7 +38,7 @@ app/xcmsdb		1.0.3	7.6
 app/xcompmgr		1.1.5	7.5+
 app/xconsole		1.0.4	7.6
 app/xdm			1.1.11	7.6+	needs-update
-app/xdpyinfo		1.3.0	7.6+	needs-update
+app/xdpyinfo		1.3.0	7.6+
 app/xdriinfo		1.0.4	7.6
 app/xedit		1.2.0	7.6
 app/xev			1.1.0	7.6
@@ -52,7 +52,7 @@ app/xfwp		1.0.2	7.6
 app/xgamma		1.0.4	7.6
 app/xgc			1.0.3	7.6
 app/xhost		1.0.4	7.6
-app/xinit		1.3.1	7.6+	needs-update
+app/xinit		1.3.1	7.6+
 app/xinput		1.5.3	7.6
 app/xkbcomp		1.2.3	7.6+
 app/xkbevd		1.1.2	7.6
