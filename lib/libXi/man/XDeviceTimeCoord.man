@@ -1,1 +1,1 @@
-.so XGetDeviceMotionEvents.libmansuffix
+.so manlibmansuffix/XGetDeviceMotionEvents.libmansuffix

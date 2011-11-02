@@ -1,1 +1,1 @@
-.so XISetClientPointer.libmansuffix
+.so manlibmansuffix/XISetClientPointer.libmansuffix

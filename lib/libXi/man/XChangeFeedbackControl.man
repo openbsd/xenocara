@@ -1,1 +1,1 @@
-.so XGetFeedbackControl.libmansuffix
+.so manlibmansuffix/XGetFeedbackControl.libmansuffix

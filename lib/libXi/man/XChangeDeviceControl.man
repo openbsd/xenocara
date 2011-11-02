@@ -1,1 +1,1 @@
-.so XGetDeviceControl.libmansuffix
+.so manlibmansuffix/XGetDeviceControl.libmansuffix

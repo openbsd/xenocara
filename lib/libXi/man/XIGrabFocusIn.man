@@ -1,1 +1,1 @@
-.so XIGrabEnter.libmansuffix
+.so manlibmansuffix/XIGrabEnter.libmansuffix

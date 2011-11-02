@@ -1,1 +1,1 @@
-.so XIDefineCursor.libmansuffix
+.so manlibmansuffix/XIDefineCursor.libmansuffix

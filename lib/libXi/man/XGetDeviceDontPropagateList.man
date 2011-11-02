@@ -1,1 +1,1 @@
-.so XChangeDeviceDontPropagateList.libmansuffix
+.so manlibmansuffix/XChangeDeviceDontPropagateList.libmansuffix

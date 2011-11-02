@@ -1,1 +1,1 @@
-.so XGetDeviceModifierMapping.libmansuffix
+.so manlibmansuffix/XGetDeviceModifierMapping.libmansuffix
