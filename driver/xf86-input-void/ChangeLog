@@ -1,3 +1,90 @@
+commit e2eabdd0bd6bc33d65ba61aeb30f2c59ec90f516
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed May 4 20:31:02 2011 -0700
+
+    xf86-input-void 1.4.0
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 28cb0b4aa530b966eb48a9fd22617e65390a9792
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon May 2 19:25:41 2011 -0700
+
+    config: Remove unnecessary calls from configure.ac
+    
+    AC_PROG_CC is provided by XORG_DEFAULT_OPTIONS now
+    PKG_CONFIG_MODULES handles AC_SUBST of the CFLAGS variables
+    AC_HEADERS_STDC result was never used
+    No headers exist in $(top_srcdir)/src, so no point including -I in CFLAGS
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 47812d4f46ec0211e97b891ce42cb47428c1caac
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon May 2 19:21:27 2011 -0700
+
+    config: replace deprecated AM_CONFIG_HEADER with AC_CONFIG_HEADERS
+    
+    Regroup AC statements under the Autoconf initialization section.
+    Regroup AM statements under the Automake initialization section.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit cb8d19b8ac433d5292502e032f6210ee5151d6e2
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Thu Nov 25 12:48:22 2010 +1000
+
+    Fix PreInit for ABI 12.
+    
+    Require an xserver 1.9.99.1 or higher and put an ifdef in for ABI 12.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Matt Turner <mattst88@gmail.com>
+    Reviewed-by: Adam Jackson <ajax@redhat.com>
+
+commit 7456467a0453677b9e5bca914c9274a305f35586
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Thu Nov 25 12:45:27 2010 +1000
+
+    Add mode field to xf86InitValuatorAxisStruct.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Matt Turner <mattst88@gmail.com>
+    Reviewed-by: Adam Jackson <ajax@redhat.com>
+
+commit 86084d219f856e420cd1984ebe0320739248eeb4
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Thu Nov 25 12:52:15 2010 +1000
+
+    Label the axes as absolute, not relative.
+    
+    Not that it matters for this driver, but the axes are set up as absolute, so
+    label them accordingly.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Matt Turner <mattst88@gmail.com>
+    Reviewed-by: Adam Jackson <ajax@redhat.com>
+
+commit 17f94b5f0f69988058c606ab92d12d394ac6fa5f
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Thu Nov 25 11:41:11 2010 +1000
+
+    Require xserver 1.9
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Matt Turner <mattst88@gmail.com>
+    Reviewed-by: Adam Jackson <ajax@redhat.com>
+
+commit 93daeb169d177fd245d6ca8469e7c7a6de53647a
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Thu Nov 25 11:43:37 2010 +1000
+
+    unifdef XFree86LOADER
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Matt Turner <mattst88@gmail.com>
+    Reviewed-by: Adam Jackson <ajax@redhat.com>
+
 commit baf55a08ee006d43f5a2e3d72b10da800ab03afd
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Sat Oct 30 09:25:57 2010 -0700
