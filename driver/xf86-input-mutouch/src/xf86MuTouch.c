@@ -21,13 +21,11 @@
  *
  */
 
-/* $XFree86: xc/programs/Xserver/hw/xfree86/input/mutouch/xf86MuTouch.c,v 1.13 2001/04/01 14:00:13 tsi Exp $ */
-
 /*
  *******************************************************************************
  *******************************************************************************
  *
- * This driver is able to deal with MicroTouch serial controllers using
+ * This driver is able to deal with MuTouch serial controllers using
  * firmware set 2. This includes (but may not be limited to) Serial/SMT3
  * and TouchPen controllers. The only data format supported is Mode Tablet
  * as it is the only available with these controllers. Anyway this is not a big
@@ -59,13 +57,7 @@
 #include "xf86Xinput.h"
 #include "exevents.h"
 
-#ifdef XFree86LOADER
 #include "xf86Module.h"
-#endif
-
-
-
-
 
 /*
  ***************************************************************************
@@ -204,7 +196,7 @@ static int      debug_level = 0;
  */
 #define FINGER_ID		1
 #define STYLUS_ID		2
-#define DEVICE_ID(flags)	((flags) & 0x03)
+#define DEVICE_ID(pInfo) (((MuTPrivatePtr)(pInfo)->private)->device_type)
 
 typedef struct _MuTPrivateRec {
   char			*input_dev;	/* The touchscreen input tty			*/
@@ -221,67 +213,12 @@ typedef struct _MuTPrivateRec {
   Bool			inited;		/* The controller has already been configured ?	*/
   char			state;		/* Current state of report flags.		*/
   int			num_old_bytes;	/* Number of bytes left in receive buffer.	*/
-  LocalDevicePtr	finger;		/* Finger device ptr associated with the hw.	*/
-  LocalDevicePtr	stylus;		/* Stylus device ptr associated with the hw.	*/
+  InputInfoPtr	finger;		/* Finger device ptr associated with the hw.	*/
+  InputInfoPtr	stylus;		/* Stylus device ptr associated with the hw.	*/
   int			swap_axes;	/* Swap X an Y axes if != 0 */
   unsigned char		rec_buf[MuT_BUFFER_SIZE]; /* Receive buffer.			*/
+  int			device_type;	/* FINGER_ID or STYLUS_ID */
 } MuTPrivateRec, *MuTPrivatePtr;
-
-
-
-
-/*
- ***************************************************************************
- *
- * xf86MuTConvert --
- *	Convert extended valuators to x and y suitable for core motion
- *	events. Return True if ok and False if the requested conversion
- *	can't be done for the specified valuators.
- *
- ***************************************************************************
- */
-static Bool
-xf86MuTConvert(LocalDevicePtr	local,
-	       int		first,
-	       int		num,
-	       int		v0,
-	       int		v1,
-	       int		v2,
-	       int		v3,
-	       int		v4,
-	       int		v5,
-	       int		*x,
-	       int		*y)
-{
-  MuTPrivatePtr	priv = (MuTPrivatePtr) local->private;
-  int		width = priv->max_x - priv->min_x;
-  int		height = priv->max_y - priv->min_y;
-  int		input_x, input_y;
-
-  if (first != 0 || num != 2)
-    return FALSE;
-
-  if (priv->swap_axes) {
-    input_x = v1;
-    input_y = v0;
-  }
-  else {
-    input_x = v0;
-    input_y = v1;
-  }
-  *x = (priv->screen_width * (input_x - priv->min_x)) / width;
-  *y = (priv->screen_height -
-	(priv->screen_height * (input_y - priv->min_y)) / height);
-
-  /*
-   * Need to check if still on the correct screen.
-   * This call is here so that this work can be done after
-   * calib and before posting the event.
-   */
-  xf86XInputSetScreen(local, priv->screen_no, *x, *y);
-
-  return TRUE;
-}
 
 
 /*
@@ -310,9 +247,9 @@ xf86MuTConvert(LocalDevicePtr	local,
  ***************************************************************************
  */
 static void
-xf86MuTReadInput(LocalDevicePtr	local)
+xf86MuTReadInput(InputInfoPtr	pInfo)
 {
-  MuTPrivatePtr		priv = (MuTPrivatePtr)(local->private);
+  MuTPrivatePtr		priv = (MuTPrivatePtr)(pInfo->private);
   int			cur_x, cur_y;
   int			state;
   int			num_bytes;
@@ -326,11 +263,11 @@ xf86MuTReadInput(LocalDevicePtr	local)
    */
   DBG(4, ErrorF("num_old_bytes is %d, Trying to read %d bytes from port\n",
 		priv->num_old_bytes, MuT_BUFFER_SIZE - priv->num_old_bytes));
-  SYSCALL(num_bytes = read(local->fd,
+  SYSCALL(num_bytes = read(pInfo->fd,
 			   (char *) (priv->rec_buf + priv->num_old_bytes),
 			   MuT_BUFFER_SIZE - priv->num_old_bytes));
   if (num_bytes < 0) {
-    Error("System error while reading from MicroTouch touchscreen.");
+    Error("System error while reading from MuTouch touchscreen.");
     return;
   }
 
@@ -374,7 +311,7 @@ xf86MuTReadInput(LocalDevicePtr	local)
     }
 
     if (bytes_in_packet == 5) {
-      LocalDevicePtr	local_to_use;
+      InputInfoPtr	pInfo_to_use;
 
       /*
        * First stick together the various pieces.
@@ -395,7 +332,7 @@ xf86MuTReadInput(LocalDevicePtr	local)
        * location has changed as DIX assumes this. This is why we always
        * emit a motion, regardless of the kind of packet processed.
        *
-       * If local_to_use is NULL we have received a packet from a device
+       * If pInfo_to_use is NULL we have received a packet from a device
        * (stylus or finger) which is not configured. Discard it. The first
        * time a warning is emitted in case of misconfiguration. (Patch
        * contributed by David Woodhouse). This probably happens
@@ -404,8 +341,8 @@ xf86MuTReadInput(LocalDevicePtr	local)
        * smart enough to ask only for packets that match the configuration
        * in XF86Config.
        */
-      local_to_use = (state & MuT_WHICH_DEVICE) ? priv->stylus : priv->finger;
-      if (!local_to_use) {
+      pInfo_to_use = (state & MuT_WHICH_DEVICE) ? priv->stylus : priv->finger;
+      if (!pInfo_to_use) {
 	/*
 	 * We have received an event for a device which we don't care
 	 * about. Drop it, but whinge first, just in case it's a
@@ -415,7 +352,7 @@ xf86MuTReadInput(LocalDevicePtr	local)
 
 	if (!whinged) {
 	  whinged++;
-	  ErrorF("MicroTouch screen sent %s event, but that device is not configured.\n",
+	  ErrorF("MuTouch screen sent %s event, but that device is not configured.\n",
 		 (state & MuT_WHICH_DEVICE)?"stylus":"finger");
 	  ErrorF("You might want to consider altering your config accordingly.\n");
 	}
@@ -429,13 +366,13 @@ xf86MuTReadInput(LocalDevicePtr	local)
           cur_x = priv->max_x - cur_x + priv->min_x;
         if (priv->y_inverted)
           cur_y = priv->max_y - cur_y + priv->min_y;
-	xf86PostMotionEvent(local_to_use->dev, TRUE, 0, 2, cur_x, cur_y);
+	xf86PostMotionEvent(pInfo_to_use->dev, TRUE, 0, 2, cur_x, cur_y);
 
 	/*
 	 * Emit a button press or release.
 	 */
 	if ((state & MuT_CONTACT) != (priv->state & MuT_CONTACT)) {
-	  xf86PostButtonEvent(local_to_use->dev, TRUE, 1, state & MuT_CONTACT,
+	  xf86PostButtonEvent(pInfo_to_use->dev, TRUE, 1, state & MuT_CONTACT,
 			      0, 2, cur_x, cur_y);
 	}
       }
@@ -490,7 +427,7 @@ xf86MuTSendPacket(unsigned char	*packet,
 		packet[5], packet[6], packet[7], packet[8], packet[9]));
   SYSCALL(result = write(fd, packet, len+2));
   if (result != len+2) {
-    DBG(5, ErrorF("System error while sending to MicroTouch touchscreen.\n"));
+    DBG(5, ErrorF("System error while sending to MuTouch touchscreen.\n"));
     return !Success;
   }
   else {
@@ -546,7 +483,7 @@ xf86MuTGetReply(unsigned char	*buffer,
    * Okay, give up.
    */
   if (num_bytes < 0) {
-    Error("System error while reading from MicroTouch touchscreen.");
+    Error("System error while reading from MuTouch touchscreen.");
     return !Success;
   }
   DBG(4, ErrorF("Read %d bytes of reply\n", num_bytes));
@@ -603,7 +540,7 @@ xf86MuTWaitReply(unsigned char	*reply,
   Bool			ok;
   int			i, result;
   int			reply_p = 0;
-  unsigned char		local_reply[3];
+  unsigned char		pInfo_reply[3];
 
   DBG(4, ErrorF("Waiting a reply\n"));
   i = MuT_MAX_TRIALS;
@@ -621,8 +558,8 @@ xf86MuTWaitReply(unsigned char	*reply,
 	ok = xf86MuTGetReply(reply, &reply_p, fd);
       }
       else {
-	ok = xf86MuTGetReply(local_reply, &reply_p, fd);
-	if (ok && local_reply[1] != MuT_OK) {
+	ok = xf86MuTGetReply(pInfo_reply, &reply_p, fd);
+	if (ok && pInfo_reply[1] != MuT_OK) {
 	  DBG(3, ErrorF("Error reported by firmware\n"));
 	  ok = !Success;
 	}
@@ -684,7 +621,7 @@ xf86MuTPrintIdent(unsigned char	*packet)
 {
   int	vers, rev;
 
-  xf86Msg(X_PROBED, "MicroTouch touchscreen is a ");
+  xf86Msg(X_PROBED, "MuTouch touchscreen is a ");
   if (strncmp((char *) &packet[1], MuT_TOUCH_PEN_IDENT, 2) == 0) {
     xf86Msg(X_NONE, "TouchPen");
   }
@@ -696,7 +633,7 @@ xf86MuTPrintIdent(unsigned char	*packet)
   }
   xf86Msg(X_NONE, ", connected through a serial port.\n");
   sscanf((char *) &packet[3], "%2d%2d", &vers, &rev);
-  xf86Msg(X_PROBED, "MicroTouch controller firmware revision is %d.%d.\n", vers, rev);
+  xf86Msg(X_PROBED, "MuTouch controller firmware revision is %d.%d.\n", vers, rev);
 }
 
 
@@ -712,7 +649,7 @@ xf86MuTPrintIdent(unsigned char	*packet)
 static void
 xf86MuTPrintHwStatus(unsigned char	*packet)
 {
-  xf86Msg(X_PROBED, "MicroTouch status of errors: %c%c.\n", packet[7], packet[8]);
+  xf86Msg(X_PROBED, "MuTouch status of errors: %c%c.\n", packet[7], packet[8]);
 }
 
 
@@ -743,22 +680,20 @@ static Bool
 xf86MuTControl(DeviceIntPtr	dev,
 	       int		mode)
 {
-  LocalDevicePtr	local = (LocalDevicePtr) dev->public.devicePrivate;
-  MuTPrivatePtr		priv = (MuTPrivatePtr)(local->private);
+  InputInfoPtr	pInfo = (InputInfoPtr) dev->public.devicePrivate;
+  MuTPrivatePtr		priv = (MuTPrivatePtr)(pInfo->private);
   unsigned char		map[] = { 0, 1 };
   unsigned char		req[MuT_PACKET_SIZE];
   unsigned char		reply[MuT_BUFFER_SIZE];
-  char			*id_string = DEVICE_ID(local->private_flags) == FINGER_ID ? "finger" : "stylus";
-#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 7
+  char			*id_string = DEVICE_ID(pInfo) == FINGER_ID ? "finger" : "stylus";
   Atom btn_label;
   Atom axis_labels[2] = { 0, 0 };
-#endif
 
   switch(mode) {
 
   case DEVICE_INIT:
     {
-      DBG(2, ErrorF("MicroTouch %s init...\n", id_string));
+      DBG(2, ErrorF("MuTouch %s init...\n", id_string));
 
       if (priv->screen_no >= screenInfo.numScreens ||
 	  priv->screen_no < 0) {
@@ -770,11 +705,7 @@ xf86MuTControl(DeviceIntPtr	dev,
       /*
        * Device reports button press for up to 1 button.
        */
-      if (InitButtonClassDeviceStruct(dev, 1,
-#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 7
-				      &btn_label,
-#endif
-				      map) == FALSE) {
+      if (InitButtonClassDeviceStruct(dev, 1, &btn_label, map) == FALSE) {
 	ErrorF("Unable to allocate ButtonClassDeviceStruct\n");
 	return !Success;
       }
@@ -786,34 +717,24 @@ xf86MuTControl(DeviceIntPtr	dev,
        * max and min values scaled from the approximate size of the
        * screen to fit one meter.
        */
-      if (InitValuatorClassDeviceStruct(dev, 2,
-#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 7
-				      axis_labels,
-#endif
-#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) < 3
-					xf86GetMotionEvents,
-#endif
-					local->history_size, Absolute) == FALSE) {
+      if (InitValuatorClassDeviceStruct(dev, 2, axis_labels,
+					GetMotionHistorySize(), Absolute) == FALSE) {
 	ErrorF("Unable to allocate ValuatorClassDeviceStruct\n");
 	return !Success;
       }
       else {
-	InitValuatorAxisStruct(dev, 0,
-#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 7
-			       axis_labels[0],
-#endif
+	InitValuatorAxisStruct(dev, 0, axis_labels[0],
 			       priv->min_x, priv->max_x,
 			       9500,
 			       0     /* min_res */,
-			       9500  /* max_res */);
-	InitValuatorAxisStruct(dev, 1,
-#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 7
-			       axis_labels[1],
-#endif
+			       9500  /* max_res */,
+			       Absolute);
+	InitValuatorAxisStruct(dev, 1, axis_labels[1],
 			       priv->min_y, priv->max_y,
 			       10500,
 			       0     /* min_res */,
-			       10500 /* max_res */);
+			       10500 /* max_res */,
+			       Absolute);
       }
 
       if (InitFocusClassDeviceStruct(dev) == FALSE) {
@@ -823,10 +744,10 @@ xf86MuTControl(DeviceIntPtr	dev,
       /*
        * Allocate the motion events buffer.
        */
-      xf86MotionHistoryAllocate(local);
+      xf86MotionHistoryAllocate(pInfo);
 
       /*
-       * This once has caused the server to crash after doing an xalloc & strcpy ??
+       * This once has caused the server to crash after doing an malloc & strcpy ??
        */
 
       DBG(2, ErrorF("Done.\n"));
@@ -838,42 +759,42 @@ xf86MuTControl(DeviceIntPtr	dev,
       Bool	already_open = FALSE;
       char	*report_what = "";
 
-      DBG(2, ErrorF("MicroTouch %s on...\n", id_string));
+      DBG(2, ErrorF("MuTouch %s on...\n", id_string));
 
       /*
        * Try to see if the port has already been opened either
        * for this device or for the other one.
        */
-      if (local->fd >= 0) {
+      if (pInfo->fd >= 0) {
 	already_open = TRUE;
       }
       else {
-	switch (DEVICE_ID(local->private_flags)) {
+	switch (DEVICE_ID(pInfo)) {
 	case FINGER_ID:
 	  if (priv->stylus && priv->stylus->fd >= 0) {
 	    already_open = TRUE;
-	    local->fd = priv->stylus->fd;
+	    pInfo->fd = priv->stylus->fd;
 	  }
 	  break;
 	case STYLUS_ID:
 	  if (priv->finger && priv->finger->fd >= 0) {
 	    already_open = TRUE;
-	    local->fd = priv->finger->fd;
+	    pInfo->fd = priv->finger->fd;
 	  }
 	  break;
 	}
       }
       if (!already_open) {
 
-	DBG(2, ErrorF("MicroTouch touchscreen opening : %s\n", priv->input_dev));
-	local->fd = xf86OpenSerial(local->options);
-	if (local->fd < 0) {
-	  Error("Unable to open MicroTouch touchscreen device");
+	DBG(2, ErrorF("MuTouch touchscreen opening : %s\n", priv->input_dev));
+	pInfo->fd = xf86OpenSerial(pInfo->options);
+	if (pInfo->fd < 0) {
+	  Error("Unable to open MuTouch touchscreen device");
 	  return !Success;
 	}
 	memset(req, 0, MuT_PACKET_SIZE);
 	strncpy((char *) &req[1], MuT_RESET, strlen(MuT_RESET));
-	if (xf86MuTSendCommand(req, strlen(MuT_RESET), NULL, local->fd) != Success) {
+	if (xf86MuTSendCommand(req, strlen(MuT_RESET), NULL, pInfo->fd) != Success) {
 	  DBG(3, ErrorF("Not at the specified rate, giving up\n"));
 	  goto not_success;
 	}
@@ -884,16 +805,16 @@ xf86MuTControl(DeviceIntPtr	dev,
 	memset(req, 0, MuT_PACKET_SIZE);
 	strncpy((char *) &req[1], MuT_OUTPUT_IDENT, strlen(MuT_OUTPUT_IDENT));
 	if (xf86MuTSendCommand(req, strlen(MuT_OUTPUT_IDENT),
-			       reply, local->fd) != Success) {
-	  ErrorF("Unable to ask MicroTouch touchscreen identification\n");
+			       reply, pInfo->fd) != Success) {
+	  ErrorF("Unable to ask MuTouch touchscreen identification\n");
 	  goto not_success;
 	}
 	xf86MuTPrintIdent(reply);
 	memset(req, 0, MuT_PACKET_SIZE);
 	strncpy((char *) &req[1], MuT_UNIT_TYPE, strlen(MuT_UNIT_TYPE));
 	if (xf86MuTSendCommand(req, strlen(MuT_UNIT_TYPE),
-			       reply, local->fd) != Success) {
-	  ErrorF("Unable to ask MicroTouch touchscreen status\n");
+			       reply, pInfo->fd) != Success) {
+	  ErrorF("Unable to ask MuTouch touchscreen status\n");
 	  goto not_success;
 	}
 	xf86MuTPrintHwStatus(reply);
@@ -904,34 +825,34 @@ xf86MuTControl(DeviceIntPtr	dev,
 	memset(req, 0, MuT_PACKET_SIZE);
 	strncpy((char *) &req[1], MuT_FORMAT_TABLET, strlen(MuT_FORMAT_TABLET));
 	if (xf86MuTSendCommand(req, strlen(MuT_FORMAT_TABLET),
-			       NULL, local->fd) != Success) {
-	  ErrorF("Unable to switch MicroTouch touchscreen to Tablet Format\n");
+			       NULL, pInfo->fd) != Success) {
+	  ErrorF("Unable to switch MuTouch touchscreen to Tablet Format\n");
 	  goto not_success;
 	}
 	memset(req, 0, MuT_PACKET_SIZE);
 	strncpy((char *) &req[1], MuT_MODE_STREAM, strlen(MuT_MODE_STREAM));
 	if (xf86MuTSendCommand(req, strlen(MuT_MODE_STREAM),
-			       NULL, local->fd) != Success) {
-	  ErrorF("Unable to switch MicroTouch touchscreen to Stream Mode\n");
+			       NULL, pInfo->fd) != Success) {
+	  ErrorF("Unable to switch MuTouch touchscreen to Stream Mode\n");
 	  goto not_success;
 	}
 
 	memset(req, 0, MuT_PACKET_SIZE);
 	strncpy((char *) &req[1], MuT_PEN_ONLY, strlen(MuT_PEN_ONLY));
 	if (xf86MuTSendCommand(req, strlen(MuT_PEN_ONLY),
-			       NULL, local->fd) != Success) {
-	  ErrorF("Unable to change MicroTouch touchscreen to pen mode\n");
+			       NULL, pInfo->fd) != Success) {
+	  ErrorF("Unable to change MuTouch touchscreen to pen mode\n");
 	  goto not_success;
 	}
 	/*	goto not_success;*/
-	AddEnabledDevice(local->fd);
+	AddEnabledDevice(pInfo->fd);
       }
 
       /*
        * Select Pen / Finger reports depending on which devices are
        * currently on.
        */
-      switch (DEVICE_ID(local->private_flags)) {
+      switch (DEVICE_ID(pInfo)) {
       case FINGER_ID:
 	if (priv->stylus && priv->stylus->dev->public.on) {
 	  report_what = MuT_PEN_FINGER;
@@ -951,8 +872,8 @@ xf86MuTControl(DeviceIntPtr	dev,
       }
       memset(req, 0, MuT_PACKET_SIZE);
       strncpy((char *) &req[1], report_what, strlen(report_what));
-      if (xf86MuTSendCommand(req, strlen(report_what), NULL, local->fd) != Success) {
-	ErrorF("Unable to change MicroTouch touchscreen to %s\n",
+      if (xf86MuTSendCommand(req, strlen(report_what), NULL, pInfo->fd) != Success) {
+	ErrorF("Unable to change MuTouch touchscreen to %s\n",
 	       (strcmp(report_what, MuT_PEN_FINGER) == 0) ? "Pen & Finger" :
 	       ((strcmp(report_what, MuT_PEN_ONLY) == 0) ? "Pen Only" : "Finger Only"));
 	goto not_success;
@@ -967,8 +888,8 @@ xf86MuTControl(DeviceIntPtr	dev,
 	req[1+strlen(MuT_SET_FREQUENCY)] = ' ';
 	req[2+strlen(MuT_SET_FREQUENCY)] = '0';
 	req[3+strlen(MuT_SET_FREQUENCY)] = (priv->frequency<=9?'0':'A'-10)+priv->frequency;
-	if (xf86MuTSendCommand(req, strlen((char *) &req[1]), NULL, local->fd) != Success) {
-	  ErrorF("Unable to set MicroTouch ThruGlass frquency to %d\n", priv->frequency);
+	if (xf86MuTSendCommand(req, strlen((char *) &req[1]), NULL, pInfo->fd) != Success) {
+	  ErrorF("Unable to set MuTouch ThruGlass frquency to %d\n", priv->frequency);
 	  goto not_success;
 	}
       }
@@ -978,8 +899,8 @@ xf86MuTControl(DeviceIntPtr	dev,
       return Success;
 
     not_success:
-      SYSCALL(close(local->fd));
-      local->fd = -1;
+      SYSCALL(close(pInfo->fd));
+      pInfo->fd = -1;
       return !Success;
     }
 
@@ -987,7 +908,7 @@ xf86MuTControl(DeviceIntPtr	dev,
    * Deactivate the device.
    */
   case DEVICE_OFF:
-    DBG(2, ErrorF("MicroTouch %s off...\n", id_string));
+    DBG(2, ErrorF("MuTouch %s off...\n", id_string));
     dev->public.on = FALSE;
     DBG(2, ErrorF("Done\n"));
     return Success;
@@ -997,16 +918,16 @@ xf86MuTControl(DeviceIntPtr	dev,
      * Close the port and free all the resources.
      */
   case DEVICE_CLOSE:
-    DBG(2, ErrorF("MicroTouch %s close...\n", id_string));
+    DBG(2, ErrorF("MuTouch %s close...\n", id_string));
     dev->public.on = FALSE;
-    if (local->fd >= 0) {
-      xf86RemoveEnabledDevice(local);
-      SYSCALL(close(local->fd));
-      local->fd = -1;
+    if (pInfo->fd >= 0) {
+      xf86RemoveEnabledDevice(pInfo);
+      SYSCALL(close(pInfo->fd));
+      pInfo->fd = -1;
       /*
        * Need some care to close the port only once.
        */
-      switch (DEVICE_ID(local->private_flags)) {
+      switch (DEVICE_ID(pInfo)) {
 	case FINGER_ID:
 	  if (priv->stylus) {
 	    priv->stylus->fd = -1;
@@ -1034,26 +955,17 @@ xf86MuTControl(DeviceIntPtr	dev,
  *
  ***************************************************************************
  */
-static LocalDevicePtr
+static int
 xf86MuTAllocate(InputDriverPtr	drv,
+		InputInfoPtr	pInfo,
 		char		*name,
 		char		*type_name,
 		int		flag)
 {
-  LocalDevicePtr        local = xf86AllocateInput(drv, 0);
-  MuTPrivatePtr         priv = (MuTPrivatePtr) xalloc(sizeof(MuTPrivateRec));
+  MuTPrivatePtr         priv = (MuTPrivatePtr) malloc(sizeof(MuTPrivateRec));
 
-  if (!local) {
-    if (priv) {
-      xfree(priv);
-    }
-    return NULL;
-  }
   if (!priv) {
-    if (local) {
-      xfree(local);
-    }
-    return NULL;
+    return BadAlloc;
   }
 
   priv->input_dev = strdup(MuT_PORT);
@@ -1071,25 +983,18 @@ xf86MuTAllocate(InputDriverPtr	drv,
   priv->finger = NULL;
   priv->swap_axes = 0;
   priv->frequency = 0;
+  priv->device_type = flag;
 
-  local->name = name;
-  local->flags = 0 /* XI86_NO_OPEN_ON_INIT */;
-  local->device_control = xf86MuTControl;
-  local->read_input = xf86MuTReadInput;
-  local->control_proc = NULL;
-  local->close_proc = NULL;
-  local->switch_mode = NULL;
-  local->conversion_proc = xf86MuTConvert;
-  local->reverse_conversion_proc = NULL;
-  local->fd = -1;
-  local->atom = 0;
-  local->dev = NULL;
-  local->private = priv;
-  local->private_flags = flag;
-  local->type_name = type_name;
-  local->history_size = 0;
+  pInfo->flags = 0 /* XI86_NO_OPEN_ON_INIT */;
+  pInfo->device_control = xf86MuTControl;
+  pInfo->read_input = xf86MuTReadInput;
+  pInfo->control_proc = NULL;
+  pInfo->switch_mode = NULL;
+  pInfo->fd = -1;
+  pInfo->private = priv;
+  pInfo->type_name = type_name;
 
-  return local;
+  return Success;
 }
 
 
@@ -1100,15 +1005,15 @@ xf86MuTAllocate(InputDriverPtr	drv,
  *
  ***************************************************************************
  */
-static LocalDevicePtr
-xf86MuTAllocateFinger(InputDriverPtr	drv)
+static int
+xf86MuTAllocateFinger(InputDriverPtr drv, InputInfoPtr pInfo)
 {
-  LocalDevicePtr	local = xf86MuTAllocate(drv, XI_FINGER, "MicroTouch Finger", FINGER_ID);
+  int rc = xf86MuTAllocate(drv, pInfo, XI_FINGER, "MuTouch Finger", FINGER_ID);
 
-  if (local) {
-    ((MuTPrivatePtr) local->private)->finger = local;
+  if (rc == Success) {
+    ((MuTPrivatePtr) pInfo->private)->finger = pInfo;
   }
-  return local;
+  return rc;
 }
 
 
@@ -1119,40 +1024,35 @@ xf86MuTAllocateFinger(InputDriverPtr	drv)
  *
  ***************************************************************************
  */
-static LocalDevicePtr
-xf86MuTAllocateStylus(InputDriverPtr	drv)
+static int
+xf86MuTAllocateStylus(InputDriverPtr drv, InputInfoPtr pInfo)
 {
-  LocalDevicePtr	local = xf86MuTAllocate(drv, XI_STYLUS, "MicroTouch Stylus", STYLUS_ID);
+    int rc = xf86MuTAllocate(drv, pInfo, XI_STYLUS, "MuTouch Stylus", STYLUS_ID);
 
-  if (local) {
-    ((MuTPrivatePtr) local->private)->stylus = local;
+  if (rc == Success) {
+    ((MuTPrivatePtr) pInfo->private)->stylus = pInfo;
   }
-  return local;
+  return rc;
 }
 
 
 static void
 xf86MuTUninit(InputDriverPtr	drv,
-	      LocalDevicePtr	local,
+	      InputInfoPtr	pInfo,
 	      int		flags)
 {
-  MuTPrivatePtr		priv = (MuTPrivatePtr) local->private;
-
-  xf86MuTControl(local->dev, DEVICE_OFF);
+  MuTPrivatePtr		priv = (MuTPrivatePtr) pInfo->private;
 
   if (priv) {
-    priv->stylus->private = NULL;
-    priv->finger->private = NULL;
-    xfree(priv->input_dev);
-    xfree(priv);
+    free(priv->input_dev);
+    free(priv);
+    pInfo->private = NULL;
   }
-  xfree(local->name);
-  xfree(local);
 
-  xf86DeleteInput(local, 0);
+  xf86DeleteInput(pInfo, 0);
 }
 
-static const char *default_options[] = {
+static char *default_options[] = {
   "BaudRate", "9600",
   "StopBits", "1",
   "DataBits", "8",
@@ -1163,49 +1063,39 @@ static const char *default_options[] = {
   NULL
 };
 
-static InputInfoPtr
+static int
 xf86MuTInit(InputDriverPtr	drv,
-	    IDevPtr		dev,
+	    InputInfoPtr	pInfo,
 	    int			flags)
 {
-  LocalDevicePtr	local=NULL, fake_local=NULL, current;
+  InputInfoPtr		current;
   MuTPrivatePtr		priv=NULL;
   char			*str;
   int			portrait=0;
+  int			rc = Success;
 
-  fake_local = (LocalDevicePtr) xcalloc(1, sizeof(LocalDeviceRec));
-  if (!fake_local) {
-    goto init_err;
-  }
-  fake_local->conf_idev = dev;
-
-  xf86CollectInputOptions(fake_local, default_options, NULL);
-
-  str = xf86FindOptionValue(fake_local->options, "Type");
+  str = xf86FindOptionValue(pInfo->options, "Type");
   if (str && (xf86NameCmp(str, "finger") == 0)) {
-    local = xf86MuTAllocateFinger(drv);
+    rc = xf86MuTAllocateFinger(drv, pInfo);
   }
   else if (str && (xf86NameCmp(str, "stylus") == 0)) {
-    local = xf86MuTAllocateStylus(drv);
+    rc = xf86MuTAllocateStylus(drv, pInfo);
   }
   else {
-    xf86Msg(X_ERROR, "%s: Type field missing in Microtouch module config,\n"
-	    "Must be stylus or finger\n", dev->identifier);
+    xf86Msg(X_ERROR, "%s: Type field missing in MuTouch module config,\n"
+	    "Must be stylus or finger\n", pInfo->name);
     goto init_err;
   }
-  if (!local) {
+  if (rc != Success) {
     goto init_err;
   }
-  priv = local->private;
-  local->options = fake_local->options;
-  local->conf_idev = fake_local->conf_idev;
-  xfree(fake_local);
-  fake_local = NULL;
+  priv = pInfo->private;
 
-  str = xf86FindOptionValue(local->options, "Device");
+  str = xf86FindOptionValue(pInfo->options, "Device");
   if (!str) {
-    xf86Msg(X_ERROR, "%s: No Device specified in Microtouch module config.\n",
-	    dev->identifier);
+    xf86Msg(X_ERROR, "%s: No Device specified in MuTouch module config.\n",
+	    pInfo->name);
+    rc = BadValue;
     goto init_err;
   }
   priv->input_dev = strdup(str);
@@ -1218,20 +1108,20 @@ xf86MuTInit(InputDriverPtr	drv,
    */
   current = xf86FirstLocalDevice();
   while (current) {
-    if ((local != current) &&
+    if ((pInfo != current) &&
 	(current->device_control == xf86MuTControl) &&
 	(strcmp(((MuTPrivatePtr) (current->private))->input_dev, priv->input_dev) == 0)) {
-      xf86Msg(X_CONFIG, "MicroTouch config detected a device share between %s and %s\n",
-	      local->name, current->name);
-      xfree(priv->input_dev);
-      xfree(priv);
-      priv = local->private = current->private;
-      switch (DEVICE_ID(local->private_flags)) {
+      xf86Msg(X_CONFIG, "MuTouch config detected a device share between %s and %s\n",
+	      pInfo->name, current->name);
+      free(priv->input_dev);
+      free(priv);
+      priv = pInfo->private = current->private;
+      switch (DEVICE_ID(pInfo)) {
       case FINGER_ID:
-	priv->finger = local;
+	priv->finger = pInfo;
 	break;
       case STYLUS_ID:
-	priv->stylus = local;
+	priv->stylus = pInfo;
 	break;
       }
       break;
@@ -1239,43 +1129,43 @@ xf86MuTInit(InputDriverPtr	drv,
     current = current->next;
   }
   if (!current) {
-    xf86Msg(X_CONFIG, "MicroTouch %s input device: %s\n", local->name, priv->input_dev);
+    xf86Msg(X_CONFIG, "MuTouch %s input device: %s\n", pInfo->name, priv->input_dev);
   }
 
   /* Process the common options. */
-  xf86ProcessCommonOptions(local, local->options);
+  xf86ProcessCommonOptions(pInfo, pInfo->options);
 
-  str = xf86FindOptionValue(local->options, "DeviceName");
+  str = xf86FindOptionValue(pInfo->options, "DeviceName");
   if (str) {
-    local->name = strdup(str);
+    pInfo->name = strdup(str);
   }
-  xf86Msg(X_CONFIG, "Microtouch X device name: %s\n", local->name);
-  priv->screen_no = xf86SetIntOption(local->options, "ScreenNo", 0);
-  xf86Msg(X_CONFIG, "Microtouch associated screen: %d\n", priv->screen_no);
-  priv->max_x = xf86SetIntOption(local->options, "MaxX", 3000);
-  xf86Msg(X_CONFIG, "Microtouch maximum x position: %d\n", priv->max_x);
-  priv->min_x = xf86SetIntOption(local->options, "MinX", 0);
-  xf86Msg(X_CONFIG, "Microtouch minimum x position: %d\n", priv->min_x);
-  priv->max_y = xf86SetIntOption(local->options, "MaxY", 3000);
-  xf86Msg(X_CONFIG, "Microtouch maximum y position: %d\n", priv->max_y);
-  priv->min_y = xf86SetIntOption(local->options, "MinY", 0);
-  xf86Msg(X_CONFIG, "Microtouch minimum y position: %d\n", priv->min_y);
-  priv->frequency = xf86SetIntOption(local->options, "Frequency", 0);
-  xf86Msg(X_CONFIG, "Microtouch ThruGlass frequency is: %d\n", priv->frequency);
-  priv->swap_axes = xf86SetBoolOption(local->options, "SwapXY", 0);
+  xf86Msg(X_CONFIG, "MuTouch X device name: %s\n", pInfo->name);
+  priv->screen_no = xf86SetIntOption(pInfo->options, "ScreenNo", 0);
+  xf86Msg(X_CONFIG, "MuTouch associated screen: %d\n", priv->screen_no);
+  priv->max_x = xf86SetIntOption(pInfo->options, "MaxX", 3000);
+  xf86Msg(X_CONFIG, "MuTouch maximum x position: %d\n", priv->max_x);
+  priv->min_x = xf86SetIntOption(pInfo->options, "MinX", 0);
+  xf86Msg(X_CONFIG, "MuTouch minimum x position: %d\n", priv->min_x);
+  priv->max_y = xf86SetIntOption(pInfo->options, "MaxY", 3000);
+  xf86Msg(X_CONFIG, "MuTouch maximum y position: %d\n", priv->max_y);
+  priv->min_y = xf86SetIntOption(pInfo->options, "MinY", 0);
+  xf86Msg(X_CONFIG, "MuTouch minimum y position: %d\n", priv->min_y);
+  priv->frequency = xf86SetIntOption(pInfo->options, "Frequency", 0);
+  xf86Msg(X_CONFIG, "MuTouch ThruGlass frequency is: %d\n", priv->frequency);
+  priv->swap_axes = xf86SetBoolOption(pInfo->options, "SwapXY", 0);
   if (priv->swap_axes) {
-    xf86Msg(X_CONFIG, "Microtouch %s device will work with X and Y axes swapped\n",
-	    local->name);
+    xf86Msg(X_CONFIG, "MuTouch %s device will work with X and Y axes swapped\n",
+	    pInfo->name);
   }
-  debug_level = xf86SetIntOption(local->options, "DebugLevel", 0);
+  debug_level = xf86SetIntOption(pInfo->options, "DebugLevel", 0);
   if (debug_level) {
 #if DEBUG
-    xf86Msg(X_CONFIG, "Microtouch debug level sets to %d\n", debug_level);
+    xf86Msg(X_CONFIG, "MuTouch debug level sets to %d\n", debug_level);
 #else
-    xf86Msg(X_INFO, "Microtouch debug not available\n");
+    xf86Msg(X_INFO, "MuTouch debug not available\n");
 #endif
   }
-  str = xf86SetStrOption(local->options, "PortraitMode", "Landscape");
+  str = xf86SetStrOption(pInfo->options, "PortraitMode", "Landscape");
   if (strcmp(str, "Portrait") == 0) {
     portrait = 1;
   }
@@ -1283,14 +1173,14 @@ xf86MuTInit(InputDriverPtr	drv,
     portrait = -1;
   }
   else if (strcmp(str, "Landscape") != 0) {
-    xf86Msg(X_ERROR, "Microtouch portrait mode should be: Portrait, Landscape or PortraitCCW");
+    xf86Msg(X_ERROR, "MuTouch portrait mode should be: Portrait, Landscape or PortraitCCW");
     str = "Landscape";
   }
-  xf86Msg(X_CONFIG, "Microtouch device will work in %s mode\n", str);
+  xf86Msg(X_CONFIG, "MuTouch device will work in %s mode\n", str);
 
   if (priv->max_x - priv->min_x <= 0) {
     int tmp;
-    xf86Msg(X_INFO, "MicroTouch: reverse x mode (minimum x position >= maximum x position)\n");
+    xf86Msg(X_INFO, "MuTouch: reverse x mode (minimum x position >= maximum x position)\n");
     tmp              = priv->max_x; /* X server doesn't do inverted by itself*/
     priv->max_x      = priv->min_x;
     priv->min_x      = tmp;
@@ -1300,7 +1190,7 @@ xf86MuTInit(InputDriverPtr	drv,
 
   if (priv->max_y - priv->min_y <= 0) {
     int tmp;
-    xf86Msg(X_INFO, "MicroTouch: reverse y mode (minimum y position >= maximum y position)\n");
+    xf86Msg(X_INFO, "MuTouch: reverse y mode (minimum y position >= maximum y position)\n");
     tmp              = priv->max_y;
     priv->max_y      = priv->min_y;
     priv->min_y      = tmp;
@@ -1329,24 +1219,17 @@ xf86MuTInit(InputDriverPtr	drv,
     priv->swap_axes = (priv->swap_axes==0) ? 1 : 0;
   }
 
-  /* mark the device configured */
-  local->flags |= XI86_CONFIGURED;
-  return local;
+  return Success;
 
  init_err:
-  if (fake_local) {
-    xfree(fake_local);
-  }
   if (priv) {
     if (priv->input_dev) {
-      xfree(priv->input_dev);
+      free(priv->input_dev);
     }
-    xfree(priv);
+    free(priv);
+    pInfo->private = NULL;
   }
-  if (local) {
-    xfree(local);
-  }
-  return NULL;
+  return rc;
 }
 
 _X_EXPORT InputDriverRec MUTOUCH = {
@@ -1356,10 +1239,9 @@ _X_EXPORT InputDriverRec MUTOUCH = {
     xf86MuTInit,		/* pre-init */
     xf86MuTUninit,		/* un-init */
     NULL,			/* module */
-    0				/* ref count */
+    default_options,
 };
 
-#ifdef XFree86LOADER
 static pointer
 Plug(pointer	module,
      pointer	options,
@@ -1396,5 +1278,3 @@ static XF86ModuleVersionInfo version_rec = {
  * Do not change it.
  */
 _X_EXPORT XF86ModuleData mutouchModuleData = { &version_rec, Plug, Unplug };
-#endif
-

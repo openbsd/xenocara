@@ -29,3 +29,5 @@
 @DRIVER_NAME@_drv_ladir = @inputdir@
 
 @DRIVER_NAME@_drv_la_SOURCES = xf86MuTouch.c
+
+AM_CFLAGS = $(XORG_CFLAGS)
