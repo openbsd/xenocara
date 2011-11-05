@@ -16,11 +16,10 @@
 ./usr/X11R6/include/xorg/IBM.h
 ./usr/X11R6/include/xorg/TI.h
 ./usr/X11R6/include/xorg/XIstubs.h
-./usr/X11R6/include/xorg/bstore.h
-./usr/X11R6/include/xorg/bstorestr.h
+./usr/X11R6/include/xorg/Xprintf.h
 ./usr/X11R6/include/xorg/bt829.h
 ./usr/X11R6/include/xorg/callback.h
-./usr/X11R6/include/xorg/cfb8_16.h
+./usr/X11R6/include/xorg/client.h
 ./usr/X11R6/include/xorg/closestr.h
 ./usr/X11R6/include/xorg/closure.h
 ./usr/X11R6/include/xorg/colormap.h
@@ -72,6 +71,8 @@
 ./usr/X11R6/include/xorg/miscstruct.h
 ./usr/X11R6/include/xorg/mispans.h
 ./usr/X11R6/include/xorg/mistruct.h
+./usr/X11R6/include/xorg/misync.h
+./usr/X11R6/include/xorg/misyncstr.h
 ./usr/X11R6/include/xorg/miwideline.h
 ./usr/X11R6/include/xorg/mizerarc.h
 ./usr/X11R6/include/xorg/msp3430.h
@@ -86,7 +87,6 @@
 ./usr/X11R6/include/xorg/randrstr.h
 ./usr/X11R6/include/xorg/region.h
 ./usr/X11R6/include/xorg/regionstr.h
-./usr/X11R6/include/xorg/renderedge.h
 ./usr/X11R6/include/xorg/resource.h
 ./usr/X11R6/include/xorg/rgb.h
 ./usr/X11R6/include/xorg/screenint.h
@@ -100,6 +100,7 @@
 ./usr/X11R6/include/xorg/swapreq.h
 ./usr/X11R6/include/xorg/synaptics-properties.h
 ./usr/X11R6/include/xorg/synaptics.h
+./usr/X11R6/include/xorg/syncsdk.h
 ./usr/X11R6/include/xorg/tda8425.h
 ./usr/X11R6/include/xorg/tda9850.h
 ./usr/X11R6/include/xorg/tda9885.h
@@ -111,7 +112,6 @@
 ./usr/X11R6/include/xorg/window.h
 ./usr/X11R6/include/xorg/windowstr.h
 ./usr/X11R6/include/xorg/xaa.h
-./usr/X11R6/include/xorg/xaaWrapper.h
 ./usr/X11R6/include/xorg/xaalocal.h
 ./usr/X11R6/include/xorg/xaarop.h
 ./usr/X11R6/include/xorg/xace.h
@@ -242,8 +242,6 @@
 ./usr/X11R6/lib/modules/extensions/librecord.so
 ./usr/X11R6/lib/modules/input/acecad_drv.la
 ./usr/X11R6/lib/modules/input/acecad_drv.so
-./usr/X11R6/lib/modules/input/citron_drv.la
-./usr/X11R6/lib/modules/input/citron_drv.so
 ./usr/X11R6/lib/modules/input/elographics_drv.la
 ./usr/X11R6/lib/modules/input/elographics_drv.so
 ./usr/X11R6/lib/modules/input/fpit_drv.la
@@ -290,8 +288,6 @@
 ./usr/X11R6/lib/modules/libwfb.so
 ./usr/X11R6/lib/modules/libxaa.la
 ./usr/X11R6/lib/modules/libxaa.so
-./usr/X11R6/lib/modules/libxf8_16bpp.la
-./usr/X11R6/lib/modules/libxf8_16bpp.so
 ./usr/X11R6/lib/modules/multimedia/bt829_drv.la
 ./usr/X11R6/lib/modules/multimedia/bt829_drv.so
 ./usr/X11R6/lib/modules/multimedia/fi1236_drv.la
@@ -331,7 +327,6 @@
 ./usr/X11R6/man/man4/ati.4
 ./usr/X11R6/man/man4/chips.4
 ./usr/X11R6/man/man4/cirrus.4
-./usr/X11R6/man/man4/citron.4
 ./usr/X11R6/man/man4/elographics.4
 ./usr/X11R6/man/man4/exa.4
 ./usr/X11R6/man/man4/fbdevhw.4
@@ -370,8 +365,10 @@
 ./usr/X11R6/man/man4/ws.4
 ./usr/X11R6/man/man4/wsudl.4
 ./usr/X11R6/man/man5/xorg.conf.5
+./usr/X11R6/man/man5/xorg.conf.d.5
 ./usr/X11R6/share/aclocal/xorg-server.m4
-./usr/X11R6/share/doc/xorg-server
+./usr/X11R6/share/X11/xorg.conf.d
+./usr/X11R6/share/X11/xorg.conf.d/50-fpit.conf
 ./var/db/xkb
 ./var/db/xkb/README.compiled
 ./var/log
