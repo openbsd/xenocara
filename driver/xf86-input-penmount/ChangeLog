@@ -1,3 +1,189 @@
+commit 30bf5a6bb20b8ad703f305bcde0ade2a99328b6c
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Jun 28 10:38:27 2011 +1000
+
+    penmount 1.5.0
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit f0158bd0eb8efe2e051bb00d98d17b6071224062
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Jun 28 10:37:53 2011 +1000
+
+    Require server 1.10 instead of manual ABI checks
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 6658e9ad22923e8bb90ff84c079e870a8e416976
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Thu Dec 2 14:34:06 2010 +1000
+
+    Support (and require) input ABI 12.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Trevor Woerner <twoerner@gmail.com>
+
+commit 55f9e93bb67bda172de9ba71c465d2fbd0a80410
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Thu Dec 2 14:33:11 2010 +1000
+
+    Move default_options up
+    
+    no functional changes, prep work for ABI 12
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Trevor Woerner <twoerner@gmail.com>
+
+commit 79c7b3641c9b42ff13c0472707d20133707aa96f
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Thu Dec 2 14:30:08 2010 +1000
+
+    Add TS_Raw and TS_Scaled defines
+    
+    The use of these is driver-internal, they used to be in the server but not
+    since ABI 12.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Trevor Woerner <twoerner@gmail.com>
+
+commit 4ac7e6e92ae7ae935b1a79aaa63a0343bb6ed08d
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Thu Dec 2 14:29:23 2010 +1000
+
+    Drop driver-specific motion history size handling.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Trevor Woerner <twoerner@gmail.com>
+
+commit ad6785f44be7d5bc6ba27ea3e05a688d9b672ddd
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Thu Dec 2 14:23:40 2010 +1000
+
+    Drop write-only flags POINTER_CAPABLE and SEND_DRAG_EVENTS
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Trevor Woerner <twoerner@gmail.com>
+
+commit 0fbd6613c9eb7fbf1e820982551380652e040233
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Thu Dec 2 14:23:07 2010 +1000
+
+    Drop close_proc, conversion_proc.
+    
+    Both aren't called by the server.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Trevor Woerner <twoerner@gmail.com>
+
+commit 84fc05ccc0a0477d9e11eb3486d1a64735ae7050
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Thu Dec 2 14:20:05 2010 +1000
+
+    Fix compiler warning, unused variable "map".
+    
+    xf86PM.c: In function 'DeviceControl':
+    xf86PM.c:530:16: warning: unused variable 'map'
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Trevor Woerner <twoerner@gmail.com>
+
+commit f2bd17021c5efb9118b813a6586da423aa5d2f4d
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Thu Dec 2 14:19:20 2010 +1000
+
+    Drop libc wrappers for free, malloc
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Trevor Woerner <twoerner@gmail.com>
+
+commit 22cd19a9e91fcd722cc30a3b8d21725512169219
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Thu Dec 2 14:17:38 2010 +1000
+
+    unifdef XFree86LOADER
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Trevor Woerner <twoerner@gmail.com>
+
+commit f3c472b4b5596685c1c094a51876dcc06be3a968
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Thu Dec 2 14:17:24 2010 +1000
+
+    Require server 1.9, drop earlier ABI support
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Trevor Woerner <twoerner@gmail.com>
+
+commit 8d4b4b7a827d9dd48d598c39ba5d3229dc45d3d4
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Thu Dec 2 14:22:16 2010 +1000
+
+    Purge CVS tags
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 68a9e64e780f2ac01a6e6700e271dcaebe7f7e86
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Thu Dec 2 14:15:56 2010 +1000
+
+    Bump to 1.4.99
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit af7e7c0aa603b67b12e4046bcda9bc58026cd82b
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Oct 27 22:21:20 2010 -0700
+
+    Remove refcnt field from InputDriverRec.
+    
+    Wasn't used in the server and is now removed.
+    
+    Fixes compiler error:
+      "xf86PM.c", line 59: too many struct/union initializers
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 63d1539957f1618af8ebca520f61ca712070d950
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Oct 18 19:39:08 2010 -0400
+
+    config: upgrade to util-macros 1.8 for additional man page support
+    
+    Use MAN_SUBST now supplied in XORG_MANPAGE_SECTIONS
+    The value of MAN_SUBST is the same for all X.Org packages.
+    
+    Use AC_PROG_SED now supplied by XORG_DEFAULT_OPTIONS
+    Use the appropriate platform version of sed
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 6dab63a36c5b89fa2de1128538b88e2bbce9a34c
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Apr 12 13:36:10 2010 -0400
+
+    config: disable inadvertently re-enabled static library creation
+    
+    AC_DISABLE_STATIC must be places before AC_PROG_LIBTOOL,
+    requirement which is not documented in libtool.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit a1d3a8a54d96b23adf1dd819726e80be1bc0eebb
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sat Mar 6 09:03:20 2010 -0500
+
+    config: remove unused sdkdir variable
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 5902c15cac1ee0c163256e132f85b8720aed845e
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Fri Mar 5 11:57:47 2010 -0500
+
+    Configuration upgrades, .gitignore, INSTALL file
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
 commit 3bc3d1245676f6022fd3db48eb3e7f3b66c7561f
 Author: Julien Cristau <jcristau@debian.org>
 Date:   Wed Mar 3 23:41:39 2010 +0100

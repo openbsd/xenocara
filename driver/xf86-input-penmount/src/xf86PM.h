@@ -27,7 +27,6 @@
  * in this Software without prior written authorization from Metro Link.
  *
  */
-/* $XFree86: xc/programs/Xserver/hw/xfree86/input/penmount/xf86PM.h,v 1.2 1999/08/22 05:57:37 dawes Exp $ */
 
 #ifndef	_PENMOUNT_H_
 #define _PENMOUNT_H_
@@ -86,16 +85,14 @@ static Bool DeviceControl (DeviceIntPtr, int);
 static void ReadInput (InputInfoPtr);
 static void DMC9000_ReadInput (InputInfoPtr);
 static int ControlProc (InputInfoPtr, xDeviceCtl *);
-static void CloseProc (InputInfoPtr);
 static int SwitchMode (ClientPtr, DeviceIntPtr, int);
-static Bool ConvertProc (InputInfoPtr, int, int, int, int, int, int, int, int, int *, int *);
 static Bool QueryHardware (PenMountPrivatePtr);
 static Bool PenMountGetPacket (PenMountPrivatePtr priv);
 static Bool DMC9000_PenMountGetPacket (PenMountPrivatePtr priv);
 static Bool PenMountSendPacket (PenMountPrivatePtr priv, unsigned char *buf, int len );
 
-static InputInfoPtr
-PenMountPreInit(InputDriverPtr drv, IDevPtr dev, int flags);
+static int
+PenMountPreInit(InputDriverPtr drv, InputInfoPtr pInfo, int flags);
 
 static void
 PenMountPtrCtrl(DeviceIntPtr device, PtrCtrl *ctrl);

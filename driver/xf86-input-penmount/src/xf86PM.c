@@ -37,7 +37,6 @@
  * in this Software without prior written authorization from Metro Link.
  *
  */
-/* $XFree86: xc/programs/Xserver/hw/xfree86/input/penmount/xf86PM.c,v 1.2 2000/08/11 19:10:46 dawes Exp $ */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -55,6 +54,26 @@
 #include <string.h>
 #include "xf86PM.h"
 
+#define TS_Raw 60
+#define TS_Scaled 61
+
+/*
+ * Be sure to set vmin appropriately for your device's protocol. You want to
+ * read a full packet before returning
+ */
+static char *default_options[] =
+{
+	/*	"Device", "/dev/ttyS1",*/
+	"BaudRate", "19200",
+	"StopBits", "1",
+	"DataBits", "8",
+	"Parity", "None",
+	"Vmin", "3",
+	"Vtime", "1",
+	"FlowControl", "None",
+	NULL,
+};
+
 _X_EXPORT InputDriverRec PENMOUNT = {
         1,
         "penmount",
@@ -62,12 +81,8 @@ _X_EXPORT InputDriverRec PENMOUNT = {
         PenMountPreInit,
         /*PenMountUnInit*/NULL,
         NULL,
-        0
-};        
-
-
-
-#ifdef XFree86LOADER
+        default_options
+};
 
 static XF86ModuleVersionInfo VersionRec =
 {
@@ -100,27 +115,6 @@ _X_EXPORT XF86ModuleData penmountModuleData = {
     NULL
 };
 
-#endif /* XFree86LOADER */
-
-
-/* 
- * Be sure to set vmin appropriately for your device's protocol. You want to
- * read a full packet before returning
- */
-static const char *default_options[] =
-{
-	/*	"Device", "/dev/ttyS1",*/
-	"BaudRate", "19200",
-	"StopBits", "1",
-	"DataBits", "8",
-	"Parity", "None",
-	"Vmin", "3",
-	"Vtime", "1",
-	"FlowControl", "None",
-	NULL,
-};
-
-
 /*****************************************************************************
  *	Function Definitions
  ****************************************************************************/
@@ -145,9 +139,7 @@ ProcessDeviceInit(PenMountPrivatePtr priv, DeviceIntPtr dev, InputInfoPtr pInfo)
 	 * Device reports button press for 1 button.
 	 */
 	if (InitButtonClassDeviceStruct (dev, 1,
-#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 7
                     &btn_label,
-#endif
                     map) == FALSE)
 		{
 			ErrorF ("Unable to allocate PenMount ButtonClassDeviceStruct\n");
@@ -158,14 +150,8 @@ ProcessDeviceInit(PenMountPrivatePtr priv, DeviceIntPtr dev, InputInfoPtr pInfo)
 	 * Device reports motions on 2 axes in absolute coordinates.
 	 * Axes min and max values are reported in raw coordinates.
 	 */
-	if (InitValuatorClassDeviceStruct (dev, 2,
-#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 7
-					   axis_labels,
-#endif
-#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) < 3
-					   xf86GetMotionEvents,
-#endif
-					   pInfo->history_size, Absolute) == FALSE)
+	if (InitValuatorClassDeviceStruct (dev, 2, axis_labels,
+					   GetMotionHistorySize(), Absolute) == FALSE)
 		{
 			ErrorF ("Unable to allocate PenMount ValuatorClassDeviceStruct\n");
 			return !Success;
@@ -194,22 +180,18 @@ ProcessDeviceInit(PenMountPrivatePtr priv, DeviceIntPtr dev, InputInfoPtr pInfo)
 					min_y = 0;
 				}
 
-			InitValuatorAxisStruct (dev, 0,
-#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 7
-						axis_labels[0],
-#endif
+			InitValuatorAxisStruct (dev, 0, axis_labels[0],
 						min_x, max_x,
 						9500,
 						0 /* min_res */ ,
-						9500 /* max_res */ );
-			InitValuatorAxisStruct (dev, 1,
-#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 7
-						axis_labels[1],
-#endif
+						9500 /* max_res */,
+                                                Absolute);
+			InitValuatorAxisStruct (dev, 1, axis_labels[1],
 						min_y, max_y,
 						10500,
 						0 /* min_res */ ,
-						10500 /* max_res */ );
+						10500 /* max_res */,
+                                                Absolute);
 		}
 		
 	if (InitProximityClassDeviceStruct (dev) == FALSE)
@@ -432,21 +414,15 @@ DMC9512_ProcessDeviceOn(PenMountPrivatePtr priv, DeviceIntPtr dev, InputInfoPtr 
 	return Success;
 }
 
-static InputInfoPtr
-PenMountPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
-{              
-	InputInfoPtr pInfo;
-   	PenMountPrivatePtr priv = xcalloc (1, sizeof (PenMountPrivateRec));
+static int
+PenMountPreInit(InputDriverPtr drv, InputInfoPtr pInfo, int flags)
+{
+	PenMountPrivatePtr priv = calloc (1, sizeof (PenMountPrivateRec));
 	char *s;
 
 	if (!priv)
-		return NULL;
+		return BadAlloc;
 
-	if (!(pInfo = xf86AllocateInput(drv, 0))) {
-		xfree(priv);
-		return NULL;
-	}
-  
 	priv->min_x = 0;
 	priv->max_x = 1024;
 	priv->min_y = 768;
@@ -466,16 +442,8 @@ PenMountPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
 	pInfo->device_control = DeviceControl;
 	pInfo->read_input = ReadInput;
 	pInfo->control_proc = ControlProc;
-	pInfo->close_proc = CloseProc;
 	pInfo->switch_mode = SwitchMode;
-	pInfo->conversion_proc = ConvertProc;
-	pInfo->dev = NULL;
 	pInfo->private = priv;
-	pInfo->private_flags = 0;
-	pInfo->flags = XI86_POINTER_CAPABLE | XI86_SEND_DRAG_EVENTS;
-	pInfo->conf_idev = dev;
-
-	xf86CollectInputOptions(pInfo, default_options, NULL);
 
 	xf86OptionListReport( pInfo->options );
 
@@ -526,22 +494,20 @@ PenMountPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
 
 	/* this results in an xstrdup that must be freed later */
 	pInfo->name = xf86SetStrOption( pInfo->options, "DeviceName", "PenMount");
-	xf86ProcessCommonOptions(pInfo, pInfo->options);
 
-	pInfo->flags |= XI86_CONFIGURED;
-	return (pInfo);
+	return Success;
 
   SetupProc_fail:
 	if ((pInfo) && (pInfo->fd))
 		xf86CloseSerial (pInfo->fd);
 	if ((pInfo) && (pInfo->name))
-		xfree (pInfo->name);
+		free (pInfo->name);
 
 	if ((priv) && (priv->buffer))
 		XisbFree (priv->buffer);
 	if (priv)
-		xfree (priv);
-	return (pInfo);
+		free (priv);
+	return BadValue;
 }
 
 static Bool
@@ -549,8 +515,6 @@ DeviceControl (DeviceIntPtr dev, int mode)
 {
 	InputInfoPtr pInfo = dev->public.devicePrivate;
 	PenMountPrivatePtr priv = (PenMountPrivatePtr) (pInfo->private);
-	unsigned char map[] =
-	{0, 1};
 
 	switch (mode)
 	{
@@ -896,15 +860,6 @@ ControlProc (InputInfoPtr pInfo, xDeviceCtl * control)
 }
 
 /* 
- * the CloseProc should not need to be tailored to your device
- */
-static void
-CloseProc (InputInfoPtr pInfo)
-{
-
-}
-
-/* 
  * The SwitchMode function may need to be tailored for your device
  */
 static int
@@ -919,50 +874,8 @@ SwitchMode (ClientPtr client, DeviceIntPtr dev, int mode)
                 priv->reporting_mode = mode;
                 return (Success);
         }
-#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) == 0
-        else if ((mode == SendCoreEvents) || (mode == DontSendCoreEvents))
-        {
-                xf86XInputSetSendCoreEvents (pInfo, (mode == SendCoreEvents));
-                return (Success);
-        }
-#endif
         else
                 return (!Success);   
-}
-
-/* 
- * The ConvertProc function may need to be tailored for your device.
- * This function converts the device's valuator outputs to x and y coordinates
- * to simulate mouse events.
- */
-static Bool
-ConvertProc (InputInfoPtr pInfo,
-			 int first,
-			 int num,
-			 int v0,
-			 int v1,
-			 int v2,
-			 int v3,
-			 int v4,
-			 int v5,
-			 int *x,
-			 int *y)
-{
-	PenMountPrivatePtr priv = (PenMountPrivatePtr) (pInfo->private);
-
-	if (priv->reporting_mode == TS_Raw)
-	{
-                *x = xf86ScaleAxis (v0, 0, priv->screen_width, priv->min_x,
-                                                        priv->max_x);
-                *y = xf86ScaleAxis (v1, 0, priv->screen_height, priv->min_y,
-                                                        priv->max_y);
-        }
-        else
-        {
-                *x = v0;
-                *y = v1;
-	}
-	return (TRUE);
 }
 
 /* 
