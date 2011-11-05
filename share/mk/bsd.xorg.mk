@@ -1,4 +1,4 @@
-# $OpenBSD: bsd.xorg.mk,v 1.39 2011/06/23 22:49:00 naddy Exp $ -*- makefile  -*-
+# $OpenBSD: bsd.xorg.mk,v 1.40 2011/11/05 11:49:01 matthieu Exp $ -*- makefile  -*-
 #
 # Copyright © 2006 Matthieu Herrb
 #
@@ -217,6 +217,10 @@ clean:
 .if !target(cleandir)
 cleandir: clean
 	-@if [ -f Makefile ]; then exec ${MAKE} distclean; fi
+	-@if [ -f config.status ]; then \
+		echo "rm config.status"; \
+		rm -f config.status; \
+	fi
 .endif
 
 #
