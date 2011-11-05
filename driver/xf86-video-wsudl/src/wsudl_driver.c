@@ -1,4 +1,4 @@
-/*	$OpenBSD: wsudl_driver.c,v 1.7 2010/08/29 15:20:40 matthieu Exp $ */
+/*	$OpenBSD: wsudl_driver.c,v 1.8 2011/11/05 14:55:09 matthieu Exp $ */
 
 /*
  * Copyright (c) 2009 Marcus Glocker <mglocker@openbsd.org>
@@ -328,7 +328,7 @@ WsudlProbe(DriverPtr drv, int flags)
 		}
 	}
 
-	xfree(devSections);
+	free(devSections);
 
 	return (foundScreen);
 }
@@ -440,14 +440,14 @@ WsudlPreInit(ScrnInfoPtr pScrn, int flags)
 
 	/* handle options */
 	xf86CollectOptions(pScrn, NULL);  
-	if (!(fPtr->Options = xalloc(sizeof(WsudlOptions))))
+	if (!(fPtr->Options = malloc(sizeof(WsudlOptions))))
 		return (FALSE);
 	memcpy(fPtr->Options, WsudlOptions, sizeof(WsudlOptions));
 	xf86ProcessOptions(pScrn->scrnIndex, fPtr->pEnt->device->options,
 	    fPtr->Options);
 
 	/* fake video mode struct */
-	mode = (DisplayModePtr)xalloc(sizeof(DisplayModeRec));
+	mode = (DisplayModePtr)malloc(sizeof(DisplayModeRec));
 	mode->prev = mode;
 	mode->next = mode;      
 	mode->name = "wsudl current mode";
@@ -507,7 +507,7 @@ WsudlFreeRec(ScrnInfoPtr pScrn)
 	if (pScrn->driverPrivate == NULL)
 		return;
 
-	xfree(pScrn->driverPrivate);
+	free(pScrn->driverPrivate);
 	pScrn->driverPrivate = NULL;
 }
 
