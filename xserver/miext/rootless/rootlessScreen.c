@@ -92,8 +92,7 @@ RootlessUpdateScreenPixmap(ScreenPtr pScreen)
     rowbytes = PixmapBytePad(pScreen->width, pScreen->rootDepth);
 
     if (s->pixmap_data_size < rowbytes) {
-        if (s->pixmap_data != NULL)
-            free(s->pixmap_data);
+        free(s->pixmap_data);
 
         s->pixmap_data_size = rowbytes;
         s->pixmap_data = malloc(s->pixmap_data_size);
@@ -224,7 +223,8 @@ out:
  *  here and leave StopDrawing for the block handler.
  */
 static void
-RootlessSourceValidate(DrawablePtr pDrawable, int x, int y, int w, int h)
+RootlessSourceValidate(DrawablePtr pDrawable, int x, int y, int w, int h,
+                       unsigned int subWindowMode)
 {
     SCREEN_UNWRAP(pDrawable->pScreen, SourceValidate);
     if (pDrawable->type == DRAWABLE_WINDOW) {
@@ -232,7 +232,7 @@ RootlessSourceValidate(DrawablePtr pDrawable, int x, int y, int w, int h)
         RootlessStartDrawing(pWin);
     }
     if (pDrawable->pScreen->SourceValidate) {
-        pDrawable->pScreen->SourceValidate(pDrawable, x, y, w, h);
+        pDrawable->pScreen->SourceValidate(pDrawable, x, y, w, h, subWindowMode);
     }
     SCREEN_WRAP(pDrawable->pScreen, SourceValidate);
 }
@@ -325,7 +325,7 @@ RootlessGlyphs(CARD8 op, PicturePtr pSrc, PicturePtr pDst,
                 box.x1 = x - glyph->info.x;
                 box.y1 = y - glyph->info.y;
                 box.x2 = box.x1 + glyph->info.width;
-                box.y2 = box.y2 + glyph->info.height;
+                box.y2 = box.y1 + glyph->info.height;
 
                 x += glyph->info.xOff;
                 y += glyph->info.yOff;
@@ -453,7 +453,6 @@ RootlessMarkOverlappedWindows(WindowPtr pWin, WindowPtr pFirst,
                 pChild = pChild->nextSib;
             }
             anyMarked = TRUE;
-            pFirst = pFirst->nextSib;
         }
         if (anyMarked)
             (* MarkWindow)(pWin->parent);

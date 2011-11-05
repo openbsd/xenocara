@@ -79,6 +79,7 @@ OF THIS SOFTWARE.
 #include <X11/Xdefs.h>
 
 #include <stddef.h>
+#include <stdint.h>
 
 #ifndef MAXSCREENS
 #define MAXSCREENS	16
@@ -91,9 +92,7 @@ OF THIS SOFTWARE.
 #define EXTENSION_EVENT_BASE 64
 #define EXTENSION_BASE 128
 
-typedef unsigned long PIXEL;
-typedef unsigned long ATOM;
-
+typedef uint32_t ATOM;
 
 #ifndef TRUE
 #define TRUE 1
@@ -180,6 +179,17 @@ typedef struct _xReq *xReqPtr;
 
 #endif
 
+#ifndef PATH_MAX
+#include <sys/param.h>
+#ifndef PATH_MAX
+#ifdef MAXPATHLEN
+#define PATH_MAX MAXPATHLEN
+#else
+#define PATH_MAX 1024
+#endif
+#endif
+#endif
+
 /**
  * Calculate the number of bytes needed to hold bits.
  * @param bits The minimum number of bits needed.
@@ -212,6 +222,24 @@ pad_to_int32(const int bytes) {
 
 extern char**
 xstrtokenize(const char *str, const char* separators);
+
+/**
+ * Compare the two version numbers comprising of major.minor.
+ *
+ * @return A value less than 0 if a is less than b, 0 if a is equal to b,
+ * or a value greater than 0
+ */
+static inline int
+version_compare(uint16_t a_major, uint16_t a_minor,
+                uint16_t b_major, uint16_t b_minor)
+{
+    int a, b;
+
+    a = a_major << 16 | a_minor;
+    b = b_major << 16 | b_minor;
+
+    return (a - b);
+}
 
 /* some macros to help swap requests, replies, and events */
 

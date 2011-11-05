@@ -55,9 +55,7 @@ extern _X_EXPORT int defaultBackingStore;
 extern _X_EXPORT Bool disableBackingStore;
 extern _X_EXPORT Bool enableBackingStore;
 extern _X_EXPORT Bool PartialNetwork;
-#ifndef NOLOGOHACK
-extern _X_EXPORT int logoScreenSaver;
-#endif
+extern _X_EXPORT Bool RunFromSigStopParent;
 #ifdef RLIMIT_DATA
 extern _X_EXPORT int limitDataSpace;
 #endif
@@ -71,6 +69,7 @@ extern _X_EXPORT Bool defeatAccessControl;
 extern _X_EXPORT long maxBigRequestSize;
 extern _X_EXPORT Bool party_like_its_1989;
 extern _X_EXPORT Bool whiteRoot;
+extern _X_EXPORT Bool bgNoneRoot;
 
 extern _X_EXPORT Bool CoreDump;
 

@@ -395,8 +395,8 @@ DRICreateSurface(ScreenPtr pScreen, Drawable id,
 	    return FALSE; /*error*/
     }
 #endif
-    else { /* for GLX 1.3, a PBuffer */
-        /* NOT_DONE */
+    else {
+	/* We handle GLXPbuffers in a different way (via CGL). */
         return FALSE;
     }
     
@@ -486,13 +486,27 @@ DRIDestroySurface(ScreenPtr pScreen, Drawable id, DrawablePtr pDrawable,
     }
 
     if (pDRIDrawablePriv != NULL) {
+	/*
+	 * This doesn't seem to be used, because notify is NULL in all callers.
+	 */
+
         if (notify != NULL) {
             pDRIDrawablePriv->notifiers = x_hook_remove(pDRIDrawablePriv->notifiers,
                                                         notify, notify_data);
         }
-        if (--pDRIDrawablePriv->refCount <= 0) {
-            /* This calls back to DRIDrawablePrivDelete
-               which frees the private area */
+
+	--pDRIDrawablePriv->refCount;
+
+	/* 
+	 * Check if the drawable privates still have a reference to the
+	 * surface.
+	 */
+
+        if (pDRIDrawablePriv->refCount <= 0) {
+            /*
+	     * This calls back to DRIDrawablePrivDelete which
+	     * frees the private area and dispatches events, if needed. 
+	     */
             FreeResourceByType(id, DRIDrawablePrivResType, FALSE);
         }
     }
@@ -500,6 +514,10 @@ DRIDestroySurface(ScreenPtr pScreen, Drawable id, DrawablePtr pDrawable,
     return TRUE;
 }
 
+/* 
+ * The assumption is that this is called when the refCount of a surface
+ * drops to <= 0, or the window/pixmap is destroyed.  
+ */
 Bool
 DRIDrawablePrivDelete(pointer pResource, XID id)
 {
@@ -518,18 +536,23 @@ DRIDrawablePrivDelete(pointer pResource, XID id)
     }
 
     if (pDRIDrawablePriv == NULL) {
+	/* 
+	 * We reuse __func__ and the resource type for the GLXPixmap code.
+	 * Attempt to free a pixmap buffer associated with the resource
+	 * if possible.
+	 */
 	return DRIFreePixmapImp(pDrawable);
     }
-
+    
     if (pDRIDrawablePriv->drawableIndex != -1) {
         /* release drawable table entry */
         pDRIPriv->DRIDrawables[pDRIDrawablePriv->drawableIndex] = NULL;
     }
 
     if (pDRIDrawablePriv->sid != 0) {
-        xp_destroy_surface(pDRIDrawablePriv->sid);
-        x_hash_table_remove(surface_hash, x_cvt_uint_to_vptr(pDRIDrawablePriv->sid));
+	DRISurfaceNotify(pDRIDrawablePriv->sid, AppleDRISurfaceNotifyDestroyed);
     }
+  
 
     if (pDRIDrawablePriv->notifiers != NULL)
         x_hook_free(pDRIDrawablePriv->notifiers);
@@ -562,7 +585,6 @@ DRIWindowExposures(WindowPtr pWin, RegionPtr prgn, RegionPtr bsreg)
 
     (*pScreen->WindowExposures)(pWin, prgn, bsreg);
 
-    pDRIPriv->wrap.WindowExposures = pScreen->WindowExposures;
     pScreen->WindowExposures = DRIWindowExposures;
 }
 
@@ -587,7 +609,6 @@ DRICopyWindow(WindowPtr pWin, DDXPointRec ptOldOrg, RegionPtr prgnSrc)
     (*pScreen->CopyWindow)(pWin, ptOldOrg, prgnSrc);
 
     /* rewrap */
-    pDRIPriv->wrap.CopyWindow = pScreen->CopyWindow;
     pScreen->CopyWindow = DRICopyWindow;
 }
 
@@ -605,7 +626,6 @@ DRIValidateTree(WindowPtr pParent, WindowPtr pChild, VTKind kind)
     returnValue = (*pScreen->ValidateTree)(pParent, pChild, kind);
 
     /* rewrap */
-    pDRIPriv->wrap.ValidateTree = pScreen->ValidateTree;
     pScreen->ValidateTree = DRIValidateTree;
 
     return returnValue;
@@ -632,7 +652,6 @@ DRIPostValidateTree(WindowPtr pParent, WindowPtr pChild, VTKind kind)
         (*pScreen->PostValidateTree)(pParent, pChild, kind);
 
         /* rewrap */
-        pDRIPriv->wrap.PostValidateTree = pScreen->PostValidateTree;
         pScreen->PostValidateTree = DRIPostValidateTree;
     }
 }
@@ -653,7 +672,6 @@ DRIClipNotify(WindowPtr pWin, int dx, int dy)
 
         (*pScreen->ClipNotify)(pWin, dx, dy);
 
-        pDRIPriv->wrap.ClipNotify = pScreen->ClipNotify;
         pScreen->ClipNotify = DRIClipNotify;
     }
 }
@@ -678,6 +696,11 @@ DRIQueryVersion(int *majorVersion,
     *patchVersion = APPLE_DRI_PATCH_VERSION;
 }
 
+/* 
+ * Note: this also cleans up the hash table in addition to notifying clients.
+ * The sid/surface-id should not be used after this, because it will be
+ * invalid.
+ */ 
 void
 DRISurfaceNotify(xp_surface_id id, int kind)
 {
@@ -698,21 +721,32 @@ DRISurfaceNotify(xp_surface_id id, int kind)
 
     if (kind == AppleDRISurfaceNotifyDestroyed)
     {
-        pDRIDrawablePriv->sid = 0;
-        x_hash_table_remove(surface_hash, x_cvt_uint_to_vptr(id));
+	x_hash_table_remove(surface_hash, x_cvt_uint_to_vptr(id));
     }
 
     x_hook_run(pDRIDrawablePriv->notifiers, &arg);
 
     if (kind == AppleDRISurfaceNotifyDestroyed)
     {
-        /* Kill off the handle. */
+	xp_error error;
+	
+	error = xp_destroy_surface(pDRIDrawablePriv->sid);
+	
+	if(error) 
+	    ErrorF("%s: xp_destroy_surface failed: %d\n", __func__, error);
+		
+	/* Guard against reuse, even though we are freeing after this. */
+	pDRIDrawablePriv->sid = 0;
 
         FreeResourceByType(pDRIDrawablePriv->pDraw->id,
                            DRIDrawablePrivResType, FALSE);
     }
 }
 
+/*
+ * This creates a shared memory buffer for use with GLXPixmaps
+ * and AppleSGLX.
+ */
 Bool DRICreatePixmap(ScreenPtr pScreen, Drawable id,
 		     DrawablePtr pDrawable, char *path,
 		     size_t pathmax) 

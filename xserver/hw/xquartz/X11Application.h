@@ -43,11 +43,12 @@
 - (void) set_controller:controller;
 - (void) set_window_menu:(NSArray *)list;
 
+- (CFPropertyListRef) prefs_get_copy:(NSString *)key CF_RETURNS_RETAINED;
 - (int) prefs_get_integer:(NSString *)key default:(int)def;
 - (const char *) prefs_get_string:(NSString *)key default:(const char *)def;
 - (float) prefs_get_float:(NSString *)key default:(float)def;
 - (int) prefs_get_boolean:(NSString *)key default:(int)def;
-- (NSURL *) prefs_copy_url:(NSString *)key default:(NSURL *)def;
+- (NSURL *) prefs_copy_url:(NSString *)key default:(NSURL *)def NS_RETURNS_RETAINED;
 - (NSArray *) prefs_get_array:(NSString *)key;
 - (void) prefs_set_integer:(NSString *)key value:(int)value;
 - (void) prefs_set_float:(NSString *)key value:(float)value;
@@ -102,6 +103,9 @@ void X11ApplicationMain(int argc, char **argv, char **envp);
 #define PREFS_CLICK_THROUGH         "wm_click_through"
 #define PREFS_FFM                   "wm_ffm"
 #define PREFS_FOCUS_ON_NEW_WINDOW   "wm_focus_on_new_window"
+
+#define PREFS_SCROLL_IN_DEV_DIRECTION "scroll_in_device_direction"
+extern Bool XQuartzScrollInDeviceDirection;
 
 #define PREFS_SYNC_PB                "sync_pasteboard"
 #define PREFS_SYNC_PB_TO_CLIPBOARD   "sync_pasteboard_to_clipboard"

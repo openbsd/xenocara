@@ -1,5 +1,5 @@
 /*
- * Copyright © 2009 Maarten Maathuis
+ * Copyright Â© 2009 Maarten Maathuis
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -114,6 +114,8 @@ exaCreatePixmap_driver(ScreenPtr pScreen, int w, int h, int depth,
 
     exaSetAccelBlock(pExaScr, pExaPixmap,
                      w, h, bpp);
+
+    pExaPixmap->use_gpu_copy = exaPixmapHasGpuCopy(pPixmap);
 
     /* During a fallback we must prepare access. */
     if (pExaScr->fallback_counter)

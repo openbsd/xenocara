@@ -35,16 +35,6 @@
 
 
 /*
- * External symbols
- */
-
-#ifdef XWIN_MULTIWINDOW
-extern DWORD			g_dwCurrentThreadID;
-#endif
-extern HWND			g_hDlgExit;
-
-
-/*
  * Local function prototypes
  */
 
@@ -348,37 +338,20 @@ winAllocateFBShadowGDI (ScreenPtr pScreen)
 {
   winScreenPriv(pScreen);
   winScreenInfo		*pScreenInfo = pScreenPriv->pScreenInfo;
-  BITMAPINFOHEADER	*pbmih = NULL;
   DIBSECTION		dibsection;
   Bool			fReturn = TRUE;
 
-  /* Get device contexts for the screen and shadow bitmap */
-  pScreenPriv->hdcScreen = GetDC (pScreenPriv->hwndScreen);
-  pScreenPriv->hdcShadow = CreateCompatibleDC (pScreenPriv->hdcScreen);
-
-  /* Allocate bitmap info header */
-  pbmih = (BITMAPINFOHEADER*) malloc (sizeof (BITMAPINFOHEADER)
-				      + 256 * sizeof (RGBQUAD));
-  if (pbmih == NULL)
-    {
-      ErrorF ("winAllocateFBShadowGDI - malloc () failed\n");
-      return FALSE;
-    }
-
-  /* Query the screen format */
-  fReturn = winQueryScreenDIBFormat (pScreen, pbmih);
-
   /* Describe shadow bitmap to be created */
-  pbmih->biWidth = pScreenInfo->dwWidth;
-  pbmih->biHeight = -pScreenInfo->dwHeight;
-  
+  pScreenPriv->pbmih->biWidth = pScreenInfo->dwWidth;
+  pScreenPriv->pbmih->biHeight = -pScreenInfo->dwHeight;
+
   ErrorF ("winAllocateFBShadowGDI - Creating DIB with width: %d height: %d "
 	  "depth: %d\n",
-	  (int) pbmih->biWidth, (int) -pbmih->biHeight, pbmih->biBitCount);
+	  (int) pScreenPriv->pbmih->biWidth, (int) -pScreenPriv->pbmih->biHeight, pScreenPriv->pbmih->biBitCount);
 
   /* Create a DI shadow bitmap with a bit pointer */
   pScreenPriv->hbmpShadow = CreateDIBSection (pScreenPriv->hdcScreen,
-					      (BITMAPINFO *) pbmih,
+					      (BITMAPINFO *) pScreenPriv->pbmih,
 					      DIB_RGB_COLORS,
 					      (VOID**) &pScreenInfo->pfb,
 					      NULL,
@@ -459,25 +432,6 @@ winAllocateFBShadowGDI (ScreenPtr pScreen)
 	  (int) pScreenInfo->dwStride);
 #endif
 
-  /* See if the shadow bitmap will be larger than the DIB size limit */
-  if (pScreenInfo->dwWidth * pScreenInfo->dwHeight * pScreenInfo->dwBPP
-      >= WIN_DIB_MAXIMUM_SIZE)
-    {
-      ErrorF ("winAllocateFBShadowGDI - Requested DIB (bitmap) "
-	      "will be larger than %d MB.  The surface may fail to be "
-	      "allocated on Windows 95, 98, or Me, due to a %d MB limit in "
-	      "DIB size.  This limit does not apply to Windows NT/2000, and "
-	      "this message may be ignored on those platforms.\n",
-	      WIN_DIB_MAXIMUM_SIZE_MB, WIN_DIB_MAXIMUM_SIZE_MB);
-    }
-
-  /* Determine our color masks */
-  if (!winQueryRGBBitsAndMasks (pScreen))
-    {
-      ErrorF ("winAllocateFBShadowGDI - winQueryRGBBitsAndMasks failed\n");
-      return FALSE;
-    }
-
 #ifdef XWIN_MULTIWINDOW
   /* Redraw all windows */
   if (pScreenInfo->fMultiWindow)
@@ -487,6 +441,18 @@ winAllocateFBShadowGDI (ScreenPtr pScreen)
   return fReturn;
 }
 
+static void
+winFreeFBShadowGDI (ScreenPtr pScreen)
+{
+  winScreenPriv(pScreen);
+  winScreenInfo *pScreenInfo = pScreenPriv->pScreenInfo;
+
+  /* Free the shadow bitmap */
+  DeleteObject (pScreenPriv->hbmpShadow);
+
+  /* Invalidate the ScreenInfo's fb pointer */
+  pScreenInfo->pfb = NULL;
+}
 
 /*
  * Blit the damaged regions of the shadow fb to the screen
@@ -612,6 +578,41 @@ winShadowUpdateGDI (ScreenPtr pScreen,
 }
 
 
+static Bool
+winInitScreenShadowGDI (ScreenPtr pScreen)
+{
+  winScreenPriv(pScreen);
+
+  /* Get device contexts for the screen and shadow bitmap */
+  pScreenPriv->hdcScreen = GetDC (pScreenPriv->hwndScreen);
+  pScreenPriv->hdcShadow = CreateCompatibleDC (pScreenPriv->hdcScreen);
+
+  /* Allocate bitmap info header */
+  pScreenPriv->pbmih = (BITMAPINFOHEADER*) malloc (sizeof (BITMAPINFOHEADER)
+                                                   + 256 * sizeof (RGBQUAD));
+  if (pScreenPriv->pbmih == NULL)
+    {
+      ErrorF ("winInitScreenShadowGDI - malloc () failed\n");
+      return FALSE;
+    }
+
+  /* Query the screen format */
+  if (!winQueryScreenDIBFormat (pScreen, pScreenPriv->pbmih))
+    {
+      ErrorF ("winInitScreenShadowGDI - winQueryScreenDIBFormat failed\n");
+      return FALSE;
+    }
+
+  /* Determine our color masks */
+  if (!winQueryRGBBitsAndMasks (pScreen))
+    {
+      ErrorF ("winInitScreenShadowGDI - winQueryRGBBitsAndMasks failed\n");
+      return FALSE;
+    }
+
+  return winAllocateFBShadowGDI(pScreen);
+}
+
 /* See Porting Layer Definition - p. 33 */
 /*
  * We wrap whatever CloseScreen procedure was specified by fb;
@@ -635,16 +636,16 @@ winCloseScreenShadowGDI (int nIndex, ScreenPtr pScreen)
 
   /* Call the wrapped CloseScreen procedure */
   WIN_UNWRAP(CloseScreen);
-  fReturn = (*pScreen->CloseScreen) (nIndex, pScreen);
+  if (pScreen->CloseScreen)
+    fReturn = (*pScreen->CloseScreen) (nIndex, pScreen);
 
   /* Delete the window property */
   RemoveProp (pScreenPriv->hwndScreen, WIN_SCR_PROP);
 
   /* Free the shadow DC; which allows the bitmap to be freed */
   DeleteDC (pScreenPriv->hdcShadow);
-  
-  /* Free the shadow bitmap */
-  DeleteObject (pScreenPriv->hbmpShadow);
+
+  winFreeFBShadowGDI(pScreen);
 
   /* Free the screen DC */
   ReleaseDC (pScreenPriv->hwndScreen, pScreenPriv->hdcScreen);
@@ -674,9 +675,6 @@ winCloseScreenShadowGDI (int nIndex, ScreenPtr pScreen)
 
   /* Invalidate our screeninfo's pointer to the screen */
   pScreenInfo->pScreen = NULL;
-
-  /* Invalidate the ScreenInfo's fb pointer */
-  pScreenInfo->pfb = NULL;
 
   /* Free the screen privates for this screen */
   free ((pointer) pScreenPriv);
@@ -715,7 +713,6 @@ winInitVisualsShadowGDI (ScreenPtr pScreen)
     case 24:
     case 16:
     case 15:
-#if defined(XFree86Server)
       /* Setup the real visual */
       if (!miSetVisualTypesAndMasks (pScreenInfo->dwDepth,
 				     TrueColorMask,
@@ -748,42 +745,9 @@ winInitVisualsShadowGDI (ScreenPtr pScreen)
 	  return FALSE;
 	}
 #endif
-#else /* XFree86Server */
-      /* Setup the real visual */
-      if (!fbSetVisualTypesAndMasks (pScreenInfo->dwDepth,
-				     TrueColorMask,
-				     pScreenPriv->dwBitsPerRGB,
-				     pScreenPriv->dwRedMask,
-				     pScreenPriv->dwGreenMask,
-				     pScreenPriv->dwBlueMask))
-	{
-	  ErrorF ("winInitVisualsShadowGDI - fbSetVisualTypesAndMasks "
-		  "failed for TrueColor\n");
-	  return FALSE;
-	}
-
-#ifdef XWIN_EMULATEPSEUDO
-      if (!pScreenInfo->fEmulatePseudo)
-	break;
-
-      /* Setup a pseudocolor visual */
-      if (!fbSetVisualTypesAndMasks (8,
-				     PseudoColorMask,
-				     8,
-				     0,
-				     0,
-				     0))
-	{
-	  ErrorF ("winInitVisualsShadowGDI - fbSetVisualTypesAndMasks "
-		  "failed for PseudoColor\n");
-	  return FALSE;
-	}
-#endif
-#endif /* XFree86Server */
       break;
 
     case 8:
-#if defined(XFree86Server)
       if (!miSetVisualTypesAndMasks (pScreenInfo->dwDepth,
 				     PseudoColorMask,
 				     pScreenPriv->dwBitsPerRGB,
@@ -796,19 +760,6 @@ winInitVisualsShadowGDI (ScreenPtr pScreen)
 		  "failed\n");
 	  return FALSE;
 	}
-#else /* XFree86Server */
-      if (!fbSetVisualTypesAndMasks (pScreenInfo->dwDepth,
-				     PseudoColorMask,
-				     pScreenPriv->dwBitsPerRGB,
-				     pScreenPriv->dwRedMask,
-				     pScreenPriv->dwGreenMask,
-				     pScreenPriv->dwBlueMask))
-	{
-	  ErrorF ("winInitVisualsShadowGDI - fbSetVisualTypesAndMasks "
-		  "failed\n");
-	  return FALSE;
-	}
-#endif
       break;
 
     default:
@@ -848,26 +799,9 @@ winAdjustVideoModeShadowGDI (ScreenPtr pScreen)
   /* Query GDI for current display depth */
   dwBPP = GetDeviceCaps (hdc, BITSPIXEL);
 
-  /* GDI cannot change the screen depth */
-  if (pScreenInfo->dwBPP == WIN_DEFAULT_BPP)
-    {
-      /* No -depth parameter passed, let the user know the depth being used */
-      ErrorF ("winAdjustVideoModeShadowGDI - Using Windows display "
-	      "depth of %d bits per pixel\n", (int) dwBPP);
+  /* GDI cannot change the screen depth, so always use GDI's depth */
+  pScreenInfo->dwBPP = dwBPP;
 
-      /* Use GDI's depth */
-      pScreenInfo->dwBPP = dwBPP;
-    }
-  else if (dwBPP != pScreenInfo->dwBPP)
-    {
-      /* Warn user if GDI depth is different than -depth parameter */
-      ErrorF ("winAdjustVideoModeShadowGDI - Command line bpp: %d, "\
-	      "using bpp: %d\n", (int) pScreenInfo->dwBPP, (int) dwBPP);
-
-      /* We'll use GDI's depth */
-      pScreenInfo->dwBPP = dwBPP;
-    }
-  
   /* Release our DC */
   ReleaseDC (NULL, hdc);
   hdc = NULL;
@@ -1292,7 +1226,9 @@ winSetEngineFunctionsShadowGDI (ScreenPtr pScreen)
   
   /* Set our pointers */
   pScreenPriv->pwinAllocateFB = winAllocateFBShadowGDI;
+  pScreenPriv->pwinFreeFB = winFreeFBShadowGDI;
   pScreenPriv->pwinShadowUpdate = winShadowUpdateGDI;
+  pScreenPriv->pwinInitScreen = winInitScreenShadowGDI;
   pScreenPriv->pwinCloseScreen = winCloseScreenShadowGDI;
   pScreenPriv->pwinInitVisuals = winInitVisualsShadowGDI;
   pScreenPriv->pwinAdjustVideoMode = winAdjustVideoModeShadowGDI;

@@ -44,7 +44,6 @@
 #include   "scrnintstr.h"
 #include   "mipointer.h"
 
-#include "darwin.h"
 #include "quartz.h"
 #include "quartzKeyboard.h"
 #include "darwinEvents.h"
@@ -57,8 +56,6 @@
 #include "xprEvent.h"
 
 Bool QuartzModeEventHandler(int screenNum, XQuartzEvent *e, DeviceIntPtr dev) {
-    TA_SERVER();
-    
     switch(e->subtype) {
         case kXquartzWindowState:
             DEBUG_LOG("kXquartzWindowState\n");

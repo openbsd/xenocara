@@ -79,8 +79,8 @@ typedef struct _DevCursorNode {
 } DevCursNodeRec, *DevCursNodePtr, *DevCursorList;
 
 typedef struct _WindowOpt {
-    VisualID		visual;		   /* default: same as parent */
     CursorPtr		cursor;		   /* default: window.cursorNone */
+    VisualID		visual;		   /* default: same as parent */
     Colormap		colormap;	   /* default: same as parent */
     Mask		dontPropagateMask; /* default: window.dontPropagate */
     Mask		otherEventMasks;   /* default: 0 */
@@ -166,6 +166,10 @@ typedef struct _Window {
     unsigned		forcedBG:1;	/* must have an opaque background */
 #ifdef ROOTLESS
     unsigned		rootlessUnhittable:1;	/* doesn't hit-test */
+#endif
+#ifdef COMPOSITE
+    unsigned		damagedDescendants:1;	/* some descendants are damaged */
+    unsigned		inhibitBGPaint:1;	/* paint the background? */
 #endif
 } WindowRec;
 

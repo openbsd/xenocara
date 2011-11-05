@@ -68,10 +68,6 @@ enum EventType {
     ET_Internal = 0xFF /* First byte */
 };
 
-#define CHECKEVENT(ev) if (ev && ((InternalEvent*)(ev))->any.header != 0xFF) \
-                          FatalError("Wrong event type %d.\n", \
-                                     ((InternalEvent*)(ev))->any.header);
-
 /**
  * Used for ALL input device events internal in the server until
  * copied into the matching protocol event.
@@ -177,7 +173,7 @@ struct _DGAEvent
     Time time;            /**<  Time in ms */
     int subtype;          /**<  KeyPress, KeyRelease, ButtonPress,
                                 ButtonRelease, MotionNotify */
-    int detail;           /**<  Relative x coordinate */
+    int detail;           /**<  Button number or key code */
     int dx;               /**<  Relative x coordinate */
     int dy;               /**<  Relative y coordinate */
     int screen;           /**<  Screen number this event applies to */

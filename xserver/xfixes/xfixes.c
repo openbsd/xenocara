@@ -1,5 +1,6 @@
 /*
- * Copyright © 2006 Sun Microsystems, Inc.  All rights reserved.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * Copyright 2010 Red Hat, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -47,10 +48,6 @@
 
 #include "xfixesint.h"
 #include "protocol-versions.h"
-/*
- * Must use these instead of the constants from xfixeswire.h.  They advertise
- * what we implement, not what the protocol headers define.
- */
 
 static unsigned char	XFixesReqCode;
 int		XFixesEventBase;
@@ -72,17 +69,17 @@ ProcXFixesQueryVersion(ClientPtr client)
     rep.type = X_Reply;
     rep.length = 0;
     rep.sequenceNumber = client->sequence;
-    if (stuff->majorVersion < SERVER_XFIXES_MAJOR_VERSION) {
+
+    if (version_compare(stuff->majorVersion, stuff->minorVersion,
+                        SERVER_XFIXES_MAJOR_VERSION, SERVER_XFIXES_MAJOR_VERSION) < 0)
+    {
 	rep.majorVersion = stuff->majorVersion;
 	rep.minorVersion = stuff->minorVersion;
     } else {
 	rep.majorVersion = SERVER_XFIXES_MAJOR_VERSION;
-	if (stuff->majorVersion == SERVER_XFIXES_MAJOR_VERSION &&
-	    stuff->minorVersion < SERVER_XFIXES_MINOR_VERSION)
-	    rep.minorVersion = stuff->minorVersion;
-	else
-	    rep.minorVersion = SERVER_XFIXES_MINOR_VERSION;
+        rep.minorVersion = SERVER_XFIXES_MINOR_VERSION;
     }
+
     pXFixesClient->major_version = rep.majorVersion;
     pXFixesClient->minor_version = rep.minorVersion;
     if (client->swapped) {
@@ -97,11 +94,12 @@ ProcXFixesQueryVersion(ClientPtr client)
 
 /* Major version controls available requests */
 static const int version_requests[] = {
-    X_XFixesQueryVersion,	/* before client sends QueryVersion */
-    X_XFixesGetCursorImage,	/* Version 1 */
-    X_XFixesChangeCursorByName,	/* Version 2 */
-    X_XFixesExpandRegion,	/* Version 3 */
-    X_XFixesShowCursor,	        /* Version 4 */
+    X_XFixesQueryVersion,	    /* before client sends QueryVersion */
+    X_XFixesGetCursorImage,	    /* Version 1 */
+    X_XFixesChangeCursorByName,	    /* Version 2 */
+    X_XFixesExpandRegion,	    /* Version 3 */
+    X_XFixesShowCursor,		    /* Version 4 */
+    X_XFixesDestroyPointerBarrier,  /* Version 5 */
 };
 
 #define NUM_VERSION_REQUESTS	(sizeof (version_requests) / sizeof (version_requests[0]))
@@ -142,6 +140,9 @@ int	(*ProcXFixesVector[XFixesNumberRequests])(ClientPtr) = {
 /*************** Version 4 ****************/
     ProcXFixesHideCursor,
     ProcXFixesShowCursor,
+/*************** Version 5 ****************/
+    ProcXFixesCreatePointerBarrier,
+    ProcXFixesDestroyPointerBarrier,
 };
 
 static int
@@ -205,6 +206,9 @@ static int (*SProcXFixesVector[XFixesNumberRequests])(ClientPtr) = {
 /*************** Version 4 ****************/
     SProcXFixesHideCursor,
     SProcXFixesShowCursor,
+/*************** Version 5 ****************/
+    SProcXFixesCreatePointerBarrier,
+    SProcXFixesDestroyPointerBarrier,
 };
 
 static int
@@ -260,5 +264,37 @@ XFixesExtensionInit(void)
 	EventSwapVector[XFixesEventBase + XFixesCursorNotify] =
 	    (EventSwapPtr) SXFixesCursorNotifyEvent;
 	SetResourceTypeErrorValue(RegionResType, XFixesErrorBase + BadRegion);
+	SetResourceTypeErrorValue(PointerBarrierType,
+				  XFixesErrorBase + BadBarrier);
     }
 }
+
+#ifdef PANORAMIX
+
+int (*PanoramiXSaveXFixesVector[XFixesNumberRequests])(ClientPtr);
+
+void
+PanoramiXFixesInit (void)
+{
+    int i;
+
+    for (i = 0; i < XFixesNumberRequests; i++)
+	PanoramiXSaveXFixesVector[i] = ProcXFixesVector[i];
+    /*
+     * Stuff in Xinerama aware request processing hooks
+     */
+    ProcXFixesVector[X_XFixesSetGCClipRegion] = PanoramiXFixesSetGCClipRegion;
+    ProcXFixesVector[X_XFixesSetWindowShapeRegion] = PanoramiXFixesSetWindowShapeRegion;
+    ProcXFixesVector[X_XFixesSetPictureClipRegion] = PanoramiXFixesSetPictureClipRegion;
+}
+
+void
+PanoramiXFixesReset (void)
+{
+    int i;
+
+    for (i = 0; i < XFixesNumberRequests; i++)
+	ProcXFixesVector[i] = PanoramiXSaveXFixesVector[i];
+}
+
+#endif

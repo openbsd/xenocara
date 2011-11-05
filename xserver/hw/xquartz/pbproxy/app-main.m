@@ -34,14 +34,14 @@
 #include <unistd.h> /*for getpid*/
 #include <Cocoa/Cocoa.h>
 
-static const char *app_prefs_domain = 	LAUNCHD_ID_PREFIX".xpbproxy";
+static const char *app_prefs_domain = 	BUNDLE_ID_PREFIX".xpbproxy";
 CFStringRef app_prefs_domain_cfstr;
 
 /* Stubs */
 char *display = NULL;
-BOOL serverInitComplete = YES;
-pthread_mutex_t serverInitCompleteMutex = PTHREAD_MUTEX_INITIALIZER;
-pthread_cond_t serverInitCompleteCond = PTHREAD_COND_INITIALIZER;
+BOOL serverRunning = YES;
+pthread_mutex_t serverRunningMutex = PTHREAD_MUTEX_INITIALIZER;
+pthread_cond_t serverRunningCond = PTHREAD_COND_INITIALIZER;
 
 static void signal_handler (int sig) {
     switch(sig) {
@@ -53,12 +53,33 @@ static void signal_handler (int sig) {
     }
 }
 
+void
+ErrorF(const char * f, ...)
+{
+    va_list args;
+
+    va_start(args, f);
+    vfprintf(stderr, f, args);
+    va_end(args);
+}
+
+/* TODO: Have this actually log to ASL */
+void xq_asl_log (int level, const char *subsystem, const char *file, const char *function, int line, const char *fmt, ...) {
+#ifdef DEBUG
+    va_list args;
+
+    va_start(args, fmt);
+    vfprintf(stderr, fmt, args);
+    va_end(args);
+#endif
+}
+
 int main (int argc, const char *argv[]) {
     const char *s;
     int i;
 
 #ifdef DEBUG
-    printf("pid: %u\n", getpid());
+    ErrorF("pid: %u\n", getpid());
 #endif
 
     xpbproxy_is_standalone = YES;
@@ -70,13 +91,13 @@ int main (int argc, const char *argv[]) {
         if(strcmp (argv[i], "--prefs-domain") == 0 && i+1 < argc) {
             app_prefs_domain = argv[++i];
         } else if (strcmp (argv[i], "--help") == 0) {
-            printf("usage: xpbproxy OPTIONS\n"
+            ErrorF("usage: xpbproxy OPTIONS\n"
                    "Pasteboard proxying for X11.\n\n"
                    "--prefs-domain <domain>   Change the domain used for reading preferences\n"
                    "                          (default: %s)\n", app_prefs_domain);
             return 0;
         } else {
-            fprintf(stderr, "usage: xpbproxy OPTIONS...\n"
+            ErrorF("usage: xpbproxy OPTIONS...\n"
                     "Try 'xpbproxy --help' for more information.\n");
             return 1;
         }

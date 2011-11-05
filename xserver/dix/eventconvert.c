@@ -97,8 +97,12 @@ EventIsKeyRepeat(xEvent *event)
  * @return Success or the matching error code.
  */
 int
-EventToCore(InternalEvent *event, xEvent *core)
+EventToCore(InternalEvent *event, xEvent **core_out, int *count_out)
 {
+    xEvent *core = NULL;
+    int count = 0;
+    int ret = BadImplementation;
+
     switch(event->any.type)
     {
         case ET_Motion:
@@ -108,7 +112,10 @@ EventToCore(InternalEvent *event, xEvent *core)
                  * present */
                 if (!BitIsOn(e->valuators.mask, 0) &&
                     !BitIsOn(e->valuators.mask, 1))
-                    return BadMatch;
+                {
+                    ret = BadMatch;
+                    goto out;
+                }
             }
             /* fallthrough */
         case ET_ButtonPress:
@@ -119,9 +126,15 @@ EventToCore(InternalEvent *event, xEvent *core)
                 DeviceEvent *e = &event->device_event;
 
                 if (e->detail.key > 0xFF)
-                    return BadMatch;
+                {
+                    ret = BadMatch;
+                    goto out;
+                }
 
-                memset(core, 0, sizeof(xEvent));
+                core = calloc(1, sizeof(*core));
+                if (!core)
+                    return BadAlloc;
+                count = 1;
                 core->u.u.type = e->type - ET_KeyPress + KeyPress;
                 core->u.u.detail = e->detail.key & 0xFF;
                 core->u.keyButtonPointer.time = e->time;
@@ -129,7 +142,10 @@ EventToCore(InternalEvent *event, xEvent *core)
                 core->u.keyButtonPointer.rootY = e->root_y;
                 core->u.keyButtonPointer.state = e->corestate;
                 core->u.keyButtonPointer.root = e->root;
-                EventSetKeyRepeatFlag(core, (e->type == ET_KeyPress && e->key_repeat));
+                EventSetKeyRepeatFlag(core,
+                                      (e->type == ET_KeyPress &&
+                                       e->key_repeat));
+                ret = Success;
             }
             break;
         case ET_ProximityIn:
@@ -139,13 +155,18 @@ EventToCore(InternalEvent *event, xEvent *core)
         case ET_RawButtonPress:
         case ET_RawButtonRelease:
         case ET_RawMotion:
-            return BadMatch;
+            ret = BadMatch;
+            break;
         default:
             /* XXX: */
             ErrorF("[dix] EventToCore: Not implemented yet \n");
-            return BadImplementation;
+            ret = BadImplementation;
     }
-    return Success;
+
+out:
+    *core_out = core;
+    *count_out = count;
+    return ret;
 }
 
 /**
@@ -261,6 +282,27 @@ eventToKeyButtonPointer(DeviceEvent *ev, xEvent **xi, int *count)
     }
 
     num_events = (countValuators(ev, &first) + 5)/6; /* valuator ev */
+    if (num_events <= 0)
+    {
+        switch (ev->type)
+        {
+            case ET_KeyPress:
+            case ET_KeyRelease:
+            case ET_ButtonPress:
+            case ET_ButtonRelease:
+                /* no axes is ok */
+                break;
+            case ET_Motion:
+            case ET_ProximityIn:
+            case ET_ProximityOut:
+                *count = 0;
+                return BadMatch;
+	    default:
+		*count = 0;
+		return BadImplementation;
+        }
+    }
+
     num_events++; /* the actual event event */
 
     *xi = calloc(num_events, sizeof(xEvent));
@@ -353,27 +395,20 @@ getValuatorEvents(DeviceEvent *ev, deviceValuator *xv)
         state |= (dev && dev->button) ? (dev->button->state) : 0;
     }
 
-    /* FIXME: non-continuous valuator data in internal events*/
     for (i = 0; i < num_valuators; i += 6, xv++) {
+        INT32 *valuators = &xv->valuator0; // Treat all 6 vals as an array
+        int j;
+
         xv->type = DeviceValuator;
         xv->first_valuator = first_valuator + i;
         xv->num_valuators = ((num_valuators - i) > 6) ? 6 : (num_valuators - i);
         xv->deviceid = ev->deviceid;
         xv->device_state = state;
-        switch (xv->num_valuators) {
-        case 6:
-            xv->valuator5 = ev->valuators.data[xv->first_valuator + 5];
-        case 5:
-            xv->valuator4 = ev->valuators.data[xv->first_valuator + 4];
-        case 4:
-            xv->valuator3 = ev->valuators.data[xv->first_valuator + 3];
-        case 3:
-            xv->valuator2 = ev->valuators.data[xv->first_valuator + 2];
-        case 2:
-            xv->valuator1 = ev->valuators.data[xv->first_valuator + 1];
-        case 1:
-            xv->valuator0 = ev->valuators.data[xv->first_valuator + 0];
-        }
+
+        /* Unset valuators in masked valuator events have the proper data values
+         * in the case of an absolute axis in between two set valuators. */
+        for (j = 0; j < xv->num_valuators; j++)
+            valuators[j] = ev->valuators.data[xv->first_valuator + j];
 
         if (i + 6 < num_valuators)
             xv->deviceid |= MORE_EVENTS;
@@ -440,7 +475,7 @@ appendValuatorInfo(DeviceChangedEvent *dce, xXIValuatorInfo *info, int axisnumbe
     info->value.frac = 0;
     info->resolution = dce->valuators[axisnumber].resolution;
     info->number = axisnumber;
-    info->mode = dce->valuators[axisnumber].mode; /* Server doesn't have per-axis mode yet */
+    info->mode = dce->valuators[axisnumber].mode;
     info->sourceid = dce->sourceid;
 
     return info->length * 4;

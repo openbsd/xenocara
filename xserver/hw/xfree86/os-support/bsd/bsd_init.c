@@ -55,11 +55,7 @@ static Bool ShareVTs = FALSE;
 
 #ifdef PCCONS_SUPPORT
 /* Stock 0.1 386bsd pccons console driver interface */
-#ifndef __OpenBSD__
-#  define PCCONS_CONSOLE_DEV1 "/dev/ttyv0"
-#else
-#  define PCCONS_CONSOLE_DEV1 "/dev/ttyC0"
-#endif
+#define PCCONS_CONSOLE_DEV1 "/dev/ttyv0"
 #define PCCONS_CONSOLE_DEV2 "/dev/vga"
 #define PCCONS_CONSOLE_MODE O_RDWR|O_NDELAY
 #endif
@@ -641,11 +637,9 @@ xf86OpenWScons()
     int mode = WSDISPLAYIO_MODE_MAPPED;
     int i;
     char ttyname[16];
-#ifdef WSCONS_SUPPORT
     int mib[2];
     size_t len;
     dev_t dev;
-#endif
 
 #ifdef KERN_CONSDEV
     mib[0] = CTL_KERN;

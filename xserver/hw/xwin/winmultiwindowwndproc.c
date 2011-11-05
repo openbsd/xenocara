@@ -42,15 +42,6 @@
 #include "winmsg.h"
 #include "inputstr.h"
 
-/*
- * External global variables
- */
-
-extern Bool			g_fCursor;
-extern Bool			g_fKeyboardHookLL;
-extern Bool			g_fSoftwareCursor;
-extern Bool			g_fButton[3];
-
 extern void winUpdateWindowPosition (HWND hWnd, Bool reshape, HWND *zstyle);
 
 
@@ -481,6 +472,20 @@ winTopLevelWindowProc (HWND hwnd, UINT message,
 	return 0;
       }
 
+#ifdef XWIN_GLX_WINDOWS
+      if (pWinPriv->fWglUsed)
+        {
+          /*
+             For regions which are being drawn by GL, the shadow framebuffer doesn't have the
+             correct bits, so don't bitblt from the shadow framebuffer
+
+             XXX: For now, just leave it alone, but ideally we want to send an expose event to
+             the window so it really redraws the affected region...
+          */
+          ValidateRect(hwnd, &(ps.rcPaint));
+        }
+      else
+#endif
       /* Try to copy from the shadow buffer */
       if (!BitBlt (hdcUpdate,
 		   ps.rcPaint.left, ps.rcPaint.top,
@@ -1016,6 +1021,64 @@ winTopLevelWindowProc (HWND hwnd, UINT message,
       /* Adjust the X Window to the moved Windows window */
       winAdjustXWindow (pWin, hwnd);
       return 0; /* end of WM_SIZE handler */
+
+    case WM_STYLECHANGING:
+      /*
+        When the style changes, adjust the Windows window size so the client area remains the same size,
+        and adjust the Windows window position so that the client area remains in the same place.
+      */
+      {
+        RECT newWinRect;
+        DWORD dwExStyle;
+        DWORD dwStyle;
+        DWORD newStyle = ((STYLESTRUCT *)lParam)->styleNew;
+        WINDOWINFO wi;
+
+        dwExStyle = GetWindowLongPtr (hwnd, GWL_EXSTYLE);
+        dwStyle = GetWindowLongPtr (hwnd, GWL_STYLE);
+
+        winDebug("winTopLevelWindowProc - WM_STYLECHANGING from %08x %08x\n", dwStyle, dwExStyle);
+
+        if (wParam == GWL_EXSTYLE)
+          dwExStyle = newStyle;
+
+        if (wParam == GWL_STYLE)
+          dwStyle = newStyle;
+
+        winDebug("winTopLevelWindowProc - WM_STYLECHANGING to %08x %08x\n", dwStyle, dwExStyle);
+
+        /* Get client rect in screen coordinates */
+        wi.cbSize = sizeof(WINDOWINFO);
+        GetWindowInfo(hwnd, &wi);
+
+        winDebug("winTopLevelWindowProc - WM_STYLECHANGING client area {%d, %d, %d, %d}, {%d x %d}\n", wi.rcClient.left, wi.rcClient.top, wi.rcClient.right, wi.rcClient.bottom, wi.rcClient.right - wi.rcClient.left, wi.rcClient.bottom - wi.rcClient.top);
+
+        newWinRect = wi.rcClient;
+        if (!AdjustWindowRectEx(&newWinRect, dwStyle, FALSE, dwExStyle))
+          winDebug("winTopLevelWindowProc - WM_STYLECHANGING AdjustWindowRectEx failed\n");
+
+        winDebug("winTopLevelWindowProc - WM_STYLECHANGING window area should be {%d, %d, %d, %d}, {%d x %d}\n", newWinRect.left, newWinRect.top, newWinRect.right, newWinRect.bottom, newWinRect.right - newWinRect.left, newWinRect.bottom - newWinRect.top);
+
+        /*
+          Style change hasn't happened yet, so we can't adjust the window size yet, as the winAdjustXWindow()
+          which WM_SIZE does will use the current (unchanged) style.  Instead make a note to change it when
+          WM_STYLECHANGED is received...
+        */
+        pWinPriv->hDwp = BeginDeferWindowPos(1);
+        pWinPriv->hDwp = DeferWindowPos(pWinPriv->hDwp, hwnd, NULL, newWinRect.left, newWinRect.top, newWinRect.right - newWinRect.left, newWinRect.bottom - newWinRect.top, SWP_NOACTIVATE | SWP_NOZORDER);
+      }
+      return 0;
+
+    case WM_STYLECHANGED:
+      {
+        if (pWinPriv->hDwp)
+          {
+            EndDeferWindowPos(pWinPriv->hDwp);
+            pWinPriv->hDwp = NULL;
+          }
+        winDebug("winTopLevelWindowProc - WM_STYLECHANGED done\n");
+      }
+      return 0;
 
     case WM_MOUSEACTIVATE:
 

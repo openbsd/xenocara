@@ -125,7 +125,6 @@ xf86AddInputDriver(InputDriverPtr driver, pointer module, int flags)
 				xnfalloc(sizeof(InputDriverRec));
     *xf86InputDriverList[xf86NumInputDrivers - 1] = *driver;
     xf86InputDriverList[xf86NumInputDrivers - 1]->module = module;
-    xf86InputDriverList[xf86NumInputDrivers - 1]->refCount = 0;
 }
 
 void
@@ -272,76 +271,6 @@ xf86AllocateScrnInfoPrivateIndex(void)
 	pScr->privates = nprivs;
     }
     return idx;
-}
-
-/* Allocate a new InputInfoRec and append it to the tail of xf86InputDevs. */
-InputInfoPtr
-xf86AllocateInput(InputDriverPtr drv, int flags)
-{
-    InputInfoPtr new, *prev = NULL;
-
-    if (!(new = calloc(sizeof(InputInfoRec), 1)))
-	return NULL;
-
-    new->drv = drv;
-    drv->refCount++;
-    new->module = DuplicateModule(drv->module, NULL);
-
-    for (prev = &xf86InputDevs; *prev; prev = &(*prev)->next)
-        ;
-
-    *prev = new;
-    new->next = NULL;
-
-    return new;
-}
-
-
-/*
- * Remove an entry from xf86InputDevs.  Ideally it should free all allocated
- * data.  To do this properly may require a driver hook.
- */
-
-void
-xf86DeleteInput(InputInfoPtr pInp, int flags)
-{
-    InputInfoPtr p;
-
-    /* First check if the inputdev is valid. */
-    if (pInp == NULL)
-	return;
-
-#if 0
-    /* If a free function is defined, call it here. */
-    if (pInp->free)
-	pInp->free(pInp, 0);
-#endif
-
-    if (pInp->module)
-	UnloadModule(pInp->module);
-
-    if (pInp->drv)
-	pInp->drv->refCount--;
-
-    /* This should *really* be handled in drv->UnInit(dev) call instead, but
-     * if the driver forgets about it make sure we free it or at least crash
-     * with flying colors */
-    free(pInp->private);
-
-    FreeInputAttributes(pInp->attrs);
-
-    /* Remove the entry from the list. */
-    if (pInp == xf86InputDevs)
-	xf86InputDevs = pInp->next;
-    else {
-	p = xf86InputDevs;
-	while (p && p->next != pInp)
-	    p = p->next;
-	if (p)
-	    p->next = pInp->next;
-	/* Else the entry wasn't in the xf86InputDevs list (ignore this). */
-    }
-    free(pInp);
 }
 
 Bool
@@ -1054,106 +983,6 @@ xf86SetBlackWhitePixels(ScreenPtr pScreen)
 }
 
 /*
- * xf86SetRootClip --
- *	Enable or disable rendering to the screen by
- *	setting the root clip list and revalidating
- *	all of the windows
- */
-
-static void
-xf86SetRootClip (ScreenPtr pScreen, Bool enable)
-{
-    WindowPtr	pWin = pScreen->root;
-    WindowPtr	pChild;
-    Bool	WasViewable = (Bool)(pWin->viewable);
-    Bool	anyMarked = FALSE;
-    WindowPtr   pLayerWin;
-    BoxRec	box;
-
-    if (WasViewable)
-    {
-	for (pChild = pWin->firstChild; pChild; pChild = pChild->nextSib)
-	{
-	    (void) (*pScreen->MarkOverlappedWindows)(pChild,
-						     pChild,
-						     &pLayerWin);
-	}
-	(*pScreen->MarkWindow) (pWin);
-	anyMarked = TRUE;
-	if (pWin->valdata)
-	{
-	    if (HasBorder (pWin))
-	    {
-		RegionPtr	borderVisible;
-
-		borderVisible = RegionCreate(NullBox, 1);
-		RegionSubtract(borderVisible,
-				&pWin->borderClip, &pWin->winSize);
-		pWin->valdata->before.borderVisible = borderVisible;
-	    }
-	    pWin->valdata->before.resized = TRUE;
-	}
-    }
-
-    /*
-     * Use REGION_BREAK to avoid optimizations in ValidateTree
-     * that assume the root borderClip can't change well, normally
-     * it doesn't...)
-     */
-    if (enable)
-    {
-	box.x1 = 0;
-	box.y1 = 0;
-	box.x2 = pScreen->width;
-	box.y2 = pScreen->height;
-	RegionInit(&pWin->winSize, &box, 1);
-	RegionInit(&pWin->borderSize, &box, 1);
-	if (WasViewable)
-	    RegionReset(&pWin->borderClip, &box);
-	pWin->drawable.width = pScreen->width;
-	pWin->drawable.height = pScreen->height;
-        RegionBreak(&pWin->clipList);
-    }
-    else
-    {
-	RegionEmpty(&pWin->borderClip);
-	RegionBreak(&pWin->clipList);
-    }
-
-    ResizeChildrenWinSize (pWin, 0, 0, 0, 0);
-
-    if (WasViewable)
-    {
-	if (pWin->firstChild)
-	{
-	    anyMarked |= (*pScreen->MarkOverlappedWindows)(pWin->firstChild,
-							   pWin->firstChild,
-							   (WindowPtr *)NULL);
-	}
-	else
-	{
-	    (*pScreen->MarkWindow) (pWin);
-	    anyMarked = TRUE;
-	}
-
-
-	if (anyMarked)
-	    (*pScreen->ValidateTree)(pWin, NullWindow, VTOther);
-    }
-
-    if (WasViewable)
-    {
-	if (anyMarked)
-	    (*pScreen->HandleExposures)(pWin);
-	if (anyMarked && pScreen->PostValidateTree)
-	    (*pScreen->PostValidateTree)(pWin, NullWindow, VTOther);
-    }
-    if (pWin->realized)
-	WindowsRestructured ();
-    FlushAllOutput ();
-}
-
-/*
  * Function to enable/disable access to the frame buffer
  *
  * This is used when VT switching and when entering/leaving DGA direct mode.
@@ -1183,14 +1012,10 @@ xf86EnableDisableFBAccess(int scrnIndex, Bool enable)
     if (enable)
     {
 	/*
-	 * Restore the screen pixmap devPrivate field
-	 */
-	pspix->devPrivate = pScrnInfo->pixmapPrivate;
-	/*
 	 * Restore all of the clip lists on the screen
 	 */
 	if (!xf86Resetting)
-	    xf86SetRootClip (pScreen, TRUE);
+	    SetRootClip (pScreen, TRUE);
 
     }
     else
@@ -1198,14 +1023,7 @@ xf86EnableDisableFBAccess(int scrnIndex, Bool enable)
 	/*
 	 * Empty all of the clip lists on the screen
 	 */
-	xf86SetRootClip (pScreen, FALSE);
-	/*
-	 * save the screen pixmap devPrivate field and
-	 * replace it with NULL so accidental references
-	 * to the frame buffer are caught
-	 */
-	pScrnInfo->pixmapPrivate = pspix->devPrivate;
-	pspix->devPrivate.ptr = NULL;
+	SetRootClip (pScreen, FALSE);
     }
 }
 
@@ -1263,6 +1081,47 @@ xf86DrvMsg(int scrnIndex, MessageType type, const char *format, ...)
     va_end(ap);
 }
 
+/* Print input driver messages in the standard format of
+   <driver>: <device name>: <message> */
+void
+xf86VIDrvMsgVerb(InputInfoPtr dev, MessageType type, int verb, const char *format,
+		 va_list args)
+{
+    char *msg;
+
+    if (asprintf(&msg, "%s: %s: %s", dev->drv->driverName, dev->name, format)
+	== -1) {
+	LogVMessageVerb(type, verb, "%s", args);
+    } else {
+	LogVMessageVerb(type, verb, msg, args);
+	free(msg);
+    }
+}
+
+/* Print input driver message, with verbose level specified directly */
+void
+xf86IDrvMsgVerb(InputInfoPtr dev, MessageType type, int verb, const char *format,
+	       ...)
+{
+    va_list ap;
+
+    va_start(ap, format);
+    xf86VIDrvMsgVerb(dev, type, verb, format, ap);
+    va_end(ap);
+}
+
+/* Print input driver messages, with verbose level of 1 (default) */
+void
+xf86IDrvMsg(InputInfoPtr dev, MessageType type, const char *format, ...)
+{
+    va_list ap;
+
+    va_start(ap, format);
+    xf86VIDrvMsgVerb(dev, type, 1, format, ap);
+    va_end(ap);
+}
+
+
 /* Print non-driver messages with verbose level specified directly */
 void
 xf86MsgVerb(MessageType type, int verb, const char *format, ...)
@@ -1270,7 +1129,7 @@ xf86MsgVerb(MessageType type, int verb, const char *format, ...)
     va_list ap;
 
     va_start(ap, format);
-    xf86VDrvMsgVerb(-1, type, verb, format, ap);
+    LogVMessageVerb(type, verb, format, ap);
     va_end(ap);
 }
 
@@ -1281,7 +1140,7 @@ xf86Msg(MessageType type, const char *format, ...)
     va_list ap;
 
     va_start(ap, format);
-    xf86VDrvMsgVerb(-1, type, 1, format, ap);
+    LogVMessageVerb(type, 1, format, ap);
     va_end(ap);
 }
 
@@ -1321,11 +1180,8 @@ xf86LogInit(void)
     /* Get the log file name */
     if (xf86LogFileFrom == X_DEFAULT) {
 	/* Append the display number and ".log" */
-	lf = malloc(strlen(xf86LogFile) + strlen("%s") +
-		    strlen(LOGSUFFIX) + 1);
-	if (!lf)
+	if (asprintf(&lf, "%s%%s" LOGSUFFIX, xf86LogFile) == -1)
 	    FatalError("Cannot allocate space for the log file name\n");
-	sprintf(lf, "%s%%s" LOGSUFFIX, xf86LogFile);
 	xf86LogFile = lf;
     }
 
@@ -1342,9 +1198,9 @@ xf86LogInit(void)
 }
 
 void
-xf86CloseLog(void)
+xf86CloseLog(enum ExitCode error)
 {
-    LogClose();
+    LogClose(error);
 }
 
 
@@ -1975,6 +1831,7 @@ xf86ConfigFbEntity(ScrnInfoPtr pScrn, int scrnFlag, int entityIndex,
 
     xf86SetEntityFuncs(entityIndex,init,enter,leave,private);
 
+    free(pEnt);
     return pScrn;
 }
 
@@ -2086,7 +1943,7 @@ xf86IsUnblank(int mode)
 }
 
 void
-xf86MotionHistoryAllocate(LocalDevicePtr local)
+xf86MotionHistoryAllocate(InputInfoPtr pInfo)
 {
-    AllocateMotionHistory(local->dev);
+    AllocateMotionHistory(pInfo->dev);
 }

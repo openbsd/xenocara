@@ -107,8 +107,10 @@ ProcXIQueryDevice(ClientPtr client)
     }
 
     info = calloc(1, len);
-    if (!info)
+    if (!info) {
+        free(skip);
         return BadAlloc;
+    }
 
     memset(&rep, 0, sizeof(xXIQueryDeviceReply));
     rep.repType = X_Reply;
@@ -152,7 +154,8 @@ ProcXIQueryDevice(ClientPtr client)
             }
         }
     }
-    len = rep.length*4;
+
+    len = rep.length * 4;
     WriteReplyToClient(client, sizeof(xXIQueryDeviceReply), &rep);
     WriteToClient(client, len, ptr);
     free(ptr);
@@ -349,7 +352,7 @@ ListValuatorInfo(DeviceIntPtr dev, xXIValuatorInfo* info, int axisnumber,
     info->value.frac = (int)(v->axisVal[axisnumber] * (1 << 16) * (1 << 16));
     info->resolution = v->axes[axisnumber].resolution;
     info->number = axisnumber;
-    info->mode = v->mode; /* Server doesn't have per-axis mode yet */
+    info->mode = valuator_get_mode(dev, axisnumber);
     info->sourceid = v->sourceid;
 
     if (!reportState)
@@ -375,7 +378,7 @@ SwapValuatorInfo(DeviceIntPtr dev, xXIValuatorInfo* info)
 
 int GetDeviceUse(DeviceIntPtr dev, uint16_t *attachment)
 {
-    DeviceIntPtr master = dev->u.master;
+    DeviceIntPtr master = GetMaster(dev, MASTER_ATTACHED);
     int use;
 
     if (IsMaster(dev))
@@ -383,7 +386,7 @@ int GetDeviceUse(DeviceIntPtr dev, uint16_t *attachment)
         DeviceIntPtr paired = GetPairedDevice(dev);
         use = IsPointerDevice(dev) ? XIMasterPointer : XIMasterKeyboard;
         *attachment = (paired ? paired->id : 0);
-    } else if (master)
+    } else if (!IsFloating(dev))
     {
         use = IsPointerDevice(master) ? XISlavePointer : XISlaveKeyboard;
         *attachment = master->id;

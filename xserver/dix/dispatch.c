@@ -75,7 +75,7 @@ Equipment Corporation.
 ******************************************************************/
 
 /* XSERVER_DTRACE additions:
- * Copyright 2005-2006 Sun Microsystems, Inc.  All rights reserved.
+ * Copyright (c) 2005-2006, Oracle and/or its affiliates. All rights reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -130,6 +130,7 @@ int ProcInitialConnection();
 #include "inputstr.h"
 #include "xkbsrv.h"
 #include "site.h"
+#include "client.h"
 
 #ifdef XSERVER_DTRACE
 #include "registry.h"
@@ -238,7 +239,6 @@ long	    SmartLastPrint;
 #endif
 
 void        Dispatch(void);
-void        InitProcVectors(void);
 
 static int
 SmartScheduleClient (int *clientReady, int nready)
@@ -917,23 +917,14 @@ GetGeometry(ClientPtr client, xGetGeometryReply *rep)
     rep->width = pDraw->width;
     rep->height = pDraw->height;
 
-    /* XXX - Because the pixmap-implementation of the multibuffer extension 
-     *       may have the buffer-id's drawable resource value be a pointer
-     *       to the buffer's window instead of the buffer itself
-     *       (this happens if the buffer is the displayed buffer),
-     *       we also have to check that the id matches before we can
-     *       truly say that it is a DRAWABLE_WINDOW.
-     */
-
-    if ((pDraw->type == UNDRAWABLE_WINDOW) ||
-        ((pDraw->type == DRAWABLE_WINDOW) && (stuff->id == pDraw->id)))
+    if (WindowDrawable(pDraw->type))
     {
         WindowPtr pWin = (WindowPtr)pDraw;
 	rep->x = pWin->origin.x - wBorderWidth (pWin);
 	rep->y = pWin->origin.y - wBorderWidth (pWin);
 	rep->borderWidth = pWin->borderWidth;
     }
-    else /* DRAWABLE_PIXMAP or DRAWABLE_BUFFER */
+    else /* DRAWABLE_PIXMAP */
     {
 	rep->x = rep->y = rep->borderWidth = 0;
     }
@@ -1428,7 +1419,6 @@ CreatePmap:
 	}
 	if (AddResource(stuff->pid, RT_PIXMAP, (pointer)pMap))
 	    return Success;
-	(*pDraw->pScreen->DestroyPixmap)(pMap);
     }
     return BadAlloc;
 }
@@ -2985,11 +2975,17 @@ ProcCreateCursor (ClientPtr client)
 			 &pCursor, client, stuff->cid);
 
     if (rc != Success)
-	return rc;
-    if (!AddResource(stuff->cid, RT_CURSOR, (pointer)pCursor))
-	return BadAlloc;
+	goto bail;
+    if (!AddResource(stuff->cid, RT_CURSOR, (pointer)pCursor)) {
+	rc = BadAlloc;
+	goto bail;
+    }
 
     return Success;
+bail:
+    free(srcbits);
+    free(mskbits);
+    return rc;
 }
 
 int
@@ -3387,25 +3383,6 @@ int ProcNoOperation(ClientPtr client)
     return Success;
 }
 
-void
-InitProcVectors(void)
-{
-    int i;
-    for (i = 0; i<256; i++)
-    {
-	if(!ProcVector[i])
-	{
-            ProcVector[i] = SwappedProcVector[i] = ProcBadRequest;
-	    ReplySwapVector[i] = ReplyNotSwappd;
-	}
-    }
-    for(i = LASTEvent; i < 128; i++)
-    {
-	EventSwapVector[i] = NotImplemented;
-    }
-    
-}
-
 /**********************
  * CloseDownClient
  *
@@ -3488,6 +3465,9 @@ CloseDownClient(ClientPtr client)
 	    CallCallbacks((&ClientStateCallback), (pointer)&clientinfo);
 	} 	    
 	FreeClientResources(client);
+	/* Disable client ID tracking. This must be done after
+	 * ClientStateCallback. */
+	ReleaseClientIds(client);
 #ifdef XSERVER_DTRACE
 	XSERVER_CLIENT_DISCONNECT(client->index);
 #endif	
@@ -3525,6 +3505,7 @@ void InitClient(ClientPtr client, int i, pointer ospriv)
     client->smart_start_tick = SmartScheduleTime;
     client->smart_stop_tick = SmartScheduleTime;
     client->smart_check_tick = SmartScheduleTime;
+    client->clientIds = NULL;
 }
 
 /************************
@@ -3564,6 +3545,11 @@ ClientPtr NextAvailableClient(pointer ospriv)
 	currentMaxClients++;
     while ((nextFreeClientID < MAXCLIENTS) && clients[nextFreeClientID])
 	nextFreeClientID++;
+
+    /* Enable client ID tracking. This must be done before
+     * ClientStateCallback. */
+    ReserveClientIds(client);
+
     if (ClientStateCallback)
     {
 	NewClientInfoRec clientinfo;

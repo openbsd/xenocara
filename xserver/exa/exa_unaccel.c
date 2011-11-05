@@ -1,6 +1,6 @@
 /*
  *
- * Copyright © 1999 Keith Packard
+ * Copyright Â© 1999 Keith Packard
  *
  * Permission to use, copy, modify, distribute, and sell this software and its
  * documentation for any purpose is hereby granted without fee, provided that
@@ -127,11 +127,10 @@ ExaCheckCopyNtoN (DrawablePtr pSrc, DrawablePtr pDst,  GCPtr pGC,
     EXA_FALLBACK(("from %p to %p (%c,%c)\n", pSrc, pDst,
 		  exaDrawableLocation(pSrc), exaDrawableLocation(pDst)));
 
-    if (pExaScr->prepare_access_reg) {
+    if (pExaScr->prepare_access_reg && RegionInitBoxes(&reg, pbox, nbox)) {
 	PixmapPtr pPixmap = exaGetDrawablePixmap(pSrc);
 
 	exaGetDrawableDeltas(pSrc, pPixmap, &xoff, &yoff);
-	RegionInit(&reg, pbox, nbox);
 	RegionTranslate(&reg, xoff + dx, yoff + dy);
 	pExaScr->prepare_access_reg(pPixmap, EXA_PREPARE_SRC, &reg);
 	RegionUninit(&reg);
@@ -140,11 +139,11 @@ ExaCheckCopyNtoN (DrawablePtr pSrc, DrawablePtr pDst,  GCPtr pGC,
 
     if (pExaScr->prepare_access_reg &&
 	!exaGCReadsDestination(pDst, pGC->planemask, pGC->fillStyle,
-			       pGC->alu, pGC->clientClipType)) {
+			       pGC->alu, pGC->clientClipType) &&
+	RegionInitBoxes (&reg, pbox, nbox)) {
 	PixmapPtr pPixmap = exaGetDrawablePixmap(pDst);
 
-	exaGetDrawableDeltas(pSrc, pPixmap, &xoff, &yoff);
-	RegionInit(&reg, pbox, nbox);
+	exaGetDrawableDeltas(pDst, pPixmap, &xoff, &yoff);
 	RegionTranslate(&reg, xoff, yoff);
 	pExaScr->prepare_access_reg(pPixmap, EXA_PREPARE_DEST, &reg);
 	RegionUninit(&reg);
@@ -438,7 +437,8 @@ ExaSrcValidate(DrawablePtr pDrawable,
 	       int x,
 	       int y,
 	       int width,
-	       int height)
+	       int height,
+	       unsigned int subWindowMode)
 {
     ScreenPtr pScreen = pDrawable->pScreen;
     ExaScreenPriv(pScreen);
@@ -464,7 +464,7 @@ ExaSrcValidate(DrawablePtr pDrawable,
 
     if (pExaScr->SavedSourceValidate) {
         swap(pExaScr, pScreen, SourceValidate);
-        pScreen->SourceValidate(pDrawable, x, y, width, height);
+        pScreen->SourceValidate(pDrawable, x, y, width, height, subWindowMode);
         swap(pExaScr, pScreen, SourceValidate);
     }
 }

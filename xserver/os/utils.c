@@ -231,17 +231,6 @@ OsSignal(int sig, OsSigHandlerPtr handler)
 #define LOCK_PREFIX "/.X"
 #define LOCK_SUFFIX "-lock"
 
-#ifndef PATH_MAX
-#include <sys/param.h>
-#ifndef PATH_MAX
-#ifdef MAXPATHLEN
-#define PATH_MAX MAXPATHLEN
-#else
-#define PATH_MAX 1024
-#endif
-#endif
-#endif
-
 static Bool StillLocking = FALSE;
 static char LockFile[PATH_MAX];
 static Bool nolock = FALSE;
@@ -312,11 +301,7 @@ LockServer(void)
   /* if possible give away the lock file to the real uid/gid */
   fchown(lfd, getuid(), getgid());
 #endif
-#ifndef USE_CHMOD
   (void) fchmod(lfd, 0444);
-#else
-  (void) chmod(tmp, 0444);
-#endif
   (void) close(lfd);
 
   /*
@@ -528,12 +513,9 @@ void UseMsg(void)
     ErrorF("-ls int                limit stack space to N Kb\n");
 #endif
     ErrorF("-nolock                disable the locking mechanism\n");
-#ifndef NOLOGOHACK
-    ErrorF("-logo                  enable logo in screen saver\n");
-    ErrorF("nologo                 disable logo in screen saver\n");
-#endif
     ErrorF("-nolisten string       don't listen on protocol\n");
     ErrorF("-noreset               don't reset after last client exists\n");
+    ErrorF("-background [none]     create root window with no background\n");
     ErrorF("-reset                 reset after last client exists\n");
     ErrorF("-p #                   screen-saver pattern duration (minutes)\n");
     ErrorF("-pn                    accept failure to listen on all ports\n");
@@ -563,6 +545,7 @@ void UseMsg(void)
 #endif
     ErrorF("-dumbSched             Disable smart scheduling, enable old behavior\n");
     ErrorF("-schedInterval int     Set scheduler interval in msec\n");
+    ErrorF("-sigstop               Enable SIGSTOP based startup\n");
     ErrorF("+extension name        Enable extension\n");
     ErrorF("-extension name        Disable extension\n");
 #ifdef XDMCP
@@ -790,16 +773,6 @@ ProcessCommandLine(int argc, char *argv[])
 #endif
 	    nolock = TRUE;
 	}
-#ifndef NOLOGOHACK
-	else if ( strcmp( argv[i], "-logo") == 0)
-	{
-	    logoScreenSaver = 1;
-	}
-	else if ( strcmp( argv[i], "nologo") == 0)
-	{
-	    logoScreenSaver = 0;
-	}
-#endif
 	else if ( strcmp( argv[i], "-nolisten") == 0)
 	{
             if(++i < argc) {
@@ -882,6 +855,14 @@ ProcessCommandLine(int argc, char *argv[])
 	    defaultBackingStore = WhenMapped;
         else if ( strcmp( argv[i], "-wr") == 0)
             whiteRoot = TRUE;
+        else if ( strcmp( argv[i], "-background") == 0) {
+            if(++i < argc) {
+                if (!strcmp ( argv[i], "none"))
+                    bgNoneRoot = TRUE;
+                else
+                    UseMsg();
+            }
+        }
         else if ( strcmp( argv[i], "-maxbigreqsize") == 0) {
              if(++i < argc) {
                  long reqSizeArg = atol(argv[i]);
@@ -962,6 +943,10 @@ ProcessCommandLine(int argc, char *argv[])
 	    }
 	    else
 		UseMsg ();
+	}
+	else if ( strcmp( argv[i], "-sigstop") == 0)
+	{
+	    RunFromSigStopParent = TRUE;
 	}
 	else if ( strcmp( argv[i], "+extension") == 0)
 	{
@@ -1157,20 +1142,9 @@ XNFstrdup(const char *s)
     return ret;
 }
 
-
-#ifdef SIGVTALRM
-#define SMART_SCHEDULE_POSSIBLE
-#endif
-
-#ifdef SMART_SCHEDULE_POSSIBLE
-#define SMART_SCHEDULE_SIGNAL		SIGALRM
-#define SMART_SCHEDULE_TIMER		ITIMER_REAL
-#endif
-
 void
 SmartScheduleStopTimer (void)
 {
-#ifdef SMART_SCHEDULE_POSSIBLE
     struct itimerval	timer;
     
     if (SmartScheduleDisable)
@@ -1180,13 +1154,11 @@ SmartScheduleStopTimer (void)
     timer.it_value.tv_sec = 0;
     timer.it_value.tv_usec = 0;
     (void) setitimer (ITIMER_REAL, &timer, 0);
-#endif
 }
 
 void
 SmartScheduleStartTimer (void)
 {
-#ifdef SMART_SCHEDULE_POSSIBLE
     struct itimerval	timer;
     
     if (SmartScheduleDisable)
@@ -1196,41 +1168,33 @@ SmartScheduleStartTimer (void)
     timer.it_value.tv_sec = 0;
     timer.it_value.tv_usec = SmartScheduleInterval * 1000;
     setitimer (ITIMER_REAL, &timer, 0);
-#endif
 }
 
-#ifdef SMART_SCHEDULE_POSSIBLE
 static void
 SmartScheduleTimer (int sig)
 {
     SmartScheduleTime += SmartScheduleInterval;
 }
-#endif
 
-Bool
+void
 SmartScheduleInit (void)
 {
-#ifdef SMART_SCHEDULE_POSSIBLE
     struct sigaction	act;
 
     if (SmartScheduleDisable)
-	return TRUE;
-    
+	return;
+
     memset((char *) &act, 0, sizeof(struct sigaction));
 
     /* Set up the timer signal function */
     act.sa_handler = SmartScheduleTimer;
     sigemptyset (&act.sa_mask);
-    sigaddset (&act.sa_mask, SMART_SCHEDULE_SIGNAL);
-    if (sigaction (SMART_SCHEDULE_SIGNAL, &act, 0) < 0)
+    sigaddset (&act.sa_mask, SIGALRM);
+    if (sigaction (SIGALRM, &act, 0) < 0)
     {
 	perror ("sigaction for smart scheduler");
-	return FALSE;
+	SmartScheduleDisable = TRUE;
     }
-    return TRUE;
-#else
-    return FALSE;
-#endif
 }
 
 #ifdef SIG_BLOCK
@@ -1247,30 +1211,18 @@ OsBlockSignals (void)
 	sigset_t    set;
 	
 	sigemptyset (&set);
-#ifdef SIGALRM
 	sigaddset (&set, SIGALRM);
-#endif
-#ifdef SIGVTALRM
 	sigaddset (&set, SIGVTALRM);
-#endif
 #ifdef SIGWINCH
 	sigaddset (&set, SIGWINCH);
 #endif
 #ifdef SIGIO
 	sigaddset (&set, SIGIO);
 #endif
-#ifdef SIGTSTP
 	sigaddset (&set, SIGTSTP);
-#endif
-#ifdef SIGTTIN
 	sigaddset (&set, SIGTTIN);
-#endif
-#ifdef SIGTTOU
 	sigaddset (&set, SIGTTOU);
-#endif
-#ifdef SIGCHLD
 	sigaddset (&set, SIGCHLD);
-#endif
 	sigprocmask (SIG_BLOCK, &set, &PreviousSignalMask);
     }
 #endif
@@ -1316,25 +1268,18 @@ int
 System(char *command)
 {
     int pid, p;
-#ifdef SIGCHLD
     void (*csig)(int);
-#endif
     int status;
 
     if (!command)
 	return 1;
 
-#ifdef SIGCHLD
     csig = signal(SIGCHLD, SIG_DFL);
     if (csig == SIG_ERR) {
       perror("signal");
       return -1;
     }
-#endif
-
-#ifdef DEBUG
-    ErrorF("System: `%s'\n", command);
-#endif
+    DebugF("System: `%s'\n", command);
 
     switch (pid = fork()) {
     case -1:	/* error */
@@ -1353,12 +1298,10 @@ System(char *command)
 	
     }
 
-#ifdef SIGCHLD
     if (signal(SIGCHLD, csig) == SIG_ERR) {
       perror("signal");
       return -1;
     }
-#endif
 
     return p == -1 ? -1 : status;
 }
@@ -1395,6 +1338,9 @@ Popen(char *command, char *type)
     /* Ignore the smart scheduler while this is going on */
     old_alarm = OsSignal(SIGALRM, SIG_IGN);
     if (old_alarm == SIG_ERR) {
+      close(pdes[0]);
+      close(pdes[1]);
+      free(cur);
       perror("signal");
       return NULL;
     }
@@ -1448,9 +1394,7 @@ Popen(char *command, char *type)
     cur->next = pidlist;
     pidlist = cur;
 
-#ifdef DEBUG
-    ErrorF("Popen: `%s', fp = %p\n", command, iop);
-#endif
+    DebugF("Popen: `%s', fp = %p\n", command, iop);
 
     return iop;
 }
@@ -1525,9 +1469,7 @@ Fopen(char *file, char *type)
     cur->next = pidlist;
     pidlist = cur;
 
-#ifdef DEBUG
-    ErrorF("Fopen(%s), fp = %p\n", file, iop);
-#endif
+    DebugF("Fopen(%s), fp = %p\n", file, iop);
 
     return iop;
 #else
@@ -1556,10 +1498,7 @@ Pclose(pointer iop)
     int pstat;
     int pid;
 
-#ifdef DEBUG
-    ErrorF("Pclose: fp = %p\n", iop);
-#endif
-
+    DebugF("Pclose: fp = %p\n", iop);
     fclose(iop);
 
     for (last = NULL, cur = pidlist; cur; last = cur, cur = cur->next)

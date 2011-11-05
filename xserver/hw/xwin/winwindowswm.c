@@ -44,10 +44,6 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include "protocol-versions.h"
 
 static int WMErrorBase;
-
-static DISPATCH_PROC(ProcWindowsWMDispatch);
-static DISPATCH_PROC(SProcWindowsWMDispatch);
-
 static unsigned char WMReqCode = 0;
 static int WMEventBase = 0;
 
@@ -80,36 +76,11 @@ make_box (int x, int y, int w, int h)
   return r;
 }
 
-void
-winWindowsWMExtensionInit (void)
-{
-  ExtensionEntry* extEntry;
-
-  ClientType = CreateNewResourceType(WMFreeClient, "WMClient");
-  eventResourceType = CreateNewResourceType(WMFreeEvents, "WMEvent");
-  eventResource = FakeClientID(0);
-
-  if (ClientType && eventResourceType &&
-      (extEntry = AddExtension(WINDOWSWMNAME,
-			       WindowsWMNumberEvents,
-			       WindowsWMNumberErrors,
-			       ProcWindowsWMDispatch,
-			       SProcWindowsWMDispatch,
-			       NULL,
-			       StandardMinorOpcode)))
-    {
-      WMReqCode = (unsigned char)extEntry->base;
-      WMErrorBase = extEntry->errorBase;
-      WMEventBase = extEntry->eventBase;
-      EventSwapVector[WMEventBase] = (EventSwapPtr) SNotifyEvent;
-    }
-}
-
 static int
-ProcWindowsWMQueryVersion(register ClientPtr client)
+ProcWindowsWMQueryVersion(ClientPtr client)
 {
   xWindowsWMQueryVersionReply rep;
-  register int n;
+  int n;
 
   REQUEST_SIZE_MATCH(xWindowsWMQueryVersionReq);
   rep.type = X_Reply;
@@ -187,7 +158,7 @@ WMFreeEvents (pointer data, XID id)
 }
 
 static int
-ProcWindowsWMSelectInput (register ClientPtr client)
+ProcWindowsWMSelectInput (ClientPtr client)
 {
   REQUEST(xWindowsWMSelectInputReq);
   WMEventPtr		pEvent, pNewEvent, *pHead;
@@ -327,7 +298,7 @@ winWindowsWMSendEvent (int type, unsigned int mask, int which, int arg,
 /* general utility functions */
 
 static int
-ProcWindowsWMDisableUpdate (register ClientPtr client)
+ProcWindowsWMDisableUpdate (ClientPtr client)
 {
   REQUEST_SIZE_MATCH(xWindowsWMDisableUpdateReq);
 
@@ -337,7 +308,7 @@ ProcWindowsWMDisableUpdate (register ClientPtr client)
 }
 
 static int
-ProcWindowsWMReenableUpdate (register ClientPtr client)
+ProcWindowsWMReenableUpdate (ClientPtr client)
 {
   REQUEST_SIZE_MATCH(xWindowsWMReenableUpdateReq);
 
@@ -350,7 +321,7 @@ ProcWindowsWMReenableUpdate (register ClientPtr client)
 /* window functions */
 
 static int
-ProcWindowsWMSetFrontProcess (register ClientPtr client)
+ProcWindowsWMSetFrontProcess (ClientPtr client)
 {
   REQUEST_SIZE_MATCH(xWindowsWMSetFrontProcessReq);
   
@@ -363,7 +334,7 @@ ProcWindowsWMSetFrontProcess (register ClientPtr client)
 /* frame functions */
 
 static int
-ProcWindowsWMFrameGetRect (register ClientPtr client)
+ProcWindowsWMFrameGetRect (ClientPtr client)
 {
   xWindowsWMFrameGetRectReply rep;
   BoxRec ir;
@@ -417,7 +388,7 @@ ProcWindowsWMFrameGetRect (register ClientPtr client)
 
 
 static int
-ProcWindowsWMFrameDraw (register ClientPtr client)
+ProcWindowsWMFrameDraw (ClientPtr client)
 {
   REQUEST(xWindowsWMFrameDrawReq);
   WindowPtr pWin;
@@ -507,12 +478,10 @@ ProcWindowsWMFrameDraw (register ClientPtr client)
 }
 
 static int
-ProcWindowsWMFrameSetTitle(
-			   register ClientPtr client
-			   )
+ProcWindowsWMFrameSetTitle(ClientPtr client)
 {
   unsigned int title_length, title_max;
-  unsigned char *title_bytes;
+  char *title_bytes;
   REQUEST(xWindowsWMFrameSetTitleReq);
   WindowPtr pWin;
   win32RootlessWindowPtr pRLWinPriv;
@@ -569,7 +538,7 @@ ProcWindowsWMFrameSetTitle(
 /* dispatch */
 
 static int
-ProcWindowsWMDispatch (register ClientPtr client)
+ProcWindowsWMDispatch (ClientPtr client)
 {
   REQUEST(xReq);
 
@@ -615,16 +584,16 @@ SNotifyEvent (xWindowsWMNotifyEvent *from, xWindowsWMNotifyEvent *to)
 }
 
 static int
-SProcWindowsWMQueryVersion (register ClientPtr client)
+SProcWindowsWMQueryVersion (ClientPtr client)
 {
-  register int n;
+  int n;
   REQUEST(xWindowsWMQueryVersionReq);
   swaps(&stuff->length, n);
   return ProcWindowsWMQueryVersion(client);
 }
 
 static int
-SProcWindowsWMDispatch (register ClientPtr client)
+SProcWindowsWMDispatch (ClientPtr client)
 {
   REQUEST(xReq);
 
@@ -639,5 +608,32 @@ SProcWindowsWMDispatch (register ClientPtr client)
       return SProcWindowsWMQueryVersion(client);
     default:
       return BadRequest;
+    }
+}
+
+void
+winWindowsWMExtensionInit (void)
+{
+  ExtensionEntry* extEntry;
+
+  ClientType = CreateNewResourceType(WMFreeClient, "WMClient");
+  eventResourceType = CreateNewResourceType(WMFreeEvents, "WMEvent");
+  eventResource = FakeClientID(0);
+
+  if (ClientType && eventResourceType &&
+      (extEntry = AddExtension(WINDOWSWMNAME,
+			       WindowsWMNumberEvents,
+			       WindowsWMNumberErrors,
+			       ProcWindowsWMDispatch,
+			       SProcWindowsWMDispatch,
+			       NULL,
+			       StandardMinorOpcode)))
+    {
+      size_t i;
+      WMReqCode = (unsigned char)extEntry->base;
+      WMErrorBase = extEntry->errorBase;
+      WMEventBase = extEntry->eventBase;
+      for (i=0; i < WindowsWMNumberEvents; i++)
+        EventSwapVector[WMEventBase + i] = (EventSwapPtr) SNotifyEvent;
     }
 }

@@ -13,6 +13,7 @@
 # PARTICULAR PURPOSE.
 
 @SET_MAKE@
+
 srcdir = @srcdir@
 top_srcdir = @top_srcdir@
 VPATH = @srcdir@
@@ -35,21 +36,25 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
-@UNITTESTS_TRUE@check_PROGRAMS = protocol-xiqueryversion$(EXEEXT) \
-@UNITTESTS_TRUE@	protocol-xiquerydevice$(EXEEXT) \
-@UNITTESTS_TRUE@	protocol-xiselectevents$(EXEEXT) \
-@UNITTESTS_TRUE@	protocol-xigetselectedevents$(EXEEXT) \
-@UNITTESTS_TRUE@	protocol-xisetclientpointer$(EXEEXT) \
-@UNITTESTS_TRUE@	protocol-xigetclientpointer$(EXEEXT) \
-@UNITTESTS_TRUE@	protocol-xiquerypointer$(EXEEXT) \
-@UNITTESTS_TRUE@	protocol-xiwarppointer$(EXEEXT) \
-@UNITTESTS_TRUE@	protocol-eventconvert$(EXEEXT)
-@SPECIAL_DTRACE_OBJECTS_TRUE@@UNITTESTS_TRUE@am__append_1 = $(OS_LIB) $(DIX_LIB)
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_LD_WRAP_TRUE@noinst_PROGRAMS = protocol-xiqueryversion$(EXEEXT) \
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_LD_WRAP_TRUE@	protocol-xiquerydevice$(EXEEXT) \
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_LD_WRAP_TRUE@	protocol-xiselectevents$(EXEEXT) \
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_LD_WRAP_TRUE@	protocol-xigetselectedevents$(EXEEXT) \
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_LD_WRAP_TRUE@	protocol-xisetclientpointer$(EXEEXT) \
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_LD_WRAP_TRUE@	protocol-xigetclientpointer$(EXEEXT) \
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_LD_WRAP_TRUE@	protocol-xipassivegrabdevice$(EXEEXT) \
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_LD_WRAP_TRUE@	protocol-xiquerypointer$(EXEEXT) \
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_LD_WRAP_TRUE@	protocol-xiwarppointer$(EXEEXT) \
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_LD_WRAP_TRUE@	protocol-eventconvert$(EXEEXT)
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_LD_WRAP_TRUE@@SPECIAL_DTRACE_OBJECTS_TRUE@am__append_1 = $(OS_LIB) $(DIX_LIB)
 subdir = test/xi2
 DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/m4/ac_define_dir.m4 \
-	$(top_srcdir)/m4/dolt.m4 $(top_srcdir)/configure.ac
+	$(top_srcdir)/m4/libtool.m4 $(top_srcdir)/m4/ltoptions.m4 \
+	$(top_srcdir)/m4/ltsugar.m4 $(top_srcdir)/m4/ltversion.m4 \
+	$(top_srcdir)/m4/lt~obsolete.m4 $(top_srcdir)/m4/xorg-tls.m4 \
+	$(top_srcdir)/configure.ac
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
 mkinstalldirs = $(SHELL) $(install_sh) -d
@@ -62,93 +67,103 @@ CONFIG_HEADER = $(top_builddir)/include/do-not-use-config.h \
 	$(top_builddir)/include/kdrive-config.h \
 	$(top_builddir)/include/version-config.h
 CONFIG_CLEAN_FILES =
+PROGRAMS = $(noinst_PROGRAMS)
 protocol_eventconvert_SOURCES = protocol-eventconvert.c
 protocol_eventconvert_OBJECTS = protocol-eventconvert.$(OBJEXT)
 am__DEPENDENCIES_1 =
-@SPECIAL_DTRACE_OBJECTS_TRUE@@UNITTESTS_TRUE@am__DEPENDENCIES_2 = $(am__DEPENDENCIES_1) \
-@SPECIAL_DTRACE_OBJECTS_TRUE@@UNITTESTS_TRUE@	$(am__DEPENDENCIES_1)
-@UNITTESTS_TRUE@am__DEPENDENCIES_3 = ../libxservertest.la \
-@UNITTESTS_TRUE@	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) \
-@UNITTESTS_TRUE@	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_2)
-@UNITTESTS_TRUE@protocol_eventconvert_DEPENDENCIES =  \
-@UNITTESTS_TRUE@	$(am__DEPENDENCIES_3)
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_LD_WRAP_TRUE@@SPECIAL_DTRACE_OBJECTS_TRUE@am__DEPENDENCIES_2 = $(am__DEPENDENCIES_1) \
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_LD_WRAP_TRUE@@SPECIAL_DTRACE_OBJECTS_TRUE@	$(am__DEPENDENCIES_1)
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_LD_WRAP_TRUE@am__DEPENDENCIES_3 = ../libxservertest.la \
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_LD_WRAP_TRUE@	$(am__DEPENDENCIES_1) \
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_LD_WRAP_TRUE@	$(am__DEPENDENCIES_1) \
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_LD_WRAP_TRUE@	$(am__DEPENDENCIES_2)
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_LD_WRAP_TRUE@protocol_eventconvert_DEPENDENCIES = $(am__DEPENDENCIES_3)
 am__protocol_xigetclientpointer_SOURCES_DIST = protocol-common.h \
 	protocol-common.c protocol-xigetclientpointer.c
-@UNITTESTS_TRUE@am__objects_1 = protocol-common.$(OBJEXT)
-@UNITTESTS_TRUE@am_protocol_xigetclientpointer_OBJECTS =  \
-@UNITTESTS_TRUE@	$(am__objects_1) \
-@UNITTESTS_TRUE@	protocol-xigetclientpointer.$(OBJEXT)
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_LD_WRAP_TRUE@am__objects_1 = protocol-common.$(OBJEXT)
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_LD_WRAP_TRUE@am_protocol_xigetclientpointer_OBJECTS =  \
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_LD_WRAP_TRUE@	$(am__objects_1) \
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_LD_WRAP_TRUE@	protocol-xigetclientpointer.$(OBJEXT)
 protocol_xigetclientpointer_OBJECTS =  \
 	$(am_protocol_xigetclientpointer_OBJECTS)
-@UNITTESTS_TRUE@protocol_xigetclientpointer_DEPENDENCIES =  \
-@UNITTESTS_TRUE@	$(am__DEPENDENCIES_3)
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_LD_WRAP_TRUE@protocol_xigetclientpointer_DEPENDENCIES = $(am__DEPENDENCIES_3)
 am__protocol_xigetselectedevents_SOURCES_DIST = protocol-common.h \
 	protocol-common.c protocol-xigetselectedevents.c
-@UNITTESTS_TRUE@am_protocol_xigetselectedevents_OBJECTS =  \
-@UNITTESTS_TRUE@	$(am__objects_1) \
-@UNITTESTS_TRUE@	protocol-xigetselectedevents.$(OBJEXT)
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_LD_WRAP_TRUE@am_protocol_xigetselectedevents_OBJECTS =  \
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_LD_WRAP_TRUE@	$(am__objects_1) \
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_LD_WRAP_TRUE@	protocol-xigetselectedevents.$(OBJEXT)
 protocol_xigetselectedevents_OBJECTS =  \
 	$(am_protocol_xigetselectedevents_OBJECTS)
-@UNITTESTS_TRUE@protocol_xigetselectedevents_DEPENDENCIES =  \
-@UNITTESTS_TRUE@	$(am__DEPENDENCIES_3)
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_LD_WRAP_TRUE@protocol_xigetselectedevents_DEPENDENCIES = $(am__DEPENDENCIES_3)
+am__protocol_xipassivegrabdevice_SOURCES_DIST = protocol-common.h \
+	protocol-common.c protocol-xipassivegrabdevice.c
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_LD_WRAP_TRUE@am_protocol_xipassivegrabdevice_OBJECTS =  \
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_LD_WRAP_TRUE@	$(am__objects_1) \
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_LD_WRAP_TRUE@	protocol-xipassivegrabdevice.$(OBJEXT)
+protocol_xipassivegrabdevice_OBJECTS =  \
+	$(am_protocol_xipassivegrabdevice_OBJECTS)
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_LD_WRAP_TRUE@protocol_xipassivegrabdevice_DEPENDENCIES = $(am__DEPENDENCIES_3)
 am__protocol_xiquerydevice_SOURCES_DIST = protocol-common.h \
 	protocol-common.c protocol-xiquerydevice.c
-@UNITTESTS_TRUE@am_protocol_xiquerydevice_OBJECTS = $(am__objects_1) \
-@UNITTESTS_TRUE@	protocol-xiquerydevice.$(OBJEXT)
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_LD_WRAP_TRUE@am_protocol_xiquerydevice_OBJECTS =  \
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_LD_WRAP_TRUE@	$(am__objects_1) \
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_LD_WRAP_TRUE@	protocol-xiquerydevice.$(OBJEXT)
 protocol_xiquerydevice_OBJECTS = $(am_protocol_xiquerydevice_OBJECTS)
-@UNITTESTS_TRUE@protocol_xiquerydevice_DEPENDENCIES =  \
-@UNITTESTS_TRUE@	$(am__DEPENDENCIES_3)
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_LD_WRAP_TRUE@protocol_xiquerydevice_DEPENDENCIES = $(am__DEPENDENCIES_3)
 am__protocol_xiquerypointer_SOURCES_DIST = protocol-common.h \
 	protocol-common.c protocol-xiquerypointer.c
-@UNITTESTS_TRUE@am_protocol_xiquerypointer_OBJECTS = $(am__objects_1) \
-@UNITTESTS_TRUE@	protocol-xiquerypointer.$(OBJEXT)
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_LD_WRAP_TRUE@am_protocol_xiquerypointer_OBJECTS =  \
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_LD_WRAP_TRUE@	$(am__objects_1) \
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_LD_WRAP_TRUE@	protocol-xiquerypointer.$(OBJEXT)
 protocol_xiquerypointer_OBJECTS =  \
 	$(am_protocol_xiquerypointer_OBJECTS)
-@UNITTESTS_TRUE@protocol_xiquerypointer_DEPENDENCIES =  \
-@UNITTESTS_TRUE@	$(am__DEPENDENCIES_3)
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_LD_WRAP_TRUE@protocol_xiquerypointer_DEPENDENCIES = $(am__DEPENDENCIES_3)
 am__protocol_xiqueryversion_SOURCES_DIST = protocol-common.h \
 	protocol-common.c protocol-xiqueryversion.c
-@UNITTESTS_TRUE@am_protocol_xiqueryversion_OBJECTS = $(am__objects_1) \
-@UNITTESTS_TRUE@	protocol-xiqueryversion.$(OBJEXT)
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_LD_WRAP_TRUE@am_protocol_xiqueryversion_OBJECTS =  \
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_LD_WRAP_TRUE@	$(am__objects_1) \
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_LD_WRAP_TRUE@	protocol-xiqueryversion.$(OBJEXT)
 protocol_xiqueryversion_OBJECTS =  \
 	$(am_protocol_xiqueryversion_OBJECTS)
-@UNITTESTS_TRUE@protocol_xiqueryversion_DEPENDENCIES =  \
-@UNITTESTS_TRUE@	$(am__DEPENDENCIES_3)
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_LD_WRAP_TRUE@protocol_xiqueryversion_DEPENDENCIES = $(am__DEPENDENCIES_3)
 am__protocol_xiselectevents_SOURCES_DIST = protocol-common.h \
 	protocol-common.c protocol-xiselectevents.c
-@UNITTESTS_TRUE@am_protocol_xiselectevents_OBJECTS = $(am__objects_1) \
-@UNITTESTS_TRUE@	protocol-xiselectevents.$(OBJEXT)
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_LD_WRAP_TRUE@am_protocol_xiselectevents_OBJECTS =  \
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_LD_WRAP_TRUE@	$(am__objects_1) \
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_LD_WRAP_TRUE@	protocol-xiselectevents.$(OBJEXT)
 protocol_xiselectevents_OBJECTS =  \
 	$(am_protocol_xiselectevents_OBJECTS)
-@UNITTESTS_TRUE@protocol_xiselectevents_DEPENDENCIES =  \
-@UNITTESTS_TRUE@	$(am__DEPENDENCIES_3)
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_LD_WRAP_TRUE@protocol_xiselectevents_DEPENDENCIES = $(am__DEPENDENCIES_3)
 am__protocol_xisetclientpointer_SOURCES_DIST = protocol-common.h \
 	protocol-common.c protocol-xisetclientpointer.c
-@UNITTESTS_TRUE@am_protocol_xisetclientpointer_OBJECTS =  \
-@UNITTESTS_TRUE@	$(am__objects_1) \
-@UNITTESTS_TRUE@	protocol-xisetclientpointer.$(OBJEXT)
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_LD_WRAP_TRUE@am_protocol_xisetclientpointer_OBJECTS =  \
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_LD_WRAP_TRUE@	$(am__objects_1) \
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_LD_WRAP_TRUE@	protocol-xisetclientpointer.$(OBJEXT)
 protocol_xisetclientpointer_OBJECTS =  \
 	$(am_protocol_xisetclientpointer_OBJECTS)
-@UNITTESTS_TRUE@protocol_xisetclientpointer_DEPENDENCIES =  \
-@UNITTESTS_TRUE@	$(am__DEPENDENCIES_3)
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_LD_WRAP_TRUE@protocol_xisetclientpointer_DEPENDENCIES = $(am__DEPENDENCIES_3)
 am__protocol_xiwarppointer_SOURCES_DIST = protocol-common.h \
 	protocol-common.c protocol-xiwarppointer.c
-@UNITTESTS_TRUE@am_protocol_xiwarppointer_OBJECTS = $(am__objects_1) \
-@UNITTESTS_TRUE@	protocol-xiwarppointer.$(OBJEXT)
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_LD_WRAP_TRUE@am_protocol_xiwarppointer_OBJECTS =  \
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_LD_WRAP_TRUE@	$(am__objects_1) \
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_LD_WRAP_TRUE@	protocol-xiwarppointer.$(OBJEXT)
 protocol_xiwarppointer_OBJECTS = $(am_protocol_xiwarppointer_OBJECTS)
-@UNITTESTS_TRUE@protocol_xiwarppointer_DEPENDENCIES =  \
-@UNITTESTS_TRUE@	$(am__DEPENDENCIES_3)
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_LD_WRAP_TRUE@protocol_xiwarppointer_DEPENDENCIES = $(am__DEPENDENCIES_3)
 DEFAULT_INCLUDES = -I. -I$(srcdir) -I$(top_builddir)/include -I$(top_builddir)/include -I$(top_builddir)/include -I$(top_builddir)/include -I$(top_builddir)/include -I$(top_builddir)/include -I$(top_builddir)/include -I$(top_builddir)/include
 depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__depfiles_maybe = depfiles
 COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
 	$(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
+LTCOMPILE = $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) \
+	$(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) \
+	$(AM_CFLAGS) $(CFLAGS)
 CCLD = $(CC)
 LINK = $(LIBTOOL) --tag=CC --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
 	$(AM_LDFLAGS) $(LDFLAGS) -o $@
 SOURCES = protocol-eventconvert.c \
 	$(protocol_xigetclientpointer_SOURCES) \
 	$(protocol_xigetselectedevents_SOURCES) \
+	$(protocol_xipassivegrabdevice_SOURCES) \
 	$(protocol_xiquerydevice_SOURCES) \
 	$(protocol_xiquerypointer_SOURCES) \
 	$(protocol_xiqueryversion_SOURCES) \
@@ -158,6 +173,7 @@ SOURCES = protocol-eventconvert.c \
 DIST_SOURCES = protocol-eventconvert.c \
 	$(am__protocol_xigetclientpointer_SOURCES_DIST) \
 	$(am__protocol_xigetselectedevents_SOURCES_DIST) \
+	$(am__protocol_xipassivegrabdevice_SOURCES_DIST) \
 	$(am__protocol_xiquerydevice_SOURCES_DIST) \
 	$(am__protocol_xiquerypointer_SOURCES_DIST) \
 	$(am__protocol_xiqueryversion_SOURCES_DIST) \
@@ -172,8 +188,8 @@ ADMIN_MAN_DIR = @ADMIN_MAN_DIR@
 ADMIN_MAN_SUFFIX = @ADMIN_MAN_SUFFIX@
 AGP_FALSE = @AGP_FALSE@
 AGP_TRUE = @AGP_TRUE@
-AIGLX_FALSE = @AIGLX_FALSE@
-AIGLX_TRUE = @AIGLX_TRUE@
+AIGLX_DRI_LOADER_FALSE = @AIGLX_DRI_LOADER_FALSE@
+AIGLX_DRI_LOADER_TRUE = @AIGLX_DRI_LOADER_TRUE@
 ALLOCA = @ALLOCA@
 ALPHA_VIDEO_FALSE = @ALPHA_VIDEO_FALSE@
 ALPHA_VIDEO_TRUE = @ALPHA_VIDEO_TRUE@
@@ -186,7 +202,6 @@ APPLE_APPLICATION_NAME = @APPLE_APPLICATION_NAME@
 APP_MAN_DIR = @APP_MAN_DIR@
 APP_MAN_SUFFIX = @APP_MAN_SUFFIX@
 AR = @AR@
-ARM_BACKTRACE_CFLAGS = @ARM_BACKTRACE_CFLAGS@
 ARM_VIDEO_FALSE = @ARM_VIDEO_FALSE@
 ARM_VIDEO_TRUE = @ARM_VIDEO_TRUE@
 AS = @AS@
@@ -199,18 +214,19 @@ BSD_APM_FALSE = @BSD_APM_FALSE@
 BSD_APM_TRUE = @BSD_APM_TRUE@
 BSD_KQUEUE_APM_FALSE = @BSD_KQUEUE_APM_FALSE@
 BSD_KQUEUE_APM_TRUE = @BSD_KQUEUE_APM_TRUE@
-BUILDDOCS_FALSE = @BUILDDOCS_FALSE@
-BUILDDOCS_TRUE = @BUILDDOCS_TRUE@
 BUILD_DATE = @BUILD_DATE@
 BUILD_KDRIVEFBDEVLIB_FALSE = @BUILD_KDRIVEFBDEVLIB_FALSE@
 BUILD_KDRIVEFBDEVLIB_TRUE = @BUILD_KDRIVEFBDEVLIB_TRUE@
 BUILD_TIME = @BUILD_TIME@
+BUNDLE_ID_PREFIX = @BUNDLE_ID_PREFIX@
 CC = @CC@
 CCAS = @CCAS@
 CCASFLAGS = @CCASFLAGS@
 CCDEPMODE = @CCDEPMODE@
 CFLAGS = @CFLAGS@
 CHANGELOG_CMD = @CHANGELOG_CMD@
+CLIENTIDS_FALSE = @CLIENTIDS_FALSE@
+CLIENTIDS_TRUE = @CLIENTIDS_TRUE@
 COMPILEDDEFAULTFONTPATH = @COMPILEDDEFAULTFONTPATH@
 COMPOSITE_FALSE = @COMPOSITE_FALSE@
 COMPOSITE_TRUE = @COMPOSITE_TRUE@
@@ -227,12 +243,7 @@ CONFIG_WSCONS_TRUE = @CONFIG_WSCONS_TRUE@
 CPP = @CPP@
 CPPFLAGS = @CPPFLAGS@
 CWARNFLAGS = @CWARNFLAGS@
-CXX = @CXX@
-CXXCPP = @CXXCPP@
-CXXDEPMODE = @CXXDEPMODE@
-CXXFLAGS = @CXXFLAGS@
 CYGPATH_W = @CYGPATH_W@
-DARWIN_LIBS = @DARWIN_LIBS@
 DBE_FALSE = @DBE_FALSE@
 DBE_TRUE = @DBE_TRUE@
 DBUS_CFLAGS = @DBUS_CFLAGS@
@@ -267,7 +278,6 @@ DMX_BUILD_USB_FALSE = @DMX_BUILD_USB_FALSE@
 DMX_BUILD_USB_TRUE = @DMX_BUILD_USB_TRUE@
 DMX_FALSE = @DMX_FALSE@
 DMX_TRUE = @DMX_TRUE@
-DOLT_BASH = @DOLT_BASH@
 DOXYGEN = @DOXYGEN@
 DPMSExtension_FALSE = @DPMSExtension_FALSE@
 DPMSExtension_TRUE = @DPMSExtension_TRUE@
@@ -288,7 +298,7 @@ DRI_LIBS = @DRI_LIBS@
 DRI_TRUE = @DRI_TRUE@
 DSYMUTIL = @DSYMUTIL@
 DTRACE = @DTRACE@
-ECHO = @ECHO@
+DUMPBIN = @DUMPBIN@
 ECHO_C = @ECHO_C@
 ECHO_N = @ECHO_N@
 ECHO_T = @ECHO_T@
@@ -297,11 +307,12 @@ ENABLE_DEVEL_DOCS_FALSE = @ENABLE_DEVEL_DOCS_FALSE@
 ENABLE_DEVEL_DOCS_TRUE = @ENABLE_DEVEL_DOCS_TRUE@
 ENABLE_DOCS_FALSE = @ENABLE_DOCS_FALSE@
 ENABLE_DOCS_TRUE = @ENABLE_DOCS_TRUE@
+ENABLE_UNIT_TESTS_FALSE = @ENABLE_UNIT_TESTS_FALSE@
+ENABLE_UNIT_TESTS_TRUE = @ENABLE_UNIT_TESTS_TRUE@
 EXEEXT = @EXEEXT@
-F77 = @F77@
 FBDEVHW_FALSE = @FBDEVHW_FALSE@
 FBDEVHW_TRUE = @FBDEVHW_TRUE@
-FFLAGS = @FFLAGS@
+FGREP = @FGREP@
 FILE_MAN_DIR = @FILE_MAN_DIR@
 FILE_MAN_SUFFIX = @FILE_MAN_SUFFIX@
 FONT100DPIDIR = @FONT100DPIDIR@
@@ -314,11 +325,10 @@ FONTTYPE1DIR = @FONTTYPE1DIR@
 FOP = @FOP@
 FREEBSD_KLDLOAD_FALSE = @FREEBSD_KLDLOAD_FALSE@
 FREEBSD_KLDLOAD_TRUE = @FREEBSD_KLDLOAD_TRUE@
-GLIB_CFLAGS = @GLIB_CFLAGS@
-GLIB_LIBS = @GLIB_LIBS@
 GLX_ARCH_DEFINES = @GLX_ARCH_DEFINES@
 GLX_DEFINES = @GLX_DEFINES@
 GLX_FALSE = @GLX_FALSE@
+GLX_TLS = @GLX_TLS@
 GLX_TRUE = @GLX_TRUE@
 GL_CFLAGS = @GL_CFLAGS@
 GL_LIBS = @GL_LIBS@
@@ -331,12 +341,16 @@ HAVE_DOXYGEN_FALSE = @HAVE_DOXYGEN_FALSE@
 HAVE_DOXYGEN_TRUE = @HAVE_DOXYGEN_TRUE@
 HAVE_FOP_FALSE = @HAVE_FOP_FALSE@
 HAVE_FOP_TRUE = @HAVE_FOP_TRUE@
+HAVE_LD_WRAP_FALSE = @HAVE_LD_WRAP_FALSE@
+HAVE_LD_WRAP_TRUE = @HAVE_LD_WRAP_TRUE@
 HAVE_STYLESHEETS_FALSE = @HAVE_STYLESHEETS_FALSE@
 HAVE_STYLESHEETS_TRUE = @HAVE_STYLESHEETS_TRUE@
 HAVE_XMLTO_FALSE = @HAVE_XMLTO_FALSE@
 HAVE_XMLTO_TEXT_FALSE = @HAVE_XMLTO_TEXT_FALSE@
 HAVE_XMLTO_TEXT_TRUE = @HAVE_XMLTO_TEXT_TRUE@
 HAVE_XMLTO_TRUE = @HAVE_XMLTO_TRUE@
+HAVE_XSLTPROC_FALSE = @HAVE_XSLTPROC_FALSE@
+HAVE_XSLTPROC_TRUE = @HAVE_XSLTPROC_TRUE@
 HP300_VIDEO_FALSE = @HP300_VIDEO_FALSE@
 HP300_VIDEO_TRUE = @HP300_VIDEO_TRUE@
 HPPA_VIDEO_FALSE = @HPPA_VIDEO_FALSE@
@@ -382,7 +396,10 @@ KDRIVE_MOUSE_TRUE = @KDRIVE_MOUSE_TRUE@
 KDRIVE_PURE_INCS = @KDRIVE_PURE_INCS@
 KDRIVE_PURE_LIBS = @KDRIVE_PURE_LIBS@
 KDRIVE_TRUE = @KDRIVE_TRUE@
-LAUNCHD_ID_PREFIX = @LAUNCHD_ID_PREFIX@
+KHRONOS_OPENGL_REGISTRY_CFLAGS = @KHRONOS_OPENGL_REGISTRY_CFLAGS@
+KHRONOS_OPENGL_REGISTRY_LIBS = @KHRONOS_OPENGL_REGISTRY_LIBS@
+KHRONOS_SPEC_DIR = @KHRONOS_SPEC_DIR@
+LD = @LD@
 LDFLAGS = @LDFLAGS@
 LD_EXPORT_SYMBOLS_FLAG = @LD_EXPORT_SYMBOLS_FLAG@
 LEX = @LEX@
@@ -401,19 +418,19 @@ LINUX_ALPHA_FALSE = @LINUX_ALPHA_FALSE@
 LINUX_ALPHA_TRUE = @LINUX_ALPHA_TRUE@
 LINUX_IA64_FALSE = @LINUX_IA64_FALSE@
 LINUX_IA64_TRUE = @LINUX_IA64_TRUE@
+LIPO = @LIPO@
 LNXACPI_FALSE = @LNXACPI_FALSE@
 LNXACPI_TRUE = @LNXACPI_TRUE@
 LNXAPM_FALSE = @LNXAPM_FALSE@
 LNXAPM_TRUE = @LNXAPM_TRUE@
 LN_S = @LN_S@
-LTCOMPILE = @LTCOMPILE@
-LTCXXCOMPILE = @LTCXXCOMPILE@
 LTLIBOBJS = @LTLIBOBJS@
 MAINT = @MAINT@
 MAINTAINER_MODE_FALSE = @MAINTAINER_MODE_FALSE@
 MAINTAINER_MODE_TRUE = @MAINTAINER_MODE_TRUE@
 MAIN_LIB = @MAIN_LIB@
 MAKEINFO = @MAKEINFO@
+MANIFEST_TOOL = @MANIFEST_TOOL@
 MAN_SUBSTS = @MAN_SUBSTS@
 MISC_MAN_DIR = @MISC_MAN_DIR@
 MISC_MAN_SUFFIX = @MISC_MAN_SUFFIX@
@@ -423,6 +440,7 @@ NEED_STRLCAT_FALSE = @NEED_STRLCAT_FALSE@
 NEED_STRLCAT_TRUE = @NEED_STRLCAT_TRUE@
 NEED_VSNPRINTF_FALSE = @NEED_VSNPRINTF_FALSE@
 NEED_VSNPRINTF_TRUE = @NEED_VSNPRINTF_TRUE@
+NM = @NM@
 NMEDIT = @NMEDIT@
 OBJC = @OBJC@
 OBJCCLD = @OBJCCLD@
@@ -434,6 +452,8 @@ OBJEXT = @OBJEXT@
 OPENSSL_CFLAGS = @OPENSSL_CFLAGS@
 OPENSSL_LIBS = @OPENSSL_LIBS@
 OS_LIB = @OS_LIB@
+OTOOL = @OTOOL@
+OTOOL64 = @OTOOL64@
 PACKAGE = @PACKAGE@
 PACKAGE_BUGREPORT = @PACKAGE_BUGREPORT@
 PACKAGE_NAME = @PACKAGE_NAME@
@@ -444,7 +464,6 @@ PATH_SEPARATOR = @PATH_SEPARATOR@
 PCIACCESS_CFLAGS = @PCIACCESS_CFLAGS@
 PCIACCESS_LIBS = @PCIACCESS_LIBS@
 PCI_TXT_IDS_PATH = @PCI_TXT_IDS_PATH@
-PERL = @PERL@
 PIXMAN_CFLAGS = @PIXMAN_CFLAGS@
 PIXMAN_LIBS = @PIXMAN_LIBS@
 PKG_CONFIG = @PKG_CONFIG@
@@ -486,6 +505,7 @@ SPECIAL_DTRACE_OBJECTS_FALSE = @SPECIAL_DTRACE_OBJECTS_FALSE@
 SPECIAL_DTRACE_OBJECTS_TRUE = @SPECIAL_DTRACE_OBJECTS_TRUE@
 STANDALONE_XPBPROXY_FALSE = @STANDALONE_XPBPROXY_FALSE@
 STANDALONE_XPBPROXY_TRUE = @STANDALONE_XPBPROXY_TRUE@
+STRICT_CFLAGS = @STRICT_CFLAGS@
 STRIP = @STRIP@
 STYLESHEET_SRCDIR = @STYLESHEET_SRCDIR@
 SYSCONFDIR = @SYSCONFDIR@
@@ -495,8 +515,6 @@ TSLIB_LIBS = @TSLIB_LIBS@
 TSLIB_TRUE = @TSLIB_TRUE@
 UDEV_CFLAGS = @UDEV_CFLAGS@
 UDEV_LIBS = @UDEV_LIBS@
-UNITTESTS_FALSE = @UNITTESTS_FALSE@
-UNITTESTS_TRUE = @UNITTESTS_TRUE@
 UTILS_SYS_LIBS = @UTILS_SYS_LIBS@
 VBE_FALSE = @VBE_FALSE@
 VBE_TRUE = @VBE_TRUE@
@@ -513,8 +531,6 @@ XAA_FALSE = @XAA_FALSE@
 XAA_TRUE = @XAA_TRUE@
 XACE_FALSE = @XACE_FALSE@
 XACE_TRUE = @XACE_TRUE@
-XCALIBRATE_FALSE = @XCALIBRATE_FALSE@
-XCALIBRATE_TRUE = @XCALIBRATE_TRUE@
 XCSECURITY_FALSE = @XCSECURITY_FALSE@
 XCSECURITY_TRUE = @XCSECURITY_TRUE@
 XDMAUTH_FALSE = @XDMAUTH_FALSE@
@@ -550,6 +566,11 @@ XINERAMA_TRUE = @XINERAMA_TRUE@
 XKB_BASE_DIRECTORY = @XKB_BASE_DIRECTORY@
 XKB_BIN_DIRECTORY = @XKB_BIN_DIRECTORY@
 XKB_COMPILED_DIR = @XKB_COMPILED_DIR@
+XKB_DFLT_LAYOUT = @XKB_DFLT_LAYOUT@
+XKB_DFLT_MODEL = @XKB_DFLT_MODEL@
+XKB_DFLT_OPTIONS = @XKB_DFLT_OPTIONS@
+XKB_DFLT_RULES = @XKB_DFLT_RULES@
+XKB_DFLT_VARIANT = @XKB_DFLT_VARIANT@
 XKM_OUTPUT_DIR = @XKM_OUTPUT_DIR@
 XLIB_CFLAGS = @XLIB_CFLAGS@
 XLIB_LIBS = @XLIB_LIBS@
@@ -581,6 +602,7 @@ XORG_TRUE = @XORG_TRUE@
 XPBPROXY_CFLAGS = @XPBPROXY_CFLAGS@
 XPBPROXY_LIBS = @XPBPROXY_LIBS@
 XQUARTZ_FALSE = @XQUARTZ_FALSE@
+XQUARTZ_LIBS = @XQUARTZ_LIBS@
 XQUARTZ_SPARKLE = @XQUARTZ_SPARKLE@
 XQUARTZ_SPARKLE_FALSE = @XQUARTZ_SPARKLE_FALSE@
 XQUARTZ_SPARKLE_TRUE = @XQUARTZ_SPARKLE_TRUE@
@@ -599,6 +621,7 @@ XSERVER_DTRACE_FALSE = @XSERVER_DTRACE_FALSE@
 XSERVER_DTRACE_TRUE = @XSERVER_DTRACE_TRUE@
 XSERVER_LIBS = @XSERVER_LIBS@
 XSERVER_SYS_LIBS = @XSERVER_SYS_LIBS@
+XSLTPROC = @XSLTPROC@
 XSL_STYLESHEET = @XSL_STYLESHEET@
 XTSTEXAMPLES_DEP_CFLAGS = @XTSTEXAMPLES_DEP_CFLAGS@
 XTSTEXAMPLES_DEP_LIBS = @XTSTEXAMPLES_DEP_LIBS@
@@ -643,13 +666,11 @@ abi_ansic = @abi_ansic@
 abi_extension = @abi_extension@
 abi_videodrv = @abi_videodrv@
 abi_xinput = @abi_xinput@
+ac_ct_AR = @ac_ct_AR@
 ac_ct_CC = @ac_ct_CC@
-ac_ct_CXX = @ac_ct_CXX@
-ac_ct_F77 = @ac_ct_F77@
+ac_ct_DUMPBIN = @ac_ct_DUMPBIN@
 am__fastdepCC_FALSE = @am__fastdepCC_FALSE@
 am__fastdepCC_TRUE = @am__fastdepCC_TRUE@
-am__fastdepCXX_FALSE = @am__fastdepCXX_FALSE@
-am__fastdepCXX_TRUE = @am__fastdepCXX_TRUE@
 am__fastdepOBJC_FALSE = @am__fastdepOBJC_FALSE@
 am__fastdepOBJC_TRUE = @am__fastdepOBJC_TRUE@
 am__include = @am__include@
@@ -699,38 +720,42 @@ symbol_visibility = @symbol_visibility@
 sysconfdir = @sysconfdir@
 sysconfigdir = @sysconfigdir@
 target_alias = @target_alias@
-@UNITTESTS_TRUE@TESTS = $(check_PROGRAMS)
-@UNITTESTS_TRUE@AM_CFLAGS = $(DIX_CFLAGS) $(GLIB_CFLAGS) @XORG_CFLAGS@
-@UNITTESTS_TRUE@INCLUDES = @XORG_INCS@
-@UNITTESTS_TRUE@TEST_LDADD = ../libxservertest.la $(XORG_SYS_LIBS) \
-@UNITTESTS_TRUE@	$(XSERVER_SYS_LIBS) $(GLIB_LIBS) \
-@UNITTESTS_TRUE@	$(am__append_1)
-@UNITTESTS_TRUE@COMMON_SOURCES = protocol-common.h protocol-common.c
-@UNITTESTS_TRUE@protocol_xiqueryversion_LDADD = $(TEST_LDADD)
-@UNITTESTS_TRUE@protocol_xiquerydevice_LDADD = $(TEST_LDADD)
-@UNITTESTS_TRUE@protocol_xiselectevents_LDADD = $(TEST_LDADD)
-@UNITTESTS_TRUE@protocol_xigetselectedevents_LDADD = $(TEST_LDADD)
-@UNITTESTS_TRUE@protocol_xisetclientpointer_LDADD = $(TEST_LDADD)
-@UNITTESTS_TRUE@protocol_xigetclientpointer_LDADD = $(TEST_LDADD)
-@UNITTESTS_TRUE@protocol_xiquerypointer_LDADD = $(TEST_LDADD)
-@UNITTESTS_TRUE@protocol_xiwarppointer_LDADD = $(TEST_LDADD)
-@UNITTESTS_TRUE@protocol_eventconvert_LDADD = $(TEST_LDADD)
-@UNITTESTS_TRUE@protocol_xiqueryversion_LDFLAGS = $(AM_LDFLAGS) -Wl,-wrap,WriteToClient
-@UNITTESTS_TRUE@protocol_xiquerydevice_LDFLAGS = $(AM_LDFLAGS) -Wl,-wrap,WriteToClient
-@UNITTESTS_TRUE@protocol_xiselectevents_LDFLAGS = $(AM_LDFLAGS) -Wl,-wrap,dixLookupWindow -Wl,-wrap,XISetEventMask
-@UNITTESTS_TRUE@protocol_xigetselectedevents_LDFLAGS = $(AM_LDFLAGS) -Wl,-wrap,WriteToClient -Wl,-wrap,dixLookupWindow -Wl,-wrap,AddResource
-@UNITTESTS_TRUE@protocol_xisetclientpointer_LDFLAGS = $(AM_LDFLAGS) -Wl,-wrap,dixLookupClient
-@UNITTESTS_TRUE@protocol_xigetclientpointer_LDFLAGS = $(AM_LDFLAGS) -Wl,-wrap,WriteToClient -Wl,-wrap,dixLookupClient
-@UNITTESTS_TRUE@protocol_xiquerypointer_LDFLAGS = $(AM_LDFLAGS) -Wl,-wrap,WriteToClient -Wl,-wrap,dixLookupWindow
-@UNITTESTS_TRUE@protocol_xiwarppointer_LDFLAGS = $(AM_LDFLAGS) -Wl,-wrap,WriteToClient -Wl,-wrap,dixLookupWindow
-@UNITTESTS_TRUE@protocol_xiqueryversion_SOURCES = $(COMMON_SOURCES) protocol-xiqueryversion.c
-@UNITTESTS_TRUE@protocol_xiquerydevice_SOURCES = $(COMMON_SOURCES) protocol-xiquerydevice.c
-@UNITTESTS_TRUE@protocol_xiselectevents_SOURCES = $(COMMON_SOURCES) protocol-xiselectevents.c
-@UNITTESTS_TRUE@protocol_xigetselectedevents_SOURCES = $(COMMON_SOURCES) protocol-xigetselectedevents.c
-@UNITTESTS_TRUE@protocol_xisetclientpointer_SOURCES = $(COMMON_SOURCES) protocol-xisetclientpointer.c
-@UNITTESTS_TRUE@protocol_xigetclientpointer_SOURCES = $(COMMON_SOURCES) protocol-xigetclientpointer.c
-@UNITTESTS_TRUE@protocol_xiquerypointer_SOURCES = $(COMMON_SOURCES) protocol-xiquerypointer.c
-@UNITTESTS_TRUE@protocol_xiwarppointer_SOURCES = $(COMMON_SOURCES) protocol-xiwarppointer.c
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_LD_WRAP_TRUE@TESTS = $(noinst_PROGRAMS)
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_LD_WRAP_TRUE@AM_CFLAGS = $(DIX_CFLAGS) @XORG_CFLAGS@
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_LD_WRAP_TRUE@INCLUDES = @XORG_INCS@
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_LD_WRAP_TRUE@TEST_LDADD = ../libxservertest.la \
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_LD_WRAP_TRUE@	$(XORG_SYS_LIBS) \
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_LD_WRAP_TRUE@	$(XSERVER_SYS_LIBS) \
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_LD_WRAP_TRUE@	$(am__append_1)
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_LD_WRAP_TRUE@COMMON_SOURCES = protocol-common.h protocol-common.c
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_LD_WRAP_TRUE@protocol_xiqueryversion_LDADD = $(TEST_LDADD)
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_LD_WRAP_TRUE@protocol_xiquerydevice_LDADD = $(TEST_LDADD)
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_LD_WRAP_TRUE@protocol_xiselectevents_LDADD = $(TEST_LDADD)
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_LD_WRAP_TRUE@protocol_xigetselectedevents_LDADD = $(TEST_LDADD)
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_LD_WRAP_TRUE@protocol_xisetclientpointer_LDADD = $(TEST_LDADD)
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_LD_WRAP_TRUE@protocol_xigetclientpointer_LDADD = $(TEST_LDADD)
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_LD_WRAP_TRUE@protocol_xiquerypointer_LDADD = $(TEST_LDADD)
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_LD_WRAP_TRUE@protocol_xipassivegrabdevice_LDADD = $(TEST_LDADD)
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_LD_WRAP_TRUE@protocol_xiwarppointer_LDADD = $(TEST_LDADD)
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_LD_WRAP_TRUE@protocol_eventconvert_LDADD = $(TEST_LDADD)
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_LD_WRAP_TRUE@protocol_xiqueryversion_LDFLAGS = $(AM_LDFLAGS) -Wl,-wrap,WriteToClient
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_LD_WRAP_TRUE@protocol_xiquerydevice_LDFLAGS = $(AM_LDFLAGS) -Wl,-wrap,WriteToClient
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_LD_WRAP_TRUE@protocol_xiselectevents_LDFLAGS = $(AM_LDFLAGS) -Wl,-wrap,dixLookupWindow -Wl,-wrap,XISetEventMask
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_LD_WRAP_TRUE@protocol_xigetselectedevents_LDFLAGS = $(AM_LDFLAGS) -Wl,-wrap,WriteToClient -Wl,-wrap,dixLookupWindow -Wl,-wrap,AddResource
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_LD_WRAP_TRUE@protocol_xisetclientpointer_LDFLAGS = $(AM_LDFLAGS) -Wl,-wrap,dixLookupClient
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_LD_WRAP_TRUE@protocol_xigetclientpointer_LDFLAGS = $(AM_LDFLAGS) -Wl,-wrap,WriteToClient -Wl,-wrap,dixLookupClient
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_LD_WRAP_TRUE@protocol_xipassivegrabdevice_LDFLAGS = $(AM_LDFLAGS) -Wl,-wrap,GrabButton -Wl,-wrap,dixLookupWindow -Wl,-wrap,WriteToClient
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_LD_WRAP_TRUE@protocol_xiquerypointer_LDFLAGS = $(AM_LDFLAGS) -Wl,-wrap,WriteToClient -Wl,-wrap,dixLookupWindow
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_LD_WRAP_TRUE@protocol_xiwarppointer_LDFLAGS = $(AM_LDFLAGS) -Wl,-wrap,WriteToClient -Wl,-wrap,dixLookupWindow
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_LD_WRAP_TRUE@protocol_xiqueryversion_SOURCES = $(COMMON_SOURCES) protocol-xiqueryversion.c
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_LD_WRAP_TRUE@protocol_xiquerydevice_SOURCES = $(COMMON_SOURCES) protocol-xiquerydevice.c
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_LD_WRAP_TRUE@protocol_xiselectevents_SOURCES = $(COMMON_SOURCES) protocol-xiselectevents.c
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_LD_WRAP_TRUE@protocol_xigetselectedevents_SOURCES = $(COMMON_SOURCES) protocol-xigetselectedevents.c
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_LD_WRAP_TRUE@protocol_xisetclientpointer_SOURCES = $(COMMON_SOURCES) protocol-xisetclientpointer.c
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_LD_WRAP_TRUE@protocol_xigetclientpointer_SOURCES = $(COMMON_SOURCES) protocol-xigetclientpointer.c
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_LD_WRAP_TRUE@protocol_xiquerypointer_SOURCES = $(COMMON_SOURCES) protocol-xiquerypointer.c
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_LD_WRAP_TRUE@protocol_xipassivegrabdevice_SOURCES = $(COMMON_SOURCES) protocol-xipassivegrabdevice.c
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_LD_WRAP_TRUE@protocol_xiwarppointer_SOURCES = $(COMMON_SOURCES) protocol-xiwarppointer.c
 all: all-am
 
 .SUFFIXES:
@@ -765,8 +790,8 @@ $(top_srcdir)/configure: @MAINTAINER_MODE_TRUE@ $(am__configure_deps)
 $(ACLOCAL_M4): @MAINTAINER_MODE_TRUE@ $(am__aclocal_m4_deps)
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
 
-clean-checkPROGRAMS:
-	@list='$(check_PROGRAMS)'; for p in $$list; do \
+clean-noinstPROGRAMS:
+	@list='$(noinst_PROGRAMS)'; for p in $$list; do \
 	  f=`echo $$p|sed 's/$(EXEEXT)$$//'`; \
 	  echo " rm -f $$p $$f"; \
 	  rm -f $$p $$f ; \
@@ -780,6 +805,9 @@ protocol-xigetclientpointer$(EXEEXT): $(protocol_xigetclientpointer_OBJECTS) $(p
 protocol-xigetselectedevents$(EXEEXT): $(protocol_xigetselectedevents_OBJECTS) $(protocol_xigetselectedevents_DEPENDENCIES) 
 	@rm -f protocol-xigetselectedevents$(EXEEXT)
 	$(LINK) $(protocol_xigetselectedevents_LDFLAGS) $(protocol_xigetselectedevents_OBJECTS) $(protocol_xigetselectedevents_LDADD) $(LIBS)
+protocol-xipassivegrabdevice$(EXEEXT): $(protocol_xipassivegrabdevice_OBJECTS) $(protocol_xipassivegrabdevice_DEPENDENCIES) 
+	@rm -f protocol-xipassivegrabdevice$(EXEEXT)
+	$(LINK) $(protocol_xipassivegrabdevice_LDFLAGS) $(protocol_xipassivegrabdevice_OBJECTS) $(protocol_xipassivegrabdevice_LDADD) $(LIBS)
 protocol-xiquerydevice$(EXEEXT): $(protocol_xiquerydevice_OBJECTS) $(protocol_xiquerydevice_DEPENDENCIES) 
 	@rm -f protocol-xiquerydevice$(EXEEXT)
 	$(LINK) $(protocol_xiquerydevice_LDFLAGS) $(protocol_xiquerydevice_OBJECTS) $(protocol_xiquerydevice_LDADD) $(LIBS)
@@ -809,6 +837,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/protocol-eventconvert.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/protocol-xigetclientpointer.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/protocol-xigetselectedevents.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/protocol-xipassivegrabdevice.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/protocol-xiquerydevice.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/protocol-xiquerypointer.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/protocol-xiqueryversion.Po@am__quote@
@@ -996,10 +1025,9 @@ distdir: $(DISTFILES)
 	  fi; \
 	done
 check-am: all-am
-	$(MAKE) $(AM_MAKEFLAGS) $(check_PROGRAMS)
 	$(MAKE) $(AM_MAKEFLAGS) check-TESTS
 check: check-am
-all-am: Makefile
+all-am: Makefile $(PROGRAMS)
 installdirs:
 install: install-am
 install-exec: install-exec-am
@@ -1027,7 +1055,7 @@ maintainer-clean-generic:
 	@echo "it deletes files that may require special tools to rebuild."
 clean: clean-am
 
-clean-am: clean-checkPROGRAMS clean-generic clean-libtool \
+clean-am: clean-generic clean-libtool clean-noinstPROGRAMS \
 	mostlyclean-am
 
 distclean: distclean-am
@@ -1077,7 +1105,7 @@ ps-am:
 uninstall-am: uninstall-info-am
 
 .PHONY: CTAGS GTAGS all all-am check check-TESTS check-am clean \
-	clean-checkPROGRAMS clean-generic clean-libtool ctags \
+	clean-generic clean-libtool clean-noinstPROGRAMS ctags \
 	distclean distclean-compile distclean-generic \
 	distclean-libtool distclean-tags distdir dvi dvi-am html \
 	html-am info info-am install install-am install-data \

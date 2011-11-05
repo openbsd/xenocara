@@ -3,10 +3,10 @@
  *
  * This version is for Solaris.
  *
- * Copyright © 2000 VA Linux Systems, Inc.
- * Copyright © 2001 The XFree86 Project, Inc.
+ * Copyright Â© 2000 VA Linux Systems, Inc.
+ * Copyright Â© 2001 The XFree86 Project, Inc.
  */
-/* Copyright 2005 Sun Microsystems, Inc.  All rights reserved.
+/* Copyright (c) 2005, Oracle and/or its affiliates. All rights reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -318,7 +318,7 @@ xf86EnableAGP(int screenNum, CARD32 mode)
 	if (ioctl(gartFd, AGPIOC_SETUP, &setup) != 0) {
 		xf86DrvMsg(screenNum, X_WARNING, "xf86EnableAGP: "
 		    "AGPIOC_SETUP with mode %x failed (%s)\n",
-		    mode, strerror(errno));
+		    (unsigned int) mode, strerror(errno));
 		return FALSE;
 	}
 

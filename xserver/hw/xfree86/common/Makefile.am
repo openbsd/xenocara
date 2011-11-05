@@ -17,8 +17,6 @@ if DGA
 DGASOURCES = xf86DGA.c
 endif
 
-XISOURCES = xf86Xinput.c xisb.c
-XISDKINCS = xf86Xinput.h xisb.h
 RANDRSOURCES = xf86RandR.c
 
 BUSSOURCES = xf86pciBus.c xf86fbBus.c xf86noBus.c $(SBUS_SOURCES)
@@ -26,8 +24,8 @@ BUSSOURCES = xf86pciBus.c xf86fbBus.c xf86noBus.c $(SBUS_SOURCES)
 MODEDEFSOURCES = $(srcdir)/vesamodes $(srcdir)/extramodes
 
 xf86DefModeSet.c: $(srcdir)/modeline2c.awk $(MODEDEFSOURCES)
-	cat $(MODEDEFSOURCES) | LC_ALL=C $(AWK) -f $(srcdir)/modeline2c.awk > $@
-	echo >> $@
+	$(AM_V_GEN)cat $(MODEDEFSOURCES) | LC_ALL=C $(AWK) -f $(srcdir)/modeline2c.awk > $@
+	$(AM_V_GEN)echo >> $@
 
 BUILT_SOURCES = xf86DefModeSet.c
 
@@ -61,7 +59,6 @@ CLEANFILES = $(BUILT_SOURCES)
 EXTRA_DIST = \
 	compiler.h \
 	fourcc.h \
-	scoasm.h \
 	vidmodeproc.h \
 	xf86.h \
 	xf86Bus.h \

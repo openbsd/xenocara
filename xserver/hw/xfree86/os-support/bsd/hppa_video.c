@@ -1,4 +1,4 @@
-/* $OpenBSD: hppa_video.c,v 1.4 2010/12/05 15:36:07 matthieu Exp $ */
+/* $OpenBSD: hppa_video.c,v 1.5 2011/11/05 13:32:52 matthieu Exp $ */
 /*
  * Copyright 1992 by Rich Murphey <Rich@Rice.edu>
  * Copyright 1993 by David Wexelblat <dwex@goblin.org>

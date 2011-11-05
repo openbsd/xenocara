@@ -39,9 +39,9 @@
  */
 
 #ifdef XWIN_CLIPBOARD
-DISPATCH_PROC(winProcEstablishConnection);
-DISPATCH_PROC(winProcQueryTree);
-DISPATCH_PROC(winProcSetSelectionOwner);
+int winProcEstablishConnection(ClientPtr /* client */);
+int winProcQueryTree(ClientPtr /* client */);
+int winProcSetSelectionOwner(ClientPtr /* client */);
 #endif
 
 
@@ -51,21 +51,6 @@ DISPATCH_PROC(winProcSetSelectionOwner);
 
 DeviceIntPtr g_pwinPointer;
 DeviceIntPtr g_pwinKeyboard;
-
-
-/*
- * References to external symbols
- */
-
-#ifdef HAS_DEVWINDOWS
-extern int			g_fdMessageQueue;
-#endif
-extern Bool			g_fXdmcpEnabled;
-#ifdef XWIN_CLIPBOARD
-extern winDispatchProcPtr	winProcEstablishConnectionOrig;
-extern winDispatchProcPtr	winProcQueryTreeOrig;
-#endif
-
 
 /* Called from dix/devices.c */
 /*
@@ -137,10 +122,6 @@ InitInput (int argc, char *argv[])
 
   g_pwinPointer = AddInputDevice (serverClient, winMouseProc, TRUE);
   g_pwinKeyboard = AddInputDevice (serverClient, winKeybdProc, TRUE);
-  
-  RegisterPointerDevice (g_pwinPointer);
-  RegisterKeyboardDevice (g_pwinKeyboard);
-
   g_pwinPointer->name = strdup("Windows mouse");
   g_pwinKeyboard->name = strdup("Windows keyboard");
 
@@ -175,4 +156,5 @@ InitInput (int argc, char *argv[])
 void
 CloseInput (void)
 {
+  mieqFini ();
 }

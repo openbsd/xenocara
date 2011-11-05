@@ -24,6 +24,7 @@ SOFTWARE.
 #ifndef DIXSTRUCT_H
 #define DIXSTRUCT_H
 
+#include "client.h"
 #include "dix.h"
 #include "resource.h"
 #include "cursor.h"
@@ -121,6 +122,7 @@ typedef struct _Client {
     long    smart_check_tick;
     
     DeviceIntPtr clientPtr;
+    ClientIdPtr  clientIds;
 }           ClientRec;
 
 /*
@@ -136,7 +138,7 @@ extern _X_EXPORT void SmartScheduleStopTimer(void);
 #define SMART_MAX_PRIORITY  (20)
 #define SMART_MIN_PRIORITY  (-20)
 
-extern _X_EXPORT Bool SmartScheduleInit(void);
+extern _X_EXPORT void SmartScheduleInit(void);
 
 
 /* This prototype is used pervasively in Xext, dix */

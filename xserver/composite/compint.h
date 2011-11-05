@@ -1,5 +1,5 @@
 /*
- * Copyright © 2006 Sun Microsystems, Inc.  All rights reserved.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -152,7 +152,6 @@ typedef struct _CompScreen {
 
     ScreenBlockHandlerProcPtr	BlockHandler;
     CloseScreenProcPtr		CloseScreen;
-    Bool			damaged;
     int				numAlternateVisuals;
     VisualID			*alternateVisuals;
 
@@ -160,6 +159,8 @@ typedef struct _CompScreen {
     Window			overlayWid;
     CompOverlayClientPtr        pOverlayClients;
     
+    GetImageProcPtr		GetImage;
+    SourceValidateProcPtr	SourceValidate;
 } CompScreenRec, *CompScreenPtr;
 
 extern DevPrivateKeyRec CompScreenPrivateKeyRec;
@@ -214,7 +215,10 @@ Bool
 compAllocPixmap (WindowPtr pWin);
 
 void
-compFreePixmap (WindowPtr pWin);
+compSetParentPixmap (WindowPtr pWin);
+
+void
+compRestoreWindow (WindowPtr pWin, PixmapPtr pPixmap);
 
 Bool
 compReallocPixmap (WindowPtr pWin, int x, int y,
@@ -314,7 +318,7 @@ void
 compCopyWindow (WindowPtr pWin, DDXPointRec ptOldOrg, RegionPtr prgnSrc);
 
 void
-compWindowUpdate (WindowPtr pWin);
+compPaintChildrenToWindow (WindowPtr pWin);
 
 WindowPtr
 CompositeRealChildHead (WindowPtr pWin);
@@ -325,5 +329,8 @@ DeleteWindowNoInputDevices(pointer value, XID wid);
 int
 compConfigNotify(WindowPtr pWin, int x, int y, int w, int h,
 		 int bw, WindowPtr pSib);
+
+void PanoramiXCompositeInit (void);
+void PanoramiXCompositeReset (void);
 
 #endif /* _COMPINT_H_ */

@@ -53,6 +53,12 @@ Equipment Corporation.
 #include "servermd.h"
 #include "resource.h"
 #include "picturestr.h"
+#ifdef XFIXES
+#include "xfixesint.h"
+#endif
+#ifdef COMPOSITE
+#include "compint.h"
+#endif
 #include "modinit.h"
 #include "protocol-versions.h"
 
@@ -77,11 +83,11 @@ static DepthPtr		PanoramiXDepths;
 static int		PanoramiXNumVisuals;
 static VisualPtr	PanoramiXVisuals;
 
-unsigned long XRC_DRAWABLE;
-unsigned long XRT_WINDOW;
-unsigned long XRT_PIXMAP;
-unsigned long XRT_GC;
-unsigned long XRT_COLORMAP;
+RESTYPE XRC_DRAWABLE;
+RESTYPE XRT_WINDOW;
+RESTYPE XRT_PIXMAP;
+RESTYPE XRT_GC;
+RESTYPE XRT_COLORMAP;
 
 static Bool VisualsEqual(VisualPtr, ScreenPtr, VisualPtr);
 XineramaVisualsEqualProcPtr XineramaVisualsEqualPtr = &VisualsEqual;
@@ -387,7 +393,7 @@ static void XineramaInitData(ScreenPtr pScreen)
     int i, w, h;
 
     RegionNull(&PanoramiXScreenRegion);
-    for (i = 0; i < PanoramiXNumScreens; i++) {
+    FOR_NSCREENS(i) {
 	BoxRec TheBox;
 	RegionRec ScreenRegion;
 
@@ -407,7 +413,7 @@ static void XineramaInitData(ScreenPtr pScreen)
     PanoramiXPixWidth = screenInfo.screens[0]->x + screenInfo.screens[0]->width;
     PanoramiXPixHeight = screenInfo.screens[0]->y + screenInfo.screens[0]->height;
 
-    for (i = 1; i < PanoramiXNumScreens; i++) {
+    FOR_NSCREENS_FORWARD_SKIP(i) {
 	pScreen = screenInfo.screens[i];
 	w = pScreen->x + pScreen->width;
 	h = pScreen->y + pScreen->height;
@@ -472,7 +478,7 @@ void PanoramiXExtensionInit(int argc, char *argv[])
 	 *	run in non-PanoramiXeen mode.
 	 */
 
-	for (i = 0; i < PanoramiXNumScreens; i++) {
+	FOR_NSCREENS(i) {
 	   pScreen = screenInfo.screens[i];
 	   pScreenPriv = malloc(sizeof(PanoramiXScreenRec));
 	   dixSetPrivate(&pScreen->devPrivates, PanoramiXScreenKey,
@@ -581,6 +587,13 @@ void PanoramiXExtensionInit(int argc, char *argv[])
     ProcVector[X_StoreNamedColor] = PanoramiXStoreNamedColor;
 
     PanoramiXRenderInit ();
+#ifdef XFIXES
+    PanoramiXFixesInit ();
+#endif
+#ifdef COMPOSITE
+    PanoramiXCompositeInit ();
+#endif
+
 }
 
 extern Bool CreateConnectionBlock(void);
@@ -727,7 +740,7 @@ PanoramiXMaybeAddDepth(DepthPtr pDepth)
     int j, k;
     Bool found = FALSE;
 
-    for (j = 1; j < PanoramiXNumScreens; j++) {
+    FOR_NSCREENS_FORWARD_SKIP(j) {
 	pScreen = screenInfo.screens[j];
 	for (k = 0; k < pScreen->numDepths; k++) {
 	    if (pScreen->allowedDepths[k].depth == pDepth->depth) {
@@ -760,7 +773,7 @@ PanoramiXMaybeAddVisual(VisualPtr pVisual)
     int j, k;
     Bool found = FALSE;
 
-    for (j = 1; j < PanoramiXNumScreens; j++) {
+    FOR_NSCREENS_FORWARD_SKIP(j) {
 	pScreen = screenInfo.screens[j];
 	found = FALSE;
 
@@ -823,7 +836,7 @@ PanoramiXConsolidate(void)
     saver = malloc(sizeof(PanoramiXRes));
     saver->type = XRT_WINDOW;
 
-    for (i =  0; i < PanoramiXNumScreens; i++) {
+    FOR_NSCREENS(i) {
 	ScreenPtr pScreen = screenInfo.screens[i];
 	root->info[i].id = pScreen->root->drawable.id;
 	root->u.win.class = InputOutput;
@@ -882,6 +895,9 @@ static void PanoramiXResetProc(ExtensionEntry* extEntry)
     int		i;
 
     PanoramiXRenderReset ();
+#ifdef XFIXES
+    PanoramiXFixesReset ();
+#endif
     screenInfo.numScreens = PanoramiXNumScreens;
     for (i = 256; i--; )
 	ProcVector[i] = SavedProcVector[i];
@@ -1058,7 +1074,7 @@ ProcXineramaQueryScreens(ClientPtr client)
 	xXineramaScreenInfo scratch;
 	int i;
 
-	for(i = 0; i < PanoramiXNumScreens; i++) {
+	FOR_NSCREENS(i) {
 	    scratch.x_org  = screenInfo.screens[i]->x;
 	    scratch.y_org  = screenInfo.screens[i]->y;
 	    scratch.width  = screenInfo.screens[i]->width;
@@ -1163,7 +1179,7 @@ XineramaGetImageData(
 
     depth = (format == XYPixmap) ? 1 : pDraw->depth;
 
-    for(i = 0; i < PanoramiXNumScreens; i++) {
+    FOR_NSCREENS(i) {
 	BoxRec TheBox;
 	ScreenPtr pScreen;
 	pDraw = pDrawables[i];

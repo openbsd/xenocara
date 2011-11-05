@@ -1,5 +1,5 @@
 /*
- * Copyright © 2006 Sun Microsystems, Inc.  All rights reserved.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -46,6 +46,10 @@
 #endif
 
 #include "compint.h"
+
+#ifdef PANORAMIX
+#include "panoramiXsrv.h"
+#endif
 
 #ifdef COMPOSITE_DEBUG
 static int
@@ -160,8 +164,18 @@ compCheckRedirect (WindowPtr pWin)
     {
 	if (should)
 	    return compAllocPixmap (pWin);
+	else {
+	    ScreenPtr pScreen = pWin->drawable.pScreen;
+	    PixmapPtr pPixmap = (*pScreen->GetWindowPixmap) (pWin);
+	    compSetParentPixmap (pWin);
+	    compRestoreWindow (pWin, pPixmap);
+	    (*pScreen->DestroyPixmap) (pPixmap);
+	}
+    } else if (should) {
+	if (cw->update == CompositeRedirectAutomatic)
+	    pWin->redirectDraw = RedirectDrawAutomatic;
 	else
-	    compFreePixmap (pWin);
+	    pWin->redirectDraw = RedirectDrawManual;
     }
     return TRUE;
 }
@@ -172,16 +186,26 @@ updateOverlayWindow(ScreenPtr pScreen)
 	CompScreenPtr cs;
 	WindowPtr pWin; /* overlay window */
 	XID vlist[2];
+	int w = pScreen->width;
+	int h = pScreen->height;
+
+#ifdef PANORAMIX
+	if (!noPanoramiXExtension)
+	{
+	    w = PanoramiXPixWidth;
+	    h = PanoramiXPixHeight;
+	}
+#endif
 
 	cs = GetCompScreen(pScreen);
 	if ((pWin = cs->pOverlayWin) != NULL) {
-		if ((pWin->drawable.width == pScreen->width) &&
-			(pWin->drawable.height == pScreen->height))
+		if ((pWin->drawable.width == w) &&
+			(pWin->drawable.height == h))
 			return Success;
 
 		/* Let's resize the overlay window. */
-		vlist[0] = pScreen->width;
-		vlist[1] = pScreen->height;
+		vlist[0] = w;
+		vlist[1] = h;
 		return ConfigureWindow(pWin, CWWidth | CWHeight, vlist, wClient(pWin));
 	}
 
@@ -569,8 +593,11 @@ compDestroyWindow (WindowPtr pWin)
     while ((csw = GetCompSubwindows (pWin)))
 	FreeResource (csw->clients->id, RT_NONE);
 
-    if (pWin->redirectDraw != RedirectDrawNone)
-	compFreePixmap (pWin);
+    if (pWin->redirectDraw != RedirectDrawNone) {
+	PixmapPtr pPixmap = (*pScreen->GetWindowPixmap) (pWin);
+	compSetParentPixmap (pWin);
+	(*pScreen->DestroyPixmap) (pPixmap);
+    }
     ret = (*pScreen->DestroyWindow) (pWin);
     cs->DestroyWindow = pScreen->DestroyWindow;
     pScreen->DestroyWindow = compDestroyWindow;
@@ -706,13 +733,11 @@ compWindowUpdateAutomatic (WindowPtr pWin)
     DamageEmpty (cw->damage);
 }
 
-void
-compWindowUpdate (WindowPtr pWin)
+static void
+compPaintWindowToParent (WindowPtr pWin)
 {
-    WindowPtr	pChild;
+    compPaintChildrenToWindow (pWin);
 
-    for (pChild = pWin->lastChild; pChild; pChild = pChild->prevSib)
-	compWindowUpdate (pChild);
     if (pWin->redirectDraw != RedirectDrawNone)
     {
 	CompWindowPtr	cw = GetCompWindow(pWin);
@@ -723,6 +748,20 @@ compWindowUpdate (WindowPtr pWin)
 	    cw->damaged = FALSE;
 	}
     }
+}
+
+void
+compPaintChildrenToWindow (WindowPtr pWin)
+{
+    WindowPtr pChild;
+
+    if (!pWin->damagedDescendants)
+	return;
+
+    for (pChild = pWin->lastChild; pChild; pChild = pChild->prevSib)
+	compPaintWindowToParent (pChild);
+
+    pWin->damagedDescendants = FALSE;
 }
 
 WindowPtr

@@ -1,6 +1,6 @@
 /*
  *
- * Copyright © 2006-2009 Simon Thum             simon dot thum at gmx dot de
+ * Copyright © 2006-2011 Simon Thum             simon dot thum at gmx dot de
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -25,7 +25,7 @@
 #ifndef POINTERVELOCITY_H
 #define POINTERVELOCITY_H
 
-#include <input.h> /* DeviceIntPtr */
+#include <input.h>
 
 /* constants for acceleration profiles */
 
@@ -62,9 +62,6 @@ typedef struct _MotionTracker {
     int dir;        /* initial direction bitfield */
 } MotionTracker, *MotionTrackerPtr;
 
-/* number of properties for predictable acceleration */
-#define NPROPS_PREDICTABLE_ACCEL 4
-
 /**
  * Contains all data needed to implement mouse ballistics
  */
@@ -91,8 +88,17 @@ typedef struct _DeviceVelocityRec {
     struct {   /* to be able to query this information */
         int     profile_number;
     } statistics;
-    long    prop_handlers[NPROPS_PREDICTABLE_ACCEL];
 } DeviceVelocityRec, *DeviceVelocityPtr;
+
+/**
+ * contains the run-time data for the predictable scheme, that is, a
+ * DeviceVelocityPtr and the property handlers.
+ */
+typedef struct _PredictableAccelSchemeRec {
+    DeviceVelocityPtr vel;
+    long* prop_handlers;
+    int num_prop_handlers;
+} PredictableAccelSchemeRec, *PredictableAccelSchemePtr;
 
 extern _X_EXPORT void
 InitVelocityData(DeviceVelocityPtr vel);
@@ -100,7 +106,7 @@ InitVelocityData(DeviceVelocityPtr vel);
 extern _X_EXPORT void
 InitTrackers(DeviceVelocityPtr vel, int ntracker);
 
-extern _X_EXPORT short
+extern _X_EXPORT BOOL
 ProcessVelocityData2D(DeviceVelocityPtr vel, int dx, int dy, int time);
 
 extern _X_EXPORT float
@@ -109,12 +115,6 @@ BasicComputeAcceleration(DeviceIntPtr dev, DeviceVelocityPtr vel,
 
 extern _X_EXPORT void
 FreeVelocityData(DeviceVelocityPtr vel);
-
-extern _X_INTERNAL BOOL
-InitializePredictableAccelerationProperties(DeviceIntPtr dev);
-
-extern _X_INTERNAL BOOL
-DeletePredictableAccelerationProperties(DeviceIntPtr dev);
 
 extern _X_EXPORT int
 SetAccelerationProfile(DeviceVelocityPtr vel, int profile_num);
@@ -129,12 +129,16 @@ SetDeviceSpecificAccelerationProfile(DeviceVelocityPtr vel,
 extern _X_INTERNAL void
 AccelerationDefaultCleanup(DeviceIntPtr dev);
 
-extern _X_INTERNAL void
-acceleratePointerPredictable(DeviceIntPtr dev, int first_valuator,
-                             int num_valuators, int *valuators, int evtime);
+extern _X_INTERNAL Bool
+InitPredictableAccelerationScheme(DeviceIntPtr dev,
+				  struct _ValuatorAccelerationRec* protoScheme);
 
 extern _X_INTERNAL void
-acceleratePointerLightweight(DeviceIntPtr dev, int first_valuator,
-                             int num_valuators, int *valuators, int ignored);
+acceleratePointerPredictable(DeviceIntPtr dev, ValuatorMask* val,
+                             CARD32 evtime);
+
+extern _X_INTERNAL void
+acceleratePointerLightweight(DeviceIntPtr dev, ValuatorMask* val,
+                             CARD32 evtime);
 
 #endif  /* POINTERVELOCITY_H */

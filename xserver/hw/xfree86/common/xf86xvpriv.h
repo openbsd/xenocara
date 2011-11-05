@@ -40,10 +40,11 @@ typedef struct {
    DestroyWindowProcPtr		DestroyWindow;
    ClipNotifyProcPtr		ClipNotify;
    WindowExposuresProcPtr	WindowExposures;
+   PostValidateTreeProcPtr	PostValidateTree;
    void                         (*AdjustFrame)(int, int, int, int);
    Bool                         (*EnterVT)(int, int);
    void                         (*LeaveVT)(int, int);
-   GCPtr			videoGC;
+   xf86ModeSetProc		*ModeSet;
 } XF86XVScreenRec, *XF86XVScreenPtr;
 
 typedef struct {
@@ -67,13 +68,13 @@ typedef struct {
    DrawablePtr pDraw;
    unsigned char type;
    unsigned int subWindowMode;
-   DDXPointRec clipOrg;
    RegionPtr clientClip;
+   RegionPtr ckeyFilled;
    RegionPtr pCompositeClip;
    Bool FreeCompositeClip;
    XvAdaptorRecPrivatePtr AdaptorRec;
    XvStatus isOn;
-   Bool moved;
+   Bool clipChanged;
    int vid_x, vid_y, vid_w, vid_h;
    int drw_x, drw_y, drw_w, drw_h;
    DevUnion DevPriv;
@@ -82,7 +83,6 @@ typedef struct {
 typedef struct _XF86XVWindowRec{
    XvPortRecPrivatePtr PortRec;
    struct _XF86XVWindowRec *next;
-   GCPtr pGC;
 } XF86XVWindowRec, *XF86XVWindowPtr;
 
 #endif  /* _XF86XVPRIV_H_ */

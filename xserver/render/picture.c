@@ -158,7 +158,7 @@ addFormat (FormatInitRec    formats[256],
     return ++nformat;
 }
 
-#define Mask(n)	((n) == 32 ? 0xffffffff : ((1 << (n))-1))
+#define Mask(n) ((1 << (n)) - 1)
 
 PictFormatPtr
 PictureCreateDefaultFormats (ScreenPtr pScreen, int *nformatp)
@@ -735,13 +735,12 @@ SetPictureToDefaults (PicturePtr    pPicture)
 
     pPicture->transform = 0;
 
-    pPicture->dither = None;
     pPicture->filter = PictureGetFilterId (FilterNearest, -1, TRUE);
     pPicture->filter_params = 0;
     pPicture->filter_nparams = 0;
 
     pPicture->serialNumber = GC_CHANGE_SERIAL_BIT;
-    pPicture->stateChanges = (1 << (CPLastBit+1)) - 1;
+    pPicture->stateChanges = -1;
     pPicture->pSourcePict = 0;
 }
 
@@ -812,51 +811,6 @@ static CARD32 xRenderColorToCard32(xRenderColor c)
         (c.blue >> 8);
 }
 
-static unsigned int premultiply(unsigned int x)
-{
-    unsigned int a = x >> 24;
-    unsigned int t = (x & 0xff00ff) * a + 0x800080;
-    t = (t + ((t >> 8) & 0xff00ff)) >> 8;
-    t &= 0xff00ff;
-
-    x = ((x >> 8) & 0xff) * a + 0x80;
-    x = (x + ((x >> 8) & 0xff));
-    x &= 0xff00;
-    x |= t | (a << 24);
-    return x;
-}
-
-static unsigned int INTERPOLATE_PIXEL_256(unsigned int x, unsigned int a,
-                                          unsigned int y, unsigned int b)
-{
-    CARD32 t = (x & 0xff00ff) * a + (y & 0xff00ff) * b;
-    t >>= 8;
-    t &= 0xff00ff;
-
-    x = ((x >> 8) & 0xff00ff) * a + ((y >> 8) & 0xff00ff) * b;
-    x &= 0xff00ff00;
-    x |= t;
-    return x;
-}
-
-CARD32
-PictureGradientColor (PictGradientStopPtr stop1,
-		      PictGradientStopPtr stop2,
-		      CARD32	          x)
-{
-     CARD32 current_color, next_color;
-     int	   dist, idist;
-
-     current_color = xRenderColorToCard32 (stop1->color);
-     next_color    = xRenderColorToCard32 (stop2->color);
-
-     dist  = (int) (256 * (x - stop1->x) / (stop2->x - stop1->x));
-     idist = 256 - dist;
-
-     return premultiply (INTERPOLATE_PIXEL_256 (current_color, idist,
-					       next_color, dist));
-}
-
 static void initGradient(SourcePictPtr pGradient, int stopCount,
                          xFixed *stopPoints, xRenderColor *stopColors, int *error)
 {
@@ -889,11 +843,6 @@ static void initGradient(SourcePictPtr pGradient, int stopCount,
         pGradient->gradient.stops[i].x = stopPoints[i];
         pGradient->gradient.stops[i].color = stopColors[i];
     }
-
-    pGradient->gradient.class	       = SourcePictClassUnknown;
-    pGradient->gradient.stopRange      = 0xffff;
-    pGradient->gradient.colorTable     = NULL;
-    pGradient->gradient.colorTableSize = 0;
 }
 
 static PicturePtr createSourcePicture(void)
@@ -968,8 +917,6 @@ CreateLinearGradientPicture (Picture pid, xPointFixed *p1, xPointFixed *p2,
     return pPicture;
 }
 
-#define FixedToDouble(x) ((x)/65536.)
-
 PicturePtr
 CreateRadialGradientPicture (Picture pid, xPointFixed *inner, xPointFixed *outer,
                              xFixed innerRadius, xFixed outerRadius,
@@ -1005,12 +952,6 @@ CreateRadialGradientPicture (Picture pid, xPointFixed *inner, xPointFixed *outer
     radial->c2.x = outer->x;
     radial->c2.y = outer->y;
     radial->c2.radius = outerRadius;
-    radial->cdx = (radial->c2.x - radial->c1.x) / 65536.;
-    radial->cdy = (radial->c2.y - radial->c1.y) / 65536.;
-    radial->dr = (radial->c2.radius - radial->c1.radius) / 65536.;
-    radial->A = (  radial->cdx * radial->cdx
-		   + radial->cdy * radial->cdy
-		   - radial->dr  * radial->dr);
     
     initGradient(pPicture->pSourcePict, nStops, stops, colors, error);
     if (*error) {
@@ -1261,7 +1202,7 @@ ChangePicture (PicturePtr	pPicture,
 	    }
 	    break;
 	case CPDither:
-	    pPicture->dither = NEXT_VAL(Atom);
+	    (void) NEXT_VAL(Atom); /* unimplemented */
 	    break;
 	case CPComponentAlpha:
 	    {
@@ -1391,11 +1332,8 @@ SetPictureTransform (PicturePtr	    pPicture,
     }
     else
     {
-	if (pPicture->transform)
-	{
-	    free(pPicture->transform);
-	    pPicture->transform = 0;
-	}
+	free(pPicture->transform);
+	pPicture->transform = NULL;
     }
     pPicture->serialNumber |= GC_CHANGE_SERIAL_BIT;
 
@@ -1483,7 +1421,6 @@ CopyPicture (PicturePtr	pSrc,
 	    pDst->polyMode = pSrc->polyMode;
 	    break;
 	case CPDither:
-	    pDst->dither = pSrc->dither;
 	    break;
 	case CPComponentAlpha:
 	    pDst->componentAlpha = pSrc->componentAlpha;
@@ -1778,11 +1715,23 @@ CompositeTriStrip (CARD8	    op,
 		   int		    npoints,
 		   xPointFixed	    *points)
 {
-    PictureScreenPtr	ps = GetPictureScreen(pDst->pDrawable->pScreen);
+    xTriangle           *tris, *tri;
+    int                 ntri;
     
-    ValidatePicture (pSrc);
-    ValidatePicture (pDst);
-    (*ps->TriStrip) (op, pSrc, pDst, maskFormat, xSrc, ySrc, npoints, points);
+    if (npoints < 3)
+        return;
+    ntri = npoints - 2;
+    tris = malloc(ntri * sizeof (xTriangle));
+    if (!tris)
+        return;
+    for (tri = tris; npoints >= 3; npoints--, points++, tri++)
+    {
+        tri->p1 = points[0];
+        tri->p2 = points[1];
+        tri->p3 = points[2];
+    }
+    CompositeTriangles (op, pSrc, pDst, maskFormat, xSrc, ySrc, ntri, tris);
+    free(tris);
 }
 
 void
@@ -1795,11 +1744,25 @@ CompositeTriFan (CARD8		op,
 		 int		npoints,
 		 xPointFixed	*points)
 {
-    PictureScreenPtr	ps = GetPictureScreen(pDst->pDrawable->pScreen);
+    xTriangle		*tris, *tri;
+    xPointFixed		*first;
+    int			ntri;
     
-    ValidatePicture (pSrc);
-    ValidatePicture (pDst);
-    (*ps->TriFan) (op, pSrc, pDst, maskFormat, xSrc, ySrc, npoints, points);
+    if (npoints < 3)
+	return;
+    ntri = npoints - 2;
+    tris = malloc(ntri * sizeof (xTriangle));
+    if (!tris)
+	return;
+    first = points++;
+    for (tri = tris; npoints >= 3; npoints--, points++, tri++)
+    {
+	tri->p1 = *first;
+	tri->p2 = points[0];
+	tri->p3 = points[1];
+    }
+    CompositeTriangles (op, pSrc, pDst, maskFormat, xSrc, ySrc, ntri, tris);
+    free(tris);
 }
 
 void

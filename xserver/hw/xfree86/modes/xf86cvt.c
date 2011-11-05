@@ -152,7 +152,7 @@ xf86CVTMode(int HDisplay, int VDisplay, float VRefresh, Bool Reduced,
 
     if (!Reduced) { /* simplified GTF calculation */
 
-        /* 4) Minimum time of vertical sync + back porch interval (µs) 
+        /* 4) Minimum time of vertical sync + back porch interval (Âµs) 
          * default 550.0 */
 #define CVT_MIN_VSYNC_BP 550.0
 
@@ -223,7 +223,7 @@ xf86CVTMode(int HDisplay, int VDisplay, float VRefresh, Bool Reduced,
         Mode->VSyncEnd = Mode->VSyncStart + VSync;
 
     } else { /* Reduced blanking */
-        /* Minimum vertical blanking interval time (µs) - default 460 */
+        /* Minimum vertical blanking interval time (Âµs) - default 460 */
 #define CVT_RB_MIN_VBLANK 460.0
 
         /* Fixed number of clocks for horizontal sync */
@@ -279,15 +279,7 @@ xf86CVTMode(int HDisplay, int VDisplay, float VRefresh, Bool Reduced,
     if (Interlaced)
         Mode->VTotal *= 2;
 
-    {
-        char  Name[256];
-        Name[0] = 0;
-
-        snprintf(Name, 256, "%dx%d", HDisplay, VDisplay);
-
-        Mode->name = xnfalloc(strlen(Name) + 1);
-        memcpy(Mode->name, Name, strlen(Name) + 1);
-    }
+    XNFasprintf(&Mode->name, "%dx%d", HDisplay, VDisplay);
 
     if (Reduced)
         Mode->Flags |= V_PHSYNC | V_NVSYNC;

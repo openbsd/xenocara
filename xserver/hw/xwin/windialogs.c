@@ -44,21 +44,9 @@
  * References to external globals
  */
 
-extern Bool			g_fCursor;
-extern HWND			g_hDlgDepthChange;
-extern HWND			g_hDlgExit;
-extern HWND			g_hDlgAbout;
-extern WINPREFS			pref;
 #ifdef XWIN_CLIPBOARD
 extern Bool			g_fClipboardStarted;
 #endif
-extern Bool			g_fSoftwareCursor;
-
-#if defined(XWIN_MULTIWINDOW)
-extern HICON                    g_hIconX;
-extern HICON                    g_hSmallIconX;
-#endif
-
 /*
  * Local function prototypes
  */
@@ -127,7 +115,7 @@ winDrawURLWindow (LPARAM lParam)
   /* Draw it */
   SetBkMode (draw->hDC, OPAQUE);
   SelectObject (draw->hDC, font);
-  DrawText (draw->hDC, str, strlen (str),&rect,DT_CENTER | DT_VCENTER);
+  DrawText (draw->hDC, str, strlen (str),&rect,DT_LEFT | DT_VCENTER);
   /* Delete the created font, replace it with stock font */
   DeleteObject (SelectObject (draw->hDC, GetStockObject (ANSI_VAR_FONT)));
 }
@@ -324,7 +312,7 @@ winDisplayExitDialog (winPrivScreenPtr pScreenPriv)
   
   /* Set focus to the Cancel button */
   PostMessage (g_hDlgExit, WM_NEXTDLGCTL,
-	       GetDlgItem (g_hDlgExit, IDCANCEL), TRUE);
+	       (WPARAM)GetDlgItem (g_hDlgExit, IDCANCEL), TRUE);
 }
 
 #define CONNECTED_CLIENTS_FORMAT	"There %s currently %d client%s connected."
@@ -353,11 +341,10 @@ winExitDlgProc (HWND hDialog, UINT message,
 	winInitDialog (hDialog);
 
 	/* Format the connected clients string */
-	pszConnectedClients = Xprintf (CONNECTED_CLIENTS_FORMAT,
+	if (asprintf (&pszConnectedClients, CONNECTED_CLIENTS_FORMAT,
            (s_pScreenPriv->iConnectedClients == 1) ? "is" : "are",
             s_pScreenPriv->iConnectedClients,
-           (s_pScreenPriv->iConnectedClients == 1) ? "" : "s");
-	if (!pszConnectedClients)
+           (s_pScreenPriv->iConnectedClients == 1) ? "" : "s") == -1)
 	    return TRUE;
      
         
@@ -495,11 +482,11 @@ winChangeDepthDlgProc (HWND hwndDialog, UINT message,
 
 #if CYGDEBUG
       winDebug ("winChangeDepthDlgProc - WM_INITDIALOG - orig bpp: %d, "
-	      "last bpp: %d\n",
+	      "current bpp: %d\n",
 	      s_pScreenInfo->dwBPP,
-	      s_pScreenPriv->dwLastWindowsBitsPixel);
+              GetDeviceCaps(s_pScreenPriv->hdcScreen, BITSPIXEL));
 #endif
-      
+
       winInitDialog( hwndDialog );
 
       return TRUE;
@@ -507,14 +494,13 @@ winChangeDepthDlgProc (HWND hwndDialog, UINT message,
     case WM_DISPLAYCHANGE:
 #if CYGDEBUG
       winDebug ("winChangeDepthDlgProc - WM_DISPLAYCHANGE - orig bpp: %d, "
-	      "last bpp: %d, new bpp: %d\n",
+	      "new bpp: %d\n",
 	      s_pScreenInfo->dwBPP,
-	      s_pScreenPriv->dwLastWindowsBitsPixel,
-	      wParam);
+              GetDeviceCaps(s_pScreenPriv->hdcScreen, BITSPIXEL));
 #endif
 
       /* Dismiss the dialog if the display returns to the original depth */
-      if (wParam == s_pScreenInfo->dwBPP)
+      if (GetDeviceCaps(s_pScreenPriv->hdcScreen, BITSPIXEL) == s_pScreenInfo->dwBPP)
 	{
 	  ErrorF ("winChangeDelthDlgProc - wParam == s_pScreenInfo->dwBPP\n");
 
@@ -594,7 +580,7 @@ winDisplayAboutDialog (winPrivScreenPtr pScreenPriv)
   
   /* Set focus to the OK button */
   PostMessage (g_hDlgAbout, WM_NEXTDLGCTL,
-	       GetDlgItem (g_hDlgAbout, IDOK), TRUE);
+	       (WPARAM)GetDlgItem (g_hDlgAbout, IDOK), TRUE);
 }
 
 
@@ -675,7 +661,7 @@ winAboutDlgProc (HWND hwndDialog, UINT message,
 
 	case ID_ABOUT_CHANGELOG:
 	  {
-	    HINSTANCE iReturn;
+	    int iReturn;
 #ifdef __CYGWIN__
 	    const char *	pszCygPath = "/usr/X11R6/share/doc/"
 	      "xorg-x11-xwin/changelog.html";
@@ -688,7 +674,7 @@ winAboutDlgProc (HWND hwndDialog, UINT message,
 		    "devel/server/changelog.html";
 #endif
 	    
-	    iReturn = ShellExecute (NULL,
+	    iReturn = (int)ShellExecute (NULL,
                                     "open",
                                     pszWinPath,
                                     NULL,
@@ -708,7 +694,7 @@ winAboutDlgProc (HWND hwndDialog, UINT message,
 	    const char *	pszPath = __VENDORDWEBSUPPORT__;
 	    int			iReturn;
 	    
-	    iReturn = ShellExecute (NULL,
+	    iReturn = (int)ShellExecute (NULL,
                                     "open",
                                     pszPath,
                                     NULL,
@@ -728,7 +714,7 @@ winAboutDlgProc (HWND hwndDialog, UINT message,
 	    const char *	pszPath = "http://x.cygwin.com/docs/ug/";
 	    int			iReturn;
 	    
-	    iReturn = ShellExecute (NULL,
+	    iReturn = (int)ShellExecute (NULL,
                                     "open",
                                     pszPath,
                                     NULL,
@@ -748,7 +734,7 @@ winAboutDlgProc (HWND hwndDialog, UINT message,
 	    const char *	pszPath = "http://x.cygwin.com/docs/faq/";
 	    int			iReturn;
 	    
-	    iReturn = ShellExecute (NULL,
+	    iReturn = (int)ShellExecute (NULL,
                                     "open",
                                     pszPath,
                                     NULL,

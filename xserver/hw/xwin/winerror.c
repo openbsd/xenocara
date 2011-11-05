@@ -31,20 +31,9 @@
 #ifdef HAVE_XWIN_CONFIG_H
 #include <xwin-config.h>
 #endif
-#ifdef XVENDORNAME
-#define VENDOR_STRING XVENDORNAME
-#define VENDOR_CONTACT BUILDERADDR
-#endif
 
 #include <../xfree86/common/xorgVersion.h>
 #include "win.h"
-
-/* References to external symbols */
-extern char *		g_pszCommandLine;
-extern const char *	g_pszLogFile;
-extern Bool		g_fSilentFatalError;
-extern Bool		g_fLogInited;
-
 
 #ifdef DDXOSVERRORF
 /* Prototype */
@@ -92,7 +81,7 @@ OsVendorFatalError (void)
     g_fLogInited = TRUE;
     g_pszLogFile = LogInit (g_pszLogFile, NULL);
   }
-  LogClose ();
+  LogClose (EXIT_ERR_ABORT);
 
   winMessageBoxF (
           "A fatal error has occurred and " PROJECT_NAME " will now exit.\n" \
@@ -112,12 +101,15 @@ winMessageBoxF (const char *pszError, UINT uType, ...)
   char *	pszErrorF = NULL;
   char *	pszMsgBox = NULL;
   va_list	args;
+  int		size;
 
   va_start(args, uType);
-  pszErrorF = Xvprintf(pszError, args);
+  size = vasprintf (&pszErrorF, pszError, args);
   va_end(args);
-  if (!pszErrorF)
+  if (size == -1) {
+    pszErrorF = NULL;
     goto winMessageBoxF_Cleanup;
+  }
 
 #define MESSAGEBOXF \
 	"%s\n" \
@@ -128,14 +120,18 @@ winMessageBoxF (const char *pszError, UINT uType, ...)
 	"XWin was started with the following command-line:\n\n" \
 	"%s\n"
 
-  pszMsgBox = Xprintf (MESSAGEBOXF,
-	   pszErrorF, VENDOR_STRING,
-		       XORG_VERSION_MAJOR, XORG_VERSION_MINOR, XORG_VERSION_PATCH, XORG_VERSION_SNAP, XORG_VERSION_CURRENT,
-		       VENDOR_CONTACT,
-		       BUILDERSTRING,
-	   g_pszCommandLine);
-  if (!pszMsgBox)
+  size = asprintf (&pszMsgBox, MESSAGEBOXF,
+		   pszErrorF, XVENDORNAME,
+		   XORG_VERSION_MAJOR, XORG_VERSION_MINOR, XORG_VERSION_PATCH,
+		    XORG_VERSION_SNAP, XORG_VERSION_CURRENT,
+		   BUILDERADDR,
+		   BUILDERSTRING,
+		   g_pszCommandLine);
+
+  if (size == -1) {
+    pszMsgBox = NULL;
     goto winMessageBoxF_Cleanup;
+  }
 
   /* Display the message box string */
   MessageBox (NULL,

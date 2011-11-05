@@ -46,7 +46,10 @@ subdir = os
 DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/m4/ac_define_dir.m4 \
-	$(top_srcdir)/m4/dolt.m4 $(top_srcdir)/configure.ac
+	$(top_srcdir)/m4/libtool.m4 $(top_srcdir)/m4/ltoptions.m4 \
+	$(top_srcdir)/m4/ltsugar.m4 $(top_srcdir)/m4/ltversion.m4 \
+	$(top_srcdir)/m4/lt~obsolete.m4 $(top_srcdir)/m4/xorg-tls.m4 \
+	$(top_srcdir)/configure.ac
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
 mkinstalldirs = $(SHELL) $(install_sh) -d
@@ -60,43 +63,45 @@ CONFIG_HEADER = $(top_builddir)/include/do-not-use-config.h \
 	$(top_builddir)/include/version-config.h
 CONFIG_CLEAN_FILES =
 LTLIBRARIES = $(noinst_LTLIBRARIES)
-liblog_la_LIBADD =
-am_liblog_la_OBJECTS = liblog_la-log.lo
-liblog_la_OBJECTS = $(am_liblog_la_OBJECTS)
 am__DEPENDENCIES_1 =
-libos_la_DEPENDENCIES = $(am__DEPENDENCIES_1) liblog.la
+libos_la_DEPENDENCIES = $(am__DEPENDENCIES_1)
 am__libos_la_SOURCES_DIST = WaitFor.c access.c auth.c backtrace.c \
-	connection.c io.c mitauth.c oscolor.c osdep.h osinit.c utils.c \
-	strcasecmp.c strcasestr.c xdmauth.c xsha1.c xstrans.c \
-	xprintf.c rpcauth.c xdmcp.c strlcat.c strlcpy.c privsep.c
-am__objects_1 = rpcauth.lo
-@SECURE_RPC_TRUE@am__objects_2 = $(am__objects_1)
-am__objects_3 = xdmcp.lo
-@XDMCP_TRUE@am__objects_4 = $(am__objects_3)
-am__objects_5 = strlcat.lo strlcpy.lo
-@NEED_STRLCAT_TRUE@am__objects_6 = $(am__objects_5)
-am__objects_7 = privsep.lo
-@X_PRIVSEP_TRUE@am__objects_8 = $(am__objects_7)
+	client.c connection.c io.c mitauth.c oscolor.c osdep.h \
+	osinit.c utils.c strcasecmp.c strcasestr.c xdmauth.c xsha1.c \
+	xstrans.c xprintf.c log.c rpcauth.c xdmcp.c strlcat.c \
+	strlcpy.c privsep.c
+am__objects_1 = log.lo
+am__objects_2 = rpcauth.lo
+@SECURE_RPC_TRUE@am__objects_3 = $(am__objects_2)
+am__objects_4 = xdmcp.lo
+@XDMCP_TRUE@am__objects_5 = $(am__objects_4)
+am__objects_6 = strlcat.lo strlcpy.lo
+@NEED_STRLCAT_TRUE@am__objects_7 = $(am__objects_6)
+am__objects_8 = privsep.lo
+@X_PRIVSEP_TRUE@am__objects_9 = $(am__objects_8)
 am_libos_la_OBJECTS = WaitFor.lo access.lo auth.lo backtrace.lo \
-	connection.lo io.lo mitauth.lo oscolor.lo osinit.lo utils.lo \
-	strcasecmp.lo strcasestr.lo xdmauth.lo xsha1.lo xstrans.lo \
-	xprintf.lo $(am__objects_2) $(am__objects_4) $(am__objects_6) \
-	$(am__objects_8)
+	client.lo connection.lo io.lo mitauth.lo oscolor.lo osinit.lo \
+	utils.lo strcasecmp.lo strcasestr.lo xdmauth.lo xsha1.lo \
+	xstrans.lo xprintf.lo $(am__objects_1) $(am__objects_3) \
+	$(am__objects_5) $(am__objects_7) $(am__objects_9)
 libos_la_OBJECTS = $(am_libos_la_OBJECTS)
 PROGRAMS = $(noinst_PROGRAMS)
-os_O_SOURCES = os.c
-os_O_OBJECTS = os.$(OBJEXT)
+am_os_O_OBJECTS =
+os_O_OBJECTS = $(am_os_O_OBJECTS)
 os_O_LDADD = $(LDADD)
 DEFAULT_INCLUDES = -I. -I$(srcdir) -I$(top_builddir)/include -I$(top_builddir)/include -I$(top_builddir)/include -I$(top_builddir)/include -I$(top_builddir)/include -I$(top_builddir)/include -I$(top_builddir)/include -I$(top_builddir)/include
 depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__depfiles_maybe = depfiles
 COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
 	$(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
+LTCOMPILE = $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) \
+	$(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) \
+	$(AM_CFLAGS) $(CFLAGS)
 CCLD = $(CC)
 LINK = $(LIBTOOL) --tag=CC --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
 	$(AM_LDFLAGS) $(LDFLAGS) -o $@
-SOURCES = $(liblog_la_SOURCES) $(libos_la_SOURCES) os.c
-DIST_SOURCES = $(liblog_la_SOURCES) $(am__libos_la_SOURCES_DIST) os.c
+SOURCES = $(libos_la_SOURCES) $(os_O_SOURCES)
+DIST_SOURCES = $(am__libos_la_SOURCES_DIST) $(os_O_SOURCES)
 ETAGS = etags
 CTAGS = ctags
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
@@ -105,8 +110,8 @@ ADMIN_MAN_DIR = @ADMIN_MAN_DIR@
 ADMIN_MAN_SUFFIX = @ADMIN_MAN_SUFFIX@
 AGP_FALSE = @AGP_FALSE@
 AGP_TRUE = @AGP_TRUE@
-AIGLX_FALSE = @AIGLX_FALSE@
-AIGLX_TRUE = @AIGLX_TRUE@
+AIGLX_DRI_LOADER_FALSE = @AIGLX_DRI_LOADER_FALSE@
+AIGLX_DRI_LOADER_TRUE = @AIGLX_DRI_LOADER_TRUE@
 ALLOCA = @ALLOCA@
 ALPHA_VIDEO_FALSE = @ALPHA_VIDEO_FALSE@
 ALPHA_VIDEO_TRUE = @ALPHA_VIDEO_TRUE@
@@ -119,7 +124,6 @@ APPLE_APPLICATION_NAME = @APPLE_APPLICATION_NAME@
 APP_MAN_DIR = @APP_MAN_DIR@
 APP_MAN_SUFFIX = @APP_MAN_SUFFIX@
 AR = @AR@
-ARM_BACKTRACE_CFLAGS = @ARM_BACKTRACE_CFLAGS@
 ARM_VIDEO_FALSE = @ARM_VIDEO_FALSE@
 ARM_VIDEO_TRUE = @ARM_VIDEO_TRUE@
 AS = @AS@
@@ -132,18 +136,19 @@ BSD_APM_FALSE = @BSD_APM_FALSE@
 BSD_APM_TRUE = @BSD_APM_TRUE@
 BSD_KQUEUE_APM_FALSE = @BSD_KQUEUE_APM_FALSE@
 BSD_KQUEUE_APM_TRUE = @BSD_KQUEUE_APM_TRUE@
-BUILDDOCS_FALSE = @BUILDDOCS_FALSE@
-BUILDDOCS_TRUE = @BUILDDOCS_TRUE@
 BUILD_DATE = @BUILD_DATE@
 BUILD_KDRIVEFBDEVLIB_FALSE = @BUILD_KDRIVEFBDEVLIB_FALSE@
 BUILD_KDRIVEFBDEVLIB_TRUE = @BUILD_KDRIVEFBDEVLIB_TRUE@
 BUILD_TIME = @BUILD_TIME@
+BUNDLE_ID_PREFIX = @BUNDLE_ID_PREFIX@
 CC = @CC@
 CCAS = @CCAS@
 CCASFLAGS = @CCASFLAGS@
 CCDEPMODE = @CCDEPMODE@
 CFLAGS = @CFLAGS@
 CHANGELOG_CMD = @CHANGELOG_CMD@
+CLIENTIDS_FALSE = @CLIENTIDS_FALSE@
+CLIENTIDS_TRUE = @CLIENTIDS_TRUE@
 COMPILEDDEFAULTFONTPATH = @COMPILEDDEFAULTFONTPATH@
 COMPOSITE_FALSE = @COMPOSITE_FALSE@
 COMPOSITE_TRUE = @COMPOSITE_TRUE@
@@ -160,12 +165,7 @@ CONFIG_WSCONS_TRUE = @CONFIG_WSCONS_TRUE@
 CPP = @CPP@
 CPPFLAGS = @CPPFLAGS@
 CWARNFLAGS = @CWARNFLAGS@
-CXX = @CXX@
-CXXCPP = @CXXCPP@
-CXXDEPMODE = @CXXDEPMODE@
-CXXFLAGS = @CXXFLAGS@
 CYGPATH_W = @CYGPATH_W@
-DARWIN_LIBS = @DARWIN_LIBS@
 DBE_FALSE = @DBE_FALSE@
 DBE_TRUE = @DBE_TRUE@
 DBUS_CFLAGS = @DBUS_CFLAGS@
@@ -200,7 +200,6 @@ DMX_BUILD_USB_FALSE = @DMX_BUILD_USB_FALSE@
 DMX_BUILD_USB_TRUE = @DMX_BUILD_USB_TRUE@
 DMX_FALSE = @DMX_FALSE@
 DMX_TRUE = @DMX_TRUE@
-DOLT_BASH = @DOLT_BASH@
 DOXYGEN = @DOXYGEN@
 DPMSExtension_FALSE = @DPMSExtension_FALSE@
 DPMSExtension_TRUE = @DPMSExtension_TRUE@
@@ -221,7 +220,7 @@ DRI_LIBS = @DRI_LIBS@
 DRI_TRUE = @DRI_TRUE@
 DSYMUTIL = @DSYMUTIL@
 DTRACE = @DTRACE@
-ECHO = @ECHO@
+DUMPBIN = @DUMPBIN@
 ECHO_C = @ECHO_C@
 ECHO_N = @ECHO_N@
 ECHO_T = @ECHO_T@
@@ -230,11 +229,12 @@ ENABLE_DEVEL_DOCS_FALSE = @ENABLE_DEVEL_DOCS_FALSE@
 ENABLE_DEVEL_DOCS_TRUE = @ENABLE_DEVEL_DOCS_TRUE@
 ENABLE_DOCS_FALSE = @ENABLE_DOCS_FALSE@
 ENABLE_DOCS_TRUE = @ENABLE_DOCS_TRUE@
+ENABLE_UNIT_TESTS_FALSE = @ENABLE_UNIT_TESTS_FALSE@
+ENABLE_UNIT_TESTS_TRUE = @ENABLE_UNIT_TESTS_TRUE@
 EXEEXT = @EXEEXT@
-F77 = @F77@
 FBDEVHW_FALSE = @FBDEVHW_FALSE@
 FBDEVHW_TRUE = @FBDEVHW_TRUE@
-FFLAGS = @FFLAGS@
+FGREP = @FGREP@
 FILE_MAN_DIR = @FILE_MAN_DIR@
 FILE_MAN_SUFFIX = @FILE_MAN_SUFFIX@
 FONT100DPIDIR = @FONT100DPIDIR@
@@ -247,11 +247,10 @@ FONTTYPE1DIR = @FONTTYPE1DIR@
 FOP = @FOP@
 FREEBSD_KLDLOAD_FALSE = @FREEBSD_KLDLOAD_FALSE@
 FREEBSD_KLDLOAD_TRUE = @FREEBSD_KLDLOAD_TRUE@
-GLIB_CFLAGS = @GLIB_CFLAGS@
-GLIB_LIBS = @GLIB_LIBS@
 GLX_ARCH_DEFINES = @GLX_ARCH_DEFINES@
 GLX_DEFINES = @GLX_DEFINES@
 GLX_FALSE = @GLX_FALSE@
+GLX_TLS = @GLX_TLS@
 GLX_TRUE = @GLX_TRUE@
 GL_CFLAGS = @GL_CFLAGS@
 GL_LIBS = @GL_LIBS@
@@ -264,12 +263,16 @@ HAVE_DOXYGEN_FALSE = @HAVE_DOXYGEN_FALSE@
 HAVE_DOXYGEN_TRUE = @HAVE_DOXYGEN_TRUE@
 HAVE_FOP_FALSE = @HAVE_FOP_FALSE@
 HAVE_FOP_TRUE = @HAVE_FOP_TRUE@
+HAVE_LD_WRAP_FALSE = @HAVE_LD_WRAP_FALSE@
+HAVE_LD_WRAP_TRUE = @HAVE_LD_WRAP_TRUE@
 HAVE_STYLESHEETS_FALSE = @HAVE_STYLESHEETS_FALSE@
 HAVE_STYLESHEETS_TRUE = @HAVE_STYLESHEETS_TRUE@
 HAVE_XMLTO_FALSE = @HAVE_XMLTO_FALSE@
 HAVE_XMLTO_TEXT_FALSE = @HAVE_XMLTO_TEXT_FALSE@
 HAVE_XMLTO_TEXT_TRUE = @HAVE_XMLTO_TEXT_TRUE@
 HAVE_XMLTO_TRUE = @HAVE_XMLTO_TRUE@
+HAVE_XSLTPROC_FALSE = @HAVE_XSLTPROC_FALSE@
+HAVE_XSLTPROC_TRUE = @HAVE_XSLTPROC_TRUE@
 HP300_VIDEO_FALSE = @HP300_VIDEO_FALSE@
 HP300_VIDEO_TRUE = @HP300_VIDEO_TRUE@
 HPPA_VIDEO_FALSE = @HPPA_VIDEO_FALSE@
@@ -315,7 +318,10 @@ KDRIVE_MOUSE_TRUE = @KDRIVE_MOUSE_TRUE@
 KDRIVE_PURE_INCS = @KDRIVE_PURE_INCS@
 KDRIVE_PURE_LIBS = @KDRIVE_PURE_LIBS@
 KDRIVE_TRUE = @KDRIVE_TRUE@
-LAUNCHD_ID_PREFIX = @LAUNCHD_ID_PREFIX@
+KHRONOS_OPENGL_REGISTRY_CFLAGS = @KHRONOS_OPENGL_REGISTRY_CFLAGS@
+KHRONOS_OPENGL_REGISTRY_LIBS = @KHRONOS_OPENGL_REGISTRY_LIBS@
+KHRONOS_SPEC_DIR = @KHRONOS_SPEC_DIR@
+LD = @LD@
 LDFLAGS = @LDFLAGS@
 LD_EXPORT_SYMBOLS_FLAG = @LD_EXPORT_SYMBOLS_FLAG@
 LEX = @LEX@
@@ -334,19 +340,19 @@ LINUX_ALPHA_FALSE = @LINUX_ALPHA_FALSE@
 LINUX_ALPHA_TRUE = @LINUX_ALPHA_TRUE@
 LINUX_IA64_FALSE = @LINUX_IA64_FALSE@
 LINUX_IA64_TRUE = @LINUX_IA64_TRUE@
+LIPO = @LIPO@
 LNXACPI_FALSE = @LNXACPI_FALSE@
 LNXACPI_TRUE = @LNXACPI_TRUE@
 LNXAPM_FALSE = @LNXAPM_FALSE@
 LNXAPM_TRUE = @LNXAPM_TRUE@
 LN_S = @LN_S@
-LTCOMPILE = @LTCOMPILE@
-LTCXXCOMPILE = @LTCXXCOMPILE@
 LTLIBOBJS = @LTLIBOBJS@
 MAINT = @MAINT@
 MAINTAINER_MODE_FALSE = @MAINTAINER_MODE_FALSE@
 MAINTAINER_MODE_TRUE = @MAINTAINER_MODE_TRUE@
 MAIN_LIB = @MAIN_LIB@
 MAKEINFO = @MAKEINFO@
+MANIFEST_TOOL = @MANIFEST_TOOL@
 MAN_SUBSTS = @MAN_SUBSTS@
 MISC_MAN_DIR = @MISC_MAN_DIR@
 MISC_MAN_SUFFIX = @MISC_MAN_SUFFIX@
@@ -356,6 +362,7 @@ NEED_STRLCAT_FALSE = @NEED_STRLCAT_FALSE@
 NEED_STRLCAT_TRUE = @NEED_STRLCAT_TRUE@
 NEED_VSNPRINTF_FALSE = @NEED_VSNPRINTF_FALSE@
 NEED_VSNPRINTF_TRUE = @NEED_VSNPRINTF_TRUE@
+NM = @NM@
 NMEDIT = @NMEDIT@
 OBJC = @OBJC@
 OBJCCLD = @OBJCCLD@
@@ -367,6 +374,8 @@ OBJEXT = @OBJEXT@
 OPENSSL_CFLAGS = @OPENSSL_CFLAGS@
 OPENSSL_LIBS = @OPENSSL_LIBS@
 OS_LIB = @OS_LIB@
+OTOOL = @OTOOL@
+OTOOL64 = @OTOOL64@
 PACKAGE = @PACKAGE@
 PACKAGE_BUGREPORT = @PACKAGE_BUGREPORT@
 PACKAGE_NAME = @PACKAGE_NAME@
@@ -377,7 +386,6 @@ PATH_SEPARATOR = @PATH_SEPARATOR@
 PCIACCESS_CFLAGS = @PCIACCESS_CFLAGS@
 PCIACCESS_LIBS = @PCIACCESS_LIBS@
 PCI_TXT_IDS_PATH = @PCI_TXT_IDS_PATH@
-PERL = @PERL@
 PIXMAN_CFLAGS = @PIXMAN_CFLAGS@
 PIXMAN_LIBS = @PIXMAN_LIBS@
 PKG_CONFIG = @PKG_CONFIG@
@@ -419,6 +427,7 @@ SPECIAL_DTRACE_OBJECTS_FALSE = @SPECIAL_DTRACE_OBJECTS_FALSE@
 SPECIAL_DTRACE_OBJECTS_TRUE = @SPECIAL_DTRACE_OBJECTS_TRUE@
 STANDALONE_XPBPROXY_FALSE = @STANDALONE_XPBPROXY_FALSE@
 STANDALONE_XPBPROXY_TRUE = @STANDALONE_XPBPROXY_TRUE@
+STRICT_CFLAGS = @STRICT_CFLAGS@
 STRIP = @STRIP@
 STYLESHEET_SRCDIR = @STYLESHEET_SRCDIR@
 SYSCONFDIR = @SYSCONFDIR@
@@ -428,8 +437,6 @@ TSLIB_LIBS = @TSLIB_LIBS@
 TSLIB_TRUE = @TSLIB_TRUE@
 UDEV_CFLAGS = @UDEV_CFLAGS@
 UDEV_LIBS = @UDEV_LIBS@
-UNITTESTS_FALSE = @UNITTESTS_FALSE@
-UNITTESTS_TRUE = @UNITTESTS_TRUE@
 UTILS_SYS_LIBS = @UTILS_SYS_LIBS@
 VBE_FALSE = @VBE_FALSE@
 VBE_TRUE = @VBE_TRUE@
@@ -446,8 +453,6 @@ XAA_FALSE = @XAA_FALSE@
 XAA_TRUE = @XAA_TRUE@
 XACE_FALSE = @XACE_FALSE@
 XACE_TRUE = @XACE_TRUE@
-XCALIBRATE_FALSE = @XCALIBRATE_FALSE@
-XCALIBRATE_TRUE = @XCALIBRATE_TRUE@
 XCSECURITY_FALSE = @XCSECURITY_FALSE@
 XCSECURITY_TRUE = @XCSECURITY_TRUE@
 XDMAUTH_FALSE = @XDMAUTH_FALSE@
@@ -483,6 +488,11 @@ XINERAMA_TRUE = @XINERAMA_TRUE@
 XKB_BASE_DIRECTORY = @XKB_BASE_DIRECTORY@
 XKB_BIN_DIRECTORY = @XKB_BIN_DIRECTORY@
 XKB_COMPILED_DIR = @XKB_COMPILED_DIR@
+XKB_DFLT_LAYOUT = @XKB_DFLT_LAYOUT@
+XKB_DFLT_MODEL = @XKB_DFLT_MODEL@
+XKB_DFLT_OPTIONS = @XKB_DFLT_OPTIONS@
+XKB_DFLT_RULES = @XKB_DFLT_RULES@
+XKB_DFLT_VARIANT = @XKB_DFLT_VARIANT@
 XKM_OUTPUT_DIR = @XKM_OUTPUT_DIR@
 XLIB_CFLAGS = @XLIB_CFLAGS@
 XLIB_LIBS = @XLIB_LIBS@
@@ -514,6 +524,7 @@ XORG_TRUE = @XORG_TRUE@
 XPBPROXY_CFLAGS = @XPBPROXY_CFLAGS@
 XPBPROXY_LIBS = @XPBPROXY_LIBS@
 XQUARTZ_FALSE = @XQUARTZ_FALSE@
+XQUARTZ_LIBS = @XQUARTZ_LIBS@
 XQUARTZ_SPARKLE = @XQUARTZ_SPARKLE@
 XQUARTZ_SPARKLE_FALSE = @XQUARTZ_SPARKLE_FALSE@
 XQUARTZ_SPARKLE_TRUE = @XQUARTZ_SPARKLE_TRUE@
@@ -532,6 +543,7 @@ XSERVER_DTRACE_FALSE = @XSERVER_DTRACE_FALSE@
 XSERVER_DTRACE_TRUE = @XSERVER_DTRACE_TRUE@
 XSERVER_LIBS = @XSERVER_LIBS@
 XSERVER_SYS_LIBS = @XSERVER_SYS_LIBS@
+XSLTPROC = @XSLTPROC@
 XSL_STYLESHEET = @XSL_STYLESHEET@
 XTSTEXAMPLES_DEP_CFLAGS = @XTSTEXAMPLES_DEP_CFLAGS@
 XTSTEXAMPLES_DEP_LIBS = @XTSTEXAMPLES_DEP_LIBS@
@@ -576,13 +588,11 @@ abi_ansic = @abi_ansic@
 abi_extension = @abi_extension@
 abi_videodrv = @abi_videodrv@
 abi_xinput = @abi_xinput@
+ac_ct_AR = @ac_ct_AR@
 ac_ct_CC = @ac_ct_CC@
-ac_ct_CXX = @ac_ct_CXX@
-ac_ct_F77 = @ac_ct_F77@
+ac_ct_DUMPBIN = @ac_ct_DUMPBIN@
 am__fastdepCC_FALSE = @am__fastdepCC_FALSE@
 am__fastdepCC_TRUE = @am__fastdepCC_TRUE@
-am__fastdepCXX_FALSE = @am__fastdepCXX_FALSE@
-am__fastdepCXX_TRUE = @am__fastdepCXX_TRUE@
 am__fastdepOBJC_FALSE = @am__fastdepOBJC_FALSE@
 am__fastdepOBJC_TRUE = @am__fastdepOBJC_TRUE@
 am__include = @am__include@
@@ -632,31 +642,23 @@ symbol_visibility = @symbol_visibility@
 sysconfdir = @sysconfdir@
 sysconfigdir = @sysconfigdir@
 target_alias = @target_alias@
-noinst_LTLIBRARIES = libos.la liblog.la
+noinst_LTLIBRARIES = libos.la
 AM_CFLAGS = $(DIX_CFLAGS) $(SHA1_CFLAGS)
 SECURERPC_SRCS = rpcauth.c
 XDMCP_SRCS = xdmcp.c
 STRLCAT_SRCS = strlcat.c strlcpy.c
 PRIVSEP_SRCS = privsep.c
-
-# Build a convenience library liblog.la that will be added into
-# libos.la. The split is done so that log.c can be built with
-# different compiler options.
-liblog_la_SOURCES = log.c
-# Add flags needed for proper backtraces of functions marked with GCC
-# __attribute__((noreturn)). Currently those flags are needed for
-# FatalError and AbortServer in log.c.
-liblog_la_CFLAGS = $(AM_CFLAGS) $(ARM_BACKTRACE_CFLAGS)
-libos_la_SOURCES = WaitFor.c access.c auth.c backtrace.c connection.c \
-	io.c mitauth.c oscolor.c osdep.h osinit.c utils.c strcasecmp.c \
-	strcasestr.c xdmauth.c xsha1.c xstrans.c xprintf.c \
-	$(am__append_1) $(am__append_2) $(am__append_3) \
-	$(am__append_4)
-libos_la_LIBADD = @SHA1_LIBS@ $(DLOPEN_LIBS) liblog.la
+XORG_SRCS = log.c
+libos_la_SOURCES = WaitFor.c access.c auth.c backtrace.c client.c \
+	connection.c io.c mitauth.c oscolor.c osdep.h osinit.c utils.c \
+	strcasecmp.c strcasestr.c xdmauth.c xsha1.c xstrans.c \
+	xprintf.c $(XORG_SRCS) $(am__append_1) $(am__append_2) \
+	$(am__append_3) $(am__append_4)
+libos_la_LIBADD = @SHA1_LIBS@ $(DLOPEN_LIBS)
 EXTRA_DIST = $(SECURERPC_SRCS) $(INTERNALMALLOC_SRCS) \
      $(XDMCP_SRCS) $(STRLCAT_SRCS)
 
-CLEANFILES = os.c
+@SPECIAL_DTRACE_OBJECTS_TRUE@os_O_SOURCES = 
 all: all-am
 
 .SUFFIXES:
@@ -699,8 +701,6 @@ clean-noinstLTLIBRARIES:
 	  echo "rm -f \"$${dir}/so_locations\""; \
 	  rm -f "$${dir}/so_locations"; \
 	done
-liblog.la: $(liblog_la_OBJECTS) $(liblog_la_DEPENDENCIES) 
-	$(LINK)  $(liblog_la_LDFLAGS) $(liblog_la_OBJECTS) $(liblog_la_LIBADD) $(LIBS)
 libos.la: $(libos_la_OBJECTS) $(libos_la_DEPENDENCIES) 
 	$(LINK)  $(libos_la_LDFLAGS) $(libos_la_OBJECTS) $(libos_la_LIBADD) $(LIBS)
 
@@ -724,11 +724,11 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/access.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/auth.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/backtrace.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/client.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/connection.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/io.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/liblog_la-log.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/log.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mitauth.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/os.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/oscolor.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/osinit.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/privsep.Plo@am__quote@
@@ -764,13 +764,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$<' object='$@' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(LTCOMPILE) -c -o $@ $<
-
-liblog_la-log.lo: log.c
-@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(liblog_la_CFLAGS) $(CFLAGS) -MT liblog_la-log.lo -MD -MP -MF "$(DEPDIR)/liblog_la-log.Tpo" -c -o liblog_la-log.lo `test -f 'log.c' || echo '$(srcdir)/'`log.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/liblog_la-log.Tpo" "$(DEPDIR)/liblog_la-log.Plo"; else rm -f "$(DEPDIR)/liblog_la-log.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='log.c' object='liblog_la-log.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(liblog_la_CFLAGS) $(CFLAGS) -c -o liblog_la-log.lo `test -f 'log.c' || echo '$(srcdir)/'`log.c
 
 mostlyclean-libtool:
 	-rm -f *.lo
@@ -878,7 +871,6 @@ install-strip:
 mostlyclean-generic:
 
 clean-generic:
-	-test -z "$(CLEANFILES)" || rm -f $(CLEANFILES)
 
 distclean-generic:
 	-test -z "$(CONFIG_CLEAN_FILES)" || rm -f $(CONFIG_CLEAN_FILES)
@@ -953,12 +945,8 @@ uninstall-am: uninstall-info-am
 # Generate dtrace object code for probes in libos & libdix
 @SPECIAL_DTRACE_OBJECTS_TRUE@dtrace.o: $(top_srcdir)/dix/Xserver.d $(am_libos_la_OBJECTS)
 @SPECIAL_DTRACE_OBJECTS_TRUE@	$(AM_V_GEN)$(DTRACE) -G -C -o $@ -s $(top_srcdir)/dix/Xserver.d .libs/*.o ../dix/.libs/*.o
-
 @SPECIAL_DTRACE_OBJECTS_TRUE@os.O: dtrace.o $(am_libos_la_OBJECTS)
 @SPECIAL_DTRACE_OBJECTS_TRUE@	$(AM_V_GEN)ld -r -o $@ dtrace.o .libs/*.o
-
-os.c:
-	touch $@
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:

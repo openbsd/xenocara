@@ -84,7 +84,6 @@ SOFTWARE.
 #include "closedev.h"
 #include "devbell.h"
 #include "getbmap.h"
-#include "getbmap.h"
 #include "getdctl.h"
 #include "getfctl.h"
 #include "getfocus.h"
@@ -92,7 +91,6 @@ SOFTWARE.
 #include "getmmap.h"
 #include "getprop.h"
 #include "getselev.h"
-#include "getvers.h"
 #include "getvers.h"
 #include "grabdev.h"
 #include "grabdevb.h"
@@ -359,7 +357,7 @@ int ChangeDeviceNotify;
 int DevicePresenceNotify;
 int DevicePropertyNotify;
 
-int RT_INPUTCLIENT;
+RESTYPE RT_INPUTCLIENT;
 
 /*****************************************************************
  *
@@ -511,7 +509,7 @@ SReplyIDispatch(ClientPtr client, int len, xGrabDeviceReply * rep)
         SRepXIQueryDevice(client, len, (xXIQueryDeviceReply*)rep);
     else if (rep->RepType == X_XIGrabDevice)
 	SRepXIGrabDevice(client, len, (xXIGrabDeviceReply *) rep);
-    else if (rep->RepType == X_XIGrabDevice)
+    else if (rep->RepType == X_XIPassiveGrabDevice)
 	SRepXIPassiveGrabDevice(client, len, (xXIPassiveGrabDeviceReply *) rep);
     else if (rep->RepType == X_XIListProperties)
 	SRepXIListProperties(client, len, (xXIListPropertiesReply *) rep);
@@ -758,6 +756,7 @@ static void SDeviceEvent(xXIDeviceEvent *from, xXIDeviceEvent *to)
     swapl(&to->mods.latched_mods, n);
     swapl(&to->mods.locked_mods, n);
     swapl(&to->mods.effective_mods, n);
+    swapl(&to->flags, n);
 
     ptr = (char*)(&to[1]);
     ptr += from->buttons_len * 4;
@@ -1155,8 +1154,7 @@ void
 AssignTypeAndName(DeviceIntPtr dev, Atom type, char *name)
 {
     dev->xinput_type = type;
-    dev->name = (char *)malloc(strlen(name) + 1);
-    strcpy(dev->name, name);
+    dev->name = strdup(name);
 }
 
 /***********************************************************************

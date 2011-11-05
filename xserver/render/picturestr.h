@@ -65,13 +65,8 @@ typedef struct pixman_transform PictTransform, *PictTransformPtr;
 #define SourcePictTypeRadial 2
 #define SourcePictTypeConical 3
 
-#define SourcePictClassUnknown    0
-#define SourcePictClassHorizontal 1
-#define SourcePictClassVertical   2
-
 typedef struct _PictSolidFill {
     unsigned int type;
-    unsigned int class;
     CARD32 color;
 } PictSolidFill, *PictSolidFillPtr;
 
@@ -82,22 +77,14 @@ typedef struct _PictGradientStop {
 
 typedef struct _PictGradient {
     unsigned int type;
-    unsigned int class;
     int nstops;
     PictGradientStopPtr stops;
-    int stopRange;
-    CARD32 *colorTable;
-    int colorTableSize;
 } PictGradient, *PictGradientPtr;
 
 typedef struct _PictLinearGradient {
     unsigned int type;
-    unsigned int class;
     int nstops;
     PictGradientStopPtr stops;
-    int stopRange;
-    CARD32 *colorTable;
-    int colorTableSize;
     xPointFixed p1;
     xPointFixed p2;
 } PictLinearGradient, *PictLinearGradientPtr;
@@ -110,28 +97,16 @@ typedef struct _PictCircle {
 
 typedef struct _PictRadialGradient {
     unsigned int type;
-    unsigned int class;
     int nstops;
     PictGradientStopPtr stops;
-    int stopRange;
-    CARD32 *colorTable;
-    int colorTableSize;
     PictCircle c1;
     PictCircle c2;
-    double cdx;
-    double cdy;
-    double dr;
-    double A;
 } PictRadialGradient, *PictRadialGradientPtr;
 
 typedef struct _PictConicalGradient {
     unsigned int type;
-    unsigned int class;
     int nstops;
     PictGradientStopPtr stops;
-    int stopRange;
-    CARD32 *colorTable;
-    int colorTableSize;
     xPointFixed center;
     xFixed angle;
 } PictConicalGradient, *PictConicalGradientPtr;
@@ -151,8 +126,6 @@ typedef struct _Picture {
     PictFormatShort format;	    /* PICT_FORMAT */
     int		    refcnt;
     CARD32	    id;
-    PicturePtr	    pNext;	    /* chain on same drawable */
-
     unsigned int    repeat : 1;
     unsigned int    graphicsExposures : 1;
     unsigned int    subWindowMode : 1;
@@ -162,7 +135,11 @@ typedef struct _Picture {
     unsigned int    clientClipType : 2;
     unsigned int    componentAlpha : 1;
     unsigned int    repeatType : 2;
-    unsigned int    unused : 21;
+    unsigned int    filter : 3;
+    unsigned int    stateChanges : CPLastBit;
+    unsigned int    unused : 18 - CPLastBit;
+
+    PicturePtr	    pNext;	    /* chain on same drawable */
 
     PicturePtr	    alphaMap;
     DDXPointRec	    alphaOrigin;
@@ -170,9 +147,6 @@ typedef struct _Picture {
     DDXPointRec	    clipOrigin;
     pointer	    clientClip;
 
-    Atom	    dither;
-
-    unsigned long   stateChanges;
     unsigned long   serialNumber;
 
     RegionPtr	    pCompositeClip;
@@ -181,10 +155,9 @@ typedef struct _Picture {
 
     PictTransform   *transform;
 
-    int		    filter;
+    SourcePictPtr   pSourcePict;
     xFixed	    *filter_params;
     int		    filter_nparams;
-    SourcePictPtr   pSourcePict;
 } PictureRec;
 
 typedef Bool (*PictFilterValidateParamsProcPtr) (ScreenPtr pScreen, int id,
@@ -205,6 +178,7 @@ typedef struct {
 #define PictFilterBest		4
 
 #define PictFilterConvolution	5
+/* if you add an 8th filter, expand the filter bitfield above */
 
 typedef struct {
     char	    *alias;
@@ -286,24 +260,6 @@ typedef void	(*TrianglesProcPtr)	    (CARD8	    op,
 					     int	    ntri,
 					     xTriangle	    *tris);
 
-typedef void	(*TriStripProcPtr)	    (CARD8	    op,
-					     PicturePtr	    pSrc,
-					     PicturePtr	    pDst,
-					     PictFormatPtr  maskFormat,
-					     INT16	    xSrc,
-					     INT16	    ySrc,
-					     int	    npoint,
-					     xPointFixed    *points);
-
-typedef void	(*TriFanProcPtr)	    (CARD8	    op,
-					     PicturePtr	    pSrc,
-					     PicturePtr	    pDst,
-					     PictFormatPtr  maskFormat,
-					     INT16	    xSrc,
-					     INT16	    ySrc,
-					     int	    npoint,
-					     xPointFixed    *points);
-
 typedef Bool	(*InitIndexedProcPtr)	    (ScreenPtr	    pScreen,
 					     PictFormatPtr  pFormat);
 
@@ -382,8 +338,6 @@ typedef struct _PictureScreen {
 
     TrapezoidsProcPtr		Trapezoids;
     TrianglesProcPtr		Triangles;
-    TriStripProcPtr		TriStrip;
-    TriFanProcPtr		TriFan;
 
     RasterizeTrapezoidProcPtr	RasterizeTrapezoid;
 
@@ -616,11 +570,6 @@ CompositeTriFan (CARD8		op,
 		 INT16		ySrc,
 		 int		npoints,
 		 xPointFixed	*points);
-
-extern _X_EXPORT CARD32
-PictureGradientColor (PictGradientStopPtr stop1,
-		      PictGradientStopPtr stop2,
-		      CARD32	          x);
 
 extern _X_EXPORT void RenderExtensionInit (void);
 

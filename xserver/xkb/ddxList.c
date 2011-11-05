@@ -156,34 +156,45 @@ char	tmpname[PATH_MAX];
 #endif
     if (XkbBaseDirectory!=NULL) {
 	if ((list->pattern[what][0]=='*')&&(list->pattern[what][1]=='\0')) {
-	    buf = Xprintf("%s/%s.dir",XkbBaseDirectory,componentDirs[what]);
-	    in= fopen(buf,"r");
+	    if (asprintf(&buf, "%s/%s.dir", XkbBaseDirectory,
+			 componentDirs[what]) == -1)
+		buf = NULL;
+	    else
+		in = fopen(buf,"r");
 	}
 	if (!in) {
 	    haveDir= FALSE;
 	    free(buf);
-	    buf = Xprintf(
-		"'%s/xkbcomp' '-R%s/%s' -w %ld -l -vlfhpR '%s'" W32_tmparg,
-                XkbBinDirectory,XkbBaseDirectory,componentDirs[what],(long)
-		((xkbDebugFlags<2)?1:((xkbDebugFlags>10)?10:xkbDebugFlags)),
-		file W32_tmpfile
-                );
+	    if (asprintf
+		(&buf,
+		 "'%s/xkbcomp' '-R%s/%s' -w %ld -l -vlfhpR '%s'" W32_tmparg,
+		 XkbBinDirectory, XkbBaseDirectory, componentDirs[what],
+		 (long) ((xkbDebugFlags < 2) ? 1 :
+			 ((xkbDebugFlags > 10) ? 10 : xkbDebugFlags)),
+		 file W32_tmpfile
+		    ) == -1)
+		buf = NULL;
 	}
     }
     else {
 	if ((list->pattern[what][0]=='*')&&(list->pattern[what][1]=='\0')) {
-	    buf = Xprintf("%s.dir",componentDirs[what]);
-	    in= fopen(buf,"r");
+	    if (asprintf(&buf, "%s.dir", componentDirs[what]) == -1)
+		buf = NULL;
+	    else
+		in = fopen(buf,"r");
 	}
 	if (!in) {
 	    haveDir= FALSE;
 	    free(buf);
-	    buf = Xprintf(
-		"xkbcomp -R%s -w %ld -l -vlfhpR '%s'" W32_tmparg,
-                componentDirs[what],(long)
-		((xkbDebugFlags<2)?1:((xkbDebugFlags>10)?10:xkbDebugFlags)),
-		file W32_tmpfile
-                );
+	    if (asprintf
+		(&buf,
+		 "xkbcomp -R%s -w %ld -l -vlfhpR '%s'" W32_tmparg,
+		 componentDirs[what],
+		 (long)	((xkbDebugFlags < 2) ? 1 :
+			 ((xkbDebugFlags > 10) ? 10 : xkbDebugFlags)),
+		 file W32_tmpfile
+		    ) == -1)
+		buf = NULL;
 	}
     }
     status= Success;
@@ -202,8 +213,7 @@ char	tmpname[PATH_MAX];
     }
     if (!in)
     {
-        if (buf != NULL)
-	    free(buf);
+	free(buf);
 #ifdef WIN32
 	unlink(tmpname);
 #endif
@@ -212,8 +222,10 @@ char	tmpname[PATH_MAX];
     list->nFound[what]= 0;
     free(buf);
     buf = malloc(PATH_MAX * sizeof(char));
-    if (!buf)
+    if (!buf) {
+        fclose(in);
         return BadAlloc;
+    }
     while ((status==Success)&&((tmp=fgets(buf,PATH_MAX,in))!=NULL)) {
 	unsigned flags;
 	register unsigned int i;
@@ -266,8 +278,7 @@ char	tmpname[PATH_MAX];
     fclose(in);
     unlink(tmpname);
 #endif
-    if (buf != NULL)
-        free(buf);
+    free(buf);
     return status;
 }
 

@@ -1,5 +1,6 @@
 /*
- * Copyright © 2006 Sun Microsystems, Inc.  All rights reserved.
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * Copyright 2010 Red Hat, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -255,6 +256,15 @@ ProcXFixesExpandRegion (ClientPtr client);
 int
 SProcXFixesExpandRegion (ClientPtr client);
 
+int
+PanoramiXFixesSetGCClipRegion (ClientPtr client);
+
+int
+PanoramiXFixesSetWindowShapeRegion (ClientPtr client);
+
+int
+PanoramiXFixesSetPictureClipRegion (ClientPtr client);
+
 /* Cursor Visibility (Version 4) */
 
 int 
@@ -268,5 +278,24 @@ ProcXFixesShowCursor (ClientPtr client);
 
 int 
 SProcXFixesShowCursor (ClientPtr client);
+
+/* Version 5 */
+
+int
+ProcXFixesCreatePointerBarrier (ClientPtr client);
+
+int
+SProcXFixesCreatePointerBarrier (ClientPtr client);
+
+int
+ProcXFixesDestroyPointerBarrier (ClientPtr client);
+
+int
+SProcXFixesDestroyPointerBarrier (ClientPtr client);
+
+/* Xinerama */
+extern int (*PanoramiXSaveXFixesVector[XFixesNumberRequests])(ClientPtr);
+void PanoramiXFixesInit (void);
+void PanoramiXFixesReset (void);
 
 #endif /* _XFIXESINT_H_ */

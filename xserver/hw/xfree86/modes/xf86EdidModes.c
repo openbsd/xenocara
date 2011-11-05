@@ -641,7 +641,6 @@ DDCModeFromDetailedTiming(int scrnIndex, struct detailed_timings *timing,
     return Mode;
 }
 
-#if XORG_VERSION_CURRENT < XORG_VERSION_NUMERIC(7,0,0,0,0)
 static DisplayModePtr
 DDCModesFromCVT(int scrnIndex, struct cvt_timings *t)
 {
@@ -670,7 +669,6 @@ DDCModesFromCVT(int scrnIndex, struct cvt_timings *t)
 
     return modes;
 }
-#endif
 
 static const struct {
     short w;
@@ -1026,12 +1024,10 @@ static void handle_detailed_modes(struct detailed_monitor_section *det_mon,
                                           p->quirks, p->timing_level,p->rb);
         p->Modes = xf86ModesAdd(p->Modes, Mode);
         break;
-#if XORG_VERSION_CURRENT < XORG_VERSION_NUMERIC(7,0,0,0,0)
     case DS_CVT:
         Mode = DDCModesFromCVT(p->DDC->scrnIndex, det_mon->section.cvt);
         p->Modes = xf86ModesAdd(p->Modes, Mode);
         break;
-#endif
     case DS_EST_III:
 	Mode = DDCModesFromEstIII(det_mon->section.est_iii);
 	p->Modes = xf86ModesAdd(p->Modes, Mode);

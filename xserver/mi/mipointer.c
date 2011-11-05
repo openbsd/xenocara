@@ -23,6 +23,29 @@ used in advertising or otherwise to promote the sale, use or other dealings
 in this Software without prior written authorization from The Open Group.
 */
 
+/**
+ * @file
+ * This file contains functions to move the pointer on the screen and/or
+ * restrict its movement. These functions are divided into two sets:
+ * Screen-specific functions that are used as function pointers from other
+ * parts of the server (and end up heavily wrapped by e.g. animcur and
+ * xfixes):
+ *      miPointerConstrainCursor
+ *      miPointerCursorLimits
+ *      miPointerDisplayCursor
+ *      miPointerRealizeCursor
+ *      miPointerUnrealizeCursor
+ *      miPointerSetCursorPosition
+ *      miRecolorCursor
+ *      miPointerDeviceInitialize
+ *      miPointerDeviceCleanup
+ * If wrapped, these are the last element in the wrapping chain. They may
+ * call into sprite-specific code through further function pointers though.
+ *
+ * The second type of functions are those that are directly called by the
+ * DIX, DDX and some drivers.
+ */
+
 #ifdef HAVE_DIX_CONFIG_H
 #include <dix-config.h>
 #endif
@@ -39,6 +62,8 @@ in this Software without prior written authorization from The Open Group.
 # include   "cursorstr.h"
 # include   "dixstruct.h"
 # include   "inputstr.h"
+# include   "inpututils.h"
+# include   "eventstr.h"
 
 DevPrivateKeyRec miPointerScreenKeyRec;
 
@@ -49,7 +74,7 @@ DevPrivateKeyRec miPointerScreenKeyRec;
 DevPrivateKeyRec miPointerPrivKeyRec;
 
 #define MIPOINTER(dev) \
-    ((!IsMaster(dev) && !dev->u.master) ? \
+    (IsFloating(dev) ? \
         (miPointerPtr)dixLookupPrivate(&(dev)->devPrivates, miPointerPrivKey): \
         (miPointerPtr)dixLookupPrivate(&(GetMaster(dev, MASTER_POINTER))->devPrivates, miPointerPrivKey))
 
@@ -75,7 +100,7 @@ static void miPointerDeviceCleanup(DeviceIntPtr pDev,
                                    ScreenPtr pScreen);
 static void miPointerMoveNoEvent (DeviceIntPtr pDev, ScreenPtr pScreen, int x, int y);
 
-static EventList* events; /* for WarpPointer MotionNotifies */
+static InternalEvent* events; /* for WarpPointer MotionNotifies */
 
 Bool
 miPointerInitialize (ScreenPtr                  pScreen,
@@ -125,35 +150,16 @@ miPointerInitialize (ScreenPtr                  pScreen,
     return TRUE;
 }
 
+/**
+ * Destroy screen-specific information.
+ *
+ * @param index Screen index of the screen in screenInfo.screens[]
+ * @param pScreen The actual screen pointer
+ */
 static Bool
 miPointerCloseScreen (int index, ScreenPtr pScreen)
 {
-#if 0
-    miPointerPtr pPointer;
-    DeviceIntPtr pDev;
-#endif
-
     SetupScreen(pScreen);
-
-#if 0
-    for (pDev = inputInfo.devices; pDev; pDev = pDev->next)
-    {
-        if (DevHasCursor(pDev))
-        {
-            pPointer = MIPOINTER(pDev);
-
-            if (pScreen == pPointer->pScreen)
-                pPointer->pScreen = 0;
-            if (pScreen == pPointer->pSpriteScreen)
-                pPointer->pSpriteScreen = 0;
-        }
-    }
-
-    if (MIPOINTER(inputInfo.pointer)->pScreen == pScreen)
-        MIPOINTER(inputInfo.pointer)->pScreen = 0;
-    if (MIPOINTER(inputInfo.pointer)->pSpriteScreen == pScreen)
-        MIPOINTER(inputInfo.pointer)->pSpriteScreen = 0;
-#endif
 
     pScreen->CloseScreen = pScreenPriv->CloseScreen;
     free((pointer) pScreenPriv);
@@ -188,8 +194,7 @@ miPointerDisplayCursor (DeviceIntPtr pDev, ScreenPtr pScreen, CursorPtr pCursor)
     miPointerPtr pPointer;
 
     /* return for keyboards */
-    if ((IsMaster(pDev) && !DevHasCursor(pDev)) ||
-        (!IsMaster(pDev) && pDev->u.master && !DevHasCursor(pDev->u.master)))
+    if (!IsPointerDevice(pDev))
             return FALSE;
 
     pPointer = MIPOINTER(pDev);
@@ -200,6 +205,15 @@ miPointerDisplayCursor (DeviceIntPtr pDev, ScreenPtr pScreen, CursorPtr pCursor)
     return TRUE;
 }
 
+/**
+ * Set up the constraints for the given device. This function does not
+ * actually constrain the cursor but merely copies the given box to the
+ * internal constraint storage.
+ *
+ * @param pDev The device to constrain to the box
+ * @param pBox The rectangle to constrain the cursor to
+ * @param pScreen Used for copying screen confinement
+ */
 static void
 miPointerConstrainCursor (DeviceIntPtr pDev, ScreenPtr pScreen, BoxPtr pBox)
 {
@@ -211,7 +225,17 @@ miPointerConstrainCursor (DeviceIntPtr pDev, ScreenPtr pScreen, BoxPtr pBox)
     pPointer->confined = PointerConfinedToScreen(pDev);
 }
 
-/*ARGSUSED*/
+/**
+ * Should calculate the box for the given cursor, based on screen and the
+ * confinement given. But we assume that whatever box is passed in is valid
+ * anyway.
+ *
+ * @param pDev The device to calculate the cursor limits for
+ * @param pScreen The screen the confinement happens on
+ * @param pCursor The screen the confinement happens on
+ * @param pHotBox The confinement box for the cursor
+ * @param[out] pTopLeftBox The new confinement box, always *pHotBox.
+ */
 static void
 miPointerCursorLimits(DeviceIntPtr pDev, ScreenPtr pScreen, CursorPtr pCursor,
                       BoxPtr pHotBox, BoxPtr pTopLeftBox)
@@ -219,15 +243,39 @@ miPointerCursorLimits(DeviceIntPtr pDev, ScreenPtr pScreen, CursorPtr pCursor,
     *pTopLeftBox = *pHotBox;
 }
 
-static Bool GenerateEvent;
-
+/**
+ * Set the device's cursor position to the x/y position on the given screen.
+ * Generates and event if required.
+ *
+ * This function is called from:
+ *    - sprite init code to place onto initial position
+ *    - the various WarpPointer implementations (core, XI, Xinerama, dmx,…)
+ *    - during the cursor update path in CheckMotion
+ *    - in the Xinerama part of NewCurrentScreen
+ *    - when a RandR/RandR1.2 mode was applied (it may have moved the pointer, so
+ *      it's set back to the original pos)
+ *
+ * @param pDev The device to move
+ * @param pScreen The screen the device is on
+ * @param x The x coordinate in per-screen coordinates
+ * @param y The y coordinate in per-screen coordinates
+ * @param generateEvent True if the pointer movement should generate an
+ * event.
+ *
+ * @return TRUE in all cases
+ */
 static Bool
 miPointerSetCursorPosition(DeviceIntPtr pDev, ScreenPtr pScreen,
                            int x, int y, Bool generateEvent)
 {
     SetupScreen (pScreen);
+    miPointerPtr pPointer = MIPOINTER(pDev);
 
-    GenerateEvent = generateEvent;
+    pPointer->generateEvent = generateEvent;
+
+    if (pScreen->ConstrainCursorHarder)
+	pScreen->ConstrainCursorHarder(pDev, pScreen, Absolute, &x, &y);
+
     /* device dependent - must pend signal and call miPointerWarpCursor */
     (*pScreenPriv->screenFuncs->WarpCursor) (pDev, pScreen, x, y);
     if (!generateEvent)
@@ -235,9 +283,13 @@ miPointerSetCursorPosition(DeviceIntPtr pDev, ScreenPtr pScreen,
     return TRUE;
 }
 
-/* Set up sprite information for the device.
-   This function will be called once for each device after it is initialized
-   in the DIX.
+/**
+ * Set up sprite information for the device.
+ * This function will be called once for each device after it is initialized
+ * in the DIX.
+ *
+ * @param pDev The newly created device
+ * @param pScreen The initial sprite scree.
  */
 static Bool
 miPointerDeviceInitialize(DeviceIntPtr pDev, ScreenPtr pScreen)
@@ -260,6 +312,7 @@ miPointerDeviceInitialize(DeviceIntPtr pDev, ScreenPtr pScreen)
     pPointer->confined = FALSE;
     pPointer->x = 0;
     pPointer->y = 0;
+    pPointer->generateEvent = FALSE;
 
     if (!((*pScreenPriv->spriteFuncs->DeviceCursorInitialize)(pDev, pScreen)))
     {
@@ -271,15 +324,19 @@ miPointerDeviceInitialize(DeviceIntPtr pDev, ScreenPtr pScreen)
     return TRUE;
 }
 
-/* Clean up after device.
-   This function will be called once before the device is freed in the DIX
+/**
+ * Clean up after device.
+ * This function will be called once before the device is freed in the DIX
+ *
+ * @param pDev The device to be removed from the server
+ * @param pScreen Current screen of the device
  */
 static void
 miPointerDeviceCleanup(DeviceIntPtr pDev, ScreenPtr pScreen)
 {
     SetupScreen(pScreen);
 
-    if (!IsMaster(pDev) && pDev->u.master)
+    if (!IsMaster(pDev) && !IsFloating(pDev))
         return;
 
     (*pScreenPriv->spriteFuncs->DeviceCursorCleanup)(pDev, pScreen);
@@ -288,7 +345,17 @@ miPointerDeviceCleanup(DeviceIntPtr pDev, ScreenPtr pScreen)
 }
 
 
-/* Once signals are ignored, the WarpCursor function can call this */
+/**
+ * Warp the pointer to the given position on the given screen. May generate
+ * an event, depending on whether we're coming from miPointerSetPosition.
+ *
+ * Once signals are ignored, the WarpCursor function can call this
+ *
+ * @param pDev The device to warp
+ * @param pScreen Screen to warp on
+ * @param x The x coordinate in per-screen coordinates
+ * @param y The y coordinate in per-screen coordinates
+ */
 
 void
 miPointerWarpCursor (DeviceIntPtr pDev, ScreenPtr pScreen, int x, int y)
@@ -305,7 +372,7 @@ miPointerWarpCursor (DeviceIntPtr pDev, ScreenPtr pScreen, int x, int y)
         changedScreen = TRUE;
     }
 
-    if (GenerateEvent)
+    if (pPointer->generateEvent)
 	miPointerMove (pDev, pScreen, x, y);
     else
         miPointerMoveNoEvent(pDev, pScreen, x, y);
@@ -321,16 +388,11 @@ miPointerWarpCursor (DeviceIntPtr pDev, ScreenPtr pScreen, int x, int y)
         UpdateSpriteForScreen (pDev, pScreen) ;
 }
 
-/*
- * Pointer/CursorDisplay interface routines
- */
-
-/*
- * miPointerUpdateSprite
+/**
+ * Syncronize the sprite with the cursor.
  *
- * Syncronize the sprite with the cursor - called from ProcessInputEvents
+ * @param pDev The device to sync
  */
-
 void
 miPointerUpdateSprite (DeviceIntPtr pDev)
 {
@@ -407,6 +469,14 @@ miPointerUpdateSprite (DeviceIntPtr pDev)
     }
 }
 
+/**
+ * Set the device to the coordinates on the given screen.
+ *
+ * @param pDev The device to move
+ * @param screen_no Index of the screen to move to
+ * @param x The x coordinate in per-screen coordinates
+ * @param y The y coordinate in per-screen coordinates
+ */
 void
 miPointerSetScreen(DeviceIntPtr pDev, int screen_no, int x, int y)
 {
@@ -425,12 +495,18 @@ miPointerSetScreen(DeviceIntPtr pDev, int screen_no, int x, int y)
         pPointer->limits.y2 = pScreen->height;
 }
 
+/**
+ * @return The current screen of the VCP
+ */
 ScreenPtr
 miPointerCurrentScreen (void)
 {
     return miPointerGetScreen(inputInfo.pointer);
 }
 
+/**
+ * @return The current screen of the given device or NULL.
+ */
 ScreenPtr
 miPointerGetScreen(DeviceIntPtr pDev)
 {
@@ -468,7 +544,7 @@ miPointerMoveNoEvent (DeviceIntPtr pDev, ScreenPtr pScreen,
      * VCP, as this may cause a non-HW rendered cursor to be rendered during
      * SIGIO. This again leads to allocs during SIGIO which leads to SIGABRT.
      */
-    if ((pDev == inputInfo.pointer || (!IsMaster(pDev) && pDev->u.master == inputInfo.pointer))
+    if (GetMaster(pDev, MASTER_POINTER) == inputInfo.pointer
         && !pScreenPriv->waitForUpdate && pScreen == pPointer->pSpriteScreen)
     {
 	pPointer->devx = x;
@@ -482,8 +558,24 @@ miPointerMoveNoEvent (DeviceIntPtr pDev, ScreenPtr pScreen,
     pPointer->pScreen = pScreen;
 }
 
+/**
+ * Set the devices' cursor position to the given x/y position.
+ *
+ * This function is called during the pointer update path in
+ * GetPointerEvents and friends (and the same in the xwin DDX).
+ *
+ * The coordinates provided are always absolute. The parameter mode whether
+ * it was relative or absolute movement that landed us at those coordinates.
+ *
+ * @param pDev The device to move
+ * @param mode Movement mode (Absolute or Relative)
+ * @param[in,out] x The x coordiante in screen coordinates (in regards to total
+ * desktop size)
+ * @param[in,out] y The y coordiante in screen coordinates (in regards to total
+ * desktop size)
+ */
 void
-miPointerSetPosition(DeviceIntPtr pDev, int *x, int *y)
+miPointerSetPosition(DeviceIntPtr pDev, int mode, int *x, int *y)
 {
     miPointerScreenPtr	pScreenPriv;
     ScreenPtr		pScreen;
@@ -511,7 +603,6 @@ miPointerSetPosition(DeviceIntPtr pDev, int *x, int *y)
 		pScreen = newScreen;
 		(*pScreenPriv->screenFuncs->NewEventScreen) (pDev, pScreen,
 							     FALSE);
-		pScreenPriv = GetScreenPrivate (pScreen);
 	    	/* Smash the confine to the new screen */
                 pPointer->limits.x2 = pScreen->width;
                 pPointer->limits.y2 = pScreen->height;
@@ -528,6 +619,9 @@ miPointerSetPosition(DeviceIntPtr pDev, int *x, int *y)
     if (*y >= pPointer->limits.y2)
 	*y = pPointer->limits.y2 - 1;
 
+    if (pScreen->ConstrainCursorHarder)
+       pScreen->ConstrainCursorHarder(pDev, pScreen, mode, x, y);
+
     if (pPointer->x == *x && pPointer->y == *y && 
             pPointer->pScreen == pScreen) 
         return;
@@ -535,6 +629,12 @@ miPointerSetPosition(DeviceIntPtr pDev, int *x, int *y)
     miPointerMoveNoEvent(pDev, pScreen, *x, *y);
 }
 
+/**
+ * Get the current position of the device in desktop coordinates.
+ *
+ * @param x Return value for the current x coordinate in desktop coordiates.
+ * @param y Return value for the current y coordinate in desktop coordiates.
+ */
 void
 miPointerGetPosition(DeviceIntPtr pDev, int *x, int *y)
 {
@@ -548,11 +648,21 @@ void darwinEvents_lock(void);
 void darwinEvents_unlock(void);
 #endif
 
+/**
+ * Move the device's pointer to the x/y coordinates on the given screen.
+ * This function generates and enqueues pointer events.
+ *
+ * @param pDev The device to move
+ * @param pScreen The screen the device is on
+ * @param x The x coordinate in per-screen coordinates
+ * @param y The y coordinate in per-screen coordinates
+ */
 void
 miPointerMove (DeviceIntPtr pDev, ScreenPtr pScreen, int x, int y)
 {
     int i, nevents;
     int valuators[2];
+    ValuatorMask mask;
 
     miPointerMoveNoEvent(pDev, pScreen, x, y);
 
@@ -571,14 +681,16 @@ miPointerMove (DeviceIntPtr pDev, ScreenPtr pScreen, int x, int y)
         }
     }
 
-    nevents = GetPointerEvents(events, pDev, MotionNotify, 0, POINTER_SCREEN | POINTER_ABSOLUTE, 0, 2, valuators);
+    valuator_mask_set_range(&mask, 0, 2, valuators);
+    nevents = GetPointerEvents(events, pDev, MotionNotify, 0,
+                               POINTER_SCREEN | POINTER_ABSOLUTE | POINTER_NORAW, &mask);
 
     OsBlockSignals();
 #ifdef XQUARTZ
     darwinEvents_lock();
 #endif
     for (i = 0; i < nevents; i++)
-        mieqEnqueue(pDev, (InternalEvent*)events[i].event);
+        mieqEnqueue(pDev, &events[i]);
 #ifdef XQUARTZ
     darwinEvents_unlock();
 #endif

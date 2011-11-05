@@ -21,6 +21,12 @@
 /* Builder string */
 #undef BUILDERSTRING
 
+/* Prefix to use for bundle identifiers */
+#undef BUNDLE_ID_PREFIX
+
+/* Support client ID tracking */
+#undef CLIENTIDS
+
 /* Default font path */
 #undef COMPILEDDEFAULTFONTPATH
 
@@ -229,6 +235,9 @@
 /* Define to 1 if you have the <libaudit.h> header file. */
 #undef HAVE_LIBAUDIT_H
 
+/* Define to 1 if you have the libdispatch (GCD) available */
+#undef HAVE_LIBDISPATCH
+
 /* Define to 1 if you have the `m' library (-lm). */
 #undef HAVE_LIBM
 
@@ -378,6 +387,9 @@
 /* Define to 1 if you have the <unistd.h> header file. */
 #undef HAVE_UNISTD_H
 
+/* Define to 1 if you have the `vasprintf' function. */
+#undef HAVE_VASPRINTF
+
 /* Define to 1 if you have the `vprintf' function. */
 #undef HAVE_VPRINTF
 
@@ -408,11 +420,12 @@
 /* Enable KDrive mouse driver */
 #undef KDRIVE_MOUSE
 
-/* Prefix to use for launchd identifiers */
-#undef LAUNCHD_ID_PREFIX
-
 /* Support os-specific local connections */
 #undef LOCALCONN
+
+/* Define to the sub-directory in which libtool stores uninstalled libraries.
+   */
+#undef LT_OBJDIR
 
 /* Support MIT-SHM extension */
 #undef MITSHM
@@ -548,11 +561,12 @@
 /* Support TCP socket connections */
 #undef TCPCONN
 
+/* The compiler supported TLS storage class, prefering initial-exec if
+   tls_model is supported */
+#undef TLS
+
 /* Have tslib support */
 #undef TSLIB
-
-/* Enable unit tests */
-#undef UNITTESTS
 
 /* Support UNIX socket connections */
 #undef UNIXCONN
@@ -613,9 +627,6 @@
 
 /* Build X-ACE extension */
 #undef XACE
-
-/* Build XCalibrate extension */
-#undef XCALIBRATE
 
 /* Support XCMisc extension */
 #undef XCMISC

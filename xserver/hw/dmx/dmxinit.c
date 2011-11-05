@@ -69,12 +69,6 @@
 #include "dmx_glxvisuals.h"
 #include <X11/extensions/Xext.h>
 #include <X11/extensions/extutil.h>
-
-extern void GlxSetVisualConfigs(
-    int               nconfigs,
-    __GLXvisualConfig *configs,
-    void              **configprivs
-);
 #endif /* GLXEXT */
 
 /* Global variables available to all Xserver/hw/dmx routines. */
@@ -768,9 +762,6 @@ void InitOutput(ScreenInfo *pScreenInfo, int argc, char *argv[])
 		    }
 		}
 
-		/* Hand out the glx configs to glx extension */
-		GlxSetVisualConfigs(nconfigs, configs, (void**)configprivs);
-
                 XFlush(dmxScreen->beDisplay);
 	    }
 	}
@@ -830,7 +821,7 @@ static void dmxSetDefaultFontPath(char *fp)
 /** This function is called in Xserver/os/utils.c from \a AbortServer().
  * We must ensure that backend and console state is restored in the
  * event the server shutdown wasn't clean. */
-void AbortDDX(void)
+void AbortDDX(enum ExitCode error)
 {
     int i;
 
@@ -851,9 +842,9 @@ void ddxBeforeReset(void)
 /** This function is called in Xserver/dix/main.c from \a main() when
  * dispatchException & DE_TERMINATE (which is the only way to exit the
  * main loop without an interruption. */
-void ddxGiveUp(void)
+void ddxGiveUp(enum ExitCode error)
 {
-    AbortDDX();
+    AbortDDX(error);
 }
 
 /** This function is called in Xserver/os/osinit.c from \a OsInit(). */

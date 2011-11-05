@@ -1,9 +1,5 @@
 noinst_LTLIBRARIES = libfb.la libwfb.la
 
-INCLUDES = \
-	-I$(top_srcdir)/hw/xfree86/os-support \
-	-I$(top_srcdir)/hw/xfree86/os-support/bus \
-	-I$(top_srcdir)/hw/xfree86/common
 AM_CFLAGS = $(DIX_CFLAGS)
 
 if XORG
@@ -55,4 +51,4 @@ libfb_la_SOURCES = 	\
 
 libwfb_la_SOURCES = $(libfb_la_SOURCES)
 
-EXTRA_DIST = fbcmap.c fbcmap_mi.c
+EXTRA_DIST = fbcmap_mi.c

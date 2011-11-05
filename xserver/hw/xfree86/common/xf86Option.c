@@ -118,57 +118,42 @@ xf86CollectOptions(ScrnInfoPtr pScrn, pointer extraOpts)
 }
 
 /*
- * xf86CollectInputOptions collects the options for an InputDevice.
- * This function requires that the following has been initialised:
- *
- *	pInfo->conf_idev
- *
- * The extraOpts parameter may optionally contain a list of additional options
- * to include.
- *
- * The order of precedence for options is:
- *
- *   extraOpts, pInfo->conf_idev->extraOptions,
- *   pInfo->conf_idev->commonOptions, defaultOpts
+ * xf86CollectInputOptions collects extra options for an InputDevice (other
+ * than those added by the config backend).
+ * The options are merged into the existing ones and thus take precedence
+ * over the others.
  */
 
 void
-xf86CollectInputOptions(InputInfoPtr pInfo, const char **defaultOpts,
-			pointer extraOpts)
+xf86CollectInputOptions(InputInfoPtr pInfo, const char **defaultOpts)
 {
-    XF86OptionPtr tmp;
-    XF86OptionPtr extras = (XF86OptionPtr)extraOpts;
-
-    pInfo->options = NULL;
     if (defaultOpts) {
-	pInfo->options = xf86OptionListCreate(defaultOpts, -1, 0);
-    }
-    if (pInfo->conf_idev && pInfo->conf_idev->commonOptions) {
-	tmp = xf86optionListDup(pInfo->conf_idev->commonOptions);
+	XF86OptionPtr tmp =xf86optionListCreate(defaultOpts, -1, 0);
 	if (pInfo->options)
-	    pInfo->options = xf86optionListMerge(pInfo->options, tmp);
+	    pInfo->options = xf86optionListMerge(tmp, pInfo->options);
 	else
 	    pInfo->options = tmp;
-    }
-    if (pInfo->conf_idev && pInfo->conf_idev->extraOptions) {
-	tmp = xf86optionListDup(pInfo->conf_idev->extraOptions);
-	if (pInfo->options)
-	    pInfo->options = xf86optionListMerge(pInfo->options, tmp);
-	else
-	    pInfo->options = tmp;
-    }
-    if (extras) {
-	tmp = xf86optionListDup(extras);
-	if (pInfo->options)
-	    pInfo->options = xf86optionListMerge(pInfo->options, tmp);
-	else
-	    pInfo->options = tmp;
-    }
-
-    if (pInfo->conf_idev && pInfo->conf_idev->attrs) {
-        pInfo->attrs = pInfo->conf_idev->attrs;
     }
 }
+
+/**
+ * Duplicate the option list passed in. The returned pointer will be a newly
+ * allocated option list and must be freed by the caller.
+ */
+pointer
+xf86OptionListDuplicate(pointer options)
+{
+    pointer o = NULL;
+
+    while (options)
+    {
+        o = xf86AddNewOption(o, xf86OptionName(options), xf86OptionValue(options));
+        options = xf86nextOption(options);
+    }
+
+    return o;
+}
+
 
 /* Created for new XInput stuff -- essentially extensions to the parser	*/
 
@@ -227,7 +212,7 @@ LookupBoolOption(pointer optlist, const char *name, int deflt, Bool markUsed)
     return deflt;
 }
 
-static int
+static double
 LookupPercentOption(pointer optlist, const char *name, double deflt, Bool markUsed)
 {
     OptionInfoRec o;
@@ -355,7 +340,7 @@ pointer
 xf86AddNewOption(pointer head, const char *name, const char *val)
 {
     /* XXX These should actually be allocated in the parser library. */
-    char *tmp = strdup(val);
+    char *tmp = val ? strdup(val) : NULL;
     char *tmp_name = strdup(name);
 
     return xf86addNewOption(head, tmp_name, tmp);
@@ -511,27 +496,33 @@ ParseOptionValue(int scrnIndex, pointer options, OptionInfoPtr p,
 	switch (p->type) {
 	case OPTV_INTEGER:
 	    if (*s == '\0') {
-		xf86DrvMsg(scrnIndex, X_WARNING,
-			   "Option \"%s\" requires an integer value\n",
-			   p->name);
+		if (markUsed) {
+		    xf86DrvMsg(scrnIndex, X_WARNING,
+			       "Option \"%s\" requires an integer value\n",
+			       p->name);
+		}
 		p->found = FALSE;
 	    } else {
 		p->value.num = strtoul(s, &end, 0);
 		if (*end == '\0') {
 		    p->found = TRUE;
 		} else {
-		    xf86DrvMsg(scrnIndex, X_WARNING,
-			       "Option \"%s\" requires an integer value\n",
-			        p->name);
+		    if (markUsed) {
+			xf86DrvMsg(scrnIndex, X_WARNING,
+				   "Option \"%s\" requires an integer value\n",
+				    p->name);
+		    }
 		    p->found = FALSE;
 		}
 	    }
 	    break;
 	case OPTV_STRING:
 	    if (*s == '\0') {
-		xf86DrvMsg(scrnIndex, X_WARNING,
-			   "Option \"%s\" requires an string value\n",
-			   p->name);
+		if (markUsed) {
+		    xf86DrvMsg(scrnIndex, X_WARNING,
+			       "Option \"%s\" requires an string value\n",
+			       p->name);
+		}
 		p->found = FALSE;
 	    } else {
 		p->value.str = s;
@@ -544,18 +535,22 @@ ParseOptionValue(int scrnIndex, pointer options, OptionInfoPtr p,
 	    break;
 	case OPTV_REAL:	
 	    if (*s == '\0') {
-		xf86DrvMsg(scrnIndex, X_WARNING,
-			   "Option \"%s\" requires a floating point value\n",
-			   p->name);
+		if (markUsed) {
+		    xf86DrvMsg(scrnIndex, X_WARNING,
+			       "Option \"%s\" requires a floating point "
+			       "value\n", p->name);
+		}
 		p->found = FALSE;
 	    } else {
 		p->value.realnum = strtod(s, &end);
 		if (*end == '\0') {
 		    p->found = TRUE;
 		} else {
-		    xf86DrvMsg(scrnIndex, X_WARNING,
-			    "Option \"%s\" requires a floating point value\n",
-			    p->name);
+		    if (markUsed) {
+			xf86DrvMsg(scrnIndex, X_WARNING,
+				"Option \"%s\" requires a floating point "
+				"value\n", p->name);
+		    }
 		    p->found = FALSE;
 		}
 	    }
@@ -564,8 +559,11 @@ ParseOptionValue(int scrnIndex, pointer options, OptionInfoPtr p,
 	    if (GetBoolValue(p, s)) {
 		p->found = TRUE;
 	    } else {
-		xf86DrvMsg(scrnIndex, X_WARNING,
-			   "Option \"%s\" requires a boolean value\n", p->name);
+		if (markUsed) {
+		    xf86DrvMsg(scrnIndex, X_WARNING,
+			       "Option \"%s\" requires a boolean value\n",
+			       p->name);
+		}
 		p->found = FALSE;
 	    }
 	    break;
@@ -576,8 +574,10 @@ ParseOptionValue(int scrnIndex, pointer options, OptionInfoPtr p,
 		 * hence 100 looks the same as 100% to the caller of sccanf
 		 */
 		if (sscanf(s, "%lf%c", &p->value.realnum, &tmp) != 2 || tmp != '%') {
-		    xf86DrvMsg(scrnIndex, X_WARNING,
+		    if (markUsed) {
+			xf86DrvMsg(scrnIndex, X_WARNING,
 			       "Option \"%s\" requires a percent value\n", p->name);
+		    }
 		    p->found = FALSE;
 		} else {
 		    p->found = TRUE;
@@ -586,9 +586,11 @@ ParseOptionValue(int scrnIndex, pointer options, OptionInfoPtr p,
 	    break;
 	case OPTV_FREQ:	
 	    if (*s == '\0') {
-		xf86DrvMsg(scrnIndex, X_WARNING,
-			   "Option \"%s\" requires a frequency value\n",
-			   p->name);
+		if (markUsed) {
+		    xf86DrvMsg(scrnIndex, X_WARNING,
+			       "Option \"%s\" requires a frequency value\n",
+			       p->name);
+		}
 		p->found = FALSE;
 	    } else {
 		double freq = strtod(s, &end);
@@ -605,17 +607,21 @@ ParseOptionValue(int scrnIndex, pointer options, OptionInfoPtr p,
 			     !xf86NameCmp(end, "M"))
 			units = 1000000;
 		    else {
-			xf86DrvMsg(scrnIndex, X_WARNING,
-			    "Option \"%s\" requires a frequency value\n",
-			    p->name);
+			if (markUsed) {
+			    xf86DrvMsg(scrnIndex, X_WARNING,
+				"Option \"%s\" requires a frequency value\n",
+				p->name);
+			}
 			p->found = FALSE;
 		    }
 		    if (p->found)
 			freq *= (double)units;
 		} else {
-		    xf86DrvMsg(scrnIndex, X_WARNING,
-			    "Option \"%s\" requires a frequency value\n",
-			    p->name);
+		    if (markUsed) {
+			xf86DrvMsg(scrnIndex, X_WARNING,
+				"Option \"%s\" requires a frequency value\n",
+				p->name);
+		    }
 		    p->found = FALSE;
 		}
 		if (p->found) {
@@ -653,13 +659,10 @@ ParseOptionValue(int scrnIndex, pointer options, OptionInfoPtr p,
 	    newn = n + 2;
 	} else {
 	    free(n);
-	    n = malloc(strlen(p->name) + 2 + 1);
-	    if (!n) {
+	    if (asprintf(&n, "No%s", p->name) == -1) {
 		p->found = FALSE;
 		return FALSE;
 	    }
-	    strcpy(n, "No");
-	    strcat(n, p->name);
 	    newn = n;
 	}
 	if ((s = xf86findOptionValue(options, newn)) != NULL) {

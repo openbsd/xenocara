@@ -1,9 +1,9 @@
 if XORG
 sdk_HEADERS =		\
 	XIstubs.h	\
-	bstore.h	\
-	bstorestr.h	\
+	Xprintf.h	\
 	callback.h	\
+	client.h	\
 	closestr.h	\
 	closure.h	\
 	colormap.h	\
@@ -67,6 +67,6 @@ AM_CFLAGS = $(DIX_CFLAGS)
 
 EXTRA_DIST = 	\
 	dix-config-apple-verbatim.h \
-	eventconvert.h eventstr.h \
+	eventconvert.h eventstr.h inpututils.h \
 	protocol-versions.h \
 	xsha1.h

@@ -28,14 +28,14 @@ RRClientKnowsRates (ClientPtr	pClient)
 {
     rrClientPriv(pClient);
 
-    return (pRRClient->major_version > 1 ||
-	    (pRRClient->major_version == 1 && pRRClient->minor_version >= 1));
+    return version_compare(pRRClient->major_version, pRRClient->minor_version,
+                           1, 1) >= 0;
 }
 
 static int
 ProcRRQueryVersion (ClientPtr client)
 {
-    xRRQueryVersionReply rep;
+    xRRQueryVersionReply rep = {0};
     register int n;
     REQUEST(xRRQueryVersionReq);
     rrClientPriv(client);
@@ -47,8 +47,8 @@ ProcRRQueryVersion (ClientPtr client)
     rep.length = 0;
     rep.sequenceNumber = client->sequence;
 
-    if ((stuff->majorVersion * 1000 + stuff->minorVersion) <
-        (SERVER_RANDR_MAJOR_VERSION * 1000 + SERVER_RANDR_MINOR_VERSION))
+    if (version_compare(stuff->majorVersion, stuff->minorVersion,
+                        SERVER_RANDR_MAJOR_VERSION, SERVER_RANDR_MINOR_VERSION) < 0)
     {
 	rep.majorVersion = stuff->majorVersion;
 	rep.minorVersion = stuff->minorVersion;
@@ -146,7 +146,7 @@ ProcRRSelectInput (ClientPtr client)
 	/*
 	 * Now see if the client needs an event
 	 */
-	if (pScrPriv && (pRREvent->mask & RRScreenChangeNotifyMask))
+	if (pScrPriv)
 	{
 	    pTimes = &((RRTimesPtr) (pRRClient + 1))[pScreen->myNum];
 	    if (CompareTimeStamps (pTimes->setTime, 
@@ -154,7 +154,35 @@ ProcRRSelectInput (ClientPtr client)
 		CompareTimeStamps (pTimes->configTime, 
 				   pScrPriv->lastConfigTime) != 0)
 	    {
-		RRDeliverScreenEvent (client, pWin, pScreen);
+		if (pRREvent->mask & RRScreenChangeNotifyMask)
+		{
+		    RRDeliverScreenEvent (client, pWin, pScreen);
+		}
+
+		if (pRREvent->mask & RRCrtcChangeNotifyMask)
+		{
+		    int i;
+
+		    for (i = 0; i < pScrPriv->numCrtcs; i++)
+		    {
+			RRDeliverCrtcEvent (client, pWin, pScrPriv->crtcs[i]);
+		    }
+		}
+
+		if (pRREvent->mask & RROutputChangeNotifyMask)
+		{
+		    int i;
+
+		    for (i = 0; i < pScrPriv->numOutputs; i++)
+		    {
+			RRDeliverOutputEvent (client, pWin, pScrPriv->outputs[i]);
+		    }
+		}
+
+		/* We don't check for RROutputPropertyNotifyMask, as randrproto.txt doesn't
+		 * say if there ought to be notifications of changes to output properties
+		 * if those changes occurred before the time RRSelectInput is called.
+		 */
 	    }
 	}
     }

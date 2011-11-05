@@ -62,7 +62,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <IOKit/pwr_mgt/IOPMLib.h>
-#include <pthread.h>
+#include <libkern/OSAtomic.h>
 #include <signal.h>
 
 #include <rootlessCommon.h>
@@ -239,8 +239,6 @@ void QuartzUpdateScreens(void) {
     AppleWMSetScreenOrigin(pRoot);
     pScreen->ResizeWindow(pRoot, x - sx, y - sy, width, height, NULL);
 
-    miPaintWindow(pRoot, &pRoot->borderClip,  PW_BACKGROUND);
-
     /* <rdar://problem/7770779> pointer events are clipped to old display region after display reconfiguration
      * http://xquartz.macosforge.org/trac/ticket/346
      */
@@ -268,6 +266,9 @@ void QuartzUpdateScreens(void) {
 
     quartzProcs->UpdateScreen(pScreen);
 
+    /* miPaintWindow needs to be called after RootlessUpdateScreenPixmap (from xprUpdateScreen) */
+    miPaintWindow(pRoot, &pRoot->borderClip,  PW_BACKGROUND);
+
     /* Tell RandR about the new size, so new connections get the correct info */
     RRScreenSizeNotify(pScreen);
 }
@@ -279,10 +280,10 @@ static void pokeActivityCallback(CFRunLoopTimerRef timer, void *info) {
 static void QuartzScreenSaver(int state) {
     static CFRunLoopTimerRef pokeActivityTimer = NULL;
     static CFRunLoopTimerContext pokeActivityContext = { 0, NULL, NULL, NULL, NULL };
-    static pthread_mutex_t pokeActivityMutex = PTHREAD_MUTEX_INITIALIZER;
+    static OSSpinLock pokeActivitySpinLock = OS_SPINLOCK_INIT;
 
-    pthread_mutex_lock(&pokeActivityMutex);
-    
+    OSSpinLockLock(&pokeActivitySpinLock);
+
     if(state) {
         if(pokeActivityTimer == NULL)
             goto QuartzScreenSaverEnd;
@@ -303,7 +304,7 @@ static void QuartzScreenSaver(int state) {
         CFRunLoopAddTimer(CFRunLoopGetMain(), pokeActivityTimer, kCFRunLoopCommonModes);
     }
 QuartzScreenSaverEnd:
-    pthread_mutex_unlock(&pokeActivityMutex);
+    OSSpinLockUnlock(&pokeActivitySpinLock);
 }
 
 void QuartzShowFullscreen(int state) {
@@ -442,7 +443,7 @@ void QuartzSetRootClip(
 
     for (i = 0; i < screenInfo.numScreens; i++) {
         if (screenInfo.screens[i]) {
-            xf86SetRootClip(screenInfo.screens[i], enable);
+            SetRootClip(screenInfo.screens[i], enable);
         }
     }
 }
@@ -464,11 +465,15 @@ void QuartzSpaceChanged(uint32_t space_id) {
 void QuartzCopyDisplayIDs(ScreenPtr pScreen,
                           int displayCount, CGDirectDisplayID *displayIDs) {
     QuartzScreenPtr pQuartzScreen = QUARTZ_PRIV(pScreen);
-    int size = displayCount * sizeof(CGDirectDisplayID);
 
     free(pQuartzScreen->displayIDs);
-    pQuartzScreen->displayIDs = malloc(size);
-    memcpy(pQuartzScreen->displayIDs, displayIDs, size);
+    if(displayCount) {
+        size_t size = displayCount * sizeof(CGDirectDisplayID);
+        pQuartzScreen->displayIDs = malloc(size);
+        memcpy(pQuartzScreen->displayIDs, displayIDs, size);
+    } else {
+       pQuartzScreen->displayIDs = NULL;
+    }
     pQuartzScreen->displayCount = displayCount;
 }
 

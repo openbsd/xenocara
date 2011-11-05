@@ -115,14 +115,12 @@ int XvReqCode;
 int XvEventBase;
 int XvErrorBase;
 
-unsigned long XvRTPort;
-unsigned long XvRTEncoding;
-unsigned long XvRTGrab;
-unsigned long XvRTVideoNotify;
-unsigned long XvRTVideoNotifyList;
-unsigned long XvRTPortNotify;
-
-
+RESTYPE XvRTPort;
+RESTYPE XvRTEncoding;
+RESTYPE XvRTGrab;
+RESTYPE XvRTVideoNotify;
+RESTYPE XvRTVideoNotifyList;
+RESTYPE XvRTPortNotify;
 
 /* EXTERNAL */
 
@@ -1112,12 +1110,7 @@ XvdiMatchPort(
 
   while (nf--)
     {
-      if ((pf->depth == pDraw->depth) 
-#if 0
-         && ((pDraw->type == DRAWABLE_PIXMAP) || 
-	   (wVisual(((WindowPtr)pDraw)) == pf->visual))
-#endif
-	)
+      if (pf->depth == pDraw->depth)
 	return Success;
       pf++;
     }

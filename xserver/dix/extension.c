@@ -97,8 +97,7 @@ AddExtension(char *name, int NumEvents, int NumErrors,
 	free(ext);
 	return NULL;
     }
-    buflen = strlen(name) + 1;
-    ext->name = malloc(buflen);
+    ext->name = strdup(name);
     ext->num_aliases = 0;
     ext->aliases = (char **)NULL;
     if (!ext->name)
@@ -107,7 +106,6 @@ AddExtension(char *name, int NumEvents, int NumErrors,
 	free(ext);
 	return((ExtensionEntry *) NULL);
     }
-    strlcpy(ext->name,  name, buflen);
     i = NumExtensions;
     newexts = (ExtensionEntry **) realloc(extensions,
 					   (i + 1) * sizeof(ExtensionEntry *));
@@ -167,11 +165,9 @@ Bool AddExtensionAlias(char *alias, ExtensionEntry *ext)
     if (!aliases)
 	return FALSE;
     ext->aliases = aliases;
-    buflen = strlen(alias) + 1;
-    name = malloc(buflen);
+    name = strdup(alias);
     if (!name)
 	return FALSE;
-    strlcpy(name,  alias, buflen);
     ext->aliases[ext->num_aliases] = name;
     ext->num_aliases++;
     return TRUE;
@@ -359,9 +355,8 @@ ProcListExtensions(ClientPtr client)
     }
     WriteReplyToClient(client, sizeof(xListExtensionsReply), &reply);
     if (reply.length)
-    {
         WriteToClient(client, total_length, buffer);
-        free(buffer);
-    }
+
+    free(buffer);
     return Success;
 }

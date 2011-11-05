@@ -133,6 +133,7 @@ xf86CrtcCreate (ScrnInfoPtr		scrn,
 	crtcs = malloc((xf86_config->num_crtc + 1) * sizeof (xf86CrtcPtr));
     if (!crtcs)
     {
+	free(crtc->gamma_red);
 	free(crtc);
 	return NULL;
     }
@@ -371,6 +372,8 @@ done:
 	crtc->active = TRUE;
 	if (scrn->pScreen)
 	    xf86CrtcSetScreenSubpixelOrder (scrn->pScreen);
+	if (scrn->ModeSet)
+	    scrn->ModeSet(scrn);
     } else {
 	crtc->x = saved_x;
 	crtc->y = saved_y;
@@ -407,12 +410,16 @@ xf86CrtcSetMode (xf86CrtcPtr crtc, DisplayModePtr mode, Rotation rotation,
 void
 xf86CrtcSetOrigin (xf86CrtcPtr crtc, int x, int y)
 {
+    ScrnInfoPtr scrn = crtc->scrn;
+
     crtc->x = x;
     crtc->y = y;
     if (crtc->funcs->set_origin) {
 	if (!xf86CrtcRotate (crtc))
 	    return;
 	crtc->funcs->set_origin (crtc, x, y);
+	if (scrn->ModeSet)
+	    scrn->ModeSet(scrn);
     }
     else
 	xf86CrtcSetMode (crtc, &crtc->mode, crtc->rotation, x, y);
@@ -474,7 +481,6 @@ static void
 xf86OutputSetMonitor (xf86OutputPtr output)
 {
     char    *option_name;
-    static const char monitor_prefix[] = "monitor-";
     char    *monitor;
 
     if (!output->name)
@@ -484,11 +490,8 @@ xf86OutputSetMonitor (xf86OutputPtr output)
 
     output->options = xnfalloc (sizeof (xf86OutputOptions));
     memcpy (output->options, xf86OutputOptions, sizeof (xf86OutputOptions));
-    
-    option_name = xnfalloc (strlen (monitor_prefix) +
-			    strlen (output->name) + 1);
-    strcpy (option_name, monitor_prefix);
-    strcat (option_name, output->name);
+
+    XNFasprintf(&option_name, "monitor-%s", output->name);
     monitor = xf86findOptionValue (output->scrn->options, option_name);
     if (!monitor)
 	monitor = output->name;
@@ -660,13 +663,11 @@ xf86OutputCreate (ScrnInfoPtr		    scrn,
 Bool
 xf86OutputRename (xf86OutputPtr output, const char *name)
 {
-    int	    len = strlen(name) + 1;
-    char    *newname = malloc(len);
+    char    *newname = strdup(name);
     
     if (!newname)
 	return FALSE;	/* so sorry... */
     
-    strcpy (newname, name);
     if (output->name && output->name != (char *) (output + 1))
 	free(output->name);
     output->name = newname;
@@ -1512,7 +1513,6 @@ struct det_monrec_parameter {
 static void handle_detailed_monrec(struct detailed_monitor_section *det_mon,
                                    void *data)
 {
-    enum { sync_config, sync_edid, sync_default };
     struct det_monrec_parameter *p;
     p = (struct det_monrec_parameter *)data;
 
@@ -2060,13 +2060,28 @@ xf86TargetPreferred(ScrnInfoPtr scrn, xf86CrtcConfigPtr config,
 		if (o == p)
 		    continue;
 
-		for (mode = output->probed_modes; mode; mode = mode->next) {
-		    Rotation r = output->initial_rotation;
-		    if (xf86ModeWidth(mode, r) == pref_width &&
-			    xf86ModeHeight(mode, r) == pref_height) {
+		/*
+		 * First see if the preferred mode matches on the next
+		 * output as well.  This catches the common case of identical
+		 * monitors and makes sure they all have the same timings
+		 * and refresh.  If that fails, we fall back to trying to
+		 * match just width & height.
+		 */
+		mode = xf86OutputHasPreferredMode(output, pref_width,
+						  pref_height);
+		if (mode && xf86ModesEqual(mode, preferred[p])) {
 			preferred[o] = mode;
 			match = TRUE;
-		    }
+		} else {
+			for (mode = output->probed_modes; mode;
+			     mode = mode->next) {
+				Rotation r = output->initial_rotation;
+				if (xf86ModeWidth(mode, r) == pref_width &&
+				    xf86ModeHeight(mode, r) == pref_height) {
+					preferred[o] = mode;
+					match = TRUE;
+				}
+			}
 		}
 
 		all_match &= match;
@@ -2897,6 +2912,8 @@ xf86DisableUnusedFunctions(ScrnInfoPtr pScrn)
     }
     if (pScrn->pScreen)
 	xf86_crtc_notify(pScrn->pScreen);
+    if (pScrn->ModeSet)
+	pScrn->ModeSet(pScrn);
 }
 
 #ifdef RANDR_12_INTERFACE
@@ -2967,8 +2984,7 @@ xf86OutputSetEDID (xf86OutputPtr output, xf86MonPtr edid_mon)
     int			size;
 #endif
     
-    if (output->MonInfo != NULL)
-	free(output->MonInfo);
+    free(output->MonInfo);
     
     output->MonInfo = edid_mon;
     output->mm_width = 0;

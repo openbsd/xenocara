@@ -113,9 +113,6 @@ SOFTWARE.
 
 #define Pid_t pid_t
 
-#ifdef DNETCONN
-#include <netdnet/dn.h>
-#endif /* DNETCONN */
 
 #ifdef HAS_GETPEERUCRED
 # include <ucred.h>
@@ -146,6 +143,8 @@ Bool NewOutputPending;		/* not yet attempted to write some new output */
 Bool AnyClientsWriteBlocked;	/* true if some client blocked on write */
 
 static Bool RunFromSmartParent;	/* send SIGUSR1 to parent process */
+Bool RunFromSigStopParent;	/* send SIGSTOP to our own process; Upstart (or
+				   equivalent) will send SIGCONT back. */
 Bool PartialNetwork;	/* continue even if unable to bind all addrs */
 static Pid_t ParentProcess;
 
@@ -361,6 +360,8 @@ NotifyParentProcess(void)
 #endif
 	}
     }
+    if (RunFromSigStopParent)
+	raise (SIGSTOP);
 #endif
 }
 
@@ -521,7 +522,7 @@ AuthAudit (ClientPtr client, Bool letin,
 #endif
 	  strlcpy(out, "local host", sizeof(addr));
 	  break;
-#if defined(TCPCONN) || defined(STREAMSCONN) || defined(MNX_TCPCONN)
+#if defined(TCPCONN) || defined(STREAMSCONN)
 	case AF_INET:
 	    snprintf(out, sizeof(addr), "IP %s",
 		inet_ntoa(((struct sockaddr_in *) saddr)->sin_addr));
@@ -535,12 +536,6 @@ AuthAudit (ClientPtr client, Bool letin,
 	}
 	    break;
 #endif
-#endif
-#ifdef DNETCONN
-	case AF_DECnet:
-	    snprintf(out, sizeof(addr), "DN %s",
-		    dnet_ntoa(&((struct sockaddr_dn *) saddr)->sdn_add));
-	    break;
 #endif
 	default:
 	    strlcpy(out, "unknown address", sizeof(addr));
@@ -755,6 +750,7 @@ AllocNewConnection (XtransConnInfo trans_conn, int fd, CARD32 conn_time)
 	free(oc);
 	return NullClient;
     }
+    oc->local_client = ComputeLocalClient(client);
 #if !defined(WIN32)
     ConnectionTranslation[fd] = client->index;
 #else
@@ -860,15 +856,14 @@ EstablishNewConnections(ClientPtr clientUnused, pointer closure)
 
 	_XSERVTransSetOption(new_trans_conn, TRANS_NONBLOCKING, 1);
 
+	if(trans_conn->flags & TRANS_NOXAUTH)
+	    new_trans_conn->flags = new_trans_conn->flags | TRANS_NOXAUTH;
+
 	if (!AllocNewConnection (new_trans_conn, newconn, connect_time))
 	{
 	    ErrorConnMax(new_trans_conn);
 	    _XSERVTransClose(new_trans_conn);
 	}
-
-	if(trans_conn->flags & TRANS_NOXAUTH)
-	    new_trans_conn->flags = new_trans_conn->flags | TRANS_NOXAUTH;
-
       }
 #ifndef WIN32
     }

@@ -165,8 +165,6 @@ Bool dmxPictureInit(ScreenPtr pScreen, PictFormatPtr formats, int nformats)
 
     DMX_WRAP(Trapezoids,         dmxTrapezoids,         dmxScreen, ps);
     DMX_WRAP(Triangles,          dmxTriangles,          dmxScreen, ps);
-    DMX_WRAP(TriStrip,           dmxTriStrip,           dmxScreen, ps);
-    DMX_WRAP(TriFan,             dmxTriFan,             dmxScreen, ps);
 
     return TRUE;
 }
@@ -271,9 +269,11 @@ static int dmxProcRenderCreateGlyphSet(ClientPtr client)
 	/* Look up glyphSet that was just created ???? */
 	/* Store glyphsets from backends in glyphSet->devPrivate ????? */
 	/* Make sure we handle all errors here!! */
-	
-	glyphSet = SecurityLookupIDByType(client, stuff->gsid, GlyphSetType,
-					  DixDestroyAccess);
+
+	dixLookupResourceByType((pointer*) &glyphSet,
+				stuff->gsid, GlyphSetType,
+				client, DixDestroyAccess);
+
 	glyphPriv = malloc(sizeof(dmxGlyphPrivRec));
 	if (!glyphPriv) return BadAlloc;
         glyphPriv->glyphSets = NULL;
@@ -314,8 +314,9 @@ static int dmxProcRenderFreeGlyphSet(ClientPtr client)
     REQUEST(xRenderFreeGlyphSetReq);
 
     REQUEST_SIZE_MATCH(xRenderFreeGlyphSetReq);
-    glyphSet = SecurityLookupIDByType(client, stuff->glyphset, GlyphSetType,
-				      DixDestroyAccess);
+    dixLookupResourceByType((pointer*) &glyphSet,
+			    stuff->glyphset, GlyphSetType,
+			    client, DixDestroyAccess);
 
     if (glyphSet && glyphSet->refcnt == 1) {
 	dmxGlyphPrivPtr  glyphPriv = DMX_GET_GLYPH_PRIV(glyphSet);
@@ -357,8 +358,9 @@ static int dmxProcRenderAddGlyphs(ClientPtr client)
 	CARD8           *bits;
 	int              nbytes;
 
-	glyphSet = SecurityLookupIDByType(client, stuff->glyphset,
-					  GlyphSetType, DixReadAccess);
+	dixLookupResourceByType((pointer*) &glyphSet,
+				stuff->glyphset, GlyphSetType,
+				client, DixReadAccess);
 	glyphPriv = DMX_GET_GLYPH_PRIV(glyphSet);
 
 	nglyphs = stuff->nglyphs;
@@ -400,8 +402,9 @@ static int dmxProcRenderFreeGlyphs(ClientPtr client)
     REQUEST(xRenderFreeGlyphsReq);
 
     REQUEST_AT_LEAST_SIZE(xRenderFreeGlyphsReq);
-    glyphSet = SecurityLookupIDByType(client, stuff->glyphset, GlyphSetType,
-				      DixWriteAccess);
+    dixLookupResourceByType((pointer*) &glyphSet,
+			    stuff->glyphset, GlyphSetType,
+			    client, DixWriteAccess);
 
     if (glyphSet) {
 	dmxGlyphPrivPtr  glyphPriv = DMX_GET_GLYPH_PRIV(glyphSet);
@@ -472,14 +475,18 @@ static int dmxProcRenderCompositeGlyphs(ClientPtr client)
 	GlyphSetPtr        glyphSet;
 	dmxGlyphPrivPtr    glyphPriv;
 
-	pSrc = SecurityLookupIDByType(client, stuff->src, PictureType,
-				      DixReadAccess);
+	dixLookupResourceByType((pointer*) &pSrc,
+				stuff->src, PictureType,
+				client, DixReadAccess);
+
 	pSrcPriv = DMX_GET_PICT_PRIV(pSrc);
 	if (!pSrcPriv->pict)
 	    return ret;
 
-	pDst = SecurityLookupIDByType(client, stuff->dst, PictureType,
-				      DixWriteAccess);
+	dixLookupResourceByType((pointer*) &pDst,
+				stuff->dst, PictureType,
+				client, DixWriteAccess);
+
 	pDstPriv = DMX_GET_PICT_PRIV(pDst);
 	if (!pDstPriv->pict)
 	    return ret;
@@ -495,8 +502,9 @@ static int dmxProcRenderCompositeGlyphs(ClientPtr client)
 	    return ret;
 
 	if (stuff->maskFormat)
-	    pFmt = SecurityLookupIDByType(client, stuff->maskFormat,
-					  PictFormatType, DixReadAccess);
+	    dixLookupResourceByType((pointer*) &pFmt,
+				    stuff->maskFormat, PictFormatType,
+				    client, DixReadAccess);
 	else
 	    pFmt = NULL;
 
@@ -546,8 +554,9 @@ static int dmxProcRenderCompositeGlyphs(ClientPtr client)
 	curGlyph = glyphs;
 	curElt = elts;
 
-	glyphSet = SecurityLookupIDByType(client, stuff->glyphset,
-					  GlyphSetType, DixReadAccess);
+	dixLookupResourceByType((pointer*) &glyphSet,
+				stuff->glyphset, GlyphSetType,
+				client, DixReadAccess);
 	glyphPriv = DMX_GET_GLYPH_PRIV(glyphSet);
 
 	while (buffer + sizeof(xGlyphElt) < end) {
@@ -555,10 +564,11 @@ static int dmxProcRenderCompositeGlyphs(ClientPtr client)
 	    buffer += sizeof(xGlyphElt);
 
 	    if (elt->len == 0xff) {
-		glyphSet = SecurityLookupIDByType(client,
-						  *((CARD32 *)buffer),
-						  GlyphSetType,
-						  DixReadAccess);
+		dixLookupResourceByType((pointer*) &glyphSet,
+					*((CARD32 *)buffer),
+					GlyphSetType,
+					client,
+					DixReadAccess);
 		glyphPriv = DMX_GET_GLYPH_PRIV(glyphSet);
 		buffer += 4;
 	    } else {
@@ -1011,8 +1021,6 @@ void dmxValidatePicture(PicturePtr pPicture, Mask mask)
 	    attribs.poly_edge = pPicture->polyEdge;
 	if (mask & CPPolyMode)
 	    attribs.poly_mode = pPicture->polyMode;
-	if (mask & CPDither)
-	    attribs.dither = pPicture->dither;
 	if (mask & CPComponentAlpha)
 	    attribs.component_alpha = pPicture->componentAlpha;
 
@@ -1226,89 +1234,4 @@ void dmxTriangles(CARD8 op, PicturePtr pSrc, PicturePtr pDst,
     }
 
     DMX_WRAP(Triangles, dmxTriangles, dmxScreen, ps);
-}
-
-/** Composite a triangle strip on the appropriate screen.  For a
- *  complete description see the protocol document of the RENDER
- *  library. */
-void dmxTriStrip(CARD8 op, PicturePtr pSrc, PicturePtr pDst,
-		 PictFormatPtr maskFormat,
-		 INT16 xSrc, INT16 ySrc,
-		 int npoint, xPointFixed *points)
-{
-    ScreenPtr         pScreen   = pDst->pDrawable->pScreen;
-    DMXScreenInfo    *dmxScreen = &dmxScreens[pScreen->myNum];
-    PictureScreenPtr  ps        = GetPictureScreen(pScreen);
-    dmxPictPrivPtr    pSrcPriv  = DMX_GET_PICT_PRIV(pSrc);
-    dmxPictPrivPtr    pDstPriv  = DMX_GET_PICT_PRIV(pDst);
-
-    DMX_UNWRAP(TriStrip, dmxScreen, ps);
-#if 0
-    if (ps->TriStrip)
-	ps->TriStrip(op, pSrc, pDst, maskFormat, xSrc, ySrc, npoint, *points);
-#endif
-
-    /* Draw trapezoids on back-end server */
-    if (pDstPriv->pict) {
-	XRenderPictFormat *pFormat;
-
-	pFormat = dmxFindFormat(dmxScreen, maskFormat);
-	if (!pFormat) {
-	    /* FIXME: Error! */
-	}
-
-	XRenderCompositeTriStrip(dmxScreen->beDisplay,
-				 op,
-				 pSrcPriv->pict,
-				 pDstPriv->pict,
-				 pFormat,
-				 xSrc, ySrc,
-				 (XPointFixed *)points,
-				 npoint);
-	dmxSync(dmxScreen, FALSE);
-    }
-
-    DMX_WRAP(TriStrip, dmxTriStrip, dmxScreen, ps);
-}
-
-/** Composite a triangle fan on the appropriate screen.  For a complete
- *  description see the protocol document of the RENDER library. */
-void dmxTriFan(CARD8 op, PicturePtr pSrc, PicturePtr pDst,
-	       PictFormatPtr maskFormat,
-	       INT16 xSrc, INT16 ySrc,
-	       int npoint, xPointFixed *points)
-{
-    ScreenPtr         pScreen   = pDst->pDrawable->pScreen;
-    DMXScreenInfo    *dmxScreen = &dmxScreens[pScreen->myNum];
-    PictureScreenPtr  ps        = GetPictureScreen(pScreen);
-    dmxPictPrivPtr    pSrcPriv  = DMX_GET_PICT_PRIV(pSrc);
-    dmxPictPrivPtr    pDstPriv  = DMX_GET_PICT_PRIV(pDst);
-
-    DMX_UNWRAP(TriFan, dmxScreen, ps);
-#if 0
-    if (ps->TriFan)
-	ps->TriFan(op, pSrc, pDst, maskFormat, xSrc, ySrc, npoint, *points);
-#endif
-
-    /* Draw trapezoids on back-end server */
-    if (pDstPriv->pict) {
-	XRenderPictFormat *pFormat;
-
-	pFormat = dmxFindFormat(dmxScreen, maskFormat);
-	if (!pFormat) {
-	    /* FIXME: Error! */
-	}
-
-	XRenderCompositeTriFan(dmxScreen->beDisplay,
-			       op,
-			       pSrcPriv->pict,
-			       pDstPriv->pict,
-			       pFormat,
-			       xSrc, ySrc,
-			       (XPointFixed *)points,
-			       npoint);
-	dmxSync(dmxScreen, FALSE);
-    }
-
-    DMX_WRAP(TriFan, dmxTriFan, dmxScreen, ps);
 }

@@ -61,8 +61,8 @@
 #include "xf86Parser.h"
 #include "xf86tokens.h"
 #include "Configint.h"
-#include <math.h>
 #include <X11/Xfuncproto.h>
+#include "Xprintf.h"
 
 extern LexRec val;
 
@@ -132,7 +132,6 @@ xf86parseFlagsSection (void)
 					if (ServerFlagsTab[i].token == token)
 					{
 						char *valstr = NULL;
-						/* can't use strdup because it calls malloc */
 						tmp = strdup (ServerFlagsTab[i].name);
 						if (hasvalue)
 						{
@@ -144,9 +143,8 @@ xf86parseFlagsSection (void)
 							} else {
 								if (tokentype != NUMBER)
 									Error (NUMBER_MSG, tmp);
-								valstr = malloc(16);
-								if (valstr)
-									sprintf(valstr, "%d", val.num);
+								if (asprintf(&valstr, "%d", val.num) == -1)
+									valstr = NULL;
 							}
 						}
 						ptr->flg_option_lst = xf86addNewOption
@@ -365,13 +363,8 @@ xf86optionListCreate( const char **options, int count, int used )
 	}
 	for (i = 0; i < count; i += 2)
 	{
-		/* can't use strdup because it calls malloc */
-		t1 = malloc (sizeof (char) *
-				(strlen (options[i]) + 1));
-		strcpy (t1, options[i]);
-		t2 = malloc (sizeof (char) *
-				(strlen (options[i + 1]) + 1));
-		strcpy (t2, options[i + 1]);
+		t1 = strdup(options[i]);
+		t2 = strdup(options[i + 1]);
 		p = addNewOption2 (p, t1, t2, used);
 	}
 
@@ -432,13 +425,9 @@ char *
 xf86uLongToString(unsigned long i)
 {
 	char *s;
-	int l;
 
-	l = ceil(log10((double)i) + 2.5);
-	s = malloc(l);
-	if (!s)
+	if (asprintf(&s, "%lu", i) == -1)
 		return NULL;
-	sprintf(s, "%lu", i);
 	return s;
 }
 

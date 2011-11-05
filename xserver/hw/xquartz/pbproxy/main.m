@@ -47,17 +47,17 @@ BOOL xpbproxy_is_standalone = NO;
 
 x_selection *_selection_object;
 
-extern BOOL serverInitComplete;
-extern pthread_mutex_t serverInitCompleteMutex;
-extern pthread_cond_t serverInitCompleteCond;
+extern BOOL serverRunning;
+extern pthread_mutex_t serverRunningMutex;
+extern pthread_cond_t serverRunningCond;
 
 static inline void wait_for_server_init(void) {
     /* If the server hasn't finished initializing, wait for it... */
-    if(!serverInitComplete) {
-        pthread_mutex_lock(&serverInitCompleteMutex);
-        while(!serverInitComplete)
-            pthread_cond_wait(&serverInitCompleteCond, &serverInitCompleteMutex);
-        pthread_mutex_unlock(&serverInitCompleteMutex);
+    if(!serverRunning) {
+        pthread_mutex_lock(&serverRunningMutex);
+        while(!serverRunning)
+            pthread_cond_wait(&serverRunningCond, &serverRunningMutex);
+        pthread_mutex_unlock(&serverRunningMutex);
     }
 }
 
@@ -105,7 +105,7 @@ int xpbproxy_run (void) {
     }
     
     if (xpbproxy_dpy == NULL) {
-        fprintf (stderr, "xpbproxy: can't open default display\n");
+        ErrorF("xpbproxy: can't open default display\n");
         [pool release];
         return EXIT_FAILURE;
     }
@@ -115,7 +115,7 @@ int xpbproxy_run (void) {
     
     if (!XAppleWMQueryExtension (xpbproxy_dpy, &xpbproxy_apple_wm_event_base,
                                  &xpbproxy_apple_wm_error_base)) {
-        fprintf (stderr, "xpbproxy: can't open AppleWM server extension\n");
+        ErrorF("xpbproxy: can't open AppleWM server extension\n");
         [pool release];
         return EXIT_FAILURE;
     }
@@ -146,20 +146,4 @@ id xpbproxy_selection_object (void) {
 Time xpbproxy_current_timestamp (void) {
     /* FIXME: may want to fetch a timestamp from the server.. */
     return CurrentTime;
-}
-
-void debug_printf (const char *fmt, ...) {
-    static int spew = -1;
-    
-    if (spew == -1) {
-        char *x = getenv ("DEBUG");
-        spew = (x != NULL && atoi (x) != 0);
-    }
-    
-    if (spew) {
-        va_list args;
-        va_start(args, fmt);
-        vfprintf (stderr, fmt, args);
-        va_end(args);
-    }
 }

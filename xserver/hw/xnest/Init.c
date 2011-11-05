@@ -45,8 +45,6 @@ is" without express or implied warranty.
 
 Bool xnestDoFullGeneration = True;
 
-EventList *xnestEvents = NULL;
-
 void
 InitOutput(ScreenInfo *screenInfo, int argc, char *argv[])
 {
@@ -100,8 +98,6 @@ InitInput(int argc, char *argv[])
   if (rc != Success)
       FatalError("Failed to init Xnest default devices.\n");
 
-  GetEventList(&xnestEvents);
-
   mieqInit();
 
   AddEnabledDevice(XConnectionNumber(xnestDisplay));
@@ -112,21 +108,22 @@ InitInput(int argc, char *argv[])
 void
 CloseInput(void)
 {
+  mieqFini();
 }
 
 /*
  * DDX - specific abort routine.  Called by AbortServer().
  */
-void AbortDDX(void)
+void AbortDDX(enum ExitCode error)
 {
   xnestDoFullGeneration = True;
   xnestCloseDisplay();
 }
 
 /* Called by GiveUp(). */
-void ddxGiveUp(void)
+void ddxGiveUp(enum ExitCode error)
 {
-  AbortDDX();
+  AbortDDX(error);
 }
 
 #ifdef __APPLE__

@@ -60,6 +60,7 @@
 #include <stdio.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <stdarg.h>
 
 #define HAS_UTSNAME 1
 #include <sys/utsname.h>
@@ -76,9 +77,33 @@
 #include "quartzKeyboard.h"
 #include "quartz.h"
 
-#ifdef ENABLE_DEBUG_LOG
-FILE *debug_log_fp = NULL;
-#endif
+aslclient aslc;
+
+void xq_asl_log (int level, const char *subsystem, const char *file, const char *function, int line, const char *fmt, ...) {
+    va_list args;
+    aslmsg msg = asl_new(ASL_TYPE_MSG);
+
+    if(msg) {
+        char *_line;
+
+        asl_set(msg, "File", file);
+        asl_set(msg, "Function", function);
+        asprintf(&_line, "%d", line);
+        if(_line) {
+            asl_set(msg, "Line", _line);
+            free(_line);
+        }
+        if(subsystem)
+            asl_set(msg, "Subsystem", subsystem);
+    }
+
+    va_start(args, fmt);
+    asl_vlog(aslc, msg, level, fmt, args);
+    va_end(args);
+
+    if(msg)
+        asl_free(msg);
+}
 
 /*
  * X server shared global variables
@@ -117,7 +142,6 @@ unsigned int            windowItemModMask = NX_COMMANDMASK;
 // devices
 DeviceIntPtr            darwinKeyboard = NULL;
 DeviceIntPtr            darwinPointer = NULL;
-DeviceIntPtr            darwinTabletCurrent = NULL;
 DeviceIntPtr            darwinTabletStylus = NULL;
 DeviceIntPtr            darwinTabletCursor = NULL;
 DeviceIntPtr            darwinTabletEraser = NULL;
@@ -134,28 +158,12 @@ static PixmapFormatRec formats[] = {
 };
 const int NUMFORMATS = sizeof(formats)/sizeof(formats[0]);
 
-#ifndef OSNAME
-#define OSNAME " Darwin"
-#endif
-#ifndef OSVENDOR
-#define OSVENDOR ""
-#endif
-#ifndef PRE_RELEASE
-#define PRE_RELEASE XORG_VERSION_SNAP
-#endif
-#ifndef BUILD_DATE
-#define BUILD_DATE ""
-#endif
-#ifndef XORG_RELEASE
-#define XORG_RELEASE "?"
-#endif
-
 void
 DarwinPrintBanner(void)
 { 
-  // this should change depending on which specific server we are building
   ErrorF("Xquartz starting:\n");
-  ErrorF("X.Org X Server %s\nBuild Date: %s\n", XSERVER_VERSION, BUILD_DATE );
+  ErrorF("X.Org X Server %s\n", XSERVER_VERSION);
+  ErrorF("Build Date: %s\n", BUILD_DATE );
 }
 
 
@@ -314,10 +322,8 @@ static int DarwinMouseProc(DeviceIntPtr pPointer, int what) {
                                     (PtrCtrlProcPtr)NoopDDA,
                                     GetMotionHistorySize(), NAXES,
                                     axes_labels);
-            pPointer->valuator->mode = Absolute; // Relative
-            InitAbsoluteClassDeviceStruct(pPointer);
-//            InitValuatorAxisStruct(pPointer, 0, 0, XQUARTZ_VALUATOR_LIMIT, 1, 0, 1);
-//            InitValuatorAxisStruct(pPointer, 1, 0, XQUARTZ_VALUATOR_LIMIT, 1, 0, 1);
+            InitValuatorAxisStruct(pPointer, 0, axes_labels[0], NO_AXIS_LIMITS, NO_AXIS_LIMITS, 0, 0, 0, Absolute);
+            InitValuatorAxisStruct(pPointer, 1, axes_labels[1], NO_AXIS_LIMITS, NO_AXIS_LIMITS, 0, 0, 0, Absolute);
             break;
         case DEVICE_ON:
             pPointer->public.on = TRUE;
@@ -362,15 +368,13 @@ static int DarwinTabletProc(DeviceIntPtr pPointer, int what) {
                                     (PtrCtrlProcPtr)NoopDDA,
                                     GetMotionHistorySize(), NAXES,
                                     axes_labels);
-            pPointer->valuator->mode = Absolute; // Relative
             InitProximityClassDeviceStruct(pPointer);
-			InitAbsoluteClassDeviceStruct(pPointer);
 
-            InitValuatorAxisStruct(pPointer, 0, axes_labels[0], 0, XQUARTZ_VALUATOR_LIMIT, 1, 0, 1);
-            InitValuatorAxisStruct(pPointer, 1, axes_labels[1], 0, XQUARTZ_VALUATOR_LIMIT, 1, 0, 1);
-            InitValuatorAxisStruct(pPointer, 2, axes_labels[2], 0, XQUARTZ_VALUATOR_LIMIT, 1, 0, 1);
-            InitValuatorAxisStruct(pPointer, 3, axes_labels[3], -XQUARTZ_VALUATOR_LIMIT, XQUARTZ_VALUATOR_LIMIT, 1, 0, 1);
-            InitValuatorAxisStruct(pPointer, 4, axes_labels[4], -XQUARTZ_VALUATOR_LIMIT, XQUARTZ_VALUATOR_LIMIT, 1, 0, 1);
+            InitValuatorAxisStruct(pPointer, 0, axes_labels[0], 0, XQUARTZ_VALUATOR_LIMIT, 1, 0, 1, Absolute);
+            InitValuatorAxisStruct(pPointer, 1, axes_labels[1], 0, XQUARTZ_VALUATOR_LIMIT, 1, 0, 1, Absolute);
+            InitValuatorAxisStruct(pPointer, 2, axes_labels[2], 0, XQUARTZ_VALUATOR_LIMIT, 1, 0, 1, Absolute);
+            InitValuatorAxisStruct(pPointer, 3, axes_labels[3], -XQUARTZ_VALUATOR_LIMIT, XQUARTZ_VALUATOR_LIMIT, 1, 0, 1, Absolute);
+            InitValuatorAxisStruct(pPointer, 4, axes_labels[4], -XQUARTZ_VALUATOR_LIMIT, XQUARTZ_VALUATOR_LIMIT, 1, 0, 1, Absolute);
 //          pPointer->use = IsXExtensionDevice;
             break;
         case DEVICE_ON:
@@ -468,7 +472,6 @@ void InitInput( int argc, char **argv )
     XkbSetRulesDflts(&rmlvo);
 
     darwinKeyboard = AddInputDevice(serverClient, DarwinKeybdProc, TRUE);
-    RegisterKeyboardDevice( darwinKeyboard );
     darwinKeyboard->name = strdup("keyboard");
 
     /* here's the snippet from the current gdk sources:
@@ -486,28 +489,26 @@ void InitInput( int argc, char **argv )
     */
 
     darwinPointer = AddInputDevice(serverClient, DarwinMouseProc, TRUE);
-    RegisterPointerDevice( darwinPointer );
     darwinPointer->name = strdup("pointer");
 
     darwinTabletStylus = AddInputDevice(serverClient, DarwinTabletProc, TRUE);
-    RegisterPointerDevice( darwinTabletStylus );
     darwinTabletStylus->name = strdup("pen");
 
     darwinTabletCursor = AddInputDevice(serverClient, DarwinTabletProc, TRUE);
-    RegisterPointerDevice( darwinTabletCursor );
     darwinTabletCursor->name = strdup("cursor");
 
     darwinTabletEraser = AddInputDevice(serverClient, DarwinTabletProc, TRUE);
-    RegisterPointerDevice( darwinTabletEraser );
     darwinTabletEraser->name = strdup("eraser");
-
-    darwinTabletCurrent = darwinTabletStylus;
 
     DarwinEQInit();
 
     QuartzInitInput(argc, argv);
 }
 
+void CloseInput(void)
+{
+    DarwinEQFini();
+}
 
 /*
  * DarwinAdjustScreenOrigins
@@ -617,6 +618,13 @@ void OsVendorFatalError( void )
 void OsVendorInit(void)
 {
     if (serverGeneration == 1) {
+        char *lf;
+        char *home = getenv("HOME");
+        assert(home);
+        assert(0 < asprintf(&lf, "%s/Library/Logs/X11.%s.log", home, bundle_id_prefix));
+        LogInit(lf, ".old");
+        free(lf);
+
         DarwinPrintBanner();
 #ifdef ENABLE_DEBUG_LOG
 	{
@@ -758,9 +766,9 @@ void ddxUseMsg( void )
  * ddxGiveUp --
  *      Device dependent cleanup. Called by dix before normal server death.
  */
-void ddxGiveUp( void )
+void ddxGiveUp( enum ExitCode error )
 {
-    ErrorF( "Quitting Xquartz\n" );
+    LogClose(error);
 }
 
 
@@ -770,141 +778,9 @@ void ddxGiveUp( void )
  *      made to restore all original setting of the displays. Also all devices
  *      are closed.
  */
-void AbortDDX( void )
-{
+_X_NORETURN
+void AbortDDX( enum ExitCode error ) {
     ErrorF( "   AbortDDX\n" );
     OsAbort();
 }
 
-#include "mivalidate.h" // for union _Validate used by windowstr.h
-#include "windowstr.h"  // for struct _Window
-#include "scrnintstr.h" // for struct _Screen
-
-// This is copied from Xserver/hw/xfree86/common/xf86Helper.c.
-// Quartz mode uses this when switching in and out of Quartz.
-// Quartz or IOKit can use this when waking from sleep.
-// Copyright (c) 1997-1998 by The XFree86 Project, Inc.
-
-/*
- * xf86SetRootClip --
- *	Enable or disable rendering to the screen by
- *	setting the root clip list and revalidating
- *	all of the windows
- */
-
-void
-xf86SetRootClip (ScreenPtr pScreen, int enable)
-{
-    WindowPtr	pWin = pScreen->root;
-    WindowPtr	pChild;
-    Bool	WasViewable = (Bool)(pWin->viewable);
-    Bool	anyMarked = TRUE;
-    RegionPtr	pOldClip = NULL, bsExposed;
-    WindowPtr   pLayerWin;
-    BoxRec	box;
-
-    if (WasViewable)
-    {
-	for (pChild = pWin->firstChild; pChild; pChild = pChild->nextSib)
-	{
-	    (void) (*pScreen->MarkOverlappedWindows)(pChild,
-						     pChild,
-						     &pLayerWin);
-	}
-	(*pScreen->MarkWindow) (pWin);
-	anyMarked = TRUE;
-	if (pWin->valdata)
-	{
-	    if (HasBorder (pWin))
-	    {
-		RegionPtr	borderVisible;
-
-		borderVisible = RegionCreate(NullBox, 1);
-		RegionSubtract(borderVisible,
-				&pWin->borderClip, &pWin->winSize);
-		pWin->valdata->before.borderVisible = borderVisible;
-	    }
-	    pWin->valdata->before.resized = TRUE;
-	}
-    }
-
-    /*
-     * Use REGION_BREAK to avoid optimizations in ValidateTree
-     * that assume the root borderClip can't change well, normally
-     * it doesn't...)
-     */
-    if (enable)
-    {
-	box.x1 = 0;
-	box.y1 = 0;
-	box.x2 = pScreen->width;
-	box.y2 = pScreen->height;
-	RegionReset(&pWin->borderClip, &box);
-	RegionBreak(&pWin->clipList);
-    }
-    else
-    {
-	RegionEmpty(&pWin->borderClip);
-	RegionBreak(&pWin->clipList);
-    }
-
-    ResizeChildrenWinSize (pWin, 0, 0, 0, 0);
-
-    if (WasViewable)
-    {
-	if (pWin->backStorage)
-	{
-	    pOldClip = RegionCreate(NullBox, 1);
-	    RegionCopy(pOldClip, &pWin->clipList);
-	}
-
-	if (pWin->firstChild)
-	{
-	    anyMarked |= (*pScreen->MarkOverlappedWindows)(pWin->firstChild,
-							   pWin->firstChild,
-							   (WindowPtr *)NULL);
-	}
-	else
-	{
-	    (*pScreen->MarkWindow) (pWin);
-	    anyMarked = TRUE;
-	}
-
-
-	if (anyMarked)
-	    (*pScreen->ValidateTree)(pWin, NullWindow, VTOther);
-    }
-
-    if (pWin->backStorage &&
-	((pWin->backingStore == Always) || WasViewable))
-    {
-	if (!WasViewable)
-	    pOldClip = &pWin->clipList; /* a convenient empty region */
-	bsExposed = (*pScreen->TranslateBackingStore)
-			     (pWin, 0, 0, pOldClip,
-			      pWin->drawable.x, pWin->drawable.y);
-	if (WasViewable)
-	    RegionDestroy(pOldClip);
-	if (bsExposed)
-	{
-	    RegionPtr	valExposed = NullRegion;
-
-	    if (pWin->valdata)
-		valExposed = &pWin->valdata->after.exposed;
-	    (*pScreen->WindowExposures) (pWin, valExposed, bsExposed);
-	    if (valExposed)
-		RegionEmpty(valExposed);
-	    RegionDestroy(bsExposed);
-	}
-    }
-    if (WasViewable)
-    {
-	if (anyMarked)
-	    (*pScreen->HandleExposures)(pWin);
-	if (anyMarked && pScreen->PostValidateTree)
-	    (*pScreen->PostValidateTree)(pWin, NullWindow, VTOther);
-    }
-    if (pWin->realized)
-	WindowsRestructured ();
-    FlushAllOutput ();
-}

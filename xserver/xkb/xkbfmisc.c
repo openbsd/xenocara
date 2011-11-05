@@ -62,7 +62,7 @@ unsigned	set,rtrn;
 		rtrn|= _XkbKSUpper;
 	    }
 	    if (((ks>=XK_a)&&(ks<=XK_z))||
-		((ks>=XK_agrave)&&(ks<=XK_ydiaeresis))) {
+		((ks>=XK_ssharp)&&(ks<=XK_ydiaeresis)&&(ks!=XK_division))) {
 		rtrn|= _XkbKSLower;
 	    }
 	    break;
@@ -71,7 +71,7 @@ unsigned	set,rtrn;
 		((ks>=XK_Racute)&&(ks<=XK_Tcedilla))) {
 		rtrn|= _XkbKSUpper;
 	    }
-	    if (((ks>=XK_aogonek)&&(ks<=XK_zabovedot)&&(ks!=XK_caron))||
+	    if (((ks>=XK_aogonek)&&(ks<=XK_zabovedot)&&(ks!=XK_ogonek)&&(ks!=XK_caron)&&(ks!=XK_doubleacute))||
 		((ks>=XK_racute)&&(ks<=XK_tcedilla))) {
 		rtrn|= _XkbKSLower;
 	    }
@@ -92,30 +92,42 @@ unsigned	set,rtrn;
 		((ks>=XK_Amacron)&&(ks<=XK_Umacron))) {
 		rtrn|= _XkbKSUpper;
 	    }
-	    if (((ks>=XK_rcedilla)&&(ks<=XK_tslash))||
+	    if ((ks==XK_kra)||
+	        ((ks>=XK_rcedilla)&&(ks<=XK_tslash))||
 	        (ks==XK_eng)||
 		((ks>=XK_amacron)&&(ks<=XK_umacron))) {
 		rtrn|= _XkbKSLower;
 	    }
 	    break;
 	case 18:		/* latin 8 */
-	    if ((ks==XK_Babovedot)||
-                ((ks>=XK_Dabovedot)&&(ks<=XK_Wacute))||
-		((ks>=XK_Ygrave)&&(ks<=XK_Fabovedot))||
-	        (ks==XK_Mabovedot)||
-	        (ks==XK_Pabovedot)||
-	        (ks==XK_Sabovedot)||
-	        (ks==XK_Wdiaeresis)||
-		((ks>=XK_Wcircumflex)&&(ks<=XK_Ycircumflex))) {
+	    if ((ks==XK_Wcircumflex)||
+		(ks==XK_Ycircumflex)||
+		(ks==XK_Babovedot)||
+		(ks==XK_Dabovedot)||
+		(ks==XK_Fabovedot)||
+		(ks==XK_Mabovedot)||
+		(ks==XK_Pabovedot)||
+		(ks==XK_Sabovedot)||
+		(ks==XK_Tabovedot)||
+		(ks==XK_Wgrave)||
+		(ks==XK_Wacute)||
+		(ks==XK_Wdiaeresis)||
+		(ks==XK_Ygrave)) {
 		rtrn|= _XkbKSUpper;
 	    }
-	    if ((ks==XK_babovedot)||
-	        (ks==XK_dabovedot)||
-	        (ks==XK_fabovedot)||
-	        (ks==XK_mabovedot)||
-                ((ks>=XK_wgrave)&&(ks<=XK_wacute))||
-	        (ks==XK_ygrave)||
-		((ks>=XK_wdiaeresis)&&(ks<=XK_ycircumflex))) {
+	    if ((ks==XK_wcircumflex)||
+		(ks==XK_ycircumflex)||
+		(ks==XK_babovedot)||
+		(ks==XK_dabovedot)||
+		(ks==XK_fabovedot)||
+		(ks==XK_mabovedot)||
+		(ks==XK_pabovedot)||
+		(ks==XK_sabovedot)||
+		(ks==XK_tabovedot)||
+		(ks==XK_wgrave)||
+		(ks==XK_wacute)||
+		(ks==XK_wdiaeresis)||
+		(ks==XK_ygrave)) {
 		rtrn|= _XkbKSLower;
 	    }
 	    break;
@@ -241,7 +253,7 @@ unsigned	wantNames,wantConfig,wantDflts;
 	if (wantNames&XkmTypesMask) {
 	    if (old_names->types!=None) {
 		tmp= NameForAtom(old_names->types);
-		names->types= _XkbDupString(tmp);
+		names->types= Xstrdup(tmp);
 	    }
 	    else {
 		wantDflts|= XkmTypesMask;
@@ -251,7 +263,7 @@ unsigned	wantNames,wantConfig,wantDflts;
 	if (wantNames&XkmCompatMapMask) {
 	    if (old_names->compat!=None) {
 		tmp= NameForAtom(old_names->compat);
-		names->compat= _XkbDupString(tmp);
+		names->compat= Xstrdup(tmp);
 	    }
 	    else wantDflts|= XkmCompatMapMask;
 	    complete|= XkmCompatMapMask; 
@@ -260,13 +272,13 @@ unsigned	wantNames,wantConfig,wantDflts;
 	    if (old_names->symbols==None)
 		return FALSE;
 	    tmp= NameForAtom(old_names->symbols);
-	    names->symbols= _XkbDupString(tmp);
+	    names->symbols= Xstrdup(tmp);
 	    complete|= XkmSymbolsMask; 
 	}
 	if (wantNames&XkmKeyNamesMask) {
 	   if (old_names->keycodes!=None) {
 		tmp= NameForAtom(old_names->keycodes);
-		names->keycodes= _XkbDupString(tmp);
+		names->keycodes= Xstrdup(tmp);
 	    }
 	    else wantDflts|= XkmKeyNamesMask;
 	    complete|= XkmKeyNamesMask;
@@ -275,7 +287,7 @@ unsigned	wantNames,wantConfig,wantDflts;
 	    if (old_names->geometry==None)
 		return FALSE;
 	    tmp= NameForAtom(old_names->geometry);
-	    names->geometry= _XkbDupString(tmp);
+	    names->geometry= Xstrdup(tmp);
 	    complete|= XkmGeometryMask; 
 	    wantNames&= ~XkmGeometryMask;
 	}

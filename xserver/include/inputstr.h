@@ -60,6 +60,7 @@ SOFTWARE.
 #define BitIsOn(ptr, bit) (!!(((BYTE *) (ptr))[(bit)>>3] & (1 << ((bit) & 7))))
 #define SetBit(ptr, bit)  (((BYTE *) (ptr))[(bit)>>3] |= (1 << ((bit) & 7)))
 #define ClearBit(ptr, bit) (((BYTE *)(ptr))[(bit)>>3] &= ~(1 << ((bit) & 7)))
+extern _X_EXPORT int CountBits(const uint8_t *mask, int len);
 
 #define SameClient(obj,client) \
 	(CLIENT_BITS((obj)->resource) == (client)->clientAsMask)
@@ -202,6 +203,47 @@ typedef struct _GrabRec {
     unsigned char       xi2mask[EMASKSIZE][XI2MASKSIZE];
 } GrabRec;
 
+/**
+ * Sprite information for a device.
+ */
+typedef struct _SpriteRec {
+    CursorPtr	current;
+    BoxRec	hotLimits;	/* logical constraints of hot spot */
+    Bool	confined;	/* confined to screen */
+    RegionPtr	hotShape;	/* additional logical shape constraint */
+    BoxRec	physLimits;	/* physical constraints of hot spot */
+    WindowPtr	win;		/* window of logical position */
+    HotSpot	hot;		/* logical pointer position */
+    HotSpot	hotPhys;	/* physical pointer position */
+#ifdef PANORAMIX
+    ScreenPtr	screen;		/* all others are in Screen 0 coordinates */
+    RegionRec   Reg1;	        /* Region 1 for confining motion */
+    RegionRec   Reg2;		/* Region 2 for confining virtual motion */
+    WindowPtr   windows[MAXSCREENS];
+    WindowPtr	confineWin;	/* confine window */
+#endif
+    /* The window trace information is used at dix/events.c to avoid having
+     * to compute all the windows between the root and the current pointer
+     * window each time a button or key goes down. The grabs on each of those
+     * windows must be checked.
+     * spriteTraces should only be used at dix/events.c! */
+    WindowPtr *spriteTrace;
+    int spriteTraceSize;
+    int spriteTraceGood;
+
+    /* Due to delays between event generation and event processing, it is
+     * possible that the pointer has crossed screen boundaries between the
+     * time in which it begins generating events and the time when
+     * those events are processed.
+     *
+     * pEnqueueScreen: screen the pointer was on when the event was generated
+     * pDequeueScreen: screen the pointer was on when the event is processed
+     */
+    ScreenPtr pEnqueueScreen;
+    ScreenPtr pDequeueScreen;
+
+} SpriteRec;
+
 typedef struct _KeyClassRec {
     int			sourceid;
     CARD8		down[DOWN_LENGTH];
@@ -217,12 +259,14 @@ typedef struct _AxisInfo {
     int		min_value;
     int		max_value;
     Atom	label;
+    CARD8	mode;
 } AxisInfo, *AxisInfoPtr;
 
 typedef struct _ValuatorAccelerationRec {
     int                         number;
     PointerAccelSchemeProc      AccelSchemeProc;
     void                       *accelData; /* at disposal of AccelScheme */
+    PointerAccelSchemeInitProc  AccelInitProc;
     DeviceCallbackProc          AccelCleanupProc;
 } ValuatorAccelerationRec, *ValuatorAccelerationPtr;
 
@@ -238,9 +282,8 @@ typedef struct _ValuatorClassRec {
     AxisInfoPtr 	  axes;
     unsigned short	  numAxes;
     double		  *axisVal; /* always absolute, but device-coord system */
-    CARD8	 	  mode;
     ValuatorAccelerationRec	accelScheme;
-} ValuatorClassRec, *ValuatorClassPtr;
+} ValuatorClassRec;
 
 typedef struct _ButtonClassRec {
     int			sourceid;
@@ -271,29 +314,8 @@ typedef struct _FocusClassRec {
 
 typedef struct _ProximityClassRec {
     int		sourceid;
-    char	pad;
+    char	in_proximity;
 } ProximityClassRec, *ProximityClassPtr;
-
-typedef struct _AbsoluteClassRec {
-    int         sourceid;
-    /* Calibration. */
-    int         min_x;
-    int         max_x;
-    int         min_y;
-    int         max_y;
-    int         flip_x;
-    int         flip_y;
-    int		rotation;
-    int         button_threshold;
-
-    /* Area. */
-    int         offset_x;
-    int         offset_y;
-    int         width;
-    int         height;
-    int         screen;
-    XID		following;
-} AbsoluteClassRec, *AbsoluteClassPtr;
 
 typedef struct _KbdFeedbackClassRec *KbdFeedbackPtr;
 typedef struct _PtrFeedbackClassRec *PtrFeedbackPtr;
@@ -349,7 +371,6 @@ typedef struct _ClassesRec {
     ButtonClassPtr	button;
     FocusClassPtr	focus;
     ProximityClassPtr	proximity;
-    AbsoluteClassPtr    absolute;
     KbdFeedbackPtr	kbdfeed;
     PtrFeedbackPtr	ptrfeed;
     IntegerFeedbackPtr	intfeed;
@@ -358,47 +379,6 @@ typedef struct _ClassesRec {
     LedFeedbackPtr	leds;
 } ClassesRec;
 
-
-/**
- * Sprite information for a device.
- */
-typedef struct {
-    CursorPtr	current;
-    BoxRec	hotLimits;	/* logical constraints of hot spot */
-    Bool	confined;	/* confined to screen */
-    RegionPtr	hotShape;	/* additional logical shape constraint */
-    BoxRec	physLimits;	/* physical constraints of hot spot */
-    WindowPtr	win;		/* window of logical position */
-    HotSpot	hot;		/* logical pointer position */
-    HotSpot	hotPhys;	/* physical pointer position */
-#ifdef PANORAMIX
-    ScreenPtr	screen;		/* all others are in Screen 0 coordinates */
-    RegionRec   Reg1;	        /* Region 1 for confining motion */
-    RegionRec   Reg2;		/* Region 2 for confining virtual motion */
-    WindowPtr   windows[MAXSCREENS];
-    WindowPtr	confineWin;	/* confine window */ 
-#endif
-    /* The window trace information is used at dix/events.c to avoid having
-     * to compute all the windows between the root and the current pointer
-     * window each time a button or key goes down. The grabs on each of those
-     * windows must be checked.
-     * spriteTraces should only be used at dix/events.c! */
-    WindowPtr *spriteTrace;
-    int spriteTraceSize;
-    int spriteTraceGood;
-
-    /* Due to delays between event generation and event processing, it is
-     * possible that the pointer has crossed screen boundaries between the
-     * time in which it begins generating events and the time when
-     * those events are processed.
-     *
-     * pEnqueueScreen: screen the pointer was on when the event was generated
-     * pDequeueScreen: screen the pointer was on when the event is processed
-     */
-    ScreenPtr pEnqueueScreen;
-    ScreenPtr pDequeueScreen;
-
-} SpriteRec, *SpritePtr;
 
 /* Device properties */
 typedef struct _XIPropertyValue
@@ -492,6 +472,7 @@ typedef struct _SpriteInfoRec {
 #define MASTER_POINTER          1
 #define MASTER_KEYBOARD         2
 #define SLAVE                   3
+#define MASTER_ATTACHED         4  /* special type for GetMaster */
 
 typedef struct _DeviceIntRec {
     DeviceRec	public;
@@ -514,7 +495,6 @@ typedef struct _DeviceIntRec {
     ButtonClassPtr	button;
     FocusClassPtr	focus;
     ProximityClassPtr	proximity;
-    AbsoluteClassPtr    absolute;
     KbdFeedbackPtr	kbdfeed;
     PtrFeedbackPtr	ptrfeed;
     IntegerFeedbackPtr	intfeed;
@@ -528,10 +508,8 @@ typedef struct _DeviceIntRec {
     PrivateRec		*devPrivates;
     DeviceUnwrapProc    unwrapProc;
     SpriteInfoPtr       spriteInfo;
-    union {
-        DeviceIntPtr        master;     /* master device */
-        DeviceIntPtr        lastSlave;  /* last slave device used */
-    } u;
+    DeviceIntPtr        master;     /* master device */
+    DeviceIntPtr        lastSlave;  /* last slave device used */
 
     /* last valuator values recorded, not posted to client;
      * for slave devices, valuators is in device coordinates
@@ -610,5 +588,15 @@ typedef struct _EventSyncInfo {
 } EventSyncInfoRec, *EventSyncInfoPtr;
 
 extern EventSyncInfoRec syncEvents;
+
+/**
+ * Given a sprite, returns the window at the bottom of the trace (i.e. the
+ * furthest window from the root).
+ */
+static inline WindowPtr DeepestSpriteWin(SpritePtr sprite)
+{
+    assert(sprite->spriteTraceGood > 0);
+    return sprite->spriteTrace[sprite->spriteTraceGood - 1];
+}
 
 #endif /* INPUTSTRUCT_H */

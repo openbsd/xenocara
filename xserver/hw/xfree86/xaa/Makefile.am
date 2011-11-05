@@ -17,7 +17,7 @@ module_LTLIBRARIES = libxaa.la
 libxaa_la_SOURCES = xaaInit.c xaaGC.c xaaInitAccel.c xaaFallback.c \
                    xaaBitBlt.c xaaCpyArea.c xaaGCmisc.c xaaCpyWin.c \
                    xaaCpyPlane.c xaaFillRect.c xaaTEText.c xaaNonTEText.c \
-                   xaaPCache.c xaaSpans.c xaaROP.c xaaImage.c xaaWrapper.c \
+                   xaaPCache.c xaaSpans.c xaaROP.c xaaImage.c \
                    xaaRect.c xaaLineMisc.c xaaBitOrder.c \
                    xaaFillPoly.c xaaWideLine.c xaaTables.c xaaFillArc.c \
                    xaaLine.c xaaDashLine.c xaaOverlay.c xaaOffscreen.c \
@@ -25,46 +25,46 @@ libxaa_la_SOURCES = xaaInit.c xaaGC.c xaaInitAccel.c xaaFallback.c \
                    $(LSB_FIRST) $(MSB_FIRST) $(LSB_FIXED) $(MSB_FIXED) \
                    $(LSB_3_FIRST) $(MSB_3_FIRST) $(LSB_3_FIXED) $(MSB_3_FIXED)
 ${POLYSEG}:
-	echo "#define POLYSEGMENT" > $@
-	echo '#include "$(srcdir)/${@:s-%=%}"' >> $@
+	$(AM_V_GEN)echo "#define POLYSEGMENT" > $@
+	$(AM_V_GEN)echo '#include "$(srcdir)/${@:s-%=%}"' >> $@
 ${LSB_FIRST}:
-	echo "#define LSBFIRST" > $@
-	echo '#include "$(srcdir)/${@:l-%=%}"' >> $@
+	$(AM_V_GEN)echo "#define LSBFIRST" > $@
+	$(AM_V_GEN)echo '#include "$(srcdir)/${@:l-%=%}"' >> $@
 ${LSB_3_FIRST}:
-	echo "#define LSBFIRST" > $@
-	echo "#define TRIPLE_BITS" >> $@
-	echo '#include "$(srcdir)/${@:l3-%=%}"' >> $@
+	$(AM_V_GEN)echo "#define LSBFIRST" > $@
+	$(AM_V_GEN)echo "#define TRIPLE_BITS" >> $@
+	$(AM_V_GEN)echo '#include "$(srcdir)/${@:l3-%=%}"' >> $@
 ${LSB_FIXED}:
-	echo "#define LSBFIRST" > $@
-	echo "#define FIXEDBASE" >> $@
-	echo '#include "$(srcdir)/${@:lf-%=%}"' >> $@
+	$(AM_V_GEN)echo "#define LSBFIRST" > $@
+	$(AM_V_GEN)echo "#define FIXEDBASE" >> $@
+	$(AM_V_GEN)echo '#include "$(srcdir)/${@:lf-%=%}"' >> $@
 ${LSB_3_FIXED}:
-	echo "#define LSBFIRST" > $@
-	echo "#define TRIPLE_BITS" >> $@
-	echo "#define FIXEDBASE" >> $@
-	echo '#include "$(srcdir)/${@:lf3-%=%}"' >> $@
+	$(AM_V_GEN)echo "#define LSBFIRST" > $@
+	$(AM_V_GEN)echo "#define TRIPLE_BITS" >> $@
+	$(AM_V_GEN)echo "#define FIXEDBASE" >> $@
+	$(AM_V_GEN)echo '#include "$(srcdir)/${@:lf3-%=%}"' >> $@
 ${MSB_FIRST}:
-	echo "#define MSBFIRST" > $@
-	echo '#include "$(srcdir)/${@:m-%=%}"' >> $@
+	$(AM_V_GEN)echo "#define MSBFIRST" > $@
+	$(AM_V_GEN)echo '#include "$(srcdir)/${@:m-%=%}"' >> $@
 ${MSB_3_FIRST}:
-	echo "#define MSBFIRST" > $@
-	echo "#define TRIPLE_BITS" >> $@
-	echo '#include "$(srcdir)/${@:m3-%=%}"' >> $@
+	$(AM_V_GEN)echo "#define MSBFIRST" > $@
+	$(AM_V_GEN)echo "#define TRIPLE_BITS" >> $@
+	$(AM_V_GEN)echo '#include "$(srcdir)/${@:m3-%=%}"' >> $@
 ${MSB_FIXED}:
-	echo "#define MSBFIRST" > $@
-	echo "#define FIXEDBASE" >> $@
-	echo '#include "$(srcdir)/${@:mf-%=%}"' >> $@
+	$(AM_V_GEN)echo "#define MSBFIRST" > $@
+	$(AM_V_GEN)echo "#define FIXEDBASE" >> $@
+	$(AM_V_GEN)echo '#include "$(srcdir)/${@:mf-%=%}"' >> $@
 ${MSB_3_FIXED}:
-	echo "#define MSBFIRST" > $@
-	echo "#define TRIPLE_BITS" >> $@
-	echo "#define FIXEDBASE" >> $@
-	echo '#include "$(srcdir)/${@:mf3-%=%}"' >> $@
+	$(AM_V_GEN)echo "#define MSBFIRST" > $@
+	$(AM_V_GEN)echo "#define TRIPLE_BITS" >> $@
+	$(AM_V_GEN)echo "#define FIXEDBASE" >> $@
+	$(AM_V_GEN)echo '#include "$(srcdir)/${@:mf3-%=%}"' >> $@
 
 DISTCLEANFILES = $(POLYSEG) \
 	$(LSB_FIRST) $(LSB_FIXED) $(MSB_FIRST) $(MSB_FIXED) \
 	$(LSB_3_FIRST) $(LSB_3_FIXED) $(MSB_3_FIRST) $(MSB_3_FIXED)
 
-sdk_HEADERS = xaa.h xaalocal.h xaarop.h xaaWrapper.h
+sdk_HEADERS = xaa.h xaalocal.h xaarop.h
 EXTRA_DIST = xaacexp.h xaawrap.h xaaLine.c xaaDashLine.c \
              xaaStipple.c xaaTEGlyph.c xaaNonTEGlyph.c xaaBitmap.c \
              XAA.HOWTO

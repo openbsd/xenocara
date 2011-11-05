@@ -51,6 +51,7 @@ SOFTWARE.
 
 #include "misc.h"
 #include <stdarg.h>
+#include <string.h>
 
 #define SCREEN_SAVER_ON   0
 #define SCREEN_SAVER_OFF  1
@@ -263,10 +264,14 @@ extern _X_EXPORT char *Xstrdup(const char *s);
  */
 extern _X_EXPORT char *XNFstrdup(const char *s);
 
-extern _X_EXPORT char *Xprintf(const char *fmt, ...) _X_ATTRIBUTE_PRINTF(1,2);
-extern _X_EXPORT char *Xvprintf(const char *fmt, va_list va);
-extern _X_EXPORT char *XNFprintf(const char *fmt, ...) _X_ATTRIBUTE_PRINTF(1,2);
-extern _X_EXPORT char *XNFvprintf(const char *fmt, va_list va);
+/* Include new X*asprintf API */
+#include "Xprintf.h"
+
+/* Older api deprecated in favor of the asprintf versions */
+extern _X_EXPORT char *Xprintf(const char *fmt, ...) _X_ATTRIBUTE_PRINTF(1,2) _X_DEPRECATED;
+extern _X_EXPORT char *Xvprintf(const char *fmt, va_list va)_X_ATTRIBUTE_PRINTF(1,0) _X_DEPRECATED;
+extern _X_EXPORT char *XNFprintf(const char *fmt, ...) _X_ATTRIBUTE_PRINTF(1,2) _X_DEPRECATED;
+extern _X_EXPORT char *XNFvprintf(const char *fmt, va_list va)_X_ATTRIBUTE_PRINTF(1,0) _X_DEPRECATED;
 
 typedef void (*OsSigHandlerPtr)(int /* sig */);
 typedef int (*OsSigWrapperPtr)(int /* sig */);
@@ -445,29 +450,6 @@ extern _X_EXPORT int ddxProcessArgument(int /*argc*/, char * /*argv*/ [], int /*
 
 extern _X_EXPORT void ddxUseMsg(void);
 
-/* int ReqLen(xReq *req, ClientPtr client)
- * Given a pointer to a *complete* request, return its length in bytes.
- * Note that if the request is a big request (as defined in the Big
- * Requests extension), the macro lies by returning 4 less than the
- * length that it actually occupies in the request buffer.  This is so you
- * can blindly compare the length with the various sz_<request> constants
- * in Xproto.h without having to know/care about big requests.
- */
-#define ReqLen(_pxReq, _client) \
- ((_pxReq->length ? \
-     (_client->swapped ? lswaps(_pxReq->length) : _pxReq->length) \
-  : ((_client->swapped ? \
-	lswapl(((CARD32*)_pxReq)[1]) : ((CARD32*)_pxReq)[1])-1) \
-  ) << 2)
-
-/* otherReqTypePtr CastxReq(xReq *req, otherReqTypePtr)
- * Cast the given request to one of type otherReqTypePtr to access
- * fields beyond the length field.
- */
-#define CastxReq(_pxReq, otherReqTypePtr) \
-    (_pxReq->length ? (otherReqTypePtr)_pxReq \
-		    : (otherReqTypePtr)(((CARD32*)_pxReq)+1))
-
 /* stuff for ReplyCallback */
 extern _X_EXPORT CallbackListPtr ReplyCallback;
 typedef struct {
@@ -481,8 +463,15 @@ typedef struct {
 /* stuff for FlushCallback */
 extern _X_EXPORT CallbackListPtr FlushCallback;
 
-extern _X_EXPORT void AbortDDX(void);
-extern _X_EXPORT void ddxGiveUp(void);
+enum ExitCode {
+    EXIT_NO_ERROR	= 0,
+    EXIT_ERR_ABORT	= 1,
+    EXIT_ERR_CONFIGURE	= 2,
+    EXIT_ERR_DRIVERS	= 3,
+};
+
+extern _X_EXPORT void AbortDDX(enum ExitCode error);
+extern _X_EXPORT void ddxGiveUp(enum ExitCode error);
 extern _X_EXPORT int TimeSinceLastInputEvent(void);
 
 /* strcasecmp.c */
@@ -530,19 +519,19 @@ typedef enum {
 } MessageType;
 
 extern _X_EXPORT const char *LogInit(const char *fname, const char *backup);
-extern _X_EXPORT void LogClose(void);
+extern _X_EXPORT void LogClose(enum ExitCode error);
 extern _X_EXPORT Bool LogSetParameter(LogParameter param, int value);
-extern _X_EXPORT void LogVWrite(int verb, const char *f, va_list args);
+extern _X_EXPORT void LogVWrite(int verb, const char *f, va_list args) _X_ATTRIBUTE_PRINTF(2,0);
 extern _X_EXPORT void LogWrite(int verb, const char *f, ...) _X_ATTRIBUTE_PRINTF(2,3);
 extern _X_EXPORT void LogVMessageVerb(MessageType type, int verb, const char *format,
-			    va_list args);
+			    va_list args) _X_ATTRIBUTE_PRINTF(3,0);
 extern _X_EXPORT void LogMessageVerb(MessageType type, int verb, const char *format,
 			   ...) _X_ATTRIBUTE_PRINTF(3,4);
 extern _X_EXPORT void LogMessage(MessageType type, const char *format, ...)
 			_X_ATTRIBUTE_PRINTF(2,3);
 extern _X_EXPORT void FreeAuditTimer(void);
 extern _X_EXPORT void AuditF(const char *f, ...) _X_ATTRIBUTE_PRINTF(1,2);
-extern _X_EXPORT void VAuditF(const char *f, va_list args);
+extern _X_EXPORT void VAuditF(const char *f, va_list args) _X_ATTRIBUTE_PRINTF(1,0);
 extern _X_EXPORT void FatalError(const char *f, ...) _X_ATTRIBUTE_PRINTF(1,2) _X_NORETURN;
 
 #ifdef DEBUG
@@ -551,9 +540,9 @@ extern _X_EXPORT void FatalError(const char *f, ...) _X_ATTRIBUTE_PRINTF(1,2) _X
 #define DebugF(...) /* */
 #endif
 
-extern _X_EXPORT void VErrorF(const char *f, va_list args);
+extern _X_EXPORT void VErrorF(const char *f, va_list args) _X_ATTRIBUTE_PRINTF(1,0);
 extern _X_EXPORT void ErrorF(const char *f, ...) _X_ATTRIBUTE_PRINTF(1,2);
-extern _X_EXPORT void Error(char *str);
+extern _X_EXPORT void Error(const char *str);
 extern _X_EXPORT void LogPrintMarkers(void);
 
 extern _X_EXPORT void xorg_backtrace(void);

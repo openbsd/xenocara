@@ -50,7 +50,6 @@ SOFTWARE.
 
 #include "screenint.h"
 #include "regionstr.h"
-#include "bstore.h"
 #include "colormap.h"
 #include "cursor.h"
 #include "validate.h"
@@ -136,7 +135,8 @@ typedef    void (* SourceValidateProcPtr)(
 	int /*x*/,
 	int /*y*/,
 	int /*width*/,
-	int /*height*/);
+	int /*height*/,
+	unsigned int /*subWindowMode*/);
 
 typedef    Bool (* CreateWindowProcPtr)(
 	WindowPtr /*pWindow*/);
@@ -213,48 +213,6 @@ typedef    PixmapPtr (* CreatePixmapProcPtr)(
 typedef    Bool (* DestroyPixmapProcPtr)(
 	PixmapPtr /*pPixmap*/);
 
-typedef    void (* SaveDoomedAreasProcPtr)(
-	WindowPtr /*pWindow*/,
-	RegionPtr /*prgnSave*/,
-	int /*xorg*/,
-	int /*yorg*/);
-
-typedef    RegionPtr (* RestoreAreasProcPtr)(
-	WindowPtr /*pWindow*/,
-	RegionPtr /*prgnRestore*/);
-
-typedef    void (* ExposeCopyProcPtr)(
-	WindowPtr /*pSrc*/,
-	DrawablePtr /*pDst*/,
-	GCPtr /*pGC*/,
-	RegionPtr /*prgnExposed*/,
-	int /*srcx*/,
-	int /*srcy*/,
-	int /*dstx*/,
-	int /*dsty*/,
-	unsigned long /*plane*/);
-
-typedef    RegionPtr (* TranslateBackingStoreProcPtr)(
-	WindowPtr /*pWindow*/,
-	int /*windx*/,
-	int /*windy*/,
-	RegionPtr /*oldClip*/,
-	int /*oldx*/,
-	int /*oldy*/);
-
-typedef    RegionPtr (* ClearBackingStoreProcPtr)(
-	WindowPtr /*pWindow*/,
-	int /*x*/,
-	int /*y*/,
-	int /*w*/,
-	int /*h*/,
-	Bool /*generateExposures*/);
-
-typedef    void (* DrawGuaranteeProcPtr)(
-	WindowPtr /*pWindow*/,
-	GCPtr /*pGC*/,
-	int /*guarantee*/);
-    
 typedef    Bool (* RealizeFontProcPtr)(
 	ScreenPtr /*pScreen*/,
 	FontPtr /*pFont*/);
@@ -388,14 +346,6 @@ typedef    Bool (* MarkOverlappedWindowsProcPtr)(
 	WindowPtr /*firstChild*/,
 	WindowPtr * /*pLayerWin*/);
 
-typedef    Bool (* ChangeSaveUnderProcPtr)(
-	WindowPtr /*pLayerWin*/,
-	WindowPtr /*firstChild*/);
-
-typedef    void (* PostChangeSaveUnderProcPtr)(
-	WindowPtr /*pLayerWin*/,
-	WindowPtr /*firstChild*/);
-
 typedef    int (* ConfigNotifyProcPtr)(
 	WindowPtr /*pWin*/,
 	int /*x*/,
@@ -452,6 +402,9 @@ typedef    Bool (* DeviceCursorInitializeProcPtr)(
 typedef    void (* DeviceCursorCleanupProcPtr)(
         DeviceIntPtr /* pDev */,
         ScreenPtr    /* pScreen */);
+
+typedef void (*ConstrainCursorHarderProcPtr)(
+       DeviceIntPtr, ScreenPtr, int, int *, int *);
 
 typedef struct _Screen {
     int			myNum;	/* index of this instance in Screens[] */
@@ -511,20 +464,6 @@ typedef struct _Screen {
     CreatePixmapProcPtr		CreatePixmap;
     DestroyPixmapProcPtr	DestroyPixmap;
 
-    /* Backing store procedures */
-
-    SaveDoomedAreasProcPtr	SaveDoomedAreas;
-    RestoreAreasProcPtr		RestoreAreas;
-    ExposeCopyProcPtr		ExposeCopy;
-    TranslateBackingStoreProcPtr TranslateBackingStore;
-    ClearBackingStoreProcPtr	ClearBackingStore;
-    DrawGuaranteeProcPtr	DrawGuarantee;
-    /*
-     * A read/write copy of the lower level backing store vector is needed now
-     * that the functions can be wrapped.
-     */
-    BSFuncRec			BackingStoreFuncs;
-    
     /* Font procedures */
 
     RealizeFontProcPtr		RealizeFont;
@@ -533,6 +472,7 @@ typedef struct _Screen {
     /* Cursor Procedures */
 
     ConstrainCursorProcPtr	ConstrainCursor;
+    ConstrainCursorHarderProcPtr ConstrainCursorHarder;
     CursorLimitsProcPtr		CursorLimits;
     DisplayCursorProcPtr	DisplayCursor;
     RealizeCursorProcPtr	RealizeCursor;
@@ -584,8 +524,6 @@ typedef struct _Screen {
 
     MarkWindowProcPtr		MarkWindow;
     MarkOverlappedWindowsProcPtr MarkOverlappedWindows;
-    ChangeSaveUnderProcPtr	ChangeSaveUnder;
-    PostChangeSaveUnderProcPtr	PostChangeSaveUnder;
     ConfigNotifyProcPtr		ConfigNotify;
     MoveWindowProcPtr		MoveWindow;
     ResizeWindowProcPtr		ResizeWindow;
@@ -601,6 +539,12 @@ typedef struct _Screen {
     /* Device cursor procedures */
     DeviceCursorInitializeProcPtr DeviceCursorInitialize;
     DeviceCursorCleanupProcPtr    DeviceCursorCleanup;
+
+    /* set it in driver side if X server can copy the framebuffer content.
+     * Meant to be used together with '-background none' option, avoiding
+     * malicious users to steal framebuffer's content if that would be the
+     * default */
+    Bool		canDoBGNoneRoot;
 } ScreenRec;
 
 static inline RegionPtr BitmapToRegion(ScreenPtr _pScreen, PixmapPtr pPix) {

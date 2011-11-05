@@ -523,18 +523,20 @@ static DMXScreenInfo *dmxFindAlternatePixmap(DrawablePtr pDrawable, XID *draw)
             
     if (noPanoramiXExtension)               return NULL;
     if (pDrawable->type != DRAWABLE_PIXMAP) return NULL;
-    
-    if (!(pXinPix = (PanoramiXRes *)LookupIDByType(pDrawable->id, XRT_PIXMAP)))
+
+    if (Success != dixLookupResourceByType((pointer*) &pXinPix,
+					   pDrawable->id, XRT_PIXMAP,
+					   NullClient, DixUnknownAccess))
         return NULL;
 
-    for (i = 1; i < PanoramiXNumScreens; i++) {
+    FOR_NSCREENS_FORWARD_SKIP(i) {
         dmxScreen = &dmxScreens[i];
         if (dmxScreen->beDisplay) {
             PixmapPtr     pSrc;
             dmxPixPrivPtr pSrcPriv;
             
-            pSrc = (PixmapPtr)LookupIDByType(pXinPix->info[i].id,
-                                             RT_PIXMAP);
+            dixLookupResourceByType((pointer*) &pSrc, pXinPix->info[i].id,
+				    RT_PIXMAP, NullClient, DixUnknownAccess);
             pSrcPriv = DMX_GET_PIXMAP_PRIV(pSrc);
             if (pSrcPriv->pixmap) {
                 *draw = pSrcPriv->pixmap;

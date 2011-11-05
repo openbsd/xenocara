@@ -14,11 +14,6 @@
 
 @SET_MAKE@
 
-#							-*- Makefile -*-
-# Rules for generating files using the C pre-processor
-# (Replaces CppFileTarget from Imake)
-
-
 srcdir = @srcdir@
 top_srcdir = @top_srcdir@
 VPATH = @srcdir@
@@ -41,20 +36,19 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
-DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in \
-	$(top_srcdir)/cpprules.in
 bin_PROGRAMS = Xorg$(EXEEXT)
-
-# Re-add dtrace object code that gets lost when building static libraries
-@SPECIAL_DTRACE_OBJECTS_TRUE@am__append_1 = $(XSERVER_LIBS)
 
 # Needs to be built before any files are compiled when using Sun compilers
 # so in*/out* inline definitions are properly processed.
-@SOLARIS_ASM_INLINE_TRUE@am__append_2 = os-support/solaris/solaris-@SOLARIS_INOUT_ARCH@.il
+@SOLARIS_ASM_INLINE_TRUE@am__append_1 = os-support/solaris/solaris-@SOLARIS_INOUT_ARCH@.il
 subdir = hw/xfree86
+DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/m4/ac_define_dir.m4 \
-	$(top_srcdir)/m4/dolt.m4 $(top_srcdir)/configure.ac
+	$(top_srcdir)/m4/libtool.m4 $(top_srcdir)/m4/ltoptions.m4 \
+	$(top_srcdir)/m4/ltsugar.m4 $(top_srcdir)/m4/ltversion.m4 \
+	$(top_srcdir)/m4/lt~obsolete.m4 $(top_srcdir)/m4/xorg-tls.m4 \
+	$(top_srcdir)/configure.ac
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
 mkinstalldirs = $(SHELL) $(install_sh) -d
@@ -67,27 +61,32 @@ CONFIG_HEADER = $(top_builddir)/include/do-not-use-config.h \
 	$(top_builddir)/include/kdrive-config.h \
 	$(top_builddir)/include/version-config.h
 CONFIG_CLEAN_FILES =
-LTLIBRARIES = $(noinst_LTLIBRARIES)
-am__DEPENDENCIES_1 =
-am_libxorg_la_OBJECTS = libxorg.lo
-libxorg_la_OBJECTS = $(am_libxorg_la_OBJECTS)
 am__installdirs = "$(DESTDIR)$(bindir)"
 binPROGRAMS_INSTALL = $(INSTALL_PROGRAM)
 PROGRAMS = $(bin_PROGRAMS)
-am_Xorg_OBJECTS = xorg.$(OBJEXT)
-Xorg_OBJECTS = $(am_Xorg_OBJECTS)
-@SPECIAL_DTRACE_OBJECTS_TRUE@am__DEPENDENCIES_2 =  \
-@SPECIAL_DTRACE_OBJECTS_TRUE@	$(am__DEPENDENCIES_1)
+nodist_Xorg_OBJECTS = sdksyms.$(OBJEXT)
+Xorg_OBJECTS = $(nodist_Xorg_OBJECTS)
+am__DEPENDENCIES_1 =
+am__DEPENDENCIES_2 = $(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) \
+	loader/libloader.la common/libcommon.la \
+	os-support/libxorgos.la parser/libxf86config_internal.la \
+	dixmods/libdixmods.la modes/libxf86modes.la \
+	ramdac/libramdac.la ddc/libddc.la i2c/libi2c.la \
+	dixmods/libxorgxkb.la $(am__DEPENDENCIES_1) \
+	$(top_builddir)/mi/libmi.la $(top_builddir)/os/libos.la
 DEFAULT_INCLUDES = -I. -I$(srcdir) -I$(top_builddir)/include -I$(top_builddir)/include -I$(top_builddir)/include -I$(top_builddir)/include -I$(top_builddir)/include -I$(top_builddir)/include -I$(top_builddir)/include -I$(top_builddir)/include
 depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__depfiles_maybe = depfiles
 COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
 	$(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
+LTCOMPILE = $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) \
+	$(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) \
+	$(AM_CFLAGS) $(CFLAGS)
 CCLD = $(CC)
 LINK = $(LIBTOOL) --tag=CC --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
 	$(AM_LDFLAGS) $(LDFLAGS) -o $@
-SOURCES = $(libxorg_la_SOURCES) $(Xorg_SOURCES)
-DIST_SOURCES = $(libxorg_la_SOURCES) $(Xorg_SOURCES)
+SOURCES = $(nodist_Xorg_SOURCES)
+DIST_SOURCES =
 RECURSIVE_TARGETS = all-recursive check-recursive dvi-recursive \
 	html-recursive info-recursive install-data-recursive \
 	install-exec-recursive install-info-recursive \
@@ -102,8 +101,8 @@ ADMIN_MAN_DIR = @ADMIN_MAN_DIR@
 ADMIN_MAN_SUFFIX = @ADMIN_MAN_SUFFIX@
 AGP_FALSE = @AGP_FALSE@
 AGP_TRUE = @AGP_TRUE@
-AIGLX_FALSE = @AIGLX_FALSE@
-AIGLX_TRUE = @AIGLX_TRUE@
+AIGLX_DRI_LOADER_FALSE = @AIGLX_DRI_LOADER_FALSE@
+AIGLX_DRI_LOADER_TRUE = @AIGLX_DRI_LOADER_TRUE@
 ALLOCA = @ALLOCA@
 ALPHA_VIDEO_FALSE = @ALPHA_VIDEO_FALSE@
 ALPHA_VIDEO_TRUE = @ALPHA_VIDEO_TRUE@
@@ -116,7 +115,6 @@ APPLE_APPLICATION_NAME = @APPLE_APPLICATION_NAME@
 APP_MAN_DIR = @APP_MAN_DIR@
 APP_MAN_SUFFIX = @APP_MAN_SUFFIX@
 AR = @AR@
-ARM_BACKTRACE_CFLAGS = @ARM_BACKTRACE_CFLAGS@
 ARM_VIDEO_FALSE = @ARM_VIDEO_FALSE@
 ARM_VIDEO_TRUE = @ARM_VIDEO_TRUE@
 AS = @AS@
@@ -129,18 +127,19 @@ BSD_APM_FALSE = @BSD_APM_FALSE@
 BSD_APM_TRUE = @BSD_APM_TRUE@
 BSD_KQUEUE_APM_FALSE = @BSD_KQUEUE_APM_FALSE@
 BSD_KQUEUE_APM_TRUE = @BSD_KQUEUE_APM_TRUE@
-BUILDDOCS_FALSE = @BUILDDOCS_FALSE@
-BUILDDOCS_TRUE = @BUILDDOCS_TRUE@
 BUILD_DATE = @BUILD_DATE@
 BUILD_KDRIVEFBDEVLIB_FALSE = @BUILD_KDRIVEFBDEVLIB_FALSE@
 BUILD_KDRIVEFBDEVLIB_TRUE = @BUILD_KDRIVEFBDEVLIB_TRUE@
 BUILD_TIME = @BUILD_TIME@
+BUNDLE_ID_PREFIX = @BUNDLE_ID_PREFIX@
 CC = @CC@
 CCAS = @CCAS@
 CCASFLAGS = @CCASFLAGS@
 CCDEPMODE = @CCDEPMODE@
 CFLAGS = @CFLAGS@
 CHANGELOG_CMD = @CHANGELOG_CMD@
+CLIENTIDS_FALSE = @CLIENTIDS_FALSE@
+CLIENTIDS_TRUE = @CLIENTIDS_TRUE@
 COMPILEDDEFAULTFONTPATH = @COMPILEDDEFAULTFONTPATH@
 COMPOSITE_FALSE = @COMPOSITE_FALSE@
 COMPOSITE_TRUE = @COMPOSITE_TRUE@
@@ -157,12 +156,7 @@ CONFIG_WSCONS_TRUE = @CONFIG_WSCONS_TRUE@
 CPP = @CPP@
 CPPFLAGS = @CPPFLAGS@
 CWARNFLAGS = @CWARNFLAGS@
-CXX = @CXX@
-CXXCPP = @CXXCPP@
-CXXDEPMODE = @CXXDEPMODE@
-CXXFLAGS = @CXXFLAGS@
 CYGPATH_W = @CYGPATH_W@
-DARWIN_LIBS = @DARWIN_LIBS@
 DBE_FALSE = @DBE_FALSE@
 DBE_TRUE = @DBE_TRUE@
 DBUS_CFLAGS = @DBUS_CFLAGS@
@@ -197,7 +191,6 @@ DMX_BUILD_USB_FALSE = @DMX_BUILD_USB_FALSE@
 DMX_BUILD_USB_TRUE = @DMX_BUILD_USB_TRUE@
 DMX_FALSE = @DMX_FALSE@
 DMX_TRUE = @DMX_TRUE@
-DOLT_BASH = @DOLT_BASH@
 DOXYGEN = @DOXYGEN@
 DPMSExtension_FALSE = @DPMSExtension_FALSE@
 DPMSExtension_TRUE = @DPMSExtension_TRUE@
@@ -218,7 +211,7 @@ DRI_LIBS = @DRI_LIBS@
 DRI_TRUE = @DRI_TRUE@
 DSYMUTIL = @DSYMUTIL@
 DTRACE = @DTRACE@
-ECHO = @ECHO@
+DUMPBIN = @DUMPBIN@
 ECHO_C = @ECHO_C@
 ECHO_N = @ECHO_N@
 ECHO_T = @ECHO_T@
@@ -227,11 +220,12 @@ ENABLE_DEVEL_DOCS_FALSE = @ENABLE_DEVEL_DOCS_FALSE@
 ENABLE_DEVEL_DOCS_TRUE = @ENABLE_DEVEL_DOCS_TRUE@
 ENABLE_DOCS_FALSE = @ENABLE_DOCS_FALSE@
 ENABLE_DOCS_TRUE = @ENABLE_DOCS_TRUE@
+ENABLE_UNIT_TESTS_FALSE = @ENABLE_UNIT_TESTS_FALSE@
+ENABLE_UNIT_TESTS_TRUE = @ENABLE_UNIT_TESTS_TRUE@
 EXEEXT = @EXEEXT@
-F77 = @F77@
 FBDEVHW_FALSE = @FBDEVHW_FALSE@
 FBDEVHW_TRUE = @FBDEVHW_TRUE@
-FFLAGS = @FFLAGS@
+FGREP = @FGREP@
 FILE_MAN_DIR = @FILE_MAN_DIR@
 FILE_MAN_SUFFIX = @FILE_MAN_SUFFIX@
 FONT100DPIDIR = @FONT100DPIDIR@
@@ -244,11 +238,10 @@ FONTTYPE1DIR = @FONTTYPE1DIR@
 FOP = @FOP@
 FREEBSD_KLDLOAD_FALSE = @FREEBSD_KLDLOAD_FALSE@
 FREEBSD_KLDLOAD_TRUE = @FREEBSD_KLDLOAD_TRUE@
-GLIB_CFLAGS = @GLIB_CFLAGS@
-GLIB_LIBS = @GLIB_LIBS@
 GLX_ARCH_DEFINES = @GLX_ARCH_DEFINES@
 GLX_DEFINES = @GLX_DEFINES@
 GLX_FALSE = @GLX_FALSE@
+GLX_TLS = @GLX_TLS@
 GLX_TRUE = @GLX_TRUE@
 GL_CFLAGS = @GL_CFLAGS@
 GL_LIBS = @GL_LIBS@
@@ -261,12 +254,16 @@ HAVE_DOXYGEN_FALSE = @HAVE_DOXYGEN_FALSE@
 HAVE_DOXYGEN_TRUE = @HAVE_DOXYGEN_TRUE@
 HAVE_FOP_FALSE = @HAVE_FOP_FALSE@
 HAVE_FOP_TRUE = @HAVE_FOP_TRUE@
+HAVE_LD_WRAP_FALSE = @HAVE_LD_WRAP_FALSE@
+HAVE_LD_WRAP_TRUE = @HAVE_LD_WRAP_TRUE@
 HAVE_STYLESHEETS_FALSE = @HAVE_STYLESHEETS_FALSE@
 HAVE_STYLESHEETS_TRUE = @HAVE_STYLESHEETS_TRUE@
 HAVE_XMLTO_FALSE = @HAVE_XMLTO_FALSE@
 HAVE_XMLTO_TEXT_FALSE = @HAVE_XMLTO_TEXT_FALSE@
 HAVE_XMLTO_TEXT_TRUE = @HAVE_XMLTO_TEXT_TRUE@
 HAVE_XMLTO_TRUE = @HAVE_XMLTO_TRUE@
+HAVE_XSLTPROC_FALSE = @HAVE_XSLTPROC_FALSE@
+HAVE_XSLTPROC_TRUE = @HAVE_XSLTPROC_TRUE@
 HP300_VIDEO_FALSE = @HP300_VIDEO_FALSE@
 HP300_VIDEO_TRUE = @HP300_VIDEO_TRUE@
 HPPA_VIDEO_FALSE = @HPPA_VIDEO_FALSE@
@@ -312,7 +309,10 @@ KDRIVE_MOUSE_TRUE = @KDRIVE_MOUSE_TRUE@
 KDRIVE_PURE_INCS = @KDRIVE_PURE_INCS@
 KDRIVE_PURE_LIBS = @KDRIVE_PURE_LIBS@
 KDRIVE_TRUE = @KDRIVE_TRUE@
-LAUNCHD_ID_PREFIX = @LAUNCHD_ID_PREFIX@
+KHRONOS_OPENGL_REGISTRY_CFLAGS = @KHRONOS_OPENGL_REGISTRY_CFLAGS@
+KHRONOS_OPENGL_REGISTRY_LIBS = @KHRONOS_OPENGL_REGISTRY_LIBS@
+KHRONOS_SPEC_DIR = @KHRONOS_SPEC_DIR@
+LD = @LD@
 LDFLAGS = @LDFLAGS@
 LD_EXPORT_SYMBOLS_FLAG = @LD_EXPORT_SYMBOLS_FLAG@
 LEX = @LEX@
@@ -331,19 +331,19 @@ LINUX_ALPHA_FALSE = @LINUX_ALPHA_FALSE@
 LINUX_ALPHA_TRUE = @LINUX_ALPHA_TRUE@
 LINUX_IA64_FALSE = @LINUX_IA64_FALSE@
 LINUX_IA64_TRUE = @LINUX_IA64_TRUE@
+LIPO = @LIPO@
 LNXACPI_FALSE = @LNXACPI_FALSE@
 LNXACPI_TRUE = @LNXACPI_TRUE@
 LNXAPM_FALSE = @LNXAPM_FALSE@
 LNXAPM_TRUE = @LNXAPM_TRUE@
 LN_S = @LN_S@
-LTCOMPILE = @LTCOMPILE@
-LTCXXCOMPILE = @LTCXXCOMPILE@
 LTLIBOBJS = @LTLIBOBJS@
 MAINT = @MAINT@
 MAINTAINER_MODE_FALSE = @MAINTAINER_MODE_FALSE@
 MAINTAINER_MODE_TRUE = @MAINTAINER_MODE_TRUE@
 MAIN_LIB = @MAIN_LIB@
 MAKEINFO = @MAKEINFO@
+MANIFEST_TOOL = @MANIFEST_TOOL@
 MAN_SUBSTS = @MAN_SUBSTS@
 MISC_MAN_DIR = @MISC_MAN_DIR@
 MISC_MAN_SUFFIX = @MISC_MAN_SUFFIX@
@@ -353,6 +353,7 @@ NEED_STRLCAT_FALSE = @NEED_STRLCAT_FALSE@
 NEED_STRLCAT_TRUE = @NEED_STRLCAT_TRUE@
 NEED_VSNPRINTF_FALSE = @NEED_VSNPRINTF_FALSE@
 NEED_VSNPRINTF_TRUE = @NEED_VSNPRINTF_TRUE@
+NM = @NM@
 NMEDIT = @NMEDIT@
 OBJC = @OBJC@
 OBJCCLD = @OBJCCLD@
@@ -364,6 +365,8 @@ OBJEXT = @OBJEXT@
 OPENSSL_CFLAGS = @OPENSSL_CFLAGS@
 OPENSSL_LIBS = @OPENSSL_LIBS@
 OS_LIB = @OS_LIB@
+OTOOL = @OTOOL@
+OTOOL64 = @OTOOL64@
 PACKAGE = @PACKAGE@
 PACKAGE_BUGREPORT = @PACKAGE_BUGREPORT@
 PACKAGE_NAME = @PACKAGE_NAME@
@@ -374,7 +377,6 @@ PATH_SEPARATOR = @PATH_SEPARATOR@
 PCIACCESS_CFLAGS = @PCIACCESS_CFLAGS@
 PCIACCESS_LIBS = @PCIACCESS_LIBS@
 PCI_TXT_IDS_PATH = @PCI_TXT_IDS_PATH@
-PERL = @PERL@
 PIXMAN_CFLAGS = @PIXMAN_CFLAGS@
 PIXMAN_LIBS = @PIXMAN_LIBS@
 PKG_CONFIG = @PKG_CONFIG@
@@ -416,6 +418,7 @@ SPECIAL_DTRACE_OBJECTS_FALSE = @SPECIAL_DTRACE_OBJECTS_FALSE@
 SPECIAL_DTRACE_OBJECTS_TRUE = @SPECIAL_DTRACE_OBJECTS_TRUE@
 STANDALONE_XPBPROXY_FALSE = @STANDALONE_XPBPROXY_FALSE@
 STANDALONE_XPBPROXY_TRUE = @STANDALONE_XPBPROXY_TRUE@
+STRICT_CFLAGS = @STRICT_CFLAGS@
 STRIP = @STRIP@
 STYLESHEET_SRCDIR = @STYLESHEET_SRCDIR@
 SYSCONFDIR = @SYSCONFDIR@
@@ -425,8 +428,6 @@ TSLIB_LIBS = @TSLIB_LIBS@
 TSLIB_TRUE = @TSLIB_TRUE@
 UDEV_CFLAGS = @UDEV_CFLAGS@
 UDEV_LIBS = @UDEV_LIBS@
-UNITTESTS_FALSE = @UNITTESTS_FALSE@
-UNITTESTS_TRUE = @UNITTESTS_TRUE@
 UTILS_SYS_LIBS = @UTILS_SYS_LIBS@
 VBE_FALSE = @VBE_FALSE@
 VBE_TRUE = @VBE_TRUE@
@@ -443,8 +444,6 @@ XAA_FALSE = @XAA_FALSE@
 XAA_TRUE = @XAA_TRUE@
 XACE_FALSE = @XACE_FALSE@
 XACE_TRUE = @XACE_TRUE@
-XCALIBRATE_FALSE = @XCALIBRATE_FALSE@
-XCALIBRATE_TRUE = @XCALIBRATE_TRUE@
 XCSECURITY_FALSE = @XCSECURITY_FALSE@
 XCSECURITY_TRUE = @XCSECURITY_TRUE@
 XDMAUTH_FALSE = @XDMAUTH_FALSE@
@@ -480,6 +479,11 @@ XINERAMA_TRUE = @XINERAMA_TRUE@
 XKB_BASE_DIRECTORY = @XKB_BASE_DIRECTORY@
 XKB_BIN_DIRECTORY = @XKB_BIN_DIRECTORY@
 XKB_COMPILED_DIR = @XKB_COMPILED_DIR@
+XKB_DFLT_LAYOUT = @XKB_DFLT_LAYOUT@
+XKB_DFLT_MODEL = @XKB_DFLT_MODEL@
+XKB_DFLT_OPTIONS = @XKB_DFLT_OPTIONS@
+XKB_DFLT_RULES = @XKB_DFLT_RULES@
+XKB_DFLT_VARIANT = @XKB_DFLT_VARIANT@
 XKM_OUTPUT_DIR = @XKM_OUTPUT_DIR@
 XLIB_CFLAGS = @XLIB_CFLAGS@
 XLIB_LIBS = @XLIB_LIBS@
@@ -511,6 +515,7 @@ XORG_TRUE = @XORG_TRUE@
 XPBPROXY_CFLAGS = @XPBPROXY_CFLAGS@
 XPBPROXY_LIBS = @XPBPROXY_LIBS@
 XQUARTZ_FALSE = @XQUARTZ_FALSE@
+XQUARTZ_LIBS = @XQUARTZ_LIBS@
 XQUARTZ_SPARKLE = @XQUARTZ_SPARKLE@
 XQUARTZ_SPARKLE_FALSE = @XQUARTZ_SPARKLE_FALSE@
 XQUARTZ_SPARKLE_TRUE = @XQUARTZ_SPARKLE_TRUE@
@@ -529,6 +534,7 @@ XSERVER_DTRACE_FALSE = @XSERVER_DTRACE_FALSE@
 XSERVER_DTRACE_TRUE = @XSERVER_DTRACE_TRUE@
 XSERVER_LIBS = @XSERVER_LIBS@
 XSERVER_SYS_LIBS = @XSERVER_SYS_LIBS@
+XSLTPROC = @XSLTPROC@
 XSL_STYLESHEET = @XSL_STYLESHEET@
 XTSTEXAMPLES_DEP_CFLAGS = @XTSTEXAMPLES_DEP_CFLAGS@
 XTSTEXAMPLES_DEP_LIBS = @XTSTEXAMPLES_DEP_LIBS@
@@ -573,13 +579,11 @@ abi_ansic = @abi_ansic@
 abi_extension = @abi_extension@
 abi_videodrv = @abi_videodrv@
 abi_xinput = @abi_xinput@
+ac_ct_AR = @ac_ct_AR@
 ac_ct_CC = @ac_ct_CC@
-ac_ct_CXX = @ac_ct_CXX@
-ac_ct_F77 = @ac_ct_F77@
+ac_ct_DUMPBIN = @ac_ct_DUMPBIN@
 am__fastdepCC_FALSE = @am__fastdepCC_FALSE@
 am__fastdepCC_TRUE = @am__fastdepCC_TRUE@
-am__fastdepCXX_FALSE = @am__fastdepCXX_FALSE@
-am__fastdepCXX_TRUE = @am__fastdepCXX_TRUE@
 am__fastdepOBJC_FALSE = @am__fastdepOBJC_FALSE@
 am__fastdepOBJC_TRUE = @am__fastdepOBJC_TRUE@
 am__include = @am__include@
@@ -629,45 +633,6 @@ symbol_visibility = @symbol_visibility@
 sysconfdir = @sysconfdir@
 sysconfigdir = @sysconfigdir@
 target_alias = @target_alias@
-SUFFIXES = .pre .man .man.pre
-
-# Translate XCOMM into pound sign with sed, rather than passing -DXCOMM=XCOMM
-# to cpp, because that trick does not work on all ANSI C preprocessors.
-# Delete line numbers from the cpp output (-P is not portable, I guess).
-# Allow XCOMM to be preceded by whitespace and provide a means of generating
-# output lines with trailing backslashes.
-# Allow XHASH to always be substituted, even in cases where XCOMM isn't.
-CPP_SED_MAGIC = $(SED) -e '/^\#  *[0-9][0-9]*  *.*$$/d' \
-                       -e '/^\#line  *[0-9][0-9]*  *.*$$/d' \
-                       -e '/^[         ]*XCOMM$$/s/XCOMM/\#/' \
-                       -e '/^[         ]*XCOMM[^a-zA-Z0-9_]/s/XCOMM/\#/' \
-                       -e '/^[         ]*XHASH/s/XHASH/\#/' \
-                       -e '/\@\@$$/s/\@\@$$/\\/'
-
-
-# Strings to replace in man pages
-XORGRELSTRING = @PACKAGE_STRING@
-XORGMANNAME = X Version 11
-XSERVERNAME = Xorg
-MANDEFS = \
-        -D__vendorversion__="\"$(XORGRELSTRING)\" \"$(XORGMANNAME)\"" \
-        -D__xorgversion__="\"$(XORGRELSTRING)\" \"$(XORGMANNAME)\"" \
-	-D__appmansuffix__=$(APP_MAN_SUFFIX) \
-	-D__filemansuffix__=$(FILE_MAN_SUFFIX) \
-	-D__libmansuffix__=$(LIB_MAN_SUFFIX) \
-	-D__miscmansuffix__=$(MISC_MAN_SUFFIX) \
-	-D__drivermansuffix__=$(DRIVER_MAN_SUFFIX) \
-	-D__adminmansuffix__=$(ADMIN_MAN_SUFFIX) \
-	-D__mandir__=$(mandir) \
-	-D__projectroot__=$(prefix) \
-	-D__sysconfdir__=$(sysconfdir) \
-	-D__datadir__=$(datadir) \
-	-D__xconfigfile__=$(__XCONFIGFILE__) \
-	-D__xconfigdir__=$(__XCONFIGDIR__) \
-	-D__xkbdir__=$(XKB_BASE_DIRECTORY) \
-	-D__modulepath__="$(DEFAULT_MODULE_PATH)" \
-	-D__xlogfile__=$(XLOGFILE) -D__xservername__=$(XSERVERNAME) 
-
 @DRI_TRUE@DRI_SUBDIR = dri
 @DRI2_TRUE@DRI2_SUBDIR = dri2
 @XF86UTILS_TRUE@XF86UTILS_SUBDIR = utils
@@ -675,27 +640,27 @@ MANDEFS = \
 @VGAHW_TRUE@VGAHW_SUBDIR = vgahw
 @VBE_TRUE@VBE_SUBDIR = vbe
 @INT10MODULE_TRUE@INT10_SUBDIR = int10
-DOC_SUBDIR = doc
 SUBDIRS = common ddc i2c x86emu $(INT10_SUBDIR) fbdevhw os-support parser \
 	  ramdac shadowfb $(VBE_SUBDIR) $(VGAHW_SUBDIR) $(XAA_SUBDIR) \
-	  xf8_16bpp loader dixmods exa modes \
-	  $(DRI_SUBDIR) $(DRI2_SUBDIR) $(XF86UTILS_SUBDIR) $(DOC_SUBDIR)
+	  loader dixmods exa modes \
+	  $(DRI_SUBDIR) $(DRI2_SUBDIR) $(XF86UTILS_SUBDIR) doc man
 
 DIST_SUBDIRS = common ddc i2c x86emu int10 fbdevhw os-support \
                parser ramdac shadowfb vbe vgahw xaa \
-               xf8_16bpp loader dixmods dri dri2 exa modes \
-	       utils doc
+               loader dixmods dri dri2 exa modes \
+	       utils doc man
 
-Xorg_SOURCES = xorg.c
+nodist_Xorg_SOURCES = sdksyms.c
 AM_CFLAGS = $(DIX_CFLAGS) @XORG_CFLAGS@
-INCLUDES = @XORG_INCS@ 
-noinst_LTLIBRARIES = libxorg.la
-libxorg_la_SOURCES = libxorg.c
-libxorg_la_LIBADD = \
+INCLUDES = $(XORG_INCS) -I$(srcdir)/parser -I$(top_srcdir)/miext/cw \
+	-I$(srcdir)/ddc -I$(srcdir)/i2c -I$(srcdir)/modes -I$(srcdir)/ramdac
+
+LOCAL_LIBS = \
+            $(MAIN_LIB) \
             $(XSERVER_LIBS) \
             loader/libloader.la \
-            os-support/libxorgos.la \
             common/libcommon.la \
+            os-support/libxorgos.la \
             parser/libxf86config_internal.la \
             dixmods/libdixmods.la \
             modes/libxf86modes.la \
@@ -703,30 +668,35 @@ libxorg_la_LIBADD = \
             ddc/libddc.la \
             i2c/libi2c.la \
             dixmods/libxorgxkb.la \
+            $(XORG_LIBS) \
             $(top_builddir)/mi/libmi.la \
-            $(top_builddir)/os/libos.la \
-            @XORG_LIBS@
+            $(top_builddir)/os/libos.la
 
-libxorg_la_DEPENDENCIES = $(libxorg_la_LIBADD)
-DISTCLEANFILES = libxorg.c xorg.c xorg.conf.example \
-	xorg.conf.example.pre
-Xorg_DEPENDENCIES = libxorg.la
-Xorg_LDADD = $(MAIN_LIB) libxorg.la $(XORG_SYS_LIBS) \
-	$(XSERVER_SYS_LIBS) $(am__append_1)
+Xorg_LDADD = \
+            $(LOCAL_LIBS) \
+            $(XORG_SYS_LIBS) \
+            $(XSERVER_SYS_LIBS)
+
+Xorg_DEPENDENCIES = $(LOCAL_LIBS)
 Xorg_LDFLAGS = $(LD_EXPORT_SYMBOLS_FLAG)
-BUILT_SOURCES = xorg.conf.example $(am__append_2)
-EXTRA_DIST = xorgconf.cpp
-CPP_FILES_FLAGS = \
-	$(MANDEFS) \
-	-DDEFAULTFONTPATH="\"$(COMPILEDDEFAULTFONTPATH)\"" \
-	-DMODULEPATH=\"$(DEFAULT_MODULE_PATH)\"
+BUILT_SOURCES = xorg.conf.example $(am__append_1)
+DISTCLEANFILES = xorg.conf.example
+EXTRA_DIST = xorgconf.cpp sdksyms.sh
 
+# Use variables from XORG_MANPAGE_SECTIONS and X Server configuration
+# Do not include manpages.am as values are not appropriate for rc files
+CONF_SUBSTS = -e 's|__filemansuffix__|$(FILE_MAN_SUFFIX)|g' \
+		-e 's|MODULEPATH|$(DEFAULT_MODULE_PATH)|g' \
+		-e 's|DEFAULTFONTPATH|$(COMPILEDDEFAULTFONTPATH)|g'
+
+CLEANFILES = sdksyms.c sdksyms.dep
+SDKSYMS_DEP = sdksyms.dep
 all: $(BUILT_SOURCES)
 	$(MAKE) $(AM_MAKEFLAGS) all-recursive
 
 .SUFFIXES:
-.SUFFIXES: .pre .man .man.pre .c .lo .o .obj
-$(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am $(top_srcdir)/cpprules.in $(am__configure_deps)
+.SUFFIXES: .c .lo .o .obj
+$(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am  $(am__configure_deps)
 	@for dep in $?; do \
 	  case '$(am__configure_deps)' in \
 	    *$$dep*) \
@@ -755,17 +725,6 @@ $(top_srcdir)/configure: @MAINTAINER_MODE_TRUE@ $(am__configure_deps)
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
 $(ACLOCAL_M4): @MAINTAINER_MODE_TRUE@ $(am__aclocal_m4_deps)
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
-
-clean-noinstLTLIBRARIES:
-	-test -z "$(noinst_LTLIBRARIES)" || rm -f $(noinst_LTLIBRARIES)
-	@list='$(noinst_LTLIBRARIES)'; for p in $$list; do \
-	  dir="`echo $$p | sed -e 's|/[^/]*$$||'`"; \
-	  test "$$dir" != "$$p" || dir=.; \
-	  echo "rm -f \"$${dir}/so_locations\""; \
-	  rm -f "$${dir}/so_locations"; \
-	done
-libxorg.la: $(libxorg_la_OBJECTS) $(libxorg_la_DEPENDENCIES) 
-	$(LINK)  $(libxorg_la_LDFLAGS) $(libxorg_la_OBJECTS) $(libxorg_la_LIBADD) $(LIBS)
 install-binPROGRAMS: $(bin_PROGRAMS)
 	@$(NORMAL_INSTALL)
 	test -z "$(bindir)" || $(mkdir_p) "$(DESTDIR)$(bindir)"
@@ -804,8 +763,7 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libxorg.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xorg.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sdksyms.Po@am__quote@
 
 .c.o:
 @am__fastdepCC_TRUE@	if $(COMPILE) -MT $@ -MD -MP -MF "$(DEPDIR)/$*.Tpo" -c -o $@ $<; \
@@ -971,7 +929,6 @@ distclean-tags:
 	-rm -f TAGS ID GTAGS GRTAGS GSYMS GPATH tags
 
 distdir: $(DISTFILES)
-	$(mkdir_p) $(distdir)/../..
 	@srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`; \
 	topsrcdirstrip=`echo "$(top_srcdir)" | sed 's|.|.|g'`; \
 	list='$(DISTFILES)'; for file in $$list; do \
@@ -1016,7 +973,7 @@ distdir: $(DISTFILES)
 check-am: all-am
 check: $(BUILT_SOURCES)
 	$(MAKE) $(AM_MAKEFLAGS) check-recursive
-all-am: Makefile $(LTLIBRARIES) $(PROGRAMS)
+all-am: Makefile $(PROGRAMS)
 installdirs: installdirs-recursive
 installdirs-am:
 	for dir in "$(DESTDIR)$(bindir)"; do \
@@ -1040,6 +997,7 @@ install-strip:
 mostlyclean-generic:
 
 clean-generic:
+	-test -z "$(CLEANFILES)" || rm -f $(CLEANFILES)
 
 distclean-generic:
 	-test -z "$(CONFIG_CLEAN_FILES)" || rm -f $(CONFIG_CLEAN_FILES)
@@ -1051,8 +1009,7 @@ maintainer-clean-generic:
 	-test -z "$(BUILT_SOURCES)" || rm -f $(BUILT_SOURCES)
 clean: clean-recursive
 
-clean-am: clean-binPROGRAMS clean-generic clean-libtool \
-	clean-noinstLTLIBRARIES mostlyclean-am
+clean-am: clean-binPROGRAMS clean-generic clean-libtool mostlyclean-am
 
 distclean: distclean-recursive
 	-rm -rf ./$(DEPDIR)
@@ -1104,29 +1061,20 @@ uninstall-info: uninstall-info-recursive
 
 .PHONY: $(RECURSIVE_TARGETS) CTAGS GTAGS all all-am check check-am \
 	clean clean-binPROGRAMS clean-generic clean-libtool \
-	clean-noinstLTLIBRARIES clean-recursive ctags ctags-recursive \
-	distclean distclean-compile distclean-generic \
-	distclean-libtool distclean-recursive distclean-tags distdir \
-	dvi dvi-am html html-am info info-am install install-am \
-	install-binPROGRAMS install-data install-data-am \
-	install-data-local install-exec install-exec-am \
-	install-exec-local install-info install-info-am install-man \
-	install-strip installcheck installcheck-am installdirs \
-	installdirs-am maintainer-clean maintainer-clean-generic \
-	maintainer-clean-recursive mostlyclean mostlyclean-compile \
-	mostlyclean-generic mostlyclean-libtool mostlyclean-recursive \
-	pdf pdf-am ps ps-am tags tags-recursive uninstall uninstall-am \
+	clean-recursive ctags ctags-recursive distclean \
+	distclean-compile distclean-generic distclean-libtool \
+	distclean-recursive distclean-tags distdir dvi dvi-am html \
+	html-am info info-am install install-am install-binPROGRAMS \
+	install-data install-data-am install-data-local install-exec \
+	install-exec-am install-exec-local install-info \
+	install-info-am install-man install-strip installcheck \
+	installcheck-am installdirs installdirs-am maintainer-clean \
+	maintainer-clean-generic maintainer-clean-recursive \
+	mostlyclean mostlyclean-compile mostlyclean-generic \
+	mostlyclean-libtool mostlyclean-recursive pdf pdf-am ps ps-am \
+	tags tags-recursive uninstall uninstall-am \
 	uninstall-binPROGRAMS uninstall-info-am
 
-
-.pre:
-	$(AM_V_GEN)$(RAWCPP) $(RAWCPPFLAGS) $(CPP_FILES_FLAGS) < $< | $(CPP_SED_MAGIC) > $@
-
-.man.pre.man:
-	$(AM_V_GEN)$(RAWCPP) $(RAWCPPFLAGS) $(MANDEFS) $(EXTRAMANDEFS) < $< | $(CPP_SED_MAGIC) > $@
-
-libxorg.c xorg.c:
-	touch $@
 
 @SOLARIS_ASM_INLINE_TRUE@os-support/solaris/solaris-@SOLARIS_INOUT_ARCH@.il:
 @SOLARIS_ASM_INLINE_TRUE@	cd os-support/solaris ; \
@@ -1141,11 +1089,15 @@ install-exec-local: install-binPROGRAMS
 @INSTALL_SETUID_TRUE@	chown root $(DESTDIR)$(bindir)/Xorg
 @INSTALL_SETUID_TRUE@	chmod u+s $(DESTDIR)$(bindir)/Xorg
 
+xorg.conf.example: xorgconf.cpp
+	$(AM_V_GEN)$(SED) $(CONF_SUBSTS) < $(srcdir)/xorgconf.cpp > $@
+
 relink:
 	$(AM_V_at)rm -f Xorg && $(MAKE) Xorg
 
-xorg.conf.example.pre: xorgconf.cpp
-	cp $(srcdir)/xorgconf.cpp $@
+sdksyms.dep sdksyms.c: sdksyms.sh
+	CPP='$(CPP)' AWK='$(AWK)' $(SHELL) $(srcdir)/sdksyms.sh $(top_srcdir) $(CFLAGS) $(AM_CFLAGS) $(INCLUDES)
+include $(SDKSYMS_DEP)
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:

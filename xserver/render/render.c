@@ -47,6 +47,11 @@
 #include "xace.h"
 #include "protocol-versions.h"
 
+#ifdef PANORAMIX
+#include "panoramiX.h"
+#include "panoramiXsrv.h"
+#endif
+
 #if HAVE_STDINT_H
 #include <stdint.h>
 #elif !defined(UINT32_MAX)
@@ -234,7 +239,7 @@ RenderClientCallback (CallbackListPtr	*list,
 }
 
 #ifdef PANORAMIX
-unsigned long	XRT_PICTURE;
+RESTYPE	XRT_PICTURE;
 #endif
 
 void
@@ -1079,8 +1084,10 @@ ProcRenderAddGlyphs (ClientPtr client)
     remain -= (sizeof (CARD32) + sizeof (xGlyphInfo)) * nglyphs;
 
     /* protect against bad nglyphs */
-    if (gi < stuff || gi > ((CARD32 *)stuff + client->req_len) ||
-        bits < stuff || bits > ((CARD32 *)stuff + client->req_len)) {
+    if (gi < ((xGlyphInfo *)stuff) ||
+        gi > ((xGlyphInfo *)((CARD32 *)stuff + client->req_len)) ||
+        bits < ((CARD8 *)stuff) ||
+        bits > ((CARD8 *)((CARD32 *)stuff + client->req_len))) {
         err = BadLength;
         goto bail;
     }
@@ -1365,8 +1372,10 @@ ProcRenderCompositeGlyphs (ClientPtr client)
     else
     {
 	listsBase = (GlyphListPtr) malloc(nlist * sizeof (GlyphListRec));
-	if (!listsBase)
-	    return BadAlloc;
+	if (!listsBase) {
+	    rc = BadAlloc;
+	    goto bail;
+	}
     }
     buffer = (CARD8 *) (stuff + 1);
     glyphs = glyphsBase;
@@ -1385,13 +1394,7 @@ ProcRenderCompositeGlyphs (ClientPtr client)
 					     GlyphSetType, client,
 					     DixUseAccess);
 		if (rc != Success)
-		{
-		    if (glyphsBase != glyphsLocal)
-			free(glyphsBase);
-		    if (listsBase != listsLocal)
-			free(listsBase);
-		    return rc;
-		}
+		    goto bail;
 	    }
 	    buffer += 4;
 	}
@@ -1429,8 +1432,10 @@ ProcRenderCompositeGlyphs (ClientPtr client)
 	    lists++;
 	}
     }
-    if (buffer > end)
-	return BadLength;
+    if (buffer > end) {
+	rc = BadLength;
+	goto bail;
+    }
 
     CompositeGlyphs (stuff->op,
 		     pSrc,
@@ -1441,13 +1446,14 @@ ProcRenderCompositeGlyphs (ClientPtr client)
 		     nlist,
 		     listsBase,
 		     glyphsBase);
+    rc = Success;
 
+bail:
     if (glyphsBase != glyphsLocal)
 	free(glyphsBase);
     if (listsBase != listsLocal)
 	free(listsBase);
-    
-    return Success;
+    return rc;
 }
 
 static int
@@ -1699,11 +1705,17 @@ ProcRenderCreateCursor (ClientPtr client)
 			 GetColor(twocolor[1], 0),
 			 &pCursor, client, stuff->cid);
     if (rc != Success)
-	return rc;
-    if (!AddResource(stuff->cid, RT_CURSOR, (pointer)pCursor))
-	return BadAlloc;
+	goto bail;
+    if (!AddResource(stuff->cid, RT_CURSOR, (pointer)pCursor)) {
+	rc = BadAlloc;
+	goto bail;
+    }
 
     return Success;
+bail:
+    free(srcbits);
+    free(mskbits);
+    return rc;
 }
 
 static int
@@ -2651,9 +2663,6 @@ SProcRenderDispatch (ClientPtr client)
 }
 
 #ifdef PANORAMIX
-#include "panoramiX.h"
-#include "panoramiXsrv.h"
-
 #define VERIFY_XIN_PICTURE(pPicture, pid, client, mode) {\
     int rc = dixLookupResourceByType((pointer *)&(pPicture), pid,\
                                      XRT_PICTURE, client, mode);\
@@ -2686,7 +2695,7 @@ PanoramiXRenderCreatePicture (ClientPtr client)
     if(!(newPict = (PanoramiXRes *) malloc(sizeof(PanoramiXRes))))
 	return BadAlloc;
     newPict->type = XRT_PICTURE;
-    newPict->info[0].id = stuff->pid;
+    panoramix_setup_ids(newPict, client, stuff->pid);
     
     if (refDraw->type == XRT_WINDOW &&
 	stuff->drawable == screenInfo.screens[0]->root->drawable.id)
@@ -2695,9 +2704,6 @@ PanoramiXRenderCreatePicture (ClientPtr client)
     }
     else
 	newPict->u.pict.root = FALSE;
-
-    for(j = 1; j < PanoramiXNumScreens; j++)
-	newPict->info[j].id = FakeClientID(client->index);
     
     FOR_NSCREENS_BACKWARD(j) {
 	stuff->pid = newPict->info[j].id;
@@ -3221,11 +3227,8 @@ PanoramiXRenderCreateSolidFill (ClientPtr client)
 	return BadAlloc;
 
     newPict->type = XRT_PICTURE;
-    newPict->info[0].id = stuff->pid;
+    panoramix_setup_ids(newPict, client, stuff->pid);
     newPict->u.pict.root = FALSE;
-
-    for(j = 1; j < PanoramiXNumScreens; j++)
-	newPict->info[j].id = FakeClientID(client->index);
 	
     FOR_NSCREENS_BACKWARD(j) {
 	stuff->pid = newPict->info[j].id;
@@ -3254,11 +3257,8 @@ PanoramiXRenderCreateLinearGradient (ClientPtr client)
 	return BadAlloc;
 
     newPict->type = XRT_PICTURE;
-    newPict->info[0].id = stuff->pid;
+    panoramix_setup_ids(newPict, client, stuff->pid);
     newPict->u.pict.root = FALSE;
-
-    for(j = 1; j < PanoramiXNumScreens; j++)
-	newPict->info[j].id = FakeClientID(client->index);
 
     FOR_NSCREENS_BACKWARD(j) {
 	stuff->pid = newPict->info[j].id;
@@ -3287,11 +3287,8 @@ PanoramiXRenderCreateRadialGradient (ClientPtr client)
 	return BadAlloc;
 
     newPict->type = XRT_PICTURE;
-    newPict->info[0].id = stuff->pid;
+    panoramix_setup_ids(newPict, client, stuff->pid);
     newPict->u.pict.root = FALSE;
-
-    for(j = 1; j < PanoramiXNumScreens; j++)
-	newPict->info[j].id = FakeClientID(client->index);
 
     FOR_NSCREENS_BACKWARD(j) {
 	stuff->pid = newPict->info[j].id;
@@ -3320,11 +3317,8 @@ PanoramiXRenderCreateConicalGradient (ClientPtr client)
 	return BadAlloc;
 
     newPict->type = XRT_PICTURE;
-    newPict->info[0].id = stuff->pid;
+    panoramix_setup_ids(newPict, client, stuff->pid);
     newPict->u.pict.root = FALSE;
-
-    for(j = 1; j < PanoramiXNumScreens; j++)
-	newPict->info[j].id = FakeClientID(client->index);
 
     FOR_NSCREENS_BACKWARD(j) {
 	stuff->pid = newPict->info[j].id;

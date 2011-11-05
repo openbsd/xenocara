@@ -447,6 +447,11 @@ extern _X_EXPORT void	XkbFreeKeyboard(
 	Bool			/* freeDesc */
 );
 
+extern _X_EXPORT void	XkbFreeComponentNames(
+	XkbComponentNamesPtr	/* names */,
+	Bool			/* freeNames */
+);
+
 extern _X_EXPORT  void XkbSetActionKeyMods(
 	XkbDescPtr		/* xkb */,
 	XkbAction *		/* act */,
@@ -844,10 +849,6 @@ extern _X_EXPORT XkbGeometryPtr XkbLookupNamedGeometry(
 	DeviceIntPtr		/* dev */,
 	Atom			/* name */,
 	Bool *			/* shouldFree */
-);
-
-extern _X_EXPORT char *	_XkbDupString(
-	const char *		/* str */
 );
 
 extern _X_EXPORT void	XkbConvertCase(

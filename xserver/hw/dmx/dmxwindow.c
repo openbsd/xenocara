@@ -84,7 +84,8 @@ Window dmxCreateRootWindow(WindowPtr pWindow)
     parent = dmxScreen->scrnWin; /* This is our "Screen" window */
     visual = dmxScreen->beVisuals[dmxScreen->beDefVisualIndex].visual;
 
-    pCmap = (ColormapPtr)LookupIDByType(wColormap(pWindow), RT_COLORMAP);
+    dixLookupResourceByType((pointer*) &pCmap, wColormap(pWindow),
+			    RT_COLORMAP, NullClient, DixUnknownAccess);
     pCmapPriv = DMX_GET_COLORMAP_PRIV(pCmap);
 
     mask = CWEventMask | CWBackingStore | CWColormap | CWBorderPixel;
@@ -114,7 +115,7 @@ Window dmxCreateRootWindow(WindowPtr pWindow)
 }
 
 /** Change the location and size of the "screen" window.  Called from
- *  #dmxConfigureScreenWindow(). */
+ *  dmxextension.c dmxConfigureScreenWindow(). */
 void dmxResizeScreenWindow(ScreenPtr pScreen,
 			   int x, int y, int w, int h)
 {
@@ -137,7 +138,7 @@ void dmxResizeScreenWindow(ScreenPtr pScreen,
 }
 
 /** Change the location and size of the "root" window.  Called from
- *  #dmxConfigureRootWindow. */
+ *  #dmxCreateWindow. */
 void dmxResizeRootWindow(WindowPtr pRoot,
 			 int x, int y, int w, int h)
 {
@@ -191,8 +192,8 @@ void dmxGetDefaultWindowAttributes(WindowPtr pWindow,
 	    ColormapPtr         pCmap;
 	    dmxColormapPrivPtr  pCmapPriv;
 
-	    pCmap = (ColormapPtr)LookupIDByType(wColormap(pWindow),
-						RT_COLORMAP);
+	    dixLookupResourceByType((pointer*) &pCmap, wColormap(pWindow),
+				    RT_COLORMAP, NullClient, DixUnknownAccess);
 	    pCmapPriv = DMX_GET_COLORMAP_PRIV(pCmap);
 	    *cmap = pCmapPriv->cmap;
 	} else {
@@ -545,7 +546,8 @@ static void dmxDoChangeWindowAttributes(WindowPtr pWindow,
 	ColormapPtr         pCmap;
 	dmxColormapPrivPtr  pCmapPriv;
 
-	pCmap = (ColormapPtr)LookupIDByType(wColormap(pWindow), RT_COLORMAP);
+	dixLookupResourceByType((pointer*) &pCmap, wColormap(pWindow),
+				RT_COLORMAP, NullClient, DixUnknownAccess);
 	pCmapPriv = DMX_GET_COLORMAP_PRIV(pCmap);
 	attribs->colormap = pCmapPriv->cmap;
     }

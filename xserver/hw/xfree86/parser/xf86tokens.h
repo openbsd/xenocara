@@ -165,7 +165,6 @@ typedef enum {
     TT_HSKEW,
     TT_BCAST,
     TT_VSCAN,
-    TT_CUSTOM,
 
     /* Module tokens */
     LOAD,
@@ -273,7 +272,6 @@ typedef enum {
 
     /* DRI Tokens */
     GROUP,
-    BUFFERS,
 
     /* InputClass Tokens */
     MATCH_PRODUCT,
@@ -284,6 +282,7 @@ typedef enum {
     MATCH_USBID,
     MATCH_DRIVER,
     MATCH_TAG,
+    MATCH_LAYOUT,
     MATCH_IS_KEYBOARD,
     MATCH_IS_POINTER,
     MATCH_IS_JOYSTICK,

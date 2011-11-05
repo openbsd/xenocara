@@ -102,6 +102,10 @@ OR PERFORMANCE OF THIS SOFTWARE.
 #include "xf86bigfontsrv.h"
 #endif
 
+#ifdef __clang__
+#pragma clang diagnostic ignored "-Wformat-nonliteral"
+#endif
+
 #ifdef DDXOSVERRORF
 void (*OsVendorVErrorFProc)(const char *, va_list args) = NULL;
 #endif
@@ -175,15 +179,10 @@ const char *
 LogInit(const char *fname, const char *backup)
 {
     char *logFileName = NULL;
-    size_t len1, len2;
 
     if (fname && *fname) {
-	/* xalloc() can't be used yet. */
-	len1 = strlen(fname) + strlen(display) + 1;
-	logFileName = malloc(len1);
-	if (!logFileName)
+	if (asprintf(&logFileName, fname, display) == -1)
 	    FatalError("Cannot allocate space for the log file name\n");
-	snprintf(logFileName, len1, fname, display);
 
 	if (backup && *backup) {
 	    struct stat buf;
@@ -192,15 +191,9 @@ LogInit(const char *fname, const char *backup)
 		char *suffix;
 		char *oldLog;
 
-		len1 = strlen(logFileName) + strlen(backup) +
-		       strlen(display) + 1;
-		len2 = strlen(backup) + strlen(display) + 1;
-		oldLog = malloc(len1);
-		suffix = malloc(len2);
-		if (!oldLog || !suffix)
+		if ((asprintf(&suffix, backup, display) == -1) ||
+		    (asprintf(&oldLog, "%s%s", logFileName, suffix) == -1))
 		    FatalError("Cannot allocate space for the log file name\n");
-		snprintf(suffix, len2, backup, display);
-		snprintf(oldLog, len1, "%s%s", logFileName, suffix);
 		free(suffix);
 		if (rename(logFileName, oldLog) == -1) {
 		    FatalError("Cannot move old log file \"%s\" to \"%s\"\n",
@@ -238,9 +231,11 @@ LogInit(const char *fname, const char *backup)
 }
 
 void
-LogClose(void)
+LogClose(enum ExitCode error)
 {
     if (logFile) {
+	ErrorF("Server terminated %s (%d). Closing log file.\n",
+		(error == EXIT_NO_ERROR) ? "successfully" : "with error", error);
 	fclose(logFile);
 	logFile = NULL;
     }
@@ -303,17 +298,10 @@ LogVWrite(int verb, const char *f, va_list args)
 		fsync(fileno(logFile));
 #endif
 	} else if (needBuffer) {
-	    /*
-	     * Note, this code is used before OsInit() has been called, so
-	     * malloc() and friends can't be used.
-	     */
 	    if (len > bufferUnused) {
 		bufferSize += 1024;
 		bufferUnused += 1024;
-		if (saveBuffer)
-		    saveBuffer = realloc(saveBuffer, bufferSize);
-		else
-		    saveBuffer = malloc(bufferSize);
+		saveBuffer = realloc(saveBuffer, bufferSize);
 		if (!saveBuffer)
 		    FatalError("realloc() failed while saving log messages\n");
 	    }
@@ -422,7 +410,7 @@ AbortServer(void)
     CloseWellKnownConnections();
     OsCleanup(TRUE);
     CloseDownDevices();
-    AbortDDX();
+    AbortDDX(EXIT_ERR_ABORT);
     fflush(stderr);
     if (CoreDump)
 	OsAbort();
@@ -490,8 +478,7 @@ AuditFlush(OsTimerPtr timer, CARD32 now, pointer arg)
 	ErrorF("%slast message repeated %d times\n",
 	       prefix != NULL ? prefix : "", nrepeat);
 	nrepeat = 0;
-	if (prefix != NULL)
-	    free(prefix);
+	free(prefix);
 	return AUDIT_TIMEOUT;
     } else {
 	/* if the timer expires without anything to print, flush the message */
@@ -524,8 +511,7 @@ VAuditF(const char *f, va_list args)
 	nrepeat = 0;
 	auditTimer = TimerSet(auditTimer, 0, AUDIT_TIMEOUT, AuditFlush, NULL);
     }
-    if (prefix != NULL)
-	free(prefix);
+    free(prefix);
 }
 
 void
@@ -541,7 +527,12 @@ FatalError(const char *f, ...)
 
     va_start(args, f);
 #ifdef __APPLE__
-    (void)vsnprintf(__crashreporter_info_buff__, sizeof(__crashreporter_info_buff__), f, args);
+    {
+        va_list args2;
+        va_copy(args2, args);
+        (void)vsnprintf(__crashreporter_info_buff__, sizeof(__crashreporter_info_buff__), f, args2);
+        va_end(args2);
+    }
 #endif
     VErrorF(f, args);
     va_end(args);
@@ -582,23 +573,14 @@ ErrorF(const char * f, ...)
 /* A perror() workalike. */
 
 void
-Error(char *str)
+Error(const char *str)
 {
-    char *err = NULL;
-    int saveErrno = errno;
-    size_t len;
+    const char *err = strerror(errno);
 
-    if (str) {
-	len = strlen(strerror(saveErrno)) + strlen(str) + 2 + 1;
-	err = malloc(len);
-	if (!err)
-	    return;
-	snprintf(err, len, "%s: ", str);
-	strlcat(err, strerror(saveErrno), len);
-	LogWrite(-1, err);
-	free(err);
-    } else
-	LogWrite(-1, "%s", strerror(saveErrno));
+    if (str)
+	LogWrite(-1, "%s: %s", str, err);
+    else
+	LogWrite(-1, "%s", err);
 }
 
 void

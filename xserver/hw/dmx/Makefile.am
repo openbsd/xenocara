@@ -1,6 +1,5 @@
-DIST_SUBDIRS = input config glxProxy examples doc
 
-SUBDIRS = input config examples
+SUBDIRS = input config examples doc doxygen man
 bin_PROGRAMS = Xdmx
 
 if XINERAMA
@@ -13,10 +12,6 @@ GLX_LIBS = glxProxy/libglxproxy.a
 GLX_SRCS = $(PANORAMIX_SRCS) dmx_glxvisuals.c dmx_glxvisuals.h
 GLX_INCS = -I$(top_srcdir)/hw/xfree86/dixmods/extmod
 GLX_DEFS = @GL_CFLAGS@
-endif
-
-if BUILDDOCS
-SUBDIRS += doc
 endif
 
 AM_CFLAGS = \
@@ -81,37 +76,14 @@ Xdmx_SOURCES = dmx.c \
 #endif
 
 XDMX_LIBS = \
-	@XDMX_LIBS@ \
 	$(GLX_LIBS) \
+	@XDMX_LIBS@ \
         input/libdmxinput.a \
         config/libdmxconfig.a
 
 Xdmx_LDFLAGS = $(LD_EXPORT_SYMBOLS_FLAG)
 Xdmx_DEPENDENCIES= $(XDMX_LIBS)
 Xdmx_LDADD = $(XDMX_LIBS) $(XDMX_SYS_LIBS) $(XSERVER_SYS_LIBS)
-
-# Man page
-appmandir = $(APP_MAN_DIR)
-
-appman_PRE = Xdmx.man
-appman_DATA = $(appman_PRE:man=@APP_MAN_SUFFIX@)
-
-CLEANFILES = $(appman_DATA)
-
-# Strings to replace in man pages
-XORGRELSTRING = @PACKAGE_STRING@
-  XORGMANNAME = X Version 11
-
-MAN_SUBSTS = \
-	-e 's|__vendorversion__|"$(XORGRELSTRING)" "$(XORGMANNAME)"|' \
-	-e 's|__miscmansuffix__|$(MISC_MAN_SUFFIX)|g'
-
-SUFFIXES = .$(APP_MAN_SUFFIX) .man
-
-.man.$(APP_MAN_SUFFIX):
-	$(AM_V_GEN)$(SED) $(MAN_SUBSTS) < $< > $@
-
-EXTRA_DIST = $(appman_PRE)
 
 relink:
 	$(AM_V_at)rm -f Xdmx$(EXEEXT) && $(MAKE) Xdmx$(EXEEXT)

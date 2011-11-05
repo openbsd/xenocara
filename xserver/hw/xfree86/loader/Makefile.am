@@ -8,26 +8,14 @@ INCLUDES = $(XORG_INCS) -I$(srcdir)/../parser -I$(top_srcdir)/miext/cw \
 AM_CFLAGS = $(DIX_CFLAGS) $(XORG_CFLAGS)
 
 EXTRA_DIST = \
-	dlloader.h \
 	loader.h \
-	loaderProcs.h \
-	sdksyms.sh
+	loaderProcs.h
 
 libloader_la_SOURCES = \
 	loader.c \
 	loaderProcs.h \
 	loadext.c \
         loadmod.c \
-        dlloader.c \
-	os.c \
-	sdksyms.c
+	os.c
+
 libloader_la_LIBADD = $(DLOPEN_LIBS)
-
-CLEANFILES = sdksyms.c sdksyms.dep
-
-sdksyms.dep sdksyms.c: sdksyms.sh
-	CPP='$(CPP)' AWK='$(AWK)' $(SHELL) $(srcdir)/sdksyms.sh $(top_srcdir) $(AM_CFLAGS) $(CFLAGS) $(INCLUDES)
-
-.if exists(sdksyms.dep)
-.include "sdksyms.dep"
-.endif

@@ -66,15 +66,9 @@ Equipment Corporation.
 #include "dixfont.h"
 #include "xace.h"
 
-#ifdef DEBUG
-#include	<stdio.h>
-#endif
-
 #ifdef XF86BIGFONT
 #include "xf86bigfontsrv.h"
 #endif
-
-#define QUERYCHARINFO(pci, pr)  *(pr) = (pci)->metrics
 
 extern pointer fosNaturalParams;
 extern FontPtr defaultFont;
@@ -391,14 +385,6 @@ OpenFont(ClientPtr client, XID fid, Mask flags, unsigned lenfname, char *pfontna
     int         i;
     FontPtr     cached = (FontPtr)0;
 
-#ifdef FONTDEBUG
-    char *f;
-    f = malloc(lenfname + 1);
-    memmove(f, pfontname, lenfname);
-    f[lenfname] = '\0';
-    ErrorF("[dix] OpenFont: fontname is \"%s\"\n", f);
-    free(f);
-#endif
     if (!lenfname || lenfname > XLFDMAXFONTNAMELEN)
 	return BadName;
     if (patternCache)
@@ -667,7 +653,7 @@ doListFontsAndAliases(ClientPtr client, LFclosurePtr c)
 		    ((pointer) c->client, fpe, &name, &namelen, &tmpname,
 		     &resolvedlen, c->current.private);
 		if (err == Suspended) {
-		    if (ClientIsAsleep(client))
+		    if (!ClientIsAsleep(client))
 			ClientSleep(client,
 				    (ClientSleepProcPtr)doListFontsAndAliases,
 				    c);
@@ -1170,6 +1156,7 @@ doPolyText(ClientPtr client, PTclosurePtr c)
     enum { NEVER_SLEPT, START_SLEEP, SLEEPING } client_state = NEVER_SLEPT;
     FontPathElementPtr fpe;
     GC *origGC = NULL;
+    int itemSize = c->reqType == X_PolyText8 ? 1 : 2;
 
     if (client->clientGone)
     {
@@ -1255,10 +1242,6 @@ doPolyText(ClientPtr client, PTclosurePtr c)
 		    val.ptr = pFont;
 		    ChangeGC(NullClient, c->pGC, GCFont, &val);
 		    ValidateGC(c->pDraw, c->pGC);
-		    if (c->reqType == X_PolyText8)
-			c->polyText = (PolyTextPtr) c->pGC->ops->PolyText8;
-		    else
-			c->polyText = (PolyTextPtr) c->pGC->ops->PolyText16;
 		}
 
 		/* Undo the refcnt++ we performed when going to sleep */
@@ -1270,7 +1253,7 @@ doPolyText(ClientPtr client, PTclosurePtr c)
 	else	/* print a string */
 	{
 	    unsigned char *pNextElt;
-	    pNextElt = c->pElt + TextEltHeader + (*c->pElt)*c->itemSize;
+	    pNextElt = c->pElt + TextEltHeader + (*c->pElt) * itemSize;
 	    if ( pNextElt > c->endReq)
 	    {
 		err = BadLength;
@@ -1283,7 +1266,7 @@ doPolyText(ClientPtr client, PTclosurePtr c)
 	    }
 	    if (c->pDraw)
 	    {
-		lgerr = LoadGlyphs(client, c->pGC->font, *c->pElt, c->itemSize,
+		lgerr = LoadGlyphs(client, c->pGC->font, *c->pElt, itemSize,
 				   c->pElt + TextEltHeader);
 	    }
 	    else lgerr = Successful;
@@ -1319,31 +1302,30 @@ doPolyText(ClientPtr client, PTclosurePtr c)
 			goto bail;
 		    }
 		    *new_closure = *c;
-		    c = new_closure;
 
-		    len = c->endReq - c->pElt;
-		    c->data = malloc(len);
-		    if (!c->data)
+		    len = new_closure->endReq - new_closure->pElt;
+		    new_closure->data = malloc(len);
+		    if (!new_closure->data)
 		    {
-			free(c);
+			free(new_closure);
 			err = BadAlloc;
 			goto bail;
 		    }
-		    memmove(c->data, c->pElt, len);
-		    c->pElt = c->data;
-		    c->endReq = c->pElt + len;
+		    memmove(new_closure->data, new_closure->pElt, len);
+		    new_closure->pElt = new_closure->data;
+		    new_closure->endReq = new_closure->pElt + len;
 
 		    /* Step 2 */
 
-		    pGC = GetScratchGC(c->pGC->depth, c->pGC->pScreen);
+		    pGC = GetScratchGC(new_closure->pGC->depth, new_closure->pGC->pScreen);
 		    if (!pGC)
 		    {
-			free(c->data);
-			free(c);
+			free(new_closure->data);
+			free(new_closure);
 			err = BadAlloc;
 			goto bail;
 		    }
-		    if ((err = CopyGC(c->pGC, pGC, GCFunction |
+		    if ((err = CopyGC(new_closure->pGC, pGC, GCFunction |
 				      GCPlaneMask | GCForeground |
 				      GCBackground | GCFillStyle |
 				      GCTile | GCStipple |
@@ -1354,15 +1336,16 @@ doPolyText(ClientPtr client, PTclosurePtr c)
 				      Success)
 		    {
 			FreeScratchGC(pGC);
-			free(c->data);
-			free(c);
+			free(new_closure->data);
+			free(new_closure);
 			err = BadAlloc;
 			goto bail;
 		    }
+		    c = new_closure;
 		    origGC = c->pGC;
 		    c->pGC = pGC;
 		    ValidateGC(c->pDraw, c->pGC);
-		    
+
 		    ClientSleep(client, (ClientSleepProcPtr)doPolyText, c);
 
 		    /* Set up to perform steps 3 and 4 */
@@ -1381,8 +1364,12 @@ doPolyText(ClientPtr client, PTclosurePtr c)
 	    if (c->pDraw)
 	    {
 		c->xorg += *((INT8 *)(c->pElt + 1));	/* must be signed */
-		c->xorg = (* c->polyText)(c->pDraw, c->pGC, c->xorg, c->yorg,
-		    *c->pElt, c->pElt + TextEltHeader);
+		if (c->reqType == X_PolyText8)
+		    c->xorg = (* c->pGC->ops->PolyText8)(c->pDraw, c->pGC, c->xorg, c->yorg,
+			*c->pElt, (char *) (c->pElt + TextEltHeader));
+		else
+		    c->xorg = (* c->pGC->ops->PolyText16)(c->pDraw, c->pGC, c->xorg, c->yorg,
+			*c->pElt, (unsigned short *) (c->pElt + TextEltHeader));
 	    }
 	    c->pElt = pNextElt;
 	}
@@ -1442,16 +1429,7 @@ PolyText(ClientPtr client, DrawablePtr pDraw, GC *pGC, unsigned char *pElt,
     local_closure.pDraw = pDraw;
     local_closure.xorg = xorg;
     local_closure.yorg = yorg;
-    if ((local_closure.reqType = reqType) == X_PolyText8)
-    {
-	local_closure.polyText = (PolyTextPtr) pGC->ops->PolyText8;
-	local_closure.itemSize = 1;
-    }
-    else
-    {
-	local_closure.polyText =  (PolyTextPtr) pGC->ops->PolyText16;
-	local_closure.itemSize = 2;
-    }
+    local_closure.reqType = reqType;
     local_closure.pGC = pGC;
     local_closure.did = did;
     local_closure.err = Success;
@@ -1469,6 +1447,7 @@ doImageText(ClientPtr client, ITclosurePtr c)
 {
     int err = Success, lgerr;	/* err is in X error, not font error, space */
     FontPathElementPtr fpe;
+    int itemSize = c->reqType == X_ImageText8 ? 1 : 2;
 
     if (client->clientGone)
     {
@@ -1493,7 +1472,7 @@ doImageText(ClientPtr client, ITclosurePtr c)
 	}
     }
 
-    lgerr = LoadGlyphs(client, c->pGC->font, c->nChars, c->itemSize, c->data);
+    lgerr = LoadGlyphs(client, c->pGC->font, c->nChars, itemSize, c->data);
     if (lgerr == Suspended)
     {
         if (!ClientIsAsleep(client)) {
@@ -1515,14 +1494,14 @@ doImageText(ClientPtr client, ITclosurePtr c)
 	    *new_closure = *c;
 	    c = new_closure;
 
-	    data = malloc(c->nChars * c->itemSize);
+	    data = malloc(c->nChars * itemSize);
 	    if (!data)
 	    {
 		free(c);
 		err = BadAlloc;
 		goto bail;
 	    }
-	    memmove(data, c->data, c->nChars * c->itemSize);
+	    memmove(data, c->data, c->nChars * itemSize);
 	    c->data = data;
 
 	    pGC = GetScratchGC(c->pGC->depth, c->pGC->pScreen);
@@ -1562,8 +1541,12 @@ doImageText(ClientPtr client, ITclosurePtr c)
     }
     if (c->pDraw)
     {
-	(* c->imageText)(c->pDraw, c->pGC, c->xorg, c->yorg,
-	    c->nChars, c->data);
+	if (c->reqType == X_ImageText8)
+	    (* c->pGC->ops->ImageText8)(c->pDraw, c->pGC, c->xorg, c->yorg,
+		c->nChars, (char *) c->data);
+	else
+	    (* c->pGC->ops->ImageText16)(c->pDraw, c->pGC, c->xorg, c->yorg,
+		c->nChars, (unsigned short *) c->data);
     }
 
 bail:
@@ -1601,16 +1584,7 @@ ImageText(ClientPtr client, DrawablePtr pDraw, GC *pGC, int nChars,
     local_closure.data = data;
     local_closure.xorg = xorg;
     local_closure.yorg = yorg;
-    if ((local_closure.reqType = reqType) == X_ImageText8)
-    {
-	local_closure.imageText = (ImageTextPtr) pGC->ops->ImageText8;
-	local_closure.itemSize = 1;
-    }
-    else
-    {
-	local_closure.imageText = (ImageTextPtr) pGC->ops->ImageText16;
-	local_closure.itemSize = 2;
-    }
+    local_closure.reqType = reqType;
     local_closure.did = did;
 
     (void) doImageText(client, &local_closure);
@@ -1829,7 +1803,9 @@ SetDefaultFontPath(char *path)
 	start = end;
     }
     if (!start) {
-	temp_path = Xprintf("%s%sbuilt-ins", path, *path ? "," : "");
+	if (asprintf(&temp_path, "%s%sbuilt-ins", path, *path ? "," : "")
+	    == -1)
+	    temp_path = NULL;
     } else {
 	temp_path = strdup(path);
     }
@@ -1839,8 +1815,10 @@ SetDefaultFontPath(char *path)
     /* get enough for string, plus values -- use up commas */
     len = strlen(temp_path) + 1;
     nump = cp = newpath = malloc(len);
-    if (!newpath)
+    if (!newpath) {
+	free(temp_path);
 	return BadAlloc;
+    }
     pp = (unsigned char *) temp_path;
     cp++;
     while (*pp) {

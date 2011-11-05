@@ -708,7 +708,7 @@ xf86WriteMmio32LeNB(__volatile__ void *base, const unsigned long offset,
 }
 
 #   elif defined(__mips__) || (defined(__arm32__) && !defined(__linux__))
-#    ifdef __arm32__
+#    if defined(__arm32__) || defined(__mips64__)
 #     define PORT_SIZE long
 #    else
 #     define PORT_SIZE short
@@ -1525,22 +1525,9 @@ inl(unsigned short port)
 #      define asm __asm
 #     endif
 #    endif
-#    ifndef SCO325
-#     if defined(__UNIXWARE__)
-#     /* avoid including <sys/types.h> for <sys/inline.h> on UnixWare */
-#      define ushort unsigned short
-#      define ushort_t unsigned short
-#      define ulong unsigned long
-#      define ulong_t unsigned long
-#      define uint_t unsigned int
-#      define uchar_t unsigned char
-#     endif /* __UNIXWARE__ */
 #     if !defined(__SUNPRO_C)
 #      include <sys/inline.h>
 #     endif
-#    else
-#     include "scoasm.h"
-#    endif
 #    if !defined(__HIGHC__) && !defined(__SUNPRO_C) || \
 	defined(__USLC__)
 #     pragma asm partial_optimization outl

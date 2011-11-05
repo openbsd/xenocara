@@ -49,7 +49,6 @@
 
 DevPrivateKeyRec xf86CreateRootWindowKeyRec;
 DevPrivateKeyRec xf86ScreenKeyRec;
-DevPrivateKeyRec xf86PixmapKeyRec;
 
 ScrnInfoPtr *xf86Screens = NULL;	/* List of ScrnInfos */
 const unsigned char byte_reversed[256] =
@@ -125,15 +124,14 @@ xf86InfoRec xf86Info = {
 #endif
     .pmFlag                     = TRUE,
     .log                        = LogNone,
-    .kbdCustomKeycodes          = FALSE,
     .disableRandR               = FALSE,
     .randRFrom                  = X_DEFAULT,
 #if defined(CONFIG_HAL) || defined(CONFIG_UDEV) || defined(CONFIG_WSCONS)
-    .allowEmptyInput            = TRUE,
+    .forceInputDevices          = FALSE,
     .autoAddDevices             = TRUE,
     .autoEnableDevices          = TRUE
 #else
-    .allowEmptyInput            = FALSE,
+    .forceInputDevices          = TRUE,
     .autoAddDevices             = FALSE,
     .autoEnableDevices          = FALSE
 #endif
@@ -196,9 +194,4 @@ Bool xf86VidModeDisabled = FALSE;
 Bool xf86VidModeAllowNonLocal = FALSE;
 #endif
 RootWinPropPtr *xf86RegisteredPropertiesTable = NULL;
-Bool xf86inSuspend = FALSE;
 Bool xorgHWAccess = FALSE;
-
-struct pci_slot_match xf86IsolateDevice = {
-    PCI_MATCH_ANY, PCI_MATCH_ANY, PCI_MATCH_ANY, PCI_MATCH_ANY, 0
-};

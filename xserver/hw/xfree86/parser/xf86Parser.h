@@ -119,7 +119,6 @@ XF86ConfModuleRec, *XF86ConfModulePtr;
 #define XF86CONF_NCSYNC    0x0100
 #define XF86CONF_HSKEW     0x0200	/* hskew provided */
 #define XF86CONF_BCAST     0x0400
-#define XF86CONF_CUSTOM    0x0800	/* timing numbers customized by editor */
 #define XF86CONF_VSCAN     0x1000
 
 typedef struct
@@ -359,6 +358,7 @@ typedef struct
 	struct list match_usbid;
 	struct list match_driver;
 	struct list match_tag;
+	struct list match_layout;
 	xf86TriState is_keyboard;
 	xf86TriState is_pointer;
 	xf86TriState is_joystick;
@@ -442,20 +442,9 @@ XF86ConfVendorRec, *XF86ConfVendorPtr;
 
 typedef struct
 {
-	GenericListRec list;
-	int buf_count;
-	int buf_size;
-	char *buf_flags;
-	char *buf_comment;
-}
-XF86ConfBuffersRec, *XF86ConfBuffersPtr;
-
-typedef struct
-{
 	char *dri_group_name;
 	int dri_group;
 	int dri_mode;
-	XF86ConfBuffersPtr dri_buffers_lst;
 	char *dri_comment;
 }
 XF86ConfDRIRec, *XF86ConfDRIPtr;

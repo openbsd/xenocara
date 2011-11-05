@@ -35,7 +35,6 @@
 #include "glxserver.h"
 #include "glxutil.h"
 #include "unpack.h"
-#include "g_disptab.h"
 #include "glapitable.h"
 #include "glapi.h"
 #include "glthread.h"
@@ -154,6 +153,8 @@ int __glXDisp_UseXFont(__GLXclientState *cl, GLbyte *pc)
     GLuint currentListIndex;
     __GLXcontext *cx;
     int error;
+
+    REQUEST_SIZE_MATCH(xGLXUseXFontReq);
 
     req = (xGLXUseXFontReq *) pc;
     cx = __glXForceCurrent(cl, req->contextTag, &error);

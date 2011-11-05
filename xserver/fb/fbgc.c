@@ -64,19 +64,13 @@ const GCOps	fbGCOps = {
 Bool
 fbCreateGC(GCPtr pGC)
 {
-    pGC->clientClip = NULL;
-    pGC->clientClipType = CT_NONE;
-
     pGC->ops = (GCOps *) &fbGCOps;
     pGC->funcs = (GCFuncs *) &fbGCFuncs;
 
     /* fb wants to translate before scan conversion */
     pGC->miTranslate = 1;
+    pGC->fExpose = 1;
 
-    fbGetRotatedPixmap(pGC) = 0;
-    fbGetExpose(pGC) = 1;
-    fbGetFreeCompClip(pGC) = 0;
-    fbGetCompositeClip(pGC) = 0;
     fbGetGCPrivate(pGC)->bpp = BitsPerPixel (pGC->depth);
     return TRUE;
 }
@@ -95,7 +89,7 @@ fbPadPixmap (PixmapPtr pPixmap)
     int	    w;
     int     stride;
     int     bpp;
-    int     xOff, yOff;
+    _X_UNUSED int xOff, yOff;
 
     fbGetDrawable (&pPixmap->drawable, bits, stride, bpp, xOff, yOff);
 
@@ -169,7 +163,7 @@ fbCanEvenStipple (PixmapPtr pStipple, int bpp)
     FbBits  *bits;
     int	    stride;
     int	    stip_bpp;
-    int	    stipXoff, stipYoff;
+    _X_UNUSED int stipXoff, stipYoff;
     int	    h;
 
     /* can't even stipple 24bpp drawables */
@@ -199,9 +193,6 @@ fbValidateGC(GCPtr pGC, unsigned long changes, DrawablePtr pDrawable)
     FbGCPrivPtr	pPriv = fbGetGCPrivate(pGC);
     FbBits	mask;
 
-    pGC->lastWinOrg.x = pDrawable->x;
-    pGC->lastWinOrg.y = pDrawable->y;
-
     /*
      * if the client clip is different or moved OR the subwindowMode has
      * changed OR the window's clip has changed since the last validation
@@ -213,10 +204,8 @@ fbValidateGC(GCPtr pGC, unsigned long changes, DrawablePtr pDrawable)
 	)
     {
 	miComputeCompositeClip (pGC, pDrawable);
-	pPriv->oneRect = RegionNumRects(fbGetCompositeClip(pGC)) == 1;
     }
     
-#ifdef FB_24_32BIT    
     if (pPriv->bpp != pDrawable->bitsPerPixel)
     {
 	changes |= GCStipple|GCForeground|GCBackground|GCPlaneMask;
@@ -250,7 +239,6 @@ fbValidateGC(GCPtr pGC, unsigned long changes, DrawablePtr pDrawable)
 	    }
 	}
     }
-#endif
     if (changes & GCTile)
     {
 	if (!pGC->tileIsPixel && 

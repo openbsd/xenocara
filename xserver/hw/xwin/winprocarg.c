@@ -30,89 +30,21 @@ from The Open Group.
 #ifdef HAVE_XWIN_CONFIG_H
 #include <xwin-config.h>
 #endif
-#ifdef XVENDORNAME
-#define VENDOR_STRING XVENDORNAME
-#define VENDOR_CONTACT BUILDERADDR
-#endif
+
 #include <../xfree86/common/xorgVersion.h>
 #include "win.h"
 #include "winconfig.h"
-#include "winprefs.h"
 #include "winmsg.h"
+#include "winmonitors.h"
 
 /*
  * References to external symbols
  */
 
-extern int			g_iNumScreens;
-extern winScreenInfo *		g_ScreenInfo;
 #ifdef XWIN_CLIPBOARD
 extern Bool			g_fUnicodeClipboard;
 extern Bool			g_fClipboard;
 #endif
-extern int			g_iLogVerbose;
-extern const char *		g_pszLogFile;
-#ifdef RELOCATE_PROJECTROOT
-extern Bool			g_fLogFileChanged;
-#endif
-extern Bool			g_fXdmcpEnabled;
-extern Bool			g_fAuthEnabled;
-extern char *			g_pszCommandLine;
-extern Bool			g_fKeyboardHookLL;
-extern Bool			g_fNoHelpMessageBox;                     
-extern Bool			g_fSoftwareCursor;
-extern Bool			g_fSilentDupError;
-extern Bool                     g_fNativeGl;
-
-/* globals required by callback function for monitor information */
-struct GetMonitorInfoData {
-    int  requestedMonitor;
-    int  monitorNum;
-    Bool bUserSpecifiedMonitor;
-    Bool bMonitorSpecifiedExists;
-    int  monitorOffsetX;
-    int  monitorOffsetY;
-    int  monitorHeight;
-    int  monitorWidth;
-};
-
-typedef wBOOL (*ENUMDISPLAYMONITORSPROC)(HDC,LPCRECT,MONITORENUMPROC,LPARAM);
-ENUMDISPLAYMONITORSPROC _EnumDisplayMonitors;
-
-wBOOL CALLBACK getMonitorInfo(HMONITOR hMonitor, HDC hdc, LPRECT rect, LPARAM _data);
-
-static Bool QueryMonitor(int index, struct GetMonitorInfoData *data)
-{
-    /* Load EnumDisplayMonitors from DLL */
-    HMODULE user32;
-    FARPROC func;
-    user32 = LoadLibrary("user32.dll");
-    if (user32 == NULL)
-    {
-        winW32Error(2, "Could not open user32.dll");
-        return FALSE;
-    }
-    func = GetProcAddress(user32, "EnumDisplayMonitors");
-    if (func == NULL)
-    {
-        winW32Error(2, "Could not resolve EnumDisplayMonitors: ");
-        return FALSE;
-    }
-    _EnumDisplayMonitors = (ENUMDISPLAYMONITORSPROC)func;
-    
-    /* prepare data */
-    if (data == NULL)
-        return FALSE;
-    memset(data, 0, sizeof(*data));
-    data->requestedMonitor = index;
-
-    /* query information */
-    _EnumDisplayMonitors(NULL, NULL, getMonitorInfo, (LPARAM) data);
-
-    /* cleanup */
-    FreeLibrary(user32);
-    return TRUE;
-}
 
 /*
  * Function prototypes
@@ -163,6 +95,7 @@ winInitializeScreenDefaults(void)
   if (monitorResolution == 0)
     monitorResolution = WIN_DEFAULT_DPI;
 
+  defaultScreenInfo.iMonitor = 1;
   defaultScreenInfo.dwWidth  = dwWidth;
   defaultScreenInfo.dwHeight = dwHeight;
   defaultScreenInfo.dwUserWidth  = dwWidth;
@@ -191,11 +124,9 @@ winInitializeScreenDefaults(void)
 #endif
   defaultScreenInfo.fMultipleMonitors = FALSE;
   defaultScreenInfo.fLessPointer = FALSE;
-  defaultScreenInfo.fScrollbars = FALSE;
+  defaultScreenInfo.iResizeMode = notAllowed;
   defaultScreenInfo.fNoTrayIcon = FALSE;
   defaultScreenInfo.iE3BTimeout = WIN_E3B_OFF;
-  defaultScreenInfo.dwWidth_mm = (dwWidth / WIN_DEFAULT_DPI) * 25.4;
-  defaultScreenInfo.dwHeight_mm = (dwHeight / WIN_DEFAULT_DPI) * 25.4;
   defaultScreenInfo.fUseWinKillKey = WIN_DEFAULT_WIN_KILL;
   defaultScreenInfo.fUseUnixKillKey = WIN_DEFAULT_UNIX_KILL;
   defaultScreenInfo.fIgnoreInput = FALSE;
@@ -388,6 +319,7 @@ ddxProcessArgument (int argc, char *argv[], int i)
 		  iArgsProcessed = 3;
 		  g_ScreenInfo[nScreenNum].fUserGaveHeightAndWidth = FALSE;
 		  g_ScreenInfo[nScreenNum].fUserGavePosition = TRUE;
+		  g_ScreenInfo[nScreenNum].iMonitor = iMonitor;
 		  g_ScreenInfo[nScreenNum].dwWidth = data.monitorWidth;
 		  g_ScreenInfo[nScreenNum].dwHeight = data.monitorHeight;
 		  g_ScreenInfo[nScreenNum].dwUserWidth = data.monitorWidth;
@@ -440,6 +372,7 @@ ddxProcessArgument (int argc, char *argv[], int i)
                       "Querying monitors is not supported on NT4 and Win95\n");
           } else if (data.bMonitorSpecifiedExists == TRUE) 
           {
+			g_ScreenInfo[nScreenNum].iMonitor = iMonitor;
 			g_ScreenInfo[nScreenNum].dwInitialX += data.monitorOffsetX;
 			g_ScreenInfo[nScreenNum].dwInitialY += data.monitorOffsetY;
 		  }
@@ -469,6 +402,7 @@ ddxProcessArgument (int argc, char *argv[], int i)
         {
 		  winErrorFVerb (2, "ddxProcessArgument - screen - Found Valid ``@Monitor'' = %d arg\n", iMonitor);
 		  g_ScreenInfo[nScreenNum].fUserGavePosition = TRUE;
+		  g_ScreenInfo[nScreenNum].iMonitor = iMonitor;
 		  g_ScreenInfo[nScreenNum].dwInitialX = data.monitorOffsetX;
 		  g_ScreenInfo[nScreenNum].dwInitialY = data.monitorOffsetY;
 		}
@@ -518,17 +452,6 @@ ddxProcessArgument (int argc, char *argv[], int i)
 		  (int) g_ScreenInfo[nScreenNum].dwHeight);
 	  iArgsProcessed = 2;
 	  g_ScreenInfo[nScreenNum].fUserGaveHeightAndWidth = FALSE;
-	}
-
-      /* Calculate the screen width and height in millimeters */
-      if (g_ScreenInfo[nScreenNum].fUserGaveHeightAndWidth)
-	{
-	  g_ScreenInfo[nScreenNum].dwWidth_mm
-	    = (g_ScreenInfo[nScreenNum].dwWidth
-	       / monitorResolution) * 25.4;
-	  g_ScreenInfo[nScreenNum].dwHeight_mm
-	    = (g_ScreenInfo[nScreenNum].dwHeight
-	       / monitorResolution) * 25.4;
 	}
 
       /* Flag that this screen was explicity specified by the user */
@@ -737,12 +660,51 @@ ddxProcessArgument (int argc, char *argv[], int i)
    */
   if (IS_OPTION ("-scrollbars"))
     {
-      screenInfoPtr->fScrollbars = TRUE;
+
+      screenInfoPtr->iResizeMode = resizeWithScrollbars;
 
       /* Indicate that we have processed this argument */
       return 1;
     }
 
+  /*
+   * Look for the '-resize' argument
+   */
+  if (IS_OPTION ("-resize") || IS_OPTION ("-noresize") ||
+      (strncmp(argv[i], "-resize=",strlen("-resize=")) == 0))
+    {
+      winResizeMode mode;
+
+      if (IS_OPTION ("-resize"))
+        mode = resizeWithRandr;
+      else if (IS_OPTION ("-noresize"))
+        mode = notAllowed;
+      else if (strncmp(argv[i], "-resize=",strlen("-resize=")) == 0)
+        {
+          char *option = argv[i] + strlen("-resize=");
+          if (strcmp(option, "randr") == 0)
+            mode = resizeWithRandr;
+          else if (strcmp(option, "scrollbars") == 0)
+            mode = resizeWithScrollbars;
+          else if (strcmp(option, "none") == 0)
+            mode = notAllowed;
+          else
+            {
+              ErrorF ("ddxProcessArgument - resize - Invalid resize mode %s\n", option);
+              return 0;
+            }
+        }
+      else
+        {
+          ErrorF ("ddxProcessArgument - resize - Invalid resize option %s\n", argv[i]);
+          return 0;
+        }
+
+      screenInfoPtr->iResizeMode = mode;
+
+      /* Indicate that we have processed this argument */
+      return 1;
+    }
 
 #ifdef XWIN_CLIPBOARD
   /*
@@ -1248,29 +1210,8 @@ winLogVersionInfo (void)
   s_fBeenHere = TRUE;
 
   ErrorF ("Welcome to the XWin X Server\n");
-  ErrorF ("Vendor: %s\n", VENDOR_STRING);
+  ErrorF ("Vendor: %s\n", XVENDORNAME);
   ErrorF ("Release: %d.%d.%d.%d (%d)\n", XORG_VERSION_MAJOR, XORG_VERSION_MINOR, XORG_VERSION_PATCH, XORG_VERSION_SNAP, XORG_VERSION_CURRENT);
   ErrorF ("%s\n\n", BUILDERSTRING);
-  ErrorF ("Contact: %s\n", VENDOR_CONTACT);
-}
-
-/*
- * getMonitorInfo - callback function used to return information from the enumeration of monitors attached
- */
-
-wBOOL CALLBACK getMonitorInfo(HMONITOR hMonitor, HDC hdc, LPRECT rect, LPARAM _data) 
-{
-  struct GetMonitorInfoData* data = (struct GetMonitorInfoData*)_data;
-  // only get data for monitor number specified in <data>
-  data->monitorNum++;
-  if (data->monitorNum == data->requestedMonitor) 
-  {
-	data->bMonitorSpecifiedExists = TRUE;
-	data->monitorOffsetX = rect->left;
-	data->monitorOffsetY = rect->top;
-	data->monitorHeight  = rect->bottom - rect->top;
-	data->monitorWidth   = rect->right  - rect->left;
-    return FALSE;
-  }
-  return TRUE;
+  ErrorF ("Contact: %s\n", BUILDERADDR);
 }

@@ -39,59 +39,41 @@
 #include <sys/stat.h>
 
 static Bool KeepTty = FALSE;
-static int VTnum = -1;
 static Bool VTSwitch = TRUE;
 static Bool ShareVTs = FALSE;
 static int activeVT = -1;
 
-static int vtPermSave[4];
 static char vtname[11];
 static struct termios tty_attr; /* tty state to restore */
 static int tty_mode; /* kbd mode to restore */
 
-static int
-saveVtPerms(void)
-{
-    /* We need to use stat to get permissions. */
-    struct stat svtp;
-
-    /* Do them numerically ordered, hard coded tty0 first. */
-    if (stat("/dev/tty0", &svtp) != 0)
-	return 0;
-    vtPermSave[0] = (int)svtp.st_uid;
-    vtPermSave[1] = (int)svtp.st_gid;
-
-    /* Now check the console we are dealing with. */
-    if (stat(vtname, &svtp) != 0)
-	return 0;
-    vtPermSave[2] = (int)svtp.st_uid;
-    vtPermSave[3] = (int)svtp.st_gid;
-
-    return 1;
-}
-
-static void
-restoreVtPerms(void)
-{
-    if (geteuid() == 0) {
-	 /* Set the terminal permissions back to before we started. */
-	 (void)chown("/dev/tty0", vtPermSave[0], vtPermSave[1]);
-	 (void)chown(vtname, vtPermSave[2], vtPermSave[3]);
-    }
-}
-
-static void *console_handler;
-
 static void
 drain_console(int fd, void *closure)
 {
-    tcflush(fd, TCIOFLUSH);
+    errno = 0;
+    if (tcflush(fd, TCIOFLUSH) == -1 && errno == EIO) {
+        xf86SetConsoleHandler(NULL, NULL);
+    }
+}
+
+static void
+switch_to(int vt, const char *from)
+{
+    int ret;
+
+    SYSCALL(ret = ioctl(xf86Info.consoleFd, VT_ACTIVATE, vt));
+    if (ret < 0)
+	FatalError("%s: VT_ACTIVATE failed: %s\n", from, strerror(errno));
+
+    SYSCALL(ret = ioctl(xf86Info.consoleFd, VT_WAITACTIVE, vt));
+    if (ret < 0)
+	FatalError("%s: VT_WAITACTIVE failed: %s\n", from, strerror(errno));
 }
 
 void
 xf86OpenConsole(void)
 {
-    int i, fd = -1;
+    int i, fd = -1, ret;
     struct vt_mode VT;
     struct vt_stat vts;
     MessageType from = X_PROBED;
@@ -108,8 +90,7 @@ xf86OpenConsole(void)
 	/*
 	 * setup the virtual terminal manager
 	 */
-	if (VTnum != -1) {
-	    xf86Info.vtno = VTnum;
+	if (xf86Info.vtno != -1) {
 	    from = X_CMDLINE;
 	} else {
 
@@ -127,17 +108,19 @@ xf86OpenConsole(void)
 
             if (ShareVTs)
             {
-                if (ioctl(fd, VT_GETSTATE, &vts) == 0)
-                    xf86Info.vtno = vts.v_active;
-                else
-                    FatalError("xf86OpenConsole: Cannot find the current"
-                               " VT (%s)\n", strerror(errno));
+		SYSCALL(ret = ioctl(fd, VT_GETSTATE, &vts));
+		if (ret < 0)
+		    FatalError("xf86OpenConsole: Cannot find the current"
+			       " VT (%s)\n", strerror(errno));
+                xf86Info.vtno = vts.v_active;
             } else {
-	        if ((ioctl(fd, VT_OPENQRY, &xf86Info.vtno) < 0) ||
-		    (xf86Info.vtno == -1))
-		    FatalError("xf86OpenConsole: Cannot find a free VT: %s\n",
-                               strerror(errno));
-            }
+		SYSCALL(ret = ioctl(fd, VT_OPENQRY, &xf86Info.vtno));
+		if (ret < 0)
+		    FatalError("xf86OpenConsole: Cannot find a free VT: "
+			       "%s\n", strerror(errno));
+		if (xf86Info.vtno == -1)
+		    FatalError("xf86OpenConsole: Cannot find a free VT\n");
+	    }
 	    close(fd);
 	}
 
@@ -175,39 +158,12 @@ xf86OpenConsole(void)
 	    FatalError("xf86OpenConsole: Cannot open virtual console"
 		       " %d (%s)\n", xf86Info.vtno, strerror(errno));
 
-        if (!ShareVTs)
-        {
-	    /*
-	     * Grab the vt ownership before we overwrite it.
-	     * Hard coded /dev/tty0 into this function as well for below.
-	     */
-	    if (!saveVtPerms())
-	        xf86Msg(X_WARNING,
-		        "xf86OpenConsole: Could not save ownership of VT\n");
-
-	    if (geteuid() == 0) {
-		    /* change ownership of the vt */
-		    if (chown(vtname, getuid(), getgid()) < 0)
-			    xf86Msg(X_WARNING,"xf86OpenConsole: chown %s failed: %s\n",
-				    vtname, strerror(errno));
-
-		    /*
-		     * the current VT device we're running on is not
-		     * "console", we want to grab all consoles too
-		     *
-		     * Why is this needed??
-		     */
-		    if (chown("/dev/tty0", getuid(), getgid()) < 0)
-			    xf86Msg(X_WARNING,"xf86OpenConsole: chown /dev/tty0 failed: %s\n",
-				    strerror(errno));
-	    }
-        }
-
 	/*
 	 * Linux doesn't switch to an active vt after the last close of a vt,
 	 * so we do this ourselves by remembering which is active now.
 	 */
-	if (ioctl(xf86Info.consoleFd, VT_GETSTATE, &vts) < 0)
+	SYSCALL(ret = ioctl(xf86Info.consoleFd, VT_GETSTATE, &vts));
+	if (ret < 0)
 	    xf86Msg(X_WARNING,"xf86OpenConsole: VT_GETSTATE failed: %s\n",
 		    strerror(errno));
 	else
@@ -219,7 +175,7 @@ xf86OpenConsole(void)
 	     * Detach from the controlling tty to avoid char loss
 	     */
 	    if ((i = open("/dev/tty",O_RDWR)) >= 0) {
-		ioctl(i, TIOCNOTTY, 0);
+		SYSCALL(ioctl(i, TIOCNOTTY, 0));
 		close(i);
 	    }
 	}
@@ -232,17 +188,12 @@ xf86OpenConsole(void)
 	    /*
 	     * now get the VT.  This _must_ succeed, or else fail completely.
 	     */
-	    if (ioctl(xf86Info.consoleFd, VT_ACTIVATE, xf86Info.vtno) < 0)
-	        FatalError("xf86OpenConsole: VT_ACTIVATE failed: %s\n",
-		           strerror(errno));
+            switch_to(xf86Info.vtno, "xf86OpenConsole");
 
-	    if (ioctl(xf86Info.consoleFd, VT_WAITACTIVE, xf86Info.vtno) < 0)
-	        FatalError("xf86OpenConsole: VT_WAITACTIVE failed: %s\n",
+	    SYSCALL(ret = ioctl(xf86Info.consoleFd, VT_GETMODE, &VT));
+	    if (ret < 0)
+		FatalError("xf86OpenConsole: VT_GETMODE failed %s\n",
 			   strerror(errno));
-
-	    if (ioctl(xf86Info.consoleFd, VT_GETMODE, &VT) < 0)
-	        FatalError("xf86OpenConsole: VT_GETMODE failed %s\n",
-		           strerror(errno));
 
 	    signal(SIGUSR1, xf86VTRequest);
 
@@ -250,20 +201,23 @@ xf86OpenConsole(void)
 	    VT.relsig = SIGUSR1;
 	    VT.acqsig = SIGUSR1;
 
-	    if (ioctl(xf86Info.consoleFd, VT_SETMODE, &VT) < 0)
-	        FatalError("xf86OpenConsole: VT_SETMODE VT_PROCESS failed: %s\n",
+	    SYSCALL(ret = ioctl(xf86Info.consoleFd, VT_SETMODE, &VT));
+	    if (ret < 0)
+		FatalError("xf86OpenConsole: VT_SETMODE VT_PROCESS failed: %s\n",
 		    strerror(errno));
-	
-	    if (ioctl(xf86Info.consoleFd, KDSETMODE, KD_GRAPHICS) < 0)
-	        FatalError("xf86OpenConsole: KDSETMODE KD_GRAPHICS failed %s\n",
-		           strerror(errno));
+
+	    SYSCALL(ret = ioctl(xf86Info.consoleFd, KDSETMODE, KD_GRAPHICS));
+	    if (ret < 0)
+		FatalError("xf86OpenConsole: KDSETMODE KD_GRAPHICS failed %s\n",
+			   strerror(errno));
 
             tcgetattr(xf86Info.consoleFd, &tty_attr);
-            ioctl(xf86Info.consoleFd, KDGKBMODE, &tty_mode);
+	    SYSCALL(ioctl(xf86Info.consoleFd, KDGKBMODE, &tty_mode));
 
-            if (ioctl(xf86Info.consoleFd, KDSKBMODE, K_RAW) < 0)
-                FatalError("xf86OpenConsole: KDSKBMODE K_RAW failed %s\n",
-                        strerror(errno));
+	    SYSCALL(ret = ioctl(xf86Info.consoleFd, KDSKBMODE, K_RAW));
+	    if (ret < 0)
+		FatalError("xf86OpenConsole: KDSKBMODE K_RAW failed %s\n",
+			strerror(errno));
 
             nTty = tty_attr;
             nTty.c_iflag = (IGNPAR | IGNBRK) & (~PARMRK) & (~ISTRIP);
@@ -277,9 +231,7 @@ xf86OpenConsole(void)
             tcsetattr(xf86Info.consoleFd, TCSANOW, &nTty);
 
             /* need to keep the buffer clean, else the kernel gets angry */
-	    if (xf86Info.allowEmptyInput)
-		console_handler = xf86AddGeneralHandler(xf86Info.consoleFd,
-							drain_console, NULL);
+	    xf86SetConsoleHandler(drain_console, NULL);
 
 	    /* we really should have a InitOSInputDevices() function instead
 	     * of Init?$#*&Device(). So I just place it here */
@@ -287,16 +239,8 @@ xf86OpenConsole(void)
     } else { 	/* serverGeneration != 1 */
         if (!ShareVTs && VTSwitch)
         {
-	    /*
-	     * now get the VT
-	     */
-	    if (ioctl(xf86Info.consoleFd, VT_ACTIVATE, xf86Info.vtno) < 0)
-	        xf86Msg(X_WARNING, "xf86OpenConsole: VT_ACTIVATE failed %s\n",
-		        strerror(errno));
-
-	    if (ioctl(xf86Info.consoleFd, VT_WAITACTIVE, xf86Info.vtno) < 0)
-	        xf86Msg(X_WARNING, "xf86OpenConsole: VT_WAITACTIVE failed %s\n",
-		        strerror(errno));
+	    /* now get the VT */
+            switch_to(xf86Info.vtno, "xf86OpenConsole");
         }
     }
 }
@@ -305,32 +249,37 @@ void
 xf86CloseConsole(void)
 {
     struct vt_mode   VT;
+    int ret;
 
     if (ShareVTs) {
         close(xf86Info.consoleFd);
         return;
     }
 
-    if (console_handler) {
-	xf86RemoveGeneralHandler(console_handler);
-	console_handler = NULL;
-    };
+    /*
+     * unregister the drain_console handler
+     * - what to do if someone else changed it in the meantime?
+     */
+    xf86SetConsoleHandler(NULL, NULL);
 
     /* Back to text mode ... */
-    if (ioctl(xf86Info.consoleFd, KDSETMODE, KD_TEXT) < 0)
+    SYSCALL(ret = ioctl(xf86Info.consoleFd, KDSETMODE, KD_TEXT));
+    if (ret < 0)
 	xf86Msg(X_WARNING, "xf86CloseConsole: KDSETMODE failed: %s\n",
 		strerror(errno));
 
-    ioctl(xf86Info.consoleFd, KDSKBMODE, tty_mode);
+    SYSCALL(ioctl(xf86Info.consoleFd, KDSKBMODE, tty_mode));
     tcsetattr(xf86Info.consoleFd, TCSANOW, &tty_attr);
 
-    if (ioctl(xf86Info.consoleFd, VT_GETMODE, &VT) < 0) 
+    SYSCALL(ret = ioctl(xf86Info.consoleFd, VT_GETMODE, &VT));
+    if (ret < 0)
 	xf86Msg(X_WARNING, "xf86CloseConsole: VT_GETMODE failed: %s\n",
 		strerror(errno));
     else {
 	/* set dflt vt handling */
 	VT.mode = VT_AUTO;
-	if (ioctl(xf86Info.consoleFd, VT_SETMODE, &VT) < 0) 
+	SYSCALL(ret = ioctl(xf86Info.consoleFd, VT_SETMODE, &VT));
+	if (ret < 0)
 	    xf86Msg(X_WARNING, "xf86CloseConsole: VT_SETMODE failed: %s\n",
 		    strerror(errno));
     }
@@ -341,19 +290,11 @@ xf86CloseConsole(void)
          * Perform a switch back to the active VT when we were started
          */
         if (activeVT >= 0) {
-	    if (ioctl(xf86Info.consoleFd, VT_ACTIVATE, activeVT) < 0)
-	        xf86Msg(X_WARNING, "xf86CloseConsole: VT_ACTIVATE failed: %s\n",
-		        strerror(errno));
-	    if (ioctl(xf86Info.consoleFd, VT_WAITACTIVE, activeVT) < 0)
-		xf86Msg(X_WARNING,
-			"xf86CloseConsole: VT_WAITACTIVE failed: %s\n",
-			strerror(errno));
+            switch_to(activeVT, "xf86CloseConsole");
 	    activeVT = -1;
         }
     }
     close(xf86Info.consoleFd);	/* make the vt-manager happy */
-
-    restoreVtPerms();		/* restore the permissions */
 }
 
 int
@@ -380,10 +321,10 @@ xf86ProcessArgument(int argc, char *argv[], int i)
         }
 	if ((argv[i][0] == 'v') && (argv[i][1] == 't'))
 	{
-		if (sscanf(argv[i], "vt%2d", &VTnum) == 0)
+		if (sscanf(argv[i], "vt%2d", &xf86Info.vtno) == 0)
 		{
 			UseMsg();
-			VTnum = -1;
+			xf86Info.vtno = -1;
 			return 0;
 		}
 		return 1;

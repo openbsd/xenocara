@@ -45,10 +45,6 @@ THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #include <X11/extensions/XI.h>
 #include "xkb.h"
 
-#if defined(CSRG_BASED) || defined(linux) || defined(__GNU__)
-#include <paths.h>
-#endif
-
 	/*
 	 * If XKM_OUTPUT_DIR specifies a path without a leading slash, it is
 	 * relative to the top-level XKB configuration directory.
@@ -210,7 +206,8 @@ XkbDDXCompileKeymapByNames(	XkbDescPtr		xkb,
 #endif
 
     if (XkbBaseDirectory != NULL) {
-	xkbbasedirflag = Xprintf("\"-R%s\"", XkbBaseDirectory);
+	if (asprintf(&xkbbasedirflag, "\"-R%s\"", XkbBaseDirectory) == -1)
+	    xkbbasedirflag = NULL;
     }
 
     if (XkbBinDirectory != NULL) {
@@ -225,14 +222,16 @@ XkbDDXCompileKeymapByNames(	XkbDescPtr		xkb,
 	}
     }
 
-    buf = Xprintf("\"%s%sxkbcomp\" -w %d %s -xkm \"%s\" "
+    if (asprintf(&buf,
+		 "\"%s%sxkbcomp\" -w %d %s -xkm \"%s\" "
 		  "-em1 %s -emp %s -eml %s \"%s%s.xkm\"",
-		  xkbbindir, xkbbindirsep,
-		  ( (xkbDebugFlags < 2) ? 1 :
-		    ((xkbDebugFlags > 10) ? 10 : (int)xkbDebugFlags) ),
-		  xkbbasedirflag ? xkbbasedirflag : "", xkmfile,
-		  PRE_ERROR_MSG, ERROR_PREFIX, POST_ERROR_MSG1,
-		  xkm_output_dir, keymap);
+		 xkbbindir, xkbbindirsep,
+		 ((xkbDebugFlags < 2) ? 1 :
+		  ((xkbDebugFlags > 10) ? 10 : (int) xkbDebugFlags)),
+		 xkbbasedirflag ? xkbbasedirflag : "", xkmfile,
+		 PRE_ERROR_MSG, ERROR_PREFIX, POST_ERROR_MSG1,
+		 xkm_output_dir, keymap) == -1)
+	buf = NULL;
 
     free(xkbbasedirflag);
 
@@ -267,8 +266,7 @@ XkbDDXCompileKeymapByNames(	XkbDescPtr		xkb,
 		strncpy(nameRtrn,keymap,nameRtrnLen);
 		nameRtrn[nameRtrnLen-1]= '\0';
 	    }
-            if (buf != NULL)
-                free(buf);
+            free(buf);
 	    return TRUE;
 	}
 	else
@@ -287,8 +285,7 @@ XkbDDXCompileKeymapByNames(	XkbDescPtr		xkb,
     }
     if (nameRtrn)
 	nameRtrn[0]= '\0';
-    if (buf != NULL)
-        free(buf);
+    free(buf);
     return FALSE;
 }
 
@@ -306,15 +303,16 @@ FILE *	file;
                 &&(!isalpha(xkm_output_dir[0]) || xkm_output_dir[1]!=':')
 #endif
                 ) {
-	    if (strlen(XkbBaseDirectory)+strlen(xkm_output_dir)
-		     +strlen(mapName)+6 <= PATH_MAX)
-	    {
-		snprintf(buf,sizeof(buf),"%s/%s%s.xkm",XkbBaseDirectory,
-					xkm_output_dir,mapName);
-	    }
+            if (snprintf(buf, PATH_MAX, "%s/%s%s.xkm", XkbBaseDirectory,
+                         xkm_output_dir, mapName) >= PATH_MAX)
+                buf[0] = '\0';
 	}
-	else if (strlen(xkm_output_dir)+strlen(mapName)+5 <= PATH_MAX)
-	    snprintf(buf,sizeof(buf),"%s%s.xkm",xkm_output_dir,mapName);
+	else
+	{
+            if (snprintf(buf, PATH_MAX, "%s%s.xkm", xkm_output_dir, mapName)
+                >= PATH_MAX)
+                buf[0] = '\0';
+	}
 	if (buf[0] != '\0')
 	    file= fopen(buf,"rb");
 	else file= NULL;
@@ -391,11 +389,11 @@ XkbRF_RulesPtr	rules;
     if (!rules_name)
 	return FALSE;
 
-    if (strlen(XkbBaseDirectory) + strlen(rules_name) + 8 > PATH_MAX) {
+    if (snprintf(buf, PATH_MAX, "%s/rules/%s", XkbBaseDirectory, rules_name)
+        >= PATH_MAX) {
         LogMessage(X_ERROR, "XKB: Rules name is too long\n");
         return FALSE;
     }
-    snprintf(buf,sizeof(buf),"%s/rules/%s", XkbBaseDirectory, rules_name);
 
     file = fopen(buf, "r");
     if (!file) {
@@ -428,34 +426,78 @@ XkbRF_RulesPtr	rules;
     return complete;
 }
 
-XkbDescPtr
-XkbCompileKeymap(DeviceIntPtr dev, XkbRMLVOSet *rmlvo)
+static Bool
+XkbRMLVOtoKcCGST(DeviceIntPtr dev, XkbRMLVOSet *rmlvo, XkbComponentNamesPtr kccgst)
 {
-    XkbComponentNamesRec kccgst;
     XkbRF_VarDefsRec mlvo;
-    XkbDescPtr xkb;
-    char name[PATH_MAX];
-
-    if (!dev || !rmlvo) {
-        LogMessage(X_ERROR, "XKB: No device or RMLVO specified\n");
-        return NULL;
-    }
 
     mlvo.model = rmlvo->model;
     mlvo.layout = rmlvo->layout;
     mlvo.variant = rmlvo->variant;
     mlvo.options = rmlvo->options;
 
-    /* XDNFR already logs for us. */
-    if (!XkbDDXNamesFromRules(dev, rmlvo->rules, &mlvo, &kccgst))
-        return NULL;
+    return XkbDDXNamesFromRules(dev, rmlvo->rules, &mlvo, kccgst);
+}
 
-    /* XDLKBN too, but it might return 0 as well as allocating. */
-    if (!XkbDDXLoadKeymapByNames(dev, &kccgst, XkmAllIndicesMask, 0, &xkb, name,
-                                 PATH_MAX)) {
-        if (xkb)
-            XkbFreeKeyboard(xkb, 0, TRUE);
+/**
+ * Compile the given RMLVO keymap and return it. Returns the XkbDescPtr on
+ * success or NULL on failure. If the components compiled are not a superset
+ * or equal to need, the compiliation is treated as failure.
+ */
+static XkbDescPtr
+XkbCompileKeymapForDevice(DeviceIntPtr dev, XkbRMLVOSet *rmlvo, int need)
+{
+    XkbDescPtr xkb = NULL;
+    unsigned int provided;
+    XkbComponentNamesRec kccgst = {0};
+    char name[PATH_MAX];
+
+    if (XkbRMLVOtoKcCGST(dev, rmlvo, &kccgst)) {
+        provided = XkbDDXLoadKeymapByNames(dev, &kccgst, XkmAllIndicesMask, need,
+                                           &xkb, name, PATH_MAX);
+        if ((need & provided) != need) {
+            if (xkb) {
+                XkbFreeKeyboard(xkb, 0, TRUE);
+                xkb = NULL;
+            }
+        }
+    }
+
+    XkbFreeComponentNames(&kccgst, FALSE);
+    return xkb;
+}
+
+XkbDescPtr
+XkbCompileKeymap(DeviceIntPtr dev, XkbRMLVOSet *rmlvo)
+{
+    XkbDescPtr xkb;
+    unsigned int need;
+
+    if (!dev || !rmlvo) {
+        LogMessage(X_ERROR, "XKB: No device or RMLVO specified\n");
         return NULL;
+    }
+
+    /* These are the components we really really need */
+    need = XkmSymbolsMask | XkmCompatMapMask | XkmTypesMask |
+           XkmKeyNamesMask | XkmVirtualModsMask;
+
+
+    xkb = XkbCompileKeymapForDevice(dev, rmlvo, need);
+
+    if (!xkb) {
+        XkbRMLVOSet dflts;
+
+        /* we didn't get what we really needed. And that will likely leave
+         * us with a keyboard that doesn't work. Use the defaults instead */
+        LogMessage(X_ERROR, "XKB: Failed to load keymap. Loading default "
+                   "keymap instead.\n");
+
+        XkbGetRulesDflts(&dflts);
+
+        xkb = XkbCompileKeymapForDevice(dev, &dflts, 0);
+
+        XkbFreeRMLVOSet(&dflts, FALSE);
     }
 
     return xkb;

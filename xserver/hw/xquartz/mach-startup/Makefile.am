@@ -1,4 +1,5 @@
 AM_CPPFLAGS = \
+	-I$(srcdir)/.. \
 	-DBUILD_DATE=\"$(BUILD_DATE)\" \
 	-DXSERVER_VERSION=\"$(VERSION)\" \
 	-DX11BINDIR=\"$(bindir)\"
@@ -21,9 +22,10 @@ X11_bin_LDADD = \
 	$(top_builddir)/dix/dixfonts.lo \
 	$(top_builddir)/miext/rootless/librootless.la \
 	$(top_builddir)/hw/xquartz/pbproxy/libxpbproxy.la \
-	$(DARWIN_LIBS) $(MAIN_LIB) $(XSERVER_LIBS) $(XSERVER_SYS_LIBS) -lXplugin
+	$(XQUARTZ_LIBS) $(XSERVER_LIBS)
 
 X11_bin_LDFLAGS =  \
+	$(XSERVER_SYS_LIBS) -lXplugin \
 	-XCClinker -Objc \
 	-Wl,-u,_miDCInitialize \
 	-Wl,-framework,Carbon \
@@ -37,7 +39,6 @@ X11_bin_LDADD += \
 	$(top_builddir)/glx/libglx.la
 
 X11_bin_LDFLAGS += \
-	-L/System/Library/Frameworks/OpenGL.framework/Libraries -lGL \
 	-Wl,-framework,OpenGL
 endif
 
@@ -50,6 +51,8 @@ if RECORD
 X11_bin_LDADD += \
 	$(top_builddir)/record/librecord.la
 endif
+
+X11_bin_DEPENDENCIES = $(X11_bin_LDADD)
 
 bin_PROGRAMS = Xquartz
 

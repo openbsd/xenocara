@@ -175,39 +175,12 @@ static char GLXServerExtensions[] =
 			"GLX_SGI_make_current_read "
 #ifndef __APPLE__
 			"GLX_SGIS_multisample "
-                        "GLX_SGIX_hyperpipe "
-                        "GLX_SGIX_swap_barrier "
 #endif
 			"GLX_SGIX_fbconfig "
 			"GLX_SGIX_pbuffer "
 			"GLX_MESA_copy_sub_buffer "
                         "GLX_INTEL_swap_event"
 			;
-
-/*
- * If your DDX driver wants to register support for swap barriers or hyperpipe
- * topology, it should call __glXHyperpipeInit() or __glXSwapBarrierInit()
- * with a dispatch table of functions to handle the requests.   In the XFree86
- * DDX, for example, you would call these near the bottom of the driver's
- * ScreenInit method, after DRI has been initialized.
- *
- * This should be replaced with a better method when we teach the server how
- * to load DRI drivers.
- */
-
-void __glXHyperpipeInit(int screen, __GLXHyperpipeExtensionFuncs *funcs)
-{
-    __GLXscreen *pGlxScreen = glxGetScreen(screenInfo.screens[screen]);
-
-    pGlxScreen->hyperpipeFuncs = funcs;
-}
-
-void __glXSwapBarrierInit(int screen, __GLXSwapBarrierExtensionFuncs *funcs)
-{
-    __GLXscreen *pGlxScreen = glxGetScreen(screenInfo.screens[screen]);
-
-    pGlxScreen->swapBarrierFuncs = funcs;
-}
 
 static Bool
 glxCloseScreen (int index, ScreenPtr pScreen)
@@ -422,8 +395,15 @@ void __glXScreenInit(__GLXscreen *pGlxScreen, ScreenPtr pScreen)
 	    if (depth == pScreen->visuals[i].nplanes)
 		break;
 	}
+	/* if it can't, fix up the fbconfig to not advertise window support */
 	if (i == pScreen->numVisuals)
+	    config->drawableType &= ~(GLX_WINDOW_BIT);
+
+       /* fbconfig must support window drawables */
+	if (!(config->drawableType & GLX_WINDOW_BIT)) {
+	    config->visualID = 0;
 	    continue;
+	}
 
 	/* Create a new X visual for our FBconfig. */
 	visual = AddScreenVisuals(pScreen, 1, depth);

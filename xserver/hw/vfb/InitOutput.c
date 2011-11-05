@@ -150,7 +150,7 @@ vfbBitsPerPixel(int depth)
 }
 
 void
-ddxGiveUp(void)
+ddxGiveUp(enum ExitCode error)
 {
     int i;
 
@@ -201,9 +201,9 @@ ddxGiveUp(void)
 }
 
 void
-AbortDDX(void)
+AbortDDX(enum ExitCode error)
 {
-    ddxGiveUp();
+    ddxGiveUp(error);
 }
 
 #ifdef __APPLE__
@@ -874,13 +874,6 @@ vfbScreenInit(int index, ScreenPtr pScreen, int argc, char **argv)
 	fbPictureInit (pScreen, 0, 0);
 
     if (!ret) return FALSE;
-
-    miInitializeBackingStore(pScreen);
-
-    /*
-     * Circumvent the backing store that was just initialised.  This amounts
-     * to a truely bizarre way of initialising SaveDoomedAreas and friends.
-     */
 
     pScreen->InstallColormap = vfbInstallColormap;
     pScreen->UninstallColormap = vfbUninstallColormap;

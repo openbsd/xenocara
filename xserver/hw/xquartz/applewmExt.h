@@ -32,16 +32,23 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #define _APPLEWMEXT_H_
 
 #include "window.h"
+#include <Xplugin.h>
+
+#if XPLUGIN_VERSION < 4
+typedef int xp_frame_attr;
+typedef int xp_frame_class;
+typedef int xp_frame_rect;
+#endif
 
 typedef int (*DisableUpdateProc)(void);
 typedef int (*EnableUpdateProc)(void);
 typedef int (*SetWindowLevelProc)(WindowPtr pWin, int level);
-typedef int (*FrameGetRectProc)(int type, int class, const BoxRec *outer,
+typedef int (*FrameGetRectProc)(xp_frame_rect type, xp_frame_class class, const BoxRec *outer,
                                 const BoxRec *inner, BoxRec *ret);
-typedef int (*FrameHitTestProc)(int class, int x, int y,
+typedef int (*FrameHitTestProc)(xp_frame_class class, int x, int y,
                                 const BoxRec *outer,
                                 const BoxRec *inner, int *ret);
-typedef int (*FrameDrawProc)(WindowPtr pWin, int class, unsigned int attr,
+typedef int (*FrameDrawProc)(WindowPtr pWin, xp_frame_class class, xp_frame_attr attr,
                              const BoxRec *outer, const BoxRec *inner,
                              unsigned int title_len,
                              const unsigned char *title_bytes);

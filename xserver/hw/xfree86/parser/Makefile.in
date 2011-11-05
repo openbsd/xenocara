@@ -15,7 +15,6 @@
 @SET_MAKE@
 
 
-
 srcdir = @srcdir@
 top_srcdir = @top_srcdir@
 VPATH = @srcdir@
@@ -43,7 +42,10 @@ DIST_COMMON = $(sdk_HEADERS) $(srcdir)/Makefile.am \
 	$(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/m4/ac_define_dir.m4 \
-	$(top_srcdir)/m4/dolt.m4 $(top_srcdir)/configure.ac
+	$(top_srcdir)/m4/libtool.m4 $(top_srcdir)/m4/ltoptions.m4 \
+	$(top_srcdir)/m4/ltsugar.m4 $(top_srcdir)/m4/ltversion.m4 \
+	$(top_srcdir)/m4/lt~obsolete.m4 $(top_srcdir)/m4/xorg-tls.m4 \
+	$(top_srcdir)/configure.ac
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
 mkinstalldirs = $(SHELL) $(install_sh) -d
@@ -63,29 +65,23 @@ am__vpath_adj = case $$p in \
   esac;
 am__strip_dir = `echo $$p | sed -e 's|^.*/||'`;
 am__installdirs = "$(DESTDIR)$(libdir)" "$(DESTDIR)$(sdkdir)"
-libLIBRARIES_INSTALL = $(INSTALL_DATA)
-LIBRARIES = $(lib_LIBRARIES)
-ARFLAGS = cru
-libxf86config_a_AR = $(AR) $(ARFLAGS)
-libxf86config_a_LIBADD =
-am__objects_1 = libxf86config_a-Device.$(OBJEXT) \
-	libxf86config_a-Files.$(OBJEXT) \
-	libxf86config_a-Flags.$(OBJEXT) \
-	libxf86config_a-Input.$(OBJEXT) \
-	libxf86config_a-InputClass.$(OBJEXT) \
-	libxf86config_a-Layout.$(OBJEXT) \
-	libxf86config_a-Module.$(OBJEXT) \
-	libxf86config_a-Video.$(OBJEXT) \
-	libxf86config_a-Monitor.$(OBJEXT) \
-	libxf86config_a-Pointer.$(OBJEXT) \
-	libxf86config_a-Screen.$(OBJEXT) \
-	libxf86config_a-Vendor.$(OBJEXT) \
-	libxf86config_a-read.$(OBJEXT) libxf86config_a-scan.$(OBJEXT) \
-	libxf86config_a-write.$(OBJEXT) libxf86config_a-DRI.$(OBJEXT) \
-	libxf86config_a-Extensions.$(OBJEXT)
-am_libxf86config_a_OBJECTS = $(am__objects_1)
-libxf86config_a_OBJECTS = $(am_libxf86config_a_OBJECTS)
-LTLIBRARIES = $(noinst_LTLIBRARIES)
+libLTLIBRARIES_INSTALL = $(INSTALL)
+LTLIBRARIES = $(lib_LTLIBRARIES) $(noinst_LTLIBRARIES)
+libxf86config_la_LIBADD =
+am__objects_1 = libxf86config_la-Device.lo libxf86config_la-Files.lo \
+	libxf86config_la-Flags.lo libxf86config_la-Input.lo \
+	libxf86config_la-InputClass.lo libxf86config_la-Layout.lo \
+	libxf86config_la-Module.lo libxf86config_la-Video.lo \
+	libxf86config_la-Monitor.lo libxf86config_la-Pointer.lo \
+	libxf86config_la-Screen.lo libxf86config_la-Vendor.lo \
+	libxf86config_la-read.lo libxf86config_la-scan.lo \
+	libxf86config_la-write.lo libxf86config_la-DRI.lo \
+	libxf86config_la-Extensions.lo
+am_libxf86config_la_OBJECTS = libxf86config_la-xprintf.lo \
+	$(am__objects_1)
+libxf86config_la_OBJECTS = $(am_libxf86config_la_OBJECTS)
+@INSTALL_LIBXF86CONFIG_TRUE@am_libxf86config_la_rpath = -rpath \
+@INSTALL_LIBXF86CONFIG_TRUE@	$(libdir)
 libxf86config_internal_la_LIBADD =
 am__objects_2 = Device.lo Files.lo Flags.lo Input.lo InputClass.lo \
 	Layout.lo Module.lo Video.lo Monitor.lo Pointer.lo Screen.lo \
@@ -100,12 +96,15 @@ depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__depfiles_maybe = depfiles
 COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
 	$(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
+LTCOMPILE = $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) \
+	$(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) \
+	$(AM_CFLAGS) $(CFLAGS)
 CCLD = $(CC)
 LINK = $(LIBTOOL) --tag=CC --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
 	$(AM_LDFLAGS) $(LDFLAGS) -o $@
-SOURCES = $(libxf86config_a_SOURCES) \
+SOURCES = $(libxf86config_la_SOURCES) \
 	$(libxf86config_internal_la_SOURCES)
-DIST_SOURCES = $(libxf86config_a_SOURCES) \
+DIST_SOURCES = $(libxf86config_la_SOURCES) \
 	$(libxf86config_internal_la_SOURCES)
 sdkHEADERS_INSTALL = $(INSTALL_HEADER)
 HEADERS = $(sdk_HEADERS)
@@ -117,8 +116,8 @@ ADMIN_MAN_DIR = @ADMIN_MAN_DIR@
 ADMIN_MAN_SUFFIX = @ADMIN_MAN_SUFFIX@
 AGP_FALSE = @AGP_FALSE@
 AGP_TRUE = @AGP_TRUE@
-AIGLX_FALSE = @AIGLX_FALSE@
-AIGLX_TRUE = @AIGLX_TRUE@
+AIGLX_DRI_LOADER_FALSE = @AIGLX_DRI_LOADER_FALSE@
+AIGLX_DRI_LOADER_TRUE = @AIGLX_DRI_LOADER_TRUE@
 ALLOCA = @ALLOCA@
 ALPHA_VIDEO_FALSE = @ALPHA_VIDEO_FALSE@
 ALPHA_VIDEO_TRUE = @ALPHA_VIDEO_TRUE@
@@ -131,7 +130,6 @@ APPLE_APPLICATION_NAME = @APPLE_APPLICATION_NAME@
 APP_MAN_DIR = @APP_MAN_DIR@
 APP_MAN_SUFFIX = @APP_MAN_SUFFIX@
 AR = @AR@
-ARM_BACKTRACE_CFLAGS = @ARM_BACKTRACE_CFLAGS@
 ARM_VIDEO_FALSE = @ARM_VIDEO_FALSE@
 ARM_VIDEO_TRUE = @ARM_VIDEO_TRUE@
 AS = @AS@
@@ -144,18 +142,19 @@ BSD_APM_FALSE = @BSD_APM_FALSE@
 BSD_APM_TRUE = @BSD_APM_TRUE@
 BSD_KQUEUE_APM_FALSE = @BSD_KQUEUE_APM_FALSE@
 BSD_KQUEUE_APM_TRUE = @BSD_KQUEUE_APM_TRUE@
-BUILDDOCS_FALSE = @BUILDDOCS_FALSE@
-BUILDDOCS_TRUE = @BUILDDOCS_TRUE@
 BUILD_DATE = @BUILD_DATE@
 BUILD_KDRIVEFBDEVLIB_FALSE = @BUILD_KDRIVEFBDEVLIB_FALSE@
 BUILD_KDRIVEFBDEVLIB_TRUE = @BUILD_KDRIVEFBDEVLIB_TRUE@
 BUILD_TIME = @BUILD_TIME@
+BUNDLE_ID_PREFIX = @BUNDLE_ID_PREFIX@
 CC = @CC@
 CCAS = @CCAS@
 CCASFLAGS = @CCASFLAGS@
 CCDEPMODE = @CCDEPMODE@
 CFLAGS = @CFLAGS@
 CHANGELOG_CMD = @CHANGELOG_CMD@
+CLIENTIDS_FALSE = @CLIENTIDS_FALSE@
+CLIENTIDS_TRUE = @CLIENTIDS_TRUE@
 COMPILEDDEFAULTFONTPATH = @COMPILEDDEFAULTFONTPATH@
 COMPOSITE_FALSE = @COMPOSITE_FALSE@
 COMPOSITE_TRUE = @COMPOSITE_TRUE@
@@ -172,12 +171,7 @@ CONFIG_WSCONS_TRUE = @CONFIG_WSCONS_TRUE@
 CPP = @CPP@
 CPPFLAGS = @CPPFLAGS@
 CWARNFLAGS = @CWARNFLAGS@
-CXX = @CXX@
-CXXCPP = @CXXCPP@
-CXXDEPMODE = @CXXDEPMODE@
-CXXFLAGS = @CXXFLAGS@
 CYGPATH_W = @CYGPATH_W@
-DARWIN_LIBS = @DARWIN_LIBS@
 DBE_FALSE = @DBE_FALSE@
 DBE_TRUE = @DBE_TRUE@
 DBUS_CFLAGS = @DBUS_CFLAGS@
@@ -212,7 +206,6 @@ DMX_BUILD_USB_FALSE = @DMX_BUILD_USB_FALSE@
 DMX_BUILD_USB_TRUE = @DMX_BUILD_USB_TRUE@
 DMX_FALSE = @DMX_FALSE@
 DMX_TRUE = @DMX_TRUE@
-DOLT_BASH = @DOLT_BASH@
 DOXYGEN = @DOXYGEN@
 DPMSExtension_FALSE = @DPMSExtension_FALSE@
 DPMSExtension_TRUE = @DPMSExtension_TRUE@
@@ -233,7 +226,7 @@ DRI_LIBS = @DRI_LIBS@
 DRI_TRUE = @DRI_TRUE@
 DSYMUTIL = @DSYMUTIL@
 DTRACE = @DTRACE@
-ECHO = @ECHO@
+DUMPBIN = @DUMPBIN@
 ECHO_C = @ECHO_C@
 ECHO_N = @ECHO_N@
 ECHO_T = @ECHO_T@
@@ -242,11 +235,12 @@ ENABLE_DEVEL_DOCS_FALSE = @ENABLE_DEVEL_DOCS_FALSE@
 ENABLE_DEVEL_DOCS_TRUE = @ENABLE_DEVEL_DOCS_TRUE@
 ENABLE_DOCS_FALSE = @ENABLE_DOCS_FALSE@
 ENABLE_DOCS_TRUE = @ENABLE_DOCS_TRUE@
+ENABLE_UNIT_TESTS_FALSE = @ENABLE_UNIT_TESTS_FALSE@
+ENABLE_UNIT_TESTS_TRUE = @ENABLE_UNIT_TESTS_TRUE@
 EXEEXT = @EXEEXT@
-F77 = @F77@
 FBDEVHW_FALSE = @FBDEVHW_FALSE@
 FBDEVHW_TRUE = @FBDEVHW_TRUE@
-FFLAGS = @FFLAGS@
+FGREP = @FGREP@
 FILE_MAN_DIR = @FILE_MAN_DIR@
 FILE_MAN_SUFFIX = @FILE_MAN_SUFFIX@
 FONT100DPIDIR = @FONT100DPIDIR@
@@ -259,11 +253,10 @@ FONTTYPE1DIR = @FONTTYPE1DIR@
 FOP = @FOP@
 FREEBSD_KLDLOAD_FALSE = @FREEBSD_KLDLOAD_FALSE@
 FREEBSD_KLDLOAD_TRUE = @FREEBSD_KLDLOAD_TRUE@
-GLIB_CFLAGS = @GLIB_CFLAGS@
-GLIB_LIBS = @GLIB_LIBS@
 GLX_ARCH_DEFINES = @GLX_ARCH_DEFINES@
 GLX_DEFINES = @GLX_DEFINES@
 GLX_FALSE = @GLX_FALSE@
+GLX_TLS = @GLX_TLS@
 GLX_TRUE = @GLX_TRUE@
 GL_CFLAGS = @GL_CFLAGS@
 GL_LIBS = @GL_LIBS@
@@ -276,12 +269,16 @@ HAVE_DOXYGEN_FALSE = @HAVE_DOXYGEN_FALSE@
 HAVE_DOXYGEN_TRUE = @HAVE_DOXYGEN_TRUE@
 HAVE_FOP_FALSE = @HAVE_FOP_FALSE@
 HAVE_FOP_TRUE = @HAVE_FOP_TRUE@
+HAVE_LD_WRAP_FALSE = @HAVE_LD_WRAP_FALSE@
+HAVE_LD_WRAP_TRUE = @HAVE_LD_WRAP_TRUE@
 HAVE_STYLESHEETS_FALSE = @HAVE_STYLESHEETS_FALSE@
 HAVE_STYLESHEETS_TRUE = @HAVE_STYLESHEETS_TRUE@
 HAVE_XMLTO_FALSE = @HAVE_XMLTO_FALSE@
 HAVE_XMLTO_TEXT_FALSE = @HAVE_XMLTO_TEXT_FALSE@
 HAVE_XMLTO_TEXT_TRUE = @HAVE_XMLTO_TEXT_TRUE@
 HAVE_XMLTO_TRUE = @HAVE_XMLTO_TRUE@
+HAVE_XSLTPROC_FALSE = @HAVE_XSLTPROC_FALSE@
+HAVE_XSLTPROC_TRUE = @HAVE_XSLTPROC_TRUE@
 HP300_VIDEO_FALSE = @HP300_VIDEO_FALSE@
 HP300_VIDEO_TRUE = @HP300_VIDEO_TRUE@
 HPPA_VIDEO_FALSE = @HPPA_VIDEO_FALSE@
@@ -327,7 +324,10 @@ KDRIVE_MOUSE_TRUE = @KDRIVE_MOUSE_TRUE@
 KDRIVE_PURE_INCS = @KDRIVE_PURE_INCS@
 KDRIVE_PURE_LIBS = @KDRIVE_PURE_LIBS@
 KDRIVE_TRUE = @KDRIVE_TRUE@
-LAUNCHD_ID_PREFIX = @LAUNCHD_ID_PREFIX@
+KHRONOS_OPENGL_REGISTRY_CFLAGS = @KHRONOS_OPENGL_REGISTRY_CFLAGS@
+KHRONOS_OPENGL_REGISTRY_LIBS = @KHRONOS_OPENGL_REGISTRY_LIBS@
+KHRONOS_SPEC_DIR = @KHRONOS_SPEC_DIR@
+LD = @LD@
 LDFLAGS = @LDFLAGS@
 LD_EXPORT_SYMBOLS_FLAG = @LD_EXPORT_SYMBOLS_FLAG@
 LEX = @LEX@
@@ -346,19 +346,19 @@ LINUX_ALPHA_FALSE = @LINUX_ALPHA_FALSE@
 LINUX_ALPHA_TRUE = @LINUX_ALPHA_TRUE@
 LINUX_IA64_FALSE = @LINUX_IA64_FALSE@
 LINUX_IA64_TRUE = @LINUX_IA64_TRUE@
+LIPO = @LIPO@
 LNXACPI_FALSE = @LNXACPI_FALSE@
 LNXACPI_TRUE = @LNXACPI_TRUE@
 LNXAPM_FALSE = @LNXAPM_FALSE@
 LNXAPM_TRUE = @LNXAPM_TRUE@
 LN_S = @LN_S@
-LTCOMPILE = @LTCOMPILE@
-LTCXXCOMPILE = @LTCXXCOMPILE@
 LTLIBOBJS = @LTLIBOBJS@
 MAINT = @MAINT@
 MAINTAINER_MODE_FALSE = @MAINTAINER_MODE_FALSE@
 MAINTAINER_MODE_TRUE = @MAINTAINER_MODE_TRUE@
 MAIN_LIB = @MAIN_LIB@
 MAKEINFO = @MAKEINFO@
+MANIFEST_TOOL = @MANIFEST_TOOL@
 MAN_SUBSTS = @MAN_SUBSTS@
 MISC_MAN_DIR = @MISC_MAN_DIR@
 MISC_MAN_SUFFIX = @MISC_MAN_SUFFIX@
@@ -368,6 +368,7 @@ NEED_STRLCAT_FALSE = @NEED_STRLCAT_FALSE@
 NEED_STRLCAT_TRUE = @NEED_STRLCAT_TRUE@
 NEED_VSNPRINTF_FALSE = @NEED_VSNPRINTF_FALSE@
 NEED_VSNPRINTF_TRUE = @NEED_VSNPRINTF_TRUE@
+NM = @NM@
 NMEDIT = @NMEDIT@
 OBJC = @OBJC@
 OBJCCLD = @OBJCCLD@
@@ -379,6 +380,8 @@ OBJEXT = @OBJEXT@
 OPENSSL_CFLAGS = @OPENSSL_CFLAGS@
 OPENSSL_LIBS = @OPENSSL_LIBS@
 OS_LIB = @OS_LIB@
+OTOOL = @OTOOL@
+OTOOL64 = @OTOOL64@
 PACKAGE = @PACKAGE@
 PACKAGE_BUGREPORT = @PACKAGE_BUGREPORT@
 PACKAGE_NAME = @PACKAGE_NAME@
@@ -389,7 +392,6 @@ PATH_SEPARATOR = @PATH_SEPARATOR@
 PCIACCESS_CFLAGS = @PCIACCESS_CFLAGS@
 PCIACCESS_LIBS = @PCIACCESS_LIBS@
 PCI_TXT_IDS_PATH = @PCI_TXT_IDS_PATH@
-PERL = @PERL@
 PIXMAN_CFLAGS = @PIXMAN_CFLAGS@
 PIXMAN_LIBS = @PIXMAN_LIBS@
 PKG_CONFIG = @PKG_CONFIG@
@@ -431,6 +433,7 @@ SPECIAL_DTRACE_OBJECTS_FALSE = @SPECIAL_DTRACE_OBJECTS_FALSE@
 SPECIAL_DTRACE_OBJECTS_TRUE = @SPECIAL_DTRACE_OBJECTS_TRUE@
 STANDALONE_XPBPROXY_FALSE = @STANDALONE_XPBPROXY_FALSE@
 STANDALONE_XPBPROXY_TRUE = @STANDALONE_XPBPROXY_TRUE@
+STRICT_CFLAGS = @STRICT_CFLAGS@
 STRIP = @STRIP@
 STYLESHEET_SRCDIR = @STYLESHEET_SRCDIR@
 SYSCONFDIR = @SYSCONFDIR@
@@ -440,8 +443,6 @@ TSLIB_LIBS = @TSLIB_LIBS@
 TSLIB_TRUE = @TSLIB_TRUE@
 UDEV_CFLAGS = @UDEV_CFLAGS@
 UDEV_LIBS = @UDEV_LIBS@
-UNITTESTS_FALSE = @UNITTESTS_FALSE@
-UNITTESTS_TRUE = @UNITTESTS_TRUE@
 UTILS_SYS_LIBS = @UTILS_SYS_LIBS@
 VBE_FALSE = @VBE_FALSE@
 VBE_TRUE = @VBE_TRUE@
@@ -458,8 +459,6 @@ XAA_FALSE = @XAA_FALSE@
 XAA_TRUE = @XAA_TRUE@
 XACE_FALSE = @XACE_FALSE@
 XACE_TRUE = @XACE_TRUE@
-XCALIBRATE_FALSE = @XCALIBRATE_FALSE@
-XCALIBRATE_TRUE = @XCALIBRATE_TRUE@
 XCSECURITY_FALSE = @XCSECURITY_FALSE@
 XCSECURITY_TRUE = @XCSECURITY_TRUE@
 XDMAUTH_FALSE = @XDMAUTH_FALSE@
@@ -495,6 +494,11 @@ XINERAMA_TRUE = @XINERAMA_TRUE@
 XKB_BASE_DIRECTORY = @XKB_BASE_DIRECTORY@
 XKB_BIN_DIRECTORY = @XKB_BIN_DIRECTORY@
 XKB_COMPILED_DIR = @XKB_COMPILED_DIR@
+XKB_DFLT_LAYOUT = @XKB_DFLT_LAYOUT@
+XKB_DFLT_MODEL = @XKB_DFLT_MODEL@
+XKB_DFLT_OPTIONS = @XKB_DFLT_OPTIONS@
+XKB_DFLT_RULES = @XKB_DFLT_RULES@
+XKB_DFLT_VARIANT = @XKB_DFLT_VARIANT@
 XKM_OUTPUT_DIR = @XKM_OUTPUT_DIR@
 XLIB_CFLAGS = @XLIB_CFLAGS@
 XLIB_LIBS = @XLIB_LIBS@
@@ -526,6 +530,7 @@ XORG_TRUE = @XORG_TRUE@
 XPBPROXY_CFLAGS = @XPBPROXY_CFLAGS@
 XPBPROXY_LIBS = @XPBPROXY_LIBS@
 XQUARTZ_FALSE = @XQUARTZ_FALSE@
+XQUARTZ_LIBS = @XQUARTZ_LIBS@
 XQUARTZ_SPARKLE = @XQUARTZ_SPARKLE@
 XQUARTZ_SPARKLE_FALSE = @XQUARTZ_SPARKLE_FALSE@
 XQUARTZ_SPARKLE_TRUE = @XQUARTZ_SPARKLE_TRUE@
@@ -544,6 +549,7 @@ XSERVER_DTRACE_FALSE = @XSERVER_DTRACE_FALSE@
 XSERVER_DTRACE_TRUE = @XSERVER_DTRACE_TRUE@
 XSERVER_LIBS = @XSERVER_LIBS@
 XSERVER_SYS_LIBS = @XSERVER_SYS_LIBS@
+XSLTPROC = @XSLTPROC@
 XSL_STYLESHEET = @XSL_STYLESHEET@
 XTSTEXAMPLES_DEP_CFLAGS = @XTSTEXAMPLES_DEP_CFLAGS@
 XTSTEXAMPLES_DEP_LIBS = @XTSTEXAMPLES_DEP_LIBS@
@@ -588,13 +594,11 @@ abi_ansic = @abi_ansic@
 abi_extension = @abi_extension@
 abi_videodrv = @abi_videodrv@
 abi_xinput = @abi_xinput@
+ac_ct_AR = @ac_ct_AR@
 ac_ct_CC = @ac_ct_CC@
-ac_ct_CXX = @ac_ct_CXX@
-ac_ct_F77 = @ac_ct_F77@
+ac_ct_DUMPBIN = @ac_ct_DUMPBIN@
 am__fastdepCC_FALSE = @am__fastdepCC_FALSE@
 am__fastdepCC_TRUE = @am__fastdepCC_TRUE@
-am__fastdepCXX_FALSE = @am__fastdepCXX_FALSE@
-am__fastdepCXX_TRUE = @am__fastdepCXX_TRUE@
 am__fastdepOBJC_FALSE = @am__fastdepOBJC_FALSE@
 am__fastdepOBJC_TRUE = @am__fastdepOBJC_TRUE@
 am__include = @am__include@
@@ -646,7 +650,7 @@ sysconfigdir = @sysconfigdir@
 target_alias = @target_alias@
 @INSTALL_LIBXF86CONFIG_FALSE@noinst_LTLIBRARIES = libxf86config_internal.la
 @INSTALL_LIBXF86CONFIG_TRUE@noinst_LTLIBRARIES = libxf86config_internal.la
-@INSTALL_LIBXF86CONFIG_TRUE@lib_LIBRARIES = libxf86config.a
+@INSTALL_LIBXF86CONFIG_TRUE@lib_LTLIBRARIES = libxf86config.la
 @INSTALL_LIBXF86CONFIG_TRUE@LIBHEADERS = \
 @INSTALL_LIBXF86CONFIG_TRUE@	xf86Optrec.h \
 @INSTALL_LIBXF86CONFIG_TRUE@	xf86Parser.h
@@ -673,10 +677,12 @@ INTERNAL_SOURCES = \
 libxf86config_internal_la_SOURCES = \
 	$(INTERNAL_SOURCES)
 
-libxf86config_a_SOURCES = \
+libxf86config_la_SOURCES = \
+	$(top_srcdir)/os/xprintf.c \
 	$(INTERNAL_SOURCES)
 
-libxf86config_a_CFLAGS = $(AM_CFLAGS)
+libxf86config_la_CFLAGS = $(AM_CFLAGS)
+libxf86config_la_LDFLAGS = -static
 AM_CFLAGS = $(DIX_CFLAGS) $(XORG_CFLAGS) \
 	-DSYSCONFDIR=\"$(sysconfdir)\" \
 	-DDATADIR=\"$(datadir)\"
@@ -725,39 +731,33 @@ $(top_srcdir)/configure: @MAINTAINER_MODE_TRUE@ $(am__configure_deps)
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
 $(ACLOCAL_M4): @MAINTAINER_MODE_TRUE@ $(am__aclocal_m4_deps)
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
-install-libLIBRARIES: $(lib_LIBRARIES)
+install-libLTLIBRARIES: $(lib_LTLIBRARIES)
 	@$(NORMAL_INSTALL)
 	test -z "$(libdir)" || $(mkdir_p) "$(DESTDIR)$(libdir)"
-	@list='$(lib_LIBRARIES)'; for p in $$list; do \
+	@list='$(lib_LTLIBRARIES)'; for p in $$list; do \
 	  if test -f $$p; then \
 	    f=$(am__strip_dir) \
-	    echo " $(libLIBRARIES_INSTALL) '$$p' '$(DESTDIR)$(libdir)/$$f'"; \
-	    $(libLIBRARIES_INSTALL) "$$p" "$(DESTDIR)$(libdir)/$$f"; \
-	  else :; fi; \
-	done
-	@$(POST_INSTALL)
-	@list='$(lib_LIBRARIES)'; for p in $$list; do \
-	  if test -f $$p; then \
-	    p=$(am__strip_dir) \
-	    echo " $(RANLIB) '$(DESTDIR)$(libdir)/$$p'"; \
-	    $(RANLIB) "$(DESTDIR)$(libdir)/$$p"; \
+	    echo " $(LIBTOOL) --mode=install $(libLTLIBRARIES_INSTALL) $(INSTALL_STRIP_FLAG) '$$p' '$(DESTDIR)$(libdir)/$$f'"; \
+	    $(LIBTOOL) --mode=install $(libLTLIBRARIES_INSTALL) $(INSTALL_STRIP_FLAG) "$$p" "$(DESTDIR)$(libdir)/$$f"; \
 	  else :; fi; \
 	done
 
-uninstall-libLIBRARIES:
+uninstall-libLTLIBRARIES:
 	@$(NORMAL_UNINSTALL)
-	@list='$(lib_LIBRARIES)'; for p in $$list; do \
+	@set -x; list='$(lib_LTLIBRARIES)'; for p in $$list; do \
 	  p=$(am__strip_dir) \
-	  echo " rm -f '$(DESTDIR)$(libdir)/$$p'"; \
-	  rm -f "$(DESTDIR)$(libdir)/$$p"; \
+	  echo " $(LIBTOOL) --mode=uninstall rm -f '$(DESTDIR)$(libdir)/$$p'"; \
+	  $(LIBTOOL) --mode=uninstall rm -f "$(DESTDIR)$(libdir)/$$p"; \
 	done
 
-clean-libLIBRARIES:
-	-test -z "$(lib_LIBRARIES)" || rm -f $(lib_LIBRARIES)
-libxf86config.a: $(libxf86config_a_OBJECTS) $(libxf86config_a_DEPENDENCIES) 
-	-rm -f libxf86config.a
-	$(libxf86config_a_AR) libxf86config.a $(libxf86config_a_OBJECTS) $(libxf86config_a_LIBADD)
-	$(RANLIB) libxf86config.a
+clean-libLTLIBRARIES:
+	-test -z "$(lib_LTLIBRARIES)" || rm -f $(lib_LTLIBRARIES)
+	@list='$(lib_LTLIBRARIES)'; for p in $$list; do \
+	  dir="`echo $$p | sed -e 's|/[^/]*$$||'`"; \
+	  test "$$dir" != "$$p" || dir=.; \
+	  echo "rm -f \"$${dir}/so_locations\""; \
+	  rm -f "$${dir}/so_locations"; \
+	done
 
 clean-noinstLTLIBRARIES:
 	-test -z "$(noinst_LTLIBRARIES)" || rm -f $(noinst_LTLIBRARIES)
@@ -767,6 +767,8 @@ clean-noinstLTLIBRARIES:
 	  echo "rm -f \"$${dir}/so_locations\""; \
 	  rm -f "$${dir}/so_locations"; \
 	done
+libxf86config.la: $(libxf86config_la_OBJECTS) $(libxf86config_la_DEPENDENCIES) 
+	$(LINK) $(am_libxf86config_la_rpath) $(libxf86config_la_LDFLAGS) $(libxf86config_la_OBJECTS) $(libxf86config_la_LIBADD) $(LIBS)
 libxf86config_internal.la: $(libxf86config_internal_la_OBJECTS) $(libxf86config_internal_la_DEPENDENCIES) 
 	$(LINK) $(am_libxf86config_internal_la_rpath) $(libxf86config_internal_la_LDFLAGS) $(libxf86config_internal_la_OBJECTS) $(libxf86config_internal_la_LIBADD) $(LIBS)
 
@@ -790,23 +792,24 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Screen.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Vendor.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Video.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libxf86config_a-DRI.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libxf86config_a-Device.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libxf86config_a-Extensions.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libxf86config_a-Files.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libxf86config_a-Flags.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libxf86config_a-Input.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libxf86config_a-InputClass.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libxf86config_a-Layout.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libxf86config_a-Module.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libxf86config_a-Monitor.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libxf86config_a-Pointer.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libxf86config_a-Screen.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libxf86config_a-Vendor.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libxf86config_a-Video.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libxf86config_a-read.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libxf86config_a-scan.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libxf86config_a-write.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libxf86config_la-DRI.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libxf86config_la-Device.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libxf86config_la-Extensions.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libxf86config_la-Files.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libxf86config_la-Flags.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libxf86config_la-Input.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libxf86config_la-InputClass.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libxf86config_la-Layout.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libxf86config_la-Module.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libxf86config_la-Monitor.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libxf86config_la-Pointer.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libxf86config_la-Screen.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libxf86config_la-Vendor.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libxf86config_la-Video.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libxf86config_la-read.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libxf86config_la-scan.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libxf86config_la-write.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libxf86config_la-xprintf.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/read.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/scan.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/write.Plo@am__quote@
@@ -832,243 +835,131 @@ distclean-compile:
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(LTCOMPILE) -c -o $@ $<
 
-libxf86config_a-Device.o: Device.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libxf86config_a_CFLAGS) $(CFLAGS) -MT libxf86config_a-Device.o -MD -MP -MF "$(DEPDIR)/libxf86config_a-Device.Tpo" -c -o libxf86config_a-Device.o `test -f 'Device.c' || echo '$(srcdir)/'`Device.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libxf86config_a-Device.Tpo" "$(DEPDIR)/libxf86config_a-Device.Po"; else rm -f "$(DEPDIR)/libxf86config_a-Device.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='Device.c' object='libxf86config_a-Device.o' libtool=no @AMDEPBACKSLASH@
+libxf86config_la-xprintf.lo: $(top_srcdir)/os/xprintf.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libxf86config_la_CFLAGS) $(CFLAGS) -MT libxf86config_la-xprintf.lo -MD -MP -MF "$(DEPDIR)/libxf86config_la-xprintf.Tpo" -c -o libxf86config_la-xprintf.lo `test -f '$(top_srcdir)/os/xprintf.c' || echo '$(srcdir)/'`$(top_srcdir)/os/xprintf.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libxf86config_la-xprintf.Tpo" "$(DEPDIR)/libxf86config_la-xprintf.Plo"; else rm -f "$(DEPDIR)/libxf86config_la-xprintf.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$(top_srcdir)/os/xprintf.c' object='libxf86config_la-xprintf.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libxf86config_a_CFLAGS) $(CFLAGS) -c -o libxf86config_a-Device.o `test -f 'Device.c' || echo '$(srcdir)/'`Device.c
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libxf86config_la_CFLAGS) $(CFLAGS) -c -o libxf86config_la-xprintf.lo `test -f '$(top_srcdir)/os/xprintf.c' || echo '$(srcdir)/'`$(top_srcdir)/os/xprintf.c
 
-libxf86config_a-Device.obj: Device.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libxf86config_a_CFLAGS) $(CFLAGS) -MT libxf86config_a-Device.obj -MD -MP -MF "$(DEPDIR)/libxf86config_a-Device.Tpo" -c -o libxf86config_a-Device.obj `if test -f 'Device.c'; then $(CYGPATH_W) 'Device.c'; else $(CYGPATH_W) '$(srcdir)/Device.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libxf86config_a-Device.Tpo" "$(DEPDIR)/libxf86config_a-Device.Po"; else rm -f "$(DEPDIR)/libxf86config_a-Device.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='Device.c' object='libxf86config_a-Device.obj' libtool=no @AMDEPBACKSLASH@
+libxf86config_la-Device.lo: Device.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libxf86config_la_CFLAGS) $(CFLAGS) -MT libxf86config_la-Device.lo -MD -MP -MF "$(DEPDIR)/libxf86config_la-Device.Tpo" -c -o libxf86config_la-Device.lo `test -f 'Device.c' || echo '$(srcdir)/'`Device.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libxf86config_la-Device.Tpo" "$(DEPDIR)/libxf86config_la-Device.Plo"; else rm -f "$(DEPDIR)/libxf86config_la-Device.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='Device.c' object='libxf86config_la-Device.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libxf86config_a_CFLAGS) $(CFLAGS) -c -o libxf86config_a-Device.obj `if test -f 'Device.c'; then $(CYGPATH_W) 'Device.c'; else $(CYGPATH_W) '$(srcdir)/Device.c'; fi`
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libxf86config_la_CFLAGS) $(CFLAGS) -c -o libxf86config_la-Device.lo `test -f 'Device.c' || echo '$(srcdir)/'`Device.c
 
-libxf86config_a-Files.o: Files.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libxf86config_a_CFLAGS) $(CFLAGS) -MT libxf86config_a-Files.o -MD -MP -MF "$(DEPDIR)/libxf86config_a-Files.Tpo" -c -o libxf86config_a-Files.o `test -f 'Files.c' || echo '$(srcdir)/'`Files.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libxf86config_a-Files.Tpo" "$(DEPDIR)/libxf86config_a-Files.Po"; else rm -f "$(DEPDIR)/libxf86config_a-Files.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='Files.c' object='libxf86config_a-Files.o' libtool=no @AMDEPBACKSLASH@
+libxf86config_la-Files.lo: Files.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libxf86config_la_CFLAGS) $(CFLAGS) -MT libxf86config_la-Files.lo -MD -MP -MF "$(DEPDIR)/libxf86config_la-Files.Tpo" -c -o libxf86config_la-Files.lo `test -f 'Files.c' || echo '$(srcdir)/'`Files.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libxf86config_la-Files.Tpo" "$(DEPDIR)/libxf86config_la-Files.Plo"; else rm -f "$(DEPDIR)/libxf86config_la-Files.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='Files.c' object='libxf86config_la-Files.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libxf86config_a_CFLAGS) $(CFLAGS) -c -o libxf86config_a-Files.o `test -f 'Files.c' || echo '$(srcdir)/'`Files.c
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libxf86config_la_CFLAGS) $(CFLAGS) -c -o libxf86config_la-Files.lo `test -f 'Files.c' || echo '$(srcdir)/'`Files.c
 
-libxf86config_a-Files.obj: Files.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libxf86config_a_CFLAGS) $(CFLAGS) -MT libxf86config_a-Files.obj -MD -MP -MF "$(DEPDIR)/libxf86config_a-Files.Tpo" -c -o libxf86config_a-Files.obj `if test -f 'Files.c'; then $(CYGPATH_W) 'Files.c'; else $(CYGPATH_W) '$(srcdir)/Files.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libxf86config_a-Files.Tpo" "$(DEPDIR)/libxf86config_a-Files.Po"; else rm -f "$(DEPDIR)/libxf86config_a-Files.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='Files.c' object='libxf86config_a-Files.obj' libtool=no @AMDEPBACKSLASH@
+libxf86config_la-Flags.lo: Flags.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libxf86config_la_CFLAGS) $(CFLAGS) -MT libxf86config_la-Flags.lo -MD -MP -MF "$(DEPDIR)/libxf86config_la-Flags.Tpo" -c -o libxf86config_la-Flags.lo `test -f 'Flags.c' || echo '$(srcdir)/'`Flags.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libxf86config_la-Flags.Tpo" "$(DEPDIR)/libxf86config_la-Flags.Plo"; else rm -f "$(DEPDIR)/libxf86config_la-Flags.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='Flags.c' object='libxf86config_la-Flags.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libxf86config_a_CFLAGS) $(CFLAGS) -c -o libxf86config_a-Files.obj `if test -f 'Files.c'; then $(CYGPATH_W) 'Files.c'; else $(CYGPATH_W) '$(srcdir)/Files.c'; fi`
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libxf86config_la_CFLAGS) $(CFLAGS) -c -o libxf86config_la-Flags.lo `test -f 'Flags.c' || echo '$(srcdir)/'`Flags.c
 
-libxf86config_a-Flags.o: Flags.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libxf86config_a_CFLAGS) $(CFLAGS) -MT libxf86config_a-Flags.o -MD -MP -MF "$(DEPDIR)/libxf86config_a-Flags.Tpo" -c -o libxf86config_a-Flags.o `test -f 'Flags.c' || echo '$(srcdir)/'`Flags.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libxf86config_a-Flags.Tpo" "$(DEPDIR)/libxf86config_a-Flags.Po"; else rm -f "$(DEPDIR)/libxf86config_a-Flags.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='Flags.c' object='libxf86config_a-Flags.o' libtool=no @AMDEPBACKSLASH@
+libxf86config_la-Input.lo: Input.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libxf86config_la_CFLAGS) $(CFLAGS) -MT libxf86config_la-Input.lo -MD -MP -MF "$(DEPDIR)/libxf86config_la-Input.Tpo" -c -o libxf86config_la-Input.lo `test -f 'Input.c' || echo '$(srcdir)/'`Input.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libxf86config_la-Input.Tpo" "$(DEPDIR)/libxf86config_la-Input.Plo"; else rm -f "$(DEPDIR)/libxf86config_la-Input.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='Input.c' object='libxf86config_la-Input.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libxf86config_a_CFLAGS) $(CFLAGS) -c -o libxf86config_a-Flags.o `test -f 'Flags.c' || echo '$(srcdir)/'`Flags.c
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libxf86config_la_CFLAGS) $(CFLAGS) -c -o libxf86config_la-Input.lo `test -f 'Input.c' || echo '$(srcdir)/'`Input.c
 
-libxf86config_a-Flags.obj: Flags.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libxf86config_a_CFLAGS) $(CFLAGS) -MT libxf86config_a-Flags.obj -MD -MP -MF "$(DEPDIR)/libxf86config_a-Flags.Tpo" -c -o libxf86config_a-Flags.obj `if test -f 'Flags.c'; then $(CYGPATH_W) 'Flags.c'; else $(CYGPATH_W) '$(srcdir)/Flags.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libxf86config_a-Flags.Tpo" "$(DEPDIR)/libxf86config_a-Flags.Po"; else rm -f "$(DEPDIR)/libxf86config_a-Flags.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='Flags.c' object='libxf86config_a-Flags.obj' libtool=no @AMDEPBACKSLASH@
+libxf86config_la-InputClass.lo: InputClass.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libxf86config_la_CFLAGS) $(CFLAGS) -MT libxf86config_la-InputClass.lo -MD -MP -MF "$(DEPDIR)/libxf86config_la-InputClass.Tpo" -c -o libxf86config_la-InputClass.lo `test -f 'InputClass.c' || echo '$(srcdir)/'`InputClass.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libxf86config_la-InputClass.Tpo" "$(DEPDIR)/libxf86config_la-InputClass.Plo"; else rm -f "$(DEPDIR)/libxf86config_la-InputClass.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='InputClass.c' object='libxf86config_la-InputClass.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libxf86config_a_CFLAGS) $(CFLAGS) -c -o libxf86config_a-Flags.obj `if test -f 'Flags.c'; then $(CYGPATH_W) 'Flags.c'; else $(CYGPATH_W) '$(srcdir)/Flags.c'; fi`
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libxf86config_la_CFLAGS) $(CFLAGS) -c -o libxf86config_la-InputClass.lo `test -f 'InputClass.c' || echo '$(srcdir)/'`InputClass.c
 
-libxf86config_a-Input.o: Input.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libxf86config_a_CFLAGS) $(CFLAGS) -MT libxf86config_a-Input.o -MD -MP -MF "$(DEPDIR)/libxf86config_a-Input.Tpo" -c -o libxf86config_a-Input.o `test -f 'Input.c' || echo '$(srcdir)/'`Input.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libxf86config_a-Input.Tpo" "$(DEPDIR)/libxf86config_a-Input.Po"; else rm -f "$(DEPDIR)/libxf86config_a-Input.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='Input.c' object='libxf86config_a-Input.o' libtool=no @AMDEPBACKSLASH@
+libxf86config_la-Layout.lo: Layout.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libxf86config_la_CFLAGS) $(CFLAGS) -MT libxf86config_la-Layout.lo -MD -MP -MF "$(DEPDIR)/libxf86config_la-Layout.Tpo" -c -o libxf86config_la-Layout.lo `test -f 'Layout.c' || echo '$(srcdir)/'`Layout.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libxf86config_la-Layout.Tpo" "$(DEPDIR)/libxf86config_la-Layout.Plo"; else rm -f "$(DEPDIR)/libxf86config_la-Layout.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='Layout.c' object='libxf86config_la-Layout.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libxf86config_a_CFLAGS) $(CFLAGS) -c -o libxf86config_a-Input.o `test -f 'Input.c' || echo '$(srcdir)/'`Input.c
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libxf86config_la_CFLAGS) $(CFLAGS) -c -o libxf86config_la-Layout.lo `test -f 'Layout.c' || echo '$(srcdir)/'`Layout.c
 
-libxf86config_a-Input.obj: Input.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libxf86config_a_CFLAGS) $(CFLAGS) -MT libxf86config_a-Input.obj -MD -MP -MF "$(DEPDIR)/libxf86config_a-Input.Tpo" -c -o libxf86config_a-Input.obj `if test -f 'Input.c'; then $(CYGPATH_W) 'Input.c'; else $(CYGPATH_W) '$(srcdir)/Input.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libxf86config_a-Input.Tpo" "$(DEPDIR)/libxf86config_a-Input.Po"; else rm -f "$(DEPDIR)/libxf86config_a-Input.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='Input.c' object='libxf86config_a-Input.obj' libtool=no @AMDEPBACKSLASH@
+libxf86config_la-Module.lo: Module.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libxf86config_la_CFLAGS) $(CFLAGS) -MT libxf86config_la-Module.lo -MD -MP -MF "$(DEPDIR)/libxf86config_la-Module.Tpo" -c -o libxf86config_la-Module.lo `test -f 'Module.c' || echo '$(srcdir)/'`Module.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libxf86config_la-Module.Tpo" "$(DEPDIR)/libxf86config_la-Module.Plo"; else rm -f "$(DEPDIR)/libxf86config_la-Module.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='Module.c' object='libxf86config_la-Module.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libxf86config_a_CFLAGS) $(CFLAGS) -c -o libxf86config_a-Input.obj `if test -f 'Input.c'; then $(CYGPATH_W) 'Input.c'; else $(CYGPATH_W) '$(srcdir)/Input.c'; fi`
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libxf86config_la_CFLAGS) $(CFLAGS) -c -o libxf86config_la-Module.lo `test -f 'Module.c' || echo '$(srcdir)/'`Module.c
 
-libxf86config_a-InputClass.o: InputClass.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libxf86config_a_CFLAGS) $(CFLAGS) -MT libxf86config_a-InputClass.o -MD -MP -MF "$(DEPDIR)/libxf86config_a-InputClass.Tpo" -c -o libxf86config_a-InputClass.o `test -f 'InputClass.c' || echo '$(srcdir)/'`InputClass.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libxf86config_a-InputClass.Tpo" "$(DEPDIR)/libxf86config_a-InputClass.Po"; else rm -f "$(DEPDIR)/libxf86config_a-InputClass.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='InputClass.c' object='libxf86config_a-InputClass.o' libtool=no @AMDEPBACKSLASH@
+libxf86config_la-Video.lo: Video.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libxf86config_la_CFLAGS) $(CFLAGS) -MT libxf86config_la-Video.lo -MD -MP -MF "$(DEPDIR)/libxf86config_la-Video.Tpo" -c -o libxf86config_la-Video.lo `test -f 'Video.c' || echo '$(srcdir)/'`Video.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libxf86config_la-Video.Tpo" "$(DEPDIR)/libxf86config_la-Video.Plo"; else rm -f "$(DEPDIR)/libxf86config_la-Video.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='Video.c' object='libxf86config_la-Video.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libxf86config_a_CFLAGS) $(CFLAGS) -c -o libxf86config_a-InputClass.o `test -f 'InputClass.c' || echo '$(srcdir)/'`InputClass.c
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libxf86config_la_CFLAGS) $(CFLAGS) -c -o libxf86config_la-Video.lo `test -f 'Video.c' || echo '$(srcdir)/'`Video.c
 
-libxf86config_a-InputClass.obj: InputClass.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libxf86config_a_CFLAGS) $(CFLAGS) -MT libxf86config_a-InputClass.obj -MD -MP -MF "$(DEPDIR)/libxf86config_a-InputClass.Tpo" -c -o libxf86config_a-InputClass.obj `if test -f 'InputClass.c'; then $(CYGPATH_W) 'InputClass.c'; else $(CYGPATH_W) '$(srcdir)/InputClass.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libxf86config_a-InputClass.Tpo" "$(DEPDIR)/libxf86config_a-InputClass.Po"; else rm -f "$(DEPDIR)/libxf86config_a-InputClass.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='InputClass.c' object='libxf86config_a-InputClass.obj' libtool=no @AMDEPBACKSLASH@
+libxf86config_la-Monitor.lo: Monitor.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libxf86config_la_CFLAGS) $(CFLAGS) -MT libxf86config_la-Monitor.lo -MD -MP -MF "$(DEPDIR)/libxf86config_la-Monitor.Tpo" -c -o libxf86config_la-Monitor.lo `test -f 'Monitor.c' || echo '$(srcdir)/'`Monitor.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libxf86config_la-Monitor.Tpo" "$(DEPDIR)/libxf86config_la-Monitor.Plo"; else rm -f "$(DEPDIR)/libxf86config_la-Monitor.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='Monitor.c' object='libxf86config_la-Monitor.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libxf86config_a_CFLAGS) $(CFLAGS) -c -o libxf86config_a-InputClass.obj `if test -f 'InputClass.c'; then $(CYGPATH_W) 'InputClass.c'; else $(CYGPATH_W) '$(srcdir)/InputClass.c'; fi`
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libxf86config_la_CFLAGS) $(CFLAGS) -c -o libxf86config_la-Monitor.lo `test -f 'Monitor.c' || echo '$(srcdir)/'`Monitor.c
 
-libxf86config_a-Layout.o: Layout.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libxf86config_a_CFLAGS) $(CFLAGS) -MT libxf86config_a-Layout.o -MD -MP -MF "$(DEPDIR)/libxf86config_a-Layout.Tpo" -c -o libxf86config_a-Layout.o `test -f 'Layout.c' || echo '$(srcdir)/'`Layout.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libxf86config_a-Layout.Tpo" "$(DEPDIR)/libxf86config_a-Layout.Po"; else rm -f "$(DEPDIR)/libxf86config_a-Layout.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='Layout.c' object='libxf86config_a-Layout.o' libtool=no @AMDEPBACKSLASH@
+libxf86config_la-Pointer.lo: Pointer.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libxf86config_la_CFLAGS) $(CFLAGS) -MT libxf86config_la-Pointer.lo -MD -MP -MF "$(DEPDIR)/libxf86config_la-Pointer.Tpo" -c -o libxf86config_la-Pointer.lo `test -f 'Pointer.c' || echo '$(srcdir)/'`Pointer.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libxf86config_la-Pointer.Tpo" "$(DEPDIR)/libxf86config_la-Pointer.Plo"; else rm -f "$(DEPDIR)/libxf86config_la-Pointer.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='Pointer.c' object='libxf86config_la-Pointer.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libxf86config_a_CFLAGS) $(CFLAGS) -c -o libxf86config_a-Layout.o `test -f 'Layout.c' || echo '$(srcdir)/'`Layout.c
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libxf86config_la_CFLAGS) $(CFLAGS) -c -o libxf86config_la-Pointer.lo `test -f 'Pointer.c' || echo '$(srcdir)/'`Pointer.c
 
-libxf86config_a-Layout.obj: Layout.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libxf86config_a_CFLAGS) $(CFLAGS) -MT libxf86config_a-Layout.obj -MD -MP -MF "$(DEPDIR)/libxf86config_a-Layout.Tpo" -c -o libxf86config_a-Layout.obj `if test -f 'Layout.c'; then $(CYGPATH_W) 'Layout.c'; else $(CYGPATH_W) '$(srcdir)/Layout.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libxf86config_a-Layout.Tpo" "$(DEPDIR)/libxf86config_a-Layout.Po"; else rm -f "$(DEPDIR)/libxf86config_a-Layout.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='Layout.c' object='libxf86config_a-Layout.obj' libtool=no @AMDEPBACKSLASH@
+libxf86config_la-Screen.lo: Screen.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libxf86config_la_CFLAGS) $(CFLAGS) -MT libxf86config_la-Screen.lo -MD -MP -MF "$(DEPDIR)/libxf86config_la-Screen.Tpo" -c -o libxf86config_la-Screen.lo `test -f 'Screen.c' || echo '$(srcdir)/'`Screen.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libxf86config_la-Screen.Tpo" "$(DEPDIR)/libxf86config_la-Screen.Plo"; else rm -f "$(DEPDIR)/libxf86config_la-Screen.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='Screen.c' object='libxf86config_la-Screen.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libxf86config_a_CFLAGS) $(CFLAGS) -c -o libxf86config_a-Layout.obj `if test -f 'Layout.c'; then $(CYGPATH_W) 'Layout.c'; else $(CYGPATH_W) '$(srcdir)/Layout.c'; fi`
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libxf86config_la_CFLAGS) $(CFLAGS) -c -o libxf86config_la-Screen.lo `test -f 'Screen.c' || echo '$(srcdir)/'`Screen.c
 
-libxf86config_a-Module.o: Module.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libxf86config_a_CFLAGS) $(CFLAGS) -MT libxf86config_a-Module.o -MD -MP -MF "$(DEPDIR)/libxf86config_a-Module.Tpo" -c -o libxf86config_a-Module.o `test -f 'Module.c' || echo '$(srcdir)/'`Module.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libxf86config_a-Module.Tpo" "$(DEPDIR)/libxf86config_a-Module.Po"; else rm -f "$(DEPDIR)/libxf86config_a-Module.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='Module.c' object='libxf86config_a-Module.o' libtool=no @AMDEPBACKSLASH@
+libxf86config_la-Vendor.lo: Vendor.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libxf86config_la_CFLAGS) $(CFLAGS) -MT libxf86config_la-Vendor.lo -MD -MP -MF "$(DEPDIR)/libxf86config_la-Vendor.Tpo" -c -o libxf86config_la-Vendor.lo `test -f 'Vendor.c' || echo '$(srcdir)/'`Vendor.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libxf86config_la-Vendor.Tpo" "$(DEPDIR)/libxf86config_la-Vendor.Plo"; else rm -f "$(DEPDIR)/libxf86config_la-Vendor.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='Vendor.c' object='libxf86config_la-Vendor.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libxf86config_a_CFLAGS) $(CFLAGS) -c -o libxf86config_a-Module.o `test -f 'Module.c' || echo '$(srcdir)/'`Module.c
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libxf86config_la_CFLAGS) $(CFLAGS) -c -o libxf86config_la-Vendor.lo `test -f 'Vendor.c' || echo '$(srcdir)/'`Vendor.c
 
-libxf86config_a-Module.obj: Module.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libxf86config_a_CFLAGS) $(CFLAGS) -MT libxf86config_a-Module.obj -MD -MP -MF "$(DEPDIR)/libxf86config_a-Module.Tpo" -c -o libxf86config_a-Module.obj `if test -f 'Module.c'; then $(CYGPATH_W) 'Module.c'; else $(CYGPATH_W) '$(srcdir)/Module.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libxf86config_a-Module.Tpo" "$(DEPDIR)/libxf86config_a-Module.Po"; else rm -f "$(DEPDIR)/libxf86config_a-Module.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='Module.c' object='libxf86config_a-Module.obj' libtool=no @AMDEPBACKSLASH@
+libxf86config_la-read.lo: read.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libxf86config_la_CFLAGS) $(CFLAGS) -MT libxf86config_la-read.lo -MD -MP -MF "$(DEPDIR)/libxf86config_la-read.Tpo" -c -o libxf86config_la-read.lo `test -f 'read.c' || echo '$(srcdir)/'`read.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libxf86config_la-read.Tpo" "$(DEPDIR)/libxf86config_la-read.Plo"; else rm -f "$(DEPDIR)/libxf86config_la-read.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='read.c' object='libxf86config_la-read.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libxf86config_a_CFLAGS) $(CFLAGS) -c -o libxf86config_a-Module.obj `if test -f 'Module.c'; then $(CYGPATH_W) 'Module.c'; else $(CYGPATH_W) '$(srcdir)/Module.c'; fi`
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libxf86config_la_CFLAGS) $(CFLAGS) -c -o libxf86config_la-read.lo `test -f 'read.c' || echo '$(srcdir)/'`read.c
 
-libxf86config_a-Video.o: Video.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libxf86config_a_CFLAGS) $(CFLAGS) -MT libxf86config_a-Video.o -MD -MP -MF "$(DEPDIR)/libxf86config_a-Video.Tpo" -c -o libxf86config_a-Video.o `test -f 'Video.c' || echo '$(srcdir)/'`Video.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libxf86config_a-Video.Tpo" "$(DEPDIR)/libxf86config_a-Video.Po"; else rm -f "$(DEPDIR)/libxf86config_a-Video.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='Video.c' object='libxf86config_a-Video.o' libtool=no @AMDEPBACKSLASH@
+libxf86config_la-scan.lo: scan.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libxf86config_la_CFLAGS) $(CFLAGS) -MT libxf86config_la-scan.lo -MD -MP -MF "$(DEPDIR)/libxf86config_la-scan.Tpo" -c -o libxf86config_la-scan.lo `test -f 'scan.c' || echo '$(srcdir)/'`scan.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libxf86config_la-scan.Tpo" "$(DEPDIR)/libxf86config_la-scan.Plo"; else rm -f "$(DEPDIR)/libxf86config_la-scan.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='scan.c' object='libxf86config_la-scan.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libxf86config_a_CFLAGS) $(CFLAGS) -c -o libxf86config_a-Video.o `test -f 'Video.c' || echo '$(srcdir)/'`Video.c
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libxf86config_la_CFLAGS) $(CFLAGS) -c -o libxf86config_la-scan.lo `test -f 'scan.c' || echo '$(srcdir)/'`scan.c
 
-libxf86config_a-Video.obj: Video.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libxf86config_a_CFLAGS) $(CFLAGS) -MT libxf86config_a-Video.obj -MD -MP -MF "$(DEPDIR)/libxf86config_a-Video.Tpo" -c -o libxf86config_a-Video.obj `if test -f 'Video.c'; then $(CYGPATH_W) 'Video.c'; else $(CYGPATH_W) '$(srcdir)/Video.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libxf86config_a-Video.Tpo" "$(DEPDIR)/libxf86config_a-Video.Po"; else rm -f "$(DEPDIR)/libxf86config_a-Video.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='Video.c' object='libxf86config_a-Video.obj' libtool=no @AMDEPBACKSLASH@
+libxf86config_la-write.lo: write.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libxf86config_la_CFLAGS) $(CFLAGS) -MT libxf86config_la-write.lo -MD -MP -MF "$(DEPDIR)/libxf86config_la-write.Tpo" -c -o libxf86config_la-write.lo `test -f 'write.c' || echo '$(srcdir)/'`write.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libxf86config_la-write.Tpo" "$(DEPDIR)/libxf86config_la-write.Plo"; else rm -f "$(DEPDIR)/libxf86config_la-write.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='write.c' object='libxf86config_la-write.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libxf86config_a_CFLAGS) $(CFLAGS) -c -o libxf86config_a-Video.obj `if test -f 'Video.c'; then $(CYGPATH_W) 'Video.c'; else $(CYGPATH_W) '$(srcdir)/Video.c'; fi`
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libxf86config_la_CFLAGS) $(CFLAGS) -c -o libxf86config_la-write.lo `test -f 'write.c' || echo '$(srcdir)/'`write.c
 
-libxf86config_a-Monitor.o: Monitor.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libxf86config_a_CFLAGS) $(CFLAGS) -MT libxf86config_a-Monitor.o -MD -MP -MF "$(DEPDIR)/libxf86config_a-Monitor.Tpo" -c -o libxf86config_a-Monitor.o `test -f 'Monitor.c' || echo '$(srcdir)/'`Monitor.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libxf86config_a-Monitor.Tpo" "$(DEPDIR)/libxf86config_a-Monitor.Po"; else rm -f "$(DEPDIR)/libxf86config_a-Monitor.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='Monitor.c' object='libxf86config_a-Monitor.o' libtool=no @AMDEPBACKSLASH@
+libxf86config_la-DRI.lo: DRI.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libxf86config_la_CFLAGS) $(CFLAGS) -MT libxf86config_la-DRI.lo -MD -MP -MF "$(DEPDIR)/libxf86config_la-DRI.Tpo" -c -o libxf86config_la-DRI.lo `test -f 'DRI.c' || echo '$(srcdir)/'`DRI.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libxf86config_la-DRI.Tpo" "$(DEPDIR)/libxf86config_la-DRI.Plo"; else rm -f "$(DEPDIR)/libxf86config_la-DRI.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='DRI.c' object='libxf86config_la-DRI.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libxf86config_a_CFLAGS) $(CFLAGS) -c -o libxf86config_a-Monitor.o `test -f 'Monitor.c' || echo '$(srcdir)/'`Monitor.c
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libxf86config_la_CFLAGS) $(CFLAGS) -c -o libxf86config_la-DRI.lo `test -f 'DRI.c' || echo '$(srcdir)/'`DRI.c
 
-libxf86config_a-Monitor.obj: Monitor.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libxf86config_a_CFLAGS) $(CFLAGS) -MT libxf86config_a-Monitor.obj -MD -MP -MF "$(DEPDIR)/libxf86config_a-Monitor.Tpo" -c -o libxf86config_a-Monitor.obj `if test -f 'Monitor.c'; then $(CYGPATH_W) 'Monitor.c'; else $(CYGPATH_W) '$(srcdir)/Monitor.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libxf86config_a-Monitor.Tpo" "$(DEPDIR)/libxf86config_a-Monitor.Po"; else rm -f "$(DEPDIR)/libxf86config_a-Monitor.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='Monitor.c' object='libxf86config_a-Monitor.obj' libtool=no @AMDEPBACKSLASH@
+libxf86config_la-Extensions.lo: Extensions.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libxf86config_la_CFLAGS) $(CFLAGS) -MT libxf86config_la-Extensions.lo -MD -MP -MF "$(DEPDIR)/libxf86config_la-Extensions.Tpo" -c -o libxf86config_la-Extensions.lo `test -f 'Extensions.c' || echo '$(srcdir)/'`Extensions.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libxf86config_la-Extensions.Tpo" "$(DEPDIR)/libxf86config_la-Extensions.Plo"; else rm -f "$(DEPDIR)/libxf86config_la-Extensions.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='Extensions.c' object='libxf86config_la-Extensions.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libxf86config_a_CFLAGS) $(CFLAGS) -c -o libxf86config_a-Monitor.obj `if test -f 'Monitor.c'; then $(CYGPATH_W) 'Monitor.c'; else $(CYGPATH_W) '$(srcdir)/Monitor.c'; fi`
-
-libxf86config_a-Pointer.o: Pointer.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libxf86config_a_CFLAGS) $(CFLAGS) -MT libxf86config_a-Pointer.o -MD -MP -MF "$(DEPDIR)/libxf86config_a-Pointer.Tpo" -c -o libxf86config_a-Pointer.o `test -f 'Pointer.c' || echo '$(srcdir)/'`Pointer.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libxf86config_a-Pointer.Tpo" "$(DEPDIR)/libxf86config_a-Pointer.Po"; else rm -f "$(DEPDIR)/libxf86config_a-Pointer.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='Pointer.c' object='libxf86config_a-Pointer.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libxf86config_a_CFLAGS) $(CFLAGS) -c -o libxf86config_a-Pointer.o `test -f 'Pointer.c' || echo '$(srcdir)/'`Pointer.c
-
-libxf86config_a-Pointer.obj: Pointer.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libxf86config_a_CFLAGS) $(CFLAGS) -MT libxf86config_a-Pointer.obj -MD -MP -MF "$(DEPDIR)/libxf86config_a-Pointer.Tpo" -c -o libxf86config_a-Pointer.obj `if test -f 'Pointer.c'; then $(CYGPATH_W) 'Pointer.c'; else $(CYGPATH_W) '$(srcdir)/Pointer.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libxf86config_a-Pointer.Tpo" "$(DEPDIR)/libxf86config_a-Pointer.Po"; else rm -f "$(DEPDIR)/libxf86config_a-Pointer.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='Pointer.c' object='libxf86config_a-Pointer.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libxf86config_a_CFLAGS) $(CFLAGS) -c -o libxf86config_a-Pointer.obj `if test -f 'Pointer.c'; then $(CYGPATH_W) 'Pointer.c'; else $(CYGPATH_W) '$(srcdir)/Pointer.c'; fi`
-
-libxf86config_a-Screen.o: Screen.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libxf86config_a_CFLAGS) $(CFLAGS) -MT libxf86config_a-Screen.o -MD -MP -MF "$(DEPDIR)/libxf86config_a-Screen.Tpo" -c -o libxf86config_a-Screen.o `test -f 'Screen.c' || echo '$(srcdir)/'`Screen.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libxf86config_a-Screen.Tpo" "$(DEPDIR)/libxf86config_a-Screen.Po"; else rm -f "$(DEPDIR)/libxf86config_a-Screen.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='Screen.c' object='libxf86config_a-Screen.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libxf86config_a_CFLAGS) $(CFLAGS) -c -o libxf86config_a-Screen.o `test -f 'Screen.c' || echo '$(srcdir)/'`Screen.c
-
-libxf86config_a-Screen.obj: Screen.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libxf86config_a_CFLAGS) $(CFLAGS) -MT libxf86config_a-Screen.obj -MD -MP -MF "$(DEPDIR)/libxf86config_a-Screen.Tpo" -c -o libxf86config_a-Screen.obj `if test -f 'Screen.c'; then $(CYGPATH_W) 'Screen.c'; else $(CYGPATH_W) '$(srcdir)/Screen.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libxf86config_a-Screen.Tpo" "$(DEPDIR)/libxf86config_a-Screen.Po"; else rm -f "$(DEPDIR)/libxf86config_a-Screen.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='Screen.c' object='libxf86config_a-Screen.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libxf86config_a_CFLAGS) $(CFLAGS) -c -o libxf86config_a-Screen.obj `if test -f 'Screen.c'; then $(CYGPATH_W) 'Screen.c'; else $(CYGPATH_W) '$(srcdir)/Screen.c'; fi`
-
-libxf86config_a-Vendor.o: Vendor.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libxf86config_a_CFLAGS) $(CFLAGS) -MT libxf86config_a-Vendor.o -MD -MP -MF "$(DEPDIR)/libxf86config_a-Vendor.Tpo" -c -o libxf86config_a-Vendor.o `test -f 'Vendor.c' || echo '$(srcdir)/'`Vendor.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libxf86config_a-Vendor.Tpo" "$(DEPDIR)/libxf86config_a-Vendor.Po"; else rm -f "$(DEPDIR)/libxf86config_a-Vendor.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='Vendor.c' object='libxf86config_a-Vendor.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libxf86config_a_CFLAGS) $(CFLAGS) -c -o libxf86config_a-Vendor.o `test -f 'Vendor.c' || echo '$(srcdir)/'`Vendor.c
-
-libxf86config_a-Vendor.obj: Vendor.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libxf86config_a_CFLAGS) $(CFLAGS) -MT libxf86config_a-Vendor.obj -MD -MP -MF "$(DEPDIR)/libxf86config_a-Vendor.Tpo" -c -o libxf86config_a-Vendor.obj `if test -f 'Vendor.c'; then $(CYGPATH_W) 'Vendor.c'; else $(CYGPATH_W) '$(srcdir)/Vendor.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libxf86config_a-Vendor.Tpo" "$(DEPDIR)/libxf86config_a-Vendor.Po"; else rm -f "$(DEPDIR)/libxf86config_a-Vendor.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='Vendor.c' object='libxf86config_a-Vendor.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libxf86config_a_CFLAGS) $(CFLAGS) -c -o libxf86config_a-Vendor.obj `if test -f 'Vendor.c'; then $(CYGPATH_W) 'Vendor.c'; else $(CYGPATH_W) '$(srcdir)/Vendor.c'; fi`
-
-libxf86config_a-read.o: read.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libxf86config_a_CFLAGS) $(CFLAGS) -MT libxf86config_a-read.o -MD -MP -MF "$(DEPDIR)/libxf86config_a-read.Tpo" -c -o libxf86config_a-read.o `test -f 'read.c' || echo '$(srcdir)/'`read.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libxf86config_a-read.Tpo" "$(DEPDIR)/libxf86config_a-read.Po"; else rm -f "$(DEPDIR)/libxf86config_a-read.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='read.c' object='libxf86config_a-read.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libxf86config_a_CFLAGS) $(CFLAGS) -c -o libxf86config_a-read.o `test -f 'read.c' || echo '$(srcdir)/'`read.c
-
-libxf86config_a-read.obj: read.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libxf86config_a_CFLAGS) $(CFLAGS) -MT libxf86config_a-read.obj -MD -MP -MF "$(DEPDIR)/libxf86config_a-read.Tpo" -c -o libxf86config_a-read.obj `if test -f 'read.c'; then $(CYGPATH_W) 'read.c'; else $(CYGPATH_W) '$(srcdir)/read.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libxf86config_a-read.Tpo" "$(DEPDIR)/libxf86config_a-read.Po"; else rm -f "$(DEPDIR)/libxf86config_a-read.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='read.c' object='libxf86config_a-read.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libxf86config_a_CFLAGS) $(CFLAGS) -c -o libxf86config_a-read.obj `if test -f 'read.c'; then $(CYGPATH_W) 'read.c'; else $(CYGPATH_W) '$(srcdir)/read.c'; fi`
-
-libxf86config_a-scan.o: scan.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libxf86config_a_CFLAGS) $(CFLAGS) -MT libxf86config_a-scan.o -MD -MP -MF "$(DEPDIR)/libxf86config_a-scan.Tpo" -c -o libxf86config_a-scan.o `test -f 'scan.c' || echo '$(srcdir)/'`scan.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libxf86config_a-scan.Tpo" "$(DEPDIR)/libxf86config_a-scan.Po"; else rm -f "$(DEPDIR)/libxf86config_a-scan.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='scan.c' object='libxf86config_a-scan.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libxf86config_a_CFLAGS) $(CFLAGS) -c -o libxf86config_a-scan.o `test -f 'scan.c' || echo '$(srcdir)/'`scan.c
-
-libxf86config_a-scan.obj: scan.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libxf86config_a_CFLAGS) $(CFLAGS) -MT libxf86config_a-scan.obj -MD -MP -MF "$(DEPDIR)/libxf86config_a-scan.Tpo" -c -o libxf86config_a-scan.obj `if test -f 'scan.c'; then $(CYGPATH_W) 'scan.c'; else $(CYGPATH_W) '$(srcdir)/scan.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libxf86config_a-scan.Tpo" "$(DEPDIR)/libxf86config_a-scan.Po"; else rm -f "$(DEPDIR)/libxf86config_a-scan.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='scan.c' object='libxf86config_a-scan.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libxf86config_a_CFLAGS) $(CFLAGS) -c -o libxf86config_a-scan.obj `if test -f 'scan.c'; then $(CYGPATH_W) 'scan.c'; else $(CYGPATH_W) '$(srcdir)/scan.c'; fi`
-
-libxf86config_a-write.o: write.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libxf86config_a_CFLAGS) $(CFLAGS) -MT libxf86config_a-write.o -MD -MP -MF "$(DEPDIR)/libxf86config_a-write.Tpo" -c -o libxf86config_a-write.o `test -f 'write.c' || echo '$(srcdir)/'`write.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libxf86config_a-write.Tpo" "$(DEPDIR)/libxf86config_a-write.Po"; else rm -f "$(DEPDIR)/libxf86config_a-write.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='write.c' object='libxf86config_a-write.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libxf86config_a_CFLAGS) $(CFLAGS) -c -o libxf86config_a-write.o `test -f 'write.c' || echo '$(srcdir)/'`write.c
-
-libxf86config_a-write.obj: write.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libxf86config_a_CFLAGS) $(CFLAGS) -MT libxf86config_a-write.obj -MD -MP -MF "$(DEPDIR)/libxf86config_a-write.Tpo" -c -o libxf86config_a-write.obj `if test -f 'write.c'; then $(CYGPATH_W) 'write.c'; else $(CYGPATH_W) '$(srcdir)/write.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libxf86config_a-write.Tpo" "$(DEPDIR)/libxf86config_a-write.Po"; else rm -f "$(DEPDIR)/libxf86config_a-write.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='write.c' object='libxf86config_a-write.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libxf86config_a_CFLAGS) $(CFLAGS) -c -o libxf86config_a-write.obj `if test -f 'write.c'; then $(CYGPATH_W) 'write.c'; else $(CYGPATH_W) '$(srcdir)/write.c'; fi`
-
-libxf86config_a-DRI.o: DRI.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libxf86config_a_CFLAGS) $(CFLAGS) -MT libxf86config_a-DRI.o -MD -MP -MF "$(DEPDIR)/libxf86config_a-DRI.Tpo" -c -o libxf86config_a-DRI.o `test -f 'DRI.c' || echo '$(srcdir)/'`DRI.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libxf86config_a-DRI.Tpo" "$(DEPDIR)/libxf86config_a-DRI.Po"; else rm -f "$(DEPDIR)/libxf86config_a-DRI.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='DRI.c' object='libxf86config_a-DRI.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libxf86config_a_CFLAGS) $(CFLAGS) -c -o libxf86config_a-DRI.o `test -f 'DRI.c' || echo '$(srcdir)/'`DRI.c
-
-libxf86config_a-DRI.obj: DRI.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libxf86config_a_CFLAGS) $(CFLAGS) -MT libxf86config_a-DRI.obj -MD -MP -MF "$(DEPDIR)/libxf86config_a-DRI.Tpo" -c -o libxf86config_a-DRI.obj `if test -f 'DRI.c'; then $(CYGPATH_W) 'DRI.c'; else $(CYGPATH_W) '$(srcdir)/DRI.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libxf86config_a-DRI.Tpo" "$(DEPDIR)/libxf86config_a-DRI.Po"; else rm -f "$(DEPDIR)/libxf86config_a-DRI.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='DRI.c' object='libxf86config_a-DRI.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libxf86config_a_CFLAGS) $(CFLAGS) -c -o libxf86config_a-DRI.obj `if test -f 'DRI.c'; then $(CYGPATH_W) 'DRI.c'; else $(CYGPATH_W) '$(srcdir)/DRI.c'; fi`
-
-libxf86config_a-Extensions.o: Extensions.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libxf86config_a_CFLAGS) $(CFLAGS) -MT libxf86config_a-Extensions.o -MD -MP -MF "$(DEPDIR)/libxf86config_a-Extensions.Tpo" -c -o libxf86config_a-Extensions.o `test -f 'Extensions.c' || echo '$(srcdir)/'`Extensions.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libxf86config_a-Extensions.Tpo" "$(DEPDIR)/libxf86config_a-Extensions.Po"; else rm -f "$(DEPDIR)/libxf86config_a-Extensions.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='Extensions.c' object='libxf86config_a-Extensions.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libxf86config_a_CFLAGS) $(CFLAGS) -c -o libxf86config_a-Extensions.o `test -f 'Extensions.c' || echo '$(srcdir)/'`Extensions.c
-
-libxf86config_a-Extensions.obj: Extensions.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libxf86config_a_CFLAGS) $(CFLAGS) -MT libxf86config_a-Extensions.obj -MD -MP -MF "$(DEPDIR)/libxf86config_a-Extensions.Tpo" -c -o libxf86config_a-Extensions.obj `if test -f 'Extensions.c'; then $(CYGPATH_W) 'Extensions.c'; else $(CYGPATH_W) '$(srcdir)/Extensions.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libxf86config_a-Extensions.Tpo" "$(DEPDIR)/libxf86config_a-Extensions.Po"; else rm -f "$(DEPDIR)/libxf86config_a-Extensions.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='Extensions.c' object='libxf86config_a-Extensions.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libxf86config_a_CFLAGS) $(CFLAGS) -c -o libxf86config_a-Extensions.obj `if test -f 'Extensions.c'; then $(CYGPATH_W) 'Extensions.c'; else $(CYGPATH_W) '$(srcdir)/Extensions.c'; fi`
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libxf86config_la_CFLAGS) $(CFLAGS) -c -o libxf86config_la-Extensions.lo `test -f 'Extensions.c' || echo '$(srcdir)/'`Extensions.c
 
 mostlyclean-libtool:
 	-rm -f *.lo
@@ -1174,7 +1065,7 @@ distdir: $(DISTFILES)
 	done
 check-am: all-am
 check: check-am
-all-am: Makefile $(LIBRARIES) $(LTLIBRARIES) $(HEADERS)
+all-am: Makefile $(LTLIBRARIES) $(HEADERS)
 installdirs:
 	for dir in "$(DESTDIR)$(libdir)" "$(DESTDIR)$(sdkdir)"; do \
 	  test -z "$$dir" || $(mkdir_p) "$$dir"; \
@@ -1205,7 +1096,7 @@ maintainer-clean-generic:
 	@echo "it deletes files that may require special tools to rebuild."
 clean: clean-am
 
-clean-am: clean-generic clean-libLIBRARIES clean-libtool \
+clean-am: clean-generic clean-libLTLIBRARIES clean-libtool \
 	clean-noinstLTLIBRARIES mostlyclean-am
 
 distclean: distclean-am
@@ -1226,7 +1117,7 @@ info-am:
 
 install-data-am: install-sdkHEADERS
 
-install-exec-am: install-libLIBRARIES
+install-exec-am: install-libLTLIBRARIES
 
 install-info: install-info-am
 
@@ -1252,21 +1143,21 @@ ps: ps-am
 
 ps-am:
 
-uninstall-am: uninstall-info-am uninstall-libLIBRARIES \
+uninstall-am: uninstall-info-am uninstall-libLTLIBRARIES \
 	uninstall-sdkHEADERS
 
 .PHONY: CTAGS GTAGS all all-am check check-am clean clean-generic \
-	clean-libLIBRARIES clean-libtool clean-noinstLTLIBRARIES ctags \
-	distclean distclean-compile distclean-generic \
+	clean-libLTLIBRARIES clean-libtool clean-noinstLTLIBRARIES \
+	ctags distclean distclean-compile distclean-generic \
 	distclean-libtool distclean-tags distdir dvi dvi-am html \
 	html-am info info-am install install-am install-data \
 	install-data-am install-exec install-exec-am install-info \
-	install-info-am install-libLIBRARIES install-man \
+	install-info-am install-libLTLIBRARIES install-man \
 	install-sdkHEADERS install-strip installcheck installcheck-am \
 	installdirs maintainer-clean maintainer-clean-generic \
 	mostlyclean mostlyclean-compile mostlyclean-generic \
 	mostlyclean-libtool pdf pdf-am ps ps-am tags uninstall \
-	uninstall-am uninstall-info-am uninstall-libLIBRARIES \
+	uninstall-am uninstall-info-am uninstall-libLTLIBRARIES \
 	uninstall-sdkHEADERS
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.

@@ -41,7 +41,6 @@
 #include <X11/extensions/windowswmstr.h>
 #include "dixevents.h"
 #include "winmultiwindowclass.h"
-#include "winprefs.h"
 #include <X11/Xatom.h>
 
 
@@ -367,8 +366,8 @@ void
 winMWExtWMDestroyFrame (RootlessFrameID wid)
 {
   win32RootlessWindowPtr pRLWinPriv = (win32RootlessWindowPtr) wid;
-  HICON			hiconClass;
-  HICON			hiconSmClass;
+  HICON			hIcon;
+  HICON			hIconSm;
   HMODULE		hInstance;
   int			iReturn;
   char			pszClass[CLASS_NAME_LENGTH];
@@ -399,8 +398,8 @@ winMWExtWMDestroyFrame (RootlessFrameID wid)
 
   /* Store the info we need to destroy after this window is gone */
   hInstance = (HINSTANCE) GetClassLongPtr (pRLWinPriv->hWnd, GCLP_HMODULE);
-  hiconClass = (HICON) GetClassLongPtr (pRLWinPriv->hWnd, GCLP_HICON);
-  hiconSmClass = (HICON) GetClassLongPtr (pRLWinPriv->hWnd, GCLP_HICONSM);
+  hIcon = (HICON)SendMessage(pRLWinPriv->hWnd, WM_GETICON, ICON_BIG, 0);
+  hIconSm = (HICON)SendMessage(pRLWinPriv->hWnd, WM_GETICON, ICON_SMALL, 0);
   iReturn = GetClassName (pRLWinPriv->hWnd, pszClass, CLASS_NAME_LENGTH);
 
   pRLWinPriv->fClose = TRUE;
@@ -416,14 +415,14 @@ winMWExtWMDestroyFrame (RootlessFrameID wid)
       winDebug ("winMWExtWMDestroyFrame - Unregistering %s: ", pszClass);
 #endif
       iReturn = UnregisterClass (pszClass, hInstance);
-      
-#if CYGMULTIWINDOW_DEBUG
-      winDebug ("winMWExtWMDestroyFramew - %d Deleting Icon: ", iReturn);
-#endif
-      
-      winDestroyIcon(hiconClass);
-      winDestroyIcon(hiconSmClass);
     }
+
+#if CYGMULTIWINDOW_DEBUG
+  winDebug ("winMWExtWMDestroyFramew - Deleting Icon\n");
+#endif
+
+  winDestroyIcon(hIcon);
+  winDestroyIcon(hIconSm);
 
 #if CYGMULTIWINDOW_DEBUG
   winDebug ("winMWExtWMDestroyFrame - done\n");
@@ -1005,28 +1004,6 @@ winMWExtWMCopyBytes (unsigned int width, unsigned int height,
   winDebug ("winMWExtWMCopyBytes - Not implemented\n");
 #endif
 }
-
-void
-winMWExtWMFillBytes (unsigned int width, unsigned int height, unsigned int value,
-			   void *dst, unsigned int dstRowBytes)
-{
-#if CYGMULTIWINDOW_DEBUG
-  winDebug ("winMWExtWMFillBytes - Not implemented\n");
-#endif
-}
-
-int
-winMWExtWMCompositePixels (unsigned int width, unsigned int height, unsigned int function,
-				 void *src[2], unsigned int srcRowBytes[2],
-				 void *mask, unsigned int maskRowBytes,
-				 void *dst[2], unsigned int dstRowBytes[2])
-{
-#if CYGMULTIWINDOW_DEBUG
-  winDebug ("winMWExtWMCompositePixels - Not implemented\n");
-#endif
-  return 0;
-}
-
 
 void
 winMWExtWMCopyWindow (RootlessFrameID wid, int nDstRects, const BoxRec *pDstRects,

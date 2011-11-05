@@ -318,18 +318,10 @@ InstallSignalHandlers(void)
 	signal(SIGEMT, SIG_DFL);
 #endif
 	signal(SIGFPE, SIG_DFL);
-#ifdef SIGBUS
 	signal(SIGBUS, SIG_DFL);
-#endif
-#ifdef SIGSYS
 	signal(SIGSYS, SIG_DFL);
-#endif
-#ifdef SIGXCPU
 	signal(SIGXCPU, SIG_DFL);
-#endif
-#ifdef SIGXFSZ
 	signal(SIGXFSZ, SIG_DFL);
-#endif
     }
 }
 
@@ -342,7 +334,7 @@ InstallSignalHandlers(void)
 void
 InitOutput(ScreenInfo *pScreenInfo, int argc, char **argv)
 {
-  int                    i, j, k, scr_index;
+  int                    i, j, k, scr_index, was_blocked = 0;
   char                   **modulelist;
   pointer                *optionlist;
   Pix24Flags		 screenpix24, pix24;
@@ -548,9 +540,7 @@ InitOutput(ScreenInfo *pScreenInfo, int argc, char **argv)
 
     for (i = 0; i < xf86NumScreens; i++) {
       if (xf86Screens[i]->name == NULL) {
-	size_t len = strlen("screen") + 10 + 1;
-	xf86Screens[i]->name = xnfalloc(len);
-	snprintf(xf86Screens[i]->name, len, "screen%d", i);
+	XNFasprintf(&xf86Screens[i]->name, "screen%d", i);
 	xf86MsgVerb(X_WARNING, 0,
 		    "Screen driver %d has no name set, using `%s'.\n",
 		    i, xf86Screens[i]->name);
@@ -722,31 +712,16 @@ InitOutput(ScreenInfo *pScreenInfo, int argc, char **argv)
       ioctl(xf86Info.consoleFd, VT_RELDISP, VT_ACKACQ);
 #endif
       xf86AccessEnter();
-      xf86EnterServerState(SETUP);
+      was_blocked = xf86BlockSIGIO();
     }
   }
-#ifdef SCO325
-  else {
-    /*
-     * Under SCO we must ack that we got the console at startup,
-     * I think this is the safest way to assure it.
-     */
-    static int once = 1;
-    if (once) {
-      once = 0;
-      if (ioctl(xf86Info.consoleFd, VT_RELDISP, VT_ACKACQ) < 0)
-        xf86Msg(X_WARNING, "VT_ACKACQ failed");
-    }
-  }
-#endif /* SCO325 */
 
   for (i = 0; i < xf86NumScreens; i++)
       if (!xf86ColormapAllocatePrivates(xf86Screens[i]))
 	  FatalError("Cannot register DDX private keys");
 
   if (!dixRegisterPrivateKey(&xf86ScreenKeyRec, PRIVATE_SCREEN, 0) ||
-      !dixRegisterPrivateKey(&xf86CreateRootWindowKeyRec, PRIVATE_SCREEN, 0) ||
-      !dixRegisterPrivateKey(&xf86PixmapKeyRec, PRIVATE_PIXMAP, 0))
+      !dixRegisterPrivateKey(&xf86CreateRootWindowKeyRec, PRIVATE_SCREEN, 0))
       FatalError("Cannot register DDX private keys");
 
   for (i = 0; i < xf86NumScreens; i++) {
@@ -808,7 +783,8 @@ InitOutput(ScreenInfo *pScreenInfo, int argc, char **argv)
 #endif
   }
 
-  xf86PostScreenInit();
+  xf86VGAarbiterWrapFunctions();
+  xf86UnblockSIGIO(was_blocked);
 
   xf86InitOrigins();
 
@@ -819,6 +795,21 @@ InitOutput(ScreenInfo *pScreenInfo, int argc, char **argv)
 				 NULL);
 }
 
+static InputInfoPtr
+duplicateDevice(InputInfoPtr pInfo)
+{
+    InputInfoPtr dup = calloc(1, sizeof(InputInfoRec));
+    if (dup) {
+        dup->name = strdup(pInfo->name);
+        dup->driver = strdup(pInfo->driver);
+        dup->options = xf86OptionListDuplicate(pInfo->options);
+        /* type_name is a const string */
+        dup->type_name = pInfo->type_name;
+        dup->fd = -1;
+    }
+    return dup;
+}
+
 /*
  * InitInput --
  *      Initialize all supported input devices.
@@ -827,24 +818,29 @@ InitOutput(ScreenInfo *pScreenInfo, int argc, char **argv)
 void
 InitInput(int argc, char **argv)
 {
-    IDevPtr* pDev;
+    InputInfoPtr* pInfo;
     DeviceIntPtr dev;
 
     xf86Info.vtRequestsPending = FALSE;
 
     mieqInit();
 
-    GetEventList(&xf86Events);
-
-    /* Call the PreInit function for each input device instance. */
-    for (pDev = xf86ConfigLayout.inputs; pDev && *pDev; pDev++) {
+    /* Initialize all configured input devices */
+    for (pInfo = xf86ConfigLayout.inputs; pInfo && *pInfo; pInfo++) {
+        InputInfoPtr dup;
         /* Replace obsolete keyboard driver with kbd */
-        if (!xf86NameCmp((*pDev)->driver, "keyboard")) {
-            strcpy((*pDev)->driver, "kbd");
+        if (!xf86NameCmp((*pInfo)->driver, "keyboard")) {
+            strcpy((*pInfo)->driver, "kbd");
         }
 
+        /* Data passed into xf86NewInputDevice will be freed on shutdown.
+         * Duplicate from xf86ConfigLayout.inputs, otherwise we don't have any
+         * xorg.conf input devices in the second generation
+         */
+        dup = duplicateDevice(*pInfo);
+
         /* If one fails, the others will too */
-        if (xf86NewInputDevice(*pDev, &dev, TRUE) == BadAlloc)
+        if (xf86NewInputDevice(dup, &dev, TRUE) == BadAlloc)
             break;
     }
 
@@ -855,6 +851,7 @@ void
 CloseInput (void)
 {
     config_fini();
+    mieqFini();
 }
 
 /*
@@ -873,9 +870,7 @@ OsVendorInit(void)
 {
   static Bool beenHere = FALSE;
 
-#ifdef SIGCHLD
   signal(SIGCHLD, SIG_DFL);	/* Need to wait for child processes */
-#endif
 
   if (!beenHere) {
     umask(022);
@@ -922,7 +917,7 @@ OsVendorInit(void)
  */
 
 void
-ddxGiveUp(void)
+ddxGiveUp(enum ExitCode error)
 {
     int i;
 
@@ -949,7 +944,7 @@ ddxGiveUp(void)
     if (xorgHWOpenConsole)
 	xf86CloseConsole();
 
-    xf86CloseLog();
+    xf86CloseLog(error);
 
     /* If an unexpected signal was caught, dump a core for debugging */
     if (xf86Info.caughtSignal)
@@ -966,9 +961,11 @@ ddxGiveUp(void)
  */
 
 void
-AbortDDX(void)
+AbortDDX(enum ExitCode error)
 {
   int i;
+
+  xf86BlockSIGIO();
 
   /*
    * try to restore the original video state
@@ -978,8 +975,6 @@ AbortDDX(void)
       DPMSSet(serverClient, DPMSModeOn);
 #endif
   if (xf86Screens) {
-      if (xf86Screens[0]->vtSema)
-	  xf86EnterServerState(SETUP);
       for (i = 0; i < xf86NumScreens; i++)
 	  if (xf86Screens[i]->vtSema) {
 	      /*
@@ -999,7 +994,7 @@ AbortDDX(void)
    * This is needed for an abnormal server exit, since the normal exit stuff
    * MUST also be performed (i.e. the vt must be left in a defined state)
    */
-  ddxGiveUp();
+  ddxGiveUp(error);
 }
 
 void
@@ -1062,11 +1057,6 @@ xf86PrintDefaultLibraryPath(void)
 int
 ddxProcessArgument(int argc, char **argv, int i)
 {
-  /*
-   * Note: can't use xalloc/xfree here because OsInit() hasn't been called
-   * yet.  Use malloc/free instead.
-   */
-
 #define CHECK_FOR_REQUIRED_ARGUMENT() \
     if (((i + 1) >= argc) || (!argv[i + 1])) { 				\
       ErrorF("Required argument to %s not specified\n", argv[i]); 	\
@@ -1083,10 +1073,9 @@ ddxProcessArgument(int argc, char **argv, int i)
     {
       char *mp;
       CHECK_FOR_REQUIRED_ARGUMENT();
-      mp = malloc(strlen(argv[i + 1]) + 1);
+      mp = strdup(argv[i + 1]);
       if (!mp)
 	FatalError("Can't allocate memory for ModulePath\n");
-      strcpy(mp, argv[i + 1]);
       xf86ModulePath = mp;
       xf86ModPathFrom = X_CMDLINE;
       return 2;
@@ -1095,10 +1084,9 @@ ddxProcessArgument(int argc, char **argv, int i)
     {
       char *lf;
       CHECK_FOR_REQUIRED_ARGUMENT();
-      lf = malloc(strlen(argv[i + 1]) + 1);
+      lf = strdup(argv[i + 1]);
       if (!lf)
 	FatalError("Can't allocate memory for LogFile\n");
-      strcpy(lf, argv[i + 1]);
       xf86LogFile = lf;
       xf86LogFileFrom = X_CMDLINE;
       return 2;
@@ -1484,8 +1472,10 @@ xf86LoadModules(char **list, pointer *optlist)
 	name = xf86NormalizeName(list[i]);
 
 	/* Skip empty names */
-	if (name == NULL || *name == '\0')
+	if (name == NULL || *name == '\0') {
+	    free(name);
 	    continue;
+	}
 
 	/* Replace obsolete keyboard driver with kbd */
 	if (!xf86NameCmp(name, "keyboard")) {

@@ -403,10 +403,10 @@ RROutputDestroyResource (pointer value, XID pid)
     free(output->userModes);
 
     free(output->crtcs);
-    free (output->clones);
+    free(output->clones);
 
     RRDeleteAllOutputProperties (output);
-    free (output);
+    free(output);
     return 1;
 }
 

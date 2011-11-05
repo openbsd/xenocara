@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile.bsd-wrapper,v 1.39 2011/09/17 13:39:31 shadchin Exp $
+# $OpenBSD: Makefile.bsd-wrapper,v 1.40 2011/11/05 13:32:40 matthieu Exp $
 
 .include <bsd.xconf.mk>
 
@@ -25,8 +25,7 @@ GLX_OPTION=	--disable-glx
 .endif
 
 .if ${XENOCARA_BUILD_DRI:L} == "yes"
-DRI_OPTION=	--enable-dri --enable-dri2 \
-		--with-dri-driver-path=${X11BASE}/lib/modules/dri
+DRI_OPTION=	--enable-dri --enable-dri2
 .else
 DRI_OPTION=	--disable-dri --disable-dri2
 .endif

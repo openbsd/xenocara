@@ -49,7 +49,7 @@ from The Open Group.
 #endif
 #ifdef RELOCATE_PROJECTROOT
 #include <shlobj.h>
-typedef HRESULT (*SHGETFOLDERPATHPROC)(
+typedef WINAPI HRESULT (*SHGETFOLDERPATHPROC)(
     HWND hwndOwner,
     int nFolder,
     HANDLE hToken,
@@ -58,29 +58,9 @@ typedef HRESULT (*SHGETFOLDERPATHPROC)(
 );
 #endif
 
-
 /*
  * References to external symbols
  */
-
-extern int			g_iNumScreens;
-extern winScreenInfo *		g_ScreenInfo;
-extern char *			g_pszCommandLine;
-extern Bool			g_fSilentFatalError;
-
-extern const char *		g_pszLogFile;
-extern Bool			g_fLogFileChanged;
-extern int			g_iLogVerbose;
-Bool				g_fLogInited;
-
-extern Bool			g_fXdmcpEnabled;
-extern Bool			g_fAuthEnabled;
-#ifdef HAS_DEVWINDOWS
-extern int			g_fdMessageQueue;
-#endif
-extern const char *		g_pszQueryHost;
-extern HINSTANCE		g_hInstance;
-
 #ifdef XWIN_CLIPBOARD
 extern Bool			g_fUnicodeClipboard;
 extern Bool			g_fClipboardLaunched;
@@ -90,15 +70,11 @@ extern HWND			g_hwndClipboard;
 extern Bool			g_fClipboard;
 #endif
 
-extern HMODULE			g_hmodDirectDraw;
-extern FARPROC			g_fpDirectDrawCreate;
-extern FARPROC			g_fpDirectDrawCreateClipper;
-  
-extern HMODULE			g_hmodCommonControls;
-extern FARPROC			g_fpTrackMouseEvent;
-extern Bool			g_fNoHelpMessageBox;                     
-extern Bool			g_fSilentDupError;                     
-extern Bool                     g_fNativeGl;
+
+/*
+  module handle for dynamically loaded comctl32 library
+*/
+static HMODULE g_hmodCommonControls = NULL;
 
 /*
  * Function prototypes
@@ -215,7 +191,7 @@ ddxBeforeReset (void)
 
 /* See Porting Layer Definition - p. 57 */
 void
-ddxGiveUp (void)
+ddxGiveUp (enum ExitCode error)
 {
   int		i;
 
@@ -252,21 +228,15 @@ ddxGiveUp (void)
     g_pszLogFile = LogInit (g_pszLogFile, NULL);
     g_fLogInited = TRUE;
   }  
-  LogClose ();
+  LogClose (error);
 
   /*
    * At this point we aren't creating any new screens, so
    * we are guaranteed to not need the DirectDraw functions.
    */
-  if (g_hmodDirectDraw != NULL)
-    {
-      FreeLibrary (g_hmodDirectDraw);
-      g_hmodDirectDraw = NULL;
-      g_fpDirectDrawCreate = NULL;
-      g_fpDirectDrawCreateClipper = NULL;
-    }
+  winReleaseDDProcAddresses();
 
-  /* Unload our TrackMouseEvent funtion pointer */
+  /* Unload our TrackMouseEvent function pointer */
   if (g_hmodCommonControls != NULL)
     {
       FreeLibrary (g_hmodCommonControls);
@@ -288,12 +258,12 @@ ddxGiveUp (void)
 
 /* See Porting Layer Definition - p. 57 */
 void
-AbortDDX (void)
+AbortDDX (enum ExitCode error)
 {
 #if CYGDEBUG
   winDebug ("AbortDDX\n");
 #endif
-  ddxGiveUp ();
+  ddxGiveUp (error);
 }
 
 #ifdef __CYGWIN__
@@ -437,7 +407,7 @@ winFixupPaths (void)
             int needs_sep = TRUE; 
             int comment_block = FALSE;
 
-            /* get defautl fontpath */
+            /* get default fontpath */
             char *fontpath = strdup(defaultFontPath);
             size_t size = strlen(fontpath);
 
@@ -785,6 +755,9 @@ winUseMsg (void)
 	  "\t\t1 - Shadow GDI\n"
 	  "\t\t2 - Shadow DirectDraw\n"
 	  "\t\t4 - Shadow DirectDraw4 Non-Locking\n"
+#ifdef XWIN_PRIMARYFB
+	  "\t\t8 - Primary DirectDraw - obsolete\n"
+#endif
 #ifdef XWIN_NATIVEGDI
 	  "\t\t16 - Native GDI - experimental\n"
 #endif
@@ -853,6 +826,11 @@ winUseMsg (void)
 	  "\tSpecify an optional refresh rate to use in fullscreen mode\n"
 	  "\twith a DirectDraw engine.\n");
 
+  ErrorF ("-resize=none|scrollbars|randr"
+	  "\tIn windowed mode, [don't] allow resizing of the window. 'scrollbars'\n"
+	  "\tmode gives the window scrollbars as needed, 'randr' mode uses the RANR\n"
+	  "\textension to resize the X screen.\n");
+
   ErrorF ("-rootless\n"
 	  "\tRun the server in rootless mode.\n");
 
@@ -866,14 +844,9 @@ winUseMsg (void)
       "\t -screen 0 1024x768@3        ; 3rd monitor size 1024x768\n"
       "\t -screen 0 @1 ; on 1st monitor using its full resolution (the default)\n");
 
-  ErrorF ("-scrollbars\n"
-	  "\tIn windowed mode, allow screens bigger than the Windows desktop.\n"
-	  "\tMoreover, if the window has decorations, one can now resize\n"
-	  "\tit.\n");
-
   ErrorF ("-silent-dup-error\n"
 	  "\tIf another instance of " EXECUTABLE_NAME " with the same display number is running\n"
-     "\texit silently and don’t display any error message.\n");
+	  "\texit silently and don't display any error message.\n");
 
   ErrorF ("-swcursor\n"
 	  "\tDisable the usage of the Windows cursor and use the X11 software\n"
@@ -928,7 +901,7 @@ ddxUseMsg(void)
     g_pszLogFile = LogInit (g_pszLogFile, NULL);
     g_fLogInited = TRUE;
   }  
-  LogClose ();
+  LogClose (EXIT_NO_ERROR);
 
   /* Notify user where UseMsg text can be found.*/
   if (!g_fNoHelpMessageBox)

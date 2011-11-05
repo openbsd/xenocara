@@ -63,15 +63,11 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include "dri.h"
 #include "sarea.h"
 #include "dristruct.h"
-#include "xf86.h"
-#include "xf86drm.h"
 #include "mi.h"
 #include "mipointer.h"
 #include "xf86_OSproc.h"
 #include "inputstr.h"
 #include "xf86VGAarbiter.h"
-
-#define PCI_BUS_NO_DOMAIN(bus) ((bus) & 0xffu)
 
 static int DRIEntPrivIndex = -1;
 static DevPrivateKeyRec DRIScreenPrivKeyRec;
@@ -432,7 +428,7 @@ DRIScreenInit(ScreenPtr pScreen, DRIInfoPtr pDRIInfo, int *pDRMFD)
     if (!pDRIPriv->pDriverInfo->dontMapFrameBuffer)
     {
 	if (drmAddMap( pDRIPriv->drmFD,
-		       (drm_handle_t)pDRIPriv->pDriverInfo->frameBufferPhysicalAddress,
+		       (uintptr_t)pDRIPriv->pDriverInfo->frameBufferPhysicalAddress,
 		       pDRIPriv->pDriverInfo->frameBufferSize,
 		       DRM_FRAME_BUFFER,
 		       0,
@@ -1475,10 +1471,6 @@ DRIGetDrawableInfo(ScreenPtr pScreen,
 	    *stamp = pDRIPriv->pSAREA->drawableTable[*index].stamp;
 	    *X = (int)(pWin->drawable.x);
 	    *Y = (int)(pWin->drawable.y);
-#if 0
-	    *W = (int)(pWin->winSize.extents.x2 - pWin->winSize.extents.x1);
-	    *H = (int)(pWin->winSize.extents.y2 - pWin->winSize.extents.y1);
-#endif
 	    *W = (int)(pWin->drawable.width);
 	    *H = (int)(pWin->drawable.height);
 	    *numClipRects = RegionNumRects(&pWin->clipList);
@@ -2404,12 +2396,9 @@ DRICreatePCIBusID(const struct pci_device * dev)
 {
     char *busID;
 
-    busID = malloc(20);
-    if (busID == NULL)
+    if (asprintf(&busID, "pci:%04x:%02x:%02x.%d",
+		 dev->domain, dev->bus, dev->dev, dev->func) == -1)
 	return NULL;
-
-    snprintf(busID, 20, "pci:%04x:%02x:%02x.%d", dev->domain, dev->bus,
-	dev->dev, dev->func);
 
     return busID;
 }

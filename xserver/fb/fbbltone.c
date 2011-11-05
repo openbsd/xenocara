@@ -26,6 +26,11 @@
 
 #include "fb.h"
 
+#ifdef __clang__
+/* shift overflow is intentional */
+#pragma clang diagnostic ignored "-Wshift-overflow"
+#endif
+
 /*
  *  Example: srcX = 13 dstX = 8	(FB unit 32 dstBpp 8)
  *
@@ -57,7 +62,6 @@
 	bits = (src < srcEnd ? READ(src++) : 0); \
 }
     
-#ifndef FBNOPIXADDR
     
 #define LaneCases1(n,a)	    case n: FbLaneCase(n,a); break
 #define LaneCases2(n,a)	    LaneCases1(n,a); LaneCases1(n+1,a)
@@ -128,7 +132,6 @@ CARD8	*fbLaneTable[33] = {
     0, 0, 0, 0, 0, 0, 0, 0,
     fb32Lane
 };
-#endif
 
 void
 fbBltOne (FbStip    *src,
@@ -164,12 +167,9 @@ fbBltOne (FbStip    *src,
     Bool	    transparent;		/* accelerate 0 nop */
     int		    srcinc;			/* source units consumed */
     Bool	    endNeedsLoad = FALSE;	/* need load for endmask */
-#ifndef FBNOPIXADDR
     CARD8	    *fbLane;
-#endif
     int		    startbyte, endbyte;
 
-#ifdef FB_24BIT
     if (dstBpp == 24)
     {
 	fbBltOne24 (src, srcStride, srcX,
@@ -178,7 +178,6 @@ fbBltOne (FbStip    *src,
 		    fgand, fgxor, bgand, bgxor);
 	return;
     }
-#endif
 
     /*
      * Do not read past the end of the buffer!
@@ -238,11 +237,9 @@ fbBltOne (FbStip    *src,
     fbBits = 0;	/* unused */
     if (pixelsPerDst <= 8)
 	fbBits = fbStippleTable[pixelsPerDst];
-#ifndef FBNOPIXADDR
     fbLane = 0;
     if (transparent && fgand == 0 && dstBpp >= 8)
 	fbLane = fbLaneTable[dstBpp];
-#endif
     
     /*
      * Compute total number of destination words written, but 
@@ -302,13 +299,11 @@ fbBltOne (FbStip    *src,
 		else
 #endif
 		    mask = fbBits[FbLeftStipBits(bits,pixelsPerDst)];
-#ifndef FBNOPIXADDR		
 		if (fbLane)
 		{
 		    fbTransparentSpan (dst, mask & startmask, fgxor, 1);
 		}
 		else
-#endif
 		{
 		    if (mask || !transparent)
 			FbDoLeftMaskByteStippleRRop (dst, mask,
@@ -343,7 +338,6 @@ fbBltOne (FbStip    *src,
 		}
 		else
 		{
-#ifndef FBNOPIXADDR
 		    if (fbLane)
 		    {
 			while (bits && n)
@@ -358,7 +352,6 @@ fbBltOne (FbStip    *src,
 			dst += n;
 		    }
 		    else
-#endif
 		    {
 			while (n--)
 			{
@@ -400,13 +393,11 @@ fbBltOne (FbStip    *src,
 	    else
 #endif
 		mask = fbBits[FbLeftStipBits(bits,pixelsPerDst)];
-#ifndef FBNOPIXADDR
 	    if (fbLane)
 	    {
 		fbTransparentSpan (dst, mask & endmask, fgxor, 1);
 	    }
 	    else
-#endif
 	    {
 		if (mask || !transparent)
 		    FbDoRightMaskByteStippleRRop (dst, mask, 
@@ -419,7 +410,6 @@ fbBltOne (FbStip    *src,
     }
 }
 
-#ifdef FB_24BIT
 
 /*
  * Crufty macros to initialize the mask array, most of this
@@ -438,8 +428,8 @@ fbBltOne (FbStip    *src,
 
 #define Mask24(x,r) (Mask24Pos(x,r) < FB_UNIT ? \
 		     (Mask24Pos(x,r) < 0 ? \
-		      0xffffff >> Mask24Neg (x,r) : \
-		      0xffffff << Mask24Check(x,r)) : 0)
+		      0xffffffU >> Mask24Neg (x,r) : \
+		      0xffffffU << Mask24Check(x,r)) : 0)
 
 #define SelMask24(b,n,r)	((((b) >> n) & 1) * Mask24(n,r))
 
@@ -747,7 +737,6 @@ fbBltOne24 (FbStip	*srcLine,
 	}
     }
 }
-#endif
 
 /*
  * Not very efficient, but simple -- copy a single plane
@@ -801,7 +790,6 @@ fbBltPlane (FbBits	    *src,
     w = width / srcBpp;
 
     pm = fbReplicatePixel (planeMask, srcBpp);
-#ifdef FB_24BIT
     if (srcBpp == 24)
     {
 	int w = 24;
@@ -812,7 +800,6 @@ fbBltPlane (FbBits	    *src,
 	srcMaskFirst = FbRot24(pm,rot0) & FbBitsMask(srcX,w);
     }
     else
-#endif
     {
 	rot0 = 0;
 	srcMaskFirst = pm & FbBitsMask(srcX, srcBpp);
@@ -828,10 +815,8 @@ fbBltPlane (FbBits	    *src,
 	src += srcStride;
 	
 	srcMask = srcMaskFirst;
-#ifdef FB_24BIT
 	if (srcBpp == 24)
 	    srcMask0 = FbRot24(pm,rot0) & FbBitsMask(0, srcBpp);
-#endif
     	srcBits = READ(s++);
 
 	dstMask = dstMaskFirst;
@@ -845,10 +830,8 @@ fbBltPlane (FbBits	    *src,
 	    if (!srcMask)
 	    {
 		srcBits = READ(s++);
-#ifdef FB_24BIT
 		if (srcBpp == 24)
 		    srcMask0 = FbNext24Pix(srcMask0) & FbBitsMask(0,24);
-#endif
 		srcMask = srcMask0;
 	    }
 	    if (!dstMask)

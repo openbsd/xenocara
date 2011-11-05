@@ -120,7 +120,7 @@ FreeList(const char ***list, int *lines)
     int i;
 
     for (i = 0; i < *lines; i++) {
-	free((*list)[i]);
+	free((char *)((*list)[i]));
     }
     free(*list);
     *list = NULL;
@@ -288,20 +288,30 @@ listPossibleVideoDrivers(char *matches[], int nmatches)
 static Bool
 copyScreen(confScreenPtr oscreen, GDevPtr odev, int i, char *driver)
 {
+    confScreenPtr nscreen;
     GDevPtr cptr = NULL;
 
-    xf86ConfigLayout.screens[i].screen = xnfcalloc(1, sizeof(confScreenRec));
-    if(!xf86ConfigLayout.screens[i].screen)
+    nscreen = malloc(sizeof(confScreenRec));
+    if (!nscreen)
         return FALSE;
-    memcpy(xf86ConfigLayout.screens[i].screen, oscreen, sizeof(confScreenRec));
+    memcpy(nscreen, oscreen, sizeof(confScreenRec));
 
-    cptr = calloc(1, sizeof(GDevRec));
-    if (!cptr)
+    cptr = malloc(sizeof(GDevRec));
+    if (!cptr) {
+        free(nscreen);
         return FALSE;
+    }
     memcpy(cptr, odev, sizeof(GDevRec));
 
-    cptr->identifier = Xprintf("Autoconfigured Video Device %s", driver);
+    if (asprintf(&cptr->identifier, "Autoconfigured Video Device %s", driver)
+        == -1) {
+        free(cptr);
+        free(nscreen);
+        return FALSE;
+    }
     cptr->driver = driver;
+
+    xf86ConfigLayout.screens[i].screen = nscreen;
 
     /* now associate the new driver entry with the new screen entry */
     xf86ConfigLayout.screens[i].screen->device = cptr;

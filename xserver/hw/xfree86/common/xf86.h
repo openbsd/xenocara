@@ -62,9 +62,6 @@ extern _X_EXPORT DevPrivateKeyRec xf86ScreenKeyRec;
 extern _X_EXPORT DevPrivateKeyRec xf86CreateRootWindowKeyRec;
 #define xf86CreateRootWindowKey (&xf86CreateRootWindowKeyRec)
 
-extern _X_EXPORT DevPrivateKeyRec xf86PixmapKeyRec;
-#define xf86PixmapKey (&xf86PixmapKeyRec)
-
 extern _X_EXPORT ScrnInfoPtr *xf86Screens;	/* List of pointers to ScrnInfoRecs */
 extern _X_EXPORT const unsigned char byte_reversed[256];
 extern _X_EXPORT Bool fbSlotClaimed;
@@ -72,7 +69,6 @@ extern _X_EXPORT Bool fbSlotClaimed;
 extern _X_EXPORT Bool sbusSlotClaimed;
 #endif
 extern _X_EXPORT confDRIRec xf86ConfigDRI;
-extern _X_EXPORT Bool xf86inSuspend;
 extern _X_EXPORT Bool xf86DRI2Enabled(void);
 
 extern _X_EXPORT Bool VTSwitchEnabled;	/* kbd driver */
@@ -139,7 +135,6 @@ extern _X_EXPORT EntityInfoPtr xf86GetEntityInfo(int entityIndex);
 extern _X_EXPORT Bool xf86SetEntityFuncs(int entityIndex, EntityProc init,
 			EntityProc enter, EntityProc leave, pointer);
 extern _X_EXPORT Bool xf86IsEntityPrimary(int entityIndex);
-extern _X_EXPORT void xf86EnterServerState(xf86State state);
 extern _X_EXPORT ScrnInfoPtr xf86FindScreenForEntity(int entityIndex);
 
 extern _X_EXPORT int xf86GetLastScrnFlag(int entityIndex);
@@ -203,6 +198,7 @@ extern _X_EXPORT pointer xf86AddGeneralHandler(int fd, InputHandlerProc proc, po
 extern _X_EXPORT int xf86RemoveGeneralHandler(pointer handler);
 extern _X_EXPORT void xf86DisableGeneralHandler(pointer handler);
 extern _X_EXPORT void xf86EnableGeneralHandler(pointer handler);
+extern _X_EXPORT InputHandlerProc xf86SetConsoleHandler(InputHandlerProc handler, pointer data);
 extern _X_EXPORT void xf86InterceptSignals(int *signo);
 extern _X_EXPORT void xf86InterceptSigIll(void (*sigillhandler)(void));
 extern _X_EXPORT Bool xf86EnableVTSwitch(Bool new);

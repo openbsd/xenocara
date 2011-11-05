@@ -42,6 +42,7 @@ THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #include <ctype.h>
 #include "mi.h"
 #include "mipointer.h"
+#include "inpututils.h"
 #define EXTENSION_EVENT_BASE 64
 
 DevPrivateKeyRec xkbDevicePrivateKeyRec;
@@ -67,20 +68,13 @@ xkbUnwrapProc(DeviceIntPtr device, DeviceHandleProc proc,
 Bool
 XkbInitPrivates(void)
 {
-    return dixRegisterPrivateKey(&xkbDevicePrivateKeyRec, PRIVATE_DEVICE, 0);
+    return dixRegisterPrivateKey(&xkbDevicePrivateKeyRec, PRIVATE_DEVICE, sizeof(xkbDeviceInfoRec));
 }
 
 void
 XkbSetExtension(DeviceIntPtr device, ProcessInputProc proc)
 {
-    xkbDeviceInfoPtr xkbPrivPtr;
-
-    xkbPrivPtr = (xkbDeviceInfoPtr) calloc(1, sizeof(xkbDeviceInfoRec));
-    if (!xkbPrivPtr)
-	return;
-    xkbPrivPtr->unwrapProc = NULL;
-
-    dixSetPrivate(&device->devPrivates, xkbDevicePrivateKey, xkbPrivPtr);
+    xkbDeviceInfoPtr xkbPrivPtr = XKBDEVICEINFO(device);
     WRAP_PROCESS_INPUT_PROC(device, xkbPrivPtr, proc, xkbUnwrapProc);
 }
 
@@ -1354,19 +1348,19 @@ xkbStateNotify	sn;
  * First one on drinking island wins!
  */
 static void
-InjectPointerKeyEvents(DeviceIntPtr dev, int type, int button, int flags, int num_valuators, int *valuators)
+InjectPointerKeyEvents(DeviceIntPtr dev, int type, int button, int flags, ValuatorMask *mask)
 {
     ScreenPtr           pScreen;
-    EventListPtr        events;
+    InternalEvent*      events;
     int                 nevents, i;
     DeviceIntPtr        ptr, mpointer, lastSlave = NULL;
     Bool                saveWait;
 
     if (IsMaster(dev)) {
         mpointer = GetMaster(dev, MASTER_POINTER);
-        lastSlave = mpointer->u.lastSlave;
+        lastSlave = mpointer->lastSlave;
         ptr = GetXTestDevice(mpointer);
-    } else if (!dev->u.master)
+    } else if (IsFloating(dev))
         ptr = dev;
     else
         return;
@@ -1376,15 +1370,14 @@ InjectPointerKeyEvents(DeviceIntPtr dev, int type, int button, int flags, int nu
     OsBlockSignals();
     pScreen = miPointerGetScreen(ptr);
     saveWait = miPointerSetWaitForUpdate(pScreen, FALSE);
-    nevents = GetPointerEvents(events, ptr, type, button, flags, 0,
-                               num_valuators, valuators);
+    nevents = GetPointerEvents(events, ptr, type, button, flags, mask);
     if (IsMaster(dev) && (lastSlave && lastSlave != ptr))
         UpdateFromMaster(&events[nevents], lastSlave, DEVCHANGE_POINTER_EVENT, &nevents);
     miPointerSetWaitForUpdate(pScreen, saveWait);
     OsReleaseSignals();
 
     for (i = 0; i < nevents; i++)
-        mieqProcessDeviceEvent(ptr, (InternalEvent*)events[i].event, NULL);
+        mieqProcessDeviceEvent(ptr, &events[i], NULL);
 
     FreeEventList(events, GetMaximumEventsNum());
 
@@ -1393,11 +1386,11 @@ InjectPointerKeyEvents(DeviceIntPtr dev, int type, int button, int flags, int nu
 static void
 XkbFakePointerMotion(DeviceIntPtr dev, unsigned flags,int x,int y)
 {
+    ValuatorMask        mask;
     int                 gpe_flags = 0;
-    int			motion[2];
 
     /* ignore attached SDs */
-    if (!IsMaster(dev) && GetMaster(dev, MASTER_POINTER) != NULL)
+    if (!IsMaster(dev) && !IsFloating(dev))
         return;
 
     if (flags & XkbSA_MoveAbsoluteX || flags & XkbSA_MoveAbsoluteY)
@@ -1405,9 +1398,9 @@ XkbFakePointerMotion(DeviceIntPtr dev, unsigned flags,int x,int y)
     else
         gpe_flags = POINTER_RELATIVE;
 
-    motion[0] = x;
-    motion[1] = y;
-    InjectPointerKeyEvents(dev, MotionNotify, 0, gpe_flags, 2, motion);
+    valuator_mask_set_range(&mask, 0, 2, (int[]){x, y});
+
+    InjectPointerKeyEvents(dev, MotionNotify, 0, gpe_flags, &mask);
 }
 
 void
@@ -1427,7 +1420,7 @@ XkbFakeDeviceButton(DeviceIntPtr dev,Bool press,int button)
     if (IsMaster(dev)) {
         DeviceIntPtr mpointer = GetMaster(dev, MASTER_POINTER);
         ptr = GetXTestDevice(mpointer);
-    } else if (!dev->u.master)
+    } else if (IsFloating(dev))
         ptr = dev;
     else
         return;
@@ -1437,5 +1430,5 @@ XkbFakeDeviceButton(DeviceIntPtr dev,Bool press,int button)
         return;
 
     InjectPointerKeyEvents(dev, press ? ButtonPress : ButtonRelease,
-                           button, 0, 0, NULL);
+                           button, 0, NULL);
 }

@@ -73,7 +73,7 @@ Equipment Corporation.
 
 ******************************************************************/
 /* XSERVER_DTRACE additions:
- * Copyright 2005-2006 Sun Microsystems, Inc.  All rights reserved.
+ * Copyright (c) 2005-2006, Oracle and/or its affiliates. All rights reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -167,7 +167,6 @@ typedef struct _Resource {
     RESTYPE		type;
     pointer		value;
 } ResourceRec, *ResourcePtr;
-#define NullResource ((ResourcePtr)NULL)
 
 typedef struct _ClientResource {
     ResourcePtr *resources;
@@ -176,7 +175,6 @@ typedef struct _ClientResource {
     int		hashsize;	/* log(2)(buckets) */
     XID		fakeID;
     XID		endFakeID;
-    XID		expectID;
 } ClientResourceRec;
 
 RESTYPE lastResourceType;
@@ -323,10 +321,9 @@ InitClientResources(ClientPtr client)
     clientTable[i].fakeID = client->clientAsMask |
 			    (client->index ? SERVER_BIT : SERVER_MINID);
     clientTable[i].endFakeID = (clientTable[i].fakeID | RESOURCE_ID_MASK) + 1;
-    clientTable[i].expectID = client->clientAsMask;
     for (j=0; j<INITBUCKETS; j++) 
     {
-        clientTable[i].resources[j] = NullResource;
+        clientTable[i].resources[j] = NULL;
     }
     return TRUE;
 }
@@ -492,7 +489,7 @@ AddResource(XID id, RESTYPE type, pointer value)
     rrec = &clientTable[client];
     if (!rrec->buckets)
     {
-	ErrorF("[dix] AddResource(%lx, %lx, %lx), client=%d \n",
+	ErrorF("[dix] AddResource(%lx, %x, %lx), client=%d \n",
 		(unsigned long)id, type, (unsigned long)value, client);
         FatalError("client not in use\n");
     }
@@ -512,8 +509,6 @@ AddResource(XID id, RESTYPE type, pointer value)
     res->value = value;
     *head = res;
     rrec->elements++;
-    if (!(id & SERVER_BIT) && (id >= rrec->expectID))
-	rrec->expectID = id + 1;
     CallResourceStateCallback(ResourceStateAdding, res);
     return TRUE;
 }
@@ -543,7 +538,7 @@ RebuildTable(int client)
     }
     for (rptr = resources, tptr = tails; --j >= 0; rptr++, tptr++)
     {
-	*rptr = NullResource;
+	*rptr = NULL;
 	*tptr = rptr;
     }
     clientTable[client].hashsize++;
@@ -555,7 +550,7 @@ RebuildTable(int client)
 	for (res = *rptr; res; res = next)
 	{
 	    next = res->next;
-	    res->next = NullResource;
+	    res->next = NULL;
 	    tptr = &tails[Hash(client, res->id)];
 	    **tptr = res;
 	    *tptr = &res->next;
@@ -565,6 +560,17 @@ RebuildTable(int client)
     clientTable[client].buckets *= 2;
     free(clientTable[client].resources);
     clientTable[client].resources = resources;
+}
+
+static void
+doFreeResource(ResourcePtr res, Bool skip)
+{
+    CallResourceStateCallback(ResourceStateFreeing, res);
+
+    if (!skip)
+	resourceTypes[res->type & TypeMask].deleteFunc(res->value, res->id);
+
+    free(res);
 }
 
 void
@@ -595,11 +601,8 @@ FreeResource(XID id, RESTYPE skipDeleteFuncType)
 		*prev = res->next;
 		elements = --*eltptr;
 
-		CallResourceStateCallback(ResourceStateFreeing, res);
+		doFreeResource(res, rtype == skipDeleteFuncType);
 
-		if (rtype != skipDeleteFuncType)
-		    (*resourceTypes[rtype & TypeMask].deleteFunc)(res->value, res->id);
-		free(res);
 		if (*eltptr != elements)
 		    prev = head; /* prev may no longer be valid */
 	    }
@@ -608,7 +611,6 @@ FreeResource(XID id, RESTYPE skipDeleteFuncType)
         }
     }
 }
-
 
 void
 FreeResourceByType(XID id, RESTYPE type, Bool skipFree)
@@ -632,11 +634,8 @@ FreeResourceByType(XID id, RESTYPE type, Bool skipFree)
 		*prev = res->next;
 		clientTable[cid].elements--;
 
-		CallResourceStateCallback(ResourceStateFreeing, res);
+		doFreeResource(res, skipFree);
 
-		if (!skipFree)
-		    (*resourceTypes[type & TypeMask].deleteFunc)(res->value, res->id);
-		free(res);
 		break;
 	    }
 	    else
@@ -798,12 +797,10 @@ FreeClientNeverRetainResources(ClientPtr client)
 #endif		    
 		*prev = this->next;
 		clientTable[client->index].elements--;
-
-		CallResourceStateCallback(ResourceStateFreeing, this);
-
 		elements = *eltptr;
-		(*resourceTypes[rtype & TypeMask].deleteFunc)(this->value, this->id);
-		free(this);
+
+		doFreeResource(this, FALSE);
+
 		if (*eltptr != elements)
 		    prev = &resources[j]; /* prev may no longer be valid */
 	    }
@@ -846,7 +843,6 @@ FreeClientResources(ClientPtr client)
 
         for (this = *head; this; this = *head)
 	{
-	    RESTYPE rtype = this->type;
 #ifdef XSERVER_DTRACE
 	    XSERVER_RESOURCE_FREE(this->id, this->type,
 			  this->value, TypeNameString(this->type));
@@ -854,10 +850,7 @@ FreeClientResources(ClientPtr client)
 	    *head = this->next;
 	    clientTable[client->index].elements--;
 
-	    CallResourceStateCallback(ResourceStateFreeing, this);
-
-	    (*resourceTypes[rtype & TypeMask].deleteFunc)(this->value, this->id);
-	    free(this);
+	    doFreeResource(this, FALSE);
 	}
     }
     free(clientTable[client->index].resources);
@@ -886,24 +879,21 @@ LegalNewID(XID id, ClientPtr client)
 #ifdef PANORAMIX
     XID 	minid, maxid;
 
-	if (!noPanoramiXExtension) { 
-	    minid = client->clientAsMask | (client->index ? 
-			                    SERVER_BIT : SERVER_MINID);
-	    maxid = (clientTable[client->index].fakeID | RESOURCE_ID_MASK) + 1;
-            if ((id >= minid) && (id <= maxid))
-	        return TRUE;
-	}
+    if (!noPanoramiXExtension) {
+        minid = client->clientAsMask | (client->index ?
+                                        SERVER_BIT : SERVER_MINID);
+        maxid = (clientTable[client->index].fakeID | RESOURCE_ID_MASK) + 1;
+        if ((id >= minid) && (id <= maxid))
+            return TRUE;
+    }
 #endif /* PANORAMIX */
-	if (client->clientAsMask == (id & ~RESOURCE_ID_MASK))
-	{
-	    if (clientTable[client->index].expectID <= id)
-		return TRUE;
-
-	    rc = dixLookupResourceByClass(&val, id, RC_ANY, serverClient,
-					  DixGetAttrAccess);
-	    return rc == BadValue;
-	}
-	return FALSE;
+    if (client->clientAsMask == (id & ~RESOURCE_ID_MASK))
+    {
+        rc = dixLookupResourceByClass(&val, id, RC_ANY, serverClient,
+                                      DixGetAttrAccess);
+        return rc == BadValue;
+    }
+    return FALSE;
 }
 
 int

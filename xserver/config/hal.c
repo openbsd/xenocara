@@ -63,10 +63,8 @@ device_removed(LibHalContext *ctx, const char *udi)
 {
     char *value;
 
-    value = malloc(strlen(udi) + 5); /* "hal:" + NULL */
-    if (!value)
+    if (asprintf (&value, "hal:%s", udi) == -1)
         return;
-    sprintf(value, "hal:%s", udi);
 
     remove_devices("hal", value);
 
@@ -200,7 +198,9 @@ device_added(LibHalContext *hal_ctx, const char *udi)
                        "config/hal: getting usb.product_id on %s "
                        "returned %04x\n", parent, usb_product);
         if (usb_vendor && usb_product)
-            attrs.usb_id = Xprintf("%04x:%04x", usb_vendor, usb_product);
+            if (asprintf(&attrs.usb_id, "%04x:%04x", usb_vendor, usb_product)
+		== -1)
+		attrs.usb_id = NULL;
 
         free(parent);
     }
@@ -226,12 +226,11 @@ device_added(LibHalContext *hal_ctx, const char *udi)
     add_option(&options, "driver", driver);
     add_option(&options, "name", name);
 
-    config_info = malloc(strlen(udi) + 5); /* "hal:" and NULL */
-    if (!config_info) {
+    if (asprintf (&config_info, "hal:%s", udi) == -1) {
+        config_info = NULL;
         LogMessage(X_ERROR, "config/hal: couldn't allocate name\n");
         goto unwind;
     }
-    sprintf(config_info, "hal:%s", udi);
 
     /* Check for duplicate devices */
     if (device_is_duplicate(config_info))
@@ -376,6 +375,7 @@ device_added(LibHalContext *hal_ctx, const char *udi)
         add_option(&options, "xkb_model", xkb_opts.model);
     if (xkb_opts.options)
         add_option(&options, "xkb_options", xkb_opts.options);
+    add_option(&options, "config_info", config_info);
 
     /* this isn't an error, but how else do you output something that the user can see? */
     LogMessage(X_INFO, "config/hal: Adding input device %s\n", name);
@@ -385,11 +385,6 @@ device_added(LibHalContext *hal_ctx, const char *udi)
         goto unwind;
     }
 
-    for (; dev; dev = dev->next){
-        free(dev->config_info);
-        dev->config_info = strdup(config_info);
-    }
-
 unwind:
     if (set)
         libhal_free_property_set(set);
@@ -397,10 +392,10 @@ unwind:
     free(driver);
     free(name);
     free(config_info);
-    while (!dev && (tmpo = options)) {
+    while ((tmpo = options)) {
         options = tmpo->next;
-        free(tmpo->key);
-        free(tmpo->value);
+        free(tmpo->key);        /* NULL if dev != NULL */
+        free(tmpo->value);      /* NULL if dev != NULL */
         free(tmpo);
     }
 

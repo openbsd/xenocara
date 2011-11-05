@@ -48,7 +48,8 @@ extern _X_EXPORT void InitValuatorAxisStruct(
 	int                    /* maxval */,
 	int                    /* resolution */,
 	int                    /* min_res */,
-	int                    /* max_res */);
+	int                    /* max_res */,
+	int                    /* mode */);
 
 /* Input device properties */
 extern _X_EXPORT void XIDeleteAllDeviceProperties(
@@ -68,7 +69,7 @@ extern _X_EXPORT int XIChangeDeviceProperty(
         int                     /* format*/,
         int                     /* mode*/,
         unsigned long           /* len*/,
-        pointer                 /* value*/,
+        const pointer           /* value*/,
         Bool                    /* sendevent*/
         );
 
@@ -145,10 +146,6 @@ typedef struct _GrabParameters {
     unsigned int        modifiers;
 } GrabParameters;
 
-
-extern void
-RegisterOtherDevice (
-	DeviceIntPtr           /* device */);
 
 extern int
 UpdateDeviceState (
@@ -310,6 +307,6 @@ XISetEventMask(DeviceIntPtr dev, WindowPtr win, ClientPtr client,
                            unsigned int len, unsigned char* mask);
 
 extern int
-XICheckInvalidMaskBits(unsigned char *mask, int len);
+XICheckInvalidMaskBits(ClientPtr client, unsigned char *mask, int len);
 
 #endif /* EXEVENTS_H */

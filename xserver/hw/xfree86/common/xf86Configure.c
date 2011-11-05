@@ -34,15 +34,16 @@
 #define IN_XSERVER
 #include "Configint.h"
 #include "xf86DDC.h"
-#if (defined(__sparc__) || defined(__sparc))
+#if (defined(__sparc__) || defined(__sparc)) && !defined(__OpenBSD__)
 #include "xf86Bus.h"
 #include "xf86Sbus.h"
 #endif
+#include "misc.h"
 
 typedef struct _DevToConfig {
     GDevRec GDev;
     struct pci_device * pVideo;
-#if (defined(__sparc__) || defined(__sparc))
+#if (defined(__sparc__) || defined(__sparc)) && !defined(__OpenBSD__)
     sbusDevicePtr sVideo;
 #endif
     int iDriver;
@@ -55,102 +56,19 @@ xf86MonPtr ConfiguredMonitor;
 Bool xf86DoConfigurePass1 = TRUE;
 static Bool foundMouse = FALSE;
 
-#if defined(__SCO__)
-static char *DFLT_MOUSE_PROTO = "OSMouse";
-#elif defined(__UNIXWARE__)
-static char *DFLT_MOUSE_PROTO = "OSMouse";
-static char *DFLT_MOUSE_DEV = "/dev/mouse";
-#elif defined(__FreeBSD__) || defined(__FreeBSD_kernel__) || defined(__DragonFly__)
+#if   defined(__FreeBSD__) || defined(__FreeBSD_kernel__) || defined(__DragonFly__)
 static char *DFLT_MOUSE_DEV = "/dev/sysmouse";
 static char *DFLT_MOUSE_PROTO = "auto";
 #elif defined(linux)
 static char DFLT_MOUSE_DEV[] = "/dev/input/mice";
 static char DFLT_MOUSE_PROTO[] = "auto";
+#elif defined(WSCONS_SUPPORT)
+static char *DFLT_MOUSE_DEV = "/dev/wsmouse";
+static char *DFLT_MOUSE_PROTO = "wsmouse";
 #else
 static char *DFLT_MOUSE_DEV = "/dev/mouse";
 static char *DFLT_MOUSE_PROTO = "auto";
 #endif
-
-static Bool
-bus_pci_configure(void *busData)
-{
-    int i;
-    struct pci_device * pVideo = NULL;
-
-	pVideo = (struct pci_device *) busData;
-	for (i = 0;  i < nDevToConfig;  i++)
-	    if (DevToConfig[i].pVideo &&
-		(DevToConfig[i].pVideo->domain == pVideo->domain) &&
-		(DevToConfig[i].pVideo->bus == pVideo->bus) &&
-		(DevToConfig[i].pVideo->dev == pVideo->dev) &&
-		(DevToConfig[i].pVideo->func == pVideo->func))
-		return 0;
-
-	return 1;
-}
-
-static Bool
-bus_sbus_configure(void *busData)
-{
-#if (defined(__sparc__) || defined(__sparc)) && !defined(__OpenBSD__)
-    int i;
-
-    for (i = 0;  i < nDevToConfig;  i++)
-        if (DevToConfig[i].sVideo &&
-        DevToConfig[i].sVideo->fbNum == ((sbusDevicePtr) busData)->fbNum)
-            return 0;
-
-#endif
-    return 1;
-}
-
-static void
-bus_pci_newdev_configure(void *busData, int i, int *chipset)
-{
-	char busnum[8];
-	struct pci_device * pVideo = NULL;
-
-	pVideo = (struct pci_device *) busData;
-	
-	DevToConfig[i].pVideo = pVideo;
-
-	DevToConfig[i].GDev.busID = xnfalloc(16);
-	xf86FormatPciBusNumber(pVideo->bus, busnum);
-	snprintf(DevToConfig[i].GDev.busID, 16, "PCI:%s:%d:%d",
-	    busnum, pVideo->dev, pVideo->func);
-
-	DevToConfig[i].GDev.chipID = pVideo->device_id;
-	DevToConfig[i].GDev.chipRev = pVideo->revision;
-
-	if (*chipset < 0) {
-	    *chipset = (pVideo->vendor_id << 16) | pVideo->device_id;
-	}
-}
-
-static void
-bus_sbus_newdev_configure(void *busData, int i)
-{
-#if (defined(__sparc__) || defined(__sparc)) && !defined(__OpenBSD__)
-	char *promPath = NULL;
-	size_t len;
-
-	DevToConfig[i].sVideo = (sbusDevicePtr) busData;
-	DevToConfig[i].GDev.identifier = DevToConfig[i].sVideo->descr;
-	if (sparcPromInit() >= 0) {
-	    promPath = sparcPromNode2Pathname(&DevToConfig[i].sVideo->node);
-	    sparcPromClose();
-	}
-	if (promPath) {
-	    len = strlen(promPath) + 6;
-	    DevToConfig[i].GDev.busID = xnfalloc(len);
-	    snprintf(DevToConfig[i].GDev.busID, len, "SBUS:%s", promPath);
-	    free(promPath);
-	} else {
-	    NewDevice.GDev.busID = xnfalloc(12);
-	    snprintf(DevToConfig[i].GDev.busID, 12, "SBUS:fb%d", NewDevice.sVideo->fbNum);
-	}
-#endif
-}
 
 /*
  * This is called by the driver, either through xf86Match???Instances() or
@@ -166,19 +84,22 @@ xf86AddBusDeviceToConfigure(const char *driver, BusType bus, void *busData, int 
 	return NULL;
 
     /* Check for duplicates */
-    switch (bus) {
-        case BUS_PCI:
-            ret = bus_pci_configure(busData);
-	        break;
-        case BUS_SBUS:
-            ret = bus_sbus_configure(busData);
-	        break;
-        default:
-	        return NULL;
+    for (i = 0;  i < nDevToConfig;  i++) {
+        switch (bus) {
+            case BUS_PCI:
+                ret = xf86PciConfigure(busData, DevToConfig[i].pVideo);
+                break;
+#if (defined(__sparc__) || defined(__sparc)) && !defined(__OpenBSD__)
+            case BUS_SBUS:
+                ret = xf86SbusConfigure(busData, DevToConfig[i].sVideo);
+                break;
+#endif
+            default:
+                return NULL;
+        }
+        if (ret == 0)
+            goto out;
     }
-
-    if (ret == 0)
-        goto out;
 
     /* Allocate new structure occurrence */
     i = nDevToConfig++;
@@ -197,11 +118,15 @@ xf86AddBusDeviceToConfigure(const char *driver, BusType bus, void *busData, int 
 
     switch (bus) {
         case BUS_PCI:
-            bus_pci_newdev_configure(busData, i, &chipset);
+            xf86PciConfigureNewDev(busData, DevToConfig[i].pVideo,
+                                   &DevToConfig[i].GDev, &chipset);
 	        break;
+#if (defined(__sparc__) || defined(__sparc)) && !defined(__OpenBSD__)
         case BUS_SBUS:
-            bus_sbus_newdev_configure(busData, i);
+            xf86SbusConfigureNewDev(busData, DevToConfig[i].sVideo,
+                                    &DevToConfig[i].GDev);
 	        break;
+#endif
         default:
 	        break;
     }
@@ -231,26 +156,12 @@ configureInputSection (void)
     /* Crude mechanism to auto-detect mouse (os dependent) */
     { 
 	int fd;
-#ifdef WSCONS_SUPPORT
-	fd = open("/dev/wsmouse", 0);
-	if (fd >= 0) {
-	    DFLT_MOUSE_DEV = "/dev/wsmouse";
-	    DFLT_MOUSE_PROTO = "wsmouse";
-	    close(fd);
-	} else {
-	    ErrorF("cannot open /dev/wsmouse\n");
-	}
-#endif
 
-#ifndef __SCO__
 	fd = open(DFLT_MOUSE_DEV, 0);
 	if (fd != -1) {
 	    foundMouse = TRUE;
 	    close(fd);
 	}
-#else
-	foundMouse = TRUE;
-#endif
     }
 
     mouse = calloc(1, sizeof(XF86ConfInputRec));
@@ -259,11 +170,9 @@ configureInputSection (void)
     mouse->inp_option_lst = 
 		xf86addNewOption(mouse->inp_option_lst, strdup("Protocol"),
 				strdup(DFLT_MOUSE_PROTO));
-#ifndef __SCO__
     mouse->inp_option_lst = 
 		xf86addNewOption(mouse->inp_option_lst, strdup("Device"),
 				strdup(DFLT_MOUSE_DEV));
-#endif
     mouse->inp_option_lst = 
 		xf86addNewOption(mouse->inp_option_lst, strdup("ZAxisMapping"),
 				strdup("4 5 6 7"));
@@ -278,12 +187,9 @@ configureScreenSection (int screennum)
     int depths[] = { 1, 4, 8, 15, 16, 24/*, 32*/ };
     parsePrologue (XF86ConfScreenPtr, XF86ConfScreenRec)
 
-    ptr->scrn_identifier = malloc(18);
-    snprintf(ptr->scrn_identifier, 18, "Screen%d", screennum);
-    ptr->scrn_monitor_str = malloc(19);
-    snprintf(ptr->scrn_monitor_str, 19, "Monitor%d", screennum);
-    ptr->scrn_device_str = malloc(16);
-    snprintf(ptr->scrn_device_str, 16, "Card%d", screennum);
+    XNFasprintf(&ptr->scrn_identifier, "Screen%d", screennum);
+    XNFasprintf(&ptr->scrn_monitor_str, "Monitor%d", screennum);
+    XNFasprintf(&ptr->scrn_device_str, "Card%d", screennum);
 
     for (i=0; i<sizeof(depths)/sizeof(depths[0]); i++)
     {
@@ -329,14 +235,13 @@ optionTypeToString(OptionValueType type)
 static XF86ConfDevicePtr
 configureDeviceSection (int screennum)
 {
-    char identifier[16];
     OptionInfoPtr p;
     int i = 0;
     parsePrologue (XF86ConfDevicePtr, XF86ConfDeviceRec)
 
     /* Move device info to parser structure */
-    snprintf(identifier, sizeof(identifier), "Card%d", screennum);
-    ptr->dev_identifier = strdup(identifier);
+    if (asprintf(&ptr->dev_identifier, "Card%d", screennum) == -1)
+        ptr->dev_identifier = NULL;
     ptr->dev_chipset = DevToConfig[screennum].GDev.chipset;
     ptr->dev_busid = DevToConfig[screennum].GDev.busID;
     ptr->dev_driver = DevToConfig[screennum].GDev.driver;
@@ -378,12 +283,9 @@ configureDeviceSection (int screennum)
 		char *optname;
 		int len = strlen(ptr->dev_comment) + strlen(prefix) +
 			  strlen(middle) + strlen(suffix) + 1;
-		int optlen = strlen(p->name) + 2 + 1;
-
-		optname = malloc(optlen);
-		if (!optname)
+		
+		if (asprintf(&optname, "\"%s\"", p->name) == -1)
 		    break;
-		snprintf(optname, optlen, "\"%s\"", p->name);
 
 		len += max(20, strlen(optname));
 		len += strlen(opttype);
@@ -445,16 +347,14 @@ configureLayoutSection (void)
 	aptr->adj_x = 0;
 	aptr->adj_y = 0;
 	aptr->adj_scrnum = scrnum;
-	aptr->adj_screen_str = xnfalloc(18);
-	snprintf(aptr->adj_screen_str, 18, "Screen%d", scrnum);
+	XNFasprintf(&aptr->adj_screen_str, "Screen%d", scrnum);
 	if (scrnum == 0) {
 	    aptr->adj_where = CONF_ADJ_ABSOLUTE;
 	    aptr->adj_refscreen = NULL;
 	}
 	else {
 	    aptr->adj_where = CONF_ADJ_RIGHTOF;
-	    aptr->adj_refscreen = xnfalloc(18);
-	    snprintf(aptr->adj_refscreen, 18, "Screen%d", scrnum - 1);
+	    XNFasprintf(&aptr->adj_refscreen, "Screen%d", scrnum - 1);
 	}
     	ptr->lay_adjacency_lst =
 	    (XF86ConfAdjacencyPtr)xf86addListItem((glp)ptr->lay_adjacency_lst,
@@ -518,8 +418,7 @@ configureMonitorSection (int screennum)
 {
     parsePrologue (XF86ConfMonitorPtr, XF86ConfMonitorRec)
 
-    ptr->mon_identifier = malloc(19);
-    snprintf(ptr->mon_identifier, 19, "Monitor%d", screennum);
+    XNFasprintf(&ptr->mon_identifier, "Monitor%d", screennum);
     ptr->mon_vendor = strdup("Monitor Vendor");
     ptr->mon_modelname = strdup("Monitor Model");
 
@@ -566,11 +465,9 @@ configureDDCMonitorSection (int screennum)
 
     parsePrologue (XF86ConfMonitorPtr, XF86ConfMonitorRec)
 
-    ptr->mon_identifier = malloc(19);
-    snprintf(ptr->mon_identifier, 19, "Monitor%d", screennum);
+    XNFasprintf(&ptr->mon_identifier, "Monitor%d", screennum);
     ptr->mon_vendor = strdup(ConfiguredMonitor->vendor.name);
-    ptr->mon_modelname = malloc(12);
-    snprintf(ptr->mon_modelname, 12, "%x", ConfiguredMonitor->vendor.prod_id);
+    XNFasprintf(&ptr->mon_modelname, "%x", ConfiguredMonitor->vendor.prod_id);
 
     /* features in centimetres, we want millimetres */
     mon_width  = 10 * ConfiguredMonitor->features.hsize ;
@@ -610,10 +507,6 @@ configureDDCMonitorSection (int screennum)
 
     return ptr;
 }
-
-#if !defined(PATH_MAX)
-# define PATH_MAX 1024
-#endif
 
 void
 DoConfigure(void)
@@ -835,13 +728,6 @@ DoConfigure(void)
 
     ErrorF("\n");
 
-#ifdef __SCO__
-    ErrorF("\n"__XSERVERNAME__
-	   " is using the kernel event driver to access the mouse.\n"
-	    "If you wish to use the internal "__XSERVERNAME__
-	   " mouse drivers, please\n"
-	    "edit the file and correct the Device.\n");
-#else /* !__SCO__ */
     if (!foundMouse) {
 	ErrorF("\n"__XSERVERNAME__" is not able to detect your mouse.\n"
 		"Edit the file and correct the Device.\n");
@@ -852,7 +738,6 @@ DoConfigure(void)
 	       " tries to autodetect\n"
 		"the protocol.\n",DFLT_MOUSE_DEV);
     }
-#endif /* !__SCO__ */
 
     if (xf86NumScreens > 1) {
 	ErrorF("\n"__XSERVERNAME__
@@ -865,7 +750,7 @@ DoConfigure(void)
 bail:
     CloseWellKnownConnections();
     OsCleanup(TRUE);
-    AbortDDX();
+    AbortDDX(EXIT_ERR_CONFIGURE);
     fflush(stderr);
     exit(0);
 }

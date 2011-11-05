@@ -75,13 +75,14 @@ setup_int(xf86Int10InfoPtr pInt)
     if (pInt->Flags & SET_BIOS_SCRATCH)
 	SetResetBIOSVars(pInt, TRUE);
 #endif
-    return xf86BlockSIGIO();
+    OsBlockSignals();
+    return 0;
 }
 
 void
 finish_int(xf86Int10InfoPtr pInt, int sig)
 {
-    xf86UnblockSIGIO(sig);
+    OsReleaseSignals();
     pInt->ax = (CARD32) X86_EAX;
     pInt->bx = (CARD32) X86_EBX;
     pInt->cx = (CARD32) X86_ECX;
@@ -462,6 +463,11 @@ Mem_wl(CARD32 addr, CARD32 val)
 
 static CARD32 PciCfg1Addr = 0;
 
+#define PCI_DOM_FROM_TAG(tag)  (((tag) >> 24) & (PCI_DOM_MASK))
+#define PCI_BUS_FROM_TAG(tag)  (((tag) >> 16) & (PCI_DOMBUS_MASK))
+#define PCI_DEV_FROM_TAG(tag)  (((tag) & 0x0000f800u) >> 11)
+#define PCI_FUNC_FROM_TAG(tag) (((tag) & 0x00000700u) >> 8)
+
 #define PCI_OFFSET(x) ((x) & 0x000000ff)
 #define PCI_TAG(x)    ((x) & 0x7fffff00)
 
@@ -498,7 +504,7 @@ pciCfg1in(CARD16 addr, CARD32 *val)
     }
     if (addr == 0xCFC) {
 	pci_device_cfg_read_u32(pci_device_for_cfg_address(PciCfg1Addr),
-			val, PCI_OFFSET(PciCfg1Addr));
+			(uint32_t *)val, PCI_OFFSET(PciCfg1Addr));
 	if (PRINT_PORT && DEBUG_IO_TRACE())
 	    ErrorF(" cfg_inl(%#lx) = %8.8lx\n", PciCfg1Addr, *val);
 	return 1;

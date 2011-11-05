@@ -83,6 +83,7 @@ typedef struct _DRI2Drawable {
     CARD64		 last_swap_ust; /* ust at completion of most recent swap */
     int			 swap_limit; /* for N-buffering */
     unsigned long	 serialNumber;
+    Bool		 needInvalidate;
 } DRI2DrawableRec, *DRI2DrawablePtr;
 
 typedef struct _DRI2Screen {
@@ -221,11 +222,16 @@ DRI2AddDrawableRef(DRI2DrawablePtr pPriv, XID id, XID dri2_id,
     if (ref == NULL)
 	return BadAlloc;
 	
-    if (!AddResource(dri2_id, dri2DrawableRes, pPriv))
+    if (!AddResource(dri2_id, dri2DrawableRes, pPriv)) {
+	free(ref);
 	return BadAlloc;
+    }
     if (!DRI2LookupDrawableRef(pPriv, id))
-	if (!AddResource(id, dri2DrawableRes, pPriv))
+	if (!AddResource(id, dri2DrawableRes, pPriv)) {
+	    FreeResourceByType(dri2_id, dri2DrawableRes, TRUE);
+	    free(ref);
 	    return BadAlloc;
+        }
 
     ref->id = id;
     ref->dri2_id = dri2_id; 
@@ -353,7 +359,7 @@ allocate_or_reuse_buffer(DrawablePtr pDraw, DRI2ScreenPtr ds,
 
 static void
 update_dri2_drawable_buffers(DRI2DrawablePtr pPriv, DrawablePtr pDraw,
-			     DRI2BufferPtr *buffers, int *out_count, int *width, int *height)
+			     DRI2BufferPtr *buffers, int out_count, int *width, int *height)
 {
     DRI2ScreenPtr   ds = DRI2GetScreen(pDraw->pScreen);
     int i;
@@ -369,7 +375,7 @@ update_dri2_drawable_buffers(DRI2DrawablePtr pPriv, DrawablePtr pDraw,
     }
 
     pPriv->buffers = buffers;
-    pPriv->bufferCount = *out_count;
+    pPriv->bufferCount = out_count;
     pPriv->width = pDraw->width;
     pPriv->height = pDraw->height;
     *width = pPriv->width;
@@ -403,7 +409,9 @@ do_get_buffers(DrawablePtr pDraw, int *width, int *height,
 	&& (pDraw->height == pPriv->height)
 	&& (pPriv->serialNumber == DRI2DrawableSerial(pDraw));
 
-    buffers = malloc((count + 1) * sizeof(buffers[0]));
+    buffers = calloc((count + 1), sizeof(buffers[0]));
+    if (!buffers)
+	goto err_out;
 
     for (i = 0; i < count; i++) {
 	const unsigned attachment = *(attachments++);
@@ -470,7 +478,7 @@ do_get_buffers(DrawablePtr pDraw, int *width, int *height,
 
     *out_count = i;
 
-    update_dri2_drawable_buffers(pPriv, pDraw, buffers, out_count, width, height);
+    update_dri2_drawable_buffers(pPriv, pDraw, buffers, *out_count, width, height);
 
     /* If the client is getting a fake front-buffer, pre-fill it with the
      * contents of the real front-buffer.  This ensures correct operation of
@@ -490,21 +498,25 @@ do_get_buffers(DrawablePtr pDraw, int *width, int *height,
 		       DRI2BufferFrontLeft);
     }
 
+    pPriv->needInvalidate = TRUE;
+
     return pPriv->buffers;
 
 err_out:
 
     *out_count = 0;
 
-    for (i = 0; i < count; i++) {
+    if (buffers) {
+	for (i = 0; i < count; i++) {
 	    if (buffers[i] != NULL)
-		    (*ds->DestroyBuffer)(pDraw, buffers[i]);
+		(*ds->DestroyBuffer)(pDraw, buffers[i]);
+	}
+
+	free(buffers);
+	buffers = NULL;
     }
 
-    free(buffers);
-    buffers = NULL;
-
-    update_dri2_drawable_buffers(pPriv, pDraw, buffers, out_count, width, height);
+    update_dri2_drawable_buffers(pPriv, pDraw, buffers, *out_count, width, height);
 
     return buffers;
 }
@@ -531,8 +543,10 @@ DRI2InvalidateDrawable(DrawablePtr pDraw)
     DRI2DrawablePtr pPriv = DRI2GetDrawable(pDraw);
     DRI2DrawableRefPtr ref;
 
-    if (!pPriv)
+    if (!pPriv || !pPriv->needInvalidate)
         return;
+
+    pPriv->needInvalidate = FALSE;
 
     list_for_each_entry(ref, &pPriv->reference_list, link)
 	ref->invalidate(pDraw, ref->priv);
@@ -1171,6 +1185,7 @@ void
 DRI2CloseScreen(ScreenPtr pScreen)
 {
     DRI2ScreenPtr ds = DRI2GetScreen(pScreen);
+    pScreen->ConfigNotify = ds->ConfigNotify;
 
     free(ds->driverNames);
     free(ds);
