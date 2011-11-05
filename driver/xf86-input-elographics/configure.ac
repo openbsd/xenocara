@@ -22,7 +22,7 @@
 
 AC_PREREQ(2.57)
 AC_INIT([xf86-input-elographics],
-        1.2.4,
+        1.3.0,
         [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],
         xf86-input-elographics)
 
@@ -58,7 +58,7 @@ XORG_DRIVER_CHECK_EXT(RANDR, randrproto)
 XORG_DRIVER_CHECK_EXT(XINPUT, inputproto)
 
 # Checks for pkg-config packages
-PKG_CHECK_MODULES(XORG, xorg-server xproto $REQUIRED_MODULES)
+PKG_CHECK_MODULES(XORG, [xorg-server >= 1.10.0] xproto $REQUIRED_MODULES)
 sdkdir=$(pkg-config --variable=sdkdir xorg-server)
 XORG_CFLAGS="$CWARNFLAGS $XORG_CFLAGS"
 

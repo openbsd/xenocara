@@ -1,3 +1,97 @@
+commit 7c324ede65c17e5c747b28f40b9fd19f21b79d9d
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Mon Jun 27 14:48:11 2011 +1000
+
+    elographics 1.3.0
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 6c9a801a5c1d7e694ff7f4f097599f2b96357982
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Mon Jun 27 14:47:32 2011 +1000
+
+    Require server 1.10
+    
+    And remove the manual input ABI check.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 6fd22a9d64f07a480d177e877189a3a3ebf7cb90
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri Dec 3 09:34:46 2010 +1000
+
+    Support input ABI 12
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Cyril Brulebois <kibi@debian.org>
+
+commit 3dac6ffa77c046b3d754f0a1105fe8ecc7377911
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri Dec 3 09:33:55 2010 +1000
+
+    Remove refcount field, dropped from the server
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Cyril Brulebois <kibi@debian.org>
+
+commit 447f547fbb7d11ec56ea578292908192175b3828
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri Dec 3 09:29:36 2010 +1000
+
+    Drop close_proc, conversion_proc, reverse_conversion_proc
+    
+    All three are not called by the server anymore.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Cyril Brulebois <kibi@debian.org>
+
+commit 61b249e75e357fc8974e3892517f251ecf36fda5
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri Dec 3 09:27:24 2010 +1000
+
+    Drop driver-specific motion history size handling.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Cyril Brulebois <kibi@debian.org>
+
+commit 8d90c971582b90c96901036203841064cb9f7a84
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri Dec 3 09:27:05 2010 +1000
+
+    Require server 1.9, drop earlier ABI support
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Cyril Brulebois <kibi@debian.org>
+
+commit 7f35fe7d26c48622896fec8cab475f510601802b
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri Dec 3 09:23:15 2010 +1000
+
+    Replace LocalDevicePtr with InputInfoPtr
+    
+    Both describe the same struct, LocalDevicePtr has been removed from the
+    server.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Cyril Brulebois <kibi@debian.org>
+
+commit 0f3df8923d4d48b24b565becefa12d676c48a61a
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri Dec 3 09:21:23 2010 +1000
+
+    unifdef XFree86LOADER
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Cyril Brulebois <kibi@debian.org>
+
+commit 787c1a94dec338da8585b7fad37f1b5fc973b2ad
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri Dec 3 09:35:06 2010 +1000
+
+    Bump to 1.2.99
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
 commit 607aed76023e71509b260dc23da7c150c1eff825
 Author: Peter Hutterer <peter.hutterer@who-t.net>
 Date:   Wed Jun 9 12:18:14 2010 +1000
