@@ -1,4 +1,4 @@
-/*	$OpenBSD: wildcatfb_driver.c,v 1.8 2010/08/29 15:20:40 matthieu Exp $	*/
+/*	$OpenBSD: wildcatfb_driver.c,v 1.9 2011/11/05 14:55:51 matthieu Exp $	*/
 
 /*
  * Copyright (c) 2009 Miodrag Vallat.
@@ -150,9 +150,7 @@ extern int priv_open_device(const char *);
 #endif
 
 /* Prototypes */
-#ifdef XFree86LOADER
 static pointer WildcatFBSetup(pointer, pointer, int *, int *);
-#endif
 static Bool WildcatFBGetRec(ScrnInfoPtr);
 static void WildcatFBFreeRec(ScrnInfoPtr);
 static const OptionInfoRec * WildcatFBAvailableOptions(int, int);
@@ -206,7 +204,6 @@ static const OptionInfoRec WildcatFBOptions[] = {
 	{ -1, NULL, OPTV_NONE, {0}, FALSE}
 };
 
-#ifdef XFree86LOADER
 static XF86ModuleVersionInfo WildcatFBVersRec = {
 	"wildcatfb",
 	MODULEVENDORSTRING,
@@ -249,7 +246,6 @@ WildcatFBSetup(pointer module, pointer opts, int *errmaj, int *errmin)
 		return NULL;
 	}
 }
-#endif /* XFree86LOADER */
 
 /* Private data */
 typedef struct {
@@ -287,7 +283,7 @@ WildcatFBFreeRec(ScrnInfoPtr pScrn)
 
 	if (pScrn->driverPrivate == NULL)
 		return;
-	xfree(pScrn->driverPrivate);
+	free(pScrn->driverPrivate);
 	pScrn->driverPrivate = NULL;
 }
 
@@ -401,7 +397,7 @@ WildcatFBProbe(DriverPtr drv, int flags)
 			}
 		}
 	}
-	xfree(devSections);
+	free(devSections);
 	TRACE("probe done");
 	return foundScreen;
 }
@@ -476,27 +472,27 @@ WildcatFBPreInit(ScrnInfoPtr pScrn, int flags)
 	 */
 	if (fPtr->info.cmsize != 0) {
 		fPtr->saved_cmap.red =
-		    (unsigned char *)xalloc(fPtr->info.cmsize);
+		    (unsigned char *)malloc(fPtr->info.cmsize);
 		if (fPtr->saved_cmap.red == NULL) {
 			xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
 			    "Cannot malloc %d bytes\n", fPtr->info.cmsize);
 			return FALSE;
 		}
 		fPtr->saved_cmap.green =
-		    (unsigned char *)xalloc(fPtr->info.cmsize);
+		    (unsigned char *)malloc(fPtr->info.cmsize);
 		if (fPtr->saved_cmap.green == NULL) {
 			xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
 			    "Cannot malloc %d bytes\n", fPtr->info.cmsize);
-			xfree(fPtr->saved_cmap.red);
+			free(fPtr->saved_cmap.red);
 			return FALSE;
 		}
 		fPtr->saved_cmap.blue =
-		    (unsigned char *)xalloc(fPtr->info.cmsize);
+		    (unsigned char *)malloc(fPtr->info.cmsize);
 		if (fPtr->saved_cmap.blue == NULL) {
 			xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
 			    "Cannot malloc %d bytes\n", fPtr->info.cmsize);
-			xfree(fPtr->saved_cmap.red);
-			xfree(fPtr->saved_cmap.green);
+			free(fPtr->saved_cmap.red);
+			free(fPtr->saved_cmap.green);
 			return FALSE;
 		}
 	}
@@ -528,14 +524,14 @@ WildcatFBPreInit(ScrnInfoPtr pScrn, int flags)
 
 	/* Handle options. */
 	xf86CollectOptions(pScrn, NULL);
-	if (!(fPtr->Options = xalloc(sizeof(WildcatFBOptions))))
+	if (!(fPtr->Options = malloc(sizeof(WildcatFBOptions))))
 		return FALSE;
 	memcpy(fPtr->Options, WildcatFBOptions, sizeof(WildcatFBOptions));
 	xf86ProcessOptions(pScrn->scrnIndex, fPtr->pEnt->device->options,
 			   fPtr->Options);
 
 	/* Fake video mode struct. */
-	mode = (DisplayModePtr)xalloc(sizeof(DisplayModeRec));
+	mode = (DisplayModePtr)malloc(sizeof(DisplayModeRec));
 	mode->prev = mode;
 	mode->next = mode;
 	mode->name = "wildcatfb current mode";
@@ -670,7 +666,7 @@ WildcatFBScreenInit(int scrnIndex, ScreenPtr pScreen, int argc, char **argv)
 	if (!miSetPixmapDepths())
 		return FALSE;
 
-	fPtr->shadow = xcalloc(1, pScrn->virtualX * pScrn->virtualY *
+	fPtr->shadow = calloc(1, pScrn->virtualX * pScrn->virtualY *
 	    pScrn->bitsPerPixel/8);
 		
 	if (!fPtr->shadow) {
