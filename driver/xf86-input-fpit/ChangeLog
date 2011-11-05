@@ -1,3 +1,206 @@
+commit c4bab98fe233921ff7d218de1e66f97715640965
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Mon Jun 27 12:14:47 2011 +1000
+
+    fpit 1.4.0
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 7371ec56d20f2aa7174271011876c8fd4d9cb592
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri Jun 10 11:47:28 2011 +1000
+
+    Add 50-fpit.conf default configuration file.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 88cd7dd4c420d505e2b881e1c71900b368d9bfae
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Jun 14 09:38:01 2011 +1000
+
+    Remove usage of sdkdir - not used by this driver
+    
+    This driver doesn't install any header files.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 7798bbf89db0d08c79f2c79b5bf252858d20a61c
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Jun 14 09:18:53 2011 +1000
+
+    Reshuffle configure.ac to be more in-line with other modules
+    
+    Also bump required macros to 1.12.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit a675198fab13393987dc7383ff679c405d2a10ff
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Jun 14 09:18:18 2011 +1000
+
+    Include xorg-server.h, not xorgVersion.h
+    
+    xorg-server is the generic server header file these days.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 539a4e9e2317d920902840083250c093684ea376
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Jun 14 09:16:32 2011 +1000
+
+    Bump minimum required server version to 1.10
+    
+    And remove manual ABI check, all 1.10 servers ship with ABI 12.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 020c04e295629b4db6afe16b26a028ccbd14e801
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Thu Dec 2 13:16:38 2010 +1000
+
+    Support input ABI 12
+    
+    Untested for lack of device.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Cyril Brulebois <kibi@debian.org>
+
+commit cfbe606a376eacf17bc998140bea75726ea21373
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Thu Dec 2 12:59:55 2010 +1000
+
+    Use GetMotionHistorySize() instead of driver-internal history
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Cyril Brulebois <kibi@debian.org>
+
+commit 3c4795fbe5ef6444a890e2baf8edf0e01530cea2
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Thu Dec 2 12:58:49 2010 +1000
+
+    Require server 1.9, drop earlier ABI support
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Cyril Brulebois <kibi@debian.org>
+
+commit 81ada2b639979aa731854b5441cecb72910643e4
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Thu Dec 2 12:56:53 2010 +1000
+
+    Drop libc wrappers for free, malloc
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Cyril Brulebois <kibi@debian.org>
+
+commit 4f79c6a79aecda664e1397eaba0d32f44eec7508
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Thu Dec 2 12:55:39 2010 +1000
+
+    Drop close_proc, conversion_proc, reverse_conversion_proc
+    
+    Not called by the server.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Cyril Brulebois <kibi@debian.org>
+
+commit a7b06d619652a42321546731994c1a9bf0b04f80
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Thu Dec 2 12:54:03 2010 +1000
+
+    Replace LocalDevicePtr with InputInfoPtr.
+    
+    Both describe the same struct, LocalDevicePtr has been dropped from the
+    server.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Cyril Brulebois <kibi@debian.org>
+
+commit b09b4f288607689e8f1f79c8337b7b1748161a3d
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Thu Dec 2 12:53:27 2010 +1000
+
+    unifdef XFree86LOADER
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Cyril Brulebois <kibi@debian.org>
+
+commit e9f8bf0fe866db6d5ba072425513186a4bc89eb1
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Thu Dec 2 12:52:35 2010 +1000
+
+    Remove refcount field, dropped from the server
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Cyril Brulebois <kibi@debian.org>
+
+commit 96ef9d422d1ed680b995ec206642eef2bb8f63c0
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Thu Dec 2 12:48:31 2010 +1000
+
+    Purge CVS tags
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 646f65fc2a091e6c7bbfb50a7ec7a09a92d1f46e
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Thu Dec 2 12:48:05 2010 +1000
+
+    Bump to 1.3.99
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 2d6975f80e72f1c2ca63397d10196d83f65e0f59
+Author: philip <feucht@uni-koblenz.de>
+Date:   Wed May 19 12:37:05 2010 +0200
+
+    fpit: minX/ maxX get wrongly initialized
+    
+    maxX/ minX get values from maxY/ minY
+    Problem introduced in commit 7d203627e7e3e7a6f8d0e847ed650b0b89760c09
+    
+    Reviewed-by: Gaetan Nadon <memsize@videotron.ca>
+    Signed-off-by: philip <feucht@uni-koblenz.de>
+
+commit a7e1d84c0796fbf6b2525416ccce0045a11fc9fb
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri Nov 20 09:48:48 2009 +1000
+
+    Remove unused bits from configure.ac
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 7dacfde39a027bb868493ba075e2f1d787c9b191
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri Aug 28 08:16:36 2009 +1000
+
+    Fix module unloading.
+    
+    After calling xfree(priv), local->private must be set NULL.
+    Otherwise the server tries to free it again during xf86DeleteInput.
+    
+    local->name must not be freed, it is set to XI_TOUCHSCREEN during PreInit.
+    
+    local must not be freed, we pass it into xf86DeleteInput.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 7d203627e7e3e7a6f8d0e847ed650b0b89760c09
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri Jul 17 14:38:31 2009 +1000
+
+    Cope with XINPUT ABI 7.
+
+commit 60fa9ab3ff6b48dfe94a77d63634d9fa82b538b3
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Mon May 11 19:37:41 2009 -0700
+
+    Fill in COPYING file, add SubmittingPatches URL to README
+
 commit 3cabac9b8d43269dabcd65dbe7477981a3945daa
 Author: Peter Hutterer <peter.hutterer@who-t.net>
 Date:   Wed Feb 18 11:28:19 2009 +1000

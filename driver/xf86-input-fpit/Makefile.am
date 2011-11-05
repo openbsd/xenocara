@@ -1,4 +1,3 @@
-#  Copyright 2005 Adam Jackson.
 #
 #  Permission is hereby granted, free of charge, to any person obtaining a
 #  copy of this software and associated documentation files (the "Software"),
@@ -18,8 +17,15 @@
 #  IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 #  CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
+
+# During distcheck, system locations (as provided by pkg-config) are
+# not writable; provide instead relative locations.
+DISTCHECK_CONFIGURE_FLAGS = \
+       --with-xorg-conf-dir='$${sysconfdir}/xorg'
+
+
 AUTOMAKE_OPTIONS = foreign
-SUBDIRS = src man
+SUBDIRS = src man conf
 
 EXTRA_DIST = readme.txt
 MAINTAINERCLEANFILES = ChangeLog

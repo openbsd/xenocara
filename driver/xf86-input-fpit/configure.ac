@@ -22,28 +22,26 @@
 
 AC_PREREQ(2.57)
 AC_INIT([xf86-input-fpit],
-        1.3.0,
+        1.4.0,
         [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],
         xf86-input-fpit)
 
 AC_CONFIG_SRCDIR([Makefile.am])
+AM_CONFIG_HEADER([config.h])
 AC_CONFIG_AUX_DIR(.)
-AM_INIT_AUTOMAKE([dist-bzip2])
 
+# Initialize Automake
+AM_INIT_AUTOMAKE([dist-bzip2])
 AM_MAINTAINER_MODE
 
 # Require xorg-macros: XORG_CWARNFLAGS, XORG_CHANGELOG
-m4_ifndef([XORG_MACROS_VERSION], [AC_FATAL([must install xorg-macros 1.2 or later before running autoconf/autogen])])
-XORG_MACROS_VERSION(1.2)
-AM_CONFIG_HEADER([config.h])
+m4_ifndef([XORG_MACROS_VERSION], [AC_FATAL([must install xorg-macros 1.12 or later before running autoconf/autogen])])
+XORG_MACROS_VERSION(1.12)
+XORG_DEFAULT_OPTIONS
 
-# Checks for programs.
+# Initialize libtool
 AC_DISABLE_STATIC
 AC_PROG_LIBTOOL
-AC_PROG_CC
-XORG_CWARNFLAGS
-
-AH_TOP([#include "xorg-server.h"])
 
 AC_ARG_WITH(xorg-module-dir,
             AC_HELP_STRING([--with-xorg-module-dir=DIR],
@@ -53,25 +51,24 @@ AC_ARG_WITH(xorg-module-dir,
 inputdir=${moduledir}/input
 AC_SUBST(inputdir)
 
+# Define a configure option for an alternate X Server configuration directory
+sysconfigdir=`$PKG_CONFIG --variable=sysconfigdir xorg-server`
+AC_ARG_WITH(xorg-conf-dir,
+            AC_HELP_STRING([--with-xorg-conf-dir=DIR],
+                           [Default xorg.conf.d directory [[default=from $PKG_CONFIG xorg-server]]]),
+            [configdir="$withval"],
+            [configdir="$sysconfigdir"])
+AC_SUBST(configdir)
+AM_CONDITIONAL(HAS_XORG_CONF_DIR, [test "x$sysconfigdir" != "x"])
+
 # Checks for extensions
 XORG_DRIVER_CHECK_EXT(RANDR, randrproto)
 XORG_DRIVER_CHECK_EXT(XINPUT, inputproto)
 
-# Checks for pkg-config packages
-PKG_CHECK_MODULES(XORG, [xorg-server >= 1.0.99.901] xproto $REQUIRED_MODULES)
-sdkdir=$(pkg-config --variable=sdkdir xorg-server)
-XORG_CFLAGS="$CWARNFLAGS $XORG_CFLAGS"
-
-# Checks for libraries.
-
-# Checks for header files.
-AC_HEADER_STDC
+# Obtain compiler/linker options for the fpit driver dependencies
+PKG_CHECK_MODULES(XORG, [xorg-server >= 1.10.0] xproto $REQUIRED_MODULES)
 
 DRIVER_NAME=fpit
 AC_SUBST([DRIVER_NAME])
 
-XORG_MANPAGE_SECTIONS
-XORG_RELEASE_VERSION
-XORG_CHANGELOG
-
-AC_OUTPUT([Makefile src/Makefile man/Makefile])
+AC_OUTPUT([Makefile src/Makefile man/Makefile conf/Makefile])
