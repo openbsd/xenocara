@@ -1,4 +1,4 @@
-/* $OpenBSD: wsfb_driver.c,v 1.24 2011/11/05 14:40:51 matthieu Exp $ */
+/* $OpenBSD: wsfb_driver.c,v 1.25 2011/11/05 14:51:18 matthieu Exp $ */
 /*
  * Copyright (c) 2001 Matthieu Herrb
  * All rights reserved.
@@ -104,9 +104,7 @@ extern int priv_open_device(const char *);
 #endif
 
 /* Prototypes */
-#ifdef XFree86LOADER
 static pointer WsfbSetup(pointer, pointer, int *, int *);
-#endif
 static Bool WsfbGetRec(ScrnInfoPtr);
 static void WsfbFreeRec(ScrnInfoPtr);
 static const OptionInfoRec * WsfbAvailableOptions(int, int);
@@ -187,7 +185,6 @@ static const OptionInfoRec WsfbOptions[] = {
 	{ -1, NULL, OPTV_NONE, {0}, FALSE}
 };
 
-#ifdef XFree86LOADER
 static XF86ModuleVersionInfo WsfbVersRec = {
 	"wsfb",
 	MODULEVENDORSTRING,
@@ -231,7 +228,6 @@ WsfbSetup(pointer module, pointer opts, int *errmaj, int *errmin)
 		return NULL;
 	}
 }
-#endif /* XFree86LOADER */
 
 /* Private data */
 typedef struct {
