@@ -24,9 +24,9 @@
 #ifndef _XF86JSTK_AXIS_H_INCLUDED_
 #define _XF86JSTK_AXIS_H_INCLUDED_
 
-void jstkStartAxisTimer(LocalDevicePtr device, int number);
-void jstkStartButtonAxisTimer(LocalDevicePtr device, int number);
-void jstkHandleAbsoluteAxis(LocalDevicePtr device, int number);
-void jstkHandlePWMAxis(LocalDevicePtr device, int number);
+void jstkStartAxisTimer(InputInfoPtr device, int number);
+void jstkStartButtonAxisTimer(InputInfoPtr device, int number);
+void jstkHandleAbsoluteAxis(InputInfoPtr device, int number);
+void jstkHandlePWMAxis(InputInfoPtr device, int number);
 
 #endif

@@ -26,6 +26,7 @@
 #include "config.h"
 #endif
 
+#include <xorg-server.h>
 #include <stdio.h>
 #include <xorgVersion.h>
 
@@ -44,9 +45,7 @@
 #include "jstk_key.h"
 #include "jstk_options.h"
 #include "jstk_properties.h"
-#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 3
-    #include <xserver-properties.h>
-#endif
+#include <xserver-properties.h>
 
 #ifdef LINUX_BACKEND
     #include "backend_joystick.h"
@@ -62,40 +61,6 @@
 #if DEBUG
     char debug_level = 0;
 #endif
-
-
-/*
- ***************************************************************************
- *
- * jstkConvertProc --
- *
- * Convert valuators to X and Y.
- *
- ***************************************************************************
- */
-
-static Bool
-jstkConvertProc(LocalDevicePtr	local,
-                int             first,
-                int             num,
-                int             v0,
-                int             v1,
-                int             v2,
-                int             v3,
-                int             v4,
-                int             v5,
-                int*            x,
-                int*            y)
-{
-    if (first != 0 || num != 2)
-        return FALSE;
-
-    *x = v0;
-    *y = v1;
-
-    return TRUE;
-}
-
 
 /*
  ***************************************************************************
@@ -147,21 +112,21 @@ jstkOpenDevice(JoystickDevPtr priv, BOOL probe)
  */
 
 static void
-jstkReadProc(LocalDevicePtr local)
+jstkReadProc(InputInfoPtr pInfo)
 {
     JOYSTICKEVENT event;
     int number;
     int i, r;
 
-    JoystickDevPtr priv = local->private;
+    JoystickDevPtr priv = pInfo->private;
 
     do {
         if ((priv->read_proc == NULL) || 
             ((r=priv->read_proc(priv, &event, &number))==0)) {
             xf86Msg(X_WARNING, "JOYSTICK: Read failed. Deactivating device.\n");
 
-            if (local->fd >= 0)
-                RemoveEnabledDevice(local->fd);
+            if (pInfo->fd >= 0)
+                RemoveEnabledDevice(pInfo->fd);
             return;
         }
 
@@ -174,7 +139,7 @@ jstkReadProc(LocalDevicePtr local)
             switch (priv->button[number].mapping) {
             case JSTK_MAPPING_BUTTON:
                 if (priv->mouse_enabled == TRUE) {
-                    xf86PostButtonEvent(local->dev, 0,
+                    xf86PostButtonEvent(pInfo->dev, 0,
                         priv->button[number].buttonnumber,
                         priv->button[number].pressed, 0, 0);
                 }
@@ -187,7 +152,7 @@ jstkReadProc(LocalDevicePtr local)
                 if (priv->button[number].pressed == 0) 
                     priv->button[number].currentspeed = 1.0;
                 else if (priv->mouse_enabled == TRUE)
-                    jstkStartButtonAxisTimer(local, number);
+                    jstkStartButtonAxisTimer(pInfo, number);
                 break;
 
             case JSTK_MAPPING_KEY:
@@ -258,7 +223,7 @@ jstkReadProc(LocalDevicePtr local)
                           priv->axis[number].mapping));
 
             if (priv->axis[number].valuator != -1)
-                xf86PostMotionEvent(local->dev, 1, priv->axis[number].valuator, 
+                xf86PostMotionEvent(pInfo->dev, 1, priv->axis[number].valuator,
                                     1, priv->axis[number].value);
 
             switch (priv->axis[number].mapping) {
@@ -272,12 +237,12 @@ jstkReadProc(LocalDevicePtr local)
                     if (priv->axis[number].value == 0)
                         priv->axis[number].currentspeed = 1.0;
                     if (priv->mouse_enabled == TRUE)
-                        jstkStartAxisTimer(local, number);
+                        jstkStartAxisTimer(pInfo, number);
                     break;
 
                 case JSTK_TYPE_ABSOLUTE:
                     if (priv->mouse_enabled == TRUE)
-                        jstkHandleAbsoluteAxis(local, number);
+                        jstkHandleAbsoluteAxis(pInfo, number);
                     break;
                 default:
                     break;
@@ -286,9 +251,9 @@ jstkReadProc(LocalDevicePtr local)
 
             case JSTK_MAPPING_KEY: if (priv->keys_enabled == TRUE) {
                 if (priv->axis[number].type == JSTK_TYPE_ACCELERATED) {
-                    jstkHandlePWMAxis(local, number);
+                    jstkHandlePWMAxis(pInfo, number);
                 } else if (priv->axis[number].type == JSTK_TYPE_BYVALUE) {
-                    jstkStartAxisTimer(local, number);
+                    jstkStartAxisTimer(pInfo, number);
                 }
                 break;
             }
@@ -327,12 +292,10 @@ jstkDeviceControlProc(DeviceIntPtr       pJstk,
                       int                what)
 {
     int i;
-    LocalDevicePtr   local = (LocalDevicePtr)pJstk->public.devicePrivate;
-    JoystickDevPtr   priv  = (JoystickDevPtr)XI_PRIVATE(pJstk);
-#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 7
+    InputInfoPtr     pInfo = (InputInfoPtr)pJstk->public.devicePrivate;
+    JoystickDevPtr   priv  = pInfo->private;
     Atom             btn_labels[BUTTONMAP_SIZE+1] = {0}; /* TODO: fillme */
     Atom             axes_labels[MAXAXES] = {0}; /* TODO: fillme */
-#endif
 
     switch (what) {
     case DEVICE_INIT: {
@@ -355,9 +318,7 @@ jstkDeviceControlProc(DeviceIntPtr       pJstk,
             
             
         if (InitButtonClassDeviceStruct(pJstk, BUTTONMAP_SIZE, 
-#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 7
             btn_labels,
-#endif
             buttonmap) == FALSE) {
             ErrorF("unable to allocate Button class device\n");
             return !Success;
@@ -373,71 +334,48 @@ jstkDeviceControlProc(DeviceIntPtr       pJstk,
             priv->axis[i].valuator = m++;
         }
 
-        if (InitValuatorClassDeviceStruct(pJstk, 
-                                          m,
-#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 7
-                                          axes_labels,
-#endif
-#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) < 3
-                                          xf86GetMotionEvents, 
-#endif
-                                          local->history_size,
+        if (InitValuatorClassDeviceStruct(pJstk, m, axes_labels,
+                                          GetMotionHistorySize(),
                                           Relative) == FALSE) {
             ErrorF("unable to allocate Valuator class device\n"); 
             return !Success;
         } else {
             InitValuatorAxisStruct(pJstk,
                                    0, /* valuator num */
-#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 7
                                    XIGetKnownProperty(AXIS_LABEL_PROP_REL_X),
-#endif
                                    0, /* min val */
                                    screenInfo.screens[0]->width, /* max val */
                                    1, /* resolution */
                                    0, /* min_res */
-                                   1); /* max_res */
+                                   1, /* max_res */
+                                   Absolute);
             InitValuatorAxisStruct(pJstk,
                                    1, /* valuator num */
-#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 7
                                    XIGetKnownProperty(AXIS_LABEL_PROP_REL_Y),
-#endif
                                    0, /* min val */
                                    screenInfo.screens[0]->height, /* max val */
                                    1, /* resolution */
                                    0, /* min_res */
-                                   1); /* max_res */
+                                   1, /* max_res */
+                                   Absolute);
             for (i=0; i<MAXAXES; i++) 
                 if (priv->axis[i].valuator != -1)
             {
                 InitValuatorAxisStruct(pJstk,
                                        priv->axis[i].valuator,
-#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 7
                                        axes_labels[i],
-#endif
                                        -32768, /* min val */
                                        32767,  /* max val */
                                        1, /* resolution */
                                        0, /* min_res */
-                                       1); /* max_res */
+                                       1, /* max_res */
+                                       Absolute);
             }
             /* allocate the motion history buffer if needed */
-            xf86MotionHistoryAllocate(local);
+            xf86MotionHistoryAllocate(pInfo);
         }
 
-
-        if (priv->keyboard_device != NULL)
-        {
-            DBG(2, ErrorF("Activating keyboard device\n"));
-            xf86ActivateDevice(priv->keyboard_device);
-            priv->keyboard_device->dev->inited = 
-                (priv->keyboard_device->device_control(priv->keyboard_device->dev, DEVICE_INIT) == Success);
-            xf86EnableDevice(priv->keyboard_device->dev);
-            DBG(2, ErrorF("Keyboard device activated\n"));
-        }
-
-#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 3
 	jstkInitProperties(pJstk, priv);
-#endif
 
         break;
     }
@@ -448,8 +386,8 @@ jstkDeviceControlProc(DeviceIntPtr       pJstk,
 
         if (jstkOpenDevice(priv, FALSE) != -1) {
             pJstk->public.on = TRUE;
-            local->fd = priv->fd;
-            AddEnabledDevice(local->fd);
+            pInfo->fd = priv->fd;
+            AddEnabledDevice(pInfo->fd);
         } else return !Success;
         break;
 
@@ -471,9 +409,9 @@ jstkDeviceControlProc(DeviceIntPtr       pJstk,
             TimerCancel(priv->axis[i].timer);
         }
 
-        if (local->fd >= 0)
-            RemoveEnabledDevice(local->fd);
-        local->fd = -1;
+        if (pInfo->fd >= 0)
+            RemoveEnabledDevice(pInfo->fd);
+        pInfo->fd = -1;
         if (priv->close_proc)
             priv->close_proc(priv);
         pJstk->public.on = FALSE;
@@ -487,19 +425,6 @@ jstkDeviceControlProc(DeviceIntPtr       pJstk,
     return Success;
 }
 
-
-
-
-_X_EXPORT InputDriverRec JSTK_KEYBOARD = {
-    1,
-    "joystick_keyboard",
-    NULL,
-    jstkKeyboardPreInit,
-    jstkKeyboardUnInit,
-    NULL,
-    0
-};
-
 /*
  ***************************************************************************
  *
@@ -507,41 +432,41 @@ _X_EXPORT InputDriverRec JSTK_KEYBOARD = {
  *
  * Called when a device will be instantiated
  *
+ * This is a tad complicated. NewInputDeviceRequest(), which we use to
+ * hotplug a keyboard device,. enables the device, so we need to make sure
+ * that all options for the dependent device are set correctly.
+ *
+ * This means that we parse the keyboard-specific options into the
+ * keyboard device's PreInit, and re-use the keyboard's priv field.
+ *
  ***************************************************************************
  */
 
-static InputInfoPtr
-jstkCorePreInit(InputDriverPtr drv, IDevPtr dev, int flags)
+static int
+jstkCorePreInit(InputDriverPtr drv, InputInfoPtr pInfo, int flags)
 {
-    LocalDevicePtr      local = NULL;
+    InputInfoPtr        keyboard_device;
     JoystickDevPtr      priv = NULL;
     char                *s;
     int                 i, j;
 
-    local = xf86AllocateInput(drv, 0);
-    if (!local) {
-        goto SetupProc_fail;
-    }
+    s = xf86CheckStrOption(pInfo->options, "_source", "");
+    if (strcmp(s, "_driver/joystick") == 0)
+        return jstkKeyboardPreInit(drv, pInfo, flags);
 
-    local->private = (JoystickDevPtr)xalloc(sizeof(JoystickDevRec));
-    priv = (JoystickDevPtr)local->private;
+    pInfo->device_control = jstkDeviceControlProc;
+    pInfo->read_input = jstkReadProc;
+    pInfo->control_proc = NULL;
+    pInfo->switch_mode = NULL;
+    pInfo->fd = -1;
+    pInfo->dev = NULL;
+    pInfo->type_name = XI_JOYSTICK;
 
-    local->name   = dev->identifier;
-    local->flags  = XI86_POINTER_CAPABLE;
-    local->flags |= XI86_SEND_DRAG_EVENTS;
-    local->device_control = jstkDeviceControlProc;
-    local->read_input = jstkReadProc;
-    local->close_proc = NULL;
-    local->control_proc = NULL;
-    local->switch_mode = NULL;
-    local->conversion_proc = jstkConvertProc;
-    local->fd = -1;
-    local->dev = NULL;
-    local->private = priv;
-    local->type_name = XI_JOYSTICK;
-    local->history_size = 0;
-    local->always_core_feedback = NULL;
-    local->conf_idev = dev;
+    keyboard_device = jstkKeyboardHotplug(pInfo, flags);
+    if (!keyboard_device)
+        return BadAlloc;
+
+    pInfo->private = priv = keyboard_device->private;
 
     priv->fd = -1;
     priv->open_proc = NULL;
@@ -554,9 +479,7 @@ jstkCorePreInit(InputDriverPtr drv, IDevPtr dev, int flags)
     priv->mouse_enabled = TRUE;
     priv->keys_enabled = TRUE;
     priv->amplify = 1.0f;
-    priv->keyboard_device = NULL;
-    priv->repeat_delay = 0;
-    priv->repeat_interval = 0;
+    priv->keyboard_device = keyboard_device;
     priv->num_axes    = MAXAXES;
     priv->num_buttons = MAXBUTTONS;
 
@@ -614,81 +537,39 @@ jstkCorePreInit(InputDriverPtr drv, IDevPtr dev, int flags)
     priv->axis[5].type      = JSTK_TYPE_ACCELERATED;
     priv->axis[5].mapping   = JSTK_MAPPING_Y;
 
-    xf86CollectInputOptions(local, NULL, NULL);
-    xf86OptionListReport(local->options);
-
     /* Joystick device is mandatory */
-    priv->device = xf86SetStrOption(dev->commonOptions, "Device", NULL);
+    priv->device = xf86SetStrOption(pInfo->options, "Device", NULL);
     if (!priv->device)
-        priv->device = xf86SetStrOption(dev->commonOptions, "Path", NULL);
+        priv->device = xf86SetStrOption(pInfo->options, "Path", NULL);
 
     if (!priv->device) {
-        xf86Msg (X_ERROR, "%s: No Device specified.\n", local->name);
+        xf86Msg (X_ERROR, "%s: No Device specified.\n", pInfo->name);
         goto SetupProc_fail;
     }
 
-    xf86ProcessCommonOptions(local, local->options);
-
 #if DEBUG
-    debug_level = xf86SetIntOption(dev->commonOptions, "DebugLevel", 0);
+    debug_level = xf86SetIntOption(pInfo->options, "DebugLevel", 0);
     if (debug_level > 0) {
         xf86Msg(X_CONFIG, "%s: debug level set to %d\n", 
-                local->name, debug_level);
+                pInfo->name, debug_level);
     }
 #else
-    if (xf86SetIntOption(dev->commonOptions, "DebugLevel", 0) != 0) {
+    if (xf86SetIntOption(pInfo->options, "DebugLevel", 0) != 0) {
         xf86Msg(X_WARNING, "%s: DebugLevel: Compiled without debugging support!\n", 
-                local->name);
+                pInfo->name);
     }
 #endif
 
-    /* Parse option for autorepeat */
-    if ((s = xf86SetStrOption(dev->commonOptions, "AutoRepeat", NULL))) {
-        int delay, rate;
-        if (sscanf(s, "%d %d", &delay, &rate) != 2) {
-            xf86Msg(X_ERROR, "%s: \"%s\" is not a valid AutoRepeat value", 
-                    local->name, s);
-        } else {
-            priv->repeat_delay = delay;
-            if (rate != 0)
-                priv->repeat_interval = 1000/rate;
-            else priv->repeat_interval = 0;
-            DBG(1, xf86Msg(X_CONFIG, "Autorepeat set to delay=%d, interval=%d\n",
-                           priv->repeat_delay,priv->repeat_interval));
-        }
-        xfree(s);
-    }
-    
-    priv->rmlvo.rules = xf86SetStrOption(dev->commonOptions, "xkb_rules", NULL);
-    if (!priv->rmlvo.rules)
-	priv->rmlvo.rules = xf86SetStrOption(dev->commonOptions, "XkbRules", "evdev");
-
-    priv->rmlvo.model = xf86SetStrOption(dev->commonOptions, "xkb_model", NULL);
-    if (!priv->rmlvo.model)
-	priv->rmlvo.model = xf86SetStrOption(dev->commonOptions, "XkbModel", "evdev");
-
-    priv->rmlvo.layout = xf86SetStrOption(dev->commonOptions, "xkb_layout", NULL);
-    if (!priv->rmlvo.layout)
-	priv->rmlvo.layout = xf86SetStrOption(dev->commonOptions, "XkbLayout", "us");
-
-    priv->rmlvo.variant = xf86SetStrOption(dev->commonOptions, "xkb_variant", NULL);
-    if (!priv->rmlvo.variant)
-	priv->rmlvo.variant = xf86SetStrOption(dev->commonOptions, "XkbVariant", "");
-
-    priv->rmlvo.options = xf86SetStrOption(dev->commonOptions, "xkb_options", NULL);
-    if (!priv->rmlvo.options)
-	priv->rmlvo.options = xf86SetStrOption(dev->commonOptions, "XkbOptions", "");
-
-    priv->mouse_enabled = xf86SetBoolOption(dev->commonOptions, "StartMouseEnabled", TRUE);
-    priv->keys_enabled = xf86SetBoolOption(dev->commonOptions, "StartKeysEnabled", TRUE);
+    priv->mouse_enabled = xf86SetBoolOption(pInfo->options, "StartMouseEnabled", TRUE);
+    priv->keys_enabled = xf86SetBoolOption(pInfo->options, "StartKeysEnabled", TRUE);
 
     /* Process button mapping options */
     for (i=0; i<MAXBUTTONS; i++) {
         char p[64];
         sprintf(p,"MapButton%d",i+1);
-        s = xf86SetStrOption(dev->commonOptions, p, NULL);
+        s = xf86SetStrOption(pInfo->options, p, NULL);
         if (s != NULL) {
-            jstkParseButtonOption(s, priv, i, local->name);
+            jstkParseButtonOption(s, priv, i, pInfo->name);
         }
         DBG(1, xf86Msg(X_CONFIG, "Button %d mapped to %d\n", i+1, 
                        priv->button[i].mapping));
@@ -698,9 +579,9 @@ jstkCorePreInit(InputDriverPtr drv, IDevPtr dev, int flags)
     for (i=0; i<MAXAXES; i++) {
         char p[64];
         sprintf(p,"MapAxis%d",i+1);
-        s = xf86SetStrOption(dev->commonOptions, p, NULL);
+        s = xf86SetStrOption(pInfo->options, p, NULL);
         if (s != NULL) {
-            jstkParseAxisOption(s, priv, &priv->axis[i], local->name);
+            jstkParseAxisOption(s, priv, &priv->axis[i], pInfo->name);
         }
         DBG(1, xf86Msg(X_CONFIG, 
                        "Axis %d type is %d, mapped to %d, amplify=%.3f\n", i+1, 
@@ -709,23 +590,17 @@ jstkCorePreInit(InputDriverPtr drv, IDevPtr dev, int flags)
                        priv->axis[i].amplify));
     }
 
-    /* return the LocalDevice */
-    local->flags |= XI86_CONFIGURED;
-
-    priv->keyboard_device = jstkKeyboardPreInit(&JSTK_KEYBOARD, dev, flags);
-    if (priv->keyboard_device) {
-        priv->keyboard_device->private = priv;
-    }
-
-    return (local);
+    return Success;
 
 SetupProc_fail:
-    if (priv)
-        xfree(priv);
-    if (local)
-        local->private = NULL;
-    return NULL;
-/*    return (local); */ /* Makes X segfault on error */
+    if (priv) {
+        free(priv);
+        if (keyboard_device)
+            keyboard_device->private = NULL;
+    }
+    if (pInfo)
+        pInfo->private = NULL;
+    return BadValue;
 }
 
 
@@ -736,26 +611,39 @@ SetupProc_fail:
  * jstkCoreUnInit --
  *
  * Called when a device is unplugged and needs to be removed
+ * This is a bit tricky, because the keyboard device and the main device
+ * share the same private data, which must be freed only once, which is done
+ * by the main device.
+ * 
  *
  ***************************************************************************
  */
 
 static void
 jstkCoreUnInit(InputDriverPtr    drv,
-               LocalDevicePtr    local,
+               InputInfoPtr      pInfo,
                int               flags)
 {
-    JoystickDevPtr device = (JoystickDevPtr) local->private;
-
-    if (device->keyboard_device != NULL)
-    {
-        xf86DisableDevice(device->keyboard_device->dev, TRUE);
-        device->keyboard_device = NULL;
+    if (pInfo->private) {
+	JoystickDevPtr priv = (JoystickDevPtr) pInfo->private;
+	if (priv->keyboard_device == pInfo) {
+	    /* this is the keyboard device */
+	    /* Unlink from private data to notify that the 
+	     * keyboard device is no more, but don't free */
+	    priv->keyboard_device = NULL;
+	} else {
+	    /* freeing main device
+	       if keyboard still exists, notify keyboard device that it's
+	       private data is gone */
+	    if (priv->keyboard_device)
+		priv->keyboard_device->private = NULL;
+	    
+	    free (priv);
+	}
     }
 
-    xfree (device);
-    local->private = NULL;
-    xf86DeleteInput(local, 0);
+    pInfo->private = NULL;
+    xf86DeleteInput(pInfo, 0);
 }
 
 
@@ -767,10 +655,8 @@ _X_EXPORT InputDriverRec JOYSTICK = {
     NULL,
     jstkCorePreInit,
     jstkCoreUnInit,
-    NULL,
-    0
+    NULL
 };
-
 
 /*
  ***************************************************************************
@@ -789,7 +675,6 @@ jstkDriverPlug(pointer  module,
                int      *errmin)
 {
     xf86AddInputDriver(&JOYSTICK, module, 0);
-    xf86AddInputDriver(&JSTK_KEYBOARD, module, 0);
     return module;
 }
 
