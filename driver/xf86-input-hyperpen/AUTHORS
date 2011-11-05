@@ -1,0 +1,8 @@
+Based on the xf86Summa driver by Steven Lang <tiger@tyger.org>
+
+Modified for the Aiptek HyperPen 6000 / Tevion MD 9310
+by Roland Jansen <roland@lut.rwth-aachen.de>
+
+added button and 19200 bps stuff from the DigitalEdge driver on sourceforge
+by Christian Herzog <daduke@dataway.ch>
+
