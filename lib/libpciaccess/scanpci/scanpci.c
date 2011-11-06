@@ -67,7 +67,7 @@ print_pci_device( struct pci_device * dev, int verbose )
 	printf("domain 0x%04x ", dev->domain);
     printf("bus 0x%04x cardnum 0x%02x function 0x%02x:"
 	   " vendor 0x%04x device 0x%04x\n",
-	   dev->bus, 
+	   dev->bus,
 	   dev->dev,
 	   dev->func,
 	   dev->vendor_id,
@@ -78,7 +78,7 @@ print_pci_device( struct pci_device * dev, int verbose )
     else {
 	printf( " %s\n", dev_name );
     }
-    
+
     if ( verbose ) {
 	unsigned   i;
 	uint16_t  command, status;
@@ -109,7 +109,7 @@ print_pci_device( struct pci_device * dev, int verbose )
 
 	pci_device_cfg_read_u16( dev, & command, 4 );
 	pci_device_cfg_read_u16( dev, & status,  6 );
-	printf( "  STATUS    0x%04x  COMMAND 0x%04x\n", 
+	printf( "  STATUS    0x%04x  COMMAND 0x%04x\n",
 		status,
 		command );
 	printf( "  CLASS     0x%02x 0x%02x 0x%02x  REVISION 0x%02x\n",
@@ -128,7 +128,7 @@ print_pci_device( struct pci_device * dev, int verbose )
 		header_type,
 		latency_timer,
 		cache_line_size );
-	
+
 	pci_device_probe( dev );
 	for ( i = 0 ; i < 6 ; i++ ) {
 	    if ( dev->regions[i].base_addr != 0 ) {
@@ -143,7 +143,7 @@ print_pci_device( struct pci_device * dev, int verbose )
 			printf( " PREFETCHABLE" );
 		    }
 		}
-		
+
 		printf( "\n" );
 	    }
 	}

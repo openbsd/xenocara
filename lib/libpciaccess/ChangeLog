@@ -219,6 +219,182 @@ Date:   Fri Sep 25 21:19:41 2009 +0200
 
     Merge remote branch 'origin/master' into obsd
 
+commit d05ed57216726811388f17d7e87d7b6c7b8580ee
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Feb 2 20:50:17 2011 -0800
+
+    libpciaccess 0.12.1
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 7b4bd8222579b60bec6ab9dbf834d61b1fc7cc74
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Fri Jan 28 16:07:07 2011 -0500
+
+    config: replace deprecated AC_HELP_STRING with AS_HELP_STRING
+    
+    This silences an Automake warning.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 5fdae72cc62f4341ae5fa0b7696809d4ccd1bd32
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Jan 13 22:05:02 2011 -0800
+
+    config: remove AC_PROG_CC as it overrides AC_PROG_C_C99
+    
+    XORG_STRICT_OPTION from XORG_DEFAULT_OPTIONS calls
+    AC_PROG_C_C99. This sets gcc with -std=gnu99.
+    If AC_PROG_CC macro is called afterwards, it resets CC to gcc.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 48d08f09e36d4aa8e02812874794937d7c778b43
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Jan 13 21:58:02 2011 -0800
+
+    config: replace deprecated AM_CONFIG_HEADER with AC_CONFIG_HEADERS
+    
+    Regroup AC statements under the Autoconf initialization section.
+    Regroup AM statements under the Automake initialization section.
+    Add missing AC_CONFIG_SRCDIR
+    Replace obsolete argument to AC_OUTPUT with AC_CONFIG_FILES
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 066032e08407311cfc24dbc1db3245cf8133ad94
+Author: Bryce Harrington <bryce@canonical.com>
+Date:   Tue Dec 14 12:03:48 2010 -0500
+
+    Fix detection of multi-function cards
+    
+    Bit 7 of the pci device header type is an indicator of multi-function
+    devices, so needs to be masked when examining the bridge type.
+    Thanks go to Chih-Pin Wu for finding the bug and its fix.
+    
+    https://bugs.launchpad.net/ubuntu/+source/libpciaccess/+bug/681207
+    
+    Reviewed-by: Adam Jackson <ajax@redhat.com>
+    Signed-off-by: Bryce Harrington <bryce@canonical.com>
+
+commit 6220537628fb5e55c94d7dbe1ec190bf38d3b01b
+Author: Jesse Barnes <jbarnes@virtuousgeek.org>
+Date:   Mon Dec 6 12:18:19 2010 -0800
+
+    Revert "Don't try to use bogus bridge data"
+    
+    This reverts commit 2bda5b733bb12854760750c08138db95e77aea0c.
+    
+    It actually conflicts with 9ba94caf57e3a8c3e9c6f3f5f068f4a7a7b3ff9d
+    which came earlier, but I didn't catch it probably because I did a blind
+    rebase before pushing.
+    
+    When reading bridge bus info, we may need to read out the current bridge
+    info if the PCI bridge private is uninitialized, so remove the check at
+    the top that would always short circuit the case where the priv was
+    still 0.
+    
+    References:
+    https://bugs.launchpad.net/ubuntu/+source/libpciaccess/+bug/681207.
+    
+    Reported-by: Bryce Harrington <bryce@canonical.com>
+    Signed-off-by: Jesse Barnes <jbarnes@virtuousgeek.org>
+
+commit 30bfd795557cada4a3c2ce36329ceb22160acff8
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Nov 21 11:14:05 2010 -0800
+
+    Sun's copyrights belong to Oracle now
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit e29e477ff84ab16938e58ae2719358c14c86a500
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Fri Oct 15 17:34:16 2010 -0400
+
+    config: use LDADD to obtain appropriate dependencies
+    
+    In generated scanpci/Makefile, this line is added:
+    scanpci_DEPENDENCIES = $(top_builddir)/src/libpciaccess.la
+    
+    If the content of the library changes, the tool will rebuild.
+    When scanpci was in the same directory as the library, the .la file was used.
+    This will also ensure the "installed" pciaccess library is not used.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit fd476deabb97d08086ad465c4d0e913c9437a6bb
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Sep 26 14:57:19 2010 -0400
+
+    include: add a Makefile to install and distribute header file
+    
+    Makefiles are simpler when they only handle what is in their
+    directory.
+    
+    Reviewed-by: Rémi Cardona <remi@gentoo.org>
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 2b5c81c2d8c643e58ac69d1d7f7a626fc392b1ea
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Sep 26 14:42:50 2010 -0400
+
+    config: replace INCLUDES, which is deprecated, with AM_CPPFLAGS
+    
+    Fixes an Automake warning.
+    
+    Reviewed-by: Rémi Cardona <remi@gentoo.org>
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit b4ee1ccfcd9e9d41033db7b6b5e0a771ae5939d2
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Aug 22 08:10:23 2010 -0400
+
+    config: provide a makefile for scanpci man pages
+    
+    Reviewed-by: Rémi Cardona <remi@gentoo.org>
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 8daa135ae9eae0a0ed48cc68d6abce16141cd426
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Sep 26 08:39:57 2010 -0400
+
+    scanpci.c: remove offending whitespace as reported by git diff
+    
+    Reviewed-by: Rémi Cardona <remi@gentoo.org>
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit dcb79a20cba1eaaa83158b80bb538d50b003bd79
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Aug 22 08:10:23 2010 -0400
+
+    config: provide a makefile for scanpci dev tool
+    
+    No function changes.
+    
+    Note that automake generates a wrapper script if libpciaccess
+    is not installed at configuration time, which is the most common case.
+    
+    If it is installed at configuration time, you get an executable.
+    
+    The makefile build order ensures the lib is build before scanpci.
+    
+    Reviewed-by: Rémi Cardona <remi@gentoo.org>
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 555772964820d88f9481eb48d0431dddd8ba7aa5
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sat Aug 21 19:54:04 2010 -0400
+
+    config: upgrade AC_DEFINE_DIR to AX_DEFINE_DIR
+    
+    Use the latest version now hosted by GNU.
+    The renaming protects Autoconf namespace.
+    There is no functional change in the macro.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
 commit 97d677746cd70ec9eb1f33483cc829a0063953bc
 Author: Dave Airlie <airlied@redhat.com>
 Date:   Fri Sep 25 10:25:56 2009 +1000

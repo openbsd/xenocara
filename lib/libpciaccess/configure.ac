@@ -22,9 +22,14 @@ dnl DEALINGS IN THE SOFTWARE.
 dnl
 dnl Process this file with autoconf to create configure.
 
+# Initialize Autoconf
 AC_PREREQ([2.60])
+AC_INIT([libpciaccess],[0.12.1],
+        [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg&component=libpciaccess],[libpciaccess])
+AC_CONFIG_SRCDIR([Makefile.am])
+AC_CONFIG_HEADERS([config.h])
 
-AC_INIT(libpciaccess, 0.12.0, [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg&component=libpciaccess], libpciaccess)
+# Initialize Automake
 AM_INIT_AUTOMAKE([foreign dist-bzip2])
 AM_MAINTAINER_MODE
 
@@ -33,16 +38,14 @@ m4_ifndef([XORG_MACROS_VERSION],
           [m4_fatal([must install xorg-macros 1.3 or later before running autoconf/autogen])])
 XORG_MACROS_VERSION(1.3)
 XORG_DEFAULT_OPTIONS
-AM_CONFIG_HEADER(config.h)
 
 # Check for progs
-AC_PROG_CC
 AC_PROG_LIBTOOL
 
 pciids_path=/usr/share/hwdata
-AC_ARG_WITH(pciids-path, AC_HELP_STRING([--with-pciids-path=PCIIDS_PATH],
+AC_ARG_WITH(pciids-path, AS_HELP_STRING([--with-pciids-path=PCIIDS_PATH],
 	[Path to pci.ids file]), [pciids_path="$withval"])
-AC_DEFINE_DIR(PCIIDS_PATH, pciids_path, [Path to pci.ids])
+AX_DEFINE_DIR(PCIIDS_PATH, pciids_path, [Path to pci.ids])
 
 AC_ARG_ENABLE(linux-rom-fallback, AS_HELP_STRING([--enable-linux-rom-fallback],
 		[Enable support for falling back to /dev/mem for roms (default: disabled)]),
@@ -53,7 +56,7 @@ if test "x$LINUX_ROM" = xyes; then
 fi
 
 use_zlib=no
-AC_ARG_WITH(zlib, AC_HELP_STRING([--with-zlib],
+AC_ARG_WITH(zlib, AS_HELP_STRING([--with-zlib],
 	[Enable zlib support to read gzip compressed pci.ids]),
 	[use_zlib="$withval"])
 if test "x$use_zlib" = xyes; then
@@ -122,6 +125,10 @@ AC_SUBST(PCIACCESS_CFLAGS)
 AC_SUBST(PCIACCESS_LIBS)
 		  
 
-AC_OUTPUT([Makefile
+AC_CONFIG_FILES([Makefile
+	   include/Makefile
+	   man/Makefile
 	   src/Makefile
+	   scanpci/Makefile
            pciaccess.pc])
+AC_OUTPUT

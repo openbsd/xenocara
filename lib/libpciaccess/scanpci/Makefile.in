@@ -14,7 +14,7 @@
 
 @SET_MAKE@
 
-# 
+#
 # (C) Copyright IBM Corporation 2006
 # All Rights Reserved.
 #
@@ -59,7 +59,8 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
-subdir = src
+noinst_PROGRAMS = scanpci$(EXEEXT)
+subdir = scanpci
 DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/m4/ax_define_dir.m4 \
@@ -69,42 +70,11 @@ am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 mkinstalldirs = $(SHELL) $(install_sh) -d
 CONFIG_HEADER = $(top_builddir)/config.h
 CONFIG_CLEAN_FILES =
-am__vpath_adj_setup = srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`;
-am__vpath_adj = case $$p in \
-    $(srcdir)/*) f=`echo "$$p" | sed "s|^$$srcdirstrip/||"`;; \
-    *) f=$$p;; \
-  esac;
-am__strip_dir = `echo $$p | sed -e 's|^.*/||'`;
-am__installdirs = "$(DESTDIR)$(libdir)"
-libLTLIBRARIES_INSTALL = $(INSTALL)
-LTLIBRARIES = $(lib_LTLIBRARIES)
-am__DEPENDENCIES_1 =
-libpciaccess_la_DEPENDENCIES = $(am__DEPENDENCIES_1)
-am__libpciaccess_la_SOURCES_DIST = common_bridge.c common_iterator.c \
-	common_init.c common_interface.c common_io.c \
-	common_capability.c common_device_name.c common_map.c \
-	pciaccess_private.h common_vgaarb_stub.c common_vgaarb.c \
-	freebsd_pci.c x86_pci.c linux_sysfs.c linux_devmem.c \
-	linux_devmem.h netbsd_pci.c openbsd_pci.c solx_devfs.c \
-	pci_tools.h
-@FREEBSD_FALSE@@GNU_FALSE@@LINUX_FALSE@@NETBSD_FALSE@@SOLARIS_TRUE@am__objects_1 = common_vgaarb_stub.lo
-@FREEBSD_FALSE@@GNU_FALSE@@LINUX_FALSE@@NETBSD_TRUE@am__objects_1 = common_vgaarb_stub.lo
-@FREEBSD_FALSE@@GNU_FALSE@@LINUX_TRUE@am__objects_1 =  \
-@FREEBSD_FALSE@@GNU_FALSE@@LINUX_TRUE@	common_vgaarb.lo
-@FREEBSD_FALSE@@GNU_TRUE@am__objects_1 = common_vgaarb_stub.lo
-@FREEBSD_TRUE@am__objects_1 = common_vgaarb_stub.lo
-@FREEBSD_FALSE@@GNU_FALSE@@LINUX_FALSE@@NETBSD_FALSE@@OPENBSD_FALSE@@SOLARIS_TRUE@am__objects_2 = solx_devfs.lo
-@FREEBSD_FALSE@@GNU_FALSE@@LINUX_FALSE@@NETBSD_FALSE@@OPENBSD_TRUE@am__objects_2 = openbsd_pci.lo
-@FREEBSD_FALSE@@GNU_FALSE@@LINUX_FALSE@@NETBSD_TRUE@am__objects_2 = netbsd_pci.lo
-@FREEBSD_FALSE@@GNU_FALSE@@LINUX_TRUE@am__objects_2 = linux_sysfs.lo \
-@FREEBSD_FALSE@@GNU_FALSE@@LINUX_TRUE@	linux_devmem.lo
-@FREEBSD_FALSE@@GNU_TRUE@am__objects_2 = x86_pci.lo
-@FREEBSD_TRUE@am__objects_2 = freebsd_pci.lo
-am_libpciaccess_la_OBJECTS = common_bridge.lo common_iterator.lo \
-	common_init.lo common_interface.lo common_io.lo \
-	common_capability.lo common_device_name.lo common_map.lo \
-	$(am__objects_1) $(am__objects_2)
-libpciaccess_la_OBJECTS = $(am_libpciaccess_la_OBJECTS)
+PROGRAMS = $(noinst_PROGRAMS)
+am_scanpci_OBJECTS = scanpci.$(OBJEXT)
+scanpci_OBJECTS = $(am_scanpci_OBJECTS)
+scanpci_LDADD = $(LDADD)
+scanpci_DEPENDENCIES = $(top_builddir)/src/libpciaccess.la
 DEFAULT_INCLUDES = -I. -I$(srcdir) -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__depfiles_maybe = depfiles
@@ -116,8 +86,8 @@ LTCOMPILE = $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) \
 CCLD = $(CC)
 LINK = $(LIBTOOL) --tag=CC --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
 	$(AM_LDFLAGS) $(LDFLAGS) -o $@
-SOURCES = $(libpciaccess_la_SOURCES)
-DIST_SOURCES = $(am__libpciaccess_la_SOURCES_DIST)
+SOURCES = $(scanpci_SOURCES)
+DIST_SOURCES = $(scanpci_SOURCES)
 ETAGS = etags
 CTAGS = ctags
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
@@ -264,33 +234,8 @@ sharedstatedir = @sharedstatedir@
 sysconfdir = @sysconfdir@
 target_alias = @target_alias@
 AM_CPPFLAGS = -I$(top_srcdir)/include
-AM_CFLAGS = $(CWARNFLAGS) @PCIACCESS_CFLAGS@
-lib_LTLIBRARIES = libpciaccess.la
-@FREEBSD_TRUE@OS_SUPPORT = freebsd_pci.c
-@GNU_TRUE@OS_SUPPORT = x86_pci.c
-@LINUX_TRUE@OS_SUPPORT = linux_sysfs.c linux_devmem.c linux_devmem.h
-@NETBSD_TRUE@OS_SUPPORT = netbsd_pci.c
-@OPENBSD_TRUE@OS_SUPPORT = openbsd_pci.c
-@SOLARIS_TRUE@OS_SUPPORT = solx_devfs.c pci_tools.h
-@FREEBSD_TRUE@VGA_ARBITER = common_vgaarb_stub.c
-@GNU_TRUE@VGA_ARBITER = common_vgaarb_stub.c
-@LINUX_TRUE@VGA_ARBITER = common_vgaarb.c
-@NETBSD_TRUE@VGA_ARBITER = common_vgaarb_stub.c
-@SOLARIS_TRUE@VGA_ARBITER = common_vgaarb_stub.c
-libpciaccess_la_SOURCES = common_bridge.c \
-	common_iterator.c \
-	common_init.c \
-	common_interface.c \
-	common_io.c \
-	common_capability.c \
-	common_device_name.c \
-	common_map.c \
-	pciaccess_private.h \
-	$(VGA_ARBITER) \
-	$(OS_SUPPORT)
-
-libpciaccess_la_LIBADD = $(PCIACCESS_LIBS)
-libpciaccess_la_LDFLAGS = -version-number 0:10:8 -no-undefined
+LDADD = $(top_builddir)/src/libpciaccess.la
+scanpci_SOURCES = scanpci.c
 all: all-am
 
 .SUFFIXES:
@@ -304,9 +249,9 @@ $(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am  $(am__confi
 	      exit 1;; \
 	  esac; \
 	done; \
-	echo ' cd $(top_srcdir) && $(AUTOMAKE) --foreign  src/Makefile'; \
+	echo ' cd $(top_srcdir) && $(AUTOMAKE) --foreign  scanpci/Makefile'; \
 	cd $(top_srcdir) && \
-	  $(AUTOMAKE) --foreign  src/Makefile
+	  $(AUTOMAKE) --foreign  scanpci/Makefile
 .PRECIOUS: Makefile
 Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 	@case '$?' in \
@@ -324,35 +269,16 @@ $(top_srcdir)/configure: @MAINTAINER_MODE_TRUE@ $(am__configure_deps)
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
 $(ACLOCAL_M4): @MAINTAINER_MODE_TRUE@ $(am__aclocal_m4_deps)
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
-install-libLTLIBRARIES: $(lib_LTLIBRARIES)
-	@$(NORMAL_INSTALL)
-	test -z "$(libdir)" || $(mkdir_p) "$(DESTDIR)$(libdir)"
-	@list='$(lib_LTLIBRARIES)'; for p in $$list; do \
-	  if test -f $$p; then \
-	    f=$(am__strip_dir) \
-	    echo " $(LIBTOOL) --mode=install $(libLTLIBRARIES_INSTALL) $(INSTALL_STRIP_FLAG) '$$p' '$(DESTDIR)$(libdir)/$$f'"; \
-	    $(LIBTOOL) --mode=install $(libLTLIBRARIES_INSTALL) $(INSTALL_STRIP_FLAG) "$$p" "$(DESTDIR)$(libdir)/$$f"; \
-	  else :; fi; \
-	done
 
-uninstall-libLTLIBRARIES:
-	@$(NORMAL_UNINSTALL)
-	@set -x; list='$(lib_LTLIBRARIES)'; for p in $$list; do \
-	  p=$(am__strip_dir) \
-	  echo " $(LIBTOOL) --mode=uninstall rm -f '$(DESTDIR)$(libdir)/$$p'"; \
-	  $(LIBTOOL) --mode=uninstall rm -f "$(DESTDIR)$(libdir)/$$p"; \
+clean-noinstPROGRAMS:
+	@list='$(noinst_PROGRAMS)'; for p in $$list; do \
+	  f=`echo $$p|sed 's/$(EXEEXT)$$//'`; \
+	  echo " rm -f $$p $$f"; \
+	  rm -f $$p $$f ; \
 	done
-
-clean-libLTLIBRARIES:
-	-test -z "$(lib_LTLIBRARIES)" || rm -f $(lib_LTLIBRARIES)
-	@list='$(lib_LTLIBRARIES)'; for p in $$list; do \
-	  dir="`echo $$p | sed -e 's|/[^/]*$$||'`"; \
-	  test "$$dir" != "$$p" || dir=.; \
-	  echo "rm -f \"$${dir}/so_locations\""; \
-	  rm -f "$${dir}/so_locations"; \
-	done
-libpciaccess.la: $(libpciaccess_la_OBJECTS) $(libpciaccess_la_DEPENDENCIES) 
-	$(LINK) -rpath $(libdir) $(libpciaccess_la_LDFLAGS) $(libpciaccess_la_OBJECTS) $(libpciaccess_la_LIBADD) $(LIBS)
+scanpci$(EXEEXT): $(scanpci_OBJECTS) $(scanpci_DEPENDENCIES) 
+	@rm -f scanpci$(EXEEXT)
+	$(LINK) $(scanpci_LDFLAGS) $(scanpci_OBJECTS) $(scanpci_LDADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
@@ -360,23 +286,7 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/common_bridge.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/common_capability.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/common_device_name.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/common_init.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/common_interface.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/common_io.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/common_iterator.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/common_map.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/common_vgaarb.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/common_vgaarb_stub.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/freebsd_pci.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/linux_devmem.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/linux_sysfs.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/netbsd_pci.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/openbsd_pci.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/solx_devfs.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/x86_pci.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/scanpci.Po@am__quote@
 
 .c.o:
 @am__fastdepCC_TRUE@	if $(COMPILE) -MT $@ -MD -MP -MF "$(DEPDIR)/$*.Tpo" -c -o $@ $<; \
@@ -486,11 +396,8 @@ distdir: $(DISTFILES)
 	done
 check-am: all-am
 check: check-am
-all-am: Makefile $(LTLIBRARIES)
+all-am: Makefile $(PROGRAMS)
 installdirs:
-	for dir in "$(DESTDIR)$(libdir)"; do \
-	  test -z "$$dir" || $(mkdir_p) "$$dir"; \
-	done
 install: install-am
 install-exec: install-exec-am
 install-data: install-data-am
@@ -517,7 +424,7 @@ maintainer-clean-generic:
 	@echo "it deletes files that may require special tools to rebuild."
 clean: clean-am
 
-clean-am: clean-generic clean-libLTLIBRARIES clean-libtool \
+clean-am: clean-generic clean-libtool clean-noinstPROGRAMS \
 	mostlyclean-am
 
 distclean: distclean-am
@@ -538,7 +445,7 @@ info-am:
 
 install-data-am:
 
-install-exec-am: install-libLTLIBRARIES
+install-exec-am:
 
 install-info: install-info-am
 
@@ -564,20 +471,19 @@ ps: ps-am
 
 ps-am:
 
-uninstall-am: uninstall-info-am uninstall-libLTLIBRARIES
+uninstall-am: uninstall-info-am
 
 .PHONY: CTAGS GTAGS all all-am check check-am clean clean-generic \
-	clean-libLTLIBRARIES clean-libtool ctags distclean \
+	clean-libtool clean-noinstPROGRAMS ctags distclean \
 	distclean-compile distclean-generic distclean-libtool \
 	distclean-tags distdir dvi dvi-am html html-am info info-am \
 	install install-am install-data install-data-am install-exec \
-	install-exec-am install-info install-info-am \
-	install-libLTLIBRARIES install-man install-strip installcheck \
-	installcheck-am installdirs maintainer-clean \
-	maintainer-clean-generic mostlyclean mostlyclean-compile \
-	mostlyclean-generic mostlyclean-libtool pdf pdf-am ps ps-am \
-	tags uninstall uninstall-am uninstall-info-am \
-	uninstall-libLTLIBRARIES
+	install-exec-am install-info install-info-am install-man \
+	install-strip installcheck installcheck-am installdirs \
+	maintainer-clean maintainer-clean-generic mostlyclean \
+	mostlyclean-compile mostlyclean-generic mostlyclean-libtool \
+	pdf pdf-am ps ps-am tags uninstall uninstall-am \
+	uninstall-info-am
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.

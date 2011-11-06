@@ -270,10 +270,6 @@ pci_device_get_bridge_buses(struct pci_device * dev, int *primary_bus,
 	return ENODEV;
     }
 
-    if (!priv->bridge.pci) {
-	return ENODEV;
-    }
-
     switch ((dev->device_class >> 8) & 0x0ff) {
     case 0x00:
 	/* What to do for host bridges?  I'm pretty sure this isn't right.
@@ -294,7 +290,7 @@ pci_device_get_bridge_buses(struct pci_device * dev, int *primary_bus,
     case 0x04:
     if (priv->bridge.pci == NULL)
         read_bridge_info(priv);
-    if (priv->header_type == 0x01) {
+    if ((priv->header_type & 0x7f) == 0x01) {
 	*primary_bus = priv->bridge.pci->primary_bus;
 	*secondary_bus = priv->bridge.pci->secondary_bus;
 	*subordinate_bus = priv->bridge.pci->subordinate_bus;
@@ -308,7 +304,7 @@ pci_device_get_bridge_buses(struct pci_device * dev, int *primary_bus,
     case 0x07:
     if (priv->bridge.pcmcia == NULL)
         read_bridge_info(priv);
-    if (priv->header_type == 0x02) {
+    if ((priv->header_type & 0x7f) == 0x02) {
 	*primary_bus = priv->bridge.pcmcia->primary_bus;
 	*secondary_bus = priv->bridge.pcmcia->card_bus;
 	*subordinate_bus = priv->bridge.pcmcia->subordinate_bus;
