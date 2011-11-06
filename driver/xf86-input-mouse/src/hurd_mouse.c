@@ -144,7 +144,15 @@ OsMousePreInit(InputInfoPtr pInfo, const char *protocol, int flags)
     xf86Msg(X_CONFIG, "%s: Protocol: %s\n", pInfo->name, protocol);
 
     /* Collect the options, and process the common options. */
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) < 12
+    /* need some special handling here. xf86CollectInputOptions will reset
+     * pInfo->options. To re-merge the previously set arguments, pass the
+     * original pInfo->options in.
+     */
+    xf86CollectInputOptions(pInfo, NULL, pInfo->options);
+#else
     COLLECT_INPUT_OPTIONS(pInfo, NULL);
+#endif
     xf86ProcessCommonOptions(pInfo, pInfo->options);
 
     /* Check if the device can be opened. */

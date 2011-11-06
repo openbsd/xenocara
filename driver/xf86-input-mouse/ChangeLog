@@ -1,3 +1,47 @@
+commit 9f969bd4d1995aa802bef1cfe93afedc412bbd8a
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Jul 5 09:09:26 2011 -0700
+
+    xf86-input-mouse 1.7.1
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit b12fa0d5ab23237bc2ac02143739ef6861e55146
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Jun 24 22:52:59 2011 -0700
+
+    Fix Solaris issues with new ABI12 init process.
+    
+    Based on BSD changes in commit a22879c6779283684fe4a61543fc95179b4f5d0b
+    by Alexandr Shadchin
+    
+    Fix segfaults when mouse device fails to open.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 1780667854d73bbd0e0596271b09f93321cd0b1d
+Author: Samuel Thibault <samuel.thibault@ens-lyon.org>
+Date:   Wed Mar 30 02:26:25 2011 +0200
+
+    Fix Hurd mouse driver with XInput ABI before 12
+    
+    Commit 7bf22a36 (Use pInfo->options instead of conf-idev.) updated the
+    xf86CollectInputOptions call into keeping previous options (for ABI before
+    12). The hurd mouse driver also needs to be updated.
+
+commit d6e9623875de5714e85f7da5782ea665116f86dc
+Author: Samuel Thibault <samuel.thibault@ens-lyon.org>
+Date:   Wed Mar 30 01:00:47 2011 +0200
+
+    Fix OSMouse OS-defined protocol support
+    
+    Fix regression introduced by 0a088df6: in the case of an OS-specific
+    protocol, the protocol is PROT_UNKNOWN, but should not be rejected: the core
+    mouse drive just needs to let the OS driver handle it.
+    
+    Signed-off-by: Samuel Thibault <samuel.thibault@ens-lyon.org>
+
 commit a07c353f01f99ef3e62f84a32e91d539a4e4863a
 Author: Peter Hutterer <peter.hutterer@who-t.net>
 Date:   Thu Mar 10 08:32:23 2011 +1000

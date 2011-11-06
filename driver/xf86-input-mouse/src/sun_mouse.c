@@ -212,76 +212,8 @@ vuidPreInit(InputInfoPtr pInfo, const char *protocol, int flags)
 	return FALSE;
     }
 
-    pMse->protocol = protocol;
-    xf86Msg(X_CONFIG, "%s: Protocol: %s\n", pInfo->name, protocol);
-
-    /* Collect the options, and process the common options. */
-    COLLECT_INPUT_OPTIONS(pInfo, NULL);
-    xf86ProcessCommonOptions(pInfo, pInfo->options);
-
     pVuidMse->buffer = (unsigned char *)&pVuidMse->event;
     pVuidMse->strmod = xf86SetStrOption(pInfo->options, "StreamsModule", NULL);
-
-    /* Check if the device can be opened. */
-    pInfo->fd = xf86OpenSerial(pInfo->options);
-    if (pInfo->fd == -1) {
-	if (xf86GetAllowMouseOpenFail()) {
-	    xf86Msg(X_WARNING, "%s: cannot open input device\n", pInfo->name);
-	} else {
-	    xf86Msg(X_ERROR, "%s: cannot open input device\n", pInfo->name);
-	    free(pVuidMse->strmod);
-	    free(pVuidMse);
-	    free(pMse);
-	    return FALSE;
-	}
-    } else {
-	if (pVuidMse->strmod) {
-	    /* Check to see if module is already pushed */
-	    SYSCALL(i = ioctl(pInfo->fd, I_FIND, pVuidMse->strmod));
-
-	    if (i == 0) { /* Not already pushed */
-		SYSCALL(i = ioctl(pInfo->fd, I_PUSH, pVuidMse->strmod));
-		if (i < 0) {
-		    xf86Msg(X_ERROR,
-			"%s: cannot push module '%s' onto mouse device: %s\n",
-			pInfo->name, pVuidMse->strmod, strerror(errno));
-		    xf86CloseSerial(pInfo->fd);
-		    pInfo->fd = -1;
-		    free(pVuidMse->strmod);
-		    free(pVuidMse);
-		    free(pMse);
-		    return FALSE;
-		}
-	    }
-	}
-
-	buttons = xf86SetIntOption(pInfo->options, "Buttons", 0);
-	if (buttons == 0) {
-	    SYSCALL(i = ioctl(pInfo->fd, MSIOBUTTONS, &buttons));
-	    if (i == 0) {
-		pInfo->options =
-		    xf86ReplaceIntOption(pInfo->options,
-					 "Buttons", buttons);
-		xf86Msg(X_INFO, "%s: Setting Buttons option to \"%d\"\n",
-			pInfo->name, buttons);
-	    }
-	}
-
-	if (pVuidMse->strmod) {
-	    SYSCALL(i = ioctl(pInfo->fd, I_POP, pVuidMse->strmod));
-	    if (i == -1) {
-		xf86Msg(X_WARNING,
-			"%s: cannot pop module '%s' off mouse device: %s\n",
-			pInfo->name, pVuidMse->strmod, strerror(errno));
-	    }
-	}
-
-	xf86CloseSerial(pInfo->fd);
-	pInfo->fd = -1;
-    }
-
-    /* Process common mouse options (like Emulate3Buttons, etc). */
-    pMse->CommonOptions(pInfo);
 
     /* Setup the local procs. */
     pVuidMse->wrapped_device_control = pInfo->device_control;

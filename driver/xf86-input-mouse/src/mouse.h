@@ -78,6 +78,7 @@ typedef enum {
     PROT_AUTO,
     PROT_SYSMOUSE,
     PROT_WSMOUSE,
+    PROT_VUID,
     PROT_NUMPROTOS	/* This must always be last. */
 } MouseProtocolID;
 
