@@ -13,7 +13,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
-/* $OpenBSD: ws.c,v 1.34 2011/10/16 17:54:07 shadchin Exp $ */
+/* $OpenBSD: ws.c,v 1.35 2011/11/06 16:20:27 shadchin Exp $ */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -56,7 +56,6 @@ static int wsDeviceOn(DeviceIntPtr);
 static void wsDeviceOff(DeviceIntPtr);
 static void wsReadInput(InputInfoPtr);
 static void wsSendButtons(InputInfoPtr, int);
-static int wsChangeControl(InputInfoPtr, xDeviceCtl *);
 static int wsSwitchMode(ClientPtr, DeviceIntPtr, int);
 static Bool wsOpen(InputInfoPtr);
 static void wsClose(InputInfoPtr);
