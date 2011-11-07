@@ -1,4 +1,4 @@
-/*	$OpenBSD: emumb.c,v 1.5 2011/07/17 13:08:38 matthieu Exp $ */
+/*	$OpenBSD: emumb.c,v 1.6 2011/11/07 18:33:04 shadchin Exp $ */
 /*
  * Copyright 1990,91 by Thomas Roell, Dinkelscherben, Germany.
  * Copyright 1993 by David Dawes <dawes@xfree86.org>
@@ -318,9 +318,9 @@ wsmbEmuPreInit(InputInfoPtr pInfo)
 		priv->emulateMB.enabled = xf86SetBoolOption(pInfo->options,
 		    "Emulate3Buttons",
 		    MBEMU_ENABLED);
-		xf86Msg(X_INFO, "%s: Forcing middle mouse button "
+		xf86IDrvMsg(pInfo, X_INFO, "Forcing middle mouse button "
 		    "emulation %s.\n",
-		    pInfo->name, (priv->emulateMB.enabled) ? "on" : "off");
+		    (priv->emulateMB.enabled) ? "on" : "off");
 	}
 
 	priv->emulateMB.timeout = xf86SetIntOption(pInfo->options,
@@ -401,7 +401,8 @@ wsmbEmuInitProperty(DeviceIntPtr dev)
 	rc = XIChangeDeviceProperty(dev, prop_mbemu, XA_INTEGER, 8,
 	    PropModeReplace, 1, &priv->emulateMB.enabled, FALSE);
 	if (rc != Success) {
-		xf86Msg(X_ERROR, "cannot create device property %s: %d\n",
+		xf86IDrvMsg(pInfo, X_ERROR,
+		    "cannot create device property %s: %d\n",
 		    WS_PROP_MIDBUTTON, rc);
 		return;
 	}
@@ -415,8 +416,9 @@ wsmbEmuInitProperty(DeviceIntPtr dev)
 	    &priv->emulateMB.timeout, FALSE);
 
 	if (rc != Success) {
-		xf86Msg(X_ERROR, "cannot create device property %s\n",
-		WS_PROP_MIDBUTTON_TIMEOUT);
+		xf86IDrvMsg(pInfo, X_ERROR,
+		    "cannot create device property %s: %d\n",
+		    WS_PROP_MIDBUTTON_TIMEOUT, rc);
 		return;
 	}
 	XISetDevicePropertyDeletable(dev, prop_mbtimeout, FALSE);
