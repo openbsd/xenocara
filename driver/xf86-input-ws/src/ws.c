@@ -13,7 +13,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
-/* $OpenBSD: ws.c,v 1.37 2011/11/07 18:36:53 shadchin Exp $ */
+/* $OpenBSD: ws.c,v 1.38 2011/11/07 18:42:32 shadchin Exp $ */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -139,7 +139,7 @@ wsPreInit(InputDriverPtr drv, InputInfoPtr pInfo, int flags)
 	    ws_debug_level);
 	xf86IDrvMsg(pInfo, X_INFO, "debuglevel %d\n", ws_debug_level);
 #endif
-	priv->devName = xf86FindOptionValue(pInfo->options, "Device");
+	priv->devName = xf86SetStrOption(pInfo->options, "Device", NULL);
 	if (priv->devName == NULL) {
 		xf86IDrvMsg(pInfo, X_ERROR, "No Device specified.\n");
 		rc = BadValue;
@@ -219,7 +219,7 @@ wsPreInit(InputDriverPtr drv, InputInfoPtr pInfo, int flags)
 	}
 	priv->inv_x = 0;
 	priv->inv_y = 0;
-	s = xf86FindOptionValue(pInfo->options, "Rotate");
+	s = xf86SetStrOption(pInfo->options, "Rotate", NULL);
 	if (s) {
 		if (xf86NameCmp(s, "CW") == 0) {
 			priv->inv_x = 1;
