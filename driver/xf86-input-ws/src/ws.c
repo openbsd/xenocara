@@ -13,7 +13,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
-/* $OpenBSD: ws.c,v 1.36 2011/11/07 18:33:04 shadchin Exp $ */
+/* $OpenBSD: ws.c,v 1.37 2011/11/07 18:36:53 shadchin Exp $ */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -46,10 +46,7 @@
 static MODULESETUPPROTO(SetupProc);
 static void TearDownProc(pointer);
 
-#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) < 12
-static InputInfoPtr wsPreInit(InputDriverPtr, IDevPtr, int);
-#endif
-static int wsPreInit12(InputDriverPtr, InputInfoPtr, int);
+static int wsPreInit(InputDriverPtr, InputInfoPtr, int);
 static int wsProc(DeviceIntPtr, int);
 static int wsDeviceInit(DeviceIntPtr);
 static int wsDeviceOn(DeviceIntPtr);
@@ -96,11 +93,7 @@ InputDriverRec WS = {
 	1,
 	"ws",
 	NULL,
-#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) < 12
 	wsPreInit,
-#else
-	wsPreInit12,
-#endif
 	NULL,
 	NULL,
 	0
@@ -126,7 +119,7 @@ TearDownProc(pointer p)
 
 
 static int
-wsPreInit12(InputDriverPtr drv, InputInfoPtr pInfo, int flags)
+wsPreInit(InputDriverPtr drv, InputInfoPtr pInfo, int flags)
 {
 	WSDevicePtr priv;
 	MessageType buttons_from = X_CONFIG;
@@ -140,12 +133,7 @@ wsPreInit12(InputDriverPtr drv, InputInfoPtr pInfo, int flags)
 	}
 	pInfo->private = priv;
 
-#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) < 12
-	xf86CollectInputOptions(pInfo, NULL, NULL);
-	xf86ProcessCommonOptions(pInfo, pInfo->options);
-#else
 	xf86CollectInputOptions(pInfo, NULL);
-#endif
 #ifdef DEBUG
 	ws_debug_level = xf86SetIntOption(pInfo->options, "DebugLevel",
 	    ws_debug_level);
@@ -313,12 +301,7 @@ wsPreInit12(InputDriverPtr drv, InputInfoPtr pInfo, int flags)
 	pInfo->device_control = wsProc;
 	pInfo->read_input = wsReadInput;
 	pInfo->switch_mode = wsSwitchMode;
-#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) < 12
-	pInfo->conversion_proc = NULL;
-	pInfo->reverse_conversion_proc = NULL;
-	pInfo->old_x = -1;
-	pInfo->old_y = -1;
-#endif
+
 	xf86IDrvMsg(pInfo, buttons_from, "Buttons: %d\n", priv->buttons);
 
 	wsClose(pInfo);
@@ -333,33 +316,6 @@ fail:
 	}
 	return rc;
 }
-
-#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) < 12
-static InputInfoPtr
-wsPreInit(InputDriverPtr drv, IDevPtr dev, int flags)
-{
-	InputInfoPtr pInfo = NULL;
-
-	pInfo = xf86AllocateInput(drv, 0);
-	if (pInfo == NULL) {
-		return NULL;
-	}
-	pInfo->name = dev->identifier;
-	pInfo->flags = XI86_POINTER_CAPABLE | XI86_SEND_DRAG_EVENTS;
-	pInfo->conf_idev = dev;
-	pInfo->close_proc = NULL;
-	pInfo->private_flags = 0;
-	pInfo->always_core_feedback = NULL;
-
-	if (wsPreInit12(drv, pInfo, flags) != Success) {
-		xf86DeleteInput(pInfo, 0);
-		return NULL;
-	}
-	/* mark the device configured */
-	pInfo->flags |= XI86_CONFIGURED;
-	return pInfo;
-}
-#endif
 
 static int
 wsProc(DeviceIntPtr pWS, int what)
@@ -452,26 +408,16 @@ wsDeviceInit(DeviceIntPtr pWS)
 
 	xf86InitValuatorAxisStruct(pWS, 0,
 	    axes_labels[0],
-	    xmin, xmax, 1, 0, 1
-#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 12
-	    , priv->type == WSMOUSE_TYPE_TPANEL  ? Absolute : Relative
-#endif
-	);
+	    xmin, xmax, 1, 0, 1,
+	    priv->type == WSMOUSE_TYPE_TPANEL ? Absolute : Relative);
 	xf86InitValuatorDefaults(pWS, 0);
 
 	xf86InitValuatorAxisStruct(pWS, 1,
 	    axes_labels[1],
-	    ymin, ymax, 1, 0, 1
-#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 12
-	    , priv->type == WSMOUSE_TYPE_TPANEL ? Absolute : Relative
-#endif
-	);
+	    ymin, ymax, 1, 0, 1,
+	    priv->type == WSMOUSE_TYPE_TPANEL ? Absolute : Relative);
 	xf86InitValuatorDefaults(pWS, 1);
 
-#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) < 12
-	xf86MotionHistoryAllocate(pInfo);
-	AssignTypeAndName(pWS, pInfo->atom, pInfo->name);
-#endif
 	pWS->public.on = FALSE;
 	if (wsOpen(pInfo) != Success) {
 		return !Success;
