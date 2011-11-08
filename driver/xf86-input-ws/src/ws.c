@@ -13,7 +13,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
-/* $OpenBSD: ws.c,v 1.41 2011/11/08 12:55:26 shadchin Exp $ */
+/* $OpenBSD: ws.c,v 1.42 2011/11/08 12:57:44 shadchin Exp $ */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -152,7 +152,7 @@ wsPreInit(InputDriverPtr drv, InputInfoPtr pInfo, int flags)
 		buttons_from = X_DEFAULT;
 	}
 	priv->negativeZ = priv->positiveZ = WS_NOZMAP;
-	s = xf86SetStrOption(pInfo->options, "ZAxisMapping", "4 5 6 7");
+	s = xf86SetStrOption(pInfo->options, "ZAxisMapping", "4 5");
 	if (s) {
 		int b1, b2;
 
@@ -175,7 +175,7 @@ wsPreInit(InputDriverPtr drv, InputInfoPtr pInfo, int flags)
 		free(s);
 	}
 	priv->negativeW = priv->positiveW = WS_NOZMAP;
-	s = xf86SetStrOption(pInfo->options, "WAxisMapping", NULL);
+	s = xf86SetStrOption(pInfo->options, "WAxisMapping", "6 7");
 	if (s) {
 		int b1, b2;
 
