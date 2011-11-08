@@ -13,7 +13,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
-/* $OpenBSD: ws.c,v 1.38 2011/11/07 18:42:32 shadchin Exp $ */
+/* $OpenBSD: ws.c,v 1.39 2011/11/08 12:51:32 shadchin Exp $ */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -47,6 +47,7 @@ static MODULESETUPPROTO(SetupProc);
 static void TearDownProc(pointer);
 
 static int wsPreInit(InputDriverPtr, InputInfoPtr, int);
+static void wsUnInit(InputDriverPtr, InputInfoPtr, int);
 static int wsProc(DeviceIntPtr, int);
 static int wsDeviceInit(DeviceIntPtr);
 static int wsDeviceOn(DeviceIntPtr);
@@ -94,7 +95,7 @@ InputDriverRec WS = {
 	"ws",
 	NULL,
 	wsPreInit,
-	NULL,
+	wsUnInit,
 	NULL,
 	0
 };
@@ -167,6 +168,7 @@ wsPreInit(InputDriverPtr drv, InputInfoPtr pInfo, int flags)
 			xf86IDrvMsg(pInfo, X_WARNING,
 			    "invalid ZAxisMapping value: \"%s\"\n", s);
 		}
+		free(s);
 	}
 	if (priv->negativeZ > priv->buttons) {
 		priv->buttons = priv->negativeZ;
@@ -193,6 +195,7 @@ wsPreInit(InputDriverPtr drv, InputInfoPtr pInfo, int flags)
 			xf86IDrvMsg(pInfo, X_WARNING,
 			    "invalid WAxisMapping value: \"%s\"\n", s);
 		}
+		free(s);
 	}
 	if (priv->negativeW > priv->buttons) {
 		priv->buttons = priv->negativeW;
@@ -238,6 +241,7 @@ wsPreInit(InputDriverPtr drv, InputInfoPtr pInfo, int flags)
 			xf86IDrvMsg(pInfo, X_ERROR, "Valid options are "
 			    "\"CW\", \"CCW\", or \"UD\"\n");
 		}
+		free(s);
 	}
 	if (wsOpen(pInfo) != Success) {
 		rc = BadValue;
@@ -315,6 +319,18 @@ fail:
 		pInfo->private = NULL;
 	}
 	return rc;
+}
+
+static void
+wsUnInit(InputDriverPtr drv, InputInfoPtr pInfo, int flags)
+{
+	WSDevicePtr priv = pInfo->private;
+
+	if (priv) {
+		free(priv->devName);
+		priv->devName = NULL;
+	}
+	xf86DeleteInput(pInfo, flags);
 }
 
 static int
