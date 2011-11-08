@@ -13,7 +13,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
-/* $OpenBSD: ws.c,v 1.40 2011/11/08 12:53:14 shadchin Exp $ */
+/* $OpenBSD: ws.c,v 1.41 2011/11/08 12:55:26 shadchin Exp $ */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -151,7 +151,7 @@ wsPreInit(InputDriverPtr drv, InputInfoPtr pInfo, int flags)
 		priv->buttons = DFLTBUTTONS;
 		buttons_from = X_DEFAULT;
 	}
-	priv->negativeZ =  priv->positiveZ = WS_NOZMAP;
+	priv->negativeZ = priv->positiveZ = WS_NOZMAP;
 	s = xf86SetStrOption(pInfo->options, "ZAxisMapping", "4 5 6 7");
 	if (s) {
 		int b1, b2;
@@ -159,26 +159,22 @@ wsPreInit(InputDriverPtr drv, InputInfoPtr pInfo, int flags)
 		if (sscanf(s, "%d %d", &b1, &b2) == 2 &&
 		    b1 > 0 && b1 <= NBUTTONS &&
 		    b2 > 0 && b2 <= NBUTTONS) {
-			priv->negativeZ = b1;
-			priv->positiveZ = b2;
+			priv->negativeZ = 1 << (b1 - 1);
+			priv->positiveZ = 1 << (b2 - 1);
 			xf86IDrvMsg(pInfo, X_CONFIG,
 			    "ZAxisMapping: buttons %d and %d\n",
 			    b1, b2);
+			if (max(b1, b2) > priv->buttons) {
+				priv->buttons = max(b1, b2);
+				buttons_from = X_CONFIG;
+			}
 		} else {
 			xf86IDrvMsg(pInfo, X_WARNING,
 			    "invalid ZAxisMapping value: \"%s\"\n", s);
 		}
 		free(s);
 	}
-	if (priv->negativeZ > priv->buttons) {
-		priv->buttons = priv->negativeZ;
-		buttons_from = X_CONFIG;
-	}
-	if (priv->positiveZ > priv->buttons) {
-		priv->buttons = priv->positiveZ;
-		buttons_from = X_CONFIG;
-	}
-	priv->negativeW =  priv->positiveW = WS_NOZMAP;
+	priv->negativeW = priv->positiveW = WS_NOZMAP;
 	s = xf86SetStrOption(pInfo->options, "WAxisMapping", NULL);
 	if (s) {
 		int b1, b2;
@@ -186,24 +182,20 @@ wsPreInit(InputDriverPtr drv, InputInfoPtr pInfo, int flags)
 		if (sscanf(s, "%d %d", &b1, &b2) == 2 &&
 		    b1 > 0 && b1 <= NBUTTONS &&
 		    b2 > 0 && b2 <= NBUTTONS) {
-			priv->negativeW = b1;
-			priv->positiveW = b2;
+			priv->negativeW = 1 << (b1 - 1);
+			priv->positiveW = 1 << (b2 - 1);
 			xf86IDrvMsg(pInfo, X_CONFIG,
 			    "WAxisMapping: buttons %d and %d\n",
 			    b1, b2);
+			if (max(b1, b2) > priv->buttons) {
+				priv->buttons = max(b1, b2);
+				buttons_from = X_CONFIG;
+			}
 		} else {
 			xf86IDrvMsg(pInfo, X_WARNING,
 			    "invalid WAxisMapping value: \"%s\"\n", s);
 		}
 		free(s);
-	}
-	if (priv->negativeW > priv->buttons) {
-		priv->buttons = priv->negativeW;
-		buttons_from = X_CONFIG;
-	}
-	if (priv->positiveW > priv->buttons) {
-		priv->buttons = priv->positiveW;
-		buttons_from = X_CONFIG;
 	}
 
 	priv->screen_no = xf86SetIntOption(pInfo->options, "ScreenNo", 0);
@@ -613,12 +605,12 @@ wsReadInput(InputInfoPtr pInfo)
 			buttons &= ~(priv->negativeZ | priv->positiveZ);
 			if (dz < 0) {
 				DBG(4, ErrorF("Z -> button %d\n",
-					priv->negativeZ));
-				zbutton = 1 << (priv->negativeZ - 1);
+					ffs(priv->negativeZ)));
+				zbutton = priv->negativeZ;
 			} else {
 				DBG(4, ErrorF("Z -> button %d\n",
-					priv->positiveZ));
-				zbutton = 1 << (priv->positiveZ - 1);
+					ffs(priv->positiveZ)));
+				zbutton = priv->positiveZ;
 			}
 			buttons |= zbutton;
 			dz = 0;
@@ -628,12 +620,12 @@ wsReadInput(InputInfoPtr pInfo)
 			buttons &= ~(priv->negativeW | priv->positiveW);
 			if (dw < 0) {
 				DBG(4, ErrorF("W -> button %d\n",
-					priv->negativeW));
-				wbutton = 1 << (priv->negativeW - 1);
+					ffs(priv->negativeW)));
+				wbutton = priv->negativeW;
 			} else {
 				DBG(4, ErrorF("W -> button %d\n",
-					priv->positiveW));
-				wbutton = 1 << (priv->positiveW - 1);
+					ffs(priv->positiveW)));
+				wbutton = priv->positiveW;
 			}
 			buttons |= wbutton;
 			dw = 0;
