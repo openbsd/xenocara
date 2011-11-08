@@ -13,7 +13,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
-/* $OpenBSD: ws.c,v 1.39 2011/11/08 12:51:32 shadchin Exp $ */
+/* $OpenBSD: ws.c,v 1.40 2011/11/08 12:53:14 shadchin Exp $ */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -673,21 +673,20 @@ static void
 wsSendButtons(InputInfoPtr pInfo, int buttons)
 {
 	WSDevicePtr priv = (WSDevicePtr)pInfo->private;
-	int button, mask;
+	int change, button, mask;
 
-	for (button = 1; button < NBUTTONS; button++) {
+	change = buttons ^ priv->lastButtons;
+	while (change) {
+		button = ffs(change);
 		mask = 1 << (button - 1);
-		if ((mask & priv->lastButtons) != (mask & buttons)) {
-			if (!wsmbEmuFilterEvent(pInfo, button,
-				(buttons & mask) != 0)) {
-				xf86PostButtonEvent(pInfo->dev, TRUE,
-				    button, (buttons & mask) != 0,
-				    0, 0);
-				DBG(3, ErrorF("post button event %d %d\n",
-					button, (buttons & mask) != 0))
-				    }
+		change &= ~mask;
+		if (!wsmbEmuFilterEvent(pInfo, button, (buttons & mask) != 0)) {
+			xf86PostButtonEvent(pInfo->dev, TRUE,
+			    button, (buttons & mask) != 0, 0, 0);
+			DBG(3, ErrorF("post button event %d %d\n",
+			    button, (buttons & mask) != 0))
 		}
-	} /* for */
+	}
 	priv->lastButtons = buttons;
 } /* wsSendButtons */
 
