@@ -13,7 +13,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
-/* $OpenBSD: ws.c,v 1.44 2011/11/09 16:07:13 shadchin Exp $ */
+/* $OpenBSD: ws.c,v 1.45 2011/11/09 16:08:42 shadchin Exp $ */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -125,7 +125,7 @@ wsPreInit(InputDriverPtr drv, InputInfoPtr pInfo, int flags)
 	WSDevicePtr priv;
 	MessageType buttons_from = X_CONFIG;
 	char *s;
-	int rc;
+	int rc = BadValue;
 
 	priv = (WSDevicePtr)calloc(1, sizeof(WSDeviceRec));
 	if (priv == NULL) {
@@ -142,7 +142,6 @@ wsPreInit(InputDriverPtr drv, InputInfoPtr pInfo, int flags)
 	priv->devName = xf86SetStrOption(pInfo->options, "Device", NULL);
 	if (priv->devName == NULL) {
 		xf86IDrvMsg(pInfo, X_ERROR, "No Device specified.\n");
-		rc = BadValue;
 		goto fail;
 	}
 	priv->buttons = xf86SetIntOption(pInfo->options, "Buttons", 0);
@@ -200,11 +199,8 @@ wsPreInit(InputDriverPtr drv, InputInfoPtr pInfo, int flags)
 	priv->screen_no = xf86SetIntOption(pInfo->options, "ScreenNo", 0);
 	xf86IDrvMsg(pInfo, X_CONFIG, "associated screen: %d\n",
 	    priv->screen_no);
-	if (priv->screen_no >= screenInfo.numScreens ||
-	    priv->screen_no < 0) {
+	if (priv->screen_no < 0 || priv->screen_no >= screenInfo.numScreens)
 		priv->screen_no = 0;
-	}
-
 
 	priv->swap_axes = xf86SetBoolOption(pInfo->options, "SwapXY", 0);
 	if (priv->swap_axes) {
@@ -234,15 +230,10 @@ wsPreInit(InputDriverPtr drv, InputInfoPtr pInfo, int flags)
 		}
 		free(s);
 	}
-	if (wsOpen(pInfo) != Success) {
-		rc = BadValue;
+	if (wsOpen(pInfo) != Success)
 		goto fail;
-	}
-	if (ioctl(pInfo->fd, WSMOUSEIO_GTYPE, &priv->type) != 0) {
-		wsClose(pInfo);
-		rc = BadValue;
+	if (ioctl(pInfo->fd, WSMOUSEIO_GTYPE, &priv->type) != 0)
 		goto fail;
-	}
 	if (priv->type == WSMOUSE_TYPE_TPANEL) {
 		pInfo->type_name = XI_TOUCHSCREEN;
 		priv->raw = xf86SetBoolOption(pInfo->options, "Raw", 1);
@@ -257,11 +248,9 @@ wsPreInit(InputDriverPtr drv, InputInfoPtr pInfo, int flags)
 
 	if (priv->type == WSMOUSE_TYPE_TPANEL && priv->raw) {
 		if (ioctl(pInfo->fd, WSMOUSEIO_GCALIBCOORDS,
-			&priv->coords) != 0) {
+		    &priv->coords) != 0) {
 			xf86IDrvMsg(pInfo, X_ERROR,
 			    "GCALIBCOORS failed %s\n", strerror(errno));
-			wsClose(pInfo);
-			rc = BadValue;
 			goto fail;
 		}
 
@@ -299,6 +288,8 @@ wsPreInit(InputDriverPtr drv, InputInfoPtr pInfo, int flags)
 	return Success;
 
 fail:
+	if (pInfo->fd >= 0)
+		wsClose(pInfo);
 	if (priv != NULL) {
 		free(priv);
 		pInfo->private = NULL;
