@@ -13,7 +13,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
-/* $OpenBSD: ws.c,v 1.45 2011/11/09 16:08:42 shadchin Exp $ */
+/* $OpenBSD: ws.c,v 1.46 2011/11/09 16:17:44 shadchin Exp $ */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -59,8 +59,8 @@ static Bool wsOpen(InputInfoPtr);
 static void wsClose(InputInfoPtr);
 static void wsControlProc(DeviceIntPtr , PtrCtrl *);
 
-static void wsInitProperty(DeviceIntPtr);
-static int wsSetProperty(DeviceIntPtr, Atom, XIPropertyValuePtr, BOOL);
+static void wsInitCalibProperty(DeviceIntPtr);
+static int wsSetCalibProperty(DeviceIntPtr, Atom, XIPropertyValuePtr, BOOL);
 
 static Atom prop_calibration = 0;
 static Atom prop_swap = 0;
@@ -414,8 +414,9 @@ wsDeviceInit(DeviceIntPtr pWS)
 	if (wsOpen(pInfo) != Success) {
 		return !Success;
 	}
-	wsInitProperty(pWS);
-	XIRegisterPropertyHandler(pWS, wsSetProperty, NULL, NULL);
+
+	if (priv->type == WSMOUSE_TYPE_TPANEL)
+		wsInitCalibProperty(pWS);
 	wsmbEmuInitProperty(pWS);
 	return Success;
 }
@@ -712,15 +713,13 @@ wsControlProc(DeviceIntPtr device, PtrCtrl *ctrl)
 }
 
 static void
-wsInitProperty(DeviceIntPtr device)
+wsInitCalibProperty(DeviceIntPtr device)
 {
 	InputInfoPtr pInfo = device->public.devicePrivate;
 	WSDevicePtr priv = (WSDevicePtr)pInfo->private;
 	int rc;
 
-	DBG(1, ErrorF("wsInitProperty\n"));
-	if (priv->type != WSMOUSE_TYPE_TPANEL)
-		return;
+	DBG(1, ErrorF("wsInitCalibProperty\n"));
 
 	prop_calibration = MakeAtom(WS_PROP_CALIBRATION,
 	    strlen(WS_PROP_CALIBRATION), TRUE);
@@ -737,11 +736,14 @@ wsInitProperty(DeviceIntPtr device)
 	    PropModeReplace, 1, &priv->swap_axes, FALSE);
 	if (rc != Success)
 		return;
+
+	XIRegisterPropertyHandler(device, wsSetCalibProperty, NULL, NULL);
+
 	return;
 }
 
 static int
-wsSetProperty(DeviceIntPtr device, Atom atom, XIPropertyValuePtr val,
+wsSetCalibProperty(DeviceIntPtr device, Atom atom, XIPropertyValuePtr val,
     BOOL checkonly)
 {
 	InputInfoPtr pInfo = device->public.devicePrivate;
@@ -751,11 +753,7 @@ wsSetProperty(DeviceIntPtr device, Atom atom, XIPropertyValuePtr val,
 	AxisInfoPtr ax = device->valuator->axes,
 		    ay = device->valuator->axes + 1;
 
-	DBG(1, ErrorF("wsSetProperty %s\n", NameForAtom(atom)));
-
-	/* Ignore non panel devices */
-	if (priv->type != WSMOUSE_TYPE_TPANEL)
-		return Success;
+	DBG(1, ErrorF("wsSetCalibProperty %s\n", NameForAtom(atom)));
 
 	if (atom == prop_calibration) {
 		if (val->format != 32 || val->type != XA_INTEGER)
