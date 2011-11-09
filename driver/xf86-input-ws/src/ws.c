@@ -13,7 +13,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
-/* $OpenBSD: ws.c,v 1.43 2011/11/09 16:04:50 shadchin Exp $ */
+/* $OpenBSD: ws.c,v 1.44 2011/11/09 16:07:13 shadchin Exp $ */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -246,19 +246,13 @@ wsPreInit(InputDriverPtr drv, InputInfoPtr pInfo, int flags)
 	if (priv->type == WSMOUSE_TYPE_TPANEL) {
 		pInfo->type_name = XI_TOUCHSCREEN;
 		priv->raw = xf86SetBoolOption(pInfo->options, "Raw", 1);
+		if (priv->raw) {
+			xf86IDrvMsg(pInfo, X_CONFIG,
+			    "device will work in raw mode\n");
+		}
 	} else {
 		pInfo->type_name = XI_MOUSE;
-		priv->raw = xf86SetBoolOption(pInfo->options, "Raw", 0);
-		if (priv->raw) {
-			xf86IDrvMsg(pInfo, X_WARNING,
-			    "Device is not a touch panel,"
-			    "ignoring 'Option \"Raw\"'\n");
-			priv->raw = 0;
-		}
-	}
-	if (priv->raw) {
-		xf86IDrvMsg(pInfo, X_CONFIG,
-		    "device will work in raw mode\n");
+		priv->raw = 0;
 	}
 
 	if (priv->type == WSMOUSE_TYPE_TPANEL && priv->raw) {
