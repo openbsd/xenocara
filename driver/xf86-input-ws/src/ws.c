@@ -13,7 +13,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
-/* $OpenBSD: ws.c,v 1.42 2011/11/08 12:57:44 shadchin Exp $ */
+/* $OpenBSD: ws.c,v 1.43 2011/11/09 16:04:50 shadchin Exp $ */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -134,7 +134,6 @@ wsPreInit(InputDriverPtr drv, InputInfoPtr pInfo, int flags)
 	}
 	pInfo->private = priv;
 
-	xf86CollectInputOptions(pInfo, NULL);
 #ifdef DEBUG
 	ws_debug_level = xf86SetIntOption(pInfo->options, "DebugLevel",
 	    ws_debug_level);
