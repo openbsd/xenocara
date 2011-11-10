@@ -79,7 +79,6 @@
 ./usr/X11R6/include/xorg/randrstr.h
 ./usr/X11R6/include/xorg/region.h
 ./usr/X11R6/include/xorg/regionstr.h
-./usr/X11R6/include/xorg/renderedge.h
 ./usr/X11R6/include/xorg/resource.h
 ./usr/X11R6/include/xorg/rgb.h
 ./usr/X11R6/include/xorg/screenint.h

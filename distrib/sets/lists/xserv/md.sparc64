@@ -260,8 +260,6 @@
 ./usr/X11R6/man/man5/xorg.conf.5
 ./usr/X11R6/man/man5/xorg.conf.d.5
 ./usr/X11R6/share/aclocal/xorg-server.m4
-./usr/X11R6/share/X11/xorg.conf.d
-./usr/X11R6/share/X11/xorg.conf.d/50-fpit.conf
 ./var/db/xkb
 ./var/db/xkb/README.compiled
 ./var/log
