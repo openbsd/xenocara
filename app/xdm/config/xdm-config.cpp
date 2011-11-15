@@ -1,4 +1,4 @@
-! $Xorg: xdm-conf.cpp,v 1.3 2000/08/17 19:54:17 cpqbld Exp $
+! $OpenBSD: xdm-config.cpp,v 1.4 2011/11/15 20:53:45 matthieu Exp $
 !
 !
 !
@@ -17,7 +17,7 @@ DisplayManager.keyFile:		XDMCONFIGDIR/xdm-keys
 DisplayManager.servers:		XDMCONFIGDIR/Xservers
 DisplayManager.accessFile:	XDMCONFIGDIR/Xaccess
 DisplayManager*resources:	XDMCONFIGDIR/Xresources
-DisplayManager.willing:		SU nobody -c XDMSCRIPTDIR/Xwilling
+DisplayManager.willing:		SU nobody -s /bin/sh XDMSCRIPTDIR/Xwilling
 ! All displays should use authorization, but we cannot be sure
 ! X terminals may not be configured that way, so they will require
 ! individual resource settings.

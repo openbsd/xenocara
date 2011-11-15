@@ -5,6 +5,7 @@
 !
 !
 
+
 #define BS \ /* cpp can be trickier than m4 */
 #define NLBS \n\ /* don't remove these comments */
 xlogin*login.translations: #override BS
@@ -21,7 +22,7 @@ xlogin*login.translations: #override BS
 
 xlogin*greeting: Welcome to CLIENTHOST
 xlogin*namePrompt: \040\040\040\040\040\040\040Login:
-xlogin*fail: Login incorrect
+xlogin*fail: Login incorrect or forbidden by policy
 
 XHASHif WIDTH > 800
 xlogin*greetFont: -adobe-helvetica-bold-o-normal--24-240-75-75-p-138-iso8859-1

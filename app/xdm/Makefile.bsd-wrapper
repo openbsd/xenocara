@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile.bsd-wrapper,v 1.18 2010/03/28 09:33:02 matthieu Exp $
+# $OpenBSD: Makefile.bsd-wrapper,v 1.19 2011/11/15 20:53:44 matthieu Exp $
 .include <bsd.own.mk>
 
 XDMCONFIGDIR=/etc/X11/xdm
@@ -14,10 +14,11 @@ DEFAULT_VT=  --with-default-vt=vt02
 CONFIGURE_ARGS= --enable-privsep \
 	--enable-bsdauth \
 	$(DEFAULT_VT) \
-	--disable-dynamic-greeter \
 	--disable-ipv6 \
 	--with-authdir=$(XDMCONFIGDIR) \
-	--with-xdmlibdir=$(XDMCONFIGDIR) \
+	--with-xdmlibdir=$(LIBDIR)/modules \
+        --with-xdmconfigdir=$(XDMCONFIGDIR) \
+        --with-xdmscriptdir=$(XDMCONFIGDIR) \
 	--with-pixmapdir=$(PIXMAPDIR) \
 	--with-bw-pixmap=OpenBSD_1bpp.xpm \
 	--with-color-pixmap=OpenBSD_15bpp.xpm

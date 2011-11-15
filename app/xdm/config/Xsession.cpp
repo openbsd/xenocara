@@ -1,28 +1,49 @@
 XCOMM!SHELL_CMD
 XCOMM
-XCOMM $OpenBSD: Xsession.cpp,v 1.7 2011/03/19 15:40:02 matthieu Exp $
+XCOMM $OpenBSD: Xsession.cpp,v 1.8 2011/11/15 20:53:45 matthieu Exp $
 
 XCOMM redirect errors to a file in user's home directory if we can
-for errfile in "$HOME/.xsession-errors" "${TMPDIR-/tmp}/xses-$USER" "/tmp/xses-$USER"
-do
-	case "$errfile" in
-	"/tmp/*" | "/var/tmp/*")
-		errfile=`mktemp ${errfile}.XXXXXXXXXX` || break;
-		;;
-	esac
-	if ( umask 077 && cp /dev/null "$errfile" 2> /dev/null )
-	then
-		exec > "$errfile" 2>&1
-		break
-	fi
-done
+
+errfile="$HOME/.xsession-errors"
+if ( umask 077 && cp /dev/null "$errfile" 2> /dev/null )
+then
+	exec > "$errfile" 2>&1
+else
+#ifdef MKTEMP_COMMAND
+	mktemp=MKTEMP_COMMAND
+	for errfile in "${TMPDIR-/tmp}/xses-$USER" "/tmp/xses-$USER"
+	do
+		if ef="$( umask 077 && $mktemp "$errfile.XXXXXX" 2> /dev/null)"
+		then
+			exec > "$ef" 2>&1
+			mv "$ef" "$errfile" 2> /dev/null
+			break
+		fi
+	done
+#else
+XCOMM Since this system doesn't have a mktemp command to allow secure
+XCOMM creation of files in shared directories, no fallback error log
+XCOMM is being used.   See https://bugs.freedesktop.org/show_bug.cgi?id=5898
+XCOMM
+XCOMM 	for errfile in "${TMPDIR-/tmp}/xses-$USER" "/tmp/xses-$USER"
+XCOMM	do
+XCOMM		if ( umask 077 && cp /dev/null "$errfile" 2> /dev/null )
+XCOMM		then
+XCOMM			exec > "$errfile" 2>&1
+XCOMM			break
+XCOMM		fi
+XCOMM	done
+
+	exec > /dev/null 2>&1
+
+#endif
+fi
 
 XCOMM if we have private ssh key(s), start ssh-agent and add the key(s)
 id1=$HOME/.ssh/identity
 id2=$HOME/.ssh/id_dsa
 id3=$HOME/.ssh/id_rsa
-id4=$HOME/.ssh/id_ecdsa
-if [ -x /usr/bin/ssh-agent ] && [ -f $id1 -o -f $id2 -o -f $id3 -o -f $id4 ];
+if [ -x /usr/bin/ssh-agent ] && [ -f $id1 -o -f $id2 -o -f $id3 ];
 then
 	eval `ssh-agent -s`
 	ssh-add < /dev/null
@@ -46,7 +67,7 @@ case $# in
 	esac
 esac
 
-XCOMM  The startup script is not intended to have arguments.
+XCOMM The startup script is not intended to have arguments.
 
 startup=$HOME/.xsession
 resources=$HOME/.Xresources

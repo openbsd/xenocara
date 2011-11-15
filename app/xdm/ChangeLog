@@ -1,3 +1,1760 @@
+commit ccd89d6ad826171e04e1d531e584a3a6917c6e62
+Author: Matthieu Herrb <matthieu.herrb@laas.fr>
+Date:   Mon Nov 7 15:41:04 2011 +0000
+
+    Merge OpenBSD Logo for OpenBSD 5.0
+
+commit 82006dd310fc567a37809231b816e70c20ca52c9
+Author: Matthieu Herrb <matthieu.herrb@laas.fr>
+Date:   Mon Nov 7 15:40:06 2011 +0000
+
+    Fix error string placement when a logo is present.
+    
+    Center it under the text area.
+
+commit 3505864d55d1361f6903167fc0f1c6f957e37a12
+Merge: 5c41cd5 284532c
+Author: Matthieu Herrb <matthieu.herrb@laas.fr>
+Date:   Mon Nov 7 15:17:55 2011 +0000
+
+    Merge remote-tracking branch 'origin/master' into obsd
+    
+    Conflicts:
+    	Makefile.am
+    	config/Xsession.cpp
+    	greeter/Login.c
+    	xdm/auth.c
+
+commit 284532c0884893728b75ca37f5d2a9a33f7bc8db
+Author: Julien Cristau <jcristau@debian.org>
+Date:   Sat Oct 22 17:14:46 2011 +0200
+
+    greeter: link against -lXrender if xft is enabled
+    
+    XmuCvtStringToXftColor uses XRenderParseColor, so require xrender for
+    the xft option, and link against it.
+    
+    Signed-off-by: Julien Cristau <jcristau@debian.org>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 8eee942be0db913511b4c53f94829e1201dfdf00
+Author: Michał Górny <mgorny@gentoo.org>
+Date:   Wed Sep 28 21:25:17 2011 +0200
+
+    Support systemd startup notification.
+    
+    If libsystemd-daemon support is enabled, xdm uses it to announce its
+    startup as soon as the session is established. This gives the user
+    opportunity to delay I/O-intensive operations until the X server is
+    started so that they would not interfere with its loading while keeping
+    the machine busy when user types in his/her login.
+    
+    Reviewed-by: Jamey Sharp <jamey@minilop.net>
+    Reviewed-by: Gaetan Nadon <memsize@videotron.ca>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit c43eb799774743bc50233eff6643c51a5fbe6899
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Sep 20 19:22:48 2011 -0700
+
+    Fix warnings about printing longs with int type format strings
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 618039261b0c7f14eb3b32c8f636464369724407
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Sep 20 19:11:20 2011 -0700
+
+    Mark some chars as const to fix gcc -Wwrite-strings warnings
+    
+    Can't fix all the warnings, due to the Xt API, but can fix a bunch.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 011a2710a69cd345a8ee3a6b2f15407b4c3b355a
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Sun Sep 25 00:56:15 2011 -0700
+
+    Require xt >= 1.0 for appdefaultdir
+    
+    https://bugs.freedesktop.org/show_bug.cgi?id=7237
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit 23949f9a4c30b5dfa67a88b3dd2523f09f163d91
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Sun Sep 25 00:41:25 2011 -0700
+
+    configure.ac: Bump to 1.1.11
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit 225493d3c6be64dafec69095f254a1bee6386e33
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Sep 20 17:39:34 2011 -0700
+
+    fix whitespace issues
+    
+    Performed with:
+      find * -type f | xargs perl -i -p -e 's{[ \t]+$}{}'
+      find * -type f | xargs perl -i -p -e 's{^[ ]+\t}{\t}'
+    git diff -w & git diff -b show no diffs from this change
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 8016dfd9080393c23d19b1c34e81d1f544655d5a
+Author: Matěj Cepl <mcepl@redhat.com>
+Date:   Mon Aug 8 21:26:47 2011 +0200
+
+    Use explicitly /bin/sh for running of Xwilling script via su.
+    
+    su nobody -c <command> uses a default shell of the user, which in case
+    of nobody is (at least on Linux distros) /sbin/nologin.
+    
+    Signed-off-by: Matěj Cepl <mcepl@redhat.com>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewd-by: Mark Kettenis <kettenis@openbsd.org>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 0782f1c24c658c06736907dd143f8e67359ac235
+Author: Michał Górny <mgorny@gentoo.org>
+Date:   Wed Aug 31 18:02:53 2011 +0200
+
+    Support installing systemd unit file.
+    
+    Fixes: https://bugs.freedesktop.org/show_bug.cgi?id=38339
+    Signed-off-by: Michał Górny <mgorny@gentoo.org>
+    Reviewed-by: Gaetan Nadon <memsize@videotron.ca>
+    Tested-by: Gaetan Nadon <memsize@videotron.ca>
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 5574b79c2d6c89f96484b890872ba1594fb6ddd2
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Jun 2 21:52:20 2011 -0700
+
+    Simplify FailedLogin code
+    
+    Relies on username going out of scope to discard the pointer returned by
+    pam_get_item that pam_end frees at the bottom of the loop.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit 29e9393697d0b7158c2c1e0856180713c7c8f925
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Jun 2 21:39:16 2011 -0700
+
+    Stop using username retrieved from PAM before pam_end frees it.
+    
+    The first time a failed login message was syslogged it had the right
+    username, but subsequent ones kept reusing that pointer, even though
+    PAM had freed it and it may have been reused and filled with something
+    else, resulting in garbage user names for the later login failures.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit eca379146cf487cbd05e1698ea12c1835327d1d4
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Jun 2 20:46:57 2011 -0700
+
+    Add _X_ATTRIBUTE_PRINTF to LogVWrite declaration
+    
+    Suggested by gcc -Wmissing-format-attribute
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit 7b8a4bb753d9da4cde60379050493d811c9b3044
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Jun 2 20:45:32 2011 -0700
+
+    Replace GCC_PRINTFLIKE with xproto's _X_ATTRIBUTE_PRINTF
+    
+    The existing GCC_PRINTFLIKE declaration seems to have been broken, since
+    it only defined GCC_PRINTFLIKE if GCC_PRINTFLIKE was already defined.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit 7843f1e00caba67025ac75c4985ddd3af7924a9c
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Jun 2 20:38:29 2011 -0700
+
+    Use C99 named initializers for XSetWindowAttributes structure
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit 3c3f9cde9dda4c74178cc5428ebf8967c26a516a
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Jun 2 18:33:56 2011 -0700
+
+    Bug 13455: allowNullPasswd: true doesn't work until the second login attempt
+    
+    Assign allow_null_passwd and allow_root_login variables' values before call to
+    pam_authenticate()
+    
+    https://bugs.freedesktop.org/show_bug.cgi?id=13455
+    
+    Based on a fix suggested by: Tim Shumakov <ars_1@mail.ru>
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit 7d69ff7b9dfcd3e4410f181225f66f51089eef67
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri May 27 22:46:09 2011 -0700
+
+    On Solaris, make sure PAM_TTY is only ever set to an actual /dev path
+    
+    Solaris PAM & auditing insist this is a device file that can be found in
+    the filesystem, so we can't use the display name (":0") like we've
+    been doing (and continue to do on other OS'es).
+    
+    Fixes Solaris bug 6960231:
+    xdm login fails with: pam_unix_cred: cannot load ttyname with c2audit loaded
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 68517be0c7ae67989bc3cd845c8aa79ef7040618
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue May 17 19:37:15 2011 -0700
+
+    xdm.man: address only needs 2 S's, not 3
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit bd0acffc9e69c4ca39d0881984ae587ad4385934
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat May 14 10:08:25 2011 -0700
+
+    freeifaddrs() when done with it in DefineSelf()
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 96362c12ccd08fcb50f697106622d0c0f8a6007a
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat May 14 09:39:21 2011 -0700
+
+    Add Solaris 11 libsocket to list of libraries to search for getifaddrs()
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Acked-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 1953570d9cd7c4e57fc270e6146aa13e794be0de
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat May 14 10:52:18 2011 -0700
+
+    Only greeter needs XPM CFLAGS & LIBS, not xdm daemon
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Mikhail Gusarov <dottedmag@dottedmag.net>
+    Reviewed-by: Julien Cristau <jcristau@debian.org>
+    Reviewed-by: Jeremy Huddleston <jeremyhu@apple.com>
+    Acked-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 47c1b146c786f057026ea2ad89b8cb4c51ee3d50
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat May 14 10:44:06 2011 -0700
+
+    Stop casting return values of malloc and friends
+    
+    It's not needed on modern mallocs that return void *, and can hide
+    missing prototype errors that cause the compiler to assume int is
+    returned (a bad thing to assume in 64-bit builds).
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Mikhail Gusarov <dottedmag@dottedmag.net>
+    Reviewed-by: Julien Cristau <jcristau@debian.org>
+    Reviewed-by: Jeremy Huddleston <jeremyhu@apple.com>
+    Reviewed-by: Mark Kettenis <kettenis@openbsd.org>
+
+commit f29b73ba549fbdcbe1361c016fc40cc424c32e9b
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat May 14 10:33:50 2011 -0700
+
+    Stop casting free() arguments to (char *)
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Mikhail Gusarov <dottedmag@dottedmag.net>
+    Reviewed-by: Julien Cristau <jcristau@debian.org>
+    Reviewed-by: Jeremy Huddleston <jeremyhu@apple.com>
+    Reviewed-by: Mark Kettenis <kettenis@openbsd.org>
+
+commit 6cb6fcd3a95bc125615d4a6736712bcc45ad7685
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat May 14 10:24:06 2011 -0700
+
+    Stop checking for NULL before calling free()
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Mikhail Gusarov <dottedmag@dottedmag.net>
+    Reviewed-by: Julien Cristau <jcristau@debian.org>
+    Reviewed-by: Jeremy Huddleston <jeremyhu@apple.com>
+    Reviewed-by: Mark Kettenis <kettenis@openbsd.org>
+
+commit d39dbde390f0f609c03dbd79f0bcc6a3486ca8a3
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat May 14 09:29:30 2011 -0700
+
+    Fix potential memory leak in allocation failure cleanup path
+    
+    Error: Memory leak (CWE 401)
+       Memory leak of pointer 'newargv' allocated with realloc(((i8*)argv), ((i * 4) + 8))
+            at line 239 of /export/alanc/X.Org/git/app/xdm/xdm/util.c in function 'parseArgs'.
+              'newargv' allocated at line 231 with realloc(((i8*)argv), ((i * 4) + 8)).
+              newargv leaks when newargv != 0 at line 234
+                  and save == 0 at line 234.
+    
+    [This bug was found by the Parfait 0.3.7 bug checking tool.
+     For more information see http://labs.oracle.com/projects/parfait/ ]
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Mikhail Gusarov <dottedmag@dottedmag.net>
+    Reviewed-by: Julien Cristau <jcristau@debian.org>
+    Reviewed-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit 4b9cbfd3f4d16000120c3241503c7a6102ae8afe
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Fri Mar 4 20:31:01 2011 -0500
+
+    man: replace hard coded section number (1) with __appmansuffix__
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit f394b7e3c7d0437a4415fe99965b866e35066713
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Feb 21 16:52:19 2011 -0800
+
+    greeter: Make sure cursor stays in bounds too
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 7d5c2364cc6c2b7338b4df9f1be0b621ca9fd2e7
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Feb 21 16:43:41 2011 -0800
+
+    greeter: Replace several #ifdef XPM blocks with LOGO_W macro
+    
+    Refactor code assuming compiler is smart enough to optimize out any
+    that reduce to + 0 or - 0 if building without XPM defined.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit f59d8f32c755b8747acf71aa3ab4c4809bff4ebf
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Feb 21 15:54:00 2011 -0800
+
+    greeter: Make sure text input areas stay inside the lines
+    
+    Regression introduced by f8585c60831a8e5ddebce18bdd7e78d217a822c5
+    broke bounds checking for text displayed in input fields.
+    
+    Since this makes each TEXT_WIDTH value only be used once, just use
+    them directly instead of storing the result in a variable.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 3297eb892017c850f25d3dc4a37095612a20a381
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Feb 21 15:53:23 2011 -0800
+
+    greeter: Add echoPasswdChar resource to set character to display
+    
+    Stop hardcoding it to '*'.   Allows setting a resource with no value to
+    to advance the cursor without drawing text (as was previously the default).
+    
+    Resolves https://bugs.freedesktop.org/show_bug.cgi?id=32794
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 472dc516e7d0190d81fdedd817261ee41bf8ada6
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Feb 19 22:33:33 2011 -0800
+
+    greeter: inline valueMask for xpm window to avoid shadowing argument
+    
+    The Realize function names one of its arguments valueMask, and the
+    valueMask variable in the inner scope is just used as a static set
+    of mask flags, so just pass them directly to the function to reduce
+    confusion and clear the gcc -Wshadow warning:
+    
+    Login.c: In function `Realize':
+    Login.c:1901: warning: declaration of 'valueMask' shadows a parameter
+    Login.c:1871: warning: shadowed declaration is here
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit b0dd4a3da0001a4510bdca6726a8ce6bfe632c28
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Feb 19 22:30:06 2011 -0800
+
+    greeter: Remove unused extern dpy that is shadowed by local variables
+    
+    Resolves these warnings from gcc -Wshadow:
+    greet.c: In function `InitGreet':
+    greet.c:244: warning: declaration of 'dpy' shadows a global declaration
+    greet.c:146: warning: shadowed declaration is here
+    greet.c: In function `CloseGreet':
+    greet.c:326: warning: declaration of 'dpy' shadows a global declaration
+    greet.c:146: warning: shadowed declaration is here
+    greet.c: At top level:
+    greet.c:431: warning: declaration of 'dpy' shadows a global declaration
+    greet.c:146: warning: shadowed declaration is here
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Mark Kettenis <kettenis@openbsd.org>
+
+commit 5bad823955542b99292783391b3f63a049fa2efc
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Feb 19 14:12:56 2011 -0800
+
+    Delete some unused variables
+    
+    auth.c: In function `DefineSelf':
+    auth.c:1045: warning: unused variable `n'
+    error.c: In function `Debug':
+    error.c:116: warning: unused variable `buf'
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Mark Kettenis <kettenis@openbsd.org>
+
+commit 3e3a45176d232c4e3f23ed6bc0b46bf660ddf271
+Author: Servaas Vandenberghe <vdb128@picaros.org>
+Date:   Sat Feb 19 14:06:57 2011 -0800
+
+    Add resource reservAttempts to allow a few successive crash-type exits
+    
+    https://bugs.freedesktop.org/show_bug.cgi?id=20546
+    https://bugs.freedesktop.org/attachment.cgi?id=43050
+    
+    Signed-off-by: Servaas Vandenberghe <vdb128@picaros.org>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit d0870e66dd9d8a41c9b6de65c4a9243c0a3fdc6e
+Author: Servaas Vandenberghe <vdb128@picaros.org>
+Date:   Sat Feb 19 13:15:58 2011 -0800
+
+    crash detect: use StopDisplay().
+    
+    This patch solves a benign bug: on server crash the display is removed
+    but the server exit code is ignored.  Proposed solution: substitute
+    RemoveDisplay() by StopDisplay() thus enabling the wait for child exit
+    synchronism.
+    
+    https://bugs.freedesktop.org/show_bug.cgi?id=20546
+    https://bugs.freedesktop.org/attachment.cgi?id=43049
+    
+    Signed-off-by: Servaas Vandenberghe <vdb128@picaros.org>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit c4031966dcbc47b2cc85b83ad78efcc64455cf72
+Author: Fernando Tarlá Cardoso Lemos <fernandotcl@gmail.com>
+Date:   Sat Feb 19 17:53:08 2011 -0200
+
+    Fix missing linking dependency on -ldl.
+    
+    Recent versions of GCC ship with a linker that doesn't add the deps
+    of the DSOs to the linking process. This behavior is also found in
+    GNU gold. This change fixes building with those linkers.
+    
+    Some references:
+    
+    http://wiki.debian.org/ToolChain/DSOLinking
+    https://fedoraproject.org/wiki/UnderstandingDSOLinkChange
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 208c7df5572f6ad8a63a4ee0fb1d5fd68c809653
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Feb 18 18:05:04 2011 -0800
+
+    xdm itself doesn't need to link with Xinerama library
+    
+    Xinerama calls are made in the greeter & chooser, but not core daemon
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 250c9931f45c73dda9d07c6bddc734c1445cfa5c
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Feb 18 18:00:11 2011 -0800
+
+    config: rename XDM_PRINT to XDM_TOOLKIT
+    
+    Name is a leftover of checking for non-Xprint Xaw7 vs. Xprint Xaw8,
+    but xdm doesn't print, just needs a toolkit to display with.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit edd8d3622528351770fd9b5dc2242b16e6f70904
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jan 12 15:29:50 2011 -0500
+
+    config: replace deprecated AC_HELP_STRING with AS_HELP_STRING
+    
+    This silences an Automake warning.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 5c41cd56717ae0c4650a47851b9ed1fb4aac8317
+Author: Matthieu Herrb <matthieu.herrb@laas.fr>
+Date:   Wed Dec 29 18:57:07 2010 +0100
+
+    Merge from OpenBSD CVS:
+    
+    Clear the password as early as possible in the BSD auth case. ok deraadt@
+
+commit 09eef3ab50a4941de0e1a854756ab55de057530a
+Author: Matthieu Herrb <matthieu.herrb@laas.fr>
+Date:   Wed Dec 29 18:53:35 2010 +0100
+
+    Merge from OpenBSD CVS:
+    
+    ifdef out the new code that moves the cursor one pixel to the right
+    for each char during password input. Requested by deraadt@.
+    
+    Conflicts:
+    
+    	greeter/Login.c
+
+commit 36af8a6fc60bbe1974ae9fce8b67de5b38554d95
+Author: Matthieu Herrb <matthieu.herrb@laas.fr>
+Date:   Wed Dec 29 18:50:06 2010 +0100
+
+    merge from OpenBSD CVS:
+    
+    Fix the computed width of the rectangle to clear when no error message
+    is present and Xft is used.
+
+commit 31270a33d8d4dff3d7fb65bf7f20e44cef86ee50
+Author: Matthieu Herrb <matthieu.herrb@laas.fr>
+Date:   Wed Dec 29 18:32:23 2010 +0100
+
+    Fix duplicated code resulting from a bad merge of xdm 1.1.9.
+
+commit b0f5152d03266c10572a2b90f1b9584f21b7dcd0
+Author: Matthieu Herrb <matthieu.herrb@laas.fr>
+Date:   Wed Dec 29 18:27:33 2010 +0100
+
+    Sync application defaults and configuration with OpenBSD CVS
+    
+    Conflicts:
+    
+    	config/Xstartup.cpp
+
+commit 597f275c39ca04474db0130f34960439dd3e9a6d
+Author: Matthieu Herrb <matthieu.herrb@laas.fr>
+Date:   Mon Dec 27 13:09:58 2010 +0100
+
+    Import OpenBSD logos for 4.8
+
+commit fe309092a115d1b97f2f8863a5b1645c10b4825f
+Author: Matthieu Herrb <matthieu.herrb@laas.fr>
+Date:   Mon Dec 27 13:04:51 2010 +0100
+
+    use mkdir -p to avoid races in parallel builds.
+    
+    Signed-off-by: Matthieu Herrb <matthieu.herrb@laas.fr>
+
+commit cf45a0ceee92c2fb048ff8882cf0bea200506d11
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Nov 16 11:42:50 2010 -0500
+
+    config: AM_PROG_CC_C_O is no longer needed
+    
+    All per-target flags have been removed now that each target
+    sits in its own directory.
+    
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit e509059f307f81d055a1ab01f4cb3a64b3157dce
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Aug 25 20:44:37 2010 -0400
+
+    config: move appdefault makefile to app-defaults dir.
+    
+    For this package it is best not to break the pattern
+    of each directory having its own makefile.
+    
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 8ee6a2678f9045c31366525bcaae5baf59a20930
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Aug 25 20:19:43 2010 -0400
+
+    config: mv xdm in its own directory
+    
+    Prevents the use of per target flags.
+    Clearly shows which libraries and compiler options apply.
+    
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit dd8a5b9f50deb9d91bb33cdd12fe083d39cd7d23
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Aug 24 11:32:53 2010 -0400
+
+    config: move common headers into the include directory
+    
+    They provide interfaces to multiple executables
+    
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit eb0e5a3a665cd4dbd376f1a1cbd6d0c7ace22572
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Aug 23 20:04:15 2010 -0400
+
+    config: move xdmshell into its own directory
+    
+    Prevents the use of per target flags.
+    Clearly shows which libraries and compiler options apply.
+    
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 2d520f71a0c89faf5522f5e37c09bdd5f933a574
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Aug 23 14:42:23 2010 -0400
+
+    config: move chooser into its own directory
+    
+    Prevents the use of per target flags.
+    Clearly shows which libraries and compiler options apply.
+    
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit f3b0019752e5b683c6e273eba15a4ecc9f55c5ae
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sat Nov 13 16:17:44 2010 -0500
+
+    config: move man pages into their own directory
+    
+    Replace lowercase $(xdmlibdir) with $(XDMLIBDIR)
+    
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 1dc0ef42cf009596db60a9fd08435621f70b81e7
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Fri Nov 12 17:07:38 2010 -0500
+
+    config: use AM_V_GEN instead of customized macros for AM_SILENT_RULES
+    
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Mikhail Gusarov <dottedmag@dottedmag.net>
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 083f3d0ee8ecbb48b86dddfcf2f172fafb579f08
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Nov 23 15:15:33 2010 -0500
+
+    config: relocate key_setnet in section "Check for header files"
+    
+    No configuration changes
+    
+    Reviewed-by: Mikhail Gusarov <dottedmag@dottedmag.net>
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit e4535a52148d58c3fe91baebdcfe0187a07519b9
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Fri Nov 12 16:25:53 2010 -0500
+
+    config: relocate AC_FUNC_FORK in section "Check for system library functions"
+    
+    No configuration changes.
+    
+    Reviewed-by: Mikhail Gusarov <dottedmag@dottedmag.net>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 63e882f86809419f8efdf2717050c96a15345c7b
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Fri Nov 12 16:21:54 2010 -0500
+
+    config: comment libxtrans macros as they are order sensitive
+    
+    XTRANS_SECURE_RPC_FLAGS must be called after XTRANS_CONNECTION_FLAGS
+    which finds libraries like -lsocket, -lnsl or -lws32_32.
+    
+    The found libraries are pre-pended to $LIBS which is not obvious.
+    
+    Reviewed-by: Mikhail Gusarov <dottedmag@dottedmag.net>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 73763eb718cba54963e0cf71b5316fdce2762c1f
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Oct 25 14:19:20 2010 -0400
+
+    config: rework check for random number generator
+    
+    Following a similar pattern to PAM and SELinux checks.
+    Unchanged: if a user has requested the use of a random device
+    and none can be found, the configuration aborts.
+    
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 10117ab7bc89ca65d313e0c6675e27d336a96925
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Sep 6 15:08:36 2010 -0400
+
+    config: integrate check for arc4random in appropriate sections
+    
+    The AC_SEARCH_LIBS is done in "Check for libraries" section.
+    Move AC_SUBST and AM_CONDITIONAL over there as well.
+    Move AC_CHECK_FUNCS for arc4random to "library functions" section
+    No function change.
+    
+    Reviewed-by: Mikhail Gusarov <dottedmag@dottedmag.net>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 5d7d55646d4867e7b3f736d318575554c2414361
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Fri Oct 22 20:39:27 2010 -0400
+
+    config: upgrade the checking for SELinux support
+    
+    Use "auto" rather than "try" for consistency with other modules.
+    Update help string to mention default value.
+    Unchanged: if configured --with-selinux and -lselinux is misisng,
+    abort the configuration.
+    
+    Change HAVE_SELINUX to USE_SELINUX to be consistent with
+    USE_PAM, USE_XFT, USE_XPM and USE_XINERAMA.
+    
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 5718767b882dc46f9393fd6b42f443227061a807
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Nov 22 16:08:18 2010 -0500
+
+    config: upgrade the checking for PAM support
+    
+    Use "auto" rather than "try" for consistency with other modules.
+    Update help string to mention default value.
+    Unchanged: if configured --with-pam and -lpam is misisng,
+    abort the configuration.
+    
+    Continue with USE_PAM rather than HAVE_PAM_OPEN_SESSION
+    as we are checking for a feature rather a function alone.
+    
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 529a045fa6a25334be469f633531fe1324dcf14a
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Fri Oct 22 13:51:43 2010 -0400
+
+    config: isolating -lselinux to a single target is not required
+    
+    Due to previous patches, -lselinux, if installed on the configured system,
+    is included in $LIBS already.
+    
+    Reviewed-by: Mikhail Gusarov <dottedmag@dottedmag.net>
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 0b1a949b7c1ce09136d3e4098b68a733d7bb32e2
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Sep 2 19:45:54 2010 -0400
+
+    config: use AC_CHECK_FUNCS for mkstemp, getifaddrs and getspnam
+    
+    Using AC_CHECK_FUNCS defines HAVE_xxx macro in config.h following
+    a consistent naming convention.
+    
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit b6309b26edd477f45dd34b6d746eb2ac1e3fe9fc
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Sep 2 17:47:55 2010 -0400
+
+    config: use AC_CHECK_FUNCS for setusercontext
+    
+    AC_CHECK_FUNCS defines HAVE_SETUSERCONTEXT
+    
+    The replaced code made an incorrect assumption that it was only
+    availble on BSD-like systems.
+    
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 80b44cfae4ab244ab4fd9d0ed0e089d946526755
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Sep 1 09:37:42 2010 -0400
+
+    config: use AC_CHECK_FUNCS for setprocttile
+    
+    AC_CHECK_FUNCS defines HAVE_SETPROCTITLE
+    
+    The replaced code made an incorrect assumption that it was only
+    availble on BSD-like systems.
+    
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit d9ab9445d1c52174788fc5df34e5379747623410
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Sep 7 16:47:26 2010 -0400
+
+    config: add "Check for system library functions"
+    
+    Relocate the existing AC_CHECK_FUNCS statement.
+    
+    The functions are checked after the libraries checks to benefit
+    from the $LIBS updated values.
+    
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 28d6283c5bfa9a7d19635b95de26907987799e2b
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Oct 20 15:35:51 2010 -0400
+
+    config: relocate headers, typedefs, and compiler characteristics
+    
+    Those checks are next following the "Check for system libraries" section.
+    They are done before xorg specific configuration.
+    
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 849a74c4146d1f1cb961026be2540b4a9970fa26
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Sep 7 16:08:06 2010 -0400
+
+    config: add "Check for system libraries" section
+    
+    This section gathers all the system libraries needed for
+    xdm features. They may be in standard C library on some
+    platforms and in discrete libraries on others.
+    
+    Any xorg library is excluded from this section.
+    XTRANS macros will be invoked at a later time and contribute
+    additional libraries.
+    
+    Although a function is used to search for the library, this
+    should not be confused with function checking (AC_CHECK_FUNC).
+    
+    Sample configuration output on GNU/Linux:
+    checking for library containing getifaddrs... none required
+    checking for library containing getspnam... none required
+    checking for library containing setproctitle... no
+    checking for library containing setusercontext... no
+    checking for library containing arc4random... -lbsd
+    checking for library containing crypt... -lcrypt
+    
+    In the Makefile, libs are pre-pended:
+    LIBS = -lcrypt -lbsd
+    
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 4455d61291b7662e652953ca326627104e0d5494
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Sep 7 15:45:44 2010 -0400
+
+    config: relocate the "Check for programs section"
+    
+    Following the usual layout, programs are check before the xorg specifics start.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 2ff31d55be7fb62aece1324ea14fed9cdac23789
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Sep 7 15:38:15 2010 -0400
+
+    config: libtool: disable production of static libraries.
+    
+    Regroup libtool statements under the "Initialize" libtool section
+    
+    The greeter is only used as a shared library that is dynamically loaded.
+    
+    Alan Coopersmith wrote:
+    "I don't think it's intended to be used as a shared library, but instead to
+    allow sites to drop in their own greeter module for greater customization
+    than allowed via just .Xresources."
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit b4d166d8c4f8ebc28fcd4d6f24065951989d11b2
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Sep 7 14:36:03 2010 -0400
+
+    config: replace deprecated AM_CONFIG_HEADER with AC_CONFIG_HEADERS
+    
+    Regroup AC statements under the Autoconf initialization section.
+    Regroup AM sttaements under the Automake initialization section.
+    Add missing AC_CONFIG_SRCDIR
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 75a285c2c7cd8c3567126dafbdc047d2bdac421c
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Aug 31 17:25:02 2010 -0400
+
+    config: look for PAM support on darwin as well
+    
+    There is an assumption that PAM support is not available on darwin.
+    A quick browse on the net indicates otherwise.
+    
+    For systems with PAM, if any, this authentication method will
+    be used, as per original configuration intent.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 22e7cc3458107662de736f9c82679d32197625bc
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Aug 31 10:52:58 2010 -0400
+
+    config: remove unused OS_CFLAGS variable
+    
+    Now unused as a result of previous patches
+    
+    Reviewed-by: Mark Kettenis <kettenis@openbsd.org>
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit c76330b71a7d65620e411df7b327ad82bff97d90
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Aug 30 19:51:24 2010 -0400
+
+    config: use AC_CHECK_HEADERS for sys/param.h
+    
+    This is the FreeBSD porting guide recommended
+    method to check for BSD 4.3 Net2 or newer systems.
+    
+    Reviewed-by: Mark Kettenis <kettenis@openbsd.org>
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 96380df139761274e03babf71b7cb6692acb847a
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Aug 30 15:51:16 2010 -0400
+
+    config: definition of CSRG_BASED in configure.ac is flawed and redundant
+    
+    CSRG_BASED is defined in both the xserver using platform checks
+    and in Xosdefs.h using compiler macros.
+    
+    The one from X11/Xosdefs.h will be used through already included headers:
+    # if defined(__OpenBSD__) || defined(__NetBSD__) || defined(__FreeBSD__) \
+    	|| defined(__APPLE__) || defined(__DragonFly__)
+    #  ifndef CSRG_BASED
+    #   define CSRG_BASED
+    #  endif
+    # endif
+    
+    Reviewed-by: Mark Kettenis <kettenis@openbsd.org>
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 1d4f032110924d90cb2302d5dcc241e961043a37
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Aug 30 09:32:06 2010 -0400
+
+    config: remove unused define NO_LASTLOG for Darwin
+    
+    This is a leftover from commit 6ae3766444c62ee when sessreg
+    was broken out so other display managers like gdm could use it
+    without having to install all of xdm.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 8b7999f8e0f797a593ac2f4697ba3be983b421ae
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Aug 30 07:39:56 2010 -0400
+
+    config: use libtool -export-dynamic option for reverse dependencies
+    
+    This replaces -rdynamic which is a GNU/Linux only solution.
+    
+    "If symbols from your executable are needed to satisfy unresolved
+    references in a library you want to dlopen you will have to use
+    the flag -export-dynamic. You should use -export-dynamic while
+    linking the executable that calls dlopen."
+    
+    It is used by the xserver, in Xdmx for example.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 50c96170ad42321310c346cf412f9ae7e80ec2a7
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Aug 29 19:56:59 2010 -0400
+
+    config: AC_LIBTOOL_DLOPEN is required for dynamic linking
+    
+    It adds the following tests in the configuration :
+    checking for shl_load... no
+    checking for shl_load in -ldld... no
+    checking for dlopen... no
+    checking for dlopen in -ldl... yes
+    checking whether a program can dlopen itself... yes
+    checking whether a statically linked program can dlopen itself... no
+    
+    This has not resulted in any compiler/linker flags change on
+    a GNU/Linux platform.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 5d79c0fad950ee6b83011a6c0242c9dc00c711a7
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Aug 29 09:05:52 2010 -0400
+
+    config: remove AC_LIBTOOL_WIN32_DLL
+    
+    As of 2002, this is no longer required and is a no-op
+    in libtool v 1.5 and higher.
+    
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 0a90d3a5f580337e5d21eac4316b282e81bae68f
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Aug 29 09:02:19 2010 -0400
+
+    remove AC_C_INLINE as all compilers support inline keyword.
+    
+    This macro is not used anywhere else in xorg.
+    
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 4afafa90e79882b464b4aaee73826fb95136e7b5
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Aug 29 09:00:45 2010 -0400
+
+    config: remove AC_PROG_CC as it overrides AC_PROG_C_C99
+    
+    XORG_STRICT_OPTION from XORG_DEFAULT_OPTIONS calls
+    AC_PROG_C_C99. This sets gcc with -std=gnu99.
+    If AC_PROG_CC macro is called afterwards, it resets CC to gcc.
+    
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit f56891b74f40df456e2e447745f70665d87d8596
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Aug 29 08:58:48 2010 -0400
+
+    config: remove AC_PROG_INSTALL provided by XORG_DEFAULTS
+    
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit a0e103250ffa2d652fa4b2a6e8c719d54f616988
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Aug 29 08:27:28 2010 -0400
+
+    greeter: transfer -DGREET_LIB from configure.ac to Makefile.am
+    
+    It does not depend on module configuration.
+    It should not mixed with flags required by dependencies.
+    
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 7e223d3ac6c0d549a7d6e4dcc86a053e19594028
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sat Aug 28 20:11:28 2010 -0400
+
+    greeter: only build the shared library version
+    
+    There is no evidence that the static version is needed since monolith
+    as hinted by the comment in configure.ac.
+    
+    The greeter code is now all managed by the greeter Makefile.
+    The configure option enable-dynamic-greeter no longer needed.
+    GREET_USER_STATIC is no longer needed.
+    GREET_LIB is still needed in greet.h as it is compiled with
+    both session.c for xdm execuatable and greeter shared lib.
+    
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 674f08cbcbf9c4a29560e8b32e0335d9638b6868
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sat Aug 28 19:43:03 2010 -0400
+
+    config: remove copying Chooser.ad to Chooser
+    
+    This was removed from all other apps with resources in app-defaults.
+    The Chooser resource file is a file in git that gets installed
+    and distributed.
+    
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit b8ca599af4a22c5cd1b2aaff203607fe8e5b99d4
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Aug 23 07:02:44 2010 -0400
+
+    man: build man page using sed rather than the C preprocessor
+    
+    This fixes misalignments to correctly display \n and \ for sample file.
+    No source code changes needed to fix that.
+    
+    Replace XCOMM IMakefile comment with #.
+    
+    Replace #if with:
+    .if !'x.VARNAME'x.' .ig
+    [man page text]
+    ..
+    
+    If $(VARNAME) is empty, the man page text is shown
+    If $(VARNAME) is not empty, the man page text is skipped
+    
+    Or replace #if with:
+    .if 'VARNAME'' .ig
+    [man page text]
+    ..
+    
+    If $(VARNAME) is empty, the man page text is skipped
+    If $(VARNAME) is not empty, the man page text is shown
+    
+    In DisplayManager.randomDevice, the default /dev/urandom is no longer
+    displayed with double-quotes which is consistent with other
+    default values. This was a cpp side-effect.
+    
+    Tested on Debian with groff and Solaris with nroff
+    
+    Co-authored-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 86f354f0a970e2c39e65b44832aad6ad69f30dc5
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Aug 22 17:47:39 2010 -0400
+
+    man: conditionally include DisplayManager.randomFile resource
+    
+    This resource follows the same pattern as prndSocket and prngPort.
+    It is displayed to the user only if ARC4_RANDOM is not defined.
+    It seems to be a simple omission in the man page.
+    Refer to resource.c:
+    
+    char	*randomFile;
+    char	*randomDevice;
+    char	*prngdSocket;
+    int	prngdPort;
+    
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit edbe0ce24ca9813fdff30c894c8174df188a1ae2
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Aug 29 08:49:23 2010 -0400
+
+    config: upgrade to util-macros 1.8 for additional man page support
+    
+    Use MAN_SUBST now supplied in XORG_MANPAGE_SECTIONS
+    The value of MAN_SUBST is the same for all X.Org packages.
+    
+    Use AC_PROG_SED now supplied by XORG_DEFAULT_OPTIONS
+    Use the appropriate platform version of sed
+    
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit d24f9406cf3d6560059a86394b4db98d22973556
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Aug 26 12:11:27 2010 -0400
+
+    Fix whitespace issues as reported by git diff
+    
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 275f45c5b28e426a594237d36f4c794784d71f28
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Aug 23 14:06:42 2010 -0400
+
+    config: remove redundant entries added in .gitignore
+    
+    The m4 generated macros are included in the default section
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 8f85641ac03f4b55f8618edde94adcc43039bb20
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sat Aug 21 10:20:18 2010 -0400
+
+    config: upgrade AC_DEFINE_DIR to AX_DEFINE_DIR
+    
+    Use the latest version now hosted by GNU.
+    The renaming protects Autoconf namespace.
+    There is no functional change in the macro.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 1355883aff8046cda927dea2b28ce3832aaf9a5d
+Merge: e60a490 0a4c314
+Author: Matthieu Herrb <matthieu.herrb@laas.fr>
+Date:   Sun Jun 13 19:41:18 2010 +0200
+
+    Merge remote branch 'origin/master' into obsd
+
+commit 0a4c314d4cfc79e8a48c6eafac01ba2762ff571a
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Apr 12 11:28:30 2010 -0700
+
+    Only install xdmshell if --enable-xdmshell is passed to configure
+    
+    As the xdmshell man page explains, it's used in uncommon configurations
+    and is likely to need site-specific review/customization.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 1da26b3c3128008315f83c3e47e21e66f2d40afe
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Mar 16 18:29:09 2010 -0700
+
+    Add man page for xdmshell
+    
+    Fixes:
+     X.Org bug #7342 - http://bugs.freedesktop.org/show_bug.cgi?id=7342
+     X Consortium bug #4559 (reported 30 Sep 1991)
+    
+    Text based on the X11R4 release notes description of xdmshell from:
+    	http://ftp.x.org/pub/X11R4/RELNOTES.txt
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Fernando Carrijo <fcarrijo@yahoo.com.br>
+
+commit e60a4909487989648821933e7b69bbf8bfcf4bfc
+Merge: 674155e 5cf2a24
+Author: Matthieu Herrb <matthieu.herrb@laas.fr>
+Date:   Sat May 8 15:45:58 2010 +0200
+
+    Merge remote branch 'origin/master' into obsd
+
+commit 5cf2a248f30e309cda6f0ae26a863bf3f5521fbe
+Author: Julien Cristau <jcristau@debian.org>
+Date:   Sat May 1 19:46:53 2010 +0200
+
+    configure: fix SELinux check to not use XDM_LIBS
+    
+    XDM_LIBS is set by pkg-config, so we don't want to set it here.
+    
+    Debian bug#556694 <http://bugs.debian.org/556694>
+    
+    Signed-off-by: Julien Cristau <jcristau@debian.org>
+
+commit 674155e47bff981963a6c14a2288134b541aad31
+Merge: bac864b 5201ce6
+Author: Matthieu Herrb <matthieu.herrb@laas.fr>
+Date:   Sat Apr 17 20:51:59 2010 +0200
+
+    Merge remote branch 'origin/master' into obsd
+    
+    Conflicts:
+    	INSTALL
+    	auth.c
+    	config/Xresources.cpp
+    	config/Xstartup.cpp
+
+commit 5201ce6666f2aac60960e77857664cefa65c318c
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Apr 12 17:05:46 2010 -0700
+
+    s/Sun/Oracle/g
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit ca19bcccc4e39f5499945edb5a1f177159867bbc
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Tue Mar 16 16:56:56 2010 -0700
+
+    Check for allowRootLogin on PAM and non-OpenBSD passwd authentication backends
+    
+    http://bugs.freedesktop.org/show_bug.cgi?id=25112
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit 2eb565827568f619b28fdaf2b75cb5bca0586a45
+Author: Julien Cristau <jcristau@debian.org>
+Date:   Sat Apr 10 15:53:31 2010 +0200
+
+    Delete empty comment in Xresources.cpp
+
+commit 7006d5c582e382660437a64b749822116823ecee
+Author: Julien Cristau <jcristau@debian.org>
+Date:   Sat Apr 10 03:48:05 2010 +0200
+
+    Bump to 1.1.10
+
+commit 7c4c0592aca80cc8affe4e94d2742caa754d5be3
+Author: Julien Cristau <jcristau@debian.org>
+Date:   Sun Apr 4 19:20:39 2010 +0200
+
+    Add missing brace in previous commit
+    
+    Thanks to cjb and tinderbox.
+    
+    Signed-off-by: Julien Cristau <jcristau@debian.org>
+
+commit 8eb897bb980dd6ce3f8ade517a8a39023a477743
+Author: Julien Cristau <jcristau@debian.org>
+Date:   Tue Mar 23 19:40:49 2010 +0100
+
+    xdmcp: disable IPV6_V6ONLY for ipv6 listening sockets
+    
+    This allows ipv4 connections mapped to ipv6, in case the system default
+    is backwards.
+    
+    Signed-off-by: Julien Cristau <jcristau@debian.org>
+    Reviewed-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit 3a4f890fa9466ed27d49ce97adbcad30b840d3d4
+Author: Julien Cristau <jcristau@debian.org>
+Date:   Tue Mar 23 19:40:48 2010 +0100
+
+    Don't remove the pid file from xdm child processes
+    
+    The parent xdm process registers RemovePid with atexit(), which means
+    that any child exit would trigger the (wrong) removal of the pidfile.
+    So in RemovePid, don't do anything if we're not the parent xdm process.
+    
+    Signed-off-by: Julien Cristau <jcristau@debian.org>
+    Reviewed-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit bac864b160bb2760539df2e4a56ca2833709d5da
+Author: Matthieu Herrb <matthieu.herrb@laas.fr>
+Date:   Sun Mar 28 15:20:43 2010 +0200
+
+    Sync with OpenBSD CVS
+
+commit 46bf85ebc8813e6b2c3b768b661666e23275ccfe
+Merge: 28427ec 6061722
+Author: Matthieu Herrb <matthieu.herrb@laas.fr>
+Date:   Sun Mar 28 15:17:12 2010 +0200
+
+    Merge commit 'xdm-1.1.9' into obsd
+
+commit 931c98390274a9e0c62c41c5e9ceed6681e7a9b7
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sat Mar 13 15:19:37 2010 -0500
+
+    lint: option -rdynamic is not valid for the lint program
+    
+    Use xdm_LIBS instead. Tested on Solaris.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 34b9c0e02bc2d36da2c8c5ee468b2a2d63914610
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Tue Mar 16 16:33:48 2010 -0700
+
+    Reject PAM conversation calls after login dialog is closed
+    
+    Based on patch suggested by Bjoern A. Zeeb <bzeeb+patch@zabbadoz.net>
+    to fix http://bugs.freedesktop.org/show_bug.cgi?id=10522
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit afc752d1c483e77de9aa3cb9532a67d95fd27dd9
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Tue Mar 16 11:23:30 2010 -0700
+
+    Make sure username is not NULL when calling syslog from FailedLogin()
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit 0f18bdfa7fcfe100e487f4c9f91ae37a125ef0f0
+Author: Johannes Dewender <xorg@JonnyJD.net>
+Date:   Fri Nov 13 21:28:23 2009 +0100
+
+    Bug #25066: exec sessreg
+    
+    Sessreg saves the pid of the calling process in utmp.
+    If this process is terminated the session is implicitly deleted.
+    Xstartup is called and the process id is gone right when
+    the script is done so the session is closed right away.
+    Using "exec" will save the pid of the master process of this login.
+    
+    Signed-off-by: Johannes Dewender <xorg@JonnyJD.net>
+    Tested-by: Johannes Dewender <xorg@JonnyJD.net>
+    Acked-by: Julien Cristau <jcristau@debian.org>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit c9cdd56df50f280e90ba95cfa933222f94ad2677
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Mon Mar 15 23:34:04 2010 -0700
+
+    Move m4 macros to m4 subdir as automake/libtool recommend
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit b9226288b96f0c5988d2c2f52718674d39803a5e
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Mon Mar 15 23:21:30 2010 -0700
+
+    Replace hardcoded NAMELEN of 14 for ancient SysV with MAXNAMELEN
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit af916ebc97a3bd6208f1376e52a4310099b48622
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Mon Mar 15 18:12:05 2010 -0700
+
+    echo_passwd should key off PAM no-echo state, not prompt position
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit dd9dc06055e16cd72ff34c2caea22a6627803fa5
+Author: Georgy A. Shepelev <gerik@super-komputer6-44.ultra>
+Date:   Wed Dec 9 09:34:02 2009 +0300
+
+    xdm: add documentation of the "EchoPasswd" option to the man page
+    
+    Signed-off-by: Georgy A. Shepelev <shepelev.georgy@googlemail.com>
+
+commit 7437298deab265b7669043d4a470a684201f5f3c
+Author: Georgy A. Shepelev <gerik@k24a.ulsu.ru>
+Date:   Wed Dec 9 12:18:50 2009 +0300
+
+    Adding an option to show stars instead of the password itself.
+    
+    The behaviour can be controlled via 'xlogin*echoPasswd' option
+    in Xresource file. The default option value is 'false'.
+    
+    Signed-off-by: Georgy A. Shepelev <shepelev.georgy@googlemail.com>
+    Tested-by: Georgy A. Shepelev <shepelev.georgy@googlemail.com>
+    
+    [Reformatted to match existing code style by Alan Coopersmith]
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit 34d120f31347697886a419411d9d4d825874f3f0
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Fri Jan 15 13:23:24 2010 -0800
+
+    Update Sun license notices to current X.Org standard form
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit 504bb1aee60d570d8676a61acbe32c66d6069c45
+Author: Dmitry V. Levin <ldv@altlinux.org>
+Date:   Tue Jan 12 14:38:33 2010 +0000
+
+    greeter: fix logging of failed login attempts
+    
+    When PAM rejects a login attempt, the "username" variable remains
+    uninitialized, which results to garbage being syslogged instead of
+    login name.  Explicit initialization helps to avoid this issue.
+    
+    Fixes FreeDesktop Bug #26015 <https://bugs.freedesktop.org/show_bug.cgi?id=26015>
+    
+    Signed-off-by: Dmitry V. Levin <ldv@altlinux.org>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit 7d8b4c16d9307f9fa984da7ac5cc00cb945cac09
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Tue Jan 12 10:46:38 2010 -0800
+
+    Raise xorg-macros requirement to 1.4
+    
+    Needed since the changes in a4a8f7b83afc9a46bc989c0eeb528a46b3a1db5d
+    depend on the INSTALL file delivered in xorg-macros 1.4
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit b69f12706abc728e9c16449f52f02ae0d3a0ee62
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Tue Jan 12 10:24:34 2010 -0800
+
+    Remove workaround for X11R3 server bug
+    
+    The comment promised 'compatibility until at least R4', so we're 20 years
+    past due for removing this.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+    Reviewed-by: Julien Cristau <jcristau@debian.org>
+
+commit c925709069d7515bb94f43e4b88155a95e41c8fe
+Author: Branden Robinson <branden@debian.org>
+Date:   Mon Nov 18 04:24:48 2002 -0500
+
+    rewrite StorePid()
+    
+    Update StorePid() function to use Matthieu Herrb's changes that refuse
+    to open an existing pid file, and take more care with the size of the
+    Pid_t type.
+    
+    Matthieu Herrb rewrote the StorePid() function based on my changes; he
+    made it more careful with the size of Pid_t, and treats an existing pid
+    file as a failure.  I then made some more changes: use _SysErrorMsg()
+    instead of strerror(), and don't assume that the process id we write to
+    the pidFile is 5 digits.
+    
+    Forward-ported by David Nusinow, Eugene Konev and Julien Cristau.
+    
+    Signed-off-by: Julien Cristau <jcristau@debian.org>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@sun.com>
+    Reviewed-by: Matthieu Herrb <matthieu.herrb@laas.fr>
+
+commit 6d393844dca10823f85d1ac797879fc6e00eae59
+Author: Manoj Srivastava <srivasta@golden-gryphon.com>
+Date:   Tue Jan 5 16:40:21 2010 +0000
+
+    xdm: add SELinux support
+    
+    Initial patch submitted in Debian bug#233551.
+    Forward-ported to modular X by Eugene Konev (changes: remove Imakefile hunks,
+    add --with-selinux flag to configure.ac).
+    Updated to latest SE Linux code by Russell Coker 3rd Aug 2008, with bugfix from
+    Julien Cristau (Debian bug#493524).
+    
+    Signed-off-by: Julien Cristau <jcristau@debian.org>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@sun.com>
+    Reviewed-by: Matthieu Herrb <matthieu.herrb@laas.fr>
+
+commit 90c2cc57cdf911cec2eec185f357868209212c79
+Author: Branden Robinson <branden@debian.org>
+Date:   Tue Jan 5 16:40:21 2010 +0000
+
+    Improve logging of xdm's script handling
+    
+    * Make execution of the session program an informational log message (with
+      LogInfo()), not a Debug() message.
+    * Ensure that source()d scripts (Xreset, Xsetup, Xstartup) can be
+      fopen()ed before invoking runAndWait() on them.  If they can, LogInfo()
+      the fact.  If they cannot, LogInfo() that, too, and use _SysErrorMsg() to
+      report why fopen() failed.
+    * Make source() complain using Debug() when it is given a null pointer in
+      its file argument.
+    * For clarity, make source() return from only one location.
+    
+    Also see Debian bug #219311.
+    
+    Forward ported by Eugene Konev.
+    
+    Signed-off-by: Julien Cristau <jcristau@debian.org>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@sun.com>
+    Reviewed-by: Matthieu Herrb <matthieu.herrb@laas.fr>
+
+commit 5222d28e8d8e5b4cc705f1a637aace405ad32bd5
+Author: Branden Robinson <branden@debian.org>
+Date:   Tue Jan 5 16:40:21 2010 +0000
+
+    improve error logging
+    
+    Make several LogError() and Debug() messages more informative.
+    Change LogError() invocations to use _SysErrorMsg() where errno might be set
+    (and not clobbered by intermediate calls).  Also make LogError() the first
+    thing we do after an error condition in those cases.
+    
+    Forward-ported by Julien Cristau <jcristau@debian.org>.
+    
+    Signed-off-by: Julien Cristau <jcristau@debian.org>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@sun.com>
+    Reviewed-by: Matthieu Herrb <matthieu.herrb@laas.fr>
+
+commit 17105faffcb4533da71f0d3d17fd40a64b6faf50
+Author: Branden Robinson <branden@debian.org>
+Date:   Tue Jan 5 16:40:21 2010 +0000
+
+    Always attempt to write data to the auth file
+    
+    Actually attempt to write data to the auth file in SaveServerAuthorizations();
+    that way we detect problems like ENOSPC (full filesystem, user over quota)
+    early enough to do something about it.  (See Debian #217505, #253480)
+    
+    Forward-ported by Julien Cristau <jcristau@debian.org>.
+    
+    Signed-off-by: Julien Cristau <jcristau@debian.org>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@sun.com>
+    Reviewed-by: Matthieu Herrb <matthieu.herrb@laas.fr>
+
+commit 11d6aa0b392daef2900681b70960d8be4ada89a9
+Author: Branden Robinson <branden@debian.org>
+Date:   Tue Jan 5 16:40:21 2010 +0000
+
+    Change openFiles() to avoid race-based symlink attacks.
+    
+    Forward-ported by Julien Cristau <jcristau@debian.org>.
+    
+    Signed-off-by: Julien Cristau <jcristau@debian.org>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@sun.com>
+    Reviewed-by: Matthieu Herrb <matthieu.herrb@laas.fr>
+
+commit cd6b6d5f78e92725d6466d138f5441d791e58212
+Author: Branden Robinson <branden@debian.org>
+Date:   Tue Jan 5 16:40:21 2010 +0000
+
+    downgrade an error to info message
+    
+    During normal xdm shutdown, killed local X servers
+    can be zombies; this is not an error.
+    
+    Forward-ported by David Nusinow, Eugene Konev and Julien Cristau
+    
+    Signed-off-by: Julien Cristau <jcristau@debian.org>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@sun.com>
+    Reviewed-by: Matthieu Herrb <matthieu.herrb@laas.fr>
+
+commit ecf015a4e78b96af913c1620d542c8e356f2a3d0
+Author: Dmitry V. Levin <ldv@altlinux.org>
+Date:   Mon Jan 11 23:09:47 2010 +0000
+
+    Call openlog(3) early
+    
+    Before this change, openlog(3) used to be called by greeter which could
+    be built as a dynamically loadable plugin.  In the latter case, the
+    ident string passed to openlog(3) resides in a dynamically mapped
+    memory region that is unmapped later when the plugin is unloaded.
+    This can cause fatal problems in some environments.  For example, in
+    any GNU/Linux system with PAM support enabled an implicit syslog(3)
+    call made by a PAM module after plugin unload causes attempt to access
+    already unmapped memory, followed by instant crash.
+    
+    It is a common practice to call openlog(3) before the first syslog(3)
+    call, including implicit calls that could be made e.g. by PAM.
+    Also, openlog(3) LOG_ODELAY flag is redundant.
+    
+    Fixes ALT Linux Bug #22362 <https://bugzilla.altlinux.org/show_bug.cgi?id=22362>
+    Fixes FreeDesktop Bug #24589 <https://bugs.freedesktop.org/show_bug.cgi?id=24589>
+    
+    Reported-by: Martin Mokrejš <mmokrejs@ribosome.natur.cuni.cz>
+    Reported-by: Denis Kirienko <dk@altlinux.org>
+    Patch-by: Oleg Zenin <tt@compas.ihep.su>
+    Signed-off-by: Dmitry V. Levin <ldv@altlinux.org>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit 9142a99cedc99277319e56f132077c1263e1eea8
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sat Dec 19 20:48:47 2009 -0500
+
+    configure.ac: use backticks rather than $() for cmd subs
+    
+    Use "$PKG_CONFIG" rather than hard coded "pkg-config"
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 989d892443b9d6e52313bf6f4a8606f8749e218d
+Author: Christoph Bartoschek <bartoschek@or.uni-bonn.de>
+Date:   Mon Nov 30 13:34:30 2009 +0100
+
+    XDM: Add support for clients that sent ipv4 addresses to a dual-stacked host
+    
+    If a client sends an ipv4 address to a dual-stacked xdm that is bound to a ipv6
+    socket in a forward request, then the packet was silently discarded. Now the
+    address is encapsulated as a ipv4-mapped address and a response is send back.
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit bad944beb34a988a12a9e18a2f4c42dc59a916a5
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Nov 29 10:54:01 2009 -0500
+
+    configure.ac: restore correct order for XORG_DEFAULT_OPTIONS
+    
+    It must be following AC_USE_SYSTEM_EXTENSION
+
+commit a9ca4d452326b0dafbf1b6f828b53fd0ddd43168
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Nov 26 09:19:53 2009 -0500
+
+    Makefile.am: add ChangeLog and INSTALL on MAINTAINERCLEANFILES
+    
+    Now that the INSTALL file is generated.
+    Allows running make maintainer-clean.
+
+commit a4a8f7b83afc9a46bc989c0eeb528a46b3a1db5d
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Oct 28 14:09:08 2009 -0400
+
+    INSTALL, NEWS, README or AUTHORS files are missing/incorrect #24206
+    
+    Add missing INSTALL file. Use standard GNU file on building tarball
+    README may have been updated
+    Remove AUTHORS file as it is empty and no content available yet.
+    Remove NEWS file as it is empty and no content available yet.
+
+commit 2d4c65a3e62c00e7907dc3f8929cbf8989fc783d
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Oct 27 15:07:24 2009 -0400
+
+    Deploy the new XORG_DEFAULT_OPTIONS #24242
+    
+    This macro aggregate a number of existing macros that sets commmon
+    X.Org components configuration options. It shields the configuration file from
+    future changes.
+
+commit f33e95d44bd378a4a7632f6b591e21b23a861486
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Oct 26 22:08:38 2009 -0400
+
+    Makefile.am: ChangeLog not required: EXTRA_DIST or *CLEANFILES #24432
+    
+    ChangeLog filename is known to Automake and requires no further
+    coding in the makefile.
+
+commit 8c251b945f57923a37a34219589ac31227ab65df
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Oct 22 15:47:23 2009 -0400
+
+    .gitignore: use common defaults with custom section # 24239
+    
+    Using common defaults will reduce errors and maintenance.
+    Only the very small or inexistent custom section need periodic maintenance
+    when the structure of the component changes. Do not edit defaults.
+
+commit 4de08979f8a77f895919145aa8f5db1b90853537
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Thu Sep 24 13:54:40 2009 -0700
+
+    Correct default greeterLib path in man page
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit 1ce3159739800fd7a93d51a378d7dbb3e0b755a5
+Author: Martin Dickopp <martin@zero-based.org>
+Date:   Tue Sep 22 20:16:37 2009 -0700
+
+    Debian bug 525596: "Login incorrect" only partially cleared on next login
+    
+    http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=525596
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit 61f5e8ee407d361bc10d704ab67a828c54678bfa
+Author: Georgy A. Shepelev <gerik@super-komputer6-44.ultra>
+Date:   Tue Sep 22 16:58:40 2009 +0400
+
+    The whole widget borders width could not be set to zero.
+    
+    Signed-off-by: Georgy A. Shepelev <shepelev.georgy@googlemail.com>
+    Tested-by: Georgy A. Shepelev <shepelev.georgy@googlemail.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit 748cfcc771c7f599d8087c7aa044bc5ff770da1d
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Tue Sep 22 13:42:31 2009 -0700
+
+    Make parent authdir if needed at startup
+    
+    Allows setting authdir to /var/run/xdm
+    
+    Also refactor directory creation code for less duplication
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit 619af82effb9125c904d34c9fbc4bf93385d7b9e
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Tue Sep 22 13:41:38 2009 -0700
+
+    Create piddir if needed on startup
+    
+    Allows setting piddir to /var/run/xdm/
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
 commit 6061722888eab858888dac2499194393299872e4
 Author: Alan Coopersmith <alan.coopersmith@sun.com>
 Date:   Fri Sep 18 15:31:50 2009 -0700
@@ -41,6 +1798,13 @@ Date:   Thu Sep 17 18:08:06 2009 -0700
     
     Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
 
+commit 28427ec7029e8dcd447eda20df5bb9d06689a651
+Merge: 805ac53 69fc064
+Author: Matthieu Herrb <matthieu.herrb@laas.fr>
+Date:   Sat Sep 12 19:53:28 2009 +0200
+
+    Merge commit 'origin/master' into obsd
+
 commit e60cf4a084951e697516a6c26dcb5ad14e6f14b8
 Author: Alan Coopersmith <alan.coopersmith@sun.com>
 Date:   Fri Sep 11 10:40:05 2009 -0700
@@ -77,6 +1841,16 @@ Date:   Tue Aug 18 21:03:54 2009 -0700
     Similar fix to http://bugs.freedesktop.org/show_bug.cgi?id=23329
     
     Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit 805ac538214821ff8ed8f08e1e77dd411ab27098
+Merge: e7791e8 a9040b2
+Author: Matthieu Herrb <matthieu.herrb@laas.fr>
+Date:   Sun Aug 2 19:32:35 2009 +0200
+
+    Merge commit 'origin/master' into obsd
+    
+    Conflicts:
+    	config/Xstartup.cpp
 
 commit a9040b281062ddabcfb2cfdfc37e431b047531b2
 Author: Alan Coopersmith <alan.coopersmith@sun.com>
@@ -127,6 +1901,13 @@ Date:   Tue Jul 28 08:36:10 2009 -0700
     
     Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
 
+commit e7791e84b872e06e3934aeb34106c1d5d0dac8c3
+Merge: c078728 a3f1f5f
+Author: Matthieu Herrb <matthieu.herrb@laas.fr>
+Date:   Fri Jul 24 21:37:06 2009 +0200
+
+    Merge commit 'origin/master' into obsd
+
 commit a3f1f5f5b8b3a070de6d9510f588b39f5ebcc0fc
 Author: Jeff Chua <jeff.chua.linux@gmail.com>
 Date:   Mon Jul 20 22:21:46 2009 +0800
@@ -138,6 +1919,21 @@ Date:   Mon Jul 20 22:21:46 2009 +0800
     There is an additional right-bracket that causes the problem.
     
     Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit c078728d14e720e29f0faf826fcf9fbd8349f410
+Merge: 64b48b7 2f5bd6e
+Author: Matthieu Herrb <matthieu.herrb@laas.fr>
+Date:   Sun Jul 19 14:38:17 2009 +0200
+
+    Merge commit 'origin/master' into obsd
+    
+    Conflicts:
+    	config/GiveConsole
+    	config/TakeConsole
+    	config/Xresources.cpp
+    	config/Xsession.cpp
+    	config/Xsetup_0
+    	config/xdm-config.cpp
 
 commit 2f5bd6ea016a6405208c91c976a16a672cc04184
 Author: Branden Robinson <branden@debian.org>
@@ -315,13 +2111,36 @@ Date:   Thu Jul 16 19:10:30 2009 -0700
     
     Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
 
+commit 64b48b7d27f48ab87ab84b6ac4bada7a5ef2c44f
+Merge: b669e63 b21117d
+Author: Matthieu Herrb <matthieu.herrb@laas.fr>
+Date:   Sat May 23 18:43:46 2009 +0200
+
+    Merge commit 'origin/master' into obsd
+
 commit b21117d4eaaa7b5886c139f06b8acae9890448c2
 Author: Alan Coopersmith <alan.coopersmith@sun.com>
 Date:   Tue May 19 01:33:41 2009 -0700
 
     Update AC_DEFINE_DIR to latest version from Autoconf Archive
 
+commit b669e637d7baeaff7fa2ffdb98c937144cb54815
+Merge: ef5621f 332bd68
+Author: Matthieu Herrb <matthieu.herrb@laas.fr>
+Date:   Wed Feb 4 21:45:54 2009 +0100
+
+    Merge commit 'origin/master' into obsd
+
 commit 332bd687a265642d17109eafb2d183887a53d739
+Author: Matthieu Herrb <matthieu.herrb@laas.fr>
+Date:   Fri Jan 30 22:48:17 2009 +0100
+
+    getLocalAddress(): return 127.0.0.1 if the hostname doesn't resolve.
+    
+    This code already does this if IPv6 support is compiled in. It
+    was dereferencing a NULL pointer in the IPv4 only case.
+
+commit ef5621fe68045784f2c630c34c6224de7a050a7a
 Author: Matthieu Herrb <matthieu.herrb@laas.fr>
 Date:   Fri Jan 30 22:48:17 2009 +0100
 
@@ -336,6 +2155,13 @@ Date:   Fri Jan 30 10:44:01 2009 +0100
 
     Remove RCS Id and put some comment here.
 
+commit 61c6a8eb78ef7f090188e9d8b0ec3a601a399390
+Merge: eac0998 7a44f52
+Author: Matthieu Herrb <matthieu.herrb@laas.fr>
+Date:   Wed Jan 28 14:53:53 2009 +0100
+
+    Merge commit 'origin/master' into obsd
+
 commit 7a44f525570af2e1d24893635c85cd86091c5503
 Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
 Date:   Tue Jan 20 16:08:34 2009 -0200
@@ -347,6 +2173,13 @@ Date:   Tue Jan 20 16:08:34 2009 -0200
     warning is due to passing read or write as function pointers in
     the format ssize_t (*)(int, void *, size_t), as it is const for
     write, but not for read.
+
+commit eac09984167307da7fcab4eb70b63b681b933458
+Merge: 3c64bfe b4dc9af
+Author: Matthieu Herrb <matthieu.herrb@laas.fr>
+Date:   Sun Oct 5 15:01:42 2008 +0200
+
+    Merge branch 'master' into obsd
 
 commit b4dc9afe20ab9c4ddec29a7357e147258e34bb67
 Author: Julien Cristau <jcristau@debian.org>
@@ -431,6 +2264,55 @@ Date:   Sat Mar 8 22:21:57 2008 +0100
 
     README: nuke RCS Id
 
+commit 3c64bfed20b987c3da608d4bad8d9b4c7ac3eabd
+Author: Matthieu Herrb <matthieu.herrb@laas.fr>
+Date:   Sat Mar 8 18:24:58 2008 +0100
+
+    Xresources.cpp: OpenBSD 4.3 updates + merge fixes.
+
+commit aac6877131ff186f03b2b6eada059ff789f9246f
+Merge: 5e041b8 83120ea
+Author: Matthieu Herrb <matthieu@bluenote.herrb.net>
+Date:   Sat Mar 8 18:18:44 2008 +0100
+
+    merge once more
+
+commit 5e041b8fe339784d3d32443c212757d602a80b27
+Author: Iruata Souza <iru.muzgo@gmail.com>
+Date:   Thu Sep 27 21:36:45 2007 +0200
+
+    Fix the commented out way to disable root logins.
+
+commit aee17f333ed51225b3fd23a2dd607c88c7fbaf90
+Author: Matthieu Herrb <matthieu@bluenote.herrb.com>
+Date:   Sat Sep 15 17:11:05 2007 +0200
+
+    Don't use a theme cursor that's not installed on OpenBSD
+
+commit c3d3e93b535e0de4b1975140387b5369efa62a21
+Author: Matthieu Herrb <matthieu@bluenote.herrb.com>
+Date:   Sat Sep 15 17:10:39 2007 +0200
+
+    Merge OpenBSD local changes
+
+commit af8712391cf7a1a648999df18c539522d254ddc8
+Author: Matthieu Herrb <matthieu@bluenote.herrb.com>
+Date:   Sat Sep 15 17:00:07 2007 +0200
+
+    OpenBSD 4.2 bitmaps
+
+commit a8bbaf28af18ad041e3b038fc70d6ef75ed6b1d4
+Author: Matthieu Herrb <matthieu@deville.herrb.com>
+Date:   Wed May 30 17:27:55 2007 -0600
+
+    Adjust resources for small screens.
+
+commit cb458f413950b519819eb01e0ef23f6b44600a5f
+Author: Matthieu Herrb <matthieu@deville.herrb.com>
+Date:   Wed May 30 16:37:06 2007 -0600
+
+    Merge OpenBSD changes
+
 commit 576861d7e6158790e18ae79b8d566919b88d0cae
 Author: Adam Jackson <ajax@redhat.com>
 Date:   Fri Mar 7 17:12:33 2008 -0500
@@ -458,6 +2340,35 @@ Date:   Fri Sep 21 11:03:54 2007 -0700
     Debian bug #440389 <http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=440389>
     When deleting the XPM #ifdefs, a set of #if WIDTH < 800 resources
     got accidentally deleted as well.  (Cause & fix found by Brice Goglin)
+
+commit 83120ea6819e63f4232433b05723bd8451d6a28b
+Author: Matthieu Herrb <matthieu@bluenote.herrb.com>
+Date:   Sat Sep 15 17:11:05 2007 +0200
+
+    Don't use a theme cursor that's not installed on OpenBSD
+
+commit 85e97a2ebb5b8feb51dd7a7e1e43a422df1ca88a
+Author: Matthieu Herrb <matthieu@bluenote.herrb.com>
+Date:   Sat Sep 15 17:10:39 2007 +0200
+
+    Merge OpenBSD local changes
+
+commit 26453925e0a2b9858e033db60701ca210916126f
+Author: Matthieu Herrb <matthieu@bluenote.herrb.com>
+Date:   Sat Sep 15 17:00:07 2007 +0200
+
+    OpenBSD 4.2 bitmaps
+
+commit 7f219e35bf3d308248c486682cf549ce9edf4b94
+Merge: a470770 9231760
+Author: Matthieu Herrb <matthieu@bluenote.herrb.com>
+Date:   Fri Sep 14 20:58:43 2007 +0200
+
+    Merge branch 'master' into obsd
+    
+    Conflicts:
+    
+    	config/Xresources.cpp
 
 commit 923176024d3d6b7f5b392b4f9a07cce8c6ed3823
 Author: Alan Coopersmith <alan.coopersmith@sun.com>
@@ -563,6 +2474,25 @@ Author: Alan Coopersmith <alan.coopersmith@sun.com>
 Date:   Thu May 31 17:11:15 2007 -0700
 
     Document more of the greeter resources in xdm man page
+
+commit a4707705f3c9477c0619f105dc90e231abc04be7
+Merge: 35f5633 d27347d
+Author: Matthieu Herrb <matthieu@deville.herrb.com>
+Date:   Wed May 30 20:10:47 2007 -0600
+
+    Merge branch 'obsd-xdm-1.1.4' into obsd
+
+commit d27347d417b03e46752d160630b68455815ce2b1
+Author: Matthieu Herrb <matthieu@deville.herrb.com>
+Date:   Wed May 30 17:27:55 2007 -0600
+
+    Adjust resources for small screens.
+
+commit 33a7ff0beddf7f4ac908b2013a0d97427ad39f5a
+Author: Matthieu Herrb <matthieu@deville.herrb.com>
+Date:   Wed May 30 16:37:06 2007 -0600
+
+    Merge OpenBSD changes
 
 commit 35f563369470139665498640f4cda23d1227073b
 Author: Alan Coopersmith <alan.coopersmith@sun.com>

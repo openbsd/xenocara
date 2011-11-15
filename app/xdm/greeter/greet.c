@@ -25,32 +25,27 @@ other dealings in this Software without prior written authorization
 from The Open Group.
 
 */
-/* Copyright 2006 Sun Microsystems, Inc.  All rights reserved.
+/*
+ * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
- * copy of this software and associated documentation files (the
- * "Software"), to deal in the Software without restriction, including
- * without limitation the rights to use, copy, modify, merge, publish,
- * distribute, and/or sell copies of the Software, and to permit persons
- * to whom the Software is furnished to do so, provided that the above
- * copyright notice(s) and this permission notice appear in all copies of
- * the Software and that both the above copyright notice(s) and this
- * permission notice appear in supporting documentation.
+ * copy of this software and associated documentation files (the "Software"),
+ * to deal in the Software without restriction, including without limitation
+ * the rights to use, copy, modify, merge, publish, distribute, sublicense,
+ * and/or sell copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following conditions:
  *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
- * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
- * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT
- * OF THIRD PARTY RIGHTS. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR
- * HOLDERS INCLUDED IN THIS NOTICE BE LIABLE FOR ANY CLAIM, OR ANY SPECIAL
- * INDIRECT OR CONSEQUENTIAL DAMAGES, OR ANY DAMAGES WHATSOEVER RESULTING
- * FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT,
- * NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION
- * WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+ * The above copyright notice and this permission notice (including the next
+ * paragraph) shall be included in all copies or substantial portions of the
+ * Software.
  *
- * Except as contained in this notice, the name of a copyright holder
- * shall not be used in advertising or otherwise to promote the sale, use
- * or other dealings in this Software without prior written authorization
- * of the copyright holder.
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
+ * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+ * DEALINGS IN THE SOFTWARE.
  */
 
 
@@ -78,7 +73,7 @@ from The Open Group.
 #include "dm.h"
 #include "dm_error.h"
 #include "greet.h"
-#include "Login.h"
+#include "LoginP.h"
 
 #if defined(HAVE_OPENLOG) && defined(HAVE_SYSLOG_H)
 # define USE_SYSLOG
@@ -98,11 +93,10 @@ from The Open Group.
 extern int getdomainname(char *name, size_t len);
 #endif
 
-#ifdef GREET_LIB
 /*
  * Function pointers filled in by the initial call ito the library
  */
-
+#ifdef GREET_LIB
 int     (*__xdm_PingServer)(struct display *d, Display *alternateDpy) = NULL;
 void    (*__xdm_SessionPingFailed)(struct display *d) = NULL;
 void    (*__xdm_Debug)(const char * fmt, ...) = NULL;
@@ -116,16 +110,16 @@ void    (*__xdm_SessionExit)(struct display *d, int status, int removeAuth) = NU
 void    (*__xdm_DeleteXloginResources)(struct display *d, Display *dpy) = NULL;
 int     (*__xdm_source)(char **environ, char *file) = NULL;
 char    **(*__xdm_defaultEnv)(void) = NULL;
-char    **(*__xdm_setEnv)(char **e, char *name, char *value) = NULL;
+char    **(*__xdm_setEnv)(char **e, const char *name, const char *value) = NULL;
 char    **(*__xdm_putEnv)(const char *string, char **env) = NULL;
-char    **(*__xdm_parseArgs)(char **argv, char *string) = NULL;
+char    **(*__xdm_parseArgs)(char **argv, const char *string) = NULL;
 void    (*__xdm_printEnv)(char **e) = NULL;
 char    **(*__xdm_systemEnv)(struct display *d, char *user, char *home) = NULL;
 void    (*__xdm_LogOutOfMem)(const char * fmt, ...) = NULL;
 void    (*__xdm_setgrent)(void) = NULL;
 struct group    *(*__xdm_getgrent)(void) = NULL;
 void    (*__xdm_endgrent)(void) = NULL;
-# ifdef USESHADOW
+# ifdef HAVE_GETSPNAM
 struct spwd   *(*__xdm_getspnam)(GETSPNAM_ARGS) = NULL;
 #  ifndef QNX4
 void   (*__xdm_endspent)(void) = NULL;
@@ -139,7 +133,6 @@ char     *(*__xdm_crypt)(CRYPT_ARGS) = NULL;
 # ifdef USE_PAM
 pam_handle_t **(*__xdm_thepamhp)(void) = NULL;
 # endif
-
 #endif
 
 #ifdef SECURE_RPC
@@ -150,8 +143,6 @@ pam_handle_t **(*__xdm_thepamhp)(void) = NULL;
 #ifdef K5AUTH
 # include <krb5/krb5.h>
 #endif
-
-extern Display	*dpy;
 
 static int	done, code;
 #ifndef USE_PAM
@@ -320,7 +311,7 @@ InitGreet (struct display *d)
 
     if (d->pingInterval)
     {
-    	pingTimeout = XtAppAddTimeOut (context, d->pingInterval * 60 * 1000,
+	pingTimeout = XtAppAddTimeOut (context, d->pingInterval * 60 * 1000,
 				       GreetPingServer, (XtPointer) d);
     }
     return dpy;
@@ -347,6 +338,8 @@ CloseGreet (struct display *d)
 	XSetAccessControl (dpy, DisableAccess);
     }
     XtDestroyWidget (toplevel);
+    toplevel = NULL;
+    login = NULL; /* child of toplevel, which we just destroyed */
     ClearCloseOnFork (XConnectionNumber (dpy));
     XCloseDisplay (dpy);
     Debug ("Greet connection closed\n");
@@ -359,7 +352,7 @@ static int
 Greet (struct display *d, struct greet_info *greet)
 {
     XEvent		event;
-    Arg		arglist[3];
+    Arg		arglist[1];
 
     XtSetArg (arglist[0], XtNallowAccess, False);
     XtSetValues (login, arglist, 1);
@@ -402,9 +395,7 @@ Greet (struct display *d, struct greet_info *greet)
 	greet->password = password;
 #endif  /* USE_PAM */
 	XtSetArg (arglist[0], XtNsessionArgument, (char *) &(greet->string));
-	XtSetArg (arglist[1], XtNallowNullPasswd, (char *) &(greet->allow_null_passwd));
-	XtSetArg (arglist[2], XtNallowRootLogin, (char *) &(greet->allow_root_login));
-	XtGetValues (login, arglist, 3);
+	XtGetValues (login, arglist, 1);
 	Debug ("sessionArgument: %s\n", greet->string ? greet->string : "<NULL>");
     }
     return code;
@@ -412,18 +403,17 @@ Greet (struct display *d, struct greet_info *greet)
 
 
 static void
-FailedLogin (struct display *d, struct greet_info *greet)
+FailedLogin (struct display *d, const char *username)
 {
 #ifdef USE_SYSLOG
+    if (username == NULL)
+	username = "username unavailable";
+
     syslog(LOG_AUTHPRIV|LOG_NOTICE,
 	   "LOGIN FAILURE ON %s, %s",
-	   d->name, greet->name);
+	   d->name, username);
 #endif
     DrawFail (login);
-#ifndef USE_PAM
-    bzero (greet->name, strlen(greet->name));
-    bzero (greet->password, strlen(greet->password));
-#endif
 }
 
 _X_EXPORT
@@ -435,6 +425,7 @@ greet_user_rtn GreetUser(
     struct dlfuncs        *dlfuncs)
 {
     int i;
+    Arg		arglist[2];
 
 #ifdef GREET_LIB
 /*
@@ -462,7 +453,7 @@ greet_user_rtn GreetUser(
     __xdm_setgrent = dlfuncs->_setgrent;
     __xdm_getgrent = dlfuncs->_getgrent;
     __xdm_endgrent = dlfuncs->_endgrent;
-# ifdef USESHADOW
+# ifdef HAVE_GETSPNAM
     __xdm_getspnam = dlfuncs->_getspnam;
 #  ifndef QNX4
     __xdm_endspent = dlfuncs->_endspent;
@@ -477,7 +468,6 @@ greet_user_rtn GreetUser(
     __xdm_thepamhp = dlfuncs->_thepamhp;
 # endif
 #endif
-
     *dpy = InitGreet (d);
     /*
      * Run the setup script - note this usually will not work when
@@ -489,9 +479,12 @@ greet_user_rtn GreetUser(
 	LogError ("Cannot reopen display %s for greet window\n", d->name);
 	exit (RESERVER_DISPLAY);
     }
-#ifdef USE_SYSLOG
-    openlog("xdm", LOG_ODELAY|LOG_PID, LOG_AUTHPRIV);
-#endif
+
+    XtSetArg (arglist[0], XtNallowNullPasswd,
+	      (char *) &(greet->allow_null_passwd));
+    XtSetArg (arglist[1], XtNallowRootLogin,
+	      (char *) &(greet->allow_root_login));
+    XtGetValues (login, arglist, 2);
 
     for (;;) {
 #ifdef USE_PAM
@@ -503,13 +496,12 @@ greet_user_rtn GreetUser(
 	struct myconv_data pcd		= { d, greet, NULL };
 	struct pam_conv   pc 		= { pamconv, &pcd };
 	const char *	  pam_fname;
-	char *		  username;
 	const char *	  login_prompt;
 
 
-	SetPrompt(login, 0, NULL, LOGIN_PROMPT_NOT_SHOWN, False);
+	SetPrompt(login, LOGIN_PROMPT_USERNAME, NULL, LOGIN_PROMPT_NOT_SHOWN, False);
 	login_prompt  = GetPrompt(login, LOGIN_PROMPT_USERNAME);
-	SetPrompt(login, 1, NULL, LOGIN_PROMPT_NOT_SHOWN, False);
+	SetPrompt(login, LOGIN_PROMPT_PASSWORD, NULL, LOGIN_PROMPT_NOT_SHOWN, False);
 
 # define RUN_AND_CHECK_PAM_ERROR(function, args)			\
 	    do { 						\
@@ -545,8 +537,25 @@ greet_user_rtn GreetUser(
 					(*pamhp, PAM_RHOST, hostname));
 		free(hostname);
 	    }
-	} else
-	    RUN_AND_CHECK_PAM_ERROR(pam_set_item, (*pamhp, PAM_TTY, d->name));
+	} else {			/* Displaying on local host */
+	    const char *ttyname = NULL;
+
+#ifdef __sun
+	    /* Solaris PAM & auditing insist this is a device file that can
+	       be found under /dev, so we can't use the display name */
+	    char vtpath[16];
+
+	    if ((d->windowPath) && !(strchr(d->windowPath, ':'))) {
+		/* if path is simply a VT, with no intermediaries, use it */
+		snprintf(vtpath, sizeof(vtpath), "/dev/vt/%s", d->windowPath);
+		ttyname = vtpath;
+	    }
+#else
+	    /* On all other OS'es we just pass the display name for PAM_TTY */
+	    ttyname = d->name;
+#endif
+	    RUN_AND_CHECK_PAM_ERROR(pam_set_item, (*pamhp, PAM_TTY, ttyname));
+	}
 
 	if (!greet->allow_null_passwd) {
 	    pam_flags |= PAM_DISALLOW_NULL_AUTHTOK;
@@ -572,12 +581,16 @@ greet_user_rtn GreetUser(
 
 	RUN_AND_CHECK_PAM_ERROR(pam_setcred,
 				(*pamhp, 0));
-	RUN_AND_CHECK_PAM_ERROR(pam_get_item,
-				(*pamhp, PAM_USER, (void *) &username));
-	if (username != NULL) {
-	    Debug("PAM_USER: %s\n", username);
-	    greet->name = username;
-	    greet->password = NULL;
+	{
+	    char *username	= NULL;
+
+	    RUN_AND_CHECK_PAM_ERROR(pam_get_item,
+				    (*pamhp, PAM_USER, (void *) &username));
+	    if (username != NULL) {
+		Debug("PAM_USER: %s\n", username);
+		greet->name = username;
+		greet->password = NULL;
+	    }
 	}
 
       pam_done:
@@ -592,15 +605,14 @@ greet_user_rtn GreetUser(
 	    break;
 	} else {
 	    /* Try to fill in username for failed login error log */
-	    if (greet->name == NULL) {
-		if (username == NULL) {
-		    RUN_AND_CHECK_PAM_ERROR(pam_get_item,
-					    (*pamhp, PAM_USER,
-					     (void *) &username));
-		}
-		greet->name = username;
+	    char *username = greet->name;
+
+	    if (username == NULL) {
+		RUN_AND_CHECK_PAM_ERROR(pam_get_item,
+					(*pamhp, PAM_USER,
+					 (void *) &username));
 	    }
-	    FailedLogin (d, greet);
+	    FailedLogin (d, username);
 	    RUN_AND_CHECK_PAM_ERROR(pam_end,
 				    (*pamhp, pam_error));
 	}
@@ -620,7 +632,11 @@ greet_user_rtn GreetUser(
 	if (Verify (d, greet, verify))
 	    break;
 	else
-	    FailedLogin (d, greet);
+	{
+	    FailedLogin (d, greet->name);
+	    bzero (greet->name, strlen(greet->name));
+	    bzero (greet->password, strlen(greet->password));
+	}
 #endif
     }
     DeleteXloginResources (d, *dpy);
@@ -709,6 +725,11 @@ static int pamconv(int num_msg,
 
     m = (struct pam_message *)*msg;
     r = *response;
+
+    if (login == NULL) {
+	status = PAM_CONV_ERR;
+	goto pam_error;
+    }
 
     for (i = 0; i < num_msg; i++ , m++ , r++) {
 	char *username;

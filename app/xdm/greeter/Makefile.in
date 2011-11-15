@@ -23,9 +23,9 @@ pkgincludedir = $(includedir)/@PACKAGE@
 top_builddir = ..
 am__cd = CDPATH="$${ZSH_VERSION+.}$(PATH_SEPARATOR)" && cd
 INSTALL = @INSTALL@
-install_sh_DATA = $(install_sh) -c -m 644
-install_sh_PROGRAM = $(install_sh) -c
-install_sh_SCRIPT = $(install_sh) -c
+install_sh_DATA = ${SHELL} $(install_sh) -c -m 644
+install_sh_PROGRAM = ${SHELL} $(install_sh) -c
+install_sh_SCRIPT = ${SHELL} $(install_sh) -c
 INSTALL_HEADER = $(INSTALL_DATA)
 transform = $(program_transform_name)
 NORMAL_INSTALL = :
@@ -39,8 +39,10 @@ host_triplet = @host@
 subdir = greeter
 DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
-am__aclocal_m4_deps = $(top_srcdir)/acinclude.m4 \
-	$(top_srcdir)/configure.ac
+am__aclocal_m4_deps = $(top_srcdir)/m4/ax_define_dir.m4 \
+	$(top_srcdir)/m4/libtool.m4 $(top_srcdir)/m4/ltoptions.m4 \
+	$(top_srcdir)/m4/ltsugar.m4 $(top_srcdir)/m4/ltversion.m4 \
+	$(top_srcdir)/m4/lt~obsolete.m4 $(top_srcdir)/configure.ac
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
 mkinstalldirs = $(SHELL) $(install_sh) -d
@@ -54,14 +56,12 @@ am__vpath_adj = case $$p in \
 am__strip_dir = `echo $$p | sed -e 's|^.*/||'`;
 am__installdirs = "$(DESTDIR)$(xdmlibdir)"
 xdmlibLTLIBRARIES_INSTALL = $(INSTALL)
-LTLIBRARIES = $(xdmlib_LTLIBRARIES)
+LTLIBRARIES = $(noinst_LTLIBRARIES) $(xdmlib_LTLIBRARIES)
 am__DEPENDENCIES_1 =
-@DYNAMIC_GREETER_TRUE@libXdmGreet_la_DEPENDENCIES =  \
-@DYNAMIC_GREETER_TRUE@	$(am__DEPENDENCIES_1)
-am__libXdmGreet_la_SOURCES_DIST = Login.c greet.c verify.c
-@DYNAMIC_GREETER_TRUE@am_libXdmGreet_la_OBJECTS = Login.lo greet.lo \
-@DYNAMIC_GREETER_TRUE@	verify.lo
+libXdmGreet_la_DEPENDENCIES = $(am__DEPENDENCIES_1)
+am_libXdmGreet_la_OBJECTS = Login.lo greet.lo verify.lo
 libXdmGreet_la_OBJECTS = $(am_libXdmGreet_la_OBJECTS)
+@DYNAMIC_GREETER_FALSE@am_libXdmGreet_la_rpath =
 @DYNAMIC_GREETER_TRUE@am_libXdmGreet_la_rpath = -rpath $(xdmlibdir)
 DEFAULT_INCLUDES = -I. -I$(srcdir) -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/depcomp
@@ -75,7 +75,7 @@ CCLD = $(CC)
 LINK = $(LIBTOOL) --tag=CC --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
 	$(AM_LDFLAGS) $(LDFLAGS) -o $@
 SOURCES = $(libXdmGreet_la_SOURCES)
-DIST_SOURCES = $(am__libXdmGreet_la_SOURCES_DIST)
+DIST_SOURCES = $(libXdmGreet_la_SOURCES)
 ETAGS = etags
 CTAGS = ctags
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
@@ -85,12 +85,12 @@ ADMIN_MAN_SUFFIX = @ADMIN_MAN_SUFFIX@
 AMDEP_FALSE = @AMDEP_FALSE@
 AMDEP_TRUE = @AMDEP_TRUE@
 AMTAR = @AMTAR@
+AM_DEFAULT_VERBOSITY = @AM_DEFAULT_VERBOSITY@
 APPDEFS_CFLAGS = @APPDEFS_CFLAGS@
 APPDEFS_LIBS = @APPDEFS_LIBS@
 APP_MAN_DIR = @APP_MAN_DIR@
 APP_MAN_SUFFIX = @APP_MAN_SUFFIX@
 AR = @AR@
-AS = @AS@
 AUTH_CFLAGS = @AUTH_CFLAGS@
 AUTH_LIBS = @AUTH_LIBS@
 AUTOCONF = @AUTOCONF@
@@ -106,10 +106,6 @@ CHOOSER_LIBS = @CHOOSER_LIBS@
 CPP = @CPP@
 CPPFLAGS = @CPPFLAGS@
 CWARNFLAGS = @CWARNFLAGS@
-CXX = @CXX@
-CXXCPP = @CXXCPP@
-CXXDEPMODE = @CXXDEPMODE@
-CXXFLAGS = @CXXFLAGS@
 CYGPATH_W = @CYGPATH_W@
 DEFAULTVT = @DEFAULTVT@
 DEFS = @DEFS@
@@ -124,41 +120,46 @@ DEF_SYSTEM_SHELL = @DEF_SYSTEM_SHELL@
 DEF_USER_PATH = @DEF_USER_PATH@
 DEF_XDM_CONFIG = @DEF_XDM_CONFIG@
 DEPDIR = @DEPDIR@
+DEV_RANDOM = @DEV_RANDOM@
 DLLTOOL = @DLLTOOL@
 DMCP_CFLAGS = @DMCP_CFLAGS@
 DMCP_LIBS = @DMCP_LIBS@
 DRIVER_MAN_DIR = @DRIVER_MAN_DIR@
 DRIVER_MAN_SUFFIX = @DRIVER_MAN_SUFFIX@
 DSYMUTIL = @DSYMUTIL@
+DUMPBIN = @DUMPBIN@
 DYNAMIC_GREETER_FALSE = @DYNAMIC_GREETER_FALSE@
 DYNAMIC_GREETER_TRUE = @DYNAMIC_GREETER_TRUE@
-ECHO = @ECHO@
 ECHO_C = @ECHO_C@
 ECHO_N = @ECHO_N@
 ECHO_T = @ECHO_T@
 EGREP = @EGREP@
 EXEEXT = @EXEEXT@
-F77 = @F77@
-FFLAGS = @FFLAGS@
+FGREP = @FGREP@
 FILE_MAN_DIR = @FILE_MAN_DIR@
 FILE_MAN_SUFFIX = @FILE_MAN_SUFFIX@
 GREP = @GREP@
-HAS_ARC4_RANDOM_FALSE = @HAS_ARC4_RANDOM_FALSE@
-HAS_ARC4_RANDOM_TRUE = @HAS_ARC4_RANDOM_TRUE@
 HAS_KERBEROS_FIVE_FALSE = @HAS_KERBEROS_FIVE_FALSE@
 HAS_KERBEROS_FIVE_TRUE = @HAS_KERBEROS_FIVE_TRUE@
 HAS_SECURE_RPC_FALSE = @HAS_SECURE_RPC_FALSE@
 HAS_SECURE_RPC_TRUE = @HAS_SECURE_RPC_TRUE@
 HAS_XDM_AUTH_FALSE = @HAS_XDM_AUTH_FALSE@
 HAS_XDM_AUTH_TRUE = @HAS_XDM_AUTH_TRUE@
-HAVE_AM_SILENT_RULES_FALSE = @HAVE_AM_SILENT_RULES_FALSE@
-HAVE_AM_SILENT_RULES_TRUE = @HAVE_AM_SILENT_RULES_TRUE@
+HAVE_ARC4RANDOM = @HAVE_ARC4RANDOM@
+HAVE_ARC4RANDOM_FALSE = @HAVE_ARC4RANDOM_FALSE@
+HAVE_ARC4RANDOM_TRUE = @HAVE_ARC4RANDOM_TRUE@
 HAVE_MKTEMP_COMMAND_FALSE = @HAVE_MKTEMP_COMMAND_FALSE@
 HAVE_MKTEMP_COMMAND_TRUE = @HAVE_MKTEMP_COMMAND_TRUE@
+HAVE_SYSTEMD_FALSE = @HAVE_SYSTEMD_FALSE@
+HAVE_SYSTEMD_TRUE = @HAVE_SYSTEMD_TRUE@
+INSTALL_CMD = @INSTALL_CMD@
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
 INSTALL_STRIP_PROGRAM = @INSTALL_STRIP_PROGRAM@
+INSTALL_XDMSHELL_FALSE = @INSTALL_XDMSHELL_FALSE@
+INSTALL_XDMSHELL_TRUE = @INSTALL_XDMSHELL_TRUE@
+LD = @LD@
 LDFLAGS = @LDFLAGS@
 LIBOBJS = @LIBOBJS@
 LIBS = @LIBS@
@@ -169,18 +170,24 @@ LINT = @LINT@
 LINT_FALSE = @LINT_FALSE@
 LINT_FLAGS = @LINT_FLAGS@
 LINT_TRUE = @LINT_TRUE@
+LIPO = @LIPO@
 LN_S = @LN_S@
 LTLIBOBJS = @LTLIBOBJS@
 MAINT = @MAINT@
 MAINTAINER_MODE_FALSE = @MAINTAINER_MODE_FALSE@
 MAINTAINER_MODE_TRUE = @MAINTAINER_MODE_TRUE@
 MAKEINFO = @MAKEINFO@
+MANIFEST_TOOL = @MANIFEST_TOOL@
+MAN_SUBSTS = @MAN_SUBSTS@
 MISC_MAN_DIR = @MISC_MAN_DIR@
 MISC_MAN_SUFFIX = @MISC_MAN_SUFFIX@
 MKTEMP_COMMAND = @MKTEMP_COMMAND@
+NM = @NM@
 NMEDIT = @NMEDIT@
 OBJDUMP = @OBJDUMP@
 OBJEXT = @OBJEXT@
+OTOOL = @OTOOL@
+OTOOL64 = @OTOOL64@
 PACKAGE = @PACKAGE@
 PACKAGE_BUGREPORT = @PACKAGE_BUGREPORT@
 PACKAGE_NAME = @PACKAGE_NAME@
@@ -189,7 +196,6 @@ PACKAGE_TARNAME = @PACKAGE_TARNAME@
 PACKAGE_VERSION = @PACKAGE_VERSION@
 PATH_SEPARATOR = @PATH_SEPARATOR@
 PKG_CONFIG = @PKG_CONFIG@
-RANDOMMANDEFS = @RANDOMMANDEFS@
 RANLIB = @RANLIB@
 RAWCPP = @RAWCPP@
 RAWCPPFLAGS = @RAWCPPFLAGS@
@@ -198,8 +204,13 @@ SERVERSTYPE = @SERVERSTYPE@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 SHELL_CMD = @SHELL_CMD@
+STRICT_CFLAGS = @STRICT_CFLAGS@
 STRIP = @STRIP@
 SU = @SU@
+SYSTEMD_DAEMON_CFLAGS = @SYSTEMD_DAEMON_CFLAGS@
+SYSTEMD_DAEMON_LIBS = @SYSTEMD_DAEMON_LIBS@
+USE_SYSTEMD_DAEMON_FALSE = @USE_SYSTEMD_DAEMON_FALSE@
+USE_SYSTEMD_DAEMON_TRUE = @USE_SYSTEMD_DAEMON_TRUE@
 USE_XPM_FALSE = @USE_XPM_FALSE@
 USE_XPM_TRUE = @USE_XPM_TRUE@
 UTMP_FILE = @UTMP_FILE@
@@ -217,30 +228,28 @@ XDMSHELL_LIBS = @XDMSHELL_LIBS@
 XDMXAUTHDIR = @XDMXAUTHDIR@
 XDM_BWPIXMAP = @XDM_BWPIXMAP@
 XDM_CFLAGS = @XDM_CFLAGS@
-XDM_LDFLAGS = @XDM_LDFLAGS@
 XDM_LIBS = @XDM_LIBS@
 XDM_PIXMAP = @XDM_PIXMAP@
 XDM_PIXMAPDIR = @XDM_PIXMAPDIR@
-XDM_PRINT_CFLAGS = @XDM_PRINT_CFLAGS@
-XDM_PRINT_LIBS = @XDM_PRINT_LIBS@
+XDM_TOOLKIT_CFLAGS = @XDM_TOOLKIT_CFLAGS@
+XDM_TOOLKIT_LIBS = @XDM_TOOLKIT_LIBS@
 XFT_CFLAGS = @XFT_CFLAGS@
 XFT_LIBS = @XFT_LIBS@
 XINERAMA_CFLAGS = @XINERAMA_CFLAGS@
 XINERAMA_LIBS = @XINERAMA_LIBS@
 XLIB_CFLAGS = @XLIB_CFLAGS@
 XLIB_LIBS = @XLIB_LIBS@
+XORG_MAN_PAGE = @XORG_MAN_PAGE@
 XPM_CFLAGS = @XPM_CFLAGS@
 XPM_LIBS = @XPM_LIBS@
 XRDB_PROGRAM = @XRDB_PROGRAM@
 XT_CFLAGS = @XT_CFLAGS@
 XT_LIBS = @XT_LIBS@
+ac_ct_AR = @ac_ct_AR@
 ac_ct_CC = @ac_ct_CC@
-ac_ct_CXX = @ac_ct_CXX@
-ac_ct_F77 = @ac_ct_F77@
+ac_ct_DUMPBIN = @ac_ct_DUMPBIN@
 am__fastdepCC_FALSE = @am__fastdepCC_FALSE@
 am__fastdepCC_TRUE = @am__fastdepCC_TRUE@
-am__fastdepCXX_FALSE = @am__fastdepCXX_FALSE@
-am__fastdepCXX_TRUE = @am__fastdepCXX_TRUE@
 am__include = @am__include@
 am__leading_dot = @am__leading_dot@
 am__quote = @am__quote@
@@ -255,7 +264,6 @@ build_os = @build_os@
 build_vendor = @build_vendor@
 datadir = @datadir@
 datarootdir = @datarootdir@
-distcleancheck_listfiles = @distcleancheck_listfiles@
 docdir = @docdir@
 dvidir = @dvidir@
 exec_prefix = @exec_prefix@
@@ -282,16 +290,22 @@ psdir = @psdir@
 sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 sysconfdir = @sysconfdir@
+systemdsystemunitdir = @systemdsystemunitdir@
 target_alias = @target_alias@
-@DYNAMIC_GREETER_TRUE@xdmlibdir = $(XDMLIBDIR)
+xdmlibdir = $(XDMLIBDIR)
 @DYNAMIC_GREETER_TRUE@xdmlib_LTLIBRARIES = libXdmGreet.la
-@DYNAMIC_GREETER_TRUE@libXdmGreet_la_SOURCES = \
-@DYNAMIC_GREETER_TRUE@		  Login.c \
-@DYNAMIC_GREETER_TRUE@		  greet.c \
-@DYNAMIC_GREETER_TRUE@		  verify.c
+@DYNAMIC_GREETER_FALSE@noinst_LTLIBRARIES = libXdmGreet.la
+libXdmGreet_la_SOURCES = \
+		  Login.c \
+		  Login.h \
+		  LoginP.h \
+		  greet.c \
+		  verify.c
 
-@DYNAMIC_GREETER_TRUE@libXdmGreet_la_LIBADD = $(XDMGREET_LIBS)
-@DYNAMIC_GREETER_TRUE@AM_CFLAGS = $(CWARNFLAGS) $(XDMGREET_CFLAGS) -I$(top_srcdir)
+libXdmGreet_la_LIBADD = $(XDMGREET_LIBS)
+AM_CPPFLAGS = -I$(top_srcdir)/include
+AM_CFLAGS = $(CWARNFLAGS) $(XDMGREET_CFLAGS) -DGREET_LIB
+@DYNAMIC_GREETER_FALSE@libXdmGreet_la_LDFLAGS = -static
 @DYNAMIC_GREETER_TRUE@libXdmGreet_la_LDFLAGS = -module -avoid-version
 @LINT_TRUE@ALL_LINT_FLAGS = $(LINT_FLAGS) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
 @LINT_TRUE@		$(AM_CPPFLAGS) $(CPPFLAGS)
@@ -309,9 +323,9 @@ $(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am  $(am__confi
 	      exit 1;; \
 	  esac; \
 	done; \
-	echo ' cd $(top_srcdir) && $(AUTOMAKE) --gnu  greeter/Makefile'; \
+	echo ' cd $(top_srcdir) && $(AUTOMAKE) --foreign  greeter/Makefile'; \
 	cd $(top_srcdir) && \
-	  $(AUTOMAKE) --gnu  greeter/Makefile
+	  $(AUTOMAKE) --foreign  greeter/Makefile
 .PRECIOUS: Makefile
 Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 	@case '$?' in \
@@ -329,6 +343,15 @@ $(top_srcdir)/configure: @MAINTAINER_MODE_TRUE@ $(am__configure_deps)
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
 $(ACLOCAL_M4): @MAINTAINER_MODE_TRUE@ $(am__aclocal_m4_deps)
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
+
+clean-noinstLTLIBRARIES:
+	-test -z "$(noinst_LTLIBRARIES)" || rm -f $(noinst_LTLIBRARIES)
+	@list='$(noinst_LTLIBRARIES)'; for p in $$list; do \
+	  dir="`echo $$p | sed -e 's|/[^/]*$$||'`"; \
+	  test "$$dir" != "$$p" || dir=.; \
+	  echo "rm -f \"$${dir}/so_locations\""; \
+	  rm -f "$${dir}/so_locations"; \
+	done
 install-xdmlibLTLIBRARIES: $(xdmlib_LTLIBRARIES)
 	@$(NORMAL_INSTALL)
 	test -z "$(xdmlibdir)" || $(mkdir_p) "$(DESTDIR)$(xdmlibdir)"
@@ -508,8 +531,8 @@ maintainer-clean-generic:
 	@echo "it deletes files that may require special tools to rebuild."
 clean: clean-am
 
-clean-am: clean-generic clean-libtool clean-xdmlibLTLIBRARIES \
-	mostlyclean-am
+clean-am: clean-generic clean-libtool clean-noinstLTLIBRARIES \
+	clean-xdmlibLTLIBRARIES mostlyclean-am
 
 distclean: distclean-am
 	-rm -rf ./$(DEPDIR)
@@ -558,17 +581,17 @@ ps-am:
 uninstall-am: uninstall-info-am uninstall-xdmlibLTLIBRARIES
 
 .PHONY: CTAGS GTAGS all all-am check check-am clean clean-generic \
-	clean-libtool clean-xdmlibLTLIBRARIES ctags distclean \
-	distclean-compile distclean-generic distclean-libtool \
-	distclean-tags distdir dvi dvi-am html html-am info info-am \
-	install install-am install-data install-data-am install-exec \
-	install-exec-am install-info install-info-am install-man \
-	install-strip install-xdmlibLTLIBRARIES installcheck \
-	installcheck-am installdirs maintainer-clean \
-	maintainer-clean-generic mostlyclean mostlyclean-compile \
-	mostlyclean-generic mostlyclean-libtool pdf pdf-am ps ps-am \
-	tags uninstall uninstall-am uninstall-info-am \
-	uninstall-xdmlibLTLIBRARIES
+	clean-libtool clean-noinstLTLIBRARIES clean-xdmlibLTLIBRARIES \
+	ctags distclean distclean-compile distclean-generic \
+	distclean-libtool distclean-tags distdir dvi dvi-am html \
+	html-am info info-am install install-am install-data \
+	install-data-am install-exec install-exec-am install-info \
+	install-info-am install-man install-strip \
+	install-xdmlibLTLIBRARIES installcheck installcheck-am \
+	installdirs maintainer-clean maintainer-clean-generic \
+	mostlyclean mostlyclean-compile mostlyclean-generic \
+	mostlyclean-libtool pdf pdf-am ps ps-am tags uninstall \
+	uninstall-am uninstall-info-am uninstall-xdmlibLTLIBRARIES
 
 
 @LINT_TRUE@lint:

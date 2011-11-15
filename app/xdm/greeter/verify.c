@@ -43,7 +43,7 @@ from The Open Group.
 #if defined(USE_PAM)
 # include	<security/pam_appl.h>
 # include	<stdlib.h>
-#elif defined(USESHADOW)
+#elif defined(HAVE_GETSPNAM)
 # include	<shadow.h>
 # include	<errno.h>
 #elif defined(USE_BSDAUTH)
@@ -61,7 +61,7 @@ from The Open Group.
 extern char *crypt(const char *, const char *);
 #endif
 
-static char *envvars[] = {
+static const char *envvars[] = {
     "TZ",			/* SYSV and SVR4, but never hurts */
 #if defined(sony) && !defined(SYSTYPE_SYSV) && !defined(_SYSTYPE_SYSV)
     "bootdev",
@@ -94,8 +94,8 @@ static char **
 userEnv (struct display *d, int useSystemPath, char *user, char *home, char *shell)
 {
     char	**env;
-    char	**envvar;
-    char	*str;
+    const char	**envvar;
+    const char	*str;
 
     env = defaultEnv ();
     env = setEnv (env, "DISPLAY", d->name);
@@ -125,8 +125,8 @@ Verify (struct display *d, struct greet_info *greet, struct verify_info *verify)
 	struct passwd	*p;
 	login_cap_t	*lc;
 	auth_session_t	*as;
-	char		*style, *shell, *home, *path, *s, **argv;
-	char		auth_path[MAXPATHLEN];
+	char		*style, *shell, *home, *s, **argv;
+	char		path[MAXPATHLEN];
 	int		authok;
 	size_t		passwd_len;
 
@@ -178,8 +178,8 @@ Verify (struct display *d, struct greet_info *greet, struct verify_info *verify)
 	bzero(greet->password, passwd_len);
 #endif
 	/* Build path of the auth script and call it */
-	snprintf(auth_path, sizeof(auth_path), _PATH_AUTHPROG "%s", style);
-	auth_call(as, auth_path, style, "-s", "response", greet->name,
+	snprintf(path, sizeof(path), _PATH_AUTHPROG "%s", style);
+	auth_call(as, path, style, "-s", "response", greet->name,
 		  lc->lc_class, (void *)NULL);
 	authok = auth_getstate(as);
 
@@ -199,16 +199,6 @@ Verify (struct display *d, struct greet_info *greet, struct verify_info *verify)
 		return 0;
 	}
 	auth_close(as);
-	path = d->userPath;
-	d->userPath = login_getcapstr(lc, "path", path, path);
-	if (d->userPath != path) {
-		free(path);
-		/* login.conf path is space delimited */
-		for (path = d->userPath; *path != '\0'; path++) {
-			if (*path == ' ')
-				*path = ':';
-		}
-	}
 	login_close(lc);
 	/* Check empty passwords against allowNullPasswd */
 	if (!greet->allow_null_passwd && passwd_len == 0) {
@@ -340,7 +330,7 @@ Verify (struct display *d, struct greet_info *greet, struct verify_info *verify)
 {
 	struct passwd	*p;
 # ifndef USE_PAM
-#  ifdef USESHADOW
+#  ifdef HAVE_GETSPNAM
 	struct spwd	*sp;
 #  endif
 	char		*user_pass = NULL;
@@ -359,6 +349,16 @@ Verify (struct display *d, struct greet_info *greet, struct verify_info *verify)
 
 	if (!p || strlen (greet->name) == 0) {
 		Debug ("getpwnam() failed.\n");
+		if (greet->password != NULL)
+		    bzero(greet->password, strlen(greet->password));
+		return 0;
+	}
+
+	/*
+	 * Only accept root logins if allowRootLogin resource is not false
+	 */
+	if ((p->pw_uid == 0) && !greet->allow_root_login) {
+		Debug("root logins not allowed\n");
 		if (greet->password != NULL)
 		    bzero(greet->password, strlen(greet->password));
 		return 0;
@@ -393,7 +393,7 @@ Verify (struct display *d, struct greet_info *greet, struct verify_info *verify)
                         Debug("Not on system console\n");
 			if (greet->password != NULL)
 			    bzero(greet->password, strlen(greet->password));
-             		free(console);
+			free(console);
 	                return 0;
                 }
 		free(console);
@@ -454,7 +454,7 @@ Verify (struct display *d, struct greet_info *greet, struct verify_info *verify)
 		}
 	}
 #  endif
-#  ifdef USESHADOW
+#  ifdef HAVE_GETSPNAM
 	errno = 0;
 	sp = getspnam(greet->name);
 	if (sp == NULL) {
@@ -465,7 +465,7 @@ Verify (struct display *d, struct greet_info *greet, struct verify_info *verify)
 #   ifndef QNX4
 	endspent();
 #   endif  /* QNX4 doesn't need endspent() to end shadow passwd ops */
-#  endif /* USESHADOW */
+#  endif /* HAVE_GETSPNAM */
 #  if defined(ultrix) || defined(__ultrix__)
 	if (authenticate_user(p, greet->password, NULL) < 0)
 #  else
@@ -481,7 +481,6 @@ Verify (struct display *d, struct greet_info *greet, struct verify_info *verify)
 #  ifdef KERBEROS
 done:
 #  endif
-#  ifdef __OpenBSD__
 	/*
 	 * Only accept root logins if allowRootLogin resource is set
 	 */
@@ -490,6 +489,7 @@ done:
 		bzero(greet->password, strlen(greet->password));
 		return 0;
 	}
+#  ifdef __OpenBSD__
 	/*
 	 * Shell must be in /etc/shells
 	 */

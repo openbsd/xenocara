@@ -1,0 +1,16 @@
+xdmlibdir = $(XDMLIBDIR)
+xdmlib_PROGRAMS = chooser
+
+AM_CPPFLAGS = -I$(top_srcdir)/include
+AM_CFLAGS = $(CWARNFLAGS) $(CHOOSER_CFLAGS)
+AM_LDFLAGS = $(CHOOSER_LIBS)
+
+chooser_SOURCES = chooser.c
+
+if LINT
+ALL_LINT_FLAGS=$(LINT_FLAGS) $(DEFS) $(DEFAULT_INCLUDES) \
+		$(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS)
+
+lint:
+	$(LINT) $(ALL_LINT_FLAGS) $(chooser_SOURCES) $(AM_LDFLAGS)
+endif LINT

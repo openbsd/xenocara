@@ -1,0 +1,11 @@
+[Unit]
+Description=X-Window Display Manager
+After=systemd-user-sessions.service
+
+[Service]
+ExecStart=BINDIR/xdm -nodaemon
+Type=notify
+NotifyAccess=all
+
+[Install]
+Alias=graphical.target.wants/xdm.service

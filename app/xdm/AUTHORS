@@ -7,7 +7,7 @@ Original authors credited in source files:
 Later enhancements:
 
 	Alan Coopersmith, Sun Microsystems:
-		IPv6 support, Solaris authentication enhancements, 
+		IPv6 support, Solaris authentication enhancements,
 		PAM conversation rewrite
 
 	Amit Margalit, Caolan McNamara, Ivan Griffin, Matthieu Herrb:

@@ -34,7 +34,7 @@
 # The fourth form is similar to the third, except instead of using the
 # broadcast address, it sends DirectQuerys to each of the hosts in the list
 # The fifth form tells xdm which addresses to listen for incoming connections
-# on.  If present, xdm will only listen for connections on the specified 
+# on.  If present, xdm will only listen for connections on the specified
 # interfaces and/or multicast groups.
 #
 # In all cases, xdm uses the first entry which matches the terminal;
@@ -84,7 +84,7 @@
 # all unicast interfaces, but not for multicast packets.  If any LISTEN lines
 # are specified, then only the listed interfaces will be listened on.
 #
-# IANA has assigned FF0X:0:0:0:0:0:0:12B as the permanently assigned 
+# IANA has assigned FF0X:0:0:0:0:0:0:12B as the permanently assigned
 # multicast addresses for XDMCP, where X in the prefix may be replaced
 # by any valid scope identifier, such as 1 for Node-Local, 2 for Link-Local,
 # 5 for Site-Local, and so on.  The default is equivalent to the example shown
