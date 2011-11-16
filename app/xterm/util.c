@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.546 2011/08/31 00:10:07 tom Exp $ */
+/* $XTermId: util.c,v 1.548 2011/10/09 22:10:45 tom Exp $ */
 
 /*
  * Copyright 1999-2010,2011 by Thomas E. Dickey
@@ -2607,11 +2607,14 @@ xtermSetClipRectangles(Display * dpy,
 #define beginXftClipping(screen,px,py,plength) \
 	    if (screen->use_clipping && (FontWidth(screen) > 2)) { \
 		XRectangle clip; \
+		double adds = (screen->scale_height - 1.0) * FontHeight(screen); \
+		int height = dimRound(adds + FontHeight(screen)); \
+		int descnt = dimRound(adds / 2.0) + FontDescent(screen); \
 		int clip_x = px; \
-		int clip_y = py - FontHeight(screen) + FontDescent(screen); \
+		int clip_y = py - height + descnt; \
 		clip.x = 0; \
 		clip.y = 0; \
-		clip.height = (unsigned short) (FontHeight(screen)); \
+		clip.height = (unsigned short) height; \
 		clip.width = (unsigned short) (FontWidth(screen) * plength); \
 		XftDrawSetClipRectangles (screen->renderDraw, \
 					  clip_x, clip_y, \
@@ -4012,5 +4015,18 @@ extendedBoolean(const char *value, FlagList * table, Cardinal limit)
     }
 
     TRACE(("extendedBoolean(%s) = %d\n", value, result));
+    return result;
+}
+
+/*
+ * Something like round() from math library, but round() is less widely-used
+ * than xterm.  Also, there are no negative numbers to complicate this.
+ */
+int
+dimRound(double value)
+{
+    int result = (int) value;
+    if (result < value)
+	++result;
     return result;
 }

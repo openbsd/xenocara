@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.667 2011/09/11 21:02:37 tom Exp $ */
+/* $XTermId: main.c,v 1.669 2011/10/09 14:14:51 tom Exp $ */
 
 /*
  * Copyright 2002-2010,2011 by Thomas E. Dickey
@@ -1402,7 +1402,7 @@ countArg(XrmOptionDescRec * item)
     return result;
 }
 
-#define isOption(string) ((string)[0] == '-' || (string)[0] == '+')
+#define isOption(string) (Boolean)((string)[0] == '-' || (string)[0] == '+')
 
 /*
  * Parse the argument list, more/less as XtInitialize, etc., would do, so we
@@ -1459,36 +1459,37 @@ parseArg(int *num, char **argv, char **valuep)
     Boolean exact = False;
     int ambiguous1 = -1;
     int ambiguous2 = -1;
+    char *option;
+    char *value;
 
 #define ITEM(n) ((Cardinal)(n) < XtNumber(optionDescList) \
 		 ? &optionDescList[n] \
 		 : &opTable[(Cardinal)(n) - XtNumber(optionDescList)])
 
-    if (argv[*num] != 0) {
+    if ((option = argv[*num]) != 0) {
 	Boolean need_value;
 	Boolean have_value = False;
 
-	TRACE(("parseArg %s\n", argv[*num]));
-	if (argv[(*num) + 1] != 0) {
-	    char *value = argv[(*num) + 1];
+	TRACE(("parseArg %s\n", option));
+	if ((value = argv[(*num) + 1]) != 0) {
 	    have_value = (Boolean) ! isOption(value);
 	}
 	for (inlist = 0; inlist < limit; ++inlist) {
 	    XrmOptionDescRec *check = ITEM(inlist);
 
-	    test = matchArg(check, argv[*num]);
+	    test = matchArg(check, option);
 	    if (test < 0)
 		continue;
 
 	    /* check for exact match */
 	    if ((test + 1) == (int) strlen(check->option)) {
 		if (check->argKind == XrmoptionStickyArg) {
-		    if (strlen(argv[*num]) > strlen(check->option)) {
+		    if (strlen(option) > strlen(check->option)) {
 			exact = True;
 			atbest = (int) inlist;
 			break;
 		    }
-		} else if ((test + 1) == (int) strlen(argv[*num])) {
+		} else if ((test + 1) == (int) strlen(option)) {
 		    exact = True;
 		    atbest = (int) inlist;
 		    break;
@@ -1497,7 +1498,9 @@ parseArg(int *num, char **argv, char **valuep)
 
 	    need_value = (Boolean) (test > 0 && countArg(check) > 0);
 
-	    if (need_value ^ have_value) {
+	    if (need_value && value != 0) {
+		;
+	    } else if (need_value ^ have_value) {
 		TRACE(("...skipping, need %d vs have %d\n", need_value, have_value));
 		continue;
 	    }

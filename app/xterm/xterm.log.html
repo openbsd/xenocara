@@ -31,7 +31,7 @@
  * sale, use or other dealings in this Software without prior written        *
  * authorization.                                                            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.1101 2011/09/12 00:50:25 tom Exp $
+  $XTermId: xterm.log.html,v 1.1107 2011/10/11 00:55:31 tom Exp $
   -->
 <HTML>
 <HEAD>
@@ -58,6 +58,7 @@ Most of these are summarized in the XFree86 CHANGELOG
 is the latest version of this file.
 
 <UL>
+<LI><A HREF="#xterm_276">Patch #276 - 2011/10/10</A>
 <LI><A HREF="#xterm_275">Patch #275 - 2011/09/11</A>
 <LI><A HREF="#xterm_274">Patch #274 - 2011/09/05</A>
 <LI><A HREF="#xterm_273">Patch #273 - 2011/08/25</A>
@@ -335,6 +336,27 @@ is the latest version of this file.
 <LI><A HREF="#xterm_02">Patch #2 - 1996/1/7</A>
 <LI><A HREF="#xterm_01">Patch #1 - 1996/1/6</A>
 </UL>
+
+<H1><A NAME="xterm_276">Patch #276 - 2011/10/10</A></H1>
+<ul>
+	<li>modify clipping limits for TrueType fonts to account for the
+	    <code>scaleHeight</code> resource setting, to work around another
+	    problem due to recent FreeType changes.  In this case, the
+	    <code>DejaVu Sans Mono</code> set to pixelsize=13.5
+	    is truncated because the font descent is reduced by FreeType to
+	    match an incorrect height metric (report by Adam Lee).
+
+	<li>improve recovery when bitmap fonts are not installed, e.g., so
+	    that switching font-sizes works for TrueType fonts.
+
+	<li>modify lookup for <code>XTERM_SHELL</code> feature to allow 
+	    relative pathnames.
+
+	<li>modify abbreviation disambiguation check
+	    for command-line parameters to account for <code>-geometry</code>,
+	    whose parameter may begin with "+" or "-"
+	    (report by Scott Bertilson).
+</ul>
 
 <H1><A NAME="xterm_275">Patch #275 - 2011/09/11</A></H1>
 <ul>

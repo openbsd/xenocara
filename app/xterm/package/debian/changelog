@@ -1,3 +1,9 @@
+xterm-dev (276) unstable; urgency=low
+
+  * Regressions in #272, #274.
+
+ -- Thomas E. Dickey <dickey@invisible-island.net>  Wed, 28 Sep 2011 17:34:20 -0400
+
 xterm-dev (275) unstable; urgency=low
 
   * Regressions in #272, #274.

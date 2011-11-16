@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.368 2011/09/11 13:22:34 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.378 2011/10/10 23:46:00 tom Exp $ */
 
 /*
  * Copyright 1998-2010,2011 by Thomas E. Dickey
@@ -52,7 +52,7 @@
 #include <ctype.h>
 
 #define SetFontWidth(screen,dst,src)  (dst)->f_width = (src)
-#define SetFontHeight(screen,dst,src) (dst)->f_height = (int)((screen)->scale_height * (float) (src))
+#define SetFontHeight(screen,dst,src) (dst)->f_height = dimRound((screen)->scale_height * (float) (src))
 
 /* from X11/Xlibint.h - not all vendors install this file */
 #define CI_NONEXISTCHAR(cs) (((cs)->width == 0) && \
@@ -116,8 +116,12 @@ typedef struct {
     char *end;
 } FontNameProperties;
 
+#if OPT_RENDERFONT
+static void fillInFaceSize(XtermWidget, int);
+#endif
+
 #if OPT_SHIFT_FONTS
-static void lookupOneFontSize(XtermWidget, int);
+static int lookupOneFontSize(XtermWidget, int);
 #endif
 
 #if OPT_WIDE_CHARS
@@ -1256,6 +1260,25 @@ xtermLoadFont(XtermWidget xw,
   bad:
     if (tmpname)
 	free(tmpname);
+
+#if OPT_RENDERFONT
+    if (x_strcasecmp(myfonts.f_n, DEFFONT)) {
+	int code;
+
+	myfonts.f_n = DEFFONT;
+	TRACE(("...recovering for TrueType fonts\n"));
+	code = xtermLoadFont(xw, &myfonts, doresize, fontnum);
+	if (code) {
+	    SetItemSensitivity(fontMenuEntries[fontnum].widget,
+			       UsingRenderFont(xw));
+	    TRACE(("...recovered size %dx%d\n",
+		   FontHeight(screen),
+		   FontWidth(screen)));
+	}
+	return code;
+    }
+#endif
+
     releaseWindowGCs(xw, win);
 
     xtermCloseFonts(xw, fnts);
@@ -1744,7 +1767,7 @@ xtermOpenXft(XtermWidget xw, const char *name, XftPattern * pat, const char *tag
  * (Newton Raphson).
  */
 static double
-mySquareRoot(double value)
+dimSquareRoot(double value)
 {
     double result = 0.0;
     if (value > 0.0) {
@@ -1863,18 +1886,22 @@ setFaceName(XtermWidget xw, const char *value)
 {
     TScreen *screen = TScreenOf(xw);
     int n;
+    Boolean changed = ((xw->misc.face_name == 0)
+		       || strcmp(xw->misc.face_name, value));
 
-    xw->misc.face_name = x_strdup(value);
-    for (n = 0; n < NMENUFONTS; ++n) {
-	xw->misc.face_size[n] = -1.0;
-	xtermCloseXft(screen, &(screen->renderFontNorm[n]));
-	xtermCloseXft(screen, &(screen->renderFontBold[n]));
-	xtermCloseXft(screen, &(screen->renderFontBold[n]));
+    if (changed) {
+	xw->misc.face_name = x_strdup(value);
+	for (n = 0; n < NMENUFONTS; ++n) {
+	    xw->misc.face_size[n] = -1.0;
+	    xtermCloseXft(screen, &(screen->renderFontNorm[n]));
+	    xtermCloseXft(screen, &(screen->renderFontBold[n]));
+	    xtermCloseXft(screen, &(screen->renderFontBold[n]));
 #if OPT_RENDERWIDE
-	xtermCloseXft(screen, &(screen->renderWideNorm[n]));
-	xtermCloseXft(screen, &(screen->renderWideBold[n]));
-	xtermCloseXft(screen, &(screen->renderWideItal[n]));
+	    xtermCloseXft(screen, &(screen->renderWideNorm[n]));
+	    xtermCloseXft(screen, &(screen->renderWideBold[n]));
+	    xtermCloseXft(screen, &(screen->renderWideItal[n]));
 #endif
+	}
     }
 }
 #endif
@@ -1916,66 +1943,14 @@ xtermComputeFontInfo(XtermWidget xw,
 
 	if (norm == 0 && face_name) {
 	    XftPattern *pat;
-	    double face_size = xw->misc.face_size[fontnum];
+	    double face_size;
 
-	    TRACE(("xtermComputeFontInfo font %d: norm(face %s, size %f)\n",
+	    TRACE(("xtermComputeFontInfo font %d: norm(face %s, size %.1f)\n",
 		   fontnum, face_name,
 		   xw->misc.face_size[fontnum]));
 
-	    if (face_size <= 0.0) {
-#if OPT_SHIFT_FONTS
-		/*
-		 * If the user is switching font-sizes, make it follow by
-		 * default the same ratios to the default as the fixed fonts
-		 * would, for easy comparison.  There will be some differences
-		 * since the fixed fonts have a variety of height/width ratios,
-		 * but this is simpler than adding another resource value - and
-		 * as noted above, the data for the fixed fonts are available.
-		 */
-		lookupOneFontSize(xw, 0);
-		lookupOneFontSize(xw, fontnum);
-		if (fontnum == fontMenu_default) {
-		    face_size = 14.0;
-		} else {
-		    double ratio;
-		    long num = screen->menu_font_sizes[fontnum];
-		    long den = screen->menu_font_sizes[0];
-
-		    if (den <= 0)
-			den = 1;
-		    ratio = mySquareRoot((double) num / (double) den);
-
-		    face_size = (ratio * xw->misc.face_size[0]);
-		    TRACE(("scaled using %3ld/%ld = %.2f -> %f\n",
-			   num, den, ratio, face_size));
-		}
-#else
-		switch (fontnum) {
-		case fontMenu_font1:
-		    face_size = 8.0;
-		    break;
-		case fontMenu_font2:
-		    face_size = 10.0;
-		    break;
-		case fontMenu_font3:
-		    face_size = 12.0;
-		    break;
-		default:
-		    face_size = 14.0;
-		    break;
-		case fontMenu_font4:
-		    face_size = 16.0;
-		    break;
-		case fontMenu_font5:
-		    face_size = 18.0;
-		    break;
-		case fontMenu_font6:
-		    face_size = 20.0;
-		    break;
-		}
-#endif
-		xw->misc.face_size[fontnum] = (float) face_size;
-	    }
+	    fillInFaceSize(xw, fontnum);
+	    face_size = xw->misc.face_size[fontnum];
 
 	    /*
 	     * By observation (there is no documentation), XftPatternBuild is
@@ -2742,7 +2717,7 @@ dec2ucs(unsigned ch)
 #endif /* OPT_WIDE_CHARS */
 
 #if OPT_SHIFT_FONTS
-static void
+static int
 lookupOneFontSize(XtermWidget xw, int fontnum)
 {
     TScreen *screen = TScreenOf(xw);
@@ -2752,13 +2727,23 @@ lookupOneFontSize(XtermWidget xw, int fontnum)
 
 	memset(&fnt, 0, sizeof(fnt));
 	screen->menu_font_sizes[fontnum] = -1;
-	if (xtermOpenFont(xw, screen->MenuFontName(fontnum), &fnt, fwAlways, True)) {
+	if (xtermOpenFont(xw,
+			  screen->MenuFontName(fontnum),
+			  &fnt,
+			  ((fontnum <= fontMenu_lastBuiltin)
+			   ? fwAlways
+			   : fwResource),
+			  True)) {
 	    if (fontnum <= fontMenu_lastBuiltin
-		|| strcmp(fnt.fn, DEFFONT))
+		|| strcmp(fnt.fn, DEFFONT)) {
 		screen->menu_font_sizes[fontnum] = FontSize(fnt.fs);
+		if (screen->menu_font_sizes[fontnum] <= 0)
+		    screen->menu_font_sizes[fontnum] = -1;
+	    }
 	    xtermCloseFont(xw, &fnt);
 	}
     }
+    return (screen->menu_font_sizes[fontnum] > 0);
 }
 
 /*
@@ -2770,32 +2755,110 @@ lookupFontSizes(XtermWidget xw)
     int n;
 
     for (n = 0; n < NMENUFONTS; n++) {
-	lookupOneFontSize(xw, n);
+	(void) lookupOneFontSize(xw, n);
     }
 }
 
 #if OPT_RENDERFONT
-#define NMENU_RENDERFONTS (NMENUFONTS - 2)	/* no selection or escape */
+static void
+fillInFaceSize(XtermWidget xw, int fontnum)
+{
+    TScreen *screen = TScreenOf(xw);
+    float value;
+    double face_size = xw->misc.face_size[fontnum];
+
+    if (face_size <= 0.0) {
+#if OPT_SHIFT_FONTS
+	/*
+	 * If the user is switching font-sizes, make it follow by
+	 * default the same ratios to the default as the fixed fonts
+	 * would, for easy comparison.  There will be some differences
+	 * since the fixed fonts have a variety of height/width ratios,
+	 * but this is simpler than adding another resource value - and
+	 * as noted above, the data for the fixed fonts are available.
+	 */
+	(void) lookupOneFontSize(xw, 0);
+	if (fontnum == fontMenu_default) {
+	    sscanf(DEFFACESIZE, "%f", &value);
+	    face_size = value;
+	} else if (lookupOneFontSize(xw, fontnum)
+		   && (screen->menu_font_sizes[0]
+		       != screen->menu_font_sizes[fontnum])) {
+	    double ratio;
+	    long num = screen->menu_font_sizes[fontnum];
+	    long den = screen->menu_font_sizes[0];
+
+	    if (den <= 0)
+		den = 1;
+	    ratio = dimSquareRoot((double) num / (double) den);
+
+	    face_size = (ratio * xw->misc.face_size[0]);
+	    TRACE(("scaled[%d] using %3ld/%ld = %.2f -> %f\n",
+		   fontnum, num, den, ratio, face_size));
+	} else
+#endif
+	{
+#define LikeBitmap(s) (((s) / 78.0) * xw->misc.face_size[fontMenu_default])
+	    switch (fontnum) {
+	    case fontMenu_font1:
+		face_size = LikeBitmap(2.0);
+		break;
+	    case fontMenu_font2:
+		face_size = LikeBitmap(35.0);
+		break;
+	    case fontMenu_font3:
+		face_size = LikeBitmap(60.0);
+		break;
+	    default:
+		sscanf(DEFFACESIZE, "%f", &value);
+		face_size = value;
+		break;
+	    case fontMenu_font4:
+		face_size = LikeBitmap(90.0);
+		break;
+	    case fontMenu_font5:
+		face_size = LikeBitmap(135.0);
+		break;
+	    case fontMenu_font6:
+		face_size = LikeBitmap(200.0);
+		break;
+	    }
+	    TRACE(("builtin[%d] -> %f\n", fontnum, face_size));
+	}
+	xw->misc.face_size[fontnum] = (float) face_size;
+    }
+}
+
+/* no selection or escape */
+#define NMENU_RENDERFONTS (fontMenu_lastBuiltin + 1)
+
+/*
+ * Workaround for breakage in font-packages - check if all of the bitmap font
+ * sizes are the same, and if we're using TrueType fonts.
+ */
 static Boolean
 useFaceSizes(XtermWidget xw)
 {
     Boolean result = False;
     int n;
 
+    TRACE(("useFaceSizes {{\n"));
     if (UsingRenderFont(xw)) {
-	result = True;
+	Boolean nonzero = True;
+
 	for (n = 0; n < NMENU_RENDERFONTS; ++n) {
 	    if (xw->misc.face_size[n] <= 0.0) {
-		result = False;
+		nonzero = False;
 		break;
 	    }
 	}
-	if (!result) {
+	if (!nonzero) {
 	    Boolean broken_fonts = True;
 	    TScreen *screen = TScreenOf(xw);
-	    long first = screen->menu_font_sizes[0];
+	    long first;
 
 	    lookupFontSizes(xw);
+	    first = screen->menu_font_sizes[0];
 	    for (n = 0; n < NMENUFONTS; n++) {
 		if (screen->menu_font_sizes[n] > 0
 		    && screen->menu_font_sizes[n] != first) {
@@ -2804,46 +2867,21 @@ useFaceSizes(XtermWidget xw)
 		}
 	    }
 
-	    /*
-	     * Workaround for breakage in font-packages - check if all of the
-	     * bitmap font sizes are the same, and if we're using TrueType
-	     * fonts.
-	     */
 	    if (broken_fonts) {
-		float lo_value = (float) 9.0e9;
-		float hi_value = (float) 0.0;
-		float value;
 
 		TRACE(("bitmap fonts are broken - set faceSize resources\n"));
 		for (n = 0; n < NMENUFONTS; n++) {
-		    value = xw->misc.face_size[n];
-		    if (value > 0.0) {
-			if (lo_value > value)
-			    lo_value = value;
-			if (hi_value < value)
-			    hi_value = value;
-		    }
+		    fillInFaceSize(xw, n);
 		}
 
-		if (hi_value <= 0.0)
-		    sscanf(DEFFACESIZE, "%f", &value);
-		else
-		    value = (float) ((hi_value + lo_value) / 2.0);
-		if (value <= 0)
-		    value = (float) 14.0;
-
-		for (n = 0; n < NMENUFONTS; n++) {
-		    TRACE(("setting faceSize%d %.1f\n", n, value));
-		    xw->misc.face_size[n] = value;
-		    value = (float) (value * 1.1);
-		}
-		result = True;
 	    }
 	}
+	result = True;
     }
+    TRACE(("...}}useFaceSizes %d\n", result));
     return result;
 }
-#endif
+#endif /* OPT_RENDERFONT */
 
 /*
  * Find the index of a larger/smaller font (according to the sign of 'relative'
@@ -2862,6 +2900,7 @@ lookupRelativeFontSize(XtermWidget xw, int old, int relative)
 	    TRACE(("...using FaceSize\n"));
 	    if (relative != 0) {
 		for (n = 0; n < NMENU_RENDERFONTS; ++n) {
+		    fillInFaceSize(xw, n);
 		    if (xw->misc.face_size[n] > 0 &&
 			xw->misc.face_size[n] != xw->misc.face_size[old]) {
 			int cmp_0 = ((xw->misc.face_size[n] >

@@ -1,4 +1,4 @@
-/* $XTermId: menu.c,v 1.297 2011/09/11 13:15:18 tom Exp $ */
+/* $XTermId: menu.c,v 1.300 2011/10/09 14:14:23 tom Exp $ */
 
 /*
  * Copyright 1999-2010,2011 by Thomas E. Dickey
@@ -2566,6 +2566,19 @@ HandleFontLoading(Widget w,
 #endif
 
 #if OPT_RENDERFONT
+static void
+update_fontmenu(XtermWidget xw)
+{
+    TScreen *screen = TScreenOf(xw);
+    int n;
+
+    for (n = 0; n <= fontMenu_lastBuiltin; ++n) {
+	Boolean active = (Boolean) (xw->misc.render_font ||
+				    (screen->menu_font_sizes[n] >= 0));
+	SetItemSensitivity(fontMenuEntries[n].widget, active);
+    }
+}
+
 void
 HandleRenderFont(Widget w,
 		 XEvent * event GCC_UNUSED,
@@ -2578,6 +2591,8 @@ HandleRenderFont(Widget w,
 
     handle_vt_toggle(do_font_renderfont, xw->misc.render_font,
 		     params, *param_count, w);
+
+    update_fontmenu(xw);
 }
 #endif
 
@@ -3519,6 +3534,7 @@ update_font_renderfont(void)
 		   (term->misc.render_font == True));
     SetItemSensitivity(fontMenuEntries[fontMenu_render_font].widget,
 		       !IsEmpty(term->misc.face_name));
+    update_fontmenu(term);
 }
 #endif
 

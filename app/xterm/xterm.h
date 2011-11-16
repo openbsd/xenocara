@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.661 2011/09/11 14:59:22 tom Exp $ */
+/* $XTermId: xterm.h,v 1.662 2011/10/09 21:58:44 tom Exp $ */
 
 /*
  * Copyright 1999-2010,2011 by Thomas E. Dickey
@@ -1231,6 +1231,7 @@ extern GC updatedXtermGC (XtermWidget /* xw */, unsigned  /* flags */, unsigned 
 extern int AddToRefresh (XtermWidget /* xw */);
 extern int ClearInLine (XtermWidget /* xw */, int /* row */, int /* col */, unsigned /* len */);
 extern int HandleExposure (XtermWidget /* xw */, XEvent * /* event */);
+extern int dimRound (double /* value */);
 extern int drawXtermText (XtermWidget /* xw */, unsigned /* flags */, GC /* gc */, int /* x */, int /* y */, int /* chrset */, IChar * /* text */, Cardinal /* len */, int /* on_wide */);
 extern int extendedBoolean(const char * /* value */, FlagList * /* table */, Cardinal /* limit */);
 extern void ChangeColors (XtermWidget  /* xw */, ScrnColors * /* pNew */);
