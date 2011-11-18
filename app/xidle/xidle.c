@@ -1,4 +1,4 @@
-/*	$OpenBSD: xidle.c,v 1.2 2008/02/10 10:57:05 mcbride Exp $	*/
+/*	$OpenBSD: xidle.c,v 1.3 2011/11/18 00:16:57 fgsch Exp $	*/
 /*
  * Copyright (c) 2005 Federico G. Schwindt
  * Copyright (c) 2005 Claudio Castiglia
@@ -389,17 +389,11 @@ main(int argc, char **argv)
 			break;
 
 		case ClientMessage:
-			switch (ev.xclient.message_type) {
-			case XIDLE_LOCK:
-				action(&x, args);
-				break;
-			case XIDLE_DIE: 
+			if (ev.xclient.message_type == XIDLE_DIE) {
 				close_x(&x);
 				exit(0);
-				/* NOTREACHED */
-			default:
-				break;
-			}
+			} else if (ev.xclient.message_type == XIDLE_LOCK)
+				action(&x, args);
 			break;
 
 		case EnterNotify:
@@ -417,13 +411,10 @@ main(int argc, char **argv)
 			    ev.xcrossing.x_root > x.coord_x + area ||
 			    ev.xcrossing.y_root > x.coord_y + area)
 				break;
-			/* FALLTHROUGH */
+			action(&x, args);
+			break;
 
 		default:
-			if (ev.type != EnterNotify &&
-			    ev.type != x.saver_event)
-				break;
-
 			if (ev.type == x.saver_event) {
 				XScreenSaverNotifyEvent *se =
 				    (XScreenSaverNotifyEvent *)&ev;
@@ -435,10 +426,9 @@ main(int argc, char **argv)
 				 * Was for real or due to terminal
 				 * switching or a locking program?
 				 */
-				if (se->forced != False)
-					break;
+				if (timeout > 0 && se->forced == False)
+					action(&x, args);
 			}
-			action(&x, args);
 			break;
 		}
 	}
