@@ -13,7 +13,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
-/* $OpenBSD: ws.c,v 1.48 2011/11/19 12:46:08 shadchin Exp $ */
+/* $OpenBSD: ws.c,v 1.49 2011/11/19 13:12:49 shadchin Exp $ */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -83,8 +83,6 @@ static XF86ModuleVersionInfo VersionRec = {
 	{0, 0, 0, 0}
 };
 
-#define WS_NOZMAP 0
-
 XF86ModuleData wsModuleData = {&VersionRec,
 			       SetupProc, TearDownProc };
 
@@ -146,7 +144,7 @@ wsPreInit(InputDriverPtr drv, InputInfoPtr pInfo, int flags)
 		priv->buttons = DFLTBUTTONS;
 		buttons_from = X_DEFAULT;
 	}
-	priv->negativeZ = priv->positiveZ = WS_NOZMAP;
+	priv->negativeZ = priv->positiveZ = WS_NOMAP;
 	s = xf86SetStrOption(pInfo->options, "ZAxisMapping", "4 5");
 	if (s) {
 		int b1, b2;
@@ -169,7 +167,7 @@ wsPreInit(InputDriverPtr drv, InputInfoPtr pInfo, int flags)
 		}
 		free(s);
 	}
-	priv->negativeW = priv->positiveW = WS_NOZMAP;
+	priv->negativeW = priv->positiveW = WS_NOMAP;
 	s = xf86SetStrOption(pInfo->options, "WAxisMapping", "6 7");
 	if (s) {
 		int b1, b2;
@@ -582,8 +580,8 @@ wsReadInput(InputInfoPtr pInfo)
 			xf86PostMotionEvent(pInfo->dev, 0, 0, 2,
 			    dx, dy);
 		}
-		if (dz && priv->negativeZ != WS_NOZMAP
-		    && priv->positiveZ != WS_NOZMAP) {
+		if (dz && priv->negativeZ != WS_NOMAP
+		    && priv->positiveZ != WS_NOMAP) {
 			buttons &= ~(priv->negativeZ | priv->positiveZ);
 			if (dz < 0) {
 				DBG(4, ErrorF("Z -> button %d\n",
@@ -597,8 +595,8 @@ wsReadInput(InputInfoPtr pInfo)
 			buttons |= zbutton;
 			dz = 0;
 		}
-		if (dw && priv->negativeW != WS_NOZMAP
-		    && priv->positiveW != WS_NOZMAP) {
+		if (dw && priv->negativeW != WS_NOMAP
+		    && priv->positiveW != WS_NOMAP) {
 			buttons &= ~(priv->negativeW | priv->positiveW);
 			if (dw < 0) {
 				DBG(4, ErrorF("W -> button %d\n",

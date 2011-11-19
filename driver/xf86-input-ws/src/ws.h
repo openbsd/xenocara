@@ -26,10 +26,12 @@ extern int ws_debug_level;
 # define DBG(lvl, f)
 #endif
 
-#define NAXES 2			/* X and Y axes only */
-#define NBUTTONS 32		/* max theoretical buttons */
-#define DFLTBUTTONS 3		/* default number of buttons */
-#define NUMEVENTS 16		/* max # of ws events to read at once */
+#define NAXES		2	/* X and Y axes only */
+#define NBUTTONS	32	/* max theoretical buttons */
+#define DFLTBUTTONS	3	/* default number of buttons */
+#define NUMEVENTS	16	/* max # of ws events to read at once */
+
+#define WS_NOMAP	0
 
 typedef struct WSDevice {
 	char *devName;		/* device name */
