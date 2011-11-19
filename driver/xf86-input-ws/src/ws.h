@@ -16,12 +16,11 @@
 
 #include <dev/wscons/wsconsio.h>
 
-
 /* #undef DEBUG */
 #define DEBUG
 #undef DBG
-extern int ws_debug_level;
 #ifdef DEBUG
+extern int ws_debug_level;
 # define DBG(lvl, f) { if ((lvl) <= ws_debug_level) f;}
 #else
 # define DBG(lvl, f)
