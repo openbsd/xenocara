@@ -1,4 +1,4 @@
-.\"	$OpenBSD: ws.man,v 1.10 2011/11/08 12:57:44 shadchin Exp $
+.\"	$OpenBSD: ws.man,v 1.11 2011/11/19 12:28:10 shadchin Exp $
 .\"
 .\" Copyright (c) 2005,2009,2011 Matthieu Herrb
 .\"
@@ -28,7 +28,7 @@ WS \- wscons pointer input driver for __xservername__ on *BSD
 .BI "    Option \*qEmulate3Buttons\*q \*q" boolean \*q
 .BI "    Option \*qEmulate3Timeout\*q \*q" integer \*q
 .BI "    Option \*qDebugLevel\*q \*q" integer \*q
-.BI "    Option \*qDevice\*q  \*q" path \*q
+.BI "    Option \*qDevice\*q \*q" path \*q
 .BI "    Option \*qMinX\*q \*q" integer \*q
 .BI "    Option \*qMaxX\*q \*q" integer \*q
 .BI "    Option \*qMinY\*q \*q" integer \*q
@@ -59,7 +59,7 @@ In cases where the number of buttons cannot be auto-detected, the
 default value is 3.
 .TP 4
 .BI "Option \*qEmulate3Buttons\*q \*q" boolean \*q
-Enable/disable the emulation of  the middle mouse button for mice which
+Enable/disable the emulation of the middle mouse button for mice which
 only have two physical buttons. The third button is emulated by pressing
 both buttons simultaneously. Default: on, until a middle button event
 is detected.
@@ -67,7 +67,7 @@ is detected.
 .BI "Option \*qEmulate3Timeout\*q \*q" integer \*q
 Sets the timeout (in milliseconds) that the driver waits before deciding
 if two buttons where pressed "simultaneously" when 3 button emulation is
-enabled.  Default: 50.
+enabled. Default: 50.
 .TP 4
 .BI "Option \*qDebugLevel\*q \*q" integer \*q
 This option sets the verbosity level of the driver.
@@ -133,7 +133,7 @@ driver.
 1 boolean value (8 bit, 0 or 1)
 .TP 7
 .BI "WS Pointer Middle Button Timeout"
-1 16-bit positive value (unit: milliseconds)
+1 32-bit positive value (unit: milliseconds)
 .TP 7
 .BI "WS Pointer Axis Calibration"
 4 32 bits values, in the order min-x, max-x, min-y, max-y.
