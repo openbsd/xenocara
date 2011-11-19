@@ -1,4 +1,4 @@
-/*	$OpenBSD: emumb.c,v 1.7 2011/11/19 12:36:16 shadchin Exp $ */
+/*	$OpenBSD: emumb.c,v 1.8 2011/11/19 13:05:33 shadchin Exp $ */
 /*
  * Copyright 1990,91 by Thomas Roell, Dinkelscherben, Germany.
  * Copyright 1993 by David Dawes <dawes@xfree86.org>
@@ -308,9 +308,11 @@ void
 wsmbEmuPreInit(InputInfoPtr pInfo)
 {
 	WSDevicePtr priv = (WSDevicePtr)pInfo->private;
-	priv->emulateMB.enabled = MBEMU_AUTO;
+	int timeout;
 
 	DBG(1, ErrorF("wsmbEmuPreInit\n"));
+
+	priv->emulateMB.enabled = MBEMU_AUTO;
 	if (xf86FindOption(pInfo->options, "Emulate3Buttons")) {
 		priv->emulateMB.enabled = xf86SetBoolOption(pInfo->options,
 		    "Emulate3Buttons",
@@ -320,8 +322,14 @@ wsmbEmuPreInit(InputInfoPtr pInfo)
 		    (priv->emulateMB.enabled) ? "on" : "off");
 	}
 
-	priv->emulateMB.timeout = xf86SetIntOption(pInfo->options,
-	    "Emulate3Timeout", 50);
+	timeout = xf86SetIntOption(pInfo->options, "Emulate3Timeout", 50);
+	if (timeout < 0) {
+		xf86IDrvMsg(pInfo, X_WARNING,
+		    "Invalid Emulate3Timeout value: %d\n", timeout);
+		xf86IDrvMsg(pInfo, X_WARNING, "Using built-in timeout value\n");
+		timeout = 50;
+	}
+	priv->emulateMB.timeout = timeout;
 }
 
 void
@@ -351,7 +359,7 @@ wsmbEmuEnable(InputInfoPtr pInfo, BOOL enable)
 
 static int
 wsmbEmuSetProperty(DeviceIntPtr dev, Atom atom, XIPropertyValuePtr val,
-                      BOOL checkonly)
+    BOOL checkonly)
 {
 	InputInfoPtr pInfo  = dev->public.devicePrivate;
 	WSDevicePtr priv = pInfo->private;
@@ -366,12 +374,19 @@ wsmbEmuSetProperty(DeviceIntPtr dev, Atom atom, XIPropertyValuePtr val,
 		if (!checkonly)
 			priv->emulateMB.enabled = *((BOOL*)val->data);
 	} else if (atom == prop_mbtimeout) {
+		int timeout;
+
 		if (val->format != 32 || val->size != 1 ||
 		    val->type != XA_INTEGER)
 			return BadMatch;
 
+		timeout = *((CARD32*)val->data);
+
+		if (timeout < 0)
+			return BadValue;
+
 		if (!checkonly)
-			priv->emulateMB.timeout = *((CARD32*)val->data);
+			priv->emulateMB.timeout = timeout;
 	}
 
 	return Success;
