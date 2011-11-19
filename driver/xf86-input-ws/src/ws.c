@@ -13,7 +13,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
-/* $OpenBSD: ws.c,v 1.46 2011/11/09 16:17:44 shadchin Exp $ */
+/* $OpenBSD: ws.c,v 1.47 2011/11/19 12:36:16 shadchin Exp $ */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -42,7 +42,6 @@
 #include "ws-properties.h"
 #include <xserver-properties.h>
 
-
 static MODULESETUPPROTO(SetupProc);
 static void TearDownProc(pointer);
 
@@ -62,8 +61,8 @@ static void wsControlProc(DeviceIntPtr , PtrCtrl *);
 static void wsInitCalibProperty(DeviceIntPtr);
 static int wsSetCalibProperty(DeviceIntPtr, Atom, XIPropertyValuePtr, BOOL);
 
-static Atom prop_calibration = 0;
-static Atom prop_swap = 0;
+static Atom prop_calibration;
+static Atom prop_swap;
 
 #ifdef DEBUG
 int ws_debug_level = 0;
@@ -88,7 +87,6 @@ static XF86ModuleVersionInfo VersionRec = {
 
 XF86ModuleData wsModuleData = {&VersionRec,
 			       SetupProc, TearDownProc };
-
 
 InputDriverRec WS = {
 	1,
@@ -117,7 +115,6 @@ TearDownProc(pointer p)
 {
 	DBG(1, ErrorF("WS TearDownProc called\n"));
 }
-
 
 static int
 wsPreInit(InputDriverPtr drv, InputInfoPtr pInfo, int flags)
@@ -666,7 +663,6 @@ wsSendButtons(InputInfoPtr pInfo, int buttons)
 	}
 	priv->lastButtons = buttons;
 } /* wsSendButtons */
-
 
 static int
 wsSwitchMode(ClientPtr client, DeviceIntPtr dev, int mode)

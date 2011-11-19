@@ -1,4 +1,4 @@
-/*	$OpenBSD: emumb.c,v 1.6 2011/11/07 18:33:04 shadchin Exp $ */
+/*	$OpenBSD: emumb.c,v 1.7 2011/11/19 12:36:16 shadchin Exp $ */
 /*
  * Copyright 1990,91 by Thomas Roell, Dinkelscherben, Germany.
  * Copyright 1993 by David Dawes <dawes@xfree86.org>
@@ -54,8 +54,8 @@ enum {
 	MBEMU_AUTO
 };
 
-static Atom prop_mbemu     = 0; /* Middle button emulation on/off property */
-static Atom prop_mbtimeout = 0; /* Middle button timeout property */
+static Atom prop_mbemu;		/* Middle button emulation on/off property */
+static Atom prop_mbtimeout;	/* Middle button timeout property */
 
 /*
  * Lets create a simple finite-state machine for 3 button emulation:
@@ -191,7 +191,6 @@ static signed char stateTab[11][5][3] = {
   },
 };
 
-
 int
 wsmbEmuTimer(InputInfoPtr pInfo)
 {
@@ -214,7 +213,6 @@ wsmbEmuTimer(InputInfoPtr pInfo)
 	xf86UnblockSIGIO(sigstate);
 	return 0;
 }
-
 
 /**
  * Emulate a middle button on button press.
@@ -272,7 +270,6 @@ wsmbEmuFilterEvent(InputInfoPtr pInfo, int button, BOOL press)
 	}
 	return ret;
 }
-
 
 void
 wsmbEmuWakeupHandler(pointer data,
@@ -351,7 +348,6 @@ wsmbEmuEnable(InputInfoPtr pInfo, BOOL enable)
 	if (priv->emulateMB.enabled == MBEMU_AUTO)
 		priv->emulateMB.enabled = enable;
 }
-
 
 static int
 wsmbEmuSetProperty(DeviceIntPtr dev, Atom atom, XIPropertyValuePtr val,
