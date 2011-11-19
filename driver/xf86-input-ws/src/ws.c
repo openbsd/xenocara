@@ -13,7 +13,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
-/* $OpenBSD: ws.c,v 1.47 2011/11/19 12:36:16 shadchin Exp $ */
+/* $OpenBSD: ws.c,v 1.48 2011/11/19 12:46:08 shadchin Exp $ */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -43,7 +43,7 @@
 #include <xserver-properties.h>
 
 static MODULESETUPPROTO(SetupProc);
-static void TearDownProc(pointer);
+static MODULETEARDOWNPROTO(TearDownProc);
 
 static int wsPreInit(InputDriverPtr, InputInfoPtr, int);
 static void wsUnInit(InputDriverPtr, InputInfoPtr, int);
