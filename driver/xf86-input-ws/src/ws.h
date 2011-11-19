@@ -63,5 +63,4 @@ extern void wsmbEmuBlockHandler(pointer, struct timeval **, pointer);
 extern void wsmbEmuPreInit(InputInfoPtr);
 extern void wsmbEmuOn(InputInfoPtr);
 extern void wsmbEmuFinalize(InputInfoPtr);
-extern void wsmbEmuEnable(InputInfoPtr, BOOL);
 extern void wsmbEmuInitProperty(DeviceIntPtr);

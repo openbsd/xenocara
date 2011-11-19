@@ -1,4 +1,4 @@
-/*	$OpenBSD: emumb.c,v 1.8 2011/11/19 13:05:33 shadchin Exp $ */
+/*	$OpenBSD: emumb.c,v 1.9 2011/11/19 13:09:16 shadchin Exp $ */
 /*
  * Copyright 1990,91 by Thomas Roell, Dinkelscherben, Germany.
  * Copyright 1993 by David Dawes <dawes@xfree86.org>
@@ -234,8 +234,9 @@ wsmbEmuFilterEvent(InputInfoPtr pInfo, int button, BOOL press)
 	if (!priv->emulateMB.enabled)
 		return ret;
 
-	if (button == 2) {
-		wsmbEmuEnable(pInfo, FALSE);
+	/* Disable emulation when middle button event is detected */
+	if (button == 2 && priv->emulateMB.enabled == MBEMU_AUTO) {
+		priv->emulateMB.enabled = FALSE;
 		return ret;
 	}
 
@@ -344,17 +345,6 @@ wsmbEmuFinalize(InputInfoPtr pInfo)
 {
 	RemoveBlockAndWakeupHandlers(wsmbEmuBlockHandler,
 	    wsmbEmuWakeupHandler, (pointer)pInfo);
-
-}
-
-/* Enable/disable middle mouse button emulation. */
-void
-wsmbEmuEnable(InputInfoPtr pInfo, BOOL enable)
-{
-	WSDevicePtr priv = (WSDevicePtr)pInfo->private;
-
-	if (priv->emulateMB.enabled == MBEMU_AUTO)
-		priv->emulateMB.enabled = enable;
 }
 
 static int
