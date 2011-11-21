@@ -77,7 +77,6 @@
 ./usr/X11R6/bin/xconsole
 ./usr/X11R6/bin/xcutsel
 ./usr/X11R6/bin/xdm
-./usr/X11R6/bin/xdmshell
 ./usr/X11R6/bin/xdpr
 ./usr/X11R6/bin/xdpyinfo
 ./usr/X11R6/bin/xedit
@@ -265,6 +264,7 @@
 ./usr/X11R6/lib/libxkbfile.la
 ./usr/X11R6/lib/libxkbui.a
 ./usr/X11R6/lib/libxkbui.la
+./usr/X11R6/lib/modules/chooser
 ./usr/X11R6/lib/xorg
 ./usr/X11R6/man
 ./usr/X11R6/man/man1
