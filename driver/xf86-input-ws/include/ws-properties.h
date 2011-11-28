@@ -23,6 +23,18 @@
 /* CARD32 */
 #define WS_PROP_MIDBUTTON_TIMEOUT "WS Pointer Middle Button Timeout"
 
+/* Mouse wheel emulation */
+/* BOOL */
+#define WS_PROP_WHEEL "WS Pointer Wheel Emulation"
+/* CARD8, 4 values [x up, x down, y up, y down], 0 to disable a value */
+#define WS_PROP_WHEEL_AXES "WS Pointer Wheel Emulation Axes"
+/* CARD16 */
+#define WS_PROP_WHEEL_INERTIA "WS Pointer Wheel Emulation Inertia"
+/* CARD32 */
+#define WS_PROP_WHEEL_TIMEOUT "WS Pointer Wheel Emulation Timeout"
+/* CARD8, value range 0-32, 0 to always scroll */
+#define WS_PROP_WHEEL_BUTTON "WS Pointer Wheel Emulation Button"
+
 /* Run-time calibration */
 /* CARD32, 4 values [minx, maxx, miny, maxy], or no values for unset */
 #define WS_PROP_CALIBRATION "WS Pointer Axis Calibration"

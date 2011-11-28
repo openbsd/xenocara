@@ -13,7 +13,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
-/* $OpenBSD: ws.c,v 1.49 2011/11/19 13:12:49 shadchin Exp $ */
+/* $OpenBSD: ws.c,v 1.50 2011/11/28 23:49:59 shadchin Exp $ */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -144,52 +144,9 @@ wsPreInit(InputDriverPtr drv, InputInfoPtr pInfo, int flags)
 		priv->buttons = DFLTBUTTONS;
 		buttons_from = X_DEFAULT;
 	}
-	priv->negativeZ = priv->positiveZ = WS_NOMAP;
-	s = xf86SetStrOption(pInfo->options, "ZAxisMapping", "4 5");
-	if (s) {
-		int b1, b2;
 
-		if (sscanf(s, "%d %d", &b1, &b2) == 2 &&
-		    b1 > 0 && b1 <= NBUTTONS &&
-		    b2 > 0 && b2 <= NBUTTONS) {
-			priv->negativeZ = 1 << (b1 - 1);
-			priv->positiveZ = 1 << (b2 - 1);
-			xf86IDrvMsg(pInfo, X_CONFIG,
-			    "ZAxisMapping: buttons %d and %d\n",
-			    b1, b2);
-			if (max(b1, b2) > priv->buttons) {
-				priv->buttons = max(b1, b2);
-				buttons_from = X_CONFIG;
-			}
-		} else {
-			xf86IDrvMsg(pInfo, X_WARNING,
-			    "invalid ZAxisMapping value: \"%s\"\n", s);
-		}
-		free(s);
-	}
-	priv->negativeW = priv->positiveW = WS_NOMAP;
-	s = xf86SetStrOption(pInfo->options, "WAxisMapping", "6 7");
-	if (s) {
-		int b1, b2;
-
-		if (sscanf(s, "%d %d", &b1, &b2) == 2 &&
-		    b1 > 0 && b1 <= NBUTTONS &&
-		    b2 > 0 && b2 <= NBUTTONS) {
-			priv->negativeW = 1 << (b1 - 1);
-			priv->positiveW = 1 << (b2 - 1);
-			xf86IDrvMsg(pInfo, X_CONFIG,
-			    "WAxisMapping: buttons %d and %d\n",
-			    b1, b2);
-			if (max(b1, b2) > priv->buttons) {
-				priv->buttons = max(b1, b2);
-				buttons_from = X_CONFIG;
-			}
-		} else {
-			xf86IDrvMsg(pInfo, X_WARNING,
-			    "invalid WAxisMapping value: \"%s\"\n", s);
-		}
-		free(s);
-	}
+	wsWheelHandleButtonMap(pInfo, &(priv->Z), "ZAxisMapping", "4 5");
+	wsWheelHandleButtonMap(pInfo, &(priv->W), "WAxisMapping", "6 7");
 
 	priv->screen_no = xf86SetIntOption(pInfo->options, "ScreenNo", 0);
 	xf86IDrvMsg(pInfo, X_CONFIG, "associated screen: %d\n",
@@ -280,6 +237,7 @@ wsPreInit(InputDriverPtr drv, InputInfoPtr pInfo, int flags)
 	wsClose(pInfo);
 
 	wsmbEmuPreInit(pInfo);
+	wsWheelEmuPreInit(pInfo);
 	return Success;
 
 fail:
@@ -413,6 +371,7 @@ wsDeviceInit(DeviceIntPtr pWS)
 	if (priv->type == WSMOUSE_TYPE_TPANEL)
 		wsInitCalibProperty(pWS);
 	wsmbEmuInitProperty(pWS);
+	wsWheelEmuInitProperty(pWS);
 	return Success;
 }
 
@@ -498,7 +457,6 @@ wsReadInput(InputInfoPtr pInfo)
 	int n, c;
 	struct wscons_event *event = eventList;
 	unsigned char *pBuf;
-	int ax, ay;
 
 	priv = pInfo->private;
 
@@ -515,10 +473,9 @@ wsReadInput(InputInfoPtr pInfo)
 	n /= sizeof(struct wscons_event);
 	while( n-- ) {
 		int buttons = priv->lastButtons;
-		int dx = 0, dy = 0, dz = 0, dw = 0;
+		int dx = 0, dy = 0, dz = 0, dw = 0, ax = 0, ay = 0;
 		int zbutton = 0, wbutton = 0;
 
-		ax = 0; ay = 0;
 		switch (event->type) {
 		case WSCONS_EVENT_MOUSE_UP:
 
@@ -572,51 +529,33 @@ wsReadInput(InputInfoPtr pInfo)
 			++event;
 			continue;
 		} /* case */
+		++event;
 
 		if (dx || dy) {
+			if (wsWheelEmuFilterMotion(pInfo, dx, dy))
+				continue;
+
 			/* relative motion event */
 			DBG(3, ErrorF("postMotionEvent dX %d dY %d\n",
-				      dx, dy));
-			xf86PostMotionEvent(pInfo->dev, 0, 0, 2,
-			    dx, dy);
+			    dx, dy));
+			xf86PostMotionEvent(pInfo->dev, 0, 0, 2, dx, dy);
 		}
-		if (dz && priv->negativeZ != WS_NOMAP
-		    && priv->positiveZ != WS_NOMAP) {
-			buttons &= ~(priv->negativeZ | priv->positiveZ);
-			if (dz < 0) {
-				DBG(4, ErrorF("Z -> button %d\n",
-					ffs(priv->negativeZ)));
-				zbutton = priv->negativeZ;
-			} else {
-				DBG(4, ErrorF("Z -> button %d\n",
-					ffs(priv->positiveZ)));
-				zbutton = priv->positiveZ;
-			}
-			buttons |= zbutton;
-			dz = 0;
+		if (dz && priv->Z.negative != WS_NOMAP
+		    && priv->Z.positive != WS_NOMAP) {
+			zbutton = (dz < 0) ? priv->Z.negative :
+			    priv->Z.positive;
+			DBG(4, ErrorF("Z -> button %d\n", zbutton));
+			wsButtonClicks(pInfo, zbutton, abs(dz));
 		}
-		if (dw && priv->negativeW != WS_NOMAP
-		    && priv->positiveW != WS_NOMAP) {
-			buttons &= ~(priv->negativeW | priv->positiveW);
-			if (dw < 0) {
-				DBG(4, ErrorF("W -> button %d\n",
-					ffs(priv->negativeW)));
-				wbutton = priv->negativeW;
-			} else {
-				DBG(4, ErrorF("W -> button %d\n",
-					ffs(priv->positiveW)));
-				wbutton = priv->positiveW;
-			}
-			buttons |= wbutton;
-			dw = 0;
+		if (dw && priv->W.negative != WS_NOMAP
+		    && priv->W.positive != WS_NOMAP) {
+			wbutton = (dw < 0) ? priv->W.negative :
+			    priv->W.positive;
+			DBG(4, ErrorF("W -> button %d\n", wbutton));
+			wsButtonClicks(pInfo, wbutton, abs(dw));
 		}
 		if (priv->lastButtons != buttons) {
 			/* button event */
-			wsSendButtons(pInfo, buttons);
-		}
-		if (zbutton != 0) {
-			/* generate a button up event */
-			buttons &= ~zbutton;
 			wsSendButtons(pInfo, buttons);
 		}
 		if (priv->swap_axes) {
@@ -627,16 +566,25 @@ wsReadInput(InputInfoPtr pInfo)
 			ay = tmp;
 		}
 		if (ax) {
+			dx = ax - priv->old_ax;
+			priv->old_ax = ax;
+			if (wsWheelEmuFilterMotion(pInfo, dx, 0))
+				continue;
+
 			/* absolute position event */
 			DBG(3, ErrorF("postMotionEvent X %d\n", ax));
 			xf86PostMotionEvent(pInfo->dev, 1, 0, 1, ax);
 		}
 		if (ay) {
+			dy = ay - priv->old_ay;
+			priv->old_ay = ay;
+			if (wsWheelEmuFilterMotion(pInfo, 0, dy))
+				continue;
+
 			/* absolute position event */
 			DBG(3, ErrorF("postMotionEvent y %d\n", ay));
 			xf86PostMotionEvent(pInfo->dev, 1, 1, 1, ay);
 		}
-		++event;
 	}
 	return;
 } /* wsReadInput */
@@ -645,19 +593,22 @@ static void
 wsSendButtons(InputInfoPtr pInfo, int buttons)
 {
 	WSDevicePtr priv = (WSDevicePtr)pInfo->private;
-	int change, button, mask;
+	int change, button, press;
 
 	change = buttons ^ priv->lastButtons;
 	while (change) {
 		button = ffs(change);
-		mask = 1 << (button - 1);
-		change &= ~mask;
-		if (!wsmbEmuFilterEvent(pInfo, button, (buttons & mask) != 0)) {
-			xf86PostButtonEvent(pInfo->dev, TRUE,
-			    button, (buttons & mask) != 0, 0, 0);
-			DBG(3, ErrorF("post button event %d %d\n",
-			    button, (buttons & mask) != 0))
-		}
+		press = buttons & (1 << (button - 1));
+		change &= ~(1 << (button - 1));
+
+		if (wsWheelEmuFilterButton(pInfo, button, press))
+			continue;
+
+		if (wsmbEmuFilterEvent(pInfo, button, press))
+			continue;
+
+		xf86PostButtonEvent(pInfo->dev, TRUE, button, press, 0, 0);
+		DBG(3, ErrorF("post button event %d %d\n", button, press));
 	}
 	priv->lastButtons = buttons;
 } /* wsSendButtons */
@@ -817,4 +768,49 @@ wsSetCalibProperty(DeviceIntPtr device, Atom atom, XIPropertyValuePtr val,
 		}
 	}
 	return Success;
+}
+
+void
+wsWheelHandleButtonMap(InputInfoPtr pInfo, WheelAxisPtr pAxis,
+    char* axis_name, char* default_value)
+{
+	WSDevicePtr priv = (WSDevicePtr)pInfo->private;
+	char *option_string;
+	int b1, b2;
+
+	pAxis->negative = pAxis->positive = WS_NOMAP;
+	pAxis->traveled_distance = 0;
+
+	option_string = xf86SetStrOption(pInfo->options, axis_name,
+	    default_value);
+	if (option_string) {
+		if (sscanf(option_string, "%d %d", &b1, &b2) == 2 &&
+		    b1 > 0 && b1 <= NBUTTONS &&
+		    b2 > 0 && b2 <= NBUTTONS) {
+			xf86IDrvMsg(pInfo, X_CONFIG, "%s: buttons %d and %d\n",
+			    axis_name, b1, b2);
+
+			pAxis->negative = b1;
+			pAxis->positive = b2;
+
+			if (max(b1, b2) > priv->buttons)
+				priv->buttons = max(b1, b2);
+		} else {
+			xf86IDrvMsg(pInfo, X_WARNING,
+			    "Invalid %s value: \"%s\"\n",
+			    axis_name, option_string);
+		}
+		free(option_string);
+	}
+}
+
+void
+wsButtonClicks(InputInfoPtr pInfo, int button, int count)
+{
+	int i;
+
+	for (i = 0; i < count; i++) {
+		xf86PostButtonEvent(pInfo->dev, TRUE, button, 1, 0, 0);
+		xf86PostButtonEvent(pInfo->dev, TRUE, button, 0, 0, 0);
+	}
 }

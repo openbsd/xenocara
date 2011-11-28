@@ -1,4 +1,4 @@
-.\"	$OpenBSD: ws.man,v 1.11 2011/11/19 12:28:10 shadchin Exp $
+.\"	$OpenBSD: ws.man,v 1.12 2011/11/28 23:49:59 shadchin Exp $
 .\"
 .\" Copyright (c) 2005,2009,2011 Matthieu Herrb
 .\"
@@ -69,6 +69,51 @@ Sets the timeout (in milliseconds) that the driver waits before deciding
 if two buttons where pressed "simultaneously" when 3 button emulation is
 enabled. Default: 50.
 .TP 4
+.BI "Option \*qEmulateWheel\*q \*q" boolean \*q
+Enable/disable "wheel" emulation.
+Wheel emulation means emulating button press/release events when the mouse
+is moved while a specific real button is pressed.
+Wheel button events (typically buttons 4 and 5) are usually used for scrolling.
+Wheel emulation is useful for getting wheel-like behaviour with trackballs.
+It can also be useful for mice with 4 or more buttons but no wheel.
+See the description of the
+.BR EmulateWheelButton ,
+.BR EmulateWheelInertia ,
+.BR EmulateWheelTimeout ,
+.BR XAxisMapping ,
+and
+.B YAxisMapping
+options.
+Default: off.
+.TP 4
+.BI "Option \*qEmulateWheelButton\*q \*q" integer \*q
+Specifies which button must be held down to enable wheel emulation mode.
+While this button is down, X and/or Y pointer movement will generate button
+press/release events as specified for the
+.B XAxisMapping
+and
+.B YAxisMapping
+settings.
+If the button is 0 and
+.BR EmulateWheel
+is on, any motion of the device is converted into wheel events.
+Default:\ 4.
+.TP 4
+.BI "Option \*qEmulateWheelInertia\*q \*q" integer \*q
+Specifies how far (in pixels) the pointer must move to generate button
+press/release events in wheel emulation mode.
+Default:\ 10.
+.TP 4
+.BI "Option \*qEmulateWheelTimeout\*q \*q" integer \*q
+Specifies the time in milliseconds the
+.BR EmulateWheelButton
+must be pressed before wheel emulation is started.
+If the
+.BR EmulateWheelButton
+is released before this timeout, the original button press/release event
+is sent.
+Default:\ 200.
+.TP 4
 .BI "Option \*qDebugLevel\*q \*q" integer \*q
 This option sets the verbosity level of the driver.
 It defaults to 0, which means no extra debug output.
@@ -107,6 +152,26 @@ clockwise, counter-clockwise, or upside-down respectively.
 .BI "Option \*qSwapXY\*q \*q" boolean \*q
 swaps the X and Y axis of the input device if set. Default: false.
 .TP 4
+.BI "Option \*qXAxisMapping\*q \*q" "N1 N2" \*q
+Specifies which buttons are mapped to motion in the X direction in wheel
+emulation mode.
+Button number
+.I N1
+is mapped to the negative X axis motion and button number
+.I N2
+is mapped to the positive X axis motion.
+Default: no mapping.
+.TP 4
+.BI "Option \*qYAxisMapping\*q \*q" "N1 N2" \*q
+Specifies which buttons are mapped to motion in the Y direction in wheel
+emulation mode.
+Button number
+.I N1
+is mapped to the negative Y axis motion and button number
+.I N2
+is mapped to the positive Y axis motion.
+Default:\ "4\ 5".
+.TP 4
 .BI "Option \*qZAxisMapping\*q \*q" "N1 N2" \*q
 Set the mapping for the Z axis (wheel) motion to buttons. Button
 number
@@ -134,6 +199,21 @@ driver.
 .TP 7
 .BI "WS Pointer Middle Button Timeout"
 1 32-bit positive value (unit: milliseconds)
+.TP 7
+.BI "WS Pointer Wheel Emulation"
+1 boolean value (8 bit, 0 or 1).
+.TP 7
+.BI "WS Pointer Wheel Emulation Axes"
+4 8-bit values, order X up, X down, Y up, Y down. 0 disables a value.
+.TP 7
+.BI "WS Pointer Wheel Emulation Button"
+1 8-bit value, allowed range 0-32, 0 to always scroll.
+.TP 7
+.BI "WS Pointer Wheel Emulation Inertia"
+1 16-bit positive value.
+.TP 7
+.BI "WS Pointer Wheel Emulation Timeout"
+1 32-bit positive value (unit: milliseconds).
 .TP 7
 .BI "WS Pointer Axis Calibration"
 4 32 bits values, in the order min-x, max-x, min-y, max-y.
