@@ -2468,7 +2468,7 @@ static RADEONMacModel RADEONDetectMacModel(ScrnInfoPtr pScrn)
 	    ret = RADEON_MAC_POWERBOOK_EXTERNAL; /* dual or single link */
 	}
 
-	if (strcmp(model, "PowerBook5,7") ||
+	if (strcmp(model, "PowerBook5,7") == 0 ||
 	    strcmp(model, "PowerBook5,8") == 0 ||
 	    strcmp(model, "PowerBook5,9") == 0) {
 	    ret = RADEON_MAC_POWERBOOK_EXTERNAL; /* dual link */
