@@ -34,9 +34,10 @@
 #endif
 
 #include "xf86.h"
-#include "i830.h"
+#include "intel.h"
 #include "i830_display.h"
 #include "i830_bios.h"
+#include "i830_reg.h"
 #include "X11/Xatom.h"
 #include <string.h>
 
@@ -1907,7 +1908,7 @@ i830_tv_get_crtc(xf86OutputPtr output)
     intel_screen_private *intel = intel_get_screen_private(scrn);
     int pipe = !!(INREG(TV_CTL) & TV_ENC_PIPEB_SELECT);
 
-    return i830_pipe_to_crtc(scrn, pipe);
+    return intel_pipe_to_crtc(scrn, pipe);
 }
 #endif
 

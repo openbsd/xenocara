@@ -31,7 +31,9 @@
 #include "i915_structs.h"
 #include "i915_program.h"
 
-#define STRIDE(w)               (((w) + 0x3ff) & ~0x3ff)
+#define ALIGN(i,m)		(((i) + (m) - 1) & ~((m) - 1))
+
+#define STRIDE(w)               (ALIGN((w), 1024))
 #define SIZE_Y420(w, h)         (h * STRIDE(w))
 #define SIZE_UV420(w, h)        ((h >> 1) * STRIDE(w >> 1))
 #define SIZE_YUV420(w, h)       (SIZE_Y420(w,h) + SIZE_UV420(w,h) * 2)
@@ -389,7 +391,6 @@ static void i915_mc_static_indirect_state_set(XvMCContext * context,
 	i915XvMCContext *pI915XvMC = (i915XvMCContext *) context->privData;
 	struct intel_xvmc_surface *intel_surf = dest->privData;
 	struct i915_mc_static_indirect_state_buffer *buffer_info;
-	unsigned int w = dest->width;
 
 	drm_intel_gem_bo_map_gtt(pI915XvMC->sis_bo);
 	buffer_info = pI915XvMC->sis_bo->virtual;
@@ -686,7 +687,7 @@ static void i915_mc_load_indirect_render_emit(XvMCContext * context)
 {
 	i915XvMCContext *pI915XvMC = (i915XvMCContext *) context->privData;
 	int mem_select;
-	uint32_t load_indirect, buffer_address;
+	uint32_t load_indirect;
 	BATCH_LOCALS;
 
 	BEGIN_BATCH(5);

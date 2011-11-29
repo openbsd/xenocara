@@ -1,7 +1,7 @@
 /*
- * Copyright © 2001 Keith Packard
+ * Copyright Â© 2001 Keith Packard
  *
- * Partly based on code that is Copyright © The XFree86 Project Inc.
+ * Partly based on code that is Copyright Â© The XFree86 Project Inc.
  *
  * Permission to use, copy, modify, distribute, and sell this software and its
  * documentation for any purpose is hereby granted without fee, provided that
@@ -164,11 +164,12 @@ void uxa_finish_access(DrawablePtr pDrawable)
 {
 	ScreenPtr pScreen = pDrawable->pScreen;
 	uxa_screen_t *uxa_screen = uxa_get_screen(pScreen);
-	PixmapPtr pPixmap = uxa_get_drawable_pixmap(pDrawable);
+	PixmapPtr pPixmap;
 
 	if (uxa_screen->info->finish_access == NULL)
 		return;
 
+	pPixmap = uxa_get_drawable_pixmap(pDrawable);
 	if (!uxa_pixmap_is_offscreen(pPixmap))
 		return;
 
@@ -354,6 +355,13 @@ void uxa_set_fallback_debug(ScreenPtr screen, Bool enable)
 	uxa_screen->fallback_debug = enable;
 }
 
+void uxa_set_force_fallback(ScreenPtr screen, Bool value)
+{
+	uxa_screen_t *uxa_screen = uxa_get_screen(screen);
+
+	uxa_screen->force_fallback = value;
+}
+
 /**
  * uxa_close_screen() unwraps its wrapped screen functions and tears down UXA's
  * screen private, before calling down to the next CloseSccreen.
@@ -377,6 +385,16 @@ static Bool uxa_close_screen(int i, ScreenPtr pScreen)
 		FreePicture(uxa_screen->solid_cache[n].picture, 0);
 
 	uxa_glyphs_fini(pScreen);
+
+	if (pScreen->devPrivate) {
+		/* Destroy the pixmap created by miScreenInit() *before*
+		 * chaining up as we finalize ourselves here and so this
+		 * is the last chance we have of releasing our resources
+		 * associated with the Pixmap. So do it first.
+		 */
+		(void) (*pScreen->DestroyPixmap) (pScreen->devPrivate);
+		pScreen->devPrivate = NULL;
+	}
 
 	pScreen->CreateGC = uxa_screen->SavedCreateGC;
 	pScreen->CloseScreen = uxa_screen->SavedCloseScreen;
@@ -480,6 +498,8 @@ Bool uxa_driver_init(ScreenPtr screen, uxa_driver_t * uxa_driver)
 	uxa_screen->info = uxa_driver;
 
 	dixSetPrivate(&screen->devPrivates, &uxa_screen_index, uxa_screen);
+
+	uxa_screen->force_fallback = FALSE;
 
 	uxa_screen->solid_cache_size = 0;
 	uxa_screen->solid_clear = 0;

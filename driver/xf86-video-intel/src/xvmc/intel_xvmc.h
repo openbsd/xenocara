@@ -41,8 +41,7 @@
 #include <stdint.h>
 
 #include <xf86drm.h>
-#include "i830_common.h"
-#include "i830_hwmc.h"
+#include "intel_hwmc.h"
 #include <X11/X.h>
 #include <X11/Xlibint.h>
 #include <X11/Xutil.h>

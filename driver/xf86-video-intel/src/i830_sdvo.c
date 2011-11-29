@@ -45,9 +45,9 @@ USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include "xf86.h"
 #include "xf86_OSproc.h"
 #include "compiler.h"
-#include "i830.h"
+#include "intel.h"
 #include "i830_display.h"
-#include "i810_reg.h"
+#include "i830_reg.h"
 #include "i830_sdvo_regs.h"
 #include "X11/Xatom.h"
 
@@ -2041,7 +2041,7 @@ i830_sdvo_get_crtc(xf86OutputPtr output)
     struct i830_sdvo_priv *dev_priv = intel_output->dev_priv;
     int pipe = !!(INREG(dev_priv->output_device) & SDVO_PIPE_B_SELECT);
    
-    return i830_pipe_to_crtc(scrn, pipe);
+    return intel_pipe_to_crtc(scrn, pipe);
 }
 #endif
 

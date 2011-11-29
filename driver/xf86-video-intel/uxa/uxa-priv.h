@@ -39,7 +39,6 @@
 #include "uxa.h"
 
 #include <X11/X.h>
-#define NEED_EVENTS
 #include <X11/Xproto.h>
 #include "scrnintstr.h"
 #include "pixmapstr.h"
@@ -133,12 +132,14 @@ typedef struct {
 #endif
 	EnableDisableFBAccessProcPtr SavedEnableDisableFBAccess;
 
+	Bool force_fallback;
 	Bool fallback_debug;
 	Bool swappedOut;
 	unsigned disableFbCount;
 	unsigned offScreenCounter;
 
 	uxa_glyph_cache_t glyphCaches[UXA_NUM_GLYPH_CACHE_FORMATS];
+	Bool glyph_cache_initialized;
 
 	PicturePtr solid_clear, solid_black, solid_white;
 	uxa_solid_cache_t solid_cache[UXA_NUM_SOLID_CACHE];
@@ -324,8 +325,10 @@ uxa_check_composite(CARD8 op,
 
 /* uxa.c */
 Bool uxa_prepare_access(DrawablePtr pDrawable, uxa_access_t access);
-
 void uxa_finish_access(DrawablePtr pDrawable);
+
+Bool uxa_picture_prepare_access(PicturePtr picture, int mode);
+void uxa_picture_finish_access(PicturePtr picture);
 
 void
 uxa_get_drawable_deltas(DrawablePtr pDrawable, PixmapPtr pPixmap,

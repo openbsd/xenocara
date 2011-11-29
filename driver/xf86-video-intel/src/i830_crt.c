@@ -32,8 +32,9 @@
 #include <unistd.h>
 
 #include "xf86.h"
-#include "i830.h"
+#include "intel.h"
 #include "xf86Modes.h"
+#include "i830_reg.h"
 #include "i830_display.h"
 
 static void
@@ -511,7 +512,7 @@ i830_crt_get_crtc(xf86OutputPtr output)
     intel_screen_private *intel = intel_get_screen_private(scrn);
     int pipe = !!(INREG(ADPA) & ADPA_PIPE_SELECT_MASK);
    
-    return i830_pipe_to_crtc(scrn, pipe);
+    return intel_pipe_to_crtc(scrn, pipe);
 }
 #endif
 

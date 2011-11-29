@@ -24,8 +24,9 @@
  *    Zou Nan hai <nanhai.zou@intel.com>
  */
 #include "intel_xvmc.h"
-#include "i830_hwmc.h"
-#include "i810_reg.h"
+#include "intel_hwmc.h"
+#include "i830_reg.h"
+#include "i965_reg.h"
 #include "brw_defines.h"
 #include "brw_structs.h"
 
@@ -784,7 +785,6 @@ static Status begin_surface(Display * display, XvMCContext * context,
 			    XvMCSurface * future,
 			    const XvMCMpegControl * control)
 {
-	struct i965_xvmc_contex *i965_ctx;
 	struct intel_xvmc_surface *priv_target, *priv_past, *priv_future;
 	intel_xvmc_context_ptr intel_ctx = context->privData;
 	Status ret;

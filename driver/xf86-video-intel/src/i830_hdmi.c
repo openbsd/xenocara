@@ -30,9 +30,10 @@
 #endif
 
 #include "xf86.h"
-#include "i830.h"
+#include "intel.h"
 #include "xf86Modes.h"
 #include "i830_display.h"
+#include "i830_reg.h"
 #include "X11/Xatom.h"
 
 struct i830_hdmi_priv {

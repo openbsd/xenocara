@@ -28,7 +28,7 @@
 #include "config.h"
 #endif
 
-#include "i830.h"
+#include "intel.h"
 
 #define SUBSYS_ANY (~0)
 

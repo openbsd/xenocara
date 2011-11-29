@@ -29,7 +29,7 @@
 #define _I915XVMC_H
 
 #include "intel_xvmc.h"
-#include "i830_hwmc.h"
+#include "intel_hwmc.h"
 
 #define I915_SUBPIC_PALETTE_SIZE        16
 #define MAX_SUBCONTEXT_LEN              1024

@@ -204,6 +204,20 @@ i.e. perform synchronous rendering.
 .IP
 Default: Disabled
 .TP
+.BI "Option \*qShadow\*q \*q" boolean \*q
+This option controls the use of GPU acceleration and placement of auxiliary
+buffers in memory. Enabling the Shadow will disable all use of the GPU for
+RENDER acceleration and force software-fallbacks for all but updating the
+scan-out buffer. Hardware overlay is still supported so Xv will continue to
+playback videos using the GPU, but GL will be forced to use software
+rasterisation as well.  This is a last resort measure for systems with
+crippling bugs, such as early 8xx chipsets. It is still hoped that we will
+find a workaround to enable as much hardware acceleration on those
+architectures as is possible, but until then, using a shadow buffer should
+maintain system stability.
+.IP
+Default: Disabled
+.TP
 .BI "Option \*qSwapbuffersWait\*q \*q" boolean \*q
 This option controls the behavior of glXSwapBuffers and glXCopySubBufferMESA
 calls by GL applications.  If enabled, the calls will avoid tearing by making
@@ -228,6 +242,18 @@ panel.  If you are not sure about this, leave it at its default, which
 allows the driver to automatically figure out the correct fixed panel
 timings.  See further in the section about LVDS fixed timing for more
 information.
+.TP
+.BI "Option \*qTiling\*q \*q" boolean \*q
+This option controls whether memory buffers for Pixmaps are allocated in tiled mode.  In
+most cases (especially for complex rendering), tiling dramatically improves
+performance.
+.BI "Option \*qLinearFramebuffer\*q \*q" boolean \*q
+This option controls whether the memory for the scanout (also known as the
+front or frame buffer) is allocated in linear memory. A tiled framebuffer is
+required for power conservation features, but for certain system configurations
+you may wish to override this and force a linear layout.
+.IP
+Default: disabled
 .TP
 .BI "Option \*qXvMC\*q \*q" boolean \*q
 Enable XvMC driver. Current support MPEG2 MC on 915/945 and G33 series.

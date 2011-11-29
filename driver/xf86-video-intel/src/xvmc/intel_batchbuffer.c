@@ -49,41 +49,6 @@
 #include "brw_structs.h"
 #define MI_BATCH_BUFFER_END     (0xA << 23)
 #define BATCH_SIZE 8*1024	/* one bo is allocated each time, so the size can be small */
-static int intelEmitIrqLocked(void)
-{
-	drmI830IrqEmit ie;
-	int ret, seq;
-
-	ie.irq_seq = &seq;
-	ret = drmCommandWriteRead(xvmc_driver->fd, DRM_I830_IRQ_EMIT,
-				  &ie, sizeof(ie));
-
-	if (ret) {
-		fprintf(stderr, "%s: drmI830IrqEmit: %d\n", __FUNCTION__, ret);
-		exit(1);
-	}
-
-	return seq;
-}
-
-static void intelWaitIrq(int seq)
-{
-	int ret;
-	drmI830IrqWait iw;
-
-	iw.irq_seq = seq;
-
-	do {
-		ret =
-		    drmCommandWrite(xvmc_driver->fd, DRM_I830_IRQ_WAIT, &iw,
-				    sizeof(iw));
-	} while (ret == -EAGAIN || ret == -EINTR);
-
-	if (ret) {
-		fprintf(stderr, "%s: drmI830IrqWait: %d\n", __FUNCTION__, ret);
-		exit(1);
-	}
-}
 
 static void i965_end_batch(void)
 {
@@ -99,8 +64,6 @@ static void i965_end_batch(void)
 
 Bool intelInitBatchBuffer(void)
 {
-	int i;
-
 	if ((xvmc_driver->batch.buf =
 	     drm_intel_bo_alloc(xvmc_driver->bufmgr,
 				"batch buffer", BATCH_SIZE, 0x1000)) == NULL) {

@@ -38,7 +38,7 @@ void intel_xvmc_dump_open(void)
 	if (xvmc_dump)
 		return;
 
-	if (d = getenv("INTEL_XVMC_DUMP"))
+	if ((d = getenv("INTEL_XVMC_DUMP")))
 		xvmc_dump = 1;
 
 	if (xvmc_dump) {

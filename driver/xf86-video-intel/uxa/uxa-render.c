@@ -167,6 +167,10 @@ uxa_print_composite_fallback(const char *func, CARD8 op,
 	if (! uxa_screen->fallback_debug)
 		return;
 
+	/* Limit the noise if fallbacks are expected. */
+	if (uxa_screen->force_fallback)
+		return;
+
 	uxa_composite_fallback_pict_desc(pSrc, srcdesc, 40);
 	uxa_composite_fallback_pict_desc(pMask, maskdesc, 40);
 	uxa_composite_fallback_pict_desc(pDst, dstdesc, 40);
@@ -200,7 +204,10 @@ Bool uxa_op_reads_destination(CARD8 op)
 static Bool
 uxa_get_pixel_from_rgba(CARD32 * pixel,
 			CARD16 red,
-			CARD16 green, CARD16 blue, CARD16 alpha, CARD32 format)
+			CARD16 green,
+			CARD16 blue,
+			CARD16 alpha,
+			CARD32 format)
 {
 	int rbits, bbits, gbits, abits;
 	int rshift, bshift, gshift, ashift;
@@ -225,17 +232,24 @@ uxa_get_pixel_from_rgba(CARD32 * pixel,
 		gshift = bbits;
 		rshift = gshift + gbits;
 		ashift = rshift + rbits;
-	} else {		/* PICT_TYPE_ABGR */
+	} else if (PICT_FORMAT_TYPE(format) == PICT_TYPE_ABGR) {
 		rshift = 0;
 		gshift = rbits;
 		bshift = gshift + gbits;
 		ashift = bshift + bbits;
+	} else if (PICT_FORMAT_TYPE(format) == PICT_TYPE_BGRA) {
+		ashift = 0;
+		rshift = abits;
+		gshift = rshift + rbits;
+		bshift = gshift + gbits;
+	} else {
+		return FALSE;
 	}
 
 	*pixel = 0;
-	*pixel |= (blue >> (16 - bbits)) << bshift;
-	*pixel |= (red >> (16 - rbits)) << rshift;
+	*pixel |= (blue  >> (16 - bbits)) << bshift;
 	*pixel |= (green >> (16 - gbits)) << gshift;
+	*pixel |= (red   >> (16 - rbits)) << rshift;
 	*pixel |= (alpha >> (16 - abits)) << ashift;
 
 	return TRUE;
@@ -245,7 +259,9 @@ Bool
 uxa_get_rgba_from_pixel(CARD32 pixel,
 			CARD16 * red,
 			CARD16 * green,
-			CARD16 * blue, CARD16 * alpha, CARD32 format)
+			CARD16 * blue,
+			CARD16 * alpha,
+			CARD32 format)
 {
 	int rbits, bbits, gbits, abits;
 	int rshift, bshift, gshift, ashift;
@@ -267,6 +283,13 @@ uxa_get_rgba_from_pixel(CARD32 pixel,
 		gshift = rbits;
 		bshift = gshift + gbits;
 		ashift = bshift + bbits;
+        } else if (PICT_FORMAT_TYPE(format) == PICT_TYPE_BGRA) {
+		ashift = 0;
+		rshift = abits;
+		if (abits == 0)
+			rshift = PICT_FORMAT_BPP(format) - (rbits+gbits+bbits);
+		gshift = rshift + rbits;
+		bshift = gshift + gbits;
 	} else {
 		return FALSE;
 	}
@@ -322,11 +345,13 @@ uxa_get_color_for_pixmap (PixmapPtr	 pixmap,
 	*pixel = uxa_get_pixmap_first_pixel(pixmap);
 
 	if (src_format != dst_format) {
-	    if (!uxa_get_rgba_from_pixel(*pixel, &red, &green, &blue, &alpha,
+	    if (!uxa_get_rgba_from_pixel(*pixel,
+					 &red, &green, &blue, &alpha,
 					 src_format))
 		return FALSE;
 
-	    if (!uxa_get_pixel_from_rgba(pixel, red, green, blue, alpha,
+	    if (!uxa_get_pixel_from_rgba(pixel,
+					 red, green, blue, alpha,
 					 dst_format))
 		return FALSE;
 	}
@@ -384,7 +409,23 @@ uxa_try_driver_solid_fill(PicturePtr pSrc,
 			return -1;
 		}
 
-		pixel = solid->color;
+		if (pDst->format == PICT_a8r8g8b8) {
+			pixel = solid->color;
+		} else if (pDst->format == PICT_x8r8g8b8) {
+			pixel = solid->color | 0xff000000;
+		} else {
+			CARD16 red, green, blue, alpha;
+
+			if (!uxa_get_rgba_from_pixel(solid->color,
+						     &red, &green, &blue, &alpha,
+						     PICT_a8r8g8b8) ||
+			    !uxa_get_pixel_from_rgba(&pixel,
+						     red, green, blue, alpha,
+						     pDst->format)) {
+				REGION_UNINIT(pDst->pDrawable->pScreen, &region);
+				return -1;
+			}
+		}
 	}
 
 	if (!(*uxa_screen->info->prepare_solid)
@@ -411,12 +452,12 @@ uxa_try_driver_solid_fill(PicturePtr pSrc,
 }
 
 static PicturePtr
-uxa_picture_for_pixman_format(ScreenPtr pScreen,
+uxa_picture_for_pixman_format(ScreenPtr screen,
 			      pixman_format_code_t format,
 			      int width, int height)
 {
-	PicturePtr pPicture;
-	PixmapPtr pPixmap;
+	PicturePtr picture;
+	PixmapPtr pixmap;
 	int error;
 
 	if (format == PIXMAN_a1)
@@ -426,24 +467,29 @@ uxa_picture_for_pixman_format(ScreenPtr pScreen,
 	if (PIXMAN_FORMAT_A(format) == 0)
 	    format = PIXMAN_a8r8g8b8;
 
-	pPixmap = (*pScreen->CreatePixmap)(pScreen, width, height,
-					   PIXMAN_FORMAT_DEPTH(format),
-					   UXA_CREATE_PIXMAP_FOR_MAP);
-	if (!pPixmap)
+	pixmap = screen->CreatePixmap(screen, width, height,
+					PIXMAN_FORMAT_DEPTH(format),
+					UXA_CREATE_PIXMAP_FOR_MAP);
+	if (!pixmap)
 		return 0;
 
-	pPicture = CreatePicture(0, &pPixmap->drawable,
-				 PictureMatchFormat(pScreen,
-						    PIXMAN_FORMAT_DEPTH(format),
-						    format),
-				 0, 0, serverClient, &error);
-	(*pScreen->DestroyPixmap) (pPixmap);
-	if (!pPicture)
+	if (!uxa_pixmap_is_offscreen(pixmap)) {
+		screen->DestroyPixmap(pixmap);
+		return 0;
+	}
+
+	picture = CreatePicture(0, &pixmap->drawable,
+				PictureMatchFormat(screen,
+						   PIXMAN_FORMAT_DEPTH(format),
+						   format),
+				0, 0, serverClient, &error);
+	screen->DestroyPixmap(pixmap);
+	if (!picture)
 		return 0;
 
-	ValidatePicture(pPicture);
+	ValidatePicture(picture);
 
-	return pPicture;
+	return picture;
 }
 
 static PicturePtr
@@ -514,10 +560,10 @@ uxa_picture_from_pixman_image(ScreenPtr screen,
 		}
 		ValidatePicture(src);
 
-		if (uxa_prepare_access(picture->pDrawable, UXA_ACCESS_RW)) {
+		if (uxa_picture_prepare_access(picture, UXA_ACCESS_RW)) {
 			fbComposite(PictOpSrc, src, NULL, picture,
 				    0, 0, 0, 0, 0, 0, width, height);
-			uxa_finish_access(picture->pDrawable);
+			uxa_picture_finish_access(picture);
 		}
 
 		FreePicture(src, 0);
@@ -645,10 +691,10 @@ uxa_acquire_pattern(ScreenPtr pScreen,
 	if (!pDst)
 		return 0;
 
-	if (uxa_prepare_access(pDst->pDrawable, UXA_ACCESS_RW)) {
+	if (uxa_picture_prepare_access(pDst, UXA_ACCESS_RW)) {
 		fbComposite(PictOpSrc, pSrc, NULL, pDst,
 			    x, y, 0, 0, 0, 0, width, height);
-		uxa_finish_access(pDst->pDrawable);
+		uxa_picture_finish_access(pDst);
 		return pDst;
 	} else {
 		FreePicture(pDst, 0);
@@ -702,14 +748,14 @@ uxa_render_picture(ScreenPtr screen,
 	if (!picture)
 		return 0;
 
-	if (uxa_prepare_access(picture->pDrawable, UXA_ACCESS_RW)) {
-		if (uxa_prepare_access(src->pDrawable, UXA_ACCESS_RO)) {
+	if (uxa_picture_prepare_access(picture, UXA_ACCESS_RW)) {
+		if (uxa_picture_prepare_access(src, UXA_ACCESS_RO)) {
 			ret = 1;
 			fbComposite(PictOpSrc, src, NULL, picture,
 				    x, y, 0, 0, 0, 0, width, height);
-			uxa_finish_access(src->pDrawable);
+			uxa_picture_finish_access(src);
 		}
-		uxa_finish_access(picture->pDrawable);
+		uxa_picture_finish_access(picture);
 	}
 
 	if (!ret) {
@@ -757,6 +803,8 @@ uxa_acquire_drawable(ScreenPtr pScreen,
 		pDst = uxa_render_picture(pScreen, pSrc,
 					  pSrc->format | (BitsPerPixel(pSrc->pDrawable->depth) << 24),
 					  x, y, width, height);
+		if (!pDst)
+			return 0;
 
 		goto done;
 	} else {
@@ -794,8 +842,10 @@ uxa_acquire_drawable(ScreenPtr pScreen,
 			     PictureMatchFormat(pScreen, depth, pSrc->format),
 			     0, 0, serverClient, &error);
 	pScreen->DestroyPixmap(pPixmap);
-	ValidatePicture(pDst);
+	if (!pDst)
+		return 0;
 
+	ValidatePicture(pDst);
 done:
 	pDst->componentAlpha = pSrc->componentAlpha;
 	*out_x = 0;
@@ -945,11 +995,6 @@ uxa_solid_rects (CARD8		op,
 		return;
 	}
 
-	/* XXX xserver-1.8: CompositeRects is not tracked by Damage, so we must
-	 * manually append the damaged regions ourselves.
-	 */
-	DamageRegionAppend(dst->pDrawable, &region);
-
 	pixman_region_translate(&region, dst_x, dst_y);
 	boxes = pixman_region_rectangles(&region, &num_boxes);
 	extents = pixman_region_extents (&region);
@@ -1013,6 +1058,8 @@ try_solid:
 			int src_off_x, src_off_y;
 
 			solid = uxa_acquire_solid(screen, src->pSourcePict);
+			if (!solid)
+				goto err_src;
 			FreePicture(src, 0);
 
 			src = solid;
@@ -1038,6 +1085,12 @@ try_solid:
 		uxa_screen->info->done_composite(dst_pixmap);
 		FreePicture(src, 0);
 	}
+
+	/* XXX xserver-1.8: CompositeRects is not tracked by Damage, so we must
+	 * manually append the damaged regions ourselves.
+	 */
+	pixman_region_translate(&region, -dst_x, -dst_y);
+	DamageRegionAppend(dst->pDrawable, &region);
 
 	pixman_region_fini(&region);
 	return;
@@ -1469,16 +1522,14 @@ uxa_composite(CARD8 op,
 	RegionRec region;
 	int tx, ty;
 
-	if (uxa_screen->swappedOut)
+	if (uxa_screen->swappedOut || uxa_screen->force_fallback)
 		goto fallback;
 
 	if (!uxa_drawable_is_offscreen(pDst->pDrawable))
 		goto fallback;
 
-
 	if (pDst->alphaMap || pSrc->alphaMap || (pMask && pMask->alphaMap))
 		goto fallback;
-
 
 	/* Remove repeat in source if useless */
 	if (pSrc->pDrawable && pSrc->repeat && pSrc->filter != PictFilterConvolution &&
@@ -1705,6 +1756,90 @@ uxa_create_alpha_picture(ScreenPtr pScreen,
 	return pPicture;
 }
 
+static void
+uxa_check_trapezoids(CARD8 op, PicturePtr src, PicturePtr dst,
+	       PictFormatPtr maskFormat, INT16 xSrc, INT16 ySrc,
+	       int ntrap, xTrapezoid * traps)
+{
+	ScreenPtr screen = dst->pDrawable->pScreen;
+
+	if (maskFormat) {
+		PixmapPtr scratch = NULL;
+		PicturePtr mask;
+		INT16 xDst, yDst;
+		INT16 xRel, yRel;
+		BoxRec bounds;
+		int width, height;
+		pixman_image_t *image;
+		pixman_format_code_t format;
+		int error;
+
+		xDst = traps[0].left.p1.x >> 16;
+		yDst = traps[0].left.p1.y >> 16;
+
+		miTrapezoidBounds (ntrap, traps, &bounds);
+		if (bounds.y1 >= bounds.y2 || bounds.x1 >= bounds.x2)
+			return;
+
+		width  = bounds.x2 - bounds.x1;
+		height = bounds.y2 - bounds.y1;
+
+		format = maskFormat->format |
+			(BitsPerPixel(maskFormat->depth) << 24);
+		image =
+		    pixman_image_create_bits(format, width, height, NULL, 0);
+		if (!image)
+			return;
+
+		for (; ntrap; ntrap--, traps++)
+			pixman_rasterize_trapezoid(image,
+						   (pixman_trapezoid_t *) traps,
+						   -bounds.x1, -bounds.y1);
+
+
+		scratch = GetScratchPixmapHeader(screen, width, height,
+						 PIXMAN_FORMAT_DEPTH(format),
+						 PIXMAN_FORMAT_BPP(format),
+						 pixman_image_get_stride(image),
+						 pixman_image_get_data(image));
+		if (!scratch) {
+			pixman_image_unref(image);
+			return;
+		}
+
+		mask = CreatePicture(0, &scratch->drawable,
+				     PictureMatchFormat(screen,
+							PIXMAN_FORMAT_DEPTH(format),
+							format),
+				     0, 0, serverClient, &error);
+		if (!mask) {
+			FreeScratchPixmapHeader(scratch);
+			pixman_image_unref(image);
+			return;
+		}
+
+		xRel = bounds.x1 + xSrc - xDst;
+		yRel = bounds.y1 + ySrc - yDst;
+		CompositePicture(op, src, mask, dst,
+				 xRel, yRel,
+				 0, 0,
+				 bounds.x1, bounds.y1,
+				 width, height);
+		FreePicture(mask, 0);
+
+		FreeScratchPixmapHeader(scratch);
+		pixman_image_unref(image);
+	} else {
+		if (dst->polyEdge == PolyEdgeSharp)
+			maskFormat = PictureMatchFormat(screen, 1, PICT_a1);
+		else
+			maskFormat = PictureMatchFormat(screen, 8, PICT_a8);
+
+		for (; ntrap; ntrap--, traps++)
+			uxa_check_trapezoids(op, src, dst, maskFormat, xSrc, ySrc, 1, traps);
+	}
+}
+
 /**
  * uxa_trapezoids is essentially a copy of miTrapezoids that uses
  * uxa_create_alpha_picture instead of miCreateAlphaPicture.
@@ -1724,8 +1859,14 @@ uxa_trapezoids(CARD8 op, PicturePtr src, PicturePtr dst,
 	       int ntrap, xTrapezoid * traps)
 {
 	ScreenPtr screen = dst->pDrawable->pScreen;
+	uxa_screen_t *uxa_screen = uxa_get_screen(screen);
 	BoxRec bounds;
 	Bool direct;
+
+	if (uxa_screen->swappedOut || uxa_screen->force_fallback) {
+		uxa_check_trapezoids(op, src, dst, maskFormat, xSrc, ySrc, ntrap, traps);
+		return;
+	}
 
 	direct = op == PictOpAdd && miIsSolidAlpha(src);
 	if (maskFormat || direct) {

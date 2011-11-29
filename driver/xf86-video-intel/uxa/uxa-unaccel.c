@@ -67,6 +67,34 @@ void uxa_finish_access_gc(GCPtr pGC)
 		uxa_finish_access(&pGC->stipple->drawable);
 }
 
+Bool uxa_picture_prepare_access(PicturePtr picture, int mode)
+{
+	if (picture->pDrawable == NULL)
+		return TRUE;
+
+	if (!uxa_prepare_access(picture->pDrawable, mode))
+		return FALSE;
+
+	if (picture->alphaMap &&
+	    !uxa_prepare_access(picture->alphaMap->pDrawable, mode)) {
+		uxa_finish_access(picture->pDrawable);
+		return FALSE;
+	}
+
+	return TRUE;
+}
+
+void uxa_picture_finish_access(PicturePtr picture)
+{
+	if (picture->pDrawable == NULL)
+		return;
+
+	uxa_finish_access(picture->pDrawable);
+	if (picture->alphaMap)
+		uxa_finish_access(picture->alphaMap->pDrawable);
+}
+
+
 char uxa_drawable_location(DrawablePtr pDrawable)
 {
 	return uxa_drawable_is_offscreen(pDrawable) ? 's' : 'm';
@@ -362,24 +390,20 @@ uxa_check_composite(CARD8 op,
 
 	UXA_FALLBACK(("from picts %p/%p to pict %p\n", pSrc, pMask, pDst));
 
-	if (uxa_prepare_access(pDst->pDrawable, UXA_ACCESS_RW)) {
-		if (pSrc->pDrawable == NULL ||
-		    uxa_prepare_access(pSrc->pDrawable, UXA_ACCESS_RO)) {
-			if (!pMask || pMask->pDrawable == NULL ||
-			    uxa_prepare_access(pMask->pDrawable, UXA_ACCESS_RO))
-			{
+	if (uxa_picture_prepare_access(pDst, UXA_ACCESS_RW)) {
+		if (uxa_picture_prepare_access(pSrc, UXA_ACCESS_RO)) {
+			if (!pMask || uxa_picture_prepare_access(pMask, UXA_ACCESS_RO)) {
 				fbComposite(op, pSrc, pMask, pDst,
 					    xSrc, ySrc,
 					    xMask, yMask,
 					    xDst, yDst,
 					    width, height);
-				if (pMask && pMask->pDrawable != NULL)
-					uxa_finish_access(pMask->pDrawable);
+				if (pMask)
+					uxa_picture_finish_access(pMask);
 			}
-			if (pSrc->pDrawable != NULL)
-				uxa_finish_access(pSrc->pDrawable);
+			uxa_picture_finish_access(pSrc);
 		}
-		uxa_finish_access(pDst->pDrawable);
+		uxa_picture_finish_access(pDst);
 	}
 }
 
@@ -391,9 +415,9 @@ uxa_check_add_traps(PicturePtr pPicture,
 
 	UXA_FALLBACK(("to pict %p (%c)\n", pPicture,
 		      uxa_drawable_location(pPicture->pDrawable)));
-	if (uxa_prepare_access(pPicture->pDrawable, UXA_ACCESS_RW)) {
+	if (uxa_picture_prepare_access(pPicture, UXA_ACCESS_RW)) {
 		fbAddTraps(pPicture, x_off, y_off, ntrap, traps);
-		uxa_finish_access(pPicture->pDrawable);
+		uxa_picture_finish_access(pPicture);
 	}
 }
 

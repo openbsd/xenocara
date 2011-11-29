@@ -30,9 +30,9 @@ USE OR OTHER DEALINGS IN THE SOFTWARE.
 #endif
 
 #include "xf86.h"
-#include "i830.h"
+#include "intel.h"
 #include "i830_display.h"
-#include "i810_reg.h"
+#include "i830_reg.h"
 
 #include "sil164/sil164.h"
 #include "ch7xxx/ch7xxx.h"
@@ -316,7 +316,7 @@ i830_dvo_get_crtc(xf86OutputPtr output)
     struct _I830DVODriver *drv = intel_output->i2c_drv;
     int pipe = !!(INREG(drv->dvo_reg) & SDVO_PIPE_B_SELECT);
    
-    return i830_pipe_to_crtc(scrn, pipe);
+    return intel_pipe_to_crtc(scrn, pipe);
 }
 #endif
 

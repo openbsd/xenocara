@@ -40,7 +40,8 @@
 #include <sys/types.h>
 
 #include "xf86.h"
-#include "i830.h"
+#include "intel.h"
+#include "i830_reg.h"
 #include "i830_bios.h"
 #include "i830_display.h"
 #include "X11/Xatom.h"
@@ -182,9 +183,14 @@ i830_lvds_get_backlight_native(xf86OutputPtr output)
 {
     ScrnInfoPtr scrn = output->scrn;
     intel_screen_private *intel = intel_get_screen_private(scrn);
-    uint32_t blc_pwm_ctl;
+    uint32_t blc_pwm_ctl, reg;
 
-    blc_pwm_ctl = INREG(BLC_PWM_CTL);
+    if (IS_IGDNG(intel))
+      reg = BLC_PWM_CPU_CTL;
+    else
+      reg = BLC_PWM_CTL;
+
+    blc_pwm_ctl = INREG(reg);
     blc_pwm_ctl &= BACKLIGHT_DUTY_CYCLE_MASK;
     return blc_pwm_ctl;
 }
@@ -1494,7 +1500,7 @@ i830_lvds_get_crtc(xf86OutputPtr output)
     intel_screen_private    *intel = intel_get_screen_private(scrn);
     int pipe = !!(INREG(LVDS) & LVDS_PIPEB_SELECT);
    
-    return i830_pipe_to_crtc(scrn, pipe);
+    return intel_pipe_to_crtc(scrn, pipe);
 }
 #endif
 

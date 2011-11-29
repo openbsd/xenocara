@@ -37,7 +37,7 @@
 
 #include "xorgVersion.h"
 
-#include "i830.h"
+#include "intel.h"
 #include "intel_bufmgr.h"
 #include "xf86drmMode.h"
 #include "X11/Xatom.h"
@@ -54,6 +54,7 @@ typedef struct {
     drmModeCrtcPtr mode_crtc;
     dri_bo *cursor;
     dri_bo *rotate_bo;
+    uint32_t rotate_pitch;
     uint32_t rotate_fb_id;
 } drmmode_crtc_private_rec, *drmmode_crtc_private_ptr;
 
@@ -318,7 +319,7 @@ drmmode_set_mode_major(xf86CrtcPtr crtc, DisplayModePtr mode,
 		ret = drmModeAddFB(drmmode->fd,
 				   scrn->virtualX, scrn->virtualY,
 				   scrn->depth, scrn->bitsPerPixel,
-				   pitch, intel->front_buffer->bo->handle,
+				   pitch, intel->front_buffer->handle,
 				   &drmmode->fb_id);
 		if (ret < 0) {
 			ErrorF("failed to add fb\n");
@@ -395,7 +396,7 @@ drmmode_set_mode_major(xf86CrtcPtr crtc, DisplayModePtr mode,
 		drmmode_output_dpms(output, DPMSModeOn);
 	}
 
-	i830_set_gem_max_sizes(scrn);
+	intel_set_gem_max_sizes(scrn);
 
 	if (scrn->pScreen)
 		xf86_reload_cursors(scrn->pScreen);
@@ -464,26 +465,23 @@ static void *
 drmmode_crtc_shadow_allocate(xf86CrtcPtr crtc, int width, int height)
 {
 	ScrnInfoPtr scrn = crtc->scrn;
-	intel_screen_private *intel = intel_get_screen_private(scrn);
 	drmmode_crtc_private_ptr drmmode_crtc = crtc->driver_private;
 	drmmode_ptr drmmode = drmmode_crtc->drmmode;
-	int size, ret;
 	unsigned long rotate_pitch;
+	uint32_t tiling;
+	int ret;
 
-	width = i830_pad_drawable_width(width);
-	rotate_pitch = width * drmmode->cpp;
-	size = rotate_pitch * height;
-
-	drmmode_crtc->rotate_bo =
-		drm_intel_bo_alloc(intel->bufmgr, "rotate", size, 4096);
+	drmmode_crtc->rotate_bo = intel_allocate_framebuffer(scrn,
+							     width, height,
+							     drmmode->cpp,
+							     &rotate_pitch,
+							     &tiling);
 
 	if (!drmmode_crtc->rotate_bo) {
 		xf86DrvMsg(crtc->scrn->scrnIndex, X_ERROR,
 			   "Couldn't allocate shadow memory for rotated CRTC\n");
 		return NULL;
 	}
-
-	drm_intel_bo_disable_reuse(drmmode_crtc->rotate_bo);
 
 	ret = drmModeAddFB(drmmode->fd, width, height, crtc->scrn->depth,
 			   crtc->scrn->bitsPerPixel, rotate_pitch,
@@ -495,6 +493,7 @@ drmmode_crtc_shadow_allocate(xf86CrtcPtr crtc, int width, int height)
 		return NULL;
 	}
 
+	drmmode_crtc->rotate_pitch = rotate_pitch;
 	return drmmode_crtc->rotate_bo;
 }
 
@@ -502,9 +501,8 @@ static PixmapPtr
 drmmode_crtc_shadow_create(xf86CrtcPtr crtc, void *data, int width, int height)
 {
 	ScrnInfoPtr scrn = crtc->scrn;
+	intel_screen_private *intel = intel_get_screen_private(scrn);
 	drmmode_crtc_private_ptr drmmode_crtc = crtc->driver_private;
-	drmmode_ptr drmmode = drmmode_crtc->drmmode;
-	unsigned long rotate_pitch;
 	PixmapPtr rotate_pixmap;
 
 	if (!data) {
@@ -515,13 +513,17 @@ drmmode_crtc_shadow_create(xf86CrtcPtr crtc, void *data, int width, int height)
 			return NULL;
 		}
 	}
+	if (drmmode_crtc->rotate_bo == NULL) {
+		xf86DrvMsg(scrn->scrnIndex, X_ERROR,
+			   "Couldn't allocate shadow pixmap for rotated CRTC\n");
+		return NULL;
+	}
 
-	rotate_pitch = i830_pad_drawable_width(width) * drmmode->cpp;
 	rotate_pixmap = GetScratchPixmapHeader(scrn->pScreen,
 					       width, height,
 					       scrn->depth,
 					       scrn->bitsPerPixel,
-					       rotate_pitch,
+					       drmmode_crtc->rotate_pitch,
 					       NULL);
 
 	if (rotate_pixmap == NULL) {
@@ -530,8 +532,9 @@ drmmode_crtc_shadow_create(xf86CrtcPtr crtc, void *data, int width, int height)
 		return NULL;
 	}
 
-	if (drmmode_crtc->rotate_bo)
-		i830_set_pixmap_bo(rotate_pixmap, drmmode_crtc->rotate_bo);
+	intel_set_pixmap_bo(rotate_pixmap, drmmode_crtc->rotate_bo);
+
+	intel->shadow_present = TRUE;
 
 	return rotate_pixmap;
 }
@@ -539,11 +542,13 @@ drmmode_crtc_shadow_create(xf86CrtcPtr crtc, void *data, int width, int height)
 static void
 drmmode_crtc_shadow_destroy(xf86CrtcPtr crtc, PixmapPtr rotate_pixmap, void *data)
 {
+	ScrnInfoPtr scrn = crtc->scrn;
+	intel_screen_private *intel = intel_get_screen_private(scrn);
 	drmmode_crtc_private_ptr drmmode_crtc = crtc->driver_private;
 	drmmode_ptr drmmode = drmmode_crtc->drmmode;
 
 	if (rotate_pixmap) {
-		i830_set_pixmap_bo(rotate_pixmap, NULL);
+		intel_set_pixmap_bo(rotate_pixmap, NULL);
 		FreeScratchPixmapHeader(rotate_pixmap);
 	}
 
@@ -556,6 +561,8 @@ drmmode_crtc_shadow_destroy(xf86CrtcPtr crtc, PixmapPtr rotate_pixmap, void *dat
 		dri_bo_unreference(drmmode_crtc->rotate_bo);
 		drmmode_crtc->rotate_bo = NULL;
 	}
+
+	intel->shadow_present = intel->use_shadow;
 }
 
 static void
@@ -1308,21 +1315,15 @@ drmmode_xf86crtc_resize (ScrnInfoPtr scrn, int width, int height)
 		    drmmode_crtc = xf86_config->crtc[0]->driver_private;
 	drmmode_ptr drmmode = drmmode_crtc->drmmode;
 	intel_screen_private *intel = intel_get_screen_private(scrn);
-	i830_memory *old_front = NULL;
-	Bool	    tiled, ret;
-	ScreenPtr   screen = screenInfo.screens[scrn->scrnIndex];
+	drm_intel_bo *old_front = NULL;
+	Bool	    ret;
 	uint32_t    old_fb_id;
-	int	    i, w, pitch, old_width, old_height, old_pitch;
+	int	    i, old_width, old_height, old_pitch;
+	unsigned long pitch;
+	uint32_t tiling;
 
 	if (scrn->virtualX == width && scrn->virtualY == height)
 		return TRUE;
-
-	w = i830_pad_drawable_width(width);
-	i830_tiled_width(intel, &w, intel->cpp);
-	pitch = w * intel->cpp;
-	xf86DrvMsg(scrn->scrnIndex, X_INFO,
-		   "Allocate new frame buffer %dx%d stride %d\n",
-		   width, height, pitch);
 
 	old_width = scrn->virtualX;
 	old_height = scrn->virtualY;
@@ -1330,24 +1331,26 @@ drmmode_xf86crtc_resize (ScrnInfoPtr scrn, int width, int height)
 	old_fb_id = drmmode->fb_id;
 	old_front = intel->front_buffer;
 
-	scrn->virtualX = width;
-	scrn->virtualY = height;
-	scrn->displayWidth = w;
-	intel->front_buffer = i830_allocate_framebuffer(scrn);
+	intel->front_buffer = intel_allocate_framebuffer(scrn,
+							 width, height,
+							 intel->cpp,
+							 &pitch,
+							 &tiling);
 	if (!intel->front_buffer)
 		goto fail;
 
 	ret = drmModeAddFB(drmmode->fd, width, height, scrn->depth,
 			   scrn->bitsPerPixel, pitch,
-			   intel->front_buffer->bo->handle,
+			   intel->front_buffer->handle,
 			   &drmmode->fb_id);
 	if (ret)
 		goto fail;
 
-	i830_set_pixmap_bo(screen->GetScreenPixmap(screen), intel->front_buffer->bo);
+	intel->front_pitch = pitch;
+	intel->front_tiling = tiling;
 
-	screen->ModifyPixmapHeader(screen->GetScreenPixmap(screen),
-				   width, height, -1, -1, pitch, NULL);
+	scrn->virtualX = width;
+	scrn->virtualY = height;
 
 	for (i = 0; i < xf86_config->num_crtc; i++) {
 		xf86CrtcPtr crtc = xf86_config->crtc[i];
@@ -1359,16 +1362,18 @@ drmmode_xf86crtc_resize (ScrnInfoPtr scrn, int width, int height)
 				       crtc->rotation, crtc->x, crtc->y);
 	}
 
+	intel_uxa_create_screen_resources(scrn->pScreen);
+
 	if (old_fb_id)
 		drmModeRmFB(drmmode->fd, old_fb_id);
 	if (old_front)
-		i830_free_memory(scrn, old_front);
+		drm_intel_bo_unreference(old_front);
 
 	return TRUE;
 
  fail:
 	if (intel->front_buffer)
-		i830_free_memory(scrn, intel->front_buffer);
+		drm_intel_bo_unreference(intel->front_buffer);
 	intel->front_buffer = old_front;
 	scrn->virtualX = old_width;
 	scrn->virtualY = old_height;

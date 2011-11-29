@@ -30,7 +30,7 @@
 #endif
 
 #include "xf86.h"
-#include "i830.h"
+#include "intel.h"
 
 #include "i915_reg.h"
 
@@ -106,7 +106,5 @@ void I915EmitInvarientState(ScrnInfoPtr scrn)
 	OUT_BATCH(_3DSTATE_STIPPLE);
 	OUT_BATCH(0x00000000);
 
-	OUT_BATCH(_3DSTATE_BACKFACE_STENCIL_OPS | BFO_ENABLE_STENCIL_TWO_SIDE |
-		  0);
-	OUT_BATCH(MI_NOOP);
+	OUT_BATCH(_3DSTATE_BACKFACE_STENCIL_OPS | BFO_ENABLE_STENCIL_TWO_SIDE | 0);
 }

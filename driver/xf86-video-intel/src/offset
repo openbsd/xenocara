@@ -1,0 +1,5 @@
+intel_memory.c:			init.gtt_start = intel->memory_manager->offset;
+intel_memory.c:			init.gtt_end = intel->memory_manager->offset +
+intel_memory.c:			    intel->memory_manager->size;
+intel_memory.c:		    prefix, intel->memory_manager->offset);
+intel_memory.c:		    prefix, intel->memory_manager->end);

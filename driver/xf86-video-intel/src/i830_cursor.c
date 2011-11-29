@@ -52,7 +52,8 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 #include "xf86fbman.h"
 
-#include "i830.h"
+#include "intel.h"
+#include "i830_reg.h"
 
 static void
 I830SetPipeCursorBase (xf86CrtcPtr crtc)

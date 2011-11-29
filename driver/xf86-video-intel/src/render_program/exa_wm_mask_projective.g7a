@@ -1,0 +1,63 @@
+/*
+ * Copyright © 2010 Intel Corporation
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a
+ * copy of this software and associated documentation files (the "Software"),
+ * to deal in the Software without restriction, including without limitation
+ * the rights to use, copy, modify, merge, publish, distribute, sublicense,
+ * and/or sell copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice (including the next
+ * paragraph) shall be included in all copies or substantial portions of the
+ * Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
+ * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+ * IN THE SOFTWARE.
+ *
+ */
+
+/*
+ * Fragment to compute src u/v values
+ */
+include(`exa_wm.g4i')
+
+define(`u',     `g72')
+define(`ul',    `g72')
+define(`uh',    `g73')
+define(`v',     `g74')
+define(`vl',    `g74')
+define(`vh',    `g75')
+define(`w',     `mask_w')
+define(`wl',    `mask_w_0')
+define(`wh',    `mask_w_1')
+
+define(`bl',    `g2.0<8,8,1>F')
+define(`bh',    `g4.0<8,8,1>F')
+
+define(`a0_a_x',`g8.0<0,1,0>F')
+define(`a0_a_y',`g8.16<0,1,0>F')
+define(`a0_a_z',`g9.0<0,1,0>F')
+
+/* W */
+pln (8) temp_x_0<1>F a0_a_z bl { align1 }; /* pixel 0-7 */
+pln (8) temp_x_1<1>F a0_a_z bh { align1 }; /* pixel 8-15 */
+math (8) wl<1>F temp_x_0<8,8,1>F null inv { align1 };
+math (8) wh<1>F temp_x_1<8,8,1>F null inv { align1 };
+
+/* U */
+pln (8) temp_x_0<1>F a0_a_x bl { align1 }; /* pixel 0-7 */
+pln (8) temp_x_1<1>F a0_a_x bh { align1 }; /* pixel 8-15 */
+mul (8) ul<1>F temp_x_0<8,8,1>F wl<8,8,1>F { align1 };
+mul (8) uh<1>F temp_x_1<8,8,1>F wh<8,8,1>F { align1 };
+
+/* V */
+pln (8) temp_x_0<1>F a0_a_y bl { align1 }; /* pixel 0-7 */
+pln (8) temp_x_1<1>F a0_a_y bh { align1 }; /* pixel 8-15 */
+mul (8) vl<1>F temp_x_0<8,8,1>F wl<8,8,1>F { align1 };
+mul (8) vh<1>F temp_x_1<8,8,1>F wh<8,8,1>F { align1 };

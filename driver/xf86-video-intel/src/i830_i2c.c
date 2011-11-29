@@ -44,7 +44,8 @@ USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include "xf86xv.h"
 #include <X11/extensions/Xv.h>
 #include "shadow.h"
-#include "i830.h"
+#include "intel.h"
+#include "i830_reg.h"
 
 #define AIRLIED_I2C	0
 

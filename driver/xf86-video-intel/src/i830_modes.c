@@ -49,7 +49,7 @@
 #include "xf86.h"
 #include "xf86DDC.h"
 #include "X11/Xatom.h"
-#include "i830.h"
+#include "intel.h"
 #include "i830_display.h"
 #include "xf86Modes.h"
 #include <randrstr.h>

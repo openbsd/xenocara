@@ -35,7 +35,7 @@
 
 #define _PARSE_EDID_
 #include "xf86.h"
-#include "i830.h"
+#include "intel.h"
 #include "i830_bios.h"
 #include "edid.h"
 

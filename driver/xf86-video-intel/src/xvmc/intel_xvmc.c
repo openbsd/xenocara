@@ -105,8 +105,6 @@ unsigned int mb_bytes_420[] = {
 
 void LOCK_HARDWARE(drm_context_t ctx)
 {
-	char __ret = 0;
-
 	PPTHREAD_MUTEX_LOCK();
 	assert(!xvmc_driver->locked);
 
@@ -218,11 +216,6 @@ _X_EXPORT Status XvMCCreateContext(Display * display, XvPortID port,
 	int error_base;
 	int event_base;
 	int priv_count;
-	int isCapable;
-	int screen = DefaultScreen(display);
-	intel_xvmc_context_ptr intel_ctx;
-	int fd;
-	char *driverName = NULL, *deviceName = NULL;
 
 	/* Verify Obvious things first */
 	if (!display || !context)
@@ -482,7 +475,6 @@ _X_EXPORT Status XvMCCreateBlocks(Display * display, XvMCContext * context,
 				  unsigned int num_blocks,
 				  XvMCBlockArray * block)
 {
-	Status ret;
 	if (!display || !context || !num_blocks || !block)
 		return BadValue;
 
@@ -505,7 +497,6 @@ _X_EXPORT Status XvMCCreateBlocks(Display * display, XvMCContext * context,
  */
 _X_EXPORT Status XvMCDestroyBlocks(Display * display, XvMCBlockArray * block)
 {
-	Status ret;
 	if (!display || !block)
 		return BadValue;
 
@@ -678,13 +669,10 @@ _X_EXPORT Status XvMCPutSurface(Display * display, XvMCSurface * surface,
  */
 _X_EXPORT Status XvMCSyncSurface(Display * display, XvMCSurface * surface)
 {
-	Status ret;
-	int stat = 0;
-
 	if (!display || !surface)
 		return XvMCBadSurface;
 
-	return ret;
+	return Success;
 }
 
 /*
@@ -739,9 +727,6 @@ _X_EXPORT Status XvMCGetSurfaceStatus(Display * display, XvMCSurface * surface,
  */
 _X_EXPORT Status XvMCHideSurface(Display * display, XvMCSurface * surface)
 {
-	int stat = 0;
-	Status ret;
-
 	if (!display || !surface)
 		return XvMCBadSurface;
 
@@ -1071,7 +1056,7 @@ _X_EXPORT Status XvMCLoadQMatrix(Display * display, XvMCContext * context,
 _X_EXPORT Status XvMCPutSlice(Display * display, XvMCContext * context,
 			      char *slice, int nbytes)
 {
-	if (xvmc_driver->put_slice(display, context, slice, nbytes)) {
+	if (xvmc_driver->put_slice(display, context, (unsigned char *) slice, nbytes)) {
 		XVMC_ERR("PutSlice fail\n");
 		return BadValue;
 	}
@@ -1082,7 +1067,7 @@ _X_EXPORT Status XvMCPutSlice2(Display * display, XvMCContext * context,
 			       char *slice, int nbytes, int slice_code)
 {
 	if (xvmc_driver->put_slice2
-	    (display, context, slice, nbytes, slice_code)) {
+	    (display, context, (unsigned char *) slice, nbytes, slice_code)) {
 		XVMC_ERR("PutSlice2 fail\n");
 		return BadValue;
 	}

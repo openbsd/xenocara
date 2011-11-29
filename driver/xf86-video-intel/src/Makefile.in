@@ -57,13 +57,17 @@ POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
 @DRI_TRUE@am__append_1 = \
-@DRI_TRUE@	$(INTEL_DRI_SRCS)
+@DRI_TRUE@	intel_dri.c \
+@DRI_TRUE@	$(NULL)
 
 @DRI_TRUE@am__append_2 = \
-@DRI_TRUE@	$(DRI_LIBS)
+@DRI_TRUE@	$(DRI_LIBS) \
+@DRI_TRUE@	$(NULL)
 
 @XVMC_TRUE@am__append_3 = \
-@XVMC_TRUE@	$(INTEL_XVMC_SRCS)
+@XVMC_TRUE@	intel_hwmc.h \
+@XVMC_TRUE@	intel_hwmc.c \
+@XVMC_TRUE@	$(NULL)
 
 subdir = src
 DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in
@@ -84,36 +88,34 @@ am__installdirs = "$(DESTDIR)$(intel_drv_ladir)"
 intel_drv_laLTLIBRARIES_INSTALL = $(INSTALL)
 LTLIBRARIES = $(intel_drv_la_LTLIBRARIES)
 am__DEPENDENCIES_1 =
-@DRI_TRUE@am__DEPENDENCIES_2 = $(am__DEPENDENCIES_1)
-intel_drv_la_DEPENDENCIES = ../uxa/libuxa.la $(am__DEPENDENCIES_2)
+@DRI_TRUE@am__DEPENDENCIES_2 = $(am__DEPENDENCIES_1) \
+@DRI_TRUE@	$(am__DEPENDENCIES_1)
+intel_drv_la_DEPENDENCIES = ../uxa/libuxa.la legacy/liblegacy.la \
+	$(am__DEPENDENCIES_2)
 am__intel_drv_la_SOURCES_DIST = brw_defines.h brw_structs.h common.h \
-	i2c_vid.h i810_accel.c i810_common.h i810_cursor.c i810_dga.c \
-	i810_driver.c i810.h i810_io.c i810_memory.c i810_reg.h \
-	i810_ring.h i810_video.c i810_wmark.c i830_3d.c i830_accel.c \
-	i830_bios.c i830_bios.h i830_batchbuffer.c i830_batchbuffer.h \
-	i830_common.h i830_crt.c i830_cursor.c i830_display.c \
-	i830_display.h i830_quirks.c i830_driver.c i830_dvo.c i830.h \
-	i830_hdmi.c i830_i2c.c i830_io.c i830_lvds.c i830_memory.c \
-	i830_modes.c i830_video.c i830_video.h i830_reg.h i830_ring.h \
-	i830_sdvo.c i830_sdvo.h i830_sdvo_regs.h i830_tv.c i915_3d.c \
-	i915_3d.h i915_reg.h i915_video.c i965_video.c i830_uxa.c \
-	i830_render.c i915_render.c i965_render.c drmmode_display.c \
-	i810_dri.c i810_dri.h i830_dri.c i810_hwmc.c i830_dri.h \
-	i830_hwmc.h i830_hwmc.c i915_hwmc.h i965_hwmc.h
-am__objects_1 = i810_dri.lo i830_dri.lo i810_hwmc.lo
-@DRI_TRUE@am__objects_2 = $(am__objects_1)
-am__objects_3 = i830_hwmc.lo
-@XVMC_TRUE@am__objects_4 = $(am__objects_3)
-am_intel_drv_la_OBJECTS = i810_accel.lo i810_cursor.lo i810_dga.lo \
-	i810_driver.lo i810_io.lo i810_memory.lo i810_video.lo \
-	i810_wmark.lo i830_3d.lo i830_accel.lo i830_bios.lo \
-	i830_batchbuffer.lo i830_crt.lo i830_cursor.lo i830_display.lo \
-	i830_quirks.lo i830_driver.lo i830_dvo.lo i830_hdmi.lo \
-	i830_i2c.lo i830_io.lo i830_lvds.lo i830_memory.lo \
-	i830_modes.lo i830_video.lo i830_sdvo.lo i830_tv.lo i915_3d.lo \
-	i915_video.lo i965_video.lo i830_uxa.lo i830_render.lo \
-	i915_render.lo i965_render.lo drmmode_display.lo \
-	$(am__objects_2) $(am__objects_4)
+	i2c_vid.h intel.h intel_module.c intel_driver.c \
+	intel_batchbuffer.c intel_batchbuffer.h intel_memory.c \
+	intel_uxa.c intel_video.c intel_video.h i830_3d.c i830_bios.c \
+	i830_bios.h i830_common.h i830_crt.c i830_cursor.c \
+	i830_display.c i830_display.h i830_quirks.c i830_dvo.c i830.h \
+	i830_hdmi.c i830_i2c.c i830_io.c i830_lvds.c i830_modes.c \
+	i830_render.c i830_reg.h i830_ring.h i830_sdvo.c i830_sdvo.h \
+	i830_sdvo_regs.h i830_tv.c i915_3d.c i915_3d.h i915_reg.h \
+	i915_render.c i915_video.c i965_reg.h i965_video.c \
+	i965_render.c drmmode_display.c intel_dri.c intel_hwmc.h \
+	intel_hwmc.c
+am__objects_1 =
+@DRI_TRUE@am__objects_2 = intel_dri.lo $(am__objects_1)
+@XVMC_TRUE@am__objects_3 = intel_hwmc.lo $(am__objects_1)
+am_intel_drv_la_OBJECTS = intel_module.lo intel_driver.lo \
+	intel_batchbuffer.lo intel_memory.lo intel_uxa.lo \
+	intel_video.lo i830_3d.lo i830_bios.lo i830_crt.lo \
+	i830_cursor.lo i830_display.lo i830_quirks.lo i830_dvo.lo \
+	i830_hdmi.lo i830_i2c.lo i830_io.lo i830_lvds.lo i830_modes.lo \
+	i830_render.lo i830_sdvo.lo i830_tv.lo i915_3d.lo \
+	i915_render.lo i915_video.lo i965_video.lo i965_render.lo \
+	drmmode_display.lo $(am__objects_1) $(am__objects_2) \
+	$(am__objects_3)
 intel_drv_la_OBJECTS = $(am_intel_drv_la_OBJECTS)
 DEFAULT_INCLUDES = -I. -I$(srcdir) -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/depcomp
@@ -152,10 +154,6 @@ AUTOCONF = @AUTOCONF@
 AUTOHEADER = @AUTOHEADER@
 AUTOMAKE = @AUTOMAKE@
 AWK = @AWK@
-BUILD_LINUXDOC_FALSE = @BUILD_LINUXDOC_FALSE@
-BUILD_LINUXDOC_TRUE = @BUILD_LINUXDOC_TRUE@
-BUILD_PDFDOC_FALSE = @BUILD_PDFDOC_FALSE@
-BUILD_PDFDOC_TRUE = @BUILD_PDFDOC_TRUE@
 CC = @CC@
 CCDEPMODE = @CCDEPMODE@
 CFLAGS = @CFLAGS@
@@ -195,8 +193,6 @@ GEN4ASM_LIBS = @GEN4ASM_LIBS@
 GREP = @GREP@
 HAVE_GEN4ASM_FALSE = @HAVE_GEN4ASM_FALSE@
 HAVE_GEN4ASM_TRUE = @HAVE_GEN4ASM_TRUE@
-HAVE_XEXTPROTO_71_FALSE = @HAVE_XEXTPROTO_71_FALSE@
-HAVE_XEXTPROTO_71_TRUE = @HAVE_XEXTPROTO_71_TRUE@
 INSTALL_CMD = @INSTALL_CMD@
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
@@ -210,17 +206,13 @@ LIBS = @LIBS@
 LIBTOOL = @LIBTOOL@
 LIB_MAN_DIR = @LIB_MAN_DIR@
 LIB_MAN_SUFFIX = @LIB_MAN_SUFFIX@
-LINUXDOC = @LINUXDOC@
 LN_S = @LN_S@
 LTLIBOBJS = @LTLIBOBJS@
 MAINT = @MAINT@
 MAINTAINER_MODE_FALSE = @MAINTAINER_MODE_FALSE@
 MAINTAINER_MODE_TRUE = @MAINTAINER_MODE_TRUE@
 MAKEINFO = @MAKEINFO@
-MAKE_HTML = @MAKE_HTML@
-MAKE_PDF = @MAKE_PDF@
-MAKE_PS = @MAKE_PS@
-MAKE_TEXT = @MAKE_TEXT@
+MAN_SUBSTS = @MAN_SUBSTS@
 MISC_MAN_DIR = @MISC_MAN_DIR@
 MISC_MAN_SUFFIX = @MISC_MAN_SUFFIX@
 NMEDIT = @NMEDIT@
@@ -235,19 +227,15 @@ PATH_SEPARATOR = @PATH_SEPARATOR@
 PCIACCESS_CFLAGS = @PCIACCESS_CFLAGS@
 PCIACCESS_LIBS = @PCIACCESS_LIBS@
 PKG_CONFIG = @PKG_CONFIG@
-PS2PDF = @PS2PDF@
 RANLIB = @RANLIB@
 SED = @SED@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 STRIP = @STRIP@
 VERSION = @VERSION@
-VIDEO_DEBUG_FALSE = @VIDEO_DEBUG_FALSE@
-VIDEO_DEBUG_TRUE = @VIDEO_DEBUG_TRUE@
-XEXT_CFLAGS = @XEXT_CFLAGS@
-XEXT_LIBS = @XEXT_LIBS@
 XORG_CFLAGS = @XORG_CFLAGS@
 XORG_LIBS = @XORG_LIBS@
+XORG_MAN_PAGE = @XORG_MAN_PAGE@
 XVMCLIB_CFLAGS = @XVMCLIB_CFLAGS@
 XVMCLIB_LIBS = @XVMCLIB_LIBS@
 XVMC_FALSE = @XVMC_FALSE@
@@ -300,7 +288,7 @@ sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 sysconfdir = @sysconfdir@
 target_alias = @target_alias@
-SUBDIRS = xvmc bios_reader ch7017 ch7xxx ivch sil164 tfp410 reg_dumper render_program
+SUBDIRS = xvmc ch7017 ch7xxx ivch sil164 tfp410 render_program legacy
 
 # this is obnoxious:
 # -module lets us name the module exactly how we want
@@ -314,38 +302,19 @@ intel_drv_la_LTLIBRARIES = intel_drv.la
 intel_drv_la_LDFLAGS = -module -avoid-version
 intel_drv_ladir = @moduledir@/drivers
 intel_drv_la_LIBADD = -lm @DRM_LIBS@ -ldrm_intel ../uxa/libuxa.la \
-	@PCIACCESS_LIBS@ $(am__append_2)
-INTEL_DRI_SRCS = \
-         i810_dri.c \
-         i810_dri.h \
-         i830_dri.c \
-         i810_hwmc.c \
-         i830_dri.h
-
-INTEL_XVMC_SRCS = \
-	 i830_hwmc.h \
-	 i830_hwmc.c \
-         i915_hwmc.h \
-         i965_hwmc.h
-
+	legacy/liblegacy.la @PCIACCESS_LIBS@ $(am__append_2)
+NULL := #
 intel_drv_la_SOURCES = brw_defines.h brw_structs.h common.h i2c_vid.h \
-	i810_accel.c i810_common.h i810_cursor.c i810_dga.c \
-	i810_driver.c i810.h i810_io.c i810_memory.c i810_reg.h \
-	i810_ring.h i810_video.c i810_wmark.c i830_3d.c i830_accel.c \
-	i830_bios.c i830_bios.h i830_batchbuffer.c i830_batchbuffer.h \
-	i830_common.h i830_crt.c i830_cursor.c i830_display.c \
-	i830_display.h i830_quirks.c i830_driver.c i830_dvo.c i830.h \
-	i830_hdmi.c i830_i2c.c i830_io.c i830_lvds.c i830_memory.c \
-	i830_modes.c i830_video.c i830_video.h i830_reg.h i830_ring.h \
-	i830_sdvo.c i830_sdvo.h i830_sdvo_regs.h i830_tv.c i915_3d.c \
-	i915_3d.h i915_reg.h i915_video.c i965_video.c i830_uxa.c \
-	i830_render.c i915_render.c i965_render.c drmmode_display.c \
-	$(am__append_1) $(am__append_3)
-EXTRA_DIST = \
-	$(XMODE_SRCS)	\
-	$(INTEL_DRI_SRCS) \
-	$(INTEL_XVMC_SRCS)
-
+	intel.h intel_module.c intel_driver.c intel_batchbuffer.c \
+	intel_batchbuffer.h intel_memory.c intel_uxa.c intel_video.c \
+	intel_video.h i830_3d.c i830_bios.c i830_bios.h i830_common.h \
+	i830_crt.c i830_cursor.c i830_display.c i830_display.h \
+	i830_quirks.c i830_dvo.c i830.h i830_hdmi.c i830_i2c.c \
+	i830_io.c i830_lvds.c i830_modes.c i830_render.c i830_reg.h \
+	i830_ring.h i830_sdvo.c i830_sdvo.h i830_sdvo_regs.h i830_tv.c \
+	i915_3d.c i915_3d.h i915_reg.h i915_render.c i915_video.c \
+	i965_reg.h i965_video.c i965_render.c drmmode_display.c \
+	$(NULL) $(am__append_1) $(am__append_3)
 all: all-recursive
 
 .SUFFIXES:
@@ -416,44 +385,34 @@ distclean-compile:
 	-rm -f *.tab.c
 
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/drmmode_display.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/i810_accel.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/i810_cursor.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/i810_dga.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/i810_dri.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/i810_driver.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/i810_hwmc.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/i810_io.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/i810_memory.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/i810_video.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/i810_wmark.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/i830_3d.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/i830_accel.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/i830_batchbuffer.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/i830_bios.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/i830_crt.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/i830_cursor.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/i830_display.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/i830_dri.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/i830_driver.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/i830_dvo.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/i830_hdmi.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/i830_hwmc.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/i830_i2c.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/i830_io.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/i830_lvds.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/i830_memory.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/i830_modes.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/i830_quirks.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/i830_render.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/i830_sdvo.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/i830_tv.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/i830_uxa.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/i830_video.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/i915_3d.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/i915_render.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/i915_video.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/i965_render.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/i965_video.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/intel_batchbuffer.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/intel_dri.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/intel_driver.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/intel_hwmc.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/intel_memory.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/intel_module.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/intel_uxa.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/intel_video.Plo@am__quote@
 
 .c.o:
 @am__fastdepCC_TRUE@	if $(COMPILE) -MT $@ -MD -MP -MF "$(DEPDIR)/$*.Tpo" -c -o $@ $<; \

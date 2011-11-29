@@ -24,7 +24,7 @@ extern int VERBOSE;
 
 #define OUT_RELOC(bo,read_domains,write_domains,delta)  \
     do { \
-        *(unsigned int *)batch_ptr = delta + bo->offset; \
+        *(unsigned int *)batch_ptr = (delta) + bo->offset; \
         intel_batch_emit_reloc(bo, read_domains, write_domains, delta, batch_ptr); \
         batch_ptr += 4;                                                 \
     } while (0)

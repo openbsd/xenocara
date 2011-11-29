@@ -571,6 +571,7 @@ uxa_get_color_for_pixmap (PixmapPtr	 pixmap,
 			  CARD32	*pixel);
 
 void uxa_set_fallback_debug(ScreenPtr screen, Bool enable);
+void uxa_set_force_fallback(ScreenPtr screen, Bool enable);
 
 /**
  * Returns TRUE if the given planemask covers all the significant bits in the

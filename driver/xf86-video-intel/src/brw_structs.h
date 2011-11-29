@@ -861,6 +861,11 @@ struct brw_wm_unit_state
    } wm10;       
 };
 
+struct brw_wm_unit_state_padded {
+	struct brw_wm_unit_state state;
+	char pad[64 - sizeof(struct brw_wm_unit_state)];
+};
+
 /* The hardware supports two different modes for border color. The
  * default (OpenGL) mode uses floating-point color channels, while the
  * legacy mode uses 4 bytes.
@@ -1485,6 +1490,230 @@ struct brw_interface_descriptor {
 	unsigned int binding_table_entry_count:5;
 	unsigned int binding_table_pointer:27;
     } desc3;
+};
+
+struct gen6_blend_state
+{
+	struct {
+		unsigned int dest_blend_factor:5;
+		unsigned int source_blend_factor:5;
+		unsigned int pad3:1;
+		unsigned int blend_func:3;
+		unsigned int pad2:1;
+		unsigned int ia_dest_blend_factor:5;
+		unsigned int ia_source_blend_factor:5;
+		unsigned int pad1:1;
+		unsigned int ia_blend_func:3;
+		unsigned int pad0:1;
+		unsigned int ia_blend_enable:1;
+		unsigned int blend_enable:1;
+	} blend0;
+
+	struct {
+		unsigned int post_blend_clamp_enable:1;
+		unsigned int pre_blend_clamp_enable:1;
+		unsigned int clamp_range:2;
+		unsigned int pad0:4;
+		unsigned int x_dither_offset:2;
+		unsigned int y_dither_offset:2;
+		unsigned int dither_enable:1;
+		unsigned int alpha_test_func:3;
+		unsigned int alpha_test_enable:1;
+		unsigned int pad1:1;
+		unsigned int logic_op_func:4;
+		unsigned int logic_op_enable:1;
+		unsigned int pad2:1;
+		unsigned int write_disable_b:1;
+		unsigned int write_disable_g:1;
+		unsigned int write_disable_r:1;
+		unsigned int write_disable_a:1;
+		unsigned int pad3:1;
+		unsigned int alpha_to_coverage_dither:1;
+		unsigned int alpha_to_one:1;
+		unsigned int alpha_to_coverage:1;
+	} blend1;
+};
+
+struct gen6_color_calc_state
+{
+	struct {
+		unsigned int alpha_test_format:1;
+		unsigned int pad0:14;
+		unsigned int round_disable:1;
+		unsigned int bf_stencil_ref:8;
+		unsigned int stencil_ref:8;
+	} cc0;
+
+	union {
+		float alpha_ref_f;
+		struct {
+			unsigned int ui:8;
+			unsigned int pad0:24;
+		} alpha_ref_fi;
+	} cc1;
+
+	float constant_r;
+	float constant_g;
+	float constant_b;
+	float constant_a;
+};
+
+struct gen6_depth_stencil_state
+{
+	struct {
+		unsigned int pad0:3;
+		unsigned int bf_stencil_pass_depth_pass_op:3;
+		unsigned int bf_stencil_pass_depth_fail_op:3;
+		unsigned int bf_stencil_fail_op:3;
+		unsigned int bf_stencil_func:3;
+		unsigned int bf_stencil_enable:1;
+		unsigned int pad1:2;
+		unsigned int stencil_write_enable:1;
+		unsigned int stencil_pass_depth_pass_op:3;
+		unsigned int stencil_pass_depth_fail_op:3;
+		unsigned int stencil_fail_op:3;
+		unsigned int stencil_func:3;
+		unsigned int stencil_enable:1;
+	} ds0;
+
+	struct {
+		unsigned int bf_stencil_write_mask:8;
+		unsigned int bf_stencil_test_mask:8;
+		unsigned int stencil_write_mask:8;
+		unsigned int stencil_test_mask:8;
+	} ds1;
+
+	struct {
+		unsigned int pad0:26;
+		unsigned int depth_write_enable:1;
+		unsigned int depth_test_func:3;
+		unsigned int pad1:1;
+		unsigned int depth_test_enable:1;
+	} ds2;
+};
+
+struct gen7_surface_state
+{
+	struct {
+		unsigned int cube_pos_z:1;
+		unsigned int cube_neg_z:1;
+		unsigned int cube_pos_y:1;
+		unsigned int cube_neg_y:1;
+		unsigned int cube_pos_x:1;
+		unsigned int cube_neg_x:1;
+		unsigned int pad2:2;
+		unsigned int render_cache_read_write:1;
+		unsigned int pad1:1;
+		unsigned int surface_array_spacing:1;
+		unsigned int vert_line_stride_ofs:1;
+		unsigned int vert_line_stride:1;
+		unsigned int tile_walk:1;
+		unsigned int tiled_surface:1;
+		unsigned int horizontal_alignment:1;
+		unsigned int vertical_alignment:2;
+		unsigned int surface_format:9;     /**< BRW_SURFACEFORMAT_x */
+		unsigned int pad0:1;
+		unsigned int is_array:1;
+		unsigned int surface_type:3;       /**< BRW_SURFACE_1D/2D/3D/CUBE */
+	} ss0;
+
+	struct {
+		unsigned int base_addr;
+	} ss1;
+
+	struct {
+		unsigned int width:14;
+		unsigned int pad1:2;
+		unsigned int height:14;
+		unsigned int pad0:2;
+	} ss2;
+
+	struct {
+		unsigned int pitch:18;
+		unsigned int pad:3;
+		unsigned int depth:11;
+	} ss3;
+
+	struct {
+		unsigned int multisample_position_palette_index:3;
+		unsigned int num_multisamples:3;
+		unsigned int multisampled_surface_storage_format:1;
+		unsigned int render_target_view_extent:11;
+		unsigned int min_array_elt:11;
+		unsigned int rotation:2;
+		unsigned int pad0:1;
+	} ss4;
+
+	struct {
+		unsigned int mip_count:4;
+		unsigned int min_lod:4;
+		unsigned int pad1:12;
+		unsigned int y_offset:4;
+		unsigned int pad0:1;
+		unsigned int x_offset:7;
+	} ss5;
+
+	struct {
+		unsigned int pad; /* Multisample Control Surface stuff */
+	} ss6;
+
+	struct {
+		unsigned int resource_min_lod:12;
+		unsigned int pad0:16;
+		unsigned int alpha_clear_color:1;
+		unsigned int blue_clear_color:1;
+		unsigned int green_clear_color:1;
+		unsigned int red_clear_color:1;
+	} ss7;
+};
+
+struct gen7_sampler_state
+{
+	struct
+	{
+		unsigned int aniso_algorithm:1;
+		unsigned int lod_bias:13;
+		unsigned int min_filter:3;
+		unsigned int mag_filter:3;
+		unsigned int mip_filter:2;
+		unsigned int base_level:5;
+		unsigned int pad1:1;
+		unsigned int lod_preclamp:1;
+		unsigned int default_color_mode:1;
+		unsigned int pad0:1;
+		unsigned int disable:1;
+	} ss0;
+
+	struct
+	{
+		unsigned int cube_control_mode:1;
+		unsigned int shadow_function:3;
+		unsigned int pad:4;
+		unsigned int max_lod:12;
+		unsigned int min_lod:12;
+	} ss1;
+
+	struct
+	{
+		unsigned int pad:5;
+		unsigned int default_color_pointer:27;
+	} ss2;
+
+	struct
+	{
+		unsigned int r_wrap_mode:3;
+		unsigned int t_wrap_mode:3;
+		unsigned int s_wrap_mode:3;
+		unsigned int pad:1;
+		unsigned int non_normalized_coord:1;
+		unsigned int trilinear_quality:2;
+		unsigned int address_round:6;
+		unsigned int max_aniso:3;
+		unsigned int chroma_key_mode:1;
+		unsigned int chroma_key_index:2;
+		unsigned int chroma_key_enable:1;
+		unsigned int pad0:6;
+	} ss3;
 };
 
 #endif
