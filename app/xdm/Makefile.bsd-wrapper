@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile.bsd-wrapper,v 1.19 2011/11/15 20:53:44 matthieu Exp $
+# $OpenBSD: Makefile.bsd-wrapper,v 1.20 2011/11/30 22:00:28 matthieu Exp $
 .include <bsd.own.mk>
 
 XDMCONFIGDIR=/etc/X11/xdm
@@ -16,9 +16,7 @@ CONFIGURE_ARGS= --enable-privsep \
 	$(DEFAULT_VT) \
 	--disable-ipv6 \
 	--with-authdir=$(XDMCONFIGDIR) \
-	--with-xdmlibdir=$(LIBDIR)/modules \
-        --with-xdmconfigdir=$(XDMCONFIGDIR) \
-        --with-xdmscriptdir=$(XDMCONFIGDIR) \
+	--with-xdmlibdir=$(XDMCONFIGDIR) \
 	--with-pixmapdir=$(PIXMAPDIR) \
 	--with-bw-pixmap=OpenBSD_1bpp.xpm \
 	--with-color-pixmap=OpenBSD_15bpp.xpm
@@ -32,7 +30,7 @@ realinstall:
 		xdmconfigDATA_INSTALL=:
 
 XDMCONFIGFILES= \
-	xdm-config Xresources Xservers Xaccess 
+	xdm-config Xresources Xservers Xaccess
 XDMCONFIGSCRIPTS= \
 	Xsession GiveConsole TakeConsole Xsetup_0 Xstartup Xreset Xwilling
 
