@@ -1,4 +1,4 @@
-# $OpenBSD: 3RDPARTY,v 1.117 2011/11/19 14:18:29 matthieu Exp $
+# $OpenBSD: 3RDPARTY,v 1.118 2011/12/03 14:09:42 matthieu Exp $
 #
 
 Package: 	Freetype
@@ -15,7 +15,7 @@ Archive Site:	http://invisible-island.net/xterm/xterm.html
 
 Package:	Mesa
 Version		7.10.3
-Current Vers:	7.11.1
+Current Vers:	7.11.2
 Maintainer:	Brian Paul
 Archive Site:	http://www.mesa3d.org/
 
