@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.12 2011/11/29 14:57:54 naddy Exp $
+# $OpenBSD: Makefile,v 1.13 2011/12/03 15:36:21 miod Exp $
 
 MESA=	${.CURDIR}/../../../dist/Mesa/src/mesa
 MAPI=	${.CURDIR}/../../../dist/Mesa/src/mapi
@@ -354,8 +354,8 @@ cleandir:	clean
 .if ${MACHINE_ARCH} == alpha
 # remove optimization flags to prevent gcc 4.2.1 ICE
 prog_execute.so: prog_execute.c
-	@echo "${COMPILE.c:N-O*} ${PICFLAG} -DPIC ${.ALLSRC} -o ${.TARGET}"
-	@${COMPILE.c:N-O*} ${PICFLAG} -DPIC ${.ALLSRC} -o ${.TARGET}.o
+	@echo "${COMPILE.c} -fno-tree-ter ${PICFLAG} -DPIC ${.ALLSRC} -o ${.TARGET}"
+	@${COMPILE.c} -fno-tree-ter ${PICFLAG} -DPIC ${.ALLSRC} -o ${.TARGET}.o
 	@${LD} -X -r ${.TARGET}.o -o ${.TARGET}
 	@rm -f ${.TARGET}.o
 .endif
