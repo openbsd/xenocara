@@ -5,6 +5,7 @@
 ./etc/X11/fs
 ./etc/X11/twm
 ./etc/X11/xdm
+./etc/X11/xdm/chooser
 ./etc/X11/xdm/pixmaps
 ./etc/X11/xinit
 ./etc/X11/xsm
@@ -264,7 +265,6 @@
 ./usr/X11R6/lib/libxkbfile.la
 ./usr/X11R6/lib/libxkbui.a
 ./usr/X11R6/lib/libxkbui.la
-./usr/X11R6/lib/modules/chooser
 ./usr/X11R6/lib/xorg
 ./usr/X11R6/man
 ./usr/X11R6/man/man1
