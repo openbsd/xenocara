@@ -48,7 +48,7 @@ from The Open Group.
 # include	<errno.h>
 #elif defined(USE_BSDAUTH)
 # include	<login_cap.h>
-# include	<varargs.h>
+# include	<stdarg.h>
 # include	<bsd_auth.h>
 #elif defined(USESECUREWARE)
 # include       <sys/types.h>
