@@ -1,3 +1,89 @@
+commit 30bff38c7436daad4140fedf867c546bea839b93
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Wed Oct 26 08:54:53 2011 +1000
+
+    Fix duplicate sizeof in copy_classes
+    
+    sizeof(bla * sizeof()) is'nt right.
+    
+    Plus add some () to the next_block call too to emphasise that *nclasses is
+    the multiplicator.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Jeremy Huddleston <jeremyhu@apple.com>
+    (cherry picked from commit 6d6ae8fc8b9620bf864ac7dff8d818573eee3e4f)
+
+commit db739c0770d49e8b47da90f160b99c76be996a18
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Thu Oct 27 10:27:49 2011 +1000
+
+    man: passive grabs return the number of failed modifier combinations
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    (cherry picked from commit 323730f7fa70190d2ea00e62c6964fee524ca430)
+
+commit d21fdd9653b0e38e54692735b5a040a7acf22164
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri Oct 21 08:49:31 2011 +1000
+
+    man: XIGrabButton returns error codes, not status codes
+    
+    Reword slightly that the returned value is the error code for this
+    particular grab.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    (cherry picked from commit 5189df57e18c79327848fb117a8ede59868c8fdb)
+
+commit cb2028ed23d3f23829241de166a14c4ef9494bd5
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri Oct 21 08:07:45 2011 +1000
+
+    man: fix #include for XIGrabButton
+    
+    Reported-by: Matthias Clasen <mclasen@redhat.com>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    (cherry picked from commit 05aaf65b3b6b7dc7268137ce4ee516f08eefb62f)
+
+commit 22e9ace88d57803ecda95db7c9355a614db1902a
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Wed Aug 17 15:20:48 2011 +1000
+
+    Handle unknown device classes.
+    
+    If the server sends an unknown device class in response to an XIQueryDevice
+    call, no memory is allocated for these classes but we still write type
+    and sourceid as well as setting to->classes[i]. The latter causes multiple
+    classes to point to the same memory field.
+    
+    Move the common code of assigning these three into the respective class type
+    handlers so to automatically skip any unknown classes.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    (cherry picked from commit 91f928a70246c26cbee00bf59a8e318e9317142e)
+
+commit b6a431df65a1d98272f3c9742b2bfe2cf185d7a0
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Mon Aug 22 13:55:56 2011 +1000
+
+    man: fix typo in XIQueryDevice man page
+    
+    struct name is XIValuatorClassInfo.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    (cherry picked from commit 14f674296bc23b3cd50f6d302c3064250132c2c1)
+
+commit a15593744048d23e407906e34530beb5a57e3c2c
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri Jun 24 10:09:10 2011 +1000
+
+    man: Fix formatting in XGetFeedbackControl
+    
+    Indent structs to make them more readable, make "Structures" header an
+    actual header.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    (cherry picked from commit 653b45b7cc275a560c1ea213216a908c125e443d)
+
 commit 9fd7b9a9652ecebb8eb533c2a30b9fa7bb186b90
 Author: Peter Hutterer <peter.hutterer@who-t.net>
 Date:   Tue Jun 7 13:32:11 2011 +1000

@@ -2,12 +2,12 @@
 .\"     Title: xigrabenter
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
 .\" Generator: DocBook XSL Stylesheets v1.76.1 <http://docbook.sf.net/>
-.\"      Date: 06/07/2011
+.\"      Date: 12/16/2011
 .\"    Manual: [FIXME: manual]
 .\"    Source: [FIXME: source]
 .\"  Language: English
 .\"
-.TH "XIGRABENTER" "libmansuffix" "06/07/2011" "[FIXME: source]" "[FIXME: manual]"
+.TH "XIGRABENTER" "libmansuffix" "12/16/2011" "[FIXME: source]" "[FIXME: manual]"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -85,7 +85,7 @@ device
 .sp
 .nf
 num_modifiers
-       Number of elements in modifiers or modifiers_return
+       Number of elements in modifiers or modifiers_inout\&.
 .fi
 .sp
 .nf
@@ -282,6 +282,21 @@ have no effect on an active grab\&.
 .nf
 XIUngrabEnter and XIUngrabFocusIn can generate BadDevice,
 BadMatch, BadValue and BadWindow errors\&.
+.fi
+.if n \{\
+.RE
+.\}
+.SH "RETURN VALUE"
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+XIGrabEnter and XIGrabFocusIn return the number of modifier combination
+that could not establish a passive grab\&. The modifiers are returned in
+modifiers_inout, along with the respective error for this modifier
+combination\&. If XIGrabEnter or XIGrabFocusIn return zero, passive grabs
+with all requested modifier combinations were established successfully\&.
 .fi
 .if n \{\
 .RE

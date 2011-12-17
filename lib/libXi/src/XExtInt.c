@@ -98,7 +98,7 @@ extern int _XiGetDevicePresenceNotifyEvent(
     Display *		/* dpy */
 );
 
-int copy_classes(XIDeviceInfo *to, xXIAnyInfo* from, int nclasses);
+int copy_classes(XIDeviceInfo *to, xXIAnyInfo* from, int *nclasses);
 int size_classes(xXIAnyInfo* from, int nclasses);
 
 static XExtensionInfo *xinput_info;
@@ -1449,30 +1449,29 @@ size_classes(xXIAnyInfo* from, int nclasses)
  *             |______________________^
  */
 _X_HIDDEN int
-copy_classes(XIDeviceInfo* to, xXIAnyInfo* from, int nclasses)
+copy_classes(XIDeviceInfo* to, xXIAnyInfo* from, int *nclasses)
 {
     XIAnyClassInfo *any_lib;
     xXIAnyInfo *any_wire;
     void *ptr_lib;
     char *ptr_wire;
     int i, len;
+    int cls_idx = 0;
 
     if (!to->classes)
         return -1;
 
     ptr_wire = (char*)from;
     ptr_lib = to->classes;
-    to->classes = next_block(&ptr_lib, nclasses * sizeof(XIAnyClassInfo*));
+    to->classes = next_block(&ptr_lib, (*nclasses) * sizeof(XIAnyClassInfo*));
+    memset(to->classes, 0, (*nclasses) * sizeof(XIAnyClassInfo*));
     len = 0; /* count wire length */
 
-    for (i = 0; i < nclasses; i++)
+    for (i = 0; i < *nclasses; i++)
     {
         any_lib = (XIAnyClassInfo*)ptr_lib;
         any_wire = (xXIAnyInfo*)ptr_wire;
 
-        to->classes[i] = any_lib;
-        any_lib->type = any_wire->type;
-        any_lib->sourceid = any_wire->sourceid;
         switch(any_wire->type)
         {
             case XIButtonClass:
@@ -1486,6 +1485,8 @@ copy_classes(XIDeviceInfo* to, xXIAnyInfo* from, int nclasses)
                     cls_lib = next_block(&ptr_lib, sizeof(XIButtonClassInfo));
                     cls_wire = (xXIButtonInfo*)any_wire;
 
+                    cls_lib->type = cls_wire->type;
+                    cls_lib->sourceid = cls_wire->sourceid;
                     cls_lib->num_buttons = cls_wire->num_buttons;
                     size = ((((cls_wire->num_buttons + 7)/8) + 3)/4);
                     cls_lib->state.mask_len = size * 4;
@@ -1500,6 +1501,7 @@ copy_classes(XIDeviceInfo* to, xXIAnyInfo* from, int nclasses)
                     for (j = 0; j < cls_lib->num_buttons; j++)
                         cls_lib->labels[j] = *atoms++;
 
+                    to->classes[cls_idx++] = any_lib;
                     break;
                 }
             case XIKeyClass:
@@ -1510,12 +1512,15 @@ copy_classes(XIDeviceInfo* to, xXIAnyInfo* from, int nclasses)
                     cls_lib = next_block(&ptr_lib, sizeof(XIKeyClassInfo));
                     cls_wire = (xXIKeyInfo*)any_wire;
 
+                    cls_lib->type = cls_wire->type;
+                    cls_lib->sourceid = cls_wire->sourceid;
                     cls_lib->num_keycodes = cls_wire->num_keycodes;
                     cls_lib->keycodes = next_block(&ptr_lib,
                             cls_lib->num_keycodes * sizeof(int));
                     memcpy(cls_lib->keycodes, &cls_wire[1],
                             cls_lib->num_keycodes);
 
+                    to->classes[cls_idx++] = any_lib;
                     break;
                 }
             case XIValuatorClass:
@@ -1526,6 +1531,8 @@ copy_classes(XIDeviceInfo* to, xXIAnyInfo* from, int nclasses)
                     cls_lib = next_block(&ptr_lib, sizeof(XIValuatorClassInfo));
                     cls_wire = (xXIValuatorInfo*)any_wire;
 
+                    cls_lib->type = cls_wire->type;
+                    cls_lib->sourceid = cls_wire->sourceid;
                     cls_lib->number = cls_wire->number;
                     cls_lib->label  = cls_wire->label;
                     cls_lib->resolution = cls_wire->resolution;
@@ -1535,12 +1542,16 @@ copy_classes(XIDeviceInfo* to, xXIAnyInfo* from, int nclasses)
                     /* FIXME: fractional parts */
                     cls_lib->mode       = cls_wire->mode;
 
+                    to->classes[cls_idx++] = any_lib;
                 }
                 break;
         }
         len += any_wire->length * 4;
         ptr_wire += any_wire->length * 4;
     }
+
+    /* we may have skipped unknown classes, reset nclasses */
+    *nclasses = cls_idx;
     return len;
 }
 
@@ -1551,6 +1562,7 @@ wireToDeviceChangedEvent(xXIDeviceChangedEvent *in, XGenericEventCookie *cookie)
     XIDeviceChangedEvent *out;
     XIDeviceInfo info;
     int len;
+    int nclasses = in->num_classes;
 
     len = size_classes((xXIAnyInfo*)&in[1], in->num_classes);
 
@@ -1565,13 +1577,13 @@ wireToDeviceChangedEvent(xXIDeviceChangedEvent *in, XGenericEventCookie *cookie)
     out->deviceid = in->deviceid;
     out->sourceid = in->sourceid;
     out->reason = in->reason;
-    out->num_classes = in->num_classes;
 
     out->classes = (XIAnyClassInfo**)&out[1];
 
     info.classes = out->classes;
 
-    copy_classes(&info, (xXIAnyInfo*)&in[1], in->num_classes);
+    copy_classes(&info, (xXIAnyInfo*)&in[1], &nclasses);
+    out->num_classes = nclasses;
 
     return 1;
 }

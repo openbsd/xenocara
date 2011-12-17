@@ -175,7 +175,7 @@ DESCRIPTION
                    double      value;
                    int         resolution;
                    int         mode;
-               } XIValuatorInfo;
+               } XIValuatorClassInfo;
 
    The number field specifies the number of the axis on the
    physical device.

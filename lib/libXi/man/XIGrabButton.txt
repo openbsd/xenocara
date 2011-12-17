@@ -10,7 +10,7 @@ NAME
 SYNOPSIS
 --------
 
-   #include <X11/extensions/XInput.h>
+   #include <X11/extensions/XInput2.h>
 
    int XIGrabButton( Display *display,
                      int deviceid,
@@ -64,7 +64,7 @@ SYNOPSIS
           or XIAnyKeycode.
 
    num_modifiers
-          Number of elements in modifiers or modifiers_return
+          Number of elements in modifiers or modifiers_inout.
 
    modifiers
           Specifies the set of latched and base modifiers or
@@ -75,7 +75,7 @@ SYNOPSIS
    modifiers_inout
           Specifies the set of latched and base modifiers or
           XIAnyModifier to grab. Returns the modifiers that could
-          not be grabbed and their status code.
+          not be grabbed and their error code.
 
    grab_window
           Specifies the grab window.
@@ -160,7 +160,7 @@ DESCRIPTION
    If one or more modifier combinations could not be grabbed,
    XIGrabButton and XIGrabKeycode return the number of failed
    combinations and modifiers_inout contains the failed combinations
-   and their respective status codes.
+   and their respective error codes.
 
    XIGrabButton and XIGrabKeycode can generate BadClass, BadDevice,
    BadMatch, BadValue, and BadWindow errors.
@@ -177,6 +177,14 @@ DESCRIPTION
 
    XIUngrabButton and XIUngrabKeycode can generate BadDevice,
    BadMatch, BadValue and BadWindow errors.
+
+RETURN VALUE
+------------
+   XIGrabButton and XIGrabKeycode return the number of modifier combination
+   that could not establish a passive grab. The modifiers are returned in
+   modifiers_inout, along with the respective error for this modifier
+   combination. If XIGrabButton or XIGrabKeycode return zero, passive grabs
+   with all requested modifier combinations were established successfully.
 
 DIAGNOSTICS
 -----------

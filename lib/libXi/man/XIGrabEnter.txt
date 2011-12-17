@@ -51,7 +51,7 @@ SYNOPSIS
           Specifies the device that is to be grabbed or released
 
    num_modifiers
-          Number of elements in modifiers or modifiers_return
+          Number of elements in modifiers or modifiers_inout.
 
    modifiers
           Specifies the set of latched and base modifiers or
@@ -151,6 +151,14 @@ DESCRIPTION
 
    XIUngrabEnter and XIUngrabFocusIn can generate BadDevice,
    BadMatch, BadValue and BadWindow errors.
+
+RETURN VALUE
+------------
+   XIGrabEnter and XIGrabFocusIn return the number of modifier combination
+   that could not establish a passive grab. The modifiers are returned in
+   modifiers_inout, along with the respective error for this modifier
+   combination. If XIGrabEnter or XIGrabFocusIn return zero, passive grabs
+   with all requested modifier combinations were established successfully.
 
 DIAGNOSTICS
 -----------

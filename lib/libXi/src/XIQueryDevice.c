@@ -29,7 +29,7 @@
 #include <X11/extensions/extutil.h>
 #include "XIint.h"
 
-extern int copy_classes(XIDeviceInfo* to, xXIAnyInfo* from, int nclasses);
+extern int copy_classes(XIDeviceInfo* to, xXIAnyInfo* from, int *nclasses);
 extern int size_classes(xXIAnyInfo* from, int nclasses);
 
 XIDeviceInfo*
@@ -87,7 +87,7 @@ XIQueryDevice(Display *dpy, int deviceid, int *ndevices_return)
         ptr += ((wire->name_len + 3)/4) * 4;
 
         lib->classes = Xmalloc(size_classes((xXIAnyInfo*)ptr, lib->num_classes));
-        ptr += copy_classes(lib, (xXIAnyInfo*)ptr, lib->num_classes);
+        ptr += copy_classes(lib, (xXIAnyInfo*)ptr, &lib->num_classes);
     }
 
     Xfree(buf);

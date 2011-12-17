@@ -2,12 +2,12 @@
 .\"     Title: xgetfeedbackcontrol
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
 .\" Generator: DocBook XSL Stylesheets v1.76.1 <http://docbook.sf.net/>
-.\"      Date: 06/02/2011
+.\"      Date: 12/16/2011
 .\"    Manual: [FIXME: manual]
 .\"    Source: [FIXME: source]
 .\"  Language: English
 .\"
-.TH "XGETFEEDBACKCONTROL" "libmansuffix" "06/02/2011" "[FIXME: source]" "[FIXME: manual]"
+.TH "XGETFEEDBACKCONTROL" "libmansuffix" "12/16/2011" "[FIXME: source]" "[FIXME: manual]"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -162,8 +162,7 @@ BadValue error\&.
 .if n \{\
 .RE
 .\}
-.sp
-Structures
+.SS "Structures"
 .sp
 .if n \{\
 .RS 4
@@ -184,11 +183,10 @@ feedback:
 .\}
 .nf
 typedef struct {
-XID class;
-int length;
-XID id;
-} XFeedbackState,
-XFeedbackControl;
+    XID class;
+    int length;
+    XID id;
+} XFeedbackState, XFeedbackControl;
 .fi
 .if n \{\
 .RE
@@ -210,16 +208,16 @@ returned for feedbacks equivalent to those on the X keyboard\&.
 .\}
 .nf
 typedef struct {
-XID class;
-int length;
-XID id;
-int click;
-int percent;
-int pitch;
-int duration;
-int led_mask;
-int global_auto_repeat;
-char auto_repeats[32];
+    XID class;
+    int length;
+    XID id;
+    int click;
+    int percent;
+    int pitch;
+    int duration;
+    int led_mask;
+    int global_auto_repeat;
+    char auto_repeats[32];
 } XKbdFeedbackState;
 .fi
 .if n \{\
@@ -243,12 +241,12 @@ pointer\&.
 .\}
 .nf
 typedef struct {
-XID class;
-int length;
-XID id;
-int accelNum;
-int accelDenom;
-int threshold;
+    XID class;
+    int length;
+    XID id;
+    int accelNum;
+    int accelDenom;
+    int threshold;
 } XPtrFeedbackState;
 .fi
 .if n \{\
@@ -271,12 +269,12 @@ returned for integer feedbacks\&.
 .\}
 .nf
 typedef struct {
-XID class;
-int length;
-XID id;
-int resolution;
-int minVal;
-int maxVal;
+    XID class;
+    int length;
+    XID id;
+    int resolution;
+    int minVal;
+    int maxVal;
 } XIntegerFeedbackState;
 .fi
 .if n \{\
@@ -299,12 +297,12 @@ are returned for string feedbacks\&.
 .\}
 .nf
 typedef struct {
-XID class;
-int length;
-XID id;
-int max_symbols;
-int num_syms_supported;
-KeySym *syms_supported;
+    XID class;
+    int length;
+    XID id;
+    int max_symbols;
+    int num_syms_supported;
+    KeySym *syms_supported;
 } XStringFeedbackState;
 .fi
 .if n \{\
@@ -327,12 +325,12 @@ are returned for bell feedbacks\&.
 .\}
 .nf
 typedef struct {
-XID class;
-int length;
-XID id;
-int percent;
-int pitch;
-int duration;
+    XID class;
+    int length;
+    XID id;
+    int percent;
+    int pitch;
+    int duration;
 } XBellFeedbackState;
 .fi
 .if n \{\
@@ -354,10 +352,11 @@ returned for LED feedbacks\&.
 .RS 4
 .\}
 .nf
-typedef struct { XID class;
-int length;
-XID id;
-int led_values;
+typedef struct {
+    XID class;
+    int length;
+    XID id;
+    int led_values;
 } XLedFeedbackState;
 .fi
 .if n \{\
@@ -380,12 +379,12 @@ can be controlled for pointer feedbacks\&.
 .\}
 .nf
 typedef struct {
-XID class;
-int length;
-XID id;
-int accelNum;
-int accelDenom;
-int threshold;
+    XID class;
+    int length;
+    XID id;
+    int accelNum;
+    int accelDenom;
+    int threshold;
 } XPtrFeedbackControl;
 .fi
 .if n \{\
@@ -408,17 +407,17 @@ can be controlled for keyboard feedbacks\&.
 .\}
 .nf
 typedef struct {
-XID class;
-int length;
-XID id;
-int click;
-int percent;
-int pitch;
-int duration;
-int led_mask;
-int led_value;
-int key;
-int auto_repeat_mode;
+    XID class;
+    int length;
+    XID id;
+    int click;
+    int percent;
+    int pitch;
+    int duration;
+    int led_mask;
+    int led_value;
+    int key;
+    int auto_repeat_mode;
 } XKbdFeedbackControl;
 .fi
 .if n \{\
@@ -441,11 +440,11 @@ that can be controlled for string feedbacks\&.
 .\}
 .nf
 typedef struct {
-XID class;
-int length;
-XID id;
-int num_keysyms;
-KeySym  *syms_to_display;
+    XID class;
+    int length;
+    XID id;
+    int num_keysyms;
+    KeySym  *syms_to_display;
 } XStringFeedbackControl;
 .fi
 .if n \{\
@@ -468,10 +467,10 @@ that can be controlled for integer feedbacks\&.
 .\}
 .nf
 typedef struct {
-XID class;
-int length;
-XID id;
-int int_to_display;
+    XID class;
+    int length;
+    XID id;
+    int int_to_display;
 } XIntegerFeedbackControl;
 .fi
 .if n \{\
@@ -494,12 +493,12 @@ can be controlled for bell feedbacks\&.
 .\}
 .nf
 typedef struct {
-XID     class;
-int     length;
-XID     id;
-int     percent;
-int     pitch;
-int     duration;
+    XID     class;
+    int     length;
+    XID     id;
+    int     percent;
+    int     pitch;
+    int     duration;
 } XBellFeedbackControl;
 .fi
 .if n \{\
@@ -522,11 +521,11 @@ can be controlled for LED feedbacks\&.
 .\}
 .nf
 typedef struct {
-XID     class;
-int     length;
-XID     id;
-int     led_mask;
-int     led_values;
+    XID     class;
+    int     length;
+    XID     id;
+    int     led_mask;
+    int     led_values;
 } XLedFeedbackControl;
 .fi
 .if n \{\

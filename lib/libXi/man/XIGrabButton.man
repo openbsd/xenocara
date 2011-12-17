@@ -2,12 +2,12 @@
 .\"     Title: xigrabbutton
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
 .\" Generator: DocBook XSL Stylesheets v1.76.1 <http://docbook.sf.net/>
-.\"      Date: 06/07/2011
+.\"      Date: 12/16/2011
 .\"    Manual: [FIXME: manual]
 .\"    Source: [FIXME: source]
 .\"  Language: English
 .\"
-.TH "XIGRABBUTTON" "libmansuffix" "06/07/2011" "[FIXME: source]" "[FIXME: manual]"
+.TH "XIGRABBUTTON" "libmansuffix" "12/16/2011" "[FIXME: source]" "[FIXME: manual]"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -32,7 +32,7 @@ XIGrabButton, XIUngrabButton, XIGrabKeycode, XIUngrabKeycode \- grab/ungrab butt
 .SH "SYNOPSIS"
 .sp
 .nf
-#include <X11/extensions/XInput\&.h>
+#include <X11/extensions/XInput2\&.h>
 .fi
 .sp
 .nf
@@ -104,7 +104,7 @@ keycode
 .sp
 .nf
 num_modifiers
-       Number of elements in modifiers or modifiers_return
+       Number of elements in modifiers or modifiers_inout\&.
 .fi
 .sp
 .nf
@@ -119,7 +119,7 @@ modifiers
 modifiers_inout
        Specifies the set of latched and base modifiers or
        XIAnyModifier to grab\&. Returns the modifiers that could
-       not be grabbed and their status code\&.
+       not be grabbed and their error code\&.
 .fi
 .sp
 .nf
@@ -265,7 +265,7 @@ On success, XIGrabButton and XIGrabKeycode return 0;
 If one or more modifier combinations could not be grabbed,
 XIGrabButton and XIGrabKeycode return the number of failed
 combinations and modifiers_inout contains the failed combinations
-and their respective status codes\&.
+and their respective error codes\&.
 .fi
 .if n \{\
 .RE
@@ -306,6 +306,21 @@ grab\&.
 .nf
 XIUngrabButton and XIUngrabKeycode can generate BadDevice,
 BadMatch, BadValue and BadWindow errors\&.
+.fi
+.if n \{\
+.RE
+.\}
+.SH "RETURN VALUE"
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+XIGrabButton and XIGrabKeycode return the number of modifier combination
+that could not establish a passive grab\&. The modifiers are returned in
+modifiers_inout, along with the respective error for this modifier
+combination\&. If XIGrabButton or XIGrabKeycode return zero, passive grabs
+with all requested modifier combinations were established successfully\&.
 .fi
 .if n \{\
 .RE

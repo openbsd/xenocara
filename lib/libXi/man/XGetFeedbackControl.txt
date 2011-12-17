@@ -81,6 +81,7 @@ DESCRIPTION
    BadValue error.
 
 Structures
+~~~~~~~~~~
 
    Each class of feedback is described by a structure specific to
    that class. These structures are defined in the file XInput.h.
@@ -88,17 +89,16 @@ Structures
    contain three fields that are at the beginning of each class of
    feedback:
 
-                typedef struct {
+            typedef struct {
                 XID class;
                 int length;
                 XID id;
-                } XFeedbackState,
-                XFeedbackControl;
+            } XFeedbackState, XFeedbackControl;
 
    The XKbdFeedbackState structure defines the attributes that are
    returned for feedbacks equivalent to those on the X keyboard.
 
-                typedef struct {
+            typedef struct {
                 XID class;
                 int length;
                 XID id;
@@ -109,82 +109,83 @@ Structures
                 int led_mask;
                 int global_auto_repeat;
                 char auto_repeats[32];
-                } XKbdFeedbackState;
+            } XKbdFeedbackState;
 
    The XPtrFeedbackState structure defines the attributes that are
    returned for feedbacks equivalent to those on the the X
    pointer.
 
-                typedef struct {
+            typedef struct {
                 XID class;
                 int length;
                 XID id;
                 int accelNum;
                 int accelDenom;
                 int threshold;
-                } XPtrFeedbackState;
+            } XPtrFeedbackState;
 
    The XIntegerFeedbackState structure defines attributes that are
    returned for integer feedbacks.
 
-                typedef struct {
+            typedef struct {
                 XID class;
                 int length;
                 XID id;
                 int resolution;
                 int minVal;
                 int maxVal;
-                } XIntegerFeedbackState;
+            } XIntegerFeedbackState;
 
    The XStringFeedbackState structure defines the attributes that
    are returned for string feedbacks.
 
-                typedef struct {
+            typedef struct {
                 XID class;
                 int length;
                 XID id;
                 int max_symbols;
                 int num_syms_supported;
                 KeySym *syms_supported;
-                } XStringFeedbackState;
+            } XStringFeedbackState;
 
    The XBellFeedbackState structure defines the attributes that
    are returned for bell feedbacks.
 
-                typedef struct {
+            typedef struct {
                 XID class;
                 int length;
                 XID id;
                 int percent;
                 int pitch;
                 int duration;
-                } XBellFeedbackState;
+            } XBellFeedbackState;
 
    The XLedFeedbackState structure defines the attributes that are
    returned for LED feedbacks.
 
-                typedef struct { XID class;
+            typedef struct {
+                XID class;
                 int length;
                 XID id;
                 int led_values;
-                } XLedFeedbackState;
+            } XLedFeedbackState;
 
    The XPrtFeedbackControl structure defines the attributes that
    can be controlled for pointer feedbacks.
 
-                typedef struct {
+            typedef struct {
                 XID class;
                 int length;
                 XID id;
                 int accelNum;
                 int accelDenom;
                 int threshold;
-                } XPtrFeedbackControl;
+            } XPtrFeedbackControl;
 
    The XKbdFeedbackControl structure defines the attributes that
    can be controlled for keyboard feedbacks.
 
-                typedef struct {
+            typedef struct {
                 XID class;
                 int length;
                 XID id;
@@ -196,51 +197,51 @@ Structures
                 int led_value;
                 int key;
                 int auto_repeat_mode;
-                } XKbdFeedbackControl;
+            } XKbdFeedbackControl;
 
    The XStringFeedbackControl structure defines the attributes
    that can be controlled for string feedbacks.
 
-                typedef struct {
+            typedef struct {
                 XID class;
                 int length;
                 XID id;
                 int num_keysyms;
                 KeySym  *syms_to_display;
-                } XStringFeedbackControl;
+            } XStringFeedbackControl;
 
    The XIntegerFeedbackControl structure defines the attributes
    that can be controlled for integer feedbacks.
 
-                typedef struct {
+            typedef struct {
                 XID class;
                 int length;
                 XID id;
                 int int_to_display;
-                } XIntegerFeedbackControl;
+            } XIntegerFeedbackControl;
 
    The XBellFeedbackControl structure defines the attributes that
    can be controlled for bell feedbacks.
 
-                typedef struct {
+            typedef struct {
                 XID     class;
                 int     length;
                 XID     id;
                 int     percent;
                 int     pitch;
                 int     duration;
-                } XBellFeedbackControl;
+            } XBellFeedbackControl;
 
    The XLedFeedbackControl structure defines the attributes that
    can be controlled for LED feedbacks.
 
-                typedef struct {
+            typedef struct {
                 XID     class;
                 int     length;
                 XID     id;
                 int     led_mask;
                 int     led_values;
-                } XLedFeedbackControl;
+            } XLedFeedbackControl;
 
 DIAGNOSTICS
 -----------
