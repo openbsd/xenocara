@@ -29,6 +29,7 @@
 #include <dev/wscons/wsksymdef.h>
 
 #include <sys/ioctl.h>
+#include <ctype.h>
 #include <errno.h>
 #include <string.h>
 #include <unistd.h>
@@ -121,7 +122,7 @@ wscons_add_keyboard(void)
 
 	LogMessage(X_INFO, "config/wscons: checking input device %s\n",
 	    WSCONS_KBD_DEVICE);
-	add_option(&options, "name", WSCONS_KBD_DEVICE);
+	add_option(&options, "name", "Keyboard");
 	add_option(&options, "driver", "kbd");
 
 	config_info = Xprintf("wscons:%s", WSCONS_KBD_DEVICE);
@@ -182,12 +183,13 @@ unwind:
 }
 
 static void
-wscons_add_pointer(const char *path, const char *driver, int flags)
+wscons_add_pointer(const char *path, const char *driver, int flags, int index)
 {
 	InputAttributes attrs = {};
 	DeviceIntPtr dev = NULL;
 	InputOption *options = NULL, *tmpo;
 	char *config_info = NULL;
+	char *name = NULL;
 	int rc;
 
 	config_info = Xprintf("wscons:%s", path);
@@ -197,11 +199,21 @@ wscons_add_pointer(const char *path, const char *driver, int flags)
 	if (!options)
 		return;
 
+	if (index >= 0)
+		name = Xprintf("%s%d", driver, index);
+	else
+		name = strdup("mouse");
+	if (!name) {
+		free(options);
+		free(config_info);
+		return;
+	}
+	name[0] = toupper(name[0]);
 	options->key = strdup("_source");
 	options->value = strdup("server/wscons");
 	if (!options->key || !options->value)
 		return;
-	add_option(&options, "name", strdup(path));
+	add_option(&options, "name", name);
 	add_option(&options, "driver", strdup(driver));
 	add_option(&options, "device", strdup(path));
 	LogMessage(X_INFO, "config/wscons: checking input device %s\n", path);
@@ -251,17 +263,17 @@ wscons_add_pointers(void)
 		case WSMOUSE_TYPE_SYNAPTICS:
 		case WSMOUSE_TYPE_ALPS:
 			wscons_add_pointer(devname, "synaptics",
-			    ATTR_TOUCHPAD);
+					   ATTR_TOUCHPAD, i);
 			break;
 		case WSMOUSE_TYPE_TPANEL:
-			wscons_add_pointer(devname, "ws", ATTR_TOUCHSCREEN);
+			wscons_add_pointer(devname, "ws", ATTR_TOUCHSCREEN, i);
 			break;
 		default:
 			break;
 		}
 	}
 	/* Add a default entry catching all other mux elements as "mouse" */
-	wscons_add_pointer(WSCONS_MOUSE_PREFIX, "mouse", ATTR_POINTER);
+	wscons_add_pointer(WSCONS_MOUSE_PREFIX, "ws", ATTR_POINTER, -1);
 }
 
 int
