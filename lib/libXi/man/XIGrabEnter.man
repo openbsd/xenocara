@@ -2,12 +2,12 @@
 .\"     Title: xigrabenter
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
 .\" Generator: DocBook XSL Stylesheets v1.76.1 <http://docbook.sf.net/>
-.\"      Date: 12/16/2011
+.\"      Date: 12/20/2011
 .\"    Manual: [FIXME: manual]
 .\"    Source: [FIXME: source]
 .\"  Language: English
 .\"
-.TH "XIGRABENTER" "libmansuffix" "12/16/2011" "[FIXME: source]" "[FIXME: manual]"
+.TH "XIGRABENTER" "libmansuffix" "12/20/2011" "[FIXME: source]" "[FIXME: manual]"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------

@@ -268,7 +268,7 @@ static XExtensionVersion versions[] = { {XI_Absent, 0, 0},
  XI_Add_DevicePresenceNotify_Minor},
 {XI_Present, XI_Add_DeviceProperties_Major,
  XI_Add_DeviceProperties_Minor},
-{XI_Present, XI_2_Major, XI_2_Minor}
+{XI_Present, 2, 0}
 };
 
 /***********************************************************************

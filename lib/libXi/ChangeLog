@@ -1,3 +1,33 @@
+commit d58150cf5cf11c0449fc9e9f3c7fc4d29764f6e5
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Dec 20 10:18:28 2011 +1000
+
+    libXi 1.4.5
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 7a30bc136fb6c1561f5cd91606bca01fb877f167
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri Aug 12 14:24:26 2011 +1000
+
+    Don't use the protocol defines for 2.0 versioning.
+    
+    Otherwise we run into the old problem again: recompiling libXi against
+    newer inputproto headers will appear to change the version support,
+    potentially causing errors or other misbehaviours.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Jeremy Huddleston <jeremyhu@apple.com>
+    (cherry picked from commit ca73cd3b7630e7eb7d26c61c4af10d35dbce5465)
+
+commit e423bfa6045a2b2eeb02080ae39dbee44e062bfa
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri Dec 16 07:43:45 2011 +1000
+
+    libXi 1.4.4
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
 commit 30bff38c7436daad4140fedf867c546bea839b93
 Author: Peter Hutterer <peter.hutterer@who-t.net>
 Date:   Wed Oct 26 08:54:53 2011 +1000
