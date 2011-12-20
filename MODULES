@@ -1,4 +1,4 @@
-# $OpenBSD: MODULES,v 1.188 2011/12/19 07:19:32 matthieu Exp $
+# $OpenBSD: MODULES,v 1.189 2011/12/20 20:18:45 matthieu Exp $
 #
 # X.Org maintained modules
 #
@@ -189,7 +189,7 @@ lib/libXfixes			5.0	7.6+
 lib/libXfont			1.4.4	7.6+
 lib/libXfontcache		1.0.5	7.5
 lib/libXft			2.2.0	7.6
-lib/libXi			1.4.4	7.6+
+lib/libXi			1.4.5	7.6+
 lib/libXinerama			1.1.1	7.6
 lib/libXmu			1.1.0	7.6
 lib/libXpm			3.5.9	7.6
