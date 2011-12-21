@@ -138,7 +138,7 @@ i830_hdmi_restore(xf86OutputPtr output)
 }
 
 static xf86OutputStatus
-igdng_hdmi_detect(xf86OutputPtr output)
+ironlake_hdmi_detect(xf86OutputPtr output)
 {
     DisplayModePtr modes;
     xf86OutputStatus status;
@@ -172,8 +172,8 @@ i830_hdmi_detect(xf86OutputPtr output)
 
     dev_priv->has_hdmi_sink = FALSE;
 
-    if (IS_IGDNG(intel))
-	return igdng_hdmi_detect(output);
+    if (HAS_PCH_SPLIT(intel))
+	return ironlake_hdmi_detect(output);
 
     /* For G4X desktop chip, PEG_BAND_GAP_DATA 3:0 must first be written 0xd.
      * Failure to do so will result in spurious interrupts being

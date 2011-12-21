@@ -3210,6 +3210,24 @@
 #define INTEL_GMCH_GMS_STOLEN_224M		(0xc << 4)
 #define INTEL_GMCH_GMS_STOLEN_352M		(0xd << 4)
 
+#define SNB_GMCH_CTRL	0x50
+#define SNB_GMCH_GMS_STOLEN_MASK	0xF8
+#define SNB_GMCH_GMS_STOLEN_32M		(1 << 3)
+#define SNB_GMCH_GMS_STOLEN_64M		(2 << 3)
+#define SNB_GMCH_GMS_STOLEN_96M		(3 << 3)
+#define SNB_GMCH_GMS_STOLEN_128M	(4 << 3)
+#define SNB_GMCH_GMS_STOLEN_160M	(5 << 3)
+#define SNB_GMCH_GMS_STOLEN_192M	(6 << 3)
+#define SNB_GMCH_GMS_STOLEN_224M	(7 << 3)
+#define SNB_GMCH_GMS_STOLEN_256M	(8 << 3)
+#define SNB_GMCH_GMS_STOLEN_288M	(9 << 3)
+#define SNB_GMCH_GMS_STOLEN_320M	(0xa << 3)
+#define SNB_GMCH_GMS_STOLEN_352M	(0xb << 3)
+#define SNB_GMCH_GMS_STOLEN_384M	(0xc << 3)
+#define SNB_GMCH_GMS_STOLEN_416M	(0xd << 3)
+#define SNB_GMCH_GMS_STOLEN_448M	(0xe << 3)
+#define SNB_GMCH_GMS_STOLEN_480M	(0xf << 3)
+#define SNB_GMCH_GMS_STOLEN_512M	(0x10 << 3)
 
 #define I85X_CAPID			0x44
 #define I85X_VARIANT_MASK			0x7
@@ -3773,6 +3791,14 @@ typedef enum {
 #define DISPLAY_PORT_PLL_BIOS_1		0x46010
 #define DISPLAY_PORT_PLL_BIOS_2		0x46014
 
+#define PCH_DSPCLK_GATE_D      0x42020
+#define DPFDUNIT_CLOCK_GATE_DISABLE           (1 << 7)
+#define DPARBUNIT_CLOCK_GATE_DISABLE          (1 << 5)
+
+#define PCH_3DCGDIS0           0x46020
+#define MARIUNIT_CLOCK_GATE_DISABLE           (1 << 18)
+#define SVSMUNIT_CLOCK_GATE_DISABLE           (1 << 1)
+
 #define FDI_PLL_FREQ_CTL	0x46030
 #define  FDI_PLL_FREQ_CHANGE_REQUEST	(1<<24)
 #define  FDI_PLL_FREQ_LOCK_LIMIT_MASK	0xfff00
@@ -3900,6 +3926,11 @@ typedef enum {
 #define SDE_PORTC_HOTPLUG	(1 << 9)
 #define SDE_PORTB_HOTPLUG	(1 << 8)
 #define SDE_SDVOB_HOTPLUG	(1 << 6)
+/* CPT */
+#define SDE_CRT_HOTPLUG_CPT    (1 << 19)
+#define SDE_PORTD_HOTPLUG_CPT  (1 << 23)
+#define SDE_PORTC_HOTPLUG_CPT  (1 << 22)
+#define SDE_PORTB_HOTPLUG_CPT  (1 << 21)
 
 #define SDEISR	0xc4000
 #define SDEIMR	0xc4004
@@ -3989,6 +4020,17 @@ typedef enum {
 #define PCH_SSC4_PARMS		0xc6210
 #define PCH_SSC4_AUX_PARMS	0xc6214
 
+#define PCH_DPLL_SEL            0xc7000
+#define  TRANSA_DPLL_ENABLE     (1<<3)
+#define  TRANSA_DPLLB_SEL       (1<<0)
+#define  TRANSA_DPLLA_SEL       0
+#define  TRANSB_DPLL_ENABLE     (1<<7)
+#define  TRANSB_DPLLB_SEL       (1<<4)
+#define  TRANSB_DPLLA_SEL       (0)
+#define  TRANSC_DPLL_ENABLE     (1<<11)
+#define  TRANSC_DPLLB_SEL       (1<<8)
+#define  TRANSC_DPLLA_SEL       (0)
+
 /* transcoder */
 
 #define TRANS_HTOTAL_A		0xe0000
@@ -4054,6 +4096,12 @@ typedef enum {
 #define  TRANS_6BPC		(2<<5)
 #define  TRANS_12BPC		(3<<5)
 
+/* CPT */
+#define  PORT_TRANS_A_SEL_CPT   0
+#define  PORT_TRANS_B_SEL_CPT   (1<<29)
+#define  PORT_TRANS_C_SEL_CPT   (2<<29)
+#define  PORT_TRANS_SEL_MASK    (3<<29)
+
 #define FDI_RXA_CHICKEN		0xc200c
 #define FDI_RXB_CHICKEN		0xc2010
 #define  FDI_RX_PHASE_SYNC_POINTER_ENABLE	(1)
@@ -4075,6 +4123,20 @@ typedef enum {
 #define  FDI_LINK_TRAIN_PRE_EMPHASIS_1_5X (1<<22)
 #define  FDI_LINK_TRAIN_PRE_EMPHASIS_2X	  (2<<22)
 #define  FDI_LINK_TRAIN_PRE_EMPHASIS_3X	  (3<<22)
+/* ILK always use 400mV 0dB for voltage swing and pre-emphasis level.
+   SNB has different settings. */
+
+/* SNB A-stepping */
+#define  FDI_LINK_TRAIN_400MV_0DB_SNB_A         (0x38<<22)
+#define  FDI_LINK_TRAIN_400MV_6DB_SNB_A         (0x02<<22)
+#define  FDI_LINK_TRAIN_600MV_3_5DB_SNB_A       (0x01<<22)
+#define  FDI_LINK_TRAIN_800MV_0DB_SNB_A         (0x0<<22)
+/* SNB B-stepping */
+#define  FDI_LINK_TRAIN_400MV_0DB_SNB_B         (0x0<<22)
+#define  FDI_LINK_TRAIN_400MV_6DB_SNB_B         (0x3a<<22)
+#define  FDI_LINK_TRAIN_600MV_3_5DB_SNB_B       (0x39<<22)
+#define  FDI_LINK_TRAIN_800MV_0DB_SNB_B         (0x38<<22)
+#define  FDI_LINK_TRAIN_VOL_EMP_MASK            (0x3f<<22)
 #define  FDI_DP_PORT_WIDTH_X1		(0<<19)
 #define  FDI_DP_PORT_WIDTH_X2		(1<<19)
 #define  FDI_DP_PORT_WIDTH_X3		(2<<19)
@@ -4109,6 +4171,13 @@ typedef enum {
 #define  FDI_RX_ENHANCE_FRAME_ENABLE	(1<<6)
 #define  FDI_SEL_RAWCLK			(0<<4)
 #define  FDI_SEL_PCDCLK			(1<<4)
+/* CPT */
+#define  FDI_AUTO_TRAINING                      (1<<10)
+#define  FDI_LINK_TRAIN_PATTERN_1_CPT           (0<<8)
+#define  FDI_LINK_TRAIN_PATTERN_2_CPT           (1<<8)
+#define  FDI_LINK_TRAIN_PATTERN_IDLE_CPT        (2<<8)
+#define  FDI_LINK_TRAIN_NORMAL_CPT              (3<<8)
+#define  FDI_LINK_TRAIN_PATTERN_MASK_CPT        (3<<8)
 
 #define FDI_RXA_MISC		0xf0010
 #define FDI_RXB_MISC		0xf1010

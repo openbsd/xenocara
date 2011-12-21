@@ -141,10 +141,6 @@ i830_set_lvds_backlight_method(xf86OutputPtr output)
 
     if (i830_kernel_backlight_available(output)) {
 	    method = BCM_KERNEL;
-#if 0
-    } else if (IS_IGDNG(intel)) {
-	method = BCM_IRONLAKE_NULL;
-#endif
     } else if (IS_I965GM(intel) || IS_GM45(intel)) {
 	blc_pwm_ctl2 = INREG(BLC_PWM_CTL2);
 	if (blc_pwm_ctl2 & BLM_LEGACY_MODE2)
@@ -168,7 +164,7 @@ i830_lvds_set_backlight_native(xf86OutputPtr output, int level)
     intel_screen_private *intel = intel_get_screen_private(scrn);
     uint32_t blc_pwm_ctl, reg;
 
-    if (IS_IGDNG(intel))
+    if (HAS_PCH_SPLIT(intel))
       reg = BLC_PWM_CPU_CTL;
     else
       reg = BLC_PWM_CTL;
@@ -185,7 +181,7 @@ i830_lvds_get_backlight_native(xf86OutputPtr output)
     intel_screen_private *intel = intel_get_screen_private(scrn);
     uint32_t blc_pwm_ctl, reg;
 
-    if (IS_IGDNG(intel))
+    if (HAS_PCH_SPLIT(intel))
       reg = BLC_PWM_CPU_CTL;
     else
       reg = BLC_PWM_CTL;
@@ -203,7 +199,7 @@ i830_lvds_get_backlight_max_native(xf86OutputPtr output)
     uint32_t pwm_ctl;
     int val, reg;
 
-    if (IS_IGDNG(intel))
+    if (HAS_PCH_SPLIT(intel))
       reg = BLC_PWM_PCH_CTL2;
     else
       reg = BLC_PWM_CTL;
@@ -518,7 +514,7 @@ i830SetLVDSPanelPower(xf86OutputPtr output, Bool on)
     intel_screen_private    *intel = intel_get_screen_private(scrn);
     uint32_t		    pp_status, ctl_reg, status_reg, lvds_reg;
 
-    if (IS_IGDNG(intel)) {
+    if (HAS_PCH_SPLIT(intel)) {
 	ctl_reg = PCH_PP_CONTROL;
 	status_reg = PCH_PP_STATUS;
 	lvds_reg = PCH_LVDS;
@@ -583,7 +579,7 @@ i830_lvds_save (xf86OutputPtr output)
    intel_screen_private    *intel = intel_get_screen_private(scrn);
    uint32_t pp_on_reg, pp_off_reg, pp_ctl_reg, pp_div_reg, pwm_ctl_reg;
 
-    if (IS_IGDNG(intel)) {
+    if (HAS_PCH_SPLIT(intel)) {
 	pp_on_reg = PCH_PP_ON_DELAYS;
 	pp_off_reg = PCH_PP_OFF_DELAYS;
 	pp_ctl_reg = PCH_PP_CONTROL;
@@ -616,7 +612,7 @@ i830_lvds_restore(xf86OutputPtr output)
     uint32_t pp_on_reg, pp_off_reg, pp_ctl_reg, pp_div_reg;
     uint32_t pwm_ctl_reg;
 
-    if (IS_IGDNG(intel)) {
+    if (HAS_PCH_SPLIT(intel)) {
 	pp_on_reg = PCH_PP_ON_DELAYS;
 	pp_off_reg = PCH_PP_OFF_DELAYS;
 	pp_ctl_reg = PCH_PP_CONTROL;
@@ -693,7 +689,7 @@ i830_lvds_mode_fixup(xf86OutputPtr output, DisplayModePtr mode,
 	}
     }
 
-    if (!IS_IGDNG(intel) && intel_crtc->pipe == 0) {
+    if (INTEL_INFO(intel)->gen < 40 && intel_crtc->pipe == 0) {
 	xf86DrvMsg(scrn->scrnIndex, X_ERROR,
 		   "Can't support LVDS on pipe A\n");
 	return FALSE;
@@ -732,7 +728,7 @@ i830_lvds_mode_fixup(xf86OutputPtr output, DisplayModePtr mode,
     }
 
     /* only full screen scale for now */
-    if (IS_IGDNG(intel))
+    if (HAS_PCH_SPLIT(intel))
 	goto out;
 
     /* 965+ wants fuzzy fitting */
@@ -757,14 +753,13 @@ i830_lvds_mode_fixup(xf86OutputPtr output, DisplayModePtr mode,
 
     /*
      * Enable automatic panel scaling for non-native modes so that they fill
-     * the screen.  Should be enabled before the pipe is enabled, according to
-     * register description and PRM.
+     * the screen.  Should be enabled before the pipe is enabled, according
+     * to register description and PRM.
+     * Change the value here to see the borders for debugging
      */
-    /* Change the value here to see the borders for debugging */
-    if (!IS_IGDNG(intel)) {
-	    OUTREG(BCLRPAT_A, 0);
-	    OUTREG(BCLRPAT_B, 0);
-    }
+    OUTREG(BCLRPAT_A, 0);
+    OUTREG(BCLRPAT_B, 0);
+
     switch (dev_priv->fitting_mode) {
     case CENTER:
 	/*
@@ -975,7 +970,7 @@ i830_lvds_mode_set(xf86OutputPtr output, DisplayModePtr mode,
      * DPLL settings.
      */
 
-    if (IS_IGDNG(intel))
+    if (HAS_PCH_SPLIT(intel))
 	return;
 
     /*
@@ -1219,11 +1214,6 @@ i830_lvds_set_backlight_control(xf86OutputPtr output)
 	dev_priv->get_backlight = i830_lvds_get_backlight_kernel;
 	dev_priv->backlight_max =
 	    i830_lvds_get_backlight_max_kernel(output);
-	break;
-    case BCM_IRONLAKE_NULL:
-	dev_priv->set_backlight = i830_lvds_set_backlight_null;
-	dev_priv->get_backlight = i830_lvds_get_backlight_null;
-	dev_priv->backlight_max = 1;
 	break;
     default:
 	/*
@@ -1549,7 +1539,7 @@ i830_lvds_init(ScrnInfoPtr scrn)
     if (intel->quirk_flag & QUIRK_IGNORE_LVDS)
 	return;
 
-    if (IS_IGDNG(intel)) {
+    if (HAS_PCH_SPLIT(intel)) {
       if ((INREG(PCH_LVDS) & LVDS_DETECTED) == 0)
 	return;
       gpio = PCH_GPIOC;
@@ -1640,7 +1630,7 @@ i830_lvds_init(ScrnInfoPtr scrn)
      * turned on.  If so, assume that whatever is currently programmed is the
      * correct mode.
      */
-    if (!intel->lvds_fixed_mode && !IS_IGDNG(intel)) {
+    if (!intel->lvds_fixed_mode && !HAS_PCH_SPLIT(intel)) {
 	uint32_t lvds = INREG(LVDS);
 	int pipe = (lvds & LVDS_PIPEB_SELECT) ? 1 : 0;
 	xf86CrtcConfigPtr xf86_config = XF86_CRTC_CONFIG_PTR(scrn);
@@ -1718,7 +1708,7 @@ found_mode:
      */
     dev_priv->fitting_mode = FULL_ASPECT;
 
-    if (IS_IGDNG(intel)) {
+    if (HAS_PCH_SPLIT(intel)) {
 	CARD32 pwm;
 	/* make sure PWM is enabled */
 	pwm = INREG(BLC_PWM_CPU_CTL2);

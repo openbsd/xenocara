@@ -221,13 +221,44 @@
 /* Some chips have specific errata (or limits) that we need to workaround. */
 #define IS_I830(intel) (DEVICE_ID((intel)->PciInfo) == PCI_CHIP_I830_M)
 #define IS_845G(intel) (DEVICE_ID((intel)->PciInfo) == PCI_CHIP_845_G)
-#define IS_I85X(pI810)  (DEVICE_ID(pI810->PciInfo) == PCI_CHIP_I855_GM || \
-			DEVICE_ID(pI810->PciInfo) == PCI_CHIP_I854)
-#define IS_I855(pI810)  (DEVICE_ID(pI810->PciInfo) == PCI_CHIP_I855_GM && (pI810->chipset.variant == I855_GM || pI810->chipset.variant == I855_GME))
 #define IS_I865G(intel) (DEVICE_ID((intel)->PciInfo) == PCI_CHIP_I865_G)
 
 #define IS_I915G(pI810) (DEVICE_ID(pI810->PciInfo) == PCI_CHIP_I915_G || DEVICE_ID(pI810->PciInfo) == PCI_CHIP_E7221_G)
 #define IS_I915GM(pI810) (DEVICE_ID(pI810->PciInfo) == PCI_CHIP_I915_GM)
+
+#define IS_965_Q(pI810) (DEVICE_ID(pI810->PciInfo) == PCI_CHIP_I965_Q)
+
+/* supports Y tiled surfaces (pre-965 Mesa isn't ready yet) */
+#define SUPPORTS_YTILING(pI810) (INTEL_INFO(intel)->gen >= 40)
+#define HAS_BLT(pI810) (INTEL_INFO(intel)->gen >= 60)
+
+#define IS_CRESTLINE(intel) IS_I965GM(intel)
+#define IS_PINEVIEW(intel) IS_IGD(intel)
+#define IS_IRONLAKE_M(pI810) (DEVICE_ID(pI810->PciInfo) == PCI_CHIP_IRONLAKE_M_G)
+#define IS_SANDYBRIDGE_M(pI810) (DEVICE_ID(pI810->PciInfo) == PCI_CHIP_SANDYBRIDGE_M_GT1  || \
+			DEVICE_ID(pI810->PciInfo) == PCI_CHIP_SANDYBRIDGE_M_GT2 || \
+			DEVICE_ID(pI810->PciInfo) == PCI_CHIP_SANDYBRIDGE_M_GT2_PLUS)
+
+#define IS_IVYBRIDGE_M(pI810) (DEVICE_ID(pI810->PciInfo) == PCI_CHIP_IVYBRIDGE_M_GT1  || \
+			DEVICE_ID(pI810->PciInfo) == PCI_CHIP_IVYBRIDGE_M_GT2)
+
+#define IS_MOBILE(dev) (IS_I830(dev) || IS_I85X(dev) || IS_I915GM(dev) || \
+	IS_I945GM(dev) || IS_CRESTLINE(dev) || IS_GM45(dev) || \
+	IS_PINEVIEW(dev) || IS_IRONLAKE_M(dev) || IS_SANDYBRIDGE_M(dev) || \
+	IS_IVYBRIDGE_M(dev))
+
+#define SUPPORTS_TV(dev) (IS_I915GM(dev) || IS_I945GM(dev) || \
+	IS_CRESTLINE(dev) || IS_GM45(dev))
+
+#define HAS_PCH_SPLIT(dev) (IS_GEN5(dev) || IS_GEN6(dev))
+#define HAS_PCH_CPT(dev) (IS_GEN6(dev))	/* XXX */
+
+
+/* Some chips have specific errata (or limits) that we need to workaround. */
+#define IS_I85X(pI810)  (DEVICE_ID(pI810->PciInfo) == PCI_CHIP_I855_GM || \
+			DEVICE_ID(pI810->PciInfo) == PCI_CHIP_I854)
+#define IS_I855(pI810)  (DEVICE_ID(pI810->PciInfo) == PCI_CHIP_I855_GM && (pI810->chipset.variant == I855_GM || pI810->chipset.variant == I855_GME))
+
  #define IS_I945G(pI810) (DEVICE_ID(pI810->PciInfo) == PCI_CHIP_I945_G)
  #define IS_I945GM(pI810) (DEVICE_ID(pI810->PciInfo) == PCI_CHIP_I945_GM || DEVICE_ID(pI810->PciInfo) == PCI_CHIP_I945_GME)
  #define IS_IGDGM(pI810) (DEVICE_ID(pI810->PciInfo) == PCI_CHIP_PINEVIEW_M)
@@ -237,10 +268,6 @@
  #define IS_G4X(pI810) (DEVICE_ID(pI810->PciInfo) == PCI_CHIP_G45_E_G || DEVICE_ID(pI810->PciInfo) == PCI_CHIP_G45_G || DEVICE_ID(pI810->PciInfo) == PCI_CHIP_Q45_G || DEVICE_ID(pI810->PciInfo) == PCI_CHIP_G41_G || DEVICE_ID(pI810->PciInfo) == PCI_CHIP_B43_G || IS_GM45(pI810))
  #define IS_I965GM(pI810) (DEVICE_ID(pI810->PciInfo) == PCI_CHIP_I965_GM || DEVICE_ID(pI810->PciInfo) == PCI_CHIP_I965_GME)
 
-#define IS_965_Q(pI810) (DEVICE_ID(pI810->PciInfo) == PCI_CHIP_I965_Q)
-#define IS_IGDNG_D(pI810) (DEVICE_ID(pI810->PciInfo) == PCI_CHIP_IRONLAKE_D_G)
-#define IS_IGDNG_M(pI810) (DEVICE_ID(pI810->PciInfo) == PCI_CHIP_IRONLAKE_M_G)
-#define IS_IGDNG(pI810) (IS_IGDNG_D(pI810) || IS_IGDNG_M(pI810))
 #define IS_I965G(pI810) (DEVICE_ID(pI810->PciInfo) == PCI_CHIP_I965_G || \
 			 DEVICE_ID(pI810->PciInfo) == PCI_CHIP_G35_G || \
 			 DEVICE_ID(pI810->PciInfo) == PCI_CHIP_I965_Q || \
@@ -248,7 +275,7 @@
 			 DEVICE_ID(pI810->PciInfo) == PCI_CHIP_I965_GM || \
 			 DEVICE_ID(pI810->PciInfo) == PCI_CHIP_I965_GME || \
 			 IS_G4X(pI810) || \
-			 IS_IGDNG(pI810) || \
+			 IS_GEN5(pI810) || \
 			 IS_GEN6(pI810))
 #define IS_G33CLASS(pI810) (DEVICE_ID(pI810->PciInfo) == PCI_CHIP_G33_G ||\
  			    DEVICE_ID(pI810->PciInfo) == PCI_CHIP_Q35_G ||\
@@ -262,25 +289,19 @@
 			IS_I965G(pI810) ||			\
 			IS_G33CLASS(pI810))
 
-#define IS_I915(pI810) (IS_I915G(pI810) || IS_I915GM(pI810) || IS_I945G(pI810) || IS_I945GM(pI810) || IS_G33CLASS(pI810))
-
-#define IS_MOBILE(pI810) (IS_I830(pI810) || IS_I85X(pI810) || IS_I915GM(pI810) || IS_I945GM(pI810) || IS_I965GM(pI810) || IS_GM45(pI810) || IS_IGD(pI810) || IS_IGDNG_M(pI810))
 /* mark chipsets for using gfx VM offset for overlay */
 #define OVERLAY_NOPHYSICAL(pI810) (IS_G33CLASS(pI810) || IS_I965G(pI810))
 /* mark chipsets without overlay hw */
-#define OVERLAY_NOEXIST(pI810) (IS_G4X(pI810) || IS_IGDNG(pI810))
+#define OVERLAY_NOEXIST(pI810) (IS_G4X(pI810) || IS_GEN5(pI810) || IS_GEN6(pI810))
 /* chipsets require graphics mem for hardware status page */
 #define HWS_NEED_GFX(pI810) (!pI810->use_drm_mode && \
 			     (IS_G33CLASS(pI810) ||\
-			      IS_G4X(pI810) || IS_IGDNG(pI810)))
+			      IS_G4X(pI810) || IS_GEN5(pI810) || IS_GEN6(pI810)))
 /* chipsets require status page in non stolen memory */
-#define HWS_NEED_NONSTOLEN(pI810) (IS_G4X(pI810) || IS_IGDNG(pI810))
-#define SUPPORTS_INTEGRATED_HDMI(pI810) (IS_G4X(pI810) || IS_IGDNG(pI810))
+#define HWS_NEED_NONSTOLEN(pI810) (IS_G4X(pI810) || IS_GEN5(pI810) || IS_GEN6(pI810))
+#define SUPPORTS_INTEGRATED_HDMI(pI810) (IS_G4X(pI810) || IS_GEN5(pI810) || IS_GEN6(pI810))
 /* dsparb controlled by hw only */
-#define DSPARB_HWCONTROL(pI810) (IS_G4X(pI810) || IS_IGDNG(pI810))
-/* supports Y tiled surfaces (pre-965 Mesa isn't ready yet) */
-#define SUPPORTS_YTILING(pI810) (INTEL_INFO(intel)->gen >= 40)
-#define HAS_BLT(pI810) (INTEL_INFO(intel)->gen >= 60)
+#define DSPARB_HWCONTROL(pI810) (IS_G4X(pI810) || IS_GEN5(pI810) || IS_GEN6(pI810))
 
 extern SymTabRec *intel_chipsets;
 

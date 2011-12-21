@@ -555,7 +555,7 @@ static const intel_limit_t intel_limits_ironlake_dual_lvds_100m = {
 };
 
 
-static const intel_limit_t *intel_igdng_limit(xf86CrtcPtr crtc)
+static const intel_limit_t *intel_ironlake_limit(xf86CrtcPtr crtc)
 {
     ScrnInfoPtr	scrn = crtc->scrn;
     intel_screen_private *intel = intel_get_screen_private(scrn);
@@ -613,8 +613,8 @@ static const intel_limit_t *intel_limit (xf86CrtcPtr crtc)
     intel_screen_private *intel = intel_get_screen_private(scrn);
     const intel_limit_t *limit;
 
-    if (IS_IGDNG(intel)) {
-	limit = intel_igdng_limit(crtc);
+    if (HAS_PCH_SPLIT(intel)) {
+	limit = intel_ironlake_limit(crtc);
     } else if (IS_G4X(intel)) {
         limit = intel_limit_g4x(crtc);
     } else if (IS_I9XX(intel) && !IS_IGD(intel)) {
@@ -1026,7 +1026,7 @@ i830_pipe_a_require_activate (ScrnInfoPtr scrn)
 	FALSE, FALSE, 0, NULL, 0, 0.0, 0.0
     };
 
-    if (IS_IGDNG(intel))
+    if (HAS_PCH_SPLIT(intel))
 	return FALSE;
 
     if (!crtc)
@@ -1115,7 +1115,7 @@ i830_disable_vga_plane (xf86CrtcPtr crtc)
     uint8_t sr01 = 0;
     uint32_t vga_reg, vgacntrl;
 
-    if (IS_IGDNG(intel))
+    if (HAS_PCH_SPLIT(intel))
 	vga_reg = CPU_VGACNTRL;
     else
 	vga_reg = VGACNTRL;
@@ -1367,6 +1367,124 @@ static void ironlake_fdi_link_train(xf86CrtcPtr crtc)
     ErrorF("FDI train done\n");
 }
 
+static const int snb_b_fdi_train_param [] = {
+        FDI_LINK_TRAIN_400MV_0DB_SNB_B,
+        FDI_LINK_TRAIN_400MV_6DB_SNB_B,
+        FDI_LINK_TRAIN_600MV_3_5DB_SNB_B,
+        FDI_LINK_TRAIN_800MV_0DB_SNB_B,
+};
+
+static void gen6_fdi_link_train(xf86CrtcPtr crtc)
+{
+    ScrnInfoPtr scrn = crtc->scrn;
+    intel_screen_private *intel = intel_get_screen_private(scrn);
+    I830CrtcPrivatePtr intel_crtc = crtc->driver_private;
+    int pipe = intel_crtc->pipe;
+    int fdi_tx_reg = (pipe == 0) ? FDI_TXA_CTL : FDI_TXB_CTL;
+    int fdi_rx_reg = (pipe == 0) ? FDI_RXA_CTL : FDI_RXB_CTL;
+    int fdi_rx_iir_reg = (pipe == 0) ? FDI_RXA_IIR : FDI_RXB_IIR;
+    int fdi_rx_imr_reg = (pipe == 0) ? FDI_RXA_IMR : FDI_RXB_IMR;
+    uint32_t temp, i = 0;
+    
+    /* Train 1: umask FDI RX Interrupt symbol_lock and bit_lock bit
+       for train result */
+    temp = INREG(fdi_rx_imr_reg);
+    temp &= ~FDI_RX_SYMBOL_LOCK;
+    temp &= ~FDI_RX_BIT_LOCK;
+    OUTREG(fdi_rx_imr_reg, temp);
+    INREG(fdi_rx_imr_reg);
+    usleep(150);
+
+    /* enable CPU FDI TX and PCH FDI RX */
+    temp = INREG(fdi_tx_reg);
+    temp |= FDI_TX_ENABLE;
+    temp &= ~(7 << 19);
+    temp |= /*(intel_crtc->fdi_lanes - 1)*/3 << 19;
+    temp &= ~FDI_LINK_TRAIN_NONE;
+    temp |= FDI_LINK_TRAIN_PATTERN_1;
+    temp &= ~FDI_LINK_TRAIN_VOL_EMP_MASK;
+    /* SNB-B */
+    temp |= FDI_LINK_TRAIN_400MV_0DB_SNB_B;
+    OUTREG(fdi_tx_reg, temp);
+    INREG(fdi_tx_reg);
+    
+    temp = INREG(fdi_rx_reg);
+    if (HAS_PCH_CPT(intel)) {
+        temp &= ~FDI_LINK_TRAIN_PATTERN_MASK_CPT;
+        temp |= FDI_LINK_TRAIN_PATTERN_1_CPT;
+    } else {
+        temp &= ~FDI_LINK_TRAIN_NONE;
+        temp |= FDI_LINK_TRAIN_PATTERN_1;
+    }
+    OUTREG(fdi_rx_reg, temp | FDI_RX_ENABLE);
+    INREG(fdi_rx_reg);
+    usleep(150);
+    
+    for (i = 0; i < 4; i++) {
+        temp = INREG(fdi_tx_reg);
+        temp &= ~FDI_LINK_TRAIN_VOL_EMP_MASK;
+        temp |= snb_b_fdi_train_param[i];
+        OUTREG(fdi_tx_reg, temp);
+        INREG(fdi_tx_reg);
+	
+        temp = INREG(fdi_rx_iir_reg);
+	ErrorF("FDI_RX_IIR 0x%x\n", temp);
+
+	if ((temp & FDI_RX_BIT_LOCK)) {
+	    ErrorF("FDI train 1 done.\n");
+	    OUTREG(fdi_rx_iir_reg,
+		       temp | FDI_RX_BIT_LOCK);
+	    break;
+	}
+    }
+    if (i == 4)
+	ErrorF("FDI train 1 fail!\n");
+
+    /* Train 2 */
+    temp = INREG(fdi_tx_reg);
+    temp &= ~FDI_LINK_TRAIN_NONE;
+    temp |= FDI_LINK_TRAIN_PATTERN_2;
+    if (IS_GEN6(intel)) {
+	temp &= ~FDI_LINK_TRAIN_VOL_EMP_MASK;
+	/* SNB-B */
+	temp |= FDI_LINK_TRAIN_400MV_0DB_SNB_B;
+    }
+    OUTREG(fdi_tx_reg, temp);
+
+    temp = INREG(fdi_rx_reg);
+    if (HAS_PCH_CPT(intel)) {
+	temp &= ~FDI_LINK_TRAIN_PATTERN_MASK_CPT;
+	temp |= FDI_LINK_TRAIN_PATTERN_2_CPT;
+    } else {
+	temp &= ~FDI_LINK_TRAIN_NONE;
+	temp |= FDI_LINK_TRAIN_PATTERN_2;
+    }
+    OUTREG(fdi_rx_reg, temp);
+    usleep(150);
+
+    for (i = 0; i < 4; i++) {
+        temp = INREG(fdi_tx_reg);
+        temp &= ~FDI_LINK_TRAIN_VOL_EMP_MASK;
+        temp |= snb_b_fdi_train_param[i];
+        OUTREG(fdi_tx_reg, temp);
+        INREG(fdi_tx_reg);
+	
+        temp = INREG(fdi_rx_iir_reg);
+	ErrorF("FDI_RX_IIR 0x%x\n", temp);
+
+	if ((temp & FDI_RX_SYMBOL_LOCK)) {
+	    ErrorF("FDI train 2 done.\n");
+	    OUTREG(fdi_rx_iir_reg,
+		       temp | FDI_RX_SYMBOL_LOCK);
+	    break;
+	}
+    }
+    if (i == 4)
+   	ErrorF("FDI train 2 fail!\n");
+
+    ErrorF("FDI train done\n");
+}
+
 static void
 ironlake_crtc_enable(xf86CrtcPtr crtc)
 {
@@ -1422,6 +1540,7 @@ ironlake_crtc_enable(xf86CrtcPtr crtc)
 	INREG(fdi_rx_reg);
 	usleep(200);
 
+	/* Switch from Rawclk to PCDclk */
 	temp = INREG(fdi_rx_reg);
 	OUTREG(fdi_rx_reg, temp | FDI_SEL_PCDCLK); 
 	temp = INREG(fdi_rx_reg);
@@ -1435,8 +1554,10 @@ ironlake_crtc_enable(xf86CrtcPtr crtc)
 	    usleep(100);
 	}
 
+	i830WaitForVblank(scrn);
 
 
+	/* Enable panel fitting for LVDS */
 #define PF_FILTER_MASK		(3<<23)
 #define PF_FILTER_MED_3x3	(1<<23)
 	if (i830PipeHasType(crtc, I830_OUTPUT_LVDS)) {
@@ -1471,7 +1592,10 @@ ironlake_crtc_enable(xf86CrtcPtr crtc)
 	OUTREG(dspcntr_reg, temp | DISPLAY_PLANE_ENABLE);
 
 	/* Train FDI. */
-	ironlake_fdi_link_train(crtc);
+	if (IS_GEN6(intel))
+		gen6_fdi_link_train(crtc);
+	else
+		ironlake_fdi_link_train(crtc);
 
 	/* enable PCH DPLL */
 	temp = INREG(pch_dpll_reg);
@@ -1480,6 +1604,16 @@ ironlake_crtc_enable(xf86CrtcPtr crtc)
 	    INREG(pch_dpll_reg);
 	}
 	usleep(200);
+
+	if (HAS_PCH_CPT(intel)) {
+		/* Be sure PCH DPLL SEL is set */
+		temp = INREG(PCH_DPLL_SEL);
+		if (pipe == 0 && (temp & TRANSA_DPLL_ENABLE) == 0)
+			temp |= (TRANSA_DPLL_ENABLE | TRANSA_DPLLA_SEL);
+		else if (pipe == 1 && (temp & TRANSB_DPLL_ENABLE) == 0)
+			temp |= (TRANSB_DPLL_ENABLE | TRANSB_DPLLB_SEL);
+		OUTREG(PCH_DPLL_SEL, temp);
+	}
 
 	/* set transcoder timing */
 	OUTREG(trans_htot_reg, INREG(cpu_htot_reg));
@@ -1490,7 +1624,7 @@ ironlake_crtc_enable(xf86CrtcPtr crtc)
 	OUTREG(trans_vblank_reg, INREG(cpu_vblank_reg));
 	OUTREG(trans_vsync_reg, INREG(cpu_vsync_reg));
 
-	/* enable normal */
+	/* enable normal train */
 
 	ErrorF("FDI TX link normal\n");
 	temp = INREG(fdi_tx_reg);
@@ -1500,10 +1634,14 @@ ironlake_crtc_enable(xf86CrtcPtr crtc)
 	INREG(fdi_tx_reg);
 
 	temp = INREG(fdi_rx_reg);
-	temp &= ~FDI_LINK_TRAIN_NONE;
-	temp |= FDI_LINK_TRAIN_NONE;
-	
-	OUTREG(fdi_rx_reg, temp | FDI_LINK_TRAIN_NONE);
+        if (HAS_PCH_CPT(intel)) {
+                temp &= ~FDI_LINK_TRAIN_PATTERN_MASK_CPT;
+                temp |= FDI_LINK_TRAIN_NORMAL_CPT;
+        } else {
+                temp &= ~FDI_LINK_TRAIN_NONE;
+                temp |= FDI_LINK_TRAIN_NONE;
+        }
+	OUTREG(fdi_rx_reg, temp | FDI_RX_ENHANCE_FRAME_ENABLE);
 	INREG(fdi_rx_reg);
 
 	usleep(100);
@@ -1618,15 +1756,20 @@ ironlake_crtc_disable(xf86CrtcPtr crtc)
 
 	ErrorF("FDI RX train 1 preload\n");
 	temp = INREG(fdi_rx_reg);
-	temp &= ~FDI_LINK_TRAIN_NONE;
-	temp |= FDI_LINK_TRAIN_PATTERN_1;
+	if (HAS_PCH_CPT(intel)) {
+		temp &= ~FDI_LINK_TRAIN_PATTERN_MASK_CPT;
+		temp |= FDI_LINK_TRAIN_PATTERN_1_CPT;
+	} else {
+		temp &= ~FDI_LINK_TRAIN_NONE;
+		temp |= FDI_LINK_TRAIN_PATTERN_1;
+	}
 	OUTREG(fdi_rx_reg, temp);
 	INREG(fdi_rx_reg);
 
 	usleep(100);
 
-	ErrorF("LVDS port force off\n");
 	if (i830PipeHasType(crtc, I830_OUTPUT_LVDS)) {
+	    ErrorF("LVDS port force off\n");
 	    while ((temp = INREG(PCH_LVDS)) & PORT_ENABLE) {
 		OUTREG(PCH_LVDS, temp & ~LVDS_PORT_EN);
 		INREG(PCH_LVDS);
@@ -1668,6 +1811,7 @@ ironlake_crtc_disable(xf86CrtcPtr crtc)
 	INREG(pch_dpll_reg);
 
 	ErrorF("FDI RX PLL PCD disable\n");
+	/* Switch from PCDclk to Rawclk */
 	temp = INREG(fdi_rx_reg);
 	temp &= ~FDI_SEL_PCDCLK;
 	OUTREG(fdi_rx_reg, temp);
@@ -1691,7 +1835,7 @@ ironlake_crtc_disable(xf86CrtcPtr crtc)
 	usleep(150);
 }
 
-static void igdng_crtc_dpms(xf86CrtcPtr crtc, int mode)
+static void ironlake_crtc_dpms(xf86CrtcPtr crtc, int mode)
 {
     I830CrtcPrivatePtr intel_crtc = crtc->driver_private;
 
@@ -1754,8 +1898,8 @@ i830_crtc_dpms(xf86CrtcPtr crtc, int mode)
     intel_screen_private *intel = intel_get_screen_private(scrn);
     I830CrtcPrivatePtr intel_crtc = crtc->driver_private;
 
-    if (IS_IGDNG(intel))
-	igdng_crtc_dpms(crtc, mode);
+    if (HAS_PCH_SPLIT(intel))
+	ironlake_crtc_dpms(crtc, mode);
     else
 	i9xx_crtc_dpms(crtc, mode);
 
@@ -1824,7 +1968,7 @@ i830_crtc_mode_fixup(xf86CrtcPtr crtc, DisplayModePtr mode,
     ScrnInfoPtr scrn = crtc->scrn;
     intel_screen_private *intel = intel_get_screen_private(scrn);
 
-    if (IS_IGDNG(intel)) {
+    if (HAS_PCH_SPLIT(intel)) {
 	/* FDI link clock is fixed at 2.7G */
 	if (mode->Clock * 3 > 27000 * 4)
 	    return MODE_CLOCK_HIGH;
@@ -2124,7 +2268,7 @@ i830_crtc_mode_set(xf86CrtcPtr crtc, DisplayModePtr mode,
 		   "using SSC reference clock of %d MHz\n", refclk / 1000);
     } else if (IS_I9XX(intel)) {
 	refclk = 96000;
-	if (IS_IGDNG(intel))
+	if (HAS_PCH_SPLIT(intel))
 	    refclk = 120000; /* 120Mhz refclk */
     } else {
 	refclk = 48000;
@@ -2168,7 +2312,7 @@ i830_crtc_mode_set(xf86CrtcPtr crtc, DisplayModePtr mode,
 	}
     }
 
-    if (IS_IGDNG(intel)) {
+    if (HAS_PCH_SPLIT(intel)) {
 	int bpp = 24;
 	if (is_lvds) {
 	    uint32_t lvds_reg = INREG(PCH_LVDS);
@@ -2185,7 +2329,7 @@ i830_crtc_mode_set(xf86CrtcPtr crtc, DisplayModePtr mode,
 	intel_crtc->bpc = bpp / 3;
     }
 
-    if (IS_IGDNG(intel)) {
+    if (HAS_PCH_SPLIT(intel)) {
 	uint32_t temp;
 
 	temp = INREG(PCH_DREF_CONTROL);
@@ -2206,7 +2350,7 @@ i830_crtc_mode_set(xf86CrtcPtr crtc, DisplayModePtr mode,
     else
 	fp = clock.n << 16 | clock.m1 << 8 | clock.m2;
 
-    if (!IS_IGDNG(intel))
+    if (!HAS_PCH_SPLIT(intel))
 	dpll = DPLL_VGA_MODE_DIS;
     if (IS_I9XX(intel)) {
 	if (is_lvds)
@@ -2219,7 +2363,7 @@ i830_crtc_mode_set(xf86CrtcPtr crtc, DisplayModePtr mode,
 	    sdvo_pixel_multiply = adjusted_mode->Clock / mode->Clock;
 	    if ((IS_I945G(intel) || IS_I945GM(intel) || IS_G33CLASS(intel)))
 		dpll |= (sdvo_pixel_multiply - 1) << SDVO_MULTIPLIER_SHIFT_HIRES;
-	    else if (IS_IGDNG(intel))
+	    else if (HAS_PCH_SPLIT(intel))
 		dpll |= (sdvo_pixel_multiply - 1) << PLL_REF_SDVO_HDMI_MULTIPLIER_SHIFT;
 		
 	}
@@ -2243,7 +2387,7 @@ i830_crtc_mode_set(xf86CrtcPtr crtc, DisplayModePtr mode,
 	    dpll |= DPLLB_LVDS_P2_CLOCK_DIV_14;
 	    break;
 	}
-	if (IS_I965G(intel) && !IS_GM45(intel) && !IS_IGDNG(intel))
+	if (IS_I965G(intel) && !IS_GM45(intel) && !HAS_PCH_SPLIT(intel))
 	    dpll |= (6 << PLL_LOAD_PULSE_PHASE_SHIFT);
     } else {
 	if (is_lvds) {
@@ -2274,7 +2418,7 @@ i830_crtc_mode_set(xf86CrtcPtr crtc, DisplayModePtr mode,
     /* Set up the display plane register */
     dspcntr = DISPPLANE_GAMMA_ENABLE;
     /* this is "must be enabled" in the docs, but not set by bios */
-    if (IS_IGDNG(intel))
+    if (HAS_PCH_SPLIT(intel))
 	dspcntr |= DISPPLANE_TRICKLE_FEED_DISABLE;
 
     switch (scrn->bitsPerPixel) {
@@ -2294,9 +2438,9 @@ i830_crtc_mode_set(xf86CrtcPtr crtc, DisplayModePtr mode,
 	FatalError("unknown display bpp\n");
     }
 
-    /* IGDNG's plane is forced to pipe, bit 24 is to
+    /* Ironlake's plane is forced to pipe, bit 24 is to
        enable color space conversion */
-    if (!IS_IGDNG(intel)) {
+    if (!HAS_PCH_SPLIT(intel)) {
 	if (pipe == 0)
 	    dspcntr |= DISPPLANE_SEL_PIPE_A;
 	else
@@ -2321,7 +2465,7 @@ i830_crtc_mode_set(xf86CrtcPtr crtc, DisplayModePtr mode,
 	    pipeconf &= ~PIPEACONF_DOUBLE_WIDE;
     }
 
-    if (IS_IGDNG(intel)) {
+    if (HAS_PCH_SPLIT(intel)) {
 	pipeconf &= ~(7 << 5);
 	if (intel_crtc->bpc == 6)
 	    pipeconf |= (1 << 6); /* 0 is 8bpc */
@@ -2334,7 +2478,7 @@ i830_crtc_mode_set(xf86CrtcPtr crtc, DisplayModePtr mode,
      * will be run after the mode is set. On 9xx, it helps.
      * On 855, it can lock up the chip (and the entire machine)
      */
-    if (!IS_I85X (intel) && !IS_IGDNG(intel))
+    if (!IS_I85X (intel) && !HAS_PCH_SPLIT(intel))
     {
 	dspcntr |= DISPLAY_PLANE_ENABLE;
 	pipeconf |= PIPEACONF_ENABLE;
@@ -2342,7 +2486,7 @@ i830_crtc_mode_set(xf86CrtcPtr crtc, DisplayModePtr mode,
     }
     
     /* Disable the panel fitter if it was on our pipe */
-    if (!IS_IGDNG(intel) && i830_panel_fitter_pipe (intel) == pipe)
+    if (!HAS_PCH_SPLIT(intel) && i830_panel_fitter_pipe (intel) == pipe)
 	OUTREG(PFIT_CONTROL, 0);
 
     if (intel->debug_modes) {
@@ -2357,8 +2501,8 @@ i830_crtc_mode_set(xf86CrtcPtr crtc, DisplayModePtr mode,
 	i830PrintPll(scrn, "chosen", &clock);
     }
 
-    /* assign to IGDNG registers */
-    if (IS_IGDNG(intel)) {
+    /* assign to PCH registers */
+    if (HAS_PCH_SPLIT(intel)) {
 	fp_reg = pch_fp_reg;
 	dpll_reg = pch_dpll_reg;
     }
@@ -2379,15 +2523,23 @@ i830_crtc_mode_set(xf86CrtcPtr crtc, DisplayModePtr mode,
     {
 	uint32_t lvds;
 
-	if (IS_IGDNG(intel))
+	if (HAS_PCH_SPLIT(intel))
 	    lvds_reg = PCH_LVDS;
 
 	lvds = INREG(lvds_reg);
 	lvds |= LVDS_PORT_EN | LVDS_A0A2_CLKA_POWER_UP;
-	if (IS_IGDNG(intel))
-	    lvds |= (pipe == 1) ? LVDS_PIPEB_SELECT : 0; 
-	else
-	    lvds |= LVDS_PIPEB_SELECT;
+	if (pipe == 1) {
+	    if (HAS_PCH_CPT(intel))
+		lvds |= PORT_TRANS_B_SEL_CPT;
+	    else
+		lvds |= LVDS_PIPEB_SELECT;
+	} else {
+	    if (HAS_PCH_CPT(intel))
+		lvds &= ~PORT_TRANS_SEL_MASK;
+	    else
+	    	lvds &= ~LVDS_PIPEB_SELECT;
+	}
+
 	/* Set the B0-B3 data pairs corresponding to whether we're going to
 	 * set the DPLLs for dual-channel mode or not.
 	 */
@@ -2427,6 +2579,21 @@ i830_crtc_mode_set(xf86CrtcPtr crtc, DisplayModePtr mode,
 	POSTING_READ(lvds_reg);
     }
 
+    if (HAS_PCH_SPLIT(intel)) {
+	    /* For non-DP output, clear any trans DP clock recovery setting.*/
+	    if (pipe == 0) {
+		    OUTREG(TRANSA_DATA_M1, 0);
+		    OUTREG(TRANSA_DATA_N1, 0);
+		    OUTREG(TRANSA_DP_LINK_M1, 0);
+		    OUTREG(TRANSA_DP_LINK_N1, 0);
+	    } else {
+		    OUTREG(TRANSB_DATA_M1, 0);
+		    OUTREG(TRANSB_DATA_N1, 0);
+		    OUTREG(TRANSB_DP_LINK_M1, 0);
+		    OUTREG(TRANSB_DP_LINK_N1, 0);
+	    }
+    }
+
     OUTREG(fp_reg, fp);
 /*    OUTREG(fp_reg + 4, fp); RHEL had this... wtf? */
     OUTREG(dpll_reg, dpll);
@@ -2434,7 +2601,7 @@ i830_crtc_mode_set(xf86CrtcPtr crtc, DisplayModePtr mode,
     /* Wait for the clocks to stabilize. */
     usleep(150);
     
-    if (IS_I965G(intel) && !IS_IGDNG(intel)) {
+    if (IS_I965G(intel) && !HAS_PCH_SPLIT(intel)) {
 	int sdvo_pixel_multiply = adjusted_mode->Clock / mode->Clock;
 	OUTREG(dpll_md_reg, (0 << DPLL_MD_UDI_DIVIDER_SHIFT) |
 	       ((sdvo_pixel_multiply - 1) << DPLL_MD_UDI_MULTIPLIER_SHIFT));
@@ -2465,13 +2632,13 @@ i830_crtc_mode_set(xf86CrtcPtr crtc, DisplayModePtr mode,
     /* pipesrc and dspsize control the size that is scaled from, which should
      * always be the user's requested size.
      */
-    if (!IS_IGDNG(intel)) {
+    if (!HAS_PCH_SPLIT(intel)) {
 	    OUTREG(dspsize_reg, ((mode->VDisplay - 1) << 16) | (mode->HDisplay - 1));
 	    OUTREG(dsppos_reg, 0);
     }
     OUTREG(pipesrc_reg, ((mode->HDisplay - 1) << 16) | (mode->VDisplay - 1));
 
-    if (IS_IGDNG(intel)) {
+    if (HAS_PCH_SPLIT(intel)) {
 	OUTREG(data_m1_reg, TU_SIZE(m_n.tu) | m_n.gmch_m);
 	OUTREG(data_n1_reg, TU_SIZE(m_n.tu) | m_n.gmch_n);
 	OUTREG(link_m1_reg, m_n.link_m);
@@ -2497,7 +2664,7 @@ i830_crtc_mode_set(xf86CrtcPtr crtc, DisplayModePtr mode,
     POSTING_READ(pipeconf_reg);
     i830WaitForVblank(scrn);
 
-    if (IS_IGDNG(intel)) {
+    if (IS_GEN5(intel)) {
 	/* enable address swizzle for tiling buffer */
 	temp = INREG(DISP_ARB_CTL);
 	OUTREG(DISP_ARB_CTL, temp | DISP_TILE_SURFACE_SWIZZLING);
@@ -2525,10 +2692,9 @@ i830_crtc_load_lut(xf86CrtcPtr crtc)
     if (!crtc->enabled)
 	return;
 
-    /* use legacy palette for IGDNG */
-    if (IS_IGDNG(intel))
-	palreg = (intel_crtc->pipe == 0) ? LGC_PALETTE_A :
-	    LGC_PALETTE_B;
+    /* use legacy palette for Ironlake */
+    if (HAS_PCH_SPLIT(intel))
+	palreg = (intel_crtc->pipe == 0) ? LGC_PALETTE_A : LGC_PALETTE_B;
 
     for (i = 0; i < 256; i++) {
 	OUTREG(palreg + 4 * i,
@@ -2699,7 +2865,7 @@ i830DescribeOutputConfiguration(ScrnInfoPtr scrn)
 	Bool hw_pipe_enable = (pipeconf & PIPEACONF_ENABLE) != 0;
 	int pipe;
 
-	if (IS_IGDNG(intel))
+	if (HAS_PCH_SPLIT(intel))
 	    pipe = intel_crtc->plane;
 	else
 	    pipe = !!(dspcntr & DISPPLANE_SEL_PIPE_MASK);
@@ -2914,22 +3080,19 @@ i830_crtc_clock_get(ScrnInfoPtr scrn, xf86CrtcPtr crtc)
 	    return 0;
 	}
 
-	if (IS_IGDNG(intel))
-	    i9xx_clock(120000, &clock);
-	else if ((dpll & PLL_REF_INPUT_MASK) == PLLB_REF_INPUT_SPREADSPECTRUMIN)
+	if ((dpll & PLL_REF_INPUT_MASK) == PLLB_REF_INPUT_SPREADSPECTRUMIN)
 	    intel_clock(intel, 100000, &clock);
 	else
 	    intel_clock(intel, 96000, &clock);
     } else {
-	CARD32 lvds = IS_IGDNG(intel) ? PCH_LVDS : LVDS;
-	Bool is_lvds = (pipe == 1) && (INREG(lvds) & LVDS_PORT_EN);
+	Bool is_lvds = (pipe == 1) && (INREG(LVDS) & LVDS_PORT_EN);
 
 	if (is_lvds) {
 	    clock.p1 = ffs((dpll & DPLL_FPA01_P1_POST_DIV_MASK_I830_LVDS) >>
 			   DPLL_FPA01_P1_POST_DIV_SHIFT);
 
 	    /* if LVDS is dual-channel, p2 = 7 */
-	    if ((INREG(lvds) & LVDS_CLKB_POWER_MASK) == LVDS_CLKB_POWER_UP)
+	    if ((INREG(LVDS) & LVDS_CLKB_POWER_MASK) == LVDS_CLKB_POWER_UP)
 		clock.p2 = 7;
 	    else
 		clock.p2 = 14;

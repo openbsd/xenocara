@@ -204,7 +204,11 @@ I830DetectMemory(ScrnInfoPtr scrn)
    int memsize = 0, gtt_size;
    int range;
    struct pci_device *bridge = intel_host_bridge ();
-   pci_device_cfg_read_u16(bridge, & gmch_ctrl, I830_GMCH_CTRL);
+
+   if (IS_GEN6(intel))
+      pci_device_cfg_read_u16(bridge, &gmch_ctrl, SNB_GMCH_CTRL);
+   else
+      pci_device_cfg_read_u16(bridge, &gmch_ctrl, I830_GMCH_CTRL);
 
    if (IS_I965G(intel)) {
       /* The 965 may have a GTT that is actually larger than is necessary
@@ -259,10 +263,61 @@ I830DetectMemory(ScrnInfoPtr scrn)
    range = gtt_size + 4;
 
    /* new 4 series hardware has seperate GTT stolen with GFX stolen */
-   if (IS_G4X(intel) || IS_IGD(intel) || IS_IGDNG(intel))
+   if (IS_G4X(intel) || IS_IGD(intel) || IS_GEN5(intel) || IS_GEN6(intel))
        range = 4;
 
-   if (IS_I85X(intel) || IS_I865G(intel) || IS_I9XX(intel)) {
+   if (IS_GEN6(intel)) {
+      switch (gmch_ctrl & SNB_GMCH_GMS_STOLEN_MASK) {
+      case SNB_GMCH_GMS_STOLEN_32M:
+	 memsize = MB(32) - KB(range);
+	 break;
+      case SNB_GMCH_GMS_STOLEN_64M:
+	 memsize = MB(64) - KB(range);
+         break;
+      case SNB_GMCH_GMS_STOLEN_96M:
+	 memsize = MB(96) - KB(range);
+         break;
+      case SNB_GMCH_GMS_STOLEN_128M:
+	 memsize = MB(128) - KB(range);
+	 break;
+      case SNB_GMCH_GMS_STOLEN_160M:
+	 memsize = MB(160) - KB(range);
+	 break;
+      case SNB_GMCH_GMS_STOLEN_192M:
+	 memsize = MB(192) - KB(range);
+	 break;
+      case SNB_GMCH_GMS_STOLEN_224M:
+	 memsize = MB(224) - KB(range);
+	 break;
+      case SNB_GMCH_GMS_STOLEN_256M:
+	 memsize = MB(256) - KB(range);
+	 break;
+      case SNB_GMCH_GMS_STOLEN_288M:
+	 memsize = MB(288) - KB(range);
+	 break;
+      case SNB_GMCH_GMS_STOLEN_320M:
+	 memsize = MB(320) - KB(range);
+	 break;
+      case SNB_GMCH_GMS_STOLEN_352M:
+	 memsize = MB(352) - KB(range);
+	 break;
+      case SNB_GMCH_GMS_STOLEN_384M:
+	 memsize = MB(384) - KB(range);
+	 break;
+      case SNB_GMCH_GMS_STOLEN_416M:
+	 memsize = MB(416) - KB(range);
+	 break;
+      case SNB_GMCH_GMS_STOLEN_448M:
+	 memsize = MB(448) - KB(range);
+	 break;
+      case SNB_GMCH_GMS_STOLEN_480M:
+	 memsize = MB(480) - KB(range);
+         break;
+      case SNB_GMCH_GMS_STOLEN_512M:
+	 memsize = MB(512) - KB(range);
+         break;
+      }
+   } else if (IS_I85X(intel) || IS_I865G(intel) || IS_I9XX(intel)) {
       switch (gmch_ctrl & I855_GMCH_GMS_MASK) {
       case I855_GMCH_GMS_STOLEN_1M:
 	 memsize = MB(1) - KB(range);
@@ -375,7 +430,7 @@ I830MapMMIO(ScrnInfoPtr scrn)
 
       if (IS_I965G(intel)) 
       {
-	 if (IS_G4X(intel) || IS_IGDNG(intel)) {
+	 if (IS_G4X(intel) || IS_GEN5(intel) || IS_GEN6(intel)) {
 	     gttaddr = intel->MMIOAddr + MB(2);
 	     intel->GTTMapSize = MB(2);
 	 } else {
@@ -580,9 +635,9 @@ static void I830SetupOutputs(ScrnInfoPtr scrn)
 
 	/* Set up integrated LVDS */
 	if (IS_MOBILE(intel) && !IS_I830(intel))
-	i830_lvds_init(scrn);
+		i830_lvds_init(scrn);
 
-	if (IS_IGDNG(intel)) {
+	if (HAS_PCH_SPLIT(intel)) {
 		int found;
 
 		if (INREG(HDMIB) & PORT_DETECTED) {
@@ -623,7 +678,8 @@ static void I830SetupOutputs(ScrnInfoPtr scrn)
 	} else {
 		i830_dvo_init(scrn);
 	}
-	if (IS_I9XX(intel) && IS_MOBILE(intel) && !IS_IGDNG(intel))
+
+	if (SUPPORTS_TV(intel))
 		i830_tv_init(scrn);
    
 	for (o = 0; o < config->num_output; o++) {
@@ -654,7 +710,10 @@ static void i830_init_clock_gating(ScrnInfoPtr scrn)
 
     /* Disable clock gating reported to work incorrectly according to the specs.
      */
-	if (IS_G4X(intel)) {
+	if (IS_GEN6(intel)) {
+		uint32_t dspclk_gate = VRHUNIT_CLOCK_GATE_DISABLE;
+		OUTREG(PCH_DSPCLK_GATE_D, dspclk_gate);
+	} else if (IS_G4X(intel)) {
 		uint32_t dspclk_gate;
 		OUTREG(RENCLK_GATE_D1, 0);
 		OUTREG(RENCLK_GATE_D2, VF_UNIT_CLOCK_GATE_DISABLE |
@@ -1493,7 +1552,7 @@ static Bool I830PreInit(ScrnInfoPtr scrn, int flags)
 
 	if (!intel->use_drm_mode) {
    /* console hack, stolen from G80 */
-	   if (IS_IGDNG(intel)) {
+	   if (IS_GEN5(intel)) {
 	       if (xf86LoadSubModule(scrn, "int10")) {
 	       intel->int10 = xf86InitInt10(pEnt->index);
 	       if (intel->int10) {
@@ -1540,7 +1599,7 @@ static Bool i830_pipe_enabled(intel_screen_private *intel, enum pipe pipe)
 {
 	uint32_t dpll_reg;
 
-	if (IS_IGDNG(intel)) {
+	if (HAS_PCH_SPLIT(intel)) {
 		dpll_reg = (pipe == PIPE_A) ? PCH_DPLL_A : PCH_DPLL_B;
 	} else {
 		dpll_reg = (pipe == PIPE_A) ? DPLL_A : DPLL_B;
@@ -1558,7 +1617,7 @@ static void i830_save_palette(intel_screen_private *intel, enum pipe pipe)
 	if (!i830_pipe_enabled(intel, pipe))
 		return;
 
-	if (IS_IGDNG(intel))
+	if (HAS_PCH_SPLIT(intel))
 		reg = (pipe == PIPE_A) ? LGC_PALETTE_A : LGC_PALETTE_B;
 
 	if (pipe == PIPE_A)
@@ -1579,7 +1638,7 @@ static void i830_restore_palette(intel_screen_private *intel, enum pipe pipe)
 	if (!i830_pipe_enabled(intel, pipe))
 		return;
 
-	if (IS_IGDNG(intel))
+	if (HAS_PCH_SPLIT(intel))
 		reg = (pipe == PIPE_A) ? LGC_PALETTE_A : LGC_PALETTE_B;
 
 	if (pipe == PIPE_A)
@@ -1599,8 +1658,8 @@ static Bool SaveHWState(ScrnInfoPtr scrn)
 	vgaRegPtr vgaReg = &hwp->SavedReg;
 	int i;
 
-       if (IS_IGDNG(intel))
-	   return TRUE;
+	if (HAS_PCH_SPLIT(intel))
+		return TRUE;
 
 	/* Save video mode information for native mode-setting. */
 	if (!DSPARB_HWCONTROL(intel))
@@ -1628,28 +1687,28 @@ static Bool SaveHWState(ScrnInfoPtr scrn)
 
 	i830_save_palette(intel, PIPE_A);
 
-	if(xf86_config->num_crtc == 2) {
-	intel->savePIPEBCONF = INREG(PIPEBCONF);
-	intel->savePIPEBSRC = INREG(PIPEBSRC);
-	intel->saveDSPBCNTR = INREG(DSPBCNTR);
-	intel->saveFPB0 = INREG(FPB0);
-	intel->saveFPB1 = INREG(FPB1);
-	intel->saveDPLL_B = INREG(DPLL_B);
-	if (IS_I965G(intel))
-		intel->saveDPLL_B_MD = INREG(DPLL_B_MD);
-	intel->saveHTOTAL_B = INREG(HTOTAL_B);
-	intel->saveHBLANK_B = INREG(HBLANK_B);
-	intel->saveHSYNC_B = INREG(HSYNC_B);
-	intel->saveVTOTAL_B = INREG(VTOTAL_B);
-	intel->saveVBLANK_B = INREG(VBLANK_B);
-	intel->saveVSYNC_B = INREG(VSYNC_B);
-	intel->saveBCLRPAT_B = INREG(BCLRPAT_B);
-	intel->saveDSPBSTRIDE = INREG(DSPBSTRIDE);
-	intel->saveDSPBSIZE = INREG(DSPBSIZE);
-	intel->saveDSPBPOS = INREG(DSPBPOS);
-	intel->saveDSPBBASE = INREG(DSPBBASE);
+	if (xf86_config->num_crtc == 2) {
+		intel->savePIPEBCONF = INREG(PIPEBCONF);
+		intel->savePIPEBSRC = INREG(PIPEBSRC);
+		intel->saveDSPBCNTR = INREG(DSPBCNTR);
+		intel->saveFPB0 = INREG(FPB0);
+		intel->saveFPB1 = INREG(FPB1);
+		intel->saveDPLL_B = INREG(DPLL_B);
+		if (IS_I965G(intel))
+			intel->saveDPLL_B_MD = INREG(DPLL_B_MD);
+		intel->saveHTOTAL_B = INREG(HTOTAL_B);
+		intel->saveHBLANK_B = INREG(HBLANK_B);
+		intel->saveHSYNC_B = INREG(HSYNC_B);
+		intel->saveVTOTAL_B = INREG(VTOTAL_B);
+		intel->saveVBLANK_B = INREG(VBLANK_B);
+		intel->saveVSYNC_B = INREG(VSYNC_B);
+		intel->saveBCLRPAT_B = INREG(BCLRPAT_B);
+		intel->saveDSPBSTRIDE = INREG(DSPBSTRIDE);
+		intel->saveDSPBSIZE = INREG(DSPBSIZE);
+		intel->saveDSPBPOS = INREG(DSPBPOS);
+		intel->saveDSPBBASE = INREG(DSPBBASE);
 
-	i830_save_palette(intel, PIPE_B);
+		i830_save_palette(intel, PIPE_B);
 	}
 
 	if (IS_I965G(intel)) {
@@ -1720,8 +1779,8 @@ static Bool RestoreHWState(ScrnInfoPtr scrn)
 	vgaRegPtr vgaReg = &hwp->SavedReg;
 	int i;
 
-       if (IS_IGDNG(intel))
-	   return TRUE;
+	if (HAS_PCH_SPLIT(intel))
+		return TRUE;
 
 	DPRINTF(PFX, "RestoreHWState\n");
 
@@ -2541,7 +2600,7 @@ static void I830LeaveVT(int scrnIndex, int flags)
 		RestoreHWState(scrn);
 
 		/* console restore hack */
-		if (IS_IGDNG(intel) && intel->int10 && intel->int10Mode) {
+		if (IS_GEN5(intel) && intel->int10 && intel->int10Mode) {
 		    xf86Int10InfoPtr int10 = intel->int10;
 
 		    /* Use int10 to restore the console mode */
@@ -2621,7 +2680,7 @@ static Bool I830EnterVT(int scrnIndex, int flags)
 		/* Disable pipes */
 		for (i = 0; i < xf86_config->num_crtc; i++) {
 			xf86CrtcPtr crtc = xf86_config->crtc[i];
-			if (IS_IGDNG(intel))
+			if (HAS_PCH_SPLIT(intel))
 			    ironlake_crtc_disable(crtc);
 			else
 			    i830_crtc_disable(crtc, TRUE);

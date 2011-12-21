@@ -112,7 +112,6 @@ static const SymTabRec _intel_chipsets[] = {
 	{PCI_CHIP_B43_G1,			"B43"},
 	{PCI_CHIP_IRONLAKE_D_G,			"Clarkdale"},
 	{PCI_CHIP_IRONLAKE_M_G,			"Arrandale"},
-#if 0
 	{PCI_CHIP_SANDYBRIDGE_GT1,		"Sandybridge Desktop (GT1)" },
 	{PCI_CHIP_SANDYBRIDGE_GT2,		"Sandybridge Desktop (GT2)" },
 	{PCI_CHIP_SANDYBRIDGE_GT2_PLUS,		"Sandybridge Desktop (GT2+)" },
@@ -120,6 +119,7 @@ static const SymTabRec _intel_chipsets[] = {
 	{PCI_CHIP_SANDYBRIDGE_M_GT2,		"Sandybridge Mobile (GT2)" },
 	{PCI_CHIP_SANDYBRIDGE_M_GT2_PLUS,	"Sandybridge Mobile (GT2+)" },
 	{PCI_CHIP_SANDYBRIDGE_S_GT,		"Sandybridge Server" },
+#if 0
 	{PCI_CHIP_IVYBRIDGE_M_GT1,		"Ivybridge Mobile (GT1)" },
 	{PCI_CHIP_IVYBRIDGE_M_GT2,		"Ivybridge Mobile (GT2)" },
 	{PCI_CHIP_IVYBRIDGE_D_GT1,		"Ivybridge Desktop (GT1)" },
@@ -179,7 +179,6 @@ static const struct pci_id_match intel_device_match[] = {
 	INTEL_DEVICE_MATCH (PCI_CHIP_IRONLAKE_D_G, &intel_ironlake_info ),
 	INTEL_DEVICE_MATCH (PCI_CHIP_IRONLAKE_M_G, &intel_ironlake_info ),
 
-#if 0
 	INTEL_DEVICE_MATCH (PCI_CHIP_SANDYBRIDGE_GT1, &intel_sandybridge_info ),
 	INTEL_DEVICE_MATCH (PCI_CHIP_SANDYBRIDGE_GT2, &intel_sandybridge_info ),
 	INTEL_DEVICE_MATCH (PCI_CHIP_SANDYBRIDGE_GT2_PLUS, &intel_sandybridge_info ),
@@ -188,6 +187,7 @@ static const struct pci_id_match intel_device_match[] = {
 	INTEL_DEVICE_MATCH (PCI_CHIP_SANDYBRIDGE_M_GT2_PLUS, &intel_sandybridge_info ),
 	INTEL_DEVICE_MATCH (PCI_CHIP_SANDYBRIDGE_S_GT, &intel_sandybridge_info ),
 
+#if 0
 	INTEL_DEVICE_MATCH (PCI_CHIP_IVYBRIDGE_M_GT1, &intel_ivybridge_info ),
 	INTEL_DEVICE_MATCH (PCI_CHIP_IVYBRIDGE_M_GT2, &intel_ivybridge_info ),
 	INTEL_DEVICE_MATCH (PCI_CHIP_IVYBRIDGE_D_GT1, &intel_ivybridge_info ),

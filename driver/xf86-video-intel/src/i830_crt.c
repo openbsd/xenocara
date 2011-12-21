@@ -44,7 +44,7 @@ i830_crt_dpms(xf86OutputPtr output, int mode)
     intel_screen_private *intel = intel_get_screen_private(scrn);
     uint32_t	    temp, reg;
 
-    if (IS_IGDNG(intel))
+    if (HAS_PCH_SPLIT(intel))
 	reg = PCH_ADPA;
     else
 	reg = ADPA;
@@ -76,7 +76,7 @@ i830_crt_save (xf86OutputPtr output)
 {
     ScrnInfoPtr	scrn = output->scrn;
     intel_screen_private *intel = intel_get_screen_private(scrn);
-    uint32_t reg = IS_IGDNG(intel) ? PCH_ADPA : ADPA;
+    uint32_t reg = HAS_PCH_SPLIT(intel) ? PCH_ADPA : ADPA;
 
     intel->saveADPA = INREG(reg);
 }
@@ -86,7 +86,7 @@ i830_crt_restore (xf86OutputPtr output)
 {
     ScrnInfoPtr	scrn = output->scrn;
     intel_screen_private *intel = intel_get_screen_private(scrn);
-    uint32_t reg = IS_IGDNG(intel) ? PCH_ADPA : ADPA;
+    uint32_t reg = HAS_PCH_SPLIT(intel) ? PCH_ADPA : ADPA;
 
     OUTREG(reg, intel->saveADPA);
 }
@@ -139,7 +139,7 @@ i830_crt_mode_set(xf86OutputPtr output, DisplayModePtr mode,
     else
 	dpll_md_reg = DPLL_B_MD;
 
-    if (IS_IGDNG(intel))
+    if (HAS_PCH_SPLIT(intel))
 	adpa_reg = PCH_ADPA;
     else
 	adpa_reg = ADPA;
@@ -148,7 +148,7 @@ i830_crt_mode_set(xf86OutputPtr output, DisplayModePtr mode,
      * Disable separate mode multiplier used when cloning SDVO to CRT
      * XXX this needs to be adjusted when we really are cloning
      */
-    if (IS_I965G(intel) && !IS_IGDNG(intel))
+    if (IS_I965G(intel) && !HAS_PCH_SPLIT(intel))
     {
 	dpll_md = INREG(dpll_md_reg);
 	OUTREG(dpll_md_reg, dpll_md & ~DPLL_MD_UDI_MULTIPLIER_MASK);
@@ -163,50 +163,58 @@ i830_crt_mode_set(xf86OutputPtr output, DisplayModePtr mode,
     if (i830_crtc->pipe == 0)
     {
 	adpa |= ADPA_PIPE_A_SELECT;
-	if (!IS_IGDNG(intel))
+	if (!HAS_PCH_SPLIT(intel))
 	    OUTREG(BCLRPAT_A, 0);
     }
     else
     {
 	adpa |= ADPA_PIPE_B_SELECT;
-	if (!IS_IGDNG(intel))
+	if (!HAS_PCH_SPLIT(intel))
 	    OUTREG(BCLRPAT_B, 0);
     }
 
     OUTREG(adpa_reg, adpa);
 }
 
-static Bool intel_igdng_crt_detect_hotplug(xf86OutputPtr output)
+static Bool intel_ironlake_crt_detect_hotplug(xf86OutputPtr output)
 {
     ScrnInfoPtr			scrn = output->scrn;
     intel_screen_private	*intel = intel_get_screen_private(scrn);
-    uint32_t adpa;
+    Bool turn_off_dac = HAS_PCH_SPLIT(intel);
+    uint32_t adpa, save_adpa;
     Bool ret;
 
     adpa = INREG(PCH_ADPA);
-
     adpa &= ~ADPA_CRT_HOTPLUG_MASK;
-
     adpa |= (ADPA_CRT_HOTPLUG_PERIOD_64 |
 	     ADPA_CRT_HOTPLUG_WARMUP_5MS |
 	     ADPA_CRT_HOTPLUG_SAMPLE_2S |
 	     ADPA_CRT_HOTPLUG_VOLTAGE_50 | /* default */
 	     ADPA_CRT_HOTPLUG_VOLREF_325MV);
     OUTREG(PCH_ADPA, adpa);
+    INREG(PCH_ADPA);
 
     usleep(6000); /* warmup */
     
+    save_adpa = adpa = INREG(PCH_ADPA);
+
     adpa |= ADPA_CRT_HOTPLUG_FORCE_TRIGGER;
+    if (turn_off_dac)
+	    adpa &= ~ADPA_DAC_ENABLE;
 
     OUTREG(PCH_ADPA, adpa);
 
     while (INREG(PCH_ADPA) & ADPA_CRT_HOTPLUG_FORCE_TRIGGER)
-      ;
+	    usleep(1000);
+
+    if (turn_off_dac) {
+	OUTREG(PCH_ADPA, save_adpa);
+	INREG(PCH_ADPA);
+    }
 
     /* Check the status to see if both blue and green are on now */
-    adpa = INREG(PCH_ADPA) & ADPA_CRT_HOTPLUG_MONITOR_MASK;
-    if (adpa == ADPA_CRT_HOTPLUG_MONITOR_COLOR ||
-	adpa ==	ADPA_CRT_HOTPLUG_MONITOR_MONO)
+    adpa = INREG(PCH_ADPA);
+    if ((adpa & ADPA_CRT_HOTPLUG_MONITOR_MASK) != 0)
 	ret = TRUE;
     else
 	ret = FALSE;
@@ -233,8 +241,8 @@ i830_crt_detect_hotplug(xf86OutputPtr output)
     int		tries = 1;
     int		try;
 
-    if (IS_IGDNG(intel))
-	return intel_igdng_crt_detect_hotplug(output);
+    if (HAS_PCH_SPLIT(intel))
+	return intel_ironlake_crt_detect_hotplug(output);
 
     /* On 4 series desktop, CRT detect sequence need to be done twice
      * to get a reliable result. */
@@ -526,7 +534,7 @@ i830_get_edid(xf86OutputPtr output, int gpio_reg, char *gpio_str)
     uint32_t		    i2c_reg;
 
     /* Set up the DDC bus. */
-    if (IS_IGDNG(intel))
+    if (HAS_PCH_SPLIT(intel))
 	i2c_reg = PCH_GPIOA;
     else
 	i2c_reg = GPIOA;

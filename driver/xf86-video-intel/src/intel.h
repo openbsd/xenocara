@@ -435,18 +435,13 @@ enum last_3d {
  *   BCM_KERNEL:  use kernel methods for controlling the backlight
  *     This is only available on some platforms, but where present this can
  *     provide the best user experience.
- *
- * And, if you're in EL5, a fifth!
- *   BCM_IRONLAKE_NULL: just don't do anything and be quiet about it.  This is
- *     a workaround for an RHGB interaction; you won't hit this at runtime.
  */
 
 enum backlight_control {
     BCM_NATIVE = 0,
     BCM_LEGACY,
     BCM_COMBO,
-    BCM_KERNEL,
-    BCM_IRONLAKE_NULL
+    BCM_KERNEL
 };
 
 enum dri_type {
