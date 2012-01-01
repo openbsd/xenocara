@@ -38,6 +38,10 @@
 /* Have 4bpp support */
 #undef HAVE_XF4BPP
 
+/* Define to the sub-directory in which libtool stores uninstalled libraries.
+   */
+#undef LT_OBJDIR
+
 /* Name of package */
 #undef PACKAGE
 

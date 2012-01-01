@@ -1,8 +1,338 @@
+commit f6c2f11627ee14611c5504935bf9fb036b8eed4d
+Author: Matthieu Herrb <matthieu.herrb@laas.fr>
+Date:   Sun Jan 1 16:10:15 2012 +0100
+
+    xf86-video-wsfb 0.4.0
+    
+    Signed-off-by: Matthieu Herrb <matthieu.herrb@laas.fr>
+
+commit 2895949949b8cecfd297b5f4a178adf5a27b7d96
+Author: Matthieu Herrb <matthieu.herrb@laas.fr>
+Date:   Sun Jan 1 16:07:55 2012 +0100
+
+    Constify argument of wsfb_open()
+    
+    Signed-off-by: Matthieu Herrb <matthieu.herrb@laas.fr>
+
+commit 433bac14e2322933754bd1aeed1c030c9f6be65e
+Author: Matthieu Herrb <matthieu.herrb@laas.fr>
+Date:   Sun Jan 1 16:05:11 2012 +0100
+
+    Add missing headers for ioctl() and getpagesize() prototypes
+    
+    Signed-off-by: Matthieu Herrb <matthieu.herrb@laas.fr>
+
+commit 2b3a927e6a2fbec8a8c244e4e09835c53d9985eb
+Author: Matthieu Herrb <matthieu.herrb@laas.fr>
+Date:   Sun Jan 1 15:42:17 2012 +0100
+
+    Bump copyright year.
+    
+    Signed-off-by: Matthieu Herrb <matthieu.herrb@laas.fr>
+
+commit a841807f623e6d379a62d0b82bdef1f9711b3e1f
+Author: Miod Vallat <miod@online.fr>
+Date:   Sun Aug 29 14:25:13 2010 +0200
+
+    Correctly handle off-screen memory in 1bpp and 4bpp modes.
+    
+    Signed-off-by: Matthieu Herrb <matthieu.herrb@laas.fr>
+
+commit a510e47a48656b740d823800fd4dfa5ffb33cea3
+Author: Matthieu Herrb <matthieu.herrb@laas.fr>
+Date:   Sun Jan 1 15:20:12 2012 +0100
+
+    Reference xorg.conf(5) in comments an manual pages.
+    
+    Signed-off-by: Matthieu Herrb <matthieu.herrb@laas.fr>
+
+commit 17317b98b8129a3302eda431b83d7d087bec2b46
+Author: Matthieu Herrb <matthieu.herrb@laas.fr>
+Date:   Sun Jan 1 15:19:38 2012 +0100
+
+    man: document "rotate" option.
+    
+    Signed-off-by: Matthieu Herrb <matthieu.herrb@laas.fr>
+
+commit fcd96100635f98ea75b8f0495b82f417634bed95
+Author: Matthieu Herrb <matthieu.herrb@laas.fr>
+Date:   Sun Jan 1 15:19:10 2012 +0100
+
+    man: update the list of OpenBSD architectures using this driver.
+    
+    Signed-off-by: Matthieu Herrb <matthieu.herrb@laas.fr>
+
+commit 135bebc71cb25216cd827d9d1abf4be153da46c0
+Author: Matthieu Herrb <matthieu.herrb@laas.fr>
+Date:   Sun Jan 1 15:18:42 2012 +0100
+
+    White space fix
+    Signed-off-by: Matthieu Herrb <matthieu.herrb@laas.fr>
+
+commit c8819498fed4eca70a0521c351e5237e399cf7ab
+Author: Matthieu Herrb <matthieu.herrb@laas.fr>
+Date:   Sun Jan 1 15:17:36 2012 +0100
+
+    Sync RCS id with OpenBSD CVS
+    
+    Signed-off-by: Matthieu Herrb <matthieu.herrb@laas.fr>
+
+commit c78d73ff023a594b1ea687109c3a24042aca3396
+Author: Matthieu Herrb <matthieu.herrb@laas.fr>
+Date:   Sun Jan 1 15:12:36 2012 +0100
+
+    Do not call shawdowRemove() if shadow fb was disabled.
+    
+    Signed-off-by: Matthieu Herrb <matthieu.herrb@laas.fr>
+
+commit c0d8dc518288658c95811225e90723e62eaeca68
+Author: Matthieu Herrb <matthieu.herrb@laas.fr>
+Date:   Sun Jan 1 15:08:55 2012 +0100
+
+    Replace deprecated xalloc/xfree with malloc/free.
+    
+    While here Fix allocation size of shadow framebuffer. Use byes, not
+    bits. Since the shadowfb is only used for bitsPerPixel >= 8,
+    bitsPerPixel/8 is always the correct amount of bytes.
+    
+    Signed-off-by: Matthieu Herrb <matthieu.herrb@laas.fr>
+    Reviewed-by: Miodrag Vallat <miod@openbsd.org>
+
+commit 8802a91190b27c1fac4423edc3aa2f9ecc9d8b26
+Author: Matthieu Herrb <matthieu.herrb@laas.fr>
+Date:   Sun Jan 1 15:06:31 2012 +0100
+
+    unifdef XFree86LOADER, this isn't optional anymore.
+    
+    Signed-off-by: Matthieu Herrb <matthieu.herrb@laas.fr>
+
+commit d917b886dc39fc5100986ed94100885717277c45
+Author: Matthieu Herrb <matthieu.herrb@laas.fr>
+Date:   Sun Jan 1 15:04:58 2012 +0100
+
+    Sync rcs id with OpenBSD CVS version.
+    
+    Signed-off-by: Matthieu Herrb <matthieu.herrb@laas.fr>
+
+commit cd0694208eb8ff889faa32304c44078ec786d79f
+Merge: 8b367fe 87232d3
+Author: Matthieu Herrb <matthieu.herrb@laas.fr>
+Date:   Sat Aug 21 16:30:30 2010 +0200
+
+    Merge remote branch 'origin/master' into obsd
+
+commit 87232d36fc06adc64e034d5fb38eb43cc1ac7b39
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jul 21 16:49:04 2010 -0400
+
+    config: add comments for main statements
+
+commit 63020e786e81fe8da25deb0ffa9516d32a05cdb8
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jul 21 16:07:00 2010 -0400
+
+    config: replace deprecated use of AC_OUTPUT with AC_CONFIG_FILES
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 8e6006c72b747f5a38cae7862d3f2b373beeec7e
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jul 21 14:37:42 2010 -0400
+
+    config: replace deprecated AC_HELP_STRING with AS_HELP_STRING
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 55fe28efa889fdaf66bae48d41e5657ae5005a99
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jul 21 14:05:23 2010 -0400
+
+    config: replace deprecated AM_CONFIG_HEADER with AC_CONFIG_HEADERS
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 96f25ab0ce60787475f3420ae3253e3762f1b6e3
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jul 21 09:27:42 2010 -0400
+
+    config: complete AC_INIT m4 quoting
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 109fa3c2cf8452623b77b3e6b6369519df3bb403
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Jul 20 21:44:58 2010 -0400
+
+    config: remove unrequired AC_SUBST([XORG_CFLAGS])
+    
+    This macro is called by PKG_CHECK_MODULES
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit c000c078ee1e5cdda301798331952c69bf4a4cfb
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Jul 20 20:24:42 2010 -0400
+
+    config: remove unrequired AC_HEADER_STDC
+    
+    Autoconf says:
+    "This macro is obsolescent, as current systems have conforming
+    header files. New programs need not use this macro".
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 39110592366d49d730d8adf686f4826c51421337
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Jul 20 19:41:31 2010 -0400
+
+    config: remove AC_PROG_CC as it overrides AC_PROG_C_C99
+    
+    XORG_STRICT_OPTION from XORG_DEFAULT_OPTIONS calls
+    AC_PROG_C_C99. This sets gcc with -std=gnu99.
+    If AC_PROG_CC macro is called afterwards, it resets CC to gcc.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 7401695110f880beeb202df2997d9863e197739d
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Jul 20 18:45:19 2010 -0400
+
+    config: update AC_PREREQ statement to 2.60
+    
+    Unrelated to the previous patches, the new value simply reflects
+    the reality that the minimum level for autoconf to configure
+    all x.org modules is 2.60 dated June 2006.
+    
+    ftp://ftp.gnu.org/gnu/autoconf/autoconf-2.60.tar.gz
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 60ca72ea815dae75619d41a2a47c07f7eff76bd5
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Jul 20 16:15:30 2010 -0400
+
+    config: upgrade to util-macros 1.8 for additional man page support
+    
+    Use MAN_SUBST now supplied in XORG_MANPAGE_SECTIONS
+    The value of MAN_SUBST is the same for all X.Org packages.
+
+commit 8b367fea87af7ec9555a71d655aae314e983762a
+Merge: 851837e 083c64a
+Author: Matthieu Herrb <matthieu.herrb@laas.fr>
+Date:   Sun Feb 14 14:41:27 2010 +0100
+
+    Merge remote branch 'origin/master' into obsd
+
+commit 083c64abda1244d5f2f9d704e353fa6766fc8300
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Fri Jan 15 15:51:11 2010 -0800
+
+    Update Sun license notices to current X.Org standard form
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit 851837e8aa2f86c1e7fac0bf43ce9b7d74eefe3e
+Merge: e75000a 0f97b1b
+Author: Matthieu Herrb <matthieu.herrb@laas.fr>
+Date:   Sat Jan 2 17:58:54 2010 +0100
+
+    Merge remote branch 'origin/master' into obsd
+
+commit 0f97b1b9daac4892727968bce7b92da740690300
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Dec 15 22:01:03 2009 -0500
+
+    configure.ac: remove unused sdkdir=$(pkg-config...) statement
+    
+    The sdkdir variable isn't use, so remove the statement.
+    
+    Acked-by: Dan Nicholson <dbn.lists@gmail.com>
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit e75000ad2d3b7fdc5603d5c6ad712e9e94409613
+Merge: 972a28f c62ad2b
+Author: Matthieu Herrb <matthieu.herrb@laas.fr>
+Date:   Sat Dec 19 23:51:10 2009 +0100
+
+    Merge remote branch 'origin/master' into obsd
+
+commit c62ad2beb96e5e0c0fb0bda235b7716b20758cce
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Nov 23 09:25:06 2009 -0500
+
+    Makefile.am: add ChangeLog and INSTALL on MAINTAINERCLEANFILES
+    
+    Now that the INSTALL file is generated.
+    Allows running make maintainer-clean.
+
+commit 972a28f16aa651c87d28936f77e7b6b425250067
+Merge: 3346d75 bbb53cc
+Author: Matthieu Herrb <matthieu.herrb@laas.fr>
+Date:   Sat Nov 21 21:16:55 2009 +0000
+
+    Merge remote branch 'origin/master' into obsd
+
+commit bbb53cc05093c499bf560132c93a25c783661639
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Oct 28 14:41:41 2009 -0400
+
+    INSTALL, NEWS, README or AUTHORS files are missing/incorrect #24206
+    
+    Automake 'foreign' option is specified in configure.ac.
+    Remove from Makefile.am
+
+commit 2f60c9d03b7dc3556991ec7c7ab7f3e62f5eeb54
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Oct 28 14:09:10 2009 -0400
+
+    INSTALL, NEWS, README or AUTHORS files are missing/incorrect #24206
+    
+    Add missing INSTALL file. Use standard GNU file on building tarball
+    README may have been updated
+    Remove AUTHORS file as it is empty and no content available yet.
+    Remove NEWS file as it is empty and no content available yet.
+
+commit 7fa8c7184057302a3efc692f0072226b1cee50fa
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Oct 26 12:54:23 2009 -0400
+
+    Several driver modules do not have a ChangeLog target in Makefile.am #23814
+    
+    The git generated ChangeLog replaces the hand written one.
+    Update configure.ac to xorg-macros level 1.3.
+    Use XORG_DEFAULT_OPTIONS which replaces four XORG_* macros
+    Update Makefile.am to add ChangeLog target if missing
+    Remove ChangeLog from EXTRA_DIST or *CLEAN variables
+    This is a pre-req for the INSTALL_CMD
+
+commit b3c841f663dda87933b924479b02d18bc3c2b218
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Oct 22 12:34:18 2009 -0400
+
+    .gitignore: use common defaults with custom section # 24239
+    
+    Using common defaults will reduce errors and maintenance.
+    Only the very small or inexistent custom section need periodic maintenance
+    when the structure of the component changes. Do not edit defaults.
+
 commit 3346d752ad5d2301501e28e4b4acc7ed429f9115
 Author: Matthieu Herrb <matthieu.herrb@laas.fr>
 Date:   Sun Sep 13 22:43:42 2009 +0200
 
     wsfb: do not forget tiny.
+
+commit 3bde5ad99c5bd99a9a4729748f27ef92bb3ee8b3
+Author: Matthieu Herrb <matthieu.herrb@laas.fr>
+Date:   Sun Sep 13 22:43:42 2009 +0200
+
+    wsfb: do not forget tiny.
+
+commit ae67e097dbf7d496e67c5a3b8b357fc641bc972d
+Author: Matthieu Herrb <matthieu.herrb@laas.fr>
+Date:   Sun Sep 13 22:39:54 2009 +0200
+
+    wsfb: fix typo in previous bump
 
 commit b014e2f9d18193be1b1f1ebf1b51e925fc3e76dc
 Author: Matthieu Herrb <matthieu.herrb@laas.fr>
