@@ -1,6 +1,6 @@
-/* $OpenBSD: wsfb_driver.c,v 1.25 2011/11/05 14:51:18 matthieu Exp $ */
+/* $OpenBSD: wsfb_driver.c,v 1.26 2012/01/01 16:04:35 matthieu Exp $ */
 /*
- * Copyright (c) 2001 Matthieu Herrb
+ * Copyright © 2001-2012 Matthieu Herrb
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -147,7 +147,7 @@ enum { WSFB_ROTATE_NONE = 0,
 };
 
 /*
- * This is intentionally screen-independent. 
+ * This is intentionally screen-independent.
  * It indicates the binding choice made in the first PreInit.
  */
 static int pix24bpp = 0;
@@ -191,8 +191,8 @@ static XF86ModuleVersionInfo WsfbVersRec = {
 	MODINFOSTRING1,
 	MODINFOSTRING2,
 	XORG_VERSION_CURRENT,
-	PACKAGE_VERSION_MAJOR, 
-	PACKAGE_VERSION_MINOR, 
+	PACKAGE_VERSION_MAJOR,
+	PACKAGE_VERSION_MINOR,
 	PACKAGE_VERSION_PATCHLEVEL,
 	ABI_CLASS_VIDEODRV,
 	ABI_VIDEODRV_VERSION,
@@ -211,7 +211,7 @@ WsfbSetup(pointer module, pointer opts, int *errmaj, int *errmin)
 	/* Check that we're being loaded on a OpenBSD or NetBSD system. */
 	LoaderGetOS(&osname, NULL, NULL, NULL);
 	if (!osname || (strcmp(osname, "openbsd") != 0 &&
-	                strcmp(osname, "netbsd") != 0)) {
+			strcmp(osname, "netbsd") != 0)) {
 		if (errmaj)
 			*errmaj = LDR_BADOS;
 		if (errmin)
@@ -436,7 +436,7 @@ WsfbPreInit(ScrnInfoPtr pScrn, int flags)
 	 * Depth
 	 */
 	defaultDepth = 0;
-	if (ioctl(fPtr->fd, WSDISPLAYIO_GETSUPPORTEDDEPTH, 
+	if (ioctl(fPtr->fd, WSDISPLAYIO_GETSUPPORTEDDEPTH,
 		&depths) == 0) {
 		/* Preferred order for default depth selection. */
 		if (depths & WSDISPLAYIO_DEPTH_16)
@@ -451,7 +451,7 @@ WsfbPreInit(ScrnInfoPtr pScrn, int flags)
 			defaultDepth = 4;
 		else if (depths & WSDISPLAYIO_DEPTH_1)
 			defaultDepth = 1;
-		
+
 		flags24 = 0;
 		if (depths & WSDISPLAYIO_DEPTH_24_24)
 			flags24 |= Support24bppFb;
@@ -470,26 +470,26 @@ WsfbPreInit(ScrnInfoPtr pScrn, int flags)
 		if (fPtr->info.depth == 8) {
 			/*
 			 * We might run on a byte addressable frame buffer,
-			 * but with less than 8 bits per pixel. 
+			 * but with less than 8 bits per pixel.
 			 * We can know this from the colormap size.
 			 */
 			defaultDepth = 1;
 			while ((1 << defaultDepth) < fPtr->info.cmsize)
 				defaultDepth++;
 		} else
-			defaultDepth = 
+			defaultDepth =
 			    fPtr->info.depth <= 24 ? fPtr->info.depth : 24;
 
 		if (fPtr->info.depth >= 24)
 			flags24 = Support24bppFb|Support32bppFb;
-		else 
+		else
 			flags24 = 0;
 	}
 
 	/* Prefer 24bpp for fb since it potentially allows larger modes. */
 	if (flags24 & Support24bppFb)
 		flags24 |= SupportConvert32to24 | PreferConvert32to24;
-	
+
 	if (!xf86SetDepthBpp(pScrn, defaultDepth, 0,
 		fPtr->info.depth, flags24))
 		return FALSE;
@@ -499,19 +499,19 @@ WsfbPreInit(ScrnInfoPtr pScrn, int flags)
 		if (pScrn->display->modes != NULL &&
 		    pScrn->display->modes[0] != NULL) {
 			struct wsdisplay_gfx_mode gfxmode;
-			
-			if (sscanf(pScrn->display->modes[0], "%dx%d", 
+
+			if (sscanf(pScrn->display->modes[0], "%dx%d",
 				&gfxmode.width, &gfxmode.height) != 2) {
 				xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
-				    "Can't parse mode name %s\n", 
+				    "Can't parse mode name %s\n",
 				    pScrn->display->modes[0]);
 				return FALSE;
 			}
 			gfxmode.depth = pScrn->bitsPerPixel;
-			if (ioctl(fPtr->fd, WSDISPLAYIO_SETGFXMODE, 
+			if (ioctl(fPtr->fd, WSDISPLAYIO_SETGFXMODE,
 				&gfxmode) == -1) {
 				xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
-				    "ioctl WSDISPLAY_SETGFXMODE: %s\n", 
+				    "ioctl WSDISPLAY_SETGFXMODE: %s\n",
 				    strerror(errno));
 				return FALSE;
 			}
@@ -564,7 +564,7 @@ WsfbPreInit(ScrnInfoPtr pScrn, int flags)
 	if (pScrn->bitsPerPixel != fPtr->info.depth) {
 		xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
 		    "specified depth (%d) or bpp (%d) doesn't match "
-		    "framebuffer depth (%d)\n", pScrn->depth, 
+		    "framebuffer depth (%d)\n", pScrn->depth,
 		    pScrn->bitsPerPixel, fPtr->info.depth);
 		return FALSE;
 	}
@@ -649,7 +649,7 @@ WsfbPreInit(ScrnInfoPtr pScrn, int flags)
 	pScrn->progClock = TRUE;
 	if (pScrn->depth == 8)
 		pScrn->rgbBits = 6;
-	else 
+	else
 		pScrn->rgbBits   = 8;
 	pScrn->chipset   = "wsfb";
 	pScrn->videoRam  = fPtr->linebytes * fPtr->info.height;
@@ -709,7 +709,7 @@ WsfbPreInit(ScrnInfoPtr pScrn, int flags)
 			    "Option \"Rotate\" ignored on depth < 8");
 		}
 	}
-	
+
 	/* Fake video mode struct. */
 	mode = (DisplayModePtr)malloc(sizeof(DisplayModeRec));
 	mode->prev = mode;
@@ -901,7 +901,7 @@ WsfbScreenInit(int scrnIndex, ScreenPtr pScreen, int argc, char **argv)
 	if (!miSetPixmapDepths())
 		return FALSE;
 
-	if (fPtr->rotate == WSFB_ROTATE_CW 
+	if (fPtr->rotate == WSFB_ROTATE_CW
 	    || fPtr->rotate == WSFB_ROTATE_CCW) {
 		int tmp = pScrn->virtualX;
 		pScrn->virtualX = pScrn->displayWidth = pScrn->virtualY;
@@ -917,7 +917,7 @@ WsfbScreenInit(int scrnIndex, ScreenPtr pScreen, int argc, char **argv)
 	if (fPtr->shadowFB) {
 		fPtr->shadow = calloc(1, pScrn->virtualX * pScrn->virtualY *
 		    pScrn->bitsPerPixel/8);
-		
+
 		if (!fPtr->shadow) {
 			xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
 			    "Failed to allocate shadow framebuffer\n");
@@ -991,9 +991,9 @@ WsfbScreenInit(int scrnIndex, ScreenPtr pScreen, int argc, char **argv)
 	}
 
 #ifdef XFreeXDGA
-	if (!fPtr->rotate) 
+	if (!fPtr->rotate)
 		WsfbDGAInit(pScrn, pScreen);
-	else 
+	else
 		xf86DrvMsg(scrnIndex, X_INFO, "Rotated display, "
 		    "disabling DGA\n");
 #endif
@@ -1001,8 +1001,8 @@ WsfbScreenInit(int scrnIndex, ScreenPtr pScreen, int argc, char **argv)
 		xf86DrvMsg(scrnIndex, X_INFO, "Enabling Driver Rotation, "
 		    "disabling RandR\n");
 		xf86DisableRandR();
-		if (pScrn->bitsPerPixel == 24) 
-			xf86DrvMsg(scrnIndex, X_WARNING, 
+		if (pScrn->bitsPerPixel == 24)
+			xf86DrvMsg(scrnIndex, X_WARNING,
 			    "Rotation might be broken in 24 bpp\n");
 	}
 
@@ -1064,7 +1064,7 @@ WsfbCloseScreen(int scrnIndex, ScreenPtr pScreen)
 	TRACE_ENTER("WsfbCloseScreen");
 
 	pPixmap = pScreen->GetScreenPixmap(pScreen);
-	if (fPtr->shadowFB) 
+	if (fPtr->shadowFB)
 		shadowRemove(pScreen, pPixmap);
 
 	if (pScrn->vtSema) {
@@ -1154,7 +1154,7 @@ WsfbEnterVT(int scrnIndex, int flags)
 	int wsmode = WSDISPLAYIO_MODE_DUMBFB;
 
 	TRACE_ENTER("EnterVT");
-	
+
 	/* Switch to graphics mode. */
 	if (ioctl(fPtr->fd, WSDISPLAYIO_SMODE, &wsmode) == -1) {
 		xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
@@ -1273,7 +1273,7 @@ WsfbSaveScreen(ScreenPtr pScreen, int mode)
 
 	if (mode != SCREEN_SAVER_FORCER) {
 		state = xf86IsUnblank(mode)?WSDISPLAYIO_VIDEO_ON:
-		                            WSDISPLAYIO_VIDEO_OFF;
+					    WSDISPLAYIO_VIDEO_OFF;
 		ioctl(fPtr->fd,
 		      WSDISPLAYIO_SVIDEO, &state);
 	}
@@ -1479,7 +1479,7 @@ WsfbDriverFunc(ScrnInfoPtr pScrn, xorgDriverFuncOp op,
     pointer ptr)
 {
 	xorgHWFlags *flag;
-	
+
 	switch (op) {
 	case GET_REQUIRED_HW_INTERFACES:
 		flag = (CARD32*)ptr;
@@ -1489,4 +1489,3 @@ WsfbDriverFunc(ScrnInfoPtr pScrn, xorgDriverFuncOp op,
 		return FALSE;
 	}
 }
-
