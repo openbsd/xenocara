@@ -88,6 +88,9 @@ enhance the keyboard layout details.  Default: not set.
 .BI "Option \*qXkbOptions\*q \*q" options \*q
 specifies the XKB keyboard option components.  These can be used to
 enhance the keyboard behaviour.  Default: not set.
+.PP
+For a list of available XKB options, see
+.B xkeyboard-config(__miscmansuffix__).
 .SH EXAMPLE
 The following xorg.conf fragment ensures that user will be able to switch between
 .I us
@@ -129,3 +132,5 @@ __xservername__(__appmansuffix__), __xconfigfile__(__filemansuffix__),
 Xserver(__appmansuffix__), X(__miscmansuffix__).
 
 hal(__miscmansuffix__), hald(__adminmansuffix__), fdi(__filemansuffix__).
+
+xkeyboard-config(__miscmansuffix__).

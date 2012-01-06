@@ -1,3 +1,60 @@
+commit 26a7180bd6b173ac8bc9eb61715fd120d59c7db1
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Wed Jan 4 10:45:09 2012 +1000
+
+    xf86-input-keyboard 1.6.1
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 45f9f4552c4dab2efc29fd4d3d5c1a9dcd7c34b3
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Oct 4 09:16:17 2011 +1000
+
+    man: link to xkeyboard-config(7) (#14494)
+    
+    X.Org Bug 14494 <http://bugs.freedesktop.org/show_bug.cgi?id=14494>
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Gaetan Nadon <memsize@videotron.ca>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 20beb15d24b5f8ab194b94f7e29f49e91ea38a8b
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Mon Sep 26 09:56:17 2011 +1000
+
+    Remove calls to xf86IsPc98()
+    
+    This call is being removed from the server and this isn't worth keeping
+    ifdefs around for.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Matthieu Herrb <matthieu.herrb@laas.fr>
+    Tested-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 38e4defe795776479594825859e101cd7cb5aa17
+Author: Terry Lambert <tlambert@chromium.org>
+Date:   Fri Jul 15 17:23:22 2011 -0700
+
+    Return proper default for unknown values in pInfo->device_control.
+    
+    Signed-off-by: Terry Lambert <tlambert@chromium.org>
+    Reviewed-by: Stephane Marchesin <marcheu@chromium.org>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit e8aa2ff0629111fbc32d71bbbc46b469c0c9a996
+Author: Matthieu Herrb <matthieu.herrb@laas.fr>
+Date:   Sat Jun 11 10:26:46 2011 +0200
+
+    man: update "rules" default value for xkeyboard-config.
+    
+    xkeyboard-config is using "base" not "xorg" as default rules.
+    While there remove references to unmaintained PC98 settings.
+    
+    Signed-off-by: Matthieu Herrb <matthieu.herrb@laas.fr>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit 0b9cd5121e1025e95a7e32addb675ab874bc6cb1
 Author: Peter Hutterer <peter.hutterer@who-t.net>
 Date:   Tue Mar 8 09:38:29 2011 +1000

@@ -48,8 +48,7 @@ ATScancode(InputInfoPtr pInfo, int *scanCode)
                   pKbd->scanPrefix = *scanCode;  /* special prefixes */
                   return TRUE;
           }
-          if (!xf86IsPc98()) {
-            switch (*scanCode) {
+          switch (*scanCode) {
              case 0x59: *scanCode = KEY_0x59; break;
              case 0x5a: *scanCode = KEY_0x5A; break;
              case 0x5b: *scanCode = KEY_0x5B; break;
@@ -78,7 +77,6 @@ ATScancode(InputInfoPtr pInfo, int *scanCode)
              case 0x74: *scanCode = KEY_0x74; break;
              case 0x75: *scanCode = KEY_0x75; break;
              case 0x76: *scanCode = KEY_0x76; break;
-            }
           }
           break;
        case KEY_Prefix0:

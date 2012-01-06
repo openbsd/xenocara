@@ -31,6 +31,9 @@ EXTRA_DIST = @DRIVER_NAME@.man
 
 CLEANFILES = $(driverman_DATA)
 
+# should allow configure override like xserver's configure.ac does
+XKBPATH=${datadir}/X11/xkb
+
 # String replacements in MAN_SUBSTS now come from xorg-macros.m4 via configure
 MAN_SUBSTS += -e 's|__xkb_path__|$(XKBPATH)|g'
 
