@@ -177,7 +177,9 @@ from the X Consortium.
 #endif
 
 #ifndef HANDLE_ROFFSEQ
-# if defined(ultrix)
+# if defined(__OpenBSD__)
+#  define FORMAT "| mandoc -Tascii"
+# elif defined(ultrix)
 #  define FORMAT "| nroff -man"             /* The format command. */
 # elif defined(CSRG_BASED)
 #  define FORMAT "| eqn | tbl | nroff -mandoc"
@@ -194,14 +196,16 @@ from the X Consortium.
 #  define ZSOELIM	"zsoelim"
 # else
 #  define ZSOELIM	"soelim"
-#endif
+# endif
 # define EQN		"eqn"
 # define TBL		"tbl"
 # define GRAP		"grap"
 # define PIC		"pic"
 # define VGRIND		"vgrind"
 # define REFER		"refer"
-# if defined(CSRG_BASED)
+# if defined(__OpenBSD__)
+#  define FORMAT	"mandoc -Tascii"
+# elif defined(CSRG_BASED)
 #  define FORMAT	"nroff -mandoc"
 # elif defined(linux)
 #  define FORMAT	"GROFF_NO_SGR= groff -Tlatin1 -mandoc"
@@ -212,6 +216,9 @@ from the X Consortium.
 # endif
 # define DEFAULT_MANROFFSEQ "et"
 #endif /*HANDLE_ROFFSEQ */
+#if defined(__OpenBSD__)
+# define TBL "cat"
+#endif
 
 /*
  * Names of the man and cat dirs.
