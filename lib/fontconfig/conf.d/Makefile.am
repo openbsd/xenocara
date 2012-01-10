@@ -35,6 +35,7 @@ CONF_FILES = \
 	20-fix-globaladvance.conf \
 	20-unhint-small-vera.conf \
 	25-unhint-nonlatin.conf \
+	30-lucida-aliases.conf \
 	30-urw-aliases.conf \
 	30-metric-aliases.conf \
 	31-nonmst.conf \
@@ -57,6 +58,7 @@ CONF_LINKS = \
 	10-autohint.conf \
 	20-fix-globaladvance.conf \
 	20-unhint-small-vera.conf \
+	30-lucida-aliases.conf \
 	30-urw-aliases.conf \
 	30-metric-aliases.conf \
 	31-nonmst.conf \
