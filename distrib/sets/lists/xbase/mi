@@ -797,8 +797,7 @@
 ./usr/X11R6/man/man4
 ./usr/X11R6/man/man5
 ./usr/X11R6/man/man7
-./usr/X11R6/man/mandoc.db
-./usr/X11R6/man/mandoc.index
+./usr/X11R6/man/whatis.db
 ./usr/X11R6/share
 ./usr/X11R6/share/X11
 ./usr/X11R6/share/xcb
