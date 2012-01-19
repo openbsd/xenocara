@@ -41,12 +41,6 @@ default partial xkb_compatibility "basic"  {
         action = SwitchScreen(Screen=12, !SameServer);
     };
 
-    interpret XF86_Ungrab {
-        action = Private(type=0x86, data="Ungrab");
-    };
-    interpret XF86_ClearGrab {
-        action = Private(type=0x86, data="ClsGrb");
-    };
     interpret XF86LogGrabInfo {
         action = Private(type=0x86, data="PrGrbs");
     };
