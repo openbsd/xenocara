@@ -37,9 +37,9 @@ host_triplet = @host@
 subdir = .
 DIST_COMMON = README $(am__configure_deps) $(srcdir)/Makefile.am \
 	$(srcdir)/Makefile.in $(srcdir)/xkeyboard-config.pc.in \
-	$(srcdir)/xkeyboard-config.spec.in $(top_srcdir)/configure \
-	ABOUT-NLS AUTHORS COPYING ChangeLog NEWS TODO config.guess \
-	config.rpath config.sub install-sh missing
+	$(top_srcdir)/configure ABOUT-NLS AUTHORS COPYING ChangeLog \
+	NEWS TODO config.guess config.rpath config.sub install-sh \
+	missing
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/configure.in
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
@@ -47,7 +47,7 @@ am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 am__CONFIG_DISTCLEAN_FILES = config.status config.cache config.log \
  configure.lineno config.status.lineno
 mkinstalldirs = $(install_sh) -d
-CONFIG_CLEAN_FILES = xkeyboard-config.pc xkeyboard-config.spec
+CONFIG_CLEAN_FILES = xkeyboard-config.pc
 CONFIG_CLEAN_VPATH_FILES =
 SOURCES =
 DIST_SOURCES =
@@ -274,8 +274,6 @@ pkgconfig_DATA = xkeyboard-config.pc
 EXTRA_DIST = config.rpath COPYING CREDITS README \
        autogen.sh \
        xkeyboard-config.pc.in \
-       xkeyboard-config.spec \
-       xkeyboard-config.spec.in \
        intltool-extract.in intltool-merge.in intltool-update.in
 
 DISTCLEANFILES = intltool-extract intltool-merge intltool-update
@@ -317,8 +315,6 @@ $(ACLOCAL_M4): @MAINTAINER_MODE_TRUE@ $(am__aclocal_m4_deps)
 	$(am__cd) $(srcdir) && $(ACLOCAL) $(ACLOCAL_AMFLAGS)
 $(am__aclocal_m4_deps):
 xkeyboard-config.pc: $(top_builddir)/config.status $(srcdir)/xkeyboard-config.pc.in
-	cd $(top_builddir) && $(SHELL) ./config.status $@
-xkeyboard-config.spec: $(top_builddir)/config.status $(srcdir)/xkeyboard-config.spec.in
 	cd $(top_builddir) && $(SHELL) ./config.status $@
 install-pkgconfigDATA: $(pkgconfig_DATA)
 	@$(NORMAL_INSTALL)

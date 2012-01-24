@@ -55,3 +55,12 @@ default partial xkb_compatibility "basic"  {
         action = Private(type=0x86, data="-VMode");
     };
 };
+
+partial xkb_compatibility "grab_break" {
+    interpret XF86_Ungrab {
+        action = Private(type=0x86, data="Ungrab");
+    };
+    interpret XF86_ClearGrab {
+        action = Private(type=0x86, data="ClsGrb");
+    };
+};
