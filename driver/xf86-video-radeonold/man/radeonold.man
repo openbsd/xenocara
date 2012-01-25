@@ -198,6 +198,16 @@ The default is to
 .B enable
 hardware acceleration.
 .TP
+.BI "Option \*qZaphodHeads\*q \*q" string \*q
+Specify the RandR output(s) to use with zaphod mode for a particular driver
+instance.  If you use this option you must use this option for all instances
+of the driver.
+.br
+For example:
+.B
+Option \*qZaphodHeads\*q \*qLVDS,VGA-0\*q
+will assign xrandr outputs LVDS and VGA-0 to this instance of the driver.
+.TP
 .BI "Option \*qDac6Bit\*q \*q" boolean \*q
 Enables or disables the use of 6 bits per color component when in 8 bpp
 mode (emulates VGA mode).  By default, all 8 bits per color component
