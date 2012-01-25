@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.39 2011/11/05 14:32:44 matthieu Exp $
+# $OpenBSD: Makefile,v 1.40 2012/01/25 21:37:03 matthieu Exp $
 
 # The input driver ABI broke between xserver 1.9 and 1.10. 
 # Some drivers were updated to the new ABI without keeping compatibility
@@ -65,7 +65,7 @@ VIDEO_DRV_amd64= \
 	${VIDEO_DRV_COMMON} \
 	xf86-video-intel \
 	xf86-video-openchrome \
-	xf86-video-radeonhd \
+	xf86-video-radeonold \
 	xf86-video-vmware \
 	xf86-video-wsudl
 
@@ -83,7 +83,7 @@ VIDEO_DRV_i386= \
 	xf86-video-i740 \
 	xf86-video-intel \
 	xf86-video-openchrome \
-	xf86-video-radeonhd \
+	xf86-video-radeonold \
 	xf86-video-vmware \
 	xf86-video-voodoo \
 	xf86-video-wsudl
