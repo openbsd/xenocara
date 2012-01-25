@@ -649,6 +649,9 @@ radeon_crtc_modeset_ioctl(xf86CrtcPtr crtc, Bool post)
     if (!info->directRenderingEnabled)
 	return;
 
+    if (info->ChipFamily >= CHIP_FAMILY_R600)
+	return;
+
     modeset.crtc = radeon_crtc->crtc_id;
     modeset.cmd = post ? _DRM_POST_MODESET : _DRM_PRE_MODESET;
 
@@ -661,54 +664,40 @@ radeon_crtc_modeset_ioctl(xf86CrtcPtr crtc, Bool post)
 void
 legacy_crtc_dpms(xf86CrtcPtr crtc, int mode)
 {
-    int mask;
+    uint32_t mask;
     RADEONCrtcPrivatePtr radeon_crtc = crtc->driver_private;
     RADEONEntPtr pRADEONEnt = RADEONEntPriv(crtc->scrn);
     unsigned char *RADEONMMIO = pRADEONEnt->MMIO;
 
-    mask = radeon_crtc->crtc_id ? (RADEON_CRTC2_DISP_DIS | RADEON_CRTC2_VSYNC_DIS | RADEON_CRTC2_HSYNC_DIS | RADEON_CRTC2_DISP_REQ_EN_B) : (RADEON_CRTC_DISPLAY_DIS | RADEON_CRTC_HSYNC_DIS | RADEON_CRTC_VSYNC_DIS);
-
-    if (mode == DPMSModeOff)
-	radeon_crtc_modeset_ioctl(crtc, FALSE);
+    if (radeon_crtc->crtc_id)
+	mask = (RADEON_CRTC2_DISP_DIS |
+		RADEON_CRTC2_VSYNC_DIS |
+		RADEON_CRTC2_HSYNC_DIS |
+		RADEON_CRTC2_DISP_REQ_EN_B);
+    else
+	mask = (RADEON_CRTC_DISPLAY_DIS |
+		RADEON_CRTC_HSYNC_DIS |
+		RADEON_CRTC_VSYNC_DIS);
 
     switch(mode) {
     case DPMSModeOn:
 	if (radeon_crtc->crtc_id) {
-	    OUTREGP(RADEON_CRTC2_GEN_CNTL, 0, ~mask);
+	    OUTREGP(RADEON_CRTC2_GEN_CNTL, RADEON_CRTC2_EN, ~(RADEON_CRTC2_EN | mask));
 	} else {
-	    OUTREGP(RADEON_CRTC_GEN_CNTL, 0, ~RADEON_CRTC_DISP_REQ_EN_B);
+	    OUTREGP(RADEON_CRTC_GEN_CNTL, RADEON_CRTC_EN, ~(RADEON_CRTC_EN | RADEON_CRTC_DISP_REQ_EN_B));
 	    OUTREGP(RADEON_CRTC_EXT_CNTL, 0, ~mask);
 	}
 	break;
     case DPMSModeStandby:
-	if (radeon_crtc->crtc_id) {
-	    OUTREGP(RADEON_CRTC2_GEN_CNTL, (RADEON_CRTC2_DISP_DIS | RADEON_CRTC2_HSYNC_DIS), ~mask);
-	} else {
-	    OUTREGP(RADEON_CRTC_GEN_CNTL, 0, ~RADEON_CRTC_DISP_REQ_EN_B);
-	    OUTREGP(RADEON_CRTC_EXT_CNTL, (RADEON_CRTC_DISPLAY_DIS | RADEON_CRTC_HSYNC_DIS), ~mask);
-	}
-	break;
     case DPMSModeSuspend:
-	if (radeon_crtc->crtc_id) {
-	    OUTREGP(RADEON_CRTC2_GEN_CNTL, (RADEON_CRTC2_DISP_DIS | RADEON_CRTC2_VSYNC_DIS), ~mask);
-	} else {
-	    OUTREGP(RADEON_CRTC_GEN_CNTL, 0, ~RADEON_CRTC_DISP_REQ_EN_B);
-	    OUTREGP(RADEON_CRTC_EXT_CNTL, (RADEON_CRTC_DISPLAY_DIS | RADEON_CRTC_VSYNC_DIS), ~mask);
-	}
-	break;
     case DPMSModeOff:
 	if (radeon_crtc->crtc_id) {
-	    OUTREGP(RADEON_CRTC2_GEN_CNTL, mask, ~mask);
+	    OUTREGP(RADEON_CRTC2_GEN_CNTL, mask, ~(RADEON_CRTC2_EN | mask));
 	} else {
-	    OUTREGP(RADEON_CRTC_GEN_CNTL, RADEON_CRTC_DISP_REQ_EN_B, ~RADEON_CRTC_DISP_REQ_EN_B);
+	    OUTREGP(RADEON_CRTC_GEN_CNTL, RADEON_CRTC_DISP_REQ_EN_B, ~(RADEON_CRTC_EN | RADEON_CRTC_DISP_REQ_EN_B));
 	    OUTREGP(RADEON_CRTC_EXT_CNTL, mask, ~mask);
 	}
 	break;
-    }
-  
-    if (mode != DPMSModeOff) {
-	radeon_crtc_modeset_ioctl(crtc, TRUE);
-	radeon_crtc_load_lut(crtc);
     }
 }
 
@@ -912,7 +901,6 @@ RADEONInitCrtcRegisters(xf86CrtcPtr crtc, RADEONSavePtr save,
 
     /*save->bios_4_scratch = info->SavedReg->bios_4_scratch;*/
     save->crtc_gen_cntl = (RADEON_CRTC_EXT_DISP_EN
-			   | RADEON_CRTC_EN
 			   | (format << 8)
 			   | ((mode->Flags & V_DBLSCAN)
 			      ? RADEON_CRTC_DBL_SCAN_EN
@@ -923,6 +911,11 @@ RADEONInitCrtcRegisters(xf86CrtcPtr crtc, RADEONSavePtr save,
 			   | ((mode->Flags & V_INTERLACE)
 			      ? RADEON_CRTC_INTERLACE_EN
 			      : 0));
+
+    /* 200M freezes on VT switch sometimes if CRTC is disabled */
+    if ((info->ChipFamily == CHIP_FAMILY_RS400) ||
+	(info->ChipFamily == CHIP_FAMILY_RS480))
+	save->crtc_gen_cntl |= RADEON_CRTC_EN;
 
     save->crtc_ext_cntl |= (RADEON_XCRT_CNT_EN|
 			    RADEON_CRTC_VSYNC_DIS |
@@ -1160,8 +1153,7 @@ RADEONInitCrtc2Registers(xf86CrtcPtr crtc, RADEONSavePtr save,
     else
 	save->crtc2_gen_cntl = 0;
 
-    save->crtc2_gen_cntl |= (RADEON_CRTC2_EN
-			     | (format << 8)
+    save->crtc2_gen_cntl |= ((format << 8)
 			     | RADEON_CRTC2_VSYNC_DIS
 			     | RADEON_CRTC2_HSYNC_DIS
 			     | RADEON_CRTC2_DISP_DIS
@@ -1175,6 +1167,11 @@ RADEONInitCrtc2Registers(xf86CrtcPtr crtc, RADEONSavePtr save,
 				? RADEON_CRTC2_INTERLACE_EN
 				: 0));
 
+    /* 200M freezes on VT switch sometimes if CRTC is disabled */
+    if ((info->ChipFamily == CHIP_FAMILY_RS400) ||
+	(info->ChipFamily == CHIP_FAMILY_RS480))
+	save->crtc2_gen_cntl |= RADEON_CRTC2_EN;
+
     save->disp2_merge_cntl = info->SavedReg->disp2_merge_cntl;
     save->disp2_merge_cntl &= ~(RADEON_DISP2_RGB_OFFSET_EN);
 
@@ -1187,12 +1184,15 @@ RADEONInitCrtc2Registers(xf86CrtcPtr crtc, RADEONSavePtr save,
 
 /* Define PLL registers for requested video mode */
 static void
-RADEONInitPLLRegisters(ScrnInfoPtr pScrn, RADEONSavePtr save,
+RADEONInitPLLRegisters(xf86CrtcPtr crtc, RADEONSavePtr save,
 		       RADEONPLLPtr pll, DisplayModePtr mode,
 		       int flags)
 {
+    RADEONCrtcPrivatePtr radeon_crtc = crtc->driver_private;
+    ScrnInfoPtr pScrn = crtc->scrn;
     RADEONInfoPtr  info       = RADEONPTR(pScrn);
     uint32_t feedback_div = 0;
+    uint32_t frac_fb_div = 0;
     uint32_t reference_div = 0;
     uint32_t post_divider = 0;
     uint32_t freq = 0;
@@ -1225,7 +1225,13 @@ RADEONInitPLLRegisters(ScrnInfoPtr pScrn, RADEONSavePtr save,
        return;
     }
 
-    RADEONComputePLL(pll, mode->Clock, &freq, &feedback_div, &reference_div, &post_divider, flags);
+    if (xf86ReturnOptValBool(info->Options, OPTION_NEW_PLL, FALSE))
+	radeon_crtc->pll_algo = RADEON_PLL_NEW;
+    else
+	radeon_crtc->pll_algo = RADEON_PLL_OLD;
+
+    RADEONComputePLL(crtc, pll, mode->Clock, &freq,
+		     &feedback_div, &frac_fb_div, &reference_div, &post_divider, flags);
 
     for (post_div = &post_divs[0]; post_div->divider; ++post_div) {
 	if (post_div->divider == post_divider)
@@ -1268,12 +1274,15 @@ RADEONInitPLLRegisters(ScrnInfoPtr pScrn, RADEONSavePtr save,
 
 /* Define PLL2 registers for requested video mode */
 static void
-RADEONInitPLL2Registers(ScrnInfoPtr pScrn, RADEONSavePtr save,
+RADEONInitPLL2Registers(xf86CrtcPtr crtc, RADEONSavePtr save,
 			RADEONPLLPtr pll, DisplayModePtr mode,
 			int flags)
 {
+    RADEONCrtcPrivatePtr radeon_crtc = crtc->driver_private;
+    ScrnInfoPtr pScrn = crtc->scrn;
     RADEONInfoPtr  info       = RADEONPTR(pScrn);
     uint32_t feedback_div = 0;
+    uint32_t frac_fb_div = 0;
     uint32_t reference_div = 0;
     uint32_t post_divider = 0;
     uint32_t freq = 0;
@@ -1304,7 +1313,13 @@ RADEONInitPLL2Registers(ScrnInfoPtr pScrn, RADEONSavePtr save,
        return;
     }
 
-    RADEONComputePLL(pll, mode->Clock, &freq, &feedback_div, &reference_div, &post_divider, flags);
+    if (xf86ReturnOptValBool(info->Options, OPTION_NEW_PLL, FALSE))
+	radeon_crtc->pll_algo = RADEON_PLL_NEW;
+    else
+	radeon_crtc->pll_algo = RADEON_PLL_OLD;
+
+    RADEONComputePLL(crtc, pll, mode->Clock, &freq,
+		     &feedback_div, &frac_fb_div, &reference_div, &post_divider, flags);
 
     for (post_div = &post_divs[0]; post_div->divider; ++post_div) {
 	if (post_div->divider == post_divider)
@@ -1361,17 +1376,12 @@ RADEONInitDispBandwidthLegacy(ScrnInfoPtr pScrn,
     uint32_t temp, data, mem_trcd, mem_trp, mem_tras, mem_trbs=0;
     float mem_tcas;
     int k1, c;
-    uint32_t MemTrcdExtMemCntl[4]     = {1, 2, 3, 4};
-    uint32_t MemTrpExtMemCntl[4]      = {1, 2, 3, 4};
-    uint32_t MemTrasExtMemCntl[8]     = {1, 2, 3, 4, 5, 6, 7, 8};
 
-    uint32_t MemTrcdMemTimingCntl[8]     = {1, 2, 3, 4, 5, 6, 7, 8};
-    uint32_t MemTrpMemTimingCntl[8]      = {1, 2, 3, 4, 5, 6, 7, 8};
-    uint32_t MemTrasMemTimingCntl[16]    = {4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19};
-
-    float MemTcas[8]  = {0, 1, 2, 3, 0, 1.5, 2.5, 0};
+    float MemTcas[8]  = {0, 1, 2, 3, 0, 1.5, 2.5, 0.0};
+    float MemTcas_rs480[8]  = {0, 1, 2, 3, 0, 1.5, 2.5, 3.5};
     float MemTcas2[8] = {0, 1, 2, 3, 4, 5, 6, 7};
     float MemTrbs[8]  = {1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5};
+    float MemTrbs_r4xx[8]  = {4, 5, 6, 7, 8, 9, 10, 11};
 
     float mem_bw, peak_disp_bw;
     float min_mem_eff = 0.8;
@@ -1400,9 +1410,6 @@ RADEONInitDispBandwidthLegacy(ScrnInfoPtr pScrn,
 	OUTREG(R300_MC_INIT_MISC_LAT_TIMER, mc_init_misc_lat_timer);
     }
 
-    /* R420 and RV410 family not supported yet */
-    if (info->ChipFamily == CHIP_FAMILY_R420 || info->ChipFamily == CHIP_FAMILY_RV410) return; 
-
     /*
      * Determine if there is enough bandwidth for current display mode
      */
@@ -1429,25 +1436,58 @@ RADEONInitDispBandwidthLegacy(ScrnInfoPtr pScrn,
     /*  Get values from the EXT_MEM_CNTL register...converting its contents. */
     temp = INREG(RADEON_MEM_TIMING_CNTL);
     if ((info->ChipFamily == CHIP_FAMILY_RV100) || info->IsIGP) { /* RV100, M6, IGPs */
-	mem_trcd      = MemTrcdExtMemCntl[(temp & 0x0c) >> 2];
-	mem_trp       = MemTrpExtMemCntl[ (temp & 0x03) >> 0];
-	mem_tras      = MemTrasExtMemCntl[(temp & 0x70) >> 4];
-    } else { /* RV200 and later */
-	mem_trcd      = MemTrcdMemTimingCntl[(temp & 0x07) >> 0];
-	mem_trp       = MemTrpMemTimingCntl[ (temp & 0x700) >> 8];
-	mem_tras      = MemTrasMemTimingCntl[(temp & 0xf000) >> 12];
+	mem_trcd = ((temp >> 2) & 0x3) + 1;
+	mem_trp  = ((temp & 0x3)) + 1;
+	mem_tras = ((temp & 0x70) >> 4) + 1;
+    } else if (info->ChipFamily == CHIP_FAMILY_R300 ||
+	       info->ChipFamily == CHIP_FAMILY_R350) { /* r300, r350 */
+	mem_trcd = (temp & 0x7) + 1;
+	mem_trp = ((temp >> 8) & 0x7) + 1;
+	mem_tras = ((temp >> 11) & 0xf) + 4;
+    } else if (info->ChipFamily == CHIP_FAMILY_RV350 ||
+	       info->ChipFamily <= CHIP_FAMILY_RV380) {
+	/* rv3x0 */
+	mem_trcd = (temp & 0x7) + 3;
+	mem_trp = ((temp >> 8) & 0x7) + 3;
+	mem_tras = ((temp >> 11) & 0xf) + 6;
+    } else if (info->ChipFamily == CHIP_FAMILY_R420 ||
+	       info->ChipFamily == CHIP_FAMILY_RV410) {
+	/* r4xx */
+	mem_trcd = (temp & 0xf) + 3;
+	if (mem_trcd > 15)
+	    mem_trcd = 15;
+	mem_trp = ((temp >> 8) & 0xf) + 3;
+	if (mem_trp > 15)
+	    mem_trp = 15;
+	mem_tras = ((temp >> 12) & 0x1f) + 6;
+	if (mem_tras > 31)
+	    mem_tras = 31;
+    } else { /* RV200, R200 */
+	mem_trcd = (temp & 0x7) + 1;
+	mem_trp = ((temp >> 8) & 0x7) + 1;
+	mem_tras = ((temp >> 12) & 0xf) + 4;
     }
 
     /* Get values from the MEM_SDRAM_MODE_REG register...converting its */
     temp = INREG(RADEON_MEM_SDRAM_MODE_REG);
     data = (temp & (7<<20)) >> 20;
     if ((info->ChipFamily == CHIP_FAMILY_RV100) || info->IsIGP) { /* RV100, M6, IGPs */
-	mem_tcas = MemTcas [data];
+	if (info->ChipFamily == CHIP_FAMILY_RS480) /* don't think rs400 */
+	    mem_tcas = MemTcas_rs480[data];
+	else
+	    mem_tcas = MemTcas[data];
     } else {
 	mem_tcas = MemTcas2 [data];
     }
+    if (info->ChipFamily == CHIP_FAMILY_RS400 ||
+	info->ChipFamily == CHIP_FAMILY_RS480) {
+	/* extra cas latency stored in bits 23-25 0-4 clocks */
+	data = (temp >> 23) & 0x7;
+	if (data < 5)
+	    mem_tcas += data;
+    }
 
-    if (IS_R300_VARIANT) {
+    if (IS_R300_VARIANT && !info->IsIGP) {
 	/* on the R300, Tcas is included in Trbs.
 	 */
 	temp = INREG(RADEON_MEM_CNTL);
@@ -1469,7 +1509,11 @@ RADEONInitDispBandwidthLegacy(ScrnInfoPtr pScrn,
 	    data = (R300_MEM_RBS_POSITION_A_MASK & temp);
 	}
 
-	mem_trbs = MemTrbs[data];
+	if (info->ChipFamily == CHIP_FAMILY_RV410 ||
+	    info->ChipFamily == CHIP_FAMILY_R420)
+	    mem_trbs = MemTrbs_r4xx[data];
+	else
+	    mem_trbs = MemTrbs[data];
 	mem_tcas += mem_trbs;
     }
 
@@ -1767,7 +1811,7 @@ legacy_crtc_mode_set(xf86CrtcPtr crtc, DisplayModePtr mode,
 	dot_clock = adjusted_mode->Clock / 1000.0;
 	if (dot_clock) {
 	    ErrorF("init pll1\n");
-	    RADEONInitPLLRegisters(pScrn, info->ModeReg, &info->pll, adjusted_mode, pll_flags);
+	    RADEONInitPLLRegisters(crtc, info->ModeReg, &info->pll, adjusted_mode, pll_flags);
 	} else {
 	    info->ModeReg->ppll_ref_div = info->SavedReg->ppll_ref_div;
 	    info->ModeReg->ppll_div_3   = info->SavedReg->ppll_div_3;
@@ -1781,7 +1825,7 @@ legacy_crtc_mode_set(xf86CrtcPtr crtc, DisplayModePtr mode,
 	dot_clock = adjusted_mode->Clock / 1000.0;
 	if (dot_clock) {
 	    ErrorF("init pll2\n");
-	    RADEONInitPLL2Registers(pScrn, info->ModeReg, &info->pll, adjusted_mode, pll_flags);
+	    RADEONInitPLL2Registers(crtc, info->ModeReg, &info->pll, adjusted_mode, pll_flags);
 	}
 	break;
     }

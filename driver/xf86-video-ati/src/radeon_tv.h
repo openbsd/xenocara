@@ -53,6 +53,10 @@
 #define NTSC_TV_PLL_N_14 693
 #define NTSC_TV_PLL_P_14 7
 
+#define PAL_TV_PLL_M_14 19
+#define PAL_TV_PLL_N_14 353
+#define PAL_TV_PLL_P_14 5
+
 #define VERT_LEAD_IN_LINES 2
 #define FRAC_BITS 0xe
 #define FRAC_MASK 0x3fff

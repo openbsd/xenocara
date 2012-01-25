@@ -18,15 +18,15 @@
 #  IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 #  CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-AUTOMAKE_OPTIONS = foreign
 SUBDIRS = src man
+MAINTAINERCLEANFILES = ChangeLog INSTALL
 
-EXTRA_DIST = ChangeLog
-CLEANFILES = ChangeLog
+.PHONY: ChangeLog INSTALL
 
-.PHONY: ChangeLog
+INSTALL:
+	$(INSTALL_CMD)
 
 ChangeLog:
-	(GIT_DIR=$(top_srcdir)/.git git-log > .changelog.tmp && mv .changelog.tmp ChangeLog; rm -f .changelog.tmp) || (touch ChangeLog; echo 'git directory not found: installing possibly empty changelog.' >&2)
+	$(CHANGELOG_CMD)
 
-dist-hook: ChangeLog
+dist-hook: ChangeLog INSTALL

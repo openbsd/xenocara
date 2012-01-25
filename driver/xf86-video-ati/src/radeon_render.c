@@ -406,11 +406,11 @@ static Bool FUNC_NAME(R100SetupTexture)(
     txformat = RadeonGetTextureFormat(format);
     tex_bytepp = PICT_FORMAT_BPP(format) >> 3;
 
-    dst_pitch = (width * tex_bytepp + 63) & ~63;
+    dst_pitch = RADEON_ALIGN(width * tex_bytepp, 64);
     size = dst_pitch * height;
 
     if ((flags & XAA_RENDER_REPEAT) && (height != 1) &&
-	(((width * tex_bytepp + 31) & ~31) != dst_pitch))
+	(RADEON_ALIGN(width * tex_bytepp, 32) != dst_pitch))
 	return FALSE;
 
 #ifndef ACCEL_CP
@@ -743,11 +743,11 @@ static Bool FUNC_NAME(R200SetupTexture)(
     txformat = RadeonGetTextureFormat(format);
     tex_bytepp = PICT_FORMAT_BPP(format) >> 3;
 
-    dst_pitch = (width * tex_bytepp + 63) & ~63;
+    dst_pitch = RADEON_ALIGN(width * tex_bytepp, 64);
     size = dst_pitch * height;
 
     if ((flags & XAA_RENDER_REPEAT) && (height != 1) &&
-	(((width * tex_bytepp + 31) & ~31) != dst_pitch))
+	(RADEON_ALIGN(width * tex_bytepp, 32) != dst_pitch))
 	return FALSE;
 
 #ifndef ACCEL_CP

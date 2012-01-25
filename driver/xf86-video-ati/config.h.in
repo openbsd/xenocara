@@ -20,6 +20,12 @@
 /* Define to 1 if you have the <inttypes.h> header file. */
 #undef HAVE_INTTYPES_H
 
+/* libudev support */
+#undef HAVE_LIBUDEV
+
+/* Define to 1 if you have the <list.h> header file. */
+#undef HAVE_LIST_H
+
 /* Define to 1 if you have the <memory.h> header file. */
 #undef HAVE_MEMORY_H
 
@@ -47,6 +53,9 @@
 /* Define to 1 if you have the <unistd.h> header file. */
 #undef HAVE_UNISTD_H
 
+/* xextproto 7.1 available */
+#undef HAVE_XEXTPROTO_71
+
 /* Have xf86_crtc_clip_video_helper prototype */
 #undef HAVE_XF86CRTCCLIPVIDEOHELPER
 
@@ -55,6 +64,13 @@
 
 /* Have xf86XVFillKeyHelperDrawable prototype */
 #undef HAVE_XV_DRAWABLE_HELPER
+
+/* Define to the sub-directory in which libtool stores uninstalled libraries.
+   */
+#undef LT_OBJDIR
+
+/* Define to 1 if your C compiler doesn't accept -c and -o together. */
+#undef NO_MINUS_C_MINUS_O
 
 /* Name of package */
 #undef PACKAGE
@@ -83,6 +99,9 @@
 /* Patch version of this package */
 #undef PACKAGE_VERSION_PATCHLEVEL
 
+/* Enable DRI2 code */
+#undef RADEON_DRI2
+
 /* Define to 1 if you have the ANSI C header files. */
 #undef STDC_HEADERS
 
@@ -104,8 +123,14 @@
 /* Enable developmental DRI driver support */
 #undef XF86DRI_DEVEL
 
-/* X server has built-in mode code */
-#undef XMODES
+/* DRM kernel modesetting */
+#undef XF86DRM_MODE
+
+/* Number of bits in a file offset, on hosts where this is settable. */
+#undef _FILE_OFFSET_BITS
+
+/* Define for large files, on AIX-style hosts. */
+#undef _LARGE_FILES
 
 /* Define to 16-bit byteswap macro */
 #undef bswap_16

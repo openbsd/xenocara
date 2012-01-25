@@ -67,18 +67,18 @@ void RADEONSetPitch (ScrnInfoPtr pScrn)
     /* FIXME: May need to validate line pitch here */
     if (info->ChipFamily < CHIP_FAMILY_R600) {
 	switch (pScrn->depth / 8) {
-	case 1: pitch_mask = align_large ? 255 : 127;
+	case 1: pitch_mask = align_large ? 256 : 128;
 	    break;
-	case 2: pitch_mask = align_large ? 127 : 31;
+	case 2: pitch_mask = align_large ? 128 : 32;
 	    break;
 	case 3:
-	case 4: pitch_mask = align_large ? 63 : 15;
+	case 4: pitch_mask = align_large ? 64 : 16;
 	    break;
 	}
     } else
-	pitch_mask = 255; /* r6xx/r7xx need 256B alignment for accel */
+	pitch_mask = 256; /* r6xx/r7xx need 256B alignment for accel */
 
-    dummy = (pScrn->virtualX + pitch_mask) & ~pitch_mask;
+    dummy = RADEON_ALIGN(pScrn->virtualX, pitch_mask);
     pScrn->displayWidth = dummy;
     info->CurrentLayout.displayWidth = pScrn->displayWidth;
 
@@ -158,7 +158,7 @@ static DisplayModePtr RADEONFPNativeMode(xf86OutputPtr output)
 	new->VSyncEnd   = new->VSyncStart + native_mode->VSyncWidth;
 
 	new->Clock      = native_mode->DotClock;
-	new->Flags      = 0;
+	new->Flags      = native_mode->Flags;
 
 	if (new) {
 	    new->type       = M_T_DRIVER | M_T_PREFERRED;
@@ -168,6 +168,20 @@ static DisplayModePtr RADEONFPNativeMode(xf86OutputPtr output)
 	}
 
 	xf86DrvMsg(pScrn->scrnIndex, X_INFO, "Added native panel mode: %dx%d\n",
+		   native_mode->PanelXRes, native_mode->PanelYRes);
+    } else if (native_mode->PanelXRes != 0 &&
+	       native_mode->PanelYRes != 0) {
+
+	new = xf86CVTMode(native_mode->PanelXRes, native_mode->PanelYRes, 60.0, TRUE, FALSE);
+
+	if (new) {
+	    new->type       = M_T_DRIVER | M_T_PREFERRED;
+
+	    new->next       = NULL;
+	    new->prev       = NULL;
+	}
+
+	xf86DrvMsg(pScrn->scrnIndex, X_INFO, "Added native panel mode using CVT: %dx%d\n",
 		   native_mode->PanelXRes, native_mode->PanelYRes);
     }
 
