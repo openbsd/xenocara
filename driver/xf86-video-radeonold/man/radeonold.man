@@ -2,17 +2,17 @@
 .ds q \N'34'
 .TH RADEON __drivermansuffix__ __vendorversion__
 .SH NAME
-radeon \- ATI RADEON video driver
+radeonold \- ATI RADEON video driver version 6.12.2.
 .SH SYNOPSIS
 .nf
 .B "Section \*qDevice\*q"
 .BI "  Identifier \*q"  devname \*q
-.B  "  Driver \*qradeon\*q"
+.B  "  Driver \*qradeonold\*q"
 \ \ ...
 .B EndSection
 .fi
 .SH DESCRIPTION
-.B radeon
+.B radeonold
 is an __xservername__ driver for ATI RADEON based video cards with the
 following features:
 .PP
