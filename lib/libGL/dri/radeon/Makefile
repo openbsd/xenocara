@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.3 2011/10/23 13:57:36 matthieu Exp $
+#	$OpenBSD: Makefile,v 1.4 2012/01/27 07:07:43 matthieu Exp $
 
 LIB=	radeon_dri.so
 
@@ -50,7 +50,8 @@ DRIVER_DEFINES = -DRADEON_R100 -DRADEON_COMMON=0 \
 	-I$(MESA)/drivers/dri/radeon/server \
 	-I$(MESA)/drivers/dri/radeon
 
-
 .include <bsd.xorg.mk>
+
+LDADD+=	-ldrm_radeon
 
 .PATH: $(MESA)/drivers/dri/radeon
