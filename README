@@ -31,7 +31,8 @@ organisation used in X.Org:
 
 In addition Xenocara uses the following directories:
 
-- dist:	    contains the Mesa sources, shared by lib and xserver above
+- dist:	    contains some of the 3rd party sources, when keeping them
+  	    separate helps the build system (Mesa and xkeyboard-config)
 - distrib:  all binary distribution related tools and data
 - etc:	    mtree(8) data files
 - share:    make(1) configuration for Xenocara
@@ -78,7 +79,7 @@ GNU autotools packages installed:
     - automake 1.9 (devel/automake/1.9)
     - autoconf 2.62 (devel/autoconf/2.62)
     - metaauto 0.6 (or later) (devel/metaauto)
-    - libtool 1.5.22 (or later) (devel/libtool)
+    - libtool 2.4.2 (or later) (devel/libtool)
 
 If you have your source tree on an NFS partition, make sure the clock
 of your server and client are properly synchronised. Any significant
@@ -201,4 +202,4 @@ The core dump will be in /var/crash.
 See also <http://xorg.freedesktop.org/wiki/Development/Documentation/ServerDebugging>
 
 -- 
-$OpenBSD: README,v 1.27 2011/10/08 13:51:04 matthieu Exp $
+$OpenBSD: README,v 1.28 2012/01/28 21:04:42 matthieu Exp $
