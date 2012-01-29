@@ -124,7 +124,7 @@ AddToMenu Utilities     "Utilities" Title
 +			""		Nop
 +                       "XLock%mini.xlock.xpm%"         Exec exec xlock
 +			""		Nop
-+                       "Reset X defaults" Exec xrdb -load $HOME/.Xdefaults 
++                       "Reset X defaults" Exec xrdb -load $HOME/.Xdefaults
 
 AddToMenu Misc-Ops "Misc Config Opts" Title
 +                  "Sloppy Focus"        ChangeDefaultFocus SloppyFocus
@@ -141,13 +141,13 @@ AddToMenu Misc-Ops "Misc Config Opts" Title
 +                  "Partial Paging"         EdgeScroll 50 50
 +                  "Full Paging && Edge Wrap" EdgeScroll 100000 100000
 
-AddToMenu Window-Ops	"Window Ops"	Title		
+AddToMenu Window-Ops	"Window Ops"	Title
 +			"Move%mini.move.xpm%"		Move
 +			"Resize%mini.resize.xpm%"	Resize
 +			"Raise%mini.raise.xpm%"		Raise
-+			"Lower%mini.lower.xpm%"		Lower 
++			"Lower%mini.lower.xpm%"		Lower
 +		 	"(De)Iconify%mini.iconify.xpm%"	Iconify
-+			"(Un)Stick%mini.stick2.xpm%"	Stick		
++			"(Un)Stick%mini.stick2.xpm%"	Stick
 +			"(Un)Maximize%mini.maximize.xpm%"	Maximize
 +			""		Nop
 +			"Delete%mini.excl.xpm%"	Delete
@@ -158,17 +158,17 @@ AddToMenu Window-Ops	"Window Ops"	Title
 
 AddToMenu Window-Ops2	"&Move%mini.move.xpm%"		Move
 +			"&Resize%mini.resize.xpm%"	Resize
-+			"R&aise%mini.raise.xpm%"	Raise   	
-+			"&Lower%mini.lower.xpm%"	Lower   	
-+			"(De)&Iconify%mini.iconify.xpm%"	Iconify 	
-+			"(Un)&Stick%mini.stick2.xpm%"	Stick		
++			"R&aise%mini.raise.xpm%"	Raise
++			"&Lower%mini.lower.xpm%"	Lower
++			"(De)&Iconify%mini.iconify.xpm%"	Iconify
++			"(Un)&Stick%mini.stick2.xpm%"	Stick
 +                       "(Un)Ma&ximize%mini.maximize.xpm%" Maximize
-+			""		Nop     	
-+			"&Delete%mini.excl.xpm%"	Delete	
-+			"&Close%mini.cut.xpm%"	Close
-+			"Destroy%mini.destroy.xpm%"	Destroy 	
 +			""		Nop
-+			"ScrollBar" 	Module FvwmScroll 2 2	
++			"&Delete%mini.excl.xpm%"	Delete
++			"&Close%mini.cut.xpm%"	Close
++			"Destroy%mini.destroy.xpm%"	Destroy
++			""		Nop
++			"ScrollBar" 	Module FvwmScroll 2 2
 +			"Print"         PrintFunction
 #+                       "Print Reverse" PrintReverseFunction
 
@@ -204,9 +204,9 @@ AddToMenu Module-Popup	"FvwmModules"	Title
 +                       "Form - MyFvwmTalk"  Module FvwmForm MyFvwmTalk
 +                       "Form - QuitVerify"  Module FvwmForm QuitVerify
 
-AddToMenu Quit-Verify 
+AddToMenu Quit-Verify
 +		      	"Restart Fvwm%mini.refresh.xpm%"	    Restart fvwm
-+		      	""		    Nop	
++		      	""		    Nop
 +	      	      	"Start cwm"         Restart cwm
 +	      	      	"Start wm2"         Restart wm2
 +		      	"Start twm"         Restart twm
@@ -215,10 +215,10 @@ AddToMenu Quit-Verify
 +		        "Start vtwm"        Restart vtwm
 +		      	"Start mwm"    	    Restart mwm
 +	      	      	"Start olwm"        Restart olwm
-+		      	""		    Nop	
++		      	""		    Nop
 +		      	"Start dummy%mini.xterm.xpm%"       Restart xterm
-+		      	""		    Nop	
-+		      	"No, Don't Quit"    Nop	
++		      	""		    Nop
++		      	"No, Don't Quit"    Nop
 
 ######################## Sample Functions ##########################
 
@@ -274,53 +274,53 @@ AddToFunc DeiconifyFocusAndWarp "I" Iconify -1
 AddToFunc ChangeDefaultFocus "I" Style "*" $0
 +                            "I" Recapture
 
-############################################################################ 
-# Now some keyboard shortcuts. 
- 
-# Arrow Keys 
-# press arrow + control anywhere, and scroll by 1 page 
-Key Left	A	C	Scroll -100 0 
-Key Right	A	C	Scroll +100 +0 
-Key Up		A	C	Scroll +0   -100 
-Key Down	A	C	Scroll +0   +100 
- 
-# press arrow + meta key, and scroll by 1/10 of a page 
-#Key Left	A	M	Scroll -10 +0 
-#Key Right	A	M	Scroll +10 +0 
-#Key Up		A	M	Scroll +0   -10 
-#Key Down	A	M	Scroll +0   +10 
- 
-# press shift arrow + control anywhere, and move the pointer by 1% of a page 
-Key Left	A	SC	CursorMove -1 0 
-Key Right	A	SC	CursorMove +1 +0 
-Key Up		A	SC	CursorMove +0   -1 
-Key Down	A	SC	CursorMove +0   +1 
- 
-# press shift arrow + meta key, and move the pointer by 1/10 of a page 
-Key Left	A	SM	CursorMove -10 +0 
-Key Right	A	SM	CursorMove +10 +0 
-Key Up		A	SM	CursorMove +0   -10 
-Key Down	A	SM	CursorMove +0   +10 
- 
-# Keyboard accelerators 
+############################################################################
+# Now some keyboard shortcuts.
+
+# Arrow Keys
+# press arrow + control anywhere, and scroll by 1 page
+Key Left	A	C	Scroll -100 0
+Key Right	A	C	Scroll +100 +0
+Key Up		A	C	Scroll +0   -100
+Key Down	A	C	Scroll +0   +100
+
+# press arrow + meta key, and scroll by 1/10 of a page
+#Key Left	A	M	Scroll -10 +0
+#Key Right	A	M	Scroll +10 +0
+#Key Up		A	M	Scroll +0   -10
+#Key Down	A	M	Scroll +0   +10
+
+# press shift arrow + control anywhere, and move the pointer by 1% of a page
+Key Left	A	SC	CursorMove -1 0
+Key Right	A	SC	CursorMove +1 +0
+Key Up		A	SC	CursorMove +0   -1
+Key Down	A	SC	CursorMove +0   +1
+
+# press shift arrow + meta key, and move the pointer by 1/10 of a page
+Key Left	A	SM	CursorMove -10 +0
+Key Right	A	SM	CursorMove +10 +0
+Key Up		A	SM	CursorMove +0   -10
+Key Down	A	SM	CursorMove +0   +10
+
+# Keyboard accelerators
 Key F1		A	M	Menu RootMenu
 Key F2		A	M	Menu Window-Ops
-Key F3		A	M	WindowList FvwmWinList  
-Key F4		A	M	Iconify 
-Key F5		A	M	Move 
-Key F6		A	M	Resize 
-Key F7		A	M	CirculateUp 
-Key F8		A	M	CirculateDown 
- 
-#Page Up/Page Down keys are used to scroll by one desktop page 
-# in any context, press page up/down + control 
-# in root context, just pressing page up/down is OK 
-#  
-# I prefer the non-wrapping scroll. These are for example purposes only 
-#Key Next	A       C       Scroll 100000 0 
-#Key Next	R       N       Scroll 100000 0   
-#Key Prior	A       C       Scroll -100000 0 
-#Key Prior	R       N       Scroll -100000 0 
+Key F3		A	M	WindowList FvwmWinList
+Key F4		A	M	Iconify
+Key F5		A	M	Move
+Key F6		A	M	Resize
+Key F7		A	M	CirculateUp
+Key F8		A	M	CirculateDown
+
+#Page Up/Page Down keys are used to scroll by one desktop page
+# in any context, press page up/down + control
+# in root context, just pressing page up/down is OK
+#
+# I prefer the non-wrapping scroll. These are for example purposes only
+#Key Next	A       C       Scroll 100000 0
+#Key Next	R       N       Scroll 100000 0
+#Key Prior	A       C       Scroll -100000 0
+#Key Prior	R       N       Scroll -100000 0
 
 ################## FvwmButtons button-bar ################################
 *FvwmButtonsBack bisque3
@@ -367,14 +367,14 @@ Key F8		A	M	CirculateDown
 *FvwmWinListAction Click3 Module "FvwmIdent" FvwmIdent
 *FvwmWinListUseSkipList
 *FvwmWinListGeometry +0-1
-                                      
+
 
 *FvwmBackerDesk 0 -solid steelblue
 *FvwmBackerDesk 1 -solid midnightblue
 
 *FvwmScrollBack grey40
 *FvwmScrollFore green
-	
+
 ############################################################
 ############################################################
 # Note that icons are shown in the module
