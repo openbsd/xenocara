@@ -211,10 +211,11 @@ AddToMenu Quit-Verify
 +	      	      	"Start wm2"         Restart wm2
 +		      	"Start twm"         Restart twm
 +		      	"Start ctwm"        Restart ctwm
-+		        "Start tvtwm"       Restart tvtwm
-+		        "Start vtwm"        Restart vtwm
++			"Start flwm"	    Restart flwm
 +		      	"Start mwm"    	    Restart mwm
-+	      	      	"Start olwm"        Restart olwm
++			"Start openbox"	    Restart openbox
++	      	      	"Start scrotwm"     Restart scrotwm
++		        "Start tvtwm"       Restart tvtwm
 +		      	""		    Nop
 +		      	"Start dummy%mini.xterm.xpm%"       Restart xterm
 +		      	""		    Nop
