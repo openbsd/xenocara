@@ -1,3 +1,455 @@
+commit e597f0119cd69b6d9edf86d06d941468f90d8e6d
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Fri Jan 27 21:07:17 2012 -0800
+
+    configure.ac: 1.11.4
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit 6c491463ee7a3637c8aae7ddae9625b36b792078
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Fri Jan 20 23:54:58 2012 -0800
+
+    1.11.3.902 (1.11.4 RC2)
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit b747a91485184649c05aba6fa10734f70e926032
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Wed Jan 18 11:47:21 2012 -0800
+
+    XQuartz: Bump bundle version to 2.7.1
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit a1ed67fa0551ee2b39d002d3b786a2017b37c7ac
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri Jan 6 13:20:45 2012 +1000
+
+    render: don't bother with animated cursors on floating slaves (#39989)
+    
+    X.Org Bug 39989 <http://bugs.freedesktop.org/show_bug.cgi?id=39989>
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Jeremy Huddleston <jeremyhu@apple.com>
+    (cherry picked from commit bbb6b8c834e0e1491ca14403b5d0840dd14380d3)
+
+commit f89c39e6c9e20ffc3c1ae228ee601c2ab9007ff4
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Mon Jan 9 15:04:10 2012 +1000
+
+    dix: Update pointer limits for floating devices too (#43635)
+    
+    When the screen is restructured, the pointer limits need to be reset for
+    floating slave devices as well, not just for master pointers. Only skip
+    devices that don't have a cursor (attached slaves and keyboard)
+    
+    Bug reproducer: float an absolute slave device, rotate the screen - the
+    device is now confined to a section of the screen only.
+    
+    X.Org Bug 43635 <http://bugs.freedesktop.org/show_bug.cgi?id=43635>
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Chase Douglas <chase.douglas@canonical.com>
+    (cherry picked from commit 35bd77e9d0701daae87d681900d749604fc6471f)
+
+commit dea9377a257a402b2c7fe4a96c958d951a7d4579
+Author: Zhigang Gong <zhigang.gong@linux.intel.com>
+Date:   Wed Jan 4 07:01:19 2012 +0000
+
+    mi/mibitblt: Fix an overflow bug of bit shift.
+    
+    When depth equal to 32 and planeMask equal to 0, the overflow will
+    occur and cause the pixmap can't be cleared. There are some test
+    cases in XTS hit this bug, and this fix can eliminate the corresponding
+    failures.
+    
+    Signed-off-by: Zhigang Gong <zhigang.gong@linux.intel.com>
+    Reviewed-by: Adam Jackson <ajax@redhat.com>
+    Signed-off-by: Keith Packard <keithp@keithp.com>
+    (cherry picked from commit f4956faab9ccf9aba6cf9603f4489f5dad19a347)
+
+commit d2db5100b1bafeeea8c1febd390631c8f8abb094
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Oct 28 21:29:50 2011 -0700
+
+    Convert DetermineClientCmd to use strdup instead of malloc+strncpy
+    
+    *cmdname is initialized to NULL earlier in the function, so it's
+    okay to overwrite it with NULL if strdup fails, don't need that
+    extra check.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Jeremy Huddleston <jeremyhu@apple.com>
+    (cherry picked from commit 780133f9ae7fada462714b47e79d26075bbd9abe)
+
+commit 5b28bcb340e279e7f4e76617e86b439092367690
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Tue Dec 13 21:23:12 2011 -0500
+
+    dix: Tune dixLookupDrawable for success
+    
+    The vast vast vast majority of resource lookups are successful.  Move some
+    work to the error paths so we don't punish success.
+    
+    Before:
+    40000000 trep @   0.0009 msec (1109091.3/sec): PutImage 10x10 square
+    60000000 trep @   0.0005 msec (2072652.2/sec): ShmPutImage 10x10 square
+    
+    After:
+    40000000 trep @   0.0009 msec (1148346.9/sec): PutImage 10x10 square
+    60000000 trep @   0.0005 msec (2091666.1/sec): ShmPutImage 10x10 square
+    
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+    (cherry picked from commit 8f9bdfd293ad8e45755efe8d764b4dcc2a724f51)
+
+commit e1ea93fec93b13d18df4451210aaaf322b769b6a
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Tue Dec 13 20:23:40 2011 -0500
+
+    dix: Tune dtrace hooks around Dispatch
+    
+    Don't call LookupMajorName if the hooks aren't active, it's quite expensive.
+    
+    Before:
+    40000000 trep @   0.0009 msec (1087458.5/sec): PutImage 10x10 square
+    60000000 trep @   0.0005 msec (2012238.6/sec): ShmPutImage 10x10 square
+    
+    After:
+    40000000 trep @   0.0009 msec (1109091.3/sec): PutImage 10x10 square
+    60000000 trep @   0.0005 msec (2072652.2/sec): ShmPutImage 10x10 square
+    
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+    (cherry picked from commit 83a98543b58c661a22574a6f8d8f9d777c0955b8)
+
+commit 9eaa0b5c89f645c50ea90e07e8b49ebacf4349a0
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Tue Dec 13 21:00:05 2011 -0500
+
+    xace: ricer tuning for XaceHook
+    
+    gcc doesn't want to hoist the check for XaceHooks[hook] != NULL above the
+    varargs code for some reason, so do it ourselves.
+    
+    Before:
+    40000000 trep @   0.0010 msec (1050420.2/sec): PutImage 10x10 square
+    60000000 trep @   0.0005 msec (1921147.6/sec): ShmPutImage 10x10 square
+    
+    After:
+    40000000 trep @   0.0009 msec (1087458.5/sec): PutImage 10x10 square
+    60000000 trep @   0.0005 msec (2012238.6/sec): ShmPutImage 10x10 square
+    
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+    (cherry picked from commit 11977fab546da35d579ebe285e3c26864007805e)
+
+commit a3b6ecc893e17028cfbe16d8d7981c9037fc0766
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Jan 3 10:45:45 2012 +1000
+
+    xfree86: split warning about missing identifier or input driver
+    
+    Check for identifier first and bail if it's missing (also remove the current
+    identifier check after we've already bailed due to missing identifiers)
+    
+    If a driver is missing, warn but also say that we may have added this device
+    already. I see too many bugreports with incorrectly shortened log files.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Cyril Brulebois <kibi@debian.org>
+    (cherry picked from commit 75953ccb9e9e5f1dbbaa44c714716a0049e22aae)
+
+commit 4a339afc586d55a9a248b893f007219d79c72600
+Author: Julien Cristau <jcristau@debian.org>
+Date:   Fri Dec 30 20:41:25 2011 +0100
+
+    os: don't ignore failure from dladdr
+    
+    If dladdr returns 0, don't go and use the returned Dl_info, it may
+    contain garbage.
+    
+    X.Org bug#44315 <https://bugs.freedesktop.org/show_bug.cgi?id=44315>
+    
+    Reported-and-tested-by: Cyril Brulebois <kibi@debian.org>
+    Reviewed-by: Jeremy Huddleston <jeremyhu@apple.com>
+    Reviewed-by: Cyril Brulebois <kibi@debian.org>
+    Signed-off-by: Julien Cristau <jcristau@debian.org>
+    (cherry picked from commit 6269977c91071e0ea16ca5b4b8e15fd6db0b6fcf)
+
+commit 9a4be7e99f0e832df87b8e7fb548793dd4b52717
+Author: Matthieu Herrb <matthieu.herrb@laas.fr>
+Date:   Mon Jan 2 13:23:59 2012 +0000
+
+    Add OpenBSD support to DetermineClientCmd()
+    
+    Uses kvm_getargv() from libkvm.
+    
+    Signed-off-by: Matthieu Herrb <matthieu.herrb@laas.fr>
+    Reviewed-by: Adam Jackson <ajax@redhat.com>
+    Signed-off-by: Keith Packard <keithp@keithp.com>
+    (cherry picked from commit 6d6d4cb6043905d850834946e9bfc526ed5a9ef7)
+
+commit 8046717d720c1bbbf02ba986622bc96c6b52a36c
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Dec 24 10:00:56 2011 -0800
+
+    Add Solaris support to DetermineClientCmd
+    
+    Uses /proc/pid/psinfo to read command & partial arguments.
+    
+    Moves cmdsize & argsize variables into non-Solaris #else clause
+    to avoid unused variable warnings.
+    
+    Fixes format mismatch errors when building with DEBUG defined on
+    a 64-bit platform (where Mask is defined as CARD32).
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Rami Ylimäki <rami.ylimaki@vincit.fi>
+    Signed-off-by: Keith Packard <keithp@keithp.com>
+    (cherry picked from commit cfc4c3d7fa8bd4da4c08b2ab8e6f85435f75353a)
+
+commit cea9f9f273cb525cb5daa2d2819d3f635582cb24
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Fri Jan 6 22:01:03 2012 -0800
+
+    configure.ac: 1.11.3.901 (1.11.4 RC1)
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit b15be8547d4d204f3e498f52d86713a76766e871
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Fri Jan 6 22:12:14 2012 -0800
+
+    Xi: Fix mishandled git merge
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit 82e0ae042379181eb143431e1413084432a17079
+Merge: f9b00c2 4e4bb31
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Mon Jan 2 20:58:22 2012 -0500
+
+    Merge remote-tracking branch 'whot/server-1.11-branch' into server-1.11-branch
+
+commit 4e4bb319a4f9510277557f65676948cd1db10e93
+Author: Carlos Garnacho <carlosg@gnome.org>
+Date:   Tue Dec 13 15:41:23 2011 +0100
+
+    Xi: assign correct grab_mode/other_device_mode in XI2 passive grabs
+    
+    CreateGrab() expects the keyboard mode to be stored in grab_mode, and the
+    pointer mode in other_device_mode, so respect this in passive XI2 grabs,
+    and switch modes if needed.
+    
+    Signed-off-by: Carlos Garnacho <carlosg@gnome.org>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Chase Douglas <chase.douglas@canonical.com>
+    (cherry picked from commit 5b169cb695bd450d7f64e3800f00c9237ee67f96)
+
+commit 8c73f6bcbdc04380cc41d9f6dc7e849c7c4f9298
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Dec 8 21:52:07 2011 -0800
+
+    Change disable_clientpointer return type to void
+    
+    It doesn't return anything, nor does it's caller expect it to.
+    
+    Fixes Solaris Studio compiler error:
+    "xichangehierarchy.c", line 214: Function has no return statement : disable_clientpointer
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Keith Packard <keithp@keithp.com>
+    (cherry picked from commit 372a6f10dc2d74d2d179e8b92449e9b8636a99ef)
+
+commit ae4272a5742119b10074a542d0dcd4c493cb83e4
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Wed Nov 30 09:06:06 2011 +1000
+
+    xfixes: don't dereference a NULL cursor
+    
+    If the new cursor is the NULL cursor, don't dereference it and use zeros
+    instead.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Jeremy Huddleston <jeremyhu@apple.com>
+    (cherry picked from commit 1ab50be938524dcd4a9e56d27e3b96a27c2db2c0)
+
+commit 20efd3c15829d8fbb3610d5af41b67a627e63d21
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Nov 29 16:15:37 2011 +1000
+
+    Xi: when removing a device, reset ClientPointers where needed
+    
+    if a client had the to-be-removed device as ClientPointer, reset to NULL.
+    
+    Fixes #43165
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Jeremy Huddleston <jeremyhu@apple.com>
+    (cherry picked from commit d2ebbcdaf6b13d70eee704b1764ff349e1be22a0)
+
+commit cf296f2eeffe4b438e9378268f84a1f63c555e52
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Wed Nov 9 15:31:10 2011 +1000
+
+    Xext: don't swap CARD8 in SProcSELinuxQueryVersion
+    
+    xselinux_ext.c: In function 'SELinuxSendItemsToClient':
+    xselinux_ext.c:340:16: warning: unused variable 'n' [-Wunused-variable]
+    xselinux_ext.c: In function 'SProcSELinuxQueryVersion':
+    xselinux_ext.c:532:62: error: call to 'wrong_size' declared with attribute
+    error: wrong sized variable passed to swap
+    xselinux_ext.c:533:62: error: call to 'wrong_size' declared with attribute
+    error: wrong sized variable passed to swap
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Julien Cristau <jcristau@debian.org>
+    (cherry picked from commit bb4aa1f263ad38c175bfda3b7e6c325260ce3f28)
+    
+    Conflicts:
+    
+    	Xext/xselinux_ext.c
+
+commit 4b386610243b1a30db7e4cdb89cb43012198407d
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri Dec 16 12:41:08 2011 +1000
+
+    dix: button state must show the logical buttons, not physical buttons
+    
+    If the device is mapped 3 2 1, a click on physical button 1 sends a button 3
+    press, but the state was set for button 1. Fix this, the state must be set
+    for that button's logical mapping.
+    
+    https://bugzilla.gnome.org/show_bug.cgi?id=655928
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    (cherry picked from commit 9567d21e85b99febe805263a4d93b15fd1f7ab42)
+    
+    Conflicts:
+    
+    	dix/inpututils.c
+
+commit f9b00c2aba496fe470c24d0f8d3e3d0e3b05aa65
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Nov 29 16:15:37 2011 +1000
+
+    Xi: when removing a device, reset ClientPointers where needed
+    
+    if a client had the to-be-removed device as ClientPointer, reset to NULL.
+    
+    Fixes #43165
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Jeremy Huddleston <jeremyhu@apple.com>
+    (cherry picked from commit d2ebbcdaf6b13d70eee704b1764ff349e1be22a0)
+
+commit e4984b3023351b5fcc506f4a196ad699db8b0535
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Wed Nov 30 09:06:06 2011 +1000
+
+    xfixes: don't dereference a NULL cursor
+    
+    If the new cursor is the NULL cursor, don't dereference it and use zeros
+    instead.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Jeremy Huddleston <jeremyhu@apple.com>
+    (cherry picked from commit 1ab50be938524dcd4a9e56d27e3b96a27c2db2c0)
+
+commit 625d1088192a9ad972c20fbdbcb4bb9fda979157
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri Dec 16 09:15:25 2011 -0500
+
+    dmx: force -fno-strict-aliasing for xinput example
+    
+    Compiler warning:
+    xinput.c:272: warning: dereferencing pointer 'e' does break strict-aliasing
+    rules
+    
+    The code itself is the usual XInput client-side code:
+            XEvent event;
+            XDeviceMotionEvent *e = (XDeviceMotionEvent *)&event;
+            XNextEvent(display, &event);
+            printf("%d\n", e->type);
+    
+    Since XDeviceMotionEvent is not guaranteed the same size as XEvent, clients
+    must use pointer aliasing as above when using the XNextEvent API. Disable
+    strict aliasing for this example.
+    
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Gaetan Nadon <memsize@videotron.ca>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+    Signed-off-by: Keith Packard <keithp@keithp.com>
+    (cherry picked from commit 3aca8199405cff5097ee5813605ec78b5ae44a43)
+
+commit 53e347b22bb79043243e25891cd7d6f374a8aa23
+Author: Keith Packard <keithp@keithp.com>
+Date:   Tue Nov 8 10:13:15 2011 -0800
+
+    Save major/minor opcodes in ClientRec for RecordAReply
+    
+    The record extension needs the major and minor opcodes in the reply
+    hook, but the request buffer may have been freed by the time the hook
+    is invoked. Saving the request major and minor codes as the request is
+    executed avoids fetching from the defunct request buffer.
+    
+    This patch also eliminates the public MinorOpcodeOfRequest function,
+    inlining it into Dispatch. Usages of that function have been replaced
+    with direct access to the new ClientRec field.
+    
+    Signed-off-by: Keith Packard <keithp@keithp.com>
+    Reviewed-by: Jamey Sharp <jamey@minilop.net>
+    (cherry picked from commit fb22a408c69a84f81905147de9e82cf66ffb6eb2)
+    
+    Conflicts:
+    
+    	include/extension.h
+
+commit b736f8c92bae7773ff6e1fca886f9ccc50156488
+Author: Julien Cristau <jcristau@debian.org>
+Date:   Sat Nov 5 13:00:07 2011 +0100
+
+    Fix ShmPutImage for XYBitmap
+    
+    We can't call CopyArea in that case because the image has depth 1, which
+    might not match the target drawable, so we might overrun the shm
+    segment.  Commit 11817a881cb93a89788105d1e575a468f2a8d27c apparently
+    fixed a similar bug for XYPixmap, but missed the bitmap case.
+    
+    Fixes: http://bugs.debian.org/629611
+    
+    Thanks to Alan Curry for diagnosing this and providing a test case.
+    
+    Reported-and-tested-by: Alan Curry <pacman@kosh.dhis.org>
+    Reviewed-by: Peter Harris <pharris@opentext.com>
+    Signed-off-by: Julien Cristau <jcristau@debian.org>
+    (cherry picked from commit 08ec4da6a7617637914bee1636858474213cf39d)
+
+commit b2a4c09507b267495ea5e4c2e05373b323c80edf
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Sat Dec 17 12:56:59 2011 -0800
+
+    kdrive/linux: Fix compilation with -Werror=int-to-pointer-cast -Werror=pointer-to-int-cast
+    
+    Reported-by: Arkadiusz Miśkiewicz <arekm@maven.pl>
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+    Reviewed-by: Jamey Sharp <jamey@minilop.net>
+    (cherry picked from commit 1deede3c48d5ac91f50774c79f02afc6e036614e)
+
+commit beaa7ad2ec45811e16722283a8b557a08e91ef18
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Sat Dec 17 12:25:26 2011 -0800
+
+    configure.ac: Make Xephyr dependency error message more informative
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+    Reviewed-by: Jamey Sharp <jamey@minilop.net>
+    (cherry picked from commit d0170d54c71fc761b8f1ae7a0e555dc2ca23cf9c)
+
 commit 41524dd61020f2a446ec54643fa17aa791338cac
 Author: Jeremy Huddleston <jeremyhu@apple.com>
 Date:   Fri Dec 16 17:47:46 2011 -0800
