@@ -1174,6 +1174,12 @@ Bool I830DRI2ScreenInit(ScreenPtr screen)
 
 	intel->deviceName = drmGetDeviceNameFromFd(intel->drmSubFD);
 	memset(&info, '\0', sizeof(info));
+	if (INTEL_INFO(intel)->gen >= 60) {
+		xf86DrvMsg(scrn->scrnIndex, X_WARNING,
+		    "DRI disabled on Sandy Bridge chipsets\n");
+		return FALSE;
+	}
+
 	info.fd = intel->drmSubFD;
 	info.driverName = INTEL_INFO(intel)->gen < 40 ? "i915" : "i965";
 	info.deviceName = intel->deviceName;
