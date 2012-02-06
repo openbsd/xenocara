@@ -117,16 +117,10 @@ extern Bool
 RADEONGetATOMConnectorInfoFromBIOSConnectorTable (ScrnInfoPtr pScrn);
 
 extern int
-atombios_clk_gating_setup(ScrnInfoPtr pScrn, Bool enable);
+atombios_dyn_clk_setup(ScrnInfoPtr pScrn, int enable);
 
 extern int
-atombios_static_pwrmgt_setup(ScrnInfoPtr pScrn, Bool enable);
-
-extern int
-atombios_set_engine_clock(ScrnInfoPtr pScrn, uint32_t engclock);
-
-extern int
-atombios_set_memory_clock(ScrnInfoPtr pScrn, uint32_t memclock);
+atombios_static_pwrmgt_setup(ScrnInfoPtr pScrn, int enable);
 
 extern Bool
 RADEONGetATOMTVInfo(xf86OutputPtr output);
@@ -194,7 +188,6 @@ typedef struct _atomDataTables
         ATOM_FIRMWARE_INFO_V1_2         *FirmwareInfo_V_1_2;
         ATOM_FIRMWARE_INFO_V1_3         *FirmwareInfo_V_1_3;
         ATOM_FIRMWARE_INFO_V1_4         *FirmwareInfo_V_1_4;
-        ATOM_FIRMWARE_INFO_V2_1         *FirmwareInfo_V_2_1;
     } FirmwareInfo;
     ATOM_DAC_INFO                       *DAC_Info;
     union {
@@ -271,13 +264,7 @@ typedef struct _atomBiosHandle {
 # endif
 
 extern Bool
-RADEONATOMGetTVTimings(ScrnInfoPtr pScrn, int index, DisplayModePtr mode);
-
-extern void
-RADEONATOMGetIGPInfo(ScrnInfoPtr pScrn);
-
-extern Bool
-RADEONGetATOMClockInfo(ScrnInfoPtr pScrn);
+RADEONATOMGetTVTimings(ScrnInfoPtr pScrn, int index, SET_CRTC_TIMING_PARAMETERS_PS_ALLOCATION *crtc_timing, int32_t *pixel_clock);
 
 extern uint32_t
 radeon_get_device_index(uint32_t device_support);
@@ -288,5 +275,4 @@ radeon_add_encoder(ScrnInfoPtr pScrn, uint32_t encoder_id, uint32_t device_suppo
 extern uint32_t
 radeon_get_encoder_id_from_supported_device(ScrnInfoPtr pScrn, uint32_t supported_device, int dac);
 
-void atombios_set_output_crtc_source(xf86OutputPtr output);
 #endif /*  RHD_ATOMBIOS_H_ */

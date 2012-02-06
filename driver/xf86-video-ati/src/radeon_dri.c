@@ -51,17 +51,17 @@
 #include "radeon_dri.h"
 #include "radeon_version.h"
 
+#include "atipciids.h"
 
 				/* X and server generic header files */
 #include "xf86.h"
+#include "xf86PciInfo.h"
 #include "windowstr.h"
 
 				/* GLX/DRI/DRM definitions */
 #define _XF86DRI_SERVER_
 #include "GL/glxtokens.h"
 #include "sarea.h"
-
-#include "atipciids.h"
 
 static size_t radeon_drm_page_size;
 
@@ -121,21 +121,21 @@ static Bool RADEONInitVisualConfigs(ScreenPtr pScreen)
 	if (use_db)             numConfigs *= 2;
 
 	if (!(pConfigs
-	      = (__GLXvisualConfig *)calloc(sizeof(__GLXvisualConfig),
-					    numConfigs))) {
+	      = (__GLXvisualConfig *)xcalloc(sizeof(__GLXvisualConfig),
+					     numConfigs))) {
 	    return FALSE;
 	}
 	if (!(pRADEONConfigs
-	      = (RADEONConfigPrivPtr)calloc(sizeof(RADEONConfigPrivRec),
-					    numConfigs))) {
-	    free(pConfigs);
+	      = (RADEONConfigPrivPtr)xcalloc(sizeof(RADEONConfigPrivRec),
+					     numConfigs))) {
+	    xfree(pConfigs);
 	    return FALSE;
 	}
 	if (!(pRADEONConfigPtrs
-	      = (RADEONConfigPrivPtr *)calloc(sizeof(RADEONConfigPrivPtr),
-					      numConfigs))) {
-	    free(pConfigs);
-	    free(pRADEONConfigs);
+	      = (RADEONConfigPrivPtr *)xcalloc(sizeof(RADEONConfigPrivPtr),
+					       numConfigs))) {
+	    xfree(pConfigs);
+	    xfree(pRADEONConfigs);
 	    return FALSE;
 	}
 
@@ -207,21 +207,21 @@ static Bool RADEONInitVisualConfigs(ScreenPtr pScreen)
 	if (use_db)             numConfigs *= 2;
 
 	if (!(pConfigs
-	      = (__GLXvisualConfig *)calloc(sizeof(__GLXvisualConfig),
-					    numConfigs))) {
+	      = (__GLXvisualConfig *)xcalloc(sizeof(__GLXvisualConfig),
+					     numConfigs))) {
 	    return FALSE;
 	}
 	if (!(pRADEONConfigs
-	      = (RADEONConfigPrivPtr)calloc(sizeof(RADEONConfigPrivRec),
-					    numConfigs))) {
-	    free(pConfigs);
+	      = (RADEONConfigPrivPtr)xcalloc(sizeof(RADEONConfigPrivRec),
+					     numConfigs))) {
+	    xfree(pConfigs);
 	    return FALSE;
 	}
 	if (!(pRADEONConfigPtrs
-	      = (RADEONConfigPrivPtr *)calloc(sizeof(RADEONConfigPrivPtr),
-					      numConfigs))) {
-	    free(pConfigs);
-	    free(pRADEONConfigs);
+	      = (RADEONConfigPrivPtr *)xcalloc(sizeof(RADEONConfigPrivPtr),
+					       numConfigs))) {
+	    xfree(pConfigs);
+	    xfree(pRADEONConfigs);
 	    return FALSE;
 	}
 
@@ -299,6 +299,36 @@ static Bool RADEONCreateContext(ScreenPtr pScreen, VisualPtr visual,
 				drm_context_t hwContext, void *pVisualConfigPriv,
 				DRIContextType contextStore)
 {
+#ifdef PER_CONTEXT_SAREA
+    ScrnInfoPtr          pScrn = xf86Screens[pScreen->myNum];
+    RADEONInfoPtr        info  = RADEONPTR(pScrn);
+    RADEONDRIContextPtr  ctx_info;
+
+    ctx_info = (RADEONDRIContextPtr)contextStore;
+    if (!ctx_info) return FALSE;
+
+    if (drmAddMap(info->dri->drmFD, 0,
+		  info->dri->perctx_sarea_size,
+		  DRM_SHM,
+		  DRM_REMOVABLE,
+		  &ctx_info->sarea_handle) < 0) {
+	xf86DrvMsg(pScrn->scrnIndex, X_INFO,
+		   "[dri] could not create private sarea for ctx id (%d)\n",
+		   (int)hwContext);
+	return FALSE;
+    }
+
+    if (drmAddContextPrivateMapping(info->dri->drmFD, hwContext,
+				    ctx_info->sarea_handle) < 0) {
+	xf86DrvMsg(pScrn->scrnIndex, X_INFO,
+		   "[dri] could not associate private sarea to ctx id (%d)\n",
+		   (int)hwContext);
+	drmRmMap(info->dri->drmFD, ctx_info->sarea_handle);
+	return FALSE;
+    }
+
+    ctx_info->ctx_id = hwContext;
+#endif
     return TRUE;
 }
 
@@ -306,6 +336,20 @@ static Bool RADEONCreateContext(ScreenPtr pScreen, VisualPtr visual,
 static void RADEONDestroyContext(ScreenPtr pScreen, drm_context_t hwContext,
 				 DRIContextType contextStore)
 {
+#ifdef PER_CONTEXT_SAREA
+    ScrnInfoPtr          pScrn = xf86Screens[pScreen->myNum];
+    RADEONInfoPtr        info = RADEONPTR(pScrn);
+    RADEONDRIContextPtr  ctx_info;
+
+    ctx_info = (RADEONDRIContextPtr)contextStore;
+    if (!ctx_info) return;
+
+    if (drmRmMap(info->dri->drmFD, ctx_info->sarea_handle) < 0) {
+	xf86DrvMsg(pScrn->scrnIndex, X_INFO,
+		   "[dri] could not remove private sarea for ctx id (%d)\n",
+		   (int)hwContext);
+    }
+#endif
 }
 
 /* Called when the X server is woken up to allow the last client's
@@ -522,12 +566,12 @@ static void RADEONDRIMoveBuffers(WindowPtr pParent, DDXPointRec ptOldOrg,
 
 	if (nbox > 1) {
 	    /* Keep ordering in each band, reverse order of bands */
-	    pboxNew1 = (BoxPtr)malloc(sizeof(BoxRec)*nbox);
+	    pboxNew1 = (BoxPtr)xalloc(sizeof(BoxRec)*nbox);
 	    if (!pboxNew1) return;
 
-	    pptNew1 = (DDXPointPtr)malloc(sizeof(DDXPointRec)*nbox);
+	    pptNew1 = (DDXPointPtr)xalloc(sizeof(DDXPointRec)*nbox);
 	    if (!pptNew1) {
-		free(pboxNew1);
+		xfree(pboxNew1);
 		return;
 	    }
 
@@ -564,14 +608,14 @@ static void RADEONDRIMoveBuffers(WindowPtr pParent, DDXPointRec ptOldOrg,
 
 	if (nbox > 1) {
 	    /* reverse order of rects in each band */
-	    pboxNew2 = (BoxPtr)malloc(sizeof(BoxRec)*nbox);
-	    pptNew2  = (DDXPointPtr)malloc(sizeof(DDXPointRec)*nbox);
+	    pboxNew2 = (BoxPtr)xalloc(sizeof(BoxRec)*nbox);
+	    pptNew2  = (DDXPointPtr)xalloc(sizeof(DDXPointRec)*nbox);
 
 	    if (!pboxNew2 || !pptNew2) {
-		free(pptNew2);
-		free(pboxNew2);
-		free(pptNew1);
-		free(pboxNew1);
+		xfree(pptNew2);
+		xfree(pboxNew2);
+		xfree(pptNew1);
+		xfree(pboxNew1);
 		return;
 	    }
 
@@ -642,10 +686,10 @@ static void RADEONDRIMoveBuffers(WindowPtr pParent, DDXPointRec ptOldOrg,
 
     info->accel_state->dst_pitch_offset = info->dri->frontPitchOffset;;
 
-    free(pptNew2);
-    free(pboxNew2);
-    free(pptNew1);
-    free(pboxNew1);
+    xfree(pptNew2);
+    xfree(pboxNew2);
+    xfree(pptNew1);
+    xfree(pboxNew1);
 
     info->accel_state->accel->NeedToSync = TRUE;
 #endif /* USE_XAA */
@@ -701,8 +745,6 @@ static radeon_agpmode_quirk radeon_agpmode_quirk_list[] = {
     { PCI_VENDOR_INTEL,0x2570,  PCI_VENDOR_ATI,0x4a4e,  PCI_VENDOR_DELL,0x5106,  4 },
     /* Intel 82865G/PE/P DRAM Controller/Host-Hub / RV280 [Radeon 9200 SE] Needs AGPMode 4 (lp #300304) */
     { PCI_VENDOR_INTEL,0x2570,  PCI_VENDOR_ATI,0x5964,  0x148c,0x2073,           4 },
-    /* Intel 82855PM host bridge / Mobility M7 LW Needs AGPMode 4 (lp: #353996) */
-    { PCI_VENDOR_INTEL,0x3340,  PCI_VENDOR_ATI,0x4c57, PCI_VENDOR_IBM,0x0530,    4 },
     /* Intel 82855PM Processor to I/O Controller / Mobility M6 LY Needs AGPMode 1 (deb #467235) */
     { PCI_VENDOR_INTEL,0x3340,  PCI_VENDOR_ATI,0x4c59,  PCI_VENDOR_IBM,0x052f,   1 },
     /* Intel 82855PM host bridge / Mobility 9600 M10 RV350 Needs AGPMode 1 (lp #195051) */
@@ -725,16 +767,6 @@ static radeon_agpmode_quirk radeon_agpmode_quirk_list[] = {
     { PCI_VENDOR_INTEL,0x3580,  PCI_VENDOR_ATI,0x4e50,  PCI_VENDOR_ASUS,0x1942,  1 },
     /* Intel 82852/82855 host bridge / Mobility 9600/9700 Needs AGPMode 1 (deb #510208) */
     { PCI_VENDOR_INTEL,0x3580,  PCI_VENDOR_ATI,0x4e50,  0x10cf,0x127f,           1 },
-    /* Intel 82443BX/ZX/DX Host bridge / RV280 [Radeon 9200] Needs AGPMode 1 (lp #370205) */
-    { PCI_VENDOR_INTEL,0x7190,  PCI_VENDOR_ATI,0x5961,  0x174b,0x7c13,           1 },
-
-    /* Ali Corp M1671 Super P4 Northbridge / Mobility M6 LY Needs AGPMode 1 (lp #146303)*/
-    { 0x10b9,0x1671,           PCI_VENDOR_ATI,0x4c59,   0x103c,0x0027,           1 },
-
-    /* SiS Host Bridge 655 / R420 [Radeon X800] Needs AGPMode 4 (lp #371296) */
-    { 0x1039,0x0655,            PCI_VENDOR_ATI,0x4a4b,  PCI_VENDOR_ATI,0x4422,   4 },
-    /* SiS Host Bridge / RV280 Needs AGPMode 4 */
-    { 0x1039,0x0741,            PCI_VENDOR_ATI,0x5964,  0x148c,0x2073,           4 },
 
     /* ASRock K7VT4A+ AGP 8x / ATI Radeon 9250 AGP Needs AGPMode 4 (lp #133192) */
     { 0x1849,0x3189,            PCI_VENDOR_ATI,0x5960,  0x1787,0x5960,           4 },
@@ -755,19 +787,12 @@ static radeon_agpmode_quirk radeon_agpmode_quirk_list[] = {
     { PCI_VENDOR_VIA,0x3189,    PCI_VENDOR_ATI,0x5960,  0x1462,0x0380,           4 },
     /* VIA VT8377 Host Bridge / RV280 Needs AGPMode 4 (ati ML) */
     { PCI_VENDOR_VIA,0x3189,    PCI_VENDOR_ATI,0x5964,  0x148c,0x2073,           4 },
-    /* VIA VT8377 Host Bridge / RV280 Needs AGPMode 4 (fdo #12544) */
-    { PCI_VENDOR_VIA,0x3189,    PCI_VENDOR_ATI,0x5964,  PCI_VENDOR_ASUS,0xc008,  4 },
-    /* VIA VT8377 Host Bridge / RV280 Needs AGPMode 4 (deb #545040) */
-    { PCI_VENDOR_VIA,0x3189,    PCI_VENDOR_ATI,0x5960,  PCI_VENDOR_ASUS,0x004c,  4 },
 
     /* ATI Host Bridge / RV280 [M9+] Needs AGPMode 1 (phoronix forum) */
     { PCI_VENDOR_ATI,0xcbb2,    PCI_VENDOR_ATI,0x5c61,  PCI_VENDOR_SONY,0x8175,  1 },
 
     /* HP Host Bridge / R300 [FireGL X1] Needs AGPMode 2 (fdo #7770) */
     { PCI_VENDOR_HP,0x122e,    PCI_VENDOR_ATI,0x4e47,  PCI_VENDOR_ATI,0x0152,    2 },
-
-    /* nVidia Host Bridge / R420 [X800 Pro] Needs AGPMode 4 (fdo #22726) */
-    { 0x10de,0x00e1,           PCI_VENDOR_ATI,0x4a49,  PCI_VENDOR_ATI,0x0002,    4 },
 
     { 0, 0, 0, 0, 0, 0, 0 },
 };
@@ -1321,7 +1346,7 @@ Bool RADEONDRIGetVersion(ScrnInfoPtr pScrn)
 {
     RADEONInfoPtr  info    = RADEONPTR(pScrn);
     int            major, minor, patch, fd;
-    int            req_major, req_minor, req_patch;
+    int		   req_minor, req_patch;
     char           *busId;
 
     /* Check that the GLX, DRI, and DRM modules have been loaded by testing
@@ -1331,33 +1356,23 @@ Bool RADEONDRIGetVersion(ScrnInfoPtr pScrn)
     if (!xf86LoaderCheckSymbol("drmAvailable"))        return FALSE;
     if (!xf86LoaderCheckSymbol("DRIQueryVersion")) {
       xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
-		 "[dri] RADEONDRIGetVersion failed (libdri too old)\n"
+		 "[dri] RADEONDRIGetVersion failed (libdri.a too old)\n"
 		 "[dri] Disabling DRI.\n");
       return FALSE;
     }
 
     /* Check the DRI version */
     DRIQueryVersion(&major, &minor, &patch);
-    if (major < DRIINFO_MAJOR_VERSION) {
-        xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
-            "[dri] RADEONDRIGetVersion failed because of a version mismatch.\n"
-            "[dri] This driver was built with %d.%d.x, which is too new;\n"
-            "[dri] libdri reports a version of %d.%d.%d."
-            "[dri] A server upgrade may be needed.\n"
-            "[dri] Disabling DRI.\n",
-            DRIINFO_MAJOR_VERSION, 0,
-            major, minor, patch);
-        return FALSE;
-    } else if (major > DRIINFO_MAJOR_VERSION) {
-        xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
-            "[dri] RADEONDRIGetVersion failed because of a version mismatch.\n"
-            "[dri] This driver was built with %d.%d.x, which is too old;\n"
-            "[dri] libdri reports a version of %d.%d.%d."
-            "[dri] This driver needs to be upgraded/rebuilt.\n"
-            "[dri] Disabling DRI.\n",
-            DRIINFO_MAJOR_VERSION, 0,
-            major, minor, patch);
-        return FALSE;
+    if (major != DRIINFO_MAJOR_VERSION || minor < 0) {
+	xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
+		   "[dri] RADEONDRIGetVersion failed because of a version "
+		   "mismatch.\n"
+		   "[dri] libdri version is %d.%d.%d but version %d.%d.x is "
+		   "needed.\n"
+		   "[dri] Disabling DRI.\n",
+		   major, minor, patch,
+                   DRIINFO_MAJOR_VERSION, 0);
+	return FALSE;
     }
 
     /* Check the lib version */
@@ -1365,7 +1380,7 @@ Bool RADEONDRIGetVersion(ScrnInfoPtr pScrn)
 	info->dri->pLibDRMVersion = drmGetLibVersion(info->dri->drmFD);
     if (info->dri->pLibDRMVersion == NULL) {
 	xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
-		   "[dri] RADEONDRIGetVersion failed because libdrm is really "
+		   "[dri] RADEONDRIGetVersion failed because libDRM is really "
 		   "way to old to even get a version number out of it.\n"
 		   "[dri] Disabling DRI.\n");
 	return FALSE;
@@ -1376,7 +1391,7 @@ Bool RADEONDRIGetVersion(ScrnInfoPtr pScrn)
 	xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
 		   "[dri] RADEONDRIGetVersion failed because of a "
 		   "version mismatch.\n"
-		   "[dri] libdrm module version is %d.%d.%d but "
+		   "[dri] libdrm.a module version is %d.%d.%d but "
 		   "version 1.2.x is needed.\n"
 		   "[dri] Disabling DRI.\n",
 		   info->dri->pLibDRMVersion->version_major,
@@ -1391,7 +1406,7 @@ Bool RADEONDRIGetVersion(ScrnInfoPtr pScrn)
     if (xf86LoaderCheckSymbol("DRICreatePCIBusID")) {
 	busId = DRICreatePCIBusID(info->PciInfo);
     } else {
-	busId = malloc(64);
+	busId = xalloc(64);
 	sprintf(busId,
 		"PCI:%d:%d:%d",
 		PCI_DEV_BUS(info->PciInfo),
@@ -1401,7 +1416,7 @@ Bool RADEONDRIGetVersion(ScrnInfoPtr pScrn)
 
     /* Low level DRM open */
     fd = drmOpen(RADEON_DRIVER_NAME, busId);
-    free(busId);
+    xfree(busId);
     if (fd < 0) {
 	xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
 		   "[dri] RADEONDRIGetVersion failed to open the DRM\n"
@@ -1420,55 +1435,37 @@ Bool RADEONDRIGetVersion(ScrnInfoPtr pScrn)
     }
 
     /* Now check if we qualify */
-    req_major = 1;
     if (info->ChipFamily >= CHIP_FAMILY_R300) {
         req_minor = 17;
         req_patch = 0;
     } else if (info->IsIGP) {
         req_minor = 10;
-        req_patch = 0;
+	req_patch = 0;
     } else { /* Many problems have been reported with 1.7 in the 2.4 kernel */
-        req_minor = 8;
-        req_patch = 0;
+	req_minor = 8;
+	req_patch = 0;
     }
 
     /* We don't, bummer ! */
-    if (info->dri->pKernelDRMVersion->version_major != req_major) {
-        /* Looks like we're trying to start in UMS mode on a KMS kernel.
-	 * This can happen if the radeon kernel module wasn't loaded before
-	 * X starts.
-	 */
-        xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
-            "[dri] RADEONDRIGetVersion failed because of a version mismatch.\n"
-            "[dri] This chipset requires a kernel module version of %d.%d.%d,\n"
-            "[dri] but the kernel reports a version of %d.%d.%d."
-            "[dri] Make sure your module is loaded prior to starting X, and\n"
-            "[dri] that this driver was built with support for KMS.\n"
-            "[dri] Aborting.\n",
-            req_major, req_minor, req_patch,
-            info->dri->pKernelDRMVersion->version_major,
-            info->dri->pKernelDRMVersion->version_minor,
-            info->dri->pKernelDRMVersion->version_patchlevel);
-        drmFreeVersion(info->dri->pKernelDRMVersion);
-        info->dri->pKernelDRMVersion = NULL;
-        return -1;
-    } else if (info->dri->pKernelDRMVersion->version_minor < req_minor ||
-        (info->dri->pKernelDRMVersion->version_minor == req_minor &&
-        info->dri->pKernelDRMVersion->version_patchlevel < req_patch)) {
+    if (info->dri->pKernelDRMVersion->version_major != 1 ||
+	info->dri->pKernelDRMVersion->version_minor < req_minor ||
+	(info->dri->pKernelDRMVersion->version_minor == req_minor &&
+	 info->dri->pKernelDRMVersion->version_patchlevel < req_patch)) {
         /* Incompatible drm version */
-        xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
-            "[dri] RADEONDRIGetVersion failed because of a version mismatch.\n"
-            "[dri] This chipset requires a kernel module version of %d.%d.%d,\n"
-            "[dri] but the kernel reports a version of %d.%d.%d."
-            "[dri] Try upgrading your kernel.\n"
-            "[dri] Disabling DRI.\n",
-            req_major, req_minor, req_patch,
-            info->dri->pKernelDRMVersion->version_major,
-            info->dri->pKernelDRMVersion->version_minor,
-            info->dri->pKernelDRMVersion->version_patchlevel);
-        drmFreeVersion(info->dri->pKernelDRMVersion);
-        info->dri->pKernelDRMVersion = NULL;
-        return FALSE;
+	xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
+		   "[dri] RADEONDRIGetVersion failed because of a version "
+		   "mismatch.\n"
+		   "[dri] radeon.o kernel module version is %d.%d.%d "
+		   "but version 1.%d.%d or newer is needed.\n"
+		   "[dri] Disabling DRI.\n",
+		   info->dri->pKernelDRMVersion->version_major,
+		   info->dri->pKernelDRMVersion->version_minor,
+		   info->dri->pKernelDRMVersion->version_patchlevel,
+		   req_minor,
+		   req_patch);
+	drmFreeVersion(info->dri->pKernelDRMVersion);
+	info->dri->pKernelDRMVersion = NULL;
+	return FALSE;
     }
 
     return TRUE;
@@ -1553,7 +1550,7 @@ Bool RADEONDRIScreenInit(ScreenPtr pScreen)
     if (xf86LoaderCheckSymbol("DRICreatePCIBusID")) {
 	pDRIInfo->busIdString = DRICreatePCIBusID(info->PciInfo);
     } else {
-	pDRIInfo->busIdString            = malloc(64);
+	pDRIInfo->busIdString            = xalloc(64);
 	sprintf(pDRIInfo->busIdString,
 		"PCI:%d:%d:%d",
 		PCI_DEV_BUS(info->PciInfo),
@@ -1563,7 +1560,7 @@ Bool RADEONDRIScreenInit(ScreenPtr pScreen)
     pDRIInfo->ddxDriverMajorVersion      = info->allowColorTiling ? 5 : 4;
     pDRIInfo->ddxDriverMinorVersion      = 3;
     pDRIInfo->ddxDriverPatchVersion      = 0;
-    pDRIInfo->frameBufferPhysicalAddress = (void *)(uintptr_t)info->LinearAddr + info->dri->frontOffset;
+    pDRIInfo->frameBufferPhysicalAddress = (void *)info->LinearAddr + info->dri->frontOffset;
     pDRIInfo->frameBufferSize            = info->FbMapSize - info->FbSecureSize;
     pDRIInfo->frameBufferStride          = (pScrn->displayWidth *
 					    info->CurrentLayout.pixel_bytes);
@@ -1575,6 +1572,12 @@ Bool RADEONDRIScreenInit(ScreenPtr pScreen)
     /* kill DRIAdjustFrame. We adjust sarea frame info ourselves to work
        correctly with pageflip + mergedfb/color tiling */
     pDRIInfo->wrap.AdjustFrame = NULL;
+
+#ifdef PER_CONTEXT_SAREA
+    /* This is only here for testing per-context SAREAs.  When used, the
+       magic number below would be properly defined in a header file. */
+    info->perctx_sarea_size = 64 * 1024;
+#endif
 
 #ifdef NOT_DONE
     /* FIXME: Need to extend DRI protocol to pass this size back to
@@ -1594,7 +1597,7 @@ Bool RADEONDRIScreenInit(ScreenPtr pScreen)
     pDRIInfo->SAREASize = SAREA_MAX;
 #endif
 
-    if (!(pRADEONDRI = (RADEONDRIPtr)calloc(sizeof(RADEONDRIRec),1))) {
+    if (!(pRADEONDRI = (RADEONDRIPtr)xcalloc(sizeof(RADEONDRIRec),1))) {
 	DRIDestroyInfoRec(info->dri->pDRIInfo);
 	info->dri->pDRIInfo = NULL;
 	return FALSE;
@@ -1641,7 +1644,7 @@ Bool RADEONDRIScreenInit(ScreenPtr pScreen)
     if (!DRIScreenInit(pScreen, pDRIInfo, &info->dri->drmFD)) {
 	xf86DrvMsg(pScreen->myNum, X_ERROR,
 		   "[dri] DRIScreenInit failed.  Disabling DRI.\n");
-	free(pDRIInfo->devPrivate);
+	xfree(pDRIInfo->devPrivate);
 	pDRIInfo->devPrivate = NULL;
 	DRIDestroyInfoRec(pDRIInfo);
 	pDRIInfo = NULL;
@@ -1782,6 +1785,11 @@ Bool RADEONDRIFinishScreenInit(ScreenPtr pScreen)
 
     pRADEONDRI->sarea_priv_offset = sizeof(XF86DRISAREARec);
 
+#ifdef PER_CONTEXT_SAREA
+    /* Set per-context SAREA size */
+    pRADEONDRI->perctx_sarea_size = info->dri->perctx_sarea_size;
+#endif
+
     info->directRenderingInited = TRUE;
 
     /* Wrap CloseScreen */
@@ -1920,7 +1928,7 @@ void RADEONDRICloseScreen(ScreenPtr pScreen)
     }
 
     if (info->dri->pciGartBackup) {
-	free(info->dri->pciGartBackup);
+	xfree(info->dri->pciGartBackup);
 	info->dri->pciGartBackup = NULL;
     }
 
@@ -1930,18 +1938,18 @@ void RADEONDRICloseScreen(ScreenPtr pScreen)
     /* De-allocate all DRI data structures */
     if (info->dri->pDRIInfo) {
 	if (info->dri->pDRIInfo->devPrivate) {
-	    free(info->dri->pDRIInfo->devPrivate);
+	    xfree(info->dri->pDRIInfo->devPrivate);
 	    info->dri->pDRIInfo->devPrivate = NULL;
 	}
 	DRIDestroyInfoRec(info->dri->pDRIInfo);
 	info->dri->pDRIInfo = NULL;
     }
     if (info->dri->pVisualConfigs) {
-	free(info->dri->pVisualConfigs);
+	xfree(info->dri->pVisualConfigs);
 	info->dri->pVisualConfigs = NULL;
     }
     if (info->dri->pVisualConfigsPriv) {
-	free(info->dri->pVisualConfigsPriv);
+	xfree(info->dri->pVisualConfigsPriv);
 	info->dri->pVisualConfigsPriv = NULL;
     }
 }

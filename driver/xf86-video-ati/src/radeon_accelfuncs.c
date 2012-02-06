@@ -827,7 +827,7 @@ FUNC_NAME(RADEONSubsequentScanlineCPUToScreenColorExpandFill)(ScrnInfoPtr
     OUT_ACCEL_REG(RADEON_SC_BOTTOM_RIGHT,  ((y+h) << 16) | ((x+w) & 0xffff));
     OUT_ACCEL_REG(RADEON_DST_Y_X,          (y << 16)     | (x & 0xffff));
     /* Have to pad the width here and use clipping engine */
-    OUT_ACCEL_REG(RADEON_DST_HEIGHT_WIDTH, (h << 16)     | RADEON_ALIGN(w, 32));
+    OUT_ACCEL_REG(RADEON_DST_HEIGHT_WIDTH, (h << 16)     | ((w + 31) & ~31));
 
     FINISH_ACCEL();
 
@@ -836,7 +836,7 @@ FUNC_NAME(RADEONSubsequentScanlineCPUToScreenColorExpandFill)(ScrnInfoPtr
     info->accel_state->scanline_x      = x;
     info->accel_state->scanline_y      = y;
     /* Have to pad the width here and use clipping engine */
-    info->accel_state->scanline_w      = RADEON_ALIGN(w, 32);
+    info->accel_state->scanline_w      = (w + 31) & ~31;
     info->accel_state->scanline_h      = h;
 
     info->accel_state->scanline_x1clip = x + skipleft;
@@ -1206,7 +1206,7 @@ FUNC_NAME(RADEONAccelInit)(ScreenPtr pScreen, XAAInfoRecPtr a)
     a->ScanlineColorExpandBuffers       = info->accel_state->scratch_buffer;
     if (!info->accel_state->scratch_save)
 	info->accel_state->scratch_save
-	    = malloc(((pScrn->virtualX+31)/32*4)
+	    = xalloc(((pScrn->virtualX+31)/32*4)
 		     + (pScrn->virtualX * info->CurrentLayout.pixel_bytes));
     info->accel_state->scratch_buffer[0]             = info->accel_state->scratch_save;
     a->SetupForScanlineCPUToScreenColorExpandFill
@@ -1332,7 +1332,6 @@ FUNC_NAME(RADEONAccelInit)(ScreenPtr pScreen, XAAInfoRecPtr a)
 #endif
 
 #ifdef RENDER
-    info->RenderAccel = FALSE;
     if (info->RenderAccel && info->xaaReq.minorversion >= 2) {
 
 	a->CPUToScreenAlphaTextureFlags = XAA_RENDER_POWER_OF_2_TILE_ONLY;
@@ -1346,7 +1345,10 @@ FUNC_NAME(RADEONAccelInit)(ScreenPtr pScreen, XAAInfoRecPtr a)
 	    xf86DrvMsg(pScrn->scrnIndex, X_INFO, "XAA Render acceleration "
 		       "unsupported on Radeon 9500/9700 and newer. "
 		       "Please use EXA instead.\n");
-	} else if (IS_R200_3D) {
+	} else if ((info->ChipFamily == CHIP_FAMILY_RV250) || 
+		   (info->ChipFamily == CHIP_FAMILY_RV280) || 
+		   (info->ChipFamily == CHIP_FAMILY_RS300) || 
+		   (info->ChipFamily == CHIP_FAMILY_R200)) {
 	    a->SetupForCPUToScreenAlphaTexture2 =
 		FUNC_NAME(R200SetupForCPUToScreenAlphaTexture);
 	    a->SubsequentCPUToScreenAlphaTexture =

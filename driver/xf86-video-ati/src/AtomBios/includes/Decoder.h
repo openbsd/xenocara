@@ -44,7 +44,6 @@ NEG:27.08.2002	Initiated.
 #define WS_AND_MASK_C													  (WS_OR_MASK_C+1)
 #define WS_FB_WINDOW_C                          (WS_AND_MASK_C+1)
 #define WS_ATTRIBUTES_C                         (WS_FB_WINDOW_C+1)
-#define WS_REGPTR_C                             (WS_ATTRIBUTES_C+1)
 #define PARSER_VERSION_MAJOR                   0x00000000
 #define PARSER_VERSION_MINOR                   0x0000000E
 #define PARSER_VERSION                         (PARSER_VERSION_MAJOR | PARSER_VERSION_MINOR)

@@ -26,7 +26,7 @@
 # _ladir passes a dummy rpath to libtool so the thing will actually link
 # TODO: -nostdlib/-Bstatic/-lgcc platform magic, not installing the .a, etc.
 
-radeon_drv_la_LIBADD = $(LIBDRM_RADEON_LIBS)
+radeon_drv_la_LIBADD =
 
 if DRI
 RADEON_DRI_SRCS = radeon_dri.c
@@ -48,35 +48,34 @@ RADEON_ATOMBIOS_SOURCES = \
         AtomBios/includes/ObjectID.h \
         AtomBios/includes/regsdef.h
 
-if XF86DRM_MODE
-RADEON_KMS_SRCS=radeon_dri2.c radeon_kms.c drmmode_display.c radeon_vbo.c
-endif
+XMODE_SRCS=\
+        local_xf86Rename.h \
+	parser/xf86Parser.h \
+        parser/xf86Optrec.h \
+        modes/xf86Modes.h \
+        modes/xf86Modes.c \
+        modes/xf86cvt.c \
+        modes/xf86Crtc.h \
+        modes/xf86Crtc.c \
+        modes/xf86Cursors.c \
+        modes/xf86EdidModes.c \
+        modes/xf86RandR12.c \
+        modes/xf86RandR12.h \
+        modes/xf86Rename.h \
+        modes/xf86Rotate.c \
+        modes/xf86DiDGA.c
 
 if USE_EXA
-RADEON_EXA_SOURCES = radeon_exa.c r600_exa.c r6xx_accel.c r600_textured_videofuncs.c r600_shader.c radeon_exa_shared.c \
-	evergreen_exa.c evergreen_accel.c evergreen_shader.c evergreen_textured_videofuncs.c cayman_accel.c cayman_shader.c
+RADEON_EXA_SOURCES = radeon_exa.c r600_exa.c r6xx_accel.c r600_textured_videofuncs.c r600_shader.c
 endif
 
-AM_CFLAGS = \
-            @LIBDRM_RADEON_CFLAGS@ \
-            @XORG_CFLAGS@ \
-            @DRI_CFLAGS@ \
-            @LIBUDEV_CFLAGS@ \
-            -DDISABLE_EASF \
-            -DENABLE_ALL_SERVICE_FUNCTIONS \
-            -DATOM_BIOS \
-            -DATOM_BIOS_PARSER \
-            -DDRIVER_PARSER
+AM_CFLAGS = @XORG_CFLAGS@ @DRI_CFLAGS@ @XMODES_CFLAGS@ -DDISABLE_EASF -DENABLE_ALL_SERVICE_FUNCTIONS -DATOM_BIOS -DATOM_BIOS_PARSER -DDRIVER_PARSER
 
 INCLUDES = -I$(srcdir)/AtomBios/includes
 
 if XSERVER_LIBPCIACCESS
 ati_drv_la_LIBADD = $(PCIACCESS_LIBS)
 radeon_drv_la_LIBADD += $(PCIACCESS_LIBS)
-endif
-
-if LIBUDEV
-radeon_drv_la_LIBADD += $(LIBUDEV_LIBS)
 endif
 
 ati_drv_la_LTLIBRARIES = ati_drv.la
@@ -89,15 +88,19 @@ radeon_drv_la_LTLIBRARIES = radeon_drv.la
 radeon_drv_la_LDFLAGS = -module -avoid-version
 radeon_drv_ladir = @moduledir@/drivers
 radeon_drv_la_SOURCES = \
-	radeon_accel.c radeon_cursor.c radeon_legacy_memory.c \
+	radeon_accel.c radeon_cursor.c radeon_dga.c radeon_legacy_memory.c \
 	radeon_driver.c radeon_video.c radeon_bios.c radeon_mm_i2c.c \
 	radeon_vip.c radeon_misc.c radeon_probe.c \
 	legacy_crtc.c legacy_output.c \
-	radeon_textured_video.c radeon_xvmc.c radeon_pm.c \
+	radeon_textured_video.c \
 	radeon_crtc.c radeon_output.c radeon_modes.c radeon_tv.c \
 	$(RADEON_ATOMBIOS_SOURCES) radeon_atombios.c radeon_atomwrapper.c \
-	$(RADEON_DRI_SRCS) $(RADEON_EXA_SOURCES) atombios_output.c atombios_crtc.c \
-	$(RADEON_KMS_SRCS)
+	$(RADEON_DRI_SRCS) $(RADEON_EXA_SOURCES) atombios_output.c atombios_crtc.c
+
+if XMODES
+radeon_drv_la_SOURCES += \
+	$(XMODE_SRCS)
+endif
 
 theatre_detect_drv_la_LTLIBRARIES = theatre_detect_drv.la
 theatre_detect_drv_la_LDFLAGS = -module -avoid-version
@@ -121,6 +124,7 @@ theatre200_drv_la_SOURCES = \
 	theatre200.c theatre200_module.c
 
 EXTRA_DIST = \
+	$(XMODE_SRCS) \
 	radeon_render.c \
 	radeon_accelfuncs.c \
 	radeon_textured_videofuncs.c \
@@ -130,13 +134,6 @@ EXTRA_DIST = \
 	r600_reg_r7xx.h \
 	r600_shader.h \
 	r600_state.h \
-	evergreen_reg.h \
-	evergreen_reg_auto.h \
-	evergreen_shader.h \
-	evergreen_state.h \
-	cayman_reg.h \
-	cayman_reg_auto.h \
-	cayman_shader.h \
 	ati.h \
 	ativersion.h \
 	bicubic_table.h \
@@ -144,20 +141,16 @@ EXTRA_DIST = \
 	radeon_commonfuncs.c \
 	radeon_dri.h \
 	radeon_drm.h \
-	radeon_dummy_bufmgr.h \
 	radeon_exa_render.c \
 	radeon_exa_funcs.c \
-	radeon_exa_shared.h \
 	radeon.h \
 	radeon_macros.h \
 	radeon_probe.h \
 	radeon_reg.h \
 	radeon_version.h \
-	radeon_vbo.h \
 	radeon_video.h \
 	radeon_tv.h \
-	radeon_atomwrapper.h \
-	simple_list.h \
+        radeon_atomwrapper.h \
 	theatre200.h \
 	theatre_detect.h \
 	theatre.h \
@@ -171,6 +164,4 @@ EXTRA_DIST = \
 	radeon_pci_device_match_gen.h \
 	pcidb/ati_pciids.csv \
 	pcidb/parse_pci_ids.pl \
-	radeon_atombios.h \
-	radeon_dri2.h \
-	drmmode_display.h
+	radeon_atombios.h

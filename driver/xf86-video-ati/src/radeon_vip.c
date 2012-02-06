@@ -349,7 +349,7 @@ void RADEONVIP_reset(ScrnInfoPtr pScrn, RADEONPortPrivPtr pPriv)
 
 void RADEONVIP_init(ScrnInfoPtr pScrn, RADEONPortPrivPtr pPriv)
 {
-    pPriv->VIP=calloc(1,sizeof(GENERIC_BUS_Rec));
+    pPriv->VIP=xcalloc(1,sizeof(GENERIC_BUS_Rec));
     pPriv->VIP->scrnIndex=pScrn->scrnIndex;
     pPriv->VIP->DriverPrivate.ptr=pPriv;
     pPriv->VIP->ioctl=RADEONVIP_ioctl;

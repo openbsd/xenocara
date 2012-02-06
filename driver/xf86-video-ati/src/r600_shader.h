@@ -157,32 +157,32 @@
 #define SRC_SEL_Z(x)    (x)
 #define SRC_SEL_W(x)    (x)
 
-#define CF_DWORD0(addr) cpu_to_le32((addr))
+#define CF_DWORD0(addr) (addr)
 // R7xx has another entry (COUNT3), but that is only used for adding a bit to count.
 // We allow one more bit for count in the argument of the macro on R7xx instead.
 // R6xx: [0,7]  R7xx: [1,16]
 #define CF_DWORD1(pc, cf_const, cond, count, call_count, eop, vpm, cf_inst, wqm, b) \
-    cpu_to_le32((((pc) << 0) | ((cf_const) << 3) | ((cond) << 8) | (((count) & 7) << 10) | (((count) >> 3) << 19) | \
-		 ((call_count) << 13) | ((eop) << 21) | ((vpm) << 22) | ((cf_inst) << 23) | ((wqm) << 30) | ((b) << 31)))
+        (((pc) << 0) | ((cf_const) << 3) | ((cond) << 8) | (((count) & 7) << 10) | (((count) >> 3) << 19) | \
+         ((call_count) << 13) | ((eop) << 21) | ((vpm) << 22) | ((cf_inst) << 23) | ((wqm) << 30) | ((b) << 31))
 
-#define CF_ALU_DWORD0(addr, kb0, kb1, km0) cpu_to_le32((((addr) << 0) | ((kb0) << 22) | ((kb1) << 26) | ((km0) << 30)))
+#define CF_ALU_DWORD0(addr, kb0, kb1, km0) (((addr) << 0) | ((kb0) << 22) | ((kb1) << 26) | ((km0) << 30))
 #define CF_ALU_DWORD1(km1, kcache_addr0, kcache_addr1, count, uw, cf_inst, wqm, b) \
-    cpu_to_le32((((km1) << 0) | ((kcache_addr0) << 2) | ((kcache_addr1) << 10) | \
-		 ((count) << 18) | ((uw) << 25) | ((cf_inst) << 26) | ((wqm) << 30) | ((b) << 31)))
+        (((km1) << 0) | ((kcache_addr0) << 2) | ((kcache_addr1) << 10) | \
+	 ((count) << 18) | ((uw) << 25) | ((cf_inst) << 26) | ((wqm) << 30) | ((b) << 31))
 
 #define CF_ALLOC_IMP_EXP_DWORD0(array_base, type, rw_gpr, rr, index_gpr, es) \
-    cpu_to_le32((((array_base) << 0) | ((type) << 13) | ((rw_gpr) << 15) | ((rr) << 22) | ((index_gpr) << 23) | \
-		 ((es) << 30)))
+	 (((array_base) << 0) | ((type) << 13) | ((rw_gpr) << 15) | ((rr) << 22) | ((index_gpr) << 23) | \
+          ((es) << 30))
 // R7xx apparently doesn't have the ELEM_LOOP entry any more
 // We still expose it, but ELEM_LOOP is explicitely R6xx now.
 // TODO: is this just forgotten in the docs, or really not available any more?
 #define CF_ALLOC_IMP_EXP_DWORD1_BUF(array_size, comp_mask, el, bc, eop, vpm, cf_inst, wqm, b) \
-    cpu_to_le32((((array_size) << 0) | ((comp_mask) << 12) | ((el) << 16) | ((bc) << 17) | \
-		 ((eop) << 21) | ((vpm) << 22) | ((cf_inst) << 23) | ((wqm) << 30) | ((b) << 31)))
+        (((array_size) << 0) | ((comp_mask) << 12) | ((el) << 16) | ((bc) << 17) | \
+	 ((eop) << 21) | ((vpm) << 22) | ((cf_inst) << 23) | ((wqm) << 30) | ((b) << 31))
 #define CF_ALLOC_IMP_EXP_DWORD1_SWIZ(sel_x, sel_y, sel_z, sel_w, el, bc, eop, vpm, cf_inst, wqm, b) \
-    cpu_to_le32((((sel_x) << 0) | ((sel_y) << 3) | ((sel_z) << 6) | ((sel_w) << 9) | ((el) << 16) | \
-		 ((bc) << 17) | ((eop) << 21) | ((vpm) << 22) | ((cf_inst) << 23) | \
-		 ((wqm) << 30) | ((b) << 31)))
+        (((sel_x) << 0) | ((sel_y) << 3) | ((sel_z) << 6) | ((sel_w) << 9) | ((el) << 16) | \
+	 ((bc) << 17) | ((eop) << 21) | ((vpm) << 22) | ((cf_inst) << 23) | \
+	 ((wqm) << 30) | ((b) << 31))
 
 // ALU clause insts
 #define SRC0_SEL(x)        (x)
@@ -193,10 +193,6 @@
 // 128-159 kcache constants bank 0
 // 160-191 kcache constants bank 1
 // 248-255 special SQ_ALU_SRC_* (0, 1, etc.)
-#define ALU_SRC_GPR_BASE        0
-#define ALU_SRC_KCACHE0_BASE  128
-#define ALU_SRC_KCACHE1_BASE  160
-#define ALU_SRC_CFILE_BASE    256
 
 #define SRC0_REL(x)        (x)
 #define SRC1_REL(x)        (x)
@@ -242,18 +238,18 @@
 #define CLAMP(x)          (x)
 
 #define ALU_DWORD0(src0_sel, s0r, s0e, s0n, src1_sel, s1r, s1e, s1n, im, ps, last) \
-    cpu_to_le32((((src0_sel) << 0) | ((s0r) << 9) | ((s0e) << 10) | ((s0n) << 12) | \
-		 ((src1_sel) << 13) | ((s1r) << 22) | ((s1e) << 23) | ((s1n) << 25) | \
-		 ((im) << 26) | ((ps) << 29) | ((last) << 31)))
+        (((src0_sel) << 0) | ((s0r) << 9) | ((s0e) << 10) | ((s0n) << 12) | \
+         ((src1_sel) << 13) | ((s1r) << 22) | ((s1e) << 23) | ((s1n) << 25) | \
+	 ((im) << 26) | ((ps) << 29) | ((last) << 31))
 // R7xx has alu_inst at a different slot, and no fog merge any more (no fix function fog any more)
 #define R6xx_ALU_DWORD1_OP2(s0a, s1a, uem, up, wm, fm, omod, alu_inst, bs, dst_gpr, dr, de, clamp) \
-    cpu_to_le32((((s0a) << 0) | ((s1a) << 1) | ((uem) << 2) | ((up) << 3) | ((wm) << 4) | \
-		 ((fm) << 5) | ((omod) << 6) | ((alu_inst) << 8) | ((bs) << 18) | ((dst_gpr) << 21) | \
-		 ((dr) << 28) | ((de) << 29) | ((clamp) << 31)))
+        (((s0a) << 0) | ((s1a) << 1) | ((uem) << 2) | ((up) << 3) | ((wm) << 4) | \
+         ((fm) << 5) | ((omod) << 6) | ((alu_inst) << 8) | ((bs) << 18) | ((dst_gpr) << 21) | \
+	 ((dr) << 28) | ((de) << 29) | ((clamp) << 31))
 #define R7xx_ALU_DWORD1_OP2(s0a, s1a, uem, up, wm, omod, alu_inst, bs, dst_gpr, dr, de, clamp) \
-    cpu_to_le32((((s0a) << 0) | ((s1a) << 1) | ((uem) << 2) | ((up) << 3) | ((wm) << 4) | \
-		 ((omod) << 5) | ((alu_inst) << 7) | ((bs) << 18) | ((dst_gpr) << 21) | \
-		 ((dr) << 28) | ((de) << 29) | ((clamp) << 31)))
+        (((s0a) << 0) | ((s1a) << 1) | ((uem) << 2) | ((up) << 3) | ((wm) << 4) | \
+         ((omod) << 5) | ((alu_inst) << 7) | ((bs) << 18) | ((dst_gpr) << 21) | \
+	 ((dr) << 28) | ((de) << 29) | ((clamp) << 31))
 // This is a general chipset macro, but due to selection by chipid typically not usable in static arrays
 // Fog is NOT USED on R7xx, even if specified.
 #define ALU_DWORD1_OP2(chipfamily, s0a, s1a, uem, up, wm, fm, omod, alu_inst, bs, dst_gpr, dr, de, clamp) \
@@ -261,9 +257,9 @@
      R6xx_ALU_DWORD1_OP2(s0a, s1a, uem, up, wm, fm, omod, alu_inst, bs, dst_gpr, dr, de, clamp) : \
      R7xx_ALU_DWORD1_OP2(s0a, s1a, uem, up, wm, omod, alu_inst, bs, dst_gpr, dr, de, clamp))
 #define ALU_DWORD1_OP3(src2_sel, s2r, s2e, s2n, alu_inst, bs, dst_gpr, dr, de, clamp) \
-    cpu_to_le32((((src2_sel) << 0) | ((s2r) << 9) | ((s2e) << 10) | ((s2n) << 12) | \
-		 ((alu_inst) << 13) | ((bs) << 18) | ((dst_gpr) << 21) | ((dr) << 28) | \
-		 ((de) << 29) | ((clamp) << 31)))
+        (((src2_sel) << 0) | ((s2r) << 9) | ((s2e) << 10) | ((s2n) << 12) | \
+         ((alu_inst) << 13) | ((bs) << 18) | ((dst_gpr) << 21) | ((dr) << 28) | \
+	 ((de) << 29) | ((clamp) << 31))
 
 // VTX clause insts
 // vxt insts
@@ -301,17 +297,17 @@
 #define MEGA_FETCH(x)     (x)
 
 #define VTX_DWORD0(vtx_inst, ft, fwq, buffer_id, src_gpr, sr, ssx, mfc) \
-    cpu_to_le32((((vtx_inst) << 0) | ((ft) << 5) | ((fwq) << 7) | ((buffer_id) << 8) | \
-		 ((src_gpr) << 16) | ((sr) << 23) | ((ssx) << 24) | ((mfc) << 26)))
+        (((vtx_inst) << 0) | ((ft) << 5) | ((fwq) << 7) | ((buffer_id) << 8) | \
+	 ((src_gpr) << 16) | ((sr) << 23) | ((ssx) << 24) | ((mfc) << 26))
 #define VTX_DWORD1_SEM(semantic_id, dsx, dsy, dsz, dsw, ucf, data_format, nfa, fca, sma) \
-    cpu_to_le32((((semantic_id) << 0) | ((dsx) << 9) | ((dsy) << 12) | ((dsz) << 15) | ((dsw) << 18) | \
-		 ((ucf) << 21) | ((data_format) << 22) | ((nfa) << 28) | ((fca) << 30) | ((sma) << 31)))
+        (((semantic_id) << 0) | ((dsx) << 9) | ((dsy) << 12) | ((dsz) << 15) | ((dsw) << 18) | \
+	 ((ucf) << 21) | ((data_format) << 22) | ((nfa) << 28) | ((fca) << 30) | ((sma) << 31))
 #define VTX_DWORD1_GPR(dst_gpr, dr, dsx, dsy, dsz, dsw, ucf, data_format, nfa, fca, sma) \
-    cpu_to_le32((((dst_gpr) << 0) | ((dr) << 7) | ((dsx) << 9) | ((dsy) << 12) | ((dsz) << 15) | ((dsw) << 18) | \
-		 ((ucf) << 21) | ((data_format) << 22) | ((nfa) << 28) | ((fca) << 30) | ((sma) << 31)))
+        (((dst_gpr) << 0) | ((dr) << 7) | ((dsx) << 9) | ((dsy) << 12) | ((dsz) << 15) | ((dsw) << 18) | \
+	 ((ucf) << 21) | ((data_format) << 22) | ((nfa) << 28) | ((fca) << 30) | ((sma) << 31))
 #define VTX_DWORD2(offset, es, cbns, mf) \
-    cpu_to_le32((((offset) << 0) | ((es) << 16) | ((cbns) << 18) | ((mf) << 19)))
-#define VTX_DWORD_PAD cpu_to_le32(0x00000000)
+	 (((offset) << 0) | ((es) << 16) | ((cbns) << 18) | ((mf) << 19))
+#define VTX_DWORD_PAD 0x00000000
 
 // TEX clause insts
 // tex insts
@@ -337,15 +333,15 @@
 
 // R7xx has an additional parameter ALT_CONST. We always expose it, but ALT_CONST is R7xx only
 #define TEX_DWORD0(tex_inst, bfm, fwq, resource_id, src_gpr, sr, ac) \
-    cpu_to_le32((((tex_inst) << 0) | ((bfm) << 5) | ((fwq) << 7) | ((resource_id) << 8) | \
-		 ((src_gpr) << 16) | ((sr) << 23) | ((ac) << 24)))
+	 (((tex_inst) << 0) | ((bfm) << 5) | ((fwq) << 7) | ((resource_id) << 8) | \
+          ((src_gpr) << 16) | ((sr) << 23) | ((ac) << 24))
 #define TEX_DWORD1(dst_gpr, dr, dsx, dsy, dsz, dsw, lod_bias, ctx, cty, ctz, ctw) \
-    cpu_to_le32((((dst_gpr) << 0) | ((dr) << 7) | ((dsx) << 9) | ((dsy) << 12) | ((dsz) << 15) | ((dsw) << 18) | \
-		 ((lod_bias) << 21) | ((ctx) << 28) | ((cty) << 29) | ((ctz) << 30) | ((ctw) << 31)))
+        (((dst_gpr) << 0) | ((dr) << 7) | ((dsx) << 9) | ((dsy) << 12) | ((dsz) << 15) | ((dsw) << 18) | \
+	 ((lod_bias) << 21) | ((ctx) << 28) | ((cty) << 29) | ((ctz) << 30) | ((ctw) << 31))
 #define TEX_DWORD2(offset_x, offset_y, offset_z, sampler_id, ssx, ssy, ssz, ssw) \
-    cpu_to_le32((((offset_x) << 0) | ((offset_y) << 5) | ((offset_z) << 10) | ((sampler_id) << 15) | \
-		 ((ssx) << 20) | ((ssy) << 23) | ((ssz) << 26) | ((ssw) << 29)))
-#define TEX_DWORD_PAD cpu_to_le32(0x00000000)
+        (((offset_x) << 0) | ((offset_y) << 5) | ((offset_z) << 10) | ((sampler_id) << 15) | \
+	 ((ssx) << 20) | ((ssy) << 23) | ((ssz) << 26) | ((ssw) << 29))
+#define TEX_DWORD_PAD 0x00000000
 
 extern int R600_solid_vs(RADEONChipFamily ChipSet, uint32_t* vs);
 extern int R600_solid_ps(RADEONChipFamily ChipSet, uint32_t* ps);
@@ -357,6 +353,7 @@ extern int R600_xv_vs(RADEONChipFamily ChipSet, uint32_t* shader);
 extern int R600_xv_ps(RADEONChipFamily ChipSet, uint32_t* shader);
 
 extern int R600_comp_vs(RADEONChipFamily ChipSet, uint32_t* vs);
+extern int R600_comp_mask_ps(RADEONChipFamily ChipSet, uint32_t* ps);
 extern int R600_comp_ps(RADEONChipFamily ChipSet, uint32_t* ps);
 
 #endif
