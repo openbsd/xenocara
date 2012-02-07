@@ -196,8 +196,8 @@
 ./usr/X11R6/lib/modules/drivers/r128_drv.so
 ./usr/X11R6/lib/modules/drivers/radeon_drv.la
 ./usr/X11R6/lib/modules/drivers/radeon_drv.so
-./usr/X11R6/lib/modules/drivers/radeonold_drv.la
-./usr/X11R6/lib/modules/drivers/radeonold_drv.so
+./usr/X11R6/lib/modules/drivers/radeonhd_drv.la
+./usr/X11R6/lib/modules/drivers/radeonhd_drv.so
 ./usr/X11R6/lib/modules/drivers/rendition_drv.la
 ./usr/X11R6/lib/modules/drivers/rendition_drv.so
 ./usr/X11R6/lib/modules/drivers/s3_drv.la
@@ -346,7 +346,7 @@
 ./usr/X11R6/man/man4/penmount.4
 ./usr/X11R6/man/man4/r128.4
 ./usr/X11R6/man/man4/radeon.4
-./usr/X11R6/man/man4/radeonold.4
+./usr/X11R6/man/man4/radeonhd.4
 ./usr/X11R6/man/man4/rendition.4
 ./usr/X11R6/man/man4/s3.4
 ./usr/X11R6/man/man4/s3virge.4
