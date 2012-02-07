@@ -1,21 +1,8 @@
 Post-installation instructions for X.Org on OpenBSD/hp300
 ---------------------------------------------------------
 
-OpenBSD uses the X.Org X server on hp300. 
-
-An unaccelerated frame buffer driver, wsfb, is provided for all frame
-buffers but those on the SGC bus (including the 425e built-in EVRX).
-DaVinci and Renaissance frame buffers are currently only supported
-in monochrome mode.
-
-The default /etc/X11/xorg.conf which is installed provides a ready-to-run
-configuration.
-
-To start xdm, the X display manager, activate the xdm_flags option in
-/etc/rc.conf. You will need to disable the console getty in /etc/ttys.
-
-Alternatively, you can log in on console and use `startx'.
+There is no X server for hp300.  Only userland X.
 
 problem_blurb
 
-$OpenBSD: README.hp300,v 1.2 2008/08/31 07:33:29 matthieu Exp $
+$OpenBSD: README.hp300,v 1.3 2012/02/07 19:53:13 matthieu Exp $
