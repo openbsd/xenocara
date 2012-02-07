@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.41 2012/02/06 22:53:02 matthieu Exp $
+# $OpenBSD: Makefile,v 1.42 2012/02/07 19:46:11 matthieu Exp $
 
 # The input driver ABI broke between xserver 1.9 and 1.10. 
 # Some drivers were updated to the new ABI without keeping compatibility
@@ -23,6 +23,8 @@ INPUT_DRV_alpha=
 
 INPUT_DRV_amd64= ${INPUT_DRV_COMMON} xf86-input-synaptics xf86-input-vmmouse
 
+INPUT_DRV_hp300=
+
 INPUT_DRV_hppa= ${INPUT_DRV_DEFAULT}
 
 INPUT_DRV_i386= ${INPUT_DRV_COMMON} xf86-input-synaptics xf86-input-vmmouse
@@ -31,10 +33,13 @@ INPUT_DRV_landisk=
 
 INPUT_DRV_loongson= ${INPUT_DRV_DEFAULT}
 
+INPUT_DRV_mac68k= 
+
 INPUT_DRV_macppc= ${INPUT_DRV_COMMON}
 
 INPUT_DRV_mvme68k=
 INPUT_DRV_mvme88k=
+
 INPUT_DRV_sgi= ${INPUT_DRV_DEFAULT}
 
 INPUT_DRV_sparc64= ${INPUT_DRV_COMMON}
@@ -72,6 +77,8 @@ VIDEO_DRV_amd64= \
 VIDEO_DRV_armish= \
 	xf86-video-wsfb	xf86-video-wsudl
 
+VIDEO_DRV_hp300=
+
 VIDEO_DRV_hppa= \
 	xf86-video-wsfb \
 	xf86-video-wsudl
@@ -93,12 +100,15 @@ VIDEO_DRV_landisk=
 VIDEO_DRV_loonson= \
 	xf86-video-siliconmotion xf86-video-wsfb
 
+VIDEO_DRV_mac68k=
+
 VIDEO_DRV_macppc= \
 	xf86-video-ati xf86-video-mach64 xf86-video-nv xf86-video-r128 \
 	xf86-video-wsfb xf86-video-wsudl
 
 VIDEO_DRV_mvme68k=
 VIDEO_DRV_mvme88k=
+
 VIDEO_DRV_sgi= xf86-video-wsfb
 
 VIDEO_DRV_sparc64= \
