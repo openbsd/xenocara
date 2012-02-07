@@ -1,7 +1,7 @@
 Post-installation instructions for X.Org on OpenBSD/macppc
 ----------------------------------------------------------
 
-OpenBSD uses the X.Org X server on macppc. 
+OpenBSD uses the X.Org X server on macppc.
 
 Accelerated drivers
 -------------------
@@ -21,7 +21,7 @@ You need to set machdep.allowaperture to 2 in /etc/sysctl.conf in
 order to be able to use the X.Org accelerated drivers.
 
 
-Unaccelerated, framebuffer driver 
+Unaccelerated, framebuffer driver
 ---------------------------------
 
 The wsfb driver uses whatever graphics mode the console is set to
@@ -38,7 +38,8 @@ Mousekeys (Or how to deal with a One Button Mouse)
 Using the mousekeys feature of Xorg, it is possible to emulate
 button2 and button3, since Apple does not seem to build hardware with
 them. Other mouse operations can also be emulated using the keyboard.
-To see the default key mappings, look at /etc/X11/xkb/compat/mousekeys.
+To see the default key mappings, look at
+/usr/X11R6/share/X11/xkb/compat/mousekeys.
 These are not enabled by default.  It is necessary to bind a key to
 the Pointer_EnableKeys action.  For the PBG4 a good setting for
 this is using the Enter key next to or near the space bar (US keymap).
@@ -60,26 +61,26 @@ this is not specific to the PBG4.  It changes the default mousekey
 behavior of the keypad 0 and keypad Decimal (period) to act as mouse
 button 2 and mouse button 3 respectively.
 
---- mousekeys.orig	Sat Oct 13 11:09:31 2001
-+++ /etc/X11/xkb/compat/mousekeys	Sat Oct 13 11:12:34 2001
-@@ -104,14 +104,14 @@
+--- mousekeys.orig	Tue Feb  7 20:27:31 2012
++++ mousekeys	Tue Feb  7 21:10:47 2012
+@@ -101,14 +101,14 @@
      };
- 
-     interpret KP_0 { 
--	action = LockPointerButton(button=default,affect=lock); 
+
+     interpret KP_0 {
+-	action = LockPointerButton(button=default,affect=lock);
 +	action= PointerButton(button=2);
      };
-     interpret KP_Insert { 
- 	action = LockPointerButton(button=default,affect=lock); 
+     interpret KP_Insert {
+ 	action = LockPointerButton(button=default,affect=lock);
      };
- 
-     interpret KP_Decimal { 
--	action = LockPointerButton(button=default,affect=unlock); 
+
+     interpret KP_Decimal {
+-	action = LockPointerButton(button=default,affect=unlock);
 +	action= PointerButton(button=3);
      };
-     interpret KP_Delete { 
- 	action = LockPointerButton(button=default,affect=unlock); 
+     interpret KP_Delete {
+ 	action = LockPointerButton(button=default,affect=unlock);
 
 problem_blurb
 
-$OpenBSD: README.macppc,v 1.8 2010/09/17 08:09:13 ajacoutot Exp $
+$OpenBSD: README.macppc,v 1.9 2012/02/07 20:12:12 matthieu Exp $
