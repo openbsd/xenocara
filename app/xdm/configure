@@ -17908,8 +17908,8 @@ if test "x$DYNAMIC_GREETER" = "xauto" ; then
 	esac
 fi
 if test "x$DYNAMIC_GREETER" = "xno"; then
-STATIC_GREETER_CFLAGS="-DGREET_USER_STATIC"
-STATIC_GREETER_LIBS="-L../greeter -lXdmGreet"
+	STATIC_GREETER_CFLAGS="-DGREET_USER_STATIC"
+	STATIC_GREETER_LIBS='${top_builddir}/greeter/libXdmGreet.la'
 fi
 
 { $as_echo "$as_me:$LINENO: result: $DYNAMIC_GREETER" >&5
@@ -18410,7 +18410,10 @@ if test -z "$DEF_USER_PATH" ; then
 	    netbsd*)
 		DEF_USER_PATH="/bin:/usr/bin:/usr/pkg/bin:/usr/local/bin:${bindir}"
 		;;
-	    openbsd*|bsdi*)
+	    openbsd*)
+		DEF_USER_PATH="/bin:/usr/bin:/sbin:/usr/sbin:${bindir}:/usr/local/bin:/usr/local/sbin"
+		;;
+	    bsdi*)
 		DEF_USER_PATH="/bin:/usr/bin:/usr/local/bin:${bindir}"
 		;;
 	    solaris*)
@@ -20745,7 +20748,7 @@ shlibpath_overrides_runpath=$shlibpath_overrides_runpath
 libname_spec=$lt_libname_spec
 
 # List of archive names.  First name is the real one, the rest are links.
-# The last name is the one that the linker finds with -lNAME.
+# The last name is the one that the linker finds with -lNAME
 library_names_spec=$lt_library_names_spec
 
 # The coded name of the library, if different from the real name.
@@ -20861,7 +20864,7 @@ allow_undefined_flag=$lt_allow_undefined_flag
 no_undefined_flag=$lt_no_undefined_flag
 
 # Flag to hardcode \$libdir into a binary during linking.
-# This must work even if \$libdir does not exist.
+# This must work even if \$libdir does not exist
 hardcode_libdir_flag_spec=$lt_hardcode_libdir_flag_spec
 
 # Whether we need a single "-rpath" flag with a separated argument.

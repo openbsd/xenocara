@@ -541,7 +541,10 @@ if test -z "$DEF_USER_PATH" ; then
 	    netbsd*)
 		DEF_USER_PATH="/bin:/usr/bin:/usr/pkg/bin:/usr/local/bin:${bindir}"
 		;;
-	    openbsd*|bsdi*)
+	    openbsd*)
+		DEF_USER_PATH="/bin:/usr/bin:/sbin:/usr/sbin:${bindir}:/usr/local/bin:/usr/local/sbin"
+		;;
+	    bsdi*)
 		DEF_USER_PATH="/bin:/usr/bin:/usr/local/bin:${bindir}"
 		;;
 	    solaris*)
