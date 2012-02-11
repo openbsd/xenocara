@@ -73,6 +73,7 @@ struct nameint kbdopt[] = {
 
 struct nameint kbdmodel[] = {
 	{ WSKBD_TYPE_ZAURUS,	"zaurus" },
+	{ WSKBD_TYPE_ADB,	"macintosh" },
 	{ 0 }
 };
 
