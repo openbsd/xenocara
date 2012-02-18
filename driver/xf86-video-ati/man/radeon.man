@@ -47,7 +47,7 @@ Overlay XVideo acceleration (only on R/RV/RS1xx, R/RV/RS2xx,
 R/RV/RS3xx, R/RV/RS4xx);
 .TP
 \(bu
-3D acceleration (not supported on R/RV6xx and R/RV/RS7xx);
+3D acceleration;
 .PD
 .SH SUPPORTED HARDWARE
 The
