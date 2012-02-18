@@ -634,6 +634,11 @@ ProcessIProfile(FILE *stream, XDCCC_Correction *pCorrection)
 		state = 0;
 		break;
 	      case DATA :
+		if(pIRec == NULL) {
+		    fprintf(stderr, "Line %d: Invalid Intensity Profile -- Premature %s\n",
+		            linenum, keyword);
+		    return (0);
+		}
 		do {
 		    /********************************************************
 		     * Note: tableType should only be 0 or 1 at this point. 
@@ -1489,7 +1494,6 @@ LoadSCCData(Display *pDpy, int screenNumber, char *filename, int targetFormat)
     }
 
     while ((pStr = nextline(buf, BUFSIZ, stream)) != NULL) {
-	token1 = token2 = token3 = (char*)NULL;
 	keyword = strtok(buf, DATA_DELIMS);
 	if (keyword != (char*)NULL) {
 	    switch (SCKeyOf(keyword)) {

@@ -166,14 +166,11 @@ main(int argc, char *argv[])
       exit (1);
     }
 
-    if (load && query) {
-	load = 0;
-    }
-    if (load && remove) {
+    if (query || remove) {
 	load = 0;
     }
 
-    if (!query && !remove) {
+    if (load) {
 	LoadSCCData(dpy, DefaultScreen(dpy), filename, targetFormat);
     }
 
