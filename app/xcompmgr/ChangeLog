@@ -1,3 +1,110 @@
+commit 3dbfa0b9f63c38068443abb7751a7c8b516febda
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Feb 14 19:22:36 2012 -0800
+
+    xcompmgr 1.1.6
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit db973127f8ee0dfad1e15a577bfa184b5fddc862
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Nov 18 23:50:57 2011 -0800
+
+    Only define shape_kind() function if DEBUG_SHAPE is true
+    
+    Fixes gcc warning:
+    xcompmgr.c:1762:1: warning: ‘shape_kind’ defined but not used
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 2d23afb54eb63f7511b16ecb17e5b90f841b2966
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Nov 18 23:46:27 2011 -0800
+
+    Make dpy a local variable instead of a global
+    
+    Fixes many gcc -Wshadow warnings
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 2a40523ef8c658703eae3d17732e76298abf48e5
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Oct 6 22:30:17 2011 -0700
+
+    Add xext to PKG_CHECK_MODULES for calls of shape ext. functions in libXext
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 747977fbc42c6c9b4bb2a77d596f5d1e434d83c4
+Author: Andreas <finkandreas@web.de>
+Date:   Sun Sep 25 00:18:17 2011 -0700
+
+    Handle XShape window which shape change
+    
+    https://bugs.freedesktop.org/show_bug.cgi?id=20839
+    
+    Tested-by: Yann Droneaud <yann@droneaud.fr>
+    Signed-off-by: Andreas <finkandreas@web.de>
+    Reviewed-by: Jeremy Huddleston <jeremyhu@apple.com>
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit 2344e53054ea3d54c3c0cfa87db51313dfbbaab8
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Nov 20 17:20:45 2010 -0800
+
+    Remove trailing whitespace
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 6dd6eed70526119003b05b9432b96dea52234d07
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Nov 20 17:15:41 2010 -0800
+
+    config: replace deprecated AM_CONFIG_HEADER with AC_CONFIG_HEADERS
+    
+    Regroup AC statements under the Autoconf initialization section.
+    Regroup AM statements under the Automake initialization section.
+    Add missing AC_CONFIG_SRCDIR
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 16057087289997f78c818416442501ba43ec10ac
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Nov 20 17:12:01 2010 -0800
+
+    config: Remove unnecessary calls from configure.ac
+    
+    AC_PROG_CC is provided by XORG_DEFAULT_OPTIONS now
+    PKG_CONFIG_MODULES handles AC_SUBST of the CFLAGS & LIBS variables
+    Never used any of the HAVE_* defines from the function/header checks
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit e501573c7181f81d2ce874445becddbc9af6eacb
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sat Nov 20 17:07:38 2010 -0800
+
+    config: update AC_PREREQ statement to 2.60
+    
+    Unrelated to the previous patches, the new value simply reflects
+    the reality that the minimum level for autoconf to configure
+    all x.org modules is 2.60 dated June 2006.
+    
+    ftp://ftp.gnu.org/gnu/autoconf/autoconf-2.60.tar.gz
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit c593ba4502b83ac021ee930b491e15994f5eece5
+Author: Matthieu Herrb <matthieu.herrb@laas.fr>
+Date:   Sun Nov 8 11:28:40 2009 +0100
+
+    don't hard-code package version in C source.
+    
+    While there, get rid of RCS Id.
+    
+    Reviewed-by: Remi Cardona <remi@gentoo.org>
+
 commit 2af85f6d21d175c2a16411540d4e44851c803fbe
 Author: Alan Coopersmith <alan.coopersmith@sun.com>
 Date:   Mon Nov 2 15:21:09 2009 -0800
