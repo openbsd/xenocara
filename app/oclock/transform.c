@@ -1,4 +1,3 @@
-/* $Xorg: transform.c,v 1.4 2001/02/09 02:05:33 xorgcvs Exp $ */
 /*
 
 Copyright 1993, 1998  The Open Group
@@ -26,7 +25,6 @@ other dealings in this Software without prior written authorization
 from The Open Group.
 
 */
-/* $XFree86: xc/programs/oclock/transform.c,v 3.4 2001/07/25 15:05:15 dawes Exp $ */
 
 
 /*
@@ -37,8 +35,8 @@ from The Open Group.
 #include	"transform.h"
 #include	<stdlib.h>
 
-static XPoint * 
-TranslatePoints(TPoint *points, int n_points, 
+static XPoint *
+TranslatePoints(TPoint *points, int n_points,
 		Transform *t, int mode)
 {
 	XPoint	*xpoints;

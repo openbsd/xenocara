@@ -1,4 +1,3 @@
-/* $Xorg: transform.h,v 1.4 2001/02/09 02:05:33 xorgcvs Exp $ */
 /*
 
 Copyright 1993, 1998  The Open Group
@@ -26,7 +25,6 @@ other dealings in this Software without prior written authorization
 from The Open Group.
 
 */
-/* $XFree86: xc/programs/oclock/transform.h,v 1.4 2001/01/17 23:45:01 dawes Exp $ */
 
 
 /*
@@ -56,13 +54,13 @@ typedef struct _TRectangle {
 # define Twidth(w,h,t)	(((double) (w)) / (t)->mx)
 # define Theight(w,h,t)	(((double) (h)) / (t)->my)
 
-extern void TFillPolygon ( Display *dpy, Drawable d, GC gc, Transform *t, 
+extern void TFillPolygon ( Display *dpy, Drawable d, GC gc, Transform *t,
 			   TPoint *points, int n_points, int shape, int mode );
-extern void TDrawArc ( Display *dpy, Drawable d, GC gc, Transform *t, 
-		       double x, double y, double width, double height, 
+extern void TDrawArc ( Display *dpy, Drawable d, GC gc, Transform *t,
+		       double x, double y, double width, double height,
 		       int angle1, int angle2 );
-extern void TFillArc ( Display *dpy, Drawable d, GC gc, Transform *t, 
-		       double x, double y, double width, double height, 
+extern void TFillArc ( Display *dpy, Drawable d, GC gc, Transform *t,
+		       double x, double y, double width, double height,
 		       int angle1, int angle2 );
-extern void SetTransform ( Transform *t, int xx1, int xx2, int xy1, int xy2, 
+extern void SetTransform ( Transform *t, int xx1, int xx2, int xy1, int xy2,
 			   double tx1, double tx2, double ty1, double ty2 );

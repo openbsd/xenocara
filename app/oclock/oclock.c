@@ -1,6 +1,5 @@
 /*
- * $Xorg: oclock.c,v 1.4 2001/02/09 02:05:33 xorgcvs Exp $
- *
+
 Copyright 1989, 1998  The Open Group
 
 Permission to use, copy, modify, distribute, and sell this software and its
@@ -22,8 +21,12 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 Except as contained in this notice, the name of The Open Group shall not be
 used in advertising or otherwise to promote the sale, use or other dealings
 in this Software without prior written authorization from The Open Group.
+
  */
-/* $XFree86: xc/programs/oclock/oclock.c,v 1.7tsi Exp $ */
+
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 
 #include <X11/Intrinsic.h>
 #include <X11/Xatom.h>
@@ -31,7 +34,7 @@ in this Software without prior written authorization from The Open Group.
 #include <X11/Shell.h>
 #include <X11/Xmu/Editres.h>
 #include "Clock.h"
-#include <stdio.h> 
+#include <stdio.h>
 #include <stdlib.h>
 
 #ifdef XKB
@@ -44,7 +47,7 @@ in this Software without prior written authorization from The Open Group.
 static void die ( Widget w, XtPointer client_data, XtPointer call_data );
 static void save ( Widget w, XtPointer client_data, XtPointer call_data );
 static void usage ( void );
-static void quit ( Widget w, XEvent *event, String *params, 
+static void quit ( Widget w, XEvent *event, String *params,
 		   Cardinal *num_params );
 
 
@@ -70,14 +73,11 @@ static void save(Widget w, XtPointer client_data, XtPointer call_data)
 static void usage(void)
 {
     fprintf(stderr,
-"usage: oclock\n");
-    fprintf (stderr, 
-"       [-geometry [{width}][x{height}][{+-}{xoff}[{+-}{yoff}]]] [-display [{host}]:[{vs}]]\n");
-    fprintf(stderr,
-"       [-fg {color}] [-bg {color}] [-bd {color}] [-bw {pixels}]\n");
-    fprintf(stderr,
-"       [-minute {color}] [-hour {color}] [-jewel {color}]\n");
-    fprintf(stderr,
+"usage: oclock\n"
+"       [-geometry [{width}][x{height}][{+-}{xoff}[{+-}{yoff}]]]\n"
+"       [-display [{host}]:[{vs}]]\n"
+"       [-fg {color}] [-bg {color}] [-bd {color}] [-bw {pixels}]\n"
+"       [-minute {color}] [-hour {color}] [-jewel {color}]\n"
 "       [-backing {backing-store}] [-shape] [-noshape] [-transparent]\n");
     exit(1);
 }
@@ -99,14 +99,14 @@ static XrmOptionDescRec options[] = {
 {"-transparent","*clock.transparent",	XrmoptionNoArg,		"TRUE"},
 };
 
-int 
+int
 main(int argc, char *argv[])
 {
     XtAppContext xtcontext;
     Widget toplevel;
     Arg arg[2];
     int	i;
-    
+
     toplevel = XtOpenApplication(&xtcontext, "Clock",
 				 options, XtNumber(options), &argc, argv, NULL,
 				 sessionShellWidgetClass, NULL, 0);
@@ -120,7 +120,7 @@ main(int argc, char *argv[])
 	(toplevel, XtParseTranslationTable ("<Message>WM_PROTOCOLS: quit()"));
 
     i = 0;
-    XtSetArg (arg[i], XtNiconPixmap, 
+    XtSetArg (arg[i], XtNiconPixmap,
 	      XCreateBitmapFromData (XtDisplay(toplevel),
 				     XtScreen(toplevel)->root,
 				     (char *)oclock_bits,
@@ -142,7 +142,7 @@ main(int argc, char *argv[])
     (void) XSetWMProtocols (XtDisplay(toplevel), XtWindow(toplevel),
                             &wm_delete_window, 1);
 
-    XtAddEventHandler(toplevel, (EventMask) 0, TRUE, 
+    XtAddEventHandler(toplevel, (EventMask) 0, TRUE,
 		      _XEditResCheckMessages, NULL);
 
     XtAppMainLoop(xtcontext);
@@ -153,7 +153,7 @@ static void quit(Widget w, XEvent *event, String *params, Cardinal *num_params)
 {
     Arg arg;
 
-    if (event->type == ClientMessage && 
+    if (event->type == ClientMessage &&
 	event->xclient.data.l[0] != wm_delete_window) {
 #ifdef XKB
 	XkbStdBell(XtDisplay(w), XtWindow(w), 0, XkbBI_BadValue);

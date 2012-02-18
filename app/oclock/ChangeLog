@@ -1,3 +1,100 @@
+commit 0563142cc89b04d1bca3208751b186df9649dbda
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Feb 10 21:25:41 2012 -0800
+
+    oclock 1.0.3
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 027f85a81df383155e365f160d7760fa50e48ebe
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Oct 14 23:12:05 2011 -0700
+
+    Enable the latent XKBStdBell code in oclock
+    
+    This code has been unreachable since the switch from Imake lost -DXKB,
+    might as well hook it back up.   Sadly it relies on the nonsensical use
+    of libxkbfile for the Bell calls, but such is the state of our XKB Bell API.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 18873da4921369f687023522bc0f07e8e51c8f05
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Oct 14 22:57:06 2011 -0700
+
+    Strip CVS/RCS id tags
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 9e9ba1248f9fa8a43bb98be9bea024aaaa4f0d64
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Oct 14 22:53:52 2011 -0700
+
+    Strip trailing whitespace
+    
+    Performed with: find * -type f | xargs perl -i -p -e 's{[ \t]+$}{}'
+    git diff -w & git diff -b show no diffs from this change
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit b1def38874735ca15025edd0d3776387fddeb7f3
+Author: Julien Cristau <jcristau@debian.org>
+Date:   Tue Apr 26 18:36:48 2011 +0200
+
+    link against -lXt directly
+    
+    We use Xt, let's check for it explicitly in configure along with the
+    other libs.
+    
+    Signed-off-by: Julien Cristau <jcristau@debian.org>
+
+commit d8d86bc4d1f8c38d7ee7a9e127e43c6892a6033d
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Jan 24 22:09:43 2011 -0800
+
+    Combine usage output into a single string/fprintf call
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 5058a07bd4be9f15094b7bbde0fd4d9a975d3ca9
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jan 19 10:06:55 2011 -0500
+
+    config: move man pages into their own directory
+    
+    Use services provided by XORG_MANPAGE_SECTIONS.
+    Use standard Makefile for man pages.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 379420630b1225d9aeed45a7b8b690e548244c14
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Jan 13 11:15:47 2011 -0500
+
+    man: remove trailing spaces and tabs
+    
+    Using s/[ \t]*$//
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 29f8733848d82ec2fd06b95ce5570f64c89ee58f
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jan 12 16:28:02 2011 -0500
+
+    config: replace deprecated AM_CONFIG_HEADER with AC_CONFIG_HEADERS
+    
+    This silences an Autoconf warning
+
+commit 7e4dc63fb57cb8d74eb2cc77e3992d5339d97d42
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jan 12 15:29:49 2011 -0500
+
+    config: replace deprecated AC_HELP_STRING with AS_HELP_STRING
+    
+    This silences an Automake warning.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
 commit 52f1f49fa24a0459b6ca4db2f3f55700ba66f3c6
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Wed Sep 22 19:55:54 2010 -0700

@@ -1,6 +1,5 @@
 /*
- * $Xorg: Clock.c,v 1.4 2001/02/09 02:05:33 xorgcvs Exp $
- *
+
 Copyright 1989, 1998  The Open Group
 
 Permission to use, copy, modify, distribute, and sell this software and its
@@ -22,14 +21,18 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 Except as contained in this notice, the name of The Open Group shall not be
 used in advertising or otherwise to promote the sale, use or other dealings
 in this Software without prior written authorization from The Open Group.
- */
-/* $XFree86: xc/programs/oclock/Clock.c,v 1.6 2001/07/25 15:05:15 dawes Exp $ */
+
+*/
 
 /*
  * Clock.c
  *
  * a NeWS clone clock
  */
+
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 
 #include <X11/IntrinsicP.h>
 #include <X11/StringDefs.h>
@@ -74,10 +77,10 @@ static XtResource resources[] = {
 #undef goffset
 
 static void ClassInitialize ( void );
-static void Initialize ( Widget greq, Widget gnew, ArgList args, 
+static void Initialize ( Widget greq, Widget gnew, ArgList args,
 			 Cardinal *num_args );
 static void Resize ( Widget widget );
-static void Realize ( Widget gw, XtValueMask *valueMask, 
+static void Realize ( Widget gw, XtValueMask *valueMask,
 		      XSetWindowAttributes *attrs );
 static void Destroy ( Widget gw );
 static void Redisplay ( Widget gw, XEvent *event, Region region );
@@ -163,7 +166,7 @@ static void Initialize (Widget greq, Widget gnew,
 
     	myXGCV.foreground = w->clock.jewel;
     	w->clock.jewelGC = XtGetGC(gnew, valuemask, &myXGCV);
-    
+
     	myXGCV.foreground = w->core.background_pixel;
     	w->clock.eraseGC = XtGetGC(gnew, valuemask, &myXGCV);
     }
@@ -171,8 +174,8 @@ static void Initialize (Widget greq, Widget gnew,
     /* wait for Realize to add the timeout */
     w->clock.interval_id = 0;
 
-    if (w->clock.shape_window && !XShapeQueryExtension (XtDisplay (w), 
-							&shape_event_base, 
+    if (w->clock.shape_window && !XShapeQueryExtension (XtDisplay (w),
+							&shape_event_base,
 							&shape_error_base))
     w->clock.shape_window = False;
     w->clock.shape_mask = 0;
@@ -219,7 +222,7 @@ static void Resize (Widget widget)
 			w->core.height - face_height, face_height,
 			-WINDOW_WIDTH(w)/2, WINDOW_WIDTH(w)/2,
 			-WINDOW_HEIGHT(w)/2, WINDOW_HEIGHT(w)/2);
-    
+
 	/*
 	 * allocate a pixmap to draw shapes in
 	 */
@@ -231,7 +234,7 @@ static void Resize (Widget widget)
 	    XFreePixmap (XtDisplay (w), w->clock.shape_mask);
 	    w->clock.shape_mask = None;
 	}
-	
+
 	if (!w->clock.shape_mask)
 	{
 	    w->clock.shape_mask = XCreatePixmap (XtDisplay (w), XtWindow (w),
@@ -314,7 +317,7 @@ static void Resize (Widget widget)
 			    0, 360 * 64);
 	}
 
-	XShapeCombineMask (XtDisplay (w), XtWindow (w), ShapeClip, 
+	XShapeCombineMask (XtDisplay (w), XtWindow (w), ShapeClip,
 		    0, 0, shape_mask, ShapeSet);
 
     } else
@@ -333,7 +336,7 @@ static void Resize (Widget widget)
     	XConfigureWindow (XtDisplay (w), XtWindow (w),
 			    CWWidth|CWHeight|CWBorderWidth,
 			    &xwc);
-    
+
     	SetTransform (&w->clock.t,
 	    0, xwc.width,
 	    xwc.height, 0,
@@ -421,7 +424,7 @@ static void new_time (XtPointer client_data, XtIntervalId *id)
         ClockWidget	w = (ClockWidget)client_data;
 	Time_t		now;
 	struct tm	*tm;
-	
+
 	if (!w->clock.transparent)
 	if (w->clock.polys_valid) {
 		paint_hands (w, XtWindow (w), w->clock.eraseGC, w->clock.eraseGC);
@@ -440,7 +443,7 @@ static void new_time (XtPointer client_data, XtIntervalId *id)
 	 * take a while and we'd like the clock to keep up
 	 * with time changes.
 	 */
-	w->clock.interval_id = 
+	w->clock.interval_id =
 	    XtAppAddTimeOut (XtWidgetToApplicationContext((Widget) w),
 			     (60 - tm->tm_sec) * 1000, new_time, client_data);
 	compute_hands (w);
@@ -525,7 +528,7 @@ compute_hand (ClockWidget w, double a, double l, double width,
 
 	c = cos(a);
 	s = sin(a);
-	poly[0].x = c * l;	
+	poly[0].x = c * l;
 	poly[0].y = s * l;
 	poly[1].x = (l - width) * c - s * width;
 	poly[1].y = (l - width) * s + c * width;

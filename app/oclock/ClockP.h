@@ -1,4 +1,3 @@
-/* $Xorg: ClockP.h,v 1.4 2001/02/09 02:05:33 xorgcvs Exp $ */
 /*
 
 Copyright 1993, 1998  The Open Group
@@ -26,7 +25,6 @@ other dealings in this Software without prior written authorization
 from The Open Group.
 
 */
-/* $XFree86: xc/programs/oclock/ClockP.h,v 1.4 2001/01/17 23:45:01 dawes Exp $ */
 
 
 #ifndef _ClockP_h
@@ -88,7 +86,7 @@ extern ClockClassRec clockClassRec;
 extern void paint_jewel ( ClockWidget w, Drawable d, GC gc );
 extern int check_jewel_poly ( ClockWidget w, TPoint poly[6] );
 extern void check_jewel ( ClockWidget w, Drawable d, GC gc );
-extern void compute_hand ( ClockWidget w, double a, double l, double width, 
+extern void compute_hand ( ClockWidget w, double a, double l, double width,
 			  TPoint poly[6] );
 extern void compute_hands ( ClockWidget w );
 extern void paint_hand ( ClockWidget w, Drawable d, GC gc, TPoint poly[6] );
