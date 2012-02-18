@@ -1,3 +1,169 @@
+commit 214132d470ef98b5d3cdc71662cb586025746bb5
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Fri Jan 20 23:46:56 2012 -0800
+
+    Version bump: 1.16.1
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit 088c848e74ac47bbd84eac70ef18a3d2abe96936
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Sun Dec 18 15:57:43 2011 -0800
+
+    Provide a configure option to turn off the selective -Werror=... CFLAGS
+    
+    Provide end users with a workaround if they find code doesn't build with
+    the -Werror=... flags provided by BASE_CFLAGS.  This can be useful if
+    newer util-macros are used with older source code that had problems, or
+    in the rare case when warnings are expanded to hit more cases (although
+    this case should not happen too much in practice).
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit 55f387315c4429704d2d5212fb1e3b130638e097
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Sat Dec 10 11:55:29 2011 -0800
+
+    Remove -Winline from BASE_CFLAGS
+    
+    This might be useful for performance tuning builds against specific
+    compilers, but it is a bit too noisy to be used in general.
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit a8f51b6864c65ab226f2febd7322354fb00b9444
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Dec 7 15:15:54 2011 -0500
+
+    Version bump: 1.16.0
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 87340dcccf97c3e1f0ab918bb6740abf47d65558
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Dec 1 13:12:59 2011 -0800
+
+    XORG_TESTSET_CFLAG: Try to both compile & link with the flags
+    
+    Catches build problems caused by compilers that ignore unknown flags
+    at compile time and pass them to the linker at link time, when the
+    linker considers unknown flags to be fatal errors.
+    
+    Reviewed-by: Gaetan Nadon <memsize@videotron.ca>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 2d4a7a4cf645c9cb586cf2f77f8d3f61d6c71883
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Thu Nov 10 23:45:57 2011 -0800
+
+    XORG_TESTSET_CFLAG: Add support fot -Werror=unused-command-line-argument
+    
+    This warning was was added to clang in r144365
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit 9d8a1e5809b4dd397efe2e62bbf2c8a6c4deb795
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Nov 3 18:14:15 2011 -0700
+
+    Add XORG_MEMORY_CHECK_FLAGS and require it in XORG_ENABLE_UNIT_TESTS
+    
+    Based on the checks already in libXt/configure.ac and proposed for
+    xserver/configure.ac - makes a common implementation before we make
+    more copies.
+    
+    Callers should be able to just add
+    	TESTS_ENVIRONMENT = $(XORG_MALLOC_DEBUG_ENV)
+    
+    If built with an older xorg-macros, then the tests will simply be
+    less stringent, matching what happens on platforms without any
+    simple malloc debugging facilities available.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit 9b4a8bae3528950bdb87df095c212d646e15dbdb
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Nov 3 17:41:24 2011 -0700
+
+    Define __wrap_exit in test program source for XORG_LD_WRAP
+    
+    Otherwise the test fails on Solaris releases that actually have support
+    for ld -wrap because the linker instead returns an error that __wrap_exit
+    is an undefined symbol.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit 0295ee03ab45c55771581664d6c903c6d2f87e53
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Nov 3 15:54:25 2011 -0700
+
+    Add an optional argument to XORG_LD_WRAP
+    
+    Allows specifying if ld -wrap support is 'required' or 'optional' for
+    unit tests, so that builds like the xserver which only need ld -wrap
+    for some tests can allow users to enable the others when ld -wrap is
+    not available.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit b8a13e531db208a7c4c9a43b74b196104e7c66ed
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Tue Nov 1 12:59:55 2011 -0700
+
+    Add additional flags to XORG_COMPILER_FLAGS
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit 08877399839f5a30a5edd2167fb4275d3dd9d473
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Tue Nov 1 12:44:48 2011 -0700
+
+    Update XORG_CWARNFLAGS to use XORG_COMPILER_FLAGS
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit b406f730d64dfb8b699631ffb3ee5f3a1f0db8c4
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Tue Nov 1 12:19:24 2011 -0700
+
+    Add XORG_COMPILER_FLAGS to replace XORG_CWARNFLAGS
+    
+    See: https://bugs.freedesktop.org/show_bug.cgi?id=31238
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit b175fe0e07fce86cf029695e9e93b573ada54b0c
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Tue Nov 1 11:53:44 2011 -0700
+
+    Use XORG_TESTSET_CFLAG in XORG_STRICT_OPTION
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit 9f427611f4bb6db60cb8cbdda6296a3bf66a5a6c
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Tue Nov 1 11:39:14 2011 -0700
+
+    Add XORG_TESTSET_CFLAG which can be used to test what flags the compiler supports
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+    Reviewed-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 4a6ecc7b8e338483fb5ea6bfc9b2fb26f890807b
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Tue Nov 1 11:49:41 2011 -0700
+
+    Fix the test for -Werror=attributes
+    
+    The current test was always failing to compile because 'return 0;' was
+    global rather than in the body of a function.
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+    Reviewed-by: Gaetan Nadon <memsize@videotron.ca>
+
 commit 08dd5d30c137abe43d5b1673edc39eb569881d66
 Author: Gaetan Nadon <memsize@videotron.ca>
 Date:   Thu Jun 23 08:03:13 2011 -0400
