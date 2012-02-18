@@ -1,4 +1,3 @@
-! $Xorg: XClipboard.ad,v 1.3 2000/08/17 19:54:12 cpqbld Exp $
 *Command*Font: 	-*-helvetica-bold-r-normal--*-120-*-*-*-*-iso8859-1
 *Label*Font: 	-*-helvetica-bold-r-normal--*-120-*-*-*-*-iso8859-1
 *Text*Font:	-*-courier-medium-r-normal--*-120-*-*-*-*-iso8859-1
@@ -83,12 +82,25 @@ XClipboard.baseTranslations: #augment\n\
 			<Message>WM_PROTOCOLS: WMProtocols()\n
 
 *fileDialog.label:			Save to file:
+*fileDialog.label.top:			ChainTop
+*fileDialog.label.bottom:		ChainTop
+*fileDialog.label.left:			ChainLeft
+*fileDialog.label.right:		ChainLeft
 *fileDialogShell.allowShellResize:	true
 *fileDialogShell.title:			File Save
 
 *fileDialog*accept.label:		Accept
+*fileDialog.accept.top:			ChainTop
+*fileDialog.accept.bottom:		ChainBottom
+*fileDialog.accept.left:		ChainLeft
+*fileDialog.accept.right:		ChainLeft
 *fileDialog*accept.translations:	#override\
 			<BtnUp>: AcceptSave() unset()
+
+*fileDialog.value.top:			ChainTop
+*fileDialog.value.bottom:		ChainTop
+*fileDialog.value.left:			ChainLeft
+*fileDialog.value.right:		ChainLeft
 *fileDialog*value.translations:	#override\
 			<Key>Return: AcceptSave() \n\
 			Ctrl<Key>S: no-op(ring-bell) \n\
@@ -105,6 +117,10 @@ XClipboard.baseTranslations: #augment\n\
 			Meta<Key>I: no-op(ring-bell)
 
 *fileDialog*cancel.label:		Cancel
+*fileDialog.cancel.top:			ChainTop
+*fileDialog.cancel.bottom:		ChainBottom
+*fileDialog.cancel.left:		ChainLeft
+*fileDialog.cancel.right:		ChainLeft
 *fileDialog*cancel.translations:	#override\
 			<BtnUp>:CancelSave() unset()
 

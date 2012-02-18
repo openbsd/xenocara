@@ -1,3 +1,227 @@
+commit a614c2be68ce6cb176901fb14bbd1802d39a5a69
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Feb 10 21:37:33 2012 -0800
+
+    xclipboard 1.1.2
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 4f1a5dbc00d577cdbd37a824c396b030cb170d65
+Author: Kees Cook <kees.cook@canonical.com>
+Date:   Sat Jul 9 07:40:23 2011 -0700
+
+    xclipboard: avoid overflow crash when building labels
+    
+    This replaces sprintf with XtAsprintf to avoid crashing when creating
+    various potentially large labels.
+    
+    https://bugs.launchpad.net/ubuntu/+source/x11-apps/+bug/792642
+    
+    Signed-off-by: Kees Cook <kees.cook@canonical.com>
+    Reviewed-by: James Cloos <cloos@jhcloos.com>
+    [jcristau: added xt >= 1.1 dependency per Alan Coopersmith]
+    Signed-off-by: Julien Cristau <jcristau@debian.org>
+
+commit 35e2f74fbcf172813b7016e58585bb30b39a3de6
+Author: Stanislav Maslovski <stanislav.maslovski@gmail.com>
+Date:   Sun Apr 3 20:10:54 2011 +1000
+
+    Change resource to better position Accept/Cancel. #17364
+    
+    Fixes: https://bugs.freedesktop.org/show_bug.cgi?id=17364
+    
+    The Accept and Cancel buttons on the Save dialog where just
+    visible at the bottom of the dialog.  Even if you resized
+    the dialog, the buttons where never fully visible.
+    
+    Signed-off-by: Alistair Leslie-Hughes <leslie_alistair@hotmail.com>
+    Acked-by: Dan Nicholson <dbn.lists@gmail.com>
+
+commit 81129a226ae24600642249847cdcc980ec5f9d18
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jan 19 10:06:55 2011 -0500
+
+    config: move man pages into their own directory
+    
+    Use services provided by XORG_MANPAGE_SECTIONS.
+    Use standard Makefile for man pages.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 936aa5b9bbbe3a2bf08f928fa5f186d2b75e0a71
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Jan 13 17:15:36 2011 -0500
+
+    man: replace hard coded man page section with substitution strings
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 201eb36b403a4408aaac4be8cecd4e5eca38f5e0
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Jan 13 11:15:47 2011 -0500
+
+    man: remove trailing spaces and tabs
+    
+    Using s/[ \t]*$//
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 5b8a938a22059638c33061e47f0028ebc5f53a01
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jan 12 15:29:50 2011 -0500
+
+    config: replace deprecated AC_HELP_STRING with AS_HELP_STRING
+    
+    This silences an Automake warning.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 4c5ba0adecd411786b11bd34122cd498ba980c01
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Nov 8 22:53:01 2010 -0800
+
+    xclipboard 1.1.1
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit de80ed3de8490eabcba3618f10c18b2d646e1669
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Nov 7 23:55:47 2010 -0800
+
+    include "config.h" in *.c files for autoconf definitions
+    
+    Actually enables the #ifdef XKB code that commit f16c6dd23a
+    attempted to enable
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 254b55b9a7ec350c3b2f857217ef93ffced3b91d
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Nov 7 23:50:49 2010 -0800
+
+    Purge CVS version tags
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 0272c10c35be588a76c27253ba1c94750b89cf61
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Nov 7 23:47:47 2010 -0800
+
+    config: replace deprecated AM_CONFIG_HEADER with AC_CONFIG_HEADERS
+    
+    Regroup AC statements under the Autoconf initialization section.
+    Regroup AM sttaements under the Automake initialization section.
+    Add missing AC_CONFIG_SRCDIR
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 163f783b9bef4348d8488b6b927c67406c8a40b6
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Nov 7 23:46:00 2010 -0800
+
+    config: Remove unnecessary calls from configure.ac
+    
+    AC_PROG_CC & AC_PROG_INSTALL are provided by XORG_DEFAULT_OPTIONS now
+    PKG_CONFIG_MODULES handles AC_SUBST of the CFLAGS & LIBS variables
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit d043044ab9949b6e15479ede69023f78f00081ee
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Nov 7 23:45:13 2010 -0800
+
+    config: upgrade to util-macros 1.8 for additional man page support
+    
+    Use MAN_SUBST now supplied in XORG_MANPAGE_SECTIONS
+    The value of MAN_SUBST is the same for all X.Org packages.
+    
+    Use AC_PROG_SED now supplied by XORG_DEFAULT_OPTIONS
+    Enables use of platform appropriate version of sed.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 4aa31642993ed592a22214791e06516d3316b226
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Nov 7 23:43:21 2010 -0800
+
+    config: update AC_PREREQ statement to 2.60
+    
+    Unrelated to the previous patches, the new value simply reflects
+    the reality that the minimum level for autoconf to configure
+    all x.org modules is 2.60 dated June 2006.
+    
+    ftp://ftp.gnu.org/gnu/autoconf/autoconf-2.60.tar.gz
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 2fa9cd45301c6f56a89845776fb88b5d9922d811
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Aug 6 08:37:48 2010 -0700
+
+    Fill in COPYING file with copyright notices from source code
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 5802b699a985522f2b1e4580b9a6b194b129b62e
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sat Dec 19 20:48:47 2009 -0500
+
+    configure.ac: use backticks rather than $() for cmd subs
+    
+    Use "$PKG_CONFIG" rather than hard coded "pkg-config"
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 7c961835a6ae4aedfe6d340f24f8855f91d9b87d
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Nov 26 09:19:53 2009 -0500
+
+    Makefile.am: add ChangeLog and INSTALL on MAINTAINERCLEANFILES
+    
+    Now that the INSTALL file is generated.
+    Allows running make maintainer-clean.
+
+commit b673f5c871ab3cd6366dacfd001636836618a03b
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Oct 28 14:09:08 2009 -0400
+
+    INSTALL, NEWS, README or AUTHORS files are missing/incorrect #24206
+    
+    Add missing INSTALL file. Use standard GNU file on building tarball
+    README may have been updated
+    Remove AUTHORS file as it is empty and no content available yet.
+    Remove NEWS file as it is empty and no content available yet.
+
+commit 5210e2aa9a83647bdb2d3407963a0a844c25ea4e
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Oct 27 15:07:24 2009 -0400
+
+    Deploy the new XORG_DEFAULT_OPTIONS #24242
+    
+    This macro aggregate a number of existing macros that sets commmon
+    X.Org components configuration options. It shields the configuration file from
+    future changes.
+
+commit 6734b4d24af6ca98ab41b824a858be5338c541b6
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Oct 26 22:08:38 2009 -0400
+
+    Makefile.am: ChangeLog not required: EXTRA_DIST or *CLEANFILES #24432
+    
+    ChangeLog filename is known to Automake and requires no further
+    coding in the makefile.
+
+commit ebb429922a8e5d0108f53ccbb34215f554641326
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Oct 22 12:34:15 2009 -0400
+
+    .gitignore: use common defaults with custom section # 24239
+    
+    Using common defaults will reduce errors and maintenance.
+    Only the very small or inexistent custom section need periodic maintenance
+    when the structure of the component changes. Do not edit defaults.
+
 commit 96d1fe9241f6b68d52c9b3020dd926319d830558
 Author: Alan Coopersmith <alan.coopersmith@sun.com>
 Date:   Wed Oct 14 22:37:17 2009 -0700

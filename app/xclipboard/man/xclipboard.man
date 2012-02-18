@@ -1,15 +1,14 @@
-.\" $Xorg: xclipboard.man,v 1.4 2001/02/09 02:05:39 xorgcvs Exp $
 .\" Copyright 1988, 1994, 1998  The Open Group
-.\" 
+.\"
 .\" Permission to use, copy, modify, distribute, and sell this software and its
 .\" documentation for any purpose is hereby granted without fee, provided that
 .\" the above copyright notice appear in all copies and that both that
 .\" copyright notice and this permission notice appear in supporting
 .\" documentation.
-.\" 
+.\"
 .\" The above copyright notice and this permission notice shall be included
 .\" in all copies or substantial portions of the Software.
-.\" 
+.\"
 .\" THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
 .\" OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
 .\" MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
@@ -17,13 +16,12 @@
 .\" OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
 .\" ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 .\" OTHER DEALINGS IN THE SOFTWARE.
-.\" 
+.\"
 .\" Except as contained in this notice, the name of The Open Group shall
 .\" not be used in advertising or otherwise to promote the sale, use or
 .\" other dealings in this Software without prior written authorization
 .\" from The Open Group.
 .\"
-.\" $XFree86: xc/programs/xclipboard/xclipboard.man,v 1.8 2001/12/14 20:01:16 dawes Exp $
 .\"
 .TH XCLIPBOARD 1 __xorgversion__
 .SH NAME
@@ -32,7 +30,7 @@ xclipboard \- X clipboard client
 \fBxclipboard\fP [ \fI\-toolkitoption\fP ... ] [ \fB\-w\fP ]
 [ \fB\-nw\fP ]
 .SH DESCRIPTION
-The \fIxclipboard\fP program is used to collect and display text selections 
+The \fIxclipboard\fP program is used to collect and display text selections
 that are sent to the CLIPBOARD by other clients.  It is typically used to
 save CLIPBOARD selections for later use.  It stores each CLIPBOARD selection
 as a separate string, each of which can be selected.  Each time CLIPBOARD
@@ -71,7 +69,7 @@ Displays the next buffer in the list.
 .I previous
 Displays the previous buffer.
 .SH OPTIONS
-The \fIxclipboard\fP program accepts all of the standard X Toolkit command 
+The \fIxclipboard\fP program accepts all of the standard X Toolkit command
 line options as well as the following:
 .TP 8
 .B \-w
@@ -130,7 +128,7 @@ file to use the clipboard are:
 .fi
 .sp
 .SH "SEE ALSO"
-X(__miscmansuffix__), xcutsel(1), xterm(1), individual client documentation for how to make a 
+X(__miscmansuffix__), xcutsel(__appmansuffix__), xterm(__appmansuffix__), individual client documentation for how to make a
 selection and send it to the CLIPBOARD.
 .SH ENVIRONMENT
 .PP

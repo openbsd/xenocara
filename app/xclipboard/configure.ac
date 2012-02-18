@@ -21,21 +21,20 @@ dnl  PERFORMANCE OF THIS SOFTWARE.
 dnl
 dnl Process this file with autoconf to create configure.
 
-AC_PREREQ([2.57])
-AC_INIT(xclipboard, [1.1.0], [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],xclipboard)
-AM_INIT_AUTOMAKE([dist-bzip2])
+AC_PREREQ([2.60])
+AC_INIT([xclipboard], [1.1.2],
+        [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg], [xclipboard])
+AC_CONFIG_SRCDIR([Makefile.am])
+AC_CONFIG_HEADERS([config.h])
+
+# Initialize Automake
+AM_INIT_AUTOMAKE([foreign dist-bzip2])
 AM_MAINTAINER_MODE
 
-# Require xorg-macros 1.3 or later: XORG_DEFAULT_OPTIONS
+# Require X.Org macros 1.8 or later for MAN_SUBSTS set by XORG_MANPAGE_SECTIONS
 m4_ifndef([XORG_MACROS_VERSION],
-	  [m4_fatal([must install xorg-macros 1.3 or later before running autoconf/autogen])])
-XORG_MACROS_VERSION(1.3)
-
-AM_CONFIG_HEADER(config.h)
-
-AC_PROG_CC
-AC_PROG_INSTALL
-
+          [m4_fatal([must install xorg-macros 1.8 or later before running autoconf/autogen])])
+XORG_MACROS_VERSION(1.8)
 XORG_DEFAULT_OPTIONS
 
 # Checks for pkg-config packages
@@ -43,20 +42,18 @@ PKG_CHECK_EXISTS([xkbfile], [XKBPKG="xkbfile"], [XKBPKG=""])
 if test x$XKBPKG = xxkbfile ; then
     AC_DEFINE([XKB], [1], [Define to use libxkbfile calls like XKBStdBell()])
 fi
-PKG_CHECK_MODULES(XCLIPBOARD, [xaw7 xmu xt x11 ${XKBPKG}])
-AC_SUBST(XCLIPBOARD_CFLAGS)
-AC_SUBST(XCLIPBOARD_LIBS)
+PKG_CHECK_MODULES(XCLIPBOARD, [xaw7 xmu xt >= 1.1 x11 ${XKBPKG}])
 
 PKG_CHECK_MODULES(APPDEFS, xt)
-xt_appdefaultdir=$(pkg-config --variable=appdefaultdir xt)
+xt_appdefaultdir=`$PKG_CONFIG --variable=appdefaultdir xt`
 AC_ARG_WITH(appdefaultdir,
-	AC_HELP_STRING([--with-appdefaultdir=<pathname>],
+	AS_HELP_STRING([--with-appdefaultdir=<pathname>],
 	  [specify directory for app-defaults files (default is autodetected)]),
 	[appdefaultdir="$withval"], [appdefaultdir="${xt_appdefaultdir}"])
 AC_SUBST(appdefaultdir)
 
-XORG_MANPAGE_SECTIONS
-XORG_RELEASE_VERSION
-XORG_CHANGELOG
 
-AC_OUTPUT([Makefile])
+AC_CONFIG_FILES([
+	Makefile
+	man/Makefile])
+AC_OUTPUT
