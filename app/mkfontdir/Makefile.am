@@ -19,30 +19,17 @@
 #  OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 #  PERFORMANCE OF THIS SOFTWARE.
 
+SUBDIRS = man
+
 bin_SCRIPTS = mkfontdir
-
-appman_PRE = mkfontdir.man
-
-.cpp:
-	$(AM_V_GEN)$(SED) s,BINDIR,`echo @bindir@/mkfontscale | $(SED) s,/[^/]*$$,,`, < $< | $(SED) s/XCOMM/\#/ > $@
-
-EXTRA_DIST = mkfontdir.cpp
-MAINTAINERCLEANFILES = ChangeLog INSTALL
 CLEANFILES = $(bin_SCRIPTS)
+EXTRA_DIST = $(bin_SCRIPTS:=.in)
+DIR_SUBSTS = -e 's|@bindir[@]|$(bindir)|g'
 
-appmandir = $(APP_MAN_DIR)
+mkfontdir: mkfontdir.in
+	$(AM_V_GEN)$(SED) $(DIR_SUBSTS) < $(srcdir)/mkfontdir.in > $@
 
-appman_DATA = $(appman_PRE:man=@APP_MAN_SUFFIX@)
-
-EXTRA_DIST += $(appman_PRE)
-CLEANFILES += $(appman_DATA)
-
-SUFFIXES = .$(APP_MAN_SUFFIX) .man .cpp
-
-# String replacements in MAN_SUBSTS now come from xorg-macros.m4 via configure
-.man.$(APP_MAN_SUFFIX):
-	$(AM_V_GEN)$(SED) $(MAN_SUBSTS) < $< > $@
-
+MAINTAINERCLEANFILES = ChangeLog INSTALL
 
 .PHONY: ChangeLog INSTALL
 

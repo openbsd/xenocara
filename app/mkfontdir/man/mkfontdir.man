@@ -1,14 +1,14 @@
 .\" Copyright 1993, 1994, 1998  The Open Group
-.\" 
+.\"
 .\" Permission to use, copy, modify, distribute, and sell this software and its
 .\" documentation for any purpose is hereby granted without fee, provided that
 .\" the above copyright notice appear in all copies and that both that
 .\" copyright notice and this permission notice appear in supporting
 .\" documentation.
-.\" 
+.\"
 .\" The above copyright notice and this permission notice shall be included
 .\" in all copies or substantial portions of the Software.
-.\" 
+.\"
 .\" THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
 .\" OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
 .\" MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
@@ -16,7 +16,7 @@
 .\" OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
 .\" ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 .\" OTHER DEALINGS IN THE SOFTWARE.
-.\" 
+.\"
 .\" Except as contained in this notice, the name of The Open Group shall
 .\" not be used in advertising or otherwise to promote the sale, use or
 .\" other dealings in this Software without prior written authorization
@@ -40,7 +40,7 @@ mkfontdir \- create an index of X font files in a directory
 .RI [ directory-name
 \&\|.\|.\|. ]
 .SH DESCRIPTION
-For each directory argument, 
+For each directory argument,
 .I mkfontdir
 reads all of the font files in the
 directory searching for properties named "FONT", or (failing that) the name
@@ -50,7 +50,7 @@ along with the name of the font file, are
 written out to the file "fonts.dir" in the directory.
 The X server and font server use "fonts.dir" to find font files.
 .PP
-The kinds of font files read by 
+The kinds of font files read by
 .I mkfontdir
 depend on configuration
 parameters, but typically include PCF (suffix ".pcf"), SNF (suffix ".snf")
@@ -66,7 +66,7 @@ the name of the font.
 Because scalable font files do not usually include the X font name, the
 file "fonts.scale" can be used to name the scalable fonts in the
 directory.
-The fonts listed in it are copied to fonts.dir by 
+The fonts listed in it are copied to fonts.dir by
 .IR mkfontdir .
 "fonts.scale" has the same format as the "fonts.dir" file, and can be
 created with the
@@ -101,7 +101,7 @@ If the string "FILE_NAMES_ALIASES" stands alone on a line, each file-name
 in the directory (stripped of its suffix) will be used as an alias for
 that font.
 .SH ENCODING FILES
-The option 
+The option
 .B -e
 can be used to specify a directory with encoding files.  Every such
 directory is scanned for encoding files, the list of which is then
@@ -111,7 +111,7 @@ information.
 .PP
 The "encodings.dir" file has the same format as "fonts.dir".
 It maps encoding names (strings of the form
-.BI CHARSET_REGISTRY \- CHARSET_ENCODING 
+.BI CHARSET_REGISTRY \- CHARSET_ENCODING
 ) to encoding file names.
 .SH OPTIONS
 The following options are supported:

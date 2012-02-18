@@ -22,7 +22,7 @@ dnl Process this file with autoconf to create configure.
 
 # Initialize Autoconf
 AC_PREREQ([2.60])
-AC_INIT([mkfontdir], [1.0.6],
+AC_INIT([mkfontdir], [1.0.7],
         [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg], [mkfontdir])
 AC_CONFIG_SRCDIR([Makefile.am])
 
@@ -36,6 +36,7 @@ m4_ifndef([XORG_MACROS_VERSION],
 XORG_MACROS_VERSION(1.8)
 XORG_DEFAULT_OPTIONS
 
-AC_SUBST([bindir])
-
-AC_OUTPUT([Makefile])
+AC_CONFIG_FILES([
+	Makefile
+	man/Makefile])
+AC_OUTPUT

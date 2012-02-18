@@ -1,3 +1,86 @@
+commit b99d2e8d1d2cd07d12cc3c08e3a33ac0aca13d68
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Feb 10 19:58:00 2012 -0800
+
+    mkfontdir 1.0.7
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit e3ee2b17572a26b6a6e78fdbfa4e38059da6c170
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Thu Oct 6 10:29:42 2011 -0700
+
+    Fix issues where mkfontscale and mkfontdir are installed in different locations or bindir contains a space
+    
+    https://bugs.freedesktop.org/show_bug.cgi?id=24465
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit f8ef438aba81485ff4402ff7f8cb4becf437b073
+Author: Jon TURNEY <jon.turney@dronecode.org.uk>
+Date:   Tue Mar 15 11:55:11 2011 +0000
+
+    Fix for non-srcdir builds
+    
+    Fix commit ad5fefcc7a0a0beb1c02270d9f28c8b28da61199 for non-srcdir builds
+    
+    Signed-off-by: Jon TURNEY <jon.turney@dronecode.org.uk>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit ad5fefcc7a0a0beb1c02270d9f28c8b28da61199
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Mar 11 14:10:19 2011 -0800
+
+    Make Makefile.am compatible with Solaris make
+    
+    Solaris make won't substitute $< in explicit rules, only implicit ones
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 7f9922eac028518fa9f06aaf06c1bd6779b1e4c7
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sat Jan 22 09:27:09 2011 -0500
+
+    config: substitute bindir in mkfontdir using Autoconf @bindir@
+    
+    Use the Autoconf recommended way of substituting bindir, see
+    http://www.gnu.org/software/autoconf/manual/autoconf.html
+    
+    Use # sign for comment in script.
+    Only sed is used, drop the cpp terminology.
+    
+    Reviewed-by: Rémi Cardona <remi@gentoo.org>
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit b9ccbf0de88e95aad25e368500a7eab217f6d434
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jan 19 10:06:55 2011 -0500
+
+    config: move man pages into their own directory
+    
+    Use services provided by XORG_MANPAGE_SECTIONS.
+    Use standard Makefile for man pages.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit ffd737b4a391415b9d5cae0c6323101f68b1cac0
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Jan 13 11:15:47 2011 -0500
+
+    man: remove trailing spaces and tabs
+    
+    Using s/[ \t]*$//
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 4790afc4c0992912ba6aed0996aba96c0355e0b3
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Nov 7 11:16:38 2010 -0800
+
+    mkfontdir 1.0.6
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit 3122bbfac0a6ef937b0d3058bf65a901f420ec7d
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Sun Nov 7 11:14:14 2010 -0800
