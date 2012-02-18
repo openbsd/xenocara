@@ -25,18 +25,18 @@
 
 #include <X11/Xfuncproto.h> /* for _X_ATTRIBUTE_PRINTF */
 
-char *dsprintf(char *f, ...) _X_ATTRIBUTE_PRINTF(1,2);
+char *dsprintf(const char *f, ...) _X_ATTRIBUTE_PRINTF(1,2);
 
 typedef struct _List {
     char *value;
     struct _List *next;
 } ListRec, *ListPtr;
 
-int listMember(char *elt, ListPtr list);
+int listMember(const char *elt, ListPtr list);
 ListPtr listCons(char *car, ListPtr cdr);
 ListPtr listAdjoin(char *car, ListPtr cdr);
-ListPtr listConsF(ListPtr cdr, char *f, ...) _X_ATTRIBUTE_PRINTF(2,3);
-ListPtr listAdjoinF(ListPtr cdr, char *f, ...) _X_ATTRIBUTE_PRINTF(2,3);
+ListPtr listConsF(ListPtr cdr, const char *f, ...) _X_ATTRIBUTE_PRINTF(2,3);
+ListPtr listAdjoinF(ListPtr cdr, const char *f, ...) _X_ATTRIBUTE_PRINTF(2,3);
 int listLength(ListPtr list);
 ListPtr appendList(ListPtr first, ListPtr second);
 ListPtr makeList(char **a, int n, ListPtr old, int begin);

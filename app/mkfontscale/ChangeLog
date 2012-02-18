@@ -1,3 +1,86 @@
+commit 4c3f72f9e3385d9c855416b6498ced067a97c712
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Feb 10 20:19:37 2012 -0800
+
+    mkfontscale 1.1.0
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit bf7d4fd83c896b70f68d59de756a3847417d9add
+Author: Maxim Iorsh <iorsh@users.sourceforge.net>
+Date:   Thu Oct 20 08:08:47 2011 +0200
+
+    mkfontscale: fix Culmus entries to precede URW
+    
+    Culmus must precede URW and Bitstream in notice list, since its fonts are
+    based on URW/Bitstream sometimes.
+    
+    Signed-off-by: Maxim Iorsh <iorsh@users.sourceforge.net>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit cd8182e74636ffd9b140603fc61502b42a9d6f2b
+Author: Maxim Iorsh <iorsh@users.sourceforge.net>
+Date:   Tue Oct 18 22:07:45 2011 -0700
+
+    Add Culmus foundry to the vendor list for TrueType & Type1 fonts
+    
+    Maps fonts produced by the Culmus project <http://culmus.sourceforge.net>
+    to the XLFD foundry name "culmus"
+    
+    For TrueType fonts, maps the vendor code "CLM" from the TrueType vendor
+    id field.
+    
+    For Type1 fonts, which use heuristics to guess mappings to XLFD foundries
+    from words in the copyright notice, add the names of the main contributors
+    to the Culmus product to recognize the fonts under their copyright.
+    
+    Signed-off-by: Maxim Iorsh <iorsh@users.sourceforge.net>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit a39deac00add15532b15827c80601f87738cb405
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Oct 4 21:03:13 2011 -0700
+
+    Strip trailing whitespace
+    
+    Performed with: find * -type f | xargs perl -i -p -e 's{[ \t]+$}{}'
+    git diff -w & git diff -b show no diffs from this change
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit b2d0f04a50f1444f9d62d11636a28c89951f0f40
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Oct 4 21:00:11 2011 -0700
+
+    Add const attributes to fix gcc -Wwrite-strings warnings
+    
+    Does not fix all of them since some lists contain constant strings and
+    some contain dynamically allocated strings that need to be freed later.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 0f4f6462597841e5f8470571d56cfda61144ee8f
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Sep 26 15:55:12 2011 -0700
+
+    Mark format string argument to dsprintf as const char *
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 8ee3b3f73a6c14c4326435fea7136c09fe2822d1
+Author: Maxim Iorsh <iorsh@users.sourceforge.net>
+Date:   Mon Oct 3 21:52:15 2011 +0200
+
+    mkfontscale: Support FontForge weight designations.
+    
+    Fontforge uses 'ExtraLight' and 'Heavy' weights in Type 1 fonts, which
+    should be understood by mkfontscale. Other FontForge designations are
+    already addressed.
+    
+    Signed-off-by: Maxim Iorsh <iorsh@users.sourceforge.net>
+    Reviewed-by: Jeremy Huddleston <jeremyhu@apple.com>
+
 commit d429321888c335042332d991480095f67c85bb64
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Wed Jun 29 20:25:37 2011 -0700
