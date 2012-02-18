@@ -89,16 +89,16 @@ typedef struct _FontGridRec {
 			     (g)->fontgrid.text_font ? \
 			     (g)->fontgrid.text_font->max_bounds.width : 1)
 #define GridForeground(g)   ((g)->fontgrid.fg_color.pixel)
-			     
+
 #else /* XRENDER */
-			     
+
 #define GridFontHeight(g)   ((g)->fontgrid.text_font->ascent + \
 			     (g)->fontgrid.text_font->descent)
 #define GridFontAscent(g)   ((g)->fontgrid.text_font ? \
 			     (g)->fontgrid.text_font->ascent: 1)
 #define GridFontWidth(g)    ((g)->fontgrid.text_font->max_bounds.width)
 #define GridForeground(g)   ((g)->fontgrid.foreground_pixel)
-			     
+
 #endif /* else XRENDER */
 
 #define DefaultCellWidth(fgw) (GridFontWidth(fgw) \

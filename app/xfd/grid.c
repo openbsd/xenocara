@@ -2,7 +2,7 @@
  * $XdotOrg: grid.c,v 1.4 2001/02/09 02:05:41 xorgcvs Exp $
  * $Xorg: grid.c,v 1.4 2001/02/09 02:05:41 xorgcvs Exp $
  *
- * 
+ *
 Copyright 1989, 1998  The Open Group
 
 Permission to use, copy, modify, distribute, and sell this software and its
@@ -52,18 +52,18 @@ in this Software without prior written authorization from The Open Group.
 
 static GC get_gc(FontGridWidget fgw, Pixel fore);
 static void ClassInitialize(void);
-static void Initialize(Widget request, Widget new, ArgList args, 
+static void Initialize(Widget request, Widget new, ArgList args,
 		       Cardinal *num_args);
-static void Realize(Widget gw, Mask *valueMask, 
+static void Realize(Widget gw, Mask *valueMask,
 		    XSetWindowAttributes *attributes);
 static void Destroy(Widget gw);
 static void Resize(Widget gw);
 static void Redisplay(Widget gw, XEvent *event, Region region);
-static void paint_grid(FontGridWidget fgw, int col, int row, 
+static void paint_grid(FontGridWidget fgw, int col, int row,
 		       int ncols, int nrows);
-static Boolean SetValues(Widget current, Widget request, Widget new, 
+static Boolean SetValues(Widget current, Widget request, Widget new,
 			 ArgList args, Cardinal *num_args);
-static void Notify(Widget gw, XEvent *event, String *params, 
+static void Notify(Widget gw, XEvent *event, String *params,
 		   Cardinal *nparams);
 
 #define Offset(field) XtOffsetOf(FontGridRec, fontgrid.field)
@@ -107,7 +107,7 @@ static XtResource resources[] = {
 
 #undef Offset
 
-static char defaultTranslations[] = 
+static char defaultTranslations[] =
   "<ButtonPress>:  notify()";
 
 static XtActionsRec actions_list[] = {
@@ -262,7 +262,7 @@ GridLastChar (Widget w)
 }
 
 /*
- * CI_GET_CHAR_INFO_2D - return the charinfo struct for the indicated row and 
+ * CI_GET_CHAR_INFO_2D - return the charinfo struct for the indicated row and
  * column.  This is used for fonts that have more than row zero.
  */
 #define CI_GET_CHAR_INFO_2D(fs,row,col,cs) \
@@ -298,7 +298,7 @@ GridHasChar (Widget w, long ch)
     {
 	XFontStruct	*fs = fgw->fontgrid.text_font;
 	XCharStruct	*cs;
-	
+
 	if (!fs)
 	    return False;
 	if (fs->max_byte1 == 0)
@@ -319,8 +319,8 @@ GridHasChar (Widget w, long ch)
  * public routines
  */
 
-void 
-GetFontGridCellDimensions(Widget w, long *startp, 
+void
+GetFontGridCellDimensions(Widget w, long *startp,
 			  int *ncolsp, int *nrowsp)
 {
     FontGridWidget fgw = (FontGridWidget) w;
@@ -330,7 +330,7 @@ GetFontGridCellDimensions(Widget w, long *startp,
 }
 
 
-void 
+void
 GetPrevNextStates(Widget w, Bool *prevvalidp, Bool *nextvalidp,
 		  Bool *prev16validp, Bool *next16validp)
 {
@@ -355,7 +355,7 @@ GetPrevNextStates(Widget w, Bool *prevvalidp, Bool *nextvalidp,
  */
 
 
-static GC 
+static GC
 get_gc(FontGridWidget fgw, Pixel fore)
 {
     XtGCMask mask;
@@ -374,7 +374,7 @@ get_gc(FontGridWidget fgw, Pixel fore)
     mask |= GCCapStyle;
     if (fgw->fontgrid.grid_width > 0) {
 	mask |= GCLineWidth;
-	gcv.line_width = ((fgw->fontgrid.grid_width < 2) ? 0 : 
+	gcv.line_width = ((fgw->fontgrid.grid_width < 2) ? 0 :
 			  fgw->fontgrid.grid_width);
     }
     return (XtGetGC ((Widget) fgw, mask, &gcv));
@@ -416,7 +416,7 @@ XmuFreeXftColor (XtAppContext app, XrmValuePtr toVal, XtPointer closure,
     Screen	*screen;
     Colormap	colormap;
     XftColor	*color;
-    
+
     if (*num_args != 2)
     {
 	XtAppErrorMsg (app,
@@ -435,7 +435,7 @@ XmuFreeXftColor (XtAppContext app, XrmValuePtr toVal, XtPointer closure,
 				 XScreenNumberOfScreen (screen)),
 		  colormap, color);
 }
-    
+
 static Boolean
 XmuCvtStringToXftColor(Display *dpy,
 		       XrmValue *args, Cardinal *num_args,
@@ -447,7 +447,7 @@ XmuCvtStringToXftColor(Display *dpy,
     XftColor	    xftColor;
     Screen	    *screen;
     Colormap	    colormap;
-    
+
     if (*num_args != 2)
     {
 	XtAppErrorMsg (XtDisplayToApplicationContext (dpy),
@@ -478,14 +478,14 @@ XmuCvtStringToXftColor(Display *dpy,
     }
     else if (!XRenderParseColor (dpy, spec, &renderColor))
 	return False;
-    if (!XftColorAllocValue (dpy, 
+    if (!XftColorAllocValue (dpy,
 			     DefaultVisual (dpy,
 					    XScreenNumberOfScreen (screen)),
 			     colormap,
 			     &renderColor,
 			     &xftColor))
 	return False;
-    
+
     donestr (XftColor, xftColor, XtRXftColor);
 }
 
@@ -495,7 +495,7 @@ XmuFreeXftFont (XtAppContext app, XrmValuePtr toVal, XtPointer closure,
 {
     Screen  *screen;
     XftFont *font;
-    
+
     if (*num_args != 1)
     {
 	XtAppErrorMsg (app,
@@ -521,7 +521,7 @@ XmuCvtStringToXftFont(Display *dpy,
     char    *name;
     XftFont *font;
     Screen  *screen;
-    
+
     if (*num_args != 1)
     {
 	XtAppErrorMsg (XtDisplayToApplicationContext (dpy),
@@ -557,13 +557,13 @@ static XtConvertArgRec xftFontConvertArgs[] = {
 
 #endif
 
-static void 
+static void
 ClassInitialize(void)
 {
     XtAddConverter (XtRString, XtRLong, XmuCvtStringToLong, NULL, 0);
 #ifdef XRENDER
-    XtSetTypeConverter (XtRString, XtRXftColor, 
-			XmuCvtStringToXftColor, 
+    XtSetTypeConverter (XtRString, XtRXftColor,
+			XmuCvtStringToXftColor,
 			xftColorConvertArgs, XtNumber(xftColorConvertArgs),
 			XtCacheByDisplay, XmuFreeXftColor);
     XtSetTypeConverter (XtRString, XtRXftFont,
@@ -574,7 +574,7 @@ ClassInitialize(void)
 }
 
 
-static void 
+static void
 Initialize(Widget request, Widget new, ArgList args, Cardinal *num_args)
 {
     FontGridWidget reqfg = (FontGridWidget) request;
@@ -595,7 +595,7 @@ Initialize(Widget request, Widget new, ArgList args, Cardinal *num_args)
 	else
 #endif
 	if (fs && fs->max_byte1 == 0) {
-	    newfg->fontgrid.cell_rows = (fs->max_char_or_byte2 / 
+	    newfg->fontgrid.cell_rows = (fs->max_char_or_byte2 /
 					 newfg->fontgrid.cell_cols) + 1;
 	    if (newfg->fontgrid.cell_rows > 16)
 	      newfg->fontgrid.cell_rows = 16;
@@ -615,8 +615,8 @@ Initialize(Widget request, Widget new, ArgList args, Cardinal *num_args)
 			   newfg->fontgrid.grid_width *
 			   (newfg->fontgrid.cell_cols + 1));
 
-    if (newfg->core.height == 0) 
-      newfg->core.height = (newfg->fontgrid.cell_height * 
+    if (newfg->core.height == 0)
+      newfg->core.height = (newfg->fontgrid.cell_height *
 			    newfg->fontgrid.cell_rows +
 			    newfg->fontgrid.grid_width *
 			    (newfg->fontgrid.cell_rows + 1));
@@ -628,13 +628,13 @@ Initialize(Widget request, Widget new, ArgList args, Cardinal *num_args)
     if (newfg->fontgrid.start_char == 0xffffffff)
 	newfg->fontgrid.start_char = GridFirstChar(new) & ~0xff;
     maxn = GridLastChar (new);
-    if (newfg->fontgrid.start_char > maxn) 
-	newfg->fontgrid.start_char = (maxn + 1 - 
-				      (newfg->fontgrid.cell_cols * 
+    if (newfg->fontgrid.start_char > maxn)
+	newfg->fontgrid.start_char = (maxn + 1 -
+				      (newfg->fontgrid.cell_cols *
 				       newfg->fontgrid.cell_rows));
 }
 
-static void 
+static void
 Realize(Widget gw, Mask *valueMask, XSetWindowAttributes *attributes)
 {
     FontGridWidget fgw = (FontGridWidget) gw;
@@ -656,7 +656,7 @@ Realize(Widget gw, Mask *valueMask, XSetWindowAttributes *attributes)
 
 
 
-static void 
+static void
 Destroy(Widget gw)
 {
     FontGridWidget fgw = (FontGridWidget) gw;
@@ -666,7 +666,7 @@ Destroy(Widget gw)
 }
 
 
-static void 
+static void
 Resize(Widget gw)
 {
     FontGridWidget fgw = (FontGridWidget) gw;
@@ -687,7 +687,7 @@ Resize(Widget gw)
 
 
 /* ARGSUSED */
-static void 
+static void
 Redisplay(Widget gw, XEvent *event, Region region)
 {
     FontGridWidget fgw = (FontGridWidget) gw;
@@ -718,10 +718,10 @@ Redisplay(Widget gw, XEvent *event, Region region)
 }
 
 
-static void 
-paint_grid(FontGridWidget fgw, 		/* widget in which to draw */ 
-	   int col, int row, 		/* where to start */          
-	   int ncols, int nrows)	/* number of cells */         
+static void
+paint_grid(FontGridWidget fgw, 		/* widget in which to draw */
+	   int col, int row, 		/* where to start */
+	   int ncols, int nrows)	/* number of cells */
 {
     FontGridPart *p = &fgw->fontgrid;
     int i, j;
@@ -747,7 +747,7 @@ paint_grid(FontGridWidget fgw, 		/* widget in which to draw */
     }
 
     /*
-     * paint the grid lines for the indicated rows 
+     * paint the grid lines for the indicated rows
      */
     if (p->grid_width > 0) {
 	int half_grid_width = p->grid_width >> 1;
@@ -764,7 +764,7 @@ paint_grid(FontGridWidget fgw, 		/* widget in which to draw */
     }
     /*
      * Draw a character in every box; treat all fonts as if they were 16bit
-     * fonts.  Store the high eight bits in byte1 and the low eight bits in 
+     * fonts.  Store the high eight bits in byte1 and the low eight bits in
      * byte2.
      */
     prevn = p->start_char + col + row * tcols;
@@ -791,12 +791,12 @@ paint_grid(FontGridWidget fgw, 		/* widget in which to draw */
 		}
 		if (extents.width && extents.height)
 		{
-		    XClearArea (dpy, wind, x + xoff - extents.x, 
+		    XClearArea (dpy, wind, x + xoff - extents.x,
 				y + yoff - extents.y,
 				extents.width, extents.height, False);
 		    if (p->box_chars)
 			XDrawRectangle (dpy, wind, p->box_gc,
-					x + xoff - extents.x, 
+					x + xoff - extents.x,
 					y + yoff - extents.y,
 					extents.width - 1,
 					extents.height - 1);
@@ -821,21 +821,21 @@ paint_grid(FontGridWidget fgw, 		/* widget in which to draw */
 		if (p->center_chars) {
 		    /*
 		     * We want to move the origin by enough to center the ink
-		     * within the cell.  The left edge will then be at 
+		     * within the cell.  The left edge will then be at
 		     * (cell_width - (rbearing - lbearing)) / 2; so we subtract
 		     * the lbearing to find the origin.  Ditto for vertical.
 		     */
 		    xoff = (((p->cell_width -
 			      (metrics.rbearing - metrics.lbearing)) / 2) -
 			    p->internal_pad - metrics.lbearing);
-		    yoff = (((p->cell_height - 
+		    yoff = (((p->cell_height -
 			      (metrics.descent + metrics.ascent)) / 2) -
 			    p->internal_pad -
 			    p->text_font->ascent + metrics.ascent);
 		}
 		if (p->box_chars) {
 		    XDrawRectangle (dpy, wind, p->box_gc,
-				    x + xoff, y + yoff - p->text_font->ascent, 
+				    x + xoff, y + yoff - p->text_font->ascent,
 				    metrics.width - 1,
 				    fontascent + fontdescent - 1);
 		}
@@ -850,7 +850,7 @@ paint_grid(FontGridWidget fgw, 		/* widget in which to draw */
 
   done:
     /*
-     * paint the grid lines for the indicated rows 
+     * paint the grid lines for the indicated rows
      */
     if (p->grid_width > 0) {
 	int half_grid_width = p->grid_width >> 1;
@@ -866,7 +866,7 @@ paint_grid(FontGridWidget fgw, 		/* widget in which to draw */
 	}
     }
 
-	
+
     return;
 }
 
@@ -883,8 +883,8 @@ PageBlank (Widget w, long first, long last)
 }
 
 /*ARGSUSED*/
-static Boolean 
-SetValues(Widget current, Widget request, Widget new, 
+static Boolean
+SetValues(Widget current, Widget request, Widget new,
 	  ArgList args, Cardinal *num_args)
 {
     FontGridWidget curfg = (FontGridWidget) current;
@@ -925,9 +925,9 @@ SetValues(Widget current, Widget request, Widget new,
 
 	if (start < 0)
 	    start = 0;
-	if (start > maxn) 
+	if (start > maxn)
 	  start = (maxn / page) * page;
-	
+
 	while (PageBlank (new, start, start + page - 1))
 	{
 	    long    next = start + dir;
@@ -946,7 +946,7 @@ SetValues(Widget current, Widget request, Widget new,
 
 
 /* ARGSUSED */
-static void 
+static void
 Notify(Widget gw, XEvent *event, String *params, Cardinal *nparams)
 {
     FontGridWidget fgw = (FontGridWidget) gw;
@@ -989,7 +989,7 @@ Notify(Widget gw, XEvent *event, String *params, Cardinal *nparams)
 	    return;
 	}
 
-	n= (fgw->fontgrid.start_char + 
+	n= (fgw->fontgrid.start_char +
 	    ((y / ch) * fgw->fontgrid.cell_cols) + (x / cw));
 
 	rec.thefont = fgw->fontgrid.text_font;

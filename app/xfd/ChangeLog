@@ -1,3 +1,114 @@
+commit 7f743669076189b615c862d0ec6b6c45d855d9b6
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Feb 15 16:15:40 2012 -0800
+
+    xfd 1.1.1
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 677df8dfd37f1018b38b4c8653bde35766d895bc
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Dec 7 13:35:45 2011 -0500
+
+    Use the Automake recommended alternative to AX_DEFINE_DIR
+    
+    DATADIR, like any installation variable, is not known at configure time.
+    This is by design to allow setting the variable at make time.
+    The AX_DEFINE_DIR macro worked around this design and consequently
+    cancelled an Automake feature.
+    
+    The alternative method suggested by Automake ends up being simpler
+    while providing the same result as AX_DEFINE_DIR but without cancelling
+    any feature. It is used in the xserver for the parser and in xquartz.
+    
+    The AX_DEFINE_DIR macro has been removed from the Autoconf Archive.
+    There are no official providers for this macro anymore.
+    
+    Separate pre-processor from compiler flags.
+    XFD_CFLAGS and CWARNFLAGS may contain compiler flags.
+    
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 74d5bc691b3a6dcc2dee99ed8b3c15d781b93843
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Sep 28 21:55:00 2011 -0700
+
+    Remove freetype2 from PKG_CHECK_MODULES list
+    
+    No direct calls to libfreetype functions or #includes of freetype headers
+    
+    Fixes Solaris ld -z guidance warning:
+    ld: guidance: removal of unused dependency recommended: libfreetype.so.6
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit bc9769630b473230e7a403817ec5e82317457f09
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Sep 28 21:53:12 2011 -0700
+
+    Add const attribute to domaindir fix gcc -Wwrite-strings warnings
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit e53ac1417a453abbdba751345ef6a227d65ef5e7
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Sep 28 21:49:29 2011 -0700
+
+    Strip trailing whitespace
+    
+    Performed with: find * -type f | xargs perl -i -p -e 's{[ \t]+$}{}'
+    git diff -w & git diff -b show no diffs from this change
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 50089064f6a02a3330578a50918c3cee5c9cda98
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jan 19 10:06:56 2011 -0500
+
+    config: move man pages into their own directory
+    
+    Use services provided by XORG_MANPAGE_SECTIONS.
+    Use standard Makefile for man pages.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 894fb8869b63f3810373f58798c09e15256f2c67
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Jan 13 17:15:36 2011 -0500
+
+    man: replace hard coded man page section with substitution strings
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit aa1b74aa0e5fe8a3b7db0334270c49d89be3fb63
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Jan 13 11:15:47 2011 -0500
+
+    man: remove trailing spaces and tabs
+    
+    Using s/[ \t]*$//
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit d577f95060b7c52915c536c1d86525e725824027
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jan 12 16:28:02 2011 -0500
+
+    config: replace deprecated AM_CONFIG_HEADER with AC_CONFIG_HEADERS
+    
+    This silences an Autoconf warning
+
+commit d277e3bd75cef27780575539a8cc2417c33bc0fd
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jan 12 15:29:50 2011 -0500
+
+    config: replace deprecated AC_HELP_STRING with AS_HELP_STRING
+    
+    This silences an Automake warning.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
 commit 6b2c1c93d9d7914d7d8e0a65c3de9c6b76c71b5f
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Wed Oct 20 21:44:30 2010 -0700

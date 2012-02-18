@@ -101,5 +101,5 @@ GridFirstChar (Widget w);
 long
 GridLastChar (Widget w);
 
-    
+
 #endif /* _FontGrid_h_ */

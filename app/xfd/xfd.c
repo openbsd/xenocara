@@ -1,7 +1,7 @@
 /*
  * $Xorg: xfd.c,v 1.4 2001/02/09 02:05:42 xorgcvs Exp $
  *
- * 
+ *
 Copyright 1989, 1998  The Open Group
 
 Permission to use, copy, modify, distribute, and sell this software and its
@@ -73,21 +73,21 @@ static XrmOptionDescRec xfd_options[] = {
 
 static void usage(void);
 static void SelectChar(Widget w, XtPointer closure, XtPointer data);
-static void do_quit(Widget w, XEvent *event, String *params, 
+static void do_quit(Widget w, XEvent *event, String *params,
 		    Cardinal *num_params);
 static void change_page(int page);
 static void set_button_state(void);
-static void do_prev(Widget w, XEvent *event, String *params, 
+static void do_prev(Widget w, XEvent *event, String *params,
 		    Cardinal *num_params);
-static void do_next(Widget w, XEvent *event, String *params, 
+static void do_next(Widget w, XEvent *event, String *params,
 		    Cardinal *num_params);
-static void do_prev16(Widget w, XEvent *event, String *params, 
+static void do_prev16(Widget w, XEvent *event, String *params,
 		      Cardinal *num_params);
-static void do_next16(Widget w, XEvent *event, String *params, 
+static void do_next16(Widget w, XEvent *event, String *params,
 		      Cardinal *num_params);
 static char *get_font_name(Display *dpy, XFontStruct *fs);
-static void CatchFontConversionWarning(String name, String type, String class, 
-				       String defaultp, String *params, 
+static void CatchFontConversionWarning(String name, String type, String class,
+				       String defaultp, String *params,
 				       Cardinal *np);
 
 static XtActionsRec xfd_actions[] = {
@@ -120,15 +120,15 @@ static struct _xfd_resources {
 #define Offset(field) XtOffsetOf(struct _xfd_resources, field)
 
 static XtResource Resources[] = {
-  { "selectFormat", "SelectFormat", XtRString, sizeof(char *), 
+  { "selectFormat", "SelectFormat", XtRString, sizeof(char *),
       Offset(select_format), XtRString, DEF_SELECT_FORMAT },
-  { "metricsFormat", "MetricsFormat", XtRString, sizeof(char *), 
+  { "metricsFormat", "MetricsFormat", XtRString, sizeof(char *),
       Offset(metrics_format), XtRString, DEF_METRICS_FORMAT },
-  { "rangeFormat", "RangeFormat", XtRString, sizeof(char *), 
+  { "rangeFormat", "RangeFormat", XtRString, sizeof(char *),
       Offset(range_format), XtRString, DEF_RANGE_FORMAT },
-  { "startFormat", "StartFormat", XtRString, sizeof(char *), 
+  { "startFormat", "StartFormat", XtRString, sizeof(char *),
       Offset(start_format), XtRString, DEF_START_FORMAT },
-  { "nocharFormat", "NocharFormat", XtRString, sizeof(char *), 
+  { "nocharFormat", "NocharFormat", XtRString, sizeof(char *),
       Offset(nochar_format), XtRString, DEF_NOCHAR_FORMAT },
 };
 
@@ -172,7 +172,7 @@ static Boolean fontConversionFailed = False;
 static XtErrorMsgHandler oldWarningHandler;
 
 int
-main(int argc, char *argv[]) 
+main(int argc, char *argv[])
 {
     XtAppContext xtcontext;
     Widget toplevel, pane, toplabel, box, form;
@@ -185,7 +185,7 @@ main(int argc, char *argv[])
     XftFont *xft;
 #endif
     char *fontname;
-    char *domaindir;
+    const char *domaindir;
     long minn, maxn;
 
     XtSetLanguageProc(NULL, NULL, NULL);
@@ -226,7 +226,7 @@ main(int argc, char *argv[])
 				  NULL, ZERO);
 
     /* font name */
-    toplabel = XtCreateManagedWidget ("fontname", labelWidgetClass, pane, 
+    toplabel = XtCreateManagedWidget ("fontname", labelWidgetClass, pane,
 				      NULL, ZERO);
 
     /* button box */
@@ -250,15 +250,15 @@ main(int argc, char *argv[])
     metricsLabel = XtCreateManagedWidget ("metrics", labelWidgetClass,
 					  pane, NULL, ZERO);
 
-    rangeLabel = XtCreateManagedWidget ("range", labelWidgetClass, pane, 
+    rangeLabel = XtCreateManagedWidget ("range", labelWidgetClass, pane,
 					NULL, ZERO);
 
-    startLabel = XtCreateManagedWidget ("start", labelWidgetClass, pane, 
+    startLabel = XtCreateManagedWidget ("start", labelWidgetClass, pane,
 					NULL, ZERO);
 
     /* form in which to draw */
     form = XtCreateManagedWidget ("form", formWidgetClass, pane, NULL, ZERO);
-    
+
     i = 0;
     XtSetArg (av[i], XtNtop, XtChainTop); i++;
     XtSetArg (av[i], XtNbottom, XtChainBottom); i++;
@@ -266,7 +266,7 @@ main(int argc, char *argv[])
     XtSetArg (av[i], XtNright, XtChainRight); i++;
     XtSetArg (av[i], XtNcallback, cb); i++;
 
-    oldWarningHandler = XtAppSetWarningMsgHandler(xtcontext, 
+    oldWarningHandler = XtAppSetWarningMsgHandler(xtcontext,
 						  CatchFontConversionWarning);
 
     fontGrid = XtCreateManagedWidget ("grid", fontgridWidgetClass, form,
@@ -318,12 +318,12 @@ main(int argc, char *argv[])
 
     minn = GridFirstChar (fontGrid);
     maxn = GridLastChar (fontGrid);
-    sprintf (buf, xfd_resources.range_format, 
+    sprintf (buf, xfd_resources.range_format,
 	     minn >> 8, minn & 0xff,
 	     minn >> 8, minn & 0xff,
 	     maxn >> 8, maxn & 0xff,
 	     maxn >> 8, maxn & 0xff);
-    
+
     i = 0;
     XtSetArg (av[i], XtNlabel, buf); i++;
     XtSetValues (rangeLabel, av, i);
@@ -341,7 +341,7 @@ main(int argc, char *argv[])
 }
 
 /*ARGSUSED*/
-static void 
+static void
 SelectChar(Widget w, XtPointer closure, XtPointer data)
 {
     FontGridCharRec *p = (FontGridCharRec *) data;
@@ -367,7 +367,7 @@ SelectChar(Widget w, XtPointer closure, XtPointer data)
 	    XGlyphInfo	extents;
 	    XftTextExtents32 (XtDisplay (w), xft, &c, 1, &extents);
 	    sprintf (buf, xfd_resources.metrics_format,
-		     extents.xOff, - extents.x, 
+		     extents.xOff, - extents.x,
 		     extents.xOff - extents.width + extents.x,
 		     extents.y, extents.height - extents.y,
 		     xft->ascent, xft->descent);
@@ -380,7 +380,7 @@ SelectChar(Widget w, XtPointer closure, XtPointer data)
 	    (n < fs->min_char_or_byte2 || n > fs->max_char_or_byte2) :
 	    (n >> 8 < fs->min_byte1 || n >> 8 > fs->max_byte1 ||
 	     (n & 0xff)  < fs->min_char_or_byte2 ||
-	     (n & 0xff) > fs->max_char_or_byte2)) 
+	     (n & 0xff) > fs->max_char_or_byte2))
 	{
 	    has_char = 0;
 	}
@@ -400,7 +400,7 @@ SelectChar(Widget w, XtPointer closure, XtPointer data)
 
     if (has_char)
     {
-	sprintf (buf, xfd_resources.select_format, 
+	sprintf (buf, xfd_resources.select_format,
 		 n >> 8, n & 0xff,
 		 n >> 8, n & 0xff,
 		 n >> 8, n & 0xff);
@@ -419,13 +419,13 @@ SelectChar(Widget w, XtPointer closure, XtPointer data)
 
 
 /*ARGSUSED*/
-static void 
+static void
 do_quit (Widget w, XEvent *event, String *params, Cardinal *num_params)
 {
     exit (0);
 }
 
-static void 
+static void
 change_page(int page)
 {
     long oldstart, newstart;
@@ -437,7 +437,7 @@ change_page(int page)
     GetFontGridCellDimensions (fontGrid, &oldstart, &ncols, &nrows);
 
     if (page) {
-	long start = (oldstart + 
+	long start = (oldstart +
 			   ((long) ncols) * ((long) nrows) * ((long) page));
 
 	arg.value = (XtArgVal) start;
@@ -464,7 +464,7 @@ change_page(int page)
 }
 
 
-static void 
+static void
 set_button_state(void)
 {
     Bool prevvalid, nextvalid, prev16valid, next16valid;
@@ -485,14 +485,14 @@ set_button_state(void)
 
 
 /* ARGSUSED */
-static void 
+static void
 do_prev16(Widget w, XEvent *event, String *params, Cardinal *num_params)
 {
     change_page (-16);
 }
 
 
-static void 
+static void
 do_prev(Widget w, XEvent *event, String *params, Cardinal *num_params)
 {
     change_page (-1);
@@ -500,14 +500,14 @@ do_prev(Widget w, XEvent *event, String *params, Cardinal *num_params)
 
 
 /* ARGSUSED */
-static void 
+static void
 do_next(Widget w, XEvent *event, String *params, Cardinal *num_params)
 {
     change_page (1);
 }
 
 /* ARGSUSED */
-static void 
+static void
 do_next16(Widget w, XEvent *event, String *params, Cardinal *num_params)
 {
     change_page (16);
@@ -530,8 +530,8 @@ get_font_name(Display *dpy, XFontStruct *fs)
 }
 
 
-static void 
-CatchFontConversionWarning(String name, String type, String class, 
+static void
+CatchFontConversionWarning(String name, String type, String class,
 			   String defaultp, String *params, Cardinal *np)
 {
     if (np && *np > 1 &&
