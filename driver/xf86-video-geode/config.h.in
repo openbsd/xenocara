@@ -2,23 +2,14 @@
 
 #include "xorg-server.h"
 
-/* Define to 1 if you have the declaration of `amd64', and to 0 if you don't.
-   */
-#undef HAVE_DECL_AMD64
-
-/* Define to 1 if you have the declaration of `_LP64', and to 0 if you don't.
-   */
-#undef HAVE_DECL__LP64
-
-/* Define to 1 if you have the declaration of `__amd64__', and to 0 if you
-   don't. */
-#undef HAVE_DECL___AMD64__
-
 /* Define to 1 if you have the <dlfcn.h> header file. */
 #undef HAVE_DLFCN_H
 
 /* Define to 1 if you have the <inttypes.h> header file. */
 #undef HAVE_INTTYPES_H
+
+/* Define to 1 if you have the <linux/videodev2.h> header file. */
+#undef HAVE_LINUX_VIDEODEV2_H
 
 /* Define to 1 if you have the <memory.h> header file. */
 #undef HAVE_MEMORY_H
@@ -46,6 +37,10 @@
 
 /* xextproto 7.1 available */
 #undef HAVE_XEXTPROTO_71
+
+/* Define to the sub-directory in which libtool stores uninstalled libraries.
+   */
+#undef LT_OBJDIR
 
 /* Name of package */
 #undef PACKAGE

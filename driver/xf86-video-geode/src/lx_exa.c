@@ -48,6 +48,19 @@
 #define F(x)    IntToxFixed(x)
 #define I(x)    xFixedToInt(x)
 
+#define GEODE_TRACE_FALL 0
+
+#if GEODE_TRACE_FALL
+#define GEODE_FALLBACK(x)               \
+do {                                    \
+	ErrorF("%s: ", __FUNCTION__);   \
+	ErrorF x;                       \
+	return FALSE;                   \
+} while (0)
+#else
+#define GEODE_FALLBACK(x) return FALSE
+#endif
+
 static const struct exa_format_t
 {
     int exa;
@@ -532,10 +545,8 @@ lx_check_composite(int op, PicturePtr pSrc, PicturePtr pMsk, PicturePtr pDst)
     GeodeRec *pGeode = GEODEPTR_FROM_PICTURE(pDst);
     const struct exa_format_t *srcFmt, *dstFmt;
 
-    /* Check that the operation is supported */
-
     if (op > PictOpAdd)
-	return FALSE;
+	GEODE_FALLBACK(("Operation %d is not supported\n", op));
 
     /* FIXME: Meet this conditions from the debug for PictOpAdd.
      * Any Other possibilities? Add a judge for the future supplement */
@@ -551,15 +562,13 @@ lx_check_composite(int op, PicturePtr pSrc, PicturePtr pMsk, PicturePtr pDst)
 	pDst->format == PICT_a8 && !pMsk)
 	return TRUE;
 
-    /* We need the off-screen buffer to do the multipass work */
-
     if (usesPasses(op)) {
 	if (pGeode->exaBfrOffset == 0 || !pMsk)
-	    return FALSE;
+	    GEODE_FALLBACK(("Multipass operation requires off-screen buffer\n"));
     }
 
     if (pMsk && op == PictOpAdd)
-	return FALSE;
+	GEODE_FALLBACK(("PictOpAdd with mask is not supported\n"));
 
     /* Check that the filter matches what we support */
 
@@ -571,17 +580,15 @@ lx_check_composite(int op, PicturePtr pSrc, PicturePtr pMsk, PicturePtr pDst)
 	break;
 
     default:
-	/* WE don't support bilinear or convolution filters */
-	return FALSE;
+	GEODE_FALLBACK(("Bilinear or convolution filters are not supported\n"));
     }
 
-    /* We don't support any mask transforms */
     if (pMsk && pMsk->transform)
-	return FALSE;
+	GEODE_FALLBACK(("Mask transforms are not supported\n"));
 
     /* XXX - don't know if we can do any hwaccel on solid fills or gradient types */
     if (pSrc->pSourcePict || (pMsk && pMsk->pSourcePict))
-	return FALSE;
+	GEODE_FALLBACK(("Solid fills or gradient types are not supported\n"));
 
     /* Keep an eye out for source rotation transforms - those we can
      * do something about */
@@ -590,13 +597,12 @@ lx_check_composite(int op, PicturePtr pSrc, PicturePtr pMsk, PicturePtr pDst)
     exaScratch.transform = NULL;
 
     if (pSrc->transform && !lx_process_transform(pSrc))
-	return FALSE;
+	GEODE_FALLBACK(("Transform operation is non-trivial\n"));
 
     /* XXX - I don't understand PICT_a8 enough - so I'm punting */
-
     if ((op != PictOpAdd) && (pSrc->format == PICT_a8 ||
 	pDst->format == PICT_a8))
-	return FALSE;
+	GEODE_FALLBACK(("PICT_a8 as src or dst format is unsupported\n"));
 
     if (pMsk && op != PictOpClear) {
 	struct blend_ops_t *opPtr = &lx_alpha_ops[op * 2];
@@ -605,21 +611,21 @@ lx_check_composite(int op, PicturePtr pSrc, PicturePtr pMsk, PicturePtr pDst)
 	/* Direction 0 indicates src->dst, 1 indiates dst->src */
 	if (((direction == 0) && (pSrc->pDrawable->bitsPerPixel < 16)) ||
 	    ((direction == 1) && (pDst->pDrawable->bitsPerPixel < 16))) {
-	    ErrorF("Can't do mask blending with less then 16bpp\n");
+	    ErrorF("Mask blending unsupported with <16bpp\n");
 	    return FALSE;
 	}
-	/* We can only do masks with a 8bpp or a 4bpp mask */
 	if (pMsk->format != PICT_a8 && pMsk->format != PICT_a4)
-	    return FALSE;
+	    GEODE_FALLBACK(("Masks can be only done with a 8bpp or 4bpp depth\n"));
+
 	/* The pSrc should be 1x1 pixel if the pMsk is not zero */
 	if (pSrc->pDrawable->width != 1 || pSrc->pDrawable->height != 1)
-	    return FALSE;
+	    GEODE_FALLBACK(("pSrc should be 1x1 pixel if pMsk is not zero\n"));
 	/* FIXME: In lx_prepare_composite, there are no variables to record the
 	 * one pixel source's width and height when the mask is not zero.
 	 * That will lead to bigger region to render instead of one pixel in lx
 	 * _do_composite, so we should fallback currently to avoid this */
 	if (!pSrc->repeat)
-	    return FALSE;
+	    GEODE_FALLBACK(("FIXME: unzero mask might lead to bigger rendering region than 1x1 pixels\n"));
     }
 
     /* Get the formats for the source and destination */
@@ -630,7 +636,7 @@ lx_check_composite(int op, PicturePtr pSrc, PicturePtr pMsk, PicturePtr pDst)
     }
 
     if ((dstFmt = lx_get_format(pDst)) == NULL) {
-	ErrorF("EXA:  Invalid destination format %x\n", pDst->format);
+	ErrorF("EXA: Invalid destination format %x\n", pDst->format);
 	return FALSE;
     }
 
@@ -638,21 +644,19 @@ lx_check_composite(int op, PicturePtr pSrc, PicturePtr pMsk, PicturePtr pDst)
     /* If a mask is enabled, the alpha will come from there */
 
     if (!pMsk && (!srcFmt->alphabits && usesSrcAlpha(op)))
-	return FALSE;
+	GEODE_FALLBACK(("Operation requires src alpha, but alphabits is unset\n"));
 
     if (!pMsk && (!dstFmt->alphabits && usesDstAlpha(op)))
-	return FALSE;
+	GEODE_FALLBACK(("Operation requires dst alpha, but alphabits is unset\n"));
 
-    /* FIXME:  See a way around this! */
-
+    /* FIXME: See a way around this! */
     if (srcFmt->alphabits == 0 && dstFmt->alphabits != 0)
-	return FALSE;
+	GEODE_FALLBACK(("src_alphabits=0, dst_alphabits!=0\n"));
 
     /* If this is a rotate operation, then make sure the src and dst
      * formats are the same */
-
     if (exaScratch.rotate != RR_Rotate_0 && srcFmt != dstFmt) {
-	ErrorF("EXA: Can't rotate and convert formats at the same time\n");
+	ErrorF("EXA: Unable to rotate and convert formats at the same time\n");
 	return FALSE;
     }
     return TRUE;

@@ -353,7 +353,7 @@ GXRandRInit(ScreenPtr pScreen, int rotation)
 	return FALSE;
 #endif
 
-    pRandr = calloc(sizeof(XF86RandRInfoRec), 1);
+    pRandr = calloc(1, sizeof(XF86RandRInfoRec));
     if (pRandr == NULL)
 	return FALSE;
 

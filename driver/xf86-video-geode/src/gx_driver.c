@@ -426,7 +426,7 @@ GXPreInit(ScrnInfoPtr pScrni, int flags)
 	return FALSE;
 #endif
 
-    pGeode = pScrni->driverPrivate = xnfcalloc(sizeof(GeodeRec), 1);
+    pGeode = pScrni->driverPrivate = xnfcalloc(1, sizeof(GeodeRec));
 
     if (pGeode == NULL)
 	return FALSE;
@@ -445,9 +445,11 @@ GXPreInit(ScrnInfoPtr pScrni, int flags)
     if (pGeode->useVGA) {
 	if (!xf86LoadSubModule(pScrni, "vgahw") || !vgaHWGetHWRec(pScrni))
 	    pGeode->useVGA = FALSE;
+	else
+	    vgaHWSetStdFuncs(VGAHWPTR(pScrni));
 
 #if INT10_SUPPORT
-	pGeode->vesa = calloc(sizeof(VESARec), 1);
+	pGeode->vesa = calloc(1, sizeof(VESARec));
 #endif
     }
 
@@ -649,7 +651,7 @@ GXPreInit(ScrnInfoPtr pScrni, int flags)
     else
 	pScrni->videoRam = pGeode->pEnt->device->videoRam;
 
-    GeodeClockRange = (ClockRangePtr) xnfcalloc(sizeof(ClockRange), 1);
+    GeodeClockRange = (ClockRangePtr) xnfcalloc(1, sizeof(ClockRange));
     GeodeClockRange->next = NULL;
     GeodeClockRange->minClock = 25175;
     GeodeClockRange->maxClock = 229500;
@@ -1259,11 +1261,11 @@ GXScreenInit(int scrnIndex, ScreenPtr pScrn, int argc, char **argv)
 	    }
 	} else {
 	    pGeode->AccelImageWriteBuffers =
-		calloc(sizeof(pGeode->AccelImageWriteBuffers[0]),
-		pGeode->NoOfImgBuffers);
+		calloc(pGeode->NoOfImgBuffers,
+		sizeof(pGeode->AccelImageWriteBuffers[0]));
 	    pGeode->AccelColorExpandBuffers =
-		calloc(sizeof(pGeode->AccelColorExpandBuffers[0]),
-		pGeode->NoOfColorExpandLines);
+		calloc(pGeode->NoOfColorExpandLines,
+		sizeof(pGeode->AccelColorExpandBuffers[0]));
 	}
     }
 

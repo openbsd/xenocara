@@ -354,10 +354,11 @@ lx_crtc_gamma_set(xf86CrtcPtr crtc, CARD16 * red, CARD16 * green,
      */
 
     for (i = 0; i < 256; i++) {
+        unsigned int val;
         (*red) &= 0xff00;
         (*green) &= 0xff00;
         (*blue) &= 0xff00;
-        unsigned int val = (*(red++) << 8) | *(green++) | (*(blue++) >> 8);
+        val = (*(red++) << 8) | *(green++) | (*(blue++) >> 8);
 
 	df_set_video_palette_entry(i, val);
     }
@@ -577,7 +578,7 @@ LXSetupCrtc(ScrnInfoPtr pScrni)
 	return;
     }
 
-    lxpriv = xnfcalloc(sizeof(LXCrtcPrivateRec), 1);
+    lxpriv = xnfcalloc(1, sizeof(LXCrtcPrivateRec));
 
     if (!lxpriv) {
 	xf86CrtcDestroy(crtc);

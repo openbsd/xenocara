@@ -190,7 +190,6 @@ IoCtl(int fd, unsigned int fn, void *arg, int flag)
 static void
 z4l_ovly_unmap(Z4lPortPrivRec * pPriv)
 {
-#ifdef LINUX_2_6
     int i, nbfrs;
 
     nbfrs = pPriv->nbfrs;
@@ -200,12 +199,6 @@ z4l_ovly_unmap(Z4lPortPrivRec * pPriv)
 	    pPriv->bfrs[i].start = NULL;
 	}
     }
-#else
-    if (pPriv->bfrs[0].start != NULL) {
-	munmap((void *)pPriv->bfrs[0].start, pPriv->bufsz);
-	pPriv->bfrs[0].start = NULL;
-    }
-#endif
     pPriv->nbfrs = -1;
     pPriv->bufsz = -1;
     pPriv->last = -1;
@@ -252,27 +245,12 @@ z4l_ovly_map(Z4lPortPrivRec * pPriv, int dir)
 	    pPriv->bufsz = bsz;
     }
 
-#ifdef LINUX_2_6
     for (i = 0; i < pPriv->nbfrs; ++i) {
 	pPriv->bfrs[i].start = mmap(NULL, bfr.length, PROT_READ | PROT_WRITE,
 	    MAP_SHARED, fd, pPriv->bfrs[i].offset);
 	if (pPriv->bfrs[i].start == MAP_FAILED)
 	    goto xit;
     }
-#else
-    pPriv->bfrs[0].offset = 0;
-    pPriv->bfrs[0].start =
-	mmap(NULL, pPriv->bufsz, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
-
-    if (pPriv->bfrs[0].start == MAP_FAILED) {
-	pPriv->bfrs[0].start = NULL;
-	goto xit;
-    }
-
-    offset = (unsigned long)pPriv->bfrs[0].start;
-    for (i = 1; i < pPriv->nbfrs; ++i)
-	pPriv->bfrs[i].start = (void *)(offset + pPriv->bfrs[i].offset);
-#endif
 
     for (i = 0; i < pPriv->nbfrs; ++i) {
 	DBLOG(3, "bfr %d ofs %#lx adr %p sz %lu\n", i, pPriv->bfrs[i].offset,

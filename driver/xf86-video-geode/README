@@ -1,28 +1,21 @@
 xf86-video-geode -- AMD Geode GX and LX graphics driver for X.org
 =================================================================
-README last updated: 2009-09-09
+README last updated: 2011-11-24
 
-GIT repository:
-        git://anongit.freedesktop.org/git/xorg/driver/xf86-video-geode
-
-Gitweb browser:
-        http://cgit.freedesktop.org/xorg/driver/xf86-video-geode
-
-Project homepage:
-	http://www.x.org/wiki/GeodeDriver
-
-= Introduction =
+1.INTRODUCTION
 
 This is the X graphics driver for the AMD Geode GX and LX processors.
-The GX driver features XAA and EXA support for graphics acceleration,
-and the LX driver supports EXA (including compositing).  Both drivers
-support dynamic rotation with XRandR, and Xv overlay support.
+The GX component supports both XAA and EXA for graphics acceleration.
+The LX component supports EXA, including compositing. Both support Xv 
+overlay and dynamic rotation with XRandR. Additionally, a V4L2 driver
+for the LX's video input port (VIP) feature is provided as "ztv".
 
-= Roadmap =
+2.DEPENDENCIES
 
-Support for X servers older than 1.4 is expected to be dropped in the
-near future.  If your distribution still hasn't upgraded, please urge 
-them to get around it soon.
+Since version 2.9.0, this driver depends on X server 1.3 or greater,
+because it utilizes the new common DDC probing libraries from X.Org.
+
+3.ROADMAP
 
 Support for old GX1 Geodes by Cyrix and NSC will be reintroduced soon,
 at which point xf86-video-cyrix and xf86-video-nsc will be retired.
@@ -31,7 +24,7 @@ Until then, the current situation for Geode coverage is as follow:
  
 xf86-video-geode
  * Geode LX      (a.k.a. GX3) PCI ID 0x1022:0x2081
- * Geode GX      (a.k.a. GX2) PCI ID 0x100B:0x0030 (rebranded GX2)
+ * Geode GX      (a.k.a. GX2) PCI ID 0x100B:0x0030 (re-branded GX2)
 
 xf86-video-nsc
  * Geode GX2     (a.k.a. GX2) PCI ID 0x100B:0x0030 (a.k.a. "Red Cloud")
@@ -44,50 +37,122 @@ xf86-video-cyrix
 Please note that both NSC and GEODE support GX2. This is indeed correct.
 However, only GEODE has up-to-date code, while NSC is deprecated. 
 
-= Dependencies =
+4.MAXIMUM RESOLUTIONS
 
-As of version 2.11.4, this driver depends upon X server 1.5 or newer,
-because the GX Randr code utilizes dixSetPrivate whose API was modified 
-in a non backward-compatible way.
+The driver supports all maximum resolutions advertised by AMD, namely:
 
-  #ifdef'ing the changes from f1268f3ba8404129d358db3bb1e66f3841f7018a 
-  and b28abde0276ddd7f687242f3886f98b0e49a7fc2 might make it possible
-  to build this driver against older X servers. Patches are welcome.
+LX: 1920x1440 (CRT) and 1600x1200 (TFT)
+GX: 1600x1200 (CRT) and 1280x1024 (TFT)
+SC: 1280x1024 (CRT/TFT) *** Currently unsupported by this driver ***
 
-As of version 2.9.0, this driver depends on X server 1.3 or newer,
-because it utilizes the new common DDC probing libraries from X.Org.
+5.CONFIGURATION OPTIONS
 
-  If necessary, it might be possible to create autoconf macros to make 
-  this driver compile against older X servers, following this example:
+You can specify driver options in /etc/X11/xorg.conf in the usual fashion:
 
-  http://lists.freedesktop.org/archives/xorg-commit/2007-February/010341.html
+Section "Device"
+	Identifier "AMD Geode"
+	Driver "geode"
+	Option "OptionName" "value"
+	...
+EndSection
 
-  Patches accomplishing the same trick for the Geode driver are welcome.
+The following options may be added to such a Device section:
 
-= FAQ =
+5.1.COMMON OPTIONS
 
-Q: Why doesn't screen rotation work?
+FBSize: Specify the size of the video space (in bytes)
+NoAccel: Disable hardware assisted acceleration
+NoCompression: Disable video bandwidth compression
+NoPanel: Disable panel support
+Rotate: Select an initial orientation - LEFT, INVERT, CCW
+SWCursor: Enable software cursors (essentially disabling HW cursor support)
 
-A: Make sure that a sufficient amount of video RAM is reserved in the BIOS,
-   otherwise rotation will fail and this error message appear in Xorg.log:
-      Couldn't allocate the shadow memory for rotation
-      You need XX bytes, but only YY bytes are available
+5.2.GX-SPECIFIC OPTIONS
 
-Q: Why doesn't this GEODE driver work at WXGA (wide screen) resolutions?
+AccelMethod: "XAA" (default) or "EXA"
+PanelGeometry: Specify the geometry of the attached panel ("<width>x<height>")
+OSMImageBuffers: Set the number of image buffers (XAA only)
+OSMColorExpBuffers: Set the number of color expansion buffers (XAA only)
+
+5.3.LX-SPECIFIC OPTIONS
+
+ExaScratch: Specify the amount of extra EXA scratch buffer (in bytes)
+
+6.FREQUENTLY ASKED QUESTIONS (FAQ)
+
+Q: Why doesn't the GEODE driver work at WXGA (wide screen) resolutions?
 
 A: Make sure that TFT Panel support is disabled in the BIOS settings, 
    otherwise resolutions will be restricted to traditional VGA modes. 
    The GEODE offers a choice between CRT-only, CRT+TFT, TFT-only for
    output device and selecting CRT-only removes the VGA restriction.
 
-Q: How do I produce useful information whenever submiting a bug report?
+Q: How can these hardcoded modes be expanded to support a WXGA laptop?
+
+A: By adding the desired modes to /etc/X11/xorg.conf as follow:
+
+   1) Use either the "cvt" or "gtf" command to determine the modeline:
+
+      cvt 1024 600 60
+
+      Where 1024x600 is the resolution and 60 the refresh rate. 
+      The resulting modeline using "gtf" is:
+
+Modeline "1024x600" 48.96 1024 1064 1168 1312 600 601 604 622 -hsync +vsync
+
+   2) Add it to the bottom of the "Monitor" section in /etc/X11/xorg.conf.
+      In this example, we created entries for two modes and configured the
+      larger resolution to be our preferred choice.
+
+#############################################################
+# /etc/X11/xorg.conf for 1024x600 and 800x480 laptop panels #
+#############################################################
+#### By J.KASPER and B.HIBRY #### for Hercules eCafe 800 ####
+#############################################################
+Section "Module"
+    Load  "ztv"
+EndSection
+Section "Device"
+    Identifier	"card0"
+    Driver	"geode"
+    BusID	"PCI:0:1:1"
+    Option	"PanelMode" "33450 800 840 968 1056 480 490 492 525"
+EndSection
+Section "Monitor"
+    Identifier	"monitor0"
+    Modeline  "1024x768" 64.56 1024 1056 1296 1328 768 783 791 807 -hsync +vsync
+    Modeline  "1024x600" 48.96 1024 1064 1168 1312 600 601 604 622 -hsync +vsync
+    Modeline   "800x480" 33.45  800  840  968 1056 480 490 492 525 -hsync +vsync
+    Option	"dpms"
+EndSection
+Section "Screen"
+    Identifier	"Default Screen"
+    Monitor	"monitor0"
+    Device	"card0"
+    DefaultDepth 24
+    Subsection "Display"
+        Depth 24
+        Modes "1024x600" "1024x768" "800x480"
+    EndSubsection        
+EndSection
+### EOF ###
+
+Q: Why doesn't screen rotation work?
+
+A: Make sure that a sufficient amount of video RAM is reserved in the BIOS,
+   otherwise rotation will fail and this error message appear in Xorg.log:
+
+      Couldn't allocate the shadow memory for rotation
+      You need XX bytes, but only YY bytes are available
+
+Q: How do I produce useful information whenever submitting a bug report?
 
 A: See http://www.x.org/wiki/Development/Documentation/ServerDebugging
-   and follow the instructions.
+   and follow the instructions found there.
 
 Q: How do I test development snapshots from the upstream GIT repository?
 
-A: Run the following commands from a command line interpreter shell...
+A: Run the following commands from a command line interpreter shell:
    1. git clone git://anongit.freedesktop.org/git/xorg/driver/xf86-video-geode 
    2. Debian/Ubuntu:  apt-get install autoconf automake libtool xutils-dev
                       apt-get install build-dep xserver-xorg-video-geode
@@ -101,40 +166,27 @@ A: Run the following commands from a command line interpreter shell...
 Q: What is the preferred method for submitting patches to this driver?
 
 A: See http://www.x.org/wiki/Development/Documentation/SubmittingPatches
-   and submit the patches as attachments to the Geode X.org mailing list
-   or to the X.org Bugzilla against component "Driver/geode".
+   and submit the patches to the Geode X.org mailing list or to Bugzilla
+   against product "xorg" component "Driver/geode".
 
-= Configuration options =
+7.PROJECT CONTACTS
 
-You can specify the Geode driver in the normal fashion:
+Project homepage:
+http://www.x.org/wiki/GeodeDriver
 
-Section "Device"
-	Identifier "AMD Geode"
-	Driver "geode"
-	Option "blah" "blah"
-	...
-EndSection
+Mailing list:
+http://lists.freedesktop.org/mailman/listinfo/xorg-driver-geode
 
-The following options may be added to the section:
+Bug reports:
+https://bugs.freedesktop.org/enter_bug.cgi?product=xorg&component=Driver%2Fgeode
 
-== Common options ==
+Code browser:
+http://cgit.freedesktop.org/xorg/driver/xf86-video-geode
 
-FBSize: Specify the size of the video space (in bytes)
-NoAccel: Disable hardware assisted acceleration
-NoCompression: Disable video bandwidth compression
-NoPanel: Disable panel support
-Rotate: Select a orientation to start with - LEFT, INVERT, CCW
-SWCursor: Enable software cursors (essentially disabling HW cursor support)
+Code repository:
+git://anongit.freedesktop.org/git/xorg/driver/xf86-video-geode
 
-== GX-specific options ==
+IRC channel:
+#geode on the Freenode network.
 
-AccelMethod: "XAA" (default) or "EXA"
-PanelGeometry: Specify the geometry of the attached panel ("<width>x<height>")
-OSMImageBuffers: Set the number of image buffers (XAA only)
-OSMColorExpBuffers: Set the number of color expansion buffers (XAA only)
-
-== LX-specific options ==
-
-ExaScratch: Specify the amount of extra EXA scratch buffer (in bytes)
-
-= EOF =
+.EOF.

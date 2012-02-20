@@ -32,8 +32,6 @@
 #include "config.h"
 #endif
 
-#define _LARGEFILE64_SOURCE
-
 #include <unistd.h>
 #include <errno.h>
 #include <compiler.h>

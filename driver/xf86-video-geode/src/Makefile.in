@@ -81,12 +81,12 @@ am__installdirs = "$(DESTDIR)$(geode_drv_ladir)"
 geode_drv_laLTLIBRARIES_INSTALL = $(INSTALL)
 LTLIBRARIES = $(geode_drv_la_LTLIBRARIES)
 geode_drv_la_LIBADD =
-am_geode_drv_la_OBJECTS = geode_driver.lo geode_common.lo \
-	geode_dcon.lo geode_ddc.lo geode_msr.lo gx_driver.lo \
-	gx_accel.lo gx_cursor.lo gx_video.lo gx_regacc.lo gx_rotate.lo \
-	gx_randr.lo durango.lo panel.lo lx_driver.lo lx_cursor.lo \
-	lx_memory.lo lx_panel.lo lx_output.lo lx_display.lo \
-	lx_video.lo lx_exa.lo cimarron.lo
+am_geode_drv_la_OBJECTS = cimarron.lo durango.lo geode_common.lo \
+	geode_dcon.lo geode_ddc.lo geode_driver.lo geode_msr.lo \
+	gx_accel.lo gx_cursor.lo gx_driver.lo gx_randr.lo gx_regacc.lo \
+	gx_rotate.lo gx_video.lo lx_cursor.lo lx_display.lo \
+	lx_driver.lo lx_exa.lo lx_memory.lo lx_output.lo lx_panel.lo \
+	lx_video.lo panel.lo
 geode_drv_la_OBJECTS = $(am_geode_drv_la_OBJECTS)
 DEFAULT_INCLUDES = -I. -I$(srcdir) -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/depcomp
@@ -109,7 +109,6 @@ ADMIN_MAN_DIR = @ADMIN_MAN_DIR@
 ADMIN_MAN_SUFFIX = @ADMIN_MAN_SUFFIX@
 AMDEP_FALSE = @AMDEP_FALSE@
 AMDEP_TRUE = @AMDEP_TRUE@
-AMD_CFLAGS = @AMD_CFLAGS@
 AMTAR = @AMTAR@
 AM_DEFAULT_VERBOSITY = @AM_DEFAULT_VERBOSITY@
 APP_MAN_DIR = @APP_MAN_DIR@
@@ -119,69 +118,70 @@ AUTOCONF = @AUTOCONF@
 AUTOHEADER = @AUTOHEADER@
 AUTOMAKE = @AUTOMAKE@
 AWK = @AWK@
+BASE_CFLAGS = @BASE_CFLAGS@
+BUILD_ZTV_FALSE = @BUILD_ZTV_FALSE@
+BUILD_ZTV_TRUE = @BUILD_ZTV_TRUE@
 CC = @CC@
-CCAS = @CCAS@
-CCASFLAGS = @CCASFLAGS@
 CCDEPMODE = @CCDEPMODE@
 CFLAGS = @CFLAGS@
 CHANGELOG_CMD = @CHANGELOG_CMD@
 CPP = @CPP@
 CPPFLAGS = @CPPFLAGS@
 CWARNFLAGS = @CWARNFLAGS@
-CXX = @CXX@
-CXXCPP = @CXXCPP@
-CXXDEPMODE = @CXXDEPMODE@
-CXXFLAGS = @CXXFLAGS@
 CYGPATH_W = @CYGPATH_W@
 DEFS = @DEFS@
 DEPDIR = @DEPDIR@
+DLLTOOL = @DLLTOOL@
 DRIVER_MAN_DIR = @DRIVER_MAN_DIR@
 DRIVER_MAN_SUFFIX = @DRIVER_MAN_SUFFIX@
-DRIVER_NAME = @DRIVER_NAME@
 DSYMUTIL = @DSYMUTIL@
-ECHO = @ECHO@
+DUMPBIN = @DUMPBIN@
 ECHO_C = @ECHO_C@
 ECHO_N = @ECHO_N@
 ECHO_T = @ECHO_T@
 EGREP = @EGREP@
 EXEEXT = @EXEEXT@
-F77 = @F77@
-FFLAGS = @FFLAGS@
+FGREP = @FGREP@
 FILE_MAN_DIR = @FILE_MAN_DIR@
 FILE_MAN_SUFFIX = @FILE_MAN_SUFFIX@
 GREP = @GREP@
-HAVE_XEXTPROTO_71_FALSE = @HAVE_XEXTPROTO_71_FALSE@
-HAVE_XEXTPROTO_71_TRUE = @HAVE_XEXTPROTO_71_TRUE@
-I386ARCH_FALSE = @I386ARCH_FALSE@
-I386ARCH_TRUE = @I386ARCH_TRUE@
 INSTALL_CMD = @INSTALL_CMD@
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
 INSTALL_STRIP_PROGRAM = @INSTALL_STRIP_PROGRAM@
+LD = @LD@
 LDFLAGS = @LDFLAGS@
 LIBOBJS = @LIBOBJS@
 LIBS = @LIBS@
 LIBTOOL = @LIBTOOL@
 LIB_MAN_DIR = @LIB_MAN_DIR@
 LIB_MAN_SUFFIX = @LIB_MAN_SUFFIX@
+LIPO = @LIPO@
 LN_S = @LN_S@
 LTLIBOBJS = @LTLIBOBJS@
+M32_CFLAGS = @M32_CFLAGS@
 MAINT = @MAINT@
 MAINTAINER_MODE_FALSE = @MAINTAINER_MODE_FALSE@
 MAINTAINER_MODE_TRUE = @MAINTAINER_MODE_TRUE@
 MAKEINFO = @MAKEINFO@
+MANIFEST_TOOL = @MANIFEST_TOOL@
 MAN_SUBSTS = @MAN_SUBSTS@
 MISC_MAN_DIR = @MISC_MAN_DIR@
 MISC_MAN_SUFFIX = @MISC_MAN_SUFFIX@
+NM = @NM@
 NMEDIT = @NMEDIT@
+OBJDUMP = @OBJDUMP@
 OBJEXT = @OBJEXT@
+OTOOL = @OTOOL@
+OTOOL64 = @OTOOL64@
 PACKAGE = @PACKAGE@
 PACKAGE_BUGREPORT = @PACKAGE_BUGREPORT@
 PACKAGE_NAME = @PACKAGE_NAME@
 PACKAGE_STRING = @PACKAGE_STRING@
 PACKAGE_TARNAME = @PACKAGE_TARNAME@
 PACKAGE_VERSION = @PACKAGE_VERSION@
+PANEL_CPPFLAGS = @PANEL_CPPFLAGS@
 PATH_SEPARATOR = @PATH_SEPARATOR@
 PCIACCESS_CFLAGS = @PCIACCESS_CFLAGS@
 PCIACCESS_LIBS = @PCIACCESS_LIBS@
@@ -198,13 +198,11 @@ XEXT_LIBS = @XEXT_LIBS@
 XORG_CFLAGS = @XORG_CFLAGS@
 XORG_LIBS = @XORG_LIBS@
 XORG_MAN_PAGE = @XORG_MAN_PAGE@
+ac_ct_AR = @ac_ct_AR@
 ac_ct_CC = @ac_ct_CC@
-ac_ct_CXX = @ac_ct_CXX@
-ac_ct_F77 = @ac_ct_F77@
+ac_ct_DUMPBIN = @ac_ct_DUMPBIN@
 am__fastdepCC_FALSE = @am__fastdepCC_FALSE@
 am__fastdepCC_TRUE = @am__fastdepCC_TRUE@
-am__fastdepCXX_FALSE = @am__fastdepCXX_FALSE@
-am__fastdepCXX_TRUE = @am__fastdepCXX_TRUE@
 am__include = @am__include@
 am__leading_dot = @am__leading_dot@
 am__quote = @am__quote@
@@ -247,124 +245,120 @@ sharedstatedir = @sharedstatedir@
 sysconfdir = @sysconfdir@
 target_alias = @target_alias@
 AM_CPPFLAGS = \
-	-I$(top_srcdir)/src/cim \
-	-I$(top_srcdir)/src/gfx \
-	-I$(top_srcdir)/src/panel \
-	-I$(top_srcdir)/linux_v26
+	-I$(top_srcdir)/src/cim 	\
+	-I$(top_srcdir)/src/gfx 	\
+	-I$(top_srcdir)/src/panel	\
+	$(PANEL_CPPFLAGS)		\
+	-DHAVE_GX			\
+	-DHAVE_LX			\
+	-DOPT_ACCEL
 
-
-# -DPNL_SUP is now provided by AMD_CFLAGS
-#
-AM_CFLAGS = @XORG_CFLAGS@ \
-   -DHAVE_GX -DHAVE_LX -DOPT_ACCEL \
-   -DLINUX_2_6 @AMD_CFLAGS@
-
-AM_CCASFLAGS = @XORG_CFLAGS@
+AM_CFLAGS = $(XORG_CFLAGS) $(CWARNFLAGS) $(M32_CFLAGS)
 geode_drv_la_LTLIBRARIES = geode_drv.la
 geode_drv_la_LDFLAGS = -module -avoid-version
-geode_drv_ladir = @moduledir@/drivers
+geode_drv_ladir = $(moduledir)/drivers
 geode_drv_la_SOURCES = \
-        geode.h \
-	geode_blend.h \
-        geode_fourcc.h \
-        cim_dev.h \
-        geode_driver.c \
-	geode_common.c \
-        geode_dcon.c \
-	geode_ddc.c \
-	geode_msr.c \
-        gx_driver.c\
-        gx_accel.c \
-        gx_cursor.c \
-        gx_video.c \
-        gx_regacc.c \
-        gx_rotate.c \
-        gx_randr.c \
-        durango.c \
-        panel.c \
-        lx_driver.c \
-        lx_cursor.c \
-	lx_memory.c \
-	lx_panel.c \
-	lx_output.c \
-	lx_display.c \
-        lx_video.c \
-	lx_exa.c \
-        cimarron.c \
-	geode_pcirename.h
+	cimarron.c		\
+	cim_dev.h		\
+	durango.c		\
+	geode_blend.h		\
+	geode_common.c		\
+	geode_dcon.c		\
+	geode_ddc.c		\
+	geode_driver.c		\
+	geode_fourcc.h		\
+	geode.h			\
+	geode_msr.c		\
+	geode_pcirename.h	\
+	gx_accel.c		\
+	gx_cursor.c		\
+	gx_driver.c		\
+	gx_randr.c		\
+	gx_regacc.c		\
+	gx_rotate.c		\
+	gx_video.c		\
+	lx_cursor.c		\
+	lx_display.c		\
+	lx_driver.c		\
+	lx_exa.c		\
+	lx_memory.c		\
+	lx_output.c		\
+	lx_panel.c		\
+	lx_video.c		\
+	panel.c
 
 EXTRA_DIST = \
-        cim/cim_defs.h \
-        cim/cim_df.c \
-        cim/cim_filter.c \
-        cim/cim_gp.c \
-        cim/cim_init.c \
-        cim/cim_modes.c \
-        cim/cim_msr.c \
-        cim/cim_parm.h \
-        cim/cim_regs.h \
-        cim/cim_rtns.h \
-        cim/cim_version.h \
-        cim/cim_vg.c \
-        cim/cim_vip.c \
-        cim/cim_vop.c \
-        cim/doc/release.txt \
-  \
-        gfx/disp_gu1.c \
-        gfx/disp_gu2.c \
-        gfx/gfx_dcdr.c \
-        gfx/gfx_defs.h \
-        gfx/gfx_disp.c \
-        gfx/gfx_i2c.c \
-        gfx/gfx_init.c \
-        gfx/gfx_mode.h \
-        gfx/gfx_msr.c \
-        gfx/gfx_priv.h \
-        gfx/gfx_regs.h \
-        gfx/gfx_rndr.c \
-        gfx/gfx_rtns.h \
-        gfx/gfx_tv.c \
-        gfx/gfx_type.h \
-        gfx/gfx_vga.c \
-        gfx/gfx_vid.c \
-        gfx/gfx_vip.c \
-        gfx/history.h \
-        gfx/i2c_acc.c \
-        gfx/i2c_gpio.c \
-        gfx/init_gu1.c \
-        gfx/init_gu2.c \
-        gfx/msr_rdcl.c \
-        gfx/release.txt \
-        gfx/rndr_gu1.c \
-        gfx/rndr_gu2.c \
-        gfx/saa7114.c \
-        gfx/tv_1200.c \
-        gfx/tv_fs450.c \
-        gfx/tv_fs450.h \
-        gfx/vga_gu1.c \
-        gfx/vid_1200.c \
-        gfx/vid_5530.c \
-        gfx/vid_rdcl.c \
-        gfx/vip_1200.c \
-  \
-        panel/92xx.h \
-        panel/cen9211.c \
-        panel/cen9211.h \
-        panel/dora9211.c \
-        panel/dora9211.h \
-        panel/drac9210.c \
-        panel/drac9210.h \
-        panel/gx2_9211.c \
-        panel/gx2_9211.h \
-        panel/panel.c \
-        panel/panel.h \
-        panel/platform.c \
-        panel/pnl_bios.c \
-        panel/pnl_defs.h \
-        panel/pnl_init.c \
-        panel/readme.txt \
-  \
-        gx_vga.c \
+        cim/cim_defs.h		\
+        cim/cim_df.c		\
+        cim/cim_filter.c	\
+        cim/cim_gp.c		\
+        cim/cim_init.c		\
+        cim/cim_modes.c		\
+        cim/cim_msr.c		\
+        cim/cim_parm.h		\
+        cim/cim_regs.h		\
+        cim/cim_rtns.h		\
+        cim/cim_version.h	\
+        cim/cim_vg.c		\
+        cim/cim_vip.c		\
+        cim/cim_vop.c		\
+        cim/doc/release.txt	\
+				\
+        gfx/disp_gu1.c		\
+        gfx/disp_gu2.c		\
+        gfx/gfx_dcdr.c		\
+        gfx/gfx_defs.h		\
+        gfx/gfx_disp.c		\
+        gfx/gfx_i2c.c		\
+        gfx/gfx_init.c		\
+        gfx/gfx_mode.h		\
+        gfx/gfx_msr.c		\
+        gfx/gfx_priv.h		\
+        gfx/gfx_regs.h		\
+        gfx/gfx_rndr.c		\
+        gfx/gfx_rtns.h		\
+        gfx/gfx_tv.c		\
+        gfx/gfx_type.h		\
+        gfx/gfx_vga.c		\
+        gfx/gfx_vid.c		\
+        gfx/gfx_vip.c		\
+        gfx/history.h		\
+        gfx/i2c_acc.c		\
+        gfx/i2c_gpio.c		\
+        gfx/init_gu1.c		\
+        gfx/init_gu2.c		\
+        gfx/msr_rdcl.c		\
+        gfx/release.txt		\
+        gfx/rndr_gu1.c		\
+        gfx/rndr_gu2.c		\
+        gfx/saa7114.c		\
+        gfx/tv_1200.c		\
+        gfx/tv_fs450.c		\
+        gfx/tv_fs450.h		\
+        gfx/vga_gu1.c		\
+        gfx/vid_1200.c		\
+        gfx/vid_5530.c		\
+        gfx/vid_rdcl.c		\
+        gfx/vip_1200.c		\
+				\
+        panel/92xx.h		\
+        panel/cen9211.c		\
+        panel/cen9211.h		\
+        panel/dora9211.c	\
+        panel/dora9211.h	\
+        panel/drac9210.c	\
+        panel/drac9210.h	\
+        panel/gx2_9211.c	\
+        panel/gx2_9211.h	\
+        panel/panel.c		\
+        panel/panel.h		\
+        panel/platform.c	\
+        panel/pnl_bios.c	\
+        panel/pnl_defs.h	\
+        panel/pnl_init.c	\
+        panel/readme.txt	\
+				\
+        gx_vga.c		\
         lx_vga.c
 
 all: all-am

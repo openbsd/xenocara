@@ -300,7 +300,7 @@ LXPreInit(ScrnInfoPtr pScrni, int flags)
 	return TRUE;
     }
 
-    pGeode = pScrni->driverPrivate = xnfcalloc(sizeof(GeodeRec), 1);
+    pGeode = pScrni->driverPrivate = xnfcalloc(1, sizeof(GeodeRec));
 
     if (pGeode == NULL)
 	return FALSE;
@@ -312,8 +312,10 @@ LXPreInit(ScrnInfoPtr pScrni, int flags)
     if (pGeode->useVGA) {
 	if (!xf86LoadSubModule(pScrni, "vgahw") || !vgaHWGetHWRec(pScrni))
 	    pGeode->useVGA = FALSE;
+	else
+	    vgaHWSetStdFuncs(VGAHWPTR(pScrni));
 
-	pGeode->vesa = calloc(sizeof(VESARec), 1);
+	pGeode->vesa = calloc(1, sizeof(VESARec));
     }
 
     cim_rdmsr = LXReadMSR;

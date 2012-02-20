@@ -1,3 +1,544 @@
+commit e420d7956afceeb41f20179cedc28d46aebdb29f
+Author: Martin-Éric Racine <martin-eric.racine@iki.fi>
+Date:   Mon Dec 26 22:13:22 2011 +0200
+
+    Geode 2.11.13
+    
+    This release mainly features a complete overhaul of the building scripts plus
+    a cleanup of deprecated macros. The key benefit is that this Geode driver can
+    finally build on FreeBSD and on other platforms not offering V4L2 support and
+    that it can also build on a 64-bit host using its 32-bit personality.
+    
+    Support for the Video Input Port (VIP) feature of the Geode LX found in 'ztv'
+    is now documented and the source code saw the removal of deprecated Linux 2.4
+    backward compatibility code. Compiling is skipped on platforms without V4L2.
+    
+    Configuration for laptops featuring WXGA resolutions is finally documented.
+    
+    Setting the GEODE_TRACE_FALL macro now enables composite operation tracing on
+    this driver. This can be used to profile the performance during development.
+    
+    Fixes to keep this driver compilable on recent X servers are also included.
+    
+    VALIDATION PLATFORMS
+    * Debian/stable (X server 1.7.7) on Artec DBE61 and Hercules EC-800.
+    * Ubuntu/Precise (X server 1.10.4) on FIC ION603A.
+    
+    Signed-off-by: Martin-Éric Racine <martin-eric.racine@iki.fi>
+
+commit 7e7fe26882dada5878d5450e64c043ba7b0737fd
+Author: Martin-Éric Racine <martin-eric.racine@iki.fi>
+Date:   Sun Dec 25 21:43:40 2011 +0200
+
+    Fix lx_display.c:360:9: warning: ISO C90 forbids mixed declarations and code
+
+commit 515d232162c8ea2c5ecabf12b88b0bf4eb5102e7
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Mon Dec 19 17:47:38 2011 -0500
+
+    Fix for new vgaHW ABI
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit 78052e0d3e28c7e6e08666d9ed2bcc64f5e93540
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Nov 29 12:02:32 2011 -0500
+
+    DCONDPMSSet: handle error return code on "write" to avoid a warning
+    
+    The author of the write() system call has deemed important for the caller
+    to check the return code. If not, the compiler issues a warning.
+    
+    The patch handles a bad return code from write() just in the same way
+    as the code does for the open() calls.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit db7155395e794eb276f853c7642f62727e29a0b9
+Author: Martin-Éric Racine <martin-eric.racine@iki.fi>
+Date:   Tue Nov 29 23:49:06 2011 +0200
+
+    README: added example of ZTV loading to EC800 xorg.conf sample.
+
+commit d072870e20c360fb0ec1baefc6abcb11a6d4687c
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Nov 29 14:20:17 2011 -0500
+
+    README: do not suggest compiling with xserver older than 1.3
+    
+    This was done at one point in time by some drivers (3 that I remember)
+    but the workarounds all have been removed since. The tarballs created
+    by those drivers picked-up whatever code happened to be on the
+    developer disk and was not in git. The code was not maintained
+    and in fact did not work thereafter.
+    
+    http://cgit.freedesktop.org/xorg/driver/xf86-video-intel/commit/configure.ac
+    ?id=84f69081abaeef8b05cafb64d3102eb2abdf9a8e
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 2890f6c431a6de0726c6c53a800074f95d71294e
+Author: Martin-Éric Racine <martin-eric.racine@iki.fi>
+Date:   Thu Nov 24 21:47:35 2011 +0200
+
+    README: added info about how to calculate arbitrary laptop modelines.
+
+commit e520739e9ce18a48df7d873de16022aec21d7d3c
+Author: Martin-Éric Racine <martin-eric.racine@iki.fi>
+Date:   Mon Nov 21 22:47:23 2011 +0200
+
+    README: whitespace cleanup.
+
+commit edb6a6380e0db6be06fe89e7d73dedbca945550f
+Author: Martin-Éric Racine <martin-eric.racine@iki.fi>
+Date:   Mon Nov 21 22:42:41 2011 +0200
+
+    README: harmonize x.org versus freedesktop.org as much as possible.
+
+commit 308430e8898e29ae111bf4f552f4d7554b96fda2
+Author: Martin-Éric Racine <martin-eric.racine@iki.fi>
+Date:   Mon Nov 21 22:34:26 2011 +0200
+
+    README: add info about the Geode mailing list and Bugzilla component.
+
+commit 1108f9cfac5b78fc9660174aa4df592ecd87d287
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Nov 14 14:52:21 2011 -0500
+
+    Remove unrequired large file descriptor partial support
+    
+    The LFS "transitional extension" API is deprecated and is not available on FreeBSD.
+    Large file support (64 bit) is not required on the geode 32 bit only architecture.
+    
+    There are some hints that the LFS transional extension API were not used
+    correclty. The variable holding the value is held in an unsigned long rather
+    than in off_t. The msr open call did not use the O_LARGEFILE flag and did not
+    check for EOVERFLOW.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 0daee9eb57c826da120edf35c50e8947a43f19b2
+Author: Martin-Éric Racine <martin-eric.racine@iki.fi>
+Date:   Mon Nov 21 10:54:10 2011 +0200
+
+    README: a little bit of proofreading wouldn't hurt now, would it?
+
+commit d1c40f2d5baa2d964499412c7f1c443c9ee63626
+Author: Martin-Éric Racine <martin-eric.racine@iki.fi>
+Date:   Mon Nov 21 10:24:29 2011 +0200
+
+    README: added a sample xorg.conf for 1024x600 and 800x480 laptops.
+
+commit 8fc372b4e239005dda60f45737468f1e82571457
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Nov 20 15:58:03 2011 -0500
+
+    config: fix Autoconf warnings and improve comments
+    
+    These changes have been done in all other video drivers.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 725d6ddc0b0888af9b033ccb6ce88c9800a791f9
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Nov 20 15:35:29 2011 -0500
+
+    config: The compiler version to use is now set in XORG_DEFAULT_OPTIONS
+    
+    In this case "now" means a couple of years ago. All of Xorg is compiled
+    with AC_PROG_CC_C99. It shows up in config.log as CC='gcc -std=gnu99'.
+    
+    The removed statement was resetting the compiler to C89 as it comes
+    after XORG_DEFAULT_OPTIONS.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 40aae069bb15cda123f5e08b757ca93166e62db8
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Nov 20 15:24:00 2011 -0500
+
+    config: remove a few dead/obsolete lines of code
+    
+    HAVE_XEXTPROTO_71 not used in Makefile.
+    AC_HEADER_STD is very obsolete.
+    AC_SUBST([XORG_CFLAGS]) is redundant.
+    DRIVER_NAME is correctly no longer used.
+    AC_SUBST([moduledir]) has just been moved up.
+    
+    Any erroneously removed statements above would result
+    in a configuration failure.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit fa0e88bfe00baa648ab3b1184b56f7dc5536aa21
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sat Nov 19 15:33:33 2011 -0500
+
+    Move back ztv with geode driver
+    
+    Now we have a clean separation between CPP flags and C Flags
+    Only the C Flags apply to both geode and ztv driver, however
+    it is not worth doing a per target compilation.
+    
+    Should some flags become mutually exclusive and if we want to have
+    both target in the same makefile, add the incompatible flag
+    on the appropriate target, example:
+    
+    geode_drv_la_CFLAGS = $(AM_CFLAGS) -newCFlag
+    and/or
+    geode_drv_la_CPPFLAGS = $(AM_CPPFLAGS) -newCPPFlag
+    
+    Note that both AM_CFLAGS and AM_CPPFLAGS are picked-up by both
+    geode and ztv driver target.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 03529b7b35fa8d7b5bac277d6abe1caf0557301a
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sat Nov 19 13:22:32 2011 -0500
+
+    Separate compiler from pre-processor options
+    
+    Clean-up what goes in AM_CFLAGS and AM_CPPFLAGS
+    Use more descriptive names such that comments are not needed.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit ac99bf2c5cdf86f039a290397614ca042a56c8db
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Fri Nov 18 16:36:12 2011 -0500
+
+    Detect 32bit support on 64bit OS and compile with -m32 if found
+    
+    For gcc compiler only at the moment.
+    The configuration reports if support is found or not, e.g.:
+    
+       checking if gcc supports the -m32 Intel/AMD option... yes
+    
+    The configuration C test relies on #include unistd.h which includes
+    features.h which includes gnu/stubs.h which includes gnu/stubs-32.h
+    which is missing on 64 bit system without the 32 bit library support.
+    
+    Tested on x86_64 AMD64 CPU with/without libc6-dev-i386 which provides
+    32 bit support. Remains to be tested on Geode and FreeBSD 32/64 bit.
+    
+    The configuration does not attempt to decide if building should proceed
+    or be aborted. If no 32 bit support then the build will die in the
+    assembly code as it always did before.
+    
+    The variable M32_CFLAGS provides the flag for the makefiles.
+    The variable names and organization is subject to change.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 3021c6df08004ec9ed846fec4000d798148eeb0e
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Nov 17 19:47:10 2011 -0500
+
+    geode source: streamline whitespace and sort alphabetically
+    
+    No functional changes.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit c1993fa8e5bf07bbd43b09ae2ec27c287725d81e
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Nov 17 19:21:01 2011 -0500
+
+    Remove -I linux_v26 as the directory does not exist
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 4eaba919fccc7618aee0b2f58294e460640bedb9
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Nov 17 12:32:55 2011 -0500
+
+    Remove unused and misleading I386ARCH configuration code
+    
+    The AM_CONDITIONAL I386ARCH is not used.
+    
+    The AC_CHECK_DECLS is misleading as it suggests there could be some i*86
+    system with a 64 bit architecture which is incorrect.
+    It also provides false results on 64 bit computer.
+    
+    The generated HAVE_DECL_XXX are not used anyway.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 65275e62415ded849f9986a36ad55ca3c96dc331
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Nov 17 12:20:13 2011 -0500
+
+    Remove -DPNL_SUP for the ztv driver
+    
+    Only the gx driver provide such a panel.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 60c3f5f7e9482d29f043504860319aeead7b9a69
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Nov 17 09:32:24 2011 -0500
+
+    Remove duplicate warning variable and werror option
+    
+    Use already existing:
+      --enable-strict-compilation
+                              Enable all warnings from compiler and make them
+                              errors (default: disabled)
+    which, byt the way was broken as it was not implemented in geode.
+    
+    Use already existing CWARNINGFLAGS variable, so there is no need
+    to define GCC_WARNINGS.
+    
+    Both come from util-macros version 1.4 or later.
+    http://cgit.freedesktop.org/xorg/util/macros/tree/xorg-macros.m4.in
+    ?id=03b04a6b5d61aafbd2705f7d29e58e0c92553a4a
+    
+    If you configure with a later version of util-macros you may see new
+    warnings appear as additional flags have been added over the years.
+    
+    You get better support for platforms/compiler differences.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 5f228208cc65348e35aa24b6cddae1df19b67fa5
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Nov 16 20:14:08 2011 -0500
+
+    Remove unrequired .s assembly files automake support
+    
+    Only the suffixes .s, .S, and .sx are recognized by automake
+    as being files containing assembly code.
+    
+    http://www.gnu.org/software/automake/manual/automake.html#Assembly-Support
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit fc9957114875edb94cba89a4f4f0e023f2c98bfb
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Nov 16 19:47:08 2011 -0500
+
+    Remove ztv LINUX_2_6 switch and dead code
+    
+    The makefile defines LINUX_2_6 so the "else" code is dead.
+    The port from kernel 2.4 is complete.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 100576b3a0a38da7a957969745b2cf087929c478
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Nov 16 19:15:17 2011 -0500
+
+    Remove broken duplicate visibility configure option
+    
+    This was added by commit f762b456 in 2007 and has been since implemented
+    in the server which returns it in XORG_CFLAGS
+    
+    pkg-config --cflags xorg-server
+    
+    The server also takes care of platforms and compilers being used.
+    Currently the visibility is set twice and even if you disable it,
+    it is still passed through XORG_CFLAGS.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 970d142abe2fa09b294dd2bfa860fe3bbcaa8c68
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Nov 16 17:01:48 2011 -0500
+
+    Remove unused LINUX_2_6 macro from geode driver makefile
+    
+    It is used in ztv but not geode driver.
+    In the wake of more platforms other than linux, might as well
+    remove any source of confusion.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 65625eac28af7cf3164e5560478cd18aaa0ac33e
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Nov 16 15:20:07 2011 -0500
+
+    Remove HAVE__GX HAVE_LX and OPT_ACCEL from ztv build
+    
+    These macros are not used in z4l.c.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit dd8eadc53732ed2929e38c565240147165767625
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Nov 16 15:11:18 2011 -0500
+
+    Remove no longer used AMD_V4L2_VIDEO from makefiles
+    
+    This macro has been removed every where from source code.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit fc19e7d2bd256663b4a731661a35abcf435eaf18
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Nov 16 14:07:10 2011 -0500
+
+    Add a configure option to enable/disable building the ztv driver
+    
+    Even when V4L2 is available there are always reasons why distros
+    may not want to build the driver.
+    
+    This patch uses a common idiom in xorg.
+    When no configure option is specified ztv is built iff v4l2 is detected (auto).
+    When user issues --disable-ztv, the ztv driver is not built (no)
+    When user issues --enable-ztv, the ztv driver is built (yes) if v4l2 is detected
+    but the configuration fails if v4l2 is missing. Distros do not want silent
+    failures when a feature is explicitly requested but cannot be built.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 23b85b3fcd1439561f0693755a31f7fded50741b
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Nov 15 19:36:17 2011 -0500
+
+    Add conditional build for ztv
+    
+    Detect the presence of Video4Linux V2 and do not build if missing.
+    
+    The geode driver is no longer Linux only.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit e4b771572d7b0797a794340ab8fb8b1db91a5eb1
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Nov 15 18:02:34 2011 -0500
+
+    Move ztv driver to it's own directory
+    
+    The convention is to have the video driver (geode) in the src subdir
+    and any other targets (utils, apps, other drivers) in their own
+    directory. It makes it much simpler to right a correct makefile
+    and to set conditional compile.
+    
+    This highlighted a few things to fix. For now, the directory includes
+    have not been copied as they are required. The AM_CCASFLAGS is not required
+    either as there is no assembler.
+    
+    Other than that, the gcc command issued has no differences. Other unrequired
+    defines could be removed later.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 2b3767b9e424ce371c342c9c9a2f2ae1f61df1fd
+Author: Martin-Éric Racine <martin-eric.racine@iki.fi>
+Date:   Sat Nov 19 02:29:20 2011 +0200
+
+    README: emphasize that "ztv" is the name of that VIP driver.
+
+commit aa7cd847d821ed639f7d18a5114a13c324f6f227
+Author: Martin-Éric Racine <martin-eric.racine@iki.fi>
+Date:   Sat Nov 19 02:17:22 2011 +0200
+
+    README: properly call the LX's video input port feature "VIP"
+
+commit 9bbc7bc49f1d04d41d7e1750b81cfce45e4ddf42
+Author: Martin-Éric Racine <martin-eric.racine@iki.fi>
+Date:   Thu Nov 17 02:15:27 2011 +0200
+
+    Added info about 'ztv' a.k.a. the V4L2 driver for LX in README.
+
+commit 9e8a766cfb458cdc791f4c4a932fe51638a8bc73
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Nov 15 16:55:15 2011 -0500
+
+    Add gx_randr.c Copyright statement to COPYING
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit b724ff4045994fff721db4ab67f8aa418cc4f707
+Author: Martin-Éric Racine <martin-eric.racine@iki.fi>
+Date:   Mon Nov 14 08:44:32 2011 +0200
+
+    Revert "Only enable z4l.c on Linux" until we have a consensus.
+
+commit 587d4e40e58e70649968261f73b7fb2078349f4f
+Author: Martin-Éric Racine <martin-eric.racine@iki.fi>
+Date:   Sun Nov 13 15:48:29 2011 +0200
+
+    Revised BSD check in geode_msr.c
+
+commit ee52d73fd2c68740b1ff3cdb5b1bf2a6d941090d
+Author: Martin-Éric Racine <martin-eric.racine@iki.fi>
+Date:   Sun Nov 13 03:40:01 2011 +0200
+
+    Move the z4l.c test to src/Makefile.am where it should be.
+
+commit d193a42b3596ceb9dfaa66af71edd1f15ecc75bd
+Author: Martin-Éric Racine <martin-eric.racine@iki.fi>
+Date:   Sun Nov 13 03:23:21 2011 +0200
+
+    Added two #ifdef to enable building on FreeBSD.
+
+commit ee6296ecb8bf5c9b5e7fa3eade5fa45245b66d62
+Author: Martin-Éric Racine <martin-eric.racine@iki.fi>
+Date:   Sun Nov 13 03:14:51 2011 +0200
+
+    Whitespace cleanup.
+
+commit f6745f544feeb7443405f4b87043be9b721236b5
+Author: Martin-Éric Racine <martin-eric.racine@iki.fi>
+Date:   Sun Nov 13 03:10:01 2011 +0200
+
+    Only enable z4l.c on Linux.
+
+commit f15f4da59a80533f3864aa6c54b4471e272d5c80
+Author: Martin-Éric Racine <martin-eric.racine@iki.fi>
+Date:   Wed Apr 6 22:13:09 2011 +0300
+
+    Added info about the Geode developers' IRC channel in README.
+
+commit 3c1375afdb9e1be524adae98c3713397d50e3a3e
+Author: Martin-Éric Racine <martin-eric.racine@iki.fi>
+Date:   Sun Mar 13 16:17:06 2011 +0200
+
+    Proofread and restructured the README for clarity.
+
+commit 9d0986232cb417f41aee934b655cc0bbbae5f99b
+Author: Martin-Éric Racine <martin-eric.racine@iki.fi>
+Date:   Sun Mar 13 15:21:31 2011 +0200
+
+    Added README section about supported resolutions.
+    
+    Inverted two FAQ sections so as to bring the answer about WXGA
+    right below this new supported resolutions section.
+
+commit 8eab313cdf0cdc53ea936c7a9dd716d1000e1c56
+Author: Martin-Éric Racine <martin-eric.racine@iki.fi>
+Date:   Sun Mar 13 15:10:28 2011 +0200
+
+    Removed README note about minimal version.
+    
+    b9a5a86a402832fe699e43b3030932b50ae821a0 restored code compatibility
+    with X server 1.4.
+
+commit c465e19ff53db4be42dabcfafde510f79508c531
+Author: Priit Laes <plaes@plaes.org>
+Date:   Sun Mar 13 03:40:53 2011 +0200
+
+    Add optional composite operation fallback tracing
+    
+    Changing GEODE_TRACE_FALL to 1 allows to easily find the unaccelerated
+    code paths in a given use case while working on driver performance.
+    
+    Signed-off-by: Priit Laes <plaes@plaes.org>
+    Signed-off-by: Mart Raudsepp <leio@gentoo.org>
+
+commit 4fd7500bb16b80ea9aee8dc61c5b11e9deb8281f
+Author: Mart Raudsepp <leio@gentoo.org>
+Date:   Sat Mar 12 22:17:19 2011 +0200
+
+    Fix parameter ordering for calloc/xnfcalloc calls
+    
+    First argument is the number of elements and second the size of one
+    element, not vice-versa.
+    
+    Signed-off-by: Mart Raudsepp <leio@gentoo.org>
+
 commit 1a23956758d17a8b4c1d8acebf8acc94358c37b9
 Author: Martin-Éric Racine <martin-eric.racine@iki.fi>
 Date:   Sun Feb 13 21:52:55 2011 +0200

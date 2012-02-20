@@ -101,8 +101,13 @@ DCONDPMSSet(ScrnInfoPtr pScrni, int mode)
 	break;
     }
 
-    write(fd, value, sizeof(value));
+    ret = write(fd, value, sizeof(value));
     close(fd);
+
+    if (ret < 0) {
+	failed = 1;
+	return 0;
+    }
 
     return 1;
 }
