@@ -47,7 +47,7 @@
 #include "servermd.h"
 #ifdef XFreeXDGA
 #define _XF86DGA_SERVER_
-#include <X11/extensions/xf86dgastr.h>
+#include <X11/extensions/xf86dgaproto.h>
 #endif
 
 /* Mandatory functions */
@@ -84,6 +84,9 @@ static Bool	dummyDriverFunc(ScrnInfoPtr pScrn, xorgDriverFuncOp op,
 #define DUMMY_MAJOR_VERSION PACKAGE_VERSION_MAJOR
 #define DUMMY_MINOR_VERSION PACKAGE_VERSION_MINOR
 #define DUMMY_PATCHLEVEL PACKAGE_VERSION_PATCHLEVEL
+
+#define DUMMY_MAX_WIDTH 32767
+#define DUMMY_MAX_HEIGHT 32767
 
 /*
  * This is intentionally screen-independent.  It indicates the binding
@@ -199,7 +202,7 @@ DUMMYFreeRec(ScrnInfoPtr pScrn)
 {
     if (pScrn->driverPrivate == NULL)
 	return;
-    xfree(pScrn->driverPrivate);
+    free(pScrn->driverPrivate);
     pScrn->driverPrivate = NULL;
 }
 
@@ -354,7 +357,7 @@ DUMMYPreInit(ScrnInfoPtr pScrn, int flags)
 
     xf86CollectOptions(pScrn, device->options);
     /* Process the options */
-    if (!(dPtr->Options = xalloc(sizeof(DUMMYOptions))))
+    if (!(dPtr->Options = malloc(sizeof(DUMMYOptions))))
 	return FALSE;
     memcpy(dPtr->Options, DUMMYOptions, sizeof(DUMMYOptions));
 
@@ -402,8 +405,9 @@ DUMMYPreInit(ScrnInfoPtr pScrn, int flags)
 	int apertureSize = (pScrn->videoRam * 1024);
 	i = xf86ValidateModes(pScrn, pScrn->monitor->Modes,
 			      pScrn->display->modes, clockRanges,
-			      NULL, 256, 2048,(8 * pScrn->bitsPerPixel),
-			      128, 2048, pScrn->display->virtualX,
+			      NULL, 256, DUMMY_MAX_WIDTH,
+			      (8 * pScrn->bitsPerPixel),
+			      128, DUMMY_MAX_HEIGHT, pScrn->display->virtualX,
 			      pScrn->display->virtualY, apertureSize,
 			      LOOKUP_BEST_REFRESH);
 
@@ -531,7 +535,7 @@ DUMMYScreenInit(int scrnIndex, ScreenPtr pScreen, int argc, char **argv)
     DUMMYScrn = pScrn;
 
 
-    if (!(dPtr->FBBase = xalloc(pScrn->videoRam * 1024)))
+    if (!(dPtr->FBBase = malloc(pScrn->videoRam * 1024)))
 	return FALSE;
     
     /*
@@ -588,7 +592,9 @@ DUMMYScreenInit(int scrnIndex, ScreenPtr pScreen, int argc, char **argv)
 
     xf86SetBlackWhitePixels(pScreen);
 
+#ifdef XFreeXDGA
     DUMMYDGAInit(pScreen);
+#endif
     
     if (dPtr->swCursor)
 	xf86DrvMsg(scrnIndex, X_CONFIG, "Using Software Cursor.\n");
@@ -701,7 +707,7 @@ DUMMYCloseScreen(int scrnIndex, ScreenPtr pScreen)
 
     if(pScrn->vtSema){
  	dummyRestore(pScrn, TRUE);
-	xfree(dPtr->FBBase);
+	free(dPtr->FBBase);
     }
 
     if (dPtr->CursorInfo)

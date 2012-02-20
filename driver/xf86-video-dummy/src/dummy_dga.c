@@ -4,8 +4,6 @@
 
 #include "xf86.h"
 #include "xf86_OSproc.h"
-#include "xf86Pci.h"
-#include "xf86PciInfo.h"
 #include "dgaproc.h"
 #include "dummy.h"
 
@@ -51,10 +49,10 @@ DUMMYDGAInit(ScreenPtr pScreen)
 
    while(pMode) {
 
-	newmodes = xrealloc(modes, (num + 1) * sizeof(DGAModeRec));
+	newmodes = realloc(modes, (num + 1) * sizeof(DGAModeRec));
 
 	if(!newmodes) {
-	   xfree(modes);
+	   free(modes);
 	   return FALSE;
 	}
 	modes = newmodes;

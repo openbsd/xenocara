@@ -1,3 +1,141 @@
+commit bccf37f052748386902112b770b89d81bddfaeb8
+Author: Cyril Brulebois <kibi@debian.org>
+Date:   Sun Jan 1 07:15:36 2012 +0100
+
+    dummy 0.3.5
+    
+    Signed-off-by: Cyril Brulebois <kibi@debian.org>
+
+commit dd9be3b21842aacdee5501cd2e0bfafb11b5ec08
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Wed Sep 14 14:50:36 2011 -0500
+
+    Add a configure option to disable dga
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+    Reviewed-by: Jamey Sharp <jamey@minilop.net>
+    Signed-off-by: Jamey Sharp <jamey@minilop.net>
+
+commit dd598ca433d2386687f9543457e4c6ffdb16d7c4
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Wed Sep 14 14:32:02 2011 -0500
+
+    Use malloc/free instead of deprecated X versions
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+    Reviewed-by: Jamey Sharp <jamey@minilop.net>
+    Signed-off-by: Jamey Sharp <jamey@minilop.net>
+
+commit d70dde48087a0d5c3930860ab97585d39de7b57e
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Wed Sep 14 14:30:55 2011 -0500
+
+    Dummy drivers don't need PCI.
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+    Reviewed-by: Jamey Sharp <jamey@minilop.net>
+    Signed-off-by: Jamey Sharp <jamey@minilop.net>
+
+commit bdc59411136b16ca3447336f22e95010bf709a53
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Wed May 25 06:05:29 2011 -0400
+
+    Port away from xalloc/xfree
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit 7f57ed6be7c561b83da44a6ecb0562e8f562e48e
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Wed May 25 06:04:39 2011 -0400
+
+    Fix DGA includes
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit fb0888f90d5d1c10d69ec2add0a66e88c94f5d5c
+Author: Antoine Martin <antoine@devloop.org.uk>
+Date:   Wed May 25 06:03:10 2011 -0400
+
+    Increase the maximum framebuffer size to 32767x32767
+    
+    Reviewed-by: Adam Jackson <ajax@redhat.com>
+    Signed-off-by: Antoine Martin <antoine@devloop.org.uk>
+    Tested-by: Antoine Martin <antoine@devloop.org.uk>
+
+commit f8dc281042b328c2fad4df38f8fb3f967a025c6f
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jul 21 16:49:04 2010 -0400
+
+    config: add comments for main statements
+
+commit ca77f09bd68587e7579f139660c8cef81662fdd0
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jul 21 16:07:00 2010 -0400
+
+    config: replace deprecated use of AC_OUTPUT with AC_CONFIG_FILES
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 945a1619300291ffe08c82f19bea6bb2e1da8f86
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jul 21 14:05:22 2010 -0400
+
+    config: replace deprecated AM_CONFIG_HEADER with AC_CONFIG_HEADERS
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 8fbbafb7ed5988a63d16d3d9fad17dd336a32b82
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jul 21 09:27:42 2010 -0400
+
+    config: complete AC_INIT m4 quoting
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 93898c6d620cb005bca60ed20b89faf9a3b8434e
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Jul 20 20:24:42 2010 -0400
+
+    config: remove unrequired AC_HEADER_STDC
+    
+    Autoconf says:
+    "This macro is obsolescent, as current systems have conforming
+    header files. New programs need not use this macro".
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit c26603e9c0ab3cb04bcac5a370c9b5de9fe0d1d6
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Jul 20 19:41:30 2010 -0400
+
+    config: remove AC_PROG_CC as it overrides AC_PROG_C_C99
+    
+    XORG_STRICT_OPTION from XORG_DEFAULT_OPTIONS calls
+    AC_PROG_C_C99. This sets gcc with -std=gnu99.
+    If AC_PROG_CC macro is called afterwards, it resets CC to gcc.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 839b7420661db5e1a9e6cffe97308a34f3196e58
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Jul 20 18:45:18 2010 -0400
+
+    config: update AC_PREREQ statement to 2.60
+    
+    Unrelated to the previous patches, the new value simply reflects
+    the reality that the minimum level for autoconf to configure
+    all x.org modules is 2.60 dated June 2006.
+    
+    ftp://ftp.gnu.org/gnu/autoconf/autoconf-2.60.tar.gz
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 51642de730f264fdfaf1c78f68a767a9347e1520
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Mon Jul 5 12:05:40 2010 +1000
+
+    dummy 0.3.4
+
 commit 77ae177fd77e90a6eaeebde9df88911256264329
 Author: Jamey Sharp <jamey@minilop.net>
 Date:   Fri Jun 4 16:09:34 2010 -0700
