@@ -1,3 +1,133 @@
+commit 96b24e2c353bb4c9b7a0e2fff4f13d015fdb25b9
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Feb 21 20:51:23 2012 -0800
+
+    xev 1.2.0
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 42299b08106445e938e47392da5b3c26f650413a
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Feb 15 15:30:59 2012 -0800
+
+    Rename "mask" variable to "rr_mask" in randr setup code.
+    
+    Fixes gcc warning:
+    xev.c: In function `main':
+    xev.c:1129: warning: declaration of 'mask' shadows a previous local
+    xev.c:923: warning: shadowed declaration is here
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 5006597a1e440bde27b652bb1754f8ad8e4f39f8
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Sep 28 21:43:40 2011 -0700
+
+    Remove checks for NULL before XFree
+    
+    Replaced if (.*) \(XFree (.*);\)  with  \1
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 2770432c982373624a34b61f8abae100ece19886
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Sep 28 21:39:20 2011 -0700
+
+    Remove render from PKG_CHECK_MODULES list
+    
+    No direct calls to libXrender functions or #includes of Xrender headers
+    
+    Fixes Solaris ld -z guidance warning:
+    ld: guidance: removal of unused dependency recommended: libXrender.so.1
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit fafbd548d2177d0e91b69fa5bf705bfff3923972
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Sep 28 21:38:49 2011 -0700
+
+    Add const attributes to fix gcc -Wwrite-strings warnings
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit a7882c4ab93100954e9e9a20f58e372bf6da612b
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Sep 28 21:34:17 2011 -0700
+
+    Strip trailing whitespace
+    
+    Performed with: find * -type f | xargs perl -i -p -e 's{[ \t]+$}{}'
+    git diff -w & git diff -b show no diffs from this change
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit a808c25d8d08b6499ae3dd63dad416a75d172cc2
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Jun 9 20:21:51 2011 -0700
+
+    config: Add missing AC_CONFIG_SRCDIR
+    
+    Regroup AC statements under the Autoconf initialization section.
+    Regroup AM statements under the Automake initialization section.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit e13d96502d6df614c35584c2e9919f4a508de34f
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Jun 9 20:19:49 2011 -0700
+
+    Replace local checks for gcc with _X_NORETURN from xproto 7.0.17
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 7965bc6efbf5db244593735bbb98f0ffa759cd1a
+Author: Michael Thayer <michael.thayer@oracle.com>
+Date:   Thu Mar 3 13:35:15 2011 -0800
+
+    Show RandR events
+    
+    Signed-off-by: Michael Thayer <michael.thayer@oracle.com>
+    Signed-off-by: Aaron Plattner <aplattner@nvidia.com>
+    Reviewed-by: Aaron Plattner <aplattner@nvidia.com>
+    Tested-by: Aaron Plattner <aplattner@nvidia.com>
+
+commit 2e7b697e9b5719056430cead8f4f155db141629a
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jan 19 10:06:56 2011 -0500
+
+    config: move man pages into their own directory
+    
+    Use services provided by XORG_MANPAGE_SECTIONS.
+    Use standard Makefile for man pages.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 5f862ac7239618dcccd793aa8a13490f3f67ff50
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Jan 13 17:15:36 2011 -0500
+
+    man: replace hard coded man page section with substitution strings
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 53c871b0439997c0a73ecf8f1af892efa955daa7
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Jan 13 11:15:47 2011 -0500
+
+    man: remove trailing spaces and tabs
+    
+    Using s/[ \t]*$//
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit e74ac8c79c617faa5d28b6d40ffd58c7aa1b4919
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jan 12 16:28:02 2011 -0500
+
+    config: replace deprecated AM_CONFIG_HEADER with AC_CONFIG_HEADERS
+    
+    This silences an Autoconf warning
+
 commit 01e2993e2563285ee22f18accecb5d65009a49a1
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Sat Oct 30 09:03:09 2010 -0700

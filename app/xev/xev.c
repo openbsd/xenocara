@@ -40,6 +40,7 @@ from the X Consortium.
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 #include <X11/Xproto.h>
+#include <X11/extensions/Xrandr.h>
 
 #define INNER_WINDOW_WIDTH 50
 #define INNER_WINDOW_HEIGHT 50
@@ -54,7 +55,7 @@ from the X Consortium.
 #define OUTER_WINDOW_DEF_HEIGHT (OUTER_WINDOW_MIN_HEIGHT + 100)
 #define OUTER_WINDOW_DEF_X 100
 #define OUTER_WINDOW_DEF_Y 100
-				
+
 
 typedef unsigned long Pixel;
 
@@ -71,8 +72,13 @@ XIC xic = NULL;
 Atom wm_delete_window;
 Atom wm_protocols;
 
+Bool have_rr;
+int rr_event_base, rr_error_base;
+
+static void usage (void) _X_NORETURN;
+
 static void
-prologue (XEvent *eventp, char *event_name)
+prologue (XEvent *eventp, const char *event_name)
 {
     XAnyEvent *e = (XAnyEvent *) eventp;
 
@@ -97,7 +103,7 @@ do_KeyPress (XEvent *eventp)
     KeySym ks;
     KeyCode kc = 0;
     Bool kc_set = False;
-    char *ksname;
+    const char *ksname;
     int nbytes, nmbbytes = 0;
     char str[256+1];
     static char *buf = NULL;
@@ -130,7 +136,7 @@ do_KeyPress (XEvent *eventp)
 	kc = XKeysymToKeycode(dpy, ks);
 	kc_set = True;
     }
-	
+
     printf ("    root 0x%lx, subw 0x%lx, time %lu, (%d,%d), root:(%d,%d),\n",
 	    e->root, e->subwindow, e->time, e->x, e->y, e->x_root, e->y_root);
     printf ("    state 0x%x, keycode %u (keysym 0x%lx, %s), same_screen %s,\n",
@@ -160,7 +166,7 @@ do_KeyPress (XEvent *eventp)
         }
     }
 
-    printf ("    XFilterEvent returns: %s\n", 
+    printf ("    XFilterEvent returns: %s\n",
 	    XFilterEvent (eventp, e->window) ? "True" : "False");
 }
 
@@ -202,7 +208,7 @@ static void
 do_EnterNotify (XEvent *eventp)
 {
     XCrossingEvent *e = (XCrossingEvent *) eventp;
-    char *mode, *detail;
+    const char *mode, *detail;
     char dmode[10], ddetail[10];
 
     switch (e->mode) {
@@ -242,7 +248,7 @@ static void
 do_FocusIn (XEvent *eventp)
 {
     XFocusChangeEvent *e = (XFocusChangeEvent *) eventp;
-    char *mode, *detail;
+    const char *mode, *detail;
     char dmode[10], ddetail[10];
 
     switch (e->mode) {
@@ -301,7 +307,7 @@ static void
 do_GraphicsExpose (XEvent *eventp)
 {
     XGraphicsExposeEvent *e = (XGraphicsExposeEvent *) eventp;
-    char *m;
+    const char *m;
     char mdummy[10];
 
     switch (e->major_code) {
@@ -319,7 +325,7 @@ static void
 do_NoExpose (XEvent *eventp)
 {
     XNoExposeEvent *e = (XNoExposeEvent *) eventp;
-    char *m;
+    const char *m;
     char mdummy[10];
 
     switch (e->major_code) {
@@ -336,7 +342,7 @@ static void
 do_VisibilityNotify (XEvent *eventp)
 {
     XVisibilityEvent *e = (XVisibilityEvent *) eventp;
-    char *v;
+    const char *v;
     char vdummy[10];
 
     switch (e->state) {
@@ -401,7 +407,7 @@ do_ReparentNotify (XEvent *eventp)
 
     printf ("    event 0x%lx, window 0x%lx, parent 0x%lx,\n",
 	    e->event, e->window, e->parent);
-    printf ("    (%d,%d), override %s\n", e->x, e->y, 
+    printf ("    (%d,%d), override %s\n", e->x, e->y,
 	    e->override_redirect ? Yes : No);
 }
 
@@ -420,7 +426,7 @@ static void
 do_ConfigureRequest (XEvent *eventp)
 {
     XConfigureRequestEvent *e = (XConfigureRequestEvent *) eventp;
-    char *detail;
+    const char *detail;
     char ddummy[10];
 
     switch (e->detail) {
@@ -459,7 +465,7 @@ static void
 do_CirculateNotify (XEvent *eventp)
 {
     XCirculateEvent *e = (XCirculateEvent *) eventp;
-    char *p;
+    const char *p;
     char pdummy[10];
 
     switch (e->place) {
@@ -476,7 +482,7 @@ static void
 do_CirculateRequest (XEvent *eventp)
 {
     XCirculateRequestEvent *e = (XCirculateRequestEvent *) eventp;
-    char *p;
+    const char *p;
     char pdummy[10];
 
     switch (e->place) {
@@ -494,7 +500,7 @@ do_PropertyNotify (XEvent *eventp)
 {
     XPropertyEvent *e = (XPropertyEvent *) eventp;
     char *aname = XGetAtomName (dpy, e->atom);
-    char *s;
+    const char *s;
     char sdummy[10];
 
     switch (e->state) {
@@ -506,7 +512,7 @@ do_PropertyNotify (XEvent *eventp)
     printf ("    atom 0x%lx (%s), time %lu, state %s\n",
 	   e->atom, aname ? aname : Unknown, e->time,  s);
 
-    if (aname) XFree (aname);
+    XFree (aname);
 }
 
 static void
@@ -518,7 +524,7 @@ do_SelectionClear (XEvent *eventp)
     printf ("    selection 0x%lx (%s), time %lu\n",
 	    e->selection, sname ? sname : Unknown, e->time);
 
-    if (sname) XFree (sname);
+    XFree (sname);
 }
 
 static void
@@ -535,9 +541,9 @@ do_SelectionRequest (XEvent *eventp)
 	    e->target, tname ? tname : Unknown, e->property,
 	    pname ? pname : Unknown, e->time);
 
-    if (sname) XFree (sname);
-    if (tname) XFree (tname);
-    if (pname) XFree (pname);
+    XFree (sname);
+    XFree (tname);
+    XFree (pname);
 }
 
 static void
@@ -554,16 +560,16 @@ do_SelectionNotify (XEvent *eventp)
     printf ("    property 0x%lx (%s), time %lu\n",
 	    e->property, pname ? pname : Unknown, e->time);
 
-    if (sname) XFree (sname);
-    if (tname) XFree (tname);
-    if (pname) XFree (pname);
+    XFree (sname);
+    XFree (tname);
+    XFree (pname);
 }
 
 static void
 do_ColormapNotify (XEvent *eventp)
 {
     XColormapEvent *e = (XColormapEvent *) eventp;
-    char *s;
+    const char *s;
     char sdummy[10];
 
     switch (e->state) {
@@ -586,18 +592,18 @@ do_ClientMessage (XEvent *eventp)
         char *message = XGetAtomName (dpy, e->data.l[0]);
         printf ("    message_type 0x%lx (%s), format %d, message 0x%lx (%s)\n",
                 e->message_type, mname ? mname : Unknown, e->format, e->data.l[0], message);
-        if (message) XFree (message);
+        XFree (message);
     }
     else {
         printf ("    message_type 0x%lx (%s), format %d\n",
                 e->message_type, mname ? mname : Unknown, e->format);
     }
 
-    if (mname) XFree (mname);
+    XFree (mname);
 
-    if (e->format == 32 
-        && e->message_type == wm_protocols 
-        && (Atom) e->data.l[0] == wm_delete_window) 
+    if (e->format == 32
+        && e->message_type == wm_protocols
+        && (Atom) e->data.l[0] == wm_delete_window)
         exit (0);
 }
 
@@ -605,7 +611,7 @@ static void
 do_MappingNotify (XEvent *eventp)
 {
     XMappingEvent *e = (XMappingEvent *) eventp;
-    char *r;
+    const char *r;
     char rdummy[10];
 
     switch (e->request) {
@@ -620,11 +626,196 @@ do_MappingNotify (XEvent *eventp)
     XRefreshKeyboardMapping(e);
 }
 
+static void
+print_SubPixelOrder (SubpixelOrder subpixel_order)
+{
+    switch (subpixel_order) {
+      case SubPixelUnknown:        printf ("SubPixelUnknown"); return;
+      case SubPixelHorizontalRGB:  printf ("SubPixelHorizontalRGB"); return;
+      case SubPixelHorizontalBGR:  printf ("SubPixelHorizontalBGR"); return;
+      case SubPixelVerticalRGB:    printf ("SubPixelVerticalRGB"); return;
+      case SubPixelVerticalBGR:    printf ("SubPixelVerticalBGR"); return;
+      case SubPixelNone:           printf ("SubPixelNone"); return;
+      default:                     printf ("%d", subpixel_order);
+    }
+}
+
+static void
+print_Rotation (Rotation rotation)
+{
+    if (rotation & RR_Rotate_0)
+        printf ("RR_Rotate_0");
+    else if (rotation & RR_Rotate_90)
+        printf ("RR_Rotate_90");
+    else if (rotation & RR_Rotate_180)
+        printf ("RR_Rotate_180");
+    else if (rotation & RR_Rotate_270)
+        printf ("RR_Rotate_270");
+    else {
+        printf ("%d", rotation);
+        return;
+    }
+    if (rotation & RR_Reflect_X)
+        printf (", RR_Reflect_X");
+    if (rotation & RR_Reflect_Y)
+        printf (", RR_Reflect_Y");
+}
+
+static void
+print_Connection (Connection connection)
+{
+    switch (connection) {
+      case RR_Connected:          printf ("RR_Connected"); return;
+      case RR_Disconnected:       printf ("RR_Disconnected"); return;
+      case RR_UnknownConnection:  printf ("RR_UnknownConnection"); return;
+      default:                    printf ("%d", connection);
+    }
+}
+
+static void
+do_RRScreenChangeNotify (XEvent *eventp)
+{
+    XRRScreenChangeNotifyEvent *e = (XRRScreenChangeNotifyEvent *) eventp;
+
+    XRRUpdateConfiguration (eventp);
+    printf ("    root 0x%lx, timestamp %lu, config_timestamp %lu\n",
+            e->root, e->timestamp, e->config_timestamp);
+    printf ("    size_index %hu", e->size_index);
+    printf (", subpixel_order ");
+    print_SubPixelOrder (e->subpixel_order);
+    printf ("\n    rotation ");
+    print_Rotation (e->rotation);
+    printf("\n    width %d, height %d, mwidth %d, mheight %d\n",
+           e->width, e->height, e->mwidth, e->mheight);
+}
+
+static void
+do_RRNotify_OutputChange (XEvent *eventp, XRRScreenResources *screen_resources)
+{
+    XRROutputChangeNotifyEvent *e = (XRROutputChangeNotifyEvent *) eventp;
+    XRROutputInfo *output_info = NULL;
+    XRRModeInfo *mode_info = NULL;
+
+    if (screen_resources) {
+        int i;
+
+        output_info = XRRGetOutputInfo (dpy, screen_resources, e->output);
+        for (i = 0; i < screen_resources->nmode; i++)
+            if (screen_resources->modes[i].id == e->mode) {
+                mode_info = &screen_resources->modes[i]; break;
+            }
+    }
+    printf ("    subtype XRROutputChangeNotifyEvent\n");
+    if (output_info)
+        printf ("    output %s, ", output_info->name);
+    else
+        printf ("    output %lu, ", e->output);
+    if (e->crtc)
+        printf("crtc %lu, ", e->crtc);
+    else
+        printf("crtc None, ");
+    if (mode_info)
+        printf ("mode %s (%dx%d)\n", mode_info->name, mode_info->width,
+                mode_info->height);
+    else if (e->mode)
+        printf ("mode %lu\n", e->mode);
+    else
+        printf("mode None\n");
+    printf ("    rotation ");
+    print_Rotation (e->rotation);
+    printf ("\n    connection ");
+    print_Connection (e->connection);
+    printf (", subpixel_order ");
+    print_SubPixelOrder (e->subpixel_order);
+    printf ("\n");
+    XRRFreeOutputInfo (output_info);
+}
+
+static void
+do_RRNotify_CrtcChange (XEvent *eventp, XRRScreenResources *screen_resources)
+{
+    XRRCrtcChangeNotifyEvent *e = (XRRCrtcChangeNotifyEvent *) eventp;
+    XRRModeInfo *mode_info = NULL;
+
+    if (screen_resources) {
+        int i;
+
+        for (i = 0; i < screen_resources->nmode; i++)
+            if (screen_resources->modes[i].id == e->mode) {
+                mode_info = &screen_resources->modes[i]; break;
+            }
+    }
+    printf ("    subtype XRRCrtcChangeNotifyEvent\n");
+    if (e->crtc)
+        printf("    crtc %lu, ", e->crtc);
+    else
+        printf("    crtc None, ");
+    if (mode_info)
+        printf ("mode %s, ", mode_info->name);
+    else if (e->mode)
+        printf ("mode %lu, ", e->mode);
+    else
+        printf("mode None, ");
+    printf ("rotation ");
+    print_Rotation (e->rotation);
+    printf ("\n    x %d, y %d, width %d, height %d\n",
+            e->x, e->y, e->width, e->height);
+}
+
+static void
+do_RRNotify_OutputProperty (XEvent *eventp,
+                            XRRScreenResources *screen_resources)
+{
+    XRROutputPropertyNotifyEvent *e = (XRROutputPropertyNotifyEvent *) eventp;
+    XRROutputInfo *output_info = NULL;
+    char *property = XGetAtomName (dpy, e->property);
+
+    if (screen_resources)
+        output_info = XRRGetOutputInfo (dpy, screen_resources, e->output);
+    printf ("    subtype XRROutputPropertyChangeNotifyEvent\n");
+    if (output_info)
+        printf ("    output %s, ", output_info->name);
+    else
+        printf ("    output %lu, ", e->output);
+    printf ("property %s, timestamp %lu, state ",
+            property, e->timestamp);
+    if (e->state == PropertyNewValue)
+        printf ("NewValue\n");
+    else if (e->state == PropertyDelete)
+        printf ("Delete\n");
+    else
+        printf ("%d\n", e->state);
+    XRRFreeOutputInfo (output_info);
+    XFree (property);
+}
+
+static void
+do_RRNotify (XEvent *eventp)
+{
+    XRRNotifyEvent *e = (XRRNotifyEvent *) eventp;
+    XRRScreenResources *screen_resources;
+
+    XRRUpdateConfiguration (eventp);
+    screen_resources = XRRGetScreenResources (dpy, e->window);
+    prologue (eventp, "RRNotify");
+    switch (e->subtype) {
+      case RRNotify_OutputChange:
+          do_RRNotify_OutputChange (eventp, screen_resources); break;
+      case RRNotify_CrtcChange:
+          do_RRNotify_CrtcChange (eventp, screen_resources); break;
+      case RRNotify_OutputProperty:
+          do_RRNotify_OutputProperty (eventp, screen_resources); break;
+      default:
+          printf ("    subtype %d\n", e->subtype);
+    }
+    XRRFreeScreenResources (screen_resources);
+}
+
 
 
 static void
-set_sizehints (XSizeHints *hintp, int min_width, int min_height, 
-	       int defwidth, int defheight, int defx, int defy, 
+set_sizehints (XSizeHints *hintp, int min_width, int min_height,
+	       int defwidth, int defheight, int defx, int defy,
 	       char *geom)
 {
     int geom_result;
@@ -674,11 +865,6 @@ set_sizehints (XSizeHints *hintp, int min_width, int min_height,
     }
 }
 
-
-#if defined(__GNUC__) && \
-    ((__GNUC__ > 2) || ((__GNUC__ == 2) && (__GNUC_MINOR__ >= 7)))
-static void usage (void) __attribute__((__noreturn__));
-#endif
 static void
 usage (void)
 {
@@ -736,7 +922,7 @@ main (int argc, char **argv)
     XWindowAttributes wattr;
     unsigned long mask = 0L;
     int done;
-    char *name = "Event Tester";
+    const char *name = "Event Tester";
     Bool reverse = False;
     Bool use_root = False;
     unsigned long back, fore;
@@ -812,7 +998,7 @@ main (int argc, char **argv)
 	      default:
 		usage ();
 	    }				/* end switch on - */
-	} else 
+	} else
 	  usage ();
     }					/* end for over argc */
 
@@ -856,19 +1042,19 @@ main (int argc, char **argv)
             }
             XFree (xim_styles);
         }
-    } 
+    }
 
     screen = DefaultScreen (dpy);
 
     /* select for all events */
     attr.event_mask = KeyPressMask | KeyReleaseMask | ButtonPressMask |
 			   ButtonReleaseMask | EnterWindowMask |
-			   LeaveWindowMask | PointerMotionMask | 
+			   LeaveWindowMask | PointerMotionMask |
 			   Button1MotionMask |
 			   Button2MotionMask | Button3MotionMask |
 			   Button4MotionMask | Button5MotionMask |
 			   ButtonMotionMask | KeymapStateMask |
-			   ExposureMask | VisibilityChangeMask | 
+			   ExposureMask | VisibilityChangeMask |
 			   StructureNotifyMask | /* ResizeRedirectMask | */
 			   SubstructureNotifyMask | SubstructureRedirectMask |
 			   FocusChangeMask | PropertyChangeMask |
@@ -885,7 +1071,7 @@ main (int argc, char **argv)
 	XSelectInput(dpy, w, attr.event_mask);
     } else {
 	set_sizehints (&hints, OUTER_WINDOW_MIN_WIDTH, OUTER_WINDOW_MIN_HEIGHT,
-		       OUTER_WINDOW_DEF_WIDTH, OUTER_WINDOW_DEF_HEIGHT, 
+		       OUTER_WINDOW_DEF_WIDTH, OUTER_WINDOW_DEF_HEIGHT,
 		       OUTER_WINDOW_DEF_X, OUTER_WINDOW_DEF_Y, geom);
 
 	if (reverse) {
@@ -924,14 +1110,29 @@ main (int argc, char **argv)
     }
 
     if (xim && xim_style) {
-        xic = XCreateIC (xim, 
-                         XNInputStyle, xim_style, 
-                         XNClientWindow, w, 
-                         XNFocusWindow, w, 
+        xic = XCreateIC (xim,
+                         XNInputStyle, xim_style,
+                         XNClientWindow, w,
+                         XNFocusWindow, w,
                          NULL);
 
         if (xic == NULL) {
             fprintf (stderr, "XCreateIC failed\n");
+        }
+    }
+
+    have_rr = XRRQueryExtension (dpy, &rr_event_base, &rr_error_base);
+    if (have_rr) {
+        int rr_major, rr_minor;
+
+        if (XRRQueryVersion (dpy, &rr_major, &rr_minor)) {
+            int rr_mask = RRScreenChangeNotifyMask;
+
+            if (rr_major > 1
+                || (rr_major == 1 && rr_minor >= 2))
+                rr_mask |= RRCrtcChangeNotifyMask | RROutputChangeNotifyMask |
+                           RROutputPropertyNotifyMask;
+            XRRSelectInput (dpy, w, rr_mask);
         }
     }
 
@@ -1074,6 +1275,17 @@ main (int argc, char **argv)
 	    do_MappingNotify (&event);
 	    break;
 	  default:
+	    if (have_rr) {
+	        if (event.type == rr_event_base + RRScreenChangeNotify) {
+	            prologue (&event, "RRScreenChangeNotify");
+	            do_RRScreenChangeNotify (&event);
+	            break;
+	        }
+	        if (event.type == rr_event_base + RRNotify) {
+	            do_RRNotify (&event);
+	            break;
+	        }
+	    }
 	    printf ("Unknown event type %d\n", event.type);
 	    break;
 	}
@@ -1081,5 +1293,5 @@ main (int argc, char **argv)
     }
 
     XCloseDisplay (dpy);
-    return 0; 
+    return 0;
 }

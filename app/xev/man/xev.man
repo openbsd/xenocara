@@ -13,7 +13,7 @@ xev - print contents of X events
 moved, resized, typed in, clicked in, etc.).  You can also attach it to an
 existing window.  It is useful for seeing what causes events to occur and to
 display the information that they contain; it is essentially a debugging and
-development tool, and should not be needed in normal usage. 
+development tool, and should not be needed in normal usage.
 .SH OPTIONS
 .TP 8
 .B \-display \fIdisplay\fP
@@ -21,7 +21,7 @@ This option specifies the X server to contact.
 .TP 8
 .B \-geometry \fIgeom\fP
 This option specifies the size and/or location of the window, if a window is
-to be created. 
+to be created.
 .TP 8
 .B \-bw \fIpixels\fP
 This option specifies the border width for the window.
@@ -53,7 +53,7 @@ This option specifies the name to assign to the created window.
 .B \-rv
 This option specifies that the window should be in reverse video.
 .SH "SEE ALSO"
-X(__miscmansuffix__), xwininfo(1), xdpyinfo(1), Xlib Programmers Manual, X Protocol
+X(__miscmansuffix__), xwininfo(__appmansuffix__), xdpyinfo(__appmansuffix__), Xlib Programmers Manual, X Protocol
 Specification
 .br
 See \fIX(__miscmansuffix__)\fP for a full statement of rights and permissions.
