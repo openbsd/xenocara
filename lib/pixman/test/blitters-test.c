@@ -8,11 +8,15 @@
 #include <assert.h>
 #include <stdlib.h>
 #include <stdio.h>
-#include <config.h>
 #include "utils.h"
 
 static pixman_indexed_t rgb_palette[9];
 static pixman_indexed_t y_palette[9];
+
+/* The first eight format in the list are by far the most widely
+ * used formats, so we test those more than the others
+ */
+#define N_MOST_LIKELY_FORMATS 8
 
 /* Create random image for testing purposes */
 static pixman_image_t *
@@ -29,6 +33,9 @@ create_random_image (pixman_format_code_t *allowed_formats,
 
     while (allowed_formats[n] != PIXMAN_null)
 	n++;
+
+    if (n > N_MOST_LIKELY_FORMATS && lcg_rand_n (4) != 0)
+	n = N_MOST_LIKELY_FORMATS;
     fmt = allowed_formats[lcg_rand_n (n)];
 
     width = lcg_rand_n (max_width) + 1;
@@ -60,6 +67,9 @@ create_random_image (pixman_format_code_t *allowed_formats,
     {
 	pixman_image_set_indexed (img, &(y_palette[PIXMAN_FORMAT_BPP (fmt)]));
     }
+
+    if (lcg_rand_n (16) == 0)
+	pixman_image_set_filter (img, PIXMAN_FILTER_BILINEAR, NULL, 0);
 
     image_endian_swap (img);
 
@@ -177,12 +187,14 @@ static pixman_op_t op_list[] = {
 
 static pixman_format_code_t img_fmt_list[] = {
     PIXMAN_a8r8g8b8,
-    PIXMAN_x8r8g8b8,
-    PIXMAN_r5g6b5,
-    PIXMAN_r3g3b2,
-    PIXMAN_a8,
     PIXMAN_a8b8g8r8,
+    PIXMAN_x8r8g8b8,
     PIXMAN_x8b8g8r8,
+    PIXMAN_r5g6b5,
+    PIXMAN_b5g6r5,
+    PIXMAN_a8,
+    PIXMAN_a1,
+    PIXMAN_r3g3b2,
     PIXMAN_b8g8r8a8,
     PIXMAN_b8g8r8x8,
     PIXMAN_r8g8b8a8,
@@ -190,8 +202,6 @@ static pixman_format_code_t img_fmt_list[] = {
     PIXMAN_x14r6g6b6,
     PIXMAN_r8g8b8,
     PIXMAN_b8g8r8,
-    PIXMAN_r5g6b5,
-    PIXMAN_b5g6r5,
     PIXMAN_x2r10g10b10,
     PIXMAN_a2r10g10b10,
     PIXMAN_x2b10g10r10,
@@ -204,7 +214,6 @@ static pixman_format_code_t img_fmt_list[] = {
     PIXMAN_x4r4g4b4,
     PIXMAN_a4b4g4r4,
     PIXMAN_x4b4g4r4,
-    PIXMAN_a8,
     PIXMAN_r3g3b2,
     PIXMAN_b2g3r3,
     PIXMAN_a2r2g2b2,
@@ -222,7 +231,6 @@ static pixman_format_code_t img_fmt_list[] = {
     PIXMAN_b1g2r1,
     PIXMAN_a1r1g1b1,
     PIXMAN_a1b1g1r1,
-    PIXMAN_a1,
     PIXMAN_null
 };
 
@@ -417,6 +425,6 @@ main (int argc, const char *argv[])
     }
 
     return fuzzer_test_main("blitters", 2000000,
-			    0x265CDFEB,
+			    0x3EDA4108,
 			    test_composite, argc, argv);
 }

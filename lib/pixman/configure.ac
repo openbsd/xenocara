@@ -26,8 +26,8 @@ AC_PREREQ([2.57])
 #
 #   - The version in git has an odd MICRO version number
 #
-#   - Released versions both development and stable have an even MICRO 
-#     version number
+#   - Released versions, both development and stable, have an
+#     even MICRO version number
 #
 #   - Released development versions have an odd MINOR number
 #
@@ -53,8 +53,8 @@ AC_PREREQ([2.57])
 #
 
 m4_define([pixman_major], 0)
-m4_define([pixman_minor], 22)
-m4_define([pixman_micro], 2)
+m4_define([pixman_minor], 24)
+m4_define([pixman_micro], 4)
 
 m4_define([pixman_version],[pixman_major.pixman_minor.pixman_micro])
 
@@ -90,7 +90,7 @@ AC_DEFUN([PIXMAN_LINK_WITH_ENV],[dnl
 	LIBS=""
 	$1
 	AC_LINK_IFELSE(
-		[$2],
+		[AC_LANG_SOURCE([$2])],
 		[pixman_cc_stderr=`test -f conftest.err && cat conftest.err`
 		 pixman_cc_flag=yes],
 		[pixman_cc_stderr=`test -f conftest.err && cat conftest.err`
@@ -150,7 +150,7 @@ AC_CHECK_DECL([__amd64], [AMD64_ABI="yes"], [AMD64_ABI="no"])
 # if we're using Sun Studio and neither the user nor a config.site
 # has set CFLAGS.
 if test $SUNCC = yes &&			\
-   test "$test_CFLAGS" == "" &&		\
+   test "x$test_CFLAGS" = "x" &&	\
    test "$CFLAGS" = "-g"
 then
   CFLAGS="-O -g"
@@ -290,7 +290,7 @@ have_mmx_intrinsics=no
 AC_MSG_CHECKING(whether to use MMX intrinsics)
 xserver_save_CFLAGS=$CFLAGS
 CFLAGS="$MMX_CFLAGS $CFLAGS"
-AC_COMPILE_IFELSE([
+AC_COMPILE_IFELSE([AC_LANG_SOURCE([[
 #if defined(__GNUC__) && (__GNUC__ < 3 || (__GNUC__ == 3 && __GNUC_MINOR__ < 4))
 error "Need GCC >= 3.4 for MMX intrinsics"
 #endif
@@ -298,12 +298,12 @@ error "Need GCC >= 3.4 for MMX intrinsics"
 int main () {
     __m64 v = _mm_cvtsi32_si64 (1);
     return _mm_cvtsi64_si32 (v);
-}], have_mmx_intrinsics=yes)
+}]])], have_mmx_intrinsics=yes)
 CFLAGS=$xserver_save_CFLAGS
 
 AC_ARG_ENABLE(mmx,
    [AC_HELP_STRING([--disable-mmx],
-                   [disable MMX fast paths])],
+                   [disable x86 MMX fast paths])],
    [enable_mmx=$enableval], [enable_mmx=auto])
 
 if test $enable_mmx = no ; then
@@ -311,17 +311,17 @@ if test $enable_mmx = no ; then
 fi
 
 if test $have_mmx_intrinsics = yes ; then
-   AC_DEFINE(USE_MMX, 1, [use MMX compiler intrinsics])
+   AC_DEFINE(USE_X86_MMX, 1, [use x86 MMX compiler intrinsics])
 else
    MMX_CFLAGS=
 fi
 
 AC_MSG_RESULT($have_mmx_intrinsics)
 if test $enable_mmx = yes && test $have_mmx_intrinsics = no ; then
-   AC_MSG_ERROR([MMX intrinsics not detected])
+   AC_MSG_ERROR([x86 MMX intrinsics not detected])
 fi
 
-AM_CONDITIONAL(USE_MMX, test $have_mmx_intrinsics = yes)
+AM_CONDITIONAL(USE_X86_MMX, test $have_mmx_intrinsics = yes)
 
 dnl ===========================================================================
 dnl Check for SSE2
@@ -342,7 +342,7 @@ AC_MSG_CHECKING(whether to use SSE2 intrinsics)
 xserver_save_CFLAGS=$CFLAGS
 CFLAGS="$SSE2_CFLAGS $CFLAGS"
 
-AC_COMPILE_IFELSE([
+AC_COMPILE_IFELSE([AC_LANG_SOURCE([[
 #if defined(__GNUC__) && (__GNUC__ < 4 || (__GNUC__ == 4 && __GNUC_MINOR__ < 2))
 #   if !defined(__amd64__) && !defined(__x86_64__)
 #      error "Need GCC >= 4.2 for SSE2 intrinsics on x86"
@@ -355,7 +355,7 @@ int main () {
     __m128i a = _mm_set1_epi32 (0), b = _mm_set1_epi32 (0), c;
 	c = _mm_xor_si128 (a, b);
     return 0;
-}], have_sse2_intrinsics=yes)
+}]])], have_sse2_intrinsics=yes)
 CFLAGS=$xserver_save_CFLAGS
 
 AC_ARG_ENABLE(sse2,
@@ -392,7 +392,7 @@ case $host_os in
 	 hwcap_save_LDFLAGS="$LDFLAGS"
 	 HWCAP_LDFLAGS='-Wl,-M,$(srcdir)/solaris-hwcap.mapfile'
 	 LDFLAGS="$LDFLAGS -Wl,-M,pixman/solaris-hwcap.mapfile"
-	 AC_LINK_IFELSE([int main() { return 0; }],
+	 AC_LINK_IFELSE([AC_LANG_SOURCE([[int main() { return 0; }]])],
 			use_hwcap_mapfile=yes,
 			HWCAP_LDFLAGS="")
 	 LDFLAGS="$hwcap_save_LDFLAGS"
@@ -424,7 +424,7 @@ have_vmx_intrinsics=no
 AC_MSG_CHECKING(whether to use VMX/Altivec intrinsics)
 xserver_save_CFLAGS=$CFLAGS
 CFLAGS="$VMX_CFLAGS $CFLAGS"
-AC_COMPILE_IFELSE([
+AC_COMPILE_IFELSE([AC_LANG_SOURCE([[
 #if defined(__GNUC__) && (__GNUC__ < 3 || (__GNUC__ == 3 && __GNUC_MINOR__ < 4))
 error "Need GCC >= 3.4 for sane altivec support"
 #endif
@@ -433,7 +433,7 @@ int main () {
     vector unsigned int v = vec_splat_u32 (1);
     v = vec_sub (v, v);
     return 0;
-}], have_vmx_intrinsics=yes)
+}]])], have_vmx_intrinsics=yes)
 CFLAGS=$xserver_save_CFLAGS
 
 AC_ARG_ENABLE(vmx,
@@ -466,7 +466,7 @@ have_arm_simd=no
 AC_MSG_CHECKING(whether to use ARM SIMD assembler)
 xserver_save_CFLAGS=$CFLAGS
 CFLAGS="-x assembler-with-cpp $CFLAGS"
-AC_COMPILE_IFELSE([[
+AC_COMPILE_IFELSE([AC_LANG_SOURCE([[
 .text
 .arch armv6
 .object_arch armv4
@@ -476,7 +476,7 @@ AC_COMPILE_IFELSE([[
 #error EABI is required (to be sure that calling conventions are compatible)
 #endif
 pld [r0]
-uqadd8 r0, r0, r0]], have_arm_simd=yes)
+uqadd8 r0, r0, r0]])], have_arm_simd=yes)
 CFLAGS=$xserver_save_CFLAGS
 
 AC_ARG_ENABLE(arm-simd,
@@ -505,7 +505,7 @@ have_arm_neon=no
 AC_MSG_CHECKING(whether to use ARM NEON assembler)
 xserver_save_CFLAGS=$CFLAGS
 CFLAGS="-x assembler-with-cpp $CFLAGS"
-AC_COMPILE_IFELSE([[
+AC_COMPILE_IFELSE([AC_LANG_SOURCE([[
 .text
 .fpu neon
 .arch armv7a
@@ -517,7 +517,7 @@ AC_COMPILE_IFELSE([[
 #error EABI is required (to be sure that calling conventions are compatible)
 #endif
 pld [r0]
-vmovn.u16 d0, q0]], have_arm_neon=yes)
+vmovn.u16 d0, q0]])], have_arm_neon=yes)
 CFLAGS=$xserver_save_CFLAGS
 
 AC_ARG_ENABLE(arm-neon,
@@ -540,17 +540,68 @@ if test $enable_arm_neon = yes && test $have_arm_neon = no ; then
    AC_MSG_ERROR([ARM NEON intrinsics not detected])
 fi
 
+dnl ===========================================================================
+dnl Check for IWMMXT
+
+if test "x$IWMMXT_CFLAGS" = "x" ; then
+   IWMMXT_CFLAGS="-march=iwmmxt -flax-vector-conversions -Winline"
+fi
+
+have_iwmmxt_intrinsics=no
+AC_MSG_CHECKING(whether to use ARM IWMMXT intrinsics)
+xserver_save_CFLAGS=$CFLAGS
+CFLAGS="$IWMMXT_CFLAGS $CFLAGS"
+AC_COMPILE_IFELSE([
+#ifndef __arm__
+#error "IWMMXT is only available on ARM"
+#endif
+#if defined(__GNUC__) && (__GNUC__ < 4 || (__GNUC__ == 4 && __GNUC_MINOR__ < 6))
+#error "Need GCC >= 4.6 for IWMMXT intrinsics"
+#endif
+#include <mmintrin.h>
+int main () {
+	union {
+		__m64 v;
+		[char c[8];]
+	} a = { .c = {1, 2, 3, 4, 5, 6, 7, 8} };
+	int b = 4;
+	__m64 c = _mm_srli_si64 (a.v, b);
+}], have_iwmmxt_intrinsics=yes)
+CFLAGS=$xserver_save_CFLAGS
+
+AC_ARG_ENABLE(arm-iwmmxt,
+   [AC_HELP_STRING([--disable-arm-iwmmxt],
+                   [disable ARM IWMMXT fast paths])],
+   [enable_iwmmxt=$enableval], [enable_iwmmxt=auto])
+
+if test $enable_iwmmxt = no ; then
+   have_iwmmxt_intrinsics=disabled
+fi
+
+if test $have_iwmmxt_intrinsics = yes ; then
+   AC_DEFINE(USE_ARM_IWMMXT, 1, [use ARM IWMMXT compiler intrinsics])
+else
+   IWMMXT_CFLAGS=
+fi
+
+AC_MSG_RESULT($have_iwmmxt_intrinsics)
+if test $enable_iwmmxt = yes && test $have_iwmmxt_intrinsics = no ; then
+   AC_MSG_ERROR([IWMMXT intrinsics not detected])
+fi
+
+AM_CONDITIONAL(USE_ARM_IWMMXT, test $have_iwmmxt_intrinsics = yes)
+
 dnl =========================================================================================
 dnl Check for GNU-style inline assembly support
 
 have_gcc_inline_asm=no
 AC_MSG_CHECKING(whether to use GNU-style inline assembler)
-AC_COMPILE_IFELSE([
+AC_COMPILE_IFELSE([AC_LANG_SOURCE([[
 int main () {
     /* Most modern architectures have a NOP instruction, so this is a fairly generic test. */
 	asm volatile ( "\tnop\n" : : : "cc", "memory" );
     return 0;
-}], have_gcc_inline_asm=yes)
+}]])], have_gcc_inline_asm=yes)
 
 AC_ARG_ENABLE(gcc-inline-asm,
    [AC_HELP_STRING([--disable-gcc-inline-asm],
@@ -685,7 +736,7 @@ dnl Thread local storage
 support_for__thread=no
 
 AC_MSG_CHECKING(for __thread)
-AC_LINK_IFELSE([
+AC_LINK_IFELSE([AC_LANG_SOURCE([[
 #if defined(__MINGW32__) && !(__GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 5))
 #error This MinGW version has broken __thread support
 #endif
@@ -694,7 +745,7 @@ AC_LINK_IFELSE([
 #endif
 static __thread int x ;
 int main () { x = 123; return x; }
-], support_for__thread=yes)
+]])], support_for__thread=yes)
 
 if test $support_for__thread = yes; then 
    AC_DEFINE([TOOLCHAIN_SUPPORTS__THREAD],[],[Whether the tool chain supports __thread])
@@ -825,7 +876,7 @@ dnl __attribute__((constructor))
 support_for_attribute_constructor=no
 
 AC_MSG_CHECKING(for __attribute__((constructor)))
-AC_LINK_IFELSE([
+AC_LINK_IFELSE([AC_LANG_SOURCE([[
 #if defined(__GNUC__) && (__GNUC__ > 2 || (__GNUC__ == 2 && __GNUC_MINOR__ >= 7))
 /* attribute 'constructor' is supported since gcc 2.7, but some compilers
  * may only pretend to be gcc, so let's try to actually use it
@@ -836,7 +887,7 @@ int main (void) { return x; }
 #else
 #error not gcc or gcc version is older than 2.7
 #endif
-], support_for_attribute_constructor=yes)
+]])], support_for_attribute_constructor=yes)
 
 if test x$support_for_attribute_constructor = xyes; then
    AC_DEFINE([TOOLCHAIN_SUPPORTS_ATTRIBUTE_CONSTRUCTOR],
@@ -845,6 +896,17 @@ fi
 
 AC_MSG_RESULT($support_for_attribute_constructor)
 AC_SUBST(TOOLCHAIN_SUPPORTS_ATTRIBUTE_CONSTRUCTOR)
+
+dnl ==================
+dnl libpng
+
+PKG_CHECK_MODULES(PNG, [libpng], have_libpng=yes, have_libpng=no)
+
+if test x$have_libpng = xyes; then
+    AC_DEFINE([HAVE_LIBPNG], [1], [Whether we have libpng])
+fi
+
+AC_SUBST(HAVE_LIBPNG)
 
 AC_OUTPUT([pixman-1.pc
            pixman-1-uninstalled.pc

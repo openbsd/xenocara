@@ -18,6 +18,12 @@
 #  define FUNC     ((const char*) ("???"))
 #endif
 
+#if defined (__GNUC__)
+#  define MAYBE_UNUSED  __attribute__((unused))
+#else
+#  define MAYBE_UNUSED
+#endif
+
 #ifndef INT16_MIN
 # define INT16_MIN              (-32767-1)
 #endif
@@ -41,6 +47,15 @@
 #ifndef UINT32_MAX
 # define UINT32_MAX             (4294967295U)
 #endif
+
+#ifndef INT64_MIN
+# define INT64_MIN              (-9223372036854775807-1)
+#endif
+
+#ifndef INT64_MAX
+# define INT64_MAX              (9223372036854775807)
+#endif
+
 
 #ifndef M_PI
 # define M_PI			3.14159265358979323846

@@ -14,6 +14,7 @@
 
 @SET_MAKE@
 
+
 srcdir = @srcdir@
 top_srcdir = @top_srcdir@
 VPATH = @srcdir@
@@ -36,9 +37,10 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
+DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in \
+	$(top_srcdir)/test/Makefile.sources
 noinst_PROGRAMS = $(am__EXEEXT_1) $(am__EXEEXT_2)
 subdir = test
-DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/configure.ac
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
@@ -46,102 +48,124 @@ am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 mkinstalldirs = $(SHELL) $(install_sh) -d
 CONFIG_HEADER = $(top_builddir)/config.h
 CONFIG_CLEAN_FILES =
+LTLIBRARIES = $(noinst_LTLIBRARIES)
+libutils_la_LIBADD =
+am__objects_1 = utils.lo
+am__objects_2 =
+am_libutils_la_OBJECTS = $(am__objects_1) $(am__objects_2)
+libutils_la_OBJECTS = $(am_libutils_la_OBJECTS)
 am__EXEEXT_1 = a1-trap-test$(EXEEXT) pdf-op-test$(EXEEXT) \
 	region-test$(EXEEXT) region-translate-test$(EXEEXT) \
 	fetch-test$(EXEEXT) oob-test$(EXEEXT) trap-crasher$(EXEEXT) \
 	alpha-loop$(EXEEXT) scaling-crash-test$(EXEEXT) \
 	scaling-helpers-test$(EXEEXT) gradient-crash-test$(EXEEXT) \
-	alphamap$(EXEEXT) stress-test$(EXEEXT) \
-	composite-traps-test$(EXEEXT) blitters-test$(EXEEXT) \
-	scaling-test$(EXEEXT) affine-test$(EXEEXT) composite$(EXEEXT)
+	region-contains-test$(EXEEXT) alphamap$(EXEEXT) \
+	stress-test$(EXEEXT) composite-traps-test$(EXEEXT) \
+	blitters-test$(EXEEXT) scaling-test$(EXEEXT) \
+	affine-test$(EXEEXT) composite$(EXEEXT)
 am__EXEEXT_2 = lowlevel-blt-bench$(EXEEXT)
 PROGRAMS = $(noinst_PROGRAMS)
 a1_trap_test_SOURCES = a1-trap-test.c
 a1_trap_test_OBJECTS = a1-trap-test.$(OBJEXT)
 a1_trap_test_LDADD = $(LDADD)
-a1_trap_test_DEPENDENCIES = $(top_builddir)/pixman/libpixman-1.la
-am_affine_test_OBJECTS = affine-test.$(OBJEXT) utils.$(OBJEXT)
-affine_test_OBJECTS = $(am_affine_test_OBJECTS)
+am__DEPENDENCIES_1 =
+a1_trap_test_DEPENDENCIES = libutils.la \
+	$(top_builddir)/pixman/libpixman-1.la $(am__DEPENDENCIES_1)
+affine_test_SOURCES = affine-test.c
+affine_test_OBJECTS = affine-test.$(OBJEXT)
 affine_test_LDADD = $(LDADD)
-affine_test_DEPENDENCIES = $(top_builddir)/pixman/libpixman-1.la
-am_alpha_loop_OBJECTS = alpha-loop.$(OBJEXT) utils.$(OBJEXT)
-alpha_loop_OBJECTS = $(am_alpha_loop_OBJECTS)
+affine_test_DEPENDENCIES = libutils.la \
+	$(top_builddir)/pixman/libpixman-1.la $(am__DEPENDENCIES_1)
+alpha_loop_SOURCES = alpha-loop.c
+alpha_loop_OBJECTS = alpha-loop.$(OBJEXT)
 alpha_loop_LDADD = $(LDADD)
-alpha_loop_DEPENDENCIES = $(top_builddir)/pixman/libpixman-1.la
-am_alphamap_OBJECTS = alphamap.$(OBJEXT) utils.$(OBJEXT)
-alphamap_OBJECTS = $(am_alphamap_OBJECTS)
+alpha_loop_DEPENDENCIES = libutils.la \
+	$(top_builddir)/pixman/libpixman-1.la $(am__DEPENDENCIES_1)
+alphamap_SOURCES = alphamap.c
+alphamap_OBJECTS = alphamap.$(OBJEXT)
 alphamap_LDADD = $(LDADD)
-alphamap_DEPENDENCIES = $(top_builddir)/pixman/libpixman-1.la
-am_blitters_test_OBJECTS = blitters-test.$(OBJEXT) utils.$(OBJEXT)
-blitters_test_OBJECTS = $(am_blitters_test_OBJECTS)
+alphamap_DEPENDENCIES = libutils.la \
+	$(top_builddir)/pixman/libpixman-1.la $(am__DEPENDENCIES_1)
+blitters_test_SOURCES = blitters-test.c
+blitters_test_OBJECTS = blitters-test.$(OBJEXT)
 blitters_test_LDADD = $(LDADD)
-blitters_test_DEPENDENCIES = $(top_builddir)/pixman/libpixman-1.la
-am_composite_OBJECTS = composite.$(OBJEXT) utils.$(OBJEXT)
-composite_OBJECTS = $(am_composite_OBJECTS)
+blitters_test_DEPENDENCIES = libutils.la \
+	$(top_builddir)/pixman/libpixman-1.la $(am__DEPENDENCIES_1)
+composite_SOURCES = composite.c
+composite_OBJECTS = composite.$(OBJEXT)
 composite_LDADD = $(LDADD)
-composite_DEPENDENCIES = $(top_builddir)/pixman/libpixman-1.la
-am_composite_traps_test_OBJECTS = composite-traps-test.$(OBJEXT) \
-	utils.$(OBJEXT)
-composite_traps_test_OBJECTS = $(am_composite_traps_test_OBJECTS)
+composite_DEPENDENCIES = libutils.la \
+	$(top_builddir)/pixman/libpixman-1.la $(am__DEPENDENCIES_1)
+composite_traps_test_SOURCES = composite-traps-test.c
+composite_traps_test_OBJECTS = composite-traps-test.$(OBJEXT)
 composite_traps_test_LDADD = $(LDADD)
-composite_traps_test_DEPENDENCIES =  \
-	$(top_builddir)/pixman/libpixman-1.la
+composite_traps_test_DEPENDENCIES = libutils.la \
+	$(top_builddir)/pixman/libpixman-1.la $(am__DEPENDENCIES_1)
 fetch_test_SOURCES = fetch-test.c
 fetch_test_OBJECTS = fetch-test.$(OBJEXT)
 fetch_test_LDADD = $(LDADD)
-fetch_test_DEPENDENCIES = $(top_builddir)/pixman/libpixman-1.la
-am_gradient_crash_test_OBJECTS = gradient-crash-test.$(OBJEXT) \
-	utils.$(OBJEXT)
-gradient_crash_test_OBJECTS = $(am_gradient_crash_test_OBJECTS)
+fetch_test_DEPENDENCIES = libutils.la \
+	$(top_builddir)/pixman/libpixman-1.la $(am__DEPENDENCIES_1)
+gradient_crash_test_SOURCES = gradient-crash-test.c
+gradient_crash_test_OBJECTS = gradient-crash-test.$(OBJEXT)
 gradient_crash_test_LDADD = $(LDADD)
-gradient_crash_test_DEPENDENCIES =  \
-	$(top_builddir)/pixman/libpixman-1.la
-am_lowlevel_blt_bench_OBJECTS = lowlevel-blt-bench.$(OBJEXT) \
-	utils.$(OBJEXT)
-lowlevel_blt_bench_OBJECTS = $(am_lowlevel_blt_bench_OBJECTS)
+gradient_crash_test_DEPENDENCIES = libutils.la \
+	$(top_builddir)/pixman/libpixman-1.la $(am__DEPENDENCIES_1)
+lowlevel_blt_bench_SOURCES = lowlevel-blt-bench.c
+lowlevel_blt_bench_OBJECTS = lowlevel-blt-bench.$(OBJEXT)
 lowlevel_blt_bench_LDADD = $(LDADD)
-lowlevel_blt_bench_DEPENDENCIES =  \
-	$(top_builddir)/pixman/libpixman-1.la
+lowlevel_blt_bench_DEPENDENCIES = libutils.la \
+	$(top_builddir)/pixman/libpixman-1.la $(am__DEPENDENCIES_1)
 oob_test_SOURCES = oob-test.c
 oob_test_OBJECTS = oob-test.$(OBJEXT)
 oob_test_LDADD = $(LDADD)
-oob_test_DEPENDENCIES = $(top_builddir)/pixman/libpixman-1.la
-am_pdf_op_test_OBJECTS = pdf-op-test.$(OBJEXT) utils.$(OBJEXT)
-pdf_op_test_OBJECTS = $(am_pdf_op_test_OBJECTS)
+oob_test_DEPENDENCIES = libutils.la \
+	$(top_builddir)/pixman/libpixman-1.la $(am__DEPENDENCIES_1)
+pdf_op_test_SOURCES = pdf-op-test.c
+pdf_op_test_OBJECTS = pdf-op-test.$(OBJEXT)
 pdf_op_test_LDADD = $(LDADD)
-pdf_op_test_DEPENDENCIES = $(top_builddir)/pixman/libpixman-1.la
-am_region_test_OBJECTS = region-test.$(OBJEXT) utils.$(OBJEXT)
-region_test_OBJECTS = $(am_region_test_OBJECTS)
+pdf_op_test_DEPENDENCIES = libutils.la \
+	$(top_builddir)/pixman/libpixman-1.la $(am__DEPENDENCIES_1)
+region_contains_test_SOURCES = region-contains-test.c
+region_contains_test_OBJECTS = region-contains-test.$(OBJEXT)
+region_contains_test_LDADD = $(LDADD)
+region_contains_test_DEPENDENCIES = libutils.la \
+	$(top_builddir)/pixman/libpixman-1.la $(am__DEPENDENCIES_1)
+region_test_SOURCES = region-test.c
+region_test_OBJECTS = region-test.$(OBJEXT)
 region_test_LDADD = $(LDADD)
-region_test_DEPENDENCIES = $(top_builddir)/pixman/libpixman-1.la
+region_test_DEPENDENCIES = libutils.la \
+	$(top_builddir)/pixman/libpixman-1.la $(am__DEPENDENCIES_1)
 region_translate_test_SOURCES = region-translate-test.c
 region_translate_test_OBJECTS = region-translate-test.$(OBJEXT)
 region_translate_test_LDADD = $(LDADD)
-region_translate_test_DEPENDENCIES =  \
-	$(top_builddir)/pixman/libpixman-1.la
+region_translate_test_DEPENDENCIES = libutils.la \
+	$(top_builddir)/pixman/libpixman-1.la $(am__DEPENDENCIES_1)
 scaling_crash_test_SOURCES = scaling-crash-test.c
 scaling_crash_test_OBJECTS = scaling-crash-test.$(OBJEXT)
 scaling_crash_test_LDADD = $(LDADD)
-scaling_crash_test_DEPENDENCIES =  \
-	$(top_builddir)/pixman/libpixman-1.la
-am_scaling_helpers_test_OBJECTS = scaling-helpers-test.$(OBJEXT) \
-	utils.$(OBJEXT)
-scaling_helpers_test_OBJECTS = $(am_scaling_helpers_test_OBJECTS)
+scaling_crash_test_DEPENDENCIES = libutils.la \
+	$(top_builddir)/pixman/libpixman-1.la $(am__DEPENDENCIES_1)
+scaling_helpers_test_SOURCES = scaling-helpers-test.c
+scaling_helpers_test_OBJECTS = scaling-helpers-test.$(OBJEXT)
 scaling_helpers_test_LDADD = $(LDADD)
-scaling_helpers_test_DEPENDENCIES =  \
-	$(top_builddir)/pixman/libpixman-1.la
-am_scaling_test_OBJECTS = scaling-test.$(OBJEXT) utils.$(OBJEXT)
-scaling_test_OBJECTS = $(am_scaling_test_OBJECTS)
+scaling_helpers_test_DEPENDENCIES = libutils.la \
+	$(top_builddir)/pixman/libpixman-1.la $(am__DEPENDENCIES_1)
+scaling_test_SOURCES = scaling-test.c
+scaling_test_OBJECTS = scaling-test.$(OBJEXT)
 scaling_test_LDADD = $(LDADD)
-scaling_test_DEPENDENCIES = $(top_builddir)/pixman/libpixman-1.la
-am_stress_test_OBJECTS = stress-test.$(OBJEXT) utils.$(OBJEXT)
-stress_test_OBJECTS = $(am_stress_test_OBJECTS)
+scaling_test_DEPENDENCIES = libutils.la \
+	$(top_builddir)/pixman/libpixman-1.la $(am__DEPENDENCIES_1)
+stress_test_SOURCES = stress-test.c
+stress_test_OBJECTS = stress-test.$(OBJEXT)
 stress_test_LDADD = $(LDADD)
-stress_test_DEPENDENCIES = $(top_builddir)/pixman/libpixman-1.la
+stress_test_DEPENDENCIES = libutils.la \
+	$(top_builddir)/pixman/libpixman-1.la $(am__DEPENDENCIES_1)
 trap_crasher_SOURCES = trap-crasher.c
 trap_crasher_OBJECTS = trap-crasher.$(OBJEXT)
 trap_crasher_LDADD = $(LDADD)
-trap_crasher_DEPENDENCIES = $(top_builddir)/pixman/libpixman-1.la
+trap_crasher_DEPENDENCIES = libutils.la \
+	$(top_builddir)/pixman/libpixman-1.la $(am__DEPENDENCIES_1)
 DEFAULT_INCLUDES = -I. -I$(srcdir) -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__depfiles_maybe = depfiles
@@ -153,24 +177,20 @@ LTCOMPILE = $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) \
 CCLD = $(CC)
 LINK = $(LIBTOOL) --tag=CC --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
 	$(AM_LDFLAGS) $(LDFLAGS) -o $@
-SOURCES = a1-trap-test.c $(affine_test_SOURCES) $(alpha_loop_SOURCES) \
-	$(alphamap_SOURCES) $(blitters_test_SOURCES) \
-	$(composite_SOURCES) $(composite_traps_test_SOURCES) \
-	fetch-test.c $(gradient_crash_test_SOURCES) \
-	$(lowlevel_blt_bench_SOURCES) oob-test.c \
-	$(pdf_op_test_SOURCES) $(region_test_SOURCES) \
-	region-translate-test.c scaling-crash-test.c \
-	$(scaling_helpers_test_SOURCES) $(scaling_test_SOURCES) \
-	$(stress_test_SOURCES) trap-crasher.c
-DIST_SOURCES = a1-trap-test.c $(affine_test_SOURCES) \
-	$(alpha_loop_SOURCES) $(alphamap_SOURCES) \
-	$(blitters_test_SOURCES) $(composite_SOURCES) \
-	$(composite_traps_test_SOURCES) fetch-test.c \
-	$(gradient_crash_test_SOURCES) $(lowlevel_blt_bench_SOURCES) \
-	oob-test.c $(pdf_op_test_SOURCES) $(region_test_SOURCES) \
-	region-translate-test.c scaling-crash-test.c \
-	$(scaling_helpers_test_SOURCES) $(scaling_test_SOURCES) \
-	$(stress_test_SOURCES) trap-crasher.c
+SOURCES = $(libutils_la_SOURCES) a1-trap-test.c affine-test.c \
+	alpha-loop.c alphamap.c blitters-test.c composite.c \
+	composite-traps-test.c fetch-test.c gradient-crash-test.c \
+	lowlevel-blt-bench.c oob-test.c pdf-op-test.c \
+	region-contains-test.c region-test.c region-translate-test.c \
+	scaling-crash-test.c scaling-helpers-test.c scaling-test.c \
+	stress-test.c trap-crasher.c
+DIST_SOURCES = $(libutils_la_SOURCES) a1-trap-test.c affine-test.c \
+	alpha-loop.c alphamap.c blitters-test.c composite.c \
+	composite-traps-test.c fetch-test.c gradient-crash-test.c \
+	lowlevel-blt-bench.c oob-test.c pdf-op-test.c \
+	region-contains-test.c region-test.c region-translate-test.c \
+	scaling-crash-test.c scaling-helpers-test.c scaling-test.c \
+	stress-test.c trap-crasher.c
 ETAGS = etags
 CTAGS = ctags
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
@@ -190,47 +210,51 @@ CCDEPMODE = @CCDEPMODE@
 CFLAGS = @CFLAGS@
 CPP = @CPP@
 CPPFLAGS = @CPPFLAGS@
-CXX = @CXX@
-CXXCPP = @CXXCPP@
-CXXDEPMODE = @CXXDEPMODE@
-CXXFLAGS = @CXXFLAGS@
 CYGPATH_W = @CYGPATH_W@
 DEFS = @DEFS@
 DEPDIR = @DEPDIR@
 DEP_CFLAGS = @DEP_CFLAGS@
 DEP_LIBS = @DEP_LIBS@
+DLLTOOL = @DLLTOOL@
 DSYMUTIL = @DSYMUTIL@
-ECHO = @ECHO@
+DUMPBIN = @DUMPBIN@
 ECHO_C = @ECHO_C@
 ECHO_N = @ECHO_N@
 ECHO_T = @ECHO_T@
 EGREP = @EGREP@
 EXEEXT = @EXEEXT@
-F77 = @F77@
-FFLAGS = @FFLAGS@
+FGREP = @FGREP@
 GREP = @GREP@
 GTK_CFLAGS = @GTK_CFLAGS@
 GTK_LIBS = @GTK_LIBS@
 HAVE_GTK_FALSE = @HAVE_GTK_FALSE@
 HAVE_GTK_TRUE = @HAVE_GTK_TRUE@
+HAVE_LIBPNG = @HAVE_LIBPNG@
 HAVE_PTHREAD_SETSPECIFIC = @HAVE_PTHREAD_SETSPECIFIC@
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
 INSTALL_STRIP_PROGRAM = @INSTALL_STRIP_PROGRAM@
+LD = @LD@
 LDFLAGS = @LDFLAGS@
 LIBOBJS = @LIBOBJS@
 LIBS = @LIBS@
 LIBTOOL = @LIBTOOL@
+LIPO = @LIPO@
 LN_S = @LN_S@
 LTLIBOBJS = @LTLIBOBJS@
 LT_VERSION_INFO = @LT_VERSION_INFO@
 MAKEINFO = @MAKEINFO@
+MANIFEST_TOOL = @MANIFEST_TOOL@
 MMX_CFLAGS = @MMX_CFLAGS@
 MMX_LDFLAGS = @MMX_LDFLAGS@
+NM = @NM@
 NMEDIT = @NMEDIT@
+OBJDUMP = @OBJDUMP@
 OBJEXT = @OBJEXT@
 OPENMP_CFLAGS = @OPENMP_CFLAGS@
+OTOOL = @OTOOL@
+OTOOL64 = @OTOOL64@
 PACKAGE = @PACKAGE@
 PACKAGE_BUGREPORT = @PACKAGE_BUGREPORT@
 PACKAGE_NAME = @PACKAGE_NAME@
@@ -244,6 +268,8 @@ PIXMAN_VERSION_MAJOR = @PIXMAN_VERSION_MAJOR@
 PIXMAN_VERSION_MICRO = @PIXMAN_VERSION_MICRO@
 PIXMAN_VERSION_MINOR = @PIXMAN_VERSION_MINOR@
 PKG_CONFIG = @PKG_CONFIG@
+PNG_CFLAGS = @PNG_CFLAGS@
+PNG_LIBS = @PNG_LIBS@
 PTHREAD_LDFLAGS = @PTHREAD_LDFLAGS@
 PTHREAD_LIBS = @PTHREAD_LIBS@
 RANLIB = @RANLIB@
@@ -258,27 +284,27 @@ STUBS_LIBS = @STUBS_LIBS@
 TESTPROGS_EXTRA_LDFLAGS = @TESTPROGS_EXTRA_LDFLAGS@
 TOOLCHAIN_SUPPORTS_ATTRIBUTE_CONSTRUCTOR = @TOOLCHAIN_SUPPORTS_ATTRIBUTE_CONSTRUCTOR@
 TOOLCHAIN_SUPPORTS__THREAD = @TOOLCHAIN_SUPPORTS__THREAD@
+USE_ARM_IWMMXT_FALSE = @USE_ARM_IWMMXT_FALSE@
+USE_ARM_IWMMXT_TRUE = @USE_ARM_IWMMXT_TRUE@
 USE_ARM_NEON_FALSE = @USE_ARM_NEON_FALSE@
 USE_ARM_NEON_TRUE = @USE_ARM_NEON_TRUE@
 USE_ARM_SIMD_FALSE = @USE_ARM_SIMD_FALSE@
 USE_ARM_SIMD_TRUE = @USE_ARM_SIMD_TRUE@
 USE_GCC_INLINE_ASM_FALSE = @USE_GCC_INLINE_ASM_FALSE@
 USE_GCC_INLINE_ASM_TRUE = @USE_GCC_INLINE_ASM_TRUE@
-USE_MMX_FALSE = @USE_MMX_FALSE@
-USE_MMX_TRUE = @USE_MMX_TRUE@
 USE_SSE2_FALSE = @USE_SSE2_FALSE@
 USE_SSE2_TRUE = @USE_SSE2_TRUE@
 USE_VMX_FALSE = @USE_VMX_FALSE@
 USE_VMX_TRUE = @USE_VMX_TRUE@
+USE_X86_MMX_FALSE = @USE_X86_MMX_FALSE@
+USE_X86_MMX_TRUE = @USE_X86_MMX_TRUE@
 VERSION = @VERSION@
 VMX_CFLAGS = @VMX_CFLAGS@
+ac_ct_AR = @ac_ct_AR@
 ac_ct_CC = @ac_ct_CC@
-ac_ct_CXX = @ac_ct_CXX@
-ac_ct_F77 = @ac_ct_F77@
+ac_ct_DUMPBIN = @ac_ct_DUMPBIN@
 am__fastdepCC_FALSE = @am__fastdepCC_FALSE@
 am__fastdepCC_TRUE = @am__fastdepCC_TRUE@
-am__fastdepCXX_FALSE = @am__fastdepCXX_FALSE@
-am__fastdepCXX_TRUE = @am__fastdepCXX_TRUE@
 am__include = @am__include@
 am__leading_dot = @am__leading_dot@
 am__quote = @am__quote@
@@ -319,10 +345,8 @@ sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 sysconfdir = @sysconfdir@
 target_alias = @target_alias@
-AM_CFLAGS = @OPENMP_CFLAGS@
-AM_LDFLAGS = @OPENMP_CFLAGS@ @TESTPROGS_EXTRA_LDFLAGS@
-LDADD = $(top_builddir)/pixman/libpixman-1.la -lm
-INCLUDES = -I$(top_srcdir)/pixman -I$(top_builddir)/pixman
+
+# Tests (sorted by expected completion time)
 TESTPROGRAMS = \
 	a1-trap-test		\
 	pdf-op-test		\
@@ -335,38 +359,44 @@ TESTPROGRAMS = \
 	scaling-crash-test	\
 	scaling-helpers-test	\
 	gradient-crash-test	\
+	region-contains-test	\
 	alphamap		\
 	stress-test		\
 	composite-traps-test	\
 	blitters-test		\
 	scaling-test		\
 	affine-test		\
-	composite
+	composite		\
+	$(NULL)
 
-pdf_op_test_SOURCES = pdf-op-test.c utils.c utils.h
-region_test_SOURCES = region-test.c utils.c utils.h
-blitters_test_SOURCES = blitters-test.c utils.c utils.h
-composite_traps_test_SOURCES = composite-traps-test.c utils.c utils.h
-scaling_test_SOURCES = scaling-test.c utils.c utils.h
-affine_test_SOURCES = affine-test.c utils.c utils.h
-alphamap_SOURCES = alphamap.c utils.c utils.h
-alpha_loop_SOURCES = alpha-loop.c utils.c utils.h
-composite_SOURCES = composite.c utils.c utils.h
-gradient_crash_test_SOURCES = gradient-crash-test.c utils.c utils.h
-stress_test_SOURCES = stress-test.c utils.c utils.h
-scaling_helpers_test_SOURCES = scaling-helpers-test.c utils.c utils.h
 
 # Benchmarks
 BENCHMARKS = \
-	lowlevel-blt-bench
+	lowlevel-blt-bench	\
+	$(NULL)
 
-lowlevel_blt_bench_SOURCES = lowlevel-blt-bench.c utils.c utils.h
+
+# Utility functions
+libutils_sources = \
+	utils.c			\
+	$(NULL)
+
+libutils_headers = \
+	utils.h			\
+	$(NULL)
+
+AM_CFLAGS = $(OPENMP_CFLAGS)
+AM_LDFLAGS = $(OPENMP_CFLAGS) $(TESTPROGS_EXTRA_LDFLAGS)
+LDADD = libutils.la $(top_builddir)/pixman/libpixman-1.la -lm  $(PNG_LIBS)
+INCLUDES = -I$(top_srcdir)/pixman -I$(top_builddir)/pixman $(PNG_CFLAGS)
+libutils_la_SOURCES = $(libutils_sources) $(libutils_headers)
+noinst_LTLIBRARIES = libutils.la
 TESTS = $(TESTPROGRAMS)
 all: all-am
 
 .SUFFIXES:
 .SUFFIXES: .c .lo .o .obj
-$(srcdir)/Makefile.in:  $(srcdir)/Makefile.am  $(am__configure_deps)
+$(srcdir)/Makefile.in:  $(srcdir)/Makefile.am $(top_srcdir)/test/Makefile.sources $(am__configure_deps)
 	@for dep in $?; do \
 	  case '$(am__configure_deps)' in \
 	    *$$dep*) \
@@ -395,6 +425,17 @@ $(top_srcdir)/configure:  $(am__configure_deps)
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
 $(ACLOCAL_M4):  $(am__aclocal_m4_deps)
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
+
+clean-noinstLTLIBRARIES:
+	-test -z "$(noinst_LTLIBRARIES)" || rm -f $(noinst_LTLIBRARIES)
+	@list='$(noinst_LTLIBRARIES)'; for p in $$list; do \
+	  dir="`echo $$p | sed -e 's|/[^/]*$$||'`"; \
+	  test "$$dir" != "$$p" || dir=.; \
+	  echo "rm -f \"$${dir}/so_locations\""; \
+	  rm -f "$${dir}/so_locations"; \
+	done
+libutils.la: $(libutils_la_OBJECTS) $(libutils_la_DEPENDENCIES) 
+	$(LINK)  $(libutils_la_LDFLAGS) $(libutils_la_OBJECTS) $(libutils_la_LIBADD) $(LIBS)
 
 clean-noinstPROGRAMS:
 	@list='$(noinst_PROGRAMS)'; for p in $$list; do \
@@ -438,6 +479,9 @@ oob-test$(EXEEXT): $(oob_test_OBJECTS) $(oob_test_DEPENDENCIES)
 pdf-op-test$(EXEEXT): $(pdf_op_test_OBJECTS) $(pdf_op_test_DEPENDENCIES) 
 	@rm -f pdf-op-test$(EXEEXT)
 	$(LINK) $(pdf_op_test_LDFLAGS) $(pdf_op_test_OBJECTS) $(pdf_op_test_LDADD) $(LIBS)
+region-contains-test$(EXEEXT): $(region_contains_test_OBJECTS) $(region_contains_test_DEPENDENCIES) 
+	@rm -f region-contains-test$(EXEEXT)
+	$(LINK) $(region_contains_test_LDFLAGS) $(region_contains_test_OBJECTS) $(region_contains_test_LDADD) $(LIBS)
 region-test$(EXEEXT): $(region_test_OBJECTS) $(region_test_DEPENDENCIES) 
 	@rm -f region-test$(EXEEXT)
 	$(LINK) $(region_test_LDFLAGS) $(region_test_OBJECTS) $(region_test_LDADD) $(LIBS)
@@ -478,6 +522,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/lowlevel-blt-bench.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/oob-test.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pdf-op-test.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/region-contains-test.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/region-test.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/region-translate-test.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/scaling-crash-test.Po@am__quote@
@@ -485,7 +530,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/scaling-test.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/stress-test.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/trap-crasher.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/utils.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/utils.Plo@am__quote@
 
 .c.o:
 @am__fastdepCC_TRUE@	if $(COMPILE) -MT $@ -MD -MP -MF "$(DEPDIR)/$*.Tpo" -c -o $@ $<; \
@@ -640,6 +685,7 @@ check-TESTS: $(TESTS)
 	else :; fi
 
 distdir: $(DISTFILES)
+	$(mkdir_p) $(distdir)/../test
 	@srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`; \
 	topsrcdirstrip=`echo "$(top_srcdir)" | sed 's|.|.|g'`; \
 	list='$(DISTFILES)'; for file in $$list; do \
@@ -669,7 +715,7 @@ distdir: $(DISTFILES)
 check-am: all-am
 	$(MAKE) $(AM_MAKEFLAGS) check-TESTS
 check: check-am
-all-am: Makefile $(PROGRAMS)
+all-am: Makefile $(LTLIBRARIES) $(PROGRAMS)
 installdirs:
 install: install-am
 install-exec: install-exec-am
@@ -697,8 +743,8 @@ maintainer-clean-generic:
 	@echo "it deletes files that may require special tools to rebuild."
 clean: clean-am
 
-clean-am: clean-generic clean-libtool clean-noinstPROGRAMS \
-	mostlyclean-am
+clean-am: clean-generic clean-libtool clean-noinstLTLIBRARIES \
+	clean-noinstPROGRAMS mostlyclean-am
 
 distclean: distclean-am
 	-rm -rf ./$(DEPDIR)
@@ -747,13 +793,13 @@ ps-am:
 uninstall-am: uninstall-info-am
 
 .PHONY: CTAGS GTAGS all all-am check check-TESTS check-am clean \
-	clean-generic clean-libtool clean-noinstPROGRAMS ctags \
-	distclean distclean-compile distclean-generic \
-	distclean-libtool distclean-tags distdir dvi dvi-am html \
-	html-am info info-am install install-am install-data \
-	install-data-am install-exec install-exec-am install-info \
-	install-info-am install-man install-strip installcheck \
-	installcheck-am installdirs maintainer-clean \
+	clean-generic clean-libtool clean-noinstLTLIBRARIES \
+	clean-noinstPROGRAMS ctags distclean distclean-compile \
+	distclean-generic distclean-libtool distclean-tags distdir dvi \
+	dvi-am html html-am info info-am install install-am \
+	install-data install-data-am install-exec install-exec-am \
+	install-info install-info-am install-man install-strip \
+	installcheck installcheck-am installdirs maintainer-clean \
 	maintainer-clean-generic mostlyclean mostlyclean-compile \
 	mostlyclean-generic mostlyclean-libtool pdf pdf-am ps ps-am \
 	tags uninstall uninstall-am uninstall-info-am

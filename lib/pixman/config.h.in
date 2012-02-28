@@ -30,6 +30,9 @@
 /* Define to 1 if you have the `pixman-1' library (-lpixman-1). */
 #undef HAVE_LIBPIXMAN_1
 
+/* Whether we have libpng */
+#undef HAVE_LIBPNG
+
 /* Define to 1 if you have the <memory.h> header file. */
 #undef HAVE_MEMORY_H
 
@@ -72,6 +75,10 @@
 /* Define to 1 if you have the <unistd.h> header file. */
 #undef HAVE_UNISTD_H
 
+/* Define to the sub-directory in which libtool stores uninstalled libraries.
+   */
+#undef LT_OBJDIR
+
 /* Name of package */
 #undef PACKAGE
 
@@ -105,6 +112,9 @@
 /* Whether the tool chain supports __thread */
 #undef TOOLCHAIN_SUPPORTS__THREAD
 
+/* use ARM IWMMXT compiler intrinsics */
+#undef USE_ARM_IWMMXT
+
 /* use ARM NEON assembly optimizations */
 #undef USE_ARM_NEON
 
@@ -114,9 +124,6 @@
 /* use GNU-style inline assembler */
 #undef USE_GCC_INLINE_ASM
 
-/* use MMX compiler intrinsics */
-#undef USE_MMX
-
 /* use OpenMP in the test suite */
 #undef USE_OPENMP
 
@@ -125,6 +132,9 @@
 
 /* use VMX compiler intrinsics */
 #undef USE_VMX
+
+/* use x86 MMX compiler intrinsics */
+#undef USE_X86_MMX
 
 /* Version number of package */
 #undef VERSION
