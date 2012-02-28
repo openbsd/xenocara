@@ -236,7 +236,7 @@ struct wininfo_cookies {
 };
 
 #ifndef USE_XCB_ICCCM
-# define xcb_get_wm_name(Dpy, Win) \
+# define xcb_icccm_get_wm_name(Dpy, Win) \
     xcb_get_property (Dpy, False, Win, XCB_ATOM_WM_NAME, \
 		      XCB_GET_PROPERTY_TYPE_ANY, 0, BUFSIZ)
 #endif
@@ -253,7 +253,8 @@ recursive_Window_With_Name  (
     xcb_connection_t *dpy,
     xcb_window_t window,
     struct wininfo_cookies *cookies,
-    const char *name)
+    const char *name,
+    size_t namelen)
 {
     xcb_window_t *children;
     unsigned int nchildren;
@@ -273,7 +274,8 @@ recursive_Window_With_Name  (
 		int prop_name_len = xcb_get_property_value_length (prop);
 
 		/* can't use strcmp, since prop.name is not null terminated */
-		if (strncmp (prop_name, name, prop_name_len) == 0) {
+		if ((namelen == prop_name_len) &&
+		    memcmp (prop_name, name, namelen) == 0) {
 		    w = window;
 		}
 	    }
@@ -289,16 +291,17 @@ recursive_Window_With_Name  (
 	xcb_discard_reply (dpy, cookies->get_wm_name.sequence);
     } else {
 #ifdef USE_XCB_ICCCM
-	xcb_get_text_property_reply_t nameprop;
+	xcb_icccm_get_text_property_reply_t nameprop;
 
-	if (xcb_get_wm_name_reply (dpy, cookies->get_wm_name,
-				   &nameprop, &err)) {
+	if (xcb_icccm_get_wm_name_reply (dpy, cookies->get_wm_name,
+					 &nameprop, &err)) {
 	    /* can't use strcmp, since nameprop.name is not null terminated */
-	    if (strncmp (nameprop.name, name, nameprop.name_len) == 0) {
+	    if ((namelen == nameprop.name_len) &&
+		memcmp (nameprop.name, name, namelen) == 0) {
 		w = window;
 	    }
 
-	    xcb_get_text_property_reply_wipe (&nameprop);
+	    xcb_icccm_get_text_property_reply_wipe (&nameprop);
 	}
 #else
 	prop = xcb_get_property_reply (dpy, cookies->get_wm_name, &err);
@@ -309,7 +312,8 @@ recursive_Window_With_Name  (
 		int prop_name_len = xcb_get_property_value_length (prop);
 
 		/* can't use strcmp, since prop.name is not null terminated */
-		if (strncmp (prop_name, name, prop_name_len) == 0) {
+		if ((namelen == prop_name_len) &&
+		    memcmp (prop_name, name, namelen) == 0) {
 		    w = window;
 		}
 	    }
@@ -347,14 +351,14 @@ recursive_Window_With_Name  (
 	if (atom_net_wm_name && atom_utf8_string)
 	    child_cookies[i].get_net_wm_name =
 		xcb_get_net_wm_name (dpy, children[i]);
-	child_cookies[i].get_wm_name = xcb_get_wm_name (dpy, children[i]);
+	child_cookies[i].get_wm_name = xcb_icccm_get_wm_name (dpy, children[i]);
 	child_cookies[i].query_tree = xcb_query_tree (dpy, children[i]);
     }
     xcb_flush (dpy);
 
     for (i = 0; i < nchildren; i++) {
 	w = recursive_Window_With_Name (dpy, children[i],
-					&child_cookies[i], name);
+					&child_cookies[i], name, namelen);
 	if (w)
 	    break;
     }
@@ -389,10 +393,10 @@ Window_With_Name (
 
     if (atom_net_wm_name && atom_utf8_string)
 	cookies.get_net_wm_name = xcb_get_net_wm_name (dpy, top);
-    cookies.get_wm_name = xcb_get_wm_name (dpy, top);
+    cookies.get_wm_name = xcb_icccm_get_wm_name (dpy, top);
     cookies.query_tree = xcb_query_tree (dpy, top);
     xcb_flush (dpy);
-    return recursive_Window_With_Name(dpy, top, &cookies, name);
+    return recursive_Window_With_Name(dpy, top, &cookies, name, strlen(name));
 }
 
 

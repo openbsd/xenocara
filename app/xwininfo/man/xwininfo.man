@@ -1,14 +1,14 @@
 .\" Copyright 1988, 1998  The Open Group
-.\" 
+.\"
 .\" Permission to use, copy, modify, distribute, and sell this software and its
 .\" documentation for any purpose is hereby granted without fee, provided that
 .\" the above copyright notice appear in all copies and that both that
 .\" copyright notice and this permission notice appear in supporting
 .\" documentation.
-.\" 
+.\"
 .\" The above copyright notice and this permission notice shall be included
 .\" in all copies or substantial portions of the Software.
-.\" 
+.\"
 .\" THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
 .\" OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
 .\" MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
@@ -16,7 +16,7 @@
 .\" OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
 .\" ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 .\" OTHER DEALINGS IN THE SOFTWARE.
-.\" 
+.\"
 .\" Except as contained in this notice, the name of The Open Group shall
 .\" not be used in advertising or otherwise to promote the sale, use or
 .\" other dealings in this Software without prior written authorization
@@ -89,7 +89,7 @@ This option is like \fB\-children\fP but displays all children recursively.
 .PP
 .TP 8
 .B \-stats
-This option causes the display of various attributes pertaining to 
+This option causes the display of various attributes pertaining to
 the location and appearance of the selected window.
 Information displayed includes the location of the window,
 its width and height, its depth, border width, visual id and class,
@@ -125,13 +125,13 @@ displayed.  Information displayed may include whether or not the application
 accepts input, what the window's icon window # and name is, where the window's
 icon should go, and what the window's initial state should be.
 .PP
-.TP 8 
+.TP 8
 .B \-shape
 This option causes the selected window's window and border shape extents to
 be displayed.
 .TP 8
 .B \-frame
-This option causes window manager frames to be considered when manually 
+This option causes window manager frames to be considered when manually
 selecting windows.
 .PP
 .TP 8
@@ -145,7 +145,7 @@ server thinks the resolution is. Geometry specifications that are in
 This option causes all individual height, width, and x and y positions to be
 displayed in inches (and feet, yards, and miles if necessary) as well as
 number of pixels. \fB\-metric\fP and \fB\-english\fP may both be enabled at the
-same time. 
+same time.
 .PP
 .TP 8
 .B \-all
@@ -187,11 +187,11 @@ xwininfo: Window id: 0x60000f "xterm"
 .B DISPLAY
 To get the default host and display number.
 .SH SEE ALSO
-.IR X (__miscmansuffix__), 
+.IR X (__miscmansuffix__),
 .IR xprop (__appmansuffix__),
-.IR xdpyinfo (__appmansuffix__), 
+.IR xdpyinfo (__appmansuffix__),
 .IR xdriinfo (__appmansuffix__),
-.IR xvinfo (__appmansuffix__), 
+.IR xvinfo (__appmansuffix__),
 .IR glxinfo (__appmansuffix__)
 .SH BUGS
 Using \fB\-stats \-bits\fP shows some redundant information.
