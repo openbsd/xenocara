@@ -49,7 +49,7 @@ typedef struct
   VisualID	visualID;		/* The VisualID of the overlay visual */
   int		transparentType;	/* Can be None, TransparentPixel or
 					 * TransparentMask */
-  int		value;			/* Pixel value */
+  Pixel		value;			/* Pixel value */
   int		layer;			/* Overlay planes will always be in
 					 * layer 1 */
 } OverlayVisualPropertyRec;
@@ -65,7 +65,7 @@ typedef struct
   XVisualInfo	*pOverlayVisualInfo;	/* Pointer to the XVisualInfo struct */
   int		transparentType;	/* Can be None, TransparentPixel or
 					 * TransparentMask */
-  int		value;			/* Pixel value */
+  Pixel		value;			/* Pixel value */
   int		layer;			/* Overlay planes will always be in
 					 * layer 1 */
 } OverlayInfo;

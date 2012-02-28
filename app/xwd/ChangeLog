@@ -1,3 +1,103 @@
+commit 431918bd9644dd5db2216e8ab61959e9a4b74bc0
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Feb 22 20:19:03 2012 -0800
+
+    xwd 1.0.5
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 61fcdc321919a362bd46853537c136140421d746
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Tue Dec 13 15:56:47 2011 -0800
+
+    Silence -Wshadow warnings
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit 48ef3b5604dbe05d67c0f6e01d38cb718085b9b6
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Tue Dec 13 15:54:13 2011 -0800
+
+    Mark usage as _X_NORETURN
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit 8376c9c6098b69a47fc37817ecf9f57302d992fc
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Tue Dec 13 15:53:02 2011 -0800
+
+    Dead code removal
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit 7d88d8ab44b17247753f7225a1d8133d55d8423e
+Author: Pär Lidberg <par.lidberg@elekta.com>
+Date:   Mon Oct 3 00:24:06 2011 -0700
+
+    Fix LP64 bug
+    
+    https://bugs.freedesktop.org/show_bug.cgi?id=14321
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit 95315108d25d0a17aef488e2bd4df8e98415d5d7
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Jun 9 20:27:46 2011 -0700
+
+    Replace local checks for gcc with _X_NORETURN from xproto 7.0.17
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 6d83294bae9ba7394716f62abb08cfb8b89ed373
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Sun May 8 10:02:16 2011 -0700
+
+    Rewrite parse_long to not fail -Wformat-nonliteral
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit 97085ba43fcd752271a9356c435d28b95211644d
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Sun May 8 09:52:49 2011 -0700
+
+    Dead code removal
+    
+    xwd.c:298:5: warning: Value stored to 'bw' is never read
+        bw = 0;
+        ^    ~
+    
+    Found-by: clang static analyzer
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit 4a148f172d83d5e7f0ace6f28d4b8894b5e10442
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jan 19 10:06:57 2011 -0500
+
+    config: move man pages into their own directory
+    
+    Use services provided by XORG_MANPAGE_SECTIONS.
+    Use standard Makefile for man pages.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 00bdfc48c8249d989282aeb4d14edac49df63a3a
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Jan 13 17:15:37 2011 -0500
+
+    man: replace hard coded man page section with substitution strings
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 1560946f78332c86e51f5298500bad94d9130181
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Jan 13 11:15:48 2011 -0500
+
+    man: remove trailing spaces and tabs
+    
+    Using s/[ \t]*$//
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
 commit d58fa4c8f990abbb12df3cca34ed413683604470
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Sun Nov 7 10:17:48 2010 -0800

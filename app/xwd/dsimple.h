@@ -61,7 +61,7 @@ Display *Open_Display(const char *);
 void Setup_Display_And_Screen(int *, char **);
 void Close_Display(void);
 Window Select_Window_Args(int *, char **);
-void usage(void);
+void usage(void) _X_NORETURN;
 
 #define X_USAGE "[host:display]"              /* X arguments handled by
 						 Get_Display_Name */
@@ -76,9 +76,5 @@ void usage(void);
 
 Window Select_Window(Display *, int);
 Window Window_With_Name(Display *, Window, const char *);
-#ifdef __GNUC__
-void Fatal_Error(char *, ...) __attribute__((__noreturn__));
-#else
-void Fatal_Error(char *, ...);
-#endif
+void Fatal_Error(char *, ...) _X_NORETURN;
 void outl(char *, ...);
