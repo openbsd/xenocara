@@ -146,6 +146,8 @@
 ./usr/X11R6/lib/modules/drivers/r128_drv.so
 ./usr/X11R6/lib/modules/drivers/radeon_drv.la
 ./usr/X11R6/lib/modules/drivers/radeon_drv.so
+./usr/X11R6/lib/modules/drivers/radeonold_drv.la
+./usr/X11R6/lib/modules/drivers/radeonold_drv.so
 ./usr/X11R6/lib/modules/drivers/sunffb_drv.la
 ./usr/X11R6/lib/modules/drivers/sunffb_drv.so
 ./usr/X11R6/lib/modules/drivers/wildcatfb_drv.la
@@ -251,6 +253,7 @@
 ./usr/X11R6/man/man4/penmount.4
 ./usr/X11R6/man/man4/r128.4
 ./usr/X11R6/man/man4/radeon.4
+./usr/X11R6/man/man4/radeonold.4
 ./usr/X11R6/man/man4/sunffb.4
 ./usr/X11R6/man/man4/usbtablet.4
 ./usr/X11R6/man/man4/void.4

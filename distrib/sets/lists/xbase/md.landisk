@@ -118,7 +118,7 @@
 ./usr/X11R6/lib/libpciaccess.so.1.0
 ./usr/X11R6/lib/libpixman-1.a
 ./usr/X11R6/lib/libpixman-1.la
-./usr/X11R6/lib/libpixman-1.so.22.2
+./usr/X11R6/lib/libpixman-1.so.24.4
 ./usr/X11R6/lib/libpthread-stubs.a
 ./usr/X11R6/lib/libpthread-stubs.so.1.0
 ./usr/X11R6/lib/libpthread-stubs_pic.a
