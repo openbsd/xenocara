@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.44 2012/03/04 15:49:04 matthieu Exp $
+# $OpenBSD: Makefile,v 1.45 2012/03/04 16:05:52 matthieu Exp $
 
 INPUT_DRV_DEFAULT= \
 	xf86-input-keyboard \
@@ -64,7 +64,6 @@ VIDEO_DRV_amd64= \
 	${VIDEO_DRV_COMMON} \
 	xf86-video-intel \
 	xf86-video-openchrome \
-	xf86-video-radeonhd \
 	xf86-video-vmware \
 	xf86-video-wsudl
 
@@ -84,7 +83,6 @@ VIDEO_DRV_i386= \
 	xf86-video-i740 \
 	xf86-video-intel \
 	xf86-video-openchrome \
-	xf86-video-radeonhd \
 	xf86-video-vmware \
 	xf86-video-voodoo \
 	xf86-video-wsudl
