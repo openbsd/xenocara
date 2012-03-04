@@ -15,6 +15,8 @@
 
 #include "bicubic_table.h"
 
+#include <xf86xvmc.h>
+
 #define ClipValue(v,min,max) ((v) < (min) ? (min) : (v) > (max) ? (max) : (v))
 
 /* Xvideo port struct */
@@ -90,14 +92,10 @@ typedef struct {
    void         *video_memory;
    int           video_offset;
 
-   Bool          planar_hw;
-   Bool          planar_state;
    int           planeu_offset;
    int           planev_offset;
 
    /* bicubic filtering */
-   void         *bicubic_memory;
-   int           bicubic_offset;
    Bool          bicubic_enabled;
    uint32_t      bicubic_src_offset;
    int           bicubic_state;
@@ -120,12 +118,32 @@ typedef struct {
     int src_w, src_h, dst_w, dst_h;
     int w, h;
     int drw_x, drw_y;
+    int src_x, src_y;
     int vsync;
+    Bool is_planar;
+    int vtx_count;
+    int hw_align;
+
+    struct radeon_bo *src_bo[2];
 } RADEONPortPrivRec, *RADEONPortPrivPtr;
 
-xf86CrtcPtr
-radeon_xv_pick_best_crtc(ScrnInfoPtr pScrn,
-			 int x1, int x2, int y1, int y2);
+/* Reference color space transform data */
+typedef struct tagREF_TRANSFORM
+{
+    float   RefLuma;
+    float   RefRCb;
+    float   RefRCr;
+    float   RefGCb;
+    float   RefGCr;
+    float   RefBCb;
+    float   RefBCr;
+} REF_TRANSFORM;
+
+#define RTFSaturation(a)   (1.0 + ((a)*1.0)/1000.0)
+#define RTFBrightness(a)   (((a)*1.0)/2000.0)
+#define RTFIntensity(a)   (((a)*1.0)/2000.0)
+#define RTFContrast(a)   (1.0 + ((a)*1.0)/1000.0)
+#define RTFHue(a)   (((a)*3.1416)/1000.0)
 
 void RADEONInitI2C(ScrnInfoPtr pScrn, RADEONPortPrivPtr pPriv);
 void RADEONResetI2C(ScrnInfoPtr pScrn, RADEONPortPrivPtr pPriv);
@@ -135,6 +153,7 @@ void RADEONVIP_reset(ScrnInfoPtr pScrn, RADEONPortPrivPtr pPriv);
 
 int  RADEONSetPortAttribute(ScrnInfoPtr, Atom, INT32, pointer);
 int  RADEONGetPortAttribute(ScrnInfoPtr, Atom ,INT32 *, pointer);
+void RADEONFreeVideoMemory(ScrnInfoPtr pScrn, RADEONPortPrivPtr pPriv);
 void RADEONStopVideo(ScrnInfoPtr, pointer, Bool);
 void RADEONQueryBestSize(ScrnInfoPtr, Bool, short, short, short, short,
 			 unsigned int *, unsigned int *, pointer);
@@ -143,6 +162,9 @@ int  RADEONQueryImageAttributes(ScrnInfoPtr, int, unsigned short *,
 
 XF86VideoAdaptorPtr
 RADEONSetupImageTexturedVideo(ScreenPtr pScreen);
+
+XF86MCAdaptorPtr
+RADEONCreateAdaptorXvMC(ScreenPtr pScreen, char *xv_adaptor_name);
 
 void
 RADEONCopyData(ScrnInfoPtr pScrn,

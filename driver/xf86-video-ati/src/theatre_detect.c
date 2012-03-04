@@ -22,9 +22,16 @@
  * authorization from the author.
  *
  * $Log: theatre_detect.c,v $
- * Revision 1.5  2012/02/06 22:53:13  matthieu
- * Revert the update to xf86-video-ati 6.14.3. Requested by espie@
- * who experiemnts regressions with this driver.
+ * Revision 1.6  2012/03/04 16:01:20  matthieu
+ * Re-update xf86-video-ati to 6.14.3.
+ *
+ * Because of ati.c revision 1.5, it will not be selected by
+ * autoconfiguration code, so people who want to run this version of the
+ * driver on their radeon cards need an explicit "Device" section in
+ * xorg.conf.
+ *
+ * Revision 1.4  2012/01/25 21:33:35  matthieu
+ * Update to xf86-video-ati 6.14.3. Tested by many.
  *
  * Revision 1.3  2009/08/25 18:51:45  matthieu
  * update do xf86-video-ati 6.12.2
@@ -88,7 +95,7 @@ _X_EXPORT TheatrePtr DetectTheatre(GENERIC_BUS_Ptr b)
    return NULL;
    }
    
-   t = xcalloc(1,sizeof(TheatreRec));
+   t = calloc(1,sizeof(TheatreRec));
    t->VIP = b;
    t->theatre_num = -1;
    t->mode=MODE_UNINITIALIZED;
@@ -122,7 +129,7 @@ _X_EXPORT TheatrePtr DetectTheatre(GENERIC_BUS_Ptr b)
 
    if(t->theatre_num < 0)
    {
-   xfree(t);
+   free(t);
    return NULL;
    }
 

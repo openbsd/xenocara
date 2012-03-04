@@ -103,28 +103,6 @@
 #define RADEON_ATTRDR                       0x03c1 /* VGA */
 #define RADEON_ATTRDW                       0x03c0 /* VGA */
 #define RADEON_ATTRX                        0x03c0 /* VGA */
-#define RADEON_AUX_SC_CNTL                  0x1660
-#       define RADEON_AUX1_SC_EN            (1 << 0)
-#       define RADEON_AUX1_SC_MODE_OR       (0 << 1)
-#       define RADEON_AUX1_SC_MODE_NAND     (1 << 1)
-#       define RADEON_AUX2_SC_EN            (1 << 2)
-#       define RADEON_AUX2_SC_MODE_OR       (0 << 3)
-#       define RADEON_AUX2_SC_MODE_NAND     (1 << 3)
-#       define RADEON_AUX3_SC_EN            (1 << 4)
-#       define RADEON_AUX3_SC_MODE_OR       (0 << 5)
-#       define RADEON_AUX3_SC_MODE_NAND     (1 << 5)
-#define RADEON_AUX1_SC_BOTTOM               0x1670
-#define RADEON_AUX1_SC_LEFT                 0x1664
-#define RADEON_AUX1_SC_RIGHT                0x1668
-#define RADEON_AUX1_SC_TOP                  0x166c
-#define RADEON_AUX2_SC_BOTTOM               0x1680
-#define RADEON_AUX2_SC_LEFT                 0x1674
-#define RADEON_AUX2_SC_RIGHT                0x1678
-#define RADEON_AUX2_SC_TOP                  0x167c
-#define RADEON_AUX3_SC_BOTTOM               0x1690
-#define RADEON_AUX3_SC_LEFT                 0x1684
-#define RADEON_AUX3_SC_RIGHT                0x1688
-#define RADEON_AUX3_SC_TOP                  0x168c
 #define RADEON_AUX_WINDOW_HORZ_CNTL         0x02d8
 #define RADEON_AUX_WINDOW_VERT_CNTL         0x02dc
 
@@ -276,19 +254,59 @@
 
 #define RADEON_PCIE_INDEX                   0x0030
 #define RADEON_PCIE_DATA                    0x0034
+#define R600_PCIE_PORT_INDEX                0x0038
+#define R600_PCIE_PORT_DATA                 0x003c
+/* PCIE_LC_LINK_WIDTH_CNTL is PCIE on r1xx-r5xx, PCIE_PORT on r6xx-r7xx */
+#define RADEON_PCIE_LC_LINK_WIDTH_CNTL      0xa2 /* PCIE */
+#       define RADEON_PCIE_LC_LINK_WIDTH_SHIFT     0
+#       define RADEON_PCIE_LC_LINK_WIDTH_MASK      0x7
+#       define RADEON_PCIE_LC_LINK_WIDTH_X0        0
+#       define RADEON_PCIE_LC_LINK_WIDTH_X1        1
+#       define RADEON_PCIE_LC_LINK_WIDTH_X2        2
+#       define RADEON_PCIE_LC_LINK_WIDTH_X4        3
+#       define RADEON_PCIE_LC_LINK_WIDTH_X8        4
+#       define RADEON_PCIE_LC_LINK_WIDTH_X12       5
+#       define RADEON_PCIE_LC_LINK_WIDTH_X16       6
+#       define RADEON_PCIE_LC_LINK_WIDTH_RD_SHIFT  4
+#       define RADEON_PCIE_LC_LINK_WIDTH_RD_MASK   0x70
+#       define R600_PCIE_LC_RECONFIG_ARC_MISSING_ESCAPE   (1 << 7)
+#       define RADEON_PCIE_LC_RECONFIG_NOW         (1 << 8)
+#       define RADEON_PCIE_LC_RECONFIG_LATER       (1 << 9)
+#       define RADEON_PCIE_LC_SHORT_RECONFIG_EN    (1 << 10)
+#       define R600_PCIE_LC_RENEGOTIATE_EN         (1 << 10)
+#       define R600_PCIE_LC_SHORT_RECONFIG_EN      (1 << 11)
+#define R600_TARGET_AND_CURRENT_PROFILE_INDEX      0x70c
+#define R700_TARGET_AND_CURRENT_PROFILE_INDEX      0x66c
 
 #define RADEON_CACHE_CNTL                   0x1724
 #define RADEON_CACHE_LINE                   0x0f0c /* PCI */
 #define RADEON_CAPABILITIES_ID              0x0f50 /* PCI */
 #define RADEON_CAPABILITIES_PTR             0x0f34 /* PCI */
 #define RADEON_CLK_PIN_CNTL                 0x0001 /* PLL */
+#       define RADEON_DONT_USE_XTALIN       (1 << 4)
 #       define RADEON_SCLK_DYN_START_CNTL   (1 << 15)
 #define RADEON_CLOCK_CNTL_DATA              0x000c
 #define RADEON_CLOCK_CNTL_INDEX             0x0008
 #       define RADEON_PLL_WR_EN             (1 << 7)
 #       define RADEON_PLL_DIV_SEL           (3 << 8)
 #       define RADEON_PLL2_DIV_SEL_MASK     ~(3 << 8)
-#define RADEON_CLK_PWRMGT_CNTL              0x0014
+#define RADEON_M_SPLL_REF_FB_DIV            0x000a /* PLL */
+#       define RADEON_M_SPLL_REF_DIV_MASK   0xff
+#       define RADEON_M_SPLL_REF_DIV_SHIFT  0
+#       define RADEON_MPLL_FB_DIV_MASK      0xff
+#       define RADEON_MPLL_FB_DIV_SHIFT     8
+#       define RADEON_SPLL_FB_DIV_MASK      0xff
+#       define RADEON_SPLL_FB_DIV_SHIFT     16
+#define RADEON_SPLL_CNTL                    0x000c /* PLL */
+#       define RADEON_SPLL_SLEEP            (1 << 0)
+#       define RADEON_SPLL_RESET            (1 << 1)
+#       define RADEON_SPLL_PCP_MASK         0x7
+#       define RADEON_SPLL_PCP_SHIFT        8
+#       define RADEON_SPLL_PVG_MASK         0x7
+#       define RADEON_SPLL_PVG_SHIFT        11
+#       define RADEON_SPLL_PDC_MASK         0x3
+#       define RADEON_SPLL_PDC_SHIFT        14
+#define RADEON_CLK_PWRMGT_CNTL              0x0014 /* PLL */
 #       define RADEON_ENGIN_DYNCLK_MODE     (1 << 12)
 #       define RADEON_ACTIVE_HILO_LAT_MASK  (3 << 13)
 #       define RADEON_ACTIVE_HILO_LAT_SHIFT 13
@@ -300,7 +318,7 @@
 #       define RADEON_DYN_STOP_MODE_MASK    (7 << 21)
 #       define RADEON_TVPLL_PWRMGT_OFF      (1 << 30)
 #       define RADEON_TVCLK_TURNOFF         (1 << 31)
-#define RADEON_PLL_PWRMGT_CNTL              0x0015
+#define RADEON_PLL_PWRMGT_CNTL              0x0015 /* PLL */
 #       define RADEON_TCL_BYPASS_DISABLE    (1 << 20)
 #define RADEON_CLR_CMP_CLR_3D               0x1a24
 #define RADEON_CLR_CMP_CLR_DST              0x15c8
@@ -405,8 +423,9 @@
 #       define RADEON_CRTC_V_CUTOFF_ACTIVE_EN (1<<5)
 #define RADEON_CRTC_GUI_TRIG_VLINE          0x0218
 #       define RADEON_CRTC_GUI_TRIG_VLINE_START_SHIFT  0
-#       define RADEON_CRTC_GUI_TRIG_VLINE_END_SHIFT    16
 #       define RADEON_CRTC_GUI_TRIG_VLINE_INV          (1 << 15)
+#       define RADEON_CRTC_GUI_TRIG_VLINE_END_SHIFT    16
+#       define RADEON_CRTC_GUI_TRIG_VLINE_STALL        (1 << 30)
 #define RADEON_CRTC_H_SYNC_STRT_WID         0x0204
 #       define RADEON_CRTC_H_SYNC_STRT_PIX        (0x07  <<  0)
 #       define RADEON_CRTC_H_SYNC_STRT_CHAR       (0x3ff <<  3)
@@ -863,7 +882,7 @@
 #       define RADEON_FP2_DVO_EN               (1 << 25)
 #       define RADEON_FP2_DVO_RATE_SEL_SDR     (1 << 26)
 #       define R200_FP2_DVO_RATE_SEL_SDR       (1 << 27)
-#       define R300_FP2_DVO_CLOCK_MODE_SINGLE  (1 << 28)
+#       define R200_FP2_DVO_CLOCK_MODE_SINGLE  (1 << 28)
 #       define R300_FP2_DVO_DUAL_CHANNEL_EN    (1 << 29)
 #define RADEON_FP_H_SYNC_STRT_WID           0x02c4
 #define RADEON_FP_H2_SYNC_STRT_WID          0x03c4
@@ -936,11 +955,11 @@
 #define RADEON_GENMO_WT                     0x03c2 /* VGA */
 #define RADEON_GENS0                        0x03c2 /* VGA */
 #define RADEON_GENS1                        0x03da /* VGA, 0x03ba */
-#define RADEON_GPIO_MONID                   0x0068 /* DDC interface via I2C */
+#define RADEON_GPIO_MONID                   0x0068 /* DDC interface via I2C */ /* DDC3 */
 #define RADEON_GPIO_MONIDB                  0x006c
 #define RADEON_GPIO_CRT2_DDC                0x006c
-#define RADEON_GPIO_DVI_DDC                 0x0064
-#define RADEON_GPIO_VGA_DDC                 0x0060
+#define RADEON_GPIO_DVI_DDC                 0x0064 /* DDC2 */
+#define RADEON_GPIO_VGA_DDC                 0x0060 /* DDC1 */
 #       define RADEON_GPIO_A_0              (1 <<  0)
 #       define RADEON_GPIO_A_1              (1 <<  1)
 #       define RADEON_GPIO_Y_0              (1 <<  8)
@@ -979,24 +998,28 @@
 
        /* Multimedia I2C bus */
 #define RADEON_I2C_CNTL_0		    0x0090
-#define RADEON_I2C_DONE (1<<0)
-#define RADEON_I2C_NACK (1<<1)
-#define RADEON_I2C_HALT (1<<2)
-#define RADEON_I2C_SOFT_RST (1<<5)
-#define RADEON_I2C_DRIVE_EN (1<<6)
-#define RADEON_I2C_DRIVE_SEL (1<<7)
-#define RADEON_I2C_START (1<<8)
-#define RADEON_I2C_STOP (1<<9)
-#define RADEON_I2C_RECEIVE (1<<10)
-#define RADEON_I2C_ABORT (1<<11)
-#define RADEON_I2C_GO (1<<12)
+#define RADEON_I2C_DONE                     (1 << 0)
+#define RADEON_I2C_NACK                     (1 << 1)
+#define RADEON_I2C_HALT                     (1 << 2)
+#define RADEON_I2C_SOFT_RST                 (1 << 5)
+#define RADEON_I2C_DRIVE_EN                 (1 << 6)
+#define RADEON_I2C_DRIVE_SEL                (1 << 7)
+#define RADEON_I2C_START                    (1 << 8)
+#define RADEON_I2C_STOP                     (1 << 9)
+#define RADEON_I2C_RECEIVE                  (1 << 10)
+#define RADEON_I2C_ABORT                    (1 << 11)
+#define RADEON_I2C_GO                       (1 << 12)
 #define RADEON_I2C_CNTL_1                   0x0094
-#define RADEON_I2C_SEL         (1<<16)
-#define RADEON_I2C_EN          (1<<17)
+#define RADEON_I2C_SEL                      (1 << 16)
+#define RADEON_I2C_EN                       (1 << 17)
 #define RADEON_I2C_DATA			    0x0098
 
 #define RADEON_DVI_I2C_CNTL_0		    0x02e0
-#define RADEON_DVI_I2C_CNTL_1               0x02e4 /* ? */
+#       define R200_DVI_I2C_PIN_SEL(x)      ((x) << 3)
+#       define R200_SEL_DDC1                0 /* 0x60 - VGA_DDC */
+#       define R200_SEL_DDC2                1 /* 0x64 - DVI_DDC */
+#       define R200_SEL_DDC3                2 /* 0x68 - MONID_DDC */
+#define RADEON_DVI_I2C_CNTL_1               0x02e4
 #define RADEON_DVI_I2C_DATA		    0x02e8
 
 #define RADEON_INTERRUPT_LINE               0x0f3c /* PCI */
@@ -3504,11 +3527,23 @@
 #	define R520_MEM_NUM_CHANNELS_SHIFT  24
 #	define R520_MC_CHANNEL_SIZE  (1 << 23)
 
+#define RS780_MC_INDEX				0x28f8
+#	define RS780_MC_INDEX_MASK		0x1ff
+#	define RS780_MC_INDEX_WR_EN		(1 << 9)
+#define RS780_MC_DATA				0x28fc
+
 #define R600_RAMCFG				       0x2408
 #       define R600_CHANSIZE                           (1 << 7)
 #       define R600_CHANSIZE_OVERRIDE                  (1 << 10)
 
 #define R600_SRBM_STATUS			       0x0e50
+
+#define AVIVO_CP_DYN_CNTL                              0x000f /* PLL */
+#       define AVIVO_CP_FORCEON                        (1 << 0)
+#define AVIVO_E2_DYN_CNTL                              0x0011 /* PLL */
+#       define AVIVO_E2_FORCEON                        (1 << 0)
+#define AVIVO_IDCT_DYN_CNTL                            0x0013 /* PLL */
+#       define AVIVO_IDCT_FORCEON                      (1 << 0)
 
 #define AVIVO_HDP_FB_LOCATION 0x134
 
@@ -3634,8 +3669,16 @@
 #       define R600_D1GRPH_SWAP_ENDIAN_32BIT                   (2 << 0)
 #       define R600_D1GRPH_SWAP_ENDIAN_64BIT                   (3 << 0)
 
+/* the *_HIGH surface regs are backwards; the D1 regs are in the D2
+ * block and vice versa.  This applies to GRPH, CUR, etc.
+ */
+
 #define AVIVO_D1GRPH_PRIMARY_SURFACE_ADDRESS                    0x6110
+#define R700_D1GRPH_PRIMARY_SURFACE_ADDRESS_HIGH                0x6914
+#define R700_D2GRPH_PRIMARY_SURFACE_ADDRESS_HIGH                0x6114
 #define AVIVO_D1GRPH_SECONDARY_SURFACE_ADDRESS                  0x6118
+#define R700_D1GRPH_SECONDARY_SURFACE_ADDRESS_HIGH              0x691c
+#define R700_D2GRPH_SECONDARY_SURFACE_ADDRESS_HIGH              0x611c
 #define AVIVO_D1GRPH_PITCH                                      0x6120
 #define AVIVO_D1GRPH_SURFACE_OFFSET_X                           0x6124
 #define AVIVO_D1GRPH_SURFACE_OFFSET_Y                           0x6128
@@ -3655,6 +3698,8 @@
 #       define AVIVO_D1CURSOR_MODE_MASK   (0x3<<8)
 #       define AVIVO_D1CURSOR_MODE_24BPP  (0x2)
 #define AVIVO_D1CUR_SURFACE_ADDRESS             0x6408
+#define R700_D1CUR_SURFACE_ADDRESS_HIGH         0x6c0c
+#define R700_D2CUR_SURFACE_ADDRESS_HIGH         0x640c
 #define AVIVO_D1CUR_SIZE                        0x6410
 #define AVIVO_D1CUR_POSITION                    0x6414
 #define AVIVO_D1CUR_HOT_SPOT                    0x6418
@@ -3689,6 +3734,19 @@
 #       define AVIVO_DC_LB_MEMORY_SPLIT_SHIFT_MODE (1 << 2)
 #       define AVIVO_DC_LB_DISP1_END_ADR_SHIFT  4
 #       define AVIVO_DC_LB_DISP1_END_ADR_MASK   0x7ff
+#define AVIVO_D1MODE_PRIORITY_A_CNT             0x6548
+#       define AVIVO_DxMODE_PRIORITY_MARK_MASK  0x7fff
+#       define AVIVO_DxMODE_PRIORITY_OFF        (1 << 16)
+#       define AVIVO_DxMODE_PRIORITY_ALWAYS_ON  (1 << 20)
+#       define AVIVO_DxMODE_PRIORITY_FORCE_MASK (1 << 24)
+#define AVIVO_D1MODE_PRIORITY_B_CNT             0x654c
+#define AVIVO_D2MODE_PRIORITY_A_CNT             0x6d48
+#define AVIVO_D2MODE_PRIORITY_B_CNT             0x6d4c
+#define AVIVO_LB_MAX_REQ_OUTSTANDING            0x6d58
+#       define AVIVO_LB_D1_MAX_REQ_OUTSTANDING_MASK    0xf
+#       define AVIVO_LB_D1_MAX_REQ_OUTSTANDING_SHIFT   0
+#       define AVIVO_LB_D2_MAX_REQ_OUTSTANDING_MASK    0xf
+#       define AVIVO_LB_D2_MAX_REQ_OUTSTANDING_SHIFT   16
 
 #define AVIVO_D1MODE_DATA_FORMAT                0x6528
 #       define AVIVO_D1MODE_INTERLEAVE_EN       (1 << 0)
@@ -3749,6 +3807,8 @@
 #define AVIVO_D2CUR_SURFACE_ADDRESS             0x6c08
 #define AVIVO_D2CUR_SIZE                        0x6c10
 #define AVIVO_D2CUR_POSITION                    0x6c14
+
+#define RS690_DCP_CONTROL                       0x6c9c
 
 #define AVIVO_D2MODE_DATA_FORMAT                0x6d28
 #define AVIVO_D2MODE_DESKTOP_HEIGHT             0x6d2c
@@ -3960,6 +4020,9 @@
 #define AVIVO_GPIO_2                        0x7e50
 #define AVIVO_GPIO_3                        0x7e60
 
+#define AVIVO_DC_GPIO_HPD_MASK              0x7e90
+#define AVIVO_DC_GPIO_HPD_A                 0x7e94
+#define AVIVO_DC_GPIO_HPD_EN                0x7e98
 #define AVIVO_DC_GPIO_HPD_Y                 0x7e9c
 
 #define AVIVO_I2C_STATUS					0x7d30
@@ -4038,6 +4101,11 @@
 #       define R600_SCK_PRESCALE_CRYSTAL_CLK_SHIFT 28
 #       define R600_SCK_PRESCALE_CRYSTAL_CLK_MASK  (0xf << 28)
 
+#define R600_CG_SPLL_FUNC_CNTL                     0x600
+#       define R600_SPLL_BYPASS_EN                 (1 << 3)
+#define R600_CG_SPLL_STATUS                        0x60c
+#       define R600_SPLL_CHG_STATUS                (1 << 1)
+
 #define R600_BIOS_0_SCRATCH               0x1724
 #define R600_BIOS_1_SCRATCH               0x1728
 #define R600_BIOS_2_SCRATCH               0x172c
@@ -4046,6 +4114,161 @@
 #define R600_BIOS_5_SCRATCH               0x1738
 #define R600_BIOS_6_SCRATCH               0x173c
 #define R600_BIOS_7_SCRATCH               0x1740
+
+/* evergreen */
+#define EVERGREEN_VGA_MEMORY_BASE_ADDRESS               0x310
+#define EVERGREEN_VGA_MEMORY_BASE_ADDRESS_HIGH          0x324
+#define EVERGREEN_D3VGA_CONTROL                         0x3e0
+#define EVERGREEN_D4VGA_CONTROL                         0x3e4
+#define EVERGREEN_D5VGA_CONTROL                         0x3e8
+#define EVERGREEN_D6VGA_CONTROL                         0x3ec
+
+#define EVERGREEN_P1PLL_SS_CNTL                         0x414
+#define EVERGREEN_P2PLL_SS_CNTL                         0x454
+#       define EVERGREEN_PxPLL_SS_EN                    (1 << 12)
+/* GRPH blocks at 0x6800, 0x7400, 0x10000, 0x10c00, 0x11800, 0x12400 */
+#define EVERGREEN_GRPH_ENABLE                           0x6800
+#define EVERGREEN_GRPH_CONTROL                          0x6804
+#       define EVERGREEN_GRPH_DEPTH(x)                  (((x) & 0x3) << 0)
+#       define EVERGREEN_GRPH_DEPTH_8BPP                0
+#       define EVERGREEN_GRPH_DEPTH_16BPP               1
+#       define EVERGREEN_GRPH_DEPTH_32BPP               2
+#       define EVERGREEN_GRPH_FORMAT(x)                 (((x) & 0x7) << 8)
+/* 8 BPP */
+#       define EVERGREEN_GRPH_FORMAT_INDEXED            0
+/* 16 BPP */
+#       define EVERGREEN_GRPH_FORMAT_ARGB1555           0
+#       define EVERGREEN_GRPH_FORMAT_ARGB565            1
+#       define EVERGREEN_GRPH_FORMAT_ARGB4444           2
+#       define EVERGREEN_GRPH_FORMAT_AI88               3
+#       define EVERGREEN_GRPH_FORMAT_MONO16             4
+#       define EVERGREEN_GRPH_FORMAT_BGRA5551           5
+/* 32 BPP */
+#       define EVERGREEN_GRPH_FORMAT_ARGB8888           0
+#       define EVERGREEN_GRPH_FORMAT_ARGB2101010        1
+#       define EVERGREEN_GRPH_FORMAT_32BPP_DIG          2
+#       define EVERGREEN_GRPH_FORMAT_8B_ARGB2101010     3
+#       define EVERGREEN_GRPH_FORMAT_BGRA1010102        4
+#       define EVERGREEN_GRPH_FORMAT_8B_BGRA1010102     5
+#       define EVERGREEN_GRPH_FORMAT_RGB111110          6
+#       define EVERGREEN_GRPH_FORMAT_BGR101111          7
+#define EVERGREEN_GRPH_SWAP_CONTROL                     0x680c
+#       define EVERGREEN_GRPH_ENDIAN_SWAP(x)            (((x) & 0x3) << 0)
+#       define EVERGREEN_GRPH_ENDIAN_NONE               0
+#       define EVERGREEN_GRPH_ENDIAN_8IN16              1
+#       define EVERGREEN_GRPH_ENDIAN_8IN32              2
+#       define EVERGREEN_GRPH_ENDIAN_8IN64              3
+#       define EVERGREEN_GRPH_RED_CROSSBAR(x)           (((x) & 0x3) << 4)
+#       define EVERGREEN_GRPH_RED_SEL_R                 0
+#       define EVERGREEN_GRPH_RED_SEL_G                 1
+#       define EVERGREEN_GRPH_RED_SEL_B                 2
+#       define EVERGREEN_GRPH_RED_SEL_A                 3
+#       define EVERGREEN_GRPH_GREEN_CROSSBAR(x)         (((x) & 0x3) << 6)
+#       define EVERGREEN_GRPH_GREEN_SEL_G               0
+#       define EVERGREEN_GRPH_GREEN_SEL_B               1
+#       define EVERGREEN_GRPH_GREEN_SEL_A               2
+#       define EVERGREEN_GRPH_GREEN_SEL_R               3
+#       define EVERGREEN_GRPH_BLUE_CROSSBAR(x)          (((x) & 0x3) << 8)
+#       define EVERGREEN_GRPH_BLUE_SEL_B                0
+#       define EVERGREEN_GRPH_BLUE_SEL_A                1
+#       define EVERGREEN_GRPH_BLUE_SEL_R                2
+#       define EVERGREEN_GRPH_BLUE_SEL_G                3
+#       define EVERGREEN_GRPH_ALPHA_CROSSBAR(x)         (((x) & 0x3) << 10)
+#       define EVERGREEN_GRPH_ALPHA_SEL_A               0
+#       define EVERGREEN_GRPH_ALPHA_SEL_R               1
+#       define EVERGREEN_GRPH_ALPHA_SEL_G               2
+#       define EVERGREEN_GRPH_ALPHA_SEL_B               3
+#define EVERGREEN_GRPH_PRIMARY_SURFACE_ADDRESS          0x6810
+#define EVERGREEN_GRPH_SECONDARY_SURFACE_ADDRESS        0x6814
+#       define EVERGREEN_GRPH_DFQ_ENABLE                (1 << 0)
+#       define EVERGREEN_GRPH_SURFACE_ADDRESS_MASK      0xffffff00
+#define EVERGREEN_GRPH_PITCH                            0x6818
+#define EVERGREEN_GRPH_PRIMARY_SURFACE_ADDRESS_HIGH     0x681c
+#define EVERGREEN_GRPH_SECONDARY_SURFACE_ADDRESS_HIGH   0x6820
+#define EVERGREEN_GRPH_SURFACE_OFFSET_X                 0x6824
+#define EVERGREEN_GRPH_SURFACE_OFFSET_Y                 0x6828
+#define EVERGREEN_GRPH_X_START                          0x682c
+#define EVERGREEN_GRPH_Y_START                          0x6830
+#define EVERGREEN_GRPH_X_END                            0x6834
+#define EVERGREEN_GRPH_Y_END                            0x6838
+
+/* CUR blocks at 0x6998, 0x7598, 0x10198, 0x10d98, 0x11998, 0x12598 */
+#define EVERGREEN_CUR_CONTROL                           0x6998
+#       define EVERGREEN_CURSOR_EN                      (1 << 0)
+#       define EVERGREEN_CURSOR_MODE(x)                 (((x) & 0x3) << 8)
+#       define EVERGREEN_CURSOR_MONO                    0
+#       define EVERGREEN_CURSOR_24_1                    1
+#       define EVERGREEN_CURSOR_24_8_PRE_MULT           2
+#       define EVERGREEN_CURSOR_24_8_UNPRE_MULT         3
+#       define EVERGREEN_CURSOR_2X_MAGNIFY              (1 << 16)
+#       define EVERGREEN_CURSOR_FORCE_MC_ON             (1 << 20)
+#       define EVERGREEN_CURSOR_URGENT_CONTROL(x)       (((x) & 0x7) << 24)
+#       define EVERGREEN_CURSOR_URGENT_ALWAYS           0
+#       define EVERGREEN_CURSOR_URGENT_1_8              1
+#       define EVERGREEN_CURSOR_URGENT_1_4              2
+#       define EVERGREEN_CURSOR_URGENT_3_8              3
+#       define EVERGREEN_CURSOR_URGENT_1_2              4
+#define EVERGREEN_CUR_SURFACE_ADDRESS                   0x699c
+#       define EVERGREEN_CUR_SURFACE_ADDRESS_MASK       0xfffff000
+#define EVERGREEN_CUR_SIZE                              0x69a0
+#define EVERGREEN_CUR_SURFACE_ADDRESS_HIGH              0x69a4
+#define EVERGREEN_CUR_POSITION                          0x69a8
+#define EVERGREEN_CUR_HOT_SPOT                          0x69ac
+#define EVERGREEN_CUR_COLOR1                            0x69b0
+#define EVERGREEN_CUR_COLOR2                            0x69b4
+#define EVERGREEN_CUR_UPDATE                            0x69b8
+#       define EVERGREEN_CURSOR_UPDATE_PENDING          (1 << 0)
+#       define EVERGREEN_CURSOR_UPDATE_TAKEN            (1 << 1)
+#       define EVERGREEN_CURSOR_UPDATE_LOCK             (1 << 16)
+#       define EVERGREEN_CURSOR_DISABLE_MULTIPLE_UPDATE (1 << 24)
+
+/* LUT blocks at 0x69e0, 0x75e0, 0x101e0, 0x10de0, 0x119e0, 0x125e0 */
+#define EVERGREEN_DC_LUT_RW_MODE                        0x69e0
+#define EVERGREEN_DC_LUT_RW_INDEX                       0x69e4
+#define EVERGREEN_DC_LUT_SEQ_COLOR                      0x69e8
+#define EVERGREEN_DC_LUT_PWL_DATA                       0x69ec
+#define EVERGREEN_DC_LUT_30_COLOR                       0x69f0
+#define EVERGREEN_DC_LUT_VGA_ACCESS_ENABLE              0x69f4
+#define EVERGREEN_DC_LUT_WRITE_EN_MASK                  0x69f8
+#define EVERGREEN_DC_LUT_AUTOFILL                       0x69fc
+#define EVERGREEN_DC_LUT_CONTROL                        0x6a00
+#define EVERGREEN_DC_LUT_BLACK_OFFSET_BLUE              0x6a04
+#define EVERGREEN_DC_LUT_BLACK_OFFSET_GREEN             0x6a08
+#define EVERGREEN_DC_LUT_BLACK_OFFSET_RED               0x6a0c
+#define EVERGREEN_DC_LUT_WHITE_OFFSET_BLUE              0x6a10
+#define EVERGREEN_DC_LUT_WHITE_OFFSET_GREEN             0x6a14
+#define EVERGREEN_DC_LUT_WHITE_OFFSET_RED               0x6a18
+
+#define EVERGREEN_DATA_FORMAT                           0x6b00
+#       define EVERGREEN_INTERLEAVE_EN                  (1 << 0)
+#define EVERGREEN_DESKTOP_HEIGHT                        0x6b04
+#define EVERGREEN_VLINE_START_END                       0x6b08
+#       define EVERGREEN_VLINE_START_SHIFT              0
+#       define EVERGREEN_VLINE_END_SHIFT                16
+#       define EVERGREEN_VLINE_INV                      (1 << 31)
+#define EVERGREEN_VLINE_STATUS                          0x6bb8
+#       define EVERGREEN_VLINE_STAT                     (1 << 12)
+
+#define EVERGREEN_VIEWPORT_START                        0x6d70
+#define EVERGREEN_VIEWPORT_SIZE                         0x6d74
+
+/* display controller offsets used for crtc/cur/lut/grph/viewport/etc. */
+#define EVERGREEN_CRTC0_REGISTER_OFFSET                 (0x6df0 - 0x6df0)
+#define EVERGREEN_CRTC1_REGISTER_OFFSET                 (0x79f0 - 0x6df0)
+#define EVERGREEN_CRTC2_REGISTER_OFFSET                 (0x105f0 - 0x6df0)
+#define EVERGREEN_CRTC3_REGISTER_OFFSET                 (0x111f0 - 0x6df0)
+#define EVERGREEN_CRTC4_REGISTER_OFFSET                 (0x11df0 - 0x6df0)
+#define EVERGREEN_CRTC5_REGISTER_OFFSET                 (0x129f0 - 0x6df0)
+
+/* CRTC blocks at 0x6df0, 0x79f0, 0x105f0, 0x111f0, 0x11df0, 0x129f0 */
+#define EVERGREEN_CRTC_CONTROL                          0x6e70
+#       define EVERGREEN_CRTC_MASTER_EN                 (1 << 0)
+#define EVERGREEN_CRTC_UPDATE_LOCK                      0x6ed4
+
+#define EVERGREEN_DC_GPIO_HPD_MASK                      0x64b0
+#define EVERGREEN_DC_GPIO_HPD_A                         0x64b4
+#define EVERGREEN_DC_GPIO_HPD_EN                        0x64b8
+#define EVERGREEN_DC_GPIO_HPD_Y                         0x64bc
 
 #define R300_GB_TILE_CONFIG				0x4018
 #       define R300_ENABLE_TILING                       (1 << 0)
@@ -4223,6 +4446,12 @@
 #define R300_VAP_PVS_CODE_CNTL_1			0x22D8
 #       define R300_PVS_LAST_VTX_SRC_INST_SHIFT         0
 #define R300_VAP_PVS_VECTOR_INDX_REG		        0x2200
+#       define R300_PVS_CODE_START                      0
+#       define R300_PVS_CONST_START                     512
+#       define R500_PVS_CONST_START                     1024
+#       define R300_PVS_VECTOR_INST_INDEX(x)            ((x) + R300_PVS_CODE_START)
+#       define R300_PVS_VECTOR_CONST_INDEX(x)           ((x) + R300_PVS_CONST_START)
+#       define R500_PVS_VECTOR_CONST_INDEX(x)           ((x) + R500_PVS_CONST_START)
 #define R300_VAP_PVS_VECTOR_DATA_REG		        0x2204
 /* PVS instructions */
 /* Opcode and dst instruction */
@@ -4341,6 +4570,10 @@
 #define R300_PVS_SRC_ADDR_SEL(x)                        ((x) << 29)
 #define R300_PVS_SRC_ADDR_MODE_1                        (1 << 31)
 
+#define R300_VAP_PVS_CONST_CNTL                         0x22d4
+#       define R300_PVS_CONST_BASE_OFFSET(x)            ((x) << 0)
+#       define R300_PVS_MAX_CONST_ADDR(x)               ((x) << 16)
+
 #define R300_VAP_PVS_FLOW_CNTL_OPC		        0x22dc
 #define R300_VAP_OUT_VTX_FMT_0			        0x2090
 #       define R300_VTX_POS_PRESENT                     (1 << 0)
@@ -4455,6 +4688,7 @@
 #define R300_TX_FORMAT0_2				0x4488
 #       define R300_TXWIDTH_SHIFT                       0
 #       define R300_TXHEIGHT_SHIFT                      11
+#       define R300_TXDEPTH_SHIFT                       22
 #       define R300_NUM_LEVELS_SHIFT                    26
 #       define R300_NUM_LEVELS_MASK                     0x
 #       define R300_TXPROJECTED                         (1 << 30)
@@ -5379,9 +5613,6 @@
 #   define R500_W_FMT_W24FP				(2 << 0)
 #   define R500_W_SRC_US				(0 << 2)
 #   define R500_W_SRC_RAS				(1 << 2)
-
-#define R500_GA_US_VECTOR_INDEX 0x4250
-#define R500_GA_US_VECTOR_DATA 0x4254
 
 #define R500_RS_INST_0					0x4320
 #define R500_RS_INST_1					0x4324

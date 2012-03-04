@@ -86,10 +86,6 @@ typedef struct {
     int           log2GARTTexGran;
     int           gartTexOffset;
     unsigned int  sarea_priv_offset;
-
-#ifdef PER_CONTEXT_SAREA
-    drmSize      perctx_sarea_size;
-#endif
 } RADEONDRIRec, *RADEONDRIPtr;
 
 #endif

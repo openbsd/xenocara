@@ -35,24 +35,23 @@
 
 
 /* SET_*_REG offsets + ends */
-enum {
-    SET_CONFIG_REG_offset          = 0x00008000,
-    SET_CONFIG_REG_end             = 0x0000ac00,
-    SET_CONTEXT_REG_offset         = 0x00028000,
-    SET_CONTEXT_REG_end            = 0x00029000,
-    SET_ALU_CONST_offset           = 0x00030000,
-    SET_ALU_CONST_end              = 0x00032000,
-    SET_RESOURCE_offset            = 0x00038000,
-    SET_RESOURCE_end               = 0x0003c000,
-    SET_SAMPLER_offset             = 0x0003c000,
-    SET_SAMPLER_end                = 0x0003cff0,
-    SET_CTL_CONST_offset           = 0x0003cff0,
-    SET_CTL_CONST_end              = 0x0003e200,
-    SET_LOOP_CONST_offset          = 0x0003e200,
-    SET_LOOP_CONST_end             = 0x0003e380,
-    SET_BOOL_CONST_offset          = 0x0003e380,
-    SET_BOOL_CONST_end             = 0x0003e38c,
-};
+#define SET_CONFIG_REG_offset  0x00008000
+#define SET_CONFIG_REG_end     0x0000ac00
+#define SET_CONTEXT_REG_offset 0x00028000
+#define SET_CONTEXT_REG_end    0x00029000
+#define SET_ALU_CONST_offset   0x00030000
+#define SET_ALU_CONST_end      0x00032000
+#define SET_RESOURCE_offset    0x00038000
+#define SET_RESOURCE_end       0x0003c000
+#define SET_SAMPLER_offset     0x0003c000
+#define SET_SAMPLER_end        0x0003cff0
+#define SET_CTL_CONST_offset   0x0003cff0
+#define SET_CTL_CONST_end      0x0003e200
+#define SET_LOOP_CONST_offset  0x0003e200
+#define SET_LOOP_CONST_end     0x0003e380
+#define SET_BOOL_CONST_offset  0x0003e380
+#define SET_BOOL_CONST_end     0x0003e38c
+
 
 /* packet3 IT_SURFACE_BASE_UPDATE bits */
 enum {
@@ -117,16 +116,19 @@ enum {
 
 /* IT_WAIT_REG_MEM operation encoding */
 
-#define IT_WAIT_ALWAYS          (0<<0)
-#define IT_WAIT_LT              (1<<0)
-#define IT_WAIT_LE              (2<<0)
-#define IT_WAIT_EQ              (3<<0)
-#define IT_WAIT_NE              (4<<0)
-#define IT_WAIT_GE              (5<<0)
-#define IT_WAIT_GT              (6<<0)
-#define IT_WAIT_REG             (0<<4)
-#define IT_WAIT_MEM             (1<<4)
+#define IT_WAIT_ALWAYS          (0 << 0)
+#define IT_WAIT_LT              (1 << 0)
+#define IT_WAIT_LE              (2 << 0)
+#define IT_WAIT_EQ              (3 << 0)
+#define IT_WAIT_NE              (4 << 0)
+#define IT_WAIT_GE              (5 << 0)
+#define IT_WAIT_GT              (6 << 0)
+#define IT_WAIT_REG             (0 << 4)
+#define IT_WAIT_MEM             (1 << 4)
 
 #define IT_WAIT_ADDR(x)         ((x) >> 2)
+
+/* IT_INDEX_TYPE */
+#define IT_INDEX_TYPE_SWAP_MODE(x) ((x) << 2)
 
 #endif

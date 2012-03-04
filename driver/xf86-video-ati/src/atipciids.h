@@ -41,6 +41,10 @@
 #define PCI_VENDOR_DELL			0x1028
 #define PCI_VENDOR_VIA			0x1106
 #define PCI_VENDOR_INTEL		0x8086
+#ifndef PCI_VENDOR_HP
+#define PCI_VENDOR_HP			0x103c
+#endif
+#define PCI_VENDOR_SONY			0x104D
 
 #include "ati_pciids_gen.h"
 

@@ -92,11 +92,9 @@
 				/* X and server generic header files */
 #include "xf86.h"
 #include "xf86_OSproc.h"
-#if GET_ABI_MAJOR(ABI_VIDEODRV_VERSION) < 7
-#include "xf86RAC.h"
-#endif
 #include "xf86RandR12.h"
-#if GET_ABI_MAJOR(ABI_VIDEODRV_VERSION) < 7
+#if GET_ABI_MAJOR(ABI_VIDEODRV_VERSION) < 6
+#include "xf86RAC.h"
 #include "xf86Resources.h"
 #endif
 #include "xf86cmap.h"
@@ -108,12 +106,13 @@
 #include "vgaHW.h"
 #endif
 
-#ifdef HAVE_X11_EXTENSIONS_DPMSCONST_H
+#ifdef HAVE_XEXTPROTO_71
 #include <X11/extensions/dpmsconst.h>
 #else
 #define DPMS_SERVER
 #include <X11/extensions/dpms.h>
 #endif
+
 
 #include "atipciids.h"
 #include "radeon_chipset_gen.h"
@@ -126,8 +125,6 @@ static Bool RADEONCloseScreen(int scrnIndex, ScreenPtr pScreen);
 static Bool RADEONSaveScreen(ScreenPtr pScreen, int mode);
 static void RADEONSave(ScrnInfoPtr pScrn);
 
-static void RADEONSetDynamicClock(ScrnInfoPtr pScrn, int mode);
-static void RADEONForceSomeClocks(ScrnInfoPtr pScrn);
 static void RADEONSaveMemMapRegisters(ScrnInfoPtr pScrn, RADEONSavePtr save);
 
 static void
@@ -164,6 +161,7 @@ static const OptionInfoRec RADEONOptions[] = {
 #endif
 #endif
     { OPTION_IGNORE_EDID,    "IgnoreEDID",       OPTV_BOOLEAN, {0}, FALSE },
+    { OPTION_CUSTOM_EDID,    "CustomEDID",       OPTV_ANYSTR,  {0}, FALSE },
     { OPTION_DISP_PRIORITY,  "DisplayPriority",  OPTV_ANYSTR,  {0}, FALSE },
     { OPTION_PANEL_SIZE,     "PanelSize",        OPTV_ANYSTR,  {0}, FALSE },
     { OPTION_MIN_DOTCLOCK,   "ForceMinDotClock", OPTV_FREQ,    {0}, FALSE },
@@ -183,8 +181,7 @@ static const OptionInfoRec RADEONOptions[] = {
     { OPTION_RENDER_ACCEL,   "RenderAccel",      OPTV_BOOLEAN, {0}, FALSE },
     { OPTION_SUBPIXEL_ORDER, "SubPixelOrder",    OPTV_ANYSTR,  {0}, FALSE },
 #endif
-    { OPTION_SHOWCACHE,      "ShowCache",        OPTV_BOOLEAN, {0}, FALSE },
-    { OPTION_DYNAMIC_CLOCKS, "DynamicClocks",    OPTV_BOOLEAN, {0}, FALSE },
+    { OPTION_CLOCK_GATING,   "ClockGating",      OPTV_BOOLEAN, {0}, FALSE },
     { OPTION_VGA_ACCESS,     "VGAAccess",        OPTV_BOOLEAN, {0}, TRUE  },
     { OPTION_REVERSE_DDC,    "ReverseDDC",       OPTV_BOOLEAN, {0}, FALSE },
     { OPTION_LVDS_PROBE_PLL, "LVDSProbePLL",     OPTV_BOOLEAN, {0}, FALSE },
@@ -205,6 +202,10 @@ static const OptionInfoRec RADEONOptions[] = {
     { OPTION_EXA_VSYNC,         "EXAVSync",        OPTV_BOOLEAN, {0}, FALSE },
     { OPTION_ATOM_TVOUT,	"ATOMTVOut",	   OPTV_BOOLEAN, {0}, FALSE },
     { OPTION_R4XX_ATOM,	        "R4xxATOM",	   OPTV_BOOLEAN, {0}, FALSE },
+    { OPTION_FORCE_LOW_POWER,	"ForceLowPowerMode", OPTV_BOOLEAN, {0}, FALSE },
+    { OPTION_DYNAMIC_PM,	"DynamicPM",       OPTV_BOOLEAN, {0}, FALSE },
+    { OPTION_NEW_PLL,	        "NewPLL",        OPTV_BOOLEAN, {0}, FALSE },
+    { OPTION_ZAPHOD_HEADS,      "ZaphodHeads",     OPTV_STRING,  {0}, FALSE },
     { -1,                    NULL,               OPTV_NONE,    {0}, FALSE }
 };
 
@@ -237,7 +238,7 @@ radeonShadowWindow(ScreenPtr screen, CARD32 row, CARD32 offset, int mode,
     stride = (pScrn->displayWidth * pScrn->bitsPerPixel) / 8;
     *size = stride;
 
-    return ((uint8_t *)info->FB + row * stride + offset);
+    return ((uint8_t *)info->FB + pScrn->fbOffset + row * stride + offset);
 }
 static Bool
 RADEONCreateScreenResources (ScreenPtr pScreen)
@@ -348,7 +349,7 @@ RADEONPostInt10Check(ScrnInfoPtr pScrn, void *ptr)
 }
 
 /* Allocate our private RADEONInfoRec */
-static Bool RADEONGetRec(ScrnInfoPtr pScrn)
+Bool RADEONGetRec(ScrnInfoPtr pScrn)
 {
     if (pScrn->driverPrivate) return TRUE;
 
@@ -357,7 +358,7 @@ static Bool RADEONGetRec(ScrnInfoPtr pScrn)
 }
 
 /* Free our private RADEONInfoRec */
-static void RADEONFreeRec(ScrnInfoPtr pScrn)
+void RADEONFreeRec(ScrnInfoPtr pScrn)
 {
     RADEONInfoPtr  info;
     int i;
@@ -367,35 +368,32 @@ static void RADEONFreeRec(ScrnInfoPtr pScrn)
     info = RADEONPTR(pScrn);
 
     if (info->cp) {
-	xfree(info->cp);
+	free(info->cp);
 	info->cp = NULL;
     }
 
     if (info->dri) {
-	xfree(info->dri);
+	free(info->dri);
 	info->dri = NULL;
     }
 
     if (info->accel_state) {
-	xfree(info->accel_state);
+	free(info->accel_state);
 	info->accel_state = NULL;
     }
 
     for (i = 0; i < RADEON_MAX_BIOS_CONNECTOR; i++) {
 	if (info->encoders[i]) {
-	    info->encoders[i]->ref_count--;
-	    if (info->encoders[i]->ref_count != 0)
-		continue;
 	    if (info->encoders[i]->dev_priv) {
-		xfree(info->encoders[i]->dev_priv);
+		free(info->encoders[i]->dev_priv);
 		info->encoders[i]->dev_priv = NULL;
 	    }
-	    xfree(info->encoders[i]);
+	    free(info->encoders[i]);
 	    info->encoders[i]= NULL;
 	}
     }
 
-    xfree(pScrn->driverPrivate);
+    free(pScrn->driverPrivate);
     pScrn->driverPrivate = NULL;
 }
 
@@ -404,10 +402,14 @@ static void RADEONFreeRec(ScrnInfoPtr pScrn)
  */
 static Bool RADEONMapMMIO(ScrnInfoPtr pScrn)
 {
+#ifdef XSERVER_LIBPCIACCESS
+    int err;
+#endif
     RADEONInfoPtr  info = RADEONPTR(pScrn);
     RADEONEntPtr pRADEONEnt = RADEONEntPriv(pScrn);
 
     if (pRADEONEnt->MMIO) {
+        pRADEONEnt->MMIO_cnt++;
         info->MMIO = pRADEONEnt->MMIO;
         return TRUE;
     }
@@ -420,15 +422,15 @@ static Bool RADEONMapMMIO(ScrnInfoPtr pScrn)
 			       info->MMIOAddr,
 			       info->MMIOSize);
 
-    if (!info->MMIO) return FALSE;
+    if (!info->MMIO)
+        return FALSE;
 #else
 
-    void** result = (void**)&info->MMIO;
-    int err = pci_device_map_range(info->PciInfo,
+    err = pci_device_map_range(info->PciInfo,
 				   info->MMIOAddr,
 				   info->MMIOSize,
 				   PCI_DEV_MAP_FLAG_WRITABLE,
-				   result);
+				   &info->MMIO);
 
     if (err) {
 	xf86DrvMsg (pScrn->scrnIndex, X_ERROR,
@@ -440,6 +442,7 @@ static Bool RADEONMapMMIO(ScrnInfoPtr pScrn)
 #endif
 
     pRADEONEnt->MMIO = info->MMIO;
+    pRADEONEnt->MMIO_cnt = 1;
     return TRUE;
 }
 
@@ -451,8 +454,8 @@ static Bool RADEONUnmapMMIO(ScrnInfoPtr pScrn)
     RADEONInfoPtr  info = RADEONPTR(pScrn);
     RADEONEntPtr pRADEONEnt = RADEONEntPriv(pScrn);
 
-    if (info->IsPrimary || info->IsSecondary) {
-      /* never unmap on zaphod */
+    /* refcount for zaphod */
+    if (--pRADEONEnt->MMIO_cnt != 0) {
       info->MMIO = NULL;
       return TRUE;
     }
@@ -475,6 +478,13 @@ static Bool RADEONMapFB(ScrnInfoPtr pScrn)
     int err;
 #endif
     RADEONInfoPtr  info = RADEONPTR(pScrn);
+    RADEONEntPtr pRADEONEnt = RADEONEntPriv(pScrn);
+
+    if (pRADEONEnt->FB) {
+        pRADEONEnt->FB_cnt++;
+        info->FB = pRADEONEnt->FB;
+        return TRUE;
+    }
 
     xf86DrvMsgVerb(pScrn->scrnIndex, X_INFO, RADEON_LOGLEVEL_DEBUG,
 		   "Map: 0x%016llx, 0x%08lx\n", info->LinearAddr, info->FbMapSize);
@@ -507,6 +517,8 @@ static Bool RADEONMapFB(ScrnInfoPtr pScrn)
 
 #endif
 
+    pRADEONEnt->FB = info->FB;
+    pRADEONEnt->FB_cnt = 1;
     return TRUE;
 }
 
@@ -514,6 +526,13 @@ static Bool RADEONMapFB(ScrnInfoPtr pScrn)
 static Bool RADEONUnmapFB(ScrnInfoPtr pScrn)
 {
     RADEONInfoPtr  info = RADEONPTR(pScrn);
+    RADEONEntPtr pRADEONEnt = RADEONEntPriv(pScrn);
+
+    /* refcount for zaphod */
+    if (--pRADEONEnt->FB_cnt != 0) {
+      info->FB = NULL;
+      return TRUE;
+    }
 
 #ifndef XSERVER_LIBPCIACCESS
     xf86UnMapVidMem(pScrn->scrnIndex, info->FB, info->FbMapSize);
@@ -521,6 +540,7 @@ static Bool RADEONUnmapFB(ScrnInfoPtr pScrn)
     pci_device_unmap_range(info->PciInfo, info->FB, info->FbMapSize);
 #endif
 
+    pRADEONEnt->FB = NULL;
     info->FB = NULL;
     return TRUE;
 }
@@ -627,6 +647,12 @@ unsigned RADEONINMC(ScrnInfoPtr pScrn, int addr)
     } else if (info->ChipFamily == CHIP_FAMILY_RS600) {
 	OUTREG(RS600_MC_INDEX, ((addr & RS600_MC_ADDR_MASK) | RS600_MC_IND_CITF_ARB0));
 	data = INREG(RS600_MC_DATA);
+    } else if ((info->ChipFamily == CHIP_FAMILY_RS780) ||
+	       (info->ChipFamily == CHIP_FAMILY_RS880)) {
+	OUTREG(RS780_MC_INDEX, (addr & RS780_MC_INDEX_MASK));
+	data = INREG(RS780_MC_DATA);
+    } else if (info->ChipFamily >= CHIP_FAMILY_R600) {
+	data = 0;
     } else if (IS_AVIVO_VARIANT) {
 	OUTREG(AVIVO_MC_INDEX, (addr & 0xff) | 0x7f0000);
 	(void)INREG(AVIVO_MC_INDEX);
@@ -663,6 +689,13 @@ void RADEONOUTMC(ScrnInfoPtr pScrn, int addr, uint32_t data)
 				RS600_MC_IND_CITF_ARB0 |
 				RS600_MC_IND_WR_EN));
 	OUTREG(RS600_MC_DATA, data);
+    } else if ((info->ChipFamily == CHIP_FAMILY_RS780) ||
+	       (info->ChipFamily == CHIP_FAMILY_RS880)) {
+	OUTREG(RS780_MC_INDEX, ((addr & RS780_MC_INDEX_MASK) |
+				      RS780_MC_INDEX_WR_EN));
+	OUTREG(RS780_MC_DATA, data);
+    } else if (info->ChipFamily >= CHIP_FAMILY_R600) {
+	// do nothing
     } else if (IS_AVIVO_VARIANT) {
 	OUTREG(AVIVO_MC_INDEX, (addr & 0xff) | 0xff0000);
 	(void)INREG(AVIVO_MC_INDEX);
@@ -702,12 +735,40 @@ void RADEONOUTPCIE(ScrnInfoPtr pScrn, int addr, uint32_t data)
     OUTREG(RADEON_PCIE_DATA, data);
 }
 
+/* Read PCIE PORT register */
+unsigned R600INPCIE_PORT(ScrnInfoPtr pScrn, int addr)
+{
+    RADEONInfoPtr  info       = RADEONPTR(pScrn);
+    unsigned char *RADEONMMIO = info->MMIO;
+    CARD32         data;
+
+    OUTREG(R600_PCIE_PORT_INDEX, addr & 0xff);
+    data = INREG(R600_PCIE_PORT_DATA);
+
+    return data;
+}
+
+/* Write PCIE PORT register */
+void R600OUTPCIE_PORT(ScrnInfoPtr pScrn, int addr, uint32_t data)
+{
+    RADEONInfoPtr  info       = RADEONPTR(pScrn);
+    unsigned char *RADEONMMIO = info->MMIO;
+
+    OUTREG(R600_PCIE_PORT_INDEX, ((addr) & 0xff));
+    OUTREG(R600_PCIE_PORT_DATA, data);
+}
+
 static Bool radeon_get_mc_idle(ScrnInfoPtr pScrn)
 {
     RADEONInfoPtr  info       = RADEONPTR(pScrn);
     unsigned char *RADEONMMIO = info->MMIO;
 
-    if (info->ChipFamily >= CHIP_FAMILY_R600) {
+    if (info->ChipFamily >= CHIP_FAMILY_CEDAR) {
+	if (INREG(R600_SRBM_STATUS) & 0x1f00)
+	    return FALSE;
+	else
+	    return TRUE;
+    } else if (info->ChipFamily >= CHIP_FAMILY_R600) {
 	if (INREG(R600_SRBM_STATUS) & 0x3f00)
 	    return FALSE;
 	else
@@ -733,6 +794,12 @@ static Bool radeon_get_mc_idle(ScrnInfoPtr pScrn)
 	    return TRUE;
 	else
 	    return FALSE;
+    } else if ((info->ChipFamily == CHIP_FAMILY_RS400) ||
+	       (info->ChipFamily == CHIP_FAMILY_RS480)) {
+	if (INREG(RADEON_MC_STATUS) & RADEON_MC_IDLE)
+	    return TRUE;
+	else
+	    return FALSE;
     } else if (IS_R300_VARIANT) {
 	if (INREG(RADEON_MC_STATUS) & R300_MC_IDLE)
 	    return TRUE;
@@ -753,6 +820,7 @@ static void radeon_write_mc_fb_agp_location(ScrnInfoPtr pScrn, int mask, uint32_
     RADEONInfoPtr  info       = RADEONPTR(pScrn);
     unsigned char *RADEONMMIO = info->MMIO;
 
+    /* evergreen is same as r7xx */
     if (info->ChipFamily >= CHIP_FAMILY_RV770) {
 	if (mask & LOC_FB)
 	    OUTREG(R700_MC_VM_FB_LOCATION, fb_loc);
@@ -803,6 +871,7 @@ static void radeon_read_mc_fb_agp_location(ScrnInfoPtr pScrn, int mask, uint32_t
     RADEONInfoPtr  info       = RADEONPTR(pScrn);
     unsigned char *RADEONMMIO = info->MMIO;
 
+    /* evergreen is same as r7xx */
     if (info->ChipFamily >= CHIP_FAMILY_RV770) {
 	if (mask & LOC_FB)
 	    *fb_loc = INREG(R700_MC_VM_FB_LOCATION);
@@ -1143,20 +1212,21 @@ static void RADEONGetClockInfo(ScrnInfoPtr pScrn)
     if (RADEONGetClockInfoFromBIOS(pScrn)) {
 	if (pll->reference_div < 2) {
 	    /* retrive it from register setting for fitting into current PLL algorithm.
-	       We'll probably need a new routine to calculate the best ref_div from BIOS 
-	       provided min_input_pll and max_input_pll 
+	       We'll probably need a new routine to calculate the best ref_div from BIOS
+	       provided min_input_pll and max_input_pll
 	    */
-	    uint32_t tmp;
-	    tmp = INPLL(pScrn, RADEON_PPLL_REF_DIV);
-	    if (IS_R300_VARIANT ||
-		(info->ChipFamily == CHIP_FAMILY_RS300) ||
-		(info->ChipFamily == CHIP_FAMILY_RS400) ||
-		(info->ChipFamily == CHIP_FAMILY_RS480)) {
-		pll->reference_div = (tmp & R300_PPLL_REF_DIV_ACC_MASK) >> R300_PPLL_REF_DIV_ACC_SHIFT;
-	    } else {
-		pll->reference_div = tmp & RADEON_PPLL_REF_DIV_MASK;
+	    if (!IS_AVIVO_VARIANT) {
+		uint32_t tmp;
+		tmp = INPLL(pScrn, RADEON_PPLL_REF_DIV);
+		if (IS_R300_VARIANT ||
+		    (info->ChipFamily == CHIP_FAMILY_RS300) ||
+		    (info->ChipFamily == CHIP_FAMILY_RS400) ||
+		    (info->ChipFamily == CHIP_FAMILY_RS480)) {
+		    pll->reference_div = (tmp & R300_PPLL_REF_DIV_ACC_MASK) >> R300_PPLL_REF_DIV_ACC_SHIFT;
+		} else {
+		    pll->reference_div = tmp & RADEON_PPLL_REF_DIV_MASK;
+		}
 	    }
-
 	    if (pll->reference_div < 2) pll->reference_div = 12;
 	}
     } else {
@@ -1194,9 +1264,13 @@ static void RADEONGetClockInfo(ScrnInfoPtr pScrn)
     if (IS_AVIVO_VARIANT) {
 	pll->min_post_div = 2;
 	pll->max_post_div = 0x7f;
+	pll->min_frac_feedback_div = 0;
+	pll->max_frac_feedback_div = 9;
     } else {
 	pll->min_post_div = 1;
 	pll->max_post_div = 12; //16 on crtc0
+	pll->min_frac_feedback_div = 0;
+	pll->max_frac_feedback_div = 0;
     }
     pll->min_ref_div = 2;
     pll->max_ref_div = 0x3ff;
@@ -1235,7 +1309,7 @@ static void RADEONGetClockInfo(ScrnInfoPtr pScrn)
 
 
 /* This is called by RADEONPreInit to set up the default visual */
-static Bool RADEONPreInitVisual(ScrnInfoPtr pScrn)
+Bool RADEONPreInitVisual(ScrnInfoPtr pScrn)
 {
     RADEONInfoPtr  info = RADEONPTR(pScrn);
 
@@ -1292,7 +1366,7 @@ static Bool RADEONPreInitVisual(ScrnInfoPtr pScrn)
 }
 
 /* This is called by RADEONPreInit to handle all color weight issues */
-static Bool RADEONPreInitWeight(ScrnInfoPtr pScrn)
+Bool RADEONPreInitWeight(ScrnInfoPtr pScrn)
 {
     RADEONInfoPtr  info = RADEONPTR(pScrn);
 
@@ -1350,7 +1424,17 @@ static void RADEONInitMemoryMap(ScrnInfoPtr pScrn)
     /* We shouldn't use info->videoRam here which might have been clipped
      * but the real video RAM instead
      */
-    if (info->ChipFamily >= CHIP_FAMILY_R600) {
+    if (info->ChipFamily >= CHIP_FAMILY_PALM) {
+	/* size in bytes on fusion */
+	mem_size = INREG(R600_CONFIG_MEMSIZE);
+	/* size in MB on fusion */
+	aper_size = INREG(R600_CONFIG_APER_SIZE) * 1024 * 1024;
+    } else if (info->ChipFamily >= CHIP_FAMILY_CEDAR) {
+	/* size in MB on evergreen */
+	/* XXX watch for overflow!!! */
+	mem_size = INREG(R600_CONFIG_MEMSIZE) * 1024 * 1024;
+	aper_size = INREG(R600_CONFIG_APER_SIZE) * 1024 * 1024;
+    } else if (info->ChipFamily >= CHIP_FAMILY_R600) {
 	mem_size = INREG(R600_CONFIG_MEMSIZE);
 	aper_size = INREG(R600_CONFIG_APER_SIZE);
     } else {
@@ -1366,6 +1450,18 @@ static void RADEONInitMemoryMap(ScrnInfoPtr pScrn)
     if (aper_size > mem_size)
 	mem_size = aper_size;
 
+    /* don't map the whole FB in the internal address space.
+     * we don't currently use fb space larger than the aperture
+     * size and on cards with more than 512 MB of vram, this can overflow
+     * the internal top of gart calculation on some systems.
+     * Limit it to cards with more than 512 MB as this causes problems
+     * on some other cards due to the way the ddx and drm set up the
+     * internal memory map.
+     * See fdo bug 24301.
+     */
+    if (mem_size > 0x20000000)
+	mem_size = aper_size;
+
 #ifdef XF86DRI
     /* Apply memory map limitation if using an old DRI */
     if (info->directRenderingEnabled && !info->dri->newMemoryMap) {
@@ -1378,7 +1474,10 @@ static void RADEONInitMemoryMap(ScrnInfoPtr pScrn)
 	(info->ChipFamily != CHIP_FAMILY_RS690) &&
 	(info->ChipFamily != CHIP_FAMILY_RS740) &&
 	(info->ChipFamily != CHIP_FAMILY_RS780) &&
-	(info->ChipFamily != CHIP_FAMILY_RS880)) {
+	(info->ChipFamily != CHIP_FAMILY_RS880) &&
+	(info->ChipFamily != CHIP_FAMILY_PALM) &&
+	(info->ChipFamily != CHIP_FAMILY_SUMO) &&
+	(info->ChipFamily != CHIP_FAMILY_SUMO2)) {
 	if (info->IsIGP)
 	    info->mc_fb_location = INREG(RADEON_NB_TOM);
 	else
@@ -1426,9 +1525,9 @@ static void RADEONInitMemoryMap(ScrnInfoPtr pScrn)
 	}
     }
     if (info->ChipFamily >= CHIP_FAMILY_R600) {
-	info->fbLocation = (info->mc_fb_location & 0xffff) << 24;
+	info->fbLocation = ((uint64_t)info->mc_fb_location & 0xffff) << 24;
     } else {
-	info->fbLocation = (info->mc_fb_location & 0xffff) << 16;
+	info->fbLocation = ((uint64_t)info->mc_fb_location & 0xffff) << 16;
     }
     /* Just disable the damn AGP apertures for now, it may be
      * re-enabled later by the DRM
@@ -1558,7 +1657,10 @@ static uint32_t RADEONGetAccessibleVRAM(ScrnInfoPtr pScrn)
     uint32_t	   aper_size;
     unsigned char  byte;
 
-    if (info->ChipFamily >= CHIP_FAMILY_R600)
+    if (info->ChipFamily >= CHIP_FAMILY_CEDAR)
+	/* size in MB on evergreen and fusion */
+	aper_size = INREG(R600_CONFIG_APER_SIZE) * 1024;
+    else if (info->ChipFamily >= CHIP_FAMILY_R600)
 	aper_size = INREG(R600_CONFIG_APER_SIZE) / 1024;
     else
 	aper_size = INREG(RADEON_CONFIG_APER_SIZE) / 1024;
@@ -1620,7 +1722,7 @@ static uint32_t RADEONGetAccessibleVRAM(ScrnInfoPtr pScrn)
      */
     if (INREG(RADEON_HOST_PATH_CNTL) & RADEON_HDP_APER_CNTL)
         return aper_size * 2;
-    
+
     return aper_size;
 }
 
@@ -1641,7 +1743,14 @@ static Bool RADEONPreInitVRAM(ScrnInfoPtr pScrn)
 
 	OUTREG(RADEON_CONFIG_MEMSIZE, pScrn->videoRam * 1024);
     } else {
-	if (info->ChipFamily >= CHIP_FAMILY_R600)
+	if (info->ChipFamily >= CHIP_FAMILY_PALM)
+	    /* R600_CONFIG_MEMSIZE is bytes on fusion */
+	    pScrn->videoRam = INREG(R600_CONFIG_MEMSIZE) / 1024;
+	else if (info->ChipFamily >= CHIP_FAMILY_CEDAR)
+	    /* R600_CONFIG_MEMSIZE is MB on evergreen */
+	    /* XXX watch for overflow!!! */
+	    pScrn->videoRam = INREG(R600_CONFIG_MEMSIZE) * 1024;
+	else if (info->ChipFamily >= CHIP_FAMILY_R600)
 	    pScrn->videoRam = INREG(R600_CONFIG_MEMSIZE) / 1024;
 	else {
 	    /* Read VRAM size from card */
@@ -1690,23 +1799,21 @@ static Bool RADEONPreInitVRAM(ScrnInfoPtr pScrn)
     xf86DrvMsg(pScrn->scrnIndex, from,
 	       "Mapped VideoRAM: %d kByte (%d bit %s SDRAM)\n", pScrn->videoRam, info->RamWidth, info->IsDDR?"DDR":"SDR");
 
+    /* Do this before we truncate since we only map fb once */
+    info->FbMapSize  = (pScrn->videoRam & ~1023) * 1024;
+
     if (info->IsPrimary) {
 	pScrn->videoRam /= 2;
 	xf86DrvMsg(pScrn->scrnIndex, X_INFO,
 		   "Using %dk of videoram for primary head\n",
 		   pScrn->videoRam);
-    }
-    
-    if (info->IsSecondary) {
+    } else if (info->IsSecondary) {
 	pScrn->videoRam /= 2;
-	info->LinearAddr += pScrn->videoRam * 1024;
 	xf86DrvMsg(pScrn->scrnIndex, X_INFO,
 		   "Using %dk of videoram for secondary head\n",
 		   pScrn->videoRam);
     }
-
     pScrn->videoRam  &= ~1023;
-    info->FbMapSize  = pScrn->videoRam * 1024;
 
     /* if the card is PCI Express reserve the last 32k for the gart table */
 #ifdef XF86DRI
@@ -1789,6 +1896,14 @@ static Bool RADEONPreInitChipType(ScrnInfoPtr pScrn)
 	}
     }
 
+    if (info->ChipFamily >= CHIP_FAMILY_SUMO) {
+	xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
+		   "Chipset: \"%s\" (ChipID = 0x%04x) requires KMS\n",
+		   pScrn->chipset,
+		   info->Chipset);
+	return FALSE;
+    }
+
     switch (info->Chipset) {
     case PCI_CHIP_RN50_515E:  /* RN50 is based on the RV100 but 3D isn't guaranteed to work.  YMMV. */
     case PCI_CHIP_RN50_5969:
@@ -1799,19 +1914,24 @@ static Bool RADEONPreInitChipType(ScrnInfoPtr pScrn)
     case PCI_CHIP_RV100_QY:
     case PCI_CHIP_RV100_QZ:
 	/* DELL triple-head configuration. */
-	if ((PCI_SUB_VENDOR_ID(info->PciInfo) == PCI_VENDOR_DELL) &&
-	    ((PCI_SUB_DEVICE_ID(info->PciInfo) == 0x016c) ||
-	     (PCI_SUB_DEVICE_ID(info->PciInfo) == 0x016d) ||
-	     (PCI_SUB_DEVICE_ID(info->PciInfo) == 0x016e) ||
-	     (PCI_SUB_DEVICE_ID(info->PciInfo) == 0x016f) ||
-	     (PCI_SUB_DEVICE_ID(info->PciInfo) == 0x0170) ||
-	     (PCI_SUB_DEVICE_ID(info->PciInfo) == 0x017d) ||
-	     (PCI_SUB_DEVICE_ID(info->PciInfo) == 0x017e) ||
-	     (PCI_SUB_DEVICE_ID(info->PciInfo) == 0x0183) ||
-	     (PCI_SUB_DEVICE_ID(info->PciInfo) == 0x018a) ||
-	     (PCI_SUB_DEVICE_ID(info->PciInfo) == 0x019a))) {
+	if (((PCI_SUB_VENDOR_ID(info->PciInfo) == PCI_VENDOR_DELL) &&
+	     ((PCI_SUB_DEVICE_ID(info->PciInfo) == 0x016c) ||
+	      (PCI_SUB_DEVICE_ID(info->PciInfo) == 0x016d) ||
+	      (PCI_SUB_DEVICE_ID(info->PciInfo) == 0x016e) ||
+	      (PCI_SUB_DEVICE_ID(info->PciInfo) == 0x016f) ||
+	      (PCI_SUB_DEVICE_ID(info->PciInfo) == 0x0170) ||
+	      (PCI_SUB_DEVICE_ID(info->PciInfo) == 0x017d) ||
+	      (PCI_SUB_DEVICE_ID(info->PciInfo) == 0x017e) ||
+	      (PCI_SUB_DEVICE_ID(info->PciInfo) == 0x0183) ||
+	      (PCI_SUB_DEVICE_ID(info->PciInfo) == 0x018a) ||
+	      (PCI_SUB_DEVICE_ID(info->PciInfo) == 0x019a) ||
+	      (PCI_SUB_DEVICE_ID(info->PciInfo) == 0x01b1) ||
+	      (PCI_SUB_DEVICE_ID(info->PciInfo) == 0x01b2) ||
+	      (PCI_SUB_DEVICE_ID(info->PciInfo) == 0x0205))) ||
+           ((PCI_SUB_VENDOR_ID(info->PciInfo) == PCI_VENDOR_HP) &&
+              (PCI_SUB_DEVICE_ID(info->PciInfo) == 0x31fb))) {
 	    info->IsDellServer = TRUE;
-	    xf86DrvMsg(pScrn->scrnIndex, X_INFO, "DELL server detected, force to special setup\n");
+	    xf86DrvMsg(pScrn->scrnIndex, X_INFO, "DELL/HP server detected, force to special setup\n");
 	}
 	break;
     case PCI_CHIP_RS482_5974:
@@ -1823,16 +1943,6 @@ static Bool RADEONPreInitChipType(ScrnInfoPtr pScrn)
 	}
     default:
 	break;
-    }
-
-    if (info->ChipFamily >= CHIP_FAMILY_R600) {
-        xf86DrvMsg(pScrn->scrnIndex, X_WARNING,
-                   "R600 support is mostly incomplete and very experimental\n");
-    }
-
-    if ((info->ChipFamily >= CHIP_FAMILY_RV515) && (info->ChipFamily < CHIP_FAMILY_R600)) {
-	xf86DrvMsg(pScrn->scrnIndex, X_WARNING,
-                   "R500 support is under development. Please report any issues to xorg-driver-ati@lists.x.org\n");
     }
 
     from               = X_PROBED;
@@ -1857,14 +1967,6 @@ static Bool RADEONPreInitChipType(ScrnInfoPtr pScrn)
 				/* BIOS */
     from              = X_PROBED;
     info->BIOSAddr    = info->PciInfo->biosBase & 0xfffe0000;
-    if (dev->BiosBase) {
-	xf86DrvMsg(pScrn->scrnIndex, X_INFO,
-		   "BIOS address override, using 0x%08lx instead of 0x%08lx\n",
-		   (unsigned long)dev->BiosBase,
-		   (unsigned long)info->BIOSAddr);
-	info->BIOSAddr = dev->BiosBase;
-	from           = X_CONFIG;
-    }
     if (info->BIOSAddr) {
 	xf86DrvMsg(pScrn->scrnIndex, from,
 		   "BIOS at 0x%08lx\n", (unsigned long)info->BIOSAddr);
@@ -1953,13 +2055,17 @@ static Bool RADEONPreInitChipType(ScrnInfoPtr pScrn)
 	}
     }
 
-
     xf86DrvMsg(pScrn->scrnIndex, X_INFO, "%s card detected\n",
 	       (info->cardType==CARD_PCI) ? "PCI" :
 		(info->cardType==CARD_PCIE) ? "PCIE" : "AGP");
 
     /* treat PCIE IGP cards as PCI */
     if (info->cardType == CARD_PCIE && info->IsIGP)
+	info->cardType = CARD_PCI;
+
+    /* some rs4xx cards report as agp */
+    if ((info->ChipFamily == CHIP_FAMILY_RS400) ||
+	(info->ChipFamily == CHIP_FAMILY_RS480))
 	info->cardType = CARD_PCI;
 
     if ((info->ChipFamily >= CHIP_FAMILY_R600) && info->IsIGP)
@@ -1973,23 +2079,27 @@ static Bool RADEONPreInitChipType(ScrnInfoPtr pScrn)
 	if (strcmp(s, "AGP") == 0) {
 	    info->cardType = CARD_AGP;
 	    xf86DrvMsg(pScrn->scrnIndex, X_CONFIG, "Forced into AGP mode\n");
-	} else if (strcmp(s, "PCI") == 0) {
-	    info->cardType = CARD_PCI;
-	    xf86DrvMsg(pScrn->scrnIndex, X_CONFIG, "Forced into PCI mode\n");
-	} else if (strcmp(s, "PCIE") == 0) {
-	    info->cardType = CARD_PCIE;
-	    xf86DrvMsg(pScrn->scrnIndex, X_CONFIG, "Forced into PCI Express mode\n");
+	} else if ((strcmp(s, "PCI") == 0) ||
+		   (strcmp(s, "PCIE") == 0)) {
+	    if ((info->ChipFamily == CHIP_FAMILY_RS400) ||
+		(info->ChipFamily == CHIP_FAMILY_RS480) ||
+		(info->ChipFamily == CHIP_FAMILY_RS690) ||
+		(info->ChipFamily == CHIP_FAMILY_RS740)) {
+		info->cardType = CARD_PCI;
+		xf86DrvMsg(pScrn->scrnIndex, X_CONFIG, "Forced into PCI mode\n");
+	    } else if (info->ChipFamily >= CHIP_FAMILY_RV380) {
+		info->cardType = CARD_PCIE;
+		xf86DrvMsg(pScrn->scrnIndex, X_CONFIG, "Forced into PCI Express mode\n");
+	    } else {
+		info->cardType = CARD_PCI;
+		xf86DrvMsg(pScrn->scrnIndex, X_CONFIG, "Forced into PCI mode\n");
+	    }
 	} else {
 	    xf86DrvMsg(pScrn->scrnIndex, X_CONFIG,
 		       "Invalid BusType option, using detected type\n");
 	}
     }
 #endif
-    xf86GetOptValBool(info->Options, OPTION_SHOWCACHE, &info->showCache);
-    if (info->showCache)
-	xf86DrvMsg(pScrn->scrnIndex, X_CONFIG,
-		   "Option ShowCache enabled\n");
-
 #ifdef RENDER
     info->RenderAccel = xf86ReturnOptValBool(info->Options, OPTION_RENDER_ACCEL,
 					     info->Chipset != PCI_CHIP_RN50_515E &&
@@ -2055,8 +2165,11 @@ static Bool RADEONPreInitAccel(ScrnInfoPtr pScrn)
 #if defined(USE_EXA) && defined(USE_XAA)
     char *optstr;
 #endif
+#ifdef XF86DRI /* zaphod FbMapSize is wrong, but no dri then */
+    int maxy = info->FbMapSize / (pScrn->displayWidth * info->CurrentLayout.pixel_bytes);
+#endif
 
-    if (!(info->accel_state = xcalloc(1, sizeof(struct radeon_accel_state)))) {
+    if (!(info->accel_state = calloc(1, sizeof(struct radeon_accel_state)))) {
 	xf86DrvMsg(pScrn->scrnIndex, X_ERROR, "Unable to allocate accel_state rec!\n");
 	return FALSE;
     }
@@ -2075,13 +2188,22 @@ static Bool RADEONPreInitAccel(ScrnInfoPtr pScrn)
 	info->accel_state->has_tcl = TRUE;
     }
 
-    info->useEXA = FALSE;
-
-    if (info->ChipFamily >= CHIP_FAMILY_R600) {
-	xf86DrvMsg(pScrn->scrnIndex, X_DEFAULT,
-	    "Will attempt to use R6xx/R7xx EXA support if DRI is enabled.\n");
-	info->useEXA = TRUE;
+    /* if we have shadow fb bail */
+    if (info->r600_shadow_fb) {
+	info->useEXA = FALSE;
+	return TRUE;
     }
+
+#ifdef XF86DRI
+    if ((!info->directRenderingEnabled) ||
+	(maxy <= pScrn->virtualY * 3) ||
+	(pScrn->videoRam <= 32768))
+	info->useEXA = FALSE;
+    else
+	info->useEXA = TRUE;
+#else
+	info->useEXA = FALSE;
+#endif
 
     if (!xf86ReturnOptValBool(info->Options, OPTION_NOACCEL, FALSE)) {
 	int errmaj = 0, errmin = 0;
@@ -2096,16 +2218,23 @@ static Bool RADEONPreInitAccel(ScrnInfoPtr pScrn)
 		info->useEXA = TRUE;
 	    } else if (xf86NameCmp(optstr, "XAA") == 0) {
 		from = X_CONFIG;
+		if (info->ChipFamily < CHIP_FAMILY_R600)
+		    info->useEXA = FALSE;
 	    }
 	}
 #else /* USE_XAA */
 	info->useEXA = TRUE;
 #endif /* !USE_XAA */
+#else
+	info->useEXA = FALSE;
 #endif /* USE_EXA */
         if (info->ChipFamily < CHIP_FAMILY_R600)
 	    xf86DrvMsg(pScrn->scrnIndex, from,
 		       "Using %s acceleration architecture\n",
 		       info->useEXA ? "EXA" : "XAA");
+	else
+	    xf86DrvMsg(pScrn->scrnIndex, X_DEFAULT,
+		       "Will attempt to use R6xx/R7xx EXA support if DRI is enabled.\n");
 
 #ifdef USE_EXA
 	if (info->useEXA) {
@@ -2141,6 +2270,9 @@ static Bool RADEONPreInitAccel(ScrnInfoPtr pScrn)
 	    }
 	}
 #endif /* USE_XAA */
+    } else {
+	/* NoAccel */
+	info->useEXA = FALSE;
     }
 
     return TRUE;
@@ -2204,18 +2336,19 @@ static Bool RADEONPreInitInt10(ScrnInfoPtr pScrn, xf86Int10InfoPtr *ppInt10)
 static Bool RADEONPreInitDRI(ScrnInfoPtr pScrn)
 {
     RADEONInfoPtr  info = RADEONPTR(pScrn);
+    Bool           ret;
     MessageType    from;
     char          *reason;
 
     info->directRenderingEnabled = FALSE;
     info->directRenderingInited = FALSE;
 
-    if (!(info->dri = xcalloc(1, sizeof(struct radeon_dri)))) {
+    if (!(info->dri = calloc(1, sizeof(struct radeon_dri)))) {
 	xf86DrvMsg(pScrn->scrnIndex, X_ERROR,"Unable to allocate dri rec!\n");
 	return FALSE;
     }
 
-    if (!(info->cp = xcalloc(1, sizeof(struct radeon_cp)))) {
+    if (!(info->cp = calloc(1, sizeof(struct radeon_cp)))) {
 	xf86DrvMsg(pScrn->scrnIndex, X_ERROR,"Unable to allocate cp rec!\n");
 	return FALSE;
     }
@@ -2235,6 +2368,12 @@ static Bool RADEONPreInitDRI(ScrnInfoPtr pScrn)
     if (info->IsSecondary)
         return FALSE;
 
+    if (info->ChipFamily >= CHIP_FAMILY_CEDAR) {
+	xf86DrvMsg(pScrn->scrnIndex, X_INFO,
+		   "No DRI yet on Evergreen\n");
+	return FALSE;
+    }
+
     if (info->Chipset == PCI_CHIP_RN50_515E ||
 	info->Chipset == PCI_CHIP_RN50_5969) {
 	if (xf86ReturnOptValBool(info->Options, OPTION_DRI, FALSE)) {
@@ -2248,9 +2387,6 @@ static Bool RADEONPreInitDRI(ScrnInfoPtr pScrn)
 	    return FALSE;
 	}
     }
-
-    if (info->ChipFamily == CHIP_FAMILY_RS880)
-	return FALSE;
 
     if (!xf86ReturnOptValBool(info->Options, OPTION_DRI, TRUE)) {
 	xf86DrvMsg(pScrn->scrnIndex, X_INFO,
@@ -2267,8 +2403,9 @@ static Bool RADEONPreInitDRI(ScrnInfoPtr pScrn)
     info->dri->pLibDRMVersion = NULL;
     info->dri->pKernelDRMVersion = NULL;
 
-    if (!RADEONDRIGetVersion(pScrn))
-	return FALSE;
+    ret = RADEONDRIGetVersion(pScrn);
+    if (ret <= 0)
+	return ret;
 
     xf86DrvMsg(pScrn->scrnIndex, X_INFO,
 	       "[dri] Found DRI library version %d.%d.%d and kernel"
@@ -2595,7 +2732,11 @@ static Bool RADEONPreInitXv(ScrnInfoPtr pScrn)
 	switch(info->ChipFamily){
 	case CHIP_FAMILY_R200:
 	case CHIP_FAMILY_R300:
+	case CHIP_FAMILY_R350:
 	case CHIP_FAMILY_RV350:
+	case CHIP_FAMILY_RV380:
+	case CHIP_FAMILY_R420:
+	case CHIP_FAMILY_RV410:
 		info->overlay_scaler_buffer_width = 1920;
 		break;
 	default:
@@ -2686,19 +2827,61 @@ RADEONPreInitBIOS(ScrnInfoPtr pScrn, xf86Int10InfoPtr  pInt10)
     return TRUE;
 }
 
+Bool
+RADEONZaphodStringMatches(ScrnInfoPtr pScrn, const char *s, char *output_name)
+{
+    int i = 0;
+    char s1[20];
+
+    do {
+	switch(*s) {
+	case ',':
+	    s1[i] = '\0';
+	    i = 0;
+	    if (strcmp(s1, output_name) == 0)
+		return TRUE;
+	    break;
+	case ' ':
+	case '\t':
+	case '\n':
+	case '\r':
+	    break;
+	default:
+	    s1[i] = *s;
+	    i++;
+	    break;
+	}
+    } while(*s++);
+
+    s1[i] = '\0';
+    if (strcmp(s1, output_name) == 0)
+	return TRUE;
+
+    return FALSE;
+}
+
 static void RADEONFixZaphodOutputs(ScrnInfoPtr pScrn)
 {
     RADEONInfoPtr info = RADEONPTR(pScrn);
     xf86CrtcConfigPtr   config = XF86_CRTC_CONFIG_PTR(pScrn);
+    int o;
+    char *s;
 
-    if (info->IsPrimary) {
-	xf86OutputDestroy(config->output[0]);
-	while(config->num_output > 1) {
-	    xf86OutputDestroy(config->output[1]);
+    if ((s = xf86GetOptValString(info->Options, OPTION_ZAPHOD_HEADS))) {
+	for (o = config->num_output; o > 0; o--) {
+	    if (!RADEONZaphodStringMatches(pScrn, s, config->output[o - 1]->name))
+		xf86OutputDestroy(config->output[o - 1]);
 	}
     } else {
-	while(config->num_output > 1) {
-	    xf86OutputDestroy(config->output[1]);
+	if (info->IsPrimary) {
+	    xf86OutputDestroy(config->output[0]);
+	    while (config->num_output > 1) {
+		xf86OutputDestroy(config->output[1]);
+	    }
+	} else {
+	    while (config->num_output > 1) {
+		xf86OutputDestroy(config->output[1]);
+	    }
 	}
     }
 }
@@ -2711,17 +2894,20 @@ static Bool RADEONPreInitControllers(ScrnInfoPtr pScrn)
     int mask;
     int found = 0;
 
-    if (!info->IsPrimary && !info->IsSecondary)
-	mask = 3;
-    else if (info->IsPrimary)
+    if (info->IsPrimary)
 	mask = 1;
-    else
+    else if (info->IsSecondary)
 	mask = 2;
-	
+    else
+	mask = 3;
+
     if (!RADEONAllocateControllers(pScrn, mask))
 	return FALSE;
 
     RADEONGetClockInfo(pScrn);
+
+    if (info->IsAtomBios && info->IsIGP)
+	RADEONATOMGetIGPInfo(pScrn);
 
     if (!RADEONSetupConnectors(pScrn)) {
 	return FALSE;
@@ -2731,7 +2917,7 @@ static Bool RADEONPreInitControllers(ScrnInfoPtr pScrn)
 	/* fixup outputs for zaphod */
 	RADEONFixZaphodOutputs(pScrn);
     }
-      
+
     RADEONPrintPortMap(pScrn);
 
     info->first_load_no_devices = FALSE;
@@ -2766,6 +2952,7 @@ RADEONProbeDDC(ScrnInfoPtr pScrn, int indx)
     if (xf86LoadSubModule(pScrn, "vbe")) {
 	pVbe = VBEInit(NULL,indx);
 	ConfiguredMonitor = vbeDoEDID(pVbe, NULL);
+	vbeFree(pVbe);
     }
 }
 
@@ -2789,7 +2976,6 @@ Bool RADEONPreInit(ScrnInfoPtr pScrn, int flags)
     xf86Int10InfoPtr  pInt10 = NULL;
     void *int10_save = NULL;
     const char *s;
-    int crtc_max_X, crtc_max_Y;
     RADEONEntPtr pRADEONEnt;
     DevUnion* pPriv;
 
@@ -2804,6 +2990,7 @@ Bool RADEONPreInit(ScrnInfoPtr pScrn, int flags)
 
     info->IsSecondary  = FALSE;
     info->IsPrimary = FALSE;
+    info->kms_enabled = FALSE;
 
     info->pEnt         = xf86GetEntityInfo(pScrn->entityList[pScrn->numEntities - 1]);
     if (info->pEnt->location.type != BUS_PCI) goto fail;
@@ -2893,9 +3080,10 @@ Bool RADEONPreInit(ScrnInfoPtr pScrn, int flags)
 	       PCI_DEV_DEV(info->PciInfo),
 	       PCI_DEV_FUNC(info->PciInfo));
 
-#if GET_ABI_MAJOR(ABI_VIDEODRV_VERSION) < 7
+#ifndef XSERVER_LIBPCIACCESS
     if (xf86RegisterResources(info->pEnt->index, 0, ResExclusive))
 	goto fail;
+
     xf86SetOperatingState(resVga, info->pEnt->index, ResUnusedOpr);
 
     pScrn->racMemFlags = RAC_FB | RAC_COLORMAP | RAC_VIEWPORT | RAC_CURSOR;
@@ -2913,7 +3101,7 @@ Bool RADEONPreInit(ScrnInfoPtr pScrn, int flags)
 				/* We can't do this until we have a
 				   pScrn->display. */
     xf86CollectOptions(pScrn, NULL);
-    if (!(info->Options = xalloc(sizeof(RADEONOptions))))
+    if (!(info->Options = malloc(sizeof(RADEONOptions))))
 	goto fail;
 
     memcpy(info->Options, RADEONOptions, sizeof(RADEONOptions));
@@ -2980,6 +3168,8 @@ Bool RADEONPreInit(ScrnInfoPtr pScrn, int flags)
      * memory map
      */
     info->directRenderingEnabled = RADEONPreInitDRI(pScrn);
+    if (info->directRenderingEnabled < 0)
+	goto fail;
 #endif
     if (!info->directRenderingEnabled) {
 	if (info->ChipFamily >= CHIP_FAMILY_R600) {
@@ -2996,59 +3186,15 @@ Bool RADEONPreInit(ScrnInfoPtr pScrn, int flags)
 
     RADEONPreInitColorTiling(pScrn);
 
-    /* we really need an FB manager... */
-    if (pScrn->display->virtualX) {
-	crtc_max_X = pScrn->display->virtualX;
-	crtc_max_Y = pScrn->display->virtualY;
-	if (info->allowColorTiling) {
-	    if (crtc_max_X > info->MaxSurfaceWidth ||
-		crtc_max_Y > info->MaxLines) {
-		info->allowColorTiling = FALSE;
-		xf86DrvMsg(pScrn->scrnIndex, X_WARNING,
-			   "Requested desktop size exceeds surface limts for tiling, ColorTiling disabled\n");
-	    }
-	}
-	if (crtc_max_X > 8192)
-	    crtc_max_X = 8192;
-	if (crtc_max_Y > 8192)
-	    crtc_max_Y = 8192;
-    } else {
-	/*
-	 * note that these aren't really the CRTC limits, they're just
-	 * heuristics until we have a better memory manager.
-	 */
-	if (pScrn->videoRam <= 16384) {
-	    crtc_max_X = 1600;
-	    crtc_max_Y = 1200;
-	} else if (IS_R300_VARIANT) {
-	    crtc_max_X = 2560;
-	    crtc_max_Y = 1200;
-	} else if (IS_AVIVO_VARIANT) {
-	    crtc_max_X = 2560;
-	    crtc_max_Y = 1600;
-	} else {
-	    crtc_max_X = 2048;
-	    crtc_max_Y = 1200;
-	}
-    }
-    xf86DrvMsg(pScrn->scrnIndex, X_INFO, "Max desktop size set to %dx%d\n",
-	       crtc_max_X, crtc_max_Y);
-    xf86DrvMsg(pScrn->scrnIndex, X_INFO,
-	       "For a larger or smaller max desktop size, add a Virtual line to your xorg.conf\n");
-    xf86DrvMsg(pScrn->scrnIndex, X_INFO,
-	       "If you are having trouble with 3D, "
-	       "reduce the desktop size by adjusting the Virtual line to your xorg.conf\n");
-
-    /*xf86CrtcSetSizeRange (pScrn, 320, 200, info->MaxSurfaceWidth, info->MaxLines);*/
-    xf86CrtcSetSizeRange (pScrn, 320, 200, crtc_max_X, crtc_max_Y);
+    if (IS_AVIVO_VARIANT)
+	xf86CrtcSetSizeRange (pScrn, 320, 200, 8192, 8192);
+    else
+	xf86CrtcSetSizeRange (pScrn, 320, 200, 4096, 4096);
 
     RADEONPreInitDDC(pScrn);
 
     if (!RADEONPreInitControllers(pScrn))
        goto fail;
-
-
-    ErrorF("before xf86InitialConfiguration\n");
 
     if (!xf86InitialConfiguration (pScrn, FALSE))
    {
@@ -3073,8 +3219,6 @@ Bool RADEONPreInit(ScrnInfoPtr pScrn, int flags)
 		output->crtc = xf86_config->crtc[0];
 	}
     }
-
-    ErrorF("after xf86InitialConfiguration\n");
 
     RADEONSetPitch(pScrn);
 
@@ -3114,10 +3258,6 @@ Bool RADEONPreInit(ScrnInfoPtr pScrn, int flags)
     info->MMIO = NULL;
 
     xf86DrvMsg(pScrn->scrnIndex, X_NOTICE,
-	       "For information on using the multimedia capabilities\n\tof this"
-	       " adapter, please see http://gatos.sf.net.\n");
-
-    xf86DrvMsg(pScrn->scrnIndex, X_NOTICE,
 	       "MergedFB support has been removed and replaced with"
 	       " xrandr 1.2 support\n");
 
@@ -3127,7 +3267,7 @@ fail:
 				/* Pre-init failed. */
 				/* Free the video bios (if applicable) */
     if (info->VBIOS) {
-	xfree(info->VBIOS);
+	free(info->VBIOS);
 	info->VBIOS = NULL;
     }
 
@@ -3251,33 +3391,9 @@ static void RADEONBlockHandler(int i, pointer blockData,
 #ifdef USE_EXA
     info->accel_state->engineMode = EXA_ENGINEMODE_UNKNOWN;
 #endif
-}
 
-static void
-RADEONPointerMoved(int index, int x, int y)
-{
-    ScrnInfoPtr pScrn = xf86Screens[index];
-    RADEONInfoPtr  info  = RADEONPTR(pScrn);
-    int newX = x, newY = y;
-
-    switch (info->rotation) {
-    case RR_Rotate_0:
-	break;
-    case RR_Rotate_90:
-	newX = y;
-	newY = pScrn->pScreen->width - x - 1;
-	break;
-    case RR_Rotate_180:
-	newX = pScrn->pScreen->width - x - 1;
-	newY = pScrn->pScreen->height - y - 1;
-	break;
-    case RR_Rotate_270:
-	newX = pScrn->pScreen->height - y - 1;
-	newY = x;
-	break;
-    }
-
-    (*info->PointerMoved)(index, newX, newY);
+    if (info->pm.dynamic_mode_enabled)
+	RADEONPMBlockHandler(pScrn);
 }
 
 static void
@@ -3348,7 +3464,8 @@ Bool RADEONScreenInit(int scrnIndex, ScreenPtr pScreen,
     pScrn->fbOffset    = info->dri->frontOffset;
 #endif
 
-    if (info->IsSecondary) pScrn->fbOffset = pScrn->videoRam * 1024;
+    if (info->IsSecondary)
+        pScrn->fbOffset = pScrn->videoRam * 1024;
 #ifdef XF86DRI
     xf86DrvMsg(pScrn->scrnIndex, X_INFO, 
 		   "RADEONScreenInit %lx %ld %d\n",
@@ -3384,21 +3501,7 @@ Bool RADEONScreenInit(int scrnIndex, ScreenPtr pScreen,
     /* blank the outputs/crtcs */
     RADEONBlank(pScrn);
 
-    if (info->IsMobility && !IS_AVIVO_VARIANT) {
-	if (xf86ReturnOptValBool(info->Options, OPTION_DYNAMIC_CLOCKS, FALSE)) {
-	    RADEONSetDynamicClock(pScrn, 1);
-	} else {
-	    RADEONSetDynamicClock(pScrn, 0);
-	}
-    } else if (IS_AVIVO_VARIANT) {
-	if (xf86ReturnOptValBool(info->Options, OPTION_DYNAMIC_CLOCKS, FALSE)) {
-	    atombios_static_pwrmgt_setup(pScrn, 1);
-	    atombios_dyn_clk_setup(pScrn, 1);
-	}
-    }
-
-    if (IS_R300_VARIANT || IS_RV100_VARIANT)
-	RADEONForceSomeClocks(pScrn);
+    RADEONPMInit(pScrn);
 
     if (info->allowColorTiling && (pScrn->virtualX > info->MaxSurfaceWidth)) {
 	xf86DrvMsg(pScrn->scrnIndex, X_INFO,
@@ -3406,7 +3509,7 @@ Bool RADEONScreenInit(int scrnIndex, ScreenPtr pScreen,
 		    info->MaxSurfaceWidth);
 	info->allowColorTiling = FALSE;
     }
-    if (info->allowColorTiling && pScrn->currentMode != NULL) {
+    if (info->allowColorTiling) {
         info->tilingEnabled = (pScrn->currentMode->Flags & (V_DBLSCAN | V_INTERLACE)) ? FALSE : TRUE;
     }
 
@@ -3585,9 +3688,9 @@ Bool RADEONScreenInit(int scrnIndex, ScreenPtr pScreen,
 		   "Initializing fb layer\n");
 
     if (info->r600_shadow_fb) {
-	info->fb_shadow = xcalloc(1,
-				  pScrn->displayWidth * pScrn->virtualY *
-				  ((pScrn->bitsPerPixel + 7) >> 3));
+	info->fb_shadow = calloc(1,
+				 pScrn->displayWidth * pScrn->virtualY *
+				 ((pScrn->bitsPerPixel + 7) >> 3));
 	if (info->fb_shadow == NULL) {
 	    xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
                        "Failed to allocate shadow framebuffer\n");
@@ -3603,7 +3706,7 @@ Bool RADEONScreenInit(int scrnIndex, ScreenPtr pScreen,
 
     if (info->r600_shadow_fb == FALSE) {
 	/* Init fb layer */
-	if (!fbScreenInit(pScreen, info->FB,
+	if (!fbScreenInit(pScreen, info->FB + pScrn->fbOffset,
 			  pScrn->virtualX, pScrn->virtualY,
 			  pScrn->xDpi, pScrn->yDpi, pScrn->displayWidth,
 			  pScrn->bitsPerPixel))
@@ -3761,9 +3864,9 @@ Bool RADEONScreenInit(int scrnIndex, ScreenPtr pScreen,
     }
 
     /* DGA setup */
-    xf86DrvMsgVerb(pScrn->scrnIndex, X_INFO, RADEON_LOGLEVEL_DEBUG,
-		   "Initializing DGA\n");
-    RADEONDGAInit(pScreen);
+#ifdef XFreeXDGA
+    xf86DiDGAInit(pScreen, info->LinearAddr + pScrn->fbOffset);
+#endif
 
     /* Init Xv */
     xf86DrvMsgVerb(pScrn->scrnIndex, X_INFO, RADEON_LOGLEVEL_DEBUG,
@@ -3776,7 +3879,10 @@ Bool RADEONScreenInit(int scrnIndex, ScreenPtr pScreen,
         }
     }
 
-    /* xf86SetDesiredModes() accesses pScrn->pScreen */
+    /* Clear the framebuffer */
+    memset(info->FB + pScrn->fbOffset, 0,
+           pScrn->virtualY * pScrn->displayWidth * info->CurrentLayout.pixel_bytes);
+
     pScrn->pScreen = pScreen;
 
     /* set the modes with desired rotation, etc. */
@@ -3793,12 +3899,8 @@ Bool RADEONScreenInit(int scrnIndex, ScreenPtr pScreen,
     info->CreateScreenResources = pScreen->CreateScreenResources;
     pScreen->CreateScreenResources = RADEONCreateScreenResources;
 
-    if (!xf86CrtcScreenInit (pScreen))
+   if (!xf86CrtcScreenInit (pScreen))
        return FALSE;
-
-    /* Wrap pointer motion to flip touch screen around */
-    info->PointerMoved = pScrn->PointerMoved;
-    pScrn->PointerMoved = RADEONPointerMoved;
 
     /* Colormap setup */
     xf86DrvMsgVerb(pScrn->scrnIndex, X_INFO, RADEON_LOGLEVEL_DEBUG,
@@ -3847,13 +3949,85 @@ void RADEONRestoreMemMapRegisters(ScrnInfoPtr pScrn,
 	       "  MC_AGP_LOCATION  : 0x%08x\n",
 	       (unsigned)restore->mc_agp_location);
 
-    if (IS_AVIVO_VARIANT) {
+    if (IS_DCE4_VARIANT) {
+	if (mc_fb_loc != restore->mc_fb_location ||
+	    mc_agp_loc != restore->mc_agp_location) {
+	    uint32_t tmp;
 
+	    //XXX
+	    //RADEONWaitForIdleMMIO(pScrn);
+
+            /* disable VGA rendering core */
+    	    OUTREG(AVIVO_VGA_RENDER_CONTROL, INREG(AVIVO_VGA_RENDER_CONTROL) & ~AVIVO_VGA_VSTATUS_CNTL_MASK);
+	    OUTREG(AVIVO_D1VGA_CONTROL, INREG(AVIVO_D1VGA_CONTROL) & ~AVIVO_DVGA_CONTROL_MODE_ENABLE);
+	    OUTREG(AVIVO_D2VGA_CONTROL, INREG(AVIVO_D2VGA_CONTROL) & ~AVIVO_DVGA_CONTROL_MODE_ENABLE);
+	    OUTREG(EVERGREEN_D3VGA_CONTROL, INREG(EVERGREEN_D3VGA_CONTROL) & ~AVIVO_DVGA_CONTROL_MODE_ENABLE);
+	    OUTREG(EVERGREEN_D4VGA_CONTROL, INREG(EVERGREEN_D4VGA_CONTROL) & ~AVIVO_DVGA_CONTROL_MODE_ENABLE);
+	    OUTREG(EVERGREEN_D5VGA_CONTROL, INREG(EVERGREEN_D5VGA_CONTROL) & ~AVIVO_DVGA_CONTROL_MODE_ENABLE);
+	    OUTREG(EVERGREEN_D6VGA_CONTROL, INREG(EVERGREEN_D6VGA_CONTROL) & ~AVIVO_DVGA_CONTROL_MODE_ENABLE);
+
+	    /* Stop display & memory access */
+	    tmp = INREG(EVERGREEN_CRTC_CONTROL + EVERGREEN_CRTC0_REGISTER_OFFSET);
+	    OUTREG(EVERGREEN_CRTC_CONTROL + EVERGREEN_CRTC0_REGISTER_OFFSET, tmp & ~EVERGREEN_CRTC_MASTER_EN);
+	    tmp = INREG(EVERGREEN_CRTC_CONTROL + EVERGREEN_CRTC0_REGISTER_OFFSET);
+
+	    tmp = INREG(EVERGREEN_CRTC_CONTROL + EVERGREEN_CRTC1_REGISTER_OFFSET);
+	    OUTREG(EVERGREEN_CRTC_CONTROL + EVERGREEN_CRTC1_REGISTER_OFFSET, tmp & ~EVERGREEN_CRTC_MASTER_EN);
+	    tmp = INREG(EVERGREEN_CRTC_CONTROL + EVERGREEN_CRTC1_REGISTER_OFFSET);
+
+	    if (!IS_DCE41_VARIANT) {
+		tmp = INREG(EVERGREEN_CRTC_CONTROL + EVERGREEN_CRTC2_REGISTER_OFFSET);
+		OUTREG(EVERGREEN_CRTC_CONTROL + EVERGREEN_CRTC2_REGISTER_OFFSET, tmp & ~EVERGREEN_CRTC_MASTER_EN);
+		tmp = INREG(EVERGREEN_CRTC_CONTROL + EVERGREEN_CRTC2_REGISTER_OFFSET);
+
+		tmp = INREG(EVERGREEN_CRTC_CONTROL + EVERGREEN_CRTC3_REGISTER_OFFSET);
+		OUTREG(EVERGREEN_CRTC_CONTROL + EVERGREEN_CRTC3_REGISTER_OFFSET, tmp & ~EVERGREEN_CRTC_MASTER_EN);
+		tmp = INREG(EVERGREEN_CRTC_CONTROL + EVERGREEN_CRTC3_REGISTER_OFFSET);
+
+		tmp = INREG(EVERGREEN_CRTC_CONTROL + EVERGREEN_CRTC4_REGISTER_OFFSET);
+		OUTREG(EVERGREEN_CRTC_CONTROL + EVERGREEN_CRTC4_REGISTER_OFFSET, tmp & ~EVERGREEN_CRTC_MASTER_EN);
+		tmp = INREG(EVERGREEN_CRTC_CONTROL + EVERGREEN_CRTC4_REGISTER_OFFSET);
+
+		tmp = INREG(EVERGREEN_CRTC_CONTROL + EVERGREEN_CRTC5_REGISTER_OFFSET);
+		OUTREG(EVERGREEN_CRTC_CONTROL + EVERGREEN_CRTC5_REGISTER_OFFSET, tmp & ~EVERGREEN_CRTC_MASTER_EN);
+		tmp = INREG(EVERGREEN_CRTC_CONTROL + EVERGREEN_CRTC5_REGISTER_OFFSET);
+	    }
+
+	    usleep(10000);
+	    timeout = 0;
+	    while (!(radeon_get_mc_idle(pScrn))) {
+		if (++timeout > 1000000) {
+		    xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
+			       "Timeout trying to update memory controller settings !\n");
+		    xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
+			       "You will probably crash now ... \n");
+		    /* Nothing we can do except maybe try to kill the server,
+		     * let's wait 2 seconds to leave the above message a chance
+		     * to maybe hit the disk and continue trying to setup despite
+		     * the MC being non-idle
+		     */
+		    usleep(2000000);
+		}
+		usleep(10);
+	    }
+
+	    radeon_write_mc_fb_agp_location(pScrn, LOC_FB | LOC_AGP,
+					    restore->mc_fb_location,
+					    restore->mc_agp_location,
+					    restore->mc_agp_location_hi);
+
+	    OUTREG(R600_HDP_NONSURFACE_BASE, (restore->mc_fb_location & 0xffff) << 16);
+
+	}
+    } else if (IS_AVIVO_VARIANT) {
 	if (mc_fb_loc != restore->mc_fb_location ||
 	    mc_agp_loc != restore->mc_agp_location) {
 	    uint32_t tmp;
 
 	    RADEONWaitForIdleMMIO(pScrn);
+
+            /* disable VGA rendering core */
+    	    OUTREG(AVIVO_VGA_RENDER_CONTROL, INREG(AVIVO_VGA_RENDER_CONTROL) &~ AVIVO_VGA_VSTATUS_CNTL_MASK);
 
 	    OUTREG(AVIVO_D1VGA_CONTROL, INREG(AVIVO_D1VGA_CONTROL) & ~AVIVO_DVGA_CONTROL_MODE_ENABLE);
 	    OUTREG(AVIVO_D2VGA_CONTROL, INREG(AVIVO_D2VGA_CONTROL) & ~AVIVO_DVGA_CONTROL_MODE_ENABLE);
@@ -4064,9 +4238,9 @@ static void RADEONAdjustMemMapRegisters(ScrnInfoPtr pScrn, RADEONSavePtr save)
 	info->mc_fb_location = fb;
 	info->mc_agp_location = agp;
 	if (info->ChipFamily >= CHIP_FAMILY_R600)
-	    info->fbLocation = (info->mc_fb_location & 0xffff) << 24;
+	    info->fbLocation = ((uint64_t)info->mc_fb_location & 0xffff) << 24;
 	else
-	    info->fbLocation = (info->mc_fb_location & 0xffff) << 16;
+	    info->fbLocation = ((uint64_t)info->mc_fb_location & 0xffff) << 16;
 
 	info->accel_state->dst_pitch_offset =
 	    (((pScrn->displayWidth * info->CurrentLayout.pixel_bytes / 64)
@@ -4141,8 +4315,8 @@ void RADEONChangeSurfaces(ScrnInfoPtr pScrn)
     int cpp = info->CurrentLayout.pixel_bytes;
     /* depth/front/back pitch must be identical (and the same as displayWidth) */
     int width_bytes = pScrn->displayWidth * cpp;
-    int bufferSize = ((((pScrn->virtualY + 15) & ~15) * width_bytes
-        + RADEON_BUFFER_ALIGN) & ~RADEON_BUFFER_ALIGN);
+    int bufferSize = RADEON_ALIGN((RADEON_ALIGN(pScrn->virtualY, 16)) * width_bytes,
+        RADEON_GPU_PAGE_SIZE);
     unsigned int color_pattern, swap_pattern;
 
     if (!info->allowColorTiling)
@@ -4174,8 +4348,8 @@ void RADEONChangeSurfaces(ScrnInfoPtr pScrn)
 	int retvalue;
 	int depthCpp = (info->dri->depthBits - 8) / 4;
 	int depth_width_bytes = pScrn->displayWidth * depthCpp;
-	int depthBufferSize = ((((pScrn->virtualY + 15) & ~15) * depth_width_bytes
-				+ RADEON_BUFFER_ALIGN) & ~RADEON_BUFFER_ALIGN);
+	int depthBufferSize = RADEON_ALIGN((RADEON_ALIGN(pScrn->virtualY, 16)) * depth_width_bytes,
+				RADEON_GPU_PAGE_SIZE);
 	unsigned int depth_pattern;
 
 	drmsurffree.address = info->dri->frontOffset;
@@ -4298,8 +4472,6 @@ static void RADEONSaveMemMapRegisters(ScrnInfoPtr pScrn, RADEONSavePtr save)
     }
 }
 
-
-#if 0
 /* Read palette data */
 static void RADEONSavePalette(ScrnInfoPtr pScrn, RADEONSavePtr save)
 {
@@ -4307,19 +4479,424 @@ static void RADEONSavePalette(ScrnInfoPtr pScrn, RADEONSavePtr save)
     unsigned char *RADEONMMIO = info->MMIO;
     int            i;
 
-#ifdef ENABLE_FLAT_PANEL
-    /* Select palette 0 (main CRTC) if using FP-enabled chip */
- /* if (info->Port1 == MT_DFP) PAL_SELECT(1); */
-#endif
     PAL_SELECT(1);
     INPAL_START(0);
-    for (i = 0; i < 256; i++) save->palette2[i] = INPAL_NEXT();
+    for (i = 0; i < 256; i++) {
+	save->palette2[i] = INREG(RADEON_PALETTE_30_DATA);
+    }
+
     PAL_SELECT(0);
     INPAL_START(0);
-    for (i = 0; i < 256; i++) save->palette[i] = INPAL_NEXT();
-    save->palette_valid = TRUE;
+    for (i = 0; i < 256; i++) {
+	save->palette[i] = INREG(RADEON_PALETTE_30_DATA);
+    }
 }
-#endif
+
+static void RADEONRestorePalette(ScrnInfoPtr pScrn, RADEONSavePtr restore)
+{
+    RADEONInfoPtr  info       = RADEONPTR(pScrn);
+    unsigned char *RADEONMMIO = info->MMIO;
+    int            i;
+
+    PAL_SELECT(1);
+    OUTPAL_START(0);
+    for (i = 0; i < 256; i++) {
+	OUTREG(RADEON_PALETTE_30_DATA, restore->palette2[i]);
+    }
+
+    PAL_SELECT(0);
+    OUTPAL_START(0);
+    for (i = 0; i < 256; i++) {
+	OUTREG(RADEON_PALETTE_30_DATA, restore->palette[i]);
+    }
+}
+
+static void
+dce4_save_grph(ScrnInfoPtr pScrn, struct dce4_main_block_state *state,
+	       uint32_t offset)
+{
+    RADEONInfoPtr info = RADEONPTR(pScrn);
+    unsigned char *RADEONMMIO = info->MMIO;
+
+    state->grph.enable = INREG(offset + EVERGREEN_GRPH_ENABLE);
+    state->grph.control = INREG(offset + EVERGREEN_GRPH_CONTROL);
+    state->grph.swap_control = INREG(offset + EVERGREEN_GRPH_SWAP_CONTROL);
+    state->grph.prim_surf_addr = INREG(offset + EVERGREEN_GRPH_PRIMARY_SURFACE_ADDRESS);
+    state->grph.sec_surf_addr = INREG(offset + EVERGREEN_GRPH_SECONDARY_SURFACE_ADDRESS);
+    state->grph.pitch = INREG(offset + EVERGREEN_GRPH_PITCH);
+    state->grph.prim_surf_addr_hi = INREG(offset + EVERGREEN_GRPH_PRIMARY_SURFACE_ADDRESS_HIGH);
+    state->grph.sec_surf_addr_hi = INREG(offset + EVERGREEN_GRPH_SECONDARY_SURFACE_ADDRESS_HIGH);
+    state->grph.x_offset = INREG(offset + EVERGREEN_GRPH_SURFACE_OFFSET_X);
+    state->grph.y_offset = INREG(offset + EVERGREEN_GRPH_SURFACE_OFFSET_Y);
+    state->grph.x_start = INREG(offset + EVERGREEN_GRPH_X_START);
+    state->grph.y_start = INREG(offset + EVERGREEN_GRPH_Y_START);
+    state->grph.x_end = INREG(offset + EVERGREEN_GRPH_X_END);
+    state->grph.y_end = INREG(offset + EVERGREEN_GRPH_Y_END);
+
+    state->grph.desktop_height = INREG(offset + EVERGREEN_DESKTOP_HEIGHT);
+    state->grph.viewport_start = INREG(offset + EVERGREEN_VIEWPORT_START);
+    state->grph.viewport_size = INREG(offset + EVERGREEN_VIEWPORT_SIZE);
+    state->grph.mode_data_format = INREG(offset + EVERGREEN_DATA_FORMAT);
+}
+
+static void
+dce4_restore_grph(ScrnInfoPtr pScrn, struct dce4_main_block_state *state,
+	       uint32_t offset)
+{
+    RADEONInfoPtr info = RADEONPTR(pScrn);
+    unsigned char *RADEONMMIO = info->MMIO;
+
+    OUTREG(offset + EVERGREEN_GRPH_ENABLE, state->grph.enable);
+    OUTREG(offset + EVERGREEN_GRPH_CONTROL, state->grph.control);
+    OUTREG(offset + EVERGREEN_GRPH_SWAP_CONTROL, state->grph.swap_control);
+    OUTREG(offset + EVERGREEN_GRPH_PRIMARY_SURFACE_ADDRESS, state->grph.prim_surf_addr);
+    OUTREG(offset + EVERGREEN_GRPH_SECONDARY_SURFACE_ADDRESS, state->grph.sec_surf_addr);
+    OUTREG(offset + EVERGREEN_GRPH_PITCH, state->grph.pitch);
+    OUTREG(offset + EVERGREEN_GRPH_PRIMARY_SURFACE_ADDRESS_HIGH, state->grph.prim_surf_addr_hi);
+    OUTREG(offset + EVERGREEN_GRPH_SECONDARY_SURFACE_ADDRESS_HIGH, state->grph.sec_surf_addr_hi);
+    OUTREG(offset + EVERGREEN_GRPH_SURFACE_OFFSET_X, state->grph.x_offset);
+    OUTREG(offset + EVERGREEN_GRPH_SURFACE_OFFSET_Y, state->grph.y_offset);
+    OUTREG(offset + EVERGREEN_GRPH_X_START, state->grph.x_start);
+    OUTREG(offset + EVERGREEN_GRPH_Y_START, state->grph.y_start);
+    OUTREG(offset + EVERGREEN_GRPH_X_END, state->grph.x_end);
+    OUTREG(offset + EVERGREEN_GRPH_Y_END, state->grph.y_end);
+
+    OUTREG(offset + EVERGREEN_DESKTOP_HEIGHT, state->grph.desktop_height);
+    OUTREG(offset + EVERGREEN_VIEWPORT_START, state->grph.viewport_start);
+    OUTREG(offset + EVERGREEN_VIEWPORT_SIZE, state->grph.viewport_size);
+    OUTREG(offset + EVERGREEN_DATA_FORMAT, state->grph.mode_data_format);
+}
+
+static uint32_t dce4_dac_regs[] = {
+    0x6690, 0x6694, 0x66b0, 0x66cc, 0x66d0, 0x66d4, 0x66d8 };
+
+static uint32_t dce4_scl_regs[] = {
+    0x6d08, 0x6d0c, 0x6d14, 0x6d1c };
+
+static uint32_t dce4_dig_regs[] = {
+    0x7000, 0x7004, 0x7008, 0x700c, 0x7010, 0x7014,
+    0x71f0, 0x71f4, 0x71f8, 0x71fc, 0x7200, 0x7204,
+    0x7208, 0x720c, 0x7210, 0x7218, 0x721c, 0x7220,
+    0x7230};
+
+static uint32_t dce4_crtc_regs[] = {
+    0x6e00, 0x6e04, 0x6e08, 0x6e0c, 0x6e1c, 0x6e34, 0x6e38, 0x6e3c, 0x6e70, 0x6e74, 0x6e78};
+
+
+#define DCE4_REG_SCL_NUM (sizeof(dce4_scl_regs)/sizeof(uint32_t))
+#define DCE4_REG_CRTC_NUM (sizeof(dce4_crtc_regs)/sizeof(uint32_t))
+#define DCE4_REG_DIG_NUM (sizeof(dce4_dig_regs)/sizeof(uint32_t))
+#define DCE4_DAC_NUM (sizeof(dce4_dac_regs)/sizeof(uint32_t))
+
+
+static void
+dce4_save_crtc(ScrnInfoPtr pScrn, struct dce4_main_block_state *state,
+	       uint32_t offset)
+{
+    RADEONInfoPtr info = RADEONPTR(pScrn);
+    unsigned char *RADEONMMIO = info->MMIO;
+    int i;
+
+    for (i = 0; i < DCE4_REG_CRTC_NUM; i++)
+        state->crtc[i] = INREG(offset + dce4_crtc_regs[i]);
+}
+
+static void
+dce4_restore_crtc(ScrnInfoPtr pScrn, struct dce4_main_block_state *state,
+		  uint32_t offset)
+{
+    RADEONInfoPtr info = RADEONPTR(pScrn);
+    unsigned char *RADEONMMIO = info->MMIO;
+    int i;
+
+    for (i = 0; i < DCE4_REG_CRTC_NUM; i++)
+        OUTREG(offset + dce4_crtc_regs[i], state->crtc[i]);
+}
+
+static void
+dce4_save_scl(ScrnInfoPtr pScrn, struct dce4_main_block_state *state,
+	      uint32_t offset)
+{
+    RADEONInfoPtr info = RADEONPTR(pScrn);
+    unsigned char *RADEONMMIO = info->MMIO;
+    int i;
+
+    for (i = 0; i < DCE4_REG_SCL_NUM; i++)
+        state->scl[i] = INREG(offset + dce4_scl_regs[i]);
+}
+
+static void
+dce4_restore_scl(ScrnInfoPtr pScrn, struct dce4_main_block_state *state,
+	      uint32_t offset)
+{
+    RADEONInfoPtr info = RADEONPTR(pScrn);
+    unsigned char *RADEONMMIO = info->MMIO;
+    int i;
+
+    for (i = 0; i < DCE4_REG_SCL_NUM; i++)
+        OUTREG(offset + dce4_scl_regs[i], state->scl[i]);
+}
+
+
+static void
+dce4_save_fmt(ScrnInfoPtr pScrn, struct dce4_main_block_state *state,
+	      uint32_t offset)
+{
+    RADEONInfoPtr info = RADEONPTR(pScrn);
+    unsigned char *RADEONMMIO = info->MMIO;
+    int i, index = 0;
+
+    for (i = 0x6fb4; i <= 0x6fd4; i += 4)
+	state->fmt[index++] = INREG(offset + i);
+}
+
+static void
+dce4_restore_fmt(ScrnInfoPtr pScrn, struct dce4_main_block_state *state,
+	      uint32_t offset)
+{
+    RADEONInfoPtr info = RADEONPTR(pScrn);
+    unsigned char *RADEONMMIO = info->MMIO;
+    int i, index = 0;
+
+    for (i = 0x6fb4; i <= 0x6fd4; i += 4)
+	OUTREG(offset + i, state->fmt[index++]);
+}
+
+
+static void
+dce4_save_dig(ScrnInfoPtr pScrn, struct dce4_main_block_state *state,
+	      uint32_t offset)
+{
+    RADEONInfoPtr info = RADEONPTR(pScrn);
+    unsigned char *RADEONMMIO = info->MMIO;
+    int i;
+
+    for (i = 0; i < DCE4_REG_DIG_NUM; i++)
+        state->dig[i] = INREG(offset + dce4_dig_regs[i]);
+}
+
+static void
+dce4_restore_dig(ScrnInfoPtr pScrn, struct dce4_main_block_state *state,
+	      uint32_t offset)
+{
+    RADEONInfoPtr info = RADEONPTR(pScrn);
+    unsigned char *RADEONMMIO = info->MMIO;
+    int i;
+
+    for (i = 0; i < DCE4_REG_DIG_NUM; i++)
+        OUTREG(offset + dce4_dig_regs[i], state->dig[i]);
+}
+
+
+
+static void dce4_save_block(ScrnInfoPtr pScrn, struct dce4_main_block_state *state,
+			    uint32_t offset)
+{
+    dce4_save_grph(pScrn, state, offset);
+    dce4_save_crtc(pScrn, state, offset);
+    dce4_save_scl(pScrn, state, offset);
+    dce4_save_dig(pScrn, state, offset);
+    dce4_save_fmt(pScrn, state, offset);
+}
+
+static void dce4_restore_block(ScrnInfoPtr pScrn, struct dce4_main_block_state *state,
+			       uint32_t offset)
+{
+    dce4_restore_grph(pScrn, state, offset);
+    dce4_restore_crtc(pScrn, state, offset);
+    dce4_restore_scl(pScrn, state, offset);
+    dce4_restore_dig(pScrn, state, offset);
+    dce4_restore_fmt(pScrn, state, offset);
+}
+
+static void dce4_save_uniphy(ScrnInfoPtr pScrn, struct dce4_state *state, int index)
+{
+    RADEONInfoPtr info = RADEONPTR(pScrn);
+    unsigned char *RADEONMMIO = info->MMIO;
+    uint32_t uniphy_offset[6] = {0x0, 0x30, 0x60, 0x100, 0x130, 0x160 };
+    int i, ri = 0;
+    for (i = 0; i < 0x18; i+=4)
+	state->uniphy[index][ri++] = INREG(0x6600 + uniphy_offset[index] + i);
+}
+
+static void dce4_restore_uniphy(ScrnInfoPtr pScrn, struct dce4_state *state, int index)
+{
+    RADEONInfoPtr info = RADEONPTR(pScrn);
+    unsigned char *RADEONMMIO = info->MMIO;
+    uint32_t uniphy_offset[6] = {0x0, 0x30, 0x60, 0x100, 0x130, 0x160 };
+    int i, ri = 0;
+    for (i = 0; i <= 0x18; i+=4)
+	OUTREG(0x6600 + uniphy_offset[index] + i, state->uniphy[index][ri++]);
+}
+
+static void dce4_save_dig_regs(ScrnInfoPtr pScrn, struct dce4_state *state)
+{
+    RADEONInfoPtr info = RADEONPTR(pScrn);
+    unsigned char *RADEONMMIO = info->MMIO;
+    int i, ri = 0;
+
+    for (i = 0x6578; i <= 0x6598; i += 4)
+	state->dig[ri++] = INREG(i);
+    for (i = 0x65ac; i <= 0x65d8; i += 4)
+	state->dig[ri++] = INREG(i);
+}
+
+static void dce4_restore_dig_regs(ScrnInfoPtr pScrn, struct dce4_state *state)
+{
+    RADEONInfoPtr info = RADEONPTR(pScrn);
+    unsigned char *RADEONMMIO = info->MMIO;
+    int i, ri = 0;
+
+    for (i = 0x6578; i <= 0x6598; i += 4)
+	OUTREG(i, state->dig[ri++]);
+    for (i = 0x65ac; i <= 0x65d8; i += 4)
+	OUTREG(i, state->dig[ri++]);
+}
+
+static void dce4_save_pll_regs(ScrnInfoPtr pScrn, struct dce4_state *state)
+{
+    RADEONInfoPtr info = RADEONPTR(pScrn);
+    unsigned char *RADEONMMIO = info->MMIO;
+    int i, ri = 0;
+
+    for (i = 0x360; i <= 0x368; i += 4)
+	state->vga_pll[0][ri++] = INREG(i);
+
+    ri = 0;
+    for (i = 0x370; i <= 0x378; i += 4)
+	state->vga_pll[1][ri++] = INREG(i);
+
+    ri = 0;
+    for (i = 0x390; i <= 0x398; i += 4)
+	state->vga_pll[2][ri++] = INREG(i);
+
+    ri = 0;
+    for (i = 0x400; i <= 0x408; i += 4)
+	state->pll[0][ri++] = INREG(i);
+    for (i = 0x410; i <= 0x43c; i += 4)
+	state->pll[0][ri++] = INREG(i);
+
+    ri = 0;
+    for (i = 0x440; i <= 0x448; i += 4)
+	state->pll[1][ri++] = INREG(i);
+    for (i = 0x450; i <= 0x47c; i += 4)
+	state->pll[1][ri++] = INREG(i);
+
+    ri = 0;
+    for (i = 0x500; i <= 0x550; i += 0x10)
+	state->pll_route[ri++] = INREG(i);
+}
+
+static void dce4_restore_pll_regs(ScrnInfoPtr pScrn, struct dce4_state *state)
+{
+    RADEONInfoPtr info = RADEONPTR(pScrn);
+    unsigned char *RADEONMMIO = info->MMIO;
+    int i, ri = 0;
+
+    for (i = 0x360; i <= 0x368; i += 4)
+	OUTREG(i, state->vga_pll[0][ri++]);
+
+    ri = 0;
+    for (i = 0x370; i <= 0x378; i += 4)
+	OUTREG(i, state->vga_pll[1][ri++]);
+
+    ri = 0;
+    for (i = 0x390; i <= 0x398; i += 4)
+	OUTREG(i, state->vga_pll[2][ri++]);
+
+    ri = 0;
+    for (i = 0x400; i <= 0x408; i += 4)
+	OUTREG(i, state->pll[0][ri++]);
+    for (i = 0x410; i <= 0x43c; i += 4)
+	OUTREG(i, state->pll[0][ri++]);
+
+    ri = 0;
+    for (i = 0x440; i <= 0x448; i += 4)
+	OUTREG(i, state->pll[1][ri++]);
+    for (i = 0x450; i <= 0x47c; i += 4)
+	OUTREG(i, state->pll[1][ri++]);
+
+    ri = 0;
+    for (i = 0x500; i <= 0x550; i += 0x10)
+	OUTREG(i, state->pll_route[ri++]);
+}
+		   
+static void
+dce4_save(ScrnInfoPtr pScrn, RADEONSavePtr save)
+{
+    RADEONInfoPtr info = RADEONPTR(pScrn);
+    unsigned char *RADEONMMIO = info->MMIO;
+    struct dce4_state *state = &save->dce4;
+    int i, j;
+    uint32_t crtc_offset[] = {EVERGREEN_CRTC0_REGISTER_OFFSET,
+			      EVERGREEN_CRTC1_REGISTER_OFFSET,
+			      EVERGREEN_CRTC2_REGISTER_OFFSET,
+			      EVERGREEN_CRTC3_REGISTER_OFFSET,
+			      EVERGREEN_CRTC4_REGISTER_OFFSET,
+			      EVERGREEN_CRTC5_REGISTER_OFFSET};
+
+    state->vga1_cntl = INREG(AVIVO_D1VGA_CONTROL);
+    state->vga2_cntl = INREG(AVIVO_D2VGA_CONTROL);
+    state->vga3_cntl = INREG(EVERGREEN_D3VGA_CONTROL);
+    state->vga4_cntl = INREG(EVERGREEN_D4VGA_CONTROL);
+    state->vga5_cntl = INREG(EVERGREEN_D5VGA_CONTROL);
+    state->vga6_cntl = INREG(EVERGREEN_D6VGA_CONTROL);
+    state->vga_render_control = INREG(AVIVO_VGA_RENDER_CONTROL);
+
+    dce4_save_pll_regs(pScrn, state);
+    dce4_save_dig_regs(pScrn, state);
+    
+    for (i = 0; i < 6; i++)
+	dce4_save_block(pScrn, &state->block[i], crtc_offset[i]);
+
+    for (i = 0; i < 6; i++)
+	dce4_save_uniphy(pScrn, state, i);
+
+    for (i = 0; i < 2; i++) {
+	for (j = 0; j < DCE4_DAC_NUM; j++) {
+	    uint32_t offset = i ? 0x100 : 0x0;
+	    state->dac[i][j] = INREG(dce4_dac_regs[j] + offset);
+	}
+    }
+}
+
+static void
+dce4_restore(ScrnInfoPtr pScrn, RADEONSavePtr restore)
+{
+    RADEONInfoPtr info = RADEONPTR(pScrn);
+    unsigned char *RADEONMMIO = info->MMIO;
+    struct dce4_state *state = &restore->dce4;
+    int i, j;
+    uint32_t crtc_offset[] = {EVERGREEN_CRTC0_REGISTER_OFFSET,
+			      EVERGREEN_CRTC1_REGISTER_OFFSET,
+			      EVERGREEN_CRTC2_REGISTER_OFFSET,
+			      EVERGREEN_CRTC3_REGISTER_OFFSET,
+			      EVERGREEN_CRTC4_REGISTER_OFFSET,
+			      EVERGREEN_CRTC5_REGISTER_OFFSET};
+
+    OUTREG(AVIVO_D1VGA_CONTROL, state->vga1_cntl);
+    OUTREG(AVIVO_D2VGA_CONTROL, state->vga2_cntl);;
+    OUTREG(EVERGREEN_D3VGA_CONTROL, state->vga3_cntl);
+    OUTREG(EVERGREEN_D4VGA_CONTROL, state->vga4_cntl);
+    OUTREG(EVERGREEN_D5VGA_CONTROL, state->vga5_cntl);
+    OUTREG(EVERGREEN_D6VGA_CONTROL, state->vga6_cntl);
+    OUTREG(AVIVO_VGA_RENDER_CONTROL, state->vga_render_control);
+
+    dce4_restore_dig_regs(pScrn, state);
+    dce4_restore_pll_regs(pScrn, state);
+    for (i = 0; i < 6; i++)
+	dce4_restore_uniphy(pScrn, state, i);
+
+    for (i = 0; i < 6; i++)
+	dce4_restore_block(pScrn, &state->block[i], crtc_offset[i]);
+ 
+    for (i = 0; i < 2; i++) {
+	for (j = 0; j < DCE4_DAC_NUM; j++) {
+	    uint32_t offset = i ? 0x100 : 0x0;
+	    OUTREG(dce4_dac_regs[j] + offset, state->dac[i][j]);
+	}
+    }
+}
 
 static void
 avivo_save(ScrnInfoPtr pScrn, RADEONSavePtr save)
@@ -4333,28 +4910,29 @@ avivo_save(ScrnInfoPtr pScrn, RADEONSavePtr save)
     //    state->vga_fb_start = INREG(AVIVO_VGA_FB_START);
     state->vga1_cntl = INREG(AVIVO_D1VGA_CONTROL);
     state->vga2_cntl = INREG(AVIVO_D2VGA_CONTROL);
+    state->vga_render_control = INREG(AVIVO_VGA_RENDER_CONTROL);
 
     state->crtc_master_en = INREG(AVIVO_DC_CRTC_MASTER_EN);
     state->crtc_tv_control = INREG(AVIVO_DC_CRTC_TV_CONTROL);
     state->dc_lb_memory_split = INREG(AVIVO_DC_LB_MEMORY_SPLIT);
 
-    state->pll1.ref_div_src = INREG(AVIVO_EXT1_PPLL_REF_DIV_SRC);
-    state->pll1.ref_div = INREG(AVIVO_EXT1_PPLL_REF_DIV);
-    state->pll1.fb_div = INREG(AVIVO_EXT1_PPLL_FB_DIV);
-    state->pll1.post_div_src = INREG(AVIVO_EXT1_PPLL_POST_DIV_SRC);
-    state->pll1.post_div = INREG(AVIVO_EXT1_PPLL_POST_DIV);
-    state->pll1.ext_ppll_cntl = INREG(AVIVO_EXT1_PPLL_CNTL);
-    state->pll1.pll_cntl = INREG(AVIVO_P1PLL_CNTL);
-    state->pll1.int_ss_cntl = INREG(AVIVO_P1PLL_INT_SS_CNTL);
+    state->pll[0].ref_div_src = INREG(AVIVO_EXT1_PPLL_REF_DIV_SRC);
+    state->pll[0].ref_div = INREG(AVIVO_EXT1_PPLL_REF_DIV);
+    state->pll[0].fb_div = INREG(AVIVO_EXT1_PPLL_FB_DIV);
+    state->pll[0].post_div_src = INREG(AVIVO_EXT1_PPLL_POST_DIV_SRC);
+    state->pll[0].post_div = INREG(AVIVO_EXT1_PPLL_POST_DIV);
+    state->pll[0].ext_ppll_cntl = INREG(AVIVO_EXT1_PPLL_CNTL);
+    state->pll[0].pll_cntl = INREG(AVIVO_P1PLL_CNTL);
+    state->pll[0].int_ss_cntl = INREG(AVIVO_P1PLL_INT_SS_CNTL);
 
-    state->pll2.ref_div_src = INREG(AVIVO_EXT1_PPLL_REF_DIV_SRC);
-    state->pll2.ref_div = INREG(AVIVO_EXT2_PPLL_REF_DIV);
-    state->pll2.fb_div = INREG(AVIVO_EXT2_PPLL_FB_DIV);
-    state->pll2.post_div_src = INREG(AVIVO_EXT2_PPLL_POST_DIV_SRC);
-    state->pll2.post_div = INREG(AVIVO_EXT2_PPLL_POST_DIV);
-    state->pll2.ext_ppll_cntl = INREG(AVIVO_EXT2_PPLL_CNTL);
-    state->pll2.pll_cntl = INREG(AVIVO_P2PLL_CNTL);
-    state->pll2.int_ss_cntl = INREG(AVIVO_P2PLL_INT_SS_CNTL);
+    state->pll[1].ref_div_src = INREG(AVIVO_EXT1_PPLL_REF_DIV_SRC);
+    state->pll[1].ref_div = INREG(AVIVO_EXT2_PPLL_REF_DIV);
+    state->pll[1].fb_div = INREG(AVIVO_EXT2_PPLL_FB_DIV);
+    state->pll[1].post_div_src = INREG(AVIVO_EXT2_PPLL_POST_DIV_SRC);
+    state->pll[1].post_div = INREG(AVIVO_EXT2_PPLL_POST_DIV);
+    state->pll[1].ext_ppll_cntl = INREG(AVIVO_EXT2_PPLL_CNTL);
+    state->pll[1].pll_cntl = INREG(AVIVO_P2PLL_CNTL);
+    state->pll[1].int_ss_cntl = INREG(AVIVO_P2PLL_INT_SS_CNTL);
 
     state->vga25_ppll.ref_div_src = INREG(AVIVO_VGA25_PPLL_REF_DIV_SRC);
     state->vga25_ppll.ref_div = INREG(AVIVO_VGA25_PPLL_REF_DIV);
@@ -4377,87 +4955,87 @@ avivo_save(ScrnInfoPtr pScrn, RADEONSavePtr save)
     state->vga41_ppll.post_div = INREG(AVIVO_VGA41_PPLL_POST_DIV);
     state->vga41_ppll.pll_cntl = INREG(AVIVO_VGA41_PPLL_CNTL);
 
-    state->crtc1.pll_source = INREG(AVIVO_PCLK_CRTC1_CNTL);
+    state->crtc[0].pll_source = INREG(AVIVO_PCLK_CRTC1_CNTL);
 
-    state->crtc1.h_total = INREG(AVIVO_D1CRTC_H_TOTAL);
-    state->crtc1.h_blank_start_end = INREG(AVIVO_D1CRTC_H_BLANK_START_END);
-    state->crtc1.h_sync_a = INREG(AVIVO_D1CRTC_H_SYNC_A);
-    state->crtc1.h_sync_a_cntl = INREG(AVIVO_D1CRTC_H_SYNC_A_CNTL);
-    state->crtc1.h_sync_b = INREG(AVIVO_D1CRTC_H_SYNC_B);
-    state->crtc1.h_sync_b_cntl = INREG(AVIVO_D1CRTC_H_SYNC_B_CNTL);
+    state->crtc[0].h_total = INREG(AVIVO_D1CRTC_H_TOTAL);
+    state->crtc[0].h_blank_start_end = INREG(AVIVO_D1CRTC_H_BLANK_START_END);
+    state->crtc[0].h_sync_a = INREG(AVIVO_D1CRTC_H_SYNC_A);
+    state->crtc[0].h_sync_a_cntl = INREG(AVIVO_D1CRTC_H_SYNC_A_CNTL);
+    state->crtc[0].h_sync_b = INREG(AVIVO_D1CRTC_H_SYNC_B);
+    state->crtc[0].h_sync_b_cntl = INREG(AVIVO_D1CRTC_H_SYNC_B_CNTL);
 
-    state->crtc1.v_total = INREG(AVIVO_D1CRTC_V_TOTAL);
-    state->crtc1.v_blank_start_end = INREG(AVIVO_D1CRTC_V_BLANK_START_END);
-    state->crtc1.v_sync_a = INREG(AVIVO_D1CRTC_V_SYNC_A);
-    state->crtc1.v_sync_a_cntl = INREG(AVIVO_D1CRTC_V_SYNC_A_CNTL);
-    state->crtc1.v_sync_b = INREG(AVIVO_D1CRTC_V_SYNC_B);
-    state->crtc1.v_sync_b_cntl = INREG(AVIVO_D1CRTC_V_SYNC_B_CNTL);
+    state->crtc[0].v_total = INREG(AVIVO_D1CRTC_V_TOTAL);
+    state->crtc[0].v_blank_start_end = INREG(AVIVO_D1CRTC_V_BLANK_START_END);
+    state->crtc[0].v_sync_a = INREG(AVIVO_D1CRTC_V_SYNC_A);
+    state->crtc[0].v_sync_a_cntl = INREG(AVIVO_D1CRTC_V_SYNC_A_CNTL);
+    state->crtc[0].v_sync_b = INREG(AVIVO_D1CRTC_V_SYNC_B);
+    state->crtc[0].v_sync_b_cntl = INREG(AVIVO_D1CRTC_V_SYNC_B_CNTL);
 
-    state->crtc1.control = INREG(AVIVO_D1CRTC_CONTROL);
-    state->crtc1.blank_control = INREG(AVIVO_D1CRTC_BLANK_CONTROL);
-    state->crtc1.interlace_control = INREG(AVIVO_D1CRTC_INTERLACE_CONTROL);
-    state->crtc1.stereo_control = INREG(AVIVO_D1CRTC_STEREO_CONTROL);
+    state->crtc[0].control = INREG(AVIVO_D1CRTC_CONTROL);
+    state->crtc[0].blank_control = INREG(AVIVO_D1CRTC_BLANK_CONTROL);
+    state->crtc[0].interlace_control = INREG(AVIVO_D1CRTC_INTERLACE_CONTROL);
+    state->crtc[0].stereo_control = INREG(AVIVO_D1CRTC_STEREO_CONTROL);
 
-    state->crtc1.cursor_control = INREG(AVIVO_D1CUR_CONTROL);
+    state->crtc[0].cursor_control = INREG(AVIVO_D1CUR_CONTROL);
 
-    state->grph1.enable = INREG(AVIVO_D1GRPH_ENABLE);
-    state->grph1.control = INREG(AVIVO_D1GRPH_CONTROL);
-    state->grph1.control = INREG(AVIVO_D1GRPH_CONTROL);
-    state->grph1.prim_surf_addr = INREG(AVIVO_D1GRPH_PRIMARY_SURFACE_ADDRESS);
-    state->grph1.sec_surf_addr = INREG(AVIVO_D1GRPH_SECONDARY_SURFACE_ADDRESS);
-    state->grph1.pitch = INREG(AVIVO_D1GRPH_PITCH);
-    state->grph1.x_offset = INREG(AVIVO_D1GRPH_SURFACE_OFFSET_X);
-    state->grph1.y_offset = INREG(AVIVO_D1GRPH_SURFACE_OFFSET_Y);
-    state->grph1.x_start = INREG(AVIVO_D1GRPH_X_START);
-    state->grph1.y_start = INREG(AVIVO_D1GRPH_Y_START);
-    state->grph1.x_end = INREG(AVIVO_D1GRPH_X_END);
-    state->grph1.y_end = INREG(AVIVO_D1GRPH_Y_END);
+    state->grph[0].enable = INREG(AVIVO_D1GRPH_ENABLE);
+    state->grph[0].control = INREG(AVIVO_D1GRPH_CONTROL);
+    state->grph[0].control = INREG(AVIVO_D1GRPH_CONTROL);
+    state->grph[0].prim_surf_addr = INREG(AVIVO_D1GRPH_PRIMARY_SURFACE_ADDRESS);
+    state->grph[0].sec_surf_addr = INREG(AVIVO_D1GRPH_SECONDARY_SURFACE_ADDRESS);
+    state->grph[0].pitch = INREG(AVIVO_D1GRPH_PITCH);
+    state->grph[0].x_offset = INREG(AVIVO_D1GRPH_SURFACE_OFFSET_X);
+    state->grph[0].y_offset = INREG(AVIVO_D1GRPH_SURFACE_OFFSET_Y);
+    state->grph[0].x_start = INREG(AVIVO_D1GRPH_X_START);
+    state->grph[0].y_start = INREG(AVIVO_D1GRPH_Y_START);
+    state->grph[0].x_end = INREG(AVIVO_D1GRPH_X_END);
+    state->grph[0].y_end = INREG(AVIVO_D1GRPH_Y_END);
 
-    state->grph1.desktop_height = INREG(AVIVO_D1MODE_DESKTOP_HEIGHT);
-    state->grph1.viewport_start = INREG(AVIVO_D1MODE_VIEWPORT_START);
-    state->grph1.viewport_size = INREG(AVIVO_D1MODE_VIEWPORT_SIZE);
-    state->grph1.mode_data_format = INREG(AVIVO_D1MODE_DATA_FORMAT);
+    state->grph[0].desktop_height = INREG(AVIVO_D1MODE_DESKTOP_HEIGHT);
+    state->grph[0].viewport_start = INREG(AVIVO_D1MODE_VIEWPORT_START);
+    state->grph[0].viewport_size = INREG(AVIVO_D1MODE_VIEWPORT_SIZE);
+    state->grph[0].mode_data_format = INREG(AVIVO_D1MODE_DATA_FORMAT);
 
-    state->crtc2.pll_source = INREG(AVIVO_PCLK_CRTC2_CNTL);
+    state->crtc[1].pll_source = INREG(AVIVO_PCLK_CRTC2_CNTL);
 
-    state->crtc2.h_total = INREG(AVIVO_D2CRTC_H_TOTAL);
-    state->crtc2.h_blank_start_end = INREG(AVIVO_D2CRTC_H_BLANK_START_END);
-    state->crtc2.h_sync_a = INREG(AVIVO_D2CRTC_H_SYNC_A);
-    state->crtc2.h_sync_a_cntl = INREG(AVIVO_D2CRTC_H_SYNC_A_CNTL);
-    state->crtc2.h_sync_b = INREG(AVIVO_D2CRTC_H_SYNC_B);
-    state->crtc2.h_sync_b_cntl = INREG(AVIVO_D2CRTC_H_SYNC_B_CNTL);
+    state->crtc[1].h_total = INREG(AVIVO_D2CRTC_H_TOTAL);
+    state->crtc[1].h_blank_start_end = INREG(AVIVO_D2CRTC_H_BLANK_START_END);
+    state->crtc[1].h_sync_a = INREG(AVIVO_D2CRTC_H_SYNC_A);
+    state->crtc[1].h_sync_a_cntl = INREG(AVIVO_D2CRTC_H_SYNC_A_CNTL);
+    state->crtc[1].h_sync_b = INREG(AVIVO_D2CRTC_H_SYNC_B);
+    state->crtc[1].h_sync_b_cntl = INREG(AVIVO_D2CRTC_H_SYNC_B_CNTL);
 
-    state->crtc2.v_total = INREG(AVIVO_D2CRTC_V_TOTAL);
-    state->crtc2.v_blank_start_end = INREG(AVIVO_D2CRTC_V_BLANK_START_END);
-    state->crtc2.v_sync_a = INREG(AVIVO_D2CRTC_V_SYNC_A);
-    state->crtc2.v_sync_a_cntl = INREG(AVIVO_D2CRTC_V_SYNC_A_CNTL);
-    state->crtc2.v_sync_b = INREG(AVIVO_D2CRTC_V_SYNC_B);
-    state->crtc2.v_sync_b_cntl = INREG(AVIVO_D2CRTC_V_SYNC_B_CNTL);
+    state->crtc[1].v_total = INREG(AVIVO_D2CRTC_V_TOTAL);
+    state->crtc[1].v_blank_start_end = INREG(AVIVO_D2CRTC_V_BLANK_START_END);
+    state->crtc[1].v_sync_a = INREG(AVIVO_D2CRTC_V_SYNC_A);
+    state->crtc[1].v_sync_a_cntl = INREG(AVIVO_D2CRTC_V_SYNC_A_CNTL);
+    state->crtc[1].v_sync_b = INREG(AVIVO_D2CRTC_V_SYNC_B);
+    state->crtc[1].v_sync_b_cntl = INREG(AVIVO_D2CRTC_V_SYNC_B_CNTL);
 
-    state->crtc2.control = INREG(AVIVO_D2CRTC_CONTROL);
-    state->crtc2.blank_control = INREG(AVIVO_D2CRTC_BLANK_CONTROL);
-    state->crtc2.interlace_control = INREG(AVIVO_D2CRTC_INTERLACE_CONTROL);
-    state->crtc2.stereo_control = INREG(AVIVO_D2CRTC_STEREO_CONTROL);
+    state->crtc[1].control = INREG(AVIVO_D2CRTC_CONTROL);
+    state->crtc[1].blank_control = INREG(AVIVO_D2CRTC_BLANK_CONTROL);
+    state->crtc[1].interlace_control = INREG(AVIVO_D2CRTC_INTERLACE_CONTROL);
+    state->crtc[1].stereo_control = INREG(AVIVO_D2CRTC_STEREO_CONTROL);
 
-    state->crtc2.cursor_control = INREG(AVIVO_D2CUR_CONTROL);
+    state->crtc[1].cursor_control = INREG(AVIVO_D2CUR_CONTROL);
 
-    state->grph2.enable = INREG(AVIVO_D2GRPH_ENABLE);
-    state->grph2.control = INREG(AVIVO_D2GRPH_CONTROL);
-    state->grph2.control = INREG(AVIVO_D2GRPH_CONTROL);
-    state->grph2.prim_surf_addr = INREG(AVIVO_D2GRPH_PRIMARY_SURFACE_ADDRESS);
-    state->grph2.sec_surf_addr = INREG(AVIVO_D2GRPH_SECONDARY_SURFACE_ADDRESS);
-    state->grph2.pitch = INREG(AVIVO_D2GRPH_PITCH);
-    state->grph2.x_offset = INREG(AVIVO_D2GRPH_SURFACE_OFFSET_X);
-    state->grph2.y_offset = INREG(AVIVO_D2GRPH_SURFACE_OFFSET_Y);
-    state->grph2.x_start = INREG(AVIVO_D2GRPH_X_START);
-    state->grph2.y_start = INREG(AVIVO_D2GRPH_Y_START);
-    state->grph2.x_end = INREG(AVIVO_D2GRPH_X_END);
-    state->grph2.y_end = INREG(AVIVO_D2GRPH_Y_END);
+    state->grph[1].enable = INREG(AVIVO_D2GRPH_ENABLE);
+    state->grph[1].control = INREG(AVIVO_D2GRPH_CONTROL);
+    state->grph[1].control = INREG(AVIVO_D2GRPH_CONTROL);
+    state->grph[1].prim_surf_addr = INREG(AVIVO_D2GRPH_PRIMARY_SURFACE_ADDRESS);
+    state->grph[1].sec_surf_addr = INREG(AVIVO_D2GRPH_SECONDARY_SURFACE_ADDRESS);
+    state->grph[1].pitch = INREG(AVIVO_D2GRPH_PITCH);
+    state->grph[1].x_offset = INREG(AVIVO_D2GRPH_SURFACE_OFFSET_X);
+    state->grph[1].y_offset = INREG(AVIVO_D2GRPH_SURFACE_OFFSET_Y);
+    state->grph[1].x_start = INREG(AVIVO_D2GRPH_X_START);
+    state->grph[1].y_start = INREG(AVIVO_D2GRPH_Y_START);
+    state->grph[1].x_end = INREG(AVIVO_D2GRPH_X_END);
+    state->grph[1].y_end = INREG(AVIVO_D2GRPH_Y_END);
 
-    state->grph2.desktop_height = INREG(AVIVO_D2MODE_DESKTOP_HEIGHT);
-    state->grph2.viewport_start = INREG(AVIVO_D2MODE_VIEWPORT_START);
-    state->grph2.viewport_size = INREG(AVIVO_D2MODE_VIEWPORT_SIZE);
-    state->grph2.mode_data_format = INREG(AVIVO_D2MODE_DATA_FORMAT);
+    state->grph[1].desktop_height = INREG(AVIVO_D2MODE_DESKTOP_HEIGHT);
+    state->grph[1].viewport_start = INREG(AVIVO_D2MODE_VIEWPORT_START);
+    state->grph[1].viewport_size = INREG(AVIVO_D2MODE_VIEWPORT_SIZE);
+    state->grph[1].mode_data_format = INREG(AVIVO_D2MODE_DATA_FORMAT);
 
     if (IS_DCE3_VARIANT) {
 	/* save DVOA regs */
@@ -4670,10 +5248,10 @@ avivo_save(ScrnInfoPtr pScrn, RADEONSavePtr save)
     state->dxscl[6] = INREG(0x6e30);
     state->dxscl[7] = INREG(0x6e34);
 
-    if (state->crtc1.control & AVIVO_CRTC_EN)
+    if (state->crtc[0].control & AVIVO_CRTC_EN)
 	info->crtc_on = TRUE;
 
-    if (state->crtc2.control & AVIVO_CRTC_EN)
+    if (state->crtc[1].control & AVIVO_CRTC_EN)
 	info->crtc2_on = TRUE;
 
 }
@@ -4708,69 +5286,69 @@ avivo_restore(ScrnInfoPtr pScrn, RADEONSavePtr restore)
 
     /* Lock graph registers */
     OUTREG(AVIVO_D1GRPH_UPDATE, AVIVO_D1GRPH_UPDATE_LOCK);
-    OUTREG(AVIVO_D1GRPH_PRIMARY_SURFACE_ADDRESS, state->grph1.prim_surf_addr);
-    OUTREG(AVIVO_D1GRPH_SECONDARY_SURFACE_ADDRESS, state->grph1.sec_surf_addr);
-    OUTREG(AVIVO_D1GRPH_CONTROL, state->grph1.control);
-    OUTREG(AVIVO_D1GRPH_SURFACE_OFFSET_X, state->grph1.x_offset);
-    OUTREG(AVIVO_D1GRPH_SURFACE_OFFSET_Y, state->grph1.y_offset);
-    OUTREG(AVIVO_D1GRPH_X_START, state->grph1.x_start);
-    OUTREG(AVIVO_D1GRPH_Y_START, state->grph1.y_start);
-    OUTREG(AVIVO_D1GRPH_X_END, state->grph1.x_end);
-    OUTREG(AVIVO_D1GRPH_Y_END, state->grph1.y_end);
-    OUTREG(AVIVO_D1GRPH_PITCH, state->grph1.pitch);
-    OUTREG(AVIVO_D1GRPH_ENABLE, state->grph1.enable);
+    OUTREG(AVIVO_D1GRPH_PRIMARY_SURFACE_ADDRESS, state->grph[0].prim_surf_addr);
+    OUTREG(AVIVO_D1GRPH_SECONDARY_SURFACE_ADDRESS, state->grph[0].sec_surf_addr);
+    OUTREG(AVIVO_D1GRPH_CONTROL, state->grph[0].control);
+    OUTREG(AVIVO_D1GRPH_SURFACE_OFFSET_X, state->grph[0].x_offset);
+    OUTREG(AVIVO_D1GRPH_SURFACE_OFFSET_Y, state->grph[0].y_offset);
+    OUTREG(AVIVO_D1GRPH_X_START, state->grph[0].x_start);
+    OUTREG(AVIVO_D1GRPH_Y_START, state->grph[0].y_start);
+    OUTREG(AVIVO_D1GRPH_X_END, state->grph[0].x_end);
+    OUTREG(AVIVO_D1GRPH_Y_END, state->grph[0].y_end);
+    OUTREG(AVIVO_D1GRPH_PITCH, state->grph[0].pitch);
+    OUTREG(AVIVO_D1GRPH_ENABLE, state->grph[0].enable);
     OUTREG(AVIVO_D1GRPH_UPDATE, 0);
 
     OUTREG(AVIVO_D2GRPH_UPDATE, AVIVO_D1GRPH_UPDATE_LOCK);
-    OUTREG(AVIVO_D2GRPH_PRIMARY_SURFACE_ADDRESS, state->grph2.prim_surf_addr);
-    OUTREG(AVIVO_D2GRPH_SECONDARY_SURFACE_ADDRESS, state->grph2.sec_surf_addr);
-    OUTREG(AVIVO_D2GRPH_CONTROL, state->grph2.control);
-    OUTREG(AVIVO_D2GRPH_SURFACE_OFFSET_X, state->grph2.x_offset);
-    OUTREG(AVIVO_D2GRPH_SURFACE_OFFSET_Y, state->grph2.y_offset);
-    OUTREG(AVIVO_D2GRPH_X_START, state->grph2.x_start);
-    OUTREG(AVIVO_D2GRPH_Y_START, state->grph2.y_start);
-    OUTREG(AVIVO_D2GRPH_X_END, state->grph2.x_end);
-    OUTREG(AVIVO_D2GRPH_Y_END, state->grph2.y_end);
-    OUTREG(AVIVO_D2GRPH_PITCH, state->grph2.pitch);
-    OUTREG(AVIVO_D2GRPH_ENABLE, state->grph2.enable);
+    OUTREG(AVIVO_D2GRPH_PRIMARY_SURFACE_ADDRESS, state->grph[1].prim_surf_addr);
+    OUTREG(AVIVO_D2GRPH_SECONDARY_SURFACE_ADDRESS, state->grph[1].sec_surf_addr);
+    OUTREG(AVIVO_D2GRPH_CONTROL, state->grph[1].control);
+    OUTREG(AVIVO_D2GRPH_SURFACE_OFFSET_X, state->grph[1].x_offset);
+    OUTREG(AVIVO_D2GRPH_SURFACE_OFFSET_Y, state->grph[1].y_offset);
+    OUTREG(AVIVO_D2GRPH_X_START, state->grph[1].x_start);
+    OUTREG(AVIVO_D2GRPH_Y_START, state->grph[1].y_start);
+    OUTREG(AVIVO_D2GRPH_X_END, state->grph[1].x_end);
+    OUTREG(AVIVO_D2GRPH_Y_END, state->grph[1].y_end);
+    OUTREG(AVIVO_D2GRPH_PITCH, state->grph[1].pitch);
+    OUTREG(AVIVO_D2GRPH_ENABLE, state->grph[1].enable);
     OUTREG(AVIVO_D2GRPH_UPDATE, 0);
 
     /* Whack some mode regs too */
     OUTREG(AVIVO_D1SCL_UPDATE, AVIVO_D1SCL_UPDATE_LOCK);
-    OUTREG(AVIVO_D1MODE_DESKTOP_HEIGHT, state->grph1.desktop_height);
-    OUTREG(AVIVO_D1MODE_VIEWPORT_START, state->grph1.viewport_start);
-    OUTREG(AVIVO_D1MODE_VIEWPORT_SIZE, state->grph1.viewport_size);
-    OUTREG(AVIVO_D1MODE_DATA_FORMAT, state->grph1.mode_data_format);
+    OUTREG(AVIVO_D1MODE_DESKTOP_HEIGHT, state->grph[0].desktop_height);
+    OUTREG(AVIVO_D1MODE_VIEWPORT_START, state->grph[0].viewport_start);
+    OUTREG(AVIVO_D1MODE_VIEWPORT_SIZE, state->grph[0].viewport_size);
+    OUTREG(AVIVO_D1MODE_DATA_FORMAT, state->grph[0].mode_data_format);
     OUTREG(AVIVO_D1SCL_UPDATE, 0);
 
     OUTREG(AVIVO_D2SCL_UPDATE, AVIVO_D1SCL_UPDATE_LOCK);
-    OUTREG(AVIVO_D2MODE_DESKTOP_HEIGHT, state->grph2.desktop_height);
-    OUTREG(AVIVO_D2MODE_VIEWPORT_START, state->grph2.viewport_start);
-    OUTREG(AVIVO_D2MODE_VIEWPORT_SIZE, state->grph2.viewport_size);
-    OUTREG(AVIVO_D2MODE_DATA_FORMAT, state->grph2.mode_data_format);
+    OUTREG(AVIVO_D2MODE_DESKTOP_HEIGHT, state->grph[1].desktop_height);
+    OUTREG(AVIVO_D2MODE_VIEWPORT_START, state->grph[1].viewport_start);
+    OUTREG(AVIVO_D2MODE_VIEWPORT_SIZE, state->grph[1].viewport_size);
+    OUTREG(AVIVO_D2MODE_DATA_FORMAT, state->grph[1].mode_data_format);
     OUTREG(AVIVO_D2SCL_UPDATE, 0);
 
     /* Set the PLL */
-    OUTREG(AVIVO_EXT1_PPLL_REF_DIV_SRC, state->pll1.ref_div_src);
-    OUTREG(AVIVO_EXT1_PPLL_REF_DIV, state->pll1.ref_div);
-    OUTREG(AVIVO_EXT1_PPLL_FB_DIV, state->pll1.fb_div);
-    OUTREG(AVIVO_EXT1_PPLL_POST_DIV_SRC, state->pll1.post_div_src);
-    OUTREG(AVIVO_EXT1_PPLL_POST_DIV, state->pll1.post_div);
-    OUTREG(AVIVO_EXT1_PPLL_CNTL, state->pll1.ext_ppll_cntl);
-    OUTREG(AVIVO_P1PLL_CNTL, state->pll1.pll_cntl);
-    OUTREG(AVIVO_P1PLL_INT_SS_CNTL, state->pll1.int_ss_cntl);
+    OUTREG(AVIVO_EXT1_PPLL_REF_DIV_SRC, state->pll[0].ref_div_src);
+    OUTREG(AVIVO_EXT1_PPLL_REF_DIV, state->pll[0].ref_div);
+    OUTREG(AVIVO_EXT1_PPLL_FB_DIV, state->pll[0].fb_div);
+    OUTREG(AVIVO_EXT1_PPLL_POST_DIV_SRC, state->pll[0].post_div_src);
+    OUTREG(AVIVO_EXT1_PPLL_POST_DIV, state->pll[0].post_div);
+    OUTREG(AVIVO_EXT1_PPLL_CNTL, state->pll[0].ext_ppll_cntl);
+    OUTREG(AVIVO_P1PLL_CNTL, state->pll[0].pll_cntl);
+    OUTREG(AVIVO_P1PLL_INT_SS_CNTL, state->pll[0].int_ss_cntl);
 
-    OUTREG(AVIVO_EXT2_PPLL_REF_DIV_SRC, state->pll2.ref_div_src);
-    OUTREG(AVIVO_EXT2_PPLL_REF_DIV, state->pll2.ref_div);
-    OUTREG(AVIVO_EXT2_PPLL_FB_DIV, state->pll2.fb_div);
-    OUTREG(AVIVO_EXT2_PPLL_POST_DIV_SRC, state->pll2.post_div_src);
-    OUTREG(AVIVO_EXT2_PPLL_POST_DIV, state->pll2.post_div);
-    OUTREG(AVIVO_EXT2_PPLL_CNTL, state->pll2.ext_ppll_cntl);
-    OUTREG(AVIVO_P2PLL_CNTL, state->pll2.pll_cntl);
-    OUTREG(AVIVO_P2PLL_INT_SS_CNTL, state->pll2.int_ss_cntl);
+    OUTREG(AVIVO_EXT2_PPLL_REF_DIV_SRC, state->pll[1].ref_div_src);
+    OUTREG(AVIVO_EXT2_PPLL_REF_DIV, state->pll[1].ref_div);
+    OUTREG(AVIVO_EXT2_PPLL_FB_DIV, state->pll[1].fb_div);
+    OUTREG(AVIVO_EXT2_PPLL_POST_DIV_SRC, state->pll[1].post_div_src);
+    OUTREG(AVIVO_EXT2_PPLL_POST_DIV, state->pll[1].post_div);
+    OUTREG(AVIVO_EXT2_PPLL_CNTL, state->pll[1].ext_ppll_cntl);
+    OUTREG(AVIVO_P2PLL_CNTL, state->pll[1].pll_cntl);
+    OUTREG(AVIVO_P2PLL_INT_SS_CNTL, state->pll[1].int_ss_cntl);
 
-    OUTREG(AVIVO_PCLK_CRTC1_CNTL, state->crtc1.pll_source);
-    OUTREG(AVIVO_PCLK_CRTC2_CNTL, state->crtc2.pll_source);
+    OUTREG(AVIVO_PCLK_CRTC1_CNTL, state->crtc[0].pll_source);
+    OUTREG(AVIVO_PCLK_CRTC2_CNTL, state->crtc[1].pll_source);
 
     /* Set the vga PLL */
     OUTREG(AVIVO_VGA25_PPLL_REF_DIV_SRC, state->vga25_ppll.ref_div_src);
@@ -4795,45 +5373,45 @@ avivo_restore(ScrnInfoPtr pScrn, RADEONSavePtr restore)
     OUTREG(AVIVO_VGA41_PPLL_CNTL, state->vga41_ppll.pll_cntl);
 
     /* Set the CRTC */
-    OUTREG(AVIVO_D1CRTC_H_TOTAL, state->crtc1.h_total);
-    OUTREG(AVIVO_D1CRTC_H_BLANK_START_END, state->crtc1.h_blank_start_end);
-    OUTREG(AVIVO_D1CRTC_H_SYNC_A, state->crtc1.h_sync_a);
-    OUTREG(AVIVO_D1CRTC_H_SYNC_A_CNTL, state->crtc1.h_sync_a_cntl);
-    OUTREG(AVIVO_D1CRTC_H_SYNC_B, state->crtc1.h_sync_b);
-    OUTREG(AVIVO_D1CRTC_H_SYNC_B_CNTL, state->crtc1.h_sync_b_cntl);
+    OUTREG(AVIVO_D1CRTC_H_TOTAL, state->crtc[0].h_total);
+    OUTREG(AVIVO_D1CRTC_H_BLANK_START_END, state->crtc[0].h_blank_start_end);
+    OUTREG(AVIVO_D1CRTC_H_SYNC_A, state->crtc[0].h_sync_a);
+    OUTREG(AVIVO_D1CRTC_H_SYNC_A_CNTL, state->crtc[0].h_sync_a_cntl);
+    OUTREG(AVIVO_D1CRTC_H_SYNC_B, state->crtc[0].h_sync_b);
+    OUTREG(AVIVO_D1CRTC_H_SYNC_B_CNTL, state->crtc[0].h_sync_b_cntl);
 
-    OUTREG(AVIVO_D1CRTC_V_TOTAL, state->crtc1.v_total);
-    OUTREG(AVIVO_D1CRTC_V_BLANK_START_END, state->crtc1.v_blank_start_end);
-    OUTREG(AVIVO_D1CRTC_V_SYNC_A, state->crtc1.v_sync_a);
-    OUTREG(AVIVO_D1CRTC_V_SYNC_A_CNTL, state->crtc1.v_sync_a_cntl);
-    OUTREG(AVIVO_D1CRTC_V_SYNC_B, state->crtc1.v_sync_b);
-    OUTREG(AVIVO_D1CRTC_V_SYNC_B_CNTL, state->crtc1.v_sync_b_cntl);
+    OUTREG(AVIVO_D1CRTC_V_TOTAL, state->crtc[0].v_total);
+    OUTREG(AVIVO_D1CRTC_V_BLANK_START_END, state->crtc[0].v_blank_start_end);
+    OUTREG(AVIVO_D1CRTC_V_SYNC_A, state->crtc[0].v_sync_a);
+    OUTREG(AVIVO_D1CRTC_V_SYNC_A_CNTL, state->crtc[0].v_sync_a_cntl);
+    OUTREG(AVIVO_D1CRTC_V_SYNC_B, state->crtc[0].v_sync_b);
+    OUTREG(AVIVO_D1CRTC_V_SYNC_B_CNTL, state->crtc[0].v_sync_b_cntl);
 
-    OUTREG(AVIVO_D1CRTC_INTERLACE_CONTROL, state->crtc1.interlace_control);
-    OUTREG(AVIVO_D1CRTC_STEREO_CONTROL, state->crtc1.stereo_control);
+    OUTREG(AVIVO_D1CRTC_INTERLACE_CONTROL, state->crtc[0].interlace_control);
+    OUTREG(AVIVO_D1CRTC_STEREO_CONTROL, state->crtc[0].stereo_control);
 
-    OUTREG(AVIVO_D1CUR_CONTROL, state->crtc1.cursor_control);
+    OUTREG(AVIVO_D1CUR_CONTROL, state->crtc[0].cursor_control);
 
     /* XXX Fix scaler */
 
-    OUTREG(AVIVO_D2CRTC_H_TOTAL, state->crtc2.h_total);
-    OUTREG(AVIVO_D2CRTC_H_BLANK_START_END, state->crtc2.h_blank_start_end);
-    OUTREG(AVIVO_D2CRTC_H_SYNC_A, state->crtc2.h_sync_a);
-    OUTREG(AVIVO_D2CRTC_H_SYNC_A_CNTL, state->crtc2.h_sync_a_cntl);
-    OUTREG(AVIVO_D2CRTC_H_SYNC_B, state->crtc2.h_sync_b);
-    OUTREG(AVIVO_D2CRTC_H_SYNC_B_CNTL, state->crtc2.h_sync_b_cntl);
+    OUTREG(AVIVO_D2CRTC_H_TOTAL, state->crtc[1].h_total);
+    OUTREG(AVIVO_D2CRTC_H_BLANK_START_END, state->crtc[1].h_blank_start_end);
+    OUTREG(AVIVO_D2CRTC_H_SYNC_A, state->crtc[1].h_sync_a);
+    OUTREG(AVIVO_D2CRTC_H_SYNC_A_CNTL, state->crtc[1].h_sync_a_cntl);
+    OUTREG(AVIVO_D2CRTC_H_SYNC_B, state->crtc[1].h_sync_b);
+    OUTREG(AVIVO_D2CRTC_H_SYNC_B_CNTL, state->crtc[1].h_sync_b_cntl);
 
-    OUTREG(AVIVO_D2CRTC_V_TOTAL, state->crtc2.v_total);
-    OUTREG(AVIVO_D2CRTC_V_BLANK_START_END, state->crtc2.v_blank_start_end);
-    OUTREG(AVIVO_D2CRTC_V_SYNC_A, state->crtc2.v_sync_a);
-    OUTREG(AVIVO_D2CRTC_V_SYNC_A_CNTL, state->crtc2.v_sync_a_cntl);
-    OUTREG(AVIVO_D2CRTC_V_SYNC_B, state->crtc2.v_sync_b);
-    OUTREG(AVIVO_D2CRTC_V_SYNC_B_CNTL, state->crtc2.v_sync_b_cntl);
+    OUTREG(AVIVO_D2CRTC_V_TOTAL, state->crtc[1].v_total);
+    OUTREG(AVIVO_D2CRTC_V_BLANK_START_END, state->crtc[1].v_blank_start_end);
+    OUTREG(AVIVO_D2CRTC_V_SYNC_A, state->crtc[1].v_sync_a);
+    OUTREG(AVIVO_D2CRTC_V_SYNC_A_CNTL, state->crtc[1].v_sync_a_cntl);
+    OUTREG(AVIVO_D2CRTC_V_SYNC_B, state->crtc[1].v_sync_b);
+    OUTREG(AVIVO_D2CRTC_V_SYNC_B_CNTL, state->crtc[1].v_sync_b_cntl);
 
-    OUTREG(AVIVO_D2CRTC_INTERLACE_CONTROL, state->crtc2.interlace_control);
-    OUTREG(AVIVO_D2CRTC_STEREO_CONTROL, state->crtc2.stereo_control);
+    OUTREG(AVIVO_D2CRTC_INTERLACE_CONTROL, state->crtc[1].interlace_control);
+    OUTREG(AVIVO_D2CRTC_STEREO_CONTROL, state->crtc[1].stereo_control);
 
-    OUTREG(AVIVO_D2CUR_CONTROL, state->crtc2.cursor_control);
+    OUTREG(AVIVO_D2CUR_CONTROL, state->crtc[1].cursor_control);
 
     if (IS_DCE3_VARIANT) {
 	/* DVOA regs */
@@ -5047,12 +5625,12 @@ avivo_restore(ScrnInfoPtr pScrn, RADEONSavePtr restore)
     OUTREG(0x6e34, state->dxscl[7]);
 
     /* Enable CRTCs */
-    if (state->crtc1.control & 1) {
+    if (state->crtc[0].control & 1) {
 	    OUTREG(AVIVO_D1CRTC_CONTROL, 0x01000101);
 	    INREG(AVIVO_D1CRTC_CONTROL);
 	    OUTREG(AVIVO_D1CRTC_CONTROL, 0x00010101);
     }
-    if (state->crtc2.control & 1) {
+    if (state->crtc[1].control & 1) {
 	    OUTREG(AVIVO_D2CRTC_CONTROL, 0x01000101);
 	    INREG(AVIVO_D2CRTC_CONTROL);
 	    OUTREG(AVIVO_D2CRTC_CONTROL, 0x00010101);
@@ -5063,10 +5641,11 @@ avivo_restore(ScrnInfoPtr pScrn, RADEONSavePtr restore)
     OUTREG(AVIVO_DC_LB_MEMORY_SPLIT, state->dc_lb_memory_split);
 
     /* Need fixing too ? */
-    OUTREG(AVIVO_D1CRTC_BLANK_CONTROL, state->crtc1.blank_control);
-    OUTREG(AVIVO_D2CRTC_BLANK_CONTROL, state->crtc2.blank_control);
+    OUTREG(AVIVO_D1CRTC_BLANK_CONTROL, state->crtc[0].blank_control);
+    OUTREG(AVIVO_D2CRTC_BLANK_CONTROL, state->crtc[1].blank_control);
 
     /* Dbl check */
+    OUTREG(AVIVO_VGA_RENDER_CONTROL, state->vga_render_control);
     OUTREG(AVIVO_D1VGA_CONTROL, state->vga1_cntl);
     OUTREG(AVIVO_D2VGA_CONTROL, state->vga2_cntl);
 
@@ -5079,9 +5658,26 @@ static void avivo_restore_vga_regs(ScrnInfoPtr pScrn, RADEONSavePtr restore)
     unsigned char *RADEONMMIO = info->MMIO;
     struct avivo_state *state = &restore->avivo;
 
+    OUTREG(AVIVO_VGA_RENDER_CONTROL, state->vga_render_control);
     OUTREG(AVIVO_D1VGA_CONTROL, state->vga1_cntl);
     OUTREG(AVIVO_D2VGA_CONTROL, state->vga2_cntl);
 }
+
+static void dce4_restore_vga_regs(ScrnInfoPtr pScrn, RADEONSavePtr restore)
+{
+    RADEONInfoPtr info = RADEONPTR(pScrn);
+    unsigned char *RADEONMMIO = info->MMIO;
+    struct dce4_state *state = &restore->dce4;
+
+    OUTREG(AVIVO_VGA_RENDER_CONTROL, state->vga_render_control);
+    OUTREG(AVIVO_D1VGA_CONTROL, state->vga1_cntl);
+    OUTREG(AVIVO_D2VGA_CONTROL, state->vga2_cntl);
+    OUTREG(EVERGREEN_D3VGA_CONTROL, state->vga3_cntl);
+    OUTREG(EVERGREEN_D4VGA_CONTROL, state->vga4_cntl);
+    OUTREG(EVERGREEN_D5VGA_CONTROL, state->vga5_cntl);
+    OUTREG(EVERGREEN_D6VGA_CONTROL, state->vga6_cntl);
+}
+
 
 static void
 RADEONRestoreBIOSRegisters(ScrnInfoPtr pScrn, RADEONSavePtr restore)
@@ -5171,7 +5767,11 @@ static void RADEONSave(ScrnInfoPtr pScrn)
     }
 #endif
 
-    if (IS_AVIVO_VARIANT) {
+    if (IS_DCE4_VARIANT) {
+	RADEONSaveMemMapRegisters(pScrn, save);
+	dce4_save(pScrn, save);
+	//XXX
+    } else if (IS_AVIVO_VARIANT) {
 	RADEONSaveMemMapRegisters(pScrn, save);
 	avivo_save(pScrn, save);
     } else {
@@ -5186,6 +5786,8 @@ static void RADEONSave(ScrnInfoPtr pScrn)
 	RADEONSaveCrtcRegisters(pScrn, save);
 	RADEONSaveFPRegisters(pScrn, save);
 	RADEONSaveDACRegisters(pScrn, save);
+	RADEONSavePalette(pScrn, save);
+
 	if (pRADEONEnt->HasCRTC2) {
 	    RADEONSaveCrtc2Registers(pScrn, save);
 	    RADEONSavePLL2Registers(pScrn, save);
@@ -5221,7 +5823,11 @@ static void RADEONRestore(ScrnInfoPtr pScrn)
 
     RADEONBlank(pScrn);
 
-    if (IS_AVIVO_VARIANT) {
+    if (IS_DCE4_VARIANT) {
+	RADEONRestoreMemMapRegisters(pScrn, restore);
+	dce4_restore(pScrn, restore);
+	//XXX
+    } else if (IS_AVIVO_VARIANT) {
 	RADEONRestoreMemMapRegisters(pScrn, restore);
 	avivo_restore(pScrn, restore);
     } else {
@@ -5302,26 +5908,18 @@ static void RADEONRestore(ScrnInfoPtr pScrn)
     /* to restore console mode, DAC registers should be set after every other registers are set,
      * otherwise,we may get blank screen 
      */
-    if (IS_AVIVO_VARIANT)
+    if (IS_DCE4_VARIANT)
+        dce4_restore_vga_regs(pScrn, restore);
+    else if (IS_AVIVO_VARIANT)
 	avivo_restore_vga_regs(pScrn, restore);
-
-    if (!IS_AVIVO_VARIANT)
+    else {
+	RADEONRestorePalette(pScrn, restore);
 	RADEONRestoreDACRegisters(pScrn, restore);
-
+    }
 #if 0
     RADEONWaitForVerticalSync(pScrn);
 #endif
 }
-
-#if 0
-/* Define initial palette for requested video mode.  This doesn't do
- * anything for XFree86 4.0.
- */
-static void RADEONInitPalette(RADEONSavePtr save)
-{
-    save->palette_valid = FALSE;
-}
-#endif
 
 static Bool RADEONSaveScreen(ScreenPtr pScreen, int mode)
 {
@@ -5485,15 +6083,6 @@ void RADEONDoAdjustFrame(ScrnInfoPtr pScrn, int x, int y, Bool crtc2)
 		   "RADEONDoAdjustFrame(%d,%d,%d)\n", x, y, clone);
 #endif
 
-    if (info->showCache && y) {
-	        int lastline = info->FbMapSize /
-		    ((pScrn->displayWidth * pScrn->bitsPerPixel) / 8);
-
-		lastline -= pScrn->currentMode->VDisplay;
-		y += (pScrn->virtualY - 1) * (y / 3 + 1);
-		if (y > lastline) y = lastline;
-    }
-
     Base = pScrn->fbOffset;
 
   /* note we cannot really simply use the info->ModeReg.crtc_offset_cntl value, since the
@@ -5655,26 +6244,16 @@ Bool RADEONEnterVT(int scrnIndex, int flags)
     /* Makes sure the engine is idle before doing anything */
     RADEONWaitForIdleMMIO(pScrn);
 
-    if (info->IsMobility && !IS_AVIVO_VARIANT) {
-	if (xf86ReturnOptValBool(info->Options, OPTION_DYNAMIC_CLOCKS, FALSE)) {
-	    RADEONSetDynamicClock(pScrn, 1);
-	} else {
-	    RADEONSetDynamicClock(pScrn, 0);
-	}
-    } else if (IS_AVIVO_VARIANT) {
-	if (xf86ReturnOptValBool(info->Options, OPTION_DYNAMIC_CLOCKS, FALSE)) {
-	    atombios_static_pwrmgt_setup(pScrn, 1);
-	    atombios_dyn_clk_setup(pScrn, 1);
-	}
-    }
-
-    if (IS_R300_VARIANT || IS_RV100_VARIANT)
-	RADEONForceSomeClocks(pScrn);
+    RADEONPMEnterVT(pScrn);
 
     for (i = 0; i < config->num_crtc; i++)
 	radeon_crtc_modeset_ioctl(config->crtc[i], TRUE);
 
     pScrn->vtSema = TRUE;
+
+    /* Clear the framebuffer */
+    memset(info->FB + pScrn->fbOffset, 0,
+           pScrn->virtualY * pScrn->displayWidth * info->CurrentLayout.pixel_bytes);
 
     if (!xf86SetDesiredModes(pScrn))
 	return FALSE;
@@ -5683,7 +6262,7 @@ Bool RADEONEnterVT(int scrnIndex, int flags)
         RADEONRestoreSurfaces(pScrn, info->ModeReg);
 #ifdef XF86DRI
     if (info->directRenderingEnabled) {
-    	if (info->cardType == CARD_PCIE &&
+	if (info->cardType == CARD_PCIE &&
 	    info->dri->pKernelDRMVersion->version_minor >= 19 &&
 	    info->FbSecureSize) {
 #if X_BYTE_ORDER == X_BIG_ENDIAN
@@ -5697,7 +6276,7 @@ Bool RADEONEnterVT(int scrnIndex, int flags)
 #if X_BYTE_ORDER == X_BIG_ENDIAN
 	    OUTREG(RADEON_SURFACE_CNTL, sctrl);
 #endif
-    	}
+	}
 
 	/* get the DRI back into shape after resume */
 	RADEONDRISetVBlankInterrupt (pScrn, TRUE);
@@ -5725,6 +6304,8 @@ Bool RADEONEnterVT(int scrnIndex, int flags)
 	DRIUnlock(pScrn->pScreen);
     }
 #endif
+    if (IS_R500_3D || IS_R300_3D)
+	radeon_load_bicubic_texture(pScrn);
 
     return TRUE;
 }
@@ -5804,6 +6385,8 @@ void RADEONLeaveVT(int scrnIndex, int flags)
 
     xf86_hide_cursors (pScrn);
 
+    RADEONPMLeaveVT(pScrn);
+
     RADEONRestore(pScrn);
 
     for (i = 0; i < config->num_crtc; i++)
@@ -5826,6 +6409,8 @@ static Bool RADEONCloseScreen(int scrnIndex, ScreenPtr pScreen)
 
     xf86DrvMsgVerb(pScrn->scrnIndex, X_INFO, RADEON_LOGLEVEL_DEBUG,
 		   "RADEONCloseScreen\n");
+
+    RADEONPMFini(pScrn);
 
     /* Mark acceleration as stopped or we might try to access the engine at
      * wrong times, especially if we had DRI, after DRI has been stopped
@@ -5869,7 +6454,7 @@ static Bool RADEONCloseScreen(int scrnIndex, ScreenPtr pScreen)
 #ifdef USE_EXA
     if (info->accel_state->exa) {
 	exaDriverFini(pScreen);
-	xfree(info->accel_state->exa);
+	free(info->accel_state->exa);
 	info->accel_state->exa = NULL;
     }
 #endif /* USE_EXA */
@@ -5880,7 +6465,7 @@ static Bool RADEONCloseScreen(int scrnIndex, ScreenPtr pScreen)
 	info->accel_state->accel = NULL;
 
 	if (info->accel_state->scratch_save)
-	    xfree(info->accel_state->scratch_save);
+	    free(info->accel_state->scratch_save);
 	info->accel_state->scratch_save = NULL;
     }
 #endif /* USE_XAA */
@@ -5890,10 +6475,6 @@ static Bool RADEONCloseScreen(int scrnIndex, ScreenPtr pScreen)
     if (info->cursor) xf86DestroyCursorInfoRec(info->cursor);
     info->cursor = NULL;
 
-    xf86DrvMsgVerb(pScrn->scrnIndex, X_INFO, RADEON_LOGLEVEL_DEBUG,
-		   "Disposing DGA\n");
-    if (info->DGAModes) xfree(info->DGAModes);
-    info->DGAModes = NULL;
     xf86DrvMsgVerb(pScrn->scrnIndex, X_INFO, RADEON_LOGLEVEL_DEBUG,
 		   "Unmapping memory\n");
     RADEONUnmapMem(pScrn);
@@ -5923,363 +6504,4 @@ void RADEONFreeScreen(int scrnIndex, int flags)
 	vgaHWFreeHWRec(pScrn);
 #endif
     RADEONFreeRec(pScrn);
-}
-
-static void RADEONForceSomeClocks(ScrnInfoPtr pScrn)
-{
-    /* It appears from r300 and rv100 may need some clocks forced-on */
-     uint32_t tmp;
-
-     tmp = INPLL(pScrn, RADEON_SCLK_CNTL);
-     tmp |= RADEON_SCLK_FORCE_CP | RADEON_SCLK_FORCE_VIP;
-     OUTPLL(pScrn, RADEON_SCLK_CNTL, tmp);
-}
-
-static void RADEONSetDynamicClock(ScrnInfoPtr pScrn, int mode)
-{
-    RADEONInfoPtr  info       = RADEONPTR(pScrn);
-    RADEONEntPtr pRADEONEnt = RADEONEntPriv(pScrn);
-    unsigned char *RADEONMMIO = info->MMIO;
-    uint32_t tmp;
-    switch(mode) {
-        case 0: /* Turn everything OFF (ForceON to everything)*/
-            if ( !pRADEONEnt->HasCRTC2 ) {
-                tmp = INPLL(pScrn, RADEON_SCLK_CNTL);
-                tmp |= (RADEON_SCLK_FORCE_CP   | RADEON_SCLK_FORCE_HDP |
-			RADEON_SCLK_FORCE_DISP1 | RADEON_SCLK_FORCE_TOP |
-                        RADEON_SCLK_FORCE_E2   | RADEON_SCLK_FORCE_SE  |
-			RADEON_SCLK_FORCE_IDCT | RADEON_SCLK_FORCE_VIP |
-			RADEON_SCLK_FORCE_RE   | RADEON_SCLK_FORCE_PB  |
-			RADEON_SCLK_FORCE_TAM  | RADEON_SCLK_FORCE_TDM |
-                        RADEON_SCLK_FORCE_RB);
-                OUTPLL(pScrn, RADEON_SCLK_CNTL, tmp);
-            } else if (info->ChipFamily == CHIP_FAMILY_RV350) {
-                /* for RV350/M10, no delays are required. */
-                tmp = INPLL(pScrn, R300_SCLK_CNTL2);
-                tmp |= (R300_SCLK_FORCE_TCL |
-                        R300_SCLK_FORCE_GA  |
-			R300_SCLK_FORCE_CBA);
-                OUTPLL(pScrn, R300_SCLK_CNTL2, tmp);
-
-                tmp = INPLL(pScrn, RADEON_SCLK_CNTL);
-                tmp |= (RADEON_SCLK_FORCE_DISP2 | RADEON_SCLK_FORCE_CP      |
-                        RADEON_SCLK_FORCE_HDP   | RADEON_SCLK_FORCE_DISP1   |
-                        RADEON_SCLK_FORCE_TOP   | RADEON_SCLK_FORCE_E2      |
-                        R300_SCLK_FORCE_VAP     | RADEON_SCLK_FORCE_IDCT    |
-			RADEON_SCLK_FORCE_VIP   | R300_SCLK_FORCE_SR        |
-			R300_SCLK_FORCE_PX      | R300_SCLK_FORCE_TX        |
-			R300_SCLK_FORCE_US      | RADEON_SCLK_FORCE_TV_SCLK |
-                        R300_SCLK_FORCE_SU      | RADEON_SCLK_FORCE_OV0);
-                OUTPLL(pScrn, RADEON_SCLK_CNTL, tmp);
-
-                tmp = INPLL(pScrn, RADEON_SCLK_MORE_CNTL);
-                tmp |= RADEON_SCLK_MORE_FORCEON;
-                OUTPLL(pScrn, RADEON_SCLK_MORE_CNTL, tmp);
-
-                tmp = INPLL(pScrn, RADEON_MCLK_CNTL);
-                tmp |= (RADEON_FORCEON_MCLKA |
-                        RADEON_FORCEON_MCLKB |
-                        RADEON_FORCEON_YCLKA |
-			RADEON_FORCEON_YCLKB |
-                        RADEON_FORCEON_MC);
-                OUTPLL(pScrn, RADEON_MCLK_CNTL, tmp);
-
-                tmp = INPLL(pScrn, RADEON_VCLK_ECP_CNTL);
-                tmp &= ~(RADEON_PIXCLK_ALWAYS_ONb  | 
-                         RADEON_PIXCLK_DAC_ALWAYS_ONb | 
-			 R300_DISP_DAC_PIXCLK_DAC_BLANK_OFF); 
-                OUTPLL(pScrn, RADEON_VCLK_ECP_CNTL, tmp);
-
-                tmp = INPLL(pScrn, RADEON_PIXCLKS_CNTL);
-                tmp &= ~(RADEON_PIX2CLK_ALWAYS_ONb         | 
-			 RADEON_PIX2CLK_DAC_ALWAYS_ONb     | 
-			 RADEON_DISP_TVOUT_PIXCLK_TV_ALWAYS_ONb | 
-			 R300_DVOCLK_ALWAYS_ONb            | 
-			 RADEON_PIXCLK_BLEND_ALWAYS_ONb    | 
-			 RADEON_PIXCLK_GV_ALWAYS_ONb       | 
-			 R300_PIXCLK_DVO_ALWAYS_ONb        | 
-			 RADEON_PIXCLK_LVDS_ALWAYS_ONb     | 
-			 RADEON_PIXCLK_TMDS_ALWAYS_ONb     | 
-			 R300_PIXCLK_TRANS_ALWAYS_ONb      | 
-			 R300_PIXCLK_TVO_ALWAYS_ONb        | 
-			 R300_P2G2CLK_ALWAYS_ONb            | 
-			 R300_P2G2CLK_ALWAYS_ONb           | 
-			 R300_DISP_DAC_PIXCLK_DAC2_BLANK_OFF); 
-                OUTPLL(pScrn, RADEON_PIXCLKS_CNTL, tmp);
-            }  else {
-                tmp = INPLL(pScrn, RADEON_SCLK_CNTL);
-                tmp |= (RADEON_SCLK_FORCE_CP | RADEON_SCLK_FORCE_E2);
-                tmp |= RADEON_SCLK_FORCE_SE;
-
-		if ( !pRADEONEnt->HasCRTC2 ) {
-                     tmp |= ( RADEON_SCLK_FORCE_RB    |
-			      RADEON_SCLK_FORCE_TDM   |
-			      RADEON_SCLK_FORCE_TAM   |
-			      RADEON_SCLK_FORCE_PB    |
-			      RADEON_SCLK_FORCE_RE    |
-			      RADEON_SCLK_FORCE_VIP   |
-			      RADEON_SCLK_FORCE_IDCT  |
-			      RADEON_SCLK_FORCE_TOP   |
-			      RADEON_SCLK_FORCE_DISP1 |
-			      RADEON_SCLK_FORCE_DISP2 |
-			      RADEON_SCLK_FORCE_HDP    );
-		} else if ((info->ChipFamily == CHIP_FAMILY_R300) ||
-			   (info->ChipFamily == CHIP_FAMILY_R350)) {
-		    tmp |= ( RADEON_SCLK_FORCE_HDP   |
-			     RADEON_SCLK_FORCE_DISP1 |
-			     RADEON_SCLK_FORCE_DISP2 |
-			     RADEON_SCLK_FORCE_TOP   |
-			     RADEON_SCLK_FORCE_IDCT  |
-			     RADEON_SCLK_FORCE_VIP);
-		}
-                OUTPLL(pScrn, RADEON_SCLK_CNTL, tmp);
-            
-                usleep(16000);
-
-		if ((info->ChipFamily == CHIP_FAMILY_R300) ||
-		    (info->ChipFamily == CHIP_FAMILY_R350)) {
-                    tmp = INPLL(pScrn, R300_SCLK_CNTL2);
-                    tmp |= ( R300_SCLK_FORCE_TCL |
-			     R300_SCLK_FORCE_GA  |
-			     R300_SCLK_FORCE_CBA);
-                    OUTPLL(pScrn, R300_SCLK_CNTL2, tmp);
-		    usleep(16000);
-		}
-
-                if (info->IsIGP) {
-                    tmp = INPLL(pScrn, RADEON_MCLK_CNTL);
-                    tmp &= ~(RADEON_FORCEON_MCLKA |
-			     RADEON_FORCEON_YCLKA);
-                    OUTPLL(pScrn, RADEON_MCLK_CNTL, tmp);
-		    usleep(16000);
-		}
-  
-		if ((info->ChipFamily == CHIP_FAMILY_RV200) ||
-		    (info->ChipFamily == CHIP_FAMILY_RV250) ||
-		    (info->ChipFamily == CHIP_FAMILY_RV280)) {
-                    tmp = INPLL(pScrn, RADEON_SCLK_MORE_CNTL);
-		    tmp |= RADEON_SCLK_MORE_FORCEON;
-                    OUTPLL(pScrn, RADEON_SCLK_MORE_CNTL, tmp);
-		    usleep(16000);
-		}
-
-                tmp = INPLL(pScrn, RADEON_PIXCLKS_CNTL);
-                tmp &= ~(RADEON_PIX2CLK_ALWAYS_ONb         |
-                         RADEON_PIX2CLK_DAC_ALWAYS_ONb     |
-                         RADEON_PIXCLK_BLEND_ALWAYS_ONb    |
-                         RADEON_PIXCLK_GV_ALWAYS_ONb       |
-                         RADEON_PIXCLK_DIG_TMDS_ALWAYS_ONb |
-                         RADEON_PIXCLK_LVDS_ALWAYS_ONb     |
-                         RADEON_PIXCLK_TMDS_ALWAYS_ONb);
-
-		OUTPLL(pScrn, RADEON_PIXCLKS_CNTL, tmp);
-		usleep(16000);
-
-                tmp = INPLL(pScrn, RADEON_VCLK_ECP_CNTL);
-                tmp &= ~(RADEON_PIXCLK_ALWAYS_ONb  |
-			 RADEON_PIXCLK_DAC_ALWAYS_ONb); 
-                OUTPLL(pScrn, RADEON_VCLK_ECP_CNTL, tmp);
-	    }
-	    xf86DrvMsg(pScrn->scrnIndex, X_INFO, "Dynamic Clock Scaling Disabled\n");
-            break;
-        case 1:
-            if (!pRADEONEnt->HasCRTC2) {
-                tmp = INPLL(pScrn, RADEON_SCLK_CNTL);
-		if ((INREG(RADEON_CONFIG_CNTL) & RADEON_CFG_ATI_REV_ID_MASK) >
-		    RADEON_CFG_ATI_REV_A13) { 
-                    tmp &= ~(RADEON_SCLK_FORCE_CP | RADEON_SCLK_FORCE_RB);
-                }
-                tmp &= ~(RADEON_SCLK_FORCE_HDP  | RADEON_SCLK_FORCE_DISP1 |
-			 RADEON_SCLK_FORCE_TOP  | RADEON_SCLK_FORCE_SE   |
-			 RADEON_SCLK_FORCE_IDCT | RADEON_SCLK_FORCE_RE   |
-			 RADEON_SCLK_FORCE_PB   | RADEON_SCLK_FORCE_TAM  |
-			 RADEON_SCLK_FORCE_TDM);
-                OUTPLL(pScrn, RADEON_SCLK_CNTL, tmp);
-	    } else if ((info->ChipFamily == CHIP_FAMILY_R300) ||
-		       (info->ChipFamily == CHIP_FAMILY_R350) ||
-		       (info->ChipFamily == CHIP_FAMILY_RV350)) {
-		if (info->ChipFamily == CHIP_FAMILY_RV350) {
-		    tmp = INPLL(pScrn, R300_SCLK_CNTL2);
-		    tmp &= ~(R300_SCLK_FORCE_TCL |
-			     R300_SCLK_FORCE_GA  |
-			     R300_SCLK_FORCE_CBA);
-		    tmp |=  (R300_SCLK_TCL_MAX_DYN_STOP_LAT |
-			     R300_SCLK_GA_MAX_DYN_STOP_LAT  |
-			     R300_SCLK_CBA_MAX_DYN_STOP_LAT);
-		    OUTPLL(pScrn, R300_SCLK_CNTL2, tmp);
-
-		    tmp = INPLL(pScrn, RADEON_SCLK_CNTL);
-		    tmp &= ~(RADEON_SCLK_FORCE_DISP2 | RADEON_SCLK_FORCE_CP      |
-			     RADEON_SCLK_FORCE_HDP   | RADEON_SCLK_FORCE_DISP1   |
-			     RADEON_SCLK_FORCE_TOP   | RADEON_SCLK_FORCE_E2      |
-			     R300_SCLK_FORCE_VAP     | RADEON_SCLK_FORCE_IDCT    |
-			     RADEON_SCLK_FORCE_VIP   | R300_SCLK_FORCE_SR        |
-			     R300_SCLK_FORCE_PX      | R300_SCLK_FORCE_TX        |
-			     R300_SCLK_FORCE_US      | RADEON_SCLK_FORCE_TV_SCLK |
-			     R300_SCLK_FORCE_SU      | RADEON_SCLK_FORCE_OV0);
-		    tmp |=  RADEON_DYN_STOP_LAT_MASK;
-		    OUTPLL(pScrn, RADEON_SCLK_CNTL, tmp);
-
-		    tmp = INPLL(pScrn, RADEON_SCLK_MORE_CNTL);
-		    tmp &= ~RADEON_SCLK_MORE_FORCEON;
-		    tmp |=  RADEON_SCLK_MORE_MAX_DYN_STOP_LAT;
-		    OUTPLL(pScrn, RADEON_SCLK_MORE_CNTL, tmp);
-
-		    tmp = INPLL(pScrn, RADEON_VCLK_ECP_CNTL);
-		    tmp |= (RADEON_PIXCLK_ALWAYS_ONb |
-			    RADEON_PIXCLK_DAC_ALWAYS_ONb);   
-		    OUTPLL(pScrn, RADEON_VCLK_ECP_CNTL, tmp);
-
-		    tmp = INPLL(pScrn, RADEON_PIXCLKS_CNTL);
-		    tmp |= (RADEON_PIX2CLK_ALWAYS_ONb         |
-			    RADEON_PIX2CLK_DAC_ALWAYS_ONb     |
-			    RADEON_DISP_TVOUT_PIXCLK_TV_ALWAYS_ONb |
-			    R300_DVOCLK_ALWAYS_ONb            |   
-			    RADEON_PIXCLK_BLEND_ALWAYS_ONb    |
-			    RADEON_PIXCLK_GV_ALWAYS_ONb       |
-			    R300_PIXCLK_DVO_ALWAYS_ONb        | 
-			    RADEON_PIXCLK_LVDS_ALWAYS_ONb     |
-			    RADEON_PIXCLK_TMDS_ALWAYS_ONb     |
-			    R300_PIXCLK_TRANS_ALWAYS_ONb      |
-			    R300_PIXCLK_TVO_ALWAYS_ONb        |
-			    R300_P2G2CLK_ALWAYS_ONb           |
-			    R300_P2G2CLK_ALWAYS_ONb);
-		    OUTPLL(pScrn, RADEON_PIXCLKS_CNTL, tmp);
-
-		    tmp = INPLL(pScrn, RADEON_MCLK_MISC);
-		    tmp |= (RADEON_MC_MCLK_DYN_ENABLE |
-			    RADEON_IO_MCLK_DYN_ENABLE);
-		    OUTPLL(pScrn, RADEON_MCLK_MISC, tmp);
-
-		    tmp = INPLL(pScrn, RADEON_MCLK_CNTL);
-		    tmp |= (RADEON_FORCEON_MCLKA |
-			    RADEON_FORCEON_MCLKB);
-
-		    tmp &= ~(RADEON_FORCEON_YCLKA  |
-			     RADEON_FORCEON_YCLKB  |
-			     RADEON_FORCEON_MC);
-
-		    /* Some releases of vbios have set DISABLE_MC_MCLKA
-		       and DISABLE_MC_MCLKB bits in the vbios table.  Setting these
-		       bits will cause H/W hang when reading video memory with dynamic clocking
-		       enabled. */
-		    if ((tmp & R300_DISABLE_MC_MCLKA) &&
-			(tmp & R300_DISABLE_MC_MCLKB)) {
-			/* If both bits are set, then check the active channels */
-			tmp = INPLL(pScrn, RADEON_MCLK_CNTL);
-			if (info->RamWidth == 64) {
-			    if (INREG(RADEON_MEM_CNTL) & R300_MEM_USE_CD_CH_ONLY)
-				tmp &= ~R300_DISABLE_MC_MCLKB;
-			    else
-				tmp &= ~R300_DISABLE_MC_MCLKA;
-			} else {
-			    tmp &= ~(R300_DISABLE_MC_MCLKA |
-				     R300_DISABLE_MC_MCLKB);
-			}
-		    }
-
-		    OUTPLL(pScrn, RADEON_MCLK_CNTL, tmp);
-		} else {
-		    tmp = INPLL(pScrn, RADEON_SCLK_CNTL);
-		    tmp &= ~(R300_SCLK_FORCE_VAP);
-		    tmp |= RADEON_SCLK_FORCE_CP;
-		    OUTPLL(pScrn, RADEON_SCLK_CNTL, tmp);
-		    usleep(15000);
-
-		    tmp = INPLL(pScrn, R300_SCLK_CNTL2);
-		    tmp &= ~(R300_SCLK_FORCE_TCL |
-			     R300_SCLK_FORCE_GA  |
-			     R300_SCLK_FORCE_CBA);
-		    OUTPLL(pScrn, R300_SCLK_CNTL2, tmp);
-		}
-	    } else {
-                tmp = INPLL(pScrn, RADEON_CLK_PWRMGT_CNTL);
-
-                tmp &= ~(RADEON_ACTIVE_HILO_LAT_MASK     | 
-			 RADEON_DISP_DYN_STOP_LAT_MASK   | 
-			 RADEON_DYN_STOP_MODE_MASK); 
-
-                tmp |= (RADEON_ENGIN_DYNCLK_MODE |
-			(0x01 << RADEON_ACTIVE_HILO_LAT_SHIFT));
-                OUTPLL(pScrn, RADEON_CLK_PWRMGT_CNTL, tmp);
-		usleep(15000);
-
-                tmp = INPLL(pScrn, RADEON_CLK_PIN_CNTL);
-                tmp |= RADEON_SCLK_DYN_START_CNTL; 
-                OUTPLL(pScrn, RADEON_CLK_PIN_CNTL, tmp);
-		usleep(15000);
-
-		/* When DRI is enabled, setting DYN_STOP_LAT to zero can cause some R200 
-		   to lockup randomly, leave them as set by BIOS.
-		*/
-                tmp = INPLL(pScrn, RADEON_SCLK_CNTL);
-                /*tmp &= RADEON_SCLK_SRC_SEL_MASK;*/
-		tmp &= ~RADEON_SCLK_FORCEON_MASK;
-
-                /*RAGE_6::A11 A12 A12N1 A13, RV250::A11 A12, R300*/
-		if (((info->ChipFamily == CHIP_FAMILY_RV250) &&
-		     ((INREG(RADEON_CONFIG_CNTL) & RADEON_CFG_ATI_REV_ID_MASK) <
-		      RADEON_CFG_ATI_REV_A13)) || 
-		    ((info->ChipFamily == CHIP_FAMILY_RV100) &&
-		     ((INREG(RADEON_CONFIG_CNTL) & RADEON_CFG_ATI_REV_ID_MASK) <=
-		      RADEON_CFG_ATI_REV_A13))){
-                    tmp |= RADEON_SCLK_FORCE_CP;
-                    tmp |= RADEON_SCLK_FORCE_VIP;
-                }
-
-                OUTPLL(pScrn, RADEON_SCLK_CNTL, tmp);
-
-		if ((info->ChipFamily == CHIP_FAMILY_RV200) ||
-		    (info->ChipFamily == CHIP_FAMILY_RV250) ||
-		    (info->ChipFamily == CHIP_FAMILY_RV280)) {
-                    tmp = INPLL(pScrn, RADEON_SCLK_MORE_CNTL);
-                    tmp &= ~RADEON_SCLK_MORE_FORCEON;
-
-                    /* RV200::A11 A12 RV250::A11 A12 */
-		    if (((info->ChipFamily == CHIP_FAMILY_RV200) ||
-			 (info->ChipFamily == CHIP_FAMILY_RV250)) &&
-			((INREG(RADEON_CONFIG_CNTL) & RADEON_CFG_ATI_REV_ID_MASK) <
-			 RADEON_CFG_ATI_REV_A13)) {
-                        tmp |= RADEON_SCLK_MORE_FORCEON;
-		    }
-                    OUTPLL(pScrn, RADEON_SCLK_MORE_CNTL, tmp);
-		    usleep(15000);
-                }
-
-                /* RV200::A11 A12, RV250::A11 A12 */
-                if (((info->ChipFamily == CHIP_FAMILY_RV200) ||
-		     (info->ChipFamily == CHIP_FAMILY_RV250)) &&
-		    ((INREG(RADEON_CONFIG_CNTL) & RADEON_CFG_ATI_REV_ID_MASK) <
-		     RADEON_CFG_ATI_REV_A13)) {
-                    tmp = INPLL(pScrn, RADEON_PLL_PWRMGT_CNTL);
-                    tmp |= RADEON_TCL_BYPASS_DISABLE;
-                    OUTPLL(pScrn, RADEON_PLL_PWRMGT_CNTL, tmp);
-                }
-		usleep(15000);
-
-                /*enable dynamic mode for display clocks (PIXCLK and PIX2CLK)*/
-		tmp = INPLL(pScrn, RADEON_PIXCLKS_CNTL);
-		tmp |=  (RADEON_PIX2CLK_ALWAYS_ONb         |
-			 RADEON_PIX2CLK_DAC_ALWAYS_ONb     |
-			 RADEON_PIXCLK_BLEND_ALWAYS_ONb    |
-			 RADEON_PIXCLK_GV_ALWAYS_ONb       |
-			 RADEON_PIXCLK_DIG_TMDS_ALWAYS_ONb |
-			 RADEON_PIXCLK_LVDS_ALWAYS_ONb     |
-			 RADEON_PIXCLK_TMDS_ALWAYS_ONb);
-
-		OUTPLL(pScrn, RADEON_PIXCLKS_CNTL, tmp);
-		usleep(15000);
-
-		tmp = INPLL(pScrn, RADEON_VCLK_ECP_CNTL);
-		tmp |= (RADEON_PIXCLK_ALWAYS_ONb  |
-		        RADEON_PIXCLK_DAC_ALWAYS_ONb); 
-
-                OUTPLL(pScrn, RADEON_VCLK_ECP_CNTL, tmp);
-		usleep(15000);
-            }    
-	    xf86DrvMsg(pScrn->scrnIndex, X_INFO, "Dynamic Clock Scaling Enabled\n");
-	    break;
-        default:
-	    break;
-    }
 }
