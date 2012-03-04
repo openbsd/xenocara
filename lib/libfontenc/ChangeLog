@@ -1,3 +1,98 @@
+commit 6012075d945e527866ef31b8796e04d6581071db
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Mar 2 17:51:30 2012 -0800
+
+    libfontenc 1.1.1
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 381c9efec4c066d984514d226b61b3360741aea2
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Fri Nov 11 10:22:52 2011 -0800
+
+    Include strings.h for strcasecmp
+    
+    Our minimum requirement for X11 is currently Unix98.  Unix98 provides
+    strcasecmp in <strings.h>.  This commit fixes implicit declarations
+    of this function on systems that closely adhere to the standard.
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit 1da600011b7e89981592308843ce7230fa5f87f1
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Sep 16 22:07:14 2011 -0700
+
+    Strip trailing whitespace
+    
+    Performed with: find * -type f | xargs perl -i -p -e 's{[ \t]+$}{}'
+    git diff -w & git diff -b show no diffs from this change
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 272b776fbd8598ff447585b8105e622d8244db7c
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Mon May 9 09:43:24 2011 -0700
+
+    Dead code removal
+    
+    encparse.c:750:9: warning: Value stored to 'namsize' is never read
+            namsize = 0;
+            ^         ~
+    
+    Found-by: clang static analyzer
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit 39800e873e8a57ee904aaf3e39315f5250bcd26f
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Feb 3 17:37:36 2011 -0500
+
+    config: comment, minor upgrade, quote and layout configure.ac
+    
+    Group statements per section as per Autoconf standard layout
+    Quote statements where appropriate.
+    Autoconf recommends not using dnl instead of # for comments
+    
+    Use AC_CONFIG_FILES to replace the deprecated AC_OUTPUT with parameters.
+    Add AC_CONFIG_SRCDIR([Makefile.am])
+    Update X.Org util-macros to version 1.8
+    
+    This helps automated maintenance and release activities.
+    Details can be found in http://wiki.x.org/wiki/NewModuleGuidelines
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit bd845a08f03afc4065cf418647d27129044fe96f
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Fri Jan 28 19:41:37 2011 -0500
+
+    config: replace deprecated AM_CONFIG_HEADER with AC_CONFIG_HEADERS
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 8acc384499a31bd41a7b62e8f6977d67182e5f06
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Jan 27 18:50:14 2011 -0500
+
+    config: remove AC_PROG_CC as it overrides AC_PROG_C_C99
+    
+    XORG_STRICT_OPTION from XORG_DEFAULT_OPTIONS calls
+    AC_PROG_C_C99. This sets gcc with -std=gnu99.
+    If AC_PROG_CC macro is called afterwards, it resets CC to gcc.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 0e3929c939d3f6c2ca79defcad8d2cceb3dba5df
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Nov 19 22:03:22 2010 -0800
+
+    Fail configure if zlib.h & -lz not found
+    
+    Fixes https://bugs.freedesktop.org/show_bug.cgi?id=31595
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Julien Cristau <jcristau@debian.org>
+    Reviewed-by: Dan Nicholson <dbn.lists@gmail.com>
+
 commit a52174d1a7562a656559f9bb728a80982b814043
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Wed Oct 20 22:35:18 2010 -0700
