@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.43 2012/03/04 14:50:24 matthieu Exp $
+# $OpenBSD: Makefile,v 1.44 2012/03/04 15:49:04 matthieu Exp $
 
 INPUT_DRV_DEFAULT= \
 	xf86-input-keyboard \
@@ -52,7 +52,8 @@ VIDEO_DRV_COMMON= \
 	xf86-video-cirrus xf86-video-dummy \
 	xf86-video-glint xf86-video-i128 xf86-video-mach64 xf86-video-mga \
 	xf86-video-neomagic \
-	xf86-video-nv xf86-video-r128 xf86-video-rendition xf86-video-s3 \
+	xf86-video-nv xf86-video-r128 xf86-video-radeonold \
+	xf86-video-rendition xf86-video-s3 \
 	xf86-video-s3virge xf86-video-savage xf86-video-siliconmotion \
 	xf86-video-sis xf86-video-tdfx xf86-video-trident \
 	xf86-video-tseng xf86-video-vesa
