@@ -4,7 +4,7 @@
 static   char cmd[MAX_COMMAND_SIZE];
 
 /* no readline - starts here */
-char *getline() {
+char *get_line() {
   if( fgets(cmd,MAX_COMMAND_SIZE,stdin) == NULL  ) {
 	return(NULL);
   }
@@ -24,7 +24,7 @@ static char *line = (char *)NULL;
 static int done_init = 0;
 static char *h_file;
 
-char *getline()
+char *get_line()
 {
     char *prompt;
     int len;

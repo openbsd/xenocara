@@ -1,4 +1,4 @@
-/* $Id: FvwmCommand.c,v 1.1.1.1 2006/11/26 10:53:10 matthieu Exp $
+/* $Id: FvwmCommand.c,v 1.2 2012/03/04 12:07:01 fgsch Exp $
  * $Source: /home/cvs/xenocara/app/fvwm/extras/FvwmCommand/Attic/FvwmCommand.c,v $
  *
  * Fvwm2 command input interface.
@@ -18,7 +18,7 @@ int  Fdr, Fdw;  /* file discriptor for fifo */
 FILE *Frun;     /* File contains pid */
 char *Fr_name;  
 int  Pfd;
-char *getline();
+char *get_line();
 fd_set fdset;
 
 struct timeval Tv;
