@@ -1,3 +1,153 @@
+commit abc8ae7a5c3dce163635fd100b925fe9b4d670ba
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Feb 29 19:32:30 2012 -0800
+
+    listres 1.0.3
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 008a2b21156a4eac85906d6b4b5e10ca0e4f740f
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Feb 10 19:32:23 2012 -0800
+
+    Replace computed printf format string with static string
+    
+    Allows format string analysis by gcc & other code checkers.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Mark Kettenis <kettenis@openbsd.org>
+
+commit ca962dc8de8af38a641e7fdd4243146817776924
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Feb 10 19:15:28 2012 -0800
+
+    Combine usage string/fprintf calls into one
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit dd31d1f8f205c140001052d15ab1ffbd5579dba4
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Feb 18 19:28:36 2011 -0800
+
+    listres depends on xproto, not x11 (Xlib)
+    
+    listres doesn't include any Xlib headers or call any Xlib functions
+    directly, but does include <X11/Xos.h> from xproto.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 3dd75eb87cc61e9b6acbd18c79357a4ae63cc440
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jan 19 10:06:55 2011 -0500
+
+    config: move man pages into their own directory
+    
+    Use services provided by XORG_MANPAGE_SECTIONS.
+    Use standard Makefile for man pages.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 13c461883dc65eb63a116e3e3131e00076a82095
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Jan 13 17:15:36 2011 -0500
+
+    man: replace hard coded man page section with substitution strings
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 6b38083afd5d23e5c758a4a2a746593a6a40ce95
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Jan 13 11:15:47 2011 -0500
+
+    man: remove trailing spaces and tabs
+    
+    Using s/[ \t]*$//
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 9151c4b149f1ca87eb99fe1281a06397fdc314c0
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jan 12 16:28:02 2011 -0500
+
+    config: replace deprecated AM_CONFIG_HEADER with AC_CONFIG_HEADERS
+    
+    This silences an Autoconf warning
+
+commit dd0509dff09cf4913d888c3ae31bf48065ddb6d7
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jan 12 15:12:08 2011 -0500
+
+    config: remove unrequired AC_SUBST([*_LIBS])
+    
+    This macro is called by PKG_CHECK_MODULES
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 74dcfa0a80c1ecf1166ad5f11f5ee73851b38a39
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jan 12 13:33:47 2011 -0500
+
+    config: remove unrequired AC_SUBST([*_CFLAGS])
+    
+    This macro is called by PKG_CHECK_MODULES
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit e9b98b326afd84d05a5e06cd185c847d6302b252
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jan 12 13:10:21 2011 -0500
+
+    config: remove AC_PROG_CC as it overrides AC_PROG_C_C99
+    
+    XORG_STRICT_OPTION from XORG_DEFAULT_OPTIONS calls
+    AC_PROG_C_C99. This sets gcc with -std=gnu99.
+    If AC_PROG_CC macro is called afterwards, it resets CC to gcc.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 3ae6b39b41d942e734eddfdf2485074876700afa
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jan 12 11:54:40 2011 -0500
+
+    config: use AC_PROG_INSTALL now supplied by XORG_DEFAULT_OPTIONS
+    
+    It depends on util-macros 1.8 or later
+    The existing statement can now be removed from the configuration file.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 07746dcbde6229dd036b44d7d1d31e3994c8d39c
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jan 12 11:23:52 2011 -0500
+
+    config: upgrade to util-macros 1.8 for additional man page support
+    
+    Use MAN_SUBST now supplied in XORG_MANPAGE_SECTIONS
+    The value of MAN_SUBST is the same for all X.Org packages.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit b5c6f43a6fdba721c9bf3a464544ca31de3d84c9
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jan 12 10:21:24 2011 -0500
+
+    config: update AC_PREREQ statement to 2.60
+    
+    Unrelated to the previous patches, the new value simply reflects
+    the reality that the minimum level for autoconf to configure
+    all x.org modules in one pass is 2.60 dated June 2006.
+    
+    A version later than 2.60 can be used, but no new features from such
+    a later version can be used in configure.ac.
+    
+    Although the code in this module can be configured with a version earlier
+    than 2.60, most of code is now contained in macros from util-macros
+    which use features of version 2.60, at the present or in the future.
+    
+    ftp://ftp.gnu.org/gnu/autoconf/autoconf-2.60.tar.gz
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
 commit ddf8dcba06c2fe3044db1f600de7d5c6e325c4a4
 Author: Alan Coopersmith <alan.coopersmith@sun.com>
 Date:   Tue Dec 15 15:05:08 2009 -0800

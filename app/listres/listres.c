@@ -85,21 +85,14 @@ static const char *ProgramName;
 static void
 usage (void)
 {
-    fprintf(stderr, "usage:  %s [-options...]\n", ProgramName);
-    fprintf(stderr, "\nwhere options include:\n");
-    fprintf(stderr,
-	    "    -all             list all known widget and object classes\n");
-    fprintf(stderr,
-	    "    -tree            list all widgets and objects in a tree\n");
-    fprintf(stderr,
-	    "    -nosuper         do not print superclass resources\n");
-    fprintf(stderr,
-	    "    -variable        show variable name instead of class name\n");
-    fprintf(stderr,
-	    "    -top name        object to be top of tree\n");
-    fprintf(stderr,
+    fprintf(stderr, "usage:  %s [-options...]\n%s\n", ProgramName,
+	    "\nwhere options include:\n"
+	    "    -all             list all known widget and object classes\n"
+	    "    -tree            list all widgets and objects in a tree\n"
+	    "    -nosuper         do not print superclass resources\n"
+	    "    -variable        show variable name instead of class name\n"
+	    "    -top name        object to be top of tree\n"
 	    "    -format string   printf format for instance, class, type\n");
-    fprintf(stderr, "\n");
     exit (1);
 }
 
@@ -157,15 +150,13 @@ static void list_known_widgets (void)
     int i;
     XmuWidgetNode *wn;
     int width = 0;
-    char format[20];
 
     for (i = 0, wn = widget_list; i < nwidgets; i++, wn++) {
 	int l = strlen (wn->label);
 	if (l > width) width = l;
     }
-    sprintf (format, "%%-%ds  ", width);
     for (i = 0, wn = widget_list; i < nwidgets; i++, wn++) {
-	printf (format, wn->label);
+	printf ("%-*s  ", width, wn->label);
 	print_classname (wn, (XmuWidgetNode *) NULL, 0, False);
 	putchar ('\n');
     }
