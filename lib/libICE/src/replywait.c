@@ -1,4 +1,3 @@
-/* $Xorg: replywait.c,v 1.4 2001/02/09 02:03:26 xorgcvs Exp $ */
 /******************************************************************************
 
 
@@ -59,7 +58,7 @@ _IceAddReplyWait (
 	prev = last;
 	last = last->next;
     }
-	
+
     savedReplyWait = (_IceSavedReplyWait *) malloc (
 	sizeof (_IceSavedReplyWait));
 
@@ -149,7 +148,7 @@ _IceCheckReplyReady (
 	    iceConn->saved_reply_waits = savedReplyWait->next;
 	else
 	    prev->next = savedReplyWait->next;
-	
+
 	free ((char *) savedReplyWait);
     }
 

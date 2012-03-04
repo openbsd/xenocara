@@ -1,3 +1,712 @@
+commit f166e8bbf16ec214fefdcf02ce81f80442899cb7
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Mar 2 19:59:50 2012 -0800
+
+    libICE 1.0.8
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit c87ecd959d61ae97d8a2bd82efc761bb3e299061
+Author: Matt Dew <marcoz@osource.org>
+Date:   Mon Jan 9 21:25:18 2012 -0700
+
+    informaltable cleanup
+    
+    On certain tables, add top and bottom borders to table header
+    and a bottom border to the table. This matches what those
+    tables in the old pdfs looked like.
+    
+    the <?dbfo keep-together='always'> prevents tables from
+    splitting across pages. Useful for tiny tables.
+    
+    Converting the colwidth to a floating point, IE, 1* -> 1.0*
+    cleans up these build errors:
+    WARNING: table-layout="fixed" and column-width unspecified =>
+    falling back to proportional-column-width(1)
+    
+    Signed-off-by: Matt Dew <marcoz@osource.org>
+
+commit 8b4321a37a9fa2ad24bf87afabba6b08dcfded12
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Nov 24 12:42:36 2011 -0800
+
+    Plug minor memory leak in unusual path through ProcessConnectionSetup
+    
+    Error: Memory leak (CWE 401)
+       Memory leak of pointer 'release' allocated with malloc((_len + 1))
+            at line 1100 of src/process.c in function 'ProcessConnectionSetup'.
+              'release' allocated at line 920 with malloc((_len + 1)).
+              release leaks when _i >= hisAuthCount at line 925
+                  and i >= _IceAuthCount at line 973
+                  and found != 0 at line 998
+                  and status != 0 at line 1053
+                  and status != 1 at line 1070
+                  and accept_setup_now == 0 at line 1082
+                  and i >= hisAuthCount at line 1093.
+       Memory leak of pointer 'vendor' allocated with malloc((_len + 1))
+            at line 1100 of src/process.c in function 'ProcessConnectionSetup'.
+              'vendor' allocated at line 919 with malloc((_len + 1)).
+              vendor leaks when _i >= hisAuthCount at line 925
+                  and i >= _IceAuthCount at line 973
+                  and found != 0 at line 998
+                  and status != 0 at line 1053
+                  and status != 1 at line 1070
+                  and accept_setup_now == 0 at line 1082
+                  and i >= hisAuthCount at line 1093.
+    
+    [ This bug was found by the Parfait 0.3.7 bug checking tool.
+      For more information see http://labs.oracle.com/projects/parfait/ ]
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit caf9e3393d5d517ea129392d001a2c46a7c1f325
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Nov 19 00:26:29 2011 -0800
+
+    Constify protocol, vendor & release string args to IceRegisterForProtocol*
+    
+    Needed to resolve gcc -Wwrite-strings warnings in callers.
+    These functions only pass the strings to strcmp before calling
+    strdup to make their own private copy for storing away.
+    
+    While fixing the API docs to match, also fix them to match the existing
+    function prototypes, where there were several errors before (including
+    just plain missing most of the args to IceRegisterForProtocolReply).
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit 59c1555dff34804c78c7e7443ad13f27300927eb
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Nov 9 22:07:34 2011 -0800
+
+    Remove ancient workaround for System V/386 Release 4.2 compiler bug
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Matthieu Herrb <matthieu.herrb@laas.fr>
+    Reviewed-by: walter <wharms@bfs.de>
+    Reviewed-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit bec4e9c9089fa4cc5a50fc513a3544cf6fd59bf1
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Nov 9 22:06:36 2011 -0800
+
+    Fix gcc -Wwrite-strings warnings in process.c
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit ffa659dd6dd1fb8847bfdcc5e1e2be353b6395b6
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Nov 9 21:37:48 2011 -0800
+
+    Fix gcc -Wwrite-strings warnings in AuthNames handling
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit 902a52ea9d7b6e6f56f7023009859072854a0fc7
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Nov 9 21:55:17 2011 -0800
+
+    constify arguments to IceGetAuthFileEntry
+    
+    Needed to clear gcc -Wwrite-strings warnings in callers
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit 9ff1f97e46903f8f83363f07cf021989bfa6a9f0
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Nov 9 21:43:59 2011 -0800
+
+    Fix gcc -Wwrite-strings warnings in _IceError* functions
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit e8a16534a9406d5096d9c0ea515d979c7c15e084
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Nov 9 21:23:33 2011 -0800
+
+    Fix gcc -Wwrite-strings warnings in _IceDefaultErrorHandler
+    
+    Had to split char *str into two variables, const char *str for the
+    string literals just being passed to fprintf etal.  and char *estr
+    for use by EXTRACT_STRING for the results of malloc calls that get
+    written to and then freed.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit 4fbcba4ee19a49c05440861e1278bc97d29048e0
+Author: Matt Dew <marcoz@osource.org>
+Date:   Tue Oct 4 23:32:02 2011 -0600
+
+    Cleanup IDs and links in doc
+    
+    1 - fix the capitalization of the ID attributes to match either the
+         <title> or <funcdef> string it goes with.
+    2 - fix any <linkend>'s that were affected by 1.
+    3 - any <function> in the docs that has an actual funcdef,
+    will become an olink.
+    
+    Signed-off-by: Matt Dew <marcoz@osource.org>
+
+commit d4e161e35335df82f412d2d2bb1ef95ff3e88401
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Sep 19 15:34:47 2011 -0400
+
+    As of 1997, X Window System is a trademark of The Open Group.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit fc0fc948d25dfa0f6f445a3b55610ea5b864dd60
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Sep 16 22:09:18 2011 -0700
+
+    Strip trailing whitespace
+    
+    Performed with: find * -type f | xargs perl -i -p -e 's{[ \t]+$}{}'
+    git diff -w & git diff -b show no diffs from this change
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 22601de3f38d035eb874d4bd9f649ddd2b3f0ae2
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Sep 11 17:20:20 2011 -0400
+
+    specs: remove <productnumber> which is not used by default
+    
+    This element is not rendered by default on the title. A template
+    customization is required to display it.
+    X Window System does not have a product number.
+    
+    Reviewed-by: Jeremy Huddleston <jeremyhu@apple.com>
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 7f330738f1f5862950b3baa35ff08446093bfd4e
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Sep 11 17:06:00 2011 -0400
+
+    specs: use DocBook suggested markup for Copyrights
+    
+    Puts the statement on a single line, using commas to separate years
+       --> Copyright © 1993, 1994, 1996 X Consortium
+    
+    As opposed to 3 double-spaced lines.
+    
+    Reviewed-by: Jeremy Huddleston <jeremyhu@apple.com>
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit d68d2d2031f623a969784e702c97a07b8cd99010
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Sep 11 16:56:21 2011 -0400
+
+    specs: remove orphan <corpname>
+    
+    It does not display on the title page and is redundant.
+    No visible change on the doc.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 87c934b9b7973a814763670e2dfad0579a8dcc78
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Sep 11 16:27:09 2011 -0400
+
+    specs: use the &fullrelvers; entity to set X11 release information
+    
+    Reviewed-by: Jeremy Huddleston <jeremyhu@apple.com>
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 41f04fd8673db5c2d8e587ab2c169a694bd7528f
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Sep 11 14:13:35 2011 -0400
+
+    ice.xml: version number is 1.1, not 1.0
+    
+    This is what it was before the conversion from roff to docbook.
+    
+    Reviewed-by: Jeremy Huddleston <jeremyhu@apple.com>
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 9e2a596b4ff06fc9c70dfcd94506e536e351ee0b
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Sep 11 14:11:28 2011 -0400
+
+    ice.xml: fix orphan affiliation
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 1309d477a061d165345b602e122990eaab71a0d4
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Fri Sep 9 21:21:57 2011 -0400
+
+    ICElib doc: remove empty revision list and specify the doc version number
+    
+    Revision histories are not used, only 3 docs out of 63 have one.
+    
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit e9d57773df26ad9440a49f58941b511e594605a4
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Sep 8 20:00:00 2011 -0400
+
+    docbook.am: embed css styles inside the HTML HEAD element
+    
+    Rather than referring to the external xorg.css stylesheet, embed the content
+    of the file in the html output produced. This is accomplished by using
+    version 1.10 of xorg-xhtml.xsl.
+    
+    This makes the whole html docs tree much more relocatable.
+    In addition, it eliminates xorg.css as a runtime file which makes
+    xorg-sgml-doctools a build time only package.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit b83cbed755315f6300133f2621cbe99bdc06345a
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Sep 7 10:31:04 2011 -0400
+
+    docbook.am: global maintenance update - entities, images and olinking
+    
+    Adding support in libX11 for html chunking caused a reorg of docbook.am
+    as well as the xorg-sgml-doctools masterdb for olinking.
+    The parameter img.src.path is added for pdf images.
+    A searchpath to the root builddir is added for local entities, if present.
+    
+    The docbook.am makefile hides all the details and is identical for
+    all 22 modules having DocBook documentation. It is included by a thin
+    Makefile.am which requires no docbook knowledge.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit f35b8b8be16f1903beed34fe23fa53d102329342
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Jun 12 17:54:50 2011 -0400
+
+    Install xml versions of specs even if HAVE_XMLTO is false
+    
+    DocBook/XML input source is also a usefull output format that can be viewed
+    with an XML viewer or editor and by some O/S help system.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 4c9cbdb1b40799121456c692d960135d741f13c7
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Jun 5 16:27:36 2011 -0400
+
+    Install target dbs alongside generated documents
+    
+    This matches a change in xorg-sgml-docs whereby the masterdb will look for
+    the target dbs into the same location as the generated documents.
+    
+    The target dbs are now installed alongside the generated documents.
+    Previously they are installed in $prefix/sgml/X11/dbs alongside masterdb which
+    has the potential of installing outside the package prefix and cause
+    distcheck to fail when user does not have write permission in this package.
+    
+    Requires XORG_CHECK_SGML_DOCTOOLS(1.8) which was released 2011-06-11
+
+commit 72d668dd2ec4db9b75973ba24f42ab49851dbc6d
+Author: Matt Dew <marcoz@osource.org>
+Date:   Wed May 25 22:54:51 2011 -0600
+
+    add id attributes to funcsynopsis to allow other docs to olink to them
+    
+    Signed-off-by: Matt Dew <marcoz@osource.org>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit dd7f2beaa753541aefba499813f25de38cbd17b7
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Apr 19 18:36:58 2011 -0700
+
+    IceWritePad: Zero fill pad bytes used when buffer is full
+    
+    Should be rarely hit, since it's only in the case where most of the
+    message fits in the buffer, but there's not room left for the padding
+    bytes, but better than sending uninitialized bytes off the stack when
+    it happens.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit 663782989be82e7893c99eaa7cbe98ec25a23c38
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Apr 19 18:19:19 2011 -0700
+
+    Fix reads outside array bounds in error handlers
+    
+    Error: Buffer overrun
+       Read outside array bounds (CWE 125): In call to memcpy(<unknown>, &mOp, 8), (size(&mOp) < (unsigned) 8)
+          Array size is 1 bytes
+            at line 296 of src/error.c in function '_IceErrorMajorOpcodeDuplicate'.
+    Error: Buffer overrun
+       Read outside array bounds (CWE 125): In call to memcpy(<unknown>, &maj, 8), (size(&maj) < (unsigned) 8)
+          Array size is 1 bytes
+            at line 346 of src/error.c in function '_IceErrorBadMajor'.
+    
+    [ This bug was found by the Parfait 0.3.7 bug checking tool.
+      For more information see http://labs.oracle.com/projects/parfait/ ]
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit daf686b7639919289b07a575a0d88efcb91d9732
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Mar 30 20:15:07 2011 -0400
+
+    doc: xorg-sgml-doctools package at version 1.7 is required
+    
+    This version contains support for external references
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit fadb927532556adb471300c89de29d268aae9102
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Feb 27 15:06:18 2011 -0500
+
+    Documentation: add Docbook external references support
+    
+    When writing technical documentation, it is often necessary to cross
+    reference to other information. When that other information is not in the
+    current document, additional support is needed, namely <olink>.
+    
+    A new feature with version 1.7 of xorg-sgml-doctools adds references to
+    other documents within or outside this package.
+    
+    This patch adds technical support for this feature but does not change
+    the content of the documentation as seen by the end user.
+    
+    Each book or article must generate a database containing the href
+    of sections that can be referred to from another document. This database
+    is installed in DATAROOTDIR/sgml/X11/dbs. There is a requirement that
+    the value of DATAROOTDIR for xorg-sgml-doctools and for the package
+    documentation is the same. This forms a virtual document tree.
+    
+    This database is consulted by other documents while they are being generated
+    in order to fulfill the missing information for linking.
+    Refer to the xorg-sgml-doctools for further technical information.
+    
+    Co-authored-by: Matt Dew <marcoz@osource.org>
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 483d32621c06bcba0c7aa7794633b46b151fd5bf
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Fri Feb 25 08:58:54 2011 -0500
+
+    Docbook: change the book id to match the xml file basename
+    
+    This is required for the up-coming external references support.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 4852c5bb1603fb6d401fe6895d9318555a8d4523
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Feb 2 19:13:54 2011 -0500
+
+    config: splitting ICE and XTRANS compiler options is not required
+    
+    Simplify configuration by using a single PKG_CHECK_MODULES statement.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 87d34a2f04c9d920da01802cd9707c8107746fa5
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Feb 2 11:43:40 2011 -0500
+
+    config: comment, minor upgrade, quote and layout configure.ac
+    
+    Group statements per section as per Autoconf standard layout
+    Quote statements where appropriate.
+    Autoconf recommends not using dnl instead of # for comments
+    
+    Use AC_CONFIG_FILES to replace the deprecated AC_OUTPUT with parameters.
+    
+    This helps automated maintenance and release activities.
+    Details can be found in http://wiki.x.org/wiki/NewModuleGuidelines
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 548eded10385ccc336e66dac8bbabe05f3225ec2
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Fri Jan 28 14:42:12 2011 -0500
+
+    config: remove unrequired AC_HEADER_STDC
+    
+    Autoconf says:
+    "This macro is obsolescent, as current systems have conforming
+    header files. New programs need not use this macro".
+
+commit 78b8e6b772685a2ed567ac2d30f96116f050dad5
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Jan 7 19:29:03 2011 -0800
+
+    Resync fallback asprintf with updated version put into xrdb
+    
+    Fixes issues found during xrdb review on xorg-devel
+    Also make sure <stdarg.h> is #included for varargs macros
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit dc63c253e33b1012c08cd274e6e37bf0fa87c624
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Dec 21 18:28:36 2010 -0800
+
+    Add AC_USE_SYSTEM_EXTENSIONS to make asprintf() visible in GNU libc
+    
+    asprintf is considered a GNU extension and thus one needs to define
+    _GNU_SOURCE before including stdio.h.
+    
+    Reported-by: Cyril Brulebois <kibi@debian.org>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Mark Kettenis <kettenis@openbsd.org>
+    Reviewed-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 4b4ec3aeaa7cf5f5a6490ad2ddc2b07d090214cb
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Dec 19 09:57:05 2010 -0800
+
+    Use correct string pointer in asprintf() fallback
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 308c8d3d5fbf96c1d4f313def50d4b001ac0d685
+Author: Paulo Zanoni <przanoni@gmail.com>
+Date:   Fri Dec 17 14:59:22 2010 -0200
+
+    Remove useless line from a table in specs/ice.xml
+    
+    This seems to be a leftover from a manpage/groff conversion.
+    
+    Signed-off-by: Paulo Zanoni <pzanoni@mandriva.com>
+    Reviewed-by: Matt Dew
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit a72467b21662a63c81418731b540a8843d138750
+Author: Paulo Zanoni <pzanoni@mandriva.com>
+Date:   Thu Dec 16 13:59:52 2010 -0200
+
+    Use docbookx.dtd version 4.3 for all docs
+    
+    Signed-off-by: Paulo Zanoni <pzanoni@mandriva.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit e0280caf7cc9d0e1c2df3ab7c5a4fbe4e42696a9
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Dec 5 01:15:42 2010 -0800
+
+    Convert src/process.c from malloc + sprintf to asprintf
+    
+    Includes simple local implemenation of asprintf if configure doesn't
+    find one in system libraries
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Julien Cristau <jcristau@debian.org>
+
+commit a5669dcb488db19b1ba4f1ef4d4565b6c3d1ea09
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Nov 20 19:47:53 2010 -0800
+
+    config: replace deprecated AM_CONFIG_HEADER with AC_CONFIG_HEADERS
+    
+    Regroup AC statements under the Autoconf initialization section.
+    Regroup AM statements under the Automake initialization section.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit d902a9f27369fc8388774e73f4bee6ab0ad86ef5
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Nov 20 19:45:42 2010 -0800
+
+    config: Remove unnecessary calls from configure.ac
+    
+    AC_PROG_CC is provided by XORG_DEFAULT_OPTIONS now
+    PKG_CONFIG_MODULES handles AC_SUBST of the CFLAGS & LIBS variables
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit fd56c4e00a564d6385ccb2f8fadf10de201ae411
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Nov 9 11:28:48 2010 -0500
+
+    config: HTML file generation: use the installed copy of xorg.css
+    
+    Currenlty the xorg.css file is copied in each location
+    where a DocBook/XML file resides. This produces about
+    70 copies in the $(docdir) install tree.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 9856f5679b2b2d458cf830c1e8fdd206c724dfc5
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Tue Oct 19 11:19:08 2010 -0400
+
+    libICE 1.0.7
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit 59a8d5609398824c81b72deb82735a55332ca239
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Sun Oct 17 21:26:31 2010 -0700
+
+    Fix include ordering, so -I../include precedes $CPPFLAGS which could
+    cause us to include installed rather than packaged headers.
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit 4a6f7a357222b2c1fa289d6e7b5fcc8c361e20e9
+Author: Jesse Adkins <jesserayadkins@gmail.com>
+Date:   Tue Sep 28 13:30:01 2010 -0700
+
+    Purge cvs tags.
+    
+    Signed-off-by: Jesse Adkins <jesserayadkins@gmail.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 5bb806a65bf23a507b135abe1e4a8b3cabc7b8aa
+Author: Matt Dew <matt@osource.org>
+Date:   Wed Jun 30 16:52:22 2010 -0400
+
+    specs: convert ICE doc/specs from xorg-docs module to DocBook XML
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 9b54f509832c50c1fac0edc0cb78e1a3454a56dc
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Jun 8 20:12:53 2010 -0700
+
+    Move ICE protocol & API specs from xorg-docs module
+    
+    For now, just checked in and included in dist tarballs, not processed
+    into a usable format - same as it was in xorg-docs
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 1967c04c021a4cfd7b3cdd4efdc13610b4385a65
+Author: Julien Cristau <jcristau@debian.org>
+Date:   Tue May 11 16:36:20 2010 +0200
+
+    Set the close-on-exec flag for listening sockets
+    
+    This prevents xsm from leaking file descriptors to the processes it
+    starts.
+    
+    X.Org bug#22932 <http://bugs.freedesktop.org/show_bug.cgi?id=22932>
+    
+    Reported-by: Kalle Olavi Niemitalo <kon@iki.fi>
+    Signed-off-by: Julien Cristau <jcristau@debian.org>
+
+commit b6478dbedcca4d4cf44bd588c050bcc70c2f4963
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Apr 5 19:50:40 2010 -0400
+
+    config: update AC_PREREQ statement to 2.60
+    
+    Unrelated to the previous patches, the new value simply reflects
+    the reality that the minimum level for autoconf to configure
+    all x.org modules is 2.60 dated June 2006.
+    
+    ftp://ftp.gnu.org/gnu/autoconf/autoconf-2.60.tar.gz
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 8e175ff18649bd30e862b6a6a5f82a4ed4d5241a
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Mar 29 14:53:48 2010 -0400
+
+    config: remove the pkgconfig pc.in file from EXTRA_DIST
+    
+    Automake always includes it in the tarball.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 09d61dc024d9846525e4c97d33cdf03c9f06c151
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Feb 16 10:37:21 2010 -0500
+
+    config: move CWARNFLAGS from configure.ac to Makefile.am
+    
+    Compiler warning flags should be explicitly set in the makefile
+    rather than being merged with other packages compiler flags.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 72b8a2d39a57eb0640929b9bb9f276c6032f8213
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Fri Nov 27 20:56:03 2009 -0500
+
+    Makefile.am: add ChangeLog and INSTALL on MAINTAINERCLEANFILES
+    
+    Now that the INSTALL file is generated.
+    Allows running make maintainer-clean.
+
+commit 68231f8574e197a12eff1ddde37166d101567269
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Oct 28 14:09:10 2009 -0400
+
+    INSTALL, NEWS, README or AUTHORS files are missing/incorrect #24206
+    
+    Add missing INSTALL file. Use standard GNU file on building tarball
+    README may have been updated
+    Remove AUTHORS file as it is empty and no content available yet.
+    Remove NEWS file as it is empty and no content available yet.
+
+commit b5cfc1cdd367c93660259a86b3b6683c57e5d76a
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Oct 27 15:07:25 2009 -0400
+
+    Deploy the new XORG_DEFAULT_OPTIONS #24242
+    
+    This macro aggregate a number of existing macros that sets commmon
+    X.Org components configuration options. It shields the configuration file from
+    future changes.
+
+commit 5524fa4d543932e4565b2235515fef9a5d9a501d
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Oct 26 22:08:41 2009 -0400
+
+    Makefile.am: ChangeLog not required: EXTRA_DIST or *CLEANFILES #24432
+    
+    ChangeLog filename is known to Automake and requires no further
+    coding in the makefile.
+
+commit 82ad2d2053af2ad37697793b9718721aa3ff80a0
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Oct 22 12:34:18 2009 -0400
+
+    .gitignore: use common defaults with custom section # 24239
+    
+    Using common defaults will reduce errors and maintenance.
+    Only the very small or inexistent custom section need periodic maintenance
+    when the structure of the component changes. Do not edit defaults.
+
+commit 4b2289ad5481de7fa51941cf6c2ca7a2a3202690
+Author: Jeremy Huddleston <jeremyhu@freedesktop.org>
+Date:   Wed Oct 21 12:47:23 2009 -0700
+
+    This is not a GNU project, so declare it foreign.
+    
+    On Wed, 2009-10-21 at 13:36 +1000, Peter Hutterer wrote:
+    > On Tue, Oct 20, 2009 at 08:23:55PM -0700, Jeremy Huddleston wrote:
+    > > I noticed an INSTALL file in xlsclients and libXvMC today, and it
+    > > was quite annoying to work around since 'autoreconf -fvi' replaces
+    > > it and git wants to commit it.  Should these files even be in git?
+    > > Can I nuke them for the betterment of humanity and since they get
+    > > created by autoreconf anyways?
+    >
+    > See https://bugs.freedesktop.org/show_bug.cgi?id=24206
+    
+    As an interim measure, replace AM_INIT_AUTOMAKE([dist-bzip2]) with
+    AM_INIT_AUTOMAKE([foreign dist-bzip2]). This will prevent the generation
+    of the INSTALL file. It is also part of the 24206 solution.
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@freedesktop.org>
+
 commit 94992c686a6850f2303aa78057a64a6369b64692
 Author: Peter Hutterer <peter.hutterer@who-t.net>
 Date:   Fri Aug 28 14:17:50 2009 +1000

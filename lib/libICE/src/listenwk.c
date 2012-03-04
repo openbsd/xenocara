@@ -1,5 +1,3 @@
-/* $Xorg: listenwk.c,v 1.5 2001/02/09 02:03:26 xorgcvs Exp $ */
-
 /*
 
 Copyright 1996, 1998  The Open Group
@@ -25,7 +23,6 @@ used in advertising or otherwise to promote the sale, use or other dealings
 in this Software without prior written authorization from The Open Group.
 
 */
-/* $XFree86: xc/lib/ICE/listenwk.c,v 1.3 2001/01/17 19:41:29 dawes Exp $ */
 
 
 /* Author: Ralph Mor, X Consortium */
@@ -86,7 +83,7 @@ IceListenForWellKnownConnections (
 	{
 	    listenObjs[*countRet].trans_conn = transConns[i];
 	    listenObjs[*countRet].network_id = networkId;
-		
+
 	    (*countRet)++;
 	}
     }
@@ -143,7 +140,7 @@ IceListenForWellKnownConnections (
     {
 	if (errorStringRet && errorLength > 0)
 	    *errorStringRet = '\0';
-	
+
 	for (i = 0; i < *countRet; i++)
 	{
 	    (*listenObjsRet)[i]->host_based_auth_proc = NULL;

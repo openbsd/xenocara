@@ -1,4 +1,3 @@
-/* $Xorg: protosetup.c,v 1.4 2001/02/09 02:03:26 xorgcvs Exp $ */
 /******************************************************************************
 
 
@@ -26,7 +25,6 @@ in this Software without prior written authorization from The Open Group.
 
 Author: Ralph Mor, X Consortium
 ******************************************************************************/
-/* $XFree86: xc/lib/ICE/protosetup.c,v 1.2 2001/10/28 03:32:28 tsi Exp $ */
 
 #ifdef HAVE_CONFIG_H
 #include <config.h>
@@ -120,7 +118,7 @@ IceProtocolSetup (
 	_IceGetPoValidAuthIndices (myProtocol->protocol_name,
 	    iceConn->connection_string,
 	    myProtocol->orig_client->auth_count,
-	    myProtocol->orig_client->auth_names,
+	    (const char **) myProtocol->orig_client->auth_names,
             &authCount, authIndices);
 
     }
@@ -231,7 +229,7 @@ IceProtocolSetup (
 	    else /* reply.type == ICE_PROTOCOL_ERROR */
 	    {
 		/* Protocol Setup failed */
-		
+
 		strncpy (errorStringRet, reply.protocol_error.error_message,
 		    errorLength);
 
@@ -253,7 +251,7 @@ IceProtocolSetup (
 	*minorVersionRet = versionRec->minor_version;
 	*vendorRet = reply.protocol_reply.vendor;
 	*releaseRet = reply.protocol_reply.release;
-	
+
 
 	/*
 	 * Increase the reference count for the number of active protocols.

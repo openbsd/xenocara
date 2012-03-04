@@ -1,4 +1,3 @@
-/* $Xorg: ICElib.h,v 1.5 2001/02/09 02:03:26 xorgcvs Exp $ */
 /******************************************************************************
 
 
@@ -26,7 +25,6 @@ in this Software without prior written authorization from The Open Group.
 
 Author: Ralph Mor, X Consortium
 ******************************************************************************/
-/* $XFree86: xc/lib/ICE/ICElib.h,v 3.4 2001/12/14 19:53:35 dawes Exp $ */
 
 #ifndef _ICELIB_H_
 #define _ICELIB_H_
@@ -208,9 +206,9 @@ typedef void (*IceIOErrorHandler) (
 _XFUNCPROTOBEGIN
 
 extern int IceRegisterForProtocolSetup (
-    char *			/* protocolName */,
-    char *			/* vendor */,
-    char *			/* release */,
+    const char *		/* protocolName */,
+    const char *		/* vendor */,
+    const char *		/* release */,
     int				/* versionCount */,
     IcePoVersionRec *		/* versionRecs */,
     int				/* authCount */,
@@ -220,9 +218,9 @@ extern int IceRegisterForProtocolSetup (
 );
 
 extern int IceRegisterForProtocolReply (
-    char *			/* protocolName */,
-    char *			/* vendor */,
-    char *			/* release */,
+    const char *		/* protocolName */,
+    const char *		/* vendor */,
+    const char *		/* release */,
     int				/* versionCount */,
     IcePaVersionRec *		/* versionRecs */,
     int				/* authCount */,

@@ -1,4 +1,3 @@
-/* $Xorg: getauth.c,v 1.4 2001/02/09 02:03:26 xorgcvs Exp $ */
 /******************************************************************************
 
 
@@ -26,7 +25,6 @@ in this Software without prior written authorization from The Open Group.
 
 Author: Ralph Mor, X Consortium
 ******************************************************************************/
-/* $XFree86: xc/lib/ICE/getauth.c,v 1.2 2001/10/28 03:32:28 tsi Exp $ */
 
 #ifdef HAVE_CONFIG_H
 #include <config.h>
@@ -35,7 +33,7 @@ Author: Ralph Mor, X Consortium
 #include "ICElibint.h"
 
 static Bool auth_valid (const char *auth_name, int num_auth_names,
-			char **auth_names, int *index_ret);
+			const char **auth_names, int *index_ret);
 
 
 /*
@@ -57,9 +55,9 @@ static Bool auth_valid (const char *auth_name, int num_auth_names,
 
 void
 _IceGetPoAuthData (
-	char		*protocolName,
-	char		*networkId,
-	char		*authName,
+	const char	*protocolName,
+	const char	*networkId,
+	const char	*authName,
 	unsigned short	*authDataLenRet,
 	char		**authDataRet
 )
@@ -88,9 +86,9 @@ _IceGetPoAuthData (
 
 void
 _IceGetPaAuthData (
-	char		*protocolName,
-	char		*networkId,
-	char		*authName,
+	const char	*protocolName,
+	const char	*networkId,
+	const char	*authName,
 	unsigned short	*authDataLenRet,
 	char		**authDataRet
 )
@@ -127,12 +125,12 @@ _IceGetPaAuthData (
 
 void
 _IceGetPoValidAuthIndices (
-	char	*protocol_name,
-	char	*network_id,
-	int	num_auth_names,
-	char	**auth_names,
-	int	*num_indices_ret,
-	int	*indices_ret		/* in/out arg */
+	const char	*protocol_name,
+	const char	*network_id,
+	int		num_auth_names,
+	const char	**auth_names,
+	int		*num_indices_ret,
+	int		*indices_ret		/* in/out arg */
 )
 {
     FILE    		*auth_file;
@@ -186,12 +184,12 @@ _IceGetPoValidAuthIndices (
 
 void
 _IceGetPaValidAuthIndices (
-	char	*protocol_name,
-	char	*network_id,
-	int	num_auth_names,
-	char	**auth_names,
-	int	*num_indices_ret,
-	int	*indices_ret		/* in/out arg */
+	const char	*protocol_name,
+	const char	*network_id,
+	int		num_auth_names,
+	const char	**auth_names,
+	int		*num_indices_ret,
+	int		*indices_ret		/* in/out arg */
 )
 {
     int			index_ret;
@@ -234,7 +232,7 @@ _IceGetPaValidAuthIndices (
 
 static Bool
 auth_valid (const char *auth_name, int num_auth_names,
-	    char **auth_names, int *index_ret)
+	    const char **auth_names, int *index_ret)
 
 {
     /*
@@ -248,7 +246,7 @@ auth_valid (const char *auth_name, int num_auth_names,
 	{
 	    break;
 	}
-   
+
     if (i < num_auth_names)
     {
 	*index_ret = i;

@@ -1,16 +1,19 @@
-SUBDIRS = src
+SUBDIRS = doc specs src
 
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = ice.pc
 
-EXTRA_DIST=ice.pc.in ChangeLog
+MAINTAINERCLEANFILES = ChangeLog INSTALL
 
-.PHONY: ChangeLog
+.PHONY: ChangeLog INSTALL
+
+INSTALL:
+	$(INSTALL_CMD)
 
 ChangeLog:
 	$(CHANGELOG_CMD)
 
-dist-hook: ChangeLog
+dist-hook: ChangeLog INSTALL
 
 if LINT
 lint:

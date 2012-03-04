@@ -1,9 +1,9 @@
 libICE - Inter-Client Exchange Library
 
-Documentation for this API can be found in the ICElib document in the
-doc/xorg-docs module of the X.Org source code, or online at:
+Documentation for this API can be found in the doc directory of the source
+code, or online at:
 
-	http://xorg.freedesktop.org/releases/X11R7.0/doc/PDF/ICElib.pdf	
+	http://xorg.freedesktop.org/releases/X11R7.0/doc/PDF/ICElib.pdf
 
 All questions regarding this software should be directed at the
 Xorg mailing list:

@@ -1,4 +1,3 @@
-/* $Xorg: process.c,v 1.4 2001/02/09 02:03:26 xorgcvs Exp $ */
 /******************************************************************************
 
 
@@ -26,7 +25,6 @@ in this Software without prior written authorization from The Open Group.
 
 Author: Ralph Mor, X Consortium
 ******************************************************************************/
-/* $XFree86: xc/lib/ICE/process.c,v 3.9tsi Exp $ */
 
 #ifdef HAVE_CONFIG_H
 #include <config.h>
@@ -68,6 +66,51 @@ Author: Ralph Mor, X Consortium
     IceDisposeCompleteMessage (_iceConn, _pStart);\
     return (0);\
 }
+
+#ifndef HAVE_ASPRINTF
+# include <stdarg.h>
+
+/* sprintf variant found in newer libc's which allocates string to print to */
+static int _X_ATTRIBUTE_PRINTF(2,3)
+asprintf(char ** ret, const char *format, ...)
+{
+    char buf[256];
+    int len;
+    va_list ap;
+
+    va_start(ap, format);
+    len = vsnprintf(buf, sizeof(buf), format, ap);
+    va_end(ap);
+
+    if (len < 0)
+	return -1;
+
+    if (len < sizeof(buf))
+    {
+	*ret = strdup(buf);
+    }
+    else
+    {
+	*ret = malloc(len + 1); /* snprintf doesn't count trailing '\0' */
+	if (*ret != NULL)
+	{
+	    va_start(ap, format);
+	    len = vsnprintf(*ret, len + 1, format, ap);
+	    va_end(ap);
+	    if (len < 0) {
+		free(*ret);
+		*ret = NULL;
+	    }
+	}
+    }
+
+    if (*ret == NULL)
+	return -1;
+
+    return len;
+}
+#endif
+
 
 /*
  * IceProcessMessages:
@@ -261,7 +304,7 @@ IceProcessMessages (
 	 * to use message replies unless we translate opcodes before
 	 * comparing them.
 	 */
-	
+
 	{
 	    int op;
 
@@ -607,8 +650,8 @@ ProcessError (
 	    _IceConnectionError *errorReply =
 	        &(((_IceReply *) (replyWait->reply))->connection_error);
 	    char *errorStr = NULL;
-	    const char *tempstr;
-	    char *prefix, *temp;
+	    const char *tempstr, *prefix;
+	    char *temp;
 
 	    invokeHandler = 0;
 	    errorReturned = True;
@@ -634,9 +677,8 @@ ProcessError (
 		prefix = "Connection Setup Failed, reason : ";
 
 		EXTRACT_STRING (pData, swap, temp);
-		errorStr = (char *) malloc (
-		    strlen (prefix) + strlen (temp) + 1);
-		sprintf (errorStr, "%s%s", prefix, temp);
+		if (asprintf (&errorStr, "%s%s", prefix, temp) == -1)
+		    errorStr = NULL;
 		free (temp);
 		break;
 
@@ -644,9 +686,8 @@ ProcessError (
 
 		prefix = "Authentication Rejected, reason : ";
 		EXTRACT_STRING (pData, swap, temp);
-		errorStr = (char *) malloc (
-		    strlen (prefix) + strlen (temp) + 1);
-		sprintf (errorStr, "%s%s", prefix, temp);
+		if (asprintf (&errorStr, "%s%s", prefix, temp) == -1)
+		    errorStr = NULL;
 		free (temp);
 		break;
 
@@ -654,9 +695,8 @@ ProcessError (
 
 		prefix = "Authentication Failed, reason : ";
 		EXTRACT_STRING (pData, swap, temp);
-		errorStr = (char *) malloc (
-		    strlen (prefix) + strlen (temp) + 1);
-		sprintf (errorStr, "%s%s", prefix, temp);
+		if (asprintf (&errorStr, "%s%s", prefix, temp) == -1)
+		    errorStr = NULL;
 		free (temp);
 		break;
 
@@ -676,7 +716,8 @@ ProcessError (
 	    _IceProtocolError *errorReply =
 	        &(((_IceReply *) (replyWait->reply))->protocol_error);
 	    char *errorStr = "";
-	    char *prefix, *temp;
+	    const char *prefix;
+	    char *temp;
 
 	    invokeHandler = 0;
 	    errorReturned = True;
@@ -685,16 +726,15 @@ ProcessError (
 	    {
 	    case IceNoVersion:
 
-	        temp =
-		    "None of the protocol versions specified are supported";
-		errorStr = strdup(temp);
+		errorStr = strdup(
+		    "None of the protocol versions specified are supported");
 		break;
 
 	    case IceNoAuth:
 
-		temp =
-		    "None of the authentication protocols specified are supported";
-		errorStr = strdup(temp);
+		errorStr = strdup(
+		    "None of the authentication protocols specified are supported");
+
 		break;
 
 	    case IceSetupFailed:
@@ -702,9 +742,8 @@ ProcessError (
 		prefix = "Protocol Setup Failed, reason : ";
 
 		EXTRACT_STRING (pData, swap, temp);
-		errorStr = (char *) malloc (
-		    strlen (prefix) + strlen (temp) + 1);
-		sprintf (errorStr, "%s%s", prefix, temp);
+		if (asprintf (&errorStr, "%s%s", prefix, temp) == -1)
+		    errorStr = NULL;
 		free (temp);
 		break;
 
@@ -712,9 +751,8 @@ ProcessError (
 
 		prefix = "Authentication Rejected, reason : ";
 		EXTRACT_STRING (pData, swap, temp);
-		errorStr = (char *) malloc (
-		    strlen (prefix) + strlen (temp) + 1);
-		sprintf (errorStr, "%s%s", prefix, temp);
+		if (asprintf (&errorStr, "%s%s", prefix, temp) == -1)
+		    errorStr = NULL;
 		free (temp);
 		break;
 
@@ -722,9 +760,8 @@ ProcessError (
 
 		prefix = "Authentication Failed, reason : ";
 		EXTRACT_STRING (pData, swap, temp);
-		errorStr = (char *) malloc (
-		    strlen (prefix) + strlen (temp) + 1);
-		sprintf (errorStr, "%s%s", prefix, temp);
+		if (asprintf (&errorStr, "%s%s", prefix, temp) == -1)
+		    errorStr = NULL;
 		free (temp);
 		break;
 
@@ -732,26 +769,24 @@ ProcessError (
 
 		prefix = "Protocol was already registered : ";
 		EXTRACT_STRING (pData, swap, temp);
-		errorStr = (char *) malloc (
-		    strlen (prefix) + strlen (temp) + 1);
-		sprintf (errorStr, "%s%s", prefix, temp);
+		if (asprintf (&errorStr, "%s%s", prefix, temp) == -1)
+		    errorStr = NULL;
 		free (temp);
 		break;
 
 	    case IceMajorOpcodeDuplicate:
 
 		prefix = "The major opcode was already used : ";
-		errorStr = (char *) malloc (strlen (prefix) + 2);
-		sprintf (errorStr, "%s%d", prefix, (int) *pData);
+		if (asprintf (&errorStr, "%s%d", prefix, (int) *pData) == -1)
+		    errorStr = NULL;
 		break;
 
 	    case IceUnknownProtocol:
 
 		prefix = "Unknown Protocol : ";
 		EXTRACT_STRING (pData, swap, temp);
-		errorStr = (char *) malloc (
-		    strlen (prefix) + strlen (temp) + 1);
-		sprintf (errorStr, "%s%s", prefix, temp);
+		if (asprintf (&errorStr, "%s%s", prefix, temp) == -1)
+		    errorStr = NULL;
 		free (temp);
 		break;
 
@@ -826,7 +861,7 @@ ProcessConnectionSetup (
     int  hisMajorVersion, hisMinorVersion;
     int	 myAuthCount, hisAuthCount;
     int	 found, i, j;
-    char *myAuthName, **hisAuthNames = NULL;
+    char **hisAuthNames = NULL;
     char *pData, *pStart, *pEnd;
     char *vendor = NULL;
     char *release = NULL;
@@ -852,17 +887,17 @@ ProcessConnectionSetup (
 
     pData = pStart;
     pEnd = pStart + (length << 3);
-    
-    SKIP_STRING (pData, swap, pEnd, 
+
+    SKIP_STRING (pData, swap, pEnd,
 		 BAIL_STRING(iceConn, ICE_ConnectionSetup,
 			     pStart));			       /* vendor */
-    SKIP_STRING (pData, swap, pEnd, 
+    SKIP_STRING (pData, swap, pEnd,
 		 BAIL_STRING(iceConn, ICE_ConnectionSetup,
 			    pStart));	        	       /* release */
-    SKIP_LISTOF_STRING (pData, swap, (int) message->authCount, pEnd, 
+    SKIP_LISTOF_STRING (pData, swap, (int) message->authCount, pEnd,
 			BAIL_STRING(iceConn, ICE_ConnectionSetup,
 				   pStart));		       /* auth names */
-    
+
     pData += (message->versionCount * 4);		       /* versions */
 
     CHECK_COMPLETE_SIZE (iceConn, ICE_ConnectionSetup,
@@ -924,7 +959,7 @@ ProcessConnectionSetup (
 	{
 	    for (i = 0; i < hisAuthCount; i++)
 		free (hisAuthNames[i]);
-	
+
 	    free ((char *) hisAuthNames);
 	}
 
@@ -948,7 +983,7 @@ ProcessConnectionSetup (
     {
 	if (authUsableFlags[i])
 	{
-	    myAuthName = _IceAuthNames[i];
+	    const char *myAuthName = _IceAuthNames[i];
 
 	    for (j = 0; j < hisAuthCount && !found; j++)
 		if (strcmp (myAuthName, hisAuthNames[j]) == 0)
@@ -983,7 +1018,7 @@ ProcessConnectionSetup (
 	    {
 		accept_setup_now = 1;
 	    }
-	    else 
+	    else
 	    {
 		_IceErrorAuthenticationRejected (iceConn,
 	            ICE_ConnectionSetup, "None of the authentication protocols specified are supported and host-based authentication failed");
@@ -1036,6 +1071,11 @@ ProcessConnectionSetup (
 	{
 	    accept_setup_now = 1;
 	}
+	else
+	{
+	    free (vendor);
+	    free (release);
+	}
 
 	if (authData && authDataLen > 0)
 	    free ((char *) authData);
@@ -1043,7 +1083,7 @@ ProcessConnectionSetup (
 	if (errorString)
 	    free (errorString);
     }
-    
+
     if (accept_setup_now)
     {
 	AcceptConnection (iceConn, hisVersionIndex);
@@ -1057,7 +1097,7 @@ ProcessConnectionSetup (
     {
 	for (i = 0; i < hisAuthCount; i++)
 	    free (hisAuthNames[i]);
-	
+
 	free ((char *) hisAuthNames);
     }
 
@@ -1211,7 +1251,8 @@ ProcessAuthRequired (
     }
     else if (status == IcePoAuthRejected || status == IcePoAuthFailed)
     {
-	char *prefix, *returnErrorString;
+	const char *prefix;
+	char *returnErrorString;
 
 	if (status == IcePoAuthRejected)
 	{
@@ -1228,11 +1269,10 @@ ProcessAuthRequired (
 	    prefix = "Authentication Failed, reason : ";
 	}
 
-	returnErrorString = (char *) malloc (strlen (prefix) +
-	    strlen (errorString) + 1);
-	sprintf (returnErrorString, "%s%s", prefix, errorString);
+	if (asprintf (&returnErrorString, "%s%s", prefix, errorString) == -1)
+	    returnErrorString = NULL;
 	free (errorString);
-	
+
 	if (iceConn->connect_to_you)
 	{
 	    _IceConnectionError *errorReply =
@@ -1638,7 +1678,8 @@ ProcessAuthNextPhase (
     }
     else if (status == IcePoAuthRejected || status == IcePoAuthFailed)
     {
-	char *prefix = NULL, *returnErrorString;
+	const char *prefix = NULL;
+	char *returnErrorString;
 
 	if (status == IcePoAuthRejected)
 	{
@@ -1655,9 +1696,8 @@ ProcessAuthNextPhase (
 	    prefix = "Authentication Failed, reason : ";
 	}
 
-	returnErrorString = (char *) malloc (strlen (prefix) +
-	    strlen (errorString) + 1);
-	sprintf (returnErrorString, "%s%s", prefix, errorString);
+	if (asprintf (&returnErrorString, "%s%s", prefix, errorString) == -1)
+	    returnErrorString = NULL;
 	free (errorString);
 
 	if (iceConn->connect_to_you)
@@ -1754,7 +1794,7 @@ ProcessConnectionReply (
 
 	    _IceErrorBadValue (iceConn, 0,
 		ICE_ConnectionReply, 2, 1, &errIndex);
-	    
+
 	    errorReply->type = ICE_CONNECTION_ERROR;
 	    errorReply->error_message =
 		"Received bad version index in Connection Reply";
@@ -1805,7 +1845,7 @@ ProcessProtocolSetup (
     int	 	      	myAuthCount, hisAuthCount;
     int  	      	myOpcode, hisOpcode;
     int	 	      	found, i, j;
-    char	      	*myAuthName, **hisAuthNames = NULL;
+    char	      	**hisAuthNames = NULL;
     char 	      	*protocolName;
     char 		*pData, *pStart, *pEnd;
     char 	      	*vendor = NULL;
@@ -1845,16 +1885,16 @@ ProcessProtocolSetup (
     pEnd = pStart + (length << 3);
 
     SKIP_STRING (pData, swap, pEnd,
-		 BAIL_STRING(iceConn, ICE_ProtocolSetup, 
+		 BAIL_STRING(iceConn, ICE_ProtocolSetup,
 			     pStart));			       /* proto name */
     SKIP_STRING (pData, swap, pEnd,
-		 BAIL_STRING(iceConn, ICE_ProtocolSetup, 
+		 BAIL_STRING(iceConn, ICE_ProtocolSetup,
 			     pStart));			       /* vendor */
     SKIP_STRING (pData, swap, pEnd,
-		 BAIL_STRING(iceConn, ICE_ProtocolSetup, 
+		 BAIL_STRING(iceConn, ICE_ProtocolSetup,
 			     pStart));			       /* release */
     SKIP_LISTOF_STRING (pData, swap, (int) message->authCount, pEnd,
-			BAIL_STRING(iceConn, ICE_ProtocolSetup, 
+			BAIL_STRING(iceConn, ICE_ProtocolSetup,
 				    pStart));		       /* auth names */
     pData += (message->versionCount * 4);		       /* versions */
 
@@ -1964,7 +2004,7 @@ ProcessProtocolSetup (
 	{
 	    for (i = 0; i < hisAuthCount; i++)
 		free (hisAuthNames[i]);
-	
+
 	    free ((char *) hisAuthNames);
 	}
 
@@ -1976,7 +2016,8 @@ ProcessProtocolSetup (
 
     _IceGetPaValidAuthIndices (
 	_IceProtocols[myOpcode - 1].protocol_name,
-	iceConn->connection_string, myAuthCount, myProtocol->auth_names,
+	iceConn->connection_string, myAuthCount,
+	(const char **) myProtocol->auth_names,
         &authUsableCount, authIndices);
 
     for (i = 0; i < myAuthCount; i++)
@@ -1990,7 +2031,7 @@ ProcessProtocolSetup (
     {
 	if (authUsableFlags[i])
 	{
-	    myAuthName = myProtocol->auth_names[i];
+	    const char *myAuthName = myProtocol->auth_names[i];
 
 	    for (j = 0; j < hisAuthCount && !found; j++)
 		if (strcmp (myAuthName, hisAuthNames[j]) == 0)
@@ -2024,7 +2065,7 @@ ProcessProtocolSetup (
 	    {
 		accept_setup_now = 1;
 	    }
-	    else 
+	    else
 	    {
 		_IceErrorAuthenticationRejected (iceConn,
 	            ICE_ProtocolSetup, "None of the authentication protocols specified are supported and host-based authentication failed");
@@ -2054,7 +2095,7 @@ ProcessProtocolSetup (
 	    _IceProtoSetupToMeInfo *setupInfo;
 
 	    AuthRequired (iceConn, hisAuthIndex, authDataLen, authData);
-	 
+
 	    iceConn->protosetup_to_me = setupInfo =
 		(_IceProtoSetupToMeInfo *) malloc (
 		sizeof (_IceProtoSetupToMeInfo));
@@ -2243,17 +2284,7 @@ ProcessProtocolReply (
 	    IcePoAuthProc authProc = myProtocol->auth_procs[(int)
 		(iceConn->protosetup_to_you->my_auth_index)];
 
-#ifdef SVR4
-
-/*
- * authProc is never NULL, but the cc compiler on UNIX System V/386
- * Release 4.2 Version 1 screws up an optimization.  Unless there is
- * some sort of reference to authProc before the function call, the
- * function call will seg fault.
- */
-	    if (authProc)
-#endif
-		(*authProc) (iceConn,
+	    (*authProc) (iceConn,
 		&iceConn->protosetup_to_you->my_auth_state,
 		True /* clean up */, False /* swap */,
 	        0, NULL, NULL, NULL, NULL);
@@ -2267,14 +2298,14 @@ ProcessProtocolReply (
 
 	    _IceErrorBadValue (iceConn, 0,
 		ICE_ProtocolReply, 2, 1, &errIndex);
-	    
+
 	    errorReply->type = ICE_PROTOCOL_ERROR;
 	    errorReply->error_message =
 		"Received bad version index in Protocol Reply";
 	}
 	else
 	{
-	    _IceProtocolReply *reply = 
+	    _IceProtocolReply *reply =
 	        &(((_IceReply *) (replyWait->reply))->protocol_reply);
 
 	    reply->type = ICE_PROTOCOL_REPLY;
@@ -2329,7 +2360,7 @@ ProcessPingReply (
     if (iceConn->ping_waits)
     {
 	_IcePingWait *next = iceConn->ping_waits->next;
-	
+
 	(*iceConn->ping_waits->ping_reply_proc) (iceConn,
 	    iceConn->ping_waits->client_data);
 

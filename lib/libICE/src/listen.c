@@ -1,4 +1,3 @@
-/* $Xorg: listen.c,v 1.5 2001/02/09 02:03:26 xorgcvs Exp $ */
 /******************************************************************************
 
 
@@ -76,13 +75,15 @@ IceListenForConnections (
 
     for (i = 0; i < transCount; i++)
     {
+	_IceTransSetOption(transConns[i], TRANS_CLOSEONEXEC, 1);
+
 	networkId = _IceTransGetMyNetworkId (transConns[i]);
 
 	if (networkId)
 	{
 	    listenObjs[*countRet].trans_conn = transConns[i];
 	    listenObjs[*countRet].network_id = networkId;
-		
+
 	    (*countRet)++;
 	}
     }
@@ -139,7 +140,7 @@ IceListenForConnections (
     {
 	if (errorStringRet && errorLength > 0)
 	    *errorStringRet = '\0';
-	
+
 	for (i = 0; i < *countRet; i++)
 	{
 	    (*listenObjsRet)[i]->host_based_auth_proc = NULL;

@@ -1,4 +1,3 @@
-/* $Xorg: ICEutil.h,v 1.5 2001/02/09 02:03:26 xorgcvs Exp $ */
 /******************************************************************************
 
 
@@ -26,7 +25,6 @@ in this Software without prior written authorization from The Open Group.
 
 Author: Ralph Mor, X Consortium
 ******************************************************************************/
-/* $XFree86: xc/lib/ICE/ICEutil.h,v 1.4 2001/12/20 19:40:59 tsi Exp $ */
 
 #ifndef _ICEUTIL_H_
 #define _ICEUTIL_H_
@@ -107,9 +105,9 @@ extern Status IceWriteAuthFileEntry (
 );
 
 extern IceAuthFileEntry *IceGetAuthFileEntry (
-    char *		/* protocol_name */,
-    char *		/* network_id */,
-    char *		/* auth_name */
+    const char *	/* protocol_name */,
+    const char *	/* network_id */,
+    const char *	/* auth_name */
 );
 
 extern char *IceGenerateMagicCookie (

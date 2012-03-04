@@ -1,4 +1,3 @@
-/* $Xorg: register.c,v 1.4 2001/02/09 02:03:26 xorgcvs Exp $ */
 /******************************************************************************
 
 
@@ -35,9 +34,9 @@ Author: Ralph Mor, X Consortium
 
 int
 IceRegisterForProtocolSetup (
-	char			*protocolName,
-	char			*vendor,
-	char			*release,
+	const char		*protocolName,
+	const char		*vendor,
+	const char		*release,
 	int			versionCount,
 	IcePoVersionRec		*versionRecs,
 	int			authCount,
@@ -57,7 +56,7 @@ IceRegisterForProtocolSetup (
 		/*
 		 * We've already registered this protocol.
 		 */
-		
+
 		return (i);
 	    }
 	    else
@@ -65,7 +64,7 @@ IceRegisterForProtocolSetup (
 		break;
 	    }
 	}
-	    
+
     if (i <= _IceLastMajorOpcode)
     {
 	p = _IceProtocols[i - 1].orig_client =
@@ -132,9 +131,9 @@ IceRegisterForProtocolSetup (
 
 int
 IceRegisterForProtocolReply (
-	char				*protocolName,
-	char				*vendor,
-	char				*release,
+	const char			*protocolName,
+	const char			*vendor,
+	const char			*release,
 	int				versionCount,
 	IcePaVersionRec			*versionRecs,
 	int				authCount,
@@ -157,7 +156,7 @@ IceRegisterForProtocolReply (
 		/*
 		 * We've already registered this protocol.
 		 */
-		
+
 		return (i);
 	    }
 	    else
@@ -165,7 +164,7 @@ IceRegisterForProtocolReply (
 		break;
 	    }
 	}
-	    
+
 
     if (i <= _IceLastMajorOpcode)
     {

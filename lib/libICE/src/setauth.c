@@ -1,4 +1,3 @@
-/* $Xorg: setauth.c,v 1.4 2001/02/09 02:03:26 xorgcvs Exp $ */
 /******************************************************************************
 
 
@@ -26,7 +25,6 @@ in this Software without prior written authorization from The Open Group.
 
 Author: Ralph Mor, X Consortium
 ******************************************************************************/
-/* $XFree86: xc/lib/ICE/setauth.c,v 1.4 2001/12/14 19:53:36 dawes Exp $ */
 
 #ifdef HAVE_CONFIG_H
 #include <config.h>

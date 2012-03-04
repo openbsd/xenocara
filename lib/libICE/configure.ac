@@ -1,55 +1,53 @@
-#                                               -*- Autoconf -*-
-# Process this file with autoconf to produce a configure script.
 
-AC_PREREQ(2.57)
-AC_INIT([libICE],
-        1.0.6,
-        [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],
-        libICE)
-
+# Initialize Autoconf
+AC_PREREQ([2.60])
+AC_INIT([libICE], [1.0.8],
+        [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg], [libICE])
 AC_CONFIG_SRCDIR([Makefile.am])
-AM_INIT_AUTOMAKE([dist-bzip2])
+AC_CONFIG_HEADERS([config.h])
 
+# Set common system defines for POSIX extensions, such as _GNU_SOURCE
+# Must be called before any macros that run the compiler (like
+# AC_PROG_LIBTOOL or XORG_DEFAULT_OPTIONS) to avoid autoconf errors.
+AC_USE_SYSTEM_EXTENSIONS
+
+# Initialize Automake
+AM_INIT_AUTOMAKE([foreign dist-bzip2])
 AM_MAINTAINER_MODE
 
-# Require xorg-macros at least 1.2.1
-XORG_MACROS_VERSION([1.2.1])
-m4_ifndef([XORG_MACROS_VERSION],
-	[AC_FATAL([must install xorg-macros 1.2.1 or later before running autoconf/autogen])])
-AM_CONFIG_HEADER([config.h])
-
-# Checks for programs.
+# Initialize libtool
 AC_PROG_LIBTOOL
-AC_PROG_CC
-XORG_CWARNFLAGS
 
-# Checks for pkg-config packages
-PKG_CHECK_MODULES(ICE, xproto)
-ICE_CFLAGS="$CWARNFLAGS $ICE_CFLAGS"
-AC_SUBST(ICE_CFLAGS)
-AC_SUBST(ICE_LIBS)
+# Require xorg-macros minimum of 1.12 for DocBook external references
+m4_ifndef([XORG_MACROS_VERSION],
+          [m4_fatal([must install xorg-macros 1.12 or later before running autoconf/autogen])])
+XORG_MACROS_VERSION(1.12)
+XORG_DEFAULT_OPTIONS
+XORG_ENABLE_DOCS
+XORG_ENABLE_SPECS
+XORG_WITH_XMLTO(0.0.22)
+XORG_WITH_FOP
+XORG_WITH_XSLTPROC
+XORG_CHECK_SGML_DOCTOOLS(1.8)
 
-PKG_CHECK_MODULES(XTRANS, xtrans)
-AC_SUBST(XTRANS_CFLAGS)
-AC_SUBST(XTRANS_LIBS)
+# Obtain compiler/linker options for depedencies
+PKG_CHECK_MODULES(ICE, xproto xtrans)
 
 # Transport selection macro from xtrans.m4
 XTRANS_CONNECTION_FLAGS
 AC_DEFINE(ICE_t, 1, [Xtrans transport type])
 
-# Checks for libraries.
+# Checks for library functions.
+AC_CHECK_FUNCS([asprintf])
 
-# Checks for header files.
-AC_HEADER_STDC
-
-dnl Allow checking code with lint, sparse, etc.
+# Allow checking code with lint, sparse, etc.
 XORG_WITH_LINT
 XORG_LINT_LIBRARY([ICE])
 LINT_FLAGS="${LINT_FLAGS} ${ICE_CFLAGS} ${XTRANS_CFLAGS}"
 
-XORG_RELEASE_VERSION
-XORG_CHANGELOG
-
-AC_OUTPUT([Makefile
-	   src/Makefile
-	   ice.pc])
+AC_CONFIG_FILES([Makefile
+		doc/Makefile
+		specs/Makefile
+		src/Makefile
+		ice.pc])
+AC_OUTPUT

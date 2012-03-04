@@ -1,4 +1,3 @@
-/* $Xorg: ICEconn.h,v 1.5 2001/02/09 02:03:26 xorgcvs Exp $ */
 /******************************************************************************
 
 
@@ -33,7 +32,7 @@ Author: Ralph Mor, X Consortium
 #include <X11/ICE/ICElib.h>
 
 /*
- * Data structures for ICE connection object 
+ * Data structures for ICE connection object
  */
 
 typedef struct _IceSavedReplyWait {

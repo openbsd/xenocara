@@ -1,4 +1,3 @@
-/* $Xorg: shutdown.c,v 1.4 2001/02/09 02:03:26 xorgcvs Exp $ */
 /******************************************************************************
 
 
@@ -26,7 +25,6 @@ in this Software without prior written authorization from The Open Group.
 
 Author: Ralph Mor, X Consortium
 ******************************************************************************/
-/* $XFree86: xc/lib/ICE/shutdown.c,v 3.3 2001/08/01 00:44:37 tsi Exp $ */
 
 #ifdef HAVE_CONFIG_H
 #include <config.h>
@@ -147,7 +145,7 @@ IceCloseConnection (
     IO	       free-      dispatch   protocol   shutdown
     error      asap bit   level      refcount   negotiation     ACTION
     occured    set        reached 0  reached 0
-    
+
         0          0          0          0          0		N
         0          0          0          0          1		N
         0          0          0          1          0		AB

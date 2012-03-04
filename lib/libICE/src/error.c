@@ -1,5 +1,3 @@
-/* $XdotOrg: $ */
-/* $Xorg: error.c,v 1.4 2001/02/09 02:03:26 xorgcvs Exp $ */
 /******************************************************************************
 
 
@@ -27,7 +25,6 @@ in this Software without prior written authorization from The Open Group.
 
 Author: Ralph Mor, X Consortium
 ******************************************************************************/
-/* $XFree86: xc/lib/ICE/error.c,v 1.5 2001/10/28 03:32:28 tsi Exp $ */
 
 #ifdef HAVE_CONFIG_H
 #include <config.h>
@@ -119,7 +116,7 @@ _IceErrorBadValue (
 
     if (PAD64 (length))
 	IceWritePad (iceConn, PAD64 (length));
-    
+
     IceFlush (iceConn);
 }
 
@@ -168,7 +165,7 @@ void
 _IceErrorSetupFailed (
 	IceConn	iceConn,
 	int	offendingMinor,
-	char	*reason
+	const char	*reason
 )
 {
     char *pBuf, *pStart;
@@ -199,7 +196,7 @@ void
 _IceErrorAuthenticationRejected (
 	IceConn	iceConn,
 	int	offendingMinor,
-	char	*reason
+	const char	*reason
 )
 {
     char *pBuf, *pStart;
@@ -228,7 +225,7 @@ void
 _IceErrorAuthenticationFailed (
 	IceConn	iceConn,
 	int	offendingMinor,
-	char	*reason
+	const char	*reason
 )
 {
     char *pBuf, *pStart;
@@ -256,7 +253,7 @@ _IceErrorAuthenticationFailed (
 void
 _IceErrorProtocolDuplicate (
 	IceConn	iceConn,
-	char	*protocolName
+	const char	*protocolName
 )
 {
     char *pBuf, *pStart;
@@ -287,7 +284,7 @@ _IceErrorMajorOpcodeDuplicate (
 	int	majorOpcode
 )
 {
-    char mOp = (char) majorOpcode;
+    char mOp[8] = { (char) majorOpcode };
 
     IceErrorHeader (iceConn,
 	0, ICE_ProtocolSetup,
@@ -296,7 +293,7 @@ _IceErrorMajorOpcodeDuplicate (
 	IceMajorOpcodeDuplicate,
 	1 /* length */);
 
-    IceWriteData (iceConn, 8, &mOp);
+    IceWriteData (iceConn, 8, mOp);
     IceFlush (iceConn);
 }
 
@@ -304,7 +301,7 @@ _IceErrorMajorOpcodeDuplicate (
 void
 _IceErrorUnknownProtocol (
 	IceConn	iceConn,
-	char	*protocolName
+	const char	*protocolName
 )
 {
     char *pBuf, *pStart;
@@ -337,7 +334,7 @@ _IceErrorBadMajor (
 	int	severity
 )
 {
-    char maj = (char) offendingMajor;
+    char maj[8] = { (char) offendingMajor };
 
     IceErrorHeader (iceConn,
 	0, offendingMinor,
@@ -346,7 +343,7 @@ _IceErrorBadMajor (
 	IceBadMajor,
 	1 /* length */);
 
-    IceWriteData (iceConn, 8, &maj);
+    IceWriteData (iceConn, 8, maj);
     IceFlush (iceConn);
 }
 
@@ -367,7 +364,8 @@ _IceDefaultErrorHandler (
 	IcePointer	values
 )
 {
-    char *str;
+    const char *str;
+    char *estr;
     char *pData = (char *) values;
 
     switch (offendingMinorOpcode)
@@ -515,42 +513,42 @@ _IceDefaultErrorHandler (
 
         case IceSetupFailed:
 
-	    EXTRACT_STRING (pData, swap, str);
-	    fprintf (stderr, "Reason : %s\n", str);
-	    free(str);
+            EXTRACT_STRING (pData, swap, estr);
+            fprintf (stderr, "Reason : %s\n", estr);
+            free(estr);
             break;
 
         case IceAuthRejected:
 
-	    EXTRACT_STRING (pData, swap, str);
-	    fprintf (stderr, "Reason : %s\n", str);
-	    free(str);
+            EXTRACT_STRING (pData, swap, estr);
+            fprintf (stderr, "Reason : %s\n", estr);
+            free(estr);
             break;
 
         case IceAuthFailed:
 
-	    EXTRACT_STRING (pData, swap, str);
-	    fprintf (stderr, "Reason : %s\n", str);
-	    free(str);
+            EXTRACT_STRING (pData, swap, estr);
+            fprintf (stderr, "Reason : %s\n", estr);
+            free(estr);
             break;
 
         case IceProtocolDuplicate:
 
-	    EXTRACT_STRING (pData, swap, str);
-	    fprintf (stderr, "Protocol name : %s\n", str);
-	    free(str);
+            EXTRACT_STRING (pData, swap, estr);
+            fprintf (stderr, "Protocol name : %s\n", estr);
+            free(estr);
             break;
 
         case IceMajorOpcodeDuplicate:
 
-	    fprintf (stderr, "Major opcode : %d\n", (int) *pData);
+            fprintf (stderr, "Major opcode : %d\n", (int) *pData);
             break;
 
         case IceUnknownProtocol:
 
-	    EXTRACT_STRING (pData, swap, str);
-	    fprintf (stderr, "Protocol name : %s\n", str);
-	    free(str);
+            EXTRACT_STRING (pData, swap, estr);
+            fprintf (stderr, "Protocol name : %s\n", estr);
+            free(estr);
             break;
 
 	default:
@@ -566,12 +564,12 @@ _IceDefaultErrorHandler (
 IceErrorHandler   _IceErrorHandler   = _IceDefaultErrorHandler;
 
 
-/* 
+/*
  * This procedure sets the ICE error handler to be the specified
  * routine.  If NULL is passed in the default error handler is restored.
  * The function's return value is the previous error handler.
  */
- 
+
 IceErrorHandler
 IceSetErrorHandler (
 	IceErrorHandler handler
@@ -608,13 +606,13 @@ _IceDefaultIOErrorHandler (
 IceIOErrorHandler _IceIOErrorHandler = _IceDefaultIOErrorHandler;
 
 
-/* 
+/*
  * This procedure sets the ICE fatal I/O error handler to be the
  * specified routine.  If NULL is passed in the default error
  * handler is restored.   The function's return value is the
  * previous error handler.
  */
- 
+
 IceIOErrorHandler
 IceSetIOErrorHandler (
 	IceIOErrorHandler handler

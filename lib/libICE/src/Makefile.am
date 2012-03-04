@@ -1,11 +1,15 @@
 lib_LTLIBRARIES=libICE.la
 
-AM_CFLAGS= -I${top_srcdir}/include $(ICE_CFLAGS) $(XTRANS_CFLAGS) \
+AM_CPPFLAGS = -I${top_srcdir}/include
+
+AM_CFLAGS = \
+	$(ICE_CFLAGS) \
+	$(CWARNFLAGS) \
 	-DICE_t -DTRANS_CLIENT -DTRANS_SERVER
 
 libICE_la_LDFLAGS = -version-number 6:3:0 -no-undefined
 
-libICE_la_LIBADD = $(ICE_LIBS) $(XTRANS_LIBS)
+libICE_la_LIBADD = $(ICE_LIBS)
 
 libICE_la_SOURCES = \
 	ICElibint.h \

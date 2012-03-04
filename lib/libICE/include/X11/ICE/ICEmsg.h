@@ -1,4 +1,3 @@
-/* $Xorg: ICEmsg.h,v 1.4 2001/02/09 02:03:26 xorgcvs Exp $ */
 /******************************************************************************
 
 
@@ -26,7 +25,6 @@ in this Software without prior written authorization from The Open Group.
 
 Author: Ralph Mor, X Consortium
 ******************************************************************************/
-/* $XFree86: xc/lib/ICE/ICEmsg.h,v 1.4 2001/12/20 19:40:59 tsi Exp $ */
 
 #ifndef _ICEMSG_H_
 #define _ICEMSG_H_
@@ -219,15 +217,15 @@ extern IcePaAuthStatus _IcePaMagicCookie1Proc (
 
 /*
  * Write pad bytes.  Used to force 32 or 64 bit alignment.
- * A maxium of 7 pad bytes can be specified.
+ * A maximum of 7 pad bytes can be specified.
  */
 
 #define IceWritePad(_iceConn, _bytes) \
 { \
     if ((_iceConn->outbufptr + (_bytes)) > _iceConn->outbufmax) \
     { \
-        char _dummy[7]; \
-	IceFlush (_iceConn); \
+        char _dummy[7] = { 0 }; \
+        IceFlush (_iceConn); \
         _IceWrite (_iceConn, (unsigned long) (_bytes), _dummy); \
     } \
     else \
