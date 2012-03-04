@@ -277,7 +277,7 @@ void RADEONInitVideo(ScreenPtr pScreen)
 
 
     num_adaptors = xf86XVListGenericAdaptors(pScrn, &adaptors);
-    newAdaptors = xalloc((num_adaptors + 2) * sizeof(XF86VideoAdaptorPtr *));
+    newAdaptors = malloc((num_adaptors + 2) * sizeof(XF86VideoAdaptorPtr *));
     if (newAdaptors == NULL)
 	return;
 
@@ -312,7 +312,7 @@ void RADEONInitVideo(ScreenPtr pScreen)
 	xf86XVScreenInit(pScreen, adaptors, num_adaptors);
 
     if(newAdaptors)
-	xfree(newAdaptors);
+	free(newAdaptors);
 
 }
 
@@ -1413,7 +1413,7 @@ static void RADEONSetupTheatre(ScrnInfoPtr pScrn, RADEONPortPrivPtr pPriv)
                         xf86DrvMsg(pScrn->scrnIndex, X_INFO,
                                 "Unsupported reference clock frequency, Rage Theatre disabled\n");
                         t->theatre_num=-1;
-			xfree(pPriv->theatre);
+			free(pPriv->theatre);
 			pPriv->theatre = NULL;
 			return;
                 }
@@ -1432,9 +1432,9 @@ RADEONAllocAdaptor(ScrnInfoPtr pScrn)
     if(!(adapt = xf86XVAllocateVideoAdaptorRec(pScrn)))
 	return NULL;
 
-    if(!(pPriv = xcalloc(1, sizeof(RADEONPortPrivRec) + sizeof(DevUnion))))
+    if(!(pPriv = calloc(1, sizeof(RADEONPortPrivRec) + sizeof(DevUnion))))
     {
-	xfree(adapt);
+	free(adapt);
 	return NULL;
     }
 
@@ -1545,7 +1545,7 @@ RADEONAllocAdaptor(ScrnInfoPtr pScrn)
 				if(!xf86LoadSubModule(pScrn,"theatre")) 
 				{
 					xf86DrvMsg(pScrn->scrnIndex,X_ERROR,"Unable to load Rage Theatre module\n");
-					xfree(pPriv->theatre);
+					free(pPriv->theatre);
 					goto skip_theatre;
 				}
 				break;
@@ -1555,7 +1555,7 @@ RADEONAllocAdaptor(ScrnInfoPtr pScrn)
 				if(!xf86LoadSubModule(pScrn,"theatre200")) 
 				{
 					xf86DrvMsg(pScrn->scrnIndex,X_ERROR,"Unable to load Rage Theatre module\n");
-					xfree(pPriv->theatre);
+					free(pPriv->theatre);
 					goto skip_theatre;
 				}
 				pPriv->theatre->microc_path = info->RageTheatreMicrocPath;
@@ -1565,7 +1565,7 @@ RADEONAllocAdaptor(ScrnInfoPtr pScrn)
 			default:
 			{
 				xf86DrvMsg(pScrn->scrnIndex,X_ERROR,"Unknown Theatre chip\n");
-				xfree(pPriv->theatre);
+				free(pPriv->theatre);
 				goto skip_theatre;
 			}
 		}
@@ -1576,7 +1576,7 @@ RADEONAllocAdaptor(ScrnInfoPtr pScrn)
 		xf86_InitTheatre(pPriv->theatre);
 		if(pPriv->theatre->mode == MODE_UNINITIALIZED)
 		{
-			Xfree(pPriv->theatre);
+			free(pPriv->theatre);
 			pPriv->theatre = NULL;
 			xf86DrvMsg(pScrn->scrnIndex,X_INFO,"Rage Theatre disabled\n");
 			/* Here the modules must be unloaded */
@@ -3199,18 +3199,18 @@ RADEONAllocateSurface(
     surface->width = w;
     surface->height = h;
 
-    if(!(surface->pitches = xalloc(sizeof(int)))) {
+    if(!(surface->pitches = malloc(sizeof(int)))) {
 	radeon_legacy_free_memory(pScrn, surface_memory);
 	return BadAlloc;
     }
-    if(!(surface->offsets = xalloc(sizeof(int)))) {
-	xfree(surface->pitches);
+    if(!(surface->offsets = malloc(sizeof(int)))) {
+	free(surface->pitches);
 	radeon_legacy_free_memory(pScrn, surface_memory);
 	return BadAlloc;
     }
-    if(!(pPriv = xalloc(sizeof(OffscreenPrivRec)))) {
-	xfree(surface->pitches);
-	xfree(surface->offsets);
+    if(!(pPriv = malloc(sizeof(OffscreenPrivRec)))) {
+	free(surface->pitches);
+	free(surface->offsets);
 	radeon_legacy_free_memory(pScrn, surface_memory);
 	return BadAlloc;
     }
@@ -3254,9 +3254,9 @@ RADEONFreeSurface(
 	RADEONStopSurface(surface);
     radeon_legacy_free_memory(pScrn, pPriv->surface_memory);
     pPriv->surface_memory = NULL;
-    xfree(surface->pitches);
-    xfree(surface->offsets);
-    xfree(surface->devPrivate.ptr);
+    free(surface->pitches);
+    free(surface->offsets);
+    free(surface->devPrivate.ptr);
 
     return Success;
 }
@@ -3371,7 +3371,7 @@ RADEONInitOffscreenImages(ScreenPtr pScreen)
     XF86OffscreenImagePtr offscreenImages;
     /* need to free this someplace */
 
-    if (!(offscreenImages = xalloc(sizeof(XF86OffscreenImageRec))))
+    if (!(offscreenImages = malloc(sizeof(XF86OffscreenImageRec))))
 	return;
 
     offscreenImages[0].image = &Images[0];

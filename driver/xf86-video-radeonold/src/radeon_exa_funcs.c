@@ -547,7 +547,7 @@ Bool FUNC_NAME(RADEONDrawInit)(ScreenPtr pScreen)
     RADEONEngineInit(pScrn);
 
     if (!exaDriverInit(pScreen, info->accel_state->exa)) {
-	xfree(info->accel_state->exa);
+	free(info->accel_state->exa);
 	return FALSE;
     }
     exaMarkSync(pScreen);

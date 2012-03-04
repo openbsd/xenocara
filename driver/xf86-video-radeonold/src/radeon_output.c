@@ -1053,7 +1053,7 @@ static void
 radeon_destroy (xf86OutputPtr output)
 {
     if (output->driver_private)
-        xfree(output->driver_private);
+        free(output->driver_private);
 }
 
 static void

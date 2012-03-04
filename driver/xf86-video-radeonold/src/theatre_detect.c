@@ -22,6 +22,10 @@
  * authorization from the author.
  *
  * $Log: theatre_detect.c,v $
+ * Revision 1.2  2012/03/04 15:44:48  matthieu
+ * Replace Xalloc/Xfree with malloc/free.
+ * Shuts down depreciation warnings during build.
+ *
  * Revision 1.1  2012/01/25 21:27:07  matthieu
  * Add radeon driver 6.12.2 renamed as 'radeonold'.
  *
@@ -92,7 +96,7 @@ _X_EXPORT TheatrePtr DetectTheatre(GENERIC_BUS_Ptr b)
    return NULL;
    }
    
-   t = xcalloc(1,sizeof(TheatreRec));
+   t = calloc(1,sizeof(TheatreRec));
    t->VIP = b;
    t->theatre_num = -1;
    t->mode=MODE_UNINITIALIZED;
@@ -126,7 +130,7 @@ _X_EXPORT TheatrePtr DetectTheatre(GENERIC_BUS_Ptr b)
 
    if(t->theatre_num < 0)
    {
-   xfree(t);
+   free(t);
    return NULL;
    }
 

@@ -121,21 +121,21 @@ static Bool RADEONInitVisualConfigs(ScreenPtr pScreen)
 	if (use_db)             numConfigs *= 2;
 
 	if (!(pConfigs
-	      = (__GLXvisualConfig *)xcalloc(sizeof(__GLXvisualConfig),
+	      = (__GLXvisualConfig *)calloc(sizeof(__GLXvisualConfig),
 					     numConfigs))) {
 	    return FALSE;
 	}
 	if (!(pRADEONConfigs
-	      = (RADEONConfigPrivPtr)xcalloc(sizeof(RADEONConfigPrivRec),
+	      = (RADEONConfigPrivPtr)calloc(sizeof(RADEONConfigPrivRec),
 					     numConfigs))) {
-	    xfree(pConfigs);
+	    free(pConfigs);
 	    return FALSE;
 	}
 	if (!(pRADEONConfigPtrs
-	      = (RADEONConfigPrivPtr *)xcalloc(sizeof(RADEONConfigPrivPtr),
+	      = (RADEONConfigPrivPtr *)calloc(sizeof(RADEONConfigPrivPtr),
 					       numConfigs))) {
-	    xfree(pConfigs);
-	    xfree(pRADEONConfigs);
+	    free(pConfigs);
+	    free(pRADEONConfigs);
 	    return FALSE;
 	}
 
@@ -207,21 +207,21 @@ static Bool RADEONInitVisualConfigs(ScreenPtr pScreen)
 	if (use_db)             numConfigs *= 2;
 
 	if (!(pConfigs
-	      = (__GLXvisualConfig *)xcalloc(sizeof(__GLXvisualConfig),
+	      = (__GLXvisualConfig *)calloc(sizeof(__GLXvisualConfig),
 					     numConfigs))) {
 	    return FALSE;
 	}
 	if (!(pRADEONConfigs
-	      = (RADEONConfigPrivPtr)xcalloc(sizeof(RADEONConfigPrivRec),
+	      = (RADEONConfigPrivPtr)calloc(sizeof(RADEONConfigPrivRec),
 					     numConfigs))) {
-	    xfree(pConfigs);
+	    free(pConfigs);
 	    return FALSE;
 	}
 	if (!(pRADEONConfigPtrs
-	      = (RADEONConfigPrivPtr *)xcalloc(sizeof(RADEONConfigPrivPtr),
+	      = (RADEONConfigPrivPtr *)calloc(sizeof(RADEONConfigPrivPtr),
 					       numConfigs))) {
-	    xfree(pConfigs);
-	    xfree(pRADEONConfigs);
+	    free(pConfigs);
+	    free(pRADEONConfigs);
 	    return FALSE;
 	}
 
@@ -566,12 +566,12 @@ static void RADEONDRIMoveBuffers(WindowPtr pParent, DDXPointRec ptOldOrg,
 
 	if (nbox > 1) {
 	    /* Keep ordering in each band, reverse order of bands */
-	    pboxNew1 = (BoxPtr)xalloc(sizeof(BoxRec)*nbox);
+	    pboxNew1 = (BoxPtr)malloc(sizeof(BoxRec)*nbox);
 	    if (!pboxNew1) return;
 
-	    pptNew1 = (DDXPointPtr)xalloc(sizeof(DDXPointRec)*nbox);
+	    pptNew1 = (DDXPointPtr)malloc(sizeof(DDXPointRec)*nbox);
 	    if (!pptNew1) {
-		xfree(pboxNew1);
+		free(pboxNew1);
 		return;
 	    }
 
@@ -608,14 +608,14 @@ static void RADEONDRIMoveBuffers(WindowPtr pParent, DDXPointRec ptOldOrg,
 
 	if (nbox > 1) {
 	    /* reverse order of rects in each band */
-	    pboxNew2 = (BoxPtr)xalloc(sizeof(BoxRec)*nbox);
-	    pptNew2  = (DDXPointPtr)xalloc(sizeof(DDXPointRec)*nbox);
+	    pboxNew2 = (BoxPtr)malloc(sizeof(BoxRec)*nbox);
+	    pptNew2  = (DDXPointPtr)malloc(sizeof(DDXPointRec)*nbox);
 
 	    if (!pboxNew2 || !pptNew2) {
-		xfree(pptNew2);
-		xfree(pboxNew2);
-		xfree(pptNew1);
-		xfree(pboxNew1);
+		free(pptNew2);
+		free(pboxNew2);
+		free(pptNew1);
+		free(pboxNew1);
 		return;
 	    }
 
@@ -686,10 +686,10 @@ static void RADEONDRIMoveBuffers(WindowPtr pParent, DDXPointRec ptOldOrg,
 
     info->accel_state->dst_pitch_offset = info->dri->frontPitchOffset;;
 
-    xfree(pptNew2);
-    xfree(pboxNew2);
-    xfree(pptNew1);
-    xfree(pboxNew1);
+    free(pptNew2);
+    free(pboxNew2);
+    free(pptNew1);
+    free(pboxNew1);
 
     info->accel_state->accel->NeedToSync = TRUE;
 #endif /* USE_XAA */
@@ -1406,7 +1406,7 @@ Bool RADEONDRIGetVersion(ScrnInfoPtr pScrn)
     if (xf86LoaderCheckSymbol("DRICreatePCIBusID")) {
 	busId = DRICreatePCIBusID(info->PciInfo);
     } else {
-	busId = xalloc(64);
+	busId = malloc(64);
 	sprintf(busId,
 		"PCI:%d:%d:%d",
 		PCI_DEV_BUS(info->PciInfo),
@@ -1416,7 +1416,7 @@ Bool RADEONDRIGetVersion(ScrnInfoPtr pScrn)
 
     /* Low level DRM open */
     fd = drmOpen(RADEON_DRIVER_NAME, busId);
-    xfree(busId);
+    free(busId);
     if (fd < 0) {
 	xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
 		   "[dri] RADEONDRIGetVersion failed to open the DRM\n"
@@ -1550,7 +1550,7 @@ Bool RADEONDRIScreenInit(ScreenPtr pScreen)
     if (xf86LoaderCheckSymbol("DRICreatePCIBusID")) {
 	pDRIInfo->busIdString = DRICreatePCIBusID(info->PciInfo);
     } else {
-	pDRIInfo->busIdString            = xalloc(64);
+	pDRIInfo->busIdString            = malloc(64);
 	sprintf(pDRIInfo->busIdString,
 		"PCI:%d:%d:%d",
 		PCI_DEV_BUS(info->PciInfo),
@@ -1597,7 +1597,7 @@ Bool RADEONDRIScreenInit(ScreenPtr pScreen)
     pDRIInfo->SAREASize = SAREA_MAX;
 #endif
 
-    if (!(pRADEONDRI = (RADEONDRIPtr)xcalloc(sizeof(RADEONDRIRec),1))) {
+    if (!(pRADEONDRI = (RADEONDRIPtr)calloc(sizeof(RADEONDRIRec),1))) {
 	DRIDestroyInfoRec(info->dri->pDRIInfo);
 	info->dri->pDRIInfo = NULL;
 	return FALSE;
@@ -1644,7 +1644,7 @@ Bool RADEONDRIScreenInit(ScreenPtr pScreen)
     if (!DRIScreenInit(pScreen, pDRIInfo, &info->dri->drmFD)) {
 	xf86DrvMsg(pScreen->myNum, X_ERROR,
 		   "[dri] DRIScreenInit failed.  Disabling DRI.\n");
-	xfree(pDRIInfo->devPrivate);
+	free(pDRIInfo->devPrivate);
 	pDRIInfo->devPrivate = NULL;
 	DRIDestroyInfoRec(pDRIInfo);
 	pDRIInfo = NULL;
@@ -1928,7 +1928,7 @@ void RADEONDRICloseScreen(ScreenPtr pScreen)
     }
 
     if (info->dri->pciGartBackup) {
-	xfree(info->dri->pciGartBackup);
+	free(info->dri->pciGartBackup);
 	info->dri->pciGartBackup = NULL;
     }
 
@@ -1938,18 +1938,18 @@ void RADEONDRICloseScreen(ScreenPtr pScreen)
     /* De-allocate all DRI data structures */
     if (info->dri->pDRIInfo) {
 	if (info->dri->pDRIInfo->devPrivate) {
-	    xfree(info->dri->pDRIInfo->devPrivate);
+	    free(info->dri->pDRIInfo->devPrivate);
 	    info->dri->pDRIInfo->devPrivate = NULL;
 	}
 	DRIDestroyInfoRec(info->dri->pDRIInfo);
 	info->dri->pDRIInfo = NULL;
     }
     if (info->dri->pVisualConfigs) {
-	xfree(info->dri->pVisualConfigs);
+	free(info->dri->pVisualConfigs);
 	info->dri->pVisualConfigs = NULL;
     }
     if (info->dri->pVisualConfigsPriv) {
-	xfree(info->dri->pVisualConfigsPriv);
+	free(info->dri->pVisualConfigsPriv);
 	info->dri->pVisualConfigsPriv = NULL;
     }
 }

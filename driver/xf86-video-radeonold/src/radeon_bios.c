@@ -296,9 +296,9 @@ RADEONGetBIOSInfo(ScrnInfoPtr pScrn, xf86Int10InfoPtr  pInt10)
 
 #ifdef XSERVER_LIBPCIACCESS
     int size = info->PciInfo->rom_size > RADEON_VBIOS_SIZE ? info->PciInfo->rom_size : RADEON_VBIOS_SIZE;
-    info->VBIOS = xalloc(size);
+    info->VBIOS = malloc(size);
 #else
-    info->VBIOS = xalloc(RADEON_VBIOS_SIZE);
+    info->VBIOS = malloc(RADEON_VBIOS_SIZE);
 #endif
     if (!info->VBIOS) {
 	xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
@@ -316,7 +316,7 @@ RADEONGetBIOSInfo(ScrnInfoPtr pScrn, xf86Int10InfoPtr  pInt10)
     if (info->VBIOS[0] != 0x55 || info->VBIOS[1] != 0xaa) {
 	xf86DrvMsg(pScrn->scrnIndex, X_WARNING,
 		   "Unrecognized BIOS signature, BIOS data will not be used\n");
-	xfree (info->VBIOS);
+	free (info->VBIOS);
 	info->VBIOS = NULL;
 	return FALSE;
     }
@@ -331,7 +331,7 @@ RADEONGetBIOSInfo(ScrnInfoPtr pScrn, xf86Int10InfoPtr  pInt10)
     else if (info->VBIOS[dptr + 0x14] != 0x0) {
 	xf86DrvMsg(pScrn->scrnIndex, X_WARNING,
 		   "Not an x86 BIOS ROM image, BIOS data will not be used\n");
-	xfree (info->VBIOS);
+	free (info->VBIOS);
 	info->VBIOS = NULL;
 	return FALSE;
     }
@@ -341,7 +341,7 @@ RADEONGetBIOSInfo(ScrnInfoPtr pScrn, xf86Int10InfoPtr  pInt10)
     if(!info->ROMHeaderStart) {
 	xf86DrvMsg(pScrn->scrnIndex, X_WARNING,
 		   "Invalid ROM pointer, BIOS data will not be used\n");
-	xfree (info->VBIOS);
+	free (info->VBIOS);
 	info->VBIOS = NULL;
 	return FALSE;
     }

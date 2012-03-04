@@ -642,7 +642,7 @@ Bool RADEONAllocateControllers(ScrnInfoPtr pScrn, int mask)
 	pRADEONEnt->Controller[1] = xnfcalloc(sizeof(RADEONCrtcPrivateRec), 1);
 	if (!pRADEONEnt->Controller[1])
 	    {
-		xfree(pRADEONEnt->Controller[0]);
+		free(pRADEONEnt->Controller[0]);
 		return FALSE;
 	    }
 

@@ -141,7 +141,7 @@ radeon_get_scrninfo(int entity_num)
         }
     }
 
-    xfree(pEnt);
+    free(pEnt);
 
     return TRUE;
 }
@@ -185,8 +185,8 @@ RADEONProbe(DriverPtr drv, int flags)
 	}
     }
 
-    xfree(usedChips);
-    xfree(devSections);
+    free(usedChips);
+    free(devSections);
 
     return foundScreen;
 }

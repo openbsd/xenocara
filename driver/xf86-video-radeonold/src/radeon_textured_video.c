@@ -725,7 +725,7 @@ RADEONSetupImageTexturedVideo(ScreenPtr pScreen)
     int i;
     int num_texture_ports = 16;
 
-    adapt = xcalloc(1, sizeof(XF86VideoAdaptorRec) + num_texture_ports *
+    adapt = calloc(1, sizeof(XF86VideoAdaptorRec) + num_texture_ports *
 		    (sizeof(RADEONPortPrivRec) + sizeof(DevUnion)));
     if (adapt == NULL)
 	return NULL;

@@ -367,17 +367,17 @@ static void RADEONFreeRec(ScrnInfoPtr pScrn)
     info = RADEONPTR(pScrn);
 
     if (info->cp) {
-	xfree(info->cp);
+	free(info->cp);
 	info->cp = NULL;
     }
 
     if (info->dri) {
-	xfree(info->dri);
+	free(info->dri);
 	info->dri = NULL;
     }
 
     if (info->accel_state) {
-	xfree(info->accel_state);
+	free(info->accel_state);
 	info->accel_state = NULL;
     }
 
@@ -387,15 +387,15 @@ static void RADEONFreeRec(ScrnInfoPtr pScrn)
 	    if (info->encoders[i]->ref_count != 0)
 		continue;
 	    if (info->encoders[i]->dev_priv) {
-		xfree(info->encoders[i]->dev_priv);
+		free(info->encoders[i]->dev_priv);
 		info->encoders[i]->dev_priv = NULL;
 	    }
-	    xfree(info->encoders[i]);
+	    free(info->encoders[i]);
 	    info->encoders[i]= NULL;
 	}
     }
 
-    xfree(pScrn->driverPrivate);
+    free(pScrn->driverPrivate);
     pScrn->driverPrivate = NULL;
 }
 
@@ -2056,7 +2056,7 @@ static Bool RADEONPreInitAccel(ScrnInfoPtr pScrn)
     char *optstr;
 #endif
 
-    if (!(info->accel_state = xcalloc(1, sizeof(struct radeon_accel_state)))) {
+    if (!(info->accel_state = calloc(1, sizeof(struct radeon_accel_state)))) {
 	xf86DrvMsg(pScrn->scrnIndex, X_ERROR, "Unable to allocate accel_state rec!\n");
 	return FALSE;
     }
@@ -2210,12 +2210,12 @@ static Bool RADEONPreInitDRI(ScrnInfoPtr pScrn)
     info->directRenderingEnabled = FALSE;
     info->directRenderingInited = FALSE;
 
-    if (!(info->dri = xcalloc(1, sizeof(struct radeon_dri)))) {
+    if (!(info->dri = calloc(1, sizeof(struct radeon_dri)))) {
 	xf86DrvMsg(pScrn->scrnIndex, X_ERROR,"Unable to allocate dri rec!\n");
 	return FALSE;
     }
 
-    if (!(info->cp = xcalloc(1, sizeof(struct radeon_cp)))) {
+    if (!(info->cp = calloc(1, sizeof(struct radeon_cp)))) {
 	xf86DrvMsg(pScrn->scrnIndex, X_ERROR,"Unable to allocate cp rec!\n");
 	return FALSE;
     }
@@ -2913,7 +2913,7 @@ Bool RADEONPreInit(ScrnInfoPtr pScrn, int flags)
 				/* We can't do this until we have a
 				   pScrn->display. */
     xf86CollectOptions(pScrn, NULL);
-    if (!(info->Options = xalloc(sizeof(RADEONOptions))))
+    if (!(info->Options = malloc(sizeof(RADEONOptions))))
 	goto fail;
 
     memcpy(info->Options, RADEONOptions, sizeof(RADEONOptions));
@@ -3127,7 +3127,7 @@ fail:
 				/* Pre-init failed. */
 				/* Free the video bios (if applicable) */
     if (info->VBIOS) {
-	xfree(info->VBIOS);
+	free(info->VBIOS);
 	info->VBIOS = NULL;
     }
 
@@ -3585,7 +3585,7 @@ Bool RADEONScreenInit(int scrnIndex, ScreenPtr pScreen,
 		   "Initializing fb layer\n");
 
     if (info->r600_shadow_fb) {
-	info->fb_shadow = xcalloc(1,
+	info->fb_shadow = calloc(1,
 				  pScrn->displayWidth * pScrn->virtualY *
 				  ((pScrn->bitsPerPixel + 7) >> 3));
 	if (info->fb_shadow == NULL) {
@@ -5869,7 +5869,7 @@ static Bool RADEONCloseScreen(int scrnIndex, ScreenPtr pScreen)
 #ifdef USE_EXA
     if (info->accel_state->exa) {
 	exaDriverFini(pScreen);
-	xfree(info->accel_state->exa);
+	free(info->accel_state->exa);
 	info->accel_state->exa = NULL;
     }
 #endif /* USE_EXA */
@@ -5880,7 +5880,7 @@ static Bool RADEONCloseScreen(int scrnIndex, ScreenPtr pScreen)
 	info->accel_state->accel = NULL;
 
 	if (info->accel_state->scratch_save)
-	    xfree(info->accel_state->scratch_save);
+	    free(info->accel_state->scratch_save);
 	info->accel_state->scratch_save = NULL;
     }
 #endif /* USE_XAA */
@@ -5892,7 +5892,7 @@ static Bool RADEONCloseScreen(int scrnIndex, ScreenPtr pScreen)
 
     xf86DrvMsgVerb(pScrn->scrnIndex, X_INFO, RADEON_LOGLEVEL_DEBUG,
 		   "Disposing DGA\n");
-    if (info->DGAModes) xfree(info->DGAModes);
+    if (info->DGAModes) free(info->DGAModes);
     info->DGAModes = NULL;
     xf86DrvMsgVerb(pScrn->scrnIndex, X_INFO, RADEON_LOGLEVEL_DEBUG,
 		   "Unmapping memory\n");

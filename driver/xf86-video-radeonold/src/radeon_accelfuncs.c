@@ -1206,7 +1206,7 @@ FUNC_NAME(RADEONAccelInit)(ScreenPtr pScreen, XAAInfoRecPtr a)
     a->ScanlineColorExpandBuffers       = info->accel_state->scratch_buffer;
     if (!info->accel_state->scratch_save)
 	info->accel_state->scratch_save
-	    = xalloc(((pScrn->virtualX+31)/32*4)
+	    = malloc(((pScrn->virtualX+31)/32*4)
 		     + (pScrn->virtualX * info->CurrentLayout.pixel_bytes));
     info->accel_state->scratch_buffer[0]             = info->accel_state->scratch_save;
     a->SetupForScanlineCPUToScreenColorExpandFill

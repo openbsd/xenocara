@@ -22,6 +22,10 @@
  * authorization from the author.
  *
  * $Log: theatre200.c,v $
+ * Revision 1.2  2012/03/04 15:44:48  matthieu
+ * Replace Xalloc/Xfree with malloc/free.
+ * Shuts down depreciation warnings during build.
+ *
  * Revision 1.1  2012/01/25 21:27:07  matthieu
  * Add radeon driver 6.12.2 renamed as 'radeonold'.
  *
@@ -175,7 +179,7 @@ static int microc_load (char* micro_path, char* micro_type, struct rt200_microc_
 		{
 			int ret;
 			
-			curr_seg = (struct rt200_microc_seg*)Xalloc(sizeof(struct rt200_microc_seg));
+			curr_seg = (struct rt200_microc_seg*)malloc(sizeof(struct rt200_microc_seg));
 			if (curr_seg == NULL)
 			{
 				ERROR_0("Cannot allocate memory\n");
@@ -191,7 +195,7 @@ static int microc_load (char* micro_path, char* micro_type, struct rt200_microc_
 				goto fail_exit;
 			}
 
-			curr_seg->data = (unsigned char*)Xalloc(curr_seg->num_bytes);
+			curr_seg->data = (unsigned char*)malloc(curr_seg->num_bytes);
 			if (curr_seg->data == NULL)
 			{
 				ERROR_0("cannot allocate memory\n");
@@ -254,7 +258,7 @@ static int microc_load (char* micro_path, char* micro_type, struct rt200_microc_
 
 		for (i = 0; i < microc_headp->num_seg; i++)
 		{
-			curr_seg = (struct rt200_microc_seg*)Xalloc(sizeof(struct rt200_microc_seg));
+			curr_seg = (struct rt200_microc_seg*)malloc(sizeof(struct rt200_microc_seg));
 			if (curr_seg == NULL)
 			{
 				ERROR_0("Cannot allocate memory\n");
@@ -275,7 +279,7 @@ static int microc_load (char* micro_path, char* micro_type, struct rt200_microc_
 				goto fail_exit;
 			}
 								
-			curr_seg->data = (unsigned char*)Xalloc(curr_seg->num_bytes);
+			curr_seg->data = (unsigned char*)malloc(curr_seg->num_bytes);
 			if (curr_seg->data == NULL)
 			{
 				ERROR_0("cannot allocate memory\n");
@@ -331,10 +335,10 @@ fail_exit:
 	curr_seg = seg_list;
 	while(curr_seg)
 	{
-		Xfree(curr_seg->data);
+		free(curr_seg->data);
 		prev_seg = curr_seg;
 		curr_seg = curr_seg->next;
-		Xfree(prev_seg);
+		free(prev_seg);
 	}
 	fclose(file);
 
@@ -348,10 +352,10 @@ static void microc_clean(struct rt200_microc_data* microc_datap, int screen)
 
 	while(seg_list)
 	{
-		Xfree(seg_list->data);
+		free(seg_list->data);
 		prev_seg = seg_list;
 		seg_list = seg_list->next;
-		Xfree(prev_seg);
+		free(prev_seg);
 	}
 }
 
