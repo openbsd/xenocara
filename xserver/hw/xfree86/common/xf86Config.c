@@ -499,7 +499,8 @@ static void
 fixup_video_driver_list(char **drivers)
 {
     static const char *fallback[4] = { "vesa", "fbdev", "wsfb", NULL };
-    char **end, **drv;
+    static const char *blacklist[] = { "radeonhd", "radeon", NULL };
+    char **end, **drv, **d;
     char *x;
     int i;
 
@@ -519,6 +520,16 @@ fixup_video_driver_list(char **drivers)
                 break;
             }
         }
+    }
+    /* Remove blacklisted drivers */
+    for (i = 0; blacklist[i]; i++) {
+	for (drv = drivers; drv != end; drv++) {
+	    if (strcmp(*drv, blacklist[i]) == 0) {
+		end--;
+		for (d = drv; d != end; d++)
+		    *d = *(d+1);
+	    }
+	}
     }
 }
 
