@@ -1,3 +1,221 @@
+commit 589eea0713cacb7b6889d15e4dbcd2914684db9b
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Mar 2 19:47:42 2012 -0800
+
+    libFS 1.0.4
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 9e5c931053f261cc97e3d7b75a5c2f14990bbb9d
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Mar 2 19:42:18 2012 -0800
+
+    Remove unneeded shadow definition of 'i' from FSQueryXBitmaps16
+    
+    Fixes gcc warning:
+    FSQGlyphs.c: In function 'FSQueryXBitmaps16':
+    FSQGlyphs.c:153:6: warning: declaration of 'i' shadows a previous local
+    FSQGlyphs.c:143:10: warning: shadowed declaration is here
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 4ebfa48f74deb4f35490e02eeeb1e59ff56856ab
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Dec 4 08:54:38 2011 -0800
+
+    Fix builds of FSlibInt.c with Solaris Studio compilers
+    
+    Required in order to build with Studio cc now that xorg-macros is
+    setting -errwarn=E_FUNC_HAS_NO_RETURN_STMT since a bug in the Solaris
+    system headers causes the noreturn attribute to not be correctly
+    applied to the exit() prototype in <stdlib.h> when building with
+    Studio instead of gcc.
+    
+    Otherwise compiler exits with error:
+    "FSlibInt.c", line 976: Function has no return statement : _FSDefaultIOError
+    
+    Uses Studio-specific pragma instead of adding another exit() prototype
+    with a noreturn attribute to avoid causing gcc to warn about having
+    a redundant prototype for the exit() function.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 447b3268bfb2d6a92d105ad75c2ac5462f1adecb
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Nov 11 22:54:21 2011 -0800
+
+    Mark pattern argument to FSListFonts* as const char *
+    
+    Needed to fix gcc -Wwrite-strings warnings in clients such as fslsfonts
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 5dae1f32a775c3f99f26571f3fab8fb4f0f2874f
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Sep 28 22:28:22 2011 -0700
+
+    Change FSOpenServer and FSServerName to take const char * args.
+    
+    Almost matches the current versions of the XOpenDisplay & XDisplayName
+    functions they're modeled on - unlike XDisplayName, FSServerName now
+    returns const char * as well so we don't lose the constness of the
+    string passed in if we return it.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 1353bd6b52241857f9e37cc6403e1fee3c5e69e4
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Sep 26 15:07:57 2011 -0700
+
+    Add const attributes to fix gcc -Wwrite-strings warnings
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 750fbfe7562e94788e5dfecb6617e26d6d3f0157
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Sep 16 22:08:05 2011 -0700
+
+    Strip trailing whitespace
+    
+    Performed with: find * -type f | xargs perl -i -p -e 's{[ \t]+$}{}'
+    git diff -w & git diff -b show no diffs from this change
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 06fd3e765d96fda0e323c11c7a6786b870655bbe
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Thu Apr 28 17:21:15 2011 -0700
+
+    Silence clang's -Wformat-nonliteral around our error printing code
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit b39bb910ce7a8dc18922957bad7c0e7b1fe9c499
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Thu Apr 28 17:11:05 2011 -0700
+
+    Annotate fatal errors with _X_NORETURN
+    
+    Fixes a false-positive with clang static analysis
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit 8607b9de7b331f7a97e623b1490194324a8b9a4b
+Author: Cyril Brulebois <kibi@debian.org>
+Date:   Fri Feb 18 21:17:12 2011 +0100
+
+    Silence gcc warning.
+    
+    Fix the build with CFLAGS="-Wall -Werror":
+    |   CC     FSGetErrorText.o
+    | cc1: warnings being treated as errors
+    | FSGetErrorText.c: In function ‘CheckErrorMessage’:
+    | FSGetErrorText.c:43: error: format ‘%d’ expects type ‘int’, but argument 5 has type ‘long unsigned int’
+    
+    An int is likely to be sufficient for this buffer's size…
+    
+    Signed-off-by: Cyril Brulebois <kibi@debian.org>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 07c1f9c135039606c63b88d51b93532199897ceb
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Feb 13 10:23:43 2011 -0800
+
+    Off-by-one error on the other end of FSGetErrorText bounds check
+    
+    The Font Server protocol actually defines 0 as an error code too.
+    
+    Before this fix, test/FSGetErrorText printed:
+    
+    FSGetErrorText for code FSBadRequest (0) returned:
+    ||
+    
+    Afterwards:
+    
+    FSGetErrorText for code FSBadRequest (0) returned:
+    |BadRequest, invalid request code or no such operation|
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit ba4f4e7604afc23431c62c3886ab9419d5913661
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Feb 13 10:20:48 2011 -0800
+
+    Add simple test program for FSGetErrorText()
+    
+    When run with arguments, prints messages for the given codes.
+    When run with no arguments, prints messages for known valid error codes
+    and some invalid codes.
+    
+    Not run as part of "make check" since it requires a connection to an
+    xfs server to run, just available for developers to manually run when
+    needed.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 3deb5cb746e94854728f8265b6bb8eeaec367322
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Feb 11 18:32:08 2011 -0800
+
+    Off-by-one error in FSGetErrorText bounds check
+    
+    Read outside array bounds (CWE 125): In array dereference of <unknown> with index 'code'
+      Array size is 12 elements (of 4 bytes each), index >= 1 and index <= 12
+        at line 108 of libFS/src/FSErrDis.c in function 'FSGetErrorText'.
+    
+    [ This bug was found by the Parfait 0.3.6 bug checking tool.
+      For more information see http://labs.oracle.com/projects/parfait/ ]
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Julien Cristau <jcristau@debian.org>
+
+commit ee8e378880e3fd3422f378b419bb77665626629c
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Feb 2 16:08:21 2011 -0500
+
+    config: splitting FS and XTRANS compiler option no longer required
+    
+    This was done for the wrong reasons and fixed in commit:
+    87c96993d17812a55d92ef32a91083614e258f02
+    where the libfs.pc.in was fixed.
+    
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 92a10dde49d707d79fe588bb9e5aba2534c0ab2c
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Feb 2 11:43:40 2011 -0500
+
+    config: comment, minor upgrade, quote and layout configure.ac
+    
+    Group statements per section as per Autoconf standard layout
+    Quote statements where appropriate.
+    Autoconf recommends not using dnl instead of # for comments
+    
+    Use AC_CONFIG_FILES to replace the deprecated AC_OUTPUT with parameters.
+    Add AC_CONFIG_SRCDIR([Makefile.am])
+    Update minimum version of util-macros to at least 1.8.
+    
+    This helps automated maintenance and release activities.
+    Details can be found in http://wiki.x.org/wiki/NewModuleGuidelines
+
+commit 195bc673e232e73b4cfa0fd34150a574683c69d1
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Fri Jan 28 19:41:37 2011 -0500
+
+    config: replace deprecated AM_CONFIG_HEADER with AC_CONFIG_HEADERS
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 5895de6dedcb8603b6a415d3486395c29501868c
+Author: Cristian Rodríguez <cristian.rodriguez@opensuse.org>
+Date:   Tue Dec 14 15:07:34 2010 -0500
+
+    Export only public API symbols
+    
+    Reviewed-by: Adam Jackson <ajax@redhat.com>
+    Signed-off-by: Cristian Rodríguez <cristian.rodriguez@opensuse.org>
+
 commit 4218339a30a899ceb82a9a057c6b96bce624f917
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Tue Oct 26 18:47:31 2010 -0700

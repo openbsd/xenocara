@@ -2,24 +2,24 @@
  * Copyright 1990 Network Computing Devices;
  * Portions Copyright 1987 by Digital Equipment Corporation
  *
- * Permission to use, copy, modify, distribute, and sell this software 
- * and its documentation for any purpose is hereby granted without fee, 
- * provided that the above copyright notice appear in all copies and 
- * that both that copyright notice and this permission notice appear 
- * in supporting documentation, and that the names of Network Computing 
- * Devices or Digital not be used in advertising or publicity pertaining 
- * to distribution of the software without specific, written prior 
- * permission. Network Computing Devices or Digital make no representations 
- * about the suitability of this software for any purpose.  It is provided 
+ * Permission to use, copy, modify, distribute, and sell this software
+ * and its documentation for any purpose is hereby granted without fee,
+ * provided that the above copyright notice appear in all copies and
+ * that both that copyright notice and this permission notice appear
+ * in supporting documentation, and that the names of Network Computing
+ * Devices or Digital not be used in advertising or publicity pertaining
+ * to distribution of the software without specific, written prior
+ * permission. Network Computing Devices or Digital make no representations
+ * about the suitability of this software for any purpose.  It is provided
  * "as is" without express or implied warranty.
  *
  * NETWORK COMPUTING DEVICES AND  DIGITAL DISCLAIM ALL WARRANTIES WITH
- * REGARD TO THIS SOFTWARE, INCLUDING ALL IMPLIED WARRANTIES OF 
+ * REGARD TO THIS SOFTWARE, INCLUDING ALL IMPLIED WARRANTIES OF
  * MERCHANTABILITY AND FITNESS, IN NO EVENT SHALL NETWORK COMPUTING DEVICES
- * OR DIGITAL BE LIABLE FOR ANY SPECIAL, INDIRECT OR CONSEQUENTIAL DAMAGES 
- * OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, 
- * WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, 
- * ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS 
+ * OR DIGITAL BE LIABLE FOR ANY SPECIAL, INDIRECT OR CONSEQUENTIAL DAMAGES
+ * OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS,
+ * WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION,
+ * ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS
  * SOFTWARE.
  */
 
@@ -61,7 +61,7 @@ in this Software without prior written authorization from The Open Group.
 #include <X11/Xos.h>
 
 static void _EatData32 ( FSServer *svr, unsigned long n );
-static char * _SysErrorMsg ( int n );
+static const char * _SysErrorMsg ( int n );
 
 /* check for both EAGAIN and EWOULDBLOCK, because some supposedly POSIX
  * systems are broken and return EWOULDBLOCK when they should return EAGAIN
@@ -127,7 +127,7 @@ static fsReq _dummy_request = {
  * action is taken.  This routine correctly handles incremental writes.
  * This routine may have to be reworked if int < long.
  */
-void 
+void
 _FSFlush(register FSServer *svr)
 {
     register long size,
@@ -211,7 +211,7 @@ _FSEventsQueued(
 /* _FSReadEvents - Flush the output queue,
  * then read as many events as possible (but at least 1) and enqueue them
  */
-void 
+void
 _FSReadEvents(register FSServer *svr)
 {
     char        buf[BUFSIZE];
@@ -268,7 +268,7 @@ _FSReadEvents(register FSServer *svr)
  * _FSRead - Read bytes from the socket taking into account incomplete
  * reads.  This routine may have to be reworked if int < long.
  */
-void 
+void
 _FSRead(
     register FSServer	*svr,
     register char	*data,
@@ -343,7 +343,7 @@ _FSRead(
  *            into a long (64 bits on a CRAY computer).
  *
  */
-static void 
+static void
 _doFSRead32(
     register FSServer	*svr,
     register long	*data,
@@ -397,7 +397,7 @@ _FSRead32(
  *            into a long (64 bits on a CRAY computer).
  *
  */
-static void 
+static void
 _doFSRead16(
     register FSServer	*svr,
     register short	*data,
@@ -429,7 +429,7 @@ _doFSRead16(
     }
 }
 
-void 
+void
 _FSRead16(
     FSServer	*svr,
     short	*data,
@@ -444,7 +444,7 @@ _FSRead16(
     _doFSRead16(svr, data, len, packbuffer);
 }
 
-void 
+void
 _FSRead16Pad(
     FSServer	*svr,
     short	*data,
@@ -467,7 +467,7 @@ _FSRead16Pad(
  * reads.  If the number of bytes is not 0 mod 32, read additional pad
  * bytes. This routine may have to be reworked if int < long.
  */
-void 
+void
 _FSReadPad(
     register FSServer	*svr,
     register char	*data,
@@ -533,10 +533,10 @@ _FSReadPad(
  * transmission is used, if size is not 0 mod 4, extra bytes are transmitted.
  * This routine may have to be reworked if int < long;
  */
-void 
+void
 _FSSend(
     register FSServer	*svr,
-    char		*data,
+    const char		*data,
     register long	 size)
 {
     struct iovec iov[3];
@@ -550,10 +550,10 @@ _FSSend(
 
     /*
      * There are 3 pieces that may need to be written out:
-     * 
+     *
      * o  whatever is in the display buffer o  the data passed in by the user o
      * any padding needed to 32bit align the whole mess
-     * 
+     *
      * This loop looks at all 3 pieces each time through.  It uses skip to figure
      * out whether or not a given piece is needed.
      */
@@ -567,12 +567,12 @@ _FSSend(
 	 * You could be very general here and have "in" and "out" iovecs and
 	 * write a loop without using a macro, but what the heck.  This
 	 * translates to:
-	 * 
+	 *
 	 * how much of this piece is new? if more new then we are trying this
 	 * time, clamp if nothing new then bump down amount already written,
 	 * for next piece else put new stuff in iovec, will need all of next
 	 * piece
-	 * 
+	 *
 	 * Note that todo had better be at least 1 or else we'll end up writing 0
 	 * iovecs.
 	 */
@@ -591,7 +591,7 @@ _FSSend(
 	    }
 
 	InsertIOV(svr->buffer, svrbufsize)
-	InsertIOV(data, size)
+	InsertIOV((char *)data, size)
 	InsertIOV(pad, padsize)
 
 	ESET(0);
@@ -835,7 +835,7 @@ _EatData32(
  * note that no squishing of move events in V11, since there
  * is pointer motion hints....
  */
-void 
+void
 _FSEnq(
     register FSServer	*svr,
     register fsEvent	*event)
@@ -938,13 +938,18 @@ _FSWireToEvent(
 }
 
 
-static char *
+static const char *
 _SysErrorMsg(int n)
 {
     char       *s = strerror(n);
 
     return (s ? s : "no such error");
 }
+
+#ifdef __SUNPRO_C
+/* prevent "Function has no return statement" error for _FSDefaultIOError */
+#pragma does_not_return(exit)
+#endif
 
 /*
  * _FSDefaultIOError - Default fatal system error reporting routine.  Called
@@ -1004,6 +1009,11 @@ _FSError(
     /* NOTREACHED */
 }
 
+#ifdef __clang__
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wformat-nonliteral" // We know better
+#endif
+
 int
 _FSPrintDefaultError(
     FSServer		*svr,
@@ -1013,19 +1023,19 @@ _FSPrintDefaultError(
     char        buffer[BUFSIZ];
     char        mesg[BUFSIZ];
     char        number[32];
-    char       *mtype = "FSlibMessage";
+    const char *mtype = "FSlibMessage";
     register _FSExtension *ext = (_FSExtension *) NULL;
 
     (void) FSGetErrorText(svr, event->error_code, buffer, BUFSIZ);
-    (void) FSGetErrorDatabaseText(svr, mtype, "FSError", "FS Error", mesg, 
+    (void) FSGetErrorDatabaseText(svr, mtype, "FSError", "FS Error", mesg,
 				  BUFSIZ);
     (void) fprintf(fp, "%s:  %s\n  ", mesg, buffer);
-    (void) FSGetErrorDatabaseText(svr, mtype, "MajorCode", 
+    (void) FSGetErrorDatabaseText(svr, mtype, "MajorCode",
 				  "Request Major code %d", mesg, BUFSIZ);
     (void) fprintf(fp, mesg, event->request_code);
     if (event->request_code < 128) {
 	snprintf(number, sizeof(number), "%d", event->request_code);
-	(void) FSGetErrorDatabaseText(svr, "FSRequest", number, "", buffer, 
+	(void) FSGetErrorDatabaseText(svr, "FSRequest", number, "", buffer,
 				      BUFSIZ);
     } else {
 	for (ext = svr->ext_procs;
@@ -1037,12 +1047,12 @@ _FSPrintDefaultError(
 	    buffer[0] = '\0';
     }
     (void) fprintf(fp, " (%s)\n  ", buffer);
-    (void) FSGetErrorDatabaseText(svr, mtype, "MinorCode", 
+    (void) FSGetErrorDatabaseText(svr, mtype, "MinorCode",
 				  "Request Minor code %d", mesg, BUFSIZ);
     (void) fprintf(fp, mesg, event->minor_code);
     if (ext) {
 	snprintf(mesg, sizeof(mesg), "%s.%d", ext->name, event->minor_code);
-	(void) FSGetErrorDatabaseText(svr, "FSRequest", mesg, "", buffer, 
+	(void) FSGetErrorDatabaseText(svr, "FSRequest", mesg, "", buffer,
 				      BUFSIZ);
 	(void) fprintf(fp, " (%s)", buffer);
     }
@@ -1055,12 +1065,16 @@ _FSPrintDefaultError(
 				  mesg, BUFSIZ);
     (void) fprintf(fp, mesg, event->serial);
     fputs("\n  ", fp);
-    (void) FSGetErrorDatabaseText(svr, mtype, "CurrentSerial", 
+    (void) FSGetErrorDatabaseText(svr, mtype, "CurrentSerial",
 				  "Current Serial #%d", mesg, BUFSIZ);
     (void) fprintf(fp, mesg, svr->request);
     fputs("\n", fp);
     return 1;
 }
+
+#ifdef __clang__
+#pragma clang diagnostic pop
+#endif
 
 int
 _FSDefaultError(
@@ -1096,7 +1110,7 @@ _FSAllocScratch(
     return (svr->scratch_buffer);
 }
 
-int 
+int
 FSFree(char *data)
 {
     FSfree(data);

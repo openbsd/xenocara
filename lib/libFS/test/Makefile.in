@@ -14,7 +14,28 @@
 
 @SET_MAKE@
 
-
+#
+# Copyright (c) 2011, Oracle and/or its affiliates. All rights reserved.
+#
+# Permission is hereby granted, free of charge, to any person obtaining a
+# copy of this software and associated documentation files (the "Software"),
+# to deal in the Software without restriction, including without limitation
+# the rights to use, copy, modify, merge, publish, distribute, sublicense,
+# and/or sell copies of the Software, and to permit persons to whom the
+# Software is furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice (including the next
+# paragraph) shall be included in all copies or substantial portions of the
+# Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
+# THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+# FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+# DEALINGS IN THE SOFTWARE.
+#
 
 srcdir = @srcdir@
 top_srcdir = @top_srcdir@
@@ -38,9 +59,9 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
-subdir = src
-DIST_COMMON = $(libFSinclude_HEADERS) $(srcdir)/Makefile.am \
-	$(srcdir)/Makefile.in
+noinst_PROGRAMS = FSGetErrorText$(EXEEXT)
+subdir = test
+DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/configure.ac
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
@@ -48,25 +69,10 @@ am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
 CONFIG_HEADER = $(top_builddir)/config.h
 CONFIG_CLEAN_FILES =
-am__vpath_adj_setup = srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`;
-am__vpath_adj = case $$p in \
-    $(srcdir)/*) f=`echo "$$p" | sed "s|^$$srcdirstrip/||"`;; \
-    *) f=$$p;; \
-  esac;
-am__strip_dir = `echo $$p | sed -e 's|^.*/||'`;
-am__installdirs = "$(DESTDIR)$(libdir)" "$(DESTDIR)$(lintlibdir)" \
-	"$(DESTDIR)$(libFSincludedir)"
-libLTLIBRARIES_INSTALL = $(INSTALL)
-LTLIBRARIES = $(lib_LTLIBRARIES)
-am__DEPENDENCIES_1 =
-libFS_la_DEPENDENCIES = $(am__DEPENDENCIES_1)
-am_libFS_la_OBJECTS = FSCloseFt.lo FSClServ.lo FSConnServ.lo \
-	FSErrDis.lo FSErrHndlr.lo FSFlush.lo FSFontInfo.lo \
-	FSFtNames.lo FSGetCats.lo FSlibInt.lo FSListCats.lo \
-	FSListExt.lo FSMisc.lo FSNextEv.lo FSOpenFont.lo FSOpenServ.lo \
-	FSQGlyphs.lo FSQuExt.lo FSQXExt.lo FSQXInfo.lo FSServName.lo \
-	FSSetCats.lo FSSync.lo FSSynchro.lo fs_transport.lo
-libFS_la_OBJECTS = $(am_libFS_la_OBJECTS)
+PROGRAMS = $(noinst_PROGRAMS)
+am_FSGetErrorText_OBJECTS = FSGetErrorText.$(OBJEXT)
+FSGetErrorText_OBJECTS = $(am_FSGetErrorText_OBJECTS)
+FSGetErrorText_DEPENDENCIES = ../src/libFS.la
 DEFAULT_INCLUDES = -I. -I$(srcdir) -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__depfiles_maybe = depfiles
@@ -78,12 +84,8 @@ LTCOMPILE = $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) \
 CCLD = $(CC)
 LINK = $(LIBTOOL) --tag=CC --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
 	$(AM_LDFLAGS) $(LDFLAGS) -o $@
-SOURCES = $(libFS_la_SOURCES)
-DIST_SOURCES = $(libFS_la_SOURCES)
-lintlibDATA_INSTALL = $(INSTALL_DATA)
-DATA = $(lintlib_DATA)
-libFSincludeHEADERS_INSTALL = $(INSTALL_HEADER)
-HEADERS = $(libFSinclude_HEADERS)
+SOURCES = $(FSGetErrorText_SOURCES)
+DIST_SOURCES = $(FSGetErrorText_SOURCES)
 ETAGS = etags
 CTAGS = ctags
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
@@ -228,55 +230,10 @@ sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 sysconfdir = @sysconfdir@
 target_alias = @target_alias@
-lib_LTLIBRARIES = libFS.la
-libFS_la_SOURCES = \
-	FSCloseFt.c	\
-	FSClServ.c	\
-	FSConnServ.c	\
-	FSErrDis.c	\
-	FSErrHndlr.c	\
-	FSFlush.c	\
-	FSFontInfo.c	\
-	FSFtNames.c	\
-	FSGetCats.c	\
-	FSlibInt.c	\
-	FSlibint.h	\
-	FSlibos.h	\
-	FSListCats.c	\
-	FSListExt.c	\
-	FSMisc.c	\
-	FSNextEv.c	\
-	FSOpenFont.c	\
-	FSOpenServ.c	\
-	FSQGlyphs.c	\
-	FSQuExt.c	\
-	FSQXExt.c	\
-	FSQXInfo.c	\
-	FSServName.c	\
-	FSSetCats.c	\
-	FSSync.c	\
-	FSSynchro.c	\
-	fs_transport.c
-
-AM_CFLAGS = \
-	$(CWARNFLAGS)		\
-	$(FS_CFLAGS)		\
-	$(MALLOC_ZERO_CFLAGS)	\
-	-DFS_t 			\
-	-DTRANS_CLIENT
-
-libFS_la_LIBADD = $(FS_LIBS)
-INCLUDES = -I$(top_srcdir)/include/X11/fonts
-libFS_la_LDFLAGS = -export-symbols-regex '^FS.*' -version-number 6:0:0 -no-undefined
-libFSincludedir = $(includedir)/X11/fonts
-libFSinclude_HEADERS = \
-	$(top_srcdir)/include/X11/fonts/FSlib.h
-
-@LINT_TRUE@ALL_LINT_FLAGS = $(LINT_FLAGS) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
-@LINT_TRUE@                $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS)
-
-@MAKE_LINT_LIB_TRUE@lintlibdir = $(libdir)
-@MAKE_LINT_LIB_TRUE@lintlib_DATA = $(LINTLIB)
+AM_CFLAGS = $(CWARNFLAGS) $(FS_CFLAGS)
+INCLUDES = -I$(top_srcdir)/include
+FSGetErrorText_SOURCES = FSGetErrorText.c
+FSGetErrorText_LDADD = ../src/libFS.la
 all: all-am
 
 .SUFFIXES:
@@ -290,9 +247,9 @@ $(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am  $(am__confi
 	      exit 1;; \
 	  esac; \
 	done; \
-	echo ' cd $(top_srcdir) && $(AUTOMAKE) --foreign  src/Makefile'; \
+	echo ' cd $(top_srcdir) && $(AUTOMAKE) --foreign  test/Makefile'; \
 	cd $(top_srcdir) && \
-	  $(AUTOMAKE) --foreign  src/Makefile
+	  $(AUTOMAKE) --foreign  test/Makefile
 .PRECIOUS: Makefile
 Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 	@case '$?' in \
@@ -310,35 +267,16 @@ $(top_srcdir)/configure: @MAINTAINER_MODE_TRUE@ $(am__configure_deps)
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
 $(ACLOCAL_M4): @MAINTAINER_MODE_TRUE@ $(am__aclocal_m4_deps)
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
-install-libLTLIBRARIES: $(lib_LTLIBRARIES)
-	@$(NORMAL_INSTALL)
-	test -z "$(libdir)" || $(mkdir_p) "$(DESTDIR)$(libdir)"
-	@list='$(lib_LTLIBRARIES)'; for p in $$list; do \
-	  if test -f $$p; then \
-	    f=$(am__strip_dir) \
-	    echo " $(LIBTOOL) --mode=install $(libLTLIBRARIES_INSTALL) $(INSTALL_STRIP_FLAG) '$$p' '$(DESTDIR)$(libdir)/$$f'"; \
-	    $(LIBTOOL) --mode=install $(libLTLIBRARIES_INSTALL) $(INSTALL_STRIP_FLAG) "$$p" "$(DESTDIR)$(libdir)/$$f"; \
-	  else :; fi; \
-	done
 
-uninstall-libLTLIBRARIES:
-	@$(NORMAL_UNINSTALL)
-	@set -x; list='$(lib_LTLIBRARIES)'; for p in $$list; do \
-	  p=$(am__strip_dir) \
-	  echo " $(LIBTOOL) --mode=uninstall rm -f '$(DESTDIR)$(libdir)/$$p'"; \
-	  $(LIBTOOL) --mode=uninstall rm -f "$(DESTDIR)$(libdir)/$$p"; \
+clean-noinstPROGRAMS:
+	@list='$(noinst_PROGRAMS)'; for p in $$list; do \
+	  f=`echo $$p|sed 's/$(EXEEXT)$$//'`; \
+	  echo " rm -f $$p $$f"; \
+	  rm -f $$p $$f ; \
 	done
-
-clean-libLTLIBRARIES:
-	-test -z "$(lib_LTLIBRARIES)" || rm -f $(lib_LTLIBRARIES)
-	@list='$(lib_LTLIBRARIES)'; for p in $$list; do \
-	  dir="`echo $$p | sed -e 's|/[^/]*$$||'`"; \
-	  test "$$dir" != "$$p" || dir=.; \
-	  echo "rm -f \"$${dir}/so_locations\""; \
-	  rm -f "$${dir}/so_locations"; \
-	done
-libFS.la: $(libFS_la_OBJECTS) $(libFS_la_DEPENDENCIES) 
-	$(LINK) -rpath $(libdir) $(libFS_la_LDFLAGS) $(libFS_la_OBJECTS) $(libFS_la_LIBADD) $(LIBS)
+FSGetErrorText$(EXEEXT): $(FSGetErrorText_OBJECTS) $(FSGetErrorText_DEPENDENCIES) 
+	@rm -f FSGetErrorText$(EXEEXT)
+	$(LINK) $(FSGetErrorText_LDFLAGS) $(FSGetErrorText_OBJECTS) $(FSGetErrorText_LDADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
@@ -346,31 +284,7 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/FSClServ.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/FSCloseFt.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/FSConnServ.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/FSErrDis.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/FSErrHndlr.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/FSFlush.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/FSFontInfo.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/FSFtNames.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/FSGetCats.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/FSListCats.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/FSListExt.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/FSMisc.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/FSNextEv.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/FSOpenFont.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/FSOpenServ.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/FSQGlyphs.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/FSQXExt.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/FSQXInfo.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/FSQuExt.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/FSServName.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/FSSetCats.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/FSSync.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/FSSynchro.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/FSlibInt.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fs_transport.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/FSGetErrorText.Po@am__quote@
 
 .c.o:
 @am__fastdepCC_TRUE@	if $(COMPILE) -MT $@ -MD -MP -MF "$(DEPDIR)/$*.Tpo" -c -o $@ $<; \
@@ -402,40 +316,6 @@ clean-libtool:
 distclean-libtool:
 	-rm -f libtool
 uninstall-info-am:
-install-lintlibDATA: $(lintlib_DATA)
-	@$(NORMAL_INSTALL)
-	test -z "$(lintlibdir)" || $(mkdir_p) "$(DESTDIR)$(lintlibdir)"
-	@list='$(lintlib_DATA)'; for p in $$list; do \
-	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
-	  f=$(am__strip_dir) \
-	  echo " $(lintlibDATA_INSTALL) '$$d$$p' '$(DESTDIR)$(lintlibdir)/$$f'"; \
-	  $(lintlibDATA_INSTALL) "$$d$$p" "$(DESTDIR)$(lintlibdir)/$$f"; \
-	done
-
-uninstall-lintlibDATA:
-	@$(NORMAL_UNINSTALL)
-	@list='$(lintlib_DATA)'; for p in $$list; do \
-	  f=$(am__strip_dir) \
-	  echo " rm -f '$(DESTDIR)$(lintlibdir)/$$f'"; \
-	  rm -f "$(DESTDIR)$(lintlibdir)/$$f"; \
-	done
-install-libFSincludeHEADERS: $(libFSinclude_HEADERS)
-	@$(NORMAL_INSTALL)
-	test -z "$(libFSincludedir)" || $(mkdir_p) "$(DESTDIR)$(libFSincludedir)"
-	@list='$(libFSinclude_HEADERS)'; for p in $$list; do \
-	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
-	  f=$(am__strip_dir) \
-	  echo " $(libFSincludeHEADERS_INSTALL) '$$d$$p' '$(DESTDIR)$(libFSincludedir)/$$f'"; \
-	  $(libFSincludeHEADERS_INSTALL) "$$d$$p" "$(DESTDIR)$(libFSincludedir)/$$f"; \
-	done
-
-uninstall-libFSincludeHEADERS:
-	@$(NORMAL_UNINSTALL)
-	@list='$(libFSinclude_HEADERS)'; for p in $$list; do \
-	  f=$(am__strip_dir) \
-	  echo " rm -f '$(DESTDIR)$(libFSincludedir)/$$f'"; \
-	  rm -f "$(DESTDIR)$(libFSincludedir)/$$f"; \
-	done
 
 ID: $(HEADERS) $(SOURCES) $(LISP) $(TAGS_FILES)
 	list='$(SOURCES) $(HEADERS) $(LISP) $(TAGS_FILES)'; \
@@ -486,7 +366,6 @@ distclean-tags:
 	-rm -f TAGS ID GTAGS GRTAGS GSYMS GPATH tags
 
 distdir: $(DISTFILES)
-	$(mkdir_p) $(distdir)/../include/X11/fonts
 	@srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`; \
 	topsrcdirstrip=`echo "$(top_srcdir)" | sed 's|.|.|g'`; \
 	list='$(DISTFILES)'; for file in $$list; do \
@@ -515,11 +394,8 @@ distdir: $(DISTFILES)
 	done
 check-am: all-am
 check: check-am
-all-am: Makefile $(LTLIBRARIES) $(DATA) $(HEADERS)
+all-am: Makefile $(PROGRAMS)
 installdirs:
-	for dir in "$(DESTDIR)$(libdir)" "$(DESTDIR)$(lintlibdir)" "$(DESTDIR)$(libFSincludedir)"; do \
-	  test -z "$$dir" || $(mkdir_p) "$$dir"; \
-	done
 install: install-am
 install-exec: install-exec-am
 install-data: install-data-am
@@ -546,7 +422,7 @@ maintainer-clean-generic:
 	@echo "it deletes files that may require special tools to rebuild."
 clean: clean-am
 
-clean-am: clean-generic clean-libLTLIBRARIES clean-libtool \
+clean-am: clean-generic clean-libtool clean-noinstPROGRAMS \
 	mostlyclean-am
 
 distclean: distclean-am
@@ -565,9 +441,9 @@ info: info-am
 
 info-am:
 
-install-data-am: install-libFSincludeHEADERS install-lintlibDATA
+install-data-am:
 
-install-exec-am: install-libLTLIBRARIES
+install-exec-am:
 
 install-info: install-info-am
 
@@ -593,32 +469,20 @@ ps: ps-am
 
 ps-am:
 
-uninstall-am: uninstall-info-am uninstall-libFSincludeHEADERS \
-	uninstall-libLTLIBRARIES uninstall-lintlibDATA
+uninstall-am: uninstall-info-am
 
 .PHONY: CTAGS GTAGS all all-am check check-am clean clean-generic \
-	clean-libLTLIBRARIES clean-libtool ctags distclean \
+	clean-libtool clean-noinstPROGRAMS ctags distclean \
 	distclean-compile distclean-generic distclean-libtool \
 	distclean-tags distdir dvi dvi-am html html-am info info-am \
 	install install-am install-data install-data-am install-exec \
-	install-exec-am install-info install-info-am \
-	install-libFSincludeHEADERS install-libLTLIBRARIES \
-	install-lintlibDATA install-man install-strip installcheck \
-	installcheck-am installdirs maintainer-clean \
-	maintainer-clean-generic mostlyclean mostlyclean-compile \
-	mostlyclean-generic mostlyclean-libtool pdf pdf-am ps ps-am \
-	tags uninstall uninstall-am uninstall-info-am \
-	uninstall-libFSincludeHEADERS uninstall-libLTLIBRARIES \
-	uninstall-lintlibDATA
+	install-exec-am install-info install-info-am install-man \
+	install-strip installcheck installcheck-am installdirs \
+	maintainer-clean maintainer-clean-generic mostlyclean \
+	mostlyclean-compile mostlyclean-generic mostlyclean-libtool \
+	pdf pdf-am ps ps-am tags uninstall uninstall-am \
+	uninstall-info-am
 
-
-@LINT_TRUE@lint:
-@LINT_TRUE@	$(LINT) $(ALL_LINT_FLAGS) $(libFS_la_SOURCES) \
-@LINT_TRUE@	 $(libFS_la_LIBADD) $(LIBS)
-
-@MAKE_LINT_LIB_TRUE@$(LINTLIB): $(libFS_la_SOURCES)
-@MAKE_LINT_LIB_TRUE@	$(LINT) -y -oFS -x $(ALL_LINT_FLAGS) $(libFS_la_SOURCES) \
-@MAKE_LINT_LIB_TRUE@	 $(libFS_la_LIBADD) $(LIBS)
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:

@@ -2,24 +2,24 @@
  * Copyright 1990 Network Computing Devices;
  * Portions Copyright 1987 by Digital Equipment Corporation
  *
- * Permission to use, copy, modify, distribute, and sell this software 
- * and its documentation for any purpose is hereby granted without fee, 
- * provided that the above copyright notice appear in all copies and 
- * that both that copyright notice and this permission notice appear 
- * in supporting documentation, and that the names of Network Computing 
- * Devices or Digital not be used in advertising or publicity pertaining 
- * to distribution of the software without specific, written prior 
- * permission. Network Computing Devices or Digital make no representations 
- * about the suitability of this software for any purpose.  It is provided 
+ * Permission to use, copy, modify, distribute, and sell this software
+ * and its documentation for any purpose is hereby granted without fee,
+ * provided that the above copyright notice appear in all copies and
+ * that both that copyright notice and this permission notice appear
+ * in supporting documentation, and that the names of Network Computing
+ * Devices or Digital not be used in advertising or publicity pertaining
+ * to distribution of the software without specific, written prior
+ * permission. Network Computing Devices or Digital make no representations
+ * about the suitability of this software for any purpose.  It is provided
  * "as is" without express or implied warranty.
  *
  * NETWORK COMPUTING DEVICES AND  DIGITAL DISCLAIM ALL WARRANTIES WITH
- * REGARD TO THIS SOFTWARE, INCLUDING ALL IMPLIED WARRANTIES OF 
+ * REGARD TO THIS SOFTWARE, INCLUDING ALL IMPLIED WARRANTIES OF
  * MERCHANTABILITY AND FITNESS, IN NO EVENT SHALL NETWORK COMPUTING DEVICES
- * OR DIGITAL BE LIABLE FOR ANY SPECIAL, INDIRECT OR CONSEQUENTIAL DAMAGES 
- * OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, 
- * WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, 
- * ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS 
+ * OR DIGITAL BE LIABLE FOR ANY SPECIAL, INDIRECT OR CONSEQUENTIAL DAMAGES
+ * OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS,
+ * WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION,
+ * ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS
  * SOFTWARE.
  */
 
@@ -242,32 +242,32 @@ typedef struct _FSXFontInfoHeader {
 
 _XFUNCPROTOBEGIN
 
-extern FSServer * FSOpenServer ( char *server );
+extern FSServer * FSOpenServer ( const char *server );
 
 extern FSSyncHandler FSSynchronize(FSServer *, int);
 extern FSSyncHandler FSSetAfterFunction(FSServer *, FSSyncHandler);
 
-extern char * FSServerName ( char *server );
+extern const char * FSServerName ( const char *server );
 extern char ** FSListExtensions ( FSServer *svr, int *next );
-extern int FSQueryExtension ( FSServer *svr, char *name, int *major_opcode, 
+extern int FSQueryExtension ( FSServer *svr, char *name, int *major_opcode,
 			      int *first_event, int *first_error );
 
-extern char ** FSListCatalogues ( FSServer *svr, char *pattern, 
+extern char ** FSListCatalogues ( FSServer *svr, char *pattern,
 				  int maxNames, int *actualCount );
 extern char ** FSGetCatalogues ( FSServer *svr, int *num );
 
 extern long FSMaxRequestSize ( FSServer *svr );
 
-extern char ** FSListFonts ( FSServer *svr, char *pattern, int maxNames, 
+extern char ** FSListFonts ( FSServer *svr, const char *pattern, int maxNames,
 			     int *actualCount );
-extern char ** FSListFontsWithXInfo ( FSServer *svr, char *pattern, 
-				      int maxNames, int *count, 
-				      FSXFontInfoHeader ***info, 
-				      FSPropInfo ***pprops, 
-				      FSPropOffset ***offsets, 
+extern char ** FSListFontsWithXInfo ( FSServer *svr, const char *pattern,
+				      int maxNames, int *count,
+				      FSXFontInfoHeader ***info,
+				      FSPropInfo ***pprops,
+				      FSPropOffset ***offsets,
 				      unsigned char ***prop_data );
-extern Font FSOpenBitmapFont ( FSServer *svr, FSBitmapFormat hint, 
-			       FSBitmapFormatMask fmask, char *name, 
+extern Font FSOpenBitmapFont ( FSServer *svr, FSBitmapFormat hint,
+			       FSBitmapFormatMask fmask, char *name,
 			       Font *otherid );
 
 extern int FSSync ( FSServer *svr, Bool discard );
@@ -277,29 +277,29 @@ extern int FSCloseFont ( FSServer *svr, Font fid );
 extern int FSGetErrorDatabaseText ( FSServer *svr, const char *name,
 				    const char *type, const char *defaultp,
 				    char *buffer, int nbytes );
-extern int FSGetErrorText ( FSServer *svr, int code, char *buffer, 
-			    
+extern int FSGetErrorText ( FSServer *svr, int code, char *buffer,
+
 			    int nbytes );
 extern int FSFlush ( FSServer *svr );
 extern int FSFreeFontNames ( char **list );
 extern int FSFreeCatalogues ( char **list );
 extern int FSFreeExtensionList ( char **list );
 extern int FSNextEvent ( FSServer *svr, FSEvent *event );
-extern int FSQueryXBitmaps8 ( FSServer *svr, Font fid, FSBitmapFormat format, 
-			      int range_type, unsigned char *str, 
-			      unsigned long str_len, FSOffset **offsets, 
+extern int FSQueryXBitmaps8 ( FSServer *svr, Font fid, FSBitmapFormat format,
+			      int range_type, unsigned char *str,
+			      unsigned long str_len, FSOffset **offsets,
 			      unsigned char **glyphdata );
 extern int FSQueryXBitmaps16 ( FSServer *svr, Font fid, FSBitmapFormat format,
-			       int range_type, FSChar2b *str, 
-			       unsigned long str_len, FSOffset **offsets, 
+			       int range_type, FSChar2b *str,
+			       unsigned long str_len, FSOffset **offsets,
 			       unsigned char **glyphdata );
-extern int FSQueryXExtents8 ( FSServer *svr, Font fid, int range_type, 
-			      unsigned char *str, unsigned long str_len, 
+extern int FSQueryXExtents8 ( FSServer *svr, Font fid, int range_type,
+			      unsigned char *str, unsigned long str_len,
 			      FSXCharInfo **extents );
-extern int FSQueryXExtents16 ( FSServer *svr, Font fid, int range_type, 
-			       FSChar2b *str, unsigned long str_len, 
+extern int FSQueryXExtents16 ( FSServer *svr, Font fid, int range_type,
+			       FSChar2b *str, unsigned long str_len,
 			       FSXCharInfo **extents );
-extern int FSQueryXInfo ( FSServer *svr, Font fid, FSXFontInfoHeader *info, 
+extern int FSQueryXInfo ( FSServer *svr, Font fid, FSXFontInfoHeader *info,
 			  FSPropInfo *props, FSPropOffset **offsets,
 			  unsigned char **prop_data );
 extern int FSSetCatalogues ( FSServer *svr, int num, char **cats );

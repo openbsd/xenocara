@@ -2,24 +2,24 @@
  * Copyright 1990 Network Computing Devices;
  * Portions Copyright 1987 by Digital Equipment Corporation
  *
- * Permission to use, copy, modify, distribute, and sell this software 
- * and its documentation for any purpose is hereby granted without fee, 
- * provided that the above copyright notice appear in all copies and 
- * that both that copyright notice and this permission notice appear 
- * in supporting documentation, and that the names of Network Computing 
- * Devices or Digital not be used in advertising or publicity pertaining 
- * to distribution of the software without specific, written prior 
- * permission. Network Computing Devices or Digital make no representations 
- * about the suitability of this software for any purpose.  It is provided 
+ * Permission to use, copy, modify, distribute, and sell this software
+ * and its documentation for any purpose is hereby granted without fee,
+ * provided that the above copyright notice appear in all copies and
+ * that both that copyright notice and this permission notice appear
+ * in supporting documentation, and that the names of Network Computing
+ * Devices or Digital not be used in advertising or publicity pertaining
+ * to distribution of the software without specific, written prior
+ * permission. Network Computing Devices or Digital make no representations
+ * about the suitability of this software for any purpose.  It is provided
  * "as is" without express or implied warranty.
  *
  * NETWORK COMPUTING DEVICES AND  DIGITAL DISCLAIM ALL WARRANTIES WITH
- * REGARD TO THIS SOFTWARE, INCLUDING ALL IMPLIED WARRANTIES OF 
+ * REGARD TO THIS SOFTWARE, INCLUDING ALL IMPLIED WARRANTIES OF
  * MERCHANTABILITY AND FITNESS, IN NO EVENT SHALL NETWORK COMPUTING DEVICES
- * OR DIGITAL BE LIABLE FOR ANY SPECIAL, INDIRECT OR CONSEQUENTIAL DAMAGES 
- * OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, 
- * WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, 
- * ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS 
+ * OR DIGITAL BE LIABLE FOR ANY SPECIAL, INDIRECT OR CONSEQUENTIAL DAMAGES
+ * OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS,
+ * WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION,
+ * ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS
  * SOFTWARE.
  */
 
@@ -56,7 +56,7 @@ in this Software without prior written authorization from The Open Group.
 char      **
 FSListFontsWithXInfo(
     FSServer		  *svr,
-    char		  *pattern,
+    const char		  *pattern,
     int			   maxNames,
     int			  *count,
     FSXFontInfoHeader	***info,
@@ -126,11 +126,11 @@ FSListFontsWithXInfo(
 	    break;
 	if ((i + reply.nReplies) >= size) {
 
-	    if (reply.nReplies > SIZE_MAX - i - 1) 
+	    if (reply.nReplies > SIZE_MAX - i - 1)
 		goto badmem;
 	    size = i + reply.nReplies + 1;
 
-	    if (size > SIZE_MAX / sizeof(char *)) 
+	    if (size > SIZE_MAX / sizeof(char *))
 		goto badmem;
 
 	    if (fhdr) {
@@ -274,7 +274,7 @@ FSListFontsWithXInfo(
 	    po[i][j].value.length = local_po.value.length;
 	    po[i][j].type = local_po.type;
 	}
-	
+
 	/* get prop data */
 	if (FSProtocolVersion(svr) == 1)
 	    _FSReadPad(svr, (char *) pd[i], pi[i]->data_len);

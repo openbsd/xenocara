@@ -2,24 +2,24 @@
  * Copyright 1990 Network Computing Devices;
  * Portions Copyright 1987 by Digital Equipment Corporation
  *
- * Permission to use, copy, modify, distribute, and sell this software 
- * and its documentation for any purpose is hereby granted without fee, 
- * provided that the above copyright notice appear in all copies and 
- * that both that copyright notice and this permission notice appear 
- * in supporting documentation, and that the names of Network Computing 
- * Devices or Digital not be used in advertising or publicity pertaining 
- * to distribution of the software without specific, written prior 
- * permission. Network Computing Devices or Digital make no representations 
- * about the suitability of this software for any purpose.  It is provided 
+ * Permission to use, copy, modify, distribute, and sell this software
+ * and its documentation for any purpose is hereby granted without fee,
+ * provided that the above copyright notice appear in all copies and
+ * that both that copyright notice and this permission notice appear
+ * in supporting documentation, and that the names of Network Computing
+ * Devices or Digital not be used in advertising or publicity pertaining
+ * to distribution of the software without specific, written prior
+ * permission. Network Computing Devices or Digital make no representations
+ * about the suitability of this software for any purpose.  It is provided
  * "as is" without express or implied warranty.
  *
  * NETWORK COMPUTING DEVICES AND  DIGITAL DISCLAIM ALL WARRANTIES WITH
- * REGARD TO THIS SOFTWARE, INCLUDING ALL IMPLIED WARRANTIES OF 
+ * REGARD TO THIS SOFTWARE, INCLUDING ALL IMPLIED WARRANTIES OF
  * MERCHANTABILITY AND FITNESS, IN NO EVENT SHALL NETWORK COMPUTING DEVICES
- * OR DIGITAL BE LIABLE FOR ANY SPECIAL, INDIRECT OR CONSEQUENTIAL DAMAGES 
- * OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, 
- * WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, 
- * ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS 
+ * OR DIGITAL BE LIABLE FOR ANY SPECIAL, INDIRECT OR CONSEQUENTIAL DAMAGES
+ * OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS,
+ * WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION,
+ * ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS
  * SOFTWARE.
  */
 
@@ -61,7 +61,7 @@ in this Software without prior written authorization from The Open Group.
 #include	<errno.h>
 #include	<stddef.h>
 
-typedef int (* FSIOErrorHandler)(FSServer *);
+typedef int (* FSIOErrorHandler)(FSServer *) _X_NORETURN;
 typedef int (* FSErrorHandler)(FSServer *, FSErrorEvent *);
 
 extern FSIOErrorHandler _FSIOErrorFunction;
@@ -74,7 +74,7 @@ extern void _FSFlush ( FSServer *svr );
 extern void _FSRead ( FSServer *svr, char *data, long size );
 extern void _FSReadEvents ( FSServer *svr );
 extern void _FSReadPad ( FSServer *svr, char *data, long size );
-extern void _FSSend ( FSServer *svr, char *data, long size );
+extern void _FSSend ( FSServer *svr, const char *data, long size );
 extern void _FSEnq ( FSServer *svr, fsEvent *event );
 extern void _FSFreeServerStructure ( FSServer *svr );
 extern int _FSError ( FSServer *svr, fsError *rep );
@@ -83,14 +83,14 @@ extern XtransConnInfo _FSConnectServer ( char *server_name );
 extern void _FSDisconnectServer ( XtransConnInfo trans_conn );
 extern void _FSSendClientPrefix ( FSServer *svr, fsConnClientPrefix *client );
 extern int _FSEventsQueued ( FSServer *svr, int mode );
-extern unsigned long _FSSetLastRequestRead ( FSServer *svr, 
+extern unsigned long _FSSetLastRequestRead ( FSServer *svr,
 					     fsGenericReply *rep );
 extern int _FSUnknownWireEvent ( FSServer *svr, FSEvent *re, fsEvent *event );
-extern int _FSUnknownNativeEvent ( FSServer *svr, FSEvent *re, 
+extern int _FSUnknownNativeEvent ( FSServer *svr, FSEvent *re,
 				   fsEvent *event );
 extern int _FSWireToEvent ( FSServer *svr, FSEvent *re, fsEvent *event );
-extern int _FSDefaultIOError ( FSServer *svr );
-extern int _FSPrintDefaultError ( FSServer *svr, FSErrorEvent *event, 
+extern int _FSDefaultIOError ( FSServer *svr ) _X_NORETURN;
+extern int _FSPrintDefaultError ( FSServer *svr, FSErrorEvent *event,
 				  FILE *fp );
 extern int _FSDefaultError ( FSServer *svr, FSErrorEvent *event );
 extern char * _FSAllocScratch ( FSServer *svr, unsigned long nbytes );
@@ -108,7 +108,7 @@ extern FSServer *_FSHeadOfServerList;
 #endif
 
 /*
- * server flags 
+ * server flags
  */
 #define	FSlibServerIOError	(1L << 0)
 #define	FSlibServerClosing	(1L << 1)
