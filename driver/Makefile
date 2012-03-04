@@ -1,11 +1,4 @@
-# $OpenBSD: Makefile,v 1.42 2012/02/07 19:46:11 matthieu Exp $
-
-# The input driver ABI broke between xserver 1.9 and 1.10. 
-# Some drivers were updated to the new ABI without keeping compatibility
-# So people testing Xserver 1.11 cant build the ones in xenocara until
-# they are updated, but I don't want to break people building from CVS
-# This is going away once xsever 1.11 and associated input drivers 
-# updates are committed
+# $OpenBSD: Makefile,v 1.43 2012/03/04 14:50:24 matthieu Exp $
 
 INPUT_DRV_DEFAULT= \
 	xf86-input-keyboard \
@@ -33,7 +26,7 @@ INPUT_DRV_landisk=
 
 INPUT_DRV_loongson= ${INPUT_DRV_DEFAULT}
 
-INPUT_DRV_mac68k= 
+INPUT_DRV_mac68k=
 
 INPUT_DRV_macppc= ${INPUT_DRV_COMMON}
 
