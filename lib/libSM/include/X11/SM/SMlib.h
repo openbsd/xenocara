@@ -1,5 +1,3 @@
-/* $Xorg: SMlib.h,v 1.4 2001/02/09 02:03:30 xorgcvs Exp $ */
-
 /*
 
 Copyright 1993, 1998  The Open Group
@@ -170,7 +168,7 @@ typedef struct {
 typedef Status (*SmsRegisterClientProc) (
     SmsConn 		/* smsConn */,
     SmPointer		/* managerData */,
-    char *		/* previousId */				     
+    char *		/* previousId */
 );
 
 typedef void (*SmsInteractRequestProc) (
@@ -447,8 +445,8 @@ extern IceConn SmcGetIceConnection (
 );
 
 extern Status SmsInitialize (
-    char *			/* vendor */,
-    char *			/* release */,
+    const char *		/* vendor */,
+    const char *		/* release */,
     SmsNewClientProc		/* newClientProc */,
     SmPointer			/* managerData */,
     IceHostBasedAuthProc	/* hostBasedAuthProc */,

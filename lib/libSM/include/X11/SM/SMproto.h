@@ -1,5 +1,3 @@
-/* $Xorg: SMproto.h,v 1.5 2001/02/09 02:03:30 xorgcvs Exp $ */
-
 /*
 
 Copyright 1993, 1998  The Open Group

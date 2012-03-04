@@ -1,6 +1,3 @@
-/* $XdotOrg: $ */
-/* $Xorg: sm_manager.c,v 1.4 2001/02/09 02:03:30 xorgcvs Exp $ */
-
 /*
 
 Copyright 1993, 1998  The Open Group
@@ -71,12 +68,11 @@ _SmsProtocolSetupProc (IceConn    iceConn,
      * Allocate new SmsConn.
      */
 
-    if ((smsConn = (SmsConn) malloc (sizeof (struct _SmsConn))) == NULL)
+    if ((smsConn = malloc (sizeof (struct _SmsConn))) == NULL)
     {
 	const char *str = "Memory allocation failed";
 
-	if ((*failureReasonRet = (char *) malloc (strlen (str) + 1)) != NULL)
-	    strcpy (*failureReasonRet, str);
+	*failureReasonRet = strdup (str);
 
 	return (0);
     }
@@ -114,7 +110,8 @@ _SmsProtocolSetupProc (IceConn    iceConn,
 
 
 Status
-SmsInitialize(char *vendor, char *release, SmsNewClientProc newClientProc,
+SmsInitialize(const char *vendor, const char *release,
+	      SmsNewClientProc newClientProc,
 	      SmPointer managerData, IceHostBasedAuthProc hostBasedAuthProc,
 	      int errorLength, char *errorStringRet)
 {
@@ -190,12 +187,10 @@ SmsRegisterClientReply(SmsConn smsConn, char *clientId)
     smRegisterClientReplyMsg 	*pMsg;
     char 			*pData;
 
-    if ((smsConn->client_id = (char *) malloc (strlen (clientId) + 1)) == NULL)
+    if ((smsConn->client_id = strdup (clientId)) == NULL)
     {
 	return (0);
     }
-
-    strcpy (smsConn->client_id, clientId);
 
     extra = ARRAY8_BYTES (strlen (clientId));
 
@@ -341,5 +336,5 @@ SmsCleanUp(SmsConn smsConn)
     if (smsConn->client_id)
 	free (smsConn->client_id);
 
-    free ((char *) smsConn);
+    free (smsConn);
 }

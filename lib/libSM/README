@@ -1,10 +1,5 @@
 libSM - X Session Management Library
 
-Documentation for this API can be found in the SMlib document in the
-doc/xorg-docs module of the X distribution, also available online at:
-
-	http://xorg.freedesktop.org/releases/X11R7.0/doc/PDF/SMlib.pdf
-
 All questions regarding this software should be directed at the
 Xorg mailing list:
 

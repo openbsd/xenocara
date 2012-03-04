@@ -6,7 +6,7 @@ includedir=@includedir@
 Name: SM
 Description: X Session Management Library
 Version: @PACKAGE_VERSION@
-Requires: ice xproto
-Requires.private: ice
+Requires:
+Requires.private: ice xproto
 Cflags: -I${includedir}
 Libs: -L${libdir} -lSM

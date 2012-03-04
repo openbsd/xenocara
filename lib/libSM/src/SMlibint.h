@@ -1,5 +1,3 @@
-/* $Xorg: SMlibint.h,v 1.4 2001/02/09 02:03:30 xorgcvs Exp $ */
-
 /*
 
 Copyright 1993, 1998  The Open Group
@@ -25,7 +23,6 @@ used in advertising or otherwise to promote the sale, use or other dealings
 in this Software without prior written authorization from The Open Group.
 
 */
-/* $XFree86: xc/lib/SM/SMlibint.h,v 1.3 2001/07/29 05:01:11 tsi Exp $ */
 
 /*
  * Author: Ralph Mor, X Consortium
@@ -239,7 +236,7 @@ in this Software without prior written authorization from The Open Group.
 #define EXTRACT_ARRAY8(_pBuf, _swap, _len, _array8) \
 { \
     EXTRACT_CARD32 (_pBuf, _swap, _len); \
-    _array8 = (char *) malloc (_len + 1); \
+    _array8 = malloc (_len + 1); \
     memcpy (_array8, _pBuf, _len); \
     _array8[_len] = '\0'; \
     _pBuf += _len + PAD64 (4 + _len); \
@@ -249,7 +246,7 @@ in this Software without prior written authorization from The Open Group.
 { \
     CARD32 _len; \
     EXTRACT_CARD32 (_pBuf, _swap, _len); \
-    _string = (char *) malloc (_len + 1); \
+    _string = malloc (_len + 1); \
     memcpy (_string, _pBuf, _len); \
     _string[_len] = '\0'; \
     _pBuf += _len + PAD64 (4 + _len); \
@@ -260,15 +257,15 @@ in this Software without prior written authorization from The Open Group.
     int _i, _j; \
     EXTRACT_CARD32 (_pBuf, _swap, _count); \
     _pBuf += 4; \
-    _props = (SmProp **) malloc (_count * sizeof (SmProp *)); \
+    _props = malloc (_count * sizeof (SmProp *)); \
     for (_i = 0; _i < _count; _i++) \
     { \
-        _props[_i] = (SmProp *) malloc (sizeof (SmProp)); \
+        _props[_i] = malloc (sizeof (SmProp)); \
         EXTRACT_ARRAY8_AS_STRING (_pBuf, _swap, _props[_i]->name); \
         EXTRACT_ARRAY8_AS_STRING (_pBuf, _swap, _props[_i]->type); \
         EXTRACT_CARD32 (_pBuf, _swap, _props[_i]->num_vals); \
         _pBuf += 4; \
-        _props[_i]->vals = (SmPropValue *) malloc ( \
+        _props[_i]->vals = malloc ( \
 	    _props[_i]->num_vals * sizeof (SmPropValue)); \
         for (_j = 0; _j < _props[_i]->num_vals; _j++) \
 	{ \

@@ -138,7 +138,7 @@ SmcOpenConnection(char *networkIdsList, SmPointer context,
 	return (NULL);
     }
 
-    if ((smcConn = (SmcConn) malloc (sizeof (struct _SmcConn))) == NULL)
+    if ((smcConn = malloc (sizeof (struct _SmcConn))) == NULL)
     {
 	if (errorStringRet && errorLength > 0) {
 	    strncpy (errorStringRet, "Can't malloc", errorLength);
@@ -158,7 +158,7 @@ SmcOpenConnection(char *networkIdsList, SmPointer context,
 	setupstat == IceProtocolSetupIOError)
     {
 	IceCloseConnection (iceConn);
-	free ((char *) smcConn);
+	free (smcConn);
 	return (NULL);
     }
     else if (setupstat == IceProtocolAlreadyActive)
@@ -169,7 +169,7 @@ SmcOpenConnection(char *networkIdsList, SmPointer context,
 	 * may not already have XSMP active on it.
 	 */
 
-	free ((char *) smcConn);
+	free (smcConn);
 	if (errorStringRet && errorLength > 0) {
 	    strncpy (errorStringRet, "Internal error in IceOpenConnection",
 		     errorLength);
@@ -235,7 +235,7 @@ SmcOpenConnection(char *networkIdsList, SmPointer context,
 	    }
 	    free (smcConn->vendor);
 	    free (smcConn->release);
-	    free ((char *) smcConn);
+	    free (smcConn);
 
 	    return (NULL);
 	}
@@ -249,10 +249,7 @@ SmcOpenConnection(char *networkIdsList, SmPointer context,
 
 		*clientIdRet = reply.client_id;
 
-		smcConn->client_id = (char *) malloc (
-		    strlen (*clientIdRet) + 1);
-
-		strcpy (smcConn->client_id, *clientIdRet);
+		smcConn->client_id = strdup (*clientIdRet);
 	    }
 	    else
 	    {
@@ -308,7 +305,7 @@ SmcCloseConnection(SmcConn smcConn, int count, char **reasonMsgs)
     pData += 4;
 
     for (i = 0; i < count; i++)
-	STORE_ARRAY8 (pData, strlen (reasonMsgs[i]), reasonMsgs[i]); 
+	STORE_ARRAY8 (pData, strlen (reasonMsgs[i]), reasonMsgs[i]);
 
     IceFlush (iceConn);
 
@@ -333,13 +330,13 @@ SmcCloseConnection(SmcConn smcConn, int count, char **reasonMsgs)
 	while (ptr)
 	{
 	    next = ptr->next;
-	    free ((char *) ptr);
+	    free (ptr);
 	    ptr = next;
 	}
-	
+
     }
 
-    free ((char *) smcConn);
+    free (smcConn);
 
     if (closeStatus == IceClosedNow)
 	statusRet = SmcClosedNow;
@@ -408,7 +405,7 @@ SmcDeleteProperties(SmcConn smcConn, int numProps, char **propNames)
     pData += 4;
 
     for (i = 0; i < numProps; i++)
-	STORE_ARRAY8 (pData, strlen (propNames[i]), propNames[i]); 
+	STORE_ARRAY8 (pData, strlen (propNames[i]), propNames[i]);
 
     IceFlush (iceConn);
 }
@@ -422,8 +419,7 @@ SmcGetProperties(SmcConn smcConn, SmcPropReplyProc propReplyProc,
     IceConn		iceConn = smcConn->iceConn;
     _SmcPropReplyWait 	*wait, *ptr;
 
-    if ((wait = (_SmcPropReplyWait *) malloc (
-	sizeof (_SmcPropReplyWait))) == NULL)
+    if ((wait = malloc (sizeof (_SmcPropReplyWait))) == NULL)
     {
 	return (0);
     }
@@ -457,8 +453,7 @@ SmcInteractRequest(SmcConn smcConn, int dialogType,
     smInteractRequestMsg	*pMsg;
     _SmcInteractWait 		*wait, *ptr;
 
-    if ((wait = (_SmcInteractWait *) malloc (
-	sizeof (_SmcInteractWait))) == NULL)
+    if ((wait = malloc (sizeof (_SmcInteractWait))) == NULL)
     {
 	return (0);
     }
@@ -537,8 +532,7 @@ SmcRequestSaveYourselfPhase2(SmcConn smcConn,
 	wait = smcConn->phase2_wait;
     else
     {
-	if ((wait = (_SmcPhase2Wait *) malloc (
-	    sizeof (_SmcPhase2Wait))) == NULL)
+	if ((wait = malloc (sizeof (_SmcPhase2Wait))) == NULL)
 	{
 	    return (0);
 	}
