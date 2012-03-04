@@ -46,7 +46,7 @@ in this Software without prior written authorization from The Open Group.
  * THIS SOFTWARE.
  */
 
-#include	"xfs-config.h"
+#include	"config.h"
 
 #include	<stdio.h>
 #include	<X11/Xos.h>
@@ -88,7 +88,7 @@ int 	     OldListenCount = 0;
 #endif
 #define WRITES(s) write(STDERR_FILENO, s, strlen(s))
 
-static char *pidFile = XFSPIDDIR "/xfs.pid";
+static const char *pidFile = XFSPIDDIR "/xfs.pid";
 static int  pidFd;
 static FILE *pidFilePtr;
 static int  StorePid (void);
@@ -187,7 +187,7 @@ GetTimeInMillis(void)
     return ((tp.tv_sec * 1000) + (tp.tv_usec / 1000));
 }
 
-static void
+static void _X_NORETURN
 usage(void)
 {
     fprintf(stderr, "usage: %s [-config config_file] [-port tcp_port] [-droppriv] [-daemon] [-nodaemon] [-user user_name] [-ls listen_socket]\n",

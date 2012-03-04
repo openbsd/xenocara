@@ -45,7 +45,7 @@ in this Software without prior written authorization from The Open Group.
  *
  */
 
-#include	"xfs-config.h"
+#include	"config.h"
 
 #include	"cachestr.h"
 #include	"misc.h"
@@ -368,7 +368,7 @@ CacheFreeMemory(
 	}
     }
     if (!found)
-	FatalError("freeing cache entry %d which isn't there\n", cid);
+	FatalError("freeing cache entry %ld which isn't there\n", cid);
 }
 
 /* ARGSUSED */

@@ -46,7 +46,7 @@ in this Software without prior written authorization from The Open Group.
  * THIS SOFTWARE.
  */
 
-#include	"xfs-config.h"
+#include	"config.h"
 
 #define	XK_LATIN1
 
@@ -210,15 +210,15 @@ CopyISOLatin1Lowered(char *d, char *s, int length)
 
 int
 strncmpnocase(
-    char       *first,
-    char       *second,
+    const char *first,
+    const char *second,
     int         n)
 {
-    register unsigned char *ap,
+    register const unsigned char *ap,
                *bp;
 
-    for (ap = (unsigned char *) first,
-	    bp = (unsigned char *) second;
+    for (ap = (const unsigned char *) first,
+	    bp = (const unsigned char *) second;
     /* SUPPRESS 112 */
 	    n > 0 && *ap && *bp; n--, ap++, bp++) {
 	register unsigned char a,

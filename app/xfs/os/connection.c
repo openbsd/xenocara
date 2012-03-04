@@ -67,7 +67,7 @@ in this Software without prior written authorization from The Open Group.
  * THIS SOFTWARE.
  */
 
-#include	"xfs-config.h"
+#include	"config.h"
 
 #include	<stdlib.h>
 #include	<X11/Xtrans/Xtrans.h>

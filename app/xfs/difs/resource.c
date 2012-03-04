@@ -63,7 +63,7 @@ in this Software without prior written authorization from The Open Group.
  *      1 - allocated color to be freed when the client dies
  */
 
-#include "xfs-config.h"
+#include "config.h"
 
 #include <X11/fonts/FS.h>
 #include "misc.h"
@@ -300,7 +300,7 @@ AddResource(
 
     rrec = &clientTable[cid];
     if (!rrec->buckets) {
-	ErrorF("AddResource(%x, %x, %x), client=%d \n",
+	ErrorF("AddResource(%lx, %lx, %p), client=%d \n",
 	       id, type, value, cid);
 	FatalError("client not in use\n");
     }
@@ -407,7 +407,7 @@ FreeResource(
 	}
     }
     if (!gotOne)
-	FatalError("freeing resource id=%X which isn't there\n", id);
+	FatalError("freeing resource id=%lX which isn't there\n", id);
 }
 
 #ifdef NOTYET

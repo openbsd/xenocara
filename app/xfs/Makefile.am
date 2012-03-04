@@ -53,7 +53,6 @@ xfs_SOURCES = \
 	difs/tables.c \
 	os/access.c \
 	os/config.c \
-	os/config.h \
 	os/configstr.h \
 	os/connection.c \
 	os/daemon.c \

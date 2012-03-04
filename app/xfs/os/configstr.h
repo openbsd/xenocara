@@ -51,7 +51,7 @@ in this Software without prior written authorization from The Open Group.
 typedef struct _config_options ConfigOptionRec, *ConfigOptionPtr;
 
 struct _config_options {
-    char       *parm_name;
+    const char *parm_name;
     char       *(*set_func) (ConfigOptionPtr, char *);
 };
 

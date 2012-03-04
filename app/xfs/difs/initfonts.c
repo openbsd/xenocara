@@ -47,7 +47,7 @@ in this Software without prior written authorization from The Open Group.
  *
  */
 
-#include	"xfs-config.h"
+#include	"config.h"
 
 #include        <X11/fonts/font.h>
 #include	"difs.h"

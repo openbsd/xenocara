@@ -1,5 +1,5 @@
 /*
- * $Id: xfstrans.c,v 1.3 2009/10/10 10:12:49 matthieu Exp $
+ * $Id: xfstrans.c,v 1.4 2012/03/04 18:36:21 matthieu Exp $
  *
  * Copyright © 2003 Keith Packard
  *
@@ -22,7 +22,7 @@
  * PERFORMANCE OF THIS SOFTWARE.
  */
 
-#include <xfs-config.h>
+#include <config.h>
 
 #define FONT_t 1
 #define TRANS_REOPEN 1
@@ -37,7 +37,7 @@
 OldListenRec *
 TRANS(GetInetdListenInfo) (int fd)
 {
-    char *port = "0";
+    char *port = NULL;
     XtransConnInfo inetdCI;
     OldListenRec *old_listen;
     int portnum;
@@ -53,7 +53,7 @@ TRANS(GetInetdListenInfo) (int fd)
     else
 #endif
 	portnum = ntohs(((struct sockaddr_in *)(inetdCI->addr))->sin_port);
-    inetdCI->port = xalloc(6); /* Base 10 integer <= 65535 + trailing NUL */
+    inetdCI->port = malloc(6); /* Base 10 integer <= 65535 + trailing NUL */
     snprintf(inetdCI->port, 6, "%d", portnum);
 
     /* Do the socket setup that xtrans normally takes care of in

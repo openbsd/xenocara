@@ -1,15 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE article PUBLIC "-//OASIS//DTD DocBook XML V4.4//EN"
-    "http://www.oasis-open.org/docbook/xml/4.4/docbookx.dtd">
+    "http://www.oasis-open.org/docbook/xml/4.4/docbookx.dtd"
+[
+<!ENTITY % defs SYSTEM "defs.ent"> %defs;
+]>
 <!-- lifted from troff+ms by doclifter -->
 <!-- previous version was in xorg-docs/specs/xfs/design.ms -->
 <!-- encoding notes:
 	- for lack of a better match, the systemitem tag is used for
 	  protocol request names
   -->
-<article id='designms'>
+<article id='xfs-design'>
   <articleinfo>
     <title>Font server implementation overview</title>
+    <releaseinfo>X Version 11, Release &fullrelvers;</releaseinfo>
     <author>
       <firstname>Dave</firstname>
       <surname>Lemke</surname>
@@ -21,6 +25,19 @@
       <year>1991</year>
       <holder>Network Computing Devices, Inc.</holder>
     </copyright>
+
+    <legalnotice>
+      <para>
+        Permission to use, copy, modify, distribute, and sell this
+        documentation for any purpose is hereby granted without fee,
+        provided that the above copyright notice and this permission
+        notice appear in all copies.  Network Computing Devices, Inc.
+        makes no representations about the suitability for any purpose
+        of the information in this document.  This documentation is
+        provided "as is" without express or implied warranty.
+      </para>
+    </legalnotice>
+
   </articleinfo>
   <sect1 id='introduction'>
     <title>Introduction</title>

@@ -44,7 +44,7 @@ in this Software without prior written authorization from The Open Group.
  * THIS SOFTWARE.
  */
 
-#include	"xfs-config.h"
+#include	"config.h"
 
 #include	<stdio.h>
 #include	<stdlib.h>
@@ -66,7 +66,7 @@ Bool        log_open = FALSE;
 char        ErrorFile[PATH_MAX];
 static char	CurrentErrorFile[PATH_MAX];
 
-static void
+static void _X_NORETURN
 abort_server(void)
 {
     fflush(stderr);
@@ -131,7 +131,7 @@ CloseErrors(void)
 }
 
 void
-Error(char *str)
+Error(const char *str)
 {
 #ifdef USE_SYSLOG
     if (UseSyslog) {
@@ -146,7 +146,7 @@ Error(char *str)
  * used for informational messages
  */
 void
-NoticeF(char *f, ...)
+NoticeF(const char *f, ...)
 {
     /* XXX should Notices just be ignored if not using syslog? */
     va_list args;
@@ -167,7 +167,7 @@ NoticeF(char *f, ...)
  * used for non-fatal error messages
  */
 void
-ErrorF(char * f, ...)
+ErrorF(const char * f, ...)
 {
     va_list args;
     va_start(args, f);
@@ -184,7 +184,7 @@ ErrorF(char * f, ...)
 }
 
 void
-FatalError(char * f, ...)
+FatalError(const char * f, ...)
 {
     va_list args;
     va_start(args, f);

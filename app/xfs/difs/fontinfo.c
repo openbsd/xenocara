@@ -46,7 +46,7 @@ in this Software without prior written authorization from The Open Group.
  * THIS SOFTWARE.
  */
 
-#include	"xfs-config.h"
+#include	"config.h"
 
 #include        <X11/fonts/FS.h>
 #include        <X11/fonts/FSproto.h>

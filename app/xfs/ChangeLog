@@ -1,3 +1,263 @@
+commit 7ec5d8d1a7adfd9b844fa750c319189a426466d5
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Feb 28 22:33:44 2012 -0800
+
+    xfs 1.1.2
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 03b4a543a812b14a565a92ac691cdc0f550e95d1
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Nov 30 18:21:30 2011 -0800
+
+    Call malloc, not xalloc
+    
+    One call in xfstrans.c used xalloc - everything else already had malloc.
+    Fix this so it won't break when Xtrans stops defining xalloc to malloc
+    for us.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 1c7f1cdefc1c256cd24d4b793c710c60870ae942
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Nov 11 22:42:51 2011 -0800
+
+    Use config.h for autoconf output now that there's no conflict
+    
+    Now that os/config.h is gone, no reason to special case and have
+    xfs-config.h for the autoconf generated header.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit e2a18c2fc203d094b2e975cf9b316528b9feaaa8
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Nov 11 22:38:08 2011 -0800
+
+    Move os/config.h into os/config.c
+    
+    The only file that needed the only remaining definition was config.c,
+    so there's no point keeping a header file around for a single #define
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit 9de423ba5997e7cdb131f4bbdec2e676fa42c3e0
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Nov 11 22:33:24 2011 -0800
+
+    Fix printf format errors found by gcc now that it can check
+    
+    Fixes:
+    os/config.c: In function ‘config_parse_nameVal’:
+    os/config.c:417:5: warning: too few arguments for format
+    os/config.c: In function ‘config_parse_int’:
+    os/config.c:458:6: warning: too few arguments for format
+    
+    Requires passing parm arguments around in order to provide parameter
+    names with problems in the error messages
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit 22968fe5dd9e83ea39c095fd74bbf518ed1e51f0
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Nov 11 22:27:00 2011 -0800
+
+    Make CONFIG_ERR_* values be strings instead of indexes in ConfigErrors array
+    
+    Allows gcc to check printf format strings instead of just giving warnings.
+    Since these #defines are only used in config.c, define them directly there,
+    instead of in the config.h header that no one else includes.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit f8224be41700ccf7d639bd9a10818a45b10bc63a
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Nov 11 20:05:49 2011 -0800
+
+    Constify string argument to MakeAtom
+    
+    Matches what's already been done in xserver and libXfont
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit ac59cccf8bc1ae3d41e0608f131b5eb888f9362b
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Sep 25 12:12:14 2011 -0700
+
+    Don't pass a static string to TRANS(GetReopenInfo)
+    
+    It never reads the value passed in, just overwrites the pointer,
+    and gcc -Wwrite-strings complains about assigning a constant string
+    to a non-const char*.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit cb8c4d800cc237c9ecaebd7af91ff26a311ac310
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Sep 22 09:10:10 2011 -0400
+
+    xfs-design: add missing legal text for Copyright holder
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit fd9d549b9e480826f8d3a22665a26977c573c0c4
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Sep 16 20:33:36 2011 -0700
+
+    Add _X_NORETURN to declarations of functions that exit
+    
+    While you might think FatalError() also should have _X_NORETURN, if
+    you add it, you will find that gcc warns you that it does indeed
+    return when built with syslog support.   Why syslog makes all fatal
+    errors become non-fatal is an excellent question to ponder...
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit cee4aafcd5ebef34cae02f2215663df6c8551a20
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Sep 16 19:36:02 2011 -0700
+
+    Fix warnings about mismatched printf arg types
+    
+    Mostly from types defined as long or unsigned long which we tried to
+    print as normal ints.
+    
+    difs/cache.c: In function `CacheFreeMemory':
+    difs/cache.c:371: warning: int format, different type arg (arg 2)
+    
+    difs/resource.c: In function `AddResource':
+    difs/resource.c:304: warning: unsigned int format, different type arg (arg 2)
+    difs/resource.c:304: warning: unsigned int format, different type arg (arg 3)
+    difs/resource.c:304: warning: unsigned int format, pointer arg (arg 4)
+    difs/resource.c: In function `FreeResource':
+    difs/resource.c:410: warning: unsigned int format, different type arg (arg 2)
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 8b426f8a15b5f2e6268438d2e0505fdbf8c64aeb
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Sep 16 19:11:53 2011 -0700
+
+    Add _X_ATTRIBUTE_PRINTF to error reporting functions
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit c57e65406a7447930f701a319ba518acf9b4b5d3
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Sep 16 19:10:04 2011 -0700
+
+    Fix gcc -Wwrite-strings warnings for initialization with string literals
+    
+    Many warnings of the form:
+    os/config.c:92:5: warning: initialization discards qualifiers from pointer target type
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 12463ed04068716ef8e9cf53eddaf8e78d0688dd
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Sep 16 19:23:30 2011 -0700
+
+    Remove dependency on libFS, the client-side library
+    
+    xfs doesn't include <X11/fonts/FSlib.h> nor call any functions from the
+    library, which is not surprising, as that's the library containing the
+    client-side code for connecting to a font server such as xfs.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit ece2db504981f95bb1766d5a95ee8558bd95da46
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Sep 12 11:08:10 2011 -0400
+
+    docs: use the &fullrelvers; entity to set X11 release information
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 074374e0b94b3ff7aa09966d01691a98e2467ee4
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Fri Sep 9 13:00:50 2011 -0400
+
+    devbook.am: maintenance update from docbook.am
+    
+    The developer docs are generated from a subset of docbook.am
+    which is sometimes updated.
+    
+    The one difference is the embedded css style in the HEAD element.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit d8c17fc48a02d9c21d55514c92ec72a03ba581a8
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Fri Sep 9 13:30:55 2011 -0400
+
+    config: fix distcheck for config.cpp
+    
+    The location of the file is in srcdir.
+    Problem introduced in commit 68bf267fa
+    
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 3024e122b6d256060696ef0ba92c794a8106bc8f
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Mar 2 14:20:10 2011 -0500
+
+    doc: use common makefile for developers documentation
+    
+    The user/specs docs now have external references support.
+    Developers doc are not installed so they do not participate.
+    However, using a similar makefile shared amongst developers
+    document reduces maintenance and is forward looking.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit fe05c6c0c5abc7708f10c7af3929b1a26dde60c8
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Jan 7 18:22:51 2011 -0800
+
+    resync font-path checking with xserver's configure.ac
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Acked-by: Dan Nicholson <dbn.lists@gmail.com>
+
+commit 68bf267fa4080e4a85df91e4a196bb701ee921d1
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Jan 7 18:19:56 2011 -0800
+
+    Make config.cpp rule compatible with Solaris make
+    
+    Solaris make doesn't support $< in direct target rules.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit ea30eb37f4402cf09db8e1dc8b999d3bf7b7d66f
+Author: Martin Jansa <martin.jansa@gmail.com>
+Date:   Sat Nov 20 08:47:06 2010 +0100
+
+    config: look for fontpath.d only if --with-default-font-path wasn't specified #31290
+    
+    * AC_CHECK_FILE doesn't work when cross compiling
+    * Fixes https://bugs.freedesktop.org/show_bug.cgi?id=31290
+    
+    Signed-off-by: Martin Jansa <Martin.Jansa@gmail.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 070fc985a8048e3a126690c5e64f0dca6418806b
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Nov 9 11:19:31 2010 -0500
+
+    config: HTML file generation: use the installed copy of xorg.css
+    
+    Currenlty the xorg.css file is copied in each location
+    where a DocBook/XML file resides. This produces about
+    70 copies in the $(docdir) install tree.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
 commit 995c9b23864e0207cf4c01cf442e49cc63817fdc
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Sat Oct 30 15:39:30 2010 -0700

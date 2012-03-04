@@ -42,7 +42,7 @@ extern ReplySwapFunc ReplySwapVector[NUM_PROC_VECTORS];
 /* FIXME: this is derived from fontstruct.h; should integrate it */
 
 /* difs/atom.c */
-extern Atom MakeAtom ( char *string, unsigned len, Bool makeit );
+extern Atom MakeAtom ( const char *string, unsigned len, Bool makeit );
 extern int ValidAtom ( Atom atom );
 extern char * NameForAtom ( Atom atom );
 extern void InitAtoms ( void );

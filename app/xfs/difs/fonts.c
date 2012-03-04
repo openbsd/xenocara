@@ -47,7 +47,7 @@ in this Software without prior written authorization from The Open Group.
  */
 /*#define DEBUG*/
 
-#include	"xfs-config.h"
+#include	"config.h"
 
 #include        <X11/fonts/FS.h>
 #include        <X11/fonts/FSproto.h>

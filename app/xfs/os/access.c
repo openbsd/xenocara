@@ -43,7 +43,7 @@ in this Software without prior written authorization from The Open Group.
  * THIS SOFTWARE.
  */
 
-#include	"xfs-config.h"
+#include	"config.h"
 
 #include	<X11/Xos.h>
 #include        <sys/param.h>

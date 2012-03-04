@@ -45,7 +45,7 @@ in this Software without prior written authorization from The Open Group.
  *
  */
 
-#include	"xfs-config.h"
+#include	"config.h"
 
 #include	<stdio.h>
 #include	<stdlib.h>
@@ -106,19 +106,20 @@ static ConfigOptionRec config_options[] = {
     {NULL, NULL},
 };
 
-char       *ConfigErrors[] = {
-    "",
-    "CONFIG: insufficient memory to load configuration file \"%s\"\n",
-    "CONFIG: can't open configuration file \"%s\"\n",
-    "CONFIG: error reading configuration file \"%s\"\n",
-    "CONFIG: bad value \"%s\" for parameter \"%s\"\n",
-    "CONFIG: unknown parameter \"%s\"\n",
-    "CONFIG: missing '=' after parameter \"%s\"\n",
-    "CONFIG: value out of range for parameter \"%s\"\n",
-    "CONFIG: syntax error near parameter \"%s\"\n",
-    "CONFIG: missing value for parameter \"%s\"\n",
-    "CONFIG: extra value for parameter \"%s\"\n",
-};
+/* max size in bytes of config file */
+#define	CONFIG_MAX_FILESIZE	32767
+
+#define	CONFIG_ERR_MEMORY \
+    "CONFIG: insufficient memory to load configuration file \"%s\"\n"
+#define	CONFIG_ERR_OPEN "CONFIG: can't open configuration file \"%s\"\n"
+#define	CONFIG_ERR_READ "CONFIG: error reading configuration file \"%s\"\n"
+#define	CONFIG_ERR_VALUE "CONFIG: bad value \"%s\" for parameter \"%s\"\n"
+#define	CONFIG_ERR_UNKNOWN "CONFIG: unknown parameter \"%s\"\n"
+#define	CONFIG_ERR_NOEQUALS "CONFIG: missing '=' after parameter \"%s\"\n"
+#define	CONFIG_ERR_RANGE "CONFIG: value out of range for parameter \"%s\"\n"
+#define	CONFIG_ERR_SYNTAX "CONFIG: syntax error near parameter \"%s\"\n"
+#define	CONFIG_ERR_NOVALUE "CONFIG: missing value for parameter \"%s\"\n"
+#define	CONFIG_ERR_EXTRAVALUE "CONFIG: extra value for parameter \"%s\"\n"
 
 #define	iseol(c)	((c) == '\n' || (c) == '\r' || (c) == '\f')
 #define	skip_whitespace(c)	while(isspace(*(c)) || *(c) == ',') (c)++;
@@ -217,14 +218,14 @@ parse_config(char *data)
 
 	/* check for junk */
 	if (!isspace(*c) && *c != '=') {
-	    ErrorF(ConfigErrors[CONFIG_ERR_SYNTAX], param_name);
+	    ErrorF(CONFIG_ERR_SYNTAX, param_name);
 	    /* eat garbage */
 	    while (!isspace(*c) && *c != '=' && *c != '\0')
 		c++;
 	}
 	skip_whitespace(c);
 	if (*c != '=') {
-	    ErrorF(ConfigErrors[CONFIG_ERR_NOEQUALS], param_name);
+	    ErrorF(CONFIG_ERR_NOEQUALS, param_name);
 	    equals_missing = TRUE;
 	} else {
 	    c++;
@@ -244,26 +245,26 @@ parse_config(char *data)
 
 	    if (val <= c) {
 		/* no value, ignore */
-		ErrorF(ConfigErrors[CONFIG_ERR_NOVALUE], param_name);
+		ErrorF(CONFIG_ERR_NOVALUE, param_name);
 		continue;
 	    }
 	    *val = '\0';
 	} else if (*c == '\0') {
 	    /* no value, ignore */
-	    ErrorF(ConfigErrors[CONFIG_ERR_NOVALUE], param_name);
+	    ErrorF(CONFIG_ERR_NOVALUE, param_name);
 	    continue;
 	}
 	/* match parm name */
 	if (equals_missing) {
 	    equals_missing = FALSE;
 	} else if ((param = match_param_name(param_name)) == NULL) {
-	    ErrorF(ConfigErrors[CONFIG_ERR_UNKNOWN], param_name);
+	    ErrorF(CONFIG_ERR_UNKNOWN, param_name);
 	} else {
 	    consumed = (param->set_func) (param, c);
 
 	    skip_whitespace(consumed);
 	    if (*consumed != '\0') {
-		ErrorF(ConfigErrors[CONFIG_ERR_EXTRAVALUE],
+		ErrorF(CONFIG_ERR_EXTRAVALUE,
 		       param_name);
 	    }
 	}
@@ -331,7 +332,7 @@ ReadConfigFile(const char *filename)
 
     data = (char *) fsalloc(CONFIG_MAX_FILESIZE);
     if (!data) {
-	ErrorF(ConfigErrors[CONFIG_ERR_MEMORY], filename);
+	ErrorF(CONFIG_ERR_MEMORY, filename);
 	return FSBadAlloc;
     }
     if (filename != NULL) {
@@ -340,7 +341,7 @@ ReadConfigFile(const char *filename)
 #endif
 	fp = fopen(filename, "r");
 	if (fp == NULL) {
-	    ErrorF(ConfigErrors[CONFIG_ERR_OPEN], filename);
+	    ErrorF(CONFIG_ERR_OPEN, filename);
 	}
     } else {
 	for (i = 0; default_config_files[i] != NULL; i++) {
@@ -357,7 +358,7 @@ ReadConfigFile(const char *filename)
 	}
 	if (fp == NULL) {
 	    for (i = 0; default_config_files[i] != NULL; i++) {
-		ErrorF(ConfigErrors[CONFIG_ERR_OPEN], default_config_files[i]);
+		ErrorF(CONFIG_ERR_OPEN, default_config_files[i]);
 	    }
 	}
     }
@@ -369,7 +370,7 @@ ReadConfigFile(const char *filename)
     if (ret <= 0) {
 	fsfree(data);
 	(void) fclose(fp);
-	ErrorF(ConfigErrors[CONFIG_ERR_READ], filename);
+	ErrorF(CONFIG_ERR_READ, filename);
 	return FSBadName;
     }
     len = ftell(fp);
@@ -387,12 +388,13 @@ ReadConfigFile(const char *filename)
 }
 
 struct nameVal {
-    char       *name;
+    const char *name;
     int         val;
 };
 
 static char *
 config_parse_nameVal (
+    ConfigOptionPtr parm,
     char       *c,
     int        *ret,
     int		*pval,
@@ -417,7 +419,7 @@ config_parse_nameVal (
 	    return c;
 	}
     }
-    ErrorF(ConfigErrors[CONFIG_ERR_VALUE], start);
+    ErrorF(CONFIG_ERR_VALUE, start, parm->parm_name);
     *c = t;
     *ret = -1;
     return c;
@@ -425,6 +427,7 @@ config_parse_nameVal (
 
 static char *
 config_parse_bool (
+    ConfigOptionPtr parm,
     char	*c,
     int		*ret,
     Bool	*pval)
@@ -440,11 +443,12 @@ config_parse_bool (
     	    { "false", FALSE },
     	    { (char *) 0, 0 },
     };
-    return config_parse_nameVal (c, ret, pval, bool_val);
+    return config_parse_nameVal (parm, c, ret, pval, bool_val);
 }
 
 static char *
 config_parse_int(
+    ConfigOptionPtr parm,
     char       *c,
     int        *ret,
     int        *pval)
@@ -458,7 +462,7 @@ config_parse_int(
 	    skip_val(c);
 	    t = *c;
 	    *c = '\0';
-	    ErrorF(ConfigErrors[CONFIG_ERR_VALUE], start);
+	    ErrorF(CONFIG_ERR_VALUE, start, parm->parm_name);
 	    *ret = -1;
 	    *c = t;
 	    return c;
@@ -484,7 +488,7 @@ config_set_int(
     int         ival,
                 ret;
 
-    val = config_parse_int(val, &ret, &ival);
+    val = config_parse_int(parm, val, &ret, &ival);
     if (ret == -1)
 	return val;
 
@@ -508,7 +512,7 @@ config_set_bool(
                 ret;
     Bool        bval;
 
-    val = config_parse_bool(val, &ret, &bval);
+    val = config_parse_bool(parm, val, &ret, &bval);
     if (ret == -1)
 	return val;
 
@@ -644,6 +648,7 @@ config_set_resolutions(
 
 static char *
 config_parse_endian(
+    ConfigOptionPtr parm,
     char       *c,
     int        *ret,
     int		*pval)
@@ -657,7 +662,7 @@ config_parse_endian(
 	{ "msbfirst", MSBFirst },
 	{ (char *) 0, 0 },
     };
-    return config_parse_nameVal (c, ret, pval, endian_val);
+    return config_parse_nameVal (parm, c, ret, pval, endian_val);
 }
 
 /* ARGSUSED */
@@ -669,19 +674,19 @@ config_set_snf_format (
     int	    bit, byte, glyph, scan;
     int	    ret;
     
-    val = config_parse_endian (val, &ret, &bit);
+    val = config_parse_endian (parm, val, &ret, &bit);
     if (ret == -1)
 	return val;
     skip_whitespace (val);
-    val = config_parse_endian (val, &ret, &byte);
+    val = config_parse_endian (parm, val, &ret, &byte);
     if (ret == -1)
 	return val;
     skip_whitespace (val);
-    val = config_parse_int (val, &ret, &glyph);
+    val = config_parse_int (parm, val, &ret, &glyph);
     if (ret == -1)
 	return val;
     skip_whitespace (val);
-    val = config_parse_int (val, &ret, &scan);
+    val = config_parse_int (parm, val, &ret, &scan);
     if (ret == -1)
 	return val;
     SnfSetFormat (bit, byte, glyph, scan);

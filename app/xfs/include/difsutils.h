@@ -52,7 +52,7 @@ extern int SetDefaultResolutions (char *str);
 extern int client_auth_generation (ClientPtr client);
 #endif
 extern int set_font_authorizations (char **authorizations, int *authlen, ClientPtr client);
-extern int strncmpnocase (char *first, char *second, int n);
+extern int strncmpnocase (const char *first, const char *second, int n);
 extern pointer Xalloc (unsigned long m);
 extern pointer Xrealloc (pointer n, unsigned long m);
 extern void BlockHandler (OSTimePtr pTimeout, pointer pReadmask);

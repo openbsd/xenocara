@@ -53,6 +53,7 @@ typedef struct _alt_server *AlternateServerPtr;
 typedef struct _auth *AuthPtr;
 
 #include <X11/fonts/FSproto.h>
+#include <X11/Xfuncproto.h>
 #include "client.h"
 #include "misc.h"
 
@@ -95,12 +96,12 @@ extern	void	BecomeDaemon(void);
 extern	void	DetachStdio(void);
 
 /* os/error.c */
-extern void	Error(char *str);
+extern void	Error(const char *str);
 extern void	InitErrors(void);
 extern void	CloseErrors(void);
-extern void	NoticeF(char *f, ...);
-extern void	ErrorF(char * f, ...);
-extern void	FatalError(char* f, ...);
+extern void	NoticeF(const char *f, ...) _X_ATTRIBUTE_PRINTF(1, 2);
+extern void	ErrorF(const char * f, ...) _X_ATTRIBUTE_PRINTF(1, 2);
+extern void	FatalError(const char* f, ...) _X_ATTRIBUTE_PRINTF(1, 2);
 
 /* os/io.c */
 extern	Bool	InsertFakeRequest(ClientPtr client, char *data, int count);
@@ -114,7 +115,7 @@ extern	void	WriteToClient(ClientPtr client, int count, char *buf);
 extern	void	WriteToClientUnpadded(ClientPtr client, int count, char *buf);
 
 /* os/osglue.c */
-extern int 	ListCatalogues(char *pattern, int patlen, int maxnames, char **catalogues, int *len);
+extern int 	ListCatalogues(const char *pattern, int patlen, int maxnames, char **catalogues, int *len);
 extern int 	ValidateCatalogues(int *num, char *cats);
 extern int 	SetAlternateServers(char *list);
 extern int 	ListAlternateServers(AlternateServerPtr *svrs);

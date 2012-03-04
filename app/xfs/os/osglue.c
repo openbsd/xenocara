@@ -51,7 +51,7 @@ in this Software without prior written authorization from The Open Group.
  * Catalogue support, alternate servers, and cloneing
  */
 
-#include "xfs-config.h"
+#include "config.h"
 
 #include <X11/Xtrans/Xtrans.h>
 #include "osstruct.h"
@@ -80,10 +80,10 @@ static AlternateServerPtr alt_servers = (AlternateServerPtr) 0;
  *
  */
 
-static char *catalogue_name = "all";
+static const char *catalogue_name = "all";
 
 static Bool			/* stolen from R4 Match() */
-pattern_match(char *pat, int plen, char *string)
+pattern_match(const char *pat, int plen, const char *string)
 {
     register int i,
                 l;
@@ -153,7 +153,7 @@ pattern_match(char *pat, int plen, char *string)
 }
 
 int
-ListCatalogues(char *pattern, int patlen, int maxnames, 
+ListCatalogues(const char *pattern, int patlen, int maxnames,
 	       char **catalogues, int *len)
 {
     int         count = 0;

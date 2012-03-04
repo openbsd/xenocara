@@ -32,5 +32,5 @@ CLEANFILES = config
 MAN_SUBSTS += -e 's|DEFAULTFONTPATH|$(FONTPATH)|g'
 MAN_SUBSTS += -e 's|FSERRORS|/var/log/xfs.log|g'
 
-config: config.cpp
-	$(AM_V_GEN)$(SED) $(MAN_SUBSTS) < ${srcdir}/config.cpp > config
+config: $(srcdir)/config.cpp
+	$(AM_V_GEN)$(SED) $(MAN_SUBSTS) < $(srcdir)/config.cpp > $@

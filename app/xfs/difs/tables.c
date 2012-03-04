@@ -46,7 +46,7 @@ in this Software without prior written authorization from The Open Group.
  * THIS SOFTWARE.
  */
 
-#include "xfs-config.h"
+#include "config.h"
 
 #include <dispatch.h>
 #include <swaprep.h>

@@ -48,7 +48,7 @@ in this Software without prior written authorization from The Open Group.
  *
  */
 
-#include "xfs-config.h"
+#include "config.h"
 
 #include "misc.h"
 #include "fsresource.h"
@@ -71,7 +71,7 @@ static unsigned long tableLength;
 static NodePtr *nodeTable;
 
 Atom
-MakeAtom(char *string, unsigned int len, Bool makeit)
+MakeAtom(const char *string, unsigned int len, Bool makeit)
 {
     register NodePtr *np;
     unsigned    i;
