@@ -55,7 +55,7 @@ FontFileRegisterFpeFunctions(void)
 #ifdef XFONT_FREETYPE
     FreeTypeRegisterFontFileFunctions();
 #endif
-    
+
     FontFileRegisterLocalFpeFunctions ();
     CatalogueRegisterLocalFpeFunctions ();
 }

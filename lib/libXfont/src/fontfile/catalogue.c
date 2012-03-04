@@ -60,7 +60,7 @@ CatalogueAddFPE (CataloguePtr cat, FontPathElementPtr fpe)
 	    cat->fpeAlloc = 16;
 	else
 	    cat->fpeAlloc *= 2;
-	
+
 	new = realloc(cat->fpeList, cat->fpeAlloc * sizeof(FontPathElementPtr));
 	if (new == NULL)
 	    return AllocError;
@@ -251,7 +251,7 @@ static int
 CatalogueResetFPE (FontPathElementPtr fpe)
 {
     /* Always just tell the caller to close and re-open */
-    return FPEResetFailed;	
+    return FPEResetFailed;
 }
 
 static int
@@ -277,10 +277,10 @@ CatalogueFreeFPE (FontPathElementPtr fpe)
 }
 
 static int
-CatalogueOpenFont (pointer client, FontPathElementPtr fpe, Mask flags, 
-		   char *name, int namelen, 
+CatalogueOpenFont (pointer client, FontPathElementPtr fpe, Mask flags,
+		   char *name, int namelen,
 		   fsBitmapFormat format, fsBitmapFormatMask fmask,
-		   XID id, FontPtr *pFont, char **aliasName, 
+		   XID id, FontPtr *pFont, char **aliasName,
 		   FontPtr non_cachable_font)
 {
     CataloguePtr cat = fpe->private;
@@ -300,7 +300,7 @@ CatalogueOpenFont (pointer client, FontPathElementPtr fpe, Mask flags,
 	if (status == Successful || status == FontNameAlias)
 	    return status;
     }
-	    
+
     return BadFontName;
 }
 
@@ -314,7 +314,7 @@ CatalogueCloseFont (FontPathElementPtr fpe, FontPtr pFont)
 }
 
 static int
-CatalogueListFonts (pointer client, FontPathElementPtr fpe, char *pat, 
+CatalogueListFonts (pointer client, FontPathElementPtr fpe, char *pat,
 		    int len, int max, FontNamesPtr names)
 {
     CataloguePtr cat = fpe->private;
@@ -335,8 +335,8 @@ CatalogueListFonts (pointer client, FontPathElementPtr fpe, char *pat,
 }
 
 int
-FontFileStartListFonts(pointer client, FontPathElementPtr fpe, 
-		       char *pat, int len, int max, 
+FontFileStartListFonts(pointer client, FontPathElementPtr fpe,
+		       char *pat, int len, int max,
 		       pointer *privatep, int mark_aliases);
 
 typedef struct _LFWIData {
@@ -345,7 +345,7 @@ typedef struct _LFWIData {
 } LFWIDataRec, *LFWIDataPtr;
 
 static int
-CatalogueStartListFonts(pointer client, FontPathElementPtr fpe, 
+CatalogueStartListFonts(pointer client, FontPathElementPtr fpe,
 			char *pat, int len, int max, pointer *privatep,
 			int mark_aliases)
 {
@@ -381,16 +381,16 @@ CatalogueStartListFonts(pointer client, FontPathElementPtr fpe,
 }
 
 static int
-CatalogueStartListFontsWithInfo(pointer client, FontPathElementPtr fpe, 
-				char *pat, int len, int max, 
+CatalogueStartListFontsWithInfo(pointer client, FontPathElementPtr fpe,
+				char *pat, int len, int max,
 				pointer *privatep)
 {
     return CatalogueStartListFonts(client, fpe, pat, len, max, privatep, 0);
 }
 
 static int
-CatalogueListNextFontWithInfo(pointer client, FontPathElementPtr fpe, 
-			      char **namep, int *namelenp, 
+CatalogueListNextFontWithInfo(pointer client, FontPathElementPtr fpe,
+			      char **namep, int *namelenp,
 			      FontInfoPtr *pFontInfo,
 			      int *numFonts, pointer private)
 {
@@ -419,15 +419,15 @@ CatalogueListNextFontWithInfo(pointer client, FontPathElementPtr fpe,
 }
 
 static int
-CatalogueStartListFontsAndAliases(pointer client, FontPathElementPtr fpe, 
-				  char *pat, int len, int max, 
+CatalogueStartListFontsAndAliases(pointer client, FontPathElementPtr fpe,
+				  char *pat, int len, int max,
 				  pointer *privatep)
 {
     return CatalogueStartListFonts(client, fpe, pat, len, max, privatep, 1);
 }
 
 static int
-CatalogueListNextFontOrAlias(pointer client, FontPathElementPtr fpe, 
+CatalogueListNextFontOrAlias(pointer client, FontPathElementPtr fpe,
 			     char **namep, int *namelenp, char **resolvedp,
 			     int *resolvedlenp, pointer private)
 {

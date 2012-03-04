@@ -66,7 +66,7 @@ void
 EmptyFontPatternCache (FontPatternCachePtr cache)
 {
     int	    i;
-    
+
     for (i = 0; i < NBUCKETS; i++)
 	cache->buckets[i] = 0;
     for (i = 0; i < NENTRIES; i++)
@@ -127,9 +127,9 @@ Hash (const char *string, int len)
 
 /* add entry */
 void
-CacheFontPattern (FontPatternCachePtr cache, 
-		  char *pattern, 
-		  int patlen, 
+CacheFontPattern (FontPatternCachePtr cache,
+		  char *pattern,
+		  int patlen,
 		  FontPtr pFont)
 {
     FontPatternCacheEntryPtr	e;
@@ -173,8 +173,8 @@ CacheFontPattern (FontPatternCachePtr cache,
 
 /* find matching entry */
 FontPtr
-FindCachedFontPattern (FontPatternCachePtr cache, 
-		       char *pattern, 
+FindCachedFontPattern (FontPatternCachePtr cache,
+		       char *pattern,
 		       int patlen)
 {
     int				hash;
@@ -195,7 +195,7 @@ FindCachedFontPattern (FontPatternCachePtr cache,
 }
 
 void
-RemoveCachedFontPattern (FontPatternCachePtr cache, 
+RemoveCachedFontPattern (FontPatternCachePtr cache,
 			 FontPtr pFont)
 {
     FontPatternCacheEntryPtr	e;

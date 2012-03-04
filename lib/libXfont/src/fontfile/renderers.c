@@ -64,7 +64,7 @@ FontFilePriorityRegisterRenderer (FontRendererPtr renderer, int priority)
     }
 
     for (i = 0; i < renderers.number; i++) {
-	if (!strcasecmp (renderers.renderers[i].renderer->fileSuffix, 
+	if (!strcasecmp (renderers.renderers[i].renderer->fileSuffix,
                          renderer->fileSuffix)) {
             if(renderers.renderers[i].priority >= priority) {
                 if(renderers.renderers[i].priority == priority) {
@@ -99,7 +99,7 @@ FontFileMatchRenderer (char *fileName)
     int			i;
     int			fileLen;
     FontRendererPtr	r;
-    
+
     fileLen = strlen (fileName);
     for (i = 0; i < renderers.number; i++)
     {

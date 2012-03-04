@@ -22,4 +22,4 @@ libstubs_la_SOURCES = 		\
 	servclient.c		\
 	setfntauth.c		\
 	stfntcfnt.c		\
-	stubs.h	
+	stubs.h

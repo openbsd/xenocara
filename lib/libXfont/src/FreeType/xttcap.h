@@ -1,8 +1,8 @@
 /* ===EmacsMode: -*- Mode: C; tab-width:4; c-basic-offset: 4; -*- === */
 /* ===FileName: ===
    Copyright (c) 1998 Takuya SHIOZAKI, All Rights reserved.
-   Copyright (c) 1998 X-TrueType Server Project, All rights reserved. 
-   Copyright (c) 2003 After X-TT Project, All rights reserved. 
+   Copyright (c) 1998 X-TrueType Server Project, All rights reserved.
+   Copyright (c) 2003 After X-TT Project, All rights reserved.
 
 ===Notice
    Redistribution and use in source and binary forms, with or without

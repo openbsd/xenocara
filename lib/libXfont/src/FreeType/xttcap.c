@@ -1,7 +1,7 @@
 /* ===EmacsMode: -*- Mode: C; tab-width:4; c-basic-offset: 4; -*- === */
 /* ===FileName: ===
    Copyright (c) 1998 Takuya SHIOZAKI, All Rights reserved.
-   Copyright (c) 1998 X-TrueType Server Project, All rights reserved. 
+   Copyright (c) 1998 X-TrueType Server Project, All rights reserved.
    Copyright (c) 2003 After X-TT Project, All rights reserved.
 
 ===Notice
@@ -133,7 +133,7 @@ get_record_type_by_name(SPropertyRecord const ** const refRefRecord, /*result*/
 {
     Bool result = False;
     int i;
-    
+
     *refRefRecord = NULL;
     for (i=0; i<numOfValidRecords; i++) {
         if (!strcasecmp(validRecords[i].strRecordName, strName)) {
@@ -142,7 +142,7 @@ get_record_type_by_name(SPropertyRecord const ** const refRefRecord, /*result*/
             break;
         }
     }
-    
+
     return result;
 }
 
@@ -161,7 +161,7 @@ SPropRecValList_add_record(SDynPropRecValList *pThisList,
             {
                 int val;
                 char *endPtr;
-                    
+
                 val = strtol(strValue, &endPtr, 0);
                 if ('\0' != *endPtr) {
                     fprintf(stderr,
@@ -178,7 +178,7 @@ SPropRecValList_add_record(SDynPropRecValList *pThisList,
             {
                 double val;
                 char *endPtr;
-                    
+
                 val = strtod(strValue, &endPtr);
                 if ('\0' != *endPtr) {
                     fprintf(stderr,
@@ -194,7 +194,7 @@ SPropRecValList_add_record(SDynPropRecValList *pThisList,
         case eRecTypeBool:
             {
                 Bool val;
-                
+
                 if (!strcasecmp(strValue, "yes"))
                     val = True;
                 else if (!strcasecmp(strValue, "y"))
@@ -233,7 +233,7 @@ SPropRecValList_add_record(SDynPropRecValList *pThisList,
         case eRecTypeString:
             {
                 char *p;
-                    
+
                 if (NULL == (p = malloc(strlen(strValue)+1))) {
                     fprintf(stderr,
                             "truetype font property : "
@@ -257,7 +257,7 @@ SPropRecValList_add_record(SDynPropRecValList *pThisList,
         {
             /* add to list */
             SPropRecValListNodeP *newNode;
-            
+
             if (NULL == (newNode = malloc(sizeof(*newNode)))) {
                 fprintf(stderr,
                         "truetype font property : "
@@ -301,11 +301,11 @@ get_one_line(FILE *is, char *buf)
     Bool flInDoubleQuote = False;
     Bool flBackSlash = False;
     Bool flFirstElement = True;
-    
+
     *buf = '\0';
     for (;;) {
         int c = fgetc(is);
-        
+
         if (ferror(is)) {
             fprintf(stderr, "truetype font property file : read error.\n");
             result = True;
@@ -446,7 +446,7 @@ parse_one_line(SDynPropRecValList *pThisList, FILE *is)
     Bool result = False;
     char *buf = NULL;
     char *recordHead, *valueHead = NULL;
-    
+
     if (NULL == (buf = malloc(LEN_LINEBUF))) {
         fprintf(stderr,
                 "truetype font property file : cannot allocate memory.\n");
@@ -483,7 +483,7 @@ parse_one_line(SDynPropRecValList *pThisList, FILE *is)
     }
   quit:
     free(buf);
-  abort:    
+  abort:
     return result;
 }
 
@@ -494,7 +494,7 @@ SPropRecValList_read_prop_file(SDynPropRecValList *pThisList,
 {
     Bool result = False;
     FILE *is;
-    
+
 #if 1
     if (!strcmp(strFileName, "-"))
         is = stdin;
@@ -530,7 +530,7 @@ Bool /* True == Error, False == Success */
 SPropRecValList_new(SDynPropRecValList *pThisList)
 {
     Bool result = False;
-    
+
     pThisList->headNode = NULL;
 
     return result;
@@ -582,7 +582,7 @@ SPropRecValList_search_record(SRefPropRecValList *pThisList,
 {
     Bool result = False;
     SPropRecValListNodeP *p;
-    
+
     *refRecValue = NULL;
     for (p=pThisList->headNode; NULL!=p; p=p->nextNode) {
         if (!strcasecmp(p->containerE.refRecordType->strRecordName,
@@ -605,7 +605,7 @@ SPropRecValList_add_by_font_cap(SDynPropRecValList *pThisList,
     Bool result = False;
     /*    SPropertyRecord const *refRecordType; */
     char const *term;
-    
+
     if (NULL == (term = strrchr(strCapHead, ':')))
         goto abort;
 
@@ -646,7 +646,7 @@ SPropRecValList_add_by_font_cap(SDynPropRecValList *pThisList,
             char *duplicated = malloc((nextColon-strCapHead)+1);
             {
                 char *value;
-            
+
                 memcpy(duplicated, strCapHead, nextColon-strCapHead);
                 duplicated[nextColon-strCapHead] = '\0';
                 if (NULL != (value=strchr(duplicated, '='))) {
@@ -654,7 +654,7 @@ SPropRecValList_add_by_font_cap(SDynPropRecValList *pThisList,
                     value++;
                 } else
                     value = &duplicated[nextColon-strCapHead];
-            
+
                 for (i=0; i<numOfCorrespondRelations; i++) {
                     if (!strcasecmp(correspondRelations[i].capVariable,
                                       duplicated)) {
@@ -676,7 +676,7 @@ SPropRecValList_add_by_font_cap(SDynPropRecValList *pThisList,
         }
         strCapHead = nextColon+1;
     }
-    
+
     /*  quit: */
   abort:
     return result;
@@ -692,7 +692,7 @@ char *
 XttXstrdup(char const *str)
 {
     char *result;
-    
+
     result = malloc(strlen(str)+1);
 
     if (result)

@@ -182,18 +182,18 @@ typedef struct _fs_reconnect {
     fsUnpack_XCharInfo((packet)->font_header_max_bounds, &(structure)->ink_maxbounds)
 
 extern void _fs_init_fontinfo ( FSFpePtr conn, FontInfoPtr pfi );
-extern int _fs_convert_props ( fsPropInfo *pi, fsPropOffset *po, pointer pd, 
+extern int _fs_convert_props ( fsPropInfo *pi, fsPropOffset *po, pointer pd,
 			       FontInfoPtr pfi );
-extern int _fs_convert_lfwi_reply ( FSFpePtr conn, FontInfoPtr pfi, 
-				    fsListFontsWithXInfoReply *fsrep, 
-				    fsPropInfo *pi, fsPropOffset *po, 
+extern int _fs_convert_lfwi_reply ( FSFpePtr conn, FontInfoPtr pfi,
+				    fsListFontsWithXInfoReply *fsrep,
+				    fsPropInfo *pi, fsPropOffset *po,
 				    pointer pd );
-extern int fs_build_range ( FontPtr pfont, Bool range_flag, 
-			    unsigned int count, int item_size, 
-			    unsigned char *data, int *nranges, 
+extern int fs_build_range ( FontPtr pfont, Bool range_flag,
+			    unsigned int count, int item_size,
+			    unsigned char *data, int *nranges,
 			    fsRange **ranges );
-extern void _fs_clean_aborted_loadglyphs ( FontPtr pfont, 
-					   int num_expected_ranges, 
+extern void _fs_clean_aborted_loadglyphs ( FontPtr pfont,
+					   int num_expected_ranges,
 					   fsRange *expected_ranges );
 extern void _fs_init_font ( FontPtr pfont );
 extern pointer fs_alloc_glyphs (FontPtr pFont, int size);
