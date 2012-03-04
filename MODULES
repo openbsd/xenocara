@@ -1,4 +1,4 @@
-# $OpenBSD: MODULES,v 1.201 2012/02/28 20:50:28 matthieu Exp $
+# $OpenBSD: MODULES,v 1.202 2012/03/04 19:07:08 matthieu Exp $
 #
 # X.Org maintained modules
 #
@@ -13,7 +13,7 @@ app/fslsfonts		1.0.3	7.6
 app/fstobdf		1.0.4 	7.6
 app/iceauth		1.0.5	7.6+
 app/ico			1.0.3	7.6
-app/listres		1.0.2	7.5+
+app/listres		1.0.3	7.6+
 app/luit		1.1.0	7.6	needs-update
 app/mkcomposecache	1.2.1	7.5	needs-import
 app/mkfontdir		1.0.7	7.6+
@@ -46,7 +46,7 @@ app/xeyes		1.1.1	7.6
 app/xf86dga		1.0.3	7.6
 app/xfd			1.1.1	7.6+
 app/xfontsel		1.0.2	7.2+
-app/xfs			1.1.1	7.6
+app/xfs			1.1.2	7.6+
 app/xfsinfo		1.0.3	7.6
 app/xfwp		1.0.2	7.6
 app/xgamma		1.0.4	7.6
@@ -102,7 +102,7 @@ driver/xf86-input-vmmouse	12.7.0	7.6+
 driver/xf86-input-void		1.4.0	7.6+
 driver/xf86-video-apm		1.2.3	7.6
 driver/xf86-video-ark		0.7.4	7.6+	needs-update*
-driver/xf86-video-ati		6.12.2	7.6+	needs-update
+driver/xf86-video-ati		6.14.3	7.6+
 driver/xf86-video-chips		1.2.4	7.6+
 driver/xf86-video-cirrus	1.3.2	7.4
 driver/xf86-video-dummy		0.3.5	7.6+
@@ -166,13 +166,13 @@ font/schumacher-misc		1.1.1
 font/screen-cyrillic		1.0.3
 font/sony-misc			1.0.2
 font/sun-misc			1.0.2
-font/util			1.2.0
+font/util			1.3.0	needs-update
 font/winitzki-cyrillic		1.0.2
 font/xfree86-type1		1.0.3
 
-lib/libFS			1.0.3	7.6
-lib/libICE			1.0.6	7.5
-lib/libSM			1.2.0	7.6
+lib/libFS			1.0.4	7.6+
+lib/libICE			1.0.8	7.6+
+lib/libSM			1.2.1	7.6+
 lib/libX11			1.4.4	7.6+
 lib/libXRes			1.0.5	7.6
 lib/libXScrnSaver		1.2.1	7.6
@@ -184,7 +184,7 @@ lib/libXdamage			1.1.3	7.5+
 lib/libXdmcp			1.1.0	7.6
 lib/libXext			1.3.0	7.6+
 lib/libXfixes			5.0	7.6+
-lib/libXfont			1.4.4	7.6+
+lib/libXfont			1.4.5	7.6+
 lib/libXfontcache		1.0.5	7.5
 lib/libXft			2.2.0	7.6
 lib/libXi			1.5.0	7.6+	needs-update
@@ -201,8 +201,8 @@ lib/libXxf86dga			1.1.2	7.6
 lib/libXxf86misc		1.0.2	7.5
 lib/libXxf86vm			1.1.1	7.6
 lib/libdmx			1.1.1	7.6
-lib/libfontenc			1.1.0	7.6
-lib/libpciaccess		0.12.1	7.6+
+lib/libfontenc			1.1.1	7.6+
+lib/libpciaccess		0.13	7.6+	needs-update
 lib/libpthread-stubs		0.3	7.5+
 lib/libxcb			1.8	7.6+	needs-update
 lib/libxkbfile			1.0.7	7.6
@@ -224,7 +224,7 @@ proto/fixesproto		5.0	7.6+
 proto/fontcacheproto		0.1.3	7.5
 proto/fontsproto		2.1.1	7.6
 proto/glproto			1.4.15	7.6+	needs-update
-proto/inputproto		2.1	7.6+	needs-update
+proto/inputproto		2.2	7.6+	needs-update
 proto/kbproto			1.0.5	7.6
 proto/pmproto			1.0.3	7.5	deprecated
 proto/randrproto		1.3.2	7.6

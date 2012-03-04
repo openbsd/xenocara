@@ -3378,6 +3378,12 @@
 ./usr/X11R6/share/doc/inputproto/XIproto.txt
 ./usr/X11R6/share/doc/libFS
 ./usr/X11R6/share/doc/libFS/FSlib.txt
+./usr/X11R6/share/doc/libICE
+./usr/X11R6/share/doc/libICE/ICElib.xml
+./usr/X11R6/share/doc/libICE/ice.xml
+./usr/X11R6/share/doc/libSM
+./usr/X11R6/share/doc/libSM/SMlib.xml
+./usr/X11R6/share/doc/libSM/xsmp.xml
 ./usr/X11R6/share/doc/libX11
 ./usr/X11R6/share/doc/libX11/Compose
 ./usr/X11R6/share/doc/libXaw
