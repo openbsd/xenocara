@@ -1,4 +1,4 @@
-/*      $OpenBSD: xtsscale.c,v 1.22 2012/03/06 23:23:44 matthieu Exp $ */
+/*      $OpenBSD: xtsscale.c,v 1.23 2012/03/06 23:24:37 matthieu Exp $ */
 /*
  * Copyright (c) 2007 Robert Nagy <robert@openbsd.org>
  * Copyright (c) 2009,2011 Matthieu Herrb <matthieu@herrb.eu>
@@ -104,7 +104,6 @@ XftFont	       *font;
 XftColor	cross, errorColor, promptColor, bg;
 XftDraw	       *draw;
 unsigned int    xpos, ypos, width, height;	/* window size */
-char           *progname;
 Bool		interrupted = False;
 Bool		verbose = False;
 
