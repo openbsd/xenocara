@@ -1,4 +1,4 @@
-# $OpenBSD: MODULES,v 1.202 2012/03/04 19:07:08 matthieu Exp $
+# $OpenBSD: MODULES,v 1.203 2012/03/09 21:13:13 matthieu Exp $
 #
 # X.Org maintained modules
 #
@@ -6,7 +6,7 @@
 app/appres		1.0.3	7.6
 app/bdftopcf		1.0.3	7.6
 app/beforelight		1.0.4	7.6
-app/bitmap		1.0.5	7.6
+app/bitmap		1.0.6	7.6+	needs-update
 app/editres		1.0.5	7.6
 app/fonttosfnt		1.0.4	7.4
 app/fslsfonts		1.0.3	7.6
@@ -98,7 +98,7 @@ driver/xf86-input-mouse		1.7.1	7.6+
 driver/xf86-input-mutouch	1.3.0	7.6+
 driver/xf86-input-penmount	1.5.0	7.6+
 driver/xf86-input-synaptics	1.5.0	7.6+
-driver/xf86-input-vmmouse	12.7.0	7.6+
+driver/xf86-input-vmmouse	12.8.0	7.6+	needs-update
 driver/xf86-input-void		1.4.0	7.6+
 driver/xf86-video-apm		1.2.3	7.6
 driver/xf86-video-ark		0.7.4	7.6+	needs-update*
@@ -128,7 +128,7 @@ driver/xf86-video-tdfx		1.4.3	7.4+
 driver/xf86-video-trident	1.3.4	7.5+
 driver/xf86-video-tseng		1.2.4	7.5+
 driver/xf86-video-vesa		2.3.0	7.5+
-driver/xf86-video-vmware	11.1.0	7.6+	needs-update
+driver/xf86-video-vmware	12.0.0	7.6+	needs-update
 driver/xf86-video-voodoo	1.2.4	7.5+
 driver/xf86-video-wsfb		0.4.0	7.6+
 
@@ -174,38 +174,38 @@ lib/libFS			1.0.4	7.6+
 lib/libICE			1.0.8	7.6+
 lib/libSM			1.2.1	7.6+
 lib/libX11			1.4.4	7.6+
-lib/libXRes			1.0.5	7.6
-lib/libXScrnSaver		1.2.1	7.6
-lib/libXau			1.0.6	7.6
+lib/libXRes			1.0.6	7.6+	needs-update
+lib/libXScrnSaver		1.2.2	7.6+	needs-update
+lib/libXau			1.0.7	7.6+	needs-update
 lib/libXaw			1.0.9	7.6
 lib/libXcomposite		0.4.3	7.6
-lib/libXcursor			1.1.12	7.6+
+lib/libXcursor			1.1.13	7.6+	needs-update
 lib/libXdamage			1.1.3	7.5+
-lib/libXdmcp			1.1.0	7.6
-lib/libXext			1.3.0	7.6+
+lib/libXdmcp			1.1.1	7.6+	needs-update
+lib/libXext			1.3.1	7.6+	needs-update
 lib/libXfixes			5.0	7.6+
 lib/libXfont			1.4.5	7.6+
 lib/libXfontcache		1.0.5	7.5
-lib/libXft			2.2.0	7.6
-lib/libXi			1.5.0	7.6+	needs-update
-lib/libXinerama			1.1.1	7.6
-lib/libXmu			1.1.0	7.6
-lib/libXpm			3.5.9	7.6
+lib/libXft			2.3.0	7.6+	needs-update
+lib/libXi			1.6.0	7.6+	needs-update
+lib/libXinerama			1.1.2	7.6+	needs-update
+lib/libXmu			1.1.1	7.6+	needs-update
+lib/libXpm			3.5.10	7.6+	needs-update
 lib/libXrandr			1.3.2	7.6+
-lib/libXrender			0.9.6	7.5+
-lib/libXt			1.1.1	7.6+
-lib/libXtst			1.2.0	7.6
-lib/libXv			1.0.6	7.6
-lib/libXvMC			1.0.6	7.6
-lib/libXxf86dga			1.1.2	7.6
+lib/libXrender			0.9.7	7.6+	needs-update
+lib/libXt			1.1.2	7.6+	needs-update
+lib/libXtst			1.2.1	7.6+	needs-update
+lib/libXv			1.0.7	7.6+	needs-update
+lib/libXvMC			1.0.7	7.6+	needs-update
+lib/libXxf86dga			1.1.3	7.6+	needs-update
 lib/libXxf86misc		1.0.2	7.5
-lib/libXxf86vm			1.1.1	7.6
-lib/libdmx			1.1.1	7.6
+lib/libXxf86vm			1.1.2	7.6+	needs-update
+lib/libdmx			1.1.2	7.6+	needs-update
 lib/libfontenc			1.1.1	7.6+
-lib/libpciaccess		0.13	7.6+	needs-update
+lib/libpciaccess		0.13	7.6+
 lib/libpthread-stubs		0.3	7.5+
-lib/libxcb			1.8	7.6+	needs-update
-lib/libxkbfile			1.0.7	7.6
+lib/libxcb			1.8.1	7.6+	needs-update
+lib/libxkbfile			1.0.8	7.6+	needs-update
 lib/libxkbui			1.0.2	7.1
 lib/libxtrans			1.2.6	7.6
 lib/pixman			0.24.4	7.6+
@@ -246,8 +246,8 @@ proto/xineramaproto		1.2.1	7.6
 
 util/cf				1.0.4	7.6
 util/gccmakedep			1.0.2
-util/imake			1.0.4	7.6
-util/macros			1.16.1	7.6+
-util/makedepend			1.0.3	7.6
+util/imake			1.0.5	7.6+	needs-update
+util/macros			1.16.2	7.6+	needs-update
+util/makedepend			1.0.4	7.6+	needs-update
 
-xserver				1.11.4	7.6+
+xserver				1.12	7.6+	needs-update
