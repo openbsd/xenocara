@@ -25,7 +25,7 @@
 /**
  * \file common_iterator.c
  * Platform independent iterator support routines.
- * 
+ *
  * \author Ian Romanick <idr@us.ibm.com>
  */
 
@@ -37,7 +37,7 @@
 
 /**
  * Track device iteration state
- * 
+ *
  * \private
  */
 struct pci_device_iterator {
@@ -69,7 +69,7 @@ struct pci_device_iterator *
 pci_slot_match_iterator_create( const struct pci_slot_match * match )
 {
     struct pci_device_iterator * iter;
-    
+
     if ( pci_sys == NULL ) {
 	return NULL;
     }
@@ -105,7 +105,7 @@ struct pci_device_iterator *
 pci_id_match_iterator_create( const struct pci_id_match * match )
 {
     struct pci_device_iterator * iter;
-    
+
     if ( pci_sys == NULL ) {
 	return NULL;
     }
@@ -130,9 +130,9 @@ pci_id_match_iterator_create( const struct pci_id_match * match )
 
 /**
  * Destroy an iterator previously created with \c pci_iterator_create.
- * 
+ *
  * \param iter  Iterator to be destroyed.
- * 
+ *
  * \sa pci_device_next, pci_iterator_create
  */
 void
@@ -146,9 +146,9 @@ pci_iterator_destroy( struct pci_device_iterator * iter )
 
 /**
  * Iterate to the next PCI device.
- * 
+ *
  * \param iter  Device iterator returned by \c pci_device_iterate.
- * 
+ *
  * \return
  * A pointer to a \c pci_device, or \c NULL when all devices have been
  * iterated.
@@ -172,7 +172,7 @@ pci_device_next( struct pci_device_iterator * iter )
 
     case match_slot: {
 	while ( iter->next_index < pci_sys->num_devices ) {
-	    struct pci_device_private * const temp = 
+	    struct pci_device_private * const temp =
 	      & pci_sys->devices[ iter->next_index ];
 
 	    iter->next_index++;
@@ -184,13 +184,13 @@ pci_device_next( struct pci_device_iterator * iter )
 		break;
 	    }
 	}
-	
+
 	break;
     }
 
     case match_id: {
 	while ( iter->next_index < pci_sys->num_devices ) {
-	    struct pci_device_private * const temp = 
+	    struct pci_device_private * const temp =
 	      & pci_sys->devices[ iter->next_index ];
 
 	    iter->next_index++;
@@ -198,13 +198,13 @@ pci_device_next( struct pci_device_iterator * iter )
 		 && PCI_ID_COMPARE( iter->match.id.device_id, temp->base.device_id )
 		 && PCI_ID_COMPARE( iter->match.id.subvendor_id, temp->base.subvendor_id )
 		 && PCI_ID_COMPARE( iter->match.id.subdevice_id, temp->base.subdevice_id )
-		 && ((temp->base.device_class & iter->match.id.device_class_mask) 
+		 && ((temp->base.device_class & iter->match.id.device_class_mask)
 		     == iter->match.id.device_class) ) {
 		d = temp;
 		break;
 	    }
 	}
-	
+
 	break;
     }
     }
@@ -218,8 +218,8 @@ pci_device_find_by_slot( uint32_t domain, uint32_t bus, uint32_t dev,
 			 uint32_t func )
 {
     struct pci_device_iterator  iter;
-    
-    
+
+
     iter.next_index = 0;
     iter.mode = match_slot;
     iter.match.slot.domain = domain;

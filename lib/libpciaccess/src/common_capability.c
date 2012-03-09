@@ -25,7 +25,7 @@
 /**
  * \file common_capability.c
  * Platform independent PCI capability related routines.
- * 
+ *
  * In addition to including the interface glue for \c pci_device_get_agp_info,
  * this file also contains a generic implementation of that function.
  *
@@ -51,7 +51,7 @@
  * Once more than just the AGP capability is supported, the body of each of
  * the cases in the capability processing loop should probably be broken out
  * into its own function.
- * 
+ *
  * \todo
  * Once more than just the AGP capability is supported, some care will need
  * to be taken in partial failure cases.  If, say, the first capability is
@@ -79,7 +79,7 @@ pci_fill_capabilities_generic( struct pci_device * dev )
     if ( (status & 0x0010) == 0 ) {
 	return ENOSYS;
     }
-    
+
     err = pci_device_cfg_read_u8( dev, & cap_offset, 52 );
     if ( err ) {
 	return err;
@@ -101,7 +101,7 @@ pci_fill_capabilities_generic( struct pci_device * dev )
 	if ( err ) {
 	    return err;
 	}
-	
+
 	switch ( cap_id ) {
 	case 2: {
 	    struct pci_agp_info * agp_info;
@@ -187,7 +187,7 @@ pci_device_get_agp_info( struct pci_device * dev )
     if ( dev == NULL ) {
 	return NULL;
     }
-    
+
     if ( dev_priv->agp == NULL ) {
 	(void) (*pci_sys->methods->fill_capabilities)( dev );
     }

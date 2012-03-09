@@ -25,7 +25,7 @@
 /**
  * \file pciaccess_private.h
  * Functions and datastructures that are private to the pciaccess library.
- * 
+ *
  * \author Ian Romanick <idr@us.ibm.com>
  */
 
@@ -46,12 +46,12 @@ int pci_device_generic_unmap_range(struct pci_device *dev,
 struct pci_system_methods {
     void (*destroy)( void );
     void (*destroy_device)( struct pci_device * dev );
-    int (*read_rom)( struct pci_device * dev, void * buffer );    
+    int (*read_rom)( struct pci_device * dev, void * buffer );
     int (*probe)( struct pci_device * dev );
     int (*map_range)(struct pci_device *dev, struct pci_device_mapping *map);
     int (*unmap_range)(struct pci_device * dev,
 		       struct pci_device_mapping *map);
-    
+
     int (*read)(struct pci_device * dev, void * data, pciaddr_t offset,
 		pciaddr_t size, pciaddr_t * bytes_read );
 
@@ -77,6 +77,10 @@ struct pci_system_methods {
     void (*write16)( struct pci_io_handle *handle, uint32_t reg,
 		     uint16_t data );
     void (*write8)( struct pci_io_handle *handle, uint32_t reg, uint8_t data );
+
+    int (*map_legacy)(struct pci_device *dev, pciaddr_t base, pciaddr_t size,
+		      unsigned map_flags, void **addr);
+    int (*unmap_legacy)(struct pci_device *dev, void *addr, pciaddr_t size);
 };
 
 struct pci_device_mapping {
@@ -90,13 +94,14 @@ struct pci_device_mapping {
 struct pci_io_handle {
     pciaddr_t base;
     pciaddr_t size;
+    void *memory;
     int fd;
 };
 
 struct pci_device_private {
     struct pci_device  base;
     const char * device_string;
-    
+
     uint8_t header_type;
 
     /**
@@ -105,7 +110,7 @@ struct pci_device_private {
     /*@{*/
     const struct pci_agp_info * agp;   /**< AGP capability information. */
     /*@}*/
-    
+
     /**
      * Base address of the device's expansion ROM.
      */

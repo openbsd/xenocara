@@ -25,7 +25,7 @@
 /**
  * \file common_bridge.c
  * Support routines used to process PCI header information for bridges.
- * 
+ *
  * \author Ian Romanick <idr@us.ibm.com>
  */
 
@@ -75,7 +75,7 @@ read_bridge_info( struct pci_device_private * priv )
 
 	info = malloc(sizeof(*info));
 	if (info != NULL) {
-	    pci_device_cfg_read( (struct pci_device *) priv, buf + 0x18, 0x18, 
+	    pci_device_cfg_read( (struct pci_device *) priv, buf + 0x18, 0x18,
 				 0x40 - 0x18, & bytes );
 
 	    info->primary_bus = buf[0x18];
@@ -239,7 +239,7 @@ pci_device_get_pcmcia_bridge_info( struct pci_device * dev )
 
 /**
  * Determine the primary, secondary, and subordinate buses for a bridge
- * 
+ *
  * Determines the IDs of the primary, secondary, and subordinate buses for
  * a specified bridge.  Not all bridges directly store this information
  * (e.g., PCI-to-ISA bridges).  For those bridges, no error is returned, but
@@ -252,7 +252,7 @@ pci_device_get_pcmcia_bridge_info( struct pci_device * dev )
  * \return
  * On success, zero is returned.  If \c dev is not a bridge, \c ENODEV is
  * returned.
- * 
+ *
  * \bug
  * Host bridges are handled the same way as PCI-to-ISA bridges.  This is
  * almost certainly not correct.
@@ -265,7 +265,7 @@ pci_device_get_bridge_buses(struct pci_device * dev, int *primary_bus,
 
     /* If the device isn't a bridge, return an error.
      */
-    
+
     if (((dev->device_class >> 16) & 0x0ff) != 0x06) {
 	return ENODEV;
     }

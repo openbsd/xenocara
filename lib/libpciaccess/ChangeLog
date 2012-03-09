@@ -219,6 +219,316 @@ Date:   Fri Sep 25 21:19:41 2009 +0200
 
     Merge remote branch 'origin/master' into obsd
 
+commit bf705561d347bc5459bc0af033595c66541cac3e
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Sat Mar 3 18:19:11 2012 -0800
+
+    configure.ac: Bump to 0.13
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit f550c1347d3518874fe1c1d417a57322ee6b52db
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Mon Feb 27 10:43:20 2012 -0500
+
+    linux: Don't use /dev/port
+    
+    Reviewed-by: Jeremy Huddleston <jeremyhu@apple.com>
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit 2a58cd13c3d14cd2ea57826b56e9906ecfc5648a
+Author: Mathias Krause <mathias.krause@secunet.com>
+Date:   Fri Feb 24 09:39:31 2012 +0100
+
+    Use correct type for pci_id file accessor functions
+    
+    This fixes the compiler warning of using the wrong type for gzgets() and
+    gzclose() as they want a gzFile argument, not a pointer to gzFile. The
+    abstraction layer pci_id_file should just abstract the full type.
+    
+    Signed-off-by: Mathias Krause <mathias.krause@secunet.com>
+    Reviewed-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit 167ffb1c4e431763e30c894131e704bb3599c7c1
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Feb 8 22:14:08 2012 -0800
+
+    solx_devfs.c: fix gcc warnings about casting away const when reading data
+    
+    solx_devfs.c: In function `pci_device_solx_devfs_write':
+    solx_devfs.c:1085: warning: cast discards qualifiers from pointer target type
+    solx_devfs.c:1089: warning: cast discards qualifiers from pointer target type
+    solx_devfs.c:1093: warning: cast discards qualifiers from pointer target type
+    solx_devfs.c:1097: warning: cast discards qualifiers from pointer target type
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 573b25ecd34dd69ee14c58f752bffdb5709654b9
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Feb 8 22:08:08 2012 -0800
+
+    Close pci.ids file when bailing out because realloc failed
+    
+    Error: File Leak
+       Leaked File f
+          at line 272 of src/common_device_name.c in function 'populate_vendor'.
+            f initialized at line 204 with fopen("/usr/share/hwdata/pci.ids", "r").
+    
+    [ This bug was found by the Parfait 0.5.0 bug checking tool.
+      For more information see http://labs.oracle.com/projects/parfait/ ]
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit ed6c6157bc94283ce0a8526eeff668094cf3992d
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Feb 8 21:40:54 2012 -0800
+
+    Solaris: reorder functions to remove need for lots of static prototypes
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit b56f9a84f3dff995a6901ffec6bcc161ec0245ad
+Author: Mark Kettenis <kettenis@openbsd.org>
+Date:   Thu Dec 29 21:14:44 2011 +0100
+
+    OpenBSD: Implement map_legacy and legacy_io
+    
+    Signed-off-by: Mark Kettenis <kettenis@openbsd.org>
+    Reviewed-by: Matthieu Herrb <matthieu.herrb@laas.fr>
+    Reviewed-by: Jeremy Huddleston <jeremyhu@apple.com>
+    Tested-by: Matthieu Herrb <matthieu.herrb@laas.fr>
+
+commit a798395a1bfd9d06d40e2d8d14377a156c94429a
+Author: Daniel Drake <dsd@laptop.org>
+Date:   Fri Nov 25 12:28:48 2011 -0600
+
+    delete_io_handle: fix deletion of last handle
+    
+    When num_ios goes from 1 to 0, a realloc(ios, 0); call is made.
+    This is equivalent to free(ios) and NULL is returned.
+    
+    However, the previous logic in the code incorrectly discards this NULL
+    return value. When we next call new_io_handle(), realloc(ios, X) is
+    called with "ios" pointing to freed memory. This causes glibc to abort.
+    
+    Correct this logic to detect the 1-to-0 case and handle it correctly.
+    Other cases are unchanged; there is still value in checking the
+    return value from realloc() as it also returns NULL on error.
+    
+    Signed-off-by: Daniel Drake <dsd@laptop.org>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 2601ddd02d608c16b0022fe342e0a3f4bf6cadeb
+Author: Mark Kettenis <mark.kettenis@xs4all.nl>
+Date:   Sun Nov 6 17:34:29 2011 +0000
+
+    Add VGA Arbiter support for OpenBSD.
+    
+    Signed-off-by: Matthieu Herrb <matthieu.herrb@laas.fr>
+
+commit e64ee4ee2b23dba147d144aacead3cb61c744854
+Author: Mark Kettenis <mark.kettenis@xs4all.nl>
+Date:   Sun Nov 6 17:32:51 2011 +0000
+
+    OpenBSD: Indicate that devices need access to legacy VGA resources.
+    
+    Makes sure xserver disables DRI if the VGA arbiter is in use.
+    
+    Signed-off-by: Matthieu Herrb <matthieu.herrb@laas.fr>
+
+commit cfae4096835fe569edb03cd12d4580fc912a0e61
+Author: Henry Zhao <henry.zhao@oracle.com>
+Date:   Mon Nov 14 18:53:21 2011 -0800
+
+    Solaris: improve support for sparc platform
+    
+    (1) added prom property retrieval on sparc
+    (2) added multiple domain support on sparc
+    (3) use kernel device as mapping device
+    (4) performance improvements by removing redundant ioctl
+    
+    Signed-off-by: Henry Zhao <henry.zhao@oracle.com>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 78eed07d599ff9e30c075aa7c8d1795e125ffc4b
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Wed Nov 9 09:27:49 2011 -0800
+
+    configure.ac: Bump to 0.12.902
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit cbb3c63affc1792ade0433691aa67f0edad52b0b
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Wed Nov 9 09:46:30 2011 -0800
+
+    Fix some -Wformat errors in scanpci
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit a0a53a67c91c698007dcac3e7aba27c999c4f6ed
+Author: Nithin Nayak Sujir <nsujir@broadcom.com>
+Date:   Mon Oct 24 12:15:15 2011 -0700
+
+    libpciaccess: close mtrr fd on pci_cleanup
+    
+    Since the fd is not closed, calling pci_system_init and
+    pci_system_cleanup more than 1024 times results in "too many files open"
+    error.
+    
+    Signed-off-by: Nithin Nayak Sujir <nsujir@broadcom.com>
+    Reviewed-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit 803bf3aa28de0f1260e479e2036159d4fead0a87
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Oct 4 21:46:05 2011 -0700
+
+    Solaris: Give better error on realloc failure
+    
+    commit a18460b385ae03 converted from a fixed maximum number of devices
+    to dynamically growing the list via realloc, but didn't update the
+    error message shown on failure.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Dirk Wallenstein <halsmit@t-online.de>
+    Reviewed-by: Mark Kettenis <kettenis@openbsd.org>
+
+commit af4478c52c960bee08209293aa14b784ac30dc05
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Tue Oct 11 10:22:49 2011 -0700
+
+    linux sysfs: Fix read-write access in map_legacy
+    
+    O_RDONLY | O_WRONLY != O_RDWR
+    
+    ><
+    
+    Reported-by: Javier Pello <javier.pello@urjc.es>
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit b9c5ce8083be53ea017bd15a63b173b4476fff23
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Sun Oct 9 03:53:05 2011 -0700
+
+    scanpci: Build fix for systems without <err.h>
+    
+    https://bugs.freedesktop.org/show_bug.cgi?id=31133
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit 30e9ec91107791835d722f99498d659dec048922
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Fri Oct 7 11:57:26 2011 -0700
+
+    configure.ac: Bump version to 0.12.901
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit 12dbf6d2d346cfe7ba8b2a1697c56af3f9876be7
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Fri Oct 7 11:56:06 2011 -0700
+
+    Update library version to reflect new API
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit 58e87933b3286f33cdeedd3a6b21f4ea795bea47
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Tue May 10 17:56:35 2011 -0400
+
+    linux: Implement map_legacy
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+    Reviewed-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit 8cc9a8fe57adfb52abaa90a8a2ac2316de8eb898
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Tue May 10 17:56:34 2011 -0400
+
+    Add map_legacy interface
+    
+    This allows platforms to hand back mmaps of the low 1M (ISA) address
+    space on a per-domain basis.
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+    Reviewed-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit e1a0240a3d6840b497845680c2bf6753415ba20f
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Sep 16 22:11:38 2011 -0700
+
+    Strip trailing whitespace
+    
+    Performed with: find * -type f | xargs perl -i -p -e 's{[ \t]+$}{}'
+    git diff -w & git diff -b show no diffs from this change
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 7bfc4f806d51b85e7ae069dd6deaf0b48326ed22
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Wed Aug 3 18:35:11 2011 -0400
+
+    linux: Fix a crash in populate_devices
+    
+    If scandir returns -1, the 'devices' array won't be initialized, and
+    attempting to free() it will crash.
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit f9159b97834ba4b4e42a07953a33866e7ac90dbd
+Author: Chris Wilson <chris@chris-wilson.co.uk>
+Date:   Sat Jun 4 12:30:06 2011 +0100
+
+    linux: Only set errno after an error
+    
+    errno is only valid after an error, and was being filled with a garbage
+    value upon eof.
+    
+    Signed-off-by: Chris Wilson <chris@chris-wilson.co.uk>
+
+commit a18460b385ae034830e4efbaaed7e0665c53ad9f
+Author: John Martin <John.M.Martin@Oracle.COM>
+Date:   Mon Mar 28 17:51:19 2011 -0700
+
+    Solaris support for multiple PCI segments (domains)
+    
+    1. Removed hardcoded maximum size of 256 PCI devices, which is
+    too small for large systems.  The number of devices is dynamically
+    resized as needed.
+    
+    2. pci_device_solx_devfs_probe() no longer walks the device tree
+    from the very top ("/") but instead starts at the nexus which
+    owns the bus.  Performance optimization for systems with multiple
+    bus nodes (including systems with just one segment/domain).
+    
+    3. Added support for multiple domains/segments.  Code tested
+    on kernels with and without multiple segment support so it should
+    be safe to integrate independent of the kernel version.
+    
+    Signed-off-by: John Martin <John.M.Martin@Oracle.COM>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Adam Jackson <ajax@redhat.com>
+
+commit f3e283a25f5fca4f750bb9538d69c4f36641cca5
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Feb 3 17:38:32 2011 -0500
+
+    config: comment, minor upgrade, quote and layout configure.ac
+    
+    Group statements per section as per Autoconf standard layout
+    Quote statements where appropriate.
+    Autoconf recommends not using dnl instead of # for comments
+    
+    Use AC_CONFIG_FILES to replace the deprecated AC_OUTPUT with parameters.
+    Add AC_CONFIG_SRCDIR([Makefile.am])
+    Update X.Org util-macros to version 1.8
+    
+    This helps automated maintenance and release activities.
+    Details can be found in http://wiki.x.org/wiki/NewModuleGuidelines
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
 commit d05ed57216726811388f17d7e87d7b6c7b8580ee
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Wed Feb 2 20:50:17 2011 -0800

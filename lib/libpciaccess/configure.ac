@@ -1,30 +1,29 @@
-dnl (C) Copyright IBM Corporation 2006
-dnl All Rights Reserved.
-dnl
-dnl Permission is hereby granted, free of charge, to any person obtaining a
-dnl copy of this software and associated documentation files (the "Software"),
-dnl to deal in the Software without restriction, including without limitation
-dnl on the rights to use, copy, modify, merge, publish, distribute, sub
-dnl license, and/or sell copies of the Software, and to permit persons to whom
-dnl the Software is furnished to do so, subject to the following conditions:
-dnl
-dnl The above copyright notice and this permission notice (including the next
-dnl paragraph) shall be included in all copies or substantial portions of the
-dnl Software.
-dnl
-dnl THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-dnl IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-dnl FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT.  IN NO EVENT SHALL
-dnl IBM AND/OR THEIR SUPPLIERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-dnl LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-dnl FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
-dnl DEALINGS IN THE SOFTWARE.
-dnl
-dnl Process this file with autoconf to create configure.
+# (C) Copyright IBM Corporation 2006
+# All Rights Reserved.
+#
+# Permission is hereby granted, free of charge, to any person obtaining a
+# copy of this software and associated documentation files (the "Software"),
+# to deal in the Software without restriction, including without limitation
+# on the rights to use, copy, modify, merge, publish, distribute, sub
+# license, and/or sell copies of the Software, and to permit persons to whom
+# the Software is furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice (including the next
+# paragraph) shall be included in all copies or substantial portions of the
+# Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT.  IN NO EVENT SHALL
+# IBM AND/OR THEIR SUPPLIERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+# FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+# DEALINGS IN THE SOFTWARE.
+#
 
 # Initialize Autoconf
 AC_PREREQ([2.60])
-AC_INIT([libpciaccess],[0.12.1],
+AC_INIT([libpciaccess],[0.13],
         [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg&component=libpciaccess],[libpciaccess])
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_HEADERS([config.h])
@@ -33,14 +32,14 @@ AC_CONFIG_HEADERS([config.h])
 AM_INIT_AUTOMAKE([foreign dist-bzip2])
 AM_MAINTAINER_MODE
 
-# Require xorg-macros: XORG_DEFAULT_OPTIONS
-m4_ifndef([XORG_MACROS_VERSION],
-          [m4_fatal([must install xorg-macros 1.3 or later before running autoconf/autogen])])
-XORG_MACROS_VERSION(1.3)
-XORG_DEFAULT_OPTIONS
-
-# Check for progs
+# Initialize libtool
 AC_PROG_LIBTOOL
+
+# Require X.Org macros 1.8 or later
+m4_ifndef([XORG_MACROS_VERSION],
+          [m4_fatal([must install xorg-macros 1.8 or later before running autoconf/autogen])])
+XORG_MACROS_VERSION(1.8)
+XORG_DEFAULT_OPTIONS
 
 pciids_path=/usr/share/hwdata
 AC_ARG_WITH(pciids-path, AS_HELP_STRING([--with-pciids-path=PCIIDS_PATH],
@@ -107,13 +106,15 @@ AM_CONDITIONAL(GNU, [test "x$gnu" = xyes])
 
 AC_SYS_LARGEFILE
 
+AC_CHECK_HEADERS([err.h])
+
 AC_CHECK_HEADER([asm/mtrr.h], [have_mtrr_h="yes"], [have_mtrr_h="no"])
 
 if test "x$have_mtrr_h" = xyes; then
     AC_DEFINE(HAVE_MTRR, 1, [Use MTRRs on mappings])
 fi
 
-dnl check for the pci_io.pi_sel.pc_domain
+# check for the pci_io.pi_sel.pc_domain
 AC_CHECK_MEMBER([struct pci_io.pi_sel.pc_domain],
                [AC_DEFINE(HAVE_PCI_IO_PC_DOMAIN,1,[Have the pci_io.pi_sel.pc_domain member.])],
                [],
@@ -123,12 +124,11 @@ AC_CHECK_MEMBER([struct pci_io.pi_sel.pc_domain],
 
 AC_SUBST(PCIACCESS_CFLAGS)
 AC_SUBST(PCIACCESS_LIBS)
-		  
 
 AC_CONFIG_FILES([Makefile
-	   include/Makefile
-	   man/Makefile
-	   src/Makefile
-	   scanpci/Makefile
-           pciaccess.pc])
+		include/Makefile
+		man/Makefile
+		src/Makefile
+		scanpci/Makefile
+		pciaccess.pc])
 AC_OUTPUT

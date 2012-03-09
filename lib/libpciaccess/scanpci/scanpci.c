@@ -22,10 +22,29 @@
  * DEALINGS IN THE SOFTWARE.
  */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include <stdlib.h>
 #include <stdio.h>
-#include <err.h>
 #include <unistd.h>
+#include <inttypes.h>
+
+#ifdef HAVE_ERR_H
+#include <err.h>
+#else
+# include <errno.h>
+# include <string.h>
+# define err(exitcode, format, args...) \
+   errx(exitcode, format ": %s", ## args, strerror(errno))
+# define errx(exitcode, format, args...) \
+   { warnx(format, ## args); exit(exitcode); }
+# define warn(format, args...) \
+   warnx(format ": %s", ## args, strerror(errno))
+# define warnx(format, args...) \
+   fprintf(stderr, format "\n", ## args)
+#endif
 
 #include "pciaccess.h"
 
@@ -33,19 +52,19 @@
 static void
 print_pci_bridge( const struct pci_bridge_info * info )
 {
-    printf( "  Bus: primary=%02x, secondary=%02x, subordinate=%02x, "
-	    "sec-latency=%u\n",
+    printf( "  Bus: primary=%02"PRIx8", secondary=%02"PRIx8", subordinate=%02"PRIx8", "
+	    "sec-latency=%"PRIu8"\n",
 	    info->primary_bus,
 	    info->secondary_bus,
 	    info->subordinate_bus,
 	    info->secondary_latency_timer );
-    printf( "  I/O behind bridge: %08x-%08x\n",
+    printf( "  I/O behind bridge: %08"PRIx32"-%08"PRIx32"\n",
 	    info->io_base,
 	    info->io_limit );
-    printf( "  Memory behind bridge: %08x-%08x\n",
+    printf( "  Memory behind bridge: %08"PRIx32"-%08"PRIx32"\n",
 	    info->mem_base,
 	    info->mem_limit );
-    printf( "  Prefetchable memory behind bridge: %08llx-%08llx\n",
+    printf( "  Prefetchable memory behind bridge: %08"PRIx64"-%08"PRIx64"\n",
 	    info->prefetch_mem_base,
 	    info->prefetch_mem_limit );
 }
@@ -132,7 +151,7 @@ print_pci_device( struct pci_device * dev, int verbose )
 	pci_device_probe( dev );
 	for ( i = 0 ; i < 6 ; i++ ) {
 	    if ( dev->regions[i].base_addr != 0 ) {
-		printf( "  BASE%u     0x%08x SIZE %d  %s",
+		printf( "  BASE%u     0x%08"PRIxPTR" SIZE %zu  %s",
 			i,
 			(intptr_t) dev->regions[i].base_addr,
 			(size_t) dev->regions[i].size,

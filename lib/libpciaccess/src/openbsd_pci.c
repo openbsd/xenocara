@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008 Mark Kettenis
+ * Copyright (c) 2008, 2011 Mark Kettenis
  *
  * Permission to use, copy, modify, and distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -192,7 +192,8 @@ pci_device_openbsd_map_range(struct pci_device *dev,
 		mo.mo_arg[0] = MEMRANGE_SET_UPDATE;
 
 		if (ioctl(aperturefd, MEMRANGE_SET, &mo))
-			(void)fprintf(stderr, "mtrr set failed: %s\n",
+			(void)fprintf(stderr, "mtrr set %lx %lx failed: %s\n",
+			    (intptr_t)map->base, (intptr_t)map->size,
 			    strerror(errno));
 	}
 #endif
@@ -394,6 +395,141 @@ pci_device_openbsd_probe(struct pci_device *device)
 	return 0;
 }
 
+#if defined(__i386__) || defined(__amd64__)
+#include <machine/sysarch.h>
+#include <machine/pio.h>
+#endif
+
+static struct pci_io_handle *
+pci_device_openbsd_open_legacy_io(struct pci_io_handle *ret,
+    struct pci_device *dev, pciaddr_t base, pciaddr_t size)
+{
+#if defined(__i386__)
+	struct i386_iopl_args ia;
+
+	ia.iopl = 1;
+	if (sysarch(I386_IOPL, &ia))
+		return NULL;
+
+	ret->base = base;
+	ret->size = size;
+	return ret;
+#elif defined(__amd64__)
+	struct amd64_iopl_args ia;
+
+	ia.iopl = 1;
+	if (sysarch(AMD64_IOPL, &ia))
+		return NULL;
+
+	ret->base = base;
+	ret->size = size;
+	return ret;
+#elif defined(PCI_MAGIC_IO_RANGE)
+	ret->memory = mmap(NULL, size, PROT_READ | PROT_WRITE, MAP_SHARED,
+	    aperturefd, PCI_MAGIC_IO_RANGE + base);
+	if (ret->memory == MAP_FAILED)
+		return NULL;
+
+	ret->base = base;
+	ret->size = size;
+	return ret;
+#else
+	return NULL;
+#endif
+}
+
+static uint32_t
+pci_device_openbsd_read32(struct pci_io_handle *handle, uint32_t reg)
+{
+#if defined(__i386__) || defined(__amd64__)
+	return inl(handle->base + reg);
+#else
+	return *(uint32_t *)((uintptr_t)handle->memory + reg);
+#endif
+}
+
+static uint16_t
+pci_device_openbsd_read16(struct pci_io_handle *handle, uint32_t reg)
+{
+#if defined(__i386__) || defined(__amd64__)
+	return inw(handle->base + reg);
+#else
+	return *(uint16_t *)((uintptr_t)handle->memory + reg);
+#endif
+}
+
+static uint8_t
+pci_device_openbsd_read8(struct pci_io_handle *handle, uint32_t reg)
+{
+#if defined(__i386__) || defined(__amd64__)
+	return inb(handle->base + reg);
+#else
+	return *(uint8_t *)((uintptr_t)handle->memory + reg);
+#endif
+}
+
+static void
+pci_device_openbsd_write32(struct pci_io_handle *handle, uint32_t reg,
+    uint32_t data)
+{
+#if defined(__i386__) || defined(__amd64__)
+	outl(handle->base + reg, data);
+#else
+	*(uint16_t *)((uintptr_t)handle->memory + reg) = data;
+#endif
+}
+
+static void
+pci_device_openbsd_write16(struct pci_io_handle *handle, uint32_t reg,
+    uint16_t data)
+{
+#if defined(__i386__) || defined(__amd64__)
+	outw(handle->base + reg, data);
+#else
+	*(uint8_t *)((uintptr_t)handle->memory + reg) = data;
+#endif
+}
+
+static void
+pci_device_openbsd_write8(struct pci_io_handle *handle, uint32_t reg,
+    uint8_t data)
+{
+#if defined(__i386__) || defined(__amd64__)
+	outb(handle->base + reg, data);
+#else
+	*(uint32_t *)((uintptr_t)handle->memory + reg) = data;
+#endif
+}
+
+static int
+pci_device_openbsd_map_legacy(struct pci_device *dev, pciaddr_t base,
+    pciaddr_t size, unsigned map_flags, void **addr)
+{
+	struct pci_device_mapping map;
+	int err;
+
+	map.base = base;
+	map.size = size;
+	map.flags = map_flags;
+	map.memory = NULL;
+	err = pci_device_openbsd_map_range(dev, &map);
+	*addr = map.memory;
+
+	return err;
+}
+
+static int
+pci_device_openbsd_unmap_legacy(struct pci_device *dev, void *addr,
+    pciaddr_t size)
+{
+	struct pci_device_mapping map;
+
+	map.memory = addr;
+	map.size = size;
+	map.flags = 0;
+	return pci_device_openbsd_unmap_range(dev, &map);
+}
+
 static const struct pci_system_methods openbsd_pci_methods = {
 	pci_system_openbsd_destroy,
 	NULL,
@@ -403,7 +539,21 @@ static const struct pci_system_methods openbsd_pci_methods = {
 	pci_device_openbsd_unmap_range,
 	pci_device_openbsd_read,
 	pci_device_openbsd_write,
-	pci_fill_capabilities_generic
+	pci_fill_capabilities_generic,
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	pci_device_openbsd_open_legacy_io,
+	NULL,
+	pci_device_openbsd_read32,
+	pci_device_openbsd_read16,
+	pci_device_openbsd_read8,
+	pci_device_openbsd_write32,
+	pci_device_openbsd_write16,
+	pci_device_openbsd_write8,
+	pci_device_openbsd_map_legacy,
+	pci_device_openbsd_unmap_legacy
 };
 
 int
@@ -584,7 +734,6 @@ int
 pci_device_vgaarb_set_target(struct pci_device *dev)
 {
 	pci_sys->vga_target = dev;
-	return 0;
 }
 
 int

@@ -25,7 +25,7 @@
 /**
  * \file linux_devmem.c
  * Access PCI subsystem using Linux's the old /dev/mem interface.
- * 
+ *
  * \note
  * This is currently just a skeleton.  It only includes the /dev/mem based
  * function for reading the device ROM.
@@ -52,11 +52,11 @@
 
 /**
  * Read a device's expansion ROM using /dev/mem.
- * 
+ *
  * \note
  * This function could probably be used, as-is, on other platforms that have
  * a /dev/mem interface.
- * 
+ *
  * \bugs
  * Before using the VGA special case code, this function should check that
  * VGA access are routed to the device.  Right?
@@ -94,7 +94,7 @@ pci_device_linux_devmem_read_rom(struct pci_device *dev, void *buffer)
 	rom_size = priv->base.rom_size;
 	PCI_ROM = 1;
     }
-    
+
 
 
     /* Enable the device's ROM.
@@ -106,15 +106,15 @@ pci_device_linux_devmem_read_rom(struct pci_device *dev, void *buffer)
 	}
 
 	if ((rom_base_tmp & 0x000000001) == 0) {
-	    err = pci_device_cfg_write_u32(& priv->base, 
+	    err = pci_device_cfg_write_u32(& priv->base,
 					   rom_base_tmp | 1, 48);
 	    if (err) {
 		return err;
 	    }
 	}
     }
-    
-    
+
+
     /* Read the portion of /dev/mem that corresponds to the device's ROM.
      */
     fd = open("/dev/mem", O_RDONLY, 0);
@@ -125,7 +125,7 @@ pci_device_linux_devmem_read_rom(struct pci_device *dev, void *buffer)
 	size_t bytes;
 
 	for (bytes = 0; bytes < rom_size; /* empty */) {
-	    const ssize_t got = pread(fd, buffer, rom_size - bytes, 
+	    const ssize_t got = pread(fd, buffer, rom_size - bytes,
 				      rom_base + bytes);
 	    if (got == -1) {
 		err = errno;
@@ -138,7 +138,7 @@ pci_device_linux_devmem_read_rom(struct pci_device *dev, void *buffer)
 	close(fd);
     }
 
-    
+
     /* Disable the device's ROM.
      */
     if (PCI_ROM && ((rom_base_tmp & 0x000000001) == 0)) {

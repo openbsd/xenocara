@@ -210,7 +210,7 @@ pci_device_netbsd_write(struct pci_device *dev, const void *data,
 		io.cfgreg.reg = offset;
 		memcpy(&io.cfgreg.val, data, 4);
 
-		if (ioctl(pcifd, PCI_IOC_BDF_CFGWRITE, &io) == -1) 
+		if (ioctl(pcifd, PCI_IOC_BDF_CFGWRITE, &io) == -1)
 			return errno;
 
 		offset += 4;

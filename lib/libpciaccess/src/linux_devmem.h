@@ -26,7 +26,7 @@
  * \file linux_devmem.h
  * Functions and datastructures that are private to the /dev/mem based
  * back-end for pciaccess.
- * 
+ *
  * \author Ian Romanick <idr@us.ibm.com>
  */
 

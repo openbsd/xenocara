@@ -1,4 +1,4 @@
-# 
+#
 # (C) Copyright IBM Corporation 2006
 # All Rights Reserved.
 #
@@ -43,6 +43,7 @@ endif
 
 if OPENBSD
 OS_SUPPORT = openbsd_pci.c
+# VGA Arbiter code is included in openbsd_pci.c
 endif
 
 if SOLARIS
@@ -69,4 +70,4 @@ libpciaccess_la_SOURCES = common_bridge.c \
 
 libpciaccess_la_LIBADD = $(PCIACCESS_LIBS)
 
-libpciaccess_la_LDFLAGS = -version-number 0:10:8 -no-undefined
+libpciaccess_la_LDFLAGS = -version-number 0:11:0 -no-undefined

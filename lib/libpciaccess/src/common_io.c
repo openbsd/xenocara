@@ -64,10 +64,15 @@ delete_io_handle(struct pci_io_handle *handle)
         }
     }
 
-    new = realloc(ios, sizeof(struct pci_io_handle) * (num_ios - 1));
-    if (new)
-        ios = new;
     num_ios--;
+    if (num_ios) {
+        new = realloc(ios, sizeof(struct pci_io_handle) * num_ios);
+        if (new)
+            ios = new;
+    } else {
+        free(ios);
+        ios = NULL;
+    }
 }
 
 _pci_hidden void
@@ -109,7 +114,7 @@ pci_device_open_io(struct pci_device *dev, pciaddr_t base, pciaddr_t size)
 	ret = new_io_handle();
 	if (!ret)
 	    return NULL;
-	
+
 	if (!pci_sys->methods->open_device_io(ret, dev, bar, base, size)) {
 	    delete_io_handle(ret);
 	    return NULL;
