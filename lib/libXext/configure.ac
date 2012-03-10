@@ -1,7 +1,7 @@
 
 # Initialize Autoconf
 AC_PREREQ([2.60])
-AC_INIT([libXext], [1.3.0],
+AC_INIT([libXext], [1.3.1],
         [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg], [libXext])
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_HEADERS([config.h])
@@ -22,10 +22,10 @@ XORG_ENABLE_SPECS
 XORG_WITH_XMLTO(0.0.22)
 XORG_WITH_FOP
 XORG_WITH_XSLTPROC
-XORG_CHECK_SGML_DOCTOOLS(1.7)
+XORG_CHECK_SGML_DOCTOOLS(1.8)
 XORG_CHECK_MALLOC_ZERO
 
-# Determine .so library version per platform 
+# Determine .so library version per platform
 # based on SharedXextRev in monolith xc/config/cf/*Lib.tmpl
 if test "x$XEXT_SOREV" = "x" ; then
     case $host_os in

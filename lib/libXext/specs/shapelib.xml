@@ -1,6 +1,9 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.3//EN"
-                   "http://www.oasis-open.org/docbook/xml/4.3/docbookx.dtd">
+                   "http://www.oasis-open.org/docbook/xml/4.3/docbookx.dtd"
+[
+<!ENTITY % defs SYSTEM "defs.ent"> %defs;
+]>
 
 <!-- lifted from troff+ms+XMan by doclifter -->
 <book id="shapelib">
@@ -8,17 +11,15 @@
 <bookinfo>
    <title>X Nonrectangular Window Shape Extension Library</title>
    <subtitle>X Consortium Standard</subtitle>
-   <releaseinfo>X Version 11, Release 6.4</releaseinfo>
+   <releaseinfo>X Version 11, Release &fullrelvers;</releaseinfo>
+   <releaseinfo>Version 1.0</releaseinfo>
    <authorgroup>
       <author>
          <firstname>Keith</firstname><surname>Packard</surname>
+         <affiliation><orgname>MIT X Consortium</orgname></affiliation>
       </author>
    </authorgroup>
-   <corpname>MIT X Consortium</corpname>
    <copyright><year>1989</year><holder>X Consortium</holder></copyright>
-   <releaseinfo>Version 1.0</releaseinfo>
-   <affiliation><orgname>MIT X Consortium</orgname></affiliation>
-   <productnumber>X Version 11, Release 6.4</productnumber>
 
 <legalnotice>
 
@@ -52,6 +53,7 @@ Except as contained in this notice, the name of the X Consortium shall not be
 used in advertising or otherwise to promote the sale, use or other dealings
 in this Software without prior written authorization from the X Consortium.
 </para>
+<para>X Window System is a trademark of The OpenGroup.</para>
 </legalnotice>
 </bookinfo>
 
@@ -94,8 +96,10 @@ window manager.
 
 <para>
 Each window (even with no shapes specified) is defined by two regions:  the
-<emphasis remap='I'>bounding region</emphasis> and the
-<emphasis remap='I'>clip region</emphasis>.  The bounding region is the
+<olink targetdoc='shapelib' targetptr='bounding_region'>bounding region</olink>
+and the
+<olink targetdoc='shapelib' targetptr='clip_region'>clip region</olink>.
+The bounding region is the
 area of the parent window that the window will occupy (including border).
 The clip region is the subset of the bounding region that is available for
 subwindows and graphics.  The area between the bounding region and the
@@ -107,8 +111,10 @@ A nonshaped window will have a bounding region that is a rectangle spanning
 the window, including its border; the clip region will be a rectangle
 filling the inside dimensions (not including the border).  In this document,
 these areas are referred to as the
-<emphasis remap='I'>default bounding region</emphasis> and the
-<emphasis remap='I'>default clip region</emphasis>.  For a window with
+<olink targetdoc='shapelib' targetptr='default_bounding_region'>
+default bounding region</olink> and the
+<olink targetdoc='shapelib' targetptr='default_clip_region'>
+default clip region</olink>.  For a window with
 inside size of <emphasis remap='I'>width</emphasis> by
 <emphasis remap='I'>height</emphasis> and border width
 <emphasis remap='I'>bwidth</emphasis>, the default bounding and clip
@@ -131,8 +137,10 @@ clip.height = <emphasis remap='I'>height</emphasis>
 This extension allows a client to modify either or both of the bounding or
 clip regions by specifying new regions that combine with the default
 regions.  These new regions are called the
-<emphasis remap='I'>client bounding region</emphasis> and the
-<emphasis remap='I'>client clip region</emphasis>.  They are specified
+<olink targetdoc='shapelib' targetptr='client_bounding_region'>
+client bounding region</olink> and the
+<olink targetdoc='shapelib' targetptr='client_clip_region'>
+client clip region</olink>.  They are specified
 relative to the origin of the window and are always defined by offsets
 relative to the window origin (that is, region adjustments are not
 required when the window is moved).  Three mechanisms for specifying
@@ -149,7 +157,8 @@ default region is used instead.
 </para>
 
 <para>
-The <emphasis remap='I'>effective bounding region</emphasis> of a window is
+The <olink targetdoc='shapelib' targetptr='effective_bounding_region'>
+effective bounding region</olink> of a window is
 defined to be the intersection of the client bounding region with the default
 bounding region.  Any portion of the client bounding region that is not
 included in the default bounding region will not be included in the
@@ -167,7 +176,8 @@ be enlarged to include more of the client bounding region.
 </para>
 
 <para>
-The <emphasis remap='I'>effective clip region</emphasis> of a window is
+The <olink targetdoc='shapelib' targetptr='effective_clip_region'>
+effective clip region</olink> of a window is
 defined to be the intersection of the client clip region with both the
 default clip region and the client bounding region.  Any portion of the
 client clip region that is not included in both the default clip region
@@ -214,11 +224,12 @@ as for events that occur in a normal rectangular border.
 </para>
 
 <para>An
-<function>InputOnly</function>
+<olink targetdoc='libX11' targetptr='glossary:InputOnly_window'>
+InputOnly</olink>
 window can have its bounding region set, but it is a
-<function>Match</function>
+<olink targetdoc='libX11' targetptr='BadMatch'>Match</olink>
 error to attempt to set a clip region on an
-<function>InputOnly</function>
+<olink targetdoc='libX11' targetptr='glossary:InputOnly_window'>InputOnly</olink>
 window or to specify its clip region as a source to a request
 in this extension.
 </para>
@@ -253,7 +264,7 @@ The defined region operations are
 and
 <function>ShapeInvert</function>.</para>
 
-<funcsynopsis>
+<funcsynopsis id='xshapequeryextension'>
 <funcprototype>
 <funcdef>Bool<function> XShapeQueryExtension</function></funcdef>
 <paramdef>Display <parameter>*display</parameter></paramdef>
@@ -275,7 +286,7 @@ this extension.  Because no errors are defined for this version of
 the extension, the value returned here is not defined (nor useful).
 </para>
 
-<funcsynopsis>
+<funcsynopsis id='xshapequeryversion'>
 <funcprototype>
 <funcdef>Status<function> XShapeQueryVersion</function></funcdef>
 <paramdef>Display<parameter> *display</parameter></paramdef>
@@ -292,7 +303,7 @@ extension supported by the display and returns a nonzero value.
 Otherwise, the arguments are not set and zero is returned.
 </para>
 
-<funcsynopsis>
+<funcsynopsis id='xshapecombineregion'>
 <funcprototype>
 <funcdef><function>XShapeCombineRegion</function></funcdef>
 <paramdef>Display<parameter> *display</parameter></paramdef>
@@ -312,7 +323,7 @@ converts the specified region into a list of rectangles and calls
 <function>XShapeCombineRectangles</function>
 </para>
 
-<funcsynopsis>
+<funcsynopsis id='xshapecombinerectangles'>
 <funcprototype>
 <funcdef><function>XShapeCombineRectangles</function></funcdef>
 <paramdef>Display<parameter> *display</parameter></paramdef>
@@ -335,7 +346,7 @@ performs a
 operation; otherwise, the request is ignored.
 </para>
 
-<funcsynopsis>
+<funcsynopsis id='xshapecombinemask'>
 <funcprototype>
 <funcdef><function>XShapeCombineMask</function></funcdef>
 <paramdef>Display<parameter> *display</parameter></paramdef>
@@ -356,7 +367,7 @@ performs a
 operation; otherwise, the request is ignored.
 </para>
 
-<funcsynopsis>
+<funcsynopsis id='xshapecombineshape'>
 <funcprototype>
 <funcdef><function>XShapeCombineShape</function></funcdef>
 <paramdef>Display<parameter> *display</parameter></paramdef>
@@ -378,7 +389,7 @@ performs a
 operation; otherwise, the request is ignored.
 </para>
 
-<funcsynopsis>
+<funcsynopsis id='xshapeoffsetshape'>
 <funcprototype>
 <funcdef><function>XShapeOffsetShape</function></funcdef>
 <paramdef><parameter>display</parameter></paramdef>
@@ -397,7 +408,7 @@ performs a
 operation; otherwise, the request is ignored.
 </para>
 
-<funcsynopsis>
+<funcsynopsis id='xshapequeryextents'>
 <funcprototype>
 <funcdef>Status <function>XShapeQueryExtents</function></funcdef>
 <paramdef>Display<parameter> *display</parameter></paramdef>
@@ -429,7 +440,7 @@ If the extension is supported, a nonzero value is returned; otherwise,
 zero is returned.
 </para>
 
-<funcsynopsis>
+<funcsynopsis id='xshapeselectinput'>
 <funcprototype>
 <funcdef><function>XShapeSelectInput</function></funcdef>
 <paramdef>Display<parameter> *display</parameter></paramdef>
@@ -464,7 +475,7 @@ typedef struct {
 } XShapeEvent;
 </literallayout>
 
-<funcsynopsis>
+<funcsynopsis id='xshapeinputselected'>
 <funcprototype>
 <funcdef>unsigned long <function>XShapeInputSelected</function></funcdef>
 <paramdef>Display<parameter> *display</parameter></paramdef>
@@ -483,7 +494,7 @@ otherwise, it returns zero.
 If the extension is not supported, it returns zero.
 </para>
 
-<funcsynopsis>
+<funcsynopsis id='xshapegetrectangles'>
 <funcprototype>
 <funcdef>XRectangle<function> *XShapeGetRectangles</function></funcdef>
 <paramdef>Display<parameter> *display</parameter></paramdef>

@@ -1,6 +1,9 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.3//EN"
-                   "http://www.oasis-open.org/docbook/xml/4.3/docbookx.dtd">
+                   "http://www.oasis-open.org/docbook/xml/4.3/docbookx.dtd"
+[
+<!ENTITY % defs SYSTEM "defs.ent"> %defs;
+]>
 
 <!-- lifted from troff+ms+XMan by doclifter -->
 <book id="dpmslib">
@@ -8,17 +11,16 @@
 <bookinfo>
    <title>X Display Power Management Signaling (DPMS) Extension</title>
    <subtitle>X Consortium Standard</subtitle>
-   <releaseinfo>X Version 11, Release 6.8</releaseinfo>
+   <releaseinfo>X Version 11, Release &fullrelvers;</releaseinfo>
+   <releaseinfo>Version 1.0</releaseinfo>
    <authorgroup>
       <author>
          <firstname>Rob</firstname><surname>Lembree</surname>
+         <affiliation><orgname>Digital Equipment Corporation</orgname></affiliation>
+         <email>lembree@zk3.dec.com</email>
       </author>
    </authorgroup>
-   <corpname>Digital Equipment Corporation</corpname>
-   <copyright><year>1996</year><holder>X Consortium</holder></copyright>
-   <releaseinfo>Version 1.0</releaseinfo>
-   <affiliation><orgname>X Consortium</orgname></affiliation>
-   <productnumber>X Version 11, Release 6.8</productnumber>
+   <copyright><year>1996</year><holder>Digital Equipment Corporation</holder></copyright>
 
 <legalnotice>
 <para>
@@ -31,9 +33,7 @@ of the information in this document.  This documentation is
 provided "as is" without express or implied warranty.
 </para>
 
-<para>
-<emphasis remap='I'>X Window System</emphasis> is a trademark of The Open Group.
-</para>
+<para>X Window System is a trademark of The Open Group.</para>
 </legalnotice>
 
 </bookinfo>
@@ -85,7 +85,7 @@ These are mapped onto the X DPMS Extension like this:
 <title>DPMS Functions</title>
 
 
-<funcsynopsis>
+<funcsynopsis id='DPMSQueryExtention'>
 <funcprototype>
   <funcdef>Bool <function>DPMSQueryExtention</function></funcdef>
     <paramdef>Display <parameter>*display</parameter></paramdef>
@@ -120,7 +120,7 @@ return value is FALSE, and the values of
 <emphasis remap='I'>error_base</emphasis> are undefined.
 </para>
 
-<funcsynopsis>
+<funcsynopsis id='DPMSGetVersion'>
 <funcprototype>
   <funcdef>Status <function>DPMSGetVersion</function></funcdef>
     <paramdef>Display <parameter>*display</parameter></paramdef>
@@ -156,7 +156,7 @@ incompatible changes, and the minor version will be incremented for small,
 upwardly compatible changes.
 </para>
 
-<funcsynopsis>
+<funcsynopsis id='DPMSCapable'>
 <funcprototype>
   <funcdef>Bool <function>DPMSCapable</function></funcdef>
     <paramdef>Display <parameter>*display</parameter></paramdef>
@@ -179,7 +179,7 @@ is capable of DPMS on one head, and incapable on another, the truth value of
 this function is defined by the X server implementation.
 </para>
 
-<funcsynopsis>
+<funcsynopsis id='DPMSSetTimeouts'>
 <funcprototype>
   <funcdef>Status <function>DPMSSetTimeouts</function></funcdef>
     <paramdef>Display <parameter>*display</parameter></paramdef>
@@ -255,7 +255,7 @@ or equal to the timeout values of earlier modes.  If inconsistent values
 are supplied, a BadValue error will result.
 </para>
 
-<funcsynopsis>
+<funcsynopsis id='DPMSGetTimeouts'>
 <funcprototype>
   <funcdef>Status <function>DPMSGetTimeouts</function></funcdef>
     <paramdef>Display <parameter>*display</parameter></paramdef>
@@ -307,7 +307,7 @@ inactivity in seconds before the third and final level of power savings is
 invoked. A value of zero indicates that this mode has been disabled.
 </para>
 
-<funcsynopsis>
+<funcsynopsis id='DPMSEnable'>
 <funcprototype>
   <funcdef>Status <function>DPMSEnable</function></funcdef>
     <paramdef>Display <parameter>*display</parameter></paramdef>
@@ -331,7 +331,7 @@ error is returned.  If DPMSEnable is invoked on a display without
 support for DPMS, no change is made and no error is returned.
 </para>
 
-<funcsynopsis>
+<funcsynopsis id='DPMSDisable'>
 <funcprototype>
   <funcdef>Status <function>DPMSDisable</function></funcdef>
     <paramdef>Display <parameter>*display</parameter></paramdef>
@@ -353,7 +353,7 @@ and no error is returned.  If DPMSDisable is invoked on a display
 without support for DPMS, no change is made and no error is returned.
 </para>
 
-<funcsynopsis>
+<funcsynopsis id='DPMSForceLevel'>
 <funcprototype>
   <funcdef>Status <function>DPMSForceLevel</function></funcdef>
     <paramdef>Display <parameter>*display</parameter></paramdef>
@@ -382,7 +382,7 @@ is disabled on the display, a BadMatch protocol error will result.
 
 <para>Status DPMSInfo(<emphasis remap='I'>display, power_level, state</emphasis>)</para>
 
-<funcsynopsis>
+<funcsynopsis id='DPMSInfo'>
 <funcprototype>
   <funcdef>Status <function>DPMSInfo</function></funcdef>
     <paramdef>Display <parameter>*display</parameter></paramdef>

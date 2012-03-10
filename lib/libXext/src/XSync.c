@@ -62,7 +62,7 @@ PERFORMANCE OF THIS SOFTWARE.
 
 static XExtensionInfo _sync_info_data;
 static XExtensionInfo *sync_info = &_sync_info_data;
-static char    *sync_extension_name = SYNC_NAME;
+static const char     *sync_extension_name = SYNC_NAME;
 
 #define SyncCheckExtension(dpy,i,val) \
 		XextCheckExtension(dpy, i, sync_extension_name, val)
@@ -89,7 +89,7 @@ static XExtensionHooks sync_extension_hooks = {
     error_string,		/* error_string */
 };
 
-static char    *sync_error_list[] = {
+static const char *sync_error_list[] = {
     "BadCounter",
     "BadAlarm",
     "BadFence",
@@ -414,7 +414,7 @@ XSyncFreeSystemCounterList(XSyncSystemCounter *list)
 }
 
 
-XSyncCounter 
+XSyncCounter
 XSyncCreateCounter(Display *dpy, XSyncValue initial_value)
 {
     XExtDisplayInfo *info = find_display(dpy);

@@ -1,6 +1,9 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.3//EN"
-                   "http://www.oasis-open.org/docbook/xml/4.3/docbookx.dtd">
+                   "http://www.oasis-open.org/docbook/xml/4.3/docbookx.dtd"
+[
+<!ENTITY % defs SYSTEM "defs.ent"> %defs;
+]>
 
 
 <!-- lifted from troff+ms+XMan by doclifter -->
@@ -9,37 +12,45 @@
 <bookinfo>
    <title>X Synchronization Extension Library</title>
    <subtitle>X Consortium Standard</subtitle>
-   <releaseinfo>X Version 11, Release 6.4</releaseinfo>
+   <releaseinfo>X Version 11, Release &fullrelvers;</releaseinfo>
+   <releaseinfo>Version 3.0</releaseinfo>
    <authorgroup>
       <author>
         <firstname>Tim</firstname><surname>Glauert</surname>
-        <affiliation><orgname>Olivetti Research/MultiWorks</orgname></affiliation>
+        <affiliation>
+          <orgname>Olivetti Research</orgname>
+          <orgdiv>MultiWorks</orgdiv>
+        </affiliation>
       </author>
       <author>
           <firstname>Dave</firstname>
           <surname>Carver</surname>
-          <affiliation><orgname>Digital Equipment Corporation, MIT/Project Athena</orgname></affiliation>
+          <affiliation>
+            <orgname>Digital Equipment Corporation</orgname>
+            <orgdiv>MIT/Project Athena</orgdiv>
+          </affiliation>
       </author>
       <author>
         <firstname>Jim</firstname>
         <surname>Gettys</surname>
-        <affiliation><orgname>Digital Equipment Corporation, Cambridge Research Laboratory</orgname></affiliation>
+        <affiliation>
+          <orgname>Digital Equipment Corporation</orgname>
+          <orgdiv>Cambridge Research Laboratory</orgdiv>
+        </affiliation>
       </author>
       <author>
         <firstname>David</firstname>
+        <othername>P.</othername>
         <surname>Wiggins</surname>
         <affiliation><orgname>X Consortium, Inc.</orgname></affiliation>
       </author>
    </authorgroup>
-   <releaseinfo>Version 3.0</releaseinfo>
-   <affiliation><orgname>X Consortium</orgname></affiliation>
-   <productnumber>X Version 11, Release 6.4</productnumber>
+   <copyright><year>1991</year>
+     <holder>Olivetti Research Limited, Cambridge England</holder>
+     <holder>Digital Equipment Corporation, Maynard, Massachusetts</holder>
+   </copyright>
+
 <legalnotice>
-
-<para>
-Copyright 1991 by Olivetti Research Limited, Cambridge England and Digital Equipment Corporation, Maynard, Massachusetts
-</para>
-
 <para>
 Permission to use, copy, modify, and distribute this documentation for any
 purpose and without fee is hereby granted, provided that the above
@@ -51,11 +62,7 @@ is without express or implied warranty.
 </legalnotice>
 
 <legalnotice>
-
-<para>
-Copyright &copy; 1991 X Consortium, Inc.
-</para>
-
+<para role="multiLicensing">Copyright &copy; 1991 X Consortium, Inc.</para>
 <para>
 Permission is hereby granted, free of charge, to any person obtaining
 a copy of this software and associated documentation files
@@ -71,7 +78,7 @@ The above copyright notice and this permission notice shall be included in
 all copies or substantial portions of the Software.
 </para>
 
-<para>THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+<para>THE SOFTWARE IS PROVIDED &ldquo;AS IS&rdquo;, WITHOUT WARRANTY OF ANY KIND,
 EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
 MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
 IN NO EVENT SHALL THE X CONSORTIUM BE LIABLE FOR ANY CLAIM, DAMAGES OR
@@ -86,6 +93,7 @@ not be used in advertising or otherwise to promote the sale, use or other
 dealings in this Software without prior written authorization from the
 X Consortium.
 </para>
+<para>X Window System is a trademark of The OpenGroup.</para>
 
 </legalnotice>
 </bookinfo>
@@ -188,7 +196,7 @@ capitalization.
 Most of the following functions generate SYNC protocol requests.
 </para>
 
-<funcsynopsis>
+<funcsynopsis id='xsyncqueryextension'>
 <funcprototype>
   <funcdef>Status <function>XSyncQueryExtension</function></funcdef>
     <paramdef>Display <parameter> *dpy</parameter></paramdef>
@@ -205,7 +213,7 @@ sets *error_base_return to the error number for the first SYNC error. If dpy
 does not support the SYNC extension, it returns False.
 </para>
 
-<funcsynopsis>
+<funcsynopsis id='xsyncinitialize'>
 <funcprototype>
   <funcdef>Status <function>XSyncInitialize</function></funcdef>
     <paramdef>Display <parameter> *dpy</parameter></paramdef>
@@ -227,7 +235,7 @@ XSyncQueryExtension. If a client violates this rule, the effects of all XSync
 calls that it makes are undefined.
 </para>
 
-<funcsynopsis>
+<funcsynopsis id='xsynclistsystemcounters'>
 <funcprototype>
   <funcdef>XSyncSystemCounter *<function>XSyncListSystemCounters</function></funcdef>
     <paramdef>Display <parameter> *dpy</parameter></paramdef>
@@ -255,7 +263,7 @@ XSyncCounter        counter;     /* counter id of this system counter */
 XSyncValue          resolution;  /* resolution of this system counter */
 </literallayout>
 
-<funcsynopsis>
+<funcsynopsis id='xsyncfreesystemcounterlist'>
 <funcprototype>
   <funcdef>void <function>XSyncFreeSystemCounterList</function></funcdef>
     <paramdef>XSyncSystemCounter <parameter> *list</parameter></paramdef>
@@ -268,7 +276,7 @@ associated with the system counter list returned by
 <function>XSyncListSystemCounters</function>.
 </para>
 
-<funcsynopsis>
+<funcsynopsis id='xsynccreatecounter'>
 <funcprototype>
   <funcdef>XSyncCounter <function>XSyncCreateCounter</function></funcdef>
     <paramdef>Display<parameter> *dpy</parameter></paramdef>
@@ -282,7 +290,7 @@ with the given initial value and returns the counter ID. It returns
 <function>None</function> if dpy does not support the SYNC extension.
 </para>
 
-<funcsynopsis>
+<funcsynopsis id='xsyncsetcounter'>
 <funcprototype>
   <funcdef>Status <function>XSyncSetCounter</function></funcdef>
     <paramdef>Display<parameter> *dpy</parameter></paramdef>
@@ -298,7 +306,7 @@ with the given initial value and returns the counter ID. It returns
 support the SYNC extension; otherwise, it returns <function>True</function>.
 </para>
 
-<funcsynopsis>
+<funcsynopsis id='xsyncchangecounter'>
 <funcprototype>
   <funcdef>Status <function>XSyncChangeCounter</function></funcdef>
     <paramdef>Display<parameter> *dpy</parameter></paramdef>
@@ -313,7 +321,7 @@ support the SYNC extension; otherwise, it returns <function>True</function>.
 otherwise, it returns
 <function>True</function>.
 </para>
-<funcsynopsis>
+<funcsynopsis id='xsyncdestroycounter'>
 <funcprototype>
   <funcdef>Status <function>XSyncDestroyCounter</function></funcdef>
     <paramdef>Display<parameter> *dpy</parameter></paramdef>
@@ -327,7 +335,7 @@ otherwise, it returns
 otherwise, it returns <function>True</function>.
 </para>
 
-<funcsynopsis>
+<funcsynopsis id='xsyncquerycounter'>
 <funcprototype>
   <funcdef>Status <function>XSyncQueryCounter</function></funcdef>
     <paramdef>Display<parameter> *dpy</parameter></paramdef>
@@ -343,7 +351,7 @@ error during communication with the server or if dpy does not support the
 SYNC extension; otherwise, it returns <function>True</function>.
 </para>
 
-<funcsynopsis>
+<funcsynopsis id='xsyncawait'>
 <funcprototype>
   <funcdef>Status <function>XSyncAwait</function></funcdef>
     <paramdef>Display<parameter> *dpy</parameter></paramdef>
@@ -385,7 +393,7 @@ XSyncValue       event_threshold;    /*send event if past threshold */
 <function>XSyncNegativeComparison</function>.
 </para>
 
-<funcsynopsis>
+<funcsynopsis id='xsynccreatealarm'>
 <funcprototype>
   <funcdef>XSyncAlarm <function>XSyncCreateAlarm</function></funcdef>
     <paramdef>Display<parameter> *dpy</parameter></paramdef>
@@ -421,7 +429,7 @@ Bool               events;              XSyncCAEvents
 XSyncAlarmState    state;               client cannot set this
 </literallayout>
 
-<funcsynopsis>
+<funcsynopsis id='xsyncdestroyalarm'>
 <funcprototype>
   <funcdef>Status <function>XSyncDestroyAlarm</function></funcdef>
     <paramdef>Display<parameter> *dpy</parameter></paramdef>
@@ -435,7 +443,7 @@ XSyncAlarmState    state;               client cannot set this
 the SYNC extension; otherwise, it returns <function>True</function>.
 </para>
 
-<funcsynopsis>
+<funcsynopsis id='xsyncqueryalarm'>
 <funcprototype>
   <funcdef>Status <function>XSyncQueryAlarm</function></funcdef>
     <paramdef>Display<parameter> *dpy</parameter></paramdef>
@@ -452,7 +460,7 @@ during communication with the server or if dpy does not support the
 SYNC extension; otherwise, it returns <function>True</function>.
 </para>
 
-<funcsynopsis>
+<funcsynopsis id='xsyncchangealarm'>
 <funcprototype>
   <funcdef>Status <function>XSyncChangeAlarm</function></funcdef>
     <paramdef>Display<parameter> *dpy</parameter></paramdef>
@@ -470,7 +478,7 @@ attributes to change are specified as in
 the SYNC extension; otherwise, it returns <function>True</function>.
 </para>
 
-<funcsynopsis>
+<funcsynopsis id='xsyncsetpriority'>
 <funcprototype>
   <funcdef>Status <function>XSyncSetPriority</function></funcdef>
     <paramdef>Display<parameter> *dpy</parameter></paramdef>
@@ -487,7 +495,7 @@ sets the caller’s priority. It returns
 otherwise, it returns <function>True</function>.
 </para>
 
-<funcsynopsis>
+<funcsynopsis id='xsyncgetpriority'>
 <funcprototype>
   <funcdef>Status <function>XSyncGetPriority</function></funcdef>
     <paramdef>Display<parameter> *dpy</parameter></paramdef>
@@ -516,7 +524,7 @@ macros and as functions. By default, the macro form is used. To use the
 function form, #undef the macro name to uncover the function.
 </para>
 
-<funcsynopsis>
+<funcsynopsis id='xsyncinttovalue'>
 <funcprototype>
   <funcdef>void <function>XSyncIntToValue</function></funcdef>
     <paramdef>XSyncValue<parameter> *pv</parameter></paramdef>
@@ -529,7 +537,7 @@ Converts i to an <function>XSyncValue</function> and stores it in *pv.
 Performs sign extension (*pv will have the same sign as i.)
 </para>
 
-<funcsynopsis>
+<funcsynopsis id='xsyncintstovalue'>
 <funcprototype>
   <funcdef>void <function>XSyncIntsToValue</function></funcdef>
     <paramdef>XSyncValue<parameter> *pv</parameter></paramdef>
@@ -543,7 +551,7 @@ Stores low in the low 32 bits of *pv and high in the high 32 bits of *pv.
 </para>
 
 
-<funcsynopsis>
+<funcsynopsis id='xsyncvaluegreaterthan'>
 <funcprototype>
   <funcdef>Bool <function>XSyncValueGreaterThan</function></funcdef>
     <paramdef>XSyncValue<parameter> a</parameter></paramdef>
@@ -556,7 +564,7 @@ Returns <function>True</function> if a is greater than b, else returns
 <function>False</function>.
 </para>
 
-<funcsynopsis>
+<funcsynopsis id='xsyncvaluelessthan'>
 <funcprototype>
   <funcdef>Bool <function>XSyncValueLessThan</function></funcdef>
     <paramdef>XSyncValue<parameter> a</parameter></paramdef>
@@ -570,7 +578,7 @@ Returns <function>True</function> if a is less than b, else returns
 </para>
 
 
-<funcsynopsis>
+<funcsynopsis id='xsyncvaluegreaterorequal'>
 <funcprototype>
   <funcdef>Bool <function>XSyncValueGreaterOrEqual</function></funcdef>
     <paramdef>XSyncValue<parameter> a</parameter></paramdef>
@@ -583,7 +591,7 @@ Returns <function>True</function> if a is greater than or equal to b,
 else returns <function>False</function>.
 </para>
 
-<funcsynopsis>
+<funcsynopsis id='xsyncvaluelessorequal'>
 <funcprototype>
   <funcdef>Bool <function>XSyncValueLessOrEqual</function></funcdef>
     <paramdef>XSyncValue<parameter> a</parameter></paramdef>
@@ -596,7 +604,7 @@ Returns <function>True</function> if a is less than or equal to b,
 else returns <function>False</function>.
 </para>
 
-<funcsynopsis>
+<funcsynopsis id='xsyncvalueequal'>
 <funcprototype>
   <funcdef>Bool <function>XSyncValueEqual</function></funcdef>
     <paramdef>XSyncValue<parameter> a</parameter></paramdef>
@@ -609,7 +617,7 @@ Returns <function>True</function> if a is equal to b,
 else returns <function>False</function>.
 </para>
 
-<funcsynopsis>
+<funcsynopsis id='xsyncvalueisnegative'>
 <funcprototype>
   <funcdef>Bool <function>XSyncValueIsNegative</function></funcdef>
     <paramdef>XSyncValue<parameter> v</parameter></paramdef>
@@ -621,7 +629,7 @@ Returns <function>True</function> if v is negative,
 else returns <function>False</function>.
 </para>
 
-<funcsynopsis>
+<funcsynopsis id='xsyncvalueiszero'>
 <funcprototype>
   <funcdef>Bool <function>XSyncValueIsZero</function></funcdef>
     <paramdef>XSyncValue<parameter> v</parameter></paramdef>
@@ -633,7 +641,7 @@ Returns <function>True</function> if v is zero,
 else returns <function>False</function>.
 </para>
 
-<funcsynopsis>
+<funcsynopsis id='xsyncvalueispositive'>
 <funcprototype>
   <funcdef>Bool <function>XSyncValueIsPositive</function></funcdef>
     <paramdef>XSyncValue<parameter> v</parameter></paramdef>
@@ -645,7 +653,7 @@ Returns <function>True</function> if v is positive,
 else returns <function>False</function>.
 </para>
 
-<funcsynopsis>
+<funcsynopsis id='xsyncvaluelow32'>
 <funcprototype>
   <funcdef>unsigned int <function>XSyncValueLow32</function></funcdef>
     <paramdef>XSyncValue<parameter> v</parameter></paramdef>
@@ -656,7 +664,7 @@ else returns <function>False</function>.
 Returns the low 32 bits of v.
 </para>
 
-<funcsynopsis>
+<funcsynopsis id='xsyncvaluehigh32'>
 <funcprototype>
   <funcdef>unsigned int <function>XSyncValueHigh32</function></funcdef>
     <paramdef>XSyncValue<parameter> v</parameter></paramdef>
@@ -667,7 +675,7 @@ Returns the low 32 bits of v.
 Returns the high 32 bits of v.
 </para>
 
-<funcsynopsis>
+<funcsynopsis id='xsyncvalueadd'>
 <funcprototype>
   <funcdef>void <function>XSyncValueAdd</function></funcdef>
     <paramdef>XSyncValue<parameter> *presult</parameter></paramdef>
@@ -683,7 +691,7 @@ fit in 64 bits, *poverﬂow is set to <function>True</function>, else it is
 set to <function>False</function>.
 </para>
 
-<funcsynopsis>
+<funcsynopsis id='xsyncvaluesubtract'>
 <funcprototype>
   <funcdef>void <function>XSyncValueSubtract</function></funcdef>
     <paramdef>XSyncValue<parameter> *presult</parameter></paramdef>
@@ -699,7 +707,7 @@ fit in 64 bits, *poverﬂow is set to <function>True</function>, else it is
 set to <function>False</function>.
 </para>
 
-<funcsynopsis>
+<funcsynopsis id='xsyncmaxvalue'>
 <funcprototype>
   <funcdef>void <function>XSyncMaxValue</function></funcdef>
     <paramdef>XSyncValue<parameter> *pv</parameter></paramdef>
@@ -710,7 +718,7 @@ set to <function>False</function>.
 Sets *pv to the maximum value expressible in 64 bits.
 </para>
 
-<funcsynopsis>
+<funcsynopsis id='xsyncminvalue'>
 <funcprototype>
   <funcdef>void <function>XSyncMinValue</function></funcdef>
     <paramdef>XSyncValue<parameter> *pv</parameter></paramdef>

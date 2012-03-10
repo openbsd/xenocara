@@ -1,3 +1,260 @@
+commit e9c1e346c90e697d5d8f0e756ef8b6e3ed339e29
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Mar 7 19:54:50 2012 -0800
+
+    libXext 1.3.1
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit c0c2a0c7819c425f3df0992b6873a15c8ec27e01
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Sep 28 16:19:27 2011 -0700
+
+    Add const attributes to fix gcc -Wwrite-strings warnings
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit a8f18777099ca5d61929bc37e4741457b6671e59
+Author: Matt Dew <marcoz@osource.org>
+Date:   Fri Oct 7 23:25:45 2011 -0600
+
+    more Cleanup of IDs and links in doc
+
+commit 3464d6eebfaaf015ea6b25a9a437192ddb1b02b0
+Author: Matt Dew <marcoz@osource.org>
+Date:   Tue Sep 20 22:06:05 2011 -0600
+
+    Fix id attributes capitolization
+    
+    #1 - fix the capitolization of the ID attriutes to match either
+         the <title> or <funcdef> string it goes with.
+    #2 - fix any <linkend>'s that were affected by #1
+    #3 - any <function> in the docs that has an actual funcdef, will
+         become an olink.
+    
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Gaetan Nadon <memsize@videotron.ca>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 17271b78c5d8d9864eda2476863543ba284bee2d
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Sep 20 19:01:41 2011 -0400
+
+    specs: regroup <author> <editor> <othercredit> under authorgroup
+    
+    Some elements are not displayed when outside authorgroup
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit a58e7d756111eafd4b75763692808198315f1c75
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Sep 20 10:18:22 2011 -0400
+
+    xtest1: adding legal text related to the X Consortium Copyright
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 276df4dd2de616617cb439df4367cbaa4f568a0a
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Sep 20 10:07:06 2011 -0400
+
+    dpmslib: minor markup fix in legal text
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit ca39a358c35ea364c10fa7c16b6a584171d27600
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Sep 20 09:57:26 2011 -0400
+
+    synclib: refactor copyright legal text for multiple licensing
+    
+    One sentence added as per the xorg License doc.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 877e74e518ec74a07cb8998a3f517ab043cf76be
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Sep 19 17:26:02 2011 -0400
+
+    specs: add missing legal text information
+    
+    The reference being the xorg License doc.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit b46167511d429792086fb8e8cfea6f19b2fc9847
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Sep 16 22:18:56 2011 -0700
+
+    Strip trailing whitespace
+    
+    Performed with: find * -type f | xargs perl -i -p -e 's{[ \t]+$}{}'
+    git diff -w & git diff -b show no diffs from this change
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit ead0cea593266b91f08d33a0c83170ba92d8ac7e
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Fri Sep 16 16:30:09 2011 -0400
+
+    dbelib: refactor docbook copyright markup
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit d01ff169e5a07cb0eda3a8fd1489abb964db7ede
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Sep 15 10:39:25 2011 -0400
+
+    synclib: fix authors and affiliations
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit d7d0ad299214c4cb0b8dac579ffb7a6722de2d7f
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Sep 14 17:40:14 2011 -0400
+
+    dbelib: fix typo in author's name
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 1a147b7a6d1842d02e40674353716e5c3eb3b432
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Sep 14 17:27:09 2011 -0400
+
+    dpmslib: restore DEC copyright
+    
+    Somehow during docbook conversion the copyright was changed from DEC
+    to X Consortium. There are suprious instances of X Consortium
+    in many docs. The dpms protocol doc was intact.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit a41bfcd7aa93046a5e917ccd4af321d4a6703160
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Sep 14 16:30:26 2011 -0400
+
+    docs: fix author affiliation
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit e493d8f2a6441ea7bd92bb9dc9681d0bd8cfb7dc
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Sep 14 16:06:55 2011 -0400
+
+    docs: remove orphan affiliation
+    
+    Move releaseinfo elements together
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 0344dafef098d64a9be7bafc859c8c1f27b75942
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Sep 14 16:03:45 2011 -0400
+
+    docs: fix author affiliation
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit a8248f0dbb84ab2530bd11f2c396b7fcd4b128f4
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Sep 12 16:54:45 2011 -0400
+
+    docs: use the &fullrelvers; entity to set X11 release information
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 426514bee44ccbb849b959c917a191545e7472fa
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Sep 11 19:49:54 2011 -0400
+
+    docs: remove <productnumber> which is not used by default
+    
+    This element is not rendered by default on the title. A template
+    customization is required to display it.
+    X Window System does not have a product number.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit aec3220c5ca4942fdb2ad40d3b460ddd90603428
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Sep 8 20:00:00 2011 -0400
+
+    docbook.am: embed css styles inside the HTML HEAD element
+    
+    Rather than referring to the external xorg.css stylesheet, embed the content
+    of the file in the html output produced. This is accomplished by using
+    version 1.10 of xorg-xhtml.xsl.
+    
+    This makes the whole html docs tree much more relocatable.
+    In addition, it eliminates xorg.css as a runtime file which makes
+    xorg-sgml-doctools a build time only package.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 23b5f7d36f850cef9a135290bec23099f33245d1
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Sep 7 10:31:04 2011 -0400
+
+    docbook.am: global maintenance update - entities, images and olinking
+    
+    Adding support in libX11 for html chunking caused a reorg of docbook.am
+    as well as the xorg-sgml-doctools masterdb for olinking.
+    The parameter img.src.path is added for pdf images.
+    A searchpath to the root builddir is added for local entities, if present.
+    
+    The docbook.am makefile hides all the details and is identical for
+    all 22 modules having DocBook documentation. It is included by a thin
+    Makefile.am which requires no docbook knowledge.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 1b9487304a4757478aa923174272dd4062af9735
+Author: Matt Dew <marcoz@osource.org>
+Date:   Wed Jul 13 12:32:49 2011 -0600
+
+    Add some links for quick referencing definitions.
+    
+    Signed-off-by: Matt Dew <marcoz@osource.org>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Acked-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit b6fc6e6a0784b747863ee9b586fb09a81340bea4
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Jun 5 16:27:36 2011 -0400
+
+    Install target dbs alongside generated documents
+    
+    This matches a change in xorg-sgml-docs whereby the masterdb will look for
+    the target dbs into the same location as the generated documents.
+    
+    The target dbs are now installed alongside the generated documents.
+    Previously they are installed in $prefix/sgml/X11/dbs alongside masterdb which
+    has the potential of installing outside the package prefix and cause
+    distcheck to fail when user does not have write permission in this package.
+    
+    Requires XORG_CHECK_SGML_DOCTOOLS(1.8) which was released 2011-06-11
+
+commit acc529ed1f1cff6c79d3b6f711ff64da97bb864c
+Author: Matt Dew <marcoz@osource.org>
+Date:   Wed May 25 23:49:37 2011 -0600
+
+    add id attributes to funcsynopsis to allow other docs to olink to them.
+    
+    Signed-off-by: Matt Dew <marcoz@osource.org>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 8451664d228852f7b57eb11a35be3328b6fff13a
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri May 6 18:45:55 2011 -0700
+
+    Install xml versions of specs even if HAVE_XMLTO is false
+    
+    Moves HAVE_XMLTO check into docbook.am, more closely matches behaviour
+    from before docbook.am changes.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit f9a140097dace149a2c6b6f72080edee24b068f4
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Fri May 6 16:41:36 2011 -0700
