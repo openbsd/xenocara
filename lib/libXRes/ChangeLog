@@ -1,3 +1,77 @@
+commit e6e0e02e4bf764fa58798540793bdeb44a60cc7f
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Mar 7 20:53:56 2012 -0800
+
+    libXres 1.0.6
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 96c59e1c7c61d7e42b8da5ddbe9af1a12567fd47
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Nov 10 21:40:51 2011 -0800
+
+    Fix gcc -Wwrite-strings warning
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit fb6002c5736eda80a8ae1df46626862ca53a1c25
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Sep 16 22:52:12 2011 -0700
+
+    Strip trailing whitespace
+    
+    Performed with: find * -type f | xargs perl -i -p -e 's{[ \t]+$}{}'
+    git diff -w & git diff -b show no diffs from this change
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 455c02ee9143b2bfbfd99b6481a1b22a0ce2a2bf
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Feb 2 11:43:40 2011 -0500
+
+    config: comment, minor upgrade, quote and layout configure.ac
+    
+    Group statements per section as per Autoconf standard layout
+    Quote statements where appropriate.
+    Autoconf recommends not using dnl instead of # for comments
+    
+    Use AC_CONFIG_FILES to replace the deprecated AC_OUTPUT with parameters.
+    Add AC_CONFIG_SRCDIR([Makefile.am])
+    
+    This helps automated maintenance and release activities.
+    Details can be found in http://wiki.x.org/wiki/NewModuleGuidelines
+
+commit ecb0cb424a93e7de7671353d9514a8bf193ad678
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Fri Jan 28 19:41:37 2011 -0500
+
+    config: replace deprecated AM_CONFIG_HEADER with AC_CONFIG_HEADERS
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 34e906a430185bd4debc00606321980ac25737db
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Fri Jan 28 16:34:14 2011 -0500
+
+    config: remove unrequired AC_CONFIG_AUX_DIR
+    
+    The default location for the generation of configuation files is the current
+    package root directory. These files are config.* and friends.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 2f16931c01e667a24210b3a76c50c5d5fe46e314
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Jan 27 18:50:15 2011 -0500
+
+    config: remove AC_PROG_CC as it overrides AC_PROG_C_C99
+    
+    XORG_STRICT_OPTION from XORG_DEFAULT_OPTIONS calls
+    AC_PROG_C_C99. This sets gcc with -std=gnu99.
+    If AC_PROG_CC macro is called afterwards, it resets CC to gcc.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
 commit 1cb91aaf819ae3c9385c130e4fa0146057c4c89b
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Thu Oct 28 16:21:39 2010 -0700
