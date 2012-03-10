@@ -45,7 +45,7 @@ from The Open Group.
 /* Resources:
 
  Name		     Class		RepType		Default Value
- ----		     -----		-------		------------- 
+ ----		     -----		-------		-------------
  background	     Background		Pixel		XtDefaultBackground
  foreground          Foredround         Pixel           XtDefaultForeground
  highlight           Highlight          Pixel           XtDefaultForeground
@@ -73,7 +73,7 @@ from The Open Group.
  stipple             Stipple            Bitmap          XtUnspecifiedPixmap
  proportional        Proportional       Boolean         True
  axes                Axes               Boolean         True
- button1Function     Button1Function    ButtonFunction  Set  
+ button1Function     Button1Function    ButtonFunction  Set
  button2Function     Button2Function    ButtonFunction  Invert
  button3Function     Button3Function    ButtonFunction  Clear
  button4Function     Button4Function    ButtonFunction  Invert
@@ -177,7 +177,7 @@ from The Open Group.
 /* bitmap exports */
 
 typedef struct _BWRequestRec BWRequestRec;
-typedef char *BWRequest;
+typedef const char *BWRequest;
 
 /* declare specific BitmapWidget class and instance datatypes */
 
@@ -187,7 +187,7 @@ typedef struct _BitmapRec      *BitmapWidget;
 
 extern WidgetClass bitmapWidgetClass;
 
-extern Boolean BWEngageRequest(Widget w, BWRequest name, Boolean trap, 
+extern Boolean BWEngageRequest(Widget w, BWRequest name, Boolean trap,
 			       XtPointer call_data, Cardinal call_data_size);
 extern Boolean BWTerminateRequest(Widget w, Boolean cont);
 
@@ -224,12 +224,12 @@ extern void BWGrabSelection ( Widget w, Time btime );
 extern void BWRequestSelection ( Widget w, Time btime, Boolean wait );
 extern void BWSetChanged ( Widget w );
 extern Boolean BWQueryChanged ( Widget w );
-extern int BWReadFile ( Widget w, String filename, String basename );
-extern int BWWriteFile ( Widget w, String filename, String basename );
+extern int BWReadFile ( Widget w, _Xconst _XtString filename, _Xconst _XtString basename );
+extern int BWWriteFile ( Widget w, _Xconst _XtString filename, _Xconst _XtString basename );
 extern String BWUnparseStatus ( Widget w );
 extern String BWGetFilename ( Widget w, String *str );
 extern String BWGetBasename ( Widget w, String *str );
-extern void BWChangeBasename ( Widget w, String str );
+extern void BWChangeBasename ( Widget w, _Xconst _XtString str );
 extern void BWRemoveAllRequests ( Widget w );
 extern void BWClearHotSpot ( Widget w );
 extern Boolean BWQueryMarked ( Widget w );
@@ -264,10 +264,10 @@ extern Boolean BWQueryDashed ( Widget w );
 extern Boolean BWQueryProportional ( Widget w );
 extern void BWSwitchProportional ( Widget w );
 extern void BWDrawGrid ( Widget w, Position from_x, Position from_y, Position to_x, Position to_y );
-extern void BWChangeFilename ( Widget w, String str );
+extern void BWChangeFilename ( Widget w, _Xconst _XtString str );
 extern Boolean BWParseSize ( String size, Dimension *width, Dimension *height );
 extern Boolean BWQuerySelection ( Widget w, Time btime );
-extern int BWStoreFile ( Widget w, String filename, String *basename );
+extern int BWStoreFile ( Widget w, _Xconst _XtString filename, _Xconst _XtString *basename );
 extern void BWNotify ( Widget w, XtActionProc proc );
 extern void BWTMark ( Widget w, XEvent *event, String *params, Cardinal *num_params  );
 extern void BWTMarkAll ( Widget w, XEvent *event, String *params, Cardinal *num_params );

@@ -36,14 +36,14 @@ from The Open Group.
 #include <X11/Xaw/Dialog.h>
 #include <X11/Xaw/Command.h>
 #include <X11/Xmu/CharSet.h>
-    
+
 #include "Dialog.h"
 
 #define min(x, y)                     (((x) < (y)) ? (x) : (y))
 #define max(x, y)                     (((x) > (y)) ? (x) : (y))
 
 
-static void SetDialogButton(Widget w, XEvent *event, 
+static void SetDialogButton(Widget w, XEvent *event,
 			    String *argv, Cardinal *argc);
 
 static XtActionsRec actions_table[] = {
@@ -63,22 +63,22 @@ static DialogButton dialog_buttons[] = {
 static unsigned long selected;
 
 /* ARGSUSED */
-static void 
+static void
 SetSelected(Widget w, XtPointer clientData, XtPointer callData) /* ARGSUSED */
 {
     String name = (String)clientData;
     int i;
-    
-    for (i = 0; i < XtNumber(dialog_buttons); i++) 
-	if (!strcmp(dialog_buttons[i].name, name)) 
+
+    for (i = 0; i < XtNumber(dialog_buttons); i++)
+	if (!strcmp(dialog_buttons[i].name, name))
 	    selected |= dialog_buttons[i].flag;
 }
 
 /* ARGSUSED */
-static void 
+static void
 SetDialogButton(Widget w,	/* not used */
 		XEvent *event,	/* not used */
-		String *argv, 
+		String *argv,
 		Cardinal *argc)
 {
   char button_name[80];
@@ -93,7 +93,7 @@ SetDialogButton(Widget w,	/* not used */
 
 static Boolean firstTime = True;
 
-Dialog 
+Dialog
 CreateDialog(Widget top_widget, String name, unsigned long options)
 {
     int i;
@@ -107,17 +107,17 @@ CreateDialog(Widget top_widget, String name, unsigned long options)
 	  firstTime = False;
 	}
 	popup->top_widget = top_widget;
-	popup->shell_widget = XtCreatePopupShell(name, 
-						 transientShellWidgetClass, 
+	popup->shell_widget = XtCreatePopupShell(name,
+						 transientShellWidgetClass,
 						 top_widget, NULL, 0);
-	popup->dialog_widget = XtCreateManagedWidget("dialog", 
+	popup->dialog_widget = XtCreateManagedWidget("dialog",
 						     dialogWidgetClass,
-						     popup->shell_widget, 
+						     popup->shell_widget,
 						     NULL, 0);
 	for (i = 0; i < XtNumber(dialog_buttons); i++)
 	    if (options & dialog_buttons[i].flag)
-		XawDialogAddButton(popup->dialog_widget, 
-				   dialog_buttons[i].name, 
+		XawDialogAddButton(popup->dialog_widget,
+				   dialog_buttons[i].name,
 				   SetSelected, dialog_buttons[i].name);
 	popup->options = options;
 	return popup;
@@ -126,17 +126,17 @@ CreateDialog(Widget top_widget, String name, unsigned long options)
 	return NULL;
 }
 
-void 
+void
 PopdownDialog(Dialog popup, String *answer)
 {
     if (answer)
 	*answer = XawDialogGetValueString(popup->dialog_widget);
-    
+
     XtPopdown(popup->shell_widget);
 }
 
-unsigned long 
-PopupDialog(Dialog popup, String message, String suggestion, 
+unsigned long
+PopupDialog(Dialog popup, String message, String suggestion,
 	    String *answer, XtGrabKind grab)
 {
   Position popup_x, popup_y, top_x, top_y;
@@ -164,14 +164,14 @@ PopupDialog(Dialog popup, String message, String suggestion,
   XtSetArg(wargs[n], XtNborderWidth, &border_width); n++;
   XtGetValues(popup->shell_widget, wargs, n);
 
-  popup_x = max(0, 
-	min(top_x + ((Position)top_width - (Position)popup_width) / 2, 
-	    (Position)DisplayWidth(XtDisplay(popup->shell_widget), 
+  popup_x = max(0,
+	min(top_x + ((Position)top_width - (Position)popup_width) / 2,
+	    (Position)DisplayWidth(XtDisplay(popup->shell_widget),
 		   DefaultScreen(XtDisplay(popup->shell_widget))) -
 	    (Position)popup_width - 2 * (Position)border_width));
-  popup_y = max(0, 
+  popup_y = max(0,
 	min(top_y + ((Position)top_height - (Position)popup_height) / 2,
-	    (Position)DisplayHeight(XtDisplay(popup->shell_widget), 
+	    (Position)DisplayHeight(XtDisplay(popup->shell_widget),
 		    DefaultScreen(XtDisplay(popup->shell_widget))) -
 	    (Position)popup_height - 2 * (Position)border_width));
   n = 0;
@@ -182,9 +182,9 @@ PopupDialog(Dialog popup, String message, String suggestion,
   selected = None;
 
   XtPopup(popup->shell_widget, grab);
-  XWarpPointer(XtDisplay(popup->shell_widget), 
+  XWarpPointer(XtDisplay(popup->shell_widget),
 	       XtWindow(popup->top_widget),
-	       XtWindow(popup->shell_widget), 
+	       XtWindow(popup->shell_widget),
 	       0, 0, top_width, top_height,
 	       popup_width / 2, popup_height / 2);
 

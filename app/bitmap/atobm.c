@@ -38,21 +38,21 @@ from The Open Group.
 
 static char *ProgramName;
 
-static void doit(FILE *fp, char *filename, char *chars, 
-		 int xhot, int yhot, char *name);
+static void doit(FILE *fp, const char *filename, const char *chars,
+		 int xhot, int yhot, const char *name);
 
-static void 
+static void
 usage (void)
 {
     fprintf (stderr, "usage:  %s [-options ...] [filename]\n\n",
 	     ProgramName);
-    fprintf (stderr, 
+    fprintf (stderr,
 	"where options include:\n");
-    fprintf (stderr, 
+    fprintf (stderr,
 	"    -chars cc        chars to use for 0 and 1 bits, respectively\n");
-    fprintf (stderr, 
+    fprintf (stderr,
 	"    -name variable   name to use in bitmap file\n");
-    fprintf (stderr, 
+    fprintf (stderr,
 	"    -xhot number     x position of hotspot\n");
     fprintf (stderr,
 	"    -yhot number     y position of hotspot\n");
@@ -96,8 +96,8 @@ main (int argc, char *argv[])
     int i;
     int xhot = -1, yhot = -1;
     char *filename = NULL;
-    char *chars = "-#";
-    char *name = NULL;
+    const char *chars = "-#";
+    const char *name = NULL;
     FILE *fp;
 
     ProgramName = argv[0];
@@ -152,8 +152,8 @@ main (int argc, char *argv[])
 	fp = stdin;
     }
 
-    if (!name) name = filename ? StripName (filename) : "";
-    cify_name (name);
+    if (!name)
+	name = filename ? cify_name (StripName (filename)) : "";
     doit (fp, filename, chars, xhot, yhot, name);
 
     if (filename) (void) fclose (fp);
@@ -162,11 +162,11 @@ main (int argc, char *argv[])
 
 
 static void
-doit (FILE *fp, 
-      char *filename, 
-      char *chars, 
-      int xhot, int yhot, 
-      char *name)
+doit (FILE *fp,
+      const char *filename,
+      const char *chars,
+      int xhot, int yhot,
+      const char *name)
 {
     int i, j;
     int last_character;
@@ -187,7 +187,7 @@ doit (FILE *fp,
     static unsigned char masktable[] = {
 	0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80 };
     int padded = 0;
-	
+
 #define NTOALLOC 16
 #define NewSList() \
 	    slist = (struct _scan_list *) calloc (1, sizeof *slist); \
@@ -204,7 +204,7 @@ doit (FILE *fp,
 		return; \
 	    } \
 	    slist->used = 0; \
-	    slist->next = NULL; 
+	    slist->next = NULL;
 
     while (1) {
 	buf[0] = '\0';

@@ -69,17 +69,17 @@ extern void BWCopy(Widget w, Position at_x, Position at_y, int value);
 extern void BWMove(Widget w, Position at_x, Position at_y, int value);
 extern void BWRestore(Widget w, Position at_x, Position at_y, int value);
 extern void BWDrawPoint(Widget w, Position x, Position y, bit value);
-extern void BWBlindLine(Widget w, Position from_x, Position from_y, 
+extern void BWBlindLine(Widget w, Position from_x, Position from_y,
 			Position to_x, Position to_y, int value);
 extern void BWDrawHotSpot(Widget w, Position x, Position y, int value);
-extern void BWZoomIn(Widget w, Position from_x, Position from_y, 
+extern void BWZoomIn(Widget w, Position from_x, Position from_y,
 		     Position to_x, Position to_y);
 
-extern void OnePointHandler(Widget w, XtPointer client_data, 
+extern void OnePointHandler(Widget w, XtPointer client_data,
 			    XEvent *event, Boolean *cont);
-extern void TwoPointsHandler(Widget w, XtPointer client_data, 
+extern void TwoPointsHandler(Widget w, XtPointer client_data,
 			     XEvent *event, Boolean *cont);
-extern void DragTwoPointsHandler(Widget w, XtPointer client_data, 
+extern void DragTwoPointsHandler(Widget w, XtPointer client_data,
 				 XEvent *event, Boolean *cont);
 
 #endif /* _Requests_h */

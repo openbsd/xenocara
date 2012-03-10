@@ -34,7 +34,7 @@ from The Open Group.
 #include <X11/StringDefs.h>
 #include <X11/Xatom.h>
 #include "BitmapP.h"
-    
+
 #include <stdio.h>
 #include <math.h>
 
@@ -48,8 +48,8 @@ from The Open Group.
  *****************************************************************************/
 
 /* ARGSUSED */
-static Boolean 
-ConvertSelection(Widget w, Atom *selection, Atom *target, Atom *type, 
+static Boolean
+ConvertSelection(Widget w, Atom *selection, Atom *target, Atom *type,
 		 XtPointer *val_ret, unsigned long *length, int *format)
 {
     XPointer *value = (XPointer *)val_ret;
@@ -58,7 +58,7 @@ ConvertSelection(Widget w, Atom *selection, Atom *target, Atom *type,
     char *data;
     XImage *image;
     Dimension width, height;
- 
+
     switch (*target) {
 
 /*  XA_TARGETS undefined ?!?
@@ -79,7 +79,7 @@ ConvertSelection(Widget w, Atom *selection, Atom *target, Atom *type,
 	  height = BW->bitmap.mark.to_y - BW->bitmap.mark.from_y + 1;
 	  data = CreateCleanData(Length(width, height));
 	  image = CreateBitmapImage(BW, data, width, height);
-	  CopyImageData(BW->bitmap.image, image, 
+	  CopyImageData(BW->bitmap.image, image,
 			BW->bitmap.mark.from_x, BW->bitmap.mark.from_y,
 			BW->bitmap.mark.to_x, BW->bitmap.mark.to_y, 0, 0);
 	  pixmap = (Pixmap *) XtMalloc(sizeof(Pixmap));
@@ -103,7 +103,7 @@ ConvertSelection(Widget w, Atom *selection, Atom *target, Atom *type,
 }
 
 /* ARGSUSED */
-static void 
+static void
 LoseSelection(Widget w, Atom selection)
 {
     BitmapWidget BW = (BitmapWidget) w;
@@ -116,12 +116,12 @@ LoseSelection(Widget w, Atom selection)
 }
 
 /* ARGSUSED */
-static void 
+static void
 SelectionDone(Widget w, Atom *selection, Atom *target)
 {
 /*  Done Automatically ?!?
 
-    BitmapWidget BW = (BitmapWidget) w; 
+    BitmapWidget BW = (BitmapWidget) w;
 
     if (*target != XA_TARGETS)
 	XtFree(BW->bitmap.value);
@@ -129,14 +129,14 @@ SelectionDone(Widget w, Atom *selection, Atom *target)
 */
 }
 
-void 
+void
 BWGrabSelection(Widget w, Time btime)
 {
     BitmapWidget BW = (BitmapWidget) w;
 
     BW->bitmap.selection.own = XtOwnSelection(w, XA_PRIMARY, btime,
-					      ConvertSelection, 
-					      (XtLoseSelectionProc)LoseSelection, 
+					      ConvertSelection,
+					      (XtLoseSelectionProc)LoseSelection,
 					      SelectionDone);
 	if (DEBUG && BW->bitmap.selection.own)
 	    fprintf(stderr, "Own the selection\n");
@@ -144,8 +144,8 @@ BWGrabSelection(Widget w, Time btime)
 
 
 /* ARGSUSED */
-static void 
-SelectionCallback(Widget w, XtPointer cldat, Atom *selection, Atom *type, 
+static void
+SelectionCallback(Widget w, XtPointer cldat, Atom *selection, Atom *type,
 		  XtPointer val, unsigned long *length, int *format)
 {
     XPointer value = (XPointer)val;
@@ -153,7 +153,7 @@ SelectionCallback(Widget w, XtPointer cldat, Atom *selection, Atom *type,
     Pixmap *pixmap;
 
    switch (*type) {
-	
+
     case XA_BITMAP:
     case XA_PIXMAP:
 	DestroyBitmapImage(&BW->bitmap.storage);
@@ -161,7 +161,7 @@ SelectionCallback(Widget w, XtPointer cldat, Atom *selection, Atom *type,
 	BW->bitmap.storage = GetImage(BW, *pixmap);
 	XFree((char *)pixmap);
 	break;
-	
+
     default:
 	XtWarning(" selection request failed.  BitmapWidget");
 	break;
@@ -170,19 +170,19 @@ SelectionCallback(Widget w, XtPointer cldat, Atom *selection, Atom *type,
     BW->bitmap.selection.limbo = FALSE;
 }
 
-void 
+void
 BWRequestSelection(Widget w, Time btime, Boolean wait)
 {
   BitmapWidget BW = (BitmapWidget) w;
-  
+
   if (BW->bitmap.selection.own)
     BWStore(w);
   else {
     XtGetSelectionValue(w, XA_PRIMARY, XA_PIXMAP,
 			SelectionCallback, NULL, btime);
-    
+
     BW->bitmap.selection.limbo = TRUE;
-    
+
     if (wait)
       while (BW->bitmap.selection.limbo) {
 	XEvent event;
@@ -194,7 +194,7 @@ BWRequestSelection(Widget w, Time btime, Boolean wait)
 
 /* ARGSUSED */
 /* Returns true if there is a transferable selection */
-Boolean 
+Boolean
 BWQuerySelection(Widget w, Time btime)
 {
 /* To be written.  XA_TARGETS to be used.  So far undefined ?!? */

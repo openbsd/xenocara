@@ -70,7 +70,7 @@ FORMAT) to and from ASCII strings.  They are most commonly used to
 quickly print out bitmaps and to generate versions for including in text.
 .SH COMMAND LINE OPTIONS
 \fIBitmap\fP supports the standard X Toolkit command line arguments
-(see \fIX\fP(1)).  The following additional arguments are supported as well.
+(see \fIX\fP(__miscmansuffix__)).  The following additional arguments are supported as well.
 .TP 4
 .B \-size\fI WIDTHxHEIGHT\fP
 Specifies size of the grid in squares.

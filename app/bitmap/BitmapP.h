@@ -47,7 +47,7 @@ typedef struct {
     BWRequestRec   *requests;
     Cardinal        num_requests;
     BWRequestRec   *request[100];
-  
+
 } BitmapClassPart;
 
 /* Full class record declaration */
@@ -160,18 +160,18 @@ typedef struct _BitmapRec {
 	(Position)(min((Position)((Dimension)(max(BW->bitmap.horizOffset,x)  -\
 				   BW->bitmap.horizOffset) /\
 				   BW->bitmap.squareW), BW->bitmap.width - 1))
-    
+
 #define InBitmapY(BW, y)\
 	(Position)(min((Position)((Dimension)(max(BW->bitmap.vertOffset, y)  -\
 				   BW->bitmap.vertOffset) /\
 				   BW->bitmap.squareH), BW->bitmap.height - 1))
-    
+
 #define InWindowX(BW, x)\
 	(Position) (BW->bitmap.horizOffset + ((x) * BW->bitmap.squareW))
 
 #define InWindowY(BW, y)\
 	(Position) (BW->bitmap.vertOffset + ((y) * BW->bitmap.squareH))
-     
+
 #define GetPixmap(BW, image)\
     XCreateBitmapFromData(XtDisplay(BW), XtWindow(BW),\
 			  image->data, image->width, image->height)
@@ -197,13 +197,13 @@ typedef struct _BitmapRec {
 XImage *CreateBitmapImage(BitmapWidget BW, char *data, Dimension width, Dimension height);
 void DestroyBitmapImage(XImage **image);
 void  TransferImageData(XImage *source, XImage *destination);
-void CopyImageData(XImage *source, XImage *destination, 
-	      Position from_x, Position from_y, 
-	      Position to_x, Position to_y, 
+void CopyImageData(XImage *source, XImage *destination,
+	      Position from_x, Position from_y,
+	      Position to_x, Position to_y,
 	      Position at_x, Position at_y);
 XImage *GetImage(BitmapWidget BW, Pixmap pixmap);
 XImage *ConvertToBitmapImage(BitmapWidget BW, XImage *image);
-XImage *ScaleBitmapImage(BitmapWidget BW, XImage *src, 
+XImage *ScaleBitmapImage(BitmapWidget BW, XImage *src,
 			 double scale_x, double scale_y);
 
 extern Boolean DEBUG;

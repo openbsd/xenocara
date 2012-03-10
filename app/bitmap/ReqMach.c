@@ -35,13 +35,13 @@ from The Open Group.
 #include <X11/Xfuncs.h>
 #include <X11/Xos.h>
 #include "BitmapP.h"
-    
+
 #include <stdio.h>
 #include <math.h>
 
 
 /*****************************************************************************\
- * Request Machine: stacks up and handles requests from application calls.   * 
+ * Request Machine: stacks up and handles requests from application calls.   *
 \*****************************************************************************/
 
 /*
@@ -56,7 +56,7 @@ FindRequest(BWRequest name)
     for (i = 0; i < bitmapClassRec.bitmap_class.num_requests; i++)
 	if (!strcmp(name, bitmapClassRec.bitmap_class.requests[i].name))
 	    return &bitmapClassRec.bitmap_class.requests[i];
-    
+
     return NULL;
 }
 
@@ -64,13 +64,13 @@ FindRequest(BWRequest name)
  * Adds a request to the request stack and does proper initializations.
  * Returns TRUE if the request was found and FALSE otherwise.
  */
-Boolean 
-BWAddRequest(Widget w, BWRequest name, Boolean trap, 
+Boolean
+BWAddRequest(Widget w, BWRequest name, Boolean trap,
 	     XtPointer call_data, Cardinal call_data_size)
 {
     BitmapWidget BW = (BitmapWidget) w;
     BWRequestRec *request;
-    
+
     request = FindRequest(name);
     if(request) {
 	if (DEBUG)
@@ -79,15 +79,15 @@ BWAddRequest(Widget w, BWRequest name, Boolean trap,
 	BW->bitmap.request_stack = (BWRequestStack *)
 	    XtRealloc((char *)BW->bitmap.request_stack,
 		      (++BW->bitmap.cardinal + 1) * sizeof(BWRequestStack));
-	
+
 	BW->bitmap.request_stack[BW->bitmap.cardinal].request = request;
-	BW->bitmap.request_stack[BW->bitmap.cardinal].status = 
+	BW->bitmap.request_stack[BW->bitmap.cardinal].status =
 	    XtMalloc(request->status_size);
 	BW->bitmap.request_stack[BW->bitmap.cardinal].trap = trap;
-	BW->bitmap.request_stack[BW->bitmap.cardinal].call_data = 
+	BW->bitmap.request_stack[BW->bitmap.cardinal].call_data =
 	    XtMalloc(call_data_size);
 	memmove( BW->bitmap.request_stack[BW->bitmap.cardinal].call_data,
-	      call_data, 
+	      call_data,
 	      call_data_size);
 
 	return True;
@@ -102,15 +102,15 @@ BWAddRequest(Widget w, BWRequest name, Boolean trap,
  * Engages the request designated by the current parameter.
  * Returnes TRUE if the request has an engage function and FALSE otherwise.
  */
-static Boolean 
+static Boolean
 Engage(BitmapWidget BW, Cardinal current)
 {
     BW->bitmap.current = current;
-    
+
     if (DEBUG)
-	fprintf(stderr, "Request: %s\n", 
+	fprintf(stderr, "Request: %s\n",
 		BW->bitmap.request_stack[current].request->name);
-  
+
     if (BW->bitmap.request_stack[current].request->engage) {
 	(*BW->bitmap.request_stack[current].request->engage)
 	    ((Widget) BW,
@@ -127,17 +127,17 @@ Engage(BitmapWidget BW, Cardinal current)
    Boolean BWRemoveRequest(); */
 
 /*
- * Scans down the request stack removing all requests untill it finds 
+ * Scans down the request stack removing all requests untill it finds
  * one to be trapped.
  */
-static void 
+static void
 TrappingLoop(BitmapWidget BW)
 {
 
     if (DEBUG)
 	fprintf(stderr, "Scanning... Current: %d\n", BW->bitmap.current);
-    if ((BW->bitmap.current > 0) 
-	&& 
+    if ((BW->bitmap.current > 0)
+	&&
 	(!BW->bitmap.request_stack[BW->bitmap.current--].trap)) {
 	BWRemoveRequest((Widget) BW);
 	TrappingLoop(BW);
@@ -154,11 +154,11 @@ TrappingLoop(BitmapWidget BW)
  * Terimantes the current request and continues with next request if con = TRUE
  * Returnes TRUE if there is any number of requests left on the stack.
  */
-Boolean 
+Boolean
 BWTerminateRequest(Widget w, Boolean cont)
 {
     BitmapWidget BW = (BitmapWidget) w;
-    
+
     if (BW->bitmap.current > 0) {
 	if (DEBUG)
 	    fprintf(stderr, "Terminating... Current: %d\n", BW->bitmap.current);
@@ -167,7 +167,7 @@ BWTerminateRequest(Widget w, Boolean cont)
 		(w,
 		 BW->bitmap.request_stack[BW->bitmap.current].status,
 		 BW->bitmap.request_stack[BW->bitmap.current].request->terminate_client_data);
-	
+
 	if (cont) {
 	    if (BW->bitmap.current == BW->bitmap.cardinal)
 		TrappingLoop(BW);
@@ -181,14 +181,14 @@ BWTerminateRequest(Widget w, Boolean cont)
 	else
 	    BW->bitmap.current = 0;
     }
-    
+
     return BW->bitmap.current;
 }
 
 /*
  * Simple interface to BWTerminateRequest that takes only a widget.
  */
-void 
+void
 BWAbort(Widget w)
 {
     BWTerminateRequest(w, True);
@@ -199,36 +199,36 @@ BWAbort(Widget w)
  * it will terminate it.
  * Returns TRUE if the number of requests left on the stack != 0.
  */
-Boolean 
+Boolean
 BWRemoveRequest(Widget w)
 {
     BitmapWidget BW = (BitmapWidget) w;
-    
+
     if (BW->bitmap.cardinal > 0) {
 	if (DEBUG)
 	    fprintf(stderr, "Removing... Cardinal: %d\n", BW->bitmap.cardinal);
 	if (BW->bitmap.current == BW->bitmap.cardinal)
 	    BWTerminateRequest(w, False);
-	
+
 	if (BW->bitmap.request_stack[BW->bitmap.cardinal].request->remove)
 	    (*BW->bitmap.request_stack[BW->bitmap.cardinal].request->remove)
 		(w,
 		 BW->bitmap.request_stack[BW->bitmap.cardinal].status,
 		 BW->bitmap.request_stack[BW->bitmap.cardinal].request->remove_client_data);
-	
+
 	XtFree(BW->bitmap.request_stack[BW->bitmap.cardinal].status);
 	XtFree(BW->bitmap.request_stack[BW->bitmap.cardinal].call_data);
 	BW->bitmap.request_stack = (BWRequestStack *)
 	    XtRealloc((char *)BW->bitmap.request_stack,
 		      (--BW->bitmap.cardinal + 1) * sizeof(BWRequestStack));
-	
+
 	return True;
     }
-    else 
+    else
 	return False;
 }
 
-void 
+void
 BWRemoveAllRequests(Widget w)
 {
     while (BWRemoveRequest(w)) {/* removes all requests from the stack */}
@@ -238,19 +238,19 @@ BWRemoveAllRequests(Widget w)
  * Adds the request to the stack and performs engaging ritual.
  * Returns TRUE if the request was found, FALSE otherwise.
  */
-Boolean 
-BWEngageRequest(Widget w, BWRequest name, Boolean trap, 
+Boolean
+BWEngageRequest(Widget w, BWRequest name, Boolean trap,
 		XtPointer call_data, Cardinal call_data_size)
 {
     BitmapWidget BW = (BitmapWidget) w;
-    
+
     if (BWAddRequest(w, name, trap, call_data, call_data_size)) {
 	BWTerminateRequest(w, False);
 	if (DEBUG)
 	    fprintf(stderr, "Engaging... Cardinal: %d\n", BW->bitmap.cardinal);
 	if (!Engage(BW, BW->bitmap.cardinal))
 	    BWTerminateRequest(w, True);
-	
+
 	return True;
     }
     else

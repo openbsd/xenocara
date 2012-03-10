@@ -14,9 +14,9 @@
 
 @SET_MAKE@
 
-# 
+#
 #  Copyright 2005  Red Hat, Inc.
-# 
+#
 #  Permission to use, copy, modify, distribute, and sell this software and its
 #  documentation for any purpose is hereby granted without fee, provided that
 #  the above copyright notice appear in all copies and that both that
@@ -26,7 +26,7 @@
 #  specific, written prior permission.  Red Hat makes no
 #  representations about the suitability of this software for any purpose.  It
 #  is provided "as is" without express or implied warranty.
-# 
+#
 #  RED HAT DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE,
 #  INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS, IN NO
 #  EVENT SHALL RED HAT BE LIABLE FOR ANY SPECIAL, INDIRECT OR
@@ -45,9 +45,9 @@ pkgincludedir = $(includedir)/@PACKAGE@
 top_builddir = .
 am__cd = CDPATH="$${ZSH_VERSION+.}$(PATH_SEPARATOR)" && cd
 INSTALL = @INSTALL@
-install_sh_DATA = $(install_sh) -c -m 644
-install_sh_PROGRAM = $(install_sh) -c
-install_sh_SCRIPT = $(install_sh) -c
+install_sh_DATA = ${SHELL} $(install_sh) -c -m 644
+install_sh_PROGRAM = ${SHELL} $(install_sh) -c
+install_sh_SCRIPT = ${SHELL} $(install_sh) -c
 INSTALL_HEADER = $(INSTALL_DATA)
 transform = $(program_transform_name)
 NORMAL_INSTALL = :
@@ -80,14 +80,14 @@ binPROGRAMS_INSTALL = $(INSTALL_PROGRAM)
 PROGRAMS = $(bin_PROGRAMS)
 am_atobm_OBJECTS = atobm-atobm.$(OBJEXT)
 atobm_OBJECTS = $(am_atobm_OBJECTS)
-atobm_DEPENDENCIES =
+am__DEPENDENCIES_1 =
+atobm_DEPENDENCIES = $(am__DEPENDENCIES_1)
 am_bitmap_OBJECTS = bitmap-BitEdit.$(OBJEXT) bitmap-CutPaste.$(OBJEXT) \
 	bitmap-Graphics.$(OBJEXT) bitmap-ReqMach.$(OBJEXT) \
 	bitmap-Bitmap.$(OBJEXT) bitmap-Dialog.$(OBJEXT) \
 	bitmap-Handlers.$(OBJEXT)
 bitmap_OBJECTS = $(am_bitmap_OBJECTS)
-am__DEPENDENCIES_1 =
-bitmap_DEPENDENCIES = $(am__DEPENDENCIES_1)
+bitmap_DEPENDENCIES = $(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1)
 am_bmtoa_OBJECTS = bmtoa-bmtoa.$(OBJEXT)
 bmtoa_OBJECTS = $(am_bmtoa_OBJECTS)
 bmtoa_DEPENDENCIES = $(am__DEPENDENCIES_1)
@@ -146,6 +146,7 @@ AUTOCONF = @AUTOCONF@
 AUTOHEADER = @AUTOHEADER@
 AUTOMAKE = @AUTOMAKE@
 AWK = @AWK@
+BASE_CFLAGS = @BASE_CFLAGS@
 BITMAP_CFLAGS = @BITMAP_CFLAGS@
 BITMAP_LIBS = @BITMAP_LIBS@
 BMTOA_CFLAGS = @BMTOA_CFLAGS@
@@ -186,6 +187,7 @@ MAINTAINER_MODE_FALSE = @MAINTAINER_MODE_FALSE@
 MAINTAINER_MODE_TRUE = @MAINTAINER_MODE_TRUE@
 MAKEINFO = @MAKEINFO@
 MAN_SUBSTS = @MAN_SUBSTS@
+MATH_LIBS = @MATH_LIBS@
 MISC_MAN_DIR = @MISC_MAN_DIR@
 MISC_MAN_SUFFIX = @MISC_MAN_SUFFIX@
 OBJEXT = @OBJEXT@
@@ -200,6 +202,7 @@ PKG_CONFIG = @PKG_CONFIG@
 SED = @SED@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
+STRICT_CFLAGS = @STRICT_CFLAGS@
 STRIP = @STRIP@
 VERSION = @VERSION@
 XORG_MAN_PAGE = @XORG_MAN_PAGE@
@@ -249,7 +252,7 @@ sysconfdir = @sysconfdir@
 target_alias = @target_alias@
 SUBDIRS = man
 bitmap_CFLAGS = $(CWARNFLAGS) $(BITMAP_CFLAGS)
-bitmap_LDADD = $(BITMAP_LIBS) -lm
+bitmap_LDADD = $(BITMAP_LIBS) $(MATH_LIBS)
 bitmap_SOURCES = \
          BitEdit.c \
          CutPaste.c \
@@ -267,7 +270,7 @@ bmtoa_CFLAGS = $(CWARNFLAGS) $(BMTOA_CFLAGS)
 bmtoa_LDADD = $(BMTOA_LIBS)
 bmtoa_SOURCES = bmtoa.c
 atobm_CFLAGS = $(CWARNFLAGS) $(ATOBM_CFLAGS)
-atobm_LDADD = $(ATOBM_LDADD)
+atobm_LDADD = $(ATOBM_LIBS)
 atobm_SOURCES = atobm.c
 EXTRA_DIST = autogen.sh
 bitmapdir = $(includedir)/X11/bitmaps

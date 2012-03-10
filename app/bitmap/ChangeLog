@@ -1,3 +1,190 @@
+commit a7909448b89f42ad0bb4834e347e6d3ecb20d7da
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Mar 8 21:40:10 2012 -0800
+
+    bitmap 1.0.6
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 67ab447959b62454f4e0273177baa19711babb96
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Dec 20 21:47:56 2011 -0800
+
+    Use lrint() from math library if available
+    
+    Moves -lm from being hardcoded in Makefile.am to being added via
+    AC_SEARCH_LIBS in configure.ac setting it in $(MATH_LIBS)
+    
+    Using lrint() [returns long int] instead of rint() [returns double]
+    clears a bunch of gcc warnings of the form:
+    "cast from function call of type ‘double’ to non-matching type ‘short int’"
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 1c2b70d13c42f5461a2d7c3cae7adf8d9b2e3cea
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Oct 14 22:48:31 2011 -0700
+
+    Constify strings in atobm
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 3fc1a649f1e81c4d93c6e00119267208877a8f02
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Oct 14 22:38:44 2011 -0700
+
+    Constify strings in bmtoa
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit a8ee8e937e8d939522f18fa5723afea084221467
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Oct 14 21:25:06 2011 -0700
+
+    Strip trailing whitespace
+    
+    Performed with: find * -type f | xargs perl -i -p -e 's{[ \t]+$}{}'
+    git diff -w & git diff -b show no diffs from this change
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 64eacd3665306283d126d0df7cf63a071e576c38
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Oct 14 21:22:26 2011 -0700
+
+    Constify filename string handling
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit ca7bf97b6e83b25e7142b321e5f2325b1e47c2d0
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Oct 14 21:03:48 2011 -0700
+
+    Add const to char * in BWRequest typedef
+    
+    Fixes many gcc --Wwrite-string warnings of the form:
+    
+    Bitmap.c: In function ‘BWTPaste’:
+    Bitmap.c:1913:7: warning: passing argument 2 of ‘BWEngageRequest’ discards qualifiers from pointer target type
+    Bitmap.h:190:16: note: expected ‘BWRequest’ but argument is of type ‘const char *’
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 6e997556a17a1b4a9d6773602af770b9e9f3751e
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Fri Mar 4 20:44:37 2011 -0500
+
+    man: use correct section number when referring to X
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 98e43d4e49c599fc633b4bb9c58d99abbdd0068a
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Feb 17 23:38:40 2011 -0800
+
+    atobm only depends on xproto, not x11
+    
+    It only includes <X11/Xos.h>, no headers or functions from libX11.
+    Due to a typo in Makefile.am (also fixed) it wasn't actually linking
+    with libX11 even though it had x11 in its PKG_CHECK_MODULES list.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit b3f10a08922f568b7cbc791354cf0d4267cd88c1
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jan 15 10:19:20 2011 -0800
+
+    Use autoconf standard HAVE_MKSTEMP define instead of old imake HAS_MKSTEMP
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit ff81a4e4e894915bb6b8aece8314ca1a854140a4
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jan 15 10:16:17 2011 -0800
+
+    config: Add missing AC_CONFIG_SRCDIR
+    
+    Regroup AC statements under the Autoconf initialization section.
+    Regroup AM statements under the Automake initialization section.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 2afe9a69417cbd25fc5379faf22eba1a8e94b348
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Jan 14 14:05:14 2011 -0800
+
+    Use fputs instead of fprintf with no format arg to print usage message.
+    
+    Clear gcc warning of:
+    BitEdit.c:986: warning: format not a string literal and no format arguments
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Dirk Wallenstein <halsmit@t-online.de>
+
+commit fcfa5f0dee6549994d8c4640fb61612d33369e74
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Jan 14 14:00:30 2011 -0800
+
+    Call snprintf() directly instead of XmuSnprintf()
+    
+    All platforms still supported by X.Org have long had snprintf()
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit e3ecaf24ea4187516a1a0679783278e34e56499f
+Author: Trevor Woerner <twoerner@gmail.com>
+Date:   Sat Jan 8 20:15:50 2011 -0500
+
+    Remove unused, leaky scanline.
+    
+    The pointer, scanline, doesn't appear to be used anymore, and is
+    leaking memory.
+    
+    Signed-off-by: Trevor Woerner <twoerner@gmail.com>
+    Reviewed-by: Adam Jackson <ajax@redhat.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit f705edec1b9aa80d3b93f587048ad33887aca5b6
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jan 12 16:28:01 2011 -0500
+
+    config: replace deprecated AM_CONFIG_HEADER with AC_CONFIG_HEADERS
+    
+    This silences an Autoconf warning
+
+commit 0a2eef9a48863dde8b3c7f60f5eb3b9a667fa505
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jan 12 15:29:49 2011 -0500
+
+    config: replace deprecated AC_HELP_STRING with AS_HELP_STRING
+    
+    This silences an Automake warning.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 38f9d56ce050baabc72254240df875a3450f798e
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jan 12 13:10:21 2011 -0500
+
+    config: remove AC_PROG_CC as it overrides AC_PROG_C_C99
+    
+    XORG_STRICT_OPTION from XORG_DEFAULT_OPTIONS calls
+    AC_PROG_C_C99. This sets gcc with -std=gnu99.
+    If AC_PROG_CC macro is called afterwards, it resets CC to gcc.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 2fee85a59998a805ca8161606c5c32953f02f659
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jan 12 11:54:40 2011 -0500
+
+    config: use AC_PROG_INSTALL now supplied by XORG_DEFAULT_OPTIONS
+    
+    It depends on util-macros 1.8 or later
+    The existing statement can now be removed from the configuration file.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
 commit 99be515efe95cb3eb4bcb29b2bc194f416b31758
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Thu Oct 7 20:04:23 2010 -0700

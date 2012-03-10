@@ -1,6 +1,6 @@
-# 
+#
 #  Copyright 2005  Red Hat, Inc.
-# 
+#
 #  Permission to use, copy, modify, distribute, and sell this software and its
 #  documentation for any purpose is hereby granted without fee, provided that
 #  the above copyright notice appear in all copies and that both that
@@ -10,7 +10,7 @@
 #  specific, written prior permission.  Red Hat makes no
 #  representations about the suitability of this software for any purpose.  It
 #  is provided "as is" without express or implied warranty.
-# 
+#
 #  RED HAT DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE,
 #  INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS, IN NO
 #  EVENT SHALL RED HAT BE LIABLE FOR ANY SPECIAL, INDIRECT OR
@@ -23,7 +23,7 @@ SUBDIRS=man
 bin_PROGRAMS = bitmap bmtoa atobm
 
 bitmap_CFLAGS = $(CWARNFLAGS) $(BITMAP_CFLAGS)
-bitmap_LDADD = $(BITMAP_LIBS) -lm
+bitmap_LDADD = $(BITMAP_LIBS) $(MATH_LIBS)
 bitmap_SOURCES = \
          BitEdit.c \
          CutPaste.c \
@@ -42,7 +42,7 @@ bmtoa_LDADD = $(BMTOA_LIBS)
 bmtoa_SOURCES = bmtoa.c
 
 atobm_CFLAGS = $(CWARNFLAGS) $(ATOBM_CFLAGS)
-atobm_LDADD = $(ATOBM_LDADD)
+atobm_LDADD = $(ATOBM_LIBS)
 atobm_SOURCES = atobm.c
 
 EXTRA_DIST = autogen.sh
