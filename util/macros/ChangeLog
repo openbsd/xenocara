@@ -1,3 +1,80 @@
+commit db238c632bb7136e3e44345820d514106e317420
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Mar 5 09:39:17 2012 -0500
+
+    Version bump: 1.16.2
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 44aa8e75c8e54c5bc09d0cbff2f7207abe80c980
+Author: Chase Douglas <chase.douglas@canonical.com>
+Date:   Wed Feb 29 12:18:51 2012 -0800
+
+    Define BASE_CXXFLAGS when C++ is the chosen language
+    
+    You can use this functionality by setting the language to C++ before
+    calling XORG_DEFAULT_OPTIONS. This can accomplished with AC_LANG(C++).
+    
+    Signed-off-by: Chase Douglas <chase.douglas@canonical.com>
+    Reviewed-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 543ce698747dc998ca0ed987ef1ab0c35fb501b1
+Author: Chase Douglas <chase.douglas@canonical.com>
+Date:   Wed Feb 29 09:51:02 2012 -0800
+
+    Make XORG_TESTSET_CFLAG work for multiple languages
+    
+    Signed-off-by: Chase Douglas <chase.douglas@canonical.com>
+    Reviewed-by: Gaetan Nadon<memsize@videotron.ca>
+
+commit 52ef6f666a4fb46b693c81dc7a44612e6b78239d
+Author: Jon TURNEY <jon.turney@dronecode.org.uk>
+Date:   Tue Feb 14 21:59:38 2012 +0000
+
+    Use AS_ECHO rather than AS_ECHO_N in XORG_TESTSET_CFLAG
+    
+    The AS_ECHO_N macro was only introduced in autoconf 2.62.
+    Backticks remove trailing newlines, so we don't need to use echo -n
+    
+    Signed-off-by: Jon TURNEY <jon.turney@dronecode.org.uk>
+    Reviewed-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit a1809fde56e45639556a44fd3c3ef9213204c5a9
+Author: Jon TURNEY <jon.turney@dronecode.org.uk>
+Date:   Mon Jan 2 19:42:10 2012 +0000
+
+    Cache the results of checking compiler flag support in XORG_TESTSET_CFLAG
+    
+    Since checking all those warning flags takes an amount of time I find irritating,
+    here is an attempt at caching the results of checking compiler warning flag support
+    
+    A couple of aspects which need definitely need review or testing:
+    
+    * I've tried to get things right when not the first flag in the list of alternates is
+    supported, but this really needs testing with a compiler other than gcc
+    
+    * The cache variable naming policy is a bit opaque me, so the names used may need corecting
+    
+    * I've tried to be careful, but who knows what portability sins I have committed :-)
+    
+    This change reduces the time to run the ./configure script produced from a configure.ac
+    containing just
+    
+    AC_INIT([test], 1.0)
+    XORG_COMPILER_FLAGS
+    XORG_CWARNFLAGS
+    XORG_STRICT_OPTION
+    AC_OUTPUT()
+    
+    from ~60s to ~20s on my cygwin machine, and from ~15s to ~9s on a linux VM running on the
+    same hardware
+    
+    v2: AS_TR_SH transforms characters which are invalid in shell variable names, so we don't
+    have to use sed to transform spaces ourself
+    
+    Signed-off-by: Jon TURNEY <jon.turney@dronecode.org.uk>
+    Reviewed-by: Gaetan Nadon <memsize@videotron.ca>
+
 commit 214132d470ef98b5d3cdc71662cb586025746bb5
 Author: Jeremy Huddleston <jeremyhu@apple.com>
 Date:   Fri Jan 20 23:46:56 2012 -0800
