@@ -20,6 +20,7 @@ Copyright (c) 1995,1996  The XFree86 Project, Inc
 #include <X11/extensions/Xext.h>
 #include <X11/extensions/extutil.h>
 #include <stdio.h>
+#include <stdint.h>
 
 
 /* If you change this, change the Bases[] array below as well */
@@ -928,7 +929,7 @@ DGAMapPhysical(
     if ((pMap->fd = open(name, O_RDWR)) < 0)
 	return False;
     pMap->virtual = mmap(NULL, size, PROT_READ | PROT_WRITE,
-			MAP_FILE | MAP_SHARED, pMap->fd, (off_t)base);
+	MAP_FILE | MAP_SHARED, pMap->fd, (off_t)(uintptr_t)base);
     if (pMap->virtual == (void *)-1)
 	return False;
     mprotect(pMap->virtual, size, PROT_READ | PROT_WRITE);
