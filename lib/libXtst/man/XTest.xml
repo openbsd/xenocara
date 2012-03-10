@@ -1,24 +1,24 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE refentry PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"
-                   "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd">
+<!DOCTYPE refentry PUBLIC "-//OASIS//DTD DocBook XML V4.3//EN"
+                   "http://www.oasis-open.org/docbook/xml/4.3/docbookx.dtd">
 <!-- lifted from troff+man by doclifter -->
 <refentry id='XTest.man'>
-<!--  
+<!--
 Copyright &copy; 1992 by UniSoft Group Ltd.
 Permission to use, copy, modify, and distribute this documentation for
 any purpose and without fee is hereby granted, provided that the above
-copyright notice and this permission notice appear in all copies.  
-UniSoft makes no representations about the suitability for any purpose of 
+copyright notice and this permission notice appear in all copies.
+UniSoft makes no representations about the suitability for any purpose of
 the information in this document.  This documentation is provided "as is"
 without express or implied warranty.
 
 Copyright &copy; 1992, 1994 X Consortium
 
-Permission is hereby granted, free of charge, to any person obtaining a 
+Permission is hereby granted, free of charge, to any person obtaining a
 copy of this software and associated documentation files (the "Software"),
 to deal in the Software without restriction, including without limitation
-the rights to use, copy, modify, merge, publish, distribute, sublicense, 
-and/or sell copies of the Software, and to permit persons to whom the 
+the rights to use, copy, modify, merge, publish, distribute, sublicense,
+and/or sell copies of the Software, and to permit persons to whom the
 Software is furnished to do so, subject to the following conditions:
 
 The above copyright notice and this permission notice shall be included in
@@ -26,15 +26,15 @@ all copies or substantial portions of the Software.
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL 
-THE X CONSORTIUM BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, 
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
+THE X CONSORTIUM BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
 WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF
-OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE 
+OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
 Except as contained in this notice, the name of the X Consortium shall not
-be used in advertising or otherwise to promote the sale, use or other 
-dealings in this Software without prior written authorization from the 
+be used in advertising or otherwise to promote the sale, use or other
+dealings in this Software without prior written authorization from the
 X Consortium.
  -->
 
@@ -207,7 +207,7 @@ cc [ flag ... ] file ... -lXtst  [ library ... ]
 <para>This extension is a minimal set of client and server extensions
 required to completely test the X11 server with no user intervention.
 This extension is not intended to support general journaling and
-playback of user actions.</para> 
+playback of user actions.</para>
 
 <para>The functions provided by this extension fall into two groups:</para>
 <variablelist remap='IP'>
@@ -218,7 +218,7 @@ playback of user actions.</para>
 actual implementation will depend on the details of the actual language
 binding and what degree of request buffering, GContext caching, and so on, is
 provided.  In the C binding, routines are provided
-to access the internals of two opaque data structures 
+to access the internals of two opaque data structures
 &mdash; <structname>GC</structname>s
 and
 <structname>Visual</structname>s &mdash;
@@ -236,7 +236,7 @@ number to the server and for the server to respond with major and minor
 versions of its own.  The remaining two requests allow the following:</para>
  <itemizedlist>
   <listitem>
-<para>Access to an otherwise <emphasis>write-only</emphasis> server resource: 
+<para>Access to an otherwise <emphasis>write-only</emphasis> server resource:
 the cursor associated with a given window</para>
   </listitem>
   <listitem>
@@ -278,12 +278,12 @@ with the cursor of the window specified by window returning
 <returnvalue>True</returnvalue>
 if they are the same and
 <returnvalue>False</returnvalue>
-otherwise. 
+otherwise.
 If the extension is not supported, then the request is ignored and
 zero is returned.</para>
 
 
-<para>If the extension is supported, 
+<para>If the extension is supported,
 <function>XTestCompareCurrentCursorWithWindow</function>
 performs a comparison of the current cursor
 with the cursor of the specified window returning

@@ -1,7 +1,7 @@
-# $OpenBSD: Makefile.bsd-wrapper,v 1.4 2010/10/31 16:25:10 matthieu Exp $
+# $OpenBSD: Makefile.bsd-wrapper,v 1.5 2012/03/10 16:54:54 matthieu Exp $
 
 SHARED_LIBS=	Xtst 10.0
 
-CONFIGURE_ARGS=	--disable-specs --without-xmlto --without-fop
+CONFIGURE_ARGS=	--without-xsltproc --without-xmlto --without-fop
 
 .include <bsd.xorg.mk>

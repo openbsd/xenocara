@@ -40,7 +40,7 @@ from The Open Group.
 
 static XExtensionInfo _xtest_info_data;
 static XExtensionInfo *xtest_info = &_xtest_info_data;
-static /* const */ char *xtest_extension_name = XTestExtensionName;
+static const char *xtest_extension_name = XTestExtensionName;
 
 #define XTestCheckExtension(dpy,i,val) \
   XextCheckExtension (dpy, i, xtest_extension_name, val)
@@ -81,7 +81,7 @@ get_xinput_base(Display *dpy)
 }
 
 static XEXT_GENERATE_FIND_DISPLAY (find_display, xtest_info,
-				   xtest_extension_name, 
+				   xtest_extension_name,
 				   &xtest_extension_hooks, XTestNumberEvents,
 				   get_xinput_base(dpy))
 

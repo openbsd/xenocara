@@ -1,6 +1,9 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"
-                   "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd">
+<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.3//EN"
+                   "http://www.oasis-open.org/docbook/xml/4.3/docbookx.dtd"
+[
+<!ENTITY % defs SYSTEM "defs.ent"> %defs;
+]>
 
 
 <!-- lifted from troff+ms+XMan by doclifter -->
@@ -9,22 +12,17 @@
 <bookinfo>
    <title>XTEST Extension Library</title>
    <subtitle>X Consortium Standard</subtitle>
-   <releaseinfo>X Version 11, Release 6.4</releaseinfo>
+   <releaseinfo>X Version 11, Release &fullrelvers;</releaseinfo>
+   <releaseinfo>Version 2.2</releaseinfo>
    <authorgroup>
       <author>
          <firstname>Kieron</firstname><surname>Drake</surname>
+         <affiliation><orgname>UniSoft Ltd.</orgname></affiliation>
       </author>
    </authorgroup>
-   <corpname>UniSoft Ltd.</corpname>
    <copyright><year>1992</year><holder>UniSoft Group Ltd.</holder></copyright>
-   <copyright><year>1992</year><holder>X Consortium</holder></copyright>
-   <copyright><year>1994</year><holder>X Consortium</holder></copyright>
-   <releaseinfo>Version 2.2</releaseinfo>
-   <affiliation><orgname>X Consortium</orgname></affiliation>
-   <productnumber>X Version 11, Release 7</productnumber>
 
 <legalnotice>
-
 <para>
 Permission to use, copy, modify, and distribute this documentation for
 any purpose and without fee is hereby granted, provided that the above
@@ -33,7 +31,10 @@ makes no representations about the suitability for any purpose of the
 information in this document.  This documentation is provided
 &ldquo;as is&rdquo; without express or implied warranty.
 </para>
+</legalnotice>
 
+<legalnotice>
+<para role="multiLicensing">Copyright © 1992,1994 X Consortium</para>
 <para>
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files
@@ -43,12 +44,10 @@ distribute, sublicense, and/or sell copies of the Software, and to permit
 persons to whom the Software is furnished to do so, subject to the following
 conditions:
 </para>
-
 <para>
 The above copyright notice and this permission notice shall be included in all
 copies or substantial portions of the Software.
 </para>
-
 <para>
 THE SOFTWARE IS PROVIDED &ldquo;AS IS&rdquo;, WITHOUT WARRANTY OF ANY KIND,
 EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
@@ -58,24 +57,16 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 </para>
-
 <para>
 Except as contained in this notice, the name of the X Consortium shall not
 be used in advertising or otherwise to promote the sale, use or other dealings
 in this Software without prior written authorization from the X Consortium.
 </para>
-
 <para>X Window System is a trademark of The Open Group.</para>
-
-<para>
-Except as contained in this notice, the name of the X Consortium shall not be
-used in advertising or otherwise to promote the sale, use or other dealings
-in this Software without prior written authorization from the X Consortium.
-</para>
 </legalnotice>
 </bookinfo>
 
-<chapter id='overview'>
+<chapter id='Overview'>
 <title>Overview</title>
 
 <para>
@@ -123,7 +114,7 @@ Minimize performance penalties on normal server operation.
 </itemizedlist>
 </chapter>
 
-<chapter id='description'>
+<chapter id='Description'>
 <title>Description</title>
 
 <para>The functions provided by this extension fall into two groups:</para>
@@ -173,7 +164,7 @@ or pressed a key or button.
 </itemizedlist>
 </chapter>
 
-<chapter id='c_language_binding'>
+<chapter id='C_Language_Binding'>
 <title>C Language Binding</title>
 
 <para>
@@ -197,7 +188,7 @@ The include file for this extension is
 &lt;<symbol role='Pn'>X11/extensions/XTest.h</symbol>&gt;.
 </para>
 
-<funcsynopsis>
+<funcsynopsis id='XTestQueryExtension'>
 <funcprototype>
 <funcdef>Bool<function> XTestQueryExtension</function></funcdef>
 <paramdef>Display<parameter> *display</parameter></paramdef>
@@ -209,7 +200,7 @@ The include file for this extension is
 </funcsynopsis>
 
 <para>
-<function>XTestQueryExtension</function>
+<xref linkend='XTestQueryExtension' xrefstyle='select: title'/>
 returns
 <function>True</function>
 if the specified display supports the XTEST extension, else
@@ -224,7 +215,7 @@ numbers of the extension supported by the display.  Otherwise, none of
 the arguments are set.
 </para>
 
-<funcsynopsis>
+<funcsynopsis id='XTestCompareCursorWithWindow'>
 <funcprototype>
 <funcdef>Bool<function> XTestCompareCursorWithWindow</function></funcdef>
 <paramdef>Display<parameter> *display</parameter></paramdef>
@@ -234,7 +225,7 @@ the arguments are set.
 </funcsynopsis>
 
 <para>If the extension is supported,
-<function>XTestCompareCursorWithWindow</function>
+<xref linkend='XTestCompareCursorWithWindow' xrefstyle='select: title'/>
 performs a comparison of the cursor whose ID is specified by cursor (which
 may be
 <function>None</function>
@@ -246,7 +237,7 @@ otherwise.  If the extension is not supported, then the request is ignored and
 zero is returned.
 </para>
 
-<funcsynopsis>
+<funcsynopsis id='XTestCompareCurrentCursorWithWindow'>
 <funcprototype>
 <funcdef>Bool<function>XTestCompareCurrentCursorWithWindow</function></funcdef>
 <paramdef>Display<parameter> *display</parameter></paramdef>
@@ -255,7 +246,7 @@ zero is returned.
 </funcsynopsis>
 
 <para>If the extension is supported,
-<function>XTestCompareCurrentCursorWithWindow</function>
+<xref linkend='XTestCompareCurrentCursorWithWindow' xrefstyle='select: title'/>
 performs a comparison of the current cursor with the cursor of the specified
 window returning
 <function>True</function>
@@ -265,7 +256,7 @@ otherwise.  If the extension is not supported, then the request is ignored and
 zero is returned.
 </para>
 
-<funcsynopsis>
+<funcsynopsis id='XTestFakeKeyEvent'>
 <funcprototype>
 <funcdef><function>XTestFakeKeyEvent</function></funcdef>
 <paramdef>Display<parameter> *display</parameter></paramdef>
@@ -276,7 +267,7 @@ zero is returned.
 </funcsynopsis>
 
 <para>If the extension is supported,
-<function>XTestFakeKeyEvent</function>
+<xref linkend='XTestFakeKeyEvent' xrefstyle='select: title'/>
 requests the server to simulate either a
 <function>KeyPress</function>
 (if is_press is
@@ -297,7 +288,7 @@ this client will be processed until this delay, if any, has expired
 and subsequent processing of the simulated event has been completed.
 </para>
 
-<funcsynopsis>
+<funcsynopsis id='XTestFakeButtonEvent'>
 <funcprototype>
 <funcdef><function>XTestFakeButtonEvent</function></funcdef>
 <paramdef>Display<parameter> *display</parameter></paramdef>
@@ -308,7 +299,7 @@ and subsequent processing of the simulated event has been completed.
 </funcsynopsis>
 
 <para>If the extension is supported,
-<function>XTestFakeButtonEvent</function>
+<xref linkend='XTestFakeButtonEvent' xrefstyle='select: title'/>
 requests the server to simulate either a
 <function>ButtonPress</function>
 (if is_press is
@@ -330,7 +321,7 @@ this client will be processed until this delay, if any, has expired
 and subsequent processing of the simulated event has been completed.
 </para>
 
-<funcsynopsis>
+<funcsynopsis id='XTestFakeMotionEvent'>
 <funcprototype>
 <funcdef><function>XTestFakeMotionEvent</function></funcdef>
 <paramdef>Display<parameter> *display</parameter></paramdef>
@@ -342,7 +333,7 @@ and subsequent processing of the simulated event has been completed.
 </funcsynopsis>
 
 <para>If the extension is supported,
-<function>XTestFakeMotionEvent</function>
+<xref linkend='XTestFakeMotionEvent' xrefstyle='select: title'/>
 requests the server to simulate a movement of the pointer to the specified
 position (x, y) on the root window of screen_number; otherwise, the request
 is ignored.  If screen_number is -1, the current screen (that the pointer
@@ -358,7 +349,7 @@ this client will be processed until this delay, if any, has expired
 and subsequent processing of the simulated event has been completed.
 </para>
 
-<funcsynopsis>
+<funcsynopsis id='XTestFakeRelativeMotionEvent'>
 <funcprototype>
 <funcdef><function>XTestFakeRelativeMotionEvent</function></funcdef>
 <paramdef>Display<parameter> *display</parameter></paramdef>
@@ -371,7 +362,7 @@ and subsequent processing of the simulated event has been completed.
 
 <para>
 If the extension is supported,
-<function>XTestFakeRelativeMotionEvent</function>
+<xref linkend='XTestFakeRelativeMotionEvent' xrefstyle='select: title'/>
 requests the server to simulate a movement of the pointer by the specified
 offsets (x, y) relative to the current pointer position on screen_number;
 otherwise, the request is ignored.  If screen_number is -1, the
@@ -387,7 +378,7 @@ this client will be processed until this delay, if any, has expired
 and subsequent processing of the simulated event has been completed.
 </para>
 
-<funcsynopsis>
+<funcsynopsis id='XTestGrabControl'>
 <funcprototype>
 <funcdef><function>XTestGrabControl</function></funcdef>
 <paramdef>Display<parameter> *display</parameter></paramdef>
@@ -403,7 +394,7 @@ then the executing client returns to the normal state of being susceptible
 to server grabs.
 </para>
 
-<funcsynopsis>
+<funcsynopsis id='XTestSetGContextOfGC'>
 <funcprototype>
 <funcdef>Bool<function> XTestSetGContextOfGC</function></funcdef>
 <paramdef>GC<parameter> gc</parameter></paramdef>
@@ -412,12 +403,12 @@ to server grabs.
 </funcsynopsis>
 
 <para>
-<function>XTestSetGContextOfGC</function>
+<xref linkend='XTestSetGContextOfGC' xrefstyle='select: title'/>
 sets the GContext within the opaque datatype referenced by gc to
 be that specified by gid.
 </para>
 
-<funcsynopsis>
+<funcsynopsis id='XTestSetVisualIDOfVisual'>
 <funcprototype>
 <funcdef><function>XTestSetVisualIDOfVisual</function></funcdef>
 <paramdef>Visual<parameter> *visual</parameter></paramdef>
@@ -426,12 +417,12 @@ be that specified by gid.
 </funcsynopsis>
 
 <para>
-<function>XTestSetVisualIDOfVisual</function>
+<xref linkend='XTestSetVisualIDOfVisual' xrefstyle='select: title'/>
 sets the VisualID within the opaque datatype referenced by visual to
 be that specified by visualid.
 </para>
 
-<funcsynopsis>
+<funcsynopsis id='XTestDiscard'>
 <funcprototype>
 <funcdef>Bool<function> XTestDiscard</function></funcdef>
 <paramdef>Display<parameter> *display</parameter></paramdef>
@@ -439,7 +430,7 @@ be that specified by visualid.
 </funcsynopsis>
 
 <para>
-<function>XTestDiscard</function>
+<xref linkend='XTestDiscard' xrefstyle='select: title'/>
 discards any requests within the output buffer for the specified display.
 It returns
 <function>True</function>
@@ -448,7 +439,7 @@ if any requests were discarded; otherwise, it returns
 </para>
 </chapter>
 
-<chapter id='references'>
+<chapter id='References'>
 <title>References</title>
 
 <para>

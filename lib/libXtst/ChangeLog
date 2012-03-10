@@ -1,3 +1,245 @@
+commit eb177d24ffb459af6205d2658c3a158449660caf
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Mar 7 21:11:34 2012 -0800
+
+    libXtst 1.2.1
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 6150958c2ae61ce82aa15f3a80107dd01278b255
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Nov 10 21:43:16 2011 -0800
+
+    Fix gcc -Wwrite-strings warnings
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 558ec1d7194307d7ce73aeae2f4f61df9d44bba0
+Author: Matt Dew <marcoz@osource.org>
+Date:   Tue Oct 4 21:50:03 2011 -0600
+
+    Cleanup IDs and links in doc
+    
+    1 - fix the capitalization of the ID attributes to match either the
+         <title> or <funcdef> string it goes with.
+    2 - fix any <linkend>'s that were affected by 1.
+    3 - any <function> in the docs that has an actual funcdef,
+    will become an olink.
+    
+    Signed-off-by: Matt Dew <marcoz@osource.org>
+
+commit 262904c22154d5a703ef92a7f954e52956b13663
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Sep 20 15:30:22 2011 -0400
+
+    specs: refactor copyright legal text for multi licensing
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 8f68b59f2b66f035ad97e3fe99e9eae983d1f44b
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Sep 16 22:55:23 2011 -0700
+
+    Strip trailing whitespace
+    
+    Performed with: find * -type f | xargs perl -i -p -e 's{[ \t]+$}{}'
+    git diff -w & git diff -b show no diffs from this change
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 01dc43ee0fbdb1ed2397a735dfb69b0434600a20
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Fri Sep 16 16:57:52 2011 -0400
+
+    xtestlib: remove duplicate paragraph in legal notice
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit d03495e02bf43e9605671d8f6474c1e9e45261e2
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Fri Sep 16 16:55:48 2011 -0400
+
+    specs: fix author affiliation
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit b5e58980988017265c239a2bad11489a7ab06c23
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Sep 12 16:54:45 2011 -0400
+
+    docs: use the &fullrelvers; entity to set X11 release information
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 743447eaeab62b5e1d5951706cc99d51c0261bbf
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Sep 11 19:49:54 2011 -0400
+
+    docs: remove <productnumber> which is not used by default
+    
+    This element is not rendered by default on the title. A template
+    customization is required to display it.
+    X Window System does not have a product number.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit c6be40edba1fe8557ebd0b1cc09b3480bc7d6bb8
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Sep 8 20:00:00 2011 -0400
+
+    docbook.am: embed css styles inside the HTML HEAD element
+    
+    Rather than referring to the external xorg.css stylesheet, embed the content
+    of the file in the html output produced. This is accomplished by using
+    version 1.10 of xorg-xhtml.xsl.
+    
+    This makes the whole html docs tree much more relocatable.
+    In addition, it eliminates xorg.css as a runtime file which makes
+    xorg-sgml-doctools a build time only package.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit ee829b31b27580afbd6e16f81d9ef3526514be8e
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Sep 7 10:31:04 2011 -0400
+
+    docbook.am: global maintenance update - entities, images and olinking
+    
+    Adding support in libX11 for html chunking caused a reorg of docbook.am
+    as well as the xorg-sgml-doctools masterdb for olinking.
+    The parameter img.src.path is added for pdf images.
+    A searchpath to the root builddir is added for local entities, if present.
+    
+    The docbook.am makefile hides all the details and is identical for
+    all 22 modules having DocBook documentation. It is included by a thin
+    Makefile.am which requires no docbook knowledge.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit b8c1a91ed12488999dee915953b5bc36019bbf95
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Jun 12 18:39:46 2011 -0400
+
+    Install xml versions of specs even if HAVE_XMLTO is false
+    
+    DocBook/XML input source is also a usefull output format that can be viewed
+    with an XML viewer or editor and by some O/S help system.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 9656d08c2c01965aa57f21f29cc2261b9d015b3c
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Jun 5 16:27:37 2011 -0400
+
+    Install target dbs alongside generated documents
+    
+    This matches a change in xorg-sgml-docs whereby the masterdb will look for
+    the target dbs into the same location as the generated documents.
+    
+    The target dbs are now installed alongside the generated documents.
+    Previously they are installed in $prefix/sgml/X11/dbs alongside masterdb which
+    has the potential of installing outside the package prefix and cause
+    distcheck to fail when user does not have write permission in this package.
+    
+    Requires XORG_CHECK_SGML_DOCTOOLS(1.8) which was released 2011-06-11
+
+commit c131572b98342e0e2a599619647dd1835c740ee4
+Author: Matt Dew <marcoz@osource.org>
+Date:   Tue May 31 20:03:23 2011 -0600
+
+    Add id attributes to funcsynopsis to allow other docs to olink to them.
+    
+    Signed-off-by: Matt Dew <marcoz@osource.org>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit c82effa402128366bfd3cfb77da82d524ddb878f
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Feb 27 15:06:18 2011 -0500
+
+    Documentation: add Docbook external references support
+    
+    When writing technical documentation, it is often necessary to cross
+    reference to other information. When that other information is not in the
+    current document, additional support is needed, namely <olink>.
+    
+    A new feature with version 1.7 of xorg-sgml-doctools adds references to
+    other documents within or outside this package.
+    
+    This patch adds technical support for this feature but does not change
+    the content of the documentation as seen by the end user.
+    
+    Each book or article must generate a database containing the href
+    of sections that can be referred to from another document. This database
+    is installed in DATAROOTDIR/sgml/X11/dbs. There is a requirement that
+    the value of DATAROOTDIR for xorg-sgml-doctools and for the package
+    documentation is the same. This forms a virtual document tree.
+    
+    This database is consulted by other documents while they are being generated
+    in order to fulfill the missing information for linking.
+    Refer to the xorg-sgml-doctools for further technical information.
+    
+    Co-authored-by: Matt Dew <marcoz@osource.org>
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 755e43b9a05dfce2564cd62cf97364db94a62731
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Feb 2 11:43:45 2011 -0500
+
+    config: comment, minor upgrade, quote and layout configure.ac
+    
+    Group statements per section as per Autoconf standard layout
+    Quote statements where appropriate.
+    Autoconf recommends not using dnl instead of # for comments
+    
+    Use AC_CONFIG_FILES to replace the deprecated AC_OUTPUT with parameters.
+    Add AC_CONFIG_SRCDIR([Makefile.am])
+    
+    This helps automated maintenance and release activities.
+    Details can be found in http://wiki.x.org/wiki/NewModuleGuidelines
+
+commit 97eab9c4e103b6b18f1307d42c4ab15bc80b8db7
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Fri Jan 28 19:41:37 2011 -0500
+
+    config: replace deprecated AM_CONFIG_HEADER with AC_CONFIG_HEADERS
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit a0154ff17ac2f7d08e26e82cc211f61935acf229
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Jan 27 18:50:15 2011 -0500
+
+    config: remove AC_PROG_CC as it overrides AC_PROG_C_C99
+    
+    XORG_STRICT_OPTION from XORG_DEFAULT_OPTIONS calls
+    AC_PROG_C_C99. This sets gcc with -std=gnu99.
+    If AC_PROG_CC macro is called afterwards, it resets CC to gcc.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 22ae1c003879ccddb4143669275c5b8071f713a8
+Author: Paulo Zanoni <pzanoni@mandriva.com>
+Date:   Thu Dec 16 14:11:43 2010 -0200
+
+    Use docbookx.dtd version 4.3 for all docs
+    
+    Signed-off-by: Paulo Zanoni <pzanoni@mandriva.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit e8ac35fac1974b9fd698f74c143c9691af5dd688
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Nov 9 13:04:59 2010 -0500
+
+    config: HTML file generation: use the installed copy of xorg.css
+    
+    Currenlty the xorg.css file is copied in each location
+    where a DocBook/XML file resides. This produces about
+    70 copies in the $(docdir) install tree.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
 commit 5c6834bc9e0ab78c78733c59046510a2f48b2d42
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Fri Oct 29 17:38:10 2010 -0700
