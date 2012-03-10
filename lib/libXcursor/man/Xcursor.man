@@ -276,7 +276,7 @@ XcursorBool XcursorXcFileLoad (XcursorFile *file, XcursorComments **commentsp, X
 XcursorBool XcursorXcFileSave (XcursorFile *file, const XcursorComments *comments, const XcursorImages *images)
 These read and write cursors from an XcursorFile handle.  After reading, the
 file pointer will be left at some random place in the file.
-		   
+
 .TP
 XcursorImage *XcursorFileLoadImage (FILE *file, int size)
 .TQ
@@ -372,7 +372,7 @@ Gets the current theme name.
 .SH "ENVIRONMENT VARIABLES"
 .TP 15
 .B XCURSOR_PATH
-This variable sets the list of paths to look for cursors in.   
+This variable sets the list of paths to look for cursors in.
 Directories in this path are separated by colons (:).
 
 .SH RESTRICTIONS

@@ -1,3 +1,91 @@
+commit 2a9eaf3305d1577ad763d56dddd46e10f8d0676b
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Mar 7 18:54:15 2012 -0800
+
+    libXcursor 1.1.13
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 8229cf75b34c2991eaf973f05326be9bfa16ef0c
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Nov 24 13:10:15 2011 -0800
+
+    XcursorImageLoadCursor: return failure if _XcursorGetDisplayInfo fails
+    
+    Error: Null pointer dereference (CWE 476)
+       Read from null pointer 'info'
+            at line 615 of src/cursor.c in function 'XcursorImageLoadCursor'.
+              Function '_XcursorGetDisplayInfo' may return constant 'NULL' at line 134, called at line 597.
+              Null pointer introduced at line 134 of src/display.c in function '_XcursorGetDisplayInfo'.
+    
+    [ This bug was found by the Parfait 0.3.7 bug checking tool.
+      For more information see http://labs.oracle.com/projects/parfait/ ]
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit 2b8d373bddf427bcd95e2595cb64740ebd1d0d30
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Nov 24 12:59:56 2011 -0800
+
+    XcursorFileSaveImages: plug memory leak on invalid input
+    
+    Error: Memory leak (CWE 401)
+       Memory leak of pointer 'comments' allocated with XcursorCommentsCreate(0)
+            at line 982 of src/file.c in function 'XcursorFileSaveImages'.
+              'comments' allocated at line 978 with XcursorCommentsCreate(0).
+              comments leaks when comments != 0 at line 981.
+    
+    [ This bug was found by the Parfait 0.3.7 bug checking tool.
+      For more information see http://labs.oracle.com/projects/parfait/ ]
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit bcfb8e8ce56cf47bc6a61bd8c896bafba9e2a9c2
+Author: Jon TURNEY <jon.turney@dronecode.org.uk>
+Date:   Thu Sep 22 14:43:38 2011 +0100
+
+    Add generated Xcursor.h to .gitignore
+    
+    Signed-off-by: Jon TURNEY <jon.turney@dronecode.org.uk>
+    Reviewed-by:  Gaetan Nadon <memsize@videotron.ca>
+    Tested-by: Gaetan Nadon <memsize@videotron.ca>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 862b9ce4aa819bf87b6e24db9d7d5867cbaa577c
+Author: Jon TURNEY <jon.turney@dronecode.org.uk>
+Date:   Wed Sep 21 20:50:46 2011 +0100
+
+    Fix install of generated Xcursor.h when builddir != srcdir
+    
+    Signed-off-by: Jon TURNEY <jon.turney@dronecode.org.uk>
+    Reviewed-by:  Gaetan Nadon <memsize@videotron.ca>
+    Tested-by: Gaetan Nadon <memsize@videotron.ca>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 334dc4f4df69d780f312f23b860df11bee5e9009
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Sep 16 21:41:41 2011 -0700
+
+    Set Xcursor.h version numbers from configure.ac
+    
+    Based on similar commit dac73a519816 to libXft
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit e086eb1bf49f2a8c270eaebd5beb595c1dc2973e
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Sep 16 21:26:17 2011 -0700
+
+    Strip trailing whitespace
+    
+    Performed with: find * -type f | xargs perl -i -p -e 's{\s+$}{\n}'
+    git diff -w & git diff -b show no diffs from this change
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit d79ddc01e4b247ae95af3581b93aef2b93e76888
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Wed Jun 29 21:41:09 2011 -0700

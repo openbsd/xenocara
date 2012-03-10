@@ -26,7 +26,7 @@
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
- 
+
 #include <X11/Xlib.h>
 #include <X11/cursorfont.h>
 #include <X11/extensions/Xrender.h>
@@ -53,7 +53,7 @@ typedef struct _XcursorFontInfo {
  * Xcursor computes a hash value for the source image
  * and tries to load a library cursor of that name.
  */
- 
+
 /* large bitmaps are unlikely to be cursors */
 #define MAX_BITMAP_CURSOR_SIZE	64
 /* don't need to remember very many; in fact, 2 is likely sufficient */
@@ -103,5 +103,5 @@ _XcursorCreateGlyphCursor(Display	    *dpy,
 
 Cursor
 _XcursorCreateFontCursor (Display *dpy, unsigned int shape);
-    
+
 #endif /* _XCURSORINT_H_ */

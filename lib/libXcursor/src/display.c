@@ -126,7 +126,7 @@ _XcursorGetDisplayInfo (Display *dpy)
 	return NULL;
     info->next = NULL;
     info->display = dpy;
-    
+
     info->codes = XAddExtension (dpy);
     if (!info->codes)
     {
@@ -162,7 +162,7 @@ _XcursorGetDisplayInfo (Display *dpy)
 		info->has_anim_cursor = XcursorFalse;
 	}
     }
-    
+
     info->size = 0;
 
     /*
@@ -173,7 +173,7 @@ _XcursorGetDisplayInfo (Display *dpy)
 	v = XGetDefault (dpy, "Xcursor", "size");
     if (v)
 	info->size = atoi (v);
-    
+
     /*
      * Use the Xft size to guess a size; make cursors 16 "points" tall
      */
@@ -186,15 +186,15 @@ _XcursorGetDisplayInfo (Display *dpy)
 	if (dpi)
 	    info->size = dpi * 16 / 72;
     }
-    
+
     /*
      * Use display size to guess a size
      */
     if (info->size == 0)
     {
 	int dim;
-	    
-	if (DisplayHeight (dpy, DefaultScreen (dpy)) < 
+
+	if (DisplayHeight (dpy, DefaultScreen (dpy)) <
 	    DisplayWidth (dpy, DefaultScreen (dpy)))
 	    dim = DisplayHeight (dpy, DefaultScreen (dpy));
 	else
@@ -204,7 +204,7 @@ _XcursorGetDisplayInfo (Display *dpy)
 	 */
 	info->size = dim / 48;
     }
-    
+
     info->theme = NULL;
     info->theme_from_config = NULL;
 
@@ -287,7 +287,7 @@ _XcursorGetDisplayInfo (Display *dpy)
 	_XcursorDisplayInfo = info;
     }
     _XUnlockMutex (_Xglobal_lock);
-    
+
     return info;
 }
 
@@ -373,7 +373,7 @@ XcursorGetThemeCore (Display *dpy)
     if (!info)
 	return XcursorFalse;
     return info->theme_core;
-    
+
 }
 
 XcursorBool

@@ -50,7 +50,7 @@ static  void
 _XcursorAddPathElt (char *path, const char *elt, int len)
 {
     int	    pathlen = strlen (path);
-    
+
     /* append / if the path doesn't currently have one */
     if (path[0] == '\0' || path[pathlen - 1] != '/')
     {
@@ -83,11 +83,11 @@ _XcursorBuildThemeDir (const char *dir, const char *theme)
 
     if (!dir || !theme)
         return NULL;
-    
+
     colon = strchr (dir, ':');
     if (!colon)
 	colon = dir + strlen (dir);
-    
+
     dirlen = colon - dir;
 
     tcolon = strchr (theme, ':');
@@ -95,7 +95,7 @@ _XcursorBuildThemeDir (const char *dir, const char *theme)
 	tcolon = theme + strlen (theme);
 
     themelen = tcolon - theme;
-    
+
     home = NULL;
     homelen = 0;
     if (*dir == '~')
@@ -113,7 +113,7 @@ _XcursorBuildThemeDir (const char *dir, const char *theme)
      * and one for the trailing null
      */
     len = 1 + homelen + 1 + dirlen + 1 + themelen + 1;
-    
+
     full = malloc (len);
     if (!full)
 	return NULL;
@@ -184,14 +184,14 @@ _XcursorThemeInherits (const char *full)
 		if (result)
 		{
 		    r = result;
-		    while (*l) 
+		    while (*l)
 		    {
 			while (XcursorSep(*l) || XcursorWhite (*l)) l++;
 			if (!*l)
 			    break;
 			if (r != result)
 			    *r++ = ':';
-			while (*l && !XcursorWhite(*l) && 
+			while (*l && !XcursorWhite(*l) &&
 			       !XcursorSep(*l))
 			    *r++ = *l++;
 		    }
@@ -324,7 +324,7 @@ XcursorLibraryLoadCursor (Display *dpy, const char *file)
 
     if (!file)
         return 0;
-    
+
     if (!images)
     {
 	int id = XcursorLibraryShape (file);
@@ -349,10 +349,10 @@ XcursorLibraryLoadCursors (Display *dpy, const char *file)
     char	    *theme = XcursorGetTheme (dpy);
     XcursorImages   *images = XcursorLibraryLoadImages (file, theme, size);
     XcursorCursors  *cursors;
-    
+
     if (!file)
         return NULL;
-    
+
     if (!images)
     {
 	int id = XcursorLibraryShape (file);

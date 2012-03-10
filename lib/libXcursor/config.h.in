@@ -33,6 +33,10 @@
 /* Define to 1 if you have Xfixes */
 #undef HAVE_XFIXES
 
+/* Define to the sub-directory in which libtool stores uninstalled libraries.
+   */
+#undef LT_OBJDIR
+
 /* Name of package */
 #undef PACKAGE
 
@@ -65,3 +69,12 @@
 
 /* Version number of package */
 #undef VERSION
+
+/* Major version of libXcursor */
+#undef XCURSOR_LIB_MAJOR
+
+/* Minor version of libXcursor */
+#undef XCURSOR_LIB_MINOR
+
+/* Micro revision of libXcursor */
+#undef XCURSOR_LIB_REVISION

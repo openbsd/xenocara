@@ -92,11 +92,11 @@ XcursorTryShapeCursor (Display	    *dpy,
 
     if (!dpy || !source_font || !mask_font || !foreground || !background)
         return 0;
-    
+
     if (!XcursorSupportsARGB (dpy) && !XcursorGetThemeCore (dpy))
 	return None;
-    
-    if (source_font == mask_font && 
+
+    if (source_font == mask_font &&
 	_XcursorFontIsCursor (dpy, source_font) &&
 	source_char + 1 == mask_char)
     {
@@ -131,14 +131,14 @@ XcursorNoticeCreateBitmap (Display	*dpy,
 
     if (!XcursorSupportsARGB (dpy) && !XcursorGetThemeCore (dpy))
 	return;
-    
+
     if (width > MAX_BITMAP_CURSOR_SIZE || height > MAX_BITMAP_CURSOR_SIZE)
 	return;
-    
+
     info = _XcursorGetDisplayInfo (dpy);
     if (!info)
 	return;
-    
+
     LockDisplay (dpy);
     replace = 0;
     now = dpy->request;
@@ -174,7 +174,7 @@ _XcursorGetBitmap (Display *dpy, Pixmap bitmap)
 
     if (!dpy || !bitmap)
         return NULL;
-    
+
     info = _XcursorGetDisplayInfo (dpy);
 
     if (!info)
@@ -233,7 +233,7 @@ static unsigned char const _reverse_byte[0x100] = {
 	0x0f, 0x8f, 0x4f, 0xcf, 0x2f, 0xaf, 0x6f, 0xef,
 	0x1f, 0x9f, 0x5f, 0xdf, 0x3f, 0xbf, 0x7f, 0xff
 };
-    
+
 #define RotByte(t,i)    (((t) << (i)) | ((t) >> (8 - (i))))
 
 void
@@ -273,7 +273,7 @@ XcursorImageHash (XImage	  *image,
      * Flip bit order on MSB images
      */
     bit_swap = (image->bitmap_bit_order != LSBFirst);
-    
+
     line = (unsigned char *) image->data;
     i = 0;
     /*
@@ -312,7 +312,7 @@ _XcursorLogDiscover (void)
     }
     return log;
 }
-    
+
 void
 XcursorNoticePutBitmap (Display	    *dpy,
 			Drawable    draw,
@@ -322,14 +322,14 @@ XcursorNoticePutBitmap (Display	    *dpy,
 
     if (!dpy || !image)
         return;
-    
+
     if (!XcursorSupportsARGB (dpy) && !XcursorGetThemeCore (dpy))
 	return;
-    
-    if (image->width > MAX_BITMAP_CURSOR_SIZE || 
+
+    if (image->width > MAX_BITMAP_CURSOR_SIZE ||
 	image->height > MAX_BITMAP_CURSOR_SIZE)
 	return;
-    
+
     bmi = _XcursorGetBitmap (dpy, (Pixmap) draw);
     if (!bmi)
 	return;
@@ -374,7 +374,7 @@ XcursorNoticePutBitmap (Display	    *dpy,
 	XImage	t = *image;
 
 	XInitImage (&t);
-	
+
 	printf ("Cursor image name: ");
 	for (i = 0; i < XCURSOR_BITMAP_HASH_SIZE; i++)
 	    printf ("%02x", bmi->hash[i]);
@@ -408,7 +408,7 @@ XcursorTryShapeBitmapCursor (Display		*dpy,
 
     if (!XcursorSupportsARGB (dpy) && !XcursorGetThemeCore (dpy))
 	return None;
-    
+
     bmi = _XcursorGetBitmap (dpy, source);
     if (!bmi || !bmi->has_image)
 	return None;
