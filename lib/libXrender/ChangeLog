@@ -1,3 +1,102 @@
+commit bf1aa4e05997ab97be4413ccdb6d0d1eb45aeefe
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Mar 7 20:46:50 2012 -0800
+
+    libXrender 0.9.7
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit bb6568cbec24ae2c84bb5d9fe418f0021291a0af
+Author: Emanuele Giaquinta <emanuele.giaquinta@gmail.com>
+Date:   Mon Jan 2 19:58:15 2012 +0000
+
+    Fix alpha premultiplication in XRenderParseColor.
+    
+    Due to C arithmetic conversion rules we must use an unsigned constant (or a
+    cast) to perform the multiplication using unsigned arithmetic.
+    
+    Reviewed-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit b3cfeecf2bddbbb120a9c796a4c9fb8fd08e15fc
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Sep 16 22:51:39 2011 -0700
+
+    Strip trailing whitespace
+    
+    Performed with: find * -type f | xargs perl -i -p -e 's{[ \t]+$}{}'
+    git diff -w & git diff -b show no diffs from this change
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit eaae07c9c9690228e16ab8dc537a8a0c2ae175bf
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun May 22 12:47:10 2011 -0700
+
+    Make DEPTH_MASK generate unsigned ints
+    
+    Clears Sun compiler warning:
+    "Xrender.c", line 127: warning: integer overflow detected: op "<<"
+    since 1 << 31 overflows a signed 32-bit int.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 1025ca2d9a00bc60639689fba177d186dace5483
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Feb 2 11:43:44 2011 -0500
+
+    config: comment, minor upgrade, quote and layout configure.ac
+    
+    Group statements per section as per Autoconf standard layout
+    Quote statements where appropriate.
+    Autoconf recommends not using dnl instead of # for comments
+    
+    Use AC_CONFIG_FILES to replace the deprecated AC_OUTPUT with parameters.
+    Add AC_CONFIG_SRCDIR([Makefile.am])
+    Remove redundant AC_SUBST(*_CFLAGS) and/or *_LIBS
+    Update minimum version of util-macros to at least 1.8.
+    No functional configuration changes
+    
+    This helps automated maintenance and release activities.
+    Details can be found in http://wiki.x.org/wiki/NewModuleGuidelines
+
+commit d3258bb910de98836f01be320ff59bb841eef825
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Fri Jan 28 19:41:37 2011 -0500
+
+    config: replace deprecated AM_CONFIG_HEADER with AC_CONFIG_HEADERS
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit ba0036d984787dc2da74ef3d8ffb9b81ca13c19c
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Jan 27 18:50:15 2011 -0500
+
+    config: remove AC_PROG_CC as it overrides AC_PROG_C_C99
+    
+    XORG_STRICT_OPTION from XORG_DEFAULT_OPTIONS calls
+    AC_PROG_C_C99. This sets gcc with -std=gnu99.
+    If AC_PROG_CC macro is called afterwards, it resets CC to gcc.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 5fb74888fd77843c81de038365791f29c799bbec
+Author: Aaron Plattner <aplattner@nvidia.com>
+Date:   Thu Nov 4 09:13:49 2010 -0700
+
+    Fix some minor typos
+    
+    Signed-off-by: Aaron Plattner <aplattner@nvidia.com>
+
+commit b1c60edb6b6a965e58fed3b613c266364a5ec0ce
+Author: Fernando Carrijo <fcarrijo@yahoo.com.br>
+Date:   Thu Jul 1 07:02:41 2010 -0300
+
+    Purge macros NEED_EVENTS and NEED_REPLIES
+    
+    Signed-off-by: Fernando Carrijo <fcarrijo@yahoo.com.br>
+    Acked-by: Tiago Vignatti <tiago.vignatti@nokia.com>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit d3d20437ceee1c225cd189fdeb6378552e206337
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Tue Jun 8 19:23:04 2010 -0700
@@ -183,7 +282,7 @@ Date:   Thu Dec 6 16:38:43 2007 -0500
     Replace static ChangeLog with dist-hook to generate from git log
 
 commit e10d5cbe4c5ed98ae1856e20a0e9d31321330d53
-Merge: 497dda5... 9d3f9fd...
+Merge: 497dda5 9d3f9fd
 Author: Eric Anholt <eric@anholt.net>
 Date:   Wed Sep 5 08:25:12 2007 -0700
 
