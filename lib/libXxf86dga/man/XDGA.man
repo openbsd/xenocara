@@ -1,4 +1,4 @@
-.\" 
+.\"
 .TH XDGA 3 __vendorversion__
 .SH NAME
 XDGA \- Client library for the XFree86-DGA extension.
@@ -230,7 +230,7 @@ Each
 corresponds to a different framebuffer layout.
 .PP
 .BR XDGAQueryModes ()
-returns a pointer to an array of 
+returns a pointer to an array of
 .IR XDGAMode s
 which are valid for the given screen.
 .I num
@@ -372,9 +372,9 @@ etc.
 The dimensions of the portion of the framebuffer which will be displayed
 on the screen.
 .TP 8
-.I xViewPortStep
+.I xViewportStep
 .TP 8
-.I yViewPortStep
+.I yViewportStep
 The granularity of the x,y viewport positioning possible with the
 .BR XDGASetViewport ()
 function.
@@ -382,7 +382,7 @@ function.
 .I maxViewportX
 .TP 8
 .I maxViewportY
-The maximum x and y positions possible with the 
+The maximum x and y positions possible with the
 .BR XDGASetViewport ()
 function.
 .TP 8
@@ -522,9 +522,9 @@ rectangle.
 sets the upper left-hand corner of the rectangle of framebuffer that is
 to be displayed on the screen.  Not all locations may be supported by
 the hardware and requested locations will be adjusted according to the
-.I xViewPortStep
+.I xViewportStep
 and
-.I yViewPortStep
+.I yViewportStep
 fields in the
 .IR XDGAMode .
 .PP

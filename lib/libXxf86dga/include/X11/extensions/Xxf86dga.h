@@ -150,7 +150,7 @@ int XDGAGetViewportStatus(
     Display	*dpy,
     int		screen
 );
-   
+
 void XDGASync(
     Display	*dpy,
     int		screen

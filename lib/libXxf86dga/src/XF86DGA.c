@@ -65,7 +65,7 @@ Copyright (c) 1995,1996  The XFree86 Project, Inc
 #include <X11/extensions/extutil.h>
 
 extern XExtDisplayInfo* xdga_find_display(Display*);
-extern char *xdga_extension_name;
+extern const char *xdga_extension_name;
 
 #define XF86DGACheckExtension(dpy,i,val) \
   XextCheckExtension (dpy, i, xdga_extension_name, val)
@@ -86,7 +86,7 @@ Bool XF86DGAQueryExtension (
 
 Bool XF86DGAQueryVersion(
     Display* dpy,
-    int* majorVersion, 
+    int* majorVersion,
     int* minorVersion
 ){
     return XDGAQueryVersion(dpy, majorVersion, minorVersion);
@@ -96,8 +96,8 @@ Bool XF86DGAGetVideoLL(
     Display* dpy,
     int screen,
     unsigned int *offset,
-    int *width, 
-    int *bank_size, 
+    int *width,
+    int *bank_size,
     int *ram_size
 ){
     XExtDisplayInfo *info = xdga_find_display (dpy);
@@ -121,13 +121,13 @@ Bool XF86DGAGetVideoLL(
     *width = rep.width;
     *bank_size = rep.bank_size;
     *ram_size = rep.ram_size;
-	
+
     UnlockDisplay(dpy);
     SyncHandle();
     return True;
 }
 
-    
+
 Bool XF86DGADirectVideoLL(
     Display* dpy,
     int screen,
@@ -153,7 +153,7 @@ Bool XF86DGADirectVideoLL(
 Bool XF86DGAGetViewPortSize(
     Display* dpy,
     int screen,
-    int *width, 
+    int *width,
     int *height
 ){
     XExtDisplayInfo *info = xdga_find_display (dpy);
@@ -175,17 +175,17 @@ Bool XF86DGAGetViewPortSize(
 
     *width = rep.width;
     *height = rep.height;
-	
+
     UnlockDisplay(dpy);
     SyncHandle();
     return True;
 }
-    
-    
+
+
 Bool XF86DGASetViewPort(
     Display* dpy,
     int screen,
-    int x, 
+    int x,
     int y
 ){
     XExtDisplayInfo *info = xdga_find_display (dpy);
@@ -206,7 +206,7 @@ Bool XF86DGASetViewPort(
     return True;
 }
 
-    
+
 Bool XF86DGAGetVidPage(
     Display* dpy,
     int screen,
@@ -235,7 +235,7 @@ Bool XF86DGAGetVidPage(
     return True;
 }
 
-    
+
 Bool XF86DGASetVidPage(
     Display* dpy,
     int screen,
@@ -342,7 +342,7 @@ Bool XF86DGAViewPortChanged(
 #include <stdlib.h>
 #include <stdio.h>
 #include <fcntl.h>
-#if defined(ISC) 
+#if defined(ISC)
 # define HAS_SVR3_MMAP
 # include <sys/types.h>
 # include <errno.h>
@@ -548,7 +548,7 @@ MapPhysAddress(unsigned long address, unsigned long size)
    if (rc != 0)
 	return NULL;
 #elif defined(Lynx) && defined(NO_MMAP)
-    vaddr = (void *)smem_create("XF86DGA", (char *)offset, 
+    vaddr = (void *)smem_create("XF86DGA", (char *)offset,
 				size + delta, SM_READ|SM_WRITE);
 #else
 #ifndef MAP_FILE
@@ -670,8 +670,8 @@ XF86DGAGetVideo(
     Display *dis,
     int screen,
     char **addr,
-    int *width, 
-    int *bank, 
+    int *width,
+    int *bank,
     int *ram
 ){
     unsigned int offset;
@@ -710,7 +710,7 @@ XF86DGAGetVideo(
 	signal(SIGBUS, XF86cleanup);
 #endif
 	signal(SIGHUP, XF86cleanup);
-	signal(SIGFPE, XF86cleanup);  
+	signal(SIGFPE, XF86cleanup);
     }
 
     return 1;

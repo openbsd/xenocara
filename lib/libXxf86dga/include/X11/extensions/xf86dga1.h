@@ -37,7 +37,7 @@ Status XF86DGAGetVideoLL(
     unsigned int *		/* base addr */,
     int *			/* width */,
     int *			/* bank_size */,
-    int *			/* ram_size */ 
+    int *			/* ram_size */
 );
 
 Status XF86DGAGetVideo(
