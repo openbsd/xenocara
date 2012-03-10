@@ -1,3 +1,84 @@
+commit 5e3da29093ff5d5b6b8805467a523d5cb7663965
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Mar 7 20:37:20 2012 -0800
+
+    libxkbfile 1.0.8
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 7b6123644fe23c2eb9816cf00729253b2dd53b23
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Sep 28 18:17:15 2011 -0700
+
+    Add const attributes to fix gcc -Wwrite-strings warnings
+    
+    Does not fix all of them, as some affect the API and thus need more analysis.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit 0c2c504819b8788075115f848343bd45a3bb6605
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Fri Nov 11 10:37:49 2011 -0800
+
+    Include strings.h for strcasecmp
+    
+    Our minimum requirement for X11 is currently Unix98.  Unix98 provides
+    strcasecmp in <strings.h>.  This commit fixes implicit declarations
+    of this function on systems that closely adhere to the standard.
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit 9ffdecdfa0a832a129a97735eaf1d22ec6defc13
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Sep 16 22:45:06 2011 -0700
+
+    Strip trailing whitespace
+    
+    Performed with: find * -type f | xargs perl -i -p -e 's{[ \t]+$}{}'
+    git diff -w & git diff -b show no diffs from this change
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit cfc92c9b8e5f511010a2e406b147dec3ce64c6fd
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Feb 2 11:43:46 2011 -0500
+
+    config: comment, minor upgrade, quote and layout configure.ac
+    
+    Group statements per section as per Autoconf standard layout
+    Quote statements where appropriate.
+    Autoconf recommends not using dnl instead of # for comments
+    
+    Use AC_CONFIG_FILES to replace the deprecated AC_OUTPUT with parameters.
+    Add AC_CONFIG_SRCDIR([Makefile.am])
+    Remove redundant AC_SUBST(*_CFLAGS) and/or *_LIBS
+    Update minimum version of util-macros to at least 1.8.
+    No functional configuration changes
+    
+    This helps automated maintenance and release activities.
+    Details can be found in http://wiki.x.org/wiki/NewModuleGuidelines
+
+commit f83b3bda908cd6d0e15287d15739344620f12d27
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Fri Jan 28 19:41:37 2011 -0500
+
+    config: replace deprecated AM_CONFIG_HEADER with AC_CONFIG_HEADERS
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit edc2a2beea14adef6c833bef456474039e2afab2
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Jan 27 18:50:15 2011 -0500
+
+    config: remove AC_PROG_CC as it overrides AC_PROG_C_C99
+    
+    XORG_STRICT_OPTION from XORG_DEFAULT_OPTIONS calls
+    AC_PROG_C_C99. This sets gcc with -std=gnu99.
+    If AC_PROG_CC macro is called afterwards, it resets CC to gcc.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
 commit 5eea77b2c35c10baf899d2b03a85a462fdcf8f93
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Fri Oct 29 18:16:00 2010 -0700
