@@ -87,7 +87,7 @@ typedef enum {
 } DMXInputEnum;
 
 /** Client-library input information structure, returned by
- * #DMXGetInputAttributes. */ 
+ * #DMXGetInputAttributes. */
 typedef struct {
     DMXInputEnum inputType;
     int          physicalScreen;

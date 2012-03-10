@@ -61,6 +61,6 @@ composite back-end screens that the
 .BR Xdmx (1)
 server is using.
 .SH "SEE ALSO"
-.BR DMXGetScreenAttribtues "(__libmansuffix__), "
-.BR DMXChangeScreenAttributes "(__libmansuffix__), "
+.BR DMXGetScreenAttributes "(__libmansuffix__), "
+.BR DMXChangeScreensAttributes "(__libmansuffix__), "
 .BR DMX "(__libmansuffix__), " Xdmx (1)

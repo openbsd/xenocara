@@ -82,8 +82,8 @@ typedef struct {
 .fi
 .PP
 .I inputType
-may bave the value
-.B DmxConsoleInputType " or " DmxBackendInputType .
+may have the value
+.B DMXConsoleInputType " or " DMXBackendInputType .
 .PP
 For console devices,
 .I name

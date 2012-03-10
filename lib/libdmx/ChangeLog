@@ -1,3 +1,78 @@
+commit 9f470c92bc2d194c8abb9154f42864e6c82f43ef
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Mar 7 21:43:10 2012 -0800
+
+    libdmx 1.1.2
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 94c2e8ba375d968bd648097a484edac5d1c87c78
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Mar 2 17:38:24 2012 -0800
+
+    Stop casting away constness on dmx_extension_name
+    
+    Fixes gcc warning:
+    dmx.c: In function 'find_display':
+    dmx.c:78:1: warning: cast discards qualifiers from pointer target type
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 19bea63b9b39d83da9b4aa277cc1db967a4928bd
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Sep 16 22:06:15 2011 -0700
+
+    Strip trailing whitespace
+    
+    Performed with: find * -type f | xargs perl -i -p -e 's{[ \t]+$}{}'
+    git diff -w & git diff -b show no diffs from this change
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 1ab0d436ceac0acef0cd97d8b280727b02062cc8
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue May 17 20:32:38 2011 -0700
+
+    Fix various typos in man pages
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 77701e9139f79db2e66026bebaab265a873b0856
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Feb 2 11:43:46 2011 -0500
+
+    config: comment, minor upgrade, quote and layout configure.ac
+    
+    Group statements per section as per Autoconf standard layout
+    Quote statements where appropriate.
+    Autoconf recommends not using dnl instead of # for comments
+    
+    Use AC_CONFIG_FILES to replace the deprecated AC_OUTPUT with parameters.
+    Add AC_CONFIG_SRCDIR([Makefile.am])
+    
+    This helps automated maintenance and release activities.
+    Details can be found in http://wiki.x.org/wiki/NewModuleGuidelines
+
+commit d970eb0954c0400bdab923c0b9c433b2f33dbe9d
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Fri Jan 28 19:41:37 2011 -0500
+
+    config: replace deprecated AM_CONFIG_HEADER with AC_CONFIG_HEADERS
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit b865861d72a86024daec36c517a214e75ef4b973
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Jan 27 19:20:39 2011 -0500
+
+    config: remove AC_PROG_CC as it overrides AC_PROG_C_C99
+    
+    XORG_STRICT_OPTION from XORG_DEFAULT_OPTIONS calls
+    AC_PROG_C_C99. This sets gcc with -std=gnu99.
+    If AC_PROG_CC macro is called afterwards, it resets CC to gcc.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
 commit 09d2ddd805a00568e4b7f668b0f500a63c350940
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Thu Oct 28 16:56:29 2010 -0700

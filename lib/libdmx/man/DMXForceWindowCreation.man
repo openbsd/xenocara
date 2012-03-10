@@ -41,7 +41,7 @@ forces the immediate creation of the window requested.
 returns
 .B True
 unless there is a protocol error.
-.B DMXForceWindwoCreation()
+.B DMXForceWindowCreation()
 can generate
 .B BadWindow
 errors.

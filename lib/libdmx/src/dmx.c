@@ -76,7 +76,7 @@ static /* const */ XExtensionHooks dmx_extension_hooks = {
 };
 
 static XEXT_GENERATE_FIND_DISPLAY(find_display, dmx_extension_info,
-                                  (char *)dmx_extension_name,
+                                  dmx_extension_name,
                                   &dmx_extension_hooks,
                                   0, NULL)
 
@@ -251,7 +251,7 @@ Bool DMXGetScreenAttributes(Display *dpy, int physical_screen,
     _XReadPad(dpy, attr->displayName, rep.displayNameLength);
     attr->displayName[rep.displayNameLength] = '\0';
     attr->logicalScreen       = rep.logicalScreen;
-    
+
     attr->screenWindowWidth   = rep.screenWindowWidth;
     attr->screenWindowHeight  = rep.screenWindowHeight;
     attr->screenWindowXoffset = rep.screenWindowXoffset;
@@ -293,7 +293,7 @@ static int _DMXDumpScreenAttributes(Display *dpy,
     unsigned long value_list[32];
     unsigned long *value = value_list;
     int           count  = 0;
-        
+
     for (i = 0; i < 32; i++) {
         if (mask & (1 << i)) {
             *value++ = _DMXGetScreenAttribute(i, attr);
@@ -383,7 +383,7 @@ int DMXChangeScreensAttributes(Display *dpy,
         if (i < mask_count) mask = masks[i];
         req->length += _DMXDumpScreenAttributes(dpy, mask, attrs + i);
     }
-    
+
     if (!_XReply(dpy, (xReply *)&rep, 0, xFalse)) {
         UnlockDisplay(dpy);
         SyncHandle();
@@ -518,7 +518,7 @@ Bool DMXGetWindowAttributes(Display *dpy, Window window,
     _XRead(dpy, (char *)windows, rep.screenCount * sizeof(*windows));
     _XRead(dpy, (char *)pos,     rep.screenCount * sizeof(*pos));
     _XRead(dpy, (char *)vis,     rep.screenCount * sizeof(*vis));
-    
+
     *screen_count = rep.screenCount;
     for (current = 0;
          current < rep.screenCount && current < (unsigned)available_count;
@@ -590,7 +590,7 @@ static int _DMXDumpDesktopAttributes(Display *dpy,
     unsigned long value_list[32];
     unsigned long *value = value_list;
     int           count  = 0;
-        
+
     for (i = 0; i < 32; i++) {
         if (mask & (1 << i)) {
             *value++ = _DMXGetDesktopAttribute(i, attr);
@@ -606,7 +606,7 @@ static int _DMXDumpDesktopAttributes(Display *dpy,
  * Available in DMX Protocol Version 2.0 */
 int DMXChangeDesktopAttributes(Display *dpy,
                                unsigned int mask,
-                               DMXDesktopAttributes *attr) 
+                               DMXDesktopAttributes *attr)
 {
     XExtDisplayInfo                  *info = find_display(dpy);
     xDMXChangeDesktopAttributesReply rep;
@@ -620,7 +620,7 @@ int DMXChangeDesktopAttributes(Display *dpy,
     req->dmxReqType   = X_DMXChangeDesktopAttributes;
     req->valueMask    = mask;
     req->length      +=_DMXDumpDesktopAttributes(dpy, mask, attr);
-    
+
     if (!_XReply(dpy, (xReply *)&rep, 0, xFalse)) {
         UnlockDisplay(dpy);
         SyncHandle();
@@ -754,7 +754,7 @@ Bool DMXAddBackendInput(Display *dpy, int screen, int sendsCore, int *newId)
     unsigned int       mask = (DMXInputType
                                | DMXInputPhysicalScreen
                                | DMXInputSendsCore);
-        
+
     attr.inputType        = DMXBackendInputType;
     attr.physicalScreen   = screen;
     attr.sendsCore        = sendsCore;
@@ -769,7 +769,7 @@ Bool DMXAddConsoleInput(Display *dpy, const char *name, int sendsCore,
     DMXInputAttributes attr;
     unsigned int       mask = (DMXInputType
                                | DMXInputSendsCore);
-        
+
     attr.inputType        = DMXConsoleInputType;
     attr.physicalScreen   = 0;
     attr.sendsCore        = sendsCore;

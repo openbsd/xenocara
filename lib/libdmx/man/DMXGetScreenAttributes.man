@@ -83,14 +83,14 @@ coordinate system.  Otherwise, these values are set to 0.
 are a geometry specification (see
 .BR X (7x))
 for the location of the DMX screen on the back-end screen.  The
-coordinant system of the back-end display is used for these values.
+coordinate system of the back-end display is used for these values.
 .PP
 .IR rootWindowWidth ", " rootWindowHeight ", "
 .IR rootWindowXoffset ", and " rootWindowYoffset
 are a geometry specification (see
 .BR X (7x))
 for the location of the root window on the screen window.  The
-coordinant system of the screen window is used.  In most cases, the root
+coordinate system of the screen window is used.  In most cases, the root
 window will have the same geometry as the DMX screen window, and will
 occupy the same area of the back-end display.  (This would not be the
 case, for example, if automatic projector alignment is used.)
@@ -106,5 +106,5 @@ can generate
 errors.
 .SH "SEE ALSO"
 .BR DMXGetScreenCount "(__libmansuffix__), "
-.BR DMXChangeScreenAttributes "(__libmansuffix__), "
+.BR DMXChangeScreensAttributes "(__libmansuffix__), "
 .BR DMX "(__libmansuffix__), " Xdmx (1)
