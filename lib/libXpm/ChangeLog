@@ -1,3 +1,112 @@
+commit acaaea96776b36c097d5413040c5ce85d3ae6cb9
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Mar 7 20:39:55 2012 -0800
+
+    libXpm 3.5.10
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 1450186652cb9d2efe55c8da7cb64996eddd34c7
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Nov 18 23:25:16 2011 -0800
+
+    closeness_cmp: maintain constness when casting pointers
+    
+    create.c: In function 'closeness_cmp':
+    create.c:224:5: warning: cast discards qualifiers from pointer target type
+    create.c:224:5: warning: cast discards qualifiers from pointer target type
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 7aa7b34491de534da56d637552ee86f94f038cc3
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Nov 18 23:22:12 2011 -0800
+
+    sxpm: make ErrorMessage take const char * arg to fix -Wwrite-strings warnings
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 4cedf181bcfe13e5d206554c51edb82cb17e7ad5
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Fri Nov 11 10:17:11 2011 -0800
+
+    Include missing headers
+    
+    This fixes implicit declarations for strdup and strcasecmp.
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit 933b5d1f1fe9273d1a984707687b36ec61c4c5af
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Nov 10 21:32:15 2011 -0800
+
+    Fix gcc -Wwrite-strings warnings that don't require public API changes
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 696be14bcb4daef5280b425e297223c6ae530cb5
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Nov 10 21:03:44 2011 -0800
+
+    Assume C89 and just use const, not local Const macro
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 29972ebbb2409bcba87637069a7ad9a958b3325d
+Author: Julien Cristau <jcristau@debian.org>
+Date:   Sat Sep 24 19:18:56 2011 +0200
+
+    Link sxpm against -lX11
+    
+    It calls various Xlib functions so should link with -lX11 directly.
+    
+    Signed-off-by: Julien Cristau <jcristau@debian.org>
+
+commit 3ea70059805b3ebc795f797b5880b90b6b3a9235
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Sep 16 22:48:53 2011 -0700
+
+    Strip trailing whitespace
+    
+    Performed with: find * -type f | xargs perl -i -p -e 's{[ \t]+$}{}'
+    git diff -w & git diff -b show no diffs from this change
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 0c9e200c3975917f5d78eac67b1f4cedefd73079
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sat Mar 5 20:39:03 2011 -0500
+
+    man: add missing title header (.TH) __xorgversion__
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 0f8f24302bb0e35eaab16f16358bf9c44f9f3af1
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sat Mar 5 15:35:17 2011 -0500
+
+    config: move man pages into their own directory
+    
+    As per X.Org guidelines.
+    Fix whitespace issues.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 9c622c5fc82f2a19ae41e75398fee4ff1de52a1d
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Feb 2 11:43:44 2011 -0500
+
+    config: minor layout change in configure.ac
+    
+    Group statements per section as per Autoconf standard layout
+    Quote statements where appropriate.
+    No functional configuration changes
+    
+    This helps automated maintenance and release activities.
+    Details can be found in http://wiki.x.org/wiki/NewModuleGuidelines
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
 commit 22a434d061af224536baee6c6110b603c5c96b2c
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Fri Oct 29 17:29:25 2010 -0700

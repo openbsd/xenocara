@@ -214,7 +214,7 @@ XpmCreateBufferFromXpmImage(
     }
     ErrorStatus = WriteColors(&ptr, &ptr_size, &used_size,
 			      image->colorTable, image->ncolors, image->cpp);
- 
+
     if (ErrorStatus != XpmSuccess)
 	RETURN(ErrorStatus);
 

@@ -22,29 +22,29 @@
 .\"in this Software without prior written authorization from GROUPE BULL.
 .\"
 .nr )S 12
-.TH SXPM 1
+.TH SXPM __appmansuffix__ __xorgversion__
 .PD
 .ad b
 .SH NAME
 sxpm \- Show an XPM (X PixMap) file and/or convert XPM 1 or 2 files to XPM 3.
 .SH SYNOPSIS
 \fBsxpm\fR
-[\|\fB-d\fR displayname\|] 
-[\|\fB-g\fR geometry\|] 
-[\|\fB-hints\fR\|] 
-[\|\fB-icon\fR filename\|] 
+[\|\fB-d\fR displayname\|]
+[\|\fB-g\fR geometry\|]
+[\|\fB-hints\fR\|]
+[\|\fB-icon\fR filename\|]
 [\|\fB-plaid\| | \|\fRfilename\| | \|-\|]
-[\|\fB-o\fR filename\| | \|\fB-o\fR -\|] 
-[\|\fB-pcmap\fR\|] 
-[\|\fB-closecolors\fR\|] 
-[\|\fB-nod\fR\|] 
-[\|\fB-nom\fR\|] 
-[\|\fB-mono | -grey4 | -grey | -color\fR\|] 
-[\|\fB-sc\fR symbol color\|] 
-[\|\fB-sp\fR symbol pixel\|] 
-[\|\fB-cp\fR color pixel\|] 
-[\|\fB-rgb\fR filename\|] 
-[\|\fB-v\fR\|] 
+[\|\fB-o\fR filename\| | \|\fB-o\fR -\|]
+[\|\fB-pcmap\fR\|]
+[\|\fB-closecolors\fR\|]
+[\|\fB-nod\fR\|]
+[\|\fB-nom\fR\|]
+[\|\fB-mono | -grey4 | -grey | -color\fR\|]
+[\|\fB-sc\fR symbol color\|]
+[\|\fB-sp\fR symbol pixel\|]
+[\|\fB-cp\fR color pixel\|]
+[\|\fB-rgb\fR filename\|]
+[\|\fB-v\fR\|]
 .SH DESCRIPTION
 .PP
 The \fIsxpm\fP program can be used to view any XPM (version 1, 2, or 3) file

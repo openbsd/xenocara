@@ -71,7 +71,7 @@ xpmReadRgbNames(
 
     /* Loop reading each line in the file. */
     n = 0;
-    rgb = rgbn; 
+    rgb = rgbn;
     /* Quit if rgb text file has too many entries. */
     while (fgets(line, sizeof(line), rgbf) && n < MAX_RGBNAMES) {
 
