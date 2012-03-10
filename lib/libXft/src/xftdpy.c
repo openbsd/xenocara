@@ -32,19 +32,19 @@ _XftCloseDisplay (Display *dpy, XExtCodes *codes)
     info = _XftDisplayInfoGet (dpy, FcFalse);
     if (!info)
 	return 0;
-    
+
     /*
      * Get rid of any dangling unreferenced fonts
      */
     info->max_unref_fonts = 0;
     XftFontManageMemory (dpy);
-    
+
     /*
      * Clean up the default values
      */
     if (info->defaults)
 	FcPatternDestroy (info->defaults);
-    
+
     /*
      * Unhook from the global list
      */
@@ -52,7 +52,7 @@ _XftCloseDisplay (Display *dpy, XExtCodes *codes)
 	if (info->display == dpy)
 	    break;
     *prev = info->next;
-    
+
     free (info);
     return 0;
 }
@@ -126,8 +126,8 @@ _XftDisplayInfoGet (Display *dpy, FcBool createIfNecessary)
     {
 	Visual		    *visual = DefaultVisual (dpy, DefaultScreen (dpy));
 	XRenderPictFormat   *format = XRenderFindVisualFormat (dpy, visual);
-	
-	printf ("XftDisplayInfoGet Default visual 0x%x ", 
+
+	printf ("XftDisplayInfoGet Default visual 0x%x ",
 		(int) visual->visualid);
 	if (format)
 	{
@@ -146,7 +146,7 @@ _XftDisplayInfoGet (Display *dpy, FcBool createIfNecessary)
 	}
 	else
 	    printf ("No Render format for default visual\n");
-	
+
 	printf ("XftDisplayInfoGet initialized, hasRender set to \"%s\"\n",
 		info->hasRender ? "True" : "False");
     }
@@ -156,18 +156,18 @@ _XftDisplayInfoGet (Display *dpy, FcBool createIfNecessary)
 	info->colors[i].pict = 0;
     }
     info->fonts = NULL;
-    
+
     info->next = _XftDisplayInfo;
     _XftDisplayInfo = info;
 
-    info->glyph_memory = NULL;
+    info->glyph_memory = 0;
     info->max_glyph_memory = XftDefaultGetInteger (dpy,
 						   XFT_MAX_GLYPH_MEMORY, 0,
 						   XFT_DPY_MAX_GLYPH_MEMORY);
     if (XftDebug () & XFT_DBG_CACHE)
 	printf ("global max cache memory %ld\n", info->max_glyph_memory);
 
-    
+
     info->num_unref_fonts = 0;
     info->max_unref_fonts = XftDefaultGetInteger (dpy,
 						  XFT_MAX_UNREF_FONTS, 0,
@@ -177,7 +177,7 @@ _XftDisplayInfoGet (Display *dpy, FcBool createIfNecessary)
 
     memset (info->fontHash, '\0', sizeof (XftFont *) * XFT_NUM_FONT_HASH);
     return info;
-    
+
 bail1:
     free (info);
 bail0:
@@ -282,7 +282,7 @@ XftDefaultSet (Display *dpy, FcPattern *defaults)
 }
 
 _X_HIDDEN int
-XftDefaultParseBool (char *v)
+XftDefaultParseBool (const char *v)
 {
     char    c0, c1;
 
@@ -307,7 +307,7 @@ XftDefaultParseBool (char *v)
 }
 
 static Bool
-_XftDefaultInitBool (Display *dpy, FcPattern *pat, char *option)
+_XftDefaultInitBool (Display *dpy, FcPattern *pat, const char *option)
 {
     char    *v;
     int	    i;
@@ -319,7 +319,7 @@ _XftDefaultInitBool (Display *dpy, FcPattern *pat, char *option)
 }
 
 static Bool
-_XftDefaultInitDouble (Display *dpy, FcPattern *pat, char *option)
+_XftDefaultInitDouble (Display *dpy, FcPattern *pat, const char *option)
 {
     char    *v, *e;
     double  d;
@@ -335,7 +335,7 @@ _XftDefaultInitDouble (Display *dpy, FcPattern *pat, char *option)
 }
 
 static Bool
-_XftDefaultInitInteger (Display *dpy, FcPattern *pat, char *option)
+_XftDefaultInitInteger (Display *dpy, FcPattern *pat, const char *option)
 {
     char    *v, *e;
     int	    i;
@@ -369,27 +369,25 @@ _XftDefaultInit (Display *dpy)
 	goto bail1;
     if (!_XftDefaultInitInteger (dpy, pat, FC_RGBA))
 	goto bail1;
+    if (!_XftDefaultInitInteger (dpy, pat, FC_LCD_FILTER))
+	goto bail1;
     if (!_XftDefaultInitBool (dpy, pat, FC_ANTIALIAS))
 	goto bail1;
-#ifdef FC_EMBOLDEN
     if (!_XftDefaultInitBool (dpy, pat, FC_EMBOLDEN))
 	goto bail1;
-#endif
     if (!_XftDefaultInitBool (dpy, pat, FC_AUTOHINT))
 	goto bail1;
-#ifdef FC_HINT_STYLE
     if (!_XftDefaultInitInteger (dpy, pat, FC_HINT_STYLE))
 	goto bail1;
-#endif
     if (!_XftDefaultInitBool (dpy, pat, FC_HINTING))
 	goto bail1;
     if (!_XftDefaultInitBool (dpy, pat, FC_MINSPACE))
 	goto bail1;
     if (!_XftDefaultInitInteger (dpy, pat, XFT_MAX_GLYPH_MEMORY))
 	goto bail1;
-    
+
     return pat;
-    
+
 bail1:
     FcPatternDestroy (pat);
 bail0:
@@ -404,7 +402,7 @@ _XftDefaultGet (Display *dpy, const char *object, int screen, FcValue *v)
 
     if (!info)
 	return FcResultNoMatch;
-    
+
     if (!info->defaults)
     {
 	info->defaults = _XftDefaultInit (dpy);
@@ -462,7 +460,7 @@ XftDefaultSubstitute (Display *dpy, int screen, FcPattern *pattern)
     if (FcPatternGet (pattern, XFT_RENDER, 0, &v) == FcResultNoMatch)
     {
 	FcPatternAddBool (pattern, XFT_RENDER,
-			   XftDefaultGetBool (dpy, XFT_RENDER, screen, 
+			   XftDefaultGetBool (dpy, XFT_RENDER, screen,
 					      XftDefaultHasRender (dpy)));
     }
     if (FcPatternGet (pattern, FC_ANTIALIAS, 0, &v) == FcResultNoMatch)
@@ -471,28 +469,24 @@ XftDefaultSubstitute (Display *dpy, int screen, FcPattern *pattern)
 			   XftDefaultGetBool (dpy, FC_ANTIALIAS, screen,
 					      True));
     }
-#ifdef FC_EMBOLDEN
     if (FcPatternGet (pattern, FC_EMBOLDEN, 0, &v) == FcResultNoMatch)
     {
 	FcPatternAddBool (pattern, FC_EMBOLDEN,
 			   XftDefaultGetBool (dpy, FC_EMBOLDEN, screen,
 					      False));
     }
-#endif
     if (FcPatternGet (pattern, FC_HINTING, 0, &v) == FcResultNoMatch)
     {
 	FcPatternAddBool (pattern, FC_HINTING,
 			  XftDefaultGetBool (dpy, FC_HINTING, screen,
 					     True));
     }
-#ifdef FC_HINT_STYLE
     if (FcPatternGet (pattern, FC_HINT_STYLE, 0, &v) == FcResultNoMatch)
     {
 	FcPatternAddInteger (pattern, FC_HINT_STYLE,
 			     XftDefaultGetInteger (dpy, FC_HINT_STYLE, screen,
 						   FC_HINT_FULL));
     }
-#endif
     if (FcPatternGet (pattern, FC_AUTOHINT, 0, &v) == FcResultNoMatch)
     {
 	FcPatternAddBool (pattern, FC_AUTOHINT,
@@ -518,8 +512,14 @@ XftDefaultSubstitute (Display *dpy, int screen, FcPattern *pattern)
 	}
 #endif
 	FcPatternAddInteger (pattern, FC_RGBA,
-			      XftDefaultGetInteger (dpy, FC_RGBA, screen, 
+			      XftDefaultGetInteger (dpy, FC_RGBA, screen,
 						    subpixel));
+    }
+    if (FcPatternGet (pattern, FC_LCD_FILTER, 0, &v) == FcResultNoMatch)
+    {
+	FcPatternAddInteger (pattern, FC_LCD_FILTER,
+			     XftDefaultGetInteger (dpy, FC_LCD_FILTER, screen,
+						   FC_LCD_DEFAULT));
     }
     if (FcPatternGet (pattern, FC_MINSPACE, 0, &v) == FcResultNoMatch)
     {
@@ -529,10 +529,10 @@ XftDefaultSubstitute (Display *dpy, int screen, FcPattern *pattern)
     }
     if (FcPatternGet (pattern, FC_DPI, 0, &v) == FcResultNoMatch)
     {
-	dpi = (((double) DisplayHeight (dpy, screen) * 25.4) / 
+	dpi = (((double) DisplayHeight (dpy, screen) * 25.4) /
 	       (double) DisplayHeightMM (dpy, screen));
-	FcPatternAddDouble (pattern, FC_DPI, 
-			    XftDefaultGetDouble (dpy, FC_DPI, screen, 
+	FcPatternAddDouble (pattern, FC_DPI,
+			    XftDefaultGetDouble (dpy, FC_DPI, screen,
 						 dpi));
     }
     if (FcPatternGet (pattern, FC_SCALE, 0, &v) == FcResultNoMatch)

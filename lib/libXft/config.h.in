@@ -3,24 +3,6 @@
 /* Define to 1 if you have the <dlfcn.h> header file. */
 #undef HAVE_DLFCN_H
 
-/* FT_Bitmap_Size structure includes y_ppem field */
-#undef HAVE_FT_BITMAP_SIZE_Y_PPEM
-
-/* Define to 1 if you have the `FT_Get_BDF_Property' function. */
-#undef HAVE_FT_GET_BDF_PROPERTY
-
-/* Define to 1 if you have the `FT_Get_Next_Char' function. */
-#undef HAVE_FT_GET_NEXT_CHAR
-
-/* Define to 1 if you have the `FT_Get_PS_Font_Info' function. */
-#undef HAVE_FT_GET_PS_FONT_INFO
-
-/* Define to 1 if you have the `FT_GlyphSlot_Embolden' function. */
-#undef HAVE_FT_GLYPHSLOT_EMBOLDEN
-
-/* Define to 1 if you have the `FT_Has_PS_Glyph_Names' function. */
-#undef HAVE_FT_HAS_PS_GLYPH_NAMES
-
 /* Define to 1 if you have the <inttypes.h> header file. */
 #undef HAVE_INTTYPES_H
 
@@ -48,11 +30,9 @@
 /* Define to 1 if you have the <unistd.h> header file. */
 #undef HAVE_UNISTD_H
 
-/* Define to 1 if you have the <X11/extensions/Xrender.h> header file. */
-#undef HAVE_X11_EXTENSIONS_XRENDER_H
-
-/* Define to 1 if you have the `XRenderFindStandardFormat' function. */
-#undef HAVE_XRENDERFINDSTANDARDFORMAT
+/* Define to the sub-directory in which libtool stores uninstalled libraries.
+   */
+#undef LT_OBJDIR
 
 /* Name of package */
 #undef PACKAGE

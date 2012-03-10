@@ -1,3 +1,200 @@
+commit b543efafefb71fb1f87ee9c1c261e86c8ca29e76
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Mar 7 20:12:27 2012 -0800
+
+    libXft 2.3.0
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 301029c9a1d9429009eaf08bb726357d4e94780d
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Mon Oct 24 23:39:25 2011 -0700
+
+    Fix undefined ftbit in XftFontLoadGlyphs
+    
+    https://bugs.freedesktop.org/show_bug.cgi?id=42173
+    
+    Fixes regression from: 6f1d7bcdd461b1f6cc64370793f52d7c170187d0
+    
+    Fixed by examining original patch before rebase from:
+    https://bugs.freedesktop.org/show_bug.cgi?id=29151
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit 550b2f76401c292d982700b60326e0a837e391b4
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Mon Oct 10 13:00:35 2011 -0700
+
+    Remove fontconfig and freetype ifdef-fu and instead require non-ancinet versions of both
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit 21a59c10803582c8f90d3b5f32e8f0240c050adf
+Author: Tom \"spot\" Callaway <tcallawa@redhat.com>
+Date:   Thu Oct 6 15:58:29 2011 -0400
+
+    compiler noise cleanups related to subpixel LCD support
+    
+    Reviewed-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit 6f1d7bcdd461b1f6cc64370793f52d7c170187d0
+Author: Tom \"spot\" Callaway <tcallawa@redhat.com>
+Date:   Thu Oct 6 15:41:10 2011 -0400
+
+    Subpixel LCD text rendering improvements
+    
+    Reviewed-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit 0e0efb8b26a241f8370053bc3686f7abc69357c1
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Sep 26 15:41:49 2011 -0700
+
+    Add const attributes to fix gcc -Wwrite-strings warnings
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Aaron Plattner <aplattner@nvidia.com>
+
+commit df353cc7fe40fadc6e48586e95a0cbf1d2e33cfa
+Author: Ross Burton <ross@burtonini.com>
+Date:   Sun Sep 25 17:47:15 2011 -0700
+
+    constify some bits
+    
+    https://bugs.freedesktop.org/show_bug.cgi?id=2658
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit 5cac9764a55c96fee64f63748c054be81fcaadf4
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Sun Sep 25 11:11:01 2011 -0700
+
+    Remove dependency on libXext
+    
+    ldd -r -u reports:
+    Unused direct dependencies:
+         .../lib/libXext.so.6
+    
+    Reported-by: Gaetan Nadon <memsize@videotron.ca>
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit d39337048d31245b69e1b72b98beb957f52ba4e6
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Sat Sep 24 21:05:27 2011 -0700
+
+    Remove broken fallback on non-pkg-config search for libXrender
+    
+    https://bugs.freedesktop.org/show_bug.cgi?id=5425
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+    Reviewed-by: Gaetan Nadon <memsize@videotron.ca>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 3ad77b636978746786546ab2b779730997839f63
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Sep 16 22:42:59 2011 -0700
+
+    Strip trailing whitespace
+    
+    Performed with: find * -type f | xargs perl -i -p -e 's{[ \t]+$}{}'
+    git diff -w & git diff -b show no diffs from this change
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit d274ffc91b22bb8f3a2447237491cbe04f2ee0c3
+Author: Derek Wang <Derek.Wang@sun.com>
+Date:   Wed Feb 2 22:15:13 2011 -0800
+
+    XftGlyphFontSpecCore: check to make sure glyphs are in range
+    
+    This fixes a crash reported when selecting "View Page Source" in Mozilla
+    on Solaris 10, due to invalid parameters being given to XPutImage.
+    
+    http://bugs.opensolaris.org/bugdatabase/view_bug.do?bug_id=6261221
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 652d9b47fc902e12c8e28481742c382676f1d035
+Author: Jay Cotton <jay.cotton@oracle.com>
+Date:   Wed Feb 2 22:09:34 2011 -0800
+
+    XftDrawSrcPicture: fail if info->solidFormat is NULL
+    
+    Fixed a core dump in x11perf render tests when a driver was returning
+    incorrect information due to a bug in the driver.
+    
+    http://bugs.opensolaris.org/bugdatabase/view_bug.do?bug_id=6872780
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 1e03ac60d1221d5c16b7f4797ab0c461f13b123a
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Feb 2 11:43:42 2011 -0500
+
+    config: comment, minor upgrade, quote and layout configure.ac
+    
+    Group statements per section as per Autoconf standard layout
+    Quote statements where appropriate.
+    Autoconf recommends not using dnl instead of # for comments
+    
+    Use AC_CONFIG_FILES to replace the deprecated AC_OUTPUT with parameters.
+    Add AC_CONFIG_SRCDIR([Makefile.am])
+    
+    This helps automated maintenance and release activities.
+    Details can be found in http://wiki.x.org/wiki/NewModuleGuidelines
+
+commit bcc24bf5bd4141cf5ca62bdd2c52d971ea88d421
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Fri Jan 28 19:41:37 2011 -0500
+
+    config: replace deprecated AM_CONFIG_HEADER with AC_CONFIG_HEADERS
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 791d10dbac030d6a164f54a7adb9b6c816c68930
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Fri Jan 28 16:34:14 2011 -0500
+
+    config: remove unrequired AC_CONFIG_AUX_DIR
+    
+    The default location for the generation of configuation files is the current
+    package root directory. These files are config.* and friends.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 28d61e969800820b1483d41445befcd1bf35fa85
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Jan 27 16:12:55 2011 -0500
+
+    config: remove already included AC_PROG_SED
+    
+    Use AC_PROG_SED now supplied by XORG_DEFAULT_OPTIONS
+    Use the appropriate platform version of sed
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 0e3c21ab0aeb99ca76ac2535f4618cb1949b7f40
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Jan 27 16:09:03 2011 -0500
+
+    config: remove AC_PROG_CC as it overrides AC_PROG_C_C99
+    
+    XORG_STRICT_OPTION from XORG_DEFAULT_OPTIONS calls
+    AC_PROG_C_C99. This sets gcc with -std=gnu99.
+    If AC_PROG_CC macro is called afterwards, it resets CC to gcc.
+    
+    Reported-by: Roberto Branciforti <rbbrnc@gmail.com>
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 9c23173cf1ff861bdb8538e3aa21ec509b0d87d8
+Author: Roberto Branciforti <rbbrnc@gmail.com>
+Date:   Mon Jan 17 22:32:15 2011 +0100
+
+    libXft: Fix variable assignment.
+    
+    Signed-off-by: Roberto Branciforti <rbbrnc@gmail.com>
+    Reviewed-by: Mikhail Gusarov <dottedmag@dottedmag.net>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit b9d4a2b5be71ca883f5a876500edb0a1a9add0cf
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Fri Oct 29 16:21:18 2010 -0700
