@@ -128,7 +128,7 @@
 XtCallAcceptFocus \- calla widget's accept_focus procedure
 .SH SYNTAX
 .HP
-Boolean XtCallAcceptFocus(Widget \fIw\fP, Time *\fItime\fP); 
+Boolean XtCallAcceptFocus(Widget \fIw\fP, Time *\fItime\fP);
 .SH ARGUMENTS
 .IP \fItime\fP 1i
 Specifies the X time of the event that is causing the accept focus.

@@ -1,3 +1,273 @@
+commit 8ab1833a80a18131d897f6d9965545c16acef921
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Mar 7 17:57:26 2012 -0800
+
+    libXt 1.1.2
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit aa0f30641769968e0453a7d02f3f8e5955641336
+Author: Matt Dew <marcoz@osource.org>
+Date:   Mon Jan 16 16:24:32 2012 -0700
+
+    informaltable cleanup
+    
+    On certain tables, add top and bottom borders to table header
+    and a bottom border to the table. This matches what those
+    tables in the old pdfs looked like.
+    
+    the <?dbfo keep-together='always'> prevents tables from
+    splitting across pages. Useful for tiny tables.
+    
+    Converting the colwidth to a floating point, IE, 1* -> 1.0*
+    cleans up these build errors:
+    WARNING: table-layout="fixed" and column-width unspecified =>
+    falling back to proportional-column-width(1)
+    
+    Signed-off-by: Matt Dew <marcoz@osource.org>
+
+commit 70bb9e28d37fff4ead4d0a2c672af77059765fa4
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Wed Jan 4 10:33:29 2012 -0800
+
+    Treat unexpected returned events from poll as errors
+    
+    Inspired by libxcb's f0565e8f06aadf760a9065a97b8cf5ab9cbd18de
+    
+    Resolves https://bugs.freedesktop.org/show_bug.cgi?id=20048
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit 6dd231d37c036d182e789f0af37ee5417792ad4e
+Author: Stephen Turnbull <stephenjturnbull@gmail.com>
+Date:   Wed Jan 4 10:18:29 2012 -0800
+
+    Don't re-enter the WaitLoop if block is set to false
+    
+    See: https://bugs.freedesktop.org/show_bug.cgi?id=20048
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit 0d8ef503e2d51d727a912d6ef3cf017608e45b7f
+Author: Gaetan Nadon <nadon@memsize.(none)>
+Date:   Sat Dec 31 09:03:39 2011 -0500
+
+    Add .gitignore for the newly added DocBook/XML generated files.
+    
+    Signed-off-by: Gaetan Nadon <nadon@memsize.(none)>
+
+commit 9cbf06b9f7b1378ce3424837c979c3241516bf9b
+Author: Gaetan Nadon <nadon@memsize.(none)>
+Date:   Fri Dec 30 17:08:14 2011 -0500
+
+    docbook.am: embed css styles inside the HTML HEAD element
+    
+    Rather than referring to the external xorg.css stylesheet, embed the content
+    of the file in the html output produced. This is accomplished by using
+    version 1.10 of xorg-xhtml.xsl.
+    
+    This makes the whole html docs tree much more relocatable.
+    In addition, it eliminates xorg.css as a runtime file which makes
+    xorg-sgml-doctools a build time only package.
+    
+    Signed-off-by: Gaetan Nadon <nadon@memsize.(none)>
+
+commit 7aa5d801d3b17fc9a1af9d5f6bc0283e3762cca2
+Author: Matt Dew <marcoz@osource.org>
+Date:   Wed Dec 28 21:17:53 2011 -0700
+
+    Remove old files.
+
+commit b8818e1233b75c6bd47a6d2197fabf3a036a2119
+Author: Matt Dew <marcoz@osource.org>
+Date:   Wed Dec 28 20:34:51 2011 -0700
+
+    Initial docbook conversion.
+
+commit fd0da0d44a8501edaac3be7fac9449ad730d8bf4
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Oct 7 19:45:21 2011 -0700
+
+    Add const attributes to TMparse typedefs to fix gcc -Wwrite-strings warnings
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit af9e4b75167c0e31ec02d5ababf204daa12f500d
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Oct 7 19:32:08 2011 -0700
+
+    Add const attributes to slashDotXdefaults to fix gcc -Wwrite-strings warnings
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 682ca8daf29285ef5013751784a7ec98962b7cbb
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Oct 7 19:30:11 2011 -0700
+
+    Make implementation_default_path return const char *
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit d3c2fbcd83ed9ae9b6cc8d765badca7f8d3261b2
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Oct 7 19:23:37 2011 -0700
+
+    Make gravity strings const to fix gcc -Wwrite-strings warnings
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 94ffb37790ce33fdf49d07dd1ade60b6d8376aa7
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Oct 7 19:21:10 2011 -0700
+
+    Convert ISOLatin1 functions to specify args as const char *
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 1f48cadaa88423a012613a0b456ec8795c8c0992
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Fri Oct 7 17:08:07 2011 -0700
+
+    Whitespace changes related to cleaning up previous patch
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit 9e898aa4fd964e888044e2fa2d64089505331f62
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Fri Oct 7 17:01:34 2011 -0700
+
+    Don't pop elements from our array while we're itterating through it.
+    
+    https://bugs.freedesktop.org/show_bug.cgi?id=22543
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit df2008411a5c6a735af2b0fced01df660bb6978a
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Sep 26 15:29:45 2011 -0700
+
+    makestrs: Add const attributes to fix gcc -Wwrite-strings warnings
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 9347b890ba24db41c7cb6c6e76564e4896bc8cac
+Author: Olivier Fourdan <fourdan@xfce.org>
+Date:   Tue Sep 20 16:45:02 2011 -0700
+
+    Bug 40577 - Missing bound checking in FreeSelectionProperty()
+    
+    https://bugs.freedesktop.org/show_bug.cgi?id=40577
+    
+    FreeSelectionProperty() did not check for the count of items in array
+    and relied on a NULL terminated list, which can cause libXt to crash if
+    FreeSelectionProperty() follows a call to GetSelectionProperty() which
+    reallocates the array.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 5691187ced24b16a951e2b8308bcc2b65dd36eee
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Sep 16 22:54:05 2011 -0700
+
+    Strip trailing whitespace
+    
+    Performed with: find * -type f | xargs perl -i -p -e 's{[ \t]+$}{}'
+    git diff -w & git diff -b show no diffs from this change
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 6c0b44caa9b424c7e05327e8ddc9273b87a0f81f
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Sun Oct 2 13:35:26 2011 -0700
+
+    LP64 fix for TypedArgToArg()
+    
+    https://bugs.freedesktop.org/show_bug.cgi?id=12662
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit 2c29b8b71575d73db6b9542b24fa3312a2cf2f86
+Author: Jon TURNEY <jon.turney@dronecode.org.uk>
+Date:   Wed Apr 27 12:32:39 2011 +0100
+
+    Only link with ws2_32 for mingw target
+    
+    For the Cygwin target, we will be using the socket functions provided
+    by the Cygwin DLL, so linking with ws2_32 is unnecessary, even though
+    it may be present.
+    
+    Signed-off-by: Jon TURNEY <jon.turney@dronecode.org.uk>
+    Reviewed-by: Cyril Brulebois <kibi@debian.org
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 4ee8867047eaff3b121478b7199201d669e2c85d
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue May 24 14:37:03 2011 -0400
+
+    Update README for documentation reference
+    
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Cyril Brulebois <kibi@debian.org>
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 5e299936489bf3476464f00ebf3ffa3fa893cc23
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Mar 18 19:36:05 2011 -0700
+
+    Add test case for XtCvtIntToPixmap fix in commit 16d9941f3aa38
+    
+    Expanded from original Sun test case for Solaris bug 4163152.
+    Verified that with commit 16d9941f3aa38 reverted, this test case
+    fails on amd64, with it present, this test case passes.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 6fc14afa3fa98503248138f7f6984ee33a9bd889
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Mar 14 19:07:12 2011 -0700
+
+    Add test case for XtAppMainLoop bug 34715
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 4bf003a824577b5a46a59b3b3e91687b530ee48f
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Mar 10 14:23:44 2011 -0800
+
+    Add test framework similar to xserver and use it to test XtAsprintf
+    
+    Only two simple test cases to start with:
+     - compares the results of snprintf of a short string to a static buffer
+    	with the new buffer returned by XtAsprintf.
+     - compare the results of using XtAsprintf to replicate a portion of a
+    	very long string with the original string.
+    
+    Uses malloc debugging flags for various platforms to try to catch errors
+    with uninitialized memory (such as the recently fixed failure to terminate
+    the string).
+    
+    Requires xorg-macros 1.13 for XORG_ENABLE_UNIT_TESTS and XORG_WITH_GLIB.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 42c611d9f8c80528f6e36ceb0ce245b06e8b1e8e
+Author: Jordan Hayes <jordan@bitway.com>
+Date:   Sun Mar 6 11:35:47 2011 -0800
+
+    Bug 34715: XtAppMainLoop doesn't work without a Display
+    
+    https://bugs.freedesktop.org/show_bug.cgi?id=34715
+    
+    XtAppNextEvent() doesn't return until there's an actual XEvent to be
+    handled; it handles Xt-internal events (inputs, timers, signals)
+    itself, but doesn't return (because of course, those aren't XEvents).
+    Which means that the exit flag doesn't get a chance to break the loop
+    until/unless there's an actual XEvent.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit c16d3cc264c45601f0e59bdd29e438c7c9679721
 Author: Julien Cristau <jcristau@debian.org>
 Date:   Thu Mar 10 10:19:59 2011 +0100

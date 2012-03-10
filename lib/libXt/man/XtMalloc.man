@@ -128,17 +128,17 @@
 XtMalloc, XtCalloc, XtRealloc, XtFree, XtNew, XtNewString \- memory management functions
 .SH SYNTAX
 .HP
-char *XtMalloc(Cardinal \fIsize\fP); 
+char *XtMalloc(Cardinal \fIsize\fP);
 .HP
-char *XtCalloc(Cardinal \fInum\fP, Cardinal \fIsize\fP); 
+char *XtCalloc(Cardinal \fInum\fP, Cardinal \fIsize\fP);
 .HP
-char *XtRealloc(char *\fIptr\fP, Cardinal \fInum\fP); 
+char *XtRealloc(char *\fIptr\fP, Cardinal \fInum\fP);
 .HP
-void XtFree(char *\fIptr\fP); 
+void XtFree(char *\fIptr\fP);
 .HP
-\fItype\fP *XtNew(\fItype\fP); 
+\fItype\fP *XtNew(\fItype\fP);
 .HP
-String XtNewString(String \fIstring\fP); 
+String XtNewString(String \fIstring\fP);
 .HP
 Cardinal XtAsprintf(String *\fInew_string\fP, const char *\fIformat\fP, ...);
 .SH ARGUMENTS
@@ -161,7 +161,7 @@ Specifies a formatting string as defined by sprintf(3c)
 .SH DESCRIPTION
 The
 .ZN XtMalloc
-functions returns a pointer to a block of storage of at least 
+functions returns a pointer to a block of storage of at least
 the specified size bytes.
 If there is insufficient memory to allocate the new block,
 .ZN XtMalloc
@@ -170,7 +170,7 @@ calls
 .LP
 The
 .ZN XtCalloc
-function allocates space for the specified number of array elements 
+function allocates space for the specified number of array elements
 of the specified size and initializes the space to zero.
 If there is insufficient memory to allocate the new block,
 .ZN XtCalloc
@@ -227,7 +227,7 @@ is a convenience macro that calls
 .ZN XtMalloc
 with the following arguments specified:
 .LP
-.Ds 
+.Ds
 .TA .5i
 .ta .5i
 (strcpy(XtMalloc((unsigned) strlen(str) + 1), str))

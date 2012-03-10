@@ -128,7 +128,7 @@
 XtParent \- obtain widget's parent widget id
 .SH SYNTAX
 .HP
-Widget XtParent(Widget \fIw\fP); 
+Widget XtParent(Widget \fIw\fP);
 .SH ARGUMENTS
 .IP \fIw\fP 1i
 Specifies the widget.

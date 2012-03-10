@@ -128,12 +128,12 @@
 XtSetSensitive, XtIsSensitive \- set and check a widget's sensitivity state
 .SH SYNTAX
 .HP
-void XtSetSensitive(Widget \fIw\fP, Boolean \fIsensitive\fP); 
+void XtSetSensitive(Widget \fIw\fP, Boolean \fIsensitive\fP);
 .HP
-Boolean XtIsSensitive(Widget \fIw\fP); 
+Boolean XtIsSensitive(Widget \fIw\fP);
 .SH ARGUMENTS
 .IP \fIsensitive\fP 1i
-Specifies a Boolean value that indicates whether the widget should receive 
+Specifies a Boolean value that indicates whether the widget should receive
 keyboard and pointer events.
 .IP \fIw\fP 1i
 Specifies the widget.
@@ -160,25 +160,25 @@ take whatever display actions are needed
 (for example, greying out or stippling the widget).
 .LP
 .ZN XtSetSensitive
-maintains the invariant that if parent has either sensitive 
-or ancestor_sensitive 
+maintains the invariant that if parent has either sensitive
+or ancestor_sensitive
 .ZN False ,
-then all children have ancestor_sensitive 
+then all children have ancestor_sensitive
 .ZN False .
 .LP
 The
 .ZN XtIsSensitive
-function returns 
-.ZN True 
-or 
-.ZN False 
+function returns
+.ZN True
+or
+.ZN False
 to indicate whether or not user input events are being dispatched.
-If both core.sensitive and core.ancestor_sensitive are 
+If both core.sensitive and core.ancestor_sensitive are
 .ZN True ,
 .ZN XtIsSensitive
-returns 
+returns
 .ZN True ;
-otherwise, it returns 
+otherwise, it returns
 .ZN False .
 .SH "SEE ALSO"
 .br

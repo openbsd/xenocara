@@ -129,19 +129,19 @@ XtCreateWidget, XtVaCreateWidget, XtCreateManagedWidget, XtVaCreateManagedWidget
 .SH SYNTAX
 .HP
 Widget XtCreateWidget(String \fIname\fP, WidgetClass \fIwidget_class\fP,
-Widget \fIparent\fP, ArgList \fIargs\fP, Cardinal \fInum_args\fP); 
+Widget \fIparent\fP, ArgList \fIargs\fP, Cardinal \fInum_args\fP);
 .HP
 Widget XtVaCreateWidget(String \fIname\fP, WidgetClass \fIwidget_class\fP,
 Widget \fIparent\fP, ...\^);
 .HP
 Widget XtCreateManagedWidget(String \fIname\fP, WidgetClass
 \fIwidget_class\fP, Widget \fIparent\fP, ArgList \fIargs\fP, Cardinal
-\fInum_args\fP); 
+\fInum_args\fP);
 .HP
 Widget XtVaCreateManagedWidget(String \fIname\fP, WidgetClass
 \fIwidget_class\fP, Widget \fIparent\fP, ...\^);
 .HP
-void XtDestroyWidget(Widget \fIw\fP); 
+void XtDestroyWidget(Widget \fIw\fP);
 .SH ARGUMENTS
 .ds Al to override the resource defaults
 .IP \fIargs\fP 1i
@@ -191,7 +191,7 @@ by using the constraint resource list specified for the parent's class
 and all superclasses up to
 .ZN constraintWidgetClass .
 .IP \(bu 5
-Calls the initialize procedures for the widget by starting at the 
+Calls the initialize procedures for the widget by starting at the
 .ZN Core
 initialize procedure on down to the widget's initialize procedure.
 .IP \(bu 5
@@ -209,7 +209,7 @@ starting at
 .ZN constraintWidgetClass
 on down to the parent's constraint initialize procedure.
 .LP
-Note that you can determine the number of arguments in an argument list 
+Note that you can determine the number of arguments in an argument list
 by using the
 .ZN  XtNumber
 macro.
@@ -235,13 +235,13 @@ In phase one,
 .ZN XtDestroyWidget
 performs the following:
 .IP \(bu 5
-If the being_destroyed field of the widget is 
+If the being_destroyed field of the widget is
 .ZN True ,
 it returns immediately.
 .IP \(bu 5
 Recursively descends the widget tree and
-sets the being_destroyed field to 
-.ZN True 
+sets the being_destroyed field to
+.ZN True
 for the widget and all children.
 .IP \(bu 5
 Adds the widget to a list of widgets (the destroy list) that should be
@@ -263,15 +263,15 @@ In phase two,
 .ZN XtDestroyWidget
 performs the following on each entry in the destroy list:
 .IP \(bu 5
-Calls the destroy callback procedures registered on the widget 
-(and all descendants) in post-order (it calls children callbacks 
+Calls the destroy callback procedures registered on the widget
+(and all descendants) in post-order (it calls children callbacks
 before parent callbacks).
 .IP \(bu 5
-If the widget's parent is a subclass of 
-.ZN compositeWidgetClass 
-and if the parent is not being destroyed, 
-it calls 
-.ZN XtUnmanageChild 
+If the widget's parent is a subclass of
+.ZN compositeWidgetClass
+and if the parent is not being destroyed,
+it calls
+.ZN XtUnmanageChild
 on the widget and then calls the widget's parent's delete_child procedure
 (see Section 3.4).
 .IP \(bu 5
@@ -296,8 +296,8 @@ if the widget is realized (that is, has an X window).
 The server recursively destroys all descendant windows.
 .IP \(bu 5
 Recursively descends the tree and deallocates all pop-up widgets, constraint
-records, callback lists and, if the widget is a subclass of 
-.ZN compositeWidgetClass , 
+records, callback lists and, if the widget is a subclass of
+.ZN compositeWidgetClass ,
 children.
 .SH "SEE ALSO"
 XtAppCreateShell(__libmansuffix__),

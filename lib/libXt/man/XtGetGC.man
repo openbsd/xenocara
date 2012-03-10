@@ -129,9 +129,9 @@ XtGetGC, XtReleaseGC \- obtain and destroy a sharable GC
 .SH SYNTAX
 .HP
 GC XtGetGC(Widget \fIw\fP, XtGCMask \fIvalue_mask\fP, XGCValues
-*\fIvalues\fP); 
+*\fIvalues\fP);
 .HP
-void XtReleaseGC(Widget \fIw\fP, GC \fIgc\fP); 
+void XtReleaseGC(Widget \fIw\fP, GC \fIgc\fP);
 .SH ARGUMENTS
 .IP \fIgc\fP 1i
 Specifies the GC to be deallocated.
@@ -147,7 +147,7 @@ The
 .ZN XtGetGC
 function returns a sharable, read-only GC.
 The parameters to this function are the same as those for
-.ZN XCreateGC 
+.ZN XCreateGC
 except that a widget is passed instead of a display.
 .ZN XtGetGC
 shares only GCs in which all values in the GC returned by

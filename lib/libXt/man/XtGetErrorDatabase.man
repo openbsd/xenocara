@@ -128,11 +128,11 @@
 XtGetErrorDatabase, XtGetErrorDatabaseText \- obtain error database
 .SH SYNTAX
 .HP
-XrmDatabase *XtGetErrorDatabase(void); 
+XrmDatabase *XtGetErrorDatabase(void);
 .HP
 void XtGetErrorDatabaseText(char *\fIname\fP, char *\fItype\fP, char
 *\fIclass\fP, char *\fIdefault\fP, char *\fIbuffer_return\fP, int
-\fInbytes\fP); 
+\fInbytes\fP);
 .SH ARGUMENTS
 .IP \fIbuffer_return\fP 1i
 Specifies the buffer into which the error message is to be returned.
@@ -145,7 +145,7 @@ Specifies the default message to use\*(Dm.
 .br
 .ns
 .IP \fItype\fP 1i
-Specifies the name and type that are concatenated to form the resource name 
+Specifies the name and type that are concatenated to form the resource name
 of the error message.
 .IP \fInbytes\fP 1i
 Specifies the size of the buffer in bytes.

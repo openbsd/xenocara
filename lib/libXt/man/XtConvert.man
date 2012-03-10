@@ -129,7 +129,7 @@ XtConvert, XtDirectConvert \- invoke resource converters
 .SH SYNTAX
 .HP
 void XtConvert(Widget \fIw\fP, String \fIfrom_type\fP, XrmValuePtr \fIfrom\fP,
-String \fIto_type\fP, XrmValuePtr \fIto_return\fP); 
+String \fIto_type\fP, XrmValuePtr \fIto_return\fP);
 .HP
 void XtDirectConvert(XtConverter \fIconverter\fP, XrmValuePtr \fIargs\fP,
 Cardinal \fInum_args\fP, XrmValuePtr \fIfrom\fP, XrmValuePtr \fIto_return\fP);
@@ -156,10 +156,10 @@ Specifies the widget \*(Wi.
 .SH DESCRIPTION
 The
 .ZN XtConvert
-function looks up the type converter registered to convert from_type 
+function looks up the type converter registered to convert from_type
 to to_type, computes any additional arguments needed, and then calls
 .ZN XtDirectConvert .
-.ZN XtConvert 
+.ZN XtConvert
 has been replaced by
 .ZN XtConvertAndStore .
 .LP

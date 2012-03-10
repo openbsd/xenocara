@@ -128,20 +128,20 @@
 XtPopup, XtPopupSpringLoaded, XtCallbackNone, XtCallbackNonexclusive, XtCallbackExclusive \- map a pop-up
 .SH SYNTAX
 .HP
-void XtPopup(Widget \fIpopup_shell\fP, XtGrabKind \fIgrab_kind\fP); 
+void XtPopup(Widget \fIpopup_shell\fP, XtGrabKind \fIgrab_kind\fP);
 .HP
-void XtPopupSpringLoaded(Widget \fIpopup_shell\fP); 
+void XtPopupSpringLoaded(Widget \fIpopup_shell\fP);
 .HP
 void XtCallbackNone(Widget \fIw\fP, XtPointer \fIclient_data\fP, XtPointer
-\fIcall_data\fP): 
+\fIcall_data\fP):
 .HP
 void XtCallbackNonexclusive(Widget \fIw\fP, XtPointer \fIclient_data\fP,
-XtPointer \fIcall_data\fP); 
+XtPointer \fIcall_data\fP);
 .HP
 void XtCallbackExclusive(Widget \fIw\fP, XtPointer \fIclient_data\fP,
-XtPointer \fIcall_data\fP); 
+XtPointer \fIcall_data\fP);
 .HP
-void MenuPopup(String \fIshell_name\fP); 
+void MenuPopup(String \fIshell_name\fP);
 .SH ARGUMENTS
 .IP \fIcall_data\fP 1i
 Specifies the callback data,
@@ -165,14 +165,14 @@ Calls
 to ensure popup_shell is a subclass of
 .ZN Shell .
 .IP \(bu 5
-Generates an error if the shell's popped_up field is already 
+Generates an error if the shell's popped_up field is already
 .ZN True .
 .IP \(bu 5
 Calls the callback procedures on the shell's popup_callback list.
 .IP \(bu 5
-Sets the shell popped_up field to 
+Sets the shell popped_up field to
 .ZN True ,
-the shell spring_loaded field to 
+the shell spring_loaded field to
 .ZN False ,
 and the shell grab_kind field from grab_kind.
 .IP \(bu 5
@@ -191,11 +191,11 @@ XtAddGrab(popup_shell, (grab_kind == XtGrabExclusive), False)
 .De
 .IP \(bu 5
 Calls
-.ZN XtRealizeWidget 
+.ZN XtRealizeWidget
 with popup_shell specified.
 .IP \(bu 5
 Calls
-.ZN XMapWindow 
+.ZN XMapWindow
 with popup_shell specified.
 .LP
 The
@@ -230,7 +230,7 @@ specify
 and
 .ZN XtGrabExclusive ,
 respectively.
-Each function then sets the widget that executed the callback list 
+Each function then sets the widget that executed the callback list
 to be insensitive by using
 .ZN XtSetSensitive .
 Using these functions in callbacks is not required.
@@ -256,7 +256,7 @@ is invoked on
 (possibly with modifiers),
 the translation manager pops up the shell with grab_kind set to
 .ZN XtGrabExclusive
-and spring_loaded set to 
+and spring_loaded set to
 .ZN True .
 If
 .ZN MenuPopup
@@ -265,7 +265,7 @@ is invoked on
 (possibly with modifiers),
 the translation manager pops up the shell with grab_kind set to
 .ZN XtGrabNonexclusive
-and spring_loaded set to 
+and spring_loaded set to
 .ZN False .
 Otherwise, the translation manager generates an error.
 When the widget is popped up,
@@ -277,12 +277,12 @@ Calls
 to ensure popup_shell is a subclass of
 .ZN Shell .
 .IP \(bu 5
-Generates an error if the shell's popped_up field is already 
+Generates an error if the shell's popped_up field is already
 .ZN True .
 .IP \(bu 5
 Calls the callback procedures on the shell's popup_callback list.
 .IP \(bu 5
-Sets the shell popped_up field to 
+Sets the shell popped_up field to
 .ZN True
 and the shell grab_kind and spring_loaded fields appropriately.
 .IP \(bu 5
@@ -296,11 +296,11 @@ XtAddGrab(popup_shell, (grab_kind == XtGrabExclusive), spring_loaded)
 .De
 .IP \(bu 5
 Calls
-.ZN XtRealizeWidget 
+.ZN XtRealizeWidget
 with popup_shell specified.
 .IP \(bu 5
 Calls
-.ZN XMapWindow 
+.ZN XMapWindow
 with popup_shell specified.
 .LP
 (Note that these actions are the same as those for

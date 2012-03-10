@@ -45,9 +45,9 @@ SOFTWARE.
 
 ******************************************************************/
 
-/* 
+/*
  * TranslateI.h - Header file private to translation management
- * 
+ *
  * Author:	Gabe Beged-Dov, HP
  *
  * Former Author:	Charles Haynes

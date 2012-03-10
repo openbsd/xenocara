@@ -128,10 +128,10 @@
 XtAppGetSelectionTimeout, XtAppSetSelectionTimeout \- set and obtain selection timeout values
 .SH SYNTAX
 .HP
-unsigned long XtAppGetSelectionTimeout(XtAppContext \fIapp_context\fP); 
+unsigned long XtAppGetSelectionTimeout(XtAppContext \fIapp_context\fP);
 .HP
 void XtAppSetSelectionTimeout(XtAppContext \fIapp_context\fP, unsigned long
-\fItimeout\fP); 
+\fItimeout\fP);
 .SH ARGUMENTS
 .IP \fIapp_context\fP 1i
 Specifies the application context.
@@ -141,9 +141,9 @@ Specifies the selection timeout in milliseconds.
 The
 .ZN XtAppGetSelectionTimeout
 function returns the current selection timeout value, in milliseconds.
-The selection timeout is the time within which the two communicating 
+The selection timeout is the time within which the two communicating
 applications must respond to one another.
-The initial timeout value is set by the 
+The initial timeout value is set by the
 .ZN selectionTimeout
 application resource, or, if
 .ZN selectionTimeout

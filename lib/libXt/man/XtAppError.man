@@ -128,15 +128,15 @@
 XtAppError, XtAppSetErrorHandler, XtAppSetWarningHandler, XtAppWarning \- low-level error handlers
 .SH SYNTAX
 .HP
-void XtAppError(XtAppContext \fIapp_context\fP, String \fImessage\fP); 
+void XtAppError(XtAppContext \fIapp_context\fP, String \fImessage\fP);
 .HP
 void XtAppSetErrorHandler(XtAppContext \fIapp_context\fP, XtErrorHandler
-\fIhandler\fP); 
+\fIhandler\fP);
 .HP
 void XtAppSetWarningHandler(XtAppContext \fIapp_context\fP, XtErrorHandler
-\fIhandler\fP); 
+\fIhandler\fP);
 .HP
-void XtAppWarning(XtAppContext \fIapp_context\fP, String \fImessage\fP); 
+void XtAppWarning(XtAppContext \fIapp_context\fP, String \fImessage\fP);
 .SH ARGUMENTS
 .IP \fIapp_context\fP 1i
 Specifies the application context.

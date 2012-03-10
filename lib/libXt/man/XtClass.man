@@ -128,30 +128,30 @@
 XtClass, XtSuperclass, XtIsSubclass, XtCheckSubclass, XtIsObject, XtIsRectObj, XtIsWidget, XtIsComposite, XtIsConstraint, XtIsShell, XtIsOverrideShell, XtIsWMShell, XtIsVendorShell, XtIsTransientShell, XtIsTopLevelShell, XtIsApplicationShell, XtIsSessionShell \- obtain and verify a widget's class
 .SH SYNTAX
 .HP
-WidgetClass XtClass(Widget \fIw\fP); 
+WidgetClass XtClass(Widget \fIw\fP);
 .HP
-WidgetClass XtSuperclass(Widget \fIw\fP); 
+WidgetClass XtSuperclass(Widget \fIw\fP);
 .HP
-Boolean XtIsSubclass(Widget \fIw\fP, WidgetClass \fIwidget_class\fP); 
+Boolean XtIsSubclass(Widget \fIw\fP, WidgetClass \fIwidget_class\fP);
 .HP
 void XtCheckSubclass(Widget \fIwidget\fP, WidgetClass \fIwidget_class\fP,
-String \fImessage\fP); 
+String \fImessage\fP);
 .HP
-Boolean XtIsObject(Widget \fIw\fP); 
+Boolean XtIsObject(Widget \fIw\fP);
 .HP
-Boolean XtIsRectObj(Widget \fIw\fP); 
+Boolean XtIsRectObj(Widget \fIw\fP);
 .HP
-Boolean XtIsWidget(Widget \fIw\fP); 
+Boolean XtIsWidget(Widget \fIw\fP);
 .HP
-Boolean XtIsComposite(Widget \fIw\fP); 
+Boolean XtIsComposite(Widget \fIw\fP);
 .HP
-Boolean XtIsConstraint(Widget \fIw\fP, 
+Boolean XtIsConstraint(Widget \fIw\fP,
 .HP
-Boolean XtIsShell(Widget \fIw\fP); 
+Boolean XtIsShell(Widget \fIw\fP);
 .HP
-Boolean XtIsOverrideShell(Widget \fIw\fP); 
+Boolean XtIsOverrideShell(Widget \fIw\fP);
 .HP
-Boolean XtIsWMShell(Widget \fIw\fP); 
+Boolean XtIsWMShell(Widget \fIw\fP);
 .HP
 Boolean XtIsVendorShell(Widget \fIw\fP);
 .HP
@@ -181,9 +181,9 @@ function returns a pointer to the widget's superclass class structure.
 .LP
 The
 .ZN XtIsSubclass
-function returns 
-.ZN True 
-if the class of the specified widget is equal to or is a subclass of 
+function returns
+.ZN True
+if the class of the specified widget is equal to or is a subclass of
 the specified class. The widget's class can be any number of subclasses
 down the chain and need not be an immediate subclass of the specified
 class. Composite widgets that need to restrict the class of the items
@@ -203,12 +203,12 @@ constructs an error message from the supplied message,
 the widget's actual class, and the expected class and calls
 .ZN XtErrorMsg .
 .ZN XtCheckSubclass
-should be used at the entry point of exported routines to ensure 
+should be used at the entry point of exported routines to ensure
 that the client has passed in a valid widget class for the exported operation.
 .LP
 .ZN XtCheckSubclass
 is only executed when the widget has been compiled with the compiler symbol
-DEBUG defined; otherwise, it is defined as the empty string 
+DEBUG defined; otherwise, it is defined as the empty string
 and generates no code.
 .LP
 To test if a given widget belongs to a subclass of an Intrinsics-defined

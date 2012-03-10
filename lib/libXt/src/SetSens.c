@@ -94,7 +94,7 @@ static void SetAncestorSensitive(
     /* If widget's sensitive is TRUE, propagate new ancestor_sensitive to
        children's ancestor_sensitive; else do nothing as children's
        ancestor_sensitive is already FALSE */
-    
+
     if (widget->core.sensitive && XtIsComposite(widget)) {
 	children = ((CompositeWidget) widget)->composite.children;
 	for (i=0; i < ((CompositeWidget)widget)->composite.num_children; i++) {
@@ -125,7 +125,7 @@ void XtSetSensitive(
     /* If widget's ancestor_sensitive is TRUE, propagate new sensitive to
        children's ancestor_sensitive; else do nothing as children's
        ancestor_sensitive is already FALSE */
-    
+
     if (widget->core.ancestor_sensitive && XtIsComposite (widget)) {
 	children = ((CompositeWidget) widget)->composite.children;
 	for (i = 0; i < ((CompositeWidget)widget)->composite.num_children; i++){

@@ -128,11 +128,11 @@
 XtSetKeyboardFocus \- focus events on a child widget
 .SH SYNTAX
 .HP
-XtSetKeyboardFocus(Widget \fIsubtree\fP, Widget \fIdescendant\fP); 
+XtSetKeyboardFocus(Widget \fIsubtree\fP, Widget \fIdescendant\fP);
 .SH ARGUMENTS
 .IP \fIsubtree\fP 1i
-Specifies either the widget in the subtree structure which is to receive the 
-keyboard event, or 
+Specifies either the widget in the subtree structure which is to receive the
+keyboard event, or
 .ZN None .
 Note that it is not an error to specify
 .ZN None
@@ -141,10 +141,10 @@ when no input focus was previously set.
 .IP \fIdescendant\fP 1i
 Specifies the widget \*(Wi.
 .SH DESCRIPTION
-If a future 
+If a future
 .ZN KeyPress
 or
-.ZN KeyRelease 
+.ZN KeyRelease
 event occurs within the specified subtree,
 .ZN XtSetKeyboardFocus
 causes

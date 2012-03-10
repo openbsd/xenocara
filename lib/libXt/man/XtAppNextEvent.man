@@ -129,21 +129,21 @@ XtAppNextEvent, XtAppPending, XtAppPeekEvent, XtAppProcessEvent, XtDispatchEvent
 .SH SYNTAX
 .HP
 void XtAppNextEvent(XtAppContext \fIapp_context\fP, XEvent
-*\fIevent_return\fP); 
+*\fIevent_return\fP);
 .HP
 Boolean XtAppPeekEvent(XtAppContext \fIapp_context\fP, XEvent
-*\fIevent_return\fP); 
+*\fIevent_return\fP);
 .HP
-XtInputMask XtAppPending(XtAppContext \fIapp_context\fP); 
+XtInputMask XtAppPending(XtAppContext \fIapp_context\fP);
 .HP
 void XtAppProcessEvent(XtAppContext \fIapp_context\fP, XtInputMask
-\fImask\fP); 
+\fImask\fP);
 .HP
-Boolean XtDispatchEvent(XEvent *\fIevent\fP); 
+Boolean XtDispatchEvent(XEvent *\fIevent\fP);
 .HP
-void XtAppMainLoop(XtAppContext \fIapp_context\fP); 
+void XtAppMainLoop(XtAppContext \fIapp_context\fP);
 .SH ARGUMENTS
-.ds Co that identifies the application 
+.ds Co that identifies the application
 .IP \fIapp_context\fP 1i
 Specifies the application context \*(Co.
 .IP \fIevent\fP 1i
@@ -167,13 +167,13 @@ If the X event queue is empty,
 .ZN XtAppNextEvent
 flushes the X output buffers of each Display in the application context
 and waits for an event while looking at the other input sources, timeout
-timeout values, and signal handlers and calling any callback procedures 
-triggered by them.  This wait time can be used for background processing 
+timeout values, and signal handlers and calling any callback procedures
+triggered by them.  This wait time can be used for background processing
 (see Section 7.8).
 .LP
 If there is an event in the queue,
 .ZN XtAppPeekEvent
-fills in the event and returns a nonzero value. If no X input is on the 
+fills in the event and returns a nonzero value. If no X input is on the
 queue,
 .ZN XtAppPeekEvent
 flushes the output buffer and blocks until input is available
@@ -187,8 +187,8 @@ returns zero.
 .LP
 The
 .ZN XtAppPending
-function returns a nonzero value if there are events pending from the 
-X server, timer pending, or other input sources pending. The value 
+function returns a nonzero value if there are events pending from the
+X server, timer pending, or other input sources pending. The value
 returned is a bit mask that is the OR of
 .ZN XtIMXEvent ,
 .ZN XtIMTimer ,
@@ -197,13 +197,13 @@ and
 .ZN XtIMSignal
 (see
 .ZN XtAppProcessEvent ).
-If there are no events pending, 
+If there are no events pending,
 .ZN XtAppPending
 flushes the output buffer and returns zero.
 .LP
 The
 .ZN XtAppProcessEvent
-function processes one timer, alternate input, signal source, or X 
+function processes one timer, alternate input, signal source, or X
 event.  If there is nothing of the appropriate type to process,
 .ZN XtAppProcessEvent
 blocks until there is.
@@ -212,9 +212,9 @@ it is undefined which will get processed.
 Usually, this procedure is not called by client applications (see
 .ZN XtAppMainLoop ).
 .ZN XtAppProcessEvent
-processes timer events by calling any appropriate timer callbacks, 
-alternate input by calling any appropriate alternate input callbacks, 
-signal source by calling any appropriate signal callbacks, and X events 
+processes timer events by calling any appropriate timer callbacks,
+alternate input by calling any appropriate alternate input callbacks,
+signal source by calling any appropriate signal callbacks, and X events
 by calling
 .ZN XtDispatchEvent .
 .LP
@@ -232,8 +232,8 @@ The
 function sends those events to the event handler functions that
 have been previously registered with the dispatch routine.
 .ZN XtDispatchEvent
-returns 
-.ZN True 
+returns
+.ZN True
 if it dispatched the event to some handler and
 .ZN False
 if it found no handler to dispatch the event to.
@@ -250,8 +250,8 @@ also is responsible for implementing the grab semantics for
 The
 .ZN XtAppMainLoop
 function first reads the next incoming X event by calling
-.ZN XtAppNextEvent 
-and then it dispatches the event to the appropriate registered procedure 
+.ZN XtAppNextEvent
+and then it dispatches the event to the appropriate registered procedure
 by calling
 .ZN XtDispatchEvent .
 This constitutes the main loop of \*(tk applications,

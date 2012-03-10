@@ -130,9 +130,9 @@ XtAppAddInput, XtRemoveInput \- register and remove an input source
 .HP
 XtInputId XtAppAddInput(XtAppContext \fIapp_context\fP, int \fIsource\fP,
 XtPointer \fIcondition\fP, XtInputCallbackProc \fIproc\fP, XtPointer
-\fIclient_data\fP); 
+\fIclient_data\fP);
 .HP
-void XtRemoveInput(XtInputId \fIid\fP); 
+void XtRemoveInput(XtInputId \fIid\fP);
 .SH ARGUMENTS
 .ds Co that identifies the application
 .IP \fIapp_context\fP 1i
@@ -159,7 +159,7 @@ The
 .ZN XtAppAddInput
 function registers with the \*(xI read routine a new source of events,
 which is usually file input but can also be file output.
-Note that file should be loosely interpreted to mean any sink 
+Note that file should be loosely interpreted to mean any sink
 or source of data.
 .ZN XtAppAddInput
 also specifies the conditions under which the source can generate events.
@@ -188,7 +188,7 @@ XtAppAddTimeOut(__libmansuffix__),XtAppAddSignal(__libmansuffix__)
 In ANSI C it is necessary to cast the condition to an XtPointer, e.g.:
 .RS 4
 .br
-XtAppAddInput(app_context, 
+XtAppAddInput(app_context,
 .RS 4
 .br
 source,

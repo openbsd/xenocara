@@ -129,7 +129,7 @@ XtQueryGeometry \- query the preferred geometry of a child widget
 .SH SYNTAX
 .HP
 XtGeometryResult XtQueryGeometry(Widget \fIw\fP\^, XtWidgetGeometry
-*\fIintended\fP, XtWidgetGeometry *\fIpreferred_return\fP\^); 
+*\fIintended\fP, XtWidgetGeometry *\fIpreferred_return\fP\^);
 .SH ARGUMENTS
 .IP \fIintended\fP 1i
 Specifies any changes the parent plans to make to the child's geometry or

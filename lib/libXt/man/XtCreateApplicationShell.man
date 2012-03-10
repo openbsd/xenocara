@@ -129,7 +129,7 @@ XtCreateApplicationShell \- create top-level widget instance
 .SH SYNTAX
 .HP
 Widget XtCreateApplicationShell(String \fIname\fP, WidgetClass
-\fIwidget_class\fP, ArgList \fIargs\fP, Cardinal \fInum_args\fP); 
+\fIwidget_class\fP, ArgList \fIargs\fP, Cardinal \fInum_args\fP);
 .SH ARGUMENTS
 .IP \fIname\fP 1i
 Specifies the name of the shell.

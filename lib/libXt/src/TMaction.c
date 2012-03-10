@@ -70,7 +70,7 @@ in this Software without prior written authorization from The Open Group.
 
 */
 
-/* TMaction.c -- maintains the state table of actions for the translation 
+/* TMaction.c -- maintains the state table of actions for the translation
  *              manager.
  */
 

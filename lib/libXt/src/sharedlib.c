@@ -81,7 +81,7 @@ void XtToolkitInitialize()
     _XtToolkitInitialize();
 }
 
-Widget 
+Widget
 XtInitialize(
     _Xconst char* name,
     _Xconst char* classname,
@@ -110,7 +110,7 @@ XtAppInitialize(
     extern Widget _XtAppInitialize();
     VENDORINIT
     return _XtAppInitialize (app_context_return, application_class, options,
-			     num_options, argc_in_out, argv_in_out, 
+			     num_options, argc_in_out, argv_in_out,
 			     fallback_resources, args_in, num_args_in);
 }
 
@@ -151,7 +151,7 @@ XtOpenApplication(
     extern Widget _XtOpenApplication();
     VENDORINIT
     return _XtOpenApplication (app_context_return, application_class, options,
-			       num_options, argc_in_out, argv_in_out, 
+			       num_options, argc_in_out, argv_in_out,
 			       fallback_resources, widget_class,
 			       args_in, num_args_in);
 }

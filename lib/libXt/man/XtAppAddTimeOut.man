@@ -129,9 +129,9 @@ XtAppAddTimeOut, XtRemoveTimeOut \- register and remove timeouts
 .SH SYNTAX
 .HP
 XtIntervalId XtAppAddTimeOut(XtAppContext \fIapp_context\fP, unsigned long
-\fIinterval\fP, XtTimerCallbackProc \fIproc\fP, XtPointer \fIclient_data\fP); 
+\fIinterval\fP, XtTimerCallbackProc \fIproc\fP, XtPointer \fIclient_data\fP);
 .HP
-void XtRemoveTimeOut(XtIntervalId \fItimer\fP); 
+void XtRemoveTimeOut(XtIntervalId \fItimer\fP);
 .SH ARGUMENTS
 .ds Co for which the timer is to be set
 .IP \fIapp_context\fP 1i

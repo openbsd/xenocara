@@ -76,12 +76,12 @@ _XtVaCreateWidget(
 
     _XtVaToTypedArgList(var, count, &typed_args, &num_args);
 
-    widget = _XtCreateWidget(name, widget_class, parent, (ArgList)NULL, 
+    widget = _XtCreateWidget(name, widget_class, parent, (ArgList)NULL,
 		    (Cardinal)0, typed_args, num_args);
 
     if (typed_args != NULL) {
         XtFree((XtPointer)typed_args);
-    }    
+    }
 
     return widget;
 }
@@ -168,7 +168,7 @@ XtVaAppCreateShell(
     if (typed_args != NULL) {
 	XtFree((XtPointer)typed_args);
     }
- 
+
     va_end(var);
     UNLOCK_APP(app);
     return widget;
@@ -239,7 +239,7 @@ XtVaSetSubvalues(XtPointer base, XtResourceList resources, Cardinal num_resource
     va_list	var;
     ArgList    	args;
     Cardinal   	num_args;
-    int		total_count, typed_count;		
+    int		total_count, typed_count;
 
     va_start(var, num_resources);
     _XtCountVaList(var, &total_count, &typed_count);
@@ -256,7 +256,7 @@ XtVaSetSubvalues(XtPointer base, XtResourceList resources, Cardinal num_resource
 
     if (num_args != 0) {
         XtFree((XtPointer)args);
-    }    
+    }
 
     va_end(var);
 }
@@ -282,7 +282,7 @@ _XtVaOpenApplication(
     XtTypedArgList typed_args;
 
     XtToolkitInitialize(); /* cannot be moved into _XtAppInit */
-    
+
     dpy = _XtAppInit(&app_con, (String)application_class, options, num_options,
 		     argc_in_out, &argv_in_out, fallback_resources);
 
@@ -301,8 +301,8 @@ _XtVaOpenApplication(
 	    typed_args[count].size = 0;
         }
 	count++;
-	typed_args = (XtTypedArgList) 
-	    XtRealloc((char *) typed_args, 
+	typed_args = (XtTypedArgList)
+	    XtRealloc((char *) typed_args,
 		       (unsigned) (count + 1) * sizeof(XtTypedArg));
     }
     typed_args[count].name = NULL;
@@ -310,14 +310,14 @@ _XtVaOpenApplication(
     va_end (var_args);
 
     root =
-	XtVaAppCreateShell( NULL, application_class, 
+	XtVaAppCreateShell( NULL, application_class,
 			    widget_class, dpy,
 			    XtNscreen, (XtArgVal)DefaultScreenOfDisplay(dpy),
 			    XtNargc, (XtArgVal)saved_argc,
 			    XtNargv, (XtArgVal)argv_in_out,
 			    XtVaNestedList, (XtVarArgsList)typed_args,
 			    NULL );
-   
+
     if (app_context_return != NULL)
 	*app_context_return = app_con;
 
@@ -346,7 +346,7 @@ _XtVaAppInitialize(
 #if !((defined(SUNSHLIB) || defined(AIXSHLIB)) && defined(SHAREDCODE))
 
 /*
- * If not used as a shared library, we still need a front end to 
+ * If not used as a shared library, we still need a front end to
  * _XtVaOpenApplication and to _XtVaAppInitialize.
  */
 
@@ -364,7 +364,7 @@ XtVaOpenApplication(
 {
     va_list	var;
 
-    va_start(var, widget_class);    
+    va_start(var, widget_class);
     return _XtVaOpenApplication(app_context_return, (String)application_class,
 				options, num_options, argc_in_out, argv_in_out,
 				fallback_resources, widget_class, var);
@@ -383,7 +383,7 @@ XtVaAppInitialize(
 {
     va_list	var;
 
-    va_start(var, fallback_resources);    
+    va_start(var, fallback_resources);
     return _XtVaOpenApplication(app_context_return, (String)application_class,
 				options, num_options, argc_in_out, argv_in_out,
 				fallback_resources,

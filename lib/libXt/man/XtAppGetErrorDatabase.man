@@ -128,11 +128,11 @@
 XtAppGetErrorDatabase, XtAppGetErrorDatabaseText \- obtain error database
 .SH SYNTAX
 .HP
-XrmDatabase *XtAppGetErrorDatabase(\^XtAppContext \fIapp_context\fP); 
+XrmDatabase *XtAppGetErrorDatabase(\^XtAppContext \fIapp_context\fP);
 .HP
 void XtAppGetErrorDatabaseText(XtAppContext \fIapp_context\fP, char
 *\fIname\fP, char *\fItype\fP, char *\fIclass\fP, char *\fIdefault\fP, char
-*\fIbuffer_return\fP, int \fInbytes\fP, XrmDatabase \fIdatabase\fP); 
+*\fIbuffer_return\fP, int \fInbytes\fP, XrmDatabase \fIdatabase\fP);
 .SH ARGUMENTS
 .IP \fIapp_context\fP 1i
 Specifies the application context.
@@ -150,7 +150,7 @@ Specifies the default message to use\*(Dm.
 .br
 .ns
 .IP \fItype\fP 1i
-Specifies the name and type that are concatenated to form the resource name 
+Specifies the name and type that are concatenated to form the resource name
 of the error message.
 .IP \fInbytes\fP 1i
 Specifies the size of the buffer in bytes.

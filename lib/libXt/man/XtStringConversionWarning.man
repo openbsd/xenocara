@@ -128,7 +128,7 @@
 XtStringConversionWarning \- issue a conversion warning message
 .SH SYNTAX
 .HP
-void XtStringConversionWarning(String \fIsrc\fP, String \fIdst_type\fP); 
+void XtStringConversionWarning(String \fIsrc\fP, String \fIdst_type\fP);
 .SH ARGUMENTS
 .IP \fIsrc\fP 1i
 Specifies the string that could not be converted.

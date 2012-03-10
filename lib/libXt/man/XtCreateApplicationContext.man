@@ -128,13 +128,13 @@
 XtCreateApplicationContext, XtDestroyApplicationContext, XtWidgetToApplicationContext, XtToolkitInitialize \- create, destroy, and obtain an application context
 .SH SYNTAX
 .HP
-XtAppContext XtCreateApplicationContext(void); 
+XtAppContext XtCreateApplicationContext(void);
 .HP
 void XtDestroyApplicationContext(XtAppContext \fIapp_context\fP);
 .HP
-XtAppContext XtWidgetToApplicationContext(Widget \fIw\fP); 
+XtAppContext XtWidgetToApplicationContext(Widget \fIw\fP);
 .HP
-void XtToolkitInitialize(void); 
+void XtToolkitInitialize(void);
 .SH ARGUMENTS
 .IP \fIapp_context\fP 1i
 Specifies the application context.
@@ -150,7 +150,7 @@ Every application must have at least one application context.
 .LP
 The
 .ZN XtDestroyApplicationContext
-function destroys the specified application context as soon as it is safe 
+function destroys the specified application context as soon as it is safe
 to do so.
 If called from with an event dispatch (for example, a callback procedure),
 .ZN XtDestroyApplicationContext

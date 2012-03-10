@@ -130,11 +130,11 @@ XtAppAddConverter, XtAddConverter \- register resource converter
 .HP
 void XtAppAddConverter(XtAppContext \fIapp_context\fP, String \fIfrom_type\fP,
 String \fIto_type\fP, XtConverter \fIconverter\fP, XtConvertArgList
-\fIconvert_args\fP, Cardinal \fInum_args\fP); 
+\fIconvert_args\fP, Cardinal \fInum_args\fP);
 .HP
 void XtAddConverter(String \fIfrom_type\fP, String \fIto_type\fP, XtConverter
 \fIconverter\fP, XtConvertArgList \fIconvert_args\fP, Cardinal
-\fInum_args\fP); 
+\fInum_args\fP);
 .SH ARGUMENTS
 .IP \fIapp_context\fP 1i
 Specifies the application context.

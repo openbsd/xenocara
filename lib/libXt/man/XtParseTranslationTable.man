@@ -128,14 +128,14 @@
 XtParseTranslationTable, XtAugmentTranslations, XtOverrideTranslations, XtUninstallTranslations \- manage translation tables
 .SH SYNTAX
 .HP
-XtTranslations XtParseTranslationTable(String \fItable\fP); 
+XtTranslations XtParseTranslationTable(String \fItable\fP);
 .HP
 void XtAugmentTranslations(Widget \fIw\fP, XtTranslations \fItranslations\fP);
 .HP
 void XtOverrideTranslations(Widget \fIw\fP, XtTranslations
-\fItranslations\fP); 
+\fItranslations\fP);
 .HP
-void XtUninstallTranslations(Widget \fIw\fP); 
+void XtUninstallTranslations(Widget \fIw\fP);
 .SH ARGUMENTS
 .IP \fItable\fP 1i
 Specifies the translation table to compile.

@@ -128,7 +128,7 @@
 XtVaCreateArgsList \- dynamically allocate a varargs list
 .SH SYNTAX
 .HP
-XtVarArgsList XtVaCreateArgsList(XtPointer \fIunused\fP, ...\^); 
+XtVarArgsList XtVaCreateArgsList(XtPointer \fIunused\fP, ...\^);
 .SH ARGUMENTS
 .IP \fIunused\fP 1i
 Must be specified as NULL.

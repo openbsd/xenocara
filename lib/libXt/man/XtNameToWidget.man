@@ -128,9 +128,9 @@
 XtNameToWidget, XtWindowToWidget \- translating strings to widgets or widgets to windows
 .SH SYNTAX
 .HP
-Widget XtNameToWidget(Widget \fIreference\fP, String \fInames\fP); 
+Widget XtNameToWidget(Widget \fIreference\fP, String \fInames\fP);
 .HP
-Widget XtWindowToWidget(Display *\fIdisplay\fP, Window \fIwindow\fP); 
+Widget XtWindowToWidget(Display *\fIdisplay\fP, Window \fIwindow\fP);
 .SH ARGUMENTS
 .ds Di \ on which the window is defined
 .IP \fIdisplay\fP 1i
@@ -154,9 +154,9 @@ If it cannot find the specified widget,
 .ZN XtNameToWidget
 returns NULL.
 .LP
-Note that the names argument contains the name of a widget with respect to the 
+Note that the names argument contains the name of a widget with respect to the
 specified reference widget and can contain more than one widget name
-(separated by periods) for widgets that are not direct children 
+(separated by periods) for widgets that are not direct children
 of the specified reference widget.
 .LP
 If more than one child of the reference widget matches the name,

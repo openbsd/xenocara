@@ -130,7 +130,7 @@ XtGetApplicationResources, XtVaGetApplicationResources \- obtain application res
 .HP
 void XtGetApplicationResources(Widget \fIw\fP, XtPointer \fIbase\fP,
 XtResourceList \fIresources\fP, Cardinal \fInum_resources\fP, ArgList
-\fIargs\fP, Cardinal \fInum_args\fP); 
+\fIargs\fP, Cardinal \fInum_args\fP);
 .HP
 void XtVaGetApplicationResources(Widget \fIw\fP, XtPointer \fIbase\fP,
 XtResourceList \fIresources\fP, Cardinal \fInum_resources\fP, ...\^);
@@ -170,7 +170,7 @@ num_args must be zero.
 However, if num_args is zero,
 the argument list is not referenced.
 The portable way to specify application resources is to declare them
-as members of a structure and pass the address of the structure 
+as members of a structure and pass the address of the structure
 as the base argument.
 .SH "SEE ALSO"
 .br

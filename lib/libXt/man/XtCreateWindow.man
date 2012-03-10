@@ -130,7 +130,7 @@ XtCreateWindow \- window creation convenience function
 .HP
 void XtCreateWindow(Widget \fIw\fP, unsigned int \fIwindow_class\fP, Visual
 *\fIvisual\fP, XtValueMask \fIvalue_mask\fP, XSetWindowAttributes
-*\fIattributes\fP); 
+*\fIattributes\fP);
 .SH ARGUMENTS
 .IP \fIattributes\fP 1i
 Specifies the window attributes to use in the
@@ -161,7 +161,7 @@ Then, it assigns the created window to the widget's window field.
 .LP
 .ZN XtCreateWindow
 evaluates the following fields of the
-.ZN Core 
+.ZN Core
 widget structure:
 .IP \(bu 5
 depth

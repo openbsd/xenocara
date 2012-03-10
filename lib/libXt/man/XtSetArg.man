@@ -128,10 +128,10 @@
 XtSetArg, XtMergeArgLists \- set and merge ArgLists
 .SH SYNTAX
 .HP
-int XtSetArg(Arg \fIarg\fP, String \fIname\fP, XtArgVal \fIvalue\fP); 
+int XtSetArg(Arg \fIarg\fP, String \fIname\fP, XtArgVal \fIvalue\fP);
 .HP
 ArgList XtMergeArgLists(ArgList \fIargs1\fP, Cardinal \fInum_args1\fP, ArgList
-\fIargs2\fP, Cardinal \fInum_args2\fP); 
+\fIargs2\fP, Cardinal \fInum_args2\fP);
 .SH ARGUMENTS
 .IP \fIarg\fP 1i
 Specifies the name-value pair to set.
@@ -139,7 +139,7 @@ Specifies the name-value pair to set.
 Specifies the first
 .ZN ArgList .
 .IP \fIargs2\fP 1i
-Specifies the second 
+Specifies the second
 .ZN ArgList .
 .IP \fInum_args1\fP 1i
 Specifies the number of arguments in the first argument list.
@@ -149,7 +149,7 @@ Specifies the number of arguments in the second argument list.
 Specifies the name of the resource.
 .IP \fIvalue\fP 1i
 Specifies the value of the resource if it will fit in an
-.ZN XtArgVal 
+.ZN XtArgVal
 or the address.
 .SH DESCRIPTION
 The

@@ -129,9 +129,9 @@ XtAppAddWorkProc, XtRemoveWorkProc \- Add and remove background processing proce
 .SH SYNTAX
 .HP
 XtWorkProcId XtAppAddWorkProc(XtAppContext \fIapp_context\fP, XtWorkProc
-\fIproc\fP, XtPointer \fIclient_data\fP); 
+\fIproc\fP, XtPointer \fIclient_data\fP);
 .HP
-void XtRemoveWorkProc(XtWorkProcId \fIid\fP); 
+void XtRemoveWorkProc(XtWorkProcId \fIid\fP);
 .SH ARGUMENTS
 .ds Co that identifies the application
 .IP \fIapp_context\fP 1i

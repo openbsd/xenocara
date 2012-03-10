@@ -130,11 +130,11 @@ XtGetSubresources, XtVaGetSubresources \- obtain subresources
 .HP
 void XtGetSubresources(Widget \fIw\fP, XtPointer \fIbase\fP, String
 \fIname\fP, String \fIclass\fP, XtResourceList \fIresources\fP, Cardinal
-\fInum_resources\fP, ArgList \fIargs\fP, Cardinal \fInum_args\fP); 
+\fInum_resources\fP, ArgList \fIargs\fP, Cardinal \fInum_args\fP);
 .HP
 void XtVaGetSubresources(Widget \fIw\fP, XtPointer \fIbase\fP, String
 \fIname\fP, String \fIclass\fP, XtResourceList \fIresources\fP, Cardinal
-\fInum_resources\fP); 
+\fInum_resources\fP);
 .SH ARGUMENTS
 .ds Al to override resources obtained from the resource database
 .IP \fIargs\fP 1i

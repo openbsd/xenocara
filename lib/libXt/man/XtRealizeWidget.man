@@ -128,18 +128,18 @@
 XtRealizeWidget, XtIsRealized, XtUnrealizeWidget \- realize and unrealize widgets
 .SH SYNTAX
 .HP
-void XtRealizeWidget(Widget \fIw\fP); 
+void XtRealizeWidget(Widget \fIw\fP);
 .HP
-Boolean XtIsRealized(Widget \fIw\fP); 
+Boolean XtIsRealized(Widget \fIw\fP);
 .HP
-void XtUnrealizeWidget(Widget \fIw\fP); 
+void XtUnrealizeWidget(Widget \fIw\fP);
 .SH ARGUMENTS
 .IP \fIw\fP 1i
 Specifies the widget.
 .SH DESCRIPTION
 If the widget is already realized,
 .ZN XtRealizeWidget
-simply returns. 
+simply returns.
 Otherwise, it performs the following:
 .IP \(bu 5
 Binds all action names in the widget's
@@ -151,13 +151,13 @@ of each composite widget that has one or more managed children.
 .IP \(bu 5
 Constructs an
 .ZN XSetWindowAttributes
-structure filled in with information derived from the 
-.ZN Core 
+structure filled in with information derived from the
+.ZN Core
 widget fields and calls the realize procedure for the widget,
 which adds any widget-specific attributes and creates the X window.
 .IP \(bu 5
 If the widget is
-not a subclass of 
+not a subclass of
 .ZN compositeWidgetClass ,
 .ZN XtRealizeWidget
 returns; otherwise, it continues and performs the following:
@@ -168,24 +168,24 @@ managed children and calls the realize procedures.
 Primitive widgets that instantiate children are responsible for realizing
 those children themselves.
 .IP \- 5
-Maps all of the managed children windows that have mapped_when_managed 
+Maps all of the managed children windows that have mapped_when_managed
 .ZN True .
-(If a widget is managed but mapped_when_managed is 
-.ZN False , 
+(If a widget is managed but mapped_when_managed is
+.ZN False ,
 the widget is allocated visual space but is not displayed.
 Some people seem to like this to indicate certain states.)
 .RE
 .LP
 If the widget is a top-level shell widget (that is, it has no parent), and
-mapped_when_managed is 
-.ZN True , 
+mapped_when_managed is
+.ZN True ,
 .ZN XtRealizeWidget
 maps the widget window.
 .LP
 The
 .ZN XtIsRealized
-function returns 
-.ZN True 
+function returns
+.ZN True
 if the widget has been realized,
 that is, if the widget has a nonzero X window ID.
 .LP
@@ -201,7 +201,7 @@ To recreate the windows at a later time,
 call
 .ZN XtRealizeWidget
 again.
-If the widget was managed, 
+If the widget was managed,
 it will be unmanaged automatically before its window is freed.
 .SH "SEE ALSO"
 XtManageChildren(__libmansuffix__)

@@ -129,7 +129,7 @@ XtTranslateCoords \- translate widget coordinates
 .SH SYNTAX
 .HP
 void XtTranslateCoords(Widget \fIw\fP, Position \fIx\fP, \fIy\fP, Position
-*\fIrootx_return\fP, *\fIrooty_return\fP); 
+*\fIrootx_return\fP, *\fIrooty_return\fP);
 .SH ARGUMENTS
 .IP \fIrootx_return\fP 1i
 .br
@@ -148,7 +148,7 @@ Specifies the widget.
 While
 .ZN XtTranslateCoords
 is similar to the Xlib
-.ZN XTranslateCoordinates 
+.ZN XTranslateCoordinates
 function, it does not generate a server request because all the required
 information already is in the widget's data structures.
 .SH "SEE ALSO"

@@ -129,7 +129,7 @@ XtAppAddActions \- register an action table
 .SH SYNTAX
 .HP
 void XtAppAddActions(XtAppContext \fIapp_context\fP, XtActionList
-\fIactions\fP, Cardinal \fInum_actions\fP); 
+\fIactions\fP, Cardinal \fInum_actions\fP);
 .SH ARGUMENTS
 .IP \fIapp_context\fP 1i
 Specifies the application context.

@@ -128,25 +128,25 @@
 XtMapWidget, XtSetMappedWhenManaged, XtUnmapWidget \- map and unmap widgets
 .SH SYNTAX
 .HP
-int XtMapWidget(Widget \fIw\fP\^); 
+int XtMapWidget(Widget \fIw\fP\^);
 .HP
-void XtSetMappedWhenManaged(Widget \fIw\fP, Boolean \fImap_when_managed\fP); 
+void XtSetMappedWhenManaged(Widget \fIw\fP, Boolean \fImap_when_managed\fP);
 .HP
-int XtUnmapWidget(Widget \fIw\fP\^); 
+int XtUnmapWidget(Widget \fIw\fP\^);
 .SH ARGUMENTS
 .IP \fImap_when_managed\fP 1i
-Specifies a Boolean value that indicates the new value of the map_when_managed 
+Specifies a Boolean value that indicates the new value of the map_when_managed
 field.
 .IP \fIw\fP 1i
 Specifies the widget.
 .SH DESCRIPTION
 If the widget is realized and managed
-and if the new value of map_when_managed is 
+and if the new value of map_when_managed is
 .ZN True ,
 .ZN XtSetMappedWhenManaged
 maps the window.
 If the widget is realized and managed
-and if the new value of map_when_managed is 
+and if the new value of map_when_managed is
 .ZN False ,
 it unmaps the window.
 .ZN XtSetMappedWhenManaged

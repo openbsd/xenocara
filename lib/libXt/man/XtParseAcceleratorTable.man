@@ -128,11 +128,11 @@
 XtParseAcceleratorTable, XtInstallAccelerators, XtInstallAllAccelerators \- managing accelerator tables
 .SH SYNTAX
 .HP
-XtAccelerators XtParseAcceleratorTable(String \fIsource\fP); 
+XtAccelerators XtParseAcceleratorTable(String \fIsource\fP);
 .HP
-void XtInstallAccelerators(Widget \fIdestination\fP, Widget \fIsource\fP); 
+void XtInstallAccelerators(Widget \fIdestination\fP, Widget \fIsource\fP);
 .HP
-void XtInstallAllAccelerators(Widget \fIdestination\fP, Widget \fIsource\fP); 
+void XtInstallAllAccelerators(Widget \fIdestination\fP, Widget \fIsource\fP);
 .SH ARGUMENTS
 .ds So to compile
 .IP \fIsource\fP 1i
@@ -151,18 +151,18 @@ The
 .ZN XtInstallAccelerators
 function installs the accelerators from source onto destination
 by augmenting the destination translations with the source accelerators.
-If the source display_accelerator method is non-NULL, 
+If the source display_accelerator method is non-NULL,
 .ZN XtInstallAccelerators
-calls it with the source widget and a string representation 
+calls it with the source widget and a string representation
 of the accelerator table,
-which indicates that its accelerators have been installed 
+which indicates that its accelerators have been installed
 and that it should display them appropriately.
 The string representation of the accelerator table is its
 canonical translation table representation.
 .LP
 The
 .ZN XtInstallAllAccelerators
-function recursively descends the widget tree rooted at source 
+function recursively descends the widget tree rooted at source
 and installs the accelerators of each widget encountered onto destination.
 A common use os to call
 .ZN XtInstallAllAccelerators

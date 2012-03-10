@@ -129,7 +129,7 @@ XtSetLanguageProc \- set the language procedure
 .SH SYNTAX
 .HP
 Widget XtSetLanguageProc(XtAppContext \fIapp_context\fP, XtLanguageProc
-\fIproc\fP, XtPointer \fIclient_data\fP); 
+\fIproc\fP, XtPointer \fIclient_data\fP);
 .SH ARGUMENTS
 .IP \fIapp_context\fP 1i
 Specifies the application context in which the language procedure
@@ -148,7 +148,7 @@ sets the language procedure that will be called from
 for all subsequent Displays initialized in the specified application
 context. If \fIapp_context\fP is NULL, the specified language procedure
 is registered in all application contexts created by the calling process,
-including any future application contexts that may be created. If 
+including any future application contexts that may be created. If
 \fIproc\fP is NULL a default language procedure is registered.
 .ZN XtSetLanguageProc
 returns the previously registered language procedure. If a language
@@ -167,7 +167,7 @@ language ). If an error is encountered a warning message is issued with
 .ZN XtWarning .
 .IP \(bu 5
 Calls
-.ZN XSupportsLocale 
+.ZN XSupportsLocale
 to verify that the current locale is supported. If the locale is not
 supported, a warning message is issued with
 .ZN XtWarning
@@ -186,7 +186,7 @@ NULL ).
 A client wishing to use this mechanism to establish locale can do so
 by calling
 .ZN XtSetLanguageProc
-prior to 
+prior to
 .ZN XtDisplayInitialize.
 .SH "SEE ALSO"
 .br

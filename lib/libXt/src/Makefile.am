@@ -77,16 +77,16 @@ libXt_la_LIBADD = @XT_LIBS@
 libXt_la_LDFLAGS = -version-number 6:0:0 -no-undefined
 
 #
-# The util directory contains a program that builds some of the sources. 
+# The util directory contains a program that builds some of the sources.
 # The input to this program is given in files. Unfortunately those input
 # files refers to things like
-# 
+#
 # 	util/foo
-# 
+#
 # so the generating program must be run from the top directory.
-# 
+#
 
-BUILT_SOURCE = StringDefs.c 
+BUILT_SOURCE = StringDefs.c
 BUILT_HEADER = $(top_builddir)/include/X11/StringDefs.h $(top_builddir)/include/X11/Shell.h
 BUILT_FILES = $(BUILT_SOURCE) $(BUILT_HEADER)
 

@@ -1,26 +1,26 @@
 .\" Copyright (c) 1993, 1994  X Consortium
-.\" 
+.\"
 .\" Permission is hereby granted, free of charge, to any person obtaining a
-.\" copy of this software and associated documentation files (the "Software"), 
-.\" to deal in the Software without restriction, including without limitation 
-.\" the rights to use, copy, modify, merge, publish, distribute, sublicense, 
-.\" and/or sell copies of the Software, and to permit persons to whom the 
+.\" copy of this software and associated documentation files (the "Software"),
+.\" to deal in the Software without restriction, including without limitation
+.\" the rights to use, copy, modify, merge, publish, distribute, sublicense,
+.\" and/or sell copies of the Software, and to permit persons to whom the
 .\" Software furnished to do so, subject to the following conditions:
-.\" 
+.\"
 .\" The above copyright notice and this permission notice shall be included in
 .\" all copies or substantial portions of the Software.
-.\" 
+.\"
 .\" THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 .\" IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-.\" FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL 
-.\" THE X CONSORTIUM BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, 
-.\" WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF 
-.\" OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE 
+.\" FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
+.\" THE X CONSORTIUM BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+.\" WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF
+.\" OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 .\" SOFTWARE.
-.\" 
-.\" Except as contained in this notice, the name of the X Consortium shall not 
-.\" be used in advertising or otherwise to promote the sale, use or other 
-.\" dealing in this Software without prior written authorization from the 
+.\"
+.\" Except as contained in this notice, the name of the X Consortium shall not
+.\" be used in advertising or otherwise to promote the sale, use or other
+.\" dealing in this Software without prior written authorization from the
 .\" X Consortium.
 .\"
 .ds tk X Toolkit
@@ -127,9 +127,9 @@
 XtLastEventProcessed, XtLastTimestampProcessed \- last event, last timestamp processed
 .SH SYNTAX
 .HP
-XEvent* XtLastEventProcessed(Display* \fIdisplay\fP); 
+XEvent* XtLastEventProcessed(Display* \fIdisplay\fP);
 .HP
-Time XtLastTimestampProcessed(Display* \fIdisplay\fP); 
+Time XtLastTimestampProcessed(Display* \fIdisplay\fP);
 .SH ARGUMENTS
 .IP \fIdisplay\fP 1i
 Specifies the open display connection.
@@ -140,7 +140,7 @@ returns the last event passed to
 for the specified display and NULL if there has been no event. The
 client must not modify the contents of the returned event.
 .LP
-.ZN XtLastTimestampProcessed 
+.ZN XtLastTimestampProcessed
 returns the timestamp of the last
 .ZN KeyPress ,
 .ZN KeyRelease ,
@@ -153,7 +153,7 @@ returns the timestamp of the last
 or
 .ZN SelectionClear
 event that has been passed to
-.ZN XtDispatchEvent 
+.ZN XtDispatchEvent
 for the specified display and zero if there has been no such event.
 .SH "SEE ALSO"
 .br

@@ -128,7 +128,7 @@
 XtBuildEventMask \- retrieve a widget's event mask
 .SH SYNTAX
 .HP
-EventMask XtBuildEventMask(Widget \fIw\fP); 
+EventMask XtBuildEventMask(Widget \fIw\fP);
 .SH ARGUMENTS
 .IP \fIw\fP 1i
 Specifies the widget.
@@ -140,7 +140,7 @@ of all event masks for event handlers registered on the widget with
 .ZN XtAddEventHandler
 and all event translations, including accelerators,
 installed on the widget.
-This is the same event mask stored into the 
+This is the same event mask stored into the
 .ZN XSetWindowAttributes
 structure by
 .ZN XtRealizeWidget

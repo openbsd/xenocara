@@ -1,5 +1,5 @@
 .\" Copyright (c) 1993, 1994  X Consortium
-.\" 
+.\"
 .\" Permission is hereby granted, free of charge, to any person obtaining
 .\" a copy of this software and associated documentation files (the
 .\" "Software"), to deal in the Software without restriction, including
@@ -7,10 +7,10 @@
 .\" distribute, sublicense, and/or sell copies of the Software, and to
 .\" permit persons to whom the Software furnished to do so, subject to
 .\" the following conditions:
-.\" 
+.\"
 .\" The above copyright notice and this permission notice shall be included
 .\" in all copies or substantial portions of the Software.
-.\" 
+.\"
 .\" THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
 .\" OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
 .\" MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
@@ -18,7 +18,7 @@
 .\" OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
 .\" ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 .\" OTHER DEALINGS IN THE SOFTWARE.
-.\" 
+.\"
 .\" Except as contained in this notice, the name of the X Consortium shall
 .\" not be used in advertising or otherwise to promote the sale, use or
 .\" other dealing in this Software without prior written authorization
@@ -130,11 +130,11 @@ XtGetSelectionValue, XtGetSelectionValues \- obtain selection values
 .HP
 void XtGetSelectionValue(Widget \fIw\fP, Atom \fIselection\fP, Atom
 \fItarget\fP, XtSelectionCallbackProc \fIcallback\fP, XtPointer
-\fIclient_data\fP, Time \fItime\fP); 
+\fIclient_data\fP, Time \fItime\fP);
 .HP
 void XtGetSelectionValues(Widget \fIw\fP, Atom \fIselection\fP, Atom
 *\fItargets\fP, int \fIcount\fP, XtSelectionCallbackProc \fIcallback\fP,
-XtPointer \fIclient_data\fP, Time \fItime\fP); 
+XtPointer \fIclient_data\fP, Time \fItime\fP);
 .SH ARGUMENTS
 .ds Cb \ that is to be called when the selection value has been obtained
 .IP \fIcallback\fP 1i
@@ -163,20 +163,20 @@ Specifies the widget \*(Wi.
 .SH DESCRIPTION
 The
 .ZN XtGetSelectionValue
-function requests the value of the selection that has been converted to 
-the target type. 
-The specified callback will be called some time after 
-.ZN XtGetSelectionValue 
+function requests the value of the selection that has been converted to
+the target type.
+The specified callback will be called some time after
+.ZN XtGetSelectionValue
 is called;
-in fact, it may be called before or after 
-.ZN XtGetSelectionValue 
+in fact, it may be called before or after
+.ZN XtGetSelectionValue
 returns.
 .LP
 The
 .ZN XtGetSelectionValues
 function is similar to
-.ZN XtGetSelectionValue 
-except that it takes a list of target types and a list of client data 
+.ZN XtGetSelectionValue
+except that it takes a list of target types and a list of client data
 and obtains the current value of the selection converted to each of the targets.
 The effect is as if each target were specified in a separate call to
 .ZN XtGetSelectionValue .
