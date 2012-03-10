@@ -1,3 +1,20 @@
+commit 29d5b553b30755a25300c30b67d39b37c9a76466
+Author: Ian Romanick <ian.d.romanick@intel.com>
+Date:   Mon Nov 28 10:53:17 2011 -0800
+
+    glproto: Document GLX_ARB_create_context and GLX_ARB_create_context_profile protocol
+    
+    Also add the struct names (in addition to the typedef names).  Most of
+    the other protocol structures have this, but some lack it.
+    
+    v2: Add a few missing Req suffixes.  Rename n0, n1, and n2 fields of
+    GLXSetClientInfoARB and GLXSetClientInfo2ARB to numVersions,
+    numGLExtensionBytes and numGLXExtensionBytes, respectively.  Since the
+    names of some structure fields change, bump the version to 1.4.15.
+    
+    Signed-off-by: Ian Romanick <ian.d.romanick@intel.com>
+    Reviewed-by: Dave Airlie <airlied@redhat.com>
+
 commit 6d7e398150dde1c15b7f62f485cb33bad8f4d5c6
 Author: Jesse Barnes <jbarnes@virtuousgeek.org>
 Date:   Thu May 5 13:10:39 2011 -0700
