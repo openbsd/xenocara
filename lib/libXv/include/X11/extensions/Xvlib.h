@@ -4,13 +4,13 @@ and the Massachusetts Institute of Technology, Cambridge, Massachusetts.
 
                         All Rights Reserved
 
-Permission to use, copy, modify, and distribute this software and its 
-documentation for any purpose and without fee is hereby granted, 
+Permission to use, copy, modify, and distribute this software and its
+documentation for any purpose and without fee is hereby granted,
 provided that the above copyright notice appear in all copies and that
-both that copyright notice and this permission notice appear in 
+both that copyright notice and this permission notice appear in
 supporting documentation, and that the names of Digital or MIT not be
 used in advertising or publicity pertaining to distribution of the
-software without specific, written prior permission.  
+software without specific, written prior permission.
 
 DIGITAL DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE, INCLUDING
 ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS, IN NO EVENT SHALL
@@ -25,11 +25,11 @@ SOFTWARE.
 #ifndef XVLIB_H
 #define XVLIB_H
 /*
-** File: 
+** File:
 **
 **   Xvlib.h --- Xv library public header file
 **
-** Author: 
+** Author:
 **
 **   David Carver (Digital Workstation Engineering/Project Athena)
 **
@@ -132,14 +132,14 @@ typedef struct {
 
   /* for RGB formats only */
   int depth;
-  unsigned int red_mask;       
-  unsigned int green_mask;   
-  unsigned int blue_mask;   
+  unsigned int red_mask;
+  unsigned int green_mask;
+  unsigned int blue_mask;
 
   /* for YUV formats only */
   unsigned int y_sample_bits;
   unsigned int u_sample_bits;
-  unsigned int v_sample_bits;   
+  unsigned int v_sample_bits;
   unsigned int horz_y_period;
   unsigned int horz_u_period;
   unsigned int horz_v_period;
@@ -148,7 +148,7 @@ typedef struct {
   unsigned int vert_v_period;
   char component_order[32];    /* eg. UYVY */
   int scanline_order;          /* XvTopToBottom, XvBottomToTop */
-} XvImageFormatValues; 
+} XvImageFormatValues;
 
 typedef struct {
   int id;
@@ -158,7 +158,7 @@ typedef struct {
   int *pitches;               /* bytes */
   int *offsets;               /* bytes */
   char *data;
-  XPointer obdata;     
+  XPointer obdata;
 } XvImage;
 
 _XFUNCPROTOBEGIN
@@ -168,7 +168,7 @@ extern int XvQueryExtension(
   unsigned int*            /* p_version */,
   unsigned int*            /* p_revision */,
   unsigned int*            /* p_requestBase */,
-  unsigned int*            /* p_eventBase */, 
+  unsigned int*            /* p_eventBase */,
   unsigned int*            /* p_errorBase */
 );
 
@@ -191,11 +191,11 @@ extern int XvPutVideo(
   XvPortID                 /* port */,
   Drawable                 /* d */,
   GC                       /* gc */,
-  int                      /* vx */, 
+  int                      /* vx */,
   int                      /* vy */,
-  unsigned int             /* vw */, 
+  unsigned int             /* vw */,
   unsigned int             /* vh */,
-  int                      /* dx */, 
+  int                      /* dx */,
   int                      /* dy */,
   unsigned int             /* dw */,
   unsigned int             /* dh */
@@ -206,11 +206,11 @@ extern int XvPutStill(
   XvPortID                 /* port */,
   Drawable                 /* d */,
   GC                       /* gc */,
-  int                      /* vx */, 
+  int                      /* vx */,
   int                      /* vy */,
-  unsigned int             /* vw */, 
+  unsigned int             /* vw */,
   unsigned int             /* vh */,
-  int                      /* dx */, 
+  int                      /* dx */,
   int                      /* dy */,
   unsigned int             /* dw */,
   unsigned int             /* dh */
@@ -221,11 +221,11 @@ extern int XvGetVideo(
   XvPortID                 /* port */,
   Drawable                 /* d */,
   GC                       /* gc */,
-  int                      /* vx */, 
+  int                      /* vx */,
   int                      /* vy */,
-  unsigned int             /* vw */, 
+  unsigned int             /* vw */,
   unsigned int             /* vh */,
-  int                      /* dx */, 
+  int                      /* dx */,
   int                      /* dy */,
   unsigned int             /* dw */,
   unsigned int             /* dh */
@@ -236,11 +236,11 @@ extern int XvGetStill(
   XvPortID                 /* port */,
   Drawable                 /* d */,
   GC                       /* gc */,
-  int                      /* vx */, 
+  int                      /* vx */,
   int                      /* vy */,
-  unsigned int             /* vw */, 
+  unsigned int             /* vw */,
   unsigned int             /* vh */,
-  int                      /* dx */, 
+  int                      /* dx */,
   int                      /* dy */,
   unsigned int             /* dw */,
   unsigned int             /* dh */
@@ -294,11 +294,11 @@ extern int XvQueryBestSize(
   Display*                /* display */,
   XvPortID                /* port */,
   Bool                    /* motion */,
-  unsigned int            /* vid_w */, 
+  unsigned int            /* vid_w */,
   unsigned int            /* vid_h */,
-  unsigned int            /* drw_w */, 
+  unsigned int            /* drw_w */,
   unsigned int            /* drw_h */,
-  unsigned int*           /* p_actual_width */, 
+  unsigned int*           /* p_actual_width */,
   unsigned int*           /* p_actual_width */
 );
 
@@ -329,8 +329,8 @@ extern XvImage * XvCreateImage (
    XvPortID port,
    int id,
    char *data,
-   int width, 
-   int height 
+   int width,
+   int height
 );
 
 extern int XvPutImage (
@@ -343,7 +343,7 @@ extern int XvPutImage (
    int src_y,
    unsigned int src_w,
    unsigned int src_h,
-   int dest_x, 
+   int dest_x,
    int dest_y,
    unsigned int dest_w,
    unsigned int dest_h
@@ -359,7 +359,7 @@ extern int XvShmPutImage (
    int src_y,
    unsigned int src_w,
    unsigned int src_h,
-   int dest_x, 
+   int dest_x,
    int dest_y,
    unsigned int dest_w,
    unsigned int dest_h,
@@ -371,7 +371,7 @@ extern XvImage * XvShmCreateImage (
    XvPortID port,
    int id,
    char* data,
-   int width, 
+   int width,
    int height,
    XShmSegmentInfo *shminfo
 );

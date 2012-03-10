@@ -52,13 +52,13 @@ define the width and height, in pixels, of the drawable region.
 .\"
 .PN XvGetStill
 captures a single frame of video from a drawable.  The
-position and size of the destination (video) rectangle is specified by 
+position and size of the destination (video) rectangle is specified by
 .IR vx ,
 .IR vy ,
 .IR vw ,
 and
 .IR vh .
-The position and size of the source (drawable) rectangle is specified by 
+The position and size of the source (drawable) rectangle is specified by
 .IR dx ,
 .IR dy ,
 .IR dw ,

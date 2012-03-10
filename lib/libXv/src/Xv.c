@@ -4,13 +4,13 @@ and the Massachusetts Institute of Technology, Cambridge, Massachusetts.
 
                         All Rights Reserved
 
-Permission to use, copy, modify, and distribute this software and its 
-documentation for any purpose and without fee is hereby granted, 
+Permission to use, copy, modify, and distribute this software and its
+documentation for any purpose and without fee is hereby granted,
 provided that the above copyright notice appear in all copies and that
-both that copyright notice and this permission notice appear in 
+both that copyright notice and this permission notice appear in
 supporting documentation, and that the names of Digital or MIT not be
 used in advertising or publicity pertaining to distribution of the
-software without specific, written prior permission.  
+software without specific, written prior permission.
 
 DIGITAL DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE, INCLUDING
 ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS, IN NO EVENT SHALL
@@ -22,11 +22,11 @@ SOFTWARE.
 
 ******************************************************************/
 /*
-** File: 
+** File:
 **
 **   Xv.c --- Xv library extension module.
 **
-** Author: 
+** Author:
 **
 **   David Carver (Digital Workstation Engineering/Project Athena)
 **
@@ -57,7 +57,7 @@ SOFTWARE.
 
 static XExtensionInfo _xv_info_data;
 static XExtensionInfo *xv_info = &_xv_info_data;
-static char *xv_extension_name = XvName;
+static const char *xv_extension_name = XvName;
 
 #define XvCheckExtension(dpy, i, val) \
   XextCheckExtension(dpy, i, xv_extension_name, val)
@@ -82,7 +82,7 @@ static XExtensionHooks xv_extension_hooks = {
 };
 
 
-static char *xv_error_list[] = 
+static const char *xv_error_list[] =
 {
    "BadPort",	    /* XvBadPort     */
    "BadEncoding",   /* XvBadEncoding */
@@ -92,11 +92,11 @@ static char *xv_error_list[] =
 static XEXT_GENERATE_CLOSE_DISPLAY (xv_close_display, xv_info)
 
 
-static XEXT_GENERATE_FIND_DISPLAY (xv_find_display, xv_info, 
-                                   xv_extension_name, 
+static XEXT_GENERATE_FIND_DISPLAY (xv_find_display, xv_info,
+                                   xv_extension_name,
                                    &xv_extension_hooks,
 				   XvNumEvents, NULL)
-     
+
 
 static XEXT_GENERATE_ERROR_STRING (xv_error_string, xv_extension_name,
                                    XvNumErrors, xv_error_list)
@@ -154,14 +154,14 @@ XvQueryAdaptors(
   XvAdaptorInfo *pas, *pa;
   XvFormat *pfs, *pf;
   char *buffer;
-  union 
+  union
     {
       char *buffer;
       char *string;
       xvAdaptorInfo *pa;
       xvFormat *pf;
     } u;
-  
+
   XvCheckExtension(dpy, info, XvBadExtension);
 
   LockDisplay(dpy);
@@ -254,7 +254,7 @@ XvQueryAdaptors(
 	  pf->depth = u.pf->depth;
 	  pf->visual_id = u.pf->visual;
 	  pf++;
-	  
+
 	  u.buffer += (sz_xvFormat + 3) & ~3;
       }
 
@@ -296,7 +296,7 @@ XvFreeAdaptorInfo(XvAdaptorInfo *pAdaptors)
 	{
 	  Xfree(pa->formats);
 	}
-    } 
+    }
 
   Xfree(pAdaptors);
 }
@@ -315,13 +315,13 @@ XvQueryEncodings(
   char *name;
   XvEncodingInfo *pes, *pe;
   char *buffer;
-  union 
+  union
     {
       char *buffer;
       char *string;
       xvEncodingInfo *pe;
     } u;
-  
+
   XvCheckExtension(dpy, info, XvBadExtension);
 
   LockDisplay(dpy);
@@ -427,7 +427,7 @@ XvPutVideo(
      XvPortID port,
      Drawable d,
      GC gc,
-     int vx, int vy, 
+     int vx, int vy,
      unsigned int vw, unsigned int vh,
      int dx, int dy,
      unsigned int dw, unsigned int dh
@@ -438,7 +438,7 @@ XvPutVideo(
   XvCheckExtension(dpy, info, XvBadExtension);
 
   LockDisplay(dpy);
-  
+
   FlushGC(dpy, gc);
 
   XvGetReq(PutVideo, req);
@@ -467,7 +467,7 @@ XvPutStill(
      XvPortID port,
      Drawable d,
      GC gc,
-     int vx, int vy, 
+     int vx, int vy,
      unsigned int vw, unsigned int vh,
      int dx, int dy,
      unsigned int dw, unsigned int dh
@@ -506,7 +506,7 @@ XvGetVideo(
      XvPortID port,
      Drawable d,
      GC gc,
-     int vx, int vy, 
+     int vx, int vy,
      unsigned int vw, unsigned int vh,
      int dx, int dy,
      unsigned int dw, unsigned int dh
@@ -545,7 +545,7 @@ XvGetStill(
      XvPortID port,
      Drawable d,
      GC gc,
-     int vx, int vy, 
+     int vx, int vy,
      unsigned int vw, unsigned int vh,
      int dx, int dy,
      unsigned int dw, unsigned int dh
@@ -620,7 +620,7 @@ XvGrabPort(
   req->port = port;
   req->time = time;
 
-  if (_XReply (dpy, (xReply *) &rep, 0, xTrue) == 0) 
+  if (_XReply (dpy, (xReply *) &rep, 0, xTrue) == 0)
     rep.result = GrabSuccess;
 
   result = rep.result;
@@ -755,7 +755,7 @@ XvGetPortAttribute (
   }
 
   *p_value = rep.value;
-  
+
   UnlockDisplay(dpy);
   SyncHandle();
 
@@ -767,11 +767,11 @@ XvQueryBestSize(
      Display *dpy,
      XvPortID port,
      Bool motion,
-     unsigned int vid_w, 
+     unsigned int vid_w,
      unsigned int vid_h,
-     unsigned int drw_w, 
+     unsigned int drw_w,
      unsigned int drw_h,
-     unsigned int *p_actual_width, 
+     unsigned int *p_actual_width,
      unsigned int *p_actual_height
 )
 {
@@ -809,7 +809,7 @@ XvQueryBestSize(
 }
 
 
-XvAttribute* 
+XvAttribute*
 XvQueryPortAttributes(Display *dpy, XvPortID port, int *num)
 {
   XExtDisplayInfo *info = xv_find_display(dpy);
@@ -841,12 +841,12 @@ XvQueryPortAttributes(Display *dpy, XvPortID port, int *num)
 	  char* marker = (char*)(&ret[rep.num_attributes]);
 	  xvAttributeInfo Info;
 	  int i;
-	
+
 	  for(i = 0; i < rep.num_attributes; i++) {
              _XRead(dpy, (char*)(&Info), sz_xvAttributeInfo);
-	      ret[i].flags = (int)Info.flags;	      
-	      ret[i].min_value = Info.min;	      
-	      ret[i].max_value = Info.max;	      
+	      ret[i].flags = (int)Info.flags;
+	      ret[i].min_value = Info.min;
+	      ret[i].max_value = Info.max;
 	      ret[i].name = marker;
 	      _XRead(dpy, marker, Info.size);
 	      marker += Info.size;
@@ -895,22 +895,22 @@ XvImageFormatValues * XvListImageFormats (
       if((ret = Xmalloc(size))) {
 	  xvImageFormatInfo Info;
 	  int i;
-	
+
 	  for(i = 0; i < rep.num_formats; i++) {
               _XRead(dpy, (char*)(&Info), sz_xvImageFormatInfo);
-	      ret[i].id = Info.id;	      
-	      ret[i].type = Info.type;	      
-	      ret[i].byte_order = Info.byte_order;	      
+	      ret[i].id = Info.id;
+	      ret[i].type = Info.type;
+	      ret[i].byte_order = Info.byte_order;
 	      memcpy(&(ret[i].guid[0]), &(Info.guid[0]), 16);
-	      ret[i].bits_per_pixel = Info.bpp;	      
-  	      ret[i].format = Info.format;	      
-   	      ret[i].num_planes = Info.num_planes;	      
-    	      ret[i].depth = Info.depth;	      
-    	      ret[i].red_mask = Info.red_mask;	      
-    	      ret[i].green_mask = Info.green_mask;	      
-    	      ret[i].blue_mask = Info.blue_mask;	      
-    	      ret[i].y_sample_bits = Info.y_sample_bits;	      
-    	      ret[i].u_sample_bits = Info.u_sample_bits;	      
+	      ret[i].bits_per_pixel = Info.bpp;
+  	      ret[i].format = Info.format;
+   	      ret[i].num_planes = Info.num_planes;
+    	      ret[i].depth = Info.depth;
+    	      ret[i].red_mask = Info.red_mask;
+    	      ret[i].green_mask = Info.green_mask;
+    	      ret[i].blue_mask = Info.blue_mask;
+    	      ret[i].y_sample_bits = Info.y_sample_bits;
+    	      ret[i].u_sample_bits = Info.u_sample_bits;
     	      ret[i].v_sample_bits = Info.v_sample_bits;
     	      ret[i].horz_y_period = Info.horz_y_period;
     	      ret[i].horz_u_period = Info.horz_u_period;
@@ -937,8 +937,8 @@ XvImage * XvCreateImage (
    XvPortID port,
    int id,
    char *data,
-   int width, 
-   int height 
+   int width,
+   int height
 ) {
    XExtDisplayInfo *info = xv_find_display(dpy);
    xvQueryImageAttributesReq *req;
@@ -989,7 +989,7 @@ XvImage * XvShmCreateImage (
    XvPortID port,
    int id,
    char *data,
-   int width, 
+   int width,
    int height,
    XShmSegmentInfo *shminfo
 ){
@@ -1012,7 +1012,7 @@ int XvPutImage (
    int src_y,
    unsigned int src_w,
    unsigned int src_h,
-   int dest_x, 
+   int dest_x,
    int dest_y,
    unsigned int dest_w,
    unsigned int dest_h
@@ -1049,7 +1049,7 @@ int XvPutImage (
 
   /* Yes it's kindof lame that we are sending the whole thing,
      but for video all of it may be needed even if displaying
-     only a subsection, and I don't want to go through the 
+     only a subsection, and I don't want to go through the
      trouble of creating subregions to send */
   Data(dpy, (char *)image->data, image->data_size);
 
@@ -1069,7 +1069,7 @@ int XvShmPutImage (
    int src_y,
    unsigned int src_w,
    unsigned int src_h,
-   int dest_x, 
+   int dest_x,
    int dest_y,
    unsigned int dest_w,
    unsigned int dest_h,
@@ -1082,7 +1082,7 @@ int XvShmPutImage (
   XvCheckExtension(dpy, info, XvBadExtension);
 
   LockDisplay(dpy);
-  
+
   FlushGC(dpy, gc);
 
   XvGetReq(ShmPutImage, req);
@@ -1125,7 +1125,7 @@ xv_wire_to_event(Display *dpy, XEvent *host, xEvent *wire)
   {
     case XvVideoNotify:
       re->xvvideo.type = event->u.u.type & 0x7f;
-      re->xvvideo.serial = 
+      re->xvvideo.serial =
 	_XSetLastRequestRead(dpy, (xGenericReply *)event);
       re->xvvideo.send_event = ((event->u.u.type & 0x80) != 0);
       re->xvvideo.display = dpy;
@@ -1136,7 +1136,7 @@ xv_wire_to_event(Display *dpy, XEvent *host, xEvent *wire)
       break;
     case XvPortNotify:
       re->xvport.type = event->u.u.type & 0x7f;
-      re->xvport.serial = 
+      re->xvport.serial =
 	_XSetLastRequestRead(dpy, (xGenericReply *)event);
       re->xvport.send_event = ((event->u.u.type & 0x80) != 0);
       re->xvport.display = dpy;
@@ -1146,7 +1146,7 @@ xv_wire_to_event(Display *dpy, XEvent *host, xEvent *wire)
       re->xvport.value = event->u.portNotify.value;
       break;
     default:
-      return False; 
+      return False;
   }
 
   return (True);
