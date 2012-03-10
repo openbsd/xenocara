@@ -23,9 +23,9 @@ pkgincludedir = $(includedir)/@PACKAGE@
 top_builddir = ..
 am__cd = CDPATH="$${ZSH_VERSION+.}$(PATH_SEPARATOR)" && cd
 INSTALL = @INSTALL@
-install_sh_DATA = $(install_sh) -c -m 644
-install_sh_PROGRAM = $(install_sh) -c
-install_sh_SCRIPT = $(install_sh) -c
+install_sh_DATA = ${SHELL} $(install_sh) -c -m 644
+install_sh_PROGRAM = ${SHELL} $(install_sh) -c
+install_sh_SCRIPT = ${SHELL} $(install_sh) -c
 INSTALL_HEADER = $(INSTALL_DATA)
 transform = $(program_transform_name)
 NORMAL_INSTALL = :
@@ -54,12 +54,10 @@ am__strip_dir = `echo $$p | sed -e 's|^.*/||'`;
 am__installdirs = "$(DESTDIR)$(libdir)"
 libLTLIBRARIES_INSTALL = $(INSTALL)
 LTLIBRARIES = $(lib_LTLIBRARIES)
-libXvMC_la_DEPENDENCIES =
-am_libXvMC_la_OBJECTS = libXvMC_la-XvMC.lo
+am__DEPENDENCIES_1 =
+libXvMC_la_DEPENDENCIES = $(am__DEPENDENCIES_1)
+am_libXvMC_la_OBJECTS = XvMC.lo
 libXvMC_la_OBJECTS = $(am_libXvMC_la_OBJECTS)
-libXvMCW_la_DEPENDENCIES =
-am_libXvMCW_la_OBJECTS = libXvMCW_la-XvMCWrapper.lo
-libXvMCW_la_OBJECTS = $(am_libXvMCW_la_OBJECTS)
 DEFAULT_INCLUDES = -I. -I$(srcdir) -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__depfiles_maybe = depfiles
@@ -71,8 +69,8 @@ LTCOMPILE = $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) \
 CCLD = $(CC)
 LINK = $(LIBTOOL) --tag=CC --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
 	$(AM_LDFLAGS) $(LDFLAGS) -o $@
-SOURCES = $(libXvMC_la_SOURCES) $(libXvMCW_la_SOURCES)
-DIST_SOURCES = $(libXvMC_la_SOURCES) $(libXvMCW_la_SOURCES)
+SOURCES = $(libXvMC_la_SOURCES)
+DIST_SOURCES = $(libXvMC_la_SOURCES)
 ETAGS = etags
 CTAGS = ctags
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
@@ -90,6 +88,7 @@ AUTOCONF = @AUTOCONF@
 AUTOHEADER = @AUTOHEADER@
 AUTOMAKE = @AUTOMAKE@
 AWK = @AWK@
+BASE_CFLAGS = @BASE_CFLAGS@
 CC = @CC@
 CCDEPMODE = @CCDEPMODE@
 CFLAGS = @CFLAGS@
@@ -97,24 +96,20 @@ CHANGELOG_CMD = @CHANGELOG_CMD@
 CPP = @CPP@
 CPPFLAGS = @CPPFLAGS@
 CWARNFLAGS = @CWARNFLAGS@
-CXX = @CXX@
-CXXCPP = @CXXCPP@
-CXXDEPMODE = @CXXDEPMODE@
-CXXFLAGS = @CXXFLAGS@
 CYGPATH_W = @CYGPATH_W@
 DEFS = @DEFS@
 DEPDIR = @DEPDIR@
+DLLTOOL = @DLLTOOL@
 DRIVER_MAN_DIR = @DRIVER_MAN_DIR@
 DRIVER_MAN_SUFFIX = @DRIVER_MAN_SUFFIX@
 DSYMUTIL = @DSYMUTIL@
-ECHO = @ECHO@
+DUMPBIN = @DUMPBIN@
 ECHO_C = @ECHO_C@
 ECHO_N = @ECHO_N@
 ECHO_T = @ECHO_T@
 EGREP = @EGREP@
 EXEEXT = @EXEEXT@
-F77 = @F77@
-FFLAGS = @FFLAGS@
+FGREP = @FGREP@
 FILE_MAN_DIR = @FILE_MAN_DIR@
 FILE_MAN_SUFFIX = @FILE_MAN_SUFFIX@
 GREP = @GREP@
@@ -123,6 +118,7 @@ INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
 INSTALL_STRIP_PROGRAM = @INSTALL_STRIP_PROGRAM@
+LD = @LD@
 LDFLAGS = @LDFLAGS@
 LIBOBJS = @LIBOBJS@
 LIBS = @LIBS@
@@ -133,6 +129,7 @@ LINT = @LINT@
 LINT_FALSE = @LINT_FALSE@
 LINT_FLAGS = @LINT_FLAGS@
 LINT_TRUE = @LINT_TRUE@
+LIPO = @LIPO@
 LN_S = @LN_S@
 LTLIBOBJS = @LTLIBOBJS@
 MAINT = @MAINT@
@@ -140,11 +137,16 @@ MAINTAINER_MODE_FALSE = @MAINTAINER_MODE_FALSE@
 MAINTAINER_MODE_TRUE = @MAINTAINER_MODE_TRUE@
 MAKEINFO = @MAKEINFO@
 MALLOC_ZERO_CFLAGS = @MALLOC_ZERO_CFLAGS@
+MANIFEST_TOOL = @MANIFEST_TOOL@
 MAN_SUBSTS = @MAN_SUBSTS@
 MISC_MAN_DIR = @MISC_MAN_DIR@
 MISC_MAN_SUFFIX = @MISC_MAN_SUFFIX@
+NM = @NM@
 NMEDIT = @NMEDIT@
+OBJDUMP = @OBJDUMP@
 OBJEXT = @OBJEXT@
+OTOOL = @OTOOL@
+OTOOL64 = @OTOOL64@
 PACKAGE = @PACKAGE@
 PACKAGE_BUGREPORT = @PACKAGE_BUGREPORT@
 PACKAGE_NAME = @PACKAGE_NAME@
@@ -157,6 +159,7 @@ RANLIB = @RANLIB@
 SED = @SED@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
+STRICT_CFLAGS = @STRICT_CFLAGS@
 STRIP = @STRIP@
 VERSION = @VERSION@
 XMALLOC_ZERO_CFLAGS = @XMALLOC_ZERO_CFLAGS@
@@ -164,13 +167,11 @@ XORG_MAN_PAGE = @XORG_MAN_PAGE@
 XTMALLOC_ZERO_CFLAGS = @XTMALLOC_ZERO_CFLAGS@
 XVMC_CFLAGS = @XVMC_CFLAGS@
 XVMC_LIBS = @XVMC_LIBS@
+ac_ct_AR = @ac_ct_AR@
 ac_ct_CC = @ac_ct_CC@
-ac_ct_CXX = @ac_ct_CXX@
-ac_ct_F77 = @ac_ct_F77@
+ac_ct_DUMPBIN = @ac_ct_DUMPBIN@
 am__fastdepCC_FALSE = @am__fastdepCC_FALSE@
 am__fastdepCC_TRUE = @am__fastdepCC_TRUE@
-am__fastdepCXX_FALSE = @am__fastdepCXX_FALSE@
-am__fastdepCXX_TRUE = @am__fastdepCXX_TRUE@
 am__include = @am__include@
 am__leading_dot = @am__leading_dot@
 am__quote = @am__quote@
@@ -211,28 +212,13 @@ sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 sysconfdir = @sysconfdir@
 target_alias = @target_alias@
-lib_LTLIBRARIES = libXvMC.la libXvMCW.la
-libXvMC_la_SOURCES = \
-         XvMC.c \
-         XvMClibint.h
-
-libXvMCW_la_SOURCES = \
-	XvMCWrapper.c
-
-AM_CFLAGS = $(CWARNFLAGS) @XVMC_CFLAGS@
-AM_CPPFLAGS = -I$(top_srcdir)/include @MALLOC_ZERO_CFLAGS@
-libXvMC_la_LIBADD = @XVMC_LIBS@
-libXvMC_la_CFLAGS = $(AM_CFLAGS)
-libXvMCW_la_LIBADD = @XVMC_LIBS@
-libXvMCW_la_CFLAGS = \
-	$(AM_CFLAGS)				\
-	-DXVMC_CONFIGDIR=$(sysconfdir)/X11		\
-	-DXVMC_SOVERSION=\".1.0\"		\
-	-DXV_SOVERSION=\".1.0\"
-
+lib_LTLIBRARIES = libXvMC.la
+AM_CPPFLAGS = -I$(top_srcdir)/include $(MALLOC_ZERO_CFLAGS)
+AM_CFLAGS = $(CWARNFLAGS) $(XVMC_CFLAGS)
+libXvMC_la_SOURCES = XvMC.c XvMClibint.h
+libXvMC_la_LIBADD = $(XVMC_LIBS)
 libXvMC_la_LDFLAGS = -version-number 1:0:0 -no-undefined
-libXvMCW_la_LDFLAGS = -version-number 1:0:0 -no-undefined
-@LINT_TRUE@ALL_LINT_FLAGS = $(LINT_FLAGS) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
+@LINT_TRUE@ALL_LINT_FLAGS = $(LINT_FLAGS) $(DEFS) $(DEFAULT_INCLUDES) \
 @LINT_TRUE@                $(AM_CPPFLAGS) $(CPPFLAGS)
 
 all: all-am
@@ -297,8 +283,6 @@ clean-libLTLIBRARIES:
 	done
 libXvMC.la: $(libXvMC_la_OBJECTS) $(libXvMC_la_DEPENDENCIES) 
 	$(LINK) -rpath $(libdir) $(libXvMC_la_LDFLAGS) $(libXvMC_la_OBJECTS) $(libXvMC_la_LIBADD) $(LIBS)
-libXvMCW.la: $(libXvMCW_la_OBJECTS) $(libXvMCW_la_DEPENDENCIES) 
-	$(LINK) -rpath $(libdir) $(libXvMCW_la_LDFLAGS) $(libXvMCW_la_OBJECTS) $(libXvMCW_la_LIBADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
@@ -306,8 +290,7 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libXvMCW_la-XvMCWrapper.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libXvMC_la-XvMC.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/XvMC.Plo@am__quote@
 
 .c.o:
 @am__fastdepCC_TRUE@	if $(COMPILE) -MT $@ -MD -MP -MF "$(DEPDIR)/$*.Tpo" -c -o $@ $<; \
@@ -329,20 +312,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$<' object='$@' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(LTCOMPILE) -c -o $@ $<
-
-libXvMC_la-XvMC.lo: XvMC.c
-@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libXvMC_la_CFLAGS) $(CFLAGS) -MT libXvMC_la-XvMC.lo -MD -MP -MF "$(DEPDIR)/libXvMC_la-XvMC.Tpo" -c -o libXvMC_la-XvMC.lo `test -f 'XvMC.c' || echo '$(srcdir)/'`XvMC.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libXvMC_la-XvMC.Tpo" "$(DEPDIR)/libXvMC_la-XvMC.Plo"; else rm -f "$(DEPDIR)/libXvMC_la-XvMC.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='XvMC.c' object='libXvMC_la-XvMC.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libXvMC_la_CFLAGS) $(CFLAGS) -c -o libXvMC_la-XvMC.lo `test -f 'XvMC.c' || echo '$(srcdir)/'`XvMC.c
-
-libXvMCW_la-XvMCWrapper.lo: XvMCWrapper.c
-@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libXvMCW_la_CFLAGS) $(CFLAGS) -MT libXvMCW_la-XvMCWrapper.lo -MD -MP -MF "$(DEPDIR)/libXvMCW_la-XvMCWrapper.Tpo" -c -o libXvMCW_la-XvMCWrapper.lo `test -f 'XvMCWrapper.c' || echo '$(srcdir)/'`XvMCWrapper.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/libXvMCW_la-XvMCWrapper.Tpo" "$(DEPDIR)/libXvMCW_la-XvMCWrapper.Plo"; else rm -f "$(DEPDIR)/libXvMCW_la-XvMCWrapper.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='XvMCWrapper.c' object='libXvMCW_la-XvMCWrapper.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libXvMCW_la_CFLAGS) $(CFLAGS) -c -o libXvMCW_la-XvMCWrapper.lo `test -f 'XvMCWrapper.c' || echo '$(srcdir)/'`XvMCWrapper.c
 
 mostlyclean-libtool:
 	-rm -f *.lo
@@ -526,8 +495,7 @@ uninstall-am: uninstall-info-am uninstall-libLTLIBRARIES
 
 
 @LINT_TRUE@lint:
-@LINT_TRUE@	$(LINT) $(ALL_LINT_FLAGS) $(libXvMC_la_SOURCES) $(XVMC_LIBS)
-@LINT_TRUE@	$(LINT) $(ALL_LINT_FLAGS) $(libXvMCW_la_CFLAGS) $(libXvMCW_la_SOURCES) $(XVMC_LIBS)
+@LINT_TRUE@	$(LINT) $(ALL_LINT_FLAGS) $(libXvMC_la_SOURCES) $(AM_CFLAGS) $(XVMC_LIBS)
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:

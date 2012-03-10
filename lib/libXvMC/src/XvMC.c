@@ -3,7 +3,7 @@
 #endif
 #include <stdio.h>
 #include "XvMClibint.h"
-#ifdef HAS_SHM
+#ifdef HAVE_SHMAT
 #ifndef Lynx
 #include <sys/ipc.h>
 #include <sys/shm.h>
@@ -11,7 +11,7 @@
 #include <ipc.h>
 #include <shm.h>
 #endif /* Lynx */
-#endif /* HAS_SHM */
+#endif /* HAVE_SHMAT */
 #include <unistd.h>
 #include <sys/time.h>
 #include <X11/extensions/Xext.h>
@@ -19,9 +19,9 @@
 
 static XExtensionInfo _xvmc_info_data;
 static XExtensionInfo *xvmc_info = &_xvmc_info_data;
-static char *xvmc_extension_name = XvMCName;
+static const char *xvmc_extension_name = XvMCName;
 
-static char *xvmc_error_list[] =
+static const char *xvmc_error_list[] =
 {
    "BadContext",
    "BadSurface",
@@ -100,7 +100,7 @@ XvMCSurfaceInfo * XvMCListSurfaceTypes(Display *dpy, XvPortID port, int *num)
     *num = 0;
 
     XvMCCheckExtension (dpy, info, NULL);
-    
+
     LockDisplay (dpy);
     XvMCGetReq (ListSurfaceTypes, req);
     req->port = port;
@@ -111,7 +111,7 @@ XvMCSurfaceInfo * XvMCListSurfaceTypes(Display *dpy, XvPortID port, int *num)
     }
 
     if(rep.num > 0) {
-	surface_info = 
+	surface_info =
 	    (XvMCSurfaceInfo*)Xmalloc(rep.num * sizeof(XvMCSurfaceInfo));
 
         if(surface_info) {
@@ -126,9 +126,9 @@ XvMCSurfaceInfo * XvMCListSurfaceTypes(Display *dpy, XvPortID port, int *num)
 	       surface_info[i].chroma_format = sinfo.chroma_format;
 	       surface_info[i].max_width = sinfo.max_width;
 	       surface_info[i].max_height = sinfo.max_height;
-	       surface_info[i].subpicture_max_width = 
+	       surface_info[i].subpicture_max_width =
 					sinfo.subpicture_max_width;
-	       surface_info[i].subpicture_max_height = 
+	       surface_info[i].subpicture_max_height =
 					sinfo.subpicture_max_height;
 	       surface_info[i].mc_type = sinfo.mc_type;
 	       surface_info[i].flags = sinfo.flags;
@@ -172,7 +172,7 @@ XvImageFormatValues * XvMCListSubpictureTypes (
     }
 
     if(rep.num > 0) {
-        ret = 
+        ret =
 	   (XvImageFormatValues*)Xmalloc(rep.num * sizeof(XvImageFormatValues));
 
         if(ret) {
@@ -183,19 +183,19 @@ XvImageFormatValues * XvMCListSubpictureTypes (
 
             for(i = 0; i < rep.num; i++) {
               _XRead(dpy, (char*)(&Info), sz_xvImageFormatInfo);
-              ret[i].id = Info.id;            
-              ret[i].type = Info.type;        
-              ret[i].byte_order = Info.byte_order;            
+              ret[i].id = Info.id;
+              ret[i].type = Info.type;
+              ret[i].byte_order = Info.byte_order;
               memcpy(&(ret[i].guid[0]), &(Info.guid[0]), 16);
-              ret[i].bits_per_pixel = Info.bpp;       
-              ret[i].format = Info.format;            
-              ret[i].num_planes = Info.num_planes;            
-              ret[i].depth = Info.depth;              
-              ret[i].red_mask = Info.red_mask;        
-              ret[i].green_mask = Info.green_mask;            
-              ret[i].blue_mask = Info.blue_mask;              
-              ret[i].y_sample_bits = Info.y_sample_bits;              
-              ret[i].u_sample_bits = Info.u_sample_bits;              
+              ret[i].bits_per_pixel = Info.bpp;
+              ret[i].format = Info.format;
+              ret[i].num_planes = Info.num_planes;
+              ret[i].depth = Info.depth;
+              ret[i].red_mask = Info.red_mask;
+              ret[i].green_mask = Info.green_mask;
+              ret[i].blue_mask = Info.blue_mask;
+              ret[i].y_sample_bits = Info.y_sample_bits;
+              ret[i].u_sample_bits = Info.u_sample_bits;
               ret[i].v_sample_bits = Info.v_sample_bits;
               ret[i].horz_y_period = Info.horz_y_period;
               ret[i].horz_u_period = Info.horz_u_period;
@@ -212,18 +212,18 @@ XvImageFormatValues * XvMCListSubpictureTypes (
 
     UnlockDisplay (dpy);
     SyncHandle ();
-    return ret; 
+    return ret;
 }
 
 
-/****************************************************************** 
+/******************************************************************
    These are intended as a protocol interface to be used by direct
    rendering libraries.  They are not intended to be client viewable
    functions.  These will stay in place until we have a mechanism in
    place similar to that of OpenGL with an libXvMCcore library.
-*******************************************************************/ 
- 
-/* 
+*******************************************************************/
+
+/*
    _xvmc_create_context -
 
    Pass in the context with the surface_type_id, width, height,
@@ -234,7 +234,7 @@ XvImageFormatValues * XvMCListSubpictureTypes (
    an array of priv_count CARD32s.  This data is allocated by
    this function.  If returned, the caller is responsible for
    freeing it!  Generally, such information is only returned if
-   an XVMC_DIRECT context was specified. 
+   an XVMC_DIRECT context was specified.
 */
 
 
@@ -309,14 +309,14 @@ Status _xvmc_destroy_context (
    _xvmc_create_surface -
 
    Pass the context and this function will fill out all the
-   information in the surface. 
+   information in the surface.
    The server may return implementation-specific information
    back in the priv_data.  The size of that information will
    an array of priv_count CARD32s.  This data is allocated by
    this function.  If returned, the caller is responsible for
    freeing it!  Generally, such information is returned only if
    the context was a direct context.
- 
+
 */
 
 Status _xvmc_create_surface (
@@ -469,15 +469,15 @@ Status _xvmc_destroy_subpicture(
 
     LockDisplay (dpy);
     XvMCGetReq (DestroySubpicture, req);
-    req->subpicture_id = subpicture->subpicture_id; 
+    req->subpicture_id = subpicture->subpicture_id;
     UnlockDisplay (dpy);
     SyncHandle ();
     return Success;
 }
 
 Status XvMCGetDRInfo(Display *dpy, XvPortID port,
-		     char **name, char **busID, 
-		     int *major, int *minor, 
+		     char **name, char **busID,
+		     int *major, int *minor,
 		     int *patchLevel,
 		     int *isLocal)
 {
@@ -487,7 +487,7 @@ Status XvMCGetDRInfo(Display *dpy, XvPortID port,
     char *tmpBuf = NULL;
     CARD32 magic;
 
-#ifdef HAS_SHM
+#ifdef HAVE_SHMAT
     volatile CARD32 *shMem;
     struct timezone here;
     struct timeval now;
@@ -503,7 +503,7 @@ Status XvMCGetDRInfo(Display *dpy, XvPortID port,
     req->port = port;
     magic = 0;
     req->magic = 0;
-#ifdef HAS_SHM 
+#ifdef HAVE_SHMAT
     req->shmKey = shmget(IPC_PRIVATE, 1024, IPC_CREAT | 0600);
 
     /*
@@ -514,11 +514,11 @@ Status XvMCGetDRInfo(Display *dpy, XvPortID port,
      * any complicated data on those pages. Thats the explanation of this
      * otherwise stupid-looking pattern algorithm.
      */
-   
+
     if (req->shmKey >= 0) {
 	shMem = (CARD32 *) shmat(req->shmKey, NULL, 0);
 	shmctl( req->shmKey, IPC_RMID, NULL);
-	if ( shMem ) { 
+	if ( shMem ) {
 
 	    register volatile CARD32 *shMemC = shMem;
 	    register int i;
@@ -528,7 +528,7 @@ Status XvMCGetDRInfo(Display *dpy, XvPortID port,
 	    req->magic = magic;
 	    i = 1024 / sizeof(CARD32);
 	    while(i--) {
-	        *shMemC++ = magic; 
+	        *shMemC++ = magic;
 	        magic = ~magic;
 	    }
 	} else {
@@ -541,14 +541,14 @@ Status XvMCGetDRInfo(Display *dpy, XvPortID port,
     if (!_XReply (dpy, (xReply *) &rep, 0, xFalse)) {
         UnlockDisplay (dpy);
         SyncHandle ();
-#ifdef HAS_SHM
+#ifdef HAVE_SHMAT
 	if ( req->shmKey >= 0) {
 	    shmdt( (const void *) shMem );
-	}            
+	}
 #endif
         return -1;
     }
-#ifdef HAS_SHM
+#ifdef HAVE_SHMAT
     shmdt( (const void *) shMem );
 #endif
 
@@ -567,7 +567,7 @@ Status XvMCGetDRInfo(Display *dpy, XvPortID port,
 		}
 	    } else {
 		XFree(tmpBuf);
-	    }	    
+	    }
 	}
 
 	if (*name && *busID && tmpBuf) {

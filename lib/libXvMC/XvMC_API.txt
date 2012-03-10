@@ -14,7 +14,7 @@
       XvMCSetAttribute.
    fifth draft (6/26/01) - Change definition of XvMCCompositeSubpicture
       plus some clarifications and fixed typographical errors.
-   sixth draft (9/24/01) - Added XVMC_SECOND_FIELD and removed 
+   sixth draft (9/24/01) - Added XVMC_SECOND_FIELD and removed
       XVMC_PROGRESSIVE_FRAME and XVMC_TOP_FIELD_FIRST flags.
    seventh draft (10/26/01) - Added XVMC_INTRA_UNSIGNED option.
    eighth draft (11/13/02) - Removed IQ level acceleration and
@@ -31,12 +31,12 @@
 /********************************************************************/
 
      XvMC extends the X-Video extension (Xv) and makes use of the
-  familar concept of the XvPort.  Ports have attributes that can be set 
+  familar concept of the XvPort.  Ports have attributes that can be set
   and queried through Xv.  In XvMC ports can also have hardware motion
-  compensation contexts created for use with them.  Ports which support 
-  XvImages (ie. they have an "XV_IMAGE" port encoding as described in 
+  compensation contexts created for use with them.  Ports which support
+  XvImages (ie. they have an "XV_IMAGE" port encoding as described in
   the Xv version 2.2 API addendum) can be queried for the list of XvMCSurface
-  types they support.  If they support any XvMCSurface types an 
+  types they support.  If they support any XvMCSurface types an
   XvMCContext can be created for that port.
 
      An XvMCContext describes the state of the motion compensation
@@ -44,7 +44,7 @@
   a single port, surface type, motion compensation type, width and
   height combination.  For example, a context might be created for a
   particular port that does MPEG-2 motion compensation on 720 x 480
-  4:2:0 surfaces.  Once the context is created, referencing it implies 
+  4:2:0 surfaces.  Once the context is created, referencing it implies
   the port, surface type, size and the motion compensation type.  Contexts
   may be "direct" or "indirect".  For indirect contexts the X server
   renders all video using the data passed to it by the client.  For
@@ -61,11 +61,11 @@
   in the video pipeline.  Acceleration starting at the first point,
   which we shall call the "Motion Compensation" level, begins after the
   the inverse quantization and IDCT at the place where motion compensation
-  is to be applied.  The second point, which we shall call the "IDCT" 
+  is to be applied.  The second point, which we shall call the "IDCT"
   level, begins before the IDCT just after the inverse quantization.
 
      Rendering is done by presenting the library with a target XvMCSurface
-  and up to two reference XvMCSurfaces for the motion compensation, a 
+  and up to two reference XvMCSurfaces for the motion compensation, a
   buffer of 8x8 blocks and a command buffer which describes how to
   use the 8x8 blocks along with motion compensation vectors to construct
   the data in the target XvMCSurface.  When the pipeline starts at the
@@ -80,7 +80,7 @@
 
 /********************************************************************/
 
-          QUERYING THE EXTENSION 
+          QUERYING THE EXTENSION
 
 /********************************************************************/
 
@@ -139,24 +139,24 @@ Status XvMCQueryVersion (Display *display, int *major, int *minor)
 typedef struct {
    int surface_type_id;
    int chroma_format;
-   unsigned short max_width;       
-   unsigned short max_height;	
+   unsigned short max_width;
+   unsigned short max_height;
    unsigned short subpicture_max_width;
    unsigned short subpicture_max_height;
-   int mc_type;  	
+   int mc_type;
    int flags;
 } XvMCSurfaceInfo;
 
    surface_type_id - Unique descriptor for this surface type.
 
-   chroma_format - Chroma format of this surface (eg. XVMC_CHROMA_FORMAT_420, 
+   chroma_format - Chroma format of this surface (eg. XVMC_CHROMA_FORMAT_420,
 		XVMC_CHROMA_FORMAT_422, XVMC_CHROMA_FORMAT_444).
 
    max_width -
    max_height -  Maximum dimensions of the luma data in pixels.
 
    subpicture_max_width -
-   subpicture_max_height -  The Maximum dimensions of the subpicture 
+   subpicture_max_height -  The Maximum dimensions of the subpicture
                             that can be created for use with this surface
                             Both fields are zero if subpictures are not
                             supported.
@@ -169,7 +169,7 @@ typedef struct {
                                level;
 
                  XVMC_IDCT - Acceleration starts at the IDCT level.
-               
+
    flags -  Any combination of the following may be OR'd together.
 
 	XVMC_OVERLAID_SURFACE - Displayed data is overlaid and not
@@ -177,7 +177,7 @@ typedef struct {
                                 When this is set the client is responsible
                                 for painting the colorkey.
 
-	XVMC_BACKEND_SUBPICTURE - The supicture is of the "backend" 
+	XVMC_BACKEND_SUBPICTURE - The supicture is of the "backend"
                                   variety.  It is "frontend" otherwise.
                                   There is more information on this in the
                                   section on subpictures below.
@@ -195,8 +195,8 @@ typedef struct {
 
 XvMCSurfaceInfo * XvMCListSurfaceTypes(Display *dpy, XvPortID port, int *num)
 
-   Returns the number of surface types supported by the XvPort and an array 
-   of XvMCSurfaceInfo describing each surface type.  The returned array 
+   Returns the number of surface types supported by the XvPort and an array
+   of XvMCSurfaceInfo describing each surface type.  The returned array
    should be freed with XFree().
 
    dpy -  The connection to the server.
@@ -235,7 +235,7 @@ typedef struct {
 
    surface_type_id - This refers to the XvMCSurfaceInfo that describes
                      the surface characteristics.
-   
+
    width -
    height -  The dimensions (of the luma data) this context supports.
 
@@ -256,7 +256,7 @@ Status XvMCCreateContext (
    XvMCContext * context
 );
 
-   This creates a context by filling out the XvMCContext structure passed 
+   This creates a context by filling out the XvMCContext structure passed
    to it and returning Success.
 
    display -  Specifies the connection to the server.
@@ -275,11 +275,11 @@ Status XvMCCreateContext (
 
 	 XVMC_DIRECT -  A direct context is requested.
                         If a direct context cannot be created the request
-                        will not fail, rather, an indirect context will 
+                        will not fail, rather, an indirect context will
 			be created instead.
-    
+
    context - Pointer to the pre-allocated XvMCContext structure.
- 
+
 
 
    Errors:
@@ -297,13 +297,13 @@ Status XvMCCreateContext (
 
 Status XvMCDestroyContext (Display display, XvMCContext * context)
 
-     Destroys the specified context.  
+     Destroys the specified context.
 
       display - Specifies the connection to the server.
 
       context - The context to be destroyed.
 
-     Errors:    
+     Errors:
 
        XvMCBadContext - The XvMCContext is not valid.
 
@@ -315,7 +315,7 @@ Status XvMCDestroyContext (Display display, XvMCContext * context)
 /*********************************************************************/
 
 typedef struct {
-  XID surface_id;	   
+  XID surface_id;
   XID context_id;
   int surface_type_id;
   unsigned short width;
@@ -334,14 +334,14 @@ typedef struct {
   height -  The width and height of the luma data.
 
 
-Status 
+Status
 XvMCCreateSurface(
   Display *display,
   XvMCContext * context;
   XvMCSurface * surface;
 );
 
-     Creates a surface (Frame) for use with the specified context.  
+     Creates a surface (Frame) for use with the specified context.
    The surface structure is filled out and Success is returned if no
    error occured.
 
@@ -354,7 +354,7 @@ XvMCCreateSurface(
 
 	XvMCBadContext - the context is not valid.
 
-        BadAlloc - there are insufficient resources to complete 
+        BadAlloc - there are insufficient resources to complete
                    this operation.
 
 Status XvMCDestroySurface(Display *display, XvMCSurface *surface);
@@ -391,7 +391,7 @@ typedef struct {
    blocks -  Pointer to an array of (64 * num_blocks) shorts.
 
 Status XvMCCreateBlocks (
-    Display *display, 
+    Display *display,
     XvMCContext *context,
     unsigned int num_blocks,
     XvMCBlockArray * block
@@ -408,12 +408,12 @@ Status XvMCCreateBlocks (
                  This number must be non-zero.
 
     block -  A pointer to a pre-allocated XvMCBlockArray structure.
-                
-      Errors: 
+
+      Errors:
 
 	  XvMCBadContext - the context is invalid.
 
-          BadAlloc -  There are insufficient resources to complete the 
+          BadAlloc -  There are insufficient resources to complete the
                       operation.
 
           BadValue -  num_blocks was zero.
@@ -437,7 +437,7 @@ Status XvMCDestroyBlocks (Display *display, XvMCBlockArray * block)
 #define XVMC_PREDICTION_FIELD		0x01
 #define XVMC_PREDICTION_FRAME		0x02
 #define XVMC_PREDICTION_DUAL_PRIME	0x03
-#define XVMC_PREDICTION_16x8		0x02 
+#define XVMC_PREDICTION_16x8		0x02
 #define XVMC_PREDICTION_4MV		0x04
 
 #define XVMC_SELECT_FIRST_FORWARD	0x01
@@ -452,7 +452,7 @@ typedef struct {
    unsigned short x;
    unsigned short y;
    unsigned char macroblock_type;
-   unsigned char motion_type;   
+   unsigned char motion_type;
    unsigned char motion_vertical_field_select;
    unsigned char dct_type;
    short PMV[2][2][2];
@@ -474,14 +474,14 @@ typedef struct {
 				       the frame is not bidirectionally
                                        predicted.
 
-        XVMC_MB_TYPE_PATTERN -  Blocks are referenced and they contain 
+        XVMC_MB_TYPE_PATTERN -  Blocks are referenced and they contain
                                 differentials.  The coded_block_pattern will
                                 indicate the number of blocks and index will
                                 note their locations in the block array.
 
-	XVMC_MB_TYPE_INTRA -  Blocks are referenced and they are intra blocks. 
+	XVMC_MB_TYPE_INTRA -  Blocks are referenced and they are intra blocks.
                               The coded_block_pattern will indicate the number
-                              of blocks and index will note their locations in 
+                              of blocks and index will note their locations in
                               the block array.  XVMC_MB_TYPE_PATTERN and
                               XVMC_MB_TYPE_INTRA are mutually exclusive.  If
                               both are specified, XVMC_MB_TYPE_INTRA takes
@@ -502,7 +502,7 @@ typedef struct {
 		XVMC_SELECT_FIRST_BACKWARD
 		XVMC_SELECT_SECOND_FORWARD
 		XVMC_SELECT_SECOND_BACKWARD
-              
+
               If the bit is set the bottom field is indicated.
               If the bit is clear the top field is indicated.
 
@@ -513,7 +513,7 @@ typedef struct {
                       |_______ Second vector backward
 
     PMV -  The motion vector(s)
-             
+
                PMV[c][b][a]
 
                   a - This holds the vector. 0 = horizontal, 1 = vertical.
@@ -524,7 +524,7 @@ typedef struct {
             or XVMC_MB_TYPE_MOTION_BACKWARD are set.
 
             DualPrime vectors must be fully decoded and placed in the PMV
-            array as follows. 
+            array as follows.
 
             Field structure:
 
@@ -532,7 +532,7 @@ typedef struct {
                 PMV[0][1][1:0]  from opposite parity
 
             Frame structure:
- 
+
                 PMV[0][0][1:0]  top from top
                 PMV[0][1][1:0]  bottom from bottom
                 PMV[1][0][1:0]  top from bottom
@@ -545,7 +545,7 @@ typedef struct {
 
     coded_block_pattern - Indicates the blocks to be updated.  The bitplanes
                           are specific to the mc_type of the surface.  This
-                          field is valid only if XVMC_MB_TYPE_PATTERN or 
+                          field is valid only if XVMC_MB_TYPE_PATTERN or
                           XVMC_MB_TYPE_INTRA are set.  In that case the blocks
                           are differential or intra blocks respectively.
 			  The bitplanes are described in ISO/IEC 13818-2
@@ -572,7 +572,7 @@ typedef struct {
 
 
 Status XvMCCreateMacroBlocks (
-    Display *display, 
+    Display *display,
     XvMCContext *context,
     unsigned int num_blocks,
     XvMCMacroBlockArray * blocks
@@ -589,12 +589,12 @@ Status XvMCCreateMacroBlocks (
                  This number must be non-zero.
 
     blocks -  A pointer to a pre-allocated XvMCMacroBlockArray structure.
-                
-      Errors: 
+
+      Errors:
 
 	  XvMCBadContext - the context is invalid.
 
-          BadAlloc -  There are insufficient resources to complete the 
+          BadAlloc -  There are insufficient resources to complete the
                       operation.
 
           BadValue -  num_blocks was zero.
@@ -607,7 +607,7 @@ Status XvMCDestroyMacroBlocks (Display *display, XvMCMacroBlockArray * block)
 
     block -  The macro block array to be freed.
 
- 
+
     ------------------------------------------------------------
 
 #define XVMC_TOP_FIELD		0x00000001
@@ -631,7 +631,7 @@ Status XvMCRenderSurface(
 );
 
     This function renders the macroblocks passed to it.  It will not
-    return until it has read all of the macroblocks, however, rendering 
+    return until it has read all of the macroblocks, however, rendering
     will usually not be completed by that time.  The return of this
     function means it is safe to touch the blocks and macroblock_array.
     To synchronize rendering see the section on sychronization below.
@@ -644,7 +644,7 @@ Status XvMCRenderSurface(
     past_surface -
     furture_surface -
 
-        The target_surface is required.  If the future and past 
+        The target_surface is required.  If the future and past
       surfaces are NULL, the target_surface is an "Intra" frame.
 
       	If the past surface is provided but not the future surface,
@@ -665,7 +665,7 @@ Status XvMCRenderSurface(
     flags -  Flags may include:
 
             XVMC_SECOND_FIELD - For field pictures this indicates whether
-                                the current field (top or bottom) is first 
+                                the current field (top or bottom) is first
                                 or second in the sequence.
 
     num_macroblocks -  The number of XvMCMacroBlock structures to execute in
@@ -684,8 +684,8 @@ Status XvMCRenderSurface(
   Errors:
 
         XvMCBadContext - The context is not valid.
-    
-        XvMCBadSurface - Any of the surfaces are not valid. 
+
+        XvMCBadSurface - Any of the surfaces are not valid.
 
 	BadMatch - Any of the surfaces do not belong to the specified
                    context or a future surface was specified without
@@ -706,9 +706,9 @@ XvMCPutSurface(
   Display *display,
   XvMCSurface *surface,
   Drawable draw,
-  short srcx, 
-  short srcy, 
-  unsigned short srcw, 
+  short srcx,
+  short srcy,
+  unsigned short srcw,
   unsigned short srch,
   short destx,
   short desty,
@@ -719,7 +719,7 @@ XvMCPutSurface(
 
    Display the rectangle from the source defined by srcx/y/w/h scaled
  to destw by desth and placed at (destx, desty) on the given drawable.
- This function is not guaranteed to be pipelined with previous rendering 
+ This function is not guaranteed to be pipelined with previous rendering
  commands and may display the surface immediately.  Therefore, the client
  must query that the surface has finished rendering before calling this
  function.
@@ -728,7 +728,7 @@ XvMCPutSurface(
 
     surface - The surface to copy/overlay from.
 
-    draw - The drawable to copy/overlay the video on. 
+    draw - The drawable to copy/overlay the video on.
 
     srcx -
     srcy -
@@ -739,8 +739,8 @@ XvMCPutSurface(
     destx -
     desty -
     destw -
-    desth -  The rectangle in the destination drawable where the scaled 
-             source rectangle should be displayed. 
+    desth -  The rectangle in the destination drawable where the scaled
+             source rectangle should be displayed.
 
     flags - this indicates the field to be displayed and can be XVMC_TOP_FIELD,
             XVMC_BOTTOM_FIELD or XVMC_FRAME_PICTURE.  XVMC_FRAME_PICTURE
@@ -757,14 +757,14 @@ Status XvMCHideSurface(Display *display, XvMCSurface *surface)
 
    Stops display of a surface.  This is only needed if the surface is an
    overlaid surface as indicated in the XvMCSurfaceInfo - it is a no-op
-   otherwise.  
+   otherwise.
 
      display - The connection to the server.
- 
+
      surface - The surface to be hidden.
-  
+
       Errors:
-	
+
 	  XvMCBadSurface - The surface is not valid.
 
 
@@ -789,20 +789,20 @@ XvImageFormatValues * XvMCListSubpictureTypes (
    display - Specifies the connection to the X-server.
 
    port - Specifies the port we are interested in.
-   
-   surface_type_id - Specifies the surface type for which we want to 
-                     query the supported subpicture types. 
-                    
+
+   surface_type_id - Specifies the surface type for which we want to
+                     query the supported subpicture types.
+
    count_return - the size of the returned array.
 
    Errors:
 
       BadPort -  The port doesn't exist.
-  
+
       BadAlloc - There are insufficient resources to complete this request.
- 
-      BadMatch - The surface type is not supported on that port. 
-  
+
+      BadMatch - The surface type is not supported on that port.
+
 
 typedef struct {
   XID subpicture_id;
@@ -816,7 +816,7 @@ typedef struct {
   void *privData;    /* private to the library */
 } XvMCSubpicture;
 
-   
+
    subpicture_id - An XID associated with this subpicture.
 
    context_id - The XID of the context this subpicture was created for.
@@ -830,21 +830,21 @@ typedef struct {
    num_palette_entries - For paletted formats only.  This is the number
                          of palette entries.  It is zero for XvImages
                          without palettes.
-  
+
    entry_bytes -  Each component is one byte and entry_bytes indicates
                   the number of components in each entry (eg. 3 for
-                  YUV palette entries).  This field is zero when 
-                  palettes are not used. 
+                  YUV palette entries).  This field is zero when
+                  palettes are not used.
 
    component_order - Is an array of ascii characters describing the order
                      of the components within the bytes.  Only entry_bytes
-                     characters of the string are used. 
+                     characters of the string are used.
 
 Status
 XvMCCreateSubpicture (
-   Display *display, 
+   Display *display,
    XvMCContext *context,
-   XvMCSubpicture *subpicture, 
+   XvMCSubpicture *subpicture,
    unsigned short width,
    unsigned short height,
    int xvimage_id
@@ -854,15 +854,15 @@ XvMCCreateSubpicture (
    passed to it and returning Success.
 
     display -  Specifies the connection to the X-Server.
-  
+
     context -  The context to create the subpicture for.
 
-    subpicture - Pre-allocated XvMCSubpicture structure to be filled 
+    subpicture - Pre-allocated XvMCSubpicture structure to be filled
                  out by this function.
 
     width -
     height -  The dimensions of the subpicture.
-    
+
     xvimage_id - The id describing the XvImage format.
 
 
@@ -873,7 +873,7 @@ XvMCCreateSubpicture (
       XvMCBadContext - The specified context does not exist.
 
       BadMatch - The XvImage format id specified is not supported by
-                 the context. 
+                 the context.
 
       BadValue - If the size requested is larger than the max size reported
                  in the XvMCSurfaceInfo.
@@ -901,7 +901,7 @@ XvMCClearSubpicture (
     width -
     height -  The rectangle in the subpicture to be cleared.
 
-    color -  The data to fill the rectangle with. 
+    color -  The data to fill the rectangle with.
 
     Errors:
 
@@ -920,14 +920,14 @@ XvMCCompositeSubpicture (
    short dsty
 )
 
-    Copies the XvImage to the XvMCSubpicture.  
+    Copies the XvImage to the XvMCSubpicture.
 
     display -  The connection to the server.
 
-    subpicture -  The subpicture used as the destination of the copy. 
+    subpicture -  The subpicture used as the destination of the copy.
 
-    image -  The XvImage to be used as the source of the copy. 
-             XvImages should be of the shared memory variety for 
+    image -  The XvImage to be used as the source of the copy.
+             XvImages should be of the shared memory variety for
              indirect contexts.
 
     srcx -
@@ -937,7 +937,7 @@ XvMCCompositeSubpicture (
 
     dstx -
     dsty -  The location in the subpicture where the source rectangle
-            should be composited. 
+            should be composited.
 
     Errors:
 
@@ -956,37 +956,37 @@ XvMCDestroySubpicture (Display *display, XvMCSubpicture *subpicture)
    subpicture - The subpicture to be destroyed.
 
    Errors:
-   
+
       XvMCBadSubpicture -  The subpicture specified does not exist.
 
 
 Status
 XvMCSetSubpicturePalette (
-  Display *display, 
-  XvMCSubpicture *subpicture, 
+  Display *display,
+  XvMCSubpicture *subpicture,
   unsigned char *palette
 )
 
    Set the subpicture's palette.  This applies to paletted subpictures
-   only. 
+   only.
 
     display -  The connection to the server.
 
     subpicture - The subpicture on which to change the palette.
 
     palette -  A pointer to an array holding the palette data.  The
-               size of this array is 
+               size of this array is
 
                    num_palette_entries * entry_bytes
 
                in size.  The order of the components in the palette
 	       is described by the component_order in the XvMCSubpicture
-               structure. 
+               structure.
 
     Errors:
 
       XvMCBadSubpicture -  The subpicture specified does not exist.
-  
+
       BadMatch -  The specified subpicture does not use palettes.
 
 
@@ -1033,7 +1033,7 @@ or not the XVMC_BACKEND_SUBPICTURE flag is set in the XvMCSurfaceInfo.
   the call to XvMCPutSurface until they are no longer displaying.  It is
   safe to associate the subpicture and target_surface before rendering has
   completed (while they still query XVMC_RENDERING) but it is not safe to
-  call XvMCPutSurface at that time. 
+  call XvMCPutSurface at that time.
 
     XvMCBlendSubpicture2 copies the source_surface to the target_surface
   and associates the subpicture with the target_surface.  This essentially
@@ -1073,8 +1073,8 @@ or not the XVMC_BACKEND_SUBPICTURE flag is set in the XvMCSurfaceInfo.
   surfw -
   surfh - The rectangle in the XvMCSurface to blend the subpicture rectangle
           into.  If XVMC_SUBPICTURE_INDEPENDENT_SCALING is not set in the
-          XvMCSurfaceInfo subw must be equal to surfw and subh must be 
-          equal to surfh height or else a BadValue error occurs. 
+          XvMCSurfaceInfo subw must be equal to surfw and subh must be
+          equal to surfh height or else a BadValue error occurs.
 
    Errors:
 
@@ -1103,7 +1103,7 @@ Status
 XvMCSyncSurface (Display *display, XvMCSurface *surface)
 
    This function blocks until all rendering requests on the surface
-  have been completed. 
+  have been completed.
 
      display - The connection to the server.
 
@@ -1116,9 +1116,9 @@ XvMCSyncSurface (Display *display, XvMCSurface *surface)
 
 Status
 XvMCFlushSurface (Display *display, XvMCSurface *surface)
-   
+
    This function commits pending rendering requests to ensure that
-  they will be completed in a finite amount of time. 
+  they will be completed in a finite amount of time.
 
     display -  The connnection to the server.
 
@@ -1133,7 +1133,7 @@ Status
 XvMCGetSurfaceStatus (Display *display, XvMCSurface *surface, int *stat)
 
    display -  The connection to the server.
-  
+
    surface -  The surface whos status is being queried.
 
    stat -  May be any of the following OR'd together:
@@ -1160,7 +1160,7 @@ XvMCGetSurfaceStatus (Display *display, XvMCSurface *surface, int *stat)
 
 Status
 XvMCSyncSubpicture (Display *display, XvMCSubpicture *subpicture)
-   
+
    This function blocks until all composite/clear requests on the supicture
   have been completed.
 
@@ -1175,9 +1175,9 @@ XvMCSyncSubpicture (Display *display, XvMCSubpicture *subpicture)
 
 Status
 XvMCFlushSubpicture (Display *display, XvMCSubpicture *subpicture)
-   
+
    This function commits pending composite/clear requests to ensure that
-  they will be completed in a finite amount of time.  
+  they will be completed in a finite amount of time.
 
     display - The connection to the server.
 
@@ -1193,11 +1193,11 @@ XvMCGetSubpictureStatus (Display *display, XvMCSubpicture *subpic, int *stat)
 
     display - The connection to the server.
 
-    subpic - The subpicture whos status is being queried. 
+    subpic - The subpicture whos status is being queried.
 
     stat - may be any of the following OR'd together:
 
-   XVMC_RENDERING - The last XvMCCompositeSubpicture or XvMCClearSubpicture 
+   XVMC_RENDERING - The last XvMCCompositeSubpicture or XvMCClearSubpicture
                     request has not completed yet.
 
    XVMC_DISPLAYING - The subpicture is currently being displayed or a
@@ -1215,7 +1215,7 @@ XvMCGetSubpictureStatus (Display *display, XvMCSubpicture *subpic, int *stat)
 /********************************************************************/
 
    Context specific attribute functions are provided.  These are
-similar to their Xv Counterparts XvQueryPortAttributes, XvSetPortAttribute 
+similar to their Xv Counterparts XvQueryPortAttributes, XvSetPortAttribute
 and XvGetPortAttribute but their state is specific to the context.
 
 XvAttribute *
@@ -1242,8 +1242,8 @@ XvMCQueryAttributes (
 Status
 XvMCSetAttribute (
     Display *display,
-    XvMCContext *context, 
-    Atom attribute, 
+    XvMCContext *context,
+    Atom attribute,
     int value
 )
 
@@ -1269,8 +1269,8 @@ XvMCSetAttribute (
 Status
 XvMCGetAttribute (
     Display *display,
-    XvMCContext *context, 
-    Atom attribute, 
+    XvMCContext *context,
+    Atom attribute,
     int *value
 )
 
@@ -1279,11 +1279,11 @@ XvMCGetAttribute (
 
     display - The connection to the server.
 
-    context - The context whos attribute we are querying. 
+    context - The context whos attribute we are querying.
 
     attribute - The X Atom of the attribute to be retrieved.
 
-    value -  The returned attribute value. 
+    value -  The returned attribute value.
 
     Errors:
 

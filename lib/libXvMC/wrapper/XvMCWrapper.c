@@ -26,7 +26,7 @@
  */
 
 /*
- * BUGS: The wrapper really should maintain one symbol table per port. This 
+ * BUGS: The wrapper really should maintain one symbol table per port. This
  * could possibly be impemented, To do that, the port-independent symbols need to be lifted out,
  * and one would have to create a number of mapping tables:
  *
@@ -35,7 +35,7 @@
  *                 surface -> port
  *                 subpicture -> port
  *
- * and reference the right table when needed. 
+ * and reference the right table when needed.
  * This needs to be done only if there is a player that wants to access two displays with different
  * hardware simultaneously. Not likely as of today.
  */
@@ -63,10 +63,10 @@ typedef Status (*XvMCDestroyContextP) (Display *, XvMCContext * );
 typedef Status (*XvMCCreateSurfaceP)(Display *,XvMCContext *,XvMCSurface *);
 typedef Status (*XvMCDestroySurfaceP)(Display *, XvMCSurface *);
 typedef XvImageFormatValues * (*XvMCListSubpictureTypesP) (Display *,XvPortID ,int ,int *);
-typedef Status (*XvMCPutSurfaceP)(Display *,XvMCSurface *,Drawable ,short , short , unsigned short , 
+typedef Status (*XvMCPutSurfaceP)(Display *,XvMCSurface *,Drawable ,short , short , unsigned short ,
 				  unsigned short ,short ,short ,unsigned short ,unsigned short ,int );
 typedef Status (*XvMCHideSurfaceP)(Display *, XvMCSurface *);
-typedef Status (*XvMCCreateSubpictureP) (Display *, XvMCContext *, XvMCSubpicture *, 
+typedef Status (*XvMCCreateSubpictureP) (Display *, XvMCContext *, XvMCSubpicture *,
 					 unsigned short, unsigned short,int);
 typedef Status (*XvMCClearSubpictureP) (Display *,XvMCSubpicture *,short,short,unsigned short,unsigned short,
 					unsigned int);
@@ -101,56 +101,56 @@ typedef Status (*XvMCGetAttributeP) (Display *,XvMCContext *, Atom, int *);
 
 /*
  * Nonstandard VLD acceleration level:
- */ 
-  
+ */
+
 typedef Status (*XvMCBeginSurfaceP) (Display *,XvMCContext *,XvMCSurface *,
 				     XvMCSurface *,XvMCSurface *f,const XvMCMpegControl *);
 typedef Status (*XvMCLoadQMatrixP) (Display *, XvMCContext *,const XvMCQMatrix *);
 typedef Status (*XvMCPutSliceP)(Display *,XvMCContext *, char *,int);
 typedef Status (*XvMCPutSlice2P)(Display *,XvMCContext *, char *,int, unsigned);
-typedef Status (*XvMCGetDRInfoP)(Display *, XvPortID, char **, char **, int *, int *, 
+typedef Status (*XvMCGetDRInfoP)(Display *, XvPortID, char **, char **, int *, int *,
 				  int *, int *);
 
 
 typedef struct {
-    XvMCQueryExtensionP   XvMCQueryExtension; 
-    XvMCQueryVersionP   XvMCQueryVersion; 
+    XvMCQueryExtensionP   XvMCQueryExtension;
+    XvMCQueryVersionP   XvMCQueryVersion;
     XvMCListSurfaceTypesP  XvMCListSurfaceTypes;
-    XvMCCreateContextP   XvMCCreateContext; 
-    XvMCDestroyContextP   XvMCDestroyContext; 
+    XvMCCreateContextP   XvMCCreateContext;
+    XvMCDestroyContextP   XvMCDestroyContext;
     XvMCCreateSurfaceP  XvMCCreateSurface;
     XvMCDestroySurfaceP  XvMCDestroySurface;
-    XvMCListSubpictureTypesP    XvMCListSubpictureTypes; 
+    XvMCListSubpictureTypesP    XvMCListSubpictureTypes;
     XvMCPutSurfaceP   XvMCPutSurface;
     XvMCHideSurfaceP   XvMCHideSurface;
     XvMCCreateSubpictureP   XvMCCreateSubpicture;
-    XvMCClearSubpictureP     XvMCClearSubpicture; 			      
-    XvMCCompositeSubpictureP    XvMCCompositeSubpicture; 
-    XvMCDestroySubpictureP    XvMCDestroySubpicture; 
-    XvMCSetSubpicturePaletteP    XvMCSetSubpicturePalette; 
-    XvMCBlendSubpictureP    XvMCBlendSubpicture; 
+    XvMCClearSubpictureP     XvMCClearSubpicture;
+    XvMCCompositeSubpictureP    XvMCCompositeSubpicture;
+    XvMCDestroySubpictureP    XvMCDestroySubpicture;
+    XvMCSetSubpicturePaletteP    XvMCSetSubpicturePalette;
+    XvMCBlendSubpictureP    XvMCBlendSubpicture;
     XvMCBlendSubpicture2P   XvMCBlendSubpicture2;
-    XvMCSyncSurfaceP    XvMCSyncSurface; 
-    XvMCFlushSurfaceP    XvMCFlushSurface; 
-    XvMCGetSurfaceStatusP    XvMCGetSurfaceStatus; 
-    XvMCRenderSurfaceP    XvMCRenderSurface; 
-    XvMCSyncSubpictureP    XvMCSyncSubpicture; 
-    XvMCFlushSubpictureP    XvMCFlushSubpicture; 
-    XvMCGetSubpictureStatusP    XvMCGetSubpictureStatus; 
-    XvMCCreateBlocksP    XvMCCreateBlocks; 
-    XvMCDestroyBlocksP    XvMCDestroyBlocks; 
+    XvMCSyncSurfaceP    XvMCSyncSurface;
+    XvMCFlushSurfaceP    XvMCFlushSurface;
+    XvMCGetSurfaceStatusP    XvMCGetSurfaceStatus;
+    XvMCRenderSurfaceP    XvMCRenderSurface;
+    XvMCSyncSubpictureP    XvMCSyncSubpicture;
+    XvMCFlushSubpictureP    XvMCFlushSubpicture;
+    XvMCGetSubpictureStatusP    XvMCGetSubpictureStatus;
+    XvMCCreateBlocksP    XvMCCreateBlocks;
+    XvMCDestroyBlocksP    XvMCDestroyBlocks;
     XvMCCreateMacroBlocksP   XvMCCreateMacroBlocks;
-    XvMCDestroyMacroBlocksP    XvMCDestroyMacroBlocks; 
-    XvMCQueryAttributesP    XvMCQueryAttributes; 
-    XvMCSetAttributeP    XvMCSetAttribute; 
-    XvMCGetAttributeP    XvMCGetAttribute; 
+    XvMCDestroyMacroBlocksP    XvMCDestroyMacroBlocks;
+    XvMCQueryAttributesP    XvMCQueryAttributes;
+    XvMCSetAttributeP    XvMCSetAttribute;
+    XvMCGetAttributeP    XvMCGetAttribute;
 
     /*
      * Nonstandard VLD acceleration level:
-     */ 
-  
-    XvMCBeginSurfaceP    XvMCBeginSurface; 
-    XvMCLoadQMatrixP    XvMCLoadQMatrix; 
+     */
+
+    XvMCBeginSurfaceP    XvMCBeginSurface;
+    XvMCLoadQMatrixP    XvMCLoadQMatrix;
     XvMCPutSliceP   XvMCPutSlice;
     XvMCPutSlice2P   XvMCPutSlice2;
 
@@ -196,7 +196,7 @@ static void *handle2;
     if (dlerror() != NULL) {					\
 	base.pointer = (pointer##P) dlsym((handle2),#pointer);	\
 	if (dlerror() != NULL) return;				\
-    }							
+    }
 
 
 /*
@@ -204,14 +204,14 @@ static void *handle2;
  */
 
 
-static void  *dlopenversion(const char *lib, const char *version, int flag) 
+static void  *dlopenversion(const char *lib, const char *version, int flag)
 {
   void *ret;
   int curLen,verLen;
   char *curName;
   const char *tail;
 
-  
+
   curLen = strlen(lib) + (verLen = strlen(version)) + 1;
   curName = (char *) malloc(curLen * sizeof(char));
   strncpy( curName, lib, curLen);
@@ -227,7 +227,7 @@ static void  *dlopenversion(const char *lib, const char *version, int flag)
   return ret;
 }
 
-static int preInitW(Display *dpy) 
+static int preInitW(Display *dpy)
 {
 
     /*
@@ -244,7 +244,7 @@ static int preInitW(Display *dpy)
 	fprintf(stderr,"XvMCWrapper: Warning! Could not open shared "
 		"library \"libXv.so" XV_SOVERSION "\"\nThis may cause relocation "
 		"errors later.\nError was: \"%s\".\n",dlerror());
-    } 
+    }
     handle2 = dlopenversion("libXvMC.so", XVMC_SOVERSION, RTLD_LAZY | RTLD_GLOBAL);
     if (!handle2) {
 	fprintf(stderr,"XvMCWrapper: Could not load XvMC "
@@ -258,14 +258,14 @@ static int preInitW(Display *dpy)
     return 0;
 }
 
-static void initW(Display *dpy, XvPortID port) 
+static void initW(Display *dpy, XvPortID port)
 {
     char nameBuffer[BUFLEN];
     void *handle;
     int tmp;
     char *clientName = NULL;
     char *err;
-    FILE *configFile; 
+    FILE *configFile;
     int nameLen = 0;
     int major,minor,patchLevel,isLocal;
     char *busID = NULL;
@@ -273,18 +273,18 @@ static void initW(Display *dpy, XvPortID port)
     wrapperInit = 1;
     xW.initialised = 0;
 
-    if (!wrapperPreInit) 
+    if (!wrapperPreInit)
 	if (preInitW( dpy )) return;
 
     /*
      * Will the DDX tell us the client driver name?
-     */ 
+     */
 
     xW.XvMCGetDRInfo = (XvMCGetDRInfoP)
 	dlsym(handle2,"XvMCGetDRInfo");
 
     if ((err = dlerror()) == NULL) {
-	if (0 == xW.XvMCGetDRInfo( dpy, port, &clientName, &busID, &major, 
+	if (0 == xW.XvMCGetDRInfo( dpy, port, &clientName, &busID, &major,
 				    &minor,&patchLevel, &isLocal)) {
 	    nameLen = strlen(clientName);
 	    XFree(busID);
@@ -296,7 +296,7 @@ static void initW(Display *dpy, XvPortID port)
 	} else {
 	    clientName = NULL;
 	}
-    } 
+    }
 
     if (clientName && (nameLen < BUFLEN-7) && (nameLen > 0)) {
 	nameLen += 3;
@@ -310,11 +310,11 @@ static void initW(Display *dpy, XvPortID port)
 	/*
 	 * No. Try to obtain it from the config file.
 	 */
-      
+
 	if (clientName) XFree(clientName);
 
 	configFile = fopen(STRS(XVMC_CONFIGDIR) "/XvMCConfig","r");
-      
+
 	xW.initialised = 0;
 	xW.vldextension = 0;
 
@@ -331,7 +331,7 @@ static void initW(Display *dpy, XvPortID port)
 	    perror("XvMCWrapper");
 	    return;
 	}
-	
+
 	fclose(configFile);
 	if ((tmp = strlen(nameBuffer)) == 0) {
 	    fprintf(stderr,"XvMCWrapper: Zero length XvMC library name.\n");
@@ -342,7 +342,7 @@ static void initW(Display *dpy, XvPortID port)
 	/*
 	 * Skip trailing newlines and garbage.
 	 */
-	
+
 	while (iscntrl(nameBuffer[tmp-1])) {
 	    nameBuffer[tmp-1] = 0;
 	    if (--tmp == 0) {
@@ -413,7 +413,7 @@ Status XvMCQueryVersion (Display *display, int *major_versionp,
 }
 
 
-XvMCSurfaceInfo * XvMCListSurfaceTypes(Display *dpy, XvPortID port, int *num) 
+XvMCSurfaceInfo * XvMCListSurfaceTypes(Display *dpy, XvPortID port, int *num)
 {
     if (!wrapperInit) initW( dpy, port);
     if (!xW.initialised) return NULL;
@@ -442,7 +442,7 @@ Status XvMCDestroyContext (Display *display, XvMCContext * context)
     return (*xW.XvMCDestroyContext)(display, context);
 }
 
-Status 
+Status
 XvMCCreateSurface(
     Display *display,
     XvMCContext * context,
@@ -478,9 +478,9 @@ XvMCPutSurface(
     Display *display,
     XvMCSurface *surface,
     Drawable draw,
-    short srcx, 
-    short srcy, 
-    unsigned short srcw, 
+    short srcx,
+    short srcy,
+    unsigned short srcw,
     unsigned short srch,
     short destx,
     short desty,
@@ -503,9 +503,9 @@ Status XvMCHideSurface(Display *display, XvMCSurface *surface)
 
 Status
 XvMCCreateSubpicture (
-    Display *display, 
+    Display *display,
     XvMCContext *context,
-    XvMCSubpicture *subpicture, 
+    XvMCSubpicture *subpicture,
     unsigned short width,
     unsigned short height,
     int xvimage_id
@@ -560,8 +560,8 @@ XvMCDestroySubpicture (Display *display, XvMCSubpicture *subpicture)
 
 Status
 XvMCSetSubpicturePalette (
-    Display *display, 
-    XvMCSubpicture *subpicture, 
+    Display *display,
+    XvMCSubpicture *subpicture,
     unsigned char *palette
     )
 {
@@ -631,7 +631,7 @@ Status XvMCGetSurfaceStatus (Display *display, XvMCSurface *surface, int *stat)
     return (*xW.XvMCGetSurfaceStatus)(display, surface, stat);
 }
 
-Status XvMCRenderSurface ( 
+Status XvMCRenderSurface (
     Display *display,
     XvMCContext *context,
     unsigned int picture_structure,
@@ -670,7 +670,7 @@ XvMCGetSubpictureStatus (Display *display, XvMCSubpicture *subpic, int *stat)
 }
 
 Status XvMCCreateBlocks (
-    Display *display, 
+    Display *display,
     XvMCContext *context,
     unsigned int num_blocks,
     XvMCBlockArray *block
@@ -719,13 +719,13 @@ XvMCQueryAttributes (
     if (!xW.initialised) return NULL;
     return (*xW.XvMCQueryAttributes)(display, context, number);
 }
-  
+
 
 Status
 XvMCSetAttribute (
     Display *display,
-    XvMCContext *context, 
-    Atom attribute, 
+    XvMCContext *context,
+    Atom attribute,
     int value
     )
 {
@@ -737,8 +737,8 @@ XvMCSetAttribute (
 Status
 XvMCGetAttribute (
     Display *display,
-    XvMCContext *context, 
-    Atom attribute, 
+    XvMCContext *context,
+    Atom attribute,
     int *value
     )
 {
@@ -755,7 +755,7 @@ Status XvMCBeginSurface(Display *display,
 			const XvMCMpegControl *control)
 {
     if (!xW.vldextension) return BadValue;
-    return (*xW.XvMCBeginSurface)(display, context, target_surface, past_surface, future_surface, 
+    return (*xW.XvMCBeginSurface)(display, context, target_surface, past_surface, future_surface,
 				  control);
 }
 
