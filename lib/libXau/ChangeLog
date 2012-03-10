@@ -1,3 +1,137 @@
+commit 0e3061495f5da8a323db02e612c4f09688b7ade0
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Mar 6 22:16:57 2012 -0800
+
+    libXau 1.0.7
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 5c01ef69eee7dfe925c97558153fcd5e116252c6
+Author: Matthew D. Fuller <fullermd@over-yonder.net>
+Date:   Mon Sep 5 10:31:14 2011 -0500
+
+    Improve the handling of "normal" locking collisions.
+    
+    EEXIST is a perfectly normal and expected errno for open(O_CREAT |
+    O_EXCL), and is a signal to loop around and retry, not return with an
+    error.
+    
+    Signed-off-by: Matthew D. Fuller <fullermd@over-yonder.net>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 8fd15eb0149cec75d69a27b1f8ec3ce092465b80
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Sep 16 22:04:41 2011 -0700
+
+    Strip trailing whitespace
+    
+    Performed with: find * -type f | xargs perl -i -p -e 's{[ \t]+$}{}'
+    git diff -w & git diff -b show no diffs from this change
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 063bfa679adc2c00a6b55e5c9ee97f2aa0638788
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Feb 2 11:43:40 2011 -0500
+
+    config: comment, minor upgrade, quote and layout configure.ac
+    
+    Group statements per section as per Autoconf standard layout
+    Quote statements where appropriate.
+    Autoconf recommends not using dnl instead of # for comments
+    
+    Use AC_CONFIG_FILES to replace the deprecated AC_OUTPUT with parameters.
+    Use AC_PROG_LIBTOOL to replace the deprecated AM_PROG_LIBTOOL
+    Add AC_CONFIG_SRCDIR([Makefile.am]) where missing
+    No functional configuration changes
+    
+    This helps automated maintenance and release activities.
+    Details can be found in http://wiki.x.org/wiki/NewModuleGuidelines
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit c492cf2f90db79e75bf3fa8a8215f8139237c5c5
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Fri Jan 28 19:41:37 2011 -0500
+
+    config: replace deprecated AM_CONFIG_HEADER with AC_CONFIG_HEADERS
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 7de07642d62440a90942a8a071624ac09f48a2b3
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Fri Jan 28 16:07:07 2011 -0500
+
+    config: replace deprecated AC_HELP_STRING with AS_HELP_STRING
+    
+    This silences an Automake warning.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 98f08b9c8414e7d759d08af4711b9519ca8fd37f
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Fri Jan 28 11:56:13 2011 -0500
+
+    config: remove already included statements
+    
+    AC_PROG_INSTALL and AC_PROG_SED are included in XORG_DEFAULT_OPTIONS.
+    AC_PROG_MAKE_SET is included by AM_INIT_AUTOMAKE
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit b910d657d7b857fcd2564304205c853fa8148667
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Jan 27 18:50:14 2011 -0500
+
+    config: remove AC_PROG_CC as it overrides AC_PROG_C_C99
+    
+    XORG_STRICT_OPTION from XORG_DEFAULT_OPTIONS calls
+    AC_PROG_C_C99. This sets gcc with -std=gnu99.
+    If AC_PROG_CC macro is called afterwards, it resets CC to gcc.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 2085fbfa8347620890ed844057a42c9a4dba606b
+Author: Jesse Adkins <jesserayadkins@gmail.com>
+Date:   Tue Sep 28 13:30:02 2010 -0700
+
+    Purge cvs tags.
+    
+    Signed-off-by: Jesse Adkins <jesserayadkins@gmail.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 240d2475aa627774dad9e4f02594c5ce8c8048a4
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Aug 11 09:41:00 2010 -0400
+
+    Xau.man: replace hard-coded 3 with __libmansuffix__
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit afcd0ff9109b3478a473772c9d4e14d57951aab8
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Aug 11 09:31:50 2010 -0400
+
+    Xau.man: remove whitespace as reported by git diff check
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit f666268d1f328f76cbbef367560eb9ea4da30808
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Aug 11 09:11:55 2010 -0400
+
+    config: simplify building of shadow man pages
+    
+    Store the shadow files in git as any other man page.
+    Move man pages to man dir and use the common makefile
+    
+    Local fix in CVS for bug 5628
+    is not required as the problem has been fixed in
+    util-macros d9062e4077ebfd0985baf8418f3d0f111b9ddbba
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
 commit a01b74fad039e68cf296bd5e83c6f538181e529a
 Author: Julien Cristau <jcristau@debian.org>
 Date:   Mon Jul 19 17:17:54 2010 +0100

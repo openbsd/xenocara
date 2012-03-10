@@ -1,5 +1,3 @@
-/* $Xorg: AuLock.c,v 1.4 2001/02/09 02:03:42 xorgcvs Exp $ */
-
 /*
 
 Copyright 1988, 1998  The Open Group
@@ -25,7 +23,6 @@ used in advertising or otherwise to promote the sale, use or other dealings
 in this Software without prior written authorization from The Open Group.
 
 */
-/* $XFree86: xc/lib/Xau/AuLock.c,v 3.6 2002/05/31 18:45:43 dawes Exp $ */
 
 #ifdef HAVE_CONFIG_H
 #include <config.h>
@@ -79,12 +76,12 @@ long	dead)
 	    (void) unlink (link_name);
 	}
     }
-    
+
     while (retries > 0) {
 	if (creat_fd == -1) {
 	    creat_fd = open (creat_name, O_WRONLY | O_CREAT | O_EXCL, 0600);
 	    if (creat_fd == -1) {
-		if (errno != EACCES)
+		if (errno != EACCES && errno != EEXIST)
 		    return LOCK_ERROR;
 	    } else
 		(void) close (creat_fd);
