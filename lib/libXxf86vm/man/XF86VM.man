@@ -1,6 +1,6 @@
 .\"
 .\" Copyright (c) 1996  Joe Moss, The XFree86 Project
-.\" 
+.\"
 .de ZN
 .ie t \fB\^\\$1\^\fR\\$2
 .el \fI\^\\$1\^\fP\\$2
@@ -252,7 +252,7 @@ Applications that use these functions must be linked with
 The
 .ZN XF86VidModeGetModeLine
 function is used to query the settings for the currently selected
-video mode.  The calling program should pass a pointer to a 
+video mode.  The calling program should pass a pointer to a
 .ZN XF86VidModeModeLine
 structure that it has already allocated.  The function fills in
 the fields of the structure.
@@ -346,13 +346,13 @@ or
 functions or from one of the mode switch key sequences.
 .PP
 .RB Note:
-Because of the asynchronous nature of the X protocol, a call to 
+Because of the asynchronous nature of the X protocol, a call to
 .ZN XFlush
 is needed if the application wants to see the mode change immediately.
 To be informed of the execution status of the request, a
 custom error handler should be installed using
 .ZN XSetErrorHandler
-before calling the mode switching function. 
+before calling the mode switching function.
 .SS "MONITOR FUNCTIONS"
 Information known to the server about the monitor is returned by the
 .ZN XF86VidModeGetMonitor
