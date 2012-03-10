@@ -1,4 +1,4 @@
-/* 
+/*
 
 Copyright 1989, 1998  The Open Group
 
@@ -39,7 +39,7 @@ in this Software without prior written authorization from The Open Group.
  */
 static struct _namepair {
     XrmQuark quark;
-    char *name;
+    _Xconst char *name;
     XtGravity gravity;
 } names[] = {
     { NULLQUARK, XtEForget, ForgetGravity },
@@ -62,7 +62,7 @@ static struct _namepair {
 };
 
 /*
- * This function is deprecated as of the addition of 
+ * This function is deprecated as of the addition of
  * XtCvtStringToGravity in R6
  */
 void

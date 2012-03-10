@@ -1,5 +1,5 @@
-/* 
- 
+/*
+
 Copyright 1988, 1998  The Open Group
 
 Permission to use, copy, modify, distribute, and sell this software and its
@@ -33,13 +33,6 @@ in this Software without prior written authorization from The Open Group.
 #include <X11/Xmu/SysUtil.h>
 
 #include <stdio.h>
-
-#ifndef HAS_SNPRINTF
-#undef SCOPE
-#define SCOPE static
-#include "snprintf.c"
-#endif
-
 #include <stdarg.h>
 
 /*

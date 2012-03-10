@@ -30,13 +30,13 @@ Copyright 1987, 1988 by Digital Equipment Corporation, Maynard, Massachusetts.
 
                         All Rights Reserved
 
-Permission to use, copy, modify, and distribute this software and its 
-documentation for any purpose and without fee is hereby granted, 
+Permission to use, copy, modify, and distribute this software and its
+documentation for any purpose and without fee is hereby granted,
 provided that the above copyright notice appear in all copies and that
-both that copyright notice and this permission notice appear in 
+both that copyright notice and this permission notice appear in
 supporting documentation, and that the name of Digital not be
 used in advertising or publicity pertaining to distribution of the
-software without specific, written prior permission.  
+software without specific, written prior permission.
 
 DIGITAL DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE, INCLUDING
 ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS, IN NO EVENT SHALL
@@ -96,7 +96,7 @@ SOFTWARE.
  * XmuConvertStringToCursor:
  *
  * allows String to specify a standard cursor name (from cursorfont.h), a
- * font name and glyph index of the form "FONT fontname index [[font] index]", 
+ * font name and glyph index of the form "FONT fontname index [[font] index]",
  * or a bitmap file name (absolute, or relative to the global resource
  * bitmapFilePath, class BitmapFilePath).  If the resource is not
  * defined, the default value is the build symbol BITMAPDIR.
@@ -111,7 +111,7 @@ static XtConvertArgRec screenConvertArg[] = {
      sizeof(Screen *)}
 };
 
-    XtAddConverter(XtRString, XtRCursor, XmuCvtStringToCursor,      
+    XtAddConverter(XtRString, XtRCursor, XmuCvtStringToCursor,
 		   screenConvertArg, XtNumber(screenConvertArg));
  *
  */
@@ -155,25 +155,29 @@ XmuCvtStringToCursor(XrmValuePtr args, Cardinal *num_args,
 
     if (0 == strncmp(FONTSPECIFIER, name, strlen(FONTSPECIFIER))) {
 	char source_name[PATH_MAX], mask_name[PATH_MAX];
-	int source_char, mask_char, fields;
+	int source_char, mask_char, fields = 0;
 	Font source_font, mask_font;
 	XrmValue fromString, toFont;
 	XrmValue cvtArg;
 	Boolean success;
 	Display *dpy = DisplayOfScreen(screen);
-        char *strspec = NULL;
+	char *strspec = NULL;
+	int strspeclen;
 #ifdef XMU_KLUDGE
 	Cardinal num;
 #endif
 
-	strspec = XtMalloc(strlen("FONT %s %d %s %d") + 21);
-	sprintf(strspec, "FONT %%%lds %%d %%%lds %%d",
-		(unsigned long)sizeof(source_name) - 1,
-		(unsigned long)sizeof(mask_name) - 1);
-	fields = sscanf(name, strspec,
-			source_name, &source_char,
-			mask_name, &mask_char);
-	XtFree(strspec);
+	strspeclen = strlen("FONT %s %d %s %d") + 21;
+	strspec = XtMalloc(strspeclen);
+	if (strspec != NULL) {
+	    snprintf(strspec, strspeclen, "FONT %%%lds %%d %%%lds %%d",
+		     (unsigned long)sizeof(source_name) - 1,
+		     (unsigned long)sizeof(mask_name) - 1);
+	    fields = sscanf(name, strspec,
+			    source_name, &source_char,
+			    mask_name, &mask_char);
+	    XtFree(strspec);
+	}
 	if (fields < 2) {
 	    XtStringConversionWarning(name, XtRCursor);
 	    return;
@@ -246,7 +250,7 @@ XmuCvtStringToCursor(XrmValuePtr args, Cardinal *num_args,
 	return;
     }
 
-    if ((source = XmuLocateBitmapFile (screen, name, 
+    if ((source = XmuLocateBitmapFile (screen, name,
 				       maskname, (sizeof maskname) - 4,
 				       NULL, NULL, &xhot, &yhot)) == None) {
 	XtStringConversionWarning (name, XtRCursor);
@@ -257,7 +261,7 @@ XmuCvtStringToCursor(XrmValuePtr args, Cardinal *num_args,
     len = strlen (maskname);
     for (i = 0; i < 2; i++) {
 	strcpy (maskname + len, i == 0 ? "Mask" : "msk");
-	if ((mask = XmuLocateBitmapFile (screen, maskname, NULL, 0, 
+	if ((mask = XmuLocateBitmapFile (screen, maskname, NULL, 0,
 					 NULL, NULL, NULL, NULL)) != None)
 	  break;
     }
@@ -328,7 +332,7 @@ XmuCvtStringToColorCursor(Display *dpy, XrmValuePtr args, Cardinal *num_args,
 
     number = 1;
     XmuCvtStringToCursor(args, &number, fromVal, &ret_val);
-    
+
     cursor = *((Cursor *) ret_val.addr);
 
     if (cursor == None || (fg == BlackPixelOfScreen(screen)
@@ -343,5 +347,5 @@ XmuCvtStringToColorCursor(Display *dpy, XrmValuePtr args, Cardinal *num_args,
     new_done(Cursor, cursor);
 }
 
-    
-    
+
+

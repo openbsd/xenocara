@@ -1,3 +1,288 @@
+commit 6437d834cd66621e4e9f4decf7341b6d7ff45556
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Mar 5 23:00:10 2012 -0800
+
+    libXmu 1.1.1
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit ccd9e64515d6fc7b5367d6d98ecd3abf5b084026
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Nov 10 20:34:03 2011 -0800
+
+    Fix gcc -Wwrite-strings warnings (some, not all)
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 72ac4c4a464b3aec21cdbe367c9d465cbe0f3ff1
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Nov 10 09:55:07 2011 -0800
+
+    Drop support for pre-ANSI-C89 preprocessors
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 004d535c707251bd4fb47426f90712c195c6dfc7
+Author: Matt Dew <marcoz@osource.org>
+Date:   Tue Oct 4 20:51:48 2011 -0600
+
+    Cleanup IDs and links in doc
+    
+    1 - fix the capitalization of the ID attributes to match either the
+         <title> or <funcdef> string it goes with.
+    2 - fix any <linkend>'s that were affected by 1.
+    3 - any <function> in the docs that has an actual funcdef,
+    will become an olink.
+    
+    Signed-off-by: Matt Dew <marcoz@osource.org>
+
+commit d7d2ad7dde7b2653aa1e08e9339674bc40f1560a
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Sat Sep 24 17:00:09 2011 -0700
+
+    Fix build with -DDEBUG
+    
+    https://bugs.freedesktop.org/show_bug.cgi?id=1069
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit 66492163cb244fbe22c67bebb14c0918dd11eab6
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Sep 16 22:46:25 2011 -0700
+
+    Strip trailing whitespace
+    
+    Performed with: find * -type f | xargs perl -i -p -e 's{[ \t]+$}{}'
+    git diff -w & git diff -b show no diffs from this change
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 6ffa7e4bb1e7efdad4dd987e1fe27cdee96f7063
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Sep 14 14:33:24 2011 -0400
+
+    docs: use appropriate markup for copyright statement
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 7b2589d66d672d2585d3df4074ce64443f7e4b71
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Sep 12 11:01:19 2011 -0400
+
+    docs: use the &fullrelvers; entity to set X11 release information
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 46cc8a399aa16d145a9141d2fa8172282e4b7211
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Sep 8 20:00:00 2011 -0400
+
+    docbook.am: embed css styles inside the HTML HEAD element
+    
+    Rather than referring to the external xorg.css stylesheet, embed the content
+    of the file in the html output produced. This is accomplished by using
+    version 1.10 of xorg-xhtml.xsl.
+    
+    This makes the whole html docs tree much more relocatable.
+    In addition, it eliminates xorg.css as a runtime file which makes
+    xorg-sgml-doctools a build time only package.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 01d2a55b4fd8e3743b1f396f81be6a06f6345ac5
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Sep 7 10:31:04 2011 -0400
+
+    docbook.am: global maintenance update - entities, images and olinking
+    
+    Adding support in libX11 for html chunking caused a reorg of docbook.am
+    as well as the xorg-sgml-doctools masterdb for olinking.
+    The parameter img.src.path is added for pdf images.
+    A searchpath to the root builddir is added for local entities, if present.
+    
+    The docbook.am makefile hides all the details and is identical for
+    all 22 modules having DocBook documentation. It is included by a thin
+    Makefile.am which requires no docbook knowledge.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 888135ef815766f0421438430ca40809e4f7e411
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Aug 7 21:20:26 2011 -0400
+
+    docbook pdf: add xsl parameter to locate images
+    
+    Unlike html, pdf/ps requires a full path name to find images,
+    but only needs it to make an internal copy of it at build time.
+    The image can later be removed and the image still shows up in the pdf doc.
+    This allows us to use the absolute builddir.
+    
+    This parameter must not be used for html which loads the image from disk
+    at user read time. The image is removed from builddir after build is done,
+    and we do not know where the image will be installed by the distro.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 5ba82aec6547513ea182cbc6cb95b472bbfb9dc5
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Aug 7 20:30:58 2011 -0400
+
+    Xmu.xml: Change layout of the X Logo figure
+    
+    The floating does not come up right, the figure caption is in the way.
+    Move the figure out of the paragraph and below the text.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 08fb51c1db9c9693125f4c093d07abc94d6ce0f6
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Jun 12 18:39:46 2011 -0400
+
+    Install xml versions of specs even if HAVE_XMLTO is false
+    
+    DocBook/XML input source is also a usefull output format that can be viewed
+    with an XML viewer or editor and by some O/S help system.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit a70bedc470f5482dc64b947057e5120c2f322177
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Jun 5 16:27:37 2011 -0400
+
+    Install target dbs alongside generated documents
+    
+    This matches a change in xorg-sgml-docs whereby the masterdb will look for
+    the target dbs into the same location as the generated documents.
+    
+    The target dbs are now installed alongside the generated documents.
+    Previously they are installed in $prefix/sgml/X11/dbs alongside masterdb which
+    has the potential of installing outside the package prefix and cause
+    distcheck to fail when user does not have write permission in this package.
+    
+    Requires XORG_CHECK_SGML_DOCTOOLS(1.8) which was released 2011-06-11
+
+commit 3f3c9a60381371f60a174497ea6d5d90abea4261
+Author: Matt Dew <marcoz@osource.org>
+Date:   Tue May 31 20:03:23 2011 -0600
+
+    Add id attributes to funcsynopsis to allow other docs to olink to them.
+    
+    Signed-off-by: Matt Dew <marcoz@osource.org>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 4000666e864e477e712caa0f0c0a5d09006c7752
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Feb 27 15:06:18 2011 -0500
+
+    Documentation: add Docbook external references support
+    
+    When writing technical documentation, it is often necessary to cross
+    reference to other information. When that other information is not in the
+    current document, additional support is needed, namely <olink>.
+    
+    A new feature with version 1.7 of xorg-sgml-doctools adds references to
+    other documents within or outside this package.
+    
+    This patch adds technical support for this feature but does not change
+    the content of the documentation as seen by the end user.
+    
+    Each book or article must generate a database containing the href
+    of sections that can be referred to from another document. This database
+    is installed in DATAROOTDIR/sgml/X11/dbs. There is a requirement that
+    the value of DATAROOTDIR for xorg-sgml-doctools and for the package
+    documentation is the same. This forms a virtual document tree.
+    
+    This database is consulted by other documents while they are being generated
+    in order to fulfill the missing information for linking.
+    Refer to the xorg-sgml-doctools for further technical information.
+    
+    Co-authored-by: Matt Dew <marcoz@osource.org>
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 6ab92082d5f6c842b578a9fe1f9888ed3339336a
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Feb 10 22:06:52 2011 -0800
+
+    Make EditresCom.c identation a lot less random
+    
+    2 spaces!  No 4!  2!  3!  No, Blue!  Red!  Aughughurglrgll...
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 70ca0ef2cc0ec84308792a7b184e90c5cb358278
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Feb 2 19:51:54 2011 -0500
+
+    config: remove config test for snprintf
+    
+    The macro HAS_SNPRINTF is hard coded to always be defined.
+    If it were not defined, Lower.c would include snprintf.c
+    which does not exist. Seems to be relics from IMakefile
+    
+    Other modules are using snprintf unconditionally.
+    
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Julien Cristau <jcristau@debian.org>
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 9f57096dd0881651de3b710b182db59091e6f421
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Feb 2 11:43:43 2011 -0500
+
+    config: comment, minor upgrade, quote and layout configure.ac
+    
+    Group statements per section as per Autoconf standard layout
+    Quote statements where appropriate.
+    Autoconf recommends not using dnl instead of # for comments
+    
+    Use AC_CONFIG_FILES to replace the deprecated AC_OUTPUT with parameters.
+    
+    This helps automated maintenance and release activities.
+    Details can be found in http://wiki.x.org/wiki/NewModuleGuidelines
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 1be35fb51871f314bef673975c2be94e5e427696
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Fri Jan 28 19:41:37 2011 -0500
+
+    config: replace deprecated AM_CONFIG_HEADER with AC_CONFIG_HEADERS
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 9bd47f1db85b0c997389609ad26a2766f5aeeff5
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Fri Jan 28 16:34:14 2011 -0500
+
+    config: remove unrequired AC_CONFIG_AUX_DIR
+    
+    The default location for the generation of configuation files is the current
+    package root directory. These files are config.* and friends.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 2f00ed22d17592b963fabd925dba90f2a003d801
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Dec 5 00:13:25 2010 -0800
+
+    XmuCvtStringToCursor: sprintf -> snprintf & check for XtMalloc failure
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 813ee0dcecc89d3f334d8747b171c71e34a7671e
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Nov 9 13:04:57 2010 -0500
+
+    config: HTML file generation: use the installed copy of xorg.css
+    
+    Currenlty the xorg.css file is copied in each location
+    where a DocBook/XML file resides. This produces about
+    70 copies in the $(docdir) install tree.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
 commit 5d9b0896bfdfe60656a2d806a06e17c7adf335b5
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Fri Oct 29 16:52:54 2010 -0700
