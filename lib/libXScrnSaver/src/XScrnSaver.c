@@ -36,7 +36,7 @@ in this Software without prior written authorization from the X Consortium.
 
 static XExtensionInfo _screen_saver_info_data;
 static XExtensionInfo *screen_saver_info = &_screen_saver_info_data;
-static /* const */ char *screen_saver_extension_name = ScreenSaverName;
+static const char *screen_saver_extension_name = ScreenSaverName;
 
 #define ScreenSaverCheckExtension(dpy,i,val) \
   XextCheckExtension (dpy, i, screen_saver_extension_name, val)
@@ -75,7 +75,7 @@ static /* const */ XExtensionHooks screen_saver_extension_hooks = {
 };
 
 static XEXT_GENERATE_FIND_DISPLAY (find_display, screen_saver_info,
-				   screen_saver_extension_name, 
+				   screen_saver_extension_name,
 				   &screen_saver_extension_hooks,
 				   ScreenSaverNumberEvents, NULL)
 
@@ -266,7 +266,7 @@ XScreenSaverProcessWindowAttributes (
 
     if (valuemask & CWBackPixmap)
 	*value++ = attributes->background_pixmap;
-	
+
     if (valuemask & CWBackPixel)
     	*value++ = attributes->background_pixel;
 
@@ -284,7 +284,7 @@ XScreenSaverProcessWindowAttributes (
 
     if (valuemask & CWBackingStore)
         *value++ = attributes->backing_store;
-    
+
     if (valuemask & CWBackingPlanes)
 	*value++ = attributes->backing_planes;
 
@@ -352,9 +352,9 @@ void XScreenSaverSetAttributes (
     else
 	req->visualID = visual->visualid;
     /* abuse an Xlib internal interface - is this legal for us? */
-    if ((req->mask = valuemask)) 
+    if ((req->mask = valuemask))
         XScreenSaverProcessWindowAttributes (dpy,
-			(xChangeWindowAttributesReq *)req, 
+			(xChangeWindowAttributesReq *)req,
 			valuemask, attributes);
     UnlockDisplay (dpy);
     SyncHandle ();
@@ -394,7 +394,7 @@ Status XScreenSaverRegister (
 	return 0;
 
     ul = (unsigned long) xid;
-    XChangeProperty (dpy, RootWindow(dpy,screen), prop, type, 32, 
+    XChangeProperty (dpy, RootWindow(dpy,screen), prop, type, 32,
 		     PropModeReplace, (unsigned char *) &ul, 1);
     return 1;
 }
