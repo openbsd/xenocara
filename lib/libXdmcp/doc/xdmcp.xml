@@ -1,27 +1,43 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.3//EN"
-                   "http://www.oasis-open.org/docbook/xml/4.3/docbookx.dtd">
+                   "http://www.oasis-open.org/docbook/xml/4.3/docbookx.dtd" [
+<!--
+   variable names used in equation markup in the authentication chapter
+   FIXME: Replace with mathml?
+  -->
+<!ENTITY variable.D	"<emphasis role='italic'>D</emphasis>">
+<!ENTITY variable.N	"<emphasis role='italic'>N</emphasis>">
+<!ENTITY variable.T	"<emphasis role='italic'>T</emphasis>">
+<!ENTITY variable.Delta	"<emphasis role='italic'>&Delta;</emphasis>">
+<!ENTITY variable.alpha	"<emphasis role='italic'>&alpha;</emphasis>">
+<!ENTITY variable.beta	"<emphasis role='italic'>&beta;</emphasis>">
+<!ENTITY variable.kappa "<emphasis role='italic'>&kappa;</emphasis>">
+<!ENTITY variable.rho	"<emphasis role='italic'>&rho;</emphasis>">
+<!ENTITY variable.sigma	"<emphasis role='italic'>&sigma;</emphasis>">
+<!ENTITY variable.tau	"<emphasis role='italic'>&tau;</emphasis>">
+<!ENTITY % defs SYSTEM "defs.ent"> %defs;
+]>
 
 <book id="xdmcp">
 
 <bookinfo>
    <title>X Display Manager Control Protocol</title>
    <subtitle>X.Org Standard</subtitle>
+   <releaseinfo>X Version 11, Release &fullrelvers;</releaseinfo>
    <releaseinfo>Version 1.1</releaseinfo>
    <authorgroup>
    <author>
       <firstname>Keith</firstname><surname>Packard</surname>
-      <affiliation><orgname>
-X Consortium,
-Laboratory for Computer Science,
-Massachusetts Institute of Technology
-      </orgname></affiliation>
+      <affiliation>
+        <orgname>Massachusetts Institute of Technology</orgname>
+        <orgdiv>Laboratory for Computer Science</orgdiv>
+        <orgdiv>X Consortium</orgdiv>
+      </affiliation>
    </author>
    </authorgroup>
 
-   <copyright><year>1989</year><holder>The Open Group</holder></copyright>
-   <copyright><year>2004</year><holder>The Open Group</holder></copyright>
-   <productnumber>X Version 11, Release 6.8</productnumber>
+   <copyright><year>1989</year><year>2004</year>
+     <holder>The Open Group</holder></copyright>
 
 <legalnotice>
 
@@ -59,9 +75,7 @@ in this Software without prior written authorization from The Open Group.
 </legalnotice>
 </bookinfo>
 
-<chapter id="TITLE">
-<title>TITLE</title>
-<sect1 id="Purpose_and_Goals">
+<chapter id="Purpose_and_Goals">
 <title>Purpose and Goals</title>
 <!-- .XS -->
 <!-- (SN Purpose and Goals -->
@@ -179,9 +193,9 @@ XDMCP must be flexible enough to accomodate a variety of security mechanisms.
     </para>
   </listitem>
 </itemizedlist>
-</sect1>
+</chapter>
 
-<sect1 id="Overview_of_the_Protocol">
+<chapter id="Overview_of_the_Protocol">
 <title>Overview of the Protocol</title>
 <!-- .XS -->
 <!-- (SN Overview of the Protocol -->
@@ -235,9 +249,9 @@ when the Manager has received (at least one copy of) a packet.  On the
 Manager side, this means that any packet may be received more than once (if
 the response was lost) and duplicates must be ignored.
 </para>
-</sect1>
+</chapter>
 
-<sect1 id="Data_Types">
+<chapter id="Data_Types">
 <title>Data Types</title>
 <!-- .XS -->
 <!-- (SN Data Types -->
@@ -251,35 +265,36 @@ restriction will not substantially hamper the efficiency of any
 implementation.  Also, no padding of any sort will occur within the packets.
 </para>
 
-<informaltable frame="none">
-  <tgroup cols='3' align='left'>
-  <colspec colname='c1' colsep="0"/>
-  <colspec colname='c2' colsep="0"/>
-  <colspec colname='c3' colsep="0"/>
+<informaltable frame="topbot">
+  <?dbfo keep-together="always" ?>
+  <tgroup cols='3' align='left' colsep='0' rowsep='0'>
+  <colspec colname='c1' colwidth="1.0*"/>
+  <colspec colname='c2' colwidth="1.0*"/>
+  <colspec colname='c3' colwidth="2.0*"/>
   <thead>
-    <row>
+    <row rowsep='1'>
       <entry>Type Name</entry>
       <entry>Length (Bytes)</entry>
       <entry>Description</entry>
     </row>
   </thead>
   <tbody>
-    <row rowsep="0">
+    <row>
       <entry>CARD8</entry>
       <entry>1</entry>
       <entry>A single byte unsigned integer</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>CARD16</entry>
       <entry>2</entry>
       <entry>Two byte unsigned integer</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>CARD32</entry>
       <entry>4</entry>
       <entry>Four byte unsigned integer</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>ARRAY8</entry>
       <entry>n+2</entry>
       <entry>
@@ -288,7 +303,7 @@ a collection of CARD8.  The value of the CARD16
 field (n) specifies the number of CARD8 values to follow
       </entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>ARRAY16</entry>
       <entry>2*m+1</entry>
       <entry>
@@ -296,7 +311,7 @@ This is a CARD8 (m) which specifies the
 number of CARD16 values to follow
       </entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>ARRAY32</entry>
       <entry>4*l+1</entry>
       <entry>
@@ -304,7 +319,7 @@ This is a CARD8 (l) which specifies the
 number of CARD32 values to follow
       </entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>ARRAYofARRAY8</entry>
       <entry>?</entry>
       <entry>
@@ -315,9 +330,9 @@ number of ARRAY8 values to follow.
   </tbody>
   </tgroup>
 </informaltable>
-</sect1>
+</chapter>
 
-<sect1 id="Packet_Format">
+<chapter id="Packet_Format">
 <title>Packet Format</title>
 <!-- .XS -->
 <!-- (SN Packet Format -->
@@ -326,35 +341,36 @@ number of ARRAY8 values to follow.
 All XDMCP packets have the following information:
 </para>
 
-<informaltable frame="none">
-  <tgroup cols='3' align='left'>
-  <colspec colname='c1' colsep="0"/>
-  <colspec colname='c2' colsep="0"/>
-  <colspec colname='c3' colsep="0"/>
+<informaltable frame="topbot">
+  <?dbfo keep-together="always" ?>
+  <tgroup cols='3' align='left' colsep='0' rowsep='0'>
+  <colspec colname='c1' colwidth="1.0*" />
+  <colspec colname='c2' colwidth="1.0*" />
+  <colspec colname='c3' colwidth="2.0*" />
   <thead>
-    <row>
+    <row rowsep='1'>
       <entry>Length (Bytes)</entry>
       <entry>Field Type</entry>
       <entry>Description</entry>
     </row>
   </thead>
   <tbody>
-    <row rowsep="0">
+    <row>
       <entry>2</entry>
       <entry>CARD16</entry>
       <entry>version number</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>2</entry>
       <entry>CARD16</entry>
       <entry>opcode packet header</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>2</entry>
       <entry>CARD16</entry>
       <entry>n = length of remaining data in bytes</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>n</entry>
       <entry>???</entry>
       <entry>packet-specific data</entry>
@@ -450,9 +466,9 @@ the Session ID should match the value sent in the preceding
     </para>
   </listitem>
 </orderedlist>
-</sect1>
+</chapter>
 
-<sect1 id="Protocol">
+<chapter id="Protocol">
 <title>Protocol</title>
 <!-- .XS -->
 <!-- (SN Protocol -->
@@ -466,49 +482,49 @@ header in the order described without padding, and the length field is
 computed accordingly.
 </para>
 
-<informaltable frame="none">
+<informaltable frame="none" colsep='0' rowsep='0'>
   <tgroup cols='10' align='left'>
-  <colspec colname='col1' colsep="0" colwidth="1*"/>
-  <colspec colname='col2' colsep="0" colwidth="1*"/>
-  <colspec colname='col3' colsep="0" colwidth="1*"/>
-  <colspec colname='col4' colsep="0" colwidth="1*"/>
-  <colspec colname='col5' colsep="0" colwidth="1*"/>
-  <colspec colname='col6' colsep="0" colwidth="1*"/>
-  <colspec colname='col7' colsep="0" colwidth="1*"/>
-  <colspec colname='col8' colsep="0" colwidth="1*"/>
-  <colspec colname='col9' colsep="0" colwidth="1*"/>
-  <colspec colname='col10' colsep="0" colwidth="1*"/>
+  <colspec colname='col1' colwidth="1.0*"/>
+  <colspec colname='col2' colwidth="1.0*"/>
+  <colspec colname='col3' colwidth="1.0*"/>
+  <colspec colname='col4' colwidth="1.0*"/>
+  <colspec colname='col5' colwidth="1.0*"/>
+  <colspec colname='col6' colwidth="1.0*"/>
+  <colspec colname='col7' colwidth="1.0*"/>
+  <colspec colname='col8' colwidth="1.0*"/>
+  <colspec colname='col9' colwidth="1.0*"/>
+  <colspec colname='col10' colwidth="1.0*"/>
   <spanspec namest="col1" nameend="col10" spanname="col1_on" align="left"/>
   <spanspec namest="col2" nameend="col10" spanname="col2_on" align="left"/>
   <spanspec namest="col3" nameend="col10" spanname="col3_on" align="left"/>
   <spanspec namest="col4" nameend="col10" spanname="col4_on" align="left"/>
   <spanspec namest="col5" nameend="col10" spanname="col5_on" align="left"/>
   <tbody>
-    <row rowsep="0">
+    <row>
       <entry spanname="col1_on"><emphasis role="bold">Query</emphasis></entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry spanname="col1_on"><emphasis role="bold">BroadcastQuery</emphasis></entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry spanname="col1_on"><emphasis role="bold">IndirectQuery</emphasis></entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry spanname="col2_on">Display -> Manager</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry spanname="col2_on">Additional Fields:</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry></entry>
       <entry spanname="col3_on">
 <emphasis>Authentication Names</emphasis>: ARRAYofARRAY8
       </entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry></entry>
       <entry></entry>
@@ -519,12 +535,12 @@ manager will choose one of these and return it in the
       </entry>
     </row>
 <!-- AAAAAAAAAAAAA -->
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry></entry>
-      <entry>Semantics</entry>
+      <entry spanname="col3_on">Semantics</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry></entry>
       <entry></entry>
@@ -574,7 +590,7 @@ Each packet type has slightly different semantics:
 </para>
       </entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry></entry>
       <entry></entry>
@@ -618,13 +634,13 @@ is not forwarded.
     </para>
       </entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry></entry>
       <entry></entry>
       <entry spanname="col4_on">Valid Responses:</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry></entry>
       <entry spanname="col3_on">
@@ -632,18 +648,18 @@ is not forwarded.
 <function>Unwilling</function>
       </entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry></entry>
       <entry></entry>
       <entry spanname="col4_on">Problems/Solutions:</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry></entry>
       <entry spanname="col3_on">Problem:</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry></entry>
       <entry></entry>
@@ -652,7 +668,7 @@ is not forwarded.
 <para>Indication:</para>
       </entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry></entry>
       <entry></entry>
@@ -666,13 +682,13 @@ was sent, else failure to receive
 <function>Willing</function>.
       </entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry></entry>
       <entry></entry>
       <entry spanname="col4_on">Solution:</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry></entry>
       <entry></entry>
@@ -681,14 +697,14 @@ was sent, else failure to receive
 Repeatedly send the packet while waiting for user to choose a manager.
       </entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry></entry>
       <entry spanname="col3_on">
 Timeout/Retransmission policy:
       </entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry></entry>
       <entry></entry>
@@ -700,26 +716,26 @@ should reset the timeout when user-input is detected.  In this way, the
 display will wakeup when touched by the user.
       </entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry spanname="col1_on">
 <function>ForwardQuery</function>
       </entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry spanname="col2_on">
 <para>Primary Manager -&gt; Secondary Manager</para>
 <para>Additional Fields:</para>
       </entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry></entry>
       <entry spanname="col3_on">
 <emphasis remap='I'>Client Address</emphasis>: ARRAY8
       </entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry></entry>
       <entry></entry>
@@ -727,14 +743,14 @@ display will wakeup when touched by the user.
 Specifies the network address of the client display.
       </entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry></entry>
       <entry spanname="col3_on">
 <emphasis remap='I'>Client Port</emphasis>: ARRAY8
       </entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry></entry>
       <entry></entry>
@@ -742,14 +758,14 @@ Specifies the network address of the client display.
 Specifies an identification of the client task on the client display.
       </entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry></entry>
       <entry spanname="col3_on">
 <emphasis remap='I'>Authentication Names</emphasis>: ARRAYofARRAY8
       </entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry></entry>
       <entry></entry>
@@ -760,13 +776,13 @@ in the
 packet.
       </entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry spanname="col2_on">
 Semantics:
       </entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry></entry>
       <entry spanname="col3_on">
@@ -798,27 +814,27 @@ packet.
         </para>
       </entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry spanname="col2_on">
 Valid Responses:
       </entry>
     </row>
 
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry></entry>
       <entry spanname="col3_on">
 <function>Willing</function>
       </entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry spanname="col2_on">
 Problems/Solutions:
       </entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry></entry>
       <entry spanname="col3_on">
@@ -826,13 +842,13 @@ Identical to
 <function>BroadcastQuery</function>
       </entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry spanname="col2_on">
 Timeout/Retransmission policy:
       </entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry></entry>
       <entry spanname="col3_on">
@@ -841,13 +857,13 @@ retransmitted.
       </entry>
     </row>
 
-    <row rowsep="0">
+    <row>
       <entry spanname="col1_on">
 <function>Willing</function>
       </entry>
     </row>
 
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry spanname="col2_on">
         <para>
@@ -859,7 +875,7 @@ Additional Fields:
       </entry>
     </row>
 
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry></entry>
       <entry spanname="col3_on">
@@ -867,7 +883,7 @@ Additional Fields:
       </entry>
     </row>
 
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry></entry>
       <entry></entry>
@@ -895,7 +911,7 @@ of authentication.
       </entry>
     </row>
 
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry></entry>
       <entry spanname="col3_on">
@@ -903,7 +919,7 @@ of authentication.
       </entry>
     </row>
 
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry></entry>
       <entry></entry>
@@ -913,7 +929,7 @@ The protocol specifies no interpretation of the data in this field.
       </entry>
     </row>
 
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry></entry>
       <entry spanname="col3_on">
@@ -921,7 +937,7 @@ The protocol specifies no interpretation of the data in this field.
       </entry>
     </row>
 
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry></entry>
       <entry></entry>
@@ -933,14 +949,14 @@ protocol specifies no interpretation of the data in this field.
     </row>
 
 
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry spanname="col2_on">
 Semantics:
       </entry>
     </row>
 
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry></entry>
       <entry spanname="col3_on">
@@ -958,14 +974,14 @@ connections already).
       </entry>
     </row>
 
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry spanname="col2_on">
 Problems/Solutions:
       </entry>
     </row>
 
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry></entry>
       <entry spanname="col3_on">
@@ -973,7 +989,7 @@ Problem:
       </entry>
     </row>
 
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry></entry>
       <entry></entry>
@@ -988,7 +1004,7 @@ Indication:
       </entry>
     </row>
 
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry></entry>
       <entry></entry>
@@ -1003,7 +1019,7 @@ was sent, else failure to receive
       </entry>
     </row>
 
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry></entry>
       <entry></entry>
@@ -1012,7 +1028,7 @@ Solution:
       </entry>
     </row>
 
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry></entry>
       <entry></entry>
@@ -1024,14 +1040,14 @@ The display should continue to send the query until a response is received.
 
 
 
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry spanname="col2_on">
 Timeout/Retransmission policy:
       </entry>
     </row>
 
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry></entry>
       <entry spanname="col3_on">
@@ -1040,13 +1056,13 @@ never be retransmitted.
       </entry>
     </row>
 
-    <row rowsep="0">
+    <row>
       <entry spanname="col1_on">
 <function>Unwilling</function>
       </entry>
     </row>
 
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry spanname="col2_on">
         <para>
@@ -1058,7 +1074,7 @@ Additional Fields:
       </entry>
     </row>
 
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry></entry>
       <entry spanname="col3_on">
@@ -1070,14 +1086,14 @@ for the refusal of service.
       </entry>
     </row>
 
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry spanname="col2_on">
 Semantics:
       </entry>
     </row>
 
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry></entry>
       <entry spanname="col3_on">
@@ -1095,14 +1111,14 @@ particular displays or that handle a limited number of displays at once.
       </entry>
     </row>
 
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry spanname="col2_on">
 Problems/Solutions:
       </entry>
     </row>
 
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry></entry>
       <entry spanname="col3_on">
@@ -1110,7 +1126,7 @@ Problem:
       </entry>
     </row>
 
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry></entry>
       <entry></entry>
@@ -1125,7 +1141,7 @@ Indication:
       </entry>
     </row>
 
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry></entry>
       <entry></entry>
@@ -1136,7 +1152,7 @@ Display fails to receive
       </entry>
     </row>
 
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry></entry>
       <entry></entry>
@@ -1145,7 +1161,7 @@ Solution:
       </entry>
     </row>
 
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry></entry>
       <entry></entry>
@@ -1157,14 +1173,14 @@ messages until a response is received.
       </entry>
     </row>
 
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry spanname="col2_on">
 Timeout/Retransmission policy:
       </entry>
     </row>
 
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry></entry>
       <entry spanname="col3_on">
@@ -1172,13 +1188,13 @@ Like all packets sent from the manager to the display, this packet should
 never be retransmitted.
       </entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry spanname="col1_on">
 <function>Request</function>
       </entry>
     </row>
 
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry spanname="col2_on">
         <para>
@@ -1190,7 +1206,7 @@ Additional Fields:
       </entry>
     </row>
 
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry></entry>
       <entry spanname="col3_on">
@@ -1198,7 +1214,7 @@ Additional Fields:
       </entry>
     </row>
 
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry></entry>
       <entry></entry>
@@ -1209,7 +1225,7 @@ This value will be zero for most autonomous displays.
       </entry>
     </row>
 
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry></entry>
       <entry spanname="col3_on">
@@ -1217,7 +1233,7 @@ This value will be zero for most autonomous displays.
       </entry>
     </row>
 
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry></entry>
       <entry></entry>
@@ -1228,7 +1244,7 @@ corresponds to an X-protocol host family type.
       </entry>
     </row>
 
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry></entry>
       <entry spanname="col3_on">
@@ -1236,7 +1252,7 @@ corresponds to an X-protocol host family type.
       </entry>
     </row>
 
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry></entry>
       <entry></entry>
@@ -1246,7 +1262,7 @@ this array indicates the network address of the display device.
       </entry>
     </row>
 
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry></entry>
       <entry spanname="col3_on">
@@ -1259,7 +1275,7 @@ this array indicates the network address of the display device.
       </entry>
     </row>
 
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry></entry>
       <entry></entry>
@@ -1271,7 +1287,7 @@ and use to authenticate itself.
       </entry>
     </row>
 
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry></entry>
       <entry spanname="col3_on">
@@ -1279,7 +1295,7 @@ and use to authenticate itself.
       </entry>
     </row>
 
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry></entry>
       <entry></entry>
@@ -1290,7 +1306,7 @@ authorization.
       </entry>
     </row>
 
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry></entry>
       <entry spanname="col3_on">
@@ -1298,7 +1314,7 @@ authorization.
       </entry>
     </row>
 
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry></entry>
       <entry></entry>
@@ -1309,14 +1325,14 @@ Manufacturer Display ID Format.
       </entry>
     </row>
 
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry spanname="col2_on">
 Semantics:
       </entry>
     </row>
 
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry></entry>
       <entry spanname="col3_on">
@@ -1334,14 +1350,14 @@ packet.
       </entry>
     </row>
 
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry spanname="col2_on">
 Valid Responses:
       </entry>
     </row>
 
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry></entry>
       <entry spanname="col3_on">
@@ -1350,14 +1366,14 @@ Valid Responses:
       </entry>
     </row>
 
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry spanname="col2_on">
 Problems/Solutions:
       </entry>
     </row>
 
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry></entry>
       <entry spanname="col3_on">
@@ -1365,7 +1381,7 @@ Problem:
       </entry>
     </row>
 
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry></entry>
       <entry></entry>
@@ -1374,7 +1390,7 @@ Request not received by manager.
       </entry>
     </row>
 
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry></entry>
       <entry></entry>
@@ -1383,7 +1399,7 @@ Indication:
       </entry>
     </row>
 
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry></entry>
       <entry></entry>
@@ -1393,7 +1409,7 @@ Display timeout waiting for response.
       </entry>
     </row>
 
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry></entry>
       <entry></entry>
@@ -1402,7 +1418,7 @@ Solution:
       </entry>
     </row>
 
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry></entry>
       <entry></entry>
@@ -1415,7 +1431,7 @@ message.
     </row>
 
 
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry></entry>
       <entry></entry>
@@ -1424,7 +1440,7 @@ Problem:
       </entry>
     </row>
 
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry></entry>
       <entry></entry>
@@ -1434,7 +1450,7 @@ Message received out of order by manager.
       </entry>
     </row>
 
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry></entry>
       <entry></entry>
@@ -1443,7 +1459,7 @@ Indication:
       </entry>
     </row>
 
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry></entry>
       <entry></entry>
@@ -1453,7 +1469,7 @@ None.
       </entry>
     </row>
 
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry></entry>
       <entry></entry>
@@ -1462,7 +1478,7 @@ Solution:
       </entry>
     </row>
 
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry></entry>
       <entry></entry>
@@ -1482,14 +1498,14 @@ will be discarded by the display.
       </entry>
     </row>
 
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry spanname="col2_on">
 Timeout/Retransmission policy:
       </entry>
     </row>
 
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry></entry>
       <entry spanname="col3_on">
@@ -1498,13 +1514,13 @@ After no more than 126 seconds, give up and report an error to the user.
       </entry>
     </row>
 
-    <row rowsep="0">
+    <row>
       <entry spanname="col1_on">
 <function>Accept</function>
       </entry>
     </row>
 
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry spanname="col2_on">
         <para>
@@ -1516,7 +1532,7 @@ Additional Fields:
       </entry>
     </row>
 
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry></entry>
       <entry spanname="col3_on">
@@ -1524,7 +1540,7 @@ Additional Fields:
       </entry>
     </row>
 
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry></entry>
       <entry></entry>
@@ -1533,7 +1549,7 @@ Identifies the session that can be started by the manager.
       </entry>
     </row>
 
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry></entry>
       <entry spanname="col3_on">
@@ -1546,7 +1562,7 @@ Identifies the session that can be started by the manager.
       </entry>
     </row>
 
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry></entry>
       <entry></entry>
@@ -1557,7 +1573,7 @@ should terminate the protocol at this point and display an error to the user.
       </entry>
     </row>
 
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry></entry>
       <entry spanname="col3_on">
@@ -1570,14 +1586,14 @@ should terminate the protocol at this point and display an error to the user.
       </entry>
     </row>
 
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry></entry>
       <entry></entry>
       <entry spanname="col4_on">
 Is the data sent to the display to indicate the type of authorization the
 manager will be using in the first call to
-<function>XOpenDisplay</function>
+<olink targetdoc='libX11' targetptr='XOpenDisplay'><function>XOpenDisplay</function></olink>
 after the
 <function>Manage</function>
 packet is received.
@@ -1585,14 +1601,14 @@ packet is received.
     </row>
 
 
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry spanname="col2_on">
 Semantics:
       </entry>
     </row>
 
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry></entry>
       <entry spanname="col3_on">
@@ -1620,14 +1636,14 @@ message.
       </entry>
     </row>
 
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry spanname="col2_on">
 Problems/Solutions:
       </entry>
     </row>
 
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry></entry>
       <entry spanname="col3_on">
@@ -1635,7 +1651,7 @@ Problem:
       </entry>
     </row>
 
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry></entry>
       <entry></entry>
@@ -1647,7 +1663,7 @@ not received by display.
       </entry>
     </row>
 
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry></entry>
       <entry></entry>
@@ -1656,7 +1672,7 @@ Indication:
       </entry>
     </row>
 
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry></entry>
       <entry></entry>
@@ -1667,7 +1683,7 @@ Display timeout waiting for response to
       </entry>
     </row>
 
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry></entry>
       <entry></entry>
@@ -1676,7 +1692,7 @@ Solution:
       </entry>
     </row>
 
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry></entry>
       <entry></entry>
@@ -1688,7 +1704,7 @@ message.
       </entry>
     </row>
 
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry></entry>
       <entry spanname="col3_on">
@@ -1696,7 +1712,7 @@ Problem:
       </entry>
     </row>
 
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry></entry>
       <entry></entry>
@@ -1705,7 +1721,7 @@ Message received out of order by display.
       </entry>
     </row>
 
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry></entry>
       <entry></entry>
@@ -1714,7 +1730,7 @@ Indication:
       </entry>
     </row>
 
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry></entry>
       <entry></entry>
@@ -1728,7 +1744,7 @@ has been sent.
       </entry>
     </row>
 
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry></entry>
       <entry></entry>
@@ -1737,7 +1753,7 @@ Solution:
       </entry>
     </row>
 
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry></entry>
       <entry></entry>
@@ -1751,14 +1767,14 @@ message.
       </entry>
     </row>
 
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry spanname="col2_on">
 Timeout/Retransmission policy:
       </entry>
     </row>
 
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry></entry>
       <entry spanname="col3_on">
@@ -1767,13 +1783,13 @@ never be retransmitted.
       </entry>
     </row>
 
-    <row rowsep="0">
+    <row>
       <entry spanname="col1_on">
 <function>Decline</function>
       </entry>
     </row>
 
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry spanname="col2_on">
         <para>
@@ -1785,7 +1801,7 @@ Additional Fields:
       </entry>
     </row>
 
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry></entry>
       <entry spanname="col3_on">
@@ -1793,7 +1809,7 @@ Additional Fields:
       </entry>
     </row>
 
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry></entry>
       <entry></entry>
@@ -1803,7 +1819,7 @@ service.
       </entry>
     </row>
 
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry></entry>
       <entry spanname="col3_on">
@@ -1818,7 +1834,7 @@ ARRAY8
       </entry>
     </row>
 
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry></entry>
       <entry></entry>
@@ -1829,14 +1845,14 @@ should terminate the protocol at this point and display an error to the user.
       </entry>
     </row>
 
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry spanname="col2_on">
 Semantics:
       </entry>
     </row>
 
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry></entry>
       <entry spanname="col3_on">
@@ -1852,14 +1868,14 @@ to a previous query.
       </entry>
     </row>
 
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry spanname="col2_on">
 Problems/Solutions:
       </entry>
     </row>
 
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry></entry>
       <entry spanname="col3_on">
@@ -1868,14 +1884,14 @@ Same as for
       </entry>
     </row>
 
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry spanname="col2_on">
 Timeout/Retransmission policy:
       </entry>
     </row>
 
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry></entry>
       <entry spanname="col3_on">
@@ -1884,13 +1900,13 @@ be retransmitted.
       </entry>
     </row>
 
-    <row rowsep="0">
+    <row>
       <entry spanname="col1_on">
 <function>Manage</function>
       </entry>
     </row>
 
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry spanname="col2_on">
         <para>
@@ -1902,7 +1918,7 @@ Additional Fields:
       </entry>
     </row>
 
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry></entry>
       <entry spanname="col3_on">
@@ -1910,7 +1926,7 @@ Additional Fields:
       </entry>
     </row>
 
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry></entry>
       <entry></entry>
@@ -1921,7 +1937,7 @@ packet.
       </entry>
     </row>
 
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry></entry>
       <entry spanname="col3_on">
@@ -1929,7 +1945,7 @@ packet.
       </entry>
     </row>
 
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry></entry>
       <entry></entry>
@@ -1940,7 +1956,7 @@ packet.
       </entry>
     </row>
 
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry></entry>
       <entry spanname="col3_on">
@@ -1948,7 +1964,7 @@ packet.
       </entry>
     </row>
 
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry></entry>
       <entry></entry>
@@ -1960,14 +1976,14 @@ which discusses the format of this field.
     </row>
 
 
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry spanname="col2_on">
 Semantics:
       </entry>
     </row>
 
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry></entry>
       <entry spanname="col3_on">
@@ -1992,14 +2008,14 @@ packet).
       </entry>
     </row>
 
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry spanname="col2_on">
 Valid Responses:
       </entry>
     </row>
 
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry></entry>
       <entry spanname="col3_on">
@@ -2009,14 +2025,14 @@ X connection with correct auth info,
       </entry>
     </row>
 
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry spanname="col2_on">
 Problems/Solutions:
       </entry>
     </row>
 
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry></entry>
       <entry spanname="col3_on">
@@ -2024,7 +2040,7 @@ Problem:
       </entry>
     </row>
 
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry></entry>
       <entry></entry>
@@ -2034,7 +2050,7 @@ not received by manager.
       </entry>
     </row>
 
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry></entry>
       <entry></entry>
@@ -2043,7 +2059,7 @@ Indication:
       </entry>
     </row>
 
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry></entry>
       <entry></entry>
@@ -2053,7 +2069,7 @@ Display timeout waiting for response.
       </entry>
     </row>
 
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry></entry>
       <entry></entry>
@@ -2062,7 +2078,7 @@ Solution:
       </entry>
     </row>
 
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry></entry>
       <entry></entry>
@@ -2075,7 +2091,7 @@ message.
     </row>
 
 
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry></entry>
       <entry spanname="col3_on">
@@ -2083,7 +2099,7 @@ Problem:
       </entry>
     </row>
 
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry></entry>
       <entry></entry>
@@ -2093,7 +2109,7 @@ received out of order by manager.
       </entry>
     </row>
 
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry></entry>
       <entry></entry>
@@ -2102,7 +2118,7 @@ Indication:
       </entry>
     </row>
 
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry></entry>
       <entry></entry>
@@ -2112,7 +2128,7 @@ Session already in progress with matching Session ID.
       </entry>
     </row>
 
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry></entry>
       <entry></entry>
@@ -2121,7 +2137,7 @@ Solution:
       </entry>
     </row>
 
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry></entry>
       <entry></entry>
@@ -2132,7 +2148,7 @@ packet ignored.
       </entry>
     </row>
 
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry></entry>
       <entry></entry>
@@ -2141,7 +2157,7 @@ Indication:
       </entry>
     </row>
 
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry></entry>
       <entry></entry>
@@ -2151,7 +2167,7 @@ Session ID does not match next Session ID.
       </entry>
     </row>
 
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry></entry>
       <entry></entry>
@@ -2160,7 +2176,7 @@ Solution:
       </entry>
     </row>
 
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry></entry>
       <entry></entry>
@@ -2172,7 +2188,7 @@ message is sent.
     </row>
 
 
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry></entry>
       <entry spanname="col3_on">
@@ -2180,7 +2196,7 @@ Problem:
       </entry>
     </row>
 
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry></entry>
       <entry></entry>
@@ -2189,7 +2205,7 @@ Display cannot be opened on selected stream.
       </entry>
     </row>
 
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry></entry>
       <entry></entry>
@@ -2198,7 +2214,7 @@ Indication:
       </entry>
     </row>
 
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry></entry>
       <entry></entry>
@@ -2208,7 +2224,7 @@ Display connection setup fails.
       </entry>
     </row>
 
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry></entry>
       <entry></entry>
@@ -2217,7 +2233,7 @@ Solution:
       </entry>
     </row>
 
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry></entry>
       <entry></entry>
@@ -2228,7 +2244,7 @@ message is sent including a human readable reason.
       </entry>
     </row>
 
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry></entry>
       <entry spanname="col3_on">
@@ -2236,7 +2252,7 @@ Problem:
       </entry>
     </row>
 
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry></entry>
       <entry></entry>
@@ -2246,7 +2262,7 @@ because of a timeout occuring in the display.
       </entry>
     </row>
 
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry></entry>
       <entry></entry>
@@ -2255,7 +2271,7 @@ Indication:
       </entry>
     </row>
 
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry></entry>
       <entry></entry>
@@ -2267,7 +2283,7 @@ attempting to connect to the display.
       </entry>
     </row>
 
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry></entry>
       <entry></entry>
@@ -2276,7 +2292,7 @@ Solution:
       </entry>
     </row>
 
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry></entry>
       <entry></entry>
@@ -2293,14 +2309,14 @@ packet is necessary.
       </entry>
     </row>
 
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry spanname="col2_on">
 Timeout/Retransmission policy:
       </entry>
     </row>
 
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry></entry>
       <entry spanname="col3_on">
@@ -2309,13 +2325,13 @@ than 126 seconds, give up and report an error to the user.
       </entry>
     </row>
 
-    <row rowsep="0">
+    <row>
       <entry spanname="col1_on">
 <function>Refuse</function>
       </entry>
     </row>
 
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry spanname="col2_on">
         <para>
@@ -2327,7 +2343,7 @@ Additional Fields:
       </entry>
     </row>
 
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry></entry>
       <entry spanname="col3_on">
@@ -2335,7 +2351,7 @@ Additional Fields:
       </entry>
     </row>
 
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry></entry>
       <entry></entry>
@@ -2347,14 +2363,14 @@ packet.
     </row>
 
 
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry spanname="col2_on">
 Semantics:
       </entry>
     </row>
 
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry></entry>
       <entry spanname="col3_on">
@@ -2371,14 +2387,14 @@ packet.
       </entry>
     </row>
 
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry spanname="col2_on">
 Problems/Solutions:
       </entry>
     </row>
 
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry></entry>
       <entry spanname="col3_on">
@@ -2386,7 +2402,7 @@ Problem:
       </entry>
     </row>
 
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry></entry>
       <entry></entry>
@@ -2395,7 +2411,7 @@ Error message is lost.
       </entry>
     </row>
 
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry></entry>
       <entry></entry>
@@ -2404,7 +2420,7 @@ Indication:
       </entry>
     </row>
 
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry></entry>
       <entry></entry>
@@ -2418,7 +2434,7 @@ or
       </entry>
     </row>
 
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry></entry>
       <entry></entry>
@@ -2427,7 +2443,7 @@ Solution:
       </entry>
     </row>
 
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry></entry>
       <entry></entry>
@@ -2441,14 +2457,14 @@ message.
 
 
 
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry spanname="col2_on">
 Timeout/Retransmission policy:
       </entry>
     </row>
 
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry></entry>
       <entry spanname="col3_on">
@@ -2457,13 +2473,13 @@ retransmitted.
       </entry>
     </row>
 
-    <row rowsep="0">
+    <row>
       <entry spanname="col1_on">
 <function>Failed</function>
       </entry>
     </row>
 
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry spanname="col2_on">
         <para>
@@ -2475,7 +2491,7 @@ Additional Fields:
       </entry>
     </row>
 
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry></entry>
       <entry spanname="col3_on">
@@ -2483,7 +2499,7 @@ Additional Fields:
       </entry>
     </row>
 
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry></entry>
       <entry></entry>
@@ -2494,7 +2510,7 @@ packet.
       </entry>
     </row>
 
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry></entry>
       <entry spanname="col3_on">
@@ -2502,7 +2518,7 @@ packet.
       </entry>
     </row>
 
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry></entry>
       <entry></entry>
@@ -2512,14 +2528,14 @@ Is a human readable string indicating the reason for failure.
     </row>
 
 
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry spanname="col2_on">
 Semantics:
       </entry>
     </row>
 
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry></entry>
       <entry spanname="col3_on">
@@ -2532,14 +2548,14 @@ packet.
       </entry>
     </row>
 
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry spanname="col2_on">
 Problems/Solutions
       </entry>
     </row>
 
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry></entry>
       <entry spanname="col3_on">
@@ -2548,13 +2564,13 @@ Same as for
       </entry>
     </row>
 
-    <row rowsep="0">
+    <row>
       <entry spanname="col1_on">
 <function>KeepAlive</function>
       </entry>
     </row>
 
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry spanname="col2_on">
         <para>
@@ -2566,7 +2582,7 @@ Additional Fields:
       </entry>
     </row>
 
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry></entry>
       <entry spanname="col3_on">
@@ -2574,7 +2590,7 @@ Additional Fields:
       </entry>
     </row>
 
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry></entry>
       <entry></entry>
@@ -2583,7 +2599,7 @@ Set to the display index for the display host.
       </entry>
     </row>
 
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry></entry>
       <entry spanname="col3_on">
@@ -2591,7 +2607,7 @@ Set to the display index for the display host.
       </entry>
     </row>
 
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry></entry>
       <entry></entry>
@@ -2602,14 +2618,14 @@ packet during the negotiation for the current session.
       </entry>
     </row>
 
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry spanname="col2_on">
 Sematics:
       </entry>
     </row>
 
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry></entry>
       <entry spanname="col3_on">
@@ -2642,14 +2658,14 @@ most recent packet.
       </entry>
     </row>
 
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry spanname="col2_on">
 Valid Responses:
       </entry>
     </row>
 
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry></entry>
       <entry spanname="col3_on">
@@ -2657,14 +2673,14 @@ Valid Responses:
       </entry>
     </row>
 
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry spanname="col2_on">
 Problems/Solutions:
       </entry>
     </row>
 
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry></entry>
       <entry spanname="col3_on">
@@ -2672,7 +2688,7 @@ Problem:
       </entry>
     </row>
 
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry></entry>
       <entry></entry>
@@ -2682,7 +2698,7 @@ Manager does not receive the packet or display does not receive the response.
     </row>
 
 
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry></entry>
       <entry></entry>
@@ -2691,7 +2707,7 @@ Indication:
       </entry>
     </row>
 
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry></entry>
       <entry></entry>
@@ -2703,7 +2719,7 @@ packet is returned.
       </entry>
     </row>
 
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry></entry>
       <entry></entry>
@@ -2712,7 +2728,7 @@ Solution:
       </entry>
     </row>
 
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry></entry>
       <entry></entry>
@@ -2723,13 +2739,13 @@ assume the host is not up after no less than 30 seconds.
       </entry>
     </row>
 
-    <row rowsep="0">
+    <row>
       <entry spanname="col1_on">
 <function>Alive</function>
       </entry>
     </row>
 
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry spanname="col2_on">
         <para>
@@ -2741,7 +2757,7 @@ Additional Fields:
       </entry>
     </row>
 
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry></entry>
       <entry spanname="col3_on">
@@ -2749,7 +2765,7 @@ Additional Fields:
       </entry>
     </row>
 
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry></entry>
       <entry></entry>
@@ -2761,7 +2777,7 @@ is active.
       </entry>
     </row>
 
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry></entry>
       <entry spanname="col3_on">
@@ -2769,7 +2785,7 @@ is active.
       </entry>
     </row>
 
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry></entry>
       <entry></entry>
@@ -2780,14 +2796,14 @@ When no session is active this field should be zero.
     </row>
 
 
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry spanname="col2_on">
 Semantics:
       </entry>
     </row>
 
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry></entry>
       <entry spanname="col3_on">
@@ -2805,9 +2821,9 @@ determine the status of the manager.
   </tgroup>
 </informaltable>
 
-</sect1>
+</chapter>
 
-<sect1 id="Session_Termination">
+<chapter id="Session_Termination">
 <title>Session Termination</title>
 <para>
 When the session is over, the initial connection with the display (the one
@@ -2835,9 +2851,9 @@ should not be fixed between loading an otherwise idle system with spurious
 <function>KeepAlive</function>
 packets and not noticing that the manager host is down for a long time.
 </para>
-</sect1>
+</chapter>
 
-<sect1 id="State_Diagrams">
+<chapter id="State_Diagrams">
 <title>State Diagrams</title>
 <!-- .XS -->
 <!-- (SN State Diagrams -->
@@ -3298,7 +3314,7 @@ Send <function>Refuse</function> packet
 Terminate any session in progress
       </para>
       <para>
-<function>XOpenDisplay</function>
+<olink targetdoc='libX11' targetptr='XOpenDisplay'><function>XOpenDisplay</function></olink>
       </para>
       <para>
 Open display succeeds -&gt;
@@ -3355,9 +3371,9 @@ Send <function>Alive</function> packet containing current status
   </varlistentry>
 </variablelist>
 
-</sect1>
+</chapter>
 
-<sect1 id="Protocol_Encoding">
+<chapter id="Protocol_Encoding">
 <title>Protocol Encoding</title>
 <para>
 When XDMCP is implemented on top of the Internet User Datagram Protocol (UDP),
@@ -3372,66 +3388,66 @@ multicast address. The version number in all packets will be 1.
 Packet opcodes are 16-bit integers.
 </para>
 
-<informaltable frame="none">
-  <tgroup cols='2' align='left'>
-  <colspec colname='c1' colsep="0"/>
-  <colspec colname='c2' colsep="0"/>
+<informaltable frame="topbot">
+  <tgroup cols='2' align='left' colsep='0' rowsep='0'>
+  <colspec colname='c1' colwidth="1.0*"/>
+  <colspec colname='c2' colwidth="3.0*"/>
   <thead>
-    <row>
+    <row rowsep='1'>
       <entry>Packet Name</entry>
       <entry>Encoding</entry>
     </row>
   </thead>
   <tbody>
-    <row rowsep="0">
+    <row>
       <entry>BroadcastQuery</entry>
       <entry>1</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>Query</entry>
       <entry>2</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>IndirectQuery</entry>
       <entry>3</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>ForwardQuery</entry>
       <entry>4</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>Willing</entry>
       <entry>5</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>Unwilling</entry>
       <entry>6</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>Request</entry>
       <entry>7</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>Accept</entry>
       <entry>8</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>Decline</entry>
       <entry>9</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>Manage</entry>
       <entry>10</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>Refuse</entry>
       <entry>11</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>Failed</entry>
       <entry>12</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>KeepAlive</entry>
       <entry>13
 <footnote><para>
@@ -3441,7 +3457,7 @@ A previous version of this document incorrectly reversed the opcodes of
 </para></footnote>
       </entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>Alive</entry>
       <entry>14
 <footnote><para>
@@ -3617,9 +3633,9 @@ Note that these three packets are identical except for the opcode field.
      1     CARD8      Session Running (0: not running 1: running)
      4     CARD32     Session ID (0: not running)
 </literallayout>
-</sect1>
+</chapter>
 
-<sect1 id="Display_Class_Format">
+<chapter id="Display_Class_Format">
 <title>Display Class Format</title>
 <!-- .XS -->
 <!-- (SN Display Class Format -->
@@ -3652,9 +3668,9 @@ This string should be documented in the users manual for the
 particular device and  should probably not be specifiable by the
 display user to avoid unexpected configuration errors.
 </para>
-</sect1>
+</chapter>
 
-<sect1 id="Manufacturer_Display_ID_Format">
+<chapter id="Manufacturer_Display_ID_Format">
 <title>Manufacturer Display ID Format</title>
 <!-- .XS -->
 <!-- (SN Manufacturer Display ID Format -->
@@ -3699,9 +3715,9 @@ Manufacturer Display ID and the private key in the documentation set.
 This information should not be modifiable by the display user.
 </para>
 
-</sect1>
+</chapter>
 
-<sect1 id="Authentication">
+<chapter id="Authentication">
 <title>Authentication</title>
 <!-- .XS -->
 <!-- (SN Authentication -->
@@ -3761,37 +3777,37 @@ Some definitions first:
 <itemizedlist>
   <listitem>
     <para>
-{D}= encryption of plain text D by key κ
+{&variable.D;}<superscript>&variable.kappa;</superscript> = encryption of plain text D by key &variable.kappa;
     </para>
   </listitem>
   <listitem>
     <para>
-{&#x394;}*&#x3BA; = decryption of crypto text &#x394; with key &#x3BA;
+{&variable.Delta;}*<superscript>&variable.kappa;</superscript> = decryption of crypto text &variable.Delta; with key &variable.kappa;
     </para>
   </listitem>
   <listitem>
     <para>
-&tau; = private key shared by display and manager
+&variable.tau; = private key shared by display and manager
     </para>
   </listitem>
   <listitem>
     <para>
-&rho; = 64 bit random number generated by display
+&variable.rho; = 64 bit random number generated by display
     </para>
   </listitem>
   <listitem>
     <para>
-&alpha; = authentication data in XDMCP packets
+&variable.alpha; = authentication data in XDMCP packets
     </para>
   </listitem>
   <listitem>
     <para>
-&sigma; = per-session private key, generated by manager
+&variable.sigma; = per-session private key, generated by manager
     </para>
   </listitem>
   <listitem>
     <para>
-&beta; = authorization data
+&variable.beta; = authorization data
     </para>
   </listitem>
 </itemizedlist>
@@ -3802,7 +3818,7 @@ shorter than 64 bits will be zero-filled
 on the right to 64 bits.  Blocks longer than 64 bits will use block chaining:
 </para>
 <para>
-{D}&#x3BA; = {D1 }&#x3BA; {D2 xor {D1 }&#x3BA; }&#x3BA;
+{&variable.D;}<superscript>&variable.kappa;</superscript> = {&variable.D;<subscript>1</subscript>}<superscript>&variable.kappa;</superscript> {&variable.D;<subscript>2</subscript> xor {&variable.D;<subscript>1</subscript>}<superscript>&variable.kappa;</superscript>}<superscript>&variable.kappa;</superscript>
 </para>
 
 <para>
@@ -3812,23 +3828,22 @@ packet:
 </para>
 
 <para>
-&#945;Request = {&#961;}τ
-
+&variable.alpha;<subscript>Request</subscript> = {&variable.rho;}<superscript>&variable.tau;</superscript>
 </para>
 
 <para>
 For the <function>Accept</function>
 packet, the manager decrypts the initial message and returns
-αAccept:
+&variable.alpha;<subscript>Accept</subscript>:
 
 </para>
 
 <para>
-&rho; = {&alpha; Request } *&tau;
+&variable.rho; = {&variable.alpha;<subscript>Request</subscript>}*<superscript>&variable.tau;</superscript>
 </para>
 
 <para>
-&alpha; Accept = { &rho; + 1}&tau;
+&variable.alpha;<subscript>Accept</subscript> = { &variable.rho; + 1}<superscript>&variable.tau;</superscript>
 </para>
 
 <para>
@@ -3844,7 +3859,7 @@ packet contains the authorization name
 "XDM-AUTHORIZATION-1".  The authorization data is the string:
 </para>
 <para>
-β Accept = {σ}τ
+&variable.beta;<subscript>Accept</subscript> = {&variable.sigma;}<superscript>&variable.tau;</superscript>
 </para>
 
 <para>
@@ -3853,20 +3868,20 @@ using the XDM-AUTHORIZATION-1 authorization protocol, the client computes the
 following:
 </para>
 <para>
-N mark = "X client identifier"
+&variable.N; = X client identifier
 </para>
 <para>
-T lineup = "Current time in seconds on client host (32 bits)"
+&variable.T; = Current time in seconds on client host (32 bits)
 </para>
 <para>
-β = {ρNT}σ
+&variable.beta; = {&variable.rho;&variable.N;&variable.T;}<superscript>&variable.sigma;</superscript>
 </para>
 
 <para>
-For TCP connections @N@ is 48 bits long and contains the 32-bit IPv4 address of
+For TCP connections &variable.N; is 48 bits long and contains the 32-bit IPv4 address of
 the client host followed by the 16-bit port number of the client socket.
 Formats for other connections must be registered.
-The resulting value, β, is 192 bits of authorization data that is sent
+The resulting value, &variable.beta;, is 192 bits of authorization data that is sent
 in the connection setup to the server.  The server receives the packet,
 decrypts the contents.  To accept the connection, the following must hold:
 </para>
@@ -3874,22 +3889,21 @@ decrypts the contents.  To accept the connection, the following must hold:
 <itemizedlist>
   <listitem>
     <para>
-ρ must match the value generated for the most recent XDMCP negotiation.
+&variable.rho; must match the value generated for the most recent XDMCP negotiation.
     </para>
   </listitem>
   <listitem>
     <para>
-T must be within 1200 seconds of the internally stored time.  If no time
-been received before, the current time is set to @T@.
+&variable.T; must be within 1200 seconds of the internally stored time.  If no time
+been received before, the current time is set to &variable.T;.
     </para>
   </listitem>
   <listitem>
     <para>
-No packet containing the same pair (N, T) can have been received
+No packet containing the same pair (&variable.N;, &variable.T;) can have been received
 in the last 1200 seconds (20 minutes).
     </para>
   </listitem>
 </itemizedlist>
-</sect1>
 </chapter>
 </book>
