@@ -1,4 +1,4 @@
-# $OpenBSD: 3RDPARTY,v 1.124 2012/02/17 07:40:30 matthieu Exp $
+# $OpenBSD: 3RDPARTY,v 1.125 2012/03/11 13:11:51 matthieu Exp $
 #
 
 Package: 	Freetype
@@ -27,8 +27,8 @@ Archive Site:	http://dri.freedesktop.org/
 
 Package:	fontconfig
 Version:	2.8.0
-Current Vers:	2.8.0
-Maintainer:	Keith Packard
+Current Vers:	2.9.0
+Maintainer:	Akira TAGOH
 Archive Site:	http://www.fontconfig.org/
 
 Package:	DejaVu Fonts
