@@ -1,6 +1,6 @@
-# $OpenBSD: bsd.xorg.mk,v 1.40 2011/11/05 11:49:01 matthieu Exp $ -*- makefile  -*-
+# $OpenBSD: bsd.xorg.mk,v 1.41 2012/03/11 10:08:59 matthieu Exp $ -*- makefile  -*-
 #
-# Copyright © 2006 Matthieu Herrb
+# Copyright © 2006,2012 Matthieu Herrb
 #
 # Permission to use, copy, modify, and distribute this software for any
 # purpose with or without fee is hereby granted, provided that the above
@@ -21,7 +21,7 @@
 
 AUTOMAKE_VERSION=	1.9
 AUTOCONF_VERSION=	2.62
-PYTHON_VERSION=		2.6
+PYTHON_VERSION=		2.7
 
 # Where source lives
 XSRCDIR?=		/usr/xenocara
@@ -177,7 +177,7 @@ config.status:
 .endif
 
 .if !target(depend)
-depend: 
+depend:
 	@echo "no dependencies here yet"
 .endif
 
