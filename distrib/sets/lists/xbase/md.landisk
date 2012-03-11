@@ -113,7 +113,7 @@
 ./usr/X11R6/lib/libfontenc.so.3.0
 ./usr/X11R6/lib/libfreetype.so.18.1
 ./usr/X11R6/lib/libfreetype_pic.a
-./usr/X11R6/lib/libpciaccess.so.1.0
+./usr/X11R6/lib/libpciaccess.so.1.1
 ./usr/X11R6/lib/libpthread-stubs.a
 ./usr/X11R6/lib/libpthread-stubs.so.1.0
 ./usr/X11R6/lib/libpthread-stubs_pic.a
