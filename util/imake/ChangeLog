@@ -1,3 +1,90 @@
+commit 061960e38cb0d6873bda2550f6a8952668193888
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Mar 7 21:47:27 2012 -0800
+
+    imake 1.0.5
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 575c3788c8b770a2c32c9d8461bc7422e3b89676
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Feb 10 18:05:36 2012 -0800
+
+    xmkmf.man: Remove instructions for "X Consortium" monolithic build tree
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit d33b96db427a2305bd230360c9653a91dbff79e0
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Oct 7 18:55:13 2011 -0700
+
+    Fix a bunch of "too many arguments for format" warnings
+    
+    Now that the log functions take variable arguments, don't need to pass
+    empty strings when there is no argument for the format string.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 4e3e7fec072591389b4f7b89475ea81e6a4e0ee5
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Oct 7 18:50:48 2011 -0700
+
+    Convert error logging functions to normal idioms
+    
+    Allows use of printf attributes for checking format strings/arguments,
+    gets rid of LogFatalI wrapper just used for casting int to char *.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 5aed95badf1bab68b848234fdd25da1ea7025264
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Oct 7 18:36:53 2011 -0700
+
+    Rework temp filename pointers into const & non-const parts
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit bfdbd65cf45eae6ba3565348cec1eeb09927cf5e
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Oct 7 18:31:52 2011 -0700
+
+    Add const attributes to fix gcc -Wwrite-strings warnings
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 7f299010c9327ab1a65a6b781c58b4c3098d13b7
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Oct 7 18:11:43 2011 -0700
+
+    Strip trailing whitespace
+    
+    Performed with: find * -type f | xargs perl -i -p -e 's{[ \t]+$}{}'
+    git diff -w & git diff -b show no diffs from this change
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 99bb38c528f87a2692253ede9f54c4320c6f0986
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Jan 7 20:21:30 2011 -0800
+
+    Remove unused variable in get_sun_compiler_versions
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit d2e1f5ca4614afbc1ca30581fcb1f6e50423fc06
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Mon Nov 1 14:29:33 2010 +1000
+
+    Silence useless pedantry warning from find(1) when running cleanlinks.
+    
+    "find: warning: you have specified the -depth option after a non-option
+    argument -type, but options are not positional (-depth affects tests
+    specified before it as well as those specified after it).  Please specify
+    options before other arguments."
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Matthieu Herrb <matthieu.herrb@laas.fr>
+
 commit bf237073d39629599cb77bf0144f862c175bb640
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Sat Oct 30 19:10:35 2010 -0700

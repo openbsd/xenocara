@@ -27,7 +27,7 @@ do
     esac
 done
 
-case $# in 
+case $# in
     0) ;;
     1) topdir=$1 ;;
     2) topdir=$1  curdir=$2 ;;
@@ -38,7 +38,7 @@ case "$topdir" in
     -*) echo "$usage" 1>&2; exit 1 ;;
 esac
 
-if [ -f Makefile ]; then 
+if [ -f Makefile ]; then
     echo mv -f Makefile Makefile.bak
     mv -f Makefile Makefile.bak
 fi
@@ -52,7 +52,7 @@ fi
 echo imake $imake_defines $args
 case "$do_all" in
 yes)
-    imake $imake_defines $args && 
+    imake $imake_defines $args &&
     echo "make Makefiles" &&
     make Makefiles &&
     echo "make includes" &&

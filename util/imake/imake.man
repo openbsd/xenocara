@@ -5,10 +5,10 @@
 .\" the above copyright notice appear in all copies and that both that
 .\" copyright notice and this permission notice appear in supporting
 .\" documentation.
-.\" 
+.\"
 .\" The above copyright notice and this permission notice shall be included
 .\" in all copies or substantial portions of the Software.
-.\" 
+.\"
 .\" THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
 .\" OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
 .\" MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
@@ -16,7 +16,7 @@
 .\" OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
 .\" ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 .\" OTHER DEALINGS IN THE SOFTWARE.
-.\" 
+.\"
 .\" Except as contained in this notice, the name of The Open Group shall
 .\" not be used in advertising or otherwise to promote the sale, use or
 .\" other dealings in this Software without prior written authorization
@@ -27,14 +27,14 @@
 imake \- C preprocessor interface to the make utility
 .SH SYNOPSIS
 \fBimake\fP [ \fB\-D\fP\fIdefine\fP ] [ \fB\-I\fP\fIdir\fP ]
-[ \fB\-U\fP\fIdefine\fP ] 
+[ \fB\-U\fP\fIdefine\fP ]
 [ \fB\-T\fP\fItemplate\fP ]
 [ \fB\-f\fP \fIfilename\fP ] [ \fB\-C\fP \fIfilename\fP ]
 [ \fB\-s\fP \fIfilename\fP ] [ \fB\-e\fP ]
 [ \fB\-v\fP ]
 .SH DESCRIPTION
 .I Imake
-is used to 
+is used to
 generate \fIMakefiles\fP from a template, a set of \fIcpp\fP macro functions,
 and a per-directory input file called an \fIImakefile\fP.  This allows machine
 dependencies (such as compiler options, alternate command names, and special
@@ -47,11 +47,11 @@ The following command line options may be passed to \fIimake\fP:
 This option is passed directly to \fIcpp\fP.  It is typically used to set
 directory-specific variables.  For example, the X Window System used this
 flag to set \fITOPDIR\fP to the name of the directory containing the top
-of the core distribution and \fICURDIR\fP to the name of the current 
+of the core distribution and \fICURDIR\fP to the name of the current
 directory, relative to the top.
 .TP 8
 .B \-I\fIdirectory\fP
-This option is passed directly to \fIcpp\fP.  It is typically used to 
+This option is passed directly to \fIcpp\fP.  It is typically used to
 indicate the directory in which the \fIimake\fP template and configuration
 files may be found.
 .TP 8
@@ -73,9 +73,9 @@ This option specifies the name of the .c file that is constructed in the
 current directory.  The default is \fIImakefile.c\fP.
 .TP 8
 .B \-s \fIfilename\fP
-This option specifies the name of the \fImake\fP description file to be 
+This option specifies the name of the \fImake\fP description file to be
 generated but \fImake\fP should not be invoked.
-If the \fIfilename\fP is a dash (\-), the 
+If the \fIfilename\fP is a dash (\-), the
 output is written to \fIstdout\fP.  The default is to generate, but
 not execute, a \fIMakefile\fP.
 .TP 8
@@ -84,7 +84,7 @@ This option indicates the \fIimake\fP should execute the generated
 \fIMakefile\fP.  The default is to leave this to the user.
 .TP 8
 .B \-v
-This option indicates that \fIimake\fP should print the \fIcpp\fP command line 
+This option indicates that \fIimake\fP should print the \fIcpp\fP command line
 that it is using to generate the \fIMakefile\fP.
 .SH "HOW IT WORKS"
 \fIImake\fP invokes \fIcpp\fP with any \fI\-I\fP or \fI\-D\fP flags passed
@@ -97,16 +97,16 @@ following 3 lines:
 \&		#include IMAKE_TEMPLATE
 .fi
 .sp
-where \fIImake.tmpl\fP and \fIImakefile\fP may be overridden by the 
+where \fIImake.tmpl\fP and \fIImakefile\fP may be overridden by the
 \fI\-T\fP and \fI\-f\fP command options, respectively.
 .PP
 The IMAKE_TEMPLATE typically
-reads in a file containing machine-dependent parameters 
+reads in a file containing machine-dependent parameters
 (specified as \fIcpp\fP symbols), a site-specific parameters file,
 a file defining variables,
 a file
 containing \fIcpp\fP macro functions for generating \fImake\fP rules, and
-finally the \fIImakefile\fP (specified by INCLUDE_IMAKEFILE) in the current 
+finally the \fIImakefile\fP (specified by INCLUDE_IMAKEFILE) in the current
 directory.  The \fIImakefile\fP uses the macro functions to indicate what
 targets should be built; \fIimake\fP takes care of generating the appropriate
 rules.
@@ -124,9 +124,9 @@ By convention make variables are upper case.
 .PP
 The rules file (usually named \fIImake.rules\fP in the configuration
 directory) contains a variety of \fIcpp\fP macro functions that are
-configured according to the current platform.  \fIImake\fP replaces 
+configured according to the current platform.  \fIImake\fP replaces
 any occurrences of the string ``@@'' with a newline to allow macros that
-generate more than one line of \fImake\fP rules.  
+generate more than one line of \fImake\fP rules.
 For example, the macro
 .ta 1i 1.6i 5i
 .nf

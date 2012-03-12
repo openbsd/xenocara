@@ -21,9 +21,9 @@ directory.
 .BR lndir (1).
 .SH AUTHOR
 .PP
-The version of the 
+The version of the
 .I cleanlinks
-included in this X.Org Foundation release was originally written 
+included in this X.Org Foundation release was originally written
 by David Dawes wrote as a part of XFree86.
 .PP
 Colin Watson wrote this manual page, originally for the Debian Project.

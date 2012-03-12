@@ -24,9 +24,9 @@ This utility is currently rather specific to X manual pages.
 In particular, the format of the index files it outputs is not configurable,
 nor is the HTML formatting it expects of manual pages.
 .SH AUTHOR
-The version of the 
+The version of the
 .I mkhtmlindex
-included in this X.Org Foundation release was originally written 
+included in this X.Org Foundation release was originally written
 by David Dawes wrote as a part of XFree86.
 .PP
 Colin Watson wrote this manual page, originally for the Debian Project.

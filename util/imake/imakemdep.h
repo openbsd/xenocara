@@ -366,7 +366,7 @@ in this Software without prior written authorization from The Open Group.
 
 #  define	ARGUMENTS 50	/* number of arguments in various arrays */
 #  if !defined (CROSSCOMPILE) || defined (CROSSCOMPILE_CPP)
-char *cpp_argv[ARGUMENTS] = {
+const char *cpp_argv[ARGUMENTS] = {
 	"cc",		/* replaced by the actual program to exec */
 	"-I.",		/* add current directory to include path */
 #   if !defined(__NetBSD_Version__) || __NetBSD_Version__ < 103080000

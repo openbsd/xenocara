@@ -154,6 +154,8 @@ in this Software without prior written authorization from The Open Group.
 #endif
 #include <stdlib.h>
 #include <stdio.h>
+#include <stdarg.h>
+#include <X11/Xfuncproto.h>
 #include <X11/Xosdefs.h>
 #include <string.h>
 #include <ctype.h>
@@ -298,11 +300,13 @@ void KludgeOutputLine(char **), KludgeResetRule(void);
 # endif
 #endif
 
-char *cpp = NULL;
+const char *cpp = NULL;
 
-char	*tmpMakefile = "/tmp/Imf.XXXXXX";
-char	*tmpImakefile = "/tmp/IIf.XXXXXX";
-char	*make_argv[ ARGUMENTS ] = {
+const char	*tmpMakefile;
+const char	*tmpMakefileTemplate = "/tmp/Imf.XXXXXX";
+const char	*tmpImakefile;
+const char	*tmpImakefileTemplate = "/tmp/IIf.XXXXXX";
+const char	*make_argv[ ARGUMENTS ] = {
 #ifdef WIN32
     "nmake"
 #else
@@ -312,53 +316,53 @@ char	*make_argv[ ARGUMENTS ] = {
 
 int	make_argindex;
 int	cpp_argindex;
-char	*Imakefile = NULL;
-char	*Makefile = "Makefile";
-char	*Template = "Imake.tmpl";
-char	*ImakefileC = "Imakefile.c";
+const char	*Imakefile = NULL;
+const char	*Makefile = "Makefile";
+const char	*Template = "Imake.tmpl";
+const char	*ImakefileC = "Imakefile.c";
 boolean haveImakefileC = FALSE;
-char	*cleanedImakefile = NULL;
-char	*program;
-char	*FindImakefile(char *Imakefile);
-char	*ReadLine(FILE *tmpfd, char *tmpfname);
-char	*CleanCppInput(char *imakefile);
-char	*Strdup(char *cp);
+const char	*cleanedImakefile = NULL;
+const char	*program;
+const char	*FindImakefile(const char *Imakefile);
+char	*ReadLine(FILE *tmpfd, const char *tmpfname);
+const char	*CleanCppInput(const char *imakefile);
+char	*Strdup(const char *cp);
 char	*Emalloc(int size);
-void	LogFatalI(char *s, int i), LogFatal(char *x0, char *x1),
-	LogMsg(char *x0, char *x1);
+void	LogFatal(const char *x0, ...) _X_ATTRIBUTE_PRINTF(1, 2);
+void	LogMsg(const char *x0, ...) _X_ATTRIBUTE_PRINTF(1, 2);
 
 void	showit(FILE *fd);
 void	wrapup(void);
 void	init(void);
-void	AddMakeArg(char *arg);
-void	AddCppArg(char *arg);
+void	AddMakeArg(const char *arg);
+void	AddCppArg(const char *arg);
 #ifdef CROSSCOMPILE
 char	*CrossCompileCPP(void);
 #endif
 void	SetOpts(int argc, char **argv);
-void	CheckImakefileC(char *masterc);
-void	cppit(char *imakefile, char *template, char *masterc,
-	      FILE *outfd, char *outfname);
+void	CheckImakefileC(const char *masterc);
+void	cppit(const char *imakefile, const char *template, const char *masterc,
+	      FILE *outfd, const char *outfname);
 void	makeit(void);
-void	CleanCppOutput(FILE *tmpfd, char *tmpfname);
+void	CleanCppOutput(FILE *tmpfd, const char *tmpfname);
 boolean isempty(char *line);
-void	writetmpfile(FILE *fd, char *buf, int cnt, char *fname);
+void	writetmpfile(FILE *fd, const char *buf, int cnt, const char *fname);
 #ifdef SIGNALRETURNSINT
 int	catch(int sig);
 #else
 void	catch(int sig);
 #endif
-void	showargs(char **argv);
-boolean optional_include(FILE *inFile, char *defsym, char *fname);
-void	  doit(FILE *outfd, char *cmd, char **argv);
+void	showargs(const char **argv);
+boolean optional_include(FILE *inFile, const char *defsym, const char *fname);
+void	  doit(FILE *outfd, const char *cmd, const char **argv);
 boolean define_os_defaults(FILE *inFile);
 #ifdef CROSSCOMPILE
 static void get_cross_compile_dir(FILE *inFile);
 #endif
 #ifdef CROSSCOMPILEDIR
-char *CrossCompileDir = CROSSCOMPILEDIR;
+const char *CrossCompileDir = CROSSCOMPILEDIR;
 #else
-char *CrossCompileDir = "";
+const char *CrossCompileDir = "";
 #endif
 boolean CrossCompiling = FALSE;
 
@@ -398,21 +402,22 @@ main(int argc, char *argv[])
 #ifdef HAVE_MKSTEMP
 		int fd;
 #endif
-		tmpMakefile = Strdup(tmpMakefile);
+		char *tmpMakefileName = Strdup(tmpMakefileTemplate);
 #ifndef HAVE_MKSTEMP
-		if (mktemp(tmpMakefile) == NULL ||
-		    (tmpfd = fopen(tmpMakefile, "w+")) == NULL) {
-		   LogFatal("Cannot create temporary file %s.", tmpMakefile);
+		if (mktemp(tmpMakefileName) == NULL ||
+		    (tmpfd = fopen(tmpMakefileName, "w+")) == NULL) {
+		   LogFatal("Cannot create temporary file %s.", tmpMakefileName);
 		}
 #else
-		fd = mkstemp(tmpMakefile);
+		fd = mkstemp(tmpMakefileName);
 		if (fd == -1 || (tmpfd = fdopen(fd, "w+")) == NULL) {
 		   if (fd != -1) {
-		      unlink(tmpMakefile); close(fd);
+		      unlink(tmpMakefileName); close(fd);
 		   }
-		   LogFatal("Cannot create temporary file %s.", tmpMakefile);
+		   LogFatal("Cannot create temporary file %s.", tmpMakefileName);
 		}
 #endif
+		tmpMakefile = tmpMakefileName;
 	}
 	AddMakeArg("-f");
 	AddMakeArg( tmpMakefile );
@@ -465,7 +470,7 @@ void
 catch(int sig)
 {
 	errno = 0;
-	LogFatalI("Signal %d.", sig);
+	LogFatal("Signal %d.", sig);
 }
 
 /*
@@ -539,21 +544,21 @@ init(void)
 }
 
 void
-AddMakeArg(char *arg)
+AddMakeArg(const char *arg)
 {
 	errno = 0;
 	if (make_argindex >= ARGUMENTS-1)
-		LogFatal("Out of internal storage.", "");
+		LogFatal("Out of internal storage.");
 	make_argv[ make_argindex++ ] = arg;
 	make_argv[ make_argindex ] = NULL;
 }
 
 void
-AddCppArg(char *arg)
+AddCppArg(const char *arg)
 {
 	errno = 0;
 	if (cpp_argindex >= ARGUMENTS-1)
-		LogFatal("Out of internal storage.", "");
+		LogFatal("Out of internal storage.");
 	cpp_argv[ cpp_argindex++ ] = arg;
 	cpp_argv[ cpp_argindex ] = NULL;
 }
@@ -585,7 +590,7 @@ SetOpts(int argc, char **argv)
 		    else {
 			argc--, argv++;
 			if (! argc)
-			    LogFatal("No description arg after -f flag", "");
+			    LogFatal("No description arg after -f flag");
 			Imakefile = argv[0];
 		    }
 		} else if (argv[0][1] == 's') {
@@ -595,7 +600,7 @@ SetOpts(int argc, char **argv)
 		    else {
 			argc--, argv++;
 			if (!argc)
-			    LogFatal("No description arg after -s flag", "");
+			    LogFatal("No description arg after -s flag");
 			Makefile = ((argv[0][0] == '-') && !argv[0][1]) ?
 			    NULL : argv[0];
 		    }
@@ -609,7 +614,7 @@ SetOpts(int argc, char **argv)
 		    else {
 			argc--, argv++;
 			if (! argc)
-			    LogFatal("No description arg after -T flag", "");
+			    LogFatal("No description arg after -T flag");
 			Template = argv[0];
 		    }
 		} else if (argv[0][1] == 'C') {
@@ -618,7 +623,7 @@ SetOpts(int argc, char **argv)
 		    else {
 			argc--, argv++;
 			if (! argc)
-			    LogFatal("No imakeCfile arg after -C flag", "");
+			    LogFatal("No imakeCfile arg after -C flag");
 			ImakefileC = argv[0];
 		    }
 		} else if (argv[0][1] == 'v') {
@@ -653,8 +658,8 @@ SetOpts(int argc, char **argv)
 	AddCppArg(ImakefileC);
 }
 
-char *
-FindImakefile(char *Imakefile)
+const char *
+FindImakefile(const char *Imakefile)
 {
 	if (Imakefile) {
 		if (access(Imakefile, R_OK) < 0)
@@ -662,7 +667,7 @@ FindImakefile(char *Imakefile)
 	} else {
 		if (access("Imakefile", R_OK) < 0) {
 			if (access("imakefile", R_OK) < 0)
-				LogFatal("No description file.", "");
+				LogFatal("No description file.");
 			else
 				Imakefile = "imakefile";
 		} else
@@ -671,30 +676,8 @@ FindImakefile(char *Imakefile)
 	return(Imakefile);
 }
 
-void
-LogFatalI(char *s, int i)
-{
-	/*NOSTRICT*/
-	LogFatal(s, (char *)(long)i);
-}
-
-void
-LogFatal(char *x0, char *x1)
-{
-	static boolean entered = FALSE;
-
-	if (entered)
-		return;
-	entered = TRUE;
-
-	LogMsg(x0, x1);
-	fprintf(stderr, "  Stop.\n");
-	wrapup();
-	exit(1);
-}
-
-void
-LogMsg(char *x0, char *x1)
+static void _X_ATTRIBUTE_PRINTF(1, 0)
+vLogMsg(const char *fmt, va_list args)
 {
 	int error_number = errno;
 
@@ -703,12 +686,40 @@ LogMsg(char *x0, char *x1)
 		fprintf(stderr, "%s\n", strerror(error_number));
 	}
 	fprintf(stderr, "%s: ", program);
-	fprintf(stderr, x0, x1);
+	vfprintf(stderr, fmt, args);
 	fprintf(stderr, "\n");
 }
 
 void
-showargs(char **argv)
+LogFatal(const char *fmt, ...)
+{
+	static boolean entered = FALSE;
+	va_list args;
+
+	if (entered)
+		return;
+	entered = TRUE;
+
+	va_start(args, fmt);
+	vLogMsg(fmt, args);
+	va_end(args);
+	fprintf(stderr, "  Stop.\n");
+	wrapup();
+	exit(1);
+}
+
+void
+LogMsg(const char *fmt, ...)
+{
+	va_list args;
+
+	va_start(args, fmt);
+	vLogMsg(fmt, args);
+	va_end(args);
+}
+
+void
+showargs(const char **argv)
 {
 	for (; *argv; argv++)
 		fprintf(stderr, "%s ", *argv);
@@ -718,7 +729,7 @@ showargs(char **argv)
 #define ImakefileCHeader "/* imake - temporary file */"
 
 void
-CheckImakefileC(char *masterc)
+CheckImakefileC(const char *masterc)
 {
 	char mkcbuf[1024];
 	FILE *inFile;
@@ -745,7 +756,7 @@ CheckImakefileC(char *masterc)
 #define OverrideWarning "Warning: local file \"%s\" overrides global macros."
 
 boolean
-optional_include(FILE *inFile, char *defsym, char *fname)
+optional_include(FILE *inFile, const char *defsym, const char *fname)
 {
 	errno = 0;
 	if (access(fname, R_OK) == 0) {
@@ -757,7 +768,7 @@ optional_include(FILE *inFile, char *defsym, char *fname)
 }
 
 void
-doit(FILE *outfd, char *cmd, char **argv)
+doit(FILE *outfd, const char *cmd, const char **argv)
 {
 	int		pid;
 	waitType	status;
@@ -772,18 +783,18 @@ doit(FILE *outfd, char *cmd, char **argv)
 	if (status < 0)
 		LogFatal("Cannot spawn %s.", cmd);
 	if (status > 0)
-		LogFatalI("Exit code %d.", status);
+		LogFatal("Exit code %d.", status);
 #else
 	pid = fork();
 	if (pid < 0)
-		LogFatal("Cannot fork.", "");
+		LogFatal("Cannot fork.");
 	if (pid) {	/* parent... simply wait */
 		while (wait(&status) > 0) {
 			errno = 0;
 			if (WIFSIGNALED(status))
-				LogFatalI("Signal %d.", waitSig(status));
+				LogFatal("Signal %d.", waitSig(status));
 			if (WIFEXITED(status) && waitCode(status))
-				LogFatalI("Exit code %d.", waitCode(status));
+				LogFatal("Exit code %d.", waitCode(status));
 		}
 	}
 	else {	/* child... dup and exec cmd */
@@ -799,7 +810,7 @@ doit(FILE *outfd, char *cmd, char **argv)
 
 #if !defined WIN32
 static void
-parse_utsname(struct utsname *name, char *fmt, char *result, char *msg)
+parse_utsname(struct utsname *name, const char *fmt, char *result, const char *msg)
 {
   char buf[SYS_NMLN * 5 + 1];
   char *ptr = buf;
@@ -859,7 +870,7 @@ parse_utsname(struct utsname *name, char *fmt, char *result, char *msg)
 
   /* Just in case... */
   if (strlen(buf) >= sizeof(buf))
-    LogFatal("Buffer overflow parsing uname.", "");
+    LogFatal("Buffer overflow parsing uname.");
 
   /* Parse the buffer.  The sscanf() return value is rarely correct. */
   *result = '\0';
@@ -1035,9 +1046,9 @@ get_distrib(FILE *inFile)
 {
   struct stat sb;
 
-  static char* suse = "/etc/SuSE-release";
-  static char* redhat = "/etc/redhat-release";
-  static char* debian = "/etc/debian_version";
+  static const char*   suse = "/etc/SuSE-release";
+  static const char* redhat = "/etc/redhat-release";
+  static const char* debian = "/etc/debian_version";
 
   fprintf (inFile, "%s\n", "#define LinuxUnknown    0");
   fprintf (inFile, "%s\n", "#define LinuxSuSE       1");
@@ -1224,7 +1235,6 @@ get_sun_compiler_versions (FILE *inFile)
 {
   const char* sunpro_path = "/opt/SUNWspro/bin";
   int cmajor, cminor, found = 0;
-  struct stat sb;
 
   /* If cross-compiling, only check CrossCompilerDir for compilers.
    * If not cross-compiling, first check cc in users $PATH,
@@ -1327,7 +1337,7 @@ static boolean
 get_gcc(char *cmd)
 {
   struct stat sb;
-    static char* gcc_path[] = {
+    static const char* gcc_path[] = {
 #if defined(linux) || \
      defined(__NetBSD__) || \
      defined(__OpenBSD__) || \
@@ -1346,7 +1356,7 @@ get_gcc(char *cmd)
     };
 
 #ifdef CROSSCOMPILE
-    static char* cross_cc_name[] = {
+    static const char* cross_cc_name[] = {
 	"cc",
 	"gcc"
     };
@@ -1426,7 +1436,7 @@ define_os_defaults(FILE *inFile)
 #  endif
       {
 	  if (uname(&uts_name) < 0)
-	      LogFatal("Cannot invoke uname", "");
+	      LogFatal("Cannot invoke uname");
 	  else
 	      name = &uts_name;
       }
@@ -1680,8 +1690,8 @@ define_os_defaults(FILE *inFile)
 }
 
 void
-cppit(char *imakefile, char *template, char *masterc,
-      FILE *outfd, char *outfname)
+cppit(const char *imakefile, const char *template, const char *masterc,
+      FILE *outfd, const char *outfname)
 {
 	FILE	*inFile;
 
@@ -1714,8 +1724,8 @@ makeit(void)
 	doit(NULL, make_argv[0], make_argv);
 }
 
-char *
-CleanCppInput(char *imakefile)
+const char *
+CleanCppInput(const char *imakefile)
 {
 	FILE	*outFile = NULL;
 	FILE	*inFile;
@@ -1772,25 +1782,26 @@ CleanCppInput(char *imakefile)
 #ifdef HAVE_MKSTEMP
 			int fd;
 #endif
-			tmpImakefile = Strdup(tmpImakefile);
+			char *tmpImakefileName = Strdup(tmpImakefileTemplate);
 #ifndef HAVE_MKSTEMP
-			if (mktemp(tmpImakefile) == NULL ||
-			    (outFile = fopen(tmpImakefile, "w+")) == NULL) {
+			if (mktemp(tmpImakefileName) == NULL ||
+			    (outFile = fopen(tmpImakefileName, "w+")) == NULL) {
 			    LogFatal("Cannot open %s for write.",
-				tmpImakefile);
+				tmpImakefileName);
 			}
 #else
-			fd=mkstemp(tmpImakefile);
+			fd=mkstemp(tmpImakefileName);
 			if (fd != -1)
 			    outFile = fdopen(fd, "w");
 			if (outFile == NULL) {
 			    if (fd != -1) {
-			       unlink(tmpImakefile); close(fd);
+			       unlink(tmpImakefileName); close(fd);
 			    }
 			    LogFatal("Cannot open %s for write.",
-				tmpImakefile);
+				tmpImakefileName);
 			}
 #endif
+			tmpImakefile = tmpImakefileName;
 		    }
 		    writetmpfile(outFile, punwritten, pbuf-punwritten,
 				 tmpImakefile);
@@ -1815,7 +1826,7 @@ CleanCppInput(char *imakefile)
 }
 
 void
-CleanCppOutput(FILE *tmpfd, char *tmpfname)
+CleanCppOutput(FILE *tmpfd, const char *tmpfname)
 {
 	char	*input;
 	int	blankline = 0;
@@ -1937,7 +1948,7 @@ isempty(char *line)
 
 /*ARGSUSED*/
 char *
-ReadLine(FILE *tmpfd, char *tmpfname)
+ReadLine(FILE *tmpfd, const char *tmpfname)
 {
 	static boolean	initialized = FALSE;
 	static char	*buf, *pline, *end;
@@ -2011,7 +2022,7 @@ ReadLine(FILE *tmpfd, char *tmpfname)
 }
 
 void
-writetmpfile(FILE *fd, char *buf, int cnt, char *fname)
+writetmpfile(FILE *fd, const char *buf, int cnt, const char *fname)
 {
 	if (fwrite(buf, sizeof(char), cnt, fd) == -1)
 		LogFatal("Cannot write to %s.", fname);
@@ -2023,7 +2034,7 @@ Emalloc(int size)
 	char	*p;
 
 	if ((p = malloc(size)) == NULL)
-		LogFatalI("Cannot allocate %d bytes", size);
+		LogFatal("Cannot allocate %d bytes", size);
 	return(p);
 }
 
@@ -2134,7 +2145,7 @@ KludgeResetRule(void)
 }
 #endif
 char *
-Strdup(char *cp)
+Strdup(const char *cp)
 {
 	char *new = Emalloc(strlen(cp) + 1);
 
