@@ -27,14 +27,6 @@ in this Software without prior written authorization from The Open Group.
 
 #include "def.h"
 
-extern struct	inclist	inclist[ MAXFILES ],
-			*inclistp, *inclistnext;
-extern const char	*includedirs[ ],
-			**includedirsnext;
-extern char	*notdotdot[ ];
-extern boolean show_where_not;
-extern boolean warn_multiple;
-
 static boolean
 isdot(const char *p)
 {
@@ -64,7 +56,7 @@ issymbolic(const char *dir, const char *component)
 			return (TRUE);
 	if (lstat(buf, &st) == 0
 	&& (st.st_mode & S_IFMT) == S_IFLNK) {
-		*pp++ = copy(buf);
+		*pp++ = strdup(buf);
 		if (pp >= &notdotdot[ MAXDIRS ])
 			fatalerr("out of .. dirs, increase MAXDIRS\n");
 		return(TRUE);
@@ -116,7 +108,7 @@ remove_dotdot(char *path)
 		    char **fp = cp + 2;
 		    char **tp = cp;
 
-		    do 
+		    do
 			*tp++ = *fp; /* move all the pointers down */
 		    while (*fp++);
 		    if (cp != components)
@@ -161,12 +153,12 @@ newinclude(const char *newfile, const char *incstring)
 	ip = inclistp++;
 	if (inclistp == inclist + MAXFILES - 1)
 		fatalerr("out of space: increase MAXFILES\n");
-	ip->i_file = copy(newfile);
+	ip->i_file = strdup(newfile);
 
 	if (incstring == NULL)
 		ip->i_incstring = ip->i_file;
 	else
-		ip->i_incstring = copy(incstring);
+		ip->i_incstring = strdup(incstring);
 
 	inclistnext = inclistp;
 	return(ip);

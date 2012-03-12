@@ -1,3 +1,82 @@
+commit b6605e3945eaaabbd090672f33e888d394f9a4f0
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Mar 7 21:52:14 2012 -0800
+
+    makedepend 1.0.4
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit cb8bbc06de0baf2dff4a703e6d2bb47bdf90d896
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Oct 7 18:07:24 2011 -0700
+
+    define(): Avoid assigning constant string to non-const char *
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit b9770941ae829ad2cb985efe809d6e3dd690648b
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Oct 7 18:02:34 2011 -0700
+
+    Call strdup directly, instead of via copy macro
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 0ecf5f3251033ab6efa1a0d881f75ed9ce60b5a4
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Oct 7 18:00:39 2011 -0700
+
+    Add const attributes to fix gcc -Wwrite-strings warnings
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 97ae52f80f9e382917889bde1913367572e89012
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Oct 7 17:47:36 2011 -0700
+
+    Move extern variable declarations to common header (def.h)
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 3602fb0b7ba2bde9c73610693dbb50534fe42b81
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Oct 7 17:34:17 2011 -0700
+
+    Strip trailing whitespace
+    
+    Performed with: find * -type f | xargs perl -i -p -e 's{[ \t]+$}{}'
+    git diff -w & git diff -b show no diffs from this change
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit c1f32dc1d4c1758065468e1f5d34707099f59f33
+Author: Stuart Kreitman <Stuart.Kreitman@Oracle.COM>
+Date:   Mon May 24 14:21:21 2010 -0700
+
+    Raise MAXFILES from 1024 to 2048
+    
+    Required in order to build OpenTTD on Solaris
+    http://bugs.opensolaris.org/bugdatabase/view_bug.do?bug_id=6917536
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit cc23acdd80fa0cad53e46f99cd0ff5998ec7f607
+Author: Cyril Brulebois <kibi@debian.org>
+Date:   Sun Oct 31 15:50:36 2010 +0100
+
+    Fix bashism: shell string comparison is =, not ==.
+    
+    Signed-off-by: Cyril Brulebois <kibi@debian.org>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 186aae76a84860d0efef638ff499ab1968fffd75
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Oct 29 22:53:25 2010 -0700
+
+    Add README with pointers to mailing list, bugzilla & git repos
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit e67389ecc0c425bcfec0a3184ee48919e0e2c61a
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Fri Oct 29 22:45:35 2010 -0700

@@ -26,13 +26,6 @@ in this Software without prior written authorization from The Open Group.
 
 #include "def.h"
 
-extern const char * const directives[];
-extern struct inclist	inclist[ MAXFILES ],
-			*inclistnext,
-			maininclist;
-extern const char	*includedirs[ ],
-			**includedirsnext;
-
 static int deftype (char *line, struct filepointer *filep,
 		    struct inclist *file_red, struct inclist *file,
 		    int parse_it);
@@ -99,8 +92,8 @@ gobble(struct filepointer *filep, struct inclist *file,
 /*
  * Decide what type of # directive this line is.
  */
-static int 
-deftype (char *line, struct filepointer *filep, 
+static int
+deftype (char *line, struct filepointer *filep,
 	     struct inclist *file_red, struct inclist *file, int parse_it)
 {
 	register char	*p;
@@ -210,7 +203,7 @@ deftype (char *line, struct filepointer *filep,
 			       (*sym) -> s_name,
 			       (*sym) -> s_value));
 			/* mark file as having included a 'soft include' */
-			file->i_flags |= INCLUDED_SYM; 
+			file->i_flags |= INCLUDED_SYM;
 		}
 
 		/*
@@ -258,7 +251,7 @@ deftype (char *line, struct filepointer *filep,
 }
 
 struct symtab **
-fdefined(char *symbol, struct inclist *file, struct inclist **srcfile)
+fdefined(const char *symbol, struct inclist *file, struct inclist **srcfile)
 {
 	struct inclist	**ip;
 	struct symtab	**val;
@@ -289,7 +282,7 @@ fdefined(char *symbol, struct inclist *file, struct inclist **srcfile)
 }
 
 struct symtab **
-isdefined(char *symbol, struct inclist *file, struct inclist **srcfile)
+isdefined(const char *symbol, struct inclist *file, struct inclist **srcfile)
 {
 	struct symtab	**val;
 
@@ -320,7 +313,7 @@ zero_value(char *filename,
 }
 
 void
-define2(char *name, char *val, struct inclist *file)
+define2(const char *name, const char *val, struct inclist *file)
 {
     int first, last, below;
     register struct symtab **sp = NULL, **dest;
@@ -346,8 +339,8 @@ define2(char *name, char *val, struct inclist *file)
     while (last >= first)
     {
 	/* Fast inline binary search */
-	register char *s1;
-	register char *s2;
+	register const char *s1;
+	register const char *s2;
 	register int middle = (first + last) / 2;
 
 	/* Fast inline strchr() */
@@ -357,14 +350,14 @@ define2(char *name, char *val, struct inclist *file)
 	    if (s2[-1] == '\0') break;
 
 	/* If exact match, set sp and break */
-	if (*--s1 == *--s2) 
+	if (*--s1 == *--s2)
 	{
 	    sp = file->i_defs + middle;
 	    break;
 	}
 
 	/* If name > i_defs[middle] ... */
-	if (*s1 > *s2) 
+	if (*s1 > *s2)
 	{
 	    below = first;
 	    first = middle + 1;
@@ -383,7 +376,7 @@ define2(char *name, char *val, struct inclist *file)
 	debug(1,("redefining %s from %s to %s in file %s\n",
 		name, (*sp)->s_value, val, file->i_file));
 	free((*sp)->s_value);
-	(*sp)->s_value = copy(val);
+	(*sp)->s_value = strdup(val);
 	return;
     }
 
@@ -399,8 +392,8 @@ define2(char *name, char *val, struct inclist *file)
 	fatalerr("malloc()/realloc() failure in insert_defn()\n");
 
     debug(1,("defining %s to %s in file %s\n", name, val, file->i_file));
-    stab->s_name = copy(name);
-    stab->s_value = copy(val);
+    stab->s_name = strdup(name);
+    stab->s_value = strdup(val);
     *sp = stab;
 }
 
@@ -419,12 +412,13 @@ define(char *def, struct inclist *file)
 	val++;
 
     if (!*val)
-	val = "1";
-    define2(def, val, file);
+	define2(def, "1", file);
+    else
+	define2(def, val, file);
 }
 
 struct symtab **
-slookup(char *symbol, struct inclist *file)
+slookup(const char *symbol, struct inclist *file)
 {
 	register int first = 0;
 	register int last;
@@ -433,12 +427,12 @@ slookup(char *symbol, struct inclist *file)
 	    return NULL;
 
 	last = file->i_ndefs - 1;
-	
+
 	while (last >= first)
 	{
 	    /* Fast inline binary search */
-	    register char *s1;
-	    register char *s2;
+	    register const char *s1;
+	    register const char *s2;
 	    register int middle = (first + last) / 2;
 
 	    /* Fast inline strchr() */
@@ -448,13 +442,13 @@ slookup(char *symbol, struct inclist *file)
 	        if (s2[-1] == '\0') break;
 
 	    /* If exact match, we're done */
-	    if (*--s1 == *--s2) 
+	    if (*--s1 == *--s2)
 	    {
 	        return file->i_defs + middle;
 	    }
 
 	    /* If symbol > i_defs[middle] ... */
-	    if (*s1 > *s2) 
+	    if (*s1 > *s2)
 	    {
 	        first = middle + 1;
 	    }
@@ -467,7 +461,7 @@ slookup(char *symbol, struct inclist *file)
 	return(NULL);
 }
 
-static int 
+static int
 merge2defines(struct inclist *file1, struct inclist *file2)
 {
 	int i;
@@ -495,7 +489,7 @@ merge2defines(struct inclist *file1, struct inclist *file2)
 			file2->i_file, file1->i_file));
 
                 if (deflen>0)
-                { 
+                {
                 	/* make sure deflen % SYMTABINC == 0 is still true */
                 	deflen += (SYMTABINC - deflen % SYMTABINC) % SYMTABINC;
                 	i_defs=(struct symtab**)
@@ -530,13 +524,13 @@ merge2defines(struct inclist *file1, struct inclist *file2)
                 if (file1->i_defs) free(file1->i_defs);
                 file1->i_defs=i_defs;
                 file1->i_ndefs=first;
-                
+
 		return 1;
   	}
 }
 
 void
-undefine(char *symbol, struct inclist *file)
+undefine(const char *symbol, struct inclist *file)
 {
 	register struct symtab **ptr;
 	struct inclist *srcfile;
@@ -549,7 +543,7 @@ undefine(char *symbol, struct inclist *file)
 }
 
 int
-find_includes(struct filepointer *filep, struct inclist *file, 
+find_includes(struct filepointer *filep, struct inclist *file,
 	      struct inclist *file_red, int recursion, boolean failOK)
 {
 	struct inclist	*inclistp;
@@ -661,7 +655,7 @@ find_includes(struct filepointer *filep, struct inclist *file,
 			warning1(", line %ld: %s\n",
 				 filep->f_line, line);
 		    	break;
-		    
+
 		case PRAGMA:
 		case IDENT:
 		case SCCS:

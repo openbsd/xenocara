@@ -1,24 +1,24 @@
 .\" Copyright (c) 1993, 1994, 1998 The Open Group
-.\" 
+.\"
 .\" Permission to use, copy, modify, distribute, and sell this software and its
 .\" documentation for any purpose is hereby granted without fee, provided that
 .\" the above copyright notice appear in all copies and that both that
 .\" copyright notice and this permission notice appear in supporting
 .\" documentation.
-.\" 
+.\"
 .\" The above copyright notice and this permission notice shall be included in
 .\" all copies or substantial portions of the Software.
-.\" 
+.\"
 .\" THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 .\" IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-.\" FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL 
-.\" THE OPEN GROUP BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, 
-.\" WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF 
-.\" OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE 
+.\" FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
+.\" THE OPEN GROUP BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+.\" WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF
+.\" OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 .\" SOFTWARE.
-.\" 
-.\" Except as contained in this notice, the name of The Open Group shall not 
-.\" be used in advertising or otherwise to promote the sale, use or other 
+.\"
+.\" Except as contained in this notice, the name of The Open Group shall not
+.\" be used in advertising or otherwise to promote the sale, use or other
 .\" dealing in this Software without prior written authorization from The
 .\" Open Group.
 .\"
@@ -166,7 +166,7 @@ This places a definition for
 in
 .B makedepend's
 symbol table.
-Without 
+Without
 .I =def\|
 the symbol becomes defined as ``1''.
 .TP 5
@@ -192,7 +192,7 @@ include directory; you can omit the
 to simply prevent searching the standard include directories.
 .TP 5
 .B \-a
-Append the dependencies to the end of the file instead of replacing them. 
+Append the dependencies to the end of the file instead of replacing them.
 .TP 5
 .B \-f\fImakefile\fP
 Filename.
@@ -243,20 +243,20 @@ This option enables you to change this width.
 .TP 5
 .B \-v
 Verbose operation.
-This option causes 
+This option causes
 .B makedepend
 to emit the list of files included by each input file.
 .TP 5
 .B \-m
 Warn about multiple inclusion.
-This option causes 
+This option causes
 .B makedepend
 to produce a warning if any input file includes another file more than
-once.  In previous versions of 
+once.  In previous versions of
 .B makedepend
 this was the default behavior; the default has been changed to better
 match the behavior of the C compiler, which does not consider multiple
-inclusion to be an error.  This option is provided for backward 
+inclusion to be an error.  This option is provided for backward
 compatibility, and to aid in debugging problems related to multiple
 inclusion.
 .TP 5

@@ -25,7 +25,7 @@ in this Software without prior written authorization from The Open Group.
 */
 
 
-/* 
+/*
  * This file contains machine-dependent constants for the imake utility.
  * When porting imake, read each of the steps below and add in any necessary
  * definitions.  In general you should *not* edit ccimake.c or imake.c!
@@ -460,7 +460,7 @@ static const struct symtab	predefs[] = {
 #endif
 #if defined (__BUILTIN_VA_ARG_INCR)
 	{"__BUILTIN_VA_ARG_INCR", "1"},
-#endif	
+#endif
 	/* add any additional symbols before this line */
 	{NULL, NULL}
 };

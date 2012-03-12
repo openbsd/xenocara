@@ -26,17 +26,8 @@ in this Software without prior written authorization from The Open Group.
 
 #include "def.h"
 
-extern struct	inclist	inclist[ MAXFILES ],
-			*inclistp;
-extern char	*objprefix;
-extern char	*objsuffix;
-extern int	width;
-extern boolean	printed;
-extern boolean	verbose;
-extern boolean	show_where_not;
-
 void
-add_include(struct filepointer *filep, struct inclist *file, 
+add_include(struct filepointer *filep, struct inclist *file,
 	    struct inclist *file_red, const char *include, int type,
 	    boolean failOK)
 {

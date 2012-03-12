@@ -5,7 +5,7 @@
 
 set -e
 
-if [ "x$MAKEDEPEND" == "x" ]; then
+if [ "x$MAKEDEPEND" = "x" ]; then
     MAKEDEPEND=makedepend
 fi
 
