@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.46 2012/03/12 13:41:19 matthieu Exp $
+# $OpenBSD: Makefile,v 1.47 2012/03/12 13:54:04 matthieu Exp $
 
 INPUT_DRV_DEFAULT= \
 	xf86-input-keyboard \
@@ -47,24 +47,18 @@ INPUT_DRV= ${INPUT_DRV_${MACHINE}}
 INPUT_DRV= ${INPUT_DRV_DEFAULT}
 .endif
 
-VIDEO_DRV_COMMON= \
-	xf86-video-apm xf86-video-ark xf86-video-ati xf86-video-chips  \
-	xf86-video-cirrus xf86-video-dummy \
-	xf86-video-glint xf86-video-i128 xf86-video-mach64 xf86-video-mga \
-	xf86-video-neomagic \
-	xf86-video-nv xf86-video-r128 xf86-video-radeonold \
-	xf86-video-rendition xf86-video-s3 \
-	xf86-video-s3virge xf86-video-savage xf86-video-siliconmotion \
-	xf86-video-sis xf86-video-tdfx xf86-video-trident \
-	xf86-video-tseng xf86-video-vesa
-
 VIDEO_DRV_alpha=
 
 VIDEO_DRV_amd64= \
-	${VIDEO_DRV_COMMON} \
-	xf86-video-intel \
-	xf86-video-openchrome \
-	xf86-video-vmware \
+	xf86-video-apm xf86-video-ark xf86-video-ati xf86-video-chips  \
+	xf86-video-cirrus xf86-video-dummy xf86-video-glint \
+	xf86-video-i128 xf86-video-intel xf86-video-mach64 \
+	xf86-video-mga xf86-video-neomagic \
+	xf86-video-nv xf86-video-openchrome xf86-video-r128 \
+	xf86-video-radeonold xf86-video-rendition xf86-video-s3 \
+	xf86-video-s3virge xf86-video-savage xf86-video-siliconmotion \
+	xf86-video-sis xf86-video-tdfx xf86-video-trident \
+	xf86-video-tseng xf86-video-vesa xf86-video-vmware \
 	xf86-video-wsudl
 
 VIDEO_DRV_armish= \
@@ -76,16 +70,11 @@ VIDEO_DRV_hppa= \
 	xf86-video-wsfb \
 	xf86-video-wsudl
 
-# keep this list sorted, please.
 VIDEO_DRV_i386= \
-	${VIDEO_DRV_COMMON} \
+	${VIDEO_DRV_amd64} \
 	xf86-video-geode \
 	xf86-video-i740 \
-	xf86-video-intel \
-	xf86-video-openchrome \
-	xf86-video-vmware \
-	xf86-video-voodoo \
-	xf86-video-wsudl
+	xf86-video-voodoo
 
 VIDEO_DRV_landisk=
 
