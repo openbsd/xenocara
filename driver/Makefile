@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.47 2012/03/12 13:54:04 matthieu Exp $
+# $OpenBSD: Makefile,v 1.48 2012/03/12 21:22:30 matthieu Exp $
 
 INPUT_DRV_DEFAULT= \
 	xf86-input-keyboard \
@@ -78,8 +78,8 @@ VIDEO_DRV_i386= \
 
 VIDEO_DRV_landisk=
 
-VIDEO_DRV_loonson= \
-	xf86-video-siliconmotion xf86-video-wsfb
+VIDEO_DRV_loongson= \
+	xf86-video-wsfb
 
 VIDEO_DRV_mac68k=
 
