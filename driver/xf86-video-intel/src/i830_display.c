@@ -941,30 +941,35 @@ i830PipeSetBase(xf86CrtcPtr crtc, int x, int y)
     I830CrtcPrivatePtr	intel_crtc = crtc->driver_private;
     int plane = intel_crtc->plane;
     unsigned long Start, Offset, Stride;
+    drm_intel_bo *bo;
     int dspbase = (plane == 0 ? DSPABASE : DSPBBASE);
     int dspsurf = (plane == 0 ? DSPASURF : DSPBSURF);
     int dsptileoff = (plane == 0 ? DSPATILEOFF : DSPBTILEOFF);
     int dspstride = (plane == 0) ? DSPASTRIDE : DSPBSTRIDE;
 
-    Offset = y * intel->front_pitch + x * intel->cpp;
-    Stride = intel->front_pitch;
-    if (intel->front_buffer == NULL) {
-	/* During startup we may be called as part of monitor detection while
-	 * there is no memory allocation done, so just supply a dummy base
-	 * address.
-	 */
-	Start = 0;
-    } else if (crtc->rotatedData != NULL) {
-	/* offset is done by shadow painting code, not here */
-	Start = (char *)crtc->rotatedData - (char *)intel->FbBase;
-	Offset = 0;
-	Stride = intel_crtc->rotate_pitch;
-    } else {
-	Start = intel->front_buffer->offset;
-    }
-
     crtc->x = x;
     crtc->y = y;
+
+    Stride = intel->front_pitch;
+    bo = intel->front_buffer;
+    Offset = y * Stride + x * intel->cpp;
+    if (intel_crtc->rotate_bo != NULL) {
+	Stride = intel_crtc->rotate_pitch;
+	bo = intel_crtc->rotate_bo;
+	Offset = 0;
+	x = y = 0;
+    }
+
+    /*
+     * During startup we may be called as part of monitor detection while
+     * there is no memory allocation done, so just supply a dummy base
+     * address.
+     */
+    if (bo == NULL) {
+	Start = 0;
+    } else {
+	Start = bo->offset;
+    }
 
     OUTREG(dspstride, Stride);
     if (IS_I965G(intel)) {
@@ -1057,16 +1062,17 @@ static Bool
 i830_display_tiled(xf86CrtcPtr crtc)
 {
     ScrnInfoPtr scrn = crtc->scrn;
+    I830CrtcPrivatePtr intel_crtc = crtc->driver_private;
     intel_screen_private *intel = intel_get_screen_private(scrn);
+    drm_intel_bo *bo = intel->front_buffer;
 
-    /* Rotated data is currently linear, allocated either via XAA or EXA */
-    if (crtc->rotatedData)
-	return FALSE;
+    if (intel_crtc->rotate_bo != NULL)
+	bo = intel_crtc->rotate_bo;
 
-    if (intel->front_buffer) {
+    if (bo != NULL) {
         uint32_t tiling_mode, swizzle;
-	if (drm_intel_bo_get_tiling(intel->front_buffer,
-	    &tiling_mode, &swizzle) == 0 && tiling_mode != I915_TILING_NONE)
+	if (drm_intel_bo_get_tiling(bo, &tiling_mode, &swizzle) == 0 &&
+	    tiling_mode != I915_TILING_NONE)
 		return TRUE;
     }
 
@@ -2755,7 +2761,7 @@ i830_crtc_shadow_allocate (xf86CrtcPtr crtc, int width, int height)
     }
 
     intel_crtc->rotate_pitch = rotate_pitch;
-    return intel->FbBase + intel_crtc->rotate_bo->offset;
+    return intel_crtc->rotate_bo;
 }
     
 /**
@@ -2769,12 +2775,19 @@ i830_crtc_shadow_create(xf86CrtcPtr crtc, void *data, int width, int height)
     I830CrtcPrivatePtr intel_crtc = crtc->driver_private;
     PixmapPtr rotate_pixmap;
 
-    if (!data)
+    if (!data) {
 	data = i830_crtc_shadow_allocate (crtc, width, height);
+	if (!data) {
+	    xf86DrvMsg(scrn->scrnIndex, X_ERROR,
+		"Couldn't allocate shadow pixmap for rotated CRTC\n");
+		return NULL;
+	}
+    }
 
     if (intel_crtc->rotate_bo == NULL) {
 	xf86DrvMsg(scrn->scrnIndex, X_ERROR,
 		   "Couldn't allocate shadow pixmap for rotated CRTC\n");
+	return NULL;
     }
     
     rotate_pixmap = GetScratchPixmapHeader(scrn->pScreen,
@@ -2782,11 +2795,12 @@ i830_crtc_shadow_create(xf86CrtcPtr crtc, void *data, int width, int height)
 					   scrn->depth,
 					   scrn->bitsPerPixel,
 					   intel_crtc->rotate_pitch,
-					   data);
+					   NULL);
 
     if (rotate_pixmap == NULL) {
 	xf86DrvMsg(scrn->scrnIndex, X_ERROR,
 		   "Couldn't allocate shadow pixmap for rotated CRTC\n");
+        return NULL;
     }
     intel_set_pixmap_bo(rotate_pixmap, intel_crtc->rotate_bo);
 
