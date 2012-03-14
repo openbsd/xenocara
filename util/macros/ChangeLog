@@ -1,3 +1,76 @@
+commit c0c42057e0d357c144e7933ee413b522950a0f17
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Mar 13 19:45:12 2012 -0400
+
+    Version bump: 1.17
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 51f69514e65637f575df901ef942515e70314f6a
+Author: Chase Douglas <chase.douglas@canonical.com>
+Date:   Mon Mar 12 11:49:28 2012 -0700
+
+    Separate unknown warning options by language
+    
+    If XORG_COMPILER_FLAGS is called more than once with separate languages,
+    the unknown warning options used internally for unknown warning checking
+    will be set the first time and then the cached value will be used for
+    subsequent languages. This is a problem if the compilers differ between
+    the languages.
+    
+    This change ensures that the unknown warning options are namespaced so
+    multiple XORG_COMPILER_FLAGS calls with different languages are checked
+    separately.
+    
+    Signed-off-by: Chase Douglas <chase.douglas@canonical.com>
+    Reviewed-by: Gaetan Nadon<memsize@videotron.ca>
+
+commit a1fec11ca3de6774fb70052f5f5ab167bf658690
+Author: Chase Douglas <chase.douglas@canonical.com>
+Date:   Mon Mar 12 10:59:55 2012 -0700
+
+    Fix cflag test compiler message and cache ids
+    
+    When the language is C++, the flag checking message references $CC
+    instead of $CXX. The cache id is also xorg_cv_cc_* instead of
+    xorg_cv_cxx_*. This change fixes both issues.
+    
+    Signed-off-by: Chase Douglas <chase.douglas@canonical.com>
+    Reviewed-by: Gaetan Nadon<memsize@videotron.ca>
+
+commit a02a9048a1b831d13d32413e2af429ac8d7a5c2b
+Author: Jon TURNEY <jon.turney@dronecode.org.uk>
+Date:   Sat Mar 10 15:04:28 2012 +0000
+
+    Don't use AS_ECHO in XORG_TESTSET_CFLAG
+    
+    Further to commit 52ef6f6, since AS_ECHO isn't supported in autoconf 2.61 either,
+    rewrite use of cache variable in XORG_TESTSET_CFLAG so 'echo' isn't needed at all.
+    
+    Signed-off-by: Jon TURNEY <jon.turney@dronecode.org.uk>
+    Reviewed-by: Gaetan Nadon<memsize@videotron.ca>
+    Reviewed-by: Chase Douglas <chase.douglas@canonical.com>
+    Signed-off-by: Chase Douglas <chase.douglas@canonical.com>
+
+commit 299ae797eff46900e7d5914ff4502662f97f2062
+Author: Chase Douglas <chase.douglas@canonical.com>
+Date:   Fri Mar 9 14:46:00 2012 -0800
+
+    Add XORG_ENABLE_INTEGRATION_TESTS
+    
+    This macro enables a builder to enable/disable integration testing
+    It makes no assumption about the test cases' implementation
+    Test cases may or may not use Automake "Support for test suites"
+    
+    Unit test support usually requires less dependencies and may be built
+    and run under less stringent environments than integration tests. Thus,
+    two separate options for unit and integration testing is desirable.
+    
+    Copied from XORG_ENABLE_UNIT_TESTS.
+    
+    Signed-off-by: Chase Douglas <chase.douglas@canonical.com>
+    Reviewed-by: Gaetan Nadon<memsize@videotron.ca>
+
 commit db238c632bb7136e3e44345820d514106e317420
 Author: Gaetan Nadon <memsize@videotron.ca>
 Date:   Mon Mar 5 09:39:17 2012 -0500
