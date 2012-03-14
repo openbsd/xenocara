@@ -734,6 +734,7 @@ int
 pci_device_vgaarb_set_target(struct pci_device *dev)
 {
 	pci_sys->vga_target = dev;
+	return (0);
 }
 
 int
