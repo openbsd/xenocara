@@ -2053,6 +2053,39 @@ AC_MSG_CHECKING([whether to build unit test cases])
 AC_MSG_RESULT([$enable_unit_tests])
 ]) # XORG_ENABLE_UNIT_TESTS
 
+# XORG_ENABLE_INTEGRATION_TESTS (enable_unit_tests=auto)
+# ------------------------------------------------------
+# Minimum version: 1.17.0
+#
+# This macro enables a builder to enable/disable integration testing
+# It makes no assumption about the test cases' implementation
+# Test cases may or may not use Automake "Support for test suites"
+#
+# Please see XORG_ENABLE_UNIT_TESTS for unit test support. Unit test support
+# usually requires less dependencies and may be built and run under less
+# stringent environments than integration tests.
+#
+# Interface to module:
+# ENABLE_INTEGRATION_TESTS:   used in makefiles to conditionally build tests
+# enable_integration_tests:   used in configure.ac for additional configuration
+# --enable-integration-tests: 'yes' user instructs the module to build tests
+#                             'no' user instructs the module not to build tests
+# parm1:                      specify the default value, yes or no.
+#
+AC_DEFUN([XORG_ENABLE_INTEGRATION_TESTS],[
+AC_REQUIRE([XORG_MEMORY_CHECK_FLAGS])
+m4_define([_defopt], m4_default([$1], [auto]))
+AC_ARG_ENABLE(integration-tests, AS_HELP_STRING([--enable-integration-tests],
+	[Enable building integration test cases (default: ]_defopt[)]),
+	[enable_integration_tests=$enableval],
+	[enable_integration_tests=]_defopt)
+m4_undefine([_defopt])
+AM_CONDITIONAL([ENABLE_INTEGRATION_TESTS],
+	[test "x$enable_integration_tests" != xno])
+AC_MSG_CHECKING([whether to build unit test cases])
+AC_MSG_RESULT([$enable_integration_tests])
+]) # XORG_ENABLE_INTEGRATION_TESTS
+
 # XORG_WITH_GLIB([MIN-VERSION], [DEFAULT])
 # ----------------------------------------
 # Minimum version: 1.13.0
@@ -2062,6 +2095,10 @@ AC_MSG_RESULT([$enable_unit_tests])
 #
 # When used with ENABLE_UNIT_TESTS, it is assumed GLib is used for unit testing.
 # Otherwise the value of $enable_unit_tests is blank.
+#
+# Please see XORG_ENABLE_INTEGRATION_TESTS for integration test support. Unit
+# test support usually requires less dependencies and may be built and run under
+# less stringent environments than integration tests.
 #
 # Interface to module:
 # HAVE_GLIB: used in makefiles to conditionally build targets
@@ -2463,36 +2500,40 @@ AC_LANG_CASE(
 	[C], [
 		AC_REQUIRE([AC_PROG_CC_C99])
 		define([PREFIX], [C])
+		define([CACHE_PREFIX], [cc])
+		define([COMPILER], [$CC])
 	],
 	[C++], [
 		define([PREFIX], [CXX])
+		define([CACHE_PREFIX], [cxx])
+		define([COMPILER], [$CXX])
 	]
 )
 
 [xorg_testset_save_]PREFIX[FLAGS]="$PREFIX[FLAGS]"
 
-if test "x$xorg_testset_unknown_warning_option" = "x" ; then
+if test "x$[xorg_testset_]CACHE_PREFIX[_unknown_warning_option]" = "x" ; then
 	PREFIX[FLAGS]="$PREFIX[FLAGS] -Werror=unknown-warning-option"
-	AC_CACHE_CHECK([if compiler supports -Werror=unknown-warning-option],
-			xorg_cv_compiler_flag_unknown_warning_option,
+	AC_CACHE_CHECK([if ]COMPILER[ supports -Werror=unknown-warning-option],
+			[xorg_cv_]CACHE_PREFIX[_flag_unknown_warning_option],
 			AC_COMPILE_IFELSE([AC_LANG_SOURCE([int i;])],
-					  [xorg_cv_compiler_flag_unknown_warning_option=yes],
-					  [xorg_cv_compiler_flag_unknown_warning_option=no]))
-	xorg_testset_unknown_warning_option=$xorg_cv_compiler_flag_unknown_warning_option
+					  [xorg_cv_]CACHE_PREFIX[_flag_unknown_warning_option=yes],
+					  [xorg_cv_]CACHE_PREFIX[_flag_unknown_warning_option=no]))
+	[xorg_testset_]CACHE_PREFIX[_unknown_warning_option]=$[xorg_cv_]CACHE_PREFIX[_flag_unknown_warning_option]
 	PREFIX[FLAGS]="$[xorg_testset_save_]PREFIX[FLAGS]"
 fi
 
-if test "x$xorg_testset_unused_command_line_argument" = "x" ; then
-	if test "x$xorg_testset_unknown_warning_option" = "xyes" ; then
+if test "x$[xorg_testset_]CACHE_PREFIX[_unused_command_line_argument]" = "x" ; then
+	if test "x$[xorg_testset_]CACHE_PREFIX[_unknown_warning_option]" = "xyes" ; then
 		PREFIX[FLAGS]="$PREFIX[FLAGS] -Werror=unknown-warning-option"
 	fi
 	PREFIX[FLAGS]="$PREFIX[FLAGS] -Werror=unused-command-line-argument"
-	AC_CACHE_CHECK([if compiler supports -Werror=unused-command-line-argument],
-			xorg_cv_compiler_flag_unused_command_line_argument,
+	AC_CACHE_CHECK([if ]COMPILER[ supports -Werror=unused-command-line-argument],
+			[xorg_cv_]CACHE_PREFIX[_flag_unused_command_line_argument],
 			AC_COMPILE_IFELSE([AC_LANG_SOURCE([int i;])],
-					  [xorg_cv_compiler_flag_unused_command_line_argument=yes],
-					  [xorg_cv_compiler_flag_unused_command_line_argument=no]))
-	xorg_testset_unused_command_line_argument=$xorg_cv_compiler_flag_unused_command_line_argument
+					  [xorg_cv_]CACHE_PREFIX[_flag_unused_command_line_argument=yes],
+					  [xorg_cv_]CACHE_PREFIX[_flag_unused_command_line_argument=no]))
+	[xorg_testset_]CACHE_PREFIX[_unused_command_line_argument]=$[xorg_cv_]CACHE_PREFIX[_flag_unused_command_line_argument]
 	PREFIX[FLAGS]="$[xorg_testset_save_]PREFIX[FLAGS]"
 fi
 
@@ -2510,16 +2551,16 @@ m4_foreach([flag], m4_cdr($@), [
 		PREFIX[FLAGS]="$PREFIX[FLAGS] ]flag["
 
 dnl Some hackery here since AC_CACHE_VAL can't handle a non-literal varname
-		AC_MSG_CHECKING([if $CC supports ]flag[])
-		cacheid=`AS_ECHO([xorg_cv_cc_flag_]flag[])`
-		AC_CACHE_VAL(AS_TR_SH($cacheid),
+		AC_MSG_CHECKING([if ]COMPILER[ supports]flag[])
+		cacheid=AS_TR_SH([xorg_cv_]CACHE_PREFIX[_flag_]flag[])
+		AC_CACHE_VAL($cacheid,
 			     [AC_LINK_IFELSE([AC_LANG_PROGRAM([int i;])],
-					     [eval AS_TR_SH($cacheid)=yes],
-					     [eval AS_TR_SH($cacheid)=no])])
+					     [eval $cacheid=yes],
+					     [eval $cacheid=no])])
 
 		PREFIX[FLAGS]="$[xorg_testset_save_]PREFIX[FLAGS]"
 
-		eval supported=$AS_TR_SH($cacheid)
+		eval supported=\$$cacheid
 		AC_MSG_RESULT([$supported])
 		if test "$supported" = "yes" ; then
 			$1="$$1 ]flag["
