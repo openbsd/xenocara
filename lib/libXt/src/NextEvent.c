@@ -356,21 +356,7 @@ static int IoWait (
     return Select (wf->nfds, &wf->rmask, &wf->wmask, &wf->emask,
 		   wt->wait_time_ptr);
 #else
-    int ret = poll (wf->fdlist, wf->fdlistlen, wt->poll_wait);
-    /* If poll() returns an event we didn't expect, such as POLLNVAL, treat
-     * it as if it failed. */
-    if(ret >= 0) {
-        nfds_t i;
-        for (i=0; i < wf->fdlistlen; i++) {
-            struct pollfd *fd = &wf->fdlist[i];
-            if (fd->revents & ~fd->events) {
-                ret = -1;
-                errno = EIO;
-                break;
-            }
-        }
-    }
-    return ret;
+    return poll (wf->fdlist, wf->fdlistlen, wt->poll_wait);
 #endif
 }
 

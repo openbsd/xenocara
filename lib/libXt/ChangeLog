@@ -1,3 +1,23 @@
+commit 2d689ac861085d1d74bcbd05d1595bac0bf67d20
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Mar 15 22:51:45 2012 -0700
+
+    libXt 1.1.3
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 75bef5b488245467b6638e25cd22006b306e8536
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Mon Mar 12 18:36:52 2012 -0700
+
+    Revert "Treat unexpected returned events from poll as errors"
+    
+    This commit caused regressions:
+    https://bugs.freedesktop.org/show_bug.cgi?id=47203
+    https://bugs.freedesktop.org/show_bug.cgi?id=47216
+    
+    This reverts commit 70bb9e28d37fff4ead4d0a2c672af77059765fa4.
+
 commit 8ab1833a80a18131d897f6d9965545c16acef921
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Wed Mar 7 17:57:26 2012 -0800
