@@ -1,4 +1,4 @@
-# $OpenBSD: MODULES,v 1.204 2012/03/11 13:11:51 matthieu Exp $
+# $OpenBSD: MODULES,v 1.205 2012/03/18 11:16:45 matthieu Exp $
 #
 # X.Org maintained modules
 #
@@ -94,7 +94,7 @@ driver/xf86-input-fpit		1.4.0	7.7
 driver/xf86-input-hyperpen	1.4.1	7.7
 driver/xf86-input-joystick	1.6.1	7.7	needs-update
 driver/xf86-input-keyboard	1.6.1	7.7
-driver/xf86-input-mouse		1.7.1	7.7
+driver/xf86-input-mouse		1.7.2	7.7	needs-update
 driver/xf86-input-mutouch	1.3.0	7.7
 driver/xf86-input-penmount	1.5.0	7.7
 driver/xf86-input-synaptics	1.5.0	7.7
@@ -128,7 +128,7 @@ driver/xf86-video-tdfx		1.4.3	7.4+
 driver/xf86-video-trident	1.3.4	7.5+
 driver/xf86-video-tseng		1.2.4	7.5+
 driver/xf86-video-vesa		2.3.0	7.5+
-driver/xf86-video-vmware	12.0.0	7.7	needs-update
+driver/xf86-video-vmware	12.0.1	7.7	needs-update
 driver/xf86-video-voodoo	1.2.4	7.5+
 driver/xf86-video-wsfb		0.4.0	7.7
 
@@ -193,7 +193,7 @@ lib/libXmu			1.1.1	7.7
 lib/libXpm			3.5.10	7.7
 lib/libXrandr			1.3.2	7.7
 lib/libXrender			0.9.7	7.7
-lib/libXt			1.1.2	7.7
+lib/libXt			1.1.3	7.7
 lib/libXtst			1.2.1	7.7
 lib/libXv			1.0.7	7.7
 lib/libXvMC			1.0.7	7.7
@@ -233,7 +233,7 @@ proto/renderproto		0.11.1	7.6
 proto/resourceproto		1.2.0	7.7
 proto/scrnsaverproto		1.2.1	7.6
 proto/videoproto		2.3.1	7.6
-proto/x11proto			7.0.22	7.7
+proto/x11proto			7.0.23	7.7	needs-update
 proto/xcb-proto			1.7	7.7	needs-update
 proto/xcmiscproto		1.2.1	7.6
 proto/xextproto			7.2.0	7.7
@@ -246,8 +246,8 @@ proto/xineramaproto		1.2.1	7.6
 
 util/cf				1.0.4	7.6
 util/gccmakedep			1.0.2
-util/imake			1.0.5	7.7	needs-update+
-util/macros			1.16.2	7.7
-util/makedepend			1.0.4	7.7	needs-update+
+util/imake			1.0.5	7.7
+util/macros			1.17	7.7
+util/makedepend			1.0.4	7.7
 
 xserver				1.12	7.7	needs-update
