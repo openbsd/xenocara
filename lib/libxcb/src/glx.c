@@ -2506,25 +2506,25 @@ xcb_glx_get_fb_configs_reply (xcb_connection_t                 *c  /**< */,
  **
  ** xcb_void_cookie_t xcb_glx_create_pixmap_checked
  ** 
- ** @param xcb_connection_t *c
- ** @param uint32_t          screen
- ** @param uint32_t          fbconfig
- ** @param xcb_pixmap_t      pixmap
- ** @param xcb_glx_pixmap_t  glx_pixmap
- ** @param uint32_t          num_attribs
- ** @param const uint32_t   *attribs
+ ** @param xcb_connection_t   *c
+ ** @param uint32_t            screen
+ ** @param xcb_glx_fbconfig_t  fbconfig
+ ** @param xcb_pixmap_t        pixmap
+ ** @param xcb_glx_pixmap_t    glx_pixmap
+ ** @param uint32_t            num_attribs
+ ** @param const uint32_t     *attribs
  ** @returns xcb_void_cookie_t
  **
  *****************************************************************************/
  
 xcb_void_cookie_t
-xcb_glx_create_pixmap_checked (xcb_connection_t *c  /**< */,
-                               uint32_t          screen  /**< */,
-                               uint32_t          fbconfig  /**< */,
-                               xcb_pixmap_t      pixmap  /**< */,
-                               xcb_glx_pixmap_t  glx_pixmap  /**< */,
-                               uint32_t          num_attribs  /**< */,
-                               const uint32_t   *attribs  /**< */)
+xcb_glx_create_pixmap_checked (xcb_connection_t   *c  /**< */,
+                               uint32_t            screen  /**< */,
+                               xcb_glx_fbconfig_t  fbconfig  /**< */,
+                               xcb_pixmap_t        pixmap  /**< */,
+                               xcb_glx_pixmap_t    glx_pixmap  /**< */,
+                               uint32_t            num_attribs  /**< */,
+                               const uint32_t     *attribs  /**< */)
 {
     static const xcb_protocol_request_t xcb_req = {
         /* count */ 4,
@@ -2560,25 +2560,25 @@ xcb_glx_create_pixmap_checked (xcb_connection_t *c  /**< */,
  **
  ** xcb_void_cookie_t xcb_glx_create_pixmap
  ** 
- ** @param xcb_connection_t *c
- ** @param uint32_t          screen
- ** @param uint32_t          fbconfig
- ** @param xcb_pixmap_t      pixmap
- ** @param xcb_glx_pixmap_t  glx_pixmap
- ** @param uint32_t          num_attribs
- ** @param const uint32_t   *attribs
+ ** @param xcb_connection_t   *c
+ ** @param uint32_t            screen
+ ** @param xcb_glx_fbconfig_t  fbconfig
+ ** @param xcb_pixmap_t        pixmap
+ ** @param xcb_glx_pixmap_t    glx_pixmap
+ ** @param uint32_t            num_attribs
+ ** @param const uint32_t     *attribs
  ** @returns xcb_void_cookie_t
  **
  *****************************************************************************/
  
 xcb_void_cookie_t
-xcb_glx_create_pixmap (xcb_connection_t *c  /**< */,
-                       uint32_t          screen  /**< */,
-                       uint32_t          fbconfig  /**< */,
-                       xcb_pixmap_t      pixmap  /**< */,
-                       xcb_glx_pixmap_t  glx_pixmap  /**< */,
-                       uint32_t          num_attribs  /**< */,
-                       const uint32_t   *attribs  /**< */)
+xcb_glx_create_pixmap (xcb_connection_t   *c  /**< */,
+                       uint32_t            screen  /**< */,
+                       xcb_glx_fbconfig_t  fbconfig  /**< */,
+                       xcb_pixmap_t        pixmap  /**< */,
+                       xcb_glx_pixmap_t    glx_pixmap  /**< */,
+                       uint32_t            num_attribs  /**< */,
+                       const uint32_t     *attribs  /**< */)
 {
     static const xcb_protocol_request_t xcb_req = {
         /* count */ 4,
@@ -2686,29 +2686,25 @@ xcb_glx_destroy_pixmap (xcb_connection_t *c  /**< */,
  **
  ** xcb_void_cookie_t xcb_glx_create_new_context_checked
  ** 
- ** @param xcb_connection_t  *c
- ** @param xcb_glx_context_t  context
- ** @param uint32_t           fbconfig
- ** @param uint32_t           screen
- ** @param uint32_t           render_type
- ** @param uint32_t           share_list
- ** @param uint8_t            is_direct
- ** @param uint8_t            reserved1
- ** @param uint16_t           reserved2
+ ** @param xcb_connection_t   *c
+ ** @param xcb_glx_context_t   context
+ ** @param xcb_glx_fbconfig_t  fbconfig
+ ** @param uint32_t            screen
+ ** @param uint32_t            render_type
+ ** @param xcb_glx_context_t   share_list
+ ** @param uint8_t             is_direct
  ** @returns xcb_void_cookie_t
  **
  *****************************************************************************/
  
 xcb_void_cookie_t
-xcb_glx_create_new_context_checked (xcb_connection_t  *c  /**< */,
-                                    xcb_glx_context_t  context  /**< */,
-                                    uint32_t           fbconfig  /**< */,
-                                    uint32_t           screen  /**< */,
-                                    uint32_t           render_type  /**< */,
-                                    uint32_t           share_list  /**< */,
-                                    uint8_t            is_direct  /**< */,
-                                    uint8_t            reserved1  /**< */,
-                                    uint16_t           reserved2  /**< */)
+xcb_glx_create_new_context_checked (xcb_connection_t   *c  /**< */,
+                                    xcb_glx_context_t   context  /**< */,
+                                    xcb_glx_fbconfig_t  fbconfig  /**< */,
+                                    uint32_t            screen  /**< */,
+                                    uint32_t            render_type  /**< */,
+                                    xcb_glx_context_t   share_list  /**< */,
+                                    uint8_t             is_direct  /**< */)
 {
     static const xcb_protocol_request_t xcb_req = {
         /* count */ 2,
@@ -2727,8 +2723,7 @@ xcb_glx_create_new_context_checked (xcb_connection_t  *c  /**< */,
     xcb_out.render_type = render_type;
     xcb_out.share_list = share_list;
     xcb_out.is_direct = is_direct;
-    xcb_out.reserved1 = reserved1;
-    xcb_out.reserved2 = reserved2;
+    memset(xcb_out.pad0, 0, 3);
     
     xcb_parts[2].iov_base = (char *) &xcb_out;
     xcb_parts[2].iov_len = sizeof(xcb_out);
@@ -2743,29 +2738,25 @@ xcb_glx_create_new_context_checked (xcb_connection_t  *c  /**< */,
  **
  ** xcb_void_cookie_t xcb_glx_create_new_context
  ** 
- ** @param xcb_connection_t  *c
- ** @param xcb_glx_context_t  context
- ** @param uint32_t           fbconfig
- ** @param uint32_t           screen
- ** @param uint32_t           render_type
- ** @param uint32_t           share_list
- ** @param uint8_t            is_direct
- ** @param uint8_t            reserved1
- ** @param uint16_t           reserved2
+ ** @param xcb_connection_t   *c
+ ** @param xcb_glx_context_t   context
+ ** @param xcb_glx_fbconfig_t  fbconfig
+ ** @param uint32_t            screen
+ ** @param uint32_t            render_type
+ ** @param xcb_glx_context_t   share_list
+ ** @param uint8_t             is_direct
  ** @returns xcb_void_cookie_t
  **
  *****************************************************************************/
  
 xcb_void_cookie_t
-xcb_glx_create_new_context (xcb_connection_t  *c  /**< */,
-                            xcb_glx_context_t  context  /**< */,
-                            uint32_t           fbconfig  /**< */,
-                            uint32_t           screen  /**< */,
-                            uint32_t           render_type  /**< */,
-                            uint32_t           share_list  /**< */,
-                            uint8_t            is_direct  /**< */,
-                            uint8_t            reserved1  /**< */,
-                            uint16_t           reserved2  /**< */)
+xcb_glx_create_new_context (xcb_connection_t   *c  /**< */,
+                            xcb_glx_context_t   context  /**< */,
+                            xcb_glx_fbconfig_t  fbconfig  /**< */,
+                            uint32_t            screen  /**< */,
+                            uint32_t            render_type  /**< */,
+                            xcb_glx_context_t   share_list  /**< */,
+                            uint8_t             is_direct  /**< */)
 {
     static const xcb_protocol_request_t xcb_req = {
         /* count */ 2,
@@ -2784,8 +2775,7 @@ xcb_glx_create_new_context (xcb_connection_t  *c  /**< */,
     xcb_out.render_type = render_type;
     xcb_out.share_list = share_list;
     xcb_out.is_direct = is_direct;
-    xcb_out.reserved1 = reserved1;
-    xcb_out.reserved2 = reserved2;
+    memset(xcb_out.pad0, 0, 3);
     
     xcb_parts[2].iov_base = (char *) &xcb_out;
     xcb_parts[2].iov_len = sizeof(xcb_out);
@@ -3633,6 +3623,386 @@ xcb_glx_delete_window (xcb_connection_t *c  /**< */,
     xcb_parts[2].iov_len = sizeof(xcb_out);
     xcb_parts[3].iov_base = 0;
     xcb_parts[3].iov_len = -xcb_parts[2].iov_len & 3;
+    xcb_ret.sequence = xcb_send_request(c, 0, xcb_parts + 2, &xcb_req);
+    return xcb_ret;
+}
+
+
+/*****************************************************************************
+ **
+ ** xcb_void_cookie_t xcb_glx_set_client_info_arb_checked
+ ** 
+ ** @param xcb_connection_t *c
+ ** @param uint32_t          major_version
+ ** @param uint32_t          minor_version
+ ** @param uint32_t          num_versions
+ ** @param uint32_t          gl_str_len
+ ** @param uint32_t          glx_str_len
+ ** @param const uint32_t   *gl_versions
+ ** @param const char       *gl_extension_string
+ ** @param const char       *glx_extension_string
+ ** @returns xcb_void_cookie_t
+ **
+ *****************************************************************************/
+ 
+xcb_void_cookie_t
+xcb_glx_set_client_info_arb_checked (xcb_connection_t *c  /**< */,
+                                     uint32_t          major_version  /**< */,
+                                     uint32_t          minor_version  /**< */,
+                                     uint32_t          num_versions  /**< */,
+                                     uint32_t          gl_str_len  /**< */,
+                                     uint32_t          glx_str_len  /**< */,
+                                     const uint32_t   *gl_versions  /**< */,
+                                     const char       *gl_extension_string  /**< */,
+                                     const char       *glx_extension_string  /**< */)
+{
+    static const xcb_protocol_request_t xcb_req = {
+        /* count */ 8,
+        /* ext */ &xcb_glx_id,
+        /* opcode */ XCB_GLX_SET_CLIENT_INFO_ARB,
+        /* isvoid */ 1
+    };
+    
+    struct iovec xcb_parts[10];
+    xcb_void_cookie_t xcb_ret;
+    xcb_glx_set_client_info_arb_request_t xcb_out;
+    
+    xcb_out.major_version = major_version;
+    xcb_out.minor_version = minor_version;
+    xcb_out.num_versions = num_versions;
+    xcb_out.gl_str_len = gl_str_len;
+    xcb_out.glx_str_len = glx_str_len;
+    
+    xcb_parts[2].iov_base = (char *) &xcb_out;
+    xcb_parts[2].iov_len = sizeof(xcb_out);
+    xcb_parts[3].iov_base = 0;
+    xcb_parts[3].iov_len = -xcb_parts[2].iov_len & 3;
+    xcb_parts[4].iov_base = (char *) gl_versions;
+    xcb_parts[4].iov_len = (num_versions * 2) * sizeof(uint32_t);
+    xcb_parts[5].iov_base = 0;
+    xcb_parts[5].iov_len = -xcb_parts[4].iov_len & 3;
+    xcb_parts[6].iov_base = (char *) gl_extension_string;
+    xcb_parts[6].iov_len = gl_str_len * sizeof(char);
+    xcb_parts[7].iov_base = 0;
+    xcb_parts[7].iov_len = -xcb_parts[6].iov_len & 3;
+    xcb_parts[8].iov_base = (char *) glx_extension_string;
+    xcb_parts[8].iov_len = glx_str_len * sizeof(char);
+    xcb_parts[9].iov_base = 0;
+    xcb_parts[9].iov_len = -xcb_parts[8].iov_len & 3;
+    xcb_ret.sequence = xcb_send_request(c, XCB_REQUEST_CHECKED, xcb_parts + 2, &xcb_req);
+    return xcb_ret;
+}
+
+
+/*****************************************************************************
+ **
+ ** xcb_void_cookie_t xcb_glx_set_client_info_arb
+ ** 
+ ** @param xcb_connection_t *c
+ ** @param uint32_t          major_version
+ ** @param uint32_t          minor_version
+ ** @param uint32_t          num_versions
+ ** @param uint32_t          gl_str_len
+ ** @param uint32_t          glx_str_len
+ ** @param const uint32_t   *gl_versions
+ ** @param const char       *gl_extension_string
+ ** @param const char       *glx_extension_string
+ ** @returns xcb_void_cookie_t
+ **
+ *****************************************************************************/
+ 
+xcb_void_cookie_t
+xcb_glx_set_client_info_arb (xcb_connection_t *c  /**< */,
+                             uint32_t          major_version  /**< */,
+                             uint32_t          minor_version  /**< */,
+                             uint32_t          num_versions  /**< */,
+                             uint32_t          gl_str_len  /**< */,
+                             uint32_t          glx_str_len  /**< */,
+                             const uint32_t   *gl_versions  /**< */,
+                             const char       *gl_extension_string  /**< */,
+                             const char       *glx_extension_string  /**< */)
+{
+    static const xcb_protocol_request_t xcb_req = {
+        /* count */ 8,
+        /* ext */ &xcb_glx_id,
+        /* opcode */ XCB_GLX_SET_CLIENT_INFO_ARB,
+        /* isvoid */ 1
+    };
+    
+    struct iovec xcb_parts[10];
+    xcb_void_cookie_t xcb_ret;
+    xcb_glx_set_client_info_arb_request_t xcb_out;
+    
+    xcb_out.major_version = major_version;
+    xcb_out.minor_version = minor_version;
+    xcb_out.num_versions = num_versions;
+    xcb_out.gl_str_len = gl_str_len;
+    xcb_out.glx_str_len = glx_str_len;
+    
+    xcb_parts[2].iov_base = (char *) &xcb_out;
+    xcb_parts[2].iov_len = sizeof(xcb_out);
+    xcb_parts[3].iov_base = 0;
+    xcb_parts[3].iov_len = -xcb_parts[2].iov_len & 3;
+    xcb_parts[4].iov_base = (char *) gl_versions;
+    xcb_parts[4].iov_len = (num_versions * 2) * sizeof(uint32_t);
+    xcb_parts[5].iov_base = 0;
+    xcb_parts[5].iov_len = -xcb_parts[4].iov_len & 3;
+    xcb_parts[6].iov_base = (char *) gl_extension_string;
+    xcb_parts[6].iov_len = gl_str_len * sizeof(char);
+    xcb_parts[7].iov_base = 0;
+    xcb_parts[7].iov_len = -xcb_parts[6].iov_len & 3;
+    xcb_parts[8].iov_base = (char *) glx_extension_string;
+    xcb_parts[8].iov_len = glx_str_len * sizeof(char);
+    xcb_parts[9].iov_base = 0;
+    xcb_parts[9].iov_len = -xcb_parts[8].iov_len & 3;
+    xcb_ret.sequence = xcb_send_request(c, 0, xcb_parts + 2, &xcb_req);
+    return xcb_ret;
+}
+
+
+/*****************************************************************************
+ **
+ ** xcb_void_cookie_t xcb_glx_create_context_attribs_arb_checked
+ ** 
+ ** @param xcb_connection_t   *c
+ ** @param xcb_glx_context_t   context
+ ** @param xcb_glx_fbconfig_t  fbconfig
+ ** @param uint32_t            screen
+ ** @param xcb_glx_context_t   share_list
+ ** @param uint8_t             is_direct
+ ** @param uint32_t            num_attribs
+ ** @param const uint32_t     *attribs
+ ** @returns xcb_void_cookie_t
+ **
+ *****************************************************************************/
+ 
+xcb_void_cookie_t
+xcb_glx_create_context_attribs_arb_checked (xcb_connection_t   *c  /**< */,
+                                            xcb_glx_context_t   context  /**< */,
+                                            xcb_glx_fbconfig_t  fbconfig  /**< */,
+                                            uint32_t            screen  /**< */,
+                                            xcb_glx_context_t   share_list  /**< */,
+                                            uint8_t             is_direct  /**< */,
+                                            uint32_t            num_attribs  /**< */,
+                                            const uint32_t     *attribs  /**< */)
+{
+    static const xcb_protocol_request_t xcb_req = {
+        /* count */ 4,
+        /* ext */ &xcb_glx_id,
+        /* opcode */ XCB_GLX_CREATE_CONTEXT_ATTRIBS_ARB,
+        /* isvoid */ 1
+    };
+    
+    struct iovec xcb_parts[6];
+    xcb_void_cookie_t xcb_ret;
+    xcb_glx_create_context_attribs_arb_request_t xcb_out;
+    
+    xcb_out.context = context;
+    xcb_out.fbconfig = fbconfig;
+    xcb_out.screen = screen;
+    xcb_out.share_list = share_list;
+    xcb_out.is_direct = is_direct;
+    memset(xcb_out.pad0, 0, 3);
+    xcb_out.num_attribs = num_attribs;
+    
+    xcb_parts[2].iov_base = (char *) &xcb_out;
+    xcb_parts[2].iov_len = sizeof(xcb_out);
+    xcb_parts[3].iov_base = 0;
+    xcb_parts[3].iov_len = -xcb_parts[2].iov_len & 3;
+    xcb_parts[4].iov_base = (char *) attribs;
+    xcb_parts[4].iov_len = (num_attribs * 2) * sizeof(uint32_t);
+    xcb_parts[5].iov_base = 0;
+    xcb_parts[5].iov_len = -xcb_parts[4].iov_len & 3;
+    xcb_ret.sequence = xcb_send_request(c, XCB_REQUEST_CHECKED, xcb_parts + 2, &xcb_req);
+    return xcb_ret;
+}
+
+
+/*****************************************************************************
+ **
+ ** xcb_void_cookie_t xcb_glx_create_context_attribs_arb
+ ** 
+ ** @param xcb_connection_t   *c
+ ** @param xcb_glx_context_t   context
+ ** @param xcb_glx_fbconfig_t  fbconfig
+ ** @param uint32_t            screen
+ ** @param xcb_glx_context_t   share_list
+ ** @param uint8_t             is_direct
+ ** @param uint32_t            num_attribs
+ ** @param const uint32_t     *attribs
+ ** @returns xcb_void_cookie_t
+ **
+ *****************************************************************************/
+ 
+xcb_void_cookie_t
+xcb_glx_create_context_attribs_arb (xcb_connection_t   *c  /**< */,
+                                    xcb_glx_context_t   context  /**< */,
+                                    xcb_glx_fbconfig_t  fbconfig  /**< */,
+                                    uint32_t            screen  /**< */,
+                                    xcb_glx_context_t   share_list  /**< */,
+                                    uint8_t             is_direct  /**< */,
+                                    uint32_t            num_attribs  /**< */,
+                                    const uint32_t     *attribs  /**< */)
+{
+    static const xcb_protocol_request_t xcb_req = {
+        /* count */ 4,
+        /* ext */ &xcb_glx_id,
+        /* opcode */ XCB_GLX_CREATE_CONTEXT_ATTRIBS_ARB,
+        /* isvoid */ 1
+    };
+    
+    struct iovec xcb_parts[6];
+    xcb_void_cookie_t xcb_ret;
+    xcb_glx_create_context_attribs_arb_request_t xcb_out;
+    
+    xcb_out.context = context;
+    xcb_out.fbconfig = fbconfig;
+    xcb_out.screen = screen;
+    xcb_out.share_list = share_list;
+    xcb_out.is_direct = is_direct;
+    memset(xcb_out.pad0, 0, 3);
+    xcb_out.num_attribs = num_attribs;
+    
+    xcb_parts[2].iov_base = (char *) &xcb_out;
+    xcb_parts[2].iov_len = sizeof(xcb_out);
+    xcb_parts[3].iov_base = 0;
+    xcb_parts[3].iov_len = -xcb_parts[2].iov_len & 3;
+    xcb_parts[4].iov_base = (char *) attribs;
+    xcb_parts[4].iov_len = (num_attribs * 2) * sizeof(uint32_t);
+    xcb_parts[5].iov_base = 0;
+    xcb_parts[5].iov_len = -xcb_parts[4].iov_len & 3;
+    xcb_ret.sequence = xcb_send_request(c, 0, xcb_parts + 2, &xcb_req);
+    return xcb_ret;
+}
+
+
+/*****************************************************************************
+ **
+ ** xcb_void_cookie_t xcb_glx_set_client_info_2arb_checked
+ ** 
+ ** @param xcb_connection_t *c
+ ** @param uint32_t          major_version
+ ** @param uint32_t          minor_version
+ ** @param uint32_t          num_versions
+ ** @param uint32_t          gl_str_len
+ ** @param uint32_t          glx_str_len
+ ** @param const uint32_t   *gl_versions
+ ** @param const char       *gl_extension_string
+ ** @param const char       *glx_extension_string
+ ** @returns xcb_void_cookie_t
+ **
+ *****************************************************************************/
+ 
+xcb_void_cookie_t
+xcb_glx_set_client_info_2arb_checked (xcb_connection_t *c  /**< */,
+                                      uint32_t          major_version  /**< */,
+                                      uint32_t          minor_version  /**< */,
+                                      uint32_t          num_versions  /**< */,
+                                      uint32_t          gl_str_len  /**< */,
+                                      uint32_t          glx_str_len  /**< */,
+                                      const uint32_t   *gl_versions  /**< */,
+                                      const char       *gl_extension_string  /**< */,
+                                      const char       *glx_extension_string  /**< */)
+{
+    static const xcb_protocol_request_t xcb_req = {
+        /* count */ 8,
+        /* ext */ &xcb_glx_id,
+        /* opcode */ XCB_GLX_SET_CLIENT_INFO_2ARB,
+        /* isvoid */ 1
+    };
+    
+    struct iovec xcb_parts[10];
+    xcb_void_cookie_t xcb_ret;
+    xcb_glx_set_client_info_2arb_request_t xcb_out;
+    
+    xcb_out.major_version = major_version;
+    xcb_out.minor_version = minor_version;
+    xcb_out.num_versions = num_versions;
+    xcb_out.gl_str_len = gl_str_len;
+    xcb_out.glx_str_len = glx_str_len;
+    
+    xcb_parts[2].iov_base = (char *) &xcb_out;
+    xcb_parts[2].iov_len = sizeof(xcb_out);
+    xcb_parts[3].iov_base = 0;
+    xcb_parts[3].iov_len = -xcb_parts[2].iov_len & 3;
+    xcb_parts[4].iov_base = (char *) gl_versions;
+    xcb_parts[4].iov_len = (num_versions * 3) * sizeof(uint32_t);
+    xcb_parts[5].iov_base = 0;
+    xcb_parts[5].iov_len = -xcb_parts[4].iov_len & 3;
+    xcb_parts[6].iov_base = (char *) gl_extension_string;
+    xcb_parts[6].iov_len = gl_str_len * sizeof(char);
+    xcb_parts[7].iov_base = 0;
+    xcb_parts[7].iov_len = -xcb_parts[6].iov_len & 3;
+    xcb_parts[8].iov_base = (char *) glx_extension_string;
+    xcb_parts[8].iov_len = glx_str_len * sizeof(char);
+    xcb_parts[9].iov_base = 0;
+    xcb_parts[9].iov_len = -xcb_parts[8].iov_len & 3;
+    xcb_ret.sequence = xcb_send_request(c, XCB_REQUEST_CHECKED, xcb_parts + 2, &xcb_req);
+    return xcb_ret;
+}
+
+
+/*****************************************************************************
+ **
+ ** xcb_void_cookie_t xcb_glx_set_client_info_2arb
+ ** 
+ ** @param xcb_connection_t *c
+ ** @param uint32_t          major_version
+ ** @param uint32_t          minor_version
+ ** @param uint32_t          num_versions
+ ** @param uint32_t          gl_str_len
+ ** @param uint32_t          glx_str_len
+ ** @param const uint32_t   *gl_versions
+ ** @param const char       *gl_extension_string
+ ** @param const char       *glx_extension_string
+ ** @returns xcb_void_cookie_t
+ **
+ *****************************************************************************/
+ 
+xcb_void_cookie_t
+xcb_glx_set_client_info_2arb (xcb_connection_t *c  /**< */,
+                              uint32_t          major_version  /**< */,
+                              uint32_t          minor_version  /**< */,
+                              uint32_t          num_versions  /**< */,
+                              uint32_t          gl_str_len  /**< */,
+                              uint32_t          glx_str_len  /**< */,
+                              const uint32_t   *gl_versions  /**< */,
+                              const char       *gl_extension_string  /**< */,
+                              const char       *glx_extension_string  /**< */)
+{
+    static const xcb_protocol_request_t xcb_req = {
+        /* count */ 8,
+        /* ext */ &xcb_glx_id,
+        /* opcode */ XCB_GLX_SET_CLIENT_INFO_2ARB,
+        /* isvoid */ 1
+    };
+    
+    struct iovec xcb_parts[10];
+    xcb_void_cookie_t xcb_ret;
+    xcb_glx_set_client_info_2arb_request_t xcb_out;
+    
+    xcb_out.major_version = major_version;
+    xcb_out.minor_version = minor_version;
+    xcb_out.num_versions = num_versions;
+    xcb_out.gl_str_len = gl_str_len;
+    xcb_out.glx_str_len = glx_str_len;
+    
+    xcb_parts[2].iov_base = (char *) &xcb_out;
+    xcb_parts[2].iov_len = sizeof(xcb_out);
+    xcb_parts[3].iov_base = 0;
+    xcb_parts[3].iov_len = -xcb_parts[2].iov_len & 3;
+    xcb_parts[4].iov_base = (char *) gl_versions;
+    xcb_parts[4].iov_len = (num_versions * 3) * sizeof(uint32_t);
+    xcb_parts[5].iov_base = 0;
+    xcb_parts[5].iov_len = -xcb_parts[4].iov_len & 3;
+    xcb_parts[6].iov_base = (char *) gl_extension_string;
+    xcb_parts[6].iov_len = gl_str_len * sizeof(char);
+    xcb_parts[7].iov_base = 0;
+    xcb_parts[7].iov_len = -xcb_parts[6].iov_len & 3;
+    xcb_parts[8].iov_base = (char *) glx_extension_string;
+    xcb_parts[8].iov_len = glx_str_len * sizeof(char);
+    xcb_parts[9].iov_base = 0;
+    xcb_parts[9].iov_len = -xcb_parts[8].iov_len & 3;
     xcb_ret.sequence = xcb_send_request(c, 0, xcb_parts + 2, &xcb_req);
     return xcb_ret;
 }

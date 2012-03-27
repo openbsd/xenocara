@@ -25,14 +25,34 @@
 
 /* Authorization systems for the X protocol. */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include <assert.h>
 #include <X11/Xauth.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <sys/un.h>
 #include <sys/param.h>
 #include <unistd.h>
 #include <stdlib.h>
+
+#ifdef __INTERIX
+/* _don't_ ask. interix has INADDR_LOOPBACK in here. */
+#include <rpc/types.h>
+#endif
+
+#ifdef _WIN32
+#ifdef HASXDMAUTH
+/* We must include the wrapped windows.h before any system header which includes
+   it unwrapped, to avoid conflicts with types defined in X headers */
+#include <X11/Xwindows.h>
+#endif
+#include "xcb_windefs.h"
+#else
+#include <arpa/inet.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <sys/un.h>
+#endif /* _WIN32 */
 
 #include "xcb.h"
 #include "xcbint.h"
@@ -256,7 +276,7 @@ static struct sockaddr *get_peer_sock_name(int (*socket_func)(int,
 {
     socklen_t socknamelen = sizeof(struct sockaddr) + INITIAL_SOCKNAME_SLACK;
     socklen_t actual_socknamelen = socknamelen;
-    struct sockaddr *sockname = malloc(socknamelen), *new_sockname = NULL;
+    struct sockaddr *sockname = malloc(socknamelen);
 
     if (sockname == NULL)
         return NULL;
@@ -269,14 +289,17 @@ static struct sockaddr *get_peer_sock_name(int (*socket_func)(int,
 
     if (actual_socknamelen > socknamelen)
     {
+        struct sockaddr *new_sockname = NULL;
         socknamelen = actual_socknamelen;
 
-        if ((new_sockname = realloc(sockname, actual_socknamelen)) == NULL ||
-            socket_func(fd, new_sockname, &actual_socknamelen) == -1 ||
-            actual_socknamelen > socknamelen) 
+        if ((new_sockname = realloc(sockname, actual_socknamelen)) == NULL)
             goto sock_or_realloc_error;
 
         sockname = new_sockname;
+
+        if (socket_func(fd, sockname, &actual_socknamelen) == -1 ||
+            actual_socknamelen > socknamelen)
+            goto sock_or_realloc_error;
     }
 
     return sockname;
@@ -322,10 +345,15 @@ int _xcb_get_auth_info(int fd, xcb_auth_info_t *info, int display)
     if (!info->namelen)
         goto no_auth;   /* out of memory */
 
-    if (!gotsockname && (sockname = get_peer_sock_name(getsockname, fd)) == NULL)
+    if (!gotsockname)
     {
-        free(info->name);
-        goto no_auth;   /* can only authenticate sockets */
+        free(sockname);
+
+        if ((sockname = get_peer_sock_name(getsockname, fd)) == NULL)
+        {
+            free(info->name);
+            goto no_auth;   /* can only authenticate sockets */
+        }
     }
 
     ret = compute_auth(info, authptr, sockname);

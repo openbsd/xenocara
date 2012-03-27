@@ -1077,6 +1077,60 @@ xcb_xf86dri_get_drawable_info_clip_rects_iterator (const xcb_xf86dri_get_drawabl
 
 /*****************************************************************************
  **
+ ** xcb_xf86dri_drm_clip_rect_t * xcb_xf86dri_get_drawable_info_back_clip_rects
+ ** 
+ ** @param const xcb_xf86dri_get_drawable_info_reply_t *R
+ ** @returns xcb_xf86dri_drm_clip_rect_t *
+ **
+ *****************************************************************************/
+ 
+xcb_xf86dri_drm_clip_rect_t *
+xcb_xf86dri_get_drawable_info_back_clip_rects (const xcb_xf86dri_get_drawable_info_reply_t *R  /**< */)
+{
+    xcb_generic_iterator_t prev = xcb_xf86dri_drm_clip_rect_end(xcb_xf86dri_get_drawable_info_clip_rects_iterator(R));
+    return (xcb_xf86dri_drm_clip_rect_t *) ((char *) prev.data + XCB_TYPE_PAD(xcb_xf86dri_drm_clip_rect_t, prev.index) + 0);
+}
+
+
+/*****************************************************************************
+ **
+ ** int xcb_xf86dri_get_drawable_info_back_clip_rects_length
+ ** 
+ ** @param const xcb_xf86dri_get_drawable_info_reply_t *R
+ ** @returns int
+ **
+ *****************************************************************************/
+ 
+int
+xcb_xf86dri_get_drawable_info_back_clip_rects_length (const xcb_xf86dri_get_drawable_info_reply_t *R  /**< */)
+{
+    return R->num_back_clip_rects;
+}
+
+
+/*****************************************************************************
+ **
+ ** xcb_xf86dri_drm_clip_rect_iterator_t xcb_xf86dri_get_drawable_info_back_clip_rects_iterator
+ ** 
+ ** @param const xcb_xf86dri_get_drawable_info_reply_t *R
+ ** @returns xcb_xf86dri_drm_clip_rect_iterator_t
+ **
+ *****************************************************************************/
+ 
+xcb_xf86dri_drm_clip_rect_iterator_t
+xcb_xf86dri_get_drawable_info_back_clip_rects_iterator (const xcb_xf86dri_get_drawable_info_reply_t *R  /**< */)
+{
+    xcb_xf86dri_drm_clip_rect_iterator_t i;
+    xcb_generic_iterator_t prev = xcb_xf86dri_drm_clip_rect_end(xcb_xf86dri_get_drawable_info_clip_rects_iterator(R));
+    i.data = (xcb_xf86dri_drm_clip_rect_t *) ((char *) prev.data + XCB_TYPE_PAD(xcb_xf86dri_drm_clip_rect_t, prev.index));
+    i.rem = R->num_back_clip_rects;
+    i.index = (char *) i.data - (char *) R;
+    return i;
+}
+
+
+/*****************************************************************************
+ **
  ** xcb_xf86dri_get_drawable_info_reply_t * xcb_xf86dri_get_drawable_info_reply
  ** 
  ** @param xcb_connection_t                        *c

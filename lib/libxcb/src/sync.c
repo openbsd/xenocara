@@ -90,6 +90,44 @@ xcb_sync_counter_end (xcb_sync_counter_iterator_t i  /**< */)
 
 /*****************************************************************************
  **
+ ** void xcb_sync_fence_next
+ ** 
+ ** @param xcb_sync_fence_iterator_t *i
+ ** @returns void
+ **
+ *****************************************************************************/
+ 
+void
+xcb_sync_fence_next (xcb_sync_fence_iterator_t *i  /**< */)
+{
+    --i->rem;
+    ++i->data;
+    i->index += sizeof(xcb_sync_fence_t);
+}
+
+
+/*****************************************************************************
+ **
+ ** xcb_generic_iterator_t xcb_sync_fence_end
+ ** 
+ ** @param xcb_sync_fence_iterator_t i
+ ** @returns xcb_generic_iterator_t
+ **
+ *****************************************************************************/
+ 
+xcb_generic_iterator_t
+xcb_sync_fence_end (xcb_sync_fence_iterator_t i  /**< */)
+{
+    xcb_generic_iterator_t ret;
+    ret.data = i.data + i.rem;
+    ret.index = i.index + ((char *) ret.data - (char *) i.data);
+    ret.rem = 0;
+    return ret;
+}
+
+
+/*****************************************************************************
+ **
  ** void xcb_sync_int64_next
  ** 
  ** @param xcb_sync_int64_iterator_t *i
@@ -1507,5 +1545,479 @@ xcb_sync_get_priority_reply (xcb_connection_t                *c  /**< */,
                              xcb_generic_error_t            **e  /**< */)
 {
     return (xcb_sync_get_priority_reply_t *) xcb_wait_for_reply(c, cookie.sequence, e);
+}
+
+
+/*****************************************************************************
+ **
+ ** xcb_void_cookie_t xcb_sync_create_fence_checked
+ ** 
+ ** @param xcb_connection_t *c
+ ** @param xcb_drawable_t    drawable
+ ** @param xcb_sync_fence_t  fence
+ ** @param uint8_t           initially_triggered
+ ** @returns xcb_void_cookie_t
+ **
+ *****************************************************************************/
+ 
+xcb_void_cookie_t
+xcb_sync_create_fence_checked (xcb_connection_t *c  /**< */,
+                               xcb_drawable_t    drawable  /**< */,
+                               xcb_sync_fence_t  fence  /**< */,
+                               uint8_t           initially_triggered  /**< */)
+{
+    static const xcb_protocol_request_t xcb_req = {
+        /* count */ 2,
+        /* ext */ &xcb_sync_id,
+        /* opcode */ XCB_SYNC_CREATE_FENCE,
+        /* isvoid */ 1
+    };
+    
+    struct iovec xcb_parts[4];
+    xcb_void_cookie_t xcb_ret;
+    xcb_sync_create_fence_request_t xcb_out;
+    
+    xcb_out.drawable = drawable;
+    xcb_out.fence = fence;
+    xcb_out.initially_triggered = initially_triggered;
+    
+    xcb_parts[2].iov_base = (char *) &xcb_out;
+    xcb_parts[2].iov_len = sizeof(xcb_out);
+    xcb_parts[3].iov_base = 0;
+    xcb_parts[3].iov_len = -xcb_parts[2].iov_len & 3;
+    xcb_ret.sequence = xcb_send_request(c, XCB_REQUEST_CHECKED, xcb_parts + 2, &xcb_req);
+    return xcb_ret;
+}
+
+
+/*****************************************************************************
+ **
+ ** xcb_void_cookie_t xcb_sync_create_fence
+ ** 
+ ** @param xcb_connection_t *c
+ ** @param xcb_drawable_t    drawable
+ ** @param xcb_sync_fence_t  fence
+ ** @param uint8_t           initially_triggered
+ ** @returns xcb_void_cookie_t
+ **
+ *****************************************************************************/
+ 
+xcb_void_cookie_t
+xcb_sync_create_fence (xcb_connection_t *c  /**< */,
+                       xcb_drawable_t    drawable  /**< */,
+                       xcb_sync_fence_t  fence  /**< */,
+                       uint8_t           initially_triggered  /**< */)
+{
+    static const xcb_protocol_request_t xcb_req = {
+        /* count */ 2,
+        /* ext */ &xcb_sync_id,
+        /* opcode */ XCB_SYNC_CREATE_FENCE,
+        /* isvoid */ 1
+    };
+    
+    struct iovec xcb_parts[4];
+    xcb_void_cookie_t xcb_ret;
+    xcb_sync_create_fence_request_t xcb_out;
+    
+    xcb_out.drawable = drawable;
+    xcb_out.fence = fence;
+    xcb_out.initially_triggered = initially_triggered;
+    
+    xcb_parts[2].iov_base = (char *) &xcb_out;
+    xcb_parts[2].iov_len = sizeof(xcb_out);
+    xcb_parts[3].iov_base = 0;
+    xcb_parts[3].iov_len = -xcb_parts[2].iov_len & 3;
+    xcb_ret.sequence = xcb_send_request(c, 0, xcb_parts + 2, &xcb_req);
+    return xcb_ret;
+}
+
+
+/*****************************************************************************
+ **
+ ** xcb_void_cookie_t xcb_sync_trigger_fence_checked
+ ** 
+ ** @param xcb_connection_t *c
+ ** @param xcb_sync_fence_t  fence
+ ** @returns xcb_void_cookie_t
+ **
+ *****************************************************************************/
+ 
+xcb_void_cookie_t
+xcb_sync_trigger_fence_checked (xcb_connection_t *c  /**< */,
+                                xcb_sync_fence_t  fence  /**< */)
+{
+    static const xcb_protocol_request_t xcb_req = {
+        /* count */ 2,
+        /* ext */ &xcb_sync_id,
+        /* opcode */ XCB_SYNC_TRIGGER_FENCE,
+        /* isvoid */ 1
+    };
+    
+    struct iovec xcb_parts[4];
+    xcb_void_cookie_t xcb_ret;
+    xcb_sync_trigger_fence_request_t xcb_out;
+    
+    xcb_out.fence = fence;
+    
+    xcb_parts[2].iov_base = (char *) &xcb_out;
+    xcb_parts[2].iov_len = sizeof(xcb_out);
+    xcb_parts[3].iov_base = 0;
+    xcb_parts[3].iov_len = -xcb_parts[2].iov_len & 3;
+    xcb_ret.sequence = xcb_send_request(c, XCB_REQUEST_CHECKED, xcb_parts + 2, &xcb_req);
+    return xcb_ret;
+}
+
+
+/*****************************************************************************
+ **
+ ** xcb_void_cookie_t xcb_sync_trigger_fence
+ ** 
+ ** @param xcb_connection_t *c
+ ** @param xcb_sync_fence_t  fence
+ ** @returns xcb_void_cookie_t
+ **
+ *****************************************************************************/
+ 
+xcb_void_cookie_t
+xcb_sync_trigger_fence (xcb_connection_t *c  /**< */,
+                        xcb_sync_fence_t  fence  /**< */)
+{
+    static const xcb_protocol_request_t xcb_req = {
+        /* count */ 2,
+        /* ext */ &xcb_sync_id,
+        /* opcode */ XCB_SYNC_TRIGGER_FENCE,
+        /* isvoid */ 1
+    };
+    
+    struct iovec xcb_parts[4];
+    xcb_void_cookie_t xcb_ret;
+    xcb_sync_trigger_fence_request_t xcb_out;
+    
+    xcb_out.fence = fence;
+    
+    xcb_parts[2].iov_base = (char *) &xcb_out;
+    xcb_parts[2].iov_len = sizeof(xcb_out);
+    xcb_parts[3].iov_base = 0;
+    xcb_parts[3].iov_len = -xcb_parts[2].iov_len & 3;
+    xcb_ret.sequence = xcb_send_request(c, 0, xcb_parts + 2, &xcb_req);
+    return xcb_ret;
+}
+
+
+/*****************************************************************************
+ **
+ ** xcb_void_cookie_t xcb_sync_reset_fence_checked
+ ** 
+ ** @param xcb_connection_t *c
+ ** @param xcb_sync_fence_t  fence
+ ** @returns xcb_void_cookie_t
+ **
+ *****************************************************************************/
+ 
+xcb_void_cookie_t
+xcb_sync_reset_fence_checked (xcb_connection_t *c  /**< */,
+                              xcb_sync_fence_t  fence  /**< */)
+{
+    static const xcb_protocol_request_t xcb_req = {
+        /* count */ 2,
+        /* ext */ &xcb_sync_id,
+        /* opcode */ XCB_SYNC_RESET_FENCE,
+        /* isvoid */ 1
+    };
+    
+    struct iovec xcb_parts[4];
+    xcb_void_cookie_t xcb_ret;
+    xcb_sync_reset_fence_request_t xcb_out;
+    
+    xcb_out.fence = fence;
+    
+    xcb_parts[2].iov_base = (char *) &xcb_out;
+    xcb_parts[2].iov_len = sizeof(xcb_out);
+    xcb_parts[3].iov_base = 0;
+    xcb_parts[3].iov_len = -xcb_parts[2].iov_len & 3;
+    xcb_ret.sequence = xcb_send_request(c, XCB_REQUEST_CHECKED, xcb_parts + 2, &xcb_req);
+    return xcb_ret;
+}
+
+
+/*****************************************************************************
+ **
+ ** xcb_void_cookie_t xcb_sync_reset_fence
+ ** 
+ ** @param xcb_connection_t *c
+ ** @param xcb_sync_fence_t  fence
+ ** @returns xcb_void_cookie_t
+ **
+ *****************************************************************************/
+ 
+xcb_void_cookie_t
+xcb_sync_reset_fence (xcb_connection_t *c  /**< */,
+                      xcb_sync_fence_t  fence  /**< */)
+{
+    static const xcb_protocol_request_t xcb_req = {
+        /* count */ 2,
+        /* ext */ &xcb_sync_id,
+        /* opcode */ XCB_SYNC_RESET_FENCE,
+        /* isvoid */ 1
+    };
+    
+    struct iovec xcb_parts[4];
+    xcb_void_cookie_t xcb_ret;
+    xcb_sync_reset_fence_request_t xcb_out;
+    
+    xcb_out.fence = fence;
+    
+    xcb_parts[2].iov_base = (char *) &xcb_out;
+    xcb_parts[2].iov_len = sizeof(xcb_out);
+    xcb_parts[3].iov_base = 0;
+    xcb_parts[3].iov_len = -xcb_parts[2].iov_len & 3;
+    xcb_ret.sequence = xcb_send_request(c, 0, xcb_parts + 2, &xcb_req);
+    return xcb_ret;
+}
+
+
+/*****************************************************************************
+ **
+ ** xcb_void_cookie_t xcb_sync_destroy_fence_checked
+ ** 
+ ** @param xcb_connection_t *c
+ ** @param xcb_sync_fence_t  fence
+ ** @returns xcb_void_cookie_t
+ **
+ *****************************************************************************/
+ 
+xcb_void_cookie_t
+xcb_sync_destroy_fence_checked (xcb_connection_t *c  /**< */,
+                                xcb_sync_fence_t  fence  /**< */)
+{
+    static const xcb_protocol_request_t xcb_req = {
+        /* count */ 2,
+        /* ext */ &xcb_sync_id,
+        /* opcode */ XCB_SYNC_DESTROY_FENCE,
+        /* isvoid */ 1
+    };
+    
+    struct iovec xcb_parts[4];
+    xcb_void_cookie_t xcb_ret;
+    xcb_sync_destroy_fence_request_t xcb_out;
+    
+    xcb_out.fence = fence;
+    
+    xcb_parts[2].iov_base = (char *) &xcb_out;
+    xcb_parts[2].iov_len = sizeof(xcb_out);
+    xcb_parts[3].iov_base = 0;
+    xcb_parts[3].iov_len = -xcb_parts[2].iov_len & 3;
+    xcb_ret.sequence = xcb_send_request(c, XCB_REQUEST_CHECKED, xcb_parts + 2, &xcb_req);
+    return xcb_ret;
+}
+
+
+/*****************************************************************************
+ **
+ ** xcb_void_cookie_t xcb_sync_destroy_fence
+ ** 
+ ** @param xcb_connection_t *c
+ ** @param xcb_sync_fence_t  fence
+ ** @returns xcb_void_cookie_t
+ **
+ *****************************************************************************/
+ 
+xcb_void_cookie_t
+xcb_sync_destroy_fence (xcb_connection_t *c  /**< */,
+                        xcb_sync_fence_t  fence  /**< */)
+{
+    static const xcb_protocol_request_t xcb_req = {
+        /* count */ 2,
+        /* ext */ &xcb_sync_id,
+        /* opcode */ XCB_SYNC_DESTROY_FENCE,
+        /* isvoid */ 1
+    };
+    
+    struct iovec xcb_parts[4];
+    xcb_void_cookie_t xcb_ret;
+    xcb_sync_destroy_fence_request_t xcb_out;
+    
+    xcb_out.fence = fence;
+    
+    xcb_parts[2].iov_base = (char *) &xcb_out;
+    xcb_parts[2].iov_len = sizeof(xcb_out);
+    xcb_parts[3].iov_base = 0;
+    xcb_parts[3].iov_len = -xcb_parts[2].iov_len & 3;
+    xcb_ret.sequence = xcb_send_request(c, 0, xcb_parts + 2, &xcb_req);
+    return xcb_ret;
+}
+
+
+/*****************************************************************************
+ **
+ ** xcb_sync_query_fence_cookie_t xcb_sync_query_fence
+ ** 
+ ** @param xcb_connection_t *c
+ ** @param xcb_sync_fence_t  fence
+ ** @returns xcb_sync_query_fence_cookie_t
+ **
+ *****************************************************************************/
+ 
+xcb_sync_query_fence_cookie_t
+xcb_sync_query_fence (xcb_connection_t *c  /**< */,
+                      xcb_sync_fence_t  fence  /**< */)
+{
+    static const xcb_protocol_request_t xcb_req = {
+        /* count */ 2,
+        /* ext */ &xcb_sync_id,
+        /* opcode */ XCB_SYNC_QUERY_FENCE,
+        /* isvoid */ 0
+    };
+    
+    struct iovec xcb_parts[4];
+    xcb_sync_query_fence_cookie_t xcb_ret;
+    xcb_sync_query_fence_request_t xcb_out;
+    
+    xcb_out.fence = fence;
+    
+    xcb_parts[2].iov_base = (char *) &xcb_out;
+    xcb_parts[2].iov_len = sizeof(xcb_out);
+    xcb_parts[3].iov_base = 0;
+    xcb_parts[3].iov_len = -xcb_parts[2].iov_len & 3;
+    xcb_ret.sequence = xcb_send_request(c, XCB_REQUEST_CHECKED, xcb_parts + 2, &xcb_req);
+    return xcb_ret;
+}
+
+
+/*****************************************************************************
+ **
+ ** xcb_sync_query_fence_cookie_t xcb_sync_query_fence_unchecked
+ ** 
+ ** @param xcb_connection_t *c
+ ** @param xcb_sync_fence_t  fence
+ ** @returns xcb_sync_query_fence_cookie_t
+ **
+ *****************************************************************************/
+ 
+xcb_sync_query_fence_cookie_t
+xcb_sync_query_fence_unchecked (xcb_connection_t *c  /**< */,
+                                xcb_sync_fence_t  fence  /**< */)
+{
+    static const xcb_protocol_request_t xcb_req = {
+        /* count */ 2,
+        /* ext */ &xcb_sync_id,
+        /* opcode */ XCB_SYNC_QUERY_FENCE,
+        /* isvoid */ 0
+    };
+    
+    struct iovec xcb_parts[4];
+    xcb_sync_query_fence_cookie_t xcb_ret;
+    xcb_sync_query_fence_request_t xcb_out;
+    
+    xcb_out.fence = fence;
+    
+    xcb_parts[2].iov_base = (char *) &xcb_out;
+    xcb_parts[2].iov_len = sizeof(xcb_out);
+    xcb_parts[3].iov_base = 0;
+    xcb_parts[3].iov_len = -xcb_parts[2].iov_len & 3;
+    xcb_ret.sequence = xcb_send_request(c, 0, xcb_parts + 2, &xcb_req);
+    return xcb_ret;
+}
+
+
+/*****************************************************************************
+ **
+ ** xcb_sync_query_fence_reply_t * xcb_sync_query_fence_reply
+ ** 
+ ** @param xcb_connection_t               *c
+ ** @param xcb_sync_query_fence_cookie_t   cookie
+ ** @param xcb_generic_error_t           **e
+ ** @returns xcb_sync_query_fence_reply_t *
+ **
+ *****************************************************************************/
+ 
+xcb_sync_query_fence_reply_t *
+xcb_sync_query_fence_reply (xcb_connection_t               *c  /**< */,
+                            xcb_sync_query_fence_cookie_t   cookie  /**< */,
+                            xcb_generic_error_t           **e  /**< */)
+{
+    return (xcb_sync_query_fence_reply_t *) xcb_wait_for_reply(c, cookie.sequence, e);
+}
+
+
+/*****************************************************************************
+ **
+ ** xcb_void_cookie_t xcb_sync_await_fence_checked
+ ** 
+ ** @param xcb_connection_t       *c
+ ** @param uint32_t                fence_list_len
+ ** @param const xcb_sync_fence_t *fence_list
+ ** @returns xcb_void_cookie_t
+ **
+ *****************************************************************************/
+ 
+xcb_void_cookie_t
+xcb_sync_await_fence_checked (xcb_connection_t       *c  /**< */,
+                              uint32_t                fence_list_len  /**< */,
+                              const xcb_sync_fence_t *fence_list  /**< */)
+{
+    static const xcb_protocol_request_t xcb_req = {
+        /* count */ 4,
+        /* ext */ &xcb_sync_id,
+        /* opcode */ XCB_SYNC_AWAIT_FENCE,
+        /* isvoid */ 1
+    };
+    
+    struct iovec xcb_parts[6];
+    xcb_void_cookie_t xcb_ret;
+    xcb_sync_await_fence_request_t xcb_out;
+    
+    
+    xcb_parts[2].iov_base = (char *) &xcb_out;
+    xcb_parts[2].iov_len = sizeof(xcb_out);
+    xcb_parts[3].iov_base = 0;
+    xcb_parts[3].iov_len = -xcb_parts[2].iov_len & 3;
+    xcb_parts[4].iov_base = (char *) fence_list;
+    xcb_parts[4].iov_len = fence_list_len * sizeof(xcb_sync_fence_t);
+    xcb_parts[5].iov_base = 0;
+    xcb_parts[5].iov_len = -xcb_parts[4].iov_len & 3;
+    xcb_ret.sequence = xcb_send_request(c, XCB_REQUEST_CHECKED, xcb_parts + 2, &xcb_req);
+    return xcb_ret;
+}
+
+
+/*****************************************************************************
+ **
+ ** xcb_void_cookie_t xcb_sync_await_fence
+ ** 
+ ** @param xcb_connection_t       *c
+ ** @param uint32_t                fence_list_len
+ ** @param const xcb_sync_fence_t *fence_list
+ ** @returns xcb_void_cookie_t
+ **
+ *****************************************************************************/
+ 
+xcb_void_cookie_t
+xcb_sync_await_fence (xcb_connection_t       *c  /**< */,
+                      uint32_t                fence_list_len  /**< */,
+                      const xcb_sync_fence_t *fence_list  /**< */)
+{
+    static const xcb_protocol_request_t xcb_req = {
+        /* count */ 4,
+        /* ext */ &xcb_sync_id,
+        /* opcode */ XCB_SYNC_AWAIT_FENCE,
+        /* isvoid */ 1
+    };
+    
+    struct iovec xcb_parts[6];
+    xcb_void_cookie_t xcb_ret;
+    xcb_sync_await_fence_request_t xcb_out;
+    
+    
+    xcb_parts[2].iov_base = (char *) &xcb_out;
+    xcb_parts[2].iov_len = sizeof(xcb_out);
+    xcb_parts[3].iov_base = 0;
+    xcb_parts[3].iov_len = -xcb_parts[2].iov_len & 3;
+    xcb_parts[4].iov_base = (char *) fence_list;
+    xcb_parts[4].iov_len = fence_list_len * sizeof(xcb_sync_fence_t);
+    xcb_parts[5].iov_base = 0;
+    xcb_parts[5].iov_len = -xcb_parts[4].iov_len & 3;
+    xcb_ret.sequence = xcb_send_request(c, 0, xcb_parts + 2, &xcb_req);
+    return xcb_ret;
 }
 

@@ -316,7 +316,9 @@ typedef struct xcb_xf86dri_get_drawable_info_reply_t {
     int16_t  drawable_size_W; /**<  */
     int16_t  drawable_size_H; /**<  */
     uint32_t num_clip_rects; /**<  */
-    uint8_t  pad1[4]; /**<  */
+    int16_t  back_x; /**<  */
+    int16_t  back_y; /**<  */
+    uint32_t num_back_clip_rects; /**<  */
 } xcb_xf86dri_get_drawable_info_reply_t;
 
 /**
@@ -1242,6 +1244,45 @@ xcb_xf86dri_get_drawable_info_clip_rects_length (const xcb_xf86dri_get_drawable_
  
 xcb_xf86dri_drm_clip_rect_iterator_t
 xcb_xf86dri_get_drawable_info_clip_rects_iterator (const xcb_xf86dri_get_drawable_info_reply_t *R  /**< */);
+
+
+/*****************************************************************************
+ **
+ ** xcb_xf86dri_drm_clip_rect_t * xcb_xf86dri_get_drawable_info_back_clip_rects
+ ** 
+ ** @param const xcb_xf86dri_get_drawable_info_reply_t *R
+ ** @returns xcb_xf86dri_drm_clip_rect_t *
+ **
+ *****************************************************************************/
+ 
+xcb_xf86dri_drm_clip_rect_t *
+xcb_xf86dri_get_drawable_info_back_clip_rects (const xcb_xf86dri_get_drawable_info_reply_t *R  /**< */);
+
+
+/*****************************************************************************
+ **
+ ** int xcb_xf86dri_get_drawable_info_back_clip_rects_length
+ ** 
+ ** @param const xcb_xf86dri_get_drawable_info_reply_t *R
+ ** @returns int
+ **
+ *****************************************************************************/
+ 
+int
+xcb_xf86dri_get_drawable_info_back_clip_rects_length (const xcb_xf86dri_get_drawable_info_reply_t *R  /**< */);
+
+
+/*****************************************************************************
+ **
+ ** xcb_xf86dri_drm_clip_rect_iterator_t xcb_xf86dri_get_drawable_info_back_clip_rects_iterator
+ ** 
+ ** @param const xcb_xf86dri_get_drawable_info_reply_t *R
+ ** @returns xcb_xf86dri_drm_clip_rect_iterator_t
+ **
+ *****************************************************************************/
+ 
+xcb_xf86dri_drm_clip_rect_iterator_t
+xcb_xf86dri_get_drawable_info_back_clip_rects_iterator (const xcb_xf86dri_get_drawable_info_reply_t *R  /**< */);
 
 /**
  * Return the reply

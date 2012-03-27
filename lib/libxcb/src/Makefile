@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.2 2010/04/18 19:58:53 matthieu Exp $
+#	$OpenBSD: Makefile,v 1.3 2012/03/27 19:14:21 matthieu Exp $
 
 DATADIR=	${X11BASE}/share
 PYTHON=		python${PYTHON_VERSION}
@@ -39,6 +39,8 @@ all: ${SRCS} ${HDRS}
 
 test:
 	@echo ${SRCS}
+
+clean:
 
 .SUFFIXES: .xml .c .h
 

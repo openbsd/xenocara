@@ -54,7 +54,6 @@ enum lazy_reply_tag
 #define XCB_PAD(i) (-(i) & 3)
 
 #define XCB_SEQUENCE_COMPARE(a,op,b)	((int64_t) ((a) - (b)) op 0)
-#define XCB_SEQUENCE_COMPARE_32(a,op,b)	(((int) (a) - (int) (b)) op 0)
 
 #ifndef offsetof
 #define offsetof(type,member) ((size_t) &((type *)0)->member)
@@ -107,6 +106,7 @@ int _xcb_out_init(_xcb_out *out);
 void _xcb_out_destroy(_xcb_out *out);
 
 int _xcb_out_send(xcb_connection_t *c, struct iovec *vector, int count);
+void _xcb_out_send_sync(xcb_connection_t *c);
 int _xcb_out_flush_to(xcb_connection_t *c, uint64_t request);
 
 
@@ -193,7 +193,10 @@ struct xcb_connection_t {
     _xcb_xid xid;
 };
 
-void _xcb_conn_shutdown(xcb_connection_t *c);
+void _xcb_conn_shutdown(xcb_connection_t *c, int err);
+
+xcb_connection_t *_xcb_conn_ret_error(int err);
+
 int _xcb_conn_wait(xcb_connection_t *c, pthread_cond_t *cond, struct iovec **vector, int *count);
 
 

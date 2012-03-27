@@ -215,6 +215,11 @@ typedef xcb_glx_generic_error_t xcb_glx_bad_current_drawable_error_t;
 
 typedef xcb_glx_generic_error_t xcb_glx_bad_window_error_t;
 
+/** Opcode for xcb_glx_glx_bad_profile_arb. */
+#define XCB_GLX_GLX_BAD_PROFILE_ARB 13
+
+typedef xcb_glx_generic_error_t xcb_glx_glx_bad_profile_arb_error_t;
+
 /** Opcode for xcb_glx_pbuffer_clobber. */
 #define XCB_GLX_PBUFFER_CLOBBER 0
 
@@ -736,14 +741,14 @@ typedef struct xcb_glx_get_fb_configs_reply_t {
  * @brief xcb_glx_create_pixmap_request_t
  **/
 typedef struct xcb_glx_create_pixmap_request_t {
-    uint8_t          major_opcode; /**<  */
-    uint8_t          minor_opcode; /**<  */
-    uint16_t         length; /**<  */
-    uint32_t         screen; /**<  */
-    uint32_t         fbconfig; /**<  */
-    xcb_pixmap_t     pixmap; /**<  */
-    xcb_glx_pixmap_t glx_pixmap; /**<  */
-    uint32_t         num_attribs; /**<  */
+    uint8_t            major_opcode; /**<  */
+    uint8_t            minor_opcode; /**<  */
+    uint16_t           length; /**<  */
+    uint32_t           screen; /**<  */
+    xcb_glx_fbconfig_t fbconfig; /**<  */
+    xcb_pixmap_t       pixmap; /**<  */
+    xcb_glx_pixmap_t   glx_pixmap; /**<  */
+    uint32_t           num_attribs; /**<  */
 } xcb_glx_create_pixmap_request_t;
 
 /** Opcode for xcb_glx_destroy_pixmap. */
@@ -766,17 +771,16 @@ typedef struct xcb_glx_destroy_pixmap_request_t {
  * @brief xcb_glx_create_new_context_request_t
  **/
 typedef struct xcb_glx_create_new_context_request_t {
-    uint8_t           major_opcode; /**<  */
-    uint8_t           minor_opcode; /**<  */
-    uint16_t          length; /**<  */
-    xcb_glx_context_t context; /**<  */
-    uint32_t          fbconfig; /**<  */
-    uint32_t          screen; /**<  */
-    uint32_t          render_type; /**<  */
-    uint32_t          share_list; /**<  */
-    uint8_t           is_direct; /**<  */
-    uint8_t           reserved1; /**<  */
-    uint16_t          reserved2; /**<  */
+    uint8_t            major_opcode; /**<  */
+    uint8_t            minor_opcode; /**<  */
+    uint16_t           length; /**<  */
+    xcb_glx_context_t  context; /**<  */
+    xcb_glx_fbconfig_t fbconfig; /**<  */
+    uint32_t           screen; /**<  */
+    uint32_t           render_type; /**<  */
+    xcb_glx_context_t  share_list; /**<  */
+    uint8_t            is_direct; /**<  */
+    uint8_t            pad0[3]; /**<  */
 } xcb_glx_create_new_context_request_t;
 
 /**
@@ -950,6 +954,59 @@ typedef struct xcb_glx_delete_window_request_t {
     uint16_t         length; /**<  */
     xcb_glx_window_t glxwindow; /**<  */
 } xcb_glx_delete_window_request_t;
+
+/** Opcode for xcb_glx_set_client_info_arb. */
+#define XCB_GLX_SET_CLIENT_INFO_ARB 33
+
+/**
+ * @brief xcb_glx_set_client_info_arb_request_t
+ **/
+typedef struct xcb_glx_set_client_info_arb_request_t {
+    uint8_t  major_opcode; /**<  */
+    uint8_t  minor_opcode; /**<  */
+    uint16_t length; /**<  */
+    uint32_t major_version; /**<  */
+    uint32_t minor_version; /**<  */
+    uint32_t num_versions; /**<  */
+    uint32_t gl_str_len; /**<  */
+    uint32_t glx_str_len; /**<  */
+} xcb_glx_set_client_info_arb_request_t;
+
+/** Opcode for xcb_glx_create_context_attribs_arb. */
+#define XCB_GLX_CREATE_CONTEXT_ATTRIBS_ARB 34
+
+/**
+ * @brief xcb_glx_create_context_attribs_arb_request_t
+ **/
+typedef struct xcb_glx_create_context_attribs_arb_request_t {
+    uint8_t            major_opcode; /**<  */
+    uint8_t            minor_opcode; /**<  */
+    uint16_t           length; /**<  */
+    xcb_glx_context_t  context; /**<  */
+    xcb_glx_fbconfig_t fbconfig; /**<  */
+    uint32_t           screen; /**<  */
+    xcb_glx_context_t  share_list; /**<  */
+    uint8_t            is_direct; /**<  */
+    uint8_t            pad0[3]; /**<  */
+    uint32_t           num_attribs; /**<  */
+} xcb_glx_create_context_attribs_arb_request_t;
+
+/** Opcode for xcb_glx_set_client_info_2arb. */
+#define XCB_GLX_SET_CLIENT_INFO_2ARB 35
+
+/**
+ * @brief xcb_glx_set_client_info_2arb_request_t
+ **/
+typedef struct xcb_glx_set_client_info_2arb_request_t {
+    uint8_t  major_opcode; /**<  */
+    uint8_t  minor_opcode; /**<  */
+    uint16_t length; /**<  */
+    uint32_t major_version; /**<  */
+    uint32_t minor_version; /**<  */
+    uint32_t num_versions; /**<  */
+    uint32_t gl_str_len; /**<  */
+    uint32_t glx_str_len; /**<  */
+} xcb_glx_set_client_info_2arb_request_t;
 
 /** Opcode for xcb_glx_new_list. */
 #define XCB_GLX_NEW_LIST 101
@@ -5054,25 +5111,25 @@ xcb_glx_get_fb_configs_reply (xcb_connection_t                 *c  /**< */,
  **
  ** xcb_void_cookie_t xcb_glx_create_pixmap_checked
  ** 
- ** @param xcb_connection_t *c
- ** @param uint32_t          screen
- ** @param uint32_t          fbconfig
- ** @param xcb_pixmap_t      pixmap
- ** @param xcb_glx_pixmap_t  glx_pixmap
- ** @param uint32_t          num_attribs
- ** @param const uint32_t   *attribs
+ ** @param xcb_connection_t   *c
+ ** @param uint32_t            screen
+ ** @param xcb_glx_fbconfig_t  fbconfig
+ ** @param xcb_pixmap_t        pixmap
+ ** @param xcb_glx_pixmap_t    glx_pixmap
+ ** @param uint32_t            num_attribs
+ ** @param const uint32_t     *attribs
  ** @returns xcb_void_cookie_t
  **
  *****************************************************************************/
  
 xcb_void_cookie_t
-xcb_glx_create_pixmap_checked (xcb_connection_t *c  /**< */,
-                               uint32_t          screen  /**< */,
-                               uint32_t          fbconfig  /**< */,
-                               xcb_pixmap_t      pixmap  /**< */,
-                               xcb_glx_pixmap_t  glx_pixmap  /**< */,
-                               uint32_t          num_attribs  /**< */,
-                               const uint32_t   *attribs  /**< */);
+xcb_glx_create_pixmap_checked (xcb_connection_t   *c  /**< */,
+                               uint32_t            screen  /**< */,
+                               xcb_glx_fbconfig_t  fbconfig  /**< */,
+                               xcb_pixmap_t        pixmap  /**< */,
+                               xcb_glx_pixmap_t    glx_pixmap  /**< */,
+                               uint32_t            num_attribs  /**< */,
+                               const uint32_t     *attribs  /**< */);
 
 /**
  * Delivers a request to the X server
@@ -5087,25 +5144,25 @@ xcb_glx_create_pixmap_checked (xcb_connection_t *c  /**< */,
  **
  ** xcb_void_cookie_t xcb_glx_create_pixmap
  ** 
- ** @param xcb_connection_t *c
- ** @param uint32_t          screen
- ** @param uint32_t          fbconfig
- ** @param xcb_pixmap_t      pixmap
- ** @param xcb_glx_pixmap_t  glx_pixmap
- ** @param uint32_t          num_attribs
- ** @param const uint32_t   *attribs
+ ** @param xcb_connection_t   *c
+ ** @param uint32_t            screen
+ ** @param xcb_glx_fbconfig_t  fbconfig
+ ** @param xcb_pixmap_t        pixmap
+ ** @param xcb_glx_pixmap_t    glx_pixmap
+ ** @param uint32_t            num_attribs
+ ** @param const uint32_t     *attribs
  ** @returns xcb_void_cookie_t
  **
  *****************************************************************************/
  
 xcb_void_cookie_t
-xcb_glx_create_pixmap (xcb_connection_t *c  /**< */,
-                       uint32_t          screen  /**< */,
-                       uint32_t          fbconfig  /**< */,
-                       xcb_pixmap_t      pixmap  /**< */,
-                       xcb_glx_pixmap_t  glx_pixmap  /**< */,
-                       uint32_t          num_attribs  /**< */,
-                       const uint32_t   *attribs  /**< */);
+xcb_glx_create_pixmap (xcb_connection_t   *c  /**< */,
+                       uint32_t            screen  /**< */,
+                       xcb_glx_fbconfig_t  fbconfig  /**< */,
+                       xcb_pixmap_t        pixmap  /**< */,
+                       xcb_glx_pixmap_t    glx_pixmap  /**< */,
+                       uint32_t            num_attribs  /**< */,
+                       const uint32_t     *attribs  /**< */);
 
 /**
  * Delivers a request to the X server
@@ -5172,29 +5229,25 @@ xcb_glx_destroy_pixmap (xcb_connection_t *c  /**< */,
  **
  ** xcb_void_cookie_t xcb_glx_create_new_context_checked
  ** 
- ** @param xcb_connection_t  *c
- ** @param xcb_glx_context_t  context
- ** @param uint32_t           fbconfig
- ** @param uint32_t           screen
- ** @param uint32_t           render_type
- ** @param uint32_t           share_list
- ** @param uint8_t            is_direct
- ** @param uint8_t            reserved1
- ** @param uint16_t           reserved2
+ ** @param xcb_connection_t   *c
+ ** @param xcb_glx_context_t   context
+ ** @param xcb_glx_fbconfig_t  fbconfig
+ ** @param uint32_t            screen
+ ** @param uint32_t            render_type
+ ** @param xcb_glx_context_t   share_list
+ ** @param uint8_t             is_direct
  ** @returns xcb_void_cookie_t
  **
  *****************************************************************************/
  
 xcb_void_cookie_t
-xcb_glx_create_new_context_checked (xcb_connection_t  *c  /**< */,
-                                    xcb_glx_context_t  context  /**< */,
-                                    uint32_t           fbconfig  /**< */,
-                                    uint32_t           screen  /**< */,
-                                    uint32_t           render_type  /**< */,
-                                    uint32_t           share_list  /**< */,
-                                    uint8_t            is_direct  /**< */,
-                                    uint8_t            reserved1  /**< */,
-                                    uint16_t           reserved2  /**< */);
+xcb_glx_create_new_context_checked (xcb_connection_t   *c  /**< */,
+                                    xcb_glx_context_t   context  /**< */,
+                                    xcb_glx_fbconfig_t  fbconfig  /**< */,
+                                    uint32_t            screen  /**< */,
+                                    uint32_t            render_type  /**< */,
+                                    xcb_glx_context_t   share_list  /**< */,
+                                    uint8_t             is_direct  /**< */);
 
 /**
  * Delivers a request to the X server
@@ -5209,29 +5262,25 @@ xcb_glx_create_new_context_checked (xcb_connection_t  *c  /**< */,
  **
  ** xcb_void_cookie_t xcb_glx_create_new_context
  ** 
- ** @param xcb_connection_t  *c
- ** @param xcb_glx_context_t  context
- ** @param uint32_t           fbconfig
- ** @param uint32_t           screen
- ** @param uint32_t           render_type
- ** @param uint32_t           share_list
- ** @param uint8_t            is_direct
- ** @param uint8_t            reserved1
- ** @param uint16_t           reserved2
+ ** @param xcb_connection_t   *c
+ ** @param xcb_glx_context_t   context
+ ** @param xcb_glx_fbconfig_t  fbconfig
+ ** @param uint32_t            screen
+ ** @param uint32_t            render_type
+ ** @param xcb_glx_context_t   share_list
+ ** @param uint8_t             is_direct
  ** @returns xcb_void_cookie_t
  **
  *****************************************************************************/
  
 xcb_void_cookie_t
-xcb_glx_create_new_context (xcb_connection_t  *c  /**< */,
-                            xcb_glx_context_t  context  /**< */,
-                            uint32_t           fbconfig  /**< */,
-                            uint32_t           screen  /**< */,
-                            uint32_t           render_type  /**< */,
-                            uint32_t           share_list  /**< */,
-                            uint8_t            is_direct  /**< */,
-                            uint8_t            reserved1  /**< */,
-                            uint16_t           reserved2  /**< */);
+xcb_glx_create_new_context (xcb_connection_t   *c  /**< */,
+                            xcb_glx_context_t   context  /**< */,
+                            xcb_glx_fbconfig_t  fbconfig  /**< */,
+                            uint32_t            screen  /**< */,
+                            uint32_t            render_type  /**< */,
+                            xcb_glx_context_t   share_list  /**< */,
+                            uint8_t             is_direct  /**< */);
 
 /**
  * Delivers a request to the X server
@@ -5851,6 +5900,233 @@ xcb_glx_delete_window_checked (xcb_connection_t *c  /**< */,
 xcb_void_cookie_t
 xcb_glx_delete_window (xcb_connection_t *c  /**< */,
                        xcb_glx_window_t  glxwindow  /**< */);
+
+/**
+ * Delivers a request to the X server
+ * @param c The connection
+ * @return A cookie
+ *
+ * Delivers a request to the X server.
+ * 
+ * This form can be used only if the request will not cause
+ * a reply to be generated. Any returned error will be
+ * saved for handling by xcb_request_check().
+ */
+
+/*****************************************************************************
+ **
+ ** xcb_void_cookie_t xcb_glx_set_client_info_arb_checked
+ ** 
+ ** @param xcb_connection_t *c
+ ** @param uint32_t          major_version
+ ** @param uint32_t          minor_version
+ ** @param uint32_t          num_versions
+ ** @param uint32_t          gl_str_len
+ ** @param uint32_t          glx_str_len
+ ** @param const uint32_t   *gl_versions
+ ** @param const char       *gl_extension_string
+ ** @param const char       *glx_extension_string
+ ** @returns xcb_void_cookie_t
+ **
+ *****************************************************************************/
+ 
+xcb_void_cookie_t
+xcb_glx_set_client_info_arb_checked (xcb_connection_t *c  /**< */,
+                                     uint32_t          major_version  /**< */,
+                                     uint32_t          minor_version  /**< */,
+                                     uint32_t          num_versions  /**< */,
+                                     uint32_t          gl_str_len  /**< */,
+                                     uint32_t          glx_str_len  /**< */,
+                                     const uint32_t   *gl_versions  /**< */,
+                                     const char       *gl_extension_string  /**< */,
+                                     const char       *glx_extension_string  /**< */);
+
+/**
+ * Delivers a request to the X server
+ * @param c The connection
+ * @return A cookie
+ *
+ * Delivers a request to the X server.
+ * 
+ */
+
+/*****************************************************************************
+ **
+ ** xcb_void_cookie_t xcb_glx_set_client_info_arb
+ ** 
+ ** @param xcb_connection_t *c
+ ** @param uint32_t          major_version
+ ** @param uint32_t          minor_version
+ ** @param uint32_t          num_versions
+ ** @param uint32_t          gl_str_len
+ ** @param uint32_t          glx_str_len
+ ** @param const uint32_t   *gl_versions
+ ** @param const char       *gl_extension_string
+ ** @param const char       *glx_extension_string
+ ** @returns xcb_void_cookie_t
+ **
+ *****************************************************************************/
+ 
+xcb_void_cookie_t
+xcb_glx_set_client_info_arb (xcb_connection_t *c  /**< */,
+                             uint32_t          major_version  /**< */,
+                             uint32_t          minor_version  /**< */,
+                             uint32_t          num_versions  /**< */,
+                             uint32_t          gl_str_len  /**< */,
+                             uint32_t          glx_str_len  /**< */,
+                             const uint32_t   *gl_versions  /**< */,
+                             const char       *gl_extension_string  /**< */,
+                             const char       *glx_extension_string  /**< */);
+
+/**
+ * Delivers a request to the X server
+ * @param c The connection
+ * @return A cookie
+ *
+ * Delivers a request to the X server.
+ * 
+ * This form can be used only if the request will not cause
+ * a reply to be generated. Any returned error will be
+ * saved for handling by xcb_request_check().
+ */
+
+/*****************************************************************************
+ **
+ ** xcb_void_cookie_t xcb_glx_create_context_attribs_arb_checked
+ ** 
+ ** @param xcb_connection_t   *c
+ ** @param xcb_glx_context_t   context
+ ** @param xcb_glx_fbconfig_t  fbconfig
+ ** @param uint32_t            screen
+ ** @param xcb_glx_context_t   share_list
+ ** @param uint8_t             is_direct
+ ** @param uint32_t            num_attribs
+ ** @param const uint32_t     *attribs
+ ** @returns xcb_void_cookie_t
+ **
+ *****************************************************************************/
+ 
+xcb_void_cookie_t
+xcb_glx_create_context_attribs_arb_checked (xcb_connection_t   *c  /**< */,
+                                            xcb_glx_context_t   context  /**< */,
+                                            xcb_glx_fbconfig_t  fbconfig  /**< */,
+                                            uint32_t            screen  /**< */,
+                                            xcb_glx_context_t   share_list  /**< */,
+                                            uint8_t             is_direct  /**< */,
+                                            uint32_t            num_attribs  /**< */,
+                                            const uint32_t     *attribs  /**< */);
+
+/**
+ * Delivers a request to the X server
+ * @param c The connection
+ * @return A cookie
+ *
+ * Delivers a request to the X server.
+ * 
+ */
+
+/*****************************************************************************
+ **
+ ** xcb_void_cookie_t xcb_glx_create_context_attribs_arb
+ ** 
+ ** @param xcb_connection_t   *c
+ ** @param xcb_glx_context_t   context
+ ** @param xcb_glx_fbconfig_t  fbconfig
+ ** @param uint32_t            screen
+ ** @param xcb_glx_context_t   share_list
+ ** @param uint8_t             is_direct
+ ** @param uint32_t            num_attribs
+ ** @param const uint32_t     *attribs
+ ** @returns xcb_void_cookie_t
+ **
+ *****************************************************************************/
+ 
+xcb_void_cookie_t
+xcb_glx_create_context_attribs_arb (xcb_connection_t   *c  /**< */,
+                                    xcb_glx_context_t   context  /**< */,
+                                    xcb_glx_fbconfig_t  fbconfig  /**< */,
+                                    uint32_t            screen  /**< */,
+                                    xcb_glx_context_t   share_list  /**< */,
+                                    uint8_t             is_direct  /**< */,
+                                    uint32_t            num_attribs  /**< */,
+                                    const uint32_t     *attribs  /**< */);
+
+/**
+ * Delivers a request to the X server
+ * @param c The connection
+ * @return A cookie
+ *
+ * Delivers a request to the X server.
+ * 
+ * This form can be used only if the request will not cause
+ * a reply to be generated. Any returned error will be
+ * saved for handling by xcb_request_check().
+ */
+
+/*****************************************************************************
+ **
+ ** xcb_void_cookie_t xcb_glx_set_client_info_2arb_checked
+ ** 
+ ** @param xcb_connection_t *c
+ ** @param uint32_t          major_version
+ ** @param uint32_t          minor_version
+ ** @param uint32_t          num_versions
+ ** @param uint32_t          gl_str_len
+ ** @param uint32_t          glx_str_len
+ ** @param const uint32_t   *gl_versions
+ ** @param const char       *gl_extension_string
+ ** @param const char       *glx_extension_string
+ ** @returns xcb_void_cookie_t
+ **
+ *****************************************************************************/
+ 
+xcb_void_cookie_t
+xcb_glx_set_client_info_2arb_checked (xcb_connection_t *c  /**< */,
+                                      uint32_t          major_version  /**< */,
+                                      uint32_t          minor_version  /**< */,
+                                      uint32_t          num_versions  /**< */,
+                                      uint32_t          gl_str_len  /**< */,
+                                      uint32_t          glx_str_len  /**< */,
+                                      const uint32_t   *gl_versions  /**< */,
+                                      const char       *gl_extension_string  /**< */,
+                                      const char       *glx_extension_string  /**< */);
+
+/**
+ * Delivers a request to the X server
+ * @param c The connection
+ * @return A cookie
+ *
+ * Delivers a request to the X server.
+ * 
+ */
+
+/*****************************************************************************
+ **
+ ** xcb_void_cookie_t xcb_glx_set_client_info_2arb
+ ** 
+ ** @param xcb_connection_t *c
+ ** @param uint32_t          major_version
+ ** @param uint32_t          minor_version
+ ** @param uint32_t          num_versions
+ ** @param uint32_t          gl_str_len
+ ** @param uint32_t          glx_str_len
+ ** @param const uint32_t   *gl_versions
+ ** @param const char       *gl_extension_string
+ ** @param const char       *glx_extension_string
+ ** @returns xcb_void_cookie_t
+ **
+ *****************************************************************************/
+ 
+xcb_void_cookie_t
+xcb_glx_set_client_info_2arb (xcb_connection_t *c  /**< */,
+                              uint32_t          major_version  /**< */,
+                              uint32_t          minor_version  /**< */,
+                              uint32_t          num_versions  /**< */,
+                              uint32_t          gl_str_len  /**< */,
+                              uint32_t          glx_str_len  /**< */,
+                              const uint32_t   *gl_versions  /**< */,
+                              const char       *gl_extension_string  /**< */,
+                              const char       *glx_extension_string  /**< */);
 
 /**
  * Delivers a request to the X server

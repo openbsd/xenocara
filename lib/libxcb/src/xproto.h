@@ -2304,8 +2304,8 @@ typedef struct xcb_translate_coordinates_reply_t {
     uint16_t     sequence; /**<  */
     uint32_t     length; /**<  */
     xcb_window_t child; /**<  */
-    uint16_t     dst_x; /**<  */
-    uint16_t     dst_y; /**<  */
+    int16_t      dst_x; /**<  */
+    int16_t      dst_y; /**<  */
 } xcb_translate_coordinates_reply_t;
 
 /** Opcode for xcb_warp_pointer. */
@@ -2668,6 +2668,7 @@ typedef struct xcb_set_font_path_request_t {
     uint8_t  pad0; /**<  */
     uint16_t length; /**<  */
     uint16_t font_qty; /**<  */
+    uint8_t  pad1[2]; /**<  */
 } xcb_set_font_path_request_t;
 
 /**
@@ -3863,6 +3864,7 @@ typedef struct xcb_change_keyboard_mapping_request_t {
     uint16_t      length; /**<  */
     xcb_keycode_t first_keycode; /**<  */
     uint8_t       keysyms_per_keycode; /**<  */
+    uint8_t       pad0[2]; /**<  */
 } xcb_change_keyboard_mapping_request_t;
 
 /**
@@ -9899,8 +9901,7 @@ xcb_list_fonts_with_info_reply (xcb_connection_t                   *c  /**< */,
  ** 
  ** @param xcb_connection_t *c
  ** @param uint16_t          font_qty
- ** @param uint32_t          path_len
- ** @param const char       *path
+ ** @param const xcb_str_t  *font
  ** @returns xcb_void_cookie_t
  **
  *****************************************************************************/
@@ -9908,8 +9909,7 @@ xcb_list_fonts_with_info_reply (xcb_connection_t                   *c  /**< */,
 xcb_void_cookie_t
 xcb_set_font_path_checked (xcb_connection_t *c  /**< */,
                            uint16_t          font_qty  /**< */,
-                           uint32_t          path_len  /**< */,
-                           const char       *path  /**< */);
+                           const xcb_str_t  *font  /**< */);
 
 /**
  * Delivers a request to the X server
@@ -9926,8 +9926,7 @@ xcb_set_font_path_checked (xcb_connection_t *c  /**< */,
  ** 
  ** @param xcb_connection_t *c
  ** @param uint16_t          font_qty
- ** @param uint32_t          path_len
- ** @param const char       *path
+ ** @param const xcb_str_t  *font
  ** @returns xcb_void_cookie_t
  **
  *****************************************************************************/
@@ -9935,8 +9934,7 @@ xcb_set_font_path_checked (xcb_connection_t *c  /**< */,
 xcb_void_cookie_t
 xcb_set_font_path (xcb_connection_t *c  /**< */,
                    uint16_t          font_qty  /**< */,
-                   uint32_t          path_len  /**< */,
-                   const char       *path  /**< */);
+                   const xcb_str_t  *font  /**< */);
 
 /**
  * Delivers a request to the X server
@@ -14389,7 +14387,7 @@ xcb_get_screen_saver_reply (xcb_connection_t               *c  /**< */,
  ** @param uint8_t           mode
  ** @param uint8_t           family
  ** @param uint16_t          address_len
- ** @param const char       *address
+ ** @param const uint8_t    *address
  ** @returns xcb_void_cookie_t
  **
  *****************************************************************************/
@@ -14399,7 +14397,7 @@ xcb_change_hosts_checked (xcb_connection_t *c  /**< */,
                           uint8_t           mode  /**< */,
                           uint8_t           family  /**< */,
                           uint16_t          address_len  /**< */,
-                          const char       *address  /**< */);
+                          const uint8_t    *address  /**< */);
 
 /**
  * Delivers a request to the X server
@@ -14418,7 +14416,7 @@ xcb_change_hosts_checked (xcb_connection_t *c  /**< */,
  ** @param uint8_t           mode
  ** @param uint8_t           family
  ** @param uint16_t          address_len
- ** @param const char       *address
+ ** @param const uint8_t    *address
  ** @returns xcb_void_cookie_t
  **
  *****************************************************************************/
@@ -14428,7 +14426,7 @@ xcb_change_hosts (xcb_connection_t *c  /**< */,
                   uint8_t           mode  /**< */,
                   uint8_t           family  /**< */,
                   uint16_t          address_len  /**< */,
-                  const char       *address  /**< */);
+                  const uint8_t    *address  /**< */);
 
 
 /*****************************************************************************

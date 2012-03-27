@@ -20,7 +20,7 @@ extern "C" {
 #endif
 
 #define XCB_SYNC_MAJOR_VERSION 3
-#define XCB_SYNC_MINOR_VERSION 0
+#define XCB_SYNC_MINOR_VERSION 1
   
 extern xcb_extension_t xcb_sync_id;
 
@@ -51,6 +51,17 @@ typedef struct xcb_sync_counter_iterator_t {
     int                 rem; /**<  */
     int                 index; /**<  */
 } xcb_sync_counter_iterator_t;
+
+typedef uint32_t xcb_sync_fence_t;
+
+/**
+ * @brief xcb_sync_fence_iterator_t
+ **/
+typedef struct xcb_sync_fence_iterator_t {
+    xcb_sync_fence_t *data; /**<  */
+    int               rem; /**<  */
+    int               index; /**<  */
+} xcb_sync_fence_iterator_t;
 
 typedef enum xcb_sync_testtype_t {
     XCB_SYNC_TESTTYPE_POSITIVE_TRANSITION,
@@ -458,6 +469,104 @@ typedef struct xcb_sync_get_priority_reply_t {
     int32_t  priority; /**<  */
 } xcb_sync_get_priority_reply_t;
 
+/** Opcode for xcb_sync_create_fence. */
+#define XCB_SYNC_CREATE_FENCE 14
+
+/**
+ * @brief xcb_sync_create_fence_request_t
+ **/
+typedef struct xcb_sync_create_fence_request_t {
+    uint8_t          major_opcode; /**<  */
+    uint8_t          minor_opcode; /**<  */
+    uint16_t         length; /**<  */
+    xcb_drawable_t   drawable; /**<  */
+    xcb_sync_fence_t fence; /**<  */
+    uint8_t          initially_triggered; /**<  */
+} xcb_sync_create_fence_request_t;
+
+/** Opcode for xcb_sync_trigger_fence. */
+#define XCB_SYNC_TRIGGER_FENCE 15
+
+/**
+ * @brief xcb_sync_trigger_fence_request_t
+ **/
+typedef struct xcb_sync_trigger_fence_request_t {
+    uint8_t          major_opcode; /**<  */
+    uint8_t          minor_opcode; /**<  */
+    uint16_t         length; /**<  */
+    xcb_sync_fence_t fence; /**<  */
+} xcb_sync_trigger_fence_request_t;
+
+/** Opcode for xcb_sync_reset_fence. */
+#define XCB_SYNC_RESET_FENCE 16
+
+/**
+ * @brief xcb_sync_reset_fence_request_t
+ **/
+typedef struct xcb_sync_reset_fence_request_t {
+    uint8_t          major_opcode; /**<  */
+    uint8_t          minor_opcode; /**<  */
+    uint16_t         length; /**<  */
+    xcb_sync_fence_t fence; /**<  */
+} xcb_sync_reset_fence_request_t;
+
+/** Opcode for xcb_sync_destroy_fence. */
+#define XCB_SYNC_DESTROY_FENCE 17
+
+/**
+ * @brief xcb_sync_destroy_fence_request_t
+ **/
+typedef struct xcb_sync_destroy_fence_request_t {
+    uint8_t          major_opcode; /**<  */
+    uint8_t          minor_opcode; /**<  */
+    uint16_t         length; /**<  */
+    xcb_sync_fence_t fence; /**<  */
+} xcb_sync_destroy_fence_request_t;
+
+/**
+ * @brief xcb_sync_query_fence_cookie_t
+ **/
+typedef struct xcb_sync_query_fence_cookie_t {
+    unsigned int sequence; /**<  */
+} xcb_sync_query_fence_cookie_t;
+
+/** Opcode for xcb_sync_query_fence. */
+#define XCB_SYNC_QUERY_FENCE 18
+
+/**
+ * @brief xcb_sync_query_fence_request_t
+ **/
+typedef struct xcb_sync_query_fence_request_t {
+    uint8_t          major_opcode; /**<  */
+    uint8_t          minor_opcode; /**<  */
+    uint16_t         length; /**<  */
+    xcb_sync_fence_t fence; /**<  */
+} xcb_sync_query_fence_request_t;
+
+/**
+ * @brief xcb_sync_query_fence_reply_t
+ **/
+typedef struct xcb_sync_query_fence_reply_t {
+    uint8_t  response_type; /**<  */
+    uint8_t  pad0; /**<  */
+    uint16_t sequence; /**<  */
+    uint32_t length; /**<  */
+    uint8_t  triggered; /**<  */
+    uint8_t  pad1[23]; /**<  */
+} xcb_sync_query_fence_reply_t;
+
+/** Opcode for xcb_sync_await_fence. */
+#define XCB_SYNC_AWAIT_FENCE 19
+
+/**
+ * @brief xcb_sync_await_fence_request_t
+ **/
+typedef struct xcb_sync_await_fence_request_t {
+    uint8_t  major_opcode; /**<  */
+    uint8_t  minor_opcode; /**<  */
+    uint16_t length; /**<  */
+} xcb_sync_await_fence_request_t;
+
 /** Opcode for xcb_sync_counter_notify. */
 #define XCB_SYNC_COUNTER_NOTIFY 0
 
@@ -580,6 +689,49 @@ xcb_sync_counter_next (xcb_sync_counter_iterator_t *i  /**< */);
  
 xcb_generic_iterator_t
 xcb_sync_counter_end (xcb_sync_counter_iterator_t i  /**< */);
+
+/**
+ * Get the next element of the iterator
+ * @param i Pointer to a xcb_sync_fence_iterator_t
+ *
+ * Get the next element in the iterator. The member rem is
+ * decreased by one. The member data points to the next
+ * element. The member index is increased by sizeof(xcb_sync_fence_t)
+ */
+
+/*****************************************************************************
+ **
+ ** void xcb_sync_fence_next
+ ** 
+ ** @param xcb_sync_fence_iterator_t *i
+ ** @returns void
+ **
+ *****************************************************************************/
+ 
+void
+xcb_sync_fence_next (xcb_sync_fence_iterator_t *i  /**< */);
+
+/**
+ * Return the iterator pointing to the last element
+ * @param i An xcb_sync_fence_iterator_t
+ * @return  The iterator pointing to the last element
+ *
+ * Set the current element in the iterator to the last element.
+ * The member rem is set to 0. The member data points to the
+ * last element.
+ */
+
+/*****************************************************************************
+ **
+ ** xcb_generic_iterator_t xcb_sync_fence_end
+ ** 
+ ** @param xcb_sync_fence_iterator_t i
+ ** @returns xcb_generic_iterator_t
+ **
+ *****************************************************************************/
+ 
+xcb_generic_iterator_t
+xcb_sync_fence_end (xcb_sync_fence_iterator_t i  /**< */);
 
 /**
  * Get the next element of the iterator
@@ -1694,6 +1846,343 @@ xcb_sync_get_priority_reply_t *
 xcb_sync_get_priority_reply (xcb_connection_t                *c  /**< */,
                              xcb_sync_get_priority_cookie_t   cookie  /**< */,
                              xcb_generic_error_t            **e  /**< */);
+
+/**
+ * Delivers a request to the X server
+ * @param c The connection
+ * @return A cookie
+ *
+ * Delivers a request to the X server.
+ * 
+ * This form can be used only if the request will not cause
+ * a reply to be generated. Any returned error will be
+ * saved for handling by xcb_request_check().
+ */
+
+/*****************************************************************************
+ **
+ ** xcb_void_cookie_t xcb_sync_create_fence_checked
+ ** 
+ ** @param xcb_connection_t *c
+ ** @param xcb_drawable_t    drawable
+ ** @param xcb_sync_fence_t  fence
+ ** @param uint8_t           initially_triggered
+ ** @returns xcb_void_cookie_t
+ **
+ *****************************************************************************/
+ 
+xcb_void_cookie_t
+xcb_sync_create_fence_checked (xcb_connection_t *c  /**< */,
+                               xcb_drawable_t    drawable  /**< */,
+                               xcb_sync_fence_t  fence  /**< */,
+                               uint8_t           initially_triggered  /**< */);
+
+/**
+ * Delivers a request to the X server
+ * @param c The connection
+ * @return A cookie
+ *
+ * Delivers a request to the X server.
+ * 
+ */
+
+/*****************************************************************************
+ **
+ ** xcb_void_cookie_t xcb_sync_create_fence
+ ** 
+ ** @param xcb_connection_t *c
+ ** @param xcb_drawable_t    drawable
+ ** @param xcb_sync_fence_t  fence
+ ** @param uint8_t           initially_triggered
+ ** @returns xcb_void_cookie_t
+ **
+ *****************************************************************************/
+ 
+xcb_void_cookie_t
+xcb_sync_create_fence (xcb_connection_t *c  /**< */,
+                       xcb_drawable_t    drawable  /**< */,
+                       xcb_sync_fence_t  fence  /**< */,
+                       uint8_t           initially_triggered  /**< */);
+
+/**
+ * Delivers a request to the X server
+ * @param c The connection
+ * @return A cookie
+ *
+ * Delivers a request to the X server.
+ * 
+ * This form can be used only if the request will not cause
+ * a reply to be generated. Any returned error will be
+ * saved for handling by xcb_request_check().
+ */
+
+/*****************************************************************************
+ **
+ ** xcb_void_cookie_t xcb_sync_trigger_fence_checked
+ ** 
+ ** @param xcb_connection_t *c
+ ** @param xcb_sync_fence_t  fence
+ ** @returns xcb_void_cookie_t
+ **
+ *****************************************************************************/
+ 
+xcb_void_cookie_t
+xcb_sync_trigger_fence_checked (xcb_connection_t *c  /**< */,
+                                xcb_sync_fence_t  fence  /**< */);
+
+/**
+ * Delivers a request to the X server
+ * @param c The connection
+ * @return A cookie
+ *
+ * Delivers a request to the X server.
+ * 
+ */
+
+/*****************************************************************************
+ **
+ ** xcb_void_cookie_t xcb_sync_trigger_fence
+ ** 
+ ** @param xcb_connection_t *c
+ ** @param xcb_sync_fence_t  fence
+ ** @returns xcb_void_cookie_t
+ **
+ *****************************************************************************/
+ 
+xcb_void_cookie_t
+xcb_sync_trigger_fence (xcb_connection_t *c  /**< */,
+                        xcb_sync_fence_t  fence  /**< */);
+
+/**
+ * Delivers a request to the X server
+ * @param c The connection
+ * @return A cookie
+ *
+ * Delivers a request to the X server.
+ * 
+ * This form can be used only if the request will not cause
+ * a reply to be generated. Any returned error will be
+ * saved for handling by xcb_request_check().
+ */
+
+/*****************************************************************************
+ **
+ ** xcb_void_cookie_t xcb_sync_reset_fence_checked
+ ** 
+ ** @param xcb_connection_t *c
+ ** @param xcb_sync_fence_t  fence
+ ** @returns xcb_void_cookie_t
+ **
+ *****************************************************************************/
+ 
+xcb_void_cookie_t
+xcb_sync_reset_fence_checked (xcb_connection_t *c  /**< */,
+                              xcb_sync_fence_t  fence  /**< */);
+
+/**
+ * Delivers a request to the X server
+ * @param c The connection
+ * @return A cookie
+ *
+ * Delivers a request to the X server.
+ * 
+ */
+
+/*****************************************************************************
+ **
+ ** xcb_void_cookie_t xcb_sync_reset_fence
+ ** 
+ ** @param xcb_connection_t *c
+ ** @param xcb_sync_fence_t  fence
+ ** @returns xcb_void_cookie_t
+ **
+ *****************************************************************************/
+ 
+xcb_void_cookie_t
+xcb_sync_reset_fence (xcb_connection_t *c  /**< */,
+                      xcb_sync_fence_t  fence  /**< */);
+
+/**
+ * Delivers a request to the X server
+ * @param c The connection
+ * @return A cookie
+ *
+ * Delivers a request to the X server.
+ * 
+ * This form can be used only if the request will not cause
+ * a reply to be generated. Any returned error will be
+ * saved for handling by xcb_request_check().
+ */
+
+/*****************************************************************************
+ **
+ ** xcb_void_cookie_t xcb_sync_destroy_fence_checked
+ ** 
+ ** @param xcb_connection_t *c
+ ** @param xcb_sync_fence_t  fence
+ ** @returns xcb_void_cookie_t
+ **
+ *****************************************************************************/
+ 
+xcb_void_cookie_t
+xcb_sync_destroy_fence_checked (xcb_connection_t *c  /**< */,
+                                xcb_sync_fence_t  fence  /**< */);
+
+/**
+ * Delivers a request to the X server
+ * @param c The connection
+ * @return A cookie
+ *
+ * Delivers a request to the X server.
+ * 
+ */
+
+/*****************************************************************************
+ **
+ ** xcb_void_cookie_t xcb_sync_destroy_fence
+ ** 
+ ** @param xcb_connection_t *c
+ ** @param xcb_sync_fence_t  fence
+ ** @returns xcb_void_cookie_t
+ **
+ *****************************************************************************/
+ 
+xcb_void_cookie_t
+xcb_sync_destroy_fence (xcb_connection_t *c  /**< */,
+                        xcb_sync_fence_t  fence  /**< */);
+
+/**
+ * Delivers a request to the X server
+ * @param c The connection
+ * @return A cookie
+ *
+ * Delivers a request to the X server.
+ * 
+ */
+
+/*****************************************************************************
+ **
+ ** xcb_sync_query_fence_cookie_t xcb_sync_query_fence
+ ** 
+ ** @param xcb_connection_t *c
+ ** @param xcb_sync_fence_t  fence
+ ** @returns xcb_sync_query_fence_cookie_t
+ **
+ *****************************************************************************/
+ 
+xcb_sync_query_fence_cookie_t
+xcb_sync_query_fence (xcb_connection_t *c  /**< */,
+                      xcb_sync_fence_t  fence  /**< */);
+
+/**
+ * Delivers a request to the X server
+ * @param c The connection
+ * @return A cookie
+ *
+ * Delivers a request to the X server.
+ * 
+ * This form can be used only if the request will cause
+ * a reply to be generated. Any returned error will be
+ * placed in the event queue.
+ */
+
+/*****************************************************************************
+ **
+ ** xcb_sync_query_fence_cookie_t xcb_sync_query_fence_unchecked
+ ** 
+ ** @param xcb_connection_t *c
+ ** @param xcb_sync_fence_t  fence
+ ** @returns xcb_sync_query_fence_cookie_t
+ **
+ *****************************************************************************/
+ 
+xcb_sync_query_fence_cookie_t
+xcb_sync_query_fence_unchecked (xcb_connection_t *c  /**< */,
+                                xcb_sync_fence_t  fence  /**< */);
+
+/**
+ * Return the reply
+ * @param c      The connection
+ * @param cookie The cookie
+ * @param e      The xcb_generic_error_t supplied
+ *
+ * Returns the reply of the request asked by
+ * 
+ * The parameter @p e supplied to this function must be NULL if
+ * xcb_sync_query_fence_unchecked(). is used.
+ * Otherwise, it stores the error if any.
+ *
+ * The returned value must be freed by the caller using free().
+ */
+
+/*****************************************************************************
+ **
+ ** xcb_sync_query_fence_reply_t * xcb_sync_query_fence_reply
+ ** 
+ ** @param xcb_connection_t               *c
+ ** @param xcb_sync_query_fence_cookie_t   cookie
+ ** @param xcb_generic_error_t           **e
+ ** @returns xcb_sync_query_fence_reply_t *
+ **
+ *****************************************************************************/
+ 
+xcb_sync_query_fence_reply_t *
+xcb_sync_query_fence_reply (xcb_connection_t               *c  /**< */,
+                            xcb_sync_query_fence_cookie_t   cookie  /**< */,
+                            xcb_generic_error_t           **e  /**< */);
+
+/**
+ * Delivers a request to the X server
+ * @param c The connection
+ * @return A cookie
+ *
+ * Delivers a request to the X server.
+ * 
+ * This form can be used only if the request will not cause
+ * a reply to be generated. Any returned error will be
+ * saved for handling by xcb_request_check().
+ */
+
+/*****************************************************************************
+ **
+ ** xcb_void_cookie_t xcb_sync_await_fence_checked
+ ** 
+ ** @param xcb_connection_t       *c
+ ** @param uint32_t                fence_list_len
+ ** @param const xcb_sync_fence_t *fence_list
+ ** @returns xcb_void_cookie_t
+ **
+ *****************************************************************************/
+ 
+xcb_void_cookie_t
+xcb_sync_await_fence_checked (xcb_connection_t       *c  /**< */,
+                              uint32_t                fence_list_len  /**< */,
+                              const xcb_sync_fence_t *fence_list  /**< */);
+
+/**
+ * Delivers a request to the X server
+ * @param c The connection
+ * @return A cookie
+ *
+ * Delivers a request to the X server.
+ * 
+ */
+
+/*****************************************************************************
+ **
+ ** xcb_void_cookie_t xcb_sync_await_fence
+ ** 
+ ** @param xcb_connection_t       *c
+ ** @param uint32_t                fence_list_len
+ ** @param const xcb_sync_fence_t *fence_list
+ ** @returns xcb_void_cookie_t
+ **
+ *****************************************************************************/
+ 
+xcb_void_cookie_t
+xcb_sync_await_fence (xcb_connection_t       *c  /**< */,
+                      uint32_t                fence_list_len  /**< */,
+                      const xcb_sync_fence_t *fence_list  /**< */);
 
 
 #ifdef __cplusplus

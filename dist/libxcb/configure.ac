@@ -3,18 +3,20 @@
 
 AC_PREREQ(2.57)
 AC_INIT([libxcb],
-        1.7,
+        1.8.1,
         [xcb@lists.freedesktop.org])
 AC_CONFIG_SRCDIR([xcb.pc.in])
 AM_INIT_AUTOMAKE([foreign dist-bzip2])
+m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
 
-AM_PATH_PYTHON([2.5])
+AM_PATH_PYTHON([2.6])
 
 PKG_CHECK_MODULES(CHECK, [check >= 0.9.4], [HAVE_CHECK=yes], [HAVE_CHECK=no])
 AM_CONDITIONAL(HAVE_CHECK, test x$HAVE_CHECK = xyes)
 
 AC_CONFIG_HEADERS([src/config.h])
 
+AC_LIBTOOL_WIN32_DLL
 AC_PROG_LIBTOOL
 AC_PROG_CC
 
@@ -32,7 +34,7 @@ fi
 AC_SUBST(HTML_CHECK_RESULT)
 
 # Checks for pkg-config packages
-PKG_CHECK_MODULES(XCBPROTO, xcb-proto >= 1.6)
+PKG_CHECK_MODULES(XCBPROTO, xcb-proto >= 1.7)
 NEEDED="pthread-stubs xau >= 0.99.2"
 PKG_CHECK_MODULES(NEEDED, $NEEDED)
 
@@ -72,11 +74,20 @@ AC_HEADER_STDC
 AC_SEARCH_LIBS(getaddrinfo, socket)
 AC_SEARCH_LIBS(connect, socket)
 
+have_win32="no"
+lt_enable_auto_import=""
 case $host_os in
+mingw*)
+	have_win32="yes"
+	lt_enable_auto_import="-Wl,--enable-auto-import"
+ 	;;
 linux*)
 	AC_DEFINE([HAVE_ABSTRACT_SOCKETS], 1, [Define if your platform supports abstract sockets])
 	;;
 esac
+
+AC_SUBST(lt_enable_auto_import)
+AM_CONDITIONAL([XCB_HAVE_WIN32], [test "x${have_win32}" = "xyes"])
 
 dnl define buffer queue size
 AC_ARG_WITH([queue-size],
@@ -94,6 +105,10 @@ AC_CHECK_MEMBER([struct sockaddr_un.sun_len],
 		[ #include <sys/types.h>
 		  #include <sys/un.h>
 		])
+
+dnl check for support for Solaris Trusted Extensions
+AC_CHECK_HEADERS([tsol/label.h])
+AC_CHECK_FUNCS([is_system_labeled])
 
 xcbincludedir='${includedir}/xcb'
 AC_SUBST(xcbincludedir)
@@ -120,9 +135,26 @@ AC_PREREQ([2.59c], [], [AC_SUBST([htmldir], [m4_ifset([AC_PACKAGE_TARNAME],
 
 XCB_CHECK_DOXYGEN()
 
+AC_CHECK_FUNC(getaddrinfo, [AC_DEFINE(HAVE_GETADDRINFO, 1, [getaddrinfo() function is available])], )
+
 case $host_os in
-	# darwin has poll() but can't be used to poll character devices (atleast through SnowLeopard)
-	darwin*) ;;
+	# darwin through Snow Leopard has poll() but can't be used to poll character devices.
+	darwin@<:@789@:>@*|darwin10*) ;;
+	darwin*)
+		_ac_xorg_macosx_version_min=""
+		if echo $CPPFLAGS $CFLAGS | grep -q mmacosx-version-min ; then
+			_ac_xorg_macosx_version_min=`echo $CPPFLAGS $CFLAGS | sed 's/^.*-mmacosx-version-min=\(@<:@^ @:>@*\).*$/\1/'`
+		else
+			_ac_xorg_macosx_version_min=$MACOSX_DEPLOYMENT_TARGET
+		fi
+		case $_ac_xorg_macosx_version_min in
+			10.@<:@0123456@:>@|10.@<:@0123456@:>@.*) ;;
+			*)
+				AC_CHECK_FUNC(poll, [AC_DEFINE(USE_POLL, 1, [poll() function is available])], )
+			;;
+		esac
+		unset _ac_xorg_macosx_version_min
+		;;
 	*)
 		AC_CHECK_FUNC(poll, [AC_DEFINE(USE_POLL, 1, [poll() function is available])], )
 	;;
@@ -146,6 +178,7 @@ XCB_EXTENSION(XFixes, "yes")
 XCB_EXTENSION(XFree86-DRI, "yes")
 XCB_EXTENSION(Xinerama, "yes")
 XCB_EXTENSION(XInput, "no")
+XCB_EXTENSION(XKB, "no")
 XCB_EXTENSION(Xprint, "yes")
 XCB_EXTENSION(SELinux, "no")
 XCB_EXTENSION(XTest, "yes")
@@ -189,6 +222,7 @@ xcb-xf86dri.pc
 xcb-xfixes.pc
 xcb-xinerama.pc
 xcb-xinput.pc
+xcb-xkb.pc
 xcb-xprint.pc
 xcb-xselinux.pc
 xcb-xtest.pc
@@ -232,6 +266,7 @@ echo "    Xfixes..............: ${BUILD_XFIXES}"
 echo "    Xfree86-dri.........: ${BUILD_XFREE86_DRI}"
 echo "    xinerama............: ${BUILD_XINERAMA}"
 echo "    xinput..............: ${BUILD_XINPUT}"
+echo "    xkb.................: ${BUILD_XKB}"
 echo "    xprint..............: ${BUILD_XPRINT}"
 echo "    xtest...............: ${BUILD_XTEST}"
 echo "    xv..................: ${BUILD_XV}"

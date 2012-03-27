@@ -6896,8 +6896,7 @@ xcb_list_fonts_with_info_reply (xcb_connection_t                   *c  /**< */,
  ** 
  ** @param xcb_connection_t *c
  ** @param uint16_t          font_qty
- ** @param uint32_t          path_len
- ** @param const char       *path
+ ** @param const xcb_str_t  *font
  ** @returns xcb_void_cookie_t
  **
  *****************************************************************************/
@@ -6905,8 +6904,7 @@ xcb_list_fonts_with_info_reply (xcb_connection_t                   *c  /**< */,
 xcb_void_cookie_t
 xcb_set_font_path_checked (xcb_connection_t *c  /**< */,
                            uint16_t          font_qty  /**< */,
-                           uint32_t          path_len  /**< */,
-                           const char       *path  /**< */)
+                           const xcb_str_t  *font  /**< */)
 {
     static const xcb_protocol_request_t xcb_req = {
         /* count */ 4,
@@ -6921,13 +6919,14 @@ xcb_set_font_path_checked (xcb_connection_t *c  /**< */,
     
     xcb_out.pad0 = 0;
     xcb_out.font_qty = font_qty;
+    memset(xcb_out.pad1, 0, 2);
     
     xcb_parts[2].iov_base = (char *) &xcb_out;
     xcb_parts[2].iov_len = sizeof(xcb_out);
     xcb_parts[3].iov_base = 0;
     xcb_parts[3].iov_len = -xcb_parts[2].iov_len & 3;
-    xcb_parts[4].iov_base = (char *) path;
-    xcb_parts[4].iov_len = path_len * sizeof(char);
+    xcb_parts[4].iov_base = (char *) font;
+    xcb_parts[4].iov_len = font_qty * sizeof(xcb_str_t);
     xcb_parts[5].iov_base = 0;
     xcb_parts[5].iov_len = -xcb_parts[4].iov_len & 3;
     xcb_ret.sequence = xcb_send_request(c, XCB_REQUEST_CHECKED, xcb_parts + 2, &xcb_req);
@@ -6941,8 +6940,7 @@ xcb_set_font_path_checked (xcb_connection_t *c  /**< */,
  ** 
  ** @param xcb_connection_t *c
  ** @param uint16_t          font_qty
- ** @param uint32_t          path_len
- ** @param const char       *path
+ ** @param const xcb_str_t  *font
  ** @returns xcb_void_cookie_t
  **
  *****************************************************************************/
@@ -6950,8 +6948,7 @@ xcb_set_font_path_checked (xcb_connection_t *c  /**< */,
 xcb_void_cookie_t
 xcb_set_font_path (xcb_connection_t *c  /**< */,
                    uint16_t          font_qty  /**< */,
-                   uint32_t          path_len  /**< */,
-                   const char       *path  /**< */)
+                   const xcb_str_t  *font  /**< */)
 {
     static const xcb_protocol_request_t xcb_req = {
         /* count */ 4,
@@ -6966,13 +6963,14 @@ xcb_set_font_path (xcb_connection_t *c  /**< */,
     
     xcb_out.pad0 = 0;
     xcb_out.font_qty = font_qty;
+    memset(xcb_out.pad1, 0, 2);
     
     xcb_parts[2].iov_base = (char *) &xcb_out;
     xcb_parts[2].iov_len = sizeof(xcb_out);
     xcb_parts[3].iov_base = 0;
     xcb_parts[3].iov_len = -xcb_parts[2].iov_len & 3;
-    xcb_parts[4].iov_base = (char *) path;
-    xcb_parts[4].iov_len = path_len * sizeof(char);
+    xcb_parts[4].iov_base = (char *) font;
+    xcb_parts[4].iov_len = font_qty * sizeof(xcb_str_t);
     xcb_parts[5].iov_base = 0;
     xcb_parts[5].iov_len = -xcb_parts[4].iov_len & 3;
     xcb_ret.sequence = xcb_send_request(c, 0, xcb_parts + 2, &xcb_req);
@@ -12384,6 +12382,7 @@ xcb_change_keyboard_mapping_checked (xcb_connection_t   *c  /**< */,
     xcb_out.keycode_count = keycode_count;
     xcb_out.first_keycode = first_keycode;
     xcb_out.keysyms_per_keycode = keysyms_per_keycode;
+    memset(xcb_out.pad0, 0, 2);
     
     xcb_parts[2].iov_base = (char *) &xcb_out;
     xcb_parts[2].iov_len = sizeof(xcb_out);
@@ -12432,6 +12431,7 @@ xcb_change_keyboard_mapping (xcb_connection_t   *c  /**< */,
     xcb_out.keycode_count = keycode_count;
     xcb_out.first_keycode = first_keycode;
     xcb_out.keysyms_per_keycode = keysyms_per_keycode;
+    memset(xcb_out.pad0, 0, 2);
     
     xcb_parts[2].iov_base = (char *) &xcb_out;
     xcb_parts[2].iov_len = sizeof(xcb_out);
@@ -13218,7 +13218,7 @@ xcb_get_screen_saver_reply (xcb_connection_t               *c  /**< */,
  ** @param uint8_t           mode
  ** @param uint8_t           family
  ** @param uint16_t          address_len
- ** @param const char       *address
+ ** @param const uint8_t    *address
  ** @returns xcb_void_cookie_t
  **
  *****************************************************************************/
@@ -13228,7 +13228,7 @@ xcb_change_hosts_checked (xcb_connection_t *c  /**< */,
                           uint8_t           mode  /**< */,
                           uint8_t           family  /**< */,
                           uint16_t          address_len  /**< */,
-                          const char       *address  /**< */)
+                          const uint8_t    *address  /**< */)
 {
     static const xcb_protocol_request_t xcb_req = {
         /* count */ 4,
@@ -13251,7 +13251,7 @@ xcb_change_hosts_checked (xcb_connection_t *c  /**< */,
     xcb_parts[3].iov_base = 0;
     xcb_parts[3].iov_len = -xcb_parts[2].iov_len & 3;
     xcb_parts[4].iov_base = (char *) address;
-    xcb_parts[4].iov_len = address_len * sizeof(char);
+    xcb_parts[4].iov_len = address_len * sizeof(uint8_t);
     xcb_parts[5].iov_base = 0;
     xcb_parts[5].iov_len = -xcb_parts[4].iov_len & 3;
     xcb_ret.sequence = xcb_send_request(c, XCB_REQUEST_CHECKED, xcb_parts + 2, &xcb_req);
@@ -13267,7 +13267,7 @@ xcb_change_hosts_checked (xcb_connection_t *c  /**< */,
  ** @param uint8_t           mode
  ** @param uint8_t           family
  ** @param uint16_t          address_len
- ** @param const char       *address
+ ** @param const uint8_t    *address
  ** @returns xcb_void_cookie_t
  **
  *****************************************************************************/
@@ -13277,7 +13277,7 @@ xcb_change_hosts (xcb_connection_t *c  /**< */,
                   uint8_t           mode  /**< */,
                   uint8_t           family  /**< */,
                   uint16_t          address_len  /**< */,
-                  const char       *address  /**< */)
+                  const uint8_t    *address  /**< */)
 {
     static const xcb_protocol_request_t xcb_req = {
         /* count */ 4,
@@ -13300,7 +13300,7 @@ xcb_change_hosts (xcb_connection_t *c  /**< */,
     xcb_parts[3].iov_base = 0;
     xcb_parts[3].iov_len = -xcb_parts[2].iov_len & 3;
     xcb_parts[4].iov_base = (char *) address;
-    xcb_parts[4].iov_len = address_len * sizeof(char);
+    xcb_parts[4].iov_len = address_len * sizeof(uint8_t);
     xcb_parts[5].iov_base = 0;
     xcb_parts[5].iov_len = -xcb_parts[4].iov_len & 3;
     xcb_ret.sequence = xcb_send_request(c, 0, xcb_parts + 2, &xcb_req);

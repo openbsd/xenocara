@@ -37,9 +37,15 @@
 #include "xcbint.h"
 #if USE_POLL
 #include <poll.h>
-#else
-#include <sys/select.h>
 #endif
+#ifndef _WIN32
+#include <sys/select.h>
+#include <sys/socket.h>
+#endif
+
+#ifdef _WIN32
+#include "xcb_windefs.h"
+#endif /* _WIN32 */
 
 #define XCB_ERROR 0
 #define XCB_REPLY 1
@@ -64,10 +70,21 @@ typedef struct pending_reply {
 } pending_reply;
 
 typedef struct reader_list {
-    unsigned int request;
+    uint64_t request;
     pthread_cond_t *data;
     struct reader_list *next;
 } reader_list;
+
+static void remove_finished_readers(reader_list **prev_reader, uint64_t completed)
+{
+    while(*prev_reader && XCB_SEQUENCE_COMPARE((*prev_reader)->request, <=, completed))
+    {
+        /* If you don't have what you're looking for now, you never
+         * will. Wake up and leave me alone. */
+        pthread_cond_signal((*prev_reader)->data);
+        *prev_reader = (*prev_reader)->next;
+    }
+}
 
 static int read_packet(xcb_connection_t *c)
 {
@@ -119,6 +136,8 @@ static int read_packet(xcb_connection_t *c)
 
         if(genrep.response_type == XCB_ERROR)
             c->in.request_completed = c->in.request_read;
+
+        remove_finished_readers(&c->in.readers, c->in.request_completed);
     }
 
     if(genrep.response_type == XCB_ERROR || genrep.response_type == XCB_REPLY)
@@ -143,14 +162,14 @@ static int read_packet(xcb_connection_t *c)
     }
 
     /* XGE events may have sizes > 32 */
-    if (genrep.response_type == XCB_XGE_EVENT)
+    if ((genrep.response_type & 0x7f) == XCB_XGE_EVENT)
         eventlength = genrep.length * 4;
 
     buf = malloc(length + eventlength +
             (genrep.response_type == XCB_REPLY ? 0 : sizeof(uint32_t)));
     if(!buf)
     {
-        _xcb_conn_shutdown(c);
+        _xcb_conn_shutdown(c, XCB_CONN_CLOSED_MEM_INSUFFICIENT);
         return 0;
     }
 
@@ -183,11 +202,10 @@ static int read_packet(xcb_connection_t *c)
     if( genrep.response_type == XCB_REPLY ||
        (genrep.response_type == XCB_ERROR && pend && (pend->flags & XCB_REQUEST_CHECKED)))
     {
-        reader_list *reader;
         struct reply_list *cur = malloc(sizeof(struct reply_list));
         if(!cur)
         {
-            _xcb_conn_shutdown(c);
+            _xcb_conn_shutdown(c, XCB_CONN_CLOSED_MEM_INSUFFICIENT);
             free(buf);
             return 0;
         }
@@ -195,17 +213,8 @@ static int read_packet(xcb_connection_t *c)
         cur->next = 0;
         *c->in.current_reply_tail = cur;
         c->in.current_reply_tail = &cur->next;
-        for(reader = c->in.readers; 
-	    reader && 
-	    XCB_SEQUENCE_COMPARE_32(reader->request, <=, c->in.request_read);
-	    reader = reader->next)
-	{
-            if(XCB_SEQUENCE_COMPARE_32(reader->request, ==, c->in.request_read))
-            {
-                pthread_cond_signal(reader->data);
-                break;
-            }
-	}
+        if(c->in.readers && c->in.readers->request == c->in.request_read)
+            pthread_cond_signal(c->in.readers->data);
         return 1;
     }
 
@@ -213,7 +222,7 @@ static int read_packet(xcb_connection_t *c)
     event = malloc(sizeof(struct event_list));
     if(!event)
     {
-        _xcb_conn_shutdown(c);
+        _xcb_conn_shutdown(c, XCB_CONN_CLOSED_MEM_INSUFFICIENT);
         free(buf);
         return 0;
     }
@@ -255,10 +264,14 @@ static int read_block(const int fd, void *buf, const ssize_t len)
     int done = 0;
     while(done < len)
     {
-        int ret = read(fd, ((char *) buf) + done, len - done);
+        int ret = recv(fd, ((char *) buf) + done, len - done, 0);
         if(ret > 0)
             done += ret;
+#ifndef _WIN32
         if(ret < 0 && errno == EAGAIN)
+#else
+        if(ret == SOCKET_ERROR && WSAGetLastError() == WSAEWOULDBLOCK)
+#endif /* !_Win32 */
         {
 #if USE_POLL
             struct pollfd pfd;
@@ -272,10 +285,13 @@ static int read_block(const int fd, void *buf, const ssize_t len)
             fd_set fds;
             FD_ZERO(&fds);
             FD_SET(fd, &fds);
+
+	    /* Initializing errno here makes sure that for Win32 this loop will execute only once */
+	    errno = 0;  
 	    do {
 		ret = select(fd + 1, &fds, 0, 0, 0);
 	    } while (ret == -1 && errno == EINTR);
-#endif
+#endif /* USE_POLL */
         }
         if(ret <= 0)
             return ret;
@@ -283,7 +299,7 @@ static int read_block(const int fd, void *buf, const ssize_t len)
     return len;
 }
 
-static int poll_for_reply(xcb_connection_t *c, unsigned int request, void **reply, xcb_generic_error_t **error)
+static int poll_for_reply(xcb_connection_t *c, uint64_t request, void **reply, xcb_generic_error_t **error)
 {
     struct reply_list *head;
 
@@ -292,7 +308,7 @@ static int poll_for_reply(xcb_connection_t *c, unsigned int request, void **repl
         head = 0;
     /* We've read requests past the one we want, so if it has replies we have
      * them all and they're in the replies map. */
-    else if(XCB_SEQUENCE_COMPARE_32(request, <, c->in.request_read))
+    else if(XCB_SEQUENCE_COMPARE(request, <, c->in.request_read))
     {
         head = _xcb_map_remove(c->in.replies, request);
         if(head && head->next)
@@ -300,7 +316,7 @@ static int poll_for_reply(xcb_connection_t *c, unsigned int request, void **repl
     }
     /* We're currently processing the responses to the request we want, and we
      * have a reply ready to return. So just return it without blocking. */
-    else if(XCB_SEQUENCE_COMPARE_32(request, ==, c->in.request_read) && c->in.current_reply)
+    else if(request == c->in.request_read && c->in.current_reply)
     {
         head = c->in.current_reply;
         c->in.current_reply = head->next;
@@ -309,7 +325,7 @@ static int poll_for_reply(xcb_connection_t *c, unsigned int request, void **repl
     }
     /* We know this request can't have any more replies, and we've already
      * established it doesn't have a reply now. Don't bother blocking. */
-    else if(XCB_SEQUENCE_COMPARE_32(request, ==, c->in.request_completed))
+    else if(request == c->in.request_completed)
         head = 0;
     /* We may have more replies on the way for this request: block until we're
      * sure. */
@@ -338,61 +354,70 @@ static int poll_for_reply(xcb_connection_t *c, unsigned int request, void **repl
     return 1;
 }
 
+static void insert_reader(reader_list **prev_reader, reader_list *reader, uint64_t request, pthread_cond_t *cond)
+{
+    while(*prev_reader && XCB_SEQUENCE_COMPARE((*prev_reader)->request, <=, request))
+        prev_reader = &(*prev_reader)->next;
+    reader->request = request;
+    reader->data = cond;
+    reader->next = *prev_reader;
+    *prev_reader = reader;
+}
+
+static void remove_reader(reader_list **prev_reader, reader_list *reader)
+{
+    while(*prev_reader && XCB_SEQUENCE_COMPARE((*prev_reader)->request, <=, reader->request))
+        if(*prev_reader == reader)
+        {
+            *prev_reader = (*prev_reader)->next;
+            break;
+        }
+}
+
+static void *wait_for_reply(xcb_connection_t *c, uint64_t request, xcb_generic_error_t **e)
+{
+    void *ret = 0;
+
+    /* If this request has not been written yet, write it. */
+    if(c->out.return_socket || _xcb_out_flush_to(c, request))
+    {
+        pthread_cond_t cond = PTHREAD_COND_INITIALIZER;
+        reader_list reader;
+
+        insert_reader(&c->in.readers, &reader, request, &cond);
+
+        while(!poll_for_reply(c, request, &ret, e))
+            if(!_xcb_conn_wait(c, &cond, 0, 0))
+                break;
+
+        remove_reader(&c->in.readers, &reader);
+        pthread_cond_destroy(&cond);
+    }
+
+    _xcb_in_wake_up_next_reader(c);
+    return ret;
+}
+
+static uint64_t widen(xcb_connection_t *c, unsigned int request)
+{
+    uint64_t widened_request = (c->out.request & UINT64_C(0xffffffff00000000)) | request;
+    if(widened_request > c->out.request)
+        widened_request -= UINT64_C(1) << 32;
+    return widened_request;
+}
+
 /* Public interface */
 
 void *xcb_wait_for_reply(xcb_connection_t *c, unsigned int request, xcb_generic_error_t **e)
 {
-    uint64_t widened_request;
-    void *ret = 0;
+    void *ret;
     if(e)
         *e = 0;
     if(c->has_error)
         return 0;
 
     pthread_mutex_lock(&c->iolock);
-
-    widened_request = (c->out.request & UINT64_C(0xffffffff00000000)) | request;
-    if(widened_request > c->out.request)
-        widened_request -= UINT64_C(1) << 32;
-
-    /* If this request has not been written yet, write it. */
-    if(c->out.return_socket || _xcb_out_flush_to(c, widened_request))
-    {
-        pthread_cond_t cond = PTHREAD_COND_INITIALIZER;
-        reader_list reader;
-        reader_list **prev_reader;
-
-        for(prev_reader = &c->in.readers; 
-	    *prev_reader && 
-	    XCB_SEQUENCE_COMPARE_32((*prev_reader)->request, <=, request);
-	    prev_reader = &(*prev_reader)->next)
-	{
-            /* empty */;
-	}
-        reader.request = request;
-        reader.data = &cond;
-        reader.next = *prev_reader;
-        *prev_reader = &reader;
-
-        while(!poll_for_reply(c, request, &ret, e))
-            if(!_xcb_conn_wait(c, &cond, 0, 0))
-                break;
-
-        for(prev_reader = &c->in.readers;
-	    *prev_reader && 
-	    XCB_SEQUENCE_COMPARE_32((*prev_reader)->request, <=, request);
-	    prev_reader = &(*prev_reader)->next)
-	{
-            if(*prev_reader == &reader)
-            {
-                *prev_reader = (*prev_reader)->next;
-                break;
-            }
-	}
-        pthread_cond_destroy(&cond);
-    }
-
-    _xcb_in_wake_up_next_reader(c);
+    ret = wait_for_reply(c, widen(c, request), e);
     pthread_mutex_unlock(&c->iolock);
     return ret;
 }
@@ -403,7 +428,7 @@ static void insert_pending_discard(xcb_connection_t *c, pending_reply **prev_nex
     pend = malloc(sizeof(*pend));
     if(!pend)
     {
-        _xcb_conn_shutdown(c);
+        _xcb_conn_shutdown(c, XCB_CONN_CLOSED_MEM_INSUFFICIENT);
         return;
     }
 
@@ -418,66 +443,27 @@ static void insert_pending_discard(xcb_connection_t *c, pending_reply **prev_nex
         c->in.pending_replies_tail = &pend->next;
 }
 
-static void discard_reply(xcb_connection_t *c, unsigned int request)
+static void discard_reply(xcb_connection_t *c, uint64_t request)
 {
-    pending_reply *pend = 0;
+    void *reply;
     pending_reply **prev_pend;
-    uint64_t widened_request;
 
-    /* We've read requests past the one we want, so if it has replies we have
-     * them all and they're in the replies map. */
-    if(XCB_SEQUENCE_COMPARE_32(request, <, c->in.request_read))
-    {
-        struct reply_list *head;
-        head = _xcb_map_remove(c->in.replies, request);
-        while (head)
-        {
-            struct reply_list *next = head->next;
-            free(head->reply);
-            free(head);
-            head = next;
-        }
+    /* Free any replies or errors that we've already read. Stop if
+     * xcb_wait_for_reply would block or we've run out of replies. */
+    while(poll_for_reply(c, request, &reply, 0) && reply)
+        free(reply);
+
+    /* If we've proven there are no more responses coming, we're done. */
+    if(XCB_SEQUENCE_COMPARE(request, <=, c->in.request_completed))
         return;
-    }
-
-    /* We're currently processing the responses to the request we want, and we
-     * have a reply ready to return. Free it, and mark the pend to free any further
-     * replies. */
-    if(XCB_SEQUENCE_COMPARE_32(request, ==, c->in.request_read) && c->in.current_reply)
-    {
-        struct reply_list *head;
-        head = c->in.current_reply;
-        c->in.current_reply = NULL;
-        c->in.current_reply_tail = &c->in.current_reply;
-        while (head)
-        {
-            struct reply_list *next = head->next;
-            free(head->reply);
-            free(head);
-            head = next;
-        }
-
-        pend = c->in.pending_replies;
-        if(pend &&
-            !(XCB_SEQUENCE_COMPARE(pend->first_request, <=, c->in.request_read) &&
-             (pend->workaround == WORKAROUND_EXTERNAL_SOCKET_OWNER ||
-              XCB_SEQUENCE_COMPARE(c->in.request_read, <=, pend->last_request))))
-            pend = 0;
-        if(pend)
-            pend->flags |= XCB_REQUEST_DISCARD_REPLY;
-        else
-            insert_pending_discard(c, &c->in.pending_replies, c->in.request_read);
-
-        return;
-    }
 
     /* Walk the list of pending requests. Mark the first match for deletion. */
     for(prev_pend = &c->in.pending_replies; *prev_pend; prev_pend = &(*prev_pend)->next)
     {
-        if(XCB_SEQUENCE_COMPARE_32((*prev_pend)->first_request, >, request))
+        if(XCB_SEQUENCE_COMPARE((*prev_pend)->first_request, >, request))
             break;
 
-        if(XCB_SEQUENCE_COMPARE_32((*prev_pend)->first_request, ==, request))
+        if((*prev_pend)->first_request == request)
         {
             /* Pending reply found. Mark for discard: */
             (*prev_pend)->flags |= XCB_REQUEST_DISCARD_REPLY;
@@ -486,11 +472,7 @@ static void discard_reply(xcb_connection_t *c, unsigned int request)
     }
 
     /* Pending reply not found (likely due to _unchecked request). Create one: */
-    widened_request = (c->out.request & UINT64_C(0xffffffff00000000)) | request;
-    if(widened_request > c->out.request)
-        widened_request -= UINT64_C(1) << 32;
-
-    insert_pending_discard(c, prev_pend, widened_request);
+    insert_pending_discard(c, prev_pend, request);
 }
 
 void xcb_discard_reply(xcb_connection_t *c, unsigned int sequence)
@@ -503,7 +485,7 @@ void xcb_discard_reply(xcb_connection_t *c, unsigned int sequence)
         return;
 
     pthread_mutex_lock(&c->iolock);
-    discard_reply(c, sequence);
+    discard_reply(c, widen(c, sequence));
     pthread_mutex_unlock(&c->iolock);
 }
 
@@ -519,7 +501,7 @@ int xcb_poll_for_reply(xcb_connection_t *c, unsigned int request, void **reply, 
     }
     assert(reply != 0);
     pthread_mutex_lock(&c->iolock);
-    ret = poll_for_reply(c, request, reply, error);
+    ret = poll_for_reply(c, widen(c, request), reply, error);
     pthread_mutex_unlock(&c->iolock);
     return ret;
 }
@@ -540,7 +522,7 @@ xcb_generic_event_t *xcb_wait_for_event(xcb_connection_t *c)
     return ret;
 }
 
-xcb_generic_event_t *xcb_poll_for_event(xcb_connection_t *c)
+static xcb_generic_event_t *poll_for_next_event(xcb_connection_t *c, int queued)
 {
     xcb_generic_event_t *ret = 0;
     if(!c->has_error)
@@ -548,30 +530,41 @@ xcb_generic_event_t *xcb_poll_for_event(xcb_connection_t *c)
         pthread_mutex_lock(&c->iolock);
         /* FIXME: follow X meets Z architecture changes. */
         ret = get_event(c);
-        if(!ret && _xcb_in_read(c)) /* _xcb_in_read shuts down the connection on error */
+        if(!ret && !queued && c->in.reading == 0 && _xcb_in_read(c)) /* _xcb_in_read shuts down the connection on error */
             ret = get_event(c);
         pthread_mutex_unlock(&c->iolock);
     }
     return ret;
 }
 
+xcb_generic_event_t *xcb_poll_for_event(xcb_connection_t *c)
+{
+    return poll_for_next_event(c, 0);
+}
+
+xcb_generic_event_t *xcb_poll_for_queued_event(xcb_connection_t *c)
+{
+    return poll_for_next_event(c, 1);
+}
+
 xcb_generic_error_t *xcb_request_check(xcb_connection_t *c, xcb_void_cookie_t cookie)
 {
-    /* FIXME: this could hold the lock to avoid syncing unnecessarily, but
-     * that would require factoring the locking out of xcb_get_input_focus,
-     * xcb_get_input_focus_reply, and xcb_wait_for_reply. */
-    xcb_generic_error_t *ret;
+    uint64_t request;
+    xcb_generic_error_t *ret = 0;
     void *reply;
     if(c->has_error)
         return 0;
-    if(XCB_SEQUENCE_COMPARE_32(cookie.sequence,>=,c->in.request_expected)
-       && XCB_SEQUENCE_COMPARE_32(cookie.sequence,>,c->in.request_completed))
+    pthread_mutex_lock(&c->iolock);
+    request = widen(c, cookie.sequence);
+    if(XCB_SEQUENCE_COMPARE(request, >=, c->in.request_expected)
+       && XCB_SEQUENCE_COMPARE(request, >, c->in.request_completed))
     {
-        free(xcb_get_input_focus_reply(c, xcb_get_input_focus(c), &ret));
-        assert(!ret);
+        _xcb_out_send_sync(c);
+        _xcb_out_flush_to(c, c->out.request);
     }
-    reply = xcb_wait_for_reply(c, cookie.sequence, &ret);
+    reply = wait_for_reply(c, request, &ret);
     assert(!reply);
+    pthread_mutex_unlock(&c->iolock);
     return ret;
 }
 
@@ -635,7 +628,7 @@ int _xcb_in_expect_reply(xcb_connection_t *c, uint64_t request, enum workarounds
     assert(workaround != WORKAROUND_NONE || flags != 0);
     if(!pend)
     {
-        _xcb_conn_shutdown(c);
+        _xcb_conn_shutdown(c, XCB_CONN_CLOSED_MEM_INSUFFICIENT);
         return 0;
     }
     pend->first_request = pend->last_request = request;
@@ -663,14 +656,18 @@ void _xcb_in_replies_done(xcb_connection_t *c)
 
 int _xcb_in_read(xcb_connection_t *c)
 {
-    int n = read(c->fd, c->in.queue + c->in.queue_len, sizeof(c->in.queue) - c->in.queue_len);
+    int n = recv(c->fd, c->in.queue + c->in.queue_len, sizeof(c->in.queue) - c->in.queue_len, 0);
     if(n > 0)
         c->in.queue_len += n;
     while(read_packet(c))
         /* empty */;
+#ifndef _WIN32
     if((n > 0) || (n < 0 && errno == EAGAIN))
+#else
+    if((n > 0) || (n < 0 && WSAGetLastError() == WSAEWOULDBLOCK))
+#endif /* !_WIN32 */
         return 1;
-    _xcb_conn_shutdown(c);
+    _xcb_conn_shutdown(c, XCB_CONN_ERROR);
     return 0;
 }
 
@@ -689,7 +686,7 @@ int _xcb_in_read_block(xcb_connection_t *c, void *buf, int len)
         int ret = read_block(c->fd, (char *) buf + done, len - done);
         if(ret <= 0)
         {
-            _xcb_conn_shutdown(c);
+            _xcb_conn_shutdown(c, XCB_CONN_ERROR);
             return ret;
         }
     }

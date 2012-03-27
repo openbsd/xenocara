@@ -27,27 +27,35 @@
 
 #include <assert.h>
 #include <sys/types.h>
-#include <sys/socket.h>
 #include <limits.h>
-#include <sys/un.h>
-#include <netinet/in.h>
-#include <netinet/tcp.h>
-#ifdef DNETCONN
-#include <netdnet/dnetdb.h>
-#include <netdnet/dn.h>
-#endif
-#include <netdb.h>
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <stddef.h>
 #include <unistd.h>
-#include <fcntl.h>
 #include <string.h>
+
+#ifdef _WIN32
+#include "xcb_windefs.h"
+#else
+#include <arpa/inet.h>
+#include <sys/socket.h>
+#include <sys/un.h>
+#include <netinet/in.h>
+#include <netinet/tcp.h>
+#include <fcntl.h>
+#include <netdb.h>
+#endif /* _WIN32 */
 
 #include "xcb.h"
 #include "xcbext.h"
 #include "xcbint.h"
+
+/* must be after "xcbint.h" to get autoconf #defines */
+#if defined(HAVE_TSOL_LABEL_H) && defined(HAVE_IS_SYSTEM_LABELED)
+# include <tsol/label.h>
+# include <sys/stat.h>
+#endif
 
 int xcb_popcount(uint32_t mask)
 {
@@ -55,6 +63,16 @@ int xcb_popcount(uint32_t mask)
     y = (mask >> 1) & 033333333333;
     y = mask - y - ((y >> 1) & 033333333333);
     return ((y + (y >> 3)) & 030707070707) % 077;
+}
+
+int xcb_sumof(uint8_t *list, int len)
+{
+  int i, s = 0;
+  for(i=0; i<len; i++) {
+    s += *list;
+    list++;
+  }
+  return s;
 }
 
 static int _xcb_parse_display(const char *name, char **host, char **protocol,
@@ -137,10 +155,9 @@ int xcb_parse_display(const char *name, char **host, int *displayp,
 }
 
 static int _xcb_open_tcp(const char *host, char *protocol, const unsigned short port);
+#ifndef _WIN32
 static int _xcb_open_unix(char *protocol, const char *file);
-#ifdef DNETCONN
-static int _xcb_open_decnet(const char *host, char *protocol, const unsigned short port);
-#endif
+#endif /* !WIN32 */
 #ifdef HAVE_ABSTRACT_SOCKETS
 static int _xcb_open_abstract(char *protocol, const char *file, size_t filelen);
 #endif
@@ -155,36 +172,37 @@ static int _xcb_open(const char *host, char *protocol, const int display)
     int actual_filelen;
 
 #ifdef HAVE_LAUNCHD
-        if(strncmp(host, "/tmp/launch", 11) == 0) {
-		base = host;
-		host = "";
-		protocol = NULL;
-        }
-#endif
-
-    if(*host || protocol)
-    {
-#ifdef DNETCONN
-        /* DECnet displays have two colons, so _xcb_parse_display will have
-           left one at the end.  However, an IPv6 address can end with *two*
-           colons, so only treat this as a DECnet display if host ends with
-           exactly one colon. */
-        char *colon = strchr(host, ':');
-        if(colon && *(colon+1) == '\0')
-        {
-            *colon = '\0';
-            return _xcb_open_decnet(host, protocol, display);
-        }
-        else
-#endif
-            if (protocol
-                || strcmp("unix",host)) { /* follow the old unix: rule */
-
-                /* display specifies TCP */
-                unsigned short port = X_TCP_PORT + display;
-                return _xcb_open_tcp(host, protocol, port);
-            }
+    if(strncmp(host, "/tmp/launch", 11) == 0) {
+        base = host;
+        host = "";
+        protocol = NULL;
     }
+#endif
+
+    /* If protocol or host is "unix", fall through to Unix socket code below */
+    if ((!protocol || (strcmp("unix",protocol) != 0)) &&
+        (*host != '\0') && (strcmp("unix",host) != 0))
+    {
+        /* display specifies TCP */
+        unsigned short port = X_TCP_PORT + display;
+        return _xcb_open_tcp(host, protocol, port);
+    }
+
+#ifndef _WIN32
+#if defined(HAVE_TSOL_LABEL_H) && defined(HAVE_IS_SYSTEM_LABELED)
+    /* Check special path for Unix sockets under Solaris Trusted Extensions */
+    if (is_system_labeled())
+    {
+        struct stat sbuf;
+        const char *tsol_base = "/var/tsol/doors/.X11-unix/X";
+        char tsol_socket[PATH_MAX];
+
+        snprintf(tsol_socket, sizeof(tsol_socket), "%s%d", tsol_base, display);
+
+        if (stat(tsol_socket, &sbuf) == 0)
+            base = tsol_base;
+    }
+#endif
 
     filelen = strlen(base) + 1 + sizeof(display) * 3 + 1;
     file = malloc(filelen);
@@ -217,7 +235,14 @@ static int _xcb_open(const char *host, char *protocol, const int display)
     fd = _xcb_open_unix(protocol, file);
     free(file);
 
+    if (fd < 0 && !protocol && *host == '\0') {
+	    unsigned short port = X_TCP_PORT + display;
+	    fd = _xcb_open_tcp(host, protocol, port);
+    }
+
     return fd;
+#endif /* !_WIN32 */
+    return -1; /* if control reaches here then something has gone wrong */
 }
 
 static int _xcb_socket(int family, int type, int proto)
@@ -230,59 +255,36 @@ static int _xcb_socket(int family, int type, int proto)
 #endif
     {
 	fd = socket(family, type, proto);
+#ifndef _WIN32
 	if (fd >= 0)
 	    fcntl(fd, F_SETFD, FD_CLOEXEC);
-    }
-    return fd;
-}
-
-#ifdef DNETCONN
-static int _xcb_open_decnet(const char *host, const char *protocol, const unsigned short port)
-{
-    int fd;
-    struct sockaddr_dn addr;
-    struct accessdata_dn accessdata;
-    struct nodeent *nodeaddr = getnodebyname(host);
-
-    if(!nodeaddr)
-        return -1;
-    if (protocol && strcmp("dnet",protocol))
-        return -1;
-    addr.sdn_family = AF_DECnet;
-
-    addr.sdn_add.a_len = nodeaddr->n_length;
-    memcpy(addr.sdn_add.a_addr, nodeaddr->n_addr, addr.sdn_add.a_len);
-
-    addr.sdn_objnamel = sprintf((char *)addr.sdn_objname, "X$X%d", port);
-    if(addr.sdn_objnamel < 0)
-        return -1;
-    addr.sdn_objnum = 0;
-
-    fd = _xcb_socket(PF_DECnet, SOCK_STREAM, 0);
-    if(fd == -1)
-        return -1;
-
-    memset(&accessdata, 0, sizeof(accessdata));
-    accessdata.acc_accl = sprintf((char*)accessdata.acc_acc, "%d", getuid());
-    if(accessdata.acc_accl < 0)
-        return -1;
-    setsockopt(fd, DNPROTO_NSP, SO_CONACCESS, &accessdata, sizeof(accessdata));
-
-    if(connect(fd, (struct sockaddr *) &addr, sizeof(addr)) == -1) {
-        close(fd);
-        return -1;
-    }
-    return fd;
-}
 #endif
+    }
+    return fd;
+}
+
+
+static int _xcb_do_connect(int fd, const struct sockaddr* addr, int addrlen) {
+	int on = 1;
+
+	if(fd < 0)
+		return -1;
+
+	setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, &on, sizeof(on));
+	setsockopt(fd, SOL_SOCKET, SO_KEEPALIVE, &on, sizeof(on));
+
+	return connect(fd, addr, addrlen);
+}
 
 static int _xcb_open_tcp(const char *host, char *protocol, const unsigned short port)
 {
     int fd = -1;
+#if HAVE_GETADDRINFO
     struct addrinfo hints;
     char service[6]; /* "65535" with the trailing '\0' */
     struct addrinfo *results, *addr;
     char *bracket;
+#endif
 
     if (protocol && strcmp("tcp",protocol) && strcmp("inet",protocol)
 #ifdef AF_INET6
@@ -294,10 +296,8 @@ static int _xcb_open_tcp(const char *host, char *protocol, const unsigned short 
     if (*host == '\0')
 	host = "localhost";
 
+#if HAVE_GETADDRINFO
     memset(&hints, 0, sizeof(hints));
-#ifdef AI_ADDRCONFIG
-    hints.ai_flags |= AI_ADDRCONFIG;
-#endif
 #ifdef AI_NUMERICSERV
     hints.ai_flags |= AI_NUMERICSERV;
 #endif
@@ -323,21 +323,45 @@ static int _xcb_open_tcp(const char *host, char *protocol, const unsigned short 
     for(addr = results; addr; addr = addr->ai_next)
     {
         fd = _xcb_socket(addr->ai_family, addr->ai_socktype, addr->ai_protocol);
-        if(fd >= 0) {
-            int on = 1;
-            setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, &on, sizeof(on));
-	    setsockopt(fd, SOL_SOCKET, SO_KEEPALIVE, &on, sizeof(on));
-
-            if (connect(fd, addr->ai_addr, addr->ai_addrlen) >= 0)
-                break;
-            close(fd);
-            fd = -1;
-        }
+        if (_xcb_do_connect(fd, addr->ai_addr, addr->ai_addrlen) >= 0)
+            break;
+        close(fd);
+        fd = -1;
     }
     freeaddrinfo(results);
     return fd;
+#else
+    {
+        struct hostent* _h;
+        struct sockaddr_in _s;
+        struct in_addr ** _c;
+
+        if((_h = gethostbyname(host)) == NULL)
+            return -1;
+
+        _c = (struct in_addr**)_h->h_addr_list;
+        fd = -1;
+
+        while(*_c) {
+            _s.sin_family = AF_INET;
+            _s.sin_port = htons(port);
+            _s.sin_addr = *(*_c);
+
+            fd = _xcb_socket(_s.sin_family, SOCK_STREAM, 0);
+            if(_xcb_do_connect(fd, (struct sockaddr*)&_s, sizeof(_s)) >= 0)
+                break;
+
+            close(fd);
+            fd = -1;
+            ++_c;
+        }
+
+        return fd;
+    }
+#endif
 }
 
+#ifndef _WIN32
 static int _xcb_open_unix(char *protocol, const char *file)
 {
     int fd;
@@ -360,6 +384,7 @@ static int _xcb_open_unix(char *protocol, const char *file)
     }
     return fd;
 }
+#endif /* !_WIN32 */
 
 #ifdef HAVE_ABSTRACT_SOCKETS
 static int _xcb_open_abstract(char *protocol, const char *file, size_t filelen)
@@ -404,13 +429,24 @@ xcb_connection_t *xcb_connect_to_display_with_auth_info(const char *displayname,
     int parsed = _xcb_parse_display(displayname, &host, &protocol, &display, screenp);
     
     if(!parsed) {
-        c = (xcb_connection_t *) &error_connection;
+        c = _xcb_conn_ret_error(XCB_CONN_CLOSED_PARSE_ERR);
         goto out;
-    } else
+    } else {
+#ifdef _WIN32
+        WSADATA wsaData;
+        if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0) {
+            c = _xcb_conn_ret_error(XCB_CONN_ERROR);
+            goto out;
+        }
+#endif
         fd = _xcb_open(host, protocol, display);
+    }
 
     if(fd == -1) {
-        c = (xcb_connection_t *) &error_connection;
+        c = _xcb_conn_ret_error(XCB_CONN_ERROR);
+#ifdef _WIN32
+        WSACleanup();
+#endif
         goto out;
     }
 
