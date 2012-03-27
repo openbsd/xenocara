@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.4 2010/04/18 19:55:51 matthieu Exp $
+#	$OpenBSD: Makefile,v 1.5 2012/03/27 19:12:47 matthieu Exp $
 
 PKGCONFIG=	xcb-proto.pc
 
@@ -21,6 +21,7 @@ FILES= \
 	sync.xml \
 	xc_misc.xml \
 	xevie.xml \
+	xkb.xml \
 	xf86dri.xml \
 	xfixes.xml \
 	xinerama.xml \
