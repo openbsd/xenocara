@@ -4,7 +4,7 @@
      The sections in this appendix correspond to their
      number counterparts in the protocol document.
 -->
-<sect1  id="syntactic_conventions_b">
+<sect1 id='Syntactic_Conventions_b'>
 <title>Syntactic Conventions</title>
 
 <para>
@@ -276,9 +276,9 @@ and pad(E) is the number of bytes needed to round E up to a multiple of four.
 </literallayout>
 </sect1>
 
-<sect1 id="common_types_encoding">
+<sect1 id='Encoding::Common_Types'>
 <title>Common Types</title>
-<indexterm zone="common_types_encoding"><primary>Types</primary><secondary>encoding</secondary></indexterm>
+<indexterm zone="Encoding::Common_Types"><primary>Types</primary><secondary>encoding</secondary></indexterm>
 
 <variablelist>
   <varlistentry>
@@ -303,100 +303,100 @@ the set.
 </variablelist>
 
 <informaltable frame='none'>
-  <tgroup cols='1' align='left'>
-  <colspec colname='c1' colsep="0"/>
+  <tgroup cols='1' align='left' colsep='0' rowsep='0'>
+  <colspec colname='c1' colwidth='1.0*'/>
   <tbody>
-    <row rowsep='0'>
+    <row>
       <entry>
 BITMASK: CARD32
       </entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry>
 WINDOW: CARD32
       </entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry>
 PIXMAP: CARD32
       </entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry>
 CURSOR: CARD32
       </entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry>
 FONT: CARD32
       </entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry>
 GCONTEXT: CARD32
       </entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry>
 COLORMAP: CARD32
       </entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry>
 DRAWABLE: CARD32
       </entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry>
 FONTABLE: CARD32
       </entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry>
 ATOM: CARD32
       </entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry>
 VISUALID: CARD32
       </entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry>
 BYTE: 8-bit value
       </entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry>
 INT8: 8-bit signed integer
       </entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry>
 INT16: 16-bit signed integer
       </entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry>
 INT32: 32-bit signed integer
       </entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry>
 CARD8: 8-bit unsigned integer
       </entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry>
 CARD16: 16-bit unsigned integer
       </entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry>
 CARD32: 32-bit unsigned integer
       </entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry>
 TIMESTAMP: CARD32
       </entry>
@@ -540,9 +540,9 @@ STR
 </literallayout>
 </sect1>
 
-<sect1 id="errors_encoding">
+<sect1 id='Encoding::Errors'>
 <title>Errors</title>
-<indexterm zone="errors_encoding"><primary>Error report</primary><secondary>encoding</secondary></indexterm>
+<indexterm zone="Encoding::Errors"><primary>Error report</primary><secondary>encoding</secondary></indexterm>
 
 <literallayout class="monospaced">
 <emphasis role='bold'>Request</emphasis>
@@ -700,7 +700,7 @@ STR
 </literallayout>
 </sect1>
 
-<sect1 id="keyboards_encoding">
+<sect1 id='Encoding::Keyboards'>
 <title>Keyboards</title>
 
 <para>
@@ -717,7 +717,7 @@ The names and encodings of the standard KEYSYM values are contained in
 </para>
 </sect1>
 
-<sect1 id="pointers_encoding">
+<sect1 id='Encoding::Pointers'>
 <title>Pointers</title>
 
 <para>
@@ -725,9 +725,9 @@ BUTTON values are numbered starting with one.
 </para>
 
 </sect1>
-<sect1 id="predefined">
+<sect1 id='Encoding::Predefined_Atoms'>
 <title>Predefined Atoms</title>
-<indexterm zone="predefined"><primary>Atom</primary><secondary>predefined</secondary></indexterm>
+<indexterm zone="Encoding::Predefined_Atoms"><primary>Atom</primary><secondary>predefined</secondary></indexterm>
 
 <literallayout class="monospaced">
 PRIMARY           1      WM_NORMAL_HINTS     40
@@ -772,7 +772,7 @@ WM_NAME           39
 </literallayout>
 </sect1>
 
-<sect1 id="connection_setup_encoding">
+<sect1 id='Encoding::Connection_Setup'>
 <title>Connection Setup</title>
 
 <para>
@@ -938,9 +938,9 @@ VISUALTYPE
 </literallayout>
 </sect1>
 
-<sect1 id="requests_encoding">
+<sect1 id='Encoding::Requests'>
 <title>Requests</title>
-<indexterm zone="requests_encoding"><primary>Request</primary><secondary>encoding</secondary></indexterm>
+<indexterm zone="Encoding::Requests"><primary>Request</primary><secondary>encoding</secondary></indexterm>
 
 <literallayout class="monospaced">
 <link linkend="requests:CreateWindow"><emphasis role='bold'>CreateWindow</emphasis></link>
@@ -1332,7 +1332,7 @@ VISUALTYPE
           1     InputFocus
      4     SETofEVENT                      event-mask
      32                                    event
-          standard event format (see <link linkend="events_encoding">the Events section</link>)
+          standard event format (see <link linkend='Events'>the Events section</link>)
 
 <link linkend="requests:GrabPointer"><emphasis role='bold'>GrabPointer</emphasis></link>
      1     26                              opcode
@@ -2796,9 +2796,9 @@ VISUALTYPE
 </literallayout>
 </sect1>
 
-<sect1 id="events_encoding">
+<sect1 id='Encoding::Events'>
 <title>Events</title>
-<indexterm zone="events_encoding"><primary>Event</primary><secondary>encoding</secondary></indexterm>
+<indexterm zone="Encoding::Events"><primary>Event</primary><secondary>encoding</secondary></indexterm>
 
 <literallayout class="monospaced">
 <link linkend="events:KeyPress"><emphasis role='bold'>KeyPress</emphasis></link>
