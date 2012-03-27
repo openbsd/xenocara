@@ -1,4 +1,4 @@
-# $OpenBSD: MODULES,v 1.206 2012/03/24 17:04:46 matthieu Exp $
+# $OpenBSD: MODULES,v 1.207 2012/03/27 19:59:53 matthieu Exp $
 #
 # X.Org maintained modules
 #
@@ -173,7 +173,7 @@ font/xfree86-type1		1.0.3
 lib/libFS			1.0.4	7.7
 lib/libICE			1.0.8	7.7
 lib/libSM			1.2.1	7.7
-lib/libX11			1.4.4	7.7
+lib/libX11			1.5rc1	7.7
 lib/libXRes			1.0.6	7.7
 lib/libXScrnSaver		1.2.2	7.7
 lib/libXau			1.0.7	7.7
@@ -204,7 +204,7 @@ lib/libdmx			1.1.2	7.7
 lib/libfontenc			1.1.1	7.7
 lib/libpciaccess		0.13	7.7
 lib/libpthread-stubs		0.3	7.5+
-lib/libxcb			1.8.1	7.7	needs-update
+lib/libxcb			1.8.1	7.7
 lib/libxkbfile			1.0.8	7.7
 lib/libxkbui			1.0.2	7.1
 lib/libxtrans			1.2.7	7.7	needs-update
@@ -233,7 +233,7 @@ proto/renderproto		0.11.1	7.6
 proto/resourceproto		1.2.0	7.7
 proto/scrnsaverproto		1.2.2	7.7	needs-update
 proto/videoproto		2.3.1	7.6
-proto/x11proto			7.0.23	7.7	needs-update
+proto/x11proto			7.0.23	7.7
 proto/xcb-proto			1.7.1	7.7	needs-update
 proto/xcmiscproto		1.2.2	7.7	needs-update
 proto/xextproto			7.2.1	7.7	needs-update
