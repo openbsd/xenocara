@@ -1,4 +1,4 @@
-<chapter id='bells'>
+<chapter id='Bells'>
 <title>Bells</title>
 
 <para>
@@ -95,7 +95,7 @@ This chapter describes bell names, the functions used to generate named bells,
 and the events the server generates for bells.
 </para>
 
-<sect1 id='bell_names'>
+<sect1 id='Bell_Names'>
 <title>Bell Names</title>
 
 <para>
@@ -115,75 +115,76 @@ XkbBellNotify</emphasis>
  events.
 </para>
 
-<table frame='none'>
+<table frame='topbot'>
 <title>Predefined Bells</title>
-<tgroup cols='2'>
-<colspec colsep='0'/>
-<colspec colsep='0'/>
+<?dbfo keep-together="always" ?>
+<tgroup cols='2' align='left' colsep='0' rowsep='0'>
+<colspec colname='c1' colwidth='1.0*'/>
+<colspec colname='c2' colwidth='1.0*'/>
 <thead>
-<row rowsep='0'>
+<row rowsep='1'>
   <entry>Action</entry>
   <entry>Named Bell</entry>
 </row>
 </thead>
 <tbody>
-<row rowsep='0'>
+<row>
     <entry>Indicator turned on</entry>
     <entry>AX_IndicatorOn</entry>
 </row>
-<row rowsep='0'>
+<row>
     <entry>Indicator turned off</entry>
     <entry>AX_IndicatorOff</entry>
 </row>
-<row rowsep='0'>
+<row>
     <entry>More than one indicator changed state</entry>
     <entry>AX_IndicatorChange</entry>
 </row>
-<row rowsep='0'>
+<row>
     <entry>Control turned on</entry>
     <entry>AX_FeatureOn</entry>
 </row>
-<row rowsep='0'>
+<row>
     <entry>Control turned off</entry>
     <entry>AX_FeatureOff</entry>
 </row>
-<row rowsep='0'>
+<row>
     <entry>More than one control changed state</entry>
     <entry>AX_FeatureChange</entry>
 </row>
-<row rowsep='0'>
+<row>
     <entry>SlowKeys and BounceKeys about to be turned on or off</entry>
     <entry>AX_SlowKeysWarning</entry>
 </row>
-<row rowsep='0'>
+<row>
     <entry>SlowKeys key pressed</entry>
     <entry>AX_SlowKeyPress</entry>
 </row>
-<row rowsep='0'>
+<row>
     <entry>SlowKeys key accepted</entry>
     <entry>AX_SlowKeyAccept</entry>
 </row>
-<row rowsep='0'>
+<row>
     <entry>SlowKeys key rejected</entry>
     <entry>AX_SlowKeyReject</entry>
 </row>
-<row rowsep='0'>
+<row>
     <entry>Accepted SlowKeys key released</entry>
     <entry>AX_SlowKeyRelease</entry>
 </row>
-<row rowsep='0'>
+<row>
     <entry>BounceKeys key rejected</entry>
     <entry>AX_BounceKeyReject</entry>
 </row>
-<row rowsep='0'>
+<row>
     <entry>StickyKeys key latched</entry>
     <entry>AX_StickyLatch</entry>
 </row>
-<row rowsep='0'>
+<row>
     <entry>StickyKeys key locked</entry>
     <entry>AX_StickyLock</entry>
 </row>
-<row rowsep='0'>
+<row>
     <entry>StickyKeys key unlocked</entry>
     <entry>AX_StickyUnlock</entry>
   </row>
@@ -192,7 +193,7 @@ XkbBellNotify</emphasis>
 </table>
 
 </sect1>
-<sect1 id='audible_bells'>
+<sect1 id='Audible_Bells'>
 <title>Audible Bells</title>
 
 <para>
@@ -232,7 +233,7 @@ information on auto-reset controls, see section 10.1.2. <!-- xref -->
 </para>
 
 </sect1>
-<sect1 id='bell_functions'>
+<sect1 id='Bell_Functions'>
 <title>Bell Functions</title>
 
 <para>
@@ -266,15 +267,16 @@ XkbBellNotifyEvent</emphasis>
  to be generated when a bell function is called.
 </para>
 
-<table frame='none'>
+<table frame='topbot'>
 <title>Bell Sounding and Bell Event Generating</title>
-<tgroup cols='4'>
-<colspec colsep='0'/>
-<colspec colsep='0'/>
-<colspec colsep='0'/>
-<colspec colsep='0'/>
+<?dbfo keep-together="always" ?>
+<tgroup cols='4' align='left' colsep='0' rowsep='0'>
+<colspec colname='c1' colwidth='1.0*'/>
+<colspec colname='c2' colwidth='1.0*'/>
+<colspec colname='c3' colwidth='1.0*'/>
+<colspec colname='c4' colwidth='1.0*'/>
 <thead>
-  <row rowsep='0'>
+  <row rowsep='1'>
     <entry>Function called</entry>
     <entry>AudibleBell</entry>
     <entry>Server sounds a bell</entry>
@@ -282,49 +284,49 @@ XkbBellNotifyEvent</emphasis>
   </row>
 </thead>
 <tbody>
-<row rowsep='0'>
+<row>
     <entry>XkbDeviceBell</entry>
     <entry>On</entry>
     <entry>Yes</entry>
     <entry>Yes</entry>
 </row>
-<row rowsep='0'>
+<row>
     <entry>XkbDeviceBell</entry>
     <entry>Off</entry>
     <entry>No</entry>
     <entry>Yes</entry>
 </row>
-<row rowsep='0'>
+<row>
     <entry>XkbBell</entry>
     <entry>On</entry>
     <entry>Yes</entry>
     <entry>Yes</entry>
 </row>
-<row rowsep='0'>
+<row>
     <entry>XkbBell</entry>
     <entry>Off</entry>
     <entry>No</entry>
     <entry>Yes</entry>
 </row>
-<row rowsep='0'>
+<row>
     <entry>XkbDeviceBellEvent</entry>
     <entry>On or Off</entry>
     <entry>No</entry>
     <entry>Yes</entry>
 </row>
-<row rowsep='0'>
+<row>
     <entry>XkbBellEvent</entry>
     <entry>On or Off</entry>
     <entry>No</entry>
     <entry>Yes</entry>
 </row>
-<row rowsep='0'>
+<row>
     <entry>XkbDeviceForceBell</entry>
     <entry>On or Off</entry>
     <entry>Yes</entry>
     <entry>No</entry>
 </row>
-<row rowsep='0'>
+<row>
     <entry>XkbForceBell</entry>
     <entry>On or Off</entry>
     <entry>Yes</entry>
@@ -334,7 +336,7 @@ XkbBellNotifyEvent</emphasis>
 </tgroup>
 </table>
 
-<sect2 id='generating_named_bells'>
+<sect2 id='Generating_Named_Bells'>
 <title>Generating Named Bells</title>
 
 <para>
@@ -344,10 +346,11 @@ XkbDeviceBell.</emphasis>
 </para>
 
 <informaltable frame='none'>
-<tgroup cols='1'>
-<colspec colsep='0'/>
+<?dbfo keep-together="always" ?>
+<tgroup cols='1' align='left' colsep='0' rowsep='0'>
+<colspec colname='c1' colwidth='1.0*'/>
 <tbody>
-  <row rowsep='0'>
+  <row>
     <entry role='functiondecl'>
 Bool <emphasis>
 XkbDeviceBell</emphasis>
@@ -356,21 +359,21 @@ display, window, device_id, bell_class, bell_id, percent, name</emphasis>
 )
     </entry>
   </row>
-  <row rowsep='0'>
+  <row>
     <entry role='functionargdecl'>
 Display *<emphasis>
       display</emphasis>
 ;            /* connection to the X server */
     </entry>
   </row>
-  <row rowsep='0'>
+  <row>
     <entry role='functionargdecl'>
 Window<emphasis>
       window</emphasis>
 ;            /* window for which the bell is generated, or None */
     </entry>
   </row>
-  <row rowsep='0'>
+  <row>
     <entry role='functionargdecl'>
 unsigned int      <emphasis>
 device_spec</emphasis>
@@ -379,28 +382,28 @@ XkbUseCoreKbd</emphasis>
  */
     </entry>
   </row>
-  <row rowsep='0'>
+  <row>
     <entry role='functionargdecl'>
 unsigned int      <emphasis>
 bell_class</emphasis>
 ;            /* X input extension bell class of the bell to be rung */
     </entry>
   </row>
-  <row rowsep='0'>
+  <row>
     <entry role='functionargdecl'>
 unsigned int      <emphasis>
 bell_id</emphasis>
 ;            /* X input extension bell ID of the bell to be rung */
     </entry>
   </row>
-  <row rowsep='0'>
+  <row>
     <entry role='functionargdecl'>
 int      <emphasis>
 percent</emphasis>
 ;            /* bell volume, from -100 to 100 inclusive */
     </entry>
   </row>
-  <row rowsep='0'>
+  <row>
     <entry role='functionargdecl'>
 Atom      <emphasis>
 name</emphasis>
@@ -469,10 +472,11 @@ XkbBell.</emphasis>
 </para>
 
 <informaltable frame='none'>
-<tgroup cols='1'>
-<colspec colsep='0'/>
+<?dbfo keep-together="always" ?>
+<tgroup cols='1' align='left' colsep='0' rowsep='0'>
+<colspec colname='c1' colwidth='1.0*'/>
 <tbody>
-  <row rowsep='0'>
+  <row>
     <entry role='functiondecl'>
 Bool <emphasis>
 XkbBell</emphasis>
@@ -481,28 +485,28 @@ display, window, percent, name</emphasis>
 )
     </entry>
   </row>
-  <row rowsep='0'>
+  <row>
     <entry role='functionargdecl'>
 Display *      <emphasis>
 display</emphasis>
 ;            /* connection to the X server */
     </entry>
   </row>
-  <row rowsep='0'>
+  <row>
     <entry role='functionargdecl'>
 Window<emphasis>
       window</emphasis>
 ;            /* event window, or None*/
     </entry>
   </row>
-  <row rowsep='0'>
+  <row>
     <entry role='functionargdecl'>
 int<emphasis>
       percent</emphasis>
 ;            /* relative volume, which can range from -100 to 100 inclusive */
     </entry>
   </row>
-  <row rowsep='0'>
+  <row>
     <entry role='functionargdecl'>
 Atom<emphasis>
       name</emphasis>
@@ -564,7 +568,7 @@ XkbBell</emphasis>
 </para>
 
 </sect2>
-<sect2 id='generating_named_bell_events'>
+<sect2 id='Generating_Named_Bell_Events'>
 <title>Generating Named Bell Events</title>
 
 <para>
@@ -589,10 +593,11 @@ XkbDeviceBellEvent.</emphasis>
 </para>
 
 <informaltable frame='none'>
-<tgroup cols='1'>
-<colspec colsep='0'/>
+<?dbfo keep-together="always" ?>
+<tgroup cols='1' align='left' colsep='0' rowsep='0'>
+<colspec colname='c1' colwidth='1.0*'/>
 <tbody>
-  <row rowsep='0'>
+  <row>
     <entry role='functiondecl'>
 Bool <emphasis>
 XkbDeviceBellEvent</emphasis>
@@ -601,21 +606,21 @@ display, window, device_spec, bell_class, bell_id, percent, name</emphasis>
 )
     </entry>
   </row>
-  <row rowsep='0'>
+  <row>
     <entry role='functionargdecl'>
 Display *      <emphasis>
 display</emphasis>
 ;      /* connection to the X server */
     </entry>
   </row>
-  <row rowsep='0'>
+  <row>
     <entry role='functionargdecl'>
 Window      <emphasis>
 window</emphasis>
 ;      /* event window, or None*/
     </entry>
   </row>
-  <row rowsep='0'>
+  <row>
     <entry role='functionargdecl'>
 unsigned int      <emphasis>
 device_spec</emphasis>
@@ -624,28 +629,28 @@ XkbUseCoreKbd</emphasis>
  */
     </entry>
   </row>
-  <row rowsep='0'>
+  <row>
     <entry role='functionargdecl'>
 unsigned int      <emphasis>
 bell_class;</emphasis>
       /* input extension bell class for the event */
     </entry>
   </row>
-  <row rowsep='0'>
+  <row>
     <entry role='functionargdecl'>
 unsigned int      <emphasis>
 bell_id</emphasis>
 ;      /* input extension bell ID for the event */
     </entry>
   </row>
-  <row rowsep='0'>
+  <row>
     <entry role='functionargdecl'>
 int      <emphasis>
 percent</emphasis>
 ;      /* volume for the bell, which can range from -100 to 100 inclusive */
     </entry>
   </row>
-  <row rowsep='0'>
+  <row>
     <entry role='functionargdecl'>
 Atom      <emphasis>
 name</emphasis>
@@ -697,10 +702,11 @@ XkbBellEvent.</emphasis>
 
 
 <informaltable frame='none'>
-<tgroup cols='1'>
-<colspec colsep='0'/>
+<?dbfo keep-together="always" ?>
+<tgroup cols='1' align='left' colsep='0' rowsep='0'>
+<colspec colname='c1' colwidth='1.0*'/>
 <tbody>
-  <row rowsep='0'>
+  <row>
     <entry role='functiondecl'>
 Bool <emphasis>
 XkbBellEvent</emphasis>
@@ -709,28 +715,28 @@ display, window, percent, name</emphasis>
 )
     </entry>
   </row>
-  <row rowsep='0'>
+  <row>
     <entry role='functionargdecl'>
 Display *      <emphasis>
 display</emphasis>
 ;            /* connection to the X server */
     </entry>
   </row>
-  <row rowsep='0'>
+  <row>
     <entry role='functionargdecl'>
 Window      <emphasis>
 window</emphasis>
 ;            /* the event window, or None */
     </entry>
   </row>
-  <row rowsep='0'>
+  <row>
     <entry role='functionargdecl'>
 int      <emphasis>
 percent</emphasis>
 ;            /* relative volume, which can range from -100 to 100 inclusive */
     </entry>
   </row>
-  <row rowsep='0'>
+  <row>
     <entry role='functionargdecl'>
 Atom      <emphasis>
 name</emphasis>
@@ -787,7 +793,7 @@ without first initializing the keyboard extension.
 </para>
 
 </sect2>
-<sect2 id='forcing_a_server_generated_bell'>
+<sect2 id='Forcing_a_Server_Generated_Bell'>
 <title>Forcing a Server-Generated Bell</title>
 
 <para>
@@ -796,10 +802,11 @@ audible bells, use <emphasis>XkbForceDeviceBell</emphasis>.
 </para>
 
 <informaltable frame='none'>
-<tgroup cols='1'>
-<colspec colsep='0'/>
+<?dbfo keep-together="always" ?>
+<tgroup cols='1' align='left' colsep='0' rowsep='0'>
+<colspec colname='c1' colwidth='1.0*'/>
 <tbody>
-  <row rowsep='0'>
+  <row>
     <entry role='functiondecl'>
 Bool <emphasis>
 XkbForceDeviceBell</emphasis>
@@ -808,21 +815,21 @@ display, window, device_spec, bell_class, bell_id, percent</emphasis>
 )
     </entry>
   </row>
-  <row rowsep='0'>
+  <row>
     <entry role='functionargdecl'>
 Display *      <emphasis>
 display</emphasis>
 ;            /* connection to the X server */
     </entry>
   </row>
-  <row rowsep='0'>
+  <row>
     <entry role='functionargdecl'>
 Window      <emphasis>
 window</emphasis>
 ;            /* event window, or None */
     </entry>
   </row>
-  <row rowsep='0'>
+  <row>
     <entry role='functionargdecl'>
 unsigned int      <emphasis>
 device_spec</emphasis>
@@ -831,21 +838,21 @@ XkbUseCoreKbd</emphasis>
  */
     </entry>
   </row>
-  <row rowsep='0'>
+  <row>
     <entry role='functionargdecl'>
 unsigned int      <emphasis>
 bell_class</emphasis>
 ;            /* input extension class of the bell to be rung */
     </entry>
   </row>
-  <row rowsep='0'>
+  <row>
     <entry role='functionargdecl'>
 unsigned int      <emphasis>
 bell_id</emphasis>
 ;            /* input extension ID of the bell to be rung */
     </entry>
   </row>
-  <row rowsep='0'>
+  <row>
     <entry role='functionargdecl'>
 int      <emphasis>
 percent</emphasis>
@@ -893,10 +900,11 @@ XkbForceBell</emphasis>.
 </para>
 
 <informaltable frame='none'>
-<tgroup cols='1'>
-<colspec colsep='0'/>
+<?dbfo keep-together="always" ?>
+<tgroup cols='1' align='left' colsep='0' rowsep='0'>
+<colspec colname='c1' colwidth='1.0*'/>
 <tbody>
-  <row rowsep='0'>
+  <row>
     <entry role='functiondecl'>
 Bool <emphasis>
 XkbForceBell</emphasis>
@@ -904,14 +912,14 @@ XkbForceBell</emphasis>
 display, percent)</emphasis>
     </entry>
   </row>
-  <row rowsep='0'>
+  <row>
     <entry role='functionargdecl'>
 Display *      <emphasis>
 display</emphasis>
 ;      /* connection to the X server */
     </entry>
   </row>
-  <row rowsep='0'>
+  <row>
     <entry role='functionargdecl'>
 int      <emphasis>
 percent</emphasis>
@@ -980,7 +988,7 @@ XkbBell</emphasis>
 
 </sect2>
 </sect1>
-<sect1 id='detecting_bells'>
+<sect1 id='Detecting_Bells'>
 <title>Detecting Bells</title>
 
 <para>

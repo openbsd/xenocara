@@ -764,10 +764,8 @@ mbstowcs_org(
         return( 0 );
     }
 
-#ifdef notdef
     if (*from_left > *to_left)
         *from_left = *to_left;
-#endif
 
     while (*from_left && *to_left) {
 
@@ -923,10 +921,8 @@ wcstombs_org(
     int defstr_len = strlen(default_string);
 
 
-#ifdef notdef
     if (*from_left > *to_left)
         *from_left = *to_left;
-#endif
 
     while (*from_left && *to_left) {
 
@@ -1084,10 +1080,8 @@ wcstocts(
     int from_size = *from_left;
     char *ext_seg_len = NULL;
 
-#ifdef notdef
     if (*from_left > *to_left)
         *from_left = *to_left;
-#endif
 
     while (*from_left && *to_left) {
 
@@ -1278,10 +1272,8 @@ ctstowcs(
         return( 0 );
     }
 
-#ifdef notdef
     if (*from_left > *to_left)
         *from_left = *to_left;
-#endif
 
     while (*from_left && *to_left) {
 
@@ -1674,10 +1666,8 @@ mbstostr(
         return( 0 );
     }
 
-#ifdef notdef
     if (*from_left > *to_left)
         *from_left = *to_left;
-#endif
 
     while (*from_left && *to_left) {
 
@@ -1794,11 +1784,6 @@ mbtocs(
         return( 0 );
     }
 
-#ifdef notdef
-    if (*from_left > *to_left)
-        *from_left = *to_left;
-#endif
-
     while (*from_left && *to_left) {
 
 	ch = *inbufptr++;
@@ -1884,7 +1869,7 @@ output:
 	return -1;
     }
 
-    /* nomal end */
+    /* normal end */
     *from = (XPointer) inbufptr;
     *to = (XPointer) outbufptr;
 
@@ -1972,10 +1957,8 @@ wcstostr(
     int defstr_len = strlen(default_string);
 
 
-#ifdef notdef
     if (*from_left > *to_left)
         *from_left = *to_left;
-#endif
 
     while (*from_left && *to_left) {
 
@@ -2131,10 +2114,8 @@ wctocs(
     char *outbufptr = *to;
     int from_size = *from_left;
 
-#ifdef notdef
     if (*from_left > *to_left)
         *from_left = *to_left;
-#endif
 
     if (*from_left && *to_left) {
 
@@ -2187,7 +2168,7 @@ end:
         return -1;
     }
 
-    /* nomal end */
+    /* normal end */
     *from = (XPointer) inbufptr;
     *to = (XPointer) outbufptr;
 
@@ -2241,7 +2222,7 @@ end:
 	return -1;
     }
 
-    /* nomal end */
+    /* normal end */
     *from = (XPointer) src;
     *from_left = src_left;
 
@@ -2446,10 +2427,8 @@ strtombs(
     char *outbufptr = *to;
     int from_size = *from_left;
 
-#ifdef notdef
     if (*from_left > *to_left)
         *from_left = *to_left;
-#endif
 
     while (*from_left && *to_left) {
 
@@ -2558,10 +2537,8 @@ strtowcs(
     wchar_t *outbufptr = (wchar_t *)*to;
     int from_size = *from_left;
 
-#ifdef notdef
     if (*from_left > *to_left)
         *from_left = *to_left;
-#endif
 
     while (*from_left && *to_left) {
 

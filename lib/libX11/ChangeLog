@@ -1,3 +1,1072 @@
+commit abc523fce31fcf2687229697a8eb656e343ecb0c
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Mar 15 22:14:45 2012 -0700
+
+    libX11 1.4.99.901 (1.5 RC1)
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit b2cc5905a4a6d519957223e8ba2caef71520040c
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Mar 15 22:03:21 2012 -0700
+
+    Remove "register" qualifier that annoys Solaris Studio compiler
+    
+    Fixes warning:
+    "Xrm.c", line 1094: warning: storage class after type is obsolescent
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 62d42953893f93a98db0504eaf06d650ceaf5811
+Author: James Cloos <cloos@jhcloos.com>
+Date:   Wed Mar 14 17:25:46 2012 -0400
+
+    Fix the gtk+ additions
+    
+    (Some of) the Dstroke and dstroke entries already were present as U011[01],
+    even though XK_Dstroke and XK_dstroke are part of the latin2 set in keysymdef.h.
+    
+    The addition of <Multi_key> <o> <apostrophe> as a postfix version of
+    <Multi_key> <apostrophe> <o> blocks the existing entries for ǻ and Ǻ.
+    That prevents its and <Multi_key> <O> <apostrophe>’s addition.
+    
+    Signed-off-by: James Cloos <cloos@jhcloos.com>
+
+commit 91bcce48d94792f78333d2aea73961cc2e739d2e
+Author: Pander <pander@users.sourceforge.net>
+Date:   Wed Mar 14 12:54:53 2012 -0400
+
+    Complete compose key sequences for musical symbols
+    
+    Signed-off-by: Pander <pander@users.sourceforge.net>
+    Signed-off-by: James Cloos <cloos@jhcloos.com>
+
+commit cf040016d455bc37f7665d6714337c5eafd8ea94
+Author: Pander <pander@users.sourceforge.net>
+Date:   Wed Mar 14 12:46:25 2012 -0400
+
+    Add compose sequences from gtk+ to X.Org
+    
+    Signed-off-by: Pander <pander@users.sourceforge.net>
+    Signed-off-by: James Cloos <cloos@jhcloos.com>
+
+commit a4c591ced5cac9301b9abfa0e521be2d0b267882
+Author: Keith Packard <keithp@keithp.com>
+Date:   Sun Mar 4 02:00:13 2012 -0800
+
+    Block for other threads in _XUserLockDisplay
+    
+    Wait for all other threads to release the user-level lock when
+    acquiring it. This ensures that only one thread at a time holds the
+    user-level lock, necessary as it is a nesting lock and a single
+    variable is used to determine when the lock is nesting and when it is
+    contended.
+    
+    Signed-off-by: Keith Packard <keithp@keithp.com>
+    Reviewed-by: Jamey Sharp <jamey@minilop.net>
+
+commit ed00b460acb08787b695f27b864e96102dfd4867
+Author: Jon TURNEY <jon.turney@dronecode.org.uk>
+Date:   Fri Oct 28 11:09:20 2011 -0500
+
+    Don't use caddr_t casts
+    
+    (caddr_t) isn't used anywhere else in xcb or libX11.
+    Cast to (char *) for consistency.
+    
+    Removing this cast allows building for MinGW without patching.
+    
+    v2: Cast to (char *) rather than just dropping the cast
+    
+    Signed-off-by: Jon TURNEY <jon.turney@dronecode.org.uk>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 20adca02c2a1d0b7c95ecbe387d68f881fd57754
+Author: Julien Cristau <jcristau@debian.org>
+Date:   Sun Feb 19 13:27:38 2012 +0100
+
+    Revert "xcb: Add TCP fallback"
+    
+    This reverts commit f09c5299a381e2729e800a0ac43f1c0e371f65f6.
+    
+    The TCP fallback ended up falling back to UNIX socket connection if
+    $DISPLAY was set to e.g. some.host:0 and the initial attempt failed.
+    
+    Debian bug#659558 <http://bugs.debian.org/659558>
+    
+    Signed-off-by: Julien Cristau <jcristau@debian.org>
+    
+    Conflicts:
+    
+    	src/OpenDis.c
+
+commit f4378193619baa9bb973c1b5b718721bbcbe92c7
+Author: James Cloos <cloos@jhcloos.com>
+Date:   Wed Feb 22 14:13:20 2012 -0500
+
+    Make the compose sequence for ẞ work.
+    
+    There is no XK_Ssharp symbol for U+1E9E LATIN CAPITAL LETTER SHARP S,
+    so use the U1e9e symbol in the Compose sequence.
+    
+    (Compose sequences do not work when the target symbol is unknown.)
+    
+    Signed-off-by: James Cloos <cloos@jhcloos.com>
+
+commit 2ca641c3a506dcbee97e279b67990d5387389f36
+Author: Marko Myllynen <myllynen@redhat.com>
+Date:   Mon Feb 20 17:04:59 2012 +0200
+
+    Use ezh/EZH in compose maps
+    
+    Related: https://bugs.freedesktop.org/show_bug.cgi?id=19687
+    
+    Signed-off-by: Marko Myllynen <myllynen@redhat.com>
+    Reviewed-by: Matt Dew <marcoz@osource.org>
+    Signed-off-by: James Cloos <cloos@jhcloos.com>
+
+commit 61725822f20f47684a545c1797183ee7075243ac
+Author: Marko Myllynen <myllynen@redhat.com>
+Date:   Sun Feb 20 17:09:43 2011 +0200
+
+    Provide translation from XK_permille (ad5) to Unicode (U2030)
+    
+    https://bugs.freedesktop.org/show_bug.cgi?id=19687
+    
+    Signed-off-by: Marko Myllynen <myllynen@redhat.com>
+    Reviewed-by: Matt Dew <marcoz@osource.org>
+    Signed-off-by: James Cloos <cloos@jhcloos.com>
+
+commit d2cce0abba0fa0143f49026442c8cab5ed721625
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Sun Feb 12 19:01:43 2012 -0800
+
+    nls: Use LC_CTYPE=C for sed magic
+    
+    Stricter versions of sed can trip up if the input does not match
+    LC_CTYPE
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit f180e043f55531933bedfa6e0ff36a00a9ec07f3
+Author: Frédéric Boiteux <fboiteux@calistel.com>
+Date:   Wed Nov 30 12:47:31 2011 +0000
+
+    Compositions with the dead greek symbol
+    
+    FreeDesktop Bug 21475 <https://bugs.freedesktop.org/show_bug.cgi?id=21475>
+    
+    Signed-off-by: Frédéric Boiteux <fboiteux@calistel.com>
+    Signed-off-by: James Cloos <cloos@jhcloos.com>
+
+commit d58e8f8e27790017fcfdeca0843b7318d541c189
+Author: Ryan Pavlik <rpavlik@iastate.edu>
+Date:   Sun Jan 1 21:04:52 2012 +0000
+
+    Use pthreads on MinGW also
+    
+    Use pthreads (provided by the pthreads-win32 compatability library which implements
+    them using native Win32 threading) on MinGW
+    
+    Reviewed-by: Jon TURNEY <jon.turney@dronecode.org.uk>
+
+commit bf15ccb6821664746ec23d769d757edf8059007e
+Author: Ryan Pavlik <rpavlik@iastate.edu>
+Date:   Mon Jan 23 14:18:02 2012 +0000
+
+    Add XWindows.h include to Xxcbint.h
+    
+    This avoids some conflicting type re-definition errors which occur if
+    we attempt to include Windows headers after Xmd.h
+    
+    Reviewed-by: Jon TURNEY <jon.turney@dronecode.org.uk>
+
+commit cadcbd376f0a5d17a71a2fe2f8ced5d93232921a
+Author: Matt Dew <marcoz@osource.org>
+Date:   Sat Jan 21 17:59:51 2012 -0700
+
+    informaltable & table cleanup
+    
+    On certain tables, add top and bottom borders to table header
+    and a bottom border to the table. This matches what those
+    tables in the old pdfs looked like.
+    
+    the <?dbfo keep-together='always'> prevents tables from
+    splitting across pages. Useful for tiny tables.
+    
+    Converting the colwidth to a floating point, IE, 1* -> 1.0*
+    cleans up these build errors:
+    WARNING: table-layout="fixed" and column-width unspecified =>
+    falling back to proportional-column-width(1)
+    
+    Signed-off-by: Matt Dew <marcoz@osource.org>
+
+commit bb551f654df8f647c867f79252241964521e689e
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Dec 28 21:22:41 2011 -0800
+
+    Add more Xkb man pages to the See Also lists for core keyboard functions
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit b7bb23fe7c8b8a17128e5bc98a05f68595190438
+Author: Gaetan Nadon <nadon@memsize.(none)>
+Date:   Fri Dec 30 17:08:14 2011 -0500
+
+    docbook.am: embed css styles inside the HTML HEAD element
+    
+    Rather than referring to the external xorg.css stylesheet, embed the content
+    of the file in the html output produced. This is accomplished by using
+    version 1.10 of xorg-xhtml.xsl.
+    
+    This makes the whole html docs tree much more relocatable.
+    In addition, it eliminates xorg.css as a runtime file which makes
+    xorg-sgml-doctools a build time only package.
+    
+    Signed-off-by: Gaetan Nadon <nadon@memsize.(none)>
+
+commit 70505468b7c4a7068cc39be42e421dcee34ec595
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Dec 13 19:58:30 2011 -0800
+
+    makekeys: move buf declaration from global to main to silence gcc -Wshadow
+    
+    The global was only referenced in the main() function, which passes it
+    as an argument of the same name to the parse_line() function, leading
+    to gcc -Wshadow warnings:
+    
+    makekeys.c: In function ‘parse_line’:
+    makekeys.c:58:24: warning: declaration of ‘buf’ shadows a global declaration
+    makekeys.c:54:13: warning: shadowed declaration is here
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 87e10a7b9a97c951ab4d477f61177779ac0a6a66
+Author: Kusanagi Kouichi <slash@ac.auone-net.jp>
+Date:   Wed Dec 14 02:17:55 2011 -0500
+
+    XQueryColors: Split a request into multiple requests if necessary
+    
+    https://bugs.freedesktop.org/show_bug.cgi?id=9160
+    
+    Signed-off-by: Kusanagi Kouichi <slash@ac.auone-net.jp>
+    Signed-off-by: James Cloos <cloos@jhcloos.com>
+
+commit d3b3570592e9b9e57f270a0bd86762fd205a2833
+Author: Andreas Wettstein <wettstein509@solnet.ch>
+Date:   Tue Nov 8 20:18:09 2011 +0000
+
+    XIM: Allow modifier releases in compose sequences (#26705)
+    
+    Currently, only non-modifier keys (actually, keysyms) can be part of a compose
+    sequence, and they are matched against the defined compose sequences at the
+    time the key is pressed.  The patch allows to use modifier keys an well, but
+    matches them on key release, and only if no other key has been pressed after
+    the modifier.
+    
+    Releasing a non-matched modifier during an ongoing compose sequence only aborts
+    the sequence if any modifier release would have matched.  In particular, if no
+    compose sequences with modifiers are specified, the compose mechanism works
+    exactly as without this patch.
+    
+    Even if modifiers are part of a compose sequence, they are not filtered.  This
+    is because modifiers affect the keyboard state no matter what we do here and,
+    therefore, filtering them only could confuse clients.
+    
+    The purpose is this extension to the compose mechanism is to allow to make
+    better use of keys in convenient reach for touch typing.
+    
+    Signed-off-by: Andreas Wettstein <wettstein509@solnet.ch>
+    Signed-off-by: James Cloos <cloos@jhcloos.com>
+
+commit 56448a626fc90bcf75a1fa2f4c294b0eb1f23bd6
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Nov 29 23:56:57 2011 -0800
+
+    Reject negative string counts in copy_string_list
+    
+    Silences parfait warning of a potential memory leak:
+       Memory leak of pointer 'dst' allocated with malloc(length)
+            at line 160 of FSWrap.c in function 'copy_string_list'.
+              'dst' allocated at line 145 with malloc(length).
+              dst leaks when count <= 0 at line 154.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit bf2d7c8c6d70539c72560b1921e18df2610acf29
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri Nov 11 14:56:36 2011 +1000
+
+    libX11 1.4.99.1
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 24283d40b1e4314c6647dda49d2a159833341a8b
+Author: Derek Buitenhuis <derek.buitenhuis@gmail.com>
+Date:   Thu Sep 22 18:44:13 2011 -0400
+
+    makekeys: Fix build/target word size mismatch when cross-compiling
+    
+    Since makekeys is built using build environment's gcc and
+    runs natively, we have to make sure that the size of the
+    Signature type is the same on both the native environment
+    and the target, otherwise we get mismatches upon running X,
+    and some LSB test failures (xts5).
+    
+    Use an unsigned 32-bit integer on all platforms. Also,
+    eliminate the redundant multiple typedefs for the
+    Signature type.
+    
+    Signed-off-by: Derek Buitenhuis <derek.buitenhuis@gmail.com>
+    Reviewed-by: Daniel Stone <daniel@fooishbar.org>
+
+commit 1c41f3b9b86b5eeedfa3bff92e519d45aa097587
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Nov 9 21:00:36 2011 -0800
+
+    XlcSL.c: convert old-style function definitions to ANSI C89 style
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit f6dad6aaa384bf836baa28ccb72b476a85c40eff
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Thu Oct 27 13:53:22 2011 +1000
+
+    Use GetReqSized for GetReq and GetReqExtra
+    
+    GetEmptyReq and GetResReq cannot do this due to the final typecast -
+    typically requests that need either of those do not have their own typedef
+    in the protocol headers.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Jamey Sharp <jamey@minilop.net>
+
+commit c9c99058b9d98789c0b2d7e78a23443c2b57a047
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri Oct 14 14:51:06 2011 +1000
+
+    include: Add GetReqSized() for request buffers of specific size
+    
+    Some XI2 requests change in size over different versions and libXi would
+    need to hack around GetReq and GetReqExtra. Add a new GetReqSized so the
+    library can explicitly specify the size of the request in 4-byte units.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Jamey Sharp <jamey@minilop.net>
+
+commit ba8a7a19165e30d14bc165f43f67c19b6a115585
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Thu Oct 27 13:24:10 2011 +1000
+
+    Switch GetEmptyReq and GetResReq to call _XGetRequest
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Jamey Sharp <jamey@minilop.net>
+
+commit 4a060f993bf676cf21ad9784e010f54134da7b40
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Mon Oct 17 09:45:15 2011 +1000
+
+    Add _XGetRequest as substitute for GetReq/GetReqExtra
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Jamey Sharp <jamey@minilop.net>
+
+commit d8956520deb79c1cbb5e974c175bf8493859b22b
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Oct 14 17:53:00 2011 -0700
+
+    Fix "nomal" -> "normal" typo in several comments
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 002b36e308a26a152504f9b40aa08a0dce9a7991
+Author: Xue Wei <Wei.Xue@Sun.COM>
+Date:   Fri Oct 14 17:39:21 2011 -0700
+
+    mbtocs should not truncate input
+    
+    Fixes pasting more than 1024 bytes into xterm, as described in
+    https://bugs.freedesktop.org/show_bug.cgi?id=25209
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 9b8d8c9e5b27273e8856a3851ba9b68022bed3cd
+Author: Marko Myllynen <myllynen@redhat.com>
+Date:   Mon Oct 10 09:41:13 2011 +0300
+
+    Add new compose sequences
+    
+    This patch adds few new compose sequences to the en_US map, ligatures
+    common in typesetting and sequences already in use in the fi_FI map.
+    
+    https://bugs.freedesktop.org/show_bug.cgi?id=30621
+    https://bugs.freedesktop.org/show_bug.cgi?id=34523
+    
+    Reviewed-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit 738f7b867341c1da87ee667d48815822715c3e75
+Author: Choe Hwanjin <choe.hwanjin@gmail.com>
+Date:   Thu Oct 13 07:58:02 2011 +0900
+
+    XIM: Make Xim handle NEED_SYNC_REPLY flag
+    
+    NEED_SYNC_REPLY flag should be in Xim not in Xic.
+    Because the focused Xic can be changed before sending sync reply.
+    After focused Xic changed, the new Xic doesn't have NEED_SYNC_REPLY
+    flag enabled, so libX11 doesn't send XIM_SYNC_REPLY packet.
+    
+    This patch adds sync reply flag to Xim and removes sync reply
+    from Xic.
+    
+    Fixes: https://bugs.freedesktop.org/show_bug.cgi?id=7869
+    
+    Signed-off-by: Choe Hwanjin <choe.hwanjin@gmail.com>
+    Reviewed-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit 50e15379331c436851abb194251cde96999e67b3
+Author: Bodo Graumann <mail@bodograumann.de>
+Date:   Mon Oct 10 16:40:52 2011 +0200
+
+    libX11: Fixing modifier key range in Xutil.h (Bug #21910)
+    
+    IsModifierKey, defined in include/X11/Xutil.h, is a macro determining,
+    which keys are regarded as modifiers. The constants ISO_Level5_Shift,
+    ISO_Level5_Latch and ISO_Level5_Lock where excluded previously, leaving
+    some Neo2 modifiers functionless in combination with compose.
+    This patch adjusts the range to include the correct, full range of
+    modifier constants.
+    
+    Neo2 Bug 277 <http://wiki.neo-layout.org/ticket/277>
+    
+    X.Org Bug 21910 <http://bugs.freedesktop.org/show_bug.cgi?id=21910>
+    
+    Signed-off-by: Bodo Graumann <mail@bodograumann.de>
+    Reviewed-by: Daniel Stone <daniel@fooishbar.org>
+
+commit b5a108624331fabf393223c0891914cc54d4caf4
+Author: Yann Droneaud <yann@droneaud.fr>
+Date:   Tue Oct 11 17:27:59 2011 +0200
+
+    Return name instead of False in XSetICValues()
+    
+    In case of error, XSetICValues() must return the first argument
+    that failed to be set.
+    
+    But in some error paths, it returns False, which is converted to NULL,
+    so the function returns OK in case of error.
+    
+    Signed-off-by: Yann Droneaud <yann@droneaud.fr>
+    Reviewed-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit 10992cb8dc5e4d938e7e5a633b68a81b5875f3ba
+Author: Yann Droneaud <yann@droneaud.fr>
+Date:   Sun Oct 9 17:56:45 2011 +0200
+
+    Return name instead of value in XGetIMValues() and XSetIMValues()
+    
+    As stated in man page (XOpenIM) and Xlib documentation (chapter 13.5.3),
+    XGetIMValues() and XSetImValues() "returns the name of the first argument
+    that could not be obtained."
+    
+    But currently,
+    
+      err = XGetIMValues(im, "invalid", &arg, NULL);
+    
+    returns &arg instead of "invalid".
+    
+    This patch fixes https://bugs.freedesktop.org/show_bug.cgi?id=12897
+    
+    Signed-off-by: Yann Droneaud <yann@droneaud.fr>
+    Reviewed-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit f2651e03f3295a453a2965c3749bc8b6e66f1c09
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Mon Oct 10 14:09:17 2011 -0700
+
+    Mark XKeycodeToKeysym as _X_DEPRECATED
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit 25d7bb9c705623ebbb3afba3b86d0ded5b6bb4fb
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Sun Oct 9 02:38:28 2011 -0700
+
+    Fix nobreakspace for pt_BR.UTF-8
+    
+    https://bugs.freedesktop.org/show_bug.cgi?id=31334
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit 913603660c17ec59a4d39d3e3b9d60469ee5c060
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Sun Oct 9 02:26:45 2011 -0700
+
+    Fix potential uninitialized variable access in _XimMakeICAttrIDList
+    
+    Found by clang static analysis
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit 566ceaf5a92c721ac7155528e4d0d2e5cbef023f
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Sun Oct 9 02:25:50 2011 -0700
+
+    Remove self-resolving aliases
+    
+    https://bugs.freedesktop.org/show_bug.cgi?id=30112
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit 22ba43d198dcca86c88eb15a56fc7d8fc47c422e
+Author: Matt Dew <marcoz@osource.org>
+Date:   Fri Oct 7 22:52:30 2011 -0600
+
+    Cleanup IDs and links in doc
+    
+    1 - fix the capitalization of the ID attributes to match either the
+         <title> or <funcdef> string it goes with.
+    2 - fix any <linkend>'s that were affected by 1.
+    3 - any <function> in the docs that has an actual funcdef,
+    will become an olink.
+    
+    Signed-off-by: Matt Dew <marcoz@osource.org>
+
+commit f858f3326adbc0c5711669b92a64a84a9083a055
+Author: James Cloos <cloos@jhcloos.com>
+Date:   Tue Oct 4 17:11:11 2011 -0400
+
+    [nls] Fix typo/synco.
+    
+    The iso8859-1 Compose table includes an optional section which uses
+    Ctrl<T> as a substitute for <Multi_key>.  In that section the sequence
+    to generate an @ (at) either was incorrectly copied from the Multi_key
+    section or was not kept in sync with the Multi_key section.
+    
+    Fixing this eliminates the warning from compose-check.pl:
+    
+    ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    ┃ Clash with existing sequence in iso8859-1/Compose.pre
+    ┃  on line 661: Ctrl<T> <A> <A>
+    ┃    line #661: Ctrl<T> <A> <A>		: "\305"	Aring
+    ┃    line #480: Ctrl<T> <A> <A>		: "@"	at
+    ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    
+    Signed-off-by: James Cloos <cloos@jhcloos.com>
+
+commit 7f35f7efc23234b3f8529fee31a802c21846d9ab
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Mon Sep 26 11:32:56 2011 -0700
+
+    Remove conflicting compose sequences for cent and colon
+    
+    Regression from 4d78ad4bf6dcabca9bb5f84c770abfbb02d3f7a4
+    Found by tinderbox
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit 4d78ad4bf6dcabca9bb5f84c770abfbb02d3f7a4
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Sun Sep 25 16:29:17 2011 -0700
+
+    Add additional compose sequences for pound sterling, yen, and cent (mixed case)
+    
+    https://bugs.freedesktop.org/show_bug.cgi?id=1013
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+    Reviewed-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 0ca4153a373e2af7a9eb3cef003393ab332bc79e
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Sat Sep 24 16:44:04 2011 -0700
+
+    Use a configure check for seteuid
+    
+    HP-UX doesn't have seteuid
+    
+    https://bugs.freedesktop.org/show_bug.cgi?id=1497
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit 79594b4d66344f248eb4314ecb78eb81f632c3ab
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Sep 20 16:06:10 2011 -0400
+
+    localedb specs: use <copyright> for first holder of multi license
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 154430268cf004b06920edde2f1812dc16d71fae
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Sep 20 16:01:52 2011 -0400
+
+    libX11 specs: use <copyright> for first holder of multi license
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 66e621f58dee804acb795ff2c79ce6dd38b34a3f
+Author: Tollef Fog Heen <tfheen@err.no>
+Date:   Tue Sep 20 13:07:37 2011 -0400
+
+    NLS: Add more vulgar fractions
+    
+    Add 1/7, 1/9, 1/10 and 0/3 vulgar fractions.
+    
+    Signed-off-by: Tollef Fog Heen <tfheen@err.no>
+    Signed-off-by: James Cloos <cloos@jhcloos.com>
+
+commit e37a6da814b5653be46000a9a76902729660a2e6
+Author: Alexander Polakov <polachok@gmail.com>
+Date:   Sat Sep 17 20:54:58 2011 +0400
+
+    XGrabKey manual page: change XAllowAccess to XAllowEvents in See Also
+    
+    There is no XAllowAccess man page to see.
+    
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit a23f3323f269b33a43d16dce01395cd28bc41b45
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Sep 19 15:27:44 2011 -0400
+
+    XKB: provide adequate quotes for the license text
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit a9c7a5cad91d968f5536ef8fc735036e921832a3
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Sep 19 15:18:53 2011 -0400
+
+    XIM: refactor the multi licensing legal text
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit c46f934ed89e7de79746a0387c9f998d91994ea6
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Sep 19 10:33:30 2011 -0400
+
+    xim trans: restore Fujitsu copyright legal text
+    
+    Somehow lost during docbook conversion. text from x.org ftp R7.5.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 3d75f993382bfdc89d31668d7dfc71c91222e0d7
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Sep 19 10:11:46 2011 -0400
+
+    xtrans: restore X Consortium original legal text
+    
+    Asking X Consortium permission to use The Open Group name makes no sense.
+    Even more so in 1994 before X Window System was passed on to the Open Group.
+    
+    Using original text from xorg-docs/general/License
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 136a381585a4a9686c11bad1a6130837978e677f
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Sep 19 10:03:21 2011 -0400
+
+    Framework: restore X Consortium copyright
+    
+    Somewhat dammaged during docbook conversion.
+    Also restore pasrt of the original license text
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 33f346878406762704a0c13cdc018111c666f3c1
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Sep 19 09:50:00 2011 -0400
+
+    localedb: restore X Consortium original legal text
+    
+    Asking X Consortium permission to use The Open Group name makes no sense.
+    Even more so in 1994 before X Window System was passed on to the Open Group.
+    
+    Using original text from xorg-docs/general/License
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit e99c9338e413efca026210b9d830efb5c74d34e5
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Sep 19 08:23:18 2011 -0400
+
+    specs: support multi licensed copyright notice and license text
+    
+    For documentation having multiple licenses, the copyright and legalnotice
+    elements sequence cannot instantiated multiple times.
+    The copyright notice and license text are therefore coded inside a
+    legalnotice element. The role attribute on the paragraph is used to allow
+    styling of the copyright notice text which should not be italicized.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit b9dedc757e667333ce899115d618f25cdaa4dd5e
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Sep 19 08:17:50 2011 -0400
+
+    localedb: add release info to spec
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 4519c89a87ddce01e599542737a27c26030fe4ff
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Sep 19 08:05:32 2011 -0400
+
+    specs: fix The Open Group license text
+    
+    The warranty referred to the X Consortium
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 08ac378423e7be72e340197ba5559a1a36f1783c
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Sep 19 08:03:39 2011 -0400
+
+    specs: The strandard name is still "X Consortium Standard"
+    
+    This spec, and fsproto spec, are the only two docs with a different
+    standard name.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 8dfbeb1b1b1e8aa17f69d0a373155419a5f6a172
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Sep 18 13:22:34 2011 -0400
+
+    specs: support multi licensed copyright notice and license text
+    
+    For documentation having multiple licenses, the copyright and legalnotice
+    elements sequence cannot instantiated multiple times.
+    The copyright notice and license text are therefore coded inside a legalnotice
+    element. The role attribute on the paragraph is used to allow styling of the
+    copyright notice text which should not be italicized.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 278ca8947c1dabb2b819527dca0fa6190c034f67
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Fri Sep 16 11:45:56 2011 -0400
+
+    docs: merge copyright holder under the same copyright notice
+    
+    As per the docbook markup dtd.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 7ff012bb433109a622ac122ade71669e842ebdcf
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Fri Sep 16 10:09:57 2011 -0400
+
+    specs: handle multiple sets of copyright notice/license/warranty
+    
+    Docbook groups all the <copyright> elements together and all the
+    <legalnotice> elements together.
+    
+    We cannot have a sequence:
+    <copyright> <legalnotice> <copyright> <legalnotice> [...]
+    
+    A workaround, which was done in some documents, is to put the copyright
+    notice inside the legalnotice in plain text without the <copyright> element.
+    A formal paragraph title is added here which makes the copyright notice bold,
+    and makes it much easier to locate.
+    
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 4a550c71b8221c37b1a9378d5a170da9eaa03405
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Sep 14 15:55:42 2011 -0400
+
+    specs: remove orphan affiliation.
+    
+    Authors affiliation are correct.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 0cc02a6df65214560b7575e89cebee741d6d2469
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Sep 13 17:39:02 2011 -0400
+
+    specs: use appropriate markup for Copyright statements
+    
+    Also move <releaseinfo> to match order of appearance
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit afe13e19ebf0fc4e3460644164433af016f0add7
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Sep 12 16:54:45 2011 -0400
+
+    docs: use the &fullrelvers; entity to set X11 release information
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 22a2153282db13e9d94881022b8c979539841a2c
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Sep 11 19:49:53 2011 -0400
+
+    docs: remove <productnumber> which is not used by default
+    
+    This element is not rendered by default on the title. A template
+    customization is required to display it.
+    X Window System does not have a product number.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 719f16570d9fcfd15247813ee51fa51ac8a6ff4c
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Sep 11 17:40:21 2011 -0400
+
+    docs: use the &fullrelvers; entity to set X11 release information
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit a6b2992f50b571d612ea9ade631c432c3099bc12
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Sep 11 17:38:42 2011 -0400
+
+    docs: remove orphan <affiliation>
+    
+    Somehow created during the conversion from roff. Unable to locate
+    the author to which it belongs.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit c7420060b6e47b8467ba50c796ec3c1bab090bc7
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Sep 11 17:38:05 2011 -0400
+
+    docs: remove <productnumber> which is not used by default
+    
+    This element is not rendered by default on the title. A template
+    customization is required to display it.
+    X Window System does not have a product number.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 7d5b718c1edbc43c54b7001be548e515a49540ea
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Fri Sep 9 14:46:39 2011 -0400
+
+    docbook.am: embed css styles inside the HTML HEAD element
+    
+    Rather than referring to the external xorg.css stylesheet, embed the content
+    of the file in the html output produced. This is accomplished by using
+    version 1.10 of xorg-xhtml.xsl.
+    
+    This makes the whole html docs tree much more relocatable.
+    In addition, it eliminates xorg.css as a runtime file which makes
+    xorg-sgml-doctools a build time only package.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 24632d280491c465dfe208ef788815890892e326
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Sep 5 12:53:12 2011 -0400
+
+    compose: upgrade makefile to support olinking on chunked html
+    
+    The essential differences over the regular docbook.am are:
+    Adding root.filename parameter for naming of chapters html files.
+    Using xhtml xmlto format and xorg-chunk.xsl stylesheet
+    Set olink.base.uri for pdf but not for chunked html
+    Olink is not applicable to ps and txt formats.
+    
+    Html chapters are added to shelf_DATA as they are also installed.
+    The xml is generated from a perl script and not distributed.
+    
+    Requires version 1.10 of xorg-sgml-doctools.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 93ab0a1c9a4f9094cf0c8e1c686130673e681798
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Aug 31 19:46:20 2011 -0400
+
+    docbook.am: refactor common flags for xmlto and xsltproc
+    
+    Maximize reuse and reduce risk of setting the wrong flag
+    at the wrong place.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 85b725aa9ef76aeb5e94d42e0cd60f896da7ab97
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Aug 31 10:46:59 2011 -0400
+
+    docbook.am: add search path for local entities
+    
+    Currently, only $(XORG_SGML_PATH)/X11 is searched for xml entities.
+    A module may want to add entities that apply only to itself and
+    not to all modules, like the xserver does.
+    
+    This feature may or may not be used in this module, but all modules
+    share a copy of docbook.am.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit b5ed2d368d47f244d43d2513329fa2758bc4ef54
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Aug 25 14:39:20 2011 -0400
+
+    docbook.am: explicitly list xmlto flags for each target
+    
+    Normal evolution of make targets make it impractical to factor out
+    common command flags for xmlto.
+    
+    The targets now list each command option as its presence or absence
+    needs to be justified.
+    
+    xorg.ss is only needed by xmlto for html.
+    masterdb is only needed by xmlto.
+    img.src.path must not be used by html.
+    xsltproc need to use customization layer xorg-*.xsl.
+    txt format is not required to search masterdb.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit d5b3605f3b0639452e892e9ff3afb18bb7442069
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Aug 25 13:12:49 2011 -0400
+
+    docbook.am: do not generate docs if docbook customization layer is missing
+    
+    The stylesheets used to be only about style, fonts or colors.
+    Complex features are now used like olink and chunked html which
+    may cause a build break when stylesheets are missing or lead to hard
+    to find problem.
+    
+    Some modules may be built when stylesheets are present while others
+    are built without. There is no requirement to build crippled docs.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 7f23c72c94d9d14122426b0d8c66054f1402769a
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Fri Aug 5 14:33:32 2011 -0400
+
+    libX11 specs: review doclifter generated tables
+    
+    Many tables had a questionnable layout and some had information dropped.
+    Each table was cross-referenced with a pre-docbook version
+    to ensure semantic integrity.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 1efdbeb8cd08f443188ac783cbab6ba0654a66d6
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jul 20 15:28:47 2011 -0400
+
+    credits.xml: remove toc from Acknowledgments
+    
+    There should be no toc for a simple preface with only one
+    Acknowledgments section.
+    
+    Use <simplesect> markup rather than sect1.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 77cc17ed0817c1df3ac5feb9dc83a5ba5d021a4b
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Aug 4 19:59:37 2011 -0400
+
+    libX11 specs: move </para> above <varaiablelist>
+    
+    Many, but not all, function synopsis have a paragraph that
+    nests the variable list. The code was generated by doclifter
+    and there is no apprent reasons as to why it was done this way.
+    Found while investigating a spacing issue.
+    
+    Before the patch:
+    <para>Some blurb about the function
+    <funcsynopsis>
+    </funcsynopsis>
+    <variablelist>
+    </variablelist>
+    </para>
+    
+    After the patch:
+    <para>Some blurb about the function</para>
+    <funcsynopsis>
+    </funcsynopsis>
+    <variablelist>
+    </variablelist>
+    
+    There are no noticable differences when reading the doc
+    other than than the removed few pixels of spacing between
+    the function sysnopsis and the variable list block.
+    
+    In some cases, there are no "blurb about the fucntion"
+    and the empty paragraph is removed.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 18595f0d8f95ff1c12e7b9f73bd4b30dda5c7168
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Jul 28 19:46:14 2011 -0400
+
+    compose specs: generate chunked html
+    
+    For large 600 page documents such as this one, chunked html
+    provide faster browser load time and better navigation.
+    
+    Simply click on the locale of your choice in the toc and
+    the browser loads just that one file. Being a DocBook,
+    it benefits from all of the usual features and can be
+    integrated with the rest of the documentation.
+    
+    Acked-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 5cc8815b8a117cf0b6af37e7d55c5a420d9fff57
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Jun 23 15:16:47 2011 -0400
+
+    specs: build compose keys tables in specs/i18n/compose
+    
+    Build the tables article together with the rest of the specs.
+    Make it transparent that the source in generated in nls.
+    Reuse docbook.am and get all the features such as olink.
+    
+    The docbook article file stem and id must be the same. The new name
+    for the main article is libX11-keys. The new installation location
+    is $docdir/libX11/i18n/compose.
+    
+    The nls dir retains the role of generating the DocBook/XML source
+    but does not build neither installs output formats or generated source.
+    
+    The tables article now has to specify that each included locale
+    section is a dependency. It did not matter before as they were web links.
+    
+    The xorg-sgml-doctools masterdb shall be updated to include this new doc.
+    Install location moved from doc/libX11/Compose to doc/libX11/i18n/compose.
+    
+    Acked-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit adebbe3856b4aee39c0c7af902c1dea847dd6d7c
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Jun 23 14:43:31 2011 -0400
+
+    nls: restructure charts as a single article with sections
+    
+    Looks more like a real article with a toc rather than individual
+    web pages. Looks nicer in pdf.
+    
+    Each locale is a "section" rather than an "article".
+    Using XInclude to aggregate xml source files gets you the toc for free.
+    
+    The single document is over 600 pages while there were 62 separate
+    documents previously. FOP version 1.0 is required to handle missing
+    character like capital sharp s.
+    
+    Acked-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
 commit fc74dc12b1ff3c43e240e1a713316ce1bf525d61
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Thu Jul 28 19:32:40 2011 -0700

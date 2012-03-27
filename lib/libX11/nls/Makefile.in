@@ -14,29 +14,6 @@
 
 @SET_MAKE@
 
-#
-# Copyright (c) 2010, Oracle and/or its affiliates. All rights reserved.
-#
-# Permission is hereby granted, free of charge, to any person obtaining a
-# copy of this software and associated documentation files (the "Software"),
-# to deal in the Software without restriction, including without limitation
-# the rights to use, copy, modify, merge, publish, distribute, sublicense,
-# and/or sell copies of the Software, and to permit persons to whom the
-# Software is furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice (including the next
-# paragraph) shall be included in all copies or substantial portions of the
-# Software.
-#
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
-# THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-# FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
-# DEALINGS IN THE SOFTWARE.
-#
-
 #							-*- Makefile -*-
 # Rules for generating files using the C pre-processor
 # (Replaces CppFileTarget from Imake)
@@ -64,22 +41,13 @@ POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
 DIST_COMMON = $(nobase_dist_x11locale_DATA) $(srcdir)/Makefile.am \
-	$(srcdir)/Makefile.in $(top_srcdir)/cpprules.in \
-	$(top_srcdir)/nls/xmlrules.in
-@HAVE_FOP_TRUE@@HAVE_XMLTO_TRUE@am__append_1 = $(doc_sources:.xml=.ps) $(doc_sources:.xml=.pdf)
-@HAVE_XMLTO_TEXT_TRUE@@HAVE_XMLTO_TRUE@am__append_2 = $(doc_sources:.xml=.txt)
-@HAVE_STYLESHEETS_TRUE@@HAVE_XMLTO_TRUE@am__append_3 = \
-@HAVE_STYLESHEETS_TRUE@@HAVE_XMLTO_TRUE@	-m $(XSL_STYLESHEET)	\
-@HAVE_STYLESHEETS_TRUE@@HAVE_XMLTO_TRUE@	--stringparam img.src.path=$(abs_builddir)/	\
-@HAVE_STYLESHEETS_TRUE@@HAVE_XMLTO_TRUE@	--stringparam html.stylesheet=$(STYLESHEET_SRCDIR)/xorg.css
-
-@HAVE_XMLTO_TRUE@am__append_4 = $(spec_DATA)
-@HAVE_PERL_TRUE@am__append_5 = $(COMPOSE_CHARTS) $(doc_sources)
-@HAVE_PERL_TRUE@am__append_6 = -o $(@D)
+	$(srcdir)/Makefile.in $(top_srcdir)/cpprules.in
 subdir = nls
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/m4/ax_define_dir.m4 \
-	$(top_srcdir)/configure.ac
+	$(top_srcdir)/m4/libtool.m4 $(top_srcdir)/m4/ltoptions.m4 \
+	$(top_srcdir)/m4/ltsugar.m4 $(top_srcdir)/m4/ltversion.m4 \
+	$(top_srcdir)/m4/lt~obsolete.m4 $(top_srcdir)/configure.ac
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
 mkinstalldirs = $(SHELL) $(install_sh) -d
@@ -95,14 +63,12 @@ am__vpath_adj = case $$p in \
   esac;
 am__strip_dir = `echo $$p | sed -e 's|^.*/||'`;
 am__installdirs = "$(DESTDIR)$(x11localedir)" \
-	"$(DESTDIR)$(x11localedir)" "$(DESTDIR)$(specdir)" \
-	"$(DESTDIR)$(x11localedir)"
+	"$(DESTDIR)$(x11localedir)" "$(DESTDIR)$(x11localedir)"
 nobase_dist_x11localeDATA_INSTALL = $(install_sh_DATA)
 nobase_x11localeDATA_INSTALL = $(install_sh_DATA)
-specDATA_INSTALL = $(INSTALL_DATA)
 x11localeDATA_INSTALL = $(INSTALL_DATA)
 DATA = $(nobase_dist_x11locale_DATA) $(nobase_x11locale_DATA) \
-	$(spec_DATA) $(x11locale_DATA)
+	$(x11locale_DATA)
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
 ACLOCAL = @ACLOCAL@
 ADMIN_MAN_DIR = @ADMIN_MAN_DIR@
@@ -118,6 +84,7 @@ AUTOCONF = @AUTOCONF@
 AUTOHEADER = @AUTOHEADER@
 AUTOMAKE = @AUTOMAKE@
 AWK = @AWK@
+BASE_CFLAGS = @BASE_CFLAGS@
 BIGFONT_CFLAGS = @BIGFONT_CFLAGS@
 BIGFONT_LIBS = @BIGFONT_LIBS@
 CC = @CC@
@@ -130,17 +97,14 @@ CPP = @CPP@
 CPPFLAGS = @CPPFLAGS@
 CPPFLAGS_FOR_BUILD = @CPPFLAGS_FOR_BUILD@
 CWARNFLAGS = @CWARNFLAGS@
-CXX = @CXX@
-CXXCPP = @CXXCPP@
-CXXDEPMODE = @CXXDEPMODE@
-CXXFLAGS = @CXXFLAGS@
 CYGPATH_W = @CYGPATH_W@
 DEFS = @DEFS@
 DEPDIR = @DEPDIR@
+DLLTOOL = @DLLTOOL@
 DRIVER_MAN_DIR = @DRIVER_MAN_DIR@
 DRIVER_MAN_SUFFIX = @DRIVER_MAN_SUFFIX@
 DSYMUTIL = @DSYMUTIL@
-ECHO = @ECHO@
+DUMPBIN = @DUMPBIN@
 ECHO_C = @ECHO_C@
 ECHO_N = @ECHO_N@
 ECHO_T = @ECHO_T@
@@ -148,8 +112,7 @@ EGREP = @EGREP@
 ENABLE_SPECS_FALSE = @ENABLE_SPECS_FALSE@
 ENABLE_SPECS_TRUE = @ENABLE_SPECS_TRUE@
 EXEEXT = @EXEEXT@
-F77 = @F77@
-FFLAGS = @FFLAGS@
+FGREP = @FGREP@
 FILE_MAN_DIR = @FILE_MAN_DIR@
 FILE_MAN_SUFFIX = @FILE_MAN_SUFFIX@
 FOP = @FOP@
@@ -174,6 +137,7 @@ INSTALL_SCRIPT = @INSTALL_SCRIPT@
 INSTALL_STRIP_PROGRAM = @INSTALL_STRIP_PROGRAM@
 KEYSYMDEFS = @KEYSYMDEFS@
 LAUNCHD = @LAUNCHD@
+LD = @LD@
 LDFLAGS = @LDFLAGS@
 LDFLAGS_FOR_BUILD = @LDFLAGS_FOR_BUILD@
 LIBOBJS = @LIBOBJS@
@@ -186,6 +150,7 @@ LINTLIB = @LINTLIB@
 LINT_FALSE = @LINT_FALSE@
 LINT_FLAGS = @LINT_FLAGS@
 LINT_TRUE = @LINT_TRUE@
+LIPO = @LIPO@
 LN_S = @LN_S@
 LTLIBOBJS = @LTLIBOBJS@
 MAINT = @MAINT@
@@ -195,13 +160,18 @@ MAKEINFO = @MAKEINFO@
 MAKE_LINT_LIB_FALSE = @MAKE_LINT_LIB_FALSE@
 MAKE_LINT_LIB_TRUE = @MAKE_LINT_LIB_TRUE@
 MALLOC_ZERO_CFLAGS = @MALLOC_ZERO_CFLAGS@
+MANIFEST_TOOL = @MANIFEST_TOOL@
 MAN_SUBSTS = @MAN_SUBSTS@
 MISC_MAN_DIR = @MISC_MAN_DIR@
 MISC_MAN_SUFFIX = @MISC_MAN_SUFFIX@
+NM = @NM@
 NMEDIT = @NMEDIT@
+OBJDUMP = @OBJDUMP@
 OBJEXT = @OBJEXT@
 OS2_FALSE = @OS2_FALSE@
 OS2_TRUE = @OS2_TRUE@
+OTOOL = @OTOOL@
+OTOOL64 = @OTOOL64@
 PACKAGE = @PACKAGE@
 PACKAGE_BUGREPORT = @PACKAGE_BUGREPORT@
 PACKAGE_NAME = @PACKAGE_NAME@
@@ -214,7 +184,7 @@ PKG_CONFIG = @PKG_CONFIG@
 RANLIB = @RANLIB@
 RAWCPP = @RAWCPP@
 RAWCPPFLAGS = @RAWCPPFLAGS@
-SED = sed
+SED = LC_CTYPE=C sed
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 STRICT_CFLAGS = @STRICT_CFLAGS@
@@ -257,13 +227,11 @@ XSL_STYLESHEET = @XSL_STYLESHEET@
 XTHREADLIB = @XTHREADLIB@
 XTHREAD_CFLAGS = @XTHREAD_CFLAGS@
 XTMALLOC_ZERO_CFLAGS = @XTMALLOC_ZERO_CFLAGS@
+ac_ct_AR = @ac_ct_AR@
 ac_ct_CC = @ac_ct_CC@
-ac_ct_CXX = @ac_ct_CXX@
-ac_ct_F77 = @ac_ct_F77@
+ac_ct_DUMPBIN = @ac_ct_DUMPBIN@
 am__fastdepCC_FALSE = @am__fastdepCC_FALSE@
 am__fastdepCC_TRUE = @am__fastdepCC_TRUE@
-am__fastdepCXX_FALSE = @am__fastdepCXX_FALSE@
-am__fastdepCXX_TRUE = @am__fastdepCXX_TRUE@
 am__include = @am__include@
 am__leading_dot = @am__leading_dot@
 am__quote = @am__quote@
@@ -292,6 +260,7 @@ install_sh = @install_sh@
 libdir = @libdir@
 libexecdir = @libexecdir@
 localedir = @localedir@
+locales = @locales@
 localstatedir = @localstatedir@
 mandir = @mandir@
 mkdir_p = @mkdir_p@
@@ -305,81 +274,13 @@ sharedstatedir = @sharedstatedir@
 sysconfdir = @sysconfdir@
 target_alias = @target_alias@
 x11localedir = $(X11_LOCALEDATADIR)
-specdir = $(docdir)/Compose
-CLEANFILES = $(am__append_4) locale.alias locale.alias.l1 \
-	locale.alias.l2 compose.dir compose.dir.l1 compose.dir.l2 \
-	locale.dir locale.dir.l1 locale.dir.l2 XLC_LOCALE \
-	$(nobase_x11locale_DATA) $(am__append_5)
-XMLTO_FLAGS = $(am__append_3) $(am__append_6)
+CLEANFILES = locale.alias locale.alias.l1 locale.alias.l2 compose.dir \
+	compose.dir.l1 compose.dir.l2 locale.dir locale.dir.l1 \
+	locale.dir.l2 XLC_LOCALE $(nobase_x11locale_DATA)
 SUFFIXES = .pre
-@HAVE_XMLTO_TRUE@spec_DATA = $(doc_sources:.xml=.html) $(am__append_1) \
-@HAVE_XMLTO_TRUE@	$(am__append_2)
 EXTRA_DIST = locale.alias.pre compose.dir.pre locale.dir.pre \
-	compose-check.pl compose-chart.pl \
-	$(nobase_x11locale_DATA:%=%.pre)
+	compose-check.pl $(nobase_x11locale_DATA:%=%.pre)
 x11locale_DATA = locale.alias locale.dir compose.dir
-locales = \
-	am_ET.UTF-8		\
-	armscii-8		\
-	C			\
-	el_GR.UTF-8		\
-	en_US.UTF-8		\
-	fi_FI.UTF-8		\
-	georgian-academy	\
-	georgian-ps		\
-	ibm-cp1133		\
-	iscii-dev		\
-	isiri-3342		\
-	iso8859-1		\
-	iso8859-10		\
-	iso8859-11		\
-	iso8859-13		\
-	iso8859-14		\
-	iso8859-15		\
-	iso8859-2		\
-	iso8859-3		\
-	iso8859-4		\
-	iso8859-5		\
-	iso8859-6		\
-	iso8859-7		\
-	iso8859-8		\
-	iso8859-9		\
-	iso8859-9e		\
-	ja			\
-	ja.JIS			\
-	ja_JP.UTF-8		\
-	ja.S90			\
-	ja.SJIS			\
-	ja.U90			\
-	ko			\
-	koi8-c			\
-	koi8-r			\
-	koi8-u			\
-	ko_KR.UTF-8		\
-	microsoft-cp1251	\
-	microsoft-cp1255	\
-	microsoft-cp1256	\
-	mulelao-1		\
-	nokhchi-1		\
-	pt_BR.UTF-8		\
-	ru_RU.UTF-8		\
-	tatar-cyr		\
-	th_TH			\
-	th_TH.UTF-8		\
-	tscii-0			\
-	vi_VN.tcvn		\
-	vi_VN.viscii		\
-	zh_CN			\
-	zh_CN.gb18030		\
-	zh_CN.gbk		\
-	zh_CN.UTF-8		\
-	zh_HK.big5		\
-	zh_HK.big5hkscs		\
-	zh_HK.UTF-8		\
-	zh_TW			\
-	zh_TW.big5		\
-	zh_TW.UTF-8
-
 WCHAR32_FLAGS = -DWCHAR32=@WCHAR32@
 CPP_FILES_FLAGS = $(WCHAR32_FLAGS)
 
@@ -397,20 +298,17 @@ CPP_SED_MAGIC = $(SED) -e '/^\#  *[0-9][0-9]*  *.*$$/d' \
                        -e 's,X11_LOCALEDATADIR,$(X11_LOCALEDATADIR),g' \
                        -e '/\@\@$$/s/\@\@$$/\\/'
 
-@HAVE_PERL_TRUE@doc_sources = Compose/index.xml \
-@HAVE_PERL_TRUE@	$(locales:%=Compose/%.xml)
+@HAVE_PERL_TRUE@TESTS_ENVIRONMENT = $(PERL)
+@HAVE_PERL_TRUE@TESTS = $(srcdir)/compose-check.pl
 
 # Per-locale data files
 nobase_dist_x11locale_DATA = $(locales:%=%/XI18N_OBJS)
 nobase_x11locale_DATA = $(locales:%=%/XLC_LOCALE) $(locales:%=%/Compose)
-@HAVE_PERL_TRUE@TESTS_ENVIRONMENT = $(PERL)
-@HAVE_PERL_TRUE@TESTS = $(srcdir)/compose-check.pl
-@HAVE_PERL_TRUE@COMPOSE_CHARTS = $(locales:%=%/Compose.xml)
 all: all-am
 
 .SUFFIXES:
 .SUFFIXES: .pre
-$(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am $(top_srcdir)/nls/xmlrules.in $(top_srcdir)/cpprules.in $(am__configure_deps)
+$(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am $(top_srcdir)/cpprules.in $(am__configure_deps)
 	@for dep in $?; do \
 	  case '$(am__configure_deps)' in \
 	    *$$dep*) \
@@ -486,23 +384,6 @@ uninstall-nobase_x11localeDATA:
 	  $(am__vpath_adj) \
 	  echo " rm -f '$(DESTDIR)$(x11localedir)/$$f'"; \
 	  rm -f "$(DESTDIR)$(x11localedir)/$$f"; \
-	done
-install-specDATA: $(spec_DATA)
-	@$(NORMAL_INSTALL)
-	test -z "$(specdir)" || $(mkdir_p) "$(DESTDIR)$(specdir)"
-	@list='$(spec_DATA)'; for p in $$list; do \
-	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
-	  f=$(am__strip_dir) \
-	  echo " $(specDATA_INSTALL) '$$d$$p' '$(DESTDIR)$(specdir)/$$f'"; \
-	  $(specDATA_INSTALL) "$$d$$p" "$(DESTDIR)$(specdir)/$$f"; \
-	done
-
-uninstall-specDATA:
-	@$(NORMAL_UNINSTALL)
-	@list='$(spec_DATA)'; for p in $$list; do \
-	  f=$(am__strip_dir) \
-	  echo " rm -f '$(DESTDIR)$(specdir)/$$f'"; \
-	  rm -f "$(DESTDIR)$(specdir)/$$f"; \
 	done
 install-x11localeDATA: $(x11locale_DATA)
 	@$(NORMAL_INSTALL)
@@ -602,7 +483,7 @@ check-TESTS: $(TESTS)
 	else :; fi
 
 distdir: $(DISTFILES)
-	$(mkdir_p) $(distdir)/.. $(distdir)/../nls
+	$(mkdir_p) $(distdir)/..
 	@srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`; \
 	topsrcdirstrip=`echo "$(top_srcdir)" | sed 's|.|.|g'`; \
 	list='$(DISTFILES)'; for file in $$list; do \
@@ -634,7 +515,7 @@ check-am: all-am
 check: check-am
 all-am: Makefile $(DATA)
 installdirs:
-	for dir in "$(DESTDIR)$(x11localedir)" "$(DESTDIR)$(x11localedir)" "$(DESTDIR)$(specdir)" "$(DESTDIR)$(x11localedir)"; do \
+	for dir in "$(DESTDIR)$(x11localedir)" "$(DESTDIR)$(x11localedir)" "$(DESTDIR)$(x11localedir)"; do \
 	  test -z "$$dir" || $(mkdir_p) "$$dir"; \
 	done
 install: install-am
@@ -662,10 +543,9 @@ distclean-generic:
 maintainer-clean-generic:
 	@echo "This command is intended for maintainers to use"
 	@echo "it deletes files that may require special tools to rebuild."
-@HAVE_PERL_FALSE@clean-local:
 clean: clean-am
 
-clean-am: clean-generic clean-libtool clean-local mostlyclean-am
+clean-am: clean-generic clean-libtool mostlyclean-am
 
 distclean: distclean-am
 	-rm -f Makefile
@@ -682,8 +562,7 @@ info: info-am
 info-am:
 
 install-data-am: install-nobase_dist_x11localeDATA \
-	install-nobase_x11localeDATA install-specDATA \
-	install-x11localeDATA
+	install-nobase_x11localeDATA install-x11localeDATA
 
 install-exec-am:
 
@@ -710,38 +589,21 @@ ps: ps-am
 ps-am:
 
 uninstall-am: uninstall-info-am uninstall-nobase_dist_x11localeDATA \
-	uninstall-nobase_x11localeDATA uninstall-specDATA \
-	uninstall-x11localeDATA
+	uninstall-nobase_x11localeDATA uninstall-x11localeDATA
 
 .PHONY: all all-am check check-TESTS check-am clean clean-generic \
-	clean-libtool clean-local distclean distclean-generic \
-	distclean-libtool distdir dvi dvi-am html html-am info info-am \
-	install install-am install-data install-data-am install-exec \
+	clean-libtool distclean distclean-generic distclean-libtool \
+	distdir dvi dvi-am html html-am info info-am install \
+	install-am install-data install-data-am install-exec \
 	install-exec-am install-info install-info-am install-man \
 	install-nobase_dist_x11localeDATA install-nobase_x11localeDATA \
-	install-specDATA install-strip install-x11localeDATA \
-	installcheck installcheck-am installdirs maintainer-clean \
+	install-strip install-x11localeDATA installcheck \
+	installcheck-am installdirs maintainer-clean \
 	maintainer-clean-generic mostlyclean mostlyclean-generic \
 	mostlyclean-libtool pdf pdf-am ps ps-am uninstall uninstall-am \
 	uninstall-info-am uninstall-nobase_dist_x11localeDATA \
-	uninstall-nobase_x11localeDATA uninstall-specDATA \
-	uninstall-x11localeDATA
+	uninstall-nobase_x11localeDATA uninstall-x11localeDATA
 
-
-@HAVE_XMLTO_TRUE@%.txt: %.xml $(dist_spec_DATA)
-@HAVE_XMLTO_TRUE@	$(AM_V_GEN)$(XMLTO) $(XMLTO_FLAGS) txt $<
-
-@HAVE_XMLTO_TRUE@%.html: %.xml $(dist_spec_DATA)
-@HAVE_XMLTO_TRUE@	$(AM_V_GEN)$(XMLTO) $(XMLTO_FLAGS) xhtml-nochunks $<
-
-@HAVE_XMLTO_TRUE@%.pdf: %.xml $(dist_spec_DATA)
-@HAVE_XMLTO_TRUE@	$(AM_V_GEN)$(XMLTO) $(XMLTO_FLAGS) --with-fop pdf $<
-
-@HAVE_XMLTO_TRUE@%.ps: %.xml $(dist_spec_DATA)
-@HAVE_XMLTO_TRUE@	$(AM_V_GEN)$(XMLTO) $(XMLTO_FLAGS) --with-fop ps $<
-
-@HAVE_XMLTO_TRUE@chunked-html: $(doc_sources)
-@HAVE_XMLTO_TRUE@	$(AM_V_GEN)$(XMLTO) $(XMLTO_FLAGS) -o html xhtml $(doc_sources)
 
 .pre:
 	@$(mkdir_p) $(@D)
@@ -751,37 +613,21 @@ uninstall-am: uninstall-info-am uninstall-nobase_dist_x11localeDATA \
 
 locale.alias: locale.alias.pre
 	$(AM_V_GEN)$(RAWCPP) $(RAWCPPFLAGS) $(CPP_FILES_FLAGS) < $(srcdir)/locale.alias.pre | $(CPP_SED_MAGIC) > locale.alias.l1
-	sed -e '/^[^#][^        ]*:/s/://' -e '/^[^#].*[        ].*:/d' \
+	$(SED) -e '/^[^#][^        ]*:/s/://' -e '/^[^#].*[        ].*:/d' \
         < locale.alias.l1 > locale.alias.l2
 	cat locale.alias.l2 locale.alias.l1 > locale.alias
 
 compose.dir: compose.dir.pre
 	$(AM_V_GEN)$(RAWCPP) $(RAWCPPFLAGS) $(CPP_FILES_FLAGS) < $(srcdir)/compose.dir.pre | $(CPP_SED_MAGIC) > compose.dir.l1
-	sed -e '/^[^#][^        ]*:/s/://' -e '/^[^#].*[        ].*:/d' \
+	$(SED) -e '/^[^#][^        ]*:/s/://' -e '/^[^#].*[        ].*:/d' \
         < compose.dir.l1 > compose.dir.l2
 	cat compose.dir.l2 compose.dir.l1 > compose.dir
 
 locale.dir: locale.dir.pre
 	$(AM_V_GEN)$(RAWCPP) $(RAWCPPFLAGS) $(CPP_FILES_FLAGS) < $(srcdir)/locale.dir.pre | $(CPP_SED_MAGIC) > locale.dir.l1
-	sed -e '/^[^#][^        ]*:/s/://' -e '/^[^#].*[        ].*:/d' \
+	$(SED) -e '/^[^#][^        ]*:/s/://' -e '/^[^#].*[        ].*:/d' \
         < locale.dir.l1 > locale.dir.l2
 	cat locale.dir.l2 locale.dir.l1 > locale.dir
-
-@HAVE_PERL_TRUE@Compose/index.xml:
-@HAVE_PERL_TRUE@	@$(MKDIR_P) $(@D)
-@HAVE_PERL_TRUE@	$(AM_V_GEN)$(PERL) $(srcdir)/compose-chart.pl \
-@HAVE_PERL_TRUE@	 --index --output="$@" $(locales)
-
-@HAVE_PERL_TRUE@clean-local: clean-Compose-dir
-@HAVE_PERL_TRUE@clean-Compose-dir:
-@HAVE_PERL_TRUE@	-rm -rf Compose
-
-@HAVE_PERL_TRUE@%/Compose.xml: %/Compose
-@HAVE_PERL_TRUE@	$(AM_V_GEN)$(PERL) $(srcdir)/compose-chart.pl \
-@HAVE_PERL_TRUE@	 --locale="$(@D)" --output="$@" $<
-
-@HAVE_PERL_TRUE@Compose/%.xml: %/Compose.xml
-@HAVE_PERL_TRUE@	$(AM_V_GEN)cp $< $@
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:

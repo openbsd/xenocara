@@ -1,4 +1,4 @@
-<chapter id='indicators'>
+<chapter id='Indicators'>
 <title>Indicators</title>
 
 <para>
@@ -42,7 +42,7 @@ keyboard indicators, which makes it straightforward to provide an on-screen
 used for manipulating them.
 </para>
 
-<sect1 id='indicator_names'>
+<sect1 id='Indicator_Names'>
 <title>Indicator Names</title>
 
 <para>
@@ -62,7 +62,7 @@ XkbGetNames</emphasis>
 
 
 </sect1>
-<sect1 id='indicator_data_structures'>
+<sect1 id='Indicator_Data_Structures'>
 <title>Indicator Data Structures</title>
 
 <para>
@@ -74,7 +74,7 @@ XkbIndicatorMapRec</emphasis>
 </para>
 
 
-<sect2 id='xkbindicatorrec'>
+<sect2 id='XkbIndicatorRec'>
 <title>XkbIndicatorRec</title>
 
 <para>
@@ -129,7 +129,7 @@ phys_indicators</emphasis>
 
 
 </sect2>
-<sect2 id='xkbindicatormaprec'>
+<sect2 id='XkbIndicatorMapRec'>
 <title>XkbIndicatorMapRec</title>
 
 <para>
@@ -191,7 +191,7 @@ For more information on the effects of explicit changes to indicators and the
 relationship to the indicator map, see section 8.4.1. <!-- xref -->
 </para>
 
-<sect3 id='xkbindicatormaprec_flags_field'>
+<sect3 id='XkbIndicatorMapRec_flags_field'>
 <title>XkbIndicatorMapRec flags field</title>
 
 <para>
@@ -203,33 +203,34 @@ flags</emphasis>
  and their effects are shown in Table 8.1. <!-- xref -->
 </para>
 
-<table frame='none'>
+<table frame='topbot'>
 <title>XkbIndicatorMapRec flags Field</title>
-<tgroup cols='3'>
-<colspec colsep='0'/>
-<colspec colsep='0'/>
-<colspec colsep='0'/>
+<?dbfo keep-together="always" ?>
+<tgroup cols='3' align='left' colsep='0' rowsep='0'>
+<colspec colname='c1' colwidth='2.0*'/>
+<colspec colname='c2' colwidth='1.0*'/>
+<colspec colname='c3' colwidth='3.0*'/>
 <thead>
-<row rowsep='0'>
+<row rowsep='1'>
   <entry>Value</entry>
   <entry></entry>
   <entry>Effect</entry>
   </row>
 </thead>
 <tbody>
-  <row rowsep='0'>
+  <row>
     <entry>XkbIM_NoExplicit</entry>
     <entry>(1L&lt;&lt;7)</entry>
     <entry>Client applications cannot change the state of the indicator.</entry>
   </row>
-  <row rowsep='0'>
+  <row>
     <entry>XkbIM_NoAutomatic</entry>
     <entry>(1L&lt;&lt;6)</entry>
     <entry>Xkb does not automatically change the value of the indicator based
 upon a change in the keyboard state, regardless of the values for the other
 fields of the indicator map.</entry>
   </row>
-  <row rowsep='0'>
+  <row>
     <entry>XkbIM_LEDDrivesKB</entry>
     <entry>(1L&lt;&lt;5)</entry>
     <entry>A client application changing the state of the indicator causes the
@@ -306,7 +307,7 @@ indicator on. If the conditions do not match, Xkb turns the indicator off.
 
 </sect3>
 
-<sect3 id='xkbindicatormaprec_which_groups_and_groups_fields'>
+<sect3 id='XkbIndicatorMapRec_which_groups_and_groups_fields'>
 <title>XkbIndicatorMapRec which_groups and groups fields</title>
 
 <para>
@@ -358,20 +359,21 @@ groups</emphasis>
  is shown in Table 8.2. <!-- xref -->
 </para>
 
-<table frame='none'>
+<table frame='topbot'>
 <title>XkbIndicatorMapRec which_groups and groups, Keyboard Drives
 Indicator</title>
-<tgroup cols='2'>
-<colspec colsep='0'/>
-<colspec colsep='0'/>
+<?dbfo keep-together="always" ?>
+<tgroup cols='2' align='left' colsep='0' rowsep='0'>
+<colspec colname='c1' colwidth='1.0*'/>
+<colspec colname='c2' colwidth='2.0*'/>
 <thead>
-<row rowsep='0'>
+<row rowsep='1'>
   <entry>which_groups</entry>
   <entry>Effect</entry>
   </row>
 </thead>
 <tbody>
-  <row rowsep='0'>
+  <row>
     <entry>XkbIM_UseNone</entry>
     <entry>
 The <emphasis>
@@ -379,7 +381,7 @@ groups</emphasis>
  field and the current keyboard group state are ignored.
     </entry>
   </row>
-  <row rowsep='0'>
+  <row>
     <entry>XkbIM_UseBase</entry>
     <entry>
 If <emphasis>
@@ -390,7 +392,7 @@ groups</emphasis>
  is zero, the indicator is lit whenever the base keyboard group is zero.
     </entry>
   </row>
-  <row rowsep='0'>
+  <row>
     <entry>XkbIM_UseLatched</entry>
     <entry>
 If <emphasis>
@@ -401,7 +403,7 @@ groups</emphasis>
  is zero, the indicator is lit whenever the latched keyboard group is zero.
     </entry>
   </row>
-  <row rowsep='0'>
+  <row>
     <entry>XkbIM_UseLocked</entry>
     <entry>
 The <emphasis>
@@ -411,7 +413,7 @@ keyboard group matches one of the bits that are set in <emphasis>
 groups</emphasis>.
     </entry>
   </row>
-  <row rowsep='0'>
+  <row>
     <entry>XkbIM_UseEffective</entry>
     <entry>
 The <emphasis>
@@ -437,30 +439,33 @@ XkbIM_LEDDrivesKB</emphasis>
 State" column refers to the new state to which you set the indicator.
 </para>
 
-<table frame='none'>
+<table frame='topbot'>
 <title>XkbIndicatorMapRec which_groups and groups, Indicator Drives
 Keyboard</title>
-<tgroup cols='3'>
-<colspec colsep='0'/>
+<?dbfo keep-together="always" ?>
+<tgroup cols='3' align='left' colsep='0' rowsep='0'>
+<colspec colname='c1' colwidth='2.0*'/>
+<colspec colname='c2' colwidth='1.0*'/>
+<colspec colname='c3' colwidth='3.0*'/>
 <thead>
-<row rowsep='0'>
+<row rowsep='1'>
   <entry>which_groups</entry>
   <entry>New State</entry>
   <entry>Effect on Keyboard Group State</entry>
   </row>
 </thead>
 <tbody>
-  <row rowsep='0'>
+  <row>
     <entry>XkbIM_UseNone </entry>
     <entry>On or Off</entry>
     <entry>No effect</entry>
   </row>
-  <row rowsep='0'>
+  <row>
     <entry>XkbIM_UseBase</entry>
     <entry>On or Off</entry>
     <entry>No effect</entry>
   </row>
-  <row rowsep='0'>
+  <row>
     <entry>XkbIM_UseLatched</entry>
     <entry>On</entry>
     <entry>
@@ -474,7 +479,7 @@ groups</emphasis>
  is empty, the keyboard group latch is changed to zero.
     </entry>
   </row>
-  <row rowsep='0'>
+  <row>
     <entry>XkbIM_UseLatched</entry>
     <entry>Off</entry>
     <entry>
@@ -490,7 +495,7 @@ groups</emphasis>
 keyboard group.
     </entry>
   </row>
-  <row rowsep='0'>
+  <row>
     <entry>XkbIM_UseLocked or XkbIM_UseEffective</entry>
     <entry>On</entry>
     <entry>
@@ -501,7 +506,7 @@ changed to the lowest numbered group specified in <emphasis>
 groups</emphasis>.
     </entry>
   </row>
-  <row rowsep='0'>
+  <row>
     <entry>XkbIM_UseLocked or XkbIM_UseEffective</entry>
     <entry>Off</entry>
     <entry>
@@ -520,7 +525,7 @@ groups</emphasis>
 </table>
 
 </sect3>
-<sect3 id='xkbindicatormaprec_which_mods_and_mods_fields'>
+<sect3 id='XkbIndicatorMapRec_which_mods_and_mods_fields'>
 <title>XkbIndicatorMapRec which_mods and mods fields</title>
 
 <para>
@@ -605,23 +610,25 @@ mods</emphasis>
  is shown in Table 8.4 <!-- xref -->
 </para>
 
-<table frame='none'>
+<table frame='topbot'>
 <title>XkbIndicatorMapRec which_mods and mods, Keyboard Drives Indicator</title>
-<tgroup cols='2'>
-<colspec colsep='0'/>
+<?dbfo keep-together="always" ?>
+<tgroup cols='2' align='left' colsep='0' rowsep='0'>
+<colspec colname='c1' colwidth='1.0*'/>
+<colspec colname='c2' colwidth='2.0*'/>
 <thead>
-<row rowsep='0'>
+<row rowsep='1'>
   <entry>which_mods</entry>
   <entry>Effect on Keyboard Modifiers</entry>
   </row>
 </thead>
 <tbody>
-  <row rowsep='0'>
+  <row>
     <entry>XkbIM_UseNone</entry>
     <entry>The mods field and the current keyboard modifier state are
 ignored.</entry>
   </row>
-  <row rowsep='0'>
+  <row>
     <entry>XkbIM_UseBase</entry>
     <entry>
 The indicator is lit when any of the modifiers specified in the <emphasis>
@@ -636,7 +643,7 @@ mods.vmods</emphasis>
 modifiers.
     </entry>
   </row>
-  <row rowsep='0'>
+  <row>
     <entry>XkbIM_UseLatched</entry>
     <entry>
 The indicator is lit when any of the modifiers specified in the <emphasis>
@@ -650,7 +657,7 @@ mods.vmods</emphasis>
  are zero, the indicator is lit when none of the modifier keys are latched.
     </entry>
   </row>
-  <row rowsep='0'>
+  <row>
     <entry>XkbIM_UseLocked</entry>
     <entry>
 The indicator is lit when any of the modifiers specified in the <emphasis>
@@ -664,7 +671,7 @@ mods.vmods</emphasis>
  are zero, the indicator is lit when none of the modifier keys are locked.
     </entry>
   </row>
-  <row rowsep='0'>
+  <row>
     <entry>XkbIM_UseEffective</entry>
     <entry>
 The indicator is lit when any of the modifiers specified in the <emphasis>
@@ -679,7 +686,7 @@ mods.vmods</emphasis>
 modifiers.
     </entry>
   </row>
-  <row rowsep='0'>
+  <row>
     <entry>XkbIM_UseCompat</entry>
     <entry>
 The indicator is lit when any of the modifiers specified in the <emphasis>
@@ -709,25 +716,27 @@ XkbIM_LEDDrivesKB</emphasis>
 State" column refers to the new state to which you set the indicator.
 </para> <!-- xref -->
 
-<table frame='none'>
+<table frame='topbot'>
 <title>XkbIndicatorMapRec which_mods and mods, Indicator Drives Keyboard</title>
-<tgroup cols='3'>
-<colspec colsep='0'/>
-<colspec colsep='0'/>
+<?dbfo keep-together="always" ?>
+<tgroup cols='3' align='left' colsep='0' rowsep='0'>
+<colspec colname='c1' colwidth='2.0*'/>
+<colspec colname='c2' colwidth='1.0*'/>
+<colspec colname='c3' colwidth='3.0*'/>
 <thead>
-<row rowsep='0'>
+<row rowsep='1'>
   <entry>which_mods</entry>
   <entry>New State</entry>
   <entry>Effect on Keyboard Modifiers</entry>
   </row>
 </thead>
 <tbody>
-  <row rowsep='0'>
+  <row>
     <entry>XkbIM_UseNone or XkbIM_UseBase</entry>
     <entry>On or Off</entry>
     <entry>No Effect</entry>
   </row>
-  <row rowsep='0'>
+  <row>
     <entry>XkbIM_UseLatched</entry>
     <entry>On</entry>
     <entry>
@@ -738,7 +747,7 @@ mods</emphasis>
  are added to the latched modifiers.
     </entry>
   </row>
-  <row rowsep='0'>
+  <row>
     <entry>XkbIM_UseLatched</entry>
     <entry>Off</entry>
     <entry>
@@ -749,7 +758,7 @@ mods</emphasis>
  are removed from the latched modifiers.
     </entry>
   </row>
-  <row rowsep='0'>
+  <row>
     <entry>XkbIM_UseLocked, XkbIM_UseCompat, or XkbIM_UseEffective</entry>
     <entry>On</entry>
     <entry>
@@ -760,7 +769,7 @@ mods</emphasis>
  are added to the locked modifiers.
     </entry>
   </row>
-  <row rowsep='0'>
+  <row>
     <entry>XkbIM_UseLocked</entry>
     <entry>Off</entry>
     <entry>
@@ -771,7 +780,7 @@ mods</emphasis>
  are removed from the locked modifiers.
     </entry>
   </row>
-  <row rowsep='0'>
+  <row>
     <entry>XkbIM_UseCompat or XkbIM_UseEffective</entry>
     <entry>Off</entry>
     <entry>
@@ -787,7 +796,7 @@ mods</emphasis>
 </table>
 
 </sect3>
-<sect3 id='xkbindicatormaprec_ctrls_field'>
+<sect3 id='XkbIndicatorMapRec_ctrls_field'>
 <title>XkbIndicatorMapRec ctrls field</title>
 
 <para>
@@ -824,7 +833,7 @@ ctrls</emphasis>
 </sect3>
 </sect2>
 </sect1>
-<sect1 id='getting_information_about_indicators'>
+<sect1 id='Getting_Information_About_Indicators'>
 <title>Getting Information About Indicators</title>
 
 <para>
@@ -842,7 +851,7 @@ XkbIndicatorRec</emphasis>
 </para>
 
 
-<sect2 id='getting_indicator_state'>
+<sect2 id='Getting_Indicator_State'>
 <title>Getting Indicator State</title>
 
 <para>
@@ -853,10 +862,11 @@ XkbGetIndicatorState</emphasis>.
 </para>
 
 <informaltable frame='none'>
-<tgroup cols='1'>
-<colspec colsep='0'/>
+<?dbfo keep-together="always" ?>
+<tgroup cols='1' align='left' colsep='0' rowsep='0'>
+<colspec colname='c1' colwidth='1.0*'/>
 <tbody>
-  <row rowsep='0'>
+  <row>
     <entry role='functiondecl'>
 Status <emphasis>
 XkbGetIndicatorState</emphasis>
@@ -869,14 +879,14 @@ state_return</emphasis>
 )
     </entry>
   </row>
-  <row rowsep='0'>
+  <row>
     <entry role='functionargdecl'>
 Display *      <emphasis>
 display</emphasis>
 ;            /* connection to the X server */
     </entry>
   </row>
-  <row rowsep='0'>
+  <row>
     <entry role='functionargdecl'>
 unsigned int      <emphasis>
 device_spec</emphasis>
@@ -885,7 +895,7 @@ XkbUseCoreKbd</emphasis>
  */
     </entry>
   </row>
-  <row rowsep='0'>
+  <row>
     <entry role='functionargdecl'>
 unsigned int *      <emphasis>
 state_return</emphasis>
@@ -923,7 +933,7 @@ XkbGetIndicatorState</emphasis>
 
 
 </sect2>
-<sect2 id='getting_indicator_information_by_index'>
+<sect2 id='Getting_Indicator_Information_by_Index'>
 <title>Getting Indicator Information by Index</title>
 
 <para>
@@ -933,10 +943,11 @@ XkbGetIndicatorMap</emphasis>.
 </para>
 
 <informaltable frame='none'>
-<tgroup cols='1'>
-<colspec colsep='0'/>
+<?dbfo keep-together="always" ?>
+<tgroup cols='1' align='left' colsep='0' rowsep='0'>
+<colspec colname='c1' colwidth='1.0*'/>
 <tbody>
-  <row rowsep='0'>
+  <row>
     <entry role='functiondecl'>
 Status <emphasis>
 XkbGetIndicatorMap</emphasis>
@@ -949,21 +960,21 @@ dpy</emphasis>
 )
     </entry>
   </row>
-  <row rowsep='0'>
+  <row>
     <entry role='functionargdecl'>
 Display *      <emphasis>
 dpy</emphasis>
 ;      /* connection to the X server */
     </entry>
   </row>
-  <row rowsep='0'>
+  <row>
     <entry role='functionargdecl'>
 unsigned int      <emphasis>
 which</emphasis>
 ;      /* mask of indicators for which maps should be returned */
     </entry>
   </row>
-  <row rowsep='0'>
+  <row>
     <entry role='functionargdecl'>
 XkbDescPtr      <emphasis>
 desc</emphasis>
@@ -1018,7 +1029,7 @@ XkbFreeIndicatorMaps</emphasis>
 
 
 </sect2>
-<sect2 id='getting_indicator_information_by_name'>
+<sect2 id='Getting_Indicator_Information_by_Name'>
 <title>Getting Indicator Information by Name</title>
 
 <para>
@@ -1042,10 +1053,11 @@ XkbGetNamedIndicator</emphasis>
 </para>
 
 <informaltable frame='none'>
-<tgroup cols='1'>
-<colspec colsep='0'/>
+<?dbfo keep-together="always" ?>
+<tgroup cols='1' align='left' colsep='0' rowsep='0'>
+<colspec colname='c1' colwidth='1.0*'/>
 <tbody>
-  <row rowsep='0'>
+  <row>
     <entry role='functiondecl'>
 Bool <emphasis>
 XkbGetNamedIndicator</emphasis>
@@ -1066,14 +1078,14 @@ real_rtrn</emphasis>
 )
     </entry>
   </row>
-  <row rowsep='0'>
+  <row>
     <entry role='functionargdecl'>
 Display *            <emphasis>
 dpy</emphasis>
 ;            /* connection to the X server */
     </entry>
   </row>
-  <row rowsep='0'>
+  <row>
     <entry role='functionargdecl'>
 unsigned int      <emphasis>
       device_spec</emphasis>
@@ -1082,35 +1094,35 @@ XkbUseCoreKbd</emphasis>
  */
     </entry>
   </row>
-  <row rowsep='0'>
+  <row>
     <entry role='functionargdecl'>
 Atom      <emphasis>
       name</emphasis>
 ;            /* name of the indicator to be retrieved */
     </entry>
   </row>
-  <row rowsep='0'>
+  <row>
     <entry role='functionargdecl'>
 int *            <emphasis>
 ndx_rtrn</emphasis>
 ;            /* backfilled with the index of the retrieved indicator */
     </entry>
   </row>
-  <row rowsep='0'>
+  <row>
     <entry role='functionargdecl'>
 Bool *            <emphasis>
 state_rtrn</emphasis>
 ;            /* backfilled with the current state of the retrieved indicator */
     </entry>
   </row>
-  <row rowsep='0'>
+  <row>
     <entry role='functionargdecl'>
 XkbIndicatorMapPtr      <emphasis>
       map_rtrn</emphasis>
 ;            /* backfilled with the mapping for the retrieved indicator */
     </entry>
   </row>
-  <row rowsep='0'>
+  <row>
     <entry role='functionargdecl'>
 Bool *            <emphasis>
 real_rtrn</emphasis>
@@ -1189,7 +1201,7 @@ BadImplementation</emphasis>
 
 </sect2>
 </sect1>
-<sect1 id='changing_indicator_maps_and_state'>
+<sect1 id='Changing_Indicator_Maps_and_State'>
 <title>Changing Indicator Maps and State</title>
 
 <para>
@@ -1216,7 +1228,7 @@ XkbChangeIndicators</emphasis>.
 </para>
 
 
-<sect2 id='effects_of_explicit_changes_on_indicators'>
+<sect2 id='Effects_of_Explicit_Changes_on_Indicators'>
 <title>Effects of Explicit Changes on Indicators</title>
 
 <para>
@@ -1314,7 +1326,7 @@ ctrls</emphasis>
 
 
 </sect2>
-<sect2 id='changing_indicator_maps_by_index'>
+<sect2 id='Changing_Indicator_Maps_by_Index'>
 <title>Changing Indicator Maps by Index</title>
 
 <para>
@@ -1325,10 +1337,11 @@ XkbSetIndicatorMap</emphasis>
 </para>
 
 <informaltable frame='none'>
-<tgroup cols='1'>
-<colspec colsep='0'/>
+<?dbfo keep-together="always" ?>
+<tgroup cols='1' align='left' colsep='0' rowsep='0'>
+<colspec colname='c1' colwidth='1.0*'/>
 <tbody>
-  <row rowsep='0'>
+  <row>
     <entry role='functiondecl'>
 Bool<emphasis>
  XkbSetIndicatorMap</emphasis>
@@ -1341,21 +1354,21 @@ dpy</emphasis>
 )
     </entry>
   </row>
-  <row rowsep='0'>
+  <row>
     <entry role='functionargdecl'>
 Display *      <emphasis>
 dpy</emphasis>
 ;      /* connection to the X server */
     </entry>
   </row>
-  <row rowsep='0'>
+  <row>
     <entry role='functionargdecl'>
 unsigned int      <emphasis>
 which</emphasis>
 ;      /* mask of indicators to change */
     </entry>
   </row>
-  <row rowsep='0'>
+  <row>
     <entry role='functionargdecl'>
 XkbDescPtr      <emphasis>
 desc</emphasis>
@@ -1380,7 +1393,7 @@ desc</emphasis>
 
 
 </sect2>
-<sect2 id='changing_indicator_maps_by_name'>
+<sect2 id='Changing_Indicator_Maps_by_Name'>
 <title>Changing Indicator Maps by Name</title>
 
 <para>
@@ -1413,10 +1426,11 @@ Set the indicator map for the indicator
 </itemizedlist>
 
 <informaltable frame='none'>
-<tgroup cols='1'>
-<colspec colsep='0'/>
+<?dbfo keep-together="always" ?>
+<tgroup cols='1' align='left' colsep='0' rowsep='0'>
+<colspec colname='c1' colwidth='1.0*'/>
 <tbody>
-  <row rowsep='0'>
+  <row>
     <entry role='functiondecl'>
 Bool<emphasis>
  XkbSetNamedIndicator</emphasis>
@@ -1435,14 +1449,14 @@ dpy</emphasis>
 )
     </entry>
   </row>
-  <row rowsep='0'>
+  <row>
     <entry role='functionargdecl'>
 Display *      <emphasis>
       dpy</emphasis>
 ;            /* connection to the X server */
     </entry>
   </row>
-  <row rowsep='0'>
+  <row>
     <entry role='functionargdecl'>
 unsigned int      <emphasis>
       device_spec</emphasis>
@@ -1451,28 +1465,28 @@ XkbUseCoreKbd</emphasis>
  */
     </entry>
   </row>
-  <row rowsep='0'>
+  <row>
     <entry role='functionargdecl'>
 Atom      <emphasis>
       name</emphasis>
 ;            /* name of the indicator to change */
     </entry>
   </row>
-  <row rowsep='0'>
+  <row>
     <entry role='functionargdecl'>
 Bool      <emphasis>
       change_state</emphasis>
 ;            /* whether to change the indicator state or not */
     </entry>
   </row>
-  <row rowsep='0'>
+  <row>
     <entry role='functionargdecl'>
 Bool      <emphasis>
       state</emphasis>
 ;            /* desired new state for the indicator */
     </entry>
   </row>
-  <row rowsep='0'>
+  <row>
     <entry role='functionargdecl'>
 Bool            <emphasis>
 create_new</emphasis>
@@ -1480,7 +1494,7 @@ create_new</emphasis>
 created when necessary */
     </entry>
   </row>
-  <row rowsep='0'>
+  <row>
     <entry role='functionargdecl'>
 XkbIndicatorMapPtr            <emphasis>
 map</emphasis>
@@ -1567,7 +1581,7 @@ XkbNamesNotify</emphasis>
 
 
 </sect2>
-<sect2 id='the_xkbindicatorchangesrec_structure'>
+<sect2 id='The_XkbIndicatorChangesRec_Structure'>
 <title>The XkbIndicatorChangesRec Structure</title>
 
 <para>
@@ -1605,10 +1619,11 @@ XkbChangeIndicators</emphasis>
 </para>
 
 <informaltable frame='none'>
-<tgroup cols='1'>
-<colspec colsep='0'/>
+<?dbfo keep-together="always" ?>
+<tgroup cols='1' align='left' colsep='0' rowsep='0'>
+<colspec colname='c1' colwidth='1.0*'/>
 <tbody>
-  <row rowsep='0'>
+  <row>
     <entry role='functiondecl'>
 Bool <emphasis>
 XkbChangeIndicators</emphasis>
@@ -1617,40 +1632,40 @@ dpy, xkb, changes, state</emphasis>
 )
     </entry>
   </row>
-  <row rowsep='0'>
+  <row>
     <entry role='functionargdecl'>
 Display *                  <emphasis>
 dpy</emphasis>
 ;      /* connection to the X server */
     </entry>
   </row>
-  <row rowsep='0'>
+  <row>
     <entry role='functionargdecl'>
 XkbDescPtr                  <emphasis>
 xkb</emphasis>
 ;      /* keyboard description from which names are to be
     </entry>
   </row>
-  <row rowsep='0'>
+  <row>
     <entry role='functionargdecl'>
                         taken. */
     </entry>
   </row>
-  <row rowsep='0'>
+  <row>
     <entry role='functionargdecl'>
 XkbIndicatorChangesPtr                  <emphasis>
 changes</emphasis>
 ;      /* indicators to be updated on the server */
     </entry>
   </row>
-  <row rowsep='0'>
+  <row>
     <entry role='functionargdecl'>
 unsigned int                  <emphasis>
 state</emphasis>
 ;      /* new state of indicators listed in
     </entry>
   </row>
-  <row rowsep='0'>
+  <row>
     <entry role='functionargdecl'>
 <emphasis>
                         changes</emphasis>
@@ -1704,7 +1719,7 @@ XkbIndicatorMapNotify</emphasis>
 
 </sect2>
 </sect1>
-<sect1 id='tracking_changes_to_indicator_state_or_map'>
+<sect1 id='Tracking_Changes_to_Indicator_State_or_Map'>
 <title>Tracking Changes to Indicator State or Map</title>
 
 <para>
@@ -1818,10 +1833,11 @@ XkbNoteIndicatorChanges</emphasis>.
 </para>
 
 <informaltable frame='none'>
-<tgroup cols='1'>
-<colspec colsep='0'/>
+<?dbfo keep-together="always" ?>
+<tgroup cols='1' align='left' colsep='0' rowsep='0'>
+<colspec colname='c1' colwidth='1.0*'/>
 <tbody>
-  <row rowsep='0'>
+  <row>
     <entry role='functiondecl'>
 void <emphasis>
 XkbNoteIndicatorChanges</emphasis>
@@ -1834,21 +1850,21 @@ old</emphasis>
 )
     </entry>
   </row>
-  <row rowsep='0'>
+  <row>
     <entry role='functionargdecl'>
 XkbIndicatorChangesPtr            <emphasis>
       old</emphasis>
 ;      /* XkbIndicatorChanges structure to be updated */
     </entry>
   </row>
-  <row rowsep='0'>
+  <row>
     <entry role='functionargdecl'>
 XkbIndicatorNotifyEvent *                  <emphasis>
 new</emphasis>
 ;      /* event from which changes are to be copied */
     </entry>
   </row>
-  <row rowsep='0'>
+  <row>
     <entry role='functionargdecl'>
 unsigned int            <emphasis>
       wanted</emphasis>
@@ -1887,10 +1903,11 @@ XkbGetIndicatorChanges</emphasis>:
 
 
 <informaltable frame='none'>
-<tgroup cols='1'>
-<colspec colsep='0'/>
+<?dbfo keep-together="always" ?>
+<tgroup cols='1' align='left' colsep='0' rowsep='0'>
+<colspec colname='c1' colwidth='1.0*'/>
 <tbody>
-  <row rowsep='0'>
+  <row>
     <entry role='functiondecl'>
 Status <emphasis>
 XkbGetIndicatorChanges</emphasis>
@@ -1905,28 +1922,28 @@ dpy</emphasis>
 )
     </entry>
   </row>
-  <row rowsep='0'>
+  <row>
     <entry role='functionargdecl'>
 Display *            <emphasis>
 dpy</emphasis>
 ;            /* connection to the X server */
     </entry>
   </row>
-  <row rowsep='0'>
+  <row>
     <entry role='functionargdecl'>
 XkbDescPtr            <emphasis>
 xkb</emphasis>
 ;            /* keyboard description to hold the new values */
     </entry>
   </row>
-  <row rowsep='0'>
+  <row>
     <entry role='functionargdecl'>
 XkbIndicatorChangesPtr            <emphasis>
 changes</emphasis>
 ;            /* indicator maps/state to be obtained from the server */
     </entry>
   </row>
-  <row rowsep='0'>
+  <row>
     <entry role='functionargdecl'>
 unsigned int *            <emphasis>
 state</emphasis>
@@ -1983,7 +2000,7 @@ BadMatch</emphasis>
 
 
 </sect1>
-<sect1 id='allocating_and_freeing_indicator_maps'>
+<sect1 id='Allocating_and_Freeing_Indicator_Maps'>
 <title>Allocating and Freeing Indicator Maps</title>
 
 <para>
@@ -1995,10 +2012,11 @@ XkbAllocIndicatorMaps.</emphasis>
 </para>
 
 <informaltable frame='none'>
-<tgroup cols='1'>
-<colspec colsep='0'/>
+<?dbfo keep-together="always" ?>
+<tgroup cols='1' align='left' colsep='0' rowsep='0'>
+<colspec colname='c1' colwidth='1.0*'/>
 <tbody>
-  <row rowsep='0'>
+  <row>
     <entry role='functiondecl'>
 Status <emphasis>
 XkbAllocIndicatorMaps</emphasis>
@@ -2007,7 +2025,7 @@ xkb</emphasis>
 )
     </entry>
   </row>
-  <row rowsep='0'>
+  <row>
     <entry role='functionargdecl'>
 XkbDescPtr      <emphasis>
 xkb</emphasis>
@@ -2049,10 +2067,11 @@ XkbFreeIndicatorMaps.</emphasis>
 </para>
 
 <informaltable frame='none'>
-<tgroup cols='1'>
-<colspec colsep='0'/>
+<?dbfo keep-together="always" ?>
+<tgroup cols='1' align='left' colsep='0' rowsep='0'>
+<colspec colname='c1' colwidth='1.0*'/>
 <tbody>
-  <row rowsep='0'>
+  <row>
     <entry role='functiondecl'>
 void <emphasis>
 XkbFreeIndicatorMaps</emphasis>
@@ -2061,7 +2080,7 @@ xkb</emphasis>
 )
     </entry>
   </row>
-  <row rowsep='0'>
+  <row>
     <entry role='functionargdecl'>
 XkbDescPtr      <emphasis>
 xkb</emphasis>

@@ -1,13 +1,17 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE book
           PUBLIC "-//OASIS//DTD DocBook XML V4.3//EN"
-          "http://www.oasis-open.org/docbook/xml/4.3/docbookx.dtd">
+          "http://www.oasis-open.org/docbook/xml/4.3/docbookx.dtd"
+[
+<!ENTITY % defs SYSTEM "defs.ent"> %defs;
+]>
 
 <book id="xkblib">
 
 <bookinfo>
    <title>The X Keyboard Extension:</title>
    <subtitle>Library Specification</subtitle>
+   <releaseinfo>X Version 11, Release &fullrelvers;</releaseinfo>
    <authorgroup>
      <author>
        <firstname>Amber</firstname>
@@ -39,13 +43,14 @@
        <affiliation><orgname>Digital Equipment Corporation</orgname></affiliation>
      </author>
    </authorgroup>
-   <releaseinfo>X Version 11, Release 6.4</releaseinfo>
+   <copyright><year>1995</year><year>1996</year>
+      <holder>X Consortium Inc.</holder>
+      <holder>Silicon Graphics Inc.</holder>
+      <holder>Hewlett-Packard Company</holder>
+      <holder>Digital Equipment Corporation</holder>
+   </copyright>
 
 <legalnotice>
-<para>Copyright © 1995, 1996 X Consortium Inc.</para>
-<para>Copyright © 1995, 1996 Silicon Graphics Inc.</para>
-<para>Copyright © 1995, 1996 Hewlett-Packard Company</para>
-<para>Copyright © 1995, 1996 Digital Equipment Corporation</para>
 <para>
 Permission is hereby granted, free of charge, to any person obtaining a
 copy of this software and associated documentation files (the “Software”),
@@ -59,7 +64,7 @@ The above copyright notice and this permission notice shall be included in
 all copies or substantial portions of the Software.
 </para>
 <para>
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+THE SOFTWARE IS PROVIDED &ldquo;AS IS&rdquo;, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
 THE X CONSORTIUM BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,

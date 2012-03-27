@@ -16,10 +16,8 @@ we would like to acknowledge some of the people who deserve special credit
 and recognition for their work on Xlib.
 Our apologies to anyone inadvertently overlooked.
 </para>
-<sect1 id="release1">
-<title>
-Release 1
-</title>
+<simplesect>
+<title>Release 1</title>
 <para>
 Our thanks does to Ron Newman (MIT Project Athena),
 who contributed substantially to the
@@ -94,11 +92,9 @@ who had much to do with W's design.
 Finally, our thanks goes to MIT,  Digital Equipment Corporation,
 and IBM for providing the environment where it could happen.
 </para>
-</sect1>
-<sect1 id="release4">
-<title>
-Release 4
-</title>
+</simplesect>
+<simplesect>
+<title>Release 4</title>
 <para>
 Our thanks go to Jim Fulton (MIT X Consortium) for designing and
 specifying the new Xlib functions for Inter-Client Communication
@@ -109,11 +105,9 @@ We also thank Al Mento of Digital for his continued effort in
 maintaining this document and Jim Fulton and Donna Converse (MIT X Consortium)
 for their much-appreciated efforts in reviewing the changes.
 </para>
-</sect1>
-<sect1 id="release5">
-<title>
-Release 5
-</title>
+</simplesect>
+<simplesect>
+<title>Release 5</title>
 <para>
 The principal authors of the Input Method facilities are
 Vania Joloboff (Open Software Foundation) and Bill McMahon (Hewlett-Packard).
@@ -169,11 +163,9 @@ and reformatting text for this manual, and for producing man pages.
 Thanks also to Clive Feather (IXI) for proof-reading and finding a
 number of small errors.
 </para>
-</sect1>
-<sect1 id="release6">
-<title>
-Release 6
-</title>
+</simplesect>
+<simplesect>
+<title>Release 6</title>
 <para>
 Stephen Gildea (X Consortium) authored the threads support.
 Ovais Ashraf (Sun) and Greg Olsen (Sun) contributed substantially
@@ -231,5 +223,5 @@ Laboratory for Computer Science
 Massachusetts Institute of Technology
 </literallayout>
 </para>
-</sect1>
+</simplesect>
 </preface>

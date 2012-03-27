@@ -30,11 +30,12 @@ from The Open Group.
 
 #include <X11/X.h>
 #include <X11/Xos.h>
+#include <X11/Xresource.h>
 #include <X11/keysymdef.h>
 #include <stdio.h>
 #include <stdlib.h>
 
-typedef unsigned long Signature;
+#include "../Xresinternal.h"
 
 #define KTNUM 4000
 
@@ -50,7 +51,6 @@ static char tab[KTNUM];
 static unsigned short offsets[KTNUM];
 static unsigned short indexes[KTNUM];
 static KeySym values[KTNUM];
-static char buf[1024];
 static int ksnum = 0;
 
 static int
@@ -111,6 +111,7 @@ main(int argc, char *argv[])
     int num_found;
     KeySym val;
     char key[128], prefix[128];
+    static char buf[1024];
 
     for (l = 1; l < argc; l++) {
         fptr = fopen(argv[l], "r");
@@ -212,7 +213,7 @@ next1:	;
 	offsets[j] = k;
 	indexes[i] = k;
 	val = info[i].val;
-	printf("0x%.2lx, 0x%.2lx, 0x%.2lx, 0x%.2lx, 0x%.2lx, 0x%.2lx, ",
+	printf("0x%.2"PRIx32", 0x%.2"PRIx32", 0x%.2lx, 0x%.2lx, 0x%.2lx, 0x%.2lx, ",
 	       (sig >> 8) & 0xff, sig & 0xff,
 	       (val >> 24) & 0xff, (val >> 16) & 0xff,
 	       (val >> 8) & 0xff, val & 0xff);

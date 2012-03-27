@@ -48,6 +48,9 @@
 /* Define to 1 if you have a working `mmap' system call. */
 #undef HAVE_MMAP
 
+/* Define to 1 if you have the `seteuid' function. */
+#undef HAVE_SETEUID
+
 /* Use shl_load to load shared libraries */
 #undef HAVE_SHL_LOAD
 
@@ -89,6 +92,10 @@
 
 /* preference sorted list of transport types to try for local connections */
 #undef LOCAL_TRANSPORT_LIST
+
+/* Define to the sub-directory in which libtool stores uninstalled libraries.
+   */
+#undef LT_OBJDIR
 
 /* Disable XLOCALEDIR environment variable */
 #undef NO_XLOCALEDIR
