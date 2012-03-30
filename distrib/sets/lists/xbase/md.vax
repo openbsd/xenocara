@@ -182,6 +182,7 @@
 ./usr/X11R6/share/xcb/xfixes.xml
 ./usr/X11R6/share/xcb/xinerama.xml
 ./usr/X11R6/share/xcb/xinput.xml
+./usr/X11R6/share/xcb/xkb.xml
 ./usr/X11R6/share/xcb/xprint.xml
 ./usr/X11R6/share/xcb/xproto.xml
 ./usr/X11R6/share/xcb/xselinux.xml

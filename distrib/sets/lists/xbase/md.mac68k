@@ -104,7 +104,7 @@
 ./usr/X11R6/lib/libX11-xcb.a
 ./usr/X11R6/lib/libX11-xcb.la
 ./usr/X11R6/lib/libX11-xcb.so.1.0
-./usr/X11R6/lib/libX11.so.15.0
+./usr/X11R6/lib/libX11.so.15.1
 ./usr/X11R6/lib/libXRes.so.4.0
 ./usr/X11R6/lib/libXau.so.9.0
 ./usr/X11R6/lib/libXaw.so.14.0
@@ -163,13 +163,13 @@
 ./usr/X11R6/lib/libxcb-dpms.so.0.0
 ./usr/X11R6/lib/libxcb-dpms_pic.a
 ./usr/X11R6/lib/libxcb-dri2.a
-./usr/X11R6/lib/libxcb-dri2.so.0.0
+./usr/X11R6/lib/libxcb-dri2.so.0.1
 ./usr/X11R6/lib/libxcb-dri2_pic.a
 ./usr/X11R6/lib/libxcb-event.a
 ./usr/X11R6/lib/libxcb-event.so.1.0
 ./usr/X11R6/lib/libxcb-event_pic.a
 ./usr/X11R6/lib/libxcb-glx.a
-./usr/X11R6/lib/libxcb-glx.so.0.0
+./usr/X11R6/lib/libxcb-glx.so.0.1
 ./usr/X11R6/lib/libxcb-glx_pic.a
 ./usr/X11R6/lib/libxcb-icccm.a
 ./usr/X11R6/lib/libxcb-icccm.so.1.1
@@ -211,13 +211,13 @@
 ./usr/X11R6/lib/libxcb-shm.so.0.0
 ./usr/X11R6/lib/libxcb-shm_pic.a
 ./usr/X11R6/lib/libxcb-sync.a
-./usr/X11R6/lib/libxcb-sync.so.0.0
+./usr/X11R6/lib/libxcb-sync.so.0.1
 ./usr/X11R6/lib/libxcb-sync_pic.a
 ./usr/X11R6/lib/libxcb-xevie.a
 ./usr/X11R6/lib/libxcb-xevie.so.0.0
 ./usr/X11R6/lib/libxcb-xevie_pic.a
 ./usr/X11R6/lib/libxcb-xf86dri.a
-./usr/X11R6/lib/libxcb-xf86dri.so.1.0
+./usr/X11R6/lib/libxcb-xf86dri.so.1.1
 ./usr/X11R6/lib/libxcb-xf86dri_pic.a
 ./usr/X11R6/lib/libxcb-xfixes.a
 ./usr/X11R6/lib/libxcb-xfixes.so.0.0
@@ -238,7 +238,7 @@
 ./usr/X11R6/lib/libxcb-xvmc.so.0.0
 ./usr/X11R6/lib/libxcb-xvmc_pic.a
 ./usr/X11R6/lib/libxcb.a
-./usr/X11R6/lib/libxcb.so.2.2
+./usr/X11R6/lib/libxcb.so.2.3
 ./usr/X11R6/lib/libxcb_pic.a
 ./usr/X11R6/lib/libxkbfile.so.5.0
 ./usr/X11R6/lib/libxkbui.so.4.0
@@ -312,6 +312,7 @@
 ./usr/X11R6/share/xcb/xfixes.xml
 ./usr/X11R6/share/xcb/xinerama.xml
 ./usr/X11R6/share/xcb/xinput.xml
+./usr/X11R6/share/xcb/xkb.xml
 ./usr/X11R6/share/xcb/xprint.xml
 ./usr/X11R6/share/xcb/xproto.xml
 ./usr/X11R6/share/xcb/xselinux.xml
