@@ -1,5 +1,6 @@
-# $OpenBSD: Makefile,v 1.44 2012/02/07 19:54:55 matthieu Exp $
+# $OpenBSD: Makefile,v 1.45 2012/04/01 09:24:04 matthieu Exp $
 .include <bsd.own.mk>
+.include <bsd.xconf.mk>
 
 LOCALAPPD=/usr/local/lib/X11/app-defaults
 LOCALAPPX=/usr/local/lib/X11
@@ -11,7 +12,7 @@ RM?=rm
 XSERVER= xserver
 .endif
 
-.if ${COMPILER_VERSION:L:Mgcc[34]*}
+.if ${COMPILER_VERSION:L:Mgcc[34]*} && ${XENOCARA_BUILD_PIXMAN:L} == "yes"
 XSERVER+= kdrive
 .endif
 
