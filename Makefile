@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.45 2012/04/01 09:24:04 matthieu Exp $
+# $OpenBSD: Makefile,v 1.46 2012/04/01 23:00:24 matthieu Exp $
 .include <bsd.own.mk>
 .include <bsd.xconf.mk>
 
@@ -12,8 +12,10 @@ RM?=rm
 XSERVER= xserver
 .endif
 
+.if defined(XENOCARA_BUILD_PIXMAN)
 .if ${COMPILER_VERSION:L:Mgcc[34]*} && ${XENOCARA_BUILD_PIXMAN:L} == "yes"
 XSERVER+= kdrive
+.endif
 .endif
 
 SUBDIR= proto font/util data/bitmaps lib app data \
