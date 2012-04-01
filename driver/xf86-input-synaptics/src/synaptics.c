@@ -261,6 +261,13 @@ SetDeviceAndProtocol(InputInfoPtr pInfo)
 
     proto = xf86SetStrOption(pInfo->options, "Protocol", NULL);
     device = xf86SetStrOption(pInfo->options, "Device", NULL);
+
+    /* If proto is auto-dev, unset and let the code do the rest */
+    if (proto && !strcmp(proto, "auto-dev")) {
+        free(proto);
+        proto = NULL;
+    }
+
     for (i = 0; protocols[i].name; i++) {
         if ((!device || !proto) &&
             protocols[i].proto_ops->AutoDevProbe &&
@@ -581,11 +588,22 @@ static void set_default_parameters(InputInfoPtr pInfo)
     }
 }
 
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 14
+static double SynapticsAccelerationProfile(DeviceIntPtr dev,
+                                           DeviceVelocityPtr vel,
+                                           double velocity,
+                                           double thr,
+                                           double acc) {
+#else
 static float SynapticsAccelerationProfile(DeviceIntPtr dev,
                                           DeviceVelocityPtr vel,
-                                          float velocity,
-                                          float thr,
-                                          float acc) {
+                                          float velocity_f,
+                                          float thr_f,
+                                          float acc_f) {
+    double velocity = velocity_f;
+    double thr = thr_f;
+    double acc = acc_f;
+#endif
     InputInfoPtr pInfo = dev->public.devicePrivate;
     SynapticsPrivate *priv = (SynapticsPrivate *) (pInfo->private);
     SynapticsParameters* para = &priv->synpara;

@@ -1,3 +1,137 @@
+commit a1457c3a4c70f875b807f9488d241b5d05e238b8
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Mon Mar 26 11:17:06 2012 +1000
+
+    synaptics 1.5.2
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 9a71f6dc88152f2599a8752ccdca1b09e6e975e4
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Thu Jun 9 20:03:05 2011 +0100
+
+    Adjust acceleration scheme for input ABI v14
+    
+    v14 wants doubles, rather than floats, from acceleration schemes.
+    
+    Signed-off-by: Daniel Stone <daniel@fooishbar.org>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+    (cherry picked from commit 7c0361d4ec6b1f1325cb6551d0ee2e7f5cfae15b)
+
+commit 75550077e66cb8bdf15d6e1cf5b28f884f508fc5
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Tue Jun 14 17:07:11 2011 +0100
+
+    Properties: Generalise InitTypedAtom from InitAtom
+    
+    Add InitTypedAtom, which does exactly the same thing as InitAtom, but
+    takes an additional type argument.
+    
+    Signed-off-by: Daniel Stone <daniel@fooishbar.org>
+    (cherry picked from commit 627b09e5bd0726ad31bfeb4f07b8f8287d8ec46f)
+
+commit a85e2926b5e23557e3bd1395da198b5cc74719b3
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Wed Mar 21 11:12:57 2012 +1000
+
+    synaptics 1.5.1
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit be5fb886021d6a9ef27e35ad90b4ab6ca60a8c1d
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Jan 3 11:03:14 2012 +1000
+
+    test: fix build error introduced in 9f9b55ab55ed5
+    
+    Bad search/replace, ended up in two xf86SetStrOption declarations which
+    differed on ABIs < 14.
+    
+    Fixes https://bugs.freedesktop.org/show_bug.cgi?id=44335
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Chase Douglas <chase.douglas@canonical.com>
+    (cherry picked from commit c861d4568c2c6cc56db8e683a8d7035bef711262)
+
+commit fd4aacb1341dae98bac53716423e209c4782c1ad
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Mon Dec 12 11:35:37 2011 +1000
+
+    test: fix build errors introduced by upstream server change
+    
+    Introduced by upstream change xorg-server-1.11.99.1-33-g09e4b78,
+        Fix gcc -Wwrite-strings warnings in xf86 ddx
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    (cherry picked from commit 9f9b55ab55ed5251c1607c59d8817231d076d82c)
+
+commit 0a9c26d1a3ee92932f0d611652b39ebbd4a65c75
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Wed Oct 12 11:20:06 2011 +1000
+
+    test: wrap ABI 14 xf86OptionRec type changes
+    
+    ABI 13 still uses pointer as type for most option calls, ABI 14 uses the
+    proper type now. Wrap this so we can build against both versions.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    (cherry picked from commit a15af628154ac37f24896a30614f3be6ecdb65c4)
+
+commit 9ea30b70a33fcd3cb0ddbf04339d5bfed24eac5e
+Author: Cyril Brulebois <kibi@debian.org>
+Date:   Mon Dec 12 01:35:27 2011 +0100
+
+    Revert: "eventcomm: replace synaptics-custom TEST_BIT with server's BitIsOn."
+    
+    This commit reverts 13543b156d78bc4d01a19844a5ee8f283269621b
+    
+    As seen in Debian's #648488, this switch causes a regression on
+    PowerPC, especially seen on iBook G4 with appletouch. Take a defensive
+    stance and revert back to a working state until things have been figured
+    out and fixed properly.
+    
+    Since things have evolved and since that revert triggers a lot of
+    conflicts, the following method was applied:
+     - manual reintroduction of the 3 removed macros: OFF, LONG, TEST_BIT
+     - coccinelle semantic patch to revert from BitIsOn to TEST_BIT
+    
+    Coccinelle semantic patch:
+      @@
+      expression a,b;
+      @@
+      -BitIsOn(a,b)
+      +TEST_BIT(b,a)
+    
+    Bugzilla: http://bugs.debian.org/648488
+    Signed-off-by: Cyril Brulebois <kibi@debian.org>
+    (cherry picked from commit b7e65f04f5f0c17ac8a26393134cc7e8418ccdec)
+
+commit 3356dcb8f20cbcff4c08ba6a856a6c8d41f659d7
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Wed Nov 30 09:59:37 2011 +1000
+
+    If protocol is auto-dev and the device path is set, unset the protocol
+    
+    The remainder of the handling code will take try through all protocols,
+    taking the device into account (as of
+    xf86-input-synaptics-1.4.0-34-g241254e)
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Jeremy Huddleston <jeremyhu@apple.com>
+    (cherry picked from commit 0cd5a77c3a455e942929eb4d5412fa51630ed13f)
+
+commit df427ef5cc45c33a4159b7852cd40da6f7cc4b94
+Author: Derek Foreman <derek.foreman@collabora.co.uk>
+Date:   Mon Mar 21 16:01:29 2011 -0700
+
+    Fix pressure->motion property format
+    
+    CARD32, not float.
+    
+    Signed-off-by: Derek Foreman <derek.foreman@collabora.co.uk>
+    Reviewed-by: Daniel Stone <daniel@fooishbar.org>
+    (cherry picked from commit a24c44375025576dd600ccf370ba365e5d94dc22)
+
 commit 065a0b495d2a7eb76b61f9eec85248aefae4c8ee
 Author: Peter Hutterer <peter.hutterer@who-t.net>
 Date:   Fri Sep 2 16:04:07 2011 +1000

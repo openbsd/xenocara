@@ -26,7 +26,7 @@ xf86WaitForInput (int fd, int timeout)
 }
 
 _X_EXPORT int
-xf86OpenSerial (pointer options)
+xf86OpenSerial (OPTTYPE options)
 {
     return 0;
 }
@@ -37,43 +37,43 @@ xf86SetSerialSpeed (int fd, int speed)
     return 0;
 }
 
-_X_EXPORT pointer
-xf86ReplaceIntOption(pointer optlist, const char *name, const int val)
+_X_EXPORT OPTTYPE
+xf86ReplaceIntOption(OPTTYPE optlist, const char *name, const int val)
 {
     return NULL;
 }
 
 _X_EXPORT char *
-xf86SetStrOption(pointer optlist, const char *name, char *deflt)
+xf86SetStrOption(OPTTYPE optlist, const char *name, CONST char *deflt)
 {
     return NULL;
 }
 
 _X_EXPORT int
-xf86SetBoolOption(pointer optlist, const char *name, int deflt)
+xf86SetBoolOption(OPTTYPE optlist, const char *name, int deflt)
 {
     return 0;
 }
 
-_X_EXPORT pointer
-xf86AddNewOption(pointer head, const char *name, const char *val)
+_X_EXPORT OPTTYPE
+xf86AddNewOption(OPTTYPE head, const char *name, const char *val)
 {
     return NULL;
 }
-_X_EXPORT char *
-xf86FindOptionValue(pointer options, const char *name)
-{
-    return NULL;
-}
-
-_X_EXPORT char *
-xf86OptionName(pointer opt)
+_X_EXPORT CONST char *
+xf86FindOptionValue(OPTTYPE options, const char *name)
 {
     return NULL;
 }
 
 _X_EXPORT char *
-xf86OptionValue(pointer opt)
+xf86OptionName(OPTTYPE opt)
+{
+    return NULL;
+}
+
+_X_EXPORT char *
+xf86OptionValue(OPTTYPE opt)
 {
     return NULL;
 }
@@ -85,7 +85,7 @@ xf86NameCmp(const char *s1, const char *s2)
 }
 
 _X_EXPORT char *
-xf86CheckStrOption(pointer optlist, const char *name, char *deflt)
+xf86CheckStrOption(OPTTYPE optlist, const char *name, char *deflt)
 {
     return NULL;
 }
@@ -196,8 +196,8 @@ xf86DeleteInput(InputInfoPtr pInp, int flags)
     return;
 }
 
-_X_EXPORT pointer
-xf86OptionListDuplicate(pointer options)
+_X_EXPORT OPTTYPE
+xf86OptionListDuplicate(OPTTYPE options)
 {
     return NULL;
 }
@@ -225,7 +225,7 @@ xf86PostKeyboardEvent(DeviceIntPtr      device,
 }
 
 _X_EXPORT int
-xf86SetIntOption(pointer optlist, const char *name, int deflt)
+xf86SetIntOption(OPTTYPE optlist, const char *name, int deflt)
 {
     return 0;
 }
@@ -254,7 +254,7 @@ InitPtrFeedbackClassDeviceStruct(DeviceIntPtr dev, PtrCtrlProcPtr controlProc)
 _X_EXPORT int
 XIChangeDeviceProperty (DeviceIntPtr dev, Atom property, Atom type,
                         int format, int mode, unsigned long len,
-                        pointer value, Bool sendevent)
+                        OPTTYPE value, Bool sendevent)
 {
     return 0;
 }
@@ -367,15 +367,15 @@ InitValuatorClassDeviceStruct(DeviceIntPtr dev, int numAxes, Atom *labels,
 }
 
 
-_X_EXPORT pointer
-xf86ReplaceStrOption(pointer optlist, const char *name, const char* val)
+_X_EXPORT OPTTYPE
+xf86ReplaceStrOption(OPTTYPE optlist, const char *name, const char* val)
 {
     return NULL;
 }
 
 
-_X_EXPORT pointer
-xf86NextOption(pointer list)
+_X_EXPORT OPTTYPE
+xf86NextOption(OPTTYPE list)
 {
     return NULL;
 }
@@ -424,14 +424,14 @@ InitFocusClassDeviceStruct(DeviceIntPtr dev)
 
 #if GET_ABI_MAJOR(ABI_XINPUT_VERSION) < 12
 void
-xf86ProcessCommonOptions(InputInfoPtr pInfo, pointer list)
+xf86ProcessCommonOptions(InputInfoPtr pInfo, OPTTYPE list)
 {
 }
 
 void
 xf86CollectInputOptions(InputInfoPtr pInfo,
                         const char **defaultOpts,
-                        pointer extraOpts)
+                        OPTTYPE extraOpts)
 {
 }
 

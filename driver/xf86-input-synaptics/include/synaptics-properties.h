@@ -133,7 +133,7 @@
 /* FLOAT, 2 values, speed, friction */
 #define SYNAPTICS_PROP_COASTING_SPEED "Synaptics Coasting Speed"
 
-/* 32 bit, 2 values, min, max */
+/* CARD32, 2 values, min, max */
 #define SYNAPTICS_PROP_PRESSURE_MOTION "Synaptics Pressure Motion"
 
 /* FLOAT, 2 values, min, max */
