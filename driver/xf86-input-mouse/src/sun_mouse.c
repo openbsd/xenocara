@@ -203,7 +203,10 @@ vuidPreInit(InputInfoPtr pInfo, const char *protocol, int flags)
 {
     MouseDevPtr pMse = pInfo->private;
     VuidMsePtr pVuidMse;
-    int buttons, i;
+
+    /* Ensure we don't add the same device twice */
+    if (getVuidMsePriv(pInfo) != NULL)
+	return TRUE;
 
     pVuidMse = calloc(sizeof(VuidMseRec), 1);
     if (pVuidMse == NULL) {
@@ -275,7 +278,6 @@ vuidReadInput(InputInfoPtr pInfo)
     int buttons;
     int dx = 0, dy = 0, dz = 0, dw = 0;
     unsigned int n;
-    int c; 
     unsigned char *pBuf;
     int absX = 0, absY = 0;
     Bool absXset = FALSE, absYset = FALSE;
@@ -684,7 +686,9 @@ SetupAuto(InputInfoPtr pInfo, int *protoPara)
     } else if (pMse->protocolID == PROT_AUTO) {
 	pdev = xf86CheckStrOption(pInfo->options,
 		"Device", NULL);
-	solarisMouseAutoProbe(pInfo, &pproto, &pdev);
+	if ((solarisMouseAutoProbe(pInfo, &pproto, &pdev) != FALSE) &&
+	    (pproto != NULL))
+	    sunMousePreInit(pInfo, pproto, 0);
     }
     return pproto;
 }

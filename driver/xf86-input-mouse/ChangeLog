@@ -1,3 +1,105 @@
+commit 80d724d13a8de585722967f7d18a65b4b555badd
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Mar 15 23:34:21 2012 -0700
+
+    xf86-input-mouse 1.7.2
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 68a1e2f74dd58c913e5d1f8d6138cd8ce73232a4
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Dec 22 20:55:45 2011 -0800
+
+    sun_mouse.c: remove unused variables
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit a5126694b29bdf9c852254b53174fcf37537b121
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Dec 22 20:54:14 2011 -0800
+
+    Mark symtab_t.name in pnp.c as const to fix gcc -Wwrite-strings warnings
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 8bc8502c698115c3f4885ba42e60ede0e681caaa
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Nov 30 19:29:01 2011 -0800
+
+    Avoid NULL pointer dereference in autoProbeMouse if proto == PROT_UNSUP
+    
+    Error: Null pointer dereference (CWE 476)
+       Read from null pointer 'GetProtocol(proto)'
+            at line 3477 of src/mouse.c in function 'autoProbeMouse'.
+              Function 'GetProtocol' may return constant 'NULL' at line 736, called at line 3477.
+              Null pointer introduced at line 736 in function 'GetProtocol'.
+    
+    We already handle one of the two cases that make GetProtocol return NULL,
+    proto == PROTO_UNKNOWN, but not PROT_UNSUP.
+    
+    [ This bug was found by the Parfait 0.4.2 bug checking tool.
+      For more information see http://labs.oracle.com/projects/parfait/ ]
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Alexandr Shadchin <alexandr.shadchin@gmail.com>
+
+commit b65651974ee5620086b484086ea12d78c92fa369
+Author: Alexandr Shadchin <alexandr.shadchin@gmail.com>
+Date:   Fri Aug 19 21:07:13 2011 +0600
+
+    Fix wrong read Protocol and Device from xorg.conf
+    
+    Add call xf86CollectInputOptions() before using pInfo->options.
+    The bug is seeing by ABI < 12.
+    
+    Signed-off-by: Alexandr Shadchin <Alexandr.Shadchin@gmail.com>
+    Reviewed-by: Matthieu Herrb <matthieu.herrb@laas.fr>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 7bb5cbecbcc24f20467546f957fb95c9190514c0
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Jul 25 21:11:50 2011 -0700
+
+    sun_mouse.c: Ensure vuidMouse setup routines are called for protocol "Auto"
+    
+    Fixes regression caused by commit b12fa0d5ab23 in which devices with
+    protocol "Auto" (generally just PS/2 devices on Solaris, since HAL
+    sets protocol "VUID" for USB devices already) weren't going through
+    vuidMousePreInit and setting up the device_control & read_input pointers
+    to the routines which know how to decode VUID packets.
+    
+    Adds a check to vuidPreInit to ensure we don't leak memory if called
+    twice for the same device, just in case I missed a code path, or a
+    new one appears in the future.
+    
+    Fixes Solaris bug 7070321: Mouse protocol "Auto" does not work in build 170
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Acked-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 94fb2250b12fbaf840352b83dd9f832319c92b0f
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Jul 25 20:40:03 2011 -0700
+
+    No need to merge NULL options list with existing options
+    
+    Appending NULL to an existing options list simply walks the entire
+    existing list before returning it unchanged, so if we aren't creating
+    a new list to merge, don't bother merging it either.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 93ebeecdda61cc7121b5c095ed5db07ad0ca0f88
+Author: Terry Lambert <tlambert@chromium.org>
+Date:   Fri Jul 15 17:23:23 2011 -0700
+
+    xf86-input-mouse: Return proper default for unknown values in pInfo->device_control.
+    
+    Signed-off-by: Terry Lambert <tlambert@chromium.org>
+    Reviewed-by: Stephane Marchesin <marcheu@chromium.org>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
 commit 9f969bd4d1995aa802bef1cfe93afedc412bbd8a
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Tue Jul 5 09:09:26 2011 -0700

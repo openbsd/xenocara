@@ -567,6 +567,9 @@ usbMouseProc(DeviceIntPtr pPointer, int what)
 	pPointer->public.on = FALSE;
 	usleep(300000);
 	break;
+
+    default:
+	return BadValue;
     }
     return Success;
 }

@@ -61,7 +61,7 @@ typedef struct {
 
 /* symbol table entry */
 typedef struct {
-    char *name;
+    const char *name;
     MouseProtocolID val;
 } symtab_t;
 
