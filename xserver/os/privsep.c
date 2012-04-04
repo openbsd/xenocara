@@ -1,4 +1,4 @@
-/* $OpenBSD: privsep.c,v 1.18 2011/08/20 17:30:37 matthieu Exp $ */
+/* $OpenBSD: privsep.c,v 1.19 2012/04/04 20:34:55 matthieu Exp $ */
 /*
  * Copyright 2001 Niels Provos <provos@citi.umich.edu>
  * All rights reserved.
@@ -202,9 +202,11 @@ receive_fd(int socket)
 		n = recvmsg(socket, &msg, 0);	
 	while (n == -1 && errno == EINTR);
 
-	if (n != sizeof(int))
+	if (n != sizeof(int)) {
 		warnx("%s: recvmsg: expected received 1 got %ld",
 		    __func__, (long)n);
+		return -1;
+	}
 	if (result == 0) {
 		cmsg = CMSG_FIRSTHDR(&msg);
 		if (cmsg == NULL) {
