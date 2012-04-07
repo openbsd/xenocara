@@ -37,13 +37,13 @@ in this Software without prior written authorization from The Open Group.
 				higher for fewer round-trips
 				lower for less bandwidth wasted */
 
-static char *ProgramName;
-static char *DisplayString;
+static const char *ProgramName;
+static const char *DisplayString;
 
-static void do_name ( xcb_connection_t *c, char *format, char *name );
+static void do_name ( xcb_connection_t *c, const char *format, char *name );
 static int parse_range ( char *range, long *lowp, long *highp );
-static void do_range ( xcb_connection_t *c, char *format, char *range );
-static void list_atoms ( xcb_connection_t *c, char *format, int mask, 
+static void do_range ( xcb_connection_t *c, const char *format, char *range );
+static void list_atoms ( xcb_connection_t *c, const char *format, int mask,
 			 long low, long high );
 
 static void 
@@ -67,7 +67,7 @@ int
 main(int argc, char *argv[])
 {
     char *displayname = NULL;
-    char *format = "%lu\t%s";
+    const char *format = "%lu\t%s";
     int i, doit;
     int didit = 0;
     xcb_connection_t *c = NULL;
@@ -128,7 +128,7 @@ main(int argc, char *argv[])
 }
 
 static void
-do_name(xcb_connection_t *c, char *format, char *name)
+do_name(xcb_connection_t *c, const char *format, char *name)
 {
     xcb_intern_atom_reply_t *a = xcb_intern_atom_reply(c, 
 	xcb_intern_atom_unchecked(c, 1, strlen(name), name), NULL);
@@ -185,7 +185,7 @@ parse_range(char *range, long *lowp, long *highp)
 }
 
 static void
-do_range(xcb_connection_t *c, char *format, char *range)
+do_range(xcb_connection_t *c, const char *format, char *range)
 {
     int mask;
     long low, high;
@@ -195,7 +195,7 @@ do_range(xcb_connection_t *c, char *format, char *range)
 }
 
 static int
-say_batch(xcb_connection_t *c, char *format, xcb_get_atom_name_cookie_t *cookie, long low, long count)
+say_batch(xcb_connection_t *c, const char *format, xcb_get_atom_name_cookie_t *cookie, long low, long count)
 {
     xcb_generic_error_t *e;
     char atom_name[1024];
@@ -228,7 +228,7 @@ say_batch(xcb_connection_t *c, char *format, xcb_get_atom_name_cookie_t *cookie,
 }
 
 static void
-list_atoms(xcb_connection_t *c, char *format, int mask, long low, long high)
+list_atoms(xcb_connection_t *c, const char *format, int mask, long low, long high)
 {
     xcb_get_atom_name_cookie_t *cookie_jar;
     int done = 0;

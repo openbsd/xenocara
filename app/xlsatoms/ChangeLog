@@ -1,3 +1,139 @@
+commit d828ec2c209ea031891cbc7ab9c9d2f6832ebc4d
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Mar 31 16:48:11 2012 -0700
+
+    xlsatoms 1.1.1
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit be56f627ae4c1324761332d7afc98cc64cd53d84
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Nov 11 23:08:39 2011 -0800
+
+    Fix gcc -Wwrite-strings warnings
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 39f6652cf2c0edfe336842718f7c5bc69961463c
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jan 19 10:06:56 2011 -0500
+
+    config: move man pages into their own directory
+    
+    Use services provided by XORG_MANPAGE_SECTIONS.
+    Use standard Makefile for man pages.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit e9e7baa39cff01acfbf90065df65dd0907f2273f
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Jan 13 17:15:36 2011 -0500
+
+    man: replace hard coded man page section with substitution strings
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 095f461e49e050a34c0c0a0d082a1b99ed2f23ba
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Jan 13 11:15:47 2011 -0500
+
+    man: remove trailing spaces and tabs
+    
+    Using s/[ \t]*$//
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 6051fa92d1c7da1579662d80aba3493b4cfb2b59
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jan 12 16:28:02 2011 -0500
+
+    config: replace deprecated AM_CONFIG_HEADER with AC_CONFIG_HEADERS
+    
+    This silences an Autoconf warning
+
+commit c1599d956b11a49c8b4d9dda897a7f27be0cbb12
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jan 12 15:12:08 2011 -0500
+
+    config: remove unrequired AC_SUBST([*_LIBS])
+    
+    This macro is called by PKG_CHECK_MODULES
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 65a27c5c6814fdfab9e83c210ddccbc93727755f
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jan 12 13:33:48 2011 -0500
+
+    config: remove unrequired AC_SUBST([*_CFLAGS])
+    
+    This macro is called by PKG_CHECK_MODULES
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit ab83284df85569164d6e79c1572d2a8da5202581
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jan 12 13:10:21 2011 -0500
+
+    config: remove AC_PROG_CC as it overrides AC_PROG_C_C99
+    
+    XORG_STRICT_OPTION from XORG_DEFAULT_OPTIONS calls
+    AC_PROG_C_C99. This sets gcc with -std=gnu99.
+    If AC_PROG_CC macro is called afterwards, it resets CC to gcc.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 5305f3d3d2eb1a62e9c7f2fa0cc4a4288f55a498
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jan 12 11:54:40 2011 -0500
+
+    config: use AC_PROG_INSTALL now supplied by XORG_DEFAULT_OPTIONS
+    
+    It depends on util-macros 1.8 or later
+    The existing statement can now be removed from the configuration file.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 2d0146545e6287f18872b4ed64595b79b05bf19b
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jan 12 11:23:52 2011 -0500
+
+    config: upgrade to util-macros 1.8 for additional man page support
+    
+    Use MAN_SUBST now supplied in XORG_MANPAGE_SECTIONS
+    The value of MAN_SUBST is the same for all X.Org packages.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 679ed6f298e1ffc40811ccb56b4d28e1940fab71
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jan 12 10:21:24 2011 -0500
+
+    config: update AC_PREREQ statement to 2.60
+    
+    Unrelated to the previous patches, the new value simply reflects
+    the reality that the minimum level for autoconf to configure
+    all x.org modules in one pass is 2.60 dated June 2006.
+    
+    A version later than 2.60 can be used, but no new features from such
+    a later version can be used in configure.ac.
+    
+    Although the code in this module can be configured with a version earlier
+    than 2.60, most of code is now contained in macros from util-macros
+    which use features of version 2.60, at the present or in the future.
+    
+    ftp://ftp.gnu.org/gnu/autoconf/autoconf-2.60.tar.gz
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 69097d56e4c84a4bc86c6d30eac6f6e60a1c6c63
+Author: Jesse Adkins <jesserayadkins@gmail.com>
+Date:   Tue Sep 28 13:29:50 2010 -0700
+
+    Purge cvs tags.
+    
+    Signed-off-by: Jesse Adkins <jesserayadkins@gmail.com>
+
 commit 79b7392f981798941b9fba368c2bf0aeeb7a9ade
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Thu Jun 3 16:30:16 2010 -0700

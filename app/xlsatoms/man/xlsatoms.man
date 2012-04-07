@@ -1,15 +1,14 @@
-.\" $Xorg: xlsatoms.man,v 1.4 2001/02/09 02:05:54 xorgcvs Exp $
 .\" Copyright 1989, 1994, 1998  The Open Group
-.\" 
+.\"
 .\" Permission to use, copy, modify, distribute, and sell this software and its
 .\" documentation for any purpose is hereby granted without fee, provided that
 .\" the above copyright notice appear in all copies and that both that
 .\" copyright notice and this permission notice appear in supporting
 .\" documentation.
-.\" 
+.\"
 .\" The above copyright notice and this permission notice shall be included
 .\" in all copies or substantial portions of the Software.
-.\" 
+.\"
 .\" THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
 .\" OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
 .\" MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
@@ -17,13 +16,11 @@
 .\" OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
 .\" ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 .\" OTHER DEALINGS IN THE SOFTWARE.
-.\" 
+.\"
 .\" Except as contained in this notice, the name of The Open Group shall
 .\" not be used in advertising or otherwise to promote the sale, use or
 .\" other dealings in this Software without prior written authorization
 .\" from The Open Group.
-.\"
-.\" $XFree86: xc/programs/xlsatoms/xlsatoms.man,v 1.7 2001/01/27 18:21:17 dawes Exp $
 .\"
 .TH XLSATOMS 1 __xorgversion__
 .SH NAME
@@ -55,11 +52,11 @@ given, a value of 1 assumed.  If \fIhigh\fP is not given, \fIxlsatoms\fP will
 stop at the first undefined atom at or above \fIlow\fP.
 .TP 8
 .B \-name \fIstring\fP
-This option specifies the name of an atom to list.  If the atom does not 
+This option specifies the name of an atom to list.  If the atom does not
 exist, a message will be printed on the standard error.
 .PP
 .SH "SEE ALSO"
-X(__miscmansuffix__), Xserver(1), xprop(1)
+X(__miscmansuffix__), Xserver(__appmansuffix__), xprop(__appmansuffix__)
 .SH ENVIRONMENT
 .TP 8
 .B DISPLAY
