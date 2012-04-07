@@ -19,10 +19,13 @@
 #  TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 #  PERFORMANCE OF THIS SOFTWARE.
 
+SUBDIRS = man
 bin_PROGRAMS = xload
 
-xload_CFLAGS = $(XLOAD_CFLAGS)
+AM_CFLAGS = $(CWARNFLAGS) $(XLOAD_CFLAGS)
 xload_LDADD = $(XLOAD_LIBS)
+
+ACLOCAL_AMFLAGS = -I m4
 
 xload_SOURCES =	\
         get_load.c \
@@ -30,56 +33,32 @@ xload_SOURCES =	\
         xload.c \
         xload.h
 
-appman_PRE = \
-        xload.man
-
-# App default files  (*.ad)
+# App default files
+DISTCHECK_CONFIGURE_FLAGS = --with-appdefaultdir=\$${datadir}/X11/app-defaults
 
 appdefaultdir = @appdefaultdir@
 
+dist_appdefault_DATA = \
+        app-defaults/XLoad
 
-APPDEFAULTFILES = \
-        XLoad
+EXTRA_DIST = xload.bit
+MAINTAINERCLEANFILES = ChangeLog INSTALL
 
-SUFFIXES = .ad 
+.PHONY: ChangeLog INSTALL
 
-.ad:
-	cp $< $@
+INSTALL:
+	$(INSTALL_CMD)
 
-appdefault_DATA = $(APPDEFAULTFILES)
+ChangeLog:
+	$(CHANGELOG_CMD)
 
-EXTRA_DIST = $(APPDEFAULTFILES:%=%.ad) xload.bit
+dist-hook: ChangeLog INSTALL
 
-CLEANFILES = $(APPDEFAULTFILES)
+if USE_GETTEXT
+noinst_DATA = xload.po
 
+xload.po: $(xload_SOURCES:%=$(srcdir)/%)
+	$(AM_V_GEN)xgettext -d xload -n $(xload_SOURCES:%=$(srcdir)/%)
 
-appmandir = $(APP_MAN_DIR)
-
-appman_DATA = $(appman_PRE:man=@APP_MAN_SUFFIX@)
-
-EXTRA_DIST += $(appman_PRE)
-CLEANFILES += $(appman_DATA)
-
-SED = sed
-
-# Strings to replace in man pages
-XORGRELSTRING = @PACKAGE_STRING@
-  XORGMANNAME = X Version 11
-
-MAN_SUBSTS = \
-	-e 's|__vendorversion__|"$(XORGRELSTRING)" "$(XORGMANNAME)"|' \
-	-e 's|__xorgversion__|"$(XORGRELSTRING)" "$(XORGMANNAME)"|' \
-	-e 's|__xservername__|Xorg|g' \
-	-e 's|__xconfigfile__|xorg.conf|g' \
-	-e 's|__projectroot__|$(prefix)|g' \
-	-e 's|__apploaddir__|$(appdefaultdir)|' \
-	-e 's|__appmansuffix__|$(APP_MAN_SUFFIX)|g' \
-	-e 's|__libmansuffix__|$(LIB_MAN_SUFFIX)|g' \
-	-e 's|__adminmansuffix__|$(ADMIN_MAN_SUFFIX)|g' \
-	-e 's|__miscmansuffix__|$(MISC_MAN_SUFFIX)|g' \
-	-e 's|__filemansuffix__|$(FILE_MAN_SUFFIX)|g'
-
-SUFFIXES += .$(APP_MAN_SUFFIX) .man
-
-.man.$(APP_MAN_SUFFIX):
-	sed $(MAN_SUBSTS) < $< > $@
+CLEANFILES = xload.po
+endif

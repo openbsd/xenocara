@@ -1,6 +1,3 @@
-/* $XdotOrg: xc/programs/xload/get_load.c,v 1.2 2004/04/23 19:54:57 eich Exp $ */
-/* $XConsortium: get_load.c /main/37 1996/03/09 09:38:04 kaleb $ */
-/* $XFree86: xc/programs/xload/get_load.c,v 1.21tsi Exp $ */
 /*
 
 Copyright (c) 1989  X Consortium
@@ -52,6 +49,7 @@ from the X Consortium.
 #include "xload.h"
 
 #if defined(__CYGWIN__)
+#define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 typedef struct {
   DWORD stat;
@@ -70,7 +68,7 @@ static long (__stdcall *pdhaddcounter)(HANDLE, LPCSTR, DWORD, HANDLE*);
 static long (__stdcall *pdhcollectquerydata)(HANDLE);
 static long (__stdcall *pdhgetformattedcountervalue)(HANDLE, DWORD, LPDWORD, COUNTER*);
 #define CYGWIN_PERF 
-void InitLoadPoint()
+void InitLoadPoint(void)
 {
   long ret;
   hdll=LoadLibrary("pdh.dll");
@@ -88,10 +86,10 @@ void InitLoadPoint()
   ret = pdhaddcounter(query, "\\Processor(_Total)\\% Processor Time", 0, &counter);
   if (ret!=0) exit(-1);  
 }
-void GetLoadPoint( w, closure, call_data )      /* SYSV386 version */
-     Widget  w;              /* unused */
-     XtPointer       closure;        /* unused */
-     XtPointer       call_data;      /* pointer to (double) return value */
+void GetLoadPoint(
+     Widget  w,              /* unused */
+     XtPointer    closure,        /* unused */
+     XtPointer    call_data)      /* pointer to (double) return value */
 {
   double *loadavg = (double *)call_data;
   COUNTER fmtvalue;
@@ -106,37 +104,18 @@ void GetLoadPoint( w, closure, call_data )      /* SYSV386 version */
 #else
 
 
-#if !defined(DGUX)
 #if defined(att) || defined(QNX4)
 #define LOADSTUB
 #endif
 
-#ifndef macII
-#ifndef apollo
 #ifndef LOADSTUB
 #if !defined(linux) && !defined(__UNIXOS2__) && !defined(__GLIBC__)
 #include <nlist.h>
 #endif /* !linux && ... */
 #endif /* LOADSTUB */
-#endif /* apollo */
-#endif /* macII */
 
 #if defined(MOTOROLA) && defined(SYSV)
 #include <sys/sysinfo.h>
-#endif
-
-#ifdef sun
-#    include <sys/param.h>
-#    if !defined(HAVE_CONFIG_H) && defined(SVR4) 
-# 	define HAVE_LIBKSTAT 1
-#    endif
-#    ifdef HAVE_LIBKSTAT
-#	include <kstat.h>
-#	include <errno.h>
-#    elif defined(i386) && !defined(SVR4)
-#        include <kvm.h>
-#        define	KVM_ROUTINES
-#    endif /* i386 */
 #endif
 
 #ifdef CSRG_BASED
@@ -160,16 +139,6 @@ void GetLoadPoint( w, closure, call_data )      /* SYSV386 version */
 #include <sys/vm.h>
 #endif /* sequent */
 
-#ifdef macII
-#include <a.out.h>
-#include <sys/var.h>
-#define X_AVENRUN 0
-#define fxtod(i) (vec[i].high+(vec[i].low/65536.0))
-struct lavnum {
-    unsigned short high;
-    unsigned short low;
-};
-#endif /* macII */
 
 #ifdef hcx
 #include <sys/param.h>
@@ -217,69 +186,9 @@ struct lavnum {
 extern long lseek();
 #endif
 
-void xload_error(char *, char *);
+static void xload_error(const char *, const char *) _X_NORETURN;
 
 
-#ifdef apollo
-#include <apollo/base.h>
-#include <apollo/time.h>
-typedef struct {
-	short		state;		/* ready, waiting, etc. */
-	pinteger	usr;		/* user sr */
-	linteger	upc;		/* user pc */
-	linteger	usp;		/* user stack pointer */
-	linteger	usb;		/* user sb ptr (A6) */
-	time_$clock_t	cpu_total;	/* cumulative cpu used by process */
-	unsigned short	priority;	/* process priority */
-    } proc1_$info_t;
-
-void proc1_$get_cput(
-	time_$clock_t	*cput
-);
-
-void proc1_$get_info(
-	short		&pid,
-	proc1_$info_t	*info,
-	status_$t	*sts
-);
-
-static int     lastNullCpu;
-static int     lastClock;
-
-void InitLoadPoint()				/* Apollo version */
-{
-     time_$clock_t  timeNow;
-     proc1_$info_t  info;
-     status_$t      st;
-
-     proc1_$get_info( (short) 2, &info, &st );
-     time_$clock( &timeNow );
-
-     lastClock = timeNow.low32;
-     lastNullCpu = info.cpu_total.low32;
-}
-
-/* ARGSUSED */
-void GetLoadPoint( w, closure, call_data ) 	/* Apollo version */
-     Widget	w;		/* unused */
-     XtPointer	closure;	/* unused */
-     XtPointer	call_data;	/* pointer to (double) return value */
-{
-     time_$clock_t  timeNow;
-     double         temp;
-     proc1_$info_t  info;
-     status_$t      st;
-
-     proc1_$get_info( (short) 2, &info, &st );
-     time_$clock( &timeNow );
-
-     temp = info.cpu_total.low32 - lastNullCpu;
-     *(double *)call_data = 1.0 - temp / (timeNow.low32 - lastClock);
-
-     lastClock = timeNow.low32;
-     lastNullCpu = info.cpu_total.low32;
-}
-#else /* not apollo */
 #if defined(SYSV) && defined(i386)
 /*
  * inspired by 'avgload' by John F. Haugh II
@@ -367,63 +276,18 @@ XtPointer	call_data;	/* pointer to (double) return value */
     return;
 }
 #else /* not (SYSV && i386) */
-#ifdef KVM_ROUTINES
-/*
- *	Sun 386i Code - abstracted to see the wood for the trees
- */
-
-static struct nlist nl[2];
-static kvm_t *kd;
-
-void
-InitLoadPoint()					/* Sun 386i version */
-{
-    kd = kvm_open("/vmunix", NULL, NULL, O_RDONLY, "Load Widget");
-    if (kd == (kvm_t *)0) {
-	xload_error("cannot get access to kernel address space", "");
-    }
-	
-    nl[0].n_name = "avenrun";
-    nl[1].n_name = NULL;
-	
-    if (kvm_nlist(kd, nl) != 0) {
-	xload_error("cannot get name list", "");
-    }
-    
-    if (nl[0].n_value == 0) {
-	xload_error("Cannot find address for avenrun in the kernel\n", "");
-    }
-}
-
-/* ARGSUSED */
-void 
-GetLoadPoint( w, closure, call_data ) 		/* Sun 386i version */
-Widget	w;		/* unused */
-XtPointer closure;	/* unused */
-XtPointer call_data;	/* pointer to (double) return value */
-{
-    double *loadavg = (double *)call_data;
-    long	temp;
-
-    if (kvm_read(kd, nl[0].n_value, (char *)&temp, sizeof (temp)) != 
-	sizeof (temp)) {
-	xload_error("Kernel read error", "");
-    }
-    *loadavg = (double)temp/FSCALE;
-}
-#else /* not KVM_ROUTINES */
 
 #if defined(linux) || (defined(__FreeBSD_kernel__) && defined(__GLIBC__))
 
-void InitLoadPoint()
+void InitLoadPoint(void)
 {
       return;
 }
 
-void GetLoadPoint( w, closure, call_data )
-     Widget   w;              /* unused */
-     XtPointer  closure;        /* unused */
-     XtPointer  call_data;      /* pointer to (double) return value */
+void GetLoadPoint(
+    Widget	w,		/* unused */
+    XtPointer	closure,	/* unused */
+    XtPointer	call_data)      /* pointer to (double) return value */
 {
       static int fd = -1;
       int n;
@@ -476,17 +340,17 @@ void GetLoadPoint( w, closure, call_data )
 
 static processor_set_t default_set;
 
-void InitLoadPoint()
+void InitLoadPoint(void)
 {
   if (processor_set_default (mach_host_self (), &default_set) != KERN_SUCCESS)
     xload_error("cannot get processor_set_default", "");
 }
 
 /* ARGSUSED */
-void GetLoadPoint( w, closure, call_data )
-     Widget	w;		/* unused */
-     XtPointer	closure;	/* unused */
-     XtPointer	call_data;	/* pointer to (double) return value */
+void GetLoadPoint(
+    Widget	w,		/* unused */
+    XtPointer	closure,	/* unused */
+    XtPointer	call_data)	/* pointer to (double) return value */
 {
   host_t host;
   struct processor_set_basic_info info;
@@ -508,22 +372,22 @@ void GetLoadPoint( w, closure, call_data )
 
 #else /* __GNU__ */
 
-#ifdef __DARWIN__
+#ifdef __APPLE__
 
 #include <mach/mach.h>
 
 static mach_port_t host_priv_port;
 
-void InitLoadPoint()
+void InitLoadPoint(void)
 {
     host_priv_port = mach_host_self();
 }
 
 /* ARGSUSED */
-void GetLoadPoint( w, closure, call_data )
-    Widget	w;		/* unused */
-    XtPointer	closure;	/* unused */
-    XtPointer	call_data;	/* pointer to (double) return value */
+void GetLoadPoint(
+    Widget	w,		/* unused */
+    XtPointer	closure,	/* unused */
+    XtPointer	call_data)	/* pointer to (double) return value */
 {
     double *loadavg = (double *)call_data;
 
@@ -540,7 +404,7 @@ void GetLoadPoint( w, closure, call_data )
     return;
 }
 
-#else /* __DARWIN__ */
+#else /* __APPLE__ */
 
 #ifdef LOADSTUB
 
@@ -591,7 +455,7 @@ static  int       nto_idle_id;
 static  struct timespec nto_now, nto_last;
 
 void
-InitLoadPoint()
+InitLoadPoint(void)
 {
   nto_idle_id = ClockId(1, 1); /* Idle thread */
   ClockTime(nto_idle_id, NULL, &nto_idle_last);
@@ -600,10 +464,10 @@ InitLoadPoint()
 
 /* ARGSUSED */
 void
-GetLoadPoint( w, closure, call_data )           /* QNX NTO version */
-Widget  w;              /* unused */
-XtPointer closure;      /* unused */
-XtPointer call_data;    /* pointer to (double) return value */
+GetLoadPoint(			/* QNX NTO version */
+    Widget	w,		/* unused */
+    XtPointer	closure,	/* unused */
+    XtPointer	call_data)	/* pointer to (double) return value */
 {
     double *loadavg = (double *)call_data;
     double timediff;
@@ -633,7 +497,7 @@ static struct nlist nl[] = {
 static kvm_t *kd;
 static int fscale;
 
-void InitLoadPoint()
+void InitLoadPoint(void)
 {
   fixpt_t averunnable[3];  /* unused really */
 
@@ -654,10 +518,10 @@ void InitLoadPoint()
   return;
 }
 
-void GetLoadPoint(w, closure, call_data)
-     Widget w;          /* unused */
-     XtPointer closure;   /* unused */
-     XtPointer call_data; /* ptr to (double) return value */
+void GetLoadPoint(
+     Widget	w,		/* unused */
+     XtPointer	closure,	/* unused */
+    XtPointer	call_data)	/* ptr to (double) return value */
 {
   double *loadavg = (double *)call_data;
   fixpt_t t;
@@ -672,8 +536,11 @@ void GetLoadPoint(w, closure, call_data)
 }
 
 #else /* not __bsdi__ */
-#if defined(BSD) && (BSD >= 199306)
+#if defined(HAVE_GETLOADAVG)
 #include <stdlib.h>
+#ifdef HAVE_SYS_LOADAVG_H
+#include <sys/loadavg.h>	/* Solaris definition of getloadavg */
+#endif
 
 void InitLoadPoint()
 {
@@ -690,37 +557,7 @@ void GetLoadPoint(w, closure, call_data)
     xload_error("couldn't obtain load average", "");
 }
 
-#else /* not BSD >= 199306 */
-#if defined(sun) && defined(HAVE_LIBKSTAT)
-
-static kstat_t		*ksp;
-static kstat_ctl_t	*kc;
-
-void
-InitLoadPoint(void)
-{
-	if ((kc = kstat_open()) == NULL)
-		xload_error("kstat_open failed:", strerror(errno));
-
-	if ((ksp = kstat_lookup(kc, "unix", 0, "system_misc")) == NULL)
-		xload_error("kstat_lookup failed:", strerror(errno));
-}
-
-void
-GetLoadPoint(Widget w, XtPointer closure, XtPointer call_data)
-{
-	kstat_named_t *vp;
-	double *loadavg = (double *)call_data;
-
-	if (kstat_read(kc, ksp, NULL) == -1)
-		xload_error("kstat_read failed:", strerror(errno));
-
-	if ((vp = kstat_data_lookup(ksp, "avenrun_1min")) == NULL)
-		xload_error("kstat_data_lookup failed:", strerror(errno));
-
-	*loadavg = (double)vp->value.l / FSCALE;
-}
-#else /* not Solaris */
+#else /* not HAVE_GETLOADAVG */
 
 #ifndef KMEM_FILE
 #define KMEM_FILE "/dev/kmem"
@@ -740,9 +577,6 @@ GetLoadPoint(Widget w, XtPointer closure, XtPointer call_data)
 #define KERNEL_FILE "/hp-ux"
 #endif /* hpux */
 
-#ifdef macII
-#define KERNEL_FILE "/unix"
-#endif /* macII */
 
 #ifdef umips
 # ifdef SYSTYPE_SYSV
@@ -771,10 +605,6 @@ GetLoadPoint(Widget w, XtPointer closure, XtPointer call_data)
 #define KERNEL_FILE "/unix"
 #endif
 #endif /* MOTOROLA */
-
-#if defined(sun) && defined(SVR4)
-#define KERNEL_FILE "/kernel/unix"
-#endif
 
 #ifdef sgi
 #if (OSMAJORVERSION > 4)
@@ -884,51 +714,18 @@ GetLoadPoint(Widget w, XtPointer closure, XtPointer call_data)
 #    endif
 #endif /* KERNEL_LOAD_VARIABLE */
 
-#ifdef macII
-static struct var v;
-static int pad[2];	/* This padding is needed if xload compiled on */
-			/* a/ux 1.1 is executed on a/ux 1.0, because */
-			/* the var structure had too much padding in 1.0, */
-			/* so the 1.0 kernel writes past the end of the 1.1 */
-			/* var structure in the uvar() call. */
-static struct nlist nl[2];
-static struct lavnum vec[3];
-#else /* not macII */
 static struct nlist namelist[] = {	    /* namelist for vmunix grubbing */
 #define LOADAV 0
     {KERNEL_LOAD_VARIABLE},
     {0}
 };
-#endif /* macII */
 
 static int kmem;
 static long loadavg_seek;
 
 void InitLoadPoint()
 {
-#ifdef macII
-    extern nlist();
-
-    int i;
-
-    strcpy(nl[0].n_name, "avenrun");
-    nl[1].n_name[0] = '\0';
-
-    kmem = open(KMEM_FILE, O_RDONLY);
-    if (kmem < 0) {
-	xload_error("cannot open", KMEM_FILE);
-    }
-
-    uvar(&v);
-
-    if (nlist( KERNEL_FILE, nl) != 0) {
-	xload_error("cannot get name list from", KERNEL_FILE);
-    }
-    for (i = 0; i < 2; i++) {
-	nl[i].n_value = (int)nl[i].n_value - v.v_kvoffset;
-    }
-#else /* not macII */
-#if !defined(SVR4) && !defined(sgi) && !defined(MOTOROLA) && !defined(AIXV5) && !(BSD >= 199103)
+#if !defined(SVR4) && !defined(sgi) && !defined(MOTOROLA) && !defined(AIXV5) && !(BSD >= 199103) && !defined(__APPLE__)
     extern void nlist();
 #endif
 
@@ -962,7 +759,6 @@ void InitLoadPoint()
 #endif /* CRAY && SYSINFO */
     kmem = open(KMEM_FILE, O_RDONLY);
     if (kmem < 0) xload_error("cannot open", KMEM_FILE);
-#endif /* macII else */
 }
 
 /* ARGSUSED */
@@ -973,25 +769,15 @@ void GetLoadPoint( w, closure, call_data )
 {
   	double *loadavg = (double *)call_data;
 
-#ifdef macII
-	lseek(kmem, (long)nl[X_AVENRUN].n_value, 0);
-#else
 	(void) lseek(kmem, loadavg_seek, 0);
-#endif
 
-#if defined(sun) || defined (UTEK) || defined(sequent) || defined(alliant) || defined(SVR4) || defined(sgi) || defined(hcx) || (BSD >= 199103)
+#if defined (UTEK) || defined(sequent) || defined(alliant) || defined(SVR4) || defined(sgi) || defined(hcx) || (BSD >= 199103)
 	{
 		long temp;
 		(void) read(kmem, (char *)&temp, sizeof(long));
 		*loadavg = (double)temp/FSCALE;
 	}
-#else /* else not sun or UTEK or sequent or alliant or SVR4 or sgi or hcx */
-# ifdef macII
-        {
-                read(kmem, vec, 3*sizeof(struct lavnum));
-                *loadavg = fxtod(0);
-        }
-# else /* else not macII */
+#else /* else not UTEK or sequent or alliant or SVR4 or sgi or hcx */
 #  if defined(umips) || (defined(ultrix) && defined(mips))
 	{
 		fix temp;
@@ -1122,24 +908,20 @@ void GetLoadPoint( w, closure, call_data )
 #     endif /* MOTOROLA else */
 #    endif /* AIXV3 else */
 #  endif /* umips else */
-# endif /* macII else */
-#endif /* sun or SVR4 or ... else */	
+#endif /* SVR4 or ... else */
 	return;
 }
-#endif /* sun else */
-#endif /* BSD >= 199306 else */
+#endif /* HAVE_GETLOADAVG else */
 #endif /* __bsdi__ else */
 #endif /* __QNXNTO__ else */
 #endif /* __osf__ else */
 #endif /* LOADSTUB else */
-#endif /* __DARWIN__ else */
+#endif /* __APPLE__ else */
 #endif /* __GNU__ else */
 #endif /* linux else */
-#endif /* KVM_ROUTINES else */
 #endif /* SYSV && i386 else */
 
-void xload_error(str1, str2)
-char *str1, *str2;
+static void xload_error(const char *str1, const char *str2)
 {
     (void) fprintf(stderr,"xload: %s %s\n", str1, str2);
 #ifdef __bsdi__
@@ -1148,93 +930,5 @@ char *str1, *str2;
 #endif
     exit(-1);
 }
-
-#endif /* apollo else */
-
-#else /* !DGUX */
-
-/* INTEL DGUX Release 4.20MU04
- * Copyright 1999 Takis Psarogiannakopoulos
- * Cambridge, UK
- * <takis@dpmms.cam.ac.uk>
- */
-
-#include <errno.h>
-#include <nlist.h>
-#include <sys/dg_sys_info.h>
-
-static struct dg_sys_info_load_info load_info;  /* DG/ux */
-
-#define KERNEL_FILE "/dgux"
-#define LDAV_SYMBOL "_avenrun"
-
-void InitLoadPoint()
-{
-
-}
-
-void GetLoadPoint(w, closure, call_data)
-     Widget w;          /* unused */
-     XtPointer closure;   /* unused */
-     XtPointer call_data; /* ptr to (double) return value */
-{
-  double *loadavg = (double *)call_data;
-
-  if (getloadavg(loadavg, 1) < 0)
-    xload_error("couldn't obtain load average", "");
-}
-
-xload_error(str1, str2)
-char *str1, *str2;
-{
-    (void) fprintf(stderr,"xload: %s %s\n", str1, str2);
-    exit(-1);
-}
-
-#if !defined (LDAV_CVT) && defined (FSCALE)
-#define LDAV_CVT(n) (((double) (n)) / FSCALE)
-#endif
-#if !defined(LDAV_CVT) && defined(LOAD_AVE_CVT)
-#define LDAV_CVT(n) (LOAD_AVE_CVT (n) / 100.0)
-#endif
-#define LOAD_AVE_TYPE double
-#ifndef LDAV_CVT
-#define LDAV_CVT(n) ((double) (n))
-#endif /* !LDAV_CVT */
-static int channel;
-static int getloadavg_initialized;
-static long offset;
-static struct nlist nl[2];
-
-
-/* GETLOADAVG FUNCTION FOR DG/ux R4.20MU04 */
-
-int
-getloadavg (double loadavg[], int nelem)
-{
-  int elem = 0;                 /* Return value.  */
-  int result =0 ;
-
-  /* This call can return -1 for an error, but with good args
-     it's not supposed to fail.  The first argument is for no
-     apparent reason of type `long int *'.  */
-  result = dg_sys_info ((long int *) &load_info,
-		DG_SYS_INFO_LOAD_INFO_TYPE, DG_SYS_INFO_LOAD_VERSION_0);
-  if ( result == -1)
-  {
-     return(-1);
-  }
-  if (nelem > 0)
-    loadavg[elem++] = load_info.one_minute;
-  if (nelem > 1)
-    loadavg[elem++] = load_info.five_minute;
-  if (nelem > 2)
-    loadavg[elem++] = load_info.fifteen_minute;
-
-  return elem;
-}
-
-#endif /* END OF DG/ux */
-
 
 #endif /* END of __CYGWIN__ */

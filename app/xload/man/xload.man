@@ -1,6 +1,3 @@
-.\" $XConsortium: xload.man,v 1.29 94/04/17 20:43:44 matt Exp $
-.\"
-.\" $XFree86: xc/programs/xload/xload.man,v 1.4 2001/08/13 19:35:01 dawes Exp $
 .\"
 .TH XLOAD 1 __xorgversion__
 .SH NAME
@@ -11,19 +8,19 @@ xload \- system load average display for X
 .br
 	[-jumpscroll \fIpixels\fP] [-label \fIstring\fP] [-nolabel] [-lights]
 .SH DESCRIPTION
-The 
-.I xload 
+The
+.I xload
 program displays a periodically updating histogram of the system load average.
 .SH OPTIONS
 .PP
 .I Xload
 accepts all of the standard X Toolkit command line options (see \fIX(__miscmansuffix__)\fP).
-The order of the options in unimportant.  \fIxload also accepts the
+The order of the options is unimportant.  \fIxload also accepts the
 following additional options:
 .PP
 .TP 8
 .B \-hl \fIcolor\fP or \-highlight \fIcolor\fP
-This option specifies the color of the scale lines.  
+This option specifies the color of the scale lines.
 .TP 8
 .B \-jumpscroll \fPnumber of pixels\fP
 The number of pixels to shift the graph to the left when the graph
@@ -59,7 +56,7 @@ is 1 second.  The default is 10.
 .B \-remote \fIhost\fP
 This option tells \fIxload\fP to display the load of \fIhost\fP instead of \fIlocalhost\fP. \fIXload\fP gets the information from the \fIrwhod\fP database and consequently requires \fIrwhod\fP to be executing both on \fIlocalhost\fP and \fIhost\fP.
 .SH RESOURCES
-In addition to the resources available to each of the widgets used by 
+In addition to the resources available to each of the widgets used by
 \fIxload\fP there is one resource defined by the application itself.
 .TP 8
 .B showLabel (\fPclass\fB Boolean)
@@ -92,15 +89,15 @@ stored in the RESOURCE_MANAGER property.
 .I __apploaddir__/XLoad
 specifies required resources
 .SH SEE ALSO
-X(__miscmansuffix__), xrdb(1), mem(4), Athena StripChart Widget.
+X(__miscmansuffix__), xrdb(__appmansuffix__), mem(__drivermansuffix__), Athena StripChart Widget.
 .SH BUGS
-This program requires the ability to open and read the special system
-file \fI/dev/kmem\fP.  Sites that do not allow general access to this file
-should make \fIxload\fP belong to the same group as \fI/dev/kmem\fP and
-turn on the \fIset group id\fP permission flag.
+On older platforms, this program may require the ability to open and read
+the special system file \fI/dev/kmem\fP.  Sites that do not allow general
+access to this file may need to make \fIxload\fP belong to the same group
+as \fI/dev/kmem\fP and turn on the \fIset group id\fP permission flag.
 .PP
-Reading /dev/kmem is inherently non-portable.  Therefore, the routine
-used to read it (get_load.c) must be ported to each new operating system. 
+Reading the load average is inherently non-portable.  Therefore, the routine
+used to read it (get_load.c) must be ported to each new operating system.
 .SH COPYRIGHT
 Copyright \(co X Consortium
 .br
@@ -110,4 +107,3 @@ K. Shane Hartman (MIT-LCS) and Stuart A. Malone (MIT-LCS);
 .br
 with features added by Jim Gettys (MIT-Athena), Bob Scheifler (MIT-LCS),
 Tony Della Fera (MIT-Athena), and Chris Peterson (MIT-LCS).
-DG/UX support by Takis Psarogiannakopoulos (XFree86 Project).
