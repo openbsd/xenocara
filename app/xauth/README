@@ -1,5 +1,5 @@
-The xauth program is used to edit and display the authorization 
-information used in connecting to the X server. 
+The xauth program is used to edit and display the authorization
+information used in connecting to the X server.
 
 All questions regarding this software should be directed at the
 Xorg mailing list:

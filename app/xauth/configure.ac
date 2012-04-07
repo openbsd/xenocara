@@ -1,5 +1,5 @@
 dnl  Copyright 2005 Red Hat, Inc.
-dnl 
+dnl
 dnl  Permission to use, copy, modify, distribute, and sell this software and its
 dnl  documentation for any purpose is hereby granted without fee, provided that
 dnl  the above copyright notice appear in all copies and that both that
@@ -9,7 +9,7 @@ dnl  advertising or publicity pertaining to distribution of the software without
 dnl  specific, written prior permission.  Red Hat makes no
 dnl  representations about the suitability of this software for any purpose.  It
 dnl  is provided "as is" without express or implied warranty.
-dnl 
+dnl
 dnl  RED HAT DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE,
 dnl  INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS, IN NO
 dnl  EVENT SHALL RED HAT BE LIABLE FOR ANY SPECIAL, INDIRECT OR
@@ -22,7 +22,7 @@ dnl Process this file with autoconf to create configure.
 
 AC_PREREQ([2.60])
 AC_INIT([xauth],
-	[1.0.6],
+	[1.0.7],
 	[https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],
 	[xauth])
 AM_INIT_AUTOMAKE([foreign dist-bzip2])
@@ -46,7 +46,7 @@ AC_CHECK_FUNCS([strlcpy])
 PKG_CHECK_MODULES(XAUTH, x11 xau xext xmuu)
 
 # Transport selection macro from xtrans.m4
-# Needed to set *CONN defines for gethost.c & parsedpy.c 
+# Needed to set *CONN defines for gethost.c & parsedpy.c
 XTRANS_CONNECTION_FLAGS
 
 XORG_WITH_LINT

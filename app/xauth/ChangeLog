@@ -1,3 +1,48 @@
+commit 374c8c7005200c13299fdcb7b7d1b12f9f4258ae
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Mar 22 21:41:35 2012 -0700
+
+    xauth 1.0.7
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit fbc307f3445a549815efb2476e9476bd51250cf6
+Author: Andreas Schwab <schwab@linux-m68k.org>
+Date:   Fri Sep 3 13:45:49 2010 +0200
+
+    Remove alarm handler in get_hostname
+    
+    gethostbyaddr is not (required to be) async-signal-safe.
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit ee3e046dfd84cda1588eef155c7e7c36df9bf5f4
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Sep 28 19:57:15 2011 -0700
+
+    Add const attributes to fix gcc -Wwrite-strings warnings
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 7f7f8cd60795c9503156950d518caa04b30a94a2
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Sep 28 19:50:40 2011 -0700
+
+    Strip trailing whitespace
+    
+    Performed with: find * -type f | xargs perl -i -p -e 's{[ \t]+$}{}'
+    git diff -w & git diff -b show no diffs from this change
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit eb5ed59c623aa360677f62a7fd6e398ee9f3cab5
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Sep 28 19:39:20 2011 -0700
+
+    convert strlen/malloc/strcpy combo to strdup
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit b67f0df2dbfa372417d0687e26704635e2d10034
 Author: Jeremy Huddleston <jeremyhu@apple.com>
 Date:   Mon May 23 19:38:50 2011 -0700
