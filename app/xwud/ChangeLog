@@ -1,3 +1,70 @@
+commit 86d36843f3f087a6c1f3eb5a21385a116ae9e46a
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Mar 31 17:04:56 2012 -0700
+
+    xwud 1.0.4
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 2785ef0c967571977b78490eb501c5f9da91d48c
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Jan 6 20:07:40 2012 -0800
+
+    Replace malloc(strlen) + strcpy() with strdup()
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 05c9c12b6491708bc9ed9ea6b7a5321928d5ac93
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Sun May 8 09:48:55 2011 -0700
+
+    Mark Error as _X_NORETURN
+    
+    xwud.c:1031:6: warning: Array access (from variable 'pixels') results in a null pointer dereference
+                pixels[i] = ~0L;
+                ^~~~~~
+    xwud.c:1036:22: warning: Array access (from variable 'pixels') results in a null pointer dereference
+                    if ((color.pixel = pixels[pix]) == ~0L) {
+                                       ^~~~~~
+    xwud.c:1101:6: warning: Array access (from variable 'rpixels') results in a null pointer dereference
+                rpixels[i] = ~0L;
+                ^~~~~~~
+    xwud.c:1100:6: warning: Array access (from variable 'pixels') results in a null pointer dereference
+                pixels[i] = ~0L;
+                ^~~~~~
+    
+    Found-by: clang static analyzer
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit b7751c561e500e066273d618bfb9967b89767559
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jan 19 10:06:57 2011 -0500
+
+    config: move man pages into their own directory
+    
+    Use services provided by XORG_MANPAGE_SECTIONS.
+    Use standard Makefile for man pages.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 4e97b1da43664f99400dc3b66afc416fb25c3bb1
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Jan 13 17:15:37 2011 -0500
+
+    man: replace hard coded man page section with substitution strings
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 70cc9502dc9757cffc165d73cfe8a29b1450df25
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Jan 13 11:15:48 2011 -0500
+
+    man: remove trailing spaces and tabs
+    
+    Using s/[ \t]*$//
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
 commit 1693c1bba2c03acd151329fb8ecc3f5c267f9576
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Sun Nov 7 10:40:46 2010 -0800

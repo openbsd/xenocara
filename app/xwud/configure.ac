@@ -23,7 +23,7 @@ dnl Process this file with autoconf to create configure.
 
 # Initialize Autoconf
 AC_PREREQ([2.60])
-AC_INIT([xwud], [1.0.3],
+AC_INIT([xwud], [1.0.4],
         [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg], [xwud])
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_HEADERS([config.h])
@@ -39,6 +39,9 @@ XORG_MACROS_VERSION(1.8)
 XORG_DEFAULT_OPTIONS
 
 # Checks for pkg-config packages
-PKG_CHECK_MODULES(XWUD, x11)
+PKG_CHECK_MODULES(XWUD, x11 xproto >= 7.0.17)
 
-AC_OUTPUT([Makefile])
+AC_CONFIG_FILES([
+	Makefile
+	man/Makefile])
+AC_OUTPUT

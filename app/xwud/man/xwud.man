@@ -1,14 +1,14 @@
 .\" Copyright 1988, 1998  The Open Group
-.\" 
+.\"
 .\" Permission to use, copy, modify, distribute, and sell this software and its
 .\" documentation for any purpose is hereby granted without fee, provided that
 .\" the above copyright notice appear in all copies and that both that
 .\" copyright notice and this permission notice appear in supporting
 .\" documentation.
-.\" 
+.\"
 .\" The above copyright notice and this permission notice shall be included
 .\" in all copies or substantial portions of the Software.
-.\" 
+.\"
 .\" THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
 .\" OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
 .\" MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
@@ -16,7 +16,7 @@
 .\" OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
 .\" ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 .\" OTHER DEALINGS IN THE SOFTWARE.
-.\" 
+.\"
 .\" Except as contained in this notice, the name of The Open Group shall
 .\" not be used in advertising or otherwise to promote the sale, use or
 .\" other dealings in this Software without prior written authorization
@@ -37,7 +37,7 @@ xwud - image displayer for X
 is an X Window System image undumping utility.
 .I Xwud
 allows X users to display in a window an image saved
-in a specially formatted dump file, such as produced by \fIxwd(1)\fP.
+in a specially formatted dump file, such as produced by \fIxwd(__appmansuffix__)\fP.
 .SH OPTIONS
 .PP
 .TP 8
@@ -70,7 +70,7 @@ Print out a short description of the allowable options.
 .PP
 .TP 8
 .B "\-in \fIfile\fP"
-This option allows the user to explicitly specify the input 
+This option allows the user to explicitly specify the input
 file on the command line.  If no input file is given, the standard input
 is assumed.
 .PP
@@ -118,7 +118,7 @@ Allow the window to be resized, and scale the image to the size of the window.
 This option causes the image to be displayed using the specified
 Standard Colormap.  The property name is obtained by converting the
 type to upper case, prepending "RGB_", and appending "_MAP".
-Typical types are "best", "default", and "gray".  See \fIxstdcmap(1)\fP
+Typical types are "best", "default", and "gray".  See \fIxstdcmap(__appmansuffix__)\fP
 for one way of creating Standard Colormaps.
 .PP
 .TP 8
@@ -144,10 +144,10 @@ To get default display.
 .B XWDFile.h
 X Window Dump File format definition file.
 .SH BUGS
-xwud doesn't handle big/deep images very well on servers that don't 
+xwud doesn't handle big/deep images very well on servers that don't
 have the BIG-REQUESTS extension.
 .SH SEE ALSO
-xwd(1), xstdcmap(1), X(__miscmansuffix__)
+xwd(__appmansuffix__), xstdcmap(__appmansuffix__), X(__miscmansuffix__)
 .SH AUTHOR
 Bob Scheifler, MIT X Consortium
 

@@ -70,7 +70,7 @@ static void Do_Direct(Display *dpy, XWDFileHeader *header, Colormap *colormap,
 		      int ncolors, XColor *colors, 
 		      XImage *in_image, XImage *out_image, XVisualInfo *vinfo);
 static unsigned int Image_Size(XImage *image);
-static void Error(char *string);
+static void Error(char *string) _X_NORETURN;
 static void _swapshort(char *bp, unsigned int n);
 static void _swaplong(char *bp, unsigned int n);
 static void DumpHeader(const XWDFileHeader *header, const char *win_name);
@@ -376,9 +376,7 @@ main(int argc, char *argv[])
     mask = VisualScreenMask;
     if (vis)
     {
-	char *vt;
-	vt = malloc(strlen(vis) + 1);
-	strcpy(vt, vis);
+	char *vt = strdup(vis);
 	Latin1Upper(vt);
 	if (strcmp(vt, "STATICGRAY") == 0) {
 	    vinfo.class = StaticGray;
