@@ -1,3 +1,111 @@
+commit b355a23e6787f348db97faaa48085428277c659b
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Mar 22 23:04:32 2012 -0700
+
+    xmodmap 1.0.6
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit d0dfd2128e6111b967c51136d97093d3b53ee6d6
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Nov 11 21:07:30 2011 -0800
+
+    Replace chk_malloc + sprintf with asprintf
+    
+    Includes local private copy of asprintf for OS'es without it in libc.
+    Removes chk_malloc as no callers remain anymore.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit fecb1f5a0c2121de6d9209fc9525ac7d9b9555ea
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Nov 11 20:46:00 2011 -0800
+
+    Free copy of input line at end of process_line instead of leaking it
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit 66c09c83aa2f64b31dc657f90447c269621545b7
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Nov 11 20:40:18 2011 -0800
+
+    Fix gcc -Wwrite-strings warnings
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit 8751095511c7d9065ab12a40e90e38bdd9d728e4
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Fri Nov 11 11:22:43 2011 -0800
+
+    Add missing _X_NORETURN to functions that need it
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit c71811ebe193cecc4add4c2d9cec751fc721343b
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Fri Nov 11 11:21:45 2011 -0800
+
+    Include strings.h for strcasecmp
+    
+    Our minimum requirement for X11 is currently Unix98.  Unix98 provides
+    strcasecmp in <strings.h>.  This commit fixes implicit declarations
+    of this function on systems that closely adhere to the standard.
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit b6b5bc9e9874934dd1c1b80a1aa0c0b1c454eab2
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Sat May 7 22:05:16 2011 -0700
+
+    Improve error handling in copy_to_scratch
+    
+    handle.c:95:5: warning: Array access (from variable 'buf') results in a null pointer dereference
+        buf[len] = '\0';
+        ^~~
+    
+    Found-by: clang static analyzer
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit 1f801eea5f4d17b83aee1170423d65a74e01a138
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Sat May 7 21:45:22 2011 -0700
+
+    Dead code removal
+    
+    xmodmap.c:159:5: warning: Value stored to 'status' is never read
+        status = 0;
+        ^        ~
+    
+    Found-by: clang static analyzer
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit d427337286e0a8ac061d5acbc326e7bdb8b056a3
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Fri Mar 4 20:50:41 2011 -0500
+
+    man: replace hard coded section with __appmansuffix__
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 65011e8a86f64d5f7e9f39052e04e5ee7e57ce1b
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jan 12 16:28:02 2011 -0500
+
+    config: replace deprecated AM_CONFIG_HEADER with AC_CONFIG_HEADERS
+    
+    This silences an Autoconf warning
+
+commit ec2cab2dc9b6e7c804984320d8f560adbc3477ff
+Author: Jesse Adkins <jesserayadkins@gmail.com>
+Date:   Tue Sep 28 13:29:50 2010 -0700
+
+    Purge cvs tags.
+    
+    Signed-off-by: Jesse Adkins <jesserayadkins@gmail.com>
+
 commit 3fe64746bb6c3ede67c9967ebd216a8a39cdb2ea
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Fri Sep 24 11:53:40 2010 -0700

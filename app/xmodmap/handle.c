@@ -1,4 +1,3 @@
-/* $Xorg: handle.c,v 1.6 2001/02/09 02:05:56 xorgcvs Exp $ */
 /*
 
 Copyright 1988, 1998  The Open Group
@@ -26,7 +25,6 @@ other dealings in this Software without prior written authorization
 from The Open Group.
 
 */
-/* $XFree86: xc/programs/xmodmap/handle.c,v 3.6 2001/07/25 15:05:27 dawes Exp $ */
 
 #include "config.h"
 #include <X11/Xos.h>
@@ -36,6 +34,10 @@ from The Open Group.
 #include "xmodmap.h"
 #include "wq.h"
 #include <stdlib.h>
+
+#ifdef HAVE_STRNCASECMP
+#include <strings.h>
+#endif
 
 static XModifierKeymap *map = NULL;
 
@@ -84,17 +86,22 @@ copy_to_scratch(const char *s, int len)
     static char *buf = NULL;
     static int buflen = 0;
 
-    if (len > buflen) {
+    if (len < 0)
+        len = 0;
+
+    if (len >= buflen) {
 	if (buf) free (buf);
 	buflen = (len < 40) ? 80 : (len * 2);
 	buf = (char *) malloc (buflen+1);
+	if (!buf) {
+	    fprintf (stderr, "attempt to allocate %d byte scratch buffer\n", buflen + 1);
+	    return NULL;
+	}
     }
-    if (len > 0)
-      strncpy (buf, s, len);
-    else 
-      len = 0;
 
+    strncpy (buf, s, len);
     buf[len] = '\0';
+
     return (buf);
 }
 
@@ -137,7 +144,7 @@ static int skip_chars ( const char *s, int len );
 static int skip_space ( const char *s, int len );
 
 static struct dt {
-    char *command;			/* name of input command */
+    const char *command;		/* name of input command */
     int length;				/* length of command */
     void (*proc)(char *, int);		/* handler */
 } dispatch_table[] = {
@@ -270,7 +277,7 @@ add_to_work_queue(union op *p)	/* this can become a macro someday */
 static Bool 
 parse_number(const char *str, unsigned long *val)
 {
-    char *fmt = "%ld";
+    const char *fmt = "%ld";
 
     if (*str == '0') {
 	str++;
@@ -317,7 +324,7 @@ static void
 do_keycode(char *line, int len)
 {
     int dummy;
-    char *fmt = "%d";
+    const char *fmt = "%d";
     KeyCode keycode;
 
     if (len < 3 || !line || *line == '\0') {  /* 5=a minimum */

@@ -1,4 +1,3 @@
-/* $Xorg: wq.h,v 1.4 2001/02/09 02:05:56 xorgcvs Exp $ */
 /*
 
 Copyright 1988, 1998  The Open Group
@@ -26,7 +25,6 @@ other dealings in this Software without prior written authorization
 from The Open Group.
 
 */
-/* $XFree86: xc/programs/xmodmap/wq.h,v 1.4 2001/01/17 23:46:21 dawes Exp $ */
 
 #ifndef _WQ_H
 #define _WQ_H
@@ -137,7 +135,7 @@ extern struct wq {
 
 
 extern struct modtab {
-    char *name;
+    const char *name;
     int length;
     int value;
 } modifier_table[];

@@ -1,4 +1,3 @@
-/* $Xorg: xmodmap.h,v 1.4 2001/02/09 02:05:56 xorgcvs Exp $ */
 /*
 
 Copyright 1988, 1998  The Open Group
@@ -26,7 +25,10 @@ other dealings in this Software without prior written authorization
 from The Open Group.
 
 */
-/* $XFree86: xc/programs/xmodmap/xmodmap.h,v 1.4 2001/01/17 23:46:21 dawes Exp $ */
+
+#ifdef HAVE_CONFIG_H
+# include "config.h"
+#endif
 
 extern const char *ProgramName;
 extern Display *dpy;
@@ -39,7 +41,7 @@ extern int parse_errors;
 
 extern void initialize_map(void);
 extern void process_file(const char *filename);
-extern void process_line(char *buffer);
+extern void process_line(const char *buffer);
 extern void handle_line(char *line, int len);
 extern void print_work_queue(void);
 extern int execute_work_queue(void);
@@ -57,4 +59,4 @@ extern void PrintKeyTable(Bool exprs, FILE *fp);
 extern void PrintPointerMap(FILE *fp);
 extern int SetPointerMap(unsigned char *map, int n);
 
-extern void *chk_malloc(size_t n_bytes);
+extern void _X_NORETURN Exit(int status);

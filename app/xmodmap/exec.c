@@ -1,5 +1,3 @@
-/* $XdotOrg: exec.c,v 1.4 2001/02/09 02:05:56 xorgcvs Exp $ */
-/* $Xorg: exec.c,v 1.4 2001/02/09 02:05:56 xorgcvs Exp $ */
 /*
 
 Copyright 1988, 1998  The Open Group
@@ -55,7 +53,6 @@ from The Open Group.
  * Author:  Jim Fulton, MIT X Consortium; derived from parts of the
  * original xmodmap, written by David Rosenthal, of Sun Microsystems.
  */
-/* $XFree86: xc/programs/xmodmap/exec.c,v 1.5 2001/12/14 20:02:13 dawes Exp $ */
 
 #include <X11/Xos.h>
 #include <X11/Xlib.h>
@@ -283,7 +280,7 @@ PrintKeyTable(Bool exprs, FILE *fp)
 	    max--;
 	for (j = 0; j <= max; j++) {
 	    register KeySym ks = keymap[j];
-	    char *s;
+	    const char *s;
 	    if (ks != NoSymbol)
 		s = XKeysymToString (ks);
 	    else

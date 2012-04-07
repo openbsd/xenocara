@@ -1,5 +1,3 @@
-.\" $Xorg: xmodmap.man,v 1.4 2001/02/09 02:05:56 xorgcvs Exp $
-.\"
 .\" Copyright (c) 1987, 2010, Oracle and/or its affiliates. All rights reserved.
 .\"
 .\" Permission is hereby granted, free of charge, to any person obtaining a
@@ -44,8 +42,6 @@
 .\" not be used in advertising or otherwise to promote the sale, use or
 .\" other dealings in this Software without prior written authorization
 .\" from The Open Group.
-.\" 
-.\" $XFree86: xc/programs/xmodmap/xmodmap.man,v 1.11 2002/10/12 16:06:48 herrb Exp $
 .\" 
 .de EX		\"Begin example
 .ne 5
@@ -102,7 +98,7 @@ This option turns off the verbose logging.  This is the default.
 This option indicates that 
 .I xmodmap
 should not change the mappings, but should display what it would do, like
-\fImake(1)\fP does when given this option.
+\fImake(__appmansuffix__)\fP does when given this option.
 .TP 8
 .B \-e \fIexpression\fB
 This option specifies an expression to be executed.  Any number of expressions

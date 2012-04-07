@@ -1,4 +1,3 @@
-/* $Xorg: xmodmap.c,v 1.4 2001/02/09 02:05:56 xorgcvs Exp $ */
 /*
 
 Copyright 1988, 1998  The Open Group
@@ -26,13 +25,13 @@ other dealings in this Software without prior written authorization
 from The Open Group.
 
 */
-/* $XFree86: xc/programs/xmodmap/xmodmap.c,v 1.8tsi Exp $ */
 
 #include <X11/Xos.h>
 #include <X11/Xlib.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
+#include <stdarg.h>
 #include "xmodmap.h"
 
 const char *ProgramName;
@@ -41,7 +40,8 @@ int min_keycode, max_keycode;
 Bool verbose = False;
 Bool dontExecute = False;
 
-static void 
+void
+_X_NORETURN
 Exit(int status)
 {
     if (dpy) {
@@ -51,16 +51,54 @@ Exit(int status)
     exit (status);
 }
 
-void *
-chk_malloc(size_t n_bytes)
+static void _X_NORETURN
+FatalError(const char *message)
 {
-    void *buf = malloc(n_bytes);
-    if (!buf) {
-	fprintf(stderr, "%s: Could not allocate %d bytes\n", ProgramName, (int)n_bytes);
-	Exit(-1);
-    }
-    return buf;
+    fprintf(stderr, "%s: %s\n", ProgramName, message);
+    Exit(-1);
 }
+
+#ifndef HAVE_ASPRINTF
+/* sprintf variant found in newer libc's which allocates string to print to */
+static int _X_ATTRIBUTE_PRINTF(2,3)
+asprintf(char ** ret, const char *format, ...)
+{
+    char buf[256];
+    int len;
+    va_list ap;
+
+    va_start(ap, format);
+    len = vsnprintf(buf, sizeof(buf), format, ap);
+    va_end(ap);
+
+    if (len < 0)
+	return -1;
+
+    if (len < sizeof(buf))
+    {
+	*ret = strdup(buf);
+    }
+    else
+    {
+	*ret = malloc(len + 1); /* snprintf doesn't count trailing '\0' */
+	if (*ret != NULL)
+	{
+	    va_start(ap, format);
+	    len = vsnprintf(*ret, len + 1, format, ap);
+	    va_end(ap);
+	    if (len < 0) {
+		free(*ret);
+		*ret = NULL;
+	    }
+	}
+    }
+
+    if (*ret == NULL)
+	return -1;
+
+    return len;
+}
+#endif /* HAVE_ASPRINTF */
 
 static const char help_message[] = 
 "\nwhere options include:\n"
@@ -78,6 +116,7 @@ static const char help_message[] =
 
 
 static void 
+_X_NORETURN
 usage(void)
 {
     fprintf (stderr, "usage:  %s [-options ...] [filename]\n", ProgramName);
@@ -107,6 +146,7 @@ static const char grammar_message[] =
 
 
 static void 
+_X_NORETURN
 grammar_usage(void)
 {
     fprintf (stderr, "%s accepts the following input expressions:\n\n",
@@ -158,7 +198,6 @@ main(int argc, char *argv[])
      * the display being open.
      */
 
-    status = 0;
     for (i = 1; i < argc; i++) {
 	char *arg = argv[i];
 
@@ -247,11 +286,11 @@ main(int argc, char *argv[])
 		  char *cmd;
 		  didAnything = True;
 		  if (++i >= argc) usage ();
-		  cmd = chk_malloc (strlen ("remove control = ") + strlen (argv[i]) + 1);
-		  (void) sprintf (cmd, "remove %s = %s",
+		  if (asprintf (&cmd, "remove %s = %s",
 				  ((arg[1] == 's') ? "shift" :
 				   ((arg[1] == 'l') ? "lock" :
-				    "control")), argv[i]);
+				    "control")), argv[i]) == -1)
+		      FatalError("Could not allocate memory for remove cmd");
 		  process_line (cmd);
 		  continue;
 	      }
@@ -269,8 +308,8 @@ main(int argc, char *argv[])
 		  char *cmd;
 		  didAnything = True;
 		  if (++i >= argc) usage ();
-		  cmd = chk_malloc (strlen ("add modX = ") + strlen (argv[i]) + 1);
-		  (void) sprintf (cmd, "add mod%c = %s", arg[1], argv[i]);
+		  if (asprintf (&cmd, "add mod%c = %s", arg[1], argv[i]) == -1)
+		      FatalError("Could not allocate memory for add cmd");
 		  process_line (cmd);
 		  continue;
 	      }
@@ -285,11 +324,11 @@ main(int argc, char *argv[])
 		  char *cmd;
 		  didAnything = True;
 		  if (++i >= argc) usage ();
-		  cmd = chk_malloc (strlen ("add control = ") + strlen (argv[i]) + 1);
-		  (void) sprintf (cmd, "add %s = %s",
+		  if (asprintf (&cmd, "add %s = %s",
 				  ((arg[1] == 's') ? "shift" :
 				   ((arg[1] == 'l') ? "lock" :
-				    "control")), argv[i]);
+				    "control")), argv[i]) == -1)
+		      FatalError("Could not allocate memory for remove cmd");
 		  process_line (cmd);
 		  continue;
 	      }

@@ -1,4 +1,3 @@
-/* $Xorg: pf.c,v 1.4 2001/02/09 02:05:56 xorgcvs Exp $ */
 /*
 
 Copyright 1988, 1998  The Open Group
@@ -31,6 +30,7 @@ from The Open Group.
 #include <X11/Xlib.h>
 #include <stdio.h>
 #include <ctype.h>
+#include <stdlib.h>
 #include "xmodmap.h"
 
 #define NOTINFILEFILENAME "commandline"
@@ -79,27 +79,29 @@ void process_file (const char *filename)	/* NULL means use stdin */
 }
 
 
-void process_line (char *buffer)
+void process_line (const char *line)
 {
     int len;
     int i;
-    char *cp;
+    char *cp, *buffer;
 
-    /* copy buffer since it may point to unwritable date */
-    len = strlen(buffer);
-    cp = chk_malloc(len + 1);
-    strcpy(cp, buffer);
-    buffer = cp;
+    /* copy line to buffer since it may point to unwritable data */
+    len = strlen(line);
+    cp = buffer = strdup(line);
+    if (buffer == NULL) {
+	fprintf(stderr, "%s: Could not allocate %d bytes\n", ProgramName, len);
+	Exit(-1);
+    }
     
     for (i = 0; i < len; i++) {		/* look for blank lines */
 	register char c = buffer[i];
 	if (!(isspace(c) || c == '\n')) break;
     }
-    if (i == len) return;
+    if (i == len) goto done;
 
     cp = &buffer[i];
 
-    if (*cp == '!') return;		/* look for comments */
+    if (*cp == '!') goto done;		/* look for comments */
     len -= (cp - buffer);		/* adjust len by how much we skipped */
 
 					/* pipe through cpp */
@@ -117,4 +119,7 @@ void process_line (char *buffer)
 
     /* handle input */
     handle_line (cp, len);
+
+  done:
+    free(buffer);
 }
