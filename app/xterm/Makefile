@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.20 2012/04/07 20:11:43 matthieu Exp $
+# $OpenBSD: Makefile,v 1.21 2012/04/07 20:22:27 matthieu Exp $
 .include <bsd.xconf.mk>
 
 SUBDIR=	icons resize
@@ -27,6 +27,14 @@ SRCS=	TekPrsTbl.c Tekproc.c VTPrsTbl.c button.c cachedGCs.c \
 
 MANDIR=		${X11BASE}/man/man
 XETC?=		/etc/X11
+
+.if ${MACHINE_ARCH} == "sh"
+charproc.o:	charproc.c
+	${CC} -O1 -c ${CPPFLAGS} ${.CURDIR}/charproc.c
+
+screen.o:	screen.c
+	${CC} -O1 -c ${CPPFLAGS} ${.CURDIR}/screen.c
+.endif
 
 .SUFFIXES: .man .1
 
