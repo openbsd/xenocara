@@ -27,6 +27,8 @@ in this Software without prior written authorization from The Open Group.
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif
+
+#ifdef XRENDER
 #include <stdio.h>
 
 #include <X11/Xlib.h>
@@ -159,4 +161,4 @@ intersect(XLineDouble *l1, XLineDouble *l2, XPointDouble *intersection)
 	fprintf(stderr, "intersect: intersection is off by %f\n", check);
     }
 }
-
+#endif /* XRENDER */

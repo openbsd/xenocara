@@ -83,7 +83,7 @@ stored in the RESOURCE_MANAGER property.
 .I __apploaddir__/XLogo
 specifies required resources
 .SH SEE ALSO
-X(__miscmansuffix__), xrdb(1)
+X(__miscmansuffix__), xrdb(__appmansuffix__)
 .SH AUTHORS
 Ollie Jones of Apollo Computer and Jim Fulton of the MIT X Consortium
 wrote the logo graphics routine, based on a graphic design by Danny

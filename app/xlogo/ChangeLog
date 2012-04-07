@@ -1,3 +1,70 @@
+commit 81f58b56464520fde4e64c0764bc58d5d197b849
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Mar 22 22:49:50 2012 -0700
+
+    xlogo 1.0.4
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 18e61546798d20b7b1c15a2ff5d554bee7ec6bdf
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Sun Sep 25 00:53:50 2011 -0700
+
+    Require xt >= 1.0 for appdefaultdir
+    
+    https://bugs.freedesktop.org/show_bug.cgi?id=7237
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit 0e96450836cc876d213e02491394da3f6fa7575d
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jan 19 10:06:56 2011 -0500
+
+    config: move man pages into their own directory
+    
+    Use services provided by XORG_MANPAGE_SECTIONS.
+    Use standard Makefile for man pages.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 7c7b2beb9b94790f9f08049163b85a37d253f0f6
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Jan 13 17:15:36 2011 -0500
+
+    man: replace hard coded man page section with substitution strings
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 7a21422aa690f4734da047ee03ea49723acda342
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jan 12 16:28:02 2011 -0500
+
+    config: replace deprecated AM_CONFIG_HEADER with AC_CONFIG_HEADERS
+    
+    This silences an Autoconf warning
+
+commit d1fe51c3209702740a2b073fa690aa2ce138bc7e
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jan 12 15:29:50 2011 -0500
+
+    config: replace deprecated AC_HELP_STRING with AS_HELP_STRING
+    
+    This silences an Automake warning.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 73941fa2f5e5a71fb36a3b9a9dec8a833898907e
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Nov 19 22:45:57 2010 -0800
+
+    Bug 31645 - xlogo: Doesn't build with libXrender and without libXft
+    
+    https://bugs.freedesktop.org/show_bug.cgi?id=31645
+    
+    Add AM_CONDITIONAL to skip building RenderLogo.c without Render support
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit 6d8da24e45c124162b06529290366d465f1df499
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Sat Oct 30 16:58:57 2010 -0700

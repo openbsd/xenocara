@@ -21,7 +21,7 @@ dnl
 dnl Process this file with autoconf to create configure.
 
 AC_PREREQ([2.60])
-AC_INIT([xlogo], [1.0.3],
+AC_INIT([xlogo], [1.0.4],
         [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg], [xlogo])
 AM_INIT_AUTOMAKE([foreign dist-bzip2])
 AM_MAINTAINER_MODE
@@ -33,15 +33,15 @@ XORG_MACROS_VERSION(1.8)
 XORG_DEFAULT_OPTIONS
 
 
-AM_CONFIG_HEADER(config.h)
+AC_CONFIG_HEADERS([config.h])
 
 # Base set of required pkg-config packages
-XLOGO_DEPS="sm xaw7 xmu xt xext x11"
+XLOGO_DEPS="sm xaw7 xmu xt >= 1.0 xext x11"
 
 # Use render & xft2 to draw logo?
 
 AC_ARG_WITH(render, 
-	AC_HELP_STRING([--with-xrender], [Use Xrender & Xft2 to draw logo]), 
+	AS_HELP_STRING([--with-xrender], [Use Xrender & Xft2 to draw logo]), 
 	USE_RENDER="$withval", USE_RENDER="try")
 
 if test "x$USE_RENDER" = "xtry" ; then
@@ -53,15 +53,19 @@ if test "x$USE_RENDER" = "xyes" ; then
 
 	AC_DEFINE(XRENDER, 1, [Define to 1 to use Xrender & Xft2 to draw logo])
 fi
+AM_CONDITIONAL([USE_RENDER], [test "x$USE_RENDER" = "xyes"])
 
 PKG_CHECK_MODULES(XLOGO, $XLOGO_DEPS)
 
 PKG_CHECK_MODULES(APPDEFS, xt)
 xt_appdefaultdir=`$PKG_CONFIG --variable=appdefaultdir xt`
 AC_ARG_WITH(appdefaultdir,
-	AC_HELP_STRING([--with-appdefaultdir=<pathname>],
+	AS_HELP_STRING([--with-appdefaultdir=<pathname>],
 	  [specify directory for app-defaults files (default is autodetected)]),
 	[appdefaultdir="$withval"], [appdefaultdir="${xt_appdefaultdir}"])
 AC_SUBST(appdefaultdir)
 
-AC_OUTPUT([Makefile])
+AC_CONFIG_FILES([
+	Makefile
+	man/Makefile])
+AC_OUTPUT
