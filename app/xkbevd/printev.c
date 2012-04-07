@@ -46,7 +46,7 @@ static char name[20];
 }
 
 static void
-xkb_prologue (FILE *file, XkbEvent *ev, char *name)
+xkb_prologue (FILE *file, XkbEvent *ev, const char *name)
 {
     XkbAnyEvent *e = &ev->any;
 
@@ -91,7 +91,7 @@ do_XkbStateNotify(FILE *file, XkbEvent *xkbev)
 }
 
 static void
-do_map_message(char *what, int first, int num, int eol)
+do_map_message(const char *what, int first, int num, int eol)
 {
     if (num>1)
 	 printf("%ss %d..%d changed%s",what,first,first+num-1,(eol?"\n":""));
@@ -182,7 +182,7 @@ static void
 do_XkbAccessXNotify(FILE *file, XkbEvent *xkbev)
 {
     XkbAccessXNotifyEvent *sk = &xkbev->accessx;
-    char *detail;
+    const char *detail;
     switch (sk->detail) {
 	case XkbAXN_SKPress:  detail= "skpress"; break;
 	case XkbAXN_SKAccept: detail= "skaccept"; break;

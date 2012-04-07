@@ -58,7 +58,7 @@
 
 static char *	dpyName=	NULL;
 Display *	dpy=		NULL;
-static char *	cfgFileName=	NULL;
+static const char *	cfgFileName=	NULL;
 int		xkbOpcode=	0;
 int		xkbEventCode=	0;
 Bool		detectableRepeat= False;
@@ -72,8 +72,8 @@ static Bool	synch=		False;
 static int	verbose=	0;
 static Bool	background=	False;
 
-static char *	soundCmd=	NULL;
-static char *	soundDir=	NULL;
+static const char *	soundCmd=	NULL;
+static const char *	soundDir=	NULL;
 
 XkbDescPtr	xkb=		NULL;
 
@@ -287,7 +287,7 @@ unsigned	priv= 0;
 	    case XkbBellNotify:
 		if (name!=NULL)	cfg->name.atom= XInternAtom(dpy,name,False);
 		else 		cfg->name.atom= None;
-		if (name) uFree(name);
+		if (name) free(name);
 		break;
 	    case XkbAccessXNotify:
 		priv= 0;
@@ -307,7 +307,7 @@ unsigned	priv= 0;
 		     priv= XkbAXN_BKRejectMask;
 		else if (uStrCaseEqual(name,"warning"))
 		     priv= XkbAXN_AXKWarningMask;
-		if (name)	uFree(name);
+		if (name)	free(name);
 		cfg->name.priv= priv;
 		break;
 	    case XkbActionMessage:
@@ -319,12 +319,12 @@ unsigned	priv= 0;
     }
     while ((config)&&(config->entry_type!=EventDef)) {
 	CfgEntryPtr next;
-	if (config->name.str)		uFree(config->name.str);
-	if (config->action.text)	uFree(config->action.text);
+	if (config->name.str)		free(config->name.str);
+	if (config->action.text)	free(config->action.text);
 	config->name.str= 	NULL;
 	config->action.text=	NULL;
 	next= 			config->next;
-	uFree(config);
+	free(config);
 	config= next;
     }
     cfg= config;
@@ -332,13 +332,13 @@ unsigned	priv= 0;
 	CfgEntryPtr next;
 	next= cfg->next;
 	if (next->entry_type!=EventDef) {
-	    if (next->name.str)		uFree(config->name.str);
-	    if (next->action.text)	uFree(config->action.text);
+	    if (next->name.str)		free(config->name.str);
+	    if (next->action.text)	free(config->action.text);
 	    next->name.str=		NULL;
 	    next->action.text=		NULL;
 	    cfg->next= 			next->next;
 	    next->next=			NULL;
-	    uFree(next);
+	    free(next);
 	}
 	else cfg= next;
     }
@@ -401,7 +401,7 @@ int		ok;
 	    char *tmp;
 	    cfg->action.type= ShellAction;
 	    tmp= uStringDup(&cfg->action.text[1]);
-	    uFree(cfg->action.text);
+	    free(cfg->action.text);
 	    cfg->action.text= tmp;
 	}
 	else cfg->action.type= SoundAction;
@@ -474,7 +474,7 @@ Bool		ok;
 	cfgFileName= buf;
     }
     if (uStringEqual(cfgFileName,"-")) {
-	static char *in= "stdin";
+	static const char *in= "stdin";
 	file= stdin;
 	cfgFileName= in;
     }

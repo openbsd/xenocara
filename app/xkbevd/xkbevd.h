@@ -93,7 +93,7 @@ extern void PrintXkbEvent(
 	XkbEvent *	/* ev */
 );
 
-extern int setScanState ( char * file, int line );
+extern int setScanState ( const char * file, int line );
 extern int CFGParseFile ( FILE *file );
 
 extern int yylex(void);

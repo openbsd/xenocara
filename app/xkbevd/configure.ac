@@ -22,7 +22,7 @@ dnl Process this file with autoconf to create configure.
 
 # Initialize Autoconf
 AC_PREREQ([2.60])
-AC_INIT([xkbevd], [1.1.2],
+AC_INIT([xkbevd], [1.1.3],
         [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg], [xkbevd])
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_HEADERS([config.h])
@@ -45,7 +45,12 @@ if test ! -f "cfgparse.c"; then
    fi
 fi
 
+AC_CHECK_FUNCS([strcasecmp])
+
 # Checks for pkg-config packages
 PKG_CHECK_MODULES(XKBEVD, xkbfile x11)
 
-AC_OUTPUT([Makefile])
+AC_CONFIG_FILES([
+	Makefile
+	man/Makefile])
+AC_OUTPUT

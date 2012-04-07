@@ -106,7 +106,7 @@ static char buf[32];
 #endif
 
 int
-setScanState(char *file, int line)
+setScanState(const char *file, int line)
 {
     if (file!=NULL)
 	strncpy(scanFile,file,1024);
@@ -240,8 +240,8 @@ int ch;
 }
 
 static struct _Keyword {
-	char	*keyword;
-	int	 token;
+	const char	*keyword;
+	int		 token;
 } keywords[] = {
     { "bell",			BELL			},
     { "accessx",		ACCESSX			},

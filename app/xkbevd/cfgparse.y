@@ -65,6 +65,7 @@
 #endif
 #define	DEBUG_VAR parseDebug
 #include "xkbevd.h"
+#include <stdlib.h>
 %}
 %right	EQUALS
 %left	PLUS MINUS
@@ -107,7 +108,7 @@ CfgEntry	:	EventDef ActionDef
 			    if (($1)&&($2))
 				$1->action= *($2);
 			    if ($2)
-				uFree($2);
+				free($2);
 			    $$= $1;
 			}
 		|	VarDef 		{ $$= $1; }
@@ -116,7 +117,7 @@ CfgEntry	:	EventDef ActionDef
 VarDef		:	Ident EQUALS NameSpec
 			{
 			    CfgEntryPtr cfg;
-			    cfg= uTypedCalloc(1,CfgEntryRec);
+			    cfg= calloc(1,sizeof(CfgEntryRec));
 			    if (cfg) {
 				cfg->entry_type= VariableDef;
 				cfg->event_type= 0;
@@ -133,7 +134,7 @@ VarDef		:	Ident EQUALS NameSpec
 EventDef	:	EventType OPAREN OptNameSpec CPAREN
 			{
 			    CfgEntryPtr cfg;
-			    cfg= uTypedCalloc(1,CfgEntryRec);
+			    cfg= calloc(1,sizeof(CfgEntryRec));
 			    if (cfg) {
 				cfg->entry_type= EventDef;
 				cfg->event_type= $1;
@@ -155,7 +156,7 @@ EventType	:	BELL		{ $$= XkbBellNotify; }
 ActionDef	:	ActionType OptString
 			{
 			    ActDefPtr act;
-			    act= uTypedCalloc(1,ActDefRec);
+			    act= calloc(1,sizeof(ActDefRec));
 			    if (act) {
 				act->type= $1;
 				act->text= $2;
