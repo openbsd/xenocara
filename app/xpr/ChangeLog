@@ -1,3 +1,165 @@
+commit 699aa034b8368a4052aa0318d4bca74dd688a7c2
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Mar 31 16:57:47 2012 -0700
+
+    xpr 1.0.4
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit c9b09f54d783689261855bd87a2bc68bfb3d9731
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Fri Nov 11 11:32:05 2011 -0800
+
+    Use memmove rather than bcopy
+    
+    bcopy was removed in POSIX 2008.  I didn't check to see if we could
+    safely use memcpy.
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit 28eaec94f936534573907425cf0fb5198979aab3
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Oct 6 22:40:45 2011 -0700
+
+    Add _X_NORETURN to usage() & leave() as suggested by gcc -Wmissing-noreturn
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 3b8fed17575db9d8d571d240bbaebd05d4547060
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Oct 6 22:38:36 2011 -0700
+
+    Add const attributes to fix gcc -Wwrite-strings warnings
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit b7d620037e130de1b0b309119c045d4f6a6ba8c5
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Oct 6 22:35:31 2011 -0700
+
+    Fix printf type warnings in LP64 builds
+    
+    x2jet.c:300:6: warning: format ‘%ld’ expects type ‘long int’, but argument 4 has type ‘CARD32’
+    x2jet.c:300:6: warning: format ‘%ld’ expects type ‘long int’, but argument 5 has type ‘CARD32’
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 787f9d6d8f6dd6663af27e3cd21facaee6bed4f5
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Oct 6 22:33:33 2011 -0700
+
+    Strip trailing whitespace
+    
+    Performed with: find * -type f | xargs perl -i -p -e 's{[ \t]+$}{}'
+    git diff -w & git diff -b show no diffs from this change
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit fbd4b8fe00ba600b44232619425f76a6f4fa8208
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jan 29 11:45:11 2011 -0800
+
+    Define pixel mask constant as unsigned long
+    
+    Clears Sun Studio cc warning of:
+    "x2jet.c", line 1681: warning: constant promoted to unsigned long
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 0b7c07a1667c1f7e692b7694d374f27d46c3c923
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jan 29 11:41:41 2011 -0800
+
+    Refactor invalid depth error reporting to allow printf format checking
+    
+    Clears gcc warnings:
+    x2jet.c: In function `validate_visual':
+    x2jet.c:1053: warning: format not a string literal, argument types not checked
+    x2jet.c:1055: warning: format not a string literal, argument types not checked
+    x2jet.c:1057: warning: format not a string literal, argument types not checked
+    x2jet.c:1059: warning: format not a string literal, argument types not checked
+    x2jet.c:1064: warning: format not a string literal, argument types not checked
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit a02099a6869064c8b8c04a91acf5ece8568c7389
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jan 29 11:03:40 2011 -0800
+
+    Replace gcc noreturn & printf attributes with macros from <X11/Xfuncproto.h>
+    
+    Adds dependency on x11proto 7.0.17 to get the definition of _X_NORETURN
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 303aa90258f0ceff98e389b226860f0d0afe4c12
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jan 29 10:48:47 2011 -0800
+
+    config: Replace obsolete argument to AC_OUTPUT with AC_CONFIG_FILES
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 43f7a9381d0c056ee2a3da193fa8d953e5881dcc
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jan 29 10:47:32 2011 -0800
+
+    config: Remove unnecessary calls from configure.ac
+    
+    AC_PROG_CC & AC_PROG_INSTALL are provided by XORG_DEFAULT_OPTIONS now
+    PKG_CONFIG_MODULES handles AC_SUBST of the CFLAGS & LIBS variables
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit dde63ef2968b104d6deb99a2a56f576382b763a5
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jan 29 10:47:04 2011 -0800
+
+    config: replace deprecated AM_CONFIG_HEADER with AC_CONFIG_HEADERS
+    
+    Regroup AC statements under the Autoconf initialization section.
+    Regroup AM statements under the Automake initialization section.
+    Add missing AC_CONFIG_SRCDIR
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 9ffea606516f4138d91a163038b03669ce787b4a
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sat Jan 29 10:44:22 2011 -0800
+
+    config: update AC_PREREQ statement to 2.60
+    
+    Unrelated to the previous patches, the new value simply reflects
+    the reality that the minimum level for autoconf to configure
+    all x.org modules is 2.60 dated June 2006.
+    
+    ftp://ftp.gnu.org/gnu/autoconf/autoconf-2.60.tar.gz
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 96c2e6761517f2d8618e3b252e4825c25b5b7627
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jan 29 10:43:20 2011 -0800
+
+    config: upgrade to util-macros 1.8 for additional man page support
+    
+    Use MAN_SUBST now supplied in XORG_MANPAGE_SECTIONS
+    The value of MAN_SUBST is the same for all X.Org packages.
+    
+    Use AC_PROG_SED now supplied by XORG_DEFAULT_OPTIONS
+    Enables use of platform appropriate version of sed.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 11569289123fb178e23fd1aa284e9fa10e6c1e8c
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Aug 6 15:09:48 2010 -0700
+
+    Fill in COPYING file with copyright notices from source code
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit ae7e1530f9e60e9a8747a1d4c38579510675f023
 Author: Alan Coopersmith <alan.coopersmith@sun.com>
 Date:   Fri Oct 16 19:13:21 2009 -0700

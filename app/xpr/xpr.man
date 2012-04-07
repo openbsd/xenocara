@@ -86,7 +86,7 @@ prints the largest possible representation of the window on the
 output page.  Options allow the user to add headers and trailers,
 specify margins, adjust the scale and orientation, and append
 multiple window dumps to a single output file.  Output is to
-standard output unless 
+standard output unless
 .B \-output
 is specified.
 .sp 1
@@ -131,7 +131,7 @@ Affects the size of the window on the page.  The PostScript, LN03, and HP
 printers are able to
 translate each bit in a window pixel map into a grid of a specified size.
 For example each bit might translate into a 3x3 grid.  This would be
-specified by \fB\-scale\fP \fI3\fP.  By default a window is printed 
+specified by \fB\-scale\fP \fI3\fP.  By default a window is printed
 with the largest scale that will fit onto the page for the specified
 orientation.
 .IP "\fB\-height\fP \fIinches\fP"
@@ -178,7 +178,7 @@ is to be appended.
 When specified in conjunction with \fB\-append\fP, the window will appear
 on the same page as the previous window.
 .IP "\fB\-split\fP \fIn\fP"
-This option allows the user to split a window onto several pages.  
+This option allows the user to split a window onto several pages.
 This might be necessary for very large windows that would otherwise
 cause the printer to overload and print the page in an obscure manner.
 .IP "\fB\-psfig\fP"
@@ -331,7 +331,7 @@ Copyright 1988, Hewlett Packard Company.
 .br
 See \fIX(1)\fP for a full statement of rights and permissions.
 .SH AUTHORS
-Michael R. Gretzinger, MIT Project Athena, 
+Michael R. Gretzinger, MIT Project Athena,
 Jose Capo, MIT Project Athena (PP3812 support),
 Marvin Solomon, University of Wisconsin,
 Bob Scheifler, MIT, Angela Bock and E. Mike Durbin, Rich Inc. (grayscale),

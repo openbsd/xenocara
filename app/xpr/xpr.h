@@ -32,7 +32,7 @@ enum orientation {
 enum device {LN01, LN03, LA100, PS, PP, LJET, PJET, PJETXL};
 
 /* Global variables */
-extern char *progname;
+extern const char *progname;
 extern int debug;
 
 /* Global prototypes */

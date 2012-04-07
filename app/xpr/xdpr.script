@@ -108,7 +108,7 @@ while [ $1 ]; do
 			xprv="$xprv $1"
 		else
 			echo "xdpr: Invalid argument "$1""
-			echo $usage			
+			echo $usage
 			exit 1
 		fi
 	esac
@@ -149,7 +149,7 @@ if [ "$out" ]; then
 	exit 0
 fi
 
-# print only 
+# print only
 if [ "$infile" ]; then
 	if [ "$xwdv" ]; then
 		echo "xdpr: The following arguments will be ignored:"
@@ -161,6 +161,6 @@ fi
 
 # dump & print (default)
 xwd $xwdv | xpr -header "$header" -trailer "$trailer" $xprv | $LP $lprv
-exit 0	
+exit 0
 
 # EOF

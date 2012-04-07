@@ -40,10 +40,10 @@ from the X Consortium.
  * by using run-length encoding on white (1) pixels.
  * This version does not (yet) support the following options
  *   -append -dump -noff -nosixopt -split
- * 
+ *
  * Changes
  * Copyright 1986 by Marvin Solomon and the University of Wisconsin
- * 
+ *
  * Permission to use, copy, modify, and distribute this
  * software and its documentation for any purpose and without
  * fee is hereby granted, provided that the above copyright
@@ -57,7 +57,7 @@ from the X Consortium.
  * makes any representations about the suitability of
  * this software for any purpose.  It is provided "as is"
  * without express or implied warranty.
- * 
+ *
  * Modified by Bob Scheifler for 2x2 grayscale, then ...
  * Modified by Angela Bock and E. Mike Durbin, Rich Inc., to produce output
  * using 2x2, 3x3, or 4x4 grayscales. This version modifies the grayscale
@@ -77,6 +77,7 @@ from the X Consortium.
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 #include <stdio.h>
+#include <string.h>
 #ifndef WIN32
 #include <pwd.h>
 #endif
@@ -131,8 +132,8 @@ int debug = 0;
 
 #define DEFAULT_CUTOFF ((unsigned int) (0xFFFF * 0.50))
 
-static char *infilename = NULL;
-char *progname   = NULL;
+static const char *infilename = NULL;
+const char *progname   = NULL;
 
 typedef struct _grayRec {
     int level;
@@ -170,7 +171,7 @@ char hex2[]="000000000000000088888888888888884444444444444444cccccccccccccccc\
 
 
 /* Local prototypes */
-static void usage(void);
+static void usage(void) _X_NORETURN;
 static
 void parse_args(
   int argc,
@@ -280,8 +281,8 @@ static void ps_output_bits(
   const char *data);
 static int ps_putbuf(
   register unsigned char *s,
-  register int n,	
-  register int ocount,	
+  register int n,
+  register int ocount,
   int compact);
 static void ps_bitrot(
   unsigned char *s,
@@ -292,8 +293,8 @@ static void ps_bitrot(
 static void fullread (
   int file,
   char *data,
-  int nbytes);  
-  
+  int nbytes);
+
 int main(int argc, char **argv)
 {
     unsigned long swaptest = 1;
@@ -319,16 +320,16 @@ int main(int argc, char **argv)
     enum orientation orientation;
     enum device device;
     XColor *colors = (XColor *)NULL;
-    
+
     if (!(progname = argv[0]))
       progname = "xpr";
 #ifdef	NLS
     nlmsg_fd = catopen("xpr", 0);
 #endif
-    parse_args (argc, argv, &scale, &width, &height, &left, &top, &device, 
+    parse_args (argc, argv, &scale, &width, &height, &left, &top, &device,
 		&flags, &split, &header, &trailer, &plane, &gray,
 		&density, &cutoff, &gamma, &render);
-    
+
     if (device == PP) {
 	x2pmp(stdin, stdout, scale,
 	      width >= 0? inch2pel((float)width/300.0): X_MAX_PELS,
@@ -369,7 +370,7 @@ int main(int argc, char **argv)
 
     w_name = malloc((unsigned)(win.header_size - sizeof win));
     fullread(0, w_name, (int) (win.header_size - sizeof win));
-    
+
     if(win.ncolors) {
 	XWDColor xwdcolor;
 	colors = (XColor *)malloc((unsigned) (win.ncolors * sizeof(XColor)));
@@ -436,7 +437,7 @@ int main(int argc, char **argv)
 /*	ln03_grind_fonts(sixmap, iw, ih, scale, &pixmap); */
 	ln03_setup(iw, ih, orientation, scale, left, top,
 		   &left_margin, &top_margin, flags, header, trailer);
-	ln03_output_sixels(sixmap, iw, ih, (flags & F_NOSIXOPT), split, 
+	ln03_output_sixels(sixmap, iw, ih, (flags & F_NOSIXOPT), split,
 			   scale, top_margin, left_margin);
 	ln03_finish();
     } else if (device == LA100) {
@@ -451,13 +452,13 @@ int main(int argc, char **argv)
     } else {
 	fprintf(stderr, "xpr: device not supported\n");
     }
-    
+
     /* print some statistics */
     if (flags & F_REPORT) {
 	fprintf(stderr, "Name: %s\n", w_name);
-	fprintf(stderr, "Width: %d, Height: %d\n", (int)win.pixmap_width, 
+	fprintf(stderr, "Width: %d, Height: %d\n", (int)win.pixmap_width,
 		(int)win.pixmap_height);
-	fprintf(stderr, "Orientation: %s, Scale: %d\n", 
+	fprintf(stderr, "Orientation: %s, Scale: %d\n",
 		(orientation==PORTRAIT) ? "Portrait" : "Landscape", scale);
     }
     if (((device == LN03) || (device == LA100)) && (flags & F_DUMP))
@@ -783,7 +784,7 @@ void parse_args(
 	    f = open(output_filename, O_WRONLY, 0);
 	}
 	if (f < 0) {
-	    fprintf(stderr, "xpr: error opening \"%s\" for output\n", 
+	    fprintf(stderr, "xpr: error opening \"%s\" for output\n",
 		    output_filename);
 	    perror("xpr");
 	    exit(1);
@@ -825,7 +826,7 @@ void setup_layout(
 
     /* check maximum width and height; set orientation and scale*/
     if (device == LN03 || device == PS) {
-	if ((win_width < win_height || (flags & F_PORTRAIT)) && 
+	if ((win_width < win_height || (flags & F_PORTRAIT)) &&
 	    !(flags & F_LANDSCAPE)) {
 	    *orientation = PORTRAIT;
 	    w_max = (width > 0)? width : W_MAX;
@@ -1156,7 +1157,7 @@ void ln03_setup(
     register int lm, tm, xm;
     char buf[256];
     register char *bp = buf;
-	
+
     if (!(flags & F_APPEND)) {
 	sprintf(bp, LN_STR); bp += 4;
 	sprintf(bp, LN_SSU, 7); bp += 5;
@@ -1183,7 +1184,7 @@ void ln03_setup(
 	xm = (((scale * iw) - (i * 30)) / 2) + lm;
 	sprintf(bp, LN_HPA, xm); bp += strlen(bp);
 	sprintf(bp, LN_SGR, 3); bp += strlen(bp);
-	bcopy(header, bp, i);
+	memmove(bp, header, i);
 	bp += i;
     }
     if (trailer != NULL) {
@@ -1192,7 +1193,7 @@ void ln03_setup(
 	xm = (((scale * iw) - (i * 30)) / 2) + lm;
 	sprintf(bp, LN_HPA, xm); bp += strlen(bp);
 	sprintf(bp, LN_SGR, 3); bp += strlen(bp);
-	bcopy(trailer, bp, i);
+	memmove(bp, trailer, i);
 	bp += i;
     }
 
@@ -1214,13 +1215,13 @@ void ln03_finish(void)
     sprintf(bp, LN_DECOPM_RESET); bp += sizeof LN_DECOPM_SET - 1;
     sprintf(bp, LN_LNM); bp += 5;
     sprintf(bp, LN_PUM); bp += 5;
-    sprintf(bp, LN_PFS, "?20"); bp += 7; 
-    sprintf(bp, LN_SGR, 0); bp += strlen(bp);   
+    sprintf(bp, LN_PFS, "?20"); bp += 7;
+    sprintf(bp, LN_SGR, 0); bp += strlen(bp);
     sprintf(bp, LN_HPA, 1); bp += strlen(bp);
     sprintf(bp, LN_VPA, 1); bp += strlen(bp);
 
 
-    write(1, buf, bp-buf);    
+    write(1, buf, bp-buf);
 }
 
 /*ARGSUSED*/
@@ -1348,7 +1349,7 @@ char *ps_prolog_compact[] = {
     NULL
 };
 
-static const 
+static const
 char *ps_prolog[] = {
     "%%Pages: 1",
     "%%EndProlog",
@@ -1740,7 +1741,7 @@ void ps_output_bits(
 
 	ibuf = (unsigned char *)malloc((unsigned)(iwb + 3));
 	for (i=0;i<ih;i++) {
-	    bcopy((char *)buffer, (char *)ibuf, iwb);
+	    memmove((char *)ibuf, (char *)buffer, iwb);
 	    buffer += iwb;
 	    if (!(*(char *) &swaptest))
 		_swaplong((char *)ibuf,(long)iwb);
@@ -1814,7 +1815,7 @@ void _invbits (
 		*b = ~*b;
 		b++;
 	    } while (--n > 0);
-	
+
 }
 
 /* copied from lib/X/XPutImage.c */
@@ -1827,7 +1828,7 @@ void _swapbits (
 		*b = _reverse_byte[*b];
 		b++;
 	    } while (--n > 0);
-	
+
 }
 
 void _swapshort (
@@ -1983,7 +1984,7 @@ void ps_bitrot(
     }
 }
 
-/* fullread() is the same as read(), except that it guarantees to 
+/* fullread() is the same as read(), except that it guarantees to
    read all the bytes requested. */
 
 static

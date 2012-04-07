@@ -27,13 +27,13 @@
 
 Copyright (c) 1988 by Hewlett-Packard Company
 
-Permission to use, copy, modify, and distribute this software 
-and its documentation for any purpose and without fee is hereby 
-granted, provided that the above copyright notice appear in all 
-copies and that both that copyright notice and this permission 
-notice appear in supporting documentation, and that 
-Hewlett-Packard not be used in advertising or publicity 
-pertaining to distribution of the software without specific, written 
+Permission to use, copy, modify, and distribute this software
+and its documentation for any purpose and without fee is hereby
+granted, provided that the above copyright notice appear in all
+copies and that both that copyright notice and this permission
+notice appear in supporting documentation, and that
+Hewlett-Packard not be used in advertising or publicity
+pertaining to distribution of the software without specific, written
 prior permission.
 
 ********************************************************/
@@ -72,6 +72,7 @@ from the X Consortium.
 #include <stdarg.h>
 #include <X11/Xlib.h>
 #include <X11/XWDFile.h>
+#include <X11/Xfuncproto.h>
 
 #include "xpr.h"
 
@@ -260,10 +261,7 @@ static void write_image (
   enum orientation orient,
   enum device device);
 static void fatal_err (const char *s, ...)
-#if defined(__GNUC__) && (__GNUC__ > 2)
-__attribute__((noreturn, format(printf, 1, 2)))
-#endif
-    ;
+  _X_NORETURN _X_ATTRIBUTE_PRINTF(1,2);
 
 
 /* Computes the centipoint width of one printer dot. */
@@ -296,7 +294,7 @@ void set_image_limits (
 
   if ((limit.width != xwd_header.pixmap_width)
       || (limit.height != xwd_header.pixmap_height))
-    fprintf(stderr,(catgets(nlmsg_fd,NL_SETN,1, "%s: Warning: %ld x %ld image clipped to %ld x %ld.\n")),
+    fprintf(stderr,(catgets(nlmsg_fd,NL_SETN,1, "%s: Warning: %d x %d image clipped to %ld x %ld.\n")),
 	    progname,
 	    xwd_header.pixmap_width, xwd_header.pixmap_height,
 	    limit.width, limit.height);
@@ -523,7 +521,7 @@ static unsigned short fullintensity;
 static long *colormap;
 
 
-/* Pjcolor array is used to hold the scaled RGB triple values 
+/* Pjcolor array is used to hold the scaled RGB triple values
  * programmed into the printer.
  */
 static long pjcolor[MAX_PJ_COLOR];
@@ -548,7 +546,7 @@ typedef struct colorindex {
 
 /* Global data for color interpretation.  This structure serves as a home
  * for the color index lists (only used when processing DirectColor or
- * TrueColor visual types).  It also holds color processing switches and a	
+ * TrueColor visual types).  It also holds color processing switches and a
  * pointer to the output file to reduce parameter passing overhead.
  */
 static struct {
@@ -616,7 +614,7 @@ void reset_color_mapping (void)
     /* preload for monochrome output */
     pjcolor[0] = WHITE;
     pjcolor[1] = BLACK;
-  }    
+  }
 
   if (Direct_or_TrueColor) {
     /* move color index chain cells onto the free list */
@@ -648,7 +646,7 @@ void prepare_color_mapping (
      fullintensity = (fullintensity << 1) | 1;
   for (n = sizeof(short) * 8 - xwd_header.bits_per_rgb; n > 0; n--)
      fullintensity = (fullintensity << 1);
-     
+
   Direct_or_TrueColor =  (xwd_header.visual_class == DirectColor
 			  || xwd_header.visual_class == TrueColor);
   color.PaintJet = paintjet;
@@ -736,7 +734,7 @@ int load_printer_color (
 {
   int n, red, blue, green, xred, xgreen, xblue;
   long compositeRGB;
-    
+
   if (colormap[index] != EMPTY)
     /* printer has already been programmed for this color index */
     return(1);	/* "success" */
@@ -1043,27 +1041,35 @@ void download_colors (
 }
 
 
+static _X_INLINE _X_NORETURN
+void invalid_depth_for_visual(int depth, const char *name)
+{
+    fatal_err(catgets(nlmsg_fd,NL_SETN,25,
+		      "%d bit deep %s bitmap not supported.\n"),
+	      depth, name);
+}
+
 static
 void validate_visual(void)
 {
   int depth = xwd_header.pixmap_depth;
-  char *errmsg = catgets(nlmsg_fd,NL_SETN,25,
-				"%d bit deep %s bitmap not supported.\n");
 
   switch (xwd_header.visual_class) {
   case GrayScale:
-    if (depth > 8)  fatal_err(errmsg, depth, "GrayScale");    break;
+    if (depth > 8)  invalid_depth_for_visual(depth, "GrayScale");    break;
   case StaticGray:
-    if (depth > 8)  fatal_err(errmsg, depth, "StaticGray");    break;
+    if (depth > 8)  invalid_depth_for_visual(depth, "StaticGray");   break;
   case PseudoColor:
-    if (depth > 8)  fatal_err(errmsg, depth, "PseudoColor");    break;
+    if (depth > 8)  invalid_depth_for_visual(depth, "PseudoColor");  break;
   case StaticColor:
-    if (depth > 8)  fatal_err(errmsg, depth, "StaticColor");    break;
+    if (depth > 8)  invalid_depth_for_visual(depth, "StaticColor");  break;
   case DirectColor:
+    if (depth != 12 && depth != 24)
+	invalid_depth_for_visual(depth, "DirectColor");
+    break;
   case TrueColor:
     if (depth != 12 && depth != 24)
-       fatal_err(errmsg, depth, (xwd_header.visual_class == DirectColor)
-                               ? "DirectColor" : "TrueColor");
+	invalid_depth_for_visual(depth, "TrueColor");
     break;
   default:
     fatal_err((catgets(nlmsg_fd,NL_SETN,26,
@@ -1173,7 +1179,7 @@ void write_image_prefix (
     fprintf(out,"\033&a%dH\033&a%dV",
 	    /* imageloc x & y are written in decipoints */
 	    (int) imageloc.x / 10, (int) imageloc.y / 10);
-  
+
   /* If doing transparencies, tell the printer before raster graphics */
   if (slide && device != LJET)
      fprintf(out, "\033&k3W");
@@ -1415,7 +1421,7 @@ void index_by_pixel(
    long *lp;
    char *line_pixels;
    register char *lc;
-  
+
   if (!(line_pixels = malloc(length)))
     fatal_err((catgets(nlmsg_fd,NL_SETN,17,
 			"Could not allocate raster line memory.")));
@@ -1444,7 +1450,7 @@ void write_raster_line (
   long *lp;
   char *line_colors, *raster_line;
   register char *lc, *rl, byte = 0;
-  
+
   if (device == PJETXL) {
      if (Direct_or_TrueColor)
         direct_by_pixel(out, line, length, device);
@@ -1647,7 +1653,7 @@ void write_image (
     write_XY_image(out, scale, orient, device);  break;
   case  ZPixmap:
     write_Z_image(out, scale, orient, device);   break;
-  default: 
+  default:
     fatal_err((catgets(nlmsg_fd,NL_SETN,23, "image not in XY or Z format.")));
   }
 }
@@ -1674,7 +1680,7 @@ void x2jet(
 
   read_xwd_data(in);
 
-  Z_pixel_mask = ~(0xFFFFFFFFL << xwd_header.pixmap_depth);
+  Z_pixel_mask = ~(0xFFFFFFFFUL << xwd_header.pixmap_depth);
 
   prepare_color_mapping(invert, paintjet, cutoff, out);
 
@@ -1684,7 +1690,7 @@ void x2jet(
 
   write_image_prefix(out, scale, density, header, device, position_on_page,
 		     initial_formfeed, orient, gamma, render, slide);
-  
+
   write_image(out, scale, orient, device);
 
   write_image_suffix(out, trailer, position_on_page, slide, render, device);

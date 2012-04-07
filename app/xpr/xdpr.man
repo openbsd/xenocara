@@ -25,9 +25,9 @@ xdpr \- dump an X window directly to a printer
 
 .SH DESCRIPTION
 .I Xdpr
-uses the commands 
+uses the commands
 .I xwd,
-.I xpr, 
+.I xpr,
 and
 .I lpr
 or
@@ -52,7 +52,7 @@ printed instead of selecting an X window.
 Specifies a printer to send the output to.  If a printer name is not
 specified here, \fIxdpr\fP (really, \fIlpr\fP or \fIlp\fP)
 will send your output to the
-printer specified by the \fIPRINTER\fP environment variable. 
+printer specified by the \fIPRINTER\fP environment variable.
 Be sure that type of the printer matches the type specified
 with the \fI\-device\fP option.
 .TP
@@ -101,8 +101,8 @@ provided only for backwards compatibility.
 This option displays the list of options known to
 .I xdpr.
 .PP
-Any other arguments 
-will be passed to the 
+Any other arguments
+will be passed to the
 .I xwd,
 .I xpr,
 and
