@@ -1,3 +1,304 @@
+commit 67309809fee4ea1b7b4334d6245788ddea626dcf
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Mar 22 22:30:31 2012 -0700
+
+    xfontsel 1.0.4
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 5815b461672845cf6de179f04c778354139f7834
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Sep 28 22:05:41 2011 -0700
+
+    Add const attribute to fieldP fix a gcc -Wwrite-strings warning
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit d9200f965f056d3da49476dd9b8333ff47265f30
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Sep 28 22:00:50 2011 -0700
+
+    Strip trailing whitespace
+    
+    Performed with: find * -type f | xargs perl -i -p -e 's{[ \t]+$}{}'
+    git diff -w & git diff -b show no diffs from this change
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 561085a83a777fec4b42cfa16a8ba80e971d86fb
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Sep 16 19:04:30 2011 -0700
+
+    Convert sprintf calls to snprintf
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 1d6970a838d4ed42a8c91a10cb5311f98ba959c3
+Author: Jesse Adkins <jesserayadkins@gmail.com>
+Date:   Tue Oct 26 16:06:24 2010 -0700
+
+    Remove USE_TEXT_WIDGET (bug 8966)
+    
+    It was included in the initial revision. The bug dates back to 2006, so I
+    think it's safe to say that this never worked.
+    
+    Signed-off-by: Jesse Adkins <jesserayadkins@gmail.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 19bcefb4c89e02833cb7fcffeb7fd3f7224db1c4
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jan 19 10:06:56 2011 -0500
+
+    config: move man pages into their own directory
+    
+    Use services provided by XORG_MANPAGE_SECTIONS.
+    Use standard Makefile for man pages.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit f68420e9698d9a3b3e18cbefb96a3ccf9d555c65
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Jan 13 17:15:36 2011 -0500
+
+    man: replace hard coded man page section with substitution strings
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 63f5e107b12fb8a78946e54e36e99f2ec64a5bac
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Jan 13 11:15:47 2011 -0500
+
+    man: remove trailing spaces and tabs
+    
+    Using s/[ \t]*$//
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 1fe1686bbe8d3830a3e7531dda4318c81f6d7405
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jan 12 16:28:02 2011 -0500
+
+    config: replace deprecated AM_CONFIG_HEADER with AC_CONFIG_HEADERS
+    
+    This silences an Autoconf warning
+
+commit 284bc2ff3e5a852f44ca08cb4fcab5ee64a08e54
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jan 12 15:29:50 2011 -0500
+
+    config: replace deprecated AC_HELP_STRING with AS_HELP_STRING
+    
+    This silences an Automake warning.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 0799a10d39b4240bdc043a5fcdd25f571338be24
+Author: Jesse Adkins <jesserayadkins@gmail.com>
+Date:   Tue Sep 28 13:29:49 2010 -0700
+
+    Purge cvs tags.
+    
+    Signed-off-by: Jesse Adkins <jesserayadkins@gmail.com>
+
+commit 3aaccefa18e0eb37393642823b2e8454b1de20fd
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Sep 26 17:24:50 2010 -0700
+
+    xfontsel 1.0.3
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 646dcaa531897aedf76a53c7b0017c90c849eb18
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Sep 26 17:20:51 2010 -0700
+
+    config: Remove unnecessary calls from configure.ac
+    
+    AC_PROG_CC & AC_PROG_INSTALL are provided by XORG_DEFAULT_OPTIONS now
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 6c77dc68321ca2149d95df90b97d741f8ff914a2
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Jul 20 18:45:18 2010 -0400
+
+    config: update AC_PREREQ statement to 2.60
+    
+    Unrelated to the previous patches, the new value simply reflects
+    the reality that the minimum level for autoconf to configure
+    all x.org modules is 2.60 dated June 2006.
+    
+    ftp://ftp.gnu.org/gnu/autoconf/autoconf-2.60.tar.gz
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit e50e3cab1eb5e50d8e0d4dfe52e2e39625bdff3c
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Jul 1 17:59:02 2010 -0700
+
+    Xmu functions are called directly, so include it in PKG_CHECK_MODULES
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit e3d6a121d1074422ea7296fdfe335eee3f42ad66
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Jun 30 23:25:03 2010 -0700
+
+    config: upgrade to util-macros 1.8 for additional man page support
+    
+    Use MAN_SUBST now supplied in XORG_MANPAGE_SECTIONS
+    The value of MAN_SUBST is the same for all X.Org packages.
+    
+    Use AC_PROG_SED now supplied by XORG_DEFAULT_OPTIONS
+    The existing statement can now be removed from the configuration file.
+    
+    Use automake provided $(AM_V_GEN) and XORG_DEFAULT_OPTIONS provided $(SED)
+    Enables silent rule and use platform appropriate version of sed.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 7b1853e8ae91e7aaecebd78eb4c6e498059e5200
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Feb 11 10:08:07 2010 -0500
+
+    config: move CWARNFLAGS from configure.ac to Makefile.am
+    
+    Compiler warning flags should be explicitly set in the makefile
+    rather than being merged with other packages compiler flags.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 9205c610f211837e9a63d08d1fbd8c687b7d0b8a
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sat Dec 19 20:48:48 2009 -0500
+
+    configure.ac: use backticks rather than $() for cmd subs
+    
+    Use "$PKG_CONFIG" rather than hard coded "pkg-config"
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit f6398f9cc100f63bf694be9c6157e1b774a75c2b
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Nov 26 09:19:53 2009 -0500
+
+    Makefile.am: add ChangeLog and INSTALL on MAINTAINERCLEANFILES
+    
+    Now that the INSTALL file is generated.
+    Allows running make maintainer-clean.
+
+commit c609c074f9d76e89cedabead3fab0600d294c3f9
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Oct 28 14:09:08 2009 -0400
+
+    INSTALL, NEWS, README or AUTHORS files are missing/incorrect #24206
+    
+    Add missing INSTALL file. Use standard GNU file on building tarball
+    README may have been updated
+    Remove AUTHORS file as it is empty and no content available yet.
+    Remove NEWS file as it is empty and no content available yet.
+
+commit 7d890dfd9ef6eeac6c7619dfb3c7eeb7666f3834
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Oct 27 15:07:25 2009 -0400
+
+    Deploy the new XORG_DEFAULT_OPTIONS #24242
+    
+    This macro aggregate a number of existing macros that sets commmon
+    X.Org components configuration options. It shields the configuration file from
+    future changes.
+
+commit b9aca05dc1bb882fabc03d11fa833cb975593e4e
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Oct 26 22:08:39 2009 -0400
+
+    Makefile.am: ChangeLog not required: EXTRA_DIST or *CLEANFILES #24432
+    
+    ChangeLog filename is known to Automake and requires no further
+    coding in the makefile.
+
+commit 38b984a4cae2bf18e8fbff07ccd98a587e0c16bd
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Oct 22 12:34:15 2009 -0400
+
+    .gitignore: use common defaults with custom section # 24239
+    
+    Using common defaults will reduce errors and maintenance.
+    Only the very small or inexistent custom section need periodic maintenance
+    when the structure of the component changes. Do not edit defaults.
+
+commit a9c2e152c8a112f5783430b27de777da7daf6aa7
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Thu Oct 1 14:54:24 2009 -0700
+
+    Add README with pointers to mailing lists, bugzilla, & git
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit 4d15dbb1ac524a017e9812fb7f21f032ccbc2ae1
+Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+Date:   Wed Jan 21 16:04:57 2009 -0200
+
+    Ansification and compile warning fixes.
+    
+        This also uses XORG_CHANGELOG and XORG_CWARNFLAGS, corrects
+    make distcheck and all gcc 4.3 and sparse warnings.
+
+commit edda127130da731e9d314456d89f083a7eeca276
+Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+Date:   Sun Mar 16 20:22:55 2008 -0300
+
+    Compile warning fixes.
+    
+      Ansify functions with K&R prototypes.
+      Adjust some definitions to match required prototypes.
+      Declare as static some functions to avoid warnings about missing prototypes.
+
+commit bb0968eff74cb55cf2de125f828a76f679c4a017
+Author: Julien Cristau <jcristau@debian.org>
+Date:   Tue Aug 19 00:58:18 2008 +0200
+
+    xaw8 is gone, use xaw7
+
+commit 9e6d440567ae5b853875f0ecb8a780733c15fb38
+Author: Julien Cristau <jcristau@debian.org>
+Date:   Fri May 16 14:17:52 2008 +0200
+
+    $(builddir) is the current directory
+    
+    Apparently automake doesn't always export the builddir variable.
+    This fixes my previous commit.
+
+commit 42b8ab848739ee6bf9003dea67c376236600964b
+Author: Julien Cristau <jcristau@debian.org>
+Date:   Sun Apr 20 19:16:26 2008 +0200
+
+    Fix build with builddir != srcdir
+
+commit 99e02e7a17ab8efe09b9a5411466bf273c01c692
+Author: Julien Cristau <jcristau@debian.org>
+Date:   Sun Apr 20 19:13:59 2008 +0200
+
+    Use AM_CFLAGS instead of xfontsel_CFLAGS and remove AM_PROG_CC_C_O
+
+commit 7177700678091d64956d789aa93e265539d9ea5c
+Author: Jeremy Huddleston <jeremyhu@freedesktop.org>
+Date:   Thu Mar 27 20:27:16 2008 -0700
+
+    Added missing AM_PROG_CC_C_O
+
+commit 4c38de0cbf47ae3dcc67ae8e81924831cb050a34
+Author: Jeremy Huddleston <jeremyhu@freedesktop.org>
+Date:   Thu Mar 27 20:07:45 2008 -0700
+
+    Build fix for file systems that are not case sensitive
+
+commit 2f878b2bc5c2e35a0ba28f8fc2e22785af3f537e
+Author: James Cloos <cloos@jhcloos.com>
+Date:   Thu Dec 6 15:51:07 2007 -0500
+
+    Add missing PHONY line for automatic ChangeLog generation
+
 commit b4d05bfdd02bb993fe27d79977be0d117f6869f5
 Author: Alan Coopersmith <alan.coopersmith@sun.com>
 Date:   Thu Feb 1 10:47:34 2007 -0800

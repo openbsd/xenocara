@@ -1,5 +1,3 @@
-/* $XConsortium: Label.c,v 1.97 94/04/17 20:12:12 kaleb Exp $ */
-
 /***********************************************************
 
 Copyright (c) 1987, 1988, 1994  X Consortium
@@ -30,13 +28,13 @@ Copyright 1987, 1988 by Digital Equipment Corporation, Maynard, Massachusetts.
 
                         All Rights Reserved
 
-Permission to use, copy, modify, and distribute this software and its 
-documentation for any purpose and without fee is hereby granted, 
+Permission to use, copy, modify, and distribute this software and its
+documentation for any purpose and without fee is hereby granted,
 provided that the above copyright notice appear in all copies and that
-both that copyright notice and this permission notice appear in 
+both that copyright notice and this permission notice appear in
 supporting documentation, and that the name of Digital not be
 used in advertising or publicity pertaining to distribution of the
-software without specific, written prior permission.  
+software without specific, written prior permission.
 
 DIGITAL DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE, INCLUDING
 ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS, IN NO EVENT SHALL
@@ -47,7 +45,6 @@ ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS
 SOFTWARE.
 
 ******************************************************************/
-/* $XFree86: xc/programs/xfontsel/ULabel.c,v 1.3tsi Exp $ */
 
 /*
  * ULabel.c - UCSLabel widget
@@ -109,17 +106,20 @@ static XtResource resources[] = {
 };
 #undef offset
 
-static void Initialize();
-static void Resize();
-static void Redisplay();
-static Boolean SetValues();
-static void ClassInitialize();
-static void Destroy();
-static XtGeometryResult QueryGeometry();
+static void Initialize(Widget request, Widget new,
+		       ArgList args, Cardinal *num_args);
+static void Resize(Widget w);
+static void Redisplay(Widget gw, XEvent *event, Region region);
+static Boolean SetValues(Widget current, Widget request, Widget new,
+			 ArgList args, Cardinal *num_args);
+static void ClassInitialize(void);
+static void Destroy(Widget w);
+static XtGeometryResult QueryGeometry(Widget w, XtWidgetGeometry *intended,
+				      XtWidgetGeometry *preferred);
 
 UCSLabelClassRec ucsLabelClassRec = {
   {
-/* core_class fields */	
+/* core_class fields */
     /* superclass	  	*/	(WidgetClass) &simpleClassRec,
     /* class_name	  	*/	"UCSLabel",
     /* widget_size	  	*/	sizeof(UCSLabelRec),
@@ -169,10 +169,10 @@ WidgetClass ucsLabelWidgetClass = (WidgetClass)&ucsLabelClassRec;
  *
  ****************************************************************/
 
-static void ClassInitialize()
+static void ClassInitialize(void)
 {
     XawInitializeWidgetSet();
-    XtAddConverter( XtRString, XtRJustify, XmuCvtStringToJustify, 
+    XtAddConverter( XtRString, XtRJustify, XmuCvtStringToJustify,
 		    (XtConvertArgList)NULL, 0 );
 }
 
@@ -187,10 +187,7 @@ static int buf2blen = 0;
 
 #define TXT16 char
 
-static int _XawLabelWidth16(fs, str, n)
-    XFontStruct *fs;
-    char *str;
-    int	n;
+static int _XawLabelWidth16(XFontStruct *fs, char *str, int n)
 {
     int i;
     XChar2b *ptr;
@@ -206,13 +203,8 @@ static int _XawLabelWidth16(fs, str, n)
     return XTextWidth16(fs, buf2b, n);
 }
 
-static void _XawLabelDraw16(dpy, d, gc, x, y, str, n)
-    Display *dpy;
-    Drawable d;
-    GC gc;
-    int x, y;
-    char *str;
-    int n;
+static void _XawLabelDraw16(Display *dpy, Drawable d, GC gc,
+			    int x, int y, char *str, int n)
 {
     int i;
     XChar2b *ptr;
@@ -233,13 +225,8 @@ static void _XawLabelDraw16(dpy, d, gc, x, y, str, n)
 
 #endif /* WORD64 */
 
-static void _XawLabelDrawUCS(dpy, d, gc, x, y, str, n)
-    Display *dpy;
-    Drawable d;
-    GC gc;
-    int x, y;
-    char *str;
-    int n;
+static void _XawLabelDrawUCS(Display *dpy, Drawable d, GC gc,
+			     int x, int y, char *str, int n)
 {
     char *ep;
     unsigned short codepoint;
@@ -320,8 +307,7 @@ static int _XawLabelWidthUCS(
  * Calculate width and height of displayed text in pixels
  */
 
-static void SetTextWidthAndHeight(lw)
-    UCSLabelWidget lw;
+static void SetTextWidthAndHeight(UCSLabelWidget lw)
 {
     XFontStruct	*fs = lw->label.font;
 
@@ -431,8 +417,7 @@ static void SetTextWidthAndHeight(lw)
     }
 }
 
-static void GetnormalGC(lw)
-    UCSLabelWidget lw;
+static void GetnormalGC(UCSLabelWidget lw)
 {
     XGCValues	values;
 
@@ -454,8 +439,7 @@ static void GetnormalGC(lw)
 	&values);
 }
 
-static void GetgrayGC(lw)
-    UCSLabelWidget lw;
+static void GetgrayGC(UCSLabelWidget lw)
 {
     XGCValues	values;
 
@@ -464,7 +448,7 @@ static void GetgrayGC(lw)
     values.font	      = lw->label.font->fid;
     values.fill_style = FillTiled;
     values.tile       = XmuCreateStippledPixmap(XtScreen((Widget)lw),
-						lw->label.foreground, 
+						lw->label.foreground,
 						lw->core.background_pixel,
 						lw->core.depth);
     values.graphics_exposures = False;
@@ -478,23 +462,22 @@ static void GetgrayGC(lw)
 					   GCGraphicsExposures,
 				&values, GCFont, 0);
     else
-        lw->label.gray_GC = XtGetGC((Widget)lw, 
+        lw->label.gray_GC = XtGetGC((Widget)lw,
 				(unsigned) GCForeground | GCBackground |
 					   GCFont | GCTile | GCFillStyle |
 					   GCGraphicsExposures,
 				&values);
 }
 
-static void compute_bitmap_offsets (lw)
-    UCSLabelWidget lw;
+static void compute_bitmap_offsets(UCSLabelWidget lw)
 {
     /*
-     * bitmap will be eventually be displayed at 
+     * bitmap will be eventually be displayed at
      * (internal_width, internal_height + lbm_y)
      */
     if (lw->label.lbm_height != 0) {
 	lw->label.lbm_y = (lw->core.height -
-			  (lw->label.internal_height * 2 + 
+			  (lw->label.internal_height * 2 +
 			   lw->label.lbm_height)) / 2;
     } else {
 	lw->label.lbm_y = 0;
@@ -502,8 +485,7 @@ static void compute_bitmap_offsets (lw)
 }
 
 
-static void set_bitmap_info (lw)
-    UCSLabelWidget lw;
+static void set_bitmap_info(UCSLabelWidget lw)
 {
     Window root;
     int x, y;
@@ -521,14 +503,12 @@ static void set_bitmap_info (lw)
 
 
 /* ARGSUSED */
-static void Initialize(request, new, args, num_args)
-    Widget request, new;
-    ArgList args;
-    Cardinal *num_args;
+static void
+Initialize(Widget request, Widget new, ArgList args, Cardinal *num_args)
 {
     UCSLabelWidget lw = (UCSLabelWidget) new;
 
-    if (lw->label.label == NULL) 
+    if (lw->label.label == NULL)
         lw->label.label = XtNewString(lw->core.name);
     else {
         lw->label.label = XtNewString(lw->label.label);
@@ -560,10 +540,7 @@ static void Initialize(request, new, args, num_args)
  */
 
 /* ARGSUSED */
-static void Redisplay(gw, event, region)
-    Widget gw;
-    XEvent *event;
-    Region region;
+static void Redisplay(Widget gw, XEvent *event, Region region)
 {
     UCSLabelWidget w = (UCSLabelWidget) gw;
     GC gc;
@@ -601,7 +578,7 @@ static void Redisplay(gw, event, region)
 	    XCopyPlane (XtDisplay(gw), w->label.left_bitmap, XtWindow(gw), gc,
 		       0, 0, w->label.lbm_width, w->label.lbm_height,
 		       (int) w->label.internal_width,
-		       (int) w->label.internal_height + w->label.lbm_y, 
+		       (int) w->label.internal_height + w->label.lbm_y,
 		       (unsigned long) 1L);
 	}
 
@@ -640,7 +617,7 @@ static void Redisplay(gw, event, region)
 		    else
 		        XDrawString(XtDisplay(gw), XtWindow(gw), gc,
 			       		w->label.label_x, y, label, (int)(nl - label));
-		    y += w->label.font->max_bounds.ascent + 
+		    y += w->label.font->max_bounds.ascent +
 		                        w->label.font->max_bounds.descent;
 		    label = nl + 1;
 	        }
@@ -676,10 +653,8 @@ static void Redisplay(gw, event, region)
 #endif /* notdef */
 }
 
-static void _Reposition(lw, width, height, dx, dy)
-    UCSLabelWidget lw;
-    Dimension width, height;
-    Position *dx, *dy;
+static void _Reposition(UCSLabelWidget lw, Dimension width, Dimension height,
+			Position *dx, Position *dy)
 {
     Position newPos;
     Position leftedge = lw->label.internal_width + LEFT_OFFSET(lw);
@@ -710,8 +685,7 @@ static void _Reposition(lw, width, height, dx, dy)
     return;
 }
 
-static void Resize(w)
-    Widget w;
+static void Resize(Widget w)
 {
     UCSLabelWidget lw = (UCSLabelWidget)w;
     Position dx, dy;
@@ -729,10 +703,9 @@ static void Resize(w)
 #define HEIGHT 2
 #define NUM_CHECKS 3
 
-static Boolean SetValues(current, request, new, args, num_args)
-    Widget current, request, new;
-    ArgList args;
-    Cardinal *num_args;
+static Boolean
+SetValues(Widget current, Widget request, Widget new,
+	  ArgList args, Cardinal *num_args)
 {
     UCSLabelWidget curlw = (UCSLabelWidget) current;
     UCSLabelWidget reqlw = (UCSLabelWidget) request;
@@ -827,8 +800,7 @@ static Boolean SetValues(current, request, new, args, num_args)
 	   XtIsSensitive(current) != XtIsSensitive(new);
 }
 
-static void Destroy(w)
-    Widget w;
+static void Destroy(Widget w)
 {
     UCSLabelWidget lw = (UCSLabelWidget)w;
 
@@ -840,17 +812,16 @@ static void Destroy(w)
 }
 
 
-static XtGeometryResult QueryGeometry(w, intended, preferred)
-    Widget w;
-    XtWidgetGeometry *intended, *preferred;
+static XtGeometryResult
+QueryGeometry(Widget w, XtWidgetGeometry *intended, XtWidgetGeometry *preferred)
 {
     UCSLabelWidget lw = (UCSLabelWidget)w;
 
     preferred->request_mode = CWWidth | CWHeight;
-    preferred->width = (lw->label.label_width + 
+    preferred->width = (lw->label.label_width +
 			    2 * lw->label.internal_width +
 			    LEFT_OFFSET(lw));
-    preferred->height = lw->label.label_height + 
+    preferred->height = lw->label.label_height +
 			    2 * lw->label.internal_height;
     if (  ((intended->request_mode & (CWWidth | CWHeight))
 	   	== (CWWidth | CWHeight)) &&

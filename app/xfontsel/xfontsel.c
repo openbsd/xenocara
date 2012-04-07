@@ -1,4 +1,3 @@
-/* $XConsortium: xfontsel.c,v 1.35 94/04/17 20:43:41 rws Exp $ */
 /*
 
 Copyright (c) 1985-1989  X Consortium
@@ -31,7 +30,6 @@ Author:	Ralph R. Swick, DEC/MIT Project Athena
 	one weekend in November, 1989
 Modified: Mark Leisher <mleisher@crl.nmsu.edu> to deal with UCS sample text.
 */
-/* $XFree86: xc/programs/xfontsel/xfontsel.c,v 1.7tsi Exp $ */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -66,32 +64,32 @@ Modified: Mark Leisher <mleisher@crl.nmsu.edu> to deal with UCS sample text.
 #define NZ NULL,ZERO
 #define BACKGROUND 10
 
-void GetFontNames();
-Boolean Matches();
-Boolean DoWorkPiece();
-void Quit();
-void OwnSelection();
-void SelectField();
-void ParseFontNames();
-void SortFields();
-void FixScalables();
-void MakeFieldMenu();
-void SelectValue();
-void AnyValue();
-void EnableOtherValues();
-void EnableMenu();
-void SetCurrentFont();
-void QuitAction();
+void GetFontNames(XtPointer closure);
+Boolean Matches(String pattern, String fontName, Boolean fields[], int *maxfields);
+Boolean DoWorkPiece(XtPointer closure);
+void Quit(Widget w, XtPointer closure, XtPointer callData);
+void OwnSelection(Widget w, XtPointer closure, XtPointer callData);
+void SelectField(Widget w, XtPointer closure, XtPointer callData);
+void ParseFontNames(XtPointer closure);
+void SortFields(XtPointer closure);
+void FixScalables(XtPointer closure);
+void MakeFieldMenu(XtPointer closure);
+void SelectValue(Widget w, XtPointer closure, XtPointer callData);
+void AnyValue(Widget w, XtPointer closure, XtPointer callData);
+void EnableOtherValues(Widget w, XtPointer closure, XtPointer callData);
+void EnableMenu(XtPointer closure);
+void SetCurrentFont(XtPointer closure);
+void QuitAction(Widget w, XEvent *event, String *params, Cardinal *num_params);
 
-XtActionsRec xfontsel_actions[] = {
+static XtActionsRec xfontsel_actions[] = {
     {"Quit",	    QuitAction}
 };
 
-Atom wm_delete_window;
+static Atom wm_delete_window;
 
-Boolean IsXLFDFontName();
+Boolean IsXLFDFontName(String fontName);
 
-typedef void (*XtProc)();
+typedef void (*XtProc)(XtPointer closure);
 
 static struct _appRes {
     int app_defaults_version;
@@ -150,26 +148,25 @@ static XrmOptionDescRec options[] = {
 {"-scaled",	"scaledFonts",	XrmoptionNoArg,		"True"},
 };
 
-static void Syntax(call)
-    char *call;
+static void Syntax(char *call)
 {
     fprintf (stderr, "usage:  %s [-options ...] -fn font\n\n", call);
     fprintf (stderr, "where options include:\n");
     fprintf (stderr,
 	"    -display dpy           X server to contact\n");
-    fprintf (stderr, 
+    fprintf (stderr,
 	"    -geometry geom         size and location of window\n");
-    fprintf (stderr, 
+    fprintf (stderr,
 	"    -pattern fontspec      font name pattern to match against\n");
-    fprintf (stderr, 
+    fprintf (stderr,
 	"    -print                 print selected font name on exit\n");
-    fprintf (stderr, 
+    fprintf (stderr,
 	"    -sample string         sample text to use for 1-byte fonts\n");
-    fprintf (stderr, 
+    fprintf (stderr,
 	"    -sample16 string       sample text to use for 2-byte fonts\n");
     fprintf (stderr,
 	"    -sampleUCS string      sample text to use for ISO10646 fonts\n");
-    fprintf (stderr, 
+    fprintf (stderr,
 	"    -scaled                use scaled instances of fonts\n");
     fprintf (stderr, "\n");
     exit (1);
@@ -235,34 +232,32 @@ static void SetCurrentFontCount(void);
 static void SetNoFonts(void);
 static void SetParsingFontCount(int count);
 
-XtAppContext appCtx;
-int numFonts;
-int numBadFonts;
-FontValues *fonts;
-int *scaledFonts;
-int numScaledFonts;
-FieldValueList *fieldValues[FIELD_COUNT];
-FontValues currentFont;
-int matchingFontCount;
+static XtAppContext appCtx;
+static int numFonts;
+static int numBadFonts;
+static FontValues *fonts;
+static int *scaledFonts;
+static int numScaledFonts;
+static FieldValueList *fieldValues[FIELD_COUNT];
+static FontValues currentFont;
+static int matchingFontCount;
 static Boolean anyDisabled = False;
-Widget ownButton;
-Widget fieldBox;
-Widget countLabel;
-Widget currentFontName;
-String currentFontNameString;
-int currentFontNameSize;
-Widget sampleText;
-int textEncoding = -1;
+static Widget ownButton;
+static Widget fieldBox;
+static Widget countLabel;
+static Widget currentFontName;
+static String currentFontNameString;
+static int currentFontNameSize;
+static Widget sampleText;
+static int textEncoding = -1;
 static XFontStruct *sampleFont = NULL;
-Boolean *fontInSet;
+static Boolean *fontInSet;
 static Choice *choiceList = NULL;
-int enabledMenuIndex;
+static int enabledMenuIndex;
 static Boolean patternFieldSpecified[FIELD_COUNT]; /* = 0 */
 
 int
-main(argc, argv)
-    int argc;
-    char **argv;
+main(int argc, char **argv)
 {
     Widget topLevel, pane;
 
@@ -319,7 +314,7 @@ see 'xfontsel' manual page."
 	    for (f = 0; f < FIELD_COUNT; f++) {
 		char name[10];
 		FieldMenuRec *makeRec = XtNew(FieldMenuRec);
-		sprintf( name, "field%d", f );
+		snprintf( name, sizeof(name), "field%d", f );
 		XtCreateManagedWidget("dash",labelWidgetClass,fieldBox,NZ);
 		field = XtCreateManagedWidget(name, menuButtonWidgetClass,
 			fieldBox, NZ);
@@ -328,7 +323,7 @@ see 'xfontsel' manual page."
 		makeRec->field = f;
 		makeRec->button = field;
 		ScheduleWork(MakeFieldMenu, (XtPointer)makeRec, 2);
-		ScheduleWork(XtFree, (XtPointer)makeRec, 2);
+		ScheduleWork((XtProc)XtFree, (XtPointer)makeRec, 2);
 	    }
 	}
 
@@ -347,19 +342,11 @@ see 'xfontsel' manual page."
 	viewPort =
 	    XtCreateManagedWidget("viewPort",viewportWidgetClass,pane,NZ);
 	{
-#ifdef USE_TEXT_WIDGET
-	    Widget text =
-		XtCreateManagedWidget("sampleText",asciiTextWidgetClass,viewPort,NZ);
-	    Arg args[1];
-	    XtSetArg( args[0], XtNtextSink, &sampleText );
-	    XtGetValues( text, args, ONE );
-#else
 	    sampleText =
 		XtCreateManagedWidget("sampleText",ucsLabelWidgetClass,viewPort,NZ);
-#endif
 	}
     }
-    
+
     XtRealizeWidget(topLevel);
     XDefineCursor( XtDisplay(topLevel), XtWindow(topLevel), AppRes.cursor );
     {
@@ -397,10 +384,7 @@ static WorkPiece workQueue = NULL;
  * Xt knows we have (background) work to do.
  */
 
-static void ScheduleWork( proc, closure, priority )
-    XtProc proc;
-    XtPointer closure;
-    int priority;
+static void ScheduleWork(XtProc proc, XtPointer closure, int priority)
 {
     WorkPiece piece = XtNew(WorkPieceRec);
 
@@ -427,8 +411,7 @@ static void ScheduleWork( proc, closure, priority )
 }
 
 /* ARGSUSED */
-Boolean DoWorkPiece(closure)
-    XtPointer closure;		/* unused */
+Boolean DoWorkPiece(XtPointer closure)
 {
     WorkPiece piece = workQueue;
 
@@ -450,7 +433,7 @@ Boolean DoWorkPiece(closure)
  * Foreground == (priority < BACKGROUND)
  */
 
-void FinishWork()
+static void FinishWork(void)
 {
     while (workQueue && workQueue->priority < BACKGROUND)
 	DoWorkPiece(NULL);
@@ -467,8 +450,7 @@ struct ParseRec {
 };
 
 
-void GetFontNames( closure )
-    XtPointer closure;
+void GetFontNames(XtPointer closure)
 {
     Display *dpy = (Display*)closure;
     ParseRec *parseRec = XtNew(ParseRec);
@@ -502,7 +484,7 @@ void GetFontNames( closure )
 	ParseRec *prevRec = parseRec;
 	parseRec->end = parseRec->start + PARSE_QUANTUM;
 	ScheduleWork(ParseFontNames, (XtPointer)parseRec, work_priority);
-	ScheduleWork(XtFree, (XtPointer)parseRec, work_priority);
+	ScheduleWork((XtProc)XtFree, (XtPointer)parseRec, work_priority);
 	parseRec = XtNew(ParseRec);
 	*parseRec = *prevRec;
 	parseRec->start += PARSE_QUANTUM;
@@ -514,7 +496,7 @@ void GetFontNames( closure )
     parseRec->end = numFonts;
     ScheduleWork(ParseFontNames,(XtPointer)parseRec,work_priority);
     ScheduleWork((XtProc)XFreeFontNames,(XtPointer)fontNames,work_priority);
-    ScheduleWork(XtFree, (XtPointer)parseRec, work_priority);
+    ScheduleWork((XtProc)XtFree, (XtPointer)parseRec, work_priority);
     if (AppRes.scaled_fonts)
 	ScheduleWork(FixScalables,(XtPointer)0,work_priority);
     ScheduleWork(SortFields,(XtPointer)0,work_priority);
@@ -531,7 +513,7 @@ void GetFontNames( closure )
 		}
 	    }
 	    else
-		XtAppWarning( appCtx, 
+		XtAppWarning( appCtx,
 		    "internal error; pattern didn't match first font" );
 	}
 	else {
@@ -543,8 +525,7 @@ void GetFontNames( closure )
 }
 
 
-void ParseFontNames( closure )
-    XtPointer closure;
+void ParseFontNames(XtPointer closure)
 {
     ParseRec *parseRec = (ParseRec*)closure;
     char **fontNames = parseRec->fontNames;
@@ -565,7 +546,7 @@ void ParseFontNames( closure )
 	}
 
 	for (f = 0, p = *fontNames++; f < FIELD_COUNT; f++) {
-	    char *fieldP;
+	    const char *fieldP;
 
 	    if (*p) ++p;
 	    if (*p == DELIM || *p == '\0') {
@@ -613,7 +594,7 @@ void ParseFontNames( closure )
 	    fontValues->value_index[f] = fieldValues[f]->count - i;
 	    if ((i = v->count++) == v->allocated) {
 		int allocated = (v->allocated += 10);
-		v->font = (int*)XtRealloc( (char *) v->font, 
+		v->font = (int*)XtRealloc( (char *) v->font,
 					  allocated * sizeof(int) );
 	    }
 	    v->font[i] = font - numBadFonts;
@@ -629,8 +610,7 @@ void ParseFontNames( closure )
  * since we need to do this for resolution fields which can be nonzero in
  * the scalable fonts.
  */
-void AddScalables(f)
-    int f;
+static void AddScalables(int f)
 {
     int i;
     int max = fieldValues[f]->count;
@@ -683,9 +663,7 @@ void AddScalables(f)
  * for field f.  Weed out duplicates.  The set of matching fonts is just
  * the set of scalable fonts.
  */
-void NewScalables(f, slist)
-    int f;
-    char *slist;
+static void NewScalables(int f, char *slist)
 {
     char endc = 1;
     char *str;
@@ -732,8 +710,7 @@ void NewScalables(f, slist)
  * in resources.
  */
 /*ARGSUSED*/
-void FixScalables( closure )
-    XtPointer closure;
+void FixScalables(XtPointer closure)
 {
     int i;
     FieldValue *fval = fieldValues[6]->value;
@@ -797,7 +774,7 @@ static int strcmpn(const char *s1, const char *s2)
 
 
 /* Order is *, (nil), rest */
-int AlphabeticSort(_Xconst void *fval1, _Xconst void *fval2)
+static int AlphabeticSort(_Xconst void *fval1, _Xconst void *fval2)
 {
 #   define fval1 ((_Xconst FieldValue *)fval1)
 #   define fval2 ((_Xconst FieldValue *)fval2)
@@ -819,7 +796,7 @@ int AlphabeticSort(_Xconst void *fval1, _Xconst void *fval2)
 
 
 /* Order is *, (nil), rest */
-int NumericSort(_Xconst void *fval1, _Xconst void *fval2)
+static int NumericSort(_Xconst void *fval1, _Xconst void *fval2)
 {
 #   define fval1 ((_Xconst FieldValue *)fval1)
 #   define fval2 ((_Xconst FieldValue *)fval2)
@@ -846,8 +823,7 @@ int NumericSort(_Xconst void *fval1, _Xconst void *fval2)
  * sort.
  */
 /*ARGSUSED*/
-void SortFields( closure )
-    XtPointer closure;
+void SortFields(XtPointer closure)
 {
     int i, j, count;
     FieldValue *vals;
@@ -883,8 +859,7 @@ void SortFields( closure )
 }
 
 
-Boolean IsXLFDFontName(fontName)
-    String fontName;
+Boolean IsXLFDFontName(String fontName)
 {
     int f;
     for (f = 0; *fontName;) if (*fontName++ == DELIM) f++;
@@ -892,8 +867,7 @@ Boolean IsXLFDFontName(fontName)
 }
 
 
-void MakeFieldMenu(closure)
-    XtPointer closure;
+void MakeFieldMenu(XtPointer closure)
 {
     FieldMenuRec *makeRec = (FieldMenuRec*)closure;
     Widget menu;
@@ -939,19 +913,13 @@ static void SetNoFonts(void)
     XtSetSensitive(fieldBox, False);
     XtSetSensitive(ownButton, False);
     if (AppRes.app_defaults_version >= MIN_APP_DEFAULTS_VERSION) {
-#ifdef USE_TEXT_WIDGET
-	XtUnmapWidget(XtParent(sampleText));
-#else
 	XtUnmapWidget(sampleText);
-#endif
     }
 }
 
 
-Boolean Matches(pattern, fontName, fields, maxField)
-    register String pattern, fontName;
-    Boolean fields[/*FIELD_COUNT*/];
-    int *maxField;
+Boolean Matches(register String pattern, register String fontName,
+		Boolean fields[/*FIELD_COUNT*/], int *maxField)
 {
     register int field = (*fontName == DELIM) ? -1 : 0;
     register Boolean marked_this_field = False;
@@ -964,7 +932,7 @@ Boolean Matches(pattern, fontName, fields, maxField)
 		marked_this_field = False;
 	    }
 	    else if (!marked_this_field)
-		fields[field] = marked_this_field = True; 
+		fields[field] = marked_this_field = True;
 	    continue;
 	}
 	if (*pattern == '*') {
@@ -999,9 +967,7 @@ Boolean Matches(pattern, fontName, fields, maxField)
 
 
 /* ARGSUSED */
-void SelectValue(w, closure, callData)
-    Widget w;
-    XtPointer closure, callData;
+void SelectValue(Widget w, XtPointer closure, XtPointer callData)
 {
     FieldValue *val = (FieldValue*)closure;
 #ifdef LOG_CHOICES
@@ -1024,16 +990,14 @@ void SelectValue(w, closure, callData)
     choice->prev = choiceList;
     choice->value = val;
     choiceList = choice;
-	
+
     SetCurrentFont(NULL);
     EnableRemainingItems(SkipCurrentField);
 }
 
 
 /* ARGSUSED */
-void AnyValue(w, closure, callData)
-    Widget w;
-    XtPointer closure, callData;
+void AnyValue(Widget w, XtPointer closure, XtPointer callData)
 {
     int field = (long)closure;
     currentFont.value_index[field] = -1;
@@ -1050,7 +1014,7 @@ static void SetCurrentFontCount(void)
     if (matchingFontCount == 1)
 	strcpy( label, "1 name matches" );
     else if (matchingFontCount)
-	sprintf( label, "%d names match", matchingFontCount );
+	snprintf( label, sizeof(label), "%d names match", matchingFontCount );
     else
 	strcpy( label, "no names match" );
     XtSetArg( args[0], XtNlabel, label );
@@ -1065,16 +1029,14 @@ static void SetParsingFontCount(int count)
     if (count == 1)
 	strcpy( label, "1 name to parse" );
     else
-	sprintf( label, "%d names to parse", count );
+	snprintf( label, sizeof(label), "%d names to parse", count );
     XtSetArg( args[0], XtNlabel, label );
     XtSetValues( countLabel, args, ONE );
     FlushXqueue(XtDisplay(countLabel));
 }
 
 /* ARGSUSED */
-static Boolean IsISO10646(dpy, font)
-    Display *dpy;
-    XFontStruct *font;
+static Boolean IsISO10646(Display *dpy, XFontStruct *font)
 {
     Boolean ok;
     int i;
@@ -1099,8 +1061,7 @@ static Boolean IsISO10646(dpy, font)
 }
 
 /* ARGSUSED */
-void SetCurrentFont(closure)
-    XtPointer closure;		/* unused */
+void SetCurrentFont(XtPointer closure)
 {
     int f;
     Boolean *b;
@@ -1156,11 +1117,7 @@ void SetCurrentFont(closure)
     SetCurrentFontCount();
 
     {
-#ifdef USE_TEXT_WIDGET
-	Widget mapWidget = XtParent(sampleText);
-#else
 	Widget mapWidget = sampleText;
-#endif
 	Display *dpy = XtDisplay(mapWidget);
 	XFontStruct *font = XLoadQueryFont(dpy, currentFontNameString);
 	String sample_text;
@@ -1200,9 +1157,7 @@ void SetCurrentFont(closure)
 }
 
 
-static void MarkInvalidFonts( set, val )
-    Boolean *set;
-    FieldValue *val;
+static void MarkInvalidFonts(Boolean *set, FieldValue *val)
 {
     int fi = 0, vi;
     int *fp = val->font;
@@ -1220,8 +1175,7 @@ static void MarkInvalidFonts( set, val )
 }
 
 
-static void EnableRemainingItems(current_field_action)
-    ValidateAction current_field_action;
+static void EnableRemainingItems(ValidateAction current_field_action)
 {
     if (matchingFontCount == 0 || matchingFontCount == numFonts) {
 	if (anyDisabled) {
@@ -1275,9 +1229,7 @@ static void EnableAllItems(int field)
 
 
 /* ARGSUSED */
-void SelectField(w, closure, callData)
-    Widget w;
-    XtPointer closure, callData;
+void SelectField(Widget w, XtPointer closure, XtPointer callData)
 {
     int field = (long)closure;
     FieldValue *values = fieldValues[field]->value;
@@ -1297,8 +1249,7 @@ void SelectField(w, closure, callData)
  * will almost always produce an illegal font name, and it isn't worth
  * trying to compute which choices might be legal to the font scaler.
  */
-void DisableScaled(f, f1, f2)
-    int f, f1, f2;
+static void DisableScaled(int f, int f1, int f2)
 {
     int i, j;
     FieldValue *v;
@@ -1321,9 +1272,7 @@ void DisableScaled(f, f1, f2)
 }
 
 /* ARGSUSED */
-void EnableOtherValues(w, closure, callData)
-    Widget w;
-    XtPointer closure, callData;
+void EnableOtherValues(Widget w, XtPointer closure, XtPointer callData)
 {
     int field = (long)closure;
     Boolean *font_in_set = (Boolean*)XtMalloc(numFonts*sizeof(Boolean));
@@ -1386,8 +1335,7 @@ void EnableOtherValues(w, closure, callData)
 }
 
 
-void EnableMenu(closure)
-    XtPointer closure;
+void EnableMenu(XtPointer closure)
 {
     int field = (long)closure;
     FieldValue *val = fieldValues[field]->value;
@@ -1434,8 +1382,7 @@ void EnableMenu(closure)
 }
 
 
-static void FlushXqueue(dpy)
-    Display *dpy;
+static void FlushXqueue(Display *dpy)
 {
     XSync(dpy, False);
     while (XtAppPending(appCtx)) XtAppProcessEvent(appCtx, XtIMAll);
@@ -1443,9 +1390,7 @@ static void FlushXqueue(dpy)
 
 
 /* ARGSUSED */
-void Quit(w, closure, callData)
-    Widget w;
-    XtPointer closure, callData;
+void Quit(Widget w, XtPointer closure, XtPointer callData)
 {
     XtCloseDisplay(XtDisplay(w));
     if (AppRes.print_on_quit) printf( "%s", currentFontNameString );
@@ -1453,12 +1398,9 @@ void Quit(w, closure, callData)
 }
 
 
-Boolean ConvertSelection(w, selection, target, type, value, length, format)
-    Widget w;
-    Atom *selection, *target, *type;
-    XtPointer *value;
-    unsigned long *length;
-    int *format;
+static Boolean
+ConvertSelection(Widget w, Atom *selection, Atom *target, Atom *type,
+		 XtPointer *value, unsigned long *length, int *format)
 {
     /* XmuConvertStandardSelection will use the second parameter only when
      * converting to the target TIMESTAMP.  However, it will never be
@@ -1485,9 +1427,7 @@ static AtomPtr _XA_PRIMARY_FONT = NULL;
 #define XA_PRIMARY_FONT XmuInternAtom(XtDisplay(w),_XA_PRIMARY_FONT)
 
 /* ARGSUSED */
-void LoseSelection(w, selection)
-    Widget w;
-    Atom *selection;
+static void LoseSelection(Widget w, Atom *selection)
 {
     Arg args[1];
     XtSetArg( args[0], XtNstate, False );
@@ -1499,18 +1439,14 @@ void LoseSelection(w, selection)
 
 
 /* ARGSUSED */
-void DoneSelection(w, selection, target)
-    Widget w;
-    Atom *selection, *target;
+static void DoneSelection(Widget w, Atom *selection, Atom *target)
 {
     /* do nothing */
 }
 
 
 /* ARGSUSED */
-void OwnSelection(w, closure, callData)
-    Widget w;
-    XtPointer closure, callData;
+void OwnSelection(Widget w, XtPointer closure, XtPointer callData)
 {
     Time time = XtLastTimestampProcessed(XtDisplay(w));
     Boolean primary = (Boolean) (long) closure;
@@ -1537,8 +1473,9 @@ void OwnSelection(w, closure, callData)
     }
 }
 
+/*ARGSUSED*/
 void
-QuitAction ()
+QuitAction(Widget w, XEvent *event, String *params, Cardinal *num_params)
 {
     exit (0);
 }
