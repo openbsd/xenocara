@@ -23,7 +23,7 @@ dnl Process this file with autoconf to create configure.
 
 # Initialize Autoconf
 AC_PREREQ([2.60])
-AC_INIT([xgamma], [1.0.4],
+AC_INIT([xgamma], [1.0.5],
         [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg], [xgamma])
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_HEADERS([config.h])
@@ -41,4 +41,7 @@ XORG_DEFAULT_OPTIONS
 # Checks for pkg-config packages
 PKG_CHECK_MODULES(XGAMMA, x11 xxf86vm)
 
-AC_OUTPUT([Makefile])
+AC_CONFIG_FILES([
+	Makefile
+	man/Makefile])
+AC_OUTPUT

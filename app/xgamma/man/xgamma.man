@@ -1,10 +1,10 @@
 .\" Copyright 1999  by The XFree86 Project, Inc.
-.\" 
+.\"
 .\" All Rights Reserved.
-.\" 
+.\"
 .\" The above copyright notice and this permission notice shall be included
 .\" in all copies or substantial portions of the Software.
-.\" 
+.\"
 .\" THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
 .\" OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
 .\" MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
@@ -12,7 +12,7 @@
 .\" OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
 .\" ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 .\" OTHER DEALINGS IN THE SOFTWARE.
-.\" 
+.\"
 .\" Except as contained in this notice, the name of The XFree86 Project shall
 .\" not be used in advertising or otherwise to promote the sale, use or
 .\" other dealings in this Software without prior written authorization
@@ -31,9 +31,12 @@ xgamma - Alter a monitor's gamma correction through the X server
 allows X users to query and alter the gamma correction of a monitor via
 the X video mode extension (XFree86-VidModeExtension).
 .PP
+Note that the \fBxgamma\fP utility is obsolete and deficient, \fBxrandr\fP
+should be used with drivers that support the \fBXRandr\fP extension.
+.PP
 If no value for the gamma correction is given via the
-.I -gamma 
-or 
+.I -gamma
+or
 .IR -rgamma / -ggamma / -bgamma
 options,
 .B xgamma
@@ -62,7 +65,7 @@ Print out the `Usage:' command syntax summary.
 .B "-gamma f.f"
 The gamma correction can either be defined as a single value, or
 separately for the red, green and blue components. This argument
-specifies the gamma correction as a single value. 
+specifies the gamma correction as a single value.
 .PP
 .TP 8
 .B "-rgamma f.f"
@@ -89,7 +92,8 @@ drivers.
 The gamma values are passed to the Xserver with 3 decimal places of
 accuracy.
 .SH SEE ALSO
-xvidtune(1)
+xvidtune(__appmansuffix__),
+xrandr(__appmansuffix__)
 .SH AUTHORS
 Kaleb S. Keithley, X Consortium.
 .br
