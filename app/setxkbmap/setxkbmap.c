@@ -6,19 +6,19 @@
  fee is hereby granted, provided that the above copyright
  notice appear in all copies and that both that copyright
  notice and this permission notice appear in supporting
- documentation, and that the name of Silicon Graphics not be 
- used in advertising or publicity pertaining to distribution 
+ documentation, and that the name of Silicon Graphics not be
+ used in advertising or publicity pertaining to distribution
  of the software without specific prior written permission.
- Silicon Graphics makes no representation about the suitability 
+ Silicon Graphics makes no representation about the suitability
  of this software for any purpose. It is provided "as is"
  without any express or implied warranty.
- 
- SILICON GRAPHICS DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS 
- SOFTWARE, INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY 
+
+ SILICON GRAPHICS DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS
+ SOFTWARE, INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY
  AND FITNESS FOR A PARTICULAR PURPOSE. IN NO EVENT SHALL SILICON
- GRAPHICS BE LIABLE FOR ANY SPECIAL, INDIRECT OR CONSEQUENTIAL 
- DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, 
- DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE 
+ GRAPHICS BE LIABLE FOR ANY SPECIAL, INDIRECT OR CONSEQUENTIAL
+ DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE,
+ DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE
  OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION  WITH
  THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
@@ -45,43 +45,29 @@
 #endif
 
 #ifndef DFLT_XKB_CONFIG_ROOT
-#define	DFLT_XKB_CONFIG_ROOT "/usr/share/X11/xkb"
+#define DFLT_XKB_CONFIG_ROOT "/usr/share/X11/xkb"
 #endif
 #ifndef DFLT_XKB_RULES_FILE
-#define	DFLT_XKB_RULES_FILE "xorg"
+#define DFLT_XKB_RULES_FILE "base"
 #endif
 #ifndef DFLT_XKB_LAYOUT
-#define	DFLT_XKB_LAYOUT "us"
+#define DFLT_XKB_LAYOUT "us"
 #endif
 #ifndef DFLT_XKB_MODEL
-#define	DFLT_XKB_MODEL "pc105"
+#define DFLT_XKB_MODEL "pc105"
 #endif
 
-/* Values used in svSrc to state how a value was obtained. The order of these
+/* Constants to state how a value was obtained. The order of these
  * is important, the bigger the higher the priority.
  * e.g. FROM_CONFIG overrides FROM_SERVER */
-#define	UNDEFINED	0
-#define	FROM_SERVER	1       /* retrieved from server at runtime */
-#define	FROM_RULES	2       /* xkb rules file */
-#define	FROM_CONFIG	3       /* command-line specified config file */
-#define	FROM_CMD_LINE	4       /* specified at the cmdline */
-#define	NUM_SOURCES	5
-
-/* Indices used into svSrc, svNValue */
-#define	RULES_NDX	0       /* rules file */
-#define	CONFIG_NDX	1       /* config file (if used) */
-#define	DISPLAY_NDX	2       /* X display name */
-#define	LOCALE_NDX	3       /* machine's locale */
-#define	MODEL_NDX	4
-#define	LAYOUT_NDX	5
-#define	VARIANT_NDX	6
-#define KEYCODES_NDX	7
-#define	TYPES_NDX	8
-#define	COMPAT_NDX	9
-#define	SYMBOLS_NDX	10
-#define	GEOMETRY_NDX	11
-#define	KEYMAP_NDX	12
-#define	NUM_STRING_VALS	13
+enum source {
+    UNDEFINED = 0,
+    FROM_SERVER,          /* Retrieved from server at runtime. */
+    FROM_RULES,           /* Xkb rules file. */
+    FROM_CONFIG,          /* Command-line specified config file. */
+    FROM_CMD_LINE,        /* Specified at the cmdline. */
+    NUM_SOURCES
+};
 
 /***====================================================================***/
 static Bool print = False;
@@ -95,30 +81,51 @@ static Display *dpy;
  * human-readable versions of FROM_CONFIG, FROM_SERVER, etc. Used for error
  * reporting.
  */
-static char *srcName[NUM_SOURCES] = {
+static const char *srcName[NUM_SOURCES] = {
     "undefined", "X server", "rules file", "config file", "command line"
 };
 
-/**
- * human-readable versions for RULES_NDX, CONFIG_NDX, etc. Used for error
- * reporting.
- */
-static char *svName[NUM_STRING_VALS] = {
-    "rules file", "config file", "X display", "locale",
-    "keyboard model", "keyboard layout", "layout variant",
-    "keycodes", "types", "compatibility map", "symbols", "geometry",
-    "keymap"
+struct setting {
+    char const  *name;  /* Human-readable setting name. Used for error reporting. */
+    char        *value; /* Holds the value. */
+    enum source  src;   /* Holds the source. */
 };
-/**
- * Holds the source for each of RULES, CONFIG, DISPLAY, etc.
- * i.e. if svSrc[LAYOUT_NDX] == FROM_SERVER, then the layout has been fetched
- * from the server.
- */
-static int svSrc[NUM_STRING_VALS];
-/**
- * Holds the value for each of RULES, CONFIG, DISPLAY, etc.
- */
-static char *svValue[NUM_STRING_VALS];
+
+typedef struct setting setting_t;
+
+struct settings {
+    setting_t rules;     /* Rules file */
+    setting_t config;    /* Config file (if used) */
+    setting_t display;   /* X display name */
+    setting_t locale;    /* Machine's locale */
+    setting_t model;
+    setting_t layout;
+    setting_t variant;
+    setting_t keycodes;
+    setting_t types;
+    setting_t compat;
+    setting_t symbols;
+    setting_t geometry;
+    setting_t keymap;
+};
+
+typedef struct settings settings_t;
+
+static settings_t settings = {
+    { "rules file",         NULL, UNDEFINED },
+    { "config file",        NULL, UNDEFINED },
+    { "X display",          NULL, UNDEFINED },
+    { "locale",             NULL, UNDEFINED },
+    { "keyboard model",     NULL, UNDEFINED },
+    { "keyboard layout",    NULL, UNDEFINED },
+    { "layout variant",     NULL, UNDEFINED },
+    { "keycodes",           NULL, UNDEFINED },
+    { "types",              NULL, UNDEFINED },
+    { "compatibility map",  NULL, UNDEFINED },
+    { "symbols",            NULL, UNDEFINED },
+    { "geometry",           NULL, UNDEFINED },
+    { "keymap",             NULL, UNDEFINED }
+};
 
 static XkbConfigRtrnRec cfgResult;
 
@@ -126,13 +133,18 @@ static XkbRF_RulesPtr rules = NULL;
 static XkbRF_VarDefsRec rdefs;
 
 static Bool clearOptions = False;
-static int szOptions = 0;
-static int numOptions = 0;
-static char **options = NULL;
 
-static int szInclPath = 0;
-static int numInclPath = 0;
-static char **inclPath = NULL;
+struct list {
+    char  **item;   /* Array of items. */
+    int     sz;     /* Size of array. */
+    int     num;    /* Number of used elements. */
+};
+
+typedef struct list list_t;
+
+static list_t options = { NULL, 0, 0 };
+
+static list_t inclPath = { NULL, 0, 0 };
 
 static XkbDescPtr xkb = NULL;
 
@@ -140,83 +152,83 @@ static int deviceSpec = XkbUseCoreKbd;
 
 /***====================================================================***/
 
-#define	streq(s1,s2)	(strcmp(s1,s2)==0)
-#define	strpfx(s1,s2)	(strncmp(s1,s2,strlen(s2))==0)
+#define streq(s1,s2)    (strcmp(s1,s2)==0)
+#define strpfx(s1,s2)   (strncmp(s1,s2,strlen(s2))==0)
 
-#define	MSG(s)		printf(s)
-#define	MSG1(s,a)	printf(s,a)
-#define	MSG2(s,a,b)	printf(s,a,b)
-#define	MSG3(s,a,b,c)	printf(s,a,b,c)
+#define MSG(s)          printf(s)
+#define MSG1(s,a)       printf(s,a)
+#define MSG2(s,a,b)     printf(s,a,b)
+#define MSG3(s,a,b,c)   printf(s,a,b,c)
 
-#define	VMSG(l,s)	if (verbose>(l)) printf(s)
-#define	VMSG1(l,s,a)	if (verbose>(l)) printf(s,a)
-#define	VMSG2(l,s,a,b)	if (verbose>(l)) printf(s,a,b)
-#define	VMSG3(l,s,a,b,c) if (verbose>(l)) printf(s,a,b,c)
+#define VMSG(l,s)        if (verbose>(l)) printf(s)
+#define VMSG1(l,s,a)     if (verbose>(l)) printf(s,a)
+#define VMSG2(l,s,a,b)   if (verbose>(l)) printf(s,a,b)
+#define VMSG3(l,s,a,b,c) if (verbose>(l)) printf(s,a,b,c)
 
-#define	ERR(s)		fprintf(stderr,s)
-#define	ERR1(s,a)	fprintf(stderr,s,a)
-#define	ERR2(s,a,b)	fprintf(stderr,s,a,b)
-#define	ERR3(s,a,b,c)	fprintf(stderr,s,a,b,c)
+#define ERR(s)          fprintf(stderr,s)
+#define ERR1(s,a)       fprintf(stderr,s,a)
+#define ERR2(s,a,b)     fprintf(stderr,s,a,b)
+#define ERR3(s,a,b,c)   fprintf(stderr,s,a,b,c)
+
+#define OOM(ptr)        do { if ((ptr) == NULL) { ERR("Out of memory.\n"); exit(-1); } } while (0)
 
 /***====================================================================***/
 
-Bool addToList(int *sz, int *num, char ***listIn, char *newVal);
+Bool addToList(list_t *list, const char *newVal);
 void usage(int argc, char **argv);
 void dumpNames(Bool wantRules, Bool wantCNames);
-void trySetString(int which, char *newVal, int src);
-Bool setOptString(int *arg, int argc, char **argv, int which, int src);
+void trySetString(setting_t * setting, char *newVal, enum source src);
+Bool setOptString(int *arg, int argc, char **argv, setting_t *setting, enum source src);
 int parseArgs(int argc, char **argv);
 Bool getDisplay(int argc, char **argv);
 Bool getServerValues(void);
-FILE *findFileInPath(char *name, char *subdir);
-Bool addStringToOptions(char *opt_str, int *sz_opts, int *num_opts,
-                        char ***opts);
-char *stringFromOptions(char *orig, int numNew, char **newOpts);
+FILE *findFileInPath(char *name);
+Bool addStringToOptions(char *opt_str, list_t *opts);
+char *stringFromOptions(char *orig, list_t *newOpts);
 Bool applyConfig(char *name);
+XkbRF_RulesPtr tryLoadRules(char *name, char *locale, Bool wantDesc, Bool wantRules);
 Bool applyRules(void);
 Bool applyComponentNames(void);
 void printKeymap(void);
 
 /***====================================================================***/
 
+/*
+    If newVal is NULL or empty string, the list is cleared.
+    Otherwise newVal is added to the end of the list (if it is not present in the list yet).
+*/
+
 Bool
-addToList(int *sz, int *num, char ***listIn, char *newVal)
+addToList(list_t *list, const char *newVal)
 {
     register int i;
-    char **list;
 
     if ((!newVal) || (!newVal[0]))
     {
-        *num = 0;
+        list->num = 0;
         return True;
     }
-    list = *listIn;
-    for (i = 0; i < *num; i++)
+    for (i = 0; i < list->num; i++)
     {
-        if (streq(list[i], newVal))
+        if (streq(list->item[i], newVal))
             return True;
     }
-    if ((list == NULL) || (*sz < 1))
+    if ((list->item == NULL) || (list->sz < 1))
     {
-        *num = 0;
-        *sz = 4;
-        list = (char **) calloc(*sz, sizeof(char *));
-        *listIn = list;
+        list->num = 0;
+        list->sz = 4;
+        list->item = (char **) calloc(list->sz, sizeof(char *));
+        OOM(list->item);
     }
-    else if (*num >= *sz)
+    else if (list->num >= list->sz)
     {
-        *sz *= 2;
-        list = (char **) realloc(list, (*sz) * sizeof(char *));
-        *listIn = list;
+        list->sz *= 2;
+        list->item = (char **) realloc(list->item, (list->sz) * sizeof(char *));
+        OOM(list->item);
     }
-    if (!list)
-    {
-        ERR("Internal Error! Allocation failure in add to list!\n");
-        ERR("                Exiting.\n");
-        exit(-1);
-    }
-    list[*num] = strdup(newVal);
-    (*num) = (*num) + 1;
+    list->item[list->num] = strdup(newVal);
+    OOM(list->item[list->num]);
+    list->num += 1;
     return True;
 }
 
@@ -225,30 +237,32 @@ addToList(int *sz, int *num, char ***listIn, char *newVal)
 void
 usage(int argc, char **argv)
 {
-    MSG1("Usage: %s [args] [<layout> [<variant> [<option> ... ]]]\n",
-         argv[0]);
-    MSG("Where legal args are:\n");
-    MSG("-?,-help            Print this message\n");
-    MSG("-compat <name>      Specifies compatibility map component name\n");
-    MSG("-config <file>      Specifies configuration file to use\n");
-    MSG("-device <deviceid>  Specifies the device ID to use\n");
-    MSG("-display <dpy>      Specifies display to use\n");
-    MSG("-geometry <name>    Specifies geometry component name\n");
-    MSG("-I[<dir>]           Add <dir> to list of directories to be used\n");
-    MSG("-keycodes <name>    Specifies keycodes component name\n");
-    MSG("-keymap <name>      Specifies name of keymap to load\n");
-    MSG("-layout <name>      Specifies layout used to choose component names\n");
-    MSG("-model <name>       Specifies model used to choose component names\n");
-    MSG("-option <name>      Adds an option used to choose component names\n");
-    MSG("-print              Print a complete xkb_keymap description and exit\n");
-    MSG("-query              Print the current layout settings and exit\n");
-    MSG("-rules <name>       Name of rules file to use\n");
-    MSG("-symbols <name>     Specifies symbols component name\n");
-    MSG("-synch              Synchronize request w/X server\n");
-    MSG("-types <name>       Specifies types component name\n");
-    MSG("-v[erbose] [<lvl>]  Sets verbosity (1..10).  Higher values yield\n");
-    MSG("                    more messages\n");
-    MSG("-variant <name>     Specifies layout variant used to choose component names\n");
+    MSG1(
+        "Usage: %s [options] [<layout> [<variant> [<option> ... ]]]\n"
+        "Options:\n"
+        "  -?, -help           Print this message\n"
+        "  -compat <name>      Specifies compatibility map component name\n"
+        "  -config <file>      Specifies configuration file to use\n"
+        "  -device <deviceid>  Specifies the device ID to use\n"
+        "  -display <dpy>      Specifies display to use\n"
+        "  -geometry <name>    Specifies geometry component name\n"
+        "  -I<dir>             Add <dir> to list of directories to be used\n"
+        "  -keycodes <name>    Specifies keycodes component name\n"
+        "  -keymap <name>      Specifies name of keymap to load\n"
+        "  -layout <name>      Specifies layout used to choose component names\n"
+        "  -model <name>       Specifies model used to choose component names\n"
+        "  -option <name>      Adds an option used to choose component names\n"
+        "  -print              Print a complete xkb_keymap description and exit\n"
+        "  -query              Print the current layout settings and exit\n"
+        "  -rules <name>       Name of rules file to use\n"
+        "  -symbols <name>     Specifies symbols component name\n"
+        "  -synch              Synchronize request with X server\n"
+        "  -types <name>       Specifies types component name\n"
+        "  -v[erbose] [<lvl>]  Sets verbosity (1..10).  Higher values yield\n"
+        "                      more messages\n"
+        "  -variant <name>     Specifies layout variant used to choose component names\n",
+        argv[0]
+    );
 }
 
 void
@@ -256,35 +270,35 @@ dumpNames(Bool wantRules, Bool wantCNames)
 {
     if (wantRules)
     {
-        if (svValue[RULES_NDX])
-            MSG1("rules:      %s\n", svValue[RULES_NDX]);
-        if (svValue[MODEL_NDX])
-            MSG1("model:      %s\n", svValue[MODEL_NDX]);
-        if (svValue[LAYOUT_NDX])
-            MSG1("layout:     %s\n", svValue[LAYOUT_NDX]);
-        if (svValue[VARIANT_NDX])
-            MSG1("variant:    %s\n", svValue[VARIANT_NDX]);
-        if (options)
+        if (settings.rules.value)
+            MSG1("rules:      %s\n", settings.rules.value);
+        if (settings.model.value)
+            MSG1("model:      %s\n", settings.model.value);
+        if (settings.layout.value)
+            MSG1("layout:     %s\n", settings.layout.value);
+        if (settings.variant.value)
+            MSG1("variant:    %s\n", settings.variant.value);
+        if (options.item)
         {
-            char *opt_str = stringFromOptions(NULL, numOptions, options);
+            char *opt_str = stringFromOptions(NULL, &options);
             MSG1("options:    %s\n", opt_str);
             free(opt_str);
         }
     }
     if (wantCNames)
     {
-        if (svValue[KEYMAP_NDX])
-            MSG1("keymap:     %s\n", svValue[KEYMAP_NDX]);
-        if (svValue[KEYCODES_NDX])
-            MSG1("keycodes:   %s\n", svValue[KEYCODES_NDX]);
-        if (svValue[TYPES_NDX])
-            MSG1("types:      %s\n", svValue[TYPES_NDX]);
-        if (svValue[COMPAT_NDX])
-            MSG1("compat:     %s\n", svValue[COMPAT_NDX]);
-        if (svValue[SYMBOLS_NDX])
-            MSG1("symbols:    %s\n", svValue[SYMBOLS_NDX]);
-        if (svValue[GEOMETRY_NDX])
-            MSG1("geometry:   %s\n", svValue[GEOMETRY_NDX]);
+        if (settings.keymap.value)
+            MSG1("keymap:     %s\n", settings.keymap.value);
+        if (settings.keycodes.value)
+            MSG1("keycodes:   %s\n", settings.keycodes.value);
+        if (settings.types.value)
+            MSG1("types:      %s\n", settings.types.value);
+        if (settings.compat.value)
+            MSG1("compat:     %s\n", settings.compat.value);
+        if (settings.symbols.value)
+            MSG1("symbols:    %s\n", settings.symbols.value);
+        if (settings.geometry.value)
+            MSG1("geometry:   %s\n", settings.geometry.value);
     }
     return;
 }
@@ -299,33 +313,33 @@ dumpNames(Bool wantRules, Bool wantCNames)
  * @param which What value is it (one of RULES_NDX, CONFIG_NDX, ...)
  */
 void
-trySetString(int which, char *newVal, int src)
+trySetString(setting_t *setting, char *newVal, enum source src)
 {
-    if (svValue[which] != NULL)
+    if (setting->value != NULL)
     {
-        if (svSrc[which] == src)
+        if (setting->src == src)
         {
             VMSG2(0, "Warning! More than one %s from %s\n",
-                  svName[which], srcName[src]);
+                  setting->name, srcName[src]);
             VMSG2(0, "         Using \"%s\", ignoring \"%s\"\n",
-                  svValue[which], newVal);
+                  setting->value, newVal);
             return;
         }
-        else if (svSrc[which] > src)
+        else if (setting->src > src)
         {
-            VMSG1(5, "Warning! Multiple definitions of %s\n", svName[which]);
+            VMSG1(5, "Warning! Multiple definitions of %s\n", setting->name);
             VMSG2(5, "         Using %s, ignoring %s\n",
-                  srcName[svSrc[which]], srcName[src]);
+                  srcName[setting->src], srcName[src]);
             return;
         }
     }
-    svSrc[which] = src;
-    svValue[which] = newVal;
+    setting->src = src;
+    setting->value = newVal;
     return;
 }
 
 Bool
-setOptString(int *arg, int argc, char **argv, int which, int src)
+setOptString(int *arg, int argc, char **argv, setting_t *setting, enum source src)
 {
     int ndx;
     char *opt;
@@ -334,31 +348,31 @@ setOptString(int *arg, int argc, char **argv, int which, int src)
     opt = argv[ndx];
     if (ndx >= argc - 1)
     {
-        VMSG1(0, "No %s specified on the command line\n", svName[which]);
+        VMSG1(0, "No %s specified on the command line\n", setting->name);
         VMSG1(0, "Trailing %s option ignored\n", opt);
         return True;
     }
     ndx++;
     *arg = ndx;
-    if (svValue[which] != NULL)
+    if (setting->value != NULL)
     {
-        if (svSrc[which] == src)
+        if (setting->src == src)
         {
-            VMSG2(0, "More than one %s on %s\n", svName[which], srcName[src]);
-            VMSG2(0, "Using \"%s\", ignoring \"%s\"\n", svValue[which],
+            VMSG2(0, "More than one %s on %s\n", setting->name, srcName[src]);
+            VMSG2(0, "Using \"%s\", ignoring \"%s\"\n", setting->value,
                   argv[ndx]);
             return True;
         }
-        else if (svSrc[which] > src)
+        else if (setting->src > src)
         {
-            VMSG1(5, "Multiple definitions of %s\n", svName[which]);
-            VMSG2(5, "Using %s, ignoring %s\n", srcName[svSrc[which]],
+            VMSG1(5, "Multiple definitions of %s\n", setting->name);
+            VMSG2(5, "Using %s, ignoring %s\n", srcName[setting->src],
                   srcName[src]);
             return True;
         }
     }
-    svSrc[which] = src;
-    svValue[which] = argv[ndx];
+    setting->src = src;
+    setting->value = argv[ndx];
     return True;
 }
 
@@ -377,59 +391,74 @@ parseArgs(int argc, char **argv)
     unsigned present;
 
     ok = True;
-    addToList(&szInclPath, &numInclPath, &inclPath, ".");
-    addToList(&szInclPath, &numInclPath, &inclPath, DFLT_XKB_CONFIG_ROOT);
+    addToList(&inclPath, ".");
+    addToList(&inclPath, DFLT_XKB_CONFIG_ROOT);
     for (i = 1; (i < argc) && ok; i++)
     {
         if (argv[i][0] != '-')
         {
             /* Allow a call like "setxkbmap us" to work. Layout is default,
                if -layout is given, then try parsing variant, then options */
-            if (!svSrc[LAYOUT_NDX])
-                trySetString(LAYOUT_NDX, argv[i], FROM_CMD_LINE);
-            else if (!svSrc[VARIANT_NDX])
-                trySetString(VARIANT_NDX, argv[i], FROM_CMD_LINE);
+            if (!settings.layout.src)
+                trySetString(&settings.layout, argv[i], FROM_CMD_LINE);
+            else if (!settings.variant.src)
+                trySetString(&settings.variant, argv[i], FROM_CMD_LINE);
             else
-                ok = addToList(&szOptions, &numOptions, &options, argv[i]);
+                ok = addToList(&options, argv[i]);
         }
         else if (streq(argv[i], "-compat"))
-            ok = setOptString(&i, argc, argv, COMPAT_NDX, FROM_CMD_LINE);
+            ok = setOptString(&i, argc, argv, &settings.compat, FROM_CMD_LINE);
         else if (streq(argv[i], "-config"))
-            ok = setOptString(&i, argc, argv, CONFIG_NDX, FROM_CMD_LINE);
+            ok = setOptString(&i, argc, argv, &settings.config, FROM_CMD_LINE);
         else if (streq(argv[i], "-device"))
-            deviceSpec = atoi(argv[++i]); /* only allow device IDs, not names */
+        {
+            if ( ++i < argc ) {
+                deviceSpec = atoi(argv[i]); /* only allow device IDs, not names */
+            } else {
+                usage(argc, argv);
+                exit(-1);
+            }
+        }
         else if (streq(argv[i], "-display"))
-            ok = setOptString(&i, argc, argv, DISPLAY_NDX, FROM_CMD_LINE);
+            ok = setOptString(&i, argc, argv, &settings.display, FROM_CMD_LINE);
         else if (streq(argv[i], "-geometry"))
-            ok = setOptString(&i, argc, argv, GEOMETRY_NDX, FROM_CMD_LINE);
+            ok = setOptString(&i, argc, argv, &settings.geometry, FROM_CMD_LINE);
         else if (streq(argv[i], "-help") || streq(argv[i], "-?"))
         {
             usage(argc, argv);
             exit(0);
         }
-        else if (strpfx(argv[i], "-I"))
-            ok = addToList(&szInclPath, &numInclPath, &inclPath, &argv[i][2]);
+        else if (streq(argv[i], "-I")) /* space between -I and path */
+        {
+            if ( ++i < argc )
+                ok = addToList(&inclPath, argv[i]);
+            else
+                VMSG(0, "No directory specified on the command line\n"
+                     "Trailing -I option ignored\n");
+        }
+        else if (strpfx(argv[i], "-I")) /* no space between -I and path */
+            ok = addToList(&inclPath, &argv[i][2]);
         else if (streq(argv[i], "-keycodes"))
-            ok = setOptString(&i, argc, argv, KEYCODES_NDX, FROM_CMD_LINE);
+            ok = setOptString(&i, argc, argv, &settings.keycodes, FROM_CMD_LINE);
         else if (streq(argv[i], "-keymap"))
-            ok = setOptString(&i, argc, argv, KEYMAP_NDX, FROM_CMD_LINE);
+            ok = setOptString(&i, argc, argv, &settings.keymap, FROM_CMD_LINE);
         else if (streq(argv[i], "-layout"))
-            ok = setOptString(&i, argc, argv, LAYOUT_NDX, FROM_CMD_LINE);
+            ok = setOptString(&i, argc, argv, &settings.layout, FROM_CMD_LINE);
         else if (streq(argv[i], "-model"))
-            ok = setOptString(&i, argc, argv, MODEL_NDX, FROM_CMD_LINE);
+            ok = setOptString(&i, argc, argv, &settings.model, FROM_CMD_LINE);
         else if (streq(argv[i], "-option"))
         {
             if ((i == argc - 1) || (argv[i + 1][0] == '\0')
                 || (argv[i + 1][0] == '-'))
             {
                 clearOptions = True;
-                ok = addToList(&szOptions, &numOptions, &options, "");
+                ok = addToList(&options, "");
                 if (i < argc - 1 && argv[i + 1][0] == '\0')
                     i++;
             }
             else
             {
-                ok = addToList(&szOptions, &numOptions, &options, argv[++i]);
+                ok = addToList(&options, argv[++i]);
             }
         }
         else if (streq(argv[i], "-print"))
@@ -437,13 +466,13 @@ parseArgs(int argc, char **argv)
         else if (streq(argv[i], "-query"))
             query = True;
         else if (streq(argv[i], "-rules"))
-            ok = setOptString(&i, argc, argv, RULES_NDX, FROM_CMD_LINE);
+            ok = setOptString(&i, argc, argv, &settings.rules, FROM_CMD_LINE);
         else if (streq(argv[i], "-symbols"))
-            ok = setOptString(&i, argc, argv, SYMBOLS_NDX, FROM_CMD_LINE);
+            ok = setOptString(&i, argc, argv, &settings.symbols, FROM_CMD_LINE);
         else if (streq(argv[i], "-synch"))
             synch = True;
         else if (streq(argv[i], "-types"))
-            ok = setOptString(&i, argc, argv, TYPES_NDX, FROM_CMD_LINE);
+            ok = setOptString(&i, argc, argv, &settings.types, FROM_CMD_LINE);
         else if (streq(argv[i], "-verbose") || (streq(argv[i], "-v")))
         {
             if ((i < argc - 1) && (isdigit(argv[i + 1][0])))
@@ -463,7 +492,7 @@ parseArgs(int argc, char **argv)
             VMSG1(7, "Setting verbose level to %d\n", verbose);
         }
         else if (streq(argv[i], "-variant"))
-            ok = setOptString(&i, argc, argv, VARIANT_NDX, FROM_CMD_LINE);
+            ok = setOptString(&i, argc, argv, &settings.variant, FROM_CMD_LINE);
         else
         {
             ERR1("Error!   Option \"%s\" not recognized\n", argv[i]);
@@ -472,25 +501,25 @@ parseArgs(int argc, char **argv)
     }
 
     present = 0;
-    if (svValue[TYPES_NDX])
+    if (settings.types.value)
         present++;
-    if (svValue[COMPAT_NDX])
+    if (settings.compat.value)
         present++;
-    if (svValue[SYMBOLS_NDX])
+    if (settings.symbols.value)
         present++;
-    if (svValue[KEYCODES_NDX])
+    if (settings.keycodes.value)
         present++;
-    if (svValue[GEOMETRY_NDX])
+    if (settings.geometry.value)
         present++;
-    if (svValue[CONFIG_NDX])
+    if (settings.config.value)
         present++;
-    if (svValue[MODEL_NDX])
+    if (settings.model.value)
         present++;
-    if (svValue[LAYOUT_NDX])
+    if (settings.layout.value)
         present++;
-    if (svValue[VARIANT_NDX])
+    if (settings.variant.value)
         present++;
-    if (svValue[KEYMAP_NDX] && present)
+    if (settings.keymap.value && present)
     {
         ERR("No other components can be specified when a keymap is present\n");
         return False;
@@ -511,14 +540,14 @@ getDisplay(int argc, char **argv)
     major = XkbMajorVersion;
     minor = XkbMinorVersion;
     dpy =
-        XkbOpenDisplay(svValue[DISPLAY_NDX], NULL, NULL, &major, &minor,
+        XkbOpenDisplay(settings.display.value, NULL, NULL, &major, &minor,
                        &why);
     if (!dpy)
     {
-        if (svValue[DISPLAY_NDX] == NULL)
-            svValue[DISPLAY_NDX] = getenv("DISPLAY");
-        if (svValue[DISPLAY_NDX] == NULL)
-            svValue[DISPLAY_NDX] = "default display";
+        if (settings.display.value == NULL)
+            settings.display.value = getenv("DISPLAY");
+        if (settings.display.value == NULL)
+            settings.display.value = "default display";
         switch (why)
         {
         case XkbOD_BadLibraryVersion:
@@ -528,16 +557,16 @@ getDisplay(int argc, char **argv)
                  major, minor);
             break;
         case XkbOD_ConnectionRefused:
-            ERR1("Cannot open display \"%s\"\n", svValue[DISPLAY_NDX]);
+            ERR1("Cannot open display \"%s\"\n", settings.display.value);
             break;
         case XkbOD_NonXkbServer:
-            ERR1("XKB extension not present on %s\n", svValue[DISPLAY_NDX]);
+            ERR1("XKB extension not present on %s\n", settings.display.value);
             break;
         case XkbOD_BadServerVersion:
             ERR3("%s was compiled with XKB version %d.%02d\n", argv[0],
                  XkbMajorVersion, XkbMinorVersion);
             ERR3("Server %s uses incompatible version %d.%02d\n",
-                 svValue[DISPLAY_NDX], major, minor);
+                 settings.display.value, major, minor);
             break;
         default:
             ERR1("Unknown error %d from XkbOpenDisplay\n", why);
@@ -577,16 +606,16 @@ getServerValues(void)
               tmp, vd.model, vd.layout);
     }
     if (tmp)
-        trySetString(RULES_NDX, tmp, FROM_SERVER);
+        trySetString(&settings.rules, tmp, FROM_SERVER);
     if (vd.model)
-        trySetString(MODEL_NDX, vd.model, FROM_SERVER);
+        trySetString(&settings.model, vd.model, FROM_SERVER);
     if (vd.layout)
-        trySetString(LAYOUT_NDX, vd.layout, FROM_SERVER);
+        trySetString(&settings.layout, vd.layout, FROM_SERVER);
     if (vd.variant)
-        trySetString(VARIANT_NDX, vd.variant, FROM_SERVER);
+        trySetString(&settings.variant, vd.variant, FROM_SERVER);
     if ((vd.options) && (!clearOptions))
     {
-        addStringToOptions(vd.options, &szOptions, &numOptions, &options);
+        addStringToOptions(vd.options, &options);
         XFree(vd.options);
     }
     return True;
@@ -595,7 +624,7 @@ getServerValues(void)
 /***====================================================================***/
 
 FILE *
-findFileInPath(char *name, char *subdir)
+findFileInPath(char *name)
 {
     register int i;
     char buf[PATH_MAX];
@@ -608,17 +637,16 @@ findFileInPath(char *name, char *subdir)
             MSG2("%s file %s\n", (fp ? "Found" : "Didn't find"), name);
         return fp;
     }
-    for (i = 0; (i < numInclPath); i++)
+    for (i = 0; (i < inclPath.num); i++)
     {
-        if ((strlen(inclPath[i]) + strlen(subdir) + strlen(name) + 2) >
+        if (snprintf(buf, PATH_MAX, "%s/%s", inclPath.item[i], name) >=
             PATH_MAX)
         {
-            VMSG3(0, "Path too long (%s/%s%s). Ignored.\n", inclPath[i],
-                  subdir, name);
+            VMSG2(0, "Path too long (%s/%s). Ignored.\n", inclPath.item[i],
+                  name);
             continue;
         }
-        sprintf(buf, "%s/%s%s", inclPath[i], subdir, name);
-        fp = fopen(name, "r");
+        fp = fopen(buf, "r");
         if ((verbose > 7) || ((!fp) && (verbose > 5)))
             MSG2("%s file %s\n", (fp ? "Found" : "Didn't find"), buf);
         if (fp != NULL)
@@ -630,14 +658,14 @@ findFileInPath(char *name, char *subdir)
 /***====================================================================***/
 
 Bool
-addStringToOptions(char *opt_str, int *sz_opts, int *num_opts, char ***opts)
+addStringToOptions(char *opt_str, list_t *opts)
 {
     char *tmp, *str, *next;
     Bool ok = True;
 
-    if ((str = strdup(opt_str)) == NULL)
-        return False;
-    for (tmp = str, next = NULL; (tmp && *tmp != '\0') && ok; tmp = next)
+    str = strdup(opt_str);
+    OOM(str);
+    for (tmp = str; (tmp && *tmp != '\0') && ok; tmp = next)
     {
         next = strchr(str, ',');
         if (next)
@@ -645,7 +673,7 @@ addStringToOptions(char *opt_str, int *sz_opts, int *num_opts, char ***opts)
             *next = '\0';
             next++;
         }
-        ok = addToList(sz_opts, num_opts, opts, tmp) && ok;
+        ok = addToList(opts, tmp) && ok;
     }
     free(str);
     return ok;
@@ -654,7 +682,7 @@ addStringToOptions(char *opt_str, int *sz_opts, int *num_opts, char ***opts)
 /***====================================================================***/
 
 char *
-stringFromOptions(char *orig, int numNew, char **newOpts)
+stringFromOptions(char *orig, list_t *newOpts)
 {
     int len, i, nOut;
 
@@ -662,44 +690,36 @@ stringFromOptions(char *orig, int numNew, char **newOpts)
         len = strlen(orig) + 1;
     else
         len = 0;
-    for (i = 0; i < numNew; i++)
+    for (i = 0; i < newOpts->num; i++)
     {
-        if (newOpts[i])
-            len += strlen(newOpts[i]) + 1;
+        if (newOpts->item[i])
+            len += strlen(newOpts->item[i]) + 1;
     }
     if (len < 1)
         return NULL;
     if (orig)
     {
         orig = (char *) realloc(orig, len);
-        if (!orig)
-        {
-            ERR("OOM in stringFromOptions\n");
-            return NULL;
-        }
+        OOM(orig);
         nOut = 1;
     }
     else
     {
         orig = (char *) calloc(len, 1);
-        if (!orig)
-        {
-            ERR("OOM in stringFromOptions\n");
-            return NULL;
-        }
+        OOM(orig);
         nOut = 0;
     }
-    for (i = 0; i < numNew; i++)
+    for (i = 0; i < newOpts->num; i++)
     {
-        if (!newOpts[i])
+        if (!newOpts->item[i])
             continue;
         if (nOut > 0)
         {
             strcat(orig, ",");
-            strcat(orig, newOpts[i]);
+            strcat(orig, newOpts->item[i]);
         }
         else
-            strcpy(orig, newOpts[i]);
+            strcpy(orig, newOpts->item[i]);
         nOut++;
     }
     return orig;
@@ -713,7 +733,7 @@ applyConfig(char *name)
     FILE *fp;
     Bool ok;
 
-    if ((fp = findFileInPath(name, "")) == NULL)
+    if ((fp = findFileInPath(name)) == NULL)
         return False;
     ok = XkbCFParse(fp, XkbCFDflts, NULL, &cfgResult);
     fclose(fp);
@@ -724,58 +744,57 @@ applyConfig(char *name)
     }
     if (cfgResult.rules_file)
     {
-        trySetString(RULES_NDX, cfgResult.rules_file, FROM_CONFIG);
+        trySetString(&settings.rules, cfgResult.rules_file, FROM_CONFIG);
         cfgResult.rules_file = NULL;
     }
     if (cfgResult.model)
     {
-        trySetString(MODEL_NDX, cfgResult.model, FROM_CONFIG);
+        trySetString(&settings.model, cfgResult.model, FROM_CONFIG);
         cfgResult.model = NULL;
     }
     if (cfgResult.layout)
     {
-        trySetString(LAYOUT_NDX, cfgResult.layout, FROM_CONFIG);
+        trySetString(&settings.layout, cfgResult.layout, FROM_CONFIG);
         cfgResult.layout = NULL;
     }
     if (cfgResult.variant)
     {
-        trySetString(VARIANT_NDX, cfgResult.variant, FROM_CONFIG);
+        trySetString(&settings.variant, cfgResult.variant, FROM_CONFIG);
         cfgResult.variant = NULL;
     }
     if (cfgResult.options)
     {
-        addStringToOptions(cfgResult.options, &szOptions, &numOptions,
-                           &options);
+        addStringToOptions(cfgResult.options, &options);
         cfgResult.options = NULL;
     }
     if (cfgResult.keymap)
     {
-        trySetString(KEYMAP_NDX, cfgResult.keymap, FROM_CONFIG);
+        trySetString(&settings.keymap, cfgResult.keymap, FROM_CONFIG);
         cfgResult.keymap = NULL;
     }
     if (cfgResult.keycodes)
     {
-        trySetString(KEYCODES_NDX, cfgResult.keycodes, FROM_CONFIG);
+        trySetString(&settings.keycodes, cfgResult.keycodes, FROM_CONFIG);
         cfgResult.keycodes = NULL;
     }
     if (cfgResult.geometry)
     {
-        trySetString(GEOMETRY_NDX, cfgResult.geometry, FROM_CONFIG);
+        trySetString(&settings.geometry, cfgResult.geometry, FROM_CONFIG);
         cfgResult.geometry = NULL;
     }
     if (cfgResult.symbols)
     {
-        trySetString(SYMBOLS_NDX, cfgResult.symbols, FROM_CONFIG);
+        trySetString(&settings.symbols, cfgResult.symbols, FROM_CONFIG);
         cfgResult.symbols = NULL;
     }
     if (cfgResult.types)
     {
-        trySetString(TYPES_NDX, cfgResult.types, FROM_CONFIG);
+        trySetString(&settings.types, cfgResult.types, FROM_CONFIG);
         cfgResult.types = NULL;
     }
     if (cfgResult.compat)
     {
-        trySetString(COMPAT_NDX, cfgResult.compat, FROM_CONFIG);
+        trySetString(&settings.compat, cfgResult.compat, FROM_CONFIG);
         cfgResult.compat = NULL;
     }
     if (verbose > 5)
@@ -784,6 +803,19 @@ applyConfig(char *name)
         dumpNames(True, True);
     }
     return True;
+}
+
+XkbRF_RulesPtr
+tryLoadRules(char *name, char *locale, Bool wantDesc, Bool wantRules)
+{
+    XkbRF_RulesPtr rules = NULL;
+    VMSG1(7, "Trying to load rules file %s...\n", name);
+    rules = XkbRF_Load(name, locale, wantDesc, wantRules);
+    if (rules)
+    {
+        VMSG(7, "Success.\n");
+    }
+    return rules;
 }
 
 /**
@@ -798,50 +830,50 @@ applyRules(void)
     int i;
     char *rfName;
 
-    if (svSrc[MODEL_NDX] || svSrc[LAYOUT_NDX] || svSrc[VARIANT_NDX]
-        || options)
+    if (settings.model.src || settings.layout.src || settings.variant.src
+        || options.item)
     {
         char buf[PATH_MAX];
         XkbComponentNamesRec rnames;
 
-        if (svSrc[VARIANT_NDX] < svSrc[LAYOUT_NDX])
-            svValue[VARIANT_NDX] = NULL;
+        if (settings.variant.src < settings.layout.src)
+            settings.variant.value = NULL;
 
-        rdefs.model = svValue[MODEL_NDX];
-        rdefs.layout = svValue[LAYOUT_NDX];
-        rdefs.variant = svValue[VARIANT_NDX];
-        if (options)
+        rdefs.model = settings.model.value;
+        rdefs.layout = settings.layout.value;
+        rdefs.variant = settings.variant.value;
+        if (options.item)
             rdefs.options =
-                stringFromOptions(rdefs.options, numOptions, options);
+                stringFromOptions(rdefs.options, &options);
 
-        if (svSrc[RULES_NDX])
-            rfName = svValue[RULES_NDX];
+        if (settings.rules.src)
+            rfName = settings.rules.value;
         else
             rfName = DFLT_XKB_RULES_FILE;
 
         if (rfName[0] == '/')
         {
-            rules = XkbRF_Load(rfName, svValue[LOCALE_NDX], True, True);
+            rules = tryLoadRules(rfName, settings.locale.value, True, True);
         }
         else
         {
             /* try to load rules files from all include paths until the first
              * we succeed with */
-            for (i = 0; (i < numInclPath) && (!rules); i++)
+            for (i = 0; (i < inclPath.num) && (!rules); i++)
             {
-                if ((strlen(inclPath[i]) + strlen(rfName) + 8) > PATH_MAX)
+                if (snprintf(buf, PATH_MAX, "%s/rules/%s",
+                             inclPath.item[i], rfName) >= PATH_MAX)
                 {
                     VMSG2(0, "Path too long (%s/rules/%s). Ignored.\n",
-                          inclPath[i], rfName);
+                          inclPath.item[i], rfName);
                     continue;
                 }
-                sprintf(buf, "%s/rules/%s", inclPath[i], svValue[RULES_NDX]);
-                rules = XkbRF_Load(buf, svValue[LOCALE_NDX], True, True);
+                rules = tryLoadRules(buf, settings.locale.value, True, True);
             }
         }
         if (!rules)
         {
-            ERR1("Couldn't find rules file (%s) \n", svValue[RULES_NDX]);
+            ERR1("Couldn't find rules file (%s) \n", rfName);
             return False;
         }
         /* Let the rules file to the magic, then update the svValues with
@@ -849,37 +881,37 @@ applyRules(void)
         XkbRF_GetComponents(rules, &rdefs, &rnames);
         if (rnames.keycodes)
         {
-            trySetString(KEYCODES_NDX, rnames.keycodes, FROM_RULES);
+            trySetString(&settings.keycodes, rnames.keycodes, FROM_RULES);
             rnames.keycodes = NULL;
         }
         if (rnames.symbols)
         {
-            trySetString(SYMBOLS_NDX, rnames.symbols, FROM_RULES);
+            trySetString(&settings.symbols, rnames.symbols, FROM_RULES);
             rnames.symbols = NULL;
         }
         if (rnames.types)
         {
-            trySetString(TYPES_NDX, rnames.types, FROM_RULES);
+            trySetString(&settings.types, rnames.types, FROM_RULES);
             rnames.types = NULL;
         }
         if (rnames.compat)
         {
-            trySetString(COMPAT_NDX, rnames.compat, FROM_RULES);
+            trySetString(&settings.compat, rnames.compat, FROM_RULES);
             rnames.compat = NULL;
         }
         if (rnames.geometry)
         {
-            trySetString(GEOMETRY_NDX, rnames.geometry, FROM_RULES);
+            trySetString(&settings.geometry, rnames.geometry, FROM_RULES);
             rnames.geometry = NULL;
         }
         if (rnames.keymap)
         {
-            trySetString(KEYMAP_NDX, rnames.keymap, FROM_RULES);
+            trySetString(&settings.keymap, rnames.keymap, FROM_RULES);
             rnames.keymap = NULL;
         }
         if (verbose > 6)
         {
-            MSG1("Applied rules from %s:\n", svValue[RULES_NDX]);
+            MSG1("Applied rules from %s:\n", rfName);
             dumpNames(True, False);
         }
     }
@@ -893,7 +925,7 @@ applyRules(void)
 /* Primitive sanity check - filter out 'map names' (inside parenthesis) */
 /* that can confuse xkbcomp parser */
 static Bool
-checkName(char *name, char *string)
+checkName(char *name, const char *string)
 {
     char *i = name, *opar = NULL;
     Bool ret = True;
@@ -948,33 +980,33 @@ void
 printKeymap(void)
 {
     MSG("xkb_keymap {\n");
-    if (svValue[KEYCODES_NDX])
-        MSG1("\txkb_keycodes  { include \"%s\"\t};\n", svValue[KEYCODES_NDX]);
-    if (svValue[TYPES_NDX])
-        MSG1("\txkb_types     { include \"%s\"\t};\n", svValue[TYPES_NDX]);
-    if (svValue[COMPAT_NDX])
-        MSG1("\txkb_compat    { include \"%s\"\t};\n", svValue[COMPAT_NDX]);
-    if (svValue[SYMBOLS_NDX])
-        MSG1("\txkb_symbols   { include \"%s\"\t};\n", svValue[SYMBOLS_NDX]);
-    if (svValue[GEOMETRY_NDX])
-        MSG1("\txkb_geometry  { include \"%s\"\t};\n", svValue[GEOMETRY_NDX]);
+    if (settings.keycodes.value)
+        MSG1("\txkb_keycodes  { include \"%s\"\t};\n", settings.keycodes.value);
+    if (settings.types.value)
+        MSG1("\txkb_types     { include \"%s\"\t};\n", settings.types.value);
+    if (settings.compat.value)
+        MSG1("\txkb_compat    { include \"%s\"\t};\n", settings.compat.value);
+    if (settings.symbols.value)
+        MSG1("\txkb_symbols   { include \"%s\"\t};\n", settings.symbols.value);
+    if (settings.geometry.value)
+        MSG1("\txkb_geometry  { include \"%s\"\t};\n", settings.geometry.value);
     MSG("};\n");
 }
 
 Bool
 applyComponentNames(void)
 {
-    if (!checkName(svValue[TYPES_NDX], "types"))
+    if (!checkName(settings.types.value, "types"))
         return False;
-    if (!checkName(svValue[COMPAT_NDX], "compat"))
+    if (!checkName(settings.compat.value, "compat"))
         return False;
-    if (!checkName(svValue[SYMBOLS_NDX], "symbols"))
+    if (!checkName(settings.symbols.value, "symbols"))
         return False;
-    if (!checkName(svValue[KEYCODES_NDX], "keycodes"))
+    if (!checkName(settings.keycodes.value, "keycodes"))
         return False;
-    if (!checkName(svValue[GEOMETRY_NDX], "geometry"))
+    if (!checkName(settings.geometry.value, "geometry"))
         return False;
-    if (!checkName(svValue[KEYMAP_NDX], "keymap"))
+    if (!checkName(settings.keymap.value, "keymap"))
         return False;
 
     if (verbose > 5)
@@ -986,12 +1018,12 @@ applyComponentNames(void)
     if (dpy && !print && !query)
     {
         XkbComponentNamesRec cmdNames;
-        cmdNames.types = svValue[TYPES_NDX];
-        cmdNames.compat = svValue[COMPAT_NDX];
-        cmdNames.symbols = svValue[SYMBOLS_NDX];
-        cmdNames.keycodes = svValue[KEYCODES_NDX];
-        cmdNames.geometry = svValue[GEOMETRY_NDX];
-        cmdNames.keymap = svValue[KEYMAP_NDX];
+        cmdNames.types = settings.types.value;
+        cmdNames.compat = settings.compat.value;
+        cmdNames.symbols = settings.symbols.value;
+        cmdNames.keycodes = settings.keycodes.value;
+        cmdNames.geometry = settings.geometry.value;
+        cmdNames.keymap = settings.keymap.value;
         xkb = XkbGetKeyboardByName(dpy, deviceSpec, &cmdNames,
                                    XkbGBN_AllComponentsMask,
                                    XkbGBN_AllComponentsMask &
@@ -1002,9 +1034,9 @@ applyComponentNames(void)
             return False;
         }
         /* update the XKB root property */
-        if (svValue[RULES_NDX] && (rdefs.model || rdefs.layout))
+        if (settings.rules.value && (rdefs.model || rdefs.layout))
         {
-            if (!XkbRF_SetNamesProp(dpy, svValue[RULES_NDX], &rdefs))
+            if (!XkbRF_SetNamesProp(dpy, settings.rules.value, &rdefs))
             {
                 VMSG(0, "Error updating the XKB names property\n");
             }
@@ -1016,7 +1048,7 @@ applyComponentNames(void)
     }
     if (query)
     {
-	dumpNames(True, False);
+        dumpNames(True, False);
     }
     return True;
 }
@@ -1027,12 +1059,12 @@ main(int argc, char **argv)
 {
     if ((!parseArgs(argc, argv)) || (!getDisplay(argc, argv)))
         exit(-1);
-    svValue[LOCALE_NDX] = setlocale(LC_ALL, svValue[LOCALE_NDX]);
-    svSrc[LOCALE_NDX] = FROM_SERVER;
-    VMSG1(7, "locale is %s\n", svValue[LOCALE_NDX]);
+    settings.locale.value = setlocale(LC_ALL, settings.locale.value);
+    settings.locale.src = FROM_SERVER;
+    VMSG1(7, "locale is %s\n", settings.locale.value);
     if (dpy)
         getServerValues();
-    if (svValue[CONFIG_NDX] && (!applyConfig(svValue[CONFIG_NDX])))
+    if (settings.config.value && (!applyConfig(settings.config.value)))
         exit(-3);
     if (!applyRules())
         exit(-4);

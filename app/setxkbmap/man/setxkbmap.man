@@ -36,8 +36,8 @@ Specifies the name of an XKB configuration file which describes the
 keyboard to be used.
 .TP 8
 .B \-device \fIdevice\fP
-Specifies the numeric device id of the input device to be updated with 
-the new keyboard layout. If not specified, the core keyboard device of 
+Specifies the numeric device id of the input device to be updated with
+the new keyboard layout. If not specified, the core keyboard device of
 the X server is updated.
 .TP 8
 .B \-display \fIdisplay\fP
@@ -61,22 +61,22 @@ a keyboard layout.
 .TP 8
 .B \-layout \fIname\fP
 Specifies the name of the layout used to determine the components which
-make up the keyboard description.  Only one layout may be specified on
-the command line.
+make up the keyboard description. The \fI-layout\fP option may only be used
+once. Multiple layouts can be specified as a comma-separated list.
 .TP 8
 .B \-model \fIname\fP
-Specifies the name of the keyboard model used to determine the components 
+Specifies the name of the keyboard model used to determine the components
 which make up the keyboard description.  Only one model may be specified
 on the command line.
 .TP 8
 .B \-option \fIname\fP
-Specifies the name of an option to determine the components which make up 
+Specifies the name of an option to determine the components which make up
 the keyboard description;  multiple options may be specified, one per
 \fI-option\fP flag. Note that
 .B setxkbmap
-adds options specified in the command line to the options that were set 
+adds options specified in the command line to the options that were set
 before (as saved in root window properties). If you want to replace all
-previously specified options, use the \fI-option\fP flag with an empty 
+previously specified options, use the \fI-option\fP flag with an empty
 argument first.
 .TP 8
 .B \-print
@@ -105,14 +105,16 @@ Specifies the name of the types component used to construct
 a keyboard layout.
 .TP 8
 .B \-variant \fIname\fP
-Specifies which variant of the keyboard layout should be used to determine 
-the components which make up the keyboard description.  Only one variant
-may be specified on the command line.
+Specifies which variant of the keyboard layout should be used to determine
+the components which make up the keyboard description. The \fI-variant\fP
+option may only be used once. Multiple variants can be specified as a
+comma-separated list and will be matched with the layouts specified with
+\fI-layout\fP.
 .TP 8
 .B \-verbose|\-v [\fIlevel\fP]
-Specifies level of verbosity in output messages.  Valid levels range from 
-0 (least verbose) to 10 (most verbose).  The default verbosity level is 5. 
-If no level is specified, each \fI-v\fP or \fI-verbose\fP flag raises the 
+Specifies level of verbosity in output messages.  Valid levels range from
+0 (least verbose) to 10 (most verbose).  The default verbosity level is 5.
+If no level is specified, each \fI-v\fP or \fI-verbose\fP flag raises the
 level by 1.
 .SH USING WITH xkbcomp
 If you have an Xserver and a client shell running on different computers and
@@ -134,6 +136,6 @@ directly to the \fBxkbcomp\fP input. For example, the command
 makes both steps run on the same (client) machine and loads a keyboard map into
 the server.
 .SH SEE ALSO
-xkbcomp(__appmansuffix__)
+xkbcomp(__appmansuffix__), xkeyboard-config(__miscmansuffix__)
 .SH FILES
 .I __xkbconfigroot__
