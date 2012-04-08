@@ -1,6 +1,9 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.3//EN"
-                   "http://www.oasis-open.org/docbook/xml/4.3/docbookx.dtd">
+                   "http://www.oasis-open.org/docbook/xml/4.3/docbookx.dtd"
+[
+<!ENTITY % defs SYSTEM "defs.ent"> %defs;
+]>
 
 
 <!-- lifted from troff+ms+XMan by doclifter -->
@@ -14,19 +17,14 @@
       <firstname>Martha</firstname><surname>Zimet</surname>
       <affiliation><orgname>Network Computing Devices, Inc.</orgname></affiliation>
     </author>
-    <othercredit>
-      <contrib>edited by</contrib>
+    <editor>
       <firstname>Stephen</firstname><surname>Gildea</surname>
       <affiliation><orgname>X Consortium</orgname></affiliation>
-    </othercredit>
+    </editor>
   </authorgroup>
-  <corpname>X Consortium Standard</corpname>
-  <copyright><year>1994</year><holder>Network Computing Devices, Inc.</holder></copyright>
-  <copyright><year>1994</year><holder>X Consortium</holder></copyright>
-  <copyright><year>1995</year><holder>X Consortium</holder></copyright>
-  <affiliation><orgname>X Consortium</orgname></affiliation>
-  <productnumber>Version 1.13</productnumber>
-  <releaseinfo>X Version 11, Release 6.7</releaseinfo>
+  <releaseinfo>X Version 11, Release &fullrelvers;</releaseinfo>
+  <copyright><year>1994</year><holder>Network Computing Devices, Inc.</holder>
+  </copyright>
 
 <legalnotice>
 <para>
@@ -36,8 +34,12 @@ provided that the above copyright notice and this permission
 notice appear in all copies.  Network Computing Devices, Inc.
 makes no representations about the suitability for any purpose
 of the information in this document.  This documentation is
-provided "as is" without express or implied warranty.
+provided &ldquo;as is&rdquo; without express or implied warranty.
 </para>
+</legalnotice>
+
+<legalnotice>
+<para role="multiLicensing">Copyright &copy; 1994, 1995 X Consortium</para>
 <para>
 Permission is hereby granted, free of charge, to any person obtaining
 a copy of this software and associated documentation files (the
@@ -54,7 +56,7 @@ in all copies or substantial portions of the Software.
 </para>
 
 <para>
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+THE SOFTWARE IS PROVIDED &ldquo;AS IS&rdquo;, WITHOUT WARRANTY OF ANY KIND,
 EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
 MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
 IN NO EVENT SHALL THE X CONSORTIUM BE LIABLE FOR ANY CLAIM, DAMAGES OR
@@ -69,12 +71,11 @@ shall not be used in advertising or otherwise to promote the sale, use
 or other dealings in this Software without prior written authorization
 from the X Consortium.
 </para>
+<para>X Window System is a trademark of The Open Group.</para>
 </legalnotice>
 </bookinfo>
 
-<chapter>
-<title>TITLE</title>
-<sect1 id="Introduction">
+<chapter id="Introduction">
 <title>Introduction</title>
 <para>
 Several proposals have been written over the past few years that address some
@@ -168,7 +169,7 @@ changes, drawing of certain text strings, etc.) can capture the
 information it needs using RECORD facilities.
 </para>
 
-<sect2 id="Acknowledgements">
+<sect1 id="Acknowledgements">
 <title>Acknowledgements</title>
 <para>
 The document represents the culmination of two years of debate and
@@ -189,9 +190,9 @@ clarification of the recorded event policy, and Kent Siefkes of
 Performance Awareness has assisted in clarification of the timestamp
 policy.
 </para>
-</sect2>
+</sect1>
 
-<sect2 id="Goals">
+<sect1 id="Goals">
 <title>Goals</title>
 <itemizedlist>
   <listitem>
@@ -216,9 +217,9 @@ To provide the ability to record arbitrary X protocol extensions.
     </para>
   </listitem>
 </itemizedlist>
-</sect2>
+</sect1>
 
-<sect2 id="Requirements">
+<sect1 id="Requirements">
 <title>Requirements</title>
 <para>
 The extension should function as follows:
@@ -256,17 +257,17 @@ support the recording of synchronization information for user events.
     </para>
   </listitem>
 </itemizedlist>
-</sect2>
 </sect1>
+</chapter>
 
-<sect1 id="Design">
+<chapter id="Design">
 <title>Design</title>
 <para>
 This section gives an overview of the RECORD extension and discusses
 its overall operation and data types.
 </para>
 
-<sect2 id="Overview">
+<sect1 id="Overview">
 <title>Overview</title>
 <para>
 The mechanism used by this extension for recording is to intercept
@@ -287,7 +288,7 @@ In addition, the
 extension does not provide data compression before intercepted protocol
 is returned to the recording clients.
 </para>
-<sect3 id="Data_Delivery">
+<sect2 id="Data_Delivery">
 <title>Data Delivery</title>
 <!-- .XS -->
 <!-- (SN Data Delivery -->
@@ -314,8 +315,8 @@ might be collected
 into a single reply.
 Nevertheless, all data are returned to the client in a timely manner.
 </para>
-</sect3>
-<sect3 id="Record_Context">
+</sect2>
+<sect2 id="Record_Context">
 <title>Record Context</title>
 <!-- .XS -->
 <!-- (SN Record Context -->
@@ -342,9 +343,9 @@ it is required to do so immediately.  That is, it is not permissible for
 the server to wait until recording is enabled to register clients
 or recording is disabled to unregister clients.
 </para>
-</sect3>
+</sect2>
 
-<sect3 id="Record_Client_Connections">
+<sect2 id="Record_Client_Connections">
 <title>Record Client Connections</title>
 <!-- .XS -->
 <!-- (SN Record Client Connections -->
@@ -374,8 +375,8 @@ to the "enable" request is sent by the server.  Therefore, unless a
 recording client never has the need to disable the interception and reporting
 of protocol data, two client connections are necessary.
 </para>
-</sect3>
-<sect3 id="Events">
+</sect2>
+<sect2 id="Events">
 <title>Events</title>
 <!-- .XS -->
 <!-- (SN Events -->
@@ -429,9 +430,9 @@ and
 <function>KeyRelease</function>
 device events are reported.
 </para>
-</sect3>
+</sect2>
 
-<sect3 id="Timing">
+<sect2 id="Timing">
 <title>Timing</title>
 <!-- .XS -->
 <!-- (SN Timing -->
@@ -441,10 +442,10 @@ Requests are recorded just before
 they are executed; the time associated with a request is the server
 time when it is recorded.
 </para>
-</sect3>
 </sect2>
+</sect1>
 
-<sect2 id="Types">
+<sect1 id="Types">
 <title>Types</title>
 <para>
 The following new types are used in the request definitions that appear
@@ -460,27 +461,28 @@ type is a resource identifier for a server record context.
 </para>
 
 <informaltable frame="none">
-  <tgroup cols='3' align='left'>
-  <colspec colname='c1' colsep="0" colwidth="1*"/>
-  <colspec colname='c2' colsep="0" colwidth="1*"/>
-  <colspec colname='c3' colsep="0" colwidth="1*"/>
+  <?dbfo keep-together="always" ?>
+  <tgroup cols='3' align='left' colsep='0' rowsep='0'>
+  <colspec colname='c1' colwidth="1.0*"/>
+  <colspec colname='c2' colwidth="1.0*"/>
+  <colspec colname='c3' colwidth="4.0*"/>
   <tbody>
-    <row rowsep="0">
+    <row>
       <entry>RANGE8:</entry>
       <entry>[first, last:</entry>
       <entry>CARD8]</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>RANGE16:</entry>
       <entry>[first, last:</entry>
       <entry>CARD16]</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>EXTRANGE:</entry>
       <entry>[major:</entry>
       <entry>RANGE8</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry>minor:</entry>
       <entry>RANGE16]</entry>
@@ -490,52 +492,53 @@ type is a resource identifier for a server record context.
 </informaltable>
 
 <informaltable frame="none">
-  <tgroup cols='3' align='left'>
-  <colspec colname='c1' colsep="0" colwidth="1*"/>
-  <colspec colname='c2' colsep="0" colwidth="1*"/>
-  <colspec colname='c3' colsep="0" colwidth="1*"/>
+  <?dbfo keep-together="always" ?>
+  <tgroup cols='3' align='left' colsep='0' rowsep='0'>
+  <colspec colname='c1' colwidth="1.5*"/>
+  <colspec colname='c2' colwidth="1.0*"/>
+  <colspec colname='c3' colwidth="4.0*"/>
   <tbody>
-    <row rowsep="0">
+    <row>
       <entry>RECORDRANGE:</entry>
       <entry>[core-requests:</entry>
       <entry>RANGE8</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry>core-replies:</entry>
       <entry>RANGE8</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry>ext-requests:</entry>
       <entry>EXTRANGE</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry>ext-replies:</entry>
       <entry>EXTRANGE</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry>delivered-events:</entry>
       <entry>RANGE8</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry>device-events:</entry>
       <entry>RANGE8</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry>errors:</entry>
       <entry>RANGE8</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry>client-started:</entry>
       <entry>BOOL</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry>client-died:</entry>
       <entry>BOOL]</entry>
@@ -691,22 +694,23 @@ this RECORDRANGE.
 </itemizedlist>
 
 <informaltable frame="none">
-  <tgroup cols='3' align='left'>
-  <colspec colname='c1' colsep="0" colwidth="1*"/>
-  <colspec colname='c2' colsep="0" colwidth="1*"/>
-  <colspec colname='c3' colsep="0" colwidth="1*"/>
+  <?dbfo keep-together="always" ?>
+  <tgroup cols='3' align='left' colsep='0' rowsep='0'>
+  <colspec colname='c1' colwidth="1.0*"/>
+  <colspec colname='c2' colwidth="1.0*"/>
+  <colspec colname='c3' colwidth="2.0*"/>
   <tbody>
-    <row rowsep="0">
+    <row>
       <entry>ELEMENT_HEADER:</entry>
       <entry>[from-server-time:</entry>
       <entry>BOOL</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry>from-client-time:</entry>
       <entry>BOOL</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry>from-client-sequence:</entry>
       <entry>BOOL]</entry>
@@ -843,17 +847,18 @@ It is an error to explicitly register the data connection.
 </para>
 
 <informaltable frame="none">
-  <tgroup cols='3' align='left'>
-  <colspec colname='c1' colsep="0" colwidth="1*"/>
-  <colspec colname='c2' colsep="0" colwidth="1*"/>
-  <colspec colname='c3' colsep="0" colwidth="1*"/>
+  <?dbfo keep-together="always" ?>
+  <tgroup cols='3' align='left' colsep='0' rowsep='0'>
+  <colspec colname='c1' colwidth="1.0*"/>
+  <colspec colname='c2' colwidth="1.0*"/>
+  <colspec colname='c3' colwidth="3.0*"/>
   <tbody>
-    <row rowsep="0">
+    <row>
       <entry>CLIENT_INFO:</entry>
       <entry>[client-resource:</entry>
       <entry>CLIENTSPEC</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry></entry>
       <entry>intercepted-protocol:</entry>
       <entry>LISTofRECORDRANGE]</entry>
@@ -869,9 +874,9 @@ resource base that identifies the intercepted client.  The
 <emphasis remap='I'>intercepted-protocol</emphasis> field specifies the protocol to intercept
 for the <emphasis remap='I'>client-resource</emphasis>.
 </para>
-</sect2>
+</sect1>
 
-<sect2 id="Errors">
+<sect1 id="Errors">
 <title>Errors</title>
 <para>
 <emphasis role="bold">RecordContext</emphasis>
@@ -887,10 +892,10 @@ in a request does not name a defined record context.
     </para>
   </listitem>
 </itemizedlist>
-</sect2>
 </sect1>
+</chapter>
 
-<sect1 id="Protocol_Requests">
+<chapter id="Protocol_Requests">
 <title>Protocol Requests</title>
 <!-- .XS -->
 <!-- (SN Protocol Requests -->
@@ -945,30 +950,31 @@ minor version thirteen (13).
 </para>
 
 <informaltable frame="none">
-  <tgroup cols='1' align='left'>
-  <colspec colname='c1' colsep="0" colwidth="1*"/>
+  <?dbfo keep-together="always" ?>
+  <tgroup cols='1' align='left' colsep='0' rowsep='0'>
+  <colspec colname='c1' colwidth="1.0*"/>
   <tbody>
-    <row rowsep="0">
+    <row>
       <entry>
 <emphasis remap='I'>context</emphasis>: RC
       </entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>
 <emphasis remap='I'>element-header</emphasis>: ELEMENT_HEADER
       </entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>
 <emphasis remap='I'>client-specifiers</emphasis>: LISTofCLIENTSPEC
       </entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>
 <emphasis remap='I'>ranges</emphasis>: LISTofRECORDRANGE
       </entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>
 Errors:
 <function>Match ,</function>
@@ -1063,30 +1069,31 @@ resources.
 </para>
 
 <informaltable frame="none">
-  <tgroup cols='1' align='left'>
-  <colspec colname='c1' colsep="0" colwidth="1*"/>
+  <?dbfo keep-together="always" ?>
+  <tgroup cols='1' align='left' colsep='0' rowsep='0'>
+  <colspec colname='c1' colwidth="1.0*"/>
   <tbody>
-    <row rowsep="0">
+    <row>
       <entry>
 <emphasis remap='I'>context</emphasis>: RC
       </entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>
 <emphasis remap='I'>element-header</emphasis>: ELEMENT_HEADER
       </entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>
 <emphasis remap='I'>client-specifiers</emphasis>: LISTofCLIENTSPEC
       </entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>
 <emphasis remap='I'>ranges</emphasis>: LISTofRECORDRANGE
       </entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>
 Errors:
 <function>Match ,</function>
@@ -1189,20 +1196,21 @@ resources.
 </para>
 
 <informaltable frame="none">
-  <tgroup cols='1' align='left'>
-  <colspec colname='c1' colsep="0" colwidth="1*"/>
+  <?dbfo keep-together="always" ?>
+  <tgroup cols='1' align='left' colsep='0' rowsep='0'>
+  <colspec colname='c1' colwidth="1.0*"/>
   <tbody>
-    <row rowsep="0">
+    <row>
       <entry>
 <emphasis remap='I'>context</emphasis>: RC
       </entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>
 <emphasis remap='I'>client-specifiers</emphasis>: LISTofCLIENTSPEC
       </entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>
 Errors:
 <function>Match ,</function>
@@ -1282,40 +1290,41 @@ A client is unregistered automatically when it disconnects.
 </para>
 
 <informaltable frame="none">
-  <tgroup cols='1' align='left'>
-  <colspec colname='c1' colsep="0" colwidth="1*"/>
+  <?dbfo keep-together="always" ?>
+  <tgroup cols='1' align='left' colsep='0' rowsep='0'>
+  <colspec colname='c1' colwidth="1.0*"/>
   <tbody>
-    <row rowsep="0">
+    <row>
       <entry>
 <emphasis remap='I'>context</emphasis>: RC
       </entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>
 -&gt;
       </entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>
 <emphasis remap='I'>enabled</emphasis>: BOOL
       </entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>
 <emphasis remap='I'>element-header</emphasis>: ELEMENT_HEADER
       </entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>
 <emphasis remap='I'>intercepted-clients</emphasis>: LISTofCLIENT_INFO
       </entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>
 Errors:
       </entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>
 <function>RecordContext</function>
       </entry>
@@ -1365,20 +1374,20 @@ error results.
 </para>
 
 <informaltable frame="none">
-  <tgroup cols='1' align='left'>
-  <colspec colname='c1' colsep="0" colwidth="1*"/>
+  <tgroup cols='1' align='left' colsep='0' rowsep='0'>
+  <colspec colname='c1' colwidth="1.0*"/>
   <tbody>
-    <row rowsep="0">
+    <row>
       <entry>
 <emphasis remap='I'>context</emphasis>: RC
       </entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>
 -&gt;+
       </entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>
 <emphasis remap='I'>category</emphasis>:
 {<function>FromServer</function>, <function>FromClient</function>,
@@ -1388,37 +1397,37 @@ error results.
       </entry>
     </row>
 
-    <row rowsep="0">
+    <row>
       <entry>
 <emphasis remap='I'>element-header</emphasis>: ELEMENT_HEADER
       </entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>
 <emphasis remap='I'>client-swapped</emphasis>: BOOL
       </entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>
 <emphasis remap='I'>id-base</emphasis>: XIDBASE
       </entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>
 <emphasis remap='I'>server-time</emphasis>: TIMESTAMP
       </entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>
 <emphasis remap='I'>recorded-sequence-number</emphasis>: CARD32
       </entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>
 <emphasis remap='I'>data</emphasis>: LISTofBYTE
       </entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>
 Errors:
 <function>Match</function>,
@@ -1599,15 +1608,16 @@ error results.
 </para>
 
 <informaltable frame="none">
-  <tgroup cols='1' align='left'>
-  <colspec colname='c1' colsep="0" colwidth="1*"/>
+  <?dbfo keep-together="always" ?>
+  <tgroup cols='1' align='left' colsep='0' rowsep='0'>
+  <colspec colname='c1' colwidth="1.0*"/>
   <tbody>
-    <row rowsep="0">
+    <row>
       <entry>
 <emphasis remap='I'>context</emphasis>: RC
       </entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>
 Errors:
 <function>RecordContext</function>
@@ -1678,9 +1688,9 @@ is closed down and the close-down mode is <function>DestroyAll</function>.  When
 <function>RecordContext</function>
 error results.
 </para>
-</sect1>
+</chapter>
 
-<sect1 id="Encoding">
+<chapter id="Encoding">
 <title>Encoding</title>
 <para>
 Please refer to the X11 Protocol Encoding document as this document uses
@@ -1691,7 +1701,7 @@ conventions established there.
 The name of this extension is "RECORD".
 </para>
 
-<sect2 id="Types_2">
+<sect1 id="Types_2">
 <title>Types</title>
 <para>
 RC: CARD32
@@ -1756,8 +1766,8 @@ CLIENT_INFO
      24n  LISTofRECORDRANGE   intercepted-protocol
 </literallayout>
 
-</sect2>
-<sect2 id="Errors_2">
+</sect1>
+<sect1 id="Errors_2">
 <title>Errors</title>
 
 <literallayout class="monospaced">
@@ -1768,9 +1778,9 @@ CLIENT_INFO
      4     CARD32             invalid record context
      24                       unused
 </literallayout>
-</sect2>
+</sect1>
 
-<sect2 id="Requests">
+<sect1 id="Requests">
 <title>Requests</title>
 
 <literallayout class="monospaced">
@@ -1889,7 +1899,6 @@ CLIENT_INFO
      4     RC                    context
 </literallayout>
 
-</sect2>
 </sect1>
 </chapter>
 </book>
