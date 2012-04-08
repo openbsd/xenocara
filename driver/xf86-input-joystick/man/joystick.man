@@ -129,9 +129,6 @@ can be one of:
 
 .B none, relative, accelerated, absolute
 
-Every axis which's mode is not
-.B none
-will be reported as an additional valuator.
 .TP 7
 .B \*qvaluator\*q
 Send extra valuator events for this axis. The valuators will be numbered ascending, starting with 2 (valuator 0 and 1 are reserved for pointer movement). The range of the valuators is always 
@@ -140,7 +137,11 @@ Neither
 .B mode
 nor
 .B axis
-needs to be set to generate extra valuator events.
+needs to be set to generate extra valuator events. The axis will be labelled according to it's physical axis number, beginning with 
+.I 1
+, i.e.
+.I \*qAxis 1\*q
+for the first axis (being the 3rd valuator).
 Default: not set.
 .TP 7
 .BI "\*qaxis="[<factor>]<axis> \*q
@@ -317,6 +318,28 @@ and the second and fourth axis to the arrow keys
 .IR up " and " down .
 The keys for the first two axes will be generated in an interval according to the value of the axis. The autorepeat speed of the first axis will be half the speed of that of the second axis.
 The keys for the third and fourth axis are generated once when the axis moves out of the deadzone and when it moves back into the deadzone. X.Org will autorepeat those keys according to current keyboard settings.
+
+.SH "XI2 Events"
+If you only care about raw events instead of using the joystick as a mouse replacement, don't forget to unmap and add valuators to all axes and map the remaining buttons:
+
+.nf
+.BI "  Option  \*qMapAxis1\*q      \*q" "mode=none valuator" \*q
+.BI "  Option  \*qMapAxis2\*q      \*q" "mode=none valuator" \*q
+.BI "  Option  \*qMapAxis3\*q      \*q" "mode=none valuator" \*q
+.BI "  Option  \*qMapAxis4\*q      \*q" "mode=none valuator" \*q
+\ \ ...
+.BI "  Option  \*qMapButton1\*q      \*q" "button=1" \*q
+.BI "  Option  \*qMapButton2\*q      \*q" "button=2" \*q
+.BI "  Option  \*qMapButton3\*q      \*q" "button=3" \*q
+.BI "  Option  \*qMapButton4\*q      \*q" "button=4" \*q
+.BI "  Option  \*qMapButton5\*q      \*q" "button=5" \*q
+\ \ ...
+.fi
+
+You might also want to set the device "floating" to stop it from reporting core events:
+.nf
+.BI "  Option  \*qFloating\*q      \*q" "true" \*q
+.fi
 
 .SH "NOTES"
 Configuration through

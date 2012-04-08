@@ -169,6 +169,8 @@ jstkKeyboardDeviceControlProc(DeviceIntPtr       dev,
         DBG(2, ErrorF("jstkKeyboardDeviceControlProc what=DEVICE_CLOSE\n"));
         dev->public.on = FALSE;
         break;
+    default:
+        return BadValue;
     }
 
     return Success;
@@ -245,32 +247,63 @@ int jstkKeyboardPreInit(InputDriverPtr drv, InputInfoPtr pInfo, int flags)
     return Success;
 }
 
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) < 14
+static InputOption*
+input_option_new(InputOption* list, char *key, char *value)
+{
+    InputOption *tmp;
+
+    tmp = calloc(1, sizeof(*tmp));
+    tmp->key = key;
+    tmp->value = value;
+    tmp->next = list;
+
+    return tmp;
+}
+
+static void
+input_option_free_list(InputOption **list)
+{
+    InputOption *iopts = *list;
+
+    while(iopts)
+    {
+        InputOption *tmp = iopts->next;
+        free(iopts->key);
+        free(iopts->value);
+        free(iopts);
+        iopts = tmp;
+    }
+
+    *list = NULL;
+}
+
+#endif
+
 InputInfoPtr
 jstkKeyboardHotplug(InputInfoPtr pInfo, int flags)
 {
     int rc;
     char name[512] = {0};
     InputAttributes *attrs = NULL;
-    InputOption *options;
-    InputOption *iopts = NULL, *tmp;
+    InputOption *iopts = NULL;
     DeviceIntPtr dev;
+    XF86OptionPtr opts;
 
     /* duplicate option list, append to name */
-    options = xf86OptionListDuplicate(pInfo->options);
+    opts = xf86OptionListDuplicate(pInfo->options);
     strcpy(name, pInfo->name);
     strcat(name, " (keys)");
-    options = xf86ReplaceStrOption(options, "Name", name);
-    options = xf86ReplaceStrOption(options, "_source", "_driver/joystick");
+    opts = xf86ReplaceStrOption(opts, "Name", name);
+    opts = xf86ReplaceStrOption(opts, "_source", "_driver/joystick");
+    opts = xf86AddNewOption(opts, "Driver", pInfo->driver);
 
-    while(options)
+    while(opts)
     {
-        tmp = calloc(1, sizeof(InputOption));
-
-        tmp->key = xf86OptionName(options);
-        tmp->value = xf86OptionValue(options);
-        tmp->next = iopts;
-        iopts = tmp;
-        options = xf86NextOption(options);
+        iopts = input_option_new(iopts,
+                                 xf86OptionName(opts),
+                                 xf86OptionValue(opts));
+        opts = xf86NextOption(opts);
     }
 
     /* duplicate attribute list */
@@ -278,14 +311,7 @@ jstkKeyboardHotplug(InputInfoPtr pInfo, int flags)
 
     rc = NewInputDeviceRequest(iopts, attrs, &dev);
 
-    while(iopts)
-    {
-        tmp = iopts->next;
-        free(iopts->key);
-        free(iopts->value);
-        free(iopts);
-        iopts = tmp;
-    }
+    input_option_free_list(&iopts);
 
     FreeInputAttributes(attrs);
 

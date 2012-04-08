@@ -1,3 +1,104 @@
+commit bdf8fd3f650789d2012ec0cc915729dd1e91346d
+Author: Sascha Hlusiak <saschahlusiak@arcor.de>
+Date:   Sun Mar 11 11:45:08 2012 +0100
+
+    joystick 1.6.1
+    
+    Signed-off-by: Sascha Hlusiak <saschahlusiak@arcor.de>
+
+commit b217fabdef1714ed4898e08de4c2a6b9cc8d4f0f
+Author: Sascha Hlusiak <saschahlusiak@arcor.de>
+Date:   Sun Nov 13 20:36:07 2011 +0100
+
+    Copy pInfo->driver to option list to fix hotplugging of keyboard device
+    
+    udev does copy the Driver line to the list of options, but when manually
+    specifying the driver in xorg.conf, the option "Driver" is unset. Because we
+    do hotplug a sub-device from within the core device, we need the "Driver"
+    option to be present in the list.
+    
+    This should fix archlinux bug #23577:
+      https://bugs.archlinux.org/task/23577
+    
+    Thanks to Malek for coming up with a fix.
+    
+    Signed-off-by: Sascha Hlusiak <contact@saschahlusiak.de>
+
+commit 411c1838456c055d3f911c54ed58bb11a6bf0da3
+Author: Sascha Hlusiak <saschahlusiak@arcor.de>
+Date:   Sun Nov 13 18:04:25 2011 +0100
+
+    man: valuators are not added automatically
+
+commit 9bbb5775be4e7c72b6d51c20be33f5ed3fb7301a
+Merge: b607c4e 7ccf3a7
+Author: Sascha Hlusiak <saschahlusiak@arcor.de>
+Date:   Sun Nov 13 17:10:09 2011 +0100
+
+    Merge branch 'master' of ssh://git.freedesktop.org/git/xorg/driver/xf86-input-joystick
+
+commit 7ccf3a75292d71104c976bf6afb389cccaac1a7d
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Mon Oct 31 14:33:08 2011 +1000
+
+    Deal with opaque input option types.
+    
+    ABI 14 made the InputOption type opaque, move the existing code to ifdefs
+    and use the new function calls otherwise.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Jeremy Huddleston <jeremyhu@apple.com>
+    Reviewed-by: Chase Douglas <chase.douglas@canonical.com>
+
+commit e0193debf8f5a72b0a06977d5dea3365ad9cafbe
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Mon Oct 31 14:27:22 2011 +1000
+
+    Fix option type for option duplication
+    
+    xf86OptionListDuplicate() duplicates an XF86Option list, not an InputOption
+    list.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit b607c4ebeea4122694f02ba87f06e4cdb23114f1
+Author: Sascha Hlusiak <saschahlusiak@arcor.de>
+Date:   Sun Oct 16 00:47:52 2011 +0200
+
+    label buttons and axes
+    
+    Buttons are labeled "Button %d", starting with 0 and representing the button in X _after_ mapping.
+    Mapping can be changed while running so the labels will be constant.
+    
+    Axes are labeled "Axis %d", starting with 1, representing the _physical_ axis that reports the valuator
+    data. The raw valuators can't be dynamically mapped, the first two valuators always are labeled "Rel X"
+    and "Rel Y", representing the aggregated post-calculation data from all axes.
+    
+    Signed-off-by: Sascha Hlusiak <saschahlusiak@arcor.de>
+
+commit b3b62328cf3f36c20c54a298f8a921e6eef42c4d
+Author: Devin J. Pohly <djpohly+xorg@gmail.com>
+Date:   Sat Sep 3 19:00:07 2011 -0400
+
+    unify capitalization of joystick properties
+    
+    the axis keys high/low properties were inconsistently capitalized,
+    leading to potential confusion as to why one works but not the other.
+    
+    Signed-off-by: Devin J. Pohly <djpohly+xorg@gmail.com>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 204dcb86368b011824fc5006f87b9e394d03a394
+Author: Terry Lambert <tlambert@chromium.org>
+Date:   Fri Jul 15 17:23:22 2011 -0700
+
+    Return proper default for unknown values in pInfo->device_control.
+    
+    Signed-off-by: Terry Lambert <tlambert@chromium.org>
+    Reviewed-by: Stephane Marchesin <marcheu@chromium.org>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
 commit bd6c54fe672a913334bfba1ca5dc0f2e0f1f1152
 Author: Sascha Hlusiak <saschahlusiak@arcor.de>
 Date:   Wed Apr 20 20:55:24 2011 +0200

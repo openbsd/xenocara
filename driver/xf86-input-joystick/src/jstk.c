@@ -1,5 +1,5 @@
 /*
- * Copyright 2007-2009 by Sascha Hlusiak. <saschahlusiak@freedesktop.org>     
+ * Copyright 2007-2011 by Sascha Hlusiak. <saschahlusiak@freedesktop.org>     
  * Copyright 1995-1999 by Frederic Lepied, France. <Lepied@XFree86.org>       
  *                                                                            
  * Permission to use, copy, modify, distribute, and sell this software and its
@@ -20,7 +20,6 @@
  * TORTIOUS  ACTION, ARISING    OUT OF OR   IN  CONNECTION  WITH THE USE    OR
  * PERFORMANCE OF THIS SOFTWARE.
  */
-
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -300,6 +299,7 @@ jstkDeviceControlProc(DeviceIntPtr       pJstk,
     switch (what) {
     case DEVICE_INIT: {
         int m;
+        char str[32];
         CARD8 buttonmap[BUTTONMAP_SIZE+1];
         DBG(1, ErrorF("jstkDeviceControlProc what=INIT\n"));
         /* Probe device and return if error */
@@ -312,11 +312,14 @@ jstkDeviceControlProc(DeviceIntPtr       pJstk,
         }
 
         for (m=0; m<=BUTTONMAP_SIZE; m++) {
-            buttonmap[m] = m;
-	}
+            sprintf(str, "Button %d", m);
 
-            
-            
+            buttonmap[m] = m;
+            btn_labels[m] = MakeAtom(str, strlen(str), TRUE);
+        }
+
+
+
         if (InitButtonClassDeviceStruct(pJstk, BUTTONMAP_SIZE, 
             btn_labels,
             buttonmap) == FALSE) {
@@ -331,7 +334,9 @@ jstkDeviceControlProc(DeviceIntPtr       pJstk,
             if (priv->axis[i].valuator != -1)
         {
             DBG(3, ErrorF("Axis %d will be valuator %d\n", i, m));
+            sprintf(str, "Axis %d", i + 1);
             priv->axis[i].valuator = m++;
+            axes_labels[i] = MakeAtom(str, strlen(str), TRUE);
         }
 
         if (InitValuatorClassDeviceStruct(pJstk, m, axes_labels,
@@ -419,8 +424,7 @@ jstkDeviceControlProc(DeviceIntPtr       pJstk,
 
     default:
         ErrorF("unsupported mode=%d\n", what);
-        return !Success;
-        break;
+        return BadValue;
     } /* switch (what) */
     return Success;
 }
@@ -720,7 +724,6 @@ static XF86ModuleVersionInfo jstkVersionRec =
                    /* a tool */
 };
 
-
 /*
  ***************************************************************************
  *
@@ -733,3 +736,6 @@ _X_EXPORT XF86ModuleData joystickModuleData = {
     jstkDriverPlug,
     jstkDriverUnplug
 };
+
+/* vim: set filetype=c.doxygen ts=4 et: */
+

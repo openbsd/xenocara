@@ -99,7 +99,7 @@ typedef enum _JSTK_MAPPING {
 
 /** Scancodes for axis in high position */
 /* 8 bit, 4 per axis */
-#define JSTK_PROP_AXIS_KEYS_HIGH "Axis keys (high)"
+#define JSTK_PROP_AXIS_KEYS_HIGH "Axis Keys (high)"
 
 /** Set the mapping of each button to
     none, x, y, zx, zy, button, key, speed_multiply,
