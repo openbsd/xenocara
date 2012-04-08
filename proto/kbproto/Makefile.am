@@ -1,3 +1,5 @@
+SUBDIRS = specs
+
 kbdir = $(includedir)/X11/extensions
 kb_HEADERS = \
 	XKBgeom.h \
