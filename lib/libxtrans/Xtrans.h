@@ -57,112 +57,84 @@ from The Open Group.
 #include <sys/socket.h>
 #endif
 
+#ifdef __clang__
+/* Not all clients make use of all provided statics */
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunused-function"
+#endif
 
 /*
  * Set the functions names according to where this code is being compiled.
  */
 
 #ifdef X11_t
-#if !defined(UNIXCPP) || defined(ANSICPP)
 #define TRANS(func) _X11Trans##func
-#else
-#define TRANS(func) _X11Trans/**/func
-#endif
 #ifdef XTRANSDEBUG
-static char* __xtransname = "_X11Trans";
+static const char *__xtransname = "_X11Trans";
 #endif
 #endif /* X11_t */
 
 #ifdef XSERV_t
-#if !defined(UNIXCPP) || defined(ANSICPP)
 #define TRANS(func) _XSERVTrans##func
-#else
-#define TRANS(func) _XSERVTrans/**/func
-#endif
 #ifdef XTRANSDEBUG
-static char* __xtransname = "_XSERVTrans";
+static const char *__xtransname = "_XSERVTrans";
 #endif
 #define X11_t
 #endif /* XSERV_t */
 
 #ifdef XIM_t
-#if !defined(UNIXCPP) || defined(ANSICPP)
 #define TRANS(func) _XimXTrans##func
-#else
-#define TRANS(func) _XimXTrans/**/func
-#endif
 #ifdef XTRANSDEBUG
-static char* __xtransname = "_XimTrans";
+static const char *__xtransname = "_XimTrans";
 #endif
 #endif /* XIM_t */
 
 #ifdef FS_t
-#if !defined(UNIXCPP) || defined(ANSICPP)
 #define TRANS(func) _FSTrans##func
-#else
-#define TRANS(func) _FSTrans/**/func
-#endif
 #ifdef XTRANSDEBUG
-static char* __xtransname = "_FSTrans";
+static const char *__xtransname = "_FSTrans";
 #endif
 #endif /* FS_t */
 
 #ifdef FONT_t
-#if !defined(UNIXCPP) || defined(ANSICPP)
 #define TRANS(func) _FontTrans##func
-#else
-#define TRANS(func) _FontTrans/**/func
-#endif
 #ifdef XTRANSDEBUG
-static char* __xtransname = "_FontTrans";
+static const char *__xtransname = "_FontTrans";
 #endif
 #endif /* FONT_t */
 
 #ifdef ICE_t
-#if !defined(UNIXCPP) || defined(ANSICPP)
 #define TRANS(func) _IceTrans##func
-#else
-#define TRANS(func) _IceTrans/**/func
-#endif
 #ifdef XTRANSDEBUG
-static char* __xtransname = "_IceTrans";
+static const char *__xtransname = "_IceTrans";
 #endif
 #endif /* ICE_t */
 
 #ifdef TEST_t
-#if !defined(UNIXCPP) || defined(ANSICPP)
 #define TRANS(func) _TESTTrans##func
-#else
-#define TRANS(func) _TESTTrans/**/func
-#endif
 #ifdef XTRANSDEBUG
-static char* __xtransname = "_TESTTrans";
+static const char *__xtransname = "_TESTTrans";
 #endif
 #endif /* TEST_t */
 
 #ifdef LBXPROXY_t
-#if !defined(UNIXCPP) || defined(ANSICPP)
 #define TRANS(func) _LBXPROXYTrans##func
-#else
-#define TRANS(func) _LBXPROXYTrans/**/func
-#endif
 #define X11_t		/* The server defines this - so should the LBX proxy */
 #ifdef XTRANSDEBUG
-static char* __xtransname = "_LBXPROXYTrans";
+static const char *__xtransname = "_LBXPROXYTrans";
 #endif
 #endif /* LBXPROXY_t */
 
 #if !defined(TRANS)
-#if !defined(UNIXCPP) || defined(ANSICPP)
 #define TRANS(func) _XTrans##func
-#else
-#define TRANS(func) _XTrans/**/func
-#endif
 #ifdef XTRANSDEBUG
-static char* __xtransname = "_XTrans";
+static const char *__xtransname = "_XTrans";
 #endif
 #endif /* !TRANS */
 
+#ifdef __clang__
+#pragma clang diagnostic pop
+#endif
 
 /*
  * Create a single address structure that can be used wherever
@@ -190,7 +162,7 @@ typedef long BytesReadable_t;
 #endif
 
 
-#if defined(WIN32) || defined(USG) 
+#if defined(WIN32) || defined(USG)
 
 /*
  *      TRANS(Readv) and TRANS(Writev) use struct iovec, normally found
@@ -332,7 +304,7 @@ int TRANS(CreateListener)(
 );
 
 int TRANS(NoListen) (
-    char*               /* protocol*/
+    const char*         /* protocol*/
 );
 
 int TRANS(ResetListener)(
@@ -465,13 +437,13 @@ TRANS(GetPeerNetworkId)(
 
 #endif /* ICE_t */
 
-int 
+int
 TRANS(GetHostname) (
     char *	/* buf */,
     int 	/* maxlen */
 );
 
-#if defined(WIN32) && defined(TCPCONN) 
+#if defined(WIN32) && defined(TCPCONN)
 int TRANS(WSAStartup)();
 #endif
 

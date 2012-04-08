@@ -1,6 +1,9 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.3//EN"
-                      "http://www.oasis-open.org/docbook/xml/4.3/docbookx.dtd">
+                      "http://www.oasis-open.org/docbook/xml/4.3/docbookx.dtd"
+[
+<!ENTITY % defs SYSTEM "defs.ent"> %defs;
+]>
 
 <!-- lifted from troff+ms+XMan by doclifter -->
 <book id="xtrans">
@@ -8,28 +11,28 @@
 <bookinfo>
    <title>X Transport Interface</title>
    <subtitle>X Consortium Standard</subtitle>
-   <releaseinfo>X Version 11, Release 7.X</releaseinfo>
    <authorgroup>
-      <author>
-         <firstname>Stuart</firstname><surname>Anderson</surname>
-      </author>
+     <author>
+       <firstname>Stuart</firstname><surname>Anderson</surname>
+       <affiliation><orgname>NCR Corporation</orgname></affiliation>
+     </author>
+     <othercredit><firstname>Ralph</firstname><surname>Mor</surname>
+       <affiliation><orgname>X Consortium</orgname></affiliation>
+     </othercredit>
+     <othercredit><firstname>Alan</firstname><surname>Coopersmith</surname>
+       <affiliation><orgname>Oracle Corp.</orgname></affiliation>
+     </othercredit>
    </authorgroup>
-   <othercredit><firstname>Ralph</firstname><surname>Mor</surname></othercredit>
-   <othercredit><firstname>Alan</firstname><surname>Coopersmith</surname></othercredit>
-   <corpname>NCR Corporation</corpname>
+   <releaseinfo>X Version 11, Release &fullrelvers;</releaseinfo>
    <releaseinfo>Version 0.7</releaseinfo>
-   <affiliation><orgname>The Open Group</orgname></affiliation>
-   <productnumber>X Version 11, Release 7.x</productnumber>
+   <copyright><year>1993</year><year>1994</year>
+     <holder>NCR Corporation - Dayton, Ohio, USA</holder>
+   </copyright>
 
 <legalnotice>
 <para>
-Copyright &copy; 1993, 1994 NCR Corporation - Dayton, Ohio, USA
-</para>
-
-<para>
 All Rights Reserved
 </para>
-
 <para>
 Permission to use, copy, modify, and distribute this software and its
 documentation for any purpose and without fee is hereby granted, provided
@@ -41,7 +44,6 @@ written prior permission.  NCR makes no representations about the
 suitability of this software for any purpose.  It is provided "as is"
 without express or implied warranty.
 </para>
-
 <para>
 NCR DISCLAIM ALL WARRANTIES WITH REGARD TO THIS SOFTWARE,
 INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS, IN
@@ -51,14 +53,12 @@ OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT,
 NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
 CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 </para>
-
 </legalnotice>
 
 <legalnotice>
-<para>
+<para role="multiLicensing">
 Copyright &copy; 1993, 1994, 2002 The Open Group
 </para>
-
 <para>
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the &ldquo;Software&rdquo;), to deal
@@ -67,12 +67,10 @@ to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 copies of the Software, and to permit persons to whom the Software is
 furnished to do so, subject to the following conditions:
 </para>
-
 <para>
 The above copyright notice and this permission notice shall be included in
 all copies or substantial portions of the Software.
 </para>
-
 <para>
 THE SOFTWARE IS PROVIDED &ldquo;AS IS&rdquo;, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
@@ -81,19 +79,15 @@ OPEN GROUP BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN
 AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 </para>
-
 <para>
 Except as contained in this notice, the name of The Open Group shall not be
 used in advertising or otherwise to promote the sale, use or other dealings
 in this Software without prior written authorization from The Open Group.
 </para>
-
 <para>
 X Window System is a trademark of The Open Group, Inc.
 </para>
-
 </legalnotice>
-
 </bookinfo>
 
 <preface><title>The X Transport Interface</title>
@@ -109,7 +103,7 @@ for client vs. server code.
 </para></note>
 </preface>
 
-<chapter id='purposes_and_goals'>
+<chapter id='Purposes_and_Goals'>
 <title>Purposes and Goals</title>
 
 <para>The X Transport Interface is intended to combine all system and
@@ -127,7 +121,7 @@ FS, and connection-less oriented protocols such as XDMCP.</para>
 
 </chapter>
 
-<chapter id='overview_of_the_interface'>
+<chapter id='Overview_of_the_Interface'>
 <title>Overview of the Interface</title>
 
 <para>
@@ -148,7 +142,7 @@ an interface would affect performance.
 </para>
 </chapter>
 
-<chapter id='definition_of_address_specification_format'>
+<chapter id='Definition_of_Address_Specification_Format'>
 <title>Definition of Address Specification Format</title>
 
 <para>
@@ -175,14 +169,14 @@ part of an address.
 </para>
 </chapter>
 
-<chapter id='internal_data_structures'>
+<chapter id='Internal_Data_Structures'>
 <title>Internal Data Structures</title>
 <para>
 There are two major data structures associated with the transport
 independent portion of this interface.  Additional data structures
 may be used internally by each transport.
 </para>
-<sect1 id="xtransport">
+<sect1 id='Xtransport'>
 <title>Xtransport</title>
 <para>
 Each transport supported has an entry in the transport table. The transport
@@ -343,7 +337,7 @@ should not be unlinked.
 </para>
 </sect1>
 
-<sect1 id="xtransconninfo">
+<sect1 id='XtransConnInfo'>
 <title>XtransConnInfo</title>
 <para>
 Each connection will have an opaque <structname>XtransConnInfo</structname>
@@ -370,7 +364,7 @@ struct _XtransConnInfo {
 </sect1>
 </chapter>
 
-<chapter id='exposed_transport_independent_api'>
+<chapter id='Exposed_Transport_Independent_API'>
 <title>Exposed Transport Independent API</title>
 
 <para>
@@ -391,7 +385,7 @@ All failures are considered fatal, and the connection should be closed
 and re-established if desired. In most cases, however, the value of
 errno will be available for debugging purposes.
 </para>
-<sect1 id="core_interface_api">
+<sect1 id='Core_Interface_API'>
 <title>Core Interface API</title>
 <itemizedlist mark='bullet'>
   <listitem>
@@ -665,7 +659,7 @@ is the list of transports.
 </itemizedlist>
 </sect1>
 
-<sect1 id="utility_api">
+<sect1 id='Utility_API'>
 <title>Utility API</title>
 <para>
 This section describes a few useful functions that have been implemented on
@@ -687,7 +681,7 @@ FamilyLocal)).
 </sect1>
 </chapter>
 
-<chapter id="transport_option_definition">
+<chapter id='Transport_Option_Definition'>
 <title>Transport Option Definition</title>
 <para>
 The following options are defined for the
@@ -721,7 +715,7 @@ connection will not be closed when an exec occurs.
 </itemizedlist>
 </chapter>
 
-<chapter id="hidden_transport_dependent_api">
+<chapter id='Hidden_Transport_Dependent_API'>
 <title>Hidden Transport Dependent API</title>
 <para>
 The hidden transport dependent functions are placed in the Xtransport record.
@@ -941,7 +935,7 @@ This function will break the connection, and close the endpoint.
   </listitem>
 </itemizedlist>
 </chapter>
-<chapter id="configuration">
+<chapter id='Configuration'>
 <title>Configuration</title>
 
 <para>
@@ -962,13 +956,14 @@ In X11R7 modular releases, these flags are set when running
 <function>XTRANS_CONNECTION_FLAGS</function> macro from
 <filename>xtrans.m4</filename>.
 </para>
-<informaltable pgwide='0' frame='none'>
-  <tgroup cols='4' align='left'>
-    <colspec colname='define' align='center'/>
-    <colspec colname='enable'/>
-    <colspec colname='desc'/>
+
+<informaltable frame='topbot'>
+  <tgroup cols='3' align='left' colsep='0' rowsep='0'>
+    <colspec colname='define' colwidth='1.0*' />
+    <colspec colname='enable' colwidth='2.0*' />
+    <colspec colname='desc'   colwidth='2.0*'/>
     <thead>
-      <row>
+      <row rowsep='1'>
 	<entry><code>#define</code></entry>
 	<entry>configure flag</entry>
 	<entry>Description</entry>
@@ -1024,18 +1019,18 @@ In X11R7 modular releases, these flags are set when running
 
 </chapter>
 
-<chapter id="transport_specific_definitions">
+<chapter id='Transport_Specific_Definitions'>
 <title>Transport Specific Definitions</title>
 
-<informaltable pgwide='0' frame='none'>
+<informaltable frame='all' colsep='1' rowsep='1'>
   <tgroup cols='4' align='center'>
-    <colspec colname='c1'/>
-    <colspec colname='c2'/>
-    <colspec colname='c3'/>
-    <colspec colname='c4'/>
+    <colspec colname='c1' colwidth='1.0*'/>
+    <colspec colname='c2' colwidth='1.0*'/>
+    <colspec colname='c3' colwidth='3.0*'/>
+    <colspec colname='c4' colwidth='2.0*'/>
     <thead>
       <row>
-        <entry morerows="1" align='center'>Protocol Family</entry>
+        <entry morerows="1">Protocol Family</entry>
         <entry namest="c2" nameend="c4"  align='center'>Address Component</entry>
       </row>
       <row>
@@ -1046,34 +1041,34 @@ In X11R7 modular releases, these flags are set when running
     </thead>
     <tbody>
       <row>
-        <entry align='center'>Internet</entry>
-        <entry align='center'>inet inet6 tcp udp</entry>
-        <entry align='center'>name of an internet addressable host</entry>
-        <entry align='center'>string containing the name of a service or a valid port number.  Example: "xserver0", "7100"</entry>
+        <entry>Internet</entry>
+        <entry>inet inet6 tcp udp</entry>
+        <entry>name of an internet addressable host</entry>
+        <entry>string containing the name of a service or a valid port number.  Example: "xserver0", "7100"</entry>
       </row>
       <row>
-        <entry align='center'>DECnet</entry>
-        <entry align='center'>decnet</entry>
-        <entry align='center'>name of a DECnet addressable host</entry>
-        <entry align='center'>string containing the complete name of the object.  Example: "X$X0"</entry>
+        <entry>DECnet</entry>
+        <entry>decnet</entry>
+        <entry>name of a DECnet addressable host</entry>
+        <entry>string containing the complete name of the object.  Example: "X$X0"</entry>
       </row>
       <row>
-        <entry align='center'>NETware</entry>
-        <entry align='center'>ipx</entry>
-        <entry align='center'>name of a NETware addressable host</entry>
-        <entry align='center'>Not sure of the specifics yet.</entry>
+        <entry>NETware</entry>
+        <entry>ipx</entry>
+        <entry>name of a NETware addressable host</entry>
+        <entry>Not sure of the specifics yet.</entry>
       </row>
       <row>
-        <entry align='center'>OSI</entry>
-        <entry align='center'>osi</entry>
-        <entry align='center'>name of an OSI adressable host.</entry>
-        <entry align='center'>Not sure of the specifics yet.</entry>
+        <entry>OSI</entry>
+        <entry>osi</entry>
+        <entry>name of an OSI adressable host.</entry>
+        <entry>Not sure of the specifics yet.</entry>
       </row>
       <row>
-        <entry align='center'>Local</entry>
-        <entry align='center'>local pts named sco isc</entry>
-        <entry align='center'>(ignored)</entry>
-        <entry align='center'>String containing the port name, ie "xserver0", "fontserver0".</entry>
+        <entry>Local</entry>
+        <entry>local pts named sco isc</entry>
+        <entry>(ignored)</entry>
+        <entry>String containing the port name, ie "xserver0", "fontserver0".</entry>
       </row>
     </tbody>
   </tgroup>
@@ -1081,7 +1076,7 @@ In X11R7 modular releases, these flags are set when running
 
 </chapter>
 
-<chapter id="implementation_notes">
+<chapter id='Implementation_Notes'>
 <title>Implementation Notes</title>
 <para>
 This section refers to the prototype implementation that is being developed
