@@ -1,29 +1,35 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.3//EN"
-                   "http://www.oasis-open.org/docbook/xml/4.3/docbookx.dtd">
+                   "http://www.oasis-open.org/docbook/xml/4.3/docbookx.dtd"
+[
+<!ENTITY % defs SYSTEM "defs.ent"> %defs;
+]>
 
 <book id="saver">
 
 <bookinfo>
    <title>X11 Screen Saver Extension</title>
    <subtitle>MIT X Consortium Proposed Standard</subtitle>
+   <releaseinfo>X Version 11, Release &fullrelvers;</releaseinfo>
    <releaseinfo>Version 1.0</releaseinfo>
    <authorgroup>
-   <othercredit>
+     <author>
       <firstname>Jim</firstname><surname>Fulton</surname>
       <affiliation><orgname>Network Computing Devices, Inc</orgname></affiliation>
-   </othercredit>
-   <othercredit>
+     </author>
+     <author>
       <firstname>Keith</firstname><surname>Packard</surname>
       <affiliation><orgname>
 X Consortium, Laboratory for Computer Science, Massachusetts Institute of Technology
       </orgname></affiliation>
-   </othercredit>
+     </author>
    </authorgroup>
 
-   <copyright><year>1992</year><holder>Massachusetts Institute of Technology and Network Computing Devices, Inc</holder></copyright>
+   <copyright><year>1992</year>
+     <holder>Massachusetts Institute of Technology</holder>
+     <holder>Network Computing Devices, Inc</holder>
+   </copyright>
 
-   <productnumber>X Version 11, Release 5</productnumber>
 
 <legalnotice>
 <para>
@@ -39,9 +45,7 @@ implied warranty.
 </legalnotice>
 </bookinfo>
 
-<chapter id="title">
-<title>TITLE</title>
-<sect1 id="Introduction_">
+<chapter id='Introduction'>
 <title>Introduction</title>
 <para>
 The X Window System provides support for changing the image on a display screen
@@ -61,9 +65,9 @@ particular, such users often wish to be able to display corporate logos,
 instructions on how to reactivate the screen, and automatic screen-locking
 utilities.  This extension provides a means for writing such clients.
 </para>
-</sect1>
+</chapter>
 
-<sect1 id="Assumptions">
+<chapter id="Assumptions">
 <title>Assumptions</title>
 <para>
 This extension exports the notion of a special screen saver window that is
@@ -73,9 +77,9 @@ the window manager.  Furthermore, the X identifier for the window is never
 returned by <function>QueryTree</function> requests on the root window, so it is typically
 not visible to other clients.
 </para>
-</sect1>
+</chapter>
 
-<sect1 id="Overview">
+<chapter id="Overview">
 <title>Overview</title>
 <para>
 The core
@@ -106,9 +110,9 @@ id for the screen saver window and setting the attributes (e.g. size,
 location, visual, colormap) to be used when the window is mapped.  These
 requirements form the basis of this extension.
 </para>
-</sect1>
+</chapter>
 
-<sect1 id="Issues">
+<chapter id="Issues">
 <title>Issues</title>
 <para>
 This extension raises several interesting issues.  First is the question of
@@ -130,33 +134,34 @@ it is not mapped so that it need not be avoided during event delivery.  Thus,
 screen saver clients may find that the requests that reference the screen
 saver window may fail when the window is not displayed.
 </para>
-</sect1>
+</chapter>
 
-<sect1 id="Protocol">
+<chapter id="Protocol">
 <title>Protocol</title>
 <para>
 The Screen Saver extension is as follows:
 </para>
 
-<sect2 id="Types">
+<sect1 id="Types">
 <title>Types</title>
 <para>
 In adition to the comon types described in the core protocol, the following
 type is used in the request and event definitions in subsequent sections.
 </para>
 
-<informaltable frame="none">
-  <tgroup cols='2' align='left'>
-  <colspec colname='c1' colsep="0"/>
-  <colspec colname='c2' colsep="0"/>
+<informaltable frame="topbot">
+  <?dbfo keep-together="always" ?>
+  <tgroup cols='2' align='left' colsep='0' rowsep='0'>
+  <colspec colname='c1' colwidth="1.0*"/>
+  <colspec colname='c2' colwidth="1.5*"/>
   <thead>
-    <row>
+    <row rowsep='1'>
       <entry>Name</entry>
       <entry>Value</entry>
     </row>
   </thead>
   <tbody>
-    <row rowsep="0">
+    <row>
       <entry>SCREENSAVEREVENT</entry>
       <entry><emphasis role="bold">ScreenSaverNotify</emphasis>,
       <emphasis role="bold">ScreenSaverCycle</emphasis></entry>
@@ -164,16 +169,16 @@ type is used in the request and event definitions in subsequent sections.
   </tbody>
   </tgroup>
 </informaltable>
-</sect2>
+</sect1>
 
-<sect2 id="Errors">
+<sect1 id="Errors">
 <title>Errors</title>
 <para>
 The Screen Saver extension adds no errors beyond the core protocol.
 </para>
-</sect2>
+</sect1>
 
-<sect2 id="Requests">
+<sect1 id="Requests">
 <title>Requests</title>
 <para>
 The Screen Saver extension adds the following requests:
@@ -232,11 +237,12 @@ active and how the <emphasis remap='I'>til-or-since</emphasis> value should be i
 </para>
 
 <informaltable frame="none">
-  <tgroup cols='2' align='left'>
-  <colspec colname='c1' colsep="0"/>
-  <colspec colname='c2' colsep="0"/>
+  <?dbfo keep-together="always" ?>
+  <tgroup cols='2' align='left' colsep='0' rowsep='0'>
+  <colspec colname='c1' colwidth="1.0*"/>
+  <colspec colname='c2' colwidth="5.0*"/>
   <tbody>
-    <row rowsep="0">
+    <row>
       <entry><emphasis role="bold">Off</emphasis></entry>
       <entry>
 The screen is not currently being saved;
@@ -245,7 +251,7 @@ specifies the number of milliseconds until the screen saver is expected to
 activate.
       </entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry><emphasis role="bold">On</emphasis></entry>
       <entry>
 The screen is currently being saved;
@@ -253,7 +259,7 @@ The screen is currently being saved;
 the number of milliseconds since the screen saver activated.
       </entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry><emphasis role="bold">Disabled</emphasis></entry>
       <entry>
 The screen saver is currently disabled;
@@ -270,21 +276,22 @@ used or would have been were the screen being saved:
 </para>
 
 <informaltable frame="none">
-  <tgroup cols='2' align='left'>
-  <colspec colname='c1' colsep="0"/>
-  <colspec colname='c2' colsep="0"/>
+  <?dbfo keep-together="always" ?>
+  <tgroup cols='2' align='left' colsep='0' rowsep='0'>
+  <colspec colname='c1' colwidth="1.0*"/>
+  <colspec colname='c2' colwidth="5.0*"/>
   <tbody>
-    <row rowsep="0">
+    <row>
       <entry><emphasis role="bold">Blanked</emphasis></entry>
       <entry>The video signal to the display monitor was disabled.</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry><emphasis role="bold">Internal</emphasis></entry>
       <entry>A server-dependent, built-in screen saver image was displayed; either no
       client had set the screen saver window attributes or a different client
       had the server grabbed when the screen saver activated.</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry><emphasis role="bold">External</emphasis></entry>
       <entry>The screen saver window was mapped with attributes set by a
       client using the <function>ScreenSaverSetAttributes</function> request.</entry>
@@ -328,18 +335,19 @@ Otherwise, any combination of the following bits may be set:
 </para>
 
 <informaltable frame="none">
-  <tgroup cols='2' align='center'>
-  <colspec colname='c1' colsep="0"/>
-  <colspec colname='c2' colsep="0"/>
+  <?dbfo keep-together="always" ?>
+  <tgroup cols='2' align='left' colsep='0' rowsep='0'>
+  <colspec colname='c1' colwidth="1.0*"/>
+  <colspec colname='c2' colwidth="3.0*"/>
   <tbody>
-    <row rowsep="0">
+    <row>
       <entry><emphasis role="bold">ScreenSaverNotify</emphasis></entry>
       <entry>
 If this bit is set, <emphasis role="bold">ScreenSaverNotify</emphasis> events are generated whenever
 the screen saver is activated or deactivated.
       </entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry><emphasis role="bold">ScreenSaverCycle</emphasis></entry>
       <entry>
 If this bit is set, <emphasis role="bold">ScreenSaverNotify</emphasis> events are generated whenever
@@ -464,9 +472,9 @@ deactivation.
 This request is ignored if the client has not previously set the screen saver
 window attributes.
 </para>
-</sect2>
+</sect1>
 
-<sect2 id="Events_">
+<sect1 id="Events">
 <title>Events</title>
 <para>
 The Screen Saver extension adds one event:
@@ -500,25 +508,26 @@ The <emphasis remap='I'>state</emphasis> field specifies the cause of the event:
 </para>
 
 <informaltable frame="none">
-  <tgroup cols='2' align='left'>
-  <colspec colname='c1' colsep="0"/>
-  <colspec colname='c2' colsep="0"/>
+  <?dbfo keep-together="always" ?>
+  <tgroup cols='2' align='left' colsep='0' rowsep='0'>
+  <colspec colname='c1' colwidth="1.0*"/>
+  <colspec colname='c2' colwidth="5.0*"/>
   <tbody>
-    <row rowsep="0">
+    <row>
       <entry><emphasis role="bold">Off</emphasis></entry>
       <entry>
 The screen saver deactivated; this event is sent if the client has set the
 ScreenSaverNotify bit in its event mask.
       </entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry><emphasis role="bold">On</emphasis></entry>
       <entry>
 The screen saver activated.  This event is sent if the client has set the
 ScreenSaverNotify bit in its event mask.
       </entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry><emphasis role="bold">Cycle</emphasis></entry>
       <entry>
 The cycle interval passed and the client is expected to change the image on
@@ -550,10 +559,10 @@ when the screen saver was activated, as described in
 The <emphasis remap='I'>time</emphasis> field indicates the server time
 when the event was generated.
 </para>
-</sect2>
 </sect1>
+</chapter>
 
-<sect1 id="Encoding">
+<chapter id="Encoding">
 <title>Encoding</title>
 <para>
 Please refer to the X11 Protocol Encoding document as this document uses
@@ -563,16 +572,16 @@ conventions established there.
 The name of this extension is "SCREEN-SAVER".
 </para>
 
-<sect2 id="Common_Types">
+<sect1 id="Common_Types">
 <title>Common Types</title>
 <literallayout class="monospaced">
 SETofSCREENSAVEREVENT
      #x00000001     ScreenSaverNotifyMask
      #x00000002     ScreenSaverCycleMask
 </literallayout>
-</sect2>
+</sect1>
 
-<sect2 id="Requests_2">
+<sect1 id="Requests_2">
 <title>Requests</title>
 <literallayout class="monospaced">
 <emphasis role="bold">ScreenSaverQueryVersion</emphasis>
@@ -649,9 +658,9 @@ SETofSCREENSAVEREVENT
 2     3                       request length
 4     DRAWABLE                drawable associated with screen
 </literallayout>
-</sect2>
+</sect1>
 
-<sect2 id="Events">
+<sect1 id="Events_2">
 <title>Events</title>
 
 <literallayout class="monospaced">
@@ -672,10 +681,10 @@ SETofSCREENSAVEREVENT
 1     BOOL                    forced
 14                            unused
 </literallayout>
-</sect2>
 </sect1>
+</chapter>
 
-<sect1 id="Inter_Client_Communications_Conventions_">
+<chapter id='Inter_Client_Communications_Conventions'>
 <title>Inter-Client Communications Conventions</title>
 <para>
 Screen saver clients should create at least one resource value whose
@@ -691,9 +700,9 @@ resource and should be one of the following:
 <emphasis role="bold">FONT</emphasis>, or
 <emphasis role="bold">COLORMAP</emphasis>.
 </para>
-</sect1>
+</chapter>
 
-<sect1 id="C_language_binding">
+<chapter id="C_language_binding">
 <title>C language binding</title>
 
 <para>
@@ -707,7 +716,7 @@ The include file for this extension is
 </para>
 
 
-<funcsynopsis>
+<funcsynopsis id='XScreenSaverQueryExtension'>
 <funcprototype>
   <funcdef>Bool <function>XScreenSaverQueryExtension</function></funcdef>
     <paramdef>Display <parameter>*display</parameter></paramdef>
@@ -730,7 +739,7 @@ no additional errors are defined by this extension, the results
 of <emphasis remap='I'>error_base</emphasis> are not defined.
 </para>
 
-<funcsynopsis>
+<funcsynopsis id='XScreenSaverQueryVersion'>
 <funcprototype>
   <funcdef>Status <function>XScreenSaverQueryVersion</function></funcdef>
     <paramdef>Display <parameter>*display</parameter></paramdef>
@@ -755,14 +764,14 @@ set and 0 is returned.
 <para>
 This routine allocates and returns an
 <emphasis role="bold">XScreenSaverInfo</emphasis> structure
-for use in calls to <function>XScreenSaverQueryInfo</function>.
+for use in calls to <xref linkend='XScreenSaverQueryInfo' xrefstyle='select: title'/>.
 All fields in the
 structure are initialized to zero.  If insufficient memory is available,
 NULL is returned.  The results of this routine can be released
-using <emphasis remap='I'>XFree</emphasis>.
+using <olink targetdoc='libX11' targetptr='XFree'><function>XFree</function></olink>.
 </para>
 
-<funcsynopsis>
+<funcsynopsis id='XScreenSaverQueryInfo'>
 <funcprototype>
   <funcdef>Status <function>XScreenSaverQueryInfo</function></funcdef>
     <paramdef>Display <parameter>*display</parameter></paramdef>
@@ -797,7 +806,7 @@ description of the fields.  If the extension is not supported,
 is returned.
 </para>
 
-<funcsynopsis>
+<funcsynopsis id='XScreenSaverSelectInput'>
 <funcprototype>
   <funcdef>void <function>XScreenSaverSelectInput</function></funcdef>
     <paramdef>Display <parameter>*display</parameter></paramdef>
@@ -834,7 +843,7 @@ See the definition of the
 of the allowed event masks.   <!-- xref ? -->
 </para>
 
-<funcsynopsis>
+<funcsynopsis id='XScreenSaverSetAttributes'>
 <funcprototype>
   <funcdef>void <function>XScreenSaverSetAttributes</function></funcdef>
     <paramdef>Display <parameter>*dpy</parameter></paramdef>
@@ -860,7 +869,7 @@ of the <function>ScreenSaverSetAttributes</function> request for a
 description of each of the arguments.
 </para>
 
-<funcsynopsis>
+<funcsynopsis id='XScreenSaverUnsetAttributes'>
 <funcprototype>
   <funcdef>void <function>XScreenSaverUnsetAttributes</function></funcdef>
     <paramdef>Display <parameter>*display</parameter></paramdef>
@@ -874,7 +883,7 @@ extension, this routine instructs the server to discard
 any previous screen saver window attributes set by this client.
 </para>
 
-<funcsynopsis>
+<funcsynopsis id='XScreenSaverRegister'>
 <funcprototype>
   <funcdef>Status <function>XScreenSaverRegister</function></funcdef>
     <paramdef>Display <parameter>*display</parameter></paramdef>
@@ -893,7 +902,7 @@ is encountered and the property is not changed, otherwise it returns
 non-zero.
 </para>
 
-<funcsynopsis>
+<funcsynopsis id='XScreenSaverUnregister'>
 <funcprototype>
   <funcdef>Status <function>XScreenSaverUnregister</function></funcdef>
     <paramdef>Display <parameter>*display</parameter></paramdef>
@@ -908,7 +917,7 @@ It returns zero if an error is encountered and the property is changed,
 otherwise it returns non-zero.
 </para>
 
-<funcsynopsis>
+<funcsynopsis id='XScreenSaverGetRegistered'>
 <funcprototype>
   <funcdef>Status <function>XScreenSaverGetRegistered</function></funcdef>
     <paramdef>Display <parameter>*display</parameter></paramdef>
@@ -930,6 +939,5 @@ is encountered or if the property does not exist or is not of the correct
 format; otherwise it returns non-zero.
 </para>
 
-</sect1>
 </chapter>
 </book>
