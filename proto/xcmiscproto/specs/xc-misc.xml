@@ -1,27 +1,29 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"
-                   "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd">
+<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.3//EN"
+                   "http://www.oasis-open.org/docbook/xml/4.3/docbookx.dtd"
+[
+<!ENTITY % defs SYSTEM "defs.ent"> %defs;
+]>
 
 <!-- lifted from troff+ms+XMan by doclifter -->
-<book id="xcmisc">
+<book id="xc-misc">
 
 <bookinfo>
    <title>XC-MISC Extension</title>
    <subtitle>X Consortium Standard</subtitle>
-   <releaseinfo>X Version 11, Release 6.9/7.0</releaseinfo>
    <authorgroup>
       <author>
          <firstname>Bob</firstname><surname>Scheifler</surname>
+         <affiliation><orgname>X Consortium</orgname></affiliation>
       </author>
       <author>
-	<firstname>David</firstname><surname>Wiggins</surname>
+	<firstname>David</firstname><othername>P.</othername><surname>Wiggins</surname>
+        <affiliation><orgname>X Consortium</orgname></affiliation>
       </author>
-      <corpauthor>X Consortium</corpauthor>
    </authorgroup>
-   <copyright><year>1994</year><holder>X Consortium</holder></copyright>
+   <releaseinfo>X Version 11, Release &fullrelvers;</releaseinfo>
    <releaseinfo>Version 1.1</releaseinfo>
-   <affiliation><orgname>X Consortium</orgname></affiliation>
-   <productnumber>X Version 11, Release 6.9/7.0</productnumber>
+   <copyright><year>1994</year><holder>X Consortium</holder></copyright>
 
 <legalnotice>
 
@@ -38,7 +40,7 @@
 
 </bookinfo>
 
-<chapter id='overview'>
+<chapter id='Overview'>
 <title>Overview</title>
 
 <para>When an X client connects to an X server, it receives a fixed range of
@@ -68,7 +70,7 @@ IDs.  Xlib can use these extension requests behind the scenes when it has
 exhausted its current pool of resource IDs.</para>
 </chapter>
 
-<chapter id='requests'>
+<chapter id='Requests'>
 <title>Requests</title>
 
 <para>
@@ -129,13 +131,13 @@ range.</para>
 The number returned may be smaller than the number requested.</para>
 </chapter>
 
-<chapter id='events_and_errors'>
+<chapter id='Events_and_Errors'>
 <title>Events and Errors</title>
 
 <para>No new events or errors are defined by this extension.</para>
 </chapter>
 
-<chapter id='encoding'>
+<chapter id='Encoding'>
 <title>Encoding</title>
 
 <para>Please refer to the X11 Protocol Encoding document as this document uses

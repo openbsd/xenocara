@@ -1,3 +1,172 @@
+commit f18667046964759f1fe086ade26829f6ced4fea7
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Mar 22 20:52:02 2012 -0700
+
+    xcmiscproto 1.2.2
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 8bdaa79348896ecbf4f69df9773ec4681eb46410
+Author: Matt Dew <marcoz@osource.org>
+Date:   Sun Oct 2 20:29:17 2011 -0600
+
+    1 - fix the capitalization of the ID attriutes to match either the
+         <title> or <funcdef> string it goes with.
+    2 - fix any <linkend>'s that were affected by 1.
+    3 - any <function> in the docs that has an actual funcdef,
+    will become an olink.
+    
+    Signed-off-by: Matt Dew <marcoz@osource.org>
+
+commit 7252c99f0bdfb560efe980f6f87786f4ccedeccd
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Sep 20 20:20:46 2011 -0400
+
+    specs: fix author affiliation
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 2d793cc635ca8a20a9ee0c99bcc0337c4f82bd7b
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Sep 12 16:54:45 2011 -0400
+
+    docs: use the &fullrelvers; entity to set X11 release information
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 4ecb4f1559d2ce1c74a1ff2763b1ad2746961d53
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Sep 11 19:49:54 2011 -0400
+
+    docs: remove <productnumber> which is not used by default
+    
+    This element is not rendered by default on the title. A template
+    customization is required to display it.
+    X Window System does not have a product number.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit e3affab380afc20a7d202ec40896ad43e65a477e
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Sep 8 20:00:00 2011 -0400
+
+    docbook.am: embed css styles inside the HTML HEAD element
+    
+    Rather than referring to the external xorg.css stylesheet, embed the content
+    of the file in the html output produced. This is accomplished by using
+    version 1.10 of xorg-xhtml.xsl.
+    
+    This makes the whole html docs tree much more relocatable.
+    In addition, it eliminates xorg.css as a runtime file which makes
+    xorg-sgml-doctools a build time only package.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit d8e1aee8520fe74d921bef604f2acbb4c0899900
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Sep 7 10:31:04 2011 -0400
+
+    docbook.am: global maintenance update - entities, images and olinking
+    
+    Adding support in libX11 for html chunking caused a reorg of docbook.am
+    as well as the xorg-sgml-doctools masterdb for olinking.
+    The parameter img.src.path is added for pdf images.
+    A searchpath to the root builddir is added for local entities, if present.
+    
+    The docbook.am makefile hides all the details and is identical for
+    all 22 modules having DocBook documentation. It is included by a thin
+    Makefile.am which requires no docbook knowledge.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 905336a989f14dbbcc0c8d1648a2a51724203a09
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Jun 12 17:54:50 2011 -0400
+
+    Install xml versions of specs even if HAVE_XMLTO is false
+    
+    DocBook/XML input source is also a usefull output format that can be viewed
+    with an XML viewer or editor and by some O/S help system.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 4179eb64ad35ab425cf00447bff334c387e23306
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Jun 5 16:27:37 2011 -0400
+
+    Install target dbs alongside generated documents
+    
+    This matches a change in xorg-sgml-docs whereby the masterdb will look for
+    the target dbs into the same location as the generated documents.
+    
+    The target dbs are now installed alongside the generated documents.
+    Previously they are installed in $prefix/sgml/X11/dbs alongside masterdb which
+    has the potential of installing outside the package prefix and cause
+    distcheck to fail when user does not have write permission in this package.
+    
+    Requires XORG_CHECK_SGML_DOCTOOLS(1.8) which was released 2011-06-11
+
+commit fd4973cb7986e69bf47264430fbd17c58be9d0cd
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Feb 27 15:06:18 2011 -0500
+
+    Documentation: add Docbook external references support
+    
+    When writing technical documentation, it is often necessary to cross
+    reference to other information. When that other information is not in the
+    current document, additional support is needed, namely <olink>.
+    
+    A new feature with version 1.7 of xorg-sgml-doctools adds references to
+    other documents within or outside this package.
+    
+    This patch adds technical support for this feature but does not change
+    the content of the documentation as seen by the end user.
+    
+    Each book or article must generate a database containing the href
+    of sections that can be referred to from another document. This database
+    is installed in DATAROOTDIR/sgml/X11/dbs. There is a requirement that
+    the value of DATAROOTDIR for xorg-sgml-doctools and for the package
+    documentation is the same. This forms a virtual document tree.
+    
+    This database is consulted by other documents while they are being generated
+    in order to fulfill the missing information for linking.
+    Refer to the xorg-sgml-doctools for further technical information.
+    
+    Co-authored-by: Matt Dew <marcoz@osource.org>
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 485c361562e986efa1cf05d2c70553e99c1b9382
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Fri Feb 25 08:44:47 2011 -0500
+
+    Docbook: change the book id to match the xml file basename
+    
+    This is required for the up-coming external references support.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 56424da60f0587a0fba8bcbf81536dd043412e87
+Author: Paulo Zanoni <pzanoni@mandriva.com>
+Date:   Thu Dec 16 13:37:28 2010 -0200
+
+    Use docbookx.dtd version 4.3 for all docs
+    
+    Signed-off-by: Paulo Zanoni <pzanoni@mandriva.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 357c04268c4801fb17e4f1f495ec113d565b5be2
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Nov 9 15:19:09 2010 -0500
+
+    config: HTML file generation: use the installed copy of xorg.css
+    
+    Currenlty the xorg.css file is copied in each location
+    where a DocBook/XML file resides. This produces about
+    70 copies in the $(docdir) install tree.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
 commit bff39d1e68056ffdf83924e708e55730236655dd
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Sat Oct 30 00:04:11 2010 -0700
