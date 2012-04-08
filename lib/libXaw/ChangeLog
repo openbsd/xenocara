@@ -1,3 +1,310 @@
+commit b16cc35e551860a0bff54c47b33317536ddeae52
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Mar 22 19:51:33 2012 -0700
+
+    libXaw 1.0.10
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 8a78d3aef0f6f1f51997468daf5f67231f4a3ecd
+Author: Matt Turner <mattst88@gmail.com>
+Date:   Wed Feb 1 13:44:05 2012 -0500
+
+    Include headers instead of using extern definitions
+    
+    Signed-off-by: Matt Turner <mattst88@gmail.com>
+
+commit 49c0a2441946f0d70fbd2612f193c95b84dde102
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Tue Nov 1 20:47:34 2011 -0700
+
+    Build fix for -Werror=pointer-to-int-cast
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit fe00db0ecafd95f6e1353b1d5f11ee6012a9b64c
+Author: Matt Dew <marcoz@osource.org>
+Date:   Wed Oct 5 22:33:05 2011 -0600
+
+    Cleanup IDs and links in doc
+    
+    1 - fix the capitalization of the ID attributes to match either the
+         <title> or <funcdef> string it goes with.
+    2 - fix any <linkend>'s that were affected by 1.
+    3 - any <function> in the docs that has an actual funcdef,
+    will become an olink.
+    
+    Signed-off-by: Matt Dew <marcoz@osource.org>
+
+commit c8e8838702ba8ae0a8100c7f1bd94ce9932339de
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Sep 19 16:25:43 2011 -0400
+
+    specs: refactor multi license legal text
+    
+    Also restore lost information.
+    There was no version number for this spec as in many of the docs.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 37ffe69b10ae29e8f91de6ef647d06804b9d159b
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Sep 16 22:13:37 2011 -0700
+
+    Strip trailing whitespace
+    
+    Performed with: find * -type f | xargs perl -i -p -e 's{[ \t]+$}{}'
+    git diff -w & git diff -b show no diffs from this change
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 6c628c605e4f58be3a84edc5273a0dd88363a770
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Sep 13 17:12:59 2011 -0400
+
+    specs: fix orphan author affiliation.
+    
+    It belongs to Chris Peterson formerly of MIT
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit e07f1d83079eb90ea91e3ff120ad747b1cc78bfb
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Sep 12 16:54:45 2011 -0400
+
+    docs: use the &fullrelvers; entity to set X11 release information
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 5b1f776e84108bce397cc6721ee176c3bb5592ad
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Sep 11 19:49:53 2011 -0400
+
+    docs: remove <productnumber> which is not used by default
+    
+    This element is not rendered by default on the title. A template
+    customization is required to display it.
+    X Window System does not have a product number.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 038802c68090dd3a75405178516017d80a51ecdf
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Sep 8 20:00:00 2011 -0400
+
+    docbook.am: embed css styles inside the HTML HEAD element
+    
+    Rather than referring to the external xorg.css stylesheet, embed the content
+    of the file in the html output produced. This is accomplished by using
+    version 1.10 of xorg-xhtml.xsl.
+    
+    This makes the whole html docs tree much more relocatable.
+    In addition, it eliminates xorg.css as a runtime file which makes
+    xorg-sgml-doctools a build time only package.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit e24d546c5da599f63cc2ff40626b58c1183ed27a
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Sep 7 10:31:04 2011 -0400
+
+    docbook.am: global maintenance update - entities, images and olinking
+    
+    Adding support in libX11 for html chunking caused a reorg of docbook.am
+    as well as the xorg-sgml-doctools masterdb for olinking.
+    The parameter img.src.path is added for pdf images.
+    A searchpath to the root builddir is added for local entities, if present.
+    
+    The docbook.am makefile hides all the details and is identical for
+    all 22 modules having DocBook documentation. It is included by a thin
+    Makefile.am which requires no docbook knowledge.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit a6c814b6d02e3f28f1d015678bd3d944ff8dfb10
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Sep 1 14:01:02 2011 -0400
+
+    Remove include directive to <X11/Xaw>
+    
+    The -I directive to include/X11/Xaw is removed which will alert
+    developers not to include header files with quotes unless they are in
+    the /src directory.
+    
+    Currently no offending includes were found.
+    
+    Tested-by: Yaakov Selkowitz <yselkowitz@users.sourceforge.net>
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 86444aeda526e957e1d7adc90625f24e263aa7ea
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sat Jun 18 10:22:19 2011 -0400
+
+    man page: replace hard coded section number with __libmansuffix__
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 66e450fdbb58b77641351e3c11631fdde86bf205
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Jun 12 18:38:44 2011 -0400
+
+    Install xml versions of specs even if HAVE_XMLTO is false
+    
+    DocBook/XML input source is also a usefull output format that can be viewed
+    with an XML viewer or editor and by some O/S help system.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit f3d7c3c5d9f142149d3217682667b32c3d0ded8d
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Jun 5 16:27:36 2011 -0400
+
+    Install target dbs alongside generated documents
+    
+    This matches a change in xorg-sgml-docs whereby the masterdb will look for
+    the target dbs into the same location as the generated documents.
+    
+    The target dbs are now installed alongside the generated documents.
+    Previously they are installed in $prefix/sgml/X11/dbs alongside masterdb which
+    has the potential of installing outside the package prefix and cause
+    distcheck to fail when user does not have write permission in this package.
+    
+    Requires XORG_CHECK_SGML_DOCTOOLS(1.8) which was released 2011-06-11
+
+commit 39ffb88b3a6523e9258bc6e4f3948a09e63b269f
+Author: Matt Dew <marcoz@osource.org>
+Date:   Tue May 31 20:03:23 2011 -0600
+
+    Add id attributes to funcsynopsis to allow other docs to olink to them.
+    
+    Signed-off-by: Matt Dew <marcoz@osource.org>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit f5823ff8ed5bd280e7858116c3cec5d97184b175
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat May 28 08:48:10 2011 -0700
+
+    Correct path to examples in X11R5 contrib archive
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 7d01dd4176b8ae1664218da8e197ef49d1efd05a
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri May 27 20:35:28 2011 -0700
+
+    Bug 37536: Documentation refers to invalid contrib/examples/mit/Xaw
+    
+    https://bugs.freedesktop.org/show_bug.cgi?id=37536
+    
+    Update text to point to the latest distributed copy I found, in the
+    X11R5 contrib archives.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit cfa8e377352d5b9d5dbddc75de8314a509f51224
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Feb 27 15:06:18 2011 -0500
+
+    Documentation: add Docbook external references support
+    
+    When writing technical documentation, it is often necessary to cross
+    reference to other information. When that other information is not in the
+    current document, additional support is needed, namely <olink>.
+    
+    A new feature with version 1.7 of xorg-sgml-doctools adds references to
+    other documents within or outside this package.
+    
+    This patch adds technical support for this feature but does not change
+    the content of the documentation as seen by the end user.
+    
+    Each book or article must generate a database containing the href
+    of sections that can be referred to from another document. This database
+    is installed in DATAROOTDIR/sgml/X11/dbs. There is a requirement that
+    the value of DATAROOTDIR for xorg-sgml-doctools and for the package
+    documentation is the same. This forms a virtual document tree.
+    
+    This database is consulted by other documents while they are being generated
+    in order to fulfill the missing information for linking.
+    Refer to the xorg-sgml-doctools for further technical information.
+    
+    Co-authored-by: Matt Dew <marcoz@osource.org>
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit a1c8ddc087715876cce1c86f837f7b13b49696aa
+Author: Glenn Burkhardt <gbburkhardt@verizon.net>
+Date:   Fri Dec 3 17:22:42 2010 -0500
+
+    fix potential infinte loop in XawBoxQueryGeometry() (bug 11569)
+    
+    Originally sent to xorg@ back in July 2007.
+    http://lists.x.org/archives/xorg/2007-July/025997.html
+
+commit 38dce0209303b48054c884508633b4ce0d52a819
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Jan 27 22:40:02 2011 -0800
+
+    Convert XmuSnprintf calls to just plain snprintf
+    
+    All supported platforms have native snprintf
+    
+    Remove #include <X11/Xmu/SysUtil.h> since it only defines XmuSnprintf
+    and the unused XmuGethostname
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 83e4910b379cb9b9d69a0438eba3322470afda24
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Jan 27 22:35:46 2011 -0800
+
+    Typo fix: sintax error -> syntax error
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit bd78cc3b4afec713fcef114b5f12186d749fdb17
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Feb 2 11:43:41 2011 -0500
+
+    config: comment, minor upgrade and layout configure.ac
+    
+    Group statements per section as per Autoconf standard layout
+    Autoconf recommends not using dnl instead of # for comments
+    No functional configuration changes
+    
+    This helps automated maintenance and release activities.
+    Details can be found in http://wiki.x.org/wiki/NewModuleGuidelines
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 449ab92d83a972ba28ffda0ae198a6c8e4b00e78
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Fri Jan 28 16:07:07 2011 -0500
+
+    config: replace deprecated AC_HELP_STRING with AS_HELP_STRING
+    
+    This silences an Automake warning.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit b73a5ea91d0b3bb61ee8e7aa26ff178fd5b72209
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Fri Jan 28 14:59:04 2011 -0500
+
+    config: remove unrequired AC_HEADER_STDC
+    
+    Autoconf says:
+    "This macro is obsolescent, as current systems have conforming
+    header files. New programs need not use this macro".
+
+commit 03457873474dfc90e5f2322facbd6032a1312086
+Author: Roberto Branciforti <rbbrnc@gmail.com>
+Date:   Wed Jan 12 22:36:06 2011 +0100
+
+    Removing trailing white spaces
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit 8ac146ce96cfa133b788b1ffdd13fe0b648ee4fc
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Tue Jan 11 17:07:08 2011 -0800
