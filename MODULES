@@ -1,4 +1,4 @@
-# $OpenBSD: MODULES,v 1.210 2012/04/04 21:00:58 matthieu Exp $
+# $OpenBSD: MODULES,v 1.211 2012/04/08 16:18:21 matthieu Exp $
 #
 # X.Org maintained modules
 #
@@ -22,13 +22,13 @@ app/oclock		1.0.3	7.7
 app/rgb			1.0.4	7.6
 app/scripts		1.0.1	7.0
 app/sessreg		1.0.7	7.7
-app/setxkbmap		1.3.0	7.7	needs-update
+app/setxkbmap		1.3.0	7.7
 app/showfont		1.0.3	7.6
 app/smproxy		1.0.5	7.7
 app/twm			1.0.7	7.7
 app/viewres		1.0.3	7.6
 app/x11perf		1.5.4	7.7
-app/xauth		1.0.7	7.7	needs-update
+app/xauth		1.0.7	7.7
 app/xbacklight		1.1.2	7.6
 app/xbiff		1.0.3	7.6
 app/xcalc		1.0.4	7.6
@@ -45,31 +45,31 @@ app/xev			1.2.0	7.7
 app/xeyes		1.1.1	7.6
 app/xf86dga		1.0.3	7.6
 app/xfd			1.1.1	7.7
-app/xfontsel		1.0.4	7.7	needs-update
+app/xfontsel		1.0.4	7.7
 app/xfs			1.1.2	7.7
 app/xfsinfo		1.0.3	7.6
 app/xfwp		1.0.2	7.6
-app/xgamma		1.0.5	7.7	needs-update
+app/xgamma		1.0.5	7.7
 app/xgc			1.0.3	7.6
-app/xhost		1.0.5	7.7	needs-update
+app/xhost		1.0.5	7.7
 app/xinit		1.3.2	7.7	needs-update
 app/xinput		1.5.4	7.7	needs-update
 app/xkbcomp		1.2.4	7.7	needs-update
-app/xkbevd		1.1.3	7.7	needs-update
+app/xkbevd		1.1.3	7.7
 app/xkbprint		1.0.3	7.6
 app/xkbutils		1.0.3	7.6
 app/xkill		1.0.3	7.5
-app/xload		1.1.1	7.7	needs-update
-app/xlogo		1.0.4	7.7	needs-update
-app/xlsatoms		1.1.1	7.7	needs-update
+app/xload		1.1.1	7.7
+app/xlogo		1.0.4	7.7
+app/xlsatoms		1.1.1	7.7
 app/xlsclients		1.1.2	7.7
 app/xlsfonts		1.0.3	7.5+
 app/xmag		1.0.4	7.6
 app/xman		1.1.2	7.7
 app/xmessage		1.0.3	7.5+
-app/xmodmap		1.0.6	7.7	needs-update
+app/xmodmap		1.0.6	7.7
 app/xmore		1.0.2	7.5+
-app/xpr			1.0.4	7.7	needs-update
+app/xpr			1.0.4	7.7
 app/xprop		1.2.1	7.7
 app/xrandr		1.3.5	7.7
 app/xrdb		1.0.9	7.7
@@ -82,7 +82,7 @@ app/xvidtune		1.0.2	7.5+
 app/xvinfo		1.1.1	7.6
 app/xwd			1.0.5	7.6
 app/xwininfo		1.1.2	7.7
-app/xwud		1.0.4	7.7	needs-update
+app/xwud		1.0.4	7.7
 
 data/bitmaps		1.1.1	7.6
 
@@ -177,7 +177,7 @@ lib/libX11			1.5rc1	7.7
 lib/libXRes			1.0.6	7.7
 lib/libXScrnSaver		1.2.2	7.7
 lib/libXau			1.0.7	7.7
-lib/libXaw			1.0.10	7.7	needs-update
+lib/libXaw			1.0.10	7.7
 lib/libXcomposite		0.4.3	7.6
 lib/libXcursor			1.1.13	7.7
 lib/libXdamage			1.1.3	7.5+
@@ -207,7 +207,7 @@ lib/libpthread-stubs		0.3	7.5+
 lib/libxcb			1.8.1	7.7
 lib/libxkbfile			1.0.8	7.7
 lib/libxkbui			1.0.2	7.1
-lib/libxtrans			1.2.7	7.7	needs-update
+lib/libxtrans			1.2.7	7.7
 lib/pixman			0.24.4	7.7
 lib/xcb-util			0.3.8	7.7	needs-update
 lib/xcb-util-image		0.3.8	7.7	needs-import
@@ -215,28 +215,28 @@ lib/xcb-util-renderutil		0.3.8	7.7	needs-import
 lib/xcb-util-wm			0.3.8	7.7	needs-import
 lib/xcb-util-keysyms		0.3.8	7.7	needs-import
 
-proto/bigreqsproto		1.1.2	7.7	needs-update
+proto/bigreqsproto		1.1.2	7.7
 proto/compositeproto		0.4.2	7.6
 proto/damageproto		1.2.1	7.6
 proto/dri2proto			2.6	7.7
 proto/dmxproto			2.3.1	7.6
 proto/fixesproto		5.0	7.7
 proto/fontcacheproto		0.1.3	7.5
-proto/fontsproto		2.1.2	7.7	needs-update
+proto/fontsproto		2.1.2	7.7
 proto/glproto			1.4.15	7.7
 proto/inputproto		2.2	7.7	needs-update
-proto/kbproto			1.0.6	7.7	needs-update
+proto/kbproto			1.0.6	7.7
 proto/pmproto			1.0.3	7.5	deprecated
 proto/randrproto		1.3.2	7.6
-proto/recordproto		1.14.2	7.7	needs-update
+proto/recordproto		1.14.2	7.7
 proto/renderproto		0.11.1	7.6
 proto/resourceproto		1.2.0	7.7
-proto/scrnsaverproto		1.2.2	7.7	needs-update
+proto/scrnsaverproto		1.2.2	7.7
 proto/videoproto		2.3.1	7.6
 proto/x11proto			7.0.23	7.7
-proto/xcb-proto			1.7.1	7.7	needs-update
-proto/xcmiscproto		1.2.2	7.7	needs-update
-proto/xextproto			7.2.1	7.7	needs-update
+proto/xcb-proto			1.7.1	7.7
+proto/xcmiscproto		1.2.2	7.7
+proto/xextproto			7.2.1	7.7
 proto/xf86bigfontproto		1.2.0	7.4+
 proto/xf86dgaproto		2.1	7.5
 proto/xf86driproto		2.1.1	7.6
