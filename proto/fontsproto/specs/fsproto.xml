@@ -1,31 +1,28 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.3//EN"
-                   "http://www.oasis-open.org/docbook/xml/4.3/docbookx.dtd">
+<!DOCTYPE article PUBLIC "-//OASIS//DTD DocBook XML V4.3//EN"
+                   "http://www.oasis-open.org/docbook/xml/4.3/docbookx.dtd"
+[
+<!ENTITY % defs SYSTEM "defs.ent"> %defs;
+]>
 
 
-<book id="fsproto">
+<article id="fsproto">
 
-<bookinfo>
+<articleinfo>
    <title>The X Font Service Protocol</title>
-   <subtitle>X Window System Standard</subtitle>
+   <subtitle>X Consortium Standard</subtitle>
+   <releaseinfo>X Version 11, Release &fullrelvers;</releaseinfo>
    <releaseinfo>Version 2.0</releaseinfo>
    <authorgroup>
       <author>
          <firstname>Jim</firstname><surname>Fulton</surname>
-         <affiliation><orgname>
-Network Computing Devices, Inc.
-         </orgname></affiliation>
+         <affiliation><orgname>Network Computing Devices, Inc.</orgname></affiliation>
       </author>
    </authorgroup>
-   <corpname>X Consortium Standard</corpname>
-   <copyright><year>1991</year><holder>Network Computing Devices, Inc.</holder></copyright>
-   <copyright><year>1994</year><holder>X Consortium</holder></copyright>
-   <affiliation><orgname>X Consortium</orgname></affiliation>
-   <productnumber>X Version 11, Release 6.8</productnumber>
    <edition>Revised May 2, 1994</edition>
+   <copyright><year>1991</year><holder>Network Computing Devices, Inc.</holder></copyright>
 
 <legalnotice>
-
 <para>
 Permission to use, copy, modify, distribute, and sell this
 documentation for any purpose is hereby granted without fee,
@@ -35,6 +32,10 @@ makes no representations about the suitability for any purpose
 of the information in this document.  This documentation is
 provided "as is" without express or implied warranty.
 </para>
+</legalnotice>
+
+<legalnotice>
+<para role="multiLicensing">Copyright © 1994 X Consortium</para>
 <para>
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -47,27 +48,23 @@ furnished to do so, subject to the following conditions:
 The above copyright notice and this permission notice shall be included in
 all copies or substantial portions of the Software.
 </para>
-
 <para>
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+THE SOFTWARE IS PROVIDED &ldquo;AS IS&rdquo;, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE
 X CONSORTIUM BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN
 AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 </para>
-
 <para>
 Except as contained in this notice, the name of the X Consortium shall not be
 used in advertising or otherwise to promote the sale, use or other dealings
 in this Software without prior written authorization from the X Consortium.
 </para>
 </legalnotice>
-</bookinfo>
+</articleinfo>
 
-<chapter>
-<title>TITLE</title>
-<sect1 id="introduction">
+<sect1 id='Introduction'>
 <title>Introduction</title>
 <para>
 The management of fonts in large, heterogeneous environments is one of the
@@ -121,7 +118,7 @@ implement a variety of strategies for fine-grained demand-loading of glyphs.
 </para>
 </sect1>
 
-<sect1 id="architectural_model">
+<sect1 id='Architectural_Model'>
 <title>Architectural Model</title>
 <!-- .XS -->
 <!-- (SN Architectural Model -->
@@ -240,7 +237,7 @@ Consortium.
 </para>
 </sect1>
 
-<sect1 id="font_server_naming">
+<sect1 id='Font_Server_Naming'>
 <title>Font Server Naming</title>
 <!-- .XS -->
 <!-- (SN Font Server Naming -->
@@ -255,7 +252,7 @@ described below.  Formats for additional transports may be registered with the
 X Consortium.
 </para>
 
-<sect2 id="tcpip_names">
+<sect2 id='TCPIP_Names'>
 <title>TCP/IP Names</title>
 <!-- .XS -->
 <!-- (SN TCP/IP Names -->
@@ -282,7 +279,7 @@ that may be requested.  For example:
 </literallayout>
 </sect2>
 
-<sect2 id="decnet_names">
+<sect2 id='DECnet_Names'>
 <title>DECnet Names</title>
 <!-- .XS -->
 <!-- (SN DECnet Names -->
@@ -312,7 +309,7 @@ requested.  For example:
 </sect2>
 </sect1>
 
-<sect1 id="protocol">
+<sect1 id='Protocol'>
 <title>Protocol</title>
 <!-- .XS -->
 <!-- (SN Protocol -->
@@ -380,7 +377,7 @@ A type with a prefix "LISTof" represents a counted list of
 elements of that type, as in:  LISTofCARD8
 </para>
 
-<sect2 id="data_types">
+<sect2 id='Data_Types'>
 <title>Data Types</title>
 <!-- .XS -->
 <!-- (SN Data Types -->
@@ -1107,7 +1104,7 @@ This structure is padded to 32-bit alignment.
 </blockquote>
 </sect2>
 
-<sect2 id="requests">
+<sect2 id='Requests'>
 <title>Requests</title>
 <!-- .XS -->
 <!-- (SN Requests -->
@@ -2653,7 +2650,7 @@ the client that made the connection.
 </blockquote>
 </sect2>
 
-<sect2 id="errors">
+<sect2 id='Errors'>
 <title>Errors</title>
 <!-- .XS -->
 <!-- (SN Errors -->
@@ -2980,7 +2977,7 @@ Additional errors may be defined by extensions.
 </blockquote>
 </sect2>
 
-<sect2 id="events">
+<sect2 id='Events'>
 <title>Events</title>
 <!-- .XS -->
 <!-- (SN Events -->
@@ -3119,7 +3116,7 @@ Additional events may be defined by extensions.
 </sect2>
 </sect1>
 
-<sect1 id="protocol_encoding">
+<sect1 id='Protocol_Encoding'>
 <title>Protocol Encoding</title>
 <!-- .XS -->
 <!-- (SN Protocol Encoding -->
@@ -3167,7 +3164,7 @@ multiple of four:
      pad(e) = (4 - (e mod 4)) mod 4
 </literallayout>
 
-<sect2 id="data_types_2">
+<sect2 id='Data_Types_2'>
 <title>Data Types</title>
 <!-- .XS -->
 <!-- (SN Data Types -->
@@ -3366,7 +3363,7 @@ n    PROPINFO           property data
 </literallayout>
 </sect2>
 
-<sect2 id="requests_2">
+<sect2 id='Requests_2'>
 <title>Requests</title>
 <para><emphasis role="bold">open connection</emphasis></para>
 <literallayout class="monospaced">
@@ -3763,7 +3760,7 @@ p                            unused, p=pad(m)
 </literallayout>
 </sect2>
 
-<sect2 id="errors_2">
+<sect2 id='Errors_2'>
 <title>Errors</title>
 <literallayout class="monospaced">
 
@@ -3897,7 +3894,7 @@ p                            unused, p=pad(m)
 </literallayout>
 </sect2>
 
-<sect2 id="events_2">
+<sect2 id='Events_2'>
 <title>Events</title>
 <literallayout class="monospaced">
 <emphasis role="bold">KeepAlive</emphasis>
@@ -3931,7 +3928,7 @@ p                            unused, p=pad(m)
 </sect2>
 </sect1>
 
-<sect1 id="acknowledgements">
+<sect1 id='Acknowledgements'>
 <title>Acknowledgements</title>
 <!-- .XS -->
 <!-- (SN Acknowledgements -->
@@ -3970,7 +3967,6 @@ the X Consortium.
 </biblioentry>
 
 </bibliography>
-</chapter>
 
 <appendix id="suggested_licensing_policies">
 <title>Suggested Licensing Policies</title>
@@ -4081,4 +4077,4 @@ handling of ECONNREFUSED in XConnDis.c).
   </listitem>
 </itemizedlist>
 </appendix>
-</book>
+</article>
