@@ -20,7 +20,7 @@
 				/* DGA support */
 #include "dgaproc.h"
 
-#ifdef XF86DRI
+#ifdef R128DRI
 #include "r128_common.h"
 #endif
 
@@ -69,7 +69,7 @@ SECOND_PASS:
 	    if (secondPitch)
 		pitch = secondPitch;
 
-	    if (!(newmodes = xrealloc(modes, (*num + 1) * sizeof(DGAModeRec))))
+	    if (!(newmodes = realloc(modes, (*num + 1) * sizeof(DGAModeRec))))
 		break;
 
 	    modes       = newmodes;
@@ -244,14 +244,14 @@ R128_SetMode(
 	pScrn->currentMode = info->CurrentLayout.mode;
 
 	pScrn->SwitchMode(indx, pScrn->currentMode, 0);
-#ifdef XF86DRI
+#ifdef R128DRI
 	if (info->directRenderingEnabled) {
 	    R128CCE_STOP(pScrn, info);
 	}
 #endif
 	if (info->accelOn)
 	    R128EngineInit(pScrn);
-#ifdef XF86DRI
+#ifdef R128DRI
 	if (info->directRenderingEnabled) {
 	    R128CCE_START(pScrn, info);
 	}
@@ -276,14 +276,14 @@ R128_SetMode(
 
 	pScrn->SwitchMode(indx, pMode->mode, 0);
 
-#ifdef XF86DRI
+#ifdef R128DRI
 	if (info->directRenderingEnabled) {
 	    R128CCE_STOP(pScrn, info);
 	}
 #endif
 	if (info->accelOn)
 		R128EngineInit(pScrn);
-#ifdef XF86DRI
+#ifdef R128DRI
 	if (info->directRenderingEnabled) {
 	    R128CCE_START(pScrn, info);
 	}

@@ -71,7 +71,7 @@
 #include "r128_reg.h"
 #include "r128_version.h"
 
-#ifdef XF86DRI
+#ifdef R128DRI
 #define _XF86DRI_SERVER_
 #include "r128_dri.h"
 #include "r128_common.h"
@@ -133,7 +133,7 @@ typedef enum {
   OPTION_SW_CURSOR,
   OPTION_DAC_6BIT,
   OPTION_DAC_8BIT,
-#ifdef XF86DRI
+#ifdef R128DRI
   OPTION_XV_DMA,
   OPTION_IS_PCI,
   OPTION_CCE_PIO,
@@ -164,7 +164,7 @@ static const OptionInfoRec R128Options[] = {
   { OPTION_SW_CURSOR,    "SWcursor",         OPTV_BOOLEAN, {0}, FALSE },
   { OPTION_DAC_6BIT,     "Dac6Bit",          OPTV_BOOLEAN, {0}, FALSE },
   { OPTION_DAC_8BIT,     "Dac8Bit",          OPTV_BOOLEAN, {0}, TRUE  },
-#ifdef XF86DRI
+#ifdef R128DRI
   { OPTION_XV_DMA,       "DMAForXv",         OPTV_BOOLEAN, {0}, FALSE },
   { OPTION_IS_PCI,       "ForcePCIMode",     OPTV_BOOLEAN, {0}, FALSE },
   { OPTION_CCE_PIO,      "CCEPIOMode",       OPTV_BOOLEAN, {0}, FALSE },
@@ -228,7 +228,7 @@ static Bool R128GetRec(ScrnInfoPtr pScrn)
 static void R128FreeRec(ScrnInfoPtr pScrn)
 {
     if (!pScrn || !pScrn->driverPrivate) return;
-    xfree(pScrn->driverPrivate);
+    free(pScrn->driverPrivate);
     pScrn->driverPrivate = NULL;
 }
 
@@ -506,9 +506,9 @@ static Bool R128GetBIOSParameters(ScrnInfoPtr pScrn, xf86Int10InfoPtr pInt10)
 
 #ifdef XSERVER_LIBPCIACCESS
     int size = info->PciInfo->rom_size > R128_VBIOS_SIZE ? info->PciInfo->rom_size : R128_VBIOS_SIZE;
-    info->VBIOS = xalloc(size);
+    info->VBIOS = malloc(size);
 #else
-    info->VBIOS = xalloc(R128_VBIOS_SIZE);
+    info->VBIOS = malloc(R128_VBIOS_SIZE);
 #endif
 
     if (!info->VBIOS) {
@@ -541,7 +541,7 @@ static Bool R128GetBIOSParameters(ScrnInfoPtr pScrn, xf86Int10InfoPtr pInt10)
     }
     if (info->VBIOS[0] != 0x55 || info->VBIOS[1] != 0xaa) {
 	info->BIOSAddr = 0x00000000;
-	xfree(info->VBIOS);
+	free(info->VBIOS);
 	info->VBIOS = NULL;
 	xf86DrvMsg(pScrn->scrnIndex, X_WARNING,
 		   "Video BIOS not found!\n");
@@ -938,14 +938,6 @@ static Bool R128PreInitConfig(ScrnInfoPtr pScrn)
 				/* BIOS */
     from              = X_PROBED;
     info->BIOSAddr    = info->PciInfo->biosBase & 0xfffe0000;
-    if (dev->BiosBase) {
-	xf86DrvMsg(pScrn->scrnIndex, X_INFO,
-		   "BIOS address override, using 0x%08lx instead of 0x%08lx\n",
-		   dev->BiosBase,
-		   info->BIOSAddr);
-	info->BIOSAddr = dev->BiosBase;
-	from           = X_CONFIG;
-    }
     if (info->BIOSAddr) {
 	xf86DrvMsg(pScrn->scrnIndex, from,
 		   "BIOS at 0x%08lx\n", info->BIOSAddr);
@@ -1183,7 +1175,7 @@ static Bool R128PreInitConfig(ScrnInfoPtr pScrn)
 	}
     }
 
-#ifdef XF86DRI
+#ifdef R128DRI
 				/* DMA for Xv */
     info->DMAForXv = xf86ReturnOptValBool(info->Options, OPTION_XV_DMA, FALSE);
     if (info->DMAForXv) {
@@ -1527,7 +1519,7 @@ static void R128SetSyncRangeFromEdid(ScrnInfoPtr pScrn, int flag)
 }
 
 /***********
-   xfree's xf86ValidateModes routine deosn't work well with DFPs
+   free's xf86ValidateModes routine deosn't work well with DFPs
    here is our own validation routine. All modes between
    640<=XRes<=MaxRes and 480<=YRes<=MaxYRes will be permitted.
    NOTE: RageProII doesn't support rmx, can only work with the
@@ -1761,17 +1753,6 @@ static Bool R128PreInitCursor(ScrnInfoPtr pScrn)
     return TRUE;
 }
 
-/* This is called by R128PreInit to initialize hardware acceleration. */
-static Bool R128PreInitAccel(ScrnInfoPtr pScrn)
-{
-    R128InfoPtr   info = R128PTR(pScrn);
-
-    if (!xf86ReturnOptValBool(info->Options, OPTION_NOACCEL, FALSE)) {
-	if (!xf86LoadSubModule(pScrn, "xaa")) return FALSE;
-    }
-    return TRUE;
-}
-
 static Bool R128PreInitInt10(ScrnInfoPtr pScrn, xf86Int10InfoPtr *ppInt10)
 {
     R128InfoPtr   info = R128PTR(pScrn);
@@ -1785,7 +1766,7 @@ static Bool R128PreInitInt10(ScrnInfoPtr pScrn, xf86Int10InfoPtr *ppInt10)
     return TRUE;
 }
 
-#ifdef XF86DRI
+#ifdef R128DRI
 static Bool R128PreInitDRI(ScrnInfoPtr pScrn)
 {
     R128InfoPtr   info = R128PTR(pScrn);
@@ -1995,7 +1976,7 @@ Bool R128PreInit(ScrnInfoPtr pScrn, int flags)
 				/* We can't do this until we have a
 				   pScrn->display. */
     xf86CollectOptions(pScrn, NULL);
-    if (!(info->Options = xalloc(sizeof(R128Options))))    goto fail;
+    if (!(info->Options = malloc(sizeof(R128Options))))    goto fail;
     memcpy(info->Options, R128Options, sizeof(R128Options));
     xf86ProcessOptions(pScrn->scrnIndex, pScrn->options, info->Options);
 
@@ -2021,8 +2002,10 @@ Bool R128PreInit(ScrnInfoPtr pScrn, int flags)
     } else
            xf86DrvMsg(pScrn->scrnIndex, X_INFO, "VGAAccess option set to FALSE,"
                       " VGA module load skipped\n");
-    if (info->VGAAccess)
+    if (info->VGAAccess) {
+	vgaHWSetStdFuncs(VGAHWPTR(pScrn));
         vgaHWGetIOBase(VGAHWPTR(pScrn));
+    }
 #else
     xf86DrvMsg(pScrn->scrnIndex, X_INFO, "VGAHW support not compiled, VGA "
                "module load skipped\n");
@@ -2082,15 +2065,13 @@ Bool R128PreInit(ScrnInfoPtr pScrn, int flags)
 
     if (!R128PreInitCursor(pScrn))             goto fail;
 
-    if (!R128PreInitAccel(pScrn))              goto fail;
-
-#ifdef XF86DRI
+#ifdef R128DRI
     if (!R128PreInitDRI(pScrn))                goto fail;
 #endif
 
 				/* Free the video bios (if applicable) */
     if (info->VBIOS) {
-	xfree(info->VBIOS);
+	free(info->VBIOS);
 	info->VBIOS = NULL;
     }
 
@@ -2109,7 +2090,7 @@ Bool R128PreInit(ScrnInfoPtr pScrn, int flags)
 
 				/* Free the video bios (if applicable) */
     if (info->VBIOS) {
-	xfree(info->VBIOS);
+	free(info->VBIOS);
 	info->VBIOS = NULL;
     }
 
@@ -2190,7 +2171,7 @@ R128BlockHandler(int i, pointer blockData, pointer pTimeout, pointer pReadmask)
     ScrnInfoPtr pScrn   = xf86Screens[i];
     R128InfoPtr info    = R128PTR(pScrn);
 
-#ifdef XF86DRI
+#ifdef R128DRI
     if (info->directRenderingEnabled)
         FLUSH_RING();
 #endif
@@ -2212,10 +2193,11 @@ Bool R128ScreenInit(int scrnIndex, ScreenPtr pScreen,
     R128InfoPtr info   = R128PTR(pScrn);
     BoxRec      MemBox;
     int		y2;
+    Bool	noAccel;
 
     R128TRACE(("R128ScreenInit %x %d\n", pScrn->memPhysBase, pScrn->fbOffset));
 
-#ifdef XF86DRI
+#ifdef R128DRI
 				/* Turn off the CCE for now. */
     info->CCEInUse     = FALSE;
     info->indirectBuffer = NULL;
@@ -2224,7 +2206,7 @@ Bool R128ScreenInit(int scrnIndex, ScreenPtr pScreen,
     if (!R128MapMem(pScrn)) return FALSE;
     pScrn->fbOffset    = 0;
     if(info->IsSecondary) pScrn->fbOffset = pScrn->videoRam * 1024;
-#ifdef XF86DRI
+#ifdef R128DRI
     info->fbX          = 0;
     info->fbY          = 0;
     info->frontOffset  = 0;
@@ -2251,7 +2233,9 @@ Bool R128ScreenInit(int scrnIndex, ScreenPtr pScreen,
 			  pScrn->defaultVisual)) return FALSE;
     miSetPixmapDepths ();
 
-#ifdef XF86DRI
+    noAccel = xf86ReturnOptValBool(info->Options, OPTION_NOACCEL, FALSE);
+
+#ifdef R128DRI
 				/* Setup DRI after visuals have been
 				   established, but before fbScreenInit is
 				   called.  fbScreenInit will eventually
@@ -2265,7 +2249,7 @@ Bool R128ScreenInit(int scrnIndex, ScreenPtr pScreen,
 			   info->CurrentLayout.pixel_bytes);
 	int maxy        = info->FbMapSize / width_bytes;
 
-	if (xf86ReturnOptValBool(info->Options, OPTION_NOACCEL, FALSE)) {
+	if (noAccel) {
 	    xf86DrvMsg(scrnIndex, X_WARNING,
 		       "Acceleration disabled, not initializing the DRI\n");
 	    info->directRenderingEnabled = FALSE;
@@ -2336,7 +2320,7 @@ Bool R128ScreenInit(int scrnIndex, ScreenPtr pScreen,
     fbPictureInit (pScreen, 0, 0);
 
 				/* Memory manager setup */
-#ifdef XF86DRI
+#ifdef R128DRI
     if (info->directRenderingEnabled) {
 	FBAreaPtr fbarea;
 	int width_bytes = (pScrn->displayWidth *
@@ -2549,7 +2533,7 @@ Bool R128ScreenInit(int scrnIndex, ScreenPtr pScreen,
     }
 
 				/* Acceleration setup */
-    if (!xf86ReturnOptValBool(info->Options, OPTION_NOACCEL, FALSE)) {
+    if (!noAccel) {
 	if (R128AccelInit(pScreen)) {
 	    xf86DrvMsg(scrnIndex, X_INFO, "Acceleration enabled\n");
 	    info->accelOn = TRUE;
@@ -2638,7 +2622,7 @@ Bool R128ScreenInit(int scrnIndex, ScreenPtr pScreen,
     if (serverGeneration == 1)
 	xf86ShowUnusedOptions(pScrn->scrnIndex, pScrn->options);
 
-#ifdef XF86DRI
+#ifdef R128DRI
 				/* DRI finalization */
     if (info->directRenderingEnabled) {
 				/* Now that mi, fb, drm and others have
@@ -3368,7 +3352,7 @@ static void R128InitCommonRegisters(R128SavePtr save, R128InfoPtr info)
     save->subpic_cntl        = 0;
     save->viph_control       = 0;
     save->i2c_cntl_1         = 0;
-#ifdef XF86DRI
+#ifdef R128DRI
     save->gen_int_cntl       = info->gen_int_cntl;
 #else
     save->gen_int_cntl       = 0;
@@ -4251,7 +4235,7 @@ Bool R128EnterVT(int scrnIndex, int flags)
     if (info->accelOn)
 	R128EngineInit(pScrn);
 
-#ifdef XF86DRI
+#ifdef R128DRI
     if (info->directRenderingEnabled) {
 	if (info->irq) {
 	    /* Need to make sure interrupts are enabled */
@@ -4278,7 +4262,7 @@ void R128LeaveVT(int scrnIndex, int flags)
     R128SavePtr save  = &info->ModeReg;
 
     R128TRACE(("R128LeaveVT\n"));
-#ifdef XF86DRI
+#ifdef R128DRI
     if (info->directRenderingEnabled) {
 	DRILock(pScrn->pScreen, 0);
 	R128CCE_STOP(pScrn, info);
@@ -4303,7 +4287,7 @@ static Bool R128CloseScreen(int scrnIndex, ScreenPtr pScreen)
 
     R128TRACE(("R128CloseScreen\n"));
 
-#ifdef XF86DRI
+#ifdef R128DRI
 				/* Disable direct rendering */
     if (info->directRenderingEnabled) {
 	R128DRICloseScreen(pScreen);
@@ -4319,17 +4303,17 @@ static Bool R128CloseScreen(int scrnIndex, ScreenPtr pScreen)
     if (info->accel)             XAADestroyInfoRec(info->accel);
     info->accel                  = NULL;
 
-    if (info->scratch_save)      xfree(info->scratch_save);
+    if (info->scratch_save)      free(info->scratch_save);
     info->scratch_save           = NULL;
 
     if (info->cursor)            xf86DestroyCursorInfoRec(info->cursor);
     info->cursor                 = NULL;
 
-    if (info->DGAModes)          xfree(info->DGAModes);
+    if (info->DGAModes)          free(info->DGAModes);
     info->DGAModes               = NULL;
 
     if (info->adaptor) {
-        xfree(info->adaptor->pPortPrivates[0].ptr);
+        free(info->adaptor->pPortPrivates[0].ptr);
 	xf86XVFreeVideoAdaptorRec(info->adaptor);
 	info->adaptor = NULL;
     }

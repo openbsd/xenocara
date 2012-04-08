@@ -34,6 +34,33 @@ enum region_type {
     REGION_IO 
 };
 
+#include "xf86Module.h"
+
+#if GET_ABI_MAJOR(ABI_VIDEODRV_VERSION) >= 12
+
+#if (defined(__alpha__) || defined(__ia64__)) && defined (linux)
+#define PCI_DOM_MASK    0x01fful
+#else
+#define PCI_DOM_MASK 0x0ffu
+#endif
+
+#ifndef PCI_DOM_MASK
+# define PCI_DOM_MASK 0x0ffu
+#endif
+#define PCI_DOMBUS_MASK (((PCI_DOM_MASK) << 8) | 0x0ffu)
+
+static inline uint32_t
+pciTag(int busnum, int devnum, int funcnum)
+{
+	uint32_t tag;
+	tag  = (busnum & (PCI_DOMBUS_MASK)) << 16;
+	tag |= (devnum & 0x00001fu) << 11;
+	tag |= (funcnum & 0x000007u) << 8;
+
+	return tag;
+}
+#endif /* GET_ABI_MAJOR(ABI_VIDEODRV_VERSION) >= 12 */
+
 #ifndef XSERVER_LIBPCIACCESS
 
 /* pciVideoPtr */

@@ -298,7 +298,7 @@ r128_get_scrninfo(int entity_num)
         instance++;
     }
 
-    xfree(pEnt);
+    free(pEnt);
 
     return TRUE;
 }
@@ -340,8 +340,8 @@ R128Probe(DriverPtr drv, int flags)
 	    foundScreen = TRUE;
     }
 
-    xfree(usedChips);
-    xfree(devSections);
+    free(usedChips);
+    free(devSections);
 
     return foundScreen;
 }

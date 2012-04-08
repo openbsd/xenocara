@@ -88,7 +88,7 @@
 #include "r128.h"
 #include "r128_reg.h"
 #include "r128_probe.h"
-#ifdef XF86DRI
+#ifdef R128DRI
 #include "r128_sarea.h"
 #define _XF86DRI_SERVER_
 #include "r128_dri.h"
@@ -187,7 +187,7 @@ void R128WaitForFifoFunction(ScrnInfoPtr pScrn, int entries)
 	xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
 		   "FIFO timed out, resetting engine...\n");
 	R128EngineReset(pScrn);
-#ifdef XF86DRI
+#ifdef R128DRI
 	R128CCE_RESET(pScrn, info);
 	if (info->directRenderingEnabled) {
 	    R128CCE_START(pScrn, info);
@@ -220,11 +220,11 @@ void R128WaitForIdle(ScrnInfoPtr pScrn)
 		   INREG(R128_GUI_PROBE)));
 	xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
 		   "Idle timed out, resetting engine...\n");
-#ifdef XF86DRI
+#ifdef R128DRI
         R128CCE_STOP(pScrn, info);
 #endif
 	R128EngineReset(pScrn);
-#ifdef XF86DRI
+#ifdef R128DRI
 	R128CCE_RESET(pScrn, info);
 	if (info->directRenderingEnabled) {
 	    R128CCE_START(pScrn, info);
@@ -233,7 +233,7 @@ void R128WaitForIdle(ScrnInfoPtr pScrn)
     }
 }
 
-#ifdef XF86DRI
+#ifdef R128DRI
 /* Wait until the CCE is completely idle: the FIFO has drained and the
  * CCE is idle.
  */
@@ -1069,7 +1069,7 @@ void R128EngineInit(ScrnInfoPtr pScrn)
     /* FIXME: this is a kludge for texture uploads in the 3D driver. Look at
      * how the radeon driver handles HOST_DATA_SWAP if you want to implement
      * CCE ImageWrite acceleration or anything needing this bit */
-#ifdef XF86DRI
+#ifdef R128DRI
     if (info->directRenderingEnabled)
 	OUTREGP(R128_DP_DATATYPE, 0, ~R128_HOST_BIG_ENDIAN_EN);
     else
@@ -1080,7 +1080,7 @@ void R128EngineInit(ScrnInfoPtr pScrn)
     OUTREGP(R128_DP_DATATYPE, 0, ~R128_HOST_BIG_ENDIAN_EN);
 #endif
 
-#ifdef XF86DRI
+#ifdef R128DRI
     info->sc_left         = 0x00000000;
     info->sc_right        = R128_DEFAULT_SC_RIGHT_MAX;
     info->sc_top          = 0x00000000;
@@ -1096,7 +1096,7 @@ void R128EngineInit(ScrnInfoPtr pScrn)
     R128WaitForIdle(pScrn);
 }
 
-#ifdef XF86DRI
+#ifdef R128DRI
 
 /* Setup for XAA SolidFill. */
 static void R128CCESetupForSolidFill(ScrnInfoPtr pScrn,
@@ -1804,7 +1804,7 @@ static void R128MMIOAccelInit(ScrnInfoPtr pScrn, XAAInfoRecPtr a)
 					       | LEFT_EDGE_CLIPPING_NEGATIVE_X;
     a->NumScanlineColorExpandBuffers   = 1;
     a->ScanlineColorExpandBuffers      = info->scratch_buffer;
-    info->scratch_save                 = xalloc(((pScrn->virtualX+31)/32*4)
+    info->scratch_save                 = malloc(((pScrn->virtualX+31)/32*4)
 					    + (pScrn->virtualX
 					    * info->CurrentLayout.pixel_bytes));
     info->scratch_buffer[0]            = info->scratch_save;
@@ -1866,9 +1866,12 @@ Bool R128AccelInit(ScreenPtr pScreen)
     R128InfoPtr   info  = R128PTR(pScrn);
     XAAInfoRecPtr a;
 
+    if (!xf86LoadSubModule(pScrn, "xaa"))
+	return FALSE;
+
     if (!(a = info->accel = XAACreateInfoRec())) return FALSE;
 
-#ifdef XF86DRI
+#ifdef R128DRI
     if (info->directRenderingEnabled)
 	R128CCEAccelInit(pScrn, a);
     else

@@ -1,3 +1,329 @@
+commit 1ac4cd4b41d0e8232660df78ff136df1214f3907
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Mar 23 19:23:54 2012 -0700
+
+    xf86-video-r128 6.8.2
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 2cab077d6a0380fa22fa3dda8669cf0613aee17b
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Mar 23 19:23:17 2012 -0700
+
+    Sun's copyrights are owned by Oracle now
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 22057e94b9f7cc8f707893400628c2d9875b2955
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Wed Jan 4 14:24:36 2012 +1000
+
+    Untangle XF86DRI from the driver-specific DRI define
+    
+    XF86DRI is defined by xorg-server.h, so --disable-dri in the driver
+    itself does exactly nothing other than not fill in the CFLAGS and thus stop
+    the driver from compiling.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit b4892e34011d6da577002a29913a803d5dbe1c06
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Mon Dec 19 17:07:11 2011 -0500
+
+    Fix for new vgahw ABI
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit 4ad32624b2f1344168e0083d33227021c87fee60
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Mon Dec 19 17:06:11 2011 -0500
+
+    Make failure to XAA non-fatal
+    
+    No shadowfb support in this driver yet
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit 67aaa4698586d75242627b7ce8f4815eeb08f853
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Mon Oct 31 11:56:33 2011 -0700
+
+    Build fix for older servers (error: conflicting types for 'pciTag')
+    
+    /usr/include/xorg/xf86Pci.h:254:25: note: previous declaration of 'pciTag' was here
+    
+    Reported-by: Johannes Obermayr <johannesobermayr@gmx.de>
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit ea9e6b548633df5b6ffeac8071f27a5c04ac817e
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Sat Oct 29 19:31:19 2011 -0700
+
+    pciTag was removed from xorg-server, so provide it in-driver until this is updated to use libpciaccess
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit cfcaac0d7861c00af23c683487dcad2fcb51a908
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Sat Oct 29 19:29:35 2011 -0700
+
+    Use malloc/calloc/realloc/free directly
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit 3de85360ca4bfdece74f8b161305b2d4276b705e
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Thu Oct 14 14:38:52 2010 -0400
+
+    Don't allow the config file to override BIOS location
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit 65c50344d147fddc36212c01d307c6e002b6a84e
+Author: Jesse Adkins <jesserayadkins@gmail.com>
+Date:   Tue Sep 28 13:29:51 2010 -0700
+
+    Purge cvs tags.
+    
+    Signed-off-by: Jesse Adkins <jesserayadkins@gmail.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit b56e5c7d651515d16605107145c8b39b76dd69e3
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jul 21 16:49:04 2010 -0400
+
+    config: add comments for main statements
+
+commit 41a59f565b92f2175c96595428c03293cb7e8d34
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jul 21 16:07:00 2010 -0400
+
+    config: replace deprecated use of AC_OUTPUT with AC_CONFIG_FILES
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit aaef5ae3fb37797ef2c521a33c0f5b6e7462cecd
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jul 21 14:37:41 2010 -0400
+
+    config: replace deprecated AC_HELP_STRING with AS_HELP_STRING
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit f057cc8a58538336862b1e2938a46b7d1e2c2288
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jul 21 14:05:22 2010 -0400
+
+    config: replace deprecated AM_CONFIG_HEADER with AC_CONFIG_HEADERS
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit e260e999e6182e9a976d576a4d36a25b6939f508
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jul 21 09:27:42 2010 -0400
+
+    config: complete AC_INIT m4 quoting
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit ecff91a9c660c2fe22ecee7740819dd0ebea97af
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Jul 20 21:54:12 2010 -0400
+
+    config: remove unrequired AC_SUBST([DRI_CFLAGS])
+    
+    This macro is called by PKG_CHECK_MODULES
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 6a21d8268b7005b5789afdd638529a342037f755
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Jul 20 21:44:57 2010 -0400
+
+    config: remove unrequired AC_SUBST([XORG_CFLAGS])
+    
+    This macro is called by PKG_CHECK_MODULES
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit b6cfee442b87418ded95dc9d9e5c43bbf57149c9
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Jul 20 20:24:42 2010 -0400
+
+    config: remove unrequired AC_HEADER_STDC
+    
+    Autoconf says:
+    "This macro is obsolescent, as current systems have conforming
+    header files. New programs need not use this macro".
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 0a912e700d92b04bbe644904e76edf2483b4f0df
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Jul 20 19:41:31 2010 -0400
+
+    config: remove AC_PROG_CC as it overrides AC_PROG_C_C99
+    
+    XORG_STRICT_OPTION from XORG_DEFAULT_OPTIONS calls
+    AC_PROG_C_C99. This sets gcc with -std=gnu99.
+    If AC_PROG_CC macro is called afterwards, it resets CC to gcc.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 56448e3a41dad4ba912c92e4c23565b8a2312d91
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Jul 20 18:45:19 2010 -0400
+
+    config: update AC_PREREQ statement to 2.60
+    
+    Unrelated to the previous patches, the new value simply reflects
+    the reality that the minimum level for autoconf to configure
+    all x.org modules is 2.60 dated June 2006.
+    
+    ftp://ftp.gnu.org/gnu/autoconf/autoconf-2.60.tar.gz
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit b6f59edaef05a42e25cb7797ac5c78ad81b1be00
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Jul 20 16:15:29 2010 -0400
+
+    config: upgrade to util-macros 1.8 for additional man page support
+    
+    Use MAN_SUBST now supplied in XORG_MANPAGE_SECTIONS
+    The value of MAN_SUBST is the same for all X.Org packages.
+
+commit 1936b9bb4746e86a10add4752b4394aad4bb5a19
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Jun 14 09:07:23 2010 -0400
+
+    README: keep the text version of README, discard the sgml version
+    
+    The linuxdoc doc tool is deprecated.
+    README files are exclusively text files.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 56bea2e89ceb84377976ab60bc9bf1707f3bec39
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Jun 14 09:05:11 2010 -0400
+
+    README: fix linuxdoc content
+    
+    defs.ent are located under X11 directory
+    ident tag is not a Linuxdoc tag
+    replace docbook email tag with linuxdoc email tag
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit b0be6cec03728dae8826c9d256790badfece6090
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Jun 13 10:00:41 2010 -0400
+
+    COPYING: replace stub file with actual Copyright notices.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit b5ba30924e001d0510313cedc96200860faa01c0
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Jun 13 10:00:41 2010 -0400
+
+    COPYING: replace stub file with actual Copyright notices.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit c8657cd4bf014d56708512916a780fccb4c10b05
+Author: Matt Turner <mattst88@gmail.com>
+Date:   Mon Mar 8 10:46:45 2010 -0500
+
+    Don't check for Xinerama.
+    
+    It doesn't seem to be used anywhere, so don't require it.
+    
+    CC: Jerome Glisse <jglisse@redhat.com>
+    CC: Alex Deucher <alexdeucher@gmail.com>
+    CC: Dave Airlie <airlied@redhat.com>
+    Signed-off-by: Matt Turner <mattst88@gmail.com>
+
+commit fa91ba1a82c44aacdb469bc2da57f5d1f924f8ed
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Fri Jan 15 15:45:24 2010 -0800
+
+    Update Sun license notices to current X.Org standard form
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit 7bc68200e08a7ab228d6be9da0943ac119a9f13e
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Dec 15 21:47:20 2009 -0500
+
+    configure.ac: use backticks rather than $() for cmd subs
+    
+    Use "$PKG_CONFIG" rather than hard coded "pkg-config"
+    
+    Acked-by: Dan Nicholson <dbn.lists@gmail.com>
+    Acked-by: Daniel Stone <daniel@fooishbar.org>
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit a502b2339bfe4cecfb7a1f4f3ce217687c1b50e6
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Nov 23 09:25:05 2009 -0500
+
+    Makefile.am: add ChangeLog and INSTALL on MAINTAINERCLEANFILES
+    
+    Now that the INSTALL file is generated.
+    Allows running make maintainer-clean.
+
+commit ac6c537bfc139cb7c5d76650c4146c86b9889902
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Oct 28 14:41:41 2009 -0400
+
+    INSTALL, NEWS, README or AUTHORS files are missing/incorrect #24206
+    
+    Automake 'foreign' option is specified in configure.ac.
+    Remove from Makefile.am
+
+commit e05f059ecd970f3d9f5454f1689ce45cbc660a55
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Oct 28 14:09:09 2009 -0400
+
+    INSTALL, NEWS, README or AUTHORS files are missing/incorrect #24206
+    
+    Add missing INSTALL file. Use standard GNU file on building tarball
+    README may have been updated
+    Remove AUTHORS file as it is empty and no content available yet.
+    Remove NEWS file as it is empty and no content available yet.
+
+commit 34b22945240af367dc1f874733a49cdeb7526bb0
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Oct 26 12:54:21 2009 -0400
+
+    Several driver modules do not have a ChangeLog target in Makefile.am #23814
+    
+    The git generated ChangeLog replaces the hand written one.
+    Update configure.ac to xorg-macros level 1.3.
+    Use XORG_DEFAULT_OPTIONS which replaces four XORG_* macros
+    Update Makefile.am to add ChangeLog target if missing
+    Remove ChangeLog from EXTRA_DIST or *CLEAN variables
+    This is a pre-req for the INSTALL_CMD
+
+commit 8aa9c81ec3fee4b1b943949d62ee90be1c2e320c
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Oct 22 12:34:17 2009 -0400
+
+    .gitignore: use common defaults with custom section # 24239
+    
+    Using common defaults will reduce errors and maintenance.
+    Only the very small or inexistent custom section need periodic maintenance
+    when the structure of the component changes. Do not edit defaults.
+
+commit 39dac77d3f2b5d69f13dc3aff17a4a245462fcc0
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Thu Jul 30 12:04:28 2009 +1000
+
+    r128: bump for release 6.8.1
+
 commit d519ef9adca6e60bbafbc5649f1bafef43cebb4e
 Author: Dave Airlie <airlied@redhat.com>
 Date:   Tue Jul 28 15:22:41 2009 +1000
@@ -219,7 +545,7 @@ Date:   Mon Feb 25 07:10:48 2008 +1000
     fixup check for EXA composite pointed out by Alan Swanson
 
 commit 85e470e64f629de72e361c77770e2e29998d1bf4
-Merge: 27ddb39... 1b84c76...
+Merge: 27ddb39 1b84c76
 Author: Alex Deucher <alex@samba.(none)>
 Date:   Sun Feb 24 05:37:22 2008 -0500
 
@@ -907,7 +1233,7 @@ Date:   Mon Jan 14 16:11:09 2008 -0500
     Fixes bug 14001
 
 commit 729da30c80d6545b75c8faea44754634f477cc09
-Merge: 000741e... 625a885...
+Merge: 000741e 625a885
 Author: Alex Deucher <alex@samba.(none)>
 Date:   Mon Jan 14 10:05:01 2008 -0500
 
@@ -1100,7 +1426,7 @@ Date:   Wed Jan 2 19:48:28 2008 -0500
     RADEON: various avivo tv-out related clean-ups
 
 commit ce34090c758ac91171cb6adb9b8a36e4adbf99cf
-Merge: 2180f04... 30cab1d...
+Merge: 2180f04 30cab1d
 Author: Alex Deucher <alex@samba.(none)>
 Date:   Wed Jan 2 16:41:36 2008 -0500
 
@@ -1307,7 +1633,7 @@ Date:   Fri Dec 21 09:45:55 2007 +1000
     set ddc line correctly post-merge
 
 commit 3c31b96afa20913ad947e68fe0c3a662e5eafbdd
-Merge: eb99c3c... f5e8c18...
+Merge: eb99c3c f5e8c18
 Author: Dave Airlie <airlied@linux.ie>
 Date:   Fri Dec 21 09:36:22 2007 +1000
 
@@ -1348,7 +1674,7 @@ Date:   Wed Dec 19 19:15:19 2007 -0500
     The correct thing to do is filter by the mode's effective memory bandwidth.
 
 commit c1b0b69cc50516c3b7e881b0eb46cb3cd2e9dce6
-Merge: 0e66348... ce4fa1c...
+Merge: 0e66348 ce4fa1c
 Author: Alex Deucher <alex@botch2.(none)>
 Date:   Wed Dec 19 11:54:50 2007 -0500
 
@@ -1423,14 +1749,14 @@ Date:   Mon Dec 17 20:20:04 2007 -0500
     RADEON: fix typo from merge
 
 commit 19b9d3708852b7efe2b05249c8359dadb924dd94
-Merge: cf685f3... 29706ca...
+Merge: cf685f3 29706ca
 Author: Alex Deucher <alex@samba.(none)>
 Date:   Mon Dec 17 20:07:32 2007 -0500
 
     Merge branch 'atombios-support' of git+ssh://agd5f@git.freedesktop.org/git/xorg/driver/xf86-video-ati into atombios-support
 
 commit cf685f37ec874f0aacd09e7c4eb0402c6daec1b0
-Merge: 2a134af... 44d07c4...
+Merge: 2a134af 44d07c4
 Author: Alex Deucher <alex@samba.(none)>
 Date:   Mon Dec 17 20:07:07 2007 -0500
 
@@ -1579,7 +1905,7 @@ Date:   Thu Dec 13 18:45:09 2007 -0500
     - Unify the PLL calculation between legacy and avivo chips
 
 commit f5ac34983411e4c4f41ab1817dce582830f398fd
-Merge: f2b2e08... 6ccf5b3...
+Merge: f2b2e08 6ccf5b3
 Author: Alex Deucher <alex@samba.(none)>
 Date:   Wed Dec 12 22:37:44 2007 -0500
 
@@ -1632,7 +1958,7 @@ Date:   Tue Dec 11 14:04:58 2007 -0500
     RADEON: handle HMDI properly (untested) and fix some merge leftovers
 
 commit 3c22ad977c25d5ca2811821fcac6bb8ecd79994a
-Merge: c9a0cee... f3d2ec3...
+Merge: c9a0cee f3d2ec3
 Author: Alex Deucher <alex@botch2.(none)>
 Date:   Tue Dec 11 13:11:15 2007 -0500
 
@@ -1688,7 +2014,7 @@ Date:   Mon Dec 10 15:25:56 2007 +1000
     add support for building against legacy servers similiar to Intel codepaths
 
 commit 9c278cb7fa7f18d13bde053fd75221cfba9da377
-Merge: 6451ea2... cc167b9...
+Merge: 6451ea2 cc167b9
 Author: Dave Airlie <airlied@linux.ie>
 Date:   Mon Dec 10 15:18:03 2007 +1000
 
@@ -1702,7 +2028,7 @@ Date:   Mon Dec 10 15:18:03 2007 +1000
     	src/radeon_output.c
 
 commit 6451ea2dcc4fac762442f699935864f4a8d445f7
-Merge: 0d89556... 5896ca4...
+Merge: 0d89556 5896ca4
 Author: Dave Airlie <airlied@linux.ie>
 Date:   Mon Dec 10 15:08:42 2007 +1000
 
@@ -1762,7 +2088,7 @@ Date:   Thu Dec 6 19:23:06 2007 +1100
     powerpc: build fixes from last merge
 
 commit dbe3d2608ecc9896db9c23b3a347b50748c51e13
-Merge: 48e31cd... 21ed435...
+Merge: 48e31cd 21ed435
 Author: Dave Airlie <airlied@redhat.com>
 Date:   Thu Dec 6 14:22:03 2007 +1000
 
@@ -1863,7 +2189,7 @@ Date:   Fri Nov 30 20:11:42 2007 -0500
     mode or vesafb etc. after running the driver.
 
 commit af0196f7bf0d1d5d211391149c18935d64ed2b06
-Merge: d9858a2... 0175b79...
+Merge: d9858a2 0175b79
 Author: Alex Deucher <alex@botch2.(none)>
 Date:   Fri Nov 30 16:40:28 2007 -0500
 
@@ -1895,7 +2221,7 @@ Date:   Fri Nov 30 15:37:42 2007 -0500
     for now.
 
 commit e1945f1f25a34310bd58ce128c8ff27ecc985618
-Merge: b368b0f... df7777b...
+Merge: b368b0f df7777b
 Author: Alex Deucher <alex@botch2.(none)>
 Date:   Fri Nov 30 14:30:55 2007 -0500
 
@@ -2116,7 +2442,7 @@ Date:   Wed Nov 21 17:03:39 2007 -0500
     Thanks to AMD for the information
 
 commit a12390c832abe423def60e39cd5a9118e5910339
-Merge: d531792... e74dca1...
+Merge: d531792 e74dca1
 Author: Alex Deucher <alex@botch2.(none)>
 Date:   Wed Nov 21 02:24:48 2007 -0500
 
@@ -2169,7 +2495,7 @@ Date:   Wed Nov 21 00:05:42 2007 -0500
     RADEON: store devices ids from bios for each driver output
 
 commit 3975da2ea8cb628f7f66c3f26c5dfa181cd1c532
-Merge: e283aa3... 295ce27...
+Merge: e283aa3 295ce27
 Author: Alex Deucher <alex@botch2.(none)>
 Date:   Tue Nov 20 23:52:29 2007 -0500
 
@@ -2269,7 +2595,7 @@ Date:   Tue Nov 20 13:37:00 2007 +1000
     atombios: add all r5xx and r6xx pci ids
 
 commit 5d023e2c3c2ab44ea57ffadc9607025d602c376c
-Merge: 0d1e0c7... c887260...
+Merge: 0d1e0c7 c887260
 Author: Dave Airlie <airlied@redhat.com>
 Date:   Tue Nov 20 13:02:43 2007 +1000
 
@@ -2294,7 +2620,7 @@ Date:   Tue Nov 20 08:15:58 2007 +1000
     r5xx: cleanups after last merge
 
 commit fe2f7a09050fb7a345a1f52239f8f3c4f1053891
-Merge: 744c8cb... 49055d8...
+Merge: 744c8cb 49055d8
 Author: Dave Airlie <airlied@redhat.com>
 Date:   Tue Nov 20 08:04:32 2007 +1000
 
@@ -2306,7 +2632,7 @@ Date:   Tue Nov 20 08:04:32 2007 +1000
     	src/radeon_output.c
 
 commit 744c8cb6c293fcaa687566f52901644e699baace
-Merge: e258fbe... e530af7...
+Merge: e258fbe e530af7
 Author: Dave Airlie <airlied@redhat.com>
 Date:   Tue Nov 20 07:56:33 2007 +1000
 
@@ -2319,14 +2645,14 @@ Date:   Mon Nov 19 16:35:05 2007 +1000
     makes 2-headed cursor work
 
 commit e530af79adf51b3e95a0eca676c915a34dcbf4a7
-Merge: 69e197f... 52aba8d...
+Merge: 69e197f 52aba8d
 Author: Alex Deucher <alex@botch2.(none)>
 Date:   Mon Nov 19 00:59:30 2007 -0500
 
     Merge branch 'agd-atom' of /home/alex/git/airlied/xf86-video-ati2 into agd-atom
 
 commit 69e197f2c8002aacf2587754c8d3bd63c88f85b1
-Merge: 5e8940f... 862dcab...
+Merge: 5e8940f 862dcab
 Author: Alex Deucher <alex@botch2.(none)>
 Date:   Mon Nov 19 00:57:34 2007 -0500
 
@@ -2357,7 +2683,7 @@ Date:   Mon Nov 19 00:39:19 2007 -0500
     Don't assign a gpio for TV
 
 commit 52aba8d73189ba959f19c0437499d5e7a8829827
-Merge: 862dcab... 5e8940f...
+Merge: 862dcab 5e8940f
 Author: Dave Airlie <airlied@redhat.com>
 Date:   Mon Nov 19 15:30:46 2007 +1000
 
@@ -2394,7 +2720,7 @@ Date:   Sun Nov 18 23:43:06 2007 -0500
     fix typo in loop
 
 commit 384cd8f52c89d089c6559e2eedbae45641fcd14e
-Merge: f3f0e4e... 234b607...
+Merge: f3f0e4e 234b607
 Author: Dave Airlie <airlied@redhat.com>
 Date:   Mon Nov 19 14:02:55 2007 +1000
 
@@ -2463,7 +2789,7 @@ Date:   Sat Nov 17 00:34:56 2007 -0500
     WIP: more new ATOM integration work
 
 commit 67db114d97abed7a607467e5d67c7b4ffa2c347e
-Merge: 7d06a87... ea15346...
+Merge: 7d06a87 ea15346
 Author: Alex Deucher <alex@botch2.(none)>
 Date:   Fri Nov 16 14:29:53 2007 -0500
 
@@ -2526,7 +2852,7 @@ Date:   Fri Nov 16 14:48:36 2007 +1000
     Add copyright headers
 
 commit 3cfcd2164b400bd0d1cb4ede8eeb01abba9d75c8
-Merge: efac14e... 718bfd3...
+Merge: efac14e 718bfd3
 Author: Alex Deucher <alex@botch2.(none)>
 Date:   Thu Nov 15 23:25:39 2007 -0500
 
@@ -3047,7 +3373,7 @@ Date:   Thu Oct 4 11:32:48 2007 +0200
     Surprisingly easy, thanks to George's pci-rework changes.
 
 commit 7addf41885ec5658f531624a9c24ea5bd7d22d19
-Merge: 3a958ba... 78c6bd3...
+Merge: 3a958ba 78c6bd3
 Author: Michel Dänzer <michel@tungstengraphics.com>
 Date:   Thu Oct 4 11:06:08 2007 +0200
 
@@ -3506,7 +3832,7 @@ Date:   Tue Aug 28 15:37:11 2007 +0300
     It still uses the old probe method though, this is due to the ati wrapper.
 
 commit 7b38d9a1209f87255e5bb0aefe46a363ce4fb6ef
-Merge: 2e3d43a... 673f799...
+Merge: 2e3d43a 673f799
 Author: George Sapountzis <gsap7@yahoo.gr>
 Date:   Tue Aug 28 16:01:12 2007 +0300
 
@@ -3770,14 +4096,14 @@ Date:   Thu Aug 23 19:56:21 2007 +1000
     updated release numbering for randr 1.2
 
 commit 81a8093f2ffdce59d4e8a44f65f3d5c771fd6425
-Merge: c08e6ec... 53a67e3...
+Merge: c08e6ec 53a67e3
 Author: Dave Airlie <airlied@redhat.com>
 Date:   Thu Aug 23 19:51:47 2007 +1000
 
     Merge remote branch 'origin/randr-1.2'
 
 commit c08e6ec9e7ac06caee53689b0ec50ef6a7a0ba37
-Merge: 5793e87... a0d0fcd...
+Merge: 5793e87 a0d0fcd
 Author: Dave Airlie <airlied@clockmaker.usersys.redhat.com>
 Date:   Thu Aug 23 19:42:19 2007 +1000
 
@@ -4650,7 +4976,7 @@ Date:   Wed May 30 17:49:01 2007 +1000
     we hang when moving the cursor into the second CRTC.
 
 commit 7fc02657c4d740941fbda5a8823cf45de3eca3f8
-Merge: 800bf53... 4c61c0e...
+Merge: 800bf53 4c61c0e
 Author: Dave Airlie <airlied@nx6125b.(none)>
 Date:   Wed May 30 17:27:22 2007 +1000
 
@@ -4705,7 +5031,7 @@ Date:   Tue May 29 07:23:24 2007 +1000
     rs480: only has single dac
 
 commit c52322354fe64725733842b3356798c50e7735d5
-Merge: dd6a966... 975da59...
+Merge: dd6a966 975da59
 Author: Dave Airlie <airlied@nx6125b.(none)>
 Date:   Tue May 29 07:21:48 2007 +1000
 
@@ -5187,7 +5513,7 @@ Date:   Tue May 8 19:27:48 2007 +0200
     remove some old mergedfb cruft
 
 commit 76670f665ebec7cdf40a04bf9379cb3ad4417507
-Merge: 83f81ed... a3ee422...
+Merge: 83f81ed a3ee422
 Author: Alex Deucher <alex@t41p.hsd1.va.comcast.net>
 Date:   Tue May 8 18:41:25 2007 +0200
 
@@ -5638,7 +5964,7 @@ Date:   Sun Feb 25 23:29:09 2007 +1100
     fix typo
 
 commit 3cfe94d5438961b869766dacbcd13fde8b770ca2
-Merge: 31c018c... 3b43788...
+Merge: 31c018c 3b43788
 Author: Dave Airlie <airlied@linux.ie>
 Date:   Sun Feb 25 23:27:19 2007 +1100
 
@@ -5831,7 +6157,7 @@ Date:   Sun Feb 4 11:28:54 2007 +0200
     case because pATI->PCIInfo is now set after ATIProcessOptions() is called.
 
 commit 9d77aabdff919360f0c9333105436c31f1f5749a
-Merge: ff8ea19... 57822be...
+Merge: ff8ea19 57822be
 Author: George Sapountzis <gsap7@yahoo.gr>
 Date:   Mon Feb 5 19:16:51 2007 +0200
 
@@ -7004,7 +7330,7 @@ Date:   Mon Sep 25 11:35:32 2006 +1000
     radeon: cleanup some bits from superpatch
 
 commit 9827afaa40720a58e2fc029c0bf92ad2fe223d11
-Merge: 10b4b46... ad8259c...
+Merge: 10b4b46 ad8259c
 Author: Dave Airlie <airlied@linux.ie>
 Date:   Mon Sep 25 11:25:17 2006 +1000
 
@@ -7149,7 +7475,7 @@ Date:   Fri Sep 22 06:35:34 2006 +1000
     radeon: add enable display function
 
 commit 4a54886d510f26b29d27e5c9a73647554291b1a6
-Merge: 70264d6... 9fa176c...
+Merge: 70264d6 9fa176c
 Author: Dave Airlie <airlied@linux.ie>
 Date:   Fri Sep 22 06:00:04 2006 +1000
 
@@ -7765,7 +8091,7 @@ Date:   Thu Jun 15 15:35:05 2006 +0200
     Fix some more cosmetic warnings.
 
 commit ec93e08b24f7c0e583970d08bfe18ad142e6b047
-Merge: 051c49d... 6ca9862...
+Merge: 051c49d 6ca9862
 Author: Michel Dänzer <michel@tungstengraphics.com>
 Date:   Thu Jun 15 15:03:27 2006 +0200
 
@@ -7784,7 +8110,7 @@ Date:   Thu Jun 15 21:24:16 2006 +1000
     remove all printf specifier warnings on Linux
 
 commit 051c49d0f002c72d1d8f15f6df264d8b093d4e95
-Merge: a840afc... dfac819...
+Merge: a840afc dfac819
 Author: Michel Dänzer <michel@tungstengraphics.com>
 Date:   Thu Jun 15 13:10:44 2006 +0200
 
@@ -7809,7 +8135,7 @@ Date:   Thu Jun 15 20:59:33 2006 +1000
     some more unused variable cleanups
 
 commit a840afc75a0453b4694e3f987ebdbddc6844a169
-Merge: c90c49d... d511ef4...
+Merge: c90c49d d511ef4
 Author: Michel Dänzer <michel@tungstengraphics.com>
 Date:   Thu Jun 15 12:46:58 2006 +0200
 

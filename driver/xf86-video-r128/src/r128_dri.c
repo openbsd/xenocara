@@ -105,21 +105,21 @@ static Bool R128InitVisualConfigs(ScreenPtr pScreen)
 	if (R128_USE_DB)      numConfigs *= 2;
 
 	if (!(pConfigs
-	      = (__GLXvisualConfig*)xcalloc(sizeof(__GLXvisualConfig),
+	      = (__GLXvisualConfig*)calloc(sizeof(__GLXvisualConfig),
 					      numConfigs))) {
 	    return FALSE;
 	}
 	if (!(pR128Configs
-	      = (R128ConfigPrivPtr)xcalloc(sizeof(R128ConfigPrivRec),
+	      = (R128ConfigPrivPtr)calloc(sizeof(R128ConfigPrivRec),
 					     numConfigs))) {
-	    xfree(pConfigs);
+	    free(pConfigs);
 	    return FALSE;
 	}
 	if (!(pR128ConfigPtrs
-	      = (R128ConfigPrivPtr*)xcalloc(sizeof(R128ConfigPrivPtr),
+	      = (R128ConfigPrivPtr*)calloc(sizeof(R128ConfigPrivPtr),
 					      numConfigs))) {
-	    xfree(pConfigs);
-	    xfree(pR128Configs);
+	    free(pConfigs);
+	    free(pR128Configs);
 	    return FALSE;
 	}
 
@@ -188,21 +188,21 @@ static Bool R128InitVisualConfigs(ScreenPtr pScreen)
 	if (R128_USE_DB)      numConfigs *= 2;
 
 	if (!(pConfigs
-	      = (__GLXvisualConfig*)xcalloc(sizeof(__GLXvisualConfig),
+	      = (__GLXvisualConfig*)calloc(sizeof(__GLXvisualConfig),
 					      numConfigs))) {
 	    return FALSE;
 	}
 	if (!(pR128Configs
-	      = (R128ConfigPrivPtr)xcalloc(sizeof(R128ConfigPrivRec),
+	      = (R128ConfigPrivPtr)calloc(sizeof(R128ConfigPrivRec),
 					     numConfigs))) {
-	    xfree(pConfigs);
+	    free(pConfigs);
 	    return FALSE;
 	}
 	if (!(pR128ConfigPtrs
-	      = (R128ConfigPrivPtr*)xcalloc(sizeof(R128ConfigPrivPtr),
+	      = (R128ConfigPrivPtr*)calloc(sizeof(R128ConfigPrivPtr),
 					      numConfigs))) {
-	    xfree(pConfigs);
-	    xfree(pR128Configs);
+	    free(pConfigs);
+	    free(pR128Configs);
 	    return FALSE;
 	}
 
@@ -1026,7 +1026,7 @@ Bool R128DRIScreenInit(ScreenPtr pScreen)
     if (xf86LoaderCheckSymbol("DRICreatePCIBusID")) {
 	pDRIInfo->busIdString = DRICreatePCIBusID(info->PciInfo);
     } else {
-	pDRIInfo->busIdString            = xalloc(64);
+	pDRIInfo->busIdString            = malloc(64);
 	sprintf(pDRIInfo->busIdString,
 		"PCI:%d:%d:%d",
 		PCI_DEV_BUS(info->PciInfo),
@@ -1065,7 +1065,7 @@ Bool R128DRIScreenInit(ScreenPtr pScreen)
     pDRIInfo->SAREASize = SAREA_MAX;
 #endif
 
-    if (!(pR128DRI = (R128DRIPtr)xcalloc(sizeof(R128DRIRec),1))) {
+    if (!(pR128DRI = (R128DRIPtr)calloc(sizeof(R128DRIRec),1))) {
 	DRIDestroyInfoRec(info->pDRIInfo);
 	info->pDRIInfo = NULL;
 	return FALSE;
@@ -1091,7 +1091,7 @@ Bool R128DRIScreenInit(ScreenPtr pScreen)
     if (!DRIScreenInit(pScreen, pDRIInfo, &info->drmFD)) {
 	xf86DrvMsg(pScreen->myNum, X_ERROR,
                    "[dri] DRIScreenInit failed.  Disabling DRI.\n");
-	xfree(pDRIInfo->devPrivate);
+	free(pDRIInfo->devPrivate);
 	pDRIInfo->devPrivate = NULL;
 	DRIDestroyInfoRec(pDRIInfo);
 	pDRIInfo = NULL;
@@ -1352,18 +1352,18 @@ void R128DRICloseScreen(ScreenPtr pScreen)
 				/* De-allocate all DRI data structures */
     if (info->pDRIInfo) {
 	if (info->pDRIInfo->devPrivate) {
-	    xfree(info->pDRIInfo->devPrivate);
+	    free(info->pDRIInfo->devPrivate);
 	    info->pDRIInfo->devPrivate = NULL;
 	}
 	DRIDestroyInfoRec(info->pDRIInfo);
 	info->pDRIInfo = NULL;
     }
     if (info->pVisualConfigs) {
-	xfree(info->pVisualConfigs);
+	free(info->pVisualConfigs);
 	info->pVisualConfigs = NULL;
     }
     if (info->pVisualConfigsPriv) {
-	xfree(info->pVisualConfigsPriv);
+	free(info->pVisualConfigsPriv);
 	info->pVisualConfigsPriv = NULL;
     }
 }

@@ -8,7 +8,7 @@
 #include "r128.h"
 #include "r128_reg.h"
 
-#ifdef XF86DRI
+#ifdef R128DRI
 #include "r128_common.h"
 #include "r128_sarea.h"
 #endif
@@ -95,7 +95,7 @@ void R128InitVideo(ScreenPtr pScreen)
 	    adaptors = &newAdaptor;
 	} else {
 	    newAdaptors =  /* need to free this someplace */
-		xalloc((num_adaptors + 1) * sizeof(XF86VideoAdaptorPtr*));
+		malloc((num_adaptors + 1) * sizeof(XF86VideoAdaptorPtr*));
 	    if(newAdaptors) {
 		memcpy(newAdaptors, adaptors, num_adaptors *
 					sizeof(XF86VideoAdaptorPtr));
@@ -110,7 +110,7 @@ void R128InitVideo(ScreenPtr pScreen)
 	xf86XVScreenInit(pScreen, adaptors, num_adaptors);
 
     if(newAdaptors)
-	xfree(newAdaptors);
+	free(newAdaptors);
 }
 
 #define MAXWIDTH 2048
@@ -188,9 +188,9 @@ R128AllocAdaptor(ScrnInfoPtr pScrn)
     if(!(adapt = xf86XVAllocateVideoAdaptorRec(pScrn)))
 	return NULL;
 
-    if(!(pPriv = xcalloc(1, sizeof(R128PortPrivRec) + sizeof(DevUnion))))
+    if(!(pPriv = calloc(1, sizeof(R128PortPrivRec) + sizeof(DevUnion))))
     {
-	xfree(adapt);
+	free(adapt);
 	return NULL;
     }
 
@@ -392,7 +392,7 @@ R128DMA(
   int w
 ){
 
-#ifdef XF86DRI
+#ifdef R128DRI
 
 #define BUFSIZE (R128_BUFFER_SIZE - R128_HOSTDATA_BLIT_OFFSET)
 #define MAXPASSES (MAXHEIGHT/(BUFSIZE/(MAXWIDTH*2))+1)
@@ -481,10 +481,10 @@ R128DMA(
 
 #else
 
-    /* This is to avoid cluttering the rest of the code with '#ifdef XF86DRI' */
+    /* This is to avoid cluttering the rest of the code with '#ifdef R128DRI' */
     return FALSE;
 
-#endif	/* XF86DRI */
+#endif	/* R128DRI */
 
 }
 

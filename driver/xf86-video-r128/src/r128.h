@@ -56,7 +56,11 @@
 #include "r128_probe.h"
 
 				/* DRI support */
-#ifdef XF86DRI
+#ifndef XF86DRI
+#undef R128DRI
+#endif
+
+#if R128DRI
 #define _XF86DRI_SERVER_
 #include "r128_dripriv.h"
 #include "dri.h"
@@ -303,14 +307,14 @@ typedef struct {
     int               scanline_y;
     int               scanline_w;
     int               scanline_h;
-#ifdef XF86DRI
+#ifdef R128DRI
     int               scanline_hpass;
     int               scanline_x1clip;
     int               scanline_x2clip;
     int               scanline_rop;
     int               scanline_fg;
     int               scanline_bg;
-#endif /* XF86DRI */
+#endif /* R128DRI */
     int               scanline_words;
     int               scanline_direct;
     int               scanline_bpp; /* Only used for ImageWrite */
@@ -322,7 +326,7 @@ typedef struct {
     DGAFunctionRec    DGAFuncs;
 
     R128FBLayout      CurrentLayout;
-#ifdef XF86DRI
+#ifdef R128DRI
     Bool              directRenderingEnabled;
     DRIInfoPtr        pDRIInfo;
     int               drmFD;
@@ -474,7 +478,7 @@ extern int         R128MinBits(int val);
 
 extern void        R128InitVideo(ScreenPtr pScreen);
 
-#ifdef XF86DRI
+#ifdef R128DRI
 extern Bool        R128DRIScreenInit(ScreenPtr pScreen);
 extern void        R128DRICloseScreen(ScreenPtr pScreen);
 extern Bool        R128DRIFinishScreenInit(ScreenPtr pScreen);
