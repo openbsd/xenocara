@@ -1,6 +1,9 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.3//EN"
-                   "http://www.oasis-open.org/docbook/xml/4.3/docbookx.dtd">
+                   "http://www.oasis-open.org/docbook/xml/4.3/docbookx.dtd"
+[
+<!ENTITY % defs SYSTEM "defs.ent"> %defs;
+]>
 <!--translated from security.tex, on 2010-06-27 15:29:00,
 by TeX4ht (http://www.cse.ohio-state.edu/~gurari/TeX4ht/)
 xhtml,docbook,html,refcaption -->
@@ -10,30 +13,50 @@ xhtml,docbook,html,refcaption -->
 <bookinfo>
    <title>Security Extension Specification</title>
    <subtitle>X Consortium Standard</subtitle>
-   <releaseinfo>X Version 11, Release 6.8</releaseinfo>
-   <date>November 15, 1996</date>
    <authorgroup>
       <author>
-         <firstname>David</firstname><surname>Wiggins</surname>
+         <firstname>David</firstname><othername>P.</othername><surname>Wiggins</surname>
+         <affiliation><orgname>X Consortium</orgname></affiliation>
       </author>
    </authorgroup>
-   <corpname>X Consortium Standard</corpname>
-   <copyright><year>1996</year><holder>X Consortium</holder></copyright>
+   <releaseinfo>X Version 11, Release &fullrelvers;</releaseinfo>
    <releaseinfo>Version 7.1</releaseinfo>
-   <affiliation><orgname>X Consortium</orgname></affiliation>
-   <productnumber>X Version 11, Release 6.8</productnumber>
+   <copyright><year>1996</year><holder>X Consortium</holder></copyright>
 
 <legalnotice>
-
-<para>THE SOFTWARE IS PROVIDED &ldquo;AS IS&rdquo;, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE X CONSORTIUM BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.</para>
-
-<para>Except as contained in this notice, the name of the X Consortium shall not be used in advertising or otherwise to promote the sale, use or other dealings in this Software without prior written authorization from the X Consortium.</para>
-
+<para>
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the &ldquo;Software&rdquo;), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+</para>
+<para>
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+</para>
+<para>
+THE SOFTWARE IS PROVIDED &ldquo;AS IS&rdquo;, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE
+X CONSORTIUM BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN
+AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+</para>
+<para>
+Except as contained in this notice, the name of the X Consortium shall not be
+used in advertising or otherwise to promote the sale, use or other dealings
+in this Software without prior written authorization from the X Consortium.
+</para>
+<para>X Window System is a trademark of The OpenGroup.</para>
 </legalnotice>
+
+<pubdate>November 15, 1996</pubdate>
 
 </bookinfo>
 
-<chapter id="introduction">
+<chapter id='Introduction'>
 <title>Introduction</title>
 
 <para>
@@ -44,10 +67,10 @@ clients (defined below).
 
 </chapter>
 
-<chapter id="requests">
+<chapter id='Requests'>
 <title>Requests</title>
 
-<sect1 id="securityqueryversion">
+<sect1 id='SecurityQueryVersion'>
 <title>SecurityQueryVersion</title>
 <para>
 This request returns the major and minor version numbers of this extension.
@@ -55,49 +78,47 @@ This request returns the major and minor version numbers of this extension.
 
 <para>SecurityQueryVersion</para>
 
-<informaltable>
-  <tgroup cols="2">
+<informaltable frame='none'>
+  <?dbfo keep-together="always" ?>
+  <tgroup cols='2' align='left' colsep='0' rowsep='0'>
+  <colspec colname='c1' colwidth="1.0*"/>
+  <colspec colname='c2' colwidth="1.5*"/>
     <tbody>
       <row>
-        <entry align="left">
+        <entry>
           <para>client-major-version</para>
         </entry>
-        <entry align="left">
+        <entry>
           <para>CARD16</para>
         </entry>
       </row>
       <row>
-        <entry align="left">
+        <entry>
           <para>client-minor-version</para>
         </entry>
-        <entry align="left">
+        <entry>
           <para>CARD16</para>
         </entry>
       </row>
       <row>
-        <entry align="left">
+        <entry>
           <para>=&gt;</para>
         </entry>
       </row>
       <row>
-        <entry align="left">
+        <entry>
           <para>server-major-version</para>
         </entry>
-        <entry align="left">
+        <entry>
           <para>CARD16</para>
         </entry>
       </row>
       <row>
-        <entry align="left">
+        <entry>
           <para>server-minor-version</para>
         </entry>
-        <entry align="left">
+        <entry>
           <para>CARD16</para>
-        </entry>
-      </row>
-      <row>
-        <entry align="left">
-          <para></para>
         </entry>
       </row>
     </tbody>
@@ -127,7 +148,7 @@ protocol version; otherwise, the client will get undefined behavior
 </para>
 </sect1>
 
-<sect1 id="securitygenerateauthentication">
+<sect1 id='SecurityGenerateAuthorization'>
 <title>SecurityGenerateAuthorization</title>
 
 <para>
@@ -140,69 +161,65 @@ authorization.
 <para>
 SecurityGenerateAuthorization
 </para>
-<informaltable>
-  <tgroup cols="2">
+<informaltable frame='none'>
+  <?dbfo keep-together="always" ?>
+  <tgroup cols='2' align='left' colsep='0' rowsep='0'>
+  <colspec colname='c1' colwidth="1.0*"/>
+  <colspec colname='c2' colwidth="1.5*"/>
     <tbody>
       <row>
-        <entry align="left">
+        <entry>
           <para>authorization-protocol-name</para>
         </entry>
-        <entry align="left">
+        <entry>
           <para>STRING8</para>
         </entry>
       </row>
       <row>
-        <entry align="left">
+        <entry>
           <para>authorization-protocol-data</para>
         </entry>
-        <entry align="left">
+        <entry>
           <para>STRING8</para>
         </entry>
       </row>
       <row>
-        <entry align="left">
+        <entry>
           <para>value-mask</para>
         </entry>
-        <entry align="left">
+        <entry>
           <para>BITMASK</para>
         </entry>
       </row>
       <row>
-        <entry align="left">
+        <entry>
           <para>value-list</para>
         </entry>
-        <entry align="left">
+        <entry>
           <para>LISTofVALUE</para>
         </entry>
       </row>
       <row>
-        <entry align="left">
+        <entry>
           <para>=></para>
         </entry>
         <entry>
         </entry>
       </row>
       <row>
-        <entry align="left">
+        <entry>
           <para>authorization-id</para>
         </entry>
-        <entry align="left">
+        <entry>
           <para>AUTHID</para>
         </entry>
       </row>
       <row>
-        <entry align="left">
+        <entry>
           <para>authorization-data-return</para>
         </entry>
-        <entry align="left">
-          <para>STRING8</para>
-        </entry>
-      </row>
-      <row>
-        <entry align="left">
-          <para></para>
-        </entry>
         <entry>
+          <para>STRING8</para>
         </entry>
       </row>
     </tbody>
@@ -241,93 +258,78 @@ The value-mask and value-list specify attributes of the authorization
 that are to be explicitly initialized. The possible values are:
 </para>
 
-<informaltable>
-  <tgroup cols="3">
+<informaltable frame='topbot'>
+  <?dbfo keep-together="always" ?>
+  <tgroup cols='3' align='left' colsep='0' rowsep='0'>
+  <colspec colname='c1' colwidth="1.0*"/>
+  <colspec colname='c2' colwidth="1.0*"/>
+  <colspec colname='c3' colwidth="1.0*"/>
+    <thead>
+      <row rowsep='1'>
+        <entry>Attribute</entry>
+        <entry>Type</entry>
+        <entry>Default</entry>
+      </row>
+    </thead>
     <tbody>
-      <row rowsep="1">
-        <entry align="left">
-          <para></para>
-        </entry>
-      </row>
-      <row rowsep="1">
-        <entry align="left">
-          <para>Attribute</para>
-        </entry>
-        <entry align="left">
-          <para>Type</para>
-        </entry>
-        <entry align="left">
-          <para>Default</para>
-        </entry>
-      </row>
       <row>
-        <entry align="left">
+        <entry>
           <para>timeout</para>
         </entry>
-        <entry align="left">
+        <entry>
           <para>CARD32</para>
         </entry>
-        <entry align="left">
+        <entry>
           <para>60</para>
         </entry>
       </row>
       <row>
-        <entry align="left">
+        <entry>
           <para>group</para>
         </entry>
-        <entry align="left">
+        <entry>
           <para>XID or None</para>
         </entry>
-        <entry align="left">
+        <entry>
           <para>None</para>
         </entry>
       </row>
       <row>
-        <entry align="left">
+        <entry>
           <para>trust-level</para>
         </entry>
-        <entry align="left">
+        <entry>
           <para>{SecurityClientTrusted,</para>
         </entry>
       </row>
       <row>
-        <entry align="left">
+        <entry>
           <para></para>
         </entry>
-        <entry align="left">
+        <entry>
           <para>SecurityClientUntrusted}</para>
         </entry>
-        <entry align="left">
+        <entry>
           <para>SecurityClientUntrusted</para>
         </entry>
       </row>
       <row>
-        <entry align="left">
+        <entry>
           <para>event-mask</para>
         </entry>
-        <entry align="left">
+        <entry>
           <para>SecurityAuthorizationRevoked,</para>
         </entry>
       </row>
       <row rowsep="1">
-        <entry align="left">
+        <entry>
           <para></para>
         </entry>
-        <entry align="left">
+        <entry>
           <para>or None</para>
         </entry>
-        <entry align="left">
+        <entry>
           <para>None</para>
-        </entry>
-      </row>
-      <row>
-        <entry align="left">
-          <para></para>
-        </entry>
-      </row>
-      <row>
-        <entry align="left">
-          <para></para>
         </entry>
       </row>
     </tbody>
@@ -372,38 +374,24 @@ is reported to the client.
 The SecurityAuthorizationRevoked event contains the following field:
 </para>
 
-<informaltable>
-  <tgroup cols="2">
+<informaltable frame='topbot'>
+  <?dbfo keep-together="always" ?>
+  <tgroup cols='2' align='left' colsep='0' rowsep='0'>
+  <colspec colname='c1' colwidth="1.0*"/>
+  <colspec colname='c2' colwidth="1.5*"/>
+    <thead>
+      <row rowsep="1">
+        <entry>Field</entry>
+        <entry>Type</entry>
+      </row>
+    </thead>
     <tbody>
-      <row rowsep="1">
-        <entry align="left">
-          <para></para>
-        </entry>
-      </row>
-      <row rowsep="1">
-        <entry align="left">
-          <para>Field</para>
-        </entry>
-        <entry align="left">
-          <para>Type</para>
-        </entry>
-      </row>
-      <row rowsep="1">
-        <entry align="left">
+      <row>
+        <entry>
           <para>authorization-id</para>
         </entry>
-        <entry align="left">
+        <entry>
           <para>AUTHID</para>
-        </entry>
-      </row>
-      <row>
-        <entry align="left">
-          <para></para>
-        </entry>
-      </row>
-      <row>
-        <entry align="left">
-          <para></para>
         </entry>
       </row>
     </tbody>
@@ -437,7 +425,7 @@ authorization-data-return this way.
 
 </sect1>
 
-<sect1 id="securityrevokeauthorization">
+<sect1 id='SecurityRevokeAuthorization'>
 <title>SecurityRevokeAuthorization</title>
 
 <para>
@@ -448,20 +436,18 @@ This request deletes an authorization created by SecurityGenerateAuthorization.
 SecurityRevokeAuthorization
 </para>
 
-<informaltable>
-  <tgroup cols="2">
+<informaltable frame='none'>
+  <?dbfo keep-together="always" ?>
+  <tgroup cols='2' align='left' colsep='0' rowsep='0'>
+  <colspec colname='c1' colwidth="1.0*"/>
+  <colspec colname='c2' colwidth="1.5*"/>
     <tbody>
       <row>
-        <entry align="left">
+        <entry>
           <para><emphasis remap='I'>authorization-id</emphasis></para>
         </entry>
-        <entry align="left">
+        <entry>
           <para>AUTHID</para>
-        </entry>
-      </row>
-      <row>
-        <entry align="left">
-          <para></para>
         </entry>
       </row>
     </tbody>
@@ -483,14 +469,14 @@ with this authorization will fail.
 </sect1>
 </chapter>
 
-<chapter id="changes_to_core_requests">
+<chapter id='Changes_to_Core_Requests'>
 <title>Changes to Core Requests</title>
 
 <para>
 A server supporting this extension modifies the handling of some core
 requests in the following ways.
 </para>
-<sect1 id="resource_id_usage">
+<sect1 id='Resource_ID_Usage'>
 <title>Resource ID Usage</title>
 
 <para>
@@ -580,7 +566,7 @@ ISSUE: are root window exceptions needed for these? WarpPointer, ReparentWindow
 </note>
 
 </sect1>
-<sect1 id="extension_security">
+<sect1 id='Extension_Security'>
 <title>Extension Security</title>
 
 <para>
@@ -615,7 +601,7 @@ opcode will fail with a Request error.
 
 </sect1>
 
-<sect1 id="keyboard_security">
+<sect1 id='Keyboard_Security'>
 <title>Keyboard Security</title>
 
 
@@ -682,7 +668,7 @@ expected. This is in line with the root window exceptions above.
 </para>
 </sect1>
 
-<sect1 id="image_security">
+<sect1 id='Image_Security'>
 <title>Image Security</title>
 
 <para>
@@ -722,8 +708,7 @@ to be an unusual configuration.
 
 </sect1>
 
-<sect1 id="property_security">
-
+<sect1 id='Property_Security'>
 <title>Property Security</title>
 
 <para>
@@ -817,7 +802,7 @@ field in the reply is zero).
 
 </sect1>
 
-<sect1 id="miscellaneous_security">
+<sect1 id='Miscellaneous_Security'>
 <title>Miscellaneous Security</title>
 
 <para>
@@ -836,7 +821,7 @@ a SelectionNotify event to the requestor with property None.
 </sect1>
 </chapter>
 
-<chapter id="new_authorization_method">
+<chapter id='New_Authorization_Method'>
 <title>New Authorization Method</title>
 
 <para>
@@ -876,28 +861,26 @@ follows.
 <function>authorization-protocol-data</function>
 </para>
 
-<informaltable>
-  <tgroup cols="2">
+<informaltable frame='none'>
+  <?dbfo keep-together="always" ?>
+  <tgroup cols='2' align='left' colsep='0' rowsep='0'>
+  <colspec colname='c1' colwidth="1.0*"/>
+  <colspec colname='c2' colwidth="1.5*"/>
     <tbody>
       <row>
-        <entry align="left">
+        <entry>
           <para>policy-mask</para>
         </entry>
-        <entry align="left">
+        <entry>
           <para>BITMASK</para>
         </entry>
       </row>
       <row>
-        <entry align="left">
+        <entry>
           <para>policies</para>
         </entry>
-        <entry align="left">
+        <entry>
           <para>LISTofSECURITYPOLICY</para>
-        </entry>
-      </row>
-      <row>
-        <entry align="left">
-          <para></para>
         </entry>
       </row>
     </tbody>
@@ -913,28 +896,26 @@ to the nth 1-bit in policy-mask, counting upward from bit 0.
 
 <para><function>SECURITYPOLICY</function></para>
 
-<informaltable>
-  <tgroup cols="2">
+<informaltable frame='none'>
+  <?dbfo keep-together="always" ?>
+  <tgroup cols='2' align='left' colsep='0' rowsep='0'>
+  <colspec colname='c1' colwidth="1.0*"/>
+  <colspec colname='c2' colwidth="1.5*"/>
     <tbody>
       <row>
-        <entry align="left">
+        <entry>
           <para>policy-type</para>
         </entry>
-        <entry align="left">
+        <entry>
           <para>{Disallow, Permit}</para>
         </entry>
       </row>
       <row>
-        <entry align="left">
+        <entry>
           <para>names</para>
         </entry>
-        <entry align="left">
+        <entry>
           <para>LISTofSTR</para>
-        </entry>
-      </row>
-      <row>
-        <entry align="left">
-          <para></para>
         </entry>
       </row>
     </tbody>
@@ -975,7 +956,7 @@ policy-type Permit.
 
 </chapter>
 
-<chapter id="encoding">
+<chapter id='Encoding'>
 <title>Encoding</title>
 
 <para>
@@ -987,14 +968,14 @@ uses syntactic conventions and data types established there.
 The name of this extension is "SECURITY".
 </para>
 
-<sect1 id="types">
+<sect1 id='Types'>
 <title>Types</title>
 <para>
 AUTHID: CARD32
 </para>
 </sect1>
 
-<sect1 id="request_encoding">
+<sect1 id='Request_Encoding'>
 <title>Request Encoding</title>
 
 <para>
@@ -1074,7 +1055,7 @@ r                         unused, r=pad(q)
 
 </sect1>
 
-<sect1 id="event_encoding">
+<sect1 id='Event_Encoding'>
 <title>Event Encoding</title>
 <para>
 <function>SecurityAuthorizationRevoked</function>
@@ -1090,7 +1071,7 @@ r                         unused, r=pad(q)
 
 </sect1>
 
-<sect1 id="authorization_method_encoding">
+<sect1 id='Authorization_Method_Encoding'>
 <title>Authorization Method Encoding</title>
 
 <para>
@@ -1128,7 +1109,7 @@ termination between STRs.
 </sect1>
 
 </chapter>
-<chapter id="c_language_binding">
+<chapter id='C_Language_Binding'>
 <title>C Language Binding</title>
 
 <para>
@@ -1141,7 +1122,7 @@ All functions that have return type Status will return nonzero for
 success and zero for failure.
 </para>
 
-<funcsynopsis>
+<funcsynopsis id='XSecurityQueryExtension'>
 <funcprototype>
   <funcdef>Status <function>XSecurityQueryExtension</function></funcdef>
     <paramdef>Display <parameter> *dpy</parameter></paramdef>
@@ -1151,7 +1132,7 @@ success and zero for failure.
 </funcsynopsis>
 
 <para>
-<function>XSecurityQueryExtension</function> sets major_version_return and
+<xref linkend='XSecurityQueryExtension' xrefstyle='select: title'/> sets major_version_return and
 minor_version_return to the major and minor Security protocol version
 supported by the server. If the Security library is compatible with the
 version returned by the server, it returns nonzero. If dpy does not support
@@ -1162,7 +1143,7 @@ function. If a client violates this rule, the effects of all subsequent
 XSecurity calls that it makes are undefined.
 </para>
 
-<funcsynopsis>
+<funcsynopsis id='XSecurityAllocXauth'>
 <funcprototype>
   <funcdef>Xauth *<function>XSecurityAllocXauth</function></funcdef>
     <paramdef><parameter>void</parameter></paramdef>
@@ -1175,9 +1156,9 @@ allocate and deallocate them.
 </para>
 
 <para>
-<function>XSecurityAllocXauth</function> must be used to allocate the
+<xref linkend='XSecurityAllocXauth' xrefstyle='select: title'/> must be used to allocate the
 Xauth structure that is passed to
-<function>XSecurityGenerateAuthorization</function>.
+<xref linkend='XSecurityGenerateAuthorization' xrefstyle='select: title'/>.
 </para>
 
 <para>
@@ -1185,78 +1166,63 @@ For the purposes of the Security extension, the Xauth structure has
 the following fields:
 </para>
 
-<informaltable>
-  <tgroup cols="3">
+<informaltable frame='topbot'>
+  <?dbfo keep-together="always" ?>
+  <tgroup cols='3' align='left' colsep='0' rowsep='0'>
+  <colspec colname='c1' colwidth="1.0*"/>
+  <colspec colname='c2' colwidth="1.0*"/>
+  <colspec colname='c3' colwidth="3.0*"/>
+    <thead>
+      <row rowsep="1">
+        <entry>Type</entry>
+        <entry>Field name</entry>
+        <entry>Description</entry>
+      </row>
+    </thead>
     <tbody>
-      <row rowsep="1">
-        <entry align="left">
-          <para></para>
-        </entry>
-      </row>
-      <row rowsep="1">
-        <entry align="left">
-          <para>Type</para>
-        </entry>
-        <entry align="left">
-          <para>Field name</para>
-        </entry>
-        <entry align="left">
-          <para>Description</para>
-        </entry>
-      </row>
       <row>
-        <entry align="left">
+        <entry>
           <para>unsigned short</para>
         </entry>
-        <entry align="left">
+        <entry>
           <para>name_length</para>
         </entry>
-        <entry align="left">
+        <entry>
           <para>number of bytes in name</para>
         </entry>
       </row>
       <row>
-        <entry align="left">
+        <entry>
           <para>char *</para>
         </entry>
-        <entry align="left">
+        <entry>
           <para>name</para>
         </entry>
-        <entry align="left">
+        <entry>
           <para>authorization protocol name</para>
         </entry>
       </row>
       <row>
-        <entry align="left">
+        <entry>
           <para>unsigned short</para>
         </entry>
-        <entry align="left">
+        <entry>
           <para>data_length</para>
         </entry>
-        <entry align="left">
+        <entry>
           <para>number of bytes in data</para>
         </entry>
       </row>
       <row rowsep="1">
-        <entry align="left">
+        <entry>
           <para>char *</para>
         </entry>
-        <entry align="left">
+        <entry>
            <para>data</para>
         </entry>
-        <entry align="left">
+        <entry>
           <para>authorization protocol data</para>
         </entry>
-     </row>
-     <row>
-       <entry align="left">
-         <para></para>
-       </entry>
-     </row>
-     <row>
-       <entry align="left">
-         <para></para>
-       </entry>
      </row>
    </tbody>
   </tgroup>
@@ -1266,7 +1232,7 @@ The Xauth structure returned by this function is initialized as follows:
 name_length and data_length are zero, and name and data are NULL.
 </para>
 
-<funcsynopsis>
+<funcsynopsis id='XSecurityFreeXauth'>
 <funcprototype>
   <funcdef>void <function>XSecurityFreeXauth</function></funcdef>
     <paramdef>Xauth<parameter> *auth</parameter></paramdef>
@@ -1274,20 +1240,20 @@ name_length and data_length are zero, and name and data are NULL.
 </funcsynopsis>
 
 <para>
-<function>XSecurityFreeXauth</function> must be used to free Xauth
+<xref linkend='XSecurityFreeXauth' xrefstyle='select: title'/> must be used to free Xauth
 structures allocated by
-<function>XSecurityAllocXauth</function> or returned by
-<function>XSecurityGenerateAuthorization</function>. It is the
+<xref linkend='XSecurityAllocXauth' xrefstyle='select: title'/> or returned by
+<xref linkend='XSecurityGenerateAuthorization' xrefstyle='select: title'/>. It is the
 caller's responsibility to fill in the name and data fields of Xauth structures
-allocated with <function>XSecurityAllocXauth</function>, so this function
+allocated with <xref linkend='XSecurityAllocXauth' xrefstyle='select: title'/>, so this function
 will not attempt to free them. In contrast, all storage associated with
 Xauth structures returned from
-<function>XSecurityGenerateAuthorization</function> will be freed by this
+<xref linkend='XSecurityGenerateAuthorization' xrefstyle='select: title'/> will be freed by this
 function, including the name and data fields.
 </para>
 
 
-<funcsynopsis>
+<funcsynopsis id='XSecurityRevokeAuthorization'>
 <funcprototype>
   <funcdef>Bool <function>XSecurityRevokeAuthorization</function></funcdef>
     <paramdef>Display<parameter> *dpy</parameter></paramdef>
@@ -1296,15 +1262,15 @@ function, including the name and data fields.
 </funcsynopsis>
 
 <para>
-<function>XSecurityRevokeAuthorization</function> deletes the authorization
+<xref linkend='XSecurityRevokeAuthorization' xrefstyle='select: title'/> deletes the authorization
 specified by auth_id, which must be a value returned in the auth_id_return
-parameter of <function>XSecurityGenerateAuthorization</function>. All
+parameter of <xref linkend='XSecurityGenerateAuthorization' xrefstyle='select: title'/>. All
 clients that connected with that authorization are be killed. Subsequently,
 clients that attempt to connect using that authorization will be refused.
 </para>
 
 
-<funcsynopsis>
+<funcsynopsis id='XSecurityGenerateAuthorization'>
 <funcprototype>
   <funcdef>Xauth *<function>XSecurityGenerateAuthorization</function></funcdef>
     <paramdef>Display<parameter> *dpy</parameter></paramdef>
@@ -1316,93 +1282,78 @@ clients that attempt to connect using that authorization will be refused.
 </funcsynopsis>
 
 <para>
-<function>XSecurityGenerateAuthorization</function> creates a new
+<xref linkend='XSecurityGenerateAuthorization' xrefstyle='select: title'/> creates a new
 authorization with the specified attributes. The auth_in argument must be
-allocated by <function>XSecurityAllocXauth</function>. The
+allocated by <xref linkend='XSecurityAllocXauth' xrefstyle='select: title'/>. The
 name and name_length fields of auth_in should be initialized to the
 authorization protocol name and its length in characters respectively.
 If there is authorization data, the data and data_length fields of
 auth_in should be initialized to the data and its length in characters
 respectivley. The library does not assume that name and data are
 null-terminated strings. The auth_in argument must be freed with
-<function>XSecurityFreeXauth</function>.
+<xref linkend='XSecurityFreeXauth' xrefstyle='select: title'/>.
 </para>
 
 <para>
 The XSecurityAuthorizationAttributes structure has the following fields:
 </para>
 
-<informaltable>
-  <tgroup cols="3">
+<informaltable frame='topbot'>
+  <?dbfo keep-together="always" ?>
+  <tgroup cols='3' align='left' colsep='0' rowsep='0'>
+  <colspec colname='c1' colwidth="1.0*"/>
+  <colspec colname='c2' colwidth="1.0*"/>
+  <colspec colname='c3' colwidth="3.0*"/>
+    <thead>
+      <row rowsep="1">
+        <entry>Type</entry>
+        <entry>Field name</entry>
+        <entry>Mask</entry>
+      </row>
+    </thead>
     <tbody>
-      <row rowsep="1">
-        <entry align="left">
-          <para></para>
-        </entry>
-      </row>
-      <row rowsep="1">
-        <entry align="left">
-          <para>Type</para>
-        </entry>
-        <entry align="left">
-          <para>Field name</para>
-        </entry>
-        <entry align="left">
-          <para>Mask</para>
-        </entry>
-      </row>
       <row>
-        <entry align="left">
+        <entry>
           <para>unsigned int</para>
         </entry>
-        <entry align="left">
+        <entry>
           <para>trust_level</para>
         </entry>
-        <entry align="left">
+        <entry>
           <para>XSecurityTrustLevel</para>
         </entry>
       </row>
       <row>
-        <entry align="left">
+        <entry>
           <para>unsigned int</para>
         </entry>
-        <entry align="left">
+        <entry>
           <para>timeout</para>
         </entry>
-        <entry align="left">
+        <entry>
           <para>XSecurityTimeout</para>
         </entry>
       </row>
       <row>
-        <entry align="left">
+        <entry>
           <para>XID</para>
         </entry>
-        <entry align="left">
+        <entry>
           <para>group</para>
         </entry>
-        <entry align="left">
+        <entry>
           <para>XSecurityGroup</para>
         </entry>
       </row>
       <row rowsep="1">
-        <entry align="left">
+        <entry>
           <para>long</para>
         </entry>
-        <entry align="left">
+        <entry>
           <para>event_mask</para>
         </entry>
-        <entry align="left">
+        <entry>
           <para>XSecurityEventMask</para>
-        </entry>
-      </row>
-      <row>
-        <entry align="left">
-          <para></para>
-        </entry>
-      </row>
-      <row>
-        <entry align="left">
-          <para></para>
         </entry>
       </row>
     </tbody>
@@ -1430,7 +1381,7 @@ the authorization data returned by the server. The caller should not assume
 that name and data are null-terminated strings. If no authorization data was
 returned by the server, the data and data_length fields will be set to NULL
 and zero repectively. The returned Xauth structure must be freed with
-<function>XSecurityFreeXauth</function>; the caller should not use any other
+<xref linkend='XSecurityFreeXauth' xrefstyle='select: title'/>; the caller should not use any other
 means free the structure or any of its components. The auth_id_return
 argument will be filled in with the non-zero authorization id of the created
 authorization.
@@ -1440,89 +1391,73 @@ authorization.
 The XSecurityAuthorizationRevokedEvent structure has the following fields:
 </para>
 
-<informaltable>
-  <tgroup cols="3">
+<informaltable frame='topbot'>
+  <?dbfo keep-together="always" ?>
+  <tgroup cols='3' align='left' colsep='0' rowsep='0'>
+  <colspec colname='c1' colwidth="1.0*"/>
+  <colspec colname='c2' colwidth="1.0*"/>
+  <colspec colname='c3' colwidth="3.0*"/>
+    <thead>
+      <row rowsep="1">
+        <entry>Type</entry>
+        <entry>Field name</entry>
+        <entry>Description</entry>
+      </row>
+    </thead>
     <tbody>
-      <row rowsep="1">
-        <entry align="left">
-          <para></para>
-        </entry>
-      </row>
-      <row rowsep="1">
-        <entry align="left">
-          <para>Type</para>
-        </entry>
-        <entry align="left">
-          <para>Field name</para>
-        </entry>
-        <entry align="left">
-          <para>Description</para>
-        </entry>
-
-      </row>
       <row>
-        <entry align="left">
+        <entry>
           <para>int</para>
         </entry>
-        <entry align="left">
+        <entry>
           <para>type</para>
         </entry>
-        <entry align="left">
+        <entry>
           <para>event base + XSecurityAuthorizationRevoked</para>
         </entry>
       </row>
       <row>
-        <entry align="left">
+        <entry>
           <para>unsigned long</para>
         </entry>
-        <entry align="left">
+        <entry>
           <para>serial</para>
         </entry>
-        <entry align="left">
+        <entry>
           <para># of last request processed by server</para>
         </entry>
       </row>
       <row>
-        <entry align="left">
+        <entry>
           <para>Bool</para>
         </entry>
-        <entry align="left">
+        <entry>
           <para>send_event</para>
         </entry>
-        <entry align="left">
+        <entry>
           <para>true if this came from SendEvent</para>
         </entry>
       </row>
       <row>
-        <entry align="left">
+        <entry>
           <para>Display*</para>
         </entry>
-        <entry align="left">
+        <entry>
           <para>display</para>
         </entry>
-        <entry align="left">
+        <entry>
           <para>Display the event was read from</para>
         </entry>
       </row>
       <row rowsep="1">
-        <entry align="left">
+        <entry>
           <para>XSecurityAuthorization</para>
         </entry>
-        <entry align="left">
+        <entry>
           <para>auth_id</para>
         </entry>
-        <entry align="left">
+        <entry>
           <para>revoked authorization id</para>
-        </entry>
-      </row>
-      <row>
-        <entry align="left">
-          <para></para>
-        </entry>
-      </row>
-      <row>
-        <entry align="left">
-          <para></para>
         </entry>
       </row>
     </tbody>

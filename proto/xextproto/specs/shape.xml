@@ -1,6 +1,9 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.3//EN"
-                   "http://www.oasis-open.org/docbook/xml/4.3/docbookx.dtd">
+                   "http://www.oasis-open.org/docbook/xml/4.3/docbookx.dtd"
+[
+<!ENTITY % defs SYSTEM "defs.ent"> %defs;
+]>
 
 
 <!-- lifted from troff+ms+XMan by doclifter -->
@@ -9,24 +12,21 @@
 <bookinfo>
    <title>X Nonrectangular Window Shape Extension Protocol</title>
    <subtitle>X.Org Standard</subtitle>
-   <releaseinfo>Version 1.1</releaseinfo>
    <authorgroup>
       <author>
          <firstname>Keith</firstname><surname>Packard</surname>
-<affiliation><orgname>MIT X Consortium Intel Corporation</orgname></affiliation>
+         <affiliation><orgname>MIT X Consortium</orgname></affiliation>
+         <affiliation><orgname>Intel Corporation</orgname></affiliation>
       </author>
       <othercredit>
          <firstname>Hideki</firstname><surname>Hiura</surname>
          <affiliation><orgname>SunSoft, Inc.</orgname></affiliation>
       </othercredit>
    </authorgroup>
-   <corpname>X Consortium Standard</corpname>
-   <copyright><year>1989</year><holder>The Open Group</holder></copyright>
-   <copyright><year>2004</year><holder>The Open Group</holder></copyright>
+   <releaseinfo>X Version 11, Release &fullrelvers;</releaseinfo>
+   <releaseinfo>Version 1.1</releaseinfo>
+   <copyright><year>1989</year><year>2004</year><holder>The Open Group</holder></copyright>
    <copyright><year>2006</year><holder>Keith Packard</holder></copyright>
-   <affiliation><orgname>X Consortium</orgname></affiliation>
-   <productnumber>X Version 11, Release 7</productnumber>
-
 <legalnotice>
 
 <para>
@@ -42,7 +42,7 @@ The above copyright notice and this permission notice shall be included in
 all copies or substantial portions of the Software.
 </para>
 <para>
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+THE SOFTWARE IS PROVIDED &ldquo;AS IS&rdquo;, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE
 COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
@@ -336,25 +336,26 @@ extension is usable by the client.  This document defines major version one
 </para>
 
 <informaltable frame="none">
-  <tgroup cols='1' align='left'>
-  <colspec colname='c1' colsep="0" colwidth="1*"/>
+  <?dbfo keep-together="always" ?>
+  <tgroup cols='1' align='left' colsep='0' rowsep='0'>
+  <colspec colname='c1' colwidth="1.0*"/>
   <tbody>
-    <row rowsep="0">
+    <row>
       <entry><emphasis remap='I'>dest</emphasis>: WINDOW</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry><emphasis remap='I'>destKind</emphasis>: SHAPE_KIND</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry><emphasis remap='I'>op</emphasis>: SHAPE_OP</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry><emphasis remap='I'>xOff, yOff</emphasis>: INT16</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry><emphasis remap='I'>rectangles</emphasis>: LISTofRECTANGLES</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry><emphasis remap='I'>ordering</emphasis>:
 { <function>UnSorted</function>,
 <function>YSorted</function>,
@@ -362,7 +363,7 @@ extension is usable by the client.  This document defines major version one
 <function>YXBanded</function> }
       </entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>
 Errors:
 <function>Window</function>,
@@ -427,10 +428,11 @@ extents.
 </para>
 
 <informaltable frame="none">
-  <tgroup cols='1' align='left'>
-  <colspec colname='c1' colsep="0" colwidth="1*"/>
+  <?dbfo keep-together="always" ?>
+  <tgroup cols='1' align='left' colsep='0' rowsep='0'>
+  <colspec colname='c1' colwidth="1.0*"/>
   <tbody>
-    <row rowsep="0">
+    <row>
       <entry>
 <emphasis remap='I'>dest</emphasis>: WINDOW
 <emphasis remap='I'>destKind</emphasis>: SHAPE_KIND
@@ -440,7 +442,7 @@ extents.
 <function>None</function>
       </entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>
 Errors:
 <function>Window</function>,
@@ -482,40 +484,41 @@ error results.
 </para>
 
 <informaltable frame="none">
-  <tgroup cols='1' align='left'>
-  <colspec colname='c1' colsep="0" colwidth="1*"/>
+  <?dbfo keep-together="always" ?>
+  <tgroup cols='1' align='left' colsep='0' rowsep='0'>
+  <colspec colname='c1' colwidth="1.0*"/>
   <tbody>
-    <row rowsep="0">
+    <row>
       <entry>
 <emphasis remap='I'>dest</emphasis>: WINDOW
       </entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>
 <emphasis remap='I'>destKind</emphasis>: SHAPE_KIND
       </entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>
 <emphasis remap='I'>op</emphasis>: SHAPE_OP
       </entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>
 <emphasis remap='I'>xOff, yOff</emphasis>: INT16
       </entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>
 <emphasis remap='I'>source</emphasis>: WINDOW
       </entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>
 <emphasis remap='I'>sourceKind</emphasis>: SHAPE_KIND
       </entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>
 Errors:
 <function>Window</function>,
@@ -543,25 +546,26 @@ error results.
 </para>
 
 <informaltable frame="none">
-  <tgroup cols='1' align='left'>
-  <colspec colname='c1' colsep="0" colwidth="1*"/>
+  <?dbfo keep-together="always" ?>
+  <tgroup cols='1' align='left' colsep='0' rowsep='0'>
+  <colspec colname='c1' colwidth="1.0*"/>
   <tbody>
-    <row rowsep="0">
+    <row>
       <entry>
 <emphasis remap='I'>dest</emphasis>: WINDOW
       </entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>
 <emphasis remap='I'>destKind</emphasis>: SHAPE_KIND
       </entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>
 <emphasis remap='I'>xOff, yOff</emphasis>: INT16
       </entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>
 Errors:
 <function>Window</function>,
@@ -583,10 +587,11 @@ current position by the amounts xOff and yOff.
 </para>
 
 <informaltable frame="none">
-  <tgroup cols='1' align='left'>
-  <colspec colname='c1' colsep="0" colwidth="1*"/>
+  <?dbfo keep-together="always" ?>
+  <tgroup cols='1' align='left' colsep='0' rowsep='0'>
+  <colspec colname='c1' colwidth="1.0*"/>
   <tbody>
-    <row rowsep="0">
+    <row>
       <entry>
 <emphasis remap='I'>dest</emphasis>: WINDOW
       </entry>
@@ -600,60 +605,61 @@ current position by the amounts xOff and yOff.
 </para>
 
 <informaltable frame="none">
-  <tgroup cols='1' align='left'>
-  <colspec colname='c1' colsep="0" colwidth="1*"/>
+  <?dbfo keep-together="always" ?>
+  <tgroup cols='1' align='left' colsep='0' rowsep='0'>
+  <colspec colname='c1' colwidth="1.0*"/>
   <tbody>
-    <row rowsep="0">
+    <row>
       <entry>
 boundingShaped: BOOL
       </entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>
 clipShaped: BOOL
       </entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>
 xBoundingShape: INT16
       </entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>
 yBoundingShape: INT16
       </entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>
 widthBoundingShape: CARD16
       </entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>
 heightBoundingShape: CARD16
       </entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>
 xClipShape: INT16
       </entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>
 yClipShape: INT16
       </entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>
 widthClipShape: CARD16
       </entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>
 heightClipShape: CARD16
       </entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>
 Errors:
 <function>Window</function>
@@ -678,20 +684,21 @@ corresponding default region are reported.
 </para>
 
 <informaltable frame="none">
-  <tgroup cols='1' align='left'>
-  <colspec colname='c1' colsep="0" colwidth="1*"/>
+  <?dbfo keep-together="always" ?>
+  <tgroup cols='1' align='left' colsep='0' rowsep='0'>
+  <colspec colname='c1' colwidth="1.0*"/>
   <tbody>
-    <row rowsep="0">
+    <row>
       <entry>
 <emphasis remap='I'>window</emphasis>: WINDOW
       </entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>
 <emphasis remap='I'>enable</emphasis>: BOOL
       </entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>
 Errors:
 <function>Window</function>,
@@ -719,21 +726,22 @@ causes the server to stop sending such events.
 </para>
 
 <informaltable frame="none">
-  <tgroup cols='1' align='left'>
-  <colspec colname='c1' colsep="0" colwidth="1*"/>
+  <?dbfo keep-together="always" ?>
+  <tgroup cols='1' align='left' colsep='0' rowsep='0'>
+  <colspec colname='c1' colwidth="1.0*"/>
   <tbody>
-    <row rowsep="0">
+    <row>
       <entry>
 <emphasis remap='I'>window</emphasis>: WINDOW
       </entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>
 =&gt;
 enable: BOOL
       </entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>
 Errors:
 <function>Window</function>
@@ -755,26 +763,27 @@ events for the window are generated for this client.
 </para>
 
 <informaltable frame="none">
-  <tgroup cols='1' align='left'>
-  <colspec colname='c1' colsep="0" colwidth="1*"/>
+  <?dbfo keep-together="always" ?>
+  <tgroup cols='1' align='left' colsep='0' rowsep='0'>
+  <colspec colname='c1' colwidth="1.0*"/>
   <tbody>
-    <row rowsep="0">
+    <row>
       <entry>
 <emphasis remap='I'>window</emphasis>: WINDOW
       </entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>
 <emphasis remap='I'>kind</emphasis>: SHAPE_KIND
       </entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>
    =&gt;
 rectangles: LISTofRECTANGLE
       </entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>
 ordering:
 { <function>UnSorted</function>,
@@ -783,7 +792,7 @@ ordering:
 <function>YXBanded</function> }
       </entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>
 Errors:
 <function>Window,</function>
@@ -810,36 +819,37 @@ request.
 </para>
 
 <informaltable frame="none">
-  <tgroup cols='1' align='left'>
-  <colspec colname='c1' colsep="0" colwidth="1*"/>
+  <?dbfo keep-together="always" ?>
+  <tgroup cols='1' align='left' colsep='0' rowsep='0'>
+  <colspec colname='c1' colwidth="1.0*"/>
   <tbody>
-    <row rowsep="0">
+    <row>
       <entry>
 <emphasis remap='I'>window</emphasis>: WINDOW
       </entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>
 <emphasis remap='I'>kind</emphasis>: SHAPE_KIND
       </entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>
 <emphasis remap='I'>shaped</emphasis>: BOOL
       </entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>
 <emphasis remap='I'>x, y</emphasis>: INT16
       </entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>
 <emphasis remap='I'>width</emphasis>,
 <emphasis remap='I'>height</emphasis>: CARD16
       </entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>
 <emphasis remap='I'>time</emphasis>: TIMESTAMP
       </entry>

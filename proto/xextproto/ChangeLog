@@ -1,3 +1,296 @@
+commit dff1a34f49644b2ed9cfac321dce6d31aed868cf
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Mar 22 20:54:16 2012 -0700
+
+    xextproto 7.2.1
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 38c6d386637eecc105f6e6b03ff10e6299bd0002
+Author: Matt Dew <marcoz@osource.org>
+Date:   Mon Jan 16 13:18:50 2012 -0700
+
+    informaltable cleanup
+    
+    On certain tables, add top and bottom borders to table
+    header and a bottom border to the table. This matches
+    what those tables in the old pdfs looked like.
+    
+    the <?dbfo keep-together='always'> prevents tables from
+    splitting across pages. Useful for tiny tables.
+    
+    Converting the colwidth to a floating point,
+    IE, 1* -> 1.0* cleans up these build errors:
+    WARNING: table-layout="fixed" and column-width unspecified
+    => falling back to proportional-column-width(1)
+    
+    Signed-off-by: Matt Dew <marcoz@osource.org>
+
+commit 618cea608d726c0aeb48960da7bedc2dd8b36bba
+Author: Matt Dew <marcoz@osource.org>
+Date:   Fri Sep 30 22:28:10 2011 -0600
+
+    #1 - fix the capitalization of the ID attriutes to
+         match either the <title> or <funcdef> string it goes with.
+    #2 - fix any <linkend>'s that were affected by #1
+    #3 - any <function> in the docs that has an actual funcdef,
+          will become an olink.
+    
+    Signed-off-by: Matt Dew <marcoz@osource.org>
+
+commit 8f35303d8d40a68deb8c4830e8946ea356b0577f
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Sep 21 19:35:12 2011 -0400
+
+    geproto spec: add missing copyright with the author's permission
+    
+    http://cgit.freedesktop.org/xorg/proto/xextproto/commit/geproto.txt
+    ?id=69356e4165f11f3ed4b377d29df038549191a91e
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 7c7f6b9e21cea649e833afa4402fd4848c97e047
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Sep 21 15:44:59 2011 -0400
+
+    xtest spec: fix copyright markup
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit c43e9edc3bed977885ec69c8e3a7f106d778b931
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Sep 21 15:42:18 2011 -0400
+
+    top-cup spec: remove orphan corpname markup
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit b72a529226cce698b3550a75ecedfea6585daccf
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Sep 21 15:40:08 2011 -0400
+
+    sync spec: fix copyright markup for multiple authors
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit daf6658219cac1fb1bde12f9e827a7832162536a
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Sep 21 15:31:39 2011 -0400
+
+    shm spec: fix author affiliation and copyright text
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 7961ee6a9d2d398f0f05ca7058644c4894822910
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Sep 21 15:24:12 2011 -0400
+
+    shape spec: fix author affiliation and copyright text
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 77f8d11c0d2e521b1dfbd27acfde381a4dcfb135
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Sep 21 10:35:58 2011 -0400
+
+    security: fix X Consortium copyrigh legal text and minor markups
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit ac60c5c5081690e2984192a8aeed7790c8b98297
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Sep 21 10:30:12 2011 -0400
+
+    multibuf spec: refactor copyright legal text for multi licensing
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 11529183d7294901074332e1369364fc0ed0cafa
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Sep 21 10:20:31 2011 -0400
+
+    lbx: complete the authors name
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 414fdfca99ac0b787ce63777024fa306126f4505
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Sep 21 10:12:06 2011 -0400
+
+    geproto: fix author's e-mail
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 91f892076e7fa842993aa2ce17eafd8c61fbe024
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Sep 21 09:52:43 2011 -0400
+
+    evi spec: fix copyright and orphan markup
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit ff0477883d6015e00b5f323c697d2bdd7e746298
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Sep 21 09:44:15 2011 -0400
+
+    dpms spec: fix author affiliation
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 40814443d5f73f340879719d945f6a8cfd2fb3fd
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Sep 21 09:26:11 2011 -0400
+
+    dbe spec: fix author affiliation and copyright notices
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit b1f8a6d384b6866ce70c8289a727d25aa5de7dbf
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Sep 20 20:54:02 2011 -0400
+
+    appgrp: use <copyright> markup and minor titlepage fixes
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 08f39a5f52ef9e10ae7b32d9ae21d64f5eaef354
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Sep 14 20:55:08 2011 -0400
+
+    sync: fix author name and authors affiliation
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 895d967d56711617ff59e2d2d60389609557072b
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Sep 12 11:23:00 2011 -0400
+
+    docs: use the &fullrelvers; entity to set X11 release information
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit a19f712304f9a606dd2f9d805d5292b37371b31d
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Sep 11 19:49:54 2011 -0400
+
+    docs: remove <productnumber> which is not used by default
+    
+    This element is not rendered by default on the title. A template
+    customization is required to display it.
+    X Window System does not have a product number.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 2ff4ebb7014d739744d30a873c90530bc4103927
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Fri Sep 9 21:03:36 2011 -0400
+
+    Use more appropriate docbook element to get "Edited by"
+    
+    The proper element to use is <editor>.
+    The <contrib> was a hack to insert text and showed up in the wrong location
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit a6b33943e6245da960d74dc7dd9a2dec40310fa2
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Sep 8 20:00:00 2011 -0400
+
+    docbook.am: embed css styles inside the HTML HEAD element
+    
+    Rather than referring to the external xorg.css stylesheet, embed the content
+    of the file in the html output produced. This is accomplished by using
+    version 1.10 of xorg-xhtml.xsl.
+    
+    This makes the whole html docs tree much more relocatable.
+    In addition, it eliminates xorg.css as a runtime file which makes
+    xorg-sgml-doctools a build time only package.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit e689b12b5d685deb7d226d116fbac21951d08968
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Sep 7 10:31:04 2011 -0400
+
+    docbook.am: global maintenance update - entities, images and olinking
+    
+    Adding support in libX11 for html chunking caused a reorg of docbook.am
+    as well as the xorg-sgml-doctools masterdb for olinking.
+    The parameter img.src.path is added for pdf images.
+    A searchpath to the root builddir is added for local entities, if present.
+    
+    The docbook.am makefile hides all the details and is identical for
+    all 22 modules having DocBook documentation. It is included by a thin
+    Makefile.am which requires no docbook knowledge.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 84ddb52e2362953c2e646e85eb745c34c1c01e2a
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Jun 12 17:54:50 2011 -0400
+
+    Install xml versions of specs even if HAVE_XMLTO is false
+    
+    DocBook/XML input source is also a usefull output format that can be viewed
+    with an XML viewer or editor and by some O/S help system.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 09dcc84b4cea1416d01a53b32875295adfb36ba4
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Jun 5 16:27:37 2011 -0400
+
+    Install target dbs alongside generated documents
+    
+    This matches a change in xorg-sgml-docs whereby the masterdb will look for
+    the target dbs into the same location as the generated documents.
+    
+    The target dbs are now installed alongside the generated documents.
+    Previously they are installed in $prefix/sgml/X11/dbs alongside masterdb which
+    has the potential of installing outside the package prefix and cause
+    distcheck to fail when user does not have write permission in this package.
+    
+    Requires XORG_CHECK_SGML_DOCTOOLS(1.8) which was released 2011-06-11
+
+commit 4f42558a78d3e14b611247249f3f300424f8ecd3
+Author: Matt Dew <marcoz@osource.org>
+Date:   Wed May 25 21:56:10 2011 -0600
+
+    Add id attributes to funcsynopsis to allow other docs to olink to them.
+    
+    Signed-off-by: Matt Dew <marcoz@osource.org>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 6dba94ecadfa4f58dd1b2ee0ceb39d4710900ac8
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Feb 27 15:06:18 2011 -0500
+
+    Documentation: add Docbook external references support
+    
+    When writing technical documentation, it is often necessary to cross
+    reference to other information. When that other information is not in the
+    current document, additional support is needed, namely <olink>.
+    
+    A new feature with version 1.7 of xorg-sgml-doctools adds references to
+    other documents within or outside this package.
+    
+    This patch adds technical support for this feature but does not change
+    the content of the documentation as seen by the end user.
+    
+    Each book or article must generate a database containing the href
+    of sections that can be referred to from another document. This database
+    is installed in DATAROOTDIR/sgml/X11/dbs. There is a requirement that
+    the value of DATAROOTDIR for xorg-sgml-doctools and for the package
+    documentation is the same. This forms a virtual document tree.
+    
+    This database is consulted by other documents while they are being generated
+    in order to fulfill the missing information for linking.
+    Refer to the xorg-sgml-doctools for further technical information.
+    
+    Co-authored-by: Matt Dew <marcoz@osource.org>
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
 commit c593fd1000ceb83f0933361c5e7496d799233f7e
 Author: Keith Packard <keithp@keithp.com>
 Date:   Sat Feb 26 23:57:48 2011 -0800

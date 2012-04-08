@@ -1,6 +1,9 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.3//EN"
-                   "http://www.oasis-open.org/docbook/xml/4.3/docbookx.dtd">
+                   "http://www.oasis-open.org/docbook/xml/4.3/docbookx.dtd"
+[
+<!ENTITY % defs SYSTEM "defs.ent"> %defs;
+]>
 
 
 <book id="tog-cup">
@@ -8,6 +11,7 @@
 <bookinfo>
    <title>Colormap Utilization Policy and Extension</title>
    <subtitle>X Project Team Standard</subtitle>
+   <releaseinfo>X Version 11, Release &fullrelvers;</releaseinfo>
    <releaseinfo>Version 1.0</releaseinfo>
    <authorgroup>
       <author>
@@ -17,10 +21,7 @@
          <affiliation><orgname>The Open Group</orgname></affiliation>
       </author>
    </authorgroup>
-   <corpname>X Consortium Standard</corpname>
    <copyright><year>1986-1997</year><holder>The Open Group</holder></copyright>
-   <affiliation><orgname>X Consortium</orgname></affiliation>
-   <productnumber>X Version 11, Release 6.8</productnumber>
 
 <legalnotice>
 
@@ -42,7 +43,7 @@ The above copyright notice and the following permission notice shall be
 included in all copies of the Software:
 </para>
 <para>
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+THE SOFTWARE IS PROVIDED &ldquo;AS IS&rdquo;, WITHOUT WARRANTY OF ANY KIND,
 EXPRESS OR IMPLIED, INCLUDING, BUT NOT LIMITED TO, THE WARRANTIES
 OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON-
 INFRINGEMENT.  IN NO EVENT SHALL THE OPEN GROUP BE LIABLE FOR ANY
@@ -108,30 +109,31 @@ available location.)
 </para>
 
 <informaltable frame="none">
-  <tgroup cols='1' align='left'>
-  <colspec colname='c1' colsep="0" colwidth="1*"/>
+  <?dbfo keep-together="always" ?>
+  <tgroup cols='1' align='left' colsep='0' rowsep='0'>
+  <colspec colname='c1' colwidth="1.0*"/>
   <tbody>
-    <row rowsep="0">
+    <row>
       <entry>
 client_major_version: CARD16
       </entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>
 client_minor_version: CARD16
       </entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>
 =&gt;
       </entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>
 server_major_version: CARD16
       </entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>
 server_minor_version: CARD16
       </entry>
@@ -160,20 +162,21 @@ server_minor_version of zero (0).
 </para>
 
 <informaltable frame="none">
-  <tgroup cols='1' align='left'>
-  <colspec colname='c1' colsep="0" colwidth="1*"/>
+  <?dbfo keep-together="always" ?>
+  <tgroup cols='1' align='left' colsep='0' rowsep='0'>
+  <colspec colname='c1' colwidth="1.0*"/>
   <tbody>
-    <row rowsep="0">
+    <row>
       <entry>
 screen: CARD32
       </entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>
 =&gt;
       </entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>
 entries: LISTofCOLORITEM
       </entry>
@@ -202,25 +205,26 @@ MS-Windows applications running/displaying on the same desktop.
 </para>
 
 <informaltable frame="none">
-  <tgroup cols='1' align='left'>
-  <colspec colname='c1' colsep="0" colwidth="1*"/>
+  <?dbfo keep-together="always" ?>
+  <tgroup cols='1' align='left' colsep='0' rowsep='0'>
+  <colspec colname='c1' colwidth="1.0*"/>
   <tbody>
-    <row rowsep="0">
+    <row>
       <entry>
 cmap: COLORMAP
       </entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>
 items: LISTofCOLORITEM
       </entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>
 =&gt;
       </entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>
 items: LISTofCOLORITEM
       </entry>
@@ -253,7 +257,7 @@ No new events or errors are defined by this extension.
 </para>
 
 </chapter>
-<chapter id="Changes_to_existing_protocol_">
+<chapter id='Changes_to_existing_protocol'>
 <title>Changes to existing protocol.</title>
 <para>
 None.
@@ -354,7 +358,7 @@ The include file for this extension is
 <function>&lt;X11/extensions/Xcup.h&gt;</function>.
 </para>
 
-<funcsynopsis>
+<funcsynopsis id='XCupQueryVersion'>
 <funcprototype>
   <funcdef>Status <function> XCupQueryVersion</function></funcdef>
   <paramdef>Display*<parameter> display</parameter></paramdef>
@@ -414,7 +418,7 @@ To get the list of reserved colormap entries, use
 XCupGetReservedColormapEntries.
 </para>
 
-<funcsynopsis>
+<funcsynopsis id='XCupGetReservedColormapEntries'>
 <funcprototype>
   <funcdef>Status <function> XCupGetReservedColormapEntries</function></funcdef>
   <paramdef>Display*<parameter> display</parameter></paramdef>
@@ -468,7 +472,7 @@ To allocate one or more read-only color cells with RGB values, use
 XCupStoreColors.
 </para>
 
-<funcsynopsis>
+<funcsynopsis id='XCupStoreColors'>
 <funcprototype>
   <funcdef>Status <function> XCupStoreColors</function></funcdef>
   <paramdef>Display*<parameter> display</parameter></paramdef>

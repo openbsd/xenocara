@@ -1,6 +1,9 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.3//EN"
-                   "http://www.oasis-open.org/docbook/xml/4.3/docbookx.dtd">
+                   "http://www.oasis-open.org/docbook/xml/4.3/docbookx.dtd"
+[
+<!ENTITY % defs SYSTEM "defs.ent"> %defs;
+]>
 
 
 <!-- lifted from troff+ms+XMan by doclifter -->
@@ -9,34 +12,23 @@
 <bookinfo>
    <title>MIT-SHM(The MIT Shared Memory Extension)</title>
    <subtitle>How the shared memory extension works</subtitle>
-   <releaseinfo>Version 1.0</releaseinfo>
    <authorgroup>
       <author>
          <firstname>Jonathan</firstname><surname>Corbet</surname>
-         <affiliation><orgname>Atmospheric Technology Division National Center for Atmospheric Research</orgname></affiliation>
+         <affiliation>
+            <orgname>National Center for Atmospheric Research</orgname>
+            <orgdiv>Atmospheric Technology Division</orgdiv>
+         </affiliation>
       <email>corbet@ncar.ucar.edu</email>
       </author>
-      <othercredit>
-         <contrib>Formatted and edited for release 5 by</contrib>
+      <editor>
          <firstname>Keith</firstname><surname>Packard</surname>
          <affiliation><orgname>MIT X Consortium</orgname></affiliation>
-      </othercredit>
+      </editor>
    </authorgroup>
-   <corpname>X Consortium Standard</corpname>
+   <releaseinfo>X Version 11, Release &fullrelvers;</releaseinfo>
+   <releaseinfo>Version 1.0</releaseinfo>
    <copyright><year>1991</year><holder>X Consortium</holder></copyright>
-   <affiliation><orgname>X Consortium</orgname></affiliation>
-   <productnumber>X Version 11, Release 7</productnumber>
-
-<abstract>
-<para>
-This document briefly describes how to use the MIT-SHM shared memory
-extension.  I have tried to make it accurate, but it would not surprise me
-if some errors remained.  If you find anything wrong, do let me know and I
-will incorporate the corrections.  Meanwhile, please take this document "as
-is" (eman improvement over what was there before, but certainly not the
-definitive word.)
-</para>
-</abstract>
 
 <legalnotice>
 <para>
@@ -52,7 +44,7 @@ The above copyright notice and this permission notice shall be included in
 all copies or substantial portions of the Software.
 </para>
 <para>
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+THE SOFTWARE IS PROVIDED &ldquo;AS IS&rdquo;, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE
 X CONSORTIUM BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN
@@ -64,7 +56,20 @@ Except as contained in this notice, the name of the X Consortium shall not be
 used in advertising or otherwise to promote the sale, use or other dealings
 in this Software without prior written authorization from the X Consortium.
 </para>
+<para>X Window System is a trademark of The OpenGroup.</para>
 </legalnotice>
+
+<abstract>
+<para>
+This document briefly describes how to use the MIT-SHM shared memory
+extension.  I have tried to make it accurate, but it would not surprise me
+if some errors remained.  If you find anything wrong, do let me know and I
+will incorporate the corrections.  Meanwhile, please take this document "as
+is" (eman improvement over what was there before, but certainly not the
+definitive word.)
+</para>
+</abstract>
+
 </bookinfo>
 
 <chapter id="REQUIREMENTS">
@@ -133,7 +138,7 @@ the net, or in some other environment where the extension will not work.
 To perform this check, call either
 </para>
 
-<funcsynopsis>
+<funcsynopsis id='XShmQueryExtension'>
 <funcprototype>
   <funcdef>Status <function>XShmQueryExtension</function></funcdef>
     <paramdef>Display <parameter>*display</parameter></paramdef>
@@ -144,7 +149,7 @@ To perform this check, call either
 or
 </para>
 
-<funcsynopsis>
+<funcsynopsis id='XShmQueryVersion'>
 <funcprototype>
   <funcdef>Status <function>XShmQueryVersion</function></funcdef>
     <paramdef>Display <parameter>*display</parameter></paramdef>
@@ -198,7 +203,7 @@ Use the shared memory XImage, much like a normal one.
 To create a shared memory XImage, use:
 </para>
 
-<funcsynopsis>
+<funcsynopsis id='XShmCreateImage'>
 <funcprototype>
   <funcdef>XImage <function>*XShmCreateImage</function></funcdef>
     <paramdef>Display <parameter>*display</parameter></paramdef>
@@ -313,7 +318,7 @@ ready for use.
 To write a shared memory XImage into an X drawable, use XShmPutImage:
 </para>
 
-<funcsynopsis>
+<funcsynopsis id='XShmPutImage'>
 <funcprototype>
   <funcdef>Status <function>XShmPutImage </function></funcdef>
     <paramdef>Display <parameter>*display</parameter></paramdef>
@@ -376,7 +381,7 @@ completion event, the results you see on the screen may be inconsistent.
 To read image data into a shared memory XImage, use the following:
 </para>
 
-<funcsynopsis>
+<funcsynopsis id='XShmGetImage'>
 <funcprototype>
   <funcdef>Status <function>XShmGetImage </function></funcdef>
     <paramdef>Display <parameter>*display</parameter></paramdef>
@@ -419,7 +424,7 @@ format is) and independent of the screen.  Use XShmPixmapFormat to get the
 format for the server:
 </para>
 
-<funcsynopsis>
+<funcsynopsis id='XShmPixmapFormat'>
 <funcprototype>
   <funcdef>int <function>XShmPixmapFormat</function></funcdef>
     <paramdef>Display <parameter>*display</parameter></paramdef>
@@ -439,7 +444,7 @@ bytes_per_line value to use.
 Once you have your shminfo structure filled in, simply call:
 </para>
 
-<funcsynopsis>
+<funcsynopsis id='XShmCreatePixmap'>
 <funcprototype>
   <funcdef>Pixmap <function>XShmCreatePixmap</function></funcdef>
     <paramdef>Display <parameter>*display</parameter></paramdef>

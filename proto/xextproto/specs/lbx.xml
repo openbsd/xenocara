@@ -1,7 +1,10 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE article
           PUBLIC "-//OASIS//DTD DocBook XML V4.3//EN"
-          "http://www.oasis-open.org/docbook/xml/4.3/docbookx.dtd">
+          "http://www.oasis-open.org/docbook/xml/4.3/docbookx.dtd"
+[
+<!ENTITY % defs SYSTEM "defs.ent"> %defs;
+]>
 
 <article id="lbx">
 
@@ -10,41 +13,39 @@
    <subtitle>X Consortium Standard</subtitle>
    <authorgroup>
      <author>
-       <firstname>D.</firstname>
+       <firstname>Donna</firstname>
        <surname>Converse</surname>
      </author>
      <author>
-       <firstname>J.</firstname>
+       <firstname>Jim</firstname>
        <surname>Fulton</surname>
      </author>
      <author>
-       <firstname>D.</firstname>
+       <firstname>David</firstname>
        <surname>Lemke</surname>
      </author>
      <author>
-       <firstname>R.</firstname>
+       <firstname>Ralph</firstname>
        <surname>Mor</surname>
      </author>
      <author>
-       <firstname>K.</firstname>
+       <firstname>Keith</firstname>
        <surname>Packard</surname>
      </author>
      <author>
-       <firstname>R.</firstname>
+       <firstname>Ray</firstname>
        <surname>Tice</surname>
      </author>
      <author>
-       <firstname>D.</firstname>
+       <firstname>Dale</firstname>
        <surname>Tonogai</surname>
      </author>
    </authorgroup>
-   <releaseinfo>Protocol Version 1.0</releaseinfo>
-
+   <releaseinfo>X Version 11, Release &fullrelvers;</releaseinfo>
+   <releaseinfo>Version 1.0</releaseinfo>
+   <copyright><year>1996</year><holder>X Consortium</holder></copyright>
 
 <legalnotice>
-<para>
-Copyright (c) 1996 X Consortium
-</para>
 <para>
 Permission is hereby granted, free of charge, to any person obtaining a copy of
 this software and associated
@@ -61,7 +62,7 @@ copies or substantial portions
 of the Software.
 </para>
 <para>
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+THE SOFTWARE IS PROVIDED &ldquo;AS IS&rdquo;, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
 FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE X
 CONSORTIUM BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN
@@ -74,11 +75,9 @@ used in advertising or otherwise
 to promote the sale, use or other dealings in this Software without prior
 written authorization from the
 X Consortium.
-
-
 </para>
+<para>X Window System is a trademark of The OpenGroup.</para>
 </legalnotice>
-
 </articleinfo>
 
 <sect1 id='introduction'>
@@ -970,21 +969,22 @@ by reception of an X request from the client. They replace the X request.
 <title>Requests Initiated by the Proxy or by the Client</title>
 
 <informaltable frame='none' tabstyle='proto'>
-<tgroup cols='1'>
-<colspec colsep='0'/>
+  <?dbfo keep-together="always" ?>
+  <tgroup cols='1' align='left' colsep='0' rowsep='0'>
+  <colspec colname='c1' colwidth="1.0*"/>
   <thead>
-    <row rowsep='0'>
+    <row>
       <entry role='protoname'>LbxQueryVersion</entry>
     </row>
   </thead>
   <tbody>
-    <row rowsep='0'>
+    <row>
      <entry>=&gt;;</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'>majorVersion: CARD16</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'>minorVersion: CARD16</entry>
     </row>
   </tbody>
@@ -1008,49 +1008,50 @@ LbxQueryVersion</ulink>.
 <title>Requests Initiated or Substituted by the Proxy</title>
 
 <informaltable frame='none' tabstyle='proto'>
-<tgroup cols='1'>
-<colspec colsep='0'/>
+  <?dbfo keep-together="always" ?>
+  <tgroup cols='1' align='left' colsep='0' rowsep='0'>
+  <colspec colname='c1' colwidth="1.0*"/>
   <thead>
-    <row rowsep='0'>
+    <row>
       <entry role='protoname'>LbxQueryExtension</entry>
     </row>
   </thead>
   <tbody>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'><emphasis>
 nbytes</emphasis>
 : CARD32</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'><emphasis>
 name</emphasis>
 : STRING8</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry>=&gt;</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'>num-requests: CARD8</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'>present: BOOL</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'>major-opcode: CARD8</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'>first-event: CARD8</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'>first-error: CARD8</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'>reply-mask: LISTofMASK      /* optional */</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'>event-mask:LISTofMASK      /* optional */</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoerror'>Errors: <emphasis>
 Alloc</emphasis>
 </entry>
@@ -1113,52 +1114,53 @@ LbxQueryExtension</ulink>.
 <title>Control Requests Initiated by the Proxy</title>
 
 <informaltable frame='none' tabstyle='proto'>
-<tgroup cols='1'>
-<colspec colsep='0'/>
+  <?dbfo keep-together="always" ?>
+  <tgroup cols='1' align='left' colsep='0' rowsep='0'>
+  <colspec colname='c1' colwidth="1.0*"/>
   <thead>
-    <row rowsep='0'>
+    <row>
       <entry role='protoname'>LbxStartProxy</entry>
     </row>
   </thead>
   <tbody>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'><emphasis>
 options</emphasis>
 : LISTofOPTION</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry>=&gt;</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'>choices: LISTofCHOICE</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoerror'>Errors: <emphasis>
 LbxClient</emphasis>
 , <emphasis>
 Alloc</emphasis>
 </entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry>where:</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'>OPTION       [optcode: CARD8,</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'>      len: OPTLEN,</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'>      option:       (See <ulink
 url="lbx.htm#35444">See StartProxy Options</ulink>) ]</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'>CHOICE      [optcode: CARD8,</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'>      len: OPTLEN,</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'>      choice:        (See <ulink
 url="lbx.htm#35444">See StartProxy Options</ulink>) ]</entry>
     </row>
@@ -1166,19 +1168,20 @@ url="lbx.htm#35444">See StartProxy Options</ulink>) ]</entry>
   </tgroup>
 </informaltable>
 <!--
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'> -->
 
 
-<table frame='none'>
+<table frame='topbot'>
  <title>StartProxy Options</title>
- <tgroup cols='4'>
- <colspec colsep='0'/>
- <colspec colsep='0'/>
- <colspec colsep='0'/>
- <colspec colsep='0'/>
+ <?dbfo keep-together="always" ?>
+ <tgroup cols='4' align='left' colsep='0' rowsep='0'>
+ <colspec colname='c1' colwidth='1.0*'/>
+ <colspec colname='c2' colwidth='1.5*'/>
+ <colspec colname='c3' colwidth='1.5*'/>
+ <colspec colname='c4' colwidth='1.5*'/>
 <thead>
-<row rowsep='0'>
+<row rowsep='1'>
   <entry>optcode</entry>
   <entry>option</entry>
   <entry>choice</entry>
@@ -1186,55 +1189,55 @@ url="lbx.htm#35444">See StartProxy Options</ulink>) ]</entry>
 </row>
 </thead>
 <tbody>
-<row rowsep='0'>
+<row>
     <entry>delta-proxy</entry>
     <entry>DELTAOPT</entry>
     <entry>DELTACHOICE</entry>
     <entry>entries=16, maxlen=64</entry>
 </row>
-<row rowsep='0'>
+<row>
     <entry>delta-server</entry>
     <entry>DELTAOPT</entry>
     <entry>DELTACHOICE</entry>
     <entry>entries=16, maxlen=64</entry>
 </row>
-<row rowsep='0'>
+<row>
     <entry>stream-comp</entry>
     <entry>LISTofNAMEDOPT</entry>
     <entry>INDEXEDCHOICE</entry>
     <entry>No Compression</entry>
 </row>
-<row rowsep='0'>
+<row>
     <entry>bitmap-comp</entry>
     <entry>LISTofSTRING8</entry>
     <entry>LISTofINDEXEDOPT</entry>
     <entry>No Compression</entry>
 </row>
-<row rowsep='0'>
+<row>
     <entry>pixmap-comp</entry>
     <entry>LISTofPIXMAPMETHOD</entry>
     <entry>LISTofPIXMAPCHOICE</entry>
     <entry>No Compression</entry>
 </row>
-<row rowsep='0'>
+<row>
     <entry>use-squish</entry>
     <entry>BOOL</entry>
     <entry>BOOL</entry>
     <entry>True</entry>
 </row>
-<row rowsep='0'>
+<row>
     <entry>use-tags</entry>
     <entry>BOOL</entry>
     <entry>BOOL</entry>
     <entry>True</entry>
 </row>
-<row rowsep='0'>
+<row>
     <entry>colormap</entry>
     <entry>LISTofSTRING8</entry>
     <entry>INDEXEDCHOICE</entry>
     <entry>No Colormap Grabbing</entry>
 </row>
-<row rowsep='0'>
+<row>
     <entry>extension</entry>
     <entry>NAMEDOPT</entry>
     <entry>INDEXEDCHOICE</entry>
@@ -1247,71 +1250,72 @@ url="lbx.htm#35444">See StartProxy Options</ulink>) ]</entry>
     </row>
 -->
 <informaltable frame='none' tabstyle='proto'>
-<tgroup cols='1'>
-<colspec colsep='0'/>
+  <?dbfo keep-together="always" ?>
+  <tgroup cols='1' align='left' colsep='0' rowsep='0'>
+  <colspec colname='c1' colwidth="1.0*"/>
   <tbody>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'>&nbsp;</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'>DELTAOPT       [minN, maxN, prefN: CARD8</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'>      minMaxMsgLen, maxMaxMsgLen, prefMaxMsgLen:
 CARD8]</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'>DELTACHOICE      [entries, maxlen:
 CARD8]</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'>INDEXEDCHOICE      [index: CARD8,</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'>      data: LISTofBYTE]</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'>INDEXEDOPT      [index, opcode: CARD8]</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'>NAMEDOPT      [name: STRING8,</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'>      detail: LISTofBYTE]</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'>OPTLEN      1 or 3 CARD8</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'>      where:</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'>      (0 &lt; in &lt;= 0xFF):       out =
 in</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'>      (0 &lt;= in&lt;= 0xFFFF):       out[0] =
 0; out[1] = in &gt;&gt; 8; out[2] = in&amp; 0xFF;</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'>PIXMAPMETHOD      [name: STRING8,</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'>      format-mask: BITMASK,</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'>      depths: LISTofCARD8]</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'>PIXMAPCHOICE      [index, opcode: CARD8,</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'>      format-mask: BITMASK,</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'>      depths: LISTofCARD8]</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'></entry>
     </row>
   </tbody>
@@ -1470,15 +1474,16 @@ LbxStartProxy</ulink>.
 
 
 <informaltable frame='none' tabstyle='proto'>
-<tgroup cols='1'>
-<colspec colsep='0'/>
+  <?dbfo keep-together="always" ?>
+  <tgroup cols='1' align='left' colsep='0' rowsep='0'>
+  <colspec colname='c1' colwidth="1.0*"/>
   <thead>
-    <row rowsep='0'>
+    <row>
       <entry role='protoname'>LbxStopProxy</entry>
     </row>
   </thead>
   <tbody>
-    <row rowsep='0'>
+    <row>
       <entry role='protoerror'>Errors: <emphasis>
 LbxClient</emphasis>
 </entry>
@@ -1507,115 +1512,116 @@ LbxClient</emphasis>
 
 
 <informaltable frame='none' tabstyle='proto'>
-<tgroup cols='1'>
-<colspec colsep='0'/>
+  <?dbfo keep-together="always" ?>
+  <tgroup cols='1' align='left' colsep='0' rowsep='0'>
+  <colspec colname='c1' colwidth="1.0*"/>
   <thead>
-    <row rowsep='0'>
+    <row>
       <entry role='protoname'>LbxNewClient</entry>
     </row>
   </thead>
   <tbody>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'><emphasis>
 byte-order</emphasis>
 : CARD8</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'><emphasis>
 client-id</emphasis>
 : CARD32</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'><emphasis>
 protocol-major-version</emphasis>
 : CARD16</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'><emphasis>
 protocol-minor-version:</emphasis>
  CARD16</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'><emphasis>
 authorization-protocol-name</emphasis>
 : STRING8</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'><emphasis>
 authorization-protocol-data</emphasis>
 : STRING8</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry>=&gt;</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'>Core X reply (if connection is rejected)</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'>&nbsp;</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'>OR</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'>&nbsp;</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'>success: BOOL</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'>change-type: {NoDeltas, NormalClientDeltas,
 AppGroupDeltas}</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'>protocol-major-version: CARD16</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'>protocol-minor-version: CARD16</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'>tag-id: CARD32</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'>length: CARD16</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'>connection-data: CONINFO or CONDIF or
 CONDIFROOT</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'>&nbsp;</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'>where:</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'>CONINFO:       (the &quot;additional data&quot;
 portion of the core connection reply for successes)</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'>CONDIF:      [resource-id-base: CARD32,</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'>      root-input-masks: LISTofSETofEVENT]</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'>CONDIFROOT:      [resource-id-base:
 CARD32,</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'>      root: WINDOW</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'>      root-visual: VISUALID</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'>      default-colormap: COLORMAP</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'>      white-pixel, black-pixel: CARD32</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'>      root-input-masks: LISTofSETofEVENT]</entry>
     </row>
   </tbody>
@@ -1775,21 +1781,22 @@ description of this request is on page 13.</ulink>.
 
 
 <informaltable frame='none' tabstyle='proto'>
-<tgroup cols='1'>
-<colspec colsep='0'/>
+  <?dbfo keep-together="always" ?>
+  <tgroup cols='1' align='left' colsep='0' rowsep='0'>
+  <colspec colname='c1' colwidth="1.0*"/>
   <thead>
-    <row rowsep='0'>
+    <row>
       <entry role='protoname'>LbxCloseClient</entry>
     </row>
   </thead>
   <tbody>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'><emphasis>
 client</emphasis>
 : CARD32</entry>
     </row>
 
-    <row rowsep='0'>
+    <row>
       <entry role='protoerror'>Errors: <emphasis>
 LbxClient</emphasis>
 </entry>
@@ -1816,21 +1823,22 @@ description of this request is on page 12.</ulink>.
 
 
 <informaltable frame='none' tabstyle='proto'>
-<tgroup cols='1'>
-<colspec colsep='0'/>
+  <?dbfo keep-together="always" ?>
+  <tgroup cols='1' align='left' colsep='0' rowsep='0'>
+  <colspec colname='c1' colwidth="1.0*"/>
   <thead>
-    <row rowsep='0'>
+    <row>
       <entry role='protoname'>LbxSwitch</entry>
     </row>
   </thead>
   <tbody>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'><emphasis>
 client</emphasis>
 : CARD32</entry>
     </row>
 
-    <row rowsep='0'>
+    <row>
       <entry role='protoerror'>Errors: <emphasis>
 LbxClient</emphasis>
 </entry>
@@ -1862,15 +1870,16 @@ LbxSwitch</ulink>.
 
 
 <informaltable frame='none' tabstyle='proto'>
-<tgroup cols='1'>
-<colspec colsep='0'/>
+  <?dbfo keep-together="always" ?>
+  <tgroup cols='1' align='left' colsep='0' rowsep='0'>
+  <colspec colname='c1' colwidth="1.0*"/>
   <thead>
-    <row rowsep='0'>
+    <row>
       <entry role='protoname'>LbxSync</entry>
     </row>
   </thead>
   <tbody>
-    <row rowsep='0'>
+    <row>
       <entry>=&gt;</entry>
     </row>
   </tbody>
@@ -1890,21 +1899,22 @@ LbxSync</ulink>.
 
 
 <informaltable frame='none' tabstyle='proto'>
-<tgroup cols='1'>
-<colspec colsep='0'/>
+  <?dbfo keep-together="always" ?>
+  <tgroup cols='1' align='left' colsep='0' rowsep='0'>
+  <colspec colname='c1' colwidth="1.0*"/>
   <thead>
-    <row rowsep='0'>
+    <row>
       <entry role='protoname'>LbxModifySequence</entry>
     </row>
   </thead>
   <tbody>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'><emphasis>
 adjust</emphasis>
 : CARD32</entry>
     </row>
 
-    <row rowsep='0'>
+    <row>
       <entry role='protoerror'>Errors: None</entry>
     </row>
   </tbody>
@@ -1927,21 +1937,22 @@ description of this request is on page 13.</ulink>.
 
 
 <informaltable frame='none' tabstyle='proto'>
-<tgroup cols='1'>
-<colspec colsep='0'/>
+  <?dbfo keep-together="always" ?>
+  <tgroup cols='1' align='left' colsep='0' rowsep='0'>
+  <colspec colname='c1' colwidth="1.0*"/>
   <thead>
-    <row rowsep='0'>
+    <row>
       <entry role='protoname'>LbxAllowMotion</entry>
     </row>
   </thead>
   <tbody>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'><emphasis>
 num</emphasis>
 : CARD32</entry>
     </row>
 
-    <row rowsep='0'>
+    <row>
       <entry role='protoerror'>Errors: None</entry>
     </row>
   </tbody>
@@ -1962,15 +1973,16 @@ description of this request is on page 14.</ulink>.
 
 
 <informaltable frame='none' tabstyle='proto'>
-<tgroup cols='1'>
-<colspec colsep='0'/>
+  <?dbfo keep-together="always" ?>
+  <tgroup cols='1' align='left' colsep='0' rowsep='0'>
+  <colspec colname='c1' colwidth="1.0*"/>
   <thead>
-    <row rowsep='0'>
+    <row>
       <entry role='protoname'>LbxInvalidateTag</entry>
     </row>
   </thead>
   <tbody>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'><emphasis>
 tag</emphasis>
 : CARD32</entry>
@@ -1993,25 +2005,26 @@ LbxInvalidateTag</ulink>.
 
 
 <informaltable frame='none' tabstyle='proto'>
-<tgroup cols='1'>
-<colspec colsep='0'/>
+  <?dbfo keep-together="always" ?>
+  <tgroup cols='1' align='left' colsep='0' rowsep='0'>
+  <colspec colname='c1' colwidth="1.0*"/>
   <thead>
-    <row rowsep='0'>
+    <row>
       <entry role='protoname'>LbxTagData</entry>
     </row>
   </thead>
   <tbody>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'><emphasis>
 tag</emphasis>
 : CARD32</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'><emphasis>
 real-length</emphasis>
 : CARD32</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'><emphasis>
 data</emphasis>
 : LISTofBYTE</entry>
@@ -2038,103 +2051,104 @@ LbxTagData</ulink>.
 
 
 <informaltable frame='none' tabstyle='proto'>
-<tgroup cols='1'>
-<colspec colsep='0'/>
+  <?dbfo keep-together="always" ?>
+  <tgroup cols='1' align='left' colsep='0' rowsep='0'>
+  <colspec colname='c1' colwidth="1.0*"/>
   <thead>
-    <row rowsep='0'>
+    <row>
       <entry role='protoname'>LbxGrabCmap</entry>
     </row>
   </thead>
   <tbody>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'><emphasis>
 cmap</emphasis>
 : Colormap </entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry>=&gt;</entry>
     </row>
 
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'><emphasis>
 smart-grab</emphasis>
 : BOOL</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'><emphasis>
 large-pixel: </emphasis>
 BOOL      /* optional */</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'><emphasis>
 auto-release: </emphasis>
 BOOL      /* optional */</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'><emphasis>
 three-channels</emphasis>
 : BOOL      /* optional */</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'><emphasis>
 bits-per-rgb: </emphasis>
 CARD4      /* optional */</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'><emphasis>
 cells</emphasis>
 : LISTofCHAN      /* optional */</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'>&nbsp;</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'>where:</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'>CHAN:      LISTofLBXPIXEL</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'>LBXPIXEL:       PIXELPRIVATE or PIXELPRIVATERANGE
 or </entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'>      PIXELALLOC or PIXELALLOCRANGE </entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'>PIXEL:      CARD8 or CARD16</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'>PIXELPRIVATE:       [ pixel: PIXEL ]</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'>PIXELPRIVATERANGE:       [ first-pixel,
 last-pixel: PIXEL]</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'>PIXELALLOC:       [ pixel: PIXEL,</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'>      color: COLORSINGLE or COLORTRIPLE]</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'>PIXELALLOCRANGE:       [ first-pixel,
 last-pixel: PIXEL,</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'>      colors: LISTofCOLORSINGLE or
 LISTofCOLORTRIPLE]</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'>COLORSINGLE:      [ value: CARD8 or CARD16
 ]</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'>COLORTRIPLE:      [ r, g, b:
 COLORSINGLE]</entry>
     </row>
 
-    <row rowsep='0'>
+    <row>
       <entry role='protoerror'>Errors: <emphasis>
 Colormap</emphasis>
 </entry>
@@ -2350,15 +2364,16 @@ LbxGrabCmap</ulink>.
 
 
 <informaltable frame='none' tabstyle='proto'>
-<tgroup cols='1'>
-<colspec colsep='0'/>
+  <?dbfo keep-together="always" ?>
+  <tgroup cols='1' align='left' colsep='0' rowsep='0'>
+  <colspec colname='c1' colwidth="1.0*"/>
   <thead>
-    <row rowsep='0'>
+    <row>
       <entry role='protoname'>LbxReleaseCmap</entry>
     </row>
   </thead>
   <tbody>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'><emphasis>
 cmap</emphasis>
 : Colormap</entry>
@@ -2393,35 +2408,36 @@ LbxReleaseCmap</ulink>.
 
 
 <informaltable frame='none' tabstyle='proto'>
-<tgroup cols='1'>
-<colspec colsep='0'/>
+  <?dbfo keep-together="always" ?>
+  <tgroup cols='1' align='left' colsep='0' rowsep='0'>
+  <colspec colname='c1' colwidth="1.0*"/>
   <thead>
-    <row rowsep='0'>
+    <row>
       <entry role='protoname'>LbxInternAtoms</entry>
     </row>
   </thead>
   <tbody>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'><emphasis>
 count</emphasis>
 : CARD16</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'><emphasis>
 names: LISTofSTRING8</emphasis>
 </entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry>=&gt;</entry>
     </row>
 
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'><emphasis>
 atoms</emphasis>
 : LISTofATOM</entry>
     </row>
 
-    <row rowsep='0'>
+    <row>
       <entry role='protoerror'>Errors: <emphasis>
 Alloc</emphasis>
 </entry>
@@ -2448,25 +2464,26 @@ LbxInternAtoms</ulink>.
 <title>Substitution Requests</title>
 
 <informaltable frame='none' tabstyle='proto'>
-<tgroup cols='1'>
-<colspec colsep='0'/>
+  <?dbfo keep-together="always" ?>
+  <tgroup cols='1' align='left' colsep='0' rowsep='0'>
+  <colspec colname='c1' colwidth="1.0*"/>
   <thead>
-    <row rowsep='0'>
+    <row>
       <entry role='protoname'>LbxAllocColor</entry>
     </row>
   </thead>
   <tbody>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'><emphasis>
 cmap</emphasis>
 : Colormap</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'><emphasis>
 pixel</emphasis>
 : CARD32</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'><emphasis>
 red</emphasis>
 , <emphasis>
@@ -2539,26 +2556,27 @@ LbxAllocColor</ulink>.
 
 
 <informaltable frame='none' tabstyle='proto'>
-<tgroup cols='1'>
-<colspec colsep='0'/>
+  <?dbfo keep-together="always" ?>
+  <tgroup cols='1' align='left' colsep='0' rowsep='0'>
+  <colspec colname='c1' colwidth="1.0*"/>
   <thead>
-    <row rowsep='0'>
+    <row>
       <entry role='protoname'>LbxIncrementPixel</entry>
     </row>
   </thead>
   <tbody>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'><emphasis>
 cmap</emphasis>
 : COLORMAP</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'><emphasis>
 pixel</emphasis>
 : CARD32</entry>
     </row>
 
-    <row rowsep='0'>
+    <row>
       <entry role='protoerror'>Errors: None</entry>
     </row>
   </tbody>
@@ -2582,25 +2600,26 @@ description of this request is on page 14.</ulink>.
 
 
 <informaltable frame='none' tabstyle='proto'>
-<tgroup cols='1'>
-<colspec colsep='0'/>
+  <?dbfo keep-together="always" ?>
+  <tgroup cols='1' align='left' colsep='0' rowsep='0'>
+  <colspec colname='c1' colwidth="1.0*"/>
   <thead>
-    <row rowsep='0'>
+    <row>
       <entry role='protoname'>LbxDelta</entry>
     </row>
   </thead>
   <tbody>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'><emphasis>
 count</emphasis>
 : CARD8</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'><emphasis>
 cache-index</emphasis>
 : CARD8</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'><emphasis>
 diffs</emphasis>
 : LISTofDIFFITEM</entry>
@@ -2624,29 +2643,30 @@ description of this request is on page 18.</ulink>.
 
 
 <informaltable frame='none' tabstyle='proto'>
-<tgroup cols='1'>
-<colspec colsep='0'/>
+  <?dbfo keep-together="always" ?>
+  <tgroup cols='1' align='left' colsep='0' rowsep='0'>
+  <colspec colname='c1' colwidth="1.0*"/>
   <thead>
-    <row rowsep='0'>
+    <row>
       <entry role='protoname'>LbxGetModifierMapping</entry>
     </row>
   </thead>
   <tbody>
-    <row rowsep='0'>
+    <row>
       <entry>=&gt;</entry>
     </row>
 
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'><emphasis>
 keyspermod</emphasis>
 : CARD8</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'><emphasis>
 tag</emphasis>
 : CARD32</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'><emphasis>
 keycodes</emphasis>
 : LISTofKEYCODE             /* optional */</entry>
@@ -2673,45 +2693,46 @@ LbxGetModifierMapping</ulink>.
 
 
 <informaltable frame='none' tabstyle='proto'>
-<tgroup cols='1'>
-<colspec colsep='0'/>
+  <?dbfo keep-together="always" ?>
+  <tgroup cols='1' align='left' colsep='0' rowsep='0'>
+  <colspec colname='c1' colwidth="1.0*"/>
   <thead>
-    <row rowsep='0'>
+    <row>
       <entry role='protoname'>LbxGetKeyboardMapping</entry>
     </row>
   </thead>
   <tbody>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'><emphasis>
 firstKeyCode</emphasis>
 : KEYCODE</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'><emphasis>
 count</emphasis>
 : CARD8</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry>=&gt;</entry>
     </row>
 
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'><emphasis>
 keysperkeycode</emphasis>
 : CARD8</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'><emphasis>
 tag</emphasis>
 : CARD32</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'><emphasis>
 keysyms</emphasis>
 : LISTofKEYSYM      /* optional */</entry>
     </row>
 
-    <row rowsep='0'>
+    <row>
       <entry role='protoerror'>Errors: <emphasis>
 Value</emphasis>
 </entry>
@@ -2739,82 +2760,83 @@ LbxGetKeyboardMapping</ulink>.
 
 
 <informaltable frame='none' tabstyle='proto'>
-<tgroup cols='1'>
-<colspec colsep='0'/>
+  <?dbfo keep-together="always" ?>
+  <tgroup cols='1' align='left' colsep='0' rowsep='0'>
+  <colspec colname='c1' colwidth="1.0*"/>
   <thead>
-    <row rowsep='0'>
+    <row>
       <entry role='protoname'>LbxGetWinAttrAndGeom</entry>
     </row>
   </thead>
   <tbody>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'><emphasis>
 window</emphasis>
 : WINDOW</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry>=&gt;</entry>
     </row>
 
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'>visual: VISUALID</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'>class: {InputOutput, InputOnly}</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'>bit-gravity: BITGRAVITY</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'>win-gravity: WINGRAVITY</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'>backing-store: {NotUseful, WhenMapped,
 Always}</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'>backing-planes: CARD32</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'>backing-pixel: CARD32</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'>save-under: BOOL</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'>colormap: COLORMAP or None</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'>map-is-installed: BOOL</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'>map-state: {Unmapped, Unviewable,
 Viewable}</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'>all-event-masks, your-event-mask:
 SETofEVENT</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'>do-not-propagate-mask: SETofDEVICEEVENT</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'>override-redirect: BOOL</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'>root: WINDOW</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'>depth: CARD8</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'>x, y: INT16</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'>width, height, border-width: CARD16</entry>
     </row>
 
-    <row rowsep='0'>
+    <row>
       <entry role='protoerror'>Errors: <emphasis>
 Window</emphasis>
 </entry>
@@ -2842,57 +2864,58 @@ LbxGetWinAttrAndGeom</ulink>.
 
 
 <informaltable frame='none' tabstyle='proto'>
-<tgroup cols='1'>
-<colspec colsep='0'/>
+  <?dbfo keep-together="always" ?>
+  <tgroup cols='1' align='left' colsep='0' rowsep='0'>
+  <colspec colname='c1' colwidth="1.0*"/>
   <thead>
-    <row rowsep='0'>
+    <row>
       <entry role='protoname'>LbxQueryFont</entry>
     </row>
   </thead>
   <tbody>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'><emphasis>
 font</emphasis>
 : FONTABLE</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry>=&gt;</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'>compression: BOOL</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'>tag: CARD32</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'>font-info: FONTINFO                  /* optional
 */</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'>char-infos: LISTofCHARINFO or LISTofLBXCHARINFO
                /* optional */</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'>where:</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'>LBXCHARINFO:       [left-side-bearing:
 INT6</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'>      right-side-bearing: INT7</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'>      character-width: INT6</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'>      ascent: INT6</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'>      descent: INT7]</entry>
     </row>
 
-    <row rowsep='0'>
+    <row>
       <entry role='protoerror'>Errors: <emphasis>
 Font,Alloc</emphasis>
       </entry>
@@ -2944,48 +2967,49 @@ LbxQueryFont</ulink>.
 
 
 <informaltable frame='none' tabstyle='proto'>
-<tgroup cols='1'>
-<colspec colsep='0'/>
+  <?dbfo keep-together="always" ?>
+  <tgroup cols='1' align='left' colsep='0' rowsep='0'>
+  <colspec colname='c1' colwidth="1.0*"/>
   <thead>
-    <row rowsep='0'>
+    <row>
       <entry role='protoname'>LbxChangeProperty</entry>
     </row>
   </thead>
   <tbody>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'><emphasis>
 window</emphasis>
 : WINDOW</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'><emphasis>
 property</emphasis>
 : ATOM</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'><emphasis>
 type</emphasis>
 : ATOM</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'><emphasis>
 format</emphasis>
 : {0,8,16,32}</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'><emphasis>
 mode</emphasis>
 : {Replace, Prepend, Append}</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'><emphasis>
 nUnits</emphasis>
 : CARD32</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry>=&gt;</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'>tag: CARD32</entry>
     </row>
   </tbody>
@@ -3034,64 +3058,65 @@ LbxChangeProperty</ulink>.
 
 
 <informaltable frame='none' tabstyle='proto'>
-<tgroup cols='1'>
-<colspec colsep='0'/>
+  <?dbfo keep-together="always" ?>
+  <tgroup cols='1' align='left' colsep='0' rowsep='0'>
+  <colspec colname='c1' colwidth="1.0*"/>
   <thead>
-    <row rowsep='0'>
+    <row>
       <entry role='protoname'>LbxGetProperty</entry>
     </row>
   </thead>
   <tbody>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'><emphasis>
 window</emphasis>
 : WINDOW</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'><emphasis>
 property</emphasis>
 : ATOM</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'><emphasis>
 type</emphasis>
 : ATOM or AnyPropertyType</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'><emphasis>
 long-offset</emphasis>
 : CARD32</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'><emphasis>
 long-length</emphasis>
 : CARD32</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'><emphasis>
 delete</emphasis>
 : CARD8</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry>=&gt;</entry>
     </row>
 
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'>type: ATOM or None</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'>format: {0, 8, 16, 32}</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'>bytes-after: CARD32</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'>nItems: CARD32</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'>tag: CARD32</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'>value: LISTofINT8 or LISTofINT16 or
 LISTofINT32</entry>
     </row>
@@ -3172,26 +3197,27 @@ LbxGetProperty</ulink>.
 
 
 <informaltable frame='none' tabstyle='proto'>
-<tgroup cols='1'>
-<colspec colsep='0'/>
+  <?dbfo keep-together="always" ?>
+  <tgroup cols='1' align='left' colsep='0' rowsep='0'>
+  <colspec colname='c1' colwidth="1.0*"/>
   <thead>
-    <row rowsep='0'>
+    <row>
       <entry role='protoname'>LbxPolyPoint</entry>
     </row>
   </thead>
   <tbody>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'><emphasis>
 gc-and-drawable: </emphasis>
 LBXGCANDDRAWABLE</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'><emphasis>
 points</emphasis>
 : LISTofLBXPOINT</entry>
     </row>
 
-    <row rowsep='0'>
+    <row>
       <entry role='protoerror'>Errors: <emphasis>
 Alloc</emphasis>
  and those given for the corresponding X request.</entry>
@@ -3224,26 +3250,27 @@ LbxPolyPoint</ulink>.
 
 
 <informaltable frame='none' tabstyle='proto'>
-<tgroup cols='1'>
-<colspec colsep='0'/>
+  <?dbfo keep-together="always" ?>
+  <tgroup cols='1' align='left' colsep='0' rowsep='0'>
+  <colspec colname='c1' colwidth="1.0*"/>
   <thead>
-    <row rowsep='0'>
+    <row>
       <entry role='protoname'>LbxPolyLine</entry>
     </row>
   </thead>
   <tbody>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'><emphasis>
 gc-and-drawable: </emphasis>
 LBXGCANDDRAWABLE</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'><emphasis>
 points</emphasis>
 : LISTofLBXPOINT</entry>
     </row>
 
-    <row rowsep='0'>
+    <row>
       <entry role='protoerror'>Errors: <emphasis>
 Alloc</emphasis>
  and those given for the corresponding X request.</entry>
@@ -3276,35 +3303,36 @@ description of this request is on page 21.</ulink>.
 
 
 <informaltable frame='none' tabstyle='proto'>
-<tgroup cols='1'>
-<colspec colsep='0'/>
+  <?dbfo keep-together="always" ?>
+  <tgroup cols='1' align='left' colsep='0' rowsep='0'>
+  <colspec colname='c1' colwidth="1.0*"/>
   <thead>
-    <row rowsep='0'>
+    <row>
       <entry role='protoname'>LbxPolySegment</entry>
     </row>
   </thead>
   <tbody>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'><emphasis>
 gc-and-drawable: </emphasis>
 LBXGCANDDRAWABLE</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'><emphasis>
 segments</emphasis>
 : LISTofLBXSEGMENT</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'>&nbsp;</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'>where:</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'>LBXSEGEMENT; [x1, y1, x2, y2: LBXINT16]</entry>
     </row>
 
-    <row rowsep='0'>
+    <row>
       <entry role='protoerror'>Errors: <emphasis>
 Alloc</emphasis>
  and those given for the corresponding X request.</entry>
@@ -3338,26 +3366,27 @@ LbxPolySegment</ulink>.
 
 
 <informaltable frame='none' tabstyle='proto'>
-<tgroup cols='1'>
-<colspec colsep='0'/>
+  <?dbfo keep-together="always" ?>
+  <tgroup cols='1' align='left' colsep='0' rowsep='0'>
+  <colspec colname='c1' colwidth="1.0*"/>
   <thead>
-    <row rowsep='0'>
+    <row>
       <entry role='protoname'>LbxPolyRectangle</entry>
     </row>
   </thead>
   <tbody>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'><emphasis>
 gc-and-drawable: </emphasis>
 LBXGCANDDRAWABLE</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'><emphasis>
 rectangles</emphasis>
 : LISTofLBXRECTANGLE</entry>
     </row>
 
-    <row rowsep='0'>
+    <row>
       <entry role='protoerror'>Errors: <emphasis>
 Alloc</emphasis>
  and those given for the corresponding X request.</entry>
@@ -3384,26 +3413,27 @@ description of this request is on page 22.</ulink>.
 
 
 <informaltable frame='none' tabstyle='proto'>
-<tgroup cols='1'>
-<colspec colsep='0'/>
+  <?dbfo keep-together="always" ?>
+  <tgroup cols='1' align='left' colsep='0' rowsep='0'>
+  <colspec colname='c1' colwidth="1.0*"/>
   <thead>
-    <row rowsep='0'>
+    <row>
       <entry role='protoname'>LbxPolyArc</entry>
     </row>
   </thead>
   <tbody>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'><emphasis>
 gc-and-drawable: </emphasis>
 LBXGCANDDRAWABLE</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'><emphasis>
 arcs</emphasis>
 : LISTofLBXARC</entry>
     </row>
 
-    <row rowsep='0'>
+    <row>
       <entry role='protoerror'>Errors: <emphasis>
 Alloc</emphasis>
  and those given for the corresponding X request.</entry>
@@ -3430,26 +3460,27 @@ LbxPolyArc</ulink>.
 
 
 <informaltable frame='none' tabstyle='proto'>
-<tgroup cols='1'>
-<colspec colsep='0'/>
+  <?dbfo keep-together="always" ?>
+  <tgroup cols='1' align='left' colsep='0' rowsep='0'>
+  <colspec colname='c1' colwidth="1.0*"/>
   <thead>
-    <row rowsep='0'>
+    <row>
       <entry role='protoname'>LbxPolyFillRectangle</entry>
     </row>
   </thead>
   <tbody>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'><emphasis>
 gc-and-drawable: </emphasis>
 LBXGCANDDRAWABLE</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'><emphasis>
 rectangles</emphasis>
 : LISTofLBXRECTANGLE</entry>
     </row>
 
-    <row rowsep='0'>
+    <row>
       <entry role='protoerror'>Errors: <emphasis>
 Alloc</emphasis>
  and those given for the corresponding X request.</entry>
@@ -3476,26 +3507,27 @@ LbxPolyFillRectangle</ulink>.
 
 
 <informaltable frame='none' tabstyle='proto'>
-<tgroup cols='1'>
-<colspec colsep='0'/>
+  <?dbfo keep-together="always" ?>
+  <tgroup cols='1' align='left' colsep='0' rowsep='0'>
+  <colspec colname='c1' colwidth="1.0*"/>
   <thead>
-    <row rowsep='0'>
+    <row>
       <entry role='protoname'>LbxPolyFillArc</entry>
     </row>
   </thead>
   <tbody>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'><emphasis>
 gc-and-drawable: </emphasis>
 LBXGCANDDRAWABLE</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'><emphasis>
 arcs</emphasis>
 : LISTofLBXARC</entry>
     </row>
 
-    <row rowsep='0'>
+    <row>
       <entry role='protoerror'>Errors: <emphasis>
 Alloc</emphasis>
  and those given for the corresponding X request.</entry>
@@ -3522,31 +3554,32 @@ description of this request is on page 22.</ulink>.
 
 
 <informaltable frame='none' tabstyle='proto'>
-<tgroup cols='1'>
-<colspec colsep='0'/>
+  <?dbfo keep-together="always" ?>
+  <tgroup cols='1' align='left' colsep='0' rowsep='0'>
+  <colspec colname='c1' colwidth="1.0*"/>
   <thead>
-    <row rowsep='0'>
+    <row>
       <entry role='protoname'>LbxFillPoly</entry>
     </row>
   </thead>
   <tbody>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'><emphasis>
 gc-and-drawable: </emphasis>
 LBXGCANDDRAWABLE</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'><emphasis>
 shape</emphasis>
 : BYTE</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'><emphasis>
 points</emphasis>
 : LISTofLBXPOINT</entry>
     </row>
 
-    <row rowsep='0'>
+    <row>
       <entry role='protoerror'>Errors: <emphasis>
 Alloc</emphasis>
  and those given for the corresponding X request.</entry>
@@ -3579,61 +3612,62 @@ LbxFillPoly</ulink>.
 
 
 <informaltable frame='none' tabstyle='proto'>
-<tgroup cols='1'>
-<colspec colsep='0'/>
+  <?dbfo keep-together="always" ?>
+  <tgroup cols='1' align='left' colsep='0' rowsep='0'>
+  <colspec colname='c1' colwidth="1.0*"/>
   <thead>
-    <row rowsep='0'>
+    <row>
       <entry role='protoname'>LbxCopyArea</entry>
     </row>
   </thead>
   <tbody>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'><emphasis>
 srcCache</emphasis>
 : CARD8      /* source drawable */</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'><emphasis>
 gc-and-drawable: </emphasis>
 LBXGCANDDRAWABLE</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'><emphasis>
 src-Drawable</emphasis>
 : CARD32</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'><emphasis>
 src-x</emphasis>
 : LBXPINT16</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'><emphasis>
 src-y</emphasis>
 : LBXPINT16</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'><emphasis>
 width</emphasis>
 : LBXCARD16</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'><emphasis>
 height</emphasis>
 : LBXCARD16</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'><emphasis>
 dst-x</emphasis>
 : LBXPINT16 </entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'><emphasis>
 dst-y</emphasis>
 : LBXPINT16</entry>
     </row>
 
-    <row rowsep='0'>
+    <row>
       <entry role='protoerror'>Errors: Those given for the corresponding X
 request.</entry>
     </row>
@@ -3655,66 +3689,67 @@ LbxCopyArea</ulink>.
 
 
 <informaltable frame='none' tabstyle='proto'>
-<tgroup cols='1'>
-<colspec colsep='0'/>
+  <?dbfo keep-together="always" ?>
+  <tgroup cols='1' align='left' colsep='0' rowsep='0'>
+  <colspec colname='c1' colwidth="1.0*"/>
   <thead>
-    <row rowsep='0'>
+    <row>
       <entry role='protoname'>LbxCopyPlane</entry>
     </row>
   </thead>
   <tbody>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'><emphasis>
 bit-plane</emphasis>
 : CARD32</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'><emphasis>
 src-cache</emphasis>
 : CARD8      /* cache reference for source drawable */</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'><emphasis>
 gc-and-drawable: </emphasis>
 LBXGCANDDRAWABLE</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'><emphasis>
 src-drawable</emphasis>
 : CARD32</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'><emphasis>
 src-x</emphasis>
 : LBXPINT16</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'><emphasis>
 src-y</emphasis>
 : LBXPINT16</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'><emphasis>
 width</emphasis>
 : LBXCARD16</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'><emphasis>
 height</emphasis>
 : LBXCARD16</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'><emphasis>
 dst-x</emphasis>
 : LBXPINT16</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'><emphasis>
 dst-y</emphasis>
 : LBXPINT16</entry>
     </row>
 
-    <row rowsep='0'>
+    <row>
       <entry role='protoerror'>Errors: Those given for the corresponding X
 request.</entry>
     </row>
@@ -3736,36 +3771,37 @@ LbxCopyPlane</ulink>.
 
 
 <informaltable frame='none' tabstyle='proto'>
-<tgroup cols='1'>
-<colspec colsep='0'/>
+  <?dbfo keep-together="always" ?>
+  <tgroup cols='1' align='left' colsep='0' rowsep='0'>
+  <colspec colname='c1' colwidth="1.0*"/>
   <thead>
-    <row rowsep='0'>
+    <row>
       <entry role='protoname'>LbxPolyText8</entry>
     </row>
   </thead>
   <tbody>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'><emphasis>
 gc-and-drawable: </emphasis>
 LBXGCANDDRAWABLE</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'><emphasis>
 x</emphasis>
 : LBXPINT16</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'><emphasis>
 y</emphasis>
 : LBXPINT16</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'><emphasis>
 items</emphasis>
 : LISTofTEXTITEM8</entry>
     </row>
 
-    <row rowsep='0'>
+    <row>
       <entry role='protoerror'>Errors: <emphasis>
 Alloc</emphasis>
 , and those given for the corresponding X request.</entry>
@@ -3788,36 +3824,37 @@ description of this request is on page 23.</ulink>.
 
 
 <informaltable frame='none' tabstyle='proto'>
-<tgroup cols='1'>
-<colspec colsep='0'/>
+  <?dbfo keep-together="always" ?>
+  <tgroup cols='1' align='left' colsep='0' rowsep='0'>
+  <colspec colname='c1' colwidth="1.0*"/>
   <thead>
-    <row rowsep='0'>
+    <row>
       <entry role='protoname'>LbxPolyText16</entry>
     </row>
   </thead>
   <tbody>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'><emphasis>
 gc-and-drawable: </emphasis>
 LBXGCANDDRAWABLE</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'><emphasis>
 x:</emphasis>
  LBXPINT16</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'><emphasis>
 y</emphasis>
 : LBXPINT16</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'><emphasis>
 items</emphasis>
 : LISTofTEXTITEM16</entry>
     </row>
 
-    <row rowsep='0'>
+    <row>
       <entry role='protoerror'>Errors: <emphasis>
 Alloc</emphasis>
 , and those given for the corresponding X request.</entry>
@@ -3840,41 +3877,42 @@ description of this request is on page 24.</ulink>.
 
 
 <informaltable frame='none' tabstyle='proto'>
-<tgroup cols='1'>
-<colspec colsep='0'/>
+  <?dbfo keep-together="always" ?>
+  <tgroup cols='1' align='left' colsep='0' rowsep='0'>
+  <colspec colname='c1' colwidth="1.0*"/>
   <thead>
-    <row rowsep='0'>
+    <row>
       <entry role='protoname'>LbxImageText8</entry>
     </row>
   </thead>
   <tbody>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'><emphasis>
 gc-and-drawable: </emphasis>
 LBXGCANDDRAWABLE</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'><emphasis>
 nChars</emphasis>
 : CARD8</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'><emphasis>
 x</emphasis>
 : LBXPINT16</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'><emphasis>
 y</emphasis>
 : LBXPINT16</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'><emphasis>
 string</emphasis>
 : STRING8</entry>
     </row>
 
-    <row rowsep='0'>
+    <row>
       <entry role='protoerror'>Errors: <emphasis>
 Alloc</emphasis>
 , and those given for the corresponding X request.</entry>
@@ -3897,39 +3935,40 @@ description of this request is on page 24.</ulink>.
 
 
 <informaltable frame='none' tabstyle='proto'>
-<tgroup cols='1'>
-<colspec colsep='0'/>
+  <?dbfo keep-together="always" ?>
+  <tgroup cols='1' align='left' colsep='0' rowsep='0'>
+  <colspec colname='c1' colwidth="1.0*"/>
   <thead>
-    <row rowsep='0'>
+    <row>
       <entry role='protoname'>LbxImageText16</entry>
     </row>
   </thead>
   <tbody>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'><emphasis>
 nChars</emphasis>
 : CARD8</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'><emphasis>
 gc-and-drawable: </emphasis>
 LBXGCANDDRAWABLE</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'>x: LBXPINT16</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'><emphasis>
 y</emphasis>
 : LBXPINT16</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'><emphasis>
 string</emphasis>
 : STRING16</entry>
     </row>
 
-    <row rowsep='0'>
+    <row>
       <entry role='protoerror'>Errors: <emphasis>
 Alloc</emphasis>
 , and those given for the corresponding X request.</entry>
@@ -3952,20 +3991,21 @@ description of this request is on page 24.</ulink>.
 
 
 <informaltable frame='none' tabstyle='proto'>
-<tgroup cols='1'>
-<colspec colsep='0'/>
+  <?dbfo keep-together="always" ?>
+  <tgroup cols='1' align='left' colsep='0' rowsep='0'>
+  <colspec colname='c1' colwidth="1.0*"/>
   <thead>
-    <row rowsep='0'>
+    <row>
       <entry role='protoname'>LbxPutImage</entry>
     </row>
   </thead>
   <tbody>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'><emphasis>
 compression-method</emphasis>
 : CARD8</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'><emphasis>
 format</emphasis>
 : {<emphasis>
@@ -3976,47 +4016,47 @@ XYPixmap</emphasis>
 ZPixmap</emphasis>
 }                  /* packed */</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'><emphasis>
 gc-and-drawable: </emphasis>
 LBXGCANDDRAWABLE</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'><emphasis>
 width</emphasis>
 , <emphasis>
 height</emphasis>
 : LBXCARD16</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'><emphasis>
 dst-x</emphasis>
 , <emphasis>
 dst-y</emphasis>
 : LBXPINT16</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'><emphasis>
 depth</emphasis>
 : CARD8                  /* packed */</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'><emphasis>
 left-pad</emphasis>
 : CARD8                  /* packed */</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'><emphasis>
 pad-bytes</emphasis>
 : CARD8                  /* packed */</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'><emphasis>
 data</emphasis>
 :LISTofBYTE</entry>
     </row>
 
-    <row rowsep='0'>
+    <row>
       <entry role='protoerror'>Errors: <emphasis>
 Alloc</emphasis>
 , <emphasis>
@@ -4053,63 +4093,64 @@ LbxPutImage</ulink>.
 
 
 <informaltable frame='none' tabstyle='proto'>
-<tgroup cols='1'>
-<colspec colsep='0'/>
+  <?dbfo keep-together="always" ?>
+  <tgroup cols='1' align='left' colsep='0' rowsep='0'>
+  <colspec colname='c1' colwidth="1.0*"/>
   <thead>
-    <row rowsep='0'>
+    <row>
       <entry role='protoname'>LbxGetImage</entry>
     </row>
   </thead>
   <tbody>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'><emphasis>
 drawable</emphasis>
 : DRAWABLE</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'><emphasis>
 x</emphasis>
 , <emphasis>
 y</emphasis>
 : INT16</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'><emphasis>
 width</emphasis>
 , <emphasis>
 height</emphasis>
 : CARD16</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'><emphasis>
 plane-mask</emphasis>
 : CARD32</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'><emphasis>
 format</emphasis>
 : {XYPixmap, ZPixmap}</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry>=&gt;</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'>depth: CARD8</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'>x-length: CARD32</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'>visual: VISUALID or None</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'>compression-method: CARD8</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'>data: LISTofBYTE</entry>
     </row>
 
-    <row rowsep='0'>
+    <row>
       <entry role='protoerror'>Errors: <emphasis>
 Alloc,Match,Value</emphasis>
 </entry>
@@ -4158,21 +4199,22 @@ LbxGetImage</ulink>.
 
 
 <informaltable frame='none' tabstyle='proto'>
-<tgroup cols='1'>
-<colspec colsep='0'/>
+  <?dbfo keep-together="always" ?>
+  <tgroup cols='1' align='left' colsep='0' rowsep='0'>
+  <colspec colname='c1' colwidth="1.0*"/>
   <thead>
-    <row rowsep='0'>
+    <row>
       <entry role='protoname'>LbxBeginLargeRequest</entry>
     </row>
   </thead>
   <tbody>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'><emphasis>
 large-request-length</emphasis>
 : CARD32</entry>
     </row>
 
-    <row rowsep='0'>
+    <row>
       <entry role='protoerror'>Errors: <emphasis>
 Alloc</emphasis>
 </entry>
@@ -4214,21 +4256,22 @@ description of this request is on page 25.</ulink>.
 
 
 <informaltable frame='none' tabstyle='proto'>
-<tgroup cols='1'>
-<colspec colsep='0'/>
+  <?dbfo keep-together="always" ?>
+  <tgroup cols='1' align='left' colsep='0' rowsep='0'>
+  <colspec colname='c1' colwidth="1.0*"/>
   <thead>
-    <row rowsep='0'>
+    <row>
       <entry role='protoname'>LbxLargeRequestData</entry>
     </row>
   </thead>
   <tbody>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'><emphasis>
 data</emphasis>
 : LISTofBYTE</entry>
     </row>
 
-    <row rowsep='0'>
+    <row>
       <entry role='protoerror'>Errors: <emphasis>
 Alloc</emphasis>
 </entry>
@@ -4259,15 +4302,16 @@ description of this request is on page 26.</ulink>.
 
 
 <informaltable frame='none' tabstyle='proto'>
-<tgroup cols='1'>
-<colspec colsep='0'/>
+  <?dbfo keep-together="always" ?>
+  <tgroup cols='1' align='left' colsep='0' rowsep='0'>
+  <colspec colname='c1' colwidth="1.0*"/>
   <thead>
-    <row rowsep='0'>
+    <row>
       <entry role='protoname'>LbxEndLargeRequest</entry>
     </row>
   </thead>
   <tbody>
-    <row rowsep='0'>
+    <row>
       <entry role='protoerror'>Errors: <emphasis>
 Length, Alloc</emphasis>
 </entry>
@@ -4316,15 +4360,16 @@ LbxEndLargeRequest</ulink>.
 <title>Events</title>
 
 <informaltable frame='none' tabstyle='proto'>
-<tgroup cols='1'>
-<colspec colsep='0'/>
+  <?dbfo keep-together="always" ?>
+  <tgroup cols='1' align='left' colsep='0' rowsep='0'>
+  <colspec colname='c1' colwidth="1.0*"/>
   <thead>
-    <row rowsep='0'>
+    <row>
       <entry role='protoname'>LbxSwitchEvent</entry>
     </row>
   </thead>
   <tbody>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'><emphasis>
 client</emphasis>
 : CARD32</entry>
@@ -4346,15 +4391,16 @@ LbxSwitchEvent</ulink>.
 
 
 <informaltable frame='none' tabstyle='proto'>
-<tgroup cols='1'>
-<colspec colsep='0'/>
+  <?dbfo keep-together="always" ?>
+  <tgroup cols='1' align='left' colsep='0' rowsep='0'>
+  <colspec colname='c1' colwidth="1.0*"/>
   <thead>
-    <row rowsep='0'>
+    <row>
       <entry role='protoname'>LbxCloseEvent</entry>
     </row>
   </thead>
   <tbody>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'><emphasis>
 client</emphasis>
 : CARD32</entry>
@@ -4375,20 +4421,21 @@ description of this event is on page 27.</ulink>.
 
 
 <informaltable frame='none' tabstyle='proto'>
-<tgroup cols='1'>
-<colspec colsep='0'/>
+  <?dbfo keep-together="always" ?>
+  <tgroup cols='1' align='left' colsep='0' rowsep='0'>
+  <colspec colname='c1' colwidth="1.0*"/>
   <thead>
-    <row rowsep='0'>
+    <row>
       <entry role='protoname'>LbxInvalidateTagEvent</entry>
     </row>
   </thead>
   <tbody>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'><emphasis>
 tag</emphasis>
 : CARD32</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'><emphasis>
 tag-type</emphasis>
 : {Modmap, Keymap, Property, Font, ConnInfo}</entry>
@@ -4421,20 +4468,21 @@ LbxInvalidateTagEvent</ulink>.
 
 
 <informaltable frame='none' tabstyle='proto'>
-<tgroup cols='1'>
-<colspec colsep='0'/>
+  <?dbfo keep-together="always" ?>
+  <tgroup cols='1' align='left' colsep='0' rowsep='0'>
+  <colspec colname='c1' colwidth="1.0*"/>
   <thead>
-    <row rowsep='0'>
+    <row>
       <entry role='protoname'>LbxSendTagDataEvent</entry>
     </row>
   </thead>
   <tbody>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'><emphasis>
 tag</emphasis>
 : CARD32</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'><emphasis>
 tag-type</emphasis>
 : {Property}</entry>
@@ -4464,15 +4512,16 @@ LbxSendTagDataEvent</ulink>.
 
 
 <informaltable frame='none' tabstyle='proto'>
-<tgroup cols='1'>
-<colspec colsep='0'/>
+  <?dbfo keep-together="always" ?>
+  <tgroup cols='1' align='left' colsep='0' rowsep='0'>
+  <colspec colname='c1' colwidth="1.0*"/>
   <thead>
-    <row rowsep='0'>
+    <row>
       <entry role='protoname'>LbxListenToOne</entry>
     </row>
   </thead>
   <tbody>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'><emphasis>
 client</emphasis>
 : CARD32 or <emphasis>
@@ -4524,10 +4573,11 @@ description of this event is on page 27.</ulink>.
 
 
 <informaltable frame='none' tabstyle='proto'>
-<tgroup cols='1'>
-<colspec colsep='0'/>
+  <?dbfo keep-together="always" ?>
+  <tgroup cols='1' align='left' colsep='0' rowsep='0'>
+  <colspec colname='c1' colwidth="1.0*"/>
   <tbody>
-    <row rowsep='0'>
+    <row>
       <entry role='protoname'>LbxListenToAll</entry>
     </row>
   </tbody>
@@ -4547,25 +4597,26 @@ description of this event is on page 27.</ulink>.
 
 
 <informaltable frame='none' tabstyle='proto'>
-<tgroup cols='1'>
-<colspec colsep='0'/>
+  <?dbfo keep-together="always" ?>
+  <tgroup cols='1' align='left' colsep='0' rowsep='0'>
+  <colspec colname='c1' colwidth="1.0*"/>
   <thead>
-    <row rowsep='0'>
+    <row>
       <entry role='protoname'>LbxQuickMotionDeltaEvent</entry>
     </row>
   </thead>
   <tbody>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'><emphasis>
 deltaTime</emphasis>
 : CARD8</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'><emphasis>
 deltaX</emphasis>
 : INT8</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'><emphasis>
 deltaY</emphasis>
 : INT8</entry>
@@ -4601,30 +4652,31 @@ LbxQuickMotionDeltaEvent</ulink>.
 
 
 <informaltable frame='none' tabstyle='proto'>
-<tgroup cols='1'>
-<colspec colsep='0'/>
+  <?dbfo keep-together="always" ?>
+  <tgroup cols='1' align='left' colsep='0' rowsep='0'>
+  <colspec colname='c1' colwidth="1.0*"/>
   <thead>
-    <row rowsep='0'>
+    <row>
       <entry role='protoname'>LbxMotionDeltaEvent</entry>
     </row>
   </thead>
   <tbody>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'><emphasis>
 deltaX</emphasis>
 : INT8</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'><emphasis>
 deltaY</emphasis>
 : INT8</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'><emphasis>
 deltaTime</emphasis>
 : CARD16</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'><emphasis>
 deltaSequence</emphasis>
 : CARD16</entry>
@@ -4660,15 +4712,16 @@ LbxMotionDeltaEvent</ulink>.
 
 
 <informaltable frame='none' tabstyle='proto'>
-<tgroup cols='1'>
-<colspec colsep='0'/>
+  <?dbfo keep-together="always" ?>
+  <tgroup cols='1' align='left' colsep='0' rowsep='0'>
+  <colspec colname='c1' colwidth="1.0*"/>
   <thead>
-    <row rowsep='0'>
+    <row>
       <entry role='protoname'>LbxReleaseCmapEvent</entry>
     </row>
   </thead>
   <tbody>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'><emphasis>
 colormap</emphasis>
 : Colormap</entry>
@@ -4691,20 +4744,21 @@ LbxReleaseCmapEvent</ulink>.
 
 
 <informaltable frame='none' tabstyle='proto'>
-<tgroup cols='1'>
-<colspec colsep='0'/>
+  <?dbfo keep-together="always" ?>
+  <tgroup cols='1' align='left' colsep='0' rowsep='0'>
+  <colspec colname='c1' colwidth="1.0*"/>
   <thead>
-    <row rowsep='0'>
+    <row>
       <entry role='protoname'>LbxFreeCellsEvent</entry>
     </row>
   </thead>
   <tbody>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'><emphasis>
 colormap</emphasis>
 : Colormap</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'><emphasis>
 pixelStart, pixelEnd</emphasis>
 : CARD32</entry>
@@ -4746,25 +4800,26 @@ speaking, events, replies or errors.
 </para>
 
 <informaltable frame='none' tabstyle='proto'>
-<tgroup cols='1'>
-<colspec colsep='0'/>
+  <?dbfo keep-together="always" ?>
+  <tgroup cols='1' align='left' colsep='0' rowsep='0'>
+  <colspec colname='c1' colwidth="1.0*"/>
   <thead>
-    <row rowsep='0'>
+    <row>
       <entry role='protoname'>LbxDeltaResponse</entry>
     </row>
   </thead>
   <tbody>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'><emphasis>
 count</emphasis>
 : CARD8</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'><emphasis>
 cache-index</emphasis>
 : CARD8</entry>
     </row>
-    <row rowsep='0'>
+    <row>
       <entry role='protoargs'><emphasis>
 diffs</emphasis>
 : LISTofDIFFITEM</entry>

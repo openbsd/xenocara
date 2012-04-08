@@ -1,6 +1,9 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.3//EN"
-                   "http://www.oasis-open.org/docbook/xml/4.3/docbookx.dtd">
+                   "http://www.oasis-open.org/docbook/xml/4.3/docbookx.dtd"
+[
+<!ENTITY % defs SYSTEM "defs.ent"> %defs;
+]>
 
 
 <!-- lifted from troff+ms+XMan by doclifter -->
@@ -8,8 +11,6 @@
 
 <bookinfo>
    <title>Extending X for Double-Buffering, Multi-Buffering, and Stereo</title>
-   <releaseinfo>X Version 11, Release 6.4</releaseinfo>
-
    <authorgroup>
       <othercredit>
          <firstname>Jeffrey</firstname><surname>Friedberg</surname>
@@ -22,10 +23,8 @@
       </othercredit>
    </authorgroup>
    <copyright><year>1989</year><holder>Digital Equipment Corporation</holder></copyright>
-   <copyright><year>1989</year><holder>X Consortium</holder></copyright>
-   <copyright><year>1994</year><holder>X Consortium</holder></copyright>
+   <releaseinfo>X Version 11, Release &fullrelvers;</releaseinfo>
    <releaseinfo>Version 3.3</releaseinfo>
-   <affiliation><orgname>X Consortium</orgname></affiliation>
 
 <legalnotice>
 <para>
@@ -38,6 +37,10 @@ this document.  This documentation is provided "as is"
 without express or implied warranty.  This document
 is subject to change.
 </para>
+</legalnotice>
+
+<legalnotice>
+<para role="multiLicensing">Copyright © 1989, 1994 X Consortium</para>
 <para>
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the ``Software''), to deal
@@ -51,7 +54,7 @@ The above copyright notice and this permission notice shall be included in
 all copies or substantial portions of the Software.
 </para>
 <para>
-THE SOFTWARE IS PROVIDED ``AS IS'', WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+THE SOFTWARE IS PROVIDED &ldquo;AS IS&rdquo;, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE
 X CONSORTIUM BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN
@@ -63,9 +66,7 @@ Except as contained in this notice, the name of the X Consortium shall not be
 used in advertising or otherwise to promote the sale, use or other dealings
 in this Software without prior written authorization from the X Consortium.
 </para>
-<para>
-<emphasis remap='I'>X Window System</emphasis> is a trademark of X Consortium, Inc.
-</para>
+<para>X Window System is a trademark of The OpenGroup.</para>
 
 </legalnotice>
 </bookinfo>
@@ -79,7 +80,7 @@ Extension (DBE).  DBE is an X Consortium Standard as of Release 6.1.
 </para></warning>
 </preface>
 
-<chapter id="introduction">
+<chapter id='Introduction'>
 <title>Introduction</title>
 
 <para>
@@ -122,7 +123,7 @@ multi-buffering, and stereo in a way that is acceptable to all concerned.
 </para>
 </chapter>
 
-<chapter id="goals">
+<chapter id='Goals'>
 <title>Goals</title>
 
 <para>
@@ -178,7 +179,7 @@ existing hardware features.
 
 </chapter>
 
-<chapter id="image_buffers">
+<chapter id='Image_Buffers'>
 <title>Image Buffers</title>
 
 <para>
@@ -318,7 +319,7 @@ maintained for an image buffer, then no exposure events are generated.
 </para>
 </chapter>
 
-<chapter id="new_requests">
+<chapter id='New_Requests'>
 <title>New Requests</title>
 
 <para>
@@ -673,7 +674,7 @@ the request is ignored.
 
 </chapter>
 
-<chapter id="attributes">
+<chapter id='Attributes'>
 <title>Attributes</title>
 
 <para>
@@ -862,7 +863,7 @@ major version will be 1, and the minor version will be 1.
 </para>
 </chapter>
 
-<chapter id="events">
+<chapter id='Events'>
 <title>Events</title>
 
 <para>
@@ -960,7 +961,7 @@ request), an <function>UpdateNotify</function> event is generated.
 </para>
 </chapter>
 
-<chapter id="errors">
+<chapter id='Errors'>
 <title>Errors</title>
 
 <para>
@@ -968,14 +969,14 @@ The following error type has been added to support
 this extension:
 </para>
 
-<sect1 id="buffer_2">
+<sect1 id='Buffer_2'>
 <title>Buffer</title>
 <para>
 A value for a BUFFER argument does not name a defined BUFFER.
 </para>
 </sect1>
 
-<sect1 id="double_buffering_normal_windows">
+<sect1 id='Double_Buffering_Normal_Windows'>
 <title>Double-Buffering Normal Windows</title>
 
 <para>
@@ -1025,7 +1026,7 @@ DestroyImageBuffers( W )
 
 </sect1>
 
-<sect1 id="multi_buffering_normal_windows">
+<sect1 id='Multi_Buffering_Normal_Windows'>
 <title>Multi-Buffering Normal Windows</title>
 
 <para>
@@ -1072,7 +1073,7 @@ while animating
 
 </sect1>
 
-<sect1 id="stereo_windows">
+<sect1 id='Stereo_Windows'>
 <title>Stereo Windows</title>
 <para>
 <emphasis remap='I'>How</emphasis> stereo windows are supported on a server
@@ -1177,7 +1178,7 @@ right eyes for normal windows should be the same
 
 </sect1>
 
-<sect1 id="single_buffered_stereo_windows">
+<sect1 id='Single_Buffered_Stereo_Windows'>
 <title>Single-Buffered Stereo Windows</title>
 
 <para>
@@ -1197,7 +1198,7 @@ MapWindow( W )
 </literallayout>
 </sect1>
 
-<sect1 id="double_buffering_stereo_windows">
+<sect1 id='Double_Buffering_Stereo_Windows'>
 <title>Double-Buffering Stereo Windows</title>
 
 <para>
@@ -1269,7 +1270,7 @@ while animating
 
 </sect1>
 
-<sect1 id="multi_buffering_stereo_windows">
+<sect1 id='Multi_Buffering_Stereo_Windows'>
 <title>Multi-Buffering Stereo Windows</title>
 
 <para>
@@ -1312,7 +1313,7 @@ while animating
 </literallayout>
 </sect1>
 
-<sect1 id="protocol_encoding">
+<sect1 id='Protocol_Encoding'>
 <title>Protocol Encoding</title>
 
 <para>
@@ -1359,7 +1360,7 @@ encoding for this extension.
 </sect1>
 </chapter>
 
-<chapter id="type">
+<chapter id='TYPES'>
 <title>TYPES</title>
 
 <literallayout class="monospaced">
@@ -1381,7 +1382,7 @@ SETofBUFFER_EVENT
 
 </chapter>
 
-<chapter id="events_2">
+<chapter id='EVENTS_2'>
 <title>EVENTS</title>
 
 <literallayout class="monospaced">
@@ -1407,7 +1408,7 @@ SETofBUFFER_EVENT
 </literallayout>
 
 </chapter>
-<chapter id="errors_2">
+<chapter id='ERRORS_2'>
 <title>ERRORS</title>
 
 <literallayout class="monospaced">
@@ -1423,7 +1424,7 @@ SETofBUFFER_EVENT
 
 </chapter>
 
-<chapter id="requests">
+<chapter id='Requests'>
 <title>REQUESTS</title>
 
 <literallayout class="monospaced">

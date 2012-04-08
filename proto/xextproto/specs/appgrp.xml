@@ -1,7 +1,10 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE article
           PUBLIC "-//OASIS//DTD DocBook XML V4.3//EN"
-          "http://www.oasis-open.org/docbook/xml/4.3/docbookx.dtd">
+          "http://www.oasis-open.org/docbook/xml/4.3/docbookx.dtd"
+[
+<!ENTITY % defs SYSTEM "defs.ent"> %defs;
+]>
 
 <article id="appgrp">
 
@@ -17,16 +20,18 @@
        <email>kaleb@x.org</email>
      </author>
    </authorgroup>
-   <releaseinfo>X Version 11, Release 6.4</releaseinfo>
-   <date>27 September 1996</date>
+   <releaseinfo>X Version 11, Release &fullrelvers;</releaseinfo>
+   <releaseinfo>Version 1.0</releaseinfo>
+   <copyright><year>1996</year><holder>X Consortium, Inc.</holder>
+   </copyright>
 
 <legalnotice>
 <para>
-Copyright © 1996 X Consortium, Inc. All Rights Reserved.
+All Rights Reserved.
 </para>
 
 <para>
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+THE SOFTWARE IS PROVIDED &ldquo;AS IS&rdquo;, WITHOUT WARRANTY OF ANY KIND,
 EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
 MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
 IN NO EVENT SHALL THE X CONSORTIUM BE LIABLE FOR ANY CLAIM,
@@ -39,7 +44,10 @@ Except as contained in this notice, the name of the X Consortium shall not be us
 or otherwise to promote the sale, use or other dealings in this Software without prior written
 authorization from the X Consortium.
 </para>
+<para>X Window System is a trademark of The OpenGroup.</para>
 </legalnotice>
+
+<pubdate>27 September 1996</pubdate>
 
 <abstract>
 <para>
@@ -52,7 +60,7 @@ example, OpenDoc does, such as shared menu bars, etc.
 </abstract>
 </articleinfo>
 
-<sect1 id='purpose_and_goals'>
+<sect1 id='Purpose_and_Goals'>
 <title>Purpose and Goals</title>
 
 <para>
@@ -75,7 +83,7 @@ Computer, Inc. WinCenter is a trademark of Network Computing Devices, Inc.
 
 </sect1>
 
-<sect1 id='overview_of_the_protocol'>
+<sect1 id='Overview_of_the_protocol'>
 <title>Overview of the protocol.</title>
 
 <para>
@@ -91,15 +99,16 @@ As a member of an Application Group, when an application creates and maps a wind
 </para>
 
 </sect1>
-<sect1 id='requests'>
+<sect1 id='Requests'>
 <title>Requests</title>
 
 
 <para><emphasis role='bold'>AppGroupQueryVersion</emphasis></para>
 
-<informaltable>
-<tgroup cols='1'>
-<colspec colsep='0'/>
+<informaltable frame='none'>
+<?dbfo keep-together="always" ?>
+<tgroup cols='1' colsep='0' rowsep='0'>
+<colspec colsep='0' colwidth='1.0*'/>
 <tbody>
   <row>
     <entry>client_major_version: CARD16</entry>
@@ -127,9 +136,10 @@ If supplied, the client_major_version and client_minor_version indicate what ver
 
 <para><emphasis role='bold'>AppGroupCreate</emphasis></para>
 
-<informaltable>
-<tgroup cols='1'>
-<colspec colsep='0'/>
+<informaltable frame='none'>
+<?dbfo keep-together="always" ?>
+<tgroup cols='1' colsep='0' rowsep='0'>
+<colspec colsep='0' colwidth='1.0*'/>
 <tbody>
   <row>
     <entry>app_group: APPGROUP</entry>
@@ -158,13 +168,14 @@ This request creates an Application Group using app_group as the Application Gro
 The value_mask and value_list specify attributes of the Application Group that are to be explicitly initialized. The attributes, their types, and the default values are:
 </para>
 
-<informaltable frame="all">
-<tgroup cols='3'>
-<colspec colsep='0'/>
-<colspec colsep='0'/>
-<colspec colsep='0'/>
+<informaltable frame="topbot">
+<?dbfo keep-together="always" ?>
+<tgroup cols='3' colsep='0' rowsep='0'>
+<colspec colname='c1' colwidth='1.0*'/>
+<colspec colname='c2' colwidth='1.0*'/>
+<colspec colname='c3' colwidth='1.0*'/>
 <tbody>
-  <row>
+  <row rowsep='1'>
   <entry>Attribute</entry>
   <entry>Type</entry>
   <entry>Default</entry>
@@ -249,9 +260,10 @@ If the application that created a non-embedded Application Group exits, and ther
 <para><emphasis role='bold'>AppGroupGetAttr</emphasis></para>
 
 
-<informaltable>
-<tgroup cols='1'>
-<colspec colsep='0'/>
+<informaltable frame='none'>
+<?dbfo keep-together="always" ?>
+<tgroup cols='1' colsep='0' rowsep='0'>
+<colspec colname='c1' colwidth='1.0*'/>
 <tbody>
   <row>
     <entry>>app_group: APPGROUP</entry>
@@ -272,9 +284,10 @@ This request returns the application group attributes for app_group.
 
 <para><emphasis role='bold'>AppGroupQuery</emphasis></para>
 
-<informaltable>
-<tgroup cols='1'>
-<colspec colsep='0'/>
+<informaltable frame='none'>
+<?dbfo keep-together="always" ?>
+<tgroup cols='1' colsep='0' rowsep='0'>
+<colspec colname='c1' colwidth='1.0*'/>
 <tbody>
   <row>
     <entry>resource: XID</entry>
@@ -295,9 +308,10 @@ This request returns the Application Group ID of the application that created re
 
 <para><emphasis role='bold'>AppGroupCreateAssociation</emphasis></para>
 
-<informaltable>
-<tgroup cols='1'>
-<colspec colsep='0'/>
+<informaltable frame='none'>
+<?dbfo keep-together="always" ?>
+<tgroup cols='1' colsep='0' rowsep='0'>
+<colspec colname='c1' colwidth='1.0*'/>
 <tbody>
   <row>
     <entry>window: WINDOW</entry>
@@ -318,9 +332,10 @@ This request associates window with system_window. The window_type indicates the
 
 <para><emphasis role='bold'>AppGroupDestroyAssociation</emphasis></para>
 
-<informaltable>
-<tgroup cols='1'>
-<colspec colsep='0'/>
+<informaltable frame='none'>
+<?dbfo keep-together="always" ?>
+<tgroup cols='1' colsep='0' rowsep='0'>
+<colspec colname='c1' colwidth='1.0*'/>
 <tbody>
   <row>
     <entry>window: WINDOW</entry>
@@ -335,10 +350,10 @@ This request destroys the association created with AppGroupCreateAssociation. Th
 
 </sect1>
 
-<sect1 id='changes_to_existing_requests'>
+<sect1 id='Changes_to_Existing_Requests'>
 <title>Changes to Existing Requests</title>
 
-<sect2 id='mapwindow'>
+<sect2 id='MapWindow'>
 <title>MapWindow</title>
 
 <para>
@@ -346,7 +361,7 @@ If the override-redirect attribute of the window is False and if the window is a
 </para>
 
 </sect2>
-<sect2 id='configurewindow'>
+<sect2 id='ConfigureWindow'>
 <title>ConfigureWindow</title>
 
 <para>
@@ -354,7 +369,7 @@ If the override-redirect attribute of the window is False and if the window is a
 </para>
 
 </sect2>
-<sect2 id='createwindow'>
+<sect2 id='CreateWindow'>
 <title>CreateWindow</title>
 
 <para>
@@ -367,7 +382,7 @@ When a program in an Application Group creates a window that is a child of a roo
 
 </sect2>
 
-<sect2 id='changewindowattributes'>
+<sect2 id='ChangeWindowAttributes'>
 <title>ChangeWindowAttributes</title>
 
 <para>
@@ -378,7 +393,7 @@ When a program in an Application Group changes the attributes of a window that i
 
 </sect1>
 
-<sect1 id='changes_to_existing_events'>
+<sect1 id='Changes_to_Existing_Events'>
 <title>Changes to Existing Events</title>
 
 <para>
@@ -390,7 +405,7 @@ The Application Group Leader must not select SubstructuRedirect events on a root
 </para></note>
 
 
-<sect2 id='maprequest'>
+<sect2 id='MapRequest'>
 <title>MapRequest</title>
 
 <para>
@@ -398,7 +413,7 @@ When a MapWindow request is received for a window whose override-redirect attrib
 </para>
 
 </sect2>
-<sect2 id='configurerequest'>
+<sect2 id='ConfigureRequest'>
 <title>ConfigureRequest</title>
 
 <para>
@@ -408,10 +423,10 @@ When a ConfigureWindow request is received for a window whose override-redirect 
 </sect2>
 </sect1>
 
-<sect1 id='errors'>
+<sect1 id='Errors'>
 <title>Errors</title>
 
-<sect2 id='appgroupqueryversion'>
+<sect2 id='AppGroupQueryVersion'>
 <title>AppGroupQueryVersion</title>
 
 <para>
@@ -420,7 +435,7 @@ There are no errors for AppGroupQueryVersion.
 
 </sect2>
 
-<sect2 id='appgroupcreate'>
+<sect2 id='AppGroupCreate'>
 <title>AppGroupCreate</title>
 
 <para>
@@ -445,7 +460,7 @@ A Match error is returned if root_visual does not exist for the screen of the de
 
 </sect2>
 
-<sect2 id='appgroupdestroy'>
+<sect2 id='AppGroupDestroy'>
 <title>AppGroupDestroy</title>
 
 <para>
@@ -458,7 +473,7 @@ An Access error is returned if an untrusted application attempts to destroy an A
 
 </sect2>
 
-<sect2 id='appgroupgetattr'>
+<sect2 id='AppGroupGetAttr'>
 <title>AppGroupGetAttr</title>
 
 <para>
@@ -471,7 +486,7 @@ An Access error is returned if an untrusted application attempts to get the attr
 
 </sect2>
 
-<sect2 id='appgroupquery'>
+<sect2 id='AppGroupQuery'>
 <title>AppGroupQuery</title>
 
 <para>
@@ -480,7 +495,7 @@ An Access error is returned if an untrusted application attempts to query the Ap
 
 </sect2>
 
-<sect2 id='appgroupcreateassociation'>
+<sect2 id='AppGroupCreateAssociation'>
 <title>AppGroupCreateAssociation</title>
 
 <para>
@@ -497,7 +512,7 @@ A Window error may be returned for system-specific errors related to system_wind
 
 </sect2>
 
-<sect2 id='appgroupdestroyassociation'>
+<sect2 id='AppGroupDestroyAssociation'>
 <title>AppGroupDestroyAssociation</title>
 
 <para>
@@ -507,7 +522,7 @@ A Window error is returned if window was not specified in a previous AppGroupCre
 </sect2>
 </sect1>
 
-<sect1 id='encoding'>
+<sect1 id='Encoding'>
 <title>Encoding</title>
 
 <para>
@@ -635,29 +650,30 @@ VALUEs
 
 </sect1>
 
-<sect1 id='library_api'>
+<sect1 id='Library_API'>
 <title>Library API</title>
 
 <informaltable frame='none'>
-<tgroup cols='1'>
-<colspec colsep='0'/>
+<?dbfo keep-together="always" ?>
+<tgroup cols='1' colsep='0' rowsep='0'>
+<colspec colname='c1' colwidth='1.0*'/>
 <tbody>
-  <row rowsep='0'>
+  <row>
     <entry role='functiondecl'>
 Status <emphasis>XagQueryVersion</emphasis> (<emphasis> xkb, keycode</emphasis>)                              /* macro */
     </entry>
   </row>
-  <row rowsep='0'>
+  <row>
     <entry role='functionargdecl'>
 Display            <emphasis>dpy</emphasis>;
     </entry>
   </row>
-  <row rowsep='0'>
+  <row>
     <entry role='functionargdecl'>
 int *            <emphasis>major_version_return</emphasis>;
     </entry>
   </row>
-  <row rowsep='0'>
+  <row>
     <entry role='functionargdecl'>
 int *            <emphasis>minor_version_return</emphasis>;
     </entry>
@@ -680,40 +696,41 @@ An embedding manager such as a web browser that intends to embed programs in an 
 
 
 <informaltable frame='none'>
-<tgroup cols='1'>
-<colspec colsep='0'/>
+<?dbfo keep-together="always" ?>
+<tgroup cols='1' colsep='0' rowsep='0'>
+<colspec colname='c1' colwidth='1.0*'/>
 <tbody>
-  <row rowsep='0'>
+  <row>
     <entry role='functiondecl'>
 Status XagCreateEmbeddedApplicationGroup(
     </entry>
   </row>
-  <row rowsep='0'>
+  <row>
     <entry role='functionargdecl'>
       Display*      dpy,
     </entry>
   </row>
-  <row rowsep='0'>
+  <row>
     <entry role='functionargdecl'>
       VisualID      root_visual,
     </entry>
   </row>
-  <row rowsep='0'>
+  <row>
     <entry role='functionargdecl'>
       Colormap      default_colormap,
     </entry>
   </row>
-  <row rowsep='0'>
+  <row>
     <entry role='functionargdecl'>
       unsigned long      black_pixel,
     </entry>
   </row>
-  <row rowsep='0'>
+  <row>
     <entry role='functionargdecl'>
       unsigned long      white_pixel,
     </entry>
   </row>
-  <row rowsep='0'>
+  <row>
     <entry role='functionargdecl'>
       XAppGroup*      app_group_return);
     </entry>
@@ -736,20 +753,21 @@ A special font-path can be created by creating an Application Group, getting an 
 </para></note>
 
 <informaltable frame='none'>
-<tgroup cols='1'>
-<colspec colsep='0'/>
+<?dbfo keep-together="always" ?>
+<tgroup cols='1' colsep='0' rowsep='0'>
+<colspec colname='c1' colwidth='1.0*'/>
 <tbody>
-  <row rowsep='0'>
+  <row>
     <entry role='functiondecl'>
 Status XagCreateNonembeddedApplicationGroup(
     </entry>
   </row>
-  <row rowsep='0'>
+  <row>
     <entry role='functionargdecl'>
       Display*      dpy,
     </entry>
   </row>
-  <row rowsep='0'>
+  <row>
     <entry role='functionargdecl'>
       XAppGroup*      app_group_return);
     </entry>
@@ -767,20 +785,21 @@ To destroy an Application Group use XagDestroyApplicationGroup.
 </para>
 
 <informaltable frame='none'>
-<tgroup cols='1'>
-<colspec colsep='0'/>
+<?dbfo keep-together="always" ?>
+<tgroup cols='1' colsep='0' rowsep='0'>
+<colspec colname='c1' colwidth='1.0*'/>
 <tbody>
-  <row rowsep='0'>
+  <row>
     <entry role='functiondecl'>
 Status XagDestroyApplicationGroup(
     </entry>
   </row>
-  <row rowsep='0'>
+  <row>
     <entry role='functionargdecl'>
       Display*      dpy,
     </entry>
   </row>
-  <row rowsep='0'>
+  <row>
     <entry role='functionargdecl'>
       XAppGroup      app_group);
     </entry>
@@ -800,25 +819,26 @@ To retrieve the attributes of an Application Group use XagGetApplicationGroupAtt
 
 
 <informaltable frame='none'>
-<tgroup cols='1'>
-<colspec colsep='0'/>
+<?dbfo keep-together="always" ?>
+<tgroup cols='1' colsep='0' rowsep='0'>
+<colspec colname='c1' colwidth='1.0*'/>
 <tbody>
-  <row rowsep='0'>
+  <row>
     <entry role='functiondecl'>
 Status XagGetApplicationGroupAttributes(
     </entry>
   </row>
-  <row rowsep='0'>
+  <row>
     <entry role='functionargdecl'>
       Display*      dpy,
     </entry>
   </row>
-  <row rowsep='0'>
+  <row>
     <entry role='functionargdecl'>
       XAppGroup      app_group,
     </entry>
   </row>
-  <row rowsep='0'>
+  <row>
     <entry role='functionargdecl'>
       ...);
     </entry>
@@ -878,25 +898,26 @@ To determine which Application Group a resource (such as a window) belongs to, u
 </para>
 
 <informaltable frame='none'>
-<tgroup cols='1'>
-<colspec colsep='0'/>
+<?dbfo keep-together="always" ?>
+<tgroup cols='1' colsep='0' rowsep='0'>
+<colspec colname='c1' colwidth='1.0*'/>
 <tbody>
-  <row rowsep='0'>
+  <row>
     <entry role='functiondecl'>
 Status XagQueryApplicationGroup(
     </entry>
   </row>
-  <row rowsep='0'>
+  <row>
     <entry role='functionargdecl'>
       Display*      dpy,
     </entry>
   </row>
-  <row rowsep='0'>
+  <row>
     <entry role='functionargdecl'>
       XID      resource,
     </entry>
   </row>
-  <row rowsep='0'>
+  <row>
     <entry role='functionargdecl'>
       XAppGroup*      app_group_return);
     </entry>
@@ -915,25 +936,26 @@ To associate an X Window ID with a system-specific window ID, such as a HWND or 
 </para>
 
 <informaltable frame='none'>
-<tgroup cols='1'>
-<colspec colsep='0'/>
+<?dbfo keep-together="always" ?>
+<tgroup cols='1' colsep='0' rowsep='0'>
+<colspec colname='c1' colwidth='1.0*'/>
 <tbody>
-  <row rowsep='0'>
+  <row>
     <entry role='functiondecl'>
 Status XagCreateAssociation(
     </entry>
   </row>
-  <row rowsep='0'>
+  <row>
     <entry role='functionargdecl'>
       Display*      dpy,
     </entry>
   </row>
-  <row rowsep='0'>
+  <row>
     <entry role='functionargdecl'>
       Window*      window_return,
     </entry>
   </row>
-  <row rowsep='0'>
+  <row>
     <entry role='functionargdecl'>
       void*      system_window);
     </entry>
@@ -983,20 +1005,21 @@ To destroy the association created with XagCreateAssociation use XagDestroyAssoc
 
 
 <informaltable frame='none'>
-<tgroup cols='1'>
-<colspec colsep='0'/>
+<?dbfo keep-together="always" ?>
+<tgroup cols='1' colsep='0' rowsep='0'>
+<colspec colname='c1' colwidth='1.0*'/>
 <tbody>
-  <row rowsep='0'>
+  <row>
     <entry role='functiondecl'>
 Status XagDestroyAssociation(
     </entry>
   </row>
-  <row rowsep='0'>
+  <row>
     <entry role='functionargdecl'>
       Display*      dpy,
     </entry>
   </row>
-  <row rowsep='0'>
+  <row>
     <entry role='functionargdecl'>
       Window      window);
     </entry>

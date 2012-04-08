@@ -1,13 +1,15 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.3//EN"
-                   "http://www.oasis-open.org/docbook/xml/4.3/docbookx.dtd">
+                   "http://www.oasis-open.org/docbook/xml/4.3/docbookx.dtd"
+[
+<!ENTITY % defs SYSTEM "defs.ent"> %defs;
+]>
 
 <book id="dpms">
 
 <bookinfo>
    <title>X Display Power Management Signaling (DPMS) Extension Protocol Specification</title>
    <subtitle>X Project Team Standard</subtitle>
-   <releaseinfo>Version 1.0</releaseinfo>
    <authorgroup>
       <author>
          <firstname>Rob </firstname><surname>Lembree</surname>
@@ -15,10 +17,9 @@
          <email>lembree@zk3.dec.com</email>
       </author>
    </authorgroup>
-   <corpname>X Consortium Standard</corpname>
+   <releaseinfo>X Version 11, Release &fullrelvers;</releaseinfo>
+   <releaseinfo>Version 1.0</releaseinfo>
    <copyright><year>1996</year><holder>Digital Equipment Corporation</holder></copyright>
-   <affiliation><orgname>X Consortium</orgname></affiliation>
-   <productnumber>X Version 11, Release 6.8</productnumber>
 
 <legalnotice>
 <para>
@@ -28,7 +29,7 @@ provided that the above copyright notice and this permission
 notice appear in all copies.  Digital Equipment Corporation
 makes no representations about the suitability for any purpose
 of the information in this document.  This documentation is
-provided "as is" without express or implied warranty.
+provided &ldquo;as is&rdquo; without express or implied warranty.
 </para>
 
 </legalnotice>
@@ -122,32 +123,33 @@ it may be decided to make DPMS less aggressive, or disable it completely.
 <chapter id="Requests">
 <title>Requests</title>
 <para>
-<function>DPMSGetVersion</function>
+<olink targetdoc='dpmslib' targetptr='DPMSGetVersion'><function>DPMSGetVersion</function></olink>
 </para>
 
 <informaltable frame="none">
-  <tgroup cols='1' align='left'>
-  <colspec colname='c1' colsep="0" colwidth="1*"/>
+  <?dbfo keep-together="always" ?>
+  <tgroup cols='1' align='left' colsep='0' rowsep='0'>
+  <colspec colname='c1' colwidth="1.0*"/>
   <tbody>
-    <row rowsep="0">
+    <row>
       <entry>
 <emphasis remap='I'>client_major_version</emphasis>: CARD16
       </entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>
 <emphasis remap='I'>client_minor_version</emphasis>: CARD16
       </entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>=&gt;</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>
 <emphasis remap='I'>server_major_version</emphasis>: CARD16
       </entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>
 <emphasis remap='I'>server_minor_version</emphasis>: CARD16
       </entry>
@@ -177,17 +179,18 @@ of one (1).
 </para>
 
 <para>
-<function>DPMSCapable</function>
+<olink targetdoc='dpmslib' targetptr='DPMSCapable'><function>DPMSCapable</function></olink>
 </para>
 
 <informaltable frame="none">
-  <tgroup cols='1' align='left'>
-  <colspec colname='c1' colsep="0" colwidth="1*"/>
+  <?dbfo keep-together="always" ?>
+  <tgroup cols='1' align='left' colsep='0' rowsep='0'>
+  <colspec colname='c1' colwidth="1.0*"/>
   <tbody>
-    <row rowsep="0">
+    <row>
       <entry>=&gt;</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>
 <emphasis remap='I'>capable</emphasis>: BOOL
       </entry>
@@ -205,27 +208,28 @@ case of heterogeneous multi-head servers is implementation defined.
 </para>
 
 <para>
-<function>DPMSGetTimeouts</function>
+<olink targetdoc='dpmslib' targetptr='DPMSGetTimeouts'><function>DPMSGetTimeouts</function></olink>
 </para>
 
 <informaltable frame="none">
-  <tgroup cols='1' align='left'>
-  <colspec colname='c1' colsep="0" colwidth="1*"/>
+  <?dbfo keep-together="always" ?>
+  <tgroup cols='1' align='left' colsep='0' rowsep='0'>
+  <colspec colname='c1' colwidth="1.0*"/>
   <tbody>
-    <row rowsep="0">
+    <row>
       <entry>=&gt;</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>
 <emphasis remap='I'>standby_timeout</emphasis>: CARD16
       </entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>
 <emphasis remap='I'>suspend_timeout</emphasis>: CARD16
       </entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>
 <emphasis remap='I'>off_timeout</emphasis>: CARD16
       </entry>
@@ -274,29 +278,30 @@ value of zero indicates that this mode is disabled.
 </para>
 
 <para>
-<function>DPMSSetTimeouts</function>
+<olink targetdoc='dpmslib' targetptr='DPMSSetTimeouts'><function>DPMSSetTimeouts</function></olink>
 </para>
 
 <informaltable frame="none">
-  <tgroup cols='1' align='left'>
-  <colspec colname='c1' colsep="0" colwidth="1*"/>
+  <?dbfo keep-together="always" ?>
+  <tgroup cols='1' align='left' colsep='0' rowsep='0'>
+  <colspec colname='c1' colwidth="1.0*"/>
   <tbody>
-    <row rowsep="0">
+    <row>
       <entry>
 <emphasis remap='I'>standby_timeout</emphasis>: CARD16
       </entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>
 <emphasis remap='I'>suspend_timeout</emphasis>: CARD16
       </entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>
 <emphasis remap='I'>off_timeout</emphasis>: CARD16
       </entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>=&gt;</entry>
     </row>
   </tbody>
@@ -338,7 +343,7 @@ to the value of the previous (non-zero) level.  A BadValue error is generated
 if an illegal combination is detected.
 </para>
 <para>
-<function>DPMSEnable</function>
+<olink targetdoc='dpmslib' targetptr='DPMSEnable'><function>DPMSEnable</function></olink>
 </para>
 <para>
 =&gt;
@@ -351,7 +356,7 @@ effected.
 </para>
 
 <para>
-<function>DPMSDisable</function>
+<olink targetdoc='dpmslib' targetptr='DPMSDisable'><function>DPMSDisable</function></olink>
 </para>
 <para>
 =&gt;
@@ -365,19 +370,20 @@ may be disabled without damaging the server's stored timeout values.
 </para>
 
 <para>
-<function>DPMSForceLevel</function>
+<olink targetdoc='dpmslib' targetptr='DPMSForceLevel'><function>DPMSForceLevel</function></olink>
 </para>
 
 <informaltable frame="none">
-  <tgroup cols='1' align='left'>
-  <colspec colname='c1' colsep="0" colwidth="1*"/>
+  <?dbfo keep-together="always" ?>
+  <tgroup cols='1' align='left' colsep='0' rowsep='0'>
+  <colspec colname='c1' colwidth="1.0*"/>
   <tbody>
-    <row rowsep="0">
+    <row>
       <entry>
 <emphasis remap='I'>power_level</emphasis>: CARD16
       </entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>=&gt;</entry>
     </row>
   </tbody>
@@ -394,22 +400,23 @@ DPMSModeSuspend or DPMSModeOff.
 </para>
 
 <para>
-<function>DPMSInfo</function>
+<olink targetdoc='dpmslib' targetptr='DPMSInfo'><function>DPMSInfo</function></olink>
 </para>
 
 <informaltable frame="none">
-  <tgroup cols='1' align='left'>
-  <colspec colname='c1' colsep="0" colwidth="1*"/>
+  <?dbfo keep-together="always" ?>
+  <tgroup cols='1' align='left' colsep='0' rowsep='0'>
+  <colspec colname='c1' colwidth="1.0*"/>
   <tbody>
-    <row rowsep="0">
+    <row>
       <entry>=&gt;</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>
 <emphasis remap='I'>power_level</emphasis>: CARD16
       </entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>
 <emphasis remap='I'>state</emphasis>: BOOL
       </entry>
@@ -449,7 +456,7 @@ The name of this extension is "DPMS".
 </para>
 
 <literallayout class="monospaced">
-<function>DPMSGetVersion</function>
+<olink targetdoc='dpmslib' targetptr='DPMSGetVersion'><function>DPMSGetVersion</function></olink>
      1     CARD8         opcode
      1     0             DPMS opcode
      2     2             request length
@@ -466,7 +473,7 @@ The name of this extension is "DPMS".
 </literallayout>
 
 <literallayout class="monospaced">
-<function>DPMSCapable</function>
+<olink targetdoc='dpmslib' targetptr='DPMSCapable'><function>DPMSCapable</function></olink>
      1     CARD8         opcode
      1     1             DPMS opcode
      2     1             request length
@@ -480,7 +487,7 @@ The name of this extension is "DPMS".
 </literallayout>
 
 <literallayout class="monospaced">
-<function>DPMSGetTimeouts</function>
+<olink targetdoc='dpmslib' targetptr='DPMSGetTimeouts'><function>DPMSGetTimeouts</function></olink>
      1     CARD8         opcode
      1     2             DPMS opcode
      2     1             request length
@@ -496,7 +503,7 @@ The name of this extension is "DPMS".
 </literallayout>
 
 <literallayout class="monospaced">
-<function>DPMSSetTimeouts</function>
+<olink targetdoc='dpmslib' targetptr='DPMSSetTimeouts'><function>DPMSSetTimeouts</function></olink>
      1     CARD8         opcode
      1     3             DPMS opcode
      2     3             request length
@@ -508,7 +515,7 @@ The name of this extension is "DPMS".
 </literallayout>
 
 <literallayout class="monospaced">
-<function>DPMSEnable</function>
+<olink targetdoc='dpmslib' targetptr='DPMSEnable'><function>DPMSEnable</function></olink>
      1     CARD8         opcode
      1     4             DPMS opcode
      2     1             request length
@@ -516,7 +523,7 @@ The name of this extension is "DPMS".
 </literallayout>
 
 <literallayout class="monospaced">
-<function>DPMSDisable</function>
+<olink targetdoc='dpmslib' targetptr='DPMSDisable'><function>DPMSDisable</function></olink>
      1     CARD8         opcode
      1     5             DPMS opcode
      2     1             request length
@@ -524,7 +531,7 @@ The name of this extension is "DPMS".
 </literallayout>
 
 <literallayout class="monospaced">
-<function>DPMSForceLevel</function>
+<olink targetdoc='dpmslib' targetptr='DPMSForceLevel'><function>DPMSForceLevel</function></olink>
      1     CARD8         opcode
      1     6             DPMS opcode
      2     2             request length
@@ -538,7 +545,7 @@ The name of this extension is "DPMS".
 </literallayout>
 
 <literallayout class="monospaced">
-<function>DPMSInfo</function>
+<olink targetdoc='dpmslib' targetptr='DPMSInfo'><function>DPMSInfo</function></olink>
      1     CARD8         opcode
      1     7             DPMS opcode
      2     1             request length
