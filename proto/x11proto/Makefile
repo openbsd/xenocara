@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.2 2009/05/22 15:11:02 matthieu Exp $
+# $OpenBSD: Makefile,v 1.3 2012/04/08 09:46:58 matthieu Exp $
 
 HEADERS_SUBDIR=	X11/
 HEADERS=	ap_keysym.h DECkeysym.h HPkeysym.h keysymdef.h keysym.h \
@@ -8,6 +8,9 @@ HEADERS=	ap_keysym.h DECkeysym.h HPkeysym.h keysymdef.h keysym.h \
 		Xwinsock.h
 GENERATED_HEADERS= Xfuncproto.h Xpoll.h
 PKGCONFIG=	xproto.pc
+SIADDRESSES=	IPv6.txt README hostname.txt localuser.txt
+SPECS=		encoding.xml glossary.xml keysyms.xml \
+		sect1-9.xml x11protocol.xml
 
 all: ${GENERATED_HEADERS}
 
@@ -24,6 +27,18 @@ install-gh:  ${GENERATED_HEADERS}
 	@for i in ${GENERATED_HEADERS}; do \
 	    cmp -s $$i ${DESTDIR}${INCSDIR}/$$i || \
 		${INSTALL_DATA} $$i ${DESTDIR}${INCSDIR}/${HEADERS_SUBDIR}$$i;\
+	done
+
+afterinstall:
+	@for i in ${SPECS}; do \
+		echo installing $$i in ${X11BASE}/share/doc/x11proto; \
+		${INSTALL_DATA} ${.CURDIR}/specs/$$i \
+			${DESTDIR}${X11BASE}/share/doc/x11proto;\
+	done
+	@for i in ${SIADDRESSES}; do \
+		echo installing $$i in ${X11BASE}/share/doc/x11proto/SIAddresses; \
+		${INSTALL_DATA} ${.CURDIR}/specs/SIAddresses/$$i \
+			${DESTDIR}${X11BASE}/share/doc/x11proto/SIAddresses;\
 	done
 
 clean-gh:
