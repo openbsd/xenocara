@@ -51,9 +51,9 @@
 #define inb(x) -1
 #define inw(x) -1
 #define inl(x) -1
-#define outb(x) do {} while (0)
-#define outw(x) do {} while (0)
-#define outl(x) do {} while (0)
+#define outb(x,y) do {} while (0)
+#define outw(x,y) do {} while (0)
+#define outl(x,y) do {} while (0)
 #define iopl(x) -1
 #endif
 
@@ -98,7 +98,7 @@ pci_system_linux_sysfs_create( void )
 	if ( pci_sys != NULL ) {
 	    pci_sys->methods = & linux_sysfs_methods;
 #ifdef HAVE_MTRR
-	    pci_sys->mtrr_fd = open("/proc/mtrr", O_WRONLY);
+	    pci_sys->mtrr_fd = open("/proc/mtrr", O_WRONLY | O_CLOEXEC);
 #endif
 	    err = populate_entries(pci_sys);
 	}
@@ -245,7 +245,7 @@ pci_device_linux_sysfs_probe( struct pci_device * dev )
 		  dev->bus,
 		  dev->dev,
 		  dev->func );
-	fd = open( name, O_RDONLY );
+	fd = open( name, O_RDONLY | O_CLOEXEC);
 	if ( fd != -1 ) {
 	    char * next;
 	    pciaddr_t  low_addr;
@@ -307,7 +307,7 @@ pci_device_linux_sysfs_read_rom( struct pci_device * dev, void * buffer )
 	      dev->dev,
 	      dev->func );
 
-    fd = open( name, O_RDWR );
+    fd = open( name, O_RDWR | O_CLOEXEC);
     if ( fd == -1 ) {
 #ifdef LINUX_ROM
 	/* If reading the ROM using sysfs fails, fall back to the old
@@ -388,7 +388,7 @@ pci_device_linux_sysfs_read( struct pci_device * dev, void * data,
 	      dev->dev,
 	      dev->func );
 
-    fd = open( name, O_RDONLY );
+    fd = open( name, O_RDONLY | O_CLOEXEC);
     if ( fd == -1 ) {
 	return errno;
     }
@@ -448,7 +448,7 @@ pci_device_linux_sysfs_write( struct pci_device * dev, const void * data,
 	      dev->dev,
 	      dev->func );
 
-    fd = open( name, O_WRONLY );
+    fd = open( name, O_WRONLY | O_CLOEXEC);
     if ( fd == -1 ) {
 	return errno;
     }
@@ -499,7 +499,7 @@ pci_device_linux_sysfs_map_range_wc(struct pci_device *dev,
 	     dev->dev,
 	     dev->func,
 	     map->region);
-    fd = open(name, open_flags);
+    fd = open(name, open_flags | O_CLOEXEC);
     if (fd == -1)
 	    return errno;
 
@@ -564,7 +564,7 @@ pci_device_linux_sysfs_map_range(struct pci_device *dev,
              dev->func,
              map->region);
 
-    fd = open(name, open_flags);
+    fd = open(name, open_flags | O_CLOEXEC);
     if (fd == -1) {
         return errno;
     }
@@ -687,7 +687,7 @@ static void pci_device_linux_sysfs_enable(struct pci_device *dev)
 	      dev->dev,
 	      dev->func );
 
-    fd = open( name, O_RDWR );
+    fd = open( name, O_RDWR | O_CLOEXEC);
     if (fd == -1)
        return;
 
@@ -709,7 +709,7 @@ static int pci_device_linux_sysfs_boot_vga(struct pci_device *dev)
 	      dev->dev,
 	      dev->func );
 
-    fd = open( name, O_RDONLY );
+    fd = open( name, O_RDONLY | O_CLOEXEC);
     if (fd == -1)
        return 0;
 
@@ -752,7 +752,7 @@ pci_device_linux_sysfs_open_device_io(struct pci_io_handle *ret,
     snprintf(name, PATH_MAX, "%s/%04x:%02x:%02x.%1u/resource%d",
 	     SYS_BUS_PCI, dev->domain, dev->bus, dev->dev, dev->func, bar);
 
-    ret->fd = open(name, O_RDWR);
+    ret->fd = open(name, O_RDWR | O_CLOEXEC);
 
     if (ret->fd < 0)
 	return NULL;
@@ -775,7 +775,7 @@ pci_device_linux_sysfs_open_legacy_io(struct pci_io_handle *ret,
 	snprintf(name, PATH_MAX, "/sys/class/pci_bus/%04x:%02x/legacy_io",
 		 dev->domain, dev->bus);
 
-	ret->fd = open(name, O_RDWR);
+	ret->fd = open(name, O_RDWR | O_CLOEXEC);
 	if (ret->fd >= 0)
 	    break;
 
@@ -897,7 +897,7 @@ pci_device_linux_sysfs_map_legacy(struct pci_device *dev, pciaddr_t base,
 	snprintf(name, PATH_MAX, "/sys/class/pci_bus/%04x:%02x/legacy_mem",
 		 dev->domain, dev->bus);
 
-	fd = open(name, flags);
+	fd = open(name, flags | O_CLOEXEC);
 	if (fd >= 0)
 	    break;
 
@@ -906,7 +906,7 @@ pci_device_linux_sysfs_map_legacy(struct pci_device *dev, pciaddr_t base,
 
     /* If not, /dev/mem is the best we can do */
     if (!dev)
-	fd = open("/dev/mem", flags);
+	fd = open("/dev/mem", flags | O_CLOEXEC);
 
     if (fd < 0)
 	return errno;

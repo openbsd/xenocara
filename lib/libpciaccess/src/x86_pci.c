@@ -330,7 +330,7 @@ pci_device_x86_read_rom(struct pci_device *dev, void *buffer)
 	return ENOSYS;
     }
 
-    memfd = open("/dev/mem", O_RDONLY);
+    memfd = open("/dev/mem", O_RDONLY | O_CLOEXEC);
     if (memfd == -1)
 	return errno;
 
@@ -475,7 +475,7 @@ static int
 pci_device_x86_map_range(struct pci_device *dev,
     struct pci_device_mapping *map)
 {
-    int memfd = open("/dev/mem", O_RDWR);
+    int memfd = open("/dev/mem", O_RDWR | O_CLOEXEC);
     int prot = PROT_READ;
 
     if (memfd == -1)

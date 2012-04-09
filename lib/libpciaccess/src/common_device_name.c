@@ -51,6 +51,7 @@
 #define DO_MATCH(a,b)  (((a) == PCI_MATCH_ANY) || ((a) == (b)))
 
 #ifdef HAVE_ZLIB
+
 #include <zlib.h>
 typedef gzFile pci_id_file;
 
@@ -68,11 +69,28 @@ pci_id_file_open(void)
 
 #define pci_id_file_gets(l, s, f)	gzgets(f, l, s)
 #define pci_id_file_close(f)		gzclose(f)
-#else
+
+#else /* not zlib */
+
 typedef FILE * pci_id_file;
-#define pci_id_file_open()		fopen(PCIIDS_PATH "/pci.ids", "r")
+
+static pci_id_file
+pci_id_file_open(void)
+{
+    pci_id_file result;
+
+#ifndef __sun
+    result = fopen(PCIIDS_PATH "/pci.ids", "re");
+    if (result)
+        return result;
+#endif
+
+    return fopen(PCIIDS_PATH "/pci.ids", "r");
+}
+
 #define pci_id_file_gets(l, s, f)	fgets(l, s, f)
 #define pci_id_file_close(f)		fclose(f)
+
 #endif
 
 /**

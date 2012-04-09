@@ -663,7 +663,7 @@ probe_nexus_node(di_node_t di_node, di_minor_t minor, void *arg)
 	    nexus_path, first_bus, last_bus);
 #endif
 
-    if ((fd = open(nexus_path, O_RDWR)) >= 0) {
+    if ((fd = open(nexus_path, O_RDWR | O_CLOEXEC)) >= 0) {
 	nexus->fd = fd;
 	nexus->path = strdup(nexus_path);
 	nexus_dev_path = di_devfs_path(di_node);
@@ -931,7 +931,7 @@ pci_device_solx_devfs_map_range(struct pci_device *dev,
     else
 	strcpy (map_dev, "/dev/fb0");
 
-    if ((map_fd = open(map_dev, O_RDWR)) < 0) {
+    if ((map_fd = open(map_dev, O_RDWR | O_CLOEXEC)) < 0) {
 	err = errno;
 	(void) fprintf(stderr, "can not open %s: %s\n", map_dev,
 			   strerror(errno));
@@ -944,7 +944,7 @@ pci_device_solx_devfs_map_range(struct pci_device *dev,
      * Still used xsvc to do the user space mapping
      */
     if (xsvc_fd < 0) {
-	if ((xsvc_fd = open("/dev/xsvc", O_RDWR)) < 0) {
+	if ((xsvc_fd = open("/dev/xsvc", O_RDWR | O_CLOEXEC)) < 0) {
 	    err = errno;
 	    (void) fprintf(stderr, "can not open /dev/xsvc: %s\n",
 			   strerror(errno));

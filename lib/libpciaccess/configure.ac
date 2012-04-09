@@ -23,7 +23,7 @@
 
 # Initialize Autoconf
 AC_PREREQ([2.60])
-AC_INIT([libpciaccess],[0.13],
+AC_INIT([libpciaccess],[0.13.1],
         [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg&component=libpciaccess],[libpciaccess])
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_HEADERS([config.h])
@@ -31,6 +31,7 @@ AC_CONFIG_HEADERS([config.h])
 # Initialize Automake
 AM_INIT_AUTOMAKE([foreign dist-bzip2])
 AM_MAINTAINER_MODE
+AC_USE_SYSTEM_EXTENSIONS
 
 # Initialize libtool
 AC_PROG_LIBTOOL

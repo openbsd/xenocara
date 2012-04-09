@@ -108,7 +108,7 @@ pci_device_freebsd_map_range(struct pci_device *dev,
 
     int fd, err = 0;
 
-    fd = open("/dev/mem", O_RDWR);
+    fd = open("/dev/mem", O_RDWR | O_CLOEXEC);
     if (fd == -1)
 	return errno;
 
@@ -153,7 +153,7 @@ pci_device_freebsd_unmap_range( struct pci_device *dev,
     if ((map->flags & PCI_DEV_MAP_FLAG_CACHABLE) ||
 	(map->flags & PCI_DEV_MAP_FLAG_WRITE_COMBINE))
     {
-	fd = open("/dev/mem", O_RDWR);
+	fd = open("/dev/mem", O_RDWR | O_CLOEXEC);
 	if (fd != -1) {
 	    mrd.mr_base = map->base;
 	    mrd.mr_len = map->size;
@@ -293,7 +293,7 @@ pci_device_freebsd_read_rom( struct pci_device * dev, void * buffer )
     }
 
     printf("Using rom_base = 0x%lx\n", (long)rom_base);
-    memfd = open( "/dev/mem", O_RDONLY );
+    memfd = open( "/dev/mem", O_RDONLY | O_CLOEXEC );
     if ( memfd == -1 )
 	return errno;
 
@@ -585,7 +585,7 @@ pci_system_freebsd_create( void )
     int i;
 
     /* Try to open the PCI device */
-    pcidev = open( "/dev/pci", O_RDWR );
+    pcidev = open( "/dev/pci", O_RDWR | O_CLOEXEC );
     if ( pcidev == -1 )
 	return ENXIO;
 

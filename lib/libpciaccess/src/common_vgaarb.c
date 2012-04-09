@@ -129,7 +129,7 @@ pci_device_vgaarb_init(void)
     if (!pci_sys)
         return -1;
 
-    if ((pci_sys->vgaarb_fd = open ("/dev/vga_arbiter", O_RDWR)) < 0) {
+    if ((pci_sys->vgaarb_fd = open ("/dev/vga_arbiter", O_RDWR | O_CLOEXEC)) < 0) {
         return errno;
     }
 

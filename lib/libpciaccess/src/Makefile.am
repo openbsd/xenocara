@@ -70,4 +70,4 @@ libpciaccess_la_SOURCES = common_bridge.c \
 
 libpciaccess_la_LIBADD = $(PCIACCESS_LIBS)
 
-libpciaccess_la_LDFLAGS = -version-number 0:11:0 -no-undefined
+libpciaccess_la_LDFLAGS = -version-number 0:11:1 -no-undefined

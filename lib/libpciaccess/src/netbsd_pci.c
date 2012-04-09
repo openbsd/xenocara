@@ -94,7 +94,7 @@ pci_device_netbsd_map_range(struct pci_device *dev,
 	struct mtrr mtrr;
 	int fd, error, nmtrr, prot = PROT_READ;
 
-	if ((fd = open("/dev/mem", O_RDWR)) == -1)
+	if ((fd = open("/dev/mem", O_RDWR | O_CLOEXEC)) == -1)
 		return errno;
 
 	if (map->flags & PCI_DEV_MAP_FLAG_WRITABLE)
@@ -328,7 +328,7 @@ pci_system_netbsd_create(void)
 	int bus, dev, func, ndevs, nfuncs;
 	uint32_t reg;
 
-	pcifd = open("/dev/pci0", O_RDWR);
+	pcifd = open("/dev/pci0", O_RDWR | O_CLOEXEC);
 	if (pcifd == -1)
 		return ENXIO;
 

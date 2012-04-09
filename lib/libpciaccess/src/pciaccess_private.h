@@ -37,6 +37,19 @@
 # define _pci_hidden
 #endif /* GNUC >= 4 */
 
+/*
+ * O_CLOEXEC fixes an fd leak case (see 'man 2 open' for details). I don't
+ * know of any OS we support where this isn't available in a sufficiently
+ * new version, so warn unconditionally.
+ */
+#include <sys/fcntl.h>
+
+#ifndef O_CLOEXEC
+#warning O_CLOEXEC not available, please upgrade.
+#define O_CLOEXEC 0
+#endif
+
+
 struct pci_device_mapping;
 
 int pci_fill_capabilities_generic( struct pci_device * dev );
