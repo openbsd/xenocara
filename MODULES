@@ -1,4 +1,4 @@
-# $OpenBSD: MODULES,v 1.212 2012/04/09 19:04:45 matthieu Exp $
+# $OpenBSD: MODULES,v 1.213 2012/04/14 09:47:15 matthieu Exp $
 #
 # X.Org maintained modules
 #
@@ -250,4 +250,4 @@ util/imake			1.0.5	7.7
 util/macros			1.17	7.7
 util/makedepend			1.0.4	7.7
 
-xserver				1.12	7.7	needs-update
+xserver				1.12.1	7.7
