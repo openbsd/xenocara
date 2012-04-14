@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.669 2011/10/09 14:14:51 tom Exp $ */
+/* $XTermId: main.c,v 1.678 2012/01/06 22:04:40 tom Exp $ */
 
 /*
  * Copyright 2002-2010,2011 by Thomas E. Dickey
@@ -135,10 +135,6 @@
 
 static void Syntax(char *) GCC_NORETURN;
 static void HsSysError(int) GCC_NORETURN;
-
-#ifdef USE_ISPTS_FLAG
-static Bool IsPts = False;
-#endif
 
 #if defined(__SCO__) || defined(SVR4) || defined(_POSIX_SOURCE)
 #define USE_POSIX_SIGNALS
@@ -754,7 +750,7 @@ static const struct {
 };
 /* *INDENT-ON* */
 
-#define TMODE(ind,var) if (ttymodelist[ind].set) var = ttymodelist[ind].value
+#define TMODE(ind,var) if (ttymodelist[ind].set) var = (cc_t) ttymodelist[ind].value
 
 static int parse_tty_modes(char *s, struct _xttymodes *modelist);
 
@@ -1529,11 +1525,10 @@ parseArg(int *num, char **argv, char **valuep)
     *valuep = 0;
     if (atbest >= 0) {
 	if (!exact && ambiguous1 >= 0 && ambiguous2 >= 0) {
-	    fprintf(stderr,
-		    "%s:  ambiguous option \"%s\" vs \"%s\"\n",
-		    ProgramName,
-		    ITEM(ambiguous1)->option,
-		    ITEM(ambiguous2)->option);
+	    xtermWarning(
+			    "ambiguous option \"%s\" vs \"%s\"\n",
+			    ITEM(ambiguous1)->option,
+			    ITEM(ambiguous2)->option);
 	}
 	result = ITEM(atbest);
 	TRACE(("...result %s\n", result->option));
@@ -1563,8 +1558,7 @@ Syntax(char *badOption)
     int col;
 
     TRACE(("Syntax error at %s\n", badOption));
-    fprintf(stderr, "%s:  bad command line option \"%s\"\r\n\n",
-	    ProgramName, badOption);
+    xtermWarning("bad command line option \"%s\"\r\n\n", badOption);
 
     fprintf(stderr, "usage:  %s", ProgramName);
     col = 8 + (int) strlen(ProgramName);
@@ -1866,7 +1860,7 @@ disableSetUid(void)
 {
     TRACE(("process %d disableSetUid\n", (int) getpid()));
     if (setuid(save_ruid) == -1) {
-	fprintf(stderr, "%s: unable to reset uid\n", ProgramName);
+	xtermWarning("unable to reset uid\n");
 	exit(1);
     }
     TRACE_IDS;
@@ -1881,7 +1875,7 @@ disableSetGid(void)
 {
     TRACE(("process %d disableSetGid\n", (int) getpid()));
     if (setegid(save_rgid) == -1) {
-	fprintf(stderr, "%s: unable to reset effective gid\n", ProgramName);
+	xtermWarning("unable to reset effective gid\n");
 	exit(1);
     }
     TRACE_IDS;
@@ -1901,8 +1895,7 @@ setEffectiveGroup(gid_t group)
 	if (!(errno == EMVSERR))	/* could happen if _BPX_SHAREAS=REUSE */
 #endif
 	{
-	    (void) fprintf(stderr, "setegid(%d): %s\n",
-			   (int) group, strerror(errno));
+	    xtermPerror("setegid(%d)", (int) group);
 	}
     }
     TRACE_IDS;
@@ -1919,8 +1912,7 @@ setEffectiveUser(uid_t user)
 	if (!(errno == EMVSERR))
 #endif
 	{
-	    (void) fprintf(stderr, "seteuid(%d): %s\n",
-			   (int) user, strerror(errno));
+	    xtermPerror("seteuid(%d)", (int) user);
 	}
     }
     TRACE_IDS;
@@ -1977,9 +1969,7 @@ main(int argc, char *argv[]ENVP_ARG)
     if (!ttydev)
 #endif
     {
-	fprintf(stderr,
-		"%s: unable to allocate memory for ttydev or ptydev\n",
-		ProgramName);
+	xtermWarning("unable to allocate memory for ttydev or ptydev\n");
 	exit(1);
     }
     strcpy(ttydev, TTYDEV);
@@ -2009,7 +1999,7 @@ main(int argc, char *argv[]ENVP_ARG)
 		if (isOption(argv[n])) {
 		    Syntax(argv[n]);
 		} else if (explicit_shname != 0) {
-		    fprintf(stderr, "Explicit shell already was %s\n", explicit_shname);
+		    xtermWarning("Explicit shell already was %s\n", explicit_shname);
 		    Syntax(argv[n]);
 		}
 		explicit_shname = xtermFindShell(argv[n], True);
@@ -2077,7 +2067,7 @@ main(int argc, char *argv[]ENVP_ARG)
 	for (nn = 0; nn < XtNumber(known_ttyChars); ++nn) {
 	    if (validTtyChar(d_tio, nn)) {
 		d_tio.c_cc[known_ttyChars[nn].sysMode] =
-		    known_ttyChars[nn].myDefault;
+		    (cc_t) known_ttyChars[nn].myDefault;
 	    }
 	}
     }
@@ -2229,8 +2219,7 @@ main(int argc, char *argv[]ENVP_ARG)
     if (resource.tty_modes) {
 	int n = parse_tty_modes(resource.tty_modes, ttymodelist);
 	if (n < 0) {
-	    fprintf(stderr, "%s:  bad tty modes \"%s\"\n",
-		    ProgramName, resource.tty_modes);
+	    xtermWarning("bad tty modes \"%s\"\n", resource.tty_modes);
 	} else if (n > 0) {
 	    override_tty_modes = True;
 	}
@@ -2238,8 +2227,7 @@ main(int argc, char *argv[]ENVP_ARG)
 #if OPT_ZICONBEEP
     if (resource.zIconBeep > 100 || resource.zIconBeep < -100) {
 	resource.zIconBeep = 0;	/* was 100, but I prefer to defaulting off. */
-	fprintf(stderr,
-		"a number between -100 and 100 is required for zIconBeep.  0 used by default\n");
+	xtermWarning("a number between -100 and 100 is required for zIconBeep.  0 used by default\n");
     }
 #endif /* OPT_ZICONBEEP */
     hold_screen = resource.hold_screen ? 1 : 0;
@@ -2615,7 +2603,20 @@ get_pty(int *pty, char *from GCC_UNUSED)
 {
     int result = 1;
 
-#if defined(PUCC_PTYD)
+#if defined(HAVE_POSIX_OPENPT) && defined(HAVE_PTSNAME)
+    if ((*pty = posix_openpt(O_RDWR)) >= 0) {
+	char *name = ptsname(*pty);
+	if (name != 0) {
+	    strcpy(ttydev, name);
+	    result = 0;
+	}
+    }
+#ifdef USE_PTY_SEARCH
+    if (result) {
+	result = pty_search(pty);
+    }
+#endif
+#elif defined(PUCC_PTYD)
 
     result = ((*pty = openrpty(ttydev, ptydev,
 			       (resource.utmpInhibit ? OPTY_NOP : OPTY_LOGIN),
@@ -2630,36 +2631,6 @@ get_pty(int *pty, char *from GCC_UNUSED)
     result = pty_search(pty);
 
 #else
-#if defined(USE_ISPTS_FLAG)
-
-    /*
-       The order of this code is *important*.  On SYSV/386 we want to open
-       a /dev/ttyp? first if at all possible.  If none are available, then
-       we'll try to open a /dev/pts??? device.
-
-       The reason for this is because /dev/ttyp? works correctly, where
-       as /dev/pts??? devices have a number of bugs, (won't update
-       screen correcly, will hang -- it more or less works, but you
-       really don't want to use it).
-
-       Most importantly, for boxes of this nature, one of the major
-       "features" is that you can emulate a 8086 by spawning off a UNIX
-       program on 80386/80486 in v86 mode.  In other words, you can spawn
-       off multiple MS-DOS environments.  On ISC the program that does
-       this is named "vpix."  The catcher is that "vpix" will *not* work
-       with a /dev/pts??? device, will only work with a /dev/ttyp? device.
-
-       Since we can open either a /dev/ttyp? or a /dev/pts??? device,
-       the flag "IsPts" is set here so that we know which type of
-       device we're dealing with in routine spawnXTerm().  That's the reason
-       for the "if (IsPts)" statement in spawnXTerm(); we have two different
-       device types which need to be handled differently.
-     */
-    result = pty_search(pty);
-    if (!result)
-	IsPts = 0;
-
-#endif
 #if defined(USE_USG_PTYS) || defined(__CYGWIN__)
 #ifdef __GLIBC__		/* if __GLIBC__ and USE_USG_PTYS, we know glibc >= 2.1 */
     /* GNU libc 2 allows us to abstract away from having to know the
@@ -2674,18 +2645,11 @@ get_pty(int *pty, char *from GCC_UNUSED)
 #elif defined(__MVS__)
     result = pty_search(pty);
 #else
-#if defined(USE_ISPTS_FLAG)
-    if (result) {
+    result = ((*pty = open("/dev/ptmx", O_RDWR)) < 0);
 #endif
-	result = ((*pty = open("/dev/ptmx", O_RDWR)) < 0);
-#endif
-#if defined(SVR4) || defined(__SCO__) || defined(USE_ISPTS_FLAG)
-	if (!result)
-	    strcpy(ttydev, ptsname(*pty));
-#ifdef USE_ISPTS_FLAG
-	IsPts = !result;	/* true if we're successful */
-    }
-#endif
+#if defined(SVR4) || defined(__SCO__)
+    if (!result)
+	strcpy(ttydev, ptsname(*pty));
 #endif
 
 #elif defined(AIXV3)
@@ -3033,12 +2997,10 @@ HsSysError(int error)
 			(const char *) &handshake,
 			sizeof(handshake)));
     } else {
-	fprintf(stderr,
-		"%s: fatal pty error errno=%d, error=%d device \"%s\"\n",
-		ProgramName,
-		handshake.error,
-		handshake.fatal_error,
-		handshake.buffer);
+	xtermWarning("fatal pty error errno=%d, error=%d device \"%s\"\n",
+		     handshake.error,
+		     handshake.fatal_error,
+		     handshake.buffer);
 	fprintf(stderr, "%s\n", SysErrorMsg(handshake.error));
 	fprintf(stderr, "Reason: %s\n", SysReasonMsg(handshake.fatal_error));
     }
@@ -3076,8 +3038,8 @@ first_map_occurred(void)
 static void
 HsSysError(int error)
 {
-    fprintf(stderr, "%s: fatal pty error %d (errno=%d) on tty %s\n",
-	    ProgramName, error, errno, ttydev);
+    xtermWarning("fatal pty error %d (errno=%d) on tty %s\n",
+		 error, errno, ttydev);
     exit(error);
 }
 #endif /* OPT_PTY_HANDSHAKE else !OPT_PTY_HANDSHAKE */
@@ -3096,9 +3058,8 @@ set_owner(char *device, uid_t uid, gid_t gid, mode_t mode)
 	why = errno;
 	if (why != ENOENT
 	    && save_ruid == 0) {
-	    fprintf(stderr, "Cannot chown %s to %ld,%ld: %s\n",
-		    device, (long) uid, (long) gid,
-		    strerror(why));
+	    xtermPerror("Cannot chown %s to %ld,%ld",
+			device, (long) uid, (long) gid);
 	}
 	TRACE(("...chown failed: %s\n", strerror(why)));
     } else if (chmod(device, mode) < 0) {
@@ -3106,16 +3067,13 @@ set_owner(char *device, uid_t uid, gid_t gid, mode_t mode)
 	if (why != ENOENT) {
 	    struct stat sb;
 	    if (stat(device, &sb) < 0) {
-		fprintf(stderr, "Cannot chmod %s to %03o: %s\n",
-			device, (unsigned) mode,
-			strerror(why));
+		xtermPerror("Cannot chmod %s to %03o",
+			    device, (unsigned) mode);
 	    } else if (mode != (sb.st_mode & 0777U)) {
-		fprintf(stderr,
-			"Cannot chmod %s to %03lo currently %03lo: %s\n",
-			device,
-			(unsigned long) mode,
-			(unsigned long) (sb.st_mode & 0777U),
-			strerror(why));
+		xtermPerror("Cannot chmod %s to %03lo currently %03lo",
+			    device,
+			    (unsigned long) mode,
+			    (unsigned long) (sb.st_mode & 0777U));
 		TRACE(("...stat uid=%d, gid=%d, mode=%#o\n",
 		       sb.st_uid, sb.st_gid, (unsigned) sb.st_mode));
 	    }
@@ -3317,18 +3275,17 @@ spawnXTerm(XtermWidget xw)
 	 * necessary.  ENXIO is what is normally returned if there is
 	 * no controlling terminal, but some systems (e.g. SunOS 4.0)
 	 * seem to return EIO.  Solaris 2.3 is said to return EINVAL.
-	 * Cygwin returns ENOENT.
+	 * Cygwin returns ENOENT.  FreeBSD can return ENOENT, especially
+	 * if xterm is run within a jail.
 	 */
 #if USE_NO_DEV_TTY
 	no_dev_tty = False;
 #endif
 	if (ttyfd < 0) {
 	    if (tty_got_hung || errno == ENXIO || errno == EIO ||
+		errno == ENOENT ||
 #ifdef ENODEV
 		errno == ENODEV ||
-#endif
-#ifdef __CYGWIN__
-		errno == ENOENT ||
 #endif
 		errno == EINVAL || errno == ENOTTY || errno == EACCES) {
 #if USE_NO_DEV_TTY
@@ -3573,6 +3530,17 @@ spawnXTerm(XtermWidget xw)
 	   TTYSIZE_COLS(ts), i));
 #endif /* TTYSIZE_STRUCT */
 
+#if defined(USE_USG_PTYS) || defined(HAVE_POSIX_OPENPT)
+    /*
+     * utempter checks the ownership of the device; some implementations
+     * set ownership in grantpt - do this first.
+     */
+    grantpt(screen->respond);
+#endif
+#if !defined(USE_USG_PTYS) && defined(HAVE_POSIX_OPENPT)
+    unlockpt(screen->respond);
+#endif
+
     added_utmp_entry = False;
 #if defined(USE_UTEMPTER)
 #undef UTMP
@@ -3581,6 +3549,8 @@ spawnXTerm(XtermWidget xw)
 
 	/* Note: utempter may trim it anyway */
 	SetUtmpHost(dummy.ut_host, screen);
+	TRACE(("...calling addToUtmp(pty=%s, hostname=%s, master_fd=%d)\n",
+	       ttydev, dummy.ut_host, screen->respond));
 	addToUtmp(ttydev, dummy.ut_host, screen->respond);
 	added_utmp_entry = True;
     }
@@ -3611,204 +3581,197 @@ spawnXTerm(XtermWidget xw)
 	    TRACE_CHILD
 
 #ifdef USE_USG_PTYS
-#ifdef USE_ISPTS_FLAG
-		if (IsPts) {	/* SYSV386 supports both, which did we open? */
-#endif
+#ifdef HAVE_SETPGID
+		setpgid(0, 0);
+#else
 		setpgrp();
-		grantpt(screen->respond);
-		unlockpt(screen->respond);
-		if ((pty_name = ptsname(screen->respond)) == 0) {
-		    SysError(ERROR_PTSNAME);
-		} else if ((ptyfd = open(pty_name, O_RDWR)) < 0) {
-		    SysError(ERROR_OPPTSNAME);
-		}
+#endif
+	    unlockpt(screen->respond);
+	    if ((pty_name = ptsname(screen->respond)) == 0) {
+		SysError(ERROR_PTSNAME);
+	    } else if ((ptyfd = open(pty_name, O_RDWR)) < 0) {
+		SysError(ERROR_OPPTSNAME);
+	    }
 #ifdef I_PUSH
-		else if (ioctl(ptyfd, I_PUSH, "ptem") < 0) {
-		    SysError(ERROR_PTEM);
-		}
+	    else if (ioctl(ptyfd, I_PUSH, "ptem") < 0) {
+		SysError(ERROR_PTEM);
+	    }
 #if !defined(SVR4) && !(defined(SYSV) && defined(i386))
-		else if (!x_getenv("CONSEM")
-			 && ioctl(ptyfd, I_PUSH, "consem") < 0) {
-		    SysError(ERROR_CONSEM);
-		}
+	    else if (!x_getenv("CONSEM")
+		     && ioctl(ptyfd, I_PUSH, "consem") < 0) {
+		SysError(ERROR_CONSEM);
+	    }
 #endif /* !SVR4 */
-		else if (ioctl(ptyfd, I_PUSH, "ldterm") < 0) {
-		    SysError(ERROR_LDTERM);
-		}
+	    else if (ioctl(ptyfd, I_PUSH, "ldterm") < 0) {
+		SysError(ERROR_LDTERM);
+	    }
 #ifdef SVR4			/* from Sony */
-		else if (ioctl(ptyfd, I_PUSH, "ttcompat") < 0) {
-		    SysError(ERROR_TTCOMPAT);
-		}
+	    else if (ioctl(ptyfd, I_PUSH, "ttcompat") < 0) {
+		SysError(ERROR_TTCOMPAT);
+	    }
 #endif /* SVR4 */
 #endif /* I_PUSH */
-		ttyfd = ptyfd;
+	    ttyfd = ptyfd;
 #ifndef __MVS__
-		close_fd(screen->respond);
+	    close_fd(screen->respond);
 #endif /* __MVS__ */
 
 #ifdef TTYSIZE_STRUCT
-		/* tell tty how big window is */
+	    /* tell tty how big window is */
 #if OPT_TEK4014
-		if (TEK4014_ACTIVE(xw)) {
-		    TTYSIZE_ROWS(ts) = 24;
-		    TTYSIZE_COLS(ts) = 80;
+	    if (TEK4014_ACTIVE(xw)) {
+		TTYSIZE_ROWS(ts) = 24;
+		TTYSIZE_COLS(ts) = 80;
 #ifdef USE_STRUCT_WINSIZE
-		    ts.ws_xpixel = TFullWidth(TekScreenOf(tekWidget));
-		    ts.ws_ypixel = TFullHeight(TekScreenOf(tekWidget));
+		ts.ws_xpixel = TFullWidth(TekScreenOf(tekWidget));
+		ts.ws_ypixel = TFullHeight(TekScreenOf(tekWidget));
 #endif
-		} else
+	    } else
 #endif /* OPT_TEK4014 */
-		{
-		    TTYSIZE_ROWS(ts) = (ttySize_t) MaxRows(screen);
-		    TTYSIZE_COLS(ts) = (ttySize_t) MaxCols(screen);
+	    {
+		TTYSIZE_ROWS(ts) = (ttySize_t) MaxRows(screen);
+		TTYSIZE_COLS(ts) = (ttySize_t) MaxCols(screen);
 #ifdef USE_STRUCT_WINSIZE
-		    ts.ws_xpixel = (ttySize_t) FullWidth(screen);
-		    ts.ws_ypixel = (ttySize_t) FullHeight(screen);
+		ts.ws_xpixel = (ttySize_t) FullWidth(screen);
+		ts.ws_ypixel = (ttySize_t) FullHeight(screen);
 #endif
-		}
+	    }
 #endif /* TTYSIZE_STRUCT */
 
-#ifdef USE_ISPTS_FLAG
-	    } else {		/* else pty, not pts */
-#endif
 #endif /* USE_USG_PTYS */
 
-		(void) pgrp;	/* not all branches use this variable */
+	    (void) pgrp;	/* not all branches use this variable */
 
 #if OPT_PTY_HANDSHAKE		/* warning, goes for a long ways */
-		if (resource.ptyHandshake) {
-		    /* close parent's sides of the pipes */
-		    close(cp_pipe[0]);
-		    close(pc_pipe[1]);
+	    if (resource.ptyHandshake) {
+		/* close parent's sides of the pipes */
+		close(cp_pipe[0]);
+		close(pc_pipe[1]);
 
-		    /* Make sure that our sides of the pipes are not in the
-		     * 0, 1, 2 range so that we don't fight with stdin, out
-		     * or err.
-		     */
-		    if (cp_pipe[1] <= 2) {
-			if ((i = fcntl(cp_pipe[1], F_DUPFD, 3)) >= 0) {
-			    IGNORE_RC(close(cp_pipe[1]));
-			    cp_pipe[1] = i;
-			}
+		/* Make sure that our sides of the pipes are not in the
+		 * 0, 1, 2 range so that we don't fight with stdin, out
+		 * or err.
+		 */
+		if (cp_pipe[1] <= 2) {
+		    if ((i = fcntl(cp_pipe[1], F_DUPFD, 3)) >= 0) {
+			IGNORE_RC(close(cp_pipe[1]));
+			cp_pipe[1] = i;
 		    }
-		    if (pc_pipe[0] <= 2) {
-			if ((i = fcntl(pc_pipe[0], F_DUPFD, 3)) >= 0) {
-			    IGNORE_RC(close(pc_pipe[0]));
-			    pc_pipe[0] = i;
-			}
+		}
+		if (pc_pipe[0] <= 2) {
+		    if ((i = fcntl(pc_pipe[0], F_DUPFD, 3)) >= 0) {
+			IGNORE_RC(close(pc_pipe[0]));
+			pc_pipe[0] = i;
 		    }
+		}
 
-		    /* we don't need the socket, or the pty master anymore */
-		    close(ConnectionNumber(screen->display));
+		/* we don't need the socket, or the pty master anymore */
+		close(ConnectionNumber(screen->display));
 #ifndef __MVS__
-		    if (screen->respond >= 0)
-			close(screen->respond);
+		if (screen->respond >= 0)
+		    close(screen->respond);
 #endif /* __MVS__ */
 
-		    /* Now is the time to set up our process group and
-		     * open up the pty slave.
-		     */
+		/* Now is the time to set up our process group and
+		 * open up the pty slave.
+		 */
 #ifdef USE_SYSV_PGRP
 #if defined(CRAY) && (OSMAJORVERSION > 5)
-		    IGNORE_RC(setsid());
+		IGNORE_RC(setsid());
 #else
-		    IGNORE_RC(setpgrp());
+		IGNORE_RC(setpgrp());
 #endif
 #endif /* USE_SYSV_PGRP */
 
 #if defined(__QNX__) && !defined(__QNXNTO__)
-		    qsetlogin(getlogin(), ttydev);
+		qsetlogin(getlogin(), ttydev);
 #endif
-		    if (ttyfd >= 0) {
+		if (ttyfd >= 0) {
 #ifdef __MVS__
-			if (ttyGetAttr(ttyfd, &gio) == 0) {
-			    gio.c_cflag &= ~(HUPCL | PARENB);
-			    ttySetAttr(ttyfd, &gio);
-			}
-#else /* !__MVS__ */
-			close_fd(ttyfd);
-#endif /* __MVS__ */
+		    if (ttyGetAttr(ttyfd, &gio) == 0) {
+			gio.c_cflag &= ~(HUPCL | PARENB);
+			ttySetAttr(ttyfd, &gio);
 		    }
+#else /* !__MVS__ */
+		    close_fd(ttyfd);
+#endif /* __MVS__ */
+		}
 
-		    for (;;) {
+		for (;;) {
 #if USE_NO_DEV_TTY
-			if (!no_dev_tty
-			    && (ttyfd = open("/dev/tty", O_RDWR)) >= 0) {
-			    ioctl(ttyfd, TIOCNOTTY, (char *) NULL);
-			    close_fd(ttyfd);
-			}
+		    if (!no_dev_tty
+			&& (ttyfd = open("/dev/tty", O_RDWR)) >= 0) {
+			ioctl(ttyfd, TIOCNOTTY, (char *) NULL);
+			close_fd(ttyfd);
+		    }
 #endif /* USE_NO_DEV_TTY */
 #ifdef CSRG_BASED
-			IGNORE_RC(revoke(ttydev));
+		    IGNORE_RC(revoke(ttydev));
 #endif
-			if ((ttyfd = open(ttydev, O_RDWR)) >= 0) {
+		    if ((ttyfd = open(ttydev, O_RDWR)) >= 0) {
 #if defined(CRAY) && defined(TCSETCTTY)
-			    /* make /dev/tty work */
-			    ioctl(ttyfd, TCSETCTTY, 0);
+			/* make /dev/tty work */
+			ioctl(ttyfd, TCSETCTTY, 0);
 #endif
 #if ((defined(__GLIBC__) && defined(__FreeBSD_kernel__)) || defined(__GNU__)) && defined(TIOCSCTTY)
-			    /* make /dev/tty work */
-			    ioctl(ttyfd, TIOCSCTTY, 0);
-#endif
-#ifdef USE_SYSV_PGRP
-			    /* We need to make sure that we are actually
-			     * the process group leader for the pty.  If
-			     * we are, then we should now be able to open
-			     * /dev/tty.
-			     */
-			    if ((i = open("/dev/tty", O_RDWR)) >= 0) {
-				/* success! */
-				close(i);
-				break;
-			    }
-#else /* USE_SYSV_PGRP */
-			    break;
-#endif /* USE_SYSV_PGRP */
-			}
-			perror("open ttydev");
-#ifdef TIOCSCTTY
+			/* make /dev/tty work */
 			ioctl(ttyfd, TIOCSCTTY, 0);
 #endif
-			/* let our master know that the open failed */
-			handshake.status = PTY_BAD;
-			handshake.error = errno;
-			strcpy(handshake.buffer, ttydev);
-			TRACE_HANDSHAKE("writing", &handshake);
-			IGNORE_RC(write(cp_pipe[1],
-					(const char *) &handshake,
-					sizeof(handshake)));
-
-			/* get reply from parent */
-			i = (int) read(pc_pipe[0], (char *) &handshake,
-				       sizeof(handshake));
-			if (i <= 0) {
-			    /* parent terminated */
-			    exit(1);
+#ifdef USE_SYSV_PGRP
+			/* We need to make sure that we are actually
+			 * the process group leader for the pty.  If
+			 * we are, then we should now be able to open
+			 * /dev/tty.
+			 */
+			if ((i = open("/dev/tty", O_RDWR)) >= 0) {
+			    /* success! */
+			    close(i);
+			    break;
 			}
-
-			if (handshake.status == PTY_NOMORE) {
-			    /* No more ptys, let's shutdown. */
-			    exit(1);
-			}
-
-			/* We have a new pty to try */
-			free(ttydev);
-			ttydev = x_strdup(handshake.buffer);
+#else /* USE_SYSV_PGRP */
+			break;
+#endif /* USE_SYSV_PGRP */
 		    }
-
-		    /* use the same tty name that everyone else will use
-		     * (from ttyname)
-		     */
-		    if ((ptr = ttyname(ttyfd)) != 0) {
-			free(ttydev);
-			ttydev = x_strdup(ptr);
-		    }
-		}
-#endif /* OPT_PTY_HANDSHAKE -- from near fork */
-
-#ifdef USE_ISPTS_FLAG
-	    }			/* end of IsPts else clause */
+		    perror("open ttydev");
+#ifdef TIOCSCTTY
+		    ioctl(ttyfd, TIOCSCTTY, 0);
 #endif
+		    /* let our master know that the open failed */
+		    handshake.status = PTY_BAD;
+		    handshake.error = errno;
+		    strcpy(handshake.buffer, ttydev);
+		    TRACE_HANDSHAKE("writing", &handshake);
+		    IGNORE_RC(write(cp_pipe[1],
+				    (const char *) &handshake,
+				    sizeof(handshake)));
+
+		    /* get reply from parent */
+		    i = (int) read(pc_pipe[0], (char *) &handshake,
+				   sizeof(handshake));
+		    if (i <= 0) {
+			/* parent terminated */
+			exit(1);
+		    }
+
+		    if (handshake.status == PTY_NOMORE) {
+			/* No more ptys, let's shutdown. */
+			exit(1);
+		    }
+
+		    /* We have a new pty to try */
+		    free(ttydev);
+		    ttydev = x_strdup(handshake.buffer);
+		}
+
+		/* use the same tty name that everyone else will use
+		 * (from ttyname)
+		 */
+		if ((ptr = ttyname(ttyfd)) != 0) {
+		    free(ttydev);
+		    ttydev = x_strdup(ptr);
+		}
+	    }
+#endif /* OPT_PTY_HANDSHAKE -- from near fork */
 
 	    set_pty_permissions(screen->uid,
 				screen->gid,
@@ -3906,7 +3869,7 @@ spawnXTerm(XtermWidget xw)
 			    }
 			}
 #endif
-			tio.c_cc[sysMode] = known_ttyChars[nn].myDefault;
+			tio.c_cc[sysMode] = (cc_t) known_ttyChars[nn].myDefault;
 		    }
 		}
 
@@ -4012,14 +3975,12 @@ spawnXTerm(XtermWidget xw)
 #ifdef TIOCCONS
 		    int on = 1;
 		    if (ioctl(ttyfd, TIOCCONS, (char *) &on) == -1)
-			fprintf(stderr, "%s: cannot open console: %s\n",
-				ProgramName, strerror(errno));
+			xtermPerror("cannot open console");
 #endif
 #ifdef SRIOCSREDIR
 		    int fd = open("/dev/console", O_RDWR);
 		    if (fd == -1 || ioctl(fd, SRIOCSREDIR, ttyfd) == -1)
-			fprintf(stderr, "%s: cannot open console: %s\n",
-				ProgramName, strerror(errno));
+			xtermPerror("cannot open console");
 		    IGNORE_RC(close(fd));
 #endif
 		}
@@ -4060,7 +4021,7 @@ spawnXTerm(XtermWidget xw)
 #if OPT_TRACE
 		old_erase = tio.c_cc[VERASE];
 #endif
-		tio.c_cc[VERASE] = initial_erase;
+		tio.c_cc[VERASE] = (cc_t) initial_erase;
 		TRACE_RC(rc, ttySetAttr(ttyfd, &tio));
 #else /* !TERMIO_STRUCT */
 		if (ioctl(ttyfd, TIOCGETP, (char *) &sg) == -1)
@@ -4343,7 +4304,7 @@ spawnXTerm(XtermWidget xw)
 	    if (xw->misc.login_shell &&
 		(i = open(etc_lastlog, O_WRONLY)) >= 0) {
 		size_t size = sizeof(struct lastlog);
-		off_t offset = (screen->uid * size);
+		off_t offset = (off_t) (screen->uid * size);
 
 		memset(&lastlog, 0, size);
 		(void) strncpy(lastlog.ll_line,
@@ -4546,11 +4507,8 @@ spawnXTerm(XtermWidget xw)
 			    xtermFindShell(*command_to_exec_with_luit, False));
 		TRACE_ARGV("spawning luit command", command_to_exec_with_luit);
 		execvp(*command_to_exec_with_luit, command_to_exec_with_luit);
-		/* print error message on screen */
-		fprintf(stderr, "%s: Can't execvp %s: %s\n",
-			ProgramName, *command_to_exec_with_luit, strerror(errno));
-		fprintf(stderr, "%s: cannot support your locale.\n",
-			ProgramName);
+		xtermPerror("Can't execvp %s", *command_to_exec_with_luit);
+		xtermWarning("cannot support your locale.\n");
 	    }
 #endif
 	    if (command_to_exec) {
@@ -4560,9 +4518,7 @@ spawnXTerm(XtermWidget xw)
 		execvp(*command_to_exec, command_to_exec);
 		if (command_to_exec[1] == 0)
 		    execlp(ptr, shname, "-c", command_to_exec[0], (void *) 0);
-		/* print error message on screen */
-		fprintf(stderr, "%s: Can't execvp %s: %s\n",
-			ProgramName, *command_to_exec, strerror(errno));
+		xtermPerror("Can't execvp %s", *command_to_exec);
 	    }
 #ifdef USE_SYSV_SIGHUP
 	    /* fix pts sh hanging around */
@@ -4598,8 +4554,7 @@ spawnXTerm(XtermWidget xw)
 		TRACE_ARGV("final luit command", command_to_exec_with_luit);
 		execvp(*command_to_exec_with_luit, command_to_exec_with_luit);
 		/* Exec failed. */
-		fprintf(stderr, "%s: Can't execvp %s: %s\n", ProgramName,
-			*command_to_exec_with_luit, strerror(errno));
+		xtermPerror("Can't execvp %s", *command_to_exec_with_luit);
 	    }
 #endif
 	    execlp(ptr,
@@ -4607,8 +4562,7 @@ spawnXTerm(XtermWidget xw)
 		   (void *) 0);
 
 	    /* Exec failed. */
-	    fprintf(stderr, "%s: Could not exec %s: %s\n", ProgramName,
-		    ptr, strerror(errno));
+	    xtermPerror("Could not exec %s", ptr);
 	    IGNORE_RC(sleep(5));
 	    exit(ERROR_EXEC);
 	}
@@ -4650,9 +4604,7 @@ spawnXTerm(XtermWidget xw)
 		    IGNORE_RC(close(screen->respond));
 		    if (get_pty(&screen->respond, XDisplayString(screen->display))) {
 			/* no more ptys! */
-			fprintf(stderr,
-				"%s: child process can find no available ptys: %s\n",
-				ProgramName, strerror(errno));
+			xtermPerror("child process can find no available ptys");
 			handshake.status = PTY_NOMORE;
 			TRACE_HANDSHAKE("writing", &handshake);
 			IGNORE_RC(write(pc_pipe[1],
@@ -4691,9 +4643,8 @@ spawnXTerm(XtermWidget xw)
 		case UTMP_TTYSLOT:
 		case PTY_EXEC:
 		default:
-		    fprintf(stderr, "%s: unexpected handshake status %d\n",
-			    ProgramName,
-			    (int) handshake.status);
+		    xtermWarning("unexpected handshake status %d\n",
+				 (int) handshake.status);
 		}
 	    }
 	    /* close our sides of the pipes */
@@ -4765,8 +4716,10 @@ Exit(int n)
     TScreen *screen = TScreenOf(xw);
 
 #ifdef USE_UTEMPTER
-    if (!resource.utmpInhibit && added_utmp_entry)
+    if (!resource.utmpInhibit && added_utmp_entry) {
+	TRACE(("...calling removeFromUtmp\n"));
 	removeFromUtmp();
+    }
 #elif defined(HAVE_UTMP)
 #ifdef USE_SYSV_UTMP
     struct UTMP_STR utmp;

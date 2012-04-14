@@ -49,6 +49,7 @@ authorization.
 /* #undef DISABLE_SETUID */		/* CF_ARG_DISABLE(setuid) */
 #define HAVE_GETHOSTNAME 1		/* AC_CHECK_FUNCS(gethostname) */
 #define HAVE_GETLOGIN 1		/* AC_CHECK_FUNCS(getlogin) */
+/* #undef HAVE_GRANTPT		/* CF_FUNC_GRANTPT */
 #define HAVE_LANGINFO_CODESET 1	/* AM_LANGINFO_CODESET */
 /* #undef HAVE_LASTLOG_H */		/* CF_LASTLOG */
 /* #undef HAVE_LIB_NEXTAW */		/* CF_X_ATHENA(--with-neXtaw) */
@@ -60,9 +61,12 @@ authorization.
 /* #undef HAVE_NCURSES_TERM_H */	/* AC_CHECK_HEADERS(ncurses/term.h) */
 #define HAVE_PATHS_H 1		/* CF_LASTLOG */
 /* #undef HAVE_PCREPOSIX_H */		/* CF_WITH_PCRE */
+/* #undef HAVE_POSIX_OPENPT	/* CF_FUNC_GRANTPT */
 #define HAVE_POSIX_SAVED_IDS 1	/* CF_POSIX_SAVED_IDS */
+/* #undef HAVE_PTSNAME		/* CF_FUNC_GRANTPT */
 #define HAVE_PUTENV 1		/* AC_CHECK_FUNCS(putenv) */
 #define HAVE_SCHED_YIELD 1		/* AC_CHECK_FUNCS(sched_yield) */
+#define HAVE_SETPGID		/* AC_CHECK_FUNCS(setpgid) */
 #define HAVE_STDLIB_H 1		/* AC_CHECK_HEADERS(stdlib.h) */
 #define HAVE_STRERROR 1		/* AC_CHECK_FUNCS(strerror) */
 #define HAVE_STRFTIME 1		/* AC_CHECK_FUNCS(strftime) */
@@ -76,8 +80,8 @@ authorization.
 #define HAVE_TERM_H 1		/* AC_CHECK_HEADERS(term.h) */
 #define HAVE_TIGETSTR 1		/* AC_CHECK_FUNCS(tigetstr) */
 #define HAVE_UNISTD_H 1		/* AC_CHECK_HEADERS(unistd.h) */
-#define HAVE_USE_EXTENDED_NAMES 1	/* AC_CHECK_FUNCS(use_extended_names) */
 #define HAVE_UNSETENV		/* AC_CHECK_FUNCS(unsetenv) */
+#define HAVE_USE_EXTENDED_NAMES 1	/* AC_CHECK_FUNCS(use_extended_names) */
 #define HAVE_UTMP 1		/* CF_UTMP */
 #define HAVE_UTMP_UT_HOST 1	/* CF_UTMP_UT_HOST */
 /* #undef HAVE_UTMP_UT_SESSION */	/* CF_UTMP_UT_SESSION */
@@ -134,6 +138,7 @@ authorization.
 /* #undef OPT_READLINE */		/* CF_ARG_ENABLE(readline-mouse) */
 /* #undef OPT_SAME_NAME */		/* CF_ARG_DISABLE(samename) */
 /* #undef OPT_SCO_FUNC_KEYS */	/* CF_ARG_ENABLE(sco-fkeys) */
+/* #undef OPT_SELECTION_OPS	/* CF_ARG_DISABLE(selection-ops) */
 #define OPT_SELECT_REGEX 1		/* CF_ARG_DISABLE(regex) */
 /* #undef OPT_SESSION_MGT */		/* CF_ARG_DISABLE(session-mgt) */
 /* #undef OPT_SUN_FUNC_KEYS */	/* CF_ARG_ENABLE(sun-fkeys) */

@@ -1,4 +1,4 @@
-/* $XTermId: input.c,v 1.327 2011/02/09 10:15:07 tom Exp $ */
+/* $XTermId: input.c,v 1.333 2012/01/07 02:01:05 tom Exp $ */
 
 /*
  * Copyright 1999-2010,2011 by Thomas E. Dickey
@@ -830,18 +830,19 @@ Input(XtermWidget xw,
     } else
 #endif
     {
-#if OPT_I18N_SUPPORT
-	if (screen->xic) {
+#if OPT_I18N_SUPPORT && OPT_INPUT_METHOD
+	TInput *input = lookupTInput(xw, (Widget) xw);
+	if (input->xic) {
 	    Status status_return;
 #if OPT_WIDE_CHARS
 	    if (screen->utf8_mode) {
-		kd.nbytes = Xutf8LookupString(screen->xic, event,
+		kd.nbytes = Xutf8LookupString(input->xic, event,
 					      kd.strbuf, (int) sizeof(kd.strbuf),
 					      &kd.keysym, &status_return);
 	    } else
 #endif
 	    {
-		kd.nbytes = XmbLookupString(screen->xic, event,
+		kd.nbytes = XmbLookupString(input->xic, event,
 					    kd.strbuf, (int) sizeof(kd.strbuf),
 					    &kd.keysym, &status_return);
 	    }
@@ -957,6 +958,13 @@ Input(XtermWidget xw,
 	    kd.strbuf[0] = '\t';
 	}
     }
+#ifdef XK_ISO_Left_Tab
+    else if (IsTabKey(kd.keysym)
+	     && kd.nbytes <= 1
+	     && modify_parm == (MOD_NONE + MOD_SHIFT)) {
+	kd.keysym = XK_ISO_Left_Tab;
+    }
+#endif
 #endif /* OPT_MOD_FKEYS */
 
     /* VT300 & up: backarrow toggle */
@@ -1046,8 +1054,9 @@ Input(XtermWidget xw,
 	 * Reevaluate the modifier parameter, stripping off the modifiers
 	 * that we just used.
 	 */
-	if (modify_parm)
+	if (modify_parm) {
 	    modify_parm = xtermStateToParam(xw, evt_state);
+	}
 #endif /* OPT_MOD_FKEYS */
     }
 
@@ -1275,7 +1284,7 @@ Input(XtermWidget xw,
 	     */
 	    if (eightbit && (kd.nbytes == 1) && screen->input_eight_bits) {
 		IChar ch = CharOf(kd.strbuf[0]);
-		if (ch < 128) {
+		if ((ch < 128) && (screen->eight_bit_meta == ebTrue)) {
 		    kd.strbuf[0] |= (char) 0x80;
 		    TRACE(("...input shift from %d to %d (%#x to %#x)\n",
 			   ch, CharOf(kd.strbuf[0]),

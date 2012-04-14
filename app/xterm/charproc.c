@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1132 2011/09/04 18:18:16 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1161 2012/01/19 00:22:08 tom Exp $ */
 
 /*
  * Copyright 1999-2010,2011 by Thomas E. Dickey
@@ -173,8 +173,8 @@ static void StopBlinking(TScreen * /* screen */ );
 #define StopBlinking(screen)	/* nothing */
 #endif
 
-#if OPT_INPUT_METHOD
-static void PreeditPosition(TScreen * screen);
+#if OPT_I18N_SUPPORT && OPT_INPUT_METHOD
+static void PreeditPosition(XtermWidget /* xw */ );
 #endif
 
 #define	DEFAULT		-1
@@ -341,6 +341,12 @@ static XtActionsRec actionsList[] = {
 #if OPT_SCROLL_LOCK
     { "scroll-lock",		HandleScrollLock },
 #endif
+#if OPT_SELECTION_OPS
+    { "exec-formatted",		HandleExecFormatted },
+    { "exec-selectable",	HandleExecSelectable },
+    { "insert-formatted",	HandleInsertFormatted },
+    { "insert-selectable",	HandleInsertSelectable },
+#endif
 #if OPT_SHIFT_FONTS
     { "larger-vt-font",		HandleLargerFont },
     { "smaller-vt-font",	HandleSmallerFont },
@@ -434,6 +440,7 @@ static XtResource xterm_resources[] =
     Bres(XtNtrimSelection, XtCTrimSelection, screen.trim_selection, False),
     Bres(XtNunderLine, XtCUnderLine, screen.underline, True),
     Bres(XtNvisualBell, XtCVisualBell, screen.visualbell, False),
+    Bres(XtNvisualBellLine, XtCVisualBellLine, screen.flash_line, False),
 
     Dres(XtNscaleHeight, XtCScaleHeight, screen.scale_height, "1.0"),
 
@@ -473,6 +480,7 @@ static XtResource xterm_resources[] =
 	 screen.disallowedTcapOps, DEF_DISALLOWED_TCAP),
     Sres(XtNdisallowedWindowOps, XtCDisallowedWindowOps,
 	 screen.disallowedWinOps, DEF_DISALLOWED_WINDOW),
+    Sres(XtNeightBitMeta, XtCEightBitMeta, screen.eight_bit_meta_s, DEF_8BIT_META),
     Sres(XtNeightBitSelectTypes, XtCEightBitSelectTypes,
 	 screen.eightbit_select_types, NULL),
     Sres(XtNfont, XtCFont, misc.default_font.f_n, DEFFONT),
@@ -1067,7 +1075,7 @@ set_ansi_conformance(TScreen * screen, int level)
 	    /* FALLTHRU */
 	case 2:
 	    screen->gsets[0] = 'B';	/* G0 is ASCII */
-	    screen->gsets[1] = 'B';	/* G1 is ISO Latin-1 (FIXME) */
+	    screen->gsets[1] = 'B';	/* G1 is ISO Latin-1 */
 	    screen->curgl = 0;
 	    screen->curgr = 1;
 	    break;
@@ -1286,15 +1294,6 @@ select_charset(struct ParseState *sp, int type, int size)
     } else {
 	sp->parsestate = scs96table;
     }
-}
-
-static int
-minus_if_default(int which)
-{
-    int result = (nparam > which) ? param[which] : -1;
-    if (result <= 0)
-	result = -1;
-    return result;
 }
 
 static int
@@ -1570,9 +1569,8 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	if (sp->nextstate == CASE_PRINT) {
 	    SafeAlloc(IChar, sp->print_area, sp->print_used, sp->print_size);
 	    if (new_string == 0) {
-		fprintf(stderr,
-			"Cannot allocate %lu bytes for printable text\n",
-			(unsigned long) new_length);
+		xtermWarning("Cannot allocate %lu bytes for printable text\n",
+			     (unsigned long) new_length);
 		continue;
 	    }
 #if OPT_VT52_MODE
@@ -1608,9 +1606,8 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	if (sp->parsestate == sos_table) {
 	    SafeAlloc(Char, sp->string_area, sp->string_used, sp->string_size);
 	    if (new_string == 0) {
-		fprintf(stderr,
-			"Cannot allocate %lu bytes for string mode %d\n",
-			(unsigned long) new_length, sp->string_mode);
+		xtermWarning("Cannot allocate %lu bytes for string mode %d\n",
+			     (unsigned long) new_length, sp->string_mode);
 		continue;
 	    }
 #if OPT_WIDE_CHARS
@@ -2764,6 +2761,58 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	    ResetState(sp);
 	    break;
 
+	case CASE_SL:		/* ISO 6429, non-DEC */
+	    TRACE(("CASE_SL - scroll left\n"));
+	    if ((count = param[0]) < 1)
+		count = 1;
+	    xtermScrollLR(xw, count, True);
+	    ResetState(sp);
+	    break;
+
+	case CASE_SR:		/* ISO 6429, non-DEC */
+	    TRACE(("CASE_SR - scroll right\n"));
+	    if ((count = param[0]) < 1)
+		count = 1;
+	    xtermScrollLR(xw, count, False);
+	    ResetState(sp);
+	    break;
+
+	case CASE_DECDC:
+	    TRACE(("CASE_DC - delete column\n"));
+	    if (screen->terminal_id >= 400) {
+		if ((count = param[0]) < 1)
+		    count = 1;
+		xtermColScroll(xw, count, True, screen->cur_col);
+	    }
+	    ResetState(sp);
+	    break;
+
+	case CASE_DECIC:
+	    TRACE(("CASE_IC - insert column\n"));
+	    if (screen->terminal_id >= 400) {
+		if ((count = param[0]) < 1)
+		    count = 1;
+		xtermColScroll(xw, count, False, screen->cur_col);
+	    }
+	    ResetState(sp);
+	    break;
+
+	case CASE_DECBI:
+	    TRACE(("CASE_BI - back index\n"));
+	    if (screen->terminal_id >= 400) {
+		xtermColIndex(xw, True);
+	    }
+	    ResetState(sp);
+	    break;
+
+	case CASE_DECFI:
+	    TRACE(("CASE_FI - forward index\n"));
+	    if (screen->terminal_id >= 400) {
+		xtermColIndex(xw, False);
+	    }
+	    ResetState(sp);
+	    break;
+
 	case CASE_IND:
 	    TRACE(("CASE_IND - index\n"));
 	    xtermIndex(xw, 1);
@@ -3370,8 +3419,7 @@ v_write(int f, const Char * data, unsigned len)
 		    v_bufend = v_bufptr + len;
 		} else {
 		    /* no memory: ignore entire write request */
-		    fprintf(stderr, "%s: cannot allocate buffer space\n",
-			    ProgramName);
+		    xtermWarning("cannot allocate buffer space\n");
 		    v_buffer = v_bufstr;	/* restore clobbered pointer */
 		}
 	    }
@@ -3543,8 +3591,8 @@ in_put(XtermWidget xw)
 	    if (screen->cursor_state)
 		HideCursor();
 	    ShowCursor();
-#if OPT_INPUT_METHOD
-	    PreeditPosition(screen);
+#if OPT_I18N_SUPPORT && OPT_INPUT_METHOD
+	    PreeditPosition(xw);
 #endif
 	} else {
 	    updateCursor(screen);
@@ -3644,8 +3692,8 @@ in_put(XtermWidget xw)
 	    if (screen->cursor_state)
 		HideCursor();
 	    ShowCursor();
-#if OPT_INPUT_METHOD
-	    PreeditPosition(screen);
+#if OPT_I18N_SUPPORT && OPT_INPUT_METHOD
+	    PreeditPosition(xw);
 #endif
 	} else {
 	    updateCursor(screen);
@@ -3736,27 +3784,29 @@ doinput(void)
     return nextPtyData(screen, VTbuffer);
 }
 
-#if OPT_INPUT_METHOD
+#if OPT_I18N_SUPPORT && OPT_INPUT_METHOD
 /*
  *  For OverTheSpot, client has to inform the position for XIM preedit.
  */
 static void
-PreeditPosition(TScreen * screen)
+PreeditPosition(XtermWidget xw)
 {
+    TInput *input = lookupTInput(xw, (Widget) xw);
+    TScreen *screen = TScreenOf(xw);
     LineData *ld;
     XPoint spot;
     XVaNestedList list;
 
-    if (screen->xic
+    if (input->xic
 	&& (ld = getLineData(screen, screen->cur_row)) != 0) {
 	spot.x = (short) LineCursorX(screen, ld, screen->cur_col);
-	spot.y = (short) (CursorY(screen, screen->cur_row) + screen->fs_ascent);
+	spot.y = (short) (CursorY(screen, screen->cur_row) + xw->misc.xim_fs_ascent);
 	list = XVaCreateNestedList(0,
 				   XNSpotLocation, &spot,
 				   XNForeground, T_COLOR(screen, TEXT_FG),
 				   XNBackground, T_COLOR(screen, TEXT_BG),
-				   NULL);
-	XSetICValues(screen->xic, XNPreeditAttributes, list, NULL);
+				   (void *) 0);
+	XSetICValues(input->xic, XNPreeditAttributes, list, (void *) 0);
 	XFree(list);
     }
 }
@@ -4012,8 +4062,8 @@ HandleStructNotify(Widget w GCC_UNUSED,
 			       save.menu_border));
 
 			/*
-			 * FIXME:  Window manager still may be using the old
-			 * values.  Try to fool it.
+			 * Window manager still may be using the old values. 
+			 * Try to fool it.
 			 */
 			REQ_RESIZE((Widget) xw,
 				   screen->fullVwin.fullwidth,
@@ -4358,7 +4408,20 @@ dpmodes(XtermWidget xw, BitFunc func)
 	    break;
 #endif
 	case SET_EXT_MODE_MOUSE:
-	    set_bool_mode(screen->ext_mode_mouse);
+	    /* FALLTHRU */
+	case SET_SGR_EXT_MODE_MOUSE:
+	    /* FALLTHRU */
+	case SET_URXVT_EXT_MODE_MOUSE:
+	    /*
+	     * Rather than choose an arbitrary precedence among the coordinate
+	     * modes, they are mutually exclusive.  For consistency, a reset is
+	     * only effective against the matching mode.
+	     */
+	    if (IsSM()) {
+		screen->extend_coords = param[i];
+	    } else if (screen->extend_coords == param[i]) {
+		screen->extend_coords = 0;
+	    }
 	    break;
 	case 1010:		/* rxvt */
 	    set_bool_mode(screen->scrollttyoutput);
@@ -4369,8 +4432,9 @@ dpmodes(XtermWidget xw, BitFunc func)
 	    update_scrollkey();
 	    break;
 	case 1034:
-	    set_bool_mode(screen->input_eight_bits);
-	    update_alt_esc();
+	    if (screen->eight_bit_meta != ebNever) {
+		set_bool_mode(screen->eight_bit_meta);
+	    }
 	    break;
 #if OPT_NUM_LOCK
 	case 1035:
@@ -4563,7 +4627,11 @@ savemodes(XtermWidget xw)
 	    break;
 #endif
 	case SET_EXT_MODE_MOUSE:
-	    DoSM(DP_X_EXT_MOUSE, screen->ext_mode_mouse);
+	    /* FALLTHRU */
+	case SET_SGR_EXT_MODE_MOUSE:
+	    /* FALLTHRU */
+	case SET_URXVT_EXT_MODE_MOUSE:
+	    DoSM(DP_X_EXT_MOUSE, screen->extend_coords);
 	    break;
 	case 1048:
 	    if (!xw->misc.titeInhibit) {
@@ -4734,7 +4802,11 @@ restoremodes(XtermWidget xw)
 	    break;
 #endif
 	case SET_EXT_MODE_MOUSE:
-	    DoRM(DP_X_EXT_MOUSE, screen->ext_mode_mouse);
+	    /* FALLTHRU */
+	case SET_SGR_EXT_MODE_MOUSE:
+	    /* FALLTHRU */
+	case SET_URXVT_EXT_MODE_MOUSE:
+	    DoRM(DP_X_EXT_MOUSE, screen->extend_coords);
 	    break;
 	case 1048:
 	    if (!xw->misc.titeInhibit) {
@@ -4933,7 +5005,7 @@ window_ops(XtermWidget xw)
 
     case ewSetWinSizePixels:	/* Resize the window to given size in pixels */
 	if (AllowWindowOps(xw, ewSetWinSizePixels)) {
-	    RequestResize(xw, minus_if_default(1), minus_if_default(2), False);
+	    RequestResize(xw, param[1], param[2], False);
 	}
 	break;
 
@@ -4960,7 +5032,7 @@ window_ops(XtermWidget xw)
 
     case ewSetWinSizeChars:	/* Resize the text-area, in characters */
 	if (AllowWindowOps(xw, ewSetWinSizeChars)) {
-	    RequestResize(xw, minus_if_default(1), minus_if_default(2), True);
+	    RequestResize(xw, param[1], param[2], True);
 	}
 	break;
 
@@ -5843,8 +5915,8 @@ VTInitialize_locale(XtermWidget xw)
 }
 #endif
 
-static void
-ParseOnClicks(XtermWidget wnew, XtermWidget wreq, Cardinal item)
+void
+lookupSelectUnit(XtermWidget xw, Cardinal item, String value)
 {
     /* *INDENT-OFF* */
     static struct {
@@ -5863,23 +5935,29 @@ ParseOnClicks(XtermWidget wnew, XtermWidget wreq, Cardinal item)
     };
     /* *INDENT-ON* */
 
-    String res = TScreenOf(wreq)->onClick[item];
-    String next = x_skip_nonblanks(res);
+    TScreen *screen = TScreenOf(xw);
+    String next = x_skip_nonblanks(value);
     Cardinal n;
 
-    TScreenOf(wnew)->selectMap[item] = NSELECTUNITS;
+    screen->selectMap[item] = NSELECTUNITS;
     for (n = 0; n < XtNumber(table); ++n) {
-	if (!x_strncasecmp(table[n].name, res, (unsigned) (next - res))) {
-	    TScreenOf(wnew)->selectMap[item] = table[n].code;
+	if (!x_strncasecmp(table[n].name, value, (unsigned) (next - value))) {
+	    screen->selectMap[item] = table[n].code;
 #if OPT_SELECT_REGEX
 	    if (table[n].code == Select_REGEX) {
-		TScreenOf(wnew)->selectExpr[item] = x_strtrim(next);
-		TRACE(("Parsed regex \"%s\"\n", TScreenOf(wnew)->selectExpr[item]));
+		screen->selectExpr[item] = x_strtrim(next);
+		TRACE(("Parsed regex \"%s\"\n", screen->selectExpr[item]));
 	    }
 #endif
 	    break;
 	}
     }
+}
+
+static void
+ParseOnClicks(XtermWidget wnew, XtermWidget wreq, Cardinal item)
+{
+    lookupSelectUnit(wnew, item, TScreenOf(wreq)->onClick[item]);
 }
 
 /*
@@ -5937,7 +6015,7 @@ set_flags_from_list(char *target,
 
 	    value = (int) strtol(next, &temp, 0);
 	    if (!IsEmpty(temp)) {
-		fprintf(stderr, "Expected a number: %s\n", next);
+		xtermWarning("Expected a number: %s\n", next);
 	    } else {
 		for (n = 0; n < limit; ++n) {
 		    if (list[n].code == value) {
@@ -5958,7 +6036,7 @@ set_flags_from_list(char *target,
 	    }
 	}
 	if (!found) {
-	    fprintf(stderr, "Unrecognized keyword: %s\n", next);
+	    xtermWarning("Unrecognized keyword: %s\n", next);
 	} else {
 	    TRACE(("...found %s (%d)\n", next, value));
 	}
@@ -6055,6 +6133,14 @@ VTInitialize(Widget wrequest,
     };
 #undef DATA
 #endif
+
+#define DATA(name) { #name, eb##name }
+    static FlagList tbl8BitMeta[] =
+    {
+	DATA(Never)
+	,DATA(Locale)
+    };
+#undef DATA
 
     XtermWidget request = (XtermWidget) wrequest;
     XtermWidget wnew = (XtermWidget) new_arg;
@@ -6221,6 +6307,7 @@ VTInitialize(Widget wrequest,
 
     init_Ires(screen.title_modes);
     init_Bres(screen.visualbell);
+    init_Bres(screen.flash_line);
     init_Ires(screen.visualBellDelay);
     init_Bres(screen.poponbell);
     init_Ires(misc.limit_resize);
@@ -6699,6 +6786,22 @@ VTInitialize(Widget wrequest,
     xtermSaveVTFonts(wnew);
 #endif /* OPT_WIDE_CHARS */
 
+    init_Sres(screen.eight_bit_meta_s);
+    wnew->screen.eight_bit_meta =
+	extendedBoolean(request->screen.eight_bit_meta_s, tbl8BitMeta, uLast);
+    if (wnew->screen.eight_bit_meta == ebLocale) {
+#if OPT_WIDE_CHARS
+	if (xtermEnvUTF8()) {
+	    wnew->screen.eight_bit_meta = ebFalse;
+	    TRACE(("...eightBitMeta is false due to locale\n"));
+	} else
+#endif /* OPT_WIDE_CHARS */
+	{
+	    wnew->screen.eight_bit_meta = ebTrue;
+	    TRACE(("...eightBitMeta is true due to locale\n"));
+	}
+    }
+
     init_Bres(screen.always_bold_mode);
     init_Bres(screen.bold_mode);
     init_Bres(screen.underline);
@@ -6843,13 +6946,15 @@ releaseWindowGCs(XtermWidget xw, VTwin * win)
 	    name = 0; \
 	}
 
-#if OPT_INPUT_METHOD
+#if OPT_I18N_SUPPORT && OPT_INPUT_METHOD
 static void
-cleanupInputMethod(TScreen * screen)
+cleanupInputMethod(XtermWidget xw)
 {
-    if (screen->xim) {
-	XCloseIM(screen->xim);
-	screen->xim = 0;
+    TInput *input = lookupTInput(xw, (Widget) xw);
+
+    if (input->xim) {
+	XCloseIM(input->xim);
+	input->xim = 0;
 	TRACE(("freed screen->xim\n"));
     }
 }
@@ -6881,6 +6986,12 @@ VTDestroy(Widget w GCC_UNUSED)
 	free(last->windowName);
 	free(last);
     }
+#if OPT_ISO_COLORS
+    TRACE_FREE_LEAK(screen->cmap_data);
+    for (n = 0; n < MAXCOLORS; n++) {
+	TRACE_FREE_LEAK(screen->Acolors[n].resource);
+    }
+#endif
     TRACE_FREE_LEAK(screen->save_ptr);
     TRACE_FREE_LEAK(screen->saveBuf_data);
     TRACE_FREE_LEAK(screen->saveBuf_index);
@@ -6896,8 +7007,11 @@ VTDestroy(Widget w GCC_UNUSED)
     TRACE_FREE_LEAK(xw->misc.localefilter);
 #endif
 #endif
+    TRACE_FREE_LEAK(xw->misc.T_geometry);
+    TRACE_FREE_LEAK(xw->misc.geo_metry);
+    TRACE_FREE_LEAK(xw->screen.term_id);
 #if OPT_INPUT_METHOD
-    cleanupInputMethod(screen);
+    cleanupInputMethod(xw);
 #endif
     releaseCursorGCs(xw);
     releaseWindowGCs(xw, &(screen->fullVwin));
@@ -6915,6 +7029,15 @@ VTDestroy(Widget w GCC_UNUSED)
 
     xtermCloseFonts(xw, screen->fnts);
     noleaks_cachedCgs(xw);
+
+    TRACE_FREE_LEAK(screen->selection_targets_8bit);
+#if OPT_SELECT_REGEX
+    for (n = 0; n < NSELECTUNITS; ++n) {
+	if (screen->selectMap[n] == Select_REGEX) {
+	    TRACE_FREE_LEAK(screen->selectExpr[n]);
+	}
+    }
+#endif
 
 #if OPT_RENDERFONT
     for (n = 0; n < NMENUFONTS; ++n) {
@@ -6960,6 +7083,7 @@ VTDestroy(Widget w GCC_UNUSED)
 #if OPT_RENDERFONT
     TRACE_FREE_LEAK(xw->misc.face_name);
     TRACE_FREE_LEAK(xw->misc.face_wide_name);
+    TRACE_FREE_LEAK(xw->misc.render_font_s);
 #endif
 
 #if OPT_SELECT_REGEX
@@ -7028,9 +7152,8 @@ VTRealize(Widget w,
 		       screen->menu_font_number)) {
 	if (XmuCompareISOLatin1(myfont->f_n, DEFFONT) != 0) {
 	    char *use_font = x_strdup(DEFFONT);
-	    fprintf(stderr,
-		    "%s:  unable to open font \"%s\", trying \"%s\"....\n",
-		    ProgramName, myfont->f_n, use_font);
+	    xtermWarning("unable to open font \"%s\", trying \"%s\"....\n",
+			 myfont->f_n, use_font);
 	    (void) xtermLoadFont(xw,
 				 xtermFontName(use_font),
 				 False,
@@ -7041,8 +7164,7 @@ VTRealize(Widget w,
 
     /* really screwed if we couldn't open default font */
     if (!screen->fnts[fNorm].fs) {
-	fprintf(stderr, "%s:  unable to locate a suitable font\n",
-		ProgramName);
+	xtermWarning("unable to locate a suitable font\n");
 	Exit(1);
     }
 #if OPT_WIDE_CHARS
@@ -7295,8 +7417,6 @@ VTRealize(Widget w,
 
 #if OPT_I18N_SUPPORT && OPT_INPUT_METHOD
     VTInitI18N(xw);
-#else
-    screen->xic = NULL;
 #endif
 #if OPT_NUM_LOCK
     VTInitModifiers(xw);
@@ -7369,10 +7489,11 @@ xim_instantiate_cb(Display * display,
 		   XPointer client_data GCC_UNUSED,
 		   XPointer call_data GCC_UNUSED)
 {
-    if (display != XtDisplay(term))
-	return;
+    TRACE(("xim_instantiate_cb client=%p, call=%p\n", client_data, call_data));
 
-    VTInitI18N(term);
+    if (display == XtDisplay(term)) {
+	VTInitI18N(term);
+    }
 }
 
 static void
@@ -7380,19 +7501,67 @@ xim_destroy_cb(XIM im GCC_UNUSED,
 	       XPointer client_data GCC_UNUSED,
 	       XPointer call_data GCC_UNUSED)
 {
-    TScreenOf(term)->xic = NULL;
+    XtermWidget xw = term;
+    TInput *input = lookupTInput(xw, (Widget) xw);
 
-    XRegisterIMInstantiateCallback(XtDisplay(term), NULL, NULL, NULL,
+    TRACE(("xim_destroy_cb im=%lx, client=%p, call=%p\n",
+	   (long) im, client_data, call_data));
+
+    input->xic = NULL;
+    XRegisterIMInstantiateCallback(XtDisplay(xw), NULL, NULL, NULL,
 				   xim_instantiate_cb, NULL);
 }
 #endif /* X11R6+ */
 
-static void
-xim_real_init(XtermWidget xw)
+static Boolean
+xim_create_fs(XtermWidget xw)
 {
-    TScreen *screen = TScreenOf(xw);
+    XFontStruct **fonts;
+    char **font_name_list;
+    char **missing_charset_list;
+    char *def_string;
+    int missing_charset_count;
     unsigned i, j;
-    char *p, *s, *t, *ns, *end, buf[32];
+
+    if (xw->misc.xim_fs == 0) {
+	xw->misc.xim_fs = XCreateFontSet(XtDisplay(xw),
+					 xw->misc.f_x,
+					 &missing_charset_list,
+					 &missing_charset_count,
+					 &def_string);
+	if (xw->misc.xim_fs == NULL) {
+	    xtermWarning("Preparation of font set "
+			 "\"%s\" for XIM failed.\n", xw->misc.f_x);
+	    xw->misc.xim_fs = XCreateFontSet(XtDisplay(xw),
+					     DEFXIMFONT,
+					     &missing_charset_list,
+					     &missing_charset_count,
+					     &def_string);
+	}
+    }
+    if (xw->misc.xim_fs == NULL) {
+	xtermWarning("Preparation of default font set "
+		     "\"%s\" for XIM failed.\n", DEFXIMFONT);
+	cleanupInputMethod(xw);
+	xw->misc.cannot_im = True;
+    } else {
+	(void) XExtentsOfFontSet(xw->misc.xim_fs);
+	j = (unsigned) XFontsOfFontSet(xw->misc.xim_fs, &fonts, &font_name_list);
+	for (i = 0, xw->misc.xim_fs_ascent = 0; i < j; i++) {
+	    if (xw->misc.xim_fs_ascent < (*fonts)->ascent)
+		xw->misc.xim_fs_ascent = (*fonts)->ascent;
+	}
+    }
+    return (Boolean) ! (xw->misc.cannot_im);
+}
+
+static void
+xim_create_xic(XtermWidget xw, Widget theInput)
+{
+    Display *myDisplay = XtDisplay(theInput);
+    Window myWindow = XtWindow(theInput);
+    unsigned i, j;
+    char *p = NULL, *s, *t, *ns, *end, buf[32];
     XIMStyles *xim_styles;
     XIMStyle input_style = 0;
     Bool found;
@@ -7410,16 +7579,33 @@ xim_real_init(XtermWidget xw)
 	    "Root", (XIMPreeditNothing | XIMStatusNothing)
 	},
     };
-
-    screen->xic = NULL;
+    TInput *input = lookupTInput(xw, theInput);
 
     if (xw->misc.cannot_im) {
 	return;
     }
 
-    if (!xw->misc.input_method || !*xw->misc.input_method) {
-	if ((p = XSetLocaleModifiers("")) != NULL && *p)
-	    screen->xim = XOpenIM(XtDisplay(xw), NULL, NULL, NULL);
+    if (input == 0) {
+	for (i = 0; i < NINPUTWIDGETS; ++i) {
+	    if (xw->misc.inputs[i].w == 0) {
+		input = xw->misc.inputs + i;
+		input->w = theInput;
+		break;
+	    }
+	}
+    }
+
+    if (input == 0) {
+	xtermWarning("attempted to add too many input widgets\n");
+	return;
+    }
+
+    TRACE(("xim_real_init\n"));
+
+    if (IsEmpty(xw->misc.input_method)) {
+	if ((p = XSetLocaleModifiers("")) != NULL && *p) {
+	    input->xim = XOpenIM(myDisplay, NULL, NULL, NULL);
+	}
     } else {
 	s = xw->misc.input_method;
 	i = 5 + (unsigned) strlen(s);
@@ -7444,11 +7630,12 @@ xim_real_init(XtermWidget xw)
 		    strncat(t, s, (size_t) (end - s));
 
 		    if ((p = XSetLocaleModifiers(t)) != 0 && *p
-			&& (screen->xim = XOpenIM(XtDisplay(xw),
-						  NULL,
-						  NULL,
-						  NULL)) != 0)
+			&& (input->xim = XOpenIM(myDisplay,
+						 NULL,
+						 NULL,
+						 NULL)) != 0) {
 			break;
+		    }
 
 		}
 		s = ns + 1;
@@ -7457,23 +7644,23 @@ xim_real_init(XtermWidget xw)
 	}
     }
 
-    if (screen->xim == NULL
+    if (input->xim == NULL
 	&& (p = XSetLocaleModifiers("@im=none")) != NULL
 	&& *p) {
-	screen->xim = XOpenIM(XtDisplay(xw), NULL, NULL, NULL);
+	input->xim = XOpenIM(myDisplay, NULL, NULL, NULL);
     }
 
-    if (!screen->xim) {
-	fprintf(stderr, "Failed to open input method\n");
+    if (!input->xim) {
+	xtermWarning("Failed to open input method\n");
 	return;
     }
-    TRACE(("VTInitI18N opened input method\n"));
+    TRACE(("VTInitI18N opened input method:%s\n", NonNull(p)));
 
-    if (XGetIMValues(screen->xim, XNQueryInputStyle, &xim_styles, NULL)
+    if (XGetIMValues(input->xim, XNQueryInputStyle, &xim_styles, (void *) 0)
 	|| !xim_styles
 	|| !xim_styles->count_styles) {
-	fprintf(stderr, "input method doesn't support any style\n");
-	cleanupInputMethod(screen);
+	xtermWarning("input method doesn't support any style\n");
+	cleanupInputMethod(xw);
 	xw->misc.cannot_im = True;
 	return;
     }
@@ -7514,10 +7701,9 @@ xim_real_init(XtermWidget xw)
     XFree(xim_styles);
 
     if (!found) {
-	fprintf(stderr,
-		"input method doesn't support my preedit type (%s)\n",
-		xw->misc.preedit_type);
-	cleanupInputMethod(screen);
+	xtermWarning("input method doesn't support my preedit type (%s)\n",
+		     xw->misc.preedit_type);
+	cleanupInputMethod(xw);
 	xw->misc.cannot_im = True;
 	return;
     }
@@ -7527,9 +7713,8 @@ xim_real_init(XtermWidget xw)
      */
     TRACE(("input_style %#lx\n", input_style));
     if (input_style == (XIMPreeditArea | XIMStatusArea)) {
-	fprintf(stderr,
-		"This program doesn't support the 'OffTheSpot' preedit type\n");
-	cleanupInputMethod(screen);
+	xtermWarning("This program doesn't support the 'OffTheSpot' preedit type\n");
+	cleanupInputMethod(xw);
 	xw->misc.cannot_im = True;
 	return;
     }
@@ -7542,62 +7727,32 @@ xim_real_init(XtermWidget xw)
      * same font cannot be used for XIM preedit.
      */
     if (input_style != (XIMPreeditNothing | XIMStatusNothing)) {
-	char **missing_charset_list;
-	int missing_charset_count;
-	char *def_string;
 	XVaNestedList p_list;
 	XPoint spot =
 	{0, 0};
-	XFontStruct **fonts;
-	char **font_name_list;
 
-	screen->fs = XCreateFontSet(XtDisplay(xw),
-				    xw->misc.f_x,
-				    &missing_charset_list,
-				    &missing_charset_count,
-				    &def_string);
-	if (screen->fs == NULL) {
-	    fprintf(stderr, "Preparation of font set "
-		    "\"%s\" for XIM failed.\n", xw->misc.f_x);
-	    screen->fs = XCreateFontSet(XtDisplay(xw),
-					DEFXIMFONT,
-					&missing_charset_list,
-					&missing_charset_count,
-					&def_string);
+	if (xim_create_fs(xw)) {
+	    p_list = XVaCreateNestedList(0,
+					 XNSpotLocation, &spot,
+					 XNFontSet, xw->misc.xim_fs,
+					 (void *) 0);
+	    input->xic = XCreateIC(input->xim,
+				   XNInputStyle, input_style,
+				   XNClientWindow, myWindow,
+				   XNFocusWindow, myWindow,
+				   XNPreeditAttributes, p_list,
+				   (void *) 0);
 	}
-	if (screen->fs == NULL) {
-	    fprintf(stderr, "Preparation of default font set "
-		    "\"%s\" for XIM failed.\n", DEFXIMFONT);
-	    cleanupInputMethod(screen);
-	    xw->misc.cannot_im = True;
-	    return;
-	}
-	(void) XExtentsOfFontSet(screen->fs);
-	j = (unsigned) XFontsOfFontSet(screen->fs, &fonts, &font_name_list);
-	for (i = 0, screen->fs_ascent = 0; i < j; i++) {
-	    if (screen->fs_ascent < (*fonts)->ascent)
-		screen->fs_ascent = (*fonts)->ascent;
-	}
-	p_list = XVaCreateNestedList(0,
-				     XNSpotLocation, &spot,
-				     XNFontSet, screen->fs,
-				     NULL);
-	screen->xic = XCreateIC(screen->xim,
-				XNInputStyle, input_style,
-				XNClientWindow, XtWindow(xw),
-				XNFocusWindow, XtWindow(xw),
-				XNPreeditAttributes, p_list,
-				NULL);
     } else {
-	screen->xic = XCreateIC(screen->xim, XNInputStyle, input_style,
-				XNClientWindow, XtWindow(xw),
-				XNFocusWindow, XtWindow(xw),
-				NULL);
+	input->xic = XCreateIC(input->xim, XNInputStyle, input_style,
+			       XNClientWindow, myWindow,
+			       XNFocusWindow, myWindow,
+			       (void *) 0);
     }
 
-    if (!screen->xic) {
-	fprintf(stderr, "Failed to create input context\n");
-	cleanupInputMethod(screen);
+    if (!input->xic) {
+	xtermWarning("Failed to create input context\n");
+	cleanupInputMethod(xw);
     }
 #if defined(USE_XIM_INSTANTIATE_CB)
     else {
@@ -7605,12 +7760,22 @@ xim_real_init(XtermWidget xw)
 
 	destroy_cb.callback = xim_destroy_cb;
 	destroy_cb.client_data = NULL;
-	if (XSetIMValues(screen->xim, XNDestroyCallback, &destroy_cb, NULL))
-	    fprintf(stderr, "Could not set destroy callback to IM\n");
+	if (XSetIMValues(input->xim,
+			 XNDestroyCallback,
+			 &destroy_cb,
+			 (void *) 0)) {
+	    xtermWarning("Could not set destroy callback to IM\n");
+	}
     }
 #endif
 
     return;
+}
+
+static void
+xim_real_init(XtermWidget xw)
+{
+    xim_create_xic(xw, (Widget) xw);
 }
 
 static void
@@ -7620,7 +7785,7 @@ VTInitI18N(XtermWidget xw)
 	xim_real_init(xw);
 
 #if defined(USE_XIM_INSTANTIATE_CB)
-	if (TScreenOf(xw)->xic == NULL
+	if (lookupTInput(xw, (Widget) xw) == NULL
 	    && !xw->misc.cannot_im
 	    && xw->misc.retry_im-- > 0) {
 	    sleep(3);
@@ -7629,6 +7794,22 @@ VTInitI18N(XtermWidget xw)
 	}
 #endif
     }
+}
+
+TInput *
+lookupTInput(XtermWidget xw, Widget w)
+{
+    TInput *result = 0;
+    unsigned n;
+
+    for (n = 0; n < NINPUTWIDGETS; ++n) {
+	if (xw->misc.inputs[n].w == w) {
+	    result = xw->misc.inputs + n;
+	    break;
+	}
+    }
+
+    return result;
 }
 #endif /* OPT_I18N_SUPPORT && OPT_INPUT_METHOD */
 
@@ -8384,7 +8565,7 @@ ReallyReset(XtermWidget xw, Bool full, Bool saved)
 	/* reset the mouse mode */
 	screen->send_mouse_pos = MOUSE_OFF;
 	screen->send_focus_pos = OFF;
-	screen->ext_mode_mouse = OFF;
+	screen->extend_coords = 0;
 	screen->waitingForTrackInfo = False;
 	screen->eventMode = NORMAL;
 
@@ -8485,6 +8666,7 @@ VTReset(XtermWidget xw, Bool full, Bool saved)
 static int
 set_character_class(char *s)
 {
+#define FMT "%s in range string \"%s\" (position %d)\n"
     int i;			/* iterator, index into s */
     int len;			/* length of s */
     int acc;			/* accumulator */
@@ -8492,7 +8674,6 @@ set_character_class(char *s)
     int base;			/* 8, 10, 16 (octal, decimal, hex) */
     int numbers;		/* count of numbers per range */
     int digits;			/* count of digits in a number */
-    static const char errfmt[] = "%s:  %s in range string \"%s\" (position %d)\n";
 
     if (!s || !s[0])
 	return -1;
@@ -8514,7 +8695,7 @@ set_character_class(char *s)
 	    low = acc;
 	    acc = 0;
 	    if (digits == 0) {
-		fprintf(stderr, errfmt, ProgramName, "missing number", s, i);
+		xtermWarning(FMT, "missing number", s, i);
 		return (-1);
 	    }
 	    digits = 0;
@@ -8526,8 +8707,7 @@ set_character_class(char *s)
 	    else if (numbers == 1)
 		high = acc;
 	    else {
-		fprintf(stderr, errfmt, ProgramName, "too many numbers",
-			s, i);
+		xtermWarning(FMT, "too many numbers", s, i);
 		return (-1);
 	    }
 	    digits = 0;
@@ -8544,10 +8724,9 @@ set_character_class(char *s)
 		numbers++;
 	    }
 	    if (numbers != 2) {
-		fprintf(stderr, errfmt, ProgramName, "bad value number",
-			s, i);
+		xtermWarning(FMT, "bad value number", s, i);
 	    } else if (SetCharacterClassRange(low, high, acc) != 0) {
-		fprintf(stderr, errfmt, ProgramName, "bad range", s, i);
+		xtermWarning(FMT, "bad range", s, i);
 	    }
 
 	    low = high = -1;
@@ -8556,7 +8735,7 @@ set_character_class(char *s)
 	    numbers = 0;
 	    continue;
 	} else {
-	    fprintf(stderr, errfmt, ProgramName, "bad character", s, i);
+	    xtermWarning(FMT, "bad character", s, i);
 	    return (-1);
 	}			/* end if else if ... else */
 
@@ -8572,12 +8751,13 @@ set_character_class(char *s)
     if (high < 0)
 	high = low;
     if (numbers < 1 || numbers > 2) {
-	fprintf(stderr, errfmt, ProgramName, "bad value number", s, i);
+	xtermWarning(FMT, "bad value number", s, i);
     } else if (SetCharacterClassRange(low, high, acc) != 0) {
-	fprintf(stderr, errfmt, ProgramName, "bad range", s, i);
+	xtermWarning(FMT, "bad range", s, i);
     }
 
     return (0);
+#undef FMT
 }
 
 /* ARGSUSED */
@@ -8664,7 +8844,8 @@ HandleIgnore(Widget w,
 {
     XtermWidget xw;
 
-    TRACE(("Handle ignore for %p\n", (void *) w));
+    TRACE(("Handle ignore for %p %s\n",
+	   (void *) w, visibleEventType(event->type)));
     if ((xw = getXtermWidget(w)) != 0) {
 	/* do nothing, but check for funny escape sequences */
 	(void) SendMousePosition(xw, event);

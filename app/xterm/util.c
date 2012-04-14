@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.548 2011/10/09 22:10:45 tom Exp $ */
+/* $XTermId: util.c,v 1.554 2011/12/30 21:56:42 tom Exp $ */
 
 /*
  * Copyright 1999-2010,2011 by Thomas E. Dickey
@@ -113,13 +113,13 @@ DamagedCells(TScreen * screen, unsigned n, int *klp, int *krp, int row, int col)
 	int kl = col;
 	int kr = col + nn;
 
-	if (kr >= ld->lineSize) {
+	if (kr >= (int) ld->lineSize) {
 	    nn = (ld->lineSize - col - 1);
 	    kr = col + nn;
 	}
 
 	if (nn > 0) {
-	    assert(kl < ld->lineSize);
+	    assert(kl < (int) ld->lineSize);
 	    if (ld->charData[kl] == HIDDEN_CHAR) {
 		while (kl > 0) {
 		    if (ld->charData[--kl] != HIDDEN_CHAR) {
@@ -578,6 +578,70 @@ xtermScroll(XtermWidget xw, int amount)
 
     screen->cursor_busy -= 1;
     return;
+}
+
+/*
+ * This is from ISO 6429, not found in any of DEC's terminals.
+ */
+void
+xtermScrollLR(XtermWidget xw, int amount, Bool toLeft)
+{
+    if (amount > 0) {
+	xtermColScroll(xw, amount, toLeft, 0);
+    }
+}
+
+/*
+ * Implement DECBI/DECFI (back/forward column index)
+ */
+void
+xtermColIndex(XtermWidget xw, Bool toLeft)
+{
+    TScreen *screen = TScreenOf(xw);
+
+    if (toLeft) {
+	if (screen->cur_col) {
+	    CursorBack(xw, 1);
+	} else {
+	    xtermColScroll(xw, 1, False, 0);
+	}
+    } else {
+	if (screen->cur_col < screen->max_col) {
+	    CursorForward(screen, 1);
+	} else {
+	    xtermColScroll(xw, 1, True, 0);
+	}
+    }
+}
+
+/*
+ * Implement DECDC/DECIC (delete/insert column)
+ */
+void
+xtermColScroll(XtermWidget xw, int amount, Bool toLeft, int at_col)
+{
+    if (amount > 0) {
+	TScreen *screen = TScreenOf(xw);
+	int save_row = screen->cur_row;
+	int save_col = screen->cur_col;
+	int row;
+
+	screen->cur_col = at_col;
+	if (toLeft) {
+	    for (row = 0; row <= screen->max_row; row++) {
+		screen->cur_row = row;
+		ScrnDeleteChar(xw, (unsigned) amount);
+	    }
+	} else {
+	    for (row = 0; row <= screen->max_row; row++) {
+		screen->cur_row = row;
+		ScrnInsertChar(xw, (unsigned) amount);
+	    }
+	}
+	screen->cur_row = save_row;
+	screen->cur_col = save_col;
+	xtermRepaint(xw);
+    }
 }
 
 /*
@@ -3795,8 +3859,8 @@ init_keyboard_type(XtermWidget xw, xtermKeyboardType type, Bool set)
 	   visibleKeyboardType(xw->keyboard.type)));
     if (set) {
 	if (wasSet) {
-	    fprintf(stderr, "Conflicting keyboard type option (%u/%u)\n",
-		    xw->keyboard.type, type);
+	    xtermWarning("Conflicting keyboard type option (%u/%u)\n",
+			 xw->keyboard.type, type);
 	}
 	xw->keyboard.type = type;
 	wasSet = True;
@@ -3866,9 +3930,8 @@ decode_keyboard_type(XtermWidget xw, XTERM_RESOURCE * rp)
 	    init_keyboard_type(xw, table[n].type, FLAG(n));
 	}
 	if (!found) {
-	    fprintf(stderr,
-		    "KeyboardType resource \"%s\" not found\n",
-		    rp->keyboardType);
+	    xtermWarning("KeyboardType resource \"%s\" not found\n",
+			 rp->keyboardType);
 	}
     }
 #undef DATA
@@ -4010,7 +4073,7 @@ extendedBoolean(const char *value, FlagList * table, Cardinal limit)
     }
 
     if (result < 0) {
-	fprintf(stderr, "Unrecognized keyword: %s\n", value);
+	xtermWarning("Unrecognized keyword: %s\n", value);
 	result = False;
     }
 

@@ -1,4 +1,4 @@
-/* $XTermId: trace.c,v 1.132 2011/10/07 09:40:46 tom Exp $ */
+/* $XTermId: trace.c,v 1.133 2011/12/27 10:10:53 tom Exp $ */
 
 /*
  * Copyright 1997-2010,2011 by Thomas E. Dickey
@@ -107,7 +107,7 @@ Trace(const char *fmt,...)
 	    TraceIds(NULL, 0);
 	}
 	if (!trace_fp) {
-	    fprintf(stderr, "Cannot open \"%s\"\n", name);
+	    xtermWarning("Cannot open \"%s\"\n", name);
 	    exit(EXIT_FAILURE);
 	}
     }

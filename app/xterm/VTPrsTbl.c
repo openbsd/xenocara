@@ -1,4 +1,4 @@
-/* $XTermId: VTPrsTbl.c,v 1.60 2011/09/11 15:00:46 tom Exp $ */
+/* $XTermId: VTPrsTbl.c,v 1.63 2011/12/04 19:46:52 tom Exp $ */
 
 /*
  * Copyright 1999-2010,2011 by Thomas E. Dickey
@@ -1786,8 +1786,8 @@ CASE_CSI_IGNORE,
 CASE_CSI_IGNORE,
 CASE_CSI_IGNORE,
 /*	@		A		B		C	*/
-CASE_GROUND_STATE,
-CASE_GROUND_STATE,
+CASE_SL,
+CASE_SR,
 CASE_GROUND_STATE,
 CASE_GROUND_STATE,
 /*	D		E		F		G	*/
@@ -2188,8 +2188,8 @@ CASE_DECELR,
 CASE_DECSLE,
 /*	|		}		~		DEL	*/
 CASE_DECRQLP,
-CASE_GROUND_STATE,
-CASE_GROUND_STATE,
+CASE_DECIC,
+CASE_DECDC,
 CASE_IGNORE,
 /*      0x80            0x81            0x82            0x83    */
 CASE_GROUND_STATE,
@@ -2348,8 +2348,8 @@ CASE_DECELR,
 CASE_DECSLE,
 /*	udiaeresis	yacute		thorn		ydiaeresis	*/
 CASE_DECRQLP,
-CASE_GROUND_STATE,
-CASE_GROUND_STATE,
+CASE_DECIC,
+CASE_DECDC,
 CASE_IGNORE,
 };
 #endif	/* OPT_DEC_LOCATOR */
@@ -5020,11 +5020,11 @@ CASE_GROUND_STATE,
 /*	4		5		6		7	*/
 CASE_GROUND_STATE,
 CASE_GROUND_STATE,
-CASE_GROUND_STATE,
+CASE_DECBI,
 CASE_DECSC,
 /*	8		9		:		;	*/
 CASE_DECRC,
-CASE_GROUND_STATE,
+CASE_DECFI,
 CASE_GROUND_STATE,
 CASE_GROUND_STATE,
 /*	<		=		>		?	*/
@@ -5180,11 +5180,11 @@ CASE_GROUND_STATE,
 /*      acute           mu              paragraph       periodcentered  */
 CASE_GROUND_STATE,
 CASE_GROUND_STATE,
-CASE_GROUND_STATE,
+CASE_DECBI,
 CASE_DECSC,
 /*      cedilla         onesuperior     masculine       guillemotright  */
 CASE_DECRC,
-CASE_GROUND_STATE,
+CASE_DECFI,
 CASE_GROUND_STATE,
 CASE_GROUND_STATE,
 /*      onequarter      onehalf         threequarters   questiondown    */

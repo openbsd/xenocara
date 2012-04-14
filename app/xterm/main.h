@@ -1,4 +1,4 @@
-/* $XTermId: main.h,v 1.56 2011/10/07 01:01:33 tom Exp $ */
+/* $XTermId: main.h,v 1.57 2011/12/14 22:43:02 tom Exp $ */
 
 /*
  * Copyright 2000-2010,2011 by Thomas E. Dickey
@@ -145,6 +145,10 @@
 #define DEF_BACKARO_ERASE	False
 #endif
 
+#ifndef DEF_8BIT_META
+#define DEF_8BIT_META		"true"	/* eightBitMeta */
+#endif
+
 #ifndef DEF_COLOR4
 #define DEF_COLOR4		"blue2"		/* see XTerm-col.ad */
 #endif
@@ -206,4 +210,4 @@
  */
 #define MAXRESOURCES            400
 
-#endif	/* included_main_h */
+#endif /* included_main_h */

@@ -1,4 +1,4 @@
-/* $XTermId: menu.c,v 1.300 2011/10/09 14:14:23 tom Exp $ */
+/* $XTermId: menu.c,v 1.301 2011/12/14 01:21:57 tom Exp $ */
 
 /*
  * Copyright 1999-2010,2011 by Thomas E. Dickey
@@ -2215,7 +2215,7 @@ HandleAltEsc(Widget w,
 	     String * params,
 	     Cardinal *param_count)
 {
-    handle_vt_toggle(do_alt_esc, !TScreenOf(term)->input_eight_bits,
+    handle_vt_toggle(do_alt_esc, !TScreenOf(term)->alt_sends_esc,
 		     params, *param_count, w);
 }
 

@@ -1,4 +1,4 @@
-/* $XTermId: xterm_io.h,v 1.51 2011/07/03 15:48:35 Paul.Lampert Exp $ */
+/* $XTermId: xterm_io.h,v 1.53 2011/12/30 22:45:49 tom Exp $ */
 
 /*
  * Copyright 2000-2006,2010 by Thomas E. Dickey
@@ -167,7 +167,7 @@
 #ifdef SYSV
 #ifdef USE_USG_PTYS
 #include <sys/stream.h>			/* get typedef used in ptem.h */
-#if !defined(SVR4) || defined(__SCO__)
+#ifdef HAVE_SYS_PTEM_H
 #include <sys/ptem.h>			/* get struct winsize */
 #endif
 #endif /* USE_USG_PTYS */

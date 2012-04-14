@@ -1,3 +1,16 @@
+xterm-dev (278) unstable; urgency=low
+
+  * Fix regression in eightBitInput logic.
+  * Fix regression in Darwin 9.x
+
+ -- Thomas E. Dickey <dickey@invisible-island.net>  Thu, 12 Jan 2012 08:10:50 -0500
+
+xterm-dev (277) unstable; urgency=low
+
+  * Minor keyboard fix.
+
+ -- Thomas E. Dickey <dickey@invisible-island.net>  Tue, 11 Oct 2011 20:12:14 -0400
+
 xterm-dev (276) unstable; urgency=low
 
   * Regressions in #272, #274.

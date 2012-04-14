@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.704 2011/08/30 22:39:45 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.720 2012/01/05 23:58:19 tom Exp $ */
 
 /*
  * Copyright 1999-2010,2011 by Thomas E. Dickey
@@ -174,26 +174,21 @@
 #undef USE_PTY_SEARCH
 #elif defined(PUCC_PTYD)
 #undef USE_PTY_SEARCH
+#elif (defined(sun) && defined(SVR4)) || defined(_ALL_SOURCE) || defined(__CYGWIN__)
+#undef USE_PTY_SEARCH
 #elif defined(__OpenBSD__)
 #undef USE_PTY_SEARCH
 #undef USE_PTY_DEVICE
-#elif (defined(sun) && defined(SVR4)) || defined(_ALL_SOURCE) || defined(__CYGWIN__)
-#undef USE_PTY_SEARCH
 #endif
 
-#if defined(SYSV) && defined(i386) && !defined(SVR4)
-#define ATT
-#define USE_HANDSHAKE 1
-#define USE_ISPTS_FLAG 1
+#if (defined (__GLIBC__) && ((__GLIBC__ > 2) || (__GLIBC__ == 2) && (__GLIBC_MINOR__ >= 1)))
+#define USE_HANDSHAKE 0	/* "recent" Linux systems do not require handshaking */
 #endif
 
 #if (defined (__GLIBC__) && ((__GLIBC__ > 2) || (__GLIBC__ == 2) && (__GLIBC_MINOR__ >= 1)))
 #define USE_USG_PTYS
-#define USE_HANDSHAKE 0	/* "recent" Linux systems do not require handshaking */
 #elif (defined(ATT) && !defined(__sgi)) || defined(__MVS__) || (defined(SYSV) && defined(i386))
 #define USE_USG_PTYS
-#else
-#define USE_HANDSHAKE 1
 #endif
 
 /*
@@ -663,6 +658,10 @@ typedef struct {
 
 #ifndef OPT_SELECT_REGEX
 #define OPT_SELECT_REGEX 0 /* true if xterm supports regular-expression selects */
+#endif
+
+#ifndef OPT_SELECTION_OPS
+#define OPT_SELECTION_OPS 1 /* true if xterm supports operations on selection */
 #endif
 
 #ifndef OPT_SESSION_MGT
@@ -1560,6 +1559,15 @@ typedef struct {
     String menu_font_names[NMENUFONTS][fMAX];
 } SubResourceRec;
 
+#if OPT_INPUT_METHOD
+#define NINPUTWIDGETS	3
+typedef struct {
+	Widget		w;
+	XIM		xim;		/* input method attached to 'w' */
+	XIC		xic;		/* input context attached to 'xim' */
+} TInput;
+#endif
+
 typedef struct {
 /* These parameters apply to both windows */
 	Display		*display;	/* X display for screen		*/
@@ -1582,6 +1590,8 @@ typedef struct {
 	Boolean		hilite_reverse;	/* hilite overrides reverse	*/
 #endif
 #if OPT_ISO_COLORS
+	XColor *	cmap_data;	/* color table			*/
+	unsigned	cmap_size;
 	ColorRes	Acolors[MAXCOLORS]; /* ANSI color emulation	*/
 	int		veryBoldColors;	/* modifier for boldColors	*/
 	Boolean		boldColors;	/* can we make bold colors?	*/
@@ -1637,7 +1647,7 @@ typedef struct {
 	long		event_mask;
 	unsigned	send_mouse_pos;	/* user wants mouse transition  */
 					/* and position information	*/
-	Boolean		ext_mode_mouse; /* support large terminals      */
+	int		extend_coords;	/* support large terminals	*/
 	Boolean		send_focus_pos; /* user wants focus in/out info */
 	Boolean		quiet_grab;	/* true if no cursor change on focus */
 #if OPT_PASTE64
@@ -1922,6 +1932,7 @@ typedef struct {
 	int		bellSuppressTime; /* msecs after Bell before another allowed */
 	Boolean		bellInProgress; /* still ringing/flashing prev bell? */
 	Boolean		bellIsUrgent;	/* set XUrgency WM hint on bell */
+	Boolean		flash_line;	/* show visualBell as current line */
 	/*
 	 * Select/paste state.
 	 */
@@ -1970,6 +1981,9 @@ typedef struct {
 	int		firstValidRow;	/* Valid rows for selection clipping */
 	int		lastValidRow;	/* " " */
 
+	Boolean		selectToBuffer;	/* copy selection to buffer	*/
+	char *		internal_select;
+
 	String		default_string;
 	String		eightbit_select_types;
 	Atom*		selection_targets_8bit;
@@ -1978,7 +1992,7 @@ typedef struct {
 	Atom*		selection_targets_utf8;
 #endif
 	Atom*		selection_atoms; /* which selections we own */
-	Cardinal	sel_atoms_size;	/*  how many atoms allocated */
+	Cardinal	sel_atoms_size;	 /* how many atoms allocated */
 	Cardinal	selection_count; /* how many atoms in use */
 #if OPT_SELECT_REGEX
 	char *		selectExpr[NSELECTUNITS];
@@ -1986,9 +2000,11 @@ typedef struct {
 	/*
 	 * Input/output state.
 	 */
-	Boolean		input_eight_bits;/* use 8th bit instead of ESC prefix */
-	Boolean		output_eight_bits; /* honor all bits or strip */
-	Boolean		control_eight_bits; /* send CSI as 8-bits */
+	Boolean		input_eight_bits;	/* do not send ESC when meta pressed */
+	int		eight_bit_meta;		/* use 8th bit when meta pressed */
+	char *		eight_bit_meta_s;	/* ...resource eightBitMeta */
+	Boolean		output_eight_bits;	/* honor all bits or strip */
+	Boolean		control_eight_bits;	/* send CSI as 8-bits */
 	Boolean		backarrow_key;		/* backspace/delete */
 	Boolean		alt_is_not_meta;	/* use both Alt- and Meta-key */
 	Boolean		alt_sends_esc;		/* Alt-key sends ESC prefix */
@@ -2028,12 +2044,6 @@ typedef struct {
 #endif
 	XftDraw *	renderDraw;
 #endif
-#if OPT_INPUT_METHOD
-	XIM		xim;
-	XFontSet	fs;		/* fontset for XIM preedit */
-	int		fs_ascent;	/* ascent of fs */
-#endif
-	XIC		xic;		/* this is used even without XIM */
 #if OPT_DABBREV
 	Boolean		dabbrev_working;	/* nonzero during dabbrev process */
 	unsigned char	dabbrev_erase_char;	/* used for deleting inserted completion */
@@ -2131,6 +2141,14 @@ typedef enum {			/* legal values for screen.utf8_mode */
     , uDefault = 3
     , uLast
 } utf8ModeTypes;
+
+typedef enum {			/* legal values for screen.eight_bit_meta */
+    ebFalse = 0
+    , ebTrue = 1
+    , ebNever = 2
+    , ebLocale = 3
+    , ebLast
+} ebMetaModeTypes;
 
 #if OPT_HP_FUNC_KEYS
 #define NAME_HP_KT " hp"
@@ -2253,6 +2271,9 @@ typedef struct _Misc {
     Boolean open_im;		/* true if input-method is opened */
     Boolean cannot_im;		/* true if we cannot use input-method */
     int retry_im;
+    XFontSet xim_fs;		/* fontset for XIM preedit */
+    int xim_fs_ascent;		/* ascent of fs */
+    TInput inputs[NINPUTWIDGETS];
 #endif
     Boolean dynamicColors;
     Boolean shared_ic;

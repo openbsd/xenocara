@@ -1,4 +1,4 @@
-XCOMM $XTermId: Imakefile,v 1.104 2011/07/02 00:48:49 tom Exp $
+XCOMM $XTermId: Imakefile,v 1.105 2011/11/29 10:19:20 Thorsten.Glaser Exp $
 XCOMM
 XCOMM                         Attention xterm porters
 XCOMM
@@ -251,6 +251,11 @@ SpecialCObjectRule(data,$(_NOOP_),$(MISC_DEFINES))
 SetUIDProgramTarget(xterm,$(OBJS1),$(DEPLIBS1),$(XRFLIBS) XkbClientLibs XawClientLibs,$(TERMCAPLIB) $(PTYLIB))
 #else
 NormalProgramTarget(xterm,$(OBJS1),$(DEPLIBS1),$(XRFLIBS) XkbClientLibs XawClientLibs,$(TERMCAPLIB) $(UTMPLIB) $(PTYLIB))
+#endif
+
+#if defined(OpenBSDArchitecture) || defined(MirBSDArchitecture)
+/* On OpenBSD xterm is now setgid utmp */
+INSTUIDFLAGS= -m 2555 -g utmp
 #endif
 
 #if InstallXtermSetUID && defined(SunArchitecture) && HasSharedLibraries && (OSMajorVersion < 5)

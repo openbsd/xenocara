@@ -1,6 +1,6 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "Xterm Control Sequences" document
-.\" $XTermId: ctlseqs.ms,v 1.244 2011/09/04 18:14:33 tom Exp $
+.\" $XTermId: ctlseqs.ms,v 1.253 2011/12/11 19:18:48 tom Exp $
 .\"
 .\"
 .\" Copyright 1996-2010,2011 by Thomas E. Dickey
@@ -238,6 +238,7 @@
 .[] ]] ]
 .[] bS \\e
 .[] { {
+.[] ~ ~
 .[] ] ]
 .[] & &
 .[] ^ ^
@@ -538,11 +539,17 @@ These work for 96-character sets only.
 .\"  \*(Cc = \*M \(-> ISO Latin-5 Supplemental
 .\"  \*(Cc = \*L \(-> ISO Latin-Cyrillic
 .
+.IP \\*(Es\\*6
+Back Index (DECBI), VT420 and up.
+.
 .IP \\*(Es\\*7
 Save Cursor (DECSC).
 .
 .IP \\*(Es\\*8
 Restore Cursor (DECRC).
+.
+.IP \\*(Es\\*9
+Forward Index (DECFI), VT420 and up.
 .
 .IP \\*(Es\\*=
 Application Keypad (DECPAM).
@@ -1201,11 +1208,15 @@ Valid values for the first (and any additional parameters) are:
   \*(Ps = \*1 \(-> De-iconify window.
   \*(Ps = \*2 \(-> Iconify window.
   \*(Ps = \*3\*s\*;\*s\fIx\*s\*;\*sy\fP \(-> Move window to [x, y].
-  \*(Ps = \*4\*s\*;\*s\fIheight\*s\*;\*swidth\fP \(-> Resize the \fIxterm\fP window to height and width in pixels.
+  \*(Ps = \*4\*s\*;\*s\fIheight\*s\*;\*swidth\fP \(-> Resize the \fIxterm\fP window to given height and width in pixels.
+Omitted parameters reuse the current height or width.
+Zero parameters use the display's height or width.
   \*(Ps = \*5 \(-> Raise the \fIxterm\fP window to the front of the stacking order.
   \*(Ps = \*6 \(-> Lower the \fIxterm\fP window to the bottom of the stacking order.
   \*(Ps = \*7 \(-> Refresh the \fIxterm\fP window.
-  \*(Ps = \*8\*s\*;\*s\fIheight\*s\*;\*swidth\fP \(-> Resize the text area to [height;width] in characters.
+  \*(Ps = \*8\*s\*;\*s\fIheight\*s\*;\*swidth\fP \(-> Resize the text area to given height and width in characters.
+Omitted parameters reuse the current height or width.
+Zero parameters use the display's height or width.
   \*(Ps = \*9\*s\*;\*s\*0 \(-> Restore maximized window.
   \*(Ps = \*9\*s\*;\*s\*1 \(-> Maximize window (i.e., resize to screen size).
   \*(Ps = \*1\*0\*s\*;\*s\*0 \(-> Undo full-screen mode.
@@ -1382,6 +1393,12 @@ Valid values for the event:
 position in the xterm window, encoded as ASCII decimal.
 .br
 The ``page'' parameter is not used by xterm, and will be omitted.
+.
+.IP \\*(Cs\\*(Pm\\*s\\*(Sp\\*}
+Insert \*(Ps Column(s) (default = 1) (DECIC), VT420 and up.
+.
+.IP \\*(Cs\\*(Pm\\*s\\*(Sp\\*~
+Delete \*(Ps Column(s) (default = 1) (DECDC), VT420 and up.
 .
 .Ed
 .
@@ -1578,7 +1595,7 @@ shift the key from codes 0-127 to 128-255 by adding 128.
 The table shows the result for a given character "x" with modifiers
 according to the default translations with the resources set on or off.
 This assumes \fBaltIsNotMeta\fP is set:
-.ne 18
+.ne 23
 .TS
 center;
 lf3	lf3	lf3	lf3
@@ -1620,6 +1637,7 @@ or by the "DECSET \*1\*0\*3\*5" control sequence.
 .lP
 The cursor keys transmit the following escape sequences depending on the
 mode specified via the \fBDECCKM\fP escape sequence.
+.ne 10
 .TS
 center;
 cf3	cf3	cf3
@@ -1636,6 +1654,7 @@ The home- and end-keys
 (unlike PageUp and other keys also on the 6-key editing keypad)
 are considered "cursor keys" by \fIxterm\fP.
 Their mode is also controlled by the \fBDECCKM\fP escape sequence:
+.ne 8
 .TS
 center;
 cf3	cf3	cf3
@@ -1688,7 +1707,7 @@ _
 .TE
 .br
 They also provide 12 function keys, as well as a few other special-purpose keys:
-.ne 16
+.ne 18
 .TS
 center;
 cf3	cf3
@@ -1714,7 +1733,7 @@ Older versions of \fIxterm\fP implement different escape sequences for F1 throug
 These can be activated by setting the \fBoldXtermFKeys\fP resource.
 However, since they do not correspond to any hardware terminal, they have been deprecated.
 (The DEC VT220 reserves F1 through F5 for local functions such as \fBSetup\fP).
-.ne 6
+.ne 10
 .TS
 center;
 cf3	cf3
@@ -1732,6 +1751,7 @@ when the \fBsunKeyboard\fP resource is false,
 \fIxterm\fP recognizes function key modifiers
 which are parameters appended before the final character
 of the control sequence.
+.ne 13
 .TS
 center;
 cf3	lf3
@@ -1760,7 +1780,7 @@ to act like a VT220 keyboard.
 .lP
 The VT102/VT220 application keypad transmits unique escape sequences in
 application mode, which are distinct from the cursor and scrolling keypad:
-.ne 31
+.ne 32
 .TS
 center;
 cf3	cf3	cf3
@@ -1796,7 +1816,7 @@ _
 The VT220 provides a 6-key editing keypad,
 which is analogous to that on the PC keyboard.
 It is not affected by \fBDECCKM\fP or \fBDECPNM\fP/\fBDECPAM\fP:
-.ne 10
+.ne 12
 .TS
 center;
 cf3	cf3	cf3
@@ -1836,7 +1856,7 @@ _
 A VT52 does not have function keys, but it does have a numeric keypad and cursor keys.
 They differ from the other emulations by the prefix.
 Also, the cursor keys do not change:
-.ne 10
+.ne 13
 .TS
 center;
 cf3	cf3
@@ -1850,6 +1870,7 @@ Cursor Left	\*(Es\*D
 _
 .TE
 The keypad is similar:
+.ne 33
 .TS
 center;
 cf3	cf3	cf3
@@ -1985,13 +2006,19 @@ These modes are typically used by
 editors and other full-screen applications that want to make use of
 the mouse.
 .lP
-There are six mutually exclusive modes.
-One is DEC Locator mode, enabled by the
+There are two sets of mutually exclusive modes:
+.bP
+mouse protocol
+.bP
+protocol encoding
+.lP
+The mouse protocols include
+DEC Locator mode, enabled by the
 DECELR \*(Cs\*(Ps\*s\*;\*(Ps\*s\*s\*(qu\*s\*z
 control sequence, and is not described here
 (control sequences are summarized above).
-The remaining five
-modes are each enabled (or disabled) by a different parameter in
+The remaining five modes of the mouse protocols
+are each enabled (or disabled) by a different parameter in
 the "DECSET \*(Cs\*?\*(Pm\*s\*h"
 or
 "DECRST \*(Cs\*?\*(Pm\*s\*l"
@@ -2010,18 +2037,23 @@ are defined in \fBxcharmouse.h\fP as follows:
 #define SET_FOCUS_EVENT_MOUSE       1004
 
 #define SET_EXT_MODE_MOUSE          1005
+#define SET_SGR_EXT_MODE_MOUSE      1006
+#define SET_URXVT_EXT_MODE_MOUSE    1015
 .DE
 .br
 The motion reporting modes are strictly \fIxterm\fP extensions, and are not
 part of any standard, though they are analogous to the DEC VT200 DECELR
 locator reports.
 .lP
-Parameters (such as pointer position and button number) for all mouse
+Normally,
+parameters (such as pointer position and button number) for all mouse
 tracking escape sequences generated by \fIxterm\fP
 encode numeric parameters in a single character as
 \fIvalue\fP+32.
 For example, \*! specifies the value 1.
 The upper left character position on the terminal is denoted as 1,1.
+This scheme dates back to X10,
+though the normal mouse-tracking (from X11) is more elaborate.
 .lP
 X10 compatibility mode sends an escape sequence only on button press,
 encoding the location and the mouse button pressed.
@@ -2138,7 +2170,12 @@ When set, it causes \fIxterm\fP to send
 \*(Cs\*I when the terminal gains focus, and
 \*(Cs\*O when it loses focus.
 .lP
-Extended mouse mode enables UTF-8 encoding for \*(Cx and \*(Cy under
+The original X10 mouse protocol limits the \*(Cx and \*(Cy ordinates
+to 223 (=255\ -\ 32).
+\fIXterm\fP supports more than one scheme for extending this range,
+by changing the protocol encoding:
+.IP "UTF-8 (1005)"
+This enables UTF-8 encoding for \*(Cx and \*(Cy under
 all tracking modes, expanding the maximum encodable position from 223 to 2015.
 For positions less than 95, the resulting output is identical under both modes.
 Under extended mouse mode, positions greater than 95
@@ -2146,12 +2183,46 @@ generate "extra" bytes which will confuse applications which do not treat
 their input as a UTF-8 stream.
 Likewise, \*(Cb will be UTF-8 encoded,
 to reduce confusion with wheel mouse events.
-.lP
-NOTE: Under normal mouse mode, positions outside (160,94) result in
+.IP
+Under normal mouse mode, positions outside (160,94) result in
 byte pairs which can be interpreted as a single UTF-8 character;
 applications
 which do treat their input as UTF-8 will almost certainly be confused
 unless extended mouse mode is active.
+.IP
+This scheme has the drawback that the encoded coordinates will not
+pass through \fIluit\fP unchanged, e.g., for locales using non-UTF-8 encoding.
+.IP "SGR (1006)"
+The normal mouse response is altered to use \*(Cs\*<
+followed by semicolon-separated
+encoded button value,
+the \*(Cx and \*(Cy ordinates and a final character which
+is \*M for button press
+and \*m for button release.
+.IP
+The encoded button value in this case does not add 32 since
+that was useful only in the X10 scheme for ensuring that the 
+byte containing the button value is a printable code.
+The modifiers are encoded in the same way.
+A different final character is used for button release
+to resolve the X10 ambiguity regarding which button was released.
+.IP
+The highlight tracking responses are also modified to an SGR-like format,
+using the same SGR-style scheme and button-encodings.
+.IP "URXVT (1015)"
+The normal mouse response is altered to use \*(Cs
+followed by semicolon-separated
+encoded button value,
+the \*(Cx and \*(Cy ordinates and final character \*M.
+.IP
+This uses the same button encoding as X10, but printing it as
+a decimal integer rather than as a single byte.
+.IP
+However, \*(Cs\*M can be mistaken for DL (delete lines),
+while the highlight tracking \*(Cs\*T can be mistaken for SD (scroll down),
+and the Window manipulation controls.
+For these reasons, the 1015 control is not recommended;
+it is not an improvement over 1005.
 .
 .Sh "Tektronix 4014 Mode"
 .LP

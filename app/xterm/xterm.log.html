@@ -31,7 +31,7 @@
  * sale, use or other dealings in this Software without prior written        *
  * authorization.                                                            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.1107 2011/10/11 00:55:31 tom Exp $
+  $XTermId: xterm.log.html,v 1.1133 2012/01/19 01:54:00 tom Exp $
   -->
 <HTML>
 <HEAD>
@@ -58,6 +58,8 @@ Most of these are summarized in the XFree86 CHANGELOG
 is the latest version of this file.
 
 <UL>
+<LI><A HREF="#xterm_278">Patch #278 - 2012/01/18</A>
+<LI><A HREF="#xterm_277">Patch #277 - 2012/01/07</A>
 <LI><A HREF="#xterm_276">Patch #276 - 2011/10/10</A>
 <LI><A HREF="#xterm_275">Patch #275 - 2011/09/11</A>
 <LI><A HREF="#xterm_274">Patch #274 - 2011/09/05</A>
@@ -336,6 +338,125 @@ is the latest version of this file.
 <LI><A HREF="#xterm_02">Patch #2 - 1996/1/7</A>
 <LI><A HREF="#xterm_01">Patch #1 - 1996/1/6</A>
 </UL>
+
+<H1><A NAME="xterm_278">Patch #278 - 2012/01/18</A></H1>
+<ul>
+	<li>correct initialization for <code>eightBitMeta</code> resource
+	    (FreeBSD #164101).
+
+	<li>make special check for Darwin 9 (and lower) to <em>not</em>
+	    use <code>posix_openpt</code> (report by Christian Ebert).
+
+	<li>minor fixes (adding ".ne" directives) to reduce the cases where
+	    groff's utility for generating images for tables dumps core.
+	    Most versions of groff (I've found 1.19.2 to be the most stable)
+	    dump core when attempting to report that there are too few lines
+	    on a page for a table to be shown.
+</ul>
+
+<H1><A NAME="xterm_277">Patch #277 - 2012/01/07</A></H1>
+<ul>
+	<li>remove special case for ISC pseudo-terminals which attempts to
+	    open the pty in two different ways.
+
+	<li>move call to <code>grantpt</code> before asking utempter to
+	    add a record, to work with kFreeBSD which does not update the
+	    terminal's ownership until this point (Debian #652907).
+
+	<li>document limitation of XIM interface in manpage (Debian #230787).
+
+	<li>cleanup error reporting with new xtermWarning function.
+
+	<li>add configure option <code>--disable-selection-ops</code> to
+	    make the new actions optional.
+
+	<li>add four new actions for making the selection or data directly
+	    copied from the screen (prompted by discussion in Debian #637001,
+	    as well as report by Arjen van Tol):
+	    <ul>
+	    <li>exec-formatted
+	    <li>exec-selectable
+	    <li>insert-formatted
+	    <li>insert-selectable
+	    </ul>
+
+	<li>add <code>visualBellLine</code> resource to allow
+	    <code>visualBell</code> to flash only the current line (prompted by
+	    patch by Gertjan Halkes).
+
+	<li>add <code>eightBitMeta</code> resource to control the features
+	    which modify or interpret the eighth bit of a key when the
+	    meta modifier key is pressed (prompted by Debian #326200).
+
+	<li>improve discussion of <code>eightBitInput</code> in the manpage
+	    (prompted by Debian #326200).
+	    
+	<li>correct logic for <code>alt-sends-escape</code> action,
+	    overlooked when implementing <code>altSendsEscape</code> resource,
+	    which still used <code>eightBitInput</code> resource value.
+
+	<li>add a workaround for <code>XAllocColor()</code>, which does not
+	    actually allocate "a read-only colormap entry corresponding to the
+	    closest RGB value supported by the hardware", but rather a rough
+	    approximation (Debian #650291).
+
+	<li>undo parameter checks for <code>RequestResize()</code> added in
+	    <a href="#xterm_251">patch #251</a> and amended in
+	    <a href="#xterm_270">patch #270</a>, because zeros also are
+	    special cases (report by John S Urban).
+
+	<li>modify some test-scripts to use <code>/bin/echo</code> rather than
+	    the shell's possibly-builtin <code>echo</code>, to work around
+	    broken configuration on Mac OS X, i.e., neither honoring the option
+	    nor flagging an error.
+
+	<li>add SGR 1006, as a better technical solution than SGR 1015:
+	    <ul>
+	    <li>the responses will not be confused with line-deletion and
+	        scrolling controls.
+	    <li>the button encoding is a little simpler, since it does not
+	        add an unnecessary 32 because the integer parameter does not
+		have to be represented as a printable character.
+	    <li>the control responses for pressing and releasing a mouse
+		button differ, allowing an application to tell which button was
+		released.
+	    </ul>
+	    <p>
+	    Besides these improvements,
+	    in discussion, it was noted that urxvt's implementation of 1005 is
+	    incorrect, relying upon a locale that provides UTF-8 encoding.  In
+	    contrast, vttest demonstrates a correct decoding, independent of
+	    locale.
+
+	<li>add support for urxvt SGR 1015 to address shortcoming of
+	    SGR 1005 with luit (patch by Egmont Koblinger).
+
+	<li>add ISO and DEC controls useful for left/right scrolling.
+
+	<li>add some changes for OpenBSD and MirBSD (adapted from patch by
+	    Thorsten Glaser):
+	    <ul>
+	    <li>disable search for non-Unix96 ptys.
+	    <li>fix a gcc warning in <code>timestamp_filename</code>
+	    <li>modify <code>Imakefile</code> to install xterm setgid to utmp.
+	    </ul>
+
+	<li>add/use/prefer <code>posix_openpt()</code> for opening
+	    pseudo-terminal.
+
+	<li>modify special errno handling case in ptydata.c from
+	    <a href="#xterm_158">patch #158</a>
+	    to allow for the possibility that any platform may have
+	    special cases where "/dev/tty" is absent.
+	    For example, this can happen in a FreeBSD jail
+	    (patch by David Wolfskill).
+
+	<li>add keyboard logic to map shift-tab into XK_ISO_Left_Tab, which is
+	    usually, not always, done by the X keyboard configuration.
+
+	<li>portability fixes for some configure macros:
+	    <code>CF_XOPEN_SOURCE</code>
+</ul>
 
 <H1><A NAME="xterm_276">Patch #276 - 2011/10/10</A></H1>
 <ul>

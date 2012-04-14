@@ -1,4 +1,4 @@
--- $XTermId: INSTALL,v 1.126 2011/08/30 09:51:01 tom Exp $
+-- $XTermId: INSTALL,v 1.127 2011/12/22 01:59:16 tom Exp $
 -------------------------------------------------------------------------------
 -- Copyright 1997-2010,2011 by Thomas E. Dickey
 --
@@ -280,6 +280,11 @@ The options (in alphabetic order):
 
 	Do not compile-in code that suppresses redundant updates to the
 	titlebar when the text has not changed.
+
+  --disable-selection-ops disable selection operations
+
+	Do not compile-in code to support the actions which allow users
+	to bind keys that use the selection or extract data from the screen.
 
   --disable-session-mgt   enable support for session management
 

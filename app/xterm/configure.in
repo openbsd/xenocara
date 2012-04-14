@@ -1,4 +1,4 @@
-dnl $XTermId: configure.in,v 1.279 2011/09/04 21:27:24 tom Exp $
+dnl $XTermId: configure.in,v 1.285 2012/01/05 10:27:54 tom Exp $
 dnl
 dnl -----------------------------------------------------------------------------
 dnl this file is part of xterm
@@ -76,7 +76,7 @@ AC_CHECK_HEADERS( \
 ncurses/curses.h \
 ncurses/term.h \
 stdlib.h \
-sys/ttydefaults.h \
+sys/ptem.h sys/ttydefaults.h \
 term.h \
 termios.h \
 unistd.h \
@@ -89,6 +89,7 @@ AM_LANGINFO_CODESET
 CF_SIG_ATOMIC_T
 CF_SIZE_T
 AC_CHECK_TYPE(time_t, long)
+CF_TYPE_CC_T
 AC_TYPE_MODE_T
 AC_TYPE_PID_T
 AC_TYPE_UID_T
@@ -103,6 +104,7 @@ AC_CHECK_FUNCS( \
 	putenv \
 	unsetenv \
 	sched_yield \
+	setpgid \
 	strerror \
 	strftime \
 	tcgetattr \
@@ -258,17 +260,7 @@ CF_TERMIO_C_ISPEED
 
 LIBS="$LIBS $X_EXTRA_LIBS"
 
-# Check for openpty() in -lutil if the UNIX98-style pty functions are not
-# available. E.g. for GNU libc 2.0.
-case $host_os in #(vi
-freebsd*|netbsd*|dragonfly*) # 2004/8/15 - revisit this if/when grantpt is known to work.
-	AC_CHECK_LIB(util,openpty)
-	;;
-*)
-	AC_CHECK_FUNCS(grantpt, [], AC_CHECK_LIB(util,openpty))
-	;;
-esac
-
+CF_FUNC_GRANTPT
 AC_CHECK_FUNCS(XkbQueryExtension)
 
 CF_XKB_BELL_EXT
@@ -724,6 +716,14 @@ CF_ARG_DISABLE(samename,
 	[enable_samename=yes])
 AC_MSG_RESULT($enable_samename)
 test "$enable_samename" = no && AC_DEFINE(OPT_SAME_NAME,0)
+
+AC_MSG_CHECKING(if you want support for selection-actions)
+CF_ARG_DISABLE(selection-ops,
+	[  --disable-selection-ops disable selection-action operations],
+	[enable_selection_ops=no],
+	[enable_selection_ops=yes])
+AC_MSG_RESULT($enable_selection_ops)
+test "$enable_selection_ops" = no && AC_DEFINE(OPT_SELECTION_OPS,0)
 
 AC_MSG_CHECKING(if you want support for session management)
 CF_ARG_DISABLE(session-mgt,

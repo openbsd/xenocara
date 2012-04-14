@@ -1,4 +1,4 @@
-/* $XTermId: screen.c,v 1.439 2011/04/20 09:10:21 tom Exp $ */
+/* $XTermId: screen.c,v 1.440 2011/12/27 10:10:53 tom Exp $ */
 
 /*
  * Copyright 1999-2010,2011 by Thomas E. Dickey
@@ -1426,7 +1426,7 @@ ScrnRefresh(XtermWidget xw,
 		    col = leftcol;
 		}
 	    } else {
-		fprintf(stderr, "This should not happen. Why is it so?\n");
+		xtermWarning("This should not happen. Why is it so?\n");
 	    }
 	});
 

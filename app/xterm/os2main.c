@@ -1,4 +1,4 @@
-/* $XTermId: os2main.c,v 1.271 2011/07/10 22:19:51 tom Exp $ */
+/* $XTermId: os2main.c,v 1.273 2011/12/27 10:36:58 tom Exp $ */
 
 /* removed all foreign stuff to get the code more clear (hv)
  * and did some rewrite for the obscure OS/2 environment
@@ -801,8 +801,7 @@ Syntax(char *badOption)
     OptionHelp *list = sortedOpts(xtermOptions, optionDescList, XtNumber(optionDescList));
     int col;
 
-    fprintf(stderr, "%s:  bad command line option \"%s\"\r\n\n",
-	    ProgramName, badOption);
+    xtermWarning("bad command line option \"%s\"\r\n\n", badOption);
 
     fprintf(stderr, "usage:  %s", ProgramName);
     col = 8 + (int) strlen(ProgramName);
@@ -1003,9 +1002,7 @@ main(int argc, char **argv ENVP_ARG)
     ttydev = TypeMallocN(char, PTMS_BUFSZ);
     ptydev = TypeMallocN(char, PTMS_BUFSZ);
     if (!ttydev || !ptydev) {
-	fprintf(stderr,
-		"%s:  unable to allocate memory for ttydev or ptydev\n",
-		ProgramName);
+	xtermWarning("unable to allocate memory for ttydev or ptydev\n");
 	exit(1);
     }
     strcpy(ttydev, TTYDEV);
@@ -1067,8 +1064,7 @@ main(int argc, char **argv ENVP_ARG)
     if (resource.tty_modes) {
 	int n = parse_tty_modes(resource.tty_modes, ttymodelist);
 	if (n < 0) {
-	    fprintf(stderr, "%s:  bad tty modes \"%s\"\n",
-		    ProgramName, resource.tty_modes);
+	    xtermWarning("bad tty modes \"%s\"\n", resource.tty_modes);
 	} else if (n > 0) {
 	    override_tty_modes = True;
 	}
@@ -1076,8 +1072,7 @@ main(int argc, char **argv ENVP_ARG)
 #if OPT_ZICONBEEP
     if (resource.zIconBeep > 100 || resource.zIconBeep < -100) {
 	resource.zIconBeep = 0;	/* was 100, but I prefer to defaulting off. */
-	fprintf(stderr,
-		"a number between -100 and 100 is required for zIconBeep.  0 used by default\n");
+	xtermWarning("a number between -100 and 100 is required for zIconBeep.  0 used by default\n");
     }
 #endif /* OPT_ZICONBEEP */
     hold_screen = resource.hold_screen ? 1 : 0;
@@ -1432,7 +1427,7 @@ pty_search(int *pty)
 #endif
 	    return 0;
 	} else {
-	    fprintf(stderr, "Unable to open %s, errno=%d\n", ptydev, errno);
+	    xtermWarning("Unable to open %s, errno=%d\n", ptydev, errno);
 	}
     }
     return 1;
@@ -1537,9 +1532,8 @@ set_owner(char *device, uid_t uid, gid_t gid, mode_t mode)
 	why = errno;
 	if (why != ENOENT
 	    && save_ruid == 0) {
-	    fprintf(stderr, "Cannot chown %s to %ld,%ld: %s\n",
-		    device, (long) uid, (long) gid,
-		    strerror(why));
+	    xtermPerror("Cannot chown %s to %ld,%ld",
+			device, (long) uid, (long) gid);
 	}
     }
 }
@@ -1777,7 +1771,7 @@ spawnXTerm(XtermWidget xw)
 	     */
 	    if ((ttyfd = open(ttydev, O_RDWR)) < 0) {
 		/* dumm gelaufen */
-		fprintf(stderr, "Cannot open slave side of PTY\n");
+		xtermWarning("Cannot open slave side of PTY\n");
 		exit(1);
 	    }
 
@@ -1817,8 +1811,7 @@ spawnXTerm(XtermWidget xw)
 		if (Console) {
 		    int on = 1;
 		    if (ioctl(ttyfd, TIOCCONS, (char *) &on) == -1)
-			fprintf(stderr, "%s: cannot open console: %s\n",
-				ProgramName, strerror(errno));
+			xtermPerror("cannot open console");
 		}
 	    }
 
@@ -1908,11 +1901,8 @@ spawnXTerm(XtermWidget xw)
 			    xtermFindShell(*command_to_exec_with_luit, False));
 		TRACE(("spawning command \"%s\"\n", *command_to_exec_with_luit));
 		execvp(*command_to_exec_with_luit, command_to_exec_with_luit);
-		/* print error message on screen */
-		fprintf(stderr, "%s: Can't execvp %s: %s\n",
-			ProgramName, *command_to_exec_with_luit, strerror(errno));
-		fprintf(stderr, "%s: cannot support your locale.\n",
-			ProgramName);
+		xtermPerror("Can't execvp %s", *command_to_exec_with_luit);
+		xtermWarning("cannot support your locale.\n");
 	    }
 #endif
 	    if (command_to_exec) {
@@ -1922,8 +1912,7 @@ spawnXTerm(XtermWidget xw)
 		execvpe(*command_to_exec, command_to_exec, gblenvp);
 
 		/* print error message on screen */
-		fprintf(stderr, "%s: Can't execvp %s\n",
-			ProgramName, *command_to_exec);
+		xtermWarning("Can't execvp %s\n", *command_to_exec);
 	    }
 
 	    /* use a layered mechanism to find a shell */
@@ -1953,14 +1942,12 @@ spawnXTerm(XtermWidget xw)
 		execvpe(exargv[0], exargv, gblenvp);
 
 		/* print error message on screen */
-		fprintf(stderr, "%s: Can't execvp %s\n",
-			ProgramName, *command_to_exec);
+		xtermWarning("Can't execvp %s\n", *command_to_exec);
 	    } else {
 		execlpe(ptr, shname, 0, gblenvp);
 
 		/* Exec failed. */
-		fprintf(stderr, "%s: Could not exec %s!\n",
-			ProgramName, ptr);
+		xtermWarning("Could not exec %s!\n", ptr);
 	    }
 	    sleep(5);
 
