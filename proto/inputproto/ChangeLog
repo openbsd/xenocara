@@ -1,12 +1,1425 @@
-commit 84479bf87230905cd26d8395577058950230c103
+commit e752e92dbdcf01b1cd46a3853f582ff765d19e90
 Author: Peter Hutterer <peter.hutterer@who-t.net>
-Date:   Tue Jun 7 14:16:17 2011 +1000
+Date:   Fri Mar 2 12:58:18 2012 +1000
 
-    inputproto 2.0.2
+    inputproto 2.2
     
     Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
 
-commit 3686697eb5a330deb222b5e95843f23037ca3faf
+commit b02b0b42e266560bd48f7e8f38c8338417394fd0
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Wed Feb 29 15:08:01 2012 +1000
+
+    specs: XI 2.2 release date is March 2012
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Chase Douglas <chase.douglas@canonical.com>
+
+commit 950a7a0b2e733d9713a88612b669603b0c155329
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Wed Feb 29 14:55:26 2012 +1000
+
+    specs: Remove work in progress warning
+    
+    We're close enough to a release now.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Chase Douglas <chase.douglas@canonical.com>
+
+commit 3ac053f2c7ef8d07b4a6dcb64d8ca47edad15716
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri Mar 2 10:31:26 2012 +1000
+
+    specs: remove "since" from TouchOwnershipEvent
+    
+    It's already in a section "Events introduced in version 2.2"
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Chase Douglas <chase.douglas@canonical.com>
+
+commit b42e4d24a26fb8467ed54183480c9dacd66fc804
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri Mar 2 10:28:46 2012 +1000
+
+    specs: remove TouchOwnership mention from DeviceEvent
+    
+    TouchOwnership is described separately below.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Chase Douglas <chase.douglas@canonical.com>
+
+commit a09ca92ce31ede86b883cb74fb1767f8ed687ca5
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri Mar 2 10:26:04 2012 +1000
+
+    specs: whitespace fix to avoid wrong asciidoc formatting
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Chase Douglas <chase.douglas@canonical.com>
+
+commit b1458f6fa9952365f4ad86dc87b385d467318fb1
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri Mar 2 10:25:03 2012 +1000
+
+    specs: fix link to touch ownership section
+    
+    Introduced in 535a4377ddb4c2680d54b4cbbb273134bb5f58a3
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Chase Douglas <chase.douglas@canonical.com>
+
+commit b321ea46fbb251970c2d655b73209750f24c0b8e
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri Mar 2 10:21:12 2012 +1000
+
+    specs: GrabtypeTouchBegin was added in XI 2.2
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Chase Douglas <chase.douglas@canonical.com>
+
+commit 3773e33579f0b5bd6de9f01481b8608fa3101a2b
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri Mar 2 10:19:42 2012 +1000
+
+    specs: formatting fix, move AcceptTouch and RejectTouch onto their own line
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Chase Douglas <chase.douglas@canonical.com>
+
+commit 4de6f26a705062343f5b93dd9827a736c721e265
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri Mar 2 10:08:33 2012 +1000
+
+    specs: replace † with ²
+    
+    † looks too much like a letter and we can't use * and ** because asciidoc
+    interprets it as lists.
+    
+    Use numbers instead, and replace all current * with ¹.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Chase Douglas <chase.douglas@canonical.com>
+
+commit 000a20296a3c52f4232aa466d29faa2e424ca626
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri Mar 2 10:07:21 2012 +1000
+
+    specs: XITouchClass doesn't have properties
+    
+    Leftover from an earlier version.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Chase Douglas <chase.douglas@canonical.com>
+
+commit 0d7bfc10bffa29de1b7217d6399e8f0d5b24c579
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri Mar 2 09:55:21 2012 +1000
+
+    specs: Formatting fix
+    
+    asciidoc requires caption to be on one line but this one here is too long.
+    Split it up instead.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Chase Douglas <chase.douglas@canonical.com>
+
+commit 883143e3454c7fe44b12b11fc12ff3ec2267ecd1
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri Mar 2 09:32:18 2012 +1000
+
+    specs: some wording fixes
+    
+    Button press events are insufficient even on scroll wheels, so don't say
+    they are good enough.
+    
+    Remove duplicate claim of event emulation
+    
+    Don't claim we send touch events "without delay"
+    
+    Touch screens hardly ever "physically move" an object.
+    
+    Hyphenate "implementation-dependent"
+    
+    Remove unnecessary "however"
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Chase Douglas <chase.douglas@canonical.com>
+
+commit 9a2e10213c996010124a3d58e71140f41202416c
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Wed Feb 29 14:56:37 2012 +1000
+
+    specs: fix typos 'hierachy' → 'hierarchy'
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Chase Douglas <chase.douglas@canonical.com>
+
+commit 5e18f74e24a17d6a1f18339600a00f5591dc6a82
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Wed Feb 8 03:17:28 2012 +1000
+
+    Unbreak protocol ABI for XIAllowEvents - inputproto 2.1.99.6
+    
+    XIAllowEvents was extended with touchid and grab_window in
+    2ea2f99f4fe1dcd3b8e539ca41c482fc40a0533d. This extended the size of
+    the request from 12 to 20 but also broke the ABI. Older server
+    match the request size exactly, so compiling libXi 1.5 against
+    inputproto 2.2 and then running it against a pre-XI 2.2 server causes a
+    BadLength for any XIAllowEvent request.
+    
+    Add a new request for the new data.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Keith Packard <keithp@keithp.com>
+
+commit 217afacda01b082f39fb6816e62ec20e4791857f
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Thu Jan 26 13:56:38 2012 +1000
+
+    specs: explain touch behaviour for dependent devices
+    
+    Dependent devices don't send touch events until the interaction is a true
+    touch interaction (i.e. doesn't just serve to move the pointer). Once that
+    happens, all touchpoints send touch events exclusively. Pointer movement
+    restarts once we're down to one touch that controls the pointer again.
+    
+    For clients listening to touch events in addition to pointer events, this
+    also means that a two-finger tap looks identical to holding one finger down
+    and tapping with a second-finger. Both actions will result in short
+    TouchBegin/TouchEnd sequences for both fingers.
+    
+    The above is the default behaviour we expect from touchpads, the protocol is
+    more generically worded to leave more room for drivers to decide when a
+    touch only controls the pointer and when it doesn't.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Chase Douglas <chase.douglas@canonical.com>
+
+commit fc9372868bb772f38a6b17299ef26e3dc9c2ff87
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Thu Jan 26 13:36:24 2012 +1000
+
+    specs: move touch support details to "Touch device support" section
+    
+    Keep the changelog small.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Chase Douglas <chase.douglas@canonical.com>
+
+commit 92f769675b0e39c51280db9690db4b3d80637069
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Thu Jan 26 13:33:40 2012 +1000
+
+    specs: remove superfluous "Changes introduced by ..."
+    
+    The line right above says the same thing.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Chase Douglas <chase.douglas@canonical.com>
+
+commit 556ea96060071ab807ece4f77304208e15f25f9b
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Thu Jan 26 13:32:33 2012 +1000
+
+    specs: move touch mode explanations to where it belongs
+    
+    Rather than have two different explanations to the touch modes, remove it
+    from the "Changes in version 2.2" section and merge the content into the
+    text.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Chase Douglas <chase.douglas@canonical.com>
+
+commit 535a4377ddb4c2680d54b4cbbb273134bb5f58a3
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jan 25 17:03:15 2012 -0500
+
+    specs: replace hard coded number in some "See section" references
+    
+    The glossary does not accept <<links>> however.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Chase Douglas <chase.douglas@canonical.com>
+
+commit f3d2feead483f6637ef8ff004afad55b5bbf2c62
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jan 25 17:03:13 2012 -0500
+
+    specs: fix Appendix A title
+    
+    This section starts a new numbered sequence.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Chase Douglas <chase.douglas@canonical.com>
+
+commit 9ff28b092f91ea1d7ff58f54a9404347f517361b
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jan 25 17:03:12 2012 -0500
+
+    specs: remove older manually typed in section number
+    
+    These would come out in html as 5.2, 6.3 and 6.4.3.4
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Chase Douglas <chase.douglas@canonical.com>
+
+commit 508a360f6530e75d94cd2999e56cb329b315ce5d
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jan 25 17:03:14 2012 -0500
+
+    specs: use subsections to group use cases description
+    
+    It makes an entry in the appendix for quick navigation.
+    It looks more readable with subtitles.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Chase Douglas <chase.douglas@canonical.com>
+
+commit 08ba2d4e1094fb196d1b7a7b3a3b27a81cb9834c
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jan 25 17:03:11 2012 -0500
+
+    specs: Edit titles for section 3 and 4
+    
+    In the htlm version, the section number appeared to be 3.2.1 and
+    4.2.2 because of the generated section number.
+    
+    A section title should not begin with a number.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Chase Douglas <chase.douglas@canonical.com>
+
+commit 1306ccf9f262c0c699bec093ffdc4b6695601599
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri Jan 6 13:35:25 2012 +1000
+
+    inputproto 2.1.99.5
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 997ae0343730c66d581fd147741cbe27fbe55af2
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Jan 3 09:26:22 2012 +1000
+
+    Set a flag on the pointer-emulating touch event
+    
+    Toolkits need to know which touch event emulated a pointer event and which
+    ones do not. To quote Carlos Garnacho:
+    
+        GTK+ does client-side windows by default (GdkWindows without a backing X
+        window), for this to work the toplevel window in the client needs to
+        select for more events that it wouldn't normally select for in order to
+        cater for the event masks in such child "windows". This means that
+        ideally GTK+ should set the touch events mask in the toplevel, and then
+        find out whether the "window" would receive pointer or touch events for
+        the sequence emulating the pointer, and perform the emulation itself.
+    
+    Reported-by: Carlos Garnacho <carlosg@gnome.org>
+    Reviewed-by: Chase Douglas <chase.douglas@canonical.com>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 5ee845c1bf457159a034111c3d0df584aa600cd6
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Jan 3 09:24:38 2012 +1000
+
+    specs: purge leftover TouchAccepted note
+    
+    This flag does not exist anymore.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Chase Douglas <chase.douglas@canonical.com>
+
+commit e65ba758c2d4147c3873c63c262db36ec23bba63
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Jan 3 09:23:23 2012 +1000
+
+    specs: only pointer events have a PointerEmulated flag
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Chase Douglas <chase.douglas@canonical.com>
+
+commit 9611be0a5bc7f4d583d49d51a0e98d3b9b75fc7a
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri Dec 23 18:03:09 2011 +1000
+
+    specs: Clarify rejection for touch events on current owner
+    
+    The current owner never gets a TouchUpdate(PendingEnd), that event is
+    superfluous for the owner. The owner receives a TouchEnd when the touch
+    physically ends. If the touch is still active, the owner receives a
+    TouchEnd after rejecting the touch.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Chase Douglas <chase.douglas@canonical.com>
+
+commit b9f1b26f076cdba373e8b7a0b73384b35e8d799c
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Wed Dec 21 15:30:22 2011 +1000
+
+    inputproto 2.1.99.4
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit b4da32ed2856fef3e8135f03c9194f9dd0287f66
+Merge: 8640944 c508e93
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Wed Dec 21 15:28:44 2011 +1000
+
+    Merge branch 'multitouch-devel'
+    
+    Conflicts:
+    	configure.ac
+    	specs/XI2proto.txt
+
+commit c508e9360414f9724cc875a4731a5fd8a3969d2b
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Wed Dec 21 15:27:47 2011 +1000
+
+    specs: add XI 2.1 release to history section
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 5c9a6569e5182a4c4c6ec052bcd76a9ca3b8f645
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Wed Dec 21 15:24:44 2011 +1000
+
+    Remove --enable-unstable-protocol configure option
+    
+    Protocol is reasonably stable and about to be merged onto the master
+    branch. People should be used to stuff on master being a tad unstable, don't
+    require any specific configure flags.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit aef700dbac09d3c8a576387be47e5693460f1393
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Wed Dec 21 15:23:23 2011 +1000
+
+    specs: remove parts of the "Work in progress" warning
+    
+    The protocol is stable enough now that a simple warning should be enough.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 9a9746b95f3585bba9730105769e9c74520f6bc4
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Dec 20 08:23:55 2011 +1000
+
+    Reinstate libXi's version defines
+    
+    Realistically, we can't remove these from the protocol without breaking
+    older libraries.
+    
+    Introduced in a02566ca7fd37d279b957037e1251a3b3419866d
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Chase Douglas <chase.douglas@canonical.com>
+    Signed-off-by: Chase Douglas <chase.douglas@canonical.com>
+
+commit ee0bc61ee3fd775127f8cd222d83314f66255f2b
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Dec 20 08:22:52 2011 +1000
+
+    Drop wrong comment for sourceid in TouchOwnershipEvents
+    
+    Copy/paste error from DeviceChangedEvent
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Chase Douglas <chase.douglas@canonical.com>
+    Signed-off-by: Chase Douglas <chase.douglas@canonical.com>
+
+commit 8640944f4ff193027ce0f21622918b88da910e72
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri Dec 16 11:06:13 2011 +1000
+
+    inputproto 2.1
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit b701750ee99e1e227ad8baa994b6fd3398949a3a
+Author: Cyril Brulebois <kibi@debian.org>
+Date:   Thu Dec 15 17:07:54 2011 +0100
+
+    specs: Fix tiny typo.
+    
+    Signed-off-by: Cyril Brulebois <kibi@debian.org>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 8687f155d8072763c2c7d52cb48eb5f46bfaf705
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Wed Dec 14 08:56:59 2011 +1000
+
+    specs: clarify button state in touch events
+    
+    Emulated pointer events will have button 1 logically down, but touch events
+    only represent the actual button state, irrespective of the touches.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Chase Douglas <chase.douglas@canonical.com>
+    Signed-off-by: Chase Douglas <chase.douglas@canonical.com>
+
+commit b1d71fe4cd3871a78e442159443c141193e79a7f
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Wed Dec 14 08:56:09 2011 +1000
+
+    specs: drop leftover from active_touches removal
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Chase Douglas <chase.douglas@canonical.com>
+    Signed-off-by: Chase Douglas <chase.douglas@canonical.com>
+
+commit 02eadf00f07abb9b0f19a05728b70e42eac08adb
+Author: Chase Douglas <chase.douglas@canonical.com>
+Date:   Tue Dec 13 10:35:18 2011 -0800
+
+    inputproto 2.1.99.3
+    
+    Signed-off-by: Chase Douglas <chase.douglas@canonical.com>
+
+commit 84c049b6603e370afcd267ce4c53a566f842fd69
+Author: Chase Douglas <chase.douglas@canonical.com>
+Date:   Mon Dec 12 10:50:58 2011 -0800
+
+    State that future touch IDs are indeterminate
+    
+    This just makes it absolutely clear that clients should not make any
+    assumptions about future touch ID values.
+    
+    I also added "strictly monotonically" increasing to the definition of
+    touch IDs. It's a more precise definition of the protocol.
+    
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Chase Douglas <chase.douglas@canonical.com>
+
+commit 7d20c9bf38d3d47adc7fb1a70faa370dda1a390c
+Author: Chase Douglas <cndougla@cndougla.(none)>
+Date:   Fri Dec 9 13:32:35 2011 -0800
+
+    Touch IDs must be globally unique
+    
+    XIAllowEvents with a master device and a touch ID must uniquely identify
+    a touch sequence. If touch IDs were unique per slave device, multiple
+    slave devices could have valid sequences with the same touch ID, and the
+    sequences may both be grabbed through the same master device grab.
+    
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Chase Douglas <chase.douglas@canonical.com>
+
+commit c4703fd9d97c962d5c599a7f826a9a11fc91ee70
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Mon Dec 12 10:26:20 2011 +1000
+
+    Remove XI2.1 and XI2.2 warnings and errors
+    
+    This is too much of a pain, anyone who includes XI headers needs to define
+    this. And that affects input and output drivers as well as legacy clients
+    that don't even need the new stuff.
+    
+    Removing the need for defines would be enough but then the warnings clog up
+    the output and hide real warnings. Just ditch them and laugh at those that
+    use an experimental branch and expect it to work.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Chase Douglas <chase.douglas@canonical.com>
+    Signed-off-by: Chase Douglas <chase.douglas@canonical.com>
+
+commit 019a252a59c1d076b07a0162cb3ee6af42ceea14
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri Dec 2 15:03:46 2011 +1000
+
+    specs: typo fix
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit a9fcea66eb18fab330f3b27b3daedef2b5c9210a
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri Nov 11 14:33:34 2011 +1000
+
+    specs: smooth scrolling was added in 2.1, say so
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit c9c4e13e8a3eb90b45c5ef65f729089b7f742e6a
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri Nov 11 14:22:08 2011 +1000
+
+    inputproto 2.1.99.2
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 279524b089c7b42871ee072cfc03a1fad7421b7b
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Nov 8 15:36:02 2011 +1000
+
+    specs: scroll events have no specific event type, state so.
+    
+    This wasn't clear enough in the current spec.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 9f2b1a33063b139756e08951affe802e8af39a76
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Nov 8 15:29:24 2011 +1000
+
+    specs: We're up to version 2.1 now, say so
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit b289b1c039e36a9440c238ff09dfa3eb67e141e4
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Thu Oct 20 15:55:54 2011 +1000
+
+    XI2: Use touchid, not touch_id in XIAllowEvents
+    
+    Be consistent with other usages of touchid.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Chase Douglas <chase.douglas@canonical.com>
+
+commit 86ce2d05e86852d52f5b135ad03288e4cb16d5df
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Thu Nov 3 09:30:20 2011 +1000
+
+    XI2: swap (Raw)TouchUpdate and (Raw)TouchEnd
+    
+    Not having the event codes in the order begin/update/end does my head in
+    when debugging. It also means there's no symmetry between raw and normal
+    touch events as the ownership event is wedged in between.
+    Rearrange event codes to be Begin/Update/End for both, with the
+    OwnershipEvent being in between.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Chase Douglas <chase.douglas@canonical.com>
+    Reviewed-by: Jeremy Huddleston <jeremyhu@apple.com>
+    Signed-off-by: Chase Douglas <chase.douglas@canonical.com>
+
+commit 463ffaabab506ad6ddb3b55c5781ae91fcccfd04
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri Sep 23 08:41:18 2011 +1000
+
+    specs: clarify that Preferred scroll valuators are per scroll direction
+    
+    Reported-by: Daniel Stone <daniel@fooishbar.org>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit cec7567863c3d363b6b75c707540cfe524f849ba
+Author: Chase Douglas <chase.douglas@canonical.com>
+Date:   Wed Sep 14 22:09:28 2011 -0500
+
+    Revert addition of active_touches to device events
+    
+    I can't remember why it's there, and I don't see how it may be useful.
+    If a client really wants to know how many touches are on the device,
+    they can listen to raw events and count the number of active touches.
+    
+    (Real reason: extending events is hard :)
+    
+    Signed-off-by: Chase Douglas <chase.douglas@canonical.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 22c06a5ddb1d3be2743a79b78eff3844f457dc5e
+Author: Chase Douglas <chase.douglas@canonical.com>
+Date:   Wed Sep 14 20:15:49 2011 -0500
+
+    Fix Xi 2.x version comment in XI2.h
+    
+    Signed-off-by: Chase Douglas <chase.douglas@canonical.com>
+
+commit 88410aa51d03dbb5599e979998137ba6558ff677
+Author: Chase Douglas <chase.douglas@canonical.com>
+Date:   Tue Sep 13 16:59:54 2011 -0500
+
+    inputproto 2.1.99.1 (first snapshot of 2.2)
+    
+    Note that this is built on top of 2.0.99.1, which is a development
+    snapshot of 2.1.
+    
+    Signed-off-by: Chase Douglas <chase.douglas@canonical.com>
+
+commit fa16231f0e5244cdcf77e262647525716f507bdd
+Author: Chase Douglas <chase.douglas@canonical.com>
+Date:   Wed Sep 14 10:10:14 2011 -0500
+
+    Allow grabbing clients to accept or reject touches any time
+    
+    This is potentially both a performance and client complexity
+    improvement. An example is a gesture recognizer using touch grabs on
+    each window with a subscription. If events on a child window are known
+    to not match any subscription on the child window, then the client
+    should be able to reject the touch grab even if the parent window hasn't
+    accepted any of the touches, perhaps because the parent window
+    gesture hasn't timed out or crossed other thresholds yet.
+    
+    As an inverse example, the events may match a child window subscription
+    before the root window has rejected ownership. The child window should
+    be able to accept the touch proactively. This allows for further clients
+    to receive a TouchEnd event earlier, and means the client may be able to
+    reduce state being tracked. If this were not allowed, the client would
+    need to wait until it received ownership before accepting the sequence.
+    
+    Signed-off-by: Chase Douglas <chase.douglas@canonical.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 2ea2f99f4fe1dcd3b8e539ca41c482fc40a0533d
+Author: Chase Douglas <chase.douglas@canonical.com>
+Date:   Wed Sep 14 09:46:18 2011 -0500
+
+    Extend XIAllowEvents for handling touch grab processing
+    
+    This removes the XIAllowTouchEvents request, which was the only new
+    request added for multitouch.
+    
+    Signed-off-by: Chase Douglas <chase.douglas@canonical.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 3c400af4f98740debd7916ad711cf91124a0f994
+Author: Chase Douglas <chase.douglas@canonical.com>
+Date:   Tue Sep 13 15:47:15 2011 -0500
+
+    Add event windows to ownership events
+    
+    Also, match device event structure to make things easy.
+    
+    Signed-off-by: Chase Douglas <chase.douglas@canonical.com>
+
+commit dd9e4bc5f5f2e0eb87b08199ce417849070249ab
+Author: Chase Douglas <chase.douglas@canonical.com>
+Date:   Tue Sep 13 15:30:34 2011 -0500
+
+    Really kill touch valuators
+    
+    Signed-off-by: Chase Douglas <chase.douglas@canonical.com>
+
+commit 05fc509fdca8d8b414a20f1359b9cb80caf5240a
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Wed Sep 14 05:46:43 2011 +1000
+
+    specs: if a sequence ends, all clients get TouchPendingEnd
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Chase Douglas <chase.douglas@canonical.com>
+    Signed-off-by: Chase Douglas <chase.douglas@canonical.com>
+
+commit 94fecdf129d8ab5bece049a26eed03d24affb549
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Wed Sep 14 05:26:54 2011 +1000
+
+    specs: remove broken asciidoc link to XIAllowTouchEvents
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Chase Douglas <chase.douglas@canonical.com>
+    Signed-off-by: Chase Douglas <chase.douglas@canonical.com>
+
+commit 4782a76b6e679493f130a53afe158a13628fa504
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Wed Sep 14 05:25:15 2011 +1000
+
+    specs: remove comment about overlapping selections, not true
+    
+    There are no overlapping selections for touch events.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Chase Douglas <chase.douglas@canonical.com>
+    Signed-off-by: Chase Douglas <chase.douglas@canonical.com>
+
+commit dd32802d2e6134cf9c4efd49c56c118ed02e6a2b
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Wed Sep 14 05:21:31 2011 +1000
+
+    specs: misc typos, rewording, etc.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Chase Douglas <chase.douglas@canonical.com>
+    Signed-off-by: Chase Douglas <chase.douglas@canonical.com>
+
+commit cfa06b98d50d6892e5961e86f6223b6b096d9ef4
+Author: Chase Douglas <chase.douglas@canonical.com>
+Date:   Tue Sep 13 15:09:57 2011 -0500
+
+    Bump version to 2.1.99 for XI 2.2 multitouch changes
+    
+    Signed-off-by: Chase Douglas <chase.douglas@canonical.com>
+
+commit 24e7dac91fb919c1668736f6e4309ae522a96d86
+Author: Chase Douglas <chase.douglas@canonical.com>
+Date:   Tue Sep 13 14:27:13 2011 -0500
+
+    Switch multitouch additions to XI 2.2
+    
+    Signed-off-by: Chase Douglas <chase.douglas@canonical.com>
+
+commit b95adf9b14ff5ba2142e8521f02728dc6d903409
+Merge: d6dcfd4 9cfdeed
+Author: Chase Douglas <chase.douglas@canonical.com>
+Date:   Tue Sep 13 14:20:31 2011 -0500
+
+    Merge remote-tracking branch 'inputproto/master' into multitouch-devel
+    
+    Conflicts:
+    	XI2.h
+    	XI2proto.h
+    	specs/XI2proto.txt
+    
+    Signed-off-by: Chase Douglas <chase.douglas@canonical.com>
+
+commit d6dcfd4039ede37e9c858ab6e890fdb9582a5a9d
+Author: Chase Douglas <chase.douglas@canonical.com>
+Date:   Mon Sep 12 16:01:53 2011 -0500
+
+    Revert "Specify dependent device pointer/touch handling"
+    
+    See parent commit for details.
+    
+    This reverts commit 4adfb5ad6c064981e2c7eb57db4bdd81cc7029ea.
+    
+    Signed-off-by: Chase Douglas <chase.douglas@canonical.com>
+
+commit 42284fa0a233240d365ff2b49cc34c257e2d2bee
+Author: Chase Douglas <chase.douglas@canonical.com>
+Date:   Mon Sep 12 15:55:28 2011 -0500
+
+    Revert "Fix touch cancel/resume semantics"
+    
+    The main use case for this was drag and drop, which we realized does not
+    need any special handling that requires canceling touches.
+    
+    This reverts commit 9e46820e4a206ae48b3e87f6ef7506e583fa3793.
+    
+    Signed-off-by: Chase Douglas <chase.douglas@canonical.com>
+
+commit 1b40cc4ff63ebbf0a4b17507762b17fa1e91bea9
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Mon Aug 29 09:20:32 2011 +1000
+
+    specs: extend XI2.1 raw events to include touch events
+    
+    RawEvents are simple enough that we can re-use the detail field for the
+    touch ID tracking and just update the respective event types.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Chase Douglas <chase.douglas@canonical.com>
+    Signed-off-by: Chase Douglas <chase.douglas@canonical.com>
+
+commit b55d236a66a614b2192da6d8a7ed4b7d831976f5
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Mon Aug 29 09:20:31 2011 +1000
+
+    Add comment to XI2.h to mark where the 2.1 events start
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Chase Douglas <chase.douglas@canonical.com>
+    Signed-off-by: Chase Douglas <chase.douglas@canonical.com>
+
+commit 3d23bf3782c9962b70dfa46ea34c86efee57eeb2
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Mon Aug 29 09:20:30 2011 +1000
+
+    Change file header to note version 2.x
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Chase Douglas <chase.douglas@canonical.com>
+    Signed-off-by: Chase Douglas <chase.douglas@canonical.com>
+
+commit 63f3097d264f790419ce59744e8d2733f9bb1026
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Mon Aug 29 09:20:29 2011 +1000
+
+    specs: Fix event lists for asciidoc parsing
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Chase Douglas <chase.douglas@canonical.com>
+    Signed-off-by: Chase Douglas <chase.douglas@canonical.com>
+
+commit 4329d45d49741aad0e93f8e064042ba83e6a23a0
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Mon Aug 29 09:20:28 2011 +1000
+
+    specs: Fix in-document references
+    
+    The primary format for the specs is still the txt format (since that's
+    guaranteed to be available anywhere, including cgit). Having in-paragraph
+    references breaks the flow of reading. Fix up some references that aren't
+    strictly necessary anyway, reword some to be easier to read and change the
+    titles of some to match the actual title of the section.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Chase Douglas <chase.douglas@canonical.com>
+    Signed-off-by: Chase Douglas <chase.douglas@canonical.com>
+
+commit 9cfdeedd16e96c0e67e70537e97a8f8dd0358244
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Thu Jun 2 16:09:23 2011 +1000
+
+    inputproto 2.0.99.1 (first snapshot of 2.1)
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Jeremy Huddleston <jeremyhu@apple.com>
+    Reviewed-by: Daniel Stone <daniel@fooishbar.org>
+
+commit 7d5a303cd8976a7eac1b96897c70d5d25c57ecf1
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Mon Aug 15 12:33:04 2011 +1000
+
+    Move scroll information into a new class.
+    
+    Using labels only to mark smooth scrolling axes disallows scrolling from
+    hardware events (e.g. a mouse wheel). If those axes are marked as scrolling
+    axes instead, the clients lose information which hardware axis this event
+    corresponds to.
+    
+    For example, on Wacom devices, the client can benefit from smooth scrolling
+    on the strip or wheel event but may still require the knowledge whether the
+    axis is a vertical strip (e.g. Intuos3) or a absolute scrolling wheel (e.g.
+    Intuos4).
+    
+    Thus, add a new class to XIQueryDevice that represents scrolling information
+    on a valuator. One of these ScrollClass may exist for each ValuatorClass if
+    that valuator is a scrolling valuator. The increment field of this class
+    removes the requirement for 1.0 == 1 unit of scrolling.
+    
+    This isn't true in most cases, especially where physical scroll axes are
+    involved. Wacom Intuos4 scroll rings have a unit size of 3.0 and the driver
+    historically sent one scroll event per 3.0 increment or decrement. Mapping
+    one scroll event to 1.0 makes the ring mostly unusable through legacy
+    button events.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 186aa20619d1720bde49fd92d2834c8f9eadf49b
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Wed Feb 23 17:37:29 2011 +0000
+
+    Document smooth-scrolling support
+    
+    Two new axes are added to support smooth scrolling: Rel Vert Scroll and
+    Rel Horiz Scroll.  Cumulative values of 1.0 with either magnitude on
+    these axes are considered to be equivalent to one legacy ButtonPress
+    event on the scroll buttons.
+    
+    Signed-off-by: Daniel Stone <daniel@fooishbar.org>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 53b58e679f977550301130794c8cb19391ecceb7
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Tue Feb 15 14:27:53 2011 +0000
+
+    Add XIPointerEmulated for emulated events
+    
+    The XIPointerEmulated flag on pointer events means that the event was
+    emulated from a smooth-scroll or touch event to support legacy events,
+    and the client may ignore this if it is listening to the other events.
+    
+    Signed-off-by: Daniel Stone <daniel@fooishbar.org>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit af1fb609beece899188469a81ac9d8c5e07bfa4a
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri Jul 29 10:09:02 2011 +1000
+
+    Add sourceid to RawEvents (#34420)
+    
+    RawEvents in XI2 do not provide the source ID. The libXi headers however do
+    and it is currently always 0. Given that the sourceid may be useful for
+    some clients, send it down the wire.
+    
+    This has no effect on the wire size of the struct, we can re-use a pad byte
+    here.
+    
+    X.Org Bug 34420 <http://bugs.freedesktop.org/show_bug.cgi?id=34420>
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Daniel Stone <daniel@fooishbar.org>
+
+commit 1e63d01d041108db6fe5be32d033e80419a6ab05
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Apr 12 13:07:53 2011 +1000
+
+    XI2.1: send RawEvents at all times.
+    
+    When a client grabbed a device, XI 2.0 only sends RawEvents to that client.
+    This behaviour is problematic and cannot be worked around for many
+    applications that need to continue receiving events.
+    
+    On the other hand, no client seems to rely on this behaviour or use it to
+    its advantage. For XI 2.1, disable this behaviour and continue to send raw
+    events regardless of the grab state of the device.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Acked-by: Chase Douglas <chase.douglas@canonical.com>
+    Reviewed-by: Daniel Stone <daniel@fooishbar.org>
+    Reviewed-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit b35f20b7bd9620710a7a6b63e39758fe83b4dec8
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri Apr 8 13:26:27 2011 +1000
+
+    Announce 2.1 availability through the XI_2_Major and XI_2_Minor defines
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 47a2cc250398648732ba2086ca6ecb21e7dabdc0
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri Apr 8 12:59:17 2011 +1000
+
+    Bump to 2.0.99
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 9e46820e4a206ae48b3e87f6ef7506e583fa3793
+Author: Chase Douglas <chase.douglas@canonical.com>
+Date:   Wed Aug 24 15:10:21 2011 -0700
+
+    Fix touch cancel/resume semantics
+    
+    If a touch is ended through a cancel, the client may never know if the
+    touch will come back as a resumed sequence. Instead, send a touch update
+    with the cancel flag, like the pending end flag, and send an end event
+    only when the full touch sequence has ended.
+    
+    Signed-off-by: Chase Douglas <chase.douglas@canonical.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 79c22a2e7b3c2bf73cd8af7eba7182198f13d2e4
+Author: Chase Douglas <chase.douglas@canonical.com>
+Date:   Wed Aug 24 13:34:47 2011 -0700
+
+    Fix indentation of active_touches definition
+    
+    Signed-off-by: Chase Douglas <chase.douglas@canonical.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit cec253561ab3feaa0a5a57fa8aa47db15662cf3d
+Author: Chase Douglas <chase.douglas@canonical.com>
+Date:   Wed Aug 24 13:32:30 2011 -0700
+
+    Introduce Touch grab mode
+    
+    Touch grabs are not really synchronous nor asynchronous. Use a separate
+    grab mode value for touch grabs, just to make the protocol seem more
+    sane.
+    
+    Signed-off-by: Chase Douglas <chase.douglas@canonical.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 1cb00433583341b3c52c8d3f62dcd19a55ddca29
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Wed Aug 24 09:07:23 2011 +1000
+
+    DeviceEvents: a TouchPendingEnd won't generate further TouchUpdate events
+    
+    Update, not motion.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Chase Douglas <chase.douglas@canonical.com>
+    Signed-off-by: Chase Douglas <chase.douglas@canonical.com>
+
+commit b025106fe8d8aa3043abd48ba3f50bde29527939
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Wed Aug 24 09:07:22 2011 +1000
+
+    DeviceEvent: active_touches needs marker that it's XI 2.1
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Chase Douglas <chase.douglas@canonical.com>
+    Signed-off-by: Chase Douglas <chase.douglas@canonical.com>
+
+commit f469fa99ae9ffda806c3e935bbebc73d633f8c10
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Wed Aug 24 09:07:21 2011 +1000
+
+    AllowTouchEvents can take any device id, not just slaves
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Chase Douglas <chase.douglas@canonical.com>
+    Signed-off-by: Chase Douglas <chase.douglas@canonical.com>
+
+commit d7fd289ee02d7ebc4cac5357edaaac1b55a7d10c
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Wed Aug 24 09:07:19 2011 +1000
+
+    Indent Ownership explanation for consistent formatting
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Chase Douglas <chase.douglas@canonical.com>
+    Signed-off-by: Chase Douglas <chase.douglas@canonical.com>
+
+commit e51dd1b6bd4aa506231a41cbb400a8ece5a6aeaa
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Wed Aug 24 09:07:18 2011 +1000
+
+    Reword the passive touch grab rules to be similar to the others
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Chase Douglas <chase.douglas@canonical.com>
+    Signed-off-by: Chase Douglas <chase.douglas@canonical.com>
+
+commit 67e06b8f14ac39c6c38e851b94b879024ff806a9
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Wed Aug 24 09:07:17 2011 +1000
+
+    Fix missing 'and' in GrabTypeFocusIn description
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Chase Douglas <chase.douglas@canonical.com>
+    Signed-off-by: Chase Douglas <chase.douglas@canonical.com>
+
+commit 5b8a8bd0b4e779b947093f9722a2af2568c27118
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Wed Aug 24 09:07:16 2011 +1000
+
+    XISelectEvents: BadValue is generated, not returned
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Chase Douglas <chase.douglas@canonical.com>
+    Signed-off-by: Chase Douglas <chase.douglas@canonical.com>
+
+commit ae6ba6b37e47134914b8fedb6524372f0a8119c0
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Wed Aug 24 09:07:15 2011 +1000
+
+    Coordinates are always absolute, no need to re-state it
+    
+    Coordinates in DeviceEvents are always absolute, regardless of the axis
+    mode. The same is true for touch events, stating it again here just adds to
+    the confusion.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Chase Douglas <chase.douglas@canonical.com>
+    Signed-off-by: Chase Douglas <chase.douglas@canonical.com>
+
+commit 544ce0cee3cc146ed1df06ed5762d21ecdfe9e8a
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Wed Aug 24 09:07:14 2011 +1000
+
+    Add two linebreaks for asciidoc list parsing
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Chase Douglas <chase.douglas@canonical.com>
+    Signed-off-by: Chase Douglas <chase.douglas@canonical.com>
+
+commit 9e46dd35896c2517b1c95224b979fc7126dce49f
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Wed Aug 24 09:07:13 2011 +1000
+
+    Changing the touch device mode generates a DeviceChangedEvent
+    
+    State it explicitly.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Chase Douglas <chase.douglas@canonical.com>
+    Signed-off-by: Chase Douglas <chase.douglas@canonical.com>
+
+commit 1b0c016d1f7615e3670fa97fc8f24bc6b79e4f7b
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Wed Aug 24 09:07:11 2011 +1000
+
+    XITouchClass' props needs a num_props
+    
+    In XI2 requests, the length field isn't enough to determine the number of
+    elements since it may vary in future versions.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Chase Douglas <chase.douglas@canonical.com>
+    Signed-off-by: Chase Douglas <chase.douglas@canonical.com>
+
+commit 94b21b47b51c2c66aa0372dfc323d6aedf12b549
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Aug 23 15:28:50 2011 +1000
+
+    specs: fix two typos in XI2proto.txt
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 9f33733fffddd166c64f0bfd293c3de385cf4411
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Wed Aug 17 16:02:39 2011 +1000
+
+    specs: ValuatorClass includes a mode
+    
+    Documented in the description, but missing in the definition.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Daniel Stone <daniel@fooishbar.org>
+
+commit 4adfb5ad6c064981e2c7eb57db4bdd81cc7029ea
+Author: Chase Douglas <chase.douglas@canonical.com>
+Date:   Fri Aug 5 15:28:51 2011 -0700
+
+    Specify dependent device pointer/touch handling
+    
+    With the added rules, trackpads should be manageable no matter what
+    occurs (button presses and pointer motion). Gesture and touch semantics
+    during these actions are not well defined, and cancelling touches cleans
+    up the protocol and implementation.
+    
+    Signed-off-by: Chase Douglas <chase.douglas@canonical.com>
+
+commit 29cd8aac674b1d831814b48b2ee2f2f7ff16497b
+Author: Chase Douglas <chase.douglas@canonical.com>
+Date:   Fri Aug 5 14:41:59 2011 -0700
+
+    Use the same valuator axes for pointer and touch events
+    
+    Signed-off-by: Chase Douglas <chase.douglas@canonical.com>
+
+commit b5e357c76dc5d8b2176fa470186688ec943d08e6
+Author: Chase Douglas <chase.douglas@canonical.com>
+Date:   Fri Aug 5 14:49:32 2011 -0700
+
+    Remove touch "Observe" grabs
+    
+    The semantics of these grabs doesn't work for all use cases. Raw touch
+    events will likely work better.
+    
+    Signed-off-by: Chase Douglas <chase.douglas@canonical.com>
+
+commit 3172e3c52eb45e4830d85ae53888d0b28c13df62
+Author: Chase Douglas <chase.douglas@canonical.com>
+Date:   Fri Aug 5 14:20:05 2011 -0700
+
+    Fix up pointer event emulation section
+    
+    * Wording cleanups for tense and to make some sentences flow better.
+    * Upon further review, it does seem to make more sense to deliver
+      emulated pointer events through the same slave device rather than the
+      master device. Thus, slave devices (including floating devices) may
+      emit emulated pointer events.
+    * Peter is correct, it doesn't make sense to set the PointerEmulated
+      flag on touch events.
+    
+    Signed-off-by: Chase Douglas <chase.douglas@canonical.com>
+
+commit b15ad6e0dc1759e514c998eecd7e61b25308add6
+Author: Chase Douglas <chase.douglas@canonical.com>
+Date:   Fri Aug 5 13:59:05 2011 -0700
+
+    Peter is right, floating devices can emit touch events
+    
+    Signed-off-by: Chase Douglas <chase.douglas@canonical.com>
+
+commit 951cb8314343fcd5cdc392dfc78024fa184fc694
+Author: Chase Douglas <chase.douglas@canonical.com>
+Date:   Tue Aug 2 15:53:35 2011 -0700
+
+    Prettyify touch device types
+    
+    Signed-off-by: Chase Douglas <chase.douglas@canonical.com>
+
+commit 45387042f8fa767dda610936557548adf76306c5
+Author: Chase Douglas <chase.douglas@canonical.com>
+Date:   Tue Aug 2 15:29:54 2011 -0700
+
+    Update device type terminology
+    
+    Remove IndepedentTouch and SemiMultitouch devices. These may be handled
+    in an implementation specific manner through the props array of ATOMs in
+    the touch class information.
+    
+    Signed-off-by: Chase Douglas <chase.douglas@canonical.com>
+
+commit 3a2f149b33531d02fff8e46181ffdcfcecb0c8cb
+Author: Chase Douglas <chase.douglas@canonical.com>
+Date:   Tue Aug 2 15:23:21 2011 -0700
+
+    Yes, send TouchEnd to owner, TouchPendingEnd to other listeners
+    
+    Signed-off-by: Chase Douglas <chase.douglas@canonical.com>
+
+commit 343fd699457483d1572b5229874f8ce6460a9b2d
+Author: Chase Douglas <chase.douglas@canonical.com>
+Date:   Tue Aug 2 15:22:15 2011 -0700
+
+    Separate "XI2.x" into "XI 2.x" for readability
+    
+    Signed-off-by: Chase Douglas <chase.douglas@canonical.com>
+
+commit 3cbc9b68a314b2986afa811f81f76c941be1973b
+Merge: d331251 2ba875f
+Author: Chase Douglas <chase.douglas@canonical.com>
+Date:   Tue Aug 2 14:09:11 2011 -0700
+
+    Merge remote-tracking branch 'origin/master' into multitouch
+    
+    Conflicts:
+    	XI2.h
+
+commit 2ba875f4f2907bb9735ee3317b7e07c5b9d1304b
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Aug 2 10:20:53 2011 +1000
+
+    Put a warning in about not adding any further libXi defines
+    
+    The matching commit in libXi is
+        e8531dd6a981c6cf19a1d256c29e886e34e8f51a
+        libXi-1.4.2-21-ge8531ddp
+    
+        Add XI2 library-internal array offsets to XIint.h
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit ee91dcda461513cdca45160df580841daa6f50e2
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Thu Mar 17 16:29:08 2011 +1000
+
+    specs: add a linebreak for asciidoc parsing
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 2cd2adb7a454072954704e1a215df49ce9dac410
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri Jun 3 15:56:21 2011 +1000
+
+    Provide convenience defines for owner_events.
+    
+    No functional effect, just to improve readability of code.
+    
+    It's not obvious what "True" or "False" stands for in a function with 11
+    arguments. Compare
+        XIGrabButton(dpy, deviceid, button, grab_window, cursor,
+                     GrabModeAsync, GrabModeSync, True,
+                     event_mask, num_modifiers, &modifiers);
+    
+    vs.
+    
+    XIGrabButton(dpy, deviceid, button, grab_window, cursor,
+                 GrabModeAsync, GrabModeSync, XIOwnerEvents,
+                 event_mask, num_modifiers, &modifiers);
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Daniel Stone <daniel@fooishbar.org>
+
+commit bef7648827a0696debdd629472a45508a30144b1
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri Jun 3 15:13:12 2011 +1000
+
+    Add XI2-specific defines for grab and property requests
+    
+    XI 2.0 headers forced clients to mix XI2 specific constants with defines for
+    core input. Most notable here are the grab code which required GrabModeAsync
+    or GrabModeSync from core, but _not_ AnyModifier (XIAnymodifier !=
+    AnyModifier). This is a hard-to-debug cause for bugs.
+    
+    Add defines for grab modes, grab return codes and property modes as well as
+    a define for the AnyPropertyType. These defines are identical to the ones
+    defined in core but stop the use of input-related defines from either core
+    or XI 1.x.
+    
+    Clients must use the core defines None and CurrentTime where applicable.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Daniel Stone <daniel@fooishbar.org>
+
+commit d331251884101c503c533e088bcace6b830b5a95
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Tue May 3 18:44:53 2011 +0100
+
+    Clean up and reword multitouch ownership/emulation
+    
+    Remove 'withheld' indirect section as well.
+    
+    Signed-off-by: Daniel Stone <daniel@fooishbar.org>
+
+commit f17598c1beeadbc648588d192d2e7eb616019e2d
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Tue May 3 17:21:34 2011 +0100
+
+    Mostly typographical
+    
+    Signed-off-by: Daniel Stone <daniel@fooishbar.org>
+
+commit 2d5294cb0b9dc641e0f8ef1ff5f2a1a1803a57ee
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Thu Apr 28 12:02:43 2011 +0100
+
+    Further cleanups and clarifications
+    
+    Signed-off-by: Daniel Stone <daniel@fooishbar.org>
+
+commit 75790691706447cecc9f7948ea55caba05dc0d7d
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Tue Apr 26 20:30:13 2011 +0100
+
+    Reword touch introduction, labels for all
+    
+    Reword the introduction to the multitouch section to try to be a bit
+    clearer, and go on a mad section-labelling spree.
+    
+    Signed-off-by: Daniel Stone <daniel@fooishbar.org>
+
+commit 400365a9bfa9ab3eaaa0bec08e32023f54d04207
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Tue Apr 26 19:51:41 2011 +0100
+
+    typo fix
+    
+    Signed-off-by: Daniel Stone <daniel@fooishbar.org>
+
+commit 416f077d8747d3d96dd5a71600e1e394226c3dc1
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Fri Apr 22 16:14:54 2011 +0100
+
+    Add FIXME sidebars, remove single-grab stipulation
+    
+    Add very visible FIXME sections to more clearly mark what's broken; also
+    remove the stipulation that only one grab may be active at a time.
+    
+    Signed-off-by: Daniel Stone <daniel@fooishbar.org>
+
+commit a500bc990ba61bf32637114d1840db7147a0deaa
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Fri Apr 22 15:42:09 2011 +0100
+
+    Add inline references, fix usecase bulleting
+    
+    Replace 'see section x.y.z' with better inline links; fix nested
+    bulleting of XI 2.1 usecases.
+    
+    Signed-off-by: Daniel Stone <daniel@fooishbar.org>
+
+commit 3a89a5a3003309f810c9273fac8cf5943238df28
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Fri Apr 22 15:31:52 2011 +0100
+
+    Doc note: No seriously, this is WIP
+    
+    Signed-off-by: Daniel Stone <daniel@fooishbar.org>
+
+commit b46a3bafd95f1bb507e4851aaa6967cf20c4eb8e
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Fri Apr 22 14:27:06 2011 +0100
+
+    Formatting fixups and minor rewording
+    
+    No semantic changes.
+    
+    Signed-off-by: Daniel Stone <daniel@fooishbar.org>
+
+commit e19eaef83db9181787a13fa95d642971c33d559b
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Mon Apr 11 10:09:57 2011 +1000
+
+    Require configure flag to build this proto version.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit ca39f67c2aa5b255f2b85d7c649edff8295eed5e
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri Apr 8 13:27:47 2011 +1000
+
+    Put a #warning and #error in to avoid unsuspecting XI 2.1 users.
+    
+    The #warning directive is intentionally outside the define to disable the
+    error. Early adopters of the protocol can't see this warning often enough.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit b1149ab782619eaeadf70affd94239184e082d03
 Author: Alexandre Julliard <julliard@winehq.org>
 Date:   Tue Apr 12 22:39:25 2011 +0200
 
@@ -17,9 +1430,218 @@ Date:   Tue Apr 12 22:39:25 2011 +0200
     
     Signed-off-by: Alexandre Julliard <julliard@winehq.org>
     Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
-    (cherry picked from commit b1149ab782619eaeadf70affd94239184e082d03)
 
-commit a4cab7946409613e27fbad195c861224ad0e0b10
+commit ab930a51047f48c7befd4316a9b116f37075697f
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Wed Mar 23 13:27:02 2011 +1000
+
+    specs: enable asciidoc parsing for XIproto.txt
+    
+    The vast majority of this patch are indentation changes, removing preceding
+    spaces from text.
+    Header lines  and some linebreaks to enable list parsing were added.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit ef7518cc6260e05a00c496c9e0f3a13c8a785b85
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Wed Mar 23 13:32:42 2011 +1000
+
+    specs: move erroneous Errors: line to where it belongs
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Julien Cristau <jcristau@debian.org>
+
+commit ed840d79d3cac60b2fb17448afcc28828236e91b
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri Mar 18 16:17:09 2011 +1000
+
+    specs: rewrite pointer emulation section
+    
+    plus a fixme
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 15e76dd365fce4e936a9f468496be3789495103b
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri Mar 18 15:29:25 2011 +1000
+
+    specs: rewrite pointer emulation for indirect devices
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 9c2817fd761bbe6c6da4e2a5638d80fa53975c4b
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri Mar 18 15:10:34 2011 +1000
+
+    specs: Rewrite Touch events delivery section
+    
+    And add a fixme
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit c883261f2bad6196e5ff1b3c1397300775e55da7
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri Mar 18 14:48:15 2011 +1000
+
+    specs: Add a fixme for using raw events instead of GrabModeObserve
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 35710924957791e389e10fcc67b75967769f001c
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri Mar 18 14:16:55 2011 +1000
+
+    specs: clean/rewrite touch grab and ownership bits
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit f24c9ae749c84d953ee3b35be1ea937dce7b86d3
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri Mar 18 13:58:29 2011 +1000
+
+    spec: Move ClientPointer up again.
+    
+    Prep work to have a separate first-class headline for touch processing
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 0e4a782339403f270de6e072262680b3a4baec01
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri Mar 18 13:52:09 2011 +1000
+
+    specs: move warning about out-of-band processing up a bit.
+    
+    The out-of-band processing is really only important for pointer emulation.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 1d720b30c996a693014f2c70004c9717945b574f
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri Mar 18 12:12:47 2011 +1000
+
+    specs: move touch sequence handling (owner-only) up a bit.
+    
+    This is to restructure to get the simple cases clarified up first before
+    explaining more complex changes.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit a4583dcd3e1c18e5c0cc616c143aafbf7ec1d88b
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri Mar 18 12:02:21 2011 +1000
+
+    specs: move from "init move destroy" to "begin update end"
+    
+    And rewrite that paragraph a bit.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit fe19202c220ce010a85fe5abc0b5a6a0c314ea9a
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Thu Mar 17 16:29:08 2011 +1000
+
+    specs: add a linebreak for asciidoc parsing
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit f9fa8f9a7dc333b45bfac0b0c6f97b8b1a72d260
+Merge: a02566c 47901cd
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Thu Mar 17 14:51:52 2011 +1000
+
+    Merge branch 'master' into chase-multitouch
+    
+    Conflicts:
+    	specs/XI2proto.txt
+    
+    Fixed up (added) asciidoc for touch proto.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 47901cd142e832eb930166cbfa769e4fbca969c5
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Mar 15 21:37:39 2011 -0400
+
+    XIproto.txt: fix whitespace issues
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 5f43b8b19e6abd00a6295692f3346295bb01b973
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Mar 15 21:29:43 2011 -0400
+
+    XI2proto.txt: fix whitespace issues
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 0ac450f47c55fb2bac394f6377f1aabde1ab8429
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Mar 15 15:43:48 2011 -0400
+
+    specs: convert XI2proto.txt to html using asciidoc
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit f21f00bd9b8e641d639d70d086df1b14faa34e38
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Wed Mar 16 09:57:10 2011 +1000
+
+    Add minimal asciidoc syntax
+    
+    Though this protocol description is mainly to be viewed as textfile, a few
+    minor changes make it parsable for asciidoc to spit out reasonably
+    nicely-formatted html code.
+    
+    Changes include:
+    - underline section headers with the matching lines
+    - add linebreaks before lists to parse them as lists
+    - change indentation level for normal text to be left-marging aligned and
+      for <pre> text to be indented
+    - comment out section dividers
+    
+    It's possible to run asciidoc XI2proto.txt and get some nice html output
+    now.
+    
+    Reviewed-by: Gaetan Nadon <memsize@videotron.ca>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Chase Douglas <chase.douglas@canonical.com>
+
+commit a02566ca7fd37d279b957037e1251a3b3419866d
+Author: Chase Douglas <chase.douglas@canonical.com>
+Date:   Thu Mar 10 11:53:57 2011 -0500
+
+    Many more updates to the XI 2.1 protocol
+    
+    Signed-off-by: Chase Douglas <chase.douglas@canonical.com>
+
+commit db7c0eccc74e95f247d78541e4c4a28cfa87b5b4
+Author: Chase Douglas <chase.douglas@canonical.com>
+Date:   Sun Feb 20 16:35:09 2011 -0500
+
+    Updates for pointer emulation and more touch device modes
+    
+    Also includes resolutions for dependent devices and implicit grabs and
+    how to handle slave touch device attachment and touch selections.
+    
+    Signed-off-by: Chase Douglas <chase.douglas@canonical.com>
+
+commit 99f15a2346c882237c78afbd638932f132d6113c
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Mon Feb 7 10:19:06 2011 +0000
+
+    Add touch classes and events, bump to 2.1
+    
+    Introduce multitouch support through a new TouchClass, as well as new
+    TouchBegin, TouchEnd, TouchOwnership, TouchUpdate, and TouchUpdateUnowned
+    events.  Bump to version 2.1.
+    
+    Signed-off-by: Daniel Stone <daniel@fooishbar.org>
+    Co-authored-by: Chase Douglas <chase.douglas@canonical.com>
+    Co-authored-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 13baef91f071ee1607f4c3bf6c1fea60e6651b89
 Author: Fernando Carrijo <fcarrijo@freedesktop.org>
 Date:   Thu Jan 27 22:40:11 2011 -0200
 
@@ -27,9 +1649,8 @@ Date:   Thu Jan 27 22:40:11 2011 -0200
     
     Signed-off-by: Fernando Carrijo <fcarrijo@freedesktop.org>
     Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
-    (cherry picked from commit 13baef91f071ee1607f4c3bf6c1fea60e6651b89)
 
-commit bf66a58ddb0a39eb4a0ae8e58160780f8a2b2716
+commit 5c2d5fd99d73ae52aef62376046b5708c58a4271
 Author: Chase Douglas <chase.douglas@ubuntu.com>
 Date:   Fri Dec 17 17:11:09 2010 +0000
 
@@ -41,7 +1662,6 @@ Date:   Fri Dec 17 17:11:09 2010 +0000
     Signed-off-by: Chase Douglas <chase.douglas@canonical.com>
     Signed-off-by: Daniel Stone <daniel@fooishbar.org>
     Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
-    (cherry picked from commit 5c2d5fd99d73ae52aef62376046b5708c58a4271)
 
 commit 56ffb564712257e0f998170e83071a6ee85aa231
 Author: Peter Hutterer <peter.hutterer@who-t.net>
