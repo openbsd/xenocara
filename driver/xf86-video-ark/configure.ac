@@ -23,8 +23,8 @@
 # Initialize Autoconf
 AC_PREREQ([2.60])
 AC_INIT([xf86-video-ark],
-        [0.7.3],
-        [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],
+        [0.7.4],
+        [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg&component=Driver/ark],
         [xf86-video-ark])
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_HEADERS([config.h])
@@ -69,7 +69,7 @@ AC_CHECK_DECL(XSERVER_LIBPCIACCESS,
 CPPFLAGS="$SAVE_CPPFLAGS"
 
 if test "x$XSERVER_LIBPCIACCESS" = xyes; then
-    PKG_CHECK_MODULES([PCIACCESS], [pciaccess >= 0.8.0])
+    PKG_CHECK_MODULES([PCIACCESS], [pciaccess >= 0.12.901])
 fi
 AM_CONDITIONAL(XSERVER_LIBPCIACCESS, test "x$XSERVER_LIBPCIACCESS" = xyes)
 

@@ -7,9 +7,14 @@
 
 #include "xf86.h"
 #include "xf86Pci.h"
-#include "xf86PciInfo.h"
 #include "xaa.h"
 #include "vgaHW.h"
+
+#define PCI_VENDOR_ARK			0xEDD8
+#define PCI_CHIP_1000PV			0xA091
+#define PCI_CHIP_2000PV			0xA099
+#define PCI_CHIP_2000MT			0xA0A1
+#define PCI_CHIP_2000MI			0xA0A9
 
 typedef struct _ARKRegRec {
 	unsigned char		sr10, sr11, sr12, sr13, sr14,
@@ -34,9 +39,8 @@ typedef struct _ARKRec {
 #endif
 	EntityInfoPtr		pEnt;
 	CARD32			IOAddress;
-	CARD32			FBAddress;
-	unsigned char *		FBBase;
-	unsigned char *		MMIOBase;
+	pointer			FBBase;
+	pointer			MMIOBase;
 	unsigned long		videoRam;
 	OptionInfoPtr		Options;
 	unsigned int		Flags;

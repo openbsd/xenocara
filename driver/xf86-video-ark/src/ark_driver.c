@@ -34,7 +34,6 @@
 #include "xf86.h"
 #include "xf86_OSproc.h"
 #include "xf86Pci.h"
-#include "xf86PciInfo.h"
 #include "xf86fbman.h"
 #include "xf86cmap.h"
 #include "compiler.h"
@@ -47,6 +46,12 @@
 
 #if GET_ABI_MAJOR(ABI_VIDEODRV_VERSION) < 6
 #include "xf86Resources.h"
+#endif
+
+#if GET_ABI_MAJOR(ABI_VIDEODRV_VERSION) < 12
+#define PIOOFFSET hwp->PIOOffset
+#else
+#define PIOOFFSET 0
 #endif
 
 #include <string.h>
@@ -77,8 +82,8 @@ static void ARKLoadPalette(ScrnInfoPtr pScrn, int numColors,
 static void ARKWriteMode(ScrnInfoPtr pScrn, vgaRegPtr pVga, ARKRegPtr new);
 
 /* helpers */
-static unsigned char get_daccomm(IOADDRESS);
-static unsigned char set_daccom(IOADDRESS, unsigned char comm);
+static unsigned char get_daccomm(unsigned long);
+static unsigned char set_daccom(unsigned long, unsigned char comm);
 
 
 _X_EXPORT DriverRec ARK =
@@ -165,10 +170,7 @@ static Bool ARKGetRec(ScrnInfoPtr pScrn)
 
 static void ARKFreeRec(ScrnInfoPtr pScrn)
 {
-	if (!pScrn->driverPrivate)
-		return;
-
-	xfree(pScrn->driverPrivate);
+	free(pScrn->driverPrivate);
 	pScrn->driverPrivate = NULL;
 }
 
@@ -202,7 +204,7 @@ static Bool ARKProbe(DriverPtr drv, int flags)
 					devSections, numDevSections, drv,
 					&usedChips);
 
-	xfree(devSections);
+	free(devSections);
 
 	if (numUsed <= 0)
 		return FALSE;
@@ -229,7 +231,7 @@ static Bool ARKProbe(DriverPtr drv, int flags)
 		foundScreen = TRUE;
 	}
 
-	xfree(usedChips);
+	free(usedChips);
 
 	return foundScreen;
 }
@@ -256,6 +258,7 @@ static Bool ARKPreInit(ScrnInfoPtr pScrn, int flags)
 		return FALSE;
 
 	hwp = VGAHWPTR(pScrn);
+	vgaHWSetStdFuncs(hwp);
 	vgaHWGetIOBase(hwp);
 
 	pScrn->monitor = pScrn->confScreen->monitor;
@@ -299,7 +302,7 @@ static Bool ARKPreInit(ScrnInfoPtr pScrn, int flags)
 	pARK = ARKPTR(pScrn);
 
 	xf86CollectOptions(pScrn, NULL);
-	if (!(pARK->Options = xalloc(sizeof(ARKOptions))))
+	if (!(pARK->Options = malloc(sizeof(ARKOptions))))
 		return FALSE;
 	memcpy(pARK->Options, ARKOptions, sizeof(ARKOptions));
 	xf86ProcessOptions(pScrn->scrnIndex, pScrn->options, pARK->Options);
@@ -348,7 +351,7 @@ static Bool ARKPreInit(ScrnInfoPtr pScrn, int flags)
 		pARK->ChipRev = pARK->PciInfo->revision;
 #endif
 	}
-	xfree(pEnt);
+	free(pEnt);
 
 	xf86DrvMsg(pScrn->scrnIndex, X_CONFIG, "Chipset: \"%s\"\n", pScrn->chipset);
 
@@ -358,19 +361,19 @@ static Bool ARKPreInit(ScrnInfoPtr pScrn, int flags)
 #endif
 
 	/* unlock CRTC[0-7] */
-	outb(hwp->PIOOffset + hwp->IOBase + 4, 0x11);
-	tmp = inb(hwp->PIOOffset + hwp->IOBase + 5);
-	outb(hwp->PIOOffset + hwp->IOBase + 5, tmp & 0x7f);
-	modinx(hwp->PIOOffset + 0x3c4, 0x1d, 0x01, 0x01);
+	outb(PIOOFFSET + hwp->IOBase + 4, 0x11);
+	tmp = inb(PIOOFFSET + hwp->IOBase + 5);
+	outb(PIOOFFSET + hwp->IOBase + 5, tmp & 0x7f);
+	modinx(PIOOFFSET + 0x3c4, 0x1d, 0x01, 0x01);
 
-	/* use membase's later on ??? */
-	pARK->FBAddress = (rdinx(hwp->PIOOffset + 0x3c4, 0x13) << 16) +
-			  (rdinx(hwp->PIOOffset + 0x3c4, 0x14) << 24);
-
-	pScrn->memPhysBase = pARK->FBAddress;
+#ifndef XSERVER_LIBPCIACCESS
+	pScrn->memPhysBase = pARK->PciInfo->memBase[0];
+#else
+	pScrn->memPhysBase = pARK->PciInfo->regions[0].base_addr;
+#endif
 
 	xf86DrvMsg(pScrn->scrnIndex, X_PROBED, "Framebuffer @ 0x%lx\n",
-		   (unsigned long)pARK->FBAddress);
+		   (unsigned long)pScrn->memPhysBase);
 
 	if (!xf86SetGamma(pScrn, gzeros))
 		return FALSE;
@@ -378,7 +381,7 @@ static Bool ARKPreInit(ScrnInfoPtr pScrn, int flags)
 	if (!pScrn->videoRam) {
 		unsigned char sr10;
 
-		sr10 = rdinx(hwp->PIOOffset + 0x3c4, 0x10);
+		sr10 = rdinx(PIOOFFSET + 0x3c4, 0x10);
 		if (pARK->Chipset == PCI_CHIP_1000PV) {
 			if ((sr10 & 0x40) == 0)
 				pScrn->videoRam = 1024;
@@ -403,9 +406,9 @@ static Bool ARKPreInit(ScrnInfoPtr pScrn, int flags)
 	{
 		int man_id, dev_id;
 
-		inb(hwp->PIOOffset + 0x3c6);		/* skip cmd register */
-		man_id = inb(hwp->PIOOffset + 0x3c6);	/* manufacturer id */
-		dev_id = inb(hwp->PIOOffset + 0x3c6);	/* device id */
+		inb(PIOOFFSET + 0x3c6);		/* skip cmd register */
+		man_id = inb(PIOOFFSET + 0x3c6);	/* manufacturer id */
+		dev_id = inb(PIOOFFSET + 0x3c6);	/* device id */
 		if (man_id == 0x84 && dev_id == 0x98) {
 			pARK->ramdac = ZOOMDAC;
 			pARK->dac_width = 16;
@@ -465,8 +468,9 @@ static Bool ARKPreInit(ScrnInfoPtr pScrn, int flags)
 
 	if (!pARK->NoAccel) {
 		if (!xf86LoadSubModule(pScrn, "xaa")) {
-			ARKFreeRec(pScrn);
-			return FALSE;
+			xf86DrvMsg(pScrn->scrnIndex, X_WARNING,
+				   "XAA not available\n");
+			pARK->NoAccel = 1;
 		}
 	}
 
@@ -576,8 +580,8 @@ static void ARKSave(ScrnInfoPtr pScrn)
 	ARKPtr pARK = ARKPTR(pScrn);
 	ARKRegPtr save = &pARK->SavedRegs;
 	vgaHWPtr hwp = VGAHWPTR(pScrn);
-	IOADDRESS isaIOBase = hwp->PIOOffset;
-	IOADDRESS vgaIOBase = isaIOBase + hwp->IOBase;
+	unsigned long isaIOBase = PIOOFFSET;
+	unsigned long vgaIOBase = isaIOBase + hwp->IOBase;
 
 	vgaHWUnlock(hwp);
 	vgaHWSave(pScrn, &hwp->SavedReg, VGA_SR_ALL);
@@ -641,8 +645,8 @@ static Bool ARKModeInit(ScrnInfoPtr pScrn, DisplayModePtr mode)
 	int multiplexing, dac16, modepitch;
 	vgaHWPtr hwp = VGAHWPTR(pScrn);
 	vgaRegPtr pVga = &hwp->ModeReg;
-	IOADDRESS isaIOBase = hwp->PIOOffset;
-	IOADDRESS vgaIOBase = isaIOBase + hwp->IOBase;
+	unsigned long isaIOBase = PIOOFFSET;
+	unsigned long vgaIOBase = isaIOBase + hwp->IOBase;
 	unsigned char tmp;
 	int offset;
 
@@ -748,8 +752,13 @@ static Bool ARKModeInit(ScrnInfoPtr pScrn, DisplayModePtr mode)
 	new->sr10 = rdinx(isaIOBase + 0x3c4, 0x10) & ~0x1f;
 	new->sr10 |= 0x1f;
 
-	new->sr13 = pARK->FBAddress >> 16;
-	new->sr14 = pARK->FBAddress >> 24;
+#ifndef XSERVER_LIBPCIACCESS
+	new->sr13 = pARK->PciInfo->memBase[0] >> 16;
+	new->sr14 = pARK->PciInfo->memBase[0] >> 24;
+#else
+	new->sr13 = pARK->PciInfo->regions[0].base_addr >> 16;
+	new->sr14 = pARK->PciInfo->regions[0].base_addr >> 24;
+#endif
 
 	new->sr12 = rdinx(isaIOBase + 0x3c4, 0x12) & ~0x03;
 	switch (pScrn->videoRam) {
@@ -886,7 +895,7 @@ static void ARKAdjustFrame(int scrnIndex, int x, int y, int flags)
 	ScrnInfoPtr pScrn = xf86Screens[scrnIndex];
 	ARKPtr pARK = ARKPTR(pScrn);
 	vgaHWPtr hwp = VGAHWPTR(pScrn);
-	IOADDRESS vgaIOBase = hwp->PIOOffset + hwp->IOBase;
+	unsigned long vgaIOBase = PIOOFFSET + hwp->IOBase;
 	int base;
 
 	base = ((y * pScrn->displayWidth + x) *
@@ -913,8 +922,8 @@ static void ARKWriteMode(ScrnInfoPtr pScrn, vgaRegPtr pVga, ARKRegPtr new)
 {
 	ARKPtr pARK = ARKPTR(pScrn);
 	vgaHWPtr hwp = VGAHWPTR(pScrn);
-	IOADDRESS isaIOBase = hwp->PIOOffset;
-	IOADDRESS vgaIOBase = isaIOBase + hwp->IOBase;
+	unsigned long isaIOBase = PIOOFFSET;
+	unsigned long vgaIOBase = isaIOBase + hwp->IOBase;
 
 	vgaHWProtect(pScrn, TRUE);
 
@@ -1022,24 +1031,28 @@ static Bool ARKMapMem(ScrnInfoPtr pScrn)
 					     pARK->PciTag, 0xb8000, 0x8000);
 
 	pARK->FBBase = xf86MapPciMem(pScrn->scrnIndex, VIDMEM_FRAMEBUFFER,
-				     pARK->PciTag, pARK->FBAddress,
+				     pARK->PciTag, pARK->PciInfo->memBase[0],
 				     pScrn->videoRam * 1024);
 #else
 
-	pARK->MMIOBase = xf86MapDomainMemory(pScrn->scrnIndex, VIDMEM_MMIO,
-					     pARK->PciInfo, 0xb8000, 0x8000);
+	(void) pci_device_map_legacy(pARK->PciInfo, 0xb8000, 0x8000,
+				     PCI_DEV_MAP_FLAG_WRITABLE,
+				     &pARK->MMIOBase);
 
 	{
-		void** result = (void**)&pARK->FBBase;
+		void** result = &pARK->FBBase;
 		int err = pci_device_map_range(pARK->PciInfo,
-					       pARK->FBAddress,
+					       pARK->PciInfo->regions[0].base_addr,
 					       pScrn->videoRam * 1024,
 					       PCI_DEV_MAP_FLAG_WRITABLE |
 					       PCI_DEV_MAP_FLAG_WRITE_COMBINE,
 					       result);
 		
-		if (err) 
+		if (err) {
+			xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
+			   "Cound not map framebuffer: %d\n", err);
 			return FALSE;
+		}
 	}
 #endif
 
@@ -1061,7 +1074,7 @@ static void ARKUnmapMem(ScrnInfoPtr pScrn)
 	vgaHWUnmapMem(pScrn);
 
 #ifndef XSERVER_LIBPCIACCESS
-	xf86UnMapVidMem(pScrn->scrnIndex, (pointer)pARK->FBBase,
+	xf86UnMapVidMem(pScrn->scrnIndex, pARK->FBBase,
 			pScrn->videoRam * 1024);
 #else
 	pci_device_unmap_range(pARK->PciInfo, pARK->FBBase, pScrn->videoRam * 1024);
@@ -1107,7 +1120,10 @@ static void ARKLoadPalette(ScrnInfoPtr pScrn, int numColors,
 			   int *indicies, LOCO *colors,
 			   VisualPtr pVisual)
 {
-	IOADDRESS isaIOBase = pScrn->domainIOBase;
+	unsigned long isaIOBase = 0;
+#if GET_ABI_MAJOR(ABI_VIDEODRV_VERSION) < 12
+	isaIOBase += pScrn->domainIOBase;
+#endif
 	int i, index;
 
 	for (i=0; i<numColors; i++) {
@@ -1130,7 +1146,7 @@ static void ARKFreeScreen(int scrnIndex, int flags)
 }
 
 
-static unsigned char get_daccomm(IOADDRESS isaIOBase)
+static unsigned char get_daccomm(unsigned long isaIOBase)
 {
 	unsigned char tmp;
 
@@ -1146,7 +1162,7 @@ static unsigned char get_daccomm(IOADDRESS isaIOBase)
 }
 
 
-static unsigned char set_daccom(IOADDRESS isaIOBase, unsigned char comm)
+static unsigned char set_daccom(unsigned long isaIOBase, unsigned char comm)
 {
 #if 0
 	outb(isaIOBase + 0x3c8, 0);

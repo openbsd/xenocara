@@ -1,3 +1,136 @@
+commit e7baf1df0bbc45e1cd697f5df959586ab27103f9
+Author: Matt Turner <mattst88@gmail.com>
+Date:   Thu Jan 26 18:04:34 2012 -0500
+
+    xf86-video-ark 0.7.4
+    
+    Signed-off-by: Matt Turner <mattst88@gmail.com>
+
+commit c2667fb882429f9393b0700a2befe6dde4523f02
+Author: Matt Turner <mattst88@gmail.com>
+Date:   Thu Jan 26 18:03:16 2012 -0500
+
+    Change types of FBBase/MMIOBase to pointer, remove casts
+    
+    Signed-off-by: Matt Turner <mattst88@gmail.com>
+
+commit 99ed41779e28bace7c3321a6d05e6436d4784c48
+Author: Matt Turner <mattst88@gmail.com>
+Date:   Thu Jan 26 17:57:42 2012 -0500
+
+    Use pci_device_map_legacy rather than xf86MapDomainMemory
+    
+    Signed-off-by: Matt Turner <mattst88@gmail.com>
+
+commit 5634e78e42d14ab2325854093a42536844cae07f
+Author: Matt Turner <mattst88@gmail.com>
+Date:   Thu Jan 26 17:44:36 2012 -0500
+
+    Fix typo in 5ab0bf04
+    
+    Signed-off-by: Matt Turner <mattst88@gmail.com>
+
+commit c043cc44316f655c9f267bd20d1ea3e3e2b2da91
+Author: Matt Turner <mattst88@gmail.com>
+Date:   Thu Jan 26 17:32:12 2012 -0500
+
+    Use unsigned long rather than deprecated IOADDRESS
+    
+    Signed-off-by: Matt Turner <mattst88@gmail.com>
+
+commit 1cac2174beb340f9a8b868818a5261b80435d3eb
+Author: Matt Turner <mattst88@gmail.com>
+Date:   Thu Jan 26 17:31:26 2012 -0500
+
+    Remove uses of xf86PciInfo.h
+    
+    Signed-off-by: Matt Turner <mattst88@gmail.com>
+
+commit bd0aa75692cc421bfeada64239fc381c40bc2ec9
+Author: Matt Turner <mattst88@gmail.com>
+Date:   Thu Jan 26 17:19:36 2012 -0500
+
+    Add &component=Driver/ark to Bugzilla link
+    
+    Signed-off-by: Matt Turner <mattst88@gmail.com>
+
+commit 97a1aa4b460e6ffda16704954012063c094d770b
+Author: Matt Turner <mattst88@gmail.com>
+Date:   Mon Sep 26 22:48:08 2011 -0400
+
+    Remove if(E != NULL) checks around free(E)
+    
+    Signed-off-by: Matt Turner <mattst88@gmail.com>
+
+commit 70321db733c380a3b5f2198d733d75916f54c10b
+Author: Matt Turner <mattst88@gmail.com>
+Date:   Mon Sep 26 22:46:51 2011 -0400
+
+    Remove xalloc/xcalloc/xrealloc/xfree
+    
+    Signed-off-by: Matt Turner <mattst88@gmail.com>
+
+commit 5ab0bf04c400f3d7d97c931b5d9e1f0318cc6f59
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Mon Dec 19 17:44:49 2011 -0500
+
+    Fix for new vgaHW ABI
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit 075a675e424cc2fbf7ab65e086b111ecfca7105f
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Mon Dec 19 16:11:53 2011 -0500
+
+    Make failure to XAA non-fatal
+    
+    No shadowfb support in this driver yet.
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit d9492762b862aa02392a011ed70e38e77e33ee40
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Thu Nov 17 16:22:16 2011 -0500
+
+    Adapt to videoabi 12
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit 9d3769bed020e9796e51411c63de337da5073bb4
+Author: Ondrej Zary <linux@rainbow-software.org>
+Date:   Fri Dec 3 19:23:51 2010 -0500
+
+    Don't assume that FB address registers are initialized properly
+    
+    https://bugs.freedesktop.org/show_bug.cgi?id=28249
+    
+    ark driver does not work with Hercules Stingray 64 card (ark2000pv).
+    X fails to start with:
+    
+    [...]
+    (II) ark(0): vgaHWGetIOBase: hwp->IOBase is 0x03d0, hwp->PIOOffset is
+    0x0000
+    (II) ark(0): Creating default Display subsection in Screen section
+            "Default Screen Section" for depth/fbbpp 24/32
+    (==) ark(0): Depth 24, (--) framebuffer bpp 32
+    (==) ark(0): RGB weight 888
+    (==) ark(0): Default visual is TrueColor
+    (**) ark(0): Chipset: "ark2000pv"
+    (--) ark(0): Framebuffer @ 0xe5e50000
+    (==) ark(0): Using gamma correction (1.0, 1.0, 1.0)
+    (--) ark(0): Detected 2048 bytes video ram
+    [...]
+    Fatal server error:
+    AddScreen/ScreenInit failed for driver 0
+    
+    Comparing with lspci, the framebuffer address is wrong:
+    00:0f.0 VGA compatible controller: ARK Logic Inc 2000PV [Stingray] (prog-if 00 [VGA controller])
+    	Flags: medium devsel
+    	Memory at e5000000 (32-bit, prefetchable) [size=4M]
+    	[virtual] Expansion ROM at 1c000000 [disabled] [size=64K]
+    
+    Reviewed-by: Adam Jackson <ajax@redhat.com>
+
 commit 5013a760db93d08b0bb87b6ad2537b1073cedf36
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Fri Jul 23 14:35:43 2010 -0700

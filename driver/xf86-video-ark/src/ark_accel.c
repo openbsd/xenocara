@@ -35,7 +35,6 @@
 #include "xf86.h"
 #include "xf86_OSproc.h"
 #include "xaa.h"
-#include "xf86PciInfo.h"
 #include "compiler.h"
 
 #include "ark.h"
@@ -47,7 +46,10 @@ static int curx, cury, cmd_flags;
 
 static void ARKSync(ScrnInfoPtr pScrn)
 {
-	IOADDRESS port = pScrn->domainIOBase + 0x3cb;
+	unsigned long port = 0x3cb;
+#if ABI_VIDEODRV_VERSION < 12
+	port += pScrn->domainIOBase + 0x3cb;
+#endif
 
 	for (;;) {
 		if (!(inb(port) & 0x40))
