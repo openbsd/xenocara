@@ -13,7 +13,6 @@
  *	David Dawes, Andrew E. Mileski, Leonard N. Zubkoff,
  *	Guy DESBIEF, Itai Nahshon.
  */
-/* $XFree86: xc/programs/Xserver/hw/xfree86/drivers/cirrus/lg_driver.c,v 1.49 2003/11/03 05:11:09 tsi Exp $ */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -259,7 +258,7 @@ LgFreeRec(ScrnInfoPtr pScrn)
 {
 	if (pScrn->driverPrivate == NULL)
 		return;
-	xfree(pScrn->driverPrivate);
+	free(pScrn->driverPrivate);
 	pScrn->driverPrivate = NULL;
 }
 
@@ -365,6 +364,7 @@ LgPreInit(ScrnInfoPtr pScrn, int flags)
 		return FALSE;
 
 	hwp = VGAHWPTR(pScrn);
+	vgaHWSetStdFuncs(hwp);
 	vgaHWGetIOBase(hwp);
 
 	/* Allocate the LgRec driverPrivate */
@@ -373,7 +373,12 @@ LgPreInit(ScrnInfoPtr pScrn, int flags)
 
 	pCir = CIRPTR(pScrn);
 	pCir->pScrn = pScrn;
+
+#if GET_ABI_MAJOR(ABI_VIDEODRV_VERSION) < 12
 	pCir->PIOReg = hwp->PIOOffset + 0x3CE;
+#else
+	pCir->PIOReg = 0x3CE;
+#endif
 
 	/* Get the entity, and make sure it is PCI. */
 	pCir->pEnt = xf86GetEntityInfo(pScrn->entityList[0]);
@@ -454,7 +459,7 @@ LgPreInit(ScrnInfoPtr pScrn, int flags)
 	xf86CollectOptions(pScrn, NULL);
 
 	/* Process the options */
-	if (!(pCir->Options = xalloc(sizeof(LgOptions))))
+	if (!(pCir->Options = malloc(sizeof(LgOptions))))
 		return FALSE;
 	memcpy(pCir->Options, LgOptions, sizeof(LgOptions));
 	xf86ProcessOptions(pScrn->scrnIndex, pScrn->options, pCir->Options);
@@ -796,8 +801,10 @@ LgPreInit(ScrnInfoPtr pScrn, int flags)
 	/* Load XAA if needed */
 	if (!pCir->NoAccel) {
 		if (!xf86LoadSubModule(pScrn, "xaa")) {
-			LgFreeRec(pScrn);
-			return FALSE;
+			xf86DrvMsg(pScrn->scrnIndex, X_INFO,
+				   "Falling back to shadowfb\n");
+			pCir->NoAccel = TRUE;
+			pCir->shadowFB = TRUE;
 		}
 	}
 
@@ -1314,7 +1321,7 @@ LgScreenInit(int scrnIndex, ScreenPtr pScreen, int argc, char **argv)
 	
 	if(pCir->shadowFB) {
 	    pCir->ShadowPitch = BitmapBytePad(pScrn->bitsPerPixel * width);
-	    pCir->ShadowPtr = xalloc(pCir->ShadowPitch * height);
+	    pCir->ShadowPtr = malloc(pCir->ShadowPitch * height);
 	    displayWidth = pCir->ShadowPitch / (pScrn->bitsPerPixel >> 3);
 	    FbBase = pCir->ShadowPtr;
 	} else {
@@ -1617,7 +1624,7 @@ LgCloseScreen(int scrnIndex, ScreenPtr pScreen)
 		xf86DestroyCursorInfoRec(pCir->CursorInfoRec);
 	pCir->CursorInfoRec = NULL;
 	if (pCir->DGAModes)
-		xfree(pCir->DGAModes);
+		free(pCir->DGAModes);
 	pCir->DGAnumModes = 0;
 	pCir->DGAModes = NULL;
 

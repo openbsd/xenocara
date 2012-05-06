@@ -1,5 +1,3 @@
-/* $XFree86: Exp $ */
-
 /*
    Copyright (c) 1999,2000  The XFree86 Project Inc. 
    based on code written by Mark Vojkovich <markv@valinux.com>

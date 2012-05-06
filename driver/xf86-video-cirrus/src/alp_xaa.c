@@ -4,8 +4,6 @@
 #include "config.h"
 #endif
 
-/* $XFree86: xc/programs/Xserver/hw/xfree86/drivers/cirrus/alp_xaa.c,v 1.7 2001/10/01 13:44:05 eich Exp $ */
-
 #include "xf86.h"
 #include "xf86_OSproc.h"
 #include "compiler.h"

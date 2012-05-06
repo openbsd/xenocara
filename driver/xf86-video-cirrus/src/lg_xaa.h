@@ -13,7 +13,6 @@
  * This header file draws much from the file cir_blitLG.h in version 3.3.3
  * of XFree86.
  */
-/* $XFree86: xc/programs/Xserver/hw/xfree86/drivers/cirrus/lg_xaa.h,v 1.3 2000/02/08 13:13:15 eich Exp $ */
 
 /* This header file defines the necessary structures, contstants, and
    variables for using the bitBLT engine on a Laguna family graphics

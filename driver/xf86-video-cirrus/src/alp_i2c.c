@@ -4,8 +4,6 @@
 #include "config.h"
 #endif
 
-/* $XFree86: xc/programs/Xserver/hw/xfree86/drivers/cirrus/alp_i2c.c,v 1.6 1999/02/28 11:19:38 dawes Exp $ */
-
 #include "xf86.h"
 #include "xf86_OSproc.h"
 #include "compiler.h"

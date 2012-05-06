@@ -1,5 +1,3 @@
-/* $XFree86: xc/programs/Xserver/hw/xfree86/drivers/cirrus/alp.h,v 1.8 2001/10/01 13:44:05 eich Exp $ */
-
 /* (c) Itai Nahshon */
 
 #ifndef ALP_H

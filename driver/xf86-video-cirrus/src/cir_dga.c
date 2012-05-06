@@ -1,4 +1,3 @@
-/* $XFree86: xc/programs/Xserver/hw/xfree86/drivers/cirrus/cir_dga.c,v 1.5 2001/02/15 17:39:27 eich Exp $ */
 /*
  * Copyright 2000 by Egbert Eich
  *
@@ -83,9 +82,9 @@ CirDGAInit(ScreenPtr pScreen)
   if (!pCir->DGAnumModes) {
     pMode = firstMode = pScrn->modes;
     while (pMode) {
-      newmodes = xrealloc(modes, (num + 1) * sizeof (DGAModeRec));
+      newmodes = realloc(modes, (num + 1) * sizeof (DGAModeRec));
       if (!newmodes) {
-	xfree(modes);
+	free(modes);
 	return FALSE;
       }
       modes = newmodes;
