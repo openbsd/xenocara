@@ -271,7 +271,7 @@ I810PreInit(ScrnInfoPtr pScrn, int flags)
    if (!vgaHWGetHWRec(pScrn))
       return FALSE;
    hwp = VGAHWPTR(pScrn);
-   pI810->ioBase = hwp->PIOOffset;
+   vgaHWSetStdFuncs(hwp);
 
    pI810->PciInfo = xf86GetPciInfoForEntity(pI810->pEnt->index);
 
