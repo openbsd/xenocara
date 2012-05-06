@@ -51,6 +51,12 @@
 #include <xf86_libc.h>
 #endif
 
+
+#define HAVE_FILLKEYHELPERDRAWABLE \
+    ((GET_ABI_MAJOR(ABI_VIDEODRV_VERSION) >= 2) ||  \
+     ((GET_ABI_MAJOR(ABI_VIDEODRV_VERSION) == 1) && \
+      (GET_ABI_MINOR(ABI_VIDEODRV_VERSION) >= 2)))
+
 #define MAKE_ATOM(a) MakeAtom(a, sizeof(a) - 1, TRUE)
 
 /*
@@ -159,7 +165,7 @@ struct VMWAREVideoRec {
    int                (*play)(ScrnInfoPtr, struct VMWAREVideoRec *,
                               short, short, short, short, short,
                               short, short, short, int, unsigned char*,
-                              short, short, RegionPtr);
+                              short, short, RegionPtr, DrawablePtr);
    /*
     * Offscreen memory region used to pass video data to the host.
     */
@@ -180,7 +186,7 @@ typedef VMWAREVideoRec *VMWAREVideoPtr;
 /*
  * Callback functions
  */
-#ifdef HAVE_XORG_SERVER_1_0_99_901
+#if (GET_ABI_MAJOR(ABI_VIDEODRV_VERSION) >= 1)
 static int vmwareXvPutImage(ScrnInfoPtr pScrn, short src_x, short src_y,
                             short drw_x, short drw_y, short src_w, short src_h,
                             short drw_w, short drw_h, int image,
@@ -217,7 +223,8 @@ static int vmwareVideoInitStream(ScrnInfoPtr pScrn, VMWAREVideoPtr pVid,
                                  short drw_y, short src_w, short src_h,
                                  short drw_w, short drw_h, int format,
                                  unsigned char *buf, short width,
-                                 short height, RegionPtr clipBoxes);
+                                 short height, RegionPtr clipBoxes,
+				 DrawablePtr draw);
 static int vmwareVideoInitAttributes(ScrnInfoPtr pScrn, VMWAREVideoPtr pVid,
                                      int format, unsigned short width,
                                      unsigned short height);
@@ -226,7 +233,8 @@ static int vmwareVideoPlay(ScrnInfoPtr pScrn, VMWAREVideoPtr pVid,
                            short drw_y, short src_w, short src_h,
                            short drw_w, short drw_h, int format,
                            unsigned char *buf, short width,
-                           short height, RegionPtr clipBoxes);
+                           short height, RegionPtr clipBoxes,
+			   DrawablePtr draw);
 static void vmwareVideoFlush(VMWAREPtr pVMWARE, uint32 streamId);
 static void vmwareVideoSetOneReg(VMWAREPtr pVMWARE, uint32 streamId,
                                  uint32 regId, uint32 value);
@@ -631,7 +639,8 @@ vmwareVideoInitStream(ScrnInfoPtr pScrn, VMWAREVideoPtr pVid,
                       short drw_y, short src_w, short src_h,
                       short drw_w, short drw_h, int format,
                       unsigned char *buf, short width,
-                      short height, RegionPtr clipBoxes)
+                      short height, RegionPtr clipBoxes,
+		      DrawablePtr draw)
 {
     VMWAREPtr pVMWARE = VMWAREPTR(pScrn);
     int i;
@@ -676,8 +685,11 @@ vmwareVideoInitStream(ScrnInfoPtr pScrn, VMWAREVideoPtr pVid,
 	BoxPtr boxes = REGION_RECTS(&pVid->clipBoxes);
 	int nBoxes = REGION_NUM_RECTS(&pVid->clipBoxes);
 
+#if HAVE_FILLKEYHELPERDRAWABLE
+	xf86XVFillKeyHelperDrawable(draw, pVid->colorKey, clipBoxes);
+#else
         xf86XVFillKeyHelper(pScrn->pScreen, pVid->colorKey, clipBoxes);
-
+#endif
 	/**
 	 * Force update to paint the colorkey before the overlay flush.
 	 */
@@ -691,7 +703,8 @@ vmwareVideoInitStream(ScrnInfoPtr pScrn, VMWAREVideoPtr pVid,
                pVid->fbarea->offset, pVid->fbarea->size, pVid->size));
 
     return pVid->play(pScrn, pVid, src_x, src_y, drw_x, drw_y, src_w, src_h,
-                      drw_w, drw_h, format, buf, width, height, clipBoxes);
+                      drw_w, drw_h, format, buf, width, height, clipBoxes,
+		      draw);
 }
 
 
@@ -761,7 +774,8 @@ vmwareVideoPlay(ScrnInfoPtr pScrn, VMWAREVideoPtr pVid,
                 short drw_y, short src_w, short src_h,
                 short drw_w, short drw_h, int format,
                 unsigned char *buf, short width,
-                short height, RegionPtr clipBoxes)
+                short height, RegionPtr clipBoxes,
+		DrawablePtr draw)
 {
     VMWAREPtr pVMWARE = VMWAREPTR(pScrn);
     uint32 *fifoItem;
@@ -803,7 +817,7 @@ vmwareVideoPlay(ScrnInfoPtr pScrn, VMWAREVideoPtr pVid,
         vmwareStopVideo(pScrn, pVid, TRUE);
         return pVid->play(pScrn, pVid, src_x, src_y, drw_x, drw_y, src_w,
                           src_h, drw_w, drw_h, format, buf, width, height,
-                          clipBoxes);
+                          clipBoxes, draw);
     }
 
     pVid->size = size;
@@ -856,8 +870,11 @@ vmwareVideoPlay(ScrnInfoPtr pScrn, VMWAREVideoPtr pVid,
 	    BoxPtr boxes = REGION_RECTS(&pVid->clipBoxes);
 	    int nBoxes = REGION_NUM_RECTS(&pVid->clipBoxes);
 
-            xf86XVFillKeyHelper(pScrn->pScreen, pVid->colorKey, clipBoxes);
-
+#if HAVE_FILLKEYHELPERDRAWABLE
+	    xf86XVFillKeyHelperDrawable(draw, pVid->colorKey, clipBoxes);
+#else
+	    xf86XVFillKeyHelper(pScrn->pScreen, pVid->colorKey, clipBoxes);
+#endif
 	    /**
 	     * Force update to paint the colorkey before the overlay flush.
 	     */
@@ -1056,7 +1073,7 @@ vmwareVideoEndStream(ScrnInfoPtr pScrn, VMWAREVideoPtr pVid)
  *-----------------------------------------------------------------------------
  */
 
-#ifdef HAVE_XORG_SERVER_1_0_99_901
+#if (GET_ABI_MAJOR(ABI_VIDEODRV_VERSION) >= 1)
 static int
 vmwareXvPutImage(ScrnInfoPtr pScrn, short src_x, short src_y,
                  short drw_x, short drw_y, short src_w, short src_h,
@@ -1082,8 +1099,15 @@ vmwareXvPutImage(ScrnInfoPtr pScrn, short src_x, short src_y,
         return XvBadAlloc;
     }
 
+#if (GET_ABI_MAJOR(ABI_VIDEODRV_VERSION) >= 1)
     return pVid->play(pScrn, pVid, src_x, src_y, drw_x, drw_y, src_w, src_h,
-                      drw_w, drw_h, format, buf, width, height, clipBoxes);
+                      drw_w, drw_h, format, buf, width, height, clipBoxes,
+		      dst);
+#else
+    return pVid->play(pScrn, pVid, src_x, src_y, drw_x, drw_y, src_w, src_h,
+                      drw_w, drw_h, format, buf, width, height, clipBoxes,
+		      NULL);
+#endif
 }
 
 

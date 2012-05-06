@@ -14,6 +14,21 @@ vmware \- VMware SVGA video driver
 .SH DESCRIPTION
 .B vmware 
 is an __xservername__ driver for VMware virtual video cards. 
+.SH MODESETTING, XINERAMA AND RANDR12
+If the driver can connect to the \*qvmwgfx\*q kernel module on linux, it
+will attempt to use kernel modesetting and will then also use RandR12 for
+multiple output operation instead of Xinerama. The X server log or the
+\*qxrandr\*q application can be used to determine whether RandR12 or Xinerama
+is actually used.
+.SH 3D ACCELERATION
+If the driver can connect to the \*qvmwgfx\*q kernel module on linux, and
+the Virtual Machine is set up to use 3D acceleration, the driver will try to
+use Gallium3D XA to accelerate 3D operations. It will also by default enable
+DRI, the Direct Rendering Infrastructure, primarily for accelerated OpenGL.
+If 3D acceleration is available,
+the driver will in addition provide an additional XVideo adaptor for textured
+video. Gallium3D XA,\*libxatracker.so\*q and the accelerated OpenGL driver,
+\*qvmwgfx_dri.so\*q is provided by the mesa distribution.
 .SH CONFIGURATION DETAILS
 Please refer to __xconfigfile__(__filemansuffix__) for general configuration
 details.  This section only covers configuration details specific to this
@@ -35,9 +50,51 @@ hardware supports it.
 .BI "Option \*qStaticXinerama\*q \*q" string \*q
 Provide a static xinerama geometry that will be active at server startup
 and will not be overridden at runtime.
-The format is "Width1xHeight1+Xoffset1+Yoffset1;Width2xHeight2+Xoffset2+Yoffset2"
-and so on. Negative offsets are not supported.
+The format is "Width1xHeight1+Xoffset1+Yoffset1;Width2xHeight2+Xoffset2+Yoffset2" and so on. Negative offsets are not supported. If the driver is using
+RandR12, this option should be used to place and enable outputs at driver
+startup time or else when VMware tools is not used for that purpose.
+Also please see option \*qGuiLayout\*q.
+.TP
+.BI "Option \*qGuiLayout\*q \*q" string \*q
+A synonym to option \*qStaticXinerama\*q, since the latter name is somewhat
+misleading when RandR12 is favoured before Xinerarma.
+.TP
+.BI "Option \*qAddDefaultMode\*q \*q" boolean \*q
+Provide a default mode with a resolution identical to the resolution of the
+guest before the X server was started. The X server will thus try to start
+without changing resolution. Default: on.
+.TP
+.BI "Option \*qRenderAccel\*q \*q" boolean \*q
+Try to accelerate render operations if the operations are reading from
+previously accelerated contents (3D or video). This option is needed for
+3D support. Default: on if 3D acceleration is supported. Otherwise off.
+.TP
+.BI "Option \*qDRI\*q \*q" boolean \*q
+Enable the Direct Rendering Infrastructure. Default: on if 3D acceleration is
+supported and \*qRenderAccel\*q is enabled. Otherwise off.
+.TP
+.BI "Option \*qDirectPresents\*q \*q" boolean \*q
+Speed up OpenGL swapbuffers by skipping a copy operation. This provides some
+OpenGL swapbuffer speedups, but may cause performance
+degradation and rendering errors when 3D contents is read back for mixing
+with software rendered contents. Default: off.
+.TP
+.BI "Option \*qHwPresents\*q \*q" boolean \*q
+This is a developer convenience option and should not be used by distros
+or normal users. When enabled, it copies software rendered contents to a
+3D surface before presenting it, so that the visible screen is always present
+on a 3D surface. Default: off.
+.TP
+.BI "Option \*qRenderCheck\*q \*q" boolean \*q
+This is a developer convenience option and should not be used by distros
+or normal users. When enabled, it tries to use 3D acceleration for all
+XRender operations where 3D acceleration is supported, resulting in a
+considerable slowdown due to the increased number of readbacks of
+accelerated contents from host to guest. This option is used to verify
+that the accelerated Xrender paths works correctly with the "rendercheck"
+application. Default: off.
+.TP
 .SH "SEE ALSO"
-__xservername__(__appmansuffix__), __xconfigfile__(__filemansuffix__), Xserver(__appmansuffix__), X(__miscmansuffix__)
+__xservername__(__appmansuffix__), __xconfigfile__(__filemansuffix__), Xserver(__appmansuffix__), X(__miscmansuffix__), xrandr(__appmansuffix__)
 .SH AUTHORS
 Copyright (c) 1999-2007 VMware, Inc.

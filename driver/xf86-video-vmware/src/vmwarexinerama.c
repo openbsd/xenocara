@@ -48,6 +48,26 @@
 #include <xf86_libc.h>
 #endif
 
+/* 
+ * LookupWindow was removed with video abi 11.
+ */
+#if (GET_ABI_MAJOR(ABI_VIDEODRV_VERSION) < 4)
+#ifndef DixGetAttrAccess
+#define DixGetAttrAccess   (1<<4)
+#endif
+#endif
+
+#if (GET_ABI_MAJOR(ABI_VIDEODRV_VERSION) < 2)
+static inline int
+dixLookupWindow(WindowPtr *pWin, XID id, ClientPtr client, Mask access)
+{
+    *pWin = LookupWindow(id, client);
+    if (!*pWin)
+	return BadWindow;
+    return Success;
+}
+#endif
+
 
 /*
  *----------------------------------------------------------------------------
@@ -79,10 +99,10 @@ VMwareXineramaQueryVersion(ClientPtr client)
     rep.majorVersion = 1;
     rep.minorVersion = 0;
     if(client->swapped) {
-        swaps(&rep.sequenceNumber, n);
-        swapl(&rep.length, n);
-        swaps(&rep.majorVersion, n);
-        swaps(&rep.minorVersion, n);
+        _swaps(&rep.sequenceNumber, n);
+        _swapl(&rep.length, n);
+        _swaps(&rep.majorVersion, n);
+        _swaps(&rep.minorVersion, n);
     }
     WriteToClient(client, sizeof(xPanoramiXQueryVersionReply), (char *)&rep);
     return (client->noClientException);
@@ -116,10 +136,12 @@ VMwareXineramaGetState(ClientPtr client)
     ExtensionEntry *ext;
     ScrnInfoPtr pScrn;
     VMWAREPtr pVMWARE;
+    int rc;
 
     REQUEST_SIZE_MATCH(xPanoramiXGetStateReq);
-    pWin = LookupWindow(stuff->window, client);
-    if(!pWin) return BadWindow;
+    rc = dixLookupWindow(&pWin, stuff->window, client, DixGetAttrAccess);
+    if (rc != Success)
+	return rc;
 
     if (!(ext = CheckExtension(PANORAMIX_PROTOCOL_NAME))) {
        return BadMatch;
@@ -131,10 +153,11 @@ VMwareXineramaGetState(ClientPtr client)
     rep.length = 0;
     rep.sequenceNumber = client->sequence;
     rep.state = pVMWARE->xinerama;
+    rep.window = stuff->window;
     if(client->swapped) {
-       swaps (&rep.sequenceNumber, n);
-       swapl (&rep.length, n);
-       swaps (&rep.state, n);
+       _swaps (&rep.sequenceNumber, n);
+       _swapl (&rep.length, n);
+       _swapl (&rep.window, n);
     }
     WriteToClient(client, sizeof(xPanoramiXGetStateReply), (char *)&rep);
     return client->noClientException;
@@ -168,10 +191,12 @@ VMwareXineramaGetScreenCount(ClientPtr client)
     ExtensionEntry *ext;
     ScrnInfoPtr pScrn;
     VMWAREPtr pVMWARE;
+    int rc;
 
     REQUEST_SIZE_MATCH(xPanoramiXGetScreenCountReq);
-    pWin = LookupWindow(stuff->window, client);
-    if(!pWin) return BadWindow;
+    rc = dixLookupWindow(&pWin, stuff->window, client, DixGetAttrAccess);
+    if (rc != Success)
+	return rc;
 
     if (!(ext = CheckExtension(PANORAMIX_PROTOCOL_NAME))) {
        return BadMatch;
@@ -183,10 +208,12 @@ VMwareXineramaGetScreenCount(ClientPtr client)
     rep.length = 0;
     rep.sequenceNumber = client->sequence;
     rep.ScreenCount = pVMWARE->xineramaNumOutputs;
+    rep.window = stuff->window;
+    
     if(client->swapped) {
-       swaps(&rep.sequenceNumber, n);
-       swapl(&rep.length, n);
-       swaps(&rep.ScreenCount, n);
+       _swaps(&rep.sequenceNumber, n);
+       _swapl(&rep.length, n);
+       _swapl(&rep.window, n);
     }
     WriteToClient(client, sizeof(xPanoramiXGetScreenCountReply), (char *)&rep);
     return client->noClientException;
@@ -220,10 +247,13 @@ VMwareXineramaGetScreenSize(ClientPtr client)
     ExtensionEntry *ext;
     ScrnInfoPtr pScrn;
     VMWAREPtr pVMWARE;
+    int rc;
+
 
     REQUEST_SIZE_MATCH(xPanoramiXGetScreenSizeReq);
-    pWin = LookupWindow (stuff->window, client);
-    if(!pWin)  return BadWindow;
+    rc = dixLookupWindow(&pWin, stuff->window, client, DixGetAttrAccess);
+    if (rc != Success)
+	return rc;
 
     if (!(ext = CheckExtension(PANORAMIX_PROTOCOL_NAME))) {
        return BadMatch;
@@ -236,11 +266,15 @@ VMwareXineramaGetScreenSize(ClientPtr client)
     rep.sequenceNumber = client->sequence;
     rep.width  = pVMWARE->xineramaState[stuff->screen].width;
     rep.height  = pVMWARE->xineramaState[stuff->screen].height;
+    rep.window = stuff->window;
+    rep.screen = stuff->screen;
     if(client->swapped) {
-       swaps(&rep.sequenceNumber, n);
-       swapl(&rep.length, n);
-       swaps(&rep.width, n);
-       swaps(&rep.height, n);
+       _swaps(&rep.sequenceNumber, n);
+       _swapl(&rep.length, n);
+       _swapl(&rep.width, n);
+       _swapl(&rep.height, n);
+       _swapl(&rep.window, n);
+       _swapl(&rep.screen, n);
     }
     WriteToClient(client, sizeof(xPanoramiXGetScreenSizeReply), (char *)&rep);
     return client->noClientException;
@@ -286,9 +320,9 @@ VMwareXineramaIsActive(ClientPtr client)
     rep.state = pVMWARE->xinerama;
     if(client->swapped) {
 	register int n;
-	swaps(&rep.sequenceNumber, n);
-	swapl(&rep.length, n);
-	swapl(&rep.state, n);
+	_swaps(&rep.sequenceNumber, n);
+	_swapl(&rep.length, n);
+	_swapl(&rep.state, n);
     }
     WriteToClient(client, sizeof(xXineramaIsActiveReply), (char *) &rep);
     return client->noClientException;
@@ -334,9 +368,9 @@ VMwareXineramaQueryScreens(ClientPtr client)
     rep.length = rep.number * sz_XineramaScreenInfo >> 2;
     if(client->swapped) {
        register int n;
-       swaps(&rep.sequenceNumber, n);
-       swapl(&rep.length, n);
-       swapl(&rep.number, n);
+       _swaps(&rep.sequenceNumber, n);
+       _swapl(&rep.length, n);
+       _swapl(&rep.number, n);
     }
     WriteToClient(client, sizeof(xXineramaQueryScreensReply), (char *)&rep);
 
@@ -351,10 +385,10 @@ VMwareXineramaQueryScreens(ClientPtr client)
 	  scratch.height = pVMWARE->xineramaState[i].height;
 	  if(client->swapped) {
 	     register int n;
-	     swaps(&scratch.x_org, n);
-	     swaps(&scratch.y_org, n);
-	     swaps(&scratch.width, n);
-	     swaps(&scratch.height, n);
+	     _swaps(&scratch.x_org, n);
+	     _swaps(&scratch.y_org, n);
+	     _swaps(&scratch.width, n);
+	     _swaps(&scratch.height, n);
 	  }
 	  WriteToClient(client, sz_XineramaScreenInfo, (char *)&scratch);
        }
@@ -425,7 +459,7 @@ SVMwareXineramaQueryVersion (ClientPtr client)
 {
     REQUEST(xPanoramiXQueryVersionReq);
     register int n;
-    swaps(&stuff->length,n);
+    _swaps(&stuff->length,n);
     REQUEST_SIZE_MATCH (xPanoramiXQueryVersionReq);
     return VMwareXineramaQueryVersion(client);
 }
@@ -453,7 +487,7 @@ SVMwareXineramaGetState(ClientPtr client)
 {
     REQUEST(xPanoramiXGetStateReq);
     register int n;
-    swaps (&stuff->length, n);
+    _swaps (&stuff->length, n);
     REQUEST_SIZE_MATCH(xPanoramiXGetStateReq);
     return VMwareXineramaGetState(client);
 }
@@ -481,7 +515,7 @@ SVMwareXineramaGetScreenCount(ClientPtr client)
 {
     REQUEST(xPanoramiXGetScreenCountReq);
     register int n;
-    swaps (&stuff->length, n);
+    _swaps (&stuff->length, n);
     REQUEST_SIZE_MATCH(xPanoramiXGetScreenCountReq);
     return VMwareXineramaGetScreenCount(client);
 }
@@ -509,7 +543,7 @@ SVMwareXineramaGetScreenSize(ClientPtr client)
 {
     REQUEST(xPanoramiXGetScreenSizeReq);
     register int n;
-    swaps (&stuff->length, n);
+    _swaps (&stuff->length, n);
     REQUEST_SIZE_MATCH(xPanoramiXGetScreenSizeReq);
     return VMwareXineramaGetScreenSize(client);
 }
@@ -537,7 +571,7 @@ SVMwareXineramaIsActive(ClientPtr client)
 {
     REQUEST(xXineramaIsActiveReq);
     register int n;
-    swaps (&stuff->length, n);
+    _swaps (&stuff->length, n);
     REQUEST_SIZE_MATCH(xXineramaIsActiveReq);
     return VMwareXineramaIsActive(client);
 }
@@ -565,7 +599,7 @@ SVMwareXineramaQueryScreens(ClientPtr client)
 {
     REQUEST(xXineramaQueryScreensReq);
     register int n;
-    swaps (&stuff->length, n);
+    _swaps (&stuff->length, n);
     REQUEST_SIZE_MATCH(xXineramaQueryScreensReq);
     return VMwareXineramaQueryScreens(client);
 }

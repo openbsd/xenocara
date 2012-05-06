@@ -23,12 +23,13 @@
 # Initialize Autoconf
 AC_PREREQ([2.60])
 AC_INIT([xf86-video-vmware],
-        [11.0.3],
+        [12.0.2],
         [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],
         [xf86-video-vmware])
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_AUX_DIR(.)
+AC_SYS_LARGEFILE
 
 # Initialize Automake
 AM_INIT_AUTOMAKE([foreign dist-bzip2])
@@ -72,18 +73,9 @@ XORG_DRIVER_CHECK_EXT(XV, videoproto)
 
 # Obtain compiler/linker options for the driver dependencies
 PKG_CHECK_MODULES(XORG, [xorg-server >= 1.0.1 xproto fontsproto $REQUIRED_MODULES])
-PKG_CHECK_MODULES(LIBDRM,
-		  [libdrm],
-		  [AC_DEFINE([HAVE_LIBDRM], 1, [Has libdrm])],
-		  [echo "Will not try support for 3D or kernel modesetting."])
-
 PKG_CHECK_EXISTS([xorg-server >= 1.1.0],
                  [AC_DEFINE([HAVE_XORG_SERVER_1_1_0], 1,
                  [Has version 1.1.0 or greater of the Xserver])])
-
-PKG_CHECK_EXISTS([xorg-server >= 1.0.99.901],
-                 [AC_DEFINE([HAVE_XORG_SERVER_1_0_99_901], 1,
-                 [Has version 1.0.99.901 or greater of the Xserver])])
 
 PKG_CHECK_EXISTS([xorg-server >= 1.2.0],
                  [AC_DEFINE([HAVE_XORG_SERVER_1_2_0], 1,
@@ -95,7 +87,12 @@ PKG_CHECK_EXISTS([xorg-server >= 1.4.99],
 
 PKG_CHECK_EXISTS([xorg-server >= 1.7.0],
                  [AC_DEFINE([HAVE_XORG_SERVER_1_7_0], 1,
-                 [Has version 1.7.0 or greater of the Xserver])])
+                 [Has version 1.7.0 or greater of the Xserver])
+		 BUILD_VMWGFX=yes],[BUILD_VMWGFX=no])
+
+PKG_CHECK_EXISTS([xorg-server >= 1.12.0],
+                 [AC_DEFINE([HAVE_XORG_SERVER_1_12_0], 1,
+                 [Has version 1.12.0 or greater of the Xserver])])
 
 # Obtain compiler/linker options for the vmwarectrl client tool
 PKG_CHECK_MODULES(X11, x11 xext)
@@ -117,13 +114,33 @@ AM_CONDITIONAL(XSERVER_LIBPCIACCESS, test "x$XSERVER_LIBPCIACCESS" = xyes)
 
 AC_SUBST([moduledir])
 
+if test x$BUILD_VMWGFX = xyes; then
+	PKG_CHECK_MODULES([LIBDRM], [libdrm],[],[BUILD_VMWGFX=no])
+fi
+if test x$BUILD_VMWGFX = xyes; then
+	PKG_CHECK_MODULES([XATRACKER], [xatracker >= 0.4.0],[],[BUILD_VMWGFX=no])
+fi
+
 DRIVER_NAME=vmware
 AC_SUBST([DRIVER_NAME])
 
+AC_MSG_CHECKING([whether to build Kernel Mode Setting and 3D])
+if test x$BUILD_VMWGFX = xyes; then
+	AC_MSG_RESULT([yes])
+        AC_DEFINE([BUILD_VMWGFX], 1, [Building the vmwgfx driver path])
+else
+	AC_MSG_RESULT([no])
+fi
+
+AM_CONDITIONAL(BUILD_VMWGFX, test "x$BUILD_VMWGFX" = xyes)
+
 AC_CONFIG_FILES([
                 Makefile
+                man/Makefile
+                saa/Makefile
+                vmwgfx/Makefile
                 src/Makefile
                 vmwarectrl/Makefile
-                man/Makefile
 ])
+
 AC_OUTPUT

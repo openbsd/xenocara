@@ -2,14 +2,14 @@
 
 #include "xorg-server.h"
 
+/* Building the vmwgfx driver path */
+#undef BUILD_VMWGFX
+
 /* Define to 1 if you have the <dlfcn.h> header file. */
 #undef HAVE_DLFCN_H
 
 /* Define to 1 if you have the <inttypes.h> header file. */
 #undef HAVE_INTTYPES_H
-
-/* Has libdrm */
-#undef HAVE_LIBDRM
 
 /* Define to 1 if you have the <memory.h> header file. */
 #undef HAVE_MEMORY_H
@@ -35,8 +35,8 @@
 /* Define to 1 if you have the <unistd.h> header file. */
 #undef HAVE_UNISTD_H
 
-/* Has version 1.0.99.901 or greater of the Xserver */
-#undef HAVE_XORG_SERVER_1_0_99_901
+/* Has version 1.12.0 or greater of the Xserver */
+#undef HAVE_XORG_SERVER_1_12_0
 
 /* Has version 1.1.0 or greater of the Xserver */
 #undef HAVE_XORG_SERVER_1_1_0
@@ -49,6 +49,10 @@
 
 /* Has version 1.7.0 or greater of the Xserver */
 #undef HAVE_XORG_SERVER_1_7_0
+
+/* Define to the sub-directory in which libtool stores uninstalled libraries.
+   */
+#undef LT_OBJDIR
 
 /* Define to 1 if your C compiler doesn't accept -c and -o together. */
 #undef NO_MINUS_C_MINUS_O
@@ -85,3 +89,9 @@
 
 /* Version number of package */
 #undef VERSION
+
+/* Number of bits in a file offset, on hosts where this is settable. */
+#undef _FILE_OFFSET_BITS
+
+/* Define for large files, on AIX-style hosts. */
+#undef _LARGE_FILES
