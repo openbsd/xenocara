@@ -70,7 +70,7 @@ typedef struct {
 typedef struct {
     ScrnInfoPtr		pScrn;
     pciVideoPtr		PciInfo;
-    PCITAG		PciTag;
+    uint32_t		PciTag;
     EntityInfoPtr	pEnt;
     ExaDriverPtr	EXADriverPtr;
     int			useEXA;
@@ -85,7 +85,7 @@ typedef struct {
     unsigned char *     IOBase;
     unsigned char *	FbBase;
     long		FbMapSize;
-    IOADDRESS		PIOBase;
+    unsigned long		PIOBase;
     Bool		NoAccel;
     Bool		HWCursor;
     Bool		UsePCIRetry;
