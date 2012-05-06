@@ -18,7 +18,11 @@
 #include "xf86xv.h"
 #include "tdfxdefs.h"
 
-#ifdef XF86DRI
+#ifndef XF86DRI
+#undef TDFXDRI
+#endif
+
+#ifdef TDFXDRI
 #include "xf86drm.h"
 #include "sarea.h"
 #define _XF86DRI_SERVER_
@@ -78,7 +82,7 @@ extern void TDFXLostContext(ScreenPtr pScreen);
 extern Bool TDFXSetupSLI(ScrnInfoPtr pScrn, Bool sliEnable, int aaSamples);
 extern Bool TDFXDisableSLI(TDFXPtr pTDFX);
 
-#ifdef XF86DRI
+#ifdef TDFXDRI
 extern void FillPrivateDRI(TDFXPtr pTDFX, TDFXDRIPtr pTDFXDRI);
 #endif
 
@@ -191,7 +195,7 @@ typedef struct _TDFXRec {
   unsigned char *FbBase;
   unsigned char *myFbBase;
 #endif
-  IOADDRESS PIOBase[MAXCHIPS];
+  unsigned long PIOBase[MAXCHIPS];
   long FbMapSize;
   int pixelFormat;
   int stride;
@@ -250,7 +254,7 @@ typedef struct _TDFXRec {
   int scanlineWidth;
   unsigned char *scanlineColorExpandBuffers[2];
   PROPDATA
-#ifdef XF86DRI
+#ifdef TDFXDRI
   Bool directRenderingEnabled;
   DRIInfoPtr pDRIInfo;
   int drmSubFD;

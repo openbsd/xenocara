@@ -1,76 +1,869 @@
-2006-06-17  Donnie Berkholz  <spyderous@gentoo.org>
+commit 98d24dd99052322c71d1676e6d66c2c724f6066a
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Mar 23 19:59:33 2012 -0700
 
-	* src/tdfx_priv.c: (TDFXResetFifo), (TDFXSyncFifo):
-	Bug #7149 <https://bugs.freedesktop.org/show_bug.cgi?id=7149>
-	Change use of getsecs to xf86getsecs (Gustavo Pichorim Boiko).
+    xf86-video-tdfx 1.4.4
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
 
-2006-04-07  Adam Jackson  <ajax@freedesktop.org>
+commit a985b54c8559d7ff8f5481004d54989ed7499237
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Wed Jan 4 14:57:56 2012 +1000
 
-	* configure.ac:
-	* src/tdfx.h:
-	Bump to 1.2.1 for Xv changes.
+    Untangle XF86DRI from the driver-specific DRI define
+    
+    XF86DRI is defined by xorg-server.h, so --disable-dri in the driver
+    itself does exactly nothing other than not fill in the CFLAGS and thus stop
+    the driver from compiling.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
 
-2006-04-07  Aaron Plattner  <aplattner@nvidia.com>
+commit 4d56f3a6a69717b04f46f3e22c3a0834050c1a46
+Author: Stefan Dirsch <sndirsch@novell.com>
+Date:   Thu Jul 30 11:28:28 2009 +0200
 
-	* src/tdfx_video.c: (TDFXPutImageTexture), (TDFXPutImageOverlay):
-	Add a DrawablePtr argument to the XV functions to pave the way for
-	redirected video.
+    Fix RPMLINT warning "64bit-portability-issue".
+    
+    Signed-off-by: Johannes Obermayr <johannesobermayr@gmx.de>
+    Reviewed-by: Tormod Volden <debian.tormod@gmail.com>
 
-2006-04-07  Adam Jackson  <ajax@freedesktop.org>
+commit fe60f0ed2a0647937cc46a45d497bdf7da4061a4
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Mon Dec 19 17:33:17 2011 -0500
 
-	* configure.ac:
-	* src/tdfx.h:
-	* src/tdfx_accel.c:
-	* src/tdfx_dga.c:
-	* src/tdfx_dri.c:
-	* src/tdfx_driver.c:
-	* src/tdfx_hwcurs.c:
-	* src/tdfx_io.c:
-	* src/tdfx_priv.c:
-	* src/tdfx_sli.c:
-	Unlibcwrap.  Bump server version requirement.  Bump to 1.2.0.
+    Stop uselessly including xf86Priv.h
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
 
-2005-12-20  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+commit 5b5d3c8b23865724d4f6d71610760e80e4b032e6
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Mon Dec 19 17:32:27 2011 -0500
 
-	* configure.ac:
-	Update package version for X11R7 release.
+    Fix for new vgaHW ABI
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
 
-2005-12-14  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+commit 92cb819839a2f37c3e3db4831aa45e5bb9b00651
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Mon Dec 19 17:31:45 2011 -0500
 
-	* configure.ac:
-	Update package version number for final X11R7 release candidate.
+    Make failure to XAA non-fatal
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
 
-2005-12-06  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+commit 4ea96c222ad0900ad53f506e485588e2a49a22f4
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Thu Nov 17 15:54:27 2011 -0500
 
-	* man/Makefile.am:
-	Change *man_SOURCES ==> *man_PRE to fix autotools warnings.
+    Check ABI major not encoded ABI
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
 
-2005-12-03  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+commit 32cd2dfa1214ed3260bf2e40bad06927b18f7f7b
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Wed Nov 16 14:44:02 2011 -0500
 
-	* configure.ac:
-	Update package version number for X11R7 RC3 release.
+    Adapt to missing PIOOffset in vgahw
+    
+    This is actually pretty lame, and I should probably extend vgahw to make
+    it easier to do this kind of trick.
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
 
-2005-12-01  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+commit d7be4a953859f12083c1743c73712f9f510d7fda
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Wed Oct 19 00:41:56 2011 -0700
 
-	* configure.ac:
-	Remove extraneous AC_MSG_RESULT.
+    Use unsigned long rather than deprecated IOADDRESS
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
 
-2005-11-20  Adam Jackson  <ajax@freedesktop.org>
+commit 3a97ecb50f326dbe0e1a3b3656806a8a2d2a1c3d
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Sun Oct 9 18:46:10 2011 -0700
 
-	* configure.ac:
-	Bump libdrm dep to 2.0.
+    Fix compiler warnings about signedness
+    
+    tdfx_sli.c:23:7: warning: pointer targets in passing argument 2 of ‘pci_device_cfg_read_u32’ differ in signedness
+    /var/tmp/jhbuild/include/pciaccess.h:153:5: note: expected ‘uint32_t *’ but argument is of type ‘int *’
+    tdfx_sli.c:31:7: warning: pointer targets in passing argument 2 of ‘pci_device_cfg_read_u32’ differ in signedness
+    /var/tmp/jhbuild/include/pciaccess.h:153:5: note: expected ‘uint32_t *’ but argument is of type ‘int *’
+    tdfx_sli.c:40:7: warning: pointer targets in passing argument 2 of ‘pci_device_cfg_read_u32’ differ in signedness
+    /var/tmp/jhbuild/include/pciaccess.h:153:5: note: expected ‘uint32_t *’ but argument is of type ‘int *’
+    tdfx_sli.c:45:7: warning: pointer targets in passing argument 2 of ‘pci_device_cfg_read_u32’ differ in signedness
+    /var/tmp/jhbuild/include/pciaccess.h:153:5: note: expected ‘uint32_t *’ but argument is of type ‘int *’
+    tdfx_sli.c: In function ‘TDFXSetupSLI’:
+    tdfx_sli.c:155:2: warning: pointer targets in passing argument 2 of ‘pci_device_cfg_read_u32’ differ in signedness
+    /var/tmp/jhbuild/include/pciaccess.h:153:5: note: expected ‘uint32_t *’ but argument is of type ‘int *’
+    tdfx_sli.c:161:4: warning: pointer targets in passing argument 2 of ‘pci_device_cfg_read_u32’ differ in signedness
+    /var/tmp/jhbuild/include/pciaccess.h:153:5: note: expected ‘uint32_t *’ but argument is of type ‘int *’
+    tdfx_sli.c:163:4: warning: pointer targets in passing argument 2 of ‘pci_device_cfg_read_u32’ differ in signedness
+    /var/tmp/jhbuild/include/pciaccess.h:153:5: note: expected ‘uint32_t *’ but argument is of type ‘int *’
+    tdfx_sli.c:165:4: warning: pointer targets in passing argument 2 of ‘pci_device_cfg_read_u32’ differ in signedness
+    /var/tmp/jhbuild/include/pciaccess.h:153:5: note: expected ‘uint32_t *’ but argument is of type ‘int *’
+    tdfx_sli.c:175:4: warning: pointer targets in passing argument 2 of ‘pci_device_cfg_read_u32’ differ in signedness
+    /var/tmp/jhbuild/include/pciaccess.h:153:5: note: expected ‘uint32_t *’ but argument is of type ‘int *’
+    tdfx_sli.c:275:7: warning: pointer targets in passing argument 2 of ‘pci_device_cfg_read_u32’ differ in signedness
+    /var/tmp/jhbuild/include/pciaccess.h:153:5: note: expected ‘uint32_t *’ but argument is of type ‘int *’
+    tdfx_sli.c:764:2: warning: pointer targets in passing argument 2 of ‘pci_device_cfg_read_u32’ differ in signedness
+    /var/tmp/jhbuild/include/pciaccess.h:153:5: note: expected ‘uint32_t *’ but argument is of type ‘int *’
+    tdfx_sli.c:768:2: warning: pointer targets in passing argument 2 of ‘pci_device_cfg_read_u32’ differ in signedness
+    /var/tmp/jhbuild/include/pciaccess.h:153:5: note: expected ‘uint32_t *’ but argument is of type ‘int *’
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
 
-2005-11-29  Adam Jackson  <ajax@freedesktop.org>
+commit 3cdf7e280c5be1bc72e38460d6c46f4ae04efc37
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Sun Oct 9 18:48:15 2011 -0700
 
-	* configure.ac:
-	Only build dlloader modules by default.
+    gettimeofday is in <sys/time.h>
+    
+    tdfx_priv.c:116:3: warning: implicit declaration of function ‘gettimeofday’
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
 
-2005-11-09  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+commit f53f5a192025bec5547c2db16741e2a4eda20d74
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Sun Oct 9 18:47:27 2011 -0700
 
-	* configure.ac:
-	Update package version number for X11R7 RC2 release.
+    Use malloc/calloc/realloc/free directly
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
 
-2005-11-01  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+commit 0c4ffbec23de9a2b0da9310f1dfca50dcc1f7132
+Author: Jesse Adkins <jesserayadkins@gmail.com>
+Date:   Tue Sep 28 13:29:52 2010 -0700
 
-	* configure.ac:
-	Update pkgcheck dependencies to work with separate build roots.
+    Purge cvs tags.
+    
+    Signed-off-by: Jesse Adkins <jesserayadkins@gmail.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit fb533c0d378e9e4909b46b7d164111c2fe8af942
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jul 21 16:49:04 2010 -0400
+
+    config: add comments for main statements
+
+commit 92c127023eb3cff5064978c482fc30dd266761f2
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jul 21 16:07:00 2010 -0400
+
+    config: replace deprecated use of AC_OUTPUT with AC_CONFIG_FILES
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 43b1b085c9ed4592e42f586fe720881ca0ed570d
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jul 21 14:37:42 2010 -0400
+
+    config: replace deprecated AC_HELP_STRING with AS_HELP_STRING
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 6b82567be23fb09f51c57c4c23f5235c5610ba2c
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jul 21 14:05:23 2010 -0400
+
+    config: replace deprecated AM_CONFIG_HEADER with AC_CONFIG_HEADERS
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 88c8af1c7874882733b5fc423dadc7541bf88f99
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jul 21 09:27:42 2010 -0400
+
+    config: complete AC_INIT m4 quoting
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit f5bba1f1f33967578df85a3b10b9a58f81831678
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Jul 20 21:54:12 2010 -0400
+
+    config: remove unrequired AC_SUBST([DRI_CFLAGS])
+    
+    This macro is called by PKG_CHECK_MODULES
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 96cf989952e5d01a44560caa799d7addd2f1b5d2
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Jul 20 21:44:58 2010 -0400
+
+    config: remove unrequired AC_SUBST([XORG_CFLAGS])
+    
+    This macro is called by PKG_CHECK_MODULES
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 094f38c3cffc71497abf9769cc4d20536657fd37
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Jul 20 20:24:42 2010 -0400
+
+    config: remove unrequired AC_HEADER_STDC
+    
+    Autoconf says:
+    "This macro is obsolescent, as current systems have conforming
+    header files. New programs need not use this macro".
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 51a5af924866d14b868c20a8abdabfaa2a7d7359
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Jul 20 19:41:31 2010 -0400
+
+    config: remove AC_PROG_CC as it overrides AC_PROG_C_C99
+    
+    XORG_STRICT_OPTION from XORG_DEFAULT_OPTIONS calls
+    AC_PROG_C_C99. This sets gcc with -std=gnu99.
+    If AC_PROG_CC macro is called afterwards, it resets CC to gcc.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit b33d5ea736cad6da7de5c89183774ddeca5f885e
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Jul 20 18:45:19 2010 -0400
+
+    config: update AC_PREREQ statement to 2.60
+    
+    Unrelated to the previous patches, the new value simply reflects
+    the reality that the minimum level for autoconf to configure
+    all x.org modules is 2.60 dated June 2006.
+    
+    ftp://ftp.gnu.org/gnu/autoconf/autoconf-2.60.tar.gz
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit cd1209abe30038f3c46bb51568733f795f17f5a5
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Jul 20 16:15:30 2010 -0400
+
+    config: upgrade to util-macros 1.8 for additional man page support
+    
+    Use MAN_SUBST now supplied in XORG_MANPAGE_SECTIONS
+    The value of MAN_SUBST is the same for all X.Org packages.
+
+commit 83661e56c332c9e10d1cd0aa7b464dbabedaab4c
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Jun 13 11:30:39 2010 -0400
+
+    COPYING: replace stub file with actual Copyright notices.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 5e06e326b2a48e1ae5da352339ee6c77904ebfbe
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Fri Jan 15 15:14:13 2010 -0800
+
+    Update Sun license notices to current X.Org standard form
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit 0fec5b777bb21012046ec05abf0f92767d43e5fc
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Dec 15 21:47:43 2009 -0500
+
+    configure.ac: use backticks rather than $() for cmd subs
+    
+    Use "$PKG_CONFIG" rather than hard coded "pkg-config"
+    
+    Acked-by: Dan Nicholson <dbn.lists@gmail.com>
+    Acked-by: Daniel Stone <daniel@fooishbar.org>
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 0ba31dcaab005862e8bdcf2800ae54e3c0eff99a
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Nov 23 09:25:06 2009 -0500
+
+    Makefile.am: add ChangeLog and INSTALL on MAINTAINERCLEANFILES
+    
+    Now that the INSTALL file is generated.
+    Allows running make maintainer-clean.
+
+commit 7ddfff90b91c6bc8dbe64eff0efdcbb6fea39cab
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Oct 28 14:41:41 2009 -0400
+
+    INSTALL, NEWS, README or AUTHORS files are missing/incorrect #24206
+    
+    Automake 'foreign' option is specified in configure.ac.
+    Remove from Makefile.am
+
+commit f7e316031e6cc1475dc6707bdb464cd228cfc460
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Oct 28 14:09:10 2009 -0400
+
+    INSTALL, NEWS, README or AUTHORS files are missing/incorrect #24206
+    
+    Add missing INSTALL file. Use standard GNU file on building tarball
+    README may have been updated
+    Remove AUTHORS file as it is empty and no content available yet.
+    Remove NEWS file as it is empty and no content available yet.
+
+commit dbe081091ba868782c1d979f5e588415f05fb861
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Oct 26 12:54:22 2009 -0400
+
+    Several driver modules do not have a ChangeLog target in Makefile.am #23814
+    
+    The git generated ChangeLog replaces the hand written one.
+    Update configure.ac to xorg-macros level 1.3.
+    Use XORG_DEFAULT_OPTIONS which replaces four XORG_* macros
+    Update Makefile.am to add ChangeLog target if missing
+    Remove ChangeLog from EXTRA_DIST or *CLEAN variables
+    This is a pre-req for the INSTALL_CMD
+
+commit 57449ae05c5f256950c1b2215069c28e4cd7c13f
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Oct 22 13:04:56 2009 -0400
+
+    .gitignore: use common defaults with custom section # 24239
+    
+    Using common defaults will reduce errors and maintenance.
+    Only the very small or inexistent custom section need periodic maintenance
+    when the structure of the component changes. Do not edit defaults.
+
+commit c062e25f39c90f8484791df2f7f330d556fcc995
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Oct 22 12:34:18 2009 -0400
+
+    .gitignore: use common defaults with custom section # 24239
+    
+    Using common defaults will reduce errors and maintenance.
+    Only the very small or inexistent custom section need periodic maintenance
+    when the structure of the component changes. Do not edit defaults.
+
+commit 96ad72682ca7925918e8cb7298a2241dc096bd6f
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Thu Jul 30 12:04:30 2009 +1000
+
+    tdfx: bump for release 1.4.3
+
+commit 690aaaedb3cf6e8241cad802651a640277094f22
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Tue Jul 28 15:22:41 2009 +1000
+
+    tdfx: change to using ABI version check
+
+commit 7149d16ed17c064cc91cb1473f10e8e80055347c
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Tue Jul 28 13:32:38 2009 +1000
+
+    tdfx: update for resources/RAC API removal
+
+commit b656f6522f287efb8595509c678ce6ec60843944
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Thu Jul 2 11:48:35 2009 -0400
+
+    tdfx 1.4.2
+
+commit 871db4476dedf77e440a4ef121643bb2eb897254
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Thu May 28 15:21:22 2009 -0400
+
+    Remove useless loader symbol lists.
+
+commit 5fd80e29b10b9e9b6c5ad4a2ecdf5d9b4013a9e4
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Fri Jan 30 21:04:39 2009 -0800
+
+    Add README with pointers to mailing list, bugzilla & git repos
+
+commit 86c9439917cab56c2b0eef6cd5fd6d8fad886c33
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Fri Jan 9 16:36:56 2009 -0800
+
+    Remove xorgconfig & xorgcfg from See Also list in man page
+
+commit e30873010523a8cde8d23ed473343b2c60794cb6
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Mon Dec 22 15:20:26 2008 +1000
+
+    tdfx 1.4.1
+
+commit 6379b129119ed77b9a45cb0207dedd68c32f73a1
+Author: Jakub Bogusz <qboosh@pld-linux.org>
+Date:   Fri Oct 17 17:25:39 2008 -0400
+
+    Bug #17557: Fix device initialization.
+
+commit fe77fea533068f5698cf4d8e9bc076a6e06d2cd2
+Author: Tiago Vignatti <vignatti@c3sl.ufpr.br>
+Date:   Mon Jul 7 14:31:32 2008 -0300
+
+    Fix my bad typo in last commit.
+    
+    Switch inexistent getsecs() function to gettimeofday().
+
+commit 2de0dcfff822e2a8e5b993936bbad771bf9420b1
+Author: Tiago Vignatti <vignatti@c3sl.ufpr.br>
+Date:   Fri Jul 4 04:13:05 2008 -0300
+
+    Remove libc wrapper functions.
+
+commit fdff22e2372635f47587f5cdaf888e26d913ee41
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Wed Mar 19 15:39:11 2008 -0400
+
+    tdfx 1.4.0
+
+commit e270c5baeb00f45abacba2b2f4e82505c339e984
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Wed Mar 19 15:37:46 2008 -0400
+
+    Death to RCS tags.
+
+commit b838b854e96c388081c0ae52320a849645f547c5
+Author: Matthieu Herrb <matthieu.herrb@laas.fr>
+Date:   Sun Mar 9 00:00:33 2008 +0100
+
+    Makefile.am: nuke RCS Id
+
+commit 8bbace5deb7b86c481ea3b0f764e8a6b879c5f7f
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Wed Feb 27 10:13:01 2008 +1000
+
+    update tdfx to use proper pciaccess detection
+
+commit 463f0590fdce3cfa0e74a6769ccf5f32dad33cbc
+Author: James Cloos <cloos@jhcloos.com>
+Date:   Mon Sep 3 05:52:46 2007 -0400
+
+    Add *~ to .gitignore to skip patch/emacs droppings
+
+commit 36ee971310cd4536291829a1021ab8853cf62e9c
+Author: James Cloos <cloos@jhcloos.com>
+Date:   Thu Aug 23 19:25:59 2007 -0400
+
+    Rename .cvsignore to .gitignore
+
+commit 7f733531e54e455f9c27555c7552184f9da81f41
+Author: Brice Goglin <bgoglin@debian.org>
+Date:   Tue Aug 7 11:57:02 2007 +0200
+
+    TDFX_*_VERSION using PACKAGE_VERSION_*
+
+commit 673c665c02f02e13d57303f817702177a170e80d
+Author: Ian Romanick <idr@us.ibm.com>
+Date:   Fri Mar 30 08:00:12 2007 -0700
+
+    Initial pass at porting driver to pci-rework.  DOES NOT WORK.
+    
+    This is my initial pass at porting xf86-video-tdfx to the pci-rework
+    interfaces.  For reasons that I'm not able to understand, it doesn't quite
+    work.  It's clear that some piece of the hardware isn't being initialized
+    properly, but, by comparing the old code to the new, it's not clear why.
+    
+    Does not impact the functionality of non-pci-rework builds.
+
+commit 347b27bc79838d17cbbae2afb36ce968c1eba620
+Author: Ian Romanick <idr@us.ibm.com>
+Date:   Wed Mar 14 15:27:05 2007 -0700
+
+    White-space police in TDFXInitChips.
+
+commit daccdfe1957752dd3215281c4f35ff271d2cc17a
+Author: Ian Romanick <idr@us.ibm.com>
+Date:   Wed Mar 14 15:18:56 2007 -0700
+
+    Minor code cleaning in TDFXMapMem.
+
+commit 3c886166d5cc9c44ccf701e02b56392b3ac26db3
+Author: Ian Romanick <idr@us.ibm.com>
+Date:   Wed Mar 14 15:16:06 2007 -0700
+
+    Make TDFXGetRec return the pointer instead of a bool.
+
+commit 229a8f64abd685c7efd9cf7baf66fac5ab71b131
+Author: Ian Romanick <idr@us.ibm.com>
+Date:   Wed Mar 14 15:09:31 2007 -0700
+
+    Wrap pciReadLong / pciWriteLong with macros.
+    
+    The pciReadLong and pciWriteLong function calls are wrapped with macros for
+    a couple reasons.  First, this will reduce the "noise" when support for
+    pci-rework is added to tdfx.  Second, by having them wrapped in macros it is
+    easier to support both pci-rework and the "classic" interfaces in the same
+    code base.
+
+commit ed38e9fd300e8ab989017dea276a2720b9423191
+Author: Ian Romanick <idr@us.ibm.com>
+Date:   Fri Mar 9 11:09:46 2007 -0800
+
+    Supply NULL driverFunc pointer in DriverRec.
+
+commit 220cc642c2d6b131f47d2c9769cb521bc6fe8c09
+Author: Michael Lorenz <macallan@netbsd.org>
+Date:   Tue Feb 27 21:31:51 2007 -0500
+
+    Add DDC2/I2C support to the tdfx driver
+    
+    Based on Michael Lorenz's code in bug 4246
+    cleaned up and modified slightly by me.
+
+commit c5b95a8d219dd4ef25c6aa14f44b70865d1a8be7
+Author: Alex Deucher <alex@t41p.(none)>
+Date:   Wed Nov 22 12:15:48 2006 -0500
+
+    bump to 1.3.0 for release
+
+commit 4f76e63ac4f7beb802561807554b64386a22b6e1
+Author: Alex Deucher <alex@t41p.(none)>
+Date:   Wed Nov 22 12:12:06 2006 -0500
+
+    bump to 1.3.0 for release.
+
+commit cd0808bd2dc6c77557e0691579a6119f8901adf6
+Author: Alex Deucher <alex@t41p.(none)>
+Date:   Wed Nov 22 11:44:48 2006 -0500
+
+    Fix locking in tdfx driver.  Fixes bug 9032.
+
+commit 867f0a956a3240466347e0ee17d7518740835048
+Author: Adam Jackson <ajax@benzedrine.nwnk.net>
+Date:   Fri Oct 13 18:45:16 2006 -0400
+
+    Bump to 1.2.2
+
+commit de5adbae146a4db8ee491a9387f65284ea919ff9
+Author: Donnie Berkholz <spyderous@gentoo.org>
+Date:   Sat Jun 17 16:35:04 2006 +0000
+
+    Bug #7149 <https://bugs.freedesktop.org/show_bug.cgi?id=7149> Change use of
+        getsecs to xf86getsecs (Gustavo Pichorim Boiko).
+
+commit acee015839a798546a9d17fdc31e443b10630c76
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Sat Apr 8 01:50:08 2006 +0000
+
+    Bump to 1.2.1 for Xv changes.
+
+commit 55954625ff815b932d365422864745b31c4eadb4
+Author: Aaron Plattner <aplattner@nvidia.com>
+Date:   Fri Apr 7 23:15:56 2006 +0000
+
+    Add a DrawablePtr argument to the XV functions to pave the way for
+        redirected video.
+
+commit e8c71c95ea67e5db17eeabaac9907924099e164f
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Fri Apr 7 21:37:49 2006 +0000
+
+    Unlibcwrap. Bump server version requirement. Bump to 1.2.0.
+
+commit 8cfc6971a58e03894040c4f4f74da4734897df16
+Author: Kevin E Martin <kem@kem.org>
+Date:   Wed Dec 21 02:30:03 2005 +0000
+
+    Update package version for X11R7 release.
+
+commit 5300267cfe87b18139a95ec555f8d43cc1465669
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Mon Dec 19 16:25:55 2005 +0000
+
+    Stub COPYING files
+
+commit c3882fb9c050d4a4b3d8bb6bff712cb9143ae97c
+Author: Kevin E Martin <kem@kem.org>
+Date:   Thu Dec 15 00:24:20 2005 +0000
+
+    Update package version number for final X11R7 release candidate.
+
+commit d214866d794e5125196c53ff96921debfb50ae74
+Author: Kevin E Martin <kem@kem.org>
+Date:   Tue Dec 6 22:48:39 2005 +0000
+
+    Change *man_SOURCES ==> *man_PRE to fix autotools warnings.
+
+commit c8db07f0b1574a9cde265505552d318e5a1f21b1
+Author: Kevin E Martin <kem@kem.org>
+Date:   Sat Dec 3 05:49:36 2005 +0000
+
+    Update package version number for X11R7 RC3 release.
+
+commit 32e28c8f5c3b5c51fc46778d6c346cadec6ba440
+Author: Kevin E Martin <kem@kem.org>
+Date:   Fri Dec 2 02:16:11 2005 +0000
+
+    Remove extraneous AC_MSG_RESULT.
+
+commit 0d640f8ed56da1782faac5c590efa3bc6ff76f7f
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Wed Nov 30 18:51:58 2005 +0000
+
+    Bump libdrm dep to 2.0.
+
+commit 84a6bfdd3ab8307071376c81349b6701242c82f5
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Tue Nov 29 23:30:05 2005 +0000
+
+    Only build dlloader modules by default.
+
+commit e9d4eaa5c966e1c062a8585bc3a2e74795c6434f
+Author: Alan Coopersmith <Alan.Coopersmith@sun.com>
+Date:   Mon Nov 28 22:04:14 2005 +0000
+
+    Change *mandir targets to use new *_MAN_DIR variables set by xorg-macros.m4
+        update to fix bug #5167 (Linux prefers *.1x man pages in man1 subdir)
+
+commit 44af3f869cb0c401fe064f5ba16e77c3fcdd3524
+Author: Eric Anholt <anholt@freebsd.org>
+Date:   Mon Nov 21 10:49:20 2005 +0000
+
+    Add .cvsignores for drivers.
+
+commit a2427c29767471615c4a257dfc3b1d7db4e091c9
+Author: Kevin E Martin <kem@kem.org>
+Date:   Wed Nov 9 21:31:21 2005 +0000
+
+    Bump version numbers for X11R6.9/X11R7 RC2.
+
+commit 906f1bd3d4365e45dcdc5c40ea5d4940add79703
+Author: Kevin E Martin <kem@kem.org>
+Date:   Wed Nov 9 21:15:22 2005 +0000
+
+    Update package version number for X11R7 RC2 release.
+
+commit 9558a7b9448b2a906abe52ec31fd76f141c54ca4
+Author: Kevin E Martin <kem@kem.org>
+Date:   Tue Nov 1 15:08:55 2005 +0000
+
+    Update pkgcheck depedencies to work with separate build roots.
+
+commit 1a194e47f962da387af7d8682ef49deade787964
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Sun Oct 23 18:30:19 2005 +0000
+
+    Bug #4829: Remove some useless DRI symbol checks.
+
+commit 0cf2b66e13412f1a07d002eb6bd2097debc91a20
+Author: Kevin E Martin <kem@kem.org>
+Date:   Wed Oct 19 02:48:05 2005 +0000
+
+    Update package version number for RC1 release.
+
+commit 99a441cb4e56066d1eca600a20eee8213dd55bcb
+Author: Alan Coopersmith <Alan.Coopersmith@sun.com>
+Date:   Tue Oct 18 00:01:55 2005 +0000
+
+    Use @DRIVER_MAN_SUFFIX@ instead of $(DRIVER_MAN_SUFFIX) in macro
+        substitutions to work better with BSD make
+
+commit 74f86678173470b5413cd138565a0a102151e785
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Mon Oct 17 22:57:37 2005 +0000
+
+    More 1.7 braindamage: define EXTRA_DIST in terms of @DRIVER_NAME@ instead
+        of indirectly
+
+commit e3e08b9a2dacd40da3e5ef57b0cbc5ed9b20f58a
+Author: Alan Coopersmith <Alan.Coopersmith@sun.com>
+Date:   Mon Oct 17 00:09:07 2005 +0000
+
+    Use sed & cpp to substitute variables in driver man pages
+
+commit 0f8e96a0d81303acd705be15c666cb775a1ae52b
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Sat Sep 24 18:45:46 2005 +0000
+
+    Disable the {Open,Close}FullScreen DRI protocol. Remove empty FullScreen
+        stubs from drivers, comment the non-empty ones.
+
+commit efe1280e8f9c1d4ce06b9c11b5f8a64e6ecc9640
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Mon Aug 22 04:24:32 2005 +0000
+
+    Fix test for DRI headers, bump to 1.0.1.
+
+commit 436871d3174f56c8bf7acc8e132a81f5e6fe603a
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Thu Aug 18 09:03:52 2005 +0000
+
+    Update autogen.sh to one that does objdir != srcdir.
+
+commit 5d98e054f44c5cf1e51bb7b4646b07192cb6cb7a
+Author: Alan Hourihane <alanh@fairlite.demon.co.uk>
+Date:   Mon Aug 15 07:30:06 2005 +0000
+
+    Egbert's 64bit fixes for mixed 32/64bit clients
+
+commit 1c68da251e1bf3828ca2c728a4d7b93bb59659a9
+Author: Ian Romanick <idr@us.ibm.com>
+Date:   Fri Aug 5 23:04:33 2005 +0000
+
+    I have resolved this by making all the "Direct rendering disabled" messages
+        X_WARNING and all the "Direct rendering enabled" messages X_INFO.
+        Ideally, we need to factor some of this stuff out to common code. There
+        is a *LOT* of duplication among the *_dri.c files under
+        programs/Xserver/hw/xfree86/drivers.
+    I'm trying to clean up as much low hanging fruit as I can and got tired of
+        waiting for ajax. :P
+
+commit 341cd708a7511dac3e728e260166b4b790df733f
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Sun Jul 31 17:19:29 2005 +0000
+
+    Post-merge fixups:
+    - Disable building the gamma driver
+    - Fix numerous Imakefiles to get header paths and subdirs right
+    - Symlink client-side GLX lib source from Mesa
+    - Add new shader subdirs to the Mesa core build
+    - Tweak the DDX drivers to not ask for "xf86dri.h"; they don't need it,
+        since they don't generate protocol, and it was breaking the build.
+
+commit 397246d1d1b55227456dd9092581871da7d17323
+Author: Kevin E Martin <kem@kem.org>
+Date:   Fri Jul 29 21:22:45 2005 +0000
+
+    Various changes preparing packages for RC0:
+    - Verify and update package version numbers as needed
+    - Implement versioning scheme
+    - Change bug address to point to bugzilla bug entry form
+    - Disable loadable i18n in libX11 by default (use --enable-loadable-i18n to
+        reenable it)
+    - Fix makedepend to use pkgconfig and pass distcheck
+    - Update build script to build macros first
+    - Update modular Xorg version
+
+commit 535a7c83e000a3410b11ffa6769127eae1464b3b
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Date:   Wed Jul 27 21:23:29 2005 +0000
+
+    Add xf86driproto to dependencies for drivers with DRI support. Patch from
+        Donnie Berkholz
+
+commit 38a86d5b1897427147543b933a1991a780f9b103
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Date:   Tue Jul 26 23:47:49 2005 +0000
+
+    Build system for tdfx
+
+commit 4cb0dd1252ed112a2e3be6de417d2ce8d849c5fe
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Mon Jul 11 02:30:02 2005 +0000
+
+    Prep for modular builds by adding guarded #include "config.h" everywhere.
+
+commit d254bed4315a09eca7c41ce26efd575b60db2526
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Mon Jul 11 01:06:22 2005 +0000
+
+    Fix the build with DRI enabled. Still at least one runtime issue...
+
+commit cd1894c3df1ab667a755852085143fcc261eb985
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Sun Jul 10 21:36:32 2005 +0000
+
+    First cut at driver build skeleton.
+
+commit 2c5f2e65f81699c619854b183d9f7825f350e118
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Sat Jun 25 21:16:57 2005 +0000
+
+    Bug #3626: _X_EXPORT tags for video and input drivers.
+
+commit 2f8fb13b9c14ff9bc24f6737658d79ea647befc7
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Wed May 18 17:47:36 2005 +0000
+
+    Bug #3163: Create new DRIINFO_*_VERSION macros to indicate the version
+        number of the DRIInfoRec, disambiguating it from the XF86DRI protocol
+        version number. Modify DRIQueryVersion to return the libdri version
+        number, which all DDXes were requesting implicitly. Fix the DDXes to
+        check for the DRIINFO version they were compiled against.
+
+commit 4db50246111e420ad5e6ae9ac8c7e03ec0d5d704
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Wed Apr 20 12:25:30 2005 +0000
+
+    Fix includes right throughout the Xserver tree:
+    change "foo.h" to <X11/foo.h> for core headers, e.g. X.h, Xpoll.h;
+    change "foo.h", "extensions/foo.h" and "X11/foo.h" to
+        <X11/extensions/foo.h> for extension headers, e.g. Xv.h;
+    change "foo.[ch]" to <X11/Xtrans/foo.[ch]> for Xtrans files.
+
+commit 9b0caee37f7ee99831735e819d97f9ccf155562a
+Author: Matthieu Herrb <matthieu.herrb@laas.fr>
+Date:   Mon Oct 4 21:14:44 2004 +0000
+
+    Manual pages fixes (XFree86 bugzilla #1487, Nicolas Joly).
+
+commit a490c1eec95ec111bdc3555d29b77192bf8caf90
+Author: Eric Anholt <anholt@freebsd.org>
+Date:   Wed Jun 16 09:44:00 2004 +0000
+
+    Merge DRI-trunk-20040613 changes in programs/Xserver/hw/xfree86/drivers,
+        with the following notes:
+    - Savage and Mach64 (= ati/ati*.[ch] changes) DRI not merged due to
+        insecurity.
+    - VIA driver converted to new drmContext and drmHandle names.
+    - Radeon driver merge conflicted in many places, and MergedFB at least
+        could probably use some checking at this point.
+
+commit 5172fd205abbbe649205b21fc24f47df5cc5ac8a
+Author: Eric Anholt <anholt@freebsd.org>
+Date:   Wed Jun 16 09:27:19 2004 +0000
+
+    DRI trunk-20040613 import
+
+commit 982a12c6ae9d15e4d22d579de4f2c8fac1a2dcee
+Author: Eric Anholt <anholt@freebsd.org>
+Date:   Wed Jun 16 09:24:02 2004 +0000
+
+    DRI XFree86-4_3_99_12-merge import
+
+commit 6f6d502351b3c7da0585791375b0102aa65e48be
+Author: Egbert Eich <eich@suse.de>
+Date:   Fri Apr 23 19:49:53 2004 +0000
+
+    Merging XORG-CURRENT into trunk
+
+commit 38f39f7f4a75693866227156a7ef3673b587e3de
+Author: Egbert Eich <eich@suse.de>
+Date:   Sun Mar 14 08:33:37 2004 +0000
+
+    Importing vendor version xf86-4_4_99_1 on Sun Mar 14 00:26:39 PST 2004
+
+commit e91530f65fe7ef236459c97c06f2203cac507736
+Author: Egbert Eich <eich@suse.de>
+Date:   Wed Mar 3 12:12:27 2004 +0000
+
+    Importing vendor version xf86-4_4_0 on Wed Mar 3 04:09:24 PST 2004
+
+commit 3cef3b10af1d67b237bde8a71ffddcef6bc7ba65
+Author: Egbert Eich <eich@suse.de>
+Date:   Thu Feb 26 13:35:55 2004 +0000
+
+    readding XFree86's cvs IDs
+
+commit d97a6f7a36b93bbd12e9d878cddfe1625f87e21d
+Author: Egbert Eich <eich@suse.de>
+Date:   Thu Feb 26 09:23:27 2004 +0000
+
+    Importing vendor version xf86-4_3_99_903 on Wed Feb 26 01:21:00 PST 2004
+
+commit 7aa6b58d626657e97cc5e72d43a2bd4c1b8611ce
+Author: Egbert Eich <eich@suse.de>
+Date:   Thu Jan 29 08:08:37 2004 +0000
+
+    Importing vendor version xf86-012804-2330 on Thu Jan 29 00:06:33 PST 2004
+
+commit a5301d652c98dbf07869a62c4198bae2d3f83571
+Author: Kaleb Keithley <kaleb@freedesktop.org>
+Date:   Tue Nov 25 19:28:43 2003 +0000
+
+    XFree86 4.3.99.16 Bring the tree up to date for the Cygwin folks
+
+commit d95aec56ffcf85524ee04d34caeb07d9b95ab463
+Author: Kaleb Keithley <kaleb@freedesktop.org>
+Date:   Fri Nov 14 16:48:55 2003 +0000
+
+    XFree86 4.3.0.1
+
+commit c4dd1bf20f2bae6d34db059ae47f053012d8a822
+Author: Kaleb Keithley <kaleb@freedesktop.org>
+Date:   Fri Nov 14 16:48:55 2003 +0000
+
+    Initial revision

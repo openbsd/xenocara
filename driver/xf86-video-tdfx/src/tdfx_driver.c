@@ -6,9 +6,6 @@
 #include <inttypes.h>
 #endif
 
-#define USE_INT10 1
-#define USE_PCIVGAIO 1
-
 /**************************************************************************
 
 Copyright 1998-1999 Precision Insight, Inc., Cedar Park, Texas.
@@ -102,9 +99,12 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include "xf86xv.h"
 #include <X11/extensions/Xv.h>
 
-#ifdef XF86DRI
+#ifdef TDFXDRI
 #include "dri.h"
 #endif
+
+#define USE_INT10 1
+#define USE_PCIVGAIO (GET_ABI_MAJOR(ABI_VIDEODRV_VERSION) < 12)
 
 /* Required Functions: */
 
@@ -306,7 +306,7 @@ static void
 TDFXFreeRec(ScrnInfoPtr pScrn) {
   if (!pScrn) return;
   if (!pScrn->driverPrivate) return;
-  xfree(pScrn->driverPrivate);
+  free(pScrn->driverPrivate);
   pScrn->driverPrivate=0;
 }
 
@@ -429,7 +429,7 @@ TDFXProbe(DriverPtr drv, int flags)
 				  devSections, numDevSections,
 				  drv, &usedChips);
 
-  xfree(devSections);
+  free(devSections);
   if (numUsed<=0) return FALSE;
 
   if (flags & PROBE_DETECT)
@@ -457,7 +457,7 @@ TDFXProbe(DriverPtr drv, int flags)
 	foundScreen = TRUE;
     }
   }
-  xfree(usedChips);
+  free(usedChips);
 
   return foundScreen;
 }
@@ -824,6 +824,7 @@ TDFXPreInit(ScrnInfoPtr pScrn, int flags)
 
   /* Allocate a vgaHWRec */
   if (!vgaHWGetHWRec(pScrn)) return FALSE;
+  vgaHWSetStdFuncs(VGAHWPTR(pScrn));
 
 #if USE_INT10
 #if !defined(__powerpc__)
@@ -927,7 +928,7 @@ TDFXPreInit(ScrnInfoPtr pScrn, int flags)
 
   /* Process the options */
   xf86CollectOptions(pScrn, NULL);
-  if (!(pTDFX->Options = xalloc(sizeof(TDFXOptions))))
+  if (!(pTDFX->Options = malloc(sizeof(TDFXOptions))))
     return FALSE;
   memcpy(pTDFX->Options, TDFXOptions, sizeof(TDFXOptions));
   xf86ProcessOptions(pScrn->scrnIndex, pScrn->options, pTDFX->Options);
@@ -1103,10 +1104,11 @@ TDFXPreInit(ScrnInfoPtr pScrn, int flags)
     return FALSE;
   }
 
-  if (!xf86ReturnOptValBool(pTDFX->Options, OPTION_NOACCEL, FALSE)) {
+  pTDFX->NoAccel = xf86ReturnOptValBool(pTDFX->Options, OPTION_NOACCEL, FALSE);
+  if (!pTDFX->NoAccel) {
     if (!xf86LoadSubModule(pScrn, "xaa")) {
-      TDFXFreeRec(pScrn);
-      return FALSE;
+      xf86DrvMsg(pScrn->scrnIndex, X_WARNING, "No acceleration available\n");
+      pTDFX->NoAccel = TRUE;
     }
   }
 
@@ -1228,7 +1230,7 @@ TDFXPreInit(ScrnInfoPtr pScrn, int flags)
   pTDFX->writeLong(pTDFX, MISCINIT0, pTDFX->ModeReg.miscinit0);
 #endif
 
-#ifdef XF86DRI
+#ifdef TDFXDRI
   /* Load the dri module if requested. */
   if (xf86ReturnOptValBool(pTDFX->Options, OPTION_DRI, FALSE)) {
     xf86LoadSubModule(pScrn, "dri");
@@ -1682,7 +1684,7 @@ TDFXInitWithBIOSData(ScrnInfoPtr pScrn)
   }
 
 #define T_B_SIZE (64 * 1024)
-  bios = xcalloc(T_B_SIZE, 1);
+  bios = calloc(T_B_SIZE, 1);
   if (!bios)
     return FALSE;
 
@@ -1692,7 +1694,7 @@ TDFXInitWithBIOSData(ScrnInfoPtr pScrn)
   if (!xf86ReadPciBIOS(0, pTDFX->PciTag[0], 1, bios, T_B_SIZE)) {
 #if 0
     xf86DrvMsg(pScrn->scrnIndex, X_WARNING, "Bad BIOS read.\n");
-    xfree(bios);
+    free(bios);
     return FALSE;
 #endif
   }
@@ -1700,7 +1702,7 @@ TDFXInitWithBIOSData(ScrnInfoPtr pScrn)
 
   if (bios[0] != 0x55 || bios[1] != 0xAA) {
     xf86DrvMsg(pScrn->scrnIndex, X_WARNING, "Bad BIOS signature.\n");
-    xfree(bios);
+    free(bios);
     return FALSE;
   }
 
@@ -1744,7 +1746,7 @@ TDFXInitWithBIOSData(ScrnInfoPtr pScrn)
   pTDFX->writeLong(pTDFX, MISCINIT0, 0xF3);
   pTDFX->writeLong(pTDFX, MISCINIT0, uint[1]);
 
-  xfree(bios);
+  free(bios);
   return TRUE;
 }
 #endif
@@ -1906,14 +1908,14 @@ TDFXModeInit(ScrnInfoPtr pScrn, DisplayModePtr mode)
     mode->CrtcHSkew=hskew;
   }    
 
-#ifdef XF86DRI
+#ifdef TDFXDRI
   if (pTDFX->directRenderingEnabled) {
     DRILock(screenInfo.screens[pScrn->scrnIndex], 0);
     TDFXSwapContextFifo(screenInfo.screens[pScrn->scrnIndex]);
   }
 #endif
   DoRestore(pScrn, &hwp->ModeReg, &pTDFX->ModeReg, FALSE);
-#ifdef XF86DRI
+#ifdef TDFXDRI
   if (pTDFX->directRenderingEnabled) {
     DRIUnlock(screenInfo.screens[pScrn->scrnIndex]);
   }
@@ -2199,7 +2201,7 @@ TDFXScreenInit(int scrnIndex, ScreenPtr pScreen, int argc, char **argv) {
   TDFXPtr pTDFX;
   VisualPtr visual;
   BoxRec MemBox;
-#ifdef XF86DRI
+#ifdef TDFXDRI
   MessageType driFrom = X_DEFAULT;
 #endif
   int scanlines;
@@ -2306,8 +2308,7 @@ TDFXScreenInit(int scrnIndex, ScreenPtr pScreen, int argc, char **argv) {
 
   miSetPixmapDepths ();
     
-  pTDFX->NoAccel=xf86ReturnOptValBool(pTDFX->Options, OPTION_NOACCEL, FALSE);
-#ifdef XF86DRI
+#ifdef TDFXDRI
   /*
    * Setup DRI after visuals have been established, but before fbScreenInit
    * is called.   fbScreenInit will eventually call into the drivers
@@ -2416,7 +2417,7 @@ TDFXScreenInit(int scrnIndex, ScreenPtr pScreen, int argc, char **argv) {
    * in of TDFXCloseScreen() before the rest is unwrapped
    */
   
-#ifdef XF86DRI
+#ifdef TDFXDRI
   if (pTDFX->directRenderingEnabled) {
 	/* Now that mi, fb, drm and others have done their thing, 
          * complete the DRI setup.
@@ -2470,7 +2471,7 @@ static Bool
 TDFXEnterVT(int scrnIndex, int flags) {
   ScrnInfoPtr pScrn;
   ScreenPtr pScreen;
-#ifdef XF86DRI
+#ifdef TDFXDRI
   TDFXPtr pTDFX;
 #endif
 
@@ -2478,7 +2479,7 @@ TDFXEnterVT(int scrnIndex, int flags) {
   pScrn = xf86Screens[scrnIndex];
   pScreen = screenInfo.screens[scrnIndex];
   TDFXInitFifo(pScreen);
-#ifdef XF86DRI
+#ifdef TDFXDRI
   pTDFX = TDFXPTR(pScrn);
   if (pTDFX->directRenderingEnabled) {
     DRIUnlock(pScreen);
@@ -2505,7 +2506,7 @@ TDFXLeaveVT(int scrnIndex, int flags) {
   pTDFX = TDFXPTR(pScrn);
   pTDFX->sync(pScrn);
   TDFXShutdownFifo(pScreen);
-#ifdef XF86DRI
+#ifdef TDFXDRI
   if (pTDFX->directRenderingEnabled) {
     DRILock(pScreen, 0);
   }
@@ -2524,7 +2525,7 @@ TDFXCloseScreen(int scrnIndex, ScreenPtr pScreen)
   hwp = VGAHWPTR(pScrn);
   pTDFX = TDFXPTR(pScrn);
 
-#ifdef XF86DRI
+#ifdef TDFXDRI
     if (pTDFX->directRenderingEnabled) {
 	TDFXDRICloseScreen(pScreen);
 	pTDFX->directRenderingEnabled=FALSE;
@@ -2542,19 +2543,19 @@ TDFXCloseScreen(int scrnIndex, ScreenPtr pScreen)
   
   if (pTDFX->AccelInfoRec) XAADestroyInfoRec(pTDFX->AccelInfoRec);
   pTDFX->AccelInfoRec=0;
-  if (pTDFX->DGAModes) xfree(pTDFX->DGAModes);
+  if (pTDFX->DGAModes) free(pTDFX->DGAModes);
   pTDFX->DGAModes=0;
   if (pTDFX->scanlineColorExpandBuffers[0])
-    xfree(pTDFX->scanlineColorExpandBuffers[0]);
+    free(pTDFX->scanlineColorExpandBuffers[0]);
   pTDFX->scanlineColorExpandBuffers[0]=0;
   if (pTDFX->scanlineColorExpandBuffers[1])
-    xfree(pTDFX->scanlineColorExpandBuffers[1]);
+    free(pTDFX->scanlineColorExpandBuffers[1]);
   pTDFX->scanlineColorExpandBuffers[1]=0;
   if (pTDFX->overlayAdaptor)
-    xfree(pTDFX->overlayAdaptor);
+    free(pTDFX->overlayAdaptor);
   pTDFX->overlayAdaptor=0;
   if (pTDFX->textureAdaptor)
-    xfree(pTDFX->textureAdaptor);
+    free(pTDFX->textureAdaptor);
   pTDFX->textureAdaptor=0;
 
   pScrn->vtSema=FALSE;

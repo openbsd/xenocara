@@ -17,7 +17,7 @@
 Bool TDFXDisableSLI(TDFXPtr pTDFX)
 {
   int i;
-  int v;
+  uint32_t v;
 
   for (i=0; i<pTDFX->numChips; i++) {
       PCI_READ_LONG(v, CFG_INIT_ENABLE, i);
@@ -83,7 +83,8 @@ Bool TDFXDisableSLI(TDFXPtr pTDFX)
 Bool TDFXSetupSLI(ScrnInfoPtr pScrn, Bool sliEnable, int aaSamples)
 {
   TDFXPtr pTDFX;
-  int i, sliLines, sliLinesLog2, nChipsLog2, v;
+  uint32_t v;
+  int i, sliLines, sliLinesLog2, nChipsLog2;
   int sli_renderMask, sli_compareMask, sli_scanMask;
   int sliAnalog, dwFormat;
 

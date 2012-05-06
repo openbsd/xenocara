@@ -3,6 +3,8 @@
 #include "config.h"
 #endif
 
+#include <sys/time.h>
+
 #include "xf86.h"
 #include "xf86_OSproc.h"
 #include "xf86fbman.h"
@@ -197,7 +199,7 @@ Bool TDFXInitFifo(ScreenPtr pScreen)
 #endif
   pTDFX->fifoBase = (uint32*)(pTDFX->FbBase+pTDFX->fifoOffset);
 #ifdef DEBUG_FIFO
-  pTDFX->fifoMirrorBase = xalloc(pTDFX->fifoSize);
+  pTDFX->fifoMirrorBase = malloc(pTDFX->fifoSize);
   pTDFX->fifoMirrorPtr = pTDFX->fifoMirrorBase;
 #endif
   pTDFX->sync=TDFXSyncFifo;
@@ -215,7 +217,7 @@ void TDFXShutdownFifo(ScreenPtr pScreen)
   TDFXWriteLongMMIO(pTDFX, SST_FIFO_BASESIZE0, 0);
   pTDFX->sync=TDFXSync;
 #ifdef DEBUG_FIFO
-  if (pTDFX->fifoMirrorBase) xfree(pTDFX->fifoMirrorBase);
+  if (pTDFX->fifoMirrorBase) free(pTDFX->fifoMirrorBase);
   pTDFX->fifoMirrorBase=0;
 #endif
 }
@@ -232,7 +234,7 @@ GetReadPtr(TDFXPtr pTDFX)
   return read_ptr;
 }
 
-#ifdef XF86DRI
+#ifdef TDFXDRI
 void TDFXSwapContextFifo(ScreenPtr pScreen)
 {
   ScrnInfoPtr pScrn;

@@ -89,7 +89,7 @@ TDFXFirstSync(ScrnInfoPtr pScrn) {
   TDFXPtr pTDFX = TDFXPTR(pScrn);
 
   if (!pTDFX->syncDone) {
-#ifdef XF86DRI
+#ifdef TDFXDRI
     if (pTDFX->directRenderingEnabled) {
       DRILock(screenInfo.screens[pScrn->scrnIndex], 0);
       TDFXSwapContextFifo(screenInfo.screens[pScrn->scrnIndex]);
@@ -107,7 +107,7 @@ TDFXCheckSync(ScrnInfoPtr pScrn) {
   if (pTDFX->syncDone) {
     pTDFX->sync(pScrn);
     pTDFX->syncDone=FALSE;
-#ifdef XF86DRI
+#ifdef TDFXDRI
     if (pTDFX->directRenderingEnabled) {
       DRIUnlock(screenInfo.screens[pScrn->scrnIndex]);
     }
@@ -254,8 +254,8 @@ TDFXAccelInit(ScreenPtr pScreen)
   infoPtr->ScreenToScreenCopyFlags = commonFlags;
 
   /* When we're using the fifo we have to use indirect expansion */
-  pTDFX->scanlineColorExpandBuffers[0] = xalloc((pScrn->virtualX+62)/32*4);
-  pTDFX->scanlineColorExpandBuffers[1] = xalloc((pScrn->virtualX+62)/32*4);
+  pTDFX->scanlineColorExpandBuffers[0] = malloc((pScrn->virtualX+62)/32*4);
+  pTDFX->scanlineColorExpandBuffers[1] = malloc((pScrn->virtualX+62)/32*4);
   infoPtr->NumScanlineColorExpandBuffers=2;
   infoPtr->ScanlineColorExpandBuffers=pTDFX->scanlineColorExpandBuffers;
   infoPtr->SetupForScanlineCPUToScreenColorExpandFill =

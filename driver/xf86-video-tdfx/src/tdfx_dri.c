@@ -5,7 +5,6 @@
 
 #include "xf86.h"
 #include "xf86_OSproc.h"
-#include "xf86Priv.h"
 #include "xf86PciInfo.h"
 #include "xf86Pci.h"
 #include "fb.h"
@@ -53,19 +52,19 @@ TDFXInitVisualConfigs(ScreenPtr pScreen)
   case 16:
     numConfigs = 16;
 
-    if (!(pConfigs = (__GLXvisualConfig*)xcalloc(sizeof(__GLXvisualConfig),
+    if (!(pConfigs = (__GLXvisualConfig*)calloc(sizeof(__GLXvisualConfig),
 						   numConfigs))) {
       return FALSE;
     }
-    if (!(pTDFXConfigs = (TDFXConfigPrivPtr)xcalloc(sizeof(TDFXConfigPrivRec),
+    if (!(pTDFXConfigs = (TDFXConfigPrivPtr)calloc(sizeof(TDFXConfigPrivRec),
 						     numConfigs))) {
-      xfree(pConfigs);
+      free(pConfigs);
       return FALSE;
     }
-    if (!(pTDFXConfigPtrs = (TDFXConfigPrivPtr*)xcalloc(sizeof(TDFXConfigPrivPtr),
+    if (!(pTDFXConfigPtrs = (TDFXConfigPrivPtr*)calloc(sizeof(TDFXConfigPrivPtr),
 							 numConfigs))) {
-      xfree(pConfigs);
-      xfree(pTDFXConfigs);
+      free(pConfigs);
+      free(pTDFXConfigs);
       return FALSE;
     }
     for (i=0; i<numConfigs; i++)
@@ -144,20 +143,20 @@ TDFXInitVisualConfigs(ScreenPtr pScreen)
   case 32:
     numConfigs = 8;
 
-    pConfigs = (__GLXvisualConfig*) xcalloc(sizeof(__GLXvisualConfig), numConfigs);
+    pConfigs = (__GLXvisualConfig*) calloc(sizeof(__GLXvisualConfig), numConfigs);
     if (!pConfigs)
       return FALSE;
 
-    pTDFXConfigs = (TDFXConfigPrivPtr) xcalloc(sizeof(TDFXConfigPrivRec), numConfigs);
+    pTDFXConfigs = (TDFXConfigPrivPtr) calloc(sizeof(TDFXConfigPrivRec), numConfigs);
     if (!pTDFXConfigs) {
-      xfree(pConfigs);
+      free(pConfigs);
       return FALSE;
     }
 
-    pTDFXConfigPtrs = (TDFXConfigPrivPtr *) xcalloc(sizeof(TDFXConfigPrivPtr), numConfigs);
+    pTDFXConfigPtrs = (TDFXConfigPrivPtr *) calloc(sizeof(TDFXConfigPrivPtr), numConfigs);
     if (!pTDFXConfigPtrs) {
-      xfree(pConfigs);
-      xfree(pTDFXConfigs);
+      free(pConfigs);
+      free(pTDFXConfigs);
       return FALSE;
     }
 
@@ -350,7 +349,7 @@ Bool TDFXDRIScreenInit(ScreenPtr pScreen)
   if (xf86LoaderCheckSymbol("DRICreatePCIBusID")) {
     pDRIInfo->busIdString = DRICreatePCIBusID(pTDFX->PciInfo);
   } else {
-    pDRIInfo->busIdString = xalloc(64);
+    pDRIInfo->busIdString = malloc(64);
     sprintf(pDRIInfo->busIdString, "PCI:%d:%d:%d",
 	    ((pciConfigPtr)pTDFX->PciInfo->thisCard)->busnum,
 	    ((pciConfigPtr)pTDFX->PciInfo->thisCard)->devnum,
@@ -360,7 +359,7 @@ Bool TDFXDRIScreenInit(ScreenPtr pScreen)
   pDRIInfo->ddxDriverMajorVersion = TDFX_MAJOR_VERSION;
   pDRIInfo->ddxDriverMinorVersion = TDFX_MINOR_VERSION;
   pDRIInfo->ddxDriverPatchVersion = TDFX_PATCHLEVEL;
-  pDRIInfo->frameBufferPhysicalAddress = pTDFX->LinearAddr[0];
+  pDRIInfo->frameBufferPhysicalAddress = (pointer) pTDFX->LinearAddr[0];
   pDRIInfo->frameBufferSize = pTDFX->FbMapSize;
   pDRIInfo->frameBufferStride = pTDFX->stride;
   pDRIInfo->ddxDrawableTableEntry = TDFX_MAX_DRAWABLES;
@@ -395,7 +394,7 @@ Bool TDFXDRIScreenInit(ScreenPtr pScreen)
   pDRIInfo->SAREASize = SAREA_MAX;
 #endif
 
-  if (!(pTDFXDRI = (TDFXDRIPtr)xcalloc(sizeof(TDFXDRIRec),1))) {
+  if (!(pTDFXDRI = (TDFXDRIPtr)calloc(sizeof(TDFXDRIRec),1))) {
     xf86DrvMsg(pScreen->myNum, X_ERROR,
                "[dri] DRI memory allocation failed, disabling DRI.\n");
     DRIDestroyInfoRec(pTDFX->pDRIInfo);
@@ -421,7 +420,7 @@ Bool TDFXDRIScreenInit(ScreenPtr pScreen)
   pDRIInfo->createDummyCtxPriv = FALSE;
 
   if (!DRIScreenInit(pScreen, pDRIInfo, &pTDFX->drmSubFD)) {
-    xfree(pDRIInfo->devPrivate);
+    free(pDRIInfo->devPrivate);
     pDRIInfo->devPrivate=0;
     DRIDestroyInfoRec(pTDFX->pDRIInfo);
     pTDFX->pDRIInfo=0;
@@ -483,14 +482,14 @@ TDFXDRICloseScreen(ScreenPtr pScreen)
 
   if (pTDFX->pDRIInfo) {
     if (pTDFX->pDRIInfo->devPrivate) {
-      xfree(pTDFX->pDRIInfo->devPrivate);
+      free(pTDFX->pDRIInfo->devPrivate);
       pTDFX->pDRIInfo->devPrivate=0;
     }
     DRIDestroyInfoRec(pTDFX->pDRIInfo);
     pTDFX->pDRIInfo=0;
   }
-  if (pTDFX->pVisualConfigs) xfree(pTDFX->pVisualConfigs);
-  if (pTDFX->pVisualConfigsPriv) xfree(pTDFX->pVisualConfigsPriv);
+  if (pTDFX->pVisualConfigs) free(pTDFX->pVisualConfigs);
+  if (pTDFX->pVisualConfigsPriv) free(pTDFX->pVisualConfigsPriv);
 }
 
 static Bool
