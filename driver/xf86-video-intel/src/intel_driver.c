@@ -1460,6 +1460,7 @@ static Bool I830PreInit(ScrnInfoPtr scrn, int flags)
 		if (!vgaHWGetHWRec(scrn))
 			return FALSE;
 		hwp = VGAHWPTR(scrn);
+		vgaHWSetStdFuncs(hwp);
 	}
 
 	scrn->displayWidth = 640;	/* default it */
