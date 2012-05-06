@@ -229,13 +229,13 @@ SavageFreeBIOSModeTable( SavagePtr psav, SavageModeTablePtr* ppTable )
     {
 	if( pMode->RefreshRate )
 	{
-	    xfree( pMode->RefreshRate );
+	    free( pMode->RefreshRate );
 	    pMode->RefreshRate = NULL;
 	}
 	pMode++;
     }
 
-    xfree( *ppTable );
+    free( *ppTable );
 }
 
 
@@ -246,7 +246,7 @@ SavageGetBIOSModeTable( SavagePtr psav, int iDepth )
     SavageModeTablePtr pTable;
 
     pTable = (SavageModeTablePtr) 
-	xcalloc( 1, sizeof(SavageModeTableRec) + 
+	calloc( 1, sizeof(SavageModeTableRec) + 
 		    (nModes-1) * sizeof(SavageModeEntry) );
     if( pTable ) {
 	pTable->NumModes = nModes;
@@ -346,7 +346,7 @@ SavageGetBIOSModes(
 			if( s3vModeTable->RefreshRate )
 			{
 			    s3vModeTable->RefreshRate = (unsigned char *)
-				xrealloc( 
+				realloc( 
 				    s3vModeTable->RefreshRate,
 				    (iRefresh+8) * sizeof(unsigned char)
 				);
@@ -354,7 +354,7 @@ SavageGetBIOSModes(
 			else
 			{
 			    s3vModeTable->RefreshRate = (unsigned char *)
-				xcalloc( 
+				calloc( 
 				    sizeof(unsigned char),
 				    (iRefresh+8)
 				);

@@ -22,11 +22,11 @@
  * DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef __SAVAGE_DRM_H__
-#define __SAVAGE_DRM_H__
+#ifndef SAVAGE_DRM_H
+#define SAVAGE_DRM_H
 
-#ifndef __SAVAGE_SAREA_DEFINES__
-#define __SAVAGE_SAREA_DEFINES__
+#ifndef SAVAGE_SAREA_DEFINES
+#define SAVAGE_SAREA_DEFINES
 
 #define DRM_SAVAGE_MEM_PAGE (1UL<<12)
 #define DRM_SAVAGE_MEM_WORK 32
@@ -96,7 +96,7 @@ typedef struct drm_savage_get_physcis_address
 #define SAVAGE_NR_TEX_REGIONS		16   /* num. of global texture manage list element*/
 #define SAVAGE_LOG_MIN_TEX_REGION_SIZE	16   /* each region 64K, Jiayo Hsu */
 
-#endif /* __SAVAGE_SAREA_DEFINES__ */
+#endif /* SAVAGE_SAREA_DEFINES */
 
 /* drm_tex_region_t define in drm.h */
 
@@ -245,4 +245,4 @@ typedef struct _drm_savage_blit {
 	int source_pitch, dest_pitch;
 } drm_savage_blit_t;
 
-#endif
+#endif /* SAVAGE_DRM_H */

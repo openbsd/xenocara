@@ -1,6 +1,6 @@
 
-#ifndef _S3BCI_H_
-#define _S3BCI_H_
+#ifndef S3BCI_H
+#define S3BCI_H
 
 
 /* BCI Control Register */
@@ -140,5 +140,4 @@
 	((yp) ? 1<<15 : 0) | \
 	((err) << 16))
 
-
-#endif /* _S3BCI_H_ */
+#endif /* S3BCI_H */

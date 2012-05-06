@@ -1,6 +1,6 @@
 
-#ifndef _SAVAGE_REGS_H
-#define _SAVAGE_REGS_H
+#ifndef SAVAGE_REGS_H
+#define SAVAGE_REGS_H
 
 /* Copied and renamed from radeon_reg.h for AGP/PCI detection. */
 #define SAVAGE_STATUS_PCI_CONFIG            0x06
@@ -285,4 +285,4 @@ do {                                            \
 #define EC1_CENTER_ON	0x10
 #define EC1_EXPAND_ON	0x0c
 
-#endif /* _SAVAGE_REGS_H */
+#endif /* SAVAGE_REGS_H */

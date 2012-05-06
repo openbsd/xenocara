@@ -29,7 +29,6 @@
 #include "xf86.h"
 #include "xf86_OSproc.h"
 #include "compiler.h"
-#include "xf86PciInfo.h"
 #include "xf86Pci.h"
 #include "xf86fbman.h"
 #include "regionstr.h"
@@ -224,7 +223,7 @@ Bool SAVAGEInitMC(ScreenPtr pScreen)
  *  Set *num_priv to the number of 32bit words that make up the size of
  *  of the data that priv will point to.
  *
- *  *priv = (long *) xcalloc (elements, sizeof(element))
+ *  *priv = (long *) calloc (elements, sizeof(element))
  *  *num_priv = (elements * sizeof(element)) >> 2;
  *
  **************************************************************************/
@@ -253,7 +252,7 @@ int SAVAGEXvMCCreateContext (ScrnInfoPtr pScrn, XvMCContextPtr pContext,
     return BadAlloc;
   }
 
-  *priv = xcalloc(1,sizeof(SAVAGEXvMCCreateContextRec));
+  *priv = calloc(1,sizeof(SAVAGEXvMCCreateContextRec));
   contextRec = (SAVAGEXvMCCreateContextRec *)*priv;
 
   if(!*priv) {
@@ -266,7 +265,7 @@ int SAVAGEXvMCCreateContext (ScrnInfoPtr pScrn, XvMCContextPtr pContext,
   if(drmCreateContext(pSAVAGE->drmFD, &(contextRec->drmcontext) ) < 0) {
     xf86DrvMsg(X_ERROR, pScrn->scrnIndex,
         "SAVAGEXvMCCreateContext: Unable to create DRMContext!\n");
-    xfree(*priv);
+    free(*priv);
     return(BadAlloc);
   }
 
@@ -310,7 +309,7 @@ int SAVAGEXvMCCreateSurface (ScrnInfoPtr pScrn, XvMCSurfacePtr pSurf,
   /* This size is used for flip, mixer, subpicture and palette buffers*/
   unsigned int offset = ((786*576*2 + 2048)*5 + 2048) & 0xfffff800; 
 
-  *priv = (long *)xcalloc(2,sizeof(long));
+  *priv = (long *)calloc(2,sizeof(long));
 
   if(!*priv) {
     xf86DrvMsg(X_ERROR, pScrn->scrnIndex,
@@ -340,7 +339,7 @@ int SAVAGEXvMCCreateSubpicture (ScrnInfoPtr pScrn, XvMCSubpicturePtr pSubp,
   SavagePtr pSAVAGE = SAVPTR(pScrn);
   int i;
 
-  *priv = (long *)xcalloc(1,sizeof(long));
+  *priv = (long *)calloc(1,sizeof(long));
 
   if(!*priv) {
     xf86DrvMsg(X_ERROR, pScrn->scrnIndex,

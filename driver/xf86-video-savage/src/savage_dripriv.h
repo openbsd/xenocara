@@ -22,8 +22,8 @@
  * DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef __SAVAGE_DRIPRIV_H__
-#define __SAVAGE_DRIPRIV_H__
+#ifndef SAVAGE_DRIPRIV_H
+#define SAVAGE_DRIPRIV_H
 
 #include "GL/glxint.h"
 
@@ -43,4 +43,4 @@ typedef struct {
   int dummy;
 } SAVAGEDRIContextRec, *SAVAGEDRIContextPtr;
 
-#endif
+#endif /* SAVAGE_DRIPRIV_H */

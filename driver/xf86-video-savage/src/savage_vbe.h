@@ -12,8 +12,8 @@ versions as being modified.
 This software has NO WARRANTY.  Use it at your own risk.
 */
 
-#ifndef _SAVAGEVBE_H
-#define _SAVAGEVBE_H
+#ifndef SAVAGEVBE_H
+#define SAVAGEVBE_H
 
 /*
  *  Common BIOS functions
@@ -161,4 +161,4 @@ struct vbe_palette_entry
 	unsigned char align;
 	} __attribute__ ((packed));
 
-#endif
+#endif /* SAVAGEVBE_H */

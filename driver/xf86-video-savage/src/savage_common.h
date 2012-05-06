@@ -23,8 +23,8 @@
  * DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef __SAVAGE_COMMON_H__
-#define __SAVAGE_COMMON_H__
+#ifndef SAVAGE_COMMON_H
+#define SAVAGE_COMMON_H
 
 #include <inttypes.h>
 
@@ -174,4 +174,4 @@ union drmSAVAGECmdHeader {
 	} clear1; /* SAVAGE_CMD_CLEAR data */
 };
 
-#endif /* __SAVAGE_COMMON_H__ */
+#endif /* SAVAGE_COMMON_H */

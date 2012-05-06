@@ -1,6 +1,5 @@
-#ifndef __SAVAGE_STREAMS_H__
-
-# define __SAVAGE_STREAMS_H__
+#ifndef SAVAGE_STREAMS_H
+#define SAVAGE_STREAMS_H
 
 /**************************************
    S3 streams processor
@@ -220,4 +219,4 @@
 #define SSTREAMS_MODE(bpp) (bpp > 16 ? (bpp > 24 ? STREAMS_MODE32 :\
 				       STREAMS_MODE24) : STREAMS_MODE16)
 
-#endif /*__SAVAGE_STREAMS_H__*/
+#endif /* SAVAGE_STREAMS_H */

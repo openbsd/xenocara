@@ -15,7 +15,7 @@
 #include "savage_bci.h"
 #include "savage_streams.h"
 
-#ifdef XF86DRI
+#ifdef SAVAGEDRI
 #define _XF86DRI_SERVER_
 #include "savage_dri.h"
 #endif
@@ -441,7 +441,7 @@ SavageUploadToScreen(PixmapPtr pDst, int x, int y, int w, int h, char *src, int 
     int i, j, dwords, queue, Bpp;
     unsigned int cmd;
     CARD32 * srcp;
-#ifdef XF86DRI
+#ifdef SAVAGEDRI
     unsigned int dst_pitch;
     unsigned int dst_yoffset;
     int agp_possible;
@@ -451,7 +451,7 @@ SavageUploadToScreen(PixmapPtr pDst, int x, int y, int w, int h, char *src, int 
 
     Bpp = pDst->drawable.bitsPerPixel / 8;
 
-#ifdef XF86DRI
+#ifdef SAVAGEDRI
     /* Test for conditions for AGP Mastered Image Transfer (MIT). AGP memory
        needs to be available, the XVideo AGP needs to be enabled, the 
        framebuffer destination must be a multiple of 32 bytes, and the source
@@ -508,7 +508,7 @@ SavageUploadToScreen(PixmapPtr pDst, int x, int y, int w, int h, char *src, int 
             return TRUE;
         }
     }
-#endif /* XF86DRI */
+#endif /* SAVAGEDRI */
 
     /* If we reach here, AGP transfer is not possible, or failed to drmMap() */
     psav->sbd_offset = exaGetPixmapOffset(pDst);
@@ -542,7 +542,7 @@ SavageUploadToScreen(PixmapPtr pDst, int x, int y, int w, int h, char *src, int 
 
 	if (4 * dwords <= queue) {
 	    /* WARNING: breaking BCI_PTR abstraction here */
-	    memcpy(bci_ptr, srcp, 4 * dwords);
+	    memcpy((CARD32 *)bci_ptr, srcp, 4 * dwords);
 	    bci_ptr += dwords;
 	    queue -= 4 * dwords;
 	} else {
@@ -567,7 +567,6 @@ SavageUploadToScreen(PixmapPtr pDst, int x, int y, int w, int h, char *src, int 
 Bool
 SavageDownloadFromScreen(PixmapPtr pSrc, int x, int y, int w, int h, char *dst, int dst_pitch)
 {
-    ScrnInfoPtr pScrn = xf86Screens[pSrc->drawable.pScreen->myNum];
     unsigned char *src = pSrc->devPrivate.ptr;
     int	src_pitch = exaGetPixmapPitch(pSrc);
     int	bpp = pSrc->drawable.bitsPerPixel;

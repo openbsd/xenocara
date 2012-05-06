@@ -23,11 +23,11 @@
  * DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef __SAVAGE_SAREA_H__
-#define __SAVAGE_SAREA_H__
+#ifndef SAVAGE_SAREA_H
+#define SAVAGE_SAREA_H
 
-#ifndef __SAVAGE_SAREA_DEFINES__
-#define __SAVAGE_SAREA_DEFINES__
+#ifndef SAVAGE_SAREA_DEFINES
+#define SAVAGE_SAREA_DEFINES
 
 /* 2 heaps (1 for card, 1 for agp), each divided into upto 128
  * regions, subject to a minimum region size of (1<<16) == 64k.
@@ -42,7 +42,7 @@
 #define SAVAGE_NR_TEX_REGIONS		16
 #define SAVAGE_LOG_MIN_TEX_REGION_SIZE	16
 
-#endif /* __SAVAGE_SAREA_DEFINES__ */
+#endif /* SAVAGE_SAREA_DEFINES */
 
 typedef struct {
 	/* LRU lists for texture memory in agp space and on the card.
@@ -55,4 +55,4 @@ typedef struct {
 	int ctxOwner;
 }  SAVAGESAREAPrivRec, *SAVAGESAREAPrivPtr;
 
-#endif /* __SAVAGE_SAREA_H__ */
+#endif /* SAVAGE_SAREA_H */

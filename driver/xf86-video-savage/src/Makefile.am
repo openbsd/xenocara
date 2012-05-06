@@ -40,6 +40,7 @@ savage_drv_la_SOURCES = \
          savage_driver.h \
          savage_drm.h \
          savage_i2c.c \
+         savage_pciids.h \
          savage_regs.h \
          savage_sarea.h \
          savage_shadow.c \

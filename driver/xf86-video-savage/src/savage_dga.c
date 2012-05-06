@@ -107,15 +107,15 @@ SavageSetupDGAMode(
 	otherPitch = secondPitch ? secondPitch : pMode->HDisplay;
 
 	if(pMode->HDisplay != otherPitch) {
-	    newmodes = xrealloc(modes, (*num + 2) * sizeof(DGAModeRec));
+	    newmodes = realloc(modes, (*num + 2) * sizeof(DGAModeRec));
 	    oneMore = TRUE;
 	} else {
-	    newmodes = xrealloc(modes, (*num + 1) * sizeof(DGAModeRec));
+	    newmodes = realloc(modes, (*num + 1) * sizeof(DGAModeRec));
 	    oneMore = FALSE;
 	}
 
 	if(!newmodes) {
-	   xfree(modes);
+	   free(modes);
 	   return NULL;
 	}
 	modes = newmodes;
@@ -390,7 +390,7 @@ Savage_OpenFramebuffer(
     SavagePtr psav = SAVPTR(pScrn);
 
     *name = NULL;	 /* no special device */
-    *mem = (unsigned char*)psav->FbRegion.base;
+    *mem = (unsigned char*)(uintptr_t) psav->FbRegion.base;
     *size = psav->videoRambytes;
     *offset = 0;
     *flags = DGA_NEED_ROOT;

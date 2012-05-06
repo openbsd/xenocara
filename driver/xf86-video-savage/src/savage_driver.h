@@ -55,7 +55,6 @@
 #include "xf86Resources.h"
 #endif
 #include "xf86Pci.h"
-#include "xf86PciInfo.h"
 #include "xf86_OSproc.h"
 #include "xf86Cursor.h"
 #include "mipointer.h"
@@ -71,7 +70,11 @@
 #include "savage_regs.h"
 #include "savage_vbe.h"
 
-#ifdef XF86DRI
+#ifndef XF86DRI
+#undef SAVAGEDRI
+#endif
+
+#ifdef SAVAGEDRI
 #define _XF86DRI_SERVER_
 #include "savage_dripriv.h"
 #include "savage_dri.h"
@@ -458,7 +461,7 @@ typedef struct _Savage {
      int                 overlayDepth;
      int			primStreamBpp;
 
-#ifdef XF86DRI
+#ifdef SAVAGEDRI
     int 		LockHeld;
     Bool 		directRenderingEnabled;
     DRIInfoPtr 		pDRIInfo;
@@ -548,7 +551,7 @@ typedef struct _Savage {
 #define writescan savagewritescan
 
 /* add for support DRI */
-#ifdef XF86DRI
+#ifdef SAVAGEDRI
 
 #define SAVAGE_FRONT	0x1
 #define SAVAGE_BACK	0x2
@@ -559,20 +562,7 @@ Bool SAVAGEDRIScreenInit( ScreenPtr pScreen );
 Bool SAVAGEInitMC(ScreenPtr pScreen);
 void SAVAGEDRICloseScreen( ScreenPtr pScreen );
 Bool SAVAGEDRIFinishScreenInit( ScreenPtr pScreen );
-
-Bool SAVAGELockUpdate( ScrnInfoPtr pScrn, drmLockFlags flags );
-
-#if 0
-void SAVAGEGetQuiescence( ScrnInfoPtr pScrn );
-void SAVAGEGetQuiescenceShared( ScrnInfoPtr pScrn );
-#endif
-
-void SAVAGESelectBuffer(ScrnInfoPtr pScrn, int which);
-
-#if 0
-Bool SAVAGECleanupDma(ScrnInfoPtr pScrn);
-Bool SAVAGEInitDma(ScrnInfoPtr pScrn, int prim_size);
-#endif
+void SAVAGEDRIResume( ScreenPtr pScreen );
 
 #define SAVAGE_AGP_1X_MODE		0x01
 #define SAVAGE_AGP_2X_MODE		0x02

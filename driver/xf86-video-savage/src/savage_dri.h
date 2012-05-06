@@ -23,8 +23,8 @@
  */
 
 
-#ifndef __SAVAGE_DRI_H__
-#define __SAVAGE_DRI_H__
+#ifndef SAVAGE_DRI_H
+#define SAVAGE_DRI_H
 
 #include "drm.h"
 
@@ -73,4 +73,4 @@ typedef struct {
    drm_handle_t xvmcSurfHandle; /* ? */
 } SAVAGEDRIRec, *SAVAGEDRIPtr;
 
-#endif
+#endif /* SAVAGE_DRI_H */

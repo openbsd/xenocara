@@ -1,3 +1,347 @@
+commit 63dd44674a28263c5d8d6aec8b72e95f94d3fe6c
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Mar 23 19:46:12 2012 -0700
+
+    xf86-video-savage 2.3.4
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit dfcc325f55d580eb630f3b236eadf99f6b7d6ad6
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Mar 23 19:38:07 2012 -0700
+
+    Add savage_pciids.h to src/Makefile.am to fix distcheck
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit c4022796ec69bb3223d435d8442f9168aebe9c3d
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Jan 17 15:35:39 2012 +1000
+
+    Untangle XF86DRI from the driver-specific DRI define
+    
+    XF86DRI is defined by xorg-server.h, so --disable-dri in the driver
+    itself does exactly nothing other than not fill in the CFLAGS and thus stop
+    the driver from compiling.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Tormod Volden <debian.tormod@gmail.com>
+
+commit 05f74bd80018bc503ff5631b357fc0b02df6187f
+Author: Andrew Turner <andrew@fubar.geek.nz>
+Date:   Fri Oct 14 00:18:40 2011 +0200
+
+    Merge almost identical code in SAVAGEInitVisualConfigs
+    
+    https://bugs.freedesktop.org/show_bug.cgi?id=9961
+    
+    Signed-off-by: Andrew Turner <andrew@fubar.geek.nz>
+    [Tormod: Rename table to SAVAGEVisuals]
+    Signed-off-by: Tormod Volden <debian.tormod@gmail.com>
+
+commit 0600b7279382c66445506fa98dc50299574a1abd
+Author: Tormod Volden <debian.tormod@gmail.com>
+Date:   Sun Dec 4 23:36:19 2011 +0100
+
+    Avoid leading underscores in #include guards
+    
+    In a user header file, the macro name should not begin with `_'
+    http://gcc.gnu.org/onlinedocs/cpp/Once_002dOnly-Headers.html
+    
+    Signed-off-by: Tormod Volden <debian.tormod@gmail.com>
+
+commit 10f319e43f77fef450aa723eff25bd200600c48d
+Author: Tormod Volden <debian.tormod@gmail.com>
+Date:   Sun Dec 4 23:36:18 2011 +0100
+
+    Do not use the deprecated xf86PciInfo.h from xserver
+    
+    Instead maintain our own list of supported PCI IDs.
+    
+    Signed-off-by: Tormod Volden <debian.tormod@gmail.com>
+
+commit c3eaacd25358c225e355a1ea7d64dece8188b69a
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Mon Dec 19 17:23:35 2011 -0500
+
+    Fix for new vgahw ABI
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit a0776b675a4a62d972d135508079950b8adbfe28
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Mon Dec 19 17:22:53 2011 -0500
+
+    Fall back to shadowfb if XAA is unavailable
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit 4618374e37674345303b5b44474195def65bba2a
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Wed Jun 22 17:05:37 2011 -0400
+
+    Don't include xf86Priv.h
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit 8b9c81bacf45a9f56b0ec275e1b48e1407380baf
+Author: Tormod Volden <debian.tormod@gmail.com>
+Date:   Sat Oct 8 21:55:38 2011 +0200
+
+    Bump version to 2.3.3
+
+commit f7516fd3a01241aaeab65cd409091e68b4be234a
+Author: Tormod Volden <debian.tormod@gmail.com>
+Date:   Sun Sep 18 22:28:31 2011 +0200
+
+    savage: Warn if broken drm maps are detected
+    
+    Linux kernel 2.6.30 - 2.6.39 had broken drm maps which would result
+    in assorted problems. Leave a message in the log if it looks like
+    the framebuffer map and the aperture map are mixed up.
+    
+    https://bugs.freedesktop.org/show_bug.cgi?id=32511
+    
+    Signed-off-by: Tormod Volden <debian.tormod@gmail.com>
+
+commit ca6c41fd8c9fcb563ee5f97689806edcb0da54bf
+Author: Tormod Volden <debian.tormod@gmail.com>
+Date:   Sat Sep 17 11:58:50 2011 +0200
+
+    savage: Avoid unnecessary float calculation in video display
+    
+    There is no reason to do the division using floats as long as
+    the result is an integer and there is no risk of intermediate
+    overflow.
+    
+    This is in the code for "Old" chipsets. Integer division was already
+    used in the parallel code for "New" chipsets.
+    
+    Also fixed up the whitespace in both blocks.
+    
+    Signed-off-by: Tormod Volden <debian.tormod@gmail.com>
+    Reviewed-by: Matt Turner <mattst88@gmail.com>
+
+commit f27eac4b3fe9e6f13d3c54711488ebe7280f24dd
+Author: Hans-Juergen Mauser <hjmauser@gmx.net>
+Date:   Sat Sep 17 11:22:30 2011 +0200
+
+    savage: Fix Xv scaling on non-native resolutions
+    
+    If I set the resolution to 800x600 for example (to be able to use the
+    TV output in full screen mode), I only can see 800/1024 = 0,78 of the
+    real video width, no matter if the video is displayed in a small player
+    window or enlarged to full screen. On the right of the video display,
+    the remaining width is filled with a black (or sometimes blue) bar.
+    
+    The problem was mainly that only the drawing starting point was modified
+    by the scaling factor, but not the size-defining end of the drawing
+    rectangle.
+    
+    https://bugs.launchpad.net/bugs/670790
+    
+    Signed-off-by: Hans-Juergen Mauser <hjmauser@gmx.net>
+    Reviewed-by: Tormod Volden <debian.tormod@gmail.com>
+    Acked-by: Matt Turner <mattst88@gmail.com>
+
+commit d177ae0b11a1b47ce088cce8c3c6e0f94a706b5e
+Author: Tormod Volden <debian.tormod@gmail.com>
+Date:   Thu Apr 21 00:17:15 2011 +0200
+
+    savage: Fix &/&& typo in "magical" register setup
+    
+    Found with CFLAGS=-Wlogical-op
+    
+    Signed-off-by: Tormod Volden <debian.tormod@gmail.com>
+    Reviewed-by: Alex Deucher <alexdeucher@gmail.com>
+
+commit 092d2aa5502d10b7f994003882202f2ffda5c9aa
+Author: Tormod Volden <debian.tormod@gmail.com>
+Date:   Tue Apr 19 00:02:50 2011 +0200
+
+    savage: Make SAVAGESelectBuffer() private (static)
+    
+    Also clean out some unused prototypes from savage_driver.h
+    
+    Signed-off-by: Tormod Volden <debian.tormod@gmail.com>
+    Reviewed-by: Matt Turner <mattst88@gmail.com>
+    Reviewed-by: Alex Deucher <alexdeucher@gmail.com>
+
+commit 644fcdfdac61500e61e7bfd5ac98f780d87ef803
+Author: Tormod Volden <debian.tormod@gmail.com>
+Date:   Mon Apr 18 23:08:55 2011 +0200
+
+    savage: Factor out a SAVAGESetAgpMode and call it on resume
+    
+    This should fix resume with AGP. After all these years...
+    
+    https://bugzilla.kernel.org/show_bug.cgi?id=4607
+    
+    Signed-off-by: Tormod Volden <debian.tormod@gmail.com>
+    Reviewed-by: Matt Turner <mattst88@gmail.com>
+    Reviewed-by: Alex Deucher <alexdeucher@gmail.com>
+
+commit ce6d156b72971bb8215a9443cbe76ce007c79663
+Author: Tormod Volden <debian.tormod@gmail.com>
+Date:   Mon Apr 18 22:36:25 2011 +0200
+
+    savage: New SAVAGEDRIResume function
+    
+    Move DRI stuff from savage_driver.c to savage_dri.c
+    
+    Signed-off-by: Tormod Volden <debian.tormod@gmail.com>
+    Reviewed-by: Matt Turner <mattst88@gmail.com>
+    Reviewed-by: Alex Deucher <alexdeucher@gmail.com>
+
+commit dad240d81ea5fa946d494467e677c6e1a3a12fd7
+Author: Tormod Volden <debian.tormod@gmail.com>
+Date:   Mon Apr 18 22:04:00 2011 +0200
+
+    savage: Fix logic in waitHSync
+    
+    Bit-masking the result of a boolean negation seems pointless,
+    so I guess this is what was intended: Only look at bit 0 of the
+    inStatus result.
+    
+    Signed-off-by: Tormod Volden <debian.tormod@gmail.com>
+    Reviewed-by: Matt Turner <mattst88@gmail.com>
+    Reviewed-by: Alex Deucher <alexdeucher@gmail.com>
+
+commit a4f93e8860494285444e6b8a6ba801b9db8c9cdc
+Author: Tormod Volden <debian.tormod@gmail.com>
+Date:   Thu Mar 31 23:13:55 2011 +0200
+
+    Fix wrong frequency unit in trace output
+    
+    The mode pixel clock frequency is in kHz, not Hz.
+    
+    Signed-off-by: Tormod Volden <debian.tormod@gmail.com>
+
+commit aff8f966c6d3f7dbad2d92d040ce7f5c4b286eef
+Author: Tormod Volden <debian.tormod@gmail.com>
+Date:   Sun Feb 13 23:04:09 2011 +0100
+
+    Use proper casts on framebuffer addresses
+    
+    Correction to df8059025cafadaeea7672842d31134ed8c9c5df.
+    Casting addresses to int is a 32bitism. If we want to use
+    this intermediate cast to silence compiler warnings, we
+    should use uintptr_t instead to not introduce potential
+    bit truncation.
+    
+    Thanks to Mark Kettenis for spotting this.
+    
+    Signed-off-by: Tormod Volden <debian.tormod@gmail.com>
+
+commit 6b22be096bed59a853e5e1cdd25d8943cce30d4f
+Author: Tormod Volden <debian.tormod@gmail.com>
+Date:   Sun Jan 23 23:45:49 2011 +0100
+
+    savage: Fix initialization typo in SAVAGEDRIMoveBuffers
+    
+    This was warned about when building with -O2, and seems
+    to be a copy-and-paste glitch.
+    
+    savage_dri.c: In function ‘SAVAGEDRIMoveBuffers’:
+    savage_dri.c:1445: warning: ‘pptNew2’ may be used uninitialized in this function
+
+commit 9872b5f7ce7a7b07ff68bd2c389c56a3cb1b4ed6
+Author: Tormod Volden <debian.tormod@gmail.com>
+Date:   Sun Jan 23 22:47:01 2011 +0100
+
+    savage: Fix building with TRACEON defined
+    
+    Two warnings and an error.
+
+commit b018d343e6a6810afdaf1a73091dd9bc8c1c95bd
+Author: Tormod Volden <debian.tormod@gmail.com>
+Date:   Sun Jan 23 20:23:49 2011 +0100
+
+    savage: Setup tiled surface registers in SavageEnterVT
+    
+    These registers are cleared after suspend/resume, so set them
+    up again in EnterVT.
+
+commit f3cd2946d0f38e89643aa6624e6bf35472828995
+Author: Tormod Volden <debian.tormod@gmail.com>
+Date:   Sun Jan 23 20:23:48 2011 +0100
+
+    savage: Factor out a SAVAGEDRISetupTiledSurfaceRegs function
+    
+    The tiled surface registers were only setup in SAVAGEDRIScreenInit,
+    however, after suspend/resume these registers must be set up again.
+    So factor it out in a new function so it can be reused.
+
+commit 055ca25faeb9decee091e8c59134c8f537bb7bc3
+Author: Tormod Volden <debian.tormod@gmail.com>
+Date:   Sun Jan 23 19:28:47 2011 +0100
+
+    savage: Cast all handles before printing them
+    
+    Removes the last bunch of -Wall build warnings.
+    
+    savage_dri.c:490: warning: format ‘%08lx’ expects type ‘long unsigned int’,
+    but argument 5 has type ‘drm_handle_t’
+    ...
+
+commit 3f18b334812086e5f487a4570a34a3906a67724c
+Author: Tormod Volden <debian.tormod@gmail.com>
+Date:   Sun Jan 23 15:49:58 2011 +0100
+
+    savage: Fix ambiguity in SavageLoadPaletteSavage4
+    
+    It looks like "!" was meant for logic negation and the parentheses
+    were wrong.
+    
+    I don't have a Savage 4 so I can't check if this fixes or breaks
+    anything.
+
+commit 6f8aa9c90cccbd893323f5f1892958b7f46e400d
+Author: Tormod Volden <debian.tormod@gmail.com>
+Date:   Sun Jan 23 15:49:57 2011 +0100
+
+    savage: Drop unused variables and functions
+    
+    Silence -Wall warnings.
+    
+    The functions are just #if'ed out, to be left for inspiration.
+
+commit df8059025cafadaeea7672842d31134ed8c9c5df
+Author: Tormod Volden <debian.tormod@gmail.com>
+Date:   Sun Jan 23 12:47:04 2011 +0100
+
+    savage: More (intermediate) casts to silence warnings
+    
+    savage_dga.c: In function ‘Savage_OpenFramebuffer’:
+    savage_dga.c:393: warning: cast to pointer from integer of different size
+    
+    savage_dri.c: In function ‘SAVAGEDRIScreenInit’:
+    savage_dri.c:924: warning: cast to pointer from integer of different size
+
+commit 35d9734049a0f701d2c1f84f778f30816176d29e
+Author: Tormod Volden <debian.tormod@gmail.com>
+Date:   Sun Jan 23 12:47:02 2011 +0100
+
+    savage: Replace deprecated x(c)alloc/xfree with m/calloc/free
+    
+    sed -i 's/xalloc/malloc/g; s/xcalloc/calloc/g; s/xfree/free/g'
+    
+    Also replace xrealloc with realloc.
+
+commit 0cbb6d275726aaed648b5ea4dcff45ce14388f91
+Author: Tormod Volden <debian.tormod@gmail.com>
+Date:   Sun Jan 23 12:47:03 2011 +0100
+
+    savage: Add casts to silence build warnings
+    
+    savage_exa.c: In function ‘SavageUploadToScreen’:
+    savage_exa.c:545: warning: passing argument 1 of ‘memcpy’ discards qualifiers from pointer target type
+    /usr/include/bits/string3.h:49: note: expected ‘void * restrict’ but argument is of type ‘volatile CARD32 *’
+    
+    savage_video.c: In function ‘SavagePutImage’:
+    savage_video.c:2007: warning: format ‘%ld’ expects type ‘long int’, but argument 4 has type ‘drmSize’
+    savage_video.c:2007: warning: format ‘%ld’ expects type ‘long int’, but argument 5 has type ‘int’
+
 commit cdfbd9674ccce6d0c96c1b16ad61eac5d5648e43
 Author: Dave Airlie <airlied@linux.ie>
 Date:   Sun Dec 5 19:09:12 2010 +1000
