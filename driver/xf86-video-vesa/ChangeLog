@@ -1,3 +1,233 @@
+commit 8cd553551767c0f970912fb73cae3aa733434106
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Thu Mar 22 17:32:22 2012 -0400
+
+    vesa 2.3.1
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit 4ba7306fd0c9533750d389829e2cbf0522e149b3
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Wed Oct 19 01:49:38 2011 -0700
+
+    configure.ac: Require a newer version of libpciaccess
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit efe1792818be463dd0367178f0233bc502b7a584
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Wed Oct 19 01:38:49 2011 -0700
+
+    Code style cleanup to make the map and unmap blocks more consistent
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit 1f84310ddf49778f776a39810aa98211c812e8ab
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Wed Oct 19 01:33:07 2011 -0700
+
+    Build fix for ABI Version 12
+    
+    ABI Version 12 removes support for multiple PCI domains.  If you need to
+    use this driver on a system with more than one PCI domain, you should
+    either port this driver to using libpciaccess directly or stick with an
+    older server.
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit 1a60e9068284e1ef22d8c470a85410a54ee668e8
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Wed Oct 19 01:15:13 2011 -0700
+
+    Use unsigned long rather than deprecated IOADDRESS
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit 463886df688d3521afc47ec88f9aaf67e924ec7f
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Wed Oct 19 01:15:03 2011 -0700
+
+    Build fix for ABI Version 12
+    
+    ABI Version 12 removes support for multiple PCI domains.  If you need to
+    use this driver on a system with more than one PCI domain, you should
+    either port this driver to using libpciaccess directly or stick with an
+    older server.
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit 0b02c68581f48c3239bc150df137623053794a3e
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Mon Feb 14 11:44:02 2011 -0500
+
+    Be forgiving of character-cell size mismatches in mode sizes
+    
+    Reviewed-by: Julien Cristau <jcristau@debian.org>
+    Reviewed-by: Matt Turner <mattst88@gmail.com>
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit 8e32d9d23c64ed700d3e9c5e6709a4b3c46b204a
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Mon Feb 14 10:28:51 2011 -0500
+
+    Fix memory leak in mode validation
+    
+    Reviewed-by: Julien Cristau <jcristau@debian.org>
+    Reviewed-by: Matt Turner <mattst88@gmail.com>
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit b1f7f190f9d4f2ab63d3e9ade3e7e04bb4b1f89f
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Wed Dec 8 13:45:32 2010 -0500
+
+    Refuse to load if there's a kernel driver bound to the device
+    
+    Ported from the equivalent check in nv.
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit fba7f460838624f55ade074e1c7690f4aa7aed4d
+Author: Trevor Woerner <twoerner@gmail.com>
+Date:   Fri Oct 22 15:23:46 2010 -0400
+
+    Convert x+m/calloc/free to m/calloc/free.
+    
+    Signed-off-by: Trevor Woerner <twoerner@gmail.com>
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 8532158308ef6445ac44276e5c989d343f851431
+Author: Jesse Adkins <jesserayadkins@gmail.com>
+Date:   Tue Sep 28 13:29:52 2010 -0700
+
+    Purge cvs tags.
+    
+    Signed-off-by: Jesse Adkins <jesserayadkins@gmail.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 32e50178f9e12112ab09af442770d43c5fa2ec9a
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jul 21 16:49:04 2010 -0400
+
+    config: add comments for main statements
+
+commit 61328ed613f9bb822227d5c80d773bdb8eba2742
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jul 21 16:07:00 2010 -0400
+
+    config: replace deprecated use of AC_OUTPUT with AC_CONFIG_FILES
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 79e954f1c06ab45ac1a59bbb54bd4a98b15e11e7
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jul 21 14:05:23 2010 -0400
+
+    config: replace deprecated AM_CONFIG_HEADER with AC_CONFIG_HEADERS
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 12c859a302e6c42b319f660af03c9718adffe699
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jul 21 09:27:42 2010 -0400
+
+    config: complete AC_INIT m4 quoting
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit bda55aa468b43731e5bd1b5ebc1d9a2d927f9b79
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Jul 20 20:24:42 2010 -0400
+
+    config: remove unrequired AC_HEADER_STDC
+    
+    Autoconf says:
+    "This macro is obsolescent, as current systems have conforming
+    header files. New programs need not use this macro".
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 8e53d57f165365b0a084f410d2f08a3073d1bece
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Jul 20 19:41:31 2010 -0400
+
+    config: remove AC_PROG_CC as it overrides AC_PROG_C_C99
+    
+    XORG_STRICT_OPTION from XORG_DEFAULT_OPTIONS calls
+    AC_PROG_C_C99. This sets gcc with -std=gnu99.
+    If AC_PROG_CC macro is called afterwards, it resets CC to gcc.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit bcdce845e1b2d48d66e1655bc86e13f3297b1916
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Jul 20 18:45:19 2010 -0400
+
+    config: update AC_PREREQ statement to 2.60
+    
+    Unrelated to the previous patches, the new value simply reflects
+    the reality that the minimum level for autoconf to configure
+    all x.org modules is 2.60 dated June 2006.
+    
+    ftp://ftp.gnu.org/gnu/autoconf/autoconf-2.60.tar.gz
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit ba8aaea71ea7c0f3dcb2bfb3bda6534d3e1c104e
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Jul 20 16:15:30 2010 -0400
+
+    config: upgrade to util-macros 1.8 for additional man page support
+    
+    Use MAN_SUBST now supplied in XORG_MANPAGE_SECTIONS
+    The value of MAN_SUBST is the same for all X.Org packages.
+
+commit fa1fcd483cc60b5f4e82e3f1fe1a84459cf0eaee
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Jun 13 13:04:25 2010 -0400
+
+    COPYING: update file with Copyright notices from source code.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit d82f2e6e52a7cac2f15a20ab91f50f06eaea7e6a
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Feb 15 13:39:02 2010 -0500
+
+    config: Move compiler flags from configure.ac to Makefile.am
+    
+    Remove unused XORG_INCS variable.
+    Remove unused INCLUDES='-I$(top_srcdir)/src'
+    This statement is redundant and not used in the makefile
+    
+    Remove unrequired '-I$(top_srcdir)/src'
+    The current dir is already included by default in the makefile
+    top_builddir = ..
+    DEFAULT_INCLUDES = -I. -I$(top_builddir)
+    
+    Move compiler flags from configure.ac to Makefile.am
+    CFLAGS is an automake defined variable that should not be set
+    by the module. It should not be AC_SUBST either, it already is.
+    Use AM_CFLAGS in Makefile.am. This will allow the user to override
+    the flags as they will be in the right order.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 069c1f82149031328bb48479732b0a21be5248dd
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Fri Jan 15 13:46:10 2010 -0800
+
+    Update Sun license notices to current X.Org standard form
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit ba6527d2695574f6f7808ada39f6caed7a688f39
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Mon Jan 4 14:19:13 2010 -0500
+
+    vesa 2.3.0
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
 commit 1d0e73302d4c4eda56f32e129920ccd263f524ce
 Author: Adam Jackson <ajax@redhat.com>
 Date:   Mon Jan 4 14:16:42 2010 -0500
