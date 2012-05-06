@@ -1,3 +1,147 @@
+commit 25c7bb8b063777f31db678db743191265f17e7be
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Mar 23 19:08:03 2012 -0700
+
+    xf86-video-neomagic 1.2.6
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 819c8f2119b8db10a6a9e4553cf88d66cff6eb8e
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Mon Dec 19 16:51:31 2011 -0500
+
+    Fix for new vgahw ABI
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit 07845a120a674380b6b499961e6c81accfdd6a2e
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Mon Dec 19 16:50:28 2011 -0500
+
+    Fall back to shadowfb when XAA is unavailable
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit f2a771c6d2a2308245a0d46301e579b50fb2b6bd
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Tue Oct 11 10:45:11 2011 -0700
+
+    Include <stdlib.h> for abs()
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit c3cf7e328d7e9c276a3e237dbf9d1772b57a370e
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Tue Oct 11 10:43:51 2011 -0700
+
+    Use malloc/calloc/realloc/free directly
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit a9d69f6d0ab4f66b954949cca016ee7b5b6f7adf
+Author: Jesse Adkins <jesserayadkins@gmail.com>
+Date:   Tue Sep 28 13:29:51 2010 -0700
+
+    Purge cvs tags.
+    
+    Signed-off-by: Jesse Adkins <jesserayadkins@gmail.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit dd32df772bdf4462b816bfc2f98ccd18dbb4b930
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jul 21 16:49:04 2010 -0400
+
+    config: add comments for main statements
+
+commit 5e0d301758b15fc1916dd0318f2a5549e3482ccf
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jul 21 16:07:00 2010 -0400
+
+    config: replace deprecated use of AC_OUTPUT with AC_CONFIG_FILES
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 8486ae164b462d50817b84340af13dccc26384ab
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jul 21 14:37:41 2010 -0400
+
+    config: replace deprecated AC_HELP_STRING with AS_HELP_STRING
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 2f60a6e4c3be390d4cf0648bdffbdbff67def7ee
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jul 21 14:05:22 2010 -0400
+
+    config: replace deprecated AM_CONFIG_HEADER with AC_CONFIG_HEADERS
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit bcfba240265ecd633fcba051591b6c50b9373a53
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jul 21 09:27:42 2010 -0400
+
+    config: complete AC_INIT m4 quoting
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 5759eca769091518fd54e0d70193edc3c099e9bb
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Jul 20 21:44:57 2010 -0400
+
+    config: remove unrequired AC_SUBST([XORG_CFLAGS])
+    
+    This macro is called by PKG_CHECK_MODULES
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit adb592292e40a5e5f032ca95f3371c6b77227c40
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Jul 20 20:24:42 2010 -0400
+
+    config: remove unrequired AC_HEADER_STDC
+    
+    Autoconf says:
+    "This macro is obsolescent, as current systems have conforming
+    header files. New programs need not use this macro".
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 788fa461f40c320c3b9a67ab9bc914e987eefd42
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Jul 20 19:41:31 2010 -0400
+
+    config: remove AC_PROG_CC as it overrides AC_PROG_C_C99
+    
+    XORG_STRICT_OPTION from XORG_DEFAULT_OPTIONS calls
+    AC_PROG_C_C99. This sets gcc with -std=gnu99.
+    If AC_PROG_CC macro is called afterwards, it resets CC to gcc.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 9ad3e98825d45208ed2754f592527a05949f676d
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Jul 20 18:45:19 2010 -0400
+
+    config: update AC_PREREQ statement to 2.60
+    
+    Unrelated to the previous patches, the new value simply reflects
+    the reality that the minimum level for autoconf to configure
+    all x.org modules is 2.60 dated June 2006.
+    
+    ftp://ftp.gnu.org/gnu/autoconf/autoconf-2.60.tar.gz
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit eba90ed039416fa5db1800ce695d2a970f43b0e0
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Jul 20 16:15:29 2010 -0400
+
+    config: upgrade to util-macros 1.8 for additional man page support
+    
+    Use MAN_SUBST now supplied in XORG_MANPAGE_SECTIONS
+    The value of MAN_SUBST is the same for all X.Org packages.
+
 commit 77faeb2222ed86622b2d3bf5291b1a7f470b1382
 Author: Dave Airlie <airlied@redhat.com>
 Date:   Mon Jul 5 14:48:07 2010 +1000
