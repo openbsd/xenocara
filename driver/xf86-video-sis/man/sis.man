@@ -1,17 +1,5 @@
-.\" $XFree86$
-.\" $XdotOrg$
 .\" shorthand for double quote that works everywhere.
 .ds q \N'34'
-#ifdef __xservername__
-#define __myservername__ __xservername__
-#else
-#define __myservername__ XFree86
-#endif
-#ifdef __xconfigfile__
-#define __myxconfigfile__ __xconfigfile__
-#else
-#define __myxconfigfile__ XF86Config
-#endif
 .TH SIS __drivermansuffix__ __vendorversion__
 .SH NAME
 sis \- SiS and XGI video driver
@@ -25,7 +13,7 @@ sis \- SiS and XGI video driver
 .fi
 .SH DESCRIPTION
 .B sis
-is an __myservername__ driver for SiS (Silicon Integrated Systems) and XGI video
+is an __xservername__ driver for SiS (Silicon Integrated Systems) and XGI video
 chips. The driver is accelerated and provides support for colordepths of 8, 16
 and 24 bpp. XVideo, Render and other extensions are supported as well.
 .SH SUPPORTED HARDWARE
@@ -60,7 +48,7 @@ for SiS315, 55x, 330, 661/741/76x (plus M, FX, MX, GX variants thereof), 340
 and all XGI chips.
 .PP
 .SH CONFIGURATION DETAILS
-Please refer to __myxconfigfile__(__filemansuffix__) for general configuration
+Please refer to __xconfigfile__(__filemansuffix__) for general configuration
 details.  This section only covers configuration details specific to this
 driver.
 .PP
@@ -428,11 +416,7 @@ The amount is to be specified in megabyte, the default is 8.
 .SH "KNOWN BUGS"
 none.
 .SH "SEE ALSO"
-#ifdef __xservername__
 __xservername__(__appmansuffix__), __xconfigfile__(__filemansuffix__), Xserver(__appmansuffix__), X(__miscmansuffix__)
-#else
-XFree86(1), XF86Config(__filemansuffix__), xf86config(1), Xserver(1), X(__miscmansuffix__)
-#endif
 .PP
 .B "http://www.winischhofer.eu/linuxsisvga.shtml"
 for more information and updates

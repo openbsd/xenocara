@@ -448,7 +448,7 @@ SiSOptions(ScrnInfoPtr pScrn)
     xf86CollectOptions(pScrn, NULL);
 
     /* Process the options */
-    if(!(pSiS->Options = xalloc(sizeof(SISOptions)))) return;
+    if(!(pSiS->Options = malloc(sizeof(SISOptions)))) return;
 
     memcpy(pSiS->Options, SISOptions, sizeof(SISOptions));
 
@@ -480,7 +480,7 @@ SiSOptions(ScrnInfoPtr pScrn)
 #endif
     pSiS->ShadowFB = FALSE;
     pSiS->loadDRI = FALSE;
-#ifdef XF86DRI
+#ifdef SISDRI
     pSiS->agpWantedPages = AGP_PAGES;
 #endif
     pSiS->VESA = -1;
@@ -888,7 +888,7 @@ SiSOptions(ScrnInfoPtr pScrn)
 	  if((strptr = (char *)xf86GetOptValString(pSiS->Options, OPTION_CRT2POS))) {
 	     int result;
 	     Bool valid = FALSE;
-	     char *tempstr = xalloc(strlen(strptr) + 1);
+	     char *tempstr = malloc(strlen(strptr) + 1);
 	     result = sscanf(strptr, "%s %d", tempstr, &ival);
 	     if(result >= 1) {
 		if(!xf86NameCmp(tempstr,"LeftOf")) {
@@ -946,18 +946,18 @@ SiSOptions(ScrnInfoPtr pScrn)
 		xf86DrvMsg(pScrn->scrnIndex, X_INFO,
 		    "Except for \"Clone\", the parameter may be followed by an integer.\n");
 	     }
-	     xfree(tempstr);
+	     free(tempstr);
 	  }
 	  if((strptr = (char *)xf86GetOptValString(pSiS->Options, OPTION_METAMODES))) {
-	     pSiS->MetaModes = xalloc(strlen(strptr) + 1);
+	     pSiS->MetaModes = malloc(strlen(strptr) + 1);
 	     if(pSiS->MetaModes) memcpy(pSiS->MetaModes, strptr, strlen(strptr) + 1);
 	  }
 	  if((strptr = (char *)xf86GetOptValString(pSiS->Options, OPTION_CRT2HSYNC))) {
-	     pSiS->CRT2HSync = xalloc(strlen(strptr) + 1);
+	     pSiS->CRT2HSync = malloc(strlen(strptr) + 1);
 	     if(pSiS->CRT2HSync) memcpy(pSiS->CRT2HSync, strptr, strlen(strptr) + 1);
 	  }
 	  if((strptr = (char *)xf86GetOptValString(pSiS->Options, OPTION_CRT2VREFRESH))) {
-	     pSiS->CRT2VRefresh = xalloc(strlen(strptr) + 1);
+	     pSiS->CRT2VRefresh = malloc(strlen(strptr) + 1);
 	     if(pSiS->CRT2VRefresh) memcpy(pSiS->CRT2VRefresh, strptr, strlen(strptr) + 1);
 	  }
 	  if((strptr = (char *)xf86GetOptValString(pSiS->Options, OPTION_MERGEDDPI))) {
@@ -2034,7 +2034,7 @@ SiSOptions(ScrnInfoPtr pScrn)
        }
     }
 
-#ifdef XF86DRI
+#ifdef SISDRI
     /* DRI */
     from = X_DEFAULT;
     if(xf86GetOptValBool(pSiS->Options, OPTION_DRI, &pSiS->loadDRI)) {

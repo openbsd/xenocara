@@ -638,13 +638,13 @@ SiS_AllocBuffers(ScrnInfoPtr pScrn, UChar **buf1, UChar **buf2, UChar **buf3)
     (*buf1) = (UChar *)pSiS->FbBase + offset;
     (*buf1) = (UChar *)(((ULong)(*buf1) + 31) & ~31);
 
-    if(!((*buf2) = (UChar *)xalloc(BUFFERSIZE + 15))) {
+    if(!((*buf2) = (UChar *)malloc(BUFFERSIZE + 15))) {
        SISFreeFBMemory(pScrn, &handle);
        return NULL;
     }
 
-    if(!((*buf3) = (UChar *)xalloc(BUFFERSIZE + 15))) {
-       xfree((*buf2));
+    if(!((*buf3) = (UChar *)malloc(BUFFERSIZE + 15))) {
+       free((*buf2));
        SISFreeFBMemory(pScrn, &handle);
        return NULL;
     }
@@ -1098,8 +1098,8 @@ SiSVidCopyInitGen(ScreenPtr pScreen, SISMCFuncData *MCFunctions, vidCopyFunc *UM
 
     /* Free buffers */
     SISFreeFBMemory(pScrn, &fbhandle);
-    xfree(buf2);
-    xfree(buf3);
+    free(buf2);
+    free(buf3);
 
     xf86DrvMsg(pScrn->scrnIndex, X_PROBED,
 	       "Using %s method for aligned data transfers %s video RAM\n",

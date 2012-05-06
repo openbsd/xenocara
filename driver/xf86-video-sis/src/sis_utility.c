@@ -34,8 +34,6 @@
 #endif
 
 #include "sis.h"
-#define NEED_REPLIES
-#define NEED_EVENTS
 #include <X11/X.h>
 #include "dixstruct.h"
 
@@ -1882,10 +1880,10 @@ SiSProcSiSCtrlQueryVersion(ClientPtr client)
     rep.majorVersion = SISCTRL_MAJOR_VERSION;
     rep.minorVersion = SISCTRL_MINOR_VERSION;
     if(client->swapped) {
-        swaps(&rep.sequenceNumber, n);
-        swapl(&rep.length, n);
-        swaps(&rep.majorVersion, n);
-        swaps(&rep.minorVersion, n);
+        _swaps(&rep.sequenceNumber, n);
+        _swapl(&rep.length, n);
+        _swaps(&rep.majorVersion, n);
+        _swaps(&rep.minorVersion, n);
     }
     WriteToClient(client, sizeof(xSiSCtrlQueryVersionReply), (char *)&rep);
     return (client->noClientException);
@@ -1926,15 +1924,15 @@ SiSProcSiSCtrlCommand(ClientPtr client)
     rep.sequenceNumber = client->sequence;
 
     if(client->swapped) {
-       swaps(&rep.sequenceNumber, n);
-       swapl(&rep.length, n);
-       swapl(&rep.screen, n);
-       swapl(&rep.sdc_id, n);
-       swapl(&rep.sdc_command, n);
-       swapl(&rep.sdc_result_header, n);
+       _swaps(&rep.sequenceNumber, n);
+       _swapl(&rep.length, n);
+       _swapl(&rep.screen, n);
+       _swapl(&rep.sdc_id, n);
+       _swapl(&rep.sdc_command, n);
+       _swapl(&rep.sdc_result_header, n);
        for(i = 0; i < SDC_NUM_PARM_RESULT; i++) {
-	  swapl(&rep.sdc_parm[i], n);
-	  swapl(&rep.sdc_result[i], n);
+	  _swapl(&rep.sdc_parm[i], n);
+	  _swapl(&rep.sdc_result[i], n);
        }
     }
     WriteToClient(client, sizeof(xSiSCtrlCommandReply), (char *)&rep);
@@ -1961,7 +1959,7 @@ SiSSProcSiSCtrlQueryVersion(ClientPtr client)
 {
     REQUEST(xSiSCtrlQueryVersionReq);
     register int n;
-    swaps(&stuff->length, n);
+    _swaps(&stuff->length, n);
     REQUEST_SIZE_MATCH(xSiSCtrlQueryVersionReq);
     return SiSProcSiSCtrlQueryVersion(client);
 }
@@ -1972,14 +1970,14 @@ SiSSProcSiSCtrlCommand(ClientPtr client)
     REQUEST(xSiSCtrlCommandReq);
     register int n;
     int i;
-    swaps(&stuff->length, n);
-    swapl(&stuff->screen, n);
-    swapl(&stuff->sdc_id, n);
-    swapl(&stuff->sdc_command, n);
-    swapl(&stuff->sdc_result_header, n);
+    _swaps(&stuff->length, n);
+    _swapl(&stuff->screen, n);
+    _swapl(&stuff->sdc_id, n);
+    _swapl(&stuff->sdc_command, n);
+    _swapl(&stuff->sdc_result_header, n);
     for(i = 0; i < SDC_NUM_PARM_RESULT; i++) {
-       swapl(&stuff->sdc_parm[i], n);
-       swapl(&stuff->sdc_result[i], n);
+       _swapl(&stuff->sdc_parm[i], n);
+       _swapl(&stuff->sdc_result[i], n);
     }
     REQUEST_SIZE_MATCH(xSiSCtrlCommandReq);
     return SiSProcSiSCtrlCommand(client);
@@ -2007,7 +2005,7 @@ SiSCtrlResetProc(ExtensionEntry* extEntry)
      * in SiSCtrlExtUnregister())
      */
     if(extEntry->extPrivate) {
-       xfree(extEntry->extPrivate);
+       free(extEntry->extPrivate);
        extEntry->extPrivate = NULL;
     }
 }
@@ -2028,7 +2026,7 @@ SiSCtrlExtInit(ScrnInfoPtr pScrn)
 
    if(!(myext = CheckExtension(SISCTRL_PROTOCOL_NAME))) {
 
-      if(!(myctrl = xcalloc(sizeof(xSiSCtrlScreenTable), 1)))
+      if(!(myctrl = calloc(sizeof(xSiSCtrlScreenTable), 1)))
          return;
 
       if(!(myext = AddExtension(SISCTRL_PROTOCOL_NAME, 0, 0,
@@ -2038,7 +2036,7 @@ SiSCtrlExtInit(ScrnInfoPtr pScrn)
 				StandardMinorOpcode))) {
          xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
 	 		"Failed to add SISCTRL extension\n");
-	 xfree(myctrl);
+	 free(myctrl);
 	 return;
       }
 

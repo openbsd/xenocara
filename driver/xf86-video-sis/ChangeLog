@@ -1,3 +1,290 @@
+commit e067fc080c653a5d47cd319ca1a7afeebe6c7c4e
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Mar 23 19:52:38 2012 -0700
+
+    xf86-video-sis 0.10.4
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit f5dafa24d825a7d279c8177422c66b997b82d240
+Author: Johannes Obermayr <johannesobermayr@gmx.de>
+Date:   Mon Feb 6 23:15:31 2012 +0100
+
+    Fix build with XInput version 12.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit bdaf1ba97cf8b0abb5aeee97a822ee466bf8f5f5
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Jan 17 15:21:26 2012 +1000
+
+    Undo typos from last commit
+    
+    Reported-by: Tormod Volden <debian.tormod@gmail.com>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 9c1f8f775ca692858fd88e325ef815cc49e55805
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Wed Jan 4 13:58:01 2012 +1000
+
+    Untangle XF86DRI from the driver-specific DRI define
+    
+    XF86DRI is defined by xorg-server.h, so --disable-dri in the sis driver
+    itself does exactly nothing other than not fill in the CFLAGS and thus stop
+    the driver from compiling.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit 16724f3ecd322c64d9ee164fb122d4285d9cef08
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Mon Oct 31 15:03:21 2011 +1000
+
+    Use miPointerSetPosition, not miPointerAbsoluteCursor
+    
+    miPointerAbsoluteCursor was removed in '09.
+    
+    Technically this shouldn't just work on the VCP since any master pointer may
+    end up in the dead area. However, I suspect the Venn diagramm of MPX users
+    and sis merged framebuffer users shows little overlap.
+    
+    miPointerSetPosition's prototype changed a few times, these are a bunch of
+    untested ifdefs that should be correct according to the git history.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit 3e0d8e11927b8c68f6531eef39eb5bca557e887b
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Mon Dec 19 17:28:33 2011 -0500
+
+    Fall back to shadowfb if XAA is unavailable
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit 2b459f385dc2f1b5e769e2ce84b6f4ec099c0a23
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Mon Oct 31 11:57:49 2011 -0700
+
+    Build fix for older servers (error: conflicting types for 'pciTag')
+    
+    /usr/include/xorg/xf86Pci.h:254:25: note: previous declaration of 'pciTag' was here
+    
+    Reported-by: Johannes Obermayr <johannesobermayr@gmx.de>
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit 0ab07a477a4916923a13c073c3fd6e575e79f725
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Sun Oct 30 11:09:30 2011 -0700
+
+    Use pci_device_map_legacy rather than xf86MapDomainMemory on newer servers
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit 77046f9be08295dbca69b51987df3308a284d87e
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Sat Oct 29 17:44:55 2011 -0700
+
+    Convert use of LookupWindow to dixLookupWindow
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit 06f8213bffd27360d5cc3df0cad19b102cc928e2
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Sat Oct 29 17:32:21 2011 -0700
+
+    pciTag was removed from xorg-server, so provide it in-driver until this is updated to use libpciaccess
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit 03644653d051e4f5b8498c790626a9bed2756a89
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Sat Oct 29 17:25:18 2011 -0700
+
+    Silence warnings by using newer xf86dgaproto
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit 4b0aab53a1e8500578f86178761f4c805b2a5990
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Wed Oct 19 00:40:32 2011 -0700
+
+    Build fix for ABI Version 12
+    
+    ABI Version 12 removes support for multiple PCI domains.  If you need to
+    use this driver on a system with more than one PCI domain, you should
+    either port this driver to using libpciaccess directly or stick with an
+    older server.
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit 69aa104ed064ca08196e7310e232ddb5c9a590bd
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Wed Oct 19 00:35:02 2011 -0700
+
+    Use unsigned long rather than deprecated IOADDRESS
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit 28f3a899a1e317b665cc1925ce7a4e34818cfd1f
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Fri Oct 7 12:32:22 2011 -0700
+
+    Use malloc/calloc/realloc/free directly
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit c530ebb5d4ad0663838a0132e3610d713eaaa640
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Fri Oct 7 12:24:40 2011 -0700
+
+    Fix build failures with recent server changes to swapl and swaps
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit 89e9a38f0ccda9b9ee973f5cd5e57cad73eb7421
+Author: Matt Turner <mattst88@gmail.com>
+Date:   Sun Sep 25 12:32:08 2011 -0400
+
+    Fix wrong-sized swaps
+    
+    Signed-off-by: Matt Turner <mattst88@gmail.com>
+
+commit 94f23a5672ebeac61cc32e34882d637aa0c7f2f4
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jun 4 21:00:03 2011 -0700
+
+    Convert sis.man from XORG_RAWCPP to using sed like other drivers
+    
+    Upgrade to util-macros 1.8 for additional man page support
+    
+    Use MAN_SUBST now supplied in XORG_MANPAGE_SECTIONS
+    The value of MAN_SUBST is the same for all X.Org packages.
+    
+    Use AC_PROG_SED now supplied by XORG_DEFAULT_OPTIONS
+    The existing statement can now be removed from the configuration file.
+    
+    Use automake provided $(AM_V_GEN) and XORG_DEFAULT_OPTIONS provided $(SED)
+    Enables silent rule and use platform appropriate version of sed.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit b3368984ae83355d70e06eedefff28c1b84eb16c
+Author: Jesse Adkins <jesserayadkins@gmail.com>
+Date:   Tue Sep 28 13:29:51 2010 -0700
+
+    Purge cvs tags.
+    
+    Signed-off-by: Jesse Adkins <jesserayadkins@gmail.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit c2a6ffda81b343d09dfae6ef68983bf28194a00c
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jul 21 16:49:04 2010 -0400
+
+    config: add comments for main statements
+
+commit ae7ac7fe58a1311544b9d0091614a61d29eef171
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jul 21 16:07:00 2010 -0400
+
+    config: replace deprecated use of AC_OUTPUT with AC_CONFIG_FILES
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit fe34acc246e938bd190af11a0361a2541fcc590c
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jul 21 14:37:41 2010 -0400
+
+    config: replace deprecated AC_HELP_STRING with AS_HELP_STRING
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 4d77c76f9c94804efd942328722fb1262df74f5a
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jul 21 14:05:23 2010 -0400
+
+    config: replace deprecated AM_CONFIG_HEADER with AC_CONFIG_HEADERS
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 2a3e9ff44670c0763557ce9c87b9946bd4349027
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jul 21 09:27:42 2010 -0400
+
+    config: complete AC_INIT m4 quoting
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 00d2b8790a0aa732d0abb4688330749a1c44763d
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Jul 20 21:54:12 2010 -0400
+
+    config: remove unrequired AC_SUBST([DRI_CFLAGS])
+    
+    This macro is called by PKG_CHECK_MODULES
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit ca0dd9ac3d78991f20e19e9b1cbb06b8707698bd
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Jul 20 21:44:58 2010 -0400
+
+    config: remove unrequired AC_SUBST([XORG_CFLAGS])
+    
+    This macro is called by PKG_CHECK_MODULES
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 96daa64b9ce5a44474fa0c62c5cc5971496120ee
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Jul 20 20:24:42 2010 -0400
+
+    config: remove unrequired AC_HEADER_STDC
+    
+    Autoconf says:
+    "This macro is obsolescent, as current systems have conforming
+    header files. New programs need not use this macro".
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 517a7563c43841ecb1cb00577540118f93856df8
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Jul 20 19:41:31 2010 -0400
+
+    config: remove AC_PROG_CC as it overrides AC_PROG_C_C99
+    
+    XORG_STRICT_OPTION from XORG_DEFAULT_OPTIONS calls
+    AC_PROG_C_C99. This sets gcc with -std=gnu99.
+    If AC_PROG_CC macro is called afterwards, it resets CC to gcc.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 494ce36b3bf1cfffb12c70ea969381766b46e622
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Jul 20 18:45:19 2010 -0400
+
+    config: update AC_PREREQ statement to 2.60
+    
+    Unrelated to the previous patches, the new value simply reflects
+    the reality that the minimum level for autoconf to configure
+    all x.org modules is 2.60 dated June 2006.
+    
+    ftp://ftp.gnu.org/gnu/autoconf/autoconf-2.60.tar.gz
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 519a4653ffdd5b643b6f3c0f38eb2cad8366215b
+Author: Fernando Carrijo <fcarrijo@yahoo.com.br>
+Date:   Thu Jul 1 07:16:18 2010 -0300
+
+    Purge macros NEED_EVENTS and NEED_REPLIES
+    
+    Signed-off-by: Fernando Carrijo <fcarrijo@yahoo.com.br>
+    Acked-by: Tiago Vignatti <tiago.vignatti@nokia.com>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit 75a8a7c51547805358ced39e1a04820e17133264
 Author: Dave Airlie <airlied@redhat.com>
 Date:   Mon Jul 5 14:23:33 2010 +1000

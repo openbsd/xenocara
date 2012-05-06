@@ -35,6 +35,10 @@
 /* xextproto 7.1 available */
 #undef HAVE_XEXTPROTO_71
 
+/* Define to the sub-directory in which libtool stores uninstalled libraries.
+   */
+#undef LT_OBJDIR
+
 /* Name of package */
 #undef PACKAGE
 
@@ -62,17 +66,17 @@
 /* Patch version of this package */
 #undef PACKAGE_VERSION_PATCHLEVEL
 
+/* Enable DRI driver support */
+#undef SISDRI
+
+/* Enable developmental DRI driver support */
+#undef SISDRI_DEVEL
+
 /* Define to 1 if you have the ANSI C header files. */
 #undef STDC_HEADERS
 
 /* Version number of package */
 #undef VERSION
-
-/* Enable DRI driver support */
-#undef XF86DRI
-
-/* Enable developmental DRI driver support */
-#undef XF86DRI_DEVEL
 
 /* Build support for Exa */
 #undef XF86EXA

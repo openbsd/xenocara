@@ -1429,7 +1429,7 @@ SiSVGASaveFonts(ScrnInfoPtr pScrn)
     attr10 = SiS_ReadAttr(pSiS, 0x10);
     if(attr10 & 0x01) return;
 
-    if(!(pSiS->fonts = xalloc(SIS_FONTS_SIZE * 2))) {
+    if(!(pSiS->fonts = malloc(SIS_FONTS_SIZE * 2))) {
        xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
 		"Could not save console fonts, mem allocation failed\n");
        return;
@@ -1716,8 +1716,8 @@ SiSVGAMapMem(ScrnInfoPtr pScrn)
 
 #if XF86_VERSION_CURRENT >= XF86_VERSION_NUMERIC(4,3,0,0,0)
 #if XSERVER_LIBPCIACCESS
-    pSiS->VGAMemBase = xf86MapDomainMemory(pScrn->scrnIndex, VIDMEM_MMIO_32BIT,
-			pSiS->PciInfo, pSiS->VGAMapPhys, pSiS->VGAMapSize);
+    (void) pci_device_map_legacy(pSiS->PciInfo, pSiS->VGAMapPhys, pSiS->VGAMapSize,
+                                 PCI_DEV_MAP_FLAG_WRITABLE, &pSiS->VGAMemBase);
 #else
     pSiS->VGAMemBase = xf86MapDomainMemory(pScrn->scrnIndex, VIDMEM_MMIO_32BIT,
 			pSiS->PciTag, pSiS->VGAMapPhys, pSiS->VGAMapSize);
@@ -1737,7 +1737,12 @@ SiSVGAUnmapMem(ScrnInfoPtr pScrn)
 
     if(pSiS->VGAMemBase == NULL) return;
 
+#if XSERVER_LIBPCIACCESS
+    (void) pci_device_unmap_legacy(pSiS->PciInfo, pSiS->VGAMemBase, pSiS->VGAMapSize);
+#else
     xf86UnMapVidMem(pScrn->scrnIndex, pSiS->VGAMemBase, pSiS->VGAMapSize);
+#endif
+
     pSiS->VGAMemBase = NULL;
 }
 #endif

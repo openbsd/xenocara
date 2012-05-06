@@ -238,10 +238,10 @@ SiSBuildBuiltInModeList(ScrnInfoPtr pScrn, BOOLEAN includelcdmodes, BOOLEAN isfo
 	 continue;
       }
 
-      if(!(new = xalloc(sizeof(DisplayModeRec)))) return first;
+      if(!(new = malloc(sizeof(DisplayModeRec)))) return first;
       memset(new, 0, sizeof(DisplayModeRec));
-      if(!(new->name = xalloc(10))) {
-	 xfree(new);
+      if(!(new->name = malloc(10))) {
+	 free(new);
 	 return first;
       }
       if(!first) first = new;
@@ -385,11 +385,11 @@ SiSBuildBuiltInModeList(ScrnInfoPtr pScrn, BOOLEAN includelcdmodes, BOOLEAN isfo
 		     }
 		  }
 
-		  if(!(new = xalloc(sizeof(DisplayModeRec)))) return first;
+		  if(!(new = malloc(sizeof(DisplayModeRec)))) return first;
 
 		  memset(new, 0, sizeof(DisplayModeRec));
-		  if(!(new->name = xalloc(12))) {
-		     xfree(new);
+		  if(!(new->name = malloc(12))) {
+		     free(new);
 		     return first;
 		  }
 		  if(!first) first = new;
@@ -470,11 +470,11 @@ SiSBuildBuiltInModeList(ScrnInfoPtr pScrn, BOOLEAN includelcdmodes, BOOLEAN isfo
 
 	 if(pSiS->SiS_Pr->CP_DataValid[i]) {
 
-	    if(!(new = xalloc(sizeof(DisplayModeRec)))) return first;
+	    if(!(new = malloc(sizeof(DisplayModeRec)))) return first;
 
 	    memset(new, 0, sizeof(DisplayModeRec));
-	    if(!(new->name = xalloc(10))) {
-	       xfree(new);
+	    if(!(new->name = malloc(10))) {
+	       free(new);
 	       return first;
 	    }
 	    if(!first) first = new;

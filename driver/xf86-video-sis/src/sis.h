@@ -86,6 +86,14 @@
 #include "xf86cmap.h"
 #include "vbe.h"
 
+#if GET_ABI_MAJOR(ABI_VIDEODRV_VERSION) < 12
+#define _swapl(x, n) swapl(x,n)
+#define _swaps(x, n) swaps(x,n)
+#else
+#define _swapl(x, n) swapl(x)
+#define _swaps(x, n) swaps(x)
+#endif
+
 #define SIS_HaveDriverFuncs 0
 
 #undef SISISXORG6899900
@@ -173,7 +181,13 @@
 
 #undef SISHAVEDRMWRITE
 #undef SISNEWDRI
-#ifdef XF86DRI
+
+/* if the server was built without DRI support, force-disable DRI */
+#ifndef XF86DRI
+#undef SISDRI
+#endif
+
+#ifdef SISDRI
 #if XF86_VERSION_CURRENT >= XF86_VERSION_NUMERIC(4,2,99,3,0)
 #define SISHAVEDRMWRITE
 #endif
@@ -187,7 +201,7 @@
 #include "dri.h"
 #include "GL/glxint.h"
 #include "sis_dri.h"
-#endif /* XF86DRI */
+#endif /* SISDRI */
 
 /* Configurable stuff: ------------------------------------- */
 
@@ -251,7 +265,6 @@
 #endif
 
 /* Need that for SiSCtrl and Pseudo-Xinerama */
-#define NEED_REPLIES				/* ? */
 #define EXTENSION_PROC_ARGS void *
 #include "extnsionst.h" 			/* required */
 #include <X11/extensions/panoramiXproto.h> 	/* required */
@@ -805,7 +818,7 @@ typedef struct {
     ScrnInfoPtr		pScrn_2;
     UChar		*BIOS;
     struct SiS_Private	*SiS_Pr;
-#ifdef XF86DRI
+#ifdef SISDRI
     SISAGPHTYPE		agpHandle;
     ULong		agpAddr;
     UChar		*agpBase;
@@ -971,7 +984,7 @@ typedef struct {
     void 		*RealFbBase;	/* Real VRAM virtual linear address (for DHM and SiS76x UMA skipping) */
     CARD32		IOAddress;	/* MMIO physical address */
     void		*IOBase;	/* MMIO linear address */
-    IOADDRESS		IODBase;	/* Base of PIO memory area */
+    unsigned long	IODBase;	/* Base of PIO memory area */
 #ifdef __alpha__
     void		*IOBaseDense;	/* MMIO for Alpha platform */
 #endif
@@ -1085,7 +1098,7 @@ typedef struct {
     unsigned int	cmdQueueSize_div2;
     unsigned int	cmdQueueSize_div4;
     unsigned int	cmdQueueSize_4_3;
-#ifdef XF86DRI
+#ifdef SISDRI
     SISAGPHTYPE		agpHandle;
     ULong		agpAddr;
     UChar 		*agpBase;
@@ -1144,7 +1157,7 @@ typedef struct {
 
     /* DRI */
     Bool		loadDRI;
-#ifdef XF86DRI
+#ifdef SISDRI
     Bool		directRenderingEnabled;
     DRIInfoPtr 		pDRIInfo;
     int			drmSubFD;
@@ -1348,7 +1361,7 @@ typedef struct {
     Bool		skipswitchcheck;
     unsigned int	VBFlagsInit;
     DisplayModePtr	currentModeLast;
-    IOADDRESS		MyPIOOffset;
+    unsigned long	MyPIOOffset;
     Bool		OverruleRanges;
     Bool		BenchMemCpy;
     Bool		NeedCopyFastVidCpy;

@@ -110,12 +110,12 @@
 #warning sisfb will not work!
 #endif
 
-#define OutPortByte(p,v) outb((u8)(v),(IOADDRESS)(p))
-#define OutPortWord(p,v) outw((u16)(v),(IOADDRESS)(p))
-#define OutPortLong(p,v) outl((u32)(v),(IOADDRESS)(p))
-#define InPortByte(p)    inb((IOADDRESS)(p))
-#define InPortWord(p)    inw((IOADDRESS)(p))
-#define InPortLong(p)    inl((IOADDRESS)(p))
+#define OutPortByte(p,v) outb((u8)(v),(unsigned long)(p))
+#define OutPortWord(p,v) outw((u16)(v),(unsigned long)(p))
+#define OutPortLong(p,v) outl((u32)(v),(unsigned long)(p))
+#define InPortByte(p)    inb((unsigned long)(p))
+#define InPortWord(p)    inw((unsigned long)(p))
+#define InPortLong(p)    inl((unsigned long)(p))
 #define SiS_SetMemory(MemoryAddress,MemorySize,value) memset_io(MemoryAddress, value, MemorySize)
 
 #endif /* LINUX_KERNEL */
@@ -129,12 +129,12 @@
 #define SIS300
 #define SIS315H
 
-#define OutPortByte(p,v) outSISREG((IOADDRESS)(p),(CARD8)(v))
-#define OutPortWord(p,v) outSISREGW((IOADDRESS)(p),(CARD16)(v))
-#define OutPortLong(p,v) outSISREGL((IOADDRESS)(p),(CARD32)(v))
-#define InPortByte(p)    inSISREG((IOADDRESS)(p))
-#define InPortWord(p)    inSISREGW((IOADDRESS)(p))
-#define InPortLong(p)    inSISREGL((IOADDRESS)(p))
+#define OutPortByte(p,v) outSISREG((unsigned long)(p),(CARD8)(v))
+#define OutPortWord(p,v) outSISREGW((unsigned long)(p),(CARD16)(v))
+#define OutPortLong(p,v) outSISREGL((unsigned long)(p),(CARD32)(v))
+#define InPortByte(p)    inSISREG((unsigned long)(p))
+#define InPortWord(p)    inSISREGW((unsigned long)(p))
+#define InPortLong(p)    inSISREGL((unsigned long)(p))
 #define SiS_SetMemory(MemoryAddress,MemorySize,value) memset(MemoryAddress, value, MemorySize)
 
 #endif /* XF86 */
