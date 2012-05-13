@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: xevents.c,v 1.56 2011/09/13 08:41:57 okan Exp $
+ * $OpenBSD: xevents.c,v 1.57 2012/05/13 15:17:13 okan Exp $
  */
 
 /*
@@ -331,7 +331,7 @@ xev_handle_keyrelease(XEvent *ee)
 	if (keysym != XK_Alt_L && keysym != XK_Alt_R)
 		return;
 
-	sc->altpersist = 0;
+	sc->cycling = 0;
 
 	/*
 	 * XXX - better interface... xevents should not know about
