@@ -58,7 +58,6 @@ in this Software without prior written authorization from the XFree86 Project.
 #include "compiler.h"
 
 #include "xf86Pci.h"
-#include "xf86PciInfo.h"
 
 #include "vgaHW.h"
 

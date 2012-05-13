@@ -28,7 +28,9 @@ in this Software without prior written authorization from the XFree86 Project.
 #include "config.h"
 #endif
 
+#include <unistd.h>
 #include "s3v.h"
+#include "s3v_pciids.h"
 
 #include "miline.h"
 	/* fb includes are in s3v.h */

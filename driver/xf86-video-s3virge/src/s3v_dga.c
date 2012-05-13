@@ -62,7 +62,6 @@ in this Software without prior written authorization from the XFree86 Project.
 #include "xf86.h"
 #include "xf86_OSproc.h"
 #include "xf86Pci.h"
-#include "xf86PciInfo.h"
 #include "xaa.h"
 #include "xaalocal.h"
 #include "s3v.h"
@@ -116,15 +115,15 @@ S3VDGAInit(ScreenPtr pScreen)
 	   to be rewritten to accommodate depth changes in DGA mode */
 
 	if(0 /*pScrn->displayWidth != pMode->HDisplay*/) {
-	    newmodes = xrealloc(modes, (num + 2) * sizeof(DGAModeRec));
+	    newmodes = realloc(modes, (num + 2) * sizeof(DGAModeRec));
 	    oneMore = TRUE;
 	} else {
-	    newmodes = xrealloc(modes, (num + 1) * sizeof(DGAModeRec));
+	    newmodes = realloc(modes, (num + 1) * sizeof(DGAModeRec));
 	    oneMore = FALSE;
 	}
 
 	if(!newmodes) {
-	   xfree(modes);
+	   free(modes);
 	   return FALSE;
 	}
 	modes = newmodes;

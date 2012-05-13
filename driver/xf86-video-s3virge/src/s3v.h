@@ -40,9 +40,6 @@ in this Software without prior written authorization from the XFree86 Project.
 /* Everything using inb/outb, etc needs "compiler.h" */
 #include "compiler.h"
 
-/* Drivers for PCI hardware need this */
-#include "xf86PciInfo.h"
-
 /* Drivers that need to access the PCI config space directly need this */
 #include "xf86Pci.h"
 
@@ -282,7 +279,9 @@ typedef struct tagS3VRec {
   XAAInfoRecPtr 	AccelInfoRec;
   /* PCI info vars.	*/
   pciVideoPtr 	PciInfo;
+#ifndef XSERVER_LIBPCIACCESS
   PCITAG 		PciTag;
+#endif
   /* Chip info, set using PCI	*/
   /* above.			*/
   int			Chipset;
