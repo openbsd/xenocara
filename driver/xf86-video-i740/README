@@ -18,130 +18,130 @@
 
   ______________________________________________________________________
 
-  [1m1.  Supported Hardware[0m
+  1.  Supported Hardware
 
 
-  +o  Intel 740 based cards.
+  o  Intel 740 based cards.
 
 
 
-  [1m2.  Features[0m
+  2.  Features
 
 
-  +o  Full support for 8, 15, 16, and 24 bit pixel depths.
+  o  Full support for 8, 15, 16, and 24 bit pixel depths.
 
-  +o  Hardware cursor support to reduce sprite flicker.
+  o  Hardware cursor support to reduce sprite flicker.
 
-  +o  Hardware accelerated 2D drawing engine support for 8, 15, 16 and 24
+  o  Hardware accelerated 2D drawing engine support for 8, 15, 16 and 24
      bit pixel depths.
 
-  +o  Support for high resolution video modes up to 1600x1200.
+  o  Support for high resolution video modes up to 1600x1200.
 
-  +o  Support for doublescan video modes (e.g., 320x200 and 320x240).
+  o  Support for doublescan video modes (e.g., 320x200 and 320x240).
 
-  +o  Support for gamma correction at all pixel depths.
+  o  Support for gamma correction at all pixel depths.
 
-  +o  Fully programmable clock supported.
+  o  Fully programmable clock supported.
 
-  +o  Robust text mode restore for VT switching.
-
-
-
-  [1m3.  Technical Notes[0m
+  o  Robust text mode restore for VT switching.
 
 
-  +o  Hardware acceleration is not possible when using the framebuffer in
+
+  3.  Technical Notes
+
+
+  o  Hardware acceleration is not possible when using the framebuffer in
      32 bit per pixel format.
 
-  +o  Interlace modes cannot be supported.
+  o  Interlace modes cannot be supported.
 
 
 
-  [1m4.  Reported Working Video Cards[0m
+  4.  Reported Working Video Cards
 
 
-  +o  Real3D Starfighter AGP
+  o  Real3D Starfighter AGP
 
-  +o  Real3D Starfighter PCI
+  o  Real3D Starfighter PCI
 
-  +o  Diamond Stealth II/G460 AGP
+  o  Diamond Stealth II/G460 AGP
 
-  +o  3DVision-i740 AGP
+  o  3DVision-i740 AGP
 
-  +o  ABIT G740 8MB SDRAM
+  o  ABIT G740 8MB SDRAM
 
-  +o  Acorp AGP i740
+  o  Acorp AGP i740
 
-  +o  AGP 2D/3D V. 1N, AGP-740D
+  o  AGP 2D/3D V. 1N, AGP-740D
 
-  +o  AOpen AGP 2X 3D Navigator PA740
+  o  AOpen AGP 2X 3D Navigator PA740
 
-  +o  ARISTO i740 AGP (ART-i740-G)
+  o  ARISTO i740 AGP (ART-i740-G)
 
-  +o  ASUS AGP-V2740
+  o  ASUS AGP-V2740
 
-  +o  Atrend (Speedy) 3DIO740 AGP (ATC-2740)
+  o  Atrend (Speedy) 3DIO740 AGP (ATC-2740)
 
-  +o  Chaintech AGP-740D
+  o  Chaintech AGP-740D
 
-  +o  EliteGroup(ECS) 3DVision-i740 AGP
+  o  EliteGroup(ECS) 3DVision-i740 AGP
 
-  +o  EONtronics Picasso 740
+  o  EONtronics Picasso 740
 
-  +o  EONtronics Van Gogh
+  o  EONtronics Van Gogh
 
-  +o  Everex MVGA i740/AG
+  o  Everex MVGA i740/AG
 
-  +o  Flagpoint Shocker i740 8MB
+  o  Flagpoint Shocker i740 8MB
 
-  +o  Gainward CardExpert 740 8MB
+  o  Gainward CardExpert 740 8MB
 
-  +o  Genoa Systems Phantom 740
+  o  Genoa Systems Phantom 740
 
-  +o  Gigabyte Predator i740 8MB AGP
+  o  Gigabyte Predator i740 8MB AGP
 
-  +o  Hercules Terminator 128 2X/i AGP
+  o  Hercules Terminator 128 2X/i AGP
 
-  +o  HOT-158 (Shuttle)
+  o  HOT-158 (Shuttle)
 
-  +o  Intel Express 3D AGP
+  o  Intel Express 3D AGP
 
-  +o  Jaton Video-740 AGP 3D
+  o  Jaton Video-740 AGP 3D
 
-  +o  Jetway J-740-3D 8MB AGP, i740 AGP 3D
+  o  Jetway J-740-3D 8MB AGP, i740 AGP 3D
 
-  +o  Joymedia Apollo 7400
+  o  Joymedia Apollo 7400
 
-  +o  Leadtek Winfast S900
+  o  Leadtek Winfast S900
 
-  +o  Machspeed Raptor i740 AGP 4600
+  o  Machspeed Raptor i740 AGP 4600
 
-  +o  Magic-Pro MP-740DVD
+  o  Magic-Pro MP-740DVD
 
-  +o  MAXI Gamer AGP 8 MB
+  o  MAXI Gamer AGP 8 MB
 
-  +o  Palit Daytona AGP740
+  o  Palit Daytona AGP740
 
-  +o  PowerColor C740 (SG/SD) AGP
+  o  PowerColor C740 (SG/SD) AGP
 
-  +o  QDI Amazing I
+  o  QDI Amazing I
 
-  +o  Soyo AGP (SY-740 AGP)
+  o  Soyo AGP (SY-740 AGP)
 
-  +o  Spacewalker Hot-158
+  o  Spacewalker Hot-158
 
-  +o  VideoExcel AGP 740
+  o  VideoExcel AGP 740
 
-  +o  ViewTop ZeusL 8MB
+  o  ViewTop ZeusL 8MB
 
-  +o  Winfast S900 i740 AGP 8MB
+  o  Winfast S900 i740 AGP 8MB
 
 
 
-  [1m5.  Configuration[0m
+  5.  Configuration
 
   The driver auto-detects all device information necessary to initialize
-  the card.  The only lines you need in the "Device" section of your
+  the card. The only lines you need in the "Device" section of your
   xorg.conf file are:
 
          Section "Device"

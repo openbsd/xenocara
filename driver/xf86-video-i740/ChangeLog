@@ -1,57 +1,618 @@
-2006-04-07  Adam Jackson  <ajax@freedesktop.org>
+commit 94a2eb3193867502d0d52d88a8e1bb990cad2b2a
+Author: Julien Cristau <jcristau@debian.org>
+Date:   Sat May 12 13:19:28 2012 +0200
 
-	* configure.ac:
-	* src/i740_accel.c:
-	* src/i740_cursor.c:
-	* src/i740_dga.c:
-	* src/i740_driver.c:
-	* src/i740_i2c.c:
-	* src/i740_io.c:
-	* src/i740_video.c:
-	Delibcwrap, bump required server, update to 1.1.0.
+    xf86-video-i740 1.3.3
 
-2006-04-07  Aaron Plattner  <aplattner@nvidia.com>
+commit c9f21d2bac44c624f770a20d1102db28fe03c3f4
+Author: Julien Cristau <jcristau@debian.org>
+Date:   Sat May 12 13:19:00 2012 +0200
 
-	* src/i740_video.c: (I740PutImage):
-	Add a DrawablePtr argument to the XV functions to pave the way for
-	redirected video.
+    Add missing unistd.h includes for usleep()
+    
+    Signed-off-by: Julien Cristau <jcristau@debian.org>
 
-2005-12-20  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+commit 8dd5542ba4dd8f51b4a87142b8e61af8b88e7957
+Author: Julien Cristau <jcristau@debian.org>
+Date:   Sat May 12 13:16:16 2012 +0200
 
-	* configure.ac:
-	Update package version for X11R7 release.
+    Replace deprecated xalloc/xrealloc/xcalloc/xfree with the standard functions
+    
+    Signed-off-by: Julien Cristau <jcristau@debian.org>
 
-2005-12-14  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+commit 421f4e721938515fe93f8e81fe6d18be50e5ffee
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Mon Dec 19 17:48:45 2011 -0500
 
-	* configure.ac:
-	Update package version number for final X11R7 release candidate.
+    Fix for new vgaHW ABI
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
 
-2005-12-06  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+commit cf434e93cdef87f49b0d77b4f3b65ddf388fbcd9
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Mon Dec 19 16:34:10 2011 -0500
 
-	* man/Makefile.am:
-	Change *man_SOURCES ==> *man_PRE to fix autotools warnings.
+    Make failure to XAA non-fatal
+    
+    No shadowfb support in this driver yet.
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
 
-2005-12-03  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+commit 87da594bba964da07d34787b391d34578519a89b
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jul 21 16:49:04 2010 -0400
 
-	* configure.ac:
-	Update package version number for X11R7 RC3 release.
+    config: add comments for main statements
 
-2005-12-01  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+commit 7c271e5112bf9bb14a5c6ecb3f10b1313e26f6d5
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jul 21 16:07:00 2010 -0400
 
-	* configure.ac:
-	Remove extraneous AC_MSG_RESULT.
+    config: replace deprecated use of AC_OUTPUT with AC_CONFIG_FILES
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
 
-2005-11-29  Adam Jackson  <ajax@freedesktop.org>
+commit e11c8cc4a428d4b7d0c33deb67837a7cdb710b05
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jul 21 14:37:41 2010 -0400
 
-	* configure.ac:
-	Only build dlloader modules by default.
+    config: replace deprecated AC_HELP_STRING with AS_HELP_STRING
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
 
-2005-11-09  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+commit accc228bbb9f1730181715ec1acc8a4d24f093c6
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jul 21 14:05:22 2010 -0400
 
-	* configure.ac:
-	Update package version number for X11R7 RC2 release.
+    config: replace deprecated AM_CONFIG_HEADER with AC_CONFIG_HEADERS
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
 
-2005-11-01  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+commit 1a0b8be6c9aaa5a189c7d1b5df64d5f9fb9a942f
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jul 21 09:27:42 2010 -0400
 
-	* configure.ac:
-	Update pkgcheck dependencies to work with separate build roots.
+    config: complete AC_INIT m4 quoting
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 13a3b6e3fb1556da3e872fee46cbb763e8cc2b48
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Jul 20 21:44:57 2010 -0400
+
+    config: remove unrequired AC_SUBST([XORG_CFLAGS])
+    
+    This macro is called by PKG_CHECK_MODULES
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 76a04a6637e221fa96c47b80126f456eb6bba91d
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Jul 20 20:24:42 2010 -0400
+
+    config: remove unrequired AC_HEADER_STDC
+    
+    Autoconf says:
+    "This macro is obsolescent, as current systems have conforming
+    header files. New programs need not use this macro".
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 4db3db385a26dba3e1a41414eafab23f14cef4b9
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Jul 20 19:41:31 2010 -0400
+
+    config: remove AC_PROG_CC as it overrides AC_PROG_C_C99
+    
+    XORG_STRICT_OPTION from XORG_DEFAULT_OPTIONS calls
+    AC_PROG_C_C99. This sets gcc with -std=gnu99.
+    If AC_PROG_CC macro is called afterwards, it resets CC to gcc.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit e9afde9b8b228d039fce177d0f6b023f205fe208
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Jul 20 18:45:19 2010 -0400
+
+    config: update AC_PREREQ statement to 2.60
+    
+    Unrelated to the previous patches, the new value simply reflects
+    the reality that the minimum level for autoconf to configure
+    all x.org modules is 2.60 dated June 2006.
+    
+    ftp://ftp.gnu.org/gnu/autoconf/autoconf-2.60.tar.gz
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 78523a9293bba6941271a356683e5c1a42c26309
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Jul 20 16:15:29 2010 -0400
+
+    config: upgrade to util-macros 1.8 for additional man page support
+    
+    Use MAN_SUBST now supplied in XORG_MANPAGE_SECTIONS
+    The value of MAN_SUBST is the same for all X.Org packages.
+
+commit 897fee2ee97ad0bb3a106642a506ad2e8b3b36c2
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Jun 13 19:14:57 2010 -0400
+
+    README: keep the text version of README, discard the sgml version
+    
+    The linuxdoc doc tool is deprecated.
+    README files are exclusively text files.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 21262b12320b7996261c1bce35957d11e1580837
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Jun 13 19:12:41 2010 -0400
+
+    README: fix linuxdoc content
+    
+    defs.ent are located under X11 directory
+    ident tag is not a Linuxdoc tag
+    replace docbook email tag with linuxdoc email tag
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 8d8b96164be4c0bc4f26acd9ea77b2d7038c4181
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Fri Jan 15 15:06:23 2010 -0800
+
+    Update Sun license notices to current X.Org standard form
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit 396223eefb20bcf163fa52914c264327e951f582
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Dec 15 22:01:02 2009 -0500
+
+    configure.ac: remove unused sdkdir=$(pkg-config...) statement
+    
+    The sdkdir variable isn't use, so remove the statement.
+    
+    Acked-by: Dan Nicholson <dbn.lists@gmail.com>
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit f441d1c4780822d78382142073676fff40f94103
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Nov 23 09:25:05 2009 -0500
+
+    Makefile.am: add ChangeLog and INSTALL on MAINTAINERCLEANFILES
+    
+    Now that the INSTALL file is generated.
+    Allows running make maintainer-clean.
+
+commit 5e6d7aa353bbb1afd98a35d8cd96bc5c1bf43cee
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Oct 28 14:41:41 2009 -0400
+
+    INSTALL, NEWS, README or AUTHORS files are missing/incorrect #24206
+    
+    Automake 'foreign' option is specified in configure.ac.
+    Remove from Makefile.am
+
+commit b074fc758976bd9b4732d74af831decff27a1b30
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Oct 28 14:09:09 2009 -0400
+
+    INSTALL, NEWS, README or AUTHORS files are missing/incorrect #24206
+    
+    Add missing INSTALL file. Use standard GNU file on building tarball
+    README may have been updated
+    Remove AUTHORS file as it is empty and no content available yet.
+    Remove NEWS file as it is empty and no content available yet.
+
+commit 1c6f39d0caa0ebd2918f0c7277944d8bf1dd59c6
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Oct 26 12:54:21 2009 -0400
+
+    Several driver modules do not have a ChangeLog target in Makefile.am #23814
+    
+    The git generated ChangeLog replaces the hand written one.
+    Update configure.ac to xorg-macros level 1.3.
+    Use XORG_DEFAULT_OPTIONS which replaces four XORG_* macros
+    Update Makefile.am to add ChangeLog target if missing
+    Remove ChangeLog from EXTRA_DIST or *CLEAN variables
+    This is a pre-req for the INSTALL_CMD
+
+commit ac47533fa0dbfc35ed07d9539c62717e833a7d67
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Oct 22 12:34:17 2009 -0400
+
+    .gitignore: use common defaults with custom section # 24239
+    
+    Using common defaults will reduce errors and maintenance.
+    Only the very small or inexistent custom section need periodic maintenance
+    when the structure of the component changes. Do not edit defaults.
+
+commit 5ada74f290e1a58a84523460693bb96d0b64217c
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Sep 7 11:12:13 2009 -0400
+
+    xf86-video-i740: Remove unused .cvsignore file #23776
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 947fbfd72fc81b26b0e167c4a8962e0a685b3381
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Thu Jul 30 12:04:28 2009 +1000
+
+    i740: bump for release 1.3.2
+
+commit 3190d52077bb22bb8a8f761aabd29afa9ea14534
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Tue Jul 28 15:22:40 2009 +1000
+
+    i740: change to using ABI version check
+
+commit c3c32b5be1c72ec8b9e0b07ada1be888a35cb50e
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Tue Jul 28 11:17:33 2009 +1000
+
+    i740: fix rac/resources properly
+
+commit 8f8428c28d1747b5b127307e710076022a4f7e0b
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Tue Jul 28 11:14:57 2009 +1000
+
+    Revert "i740: fixup for rac/resources"
+    
+    This reverts commit 32338c01531f26e599b69318157d86f9c1ea7d11.
+
+commit 32338c01531f26e599b69318157d86f9c1ea7d11
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Tue Jul 28 11:08:35 2009 +1000
+
+    i740: fixup for rac/resources
+
+commit 6a2c6b45e88403d5e0d7a2ca2e4c24693809484f
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Thu Jul 2 11:21:35 2009 -0400
+
+    i740 1.3.1
+
+commit 88520119eb43d8fed27de88003171178e8305fbf
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Thu May 28 15:00:44 2009 -0400
+
+    Remove useless loader symbol lists.
+
+commit 17c0afa07e8adf05fe5ea51f3a69d86d3e6c5380
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Mon May 11 21:15:29 2009 -0700
+
+    Documentation update
+    
+    Copy list of driver options from README to man page
+    Remove xorgconfig from README/README.sgml
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit 3ee25988bbf773fc320e5215942b6341be2503a6
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Mon May 11 20:53:46 2009 -0700
+
+    Fill in COPYING file
+
+commit 85dbf1b7a259b8b8b3f378326ca7efa82752d1c0
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Thu Mar 19 15:26:34 2009 -0400
+
+    i740 1.3.0
+
+commit 5a99ac561a0cdfafc09b98cecb429fe712edd42d
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Fri Jan 9 16:29:11 2009 -0800
+
+    Remove xorgconfig & xorgcfg from See Also list in man page
+
+commit 3d15d37fa05b8e27f0aeb114cc5ba419a85b5124
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Fri Aug 15 15:45:52 2008 -0400
+
+    Uncomment DDC2 code, move it before mode validation so DDC has some effect.
+
+commit fceb711ffe910bcea3177b883dd1a8c036582876
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Wed Mar 19 14:34:00 2008 -0400
+
+    i128 1.2.0
+
+commit f13467f7fbedc4b6d3386ee1ac590783823e4fe6
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Wed Mar 19 14:31:45 2008 -0400
+
+    Fix distcheck
+
+commit 3ce42de1932ddc9087ac501da7ff3867910c4fde
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Wed Mar 19 14:18:21 2008 -0400
+
+    Death to RCS tags.
+
+commit e26359a603d502d44081941fe566a47c5690bc91
+Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+Date:   Mon Mar 10 01:15:50 2008 -0300
+
+    Minor fixes to compile with pciaccess.
+    
+    o Fix a typo
+    o Protect call to xf86GetPciVideoInfo with ifndef XSERVER_LIBPCIACCESS
+    o Some minor consistency in macro names in i740_pcirename.h
+
+commit 8c31b2e40951c62d362e9a95d8a7b29018626ef2
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Mon Mar 10 12:08:10 2008 +1000
+
+    i740: pciaccess conversion
+
+commit 870eb9fe825917b2bec48ec2b95ad794e585bf09
+Author: Matthieu Herrb <matthieu@bluenote.herrb.net>
+Date:   Sat Mar 8 23:31:47 2008 +0100
+
+    Makefile.am: nuke RCS Id
+
+commit 5241aee2f633bab3c22b44d6b5f907973924fcd8
+Author: Brice Goglin <bgoglin@debian.org>
+Date:   Tue Aug 7 11:28:16 2007 +0200
+
+    Define I740_*_VERSION* using PACKAGE_VERSION_*
+
+commit 87f355c3d5b007c5ae24c0fcc1c2c2c97b2dc7ef
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Thu Mar 1 10:46:32 2007 -0800
+
+    renamed: .cvsignore -> .gitignore
+
+commit f8c8d2d7d3617a7ddea3f75b4b17072bb9697d64
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Thu Mar 1 10:46:03 2007 -0800
+
+    Replace references to XFree86/XF86Config in man page
+
+commit 6452da4f4a42b0740d229325bb57ba845132f4e3
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Sat Apr 8 01:29:00 2006 +0000
+
+    Delibcwrap, bump required server, update to 1.1.0.
+
+commit 5157dee313f692258a07f6a757dbfe3ac5a7e4b7
+Author: Aaron Plattner <aplattner@nvidia.com>
+Date:   Fri Apr 7 23:07:55 2006 +0000
+
+    Add a DrawablePtr argument to the XV functions to pave the way for
+        redirected video.
+
+commit 4ba290d181f169a1b42061a6c8bcad8a4c14c967
+Author: Kevin E Martin <kem@kem.org>
+Date:   Wed Dec 21 02:30:00 2005 +0000
+
+    Update package version for X11R7 release.
+
+commit ef157640d3af80d623e854b3788011b36060f181
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Mon Dec 19 16:25:53 2005 +0000
+
+    Stub COPYING files
+
+commit 0377a04a6cd1a0f888717000c1ba431269563ba5
+Author: Kevin E Martin <kem@kem.org>
+Date:   Thu Dec 15 00:24:17 2005 +0000
+
+    Update package version number for final X11R7 release candidate.
+
+commit 26412eeae0eb7836682f1bdce5681924aa767604
+Author: Kevin E Martin <kem@kem.org>
+Date:   Tue Dec 6 22:48:34 2005 +0000
+
+    Change *man_SOURCES ==> *man_PRE to fix autotools warnings.
+
+commit c7754feb77d5a49389276a8f4a54ba6f4fc18e92
+Author: Kevin E Martin <kem@kem.org>
+Date:   Sat Dec 3 05:49:33 2005 +0000
+
+    Update package version number for X11R7 RC3 release.
+
+commit 1948bc181eab024a4b50e6c09bf110ac511aec87
+Author: Kevin E Martin <kem@kem.org>
+Date:   Fri Dec 2 02:16:08 2005 +0000
+
+    Remove extraneous AC_MSG_RESULT.
+
+commit a2e7f5ab261c30a79402a0f5dfdc30b3ac880d87
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Tue Nov 29 23:29:59 2005 +0000
+
+    Only build dlloader modules by default.
+
+commit 43b2e63ae3789b6cb4a7268f0fdaea55f69c733d
+Author: Alan Coopersmith <Alan.Coopersmith@sun.com>
+Date:   Mon Nov 28 22:04:09 2005 +0000
+
+    Change *mandir targets to use new *_MAN_DIR variables set by xorg-macros.m4
+        update to fix bug #5167 (Linux prefers *.1x man pages in man1 subdir)
+
+commit 745e01742b8f233f3a77cde079df91e0028f8b77
+Author: Eric Anholt <anholt@freebsd.org>
+Date:   Mon Nov 21 10:49:14 2005 +0000
+
+    Add .cvsignores for drivers.
+
+commit 908da66b952ce20d7bbb50eb41f7e3ef7c00a250
+Author: Kevin E Martin <kem@kem.org>
+Date:   Wed Nov 9 21:15:15 2005 +0000
+
+    Update package version number for X11R7 RC2 release.
+
+commit c2f597e37c7a35b54838a50269b4adc5d7daa4f7
+Author: Kevin E Martin <kem@kem.org>
+Date:   Tue Nov 1 15:08:53 2005 +0000
+
+    Update pkgcheck depedencies to work with separate build roots.
+
+commit 44bbca70bab4573478b9dd6d0a5b03e9495f9ad0
+Author: Kevin E Martin <kem@kem.org>
+Date:   Wed Oct 19 02:48:03 2005 +0000
+
+    Update package version number for RC1 release.
+
+commit 5c97e4738d2d08a9cf382721c5fc32ad7969b8a5
+Author: Alan Coopersmith <Alan.Coopersmith@sun.com>
+Date:   Tue Oct 18 00:01:53 2005 +0000
+
+    Use @DRIVER_MAN_SUFFIX@ instead of $(DRIVER_MAN_SUFFIX) in macro
+        substitutions to work better with BSD make
+
+commit 91b0dc8bffd3e64b852e9ea08107189ef086fbdc
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Mon Oct 17 22:57:33 2005 +0000
+
+    More 1.7 braindamage: define EXTRA_DIST in terms of @DRIVER_NAME@ instead
+        of indirectly
+
+commit a211cefc94ee604a1c58bbf0f39bc27f3746045b
+Author: Alan Coopersmith <Alan.Coopersmith@sun.com>
+Date:   Mon Oct 17 00:09:03 2005 +0000
+
+    Use sed & cpp to substitute variables in driver man pages
+
+commit 0274958fa137703be4fa41c9e1015e54de0e9a4d
+Author: Kevin E Martin <kem@kem.org>
+Date:   Tue Oct 4 22:59:15 2005 +0000
+
+    Add missing files for various drivers Remove trailing / on src_dir that
+        causes problems in symlink.sh
+
+commit 0dd8552bab2901c7e786e3405fc00dcb8bf52b25
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Date:   Tue Oct 4 20:01:03 2005 +0000
+
+    Check in generated README files
+
+commit ffd8b3f85e2cd007b36a6e551cf7745f79964ab7
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Date:   Mon Oct 3 21:22:07 2005 +0000
+
+    - For all drivers that have a <driver>.sgml file, add code in their build
+        system to build the README file at make dist time
+    - in util/macros/xorg-macros.m4, add a new XORG_CHECK_LINUXDOC macro that
+        will check if the required tools and files exist, and if so set a
+        conditional.
+    - util/modular/symlink.sh
+    - Link all the <driver>.sgml to xf86-video-<driver>/README.sgml
+    - Add all the README.<driver> to the list of excluded files
+    - xc/programs/Xserver/hw/xfree86/doc/sgml/SiS.sgml: Various changes to make
+        it spew less warnings when the text file is built.
+
+commit 38e787cdc298e3e8ed983ed3f792ae5327d7d32d
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Thu Aug 18 09:03:46 2005 +0000
+
+    Update autogen.sh to one that does objdir != srcdir.
+
+commit d50b04eaad49868ce5411f70d3346f6df9882aad
+Author: Kevin E Martin <kem@kem.org>
+Date:   Fri Jul 29 21:22:43 2005 +0000
+
+    Various changes preparing packages for RC0:
+    - Verify and update package version numbers as needed
+    - Implement versioning scheme
+    - Change bug address to point to bugzilla bug entry form
+    - Disable loadable i18n in libX11 by default (use --enable-loadable-i18n to
+        reenable it)
+    - Fix makedepend to use pkgconfig and pass distcheck
+    - Update build script to build macros first
+    - Update modular Xorg version
+
+commit 31b2848e8b2afba2385534415d304115ed0bf284
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Date:   Tue Jul 26 00:17:49 2005 +0000
+
+    "Build system for `basename $PWD | sed s/xf86-video-//`"
+
+commit 9f2b76b4c0eb49634904208892ec3b05c816fa04
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Mon Jul 11 02:29:50 2005 +0000
+
+    Prep for modular builds by adding guarded #include "config.h" everywhere.
+
+commit fafd4e6169055b1dac95bc085527bab850bfb143
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Sat Jun 25 21:16:54 2005 +0000
+
+    Bug #3626: _X_EXPORT tags for video and input drivers.
+
+commit 37a732314a679a93c68317d9499ae42136e60001
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Wed Apr 20 12:25:27 2005 +0000
+
+    Fix includes right throughout the Xserver tree:
+    change "foo.h" to <X11/foo.h> for core headers, e.g. X.h, Xpoll.h;
+    change "foo.h", "extensions/foo.h" and "X11/foo.h" to
+        <X11/extensions/foo.h> for extension headers, e.g. Xv.h;
+    change "foo.[ch]" to <X11/Xtrans/foo.[ch]> for Xtrans files.
+
+commit 3eed3c377f566a809256c2dab74bcfcb3b545e7d
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Fri Sep 17 03:04:51 2004 +0000
+
+    Bug #1192: Remove cfb support from drivers where its use is an option.
+        Delete xf24_32bpp, as s3virge was the last user. Fix up some comments
+        to refer to fb rather than cfb.
+
+commit fc2e1a1f359c05dede7cbb8cbcbfce2171dcb051
+Author: Eric Anholt <anholt@freebsd.org>
+Date:   Wed Jun 16 09:23:13 2004 +0000
+
+    DRI XFree86-4_3_99_12-merge import
+
+commit 295e3a3d03038e79dd0f593765643febda4e36a3
+Author: Egbert Eich <eich@suse.de>
+Date:   Fri Apr 23 19:35:03 2004 +0000
+
+    Merging XORG-CURRENT into trunk
+
+commit ee538370a85616e74dd1acbe2fdd5e0d61d2c6a6
+Author: Egbert Eich <eich@suse.de>
+Date:   Sun Mar 14 08:33:21 2004 +0000
+
+    Importing vendor version xf86-4_4_99_1 on Sun Mar 14 00:26:39 PST 2004
+
+commit 864ea8e9c9d24e4cc030ec3ea55c3ed1e96c210c
+Author: Egbert Eich <eich@suse.de>
+Date:   Wed Mar 3 12:12:19 2004 +0000
+
+    Importing vendor version xf86-4_4_0 on Wed Mar 3 04:09:24 PST 2004
+
+commit b5bc8e70cfe34febd02ae025b1ee87904c672775
+Author: Egbert Eich <eich@suse.de>
+Date:   Thu Feb 26 13:35:52 2004 +0000
+
+    readding XFree86's cvs IDs
+
+commit fdbdc7c44a34dc4cd6577ffca9dcb50248f39805
+Author: Egbert Eich <eich@suse.de>
+Date:   Thu Feb 26 09:23:19 2004 +0000
+
+    Importing vendor version xf86-4_3_99_903 on Wed Feb 26 01:21:00 PST 2004
+
+commit af1b2da6040ef11b3b1c382904c48b890684cfad
+Author: Kaleb Keithley <kaleb@freedesktop.org>
+Date:   Tue Nov 25 19:28:37 2003 +0000
+
+    XFree86 4.3.99.16 Bring the tree up to date for the Cygwin folks
+
+commit 1b9c503116833da554f19fd49705c0eebdfef38a
+Author: Kaleb Keithley <kaleb@freedesktop.org>
+Date:   Fri Nov 14 16:48:55 2003 +0000
+
+    XFree86 4.3.0.1
+
+commit 3b2090ec858107463451f90a4889f2c4cfc21254
+Author: Kaleb Keithley <kaleb@freedesktop.org>
+Date:   Fri Nov 14 16:48:55 2003 +0000
+
+    Initial revision

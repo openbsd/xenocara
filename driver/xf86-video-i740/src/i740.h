@@ -140,6 +140,7 @@ typedef struct _I740Rec {
   /*-*/
 
   Bool usevgacompat;
+  Bool NoAccel;
 } I740Rec;
 
 #define I740PTR(p) ((I740Ptr)((p)->driverPrivate))

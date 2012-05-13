@@ -38,6 +38,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 #include <string.h>
 #include <math.h>
+#include <unistd.h>
 
 /*
  * This server does not support these XFree86 4.0 features yet
@@ -256,8 +257,7 @@ I740GetRec(ScrnInfoPtr pScrn) {
 static void
 I740FreeRec(ScrnInfoPtr pScrn) {
   if (!pScrn) return;
-  if (!pScrn->driverPrivate) return;
-  xfree(pScrn->driverPrivate);
+  free(pScrn->driverPrivate);
   pScrn->driverPrivate=0;
 }
 
@@ -371,8 +371,8 @@ I740Probe(DriverPtr drv, int flags) {
       }
   }
   
-  xfree(devSections);
-  xfree(usedChips);
+  free(devSections);
+  free(usedChips);
   
   return foundScreen;
 }
@@ -429,6 +429,7 @@ I740PreInit(ScrnInfoPtr pScrn, int flags) {
 
   /* Allocate a vgaHWRec */
   if (!vgaHWGetHWRec(pScrn)) return FALSE;
+  vgaHWSetStdFuncs(VGAHWPTR(pScrn));
 
   pI740->PciInfo = xf86GetPciInfoForEntity(pI740->pEnt->index);
 #ifndef XSERVER_LIBPCIACCESS
@@ -487,7 +488,7 @@ I740PreInit(ScrnInfoPtr pScrn, int flags) {
 
   /* Process the options */
   xf86CollectOptions(pScrn, NULL);
-  if (!(pI740->Options = xalloc(sizeof(I740Options))))
+  if (!(pI740->Options = malloc(sizeof(I740Options))))
     return FALSE;
   memcpy(pI740->Options, I740Options, sizeof(I740Options));
   xf86ProcessOptions(pScrn->scrnIndex, pScrn->options, pI740->Options);
@@ -725,10 +726,11 @@ I740PreInit(ScrnInfoPtr pScrn, int flags) {
     return FALSE;
   }
 
-  if (!xf86ReturnOptValBool(pI740->Options, OPTION_NOACCEL, FALSE)) {
+  pI740->NoAccel = xf86ReturnOptValBool(pI740->Options, OPTION_NOACCEL, FALSE);
+  if (!pI740->NoAccel) {
     if (!xf86LoadSubModule(pScrn, "xaa")) {
-      I740FreeRec(pScrn);
-      return FALSE;
+      xf86DrvMsg(pScrn->scrnIndex, X_WARNING, "No acceleration available\n");
+      pI740->NoAccel = 1;
     }
   }
 
@@ -1535,7 +1537,7 @@ I740ScreenInit(int scrnIndex, ScreenPtr pScreen, int argc, char **argv) {
     return FALSE;
   }
 
-  if (!xf86ReturnOptValBool(pI740->Options, OPTION_NOACCEL, FALSE)) {
+  if (!pI740->NoAccel) {
     if (!I740AccelInit(pScreen)) {
       xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
 		 "Hardware acceleration initialization failed\n");
