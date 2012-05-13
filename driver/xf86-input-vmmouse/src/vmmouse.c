@@ -228,11 +228,40 @@ static char reverseMap[32] = { 0,  4,  2,  6,  1,  5,  3,  7,
 #define reverseBits(map, b)	(((b) & ~0x0f) | map[(b) & 0x0f])
 
 #if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 12
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) < 14
+
+static InputOption*
+input_option_new(InputOption *list, char *key, char *value)
+{
+   InputOption *new;
+
+   new = calloc(1, sizeof(InputOption));
+   new->key = key;
+   new->value = value;
+   new->next = list;
+   return new;
+}
+
+static void
+input_option_free_list(InputOption **opts)
+{
+   InputOption *tmp = *opts;
+   while(*opts)
+   {
+      tmp = (*opts)->next;
+      free((*opts)->key);
+      free((*opts)->value);
+      free((*opts));
+      *opts = tmp;
+   }
+}
+#endif
+
 static int
 VMMouseInitPassthru(InputDriverPtr drv, InputInfoPtr pInfo, int flags)
 {
    InputAttributes *attrs = NULL;
-   InputOption *input_options = NULL, *tmp, *opts;
+   InputOption *input_options = NULL;
    pointer options;
    DeviceIntPtr dev;
    int rc;
@@ -241,25 +270,15 @@ VMMouseInitPassthru(InputDriverPtr drv, InputInfoPtr pInfo, int flags)
    options = xf86ReplaceStrOption(options, "Driver", "mouse");
 
    while(options) {
-      tmp = calloc(1, sizeof(InputOption));
-      tmp->key = xf86OptionName(options);
-      tmp->value = xf86OptionValue(options);
-      tmp->next = input_options;
-      input_options = tmp;
+      input_options = input_option_new(input_options,
+                                       xf86OptionName(options),
+                                       xf86OptionValue(options));
       options = xf86NextOption(options);
    }
 
    rc = NewInputDeviceRequest(input_options, attrs, &dev);
 
-   opts = input_options;
-   tmp = opts;
-   while(opts) {
-      tmp = opts->next;
-      free(opts->key);
-      free(opts->value);
-      free(opts);
-      opts = tmp;
-   }
+   input_option_free_list(&input_options);
 
    return rc;
 }

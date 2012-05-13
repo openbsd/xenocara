@@ -1,1 +1,1 @@
-ACTION=="add|change", ENV{ID_INPUT_MOUSE}=="?*", ATTRS{description}=="i8042 AUX port", KERNEL=="event[0-9]*", PROGRAM="__BIN_PREFIX__/vmmouse_detect", ENV{ID_INPUT.tags}="vmmouse"
+ACTION=="add|change", ENV{ID_INPUT_MOUSE}=="?*", ATTRS{description}=="i8042 AUX port", KERNEL=="mouse[0-9]*", PROGRAM="__BIN_PREFIX__/vmmouse_detect", ENV{ID_INPUT.tags}="vmmouse"

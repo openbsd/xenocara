@@ -44,6 +44,10 @@
 /* Has version 1.5.0 or greater of the Xserver */
 #undef HAVE_XORG_SERVER_1_5_0
 
+/* Define to the sub-directory in which libtool stores uninstalled libraries.
+   */
+#undef LT_OBJDIR
+
 /* Do not include built-in mouse module fallback */
 #undef NO_MOUSE_MODULE
 

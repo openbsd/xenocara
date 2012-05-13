@@ -1,3 +1,59 @@
+commit e925b2e6e9d548db5a6646a76d513fb6881f69b4
+Author: Zack Rusin <zackr@vmware.com>
+Date:   Thu Mar 8 09:51:48 2012 -0500
+
+    vmmouse 12.8.0
+    
+    bump the version number for the new release
+    
+    Signed-off-by: Zack Rusin <zackr@vmware.com>
+
+commit 189dc266a66485d48303acbc1a4fbe4642c75e9f
+Author: Zack Rusin <zackr@vmware.com>
+Date:   Wed Mar 7 23:22:35 2012 -0500
+
+    Adjust the kernel name in the udev file.
+    
+    Some distros (most notable OpenSuSE) are unable to match on the
+    'event' devices, since we should be using 'mouse' kernel anyway
+    (because that's what the 'udevadm info' reports) switch to it in the
+    rules file.
+    
+    Signed-off-by: Zack Rusin <zackr@vmware.com>
+    Reviewed-by: Jakob Bornecrantz <jakob@vmware.com>
+
+commit 3960dd29b4e839d224b9da4e28ab4302832e906f
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Sat Nov 12 14:08:13 2011 +1000
+
+    Deal with opaque InputOption types in ABI 14
+    
+    Tested-by: Jakob Bornecrantz <jakob@vmware.com>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Jakob Bornecrantz <jakob@vmware.com>
+
+commit fd140bfbea9fac8f05ad525dd798a5ca39f68c44
+Author: Thomas Hellstrom <thellstrom@vmware.com>
+Date:   Tue Apr 5 14:42:37 2011 +0200
+
+    Make the fdi script work with FreeBSD
+    
+    The key "input.originating_device" is not present on FreeBSD.
+    Use "freebsd.driver" instead.
+    
+    Signed-off-by: Thomas Hellstrom <thellstrom@vmware.com>
+    Reviewed-by: Michel Dänzer <daenzer@vmware.com>
+
+commit de2b5ca7a76f1ffac1e8d4ed88408dda0f77a83c
+Author: Thomas Hellstrom <thellstrom@vmware.com>
+Date:   Wed Mar 2 11:50:12 2011 +0100
+
+    vmmouse 12.7.0
+    
+    Remove trailing zero from version number.
+    
+    Signed-off-by: Thomas Hellstrom <thellstrom@vmware.com>
+
 commit cfaffd24413a31ebd7ae766ac39ed366902e38e5
 Author: Thomas Hellstrom <thellstrom@vmware.com>
 Date:   Wed Mar 2 09:06:47 2011 +0100

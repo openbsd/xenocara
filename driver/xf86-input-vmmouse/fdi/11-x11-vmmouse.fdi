@@ -5,6 +5,9 @@
       <match key="input.originating_device" contains="i8042_">
         <append key="info.callouts.add" type="strlist">hal-probe-vmmouse</append>
       </match>
+      <match key="freebsd.driver" contains="psm">
+        <append key="info.callouts.add" type="strlist">hal-probe-vmmouse</append>
+      </match>
     </match>
   </device>
 </deviceinfo>
