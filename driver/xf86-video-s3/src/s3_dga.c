@@ -82,15 +82,15 @@ static DGAModePtr S3SetupDGAMode(ScrnInfoPtr pScrn, DGAModePtr modes,
 		otherPitch = secondPitch ? secondPitch : pMode->HDisplay;
 
 		if (pMode->HDisplay != otherPitch) {
-			newmodes = xrealloc(modes, (*num + 2) * sizeof(DGAModeRec));
+			newmodes = realloc(modes, (*num + 2) * sizeof(DGAModeRec));
 			oneMore = TRUE;
 		} else {
-			newmodes = xrealloc(modes, (*num + 1) * sizeof(DGAModeRec));
+			newmodes = realloc(modes, (*num + 1) * sizeof(DGAModeRec));
 			oneMore = FALSE;
 		}
 
 		if (!newmodes) {
-			xfree(modes);
+			free(modes);
 			return NULL;
 		}
 

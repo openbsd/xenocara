@@ -237,10 +237,7 @@ static Bool S3GetRec(ScrnInfoPtr pScrn)
                         
 static void S3FreeRec(ScrnInfoPtr pScrn)
 {
-        if (!pScrn->driverPrivate)
-                return;
-
-        xfree(pScrn->driverPrivate);
+        free(pScrn->driverPrivate);
         pScrn->driverPrivate = NULL;
 }
 
@@ -271,7 +268,7 @@ static Bool S3Probe(DriverPtr drv, int flags)
 					devSections, numDevSections,
 					drv, &usedChips);
 
-	xfree(devSections);
+	free(devSections);
 
 	if (numUsed <= 0)
 		return FALSE;
@@ -298,7 +295,7 @@ static Bool S3Probe(DriverPtr drv, int flags)
 		foundScreen = TRUE;
         }
                 
-        xfree(usedChips);
+        free(usedChips);
                 
         return foundScreen;
 }
@@ -309,6 +306,7 @@ static Bool S3PreInit(ScrnInfoPtr pScrn, int flags)
 	S3Ptr pS3;
 	vgaHWPtr hwp;
 	ClockRangePtr clockRanges;
+	vbeInfoPtr pVBE;
 	rgb zeros = {0, 0, 0};
 	Gamma gzeros = {0.0, 0.0, 0.0};
 	int i, vgaCRIndex, vgaCRReg;
@@ -325,6 +323,7 @@ static Bool S3PreInit(ScrnInfoPtr pScrn, int flags)
                 return FALSE;
         
         hwp = VGAHWPTR(pScrn);
+	vgaHWSetStdFuncs(hwp);
         vgaHWGetIOBase(hwp);
         
         pScrn->monitor = pScrn->confScreen->monitor;
@@ -425,7 +424,7 @@ static Bool S3PreInit(ScrnInfoPtr pScrn, int flags)
         pEnt = xf86GetEntityInfo(pScrn->entityList[0]);
 #ifndef XSERVER_LIBPCIACCESS
         if (pEnt->resources) {
-                xfree(pEnt);
+                free(pEnt);
                 S3FreeRec(pScrn);
                 return FALSE;
         }
@@ -436,9 +435,19 @@ static Bool S3PreInit(ScrnInfoPtr pScrn, int flags)
 	}
 
 	if (xf86LoadSubModule(pScrn, "vbe")) {
-		pS3->pVBE = VBEInit(pS3->pInt10, pEnt->index);
+		pVBE = VBEInit(pS3->pInt10, pEnt->index);
+		vbeFree(pVBE);
 	}
 	
+	xf86LoadSubModule(pScrn, "fb");
+
+	if (!xf86LoadSubModule(pScrn, "xaa")) {
+		xf86DrvMsg(pScrn->scrnIndex, X_INFO,
+			   "Falling back to shadowfb\n");
+		pS3->NoAccel = TRUE;
+		pS3->shadowFB = TRUE;
+	}
+
 	if (pS3->shadowFB) {
 		if (!xf86LoadSubModule(pScrn, "shadowfb")) {
 			S3FreeRec(pScrn);
@@ -475,7 +484,7 @@ static Bool S3PreInit(ScrnInfoPtr pScrn, int flags)
         } else
 	        pS3->ChipRev = PCI_DEV_REVISION(pS3->PciInfo);
         
-        xfree(pEnt);
+        free(pEnt);
         
         xf86DrvMsg(pScrn->scrnIndex, X_CONFIG, "Chipset: \"%s\"\n", 
 		   pScrn->chipset);
@@ -726,11 +735,6 @@ static Bool S3PreInit(ScrnInfoPtr pScrn, int flags)
         xf86PrintModes(pScrn);
         xf86SetDpi(pScrn, 0, 0);
  
-        xf86LoadSubModule(pScrn, "fb");
-
-	if (!xf86LoadSubModule(pScrn, "xaa"))
-		return FALSE;
-
 	return TRUE;
 }
 
@@ -788,7 +792,7 @@ static Bool S3ScreenInit(int scrnIndex, ScreenPtr pScreen, int argc,
         /* no screen rotation assumed */
         if(pS3->shadowFB) {
         	pS3->ShadowPitch = BitmapBytePad(pScrn->bitsPerPixel * width);
-        	pS3->ShadowPtr = xalloc(pS3->ShadowPitch * height);
+        	pS3->ShadowPtr = malloc(pS3->ShadowPitch * height);
 		displayWidth = pS3->ShadowPitch / (pScrn->bitsPerPixel >> 3);
         } else {
         	pS3->ShadowPtr = NULL;
@@ -1098,8 +1102,7 @@ Bool S3CloseScreen(int scrnIndex, ScreenPtr pScreen)
                 S3UnmapMem(pScrn);
         }
 
-	if (pS3->DGAModes)
-		xfree(pS3->DGAModes);
+	free(pS3->DGAModes);
 	pS3->DGAModes = NULL;
 
         pScrn->vtSema = FALSE;

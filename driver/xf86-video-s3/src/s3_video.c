@@ -79,7 +79,7 @@ void S3InitVideo(ScreenPtr pScreen)
             		adaptors = &newAdaptor;
         	} else {
             		newAdaptors =  /* need to free this someplace */
-                		xalloc((num_adaptors + 1) * sizeof(XF86VideoAdaptorPtr*));   
+                		malloc((num_adaptors + 1) * sizeof(XF86VideoAdaptorPtr*));   
             		if(newAdaptors) {
                 		memcpy(newAdaptors, adaptors, num_adaptors *
                                        sizeof(XF86VideoAdaptorPtr));
@@ -93,8 +93,7 @@ void S3InitVideo(ScreenPtr pScreen)
     	if(num_adaptors)
         	xf86XVScreenInit(pScreen, adaptors, num_adaptors);
             
-    	if(newAdaptors)
-        	xfree(newAdaptors);
+        free(newAdaptors);
 }
 
 
@@ -211,10 +210,10 @@ static XF86VideoAdaptorPtr S3AllocAdaptor(ScrnInfoPtr pScrn)
     	if(!(adapt = xf86XVAllocateVideoAdaptorRec(pScrn)))
         	return NULL;
    
-    	if(!(pPriv = xcalloc(1, sizeof(S3PortPrivRec)  +
+    	if(!(pPriv = calloc(1, sizeof(S3PortPrivRec)  +
 			     (sizeof(DevUnion) * S3_MAX_PORTS))))
     	{
-        	xfree(adapt);
+        	free(adapt);
         	return NULL;
     	}
     
@@ -244,6 +243,8 @@ static XF86VideoAdaptorPtr S3SetupImageVideoOverlay(ScreenPtr pScreen)
 	XF86VideoAdaptorPtr adapt;
 
 	adapt = S3AllocAdaptor(pScrn);
+	if (adapt == NULL)
+		return NULL;
 
     	adapt->type = XvWindowMask | XvInputMask | XvImageMask;
     	adapt->flags = VIDEO_OVERLAID_IMAGES | VIDEO_CLIP_TO_VIEWPORT;

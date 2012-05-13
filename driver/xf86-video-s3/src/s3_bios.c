@@ -45,7 +45,7 @@ static unsigned char *find_bios_string(ScrnInfoPtr pScrn, int BIOSbase,
 
 	S3Ptr pS3 = S3PTR(pScrn);
 
-	bios = xalloc(BIOS_BSIZE);
+	bios = malloc(BIOS_BSIZE);
 	if (bios = NULL)
 		return NULL;
 
@@ -86,7 +86,7 @@ static unsigned char *find_bios_string(ScrnInfoPtr pScrn, int BIOSbase,
 						return &bios[j+l2];
 		}
 error:
-	xfree(bios);
+	free(bios);
 	return NULL;
 }
 

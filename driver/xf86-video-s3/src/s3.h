@@ -113,7 +113,6 @@ typedef struct _S3Rec {
         XAAInfoRecPtr           pXAA;
 	xf86CursorInfoPtr	pCurs;
 	xf86Int10InfoPtr	pInt10;
-	vbeInfoPtr		pVBE;
         XF86VideoAdaptorPtr     adaptor;
         S3PortPrivPtr           portPrivate;
 
