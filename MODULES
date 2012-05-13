@@ -1,4 +1,4 @@
-# $OpenBSD: MODULES,v 1.214 2012/05/02 19:58:01 matthieu Exp $
+# $OpenBSD: MODULES,v 1.215 2012/05/13 20:51:13 matthieu Exp $
 #
 # X.Org maintained modules
 #
@@ -97,38 +97,38 @@ driver/xf86-input-keyboard	1.6.1	7.7
 driver/xf86-input-mouse		1.7.2	7.7
 driver/xf86-input-mutouch	1.3.0	7.7
 driver/xf86-input-penmount	1.5.0	7.7
-driver/xf86-input-synaptics	1.5.2	7.7
-driver/xf86-input-vmmouse	12.8.0	7.7	needs-update
+driver/xf86-input-synaptics	1.6.1	7.7	needs-update
+driver/xf86-input-vmmouse	12.8.0	7.7
 driver/xf86-input-void		1.4.0	7.7
-driver/xf86-video-apm		1.2.3	7.6
-driver/xf86-video-ark		0.7.4	7.7	needs-update*
+driver/xf86-video-apm		1.2.4	7.7
+driver/xf86-video-ark		0.7.4	7.7
 driver/xf86-video-ati		6.14.4	7.7	needs-update
 driver/xf86-video-chips		1.2.4	7.7
-driver/xf86-video-cirrus	1.4.0	7.7	needs-update
+driver/xf86-video-cirrus	1.4.0	7.7
 driver/xf86-video-dummy		0.3.5	7.7
 driver/xf86-video-geode		2.11.13	7.7
 driver/xf86-video-glint		1.2.7	7.7	needs-update
 driver/xf86-video-i128		1.3.5	7.7	needs-update
-driver/xf86-video-i740		1.3.2	7.4+
-driver/xf86-video-intel		2.18.0	7.6	needs-update
+driver/xf86-video-i740		1.3.3	7.7
+driver/xf86-video-intel		2.19.0	7.7	needs-update
 driver/xf86-video-mach64	6.9.1	7.7	needs-update
 driver/xf86-video-mga		1.5.0	7.7	needs-update
-driver/xf86-video-neomagic	1.2.6	7.7	needs-update
+driver/xf86-video-neomagic	1.2.6	7.7
 driver/xf86-video-nv		2.1.18	7.6
 driver/xf86-video-openchrome	0.2.905	7.7	needs-update
 driver/xf86-video-r128		6.8.2	7.7
 driver/xf86-video-rendition	4.2.4	7.5+
-driver/xf86-video-s3		0.6.3	7.4+
-driver/xf86-video-s3virge	1.10.4	7.4+
-driver/xf86-video-savage	2.3.4	7.7	needs-update
-driver/xf86-video-siliconmotion	1.7.6	7.7	needs-update
-driver/xf86-video-sis		0.10.4	7.7	needs-update
+driver/xf86-video-s3		0.6.4	7.7
+driver/xf86-video-s3virge	1.10.5	7.7
+driver/xf86-video-savage	2.3.4	7.7
+driver/xf86-video-siliconmotion	1.7.6	7.7
+driver/xf86-video-sis		0.10.4	7.7
 driver/xf86-video-sunffb	1.2.1	7.4+
-driver/xf86-video-tdfx		1.4.4	7.7	needs-update
-driver/xf86-video-trident	1.3.5	7.7	needs-update
+driver/xf86-video-tdfx		1.4.4	7.7
+driver/xf86-video-trident	1.3.5	7.7
 driver/xf86-video-tseng		1.2.4	7.5+
-driver/xf86-video-vesa		2.3.1	7.7	needs-update
-driver/xf86-video-vmware	12.0.2	7.7	needs-update
+driver/xf86-video-vesa		2.3.1	7.7
+driver/xf86-video-vmware	12.0.2	7.7
 driver/xf86-video-voodoo	1.2.4	7.5+
 driver/xf86-video-wsfb		0.4.0	7.7
 
@@ -187,7 +187,7 @@ lib/libXfixes			5.0	7.7
 lib/libXfont			1.4.5	7.7
 lib/libXfontcache		1.0.5	7.5
 lib/libXft			2.3.0	7.7
-lib/libXi			1.6.0	7.7	needs-update
+lib/libXi			1.6.1	7.7	needs-update
 lib/libXinerama			1.1.2	7.7
 lib/libXmu			1.1.1	7.7
 lib/libXpm			3.5.10	7.7
