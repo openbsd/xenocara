@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: calmwm.c,v 1.59 2011/09/08 12:35:33 okan Exp $
+ * $OpenBSD: calmwm.c,v 1.60 2012/05/13 15:15:54 okan Exp $
  */
 
 #include <sys/param.h>
@@ -159,6 +159,7 @@ x_setupscreen(struct screen_ctx *sc, u_int which)
 	XSetWindowAttributes	 rootattr;
 	int			 fake;
 	u_int			 nwins, i;
+
 	sc->which = which;
 	sc->rootwin = RootWindow(X_Dpy, sc->which);
 
@@ -221,6 +222,7 @@ x_wmerrorhandler(Display *dpy, XErrorEvent *e)
 
 	return (0);
 }
+
 static int
 x_errorhandler(Display *dpy, XErrorEvent *e)
 {

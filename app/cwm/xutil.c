@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: xutil.c,v 1.37 2011/07/25 15:10:24 okan Exp $
+ * $OpenBSD: xutil.c,v 1.38 2012/05/13 15:15:54 okan Exp $
  */
 
 #include <sys/param.h>
@@ -292,10 +292,10 @@ xu_getcolor(struct screen_ctx *sc, char *name)
 	if (!XAllocNamedColor(X_Dpy, DefaultColormap(X_Dpy, sc->which),
 	    name, &color, &tmp)) {
 		warnx("XAllocNamedColor error: '%s'", name);
-		return 0;
+		return (0);
 	}
 
-	return color.pixel;
+	return (color.pixel);
 }
 
 void

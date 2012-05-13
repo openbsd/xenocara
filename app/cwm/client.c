@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: client.c,v 1.91 2011/09/13 08:41:57 okan Exp $
+ * $OpenBSD: client.c,v 1.92 2012/05/13 15:15:54 okan Exp $
  */
 
 #include <sys/param.h>
@@ -394,7 +394,7 @@ client_horizmaximize(struct client_ctx *cc)
 			cc->geom.height -= cc->bwidth * 2;
 		cc->flags &= ~CLIENT_HMAXIMIZED;
 		goto resize;
-	} 
+	}
 
 	cc->savegeom.x = cc->geom.x;
 	cc->savegeom.width = cc->geom.width;
@@ -613,7 +613,8 @@ client_cycle(struct screen_ctx *sc, int flags)
 		return;
 
 	if (oldcc == NULL)
-		oldcc = (flags & CWM_RCYCLE ? TAILQ_LAST(&sc->mruq, cycle_entry_q) :
+		oldcc = (flags & CWM_RCYCLE ? 
+		    TAILQ_LAST(&sc->mruq, cycle_entry_q) :
 		    TAILQ_FIRST(&sc->mruq));
 
 	newcc = oldcc;
@@ -792,6 +793,7 @@ client_getsizehints(struct client_ctx *cc)
 			    cc->size->max_aspect.y;
 	}
 }
+
 void
 client_applysizehints(struct client_ctx *cc)
 {
@@ -911,13 +913,13 @@ client_snapcalc(int n, int dn, int nmax, int bwidth, int snapdist)
 	/* possible to snap in both directions */
 	if (s0 != 0 && s1 != 0)
 		if (abs(s0) < abs(s1))
-			return s0;
+			return (s0);
 		else
-			return s1;
+			return (s1);
 	else if (s0 != 0)
-		return s0;
+		return (s0);
 	else if (s1 != 0)
-		return s1;
+		return (s1);
 	else
-		return 0;
+		return (0);
 }
