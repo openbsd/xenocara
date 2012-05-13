@@ -150,61 +150,60 @@
          EndSection
 
 
-  or let xorgconfig do this for you.
 
   However, if you have problems with auto-detection, you can specify:
 
-  +o  VideoRam - in kilobytes
+  o  VideoRam - in kilobytes
 
-  +o  DacSpeed - in MHz
+  o  DacSpeed - in MHz
 
-  +o  MemBase  - physical address of the linear framebuffer
+  o  MemBase - physical address of the linear framebuffer
 
-  +o  IOBase   - physical address of the memory mapped IO registers
-
-
-
-  [1m6.  Driver Options[0m
+  o  IOBase - physical address of the memory mapped IO registers
 
 
-  +o  "NoAccel"  - Turn off hardware acceleration
 
-  +o  "SWCursor" - Request a software cursor (hardware is default)
+  6.  Driver Options
 
-  +o  "SDRAM"    - Force the use of SDRAM timings
 
-  +o  "SGRAM"    - Force the use of SGRAM timings
+  o  "NoAccel" - Turn off hardware acceleration
 
-  +o  "SlowRam"  - Force the use of slower ram timings
+  o  "SWCursor" - Request a software cursor (hardware is default)
 
-  +o  "Dac6Bit"  - Force the use of a 6 Bit Dac (8 Bit is the default)
+  o  "SDRAM" - Force the use of SDRAM timings
 
-  +o  "UsePIO    - Force the use of programmed IO (Memory mapped is the
+  o  "SGRAM" - Force the use of SGRAM timings
+
+  o  "SlowRam" - Force the use of slower ram timings
+
+  o  "Dac6Bit" - Force the use of a 6 Bit Dac (8 Bit is the default)
+
+  o  "UsePIO - Force the use of programmed IO (Memory mapped is the
      default)
 
   Note: the i740 X server should automatically detect whether your card
-  has SGRAM or SDRAM.  Use the "sgram" and "sdram" options if it is
+  has SGRAM or SDRAM. Use the "sgram" and "sdram" options if it is
   incorrectly detected.
 
 
 
-  [1m7.  Known Limitations[0m
+  7.  Known Limitations
 
 
-  +o  Certain drawing operations are very slow when using 24 bit pixel
+  o  Certain drawing operations are very slow when using 24 bit pixel
      depth mode.
 
 
 
-  [1m8.  Author[0m
+  8.  Author
 
 
-  +o  Original version by Kevin E Martin <kevin@precisioninsight.com>
+  o  Original version by Kevin E Martin
+     <mailto:kevin@precisioninsight.com>
 
-  +o  Daryll Strauss  <daryll@precisioninsight.com>
+  o  Daryll Strauss  <mailto:daryll@precisioninsight.com>
 
-  The X11R6.8 version of this driver originally came from XFree86 4.4
-  rc2.
+  The Xorg version of this driver originally came from XFree86 4.4 rc2.
 
   The XFree86 version of this driver was donated to The XFree86 Project
   by:
