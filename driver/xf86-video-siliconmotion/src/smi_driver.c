@@ -442,7 +442,12 @@ SMI_PreInit(ScrnInfoPtr pScrn, int flags)
 	    LEAVE(FALSE);
 
 	hwp = VGAHWPTR(pScrn);
+	vgaHWSetStdFuncs(hwp);
+#if GET_ABI_MAJOR(ABI_VIDEODRV_VERSION) < 12
 	pSmi->PIOBase = hwp->PIOOffset;
+#else
+	pSmi->PIOBase = 0;
+#endif
 
 	xf86ErrorFVerb(VERBLEV, "\tSMI_PreInit vgaCRIndex=%x, vgaIOBase=%x, "
 		       "MMIOBase=%p\n", hwp->IOBase + VGA_CRTC_INDEX_OFFSET,
@@ -875,8 +880,8 @@ SMI_PreInit(ScrnInfoPtr pScrn, int flags)
     if (!pSmi->NoAccel) {
 	if (!pSmi->useEXA) {
 	    if (!xf86LoadSubModule(pScrn, "xaa")) {
-		SMI_FreeRec(pScrn);
-		LEAVE(FALSE);
+		xf86DrvMsg(pScrn->scrnIndex, X_WARNING, "No acceleration\n");
+		pSmi->NoAccel = 1;
 	    }
 	} else {
 	    XF86ModReqInfo req;

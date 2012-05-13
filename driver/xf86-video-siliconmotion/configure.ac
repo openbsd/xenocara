@@ -23,8 +23,8 @@
 # Initialize Autoconf
 AC_PREREQ([2.60])
 AC_INIT([xf86-video-siliconmotion],
-        [1.7.5],
-        [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],
+        [1.7.6],
+        [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg&component=Driver/siliconmotion],
         [xf86-video-siliconmotion])
 
 # Require X.Org macros 1.8 or later for MAN_SUBSTS set by XORG_MANPAGE_SECTIONS
@@ -55,8 +55,6 @@ AC_ARG_WITH(xorg-module-dir,
             [moduledir="$libdir/xorg/modules"])
 
 # Store the list of server defined optional extensions in REQUIRED_MODULES
-XORG_DRIVER_CHECK_EXT(RANDR, randrproto)
-XORG_DRIVER_CHECK_EXT(RENDER, renderproto)
 XORG_DRIVER_CHECK_EXT(XV, videoproto)
 XORG_DRIVER_CHECK_EXT(DPMSExtension, xextproto)
 

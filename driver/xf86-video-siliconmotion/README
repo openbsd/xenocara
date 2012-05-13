@@ -7,7 +7,7 @@ Xorg mailing list:
 
 Please submit bug reports to the Xorg bugzilla:
 
-        https://bugs.freedesktop.org/enter_bug.cgi?product=xorg
+        https://bugs.freedesktop.org/enter_bug.cgi?product=xorg&component=Driver/siliconmotion
 
 The master development code repository can be found at:
 
