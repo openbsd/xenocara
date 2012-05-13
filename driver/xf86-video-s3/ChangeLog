@@ -1,133 +1,754 @@
-2009-06-25  Evgeny M. zubok <evgeny.zubok@tochka.ru>
+commit ba2e11464f17ba17d65214e0344422a5b00b1acb
+Author: Julien Cristau <jcristau@debian.org>
+Date:   Sat May 12 13:50:32 2012 +0200
 
-	* src/s3_driver.c:
-	Revert the old behaviour when the BIOS settings are used for
-	intialization of DRAM/VRAM timings, i. e. we don't touch the
-	timings during initialization phase until any memory option (like
-	slow_edodram) is specified.
-	
-	Add manual page.	
+    xf86-video-s3 0.6.4
 
-2009-05-25  Evgeny M. Zubok <evgeny.zubok@tochka.ru>
-	
-	* src/s3_driver.c:
-	* src/s3_video.c:
-	
-	Enable Xv extension for Trio64V+ (thanks to Egor Ivanov for 
-	testing on real hardware) and Trio64UV+ (Tested only on Trio64V2 by
-	overriding Chipset with "Trio64UV+" but not on real hardware).
+commit 6a8cead012e36c9e709f0198af17a94dfae17048
+Author: Julien Cristau <jcristau@debian.org>
+Date:   Sat May 12 13:47:36 2012 +0200
 
-	S3 Trio64V+ now using NewMMIO. Trio64V+ chips have the same ChipId
-	as Trio32/64 but only with chip revision greater or eq 0x40. So if 
-	you have problems with NewMMIO, you may override ChipRev in "Device" 
- 	section of your xorg.conf: "ChipRev" 0x00. Note: disabling the NewMMIO 
-	also disables overlay video (Xv) because it isn't implemented for
-	Old MMIO yet.
-	
-2009-05-04  Evgeny M. Zubok <evgeny.zubok@tochka.ru>
+    Include unistd.h for usleep
+    
+    Signed-off-by: Julien Cristau <jcristau@debian.org>
 
-	* src/s3_driver.c:
-	* src/s3_shadow.c:
+commit db87c42485f7748a7a5ccdc94f4fc6065766bd0f
+Author: Julien Cristau <jcristau@debian.org>
+Date:   Sat May 12 13:44:58 2012 +0200
 
-	Add shadowFB option. It can be used to speedup drawing when
-	hardware acceleration is undesirable or unavailable (for colour depth
-	24 with 24 bpp framebuffer, for example). shadowFB is disabled by
-	default. Enabling shadowFB option disables HW acceleration. Thanks
-	to Egor Ivanov for initial porting of shadowFB from s3virge.
+    Use standard allocation functions
+    
+    Signed-off-by: Julien Cristau <jcristau@debian.org>
 
-	Interlace mode support.
+commit fb368727b9251b23f937a6432946dd376a153e27
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Dec 28 20:04:22 2011 -0800
 
-	Close bug #14999.
-	
-2008-07-06  Evgeny M. Zubok <evgeny.zubok@tochka.ru>
+    If it couldn't allocate memory, don't attempt to write a bunch of values
+    to the NULL pointer before returning it, but just pass the NULL along
+    right away.
+    
+    Resolves parfait warnings of the form:
+    
+    Error: Null pointer dereference (CWE 476)
+       Write to null pointer 'adapt'
+            at line 248 of driver/xf86-video-s3/src/s3_video.c in function 'S3SetupImageVideoOverlay'.
+              Function 'S3AllocAdaptor' may return constant 'NULL' at line 218, called at line 246.
+              Null pointer introduced at line 218 in function 'S3AllocAdaptor'.
+    
+    repeated for every line writing to the adapt pointer in the function.
+    
+    [ This bug was found by the Parfait 0.4.2 bug checking tool.
+      For more information see http://labs.oracle.com/projects/parfait/ ]
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
 
-	* src/s3_video.c: 
+commit e5c1c27b83e93d9cb2a74c7c4ee85b36eb1bbdef
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Mon Dec 19 17:17:28 2011 -0500
 
-	Streams Processor initialization.
+    Fix for new vgahw ABI
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
 
-	XVideo support for 16, 24 and 32 bpp (only for TRIO64V2).
+commit 1aa3e0413bcf89734083649c2057fc4065c8348d
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Mon Dec 19 17:16:44 2011 -0500
 
-	* src/s3_driver.c: 
+    Fall back to shadowfb if XAA is unavailable
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
 
-	Add XVideo option (enabled by default).
+commit 381ace93a17da291d4149fe0f98ee4b7386f67ee
+Author: Matt Turner <mattst88@gmail.com>
+Date:   Thu Dec 2 17:09:46 2010 -0500
 
-	Replace "swcursor" by "hwcursor" option (HW cursor 
-	not implemented yet for all chipsets).
+    Add missing call to vbeFree (bug 4417)
+    
+    Reviewed-by: Adam Jackson <ajax@redhat.com>
+    Signed-off-by: Matt Turner <mattst88@gmail.com>
 
-	Close bug #5527: 24-bit colour depth support (24bpp and 
-	32bpp framebuffer) for TRIOs. Acceleration doesn't work
-	with packed colour mode (24 bpp FB) but works with 32bpp 
-	framebuffer mode (hardware limitation? -- need data).
+commit bc10d3acae50db1303a5255c9211a9963a7f60ff
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Fri Jul 23 20:54:56 2010 -0400
 
-	Fix system hang-up when switching between console and X session.
+    config: add AM_PROG_CC_C_O for per-target compilation flags
+    
+    The use of per-target compilation flags with C sources requires
+    that the macro AM_PROG_CC_C_O be called from configure.ac
+    
+    If the C compiler does not accept the -c and -o options simultaneously,
+    define NO_MINUS_C_MINUS_O. This macro actually tests both the compiler
+    found by AC_PROG_CC, and, if different, the first cc in the path.
+    The test fails if one fails. This macro was created for GNU Make
+    to choose the default C compilation rule.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
 
-	Some minor changes of driver messages.
+commit eb2677eaa2880e99f3b731d45dab5274bda4cb99
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jul 21 16:49:04 2010 -0400
 
-2008-02-23  Evgeny M. Zubok <evgeny.zubok@tochka.ru>
+    config: add comments for main statements
 
-	* src/s3_driver.c: Add DPMS support for S3 Trio64V2 and possibly
-	others (need testing): S3 Trio64UV+. S3 Aurora64V+ and S3 Trio32/64
-	* src/s3_Trio64DAC: Change clocks for S3 Trio64V2 to make
-	the 1024x768@16bpp mode work.
-	Thanks to Richard Driscoll for these patches.
-	
-2006-04-07  Adam Jackson  <ajax@freedesktop.org>
+commit edd93140a9330c886761b2207bdb2ca1d5c6a170
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jul 21 16:07:00 2010 -0400
 
-	* configure.ac:
-	* src/s3.h:
-	Bump to 0.4.1 for Xv changes.
+    config: replace deprecated use of AC_OUTPUT with AC_CONFIG_FILES
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
 
-2006-04-07  Aaron Plattner  <aplattner@nvidia.com>
+commit 4fd39e6c68fe735d0a16a66267461472d78c15a7
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jul 21 14:37:41 2010 -0400
 
-	* src/s3_video.c: (S3PutImage):
-	Add a DrawablePtr argument to the XV functions to pave the way for
-	redirected video.
+    config: replace deprecated AC_HELP_STRING with AS_HELP_STRING
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
 
-2006-04-07  Adam Jackson  <ajax@freedesktop.org>
+commit 9e7e206334067b708d0c0d31f218309da9dbbb1e
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jul 21 14:05:23 2010 -0400
 
-	* configure.ac:
-	* src/s3.h:
-	* src/s3_IBMRGB.c:
-	* src/s3_Ti.c:
-	* src/s3_Trio64DAC.c:
-	* src/s3_bios.c:
-	* src/s3_cursor.c:
-	* src/s3_dga.c:
-	* src/s3_driver.c:
-	* src/s3_video.c:
-	Unlibcwrap.  Bump server version requirement.  Bump to 0.4.0.
+    config: replace deprecated AM_CONFIG_HEADER with AC_CONFIG_HEADERS
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
 
-2005-12-20  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+commit 2852a8d1c587a473f1ba341458c0f97a2d494cb7
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jul 21 09:27:42 2010 -0400
 
-	* configure.ac:
-	Update package version for X11R7 release.
+    config: complete AC_INIT m4 quoting
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
 
-2005-12-14  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+commit d96305aee294efafb98cab1bf087791c1f87de20
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Jul 20 21:44:58 2010 -0400
 
-	* configure.ac:
-	Update package version number for final X11R7 release candidate.
+    config: remove unrequired AC_SUBST([XORG_CFLAGS])
+    
+    This macro is called by PKG_CHECK_MODULES
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
 
-2005-12-03  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+commit bfa6c1607bab7d04aba747fc964608bc97ca43b4
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Jul 20 20:24:42 2010 -0400
 
-	* configure.ac:
-	Update package version number for X11R7 RC3 release.
+    config: remove unrequired AC_HEADER_STDC
+    
+    Autoconf says:
+    "This macro is obsolescent, as current systems have conforming
+    header files. New programs need not use this macro".
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
 
-2005-12-01  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+commit 651282bbe144e094ce342a2433d8e2e0d2f96277
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Jul 20 19:41:31 2010 -0400
 
-	* configure.ac:
-	Remove extraneous AC_MSG_RESULT.
+    config: remove AC_PROG_CC as it overrides AC_PROG_C_C99
+    
+    XORG_STRICT_OPTION from XORG_DEFAULT_OPTIONS calls
+    AC_PROG_C_C99. This sets gcc with -std=gnu99.
+    If AC_PROG_CC macro is called afterwards, it resets CC to gcc.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
 
-2005-11-29  Adam Jackson  <ajax@freedesktop.org>
+commit 0021ca4e9594eaf6cf7843bbbe34caedc5d66989
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Jul 20 18:45:19 2010 -0400
 
-	* configure.ac:
-	Only build dlloader modules by default.
+    config: update AC_PREREQ statement to 2.60
+    
+    Unrelated to the previous patches, the new value simply reflects
+    the reality that the minimum level for autoconf to configure
+    all x.org modules is 2.60 dated June 2006.
+    
+    ftp://ftp.gnu.org/gnu/autoconf/autoconf-2.60.tar.gz
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
 
-2005-11-09  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+commit 51294ed2c413c6d64e88b099324e6027832fbe21
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Jul 20 16:15:29 2010 -0400
 
-	* configure.ac:
-	Update package version number for X11R7 RC2 release.
+    config: upgrade to util-macros 1.8 for additional man page support
+    
+    Use MAN_SUBST now supplied in XORG_MANPAGE_SECTIONS
+    The value of MAN_SUBST is the same for all X.Org packages.
 
-2005-11-01  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+commit 798a0017ebd8078a9e0be0c4571675c8056f1100
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Jun 13 10:18:36 2010 -0400
 
-	* configure.ac:
-	Update pkgcheck dependencies to work with separate build roots.
+    COPYING: replace stub file with actual Copyright notices.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 36776d8ab030d2c139a099ea6f7d39d1005faef3
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Fri Jan 29 16:11:25 2010 -0500
+
+    config: remove dead LINUXDOC macro usage
+    
+    This module does not generate LINUXDOC documentation.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 9d61ff1212e0ddaf89d9ce10f738f42fa08c5e9b
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Fri Jan 15 13:55:12 2010 -0800
+
+    Update Sun license notices to current X.Org standard form
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit 5d147f161c47e8eab97a6b4e9973000739dec7ef
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Dec 15 22:01:02 2009 -0500
+
+    configure.ac: remove unused sdkdir=$(pkg-config...) statement
+    
+    The sdkdir variable isn't use, so remove the statement.
+    
+    Acked-by: Dan Nicholson <dbn.lists@gmail.com>
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit cf940ced9d927d811c5d6babfc8e8f290d30c28c
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Nov 23 09:25:05 2009 -0500
+
+    Makefile.am: add ChangeLog and INSTALL on MAINTAINERCLEANFILES
+    
+    Now that the INSTALL file is generated.
+    Allows running make maintainer-clean.
+
+commit 2585a89902107be3bae5c38c9c8f5b0c18a46866
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Oct 28 17:10:47 2009 -0400
+
+    Remove .cvsignore #23776
+    
+    X.Org no longer use CVS
+
+commit a54a582f68477386f01e67c0753fce1b93cdc777
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Oct 28 14:41:41 2009 -0400
+
+    INSTALL, NEWS, README or AUTHORS files are missing/incorrect #24206
+    
+    Automake 'foreign' option is specified in configure.ac.
+    Remove from Makefile.am
+
+commit 43e7114b140a97279d556cb6ec0a631df488dae1
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Oct 28 14:09:09 2009 -0400
+
+    INSTALL, NEWS, README or AUTHORS files are missing/incorrect #24206
+    
+    Add missing INSTALL file. Use standard GNU file on building tarball
+    README may have been updated
+    Remove AUTHORS file as it is empty and no content available yet.
+    Remove NEWS file as it is empty and no content available yet.
+
+commit 152368af1ed13e566a91880e8b123803fdef040d
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Oct 26 12:54:22 2009 -0400
+
+    Several driver modules do not have a ChangeLog target in Makefile.am #23814
+    
+    The git generated ChangeLog replaces the hand written one.
+    Update configure.ac to xorg-macros level 1.3.
+    Use XORG_DEFAULT_OPTIONS which replaces four XORG_* macros
+    Update Makefile.am to add ChangeLog target if missing
+    Remove ChangeLog from EXTRA_DIST or *CLEAN variables
+    This is a pre-req for the INSTALL_CMD
+
+commit b3bcda3cc69641a216f32fb764c61c242423d00c
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Oct 22 12:34:18 2009 -0400
+
+    .gitignore: use common defaults with custom section # 24239
+    
+    Using common defaults will reduce errors and maintenance.
+    Only the very small or inexistent custom section need periodic maintenance
+    when the structure of the component changes. Do not edit defaults.
+
+commit d096fd94d8064a08895d34f978830240bfdc9616
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Thu Jul 30 12:04:29 2009 +1000
+
+    s3: bump for release 0.6.3
+
+commit 3e974443b5b2906d1b82b7c27c83062715f925e9
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Tue Jul 28 15:22:41 2009 +1000
+
+    s3: change to using ABI version check
+
+commit f047dffb193ffc52a358bfb0a3ae595acf4726b2
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Tue Jul 28 10:49:36 2009 +1000
+
+    s3: fixup resources under pci access
+
+commit b8d3e448a8debbc2c77dee8e590a564a010ede59
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Tue Jul 28 10:48:48 2009 +1000
+
+    s3: remove unneeded include
+
+commit c5c69f9de5d11fd2cadc4ccf00bcf2e8cf65f2eb
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Tue Jul 28 10:03:14 2009 +1000
+
+    s3: switch to using config pci entity instead of active
+
+commit c41a1188ce53b8975e6d5c34c54a77a3f3c291bc
+Author: Adam Hoka <ahoka@NetBSD.org>
+Date:   Sun Jul 5 22:01:46 2009 +0200
+
+    Handle libpciaccess errors more gently and report any problems
+    encountered in Xorg.log (server crash versus log entry).
+    
+    This fixes PR 22510.  Report and fix by Adam Hoka <ahoka@NetBSD.org>,
+    many thanks.
+    
+    Reviewed-by: Matthieu Herrb <herrb@laas.fr>
+    Signed-off-by: Marc Balmer <marc@msys.ch>
+
+commit aa955eda7b6fddd12b163ee66367ecc998f82ae0
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Thu Jul 2 11:33:54 2009 -0400
+
+    s3 0.6.2
+
+commit 2b83d07b90efd15756cf8c4c80f7f60c0e7cee2a
+Author: Evgeny M. Zubok <evgeny.zubok@tochka.ru>
+Date:   Thu Jun 25 19:48:34 2009 +0400
+
+    Revert the using of BIOS defaults for the VRAM/DRAM timings
+
+commit bf6bdcc1220f3ed8c636e869c4b13e27923a139e
+Author: Evgeny M. Zubok <evgeny.zubok@tochka.ru>
+Date:   Thu Jun 25 01:57:06 2009 +0400
+
+    Add manual page.
+
+commit 003d36e18e32b656c1dc309c5238fa5b4804c58e
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Thu May 28 15:14:38 2009 -0400
+
+    Remove useless loader symbol lists.
+
+commit 061d5f51141323ea2f4e8e597e3d4bd7e3b7cbfa
+Author: Evgeny M. Zubok <evgeny.zubok@tochka.ru>
+Date:   Mon May 25 14:34:27 2009 +0400
+
+    Trio64V+ now using NewMMIO. Enable Xv for Trio64V+ and Trio64UV+
+
+commit a1d6d9bec68c3bf47af69b73c875836bc46db3a1
+Author: Evgeny M. Zubok <evgeny.zubok@tochka.ru>
+Date:   Mon May 4 15:10:17 2009 +0400
+
+    shadowFB option. Interlace mode support. Close bug #14999.
+
+commit dd2e8e7a5f0bbb0f6fc3cb32161a0024545179bc
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Wed Apr 29 18:48:52 2009 -0700
+
+    Raise minimum xorg-server required to 1.4 for miGetPointerPosition
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit 1fdb00594ed3ea18cb24e19f23813e9cc495fda3
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Fri Jan 30 20:59:25 2009 -0800
+
+    Add README with pointers to mailing list, bugzilla & git repos
+
+commit 695868128746b7d8545fd78d1c42ebc2eac00a75
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Mon Dec 22 15:30:39 2008 +1000
+
+    s3: fix build by including inputstr.h
+
+commit 51e77345fdb5423db233f26d6af4af36887c7059
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Mon Dec 22 15:25:45 2008 +1000
+
+    s3 0.6.1
+
+commit 115436e1ec83e43b1e7727903036720cb109abef
+Author: Andrew Randrianasulu <randrik@mail.ru>
+Date:   Mon Nov 24 12:46:48 2008 -0500
+
+    Fix typo in map setup
+    
+    fixes bug 18688
+
+commit ef1ca4800ee75044243d0eb2346240c50c28f0aa
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Fri Aug 15 14:07:28 2008 -0400
+
+    Uninclude xf86Version.h
+
+commit 565c1ad65277080968c188a635dfd743be7ea2a3
+Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+Date:   Thu Jul 17 18:54:17 2008 -0300
+
+    Correct unresolved symbol and incorrect assignment.
+    
+      Function miPointerPosition is deprecated and not available anymore.
+      Correct "if (test = value)" -> "if (test == value)".
+
+commit 2128de2ad9fa67537d8ed56ff173b8a7b0422e0e
+Author: Evgeny M. Zubok <evgeny.zubok@tochka.ru>
+Date:   Mon Jul 7 14:31:10 2008 -0400
+
+    S3: various fixes
+    
+            * src/s3_video.c:
+    
+            Streams Processor initialization.
+    
+            XVideo support for 16, 24 and 32 bpp (only for TRIO64V2).
+    
+            * src/s3_driver.c:
+    
+            Add XVideo option (enabled by default).
+    
+            Replace "swcursor" by "hwcursor" option (HW cursor
+            not implemented yet for all chipsets).
+    
+            Close bug #5527: 24-bit colour depth support (24bpp and
+            32bpp framebuffer) for TRIO64V2. Acceleration doesn't work
+            with packed colour mode (24 bpp FB) but works with 32bpp
+            framebuffer mode (hardware limitation? -- need data).
+    
+            Fix system hang-up when switching between console and X session.
+    
+            Some minor changes of driver messages.
+
+commit 7edc59e33bfa152e124bc8dd25f7fc4b22e44bd8
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Wed Mar 19 15:00:28 2008 -0400
+
+    s3 0.6.0
+
+commit 081bf87a55b65f12d0339b4f48a13b8113661dc7
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Wed Mar 19 14:55:06 2008 -0400
+
+    Fix distcheck
+
+commit 773959298037b5b86e87d0fed530f1924d5d2208
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Wed Mar 19 14:53:10 2008 -0400
+
+    Death to RCS tags.
+
+commit a0d6e3ff590f3704918339dc2b9aa0f820b24b75
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Mon Mar 10 11:47:10 2008 +1000
+
+    s3: pciaccess conversion
+
+commit 7985d0148c766475c04f8481b0a9ddcea807d990
+Author: Evgeny M. Zubok <evgeny.zubok@tochka.ru>
+Date:   Mon Feb 25 11:52:09 2008 -0500
+
+    Add non-vbe DPMS support for TRIOs, adjust max clock on Trio64V2
+
+commit 4cf015311015b0e2267d7195c3795a337a466508
+Author: Brice Goglin <bgoglin@debian.org>
+Date:   Tue Aug 7 12:50:34 2007 +0200
+
+    Define VERSION* using PACKAGE_VERSION*
+
+commit 9465c594e919bd2ac3e41ac96e72a432daf81fa7
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Tue Jan 9 19:33:45 2007 -0800
+
+    Was previously done in monolith Imakefile as:
+    SpecialCObjectRule(s3_video,$(_NOOP_), -DS3_NEWMMIO)
+    
+    Needed to get definitions of GET_PSTREAM_*, GET_SSTREAM_*, etc.
+
+commit 3470935b099daed7ed2a31791267b9087672f3f7
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Tue Jan 9 19:30:36 2007 -0800
+
+    renamed: .cvsignore -> .gitignore
+
+commit 658f0fcdb9d6494c99dcb9bf61b8f8d3ba830618
+Author: Alex Deucher <alex@t41p.(none)>
+Date:   Mon Nov 27 14:20:10 2006 -0500
+
+    bump version for release
+
+commit d4ce4d3f91690a61511b2d13943e5d0073917377
+Author: Evgeny M. Zubok <zoubok@mail.ru>
+Date:   Sat Nov 25 23:35:28 2006 -0500
+
+    full fix for older cards.
+
+commit 1f2426bf8aad082f6f232d3b8c497acdd9892810
+Author: Evgeny M. Zubok <zoubok@mail.ru>
+Date:   Thu Nov 23 13:36:04 2006 -0500
+
+    Make S3 driver work again.  Bug 7112.
+
+commit 921ff3112b0fa7ca95e9ef16d4ac980f86138594
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Sat Apr 8 01:39:50 2006 +0000
+
+    Bump to 0.4.1 for Xv changes.
+
+commit 0dd4f7377699b4d31a0cf34cc95a0bc8ae9a9391
+Author: Aaron Plattner <aplattner@nvidia.com>
+Date:   Fri Apr 7 23:11:42 2006 +0000
+
+    Add a DrawablePtr argument to the XV functions to pave the way for
+        redirected video.
+
+commit df44e7c257fdf15aa30c6b49d3a6116c01e396e4
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Fri Apr 7 19:51:30 2006 +0000
+
+    Unlibcwrap. Bump server version requirement. Bump to 0.4.0.
+
+commit 6adde374f8c1a1fd6573262d83e2810e5193c538
+Author: Kevin E Martin <kem@kem.org>
+Date:   Wed Dec 21 02:30:01 2005 +0000
+
+    Update package version for X11R7 release.
+
+commit c5d01fca0fb8c72dd69766eae41659bf4e6cb50e
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Mon Dec 19 16:25:54 2005 +0000
+
+    Stub COPYING files
+
+commit 18c0c40ce5f8142db7b12835f3c4dadcbbd063d5
+Author: Kevin E Martin <kem@kem.org>
+Date:   Thu Dec 15 00:24:18 2005 +0000
+
+    Update package version number for final X11R7 release candidate.
+
+commit d992241a8afda96025bae85fcc6d26132c5372ae
+Author: Kevin E Martin <kem@kem.org>
+Date:   Sat Dec 3 05:49:34 2005 +0000
+
+    Update package version number for X11R7 RC3 release.
+
+commit 8d185b334f89baccc9d1ba288c43099d420162bd
+Author: Kevin E Martin <kem@kem.org>
+Date:   Fri Dec 2 02:16:09 2005 +0000
+
+    Remove extraneous AC_MSG_RESULT.
+
+commit a8e40603f6f12adc12c85c3f6e2e16df661381ab
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Tue Nov 29 23:30:02 2005 +0000
+
+    Only build dlloader modules by default.
+
+commit be33c9a629feb4795006550e916cb1f27b4da69f
+Author: Eric Anholt <anholt@freebsd.org>
+Date:   Mon Nov 21 10:49:17 2005 +0000
+
+    Add .cvsignores for drivers.
+
+commit 610b28959e0222e652c826aebae4de4bd08b60da
+Author: Kevin E Martin <kem@kem.org>
+Date:   Wed Nov 9 21:15:20 2005 +0000
+
+    Update package version number for X11R7 RC2 release.
+
+commit 74b42054bf14a29df6629b4f3b295dd4f1f448ed
+Author: Kevin E Martin <kem@kem.org>
+Date:   Tue Nov 1 15:08:54 2005 +0000
+
+    Update pkgcheck depedencies to work with separate build roots.
+
+commit fe34c3a53ea040fb07de1edb0d0b5efba271c2ad
+Author: Kevin E Martin <kem@kem.org>
+Date:   Wed Oct 19 02:48:04 2005 +0000
+
+    Update package version number for RC1 release.
+
+commit 8af9770f05b485d9016a2f46a65423075091bc9b
+Author: Alan Coopersmith <Alan.Coopersmith@sun.com>
+Date:   Mon Oct 17 00:09:04 2005 +0000
+
+    Use sed & cpp to substitute variables in driver man pages
+
+commit 527b5f01b56106ee43e1fdfec34a8da4a9cd250f
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Thu Aug 18 09:03:48 2005 +0000
+
+    Update autogen.sh to one that does objdir != srcdir.
+
+commit 1304f6f06236eac7fc8b1c426ee3c67c88a9e4e5
+Author: Kevin E Martin <kem@kem.org>
+Date:   Fri Jul 29 21:22:44 2005 +0000
+
+    Various changes preparing packages for RC0:
+    - Verify and update package version numbers as needed
+    - Implement versioning scheme
+    - Change bug address to point to bugzilla bug entry form
+    - Disable loadable i18n in libX11 by default (use --enable-loadable-i18n to
+        reenable it)
+    - Fix makedepend to use pkgconfig and pass distcheck
+    - Update build script to build macros first
+    - Update modular Xorg version
+
+commit 7a4f0abfbb2d38e58b402d64c73c5e8b8f7ceed5
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Date:   Tue Jul 26 18:46:49 2005 +0000
+
+    Build system for s3
+
+commit f53881d942bcd463127d2e5bef18e6e422d361c4
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Mon Jul 11 02:29:58 2005 +0000
+
+    Prep for modular builds by adding guarded #include "config.h" everywhere.
+
+commit b826671f9e2dc702ab8537deb33f51fa7ede9c57
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Fri Jul 1 22:43:12 2005 +0000
+
+    Change all misc.h and os.h references to <X11/foo.h>.
+
+commit 807527511814ff314c16d3c611d58a10d21c3369
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Sat Jun 25 21:16:55 2005 +0000
+
+    Bug #3626: _X_EXPORT tags for video and input drivers.
+
+commit 74df74c1f8b49e71e495af5ccad77600fd783f23
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Wed Apr 20 12:25:29 2005 +0000
+
+    Fix includes right throughout the Xserver tree:
+    change "foo.h" to <X11/foo.h> for core headers, e.g. X.h, Xpoll.h;
+    change "foo.h", "extensions/foo.h" and "X11/foo.h" to
+        <X11/extensions/foo.h> for extension headers, e.g. Xv.h;
+    change "foo.[ch]" to <X11/Xtrans/foo.[ch]> for Xtrans files.
+
+commit 0147cb45138ccd06477dc7f973ae20c1405f2bf5
+Author: Alex Deucher <agd5f@yahoo.com>
+Date:   Sun Oct 17 20:29:32 2004 +0000
+
+    - Add interlaced support to S3 driver (bug 332, Leo Savernik)
+    - EmulateWheelTimeout (bug 323, Mathias Fröhlich)
+    - single button double-click (bug 322, Rob Brown)
+
+commit b66a0081cec6427604758371907ac6c7dca532a3
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Fri Sep 17 03:04:53 2004 +0000
+
+    Bug #1192: Remove cfb support from drivers where its use is an option.
+        Delete xf24_32bpp, as s3virge was the last user. Fix up some comments
+        to refer to fb rather than cfb.
+
+commit 73537025414eb20771ee2337cf60016daafc0fc9
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Mon Aug 16 09:13:14 2004 +0000
+
+    Bug #1087: Make sure all the *Weak symbols are documented in the import
+        list, so the loader knows not to complain about unresolved symbols when
+        an optional module isn't loaded. This typically manifests as warnings
+        about fbdevHW symbols when the user isn't using the framebuffer
+        console.
+
+commit c431a14b6be0d9071b0fc95121260b33ab598f75
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Tue Aug 3 02:44:21 2004 +0000
+
+    Bug #962: Remove LoaderSymbol calls introduced by the dlloader work so
+        DoLoadableServer NO builds work again.
+
+commit d5c13acdc525296f3dd7b7fc99737be2423c1a01
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Fri Jul 30 20:30:54 2004 +0000
+
+    Bug #400 (partial): Driver fixes for the dlloader. When using dlloader, all
+        framebuffer formats except cfb and the overlay modes should work, and
+        r128 and radeon need to be loaded from the ati driver (both issues to
+        be fixed soon). Tested on i740, s3virge, mach64, tdfx, vesa, and vga
+        drivers. elfloader users shouldn't be affected.
+
+commit 1c466ae7996c3b3e7d3dba87458a056452bd3601
+Author: Eric Anholt <anholt@freebsd.org>
+Date:   Wed Jun 16 09:23:31 2004 +0000
+
+    DRI XFree86-4_3_99_12-merge import
+
+commit b1069acf6e9345c44f2a3cf7378590162e947042
+Author: Egbert Eich <eich@suse.de>
+Date:   Wed May 26 16:24:09 2004 +0000
+
+    Fixing setting of physical framebuffer base for several drivers. C&T
+        driver: Fixed setting of minimal clocks for HiQV chipsets. Neomagic
+        driver: improved support for lowres double scan modes.
+
+commit 143b16b20caba7c6f61784752b2ce766441ce170
+Author: Egbert Eich <eich@suse.de>
+Date:   Fri Apr 23 19:43:14 2004 +0000
+
+    Merging XORG-CURRENT into trunk
+
+commit c690296c3a9ea42e3beb8b97b2fe4654b5f0b7f7
+Author: Egbert Eich <eich@suse.de>
+Date:   Sun Mar 14 08:33:31 2004 +0000
+
+    Importing vendor version xf86-4_4_99_1 on Sun Mar 14 00:26:39 PST 2004
+
+commit 55979da7b2d78bc8a2e85d0544d49801640e2617
+Author: Egbert Eich <eich@suse.de>
+Date:   Wed Mar 3 12:12:23 2004 +0000
+
+    Importing vendor version xf86-4_4_0 on Wed Mar 3 04:09:24 PST 2004
+
+commit 05d3ef930b8b6dfde1eb4a272ad97e44625d9faf
+Author: Egbert Eich <eich@suse.de>
+Date:   Thu Feb 26 13:35:54 2004 +0000
+
+    readding XFree86's cvs IDs
+
+commit ce44f2000de918df33fa355aaccf3f4aaa82762c
+Author: Egbert Eich <eich@suse.de>
+Date:   Thu Feb 26 09:23:23 2004 +0000
+
+    Importing vendor version xf86-4_3_99_903 on Wed Feb 26 01:21:00 PST 2004
+
+commit 44cec492e6684d44e3ddcee0570bf3c72b9e07e3
+Author: Kaleb Keithley <kaleb@freedesktop.org>
+Date:   Thu Dec 4 22:03:18 2003 +0000
+
+    XFree86 4.3.99.901 (RC 1)
+
+commit 22ef8a01ef4b9d7d9ce62e3646a8309f0d789e1f
+Author: Kaleb Keithley <kaleb@freedesktop.org>
+Date:   Tue Nov 25 19:28:38 2003 +0000
+
+    XFree86 4.3.99.16 Bring the tree up to date for the Cygwin folks
+
+commit 7a758184cd0a922e87909ccc54375a52bed792b8
+Author: Kaleb Keithley <kaleb@freedesktop.org>
+Date:   Fri Nov 14 16:48:55 2003 +0000
+
+    XFree86 4.3.0.1
+
+commit b8772dfb095f92bdedafae787f74a099182a4594
+Author: Kaleb Keithley <kaleb@freedesktop.org>
+Date:   Fri Nov 14 16:48:55 2003 +0000
+
+    Initial revision
