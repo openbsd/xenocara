@@ -357,7 +357,7 @@ install.man:: 								@@\
 
 #define InstallManPageAliasesBase(file,destdir,aliases)			@@\
 install.man::								@@\
-	@SUFFIX=`echo $(DESTDIR)destdir/file.* | sed -e 's,.*/[^\.]*.,,'`; \ @@\
+	@SUFFIX=${MANSUFFIX}; \						@@\
 	for i in aliases; do \						@@\
 		(set -x; \						@@\
 		$(RM) $(DESTDIR)destdir/$$i.*; \			@@\
