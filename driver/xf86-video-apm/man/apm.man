@@ -67,10 +67,6 @@ Enable or disable the hardware cursor.  Default: on.
 .BI "Option \*qNoAccel\*q \*q" boolean \*q
 Disable or enable acceleration.  Default: acceleration is enabled.
 .TP
-.BI "Option \*qNoLinear\*q \*q" boolean \*q
-Disable or enable use of linear frame buffer. Default: on.
-Note: it may or may not work. Tell me if you need it.
-.TP
 .BI "Option \*qPciRetry\*q \*q" boolean \*q
 Enable or disable PCI retries.  Default: off.
 .TP

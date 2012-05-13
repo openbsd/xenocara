@@ -19,7 +19,6 @@ static XF86VideoAdaptorPtr A(SetupImageVideo)(ScreenPtr);
 
 static void	A(StopVideo)(ScrnInfoPtr, pointer, Bool);
 static int	A(SetPortAttribute)(ScrnInfoPtr, Atom, INT32, pointer);
-#ifndef IOP_ACCESS
 static int	ApmGetPortAttribute(ScrnInfoPtr, Atom ,INT32 *, pointer);
 static void	ApmQueryBestSize(ScrnInfoPtr, Bool, short, short, short,
 				    short, unsigned int *, unsigned int *,
@@ -27,9 +26,10 @@ static void	ApmQueryBestSize(ScrnInfoPtr, Bool, short, short, short,
 static int	ApmQueryImageAttributes(ScrnInfoPtr, int,
 					    unsigned short *, unsigned short *,
 					    int *, int *);
-#endif
+#ifndef XV_NEW_REPUT
 static int	A(ReputImage)(ScrnInfoPtr, short, short, RegionPtr, pointer,
 				DrawablePtr);
+#endif
 static int	A(PutImage)(ScrnInfoPtr, short, short, short, short, short,
 				short, short, short, int, unsigned char*,
 				short, short, Bool, RegionPtr, pointer,
@@ -55,7 +55,7 @@ void A(InitVideo)(ScreenPtr pScreen)
     if (pApm->Chipset >= AT24) {
 	if ((newAdaptor = A(SetupImageVideo)(pScreen))) {
 
-	   newAdaptors = xalloc((num_adaptors + 1) *
+	   newAdaptors = malloc((num_adaptors + 1) *
 				   sizeof(XF86VideoAdaptorPtr*));
 	   if(newAdaptors) {
 		if(num_adaptors)
@@ -72,8 +72,7 @@ void A(InitVideo)(ScreenPtr pScreen)
     if(num_adaptors)
         xf86XVScreenInit(pScreen, adaptors, num_adaptors);
 
-    if(freeAdaptors)
-	xfree(adaptors);
+    free(adaptors);
 }
 
 #ifndef APM_VIDEO_DEFINES
@@ -302,9 +301,9 @@ A(SetupImageVideo)(ScreenPtr pScreen)
     XF86VideoAdaptorPtr adapt;
     ApmPortPrivPtr pPriv;
 
-    if(!(adapt = xcalloc(1, sizeof(XF86VideoAdaptorRec) +
-			    2 * sizeof(ApmPortPrivRec) +
-			    2 * sizeof(DevUnion))))
+    if(!(adapt = calloc(1, sizeof(XF86VideoAdaptorRec) +
+			   2 * sizeof(ApmPortPrivRec) +
+			   2 * sizeof(DevUnion))))
 	return NULL;
 
     adapt->type = XvWindowMask | XvInputMask | XvImageMask;
@@ -336,7 +335,9 @@ A(SetupImageVideo)(ScreenPtr pScreen)
     adapt->GetPortAttribute = ApmGetPortAttribute;
     adapt->QueryBestSize = ApmQueryBestSize;
     adapt->PutImage = A(PutImage);
+#ifndef XV_NEW_REPUT
     adapt->ReputImage = A(ReputImage);
+#endif
     adapt->QueryImageAttributes = ApmQueryImageAttributes;
 
     pPriv->brightness = 0;
@@ -358,7 +359,6 @@ A(SetupImageVideo)(ScreenPtr pScreen)
     return adapt;
 }
 
-#ifndef IOP_ACCESS
 /* ApmClipVideo -
 
    Takes the dst box in standard X BoxRec form (top and left
@@ -420,7 +420,6 @@ ApmClipVideo(BoxPtr dst, INT32 *x1, INT32 *x2, INT32 *y1, INT32 *y2,
     else
 	*scaley = ((*y2 - *y1) / (dst->y2 - dst->y1)) >> 4;
 }
-#endif
 
 static void
 A(StopVideo)(ScrnInfoPtr pScrn, pointer data, Bool shutdown)
@@ -457,7 +456,6 @@ A(SetPortAttribute)(ScrnInfoPtr pScrn, Atom attribute, INT32 value,
   return Success;
 }
 
-#ifndef IOP_ACCESS
 static int
 ApmGetPortAttribute(ScrnInfoPtr pScrn, Atom attribute, INT32 *value,
 		      pointer data)
@@ -485,7 +483,6 @@ ApmQueryBestSize(ScrnInfoPtr pScrn, Bool motion, short vid_w, short vid_h,
     *p_w = drw_w & round;
     *p_h = drw_h & round;
 }
-#endif
 
 static void A(XvMoveCB)(FBAreaPtr area1, FBAreaPtr area2)
 {
@@ -903,7 +900,6 @@ A(PutImage)(ScrnInfoPtr pScrn, short src_x, short src_y,
     return Success;
 }
 
-#ifndef IOP_ACCESS
 static int
 ApmQueryImageAttributes(ScrnInfoPtr pScrn, int id,
 			  unsigned short *w, unsigned short *h,
@@ -949,5 +945,5 @@ common:
 
     return size;
 }
-#endif
+
 #endif

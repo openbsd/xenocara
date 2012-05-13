@@ -7,41 +7,15 @@
 #ifndef PSZ
 #define PSZ	8
 #endif
-#ifdef IOP_ACCESS
-#  define APM_SUFF_IOP	"_IOP"
-#  undef	RDXB
-#  undef	RDXW
-#  undef	RDXL
-#  undef	WRXB
-#  undef	WRXW
-#  undef	WRXL
-#  undef	ApmWriteSeq
-#  define RDXB	RDXB_IOP
-#  define RDXW	RDXW_IOP
-#  define RDXL	RDXL_IOP
-#  define WRXB	WRXB_IOP
-#  define WRXW	WRXW_IOP
-#  define WRXL	WRXL_IOP
-#  define ApmWriteSeq(i, v)	wrinx(pApm->xport, i, v)
-#else
-#  define APM_SUFF_IOP	""
-#endif
+
 #if PSZ == 24
 #  define APM_SUFF_24	"24"
-#  ifdef IOP_ACCESS
-#    define A(s)		Apm##s##24##_IOP
-#  else
-#    define A(s)		Apm##s##24
-#  endif
+#  define A(s)		Apm##s##24
 #else
 #  define APM_SUFF_24	""
-#  ifdef IOP_ACCESS
-#    define A(s)		Apm##s##_IOP
-#  else
-#    define A(s)		Apm##s
-#  endif
+#  define A(s)		Apm##s
 #endif
-#define	DPRINTNAME(s)	do { xf86DrvMsgVerb(pScrn->pScreen->myNum, X_NOTICE, 6, "Apm" #s APM_SUFF_24 APM_SUFF_IOP "\n"); } while (0)
+#define	DPRINTNAME(s)	do { xf86DrvMsgVerb(pScrn->pScreen->myNum, X_NOTICE, 6, "Apm" #s APM_SUFF_24 "\n"); } while (0)
 
 #if PSZ == 24
 #undef SETSOURCEXY
@@ -728,7 +702,7 @@ A(TEGlyphRenderer)(ScrnInfoPtr pScrn, int x, int y, int w, int h,
     dwords = (w2 + 31) >> 5;
     dwords <<= 2;
 
-    base0 = base = (CARD32*)xalloc(dwords * h);
+    base0 = base = malloc(dwords * h);
     if (!base)
 	return;		/* Should not happen : it's rather small... */
 
@@ -739,7 +713,7 @@ A(TEGlyphRenderer)(ScrnInfoPtr pScrn, int x, int y, int w, int h,
     A(WriteBitmap)(pScrn, x, y, w, h2, (unsigned char *)base0, dwords,
 		    skipleft, fg, bg, rop, planemask);
 
-    xfree(base0);
+    free(base0);
 }
 
 static void A(SetupForMono8x8PatternFill)(ScrnInfoPtr pScrn, int patx, int paty,
@@ -1495,7 +1469,7 @@ A(Sync)(ScrnInfoPtr pScrn)
 
     WRXB(0x1FF, 0);
     if (!xf86ServerIsExiting())
-	FatalError("Hung in ApmSync" APM_SUFF_24 APM_SUFF_IOP "(%d) (Status = 0x%08X)\n", pScrn->pScreen->myNum, status);
+	FatalError("Hung in ApmSync" APM_SUFF_24 "(%d) (Status = 0x%08X)\n", pScrn->pScreen->myNum, status);
   }
   if (pApm->apmClip) {
     SETCLIP_CTRL(0);
@@ -1559,6 +1533,4 @@ A(Sync6422)(ScrnInfoPtr pScrn)
 #undef A
 #undef DEPTH
 #undef PSZ
-#undef IOP_ACCESS
 #undef APM_SUFF_24
-#undef APM_SUFF_IOP

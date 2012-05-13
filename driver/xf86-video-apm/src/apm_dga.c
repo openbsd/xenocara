@@ -11,7 +11,6 @@
 #include "xf86.h"
 #include "xf86_OSproc.h"
 #include "xf86Pci.h"
-#include "xf86PciInfo.h"
 #include "xaa.h"
 #include "xaalocal.h"
 #include "apm.h"
@@ -103,7 +102,7 @@ SECOND_PASS:
 	    if(secondPitch)
 		pitch = secondPitch; 
 
-	    if(!(newmodes = xrealloc(modes, (*num + 1) * sizeof(DGAModeRec))))
+	    if(!(newmodes = realloc(modes, (*num + 1) * sizeof(DGAModeRec))))
 		break;
 
 	    modes = newmodes;
@@ -316,18 +315,10 @@ ApmSetViewport(
 	 * This is just an attempt, because Daryll is tampering with MY
 	 * registers.
 	 */
-	if (!pApm->noLinear) {
-	    tmp = (RDXB(0xDB) & 0xF4) |  0x0A;
-	    WRXB(0xDB, tmp);
-	    ApmWriteSeq(0x1B, 0x20);
-	    ApmWriteSeq(0x1C, 0x2F);
-	}
-	else {
-	    tmp = (RDXB_IOP(0xDB) & 0xF4) |  0x0A;
-	    WRXB_IOP(0xDB, tmp);
-	    wrinx(pApm->xport, 0x1B, 0x20);
-	    wrinx(pApm->xport, 0x1C, 0x2F);
-	}
+	tmp = (RDXB(0xDB) & 0xF4) |  0x0A;
+	WRXB(0xDB, tmp);
+	ApmWriteSeq(0x1B, 0x20);
+	ApmWriteSeq(0x1C, 0x2F);
 	pApm->apmLock = FALSE;
     }
     pScrn->AdjustFrame(pScrn->pScreen->myNum, x, y, flags);

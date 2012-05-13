@@ -11,9 +11,6 @@
 /* Everything using inb/outb, etc needs "compiler.h" */
 #include "compiler.h"
 
-/* Drivers for PCI hardware need this */
-#include "xf86PciInfo.h"
-
 /* Drivers that need to access the PCI config space directly need this */
 #include "xf86Pci.h"
 
@@ -109,14 +106,13 @@ typedef struct {
     char		*MemMap;
     pointer		BltMap;
     Bool		UnlockCalled;
-    IOADDRESS		iobase, xport, xbase;
+    unsigned long	iobase, xport, xbase;
     unsigned char	savedSR10;
     CARD8		MiscOut;
     CARD8		c9, d9, db, Rush;
     unsigned int	saveCmd;
     pointer		FontInfo;
     Bool		hwCursor;
-    Bool		noLinear;
     ApmRegStr		ModeReg, SavedReg;
     CloseScreenProcPtr	CloseScreen;
     Bool		UsePCIRetry;  /* Do we use PCI-retry or busy-waiting */

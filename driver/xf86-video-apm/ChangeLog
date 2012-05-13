@@ -1,3 +1,103 @@
+commit d63d7c600cb3927a5a2a5e223252cfd9a44112d4
+Author: Julien Cristau <jcristau@debian.org>
+Date:   Sat May 12 12:46:11 2012 +0200
+
+    xf86-video-apm 1.2.4
+    
+    Signed-off-by: Julien Cristau <jcristau@debian.org>
+
+commit 384531dbd4ea359511c274d3cbd2b34449321ad0
+Author: Luc Verhaegen <luc.verhaegen@basyskom.de>
+Date:   Wed Nov 24 18:21:23 2010 +0100
+
+    xv: disable reputimage hook on newer api
+    
+    This change makes Xv support slightly less nice, but should, in itself,
+    not deteriorate things too much, as most drivers function acceptably
+    without reputimage.
+    
+    Signed-off-by: Luc Verhaegen <luc.verhaegen@basyskom.de>
+    Signed-off-by: Julien Cristau <jcristau@debian.org>
+
+commit e92c8ed0b03b5a33f4b0c3966e540a31af760402
+Author: Julien Cristau <jcristau@debian.org>
+Date:   Tue May 1 15:27:40 2012 +0200
+
+    Disable PC98 code on newer servers
+    
+    It was removed in xserver commit
+    6ad7bb69eebd5e5b4068bd9aa0b9a7168f075006, and keeping API compatibility
+    would have been too hard.  Or something.
+
+commit 37630bd20e59e49db3ee0bfa77f82a7c2595a0ac
+Author: Julien Cristau <jcristau@debian.org>
+Date:   Tue May 1 15:25:30 2012 +0200
+
+    Stop including xf86PciInfo.h
+    
+    Deprecated in xserver commit 1f5baa924a5907978f564372265d9830ac72a077
+
+commit 784c3a1fa53771662b4656e193fb392cbb8c8452
+Author: Julien Cristau <jcristau@debian.org>
+Date:   Tue May 1 15:10:39 2012 +0200
+
+    Replace x{{,re,c}alloc,free} with malloc/realloc/calloc/free
+
+commit 21f5f7acf9235428ef2bcd5e34d0a44f9e4d838b
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Mon Dec 19 17:44:20 2011 -0500
+
+    Fix for new vgaHW ABI
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit f66da557eb7773856081bda2465973dfabf3eaa0
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Mon Dec 19 16:09:34 2011 -0500
+
+    Fall back to shadowfb if XAA fails to load
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit ca19356b3b979b92535f6f22f79c8bab852093a4
+Merge: 413eee0 967f6f2
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Mon Dec 19 16:06:05 2011 -0500
+
+    Merge branch 'master' of git+ssh://git.freedesktop.org/git/xorg/driver/xf86-video-apm
+
+commit 967f6f20670baa33506c3c1b107260a4f909f3d6
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Thu Nov 17 15:50:02 2011 -0500
+
+    Check ABI major not encoded ABI
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit 6b195cc0273650d01fc20c26433b929e9683aa5f
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Wed Nov 16 13:02:14 2011 -0500
+
+    Adapt to vgahw changes in videoabi 12
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit 9ce6499f013a5b6fdc9440fd3213dbb28b3bf1be
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Wed Nov 16 12:59:00 2011 -0500
+
+    s/IOADDRESS/unsigned long/
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit 6f8a776f792c02779a34c911f803fde8c09b93f6
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Jul 28 07:42:30 2010 -0700
+
+    Add XFree86 Copyright/License to COPYING for all code that came from XF86 4.4
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit 876d8aea6c4c442756c03dd6cd64e14e42658d0b
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Fri Jul 23 15:13:02 2010 -0700
@@ -121,6 +221,16 @@ Date:   Sat Jun 12 10:25:31 2010 -0400
     COPYING: replace stub file with Copyright notice
     
     Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 413eee03287b6e161ce0337df712099b585aa722
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Fri Jun 4 17:10:07 2010 -0400
+
+    Remove non-linear framebuffer mapping
+    
+    It hasn't worked since the pciaccess conversion anyway.
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
 
 commit aa26b72a5f76012e8246de1e885f707f29e5fc4c
 Author: Adam Jackson <ajax@redhat.com>
