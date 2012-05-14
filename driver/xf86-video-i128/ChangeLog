@@ -1,45 +1,747 @@
-2006-04-06  Eric Anholt  <anholt@FreeBSD.org>
+commit 2228b7f80cc2f2a13dc00fd659b592407f1bbef1
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Mar 23 18:51:51 2012 -0700
 
-	* src/i128_driver.c: (I128PreInit):
-	Don't forget to zero the xf86ModReqInfo before using it.
-	Noticed by Alex Deucher.
+    xf86-video-i128 1.3.5
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
 
-2005-12-20  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+commit 3b23ca1d037b9d70f8e3a1ce5b5af0cba05f45cc
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Mon Dec 19 17:48:13 2011 -0500
 
-	* configure.ac:
-	Update package version for X11R7 release.
+    Fix for new vgaHW ABI
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
 
-2005-12-14  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+commit 0a46285e074dded359c859b8ffa2a0c9c437b21b
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Mon Dec 19 16:29:49 2011 -0500
 
-	* configure.ac:
-	Update package version number for final X11R7 release candidate.
+    Make failure to XAA non-fatal
+    
+    No shadowfb support in this driver yet.
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
 
-2005-12-06  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+commit 0e357623bc3d68e6eaf9bb755f44cca2d5321f8b
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Wed Oct 19 00:24:00 2011 -0700
 
-	* man/Makefile.am:
-	Change *man_SOURCES ==> *man_PRE to fix autotools warnings.
+    Build fix for ABI Version 12
+    
+    ABI Version 12 removes support for multiple PCI domains.  If you need to
+    use this driver on a system with more than one PCI domain, you should
+    either port this driver to using libpciaccess directly or stick with an
+    older server.
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
 
-2005-12-03  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+commit c3eb2c3f05902be4e4e5b929663753276cde3611
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Wed Oct 19 00:23:12 2011 -0700
 
-	* configure.ac:
-	Update package version number for X11R7 RC3 release.
+    Use unsigned long rather than deprecated IOADDRESS
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
 
-2005-12-01  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+commit f5c6593c9309541eedd374431dbd72151b8fb3ab
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Wed Oct 19 00:22:09 2011 -0700
 
-	* configure.ac:
-	Remove extraneous AC_MSG_RESULT.
+    Use malloc/calloc/realloc/free directly
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
 
-2005-11-29  Adam Jackson  <ajax@freedesktop.org>
+commit b9e0edbd4ab23c811714a648cb729b5c11356795
+Author: Jesse Adkins <jesserayadkins@gmail.com>
+Date:   Tue Sep 28 13:29:51 2010 -0700
 
-	* configure.ac:
-	Only build dlloader modules by default.
+    Purge cvs tags.
+    
+    Signed-off-by: Jesse Adkins <jesserayadkins@gmail.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
 
-2005-11-09  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+commit d7c1073cf42e3486b49f5a55f2c5f2929b18417f
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Tue Aug 10 10:51:59 2010 -0400
 
-	* configure.ac:
-	Update package version number for X11R7 RC2 release.
+    xf86-video-i128 1.3.4
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
 
-2005-11-01  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+commit 94cdca24c2035245b191e2d1c453fc02c2fbecac
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jul 21 16:49:04 2010 -0400
 
-	* configure.ac:
-	Update pkgcheck dependencies to work with separate build roots.
+    config: add comments for main statements
+
+commit 2c9c7070abec4eb3fbf14f380dd1e57d63fdd720
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jul 21 16:07:00 2010 -0400
+
+    config: replace deprecated use of AC_OUTPUT with AC_CONFIG_FILES
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 68934cda27a0c2c051187f77c0d8faf82b9615f4
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jul 21 14:37:41 2010 -0400
+
+    config: replace deprecated AC_HELP_STRING with AS_HELP_STRING
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit bef6413d558428f439422126f77791814df4453b
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jul 21 14:05:22 2010 -0400
+
+    config: replace deprecated AM_CONFIG_HEADER with AC_CONFIG_HEADERS
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 53239cdc70f2ffff09b2d509f44319008e5c6397
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jul 21 09:27:42 2010 -0400
+
+    config: complete AC_INIT m4 quoting
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit b0f3826e110f44e3dd0660b8c6d0dd04cc35d908
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Jul 20 21:44:57 2010 -0400
+
+    config: remove unrequired AC_SUBST([XORG_CFLAGS])
+    
+    This macro is called by PKG_CHECK_MODULES
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 4b3e0c971fc320bf3d47b56adc0f65ac16d78eb7
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Jul 20 20:24:42 2010 -0400
+
+    config: remove unrequired AC_HEADER_STDC
+    
+    Autoconf says:
+    "This macro is obsolescent, as current systems have conforming
+    header files. New programs need not use this macro".
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit aedc94dd1770317bb41e9341863f371834203373
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Jul 20 19:41:31 2010 -0400
+
+    config: remove AC_PROG_CC as it overrides AC_PROG_C_C99
+    
+    XORG_STRICT_OPTION from XORG_DEFAULT_OPTIONS calls
+    AC_PROG_C_C99. This sets gcc with -std=gnu99.
+    If AC_PROG_CC macro is called afterwards, it resets CC to gcc.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 04015a519e52493fcd43f4d940a3a9e55d7c03be
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Jul 20 18:45:19 2010 -0400
+
+    config: update AC_PREREQ statement to 2.60
+    
+    Unrelated to the previous patches, the new value simply reflects
+    the reality that the minimum level for autoconf to configure
+    all x.org modules is 2.60 dated June 2006.
+    
+    ftp://ftp.gnu.org/gnu/autoconf/autoconf-2.60.tar.gz
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit eda5280a2acd6b55c9cc29a7d251aca5915ad744
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Jul 20 16:15:29 2010 -0400
+
+    config: upgrade to util-macros 1.8 for additional man page support
+    
+    Use MAN_SUBST now supplied in XORG_MANPAGE_SECTIONS
+    The value of MAN_SUBST is the same for all X.Org packages.
+
+commit ff026f65b3e8f54d6677b8dc16fd17db43b39edf
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Jun 13 18:51:15 2010 -0400
+
+    README: keep the text version of README, discard the sgml version
+    
+    The linuxdoc doc tool is deprecated.
+    README files are exclusively text files.
+    The file had not been updated for 5 years.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 399c47cb69731d1e3e8d59edd53b3e7cc2b77d95
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Jun 13 18:40:05 2010 -0400
+
+    README: fix linuxdoc content
+    
+    defs.ent are located under X11 directory
+    ident tag is not a Linuxdoc tag
+    replace docbook email tag with linuxdoc email tag
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit f1d97375da248af05848f56323c1a8cad4d3a416
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sat Jun 12 19:55:58 2010 -0400
+
+    COPYING: replace stub file with actual Copyright notices.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 3c58b1d2ad0203ac9b96db7ba8da6f7171aead49
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Fri Jan 15 14:55:02 2010 -0800
+
+    Update Sun license notices to current X.Org standard form
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit d5e49a46c62501a0b95fc2298d6b3c129500a6e0
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Dec 15 22:01:02 2009 -0500
+
+    configure.ac: remove unused sdkdir=$(pkg-config...) statement
+    
+    The sdkdir variable isn't use, so remove the statement.
+    
+    Acked-by: Dan Nicholson <dbn.lists@gmail.com>
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit d9fddc2023770c58d7ccc7e3a5507b0c6042b984
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Nov 23 09:25:05 2009 -0500
+
+    Makefile.am: add ChangeLog and INSTALL on MAINTAINERCLEANFILES
+    
+    Now that the INSTALL file is generated.
+    Allows running make maintainer-clean.
+
+commit b045340006550b484ae38be6e25c8f22ec7cf5c1
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Oct 28 14:41:41 2009 -0400
+
+    INSTALL, NEWS, README or AUTHORS files are missing/incorrect #24206
+    
+    Automake 'foreign' option is specified in configure.ac.
+    Remove from Makefile.am
+
+commit 6c8d05924ca437cfe237211a43f2b183ea78ed96
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Oct 28 14:09:09 2009 -0400
+
+    INSTALL, NEWS, README or AUTHORS files are missing/incorrect #24206
+    
+    Add missing INSTALL file. Use standard GNU file on building tarball
+    README may have been updated
+    Remove AUTHORS file as it is empty and no content available yet.
+    Remove NEWS file as it is empty and no content available yet.
+
+commit 48f66f2548cec5db9580626bb03f6393a52dd273
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Oct 26 12:54:21 2009 -0400
+
+    Several driver modules do not have a ChangeLog target in Makefile.am #23814
+    
+    The git generated ChangeLog replaces the hand written one.
+    Update configure.ac to xorg-macros level 1.3.
+    Use XORG_DEFAULT_OPTIONS which replaces four XORG_* macros
+    Update Makefile.am to add ChangeLog target if missing
+    Remove ChangeLog from EXTRA_DIST or *CLEAN variables
+    This is a pre-req for the INSTALL_CMD
+
+commit 994740528a43d86c6202c325c2ae92cfd603c39b
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Oct 22 12:34:17 2009 -0400
+
+    .gitignore: use common defaults with custom section # 24239
+    
+    Using common defaults will reduce errors and maintenance.
+    Only the very small or inexistent custom section need periodic maintenance
+    when the structure of the component changes. Do not edit defaults.
+
+commit 6fb5733ca06477bdab2d2070c4692ff45e09be61
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Thu Nov 12 09:50:58 2009 -0500
+
+    Don't mess with the blender unit on chips that don't have it
+    
+    Where your typical x86 machine silently ignores writes to non-existing
+    registers, UltraSPARC machines generate a bus error.  So we shouldn't
+    write to the alpha blender setup register on the Imagine 1 and Imagine 2
+    that don't seem to have the blender unit.
+    
+    Reviewed-by: Adam Jackson <ajax@redhat.com>
+    Signed-off-by: Mark Kettenis <mark.kettenis@xs4all.nl>
+
+commit cc0682924e84006662d77557876123a88f76afa0
+Author: Mark Kettenis <mark.kettenis@xs4all.nl>
+Date:   Mon Nov 2 11:08:13 2009 -0500
+
+    Use hardware byteswap on big-endian platforms
+    
+    Fixes 16 and 32 bit-per-pixel modes with a Tech Source Raptor GFX-8M
+    board on OpenBSD/sparc64
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit 5b60ef6cbc140f95295e5a8c32625b4f572063e1
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Sep 7 11:12:13 2009 -0400
+
+    xf86-video-i128: Remove unused .cvsignore file #23776
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 8909e47f36cbb030060d5a40d673a962f997c93a
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Thu Jul 30 12:04:27 2009 +1000
+
+    i128: bump for release 1.3.3
+
+commit 6a5098d0f2439a2f2e338ab30fccc19032fae82a
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Tue Jul 28 15:22:40 2009 +1000
+
+    i128: change to using ABI version check
+
+commit ec37c2ec027ebcaa3bf138c32e417821b78527b0
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Tue Jul 28 13:32:30 2009 +1000
+
+    i128: update for resources/RAC API removal
+
+commit 6a1eae8adf2bc8ba2c0e86e28d3b121a54aa8c3b
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Thu Jul 2 11:16:59 2009 -0400
+
+    i128 1.3.2
+
+commit b690e9f84e3c4504f3344185c6a8572805dd73d8
+Author: Mark Kettenis <mark.kettenis@xs4all.nl>
+Date:   Thu Jun 4 11:46:18 2009 -0600
+
+    Fix endianness bugs in cursor realization code.
+    
+    The default cursor realization code seems to work just fine.  We just
+    have to set the HARDWARE_CURSOR_NIBBLE_SWAPPED flag on big endian
+    platforms.
+    
+    This isn't really surprising since these cards use fairly standard IBM
+    or TI RAMDACs.
+    
+    Signed-off-by: Matthieu Herrb <matthieu.herrb@laas.fr>
+
+commit f42dd67d9372bf7f46cf8a35877e4ab8ac82d89b
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Thu May 28 14:59:53 2009 -0400
+
+    Remove useless loader symbol lists.
+
+commit cee4cdf061ca8e6376846c0eac2fc6d57711129e
+Author: Mark Kettenis <mark.kettenis@xs4all.nl>
+Date:   Mon May 4 21:54:30 2009 +0200
+
+    Properly unmap things with libpciaccess.
+    
+    If the xf86-vide-i128 is compiled with XSERVER_LIBPCIACCESS, registers and
+    frmaebuffer memory are mapped through libpciaccess.  However, I128UnmapMem
+    tried to unmap things vy using xf86UnmapVidMem.  This failed because the memory
+    wasn't registered (which only happens if you mapped the memory using
+    xf86MapPciMem.
+    
+    Fixes bugzilla #20541
+    
+    Signed-off-by: Matthieu Herrb <matthieu.herrb@laas.fr>
+
+commit 8bd4dc99bbaa8bf8c6649dc25fc75859e16e35ec
+Author: Thomas Jaeger <ThJaeger@gmail.com>
+Date:   Fri Jan 30 16:25:07 2009 -0500
+
+    CheckComposite: Add a few checks
+    
+    It looks like the driver doesn't support any form of repeating and only
+    nearest-neighbor interpolation.
+
+commit 8936b17d83c6fa2b67c447ae3cac5159d8d84649
+Author: Chris Ball <cjb@laptop.org>
+Date:   Tue Feb 24 13:00:05 2009 -0500
+
+    Build fix for EXA 3
+    
+    EXA in xserver head now requires us to pass -DEXA_DRIVER_KNOWN_MAJOR=3.
+    
+    Signed-off-by: Chris Ball <cjb@laptop.org>
+
+commit 4fcee9dd9075b28474ae5b248a9edc0789f55b05
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Fri Jan 9 16:28:55 2009 -0800
+
+    Remove xorgconfig & xorgcfg from See Also list in man page
+
+commit 4be161bca1ae9fca29e882c5909405781b565cb1
+Author: Julien Cristau <jcristau@debian.org>
+Date:   Thu Sep 4 19:51:58 2008 +0200
+
+    Bump to 1.3.1
+
+commit ab11b4bd9e76abdbfca5d7e5c9e9d0a7f52a4a34
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Fri Aug 15 15:30:19 2008 -0400
+
+    Don't store pScrn->monitor->DDC manually, let xf86SetDDCproperties do it.
+
+commit 3b1d9fe8694df9b63ad12c7fe5cd059f4132a8ce
+Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+Date:   Thu Mar 13 16:31:30 2008 -0300
+
+    Replace calls to xf86usleep with calls to usleep and include unistd.h.
+
+commit 6327ba52ba39cbbe5584fe5cba6864d3d6ad38b0
+Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+Date:   Thu Mar 13 16:42:06 2008 -0300
+
+    Compile warning fixes.
+    
+    The casts for printf format are really required to pass
+    proper arguments, as pciaddr_t is a 64 bit integer.
+
+commit fae990d08f50c760c3ba09fa9d949e42104ebf60
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Wed Mar 19 14:16:19 2008 -0400
+
+    i128 1.3.0
+
+commit 560fc83e29f95fbed700010ce149b72d6cd21109
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Wed Mar 19 14:15:14 2008 -0400
+
+    Fix distcheck
+
+commit a85f46b433a0e0508fa6dacde7d77283460bf14a
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Wed Mar 19 14:12:45 2008 -0400
+
+    Death to RCS tags.
+
+commit e4cfc0c48a5943e0c399f59d36a7765a92e823e7
+Author: Matthieu Herrb <matthieu@bluenote.herrb.net>
+Date:   Sat Mar 8 23:30:44 2008 +0100
+
+    Makefile.am: nuke RCS Id
+
+commit 64987900b7398943005d0a43f6b39ce3c2d1f4f1
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Fri Feb 29 16:00:53 2008 +1000
+
+    i128: fixup typo
+
+commit 7273b0f586f04fe9c29ac206d5d9bf51fa92cc22
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Wed Feb 27 13:45:31 2008 +1000
+
+    i128: drop ansi C wrapper
+
+commit 8c8779a65ff3f017f02b6024a20ba4ceb8c48e4e
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Wed Feb 27 13:18:57 2008 +1000
+
+    i128: pciaccess conversion
+
+commit 6b837746d1652150c0ed4d61442a975cf687f624
+Author: Brice Goglin <bgoglin@debian.org>
+Date:   Tue Aug 7 11:26:28 2007 +0200
+
+    Define I128_*_VERSION* using PACKAGE_VERSION_*
+
+commit e639c549b13dca121e7e4af2ce62afd84e44e044
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Tue Feb 27 10:29:16 2007 -0800
+
+    renamed: .cvsignore -> .gitignore
+
+commit 161b0487ab444d9c697bf1f1ff32b3fada83cfe5
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Tue Feb 27 10:28:42 2007 -0800
+
+    Replace references to XFree86/XF86Config in man page
+
+commit f9996f11e947fb4292a2f156dcd63a3b990aa0cd
+Author: Adam Jackson <ajax@benzedrine.nwnk.net>
+Date:   Fri Dec 1 17:32:11 2006 -0500
+
+    Fix version number to 1.2.1
+
+commit 8bbc4bb70d5208963efa7e5627f0f3adef1ccf16
+Author: Adam Jackson <ajax@benzedrine.nwnk.net>
+Date:   Fri Oct 13 18:31:38 2006 -0400
+
+    Bump to 1.1.0.6
+
+commit 14062aa41f9e3846aef733f66d2544ab33503af6
+Author: Eric Anholt <anholt@freebsd.org>
+Date:   Fri Apr 7 04:15:34 2006 +0000
+
+    Don't forget to zero the xf86ModReqInfo before using it. Noticed by Alex
+        Deucher.
+
+commit daf6a54ec89dbe9f943c02f9ba5cea20b02e66a8
+Author: Eric Anholt <anholt@freebsd.org>
+Date:   Thu Mar 9 06:06:25 2006 +0000
+
+    Update drivers that support EXA for the new EXA ABI. This consists of
+        moving all the accel and card members into the driver ptr, filling in
+        the exa_major/ exa_minor fields, and always using LoadSubModule so we
+        can check the module version up front. Only tested on ATI.
+
+commit 4778b0724cb0edb53e110d4774ec7af26d6348bc
+Author: Kevin E Martin <kem@kem.org>
+Date:   Wed Dec 21 02:30:00 2005 +0000
+
+    Update package version for X11R7 release.
+
+commit 27fd31114c2d3f9d232da7f49f4ca0a901a31be0
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Mon Dec 19 16:25:53 2005 +0000
+
+    Stub COPYING files
+
+commit c53e62103707053f1737558eca3689d1d6ca9317
+Author: Kevin E Martin <kem@kem.org>
+Date:   Thu Dec 15 00:24:17 2005 +0000
+
+    Update package version number for final X11R7 release candidate.
+
+commit 63518d66adb729f8536230d8ac247296612f61f0
+Author: Kevin E Martin <kem@kem.org>
+Date:   Tue Dec 6 22:48:34 2005 +0000
+
+    Change *man_SOURCES ==> *man_PRE to fix autotools warnings.
+
+commit 73979afbf55fb60fb3f00dc50025b6852eaba156
+Author: Kevin E Martin <kem@kem.org>
+Date:   Sat Dec 3 05:49:33 2005 +0000
+
+    Update package version number for X11R7 RC3 release.
+
+commit daf5da8b112db896598f101bc765b31b792e37dd
+Author: Kevin E Martin <kem@kem.org>
+Date:   Fri Dec 2 02:16:08 2005 +0000
+
+    Remove extraneous AC_MSG_RESULT.
+
+commit 24fbb6fea98b5a6569abd27a3f22218b494ee4b5
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Tue Nov 29 23:29:59 2005 +0000
+
+    Only build dlloader modules by default.
+
+commit 6a8876ad16fc765be749d09918b017c33bf7f648
+Author: Alan Coopersmith <Alan.Coopersmith@sun.com>
+Date:   Mon Nov 28 22:04:09 2005 +0000
+
+    Change *mandir targets to use new *_MAN_DIR variables set by xorg-macros.m4
+        update to fix bug #5167 (Linux prefers *.1x man pages in man1 subdir)
+
+commit 3e173f114cab770f0a9711463d44af26f7b46eda
+Author: Eric Anholt <anholt@freebsd.org>
+Date:   Mon Nov 21 10:49:14 2005 +0000
+
+    Add .cvsignores for drivers.
+
+commit 92c550bdfd132915a662789368bda40a6199e9e3
+Author: Kevin E Martin <kem@kem.org>
+Date:   Wed Nov 9 21:15:15 2005 +0000
+
+    Update package version number for X11R7 RC2 release.
+
+commit b645ec0f8ce667f9d22dcdf42b9a874fdfa09c9c
+Author: Kevin E Martin <kem@kem.org>
+Date:   Tue Nov 1 15:08:53 2005 +0000
+
+    Update pkgcheck depedencies to work with separate build roots.
+
+commit 284c18210cef9ed99ebd688be15d2e166e799dcf
+Author: Kevin E Martin <kem@kem.org>
+Date:   Wed Oct 19 02:48:02 2005 +0000
+
+    Update package version number for RC1 release.
+
+commit 844ae6d34fc7f214ab4fb481f5d42dc6a42c01f6
+Author: Alan Coopersmith <Alan.Coopersmith@sun.com>
+Date:   Tue Oct 18 00:01:53 2005 +0000
+
+    Use @DRIVER_MAN_SUFFIX@ instead of $(DRIVER_MAN_SUFFIX) in macro
+        substitutions to work better with BSD make
+
+commit b28a96dbd24571059c6366411f8ee354e9ca225a
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Mon Oct 17 22:57:33 2005 +0000
+
+    More 1.7 braindamage: define EXTRA_DIST in terms of @DRIVER_NAME@ instead
+        of indirectly
+
+commit 54bedceb8cafaf61ef1932acc2ab92ee1f6bd80b
+Author: Alan Coopersmith <Alan.Coopersmith@sun.com>
+Date:   Mon Oct 17 00:09:03 2005 +0000
+
+    Use sed & cpp to substitute variables in driver man pages
+
+commit a7245466156b03b2d6a96f553a0b32bd2ea9f37c
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Date:   Tue Oct 4 20:01:03 2005 +0000
+
+    Check in generated README files
+
+commit be7e3263669b7f2746b1dce8d1909576f38844ee
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Date:   Mon Oct 3 21:22:07 2005 +0000
+
+    - For all drivers that have a <driver>.sgml file, add code in their build
+        system to build the README file at make dist time
+    - in util/macros/xorg-macros.m4, add a new XORG_CHECK_LINUXDOC macro that
+        will check if the required tools and files exist, and if so set a
+        conditional.
+    - util/modular/symlink.sh
+    - Link all the <driver>.sgml to xf86-video-<driver>/README.sgml
+    - Add all the README.<driver> to the list of excluded files
+    - xc/programs/Xserver/hw/xfree86/doc/sgml/SiS.sgml: Various changes to make
+        it spew less warnings when the text file is built.
+
+commit 5368b5439cd30fde04ee397cba379ea53d585c75
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Sun Sep 11 21:52:37 2005 +0000
+
+    Build system fixes for EXA support; reflect the 1.1 bump.
+
+commit 3e6793ec11b08e3dfe83a1323219f88bf5b4d3e9
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Sun Sep 11 21:51:46 2005 +0000
+
+    Bump driver version to 1.1.0 for EXA support.
+
+commit 5ebb70091380bd8392991f1a30e5a38121937ffe
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Sun Sep 11 21:43:53 2005 +0000
+
+    EXA support for i128. Solid and Copy only for now, and incompatible with
+        DGA. Also some drive-by static and const cleanups.
+
+commit e16cd7d62d1664f6c709b18bb0e5209569d615bc
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Thu Aug 18 09:03:46 2005 +0000
+
+    Update autogen.sh to one that does objdir != srcdir.
+
+commit 72ff4da599178cb2cec868f466449d51a2a49f5a
+Author: Kevin E Martin <kem@kem.org>
+Date:   Fri Jul 29 21:22:43 2005 +0000
+
+    Various changes preparing packages for RC0:
+    - Verify and update package version numbers as needed
+    - Implement versioning scheme
+    - Change bug address to point to bugzilla bug entry form
+    - Disable loadable i18n in libX11 by default (use --enable-loadable-i18n to
+        reenable it)
+    - Fix makedepend to use pkgconfig and pass distcheck
+    - Update build script to build macros first
+    - Update modular Xorg version
+
+commit 12fb6c9712311fb0e39bce91862aac5f6b832cd7
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Date:   Tue Jul 26 00:01:49 2005 +0000
+
+    Build system for i128 driver
+
+commit dcc9630f078796a54e194872728e767f55d421ef
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Mon Jul 11 02:29:50 2005 +0000
+
+    Prep for modular builds by adding guarded #include "config.h" everywhere.
+
+commit 4a223979b683b104e8757f90dbcd96e68a652bfc
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Sat Jun 25 21:16:54 2005 +0000
+
+    Bug #3626: _X_EXPORT tags for video and input drivers.
+
+commit a81797ae116620b19d74d5b9f0cf7a8e340f4a79
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Wed Apr 20 12:25:24 2005 +0000
+
+    Fix includes right throughout the Xserver tree:
+    change "foo.h" to <X11/foo.h> for core headers, e.g. X.h, Xpoll.h;
+    change "foo.h", "extensions/foo.h" and "X11/foo.h" to
+        <X11/extensions/foo.h> for extension headers, e.g. Xv.h;
+    change "foo.[ch]" to <X11/Xtrans/foo.[ch]> for Xtrans files.
+
+commit 72e6b62363966bf07644461c41a39d298c98cfcf
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Fri Sep 17 03:04:51 2004 +0000
+
+    Bug #1192: Remove cfb support from drivers where its use is an option.
+        Delete xf24_32bpp, as s3virge was the last user. Fix up some comments
+        to refer to fb rather than cfb.
+
+commit 3c801e7a9267a9f3aae9ea8adaee9f27acd6e745
+Author: Eric Anholt <anholt@freebsd.org>
+Date:   Wed Jun 16 09:23:11 2004 +0000
+
+    DRI XFree86-4_3_99_12-merge import
+
+commit d31917c34e40d9d462bd355e44d77549a331ff1c
+Author: Egbert Eich <eich@suse.de>
+Date:   Fri Apr 23 19:34:24 2004 +0000
+
+    Merging XORG-CURRENT into trunk
+
+commit fa09cd7513a3af4ad272515b6c25b3df9d6afd42
+Author: Egbert Eich <eich@suse.de>
+Date:   Sun Mar 14 08:33:21 2004 +0000
+
+    Importing vendor version xf86-4_4_99_1 on Sun Mar 14 00:26:39 PST 2004
+
+commit b54afdbfcfdd789aef42aa6917ea3226a376a126
+Author: Egbert Eich <eich@suse.de>
+Date:   Wed Mar 3 12:12:19 2004 +0000
+
+    Importing vendor version xf86-4_4_0 on Wed Mar 3 04:09:24 PST 2004
+
+commit 8081c182ae35ebc29723b6ecb8af5f386a438440
+Author: Egbert Eich <eich@suse.de>
+Date:   Thu Feb 26 13:35:52 2004 +0000
+
+    readding XFree86's cvs IDs
+
+commit 34cffc30ce3c76b556aa104f4b385925b8dceb23
+Author: Egbert Eich <eich@suse.de>
+Date:   Thu Feb 26 09:23:18 2004 +0000
+
+    Importing vendor version xf86-4_3_99_903 on Wed Feb 26 01:21:00 PST 2004
+
+commit bf7aa4e7ee6b63afb96beded9de84a29f19e37ff
+Author: Kaleb Keithley <kaleb@freedesktop.org>
+Date:   Tue Nov 25 19:28:37 2003 +0000
+
+    XFree86 4.3.99.16 Bring the tree up to date for the Cygwin folks
+
+commit 702949e7e8b64509caa3752429948c3ae31819d9
+Author: Kaleb Keithley <kaleb@freedesktop.org>
+Date:   Fri Nov 14 16:48:55 2003 +0000
+
+    XFree86 4.3.0.1
+
+commit e1509ab4368d99d5872a68bdb7a8c331f4309a37
+Author: Kaleb Keithley <kaleb@freedesktop.org>
+Date:   Fri Nov 14 16:48:55 2003 +0000
+
+    Initial revision

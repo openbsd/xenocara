@@ -451,7 +451,20 @@ I128Init(ScrnInfoPtr pScrn, DisplayModePtr mode)
 		pI128->DoubleScan = FALSE;
 	pI128->mem.rbase_g[CRT_ZOOM] = (pI128->DoubleScan ? 0x00000001 : 0x00000000);
 
-	pI128->mem.rbase_w[MW0_CTRL] = 0x00000000;
+       switch (pI128->bitsPerPixel) {
+#if X_BYTE_ORDER == X_BIG_ENDIAN
+       case 32:
+               pI128->mem.rbase_w[MW0_CTRL] = 0x00060000;
+               break;
+       case 16:
+               pI128->mem.rbase_w[MW0_CTRL] = 0x00020000;
+               break;
+#endif
+       default:
+               pI128->mem.rbase_w[MW0_CTRL] = 0x00000000;
+               break;
+       }
+
 	switch (pI128->MemorySize) {
 		case 2048:
 			pI128->mem.rbase_w[MW0_SZ]   = 0x00000009;

@@ -75,7 +75,7 @@ struct i128mem {
 
 /* save the registers needed for restoration in this structure */
 typedef struct {
-	IOADDRESS iobase;		/* saved only for iobase indexing    */
+	unsigned long iobase;		/* saved only for iobase indexing    */
 	CARD32 config1;			/* iobase+0x1C register              */
 	CARD32 config2;			/* iobase+0x20 register              */
 	CARD32 sgram;			/* iobase+0x24 register              */

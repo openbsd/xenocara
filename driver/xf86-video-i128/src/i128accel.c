@@ -508,7 +508,9 @@ I128XaaInit(ScreenPtr pScreen)
 	pI128->mem.rbase_a[PCTRL] = 0x00000000; /* for lines */
 	pI128->mem.rbase_a[CLPTL] = 0x00000000;
 	pI128->mem.rbase_a[CLPBR] = (4095<<16) | 2047 ;
-	pI128->mem.rbase_a[ACNTRL] = 0x00000000;
+	if (pI128->Chipset == PCI_CHIP_I128_T2R ||
+	    pI128->Chipset == PCI_CHIP_I128_T2R4)
+		pI128->mem.rbase_a[ACNTRL] = 0x00000000;
 	pI128->mem.rbase_a[INTM] = 0x03;
 
 	if (pI128->Debug) {
