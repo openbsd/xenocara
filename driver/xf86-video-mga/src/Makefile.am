@@ -32,7 +32,6 @@ mga_drv_la_LIBADD = $(noinst_LTLIBRARIES)
 mga_drv_la_SOURCES = \
          binding.h \
          client.h \
-         clientlx.c \
          mga_arc.c \
          mga_bios.c \
          mga_common.h \

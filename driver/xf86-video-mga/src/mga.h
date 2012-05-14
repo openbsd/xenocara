@@ -1,4 +1,3 @@
-/* $XFree86: xc/programs/Xserver/hw/xfree86/drivers/mga/mga.h,v 1.87tsi Exp $ */
 /*
  * MGA Millennium (MGA2064W) functions
  *
@@ -29,6 +28,10 @@
 #include "xf86DDC.h"
 #include "xf86xv.h"
 
+#ifndef XF86DRI
+#undef MGADRI
+#endif
+
 #ifdef MGADRI
 #include "xf86drm.h"
 
@@ -41,10 +44,6 @@
 
 #include "GL/glxint.h"
 #include "mga_dri.h"
-#endif
-
-#ifdef USEMGAHAL
-#include "client.h"
 #endif
 
 typedef enum {
@@ -137,6 +136,10 @@ void MGAdbg_outreg32(ScrnInfoPtr, int,int, char*);
 #define PCI_CHIP_MGAG200_EH_PCI 0x0533
 #endif
 
+#ifndef PCI_CHIP_MGAG200_ER_PCI
+#define PCI_CHIP_MGAG200_ER_PCI 0x0534
+#endif
+
 /*
  * Read/write to the DAC via MMIO 
  */
@@ -200,7 +203,9 @@ void MGAdbg_outreg32(ScrnInfoPtr, int,int, char*);
 typedef struct {
     unsigned char	ExtVga[6];
     unsigned char 	DacClk[6];
-    unsigned char *     DacRegs;
+    unsigned char	ExtVga_Index24;
+    unsigned char	Dac_Index90;
+    unsigned char * DacRegs;
     unsigned long	crtc2[0x58];
     unsigned char	dac2[0x21];
     CARD32		Option;
@@ -324,11 +329,6 @@ typedef enum {
 
 typedef struct {
     int			lastInstance;
-#ifdef USEMGAHAL
-    LPCLIENTDATA	pClientStruct;
-    LPBOARDHANDLE	pBoard;
-    LPMGAHWINFO		pMgaHwInfo;
-#endif
     int			refCount;
     CARD32		masterFbAddress;
     long		masterFbMapSize;
@@ -454,12 +454,6 @@ struct mga_device_attributes {
 };
 
 typedef struct {
-#ifdef USEMGAHAL
-    LPCLIENTDATA	pClientStruct;
-    LPBOARDHANDLE	pBoard;
-    LPMGAMODEINFO	pMgaModeInfo;
-    LPMGAHWINFO		pMgaHwInfo;
-#endif
     EntityInfoPtr	pEnt;
     struct mga_bios_values bios;
     CARD8               BiosOutputMode;
@@ -479,6 +473,7 @@ typedef struct {
     int is_G200WB:1;
     int is_G200EV:1;
     int is_G200EH:1;
+    int is_G200ER:1;
 
     int KVM;
 
@@ -605,7 +600,7 @@ typedef struct {
     int 		numVisualConfigs;
     __GLXvisualConfig*	pVisualConfigs;
     MGAConfigPrivPtr 	pVisualConfigsPriv;
-    XF86DRIServerPrivatePtr DRIServerInfo;
+    MGADRIServerPrivatePtr DRIServerInfo;
 
     MGARegRec		DRContextRegs;
 
@@ -644,9 +639,6 @@ typedef struct {
     MGAPaletteInfo	palinfo[256];  /* G400 hardware bug workaround */
     FBLinearPtr		LinearScratch;
     Bool                softbooted;
-#ifdef USEMGAHAL
-    Bool                HALLoaded;
-#endif
     OptionInfoPtr	Options;
 
     /* Exa */
@@ -761,7 +753,7 @@ void MGAResetVideo(ScrnInfoPtr pScrn);
 #define MGA_BACK	0x2
 #define MGA_DEPTH	0x4
 
-Bool XF86DRIScreenInit( ScreenPtr pScreen );
+Bool MGADRIScreenInit( ScreenPtr pScreen );
 void MGADRICloseScreen( ScreenPtr pScreen );
 Bool MGADRIFinishScreenInit( ScreenPtr pScreen );
 
@@ -803,26 +795,6 @@ void MGAG200SERestoreFonts(ScrnInfoPtr, vgaRegPtr);
 void MGAG200SESaveMode(ScrnInfoPtr, vgaRegPtr);
 void MGAG200SERestoreMode(ScrnInfoPtr, vgaRegPtr);
 void MGAG200SEHWProtect(ScrnInfoPtr, Bool);
-
-#ifdef USEMGAHAL
-/************ ESC Call Definition ***************/
-typedef struct {
-    char *function;
-    void (*funcptr)(ScrnInfoPtr pScrn, unsigned long *param, char *out, DisplayModePtr pMode);
-} MGAEscFuncRec, *MGAEscFuncPtr;
-
-typedef struct {
-    char function[32];
-    unsigned long parameters[32];
-} EscCmdStruct;
-
-extern LPMGAMODEINFO pMgaModeInfo[2];
-extern MGAMODEINFO   TmpMgaModeInfo[2];
-
-extern void MGAExecuteEscCmd(ScrnInfoPtr pScrn, char *cmdline , char *sResult, DisplayModePtr pMode);
-void MGAFillDisplayModeStruct(DisplayModePtr pMode, LPMGAMODEINFO pModeInfo);
-/************************************************/
-#endif
 
 static __inline__ void
 MGA_MARK_SYNC(MGAPtr pMga, ScrnInfoPtr pScrn)

@@ -111,7 +111,7 @@ SECOND_PASS:
 	    if(secondPitch)
 		pitch = secondPitch; 
 
-	    if(!(newmodes = xrealloc(modes, (*num + 1) * sizeof(DGAModeRec))))
+	    if(!(newmodes = realloc(modes, (*num + 1) * sizeof(DGAModeRec))))
 		break;
 
 	    modes = newmodes;

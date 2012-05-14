@@ -1,8 +1,3 @@
-/* $XConsortium: dwg.c /main/2 1996/10/28 06:57:55 kaleb $ */
-
-
-
-/* $XFree86: xc/programs/Xserver/hw/xfree86/drivers/mga/util/stormdwg.c,v 1.1 1997/04/12 14:11:29 hohndel Exp $ */
 
 #include <stdio.h>
 #include <stdlib.h>

@@ -25,8 +25,6 @@
  * Converted to common header format:
  *   Jens Owen <jens@tungstengraphics.com>
  *
- * $XFree86: xc/programs/Xserver/hw/xfree86/drivers/mga/mga_common.h,v 1.2 2002/12/16 16:19:18 dawes Exp $
- *
  */
 
 #ifndef _MGA_COMMON_H_

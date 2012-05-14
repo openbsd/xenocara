@@ -1,5 +1,3 @@
-/* $XFree86$ */
-
 /*
  * Copyright 2000 Gareth Hughes
  * All Rights Reserved.

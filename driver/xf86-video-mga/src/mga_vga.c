@@ -2,6 +2,8 @@
 #include "config.h"
 #endif
 
+#include <unistd.h>
+
 #include "misc.h"
 #include "xf86.h"
 #include "xf86_OSproc.h"
@@ -197,17 +199,17 @@ MGAG200SESaveFonts(ScrnInfoPtr scrninfp, vgaRegPtr save)
     hwp->writeSeq(hwp, 0x04, 0x06); /* enable plane graphics */
     hwp->writeGr(hwp, 0x05, 0x00);  /* write mode 0, read mode 0 */
     hwp->writeGr(hwp, 0x06, 0x05);  /* set graphics */
-    if (hwp->FontInfo1 || (hwp->FontInfo1 = xalloc(FONT_AMOUNT))) {
+    if (hwp->FontInfo1 || (hwp->FontInfo1 = malloc(FONT_AMOUNT))) {
 	hwp->writeSeq(hwp, 0x02, 0x04); /* write to plane 2 */
 	hwp->writeGr(hwp, 0x04, 0x02);  /* read plane 2 */
 	slowbcopy_frombus(hwp->Base, hwp->FontInfo1, FONT_AMOUNT);
     }
-    if (hwp->FontInfo2 || (hwp->FontInfo2 = xalloc(FONT_AMOUNT))) {
+    if (hwp->FontInfo2 || (hwp->FontInfo2 = malloc(FONT_AMOUNT))) {
 	hwp->writeSeq(hwp, 0x02, 0x08); /* write to plane 3 */
 	hwp->writeGr(hwp, 0x04, 0x03);  /* read plane 3 */
 	slowbcopy_frombus(hwp->Base, hwp->FontInfo2, FONT_AMOUNT);
     }
-    if (hwp->TextInfo || (hwp->TextInfo = xalloc(2 * TEXT_AMOUNT))) {
+    if (hwp->TextInfo || (hwp->TextInfo = malloc(2 * TEXT_AMOUNT))) {
 	hwp->writeSeq(hwp, 0x02, 0x01); /* write to plane 0 */
 	hwp->writeGr(hwp, 0x04, 0x00);  /* read plane 0 */
 	slowbcopy_frombus(hwp->Base, hwp->TextInfo, TEXT_AMOUNT);

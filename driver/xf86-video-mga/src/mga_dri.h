@@ -1,5 +1,3 @@
-/* $XFree86: xc/programs/Xserver/hw/xfree86/drivers/mga/mga_dri.h,v 1.6 2001/04/10 16:08:01 dawes Exp $ */
-
 /*
  * Copyright 2000 VA Linux Systems Inc., Fremont, California.
  * All Rights Reserved.
@@ -71,7 +69,7 @@ typedef struct {
 
    int drm_version_major;
    int drm_version_minor;
-} XF86DRIServerPrivateRec, *XF86DRIServerPrivatePtr;
+} MGADRIServerPrivateRec, *MGADRIServerPrivatePtr;
 
 /**
  * Hardware information sent from server to client-side DRI driver.

@@ -1,11 +1,3 @@
-/* $XConsortium: mgareg.h /main/2 1996/10/25 10:33:21 kaleb $ */
-
-
-
-/* $XFree86: xc/programs/Xserver/hw/xfree86/drivers/mga/mga_reg.h,v 1.18 2001/09/26 12:59:18 alanh Exp $ */
-
-
-
 /*
  * MGA Millennium (MGA2064W) functions
  * MGA Mystique (MGA1064SG) functions
@@ -126,6 +118,9 @@
 #define MGAREG_WVRTXSZ          0x1dcc
 #define MGAREG_WACCEPTSEQ       0x1dd4
 #define MGAREG_WMISC            0x1e70
+
+
+#define MGAREG_MEMCTL           0x2E08
 
 /* OPMODE register additives */
 
@@ -377,6 +372,7 @@
 #define MGA1064_MISC_CTL_VGA8   		( 0x01 << 3 )
 #define MGA1064_MISC_CTL_DAC_RAM_CS   		( 0x01 << 4 )
 
+#define MGA1064_GEN_IO_CTL2	0x29
 #define MGA1064_GEN_IO_CTL	0x2a
 #define MGA1064_GEN_IO_DATA	0x2b
 #define MGA1064_SYS_PLL_M	0x2c
@@ -437,6 +433,10 @@
 #define MGA1064_EH_PIX_PLLC_N   0xb7
 #define MGA1064_EH_PIX_PLLC_P   0xb8
 
+/* Modified PLL for G200 Maxim (G200ER) */
+#define MGA1064_ER_PIX_PLLC_M	0xb7
+#define MGA1064_ER_PIX_PLLC_N	0xb6
+#define MGA1064_ER_PIX_PLLC_P	0xb8
 
 #define MGA1064_DISP_CTL        0x8a
 #define MGA1064_DISP_CTL_DAC1OUTSEL_MASK       0x01
