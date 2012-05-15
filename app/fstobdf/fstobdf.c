@@ -1,5 +1,5 @@
 /*
- 
+
 Copyright 1990, 1998  The Open Group
 
 Permission to use, copy, modify, distribute, and sell this software and its
@@ -23,7 +23,7 @@ used in advertising or otherwise to promote the sale, use or other dealings
 in this Software without prior written authorization from The Open Group.
 
  * Copyright 1990 Network Computing Devices;
- * Portions Copyright 1987 by Digital Equipment Corporation 
+ * Portions Copyright 1987 by Digital Equipment Corporation
  *
  * Permission to use, copy, modify, distribute, and sell this software and
  * its documentation for any purpose is hereby granted without fee, provided
@@ -47,7 +47,9 @@ in this Software without prior written authorization from The Open Group.
 #include	<stdlib.h>
 #include        <string.h>
 #include	"fstobdf.h"
-static void
+
+
+static void _X_NORETURN
 usage(char *progName)
 {
     fprintf(stderr, "Usage: %s [-s <font server>] -fn <font name>\n",
@@ -55,7 +57,7 @@ usage(char *progName)
     exit(0);
 }
 
-static void 
+static void _X_NORETURN
 Fail(char *progName)
 {
     fprintf(stderr, "%s: unable to dump font\n", progName);
@@ -102,7 +104,7 @@ main(int argc, char *argv[])
 
     fontServer = FSOpenServer(serverName);
     if (!fontServer) {
-	char *sn = FSServerName(serverName);
+	const char *sn = FSServerName(serverName);
 	if (sn)
 	    fprintf(stderr, "%s: can't open font server \"%s\"\n",
 	      	    argv[0], sn);

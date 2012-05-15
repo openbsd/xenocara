@@ -1,5 +1,5 @@
 /*
- 
+
 Copyright 1990, 1998  The Open Group
 
 Permission to use, copy, modify, distribute, and sell this software and its
@@ -23,7 +23,7 @@ used in advertising or otherwise to promote the sale, use or other dealings
 in this Software without prior written authorization from The Open Group.
 
  * Copyright 1990 Network Computing Devices;
- * Portions Copyright 1987 by Digital Equipment Corporation 
+ * Portions Copyright 1987 by Digital Equipment Corporation
  *
  * Permission to use, copy, modify, distribute, and sell this software and
  * its documentation for any purpose is hereby granted without fee, provided
@@ -69,11 +69,11 @@ in this Software without prior written authorization from The Open Group.
 
 
 static void
-EmitBitmap(FILE *outFile, 
-	   FSXFontInfoHeader *fontHeader, 
-	   FSXCharInfo *charInfo, 
-	   unsigned int encoding, 
-	   int bpr, 
+EmitBitmap(FILE *outFile,
+	   FSXFontInfoHeader *fontHeader,
+	   FSXCharInfo *charInfo,
+	   unsigned int encoding,
+	   int bpr,
 	   unsigned char *data)
 {
     char       *glyphName;
@@ -148,9 +148,9 @@ EmitBitmap(FILE *outFile,
 
 
 Bool
-EmitCharacters(FILE *outFile, 
-	       FSServer *fontServer, 
-	       FSXFontInfoHeader *fontHeader, 
+EmitCharacters(FILE *outFile,
+	       FSServer *fontServer,
+	       FSXFontInfoHeader *fontHeader,
 	       Font fontID)
 {
     FSXCharInfo *extents;
@@ -172,8 +172,8 @@ EmitCharacters(FILE *outFile,
 
     format = BYTE_ORDER | BIT_ORDER | SCANLINE_UNIT |
 	SCANLINE_PAD | EXTENTS;
-    firstCharLow = fontHeader->char_range.min_char.low; 
-    firstCharHigh = fontHeader->char_range.min_char.high; 
+    firstCharLow = fontHeader->char_range.min_char.low;
+    firstCharHigh = fontHeader->char_range.min_char.high;
     lastCharLow = fontHeader->char_range.max_char.low;
     lastCharHigh = fontHeader->char_range.max_char.high;
 

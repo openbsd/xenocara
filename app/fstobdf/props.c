@@ -1,5 +1,5 @@
 /*
- 
+
 Copyright 1990, 1991, 1998  The Open Group
 
 Permission to use, copy, modify, distribute, and sell this software and its
@@ -23,7 +23,7 @@ used in advertising or otherwise to promote the sale, use or other dealings
 in this Software without prior written authorization from The Open Group.
 
  * Copyright 1990, 1991 Network Computing Devices;
- * Portions Copyright 1987 by Digital Equipment Corporation 
+ * Portions Copyright 1987 by Digital Equipment Corporation
  *
  * Permission to use, copy, modify, distribute, and sell this software and
  * its documentation for any purpose is hereby granted without fee, provided
@@ -66,10 +66,10 @@ AddQuotes(unsigned char *string, int length)
 }
 
 Bool
-EmitProperties(FILE *outFile, 
-	       FSXFontInfoHeader *fontHeader, 
-	       FSPropInfo *propInfo, 
-	       FSPropOffset *propOffsets, 
+EmitProperties(FILE *outFile,
+	       FSXFontInfoHeader *fontHeader,
+	       FSPropInfo *propInfo,
+	       FSPropOffset *propOffsets,
 	       unsigned char *propData)
 {
     int         nProperties;

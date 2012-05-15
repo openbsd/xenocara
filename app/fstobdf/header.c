@@ -1,5 +1,5 @@
 /*
- 
+
 Copyright 1990, 1998  The Open Group
 
 Permission to use, copy, modify, distribute, and sell this software and its
@@ -23,7 +23,7 @@ used in advertising or otherwise to promote the sale, use or other dealings
 in this Software without prior written authorization from The Open Group.
 
  * Copyright 1990 Network Computing Devices;
- * Portions Copyright 1987 by Digital Equipment Corporation 
+ * Portions Copyright 1987 by Digital Equipment Corporation
  *
  * Permission to use, copy, modify, distribute, and sell this software and
  * its documentation for any purpose is hereby granted without fee, provided
@@ -52,7 +52,7 @@ in this Software without prior written authorization from The Open Group.
 unsigned long        pointSize;
 unsigned long        yResolution;
 
-static char *warning[] =
+static const char *warning[] =
 {
     "COMMENT  ",
     "COMMENT  WARNING:  This bdf file was generated from a font server using",
@@ -65,10 +65,10 @@ static char *warning[] =
 };
 
 static char *
-FindStringProperty(char *propName, 
-		   int *propLength, 
-		   FSPropInfo *propInfo, 
-		   FSPropOffset *propOffsets, 
+FindStringProperty(const char *propName,
+		   int *propLength,
+		   FSPropInfo *propInfo,
+		   FSPropOffset *propOffsets,
 		   unsigned char *propData)
 {
     FSPropOffset *propOffset;
@@ -83,7 +83,7 @@ FindStringProperty(char *propName,
 #ifdef DEBUG
 	    char        pname[256];
 
-	    memmove( pname, propData + propOffset->name.position, 
+	    memmove( pname, propData + propOffset->name.position,
 		  propOffset->name.length);
 	    pname[propOffset->name.length] = '\0';
 	    fprintf(stderr, "prop name: %s (len %d)\n",
@@ -102,10 +102,10 @@ FindStringProperty(char *propName,
 }
 
 static int
-FindNumberProperty(char *propName, 
-		   unsigned long *propValue, 
-		   FSPropInfo *propInfo, 
-		   FSPropOffset *propOffsets, 
+FindNumberProperty(const char *propName,
+		   unsigned long *propValue,
+		   FSPropInfo *propInfo,
+		   FSPropOffset *propOffsets,
 		   unsigned char *propData)
 {
     FSPropOffset *propOffset;
@@ -132,16 +132,16 @@ FindNumberProperty(char *propName,
  * FONTBOUNDINGBOX lines
  */
 Bool
-EmitHeader(FILE *outFile, 
-	   FSXFontInfoHeader *fontHeader, 
-	   FSPropInfo *propInfo, 
-	   FSPropOffset *propOffsets, 
+EmitHeader(FILE *outFile,
+	   FSXFontInfoHeader *fontHeader,
+	   FSPropInfo *propInfo,
+	   FSPropOffset *propOffsets,
 	   unsigned char *propData)
 {
     int         len;
     int         type;
     char       *cp;
-    char      **cpp;
+    const char **cpp;
     unsigned long xResolution;
 
     fprintf(outFile, "STARTFONT 2.1\n");
@@ -174,7 +174,7 @@ EmitHeader(FILE *outFile,
 
     /*
      * SIZE point xres yres
-     * 
+     *
      * Get XLFD values if possible, else fake it
      */
     type = FindNumberProperty("RESOLUTION_X", &xResolution, propInfo,
@@ -195,12 +195,12 @@ EmitHeader(FILE *outFile,
 	pointSize = ((fontHeader->font_ascent + fontHeader->font_descent)
 		     * 72) / yResolution;
 
-    fprintf(outFile, "SIZE %lu %lu %lu\n", pointSize, xResolution, 
+    fprintf(outFile, "SIZE %lu %lu %lu\n", pointSize, xResolution,
 	    yResolution);
 
     /*
      * FONTBOUNDINGBOX width height xoff yoff
-     * 
+     *
      */
     fprintf(outFile, "FONTBOUNDINGBOX %d %d %d %d\n",
 	    fontHeader->max_bounds.right - fontHeader->min_bounds.left,
