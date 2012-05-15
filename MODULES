@@ -1,4 +1,4 @@
-# $OpenBSD: MODULES,v 1.216 2012/05/14 21:01:25 matthieu Exp $
+# $OpenBSD: MODULES,v 1.217 2012/05/15 06:20:09 matthieu Exp $
 #
 # X.Org maintained modules
 #
@@ -9,8 +9,8 @@ app/beforelight		1.0.4	7.6
 app/bitmap		1.0.6	7.7
 app/editres		1.0.5	7.6
 app/fonttosfnt		1.0.4	7.4
-app/fslsfonts		1.0.4	7.7	needs-update
-app/fstobdf		1.0.5 	7.7	needs-update
+app/fslsfonts		1.0.4	7.7
+app/fstobdf		1.0.5 	7.7
 app/iceauth		1.0.5	7.7
 app/ico			1.0.3	7.6
 app/listres		1.0.3	7.7
@@ -53,8 +53,8 @@ app/xgamma		1.0.5	7.7
 app/xgc			1.0.3	7.6
 app/xhost		1.0.5	7.7
 app/xinit		1.3.2	7.7	needs-update
-app/xinput		1.5.4	7.7	needs-update
-app/xkbcomp		1.2.4	7.7	needs-update
+app/xinput		1.5.4	7.7
+app/xkbcomp		1.2.4	7.7
 app/xkbevd		1.1.3	7.7
 app/xkbprint		1.0.3	7.6
 app/xkbutils		1.0.3	7.6
@@ -63,11 +63,11 @@ app/xload		1.1.1	7.7
 app/xlogo		1.0.4	7.7
 app/xlsatoms		1.1.1	7.7
 app/xlsclients		1.1.2	7.7
-app/xlsfonts		1.0.4	7.7	needs-update
+app/xlsfonts		1.0.4	7.7
 app/xmag		1.0.4	7.6
 app/xman		1.1.2	7.7
 app/xmessage		1.0.3	7.5+
-app/xmodmap		1.0.7	7.7	needs-update
+app/xmodmap		1.0.7	7.7
 app/xmore		1.0.2	7.5+
 app/xpr			1.0.4	7.7
 app/xprop		1.2.1	7.7
@@ -111,7 +111,7 @@ driver/xf86-video-glint		1.2.7	7.7	needs-update
 driver/xf86-video-i128		1.3.5	7.7
 driver/xf86-video-i740		1.3.3	7.7
 driver/xf86-video-intel		2.19.0	7.7	needs-update
-driver/xf86-video-mach64	6.9.1	7.7	needs-update
+driver/xf86-video-mach64	6.9.1	7.7
 driver/xf86-video-mga		1.5.0	7.7
 driver/xf86-video-neomagic	1.2.6	7.7
 driver/xf86-video-nv		2.1.18	7.6
@@ -166,7 +166,7 @@ font/schumacher-misc		1.1.1
 font/screen-cyrillic		1.0.3
 font/sony-misc			1.0.2
 font/sun-misc			1.0.2
-font/util			1.3.0	needs-update
+font/util			1.3.0
 font/winitzki-cyrillic		1.0.2
 font/xfree86-type1		1.0.3
 
