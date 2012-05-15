@@ -581,12 +581,12 @@ viaVidCopyInit(char *copyType, ScreenPtr pScreen)
 
     if (VIAAllocLinear(&tmpFbBuffer, pScrn, alignSize + 31))
         return libc_YUV42X;
-    if (NULL == (buf2 = (unsigned char *)xalloc(testSize))) {
+    if (NULL == (buf2 = (unsigned char *)malloc(testSize))) {
         VIAFreeLinear(&tmpFbBuffer);
         return libc_YUV42X;
     }
-    if (NULL == (buf3 = (unsigned char *)xalloc(testSize))) {
-        xfree(buf2);
+    if (NULL == (buf3 = (unsigned char *)malloc(testSize))) {
+        free(buf2);
         VIAFreeLinear(&tmpFbBuffer);
         return libc_YUV42X;
     }
@@ -642,8 +642,8 @@ viaVidCopyInit(char *copyType, ScreenPtr pScreen)
                        curData->mName);
         }
     }
-    xfree(buf3);
-    xfree(buf2);
+    free(buf3);
+    free(buf2);
     VIAFreeLinear(&tmpFbBuffer);
     xf86DrvMsg(pScrn->scrnIndex, X_PROBED,
                "Using %s YUV42X copy for %s.\n",

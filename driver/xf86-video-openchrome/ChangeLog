@@ -14,6 +14,240 @@
 	(viaRestoreVideo), (viaExitVideo):
 	* src/via_video.h:
 
+2011-05-10  Bartosz Kosiorek  <gang65@poczta.onet.pl>
+
+	Workaround EXA crash with new libcairo2 (#298)
+
+	* src/via_accel.c: (viaExaPrepareComposite):
+
+2011-05-08  Bartosz Kosiorek  <gang65@poczta.onet.pl>
+
+	Fix cursor garbage after suspend/resume for Xserver 1.10 (#405)
+
+	* src/via_video.c: (viaRestoreVideo):
+
+2011-05-04  Bartosz Kosiorek  <gang65@poczta.onet.pl>
+
+	Fix XAA displaying issues
+
+	* src/via_accel.c: (viaInitXAA):
+
+2011-01-23  Bartosz Kosiorek  <gang65@poczta.onet.pl>
+
+	Enable hardware cursor for VX900
+
+	* src/via_cursor.c: (viaHWCursorInit):
+	* src/via_mode.c: (ViaModeSet):
+
+2010-12-16  Bartosz Kosiorek  <gang65@poczta.onet.pl>
+
+	Merge vx900_branch - initial VX900 support
+
+	* src/via_accel.c: (viaFlushPCI), (viaDisableVQ),
+	(viaInitialize2DEngine), (viaAccelSync), (viaPitchHelper),
+	(viaInitXAA):
+	* src/via_bandwidth.c: (ViaSetPrimaryFIFO), (ViaSetSecondaryFIFO):
+	* src/via_bios.h:
+	* src/via_crtc.c: (ViaFirstCRTCSetMode), (ViaSecondCRTCSetMode):
+	* src/via_cursor.c: (viaHWCursorInit), (viaCursorStore),
+	(viaCursorRestore), (viaShowCursor), (viaHideCursor),
+	(viaSetCursorPosition), (viaLoadCursorImage), (viaSetCursorColors):
+	* src/via_driver.c: (VIASetupDefaultOptions), (VIAPreInit),
+	(VIALeaveVT), (VIASave), (VIARestore), (ViaMMIOEnable),
+	(ViaMMIODisable), (VIAMapFB), (VIAWriteMode), (VIACloseScreen):
+	* src/via_driver.h:
+	* src/via_id.c:
+	* src/via_id.h:
+	* src/via_mode.c: (ViaDFPDetect), (ViaOutputsDetect),
+	(ViaOutputsSelect), (ViaGetMemoryBandwidth), (ViaSetDotclock),
+	(ViaModeSet):
+	* src/via_mode.h:
+	* src/via_panel.c: (ViaPanelScaleDisable), (ViaPanelPreInit),
+	(ViaPanelGetSizeFromDDC):
+	* src/via_video.c: (DecideOverlaySupport):
+	* src/via_xvmc.c: (ViaInitXVMC):
+
+2010-12-15  Bartosz Kosiorek  <gang65@poczta.onet.pl>
+
+	Enable the new mode switch and panel support on K8M800 and VM800 chipsets
+
+	* src/via_driver.c: (VIASetupDefaultOptions), (VIAPreInit):
+	* src/via_mode.c: (ViaModeSet):
+
+2010-11-10  Bartosz Kosiorek  <gang65@poczta.onet.pl>
+
+    Replace the deprecated functions 
+    xalloc/xrealloc/xfree/xcalloc with 
+    malloc/realloc/free/calloc.
+    Refer to "/xserver/include/os.h"
+
+	* src/via_accel.c: (viaSetupCBuffer), (viaTearDownCBuffer),
+	(viaInitExa), (viaExitAccel), (viaFinishInitAccel):
+	* src/via_dga.c: (VIASetupDGAMode):
+	* src/via_dri.c: (VIAInitVisualConfigs), (VIADRIScreenInit),
+	(VIADRICloseScreen):
+	* src/via_driver.c: (VIAFreeRec), (VIAProbe), (VIAPreInit),
+	(VIACloseScreen):
+	* src/via_memcpy.c: (viaVidCopyInit):
+	* src/via_swov.c: (Upd_Video):
+	* src/via_vbe.c: (ViaVbeSetMode):
+	* src/via_video.c: (viaExitVideo), (viaStopVideo),
+	(viaDmaBlitImage):
+	* src/via_xvmc.c: (cleanupViaXvMC), (ViaCleanupXVMC),
+	(ViaXvMCCreateContext), (ViaXvMCCreateSurface),
+	(ViaXvMCCreateSubpicture), (ViaXvMCDestroyContext),
+	(ViaXvMCDestroySurface), (ViaXvMCDestroySubpicture),
+	(viaXvMCInitXv):
+
+2010-10-24  Bartosz Kosiorek  <gang65@poczta.onet.pl>
+
+	Siragon ML-6200 laptop support
+
+	* src/via_id.c:
+
+2010-06-24  Jon Nettleton  <jon.nettleton@gmail.com>
+
+	PM800 also uses the CME Engine.  Setup the hqv_cme_regs
+	for it.
+
+	* src/via_swov.c: (VIAVidHWDiffInit):
+
+2010-06-09  Bartosz Kosiorek  <gang65@poczta.onet.pl>
+
+	Fix freeze on 64bit system for K8M800 chipset
+
+	* src/via_dri.c: (VIADRIAgpInit):
+
+2010-05-04  Jon Nettleton <jon.nettleton@gmail.com>
+
+	Re-enable the Virtual Queue for the VX800/VX855 chipsets.
+
+	* src/via_accel.c: (viaDisableVQ), (viaInitialize2DEngine):
+
+2010-05-04  Jon Nettleton  <jon.nettleton@gmail.com>
+
+	Disable certain hardware clipping options for the VX855.
+	These cause the 2d engine to become unstable when in
+	16-bit mode.
+
+	* src/via_accel.c: (viaInitXAA):
+
+2010-05-04  Jon Nettleton <jon.nettleton@gmail.com>
+
+	Add an undocumented option which allows certain I2C buses
+	to be probed at startup.  This allows workarounds for custom
+	chipset makers that have used the VX855 I2C buses for other
+	purposes.
+
+	* src/via_bios.h:
+	* src/via_driver.c: (VIASetupDefaultOptions), (VIAPreInit):
+	* src/via_driver.h:
+	* src/via_i2c.c:
+
+2010-05-04  Jon Nettleton  <jon.nettleton@gmail.com>
+
+	Improve 2d performance on chipsets that don't have
+	AGP/PCIe support yet.
+
+	* src/via_accel.c: (viaSetupForScreenToScreenCopy),
+	(viaSetupForSolidFill), (viaSetupForMono8x8PatternFill),
+	(viaSetupForColor8x8PatternFill),
+	(viaSetupForCPUToScreenColorExpandFill),
+	(viaSubsequentScanlineCPUToScreenColorExpandFill),
+	(viaSetupForImageWrite), (viaSubsequentImageWriteRect),
+	(viaSetupForSolidLine), (viaSetupForDashedLine), (viaInitXAA):
+
+2010-05-04  Jon Nettleton <jon.nettleton@gmail.com>
+
+	Put timeouts on our while statements.  These codepaths
+	should be interrupted by a hardware state change, but
+	if something goes wrong they loop forevere.  Let's try
+	and behave a little by putting a timeout on these loops.
+
+	* src/via_swov.c: (viaWaitHQVFlip), (viaWaitHQVFlipClear),
+	(viaWaitHQVDone):
+	* src/via_video.c: (Flip):
+
+2010-05-04  Jon Nettleton <jon.nettleton@gmail.com>
+
+	Add XVideo support for the VX855 Chipset.
+	To support this chipset I have added HWDiff->HQVCmeRegs
+	that allows handling differing register values, and
+	HWDiff->dwNewScaleCtl which allows selection of a
+	new Video scaling engine needed for the VX800/VX855
+	chipsets.
+
+	* src/via.h:
+	* src/via_bandwidth.c: (ViaSetSecondaryFIFO):
+	* src/via_driver.h:
+	* src/via_swov.c: (SaveVideoRegister), (VIAVidHWDiffInit),
+	(viaOverlayHQVCalcZoomWidth), (viaOverlayHQVCalcZoomHeight),
+	(ViaSwovSurfaceCreate), (SetHQVFetch), (Upd_Video):
+	* src/via_swov.h:
+
+2010-04-21  Bartosz Kosiorek  <gang65@poczta.onet.pl>
+
+	Replace RegionsEqual with REGION_EQUAL and use 
+        the xf86XVFillKeyHelperDrawable instead of xf86XVFillKeyHelper
+
+	* src/via_video.c: (viaReputImage), (viaPutImage):
+
+2010-03-07  Bartosz Kosiorek  <gang65@poczta.onet.pl>
+
+	Fix segfaults with EXA and XV (Ticket #359)
+        Tested on K8M890 and VN800
+
+	* src/via_video.c: (viaReputImage), (viaPutImage):
+
+2010-02-10  Bartosz Kosiorek  <gang65@poczta.onet.pl>
+
+	Fix bug with suspend and VT switch on VX800 and 64bit systems
+
+	* src/via_driver.h:
+	* src/via_video.c: (viaResetVideo), (viaSaveVideo),
+	(viaRestoreVideo), (viaExitVideo):
+	* src/via_video.h:
+
+2010-01-24  Bartosz Kosiorek  <gang65@poczta.onet.pl>
+
+	Fix starting address restore and save (initial 64-bit support)
+
+	* src/via_crtc.c: (ViaFirstCRTCSetMode),
+	(ViaFirstCRTCSetStartingAddress):
+	* src/via_dri.c: (VIADRIAgpInit):
+	* src/via_driver.c: (VIASave), (VIARestore):
+	* src/via_driver.h:
+
+2009-12-04  Bartosz Kosiorek  <gang65@poczta.onet.pl>
+
+	Enable new mode switch for VM800 chipsets
+
+	* src/via_driver.c: (VIASetupDefaultOptions):
+
+2009-11-21  Bartosz Kosiorek  <gang65@poczta.onet.pl>
+
+	Add option to enable unaccelerated RandR rotation ("SWRandR").
+        The accelerated option "HWRandR" is currently not implemented.
+
+	* src/openchrome.man:
+	* src/via_driver.c: (VIAPreInit):
+
+2009-11-20  Bartosz Kosiorek  <gang65@poczta.onet.pl>
+
+	Enabled new mode switch for PM800 chipset, 
+        to resolve many bugs with resolution detecting and changing
+        (eg. switching to console)
+
+	* src/via_driver.c: (VIASetupDefaultOptions), (VIAPreInit):
+
+2009-11-07  Bartosz Kosiorek  <gang65@poczta.onet.pl>
+
+	Add more comments to ViaSetSecondaryFIFO, add panel scale support for 
+ 	CLE266 and KM400, fix bug with malloc.
+
+	* src/via_bandwidth.c: (ViaSetSecondaryFIFO):
+	* src/via_panel.c: (ViaPanelScale), (ViaPanelGetNativeDisplayMode):
+
 2009-09-26  Bartosz Kosiorek  <gang65@poczta.onet.pl>
 
 	Save/restore ECK Clock Synthesizer

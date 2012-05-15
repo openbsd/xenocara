@@ -39,6 +39,7 @@ enum VIACHIPTAGS {
     VIA_P4M890,
     VIA_VX800,
     VIA_VX855,
+    VIA_VX900,
     VIA_LAST
 };
 
@@ -56,6 +57,7 @@ enum VIACHIPTAGS {
 #define PCI_CHIP_VT3327         0x3343 /* P4M890 */
 #define PCI_CHIP_VT3353         0x1122 /* VX800 */
 #define PCI_CHIP_VT3409         0x5122 /* VX855/VX875 */
+#define PCI_CHIP_VT3410         0x7122 /* VX900 */
 
 /* There is some conflicting information about the two major revisions of
  * the CLE266, often labelled Ax and Cx.  The dividing line seems to be

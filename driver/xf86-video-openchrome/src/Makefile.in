@@ -130,25 +130,34 @@ ETAGS = etags
 CTAGS = ctags
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
 ACLOCAL = @ACLOCAL@
+ADMIN_MAN_DIR = @ADMIN_MAN_DIR@
+ADMIN_MAN_SUFFIX = @ADMIN_MAN_SUFFIX@
 AMDEP_FALSE = @AMDEP_FALSE@
 AMDEP_TRUE = @AMDEP_TRUE@
 AMTAR = @AMTAR@
+AM_DEFAULT_VERBOSITY = @AM_DEFAULT_VERBOSITY@
+APP_MAN_DIR = @APP_MAN_DIR@
+APP_MAN_SUFFIX = @APP_MAN_SUFFIX@
 AR = @AR@
 AUTOCONF = @AUTOCONF@
 AUTOHEADER = @AUTOHEADER@
 AUTOMAKE = @AUTOMAKE@
 AWK = @AWK@
+BASE_CFLAGS = @BASE_CFLAGS@
 CC = @CC@
 CCDEPMODE = @CCDEPMODE@
 CFLAGS = @CFLAGS@
+CHANGELOG_CMD = @CHANGELOG_CMD@
 CPP = @CPP@
 CPPFLAGS = @CPPFLAGS@
+CWARNFLAGS = @CWARNFLAGS@
 CYGPATH_W = @CYGPATH_W@
 DEBUG_FALSE = @DEBUG_FALSE@
 DEBUG_TRUE = @DEBUG_TRUE@
 DEFS = @DEFS@
 DEPDIR = @DEPDIR@
 DLLTOOL = @DLLTOOL@
+DRIVER_MAN_DIR = @DRIVER_MAN_DIR@
 DRIVER_MAN_SUFFIX = @DRIVER_MAN_SUFFIX@
 DRIVER_NAME = @DRIVER_NAME@
 DRI_CFLAGS = @DRI_CFLAGS@
@@ -163,9 +172,12 @@ ECHO_T = @ECHO_T@
 EGREP = @EGREP@
 EXEEXT = @EXEEXT@
 FGREP = @FGREP@
+FILE_MAN_DIR = @FILE_MAN_DIR@
+FILE_MAN_SUFFIX = @FILE_MAN_SUFFIX@
 GREP = @GREP@
 HAVE_XEXTPROTO_71_FALSE = @HAVE_XEXTPROTO_71_FALSE@
 HAVE_XEXTPROTO_71_TRUE = @HAVE_XEXTPROTO_71_TRUE@
+INSTALL_CMD = @INSTALL_CMD@
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
@@ -175,6 +187,8 @@ LDFLAGS = @LDFLAGS@
 LIBOBJS = @LIBOBJS@
 LIBS = @LIBS@
 LIBTOOL = @LIBTOOL@
+LIB_MAN_DIR = @LIB_MAN_DIR@
+LIB_MAN_SUFFIX = @LIB_MAN_SUFFIX@
 LIPO = @LIPO@
 LN_S = @LN_S@
 LTLIBOBJS = @LTLIBOBJS@
@@ -183,6 +197,9 @@ MAINTAINER_MODE_FALSE = @MAINTAINER_MODE_FALSE@
 MAINTAINER_MODE_TRUE = @MAINTAINER_MODE_TRUE@
 MAKEINFO = @MAKEINFO@
 MANIFEST_TOOL = @MANIFEST_TOOL@
+MAN_SUBSTS = @MAN_SUBSTS@
+MISC_MAN_DIR = @MISC_MAN_DIR@
+MISC_MAN_SUFFIX = @MISC_MAN_SUFFIX@
 NM = @NM@
 NMEDIT = @NMEDIT@
 OBJDUMP = @OBJDUMP@
@@ -203,12 +220,16 @@ RANLIB = @RANLIB@
 SED = @SED@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
+STRICT_CFLAGS = @STRICT_CFLAGS@
 STRIP = @STRIP@
+TOOLS_FALSE = @TOOLS_FALSE@
+TOOLS_TRUE = @TOOLS_TRUE@
 VERSION = @VERSION@
 XEXT_CFLAGS = @XEXT_CFLAGS@
 XEXT_LIBS = @XEXT_LIBS@
 XORG_CFLAGS = @XORG_CFLAGS@
 XORG_LIBS = @XORG_LIBS@
+XORG_MAN_PAGE = @XORG_MAN_PAGE@
 XSERVER_LIBPCIACCESS_FALSE = @XSERVER_LIBPCIACCESS_FALSE@
 XSERVER_LIBPCIACCESS_TRUE = @XSERVER_LIBPCIACCESS_TRUE@
 XVMC_CFLAGS = @XVMC_CFLAGS@
@@ -263,9 +284,9 @@ sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 sysconfdir = @sysconfdir@
 target_alias = @target_alias@
-BUILT_SOURCES = svnversion.h
-EXTRA_DIST = svnversion.h $(am__append_2)
-CONFIG_CLEAN_FILES = svnversion.h
+BUILT_SOURCES = version.h
+EXTRA_DIST = version.h $(am__append_2)
+CONFIG_CLEAN_FILES = version.h
 AM_CFLAGS = @XORG_CFLAGS@ @DRI_CFLAGS@
 openchrome_drv_la_LTLIBRARIES = openchrome_drv.la
 openchrome_drv_la_LDFLAGS = -module -avoid-version
@@ -584,24 +605,29 @@ uninstall-am: uninstall-info-am uninstall-openchrome_drv_laLTLIBRARIES
 	uninstall-openchrome_drv_laLTLIBRARIES
 
 
-via_driver.lo: svnversion.h
-svnversion.h: $(openchrome_drv_la_SOURCES)
-	@if [ -d .svn ]; then \
-	echo '#define BUILDCOMMENT "(development build, at svn revision '\
-	"`svnversion -nc .. | sed -e s/^[^:]*://`"')"' > $@.tmp; \
-	else \
-	date +'#define BUILDCOMMENT "(development build, compiled on %c)"' \
-	> $@.tmp; \
-	fi
+via_driver.lo: version.h
+version.h: $(openchrome_drv_la_SOURCES)
+	@if [ -d ../.git ]; then \
+	    echo '#define BUILDCOMMENT "(developement build, at revision '\
+        "`git log -1 --pretty=format:%h | head -1`"')"' > $@.tmp; \
+    else \
+        if [ -d .svn ]; then \
+	        echo '#define BUILDCOMMENT "(development build, at revision '\
+	        "`svnversion -nc .. | sed -e s/^[^:]*://`"')"' > $@.tmp; \
+        else \
+	        date +'#define BUILDCOMMENT "(development build, compiled on %c)"' \
+        	> $@.tmp; \
+	    fi; \
+    fi
 
 	@chmod 666 $@.tmp
 	@mv $@.tmp $@
 	@echo "created $@"
 
 dist-hook:
-	rm svnversion.h;
+	rm version.h;
 	echo '#define BUILDCOMMENT "(openchrome '$(VERSION)' release)"' \
-	> svnversion.h
+	> version.h
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:

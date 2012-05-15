@@ -53,7 +53,7 @@ typedef struct __VIAHWDiff
 {
     unsigned long dwThreeHQVBuffer;    /* Use Three HQV Buffers */
     /* unsigned long dwV3SrcHeightSetting; *//* Set Video Source Width and Height */
-    /* unsigned long dwSupportExtendFIFO; *//* Support Extand FIFO */
+    /* unsigned long dwSupportExtendFIFO; *//* Support Extend FIFO */
     unsigned long dwHQVFetchByteUnit;  /* HQV Fetch Count unit is byte */
     unsigned long dwHQVInitPatch;      /* Initialize HQV Engine 2 times */
     /*unsigned long dwSupportV3Gamma; *//* Support V3 Gamma */
@@ -73,6 +73,8 @@ typedef struct __VIAHWDiff
     /*unsigned long dwV3FIFOPatch; *//* For CLE V3 FIFO Bug (srcWidth <= 8) */
     unsigned long dwSupportTwoColorKey;	/* Support two color key */
     /* unsigned long dwCxColorSpace; *//* CLE_Cx ColorSpace */
+    unsigned dwNewScaleCtl; /* Use new HQV scale engine code */
+    const unsigned *HQVCmeRegs; /* Which set of CME regs to use for newer chipsets */
 } VIAHWDiff;
 
 void VIAVidHWDiffInit(ScrnInfoPtr pScrn);

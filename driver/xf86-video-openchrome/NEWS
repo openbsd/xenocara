@@ -1,3 +1,76 @@
+openchrome 0.2.905 (10/02/2012)
+-------------------------------
+* New features :
+- VX900 support (Xv not supported yet).
+- VX855 XVideo support.
+
+* Bugfixes and enhancements :
+- More debug information to video decoding.
+- Add secondary FIFO support for K8M890 and P4M890.
+- Check the primary FIFO for VX855.
+- Add panel scale support for CLE266 and KM400.
+- Fix bug with malloc.
+- Enabled new mode switch for PM800 chipset.
+- Add option to enable unaccelerated RandR rotation ("SWRandR").
+- Enable new mode switch for VM800 chipsets.
+- More debug traces to via_video.c.
+- Fix manual and add more comments.
+- Fix start address.
+- Optimization of the hardware accelerated cursor and XAA (K8M890 chipset).
+- Code clean up.
+- Fix bug with suspend and VT switch on VX800 chipset and 64bit systems.
+- Synchronize via_drm.h with drm-2.4.17.
+- Fix segfaults with EXA and XV.
+- Fix build on old kernels.
+- Replace RegionsEqual with REGION_EQUAL and use
+  the xf86XVFillKeyHelperDrawable instead of xf86XVFillKeyHelper.
+- Fix DFP parameter description for the ActiveDevice option.
+- Manpage update and some minor changes.
+- Set colorkey for 2nd_monitor.
+- Add timeouts to HQV while loops.
+- Improve 2d performance on chipsets without AGP/PCIe.
+- Add option I2CDevices.
+- Disable Hardware Clipping for the VX855.
+- Re-Enable the VQ for VX800/VX855.
+- Disable AGP and DMA by default for VX800 and VX855.
+- Fixed freeze on 64bit system for K8M800 chipset.
+- Increase bandwidth to handle 1920x1200 resolution with DDR266.
+- Fix XV crash on PM800 post VX855 rework.
+- Fix several typo in code comments.
+- Update VX855 FIFO.
+- Fix bug with TV out flickering.
+- Replace the deprecated functions with new ones.
+  Refer to "/xserver/include/os.h".
+- Replace remaining xalloc to malloc.
+- Change maximum line pitch and virtual height according to chipset.
+- Update 1024x600 modeline.
+- Add workaround for memory autodetection.
+- Enable new mode switch and panel support on K8M800 and VM800.
+- Fix type in VIASave.
+- Use DRICreatePCIBusID when available to create Bus ID string.
+- Restore video interrupt flag.
+- Fix OpenGL application crash on VX900 chipset.
+- Fix VIA VB8001 Mini-ITX Board (P4M900) support.
+- Add workaround for bad memory detection on some P4M800.
+- Fix resolution detection for OLPC 1.5.
+- Fix Xvideo crash on X.Org server 1.10.
+- Fix XAA displaying issues.
+- Fix cursor garbare after suspend/hibernate/resume on VX855/VX900.
+- Workaround EXA crash with new libcairo2.
+- Handle X server 1.12 (videoabi 12).
+- Add support for I420 Xv surface.
+- Limit video RAM size to 256 MB, PCI BAR can't handle more.
+- Add Harald Welte's registers dump tool.
+
+* New boards :
+- ASRock PV530, ECS P4M800PRO-M2 (V2.0) , FIC CE2A1, FIC PTM800Pro LF,
+  Guillemot-Hercules ECafe EC900B, Hewlett Packard DX2020,
+  Hewlett Packard t5550 Thin Client, Lenovo ThinkCenter E51 8714,
+  MSI K8M890M2-V, MSI PM8M-V, MSI PM9M-V, OLPC XO 1.5,
+  Semp Informática Notebook IS 1462, Sharp Mebius PC-CS30H, Siragon ML-6200,
+  Twinhead K15V
+
+
 openchrome 0.2.904 (09/10/2009)
 -------------------------------
 * New features :

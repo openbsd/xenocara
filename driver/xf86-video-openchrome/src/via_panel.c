@@ -45,17 +45,17 @@ static ViaPanelModeRec ViaPanelNativeModes[] = {
     {1280, 768},
     {1280, 1024},
     {1400, 1050},
-    {1600, 1200},   /* 0x6 Resolution 1440x900 */
+    {1600, 1200},   /* 0x6 */
     {1280, 800},    /* 0x7 Resolution 1280x800 (Samsung NC20) */
     {800, 480},     /* 0x8 For Quanta 800x480 */
     {1024, 600},    /* 0x9 Resolution 1024x600 (for HP 2133) */
     {1366, 768},    /* 0xA Resolution 1366x768 */
     {1920, 1080},
     {1920, 1200},
-    {1280, 1024},   /* 0xD Need to be fixed to 1920x1200 */
-    {1440, 900},    /* 0xE Need to be fixed to 640x240 */
+    {1280, 1024},   /* 0xD */
+    {1440, 900},    /* 0xE */
     {1280, 720},    /* 0xF 480x640 */
-    {1200, 900},   /* 0x10 For Panasonic 1280x768 18bit Dual-Channel Panel */
+    {1200, 900},   /* 0x10 For OLPC 1.5 */
     {1360, 768},   /* 0x11 Resolution 1360X768 */
     {1024, 768},   /* 0x12 Resolution 1024x768 */
     {800, 480}     /* 0x13 General 8x4 panel use this setting */
@@ -147,6 +147,9 @@ ViaPanelScaleDisable(ScrnInfoPtr pScrn)
     vgaHWPtr hwp = VGAHWPTR(pScrn);
 
     ViaCrtcMask(hwp, 0x79, 0x00, 0x01);
+    /* Disable VX900 down scaling */
+    if (pVia->Chipset == VIA_VX900)
+        ViaCrtcMask(hwp, 0x89, 0x00, 0x01);
     if (pVia->Chipset != VIA_CLE266 && pVia->Chipset != VIA_KM400)
         ViaCrtcMask(hwp, 0xA2, 0x00, 0xC8);
 }
@@ -171,12 +174,18 @@ ViaPanelScale(ScrnInfoPtr pScrn, int resWidth, int resHeight,
                      resWidth, resHeight, panelWidth, panelHeight));
 
     if (resWidth < panelWidth) {
-        /* FIXME: It is different for chipset < K8M800 */
-        horScalingFactor = ((resWidth - 1) * 4096) / (panelWidth - 1);
+        /* Load Horizontal Scaling Factor */
+        if (pVia->Chipset != VIA_CLE266 && pVia->Chipset != VIA_KM400) {
+            horScalingFactor = ((resWidth - 1) * 4096) / (panelWidth - 1);
+            
+            /* Horizontal scaling enabled */
+            cra2 = 0xC0;
+            cr9f = horScalingFactor & 0x0003;          /* HSCaleFactor[1:0] at CR9F[1:0] */
+	} else {
+            /* TODO: Need testing */
+            horScalingFactor = ((resWidth - 1) * 1024) / (panelWidth - 1);
+        }
 
-        /* Horizontal scaling enabled */
-        cra2 = 0xC0;
-        cr9f = horScalingFactor & 0x0003;          /* HSCaleFactor[1:0] at CR9F[1:0] */
         cr77 = (horScalingFactor & 0x03FC) >> 2;   /* HSCaleFactor[9:2] at CR77[7:0] */
         cr79 = (horScalingFactor & 0x0C00) >> 10;  /* HSCaleFactor[11:10] at CR79[5:4] */
         cr79 <<= 4;
@@ -184,11 +193,18 @@ ViaPanelScale(ScrnInfoPtr pScrn, int resWidth, int resHeight,
     }
 
     if (resHeight < panelHeight) {
-        verScalingFactor = ((resHeight - 1) * 2048) / (panelHeight - 1);
+        /* Load Vertical Scaling Factor */
+        if (pVia->Chipset != VIA_CLE266 && pVia->Chipset != VIA_KM400) {
+            verScalingFactor = ((resHeight - 1) * 2048) / (panelHeight - 1);
 
-        /* Vertical scaling enabled */
-        cra2 |= 0x08;
-        cr79 |= ((verScalingFactor & 0x0001) << 3);       /* VSCaleFactor[0] at CR79[3] */
+            /* Vertical scaling enabled */
+            cra2 |= 0x08;
+            cr79 |= ((verScalingFactor & 0x0001) << 3);       /* VSCaleFactor[0] at CR79[3] */
+        } else {
+            /* TODO: Need testing */
+            verScalingFactor = ((resHeight - 1) * 1024) / (panelHeight - 1);
+        }
+
         cr78 |= (verScalingFactor & 0x01FE) >> 1;         /* VSCaleFactor[8:1] at CR78[7:0] */
         cr79 |= ((verScalingFactor & 0x0600) >> 9) << 6;  /* VSCaleFactor[10:9] at CR79[7:6] */
         scaling = TRUE;
@@ -203,12 +219,18 @@ ViaPanelScale(ScrnInfoPtr pScrn, int resWidth, int resHeight,
         ViaCrtcMask(hwp, 0x77, cr77, 0xFF);
         ViaCrtcMask(hwp, 0x78, cr78, 0xFF);
         ViaCrtcMask(hwp, 0x79, cr79, 0xF8);
-        ViaCrtcMask(hwp, 0x9F, cr9f, 0x03);
+        if (pVia->Chipset != VIA_CLE266 && pVia->Chipset != VIA_KM400) {
+            ViaCrtcMask(hwp, 0x9F, cr9f, 0x03);
+        }
         ViaCrtcMask(hwp, 0x79, 0x03, 0x03);
-    } else
+    } else {
+        /*  Disable panel scale */
         ViaCrtcMask(hwp, 0x79, 0x00, 0x01);
-
-    ViaCrtcMask(hwp, 0xA2, cra2, 0xC8);
+    }
+    
+    if (pVia->Chipset != VIA_CLE266 && pVia->Chipset != VIA_KM400) {
+        ViaCrtcMask(hwp, 0xA2, cra2, 0xC8);
+    }
 
     /* Horizontal scaling selection: interpolation */
     // ViaCrtcMask(hwp, 0x79, 0x02, 0x02);
@@ -233,14 +255,14 @@ ViaPanelGetNativeDisplayMode(ScrnInfoPtr pScrn)
 
     if (panelMode->Width && panelMode->Height) {
 
-        /* TODO: fix refresh rate and check malloc */
+        /* TODO: fix refresh rate */
         DisplayModePtr p = malloc( sizeof(DisplayModeRec) ) ;
-        memset(p, 0, sizeof(DisplayModeRec));
-
-        float refresh = 60.0f ;
-
-        /* The following code is borrowed from xf86SetModeCrtc. */
         if (p) {
+            memset(p, 0, sizeof(DisplayModeRec));
+
+            float refresh = 60.0f ;
+
+            /* The following code is borrowed from xf86SetModeCrtc. */
             viaTimingCvt(p, panelMode->Width, panelMode->Height, refresh, FALSE, TRUE);
             p->CrtcHDisplay = p->HDisplay;
             p->CrtcHSyncStart = p->HSyncStart;
@@ -256,9 +278,13 @@ ViaPanelGetNativeDisplayMode(ScrnInfoPtr pScrn)
             p->CrtcVBlankEnd = max(p->CrtcVSyncEnd, p->CrtcVTotal);
             p->CrtcHBlankStart = min(p->CrtcHSyncStart, p->CrtcHDisplay);
             p->CrtcHBlankEnd = max(p->CrtcHSyncEnd, p->CrtcHTotal);
-
+            
+            pVia->pBIOSInfo->Panel->NativeDisplayMode = p;
+        } else {
+            xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
+                     "Out of memory. Size: %d bytes\n", sizeof(DisplayModeRec));
         }
-        pVia->pBIOSInfo->Panel->NativeDisplayMode = p;
+        
     } else {
         xf86DrvMsg(pScrn->scrnIndex, X_WARNING,
                    "Invalid panel dimension (%dx%d)\n", panelMode->Width,
@@ -282,10 +308,7 @@ ViaPanelPreInit(ScrnInfoPtr pScrn)
         Bool ret;
 
         ret = ViaPanelGetSizeFromDDCv1(pScrn, &width, &height);
-/*
-        if (!ret)
-            ret = ViaPanelGetSizeFromDDCv2(pScrn, &width);
-*/
+
         if (ret) {
             panel->NativeModeIndex = ViaPanelLookUpModeIndex(width, height);
             DEBUG(xf86DrvMsg(pScrn->scrnIndex, X_INFO, "ViaPanelLookUpModeIndex, Width %d, Height %d, NativeModeIndex%d\n", width, height, panel->NativeModeIndex));
@@ -333,28 +356,28 @@ ViaPanelCenterMode(DisplayModePtr centerMode, DisplayModePtr panelMode,
 
 
 /*
- * Try to interprete EDID ourselves.
+ * Try to interpret EDID ourselves.
  */
 Bool
 ViaPanelGetSizeFromEDID(ScrnInfoPtr pScrn, xf86MonPtr pMon,
                         int *width, int *height)
 {
-    int i, max = 0, vsize;
+    int i, max_hsize = 0, vsize = 0;
 
     DEBUG(xf86DrvMsg(pScrn->scrnIndex, X_INFO, "VIAGetPanelSizeFromEDID\n"));
 
     /* !!! Why are we not checking VESA modes? */
 
     /* checking standard timings */
-    for (i = 0; i < 8; i++)
+    for (i = 0; i < STD_TIMINGS; i++)
         if ((pMon->timings2[i].hsize > 256)
-            && (pMon->timings2[i].hsize > max)) {
-            max = pMon->timings2[i].hsize;
+            && (pMon->timings2[i].hsize > max_hsize)) {
+            max_hsize = pMon->timings2[i].hsize;
             vsize = pMon->timings2[i].vsize;
         }
 
-    if (max != 0) {
-        *width = max;
+    if (max_hsize != 0) {
+        *width = max_hsize;
         *height = vsize;
         return TRUE;
     }
@@ -369,14 +392,14 @@ ViaPanelGetSizeFromEDID(ScrnInfoPtr pScrn, xf86MonPtr pMon,
             struct detailed_timings timing = pMon->det_mon[i].section.d_timings;
 
             /* ignore v_active for now */
-            if ((timing.clock > 15000000) && (timing.h_active > max)) {
-                max = timing.h_active;
+            if ((timing.clock > 15000000) && (timing.h_active > max_hsize)) {
+                max_hsize = timing.h_active;
                 vsize = timing.v_active;
             }
         }
 
-    if (max != 0) {
-        *width = max;
+    if (max_hsize != 0) {
+        *width = max_hsize;
         *height = vsize;
         return TRUE;
     }
@@ -386,7 +409,6 @@ ViaPanelGetSizeFromEDID(ScrnInfoPtr pScrn, xf86MonPtr pMon,
 
 Bool
 ViaPanelGetSizeFromDDCv1(ScrnInfoPtr pScrn, int *width, int *height)
-
 {
     VIAPtr pVia = VIAPTR(pScrn);
     xf86MonPtr pMon;
@@ -396,7 +418,7 @@ ViaPanelGetSizeFromDDCv1(ScrnInfoPtr pScrn, int *width, int *height)
     if (!xf86I2CProbeAddress(pVia->pI2CBus2, 0xA0))
         return FALSE;
 
-    pMon = xf86DoEDID_DDC2(pScrn->scrnIndex, pVia->pI2CBus2);
+    pMon = xf86DoEEDID(pScrn->scrnIndex, pVia->pI2CBus2, TRUE);
     if (!pMon)
         return FALSE;
 

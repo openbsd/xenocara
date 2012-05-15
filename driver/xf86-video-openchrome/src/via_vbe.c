@@ -230,7 +230,7 @@ ViaVbeSetMode(ScrnInfoPtr pScrn, DisplayModePtr pMode)
                 /* Some cards do not like setting the clock. */
                 xf86ErrorF("...but worked OK without customized "
                            "refresh and dotclock.\n");
-                xfree(data->block);
+                free(data->block);
                 data->block = NULL;
                 data->mode &= ~(1 << 11);
             } else {
@@ -322,7 +322,7 @@ ViaVbeSaveRestore(ScrnInfoPtr pScrn, vbeSaveRestoreFunction function)
                 && (function == MODE_SAVE)) {
                 /* Do not rely on the memory not being touched. */
                 if (pVia->vbeMode.pstate == NULL)
-                    pVia->vbeMode.pstate = xalloc(pVia->vbeMode.stateSize);
+                    pVia->vbeMode.pstate = malloc(pVia->vbeMode.stateSize);
                 memcpy(pVia->vbeMode.pstate, pVia->vbeMode.state,
                        pVia->vbeMode.stateSize);
             }

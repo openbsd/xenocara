@@ -104,7 +104,7 @@
 #define DRIVER_NAME     "openchrome"
 #define VERSION_MAJOR   0
 #define VERSION_MINOR   2
-#define PATCHLEVEL      904
+#define PATCHLEVEL      905
 #define VIA_VERSION     ((VERSION_MAJOR<<24) | (VERSION_MINOR<<16) | PATCHLEVEL)
 
 #define VIA_VQ_SIZE             (256 * 1024)
@@ -127,9 +127,10 @@ typedef struct {
     CARD8   SR27, SR28, SR29, SR2A,SR2B,SR2C,SR2D,SR2E;
     CARD8   SR2F, SR30, SR31, SR32,SR33,SR34,SR40,SR41;
     CARD8   SR42, SR43, SR44, SR45,SR46,SR47,SR48,SR49;
-    CARD8   SR4A, SR4B, SR4C;
+    CARD8   SR4A, SR4B, SR4C, SR4D;
 
     /*   extended CRTC registers */
+    CARD8   CR0C, CR0D;
     CARD8   CR13, CR30, CR31, CR32, CR33, CR34, CR35, CR36;
     CARD8   CR37, CR38, CR39, CR3A, CR40, CR41, CR42, CR43;
     CARD8   CR44, CR45, CR46, CR47, CR48, CR49, CR4A;
@@ -142,7 +143,7 @@ typedef struct {
 } VIARegRec, *VIARegPtr;
 
 /*
- * varables that need to be shared among different screens.
+ * variables that need to be shared among different screens.
  */
 typedef struct {
     Bool b3DRegsInitialized;
@@ -285,6 +286,7 @@ typedef struct _VIA {
     Bool                agpDMA;
     Bool                nPOT[VIA_NUM_TEXUNITS];
     const unsigned     *TwodRegs;
+    const unsigned     *HqvCmeRegs;
     ExaDriverPtr        exaDriverPtr;
     ExaOffscreenArea   *exa_scratch;
     unsigned int        exa_scratch_next;
@@ -412,6 +414,8 @@ typedef struct _VIA {
     void                *cursorMap;
     CARD32              cursorOffset;
 
+    CARD8               I2CDevices;     /* Option */
+
 #ifdef HAVE_DEBUG
     Bool                disableXvBWCheck;
     Bool                DumpVGAROM;
@@ -433,7 +437,7 @@ typedef struct
     Bool HasSecondary;
     Bool BypassSecondary;
     /*These two registers are used to make sure the CRTC2 is
-      retored before CRTC_EXT, otherwise it could lead to blank screen.*/
+      restored before CRTC_EXT, otherwise it could lead to blank screen.*/
     Bool IsSecondaryRestored;
     Bool RestorePrimary;
 

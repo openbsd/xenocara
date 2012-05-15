@@ -41,30 +41,42 @@ ViaSetTVClockSource(ScrnInfoPtr pScrn)
     VIABIOSInfoPtr pBIOSInfo = pVia->pBIOSInfo;
     vgaHWPtr hwp = VGAHWPTR(pScrn);
 
-    /* External TV: */
-    switch(pVia->Chipset) {
-        case VIA_CX700:
-        case VIA_VX800:
-            if (pBIOSInfo->FirstCRTC->IsActive) {
-                if(pBIOSInfo->TVDIPort == VIA_DI_PORT_DVP1)
-                    ViaCrtcMask(hwp, 0x6C, 0xB0, 0xF0);
-                else if(pBIOSInfo->TVDIPort == VIA_DI_PORT_DVP0)
-                    ViaCrtcMask(hwp, 0x6C, 0x90, 0xF0);
-            } else {
-                /* IGA2 */
-                if(pBIOSInfo->TVDIPort == VIA_DI_PORT_DVP1)
-                    ViaCrtcMask(hwp, 0x6C, 0x0B, 0x0F);
-                else if(pBIOSInfo->TVDIPort == VIA_DI_PORT_DVP0)
-                    ViaCrtcMask(hwp, 0x6C, 0x09, 0x0F);
+    switch(pBIOSInfo->TVEncoder) {
+        case VIA_VT1625:
+            /* External TV: */
+            switch(pVia->Chipset) {
+                case VIA_CX700:
+                case VIA_VX800:
+                case VIA_VX855:
+                    if (pBIOSInfo->FirstCRTC->IsActive) {
+                        if(pBIOSInfo->TVDIPort == VIA_DI_PORT_DVP1)
+                            ViaCrtcMask(hwp, 0x6C, 0xB0, 0xF0);
+                        else if(pBIOSInfo->TVDIPort == VIA_DI_PORT_DVP0)
+                            ViaCrtcMask(hwp, 0x6C, 0x90, 0xF0);
+                    } else {
+                        /* IGA2 */
+                        if(pBIOSInfo->TVDIPort == VIA_DI_PORT_DVP1)
+                            ViaCrtcMask(hwp, 0x6C, 0x0B, 0x0F);
+                        else if(pBIOSInfo->TVDIPort == VIA_DI_PORT_DVP0)
+                            ViaCrtcMask(hwp, 0x6C, 0x09, 0x0F);
+                    }
+                    break;
+                default:
+                    if (pBIOSInfo->FirstCRTC->IsActive)
+                        ViaCrtcMask(hwp, 0x6C, 0x21, 0x21);
+                    else
+                        ViaCrtcMask(hwp, 0x6C, 0xA1, 0xA1);
+                    break;
             }
             break;
         default:
             if (pBIOSInfo->FirstCRTC->IsActive)
-                ViaCrtcMask(hwp, 0x6C, 0x21, 0x21);
+                ViaCrtcMask(hwp, 0x6C, 0x50, 0xF0);
             else
-                ViaCrtcMask(hwp, 0x6C, 0xA1, 0xA1);
+                ViaCrtcMask(hwp, 0x6C, 0x05, 0x0F);
             break;
     }
+
 }
 
 static void

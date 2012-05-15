@@ -65,6 +65,31 @@
 #define IN_VIDEO_DISPLAY     (*((unsigned long volatile *)(pVia->VidMapBase+V_FLAGS))&VBI_STATUS)
 #define VIA_FIRETIMEOUT 40000
 
+enum HQV_CME_Regs {
+        HQV_SDO_CTRL1,
+        HQV_SDO_CTRL2,
+        HQV_SDO_CTRL3,
+        HQV_SDO_CTRL4
+};
+
+/* register offsets for VT3553/VX800 */
+static const unsigned hqv_cme_regs[] = {
+    [HQV_SDO_CTRL1]  = HQV_SRC_DATA_OFFSET_CONTROL1,
+    [HQV_SDO_CTRL2]  = HQV_SRC_DATA_OFFSET_CONTROL2,
+    [HQV_SDO_CTRL3]  = HQV_SRC_DATA_OFFSET_CONTROL3,
+    [HQV_SDO_CTRL4]  = HQV_SRC_DATA_OFFSET_CONTROL4
+};
+
+/* register hqv offsets for new VT3409/VX855 */
+static const unsigned hqv_cme_regs_409[] = {
+    [HQV_SDO_CTRL1]  = HQV_SRC_DATA_OFFSET_CTRL1_409,
+    [HQV_SDO_CTRL2]  = HQV_SRC_DATA_OFFSET_CTRL2_409,
+    [HQV_SDO_CTRL3]  = HQV_SRC_DATA_OFFSET_CTRL3_409,
+    [HQV_SDO_CTRL4]  = HQV_SRC_DATA_OFFSET_CTRL4_409
+};
+
+#define HQV_CME_REG(HWDiff, name) (HWDiff)->HQVCmeRegs[name]
+
 static void
 viaWaitVideoCommandFire(VIAPtr pVia)
 {
@@ -88,6 +113,7 @@ viaWaitHQVFlip(VIAPtr pVia)
 {
     unsigned long proReg = 0;
     CARD32 volatile *pdwState;
+    unsigned count = 50000;
 
     if (pVia->ChipId == PCI_CHIP_VT3259
         && !(pVia->swov.gdwVideoFlagSW & VIDEO_1_INUSE))
@@ -96,10 +122,9 @@ viaWaitHQVFlip(VIAPtr pVia)
     pdwState = (CARD32 volatile *)(pVia->VidMapBase + (HQV_CONTROL + proReg));
 
     if (pVia->VideoEngine == VIDEO_ENGINE_CME) {
-        // while (*pdwState & (HQV_SUBPIC_FLIP | HQV_SW_FLIP)) ;
-	while (*pdwState & HQV_SUBPIC_FLIP);
+		while (--count && (*pdwState & HQV_SUBPIC_FLIP));
     } else {
-        while (!(*pdwState & HQV_FLIP_STATUS)) ;
+        while (--count && !(*pdwState & HQV_FLIP_STATUS)) ;
     }
 }
 
@@ -109,8 +134,9 @@ viaWaitHQVFlipClear(VIAPtr pVia, unsigned long dwData)
     CARD32 volatile *pdwState =
             (CARD32 volatile *)(pVia->VidMapBase + HQV_CONTROL);
     *pdwState = dwData;
+    unsigned count = 50000;
 
-    while ((*pdwState & HQV_FLIP_STATUS)) {
+    while (--count && (*pdwState & HQV_FLIP_STATUS)) {
         VIDOutD(HQV_CONTROL, *pdwState | HQV_FLIP_STATUS);
     }
 }
@@ -126,6 +152,7 @@ viaWaitHQVDone(VIAPtr pVia)
 {
     CARD32 volatile *pdwState;
     unsigned long proReg = 0;
+    unsigned count = 50000;
 
     if (pVia->ChipId == PCI_CHIP_VT3259
         && !(pVia->swov.gdwVideoFlagSW & VIDEO_1_INUSE))
@@ -133,7 +160,7 @@ viaWaitHQVDone(VIAPtr pVia)
 
     pdwState = (CARD32 volatile *)(pVia->VidMapBase + (HQV_CONTROL + proReg));
     if (pVia->swov.MPEG_ON) {
-        while ((*pdwState & HQV_SW_FLIP)) ;
+        while (--count && (*pdwState & HQV_SW_FLIP)) ;
     }
 }
 
@@ -179,12 +206,14 @@ ResetVidRegBuffer(VIAPtr pVia)
 static void
 SaveVideoRegister(VIAPtr pVia, CARD32 index, CARD32 data)
 {
+    if (pVia->VidRegCursor >= VIDREG_BUFFER_SIZE) {
+        DBG_DD(ErrorF("SaveVideoRegister: Out of video register space flushing"));
+        FlushVidRegBuffer(pVia);
+        ResetVidRegBuffer(pVia);
+    }
+
     pVia->VidRegBuffer[pVia->VidRegCursor++] = index;
     pVia->VidRegBuffer[pVia->VidRegCursor++] = data;
-
-    if (pVia->VidRegCursor > VIDREG_BUFFER_SIZE) {
-        DBG_DD(ErrorF("SaveVideoRegister: Out of video register space"));
-    }
 }
 
 /*
@@ -224,6 +253,7 @@ VIAVidHWDiffInit(ScrnInfoPtr pScrn)
                 HWDiff->dwHQVDisablePatch = VID_HWDIFF_TRUE;
                 HWDiff->dwNeedV1Prefetch = VID_HWDIFF_FALSE;
             }
+            HWDiff->dwNewScaleCtl = VID_HWDIFF_FALSE;
             break;
         case VIA_KM400:
             HWDiff->dwThreeHQVBuffer = VID_HWDIFF_TRUE;
@@ -232,6 +262,7 @@ VIAVidHWDiffInit(ScrnInfoPtr pScrn)
             HWDiff->dwHQVInitPatch = VID_HWDIFF_FALSE;
             HWDiff->dwHQVDisablePatch = VID_HWDIFF_TRUE;
             HWDiff->dwNeedV1Prefetch = VID_HWDIFF_FALSE;
+            HWDiff->dwNewScaleCtl = VID_HWDIFF_FALSE;
             break;
         case VIA_K8M800:
             HWDiff->dwThreeHQVBuffer = VID_HWDIFF_TRUE;
@@ -240,6 +271,7 @@ VIAVidHWDiffInit(ScrnInfoPtr pScrn)
             HWDiff->dwHQVInitPatch = VID_HWDIFF_FALSE;
             HWDiff->dwHQVDisablePatch = VID_HWDIFF_TRUE;
             HWDiff->dwNeedV1Prefetch = VID_HWDIFF_FALSE;
+            HWDiff->dwNewScaleCtl = VID_HWDIFF_FALSE;
             break;
         case VIA_PM800:
             HWDiff->dwThreeHQVBuffer = VID_HWDIFF_TRUE;
@@ -248,6 +280,8 @@ VIAVidHWDiffInit(ScrnInfoPtr pScrn)
             HWDiff->dwHQVInitPatch = VID_HWDIFF_FALSE;
             HWDiff->dwHQVDisablePatch = VID_HWDIFF_FALSE;
             HWDiff->dwNeedV1Prefetch = VID_HWDIFF_FALSE;
+            HWDiff->dwNewScaleCtl = VID_HWDIFF_FALSE;
+            HWDiff->HQVCmeRegs = hqv_cme_regs;
             break;
         case VIA_VM800:
         case VIA_P4M900:
@@ -257,6 +291,8 @@ VIAVidHWDiffInit(ScrnInfoPtr pScrn)
             HWDiff->dwHQVInitPatch = VID_HWDIFF_FALSE;
             HWDiff->dwHQVDisablePatch = VID_HWDIFF_TRUE;
             HWDiff->dwNeedV1Prefetch = VID_HWDIFF_FALSE;
+            HWDiff->dwNewScaleCtl = VID_HWDIFF_FALSE;
+            HWDiff->HQVCmeRegs = hqv_cme_regs;
             break;
         case VIA_K8M890:
             HWDiff->dwThreeHQVBuffer = VID_HWDIFF_TRUE;
@@ -265,6 +301,8 @@ VIAVidHWDiffInit(ScrnInfoPtr pScrn)
             HWDiff->dwHQVInitPatch = VID_HWDIFF_FALSE;
             HWDiff->dwHQVDisablePatch = VID_HWDIFF_TRUE;
             HWDiff->dwNeedV1Prefetch = VID_HWDIFF_TRUE;
+            HWDiff->dwNewScaleCtl = VID_HWDIFF_FALSE;
+            HWDiff->HQVCmeRegs = hqv_cme_regs;
             break;
         case VIA_P4M890:
             HWDiff->dwThreeHQVBuffer = VID_HWDIFF_TRUE;
@@ -273,6 +311,8 @@ VIAVidHWDiffInit(ScrnInfoPtr pScrn)
             HWDiff->dwHQVInitPatch = VID_HWDIFF_FALSE;
             HWDiff->dwHQVDisablePatch = VID_HWDIFF_TRUE;
             HWDiff->dwNeedV1Prefetch = VID_HWDIFF_FALSE;
+            HWDiff->dwNewScaleCtl = VID_HWDIFF_FALSE;
+            HWDiff->HQVCmeRegs = hqv_cme_regs;
             break;
         case VIA_CX700:
             HWDiff->dwThreeHQVBuffer = VID_HWDIFF_TRUE;
@@ -281,8 +321,19 @@ VIAVidHWDiffInit(ScrnInfoPtr pScrn)
             HWDiff->dwHQVInitPatch = VID_HWDIFF_FALSE;
             HWDiff->dwHQVDisablePatch = VID_HWDIFF_FALSE;
             HWDiff->dwNeedV1Prefetch = VID_HWDIFF_FALSE;
+            HWDiff->dwNewScaleCtl = VID_HWDIFF_FALSE;
+            HWDiff->HQVCmeRegs = hqv_cme_regs;
             break;
         case VIA_VX800:
+            HWDiff->dwThreeHQVBuffer = VID_HWDIFF_TRUE;
+            HWDiff->dwHQVFetchByteUnit = VID_HWDIFF_TRUE;
+            HWDiff->dwSupportTwoColorKey = VID_HWDIFF_TRUE;
+            HWDiff->dwHQVInitPatch = VID_HWDIFF_FALSE;
+            HWDiff->dwHQVDisablePatch = VID_HWDIFF_FALSE;
+            HWDiff->dwNeedV1Prefetch = VID_HWDIFF_FALSE;
+            HWDiff->dwNewScaleCtl = VID_HWDIFF_TRUE;
+            HWDiff->HQVCmeRegs = hqv_cme_regs;
+            break;
         case VIA_VX855:
             HWDiff->dwThreeHQVBuffer = VID_HWDIFF_TRUE;
             HWDiff->dwHQVFetchByteUnit = VID_HWDIFF_TRUE;
@@ -290,6 +341,8 @@ VIAVidHWDiffInit(ScrnInfoPtr pScrn)
             HWDiff->dwHQVInitPatch = VID_HWDIFF_FALSE;
             HWDiff->dwHQVDisablePatch = VID_HWDIFF_FALSE;
             HWDiff->dwNeedV1Prefetch = VID_HWDIFF_FALSE;
+            HWDiff->dwNewScaleCtl = VID_HWDIFF_TRUE;
+            HWDiff->HQVCmeRegs = hqv_cme_regs_409;
             break;
         default:
             xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
@@ -339,6 +392,7 @@ viaOverlayGetV1V3Format(VIAPtr pVia, int vport, /* 1 or 3, as in V1 or V3 */
     if (videoFlag & VIDEO_HQV_INUSE) {
         switch (pVia->swov.SrcFourCC) {
             case FOURCC_YV12:
+            case FOURCC_I420:
             case FOURCC_XVMC:
                 *pHQVCtl |= HQV_YUV420;
                 break;
@@ -368,6 +422,7 @@ viaOverlayGetV1V3Format(VIAPtr pVia, int vport, /* 1 or 3, as in V1 or V3 */
     } else {
         switch (pVia->swov.SrcFourCC) {
             case FOURCC_YV12:
+            case FOURCC_I420:
             case FOURCC_XVMC:
                 if (vport == 1) {
                     *pVidCtl |= V1_YCbCr420;
@@ -450,6 +505,7 @@ viaOverlayGetSrcStartAddress(VIAPtr pVia,
                 break;
 
             case FOURCC_YV12:
+            case FOURCC_I420:
             case FOURCC_XVMC:
 
                 if (videoFlag & VIDEO_HQV_INUSE)
@@ -509,10 +565,12 @@ viaOverlayHQVCalcZoomWidth(VIAPtr pVia,
                            unsigned long *pMiniCtl,
                            unsigned long *pHQVfilterCtl,
                            unsigned long *pHQVminiCtl,
+                           unsigned long *pHQVscaleCtlH,
                            unsigned long *pHQVzoomflag)
 {
     unsigned long tmp, sw1, d, falign, mdiv;
     Bool zoom_ok = TRUE;
+    VIAHWDiff *hwDiff = &pVia->HWDiff;
 
     CARD32 HQVfilter[5] = { HQV_H_FILTER_DEFAULT, HQV_H_TAP4_121,
         HQV_H_TAP4_121, HQV_H_TAP8_12221, HQV_H_TAP8_12221
@@ -525,24 +583,57 @@ viaOverlayHQVCalcZoomWidth(VIAPtr pVia,
     if (srcWidth == dstWidth) { /* No zoom */
         *pHQVfilterCtl |= HQV_H_FILTER_DEFAULT;
     } else if (srcWidth < dstWidth) { /* Zoom in */
+			*pZoomCtl &= 0x0000FFFF;
+	        tmp = srcWidth * 0x800 / dstWidth;
+	        *pZoomCtl |= ((tmp & 0x7ff) << 16) | V1_X_ZOOM_ENABLE;
+	        *pMiniCtl |= V1_X_INTERPOLY;
+	        zoom_ok = !(tmp > 0x7ff);
 
-        tmp = srcWidth * 0x800 / dstWidth;
-        *pZoomCtl = ((tmp & 0x7ff) << 16) | V1_X_ZOOM_ENABLE;
-        *pMiniCtl |= V1_X_INTERPOLY;
-        zoom_ok = !(tmp > 0x7ff);
-
-        *pHQVzoomflag = 1;
-        *pHQVfilterCtl |= HQV_H_FILTER_DEFAULT;
-
+	        *pHQVzoomflag = 1;
+	        *pHQVfilterCtl |= HQV_H_FILTER_DEFAULT;
     } else { /* srcWidth > dstWidth - Zoom out */
+		if (hwDiff->dwNewScaleCtl) {
+            if (srcWidth > (dstWidth << 3)) {
+                /*<1/8*/
+                /*FIXME!*/
+                if (dstWidth <= 32) {
+                    dstWidth = 33;
+                }
+                if (srcWidth > (dstWidth << 5)) {
+                    tmp = 1 * 0x1000 / 31;
+                } else {
+                    tmp = (dstWidth * 0x1000) / srcWidth;
+                }
 
-        /* HQV rounding patch, instead of:
-         * //tmp = dstWidth*0x0800 / srcWidth; */
-        tmp = dstWidth * 0x800 * 0x400 / srcWidth;
-        tmp = tmp / 0x400 + ((tmp & 0x3ff) ? 1 : 0);
+                *pHQVscaleCtlH = HQV_H_SCALE_DOWN_UNDER_EIGHTH;
+            } else if (srcWidth == (dstWidth << 3)) {
+                /*1/8*/
+                tmp = ((dstWidth - 1) * 0x1000) / srcWidth;
+                *pHQVscaleCtlH = HQV_H_SCALE_DOWN_UNDER_EIGHTH;
+            } else if (srcWidth > (dstWidth << 2)) {
+                /*1/4 -1/8 zoom-out*/
+                tmp = (srcWidth * 0x1000) / dstWidth;
+                *pHQVscaleCtlH = HQV_H_SCALE_DOWN_FOURTH_TO_EIGHTH;
+            } else {
+                /*1-1/4 zoom-out*/
+                /*setting :src/(destination+0.5)*/
+                tmp = (srcWidth * 0x2000) / ((dstWidth << 1) + 1);
+                *pHQVscaleCtlH = HQV_H_SCALE_DOWN_FOURTH_TO_1;
+            }
 
-        *pHQVminiCtl = (tmp & 0x7ff) | HQV_H_MINIFY_ENABLE | HQV_H_MINIFY_DOWN;
+            /*rounding to nearest interger*/
+            tmp += (((tmp * 0x1000) & 0xfff) > 1) ? 1 : 0;
+            *pHQVscaleCtlH |= (tmp & 0x7fff) | HQV_H_SCALE_ENABLE;
+		} else {
+	        /* HQV rounding patch, instead of:
+	         * //tmp = dstWidth*0x0800 / srcWidth; */
+	        tmp = dstWidth * 0x800 * 0x400 / srcWidth;
+	        tmp = tmp / 0x400 + ((tmp & 0x3ff) ? 1 : 0);
 
+	        *pHQVminiCtl = (tmp & 0x7ff) | HQV_H_MINIFY_ENABLE | HQV_H_MINIFY_DOWN;
+
+	        *pHQVminiCtl |= HQV_HDEBLOCK_FILTER;
+		}
         /* Scale down the picture by a factor mdiv = (1 << d) = {2, 4, 8 or 16} */
 
         sw1 = srcWidth;
@@ -561,27 +652,25 @@ viaOverlayHQVCalcZoomWidth(VIAPtr pVia,
         *pMiniCtl |= ((d << 1) - 1) << 24; /* <= {1,3,5,7} << 24 */
 
         *pHQVfilterCtl |= HQVfilter[d];
-        /* *pHQVminiCtl = HQVmini[d]; */
-        *pHQVminiCtl |= HQV_HDEBLOCK_FILTER;
 
-        /* Scale to arbitrary size, on top of previous scaling by (1 << d). */
+       	/* Scale to arbitrary size, on top of previous scaling by (1 << d). */
 
-        if (sw1 < dstWidth) {
-            /* CLE bug
-             *pZoomCtl = sw1 * 0x0800 / dstWidth;*/
-            *pZoomCtl = (sw1 - 2) * 0x0800 / dstWidth;
-            *pZoomCtl = ((*pZoomCtl & 0x7ff) << 16) | V1_X_ZOOM_ENABLE;
-        }
-    }
+       	if (sw1 < dstWidth) {
+            	/* CLE bug
+           	*pZoomCtl = sw1 * 0x0800 / dstWidth;*/
+           	*pZoomCtl = (sw1 - 2) * 0x0800 / dstWidth;
+           	*pZoomCtl = ((*pZoomCtl & 0x7ff) << 16) | V1_X_ZOOM_ENABLE;
+   		}
 
-    if (videoFlag & VIDEO_1_INUSE) {
-        pVia->swov.overlayRecordV1.dwFetchAlignment = falign;
-        pVia->swov.overlayRecordV1.dwminifyH = mdiv;
-    } else {
-        pVia->swov.overlayRecordV3.dwFetchAlignment = falign;
-        pVia->swov.overlayRecordV3.dwminifyH = mdiv;
-    }
+    	if (videoFlag & VIDEO_1_INUSE) {
+        	pVia->swov.overlayRecordV1.dwFetchAlignment = falign;
+        	pVia->swov.overlayRecordV1.dwminifyH = mdiv;
+    	} else {
+        	pVia->swov.overlayRecordV3.dwFetchAlignment = falign;
+        	pVia->swov.overlayRecordV3.dwminifyH = mdiv;
+    	}
 
+	}
     return zoom_ok;
 }
 
@@ -591,10 +680,12 @@ viaOverlayHQVCalcZoomHeight(VIAPtr pVia,
                             unsigned long *pZoomCtl, unsigned long *pMiniCtl,
                             unsigned long *pHQVfilterCtl,
                             unsigned long *pHQVminiCtl,
+                            unsigned long *pHQVscaleCtlV,
                             unsigned long *pHQVzoomflag)
 {
     unsigned long tmp, sh1, d;
     Bool zoom_ok = TRUE;
+    VIAHWDiff *hwDiff = &pVia->HWDiff;
 
     CARD32 HQVfilter[5] = { HQV_V_TAP4_121, HQV_V_TAP4_121, HQV_V_TAP4_121,
                             HQV_V_TAP8_12221, HQV_V_TAP8_12221 };
@@ -608,48 +699,58 @@ viaOverlayHQVCalcZoomHeight(VIAPtr pVia,
     if (srcHeight == dstHeight) { /* No zoom */
         *pHQVfilterCtl |= HQV_V_TAP4_121;
     } else if (srcHeight < dstHeight) { /* Zoom in */
+		*pZoomCtl &= 0xFFFF0000;
+	    tmp = srcHeight * 0x400 / dstHeight - 1;
+	    *pZoomCtl |= ((tmp & 0x3ff) | V1_Y_ZOOM_ENABLE);
+	    *pMiniCtl |= (V1_Y_INTERPOLY | V1_YCBCR_INTERPOLY);
 
-        tmp = srcHeight * 0x0400 / dstHeight;
-        *pZoomCtl |= ((tmp & 0x3ff) | V1_Y_ZOOM_ENABLE);
-        *pMiniCtl |= (V1_Y_INTERPOLY | V1_YCBCR_INTERPOLY);
-
-        *pHQVzoomflag = 1;
-        *pHQVfilterCtl |= HQV_V_TAP4_121;
+	    *pHQVzoomflag = 1;
+	    *pHQVfilterCtl |= HQV_V_TAP4_121;
     } else { /* srcHeight > dstHeight - Zoom out */
+		if (hwDiff->dwNewScaleCtl) {
+            /*setting :src/(destination+0.5)*/
+            tmp = srcHeight * 0x2000 / ((dstHeight << 1) + 1);
+            tmp += (((tmp * 0x1000) & 0xfff) > 1) ? 1 : 0;
+            if ((tmp & 0x1ffff) == 0) {
+                tmp = 0x1ffff;
+            }
 
-        /* HQV rounding patch, instead of:
-         * //tmp = dstHeight*0x0800 / srcHeight; */
-        tmp = dstHeight * 0x0800 * 0x400 / srcHeight;
-        tmp = tmp / 0x400 + ((tmp & 0x3ff) ? 1 : 0);
-        *pHQVminiCtl |= (((tmp & 0x7ff) << 16) | HQV_V_MINIFY_ENABLE
-                         | HQV_V_MINIFY_DOWN);
+            *pHQVscaleCtlV = (tmp & 0x1ffff) | HQV_V_SCALE_ENABLE| HQV_V_SCALE_DOWN;
+		} else {
+	        /* HQV rounding patch, instead of:
+	         * //tmp = dstHeight*0x0800 / srcHeight; */
+	        tmp = dstHeight * 0x0800 * 0x400 / srcHeight;
+	        tmp = tmp / 0x400 + ((tmp & 0x3ff) ? 1 : 0);
+	        *pHQVminiCtl |= (((tmp & 0x7ff) << 16) | HQV_V_MINIFY_ENABLE
+	                         | HQV_V_MINIFY_DOWN);
 
-        /* Scale down the picture by a factor (1 << d) = {2, 4, 8 or 16} */
+	        /* Scale down the picture by a factor (1 << d) = {2, 4, 8 or 16} */
+	
+	        sh1 = srcHeight;
+	        for (d = 1; d < 5; d++) {
+	            sh1 >>= 1;
+	            if (sh1 <= dstHeight)
+	                break;
+	        }
+	        if (d == 5) { /* Too small. */
+	            d = 4;
+	            zoom_ok = FALSE;
+	        }
 
-        sh1 = srcHeight;
-        for (d = 1; d < 5; d++) {
-            sh1 >>= 1;
-            if (sh1 <= dstHeight)
-                break;
-        }
-        if (d == 5) { /* Too small. */
-            d = 4;
-            zoom_ok = FALSE;
-        }
+	        *pMiniCtl |= ((d << 1) - 1) << 16; /* <= {1,3,5,7} << 16 */
 
-        *pMiniCtl |= ((d << 1) - 1) << 16; /* <= {1,3,5,7} << 16 */
+	        *pHQVfilterCtl |= HQVfilter[d];
+	        /* *pHQVminiCtl |= HQVmini[d]; */
+	        *pHQVminiCtl |= HQV_VDEBLOCK_FILTER;
 
-        *pHQVfilterCtl |= HQVfilter[d];
-        /* *pHQVminiCtl |= HQVmini[d]; */
-        *pHQVminiCtl |= HQV_VDEBLOCK_FILTER;
+	        /* Scale to arbitrary size, on top of previous scaling by (1 << d). */
 
-        /* Scale to arbitrary size, on top of previous scaling by (1 << d). */
-
-        if (sh1 < dstHeight) {
-            tmp = sh1 * 0x0400 / dstHeight;
-            *pZoomCtl |= ((tmp & 0x3ff) | V1_Y_ZOOM_ENABLE);
-            *pMiniCtl |= V1_Y_INTERPOLY | V1_YCBCR_INTERPOLY;
-        }
+	        if (sh1 < dstHeight) {
+	            tmp = sh1 * 0x0400 / dstHeight;
+	            *pZoomCtl |= ((tmp & 0x3ff) | V1_Y_ZOOM_ENABLE);
+	            *pMiniCtl |= V1_Y_INTERPOLY | V1_YCBCR_INTERPOLY;
+	        }
+		}
     }
 
     return zoom_ok;
@@ -665,6 +766,7 @@ viaOverlayGetFetch(VIAPtr pVia, unsigned long videoFlag,
 
     switch (pVia->swov.SrcFourCC) {
         case FOURCC_YV12:
+        case FOURCC_I420:
         case FOURCC_XVMC:
             n = 0; /* 2^n = 1 byte per pixel (Y channel in planar YUV) */
             break;
@@ -1048,7 +1150,8 @@ AddHQVSurface(ScrnInfoPtr pScrn, unsigned int numbuf, CARD32 fourcc)
         !(pVia->swov.gdwVideoFlagSW & VIDEO_1_INUSE))
         proReg = PRO_HQV1_OFFSET;
 
-    isplanar = ((fourcc == FOURCC_YV12) || (fourcc == FOURCC_XVMC));
+    isplanar = ((fourcc == FOURCC_YV12) || (fourcc == FOURCC_I420) ||
+				(fourcc == FOURCC_XVMC));
 
     width = pVia->swov.SWDevice.gdwSWSrcWidth;
     height = pVia->swov.SWDevice.gdwSWSrcHeight;
@@ -1091,6 +1194,7 @@ CreateSurface(ScrnInfoPtr pScrn, CARD32 FourCC, CARD16 Width,
     isplanar = FALSE;
     switch (FourCC) {
         case FOURCC_YV12:
+        case FOURCC_I420:
         case FOURCC_XVMC:
             isplanar = TRUE;
             pitch = ALIGN_TO(Width, 32);
@@ -1183,9 +1287,10 @@ ViaSwovSurfaceCreate(ScrnInfoPtr pScrn, viaPortPrivPtr pPriv,
             break;
 
         case FOURCC_YV12:
+        case FOURCC_I420:
             retCode = CreateSurface(pScrn, FourCC, Width, Height, TRUE);
             if (retCode == Success)
-                retCode = AddHQVSurface(pScrn, numbuf, FOURCC_YV12);
+                retCode = AddHQVSurface(pScrn, numbuf, FourCC);
             break;
 
         case FOURCC_XVMC:
@@ -1247,6 +1352,7 @@ ViaSwovSurfaceDestroy(ScrnInfoPtr pScrn, viaPortPrivPtr pPriv)
                 break;
 
             case FOURCC_YV12:
+            case FOURCC_I420:
                 VIAFreeLinear(&pVia->swov.SWfbMem);
             case FOURCC_XVMC:
                 pVia->swov.SrcFourCC = 0;
@@ -1411,6 +1517,7 @@ SetupFIFOs(VIAPtr pVia, unsigned long videoFlag,
 {
     if (miniCtl & V1_Y_INTERPOLY) {
         if (pVia->swov.SrcFourCC == FOURCC_YV12
+			|| pVia->swov.SrcFourCC == FOURCC_I420
             || pVia->swov.SrcFourCC == FOURCC_XVMC) {
             if (videoFlag & VIDEO_HQV_INUSE) {
                 if (videoFlag & VIDEO_1_INUSE)
@@ -1444,6 +1551,7 @@ SetupFIFOs(VIAPtr pVia, unsigned long videoFlag,
         }
     } else {
         if (pVia->swov.SrcFourCC == FOURCC_YV12
+			|| pVia->swov.SrcFourCC == FOURCC_I420
             || pVia->swov.SrcFourCC == FOURCC_XVMC) {
             if (videoFlag & VIDEO_HQV_INUSE) {
                 if (videoFlag & VIDEO_1_INUSE)
@@ -1488,6 +1596,7 @@ SetColorKey(VIAPtr pVia, unsigned long videoFlag,
 
     if (videoFlag & VIDEO_1_INUSE) {
         SaveVideoRegister(pVia, V_COLOR_KEY, keyLow);
+        SaveVideoRegister(pVia, SND_COLOR_KEY, keyLow);
     } else {
         if (pVia->HWDiff.dwSupportTwoColorKey)    /*CLE_C0 */
             SaveVideoRegister(pVia, V3_COLOR_KEY, keyLow);
@@ -1561,8 +1670,9 @@ SetHQVFetch(VIAPtr pVia, CARD32 srcFetch, unsigned long srcHeight)
         srcFetch >>= 3;  /* fetch unit is 8 bytes */
     }
 
-    SaveVideoRegister(pVia, HQV_SRC_FETCH_LINE + proReg,
-                      ((srcFetch - 1) << 16) | (srcHeight - 1));
+    if (pVia->ChipId != PCI_CHIP_VT3409)
+        SaveVideoRegister(pVia, HQV_SRC_FETCH_LINE + proReg,
+                          ((srcFetch - 1) << 16) | (srcHeight - 1));
 }
 
 static void
@@ -1713,13 +1823,14 @@ Upd_Video(ScrnInfoPtr pScrn, unsigned long videoFlag,
     unsigned long zoomCtl = 0, miniCtl = 0;
     unsigned long hqvCtl = 0;
     unsigned long hqvFilterCtl = 0, hqvMiniCtl = 0;
+    unsigned long hqvScaleCtlH = 0, hqvScaleCtlV = 0;
     unsigned long haveHQVzoomH = 0, haveHQVzoomV = 0;
     unsigned long hqvSrcWidth = 0, hqvDstWidth = 0;
     unsigned long hqvSrcFetch = 0, hqvOffset = 0;
     unsigned long dwOffset = 0, fetch = 0, tmp = 0;
     unsigned long proReg = 0;
 
-    DBG_DD(ErrorF("videoflag=%p\n", videoFlag));
+    DBG_DD(ErrorF("videoflag=%ld\n", videoFlag));
 
     if (pVia->ChipId == PCI_CHIP_VT3259 && !(videoFlag & VIDEO_1_INUSE))
         proReg = PRO_HQV1_OFFSET;
@@ -1762,16 +1873,16 @@ Upd_Video(ScrnInfoPtr pScrn, unsigned long videoFlag,
 
     /* 
      * FIXME:
-     * Enable video on secondary 
+     * Enable video on secondary (change Panel to SecondCRTC?)
      */
     if ((pVia->VideoEngine == VIDEO_ENGINE_CME
          || pVia->Chipset == VIA_VM800)
         && pVia->pBIOSInfo->Panel->IsActive) {
 
         /* V1_ON_SND_DISPLAY */
-        vidCtl |= 0x80000000;
+        vidCtl |= V1_ON_SND_DISPLAY;
         /* SECOND_DISPLAY_COLOR_KEY_ENABLE */
-        compose |= 0x00010000 | 0x1;
+        compose |= SECOND_DISPLAY_COLOR_KEY_ENABLE | 0x1;
     }
 
     viaOverlayGetV1V3Format(pVia, (videoFlag & VIDEO_1_INUSE) ? 1 : 3,
@@ -1790,6 +1901,7 @@ Upd_Video(ScrnInfoPtr pScrn, unsigned long videoFlag,
     pVia->swov.overlayRecordV1.dwOffset = dwOffset;
 
     if (pVia->swov.SrcFourCC == FOURCC_YV12
+		|| pVia->swov.SrcFourCC == FOURCC_I420
         || pVia->swov.SrcFourCC == FOURCC_XVMC) {
 
         YCBCRREC YCbCr;
@@ -1882,6 +1994,7 @@ Upd_Video(ScrnInfoPtr pScrn, unsigned long videoFlag,
             SetHQVFetch(pVia, hqvSrcFetch, oriSrcHeight);
 
         if (pVia->swov.SrcFourCC == FOURCC_YV12
+            || pVia->swov.SrcFourCC == FOURCC_I420
             || pVia->swov.SrcFourCC == FOURCC_XVMC) {
             if (videoFlag & VIDEO_1_INUSE)
                 SaveVideoRegister(pVia, V1_STRIDE, srcPitch << 1);
@@ -1925,7 +2038,7 @@ Upd_Video(ScrnInfoPtr pScrn, unsigned long videoFlag,
 
     if (!viaOverlayHQVCalcZoomWidth(pVia, videoFlag, srcWidth, dstWidth,
                                     &zoomCtl, &miniCtl, &hqvFilterCtl,
-                                    &hqvMiniCtl, &haveHQVzoomH)) {
+                                    &hqvMiniCtl, &hqvScaleCtlH, &haveHQVzoomH)) {
         /* Need to scale (minify) too much - can't handle it. */
         SetFetch(pVia, videoFlag, fetch);
         FireVideoCommand(pVia, videoFlag, compose);
@@ -1964,7 +2077,7 @@ Upd_Video(ScrnInfoPtr pScrn, unsigned long videoFlag,
 
     if (!viaOverlayHQVCalcZoomHeight(pVia, srcHeight, dstHeight, &zoomCtl,
                                      &miniCtl, &hqvFilterCtl, &hqvMiniCtl,
-                                     &haveHQVzoomV)) {
+                                     &hqvScaleCtlV, &haveHQVzoomV)) {
         /* Need to scale (minify) too much - can't handle it. */
         FireVideoCommand(pVia, videoFlag, compose);
         FlushVidRegBuffer(pVia);
@@ -2008,8 +2121,13 @@ Upd_Video(ScrnInfoPtr pScrn, unsigned long videoFlag,
                 hqvFilterCtl &= 0xfffdffff;
             SetMiniAndZoom(pVia, videoFlag, 0, 0);
         }
-        SaveVideoRegister(pVia, HQV_MINIFY_CONTROL + proReg, hqvMiniCtl);
-        SaveVideoRegister(pVia, HQV_FILTER_CONTROL + proReg, hqvFilterCtl);
+		if (hwDiff->dwNewScaleCtl) {
+        	SaveVideoRegister(pVia, HQV_H_SCALE_CONTROL + proReg, hqvScaleCtlH);
+        	SaveVideoRegister(pVia, HQV_V_SCALE_CONTROL + proReg, hqvScaleCtlV);
+		} else {
+        	SaveVideoRegister(pVia, HQV_MINIFY_CONTROL + proReg, hqvMiniCtl);
+		}
+       	SaveVideoRegister(pVia, HQV_FILTER_CONTROL + proReg, hqvFilterCtl);
     } else
         SetMiniAndZoom(pVia, videoFlag, miniCtl, zoomCtl);
 
@@ -2022,11 +2140,24 @@ Upd_Video(ScrnInfoPtr pScrn, unsigned long videoFlag,
                                miniCtl, compose);
 
     if (pVia->VideoEngine == VIDEO_ENGINE_CME) {
-        VIDOutD(HQV_SRC_DATA_OFFSET_CONTROL1,0);
-        VIDOutD(HQV_SRC_DATA_OFFSET_CONTROL3,((pUpdate->SrcRight - 1 ) << 16) | (pUpdate->SrcBottom - 1));
+        SaveVideoRegister(pVia, HQV_CME_REG(hwDiff, HQV_SDO_CTRL1),0);
+        SaveVideoRegister(pVia, HQV_CME_REG(hwDiff, HQV_SDO_CTRL3),((pUpdate->SrcRight - 1 ) << 16) | (pUpdate->SrcBottom - 1));
         if (pVia->Chipset == VIA_VX800 || pVia->Chipset == VIA_VX855) {
-            VIDOutD(HQV_SRC_DATA_OFFSET_CONTROL2,0);
-            VIDOutD(HQV_SRC_DATA_OFFSET_CONTROL4,((pUpdate->SrcRight - 1 ) << 16) | (pUpdate->SrcBottom - 1));
+            SaveVideoRegister(pVia, HQV_CME_REG(hwDiff, HQV_SDO_CTRL2),0);
+            SaveVideoRegister(pVia, HQV_CME_REG(hwDiff, HQV_SDO_CTRL4),((pUpdate->SrcRight - 1 ) << 16) | (pUpdate->SrcBottom - 1));
+            if (pVia->Chipset == VIA_VX855) {
+                SaveVideoRegister(pVia, HQV_DST_DATA_OFFSET_CTRL1,0);
+                SaveVideoRegister(pVia, HQV_DST_DATA_OFFSET_CTRL3,((pUpdate->SrcRight - 1 ) << 16) | (pUpdate->SrcBottom - 1));
+                SaveVideoRegister(pVia, HQV_DST_DATA_OFFSET_CTRL2,0);
+                SaveVideoRegister(pVia, HQV_DST_DATA_OFFSET_CTRL4,((pUpdate->SrcRight - 1 ) << 16) | (pUpdate->SrcBottom - 1));
+                SaveVideoRegister(pVia, HQV_BACKGROUND_DATA_OFFSET,((pUpdate->SrcRight - 1 ) << 16) | (pUpdate->SrcBottom - 1));
+                SaveVideoRegister(pVia, HQV_EXTENDED_CONTROL,0);
+                /*0x3e0*/
+                SaveVideoRegister(pVia, HQV_SUBP_HSCALE_CTRL,0);
+                /*0x3e8*/
+                SaveVideoRegister(pVia, HQV_SUBP_VSCALE_CTRL,0);
+                SaveVideoRegister(pVia, HQV_DEFAULT_VIDEO_COLOR, HQV_FIX_COLOR);
+            }
         }
     }
 
@@ -2061,9 +2192,6 @@ Upd_Video(ScrnInfoPtr pScrn, unsigned long videoFlag,
                     DBG_DD(ErrorF("HQV control busy - %08lx\n", *HQVCtrl));
                     usleep(1);
                 }
-
-                if (pVia->VideoEngine == VIDEO_ENGINE_CME)
-                    hqvCtl |= HQV_GEN_IRQ;
 
                 VIDOutD(HQV_CONTROL + proReg, hqvCtl & ~HQV_SW_FLIP);
                 VIDOutD(HQV_CONTROL + proReg, hqvCtl | HQV_SW_FLIP);
@@ -2176,6 +2304,7 @@ VIAVidUpdateOverlay(ScrnInfoPtr pScrn, LPDDUPDATEOVERLAY pUpdate)
         (pVia->swov.SrcFourCC == FOURCC_RV16) ||
         (pVia->swov.SrcFourCC == FOURCC_RV32) ||
         (pVia->swov.SrcFourCC == FOURCC_YV12) ||
+        (pVia->swov.SrcFourCC == FOURCC_I420) ||
         (pVia->swov.SrcFourCC == FOURCC_XVMC)) {
         videoFlag = pVia->swov.gdwVideoFlagSW;
     }
@@ -2250,6 +2379,7 @@ VIAVidUpdateOverlay(ScrnInfoPtr pScrn, LPDDUPDATEOVERLAY pUpdate)
         (pVia->swov.SrcFourCC == FOURCC_RV16) ||
         (pVia->swov.SrcFourCC == FOURCC_RV32) ||
         (pVia->swov.SrcFourCC == FOURCC_YV12) ||
+        (pVia->swov.SrcFourCC == FOURCC_I420) ||
         (pVia->swov.SrcFourCC == FOURCC_XVMC)) {
         pVia->swov.SWDevice.gdwSWDstLeft = pUpdate->DstLeft + panDX;
         pVia->swov.SWDevice.gdwSWDstTop = pUpdate->DstTop + panDY;
@@ -2309,6 +2439,7 @@ ViaOverlayHide(ScrnInfoPtr pScrn)
         (pVia->swov.SrcFourCC == FOURCC_RV16) ||
         (pVia->swov.SrcFourCC == FOURCC_RV32) ||
         (pVia->swov.SrcFourCC == FOURCC_YV12) ||
+        (pVia->swov.SrcFourCC == FOURCC_I420) ||
         (pVia->swov.SrcFourCC == FOURCC_XVMC))
         videoFlag = pVia->swov.gdwVideoFlagSW;
 

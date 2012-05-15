@@ -98,6 +98,7 @@ viaHWCursorInit(ScreenPtr pScreen)
         case VIA_P4M900:
         case VIA_VX800:
         case VIA_VX855:
+        case VIA_VX900:
 			if (pVia->pBIOSInfo->FirstCRTC->IsActive) {
 				pVia->CursorRegControl  = VIA_REG_HI_CONTROL0;
 				pVia->CursorRegBase     = VIA_REG_HI_BASE0;
@@ -145,9 +146,12 @@ viaHWCursorInit(ScreenPtr pScreen)
     infoPtr->ShowCursor = viaShowCursor;
     infoPtr->UseHWCursor = viaUseHWCursor;
 
+    /* ARGB Cursor init */
     infoPtr->UseHWCursorARGB = viaUseHWCursorARGB;
-	if (pVia->CursorARGBSupported)
+    if (pVia->CursorARGBSupported) {
+        DEBUG(xf86DrvMsg(pScrn->scrnIndex, X_INFO, "HWCursor ARGB enabled\n"));
     	infoPtr->LoadCursorARGB = viaLoadCursorARGB;
+    }
 
     /* Set cursor location in frame buffer. */
     VIASETREG(VIA_REG_CURSOR_MODE, pVia->cursorOffset);
@@ -166,6 +170,7 @@ viaHWCursorInit(ScreenPtr pScreen)
         case VIA_P4M900:
         case VIA_VX800:
         case VIA_VX855:
+        case VIA_VX900:
 			if (pVia->pBIOSInfo->FirstCRTC->IsActive) {
 				VIASETREG(VIA_REG_PRIM_HI_INVTCOLOR, 0x00FFFFFF);
 				VIASETREG(VIA_REG_V327_HI_INVTCOLOR, 0x00FFFFFF);
@@ -225,6 +230,7 @@ viaCursorStore(ScrnInfoPtr pScrn)
         case VIA_P4M900:
         case VIA_VX800:
         case VIA_VX855:
+        case VIA_VX900:
 		if (pVia->pBIOSInfo->FirstCRTC->IsActive) {
 	    		pVia->CursorPrimHiInvtColor = VIAGETREG(VIA_REG_PRIM_HI_INVTCOLOR);
 	    		pVia->CursorV327HiInvtColor = VIAGETREG(VIA_REG_V327_HI_INVTCOLOR);
@@ -265,6 +271,7 @@ viaCursorRestore(ScrnInfoPtr pScrn)
         case VIA_P4M900:
         case VIA_VX800:
         case VIA_VX855:
+        case VIA_VX900:
 		if (pVia->pBIOSInfo->FirstCRTC->IsActive) {
 	    		VIASETREG(VIA_REG_PRIM_HI_INVTCOLOR, pVia->CursorPrimHiInvtColor);
 	    		VIASETREG(VIA_REG_V327_HI_INVTCOLOR, pVia->CursorV327HiInvtColor);
@@ -284,7 +291,7 @@ viaCursorRestore(ScrnInfoPtr pScrn)
 }
 
 /*
- * ARGB Cursor
+ * display the current cursor
  */
 
 void
@@ -298,6 +305,7 @@ viaShowCursor(ScrnInfoPtr pScrn)
         case VIA_P4M900:
         case VIA_VX800:
         case VIA_VX855:
+        case VIA_VX900:
              if (pVia->pBIOSInfo->FirstCRTC->IsActive) {
                  VIASETREG(VIA_REG_HI_CONTROL0, 0x36000005);
              }
@@ -319,13 +327,19 @@ viaShowCursor(ScrnInfoPtr pScrn)
             */
 
             /* Duoview */
-	    if (pVia->CursorPipe)
+	    if (pVia->CursorPipe) {
+                /* Mono Cursor Display Path [bit31]: Secondary */
+                /* FIXME For CLE266 and KM400 try to enable 32x32 cursor size [bit1] */
                 VIASETREG(VIA_REG_ALPHA_CONTROL, 0xF6000005);
-            else
+            } else {
+                /* Mono Cursor Display Path [bit31]: Primary */
                 VIASETREG(VIA_REG_ALPHA_CONTROL, 0x76000005);
+            }
     }
 }
 
+
+/* hide the current cursor */
 void
 viaHideCursor(ScrnInfoPtr pScrn)
 {
@@ -338,6 +352,7 @@ viaHideCursor(ScrnInfoPtr pScrn)
         case VIA_P4M900:
         case VIA_VX800:
         case VIA_VX855:
+        case VIA_VX900:
              if (pVia->pBIOSInfo->FirstCRTC->IsActive) {
                  temp = VIAGETREG(VIA_REG_HI_CONTROL0);
                  VIASETREG(VIA_REG_HI_CONTROL0, temp & 0xFFFFFFFA);
@@ -350,10 +365,16 @@ viaHideCursor(ScrnInfoPtr pScrn)
         
         default:
              temp = VIAGETREG(VIA_REG_ALPHA_CONTROL);
+             /* Hardware cursor disable [bit0] */
              VIASETREG(VIA_REG_ALPHA_CONTROL, temp & 0xFFFFFFFA);
     }
 }
 
+/*
+    Set the cursor position to (x,y).  X and/or y may be negative
+    indicating that the cursor image is partially offscreen on
+    the left and/or top edges of the screen.
+*/
 static void
 viaSetCursorPosition(ScrnInfoPtr pScrn, int x, int y)
 {
@@ -380,6 +401,7 @@ viaSetCursorPosition(ScrnInfoPtr pScrn, int x, int y)
         case VIA_P4M900:
         case VIA_VX800:
         case VIA_VX855:
+        case VIA_VX900:
              if (pVia->pBIOSInfo->FirstCRTC->IsActive) {                
                  VIASETREG(VIA_REG_HI_POS0,    ((x    << 16) | (y    & 0x07ff)));
                  VIASETREG(VIA_REG_HI_OFFSET0, ((xoff << 16) | (yoff & 0x07ff)));
@@ -409,6 +431,15 @@ viaUseHWCursorARGB(ScreenPtr pScreen, CursorPtr pCurs)
             && pCurs->bits->height <= pVia->CursorMaxHeight);
 }
 
+/*
+    If the driver is unable to use a hardware cursor for reasons
+    other than the cursor being larger than the maximum specified
+    in the MaxWidth or MaxHeight field below, it can supply the
+    UseHWCursor function.  If UseHWCursor is provided by the driver,
+    it will be called whenever the cursor shape changes or the video
+    mode changes.  This is useful for when the hardware cursor cannot
+    be used in interlaced or doublescan modes.
+*/
 static Bool
 viaUseHWCursor(ScreenPtr pScreen, CursorPtr pCurs)
 {
@@ -423,8 +454,11 @@ viaUseHWCursor(ScreenPtr pScreen, CursorPtr pCurs)
             && pCurs->bits->height <= pVia->CursorMaxHeight);
 }
 
+/*
+    Load Mono Cursor Image 
+*/
 static void
-viaLoadCursorImage(ScrnInfoPtr pScrn, unsigned char *s)
+viaLoadCursorImage(ScrnInfoPtr pScrn, unsigned char *src)
 {
     VIAPtr pVia = VIAPTR(pScrn);
     CARD32 temp;
@@ -439,7 +473,7 @@ viaLoadCursorImage(ScrnInfoPtr pScrn, unsigned char *s)
     if (pVia->CursorARGBSupported) {
 #define ARGB_PER_CHUNK	(8 * sizeof (chunk) / 2)
 		for (i = 0; i < (pVia->CursorMaxWidth * pVia->CursorMaxHeight / ARGB_PER_CHUNK); i++) {
-		    chunk = *s++;
+		    chunk = *src++;
 		    for (j = 0; j < ARGB_PER_CHUNK; j++, chunk >>= 2)
 			*dst++ = mono_cursor_color[chunk & 3];
 		}
@@ -447,7 +481,7 @@ viaLoadCursorImage(ScrnInfoPtr pScrn, unsigned char *s)
 		pVia->CursorFG = mono_cursor_color[3];
 		pVia->CursorBG = mono_cursor_color[2];
     } else {
-	memcpy(dst, (CARD8*)s, pVia->CursorSize);
+	memcpy(dst, (CARD8*)src, pVia->CursorSize);
     }
     switch(pVia->Chipset) {
         case VIA_CX700:
@@ -455,6 +489,7 @@ viaLoadCursorImage(ScrnInfoPtr pScrn, unsigned char *s)
         case VIA_P4M900:
         case VIA_VX800:
         case VIA_VX855:
+        case VIA_VX900:
              if (pVia->pBIOSInfo->FirstCRTC->IsActive) {
                  temp = VIAGETREG(VIA_REG_HI_CONTROL0);
                  VIASETREG(VIA_REG_HI_CONTROL0, temp & 0xFFFFFFFE);
@@ -471,11 +506,17 @@ viaLoadCursorImage(ScrnInfoPtr pScrn, unsigned char *s)
     }
 }
 
+/*
+    Set the cursor foreground and background colors.  In 8bpp, fg and
+    bg are indices into the current colormap unless the 
+    HARDWARE_CURSOR_TRUECOLOR_AT_8BPP flag is set.  In that case
+    and in all other bpps the fg and bg are in 8-8-8 RGB format.
+*/
+
 static void
 viaSetCursorColors(ScrnInfoPtr pScrn, int bg, int fg)
 {
     VIAPtr pVia = VIAPTR(pScrn);
-    CARD32 control = pVia->CursorRegControl;
     CARD32 pixel;
     CARD32 temp;
     CARD32 *dst;
@@ -487,11 +528,9 @@ viaSetCursorColors(ScrnInfoPtr pScrn, int bg, int fg)
     fg |= 0xff000000;
     bg |= 0xff000000;
 
+    /* Don't recolour the image if we don't have to. */
     if (fg == pVia->CursorFG && bg == pVia->CursorBG)
 	return;
-
-    temp = VIAGETREG(control);
-    VIASETREG(control, temp & 0xFFFFFFFE);
 
     dst = (CARD32*)pVia->cursorMap;
     for (i = 0; i < pVia->CursorMaxWidth * pVia->CursorMaxHeight; i++, dst++)
@@ -507,6 +546,7 @@ viaSetCursorColors(ScrnInfoPtr pScrn, int bg, int fg)
         case VIA_P4M900:
         case VIA_VX800:
         case VIA_VX855:
+        case VIA_VX900:
              if (pVia->pBIOSInfo->FirstCRTC->IsActive) {
                  temp = VIAGETREG(VIA_REG_HI_CONTROL0);
                  VIASETREG(VIA_REG_HI_CONTROL0, temp & 0xFFFFFFFE);
@@ -517,7 +557,8 @@ viaSetCursorColors(ScrnInfoPtr pScrn, int bg, int fg)
              }
              break;        
         default:
-             VIASETREG(control, temp);
+             temp = VIAGETREG(VIA_REG_ALPHA_CONTROL);
+             VIASETREG(VIA_REG_ALPHA_CONTROL, temp & 0xFFFFFFFE);
     }
 }
 

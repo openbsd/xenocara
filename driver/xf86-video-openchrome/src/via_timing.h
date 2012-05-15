@@ -40,7 +40,7 @@
 #define TIMING_CVT_WARN_REFRESH_RATE_NOT_RB 1 << 3
 
 /**
- * Geneartes a CVT modeline
+ * Generates a CVT modeline
  * mode must not be null, if mode->name is null a new char* will be allocated. 
  * 
  */

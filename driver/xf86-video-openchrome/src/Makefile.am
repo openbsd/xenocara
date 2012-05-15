@@ -24,9 +24,9 @@
 # _ladir passes a dummy rpath to libtool so the thing will actually link
 # TODO: -nostdlib/-Bstatic/-lgcc platform magic, not installing the .a, etc.
 
-BUILT_SOURCES = svnversion.h
-EXTRA_DIST = svnversion.h
-CONFIG_CLEAN_FILES= svnversion.h
+BUILT_SOURCES = version.h
+EXTRA_DIST = version.h
+CONFIG_CLEAN_FILES= version.h
 AM_CFLAGS = @XORG_CFLAGS@ @DRI_CFLAGS@
 openchrome_drv_la_LTLIBRARIES = openchrome_drv.la
 openchrome_drv_la_LDFLAGS = -module -avoid-version
@@ -92,21 +92,26 @@ EXTRA_DIST += \
 endif
 
 
-via_driver.lo: svnversion.h
-svnversion.h: $(openchrome_drv_la_SOURCES)
-	@if [ -d .svn ]; then \
-	echo '#define BUILDCOMMENT "(development build, at svn revision '\
-	"`svnversion -nc .. | sed -e s/^[^:]*://`"')"' > $@.tmp; \
-	else \
-	date +'#define BUILDCOMMENT "(development build, compiled on %c)"' \
-	> $@.tmp; \
-	fi
+via_driver.lo: version.h
+version.h: $(openchrome_drv_la_SOURCES)
+	@if [ -d ../.git ]; then \
+	    echo '#define BUILDCOMMENT "(developement build, at revision '\
+        "`git log -1 --pretty=format:%h | head -1`"')"' > $@.tmp; \
+    else \
+        if [ -d .svn ]; then \
+	        echo '#define BUILDCOMMENT "(development build, at revision '\
+	        "`svnversion -nc .. | sed -e s/^[^:]*://`"')"' > $@.tmp; \
+        else \
+	        date +'#define BUILDCOMMENT "(development build, compiled on %c)"' \
+        	> $@.tmp; \
+	    fi; \
+    fi
 
 	@chmod 666 $@.tmp
 	@mv $@.tmp $@
 	@echo "created $@"
 
 dist-hook:
-	rm svnversion.h;
+	rm version.h;
 	echo '#define BUILDCOMMENT "(openchrome '$(VERSION)' release)"' \
-	> svnversion.h
+	> version.h

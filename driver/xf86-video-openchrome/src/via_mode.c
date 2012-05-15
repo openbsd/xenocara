@@ -308,11 +308,14 @@ ViaDFPDetect(ScrnInfoPtr pScrn)
     xf86MonPtr          monPtr = NULL;
 
     if (pVia->pI2CBus2)
-        monPtr = xf86DoEDID_DDC2(pScrn->scrnIndex, pVia->pI2CBus2);
+        monPtr = xf86DoEEDID(pScrn->scrnIndex, pVia->pI2CBus2, TRUE);
     
     if (monPtr) {
         xf86PrintEDID(monPtr);
         xf86SetDDCproperties(pScrn, monPtr);
+        DEBUG(xf86DrvMsg(pScrn->scrnIndex, X_PROBED,
+                   "DDC pI2CBus2 detected a %s\n", DIGITAL(monPtr->features.input_type) ?
+                   "DFP" : "CRT"));
         return TRUE;
     } else {
         return FALSE;
@@ -380,6 +383,7 @@ ViaOutputsDetect(ScrnInfoPtr pScrn)
         case VIA_CX700:
         case VIA_VX800:
         case VIA_VX855:
+        case VIA_VX900:
             if (ViaDFPDetect(pScrn)) {
                 pBIOSInfo->DfpPresent = TRUE;
                 xf86DrvMsg(pScrn->scrnIndex, X_INFO,
@@ -514,6 +518,7 @@ ViaOutputsSelect(ScrnInfoPtr pScrn)
                 case VIA_CX700:
                 case VIA_VX800:
                 case VIA_VX855:
+                case VIA_VX900:
                     pVia->pBIOSInfo->Lvds->IsActive = TRUE ;
                     break;
             }
@@ -859,6 +864,9 @@ ViaGetMemoryBandwidth(ScrnInfoPtr pScrn)
         case VIA_MEM_DDR533:
         case VIA_MEM_DDR667:
             return VIA_BW_DDR667;
+        case VIA_MEM_DDR800:
+        case VIA_MEM_DDR1066:
+            return VIA_BW_DDR1066;
         default:
             xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
                        "ViaBandwidthAllowed: Unknown memory type: %d\n", pVia->MemClk);
@@ -999,8 +1007,8 @@ ViaSetDotclock(ScrnInfoPtr pScrn, CARD32 clock, int base, int probase)
         dn  = pll.params.dn;
         dm  = pll.params.dm;
 
-        /* The VX855 does not modify dm/dn, but earlier chipsets do. */
-        if (pVia->Chipset != VIA_VX855) {
+        /* The VX855 and VX900 do not modify dm/dn, but earlier chipsets do. */
+        if ((pVia->Chipset != VIA_VX855) && (pVia->Chipset != VIA_VX900)) {
             dm -= 2;
             dn -= 2;
         }
@@ -1078,7 +1086,7 @@ VIASetLCDMode(ScrnInfoPtr pScrn, DisplayModePtr mode)
             pBIOSInfo->Clock = Table.InitTb.LCDClk_12Bit;
         else {
             pBIOSInfo->Clock = Table.InitTb.VClk_12Bit;
-            /* for some reason still to be defined this is neccessary */
+            /* for some reason still to be defined this is necessary */
             ViaSetSecondaryDotclock(pScrn, Table.InitTb.LCDClk_12Bit);
         }
     } else {
@@ -1708,7 +1716,7 @@ ViaModeSet(ScrnInfoPtr pScrn, DisplayModePtr mode)
         ViaModeSecondCRTC(pScrn, mode);
         ViaSecondDisplayChannelEnable(pScrn);
     }
-
+    
     if (pBIOSInfo->FirstCRTC->IsActive) {
         if (pBIOSInfo->CrtActive) {
             /* CRT on FirstCRTC */
@@ -1734,6 +1742,15 @@ ViaModeSet(ScrnInfoPtr pScrn, DisplayModePtr mode)
         ViaDisplayDisableCRT(pScrn);
     }
 
+    // Enable panel support on VM800, K8M800 and VX900 chipset
+    // See: https://bugs.launchpad.net/openchrome/+bug/186103
+    if (pBIOSInfo->Panel->IsActive &&
+       ((pVia->Chipset == VIA_VM800) ||
+        (pVia->Chipset == VIA_K8M800) || 
+        (pVia->Chipset == VIA_VX900) )) {
+        pBIOSInfo->FirstCRTC->IsActive=TRUE;
+        ViaModeFirstCRTC(pScrn, mode);
+    }
     if (pBIOSInfo->Simultaneous->IsActive) {
         ViaDisplayEnableSimultaneous(pScrn);
     } else {

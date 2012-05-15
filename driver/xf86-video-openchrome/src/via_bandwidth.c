@@ -194,6 +194,7 @@ ViaSetPrimaryFIFO(ScrnInfoPtr pScrn, DisplayModePtr mode)
             else
                 ViaSeqMask(hwp, 0x22, 0x00, 0x1F);  /* 128/4 = overflow = 0 */
             break;
+        /* PM800/PM880/CN400 */
         case VIA_PM800:
             hwp->writeSeq(hwp, 0x17, 0x5F);     /* 95 */
             ViaSeqMask(hwp, 0x16, 0x20, 0xBF);  /* 32 */
@@ -204,9 +205,10 @@ ViaSetPrimaryFIFO(ScrnInfoPtr pScrn, DisplayModePtr mode)
             else
                 ViaSeqMask(hwp, 0x22, 0x1F, 0x1F);  /* 31 */
             break;
+        /* P4M800Pro/VN800/CN700 */ 
         case VIA_VM800:
             hwp->writeSeq(hwp, 0x17, 0x2F);
-            ViaSeqMask(hwp, 0x16, 0x14, 0xBF);
+            ViaSeqMask(hwp, 0x16, 0x14, 0xBF);  /* 80/4    = 20  = 0x14 */
             ViaSeqMask(hwp, 0x18, 0x08, 0xBF);
 
             if ((mode->HDisplay >= 1400) && (pScrn->bitsPerPixel == 32))
@@ -215,40 +217,60 @@ ViaSetPrimaryFIFO(ScrnInfoPtr pScrn, DisplayModePtr mode)
                 ViaSeqMask(hwp, 0x22, 0x00, 0x1F);
             break;
         case VIA_K8M890:
-            hwp->writeSeq(hwp, 0x16, 0x92);
-            hwp->writeSeq(hwp, 0x17, 0xB3);
-            hwp->writeSeq(hwp, 0x18, 0x8A);
+            /* depth location: {SR17,0,7} */
+            hwp->writeSeq(hwp, 0x17, 0xB3);    /* 360/2-1 = 179 = 0xB3 */
+            /* Formula (x & 0x3F) | ((x & 0x40) << 1) */
+            /* threshold location: {SR16,0,5},{SR16,7,7} */
+            ViaSeqMask(hwp, 0x16, 0x92, 0xBF); /* 328/4   = 82  = 0x52 */
+            /* high threshold location: {SR18,0,5},{SR18,7,7} */
+            ViaSeqMask(hwp, 0x18, 0x8A, 0xBF); /* 296/4   = 74  = 0x4A */
+            /* display queue expire num location: {SR22,0,4}. */
+            ViaSeqMask(hwp, 0x22, 0x1F, 0x1F); /* 124/4   = 31  = 0x1F */
             break;
         case VIA_P4M900:
-            ViaSeqMask(hwp, 0x17, 0x2F, 0xFF);
-            ViaSeqMask(hwp, 0x16, 0x13, 0x3F);
-            ViaSeqMask(hwp, 0x16, 0x00, 0x80);
-            ViaSeqMask(hwp, 0x18, 0x13, 0x3F);
-            ViaSeqMask(hwp, 0x18, 0x00, 0x80);
+            /* location: {SR17,0,7} */
+            hwp->writeSeq(hwp, 0x17, 0x2F);    /* 96/2-1  = 47  = 0x2F */
+            /* location: {SR16,0,5},{SR16,7,7} */
+            ViaSeqMask(hwp, 0x16, 0x13, 0xBF); /* 76/4    = 19  = 0x13 */
+            /* location: {SR18,0,5},{SR18,7,7} */
+            ViaSeqMask(hwp, 0x18, 0x13, 0xBF); /* 76/4    = 19  = 0x13 */
+            /* location: {SR22,0,4}. */
+            ViaSeqMask(hwp, 0x22, 0x08, 0x1F); /* 32/4    = 8   = 0x08 */
             break;
         case VIA_P4M890:
-            hwp->writeSeq(hwp, 0x16, 0x13);
-            hwp->writeSeq(hwp, 0x17, 0x2F);
-            hwp->writeSeq(hwp, 0x18, 0x53);
-            hwp->writeSeq(hwp, 0x22, 0x10);
+            hwp->writeSeq(hwp, 0x17, 0x2F);      /* 96/2-1  = 47  = 0x2F */
+            ViaSeqMask(hwp, 0x16, 0x13, 0xBF);   /* 76/4    = 19  = 0x13 */
+            ViaSeqMask(hwp, 0x18, 0x10, 0xBF);   /* 64/4    = 16  = 0x10 */
+            ViaSeqMask(hwp, 0x22, 0x08, 0x1F);   /* 32/4    = 8   = 0x08 */
             break;
         case VIA_CX700:
-            hwp->writeSeq(hwp, 0x16, 0x26);
             hwp->writeSeq(hwp, 0x17, 0x5F);
-            hwp->writeSeq(hwp, 0x18, 0x66);
-            hwp->writeSeq(hwp, 0x22, 0x1F);
+            ViaSeqMask(hwp, 0x16, 0x20, 0xBF);   /* 128/4  = 32  = 0x20 */
+            ViaSeqMask(hwp, 0x18, 0x20, 0xBF);   /* 128/4  = 32  = 0x20 */
+            ViaSeqMask(hwp, 0x22, 0x1F, 0x1F);   /* 124/4  = 31  = 0x1F */
             break;
         case VIA_VX800:
-            hwp->writeSeq(hwp, 0x16, 0x26); /* 152/4   = 38 */
-            hwp->writeSeq(hwp, 0x17, 0x5F); /* 192/2-1 = 95 */
+            hwp->writeSeq(hwp, 0x17, 0x5F); /* 192/2-1 = 95   = 0x5F */
+            hwp->writeSeq(hwp, 0x16, 0x26); /* 152/4   = 38   = 0x26 */
             hwp->writeSeq(hwp, 0x18, 0x26); /* 152/4   = 38 */ 
             hwp->writeSeq(hwp, 0x22, 0x10); /*  64/4   = 16 */
             break;
         case VIA_VX855:
-              hwp->writeSeq(hwp, 0x16, 0x50); /* 320/4   = 80 */
-              hwp->writeSeq(hwp, 0x17, 0xC7); /* 400/2-1 = 199 */
-              hwp->writeSeq(hwp, 0x18, 0x50); /* 320/4   = 80 */
-              hwp->writeSeq(hwp, 0x22, 0x28); /* 160/4   = 40 */
+            hwp->writeSeq(hwp, 0x17, 0xC7); /* 400/2-1 = 199  = 0xC7 */
+            /* Formula for {SR16,0,5},{SR16,7,7} is: (0x50 & 0x3F) | ((0x50 & 0x40) << 1) = 0x90 */
+            hwp->writeSeq(hwp, 0x16, 0x90); /* 320/4   = 80   = 0x50 */
+            /* Formula for {SR18,0,5},{SR18,7,7} is: (0x50 & 0x3F) | ((0x50 & 0x40) << 1) = 0x90 */
+            hwp->writeSeq(hwp, 0x18, 0x90); /* 320/4   = 80   = 0x50 */
+            hwp->writeSeq(hwp, 0x22, 0x28); /* 160/4   = 40   = 0x28 */
+            break;
+        case VIA_VX900:
+            hwp->writeSeq(hwp, 0x17, 0xC7); /* 400/2-1 = 199  = 0xC7 */
+            /* Formula for {SR16,0,5},{SR16,7,7} is: (0x50 & 0x3F) | ((0x50 & 0x40) << 1) = 0x90 */
+            hwp->writeSeq(hwp, 0x16, 0x90); /* 320/4   = 80   = 0x50 */
+            /* Formula for {SR18,0,5},{SR18,7,7} is: (0x50 & 0x3F) | ((0x50 & 0x40) << 1) = 0x90 */
+            hwp->writeSeq(hwp, 0x18, 0x90); /* 320/4   = 80   = 0x50 */
+            hwp->writeSeq(hwp, 0x22, 0x28); /* 160/4   = 40   = 0x28 */
+            break;
         default:
             xf86DrvMsg(pScrn->scrnIndex, X_ERROR, "ViaSetPrimaryFIFO: "
                        "Chipset %d not implemented\n", pVia->Chipset);
@@ -371,7 +393,38 @@ ViaSetSecondaryFIFO(ScrnInfoPtr pScrn, DisplayModePtr mode)
                 ViaCrtcMask(hwp, 0x94, 0x20, 0x7F);
             break;
         case VIA_P4M890:
+            /* depth location: {CR68,4,7},{CR94,7,7},{CR95,7,7} */
+            ViaCrtcMask(hwp, 0x68, 0xB0, 0xF0); /* 96/8-1 = 11  = 0x0B */
+            ViaCrtcMask(hwp, 0x94, 0x00, 0x80);
+            ViaCrtcMask(hwp, 0x95, 0x00, 0x80);
+
+            /* location: {CR68,0,3},{CR95,4,6} */
+            ViaCrtcMask(hwp, 0x68, 0x03, 0x0F); /* 76/4   = 19  = 0x13 */
+            ViaCrtcMask(hwp, 0x95, 0x10, 0x70);
+
+            /* location: {CR92,0,3},{CR95,0,2} */
+            ViaCrtcMask(hwp, 0x92, 0x00, 0x0F); /* 64/4   = 16  = 0x10 */
+            ViaCrtcMask(hwp, 0x95, 0x01, 0x07);
+
+            /* location: {CR94,0,6} */
+            ViaCrtcMask(hwp, 0x94, 0x08, 0x7F); /* 32/4   = 8   = 0x08 */
+            break;
         case VIA_K8M890:
+            /* Display Queue Depth, location: {CR68,4,7},{CR94,7,7},{CR95,7,7} */
+            ViaCrtcMask(hwp, 0x68, 0xC0, 0xF0); /* 360/8-1 = 44  = 0x2C; 0x2C << 4 = 0xC0 */
+            ViaCrtcMask(hwp, 0x94, 0x00, 0x80); /* 0x2C << 3 = 0x00 */
+            ViaCrtcMask(hwp, 0x95, 0x80, 0x80); /* 0x2C << 2 = 0x80 */
+
+            /* Display Queue Read Threshold 1, location: {CR68,0,3},{CR95,4,6} */
+            ViaCrtcMask(hwp, 0x68, 0x02, 0x0F); /* 328/4   = 82  = 0x52 */
+            ViaCrtcMask(hwp, 0x95, 0x50, 0x70);
+
+            /* location: {CR92,0,3},{CR95,0,2} */
+            ViaCrtcMask(hwp, 0x92, 0x0A, 0x0F); /* 296/4   = 74  = 0x4A */
+            ViaCrtcMask(hwp, 0x95, 0x04, 0x07); /* 0x4A >> 4 = 0x04 */
+
+            /* Display Expire Number Bits, location: {CR94,0,6} */
+            ViaCrtcMask(hwp, 0x94, 0x1F, 0x7F); /* 124/4   = 31  = 0x1F */
             break;
         case VIA_P4M900:
             ViaCrtcMask(hwp, 0x68, 0xB0, 0xF0);
@@ -402,8 +455,8 @@ ViaSetSecondaryFIFO(ScrnInfoPtr pScrn, DisplayModePtr mode)
             break;
         case VIA_VX800:
             /* {CR68,4,7},{CR94,7,7},{CR95,7,7} : 96/8-1 = 0x0B */
-            ViaCrtcMask(hwp, 0x68, 0xA0, 0xF0); 
-            ViaCrtcMask(hwp, 0x94, 0x00, 0x80);
+            ViaCrtcMask(hwp, 0x68, 0xB0, 0xF0); /* ((0x0B & 0x0F) << 4)) = 0xB0 */
+            ViaCrtcMask(hwp, 0x94, 0x00, 0x80); /* ((0x0B & 0x10) << 3)) = 0x00 */
             ViaCrtcMask(hwp, 0x95, 0x00, 0x80);
             /* {CR68,0,3},{CR95,4,6} : 64/4 = 0x10 */
             ViaCrtcMask(hwp, 0x68, 0x04, 0x0F);
@@ -418,6 +471,38 @@ ViaSetSecondaryFIFO(ScrnInfoPtr pScrn, DisplayModePtr mode)
                 ViaCrtcMask(hwp, 0x94, 0x20, 0x7F);
             break;
         case VIA_VX855:
+            /* {CR68,4,7},{CR94,7,7},{CR95,7,7} : 200/8-1 = 24 = 0x18 */
+            ViaCrtcMask(hwp, 0x68, 0x80, 0xF0); /* ((0x18 & 0x0F) << 4)) = 0x80 */
+            ViaCrtcMask(hwp, 0x94, 0x80, 0x80); /* ((0x18 & 0x10) << 3)) = 0x80 */
+            ViaCrtcMask(hwp, 0x95, 0x00, 0x80); /* ((0x18 & 0x20) << 2)) = 0x00 */
+            /* {CR68,0,3},{CR95,4,6} : 160/4 = 0x28 */
+            ViaCrtcMask(hwp, 0x68, 0x08, 0x0F); /* (0x28 & 0x0F) = 0x08 */
+            ViaCrtcMask(hwp, 0x95, 0x20, 0x70); /* (0x28 & 0x70) = 0x20 */
+            /* {CR92,0,3},{CR95,0,2} : 160/4 = 0x28 */
+            ViaCrtcMask(hwp, 0x92, 0x08, 0x08); /* (0x28 & 0x0F) = 0x08 */
+            ViaCrtcMask(hwp, 0x95, 0x02, 0x07); /* ((0x28 & 0x70) >> 4)) = 0x02 */
+            /* {CR94,0,6} : 320/4 = 0x50 */
+            if ((mode->HDisplay >= 1400) && (pScrn->bitsPerPixel == 32))
+                ViaCrtcMask(hwp, 0x94, 0x08, 0x7F);
+            else
+                ViaCrtcMask(hwp, 0x94, 0x08, 0x7F);
+            break;
+        case VIA_VX900:
+            /* {CR68,4,7},{CR94,7,7},{CR95,7,7} : 192/8-1 = 23 = 0x17 */
+            ViaCrtcMask(hwp, 0x68, 0x70, 0xF0); /* ((0x17 & 0x0F) << 4)) = 0x70 */
+            ViaCrtcMask(hwp, 0x94, 0x80, 0x80); /* ((0x17 & 0x10) << 3)) = 0x80 */
+            ViaCrtcMask(hwp, 0x95, 0x00, 0x80); /* ((0x17 & 0x20) << 2)) = 0x00 */
+            /* {CR68,0,3},{CR95,4,6} : 160/4 = 0x28 */
+            ViaCrtcMask(hwp, 0x68, 0x08, 0x0F); /* (0x28 & 0x0F) = 0x08 */
+            ViaCrtcMask(hwp, 0x95, 0x20, 0x70); /* (0x28 & 0x70) = 0x20 */
+            /* {CR92,0,3},{CR95,0,2} : 160/4 = 0x28 */
+            ViaCrtcMask(hwp, 0x92, 0x08, 0x08); /* (0x28 & 0x0F) = 0x08 */
+            ViaCrtcMask(hwp, 0x95, 0x02, 0x07); /* ((0x28 & 0x70) >> 4)) = 0x2 */
+            /* {CR94,0,6} : 320/4 = 0x50 */
+            if ((mode->HDisplay >= 1400) && (pScrn->bitsPerPixel == 32))
+                ViaCrtcMask(hwp, 0x94, 0x08, 0x7F);
+            else
+                ViaCrtcMask(hwp, 0x94, 0x08, 0x7F);
             break;
         default:
             xf86DrvMsg(pScrn->scrnIndex, X_ERROR, "ViaSetSecondaryFIFO: "

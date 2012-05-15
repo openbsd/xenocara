@@ -82,6 +82,11 @@
 #define	    VIA_DEVICE_TV		    0x04
 #define	    VIA_DEVICE_DFP		    0x08
 
+#define     VIA_I2C_NONE                    0x00
+#define     VIA_I2C_BUS1                    0x01
+#define     VIA_I2C_BUS2                    0x02
+#define     VIA_I2C_BUS3                    0x04
+
 /* System Memory CLK */
 #define VIA_MEM_SDR66   0x00
 #define VIA_MEM_SDR100  0x01
@@ -92,7 +97,9 @@
 #define VIA_MEM_DDR400  0x06
 #define VIA_MEM_DDR533  0x07
 #define VIA_MEM_DDR667  0x08
-#define VIA_MEM_END     0x09
+#define VIA_MEM_DDR800  0x09
+#define VIA_MEM_DDR1066 0x0A
+#define VIA_MEM_END     0x0B
 #define VIA_MEM_NONE    0xFF
 
 /* Digital Output Bus Width */

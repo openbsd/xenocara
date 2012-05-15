@@ -22,13 +22,19 @@
 
 AC_PREREQ(2.57)
 AC_INIT([xf86-video-openchrome],
-        0.2.904,
+        0.2.905,
         [http://www.openchrome.org/trac/report/1],
         xf86-video-openchrome)
 
 AC_CONFIG_SRCDIR([Makefile.am])
 AM_CONFIG_HEADER([config.h])
 AC_CONFIG_AUX_DIR(.)
+
+# Require X.Org macros 1.8 or later for MAN_SUBSTS set by XORG_MANPAGE_SECTIONS
+m4_ifndef([XORG_MACROS_VERSION],
+          [m4_fatal([must install xorg-macros 1.8 or later before running autoconf/autogen])])
+XORG_MACROS_VERSION(1.8)
+XORG_DEFAULT_OPTIONS
 
 AM_INIT_AUTOMAKE([dist-bzip2])
 
@@ -61,6 +67,11 @@ AC_ARG_ENABLE(xv-debug, AC_HELP_STRING([--enable-xv-debug],
 				    [Enable XVideo debugging support [[default=no]]]),
               [XV_DEBUG="$enableval"],
               [XV_DEBUG=no])
+
+AC_ARG_ENABLE(viaregtool, AC_HELP_STRING([--enable-viaregtool],
+				    [Enable build of registers dumper tool [[default=no]]]),
+              [TOOLS="$enableval"],
+              [TOOLS=no])
 
 # Checks for extensions
 XORG_DRIVER_CHECK_EXT(RANDR, randrproto)
@@ -161,6 +172,11 @@ if test "$XV_DEBUG" = yes; then
         AC_DEFINE(XV_DEBUG,1,[Enable XVideo debug support])
 fi
 
+AM_CONDITIONAL(TOOLS, test x$TOOLS = xyes)
+if test "$TOOLS" = yes; then
+        AC_DEFINE(TOOLS,1,[Enable build of registers dumper tool])
+fi
+
 AC_SUBST([DRI_CFLAGS])
 AC_SUBST([XORG_CFLAGS])
 AC_SUBST([moduledir])
@@ -183,4 +199,5 @@ AC_OUTPUT([
 	libxvmc/Makefile
 	man/Makefile
 	src/Makefile
+	tools/Makefile
 ])

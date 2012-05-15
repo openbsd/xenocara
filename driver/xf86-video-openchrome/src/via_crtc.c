@@ -174,6 +174,7 @@ ViaFirstCRTCSetMode(ScrnInfoPtr pScrn, DisplayModePtr mode)
         case VIA_P4M900:
 	case VIA_VX800:
 	case VIA_VX855:
+	case VIA_VX900:
             break;
         default:
             ViaSeqMask(hwp, 0x16, 0x08, 0xBF);
@@ -234,8 +235,8 @@ ViaFirstCRTCSetMode(ScrnInfoPtr pScrn, DisplayModePtr mode)
     /* Primary starting address -> 0x00, adjustframe does the rest */
     hwp->writeCrtc(hwp, 0x0C, 0x00);
     hwp->writeCrtc(hwp, 0x0D, 0x00);
-    hwp->writeCrtc(hwp, 0x34, 0x00);
     ViaCrtcMask(hwp, 0x48, 0x00, 0x03); /* is this even possible on CLE266A ? */
+    hwp->writeCrtc(hwp, 0x34, 0x00);
 
     /* vertical sync start : 2047 */
     temp = mode->CrtcVSyncStart;
@@ -278,6 +279,7 @@ ViaFirstCRTCSetMode(ScrnInfoPtr pScrn, DisplayModePtr mode)
         case VIA_P4M900:
 	case VIA_VX800:
 	case VIA_VX855:
+	case VIA_VX900:
             break;
         default:
             /* some leftovers */
@@ -314,6 +316,7 @@ ViaFirstCRTCSetMode(ScrnInfoPtr pScrn, DisplayModePtr mode)
         case VIA_P4M900:
 	case VIA_VX800:
 	case VIA_VX855:
+	case VIA_VX900:
             break;
         default:
             /* some leftovers */
@@ -331,15 +334,20 @@ ViaFirstCRTCSetStartingAddress(ScrnInfoPtr pScrn, int x, int y)
     CARD32 Base;
     CARD32 tmp;
 
+    DEBUG(xf86DrvMsg(pScrn->scrnIndex, X_INFO, "ViaFirstCRTCSetStartingAddress\n"));
+
     Base = (y * pScrn->displayWidth + x) * (pScrn->bitsPerPixel / 8);
     Base = Base >> 1;
 
     hwp->writeCrtc(hwp, 0x0C, (Base & 0xFF00) >> 8);
     hwp->writeCrtc(hwp, 0x0D, Base & 0xFF);
-    hwp->writeCrtc(hwp, 0x34, (Base & 0xFF0000) >> 16);
-
+    /* FIXME The proper starting address for CR48 is 0x1F - Bits[28:24] */
     if (!(pVia->Chipset == VIA_CLE266 && CLE266_REV_IS_AX(pVia->ChipRev)))
         ViaCrtcMask(hwp, 0x48, Base >> 24, 0x0F);
+    /* CR34 are fire bits. Must be written after CR0C CR0D CR48.  */
+    hwp->writeCrtc(hwp, 0x34, (Base & 0xFF0000) >> 16);
+
+
 }
 
 void
@@ -434,6 +442,7 @@ ViaSecondCRTCSetMode(ScrnInfoPtr pScrn, DisplayModePtr mode)
         case VIA_P4M900:
 	case VIA_VX800:
 	case VIA_VX855:
+	case VIA_VX900:  
             break;
         default:
             ViaSeqMask(hwp, 0x16, 0x08, 0xBF);
@@ -518,6 +527,7 @@ ViaSecondCRTCSetMode(ScrnInfoPtr pScrn, DisplayModePtr mode)
         case VIA_P4M900:
 	case VIA_VX800:
 	case VIA_VX855:
+	case VIA_VX900:
             break;
         default:
             /* some leftovers */

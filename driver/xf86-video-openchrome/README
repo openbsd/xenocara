@@ -15,6 +15,7 @@ SUPPORTED CHIPSETS :
 - P4M900/VN896 (VT3364)
 - VX800 (VT3353)
 - VX855 (VT3409)
+- VX900 (VT3410)
 
 
 SUPPORTED FEATURES :
@@ -24,13 +25,6 @@ SUPPORTED FEATURES :
 - TV-out support.
 - EXA acceleration.
 - Hardware MPEG2 acceleration.
-
-
-IMPORTANT NOTE :
-----------------
-- The driver name is now 'openchrome', and this is what you need to use in
-  your xorg.conf now (instead of 'via'). The XvMC libraries have also been
-  renamed, to 'libchromeXvMC.so' and 'libchromeXvMCPro.so'.
 
 
 KNOWN BUGS/LIMITATIONS :
@@ -63,6 +57,9 @@ KNOWN BUGS/LIMITATIONS :
 * Chrome9
 - Chrome9 chipsets' family (P4M900, K8M890, VX800, VX855) currently doesn't
   support neither AGP DMA nor 3D acceleration. 
+
+* VX900
+- Xv is not yet supported.
 
 
 Please note that 3D acceleration is provided by Mesa (http://mesa3d.org) and is

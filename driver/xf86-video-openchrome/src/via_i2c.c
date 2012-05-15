@@ -365,9 +365,18 @@ ViaI2CInit(ScrnInfoPtr pScrn)
 
     DEBUG(xf86DrvMsg(pScrn->scrnIndex, X_INFO, "ViaI2CInit\n"));
 
-    pVia->pI2CBus1 = ViaI2CBus1Init(pScrn->scrnIndex);
-    pVia->pI2CBus2 = ViaI2CBus2Init(pScrn->scrnIndex);
-    pVia->pI2CBus3 = ViaI2CBus3Init(pScrn->scrnIndex);
+    if (!pVia->I2CDevices) {
+        pVia->pI2CBus1 = ViaI2CBus1Init(pScrn->scrnIndex);
+        pVia->pI2CBus2 = ViaI2CBus2Init(pScrn->scrnIndex);
+        pVia->pI2CBus3 = ViaI2CBus3Init(pScrn->scrnIndex);
+    } else {
+        if (pVia->I2CDevices & VIA_I2C_BUS1)
+            pVia->pI2CBus1 = ViaI2CBus1Init(pScrn->scrnIndex);
+        if (pVia->I2CDevices & VIA_I2C_BUS2)
+            pVia->pI2CBus2 = ViaI2CBus2Init(pScrn->scrnIndex);
+        if (pVia->I2CDevices & VIA_I2C_BUS3)
+            pVia->pI2CBus3 = ViaI2CBus3Init(pScrn->scrnIndex);
+    }
 
 #ifdef HAVE_DEBUG
     if (pVia->I2CScan) {

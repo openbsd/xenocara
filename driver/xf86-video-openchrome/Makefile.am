@@ -19,6 +19,11 @@
 #  CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 AUTOMAKE_OPTIONS = foreign
-SUBDIRS = src man libxvmc
+SUBDIRS = src man libxvmc tools
 
 EXTRA_DIST = COPYING NEWS README
+
+ChangeLog:
+	$(CHANGELOG_CMD)
+
+dist-hook: ChangeLog

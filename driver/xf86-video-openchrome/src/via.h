@@ -34,7 +34,7 @@
 
 /* Video Engines */
 #define VIDEO_ENGINE_UNK	0 /* Unknown video engine */
-#define VIDEO_ENGINE_CLE	1 /* CLE First generaion video engine */
+#define VIDEO_ENGINE_CLE	1 /* CLE First generation video engine */
 #define VIDEO_ENGINE_CME	2 /* CME Second generation video engine */
 
 /* Video status flag */
@@ -214,6 +214,9 @@
 #define HQV_DST_STARTADDR2      0x1FC
 #define HQV_DST_STRIDE          0x1F4
 #define HQV_SRC_STRIDE          0x1F8
+
+#define HQV_H_SCALE_CONTROL     0x1B0
+#define HQV_V_SCALE_CONTROL     0x1B4
 
 #define PRO_HQV1_OFFSET         0x1000
 /*
@@ -515,6 +518,22 @@
 #define HQV_FIFO_STATUS     0x00001000  
 #define HQV_GEN_IRQ         0x00000080
 #define HQV_FIFO_DEPTH_1    0x00010000
+/* for CME engine */
+#define HQV_SW_FLIP_QUEUE_ENABLE    0x00100000
+
+/* for hwDiff->dwNewScaleCtl */
+#define HQV_H_SCALE_ENABLE                 0x80000000
+#define HQV_H_SCALE_UP                     0x00000000  
+#define HQV_H_SCALE_DOWN_FOURTH_TO_1       0x10000000 
+#define HQV_H_SCALE_DOWN_FOURTH_TO_EIGHTH  0x20000000 
+#define HQV_H_SCALE_DOWN_UNDER_EIGHTH      0x30000000 
+
+#define HQV_V_SCALE_ENABLE 0x80000000
+#define HQV_V_SCALE_UP     0x00000000
+#define HQV_V_SCALE_DOWN   0x10000000
+
+/* HQV Default Vodeo Color 0x3B8 */
+#define HQV_FIX_COLOR           0x0643212c
 
 /* HQV_FILTER_CONTROL      0x3E4 */
 #define HQV_H_LOWPASS_2TAP  0x00000001
@@ -575,6 +594,25 @@
 #define HQV_VDEBLOCK_FILTER 0x80000000
 #define HQV_HDEBLOCK_FILTER 0x00008000
 
+/* new added registers for VT3409.For some registers have different meanings 
+ * but the same address,we add postfix _409 to distinguish */
+#define HQV_COLOR_ADJUSTMENT_PRE_CTRL1      0x160
+#define HQV_COLOR_ADJUSTMENT_PRE_CTRL2      0x164
+#define HQV_COLOR_ADJUSTMENT_PRE_CTRL3      0x168
+#define HQV_COLOR_ADJUSTMENT_PRE_CTRL4      0x16C
+#define HQV_SRC_DATA_OFFSET_CTRL1_409       0x170 
+#define HQV_SRC_DATA_OFFSET_CTRL2_409       0x174  
+#define HQV_SRC_DATA_OFFSET_CTRL3_409       0x178  
+#define HQV_SRC_DATA_OFFSET_CTRL4_409       0x17C  
+#define HQV_DST_DATA_OFFSET_CTRL1           0x180
+#define HQV_DST_DATA_OFFSET_CTRL2           0x184  
+#define HQV_DST_DATA_OFFSET_CTRL3           0x188  
+#define HQV_DST_DATA_OFFSET_CTRL4           0x18C 
+#define HQV_RESIDUE_PIXEL_FRAME_STARTADDR   0x1BC
+#define HQV_BACKGROUND_DATA_OFFSET          0x1CC
+#define HQV_SUBP_HSCALE_CTRL                0x1E0
+#define HQV_SUBP_VSCALE_CTRL                0x1E8
+
 /* Add new HQV Registers for VT3353: */
 #define HQV_SRC_DATA_OFFSET_CONTROL1        0x180
 #define HQV_SRC_DATA_OFFSET_CONTROL2        0x184
@@ -588,6 +626,7 @@
 #define HQV_COLOR_ADJUSTMENT_CONTROL2       0x1A4
 #define HQV_COLOR_ADJUSTMENT_CONTROL3       0x1A8
 #define HQV_COLOR_ADJUSTMENT_CONTROL5       0x1AC
+#define HQV_DEFAULT_VIDEO_COLOR             0x1B8
 
 #define CHROMA_KEY_LOW          0x00FFFFFF
 #define CHROMA_KEY_HIGH         0x00FFFFFF
