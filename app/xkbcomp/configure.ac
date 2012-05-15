@@ -21,7 +21,7 @@ dnl
 dnl Process this file with autoconf to create configure.
 
 AC_PREREQ([2.60])
-AC_INIT([xkbcomp], [1.2.3],
+AC_INIT([xkbcomp], [1.2.4],
         [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg], [xkbcomp])
 AM_INIT_AUTOMAKE([foreign dist-bzip2])
 AM_MAINTAINER_MODE
@@ -45,8 +45,11 @@ fi
 
 AC_CHECK_FUNCS([strdup strcasecmp])
 
+REQUIRED_MODULES="x11 xkbfile xproto >= 7.0.17"
+
 # Checks for pkg-config packages
-PKG_CHECK_MODULES(XKBCOMP, x11 xkbfile)
+PKG_CHECK_MODULES(XKBCOMP, [$REQUIRED_MODULES])
+AC_SUBST(REQUIRED_MODULES)
 
 AC_ARG_WITH([xkb_config_root],
     [AS_HELP_STRING([--with-xkb-config-root=<paths>],
@@ -58,5 +61,6 @@ AC_SUBST([XKBCONFIGROOT])
 
 AC_CONFIG_FILES([
 	Makefile
-	man/Makefile])
+	man/Makefile
+	xkbcomp.pc])
 AC_OUTPUT

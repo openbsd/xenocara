@@ -40,10 +40,6 @@
 #include "misc.h"
 #include "alias.h"
 
-extern Atom tok_ONE_LEVEL;
-extern Atom tok_TWO_LEVEL;
-extern Atom tok_KEYPAD;
-
 /***====================================================================***/
 
 #define	RepeatYes	1
@@ -1714,7 +1710,7 @@ FindKeyForSymbol(XkbDescPtr xkb, KeySym sym, unsigned int *kc_rtrn)
             if (j < (int) XkbKeyNumSyms(xkb, i))
             {
                 gotOne = True;
-                if ((XkbKeySym(xkb, i, j) == sym))
+                if (XkbKeySym(xkb, i, j) == sym)
                 {
                     *kc_rtrn = i;
                     return True;

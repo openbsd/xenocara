@@ -1,3 +1,150 @@
+commit f2eff337176551f643e35c54c1e1ca0a78df69c6
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Mar 22 22:02:56 2012 -0700
+
+    xkbcomp 1.2.4
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit b4fafc4fa7edc4c04c3c0affae0d7f79a63e8d2f
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Dec 28 20:57:55 2011 -0800
+
+    Delete redundant redeclarations of extern Atoms in symbols.c
+    
+    Fixes gcc warnings of:
+    
+    symbols.c:43: warning: redundant redeclaration of 'tok_ONE_LEVEL'
+    tokens.h:99: warning: previous declaration of 'tok_ONE_LEVEL' was here
+    symbols.c:44: warning: redundant redeclaration of 'tok_TWO_LEVEL'
+    tokens.h:100: warning: previous declaration of 'tok_TWO_LEVEL' was here
+    symbols.c:45: warning: redundant redeclaration of 'tok_KEYPAD'
+    tokens.h:102: warning: previous declaration of 'tok_KEYPAD' was here
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 3835cae3cb1ad1073cbb2711f938beb878b4986c
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Dec 28 20:53:45 2011 -0800
+
+    Make sure to leave room for trailing nil byte in yyGetNumber
+    
+    ...though really, by the time you've added 1023 digits to the number
+    you want to parse, you've got much bigger problems than an off-by-one
+    error in your buffer count.
+    
+    Fixes parfait warnings:
+       Buffer overflow (CWE 120): In array dereference of (*buf)[nInBuf] with index 'nInBuf'
+          Array size is 1024 bytes, nInBuf >= 1 and nInBuf <= 1024
+            at line 625 of xkbscan.c in function 'yyGetNumber'.
+       Buffer overflow (CWE 120): In array dereference of (*buf)[nInBuf] with index 'nInBuf'
+          Array size is 1024 bytes, nInBuf <= 1025
+            at line 632 of xkbscan.c in function 'yyGetNumber'.
+    
+    [ This bug was found by the Parfait 0.4.2 bug checking tool.
+      For more information see http://labs.oracle.com/projects/parfait/ ]
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 1447071942dbbbfc37b08417c74c8a1d302c1626
+Author: Andreas Wettstein <wettstein509@solnet.ch>
+Date:   Fri Dec 2 20:10:06 2011 +0000
+
+    include resets group compatibility modifiers #43091
+    
+    This change makes sure that include does not overwrite previous
+    compatibility modifier settings when the included files does not
+    explicitly specify them.
+    
+    Signed-off-by: Andreas Wettstein <wettstein509@solnet.ch>
+    Reviewed-by: Daniel Stone <daniel@fooishbar.org>
+
+commit 5fd14db5b2cc0c2c43f7a1ddefd6f9991eb1dcc2
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Fri Nov 11 11:18:43 2011 -0800
+
+    Silence -Wparentheses-equality
+    
+    warning: equality comparison with extraneous parentheses [-Wparentheses-equality]
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit 6099655a4bbe1fd3e26b8afd2b91888ad2766086
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Fri Nov 11 11:17:38 2011 -0800
+
+    Silence -Wshadow warnings
+    
+    warning: declaration shadows a local variable [-Wshadow]
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit b7e88debd937be147d3581b9c8720c0bfe354052
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Fri Nov 11 11:13:42 2011 -0800
+
+    Correct our zeroing out of the row in InitRowInfo
+    
+    geometry.c:369:20: warning: argument to 'sizeof' in '__builtin___memset_chk' call is the same
+          pointer type 'RowInfo *' (aka 'struct _RowInfo *') as the destination; expected 'RowInfo'
+          (aka 'struct _RowInfo') or an explicit length [-Wsizeof-pointer-memaccess]
+            bzero(row, sizeof(RowInfo *));
+            ~~~~~~~~~~~^~~~~~~~~~~~~~~~~~
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit 33b5c9413463613d341d15184b34a4f4c4e70e56
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Fri Nov 11 11:12:22 2011 -0800
+
+    Fix -Wformat warnings
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit b9f6482d5fc413222334c2370ef8b9693f4b50fd
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Fri Nov 11 11:07:30 2011 -0800
+
+    Add missing _X_NORETURN to uFatalError
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit 8ea06128c70b07c265a217222f2a245aad4bfce4
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Fri Nov 11 11:06:02 2011 -0800
+
+    Include strings.h for strcasecmp and string.h for strdup
+    
+    Our minimum requirement for X11 is currently Unix98.  Unix98 provides
+    strcasecmp in <strings.h>.  This commit fixes implicit declarations
+    of this function on systems that closely adhere to the standard.
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit 89c8317ad84386f69d31f38dcddbc7ff0abffb31
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Jul 5 08:23:37 2011 +1000
+
+    Add .pc file for version export
+    
+    Exports xkbcomp version and the xkb base directory.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Daniel Stone <daniel@fooishbar.org>
+    Reviewed-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit cdb8677f370b34a3a523a32ae0023c7e8c0c965c
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Wed Jun 22 10:41:33 2011 +1000
+
+    Print version number on -version.
+    
+    This commit isn't playing the WARN/M/M1 macro game. Version numbers to to
+    stdout, full stop.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit cef4ba4b8fdc9a5439f71437c08cf690a750bd6b
 Author: Daniel Stone <daniel@fooishbar.org>
 Date:   Tue Jun 21 16:04:45 2011 +0100

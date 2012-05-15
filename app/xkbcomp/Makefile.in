@@ -35,6 +35,7 @@
 #  TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 #  PERFORMANCE OF THIS SOFTWARE.
 
+
 srcdir = @srcdir@
 top_srcdir = @top_srcdir@
 VPATH = @srcdir@
@@ -60,8 +61,9 @@ host_triplet = @host@
 bin_PROGRAMS = xkbcomp$(EXEEXT)
 DIST_COMMON = README $(am__configure_deps) $(srcdir)/Makefile.am \
 	$(srcdir)/Makefile.in $(srcdir)/config.h.in \
-	$(top_srcdir)/configure COPYING ChangeLog INSTALL config.guess \
-	config.sub depcomp install-sh missing xkbparse.c
+	$(srcdir)/xkbcomp.pc.in $(top_srcdir)/configure COPYING \
+	ChangeLog INSTALL config.guess config.sub depcomp install-sh \
+	missing xkbparse.c
 subdir = .
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/configure.ac
@@ -71,8 +73,8 @@ am__CONFIG_DISTCLEAN_FILES = config.status config.cache config.log \
  configure.lineno configure.status.lineno
 mkinstalldirs = $(SHELL) $(install_sh) -d
 CONFIG_HEADER = config.h
-CONFIG_CLEAN_FILES =
-am__installdirs = "$(DESTDIR)$(bindir)"
+CONFIG_CLEAN_FILES = xkbcomp.pc
+am__installdirs = "$(DESTDIR)$(bindir)" "$(DESTDIR)$(pkgconfigdir)"
 binPROGRAMS_INSTALL = $(INSTALL_PROGRAM)
 PROGRAMS = $(bin_PROGRAMS)
 am_xkbcomp_OBJECTS = action.$(OBJEXT) alias.$(OBJEXT) compat.$(OBJEXT) \
@@ -101,6 +103,14 @@ RECURSIVE_TARGETS = all-recursive check-recursive dvi-recursive \
 	install-recursive installcheck-recursive installdirs-recursive \
 	pdf-recursive ps-recursive uninstall-info-recursive \
 	uninstall-recursive
+am__vpath_adj_setup = srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`;
+am__vpath_adj = case $$p in \
+    $(srcdir)/*) f=`echo "$$p" | sed "s|^$$srcdirstrip/||"`;; \
+    *) f=$$p;; \
+  esac;
+am__strip_dir = `echo $$p | sed -e 's|^.*/||'`;
+pkgconfigDATA_INSTALL = $(INSTALL_DATA)
+DATA = $(pkgconfig_DATA)
 ETAGS = etags
 CTAGS = ctags
 DIST_SUBDIRS = $(SUBDIRS)
@@ -128,6 +138,7 @@ AUTOCONF = @AUTOCONF@
 AUTOHEADER = @AUTOHEADER@
 AUTOMAKE = @AUTOMAKE@
 AWK = @AWK@
+BASE_CFLAGS = @BASE_CFLAGS@
 CC = @CC@
 CCDEPMODE = @CCDEPMODE@
 CFLAGS = @CFLAGS@
@@ -175,9 +186,11 @@ PACKAGE_TARNAME = @PACKAGE_TARNAME@
 PACKAGE_VERSION = @PACKAGE_VERSION@
 PATH_SEPARATOR = @PATH_SEPARATOR@
 PKG_CONFIG = @PKG_CONFIG@
+REQUIRED_MODULES = @REQUIRED_MODULES@
 SED = @SED@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
+STRICT_CFLAGS = @STRICT_CFLAGS@
 STRIP = @STRIP@
 VERSION = @VERSION@
 XKBCOMP_CFLAGS = @XKBCOMP_CFLAGS@
@@ -268,6 +281,8 @@ xkbcomp_SOURCES = \
         xkbpath.h \
         xkbscan.c
 
+pkgconfigdir = $(libdir)/pkgconfig
+pkgconfig_DATA = xkbcomp.pc
 MAINTAINERCLEANFILES = ChangeLog INSTALL
 all: config.h
 	$(MAKE) $(AM_MAKEFLAGS) all-recursive
@@ -324,6 +339,8 @@ $(srcdir)/config.h.in: @MAINTAINER_MODE_TRUE@ $(am__configure_deps)
 
 distclean-hdr:
 	-rm -f config.h stamp-h1
+xkbcomp.pc: $(top_builddir)/config.status $(srcdir)/xkbcomp.pc.in
+	cd $(top_builddir) && $(SHELL) ./config.status $@
 install-binPROGRAMS: $(bin_PROGRAMS)
 	@$(NORMAL_INSTALL)
 	test -z "$(bindir)" || $(mkdir_p) "$(DESTDIR)$(bindir)"
@@ -412,6 +429,23 @@ distclean-compile:
 	sed '/^#/ s|y\.tab\.c|$@|' y.tab.c >$@t && mv $@t $@
 	rm -f y.tab.c
 uninstall-info-am:
+install-pkgconfigDATA: $(pkgconfig_DATA)
+	@$(NORMAL_INSTALL)
+	test -z "$(pkgconfigdir)" || $(mkdir_p) "$(DESTDIR)$(pkgconfigdir)"
+	@list='$(pkgconfig_DATA)'; for p in $$list; do \
+	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
+	  f=$(am__strip_dir) \
+	  echo " $(pkgconfigDATA_INSTALL) '$$d$$p' '$(DESTDIR)$(pkgconfigdir)/$$f'"; \
+	  $(pkgconfigDATA_INSTALL) "$$d$$p" "$(DESTDIR)$(pkgconfigdir)/$$f"; \
+	done
+
+uninstall-pkgconfigDATA:
+	@$(NORMAL_UNINSTALL)
+	@list='$(pkgconfig_DATA)'; for p in $$list; do \
+	  f=$(am__strip_dir) \
+	  echo " rm -f '$(DESTDIR)$(pkgconfigdir)/$$f'"; \
+	  rm -f "$(DESTDIR)$(pkgconfigdir)/$$f"; \
+	done
 
 # This directory's subdirectories are mostly independent; you can cd
 # into them and run `make' without going through this Makefile.
@@ -548,6 +582,7 @@ distclean-tags:
 distdir: $(DISTFILES)
 	$(am__remove_distdir)
 	mkdir $(distdir)
+	$(mkdir_p) $(distdir)/.
 	@srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`; \
 	topsrcdirstrip=`echo "$(top_srcdir)" | sed 's|.|.|g'`; \
 	list='$(DISTFILES)'; for file in $$list; do \
@@ -691,10 +726,10 @@ distcleancheck: distclean
 	       exit 1; } >&2
 check-am: all-am
 check: check-recursive
-all-am: Makefile $(PROGRAMS) config.h
+all-am: Makefile $(PROGRAMS) $(DATA) config.h
 installdirs: installdirs-recursive
 installdirs-am:
-	for dir in "$(DESTDIR)$(bindir)"; do \
+	for dir in "$(DESTDIR)$(bindir)" "$(DESTDIR)$(pkgconfigdir)"; do \
 	  test -z "$$dir" || $(mkdir_p) "$$dir"; \
 	done
 install: install-recursive
@@ -744,7 +779,7 @@ info: info-recursive
 
 info-am:
 
-install-data-am:
+install-data-am: install-pkgconfigDATA
 
 install-exec-am: install-binPROGRAMS
 
@@ -773,7 +808,8 @@ ps: ps-recursive
 
 ps-am:
 
-uninstall-am: uninstall-binPROGRAMS uninstall-info-am
+uninstall-am: uninstall-binPROGRAMS uninstall-info-am \
+	uninstall-pkgconfigDATA
 
 uninstall-info: uninstall-info-recursive
 
@@ -786,12 +822,14 @@ uninstall-info: uninstall-info-recursive
 	distuninstallcheck dvi dvi-am html html-am info info-am \
 	install install-am install-binPROGRAMS install-data \
 	install-data-am install-exec install-exec-am install-info \
-	install-info-am install-man install-strip installcheck \
-	installcheck-am installdirs installdirs-am maintainer-clean \
-	maintainer-clean-generic maintainer-clean-recursive \
-	mostlyclean mostlyclean-compile mostlyclean-generic \
-	mostlyclean-recursive pdf pdf-am ps ps-am tags tags-recursive \
-	uninstall uninstall-am uninstall-binPROGRAMS uninstall-info-am
+	install-info-am install-man install-pkgconfigDATA \
+	install-strip installcheck installcheck-am installdirs \
+	installdirs-am maintainer-clean maintainer-clean-generic \
+	maintainer-clean-recursive mostlyclean mostlyclean-compile \
+	mostlyclean-generic mostlyclean-recursive pdf pdf-am ps ps-am \
+	tags tags-recursive uninstall uninstall-am \
+	uninstall-binPROGRAMS uninstall-info-am \
+	uninstall-pkgconfigDATA
 
 
 .PHONY: ChangeLog INSTALL
