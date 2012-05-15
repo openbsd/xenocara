@@ -79,8 +79,8 @@ static FSServer *svr;
 
 static char *program_name;
 
-static void usage ( void );
-static void get_list ( char *pattern );
+static void usage ( void ) _X_NORETURN;
+static void get_list ( const char *pattern );
 static int compare ( const void *f1, const void *f2 );
 static void show_fonts ( void );
 static void print_font_header ( void );
@@ -92,26 +92,15 @@ static void
 usage(void)
 {
     fprintf(stderr, "usage:  %s [-options] [-fn pattern]\n", program_name);
-    fprintf(stderr, "where options include:\n");
-
-    fprintf(stderr,
-	    "    -l[l[l]]                 give long info about each font\n");
-    fprintf(stderr,
-	 "    -m                       give character min and max bounds\n");
-
-    fprintf(stderr,
-	    "    -C                       force columns\n");
-    fprintf(stderr,
-	    "    -1                       force single column\n");
-    fprintf(stderr,
-	    "    -u                       keep output unsorted\n");
-    fprintf(stderr,
-	"    -w width                 maximum width for multiple columns\n");
-    fprintf(stderr,
-	 "    -n columns               number of columns if multi column\n");
-    fprintf(stderr,
-	    "    -server servername       font server to contact\n");
-    fprintf(stderr,
+    fprintf(stderr, "%s", "where options include:\n"
+	    "    -l[l[l]]                 give long info about each font\n"
+	    "    -m                       give character min and max bounds\n"
+	    "    -C                       force columns\n"
+	    "    -1                       force single column\n"
+	    "    -u                       keep output unsorted\n"
+	    "    -w width                 maximum width for multiple columns\n"
+	    "    -n columns               number of columns if multi column\n"
+	    "    -server servername       font server to contact\n"
 	    "\n");
     exit(1);
 }
@@ -208,7 +197,7 @@ next:	;
 }
 
 static void
-get_list(char *pattern)
+get_list(const char *pattern)
 {
     int         available = nnames + 1,
                 i;
@@ -276,8 +265,8 @@ get_list(char *pattern)
 static int 
 compare(const void *f1, const void *f2)
 {
-    char       *p1 = ((FontList *)f1)->name,
-               *p2 = ((FontList *)f2)->name;
+    const char *p1 = ((const FontList *)f1)->name,
+               *p2 = ((const FontList *)f2)->name;
 
     while (*p1 && *p2 && *p1 == *p2)
 	p1++, p2++;
@@ -387,7 +376,7 @@ print_font_header(void)
 static void
 show_font_header(FontList *list)
 {
-    char       *string;
+    const char        *string;
     FSXFontInfoHeader *pfh;
 
     pfh = list->info;
