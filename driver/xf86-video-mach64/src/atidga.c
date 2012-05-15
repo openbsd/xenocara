@@ -324,7 +324,7 @@ ATIDGAAddModes
             if ((modePitch * bitsPerPixel * pMode->VDisplay) <= videoBits)
             {
                 /* Stop generating modes on out-of-memory conditions */
-                pDGAMode = xrealloc(pATI->pDGAMode,
+                pDGAMode = realloc(pATI->pDGAMode,
                     (pATI->nDGAMode + 1) * SizeOf(DGAModeRec));
                 if (!pDGAMode)
                     break;

@@ -324,7 +324,7 @@ ATICreateI2CBusRec
     if (!(pI2CBus = xf86CreateI2CBusRec()))
     {
         xf86DrvMsg(iScreen, X_WARNING, "Unable to allocate I2C Bus record.\n");
-        xfree(pATII2C);
+        free(pATII2C);
         return NULL;
     }
 
@@ -348,7 +348,7 @@ ATICreateI2CBusRec
     xf86DrvMsg(iScreen, X_WARNING,
         "I2C bus %s initialisation failure.\n", BusName);
     xf86DestroyI2CBusRec(pI2CBus, TRUE, TRUE);
-    xfree(pATII2C);
+    free(pATII2C);
     return NULL;
 }
 
@@ -392,8 +392,8 @@ ATII2CFreeScreen
         pATII2C = pI2CBus->DriverPrivate.ptr;
 
         xf86DestroyI2CBusRec(pI2CBus, TRUE, TRUE);
-        xfree(pATII2C);
+        free(pATII2C);
     }
 
-    xfree(ppI2CBus);
+    free(ppI2CBus);
 }

@@ -373,7 +373,7 @@ ATIMach64ProbeIO
 
 #ifndef AVOID_CPIO
 
-        static const IOADDRESS Mach64SparseIOBases[] = {
+        static const unsigned long Mach64SparseIOBases[] = {
             0x02ECU,
             0x01CCU,
             0x01C8U

@@ -43,11 +43,6 @@ ATILoadModules
 {
     pointer fbPtr = NULL;
 
-    /* Load shadow frame buffer code if needed */
-    if (pATI->OptionShadowFB &&
-        !xf86LoadSubModule(pScreenInfo, "shadowfb"))
-        return NULL;
-
     /* Load depth-specific entry points */
     switch (pATI->bitsPerPixel)
     {
@@ -90,9 +85,18 @@ ATILoadModules
 #ifdef USE_XAA
     /* Load XAA if needed */
     if (!pATI->useEXA && pATI->OptionAccel &&
-        !xf86LoadSubModule(pScreenInfo, "xaa"))
-        return NULL;
+        !xf86LoadSubModule(pScreenInfo, "xaa")) {
+	xf86DrvMsg(pScreenInfo->scrnIndex, X_INFO,
+		   "Falling back to shadowfb\n");
+	pATI->OptionAccel = 0;
+	pATI->OptionShadowFB = 1;
+    }
 #endif
+
+    /* Load shadow frame buffer code if needed */
+    if (pATI->OptionShadowFB &&
+        !xf86LoadSubModule(pScreenInfo, "shadowfb"))
+        return NULL;
 
     return fbPtr;
 }

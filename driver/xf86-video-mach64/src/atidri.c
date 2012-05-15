@@ -109,14 +109,14 @@ static Bool ATIInitVisualConfigs( ScreenPtr pScreen )
       pATIConfigs = (ATIConfigPrivPtr)
 	 xnfcalloc( sizeof(ATIConfigPrivRec), numConfigs );
       if ( !pATIConfigs ) {
-	 xfree( pConfigs );
+	 free( pConfigs );
 	 return FALSE;
       }
       pATIConfigPtrs = (ATIConfigPrivPtr*)
 	 xnfcalloc( sizeof(ATIConfigPrivPtr), numConfigs );
       if ( !pATIConfigPtrs ) {
-	 xfree( pConfigs );
-	 xfree( pATIConfigs );
+	 free( pConfigs );
+	 free( pATIConfigs );
 	 return FALSE;
       }
 
@@ -190,14 +190,14 @@ static Bool ATIInitVisualConfigs( ScreenPtr pScreen )
       pATIConfigs = (ATIConfigPrivPtr)
 	 xnfcalloc( sizeof(ATIConfigPrivRec), numConfigs );
       if ( !pATIConfigs ) {
-	 xfree( pConfigs );
+	 free( pConfigs );
 	 return FALSE;
       }
       pATIConfigPtrs = (ATIConfigPrivPtr*)
 	 xnfcalloc( sizeof(ATIConfigPrivPtr), numConfigs );
       if ( !pATIConfigPtrs ) {
-	 xfree( pConfigs );
-	 xfree( pATIConfigs );
+	 free( pConfigs );
+	 free( pATIConfigs );
 	 return FALSE;
       }
 
@@ -553,11 +553,11 @@ static void ATIDRIMoveBuffers( WindowPtr pWin, DDXPointRec ptOldOrg,
 
 	if (nbox > 1) {
 	    /* Keep ordering in each band, reverse order of bands */
-	    pboxNew1 = (BoxPtr)xalloc(sizeof(BoxRec)*nbox);
+	    pboxNew1 = (BoxPtr)malloc(sizeof(BoxRec)*nbox);
 	    if (!pboxNew1) return;
-	    pptNew1 = (DDXPointPtr)xalloc(sizeof(DDXPointRec)*nbox);
+	    pptNew1 = (DDXPointPtr)malloc(sizeof(DDXPointRec)*nbox);
 	    if (!pptNew1) {
-		xfree(pboxNew1);
+		free(pboxNew1);
 		return;
 	    }
 	    pboxBase = pboxNext = pbox+nbox-1;
@@ -588,13 +588,13 @@ static void ATIDRIMoveBuffers( WindowPtr pWin, DDXPointRec ptOldOrg,
 
 	if (nbox > 1) {
 	    /* reverse order of rects in each band */
-	    pboxNew2 = (BoxPtr)xalloc(sizeof(BoxRec)*nbox);
-	    pptNew2  = (DDXPointPtr)xalloc(sizeof(DDXPointRec)*nbox);
+	    pboxNew2 = (BoxPtr)malloc(sizeof(BoxRec)*nbox);
+	    pptNew2  = (DDXPointPtr)malloc(sizeof(DDXPointRec)*nbox);
 	    if (!pboxNew2 || !pptNew2) {
-		xfree(pptNew2);
-		xfree(pboxNew2);
-		xfree(pptNew1);
-		xfree(pboxNew1);
+		free(pptNew2);
+		free(pboxNew2);
+		free(pptNew1);
+		free(pboxNew1);
 		return;
 	    }
 	    pboxBase = pboxNext = pbox;
@@ -665,10 +665,10 @@ static void ATIDRIMoveBuffers( WindowPtr pWin, DDXPointRec ptOldOrg,
     outf(SRC_OFF_PITCH, pATI->NewHW.dst_off_pitch);
     outf(DST_OFF_PITCH, pATI->NewHW.src_off_pitch);
 
-    xfree(pptNew2);
-    xfree(pboxNew2);
-    xfree(pptNew1);
-    xfree(pboxNew1);
+    free(pptNew2);
+    free(pboxNew2);
+    free(pptNew1);
+    free(pboxNew1);
 
     ATIDRIMarkSyncInt(pScreenInfo);
 #endif
@@ -1237,7 +1237,7 @@ Bool ATIDRIScreenInit( ScreenPtr pScreen )
    if (xf86LoaderCheckSymbol("DRICreatePCIBusID")) {
       pDRIInfo->busIdString = DRICreatePCIBusID(pATI->PCIInfo);
    } else {
-      pDRIInfo->busIdString = xalloc( 64 );
+      pDRIInfo->busIdString = malloc( 64 );
       sprintf( pDRIInfo->busIdString,
 	       "PCI:%d:%d:%d",
 	       PCI_DEV_BUS(pATI->PCIInfo),
@@ -1283,7 +1283,7 @@ Bool ATIDRIScreenInit( ScreenPtr pScreen )
    pATIDRIServer = (ATIDRIServerInfoPtr)
       xnfcalloc( sizeof(ATIDRIServerInfoRec), 1 );
    if ( !pATIDRIServer ) {
-      xfree( pATIDRI );
+      free( pATIDRI );
       DRIDestroyInfoRec( pATI->pDRIInfo );
       pATI->pDRIInfo = NULL;
       xf86DrvMsg( pScreenInfo->scrnIndex, X_ERROR,
@@ -1322,9 +1322,9 @@ Bool ATIDRIScreenInit( ScreenPtr pScreen )
    pATI->have3DWindows = FALSE;
 
    if ( !DRIScreenInit( pScreen, pDRIInfo, &pATI->drmFD ) ) {
-      xfree( pATIDRIServer );
+      free( pATIDRIServer );
       pATI->pDRIServerInfo = NULL;
-      xfree( pDRIInfo->devPrivate );
+      free( pDRIInfo->devPrivate );
       pDRIInfo->devPrivate = NULL;
       DRIDestroyInfoRec( pDRIInfo );
       pDRIInfo = NULL;
@@ -1619,22 +1619,22 @@ void ATIDRICloseScreen( ScreenPtr pScreen )
    /* De-allocate all DRI data structures */
    if ( pATI->pDRIInfo ) {
       if ( pATI->pDRIInfo->devPrivate ) {
-	 xfree( pATI->pDRIInfo->devPrivate );
+	 free( pATI->pDRIInfo->devPrivate );
 	 pATI->pDRIInfo->devPrivate = NULL;
       }
       DRIDestroyInfoRec( pATI->pDRIInfo );
       pATI->pDRIInfo = NULL;
    }
    if ( pATI->pDRIServerInfo ) {
-      xfree( pATI->pDRIServerInfo );
+      free( pATI->pDRIServerInfo );
       pATI->pDRIServerInfo = NULL;
    }
    if ( pATI->pVisualConfigs ) {
-      xfree( pATI->pVisualConfigs );
+      free( pATI->pVisualConfigs );
       pATI->pVisualConfigs = NULL;
    }
    if ( pATI->pVisualConfigsPriv ) {
-      xfree( pATI->pVisualConfigsPriv );
+      free( pATI->pVisualConfigsPriv );
       pATI->pVisualConfigsPriv = NULL;
    }
 }

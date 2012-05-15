@@ -562,7 +562,7 @@ ATIPreInit
 #endif
     pVideo = xf86GetPciInfoForEntity(pATI->iEntity);
 
-    xfree(pEntity);
+    free(pEntity);
 
 #ifndef XSERVER_LIBPCIACCESS
     if (!pResources)

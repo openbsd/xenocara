@@ -686,7 +686,7 @@ Bool ATIMach64ExaInit(ScreenPtr pScreen)
 	       pATI->RenderAccelEnabled ? "enabled" : "disabled");
 
     if (!exaDriverInit(pScreen, pATI->pExa)) {
-	xfree(pATI->pExa);
+	free(pATI->pExa);
 	pATI->pExa = NULL;
 	return FALSE;
     }

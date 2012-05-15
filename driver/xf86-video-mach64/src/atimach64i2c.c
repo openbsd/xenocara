@@ -347,7 +347,7 @@ ATITVAddOnProbe
         return TRUE;
     }
 
-    xfree(pI2CDev);
+    free(pI2CDev);
     return FALSE;
 }
 

@@ -92,11 +92,11 @@ ATIPrintBIOS
 static void
 ATIPrintIndexedRegisters
 (
-    const IOADDRESS Port,
+    const unsigned long Port,
     const CARD8     StartIndex,
     const CARD8     EndIndex,
     const char      *Name,
-    const IOADDRESS GenS1
+    const unsigned long GenS1
 )
 {
     int Index;

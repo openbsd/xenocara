@@ -114,7 +114,7 @@ ATISwap
         if (!pATIHW->frame_buffer)
         {
             pATIHW->frame_buffer =
-                (pointer)xalloc(pATIHW->nBank * pATIHW->nPlane * 0x00010000U);
+                (pointer)malloc(pATIHW->nBank * pATIHW->nPlane * 0x00010000U);
             if (!pATIHW->frame_buffer)
             {
                 xf86DrvMsg(iScreen, X_WARNING,

@@ -84,7 +84,11 @@ ATIUnmapVGA
     if (!pATI->pBank)
         return;
 
+#ifndef XSERVER_LIBPCIACCESS
     xf86UnMapVidMem(iScreen, pATI->pBank, 0x00010000U);
+#else
+    (void) pci_device_unmap_legacy(pATI->PCIInfo, pATI->pBank, 0x00010000U);
+#endif
 
     pATI->pBank = NULL;
 }
@@ -219,8 +223,14 @@ ATIMapApertures
          * No relocation, resizing, caching or write-combining of this
          * aperture is supported.  Hence, the hard-coded values here...
          */
-            pATI->pBank = xf86MapDomainMemory(iScreen, VIDMEM_MMIO_32BIT,
-                Tag, 0x000A0000U, 0x00010000U);
+#ifndef XSERVER_LIBPCIACCESS
+        pATI->pBank = xf86MapDomainMemory(iScreen, VIDMEM_MMIO_32BIT,
+                                          Tag, 0x000A0000U, 0x00010000U);
+#else
+        (void) pci_device_map_legacy(Tag, 0x000A0000U, 0x00010000U,
+                                     PCI_DEV_MAP_FLAG_WRITABLE,
+                                     &pATI->pBank);
+#endif
 
         if (!pATI->pBank)
             return FALSE;
