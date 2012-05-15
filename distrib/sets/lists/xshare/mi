@@ -925,6 +925,7 @@
 ./usr/X11R6/lib/pkgconfig/xi.pc
 ./usr/X11R6/lib/pkgconfig/xinerama.pc
 ./usr/X11R6/lib/pkgconfig/xineramaproto.pc
+./usr/X11R6/lib/pkgconfig/xkbcomp.pc
 ./usr/X11R6/lib/pkgconfig/xkbfile.pc
 ./usr/X11R6/lib/pkgconfig/xkbui.pc
 ./usr/X11R6/lib/pkgconfig/xmu.pc
