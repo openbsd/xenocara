@@ -221,14 +221,14 @@ static int
 list_xi2(Display *display,
          int     shortformat)
 {
-    int major = XI_2_Major,
-        minor = XI_2_Minor;
+    int major = 2,
+        minor = 0;
     int ndevices;
     int i, j;
     XIDeviceInfo *info, *dev;
 
     if (XIQueryVersion(display, &major, &minor) != Success ||
-        (major * 1000 + minor) < (XI_2_Major * 1000 + XI_2_Minor))
+        (major * 1000 + minor) < 2000)
     {
         fprintf(stderr, "XI2 not supported.\n");
         return EXIT_FAILURE;

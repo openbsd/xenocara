@@ -1,3 +1,25 @@
+commit 3a0a3a8e36710b04553774f147f09fd016e9895b
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Thu Dec 22 10:28:50 2011 +1000
+
+    xinput 1.5.4
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 302686104e7c1d62eff2ac45ad1d12759e33290b
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri Aug 12 14:20:21 2011 +1000
+
+    list: don't use defines for checking server version.
+    
+    Otherwise we run into the old problem again: recompiling xinput against
+    newer inputproto headers will appear to change the version support,
+    potentially causing errors or other misbehaviours.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Jeremy Huddleston <jeremyhu@apple.com>
+    (cherry picked from commit 4be60c90008ac48e72e819e078ce957fd003a509)
+
 commit 13d9a0906acca18a268b8898addc1a192c5a2b12
 Author: Peter Hutterer <peter.hutterer@who-t.net>
 Date:   Thu Nov 11 13:56:22 2010 +1000
