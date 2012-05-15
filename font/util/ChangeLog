@@ -1,3 +1,126 @@
+commit dff77bb76ab2260877a37193df1d728d2f4a1d88
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Feb 28 22:14:18 2012 -0800
+
+    font-util 1.3.0
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit faee5567a53bcde7c9e280c330e1ff6671b979b1
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Feb 22 20:43:34 2012 -0800
+
+    configure.ac updates to match other X.Org modules
+    
+    layout and comment the top portion of configure.ac
+    add missing AC_CONFIG_SRCDIR
+    Replace obsolete AM_CONFIG_HEADER with AC_CONFIG_HEADERS
+    replace deprecated AC_HELP_STRING with AS_HELP_STRING
+    Remove unnecessary AC_PROG_CC & AC_PROG_INSTALL (already
+     provided by XORG_DEFAULT_OPTIONS)
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Gaetan Nadon<memsize@videotron.ca>
+
+commit 9e9519975fe3a5827b362b8df4a5c69745125a5a
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Nov 18 23:09:43 2011 -0800
+
+    Fix "cast discards qualifiers from pointer target type" warnings
+    
+    ucs2any.c: In function ‘chars_compare’:
+    ucs2any.c:450:2: warning: cast discards qualifiers from pointer target type
+    ucs2any.c:451:2: warning: cast discards qualifiers from pointer target type
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit e46b483c58ec3cfc01d2800c069eadc90166eb04
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Nov 18 23:06:46 2011 -0800
+
+    Mark usage() as not returning to clear incorrect uninit var warning
+    
+    bdftruncate.c: In function ‘main’:
+    bdftruncate.c:119:16: warning: ‘threshold’ may be used uninitialized in this function
+    
+    (It's not actually, if you consider that usage() exits when
+     parse_threshold fails.)
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 3419c66ac700689351be9fe2bc3f81b80465cd3e
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Sep 26 14:50:29 2011 -0700
+
+    Add const attributes to fix gcc -Wwrite-strings warnings
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 80cde5d8bb59a50ba1e98b5947f2fe0c8f38ef84
+Author: Jon TURNEY <jon.turney@dronecode.org.uk>
+Date:   Tue Apr 26 15:03:42 2011 +0100
+
+    If cross-compiling, we don't have to run mkfontdir
+    
+    If cross-compiling, we can run the host mkfontdir on the font directory,
+    since the output is arch independent (I think)
+    
+    If cross-compiling and we can't find mkfontdir, just warn that mkfontdir
+    needs to be run on the target.
+    
+    When not cross-compiling, the behaviour remains unchanged: mkfontdir
+    must be found and is run
+    
+    (Also, bump version number to 1.2.90 as the next release must be 1.3.0
+    as this change adds a macro)
+    
+    Signed-off-by: Jon TURNEY <jon.turney@dronecode.org.uk>
+    Reviewed-by: Jeremy Huddleston <jeremyhu@apple.com>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 901fa14455a09901ebc69d0c93c03bb3c7c712d4
+Author: Jon TURNEY <jon.turney@dronecode.org.uk>
+Date:   Tue Apr 26 15:00:30 2011 +0100
+
+    Never run fc-cache if cross-compiling
+    
+    Since the cache files produced by fc-cache are arch-dependent, there is
+    no point in running fc-cache if cross-compiling
+    
+    So, even if we aren't using a DESTDIR, but are installing directly into
+    (a hopefully non-default) prefix, don't run fc-cache when cross-compiling
+    
+    Signed-off-by: Jon TURNEY <jon.turney@dronecode.org.uk>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 9f807dfb4e7bea7128b7538e41de78bb5994ca80
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Wed May 4 11:07:39 2011 -0700
+
+    bdftruncate: Make sure opt_minus_w and opt_plus_w are initialized
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit 06e9c86e3741355729748b6c646f7f738c583323
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Thu Apr 28 00:45:05 2011 -0700
+
+    ucs2any: Dead code removal
+    
+    Found-by: clang static analyzer
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit e15cbb4f48a9c5c0aae5acc88a7f56086fc9e51f
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Thu Apr 28 00:39:17 2011 -0700
+
+    bdftruncate: Properly support -w and +w
+    
+    Regression introduced by fb486bb1a5038912d064291b12c7aef5da3d8b63
+    
+    Found-by: clang static analyzer
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+
 commit 640a11b930dde29a5a74bcecec858d0a8255c013
 Author: Alan Coopersmith <alan.coopersmith@sun.com>
 Date:   Mon Oct 12 08:49:02 2009 -0700
