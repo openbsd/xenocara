@@ -1,3 +1,191 @@
+commit 87ffdc226daff7b6999fb36ac36c45fffd3e8980
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Apr 16 16:52:41 2012 -0700
+
+    xlsfonts 1.0.4
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit b9a08309bf5dcaaf1369d81095e459ae9ccbead5
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Apr 16 16:47:12 2012 -0700
+
+    Combine usage message strings
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 3c66627ec29473110432ed9d5448850ca4a293bb
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Nov 11 23:17:31 2011 -0800
+
+    Add function attributes suggested by gcc warnings
+    
+    Mark usage() with _X_NORETURN
+    Mark Fatal_Error() with _X_ATTRIBUTE_PRINTF
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 1dd99ee7d52871c998d0944311260623d131521f
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Nov 11 23:16:53 2011 -0800
+
+    Fix gcc -Wwrite-strings warnings
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 862292d9509856cfd311f9741db059b92a5fd78a
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Jan 28 20:06:16 2011 -0800
+
+    Use _X_NORETURN from xproto 7.0.17 instead of local check
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Julien Cristau <jcristau@debian.org>
+
+commit 431c1ed9e1b445e20a9c0413c3faeee566755b4d
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Jan 28 20:02:03 2011 -0800
+
+    inline Realloc() at the one place it's called
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Julien Cristau <jcristau@debian.org>
+
+commit d1dbba01539a89e1d56ca261e18ae2e31f075cfe
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Jan 28 19:57:52 2011 -0800
+
+    Remove unneeded Malloc function
+    
+    The only place it was called was in Realloc, if the initial pointer was
+    NULL, but ANSI C89 already guarantees realloc(NULL, size) will be handled
+    as malloc(size), so we don't need to handle that case ourselves.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Julien Cristau <jcristau@debian.org>
+
+commit 184f5f3948b98abd21082e0cdc302502d70c3c49
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jan 19 10:06:56 2011 -0500
+
+    config: move man pages into their own directory
+    
+    Use services provided by XORG_MANPAGE_SECTIONS.
+    Use standard Makefile for man pages.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 29488409e79cd74dea1d24d43911849cf3a377be
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Jan 13 11:15:47 2011 -0500
+
+    man: remove trailing spaces and tabs
+    
+    Using s/[ \t]*$//
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 4381b50d4cc6d49cddf186dbeab85de1d15e2c53
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jan 12 16:28:02 2011 -0500
+
+    config: replace deprecated AM_CONFIG_HEADER with AC_CONFIG_HEADERS
+    
+    This silences an Autoconf warning
+
+commit 59987462e79a2d2e2fe9b6b4442fe9d845b01f63
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jan 12 15:12:08 2011 -0500
+
+    config: remove unrequired AC_SUBST([*_LIBS])
+    
+    This macro is called by PKG_CHECK_MODULES
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit de09e9a73ec248f0ac3c7d00fb3f7cc1472e34fd
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jan 12 13:33:48 2011 -0500
+
+    config: remove unrequired AC_SUBST([*_CFLAGS])
+    
+    This macro is called by PKG_CHECK_MODULES
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 19e1d10ad952691087c41ffa39f2f38ac8b924c6
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jan 12 13:10:21 2011 -0500
+
+    config: remove AC_PROG_CC as it overrides AC_PROG_C_C99
+    
+    XORG_STRICT_OPTION from XORG_DEFAULT_OPTIONS calls
+    AC_PROG_C_C99. This sets gcc with -std=gnu99.
+    If AC_PROG_CC macro is called afterwards, it resets CC to gcc.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit acb9f60a6431b65da919d50b0d9438f02a2c2153
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jan 12 11:54:40 2011 -0500
+
+    config: use AC_PROG_INSTALL now supplied by XORG_DEFAULT_OPTIONS
+    
+    It depends on util-macros 1.8 or later
+    The existing statement can now be removed from the configuration file.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit e5e6e0f951ceb9991a19c9e22710d0cc4603110d
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jan 12 11:23:52 2011 -0500
+
+    config: upgrade to util-macros 1.8 for additional man page support
+    
+    Use MAN_SUBST now supplied in XORG_MANPAGE_SECTIONS
+    The value of MAN_SUBST is the same for all X.Org packages.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 053ab67df504b78cc9524f57ee556ba3a3ae9793
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jan 12 10:21:24 2011 -0500
+
+    config: update AC_PREREQ statement to 2.60
+    
+    Unrelated to the previous patches, the new value simply reflects
+    the reality that the minimum level for autoconf to configure
+    all x.org modules in one pass is 2.60 dated June 2006.
+    
+    A version later than 2.60 can be used, but no new features from such
+    a later version can be used in configure.ac.
+    
+    Although the code in this module can be configured with a version earlier
+    than 2.60, most of code is now contained in macros from util-macros
+    which use features of version 2.60, at the present or in the future.
+    
+    ftp://ftp.gnu.org/gnu/autoconf/autoconf-2.60.tar.gz
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 0b7dd26f5e7c3d3a780f71c74118e8adfd9ac04d
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Fri Aug 27 20:41:56 2010 -0400
+
+    Change xlsfonts DocBook XML file extension from .sgml to .xml
+    
+    This file is used as the input format for the man page.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 0e2aac955e2a3887cb2dcb356f296b58f9e3b5df
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Aug 6 11:29:09 2010 -0700
+
+    Fill in COPYING file with copyright notices from source code
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit 922c6ce1384df559116d764598b81c375e9e5790
 Author: Julien Cristau <jcristau@debian.org>
 Date:   Sat Jun 12 01:53:46 2010 +0200

@@ -63,7 +63,7 @@ typedef struct {
 static FontList *font_list = NULL;
 
 /* Local prototypes */
-static void get_list(char *pattern);
+static void get_list(const char *pattern);
 static int  compare(const void *arg1, const void *arg2);
 static void show_fonts(void);
 static void copy_number(char **pp1, char**pp2, int n1, int n2);
@@ -75,19 +75,19 @@ static void do_query_font (Display *dpy, char *name);
 
 void usage(void)
 {
-    fprintf (stderr, "usage:  %s [-options] [-fn pattern]\n", program_name);
-    fprintf (stderr, "where options include:\n");
-    fprintf (stderr, "    -l[l[l]]                 give long info about each font\n");
-    fprintf (stderr, "    -m                       give character min and max bounds\n");
-    fprintf (stderr, "    -C                       force columns\n");
-    fprintf (stderr, "    -1                       force single column\n");
-    fprintf (stderr, "    -u                       keep output unsorted\n");
-    fprintf (stderr, "    -o                       use OpenFont/QueryFont instead of ListFonts\n");
-    fprintf (stderr, "    -w width                 maximum width for multiple columns\n");
-    fprintf (stderr, "    -n columns               number of columns if multi column\n");
-    fprintf (stderr, "    -display displayname     X server to contact\n");
-    fprintf (stderr, "    -d displayname           (alias for -display displayname)\n");
-    fprintf (stderr, "\n");
+    fprintf (stderr, "usage:  %s [-options] [-fn pattern]\n%s", program_name,
+    "where options include:\n"
+    "    -l[l[l]]                 give long info about each font\n"
+    "    -m                       give character min and max bounds\n"
+    "    -C                       force columns\n"
+    "    -1                       force single column\n"
+    "    -u                       keep output unsorted\n"
+    "    -o                       use OpenFont/QueryFont instead of ListFonts\n"
+    "    -w width                 maximum width for multiple columns\n"
+    "    -n columns               number of columns if multi column\n"
+    "    -display displayname     X server to contact\n"
+    "    -d displayname           (alias for -display displayname)\n"
+    "\n");
     Close_Display();
     exit(EXIT_FAILURE);
 }
@@ -165,7 +165,7 @@ int main(int argc, char **argv)
 
 
 static
-void get_list(char *pattern)
+void get_list(const char *pattern)
 {
     int           available = nnames+1,
                   i;
@@ -206,8 +206,9 @@ void get_list(char *pattern)
         return;
     }
 
-    font_list = (FontList *)Realloc((char *)font_list,
-            (font_cnt + available) * sizeof(FontList));
+    font_list = realloc(font_list, (font_cnt + available) * sizeof(FontList));
+    if (font_list == NULL)
+        Fatal_Error("Out of memory!");
     for (i=0; i<available; i++) {
         font_list[font_cnt].name = fonts[i];
         if (long_list == L_MEDIUM)
@@ -252,7 +253,7 @@ void show_fonts(void)
 
     if (long_list == L_MEDIUM) {
         XFontStruct *pfi;
-        char        *string;
+        const char  *string;
 
         printf("DIR  ");
         printf("MIN  ");
@@ -414,7 +415,7 @@ int IgnoreError(Display *disp, XErrorEvent *event)
     return 0;
 }
 
-static char *bounds_metrics_title =
+static const char *bounds_metrics_title =
                       "width left  right  asc  desc   attr   keysym\n";
 
 #define PrintBounds(_what,_ptr) \
@@ -424,7 +425,7 @@ static char *bounds_metrics_title =
           p->rbearing, p->ascent, p->descent, p->attributes); }
 
 
-static char* stringValued [] = { /* values are atoms */
+static const char* stringValued [] = { /* values are atoms */
     /* font name components (see section 3.2 of the XLFD) */
     "FOUNDRY",
     "FAMILY_NAME",
@@ -509,7 +510,7 @@ ComputeFontType(XFontStruct *fs)
 {
     int i;
     Bool char_cell = True;
-    char *reason = NULL;
+    const char *reason = NULL;
     XCharStruct *cs;
     Atom awatom = XInternAtom (dpy, "AVERAGE_WIDTH", False);
 

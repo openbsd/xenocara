@@ -55,42 +55,9 @@ from The Open Group.
 
 
 /* This stuff is defined in the calling program by just_display.h */
-char    *program_name = "unknown_program";
+const char    *program_name = "unknown_program";
 Display *dpy = NULL;
 int      screen = 0;
-
-/*
- * Malloc: like malloc but handles out of memory using Fatal_Error.
- */
-char *
-Malloc(unsigned size)
-{
-	char *data;
-
-	if (!(data = malloc(size)))
-	  Fatal_Error("Out of memory!");
-
-	return(data);
-}
-	
-
-/*
- * Realloc: like Malloc except for realloc, handles NULL using Malloc.
- */
-char *
-Realloc(char *ptr, int size)
-{
-	char *new_ptr;
-
-	if (!ptr)
-	  return(Malloc(size));
-
-	if (!(new_ptr = realloc(ptr, size)))
-	  Fatal_Error("Out of memory!");
-
-	return(new_ptr);
-}
-
 
 /*
  * Get_Display_Name (argc, argv) Look for -display, -d, or host:dpy (obselete)
@@ -180,7 +147,7 @@ void Close_Display(void)
  * Standard fatal error routine - call like printf but maximum of 7 arguments.
  * Does not require dpy or screen defined.
  */
-void Fatal_Error(char *msg, ...)
+void Fatal_Error(const char *msg, ...)
 {
 	va_list args;
 	fflush(stdout);
