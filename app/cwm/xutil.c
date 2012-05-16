@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: xutil.c,v 1.38 2012/05/13 15:15:54 okan Exp $
+ * $OpenBSD: xutil.c,v 1.39 2012/05/16 01:04:36 okan Exp $
  */
 
 #include <sys/param.h>
@@ -94,8 +94,8 @@ xu_key_grab(Window win, int mask, int keysym)
 	int	 i;
 
 	code = XKeysymToKeycode(X_Dpy, keysym);
-	if ((XKeycodeToKeysym(X_Dpy, code, 0) != keysym) &&
-	    (XKeycodeToKeysym(X_Dpy, code, 1) == keysym))
+	if ((XkbKeycodeToKeysym(X_Dpy, code, 0, 0) != keysym) &&
+	    (XkbKeycodeToKeysym(X_Dpy, code, 0, 1) == keysym))
 		mask |= ShiftMask;
 
 	for (i = 0; i < nitems(ign_mods); i++)
@@ -110,8 +110,8 @@ xu_key_ungrab(Window win, int mask, int keysym)
 	int	 i;
 
 	code = XKeysymToKeycode(X_Dpy, keysym);
-	if ((XKeycodeToKeysym(X_Dpy, code, 0) != keysym) &&
-	    (XKeycodeToKeysym(X_Dpy, code, 1) == keysym))
+	if ((XkbKeycodeToKeysym(X_Dpy, code, 0, 0) != keysym) &&
+	    (XkbKeycodeToKeysym(X_Dpy, code, 0, 1) == keysym))
 		mask |= ShiftMask;
 
 	for (i = 0; i < nitems(ign_mods); i++)

@@ -16,7 +16,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: menu.c,v 1.33 2011/09/08 12:00:50 okan Exp $
+ * $OpenBSD: menu.c,v 1.34 2012/05/16 01:04:36 okan Exp $
  */
 
 #include <sys/param.h>
@@ -466,7 +466,7 @@ menu_keycode(KeyCode kc, u_int state, enum ctltype *ctl, char *chr)
 	*ctl = CTL_NONE;
 	*chr = '\0';
 
-	ks = XKeycodeToKeysym(X_Dpy, kc, (state & ShiftMask) ? 1 : 0);
+	ks = XkbKeycodeToKeysym(X_Dpy, kc, 0, (state & ShiftMask) ? 1 : 0);
 
 	/* Look for control characters. */
 	switch (ks) {
