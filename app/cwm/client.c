@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: client.c,v 1.93 2012/05/13 15:17:13 okan Exp $
+ * $OpenBSD: client.c,v 1.94 2012/05/16 01:09:17 okan Exp $
  */
 
 #include <sys/param.h>
@@ -642,6 +642,18 @@ client_cycle(struct screen_ctx *sc, int flags)
 	sc->cycling = 1;
 	client_ptrsave(oldcc);
 	client_ptrwarp(newcc);
+}
+
+void
+client_cycle_leave(struct screen_ctx *sc, struct client_ctx *cc) 
+{
+	sc->cycling = 0;
+
+	client_mtf(NULL);
+	if (cc) {
+		group_sticky_toggle_exit(cc);
+		XUngrabKeyboard(X_Dpy, CurrentTime);
+	}
 }
 
 static struct client_ctx *
