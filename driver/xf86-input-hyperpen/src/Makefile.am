@@ -18,12 +18,8 @@
 #  IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 #  CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
+AM_CFLAGS = $(XORG_CFLAGS)
 
-# this is obnoxious:
-# -module lets us name the module exactly how we want
-# -avoid-version prevents gratuitous .0.0.0 version numbers on the end
-# _ladir passes a dummy rpath to libtool so the thing will actually link
-# TODO: -nostdlib/-Bstatic/-lgcc platform magic, not installing the .a, etc.
 @DRIVER_NAME@_drv_la_LTLIBRARIES = @DRIVER_NAME@_drv.la
 @DRIVER_NAME@_drv_la_LDFLAGS = -module -avoid-version
 @DRIVER_NAME@_drv_ladir = @inputdir@
