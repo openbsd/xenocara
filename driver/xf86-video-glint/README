@@ -2,7 +2,7 @@ xf86-video-glint - GLINT/Permedia video driver for the Xorg X server
 
 Please submit bugs & patches to the Xorg bugzilla:
 
-        https://bugs.freedesktop.org/enter_bug.cgi?product=xorg
+        https://bugs.freedesktop.org/enter_bug.cgi?product=xorg&component=Driver/glint
 
 All questions regarding this software should be directed at the
 Xorg mailing list:

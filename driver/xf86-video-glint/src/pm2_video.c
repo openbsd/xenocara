@@ -20,8 +20,6 @@
  *  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  */
- 
-/* $XFree86: xc/programs/Xserver/hw/xfree86/drivers/glint/pm2_video.c,v 1.25tsi Exp $ */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -30,7 +28,6 @@
 #include "xf86.h"
 #include "xf86_OSproc.h"
 #include "xf86Pci.h"
-#include "xf86PciInfo.h"
 #include "xf86fbman.h"
 #include "xf86i2c.h"
 #include "xf86xv.h"
@@ -183,10 +180,8 @@ static AdaptorPrivPtr AdaptorPrivList = NULL;
 
 #define FreeCookies(pPPriv)		\
 do {					\
-    if ((pPPriv)->pCookies) {		\
-        xfree((pPPriv)->pCookies);	\
+	free((pPPriv)->pCookies);	\
 	(pPPriv)->pCookies = NULL;	\
-    }					\
 } while (0)
 
 #define PORTNUM(p) ((int)((p) - &pAPriv->Port[0]))
@@ -203,28 +198,22 @@ static const Bool ColorBars = FALSE;
 
 typedef enum {
     OPTION_DEVICE,
-    OPTION_FPS,
-    OPTION_BUFFERS,
-    OPTION_ENCODING,
-    OPTION_EXPOSE	/* obsolete, ignored */
+    OPTION_IN_FPS,
+    OPTION_IN_BUFFERS,
+    OPTION_IN_ENCODING,
+    OPTION_OUT_FPS,
+    OPTION_OUT_BUFFERS,
+    OPTION_OUT_ENCODING,
 } OptToken;
 
-/* XXX These should be made const, and per-screen/adaptor copies processed. */
-static OptionInfoRec AdaptorOptions[] = {
+static const OptionInfoRec pm2Options[] = {
     { OPTION_DEVICE,		"Device",	OPTV_STRING,	{0}, FALSE },
-    { -1,			NULL,		OPTV_NONE,	{0}, FALSE }
-};
-static OptionInfoRec InputOptions[] = {
-    { OPTION_BUFFERS,		"Buffers",	OPTV_INTEGER,	{0}, FALSE },
-    { OPTION_FPS,		"FramesPerSec", OPTV_INTEGER,	{0}, FALSE },
-    { OPTION_ENCODING,		"Encoding",	OPTV_STRING,	{0}, FALSE },
-    { -1,			NULL,		OPTV_NONE,	{0}, FALSE }
-};
-static OptionInfoRec OutputOptions[] = {
-    { OPTION_BUFFERS,		"Buffers",	OPTV_INTEGER,	{0}, FALSE },
-    { OPTION_EXPOSE,		"Expose",	OPTV_BOOLEAN,	{0}, FALSE },
-    { OPTION_FPS,		"FramesPerSec", OPTV_INTEGER,	{0}, FALSE },
-    { OPTION_ENCODING,		"Encoding",	OPTV_STRING,	{0}, FALSE },
+    { OPTION_IN_BUFFERS,		"InputBuffers",	OPTV_INTEGER,	{0}, FALSE },
+    { OPTION_IN_FPS,		"InputFramesPerSec", OPTV_INTEGER,	{0}, FALSE },
+    { OPTION_IN_ENCODING,		"InputEncoding",	OPTV_STRING,	{0}, FALSE },
+    { OPTION_OUT_BUFFERS,		"OutputBuffers",	OPTV_INTEGER,	{0}, FALSE },
+    { OPTION_OUT_FPS,		"OutputFramesPerSec", OPTV_INTEGER,	{0}, FALSE },
+    { OPTION_OUT_ENCODING,		"OutputEncoding",	OPTV_STRING,	{0}, FALSE },
     { -1,			NULL,		OPTV_NONE,	{0}, FALSE }
 };
 
@@ -795,7 +784,7 @@ RemakePutCookies(PortPrivPtr pPPriv, RegionPtr pRegion)
 	nBox = REGION_NUM_RECTS(pRegion);
 
 	if (!pPPriv->pCookies || pPPriv->nCookies < nBox) {
-	    if (!(pCookie = (CookiePtr) xrealloc(pPPriv->pCookies, nBox * sizeof(CookieRec))))
+	    if (!(pCookie = (CookiePtr) realloc(pPPriv->pCookies, nBox * sizeof(CookieRec))))
     		return FALSE;
 
 	    pPPriv->pCookies = pCookie;
@@ -1071,7 +1060,7 @@ RemakeGetCookies(PortPrivPtr pPPriv, RegionPtr pRegion)
 	nBox = REGION_NUM_RECTS(pRegion);
 
 	if (!pPPriv->pCookies || pPPriv->nCookies < nBox) {
-	    if (!(pCookie = (CookiePtr) xrealloc(pPPriv->pCookies, nBox * sizeof(CookieRec))))
+	    if (!(pCookie = (CookiePtr) realloc(pPPriv->pCookies, nBox * sizeof(CookieRec))))
     		return FALSE;
 
 	    pPPriv->pCookies = pCookie;
@@ -1722,6 +1711,56 @@ CopyYV12(CARD8 *Y, CARD32 *dst, int width, int height, int pitch)
     }
 }
 
+#if X_BYTE_ORDER == X_BIG_ENDIAN
+
+static void
+CopyYV12_16(CARD8 *Y, CARD32 *dst, int width, int height, int pitch)
+{
+    int Y_size = width * height;
+    CARD8 *V = Y + Y_size;
+    CARD8 *U = V + (Y_size >> 2);
+    int pad = (pitch >> 2) - (width >> 1);
+    int x;
+
+    width >>= 1;
+
+    for (height >>= 1; height > 0; height--) {
+	for (x = 0; x < width; Y += 2, x++)
+	    *dst++ = Y[1] + (V[x] << 8) + (Y[0] << 16) + (U[x] << 24);
+	dst += pad;
+	for (x = 0; x < width; Y += 2, x++)
+	    *dst++ = Y[1] + (V[x] << 8) + (Y[0] << 16) + (U[x] << 24);
+	dst += pad;
+	U += width;
+	V += width;
+    }
+}
+
+static void
+CopyYV12_8(CARD8 *Y, CARD32 *dst, int width, int height, int pitch)
+{
+    int Y_size = width * height;
+    CARD8 *V = Y + Y_size;
+    CARD8 *U = V + (Y_size >> 2);
+    int pad = (pitch >> 2) - (width >> 1);
+    int x;
+
+    width >>= 1;
+
+    for (height >>= 1; height > 0; height--) {
+	for (x = 0; x < width; Y += 2, x++)
+	    *dst++ = V[x] + (Y[1] << 8) + (U[x] << 16) + (Y[0] << 24);
+	dst += pad;
+	for (x = 0; x < width; Y += 2, x++)
+	    *dst++ = V[x] + (Y[1] << 8) + (U[x] << 16) + (Y[0] << 24);
+	dst += pad;
+	U += width;
+	V += width;
+    }
+}
+
+#endif
+
 static void
 CopyFlat(CARD8 *src, CARD8 *dst, int width, int height, int pitch)
 {
@@ -1818,8 +1857,24 @@ Permedia2PutImage(ScrnInfoPtr pScrn,
 
     switch (id) {
     case LE4CC('Y','V','1','2'):
-	CopyYV12(buf, (CARD32 *)((CARD8 *) pGlint->FbBase + pPPriv->BufferBase[0]),
-	    width, height, pPPriv->BufferStride);
+	switch(pGlint->HwBpp) {
+#if X_BYTE_ORDER == X_BIG_ENDIAN
+	case 8:
+	case 24:
+	    CopyYV12_8(buf, (CARD32 *)((CARD8 *) pGlint->FbBase + pPPriv->BufferBase[0]),
+		width, height, pPPriv->BufferStride);
+	    break;
+	case 15:
+	case 16:
+	    CopyYV12_16(buf, (CARD32 *)((CARD8 *) pGlint->FbBase + pPPriv->BufferBase[0]),
+		width, height, pPPriv->BufferStride);
+	    break;
+#endif
+	default:
+	    CopyYV12(buf, (CARD32 *)((CARD8 *) pGlint->FbBase + pPPriv->BufferBase[0]),
+		width, height, pPPriv->BufferStride);
+	    break;
+	}
 	PutYUV(pPPriv, pPPriv->BufferBase[0], FORMAT_YUYV, 1, 0);
 	break;
 
@@ -2393,7 +2448,7 @@ xvipcHandshake(PortPrivPtr pPPriv, int op, Bool block)
 
 	    xvipc.a = -1;
 
-	    pLFBArea = xalloc(sizeof(LFBAreaRec));
+	    pLFBArea = malloc(sizeof(LFBAreaRec));
 
 	    if (pLFBArea) {
 		pLFBArea->pFBArea = pFBArea =
@@ -2406,7 +2461,7 @@ xvipcHandshake(PortPrivPtr pPPriv, int op, Bool block)
 			((pFBArea->box.y1 * pScrn->displayWidth) +
 			    pFBArea->box.x1) << BPPSHIFT(pGlint);
 		} else
-		    xfree(pLFBArea);
+		    free(pLFBArea);
 	    }
 
 	    /* Report results */
@@ -2414,7 +2469,7 @@ xvipcHandshake(PortPrivPtr pPPriv, int op, Bool block)
 	    if (ioctl(xvipc_fd, VIDIOC_PM2_XVIPC, (void *) &xvipc) != 0)
 		if (pFBArea) {
 		    xf86FreeOffscreenArea(pFBArea);
-		    xfree(pLFBArea);
+		    free(pLFBArea);
 		    pFBArea = NULL;
 		}
 
@@ -2448,7 +2503,7 @@ xvipcHandshake(PortPrivPtr pPPriv, int op, Bool block)
 	    if (ioctl(xvipc_fd, VIDIOC_PM2_XVIPC, (void *) &xvipc) == 0 && pLFBArea) {
 		xf86FreeOffscreenArea(pLFBArea->pFBArea);
 		*ppLFBArea = pLFBArea->Next;
-		xfree(pLFBArea);
+		free(pLFBArea);
 	    }
 
 	    goto event;
@@ -2622,14 +2677,14 @@ DeleteAdaptorPriv(AdaptorPrivPtr pAPriv)
 	}
     }
 
-    xfree(pAPriv);
+    free(pAPriv);
 }
 
 static AdaptorPrivPtr
 NewAdaptorPriv(ScrnInfoPtr pScrn, Bool VideoIO)
 {
     GLINTPtr pGlint = GLINTPTR(pScrn);
-    AdaptorPrivPtr pAPriv = (AdaptorPrivPtr) xcalloc(1, sizeof(AdaptorPrivRec));
+    AdaptorPrivPtr pAPriv = (AdaptorPrivPtr) calloc(1, sizeof(AdaptorPrivRec));
     int i;
 
     if (!pAPriv)
@@ -2718,7 +2773,7 @@ NewAdaptorPriv(ScrnInfoPtr pScrn, Bool VideoIO)
 	break;
 
     default:
-	xfree(pAPriv);
+	free(pAPriv);
 	return NULL;
     }
 
@@ -2932,12 +2987,13 @@ Permedia2VideoInit(ScreenPtr pScreen)
     ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
     GLINTPtr pGlint = GLINTPTR(pScrn);
     AdaptorPrivPtr pAPriv;
-    pointer options[3];
     DevUnion Private[PORTS];
     XF86VideoAdaptorRec VAR[ADAPTORS];
     XF86VideoAdaptorPtr VARPtrs[ADAPTORS];
     Bool VideoIO = TRUE;
     int i;
+    /* Glint is still intializing, so pGlint->Options is off-limits. */
+    OptionInfoPtr VidOpts;
 
     switch (pGlint->Chipset) {
     case PCI_VENDOR_TI_CHIP_PERMEDIA2:
@@ -2949,64 +3005,50 @@ Permedia2VideoInit(ScreenPtr pScreen)
         return;
     }
 
-    options[0] = NULL;	/* VideoAdaptor "input" subsection options */
-    options[1] = NULL;	/* VideoAdaptor "output" subsection options */
-    options[2] = NULL;	/* VideoAdaptor options */
-
-    for (i = 0;; i++) {
-	char *adaptor = NULL; /* receives VideoAdaptor section identifier */
-
-	if (!options[0])
-	    options[0] = xf86FindXvOptions(pScreen->myNum, i, "input", &adaptor, options[2] ? NULL : &options[2]);
-
-	if (!options[1])
-	    options[1] = xf86FindXvOptions(pScreen->myNum, i, "output", &adaptor, options[2] ? NULL : &options[2]);
-
-	if (!adaptor) {
-	    if (!i) /* VideoAdaptor reference enables Xv vio driver */
-		VideoIO = FALSE;
-	    break;
-	} else if (options[0] && options[1])
-	    break;
-    }
-
-    if (VideoIO) {
-      unsigned int temp;
-      PCI_READ_LONG(pGlint->PciInfo, &temp, PCI_SUBSYSTEM_ID_REG);
-      switch (temp) {
-	case PCI_SUBSYSTEM_ID_WINNER_2000_P2A:
-	case PCI_SUBSYSTEM_ID_WINNER_2000_P2C:
-	case PCI_SUBSYSTEM_ID_GLORIA_SYNERGY_P2A:
-	case PCI_SUBSYSTEM_ID_GLORIA_SYNERGY_P2C:
-	    break;
-
-	default:
-	    xf86DrvMsgVerb(pScrn->scrnIndex, X_PROBED, 1, "No Xv vio support for this board\n");
-	    VideoIO = FALSE;
-	}
-    }
-    if (pGlint->NoAccel && !VideoIO)
+    xf86CollectOptions(pScrn, NULL);
+    /* Process the options */
+    if (!(VidOpts = malloc(sizeof(pm2Options))))
 	return;
+
+    memcpy(VidOpts, pm2Options, sizeof(pm2Options));
+
+    xf86ProcessOptions(pScrn->scrnIndex, pScrn->options, VidOpts);
+    xf86ShowUnusedOptions(pScrn->scrnIndex, VidOpts);
+
+    /* Don't complain about no Xv support unless they asked for Xv support.
+       Assume they want Xv if OPTION_DEVICE is set, since that's required. */
+	if (xf86IsOptionSet(VidOpts, OPTION_DEVICE)) {
+	    unsigned int temp;
+	    PCI_READ_LONG(pGlint->PciInfo, &temp, PCI_SUBSYSTEM_ID_REG);
+	    switch (temp) {
+		    case PCI_SUBSYSTEM_ID_WINNER_2000_P2A:
+		    case PCI_SUBSYSTEM_ID_WINNER_2000_P2C:
+		    case PCI_SUBSYSTEM_ID_GLORIA_SYNERGY_P2A:
+		    case PCI_SUBSYSTEM_ID_GLORIA_SYNERGY_P2C:
+			    break;
+		    default:
+			    VideoIO = FALSE;
+			    xf86DrvMsgVerb(pScrn->scrnIndex, X_PROBED, 1, "No Xv vio support for this board\n");
+	    }
+	}
+    else
+	    /* Assume they don't, even if other options are set. */
+	    VideoIO = FALSE;
+
+    if (pGlint->NoAccel && !VideoIO) {
+	    free(VidOpts);
+	    return;
+    }
 
     xf86DrvMsgVerb(pScrn->scrnIndex, X_INFO, 1, "Initializing Xv driver rev. 4\n");
 
-    if (VideoIO) {
-	for (i = 0; i <= 2; i++) {
-	    xf86ProcessOptions(pScrn->scrnIndex, options[i],
-		(i == 0) ? InputOptions :
-		(i == 1) ? OutputOptions :
-			   AdaptorOptions);
-
-	    xf86ShowUnusedOptions(pScrn->scrnIndex, options[i]);
-	}
-
-	if (xf86IsOptionSet(AdaptorOptions, OPTION_DEVICE)) {
-    	    if (!xvipcOpen(xf86GetOptValString(AdaptorOptions, OPTION_DEVICE), pScrn))
+	if (VideoIO) {
+	    if (!xvipcOpen(xf86GetOptValString(VidOpts, OPTION_DEVICE), pScrn))
 		VideoIO = FALSE;
-	}
     }
 
     if (!(pAPriv = NewAdaptorPriv(pScrn, VideoIO))) {
+	free(VidOpts);
 	xf86DrvMsg(pScrn->scrnIndex, X_ERROR, "Xv driver initialization failed\n");
 	return;
     }
@@ -3014,14 +3056,14 @@ Permedia2VideoInit(ScreenPtr pScreen)
     if (VideoIO) {
 	int n;
 
-	if (xf86GetOptValInteger(InputOptions, OPTION_BUFFERS, &n))
+	if (xf86GetOptValInteger(VidOpts, OPTION_IN_BUFFERS, &n))
 	    pAPriv->Port[0].BuffersRequested = CLAMP(n, 1, 2);
-	if (xf86GetOptValInteger(InputOptions, OPTION_FPS, &n))
+	if (xf86GetOptValInteger(VidOpts, OPTION_IN_FPS, &n))
 	    pAPriv->Port[0].FramesPerSec = CLAMP(n, 1, 30);
 
-	if (xf86GetOptValInteger(OutputOptions, OPTION_BUFFERS, &n))
+	if (xf86GetOptValInteger(VidOpts, OPTION_OUT_BUFFERS, &n))
 	    pAPriv->Port[1].BuffersRequested = 1;
-	if (xf86GetOptValInteger(OutputOptions, OPTION_FPS, &n))
+	if (xf86GetOptValInteger(VidOpts, OPTION_OUT_FPS, &n))
 	    pAPriv->Port[1].FramesPerSec = CLAMP(n, 1, 30);	
     }
 
@@ -3146,14 +3188,14 @@ Permedia2VideoInit(ScreenPtr pScreen)
 	xf86DrvMsg(pScrn->scrnIndex, X_INFO, "Xv frontend scaler enabled\n");
 
 	if (VideoIO) {
-	    if ((s = xf86GetOptValString(InputOptions, OPTION_ENCODING)))
+	    if ((s = xf86GetOptValString(VidOpts, OPTION_IN_ENCODING)))
 	        for (i = 0; i < ENTRIES(InputVideoEncodings); i++)
 		    if (!strncmp(s, InputVideoEncodings[i].name, strlen(s))) {
 			Permedia2SetPortAttribute(pScrn, xvEncoding, i, (pointer) &pAPriv->Port[0]);
 			break;
 		    }
 
-	    if ((s = xf86GetOptValString(OutputOptions, OPTION_ENCODING)))
+	    if ((s = xf86GetOptValString(VidOpts, OPTION_OUT_ENCODING)))
 		for (i = 0; i < ENTRIES(OutputVideoEncodings); i++)
 		    if (!strncmp(s, OutputVideoEncodings[i].name, strlen(s))) {
 			Permedia2SetPortAttribute(pScrn, xvEncoding, i, (pointer) &pAPriv->Port[1]);
@@ -3167,4 +3209,6 @@ Permedia2VideoInit(ScreenPtr pScreen)
 	xf86DrvMsg(pScrn->scrnIndex, X_ERROR, "Xv initialization failed\n");
 	DeleteAdaptorPriv(pAPriv);
     }
+
+    free(VidOpts);
 }

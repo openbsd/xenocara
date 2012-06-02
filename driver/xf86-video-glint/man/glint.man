@@ -1,4 +1,3 @@
-.\" $XFree86: xc/programs/Xserver/hw/xfree86/drivers/glint/glint.man,v 1.5 2001/12/17 20:52:32 dawes Exp $ 
 .\" shorthand for double quote that works everywhere.
 .ds q \N'34'
 .TH GLINT __drivermansuffix__ __vendorversion__
@@ -102,6 +101,30 @@ acceleration in general, but disables it for some special cases.  Default: off.
 .TP
 .BI "Option \*qFireGL3000\*q \*q" boolean \*q
 If you have a card of the same name, turn this on.  Default: off.
+.TP
+The Permedia 2 xv driver supports some additional options:
+.TP
+.BI "Option \*qDevice\*q \*q" string \*q
+A path to the Permedia 2 kernel driver. This is required for Xv support.
+.TP
+.BI "Option \*qInputBuffers\*q \*q" integer \*q
+Sets the number of buffers for incoming data. Minimum of 1, max of 2.
+.TP
+.BI "Option \*qInputFramesPerSec\*q \*q" integer \*q
+Expected frames per second for incoming data.
+.TP
+.BI "Option \*qInputEncoding\*q \*q" string \*q
+The encoding that input data will have.
+.TP
+.BI "Option \*qOutputBuffers\*q \*q" integer \*q
+This should probably set the number of buffers for outgoing data. It actually
+does nothing.
+.TP
+.BI "Option \*qOutputFramesPerSec\*q \*q" integer \*q
+Expected frames per second for outgoing data.
+.TP
+.BI "Option \*qOutputEncoding\*q \*q" string \*q
+The encoding to put output data in.
 .SH "SEE ALSO"
 __xservername__(__appmansuffix__), __xconfigfile__(__filemansuffix__), Xserver(__appmansuffix__), X(__miscmansuffix__)
 .SH AUTHORS

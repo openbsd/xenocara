@@ -23,13 +23,12 @@
 # -avoid-version prevents gratuitous .0.0.0 version numbers on the end
 # _ladir passes a dummy rpath to libtool so the thing will actually link
 # TODO: -nostdlib/-Bstatic/-lgcc platform magic, not installing the .a, etc.
-AM_CFLAGS = @XORG_CFLAGS@ @DRI_CFLAGS@ -DPPC_MMIO_IS_BE -DSPARC_MMIO_IS_BE
+AM_CFLAGS = @XORG_CFLAGS@ -DPPC_MMIO_IS_BE -DSPARC_MMIO_IS_BE
 glint_drv_la_LTLIBRARIES = glint_drv.la
 glint_drv_la_LDFLAGS = -module -avoid-version
 glint_drv_ladir = @moduledir@/drivers
 
 glint_drv_la_SOURCES = \
-         glint_common.h \
          glint_dga.c \
          glint_driver.c \
          glint.h \
@@ -53,10 +52,3 @@ glint_drv_la_SOURCES = \
          TIramdac.c \
          tx_accel.c \
          tx_dac.c
-
-if DRI
-glint_drv_la_SOURCES += \
-         glint_dri.c \
-         glint_dri.h \
-         glint_dripriv.h
-endif

@@ -1,101 +1,1067 @@
-2006-04-07  Adam Jackson  <ajax@freedesktop.org>
+commit c4796200c2d322a59ccf2eeb2df3be874507fd48
+Author: Matt Turner <mattst88@gmail.com>
+Date:   Wed Feb 15 23:12:23 2012 -0500
 
-	* configure.ac:
-	* src/glint.h:
-	Bump to 1.1.1 for Xv changes.
+    xf86-video-glint 1.2.7
+    
+    Signed-off-by: Matt Turner <mattst88@gmail.com>
 
-2006-04-07  Aaron Plattner  <aplattner@nvidia.com>
+commit 288243a9301c38baae63ec66ba344f0a8245b2ee
+Author: Matt Turner <mattst88@gmail.com>
+Date:   Wed Jan 25 13:07:23 2012 -0500
 
-	* src/pm2_video.c: (Permedia2PutVideo), (Permedia2PutStill),
-	(Permedia2GetVideo), (Permedia2GetStill), (Permedia2PutImage):
-	* src/pm3_video.c: (Permedia3PutImage):
-	Add a DrawablePtr argument to the XV functions to pave the way for
-	redirected video.
+    Remove uses of xf86PciInfo.h
+    
+    Signed-off-by: Matt Turner <mattst88@gmail.com>
 
-2006-04-07  Adam Jackson  <ajax@freedesktop.org>
+commit 754a81fc5f91be4d35853953c1a803a421b0379d
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Mon Dec 19 16:27:31 2011 -0500
 
-	* configure.ac:
-	* src/IBMramdac.c:
-	* src/TIramdac.c:
-	* src/glint.h:
-	* src/glint_dga.c:
-	* src/glint_dri.c:
-	* src/glint_driver.c:
-	* src/glint_shadow.c:
-	* src/pm2_accel.c:
-	* src/pm2_dac.c:
-	* src/pm2_video.c:
-	* src/pm2ramdac.c:
-	* src/pm2v_dac.c:
-	* src/pm2vramdac.c:
-	* src/pm3_accel.c:
-	* src/pm3_dac.c:
-	* src/pm3_video.c:
-	* src/pm_accel.c:
-	* src/pm_dac.c:
-	* src/sx_accel.c:
-	* src/tx_accel.c:
-	* src/tx_dac.c:
-	Unlibcwrap.  Bump server version requirement.  Bump to 1.1.0.
+    Fall back to shadowfb if XAA is unavailable
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
 
-2006-02-02  Alan Hourihane  <alanh@fairlite.demon.co.uk>
+commit c539e59ba332fba669e025f8d0d680d2a2b1c9ff
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Sat Oct 29 17:12:58 2011 -0700
 
-	* src/glint.h:
-	Allocate more space for the dac registers on pm2v hardware.
+    Disable PC98 code on newer servers.
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
 
-2006-01-09  David Nusinow  <gravity-at-freedesktop-dot-org>
+commit 0aaa00ac0d0304737e0a3fd79695537c6e3a07d4
+Author: Matt Turner <mattst88@gmail.com>
+Date:   Tue Sep 6 15:19:36 2011 -0400
 
-	* man/glint.man:
-	Convert manpage to utf-8
-	Bugzilla #1925 <https://bugs.freedesktop.org/show_bug.cgi?id=1925>
+    xf86-video-glint 1.2.6
 
-2005-12-20  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+commit ca7c202da8d291eba9c68c149eb9530be1d66880
+Author: Mark Kettenis <mark.kettenis@xs4all.nl>
+Date:   Tue Mar 1 07:32:26 2011 +0000
 
-	* configure.ac:
-	Update package version for X11R7 release.
+    Fix uploading YV12 data to texture buffer on BE machines
+    
+    On BE machines various hardware byteswapping options are used for the
+    framebuffer aperture.  Which option gets used depends on the depth of the
+    framebuffer.  Uploading YV12 data to the texture buffer is done through the
+    same aperture, but is always done in 32-bit wide units.  Therefore the code
+    that does the uploading needs to take into account the byteswapping done by
+    the hardware.  For 32bpp modes we can use the same code as on LE machines,
+    but 16bpp and 8bpp modes need their own versions.
+    
+    Signed-off-by: Mark Kettenis <kettenis@openbsd.org>
+    Signed-off-by: Matt Turner <mattst88@gmail.com>
 
-2005-12-14  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+commit 97c9bdf9a396c5627c865d03cd0de91a7267a277
+Author: Jesse Adkins <jesserayadkins@gmail.com>
+Date:   Sat Dec 11 12:38:54 2010 +0000
 
-	* configure.ac:
-	Update package version number for final X11R7 release candidate.
+    Make pm2's xv driver collect options like all other drivers.
+    
+    The current method of argument collection is to collect options from different
+    ports of a VideoAdaptor record. Specifically, the ports had to be named
+    'Input' for input options, and 'Output' for output options.
+    
+    This resulted in three groups of options, requiring people to know what
+    VideoAdaptor does, both of which were not documented in the man page. If you
+    forgot to create a VideoAdaptor port, then the xv driver would just not work.
+    
+    This patch makes the xv driver collect options from the screen, like every
+    single other driver. Input and Output prefixes are used for options where the
+    input and output ports have the same args (FramesPerSec, for example).
+    Documentation added for the change.
+    
+    This is a step toward getting rid of VideoAdaptor, since only glint uses it
+    (and is probably the only one to have used it).
+    
+    v2: Complain about Xv driver failing to load only if the user wanted Xv.
+    Don't use pGlint->Options, since glint is still initializing.
+    
+    Signed-off-by: Jesse Adkins <jesserayadkins@gmail.com>
+    Signed-off-by: Matt Turner <mattst88@gmail.com>
 
-2005-12-06  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+commit d722b45848b899c5f4b7794871ef99207b8e7961
+Author: Matt Turner <mattst88@gmail.com>
+Date:   Sat Dec 4 13:14:31 2010 -0500
 
-	* man/Makefile.am:
-	Change *man_SOURCES ==> *man_PRE to fix autotools warnings.
+    unifdef XFree86LOADER
+    
+    Signed-off-by: Matt Turner <mattst88@gmail.com>
 
-2005-12-03  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+commit 1b193cba02b6ca3e27bb72facaffcdd5fe57ba09
+Author: Matt Turner <mattst88@gmail.com>
+Date:   Sat Dec 4 13:11:00 2010 -0500
 
-	* configure.ac:
-	Update package version number for X11R7 RC3 release.
+    Add &component=Driver/glint to Bugzilla link
+    
+    Signed-off-by: Matt Turner <mattst88@gmail.com>
 
-2005-12-01  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+commit c34858ad8a7e6929ef5a432ff141d0ebb28c6874
+Author: Matt Turner <mattst88@gmail.com>
+Date:   Sat Dec 4 12:58:54 2010 -0500
 
-	* configure.ac:
-	Remove extraneous AC_MSG_RESULT.
+    Don't check for fontsproto.
+    
+    Signed-off-by: Matt Turner <mattst88@gmail.com>
 
-2005-11-20  Adam Jackson  <ajax@freedesktop.org>
+commit d343834fac2f413ab0f89841eb71f155682f2ac2
+Author: Matt Turner <mattst88@gmail.com>
+Date:   Sat Dec 4 12:58:23 2010 -0500
 
-	* configure.ac:
-	Bump libdrm dep to 2.0.
+    Add back mistakenly removed check for videoproto
+    
+    Signed-off-by: Matt Turner <mattst88@gmail.com>
 
-2005-11-29  Adam Jackson  <ajax@freedesktop.org>
+commit f5609d296b46304495293bb6b3f48f806f3e16bf
+Author: Jesse Adkins <jesserayadkins@gmail.com>
+Date:   Tue Sep 28 13:29:51 2010 -0700
 
-	* configure.ac:
-	Only build dlloader modules by default.
+    Purge cvs tags.
+    
+    Signed-off-by: Jesse Adkins <jesserayadkins@gmail.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
 
-2005-11-15  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+commit 0f943ec35255af41c8042a300cf73ecca35c9c55
+Author: Matt Turner <mattst88@gmail.com>
+Date:   Thu Sep 23 00:18:29 2010 -0400
 
-	* configure.ac:
-	Add check for DGA extension to fix issues when building with
-	separate build roots.
+    Include xf86dgaproto.h, not xf86dgastr.h
+    
+    Signed-off-by: Matt Turner <mattst88@gmail.com>
 
-2005-11-09  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+commit b4acf1fb50f1560d177e8e7912ef27ddca80d209
+Author: Matt Turner <mattst88@gmail.com>
+Date:   Thu Sep 23 00:05:09 2010 -0400
 
-	* configure.ac:
-	Update package version number for X11R7 RC2 release.
+    Delete CFB
+    
+    ajax killed cfb in April 2008 (0dab6fa3582b70ccd0f01459902415c28dbc81ff).
+    
+    Signed-off-by: Matt Turner <mattst88@gmail.com>
 
-2005-11-01  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+commit 7669aeb2a170c246089043bb4d203c25cbfe5e95
+Author: Matt Turner <mattst88@gmail.com>
+Date:   Thu Sep 23 00:01:16 2010 -0400
 
-	* configure.ac:
-	Update pkgcheck dependencies to work with separate build roots.
+    Delete DRI/DRM
+    
+    The DRM kernel component has been gone since at least 2.6.13, and Mesa dropped
+    the gamma driver in February 2010 (79aeafd3ca3680c28f6d47a21a501334844f4475).
+    
+    Signed-off-by: Matt Turner <mattst88@gmail.com>
+
+commit ff602c76781e27f191f4836b4f7eff5df5f7e54c
+Author: Matt Turner <mattst88@gmail.com>
+Date:   Wed Sep 22 23:50:04 2010 -0400
+
+    Don't check for unneeded proto headers.
+    
+    Signed-off-by: Matt Turner <mattst88@gmail.com>
+
+commit 705ffc1776df2240f337dd896223b371c12bc19f
+Author: Matt Turner <mattst88@gmail.com>
+Date:   Wed Sep 15 23:23:56 2010 -0400
+
+    Fix timing errors, as per documentation
+    
+    pm2_dac.c:
+    -	VsEnd and VsStart should have 1 subtracted, say the docs. This also
+    	matches with the PM3 and PM4 docs, and is what the pm2fb Linux
+    	kernel driver does.
+    -	Move VsTotal subtract-1 to instantiation, since it doesn't need to
+    	be shifted before the subtraction, unlike horizontal timings
+    	(HTotal, for instance).
+    -	Remove subtract-1 from HsStart, as the docs don't say this is
+    	correct. This also matches with the PM3 and PM4 docs, and is what
+    	the pm2fb Linux kernel driver does.
+    
+    pm3_dac.c:
+    -	Subtract 1 from HTotal after the Shiftbpp, as the docs say. This
+    	error has existed since xf86-video-glint was imported into git and
+    	has been propagated to the pm3fb Linux kernel driver.
+    
+    Signed-off-by: Matt Turner <mattst88@gmail.com>
+
+commit 7050a255115b2c5a70083d2d4ad775548ef701f7
+Author: Matt Turner <mattst88@gmail.com>
+Date:   Sat Sep 11 16:22:23 2010 -0400
+
+    xf86-video-glint 1.2.5
+
+commit a2fa84df74b2c799b4bf992a212fa7c06dfa919f
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jul 21 16:49:04 2010 -0400
+
+    config: add comments for main statements
+
+commit ebd5eec763716b34f9c5759c9214c068e85c1ed7
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jul 21 16:07:00 2010 -0400
+
+    config: replace deprecated use of AC_OUTPUT with AC_CONFIG_FILES
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit d4af4770f292539395ef9513fa3c7da6264ea90f
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jul 21 14:37:41 2010 -0400
+
+    config: replace deprecated AC_HELP_STRING with AS_HELP_STRING
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 9d2fe6766e9a4e48bbac0e6b2aa394f45859c460
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jul 21 14:05:22 2010 -0400
+
+    config: replace deprecated AM_CONFIG_HEADER with AC_CONFIG_HEADERS
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 361ff8746407ec90a03e5c5bc43b3ddcd37a5162
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jul 21 09:27:42 2010 -0400
+
+    config: complete AC_INIT m4 quoting
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit e98573f1167fd29f1a6ea4a6324eba4bb8c91468
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Jul 20 21:54:11 2010 -0400
+
+    config: remove unrequired AC_SUBST([DRI_CFLAGS])
+    
+    This macro is called by PKG_CHECK_MODULES
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 819acac0a1613296b3a15176e0061336bd99c120
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Jul 20 21:44:57 2010 -0400
+
+    config: remove unrequired AC_SUBST([XORG_CFLAGS])
+    
+    This macro is called by PKG_CHECK_MODULES
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 9bdca08b4d3728fb7addf2d7aa4c6288e3ad80f3
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Jul 20 20:24:42 2010 -0400
+
+    config: remove unrequired AC_HEADER_STDC
+    
+    Autoconf says:
+    "This macro is obsolescent, as current systems have conforming
+    header files. New programs need not use this macro".
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 2bfc9d4232fffcef0a61ad55683c0b8f517c281e
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Jul 20 19:41:30 2010 -0400
+
+    config: remove AC_PROG_CC as it overrides AC_PROG_C_C99
+    
+    XORG_STRICT_OPTION from XORG_DEFAULT_OPTIONS calls
+    AC_PROG_C_C99. This sets gcc with -std=gnu99.
+    If AC_PROG_CC macro is called afterwards, it resets CC to gcc.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 7706c011e7b46b76ea91467f9446523458e0a8d9
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Jul 20 18:45:19 2010 -0400
+
+    config: update AC_PREREQ statement to 2.60
+    
+    Unrelated to the previous patches, the new value simply reflects
+    the reality that the minimum level for autoconf to configure
+    all x.org modules is 2.60 dated June 2006.
+    
+    ftp://ftp.gnu.org/gnu/autoconf/autoconf-2.60.tar.gz
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 4582c1f184ed3718caed0b73e71f5198e8d4b8a6
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Jul 20 16:15:29 2010 -0400
+
+    config: upgrade to util-macros 1.8 for additional man page support
+    
+    Use MAN_SUBST now supplied in XORG_MANPAGE_SECTIONS
+    The value of MAN_SUBST is the same for all X.Org packages.
+
+commit b2590514c4cb76d571e40dbab3e9bff357aaa461
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sat Jun 12 15:59:54 2010 -0400
+
+    COPYING: replace stub file with actual Copyright notices.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit b333d1751eab5aaff9fb5764c4b7b6250f78d145
+Author: Matt Turner <mattst88@gmail.com>
+Date:   Wed Jun 9 01:56:27 2010 -0400
+
+    Remove another superfluous if(p) check around free(p)
+    
+    Signed-off-by: Matt Turner <mattst88@gmail.com>
+
+commit 415b727c6a91bd788436f848bd7828930f2019e2
+Author: Matt Turner <mattst88@gmail.com>
+Date:   Wed Jun 9 01:26:50 2010 -0400
+
+    Move mem_barrier() outside of loop
+    
+    This makes more sense, and is also how the pm3fb driver in the kernel
+    does it.
+    
+    Signed-off-by: Matt Turner <mattst88@gmail.com>
+
+commit c8a03b63945a358bd895590a8ed2b817b9f08ce9
+Author: Matt Turner <mattst88@gmail.com>
+Date:   Wed Jun 9 01:23:36 2010 -0400
+
+    Remove superfluous if(p) checks around free(p)
+    
+    Signed-off-by: Matt Turner <mattst88@gmail.com>
+
+commit 610703a0453e30354aae959a914200ca33012b4a
+Author: Matt Turner <mattst88@gmail.com>
+Date:   Wed Jun 9 01:20:21 2010 -0400
+
+    Use libc instead of deprecated libc wrappers for malloc/calloc/free.
+    
+    Signed-off-by: Matt Turner <mattst88@gmail.com>
+
+commit febdcbe2df005e30bf62f9c3b7d12f8df1bf6481
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Fri Jan 15 15:54:22 2010 -0800
+
+    Update Sun license notices to current X.Org standard form
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit 61d5faed232a38c4d85900b123c3d8c14dda752a
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Dec 15 21:46:36 2009 -0500
+
+    configure.ac: use backticks rather than $() for cmd subs
+    
+    Use "$PKG_CONFIG" rather than hard coded "pkg-config"
+    
+    Acked-by: Dan Nicholson <dbn.lists@gmail.com>
+    Acked-by: Daniel Stone <daniel@fooishbar.org>
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit b1c16640e7ae9481866b76060f02127ef50bbde8
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Nov 23 09:25:05 2009 -0500
+
+    Makefile.am: add ChangeLog and INSTALL on MAINTAINERCLEANFILES
+    
+    Now that the INSTALL file is generated.
+    Allows running make maintainer-clean.
+
+commit 1380dcf9961225e39eadd07370023d768db0e432
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Oct 28 14:41:41 2009 -0400
+
+    INSTALL, NEWS, README or AUTHORS files are missing/incorrect #24206
+    
+    Automake 'foreign' option is specified in configure.ac.
+    Remove from Makefile.am
+
+commit b02ee1cce48c60c93e4b3cefd27ea7abeaf5f042
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Oct 28 14:09:09 2009 -0400
+
+    INSTALL, NEWS, README or AUTHORS files are missing/incorrect #24206
+    
+    Add missing INSTALL file. Use standard GNU file on building tarball
+    README may have been updated
+    Remove AUTHORS file as it is empty and no content available yet.
+    Remove NEWS file as it is empty and no content available yet.
+
+commit 430e6a1f5229e8a961431a20323066fa0e46edd1
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Oct 26 12:54:21 2009 -0400
+
+    Several driver modules do not have a ChangeLog target in Makefile.am #23814
+    
+    The git generated ChangeLog replaces the hand written one.
+    Update configure.ac to xorg-macros level 1.3.
+    Use XORG_DEFAULT_OPTIONS which replaces four XORG_* macros
+    Update Makefile.am to add ChangeLog target if missing
+    Remove ChangeLog from EXTRA_DIST or *CLEAN variables
+    This is a pre-req for the INSTALL_CMD
+
+commit d29bde968e0cc6b6032f3d64f857ed68cf65216d
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Oct 22 13:01:18 2009 -0400
+
+    .gitignore: use common defaults with custom section # 24239
+    
+    Using common defaults will reduce errors and maintenance.
+    Only the very small or inexistent custom section need periodic maintenance
+    when the structure of the component changes. Do not edit defaults.
+
+commit 914a0c8f4ee599210c2d941a45ef009a13be09dc
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Oct 22 12:34:17 2009 -0400
+
+    .gitignore: use common defaults with custom section # 24239
+    
+    Using common defaults will reduce errors and maintenance.
+    Only the very small or inexistent custom section need periodic maintenance
+    when the structure of the component changes. Do not edit defaults.
+
+commit ab648787e729651e45e615cc05a1080ba46e9ce4
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Thu Jul 30 12:04:27 2009 +1000
+
+    glint: bump for release 1.2.4
+
+commit d67bba116851bb4682df9fcbac12b0cda10aa28b
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Tue Jul 28 15:22:40 2009 +1000
+
+    glint: change to using ABI version check
+
+commit a7c9dd7039005cc656108d00c95fc7eb75b74642
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Tue Jul 28 13:32:30 2009 +1000
+
+    glint: update for resources/RAC API removal
+
+commit f74a51285651c2eea31efb43734600b79caa0507
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Thu Jul 16 11:39:13 2009 +1000
+
+    Update to xextproto 7.1 support.
+    
+    DPMS header was split into dpms.h (client) and dpmsconst.h (server). Drivers
+    need to include dpmsconst.h if xextproto 7.1 is available.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 833a4f3fcc859a80b4edc9d4c45061c11f8290ab
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Thu Jul 2 11:12:21 2009 -0400
+
+    glint 1.2.3
+
+commit 599fd0c36e38014cf4611130d2f75847af549a95
+Author: Mark Kettenis <mark.kettenis@xs4all.nl>
+Date:   Fri Jun 5 14:28:57 2009 -0600
+
+    Don't set the default depth to 8bpp.
+    
+    These days 24/32bpp makes much more sense.
+    
+    Signed-off-by: Matthieu Herrb <matthieu.herrb@laas.fr>
+
+commit db324d0a4d9faf1df3a5c9be8f5a837e852e22cb
+Author: Mark Kettenis <mark.kettenis@xs4all.nl>
+Date:   Fri Jun 5 14:27:55 2009 -0600
+
+    Disable int10 code if __sparc__.
+    
+    Signed-off-by: Matthieu Herrb <matthieu.herrb@laas.fr>
+
+commit fc258c28f99101f7a08bac3f08a66b70ba273161
+Author: Mark Kettenis <mark.kettenis@xs4all.nl>
+Date:   Thu Jun 4 11:29:10 2009 -0600
+
+    Fix DDC probe.
+    
+    The driver tried to do DDC stuff without having its registers mapped.
+    
+    Signed-off-by: Matthieu Herrb <matthieu.herrb@laas.fr>
+
+commit 2c022e126c027d20b4b060e31cccb012265cec6a
+Author: Mark Kettenis <mark.kettenis@xs4all.nl>
+Date:   Thu Jun 4 11:27:07 2009 -0600
+
+    Only map a 64k block of registers.
+    
+    The driver tries to map a block of registers that is too large.  The
+    mmio registers consist of two blocks of 64k.  The first 64k provide a
+    little-endian view, the second 64k provide a big-endian view.  However
+    the driver always tries to map 128k.  And mapping 128k from the offset
+    where the big-endian view starts will fail on OpenBSD.
+    
+    This changes things such that the driver maps just 64k.  There is no
+    reason to map the big-endian view on little-endian machines.
+    
+    Signed-off-by: Matthieu Herrb <matthieu.herrb@laas.fr>
+
+commit 1b36ca0c453191e4837cea25794731b166df19f7
+Author: Mark Kettenis <mark.kettenis@xs4all.nl>
+Date:   Thu Jun 4 11:24:15 2009 -0600
+
+    Fix for big-endian machines.
+    
+    The problem is that the card provides a big-endian view on its
+    registers, which the driver uses on big-endian machines.  However, the
+    driver uses MMIO_OUT32() and friends to access these registers.  And
+    on sparc64, these macros do byte swapping themselves.  The net result
+    of course is that no byte swapping gets done at all, and things fail
+    miserably.
+    
+    The fix is to make the macros not do byte swapping, which can be done
+    by defining SPARC_MMIO_IS_BE.  There is a similar define for powerpc
+    as well.  I assume these defines were accidentally dropped in the
+    autoconfiscation of Xorg.
+    
+    Other people came up with the same conclusion see:
+    
+      http://www.mail-archive.com/opensolaris-discuss@opensolaris.org/msg20874.html
+    
+    and
+    
+      https://bugs.freedesktop.org/show_bug.cgi?id=10742
+    
+    Signed-off-by: Matthieu Herrb <matthieu.herrb@laas.fr>
+
+commit 860e3c4bc40b6e130411b954f8945e8fbc42c9bb
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Thu May 28 14:58:01 2009 -0400
+
+    Remove useless loader symbol lists.
+
+commit 6b6cca87d65d062035b156485e3865e1973115e4
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Fri Jan 30 20:39:18 2009 -0800
+
+    Add README with pointers to mailing list, bugzilla & git repos
+
+commit 4a03cf57e4c8c998bca8bd4378777cf0008764bd
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Fri Jan 9 16:28:39 2009 -0800
+
+    Remove xorgconfig & xorgcfg from See Also list in man page
+
+commit f0b4f9629c4c11c33f8c6d382b21da99a0c52570
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Mon Dec 22 14:33:28 2008 +1000
+
+    glint 1.2.2
+
+commit ea4b1f56fdcdd88f111e9ecbb73cd6583ad01ac8
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Sun Nov 23 17:43:34 2008 -0500
+
+    Remove bizarre use of ISA setup
+
+commit 9da29a371f7a12c5ebe225c94d0719d0cd6098e5
+Author: Dave Airlie <airlied@linux.ie>
+Date:   Mon Sep 15 02:33:25 2008 +1000
+
+    glint: fix build on alpha for pciaccess.
+    
+    Redid patch from #17569 from jcristau@debian.org
+
+commit 986464aa29077a131304b407e4da565f85c144ab
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Fri Aug 15 15:25:30 2008 -0400
+
+    Move DDC before mode validation so the EDID modes actually take effect.
+
+commit ad31d1bf886076776354e0e35f5eff8200296dbc
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Fri Aug 15 14:05:53 2008 -0400
+
+    Uninclude xf86Version.h
+
+commit 7b6206e6ba9f1351e5c9fe45da14c18ef2b69ac9
+Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+Date:   Tue Jul 29 14:03:09 2008 -0300
+
+    Remove dependency on cfb8_32.
+    
+      This probably was not noticed because glint_driver.c doesn't include
+    the proper header file.
+
+commit a68acd796e14742615eb071819b2910f69346a2b
+Author: Julien Cristau <jcristau@debian.org>
+Date:   Mon Jun 30 17:56:27 2008 +0200
+
+    Bump to 1.2.1
+
+commit 9c4f5ec0c8a5b48b9b923798175cc6e66932f8ed
+Author: Julien Cristau <jcristau@debian.org>
+Date:   Tue Jun 24 03:17:32 2008 +0200
+
+    Fix regression from pciaccess conversion (bug#16060)
+
+commit 27da4e81ea2eceed69b37a5c6a19def9d1146258
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Wed Mar 19 14:01:42 2008 -0400
+
+    glint 1.2.0
+
+commit 71635ce6e595705c8841f68668d3efd7db9cec57
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Wed Mar 19 13:58:54 2008 -0400
+
+    Fix distcheck
+
+commit 7c0a6d5e978fbd3f635ba4a35dd24a9cb08ede92
+Author: Dave Airlie <airlied@clockmaker.usersys.redhat.com>
+Date:   Tue Mar 11 15:47:34 2008 +1000
+
+    fix regression in tinderbox
+
+commit bee9cba6766271c1e0e007eae8dcd853aa8ef361
+Author: Dave Airlie <airlied@panoply-rh.(none)>
+Date:   Tue Mar 11 10:15:00 2008 +1000
+
+    hey look a flying pig....
+    
+    it builds, but it may or may not work at all.
+
+commit faabfbccbe0516f461590eee05cf44122135d9ee
+Author: Matthieu Herrb <matthieu@bluenote.herrb.net>
+Date:   Sat Mar 8 23:29:30 2008 +0100
+
+    Makefile.am: nuke RCS Id
+
+commit 6a56ee0b6b409c36d4f7e9b1f784ec3eeebd20b9
+Author: Dave Airlie <airlied@clockmaker.usersys.redhat.com>
+Date:   Mon Mar 3 10:47:24 2008 +1000
+
+    fix typos in dac code from last commit
+
+commit c4b0de8dc27ce4c3145dca36f75f3b3e4fdd20b9
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Wed Feb 27 15:45:37 2008 +1000
+
+    half attempt at pciaccess conversion for glint - doesn't build yet
+    
+    but this gets most of the mechanical changes
+
+commit f87b7c663c8ae2c4abf270f8f941a4c068da7e8b
+Author: Julien Cristau <jcristau@debian.org>
+Date:   Tue Feb 5 13:45:05 2008 +0100
+
+    Add missing #includes to fix compiler warnings.
+    
+    Fixes the following warnings:
+    ../../src/glint_driver.c: In function 'GLINTScreenInit':
+    ../../src/glint_driver.c:2968: warning: implicit declaration of function 'cfb8_32ScreenInit'
+    ../../src/glint_driver.c:3147: warning: implicit declaration of function 'xf86Overlay8Plus32Init'
+    ../../src/pm2_video.c: In function 'StopVideoStream':
+    ../../src/pm2_video.c:1339: warning: implicit declaration of function 'usleep'
+    ../../src/pm2_video.c: In function 'xvipcHandshake':
+    ../../src/pm2_video.c:2413: warning: implicit declaration of function 'ioctl'
+    ../../src/pm2_video.c: In function 'xvipcOpen':
+    ../../src/pm2_video.c:2622: warning: implicit declaration of function 'close'
+
+commit 5b230db4e4884e3410b617cc161bf9b4a5a4a979
+Author: James Cloos <cloos@jhcloos.com>
+Date:   Mon Sep 3 05:52:33 2007 -0400
+
+    Add *~ to .gitignore to skip patch/emacs droppings
+
+commit 264b56d592e20a30a13273494430a7b618f4a8b5
+Author: James Cloos <cloos@jhcloos.com>
+Date:   Thu Aug 23 19:25:49 2007 -0400
+
+    Rename .cvsignore to .gitignore
+
+commit e80c3bea70d1196fcc518d4007d13b7b1adf56aa
+Author: Brice Goglin <bgoglin@debian.org>
+Date:   Tue Aug 7 11:15:15 2007 +0200
+
+    Define GLINT_*_VERSION* using PACKAGE_VERSION_*
+
+commit 90e9a4dc8639907d26f77ae40c89dc177bb87002
+Author: Alan Hourihane <alanh@fairlite.demon.co.uk>
+Date:   Fri Dec 1 14:08:23 2006 +0000
+
+    Fix --disable-dri for glint driver
+    Bug #7045.
+
+commit 0ee291b241e364f16eb7b274a0fd58a71e7646ef
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Sat Apr 8 01:23:07 2006 +0000
+
+    Bump to 1.1.1 for Xv changes.
+
+commit b606af1a3438209c085361573436a7742d0f2bc0
+Author: Aaron Plattner <aplattner@nvidia.com>
+Date:   Fri Apr 7 23:07:25 2006 +0000
+
+    Add a DrawablePtr argument to the XV functions to pave the way for
+        redirected video.
+
+commit 30814ce8d6d75f69cb56014150aa4b9d223b77ff
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Fri Apr 7 19:07:59 2006 +0000
+
+    Unlibcwrap. Bump server version requirement. Bump to 1.1.0.
+
+commit d20f62cf797cff41907d78efa9ce4ee78d5cbe49
+Author: Alan Hourihane <alanh@fairlite.demon.co.uk>
+Date:   Thu Feb 2 23:02:10 2006 +0000
+
+    Allocate more space for the dac registers on pm2v hardware.
+
+commit 393de63d8f99a20d932d0ecc58c013902d68e113
+Author: gravity <gravity>
+Date:   Tue Jan 10 03:20:06 2006 +0000
+
+    Convert manpage to utf-8
+
+commit 83b69c5cdecf098dd91d72cc05eb289edfde99e5
+Author: Kevin E Martin <kem@kem.org>
+Date:   Wed Dec 21 02:30:00 2005 +0000
+
+    Update package version for X11R7 release.
+
+commit 8bd9ccfa3db41d71498bf3813b7817c69509bc3a
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Mon Dec 19 16:25:53 2005 +0000
+
+    Stub COPYING files
+
+commit 21bd357ee7e4d8134e18be88c95e40a2ed900ffe
+Author: Kevin E Martin <kem@kem.org>
+Date:   Thu Dec 15 00:24:17 2005 +0000
+
+    Update package version number for final X11R7 release candidate.
+
+commit cf65e774e59aecd4e267f678e4a6a7b426c34fdc
+Author: Kevin E Martin <kem@kem.org>
+Date:   Tue Dec 6 22:48:34 2005 +0000
+
+    Change *man_SOURCES ==> *man_PRE to fix autotools warnings.
+
+commit 01eb136eb8edcc395c0058bb7ac9f80a9891c2ec
+Author: Kevin E Martin <kem@kem.org>
+Date:   Sat Dec 3 05:49:33 2005 +0000
+
+    Update package version number for X11R7 RC3 release.
+
+commit 5f3c185f44c1f8c8fda0eb69ed2f6d9fe81ae7b1
+Author: Kevin E Martin <kem@kem.org>
+Date:   Fri Dec 2 02:16:08 2005 +0000
+
+    Remove extraneous AC_MSG_RESULT.
+
+commit 8a628988507ecdad564e0effb29e7264e5fa6637
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Wed Nov 30 18:51:28 2005 +0000
+
+    Bump libdrm dep to 2.0.
+
+commit f8625abd39a9a60c4febdd145a432c156646a4e5
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Tue Nov 29 23:29:58 2005 +0000
+
+    Only build dlloader modules by default.
+
+commit ee629c6028588b5acd08b131f57d65d9ae0b5ba7
+Author: Alan Coopersmith <Alan.Coopersmith@sun.com>
+Date:   Mon Nov 28 22:04:09 2005 +0000
+
+    Change *mandir targets to use new *_MAN_DIR variables set by xorg-macros.m4
+        update to fix bug #5167 (Linux prefers *.1x man pages in man1 subdir)
+
+commit 21265a3e05734aa4519288f537dd0aa5693ec5e3
+Author: Eric Anholt <anholt@freebsd.org>
+Date:   Mon Nov 21 10:49:13 2005 +0000
+
+    Add .cvsignores for drivers.
+
+commit 7fba08f281423b88cb34608222279c3b5a725190
+Author: Kevin E Martin <kem@kem.org>
+Date:   Tue Nov 15 05:42:03 2005 +0000
+
+    Add check for DGA extension to fix issues when building with separate build
+        roots.
+
+commit 4d27cb49c29cb2157515a7fd518ff971c9ab8cb9
+Author: Kevin E Martin <kem@kem.org>
+Date:   Wed Nov 9 21:31:20 2005 +0000
+
+    Bump version numbers for X11R6.9/X11R7 RC2.
+
+commit 4a8e5e77c84f8bac7d4cd1b42b91a302017e692d
+Author: Kevin E Martin <kem@kem.org>
+Date:   Wed Nov 9 21:15:15 2005 +0000
+
+    Update package version number for X11R7 RC2 release.
+
+commit 14251292588e9245a414dffb94380a69ca115acb
+Author: Kevin E Martin <kem@kem.org>
+Date:   Tue Nov 1 15:08:52 2005 +0000
+
+    Update pkgcheck depedencies to work with separate build roots.
+
+commit 22fc017fd2b8755722e5456f12313e39f2873d66
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Fri Oct 21 18:40:18 2005 +0000
+
+    Bug #4829: Remove some useless DRI symbol checks.
+
+commit 12e0d4f8f932bcbbfef8d99bbf2e9f8543ff3b02
+Author: Kevin E Martin <kem@kem.org>
+Date:   Wed Oct 19 02:48:02 2005 +0000
+
+    Update package version number for RC1 release.
+
+commit a74ec74ec143738cfa1c0173ebeda1f3de0304e0
+Author: Alan Coopersmith <Alan.Coopersmith@sun.com>
+Date:   Tue Oct 18 00:01:53 2005 +0000
+
+    Use @DRIVER_MAN_SUFFIX@ instead of $(DRIVER_MAN_SUFFIX) in macro
+        substitutions to work better with BSD make
+
+commit 5cfcf7473f33961b1fabe6a32fdabfbc2b900cf8
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Mon Oct 17 22:57:33 2005 +0000
+
+    More 1.7 braindamage: define EXTRA_DIST in terms of @DRIVER_NAME@ instead
+        of indirectly
+
+commit 8f91f7517192ac5bfbe8c843adf89487bdc93035
+Author: Alan Coopersmith <Alan.Coopersmith@sun.com>
+Date:   Mon Oct 17 00:09:02 2005 +0000
+
+    Use sed & cpp to substitute variables in driver man pages
+
+commit c0ba03f97d900f5810c67678c213ac063f09e6f4
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Date:   Tue Sep 27 20:53:19 2005 +0000
+
+    Update build system for apm, chips, cirrus, glint, i740, mga, neomagic,
+        newport to accomodate various new documentation and utility files.
+
+commit fb9960e2373eb3bb89f80fe4767a7bd62a49b164
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Sun Aug 21 18:31:47 2005 +0000
+
+    Fix test for DRI headers.
+
+commit bf488777b6a535adcfefe38f7e575eb34e146727
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Thu Aug 18 09:03:46 2005 +0000
+
+    Update autogen.sh to one that does objdir != srcdir.
+
+commit f7af0c394229b978532781b7e08c603847a73a40
+Author: Alan Hourihane <alanh@fairlite.demon.co.uk>
+Date:   Mon Aug 15 07:30:05 2005 +0000
+
+    Egbert's 64bit fixes for mixed 32/64bit clients
+
+commit df6f4600c27cd4b4e7b68f1b75aca3fb1fc80464
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Sun Jul 31 17:19:27 2005 +0000
+
+    Post-merge fixups:
+    - Disable building the gamma driver
+    - Fix numerous Imakefiles to get header paths and subdirs right
+    - Symlink client-side GLX lib source from Mesa
+    - Add new shader subdirs to the Mesa core build
+    - Tweak the DDX drivers to not ask for "xf86dri.h"; they don't need it,
+        since they don't generate protocol, and it was breaking the build.
+
+commit 41dc9bd7a4e4a15a8e429c95ad34caba3ff5474d
+Author: Kevin E Martin <kem@kem.org>
+Date:   Fri Jul 29 21:22:43 2005 +0000
+
+    Various changes preparing packages for RC0:
+    - Verify and update package version numbers as needed
+    - Implement versioning scheme
+    - Change bug address to point to bugzilla bug entry form
+    - Disable loadable i18n in libX11 by default (use --enable-loadable-i18n to
+        reenable it)
+    - Fix makedepend to use pkgconfig and pass distcheck
+    - Update build script to build macros first
+    - Update modular Xorg version
+
+commit ca1e5c8e73c5e322258a2597f8ab8e25ed11126c
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Date:   Wed Jul 27 21:23:28 2005 +0000
+
+    Add xf86driproto to dependencies for drivers with DRI support. Patch from
+        Donnie Berkholz
+
+commit 8793f6c29d5b574e5047bf01f9f5d5b91441cb00
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Date:   Wed Jul 27 17:40:19 2005 +0000
+
+    Build system for gilnt
+
+commit 7240a099d97e6f2f569f78d3e40de2e690f0c427
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Date:   Tue Jul 26 18:29:39 2005 +0000
+
+    symlink.sh: add binding.h from mga/HALlib add nsc/gfx add nsc/panel
+        glint_driver.c: remove include of cfb8_32.h mga_driver.c: remove
+        include of cfb8_32.h modularizevideodriver.sh: fix typo
+
+commit ec644bfe186f27ea5fb9f2acc38ceb7cb30e9567
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Mon Jul 11 02:29:49 2005 +0000
+
+    Prep for modular builds by adding guarded #include "config.h" everywhere.
+
+commit c4086447dc0537c3ffdd6bdd78820a1d7daa84ca
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Fri Jul 1 22:43:11 2005 +0000
+
+    Change all misc.h and os.h references to <X11/foo.h>.
+
+commit 98d825e0fa513e7ae6a601e25a20d94eba2c87b6
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Sat Jun 25 21:16:54 2005 +0000
+
+    Bug #3626: _X_EXPORT tags for video and input drivers.
+
+commit 35af6065ca0807c25bdba08ee0105b3074343c98
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Wed May 18 17:47:35 2005 +0000
+
+    Bug #3163: Create new DRIINFO_*_VERSION macros to indicate the version
+        number of the DRIInfoRec, disambiguating it from the XF86DRI protocol
+        version number. Modify DRIQueryVersion to return the libdri version
+        number, which all DDXes were requesting implicitly. Fix the DDXes to
+        check for the DRIINFO version they were compiled against.
+
+commit bec37c1f7cc5ac88eb15b8e26998ba765224cd33
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Wed Apr 20 12:25:24 2005 +0000
+
+    Fix includes right throughout the Xserver tree:
+    change "foo.h" to <X11/foo.h> for core headers, e.g. X.h, Xpoll.h;
+    change "foo.h", "extensions/foo.h" and "X11/foo.h" to
+        <X11/extensions/foo.h> for extension headers, e.g. Xv.h;
+    change "foo.[ch]" to <X11/Xtrans/foo.[ch]> for Xtrans files.
+
+commit 8e88fe1b8aaf3476b2c236e0f816df8f25a60bcb
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Fri Feb 25 16:38:34 2005 +0000
+
+    Bug #2605: Make the cyrix, dummy, glint, neomagic, tga, and trident drivers
+        build when BuildXF86DGA NO.
+    (also fix some datestamps in the changelog)
+
+commit df394e737f937ac8f7e86de959b16ef7e47f8eb5
+Author: Markus Kuhn <Markus.Kuhn@cl.cam.ac.uk>
+Date:   Sat Dec 4 00:43:09 2004 +0000
+
+    Encoding of numerous files changed to UTF-8
+
+commit 5c9d83e0f38fbaaf01dd3593afc04ac0ecbef285
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Mon Aug 16 09:13:14 2004 +0000
+
+    Bug #1087: Make sure all the *Weak symbols are documented in the import
+        list, so the loader knows not to complain about unresolved symbols when
+        an optional module isn't loaded. This typically manifests as warnings
+        about fbdevHW symbols when the user isn't using the framebuffer
+        console.
+
+commit b2400d46e8f619f2677ef86e2453726c849ab0f9
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Tue Aug 3 02:44:20 2004 +0000
+
+    Bug #962: Remove LoaderSymbol calls introduced by the dlloader work so
+        DoLoadableServer NO builds work again.
+
+commit 65df2a5577d8fd26e92c60f5b35328615695e7a9
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Sat Jul 31 01:21:18 2004 +0000
+
+    Change several LoaderSymbol calls introduced by the bug #400 patch to
+    *Weak() resolver functions.
+
+commit fc56eac7f9e9ee6fdca34782e786b0d65b3db5d1
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Fri Jul 30 20:30:52 2004 +0000
+
+    Bug #400 (partial): Driver fixes for the dlloader. When using dlloader, all
+        framebuffer formats except cfb and the overlay modes should work, and
+        r128 and radeon need to be loaded from the ati driver (both issues to
+        be fixed soon). Tested on i740, s3virge, mach64, tdfx, vesa, and vga
+        drivers. elfloader users shouldn't be affected.
+
+commit 3ff738aee5c60a51cddb7ad08f7d96d0376590a0
+Author: Eric Anholt <anholt@freebsd.org>
+Date:   Wed Jun 16 09:43:59 2004 +0000
+
+    Merge DRI-trunk-20040613 changes in programs/Xserver/hw/xfree86/drivers,
+        with the following notes:
+    - Savage and Mach64 (= ati/ati*.[ch] changes) DRI not merged due to
+        insecurity.
+    - VIA driver converted to new drmContext and drmHandle names.
+    - Radeon driver merge conflicted in many places, and MergedFB at least
+        could probably use some checking at this point.
+
+commit 5363c1b9d3e0122ae0d6c9bcfda0720fb02be4cf
+Author: Eric Anholt <anholt@freebsd.org>
+Date:   Wed Jun 16 09:26:08 2004 +0000
+
+    DRI trunk-20040613 import
+
+commit 1d9588d47041e581a0acd7bbe38770ea31e61023
+Author: Eric Anholt <anholt@freebsd.org>
+Date:   Wed Jun 16 09:23:10 2004 +0000
+
+    DRI XFree86-4_3_99_12-merge import
+
+commit 049f110bcd0a331fbea35285504cef635254b036
+Author: Egbert Eich <eich@suse.de>
+Date:   Fri Apr 23 19:33:33 2004 +0000
+
+    Merging XORG-CURRENT into trunk
+
+commit 4638c881e76511b888c22806808ef739aaa742d7
+Author: Egbert Eich <eich@suse.de>
+Date:   Sun Mar 14 08:33:21 2004 +0000
+
+    Importing vendor version xf86-4_4_99_1 on Sun Mar 14 00:26:39 PST 2004
+
+commit d844c82d187ac4838c222a6a48f4f0286bf982b0
+Author: Egbert Eich <eich@suse.de>
+Date:   Wed Mar 3 12:12:18 2004 +0000
+
+    Importing vendor version xf86-4_4_0 on Wed Mar 3 04:09:24 PST 2004
+
+commit e2f268c61d3f094a2753dcf35248b0cc93341b2c
+Author: Egbert Eich <eich@suse.de>
+Date:   Thu Feb 26 13:35:52 2004 +0000
+
+    readding XFree86's cvs IDs
+
+commit 143539b7f4a2167ad9075e8d4b578ae9c16275ed
+Author: Egbert Eich <eich@suse.de>
+Date:   Thu Feb 26 09:23:18 2004 +0000
+
+    Importing vendor version xf86-4_3_99_903 on Wed Feb 26 01:21:00 PST 2004
+
+commit 6b337aef51c26437df7e65b4ddd1d267095a3fc1
+Author: Kaleb Keithley <kaleb@freedesktop.org>
+Date:   Tue Nov 25 19:28:37 2003 +0000
+
+    XFree86 4.3.99.16 Bring the tree up to date for the Cygwin folks
+
+commit 26e5961d86c073d8c1f8332714c38856c6b86b38
+Author: Kaleb Keithley <kaleb@freedesktop.org>
+Date:   Fri Nov 14 16:48:55 2003 +0000
+
+    XFree86 4.3.0.1
+
+commit dc74177b8c1a750d4108ed0b9b5099399672dbb3
+Author: Kaleb Keithley <kaleb@freedesktop.org>
+Date:   Fri Nov 14 16:48:55 2003 +0000
+
+    Initial revision

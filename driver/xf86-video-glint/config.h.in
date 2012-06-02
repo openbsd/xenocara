@@ -2,9 +2,6 @@
 
 #include "xorg-server.h"
 
-/* Have cfb8_32 support */
-#undef HAVE_CFB8_32
-
 /* Define to 1 if you have the <dlfcn.h> header file. */
 #undef HAVE_DLFCN_H
 
@@ -38,6 +35,10 @@
 /* xextproto 7.1 available */
 #undef HAVE_XEXTPROTO_71
 
+/* Define to the sub-directory in which libtool stores uninstalled libraries.
+   */
+#undef LT_OBJDIR
+
 /* Name of package */
 #undef PACKAGE
 
@@ -70,9 +71,3 @@
 
 /* Version number of package */
 #undef VERSION
-
-/* Enable DRI driver support */
-#undef XF86DRI
-
-/* Enable developmental DRI driver support */
-#undef XF86DRI_DEVEL

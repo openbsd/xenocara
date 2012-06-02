@@ -27,7 +27,6 @@
  * this work is sponsored by S.u.S.E. GmbH, Fuerth, Elsa GmbH, Aachen and
  * Siemens Nixdorf Informationssysteme
  */
-/* $XFree86: xc/programs/Xserver/hw/xfree86/drivers/glint/tx_dac.c,v 1.15tsi Exp $ */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -36,7 +35,6 @@
 #include "xf86.h"
 #include "xf86_OSproc.h"
 
-#include "xf86PciInfo.h"
 #include "xf86Pci.h"
 
 #include "IBM.h"
@@ -165,7 +163,7 @@ TXInit(ScrnInfoPtr pScrn, DisplayModePtr mode, GLINTRegPtr pReg)
     /* Override FBModeSel for 300SX chip */
     if ( (pGlint->Chipset == PCI_VENDOR_3DLABS_CHIP_300SX) ||
         ((pGlint->Chipset == PCI_VENDOR_3DLABS_CHIP_DELTA) &&
-	 (pGlint->MultiChip == PCI_CHIP_300SX)) ) {
+	 (pGlint->MultiChip == PCI_CHIP_3DLABS_300SX)) ) {
 	switch (pScrn->bitsPerPixel) {
 	    case 8:
 		STOREREG(FBModeSel, 0x905);

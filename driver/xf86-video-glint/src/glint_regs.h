@@ -1,5 +1,3 @@
-/* $XFree86: xc/programs/Xserver/hw/xfree86/drivers/glint/glint_regs.h,v 1.36 2003/01/12 03:55:47 tsi Exp $ */
-
 /*
  * glint register file 
  *
@@ -32,6 +30,11 @@
 #define PCI_CHIP_3DLABS_PERMEDIA4				0x0C
 #define PCI_CHIP_3DLABS_R4					0x0D
 #define PCI_CHIP_3DLABS_GAMMA2					0x0E
+#define PCI_CHIP_3DLABS_R4ALT					0x11
+
+/* Texas Instruments */
+#define PCI_CHIP_TI_PERMEDIA					0x3D04
+#define PCI_CHIP_TI_PERMEDIA2					0x3D07
 
 /* The boards we know */
 #define IS_GLORIAXXL	((PCI_SUB_VENDOR_ID(pGlint->PciInfo) == 0x1048) && \
@@ -1282,7 +1285,6 @@ do{								\
 	}							\
 }
 
-#ifndef XF86DRI_DEVEL
 #define LOADROP(rop)						\
 {								\
 	if (pGlint->ROP != rop)	{				\
@@ -1290,14 +1292,7 @@ do{								\
 		pGlint->ROP = rop;				\
 	}							\
 }
-#else
-#define LOADROP(rop) \
-	{				\
-		GLINT_WRITE_REG(rop<<1|UNIT_ENABLE, LogicalOpMode);	\
-		pGlint->ROP = rop;				\
-	}
-#endif
-	
+
 #define CHECKCLIPPING						\
 {								\
 	if (pGlint->ClippingOn) {				\
@@ -1307,7 +1302,6 @@ do{								\
 	}							\
 }
 
-#ifndef XF86DRI_DEVEL
 #define DO_PLANEMASK(planemask)					\
 { 								\
 	if (planemask != pGlint->planemask) {			\
@@ -1316,14 +1310,6 @@ do{								\
 		GLINT_WRITE_REG(planemask, FBHardwareWriteMask);\
 	}							\
 } 
-#else
-#define DO_PLANEMASK(planemask)					\
-	{							\
-		pGlint->planemask = planemask;			\
-		REPLICATE(planemask); 				\
-		GLINT_WRITE_REG(planemask, FBHardwareWriteMask);\
-	}
-#endif
 
 /* Permedia Save/Restore functions */
 

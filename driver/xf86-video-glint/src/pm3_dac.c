@@ -26,7 +26,6 @@
  * this work is sponsored by Appian Graphics.
  * 
  */
-/* $XFree86: xc/programs/Xserver/hw/xfree86/drivers/glint/pm3_dac.c,v 1.33tsi Exp $ */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -35,7 +34,6 @@
 #include "xf86.h"
 #include "xf86_OSproc.h"
 
-#include "xf86PciInfo.h"
 #include "xf86Pci.h"
 #include "xf86int10.h"
 
@@ -115,8 +113,9 @@ Permedia3MemorySizeDetect(ScrnInfoPtr pScrn)
 	for(i=0;i<32;i++) {
 	    /* Clear first 32MB */
 	    MMIO_OUT32(pGlint->FbBase, i*1024*1024, 0);
-	    mem_barrier();
 	}
+	mem_barrier();
+
         for(i=32;i<64;i++) {
     	    /* write test pattern */
 	    MMIO_OUT32(pGlint->FbBase, i*1024*1024, i*0x00345678);
@@ -501,7 +500,7 @@ Permedia3Init(ScrnInfoPtr pScrn, DisplayModePtr mode, GLINTRegPtr pReg)
     temp3 = mode->CrtcHSyncEnd - mode->CrtcHSyncStart;
     temp4 = mode->CrtcVSyncEnd - mode->CrtcVSyncStart;
 
-    STOREREG(PMHTotal,	Shiftbpp(pScrn, mode->CrtcHTotal - 1));
+    STOREREG(PMHTotal,	Shiftbpp(pScrn, mode->CrtcHTotal) - 1);
     STOREREG(PMHsEnd,	Shiftbpp(pScrn, temp1 + temp3));
     STOREREG(PMHsStart,	Shiftbpp(pScrn, temp1));
     STOREREG(PMHbEnd,	Shiftbpp(pScrn, mode->CrtcHTotal - mode->CrtcHDisplay));
@@ -565,11 +564,11 @@ Permedia3Init(ScrnInfoPtr pScrn, DisplayModePtr mode, GLINTRegPtr pReg)
 	  break;
 	case PCI_VENDOR_3DLABS_CHIP_GAMMA:
 	  switch (pGlint->MultiChip) {
-	    case PCI_CHIP_PERMEDIA3:
+	    case PCI_CHIP_3DLABS_PERMEDIA3:
 		(void) PM3DAC_CalculateClock(mode->Clock,
 					    pGlint->RefClock, &m,&n,&p);
 		break;
-	    case PCI_CHIP_R4:
+	    case PCI_CHIP_3DLABS_R4:
 		(void) PM4DAC_CalculateClock(mode->Clock,
 					    pGlint->RefClock, &m,&n,&p);
 		break;
