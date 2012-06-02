@@ -281,7 +281,7 @@ pci_device_openbsd_write(struct pci_device *dev, const void *data,
 			return errno;
 
 		offset += 4;
-		data = (char *)data + 4;
+		data = (const char *)data + 4;
 		size -= 4;
 		*bytes_written += 4;
 	}
@@ -400,42 +400,47 @@ pci_device_openbsd_probe(struct pci_device *device)
 #include <machine/pio.h>
 #endif
 
+static struct pci_io_handle *legacy_io_handle = NULL;
+
 static struct pci_io_handle *
 pci_device_openbsd_open_legacy_io(struct pci_io_handle *ret,
     struct pci_device *dev, pciaddr_t base, pciaddr_t size)
 {
 #if defined(__i386__)
 	struct i386_iopl_args ia;
+#elif defined(__amd64__)
+	struct amd64_iopl_args ia;
+#endif
 
+	/* With X server privilege separation, i/o access is 
+	   enabled early and never disabled, allow recursive, 
+	   privilege-less calls */
+	if (legacy_io_handle != NULL) {
+		ret->base = legacy_io_handle->base;
+		ret->size = legacy_io_handle->size;
+		ret->memory = legacy_io_handle->memory;
+		return ret;
+	}
+#if defined(__i386__)
 	ia.iopl = 1;
 	if (sysarch(I386_IOPL, &ia))
 		return NULL;
-
-	ret->base = base;
-	ret->size = size;
-	return ret;
 #elif defined(__amd64__)
-	struct amd64_iopl_args ia;
-
 	ia.iopl = 1;
 	if (sysarch(AMD64_IOPL, &ia))
 		return NULL;
-
-	ret->base = base;
-	ret->size = size;
-	return ret;
 #elif defined(PCI_MAGIC_IO_RANGE)
 	ret->memory = mmap(NULL, size, PROT_READ | PROT_WRITE, MAP_SHARED,
 	    aperturefd, PCI_MAGIC_IO_RANGE + base);
 	if (ret->memory == MAP_FAILED)
 		return NULL;
-
-	ret->base = base;
-	ret->size = size;
-	return ret;
 #else
 	return NULL;
 #endif
+	ret->base = base;
+	ret->size = size;
+	legacy_io_handle = ret;
+	return ret;
 }
 
 static uint32_t
