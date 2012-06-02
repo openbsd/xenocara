@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.49 2012/06/02 15:58:19 matthieu Exp $
+# $OpenBSD: Makefile,v 1.50 2012/06/02 23:23:12 matthieu Exp $
 
 # Check for Xserver 1.12 or later
 USING_XSERVER_112 != if pkg-config --atleast-version 1.10 xorg-server; then \
@@ -87,7 +87,7 @@ VIDEO_DRV_i386= \
 	xf86-video-i740
 
 .if !$(USING_XSERVER_112)
-	xf86-video-voodoo
+VIDEO_DRV_i386 += xf86-video-voodoo
 .endif
 
 VIDEO_DRV_landisk=
