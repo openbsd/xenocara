@@ -222,8 +222,6 @@
 ./usr/X11R6/lib/modules/drivers/vesa_drv.so
 ./usr/X11R6/lib/modules/drivers/vmware_drv.la
 ./usr/X11R6/lib/modules/drivers/vmware_drv.so
-./usr/X11R6/lib/modules/drivers/voodoo_drv.la
-./usr/X11R6/lib/modules/drivers/voodoo_drv.so
 ./usr/X11R6/lib/modules/drivers/wsudl_drv.la
 ./usr/X11R6/lib/modules/drivers/wsudl_drv.so
 ./usr/X11R6/lib/modules/extensions/libdbe.la
@@ -356,7 +354,6 @@
 ./usr/X11R6/man/man4/vmmouse.4
 ./usr/X11R6/man/man4/vmware.4
 ./usr/X11R6/man/man4/void.4
-./usr/X11R6/man/man4/voodoo.4
 ./usr/X11R6/man/man4/ws.4
 ./usr/X11R6/man/man4/wsudl.4
 ./usr/X11R6/man/man5/xorg.conf.5
