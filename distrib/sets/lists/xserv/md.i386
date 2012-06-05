@@ -164,8 +164,6 @@
 ./usr/X11R6/lib/modules/drivers/ch7017.so
 ./usr/X11R6/lib/modules/drivers/ch7xxx.la
 ./usr/X11R6/lib/modules/drivers/ch7xxx.so
-./usr/X11R6/lib/modules/drivers/chips_drv.la
-./usr/X11R6/lib/modules/drivers/chips_drv.so
 ./usr/X11R6/lib/modules/drivers/cirrus_alpine.la
 ./usr/X11R6/lib/modules/drivers/cirrus_alpine.so
 ./usr/X11R6/lib/modules/drivers/cirrus_drv.la
@@ -202,8 +200,6 @@
 ./usr/X11R6/lib/modules/drivers/radeon_drv.so
 ./usr/X11R6/lib/modules/drivers/radeonold_drv.la
 ./usr/X11R6/lib/modules/drivers/radeonold_drv.so
-./usr/X11R6/lib/modules/drivers/rendition_drv.la
-./usr/X11R6/lib/modules/drivers/rendition_drv.so
 ./usr/X11R6/lib/modules/drivers/s3_drv.la
 ./usr/X11R6/lib/modules/drivers/s3_drv.so
 ./usr/X11R6/lib/modules/drivers/s3virge_drv.la
@@ -222,8 +218,6 @@
 ./usr/X11R6/lib/modules/drivers/tfp410.so
 ./usr/X11R6/lib/modules/drivers/trident_drv.la
 ./usr/X11R6/lib/modules/drivers/trident_drv.so
-./usr/X11R6/lib/modules/drivers/tseng_drv.la
-./usr/X11R6/lib/modules/drivers/tseng_drv.so
 ./usr/X11R6/lib/modules/drivers/vesa_drv.la
 ./usr/X11R6/lib/modules/drivers/vesa_drv.so
 ./usr/X11R6/lib/modules/drivers/vmware_drv.la
@@ -312,8 +306,6 @@
 ./usr/X11R6/lib/modules/multimedia/theatre_drv.so
 ./usr/X11R6/lib/modules/multimedia/uda1380_drv.la
 ./usr/X11R6/lib/modules/multimedia/uda1380_drv.so
-./usr/X11R6/lib/modules/v10002d.uc
-./usr/X11R6/lib/modules/v20002d.uc
 ./usr/X11R6/lib/pkgconfig/libdrm_radeon.pc
 ./usr/X11R6/lib/pkgconfig/xorg-server.pc
 ./usr/X11R6/lib/pkgconfig/xorg-synaptics.pc
@@ -329,7 +321,6 @@
 ./usr/X11R6/man/man4/acecad.4
 ./usr/X11R6/man/man4/apm.4
 ./usr/X11R6/man/man4/ati.4
-./usr/X11R6/man/man4/chips.4
 ./usr/X11R6/man/man4/cirrus.4
 ./usr/X11R6/man/man4/elographics.4
 ./usr/X11R6/man/man4/exa.4
@@ -352,7 +343,6 @@
 ./usr/X11R6/man/man4/r128.4
 ./usr/X11R6/man/man4/radeon.4
 ./usr/X11R6/man/man4/radeonold.4
-./usr/X11R6/man/man4/rendition.4
 ./usr/X11R6/man/man4/s3.4
 ./usr/X11R6/man/man4/s3virge.4
 ./usr/X11R6/man/man4/savage.4
@@ -361,7 +351,6 @@
 ./usr/X11R6/man/man4/synaptics.4
 ./usr/X11R6/man/man4/tdfx.4
 ./usr/X11R6/man/man4/trident.4
-./usr/X11R6/man/man4/tseng.4
 ./usr/X11R6/man/man4/usbtablet.4
 ./usr/X11R6/man/man4/vesa.4
 ./usr/X11R6/man/man4/vmmouse.4
