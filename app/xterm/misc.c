@@ -1,7 +1,7 @@
-/* $XTermId: misc.c,v 1.576 2012/01/07 01:57:52 tom Exp $ */
+/* $XTermId: misc.c,v 1.588 2012/05/07 23:35:34 tom Exp $ */
 
 /*
- * Copyright 1999-2010,2011 by Thomas E. Dickey
+ * Copyright 1999-2011,2012 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -2176,16 +2176,79 @@ allocateClosestRGB(XtermWidget xw, Colormap cmap, XColor * def)
 #define ULONG_MAX (unsigned long)(~(0L))
 #endif
 
-static unsigned short
-searchColortable(XColor * colortable, unsigned length, unsigned color)
+#define CheckColor(result, value) \
+	    result = 0; \
+	    if (value.red) \
+		result |= 1; \
+	    if (value.green) \
+		result |= 2; \
+	    if (value.blue) \
+		result |= 4
+
+#define SelectColor(state, value, result) \
+	switch (state) { \
+	default: \
+	case 1: \
+	    result = value.red; \
+	    break; \
+	case 2: \
+	    result = value.green; \
+	    break; \
+	case 4: \
+	    result = value.blue; \
+	    break; \
+	}
+
+/*
+ * Check if the color map consists of values in exactly one of the red, green
+ * or blue columns.  If it is not, we do not know how to use it for the exact
+ * match.
+ */
+static int
+simpleColors(XColor * colortable, unsigned length)
+{
+    unsigned n;
+    int state = -1;
+    int check;
+
+    for (n = 0; n < length; ++n) {
+	if (state == -1) {
+	    CheckColor(state, colortable[n]);
+	    if (state == 0)
+		state = -1;
+	}
+	if (state > 0) {
+	    CheckColor(check, colortable[n]);
+	    if (check > 0 && check != state) {
+		state = 0;
+		break;
+	    }
+	}
+    }
+    switch (state) {
+    case 1:
+    case 2:
+    case 4:
+	break;
+    default:
+	state = 0;
+	break;
+    }
+    return state;
+}
+
+static unsigned
+searchColors(XColor * colortable, unsigned length, unsigned color, int state)
 {
     unsigned result = 0;
     unsigned n;
     unsigned long best = ULONG_MAX;
     unsigned long diff;
+    unsigned value;
 
     for (n = 0; n < length; ++n) {
-	diff = (color - colortable[n].blue);
+	SelectColor(state, colortable[n], value);
+	diff = (color - value);
 	diff *= diff;
 	if (diff < best) {
 #if 0
@@ -2200,7 +2263,8 @@ searchColortable(XColor * colortable, unsigned length, unsigned color)
 	    best = diff;
 	}
     }
-    return colortable[result].blue;
+    SelectColor(state, colortable[result], value);
+    return value;
 }
 
 /*
@@ -2243,20 +2307,19 @@ allocateExactRGB(XtermWidget xw, Colormap cmap, XColor * def)
     if (result) {
 	unsigned cmap_type;
 	unsigned cmap_size;
+	int state;
 
 	getColormapInfo(screen->display, &cmap_type, &cmap_size);
 
 	if ((cmap_type & 1) == 0) {
 	    XColor temp = *def;
 
-	    if (loadColorTable(xw, cmap_size)) {
-		/*
-		 * Note: the query will return only a value in the ".blue"
-		 * member, leaving ".red" and ".green" as zeros.
-		 */
-		temp.red = searchColortable(screen->cmap_data, cmap_size, save.red);
-		temp.green = searchColortable(screen->cmap_data, cmap_size, save.green);
-		temp.blue = searchColortable(screen->cmap_data, cmap_size, save.blue);
+	    if (loadColorTable(xw, cmap_size)
+		&& (state = simpleColors(screen->cmap_data, cmap_size)) > 0) {
+#define SearchColors(which) temp.which = (unsigned short) searchColors(screen->cmap_data, cmap_size, save.which, state)
+		SearchColors(red);
+		SearchColors(green);
+		SearchColors(blue);
 		if (XAllocColor(screen->display, cmap, &temp) != 0) {
 #if OPT_TRACE
 		    if (temp.red != save.red
@@ -2265,6 +2328,9 @@ allocateExactRGB(XtermWidget xw, Colormap cmap, XColor * def)
 			TRACE(("...improved %x/%x/%x ->%x/%x/%x\n",
 			       save.red, save.green, save.blue,
 			       temp.red, temp.green, temp.blue));
+		    } else {
+			TRACE(("...no improvement for %x/%x/%x\n",
+			       save.red, save.green, save.blue));
 		    }
 #endif
 		    *def = temp;
@@ -3575,6 +3641,10 @@ do_dcs(XtermWidget xw, Char * dcsbuf, size_t dcslen)
 			&& (xw->flags & PROTECTED) ? 1 : 0,
 			cp);
 	    } else if (!strcmp(cp, "\"p")) {	/* DECSCL */
+		if (screen->vtXX_level < 2) {
+		    /* actually none of DECRQSS is valid for vt100's */
+		    break;
+		}
 		sprintf(reply, "%d%s%s",
 			(screen->vtXX_level ?
 			 screen->vtXX_level : 1) + 60,
@@ -3587,6 +3657,12 @@ do_dcs(XtermWidget xw, Char * dcsbuf, size_t dcslen)
 		sprintf(reply, "%d;%dr",
 			screen->top_marg + 1,
 			screen->bot_marg + 1);
+	    } else if (!strcmp(cp, "s")) {	/* DECSLRM */
+		if (screen->terminal_id >= 400) {	/* VT420 */
+		    sprintf(reply, "%d;%ds",
+			    screen->lft_marg + 1,
+			    screen->rgt_marg + 1);
+		}
 	    } else if (!strcmp(cp, "m")) {	/* SGR */
 		strcpy(reply, "0");
 		if (xw->flags & BOLD)
@@ -3647,10 +3723,10 @@ do_dcs(XtermWidget xw, Char * dcsbuf, size_t dcslen)
 		strcat(reply, "m");
 	    } else if (!strcmp(cp, " q")) {	/* DECSCUSR */
 		int code = 0;
-		if (screen->cursor_underline)
+		if (screen->cursor_underline != 0)
 		    code |= 2;
 #if OPT_BLINK_CURS
-		if (screen->cursor_blink)
+		if (screen->cursor_blink_esc == 0)
 		    code |= 1;
 #endif
 		sprintf(reply, "%d%s", code + 1, cp);
@@ -3770,7 +3846,7 @@ enum {
 };
 
 #define MdBool(bool)      ((bool) ? mdMaybeSet : mdMaybeReset)
-#define MdFlag(mode,flag) MdBool(xw->keyboard.flags & MODE_KAM)
+#define MdFlag(mode,flag) MdBool((mode) & (flag))
 
 /*
  * Reply is the same format as the query, with pair of mode/value:
@@ -3947,6 +4023,12 @@ do_decrpm(XtermWidget xw, int nparams, int *params)
 	case 67:		/* DECBKM */
 	    result = MdFlag(xw->keyboard.flags, MODE_DECBKM);
 	    break;
+	case 69:		/* DECLRMM */
+	    result = MdFlag(xw->flags, LEFT_RIGHT);
+	    break;
+	case 95:		/* DECNCSM */
+	    result = MdFlag(xw->flags, NOCLEAR_COLM);
+	    break;
 	case SET_VT200_MOUSE:	/* xterm bogus sequence         */
 	    result = MdBool(screen->send_mouse_pos == VT200_MOUSE);
 	    break;
@@ -4082,7 +4164,7 @@ udk_lookup(int keycode, int *len)
     return 0;
 }
 
-static void
+void
 ChangeGroup(XtermWidget xw, const char *attribute, char *value)
 {
 #if OPT_WIDE_CHARS
@@ -4235,19 +4317,7 @@ ChangeIconName(XtermWidget xw, char *name)
 	static char dummy[] = "";
 	name = dummy;
     }
-#if OPT_ZICONBEEP		/* If warning should be given then give it */
-    if (resource.zIconBeep && TScreenOf(xw)->zIconBeep_flagged) {
-	char *newname = CastMallocN(char, strlen(name) + 4);
-	if (!newname) {
-	    xtermWarning("malloc failed in ChangeIconName\n");
-	    return;
-	}
-	strcpy(newname, "*** ");
-	strcat(newname, name);
-	ChangeGroup(xw, XtNiconName, newname);
-	free(newname);
-    } else
-#endif /* OPT_ZICONBEEP */
+    if (!showZIconBeep(xw, name))
 	ChangeGroup(xw, XtNiconName, name);
 }
 

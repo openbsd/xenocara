@@ -1,7 +1,7 @@
-/* $XTermId: charproc.c,v 1.1161 2012/01/19 00:22:08 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1205 2012/05/10 10:51:37 tom Exp $ */
 
 /*
- * Copyright 1999-2010,2011 by Thomas E. Dickey
+ * Copyright 1999-2011,2012 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -162,6 +162,7 @@ static void window_ops(XtermWidget /* xw */ );
 #define DoStartBlinking(s) ((s)->cursor_blink ^ (s)->cursor_blink_esc)
 
 #if OPT_BLINK_CURS || OPT_BLINK_TEXT
+#define UpdateCursorBlink(screen) SetCursorBlink(screen, screen->cursor_blink)
 static void SetCursorBlink(TScreen * /* screen */ ,
 			   Bool /* enable */ );
 static void HandleBlinking(XtPointer /* closure */ ,
@@ -666,6 +667,7 @@ static XtResource xterm_resources[] =
 #if OPT_WIDE_CHARS
     Bres(XtNcjkWidth, XtCCjkWidth, misc.cjk_width, False),
     Bres(XtNmkWidth, XtCMkWidth, misc.mk_width, False),
+    Bres(XtNprecompose, XtCPrecompose, screen.normalized_c, True),
     Bres(XtNutf8Latin1, XtCUtf8Latin1, screen.utf8_latin1, False),
     Bres(XtNutf8Title, XtCUtf8Title, screen.utf8_title, False),
     Bres(XtNvt100Graphics, XtCVT100Graphics, screen.vt100_graphics, True),
@@ -1065,8 +1067,9 @@ resetCharsets(TScreen * screen)
 static void
 set_ansi_conformance(TScreen * screen, int level)
 {
-    TRACE(("set_ansi_conformance(%d) terminal_id %d, ansi_level %d\n",
+    TRACE(("set_ansi_conformance(%d) dec_level %d:%d, ansi_level %d\n",
 	   level,
+	   screen->vtXX_level * 100,
 	   screen->terminal_id,
 	   screen->ansi_level));
     if (screen->vtXX_level >= 3) {
@@ -1106,6 +1109,33 @@ set_tb_margins(TScreen * screen, int top, int bottom)
 	screen->top_marg = screen->max_row;
     if (screen->bot_marg > screen->max_row)
 	screen->bot_marg = screen->max_row;
+}
+
+void
+set_lr_margins(TScreen * screen, int left, int right)
+{
+    TRACE(("set_lr_margins %d..%d, prior %d..%d\n",
+	   left, right,
+	   screen->lft_marg,
+	   screen->rgt_marg));
+    if (right > left) {
+	screen->lft_marg = left;
+	screen->rgt_marg = right;
+    }
+    if (screen->lft_marg > screen->max_col)
+	screen->lft_marg = screen->max_col;
+    if (screen->rgt_marg > screen->max_col)
+	screen->rgt_marg = screen->max_col;
+}
+
+#define reset_tb_margins(screen) set_tb_margins(screen, 0, screen->max_row)
+#define reset_lr_margins(screen) set_lr_margins(screen, 0, screen->max_col)
+
+static void
+reset_margins(TScreen * screen)
+{
+    reset_tb_margins(screen);
+    reset_lr_margins(screen);
 }
 
 void
@@ -1344,14 +1374,19 @@ init_parser(XtermWidget xw, struct ParseState *sp)
     ResetState(sp);
 }
 
+static void
+init_reply(unsigned type)
+{
+    memset(&reply, 0, sizeof(reply));
+    reply.a_type = (Char) type;
+}
+
 static Boolean
 doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 {
     TScreen *screen = TScreenOf(xw);
     int row;
     int col;
-    int top;
-    int bot;
     int count;
     int laststate;
     int thischar = -1;
@@ -1370,25 +1405,38 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	if (c >= 0x300 && screen->wide_chars
 	    && my_wcwidth((int) c) == 0
 	    && !isWideControl(c)) {
-	    int prev, precomposed;
+	    int prev, test;
 
 	    WriteNow();
 
-	    prev = (int) XTERM_CELL(screen->last_written_row,
-				    screen->last_written_col);
-	    precomposed = do_precomposition(prev, (int) c);
-	    TRACE(("do_precomposition (U+%04X [%d], U+%04X [%d]) -> U+%04X [%d]\n",
-		   prev, my_wcwidth(prev),
-		   (int) c, my_wcwidth((int) c),
-		   precomposed, my_wcwidth(precomposed)));
+	    /*
+	     * Check if the latest data can be added to the base character.
+	     * If there is already a combining character stored for the cell,
+	     * we cannot, since that would change the order.
+	     */
+	    if (screen->normalized_c
+		&& !IsCellCombined(screen,
+				   screen->last_written_row,
+				   screen->last_written_col)) {
+		prev = (int) XTERM_CELL(screen->last_written_row,
+					screen->last_written_col);
+		test = do_precomposition(prev, (int) c);
+		TRACE(("do_precomposition (U+%04X [%d], U+%04X [%d]) -> U+%04X [%d]\n",
+		       prev, my_wcwidth(prev),
+		       (int) c, my_wcwidth((int) c),
+		       test, my_wcwidth(test)));
+	    } else {
+		prev = -1;
+		test = -1;
+	    }
 
 	    /* substitute combined character with precomposed character
 	     * only if it does not change the width of the base character
 	     */
-	    if (precomposed != -1 && my_wcwidth(precomposed) == my_wcwidth(prev)) {
+	    if (test != -1 && my_wcwidth(test) == my_wcwidth(prev)) {
 		putXtermCell(screen,
 			     screen->last_written_row,
-			     screen->last_written_col, precomposed);
+			     screen->last_written_col, test);
 	    } else {
 		addXtermCombining(screen,
 				  screen->last_written_row,
@@ -1672,8 +1720,8 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	    break;
 
 	case CASE_CR:
-	    /* CR */
-	    CarriageReturn(screen);
+	    TRACE(("CASE_CR\n"));
+	    CarriageReturn(xw);
 	    break;
 
 	case CASE_ESC:
@@ -1698,18 +1746,20 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 #endif
 
 	case CASE_VMOT:
+	    TRACE(("CASE_VMOT\n"));
 	    /*
 	     * form feed, line feed, vertical tab
 	     */
 	    xtermAutoPrint(xw, c);
 	    xtermIndex(xw, 1);
 	    if (xw->flags & LINEFEED)
-		CarriageReturn(screen);
+		CarriageReturn(xw);
 	    else
 		do_xevents();
 	    break;
 
 	case CASE_CBT:
+	    TRACE(("CASE_CBT\n"));
 	    /* cursor backward tabulation */
 	    if ((count = param[0]) == DEFAULT)
 		count = 1;
@@ -1719,6 +1769,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	    break;
 
 	case CASE_CHT:
+	    TRACE(("CASE_CHT\n"));
 	    /* cursor forward tabulation */
 	    if ((count = param[0]) == DEFAULT)
 		count = 1;
@@ -1870,7 +1921,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	    TRACE(("CASE_CUF - cursor forward\n"));
 	    if ((col = param[0]) < 1)
 		col = 1;
-	    CursorForward(screen, col);
+	    CursorForward(xw, col);
 	    ResetState(sp);
 	    break;
 
@@ -1896,18 +1947,34 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	    break;
 
 	case CASE_VPA:
-	    TRACE(("CASE_VPA - vertical position\n"));
+	    TRACE(("CASE_VPA - vertical position absolute\n"));
 	    if ((row = param[0]) < 1)
 		row = 1;
-	    CursorSet(screen, row - 1, screen->cur_col, xw->flags);
+	    CursorSet(screen, row - 1, CursorCol(xw), xw->flags);
 	    ResetState(sp);
 	    break;
 
 	case CASE_HPA:
-	    TRACE(("CASE_HPA - horizontal position\n"));
+	    TRACE(("CASE_HPA - horizontal position absolute\n"));
 	    if ((col = param[0]) < 1)
 		col = 1;
-	    CursorSet(screen, screen->cur_row, col - 1, xw->flags);
+	    CursorSet(screen, CursorRow(xw), col - 1, xw->flags);
+	    ResetState(sp);
+	    break;
+
+	case CASE_VPR:
+	    TRACE(("CASE_VPR - vertical position relative\n"));
+	    if ((row = param[0]) < 1)
+		row = 1;
+	    CursorSet(screen, CursorRow(xw) + row, CursorCol(xw), xw->flags);
+	    ResetState(sp);
+	    break;
+
+	case CASE_HPR:
+	    TRACE(("CASE_HPR - horizontal position relative\n"));
+	    if ((col = param[0]) < 1)
+		col = 1;
+	    CursorSet(screen, CursorRow(xw), CursorCol(xw) + col, xw->flags);
 	    ResetState(sp);
 	    break;
 
@@ -2010,7 +2077,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	    TRACE(("CASE_DA1\n"));
 	    if (param[0] <= 0) {	/* less than means DEFAULT */
 		count = 0;
-		reply.a_type = ANSI_CSI;
+		init_reply(ANSI_CSI);
 		reply.a_pintro = '?';
 
 		/* The first param corresponds to the highest
@@ -2066,7 +2133,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	    TRACE(("CASE_DA2\n"));
 	    if (param[0] <= 0) {	/* less than means DEFAULT */
 		count = 0;
-		reply.a_type = ANSI_CSI;
+		init_reply(ANSI_CSI);
 		reply.a_pintro = '>';
 
 		if (screen->terminal_id >= 200)
@@ -2315,56 +2382,106 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 
 	    /* FALLTHRU */
 	case CASE_CPR:
-	    TRACE(("CASE_CPR - cursor position\n"));
+	    TRACE(("CASE_DSR - device status report\n"));
 	    count = 0;
-	    reply.a_type = ANSI_CSI;
+	    init_reply(ANSI_CSI);
 	    reply.a_pintro = CharOf(sp->private_function ? '?' : 0);
 	    reply.a_inters = 0;
 	    reply.a_final = 'n';
 
 	    switch (param[0]) {
 	    case 5:
+		TRACE(("...request operating status\n"));
 		/* operating status */
 		reply.a_param[count++] = 0;	/* (no malfunction ;-) */
 		break;
 	    case 6:
+		TRACE(("...request %s\n",
+		       (sp->private_function
+			? "DECXCPR"
+			: "CPR")));
 		/* CPR */
-		/* DECXCPR (with page=0) */
+		/* DECXCPR (with page=1) */
 		reply.a_param[count++] = (ParmType) (screen->cur_row + 1);
 		reply.a_param[count++] = (ParmType) (screen->cur_col + 1);
+		if (sp->private_function
+		    && screen->vtXX_level >= 4) {	/* VT420 */
+		    reply.a_param[count++] = 1;
+		}
 		reply.a_final = 'R';
 		break;
 	    case 15:
-		/* printer status */
-		if (screen->terminal_id >= 200) {	/* VT220 */
+		TRACE(("...request printer status\n"));
+		if (sp->private_function
+		    && screen->vtXX_level >= 2) {	/* VT220 */
 		    reply.a_param[count++] = 13;	/* implement printer */
 		}
 		break;
 	    case 25:
-		/* UDK status */
-		if (screen->terminal_id >= 200) {	/* VT220 */
+		TRACE(("...request UDK status\n"));
+		if (sp->private_function
+		    && screen->vtXX_level >= 2) {	/* VT220 */
 		    reply.a_param[count++] = 20;	/* UDK always unlocked */
 		}
 		break;
 	    case 26:
-		/* keyboard status */
-		if (screen->terminal_id >= 200) {	/* VT220 */
+		TRACE(("...request keyboard status\n"));
+		if (sp->private_function
+		    && screen->vtXX_level >= 2) {	/* VT220 */
 		    reply.a_param[count++] = 27;
 		    reply.a_param[count++] = 1;		/* North American */
-		    if (screen->terminal_id >= 400) {
+		    if (screen->vtXX_level >= 4) {	/* VT420 */
 			reply.a_param[count++] = 0;	/* ready */
 			reply.a_param[count++] = 0;	/* LK201 */
 		    }
 		}
 		break;
 	    case 53:
-		/* Locator status */
-		if (screen->terminal_id >= 200) {	/* VT220 */
+		TRACE(("...request locator status\n"));
+		if (sp->private_function
+		    && screen->vtXX_level >= 2) {	/* VT220 */
 #if OPT_DEC_LOCATOR
 		    reply.a_param[count++] = 50;	/* locator ready */
 #else
 		    reply.a_param[count++] = 53;	/* no locator */
 #endif
+		}
+		break;
+	    case 62:
+		TRACE(("...request DECMSR - macro space\n"));
+		if (sp->private_function
+		    && screen->vtXX_level >= 4) {	/* VT420 */
+		    reply.a_pintro = 0;
+		    reply.a_radix[count] = 16;	/* no data */
+		    reply.a_param[count++] = 0;		/* no space for macros */
+		    reply.a_inters = '*';
+		    reply.a_final = '{';
+		}
+		break;
+	    case 63:
+		TRACE(("...request DECCKSR - memory checksum\n"));
+		/* DECCKSR - Memory checksum */
+		if (sp->private_function
+		    && screen->vtXX_level >= 4) {	/* VT420 */
+		    init_reply(ANSI_DCS);
+		    reply.a_param[count++] = (ParmType) param[1];	/* PID */
+		    reply.a_delim = "!~";	/* delimiter */
+		    reply.a_radix[count] = 16;	/* use hex */
+		    reply.a_param[count++] = 0;		/* no data */
+		}
+		break;
+	    case 75:
+		TRACE(("...request data integrity\n"));
+		if (sp->private_function
+		    && screen->vtXX_level >= 4) {	/* VT420 */
+		    reply.a_param[count++] = 70;	/* no errors */
+		}
+		break;
+	    case 85:
+		TRACE(("...request multi-session configuration\n"));
+		if (sp->private_function
+		    && screen->vtXX_level >= 4) {	/* VT420 */
+		    reply.a_param[count++] = 83;	/* not configured */
 		}
 		break;
 	    default:
@@ -2406,19 +2523,23 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 
 	case CASE_DECSTBM:
 	    TRACE(("CASE_DECSTBM - set scrolling region\n"));
-	    if ((top = param[0]) < 1)
-		top = 1;
-	    if (nparam < 2 || (bot = param[1]) == DEFAULT
-		|| bot > MaxRows(screen)
-		|| bot == 0)
-		bot = MaxRows(screen);
-	    if (bot > top) {
-		if (screen->scroll_amt)
-		    FlushScroll(xw);
-		set_tb_margins(screen, top - 1, bot - 1);
-		CursorSet(screen, 0, 0, xw->flags);
+	    {
+		int top;
+		int bot;
+		if ((top = param[0]) < 1)
+		    top = 1;
+		if (nparam < 2 || (bot = param[1]) == DEFAULT
+		    || bot > MaxRows(screen)
+		    || bot == 0)
+		    bot = MaxRows(screen);
+		if (bot > top) {
+		    if (screen->scroll_amt)
+			FlushScroll(xw);
+		    set_tb_margins(screen, top - 1, bot - 1);
+		    CursorSet(screen, 0, 0, xw->flags);
+		}
+		ResetState(sp);
 	    }
-	    ResetState(sp);
 	    break;
 
 	case CASE_DECREQTPARM:
@@ -2427,7 +2548,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		if ((row = param[0]) == DEFAULT)
 		    row = 0;
 		if (row == 0 || row == 1) {
-		    reply.a_type = ANSI_CSI;
+		    init_reply(ANSI_CSI);
 		    reply.a_pintro = 0;
 		    reply.a_nparam = 7;
 		    reply.a_param[0] = (ParmType) (row + 2);
@@ -2469,7 +2590,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	    TRACE(("CASE_DECALN - alignment test\n"));
 	    if (screen->cursor_state)
 		HideCursor();
-	    set_tb_margins(screen, 0, screen->max_row);
+	    reset_margins(screen);
 	    CursorSet(screen, 0, 0, xw->flags);
 	    xtermParseRect(xw, 0, 0, &myRect);
 	    ScrnFillRectangle(xw, &myRect, 'E', 0, False);
@@ -2484,9 +2605,26 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	    break;
 
 	case CASE_DECSC:
-	    TRACE(("CASE_DECSC - save cursor\n"));
-	    CursorSave(xw);
-	    ResetState(sp);
+	    if (IsLeftRightMode(xw)) {
+		int left;
+		int right;
+
+		TRACE(("CASE_DECSLRM - set left and right margin\n"));
+		if ((left = param[0]) < 1)
+		    left = 1;
+		if (nparam < 2 || (right = param[1]) == DEFAULT
+		    || right > MaxCols(screen)
+		    || right == 0)
+		    right = MaxCols(screen);
+		if (right > left) {
+		    set_lr_margins(screen, left - 1, right - 1);
+		    CursorSet(screen, 0, 0, xw->flags);
+		}
+	    } else {
+		TRACE(("CASE_DECSC - save cursor\n"));
+		CursorSave(xw);
+		ResetState(sp);
+	    }
 	    break;
 
 	case CASE_DECRC:
@@ -2525,7 +2663,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	    TRACE(("CASE_DECSCUSR\n"));
 	    {
 		Boolean change = True;
-		Boolean blinks = screen->cursor_blink;
+		Boolean blinks = screen->cursor_blink_esc;
 
 		HideCursor();
 
@@ -2559,7 +2697,8 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 
 		if (change) {
 		    xtermSetCursorBox(screen);
-		    SetCursorBlink(screen, blinks);
+		    screen->cursor_blink_esc = blinks;
+		    UpdateCursorBlink(screen);
 		}
 	    }
 	    ResetState(sp);
@@ -2604,7 +2743,11 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		&& screen->vtXX_level == 0) {
 		sp->groundtable =
 		    sp->parsestate = ansi_table;
-		screen->vtXX_level = screen->vt52_save_level;
+		/*
+		 * On restore, the terminal does not recognize DECRQSS for
+		 * DECSCL (per vttest).
+		 */
+		screen->vtXX_level = 1;
 		screen->curgl = screen->vt52_save_curgl;
 		screen->curgr = screen->vt52_save_curgr;
 		screen->curss = screen->vt52_save_curss;
@@ -2633,24 +2776,27 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 
 	case CASE_DECSCL:
 	    TRACE(("CASE_DECSCL(%d,%d)\n", param[0], param[1]));
-	    if (param[0] >= 61 && param[0] <= 65) {
-		/*
-		 * VT300, VT420, VT520 manuals claim that DECSCL does a hard
-		 * reset (RIS).  VT220 manual states that it is a soft reset.
-		 * Perhaps both are right (unlikely).  Kermit says it's soft.
-		 */
-		ReallyReset(xw, False, False);
-		init_parser(xw, sp);
-		screen->vtXX_level = param[0] - 60;
-		if (param[0] > 61) {
-		    switch (zero_if_default(1)) {
-		    case 1:
-			show_8bit_control(False);
-			break;
-		    case 0:
-		    case 2:
-			show_8bit_control(True);
-			break;
+	    if (screen->terminal_id >= 200) {
+		if (param[0] >= 61 && param[0] <= 65) {
+		    /*
+		     * VT300, VT420, VT520 manuals claim that DECSCL does a
+		     * hard reset (RIS).  VT220 manual states that it is a soft
+		     * reset.  Perhaps both are right (unlikely).  Kermit says
+		     * it's soft.
+		     */
+		    ReallyReset(xw, False, False);
+		    init_parser(xw, sp);
+		    screen->vtXX_level = param[0] - 60;
+		    if (param[0] > 61) {
+			switch (zero_if_default(1)) {
+			case 1:
+			    show_8bit_control(False);
+			    break;
+			case 0:
+			case 2:
+			    show_8bit_control(True);
+			    break;
+			}
 		    }
 		}
 	    }
@@ -2660,10 +2806,13 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	case CASE_DECSCA:
 	    TRACE(("CASE_DECSCA\n"));
 	    screen->protected_mode = DEC_PROTECT;
-	    if (param[0] <= 0 || param[0] == 2)
+	    if (param[0] <= 0 || param[0] == 2) {
 		UIntClr(xw->flags, PROTECTED);
-	    else if (param[0] == 1)
+		TRACE(("...clear PROTECTED\n"));
+	    } else if (param[0] == 1) {
 		xw->flags |= PROTECTED;
+		TRACE(("...set PROTECTED\n"));
+	    }
 	    ResetState(sp);
 	    break;
 
@@ -2779,7 +2928,8 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 
 	case CASE_DECDC:
 	    TRACE(("CASE_DC - delete column\n"));
-	    if (screen->terminal_id >= 400) {
+	    if (screen->vtXX_level >= 4
+		&& IsLeftRightMode(xw)) {
 		if ((count = param[0]) < 1)
 		    count = 1;
 		xtermColScroll(xw, count, True, screen->cur_col);
@@ -2789,7 +2939,8 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 
 	case CASE_DECIC:
 	    TRACE(("CASE_IC - insert column\n"));
-	    if (screen->terminal_id >= 400) {
+	    if (screen->vtXX_level >= 4
+		&& IsLeftRightMode(xw)) {
 		if ((count = param[0]) < 1)
 		    count = 1;
 		xtermColScroll(xw, count, False, screen->cur_col);
@@ -2799,7 +2950,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 
 	case CASE_DECBI:
 	    TRACE(("CASE_BI - back index\n"));
-	    if (screen->terminal_id >= 400) {
+	    if (screen->vtXX_level >= 4) {
 		xtermColIndex(xw, True);
 	    }
 	    ResetState(sp);
@@ -2807,7 +2958,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 
 	case CASE_DECFI:
 	    TRACE(("CASE_FI - forward index\n"));
-	    if (screen->terminal_id >= 400) {
+	    if (screen->vtXX_level >= 4) {
 		xtermColIndex(xw, False);
 	    }
 	    ResetState(sp);
@@ -2822,20 +2973,20 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 
 	case CASE_CPL:
 	    TRACE(("CASE_CPL - cursor prev line\n"));
-	    CursorPrevLine(screen, param[0]);
+	    CursorPrevLine(xw, param[0]);
 	    ResetState(sp);
 	    break;
 
 	case CASE_CNL:
 	    TRACE(("CASE_CNL - cursor next line\n"));
-	    CursorNextLine(screen, param[0]);
+	    CursorNextLine(xw, param[0]);
 	    ResetState(sp);
 	    break;
 
 	case CASE_NEL:
 	    TRACE(("CASE_NEL\n"));
 	    xtermIndex(xw, 1);
-	    CarriageReturn(screen);
+	    CarriageReturn(xw);
 	    ResetState(sp);
 	    break;
 
@@ -2983,6 +3134,24 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 		sp->parsestate = eigtable;
 	    break;
 
+	case CASE_DECRQCRA:
+	    if (screen->vtXX_level >= 4) {
+		int checksum;
+
+		TRACE(("CASE_DECRQCRA - Request checksum of rectangular area\n"));
+		xtermCheckRect(xw, nparam, param, &checksum);
+		init_reply(ANSI_DCS);
+		count = 0;
+		reply.a_param[count++] = (ParmType) param[1];	/* PID */
+		reply.a_delim = "!~";	/* delimiter */
+		reply.a_radix[count] = 16;
+		reply.a_param[count++] = (ParmType) checksum;
+		reply.a_nparam = (ParmType) count;
+		unparseseq(xw, &reply);
+	    }
+	    ResetState(sp);
+	    break;
+
 	case CASE_DECCRA:
 	    if (screen->vtXX_level >= 4) {
 		TRACE(("CASE_DECCRA - Copy rectangular area\n"));
@@ -3083,18 +3252,22 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 
 	case CASE_S7C1T:
 	    TRACE(("CASE_S7C1T\n"));
-	    show_8bit_control(False);
-	    ResetState(sp);
+	    if (screen->terminal_id >= 200) {
+		show_8bit_control(False);
+		ResetState(sp);
+	    }
 	    break;
 
 	case CASE_S8C1T:
 	    TRACE(("CASE_S8C1T\n"));
+	    if (screen->terminal_id >= 200) {
 #if OPT_VT52_MODE
-	    if (screen->vtXX_level <= 1)
-		break;
+		if (screen->vtXX_level <= 1)
+		    break;
 #endif
-	    show_8bit_control(True);
-	    ResetState(sp);
+		show_8bit_control(True);
+		ResetState(sp);
+	    }
 	    break;
 
 	case CASE_OSC:
@@ -3826,7 +3999,7 @@ WrapLine(XtermWidget xw)
 	}
 	xtermAutoPrint(xw, '\n');
 	xtermIndex(xw, 1);
-	set_cur_col(screen, 0);
+	set_cur_col(screen, ScrnLeftMargin(xw));
     }
 }
 
@@ -3848,7 +4021,15 @@ dotext(XtermWidget xw,
     int next_col, last_col, this_col;	/* must be signed */
 #endif
     Cardinal offset;
+    int right = ScrnRightMargin(xw);
 
+    /*
+     * It is possible to use CUP, etc., to move outside margins.  In that
+     * case, the right-margin is ineffective.
+     */
+    if (screen->cur_col > right) {
+	right = screen->max_col;
+    }
 #if OPT_WIDE_CHARS
     /* don't translate if we use UTF-8, and are not handling legacy support
      * for line-drawing characters.
@@ -3873,7 +4054,7 @@ dotext(XtermWidget xw,
     for (offset = 0;
 	 offset < len && (chars_chomped > 0 || screen->do_wrap);
 	 offset += chars_chomped) {
-	int width_available = MaxCols(screen) - screen->cur_col;
+	int width_available = right + 1 - screen->cur_col;
 	int width_here = 0;
 	Boolean need_wrap = False;
 	int last_chomp = 0;
@@ -3883,10 +4064,16 @@ dotext(XtermWidget xw,
 	    screen->do_wrap = False;
 	    if ((xw->flags & WRAPAROUND)) {
 		WrapLine(xw);
-		width_available = MaxCols(screen) - screen->cur_col;
+		width_available = right + 1 - screen->cur_col;
 		next_col = screen->cur_col;
 	    }
 	}
+
+	/*
+	 * This can happen with left/right margins...
+	 */
+	if (width_available <= 0)
+	    break;
 
 	while (width_here <= width_available && chars_chomped < (len - offset)) {
 	    if (!screen->utf8_mode
@@ -3899,9 +4086,12 @@ dotext(XtermWidget xw,
 	}
 
 	if (width_here > width_available) {
-	    if (last_chomp > MaxCols(screen))
+	    if (last_chomp > right + 1)
 		break;		/* give up - it is too big */
-	    chars_chomped--;
+	    if (chars_chomped-- == 0) {
+		/* This can happen with left/right margins... */
+		break;
+	    }
 	    width_here -= last_chomp;
 	    if (chars_chomped > 0) {
 		need_wrap = True;
@@ -3934,6 +4124,8 @@ dotext(XtermWidget xw,
 #endif
 
 	last_col = LineMaxCol(screen, ld);
+	if (last_col > (right + 1))
+	    last_col = right + 1;
 	this_col = last_col - screen->cur_col + 1;
 	if (this_col <= 1) {
 	    if (screen->do_wrap) {
@@ -3990,34 +4182,12 @@ HandleStructNotify(Widget w GCC_UNUSED,
 		   XEvent * event,
 		   Boolean * cont GCC_UNUSED)
 {
-    static char *icon_name;
-    static Arg args[] =
-    {
-	{XtNiconName, (XtArgVal) & icon_name}
-    };
     XtermWidget xw = term;
-    TScreen *screen = TScreenOf(xw);
 
     switch (event->type) {
     case MapNotify:
 	TRACE(("HandleStructNotify(MapNotify)\n"));
-#if OPT_ZICONBEEP
-	if (screen->zIconBeep_flagged) {
-	    screen->zIconBeep_flagged = False;
-	    icon_name = NULL;
-	    XtGetValues(toplevel, args, XtNumber(args));
-	    if (icon_name != NULL) {
-		char *buf = CastMallocN(char, strlen(icon_name));
-		if (buf == NULL) {
-		    screen->zIconBeep_flagged = True;
-		    return;
-		}
-		strcpy(buf, icon_name + 4);
-		ChangeIconName(xw, buf);
-		free(buf);
-	    }
-	}
-#endif /* OPT_ZICONBEEP */
+	resetZIconBeep(xw);
 	mapstate = !IsUnmapped;
 	break;
     case UnmapNotify:
@@ -4066,10 +4236,10 @@ HandleStructNotify(Widget w GCC_UNUSED,
 			 * Try to fool it.
 			 */
 			REQ_RESIZE((Widget) xw,
-				   screen->fullVwin.fullwidth,
+				   TScreenOf(xw)->fullVwin.fullwidth,
 				   (Dimension) (info->menu_height
 						- save.menu_height
-						+ screen->fullVwin.fullheight),
+						+ TScreenOf(xw)->fullVwin.fullheight),
 				   NULL, NULL);
 			repairSizeHints();
 		    }
@@ -4172,6 +4342,103 @@ really_set_mousemode(XtermWidget xw,
 #endif
 
 /*
+ * Use this enumerated type to check consistency among dpmodes(), savemodes()
+ * and restoremodes().
+ */
+typedef enum {
+    srm_DECCKM = 1
+    ,srm_DECANM = 2
+    ,srm_DECCOLM = 3
+    ,srm_DECSCLM = 4
+    ,srm_DECSCNM = 5
+    ,srm_DECOM = 6
+    ,srm_DECAWM = 7
+    ,srm_DECARM = 8
+    ,srm_X10_MOUSE = SET_X10_MOUSE
+#if OPT_TOOLBAR
+    ,srm_RXVT_TOOLBAR = 10
+#endif
+#if OPT_BLINK_CURS
+    ,srm_ATT610_BLINK = 12
+#endif
+    ,srm_DECPFF = 18
+    ,srm_DECPEX = 19
+    ,srm_DECTCEM = 25
+    ,srm_RXVT_SCROLLBAR = 30
+#if OPT_SHIFT_FONTS
+    ,srm_RXVT_FONTSIZE = 35
+#endif
+#if OPT_TEK4014
+    ,srm_DECTEK = 38
+#endif
+    ,srm_132COLS = 40
+    ,srm_CURSES_HACK = 41
+    ,srm_DECNRCM = 42
+    ,srm_MARGIN_BELL = 44
+    ,srm_REVERSEWRAP = 45
+#ifdef ALLOWLOGGING
+    ,srm_ALLOWLOGGING = 46
+#endif
+    ,srm_OPT_ALTBUF_CURSOR = 1049
+    ,srm_OPT_ALTBUF = 1047
+    ,srm_ALTBUF = 47
+    ,srm_DECNKM = 66
+    ,srm_DECBKM = 67
+    ,srm_DECLRMM = 69
+    ,srm_DECNCSM = 95
+    ,srm_VT200_MOUSE = SET_VT200_MOUSE
+    ,srm_VT200_HIGHLIGHT_MOUSE = SET_VT200_HIGHLIGHT_MOUSE
+    ,srm_BTN_EVENT_MOUSE = SET_BTN_EVENT_MOUSE
+    ,srm_ANY_EVENT_MOUSE = SET_ANY_EVENT_MOUSE
+#if OPT_FOCUS_EVENT
+    ,srm_FOCUS_EVENT_MOUSE = SET_FOCUS_EVENT_MOUSE
+#endif
+    ,srm_EXT_MODE_MOUSE = SET_EXT_MODE_MOUSE
+    ,srm_SGR_EXT_MODE_MOUSE = SET_SGR_EXT_MODE_MOUSE
+    ,srm_URXVT_EXT_MODE_MOUSE = SET_URXVT_EXT_MODE_MOUSE
+    ,srm_RXVT_SCROLL_TTY_OUTPUT = 1010
+    ,srm_RXVT_SCROLL_TTY_KEYPRESS = 1011
+    ,srm_EIGHT_BIT_META = 1034
+#if OPT_NUM_LOCK
+    ,srm_REAL_NUMLOCK = 1035
+    ,srm_META_SENDS_ESC = 1036
+#endif
+    ,srm_DELETE_IS_DEL = 1037
+#if OPT_NUM_LOCK
+    ,srm_ALT_SENDS_ESC = 1039
+#endif
+    ,srm_KEEP_SELECTION = 1040
+    ,srm_SELECT_TO_CLIPBOARD = 1041
+    ,srm_BELL_IS_URGENT = 1042
+    ,srm_POP_ON_BELL = 1043
+    ,srm_TITE_INHIBIT = 1048
+#if OPT_TCAP_FKEYS
+    ,srm_TCAP_FKEYS = 1050
+#endif
+#if OPT_SUN_FUNC_KEYS
+    ,srm_SUN_FKEYS = 1051
+#endif
+#if OPT_HP_FUNC_KEYS
+    ,srm_HP_FKEYS = 1052
+#endif
+#if OPT_SCO_FUNC_KEYS
+    ,srm_SCO_FKEYS = 1053
+#endif
+    ,srm_LEGACY_FKEYS = 1060
+#if OPT_SUNPC_KBD
+    ,srm_VT220_FKEYS = 1061
+#endif
+#if OPT_READLINE
+    ,srm_BUTTON1_MOVE_POINT = SET_BUTTON1_MOVE_POINT
+    ,srm_BUTTON2_MOVE_POINT = SET_BUTTON2_MOVE_POINT
+    ,srm_DBUTTON3_DELETE = SET_DBUTTON3_DELETE
+    ,srm_PASTE_IN_BRACKET = SET_PASTE_IN_BRACKET
+    ,srm_PASTE_QUOTE = SET_PASTE_QUOTE
+    ,srm_PASTE_LITERAL_NL = SET_PASTE_LITERAL_NL
+#endif				/* OPT_READLINE */
+} DECSET_codes;
+
+/*
  * process DEC private modes set, reset
  */
 static void
@@ -4183,12 +4450,12 @@ dpmodes(XtermWidget xw, BitFunc func)
 
     for (i = 0; i < nparam; ++i) {
 	TRACE(("%s %d\n", IsSM()? "DECSET" : "DECRST", param[i]));
-	switch (param[i]) {
-	case 1:		/* DECCKM                       */
+	switch ((DECSET_codes) param[i]) {
+	case srm_DECCKM:
 	    (*func) (&xw->keyboard.flags, MODE_DECCKM);
 	    update_appcursor();
 	    break;
-	case 2:		/* DECANM - ANSI/VT52 mode      */
+	case srm_DECANM:	/* ANSI/VT52 mode      */
 	    if (IsSM()) {	/* ANSI (VT100) */
 		/*
 		 * Setting DECANM should have no effect, since this function
@@ -4201,7 +4468,6 @@ dpmodes(XtermWidget xw, BitFunc func)
 		TRACE(("DECANM terminal_id %d, vtXX_level %d\n",
 		       screen->terminal_id,
 		       screen->vtXX_level));
-		screen->vt52_save_level = screen->vtXX_level;
 		screen->vtXX_level = 0;
 		screen->vt52_save_curgl = screen->curgl;
 		screen->vt52_save_curgr = screen->curgr;
@@ -4212,18 +4478,23 @@ dpmodes(XtermWidget xw, BitFunc func)
 	    }
 #endif
 	    break;
-	case 3:		/* DECCOLM                      */
+	case srm_DECCOLM:
 	    if (screen->c132) {
-		ClearScreen(xw);
+		if (!(xw->flags & NOCLEAR_COLM))
+		    ClearScreen(xw);
 		CursorSet(screen, 0, 0, xw->flags);
 		if ((j = IsSM()? 132 : 80) !=
 		    ((xw->flags & IN132COLUMNS) ? 132 : 80) ||
 		    j != MaxCols(screen))
 		    RequestResize(xw, -1, j, True);
 		(*func) (&xw->flags, IN132COLUMNS);
+		if (xw->flags & IN132COLUMNS) {
+		    xw->flags &= ~LEFT_RIGHT;
+		    reset_lr_margins(screen);
+		}
 	    }
 	    break;
-	case 4:		/* DECSCLM (slow scroll)        */
+	case srm_DECSCLM:	/* (slow scroll)        */
 	    if (IsSM()) {
 		screen->jumpscroll = 0;
 		if (screen->scroll_amt)
@@ -4233,7 +4504,7 @@ dpmodes(XtermWidget xw, BitFunc func)
 	    (*func) (&xw->flags, SMOOTHSCROLL);
 	    update_jumpscroll();
 	    break;
-	case 5:		/* DECSCNM                      */
+	case srm_DECSCNM:
 	    myflags = xw->flags;
 	    (*func) (&xw->flags, REVERSE_VIDEO);
 	    if ((xw->flags ^ myflags) & REVERSE_VIDEO)
@@ -4241,87 +4512,87 @@ dpmodes(XtermWidget xw, BitFunc func)
 	    /* update_reversevideo done in RevVid */
 	    break;
 
-	case 6:		/* DECOM                        */
+	case srm_DECOM:
 	    (*func) (&xw->flags, ORIGIN);
 	    CursorSet(screen, 0, 0, xw->flags);
 	    break;
 
-	case 7:		/* DECAWM                       */
+	case srm_DECAWM:
 	    (*func) (&xw->flags, WRAPAROUND);
 	    update_autowrap();
 	    break;
-	case 8:		/* DECARM                       */
+	case srm_DECARM:
 	    /* ignore autorepeat
 	     * XAutoRepeatOn() and XAutoRepeatOff() can do this, but only
 	     * for the whole display - not limited to a given window.
 	     */
 	    break;
-	case SET_X10_MOUSE:	/* MIT bogus sequence           */
+	case srm_X10_MOUSE:	/* MIT bogus sequence           */
 	    MotionOff(screen, xw);
 	    set_mousemode(X10_MOUSE);
 	    break;
 #if OPT_TOOLBAR
-	case 10:		/* rxvt */
+	case srm_RXVT_TOOLBAR:
 	    ShowToolbar(IsSM());
 	    break;
 #endif
 #if OPT_BLINK_CURS
-	case 12:		/* att610: Start/stop blinking cursor */
+	case srm_ATT610_BLINK:	/* att610: Start/stop blinking cursor */
 	    if (screen->cursor_blink_res) {
 		set_bool_mode(screen->cursor_blink_esc);
-		SetCursorBlink(screen, screen->cursor_blink);
+		UpdateCursorBlink(screen);
 	    }
 	    break;
 #endif
-	case 18:		/* DECPFF: print form feed */
+	case srm_DECPFF:	/* print form feed */
 	    set_bool_mode(PrinterOf(screen).printer_formfeed);
 	    break;
-	case 19:		/* DECPEX: print extent */
+	case srm_DECPEX:	/* print extent */
 	    set_bool_mode(PrinterOf(screen).printer_extent);
 	    break;
-	case 25:		/* DECTCEM: Show/hide cursor (VT200) */
+	case srm_DECTCEM:	/* Show/hide cursor (VT200) */
 	    set_bool_mode(screen->cursor_set);
 	    break;
-	case 30:		/* rxvt */
+	case srm_RXVT_SCROLLBAR:
 	    if (screen->fullVwin.sb_info.width != (IsSM()? ON : OFF))
 		ToggleScrollBar(xw);
 	    break;
 #if OPT_SHIFT_FONTS
-	case 35:		/* rxvt */
+	case srm_RXVT_FONTSIZE:
 	    set_bool_mode(xw->misc.shift_fonts);
 	    break;
 #endif
-	case 38:		/* DECTEK                       */
 #if OPT_TEK4014
+	case srm_DECTEK:
 	    if (IsSM() && !(screen->inhibit & I_TEK)) {
 		FlushLog(xw);
 		TEK4014_ACTIVE(xw) = True;
 	    }
-#endif
 	    break;
-	case 40:		/* 132 column mode              */
+#endif
+	case srm_132COLS:	/* 132 column mode              */
 	    set_bool_mode(screen->c132);
 	    update_allow132();
 	    break;
-	case 41:		/* curses hack                  */
+	case srm_CURSES_HACK:
 	    set_bool_mode(screen->curses);
 	    update_cursesemul();
 	    break;
-	case 42:		/* DECNRCM national charset (VT220) */
+	case srm_DECNRCM:	/* national charset (VT220) */
 	    (*func) (&xw->flags, NATIONAL);
 	    break;
-	case 44:		/* margin bell                  */
+	case srm_MARGIN_BELL:	/* margin bell                  */
 	    set_bool_mode(screen->marginbell);
 	    if (!screen->marginbell)
 		screen->bellArmed = -1;
 	    update_marginbell();
 	    break;
-	case 45:		/* reverse wraparound   */
+	case srm_REVERSEWRAP:	/* reverse wraparound   */
 	    (*func) (&xw->flags, REVERSEWRAP);
 	    update_reversewrap();
 	    break;
 #ifdef ALLOWLOGGING
-	case 46:		/* logging              */
+	case srm_ALLOWLOGGING:	/* logging              */
 #ifdef ALLOWLOGFILEONOFF
 	    /*
 	     * if this feature is enabled, logging may be
@@ -4337,7 +4608,7 @@ dpmodes(XtermWidget xw, BitFunc func)
 #endif /* ALLOWLOGFILEONOFF */
 	    break;
 #endif
-	case 1049:		/* alternate buffer & cursor */
+	case srm_OPT_ALTBUF_CURSOR:	/* alternate buffer & cursor */
 	    if (!xw->misc.titeInhibit) {
 		if (IsSM()) {
 		    CursorSave(xw);
@@ -4353,9 +4624,9 @@ dpmodes(XtermWidget xw, BitFunc func)
 		}
 	    }
 	    break;
-	case 1047:
+	case srm_OPT_ALTBUF:
 	    /* FALLTHRU */
-	case 47:		/* alternate buffer */
+	case srm_ALTBUF:	/* alternate buffer */
 	    if (!xw->misc.titeInhibit) {
 		if (IsSM()) {
 		    ToAlternate(xw);
@@ -4371,30 +4642,46 @@ dpmodes(XtermWidget xw, BitFunc func)
 		}
 	    }
 	    break;
-	case 66:		/* DECNKM */
+	case srm_DECNKM:
 	    (*func) (&xw->keyboard.flags, MODE_DECKPAM);
 	    update_appkeypad();
 	    break;
-	case 67:		/* DECBKM */
+	case srm_DECBKM:
 	    /* back-arrow mapped to backspace or delete(D) */
 	    (*func) (&xw->keyboard.flags, MODE_DECBKM);
 	    TRACE(("DECSET DECBKM %s\n",
 		   BtoS(xw->keyboard.flags & MODE_DECBKM)));
 	    update_decbkm();
 	    break;
-	case SET_VT200_MOUSE:	/* xterm bogus sequence         */
+	case srm_DECLRMM:
+	    if (screen->terminal_id >= 400) {	/* VT420 */
+		(*func) (&xw->flags, LEFT_RIGHT);
+		if (IsLeftRightMode(xw)) {
+		    xterm_ResetDouble(xw);
+		} else {
+		    reset_lr_margins(screen);
+		}
+		CursorSet(screen, 0, 0, xw->flags);
+	    }
+	    break;
+	case srm_DECNCSM:
+	    if (screen->terminal_id >= 500) {	/* VT510 */
+		(*func) (&xw->flags, NOCLEAR_COLM);
+	    }
+	    break;
+	case srm_VT200_MOUSE:	/* xterm bogus sequence         */
 	    MotionOff(screen, xw);
 	    set_mousemode(VT200_MOUSE);
 	    break;
-	case SET_VT200_HIGHLIGHT_MOUSE:	/* xterm sequence w/hilite tracking */
+	case srm_VT200_HIGHLIGHT_MOUSE:	/* xterm sequence w/hilite tracking */
 	    MotionOff(screen, xw);
 	    set_mousemode(VT200_HIGHLIGHT_MOUSE);
 	    break;
-	case SET_BTN_EVENT_MOUSE:
+	case srm_BTN_EVENT_MOUSE:
 	    MotionOff(screen, xw);
 	    set_mousemode(BTN_EVENT_MOUSE);
 	    break;
-	case SET_ANY_EVENT_MOUSE:
+	case srm_ANY_EVENT_MOUSE:
 	    set_mousemode(ANY_EVENT_MOUSE);
 	    if (screen->send_mouse_pos == MOUSE_OFF) {
 		MotionOff(screen, xw);
@@ -4403,15 +4690,15 @@ dpmodes(XtermWidget xw, BitFunc func)
 	    }
 	    break;
 #if OPT_FOCUS_EVENT
-	case SET_FOCUS_EVENT_MOUSE:
+	case srm_FOCUS_EVENT_MOUSE:
 	    set_bool_mode(screen->send_focus_pos);
 	    break;
 #endif
-	case SET_EXT_MODE_MOUSE:
+	case srm_EXT_MODE_MOUSE:
 	    /* FALLTHRU */
-	case SET_SGR_EXT_MODE_MOUSE:
+	case srm_SGR_EXT_MODE_MOUSE:
 	    /* FALLTHRU */
-	case SET_URXVT_EXT_MODE_MOUSE:
+	case srm_URXVT_EXT_MODE_MOUSE:
 	    /*
 	     * Rather than choose an arbitrary precedence among the coordinate
 	     * modes, they are mutually exclusive.  For consistency, a reset is
@@ -4423,56 +4710,56 @@ dpmodes(XtermWidget xw, BitFunc func)
 		screen->extend_coords = 0;
 	    }
 	    break;
-	case 1010:		/* rxvt */
+	case srm_RXVT_SCROLL_TTY_OUTPUT:
 	    set_bool_mode(screen->scrollttyoutput);
 	    update_scrollttyoutput();
 	    break;
-	case 1011:		/* rxvt */
+	case srm_RXVT_SCROLL_TTY_KEYPRESS:
 	    set_bool_mode(screen->scrollkey);
 	    update_scrollkey();
 	    break;
-	case 1034:
+	case srm_EIGHT_BIT_META:
 	    if (screen->eight_bit_meta != ebNever) {
 		set_bool_mode(screen->eight_bit_meta);
 	    }
 	    break;
 #if OPT_NUM_LOCK
-	case 1035:
+	case srm_REAL_NUMLOCK:
 	    set_bool_mode(xw->misc.real_NumLock);
 	    update_num_lock();
 	    break;
-	case 1036:
+	case srm_META_SENDS_ESC:
 	    set_bool_mode(screen->meta_sends_esc);
 	    update_meta_esc();
 	    break;
 #endif
-	case 1037:
+	case srm_DELETE_IS_DEL:
 	    set_bool_mode(screen->delete_is_del);
 	    update_delete_del();
 	    break;
 #if OPT_NUM_LOCK
-	case 1039:
+	case srm_ALT_SENDS_ESC:
 	    set_bool_mode(screen->alt_sends_esc);
 	    update_alt_esc();
 	    break;
 #endif
-	case 1040:
+	case srm_KEEP_SELECTION:
 	    set_bool_mode(screen->keepSelection);
 	    update_keepSelection();
 	    break;
-	case 1041:
+	case srm_SELECT_TO_CLIPBOARD:
 	    set_bool_mode(screen->selectToClipboard);
 	    update_selectToClipboard();
 	    break;
-	case 1042:
+	case srm_BELL_IS_URGENT:
 	    set_bool_mode(screen->bellIsUrgent);
 	    update_bellIsUrgent();
 	    break;
-	case 1043:
+	case srm_POP_ON_BELL:
 	    set_bool_mode(screen->poponbell);
 	    update_poponbell();
 	    break;
-	case 1048:
+	case srm_TITE_INHIBIT:
 	    if (!xw->misc.titeInhibit) {
 		if (IsSM())
 		    CursorSave(xw);
@@ -4481,50 +4768,50 @@ dpmodes(XtermWidget xw, BitFunc func)
 	    }
 	    break;
 #if OPT_TCAP_FKEYS
-	case 1050:
+	case srm_TCAP_FKEYS:
 	    set_keyboard_type(xw, keyboardIsTermcap, IsSM());
 	    break;
 #endif
 #if OPT_SUN_FUNC_KEYS
-	case 1051:
+	case srm_SUN_FKEYS:
 	    set_keyboard_type(xw, keyboardIsSun, IsSM());
 	    break;
 #endif
 #if OPT_HP_FUNC_KEYS
-	case 1052:
+	case srm_HP_FKEYS:
 	    set_keyboard_type(xw, keyboardIsHP, IsSM());
 	    break;
 #endif
 #if OPT_SCO_FUNC_KEYS
-	case 1053:
+	case srm_SCO_FKEYS:
 	    set_keyboard_type(xw, keyboardIsSCO, IsSM());
 	    break;
 #endif
-	case 1060:
+	case srm_LEGACY_FKEYS:
 	    set_keyboard_type(xw, keyboardIsLegacy, IsSM());
 	    break;
 #if OPT_SUNPC_KBD
-	case 1061:
+	case srm_VT220_FKEYS:
 	    set_keyboard_type(xw, keyboardIsVT220, IsSM());
 	    break;
 #endif
 #if OPT_READLINE
-	case SET_BUTTON1_MOVE_POINT:
+	case srm_BUTTON1_MOVE_POINT:
 	    set_mouseflag(click1_moves);
 	    break;
-	case SET_BUTTON2_MOVE_POINT:
+	case srm_BUTTON2_MOVE_POINT:
 	    set_mouseflag(paste_moves);
 	    break;
-	case SET_DBUTTON3_DELETE:
+	case srm_DBUTTON3_DELETE:
 	    set_mouseflag(dclick3_deletes);
 	    break;
-	case SET_PASTE_IN_BRACKET:
+	case srm_PASTE_IN_BRACKET:
 	    set_mouseflag(paste_brackets);
 	    break;
-	case SET_PASTE_QUOTE:
+	case srm_PASTE_QUOTE:
 	    set_mouseflag(paste_quotes);
 	    break;
-	case SET_PASTE_LITERAL_NL:
+	case srm_PASTE_LITERAL_NL:
 	    set_mouseflag(paste_literal_nl);
 	    break;
 #endif /* OPT_READLINE */
@@ -4543,118 +4830,208 @@ savemodes(XtermWidget xw)
 
     for (i = 0; i < nparam; i++) {
 	TRACE(("savemodes %d\n", param[i]));
-	switch (param[i]) {
-	case 1:		/* DECCKM                       */
+	switch ((DECSET_codes) param[i]) {
+	case srm_DECCKM:
 	    DoSM(DP_DECCKM, xw->keyboard.flags & MODE_DECCKM);
 	    break;
-	case 3:		/* DECCOLM                      */
+	case srm_DECANM:	/* ANSI/VT52 mode      */
+	    /* no effect */
+	    break;
+	case srm_DECCOLM:
 	    if (screen->c132)
 		DoSM(DP_DECCOLM, xw->flags & IN132COLUMNS);
 	    break;
-	case 4:		/* DECSCLM (slow scroll)        */
+	case srm_DECSCLM:	/* (slow scroll)        */
 	    DoSM(DP_DECSCLM, xw->flags & SMOOTHSCROLL);
 	    break;
-	case 5:		/* DECSCNM                      */
+	case srm_DECSCNM:
 	    DoSM(DP_DECSCNM, xw->flags & REVERSE_VIDEO);
 	    break;
-	case 6:		/* DECOM                        */
+	case srm_DECOM:
 	    DoSM(DP_DECOM, xw->flags & ORIGIN);
 	    break;
-	case 7:		/* DECAWM                       */
+	case srm_DECAWM:
 	    DoSM(DP_DECAWM, xw->flags & WRAPAROUND);
 	    break;
-	case 8:		/* DECARM                       */
+	case srm_DECARM:
 	    /* ignore autorepeat */
 	    break;
-	case SET_X10_MOUSE:	/* mouse bogus sequence */
+	case srm_X10_MOUSE:	/* mouse bogus sequence */
 	    DoSM(DP_X_X10MSE, screen->send_mouse_pos);
 	    break;
 #if OPT_TOOLBAR
-	case 10:		/* rxvt */
+	case srm_RXVT_TOOLBAR:
 	    DoSM(DP_TOOLBAR, resource.toolBar);
 	    break;
 #endif
 #if OPT_BLINK_CURS
-	case 12:		/* att610: Start/stop blinking cursor */
+	case srm_ATT610_BLINK:	/* att610: Start/stop blinking cursor */
 	    if (screen->cursor_blink_res) {
 		DoSM(DP_CRS_BLINK, screen->cursor_blink_esc);
 	    }
 	    break;
 #endif
-	case 18:		/* DECPFF: print form feed */
+	case srm_DECPFF:	/* print form feed */
 	    DoSM(DP_PRN_FORMFEED, PrinterOf(screen).printer_formfeed);
 	    break;
-	case 19:		/* DECPEX: print extent */
+	case srm_DECPEX:	/* print extent */
 	    DoSM(DP_PRN_EXTENT, PrinterOf(screen).printer_extent);
 	    break;
-	case 25:		/* DECTCEM: Show/hide cursor (VT200) */
+	case srm_DECTCEM:	/* Show/hide cursor (VT200) */
 	    DoSM(DP_CRS_VISIBLE, screen->cursor_set);
 	    break;
-	case 40:		/* 132 column mode              */
+	case srm_RXVT_SCROLLBAR:
+	    DoSM(DP_RXVT_SCROLLBAR, (screen->fullVwin.sb_info.width != 0));
+	    break;
+#if OPT_SHIFT_FONTS
+	case srm_RXVT_FONTSIZE:
+	    DoSM(DP_RXVT_FONTSIZE, xw->misc.shift_fonts);
+	    break;
+#endif
+#if OPT_TEK4014
+	case srm_DECTEK:
+	    DoSM(DP_DECTEK, TEK4014_ACTIVE(xw));
+	    break;
+#endif
+	case srm_132COLS:	/* 132 column mode              */
 	    DoSM(DP_X_DECCOLM, screen->c132);
 	    break;
-	case 41:		/* curses hack                  */
+	case srm_CURSES_HACK:	/* curses hack                  */
 	    DoSM(DP_X_MORE, screen->curses);
 	    break;
-	case 42:		/* DECNRCM national charset (VT220) */
-	    /* do nothing */
+	case srm_DECNRCM:	/* national charset (VT220) */
+	    DoSM(DP_DECNRCM, xw->flags & NATIONAL);
 	    break;
-	case 44:		/* margin bell                  */
+	case srm_MARGIN_BELL:	/* margin bell                  */
 	    DoSM(DP_X_MARGIN, screen->marginbell);
 	    break;
-	case 45:		/* reverse wraparound   */
+	case srm_REVERSEWRAP:	/* reverse wraparound   */
 	    DoSM(DP_X_REVWRAP, xw->flags & REVERSEWRAP);
 	    break;
 #ifdef ALLOWLOGGING
-	case 46:		/* logging              */
+	case srm_ALLOWLOGGING:	/* logging              */
 	    DoSM(DP_X_LOGGING, screen->logging);
 	    break;
 #endif
-	case 1047:		/* alternate buffer             */
+	case srm_OPT_ALTBUF_CURSOR:
 	    /* FALLTHRU */
-	case 47:		/* alternate buffer             */
+	case srm_OPT_ALTBUF:
+	    /* FALLTHRU */
+	case srm_ALTBUF:	/* alternate buffer             */
 	    DoSM(DP_X_ALTSCRN, screen->whichBuf);
 	    break;
-	case SET_VT200_MOUSE:	/* mouse bogus sequence         */
-	case SET_VT200_HIGHLIGHT_MOUSE:
-	case SET_BTN_EVENT_MOUSE:
-	case SET_ANY_EVENT_MOUSE:
+	case srm_DECNKM:
+	    DoSM(DP_DECKPAM, xw->keyboard.flags & MODE_DECKPAM);
+	    break;
+	case srm_DECBKM:
+	    DoSM(DP_DECBKM, xw->keyboard.flags & MODE_DECBKM);
+	    break;
+	case srm_DECLRMM:	/* left-right */
+	    DoSM(DP_X_LRMM, LEFT_RIGHT);
+	    break;
+	case srm_DECNCSM:	/* noclear */
+	    DoSM(DP_X_NCSM, NOCLEAR_COLM);
+	    break;
+	case srm_VT200_MOUSE:	/* mouse bogus sequence         */
+	case srm_VT200_HIGHLIGHT_MOUSE:
+	case srm_BTN_EVENT_MOUSE:
+	case srm_ANY_EVENT_MOUSE:
 	    DoSM(DP_X_MOUSE, screen->send_mouse_pos);
 	    break;
 #if OPT_FOCUS_EVENT
-	case SET_FOCUS_EVENT_MOUSE:
+	case srm_FOCUS_EVENT_MOUSE:
 	    DoSM(DP_X_FOCUS, screen->send_focus_pos);
 	    break;
 #endif
-	case SET_EXT_MODE_MOUSE:
+	case srm_EXT_MODE_MOUSE:
 	    /* FALLTHRU */
-	case SET_SGR_EXT_MODE_MOUSE:
+	case srm_SGR_EXT_MODE_MOUSE:
 	    /* FALLTHRU */
-	case SET_URXVT_EXT_MODE_MOUSE:
+	case srm_URXVT_EXT_MODE_MOUSE:
 	    DoSM(DP_X_EXT_MOUSE, screen->extend_coords);
 	    break;
-	case 1048:
+	case srm_RXVT_SCROLL_TTY_OUTPUT:
+	    DoSM(DP_RXVT_SCROLL_TTY_OUTPUT, screen->scrollttyoutput);
+	    break;
+	case srm_RXVT_SCROLL_TTY_KEYPRESS:
+	    DoSM(DP_RXVT_SCROLL_TTY_KEYPRESS, screen->scrollkey);
+	    break;
+	case srm_EIGHT_BIT_META:
+	    DoSM(DP_EIGHT_BIT_META, screen->eight_bit_meta);
+	    break;
+#if OPT_NUM_LOCK
+	case srm_REAL_NUMLOCK:
+	    DoSM(DP_REAL_NUMLOCK, xw->misc.real_NumLock);
+	    break;
+	case srm_META_SENDS_ESC:
+	    DoSM(DP_META_SENDS_ESC, screen->meta_sends_esc);
+	    break;
+#endif
+	case srm_DELETE_IS_DEL:
+	    DoSM(DP_DELETE_IS_DEL, screen->delete_is_del);
+	    break;
+#if OPT_NUM_LOCK
+	case srm_ALT_SENDS_ESC:
+	    DoSM(DP_ALT_SENDS_ESC, screen->alt_sends_esc);
+	    break;
+#endif
+	case srm_KEEP_SELECTION:
+	    DoSM(DP_KEEP_SELECTION, screen->keepSelection);
+	    break;
+	case srm_SELECT_TO_CLIPBOARD:
+	    DoSM(DP_SELECT_TO_CLIPBOARD, screen->selectToClipboard);
+	    break;
+	case srm_BELL_IS_URGENT:
+	    DoSM(DP_BELL_IS_URGENT, screen->bellIsUrgent);
+	    break;
+	case srm_POP_ON_BELL:
+	    DoSM(DP_POP_ON_BELL, screen->poponbell);
+	    break;
+#if OPT_TCAP_FKEYS
+	case srm_TCAP_FKEYS:
+	    /* FALLTHRU */
+#endif
+#if OPT_SUN_FUNC_KEYS
+	case srm_SUN_FKEYS:
+	    /* FALLTHRU */
+#endif
+#if OPT_HP_FUNC_KEYS
+	case srm_HP_FKEYS:
+	    /* FALLTHRU */
+#endif
+#if OPT_SCO_FUNC_KEYS
+	case srm_SCO_FKEYS:
+	    /* FALLTHRU */
+#endif
+#if OPT_SUNPC_KBD
+	case srm_VT220_FKEYS:
+	    /* FALLTHRU */
+#endif
+	case srm_LEGACY_FKEYS:
+	    DoSM(DP_KEYBOARD_TYPE, xw->keyboard.type);
+	    break;
+	case srm_TITE_INHIBIT:
 	    if (!xw->misc.titeInhibit) {
 		CursorSave(xw);
 	    }
 	    break;
 #if OPT_READLINE
-	case SET_BUTTON1_MOVE_POINT:
+	case srm_BUTTON1_MOVE_POINT:
 	    SCREEN_FLAG_save(screen, click1_moves);
 	    break;
-	case SET_BUTTON2_MOVE_POINT:
+	case srm_BUTTON2_MOVE_POINT:
 	    SCREEN_FLAG_save(screen, paste_moves);
 	    break;
-	case SET_DBUTTON3_DELETE:
+	case srm_DBUTTON3_DELETE:
 	    SCREEN_FLAG_save(screen, dclick3_deletes);
 	    break;
-	case SET_PASTE_IN_BRACKET:
+	case srm_PASTE_IN_BRACKET:
 	    SCREEN_FLAG_save(screen, paste_brackets);
 	    break;
-	case SET_PASTE_QUOTE:
+	case srm_PASTE_QUOTE:
 	    SCREEN_FLAG_save(screen, paste_quotes);
 	    break;
-	case SET_PASTE_LITERAL_NL:
+	case srm_PASTE_LITERAL_NL:
 	    SCREEN_FLAG_save(screen, paste_literal_nl);
 	    break;
 #endif /* OPT_READLINE */
@@ -4673,15 +5050,19 @@ restoremodes(XtermWidget xw)
 
     for (i = 0; i < nparam; i++) {
 	TRACE(("restoremodes %d\n", param[i]));
-	switch (param[i]) {
-	case 1:		/* DECCKM                       */
+	switch ((DECSET_codes) param[i]) {
+	case srm_DECCKM:
 	    bitcpy(&xw->keyboard.flags,
 		   screen->save_modes[DP_DECCKM], MODE_DECCKM);
 	    update_appcursor();
 	    break;
-	case 3:		/* DECCOLM                      */
+	case srm_DECANM:	/* ANSI/VT52 mode      */
+	    /* no effect */
+	    break;
+	case srm_DECCOLM:
 	    if (screen->c132) {
-		ClearScreen(xw);
+		if (!(xw->flags & NOCLEAR_COLM))
+		    ClearScreen(xw);
 		CursorSet(screen, 0, 0, xw->flags);
 		if ((j = (screen->save_modes[DP_DECCOLM] & IN132COLUMNS)
 		     ? 132 : 80) != ((xw->flags & IN132COLUMNS)
@@ -4692,7 +5073,7 @@ restoremodes(XtermWidget xw)
 		       IN132COLUMNS);
 	    }
 	    break;
-	case 4:		/* DECSCLM (slow scroll)        */
+	case srm_DECSCLM:	/* (slow scroll)        */
 	    if (screen->save_modes[DP_DECSCLM] & SMOOTHSCROLL) {
 		screen->jumpscroll = 0;
 		if (screen->scroll_amt)
@@ -4702,70 +5083,95 @@ restoremodes(XtermWidget xw)
 	    bitcpy(&xw->flags, screen->save_modes[DP_DECSCLM], SMOOTHSCROLL);
 	    update_jumpscroll();
 	    break;
-	case 5:		/* DECSCNM                      */
+	case srm_DECSCNM:
 	    if ((screen->save_modes[DP_DECSCNM] ^ xw->flags) & REVERSE_VIDEO) {
 		bitcpy(&xw->flags, screen->save_modes[DP_DECSCNM], REVERSE_VIDEO);
 		ReverseVideo(xw);
 		/* update_reversevideo done in RevVid */
 	    }
 	    break;
-	case 6:		/* DECOM                        */
+	case srm_DECOM:
 	    bitcpy(&xw->flags, screen->save_modes[DP_DECOM], ORIGIN);
 	    CursorSet(screen, 0, 0, xw->flags);
 	    break;
 
-	case 7:		/* DECAWM                       */
+	case srm_DECAWM:
 	    bitcpy(&xw->flags, screen->save_modes[DP_DECAWM], WRAPAROUND);
 	    update_autowrap();
 	    break;
-	case 8:		/* DECARM                       */
+	case srm_DECARM:
 	    /* ignore autorepeat */
 	    break;
-	case SET_X10_MOUSE:	/* MIT bogus sequence           */
+	case srm_X10_MOUSE:	/* MIT bogus sequence           */
 	    DoRM0(DP_X_X10MSE, screen->send_mouse_pos);
+	    really_set_mousemode(xw, screen->send_mouse_pos,
+				 screen->send_mouse_pos != MOUSE_OFF);
 	    break;
 #if OPT_TOOLBAR
-	case 10:		/* rxvt */
+	case srm_RXVT_TOOLBAR:
 	    DoRM(DP_TOOLBAR, resource.toolBar);
 	    ShowToolbar(resource.toolBar);
 	    break;
 #endif
 #if OPT_BLINK_CURS
-	case 12:		/* att610: Start/stop blinking cursor */
+	case srm_ATT610_BLINK:	/* Start/stop blinking cursor */
 	    if (screen->cursor_blink_res) {
 		DoRM(DP_CRS_BLINK, screen->cursor_blink_esc);
-		SetCursorBlink(screen, screen->cursor_blink);
+		UpdateCursorBlink(screen);
 	    }
 	    break;
 #endif
-	case 18:		/* DECPFF: print form feed */
+	case srm_DECPFF:	/* print form feed */
 	    DoRM(DP_PRN_FORMFEED, PrinterOf(screen).printer_formfeed);
 	    break;
-	case 19:		/* DECPEX: print extent */
+	case srm_DECPEX:	/* print extent */
 	    DoRM(DP_PRN_EXTENT, PrinterOf(screen).printer_extent);
 	    break;
-	case 25:		/* DECTCEM: Show/hide cursor (VT200) */
+	case srm_DECTCEM:	/* Show/hide cursor (VT200) */
 	    DoRM(DP_CRS_VISIBLE, screen->cursor_set);
 	    break;
-	case 40:		/* 132 column mode              */
+	case srm_RXVT_SCROLLBAR:
+	    if ((screen->fullVwin.sb_info.width != 0) !=
+		screen->save_modes[DP_RXVT_SCROLLBAR]) {
+		ToggleScrollBar(xw);
+	    }
+	    break;
+#if OPT_SHIFT_FONTS
+	case srm_RXVT_FONTSIZE:
+	    DoRM(DP_RXVT_FONTSIZE, xw->misc.shift_fonts);
+	    break;
+#endif
+#if OPT_TEK4014
+	case srm_DECTEK:
+	    if (!(screen->inhibit & I_TEK) &&
+		(TEK4014_ACTIVE(xw) != (Boolean) screen->save_modes[DP_DECTEK])) {
+		FlushLog(xw);
+		TEK4014_ACTIVE(xw) = screen->save_modes[DP_DECTEK];
+	    }
+	    break;
+#endif
+	case srm_132COLS:	/* 132 column mode              */
 	    DoRM(DP_X_DECCOLM, screen->c132);
 	    update_allow132();
 	    break;
-	case 41:		/* curses hack                  */
+	case srm_CURSES_HACK:	/* curses hack                  */
 	    DoRM(DP_X_MORE, screen->curses);
 	    update_cursesemul();
 	    break;
-	case 44:		/* margin bell                  */
+	case srm_DECNRCM:	/* national charset (VT220) */
+	    bitcpy(&xw->flags, screen->save_modes[DP_DECNRCM], NATIONAL);
+	    break;
+	case srm_MARGIN_BELL:	/* margin bell                  */
 	    if ((DoRM(DP_X_MARGIN, screen->marginbell)) == 0)
 		screen->bellArmed = -1;
 	    update_marginbell();
 	    break;
-	case 45:		/* reverse wraparound   */
+	case srm_REVERSEWRAP:	/* reverse wraparound   */
 	    bitcpy(&xw->flags, screen->save_modes[DP_X_REVWRAP], REVERSEWRAP);
 	    update_reversewrap();
 	    break;
 #ifdef ALLOWLOGGING
-	case 46:		/* logging              */
+	case srm_ALLOWLOGGING:	/* logging              */
 #ifdef ALLOWLOGFILEONOFF
 	    if (screen->save_modes[DP_X_LOGGING])
 		StartLog(xw);
@@ -4775,9 +5181,11 @@ restoremodes(XtermWidget xw)
 	    /* update_logging done by StartLog and CloseLog */
 	    break;
 #endif
-	case 1047:		/* alternate buffer */
+	case srm_OPT_ALTBUF_CURSOR:	/* alternate buffer & cursor */
 	    /* FALLTHRU */
-	case 47:		/* alternate buffer */
+	case srm_OPT_ALTBUF:
+	    /* FALLTHRU */
+	case srm_ALTBUF:	/* alternate buffer */
 	    if (!xw->misc.titeInhibit) {
 		if (screen->save_modes[DP_X_ALTSCRN])
 		    ToAlternate(xw);
@@ -4790,46 +5198,138 @@ restoremodes(XtermWidget xw)
 		}
 	    }
 	    break;
-	case SET_VT200_MOUSE:	/* mouse bogus sequence         */
-	case SET_VT200_HIGHLIGHT_MOUSE:
-	case SET_BTN_EVENT_MOUSE:
-	case SET_ANY_EVENT_MOUSE:
+	case srm_DECNKM:
+	    bitcpy(&xw->flags, screen->save_modes[DP_DECKPAM], MODE_DECKPAM);
+	    update_appkeypad();
+	    break;
+	case srm_DECBKM:
+	    bitcpy(&xw->flags, screen->save_modes[DP_DECBKM], MODE_DECBKM);
+	    update_decbkm();
+	    break;
+	case srm_DECLRMM:	/* left-right */
+	    bitcpy(&xw->flags, screen->save_modes[DP_X_LRMM], LEFT_RIGHT);
+	    if (IsLeftRightMode(xw)) {
+		xterm_ResetDouble(xw);
+	    } else {
+		reset_lr_margins(screen);
+	    }
+	    CursorSet(screen, 0, 0, xw->flags);
+	    break;
+	case srm_DECNCSM:	/* noclear */
+	    bitcpy(&xw->flags, screen->save_modes[DP_X_NCSM], NOCLEAR_COLM);
+	    break;
+	case srm_VT200_MOUSE:	/* mouse bogus sequence         */
+	case srm_VT200_HIGHLIGHT_MOUSE:
+	case srm_BTN_EVENT_MOUSE:
+	case srm_ANY_EVENT_MOUSE:
 	    DoRM0(DP_X_MOUSE, screen->send_mouse_pos);
+	    really_set_mousemode(xw, screen->send_mouse_pos,
+				 screen->send_mouse_pos != MOUSE_OFF);
 	    break;
 #if OPT_FOCUS_EVENT
-	case SET_FOCUS_EVENT_MOUSE:
+	case srm_FOCUS_EVENT_MOUSE:
 	    DoRM(DP_X_FOCUS, screen->send_focus_pos);
 	    break;
 #endif
-	case SET_EXT_MODE_MOUSE:
+	case srm_EXT_MODE_MOUSE:
 	    /* FALLTHRU */
-	case SET_SGR_EXT_MODE_MOUSE:
+	case srm_SGR_EXT_MODE_MOUSE:
 	    /* FALLTHRU */
-	case SET_URXVT_EXT_MODE_MOUSE:
+	case srm_URXVT_EXT_MODE_MOUSE:
 	    DoRM(DP_X_EXT_MOUSE, screen->extend_coords);
 	    break;
-	case 1048:
+	case srm_TITE_INHIBIT:
 	    if (!xw->misc.titeInhibit) {
 		CursorRestore(xw);
 	    }
 	    break;
+	case srm_RXVT_SCROLL_TTY_OUTPUT:
+	    DoRM(DP_RXVT_SCROLL_TTY_OUTPUT, screen->scrollttyoutput);
+	    update_scrollttyoutput();
+	    break;
+	case srm_RXVT_SCROLL_TTY_KEYPRESS:
+	    DoRM(DP_RXVT_SCROLL_TTY_KEYPRESS, screen->scrollkey);
+	    update_scrollkey();
+	    break;
+	case srm_EIGHT_BIT_META:
+	    DoRM(DP_EIGHT_BIT_META, screen->eight_bit_meta);
+	    break;
+#if OPT_NUM_LOCK
+	case srm_REAL_NUMLOCK:
+	    DoRM(DP_REAL_NUMLOCK, xw->misc.real_NumLock);
+	    update_num_lock();
+	    break;
+	case srm_META_SENDS_ESC:
+	    DoRM(DP_META_SENDS_ESC, screen->meta_sends_esc);
+	    update_meta_esc();
+	    break;
+#endif
+	case srm_DELETE_IS_DEL:
+	    DoRM(DP_DELETE_IS_DEL, screen->delete_is_del);
+	    update_delete_del();
+	    break;
+#if OPT_NUM_LOCK
+	case srm_ALT_SENDS_ESC:
+	    DoRM(DP_ALT_SENDS_ESC, screen->alt_sends_esc);
+	    update_alt_esc();
+	    break;
+#endif
+	case srm_KEEP_SELECTION:
+	    DoRM(DP_KEEP_SELECTION, screen->keepSelection);
+	    update_keepSelection();
+	    break;
+	case srm_SELECT_TO_CLIPBOARD:
+	    DoRM(DP_SELECT_TO_CLIPBOARD, screen->selectToClipboard);
+	    update_selectToClipboard();
+	    break;
+	case srm_BELL_IS_URGENT:
+	    DoRM(DP_BELL_IS_URGENT, screen->bellIsUrgent);
+	    update_bellIsUrgent();
+	    break;
+	case srm_POP_ON_BELL:
+	    DoRM(DP_POP_ON_BELL, screen->poponbell);
+	    update_poponbell();
+	    break;
+#if OPT_TCAP_FKEYS
+	case srm_TCAP_FKEYS:
+	    /* FALLTHRU */
+#endif
+#if OPT_SUN_FUNC_KEYS
+	case srm_SUN_FKEYS:
+	    /* FALLTHRU */
+#endif
+#if OPT_HP_FUNC_KEYS
+	case srm_HP_FKEYS:
+	    /* FALLTHRU */
+#endif
+#if OPT_SCO_FUNC_KEYS
+	case srm_SCO_FKEYS:
+	    /* FALLTHRU */
+#endif
+#if OPT_SUNPC_KBD
+	case srm_VT220_FKEYS:
+	    /* FALLTHRU */
+#endif
+	case srm_LEGACY_FKEYS:
+	    xw->keyboard.type = (xtermKeyboardType) screen->save_modes[DP_KEYBOARD_TYPE];
+	    break;
 #if OPT_READLINE
-	case SET_BUTTON1_MOVE_POINT:
+	case srm_BUTTON1_MOVE_POINT:
 	    SCREEN_FLAG_restore(screen, click1_moves);
 	    break;
-	case SET_BUTTON2_MOVE_POINT:
+	case srm_BUTTON2_MOVE_POINT:
 	    SCREEN_FLAG_restore(screen, paste_moves);
 	    break;
-	case SET_DBUTTON3_DELETE:
+	case srm_DBUTTON3_DELETE:
 	    SCREEN_FLAG_restore(screen, dclick3_deletes);
 	    break;
-	case SET_PASTE_IN_BRACKET:
+	case srm_PASTE_IN_BRACKET:
 	    SCREEN_FLAG_restore(screen, paste_brackets);
 	    break;
-	case SET_PASTE_QUOTE:
+	case srm_PASTE_QUOTE:
 	    SCREEN_FLAG_restore(screen, paste_quotes);
 	    break;
-	case SET_PASTE_LITERAL_NL:
+	case srm_PASTE_LITERAL_NL:
 	    SCREEN_FLAG_restore(screen, paste_literal_nl);
 	    break;
 #endif /* OPT_READLINE */
@@ -4933,7 +5433,6 @@ report_win_label(XtermWidget xw,
 		 int code,
 		 char *text)
 {
-    reply.a_type = ANSI_ESC;
     unparseputc(xw, ANSI_ESC);
     unparseputc(xw, ']');
     unparseputc(xw, code);
@@ -5055,7 +5554,7 @@ window_ops(XtermWidget xw)
 	    XGetWindowAttributes(screen->display,
 				 VWindow(screen),
 				 &win_attrs);
-	    reply.a_type = ANSI_CSI;
+	    init_reply(ANSI_CSI);
 	    reply.a_pintro = 0;
 	    reply.a_nparam = 1;
 	    reply.a_param[0] = (ParmType) ((win_attrs.map_state == IsViewable)
@@ -5073,7 +5572,7 @@ window_ops(XtermWidget xw)
 	    XGetWindowAttributes(screen->display,
 				 WMFrameWindow(xw),
 				 &win_attrs);
-	    reply.a_type = ANSI_CSI;
+	    init_reply(ANSI_CSI);
 	    reply.a_pintro = 0;
 	    reply.a_nparam = 3;
 	    reply.a_param[0] = 3;
@@ -5091,7 +5590,7 @@ window_ops(XtermWidget xw)
 	    XGetWindowAttributes(screen->display,
 				 VWindow(screen),
 				 &win_attrs);
-	    reply.a_type = ANSI_CSI;
+	    init_reply(ANSI_CSI);
 	    reply.a_pintro = 0;
 	    reply.a_nparam = 3;
 	    reply.a_param[0] = 4;
@@ -5110,7 +5609,7 @@ window_ops(XtermWidget xw)
     case ewGetWinSizeChars:	/* Report the text's size in characters */
 	if (AllowWindowOps(xw, ewGetWinSizeChars)) {
 	    TRACE(("...get window size in characters\n"));
-	    reply.a_type = ANSI_CSI;
+	    init_reply(ANSI_CSI);
 	    reply.a_pintro = 0;
 	    reply.a_nparam = 3;
 	    reply.a_param[0] = 8;
@@ -5130,7 +5629,7 @@ window_ops(XtermWidget xw)
 		root_height = 0;
 		root_width = 0;
 	    }
-	    reply.a_type = ANSI_CSI;
+	    init_reply(ANSI_CSI);
 	    reply.a_pintro = 0;
 	    reply.a_nparam = 3;
 	    reply.a_param[0] = 9;
@@ -5287,9 +5786,20 @@ unparseseq(XtermWidget xw, ANSI * ap)
 	if (ap->a_pintro != 0)
 	    unparseputc(xw, ap->a_pintro);
 	for (i = 0; i < ap->a_nparam; ++i) {
-	    if (i != 0)
-		unparseputc(xw, ';');
-	    unparseputn(xw, (unsigned int) ap->a_param[i]);
+	    if (i != 0) {
+		if (ap->a_delim) {
+		    unparseputs(xw, ap->a_delim);
+		} else {
+		    unparseputc(xw, ';');
+		}
+	    }
+	    if (ap->a_radix[i]) {
+		char temp[8];
+		sprintf(temp, "%04X", ap->a_param[i] & 0xffff);
+		unparseputs(xw, temp);
+	    } else {
+		unparseputn(xw, (unsigned int) ap->a_param[i]);
+	    }
 	}
 	if ((inters = ap->a_inters) != 0) {
 	    for (i = 3; i >= 0; --i) {
@@ -5298,7 +5808,17 @@ unparseseq(XtermWidget xw, ANSI * ap)
 		    unparseputc(xw, c);
 	    }
 	}
-	unparseputc(xw, (char) ap->a_final);
+	switch (ap->a_type) {
+	case ANSI_DCS:
+	case ANSI_OSC:
+	case ANSI_PM:
+	case ANSI_APC:
+	    unparseputc1(xw, ANSI_ST);
+	    break;
+	default:
+	    unparseputc(xw, (char) ap->a_final);
+	    break;
+	}
     }
     unparse_end(xw);
 }
@@ -6697,6 +7217,7 @@ VTInitialize(Widget wrequest,
 				  tblRenderFont, erLast);
     if (wnew->misc.render_font == erDefault) {
 	if (IsEmpty(wnew->misc.face_name)) {
+	    free(wnew->misc.face_name);
 	    wnew->misc.face_name = x_strdup(DEFFACENAME_AUTO);
 	    TRACE(("will allow runtime switch to render_font using \"%s\"\n",
 		   wnew->misc.face_name));
@@ -6722,6 +7243,7 @@ VTInitialize(Widget wrequest,
 	extendedBoolean(request->screen.utf8_fonts_s, tblUtf8Mode, uLast);
 
     VTInitialize_locale(request);
+    init_Bres(screen.normalized_c);
     init_Bres(screen.utf8_latin1);
     init_Bres(screen.utf8_title);
 
@@ -6936,8 +7458,8 @@ releaseWindowGCs(XtermWidget xw, VTwin * win)
 #define TRACE_FREE_LEAK(name) \
 	if (name) { \
 	    free((void *) name); \
+	    TRACE(("freed " #name ": %p\n", name)); \
 	    name = 0; \
-	    TRACE(("freed " #name "\n")); \
 	}
 
 #define FREE_LEAK(name) \
@@ -6992,6 +7514,21 @@ VTDestroy(Widget w GCC_UNUSED)
 	TRACE_FREE_LEAK(screen->Acolors[n].resource);
     }
 #endif
+#if OPT_COLOR_RES
+    for (n = 0; n < NCOLORS; n++) {
+	switch (n) {
+#if OPT_TEK4014
+	case TEK_BG:
+	case TEK_FG:
+	case TEK_CURSOR:
+	    break;
+#endif
+	default:
+	    TRACE_FREE_LEAK(screen->Tcolors[n].resource);
+	    break;
+	}
+    }
+#endif
     TRACE_FREE_LEAK(screen->save_ptr);
     TRACE_FREE_LEAK(screen->saveBuf_data);
     TRACE_FREE_LEAK(screen->saveBuf_index);
@@ -7012,6 +7549,9 @@ VTDestroy(Widget w GCC_UNUSED)
     TRACE_FREE_LEAK(xw->screen.term_id);
 #if OPT_INPUT_METHOD
     cleanupInputMethod(xw);
+    TRACE_FREE_LEAK(xw->misc.f_x);
+    TRACE_FREE_LEAK(xw->misc.input_method);
+    TRACE_FREE_LEAK(xw->misc.preedit_type);
 #endif
     releaseCursorGCs(xw);
     releaseWindowGCs(xw, &(screen->fullVwin));
@@ -7053,9 +7593,13 @@ VTDestroy(Widget w GCC_UNUSED)
 #endif
 
     /* free things allocated via init_Sres or Init_Sres2 */
+#ifndef NO_ACTIVE_ICON
+    TRACE_FREE_LEAK(screen->icon_fontname);
+#endif
 #ifdef ALLOWLOGGING
     TRACE_FREE_LEAK(screen->logfile);
 #endif
+    TRACE_FREE_LEAK(screen->eight_bit_meta_s);
     TRACE_FREE_LEAK(screen->term_id);
     TRACE_FREE_LEAK(screen->charClass);
     TRACE_FREE_LEAK(screen->answer_back);
@@ -7097,6 +7641,7 @@ VTDestroy(Widget w GCC_UNUSED)
 
     XtFree((char *) (screen->selection_data));
 
+    TRACE_FREE_LEAK(xtermClassRec.core_class.tm_table);
     TRACE_FREE_LEAK(xw->keyboard.extra_translations);
     TRACE_FREE_LEAK(xw->keyboard.shell_translations);
     TRACE_FREE_LEAK(xw->keyboard.xterm_translations);
@@ -7440,7 +7985,7 @@ VTRealize(Widget w,
     set_cur_row(screen, 0);
     set_max_col(screen, Width(screen) / screen->fullVwin.f_width - 1);
     set_max_row(screen, Height(screen) / screen->fullVwin.f_height - 1);
-    set_tb_margins(screen, 0, screen->max_row);
+    reset_margins(screen);
 
     memset(screen->sc, 0, sizeof(screen->sc));
 
@@ -8374,7 +8919,7 @@ StopBlinking(TScreen * screen)
 }
 
 #if OPT_BLINK_TEXT
-static Bool
+Bool
 LineHasBlinking(TScreen * screen, LineData * ld)
 {
     int col;
@@ -8536,7 +9081,7 @@ ReallyReset(XtermWidget xw, Bool full, Bool saved)
     screen->cursor_set = ON;
 
     /* reset scrolling region */
-    set_tb_margins(screen, 0, screen->max_row);
+    reset_margins(screen);
 
     bitclr(&xw->flags, ORIGIN);
 

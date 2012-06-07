@@ -1,4 +1,4 @@
-/* $XTermId: os2main.c,v 1.273 2011/12/27 10:36:58 tom Exp $ */
+/* $XTermId: os2main.c,v 1.276 2012/03/27 23:09:20 tom Exp $ */
 
 /* removed all foreign stuff to get the code more clear (hv)
  * and did some rewrite for the obscure OS/2 environment
@@ -277,7 +277,11 @@ static XtResource application_resources[] =
     Sres("omitTranslation", "OmitTranslation", omitTranslation, NULL),
     Sres("keyboardType", "KeyboardType", keyboardType, "unknown"),
 #if OPT_PRINT_ON_EXIT
+    Ires("printModeImmediate", "PrintModeImmediate", printModeNow, 0),
+    Ires("printOptsImmediate", "PrintOptsImmediate", printOptsNow, 9),
+    Sres("printFileImmediate", "PrintFileImmediate", printFileNow, NULL),
     Ires("printModeOnXError", "PrintModeOnXError", printModeOnXError, 0),
+    Ires("printOptsOnXError", "PrintOptsOnXError", printOptsOnXError, 9),
     Sres("printFileOnXError", "PrintFileOnXError", printFileOnXError, NULL),
 #endif
 #if OPT_SUNPC_KBD
@@ -302,6 +306,7 @@ static XtResource application_resources[] =
     Bres("useInsertMode", "UseInsertMode", useInsertMode, False),
 #if OPT_ZICONBEEP
     Ires("zIconBeep", "ZIconBeep", zIconBeep, 0),
+    Sres("zIconTitleFormat", "ZIconTitleFormat", zIconFormat, "*** %s"),
 #endif
 #if OPT_PTY_HANDSHAKE
     Bres("waitForMap", "WaitForMap", wait_for_map, False),
@@ -419,7 +424,6 @@ static XrmOptionDescRec optionDescList[] = {
 {"+k8",		"*allowC1Printable", XrmoptionNoArg,	(XPointer) "off"},
 #endif
 {"-kt",		"*keyboardType", XrmoptionSepArg,	(XPointer) NULL},
-{"+kt",		"*keyboardType", XrmoptionSepArg,	(XPointer) NULL},
 /* parse logging options anyway for compatibility */
 {"-l",		"*logging",	XrmoptionNoArg,		(XPointer) "on"},
 {"+l",		"*logging",	XrmoptionNoArg,		(XPointer) "off"},
@@ -451,6 +455,7 @@ static XrmOptionDescRec optionDescList[] = {
 {"+rvc",	"*colorRVMode",	XrmoptionNoArg,		(XPointer) "on"},
 {"-sf",		"*sunFunctionKeys", XrmoptionNoArg,	(XPointer) "on"},
 {"+sf",		"*sunFunctionKeys", XrmoptionNoArg,	(XPointer) "off"},
+{"-sh",		"*scaleHeight", XrmoptionSepArg,	(XPointer) NULL},
 {"-si",		"*scrollTtyOutput", XrmoptionNoArg,	(XPointer) "off"},
 {"+si",		"*scrollTtyOutput", XrmoptionNoArg,	(XPointer) "on"},
 {"-sk",		"*scrollKey",	XrmoptionNoArg,		(XPointer) "on"},
@@ -657,8 +662,8 @@ static OptionHelp xtermOptions[] = {
 #endif
 { "-/+uc",                 "turn on/off underline cursor" },
 { "-/+ulc",                "turn off/on display of underline as color" },
-{ "-/+ut",                 "turn on/off utmp inhibit (not supported)" },
 { "-/+ulit",               "turn off/on display of underline as italics" },
+{ "-/+ut",                 "turn on/off utmp inhibit (not supported)" },
 { "-/+vb",                 "turn on/off visual bell" },
 { "-/+pob",                "turn on/off pop on bell" },
 #if OPT_WIDE_CHARS
@@ -688,6 +693,7 @@ static OptionHelp xtermOptions[] = {
 #endif
 #if OPT_MAXIMIZE
 {"-/+maximized",           "turn on/off maxmize on startup" },
+{"-/+fullscreen",          "turn on/off fullscreen on startup" },
 #endif
 { NULL, NULL }};
 /* *INDENT-ON* */
@@ -1069,12 +1075,7 @@ main(int argc, char **argv ENVP_ARG)
 	    override_tty_modes = True;
 	}
     }
-#if OPT_ZICONBEEP
-    if (resource.zIconBeep > 100 || resource.zIconBeep < -100) {
-	resource.zIconBeep = 0;	/* was 100, but I prefer to defaulting off. */
-	xtermWarning("a number between -100 and 100 is required for zIconBeep.  0 used by default\n");
-    }
-#endif /* OPT_ZICONBEEP */
+    initZIconBeep();
     hold_screen = resource.hold_screen ? 1 : 0;
     if (resource.icon_geometry != NULL) {
 	int scr, junk;

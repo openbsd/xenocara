@@ -1,10 +1,10 @@
-# $XTermId: VTparse.def,v 1.42 2011/12/04 18:29:33 tom Exp $
+# $XTermId: VTparse.def,v 1.44 2012/04/26 01:01:03 tom Exp $
 #
 # vile:confmode rs=lf
 # -----------------------------------------------------------------------------
 # this file is part of xterm
 #
-# Copyright 1996-2010,2011 by Thomas E. Dickey
+# Copyright 1996-2011,2012 by Thomas E. Dickey
 # 
 #                         All Rights Reserved
 # 
@@ -191,3 +191,6 @@ CASE_DECDC
 CASE_DECIC
 CASE_DECBI
 CASE_DECFI
+CASE_DECRQCRA
+CASE_HPR
+CASE_VPR

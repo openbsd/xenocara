@@ -1,7 +1,7 @@
-/* $XTermId: xterm_io.h,v 1.53 2011/12/30 22:45:49 tom Exp $ */
+/* $XTermId: xterm_io.h,v 1.54 2012/03/16 09:48:56 tom Exp $ */
 
 /*
- * Copyright 2000-2006,2010 by Thomas E. Dickey
+ * Copyright 2000-2011,2012 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -293,15 +293,33 @@ extern int ptioctl(int fd, int func, void* data);
 #endif /* TTYSIZE_STRUCT */
 
 #if defined(USE_STRUCT_TTYSIZE)
+
 #define TTYSIZE_STRUCT struct ttysize
-#define SET_TTYSIZE(fd, data) ioctl(fd, TIOCSSIZE, &data);
+#define GET_TTYSIZE(fd, data) ioctl(fd, TIOCGSIZE, &data)
+#define SET_TTYSIZE(fd, data) ioctl(fd, TIOCSSIZE, &data)
 #define TTYSIZE_COLS(data) data.ts_cols
 #define TTYSIZE_ROWS(data) data.ts_lines
+
 #elif defined(USE_STRUCT_WINSIZE)
+
 #define TTYSIZE_STRUCT struct winsize
+#define GET_TTYSIZE(fd, data) ioctl(fd, TIOCGWINSZ, (char *) &data)
 #define SET_TTYSIZE(fd, data) ioctl(fd, TIOCSWINSZ, (char *) &data)
 #define TTYSIZE_COLS(data) data.ws_col
 #define TTYSIZE_ROWS(data) data.ws_row
+
+#endif /* (USE_STRUCT_TTYSIZE) */
+
+#if OPT_TRACE
+#define TRACE_TTYSIZE(fd, id) { \
+	    TTYSIZE_STRUCT debug_ttysize; \
+	    if (GET_TTYSIZE(fd, debug_ttysize) == 0) \
+		TRACE(("%s@%d, TTYSIZE %s %d %d\n", __FILE__, __LINE__, id, TTYSIZE_ROWS(debug_ttysize), TTYSIZE_COLS(debug_ttysize))); \
+	    else \
+		TRACE(("%s@%d, TTYSIZE failed %s\n", __FILE__, __LINE__, strerror(errno))); \
+	}
+#else
+#define TRACE_TTYSIZE(fd, id) /* nothing */
 #endif
 
 typedef unsigned short ttySize_t;

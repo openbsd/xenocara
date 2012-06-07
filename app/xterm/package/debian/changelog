@@ -1,3 +1,9 @@
+xterm-dev (279) unstable; urgency=low
+
+  * Miscellaneous fixes.
+
+ -- Thomas E. Dickey <dickey@invisible-island.net>  Wed, 14 Mar 2012 20:33:27 -0400
+
 xterm-dev (278) unstable; urgency=low
 
   * Fix regression in eightBitInput logic.

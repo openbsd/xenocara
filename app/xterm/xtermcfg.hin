@@ -1,7 +1,7 @@
-/* $XTermId: xtermcfg.hin,v 1.188 2012/01/05 10:28:29 tom Exp $ */
+/* $XTermId: xtermcfg.hin,v 1.190 2012/05/07 23:28:24 tom Exp $ */
 
 /*
- * Copyright 1997-2010,2011 by Thomas E. Dickey
+ * Copyright 1997-2011,2012 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -48,6 +48,7 @@
 #undef HAVE_GETHOSTNAME		/* AC_CHECK_FUNCS(gethostname) */
 #undef HAVE_GETLOGIN		/* AC_CHECK_FUNCS(getlogin) */
 #undef HAVE_GRANTPT		/* CF_FUNC_GRANTPT */
+#undef HAVE_GRANTPT_PTY_ISATTY	/* CF_FUNC_GRANTPT */
 #undef HAVE_LANGINFO_CODESET	/* AM_LANGINFO_CODESET */
 #undef HAVE_LASTLOG_H		/* CF_LASTLOG */
 #undef HAVE_LIB_NEXTAW		/* CF_X_ATHENA(--with-neXtaw) */

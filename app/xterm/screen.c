@@ -1,7 +1,7 @@
-/* $XTermId: screen.c,v 1.440 2011/12/27 10:10:53 tom Exp $ */
+/* $XTermId: screen.c,v 1.452 2012/05/08 08:36:43 tom Exp $ */
 
 /*
- * Copyright 1999-2010,2011 by Thomas E. Dickey
+ * Copyright 1999-2011,2012 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -78,8 +78,8 @@
 
 #define getMinRow(screen) ((xw->flags & ORIGIN) ? (screen)->top_marg : 0)
 #define getMaxRow(screen) ((xw->flags & ORIGIN) ? (screen)->bot_marg : (screen)->max_row)
-#define getMinCol(screen) 0
-#define getMaxCol(screen) ((screen)->max_col)
+#define getMinCol(screen) ((xw->flags & ORIGIN) ? (screen)->lft_marg : 0)
+#define getMaxCol(screen) ((xw->flags & ORIGIN) ? (screen)->rgt_marg : (screen)->max_col)
 
 #define MoveLineData(base, dst, src, len) \
 	memmove(scrnHeadAddr(screen, base, (unsigned) (dst)), \
@@ -706,6 +706,37 @@ ChangeToWide(XtermWidget xw)
  * Clear cells, no side-effects.
  */
 void
+CopyCells(TScreen * screen, LineData * src, LineData * dst, int col, int len)
+{
+    if (len > 0) {
+	int n;
+	int last = col + len;
+
+	for (n = col; n < last; ++n) {
+	    dst->charData[n] = src->charData[n];
+	    dst->attribs[n] = src->attribs[n];
+	}
+
+	if_OPT_ISO_COLORS(screen, {
+	    for (n = col; n < last; ++n) {
+		dst->color[n] = src->color[n];
+	    }
+	});
+	if_OPT_WIDE_CHARS(screen, {
+	    size_t off;
+	    for (n = col; n < last; ++n) {
+		for_each_combData(off, src) {
+		    dst->combData[off][n] = src->combData[off][n];
+		}
+	    }
+	});
+    }
+}
+
+/*
+ * Clear cells, no side-effects.
+ */
+void
 ClearCells(XtermWidget xw, int flags, unsigned len, int row, int col)
 {
     if (len != 0) {
@@ -896,10 +927,10 @@ ScrnWriteText(XtermWidget xw,
 	    ld->color[screen->cur_col + (int) j] = (CellColor) cur_fg_bg;
     });
 
-    if_OPT_WIDE_CHARS(screen, {
-	screen->last_written_col = screen->cur_col + (int) real_width - 1;
-	screen->last_written_row = screen->cur_row;
-    });
+#if OPT_WIDE_CHARS
+    screen->last_written_col = screen->cur_col + (int) real_width - 1;
+    screen->last_written_row = screen->cur_row;
+#endif
 
     if_OPT_XMC_GLITCH(screen, {
 	Resolve_XMC(xw);
@@ -1179,26 +1210,28 @@ void
 ScrnInsertChar(XtermWidget xw, unsigned n)
 {
 #define MemMove(data) \
-    	for (j = last - 1; j >= (col + (int) n); --j) \
+    	for (j = last; j >= (col + (int) n); --j) \
 	    data[j] = data[j - (int) n]
 
     TScreen *screen = TScreenOf(xw);
-    int last = MaxCols(screen);
+    int first = ScrnLeftMargin(xw);
+    int last = ScrnRightMargin(xw);
     int row = screen->cur_row;
     int col = screen->cur_col;
     int j;
     LineData *ld;
 
-    if (last <= (col + (int) n)) {
-	if (last <= col)
-	    return;
+    if (col < first || col > last) {
+	TRACE(("ScrnInsertChar - col %d outside [%d..%d]\n", col, first, last));
+	return;
+    } else if (last <= (col + (int) n)) {
 	n = (unsigned) (last - col);
     }
 
     assert(screen->cur_col >= 0);
     assert(screen->cur_row >= 0);
     assert(n > 0);
-    assert(last > (int) n);
+    assert(last >= (int) n);
 
     if_OPT_WIDE_CHARS(screen, {
 	int xx = screen->cur_row;
@@ -1207,7 +1240,7 @@ ScrnInsertChar(XtermWidget xw, unsigned n)
 	if (DamagedCells(screen, n, &kl, (int *) 0, xx, kr) && kr > kl) {
 	    ClearCells(xw, 0, (unsigned) (kr - kl + 1), row, kl);
 	}
-	kr = screen->max_col - (int) n + 1;
+	kr = last - (int) n + 1;
 	if (DamagedCells(screen, n, &kl, (int *) 0, xx, kr) && kr > kl) {
 	    ClearCells(xw, 0, (unsigned) (kr - kl + 1), row, kl);
 	}
@@ -1239,19 +1272,21 @@ void
 ScrnDeleteChar(XtermWidget xw, unsigned n)
 {
 #define MemMove(data) \
-    	for (j = col; j < last - (int) n; ++j) \
+    	for (j = col; j <= last - (int) n; ++j) \
 	    data[j] = data[j + (int) n]
 
     TScreen *screen = TScreenOf(xw);
-    int last = MaxCols(screen);
+    int first = ScrnLeftMargin(xw);
+    int last = ScrnRightMargin(xw) + 1;
     int row = screen->cur_row;
     int col = screen->cur_col;
     int j;
     LineData *ld;
 
-    if (last <= (col + (int) n)) {
-	if (last <= col)
-	    return;
+    if (col < first || col > last) {
+	TRACE(("ScrnDeleteChar - col %d outside [%d..%d]\n", col, first, last));
+	return;
+    } else if (last <= (col + (int) n)) {
 	n = (unsigned) (last - col);
     }
 
@@ -2075,6 +2110,7 @@ ScreenResize(XtermWidget xw,
 
 	/* adjust scrolling region */
 	set_tb_margins(screen, 0, screen->max_row);
+	set_lr_margins(screen, 0, screen->max_col);
 	UIntClr(*flags, ORIGIN);
 
 	if (screen->cur_row > screen->max_row)
@@ -2175,7 +2211,7 @@ non_blank_line(TScreen * screen,
 }
 
 /*
- * Rectangle parameters start from one.
+ * Limit/map rectangle parameters.
  */
 #define minRectRow(screen) (getMinRow(screen) + 1)
 #define minRectCol(screen) (getMinCol(screen) + 1)
@@ -2183,34 +2219,43 @@ non_blank_line(TScreen * screen,
 #define maxRectCol(screen) (getMaxCol(screen) + 1)
 
 static int
-limitedParseRow(XtermWidget xw, TScreen * screen, int row)
+limitedParseRow(XtermWidget xw, int row)
 {
+    TScreen *screen = TScreenOf(xw);
     int min_row = minRectRow(screen);
     int max_row = maxRectRow(screen);
+
+    if (xw->flags & ORIGIN)
+	row += screen->top_marg;
 
     if (row < min_row)
 	row = min_row;
     else if (row > max_row)
 	row = max_row;
+
     return row;
 }
 
 static int
-limitedParseCol(XtermWidget xw, TScreen * screen, int col)
+limitedParseCol(XtermWidget xw, int col)
 {
+    TScreen *screen = TScreenOf(xw);
     int min_col = minRectCol(screen);
     int max_col = maxRectCol(screen);
 
-    (void) xw;
+    if (xw->flags & ORIGIN)
+	col += screen->lft_marg;
+
     if (col < min_col)
 	col = min_col;
     else if (col > max_col)
 	col = max_col;
+
     return col;
 }
 
 #define LimitedParse(num, func, dft) \
-	func(xw, screen, (nparams > num) ? params[num] : dft)
+	func(xw, (nparams > num) ? params[num] : dft)
 
 /*
  * Copy the rectangle boundaries into a struct, providing default values as
@@ -2281,8 +2326,7 @@ ScrnFillRectangle(XtermWidget xw,
 	    TRACE(("filling %d [%d..%d]\n", row, left, left + size));
 
 	    /*
-	     * Fill attributes, preserving "protected" flag, as well as
-	     * colors if asked.
+	     * Fill attributes, preserving colors.
 	     */
 	    for (col = (int) left; col < target->right; ++col) {
 		unsigned temp = ld->attribs[col];
@@ -2290,8 +2334,7 @@ ScrnFillRectangle(XtermWidget xw,
 		if (!keepColors) {
 		    UIntClr(temp, (FG_COLOR | BG_COLOR));
 		}
-		temp = attrs | (temp & (FG_COLOR | BG_COLOR | PROTECTED));
-		temp |= CHARDRAWN;
+		temp = attrs | (temp & (FG_COLOR | BG_COLOR)) | CHARDRAWN;
 		ld->attribs[col] = (Char) temp;
 #if OPT_ISO_COLORS
 		if (attrs & (FG_COLOR | BG_COLOR)) {
@@ -2391,6 +2434,13 @@ ScrnCopyRectangle(XtermWidget xw, XTermRect * source, int nparam, int *params)
 			    ld->attribs[col] |= CHARDRAWN;
 			}
 		    }
+#if OPT_BLINK_TEXT
+		    if (LineHasBlinking(screen, ld)) {
+			LineSetBlinked(ld);
+		    } else {
+			LineClrBlinked(ld);
+		    }
+#endif
 		}
 		free(cells);
 
@@ -2576,6 +2626,50 @@ ScrnWipeRectangle(XtermWidget xw,
 		   (target->bottom - target->top) + 1,
 		   ((target->right - target->left) + 1),
 		   False);
+    }
+}
+
+/*
+ * Compute a checksum, ignoring the page number (since we have only one page).
+ */
+void
+xtermCheckRect(XtermWidget xw,
+	       int nparam,
+	       int *params,
+	       int *result)
+{
+    TScreen *screen = TScreenOf(xw);
+    XTermRect target;
+    LineData *ld;
+
+    *result = 0;
+    if (nparam > 2) {
+	nparam -= 2;
+	params += 2;
+    }
+    xtermParseRect(xw, nparam, params, &target);
+    if (validRect(xw, &target)) {
+	int top = target.top - 1;
+	int bottom = target.bottom - 1;
+	int row, col;
+
+	for (row = top; row <= bottom; ++row) {
+	    int left = (target.left - 1);
+	    int right = (target.right - 1);
+
+	    ld = getLineData(screen, row);
+	    for (col = left; col <= right; ++col) {
+		if (ld->attribs[col] & CHARDRAWN) {
+		    *result += (int) ld->charData[col];
+		    if_OPT_WIDE_CHARS(screen, {
+			size_t off;
+			for_each_combData(off, ld) {
+			    *result += (int) ld->combData[off][col];
+			}
+		    })
+		}
+	    }
+	}
     }
 }
 #endif /* OPT_DEC_RECTOPS */

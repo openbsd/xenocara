@@ -1,7 +1,7 @@
-/* $XTermId: ptyx.h,v 1.720 2012/01/05 23:58:19 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.730 2012/05/09 00:09:32 tom Exp $ */
 
 /*
- * Copyright 1999-2010,2011 by Thomas E. Dickey
+ * Copyright 1999-2011,2012 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -361,7 +361,7 @@ typedef struct {
 #define	ANSI_APC	0x9F
 
 #define MIN_DECID  52			/* can emulate VT52 */
-#define MAX_DECID 420			/* ...through VT420 */
+#define MAX_DECID 525			/* ...through VT525 */
 
 #ifndef DFT_DECID
 #define DFT_DECID "vt100"		/* default VT100 */
@@ -392,10 +392,12 @@ typedef short ParmType;
 typedef struct {
 	Char		a_type;		/* CSI, etc., see unparseq()	*/
 	Char		a_pintro;	/* private-mode char, if any	*/
+	char *		a_delim;	/* between parameters (;)	*/
 	Char		a_inters;	/* special (before final-char)	*/
 	Char		a_final;	/* final-char			*/
 	ParmType	a_nparam;	/* # of parameters		*/
 	ParmType	a_param[NPARAM]; /* Parameters			*/
+	Char		a_radix[NPARAM]; /* Parameters			*/
 } ANSI;
 
 #define TEK_FONT_LARGE 0
@@ -1375,6 +1377,8 @@ typedef struct {
 
 	/* indices into save_modes[] */
 typedef enum {
+	DP_ALT_SENDS_ESC,
+	DP_BELL_IS_URGENT,
 	DP_CRS_VISIBLE,
 	DP_DECANM,
 	DP_DECARM,
@@ -1382,22 +1386,34 @@ typedef enum {
 	DP_DECBKM,
 	DP_DECCKM,
 	DP_DECCOLM,	/* IN132COLUMNS */
+	DP_DECKPAM,
+	DP_DECNRCM,
 	DP_DECOM,
 	DP_DECPEX,
 	DP_DECPFF,
 	DP_DECSCLM,
 	DP_DECSCNM,
 	DP_DECTCEM,
-	DP_DECTEK,
+	DP_DELETE_IS_DEL,
+	DP_EIGHT_BIT_META,
+	DP_KEEP_SELECTION,
+	DP_KEYBOARD_TYPE,
+	DP_POP_ON_BELL,
 	DP_PRN_EXTENT,
 	DP_PRN_FORMFEED,
+	DP_RXVT_SCROLLBAR,
+	DP_RXVT_SCROLL_TTY_KEYPRESS,
+	DP_RXVT_SCROLL_TTY_OUTPUT,
+	DP_SELECT_TO_CLIPBOARD,
 	DP_X_ALTSCRN,
 	DP_X_DECCOLM,
+	DP_X_EXT_MOUSE,
 	DP_X_LOGGING,
+	DP_X_LRMM,
 	DP_X_MARGIN,
 	DP_X_MORE,
 	DP_X_MOUSE,
-	DP_X_EXT_MOUSE,
+	DP_X_NCSM,
 	DP_X_REVWRAP,
 	DP_X_X10MSE,
 #if OPT_BLINK_CURS
@@ -1405,6 +1421,16 @@ typedef enum {
 #endif
 #if OPT_FOCUS_EVENT
 	DP_X_FOCUS,
+#endif
+#if OPT_NUM_LOCK
+	DP_REAL_NUMLOCK,
+	DP_META_SENDS_ESC,
+#endif
+#if OPT_SHIFT_FONTS
+	DP_RXVT_FONTSIZE,
+#endif
+#if OPT_TEK4014
+	DP_DECTEK,
 #endif
 #if OPT_TOOLBAR
 	DP_TOOLBAR,
@@ -1617,6 +1643,7 @@ typedef struct {
 	Boolean		wide_chars;	/* true when 16-bit chars	*/
 	Boolean		vt100_graphics;	/* true to allow vt100-graphics	*/
 	Boolean		utf8_inparse;	/* true to enable UTF-8 parser	*/
+	Boolean		normalized_c;	/* true to precompose to Form C */
 	char *		utf8_mode_s;	/* use UTF-8 decode/encode	*/
 	char *		utf8_fonts_s;	/* use UTF-8 decode/encode	*/
 	int		utf8_mode;	/* use UTF-8 decode/encode: 0-2	*/
@@ -1799,6 +1826,8 @@ typedef struct {
 	int		max_row;	/* bottom row			*/
 	int		top_marg;	/* top line of scrolling region */
 	int		bot_marg;	/* bottom line of  "	    "	*/
+	int		lft_marg;	/* left column of "	    "	*/
+	int		rgt_marg;	/* right column of "	    "	*/
 	Widget		scrollWidget;	/* pointer to scrollbar struct	*/
 	/*
 	 * Indices used to keep track of the top of the vt100 window and
@@ -1884,7 +1913,7 @@ typedef struct {
 	String		term_id;	/* resource for terminal_id	*/
 	int		terminal_id;	/* 100=vt100, 220=vt220, etc.	*/
 	int		vtXX_level;	/* 0=vt52, 1,2,3 = vt100 ... vt320 */
-	int		ansi_level;	/* levels 1,2,3			*/
+	int		ansi_level;	/* dpANSI levels 1,2,3		*/
 	int		protected_mode;	/* 0=off, 1=DEC, 2=ISO		*/
 	Boolean		always_bold_mode; /* compare normal/bold font	*/
 	Boolean		always_highlight; /* whether to highlight cursor */
@@ -1911,7 +1940,6 @@ typedef struct {
 #endif
 
 #if OPT_VT52_MODE
-	int		vt52_save_level; /* save-area for DECANM	*/
 	Char		vt52_save_curgl;
 	Char		vt52_save_curgr;
 	Char		vt52_save_curss;
@@ -2433,6 +2461,8 @@ typedef struct _TekWidgetRec {
 #define IN132COLUMNS	MiscBIT(7)	/* true if in 132 column mode */
 #define INVISIBLE	MiscBIT(8)	/* true if writing invisible text */
 #define NATIONAL        MiscBIT(9)	/* true if writing national charset */
+#define LEFT_RIGHT      MiscBIT(10)	/* true if left/right margin mode */
+#define NOCLEAR_COLM    MiscBIT(11)	/* true if no clear on DECCOLM change */
 
 /*
  * Groups of attributes
@@ -2507,9 +2537,10 @@ typedef struct _TekWidgetRec {
 		    ((screen)->cursorp.col != (screen)->cur_col || \
 		     (screen)->cursorp.row != (screen)->cur_row))
 
-#define CursorX(screen,col) ((col) * FontWidth(screen) + OriginX(screen))
-#define CursorY(screen,row) ((INX2ROW(screen, row) * FontHeight(screen)) \
-			+ screen->border)
+#define CursorX2(screen,col,fw) ((col) * (int)(fw) + OriginX(screen))
+#define CursorX(screen,col)     CursorX2(screen, col, FontWidth(screen))
+#define CursorY(screen,row)     ((INX2ROW(screen, row) * FontHeight(screen)) \
+				  + screen->border)
 
 /*
  * These definitions depend on whether xterm supports active-icon.

@@ -3,7 +3,7 @@
  *****************************************************************************
  * this file is part of xterm                                                *
  *                                                                           *
- * Copyright 1997-2010,2011 by Thomas E. Dickey                              *
+ * Copyright 1997-2011,2012 by Thomas E. Dickey                              *
  *                                                                           *
  * All Rights Reserved                                                       *
  *                                                                           *
@@ -31,7 +31,7 @@
  * sale, use or other dealings in this Software without prior written        *
  * authorization.                                                            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.1133 2012/01/19 01:54:00 tom Exp $
+  $XTermId: xterm.log.html,v 1.1167 2012/05/09 21:21:44 tom Exp $
   -->
 <HTML>
 <HEAD>
@@ -43,7 +43,7 @@
 <HR>
 <a href=
 "http://invisible-island.net/">http://invisible-island.net/</a><a href="http://invisible-island.net/xterm/">xterm/</a><br>
-Copyright &copy; 1997-2010,2011 by <A
+Copyright &copy; 1997-2011,2012 by <A
 HREF="mailto:dickey@invisible-island.net">Thomas E. Dickey</A>
 <HR>
 <H1>Contents</H1>
@@ -58,6 +58,7 @@ Most of these are summarized in the XFree86 CHANGELOG
 is the latest version of this file.
 
 <UL>
+<LI><A HREF="#xterm_279">Patch #279 - 2012/05/10</A>
 <LI><A HREF="#xterm_278">Patch #278 - 2012/01/18</A>
 <LI><A HREF="#xterm_277">Patch #277 - 2012/01/07</A>
 <LI><A HREF="#xterm_276">Patch #276 - 2011/10/10</A>
@@ -338,6 +339,108 @@ is the latest version of this file.
 <LI><A HREF="#xterm_02">Patch #2 - 1996/1/7</A>
 <LI><A HREF="#xterm_01">Patch #1 - 1996/1/6</A>
 </UL>
+
+<H1><A NAME="xterm_279">Patch #279 - 2012/05/10</A></H1>
+<ul>
+	<li>fill in missing cases in the save/restore modes feature
+	    (report by Thomas Wolff).
+
+	<li>add check to ensure that combining characters are precomposed in
+	    the order given (report/analysis by Andries E Brouwer).
+
+	<li>improve workability check for posix_openpt(), to take into account
+	    BSD systems which do not complete initialization until both sides
+	    of the pseudoterminal are opened (report by Christian Weisgerber).
+
+	<li>amend fix for Debian #650291 in
+	    <a href="#xterm_277">patch #277</a> changes to account for
+	    different data returned by vnc4server
+	    (Debian #670638).
+
+	<li>add check in DECCRA operation to make copies of blinking text also
+	    blink by updating a line-level flag.
+
+	<li>modify rectangle operations to work with DECOM.
+
+	<li>modify DECSERA to use the current protected state rather than
+	    preserving it.
+
+	<li>add <code>precompose</code> resource to allow storing character
+	    data in Normalized Form D as described in
+	    <a href="http://unicode.org/reports/tr15/">http://unicode.org/reports/tr15/</a>
+	    (report/discussion with Andries E Brouwer).
+
+	<li>modify CBT, other ISO-6429 controls which are used by VT520 to
+	    work with DECOM.
+
+	<li>add HPR and VPR controls, ISO 6429 cursor movement used in VT520.
+
+	<li>remove "linux" restriction for IUTF8 ifdef in main.c (prompted by
+	    Matthew Dempsky posting on mailing.openbsd.tech).
+
+	<li>implement the remaining VT420-level device status reports.
+
+	<li>change DECXCPR to return page 1, rather than 0.
+
+	<li>improve VT-level checks on reporting functions, such as DECXCPR.
+
+	<li>change limit on <code>decTerminalID</code> to 525.
+
+	<li>fixes to improve vttest vt52 screen when running as a VT420:
+	    <ul>
+	    <li>add checks for some VT2xx and up controls for consistency:
+	        DECSCL, S1C8T, S1C7T.
+	    <li>modify DECRQSS return for DECSCL to only return that when
+	        running as VT2xx and up.
+	    <li>when exiting from VT52-mode, resume in VT100 level rather
+	        than the level before starting VT52-mode.
+	    </ul>
+
+	<li>implement DECLRMM, DECSLRMM and DECNCSM (prompted by discussions
+	    with Ailin Nemui and Paul LeoNerd Evans).  This modifies several
+	    controls to obey top/bottom and left/right margins.
+
+	<li>correct macro definition used for testing modes used in ANSI/DEC
+	    request-mode controls introduced
+	    in <a href="#xterm_262">patch #262</a>.
+
+	<li>modify <code>x_getlogin</code> to check $LOGNAME and $USER before
+	    fallback to <code>getlogin</code>, so that user's choice for these
+	    variables can be carried forward to the xterm process
+	    (Debian #611487).
+
+	<li>document DECSCUSR response for DECRQSS in ctlseqs.ms
+
+	<li>add <code>zIconTitleFormat</code> resource to allow customizing
+	    the "***&nbsp;" prefixed to the icon title when the
+	    <code>zIconBeep</code> feature is activated
+	    (request by Thomas Adam).
+
+	<li>modify DECSCUSR to update the same internal variable as RM/SM 12,
+	    and document in manpage the two variables used for controlling
+	    blinking cursor (report by Paul LeoNerd Evans).
+
+	<li>correct response data for DECSCUSR in reply for DECRQSS response,
+	    which had inverted the blink-value
+	    (reports by Ailin Nemui, Paul LeoNerd Evans).
+
+	<li>add a null-pointer check in <code>OkPasswd</code> macro
+	    to fix a problem in <code>resize</code> with Fedora 17
+	    and a serial console (report/patch by Daniel Drake).
+
+	<li>add workaround for Mac OS X, which loses the window size of
+	    a pseudo-terminal when the tty device is opened (report/analysis
+	    by Egmont Koblinger).
+
+	<li>updated configure check for workable <code>posix_openpt</code>
+	    versus <code>grantpt</code>, from <code>luit</code> fixes.
+
+	<li>modify DECIC/DECDC/DECBI/DECFI
+	    implemented in <a href="#xterm_277">patch #277</a>
+	    to enable them only in VT4xx mode and up (report by Ailin Nemui).
+
+	<li>update config.guess, config.sub
+</ul>
 
 <H1><A NAME="xterm_278">Patch #278 - 2012/01/18</A></H1>
 <ul>
@@ -703,7 +806,7 @@ is the latest version of this file.
 
 	<li>modify configure script to work with systems that have both
 	    ncurses (or other terminfo) as well as a real termcap library,
-	    e.g., Slackware (report by Alan Watts).
+	    e.g., Slackware (report by Andrew Watts).
 
 	<li>modify configure script to work around special case where user's
 	    environment adds compiler flags to the <code>CC</code> variable

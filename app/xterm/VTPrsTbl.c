@@ -1,4 +1,4 @@
-/* $XTermId: VTPrsTbl.c,v 1.63 2011/12/04 19:46:52 tom Exp $ */
+/* $XTermId: VTPrsTbl.c,v 1.66 2012/04/26 09:04:37 tom Exp $ */
 
 /*
  * Copyright 1999-2010,2011 by Thomas E. Dickey
@@ -99,7 +99,7 @@ CASE_BS,
 CASE_TAB,
 CASE_VMOT,
 CASE_VMOT,
-/*	NP		CR		SO		SI	*/
+/*	FF		CR		SO		SI	*/
 CASE_VMOT,
 CASE_CR,
 CASE_SO,
@@ -423,7 +423,7 @@ CASE_BS,
 CASE_TAB,
 CASE_VMOT,
 CASE_VMOT,
-/*	NP		CR		SO		SI	*/
+/*	FF		CR		SO		SI	*/
 CASE_VMOT,
 CASE_CR,
 CASE_SO,
@@ -530,12 +530,12 @@ CASE_GROUND_STATE,
 CASE_GROUND_STATE,
 /*	`		a		b		c	*/
 CASE_HPA,
-CASE_GROUND_STATE,
+CASE_HPR,
 CASE_REP,
 CASE_DA1,
 /*	d		e		f		g	*/
 CASE_VPA,
-CASE_GROUND_STATE,
+CASE_VPR,
 CASE_CUP,
 CASE_TBC,
 /*	h		i		j		k	*/
@@ -690,12 +690,12 @@ CASE_GROUND_STATE,
 CASE_GROUND_STATE,
 /*      agrave          aacute          acircumflex     atilde          */
 CASE_HPA,
-CASE_GROUND_STATE,
+CASE_HPR,
 CASE_REP,
 CASE_DA1,
 /*      adiaeresis      aring           ae              ccedilla        */
 CASE_VPA,
-CASE_GROUND_STATE,
+CASE_VPR,
 CASE_CUP,
 CASE_TBC,
 /*      egrave          eacute          ecircumflex     ediaeresis      */
@@ -747,7 +747,7 @@ CASE_BS,
 CASE_TAB,
 CASE_VMOT,
 CASE_VMOT,
-/*	NP		CR		SO		SI	*/
+/*	FF		CR		SO		SI	*/
 CASE_VMOT,
 CASE_CR,
 CASE_SO,
@@ -854,12 +854,12 @@ CASE_GROUND_STATE,
 CASE_GROUND_STATE,
 /*	`		a		b		c	*/
 CASE_HPA,
-CASE_GROUND_STATE,
+CASE_HPR,
 CASE_REP,
 CASE_DA1,
 /*	d		e		f		g	*/
 CASE_VPA,
-CASE_GROUND_STATE,
+CASE_VPR,
 CASE_CUP,
 CASE_TBC,
 /*	h		i		j		k	*/
@@ -1014,12 +1014,12 @@ CASE_GROUND_STATE,
 CASE_GROUND_STATE,
 /*      agrave          aacute          acircumflex     atilde          */
 CASE_HPA,
-CASE_GROUND_STATE,
+CASE_HPR,
 CASE_REP,
 CASE_DA1,
 /*      adiaeresis      aring           ae              ccedilla        */
 CASE_VPA,
-CASE_GROUND_STATE,
+CASE_VPR,
 CASE_CUP,
 CASE_TBC,
 /*      egrave          eacute          ecircumflex     ediaeresis      */
@@ -1071,7 +1071,7 @@ CASE_BS,
 CASE_TAB,
 CASE_VMOT,
 CASE_VMOT,
-/*	NP		CR		SO		SI	*/
+/*	FF		CR		SO		SI	*/
 CASE_VMOT,
 CASE_CR,
 CASE_SO,
@@ -1395,7 +1395,7 @@ CASE_BS,
 CASE_TAB,
 CASE_VMOT,
 CASE_VMOT,
-/*	NP		CR		SO		SI	*/
+/*	FF		CR		SO		SI	*/
 CASE_VMOT,
 CASE_CR,
 CASE_SO,
@@ -1720,7 +1720,7 @@ CASE_BS,
 CASE_TAB,
 CASE_VMOT,
 CASE_VMOT,
-/*	NP		CR		SO		SI	*/
+/*	FF		CR		SO		SI	*/
 CASE_VMOT,
 CASE_CR,
 CASE_SO,
@@ -2046,7 +2046,7 @@ CASE_BS,
 CASE_TAB,
 CASE_VMOT,
 CASE_VMOT,
-/*	NP		CR		SO		SI	*/
+/*	FF		CR		SO		SI	*/
 CASE_VMOT,
 CASE_CR,
 CASE_SO,
@@ -2372,7 +2372,7 @@ CASE_BS,
 CASE_TAB,
 CASE_VMOT,
 CASE_VMOT,
-/*	NP		CR		SO		SI	*/
+/*	FF		CR		SO		SI	*/
 CASE_VMOT,
 CASE_CR,
 CASE_SO,
@@ -2696,7 +2696,7 @@ CASE_BS,
 CASE_TAB,
 CASE_VMOT,
 CASE_VMOT,
-/*	NP		CR		SO		SI	*/
+/*	FF		CR		SO		SI	*/
 CASE_VMOT,
 CASE_CR,
 CASE_SO,
@@ -2833,7 +2833,7 @@ CASE_GROUND_STATE,
 CASE_GROUND_STATE,
 /*	x		y		z		{	*/
 CASE_DECSACE,
-CASE_GROUND_STATE,
+CASE_DECRQCRA,
 CASE_GROUND_STATE,
 CASE_GROUND_STATE,
 /*	|		}		~		DEL	*/
@@ -2993,7 +2993,7 @@ CASE_GROUND_STATE,
 CASE_GROUND_STATE,
 /*	oslash		ugrave		uacute		ucircumflex	*/
 CASE_DECSACE,
-CASE_GROUND_STATE,
+CASE_DECRQCRA,
 CASE_GROUND_STATE,
 CASE_GROUND_STATE,
 /*	udiaeresis	yacute		thorn		ydiaeresis	*/
@@ -3021,7 +3021,7 @@ CASE_BS,
 CASE_TAB,
 CASE_VMOT,
 CASE_VMOT,
-/*	NP		CR		SO		SI	*/
+/*	FF		CR		SO		SI	*/
 CASE_VMOT,
 CASE_CR,
 CASE_SO,
@@ -3346,7 +3346,7 @@ CASE_BS,
 CASE_TAB,
 CASE_VMOT,
 CASE_VMOT,
-/*	NP		CR		SO		SI	*/
+/*	FF		CR		SO		SI	*/
 CASE_VMOT,
 CASE_CR,
 CASE_SO,
@@ -3671,7 +3671,7 @@ CASE_BS,
 CASE_TAB,
 CASE_VMOT,
 CASE_VMOT,
-/*	NP		CR		SO		SI	*/
+/*	FF		CR		SO		SI	*/
 CASE_VMOT,
 CASE_CR,
 CASE_SO,
@@ -3995,7 +3995,7 @@ CASE_BS,
 CASE_TAB,
 CASE_VMOT,
 CASE_VMOT,
-/*	NP		CR		SO		SI	*/
+/*	FF		CR		SO		SI	*/
 CASE_VMOT,
 CASE_CR,
 CASE_SO,
@@ -4319,7 +4319,7 @@ CASE_BS,
 CASE_TAB,
 CASE_VMOT,
 CASE_VMOT,
-/*	NP		CR		SO		SI	*/
+/*	FF		CR		SO		SI	*/
 CASE_VMOT,
 CASE_CR,
 CASE_SO,
@@ -4643,7 +4643,7 @@ CASE_BS,
 CASE_TAB,
 CASE_VMOT,
 CASE_VMOT,
-/*	NP		CR		SO		SI	*/
+/*	FF		CR		SO		SI	*/
 CASE_VMOT,
 CASE_CR,
 CASE_SO,
@@ -4967,7 +4967,7 @@ CASE_BS,
 CASE_TAB,
 CASE_VMOT,
 CASE_VMOT,
-/*	NP		CR		SO		SI	*/
+/*	FF		CR		SO		SI	*/
 CASE_VMOT,
 CASE_CR,
 CASE_SO,
@@ -5291,7 +5291,7 @@ CASE_BS,
 CASE_TAB,
 CASE_VMOT,
 CASE_VMOT,
-/*	NP		CR		SO		SI	*/
+/*	FF		CR		SO		SI	*/
 CASE_VMOT,
 CASE_CR,
 CASE_SO,
@@ -5615,7 +5615,7 @@ CASE_BS,
 CASE_TAB,
 CASE_VMOT,
 CASE_VMOT,
-/*	NP		CR		SO		SI	*/
+/*	FF		CR		SO		SI	*/
 CASE_VMOT,
 CASE_CR,
 CASE_SO,
@@ -5939,7 +5939,7 @@ CASE_BS,
 CASE_TAB,
 CASE_VMOT,
 CASE_VMOT,
-/*	NP		CR		SO		SI	*/
+/*	FF		CR		SO		SI	*/
 CASE_VMOT,
 CASE_CR,
 CASE_SO,
@@ -6263,7 +6263,7 @@ CASE_BS,
 CASE_TAB,
 CASE_VMOT,
 CASE_VMOT,
-/*	NP		CR		SO		SI	*/
+/*	FF		CR		SO		SI	*/
 CASE_VMOT,
 CASE_CR,
 CASE_SO,
@@ -6591,7 +6591,7 @@ CASE_IGNORE,
 CASE_IGNORE,
 CASE_IGNORE,
 CASE_IGNORE,
-/*	NP		CR		SO		SI	*/
+/*	FF		CR		SO		SI	*/
 CASE_IGNORE,
 CASE_IGNORE,
 CASE_IGNORE,
@@ -6916,7 +6916,7 @@ CASE_BS,
 CASE_TAB,
 CASE_VMOT,
 CASE_VMOT,
-/*	NP		CR		SO		SI	*/
+/*	FF		CR		SO		SI	*/
 CASE_VMOT,
 CASE_CR,
 CASE_SO,
@@ -7242,7 +7242,7 @@ CASE_BS,
 CASE_TAB,
 CASE_VMOT,
 CASE_VMOT,
-/*	NP		CR		SO		SI	*/
+/*	FF		CR		SO		SI	*/
 CASE_VMOT,
 CASE_CR,
 CASE_IGNORE,
@@ -7566,7 +7566,7 @@ CASE_BS,
 CASE_TAB,
 CASE_VMOT,
 CASE_VMOT,
-/*	NP		CR		SO		SI	*/
+/*	FF		CR		SO		SI	*/
 CASE_VMOT,
 CASE_CR,
 CASE_IGNORE,
@@ -7890,7 +7890,7 @@ CASE_BS,
 CASE_TAB,
 CASE_VMOT,
 CASE_VMOT,
-/*	NP		CR		SO		SI	*/
+/*	FF		CR		SO		SI	*/
 CASE_VMOT,
 CASE_CR,
 CASE_IGNORE,

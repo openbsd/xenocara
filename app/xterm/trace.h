@@ -1,4 +1,4 @@
-/* $XTermId: trace.h,v 1.64 2011/09/11 14:56:42 tom Exp $ */
+/* $XTermId: trace.h,v 1.65 2012/04/18 23:29:10 tom Exp $ */
 
 /*
  * Copyright 1997-2010,2011 by Thomas E. Dickey
@@ -123,6 +123,8 @@ extern	XtGeometryResult TraceResizeRequest(const char * /* fn */, int  /* ln */,
 			    (gotwide), (gothigh))
 
 #endif
+
+extern void TraceScreen(XtermWidget /* xw */, int /* whichBuf */);
 
 /*
  * The whole wnew->screen struct is zeroed in VTInitialize.  Use these macros

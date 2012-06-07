@@ -1,7 +1,7 @@
-/* $XTermId: xstrings.h,v 1.25 2011/09/11 20:20:22 tom Exp $ */
+/* $XTermId: xstrings.h,v 1.27 2012/03/25 23:31:52 tom Exp $ */
 
 /*
- * Copyright 2000-2009,2011 by Thomas E. Dickey
+ * Copyright 2000-2011,2012 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *

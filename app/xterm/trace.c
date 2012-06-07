@@ -1,7 +1,7 @@
-/* $XTermId: trace.c,v 1.133 2011/12/27 10:10:53 tom Exp $ */
+/* $XTermId: trace.c,v 1.140 2012/05/06 18:01:58 tom Exp $ */
 
 /*
- * Copyright 1997-2010,2011 by Thomas E. Dickey
+ * Copyright 1997-2011,2012 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -503,6 +503,77 @@ LineTstFlag(LineData ld, int flag)
 }
 #endif /* OPT_TRACE_FLAGS */
 
+/*
+ * Trace the normal or alternate screen, showing color values up to 16, e.g.,
+ * for debugging with vttest.
+ */
+void
+TraceScreen(XtermWidget xw, int whichBuf)
+{
+    TScreen *screen = TScreenOf(xw);
+    int row, col;
+
+    if (screen->editBuf_index[whichBuf]) {
+	TRACE(("TraceScreen %d:\n", whichBuf));
+	for (row = 0; row <= screen->max_row; ++row) {
+	    LineData *ld = getLineData(screen, row);
+	    TRACE((" %3d:", row));
+	    if (ld != 0) {
+		for (col = 0; col < ld->lineSize; ++col) {
+		    int ch = (int) ld->charData[col];
+		    if (ch < ' ')
+			ch = ' ';
+		    if (ch >= 127)
+			ch = '#';
+		    TRACE(("%c", ch));
+		}
+		TRACE((":\n"));
+
+		TRACE(("  xx:"));
+		for (col = 0; col < ld->lineSize; ++col) {
+		    unsigned attrs = ld->attribs[col];
+		    char ch;
+		    if (attrs & PROTECTED) {
+			ch = '*';
+		    } else if (attrs & BLINK) {
+			ch = 'B';
+		    } else if (attrs & CHARDRAWN) {
+			ch = '+';
+		    } else {
+			ch = ' ';
+		    }
+		    TRACE(("%c", ch));
+		}
+		TRACE((":\n"));
+
+#if 0
+		TRACE(("  fg:"));
+		for (col = 0; col < ld->lineSize; ++col) {
+		    unsigned fg = extract_fg(xw, ld->color[col], ld->attribs[col]);
+		    if (fg > 15)
+			fg = 15;
+		    TRACE(("%1x", fg));
+		}
+		TRACE((":\n"));
+
+		TRACE(("  bg:"));
+		for (col = 0; col < ld->lineSize; ++col) {
+		    unsigned bg = extract_bg(xw, ld->color[col], ld->attribs[col]);
+		    if (bg > 15)
+			bg = 15;
+		    TRACE(("%1x", bg));
+		}
+		TRACE((":\n"));
+#endif
+	    } else {
+		TRACE(("null lineData\n"));
+	    }
+	}
+    } else {
+	TRACE(("TraceScreen %d is nil\n", whichBuf));
+    }
+}
+
 void
 TraceFocus(Widget w, XEvent * ev)
 {
@@ -764,6 +835,7 @@ TraceXtermResources(void)
     XRES_B(useInsertMode);
 #if OPT_ZICONBEEP
     XRES_I(zIconBeep);
+    XRES_S(zIconFormat);
 #endif
 #if OPT_PTY_HANDSHAKE
     XRES_B(wait_for_map);

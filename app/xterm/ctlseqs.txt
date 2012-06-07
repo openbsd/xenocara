@@ -9,6 +9,7 @@
 
                         Xterm Control Sequences
 
+
                                Edward Moy
                    University of California, Berkeley
 
@@ -19,7 +20,7 @@
 
                              Thomas Dickey
                       XFree86 Project (1996-2006)
-                    invisible-island.net (2006-2011)
+                    invisible-island.net (2006-2012)
 
 
 
@@ -85,14 +86,14 @@ These control characters are used in the vtXXX emulation.
 VT100 Mode
 Most of these control sequences are standard VT102 control sequences,
 but there is support for later DEC VT terminals (i.e., VT220, VT320,
-VT420), as well as ISO 6429 and aixterm color controls.  The only VT102
-feature not supported is auto-repeat, since the only way X provides for
-this will affect all windows.  There are additional control sequences to
-provide xterm-dependent functions, such as the scrollbar or window size.
-Where the function is specified by DEC or ISO 6429, the code assigned to
-it is given in parentheses.  The escape codes to designate and invoke
-character sets are specified by ISO 2022; see that document for a dis-
-cussion of character sets.
+VT420, VT510), as well as ISO 6429 and aixterm color controls.  The only
+VT102 feature not supported is auto-repeat, since the only way X pro-
+vides for this will affect all windows.  There are additional control
+sequences to provide xterm-dependent functions, such as the scrollbar or
+window size.  Where the function is specified by DEC or ISO 6429, the
+code assigned to it is given in parentheses.  The escape codes to desig-
+nate and invoke character sets are specified by ISO 2022; see that docu-
+ment for a discussion of character sets.
 
 Single-character functions
 BEL       Bell (Ctrl-G).
@@ -197,6 +198,7 @@ DCS $ q Pt ST
             " p     -> DECSCL
             r       -> DECSTBM
             m       -> SGR
+            SP q    -> DECSCUSR
           xterm responds with DCS 1 $ r Pt ST for valid requests,
           replacing the Pt with the corresponding CSI string, or DCS 0 $
           r Pt ST for invalid requests.
@@ -208,8 +210,8 @@ DCS + p Pt ST
           as by the Request Termcap/Terminfo String control.
 DCS + q Pt ST
           Request Termcap/Terminfo String (xterm, experimental).  The
-          string following the "q" is a list of names encoded in hex-
-          adecimal (2 digits per character) separated by ; which corre-
+          string following the "q" is a list of names encoded in hexa-
+          decimal (2 digits per character) separated by ; which corre-
           spond to termcap or terminfo key names.
           Two special features are also recognized, which are not key
           names: Co for termcap colors (or colors for terminfo colors),
@@ -275,6 +277,8 @@ CSI Ps X  Erase Ps Character(s) (default = 1) (ECH).
 CSI Ps Z  Cursor Backward Tabulation Ps tab stops (default = 1) (CBT).
 CSI Pm `  Character Position Absolute  [column] (default = [row,1])
           (HPA).
+CSI Pm a  Character Position Relative  [columns] (default = [row,col+1])
+          (HPR).
 CSI Ps b  Repeat the preceding graphic character Ps times (REP).
 CSI Ps c  Send Device Attributes (Primary DA).
             Ps = 0  or omitted -> request attributes from terminal.  The
@@ -309,6 +313,8 @@ CSI > Ps c
           nal, Pc indicates the ROM cartridge registration number and is
           always zero.
 CSI Pm d  Line Position Absolute  [row] (default = [1,column]) (VPA).
+CSI Pm e  Line Position Relative  [rows] (default = [row+1,column])
+          (VPR).
 CSI Ps ; Ps f
           Horizontal and Vertical Position [row;column] (default =
           [1,1]) (HVP).
@@ -353,14 +359,20 @@ CSI ? Pm h
           abled by the titeInhibit resource).
             Ps = 6 6  -> Application keypad (DECNKM).
             Ps = 6 7  -> Backarrow key sends backspace (DECBKM).
+            Ps = 6 9  -> Enable left and right margin mode (DECLRMM),
+          VT420 and up.
+            Ps = 9 5  -> Do not clear screen when DECCOLM is set/reset
+          (DECNCSM), VT510 and up.
             Ps = 1 0 0 0  -> Send Mouse X & Y on button press and
           release.  See the section Mouse Tracking.
             Ps = 1 0 0 1  -> Use Hilite Mouse Tracking.
             Ps = 1 0 0 2  -> Use Cell Motion Mouse Tracking.
             Ps = 1 0 0 3  -> Use All Motion Mouse Tracking.
             Ps = 1 0 0 4  -> Send FocusIn/FocusOut events.
-            Ps = 1 0 0 5  -> Enable Extended Mouse Mode.
+            Ps = 1 0 0 5  -> Enable UTF-8 Mouse Mode.
+            Ps = 1 0 0 6  -> Enable SGR Mouse Mode.
             Ps = 1 0 1 0  -> Scroll to bottom on tty output (rxvt).
+            Ps = 1 0 1 5  -> Enable urxvt Mouse Mode.
             Ps = 1 0 1 1  -> Scroll to bottom on key press (rxvt).
             Ps = 1 0 3 4  -> Interpret "meta" key, sets eighth bit.
           (enables the eightBitInput resource).
@@ -442,15 +454,21 @@ CSI ? Pm l
             Ps = 4 7  -> Use Normal Screen Buffer.
             Ps = 6 6  -> Numeric keypad (DECNKM).
             Ps = 6 7  -> Backarrow key sends delete (DECBKM).
+            Ps = 6 9  -> Disable left and right margin mode (DECLRMM),
+          VT420 and up.
+            Ps = 9 5  -> Clear screen when DECCOLM is set/reset (DEC-
+          NCSM), VT510 and up.
             Ps = 1 0 0 0  -> Don't send Mouse X & Y on button press and
           release.  See the section Mouse Tracking.
             Ps = 1 0 0 1  -> Don't use Hilite Mouse Tracking.
             Ps = 1 0 0 2  -> Don't use Cell Motion Mouse Tracking.
             Ps = 1 0 0 3  -> Don't use All Motion Mouse Tracking.
             Ps = 1 0 0 4  -> Don't send FocusIn/FocusOut events.
-            Ps = 1 0 0 5  -> Disable Extended Mouse Mode.
+            Ps = 1 0 0 5  -> Disable UTF-8 Mouse Mode.
+            Ps = 1 0 0 6  -> Disable SGR Mouse Mode.
             Ps = 1 0 1 0  -> Don't scroll to bottom on tty output
           (rxvt).
+            Ps = 1 0 1 5  -> Disable urxvt Mouse Mode.
             Ps = 1 0 1 1  -> Don't scroll to bottom on key press (rxvt).
             Ps = 1 0 3 4  -> Don't interpret "meta" key.  (This disables
           the eightBitInput resource).
@@ -584,19 +602,28 @@ CSI > Ps n
           fiers.
 CSI ? Ps n
           Device Status Report (DSR, DEC-specific).
-            Ps = 6  -> Report Cursor Position (CPR) [row;column] as CSI
-          ? r ; c R (assumes page is zero).
-            Ps = 1 5  -> Report Printer status as CSI ? 1 0  n  (ready).
-          or CSI ? 1 1  n  (not ready).
-            Ps = 2 5  -> Report UDK status as CSI ? 2 0  n  (unlocked)
-          or CSI ? 2 1  n  (locked).
+            Ps = 6  -> Report Cursor Position (DECXCPR) [row;column] as
+          CSI ? r ; c R (assumes the default page, i.e., "1").
+            Ps = 1 5  -> Report Printer status as CSI ? 1 0 n  (ready).
+          or CSI ? 1 1 n  (not ready).
+            Ps = 2 5  -> Report UDK status as CSI ? 2 0 n  (unlocked) or
+          CSI ? 2 1 n  (locked).
             Ps = 2 6  -> Report Keyboard status as
-          CSI ? 2 7  ;  1  ;  0  ;  0  n  (North American).
+          CSI ? 2 7 ; 1 ; 0 ; 0 n  (North American).
           The last two parameters apply to VT400 & up, and denote key-
           board ready and LK01 respectively.
-            Ps = 5 3  -> Report Locator status as
-          CSI ? 5 3  n  Locator available, if compiled-in, or
-          CSI ? 5 0  n  No Locator, if not.
+            Ps = 5 3  -> Report Locator status as CSI ? 5 3 n  Locator
+          available, if compiled-in, or CSI ? 5 0 n  No Locator, if not.
+            Ps = 6 2  -> Report macro space (DECMSR) as CSI Pn \* {
+            Ps = 6 3  -> Report memory checksum (DECCKSR) as DCS Pt ! x
+          x x x ST
+              Pt is the request id (from an optional parameter to the
+          request).
+              The x's are hexadecimal digits 0-9 and A-F.
+            Ps = 7 5  -> Report data integrity as CSI ? 7 0 n  (ready,
+          no errors)
+            Ps = 8 5  -> Report multi-session configuration as CSI ? 8 3
+          n  (not configured for multiple-session operation).
 CSI > Ps p
           Set resource value pointerMode.  This is used by xterm to
           decide whether to hide the pointer cursor as the user types.
@@ -606,7 +633,7 @@ CSI > Ps p
             Ps = 2  -> always hide the pointer.  If no parameter is
           given, xterm uses the default, which is 1 .
 CSI ! p   Soft terminal reset (DECSTR).
-CSI Ps$ p
+CSI Ps $ p
           Request ANSI mode (DECRQM).  For VT300 and up, reply is
             CSI Ps; Pm$ y
           where Ps is the mode number as in RM, and Pm is the mode
@@ -662,7 +689,11 @@ CSI Pt; Pl; Pb; Pr; Ps$ r
           Change Attributes in Rectangular Area (DECCARA), VT400 and up.
             Pt; Pl; Pb; Pr denotes the rectangle.
             Ps denotes the SGR attributes to change: 0, 1, 4, 5, 7.
-CSI s     Save cursor (ANSI.SYS).
+CSI  Pl ; Pr s
+          Set left and right margins (DECSLRM), available only when
+          DECLRMM is enabled (VT420 and up).
+CSI s     Save cursor (ANSI.SYS), available only when DECLRMM is dis-
+          abled.
 CSI ? Pm s
           Save DEC Private Mode Values.  Ps values are the same as for
           DECSET.
@@ -768,11 +799,20 @@ CSI Ps x  Request Terminal Parameters (DECREQTPARM).
             Pn = 1  <- 2  8  receive 38.4k baud.
             Pn = 1  <- clock multiplier.
             Pn = 0  <- STP flags.
-CSI Ps x  Select Attribute Change Extent (DECSACE).
+CSI Ps * x
+          Select Attribute Change Extent (DECSACE).
             Ps = 0  -> from start to end position, wrapped.
             Ps = 1  -> from start to end position, wrapped.
             Ps = 2  -> rectangle (exact).
-CSI Pc; Pt; Pl; Pb; Pr$ x
+CSI Pi ; Pg ; Pt; Pl; Pb; Pr * y
+          Request Checksum of Rectangular Area (DECRQCRA), VT420 and up.
+          Response is
+          DCS Pt ! x x x x ST
+            Pi is the request id.
+            Pg is the page number.
+            Pt; Pl; Pb; Pr denotes the rectangle.
+            The x's are hexadecimal digits 0-9 and A-F.
+CSI Pc ; Pt ; Pl ; Pb ; Pr $ x
           Fill Rectangular Area (DECFRA), VT420 and up.
             Pc is the character to use.
             Pt; Pl; Pb; Pr denotes the rectangle.
@@ -797,12 +837,12 @@ CSI Pm ' {
           are:
             Ps = 0  -> only respond to explicit host requests (DECRQLP).
                        (This is default).  It also cancels any filter
-          rectangle.
+                       rectangle.
             Ps = 1  -> report button down transitions.
             Ps = 2  -> do not report button down transitions.
             Ps = 3  -> report button up transitions.
             Ps = 4  -> do not report button up transitions.
-CSI Pt; Pl; Pb; Pr$ {
+CSI Pt; Pl; Pb; Pr $ {
           Selective Erase Rectangular Area (DECSERA), VT400 and up.
             Pt; Pl; Pb; Pr denotes the rectangle.
 CSI Ps ' |

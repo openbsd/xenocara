@@ -1,7 +1,7 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.522 2012/01/08 18:21:15 tom Exp $
+.\" $XTermId: xterm.man,v 1.528 2012/05/10 13:35:30 tom Exp $
 .\"
-.\" Copyright 1996-2010,2011 by Thomas E. Dickey
+.\" Copyright 1996-2011,2012 by Thomas E. Dickey
 .\"
 .\"                         All Rights Reserved
 .\"
@@ -89,9 +89,10 @@ xterm \- terminal emulator for X
 [\-\fItoolkitoption\fP ...] [\-\fIoption\fP ...] [\fIshell\fP]
 .SH DESCRIPTION
 The \fIxterm\fP program is a terminal emulator for the X Window System.
-It provides DEC VT102/VT220 (VTxxx) and Tektronix 4014
-compatible terminals for programs that cannot
-use the window system directly.
+It provides DEC VT102/VT220 and selected features from higher-level
+terminals such as VT320/VT420/VT520 (VTxxx).
+It also provides Tektronix 4014 emulation
+for programs that cannot use the window system directly.
 If the underlying operating system supports
 terminal resizing capabilities (for example, the SIGWINCH signal in systems
 derived from 4.3bsd), \fIxterm\fP will use the facilities to notify programs
@@ -1561,11 +1562,20 @@ The default is \*(``false\*(''.
 Same as \-ziconbeep command line argument.
 If the value of this resource is non-zero, xterms that produce output
 while iconified will cause an XBell sound at the given volume
-and have \*(``***\*('' prepended to their icon titles.
+and have \*(``***\ \*('' prepended to their icon titles.
 Most window managers will detect this change immediately, showing you
 which window has the output.
 (A similar feature was in x10 \fIxterm\fR.)
 The default is \*(``false\*(''.
+.TP 8
+.B "zIconTitleFormat (\fPclass\fB ZIconTitleFormat)"
+Allow customization of the string used in the \fBzIconBeep\fP feature.
+The default value is \*(``***\ %s\*(''.
+.IP
+If the resource value contains a \*(``%s\*('',
+then \fIxterm\fP inserts the icon title at that point rather
+than prepending the string to the icon title.
+(Only the first \*(``%s\*('' is used).
 .\"
 .SS VT100 Widget Resources
 .PP
@@ -1652,14 +1662,12 @@ A few programs, e.g., \fIvim\fP, use this feature to get an accurate
 description of the terminal's capabilities,
 independent of the termcap/terminfo setting:
 .RS
-.TP 3
--
+.bP
 \fIxterm\fP can tell the querying program how many colors it supports.
 This is a constant, depending on how it is compiled, typically 16.
 It does not change if you alter resource settings,
 e.g., the \fBboldColors\fP resource.
-.TP 3
--
+.bP
 \fIxterm\fP can tell the querying program what strings are sent by modified
 (shift-, control-, alt-) function- and keypad-keys.
 Reporting control- and alt-modifiers is a feature that relies on the
@@ -2137,6 +2145,11 @@ The default is \*(``false\*(''.
 .B "cursorBlink (\fPclass\fB CursorBlink)"
 Specifies whether to make the cursor blink.
 The default is \*(``false\*(''.
+.IP
+\fIXterm\fP uses two variables to determine whether the cursor blinks.
+One is set by this resource.
+The other is set by control sequences (private mode 12 and DECSCUSR).
+\fIXterm\fP tests the XOR of the two variables.
 .TP 8
 .B "cursorColor (\fPclass\fB CursorColor)"
 Specifies the color to use for the text cursor.
@@ -2627,13 +2640,11 @@ The default is \*(``1\*(''.
 Specifies whether \fIxterm\fP should assume the normal and bold fonts
 have VT100 line-drawing characters:
 .RS
-.TP 5
--
+.bP
 The fixed-pitch ISO-8859-*-encoded fonts used by \fIxterm\fP
 normally have the VT100 line-drawing glyphs in cells 1-31.
 Other fixed-pitch fonts may be more attractive, but lack these glyphs.
-.TP
--
+.bP
 When using an ISO-10646-1 font and the \fBwideChars\fP resource is true,
 \fIxterm\fP uses the Unicode glyphs which match the VT100 line-drawing glyphs.
 .RE
@@ -3186,6 +3197,12 @@ The default is \*(``false\*(''.
 If the window is iconified, this has no effect.
 However, the \fBzIconBeep\fP resource provides you with the ability to
 see which iconified windows have sounded a bell.
+.TP 8
+.B "precompose (\fPclass\fB XtCPrecompose)"
+Tells \fIxterm\fP whether to precompose UTF-8 data into Normalization Form C,
+which combines commonly-used accents onto base characters.
+If it does not do this, accents are left as separatate characters.
+The default is \*(``true\*(''.
 .TP 8
 .B "preeditType (\fPclass\fB XtCPreeditType)"
 Tells \fIxterm\fP which types of preedit (preconversion) string to display.
@@ -4148,15 +4165,12 @@ The selected text is highlighted and is saved in the global cut buffer
 and made the PRIMARY selection when the button is released.
 Normally (but see the discussion of \fBon2Clicks\fP, etc):
 .RS
-.TP 3
--
+.bP
 Double-clicking selects by words.
-.TP
--
+.bP
 Triple-clicking
 selects by lines.
-.TP
--
+.bP
 Quadruple-clicking goes back to characters, etc.
 .RE
 .PP

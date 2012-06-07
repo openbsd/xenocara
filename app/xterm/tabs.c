@@ -1,4 +1,4 @@
-/* $XTermId: tabs.c,v 1.39 2011/09/11 15:00:38 tom Exp $ */
+/* $XTermId: tabs.c,v 1.41 2012/05/02 14:14:36 tom Exp $ */
 
 /*
  * Copyright 2000-2010,2011 by Thomas E. Dickey
@@ -149,6 +149,8 @@ TabToNextStop(XtermWidget xw)
     int next = TabNext(xw, xw->tabs, screen->cur_col);
     int max = LineMaxCol(screen, getLineData(screen, screen->cur_row));
 
+    if (IsLeftRightMode(xw))
+	max = TScreenOf(xw)->rgt_marg;
     if (next > max)
 	next = max;
     set_cur_col(screen, next);
@@ -164,8 +166,15 @@ TabToPrevStop(XtermWidget xw)
 {
     TScreen *screen = TScreenOf(xw);
     int saved_column = screen->cur_col;
+    int next_column = TabPrev(xw->tabs, screen->cur_col);
 
-    set_cur_col(screen, TabPrev(xw->tabs, screen->cur_col));
+    if (xw->flags & ORIGIN) {
+	int left = ScrnLeftMargin(xw);
+	if (next_column < left)
+	    next_column = left;
+    }
+
+    set_cur_col(screen, next_column);
 
     return (screen->cur_col < saved_column);
 }
