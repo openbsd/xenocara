@@ -483,7 +483,9 @@ i830_dvo_init(ScrnInfoPtr scrn)
 		xf86DestroyI2CBusRec(pI2CBus, TRUE, TRUE);
 		xf86DestroyI2CBusRec(intel_output->pDDCBus, TRUE, TRUE);
 		free(intel_output);
+#if GET_ABI_MAJOR(ABI_VIDEODRV_VERSION) < 12
 		xf86UnloadSubModule(drv->modhandle);
+#endif
 		return;
 	    }
 
@@ -510,7 +512,9 @@ i830_dvo_init(ScrnInfoPtr scrn)
 
 	    return;
 	}
+#if GET_ABI_MAJOR(ABI_VIDEODRV_VERSION) < 12
 	xf86UnloadSubModule(drv->modhandle);
+#endif
     }
 
     /* Didn't find a chip, so tear down. */
