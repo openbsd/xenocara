@@ -108,6 +108,7 @@ typedef enum {
     CHIP_FAMILY_TURKS,
     CHIP_FAMILY_CAICOS,
     CHIP_FAMILY_CAYMAN,
+    CHIP_FAMILY_ARUBA,
     CHIP_FAMILY_LAST
 } RADEONChipFamily;
 
@@ -663,8 +664,8 @@ typedef struct {
 
 				/* Pallet */
     Bool              palette_valid;
-    uint32_t          palette[256];
-    uint32_t          palette2[256];
+    Bool	      palette_saved[2];
+    uint32_t          palette[2][256];
 
     uint32_t          disp2_req_cntl1;
     uint32_t          disp2_req_cntl2;
@@ -750,7 +751,7 @@ typedef struct
     void              *FB;              /* Map of FB region                  */
     int               FB_cnt;           /* Map of FB region refcount         */
     int fd;                             /* for sharing across zaphod heads   */
-    Bool              fd_wakeup_registered; /* fd has already been registered for wakeup handling */
+    unsigned long     fd_wakeup_registered; /* server generation for which fd has been registered for wakeup handling */
     int dri2_info_cnt;
 } RADEONEntRec, *RADEONEntPtr;
 

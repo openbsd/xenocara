@@ -62,6 +62,7 @@ const OptionInfoRec RADEONOptions_KMS[] = {
     { OPTION_ACCEL_DFS,      "AccelDFS",         OPTV_BOOLEAN, {0}, FALSE },
     { OPTION_IGNORE_EDID,    "IgnoreEDID",       OPTV_BOOLEAN, {0}, FALSE },
     { OPTION_COLOR_TILING,   "ColorTiling",      OPTV_BOOLEAN, {0}, FALSE },
+    { OPTION_COLOR_TILING_2D,"ColorTiling2D",    OPTV_BOOLEAN, {0}, FALSE },
     { OPTION_RENDER_ACCEL,   "RenderAccel",      OPTV_BOOLEAN, {0}, FALSE },
     { OPTION_SUBPIXEL_ORDER, "SubPixelOrder",    OPTV_ANYSTR,  {0}, FALSE },
     { OPTION_ACCELMETHOD,    "AccelMethod",      OPTV_STRING,  {0}, FALSE },
@@ -158,6 +159,7 @@ static Bool RADEONCreateScreenResources_KMS(ScreenPtr pScreen)
     ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
     RADEONInfoPtr  info   = RADEONPTR(pScrn);
     PixmapPtr pixmap;
+    struct radeon_surface *surface;
 
     pScreen->CreateScreenResources = info->CreateScreenResources;
     if (!(*pScreen->CreateScreenResources)(pScreen))
@@ -181,6 +183,10 @@ static Bool RADEONCreateScreenResources_KMS(ScreenPtr pScreen)
 	if (info->front_bo) {
 	    PixmapPtr pPix = pScreen->GetScreenPixmap(pScreen);
 	    radeon_set_pixmap_bo(pPix, info->front_bo);
+	    surface = radeon_get_pixmap_surface(pPix);
+	    if (surface) {
+		*surface = info->front_surface;
+	    }
 	}
     }
     return TRUE;
@@ -429,7 +435,7 @@ static Bool radeon_open_drm_master(ScrnInfoPtr pScrn)
     int err;
 
     if (pRADEONEnt->fd) {
-	xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
+	xf86DrvMsg(pScrn->scrnIndex, X_INFO,
 		   " reusing fd for second head\n");
 
 	info->dri2.drm_fd = pRADEONEnt->fd;
@@ -674,11 +680,20 @@ Bool RADEONPreInit_KMS(ScrnInfoPtr pScrn, int flags)
 
     if (!RADEONPreInitAccel_KMS(pScrn))              goto fail;
 
+    info->allowColorTiling2D = FALSE;
+
 #ifdef EXA_MIXED_PIXMAPS
     /* don't enable tiling if accel is not enabled */
     if (!info->r600_shadow_fb) {
-	Bool colorTilingDefault = info->ChipFamily >= CHIP_FAMILY_R300 &&
-	    info->ChipFamily <= CHIP_FAMILY_CAYMAN;
+	Bool colorTilingDefault =
+	    xorgGetVersion() >= XORG_VERSION_NUMERIC(1,9,4,901,0) &&
+	    info->ChipFamily >= CHIP_FAMILY_R300 &&
+	    info->ChipFamily <= CHIP_FAMILY_ARUBA;
+
+	/* 2D color tiling */
+	if (info->ChipFamily >= CHIP_FAMILY_R600) {
+		info->allowColorTiling2D = xf86ReturnOptValBool(info->Options, OPTION_COLOR_TILING_2D, FALSE);
+	}
 
 	if (info->ChipFamily >= CHIP_FAMILY_R600) {
 	    /* set default group bytes, overridden by kernel info below */
@@ -931,6 +946,7 @@ Bool RADEONScreenInit_KMS(int scrnIndex, ScreenPtr pScreen,
 
     front_ptr = info->FB;
 
+    info->surf_man = radeon_surface_manager_new(info->dri->drmFD);
     if (!info->bufmgr)
         info->bufmgr = radeon_bo_manager_gem_ctor(info->dri->drmFD);
     if (!info->bufmgr) {
@@ -1120,6 +1136,8 @@ Bool RADEONScreenInit_KMS(int scrnIndex, ScreenPtr pScreen,
     if (serverGeneration == 1)
 	xf86ShowUnusedOptions(pScrn->scrnIndex, pScrn->options);
 
+    drmmode_init(pScrn, &info->drmmode);
+
     xf86DrvMsgVerb(pScrn->scrnIndex, X_INFO, RADEON_LOGLEVEL_DEBUG,
 		   "RADEONScreenInit finished\n");
 
@@ -1207,6 +1225,7 @@ static Bool radeon_setup_kernel_mem(ScreenPtr pScreen)
     int pitch, base_align;
     int total_size_bytes = 0;
     uint32_t tiling_flags = 0;
+    struct radeon_surface surface;
 
     if (info->accel_state->exa != NULL) {
 	xf86DrvMsg(pScreen->myNum, X_ERROR, "Memory map already initialized\n");
@@ -1219,14 +1238,67 @@ static Bool radeon_setup_kernel_mem(ScreenPtr pScreen)
     }
 
     if (info->allowColorTiling) {
-	if (info->ChipFamily >= CHIP_FAMILY_R600)
-	    tiling_flags |= RADEON_TILING_MICRO;
-	else
+	if (info->ChipFamily >= CHIP_FAMILY_R600) {
+		if (info->allowColorTiling2D) {
+			tiling_flags |= RADEON_TILING_MACRO;
+		} else {
+			tiling_flags |= RADEON_TILING_MICRO;
+		}
+	} else
 	    tiling_flags |= RADEON_TILING_MACRO;
     }
     pitch = RADEON_ALIGN(pScrn->displayWidth, drmmode_get_pitch_align(pScrn, cpp, tiling_flags)) * cpp;
     screen_size = RADEON_ALIGN(pScrn->virtualY, drmmode_get_height_align(pScrn, tiling_flags)) * pitch;
     base_align = drmmode_get_base_align(pScrn, cpp, tiling_flags);
+	if (info->ChipFamily >= CHIP_FAMILY_R600) {
+		memset(&surface, 0, sizeof(struct radeon_surface));
+		surface.npix_x = pScrn->displayWidth;
+		surface.npix_y = pScrn->virtualY;
+		surface.npix_z = 1;
+		surface.blk_w = 1;
+		surface.blk_h = 1;
+		surface.blk_d = 1;
+		surface.array_size = 1;
+		surface.last_level = 0;
+		surface.bpe = cpp;
+		surface.nsamples = 1;
+		surface.flags = RADEON_SURF_SCANOUT;
+		surface.flags |= RADEON_SURF_SET(RADEON_SURF_TYPE_2D, TYPE);
+		surface.flags |= RADEON_SURF_SET(RADEON_SURF_MODE_LINEAR_ALIGNED, MODE);
+		if (tiling_flags & RADEON_TILING_MICRO) {
+			surface.flags = RADEON_SURF_CLR(surface.flags, MODE);
+			surface.flags |= RADEON_SURF_SET(RADEON_SURF_MODE_1D, MODE);
+		}
+		if (tiling_flags & RADEON_TILING_MACRO) {
+			surface.flags = RADEON_SURF_CLR(surface.flags, MODE);
+			surface.flags |= RADEON_SURF_SET(RADEON_SURF_MODE_2D, MODE);
+		}
+		if (radeon_surface_best(info->surf_man, &surface)) {
+			return FALSE;
+		}
+		if (radeon_surface_init(info->surf_man, &surface)) {
+			return FALSE;
+		}
+		pitch = surface.level[0].pitch_bytes;
+		screen_size = surface.bo_size;
+		base_align = surface.bo_alignment;
+		tiling_flags = 0;
+		switch (surface.level[0].mode) {
+		case RADEON_SURF_MODE_2D:
+			tiling_flags |= RADEON_TILING_MACRO;
+			tiling_flags |= surface.bankw << RADEON_TILING_EG_BANKW_SHIFT;
+			tiling_flags |= surface.bankh << RADEON_TILING_EG_BANKH_SHIFT;
+			tiling_flags |= surface.mtilea << RADEON_TILING_EG_MACRO_TILE_ASPECT_SHIFT;
+			tiling_flags |= eg_tile_split(surface.tile_split) << RADEON_TILING_EG_TILE_SPLIT_SHIFT;
+			break;
+		case RADEON_SURF_MODE_1D:
+			tiling_flags |= RADEON_TILING_MICRO;
+			break;
+		default:
+			break;
+		}
+		info->front_surface = surface;
+	}
     {
 	int cursor_size = 64 * 4 * 64;
 	int c;

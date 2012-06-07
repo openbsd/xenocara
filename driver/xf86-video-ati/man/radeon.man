@@ -194,6 +194,8 @@ Radeon HD 6430/6450/6470/6490
 .TP 12
 .B CAYMAN
 Radeon HD 6950/6970/6990
+.TP 12
+.B ARUBA
 .PD
 .SH CONFIGURATION DETAILS
 Please refer to __xconfigfile__(__filemansuffix__) for general configuration
@@ -260,13 +262,25 @@ are supported for
 .BI "Option \*qColorTiling\*q \*q" "boolean" \*q
 The framebuffer can be addressed either in linear or tiled mode. Tiled mode can provide
 significant performance benefits with 3D applications.  Tiling will be disabled if the drm
-module is too old or if the current display configuration does not support it. KMS
-ColorTiling is not currently supported on R/RV/RS1XX, R/RV/RS2XX, and RS3XX.
+module is too old or if the current display configuration does not support it.  On R600+
+this enables 1D tiling mode.
 .br
 The default value is
 .B on
 for R/RV3XX, R/RV4XX, R/RV5XX, RS6XX, RS740, R/RV6XX, R/RV7XX, RS780, RS880,
-EVERGREEN, and CAYMAN.
+EVERGREEN, and CAYMAN and
+.B off
+for R/RV/RS1XX, R/RV/RS2XX, and RS3XX.
+.TP
+.BI "Option \*qColorTiling2D\*q \*q" "boolean" \*q
+The framebuffer can be addressed either in linear, 1D, or 2D tiled modes. 2D tiled mode can
+provide significant performance benefits over 1D tiling with 3D applications.  Tiling
+will be disabled if the drm module is too old or if the current display configuration
+does not support it. KMS ColorTiling2D is only supported on R600 and newer chips.
+.br
+The default value is
+.B off
+for R/RV6XX, R/RV7XX, RS780, RS880, EVERGREEN, and CAYMAN.
 .TP
 .BI "Option \*qEXAPixmaps\*q \*q" boolean \*q
 Under KMS, to avoid thrashing pixmaps in/out of VRAM on low memory cards,

@@ -121,6 +121,8 @@ FUNC_NAME(RADEONPrepareTexturedVideo)(ScrnInfoPtr pScrn, RADEONPortPrivPtr pPriv
 	    return FALSE;
 	}
     }
+#else
+    (void)src_bo;
 #endif
 
     pixel_shift = pPixmap->drawable.bitsPerPixel >> 4;
@@ -435,7 +437,7 @@ FUNC_NAME(RADEONDisplayTexturedVideo)(ScrnInfoPtr pScrn, RADEONPortPrivPtr pPriv
 		 ((loop_boxes * 3) << RADEON_CP_VC_CNTL_NUM_SHIFT));
 
 	while (loop_boxes--) {
-	    int srcX, srcY, srcw, srch;
+	    float srcX, srcY, srcw, srch;
 	    int dstX, dstY, dstw, dsth;
 	    dstX = pBox->x1 + dstxoff;
 	    dstY = pBox->y1 + dstyoff;
@@ -444,13 +446,13 @@ FUNC_NAME(RADEONDisplayTexturedVideo)(ScrnInfoPtr pScrn, RADEONPortPrivPtr pPriv
 
 	    srcX = pPriv->src_x;
 	    srcX += ((pBox->x1 - pPriv->drw_x) *
-		     pPriv->src_w) / pPriv->dst_w;
+		     pPriv->src_w) / (float)pPriv->dst_w;
 	    srcY = pPriv->src_y;
 	    srcY += ((pBox->y1 - pPriv->drw_y) *
-		     pPriv->src_h) / pPriv->dst_h;
+		     pPriv->src_h) / (float)pPriv->dst_h;
 
-	    srcw = (pPriv->src_w * dstw) / pPriv->dst_w;
-	    srch = (pPriv->src_h * dsth) / pPriv->dst_h;
+	    srcw = (pPriv->src_w * dstw) / (float)pPriv->dst_w;
+	    srch = (pPriv->src_h * dsth) / (float)pPriv->dst_h;
 
 
 	    if (pPriv->is_planar) {
@@ -491,7 +493,7 @@ FUNC_NAME(RADEONDisplayTexturedVideo)(ScrnInfoPtr pScrn, RADEONPortPrivPtr pPriv
 				      RADEON_VF_RADEON_MODE |
 				      ((nBox * 3) << RADEON_VF_NUM_VERTICES_SHIFT)));
     while (nBox--) {
-	int srcX, srcY, srcw, srch;
+	float srcX, srcY, srcw, srch;
 	int dstX, dstY, dstw, dsth;
 	dstX = pBox->x1 + dstxoff;
 	dstY = pBox->y1 + dstyoff;
@@ -500,13 +502,13 @@ FUNC_NAME(RADEONDisplayTexturedVideo)(ScrnInfoPtr pScrn, RADEONPortPrivPtr pPriv
 
 	srcX = pPriv->src_x;
 	srcX += ((pBox->x1 - pPriv->drw_x) *
-		 pPriv->src_w) / pPriv->dst_w;
+		 pPriv->src_w) / (float)pPriv->dst_w;
 	srcY = pPriv->src_y;
 	srcY += ((pBox->y1 - pPriv->drw_y) *
-		 pPriv->src_h) / pPriv->dst_h;
+		 pPriv->src_h) / (float)pPriv->dst_h;
 
-	srcw = (pPriv->src_w * dstw) / pPriv->dst_w;
-	srch = (pPriv->src_h * dsth) / pPriv->dst_h;
+	srcw = (pPriv->src_w * dstw) / (float)pPriv->dst_w;
+	srch = (pPriv->src_h * dsth) / (float)pPriv->dst_h;
 
 
 	if (pPriv->is_planar) {
@@ -588,6 +590,8 @@ FUNC_NAME(R200PrepareTexturedVideo)(ScrnInfoPtr pScrn, RADEONPortPrivPtr pPriv)
 	    return FALSE;
 	}
     }
+#else
+    (void)src_bo;
 #endif
 
     pixel_shift = pPixmap->drawable.bitsPerPixel >> 4;
@@ -1066,7 +1070,7 @@ FUNC_NAME(R200DisplayTexturedVideo)(ScrnInfoPtr pScrn, RADEONPortPrivPtr pPriv)
 		 ((loop_boxes * 3) << RADEON_CP_VC_CNTL_NUM_SHIFT));
 
 	while (loop_boxes--) {
-	    int srcX, srcY, srcw, srch;
+	    float srcX, srcY, srcw, srch;
 	    int dstX, dstY, dstw, dsth;
 	    dstX = pBox->x1 + dstxoff;
 	    dstY = pBox->y1 + dstyoff;
@@ -1075,13 +1079,13 @@ FUNC_NAME(R200DisplayTexturedVideo)(ScrnInfoPtr pScrn, RADEONPortPrivPtr pPriv)
 
 	    srcX = pPriv->src_x;
 	    srcX += ((pBox->x1 - pPriv->drw_x) *
-		     pPriv->src_w) / pPriv->dst_w;
+		     pPriv->src_w) / (float)pPriv->dst_w;
 	    srcY = pPriv->src_y;
 	    srcY += ((pBox->y1 - pPriv->drw_y) *
-		     pPriv->src_h) / pPriv->dst_h;
+		     pPriv->src_h) / (float)pPriv->dst_h;
 
-	    srcw = (pPriv->src_w * dstw) / pPriv->dst_w;
-	    srch = (pPriv->src_h * dsth) / pPriv->dst_h;
+	    srcw = (pPriv->src_w * dstw) / (float)pPriv->dst_w;
+	    srch = (pPriv->src_h * dsth) / (float)pPriv->dst_h;
 
 	    if (pPriv->is_planar) {
 		/*
@@ -1120,7 +1124,7 @@ FUNC_NAME(R200DisplayTexturedVideo)(ScrnInfoPtr pScrn, RADEONPortPrivPtr pPriv)
 				      RADEON_VF_PRIM_WALK_DATA |
 				      ((nBox * 3) << RADEON_VF_NUM_VERTICES_SHIFT)));
     while (nBox--) {
-	int srcX, srcY, srcw, srch;
+	float srcX, srcY, srcw, srch;
 	int dstX, dstY, dstw, dsth;
 	dstX = pBox->x1 + dstxoff;
 	dstY = pBox->y1 + dstyoff;
@@ -1129,13 +1133,13 @@ FUNC_NAME(R200DisplayTexturedVideo)(ScrnInfoPtr pScrn, RADEONPortPrivPtr pPriv)
 
 	srcX = pPriv->src_x;
 	srcX += ((pBox->x1 - pPriv->drw_x) *
-		 pPriv->src_w) / pPriv->dst_w;
+		 pPriv->src_w) / (float)pPriv->dst_w;
 	srcY = pPriv->src_y;
 	srcY += ((pBox->y1 - pPriv->drw_y) *
-		 pPriv->src_h) / pPriv->dst_h;
+		 pPriv->src_h) / (float)pPriv->dst_h;
 
-	srcw = (pPriv->src_w * dstw) / pPriv->dst_w;
-	srch = (pPriv->src_h * dsth) / pPriv->dst_h;
+	srcw = (pPriv->src_w * dstw) / (float)pPriv->dst_w;
+	srch = (pPriv->src_h * dsth) / (float)pPriv->dst_h;
 
 	if (pPriv->is_planar) {
 	    /*
@@ -1205,6 +1209,8 @@ FUNC_NAME(R300PrepareTexturedVideo)(ScrnInfoPtr pScrn, RADEONPortPrivPtr pPriv)
 	    return FALSE;
 	}
     }
+#else
+    (void)src_bo;
 #endif
 
     pixel_shift = pPixmap->drawable.bitsPerPixel >> 4;
@@ -2493,7 +2499,7 @@ FUNC_NAME(R300DisplayTexturedVideo)(ScrnInfoPtr pScrn, RADEONPortPrivPtr pPriv)
      */
 
     while (nBox--) {
-	int srcX, srcY, srcw, srch;
+	float srcX, srcY, srcw, srch;
 	int dstX, dstY, dstw, dsth;
 	Bool use_quad = FALSE;
 #ifdef ACCEL_CP
@@ -2516,13 +2522,13 @@ FUNC_NAME(R300DisplayTexturedVideo)(ScrnInfoPtr pScrn, RADEONPortPrivPtr pPriv)
 
 	srcX = pPriv->src_x;
 	srcX += ((pBox->x1 - pPriv->drw_x) *
-		 pPriv->src_w) / pPriv->dst_w;
+		 pPriv->src_w) / (float)pPriv->dst_w;
 	srcY = pPriv->src_y;
 	srcY += ((pBox->y1 - pPriv->drw_y) *
-		 pPriv->src_h) / pPriv->dst_h;
+		 pPriv->src_h) / (float)pPriv->dst_h;
 
-	srcw = (pPriv->src_w * dstw) / pPriv->dst_w;
-	srch = (pPriv->src_h * dsth) / pPriv->dst_h;
+	srcw = (pPriv->src_w * dstw) / (float)pPriv->dst_w;
+	srch = (pPriv->src_h * dsth) / (float)pPriv->dst_h;
 
 	if (IS_R400_3D) {
 	    if ((dstw+dsth) > 4021)
@@ -2687,6 +2693,8 @@ FUNC_NAME(R500PrepareTexturedVideo)(ScrnInfoPtr pScrn, RADEONPortPrivPtr pPriv)
 	    return FALSE;
 	}
     }
+#else
+    (void)src_bo;
 #endif
 
     pixel_shift = pPixmap->drawable.bitsPerPixel >> 4;
@@ -4122,7 +4130,7 @@ FUNC_NAME(R500DisplayTexturedVideo)(ScrnInfoPtr pScrn, RADEONPortPrivPtr pPriv)
      */
 
     while (nBox--) {
-	int srcX, srcY, srcw, srch;
+	float srcX, srcY, srcw, srch;
 	int dstX, dstY, dstw, dsth;
 #ifdef ACCEL_CP
 	int draw_size = 3 * pPriv->vtx_count + 4 + 2 + 3;
@@ -4144,13 +4152,13 @@ FUNC_NAME(R500DisplayTexturedVideo)(ScrnInfoPtr pScrn, RADEONPortPrivPtr pPriv)
 
 	srcX = pPriv->src_x;
 	srcX += ((pBox->x1 - pPriv->drw_x) *
-		 pPriv->src_w) / pPriv->dst_w;
+		 pPriv->src_w) / (float)pPriv->dst_w;
 	srcY = pPriv->src_y;
 	srcY += ((pBox->y1 - pPriv->drw_y) *
-		 pPriv->src_h) / pPriv->dst_h;
+		 pPriv->src_h) / (float)pPriv->dst_h;
 
-	srcw = (pPriv->src_w * dstw) / pPriv->dst_w;
-	srch = (pPriv->src_h * dsth) / pPriv->dst_h;
+	srcw = (pPriv->src_w * dstw) / (float)pPriv->dst_w;
+	srch = (pPriv->src_h * dsth) / (float)pPriv->dst_h;
 
 	BEGIN_ACCEL(2);
 	OUT_ACCEL_REG(R300_SC_SCISSOR0, (((dstX) << R300_SCISSOR_X_SHIFT) |

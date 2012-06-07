@@ -839,9 +839,6 @@ void FUNC_NAME(RADEONWaitForVLine)(ScrnInfoPtr pScrn, PixmapPtr pPix,
     if (!crtc)
 	return;
 
-    if (stop < start)
-	return;
-
     if (!crtc->enabled)
 	return;
 
@@ -861,16 +858,16 @@ void FUNC_NAME(RADEONWaitForVLine)(ScrnInfoPtr pScrn, PixmapPtr pPix,
 	    return;
     }
 
-    start = max(start, 0);
-    stop = min(stop, crtc->mode.VDisplay);
+    start = max(start, crtc->y);
+    stop = min(stop, crtc->y + crtc->mode.VDisplay);
 
-    if (start > crtc->mode.VDisplay)
+    if (start >= stop)
 	return;
 
-    if (IS_AVIVO_VARIANT) {
-	/* on r5xx+ vline starts at viewport_y */
-	start += crtc->y;
-	stop += crtc->y;
+    if (!IS_AVIVO_VARIANT) {
+	/* on pre-r5xx vline starts at CRTC scanout */
+	start -= crtc->y;
+	stop -= crtc->y;
     }
 
 #if defined(ACCEL_CP) && defined(XF86DRM_MODE)

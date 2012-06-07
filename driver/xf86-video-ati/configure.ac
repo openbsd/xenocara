@@ -23,7 +23,7 @@
 # Initialize Autoconf
 AC_PREREQ([2.60])
 AC_INIT([xf86-video-ati],
-        [6.14.3],
+        [6.14.4],
         [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],
         [xf86-video-ati])
 
@@ -141,7 +141,7 @@ if test "$DRI" = yes; then
 	   	AC_CHECK_HEADER(xf86drmMode.h,[DRM_MODE=yes],[DRM_MODE=no],[#include <stdint.h>
 #include <stdlib.h>])
 		if test "x$DRM_MODE" = xyes; then
-			PKG_CHECK_MODULES(LIBDRM_RADEON, [xorg-server >= 1.6.2 libdrm_radeon],
+			PKG_CHECK_MODULES(LIBDRM_RADEON, [xorg-server >= 1.6.2 libdrm >= 2.4.33 libdrm_radeon],
 			[LIBDRM_RADEON=yes], [LIBDRM_RADEON=no])
 
 			if test "x$LIBDRM_RADEON" = xyes; then
@@ -234,9 +234,17 @@ AC_CHECK_DECL(XSERVER_LIBPCIACCESS,
 	      [#include "xorg-server.h"])
 
 AC_CHECK_HEADERS([list.h],
-		 [], [],
+		 [have_list_h="yes"], [have_list_h="no"],
 		 [#include <X11/Xdefs.h>
 		  #include "xorg-server.h"])
+
+if test "x$have_list_h" = xyes; then
+    AC_CHECK_DECL(xorg_list_init,
+		  [AC_DEFINE(HAVE_XORG_LIST, 1, [Have xorg_list API])], [],
+		  [#include <X11/Xdefs.h>
+		   #include "xorg-server.h"
+		   #include "list.h"])
+fi
 
 CPPFLAGS="$SAVE_CPPFLAGS"
 

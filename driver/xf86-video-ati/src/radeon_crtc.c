@@ -69,18 +69,12 @@ RADEONInitDispBandwidthAVIVO(ScrnInfoPtr pScrn,
 			     DisplayModePtr mode2, int pixel_bytes2);
 
 void
-radeon_crtc_dpms(xf86CrtcPtr crtc, int mode)
+radeon_do_crtc_dpms(xf86CrtcPtr crtc, int mode)
 {
     RADEONInfoPtr info = RADEONPTR(crtc->scrn);
     RADEONEntPtr pRADEONEnt = RADEONEntPriv(crtc->scrn);
-    RADEONCrtcPrivatePtr radeon_crtc = crtc->driver_private;
     xf86CrtcPtr crtc0 = pRADEONEnt->pCrtc[0];
-
-    if ((mode == DPMSModeOn) && radeon_crtc->enabled)
-	return;
-
-    if (mode == DPMSModeOff)
-	radeon_crtc_modeset_ioctl(crtc, FALSE);
+    RADEONCrtcPrivatePtr radeon_crtc = crtc->driver_private;
 
     if (IS_AVIVO_VARIANT || info->r4xx_atom) {
 	atombios_crtc_dpms(crtc, mode);
@@ -101,6 +95,20 @@ radeon_crtc_dpms(xf86CrtcPtr crtc, int mode)
 		legacy_crtc_dpms(crtc0, mode);
 	}
     }
+}
+
+void
+radeon_crtc_dpms(xf86CrtcPtr crtc, int mode)
+{
+    RADEONCrtcPrivatePtr radeon_crtc = crtc->driver_private;
+
+    if ((mode == DPMSModeOn) && radeon_crtc->enabled)
+	return;
+
+    if (mode == DPMSModeOff)
+	radeon_crtc_modeset_ioctl(crtc, FALSE);
+
+    radeon_do_crtc_dpms(crtc, mode);
 
     if (mode != DPMSModeOff) {
 	radeon_crtc_modeset_ioctl(crtc, TRUE);
@@ -511,6 +519,8 @@ radeon_crtc_load_lut(xf86CrtcPtr crtc)
     if (!crtc->enabled)
 	return;
 
+    radeon_save_palette_on_demand(pScrn, radeon_crtc->crtc_id);
+
     if (IS_DCE4_VARIANT) {
 	OUTREG(EVERGREEN_DC_LUT_CONTROL + radeon_crtc->crtc_offset, 0);
 
@@ -559,7 +569,6 @@ radeon_crtc_load_lut(xf86CrtcPtr crtc)
 	if (IS_AVIVO_VARIANT)
 	    OUTREG(AVIVO_D1GRPH_LUT_SEL + radeon_crtc->crtc_offset, radeon_crtc->crtc_id);
     }
-
 }
 
 static void

@@ -40,6 +40,13 @@
 
 #if HAVE_LIST_H
 #include "list.h"
+#if !HAVE_XORG_LIST
+#define xorg_list			list
+#define xorg_list_init			list_init
+#define xorg_list_add			list_add
+#define xorg_list_del			list_del
+#define xorg_list_for_each_entry	list_for_each_entry
+#endif
 #endif
 
 #ifdef RADEON_DRI2
@@ -121,6 +128,8 @@ radeon_dri2_create_buffers(DrawablePtr drawable,
 		    flags = RADEON_CREATE_PIXMAP_TILING_MICRO;
 		else
 		    flags = RADEON_CREATE_PIXMAP_TILING_MACRO | RADEON_CREATE_PIXMAP_TILING_MICRO;
+		if (IS_R200_3D || info->ChipFamily == CHIP_FAMILY_RV200 || info->ChipFamily == CHIP_FAMILY_RADEON)
+		    flags |= RADEON_CREATE_PIXMAP_DEPTH;
 		break;
 	    case DRI2BufferDepthStencil:
 		if (info->ChipFamily >= CHIP_FAMILY_R600) {
@@ -132,6 +141,8 @@ radeon_dri2_create_buffers(DrawablePtr drawable,
 			need_enlarge = 1;
 		} else
 		    flags = RADEON_CREATE_PIXMAP_TILING_MACRO | RADEON_CREATE_PIXMAP_TILING_MICRO;
+		if (IS_R200_3D || info->ChipFamily == CHIP_FAMILY_RV200 || info->ChipFamily == CHIP_FAMILY_RADEON)
+		    flags |= RADEON_CREATE_PIXMAP_DEPTH;
 		break;
 	    case DRI2BufferBackLeft:
 	    case DRI2BufferBackRight:
@@ -240,10 +251,10 @@ radeon_dri2_create_buffer(DrawablePtr drawable,
     struct dri2_buffer_priv *privates;
     PixmapPtr pixmap, depth_pixmap;
     struct radeon_exa_pixmap_priv *driver_priv;
-    int need_enlarge = 0;
     int flags;
     unsigned front_width;
     uint32_t tiling = 0;
+    unsigned aligned_width = drawable->width;
 
     pixmap = pScreen->GetScreenPixmap(pScreen);
     front_width = pixmap->drawable.width;
@@ -267,32 +278,48 @@ radeon_dri2_create_buffer(DrawablePtr drawable,
 	    /* macro is the preferred setting, but the 2D detiling for software
 	     * fallbacks in mesa still has issues on some configurations
 	     */
-	    if (info->ChipFamily >= CHIP_FAMILY_R600)
-		flags = RADEON_CREATE_PIXMAP_TILING_MICRO;
-	    else
+	    if (info->ChipFamily >= CHIP_FAMILY_R600) {
+		if (info->allowColorTiling2D) {
+			flags = RADEON_CREATE_PIXMAP_TILING_MACRO;
+		} else {
+			flags = RADEON_CREATE_PIXMAP_TILING_MICRO;
+		}
+		if (info->ChipFamily >= CHIP_FAMILY_CEDAR)
+		    flags |= RADEON_CREATE_PIXMAP_SZBUFFER;
+	    } else
 		flags = RADEON_CREATE_PIXMAP_TILING_MACRO | RADEON_CREATE_PIXMAP_TILING_MICRO;
+	    if (IS_R200_3D || info->ChipFamily == CHIP_FAMILY_RV200 || info->ChipFamily == CHIP_FAMILY_RADEON)
+		flags |= RADEON_CREATE_PIXMAP_DEPTH;
 	    break;
 	case DRI2BufferDepthStencil:
 	    /* macro is the preferred setting, but the 2D detiling for software
 	     * fallbacks in mesa still has issues on some configurations
 	     */
 	    if (info->ChipFamily >= CHIP_FAMILY_R600) {
-		flags = RADEON_CREATE_PIXMAP_TILING_MICRO;
+		if (info->allowColorTiling2D) {
+			flags = RADEON_CREATE_PIXMAP_TILING_MACRO;
+		} else {
+			flags = RADEON_CREATE_PIXMAP_TILING_MICRO;
+		}
 		if (info->ChipFamily >= CHIP_FAMILY_CEDAR)
-		    need_enlarge = 1;
+		    flags |= RADEON_CREATE_PIXMAP_SZBUFFER;
 	    } else
 		flags = RADEON_CREATE_PIXMAP_TILING_MACRO | RADEON_CREATE_PIXMAP_TILING_MICRO;
+	    if (IS_R200_3D || info->ChipFamily == CHIP_FAMILY_RV200 || info->ChipFamily == CHIP_FAMILY_RADEON)
+		flags |= RADEON_CREATE_PIXMAP_DEPTH;
+		
 	    break;
 	case DRI2BufferBackLeft:
 	case DRI2BufferBackRight:
 	case DRI2BufferFakeFrontLeft:
 	case DRI2BufferFakeFrontRight:
-	    if (info->ChipFamily >= CHIP_FAMILY_R600)
-		/* macro is the preferred setting, but the 2D detiling for software
-		 * fallbacks in mesa still has issues on some configurations
-		 */
-		flags = RADEON_CREATE_PIXMAP_TILING_MICRO;
-	    else
+	    if (info->ChipFamily >= CHIP_FAMILY_R600) {
+		if (info->allowColorTiling2D) {
+			flags = RADEON_CREATE_PIXMAP_TILING_MACRO;
+		} else {
+			flags = RADEON_CREATE_PIXMAP_TILING_MICRO;
+		}
+	    } else
 		flags = RADEON_CREATE_PIXMAP_TILING_MACRO;
 	    break;
 	default:
@@ -304,39 +331,6 @@ radeon_dri2_create_buffer(DrawablePtr drawable,
 	if (flags & RADEON_CREATE_PIXMAP_TILING_MACRO)
 	    tiling |= RADEON_TILING_MACRO;
 
-	if (need_enlarge) {
-	    /* evergreen uses separate allocations for depth and stencil
-	     * so we make an extra large depth buffer to cover stencil
-	     * as well.
-	     */
-	    int depth = (format != 0) ? format : drawable->depth;
-	    unsigned aligned_width = drawable->width;
-	    unsigned width_align = drmmode_get_pitch_align(pScrn, drawable->depth / 8, tiling);
-	    unsigned aligned_height;
-	    unsigned height_align = drmmode_get_height_align(pScrn, tiling);
-	    unsigned base_align = drmmode_get_base_align(pScrn, drawable->depth / 8, tiling);
-	    unsigned pitch_bytes;
-	    unsigned size;
-
-	    if (aligned_width == front_width)
-		aligned_width = pScrn->virtualX;
-	    aligned_width = RADEON_ALIGN(aligned_width, width_align);
-	    pitch_bytes = aligned_width * (depth / 8);
-	    aligned_height = RADEON_ALIGN(drawable->height, height_align);
-	    size = pitch_bytes * aligned_height;
-	    size = RADEON_ALIGN(size, base_align);
-	    /* add additional size for stencil */
-	    size += aligned_width * aligned_height;
-	    aligned_height = RADEON_ALIGN(size / pitch_bytes, height_align);
-
-	    pixmap = (*pScreen->CreatePixmap)(pScreen,
-					      aligned_width,
-					      aligned_height,
-					      (format != 0)?format:drawable->depth,
-					      flags);
-
-	} else {
-	    unsigned aligned_width = drawable->width;
 
 	    if (aligned_width == front_width)
 		aligned_width = pScrn->virtualX;
@@ -346,7 +340,6 @@ radeon_dri2_create_buffer(DrawablePtr drawable,
 					      drawable->height,
 					      (format != 0)?format:drawable->depth,
 					      flags);
-	}
     }
 
     if (!pixmap)
@@ -529,11 +522,11 @@ typedef struct _DRI2FrameEvent {
 
     Bool valid;
 
-    struct list link;
+    struct xorg_list link;
 } DRI2FrameEventRec, *DRI2FrameEventPtr;
 
 typedef struct _DRI2ClientEvents {
-    struct list   reference_list;
+    struct xorg_list   reference_list;
 } DRI2ClientEventsRec, *DRI2ClientEventsPtr;
 
 #if HAS_DEVPRIVATEKEYREC
@@ -552,7 +545,7 @@ DevPrivateKey DRI2ClientEventsPrivateKey = &DRI2ClientEventsPrivateKeyIndex;
     dixLookupPrivate(&(pClient)->devPrivates, DRI2ClientEventsPrivateKey))
 
 static int
-ListAddDRI2ClientEvents(ClientPtr client, struct list *entry)
+ListAddDRI2ClientEvents(ClientPtr client, struct xorg_list *entry)
 {
     DRI2ClientEventsPtr pClientPriv;
     pClientPriv = GetDRI2ClientEvents(client);
@@ -561,12 +554,12 @@ ListAddDRI2ClientEvents(ClientPtr client, struct list *entry)
         return BadAlloc;
     }
 
-    list_add(entry, &pClientPriv->reference_list);
+    xorg_list_add(entry, &pClientPriv->reference_list);
     return 0;
 }
 
 static void
-ListDelDRI2ClientEvents(ClientPtr client, struct list *entry)
+ListDelDRI2ClientEvents(ClientPtr client, struct xorg_list *entry)
 {
     DRI2ClientEventsPtr pClientPriv;
     pClientPriv = GetDRI2ClientEvents(client);
@@ -574,36 +567,7 @@ ListDelDRI2ClientEvents(ClientPtr client, struct list *entry)
     if (!pClientPriv) {
         return;
     }
-    list_del(entry);
-}
-
-static void
-radeon_dri2_client_state_changed(CallbackListPtr *ClientStateCallback, pointer data, pointer calldata)
-{
-    DRI2ClientEventsPtr pClientEventsPriv;
-    DRI2FrameEventPtr ref;
-    NewClientInfoRec *clientinfo = calldata;
-    ClientPtr pClient = clientinfo->client;
-    pClientEventsPriv = GetDRI2ClientEvents(pClient);
-
-    switch (pClient->clientState) {
-    case ClientStateInitial:
-        list_init(&pClientEventsPriv->reference_list);
-        break;
-    case ClientStateRunning:
-        break;
-
-    case ClientStateRetained:
-    case ClientStateGone:
-        if (pClientEventsPriv) {
-            list_for_each_entry(ref, &pClientEventsPriv->reference_list, link) {
-                ref->valid = FALSE;
-            }
-        }
-        break;
-    default:
-        break;
-    }
+    xorg_list_del(entry);
 }
 
 static void
@@ -619,6 +583,37 @@ radeon_dri2_unref_buffer(BufferPtr buffer)
     if (buffer) {
         struct dri2_buffer_priv *private = buffer->driverPrivate;
         radeon_dri2_destroy_buffer(&(private->pixmap->drawable), buffer);
+    }
+}
+
+static void
+radeon_dri2_client_state_changed(CallbackListPtr *ClientStateCallback, pointer data, pointer calldata)
+{
+    DRI2ClientEventsPtr pClientEventsPriv;
+    DRI2FrameEventPtr ref;
+    NewClientInfoRec *clientinfo = calldata;
+    ClientPtr pClient = clientinfo->client;
+    pClientEventsPriv = GetDRI2ClientEvents(pClient);
+
+    switch (pClient->clientState) {
+    case ClientStateInitial:
+        xorg_list_init(&pClientEventsPriv->reference_list);
+        break;
+    case ClientStateRunning:
+        break;
+
+    case ClientStateRetained:
+    case ClientStateGone:
+        if (pClientEventsPriv) {
+            xorg_list_for_each_entry(ref, &pClientEventsPriv->reference_list, link) {
+                ref->valid = FALSE;
+                radeon_dri2_unref_buffer(ref->front);
+                radeon_dri2_unref_buffer(ref->back);
+            }
+        }
+        break;
+    default:
+        break;
     }
 }
 
@@ -743,6 +738,16 @@ can_exchange(ScrnInfoPtr pScrn, DrawablePtr draw,
     return TRUE;
 }
 
+static Bool
+can_flip(ScrnInfoPtr pScrn, DrawablePtr draw,
+	 DRI2BufferPtr front, DRI2BufferPtr back)
+{
+    return draw->type == DRAWABLE_WINDOW &&
+	   RADEONPTR(pScrn)->allowPageFlip &&
+	   DRI2CanFlip(draw) &&
+	   can_exchange(pScrn, draw, front, back);
+}
+
 static void
 radeon_dri2_exchange_buffers(DrawablePtr draw, DRI2BufferPtr front, DRI2BufferPtr back)
 {
@@ -782,7 +787,6 @@ void radeon_dri2_frame_event_handler(unsigned int frame, unsigned int tv_sec,
                                      unsigned int tv_usec, void *event_data)
 {
     DRI2FrameEventPtr event = event_data;
-    RADEONInfoPtr info;
     DrawablePtr drawable;
     ScreenPtr screen;
     ScrnInfoPtr scrn;
@@ -801,13 +805,10 @@ void radeon_dri2_frame_event_handler(unsigned int frame, unsigned int tv_sec,
 
     screen = drawable->pScreen;
     scrn = xf86Screens[screen->myNum];
-    info = RADEONPTR(scrn);
 
     switch (event->type) {
     case DRI2_FLIP:
-	if (info->allowPageFlip &&
-	    DRI2CanFlip(drawable) &&
-	    can_exchange(scrn, drawable, event->front, event->back) &&
+	if (can_flip(scrn, drawable, event->front, event->back) &&
 	    radeon_dri2_schedule_flip(scrn,
 				      event->client,
 				      drawable,
@@ -850,10 +851,11 @@ void radeon_dri2_frame_event_handler(unsigned int frame, unsigned int tv_sec,
     }
 
 cleanup:
-    radeon_dri2_unref_buffer(event->front);
-    radeon_dri2_unref_buffer(event->back);
-    if (event->valid)
+    if (event->valid) {
+        radeon_dri2_unref_buffer(event->front);
+        radeon_dri2_unref_buffer(event->back);
         ListDelDRI2ClientEvents(event->client, &event->link);
+    }
     free(event);
 }
 
@@ -1182,9 +1184,7 @@ static int radeon_dri2_schedule_swap(ClientPtr client, DrawablePtr draw,
     current_msc = vbl.reply.sequence;
 
     /* Flips need to be submitted one frame before */
-    if (info->allowPageFlip &&
-	DRI2CanFlip(draw) &&
-	can_exchange(scrn, draw, front, back)) {
+    if (can_flip(scrn, draw, front, back)) {
 	swap_type = DRI2_FLIP;
 	flip = 1;
     }

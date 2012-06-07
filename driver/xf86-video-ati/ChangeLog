@@ -1,3 +1,518 @@
+commit 9425c50e93903fb64d9e569cfdc1e2c35d16ce25
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Thu Mar 29 00:19:12 2012 -0400
+
+    configure: bump version for release
+    
+    Signed-off-by: Alex Deucher <alexdeucher@gmail.com>
+
+commit dc18d771713ecd893c7d5833da6e0661093161dc
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Wed Mar 28 17:32:53 2012 -0400
+
+    configure: bump libdrm requirement for TN support
+    
+    Signed-off-by: Alex Deucher <alexdeucher@gmail.com>
+
+commit 03535904a3e1542b3924d0a062c4b022ca196888
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Tue Mar 27 09:48:28 2012 -0400
+
+    radeon: man page updates
+    
+    Signed-off-by: Alex Deucher <alexdeucher@gmail.com>
+
+commit 6ed191c33caa33c12c2c6dafcba3a5ab1bf4a02f
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Tue Mar 20 19:57:53 2012 -0400
+
+    radeon/kms: add TN pci ids
+    
+    Signed-off-by: Alex Deucher <alexdeucher@gmail.com>
+
+commit 55d65fcf33eb383e3fbc7a1d469ab68a70a7ab37
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Tue Mar 20 19:54:57 2012 -0400
+
+    radeon/kms: add support for TN (trinity) APUs
+    
+    - KMS only
+    - Includes full EXA/Xv support
+    
+    Signed-off-by: Alex Deucher <alexdeucher@gmail.com>
+
+commit b5cf9bd693cf4090956add4c33c4fae9c3069a03
+Author: Marek Olšák <maraeo@gmail.com>
+Date:   Wed Mar 7 11:01:40 2012 -0500
+
+    r6xx: initialize SX_MISC
+    
+    If Mesa set it to 1, the DDX would not render anything = the monitor would
+    basically freeze.
+    
+    agd5f: update emit count as well.
+    
+    Signed-off-by: Alex Deucher <alexdeucher@gmail.com>
+
+commit 355dc4295912c153f5333421594fa90aa119a056
+Author: Michel Dänzer <michel.daenzer@amd.com>
+Date:   Tue Mar 6 15:52:40 2012 +0100
+
+    DRI2: Unreference buffers immediately when event wait info is invalidated.
+    
+    Deferring this could result in trying to unreference buffers from a previous
+    server generation, i.e. accessing freed memory.
+    
+    Signed-off-by: Michel Dänzer <michel.daenzer@amd.com>
+    Tested-by: Christian König <Christian.koenig@amd.com>
+
+commit fe51469b2e02e4d565050bab077985270fb58a9b
+Author: Michel Dänzer <michel.daenzer@amd.com>
+Date:   Tue Mar 6 15:52:40 2012 +0100
+
+    Re-register DRM FD wakeup handler for each server generation.
+    
+    Fixes hang when trying to use DRI2 swap scheduling after a server reset.
+    
+    Signed-off-by: Michel Dänzer <michel.daenzer@amd.com>
+    Tested-by: Christian König <Christian.koenig@amd.com>
+
+commit 878454ae8d8e96dd27a19d0b30940d014c4cd7e2
+Author: Hans Verkuil <hverkuil@xs4all.nl>
+Date:   Fri Feb 24 09:35:39 2012 -0500
+
+    Fix ConnectorTable crash in radeon_output.c
+    
+    The sam440ep PPC board requires a ConnectorTable xorg.conf option, but putting
+    in that option causes the radeon driver to crash. I finally traced it to a
+    copy-and-paste bug in radeon_output.c as a result of a major rework in commit
+    82f12e5a40c1fbcb91910a0f8b725c34fff02aae.
+    
+    The actual crash occurred in RADEONPrintPortMap().
+    
+    Signed-off-by: Hans Verkuil <hverkuil@xs4all.nl>
+    Signed-off-by: Alex Deucher <alexdeucher@gmail.com>
+
+commit 688c8a54a00b01e73a11970ad2abe858f8c7c5c4
+Author: Roland Scheidegger <rscheidegger_lists@hispeed.ch>
+Date:   Sat Feb 18 21:12:34 2012 +0100
+
+    radeon: avoid rounding errors in texture coords for textured xv
+    
+    make sure the division is done with floats, otherwise the coordinate
+    can be wrong up to 1 texel.
+    Particularly visible with clipping and small source scaled up (since one
+    texel can be a shift of several pixels) but could be seen even unscaled.
+    Should provide more accurate coords without clipping too depending on the
+    scale factor probably.
+    Changed for r100-r600, though only tested on r300.
+
+commit 2778b56252124ef6f636a493d2e1457b43911c37
+Author: Jerome Glisse <jglisse@redhat.com>
+Date:   Mon Feb 13 20:42:57 2012 -0500
+
+    radeon: r6xx-eg use linear general when using scratch bo
+    
+    In path where we need to use scratch bo as temporary area,
+    consider it as linear buffer. Not linear aligned. Fix some
+    case such as in bugs:
+    
+    https://bugs.freedesktop.org/show_bug.cgi?id=45827
+    
+    Signed-off-by: Jerome Glisse <jglisse@redhat.com>
+
+commit c66ae235700f5efe64eb168327551b8f1d153c9c
+Author: Michel Dänzer <michel.daenzer@amd.com>
+Date:   Mon Feb 13 10:43:58 2012 +0100
+
+    Handle new xorg_list API.
+    
+    Fixes https://bugs.freedesktop.org/show_bug.cgi?id=45937
+    
+    Signed-off-by: Michel Dänzer <michel.daenzer@amd.com>
+
+commit 7ff277e22c629308915307bbee96eb25ff77f8b9
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Fri Feb 10 13:04:59 2012 -0500
+
+    radeon: fix crash in drmmode_create_bo_pixmap()
+    
+    Only init surface on r6xx+.  Return NULL rather than
+    FALSE.
+    
+    Fixes:
+    https://bugs.freedesktop.org/show_bug.cgi?id=45829
+    
+    Signed-off-by: Alex Deucher <alexdeucher@gmail.com>
+
+commit 60b949f34df5db05e0e102cc3daa33469aa50cfc
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Fri Feb 10 13:11:26 2012 -0500
+
+    radeon/kms: reusing fd message is not an error
+    
+    It's standard behavior.
+    
+    Signed-off-by: Alex Deucher <alexdeucher@gmail.com>
+
+commit e20284409937d784847339b5d466a95012d85940
+Author: Michel Dänzer <michel.daenzer@amd.com>
+Date:   Fri Feb 3 12:21:59 2012 +0100
+
+    EXA/r6xx+: Only set write domain or read domains, not both. (Bug #43893)
+    
+    Avoids an accounting bug in libdrm_radeon 2.4.31 or older.
+    
+    See https://bugs.freedesktop.org/show_bug.cgi?id=43893
+    
+    Signed-off-by: Michel Dänzer <michel.daenzer@amd.com>
+
+commit 5a7f64c5170ca424c9dca739662018e30df13413
+Author: Michel Dänzer <michel.daenzer@amd.com>
+Date:   Wed Feb 8 11:35:35 2012 +0100
+
+    Fix UMS build failure.
+    
+    And some UMS specific warnings.
+    
+    Signed-off-by: Michel Dänzer <michel.daenzer@amd.com>
+
+commit 87f776b966f4200c97a989536d4b71822ae4c0b3
+Author: Michel Dänzer <michel.daenzer@amd.com>
+Date:   Wed Feb 8 11:10:27 2012 +0100
+
+    Remove unused local variable 'height'.
+    
+    Pointed out by gcc -Wunused-variable.
+    
+    Signed-off-by: Michel Dänzer <michel.daenzer@amd.com>
+
+commit f63262e2f112a348c45f0dcecd891c8b6d9c5ee8
+Author: Michel Dänzer <michel.daenzer@amd.com>
+Date:   Wed Feb 8 10:28:45 2012 +0100
+
+    evergreen: Initialize source surface member for textured video.
+    
+    Fixes crash reported by Ole Salscheider on IRC.
+    
+    Signed-off-by: Michel Dänzer <michel.daenzer@amd.com>
+
+commit c8f104d38870f14049402bbc14f662c151caeeef
+Author: Jerome Glisse <jglisse@redhat.com>
+Date:   Tue Feb 7 15:04:37 2012 -0500
+
+    radeon: fix tiling for weird resolution
+    
+    Should also fix xv for some case.
+    
+    Signed-off-by: Jerome Glisse <jglisse@redhat.com>
+
+commit 615033f2b5e3817e335e9d022fc9fdcf8ac8b11a
+Author: Jerome Glisse <jglisse@redhat.com>
+Date:   Tue Dec 13 11:08:19 2011 -0500
+
+    r600-evergreen: use common surface allocator for tiling v11
+    
+    Use libdrm common surface code so mesa,ddx have same idea
+    about tiling surface and what their pitch should be and
+    the alignment constraint.
+    
+    v2 fix remaining issue add new option to conditionaly enable
+    v3 fix fbcon copy and r600 exa copy path
+    v4 fix non tiled path 2D tiling on GPU >= R600, set it to false
+       as default
+    v5 adapt to pixel/element size split of libdrm/radeon
+    v6 update to properly handle falling back to 1d tiled
+    v6 final fix to tile split value on evergreen and newer
+    v7 fix default array mode on r6xx, fix height alignment issue
+       on evergreen
+    v8 fix tile split value
+    v9 add stencil tile split support, simplify dri2 for stencil
+       with evergreen
+    v10 Try to fix xv path regarding tiling. Adapt to libdrm API
+        change. Try to fix case where there is no surface which
+        means non tiled bo.
+    v11 check for proper libdrm
+    
+    Signed-off-by: Jerome Glisse <jglisse@redhat.com>
+
+commit 36c190671081967bac6fff48aaf66d67b639a48c
+Author: Michel Dänzer <michel.daenzer@amd.com>
+Date:   Wed Feb 1 13:21:02 2012 +0100
+
+    Fix vline range calculations.
+    
+    The range passed in is in pixmap coordinates, so the CRTC offset needs to be
+    added to the clamping limits and subtracted from the clamped range for
+    pre-AVIVO display engines.
+    
+    Signed-off-by: Michel Dänzer <michel.daenzer@amd.com>
+    Reviewed-by: Alex Deucher <alexander.deucher@amd.com>
+
+commit bb0e1531ac6949d38025d7dcb19234fee33b2acf
+Author: Michel Dänzer <michel.daenzer@amd.com>
+Date:   Wed Feb 1 13:07:11 2012 +0100
+
+    Check for empty vline ranges after clamping.
+    
+    The clamping could turn a previously non-empty range into an empty one.
+    
+    Also, start == stop means the range is empty.
+    
+    Signed-off-by: Michel Dänzer <michel.daenzer@amd.com>
+    Reviewed-by: Alex Deucher <alexander.deucher@amd.com>
+
+commit 13b3aed4ef9afbcbaea1dcf0ed1acb162b240a3f
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Tue Jan 10 09:35:09 2012 -0500
+
+    EXA/r6xx+: fix rop setting for overlapping copies
+    
+    Need to use GXCopy for the src to temp copy, then
+    the original rop for the temp to dest copy.
+    
+    Noticed by: Frank Huang
+    
+    Signed-off-by: Alex Deucher <alexdeucher@gmail.com>
+
+commit eb6d769a087b2ed5952f477fc3f0b0625810a287
+Author: Egbert Eich <eich@suse.de>
+Date:   Tue Nov 15 18:50:56 2011 +0100
+
+    DPMS: Split non-modeset CRTC DPMS function.
+    
+    RADEONRestore() calls crtc->funcs->dpms() after most of the mode setting
+    subsystems have been restored. This function enables the CRTCs but does
+    more: it calls DRM pre- and post-modeset ioctls and sets up the palettes
+    (LUTs).
+    None of these two things are needed. Accessing the palette registers after
+    restoring the PLLs can even lead to lockups.
+    Thus the CRTC DPMS function is split into two parts: one that just enables
+    /disables the CRTC and one which wraps this function and does the rest.
+    Now the inner function can be called directly from RADEONRestore() as
+    there is no need to go thru the RandR hooks in this function while the
+    RandR hook uses the wrappering function so the full functionality is
+    preserved from an RandR point of view.
+    
+    Signed-off-by: Egbert Eich <eich@freedesktop.org>
+    Reviewed-by: Alex Deucher <alexdeucher@gmail.com>
+
+commit ac51e331895b216d288bc7bd108a38b362214668
+Author: Egbert Eich <eich@suse.de>
+Date:   Mon Nov 14 19:10:01 2011 +0100
+
+    UMS: Fix lockups in palette save/restore on pre-AVIVO chips.
+    
+    The reintroduction of palette save/restore in 5efdf514 causes some
+    pre-AVIVO chips to lock up. An investigation revealed that accessing
+    palette registers when the associated PLL is not running is causing
+    this. With UMS the PLL setup that is saved has been done by the BIOS
+    typically.
+    A similar issue was observed when VGA palette save/restore had
+    been reinitroduced with 80eee856:
+     http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=480312
+    and has been worked around for Linux without further investigation
+    by 87e66ce7.
+    To fix the issue we now
+    a. introduce 'on-demand' palette saving (ie the palette is
+       saved before it is first altered). This guarantees that
+       the palette register are only associated when the associated
+       CRTC is active and thus the PLLs are powered up and running.
+    b. move palette restore before PLL restore.
+    c. eliminate generic VGA palette save/restore which seems to be
+       unneeded when the palette is restored natively.
+       It is believed that this caused the behavior described in
+       https://bugs.freedesktop.org/show_bug.cgi?id=18407#c27
+    
+    Signed-off-by: Egbert Eich <eich@freedesktop.org>
+    Reviewed-by: Alex Deucher <alexdeucher@gmail.com>
+
+commit 0a8d04eeac95f4db9d03ee31070bd825a7feb0b2
+Author: Matthieu Herrb <matthieu.herrb@laas.fr>
+Date:   Sun Jan 1 18:27:54 2012 +0100
+
+    Update for new vgaHW API.
+    
+    Signed-off-by: Matthieu Herrb <matthieu.herrb@laas.fr>
+    Reviewed-by: Mark Kettenis <kettenis@openbsd.org>
+    Signed-off-by: Alex Deucher <alexdeucher@gmail.com>
+
+commit ae45d7e6d8e6844cd4586c9ee97c21b257fa788f
+Author: Michel Dänzer <michel.daenzer@amd.com>
+Date:   Wed Dec 28 11:48:36 2011 +0100
+
+    DRI2: Can't use page flipping for pixmaps. (bug #42913)
+    
+    Fixes https://bugs.freedesktop.org/show_bug.cgi?id=42913 .
+    
+    Signed-off-by: Michel Dänzer <michel.daenzer@amd.com>
+
+commit aacbd629b02cbee3f9e6a0ee452b4e3f21376bd3
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Mon Dec 12 09:32:30 2011 -0500
+
+    radeon: add some new pci ids
+    
+    fixes:
+    https://bugs.freedesktop.org/show_bug.cgi?id=43739
+    
+    Signed-off-by: Alex Deucher <alexdeucher@gmail.com>
+
+commit bc54e415e2fd344939c5c788ea0686133a7e2c69
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Tue Dec 6 15:47:45 2011 +0000
+
+    radeon: add original radeon to always tiled.
+    
+    and actually enable it for M7, previous commit only did one function.
+    
+    Signed-off-by: Dave Airlie <airlied@redhat.com>
+
+commit ba46c7b0cf72d157748981eb3224d5eefb6200aa
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Tue Dec 6 13:42:49 2011 +0000
+
+    radeon: refine always tiled depth check
+    
+    So it appears the M7 family always tiles its depth buffer also.
+    
+    Signed-off-by: Dave Airlie <airlied@redhat.com>
+
+commit 98b2d5fe1722a43c4bbe7711ed7180a3fb65305f
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Mon Dec 5 18:44:28 2011 +0000
+
+    radeon: r200 depth buffers are always tiled
+    
+    When we do the allocations we need to make sure the always tiled
+    nature is taken into account.
+    
+    Signed-off-by: Dave Airlie <airlied@redhat.com>
+
+commit 7dcefc69d9fbceae27cd03083c815e01a19b527e
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Mon Dec 5 09:21:48 2011 -0500
+
+    Xv: Evergreen+ asics support 16k surfaces
+    
+    Signed-off-by: Alex Deucher <alexdeucher@gmail.com>
+
+commit 72e386d42516e7cd3c2cbf2fffc9174cd3ec8451
+Author: Alex Deucher <alexander.deucher@amd.com>
+Date:   Wed Nov 30 19:38:35 2011 -0500
+
+    radeon: add some new pci ids
+    
+    Signed-off-by: Alex Deucher <alexander.deucher@amd.com>
+
+commit 3853c3020d05175ae180b9a188dec7c425bdd0b8
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Mon Nov 28 18:38:30 2011 +0000
+
+    fixup xinerama since 9151f3b1c2ebcc34e63195888ba696f2183ba5e2
+    
+    since the driver would call RRFirstOutput without checking if randr has
+    been enabled, and it would crash in privates code.
+    
+    reported by vereteran on #radeon
+    
+    Signed-off-by: Dave Airlie <airlied@redhat.com>
+    Acked-on-irc-by: Michel Dänzer <michel.daenzer@amd.com>
+
+commit d669c34f140c000f88c4b4e464e44e6c8694f581
+Author: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Date:   Mon Nov 21 11:35:40 2011 +1100
+
+    ddx/evergreen: Fix endian of ALU constants
+    
+    The constants are written directly into a buffer object shared with the
+    card and we "forget" to swap them. This patch fixes it by doing the swap
+    in evergreen_set_alu_consts() in-place (ie, it modifies the buffer),
+    which should be fine with the way we use it in the ddx.
+    
+    This makes everything work fine on my caicos card on a G5 including some
+    quik tests with Xv, gnome3 shell, etc...
+    
+    Thanks a lot to Jerome Glisse for holding my hand through debugging that
+    (and finding the actual bug).
+    
+    Signed-off-by: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+    Signed-off-by: Alex Deucher <alexdeucher@gmail.com>
+
+commit 422bdd4fe6cb728e1dd08a56f6ee2d0f009cbfcb
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Mon Nov 14 09:39:16 2011 -0500
+
+    radeon: add missing FireMV pci id
+    
+    Signed-off-by: Alex Deucher <alexdeucher@gmail.com>
+
+commit 534fb6e413a909a9d1afd57d1c711844b7c5ddf4
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Fri Nov 11 10:26:51 2011 +0000
+
+    ati: enable bg none when fbcon succeeds and we are built against ABI after 10.
+    
+    One less patch to keep carrying in Fedora.
+    
+    Signed-off-by: Dave Airlie <airlied@redhat.com>
+
+commit 89452c08048c98fb5cc3dc551b3824be40d52cf2
+Author: Michel Dänzer <michel.daenzer@amd.com>
+Date:   Tue Nov 8 11:23:11 2011 +0100
+
+    UMS: Guard references to PCITAG / pciTag with XSERVER_LIBPCIACCESS (bug #42690)
+    
+    Should fix https://bugs.freedesktop.org/show_bug.cgi?id=42690 .
+    
+    Signed-off-by: Michel Dänzer <michel.daenzer@amd.com>
+
+commit 5ec34ed95948f7164184551615c1fc4c3eef3b98
+Author: Ilija Hadzic <ihadzic@research.bell-labs.com>
+Date:   Thu Nov 3 20:16:47 2011 -0400
+
+    DRI/DRI2: remove hard-coded limitation to 6 crtcs
+    
+    DRM's hard limit to the number of CRTCs is 32. ATI DDX unnecessarily
+    clips this limit to 6 by hard coding initial assumption for
+    output->possible_crtcs mask to 0x7f (before it gets trimmed down to
+    what's really possible for a given output) and by allocating only 6
+    entries for for cursor_bo[] array in RADEONInfoRec.
+    
+    Fix this and thus allow the ATI DDX to deal with as many CRTCs
+    as the DRM allows (32), so it is ready if anything with >6 CRTCs
+    comes out.
+    
+    Signed-off-by: Ilija Hadzic <ihadzic@research.bell-labs.com>
+
+commit 4853ab2cdc3b97948c7cd69eaf4fff54f59774fc
+Author: Michel Dänzer <michel.daenzer@amd.com>
+Date:   Fri Nov 4 12:15:53 2011 +0100
+
+    Turn compile time check into runtime check.
+    
+    Signed-off-by: Michel Dänzer <michel.daenzer@amd.com>
+
+commit bcdb54fe16ebf2e239b84eebf20e8adfe5094bff
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Thu Oct 20 11:11:35 2011 -0400
+
+    check for xserver 1.9.4.901 to enable tiling by default
+    
+    Previous xservers had a bug in the EXA code which caused
+    display corruption in some cases.
+    
+    See:
+    https://bugs.freedesktop.org/show_bug.cgi?id=33929
+    
+    Signed-off-by: Alex Deucher <alexdeucher@gmail.com>
+
+commit edde94cba5321e6e51e7fd4d79dde5abc4944495
+Author: Michel Dänzer <michel.daenzer@amd.com>
+Date:   Wed Nov 2 13:40:05 2011 +0100
+
+    Bump version post release.
+
 commit 93459f842c2d8dc178a1954b8e05150fcb96ac9a
 Author: Michel Dänzer <michel.daenzer@amd.com>
 Date:   Wed Nov 2 12:51:15 2011 +0100

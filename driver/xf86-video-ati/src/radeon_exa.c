@@ -454,9 +454,12 @@ void *RADEONEXACreatePixmap2(ScreenPtr pScreen, int width, int height,
     RADEONInfoPtr info = RADEONPTR(pScrn);
     struct radeon_exa_pixmap_priv *new_priv;
     int pitch, base_align;
-    uint32_t size;
+    uint32_t size, heighta;
     uint32_t tiling = 0;
     int cpp = bitsPerPixel / 8;
+#ifdef XF86DRM_MODE
+    struct radeon_surface surface;
+#endif
 
 #ifdef EXA_MIXED_PIXMAPS
     if (info->accel_state->exa->flags & EXA_MIXED_PIXMAPS) {
@@ -473,6 +476,9 @@ void *RADEONEXACreatePixmap2(ScreenPtr pScreen, int width, int height,
     	    if (usage_hint & RADEON_CREATE_PIXMAP_TILING_MICRO)
                 tiling |= RADEON_TILING_MICRO;
 	}
+	if (usage_hint & RADEON_CREATE_PIXMAP_DEPTH)
+ 	   	tiling |= RADEON_TILING_MACRO | RADEON_TILING_MICRO;
+		
     }
 
     /* Small pixmaps must not be macrotiled on R300, hw cannot sample them
@@ -485,17 +491,78 @@ void *RADEONEXACreatePixmap2(ScreenPtr pScreen, int width, int height,
         tiling &= ~RADEON_TILING_MACRO;
     }
 
-    height = RADEON_ALIGN(height, drmmode_get_height_align(pScrn, tiling));
+    heighta = RADEON_ALIGN(height, drmmode_get_height_align(pScrn, tiling));
     pitch = RADEON_ALIGN(width, drmmode_get_pitch_align(pScrn, cpp, tiling)) * cpp;
     base_align = drmmode_get_base_align(pScrn, cpp, tiling);
-    size = RADEON_ALIGN(height * pitch, RADEON_GPU_PAGE_SIZE);
+    size = RADEON_ALIGN(heighta * pitch, RADEON_GPU_PAGE_SIZE);
+    memset(&surface, 0, sizeof(struct radeon_surface));
+
+#ifdef XF86DRM_MODE
+    if (info->ChipFamily >= CHIP_FAMILY_R600 && info->surf_man) {
+		if (width) {
+			surface.npix_x = width;
+			/* need to align height to 8 for old kernel */
+			surface.npix_y = RADEON_ALIGN(height, 8);
+			surface.npix_z = 1;
+			surface.blk_w = 1;
+			surface.blk_h = 1;
+			surface.blk_d = 1;
+			surface.array_size = 1;
+			surface.last_level = 0;
+			surface.bpe = cpp;
+			surface.nsamples = 1;
+			surface.flags = RADEON_SURF_SCANOUT;
+			surface.flags |= RADEON_SURF_SET(RADEON_SURF_TYPE_2D, TYPE);
+			surface.flags |= RADEON_SURF_SET(RADEON_SURF_MODE_LINEAR, MODE);
+			if ((tiling & RADEON_TILING_MICRO)) {
+				surface.flags = RADEON_SURF_CLR(surface.flags, MODE);
+				surface.flags |= RADEON_SURF_SET(RADEON_SURF_MODE_1D, MODE);
+			}
+			if ((tiling & RADEON_TILING_MACRO)) {
+				surface.flags = RADEON_SURF_CLR(surface.flags, MODE);
+				surface.flags |= RADEON_SURF_SET(RADEON_SURF_MODE_2D, MODE);
+			}
+			if (usage_hint & RADEON_CREATE_PIXMAP_SZBUFFER) {
+				surface.flags |= RADEON_SURF_ZBUFFER;
+				surface.flags |= RADEON_SURF_SBUFFER;
+			}
+			if (radeon_surface_best(info->surf_man, &surface)) {
+				return NULL;
+			}
+			if (radeon_surface_init(info->surf_man, &surface)) {
+				return NULL;
+			}
+			size = surface.bo_size;
+			base_align = surface.bo_alignment;
+			pitch = surface.level[0].pitch_bytes;
+			tiling = 0;
+			switch (surface.level[0].mode) {
+			case RADEON_SURF_MODE_2D:
+				tiling |= RADEON_TILING_MACRO;
+				tiling |= surface.bankw << RADEON_TILING_EG_BANKW_SHIFT;
+				tiling |= surface.bankh << RADEON_TILING_EG_BANKH_SHIFT;
+				tiling |= surface.mtilea << RADEON_TILING_EG_MACRO_TILE_ASPECT_SHIFT;
+				tiling |= eg_tile_split(surface.tile_split) << RADEON_TILING_EG_TILE_SPLIT_SHIFT;
+				tiling |= eg_tile_split(surface.stencil_tile_split) << RADEON_TILING_EG_STENCIL_TILE_SPLIT_SHIFT;
+				break;
+			case RADEON_SURF_MODE_1D:
+				tiling |= RADEON_TILING_MICRO;
+				break;
+			default:
+				break;
+			}
+		}
+	}
+#endif
 
     new_priv = calloc(1, sizeof(struct radeon_exa_pixmap_priv));
-    if (!new_priv)
+    if (!new_priv) {
 	return NULL;
+    }
 
-    if (size == 0)
+    if (size == 0) {
 	return new_priv;
+    }
 
     *new_pitch = pitch;
 
@@ -510,6 +577,7 @@ void *RADEONEXACreatePixmap2(ScreenPtr pScreen, int width, int height,
     if (tiling && !radeon_bo_set_tiling(new_priv->bo, tiling, *new_pitch))
 	new_priv->tiling_flags = tiling;
 
+    new_priv->surface = surface;
     return new_priv;
 }
 
@@ -531,6 +599,15 @@ struct radeon_bo *radeon_get_pixmap_bo(PixmapPtr pPix)
     driver_priv = exaGetPixmapDriverPrivate(pPix);
     return driver_priv->bo;
 }
+
+#if defined(XF86DRM_MODE)
+struct radeon_surface *radeon_get_pixmap_surface(PixmapPtr pPix)
+{
+    struct radeon_exa_pixmap_priv *driver_priv;
+    driver_priv = exaGetPixmapDriverPrivate(pPix);
+    return &driver_priv->surface;
+}
+#endif
 
 uint32_t radeon_get_pixmap_tiling(PixmapPtr pPix)
 {

@@ -142,7 +142,7 @@ radeon_pick_best_crtc(ScrnInfoPtr pScrn,
     xf86CrtcConfigPtr   xf86_config = XF86_CRTC_CONFIG_PTR(pScrn);
     int			coverage, best_coverage, c;
     BoxRec		box, crtc_box, cover_box;
-    RROutputPtr         primary_output;
+    RROutputPtr         primary_output = NULL;
     xf86CrtcPtr         best_crtc = NULL, primary_crtc = NULL;
 
     box.x1 = x1;
@@ -152,7 +152,9 @@ radeon_pick_best_crtc(ScrnInfoPtr pScrn,
     best_coverage = 0;
 
     /* Prefer the CRTC of the primary output */
-    primary_output = RRFirstOutput(pScrn->pScreen);
+    if (dixPrivateKeyRegistered(rrPrivKey)) {
+	primary_output = RRFirstOutput(pScrn->pScreen);
+    }
     if (primary_output && primary_output->crtc)
 	primary_crtc = primary_output->crtc->devPrivate;
 

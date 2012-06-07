@@ -49,12 +49,16 @@
 #include <X11/extensions/dpms.h>
 #endif
 
-static PixmapPtr drmmode_create_bo_pixmap(ScreenPtr pScreen,
+static PixmapPtr drmmode_create_bo_pixmap(ScrnInfoPtr pScrn,
 					  int width, int height,
 					  int depth, int bpp,
-					  int pitch, struct radeon_bo *bo)
+					  int pitch, int tiling,
+					  struct radeon_bo *bo)
 {
+	RADEONInfoPtr info = RADEONPTR(pScrn);
+	ScreenPtr pScreen = pScrn->pScreen;
 	PixmapPtr pixmap;
+	struct radeon_surface *surface;
 
 	pixmap = (*pScreen->CreatePixmap)(pScreen, 0, 0, depth, 0);
 	if (!pixmap)
@@ -67,6 +71,39 @@ static PixmapPtr drmmode_create_bo_pixmap(ScreenPtr pScreen,
 
 	exaMoveInPixmap(pixmap);
 	radeon_set_pixmap_bo(pixmap, bo);
+	if (info->ChipFamily >= CHIP_FAMILY_R600) {
+		surface = radeon_get_pixmap_surface(pixmap);
+		if (surface) {
+			memset(surface, 0, sizeof(struct radeon_surface));
+			surface->npix_x = width;
+			surface->npix_y = height;
+			surface->npix_z = 1;
+			surface->blk_w = 1;
+			surface->blk_h = 1;
+			surface->blk_d = 1;
+			surface->array_size = 1;
+			surface->last_level = 0;
+			surface->bpe = bpp / 8;
+			surface->nsamples = 1;
+			surface->flags = RADEON_SURF_SCANOUT;
+			surface->flags |= RADEON_SURF_SET(RADEON_SURF_TYPE_2D, TYPE);
+			surface->flags |= RADEON_SURF_SET(RADEON_SURF_MODE_LINEAR_ALIGNED, MODE);
+			if (tiling & RADEON_TILING_MICRO) {
+				surface->flags = RADEON_SURF_CLR(surface->flags, MODE);
+				surface->flags |= RADEON_SURF_SET(RADEON_SURF_MODE_1D, MODE);
+			}
+			if (tiling & RADEON_TILING_MACRO) {
+				surface->flags = RADEON_SURF_CLR(surface->flags, MODE);
+				surface->flags |= RADEON_SURF_SET(RADEON_SURF_MODE_2D, MODE);
+			}
+			if (radeon_surface_best(info->surf_man, surface)) {
+				return NULL;
+			}
+			if (radeon_surface_init(info->surf_man, surface)) {
+				return NULL;
+			}
+		}
+	}
 
 	return pixmap;
 }
@@ -159,7 +196,6 @@ create_pixmap_for_fbcon(drmmode_ptr drmmode,
 {
 	xf86CrtcConfigPtr xf86_config = XF86_CRTC_CONFIG_PTR(pScrn);
 	drmmode_crtc_private_ptr drmmode_crtc;
-	ScreenPtr pScreen = pScrn->pScreen;
 	PixmapPtr pixmap;
 	struct radeon_bo *bo;
 	drmModeFBPtr fbcon;
@@ -185,9 +221,9 @@ create_pixmap_for_fbcon(drmmode_ptr drmmode,
 		return NULL;
 	}
 
-	pixmap = drmmode_create_bo_pixmap(pScreen, fbcon->width, fbcon->height,
+	pixmap = drmmode_create_bo_pixmap(pScrn, fbcon->width, fbcon->height,
 					  fbcon->depth, fbcon->bpp,
-					  fbcon->pitch, bo);
+					  fbcon->pitch, 0, bo);
 	if (!pixmap) 
 		return NULL;
 
@@ -225,9 +261,13 @@ void drmmode_copy_fb(ScrnInfoPtr pScrn, drmmode_ptr drmmode)
 		return;
 
 	if (info->allowColorTiling) {
-		if (info->ChipFamily >= CHIP_FAMILY_R600)
-			tiling_flags |= RADEON_TILING_MICRO;
-		else
+		if (info->ChipFamily >= CHIP_FAMILY_R600) {
+			if (info->allowColorTiling2D) {
+				tiling_flags |= RADEON_TILING_MACRO;
+			} else {
+				tiling_flags |= RADEON_TILING_MICRO;
+			}
+		} else
 			tiling_flags |= RADEON_TILING_MACRO;
 	}
 
@@ -235,10 +275,10 @@ void drmmode_copy_fb(ScrnInfoPtr pScrn, drmmode_ptr drmmode)
 			     drmmode_get_pitch_align(pScrn, info->CurrentLayout.pixel_bytes, tiling_flags)) *
 		info->CurrentLayout.pixel_bytes;
 
-	dst = drmmode_create_bo_pixmap(pScreen, pScrn->virtualX,
+	dst = drmmode_create_bo_pixmap(pScrn, pScrn->virtualX,
 				       pScrn->virtualY, pScrn->depth,
 				       pScrn->bitsPerPixel, pitch,
-				       info->front_bo);
+				       tiling_flags, info->front_bo);
 	if (!dst)
 		goto out_free_src;
 
@@ -251,6 +291,9 @@ void drmmode_copy_fb(ScrnInfoPtr pScrn, drmmode_ptr drmmode)
 	info->accel_state->exa->DoneCopy (dst);
 	radeon_cs_flush_indirect(pScrn);
 
+#if GET_ABI_MAJOR(ABI_VIDEODRV_VERSION) >= 10
+	pScreen->canDoBGNoneRoot = TRUE;
+#endif
 	drmmode_destroy_bo_pixmap(dst);
  out_free_src:
 	drmmode_destroy_bo_pixmap(src);
@@ -289,6 +332,9 @@ drmmode_set_mode_major(xf86CrtcPtr crtc, DisplayModePtr mode,
 	pitch = RADEON_ALIGN(pScrn->displayWidth, drmmode_get_pitch_align(pScrn, info->CurrentLayout.pixel_bytes, tiling_flags)) *
 		info->CurrentLayout.pixel_bytes;
 	height = RADEON_ALIGN(pScrn->virtualY, drmmode_get_height_align(pScrn, tiling_flags));
+	if (info->ChipFamily >= CHIP_FAMILY_R600) {
+		pitch = info->front_surface.level[0].pitch_bytes;
+	}
 
 	if (drmmode->fb_id == 0) {
 		ret = drmModeAddFB(drmmode->fd,
@@ -500,12 +546,12 @@ drmmode_crtc_shadow_create(xf86CrtcPtr crtc, void *data, int width, int height)
 
 	rotate_pitch = RADEON_ALIGN(width, drmmode_get_pitch_align(pScrn, drmmode->cpp, 0)) * drmmode->cpp;
 
-	rotate_pixmap = drmmode_create_bo_pixmap(pScrn->pScreen,
+	rotate_pixmap = drmmode_create_bo_pixmap(pScrn,
 						 width, height,
 						 pScrn->depth,
 						 pScrn->bitsPerPixel,
 						 rotate_pitch,
-						 drmmode_crtc->rotate_bo);
+						 0, drmmode_crtc->rotate_bo);
 	if (rotate_pixmap == NULL) {
 		xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
 			   "Couldn't allocate shadow pixmap for rotated CRTC\n");
@@ -1011,7 +1057,7 @@ drmmode_output_init(ScrnInfoPtr pScrn, drmmode_ptr drmmode, int num, int *num_dv
 	output->doubleScanAllowed = TRUE;
 	output->driver_private = drmmode_output;
 	
-	output->possible_crtcs = 0x7f;
+	output->possible_crtcs = 0xffffffff;
 	for (i = 0; i < koutput->count_encoders; i++) {
 		output->possible_crtcs &= kencoders[i]->possible_crtcs;
 	}
@@ -1203,7 +1249,9 @@ drmmode_xf86crtc_resize (ScrnInfoPtr scrn, int width, int height)
 	int screen_size;
 	int cpp = info->CurrentLayout.pixel_bytes;
 	struct radeon_bo *front_bo;
-	uint32_t tiling_flags = 0;
+	struct radeon_surface surface;
+	struct radeon_surface *psurface;
+	uint32_t tiling_flags = 0, base_align;
 	PixmapPtr ppix = screen->GetScreenPixmap(screen);
 	void *fb_shadow;
 
@@ -1217,15 +1265,69 @@ drmmode_xf86crtc_resize (ScrnInfoPtr scrn, int width, int height)
 		radeon_bo_wait(front_bo);
 
 	if (info->allowColorTiling) {
-		if (info->ChipFamily >= CHIP_FAMILY_R600)
-			tiling_flags |= RADEON_TILING_MICRO;
-		else
+		if (info->ChipFamily >= CHIP_FAMILY_R600) {
+			if (info->allowColorTiling2D) {
+				tiling_flags |= RADEON_TILING_MACRO;
+			} else {
+				tiling_flags |= RADEON_TILING_MICRO;
+			}
+		} else
 			tiling_flags |= RADEON_TILING_MACRO;
 	}
 
 	pitch = RADEON_ALIGN(width, drmmode_get_pitch_align(scrn, cpp, tiling_flags)) * cpp;
 	height = RADEON_ALIGN(height, drmmode_get_height_align(scrn, tiling_flags));
 	screen_size = RADEON_ALIGN(pitch * height, RADEON_GPU_PAGE_SIZE);
+	base_align = 4096;
+	if (info->ChipFamily >= CHIP_FAMILY_R600) {
+		memset(&surface, 0, sizeof(struct radeon_surface));
+		surface.npix_x = width;
+		surface.npix_y = height;
+		surface.npix_z = 1;
+		surface.blk_w = 1;
+		surface.blk_h = 1;
+		surface.blk_d = 1;
+		surface.array_size = 1;
+		surface.last_level = 0;
+		surface.bpe = cpp;
+		surface.nsamples = 1;
+		surface.flags = RADEON_SURF_SCANOUT;
+		surface.flags |= RADEON_SURF_SET(RADEON_SURF_TYPE_2D, TYPE);
+		surface.flags |= RADEON_SURF_SET(RADEON_SURF_MODE_LINEAR_ALIGNED, MODE);
+		if (tiling_flags & RADEON_TILING_MICRO) {
+			surface.flags = RADEON_SURF_CLR(surface.flags, MODE);
+			surface.flags |= RADEON_SURF_SET(RADEON_SURF_MODE_1D, MODE);
+		}
+		if (tiling_flags & RADEON_TILING_MACRO) {
+			surface.flags = RADEON_SURF_CLR(surface.flags, MODE);
+			surface.flags |= RADEON_SURF_SET(RADEON_SURF_MODE_2D, MODE);
+		}
+		if (radeon_surface_best(info->surf_man, &surface)) {
+			return FALSE;
+		}
+		if (radeon_surface_init(info->surf_man, &surface)) {
+			return FALSE;
+		}
+		screen_size = surface.bo_size;
+		base_align = surface.bo_alignment;
+		pitch = surface.level[0].pitch_bytes;
+		tiling_flags = 0;
+		switch (surface.level[0].mode) {
+		case RADEON_SURF_MODE_2D:
+			tiling_flags |= RADEON_TILING_MACRO;
+			tiling_flags |= surface.bankw << RADEON_TILING_EG_BANKW_SHIFT;
+			tiling_flags |= surface.bankh << RADEON_TILING_EG_BANKH_SHIFT;
+			tiling_flags |= surface.mtilea << RADEON_TILING_EG_MACRO_TILE_ASPECT_SHIFT;
+			tiling_flags |= eg_tile_split(surface.tile_split) << RADEON_TILING_EG_TILE_SPLIT_SHIFT;
+			break;
+		case RADEON_SURF_MODE_1D:
+			tiling_flags |= RADEON_TILING_MICRO;
+			break;
+		default:
+			break;
+		}
+		info->front_surface = surface;
+	}
 
 	xf86DrvMsg(scrn->scrnIndex, X_INFO,
 		   "Allocate new frame buffer %dx%d stride %d\n",
@@ -1241,7 +1343,7 @@ drmmode_xf86crtc_resize (ScrnInfoPtr scrn, int width, int height)
 	scrn->virtualY = height;
 	scrn->displayWidth = pitch / cpp;
 
-	info->front_bo = radeon_bo_open(info->bufmgr, 0, screen_size, 0, RADEON_GEM_DOMAIN_VRAM, 0);
+	info->front_bo = radeon_bo_open(info->bufmgr, 0, screen_size, base_align, RADEON_GEM_DOMAIN_VRAM, 0);
 	if (!info->front_bo)
 		goto fail;
 
@@ -1267,6 +1369,8 @@ drmmode_xf86crtc_resize (ScrnInfoPtr scrn, int width, int height)
 
 	if (!info->r600_shadow_fb) {
 		radeon_set_pixmap_bo(ppix, info->front_bo);
+		psurface = radeon_get_pixmap_surface(ppix);
+		*psurface = info->front_surface;
 		screen->ModifyPixmapHeader(ppix,
 					   width, height, -1, -1, pitch, NULL);
 	} else {
@@ -1376,9 +1480,7 @@ drm_wakeup_handler(pointer data, int err, pointer p)
 
 Bool drmmode_pre_init(ScrnInfoPtr pScrn, drmmode_ptr drmmode, int cpp)
 {
-	RADEONEntPtr pRADEONEnt   = RADEONEntPriv(pScrn);
 	xf86CrtcConfigPtr xf86_config;
-	RADEONInfoPtr info = RADEONPTR(pScrn);
 	int i, num_dvi = 0, num_hdmi = 0;
 
 	xf86CrtcConfigInit(pScrn, &drmmode_xf86crtc_config_funcs);
@@ -1408,14 +1510,22 @@ Bool drmmode_pre_init(ScrnInfoPtr pScrn, drmmode_ptr drmmode, int cpp)
 #ifdef __linux__
 	drmmode->event_context.page_flip_handler = drmmode_flip_handler;
 #endif
-	if (!pRADEONEnt->fd_wakeup_registered && info->dri->pKernelDRMVersion->version_minor >= 4) {
+
+       return TRUE;
+}
+
+void drmmode_init(ScrnInfoPtr pScrn, drmmode_ptr drmmode)
+{
+       RADEONEntPtr pRADEONEnt = RADEONEntPriv(pScrn);
+       RADEONInfoPtr info = RADEONPTR(pScrn);
+
+       if (pRADEONEnt->fd_wakeup_registered != serverGeneration &&
+           info->dri->pKernelDRMVersion->version_minor >= 4) {
 		AddGeneralSocket(drmmode->fd);
 		RegisterBlockAndWakeupHandlers((BlockHandlerProcPtr)NoopDDA,
 				drm_wakeup_handler, drmmode);
-		pRADEONEnt->fd_wakeup_registered = TRUE;
+		pRADEONEnt->fd_wakeup_registered = serverGeneration;
 	}
-
-	return TRUE;
 }
 
 Bool drmmode_set_bufmgr(ScrnInfoPtr pScrn, drmmode_ptr drmmode, struct radeon_bo_manager *bufmgr)
@@ -1672,6 +1782,9 @@ Bool radeon_do_pageflip(ScrnInfoPtr scrn, struct radeon_bo *new_front, void *dat
 	pitch = RADEON_ALIGN(scrn->displayWidth, drmmode_get_pitch_align(scrn, info->CurrentLayout.pixel_bytes, tiling_flags)) *
 		info->CurrentLayout.pixel_bytes;
 	height = RADEON_ALIGN(scrn->virtualY, drmmode_get_height_align(scrn, tiling_flags));
+	if (info->ChipFamily >= CHIP_FAMILY_R600 && info->surf_man) {
+		pitch = info->front_surface.level[0].pitch_bytes;
+	}
 
 	/*
 	 * Create a new handle for the back buffer

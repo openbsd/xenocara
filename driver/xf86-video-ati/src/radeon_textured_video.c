@@ -66,6 +66,9 @@ R600CopyToVRAM(ScrnInfoPtr pScrn,
 #define IMAGE_MAX_WIDTH_R600	8192
 #define IMAGE_MAX_HEIGHT_R600	8192
 
+#define IMAGE_MAX_WIDTH_EG	16384
+#define IMAGE_MAX_HEIGHT_EG	16384
+
 static Bool
 RADEONTilingEnabled(ScrnInfoPtr pScrn, PixmapPtr pPix)
 {
@@ -554,6 +557,16 @@ static XF86VideoEncodingRec DummyEncodingR600[1] =
     }
 };
 
+static XF86VideoEncodingRec DummyEncodingEG[1] =
+{
+    {
+	0,
+	"XV_IMAGE",
+	IMAGE_MAX_WIDTH_EG, IMAGE_MAX_HEIGHT_EG,
+	{1, 1}
+    }
+};
+
 #define NUM_FORMATS 3
 
 static XF86VideoFormatRec Formats[NUM_FORMATS] =
@@ -824,7 +837,9 @@ RADEONSetupImageTexturedVideo(ScreenPtr pScreen)
     adapt->flags = 0;
     adapt->name = "Radeon Textured Video";
     adapt->nEncodings = 1;
-    if (IS_R600_3D)
+    if (IS_EVERGREEN_3D)
+	adapt->pEncodings = DummyEncodingEG;
+    else if (IS_R600_3D)
 	adapt->pEncodings = DummyEncodingR600;
     else if (IS_R500_3D)
 	adapt->pEncodings = DummyEncodingR500;

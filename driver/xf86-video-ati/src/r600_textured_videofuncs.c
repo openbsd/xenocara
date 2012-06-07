@@ -170,6 +170,7 @@ R600DisplayTexturedVideo(ScrnInfoPtr pScrn, RADEONPortPrivPtr pPriv)
 	src_obj.offset = 0;
 	dst_obj.bo = radeon_get_pixmap_bo(pPixmap);
 	dst_obj.tiling_flags = radeon_get_pixmap_tiling(pPixmap);
+	dst_obj.surface = radeon_get_pixmap_surface(pPixmap);
     } else
 #endif
     {
@@ -186,6 +187,9 @@ R600DisplayTexturedVideo(ScrnInfoPtr pScrn, RADEONPortPrivPtr pPriv)
     src_obj.domain = RADEON_GEM_DOMAIN_VRAM | RADEON_GEM_DOMAIN_GTT;
     src_obj.bo = pPriv->src_bo[pPriv->currentBuffer];
     src_obj.tiling_flags = 0;
+#ifdef XF86DRM_MODE
+    src_obj.surface = NULL;
+#endif
 
     dst_obj.width = pPixmap->drawable.width;
     dst_obj.height = pPixmap->drawable.height;
@@ -270,6 +274,9 @@ R600DisplayTexturedVideo(ScrnInfoPtr pScrn, RADEONPortPrivPtr pPriv)
 	tex_res.size                = accel_state->src_size[0];
 	tex_res.bo                  = accel_state->src_obj[0].bo;
 	tex_res.mip_bo              = accel_state->src_obj[0].bo;
+#ifdef XF86DRM_MODE
+	tex_res.surface             = NULL;
+#endif
 
 	tex_res.format              = FMT_8;
 	tex_res.dst_sel_x           = SQ_SEL_X; /* Y */
@@ -431,6 +438,9 @@ R600DisplayTexturedVideo(ScrnInfoPtr pScrn, RADEONPortPrivPtr pPriv)
     cb_conf.h = accel_state->dst_obj.height;
     cb_conf.base = accel_state->dst_obj.offset;
     cb_conf.bo = accel_state->dst_obj.bo;
+#ifdef XF86DRM_MODE
+    cb_conf.surface = accel_state->dst_obj.surface;
+#endif
 
     switch (accel_state->dst_obj.bpp) {
     case 16:
@@ -493,7 +503,7 @@ R600DisplayTexturedVideo(ScrnInfoPtr pScrn, RADEONPortPrivPtr pPriv)
     }
 
     while (nBox--) {
-	int srcX, srcY, srcw, srch;
+	float srcX, srcY, srcw, srch;
 	int dstX, dstY, dstw, dsth;
 	float *vb;
 
@@ -505,13 +515,13 @@ R600DisplayTexturedVideo(ScrnInfoPtr pScrn, RADEONPortPrivPtr pPriv)
 
 	srcX = pPriv->src_x;
 	srcX += ((pBox->x1 - pPriv->drw_x) *
-		 pPriv->src_w) / pPriv->dst_w;
+		 pPriv->src_w) / (float)pPriv->dst_w;
 	srcY = pPriv->src_y;
 	srcY += ((pBox->y1 - pPriv->drw_y) *
-		 pPriv->src_h) / pPriv->dst_h;
+		 pPriv->src_h) / (float)pPriv->dst_h;
 
-	srcw = (pPriv->src_w * dstw) / pPriv->dst_w;
-	srch = (pPriv->src_h * dsth) / pPriv->dst_h;
+	srcw = (pPriv->src_w * dstw) / (float)pPriv->dst_w;
+	srch = (pPriv->src_h * dsth) / (float)pPriv->dst_h;
 
 	vb = radeon_vbo_space(pScrn, &accel_state->vbo, 16);
 

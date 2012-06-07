@@ -91,6 +91,7 @@
 #include "radeon_cs.h"
 #include "radeon_dri2.h"
 #include "drmmode_display.h"
+#include "radeon_surface.h"
 #else
 #include "radeon_dummy_bufmgr.h"
 #endif
@@ -183,6 +184,7 @@ typedef enum {
     OPTION_PANEL_SIZE,
     OPTION_MIN_DOTCLOCK,
     OPTION_COLOR_TILING,
+    OPTION_COLOR_TILING_2D,
 #ifdef XvExtension
     OPTION_VIDEO_KEY,
     OPTION_RAGE_THEATRE_CRYSTAL,
@@ -442,6 +444,9 @@ typedef struct _atomBiosHandle *atomBiosHandlePtr;
 struct radeon_exa_pixmap_priv {
     struct radeon_bo *bo;
     uint32_t tiling_flags;
+#ifdef XF86DRM_MODE
+    struct radeon_surface surface;
+#endif
     Bool bo_mapped;
 };
 
@@ -621,6 +626,9 @@ struct r600_accel_object {
     uint32_t domain;
     struct radeon_bo *bo;
     uint32_t tiling_flags;
+#if defined(XF86DRM_MODE)
+    struct radeon_surface *surface;
+#endif
 };
 
 struct radeon_vbo_object {
@@ -792,7 +800,9 @@ struct radeon_accel_state {
 typedef struct {
     EntityInfoPtr     pEnt;
     pciVideoPtr       PciInfo;
+#ifndef XSERVER_LIBPCIACCESS
     PCITAG            PciTag;
+#endif
     int               Chipset;
     RADEONChipFamily  ChipFamily;
     RADEONErrata      ChipErrata;
@@ -887,6 +897,7 @@ typedef struct {
     /* accel */
     Bool              RenderAccel; /* Render */
     Bool              allowColorTiling;
+    Bool              allowColorTiling2D;
     Bool              tilingEnabled; /* mirror of sarea->tiling_enabled */
     struct radeon_accel_state *accel_state;
     Bool              accelOn;
@@ -1001,7 +1012,7 @@ typedef struct {
     struct radeon_cs_manager *csm;
     struct radeon_cs *cs;
 
-    struct radeon_bo *cursor_bo[6];
+    struct radeon_bo *cursor_bo[32];
     uint64_t vram_size;
     uint64_t gart_size;
     drmmode_rec drmmode;
@@ -1012,6 +1023,8 @@ typedef struct {
     int num_channels;
     int num_banks;
     int r7xx_bank_op;
+    struct radeon_surface_manager *surf_man;
+    struct radeon_surface front_surface;
 #else
     /* fake bool */
     Bool cs;
@@ -1070,6 +1083,7 @@ extern void RADEONRestoreLVDSRegisters(ScrnInfoPtr pScrn, RADEONSavePtr restore)
 extern void RADEONRestoreRMXRegisters(ScrnInfoPtr pScrn, RADEONSavePtr restore);
 extern void RADEONSaveDACRegisters(ScrnInfoPtr pScrn, RADEONSavePtr save);
 extern void RADEONSaveFPRegisters(ScrnInfoPtr pScrn, RADEONSavePtr save);
+extern void radeon_save_palette_on_demand(ScrnInfoPtr pScrn, int palID);
 
 extern void RADEONGetTVDacAdjInfo(ScrnInfoPtr pScrn, radeon_tvdac_ptr tvdac);
 extern void RADEONGetTMDSInfoFromTable(ScrnInfoPtr pScrn, radeon_tmds_ptr tmds);
@@ -1144,6 +1158,7 @@ extern void RADEONWaitForVLineMMIO(ScrnInfoPtr pScrn, PixmapPtr pPix,
 
 /* radeon_crtc.c */
 extern void radeon_crtc_dpms(xf86CrtcPtr crtc, int mode);
+extern void radeon_do_crtc_dpms(xf86CrtcPtr crtc, int mode);
 extern void radeon_crtc_load_lut(xf86CrtcPtr crtc);
 extern void radeon_crtc_modeset_ioctl(xf86CrtcPtr crtc, Bool post);
 extern Bool RADEONAllocateControllers(ScrnInfoPtr pScrn, int mask);
@@ -1227,6 +1242,7 @@ extern void RADEONPMFini(ScrnInfoPtr pScrn);
 
 #ifdef USE_EXA
 /* radeon_exa.c */
+extern unsigned eg_tile_split(unsigned tile_split);
 extern Bool RADEONSetupMemEXA(ScreenPtr pScreen);
 extern Bool radeon_transform_is_affine_or_scaled(PictTransformPtr t);
 
@@ -1318,6 +1334,7 @@ extern void radeon_ddx_cs_start(ScrnInfoPtr pScrn,
 				int num, const char *file,
 				const char *func, int line);
 void radeon_kms_update_vram_limit(ScrnInfoPtr pScrn, int new_fb_size);
+struct radeon_surface *radeon_get_pixmap_surface(PixmapPtr pPix);
 #endif
 struct radeon_bo *radeon_get_pixmap_bo(PixmapPtr pPix);
 void radeon_set_pixmap_bo(PixmapPtr pPix, struct radeon_bo *bo);
@@ -1665,6 +1682,8 @@ static __inline__ int radeon_timedout(const struct timeval *endtime)
 enum {
     RADEON_CREATE_PIXMAP_TILING_MACRO = 0x10000000,
     RADEON_CREATE_PIXMAP_TILING_MICRO = 0x20000000,
+    RADEON_CREATE_PIXMAP_DEPTH = 0x40000000, /* for r200 */
+    RADEON_CREATE_PIXMAP_SZBUFFER = 0x80000000, /* for eg */
 };
 
 #endif /* _RADEON_H_ */

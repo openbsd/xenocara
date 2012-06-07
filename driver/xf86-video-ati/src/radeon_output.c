@@ -3002,9 +3002,9 @@ Bool RADEONSetupConnectors(ScrnInfoPtr pScrn)
 		info->BiosConnector[i].devices |= ATOM_DEVICE_CRT2_SUPPORT;
 		if (!radeon_add_encoder(pScrn,
 					radeon_get_encoder_id_from_supported_device(pScrn,
-										    ATOM_DEVICE_CRT1_SUPPORT,
+										    ATOM_DEVICE_CRT2_SUPPORT,
 										    2),
-					ATOM_DEVICE_CRT1_SUPPORT))
+					ATOM_DEVICE_CRT2_SUPPORT))
 		    return FALSE;
 		info->BiosConnector[i].load_detection = FALSE;
 		break;

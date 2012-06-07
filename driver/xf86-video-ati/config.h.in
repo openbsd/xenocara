@@ -62,6 +62,9 @@
 /* Have xf86ModeBandwidth prototype */
 #undef HAVE_XF86MODEBANDWIDTH
 
+/* Have xorg_list API */
+#undef HAVE_XORG_LIST
+
 /* Have xf86XVFillKeyHelperDrawable prototype */
 #undef HAVE_XV_DRAWABLE_HELPER
 

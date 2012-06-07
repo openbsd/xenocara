@@ -223,12 +223,37 @@ void
 r600_set_render_target(ScrnInfoPtr pScrn, drmBufPtr ib, cb_config_t *cb_conf, uint32_t domain)
 {
     uint32_t cb_color_info, cb_color_control;
-    int pitch, slice, h;
+    unsigned pitch, slice, h, array_mode;
     RADEONInfoPtr info = RADEONPTR(pScrn);
+
+
+#if defined(XF86DRM_MODE)
+    if (cb_conf->surface) {
+	switch (cb_conf->surface->level[0].mode) {
+	case RADEON_SURF_MODE_1D:
+		array_mode = 2;
+		break;
+	case RADEON_SURF_MODE_2D:
+		array_mode = 4;
+		break;
+	default:
+		array_mode = 0;
+		break;
+	}
+	pitch = (cb_conf->surface->level[0].nblk_x >> 3) - 1;
+	slice = ((cb_conf->surface->level[0].nblk_x * cb_conf->surface->level[0].nblk_y) / 64) - 1;
+    } else
+#endif
+    {
+	array_mode = cb_conf->array_mode;
+	pitch = (cb_conf->w / 8) - 1;
+	h = RADEON_ALIGN(cb_conf->h, 8);
+	slice = ((cb_conf->w * h) / 64) - 1;
+    }
 
     cb_color_info = ((cb_conf->endian      << ENDIAN_shift)				|
 		     (cb_conf->format      << CB_COLOR0_INFO__FORMAT_shift)		|
-		     (cb_conf->array_mode  << CB_COLOR0_INFO__ARRAY_MODE_shift)		|
+		     (array_mode  << CB_COLOR0_INFO__ARRAY_MODE_shift)		|
 		     (cb_conf->number_type << NUMBER_TYPE_shift)			|
 		     (cb_conf->comp_swap   << COMP_SWAP_shift)				|
 		     (cb_conf->tile_mode   << CB_COLOR0_INFO__TILE_MODE_shift));
@@ -250,10 +275,6 @@ r600_set_render_target(ScrnInfoPtr pScrn, drmBufPtr ib, cb_config_t *cb_conf, ui
 	cb_color_info |= TILE_COMPACT_bit;
     if (cb_conf->source_format)
 	cb_color_info |= SOURCE_FORMAT_bit;
-
-    pitch = (cb_conf->w / 8) - 1;
-    h = RADEON_ALIGN(cb_conf->h, 8);
-    slice = ((cb_conf->w * h) / 64) - 1;
 
     BEGIN_BATCH(3 + 2);
     EREG(ib, (CB_COLOR0_BASE + (4 * cb_conf->id)), (cb_conf->base >> 8));
@@ -345,9 +366,6 @@ r600_cp_wait_vline_sync(ScrnInfoPtr pScrn, drmBufPtr ib, PixmapPtr pPix,
     if (!crtc)
         return;
 
-    if (stop < start)
-        return;
-
     if (!crtc->enabled)
         return;
 
@@ -367,15 +385,11 @@ r600_cp_wait_vline_sync(ScrnInfoPtr pScrn, drmBufPtr ib, PixmapPtr pPix,
 	    return;
     }
 
-    start = max(start, 0);
-    stop = min(stop, crtc->mode.VDisplay);
+    start = max(start, crtc->y);
+    stop = min(stop, crtc->y + crtc->mode.VDisplay);
 
-    if (start > crtc->mode.VDisplay)
+    if (start >= stop)
         return;
-
-    /* on r5xx+ vline starts at viewport_y */
-    start += crtc->y;
-    stop += crtc->y;
 
 #if defined(XF86DRM_MODE)
     if (info->cs) {
@@ -609,12 +623,34 @@ r600_set_tex_resource(ScrnInfoPtr pScrn, drmBufPtr ib, tex_resource_t *tex_res, 
     RADEONInfoPtr info = RADEONPTR(pScrn);
     uint32_t sq_tex_resource_word0, sq_tex_resource_word1, sq_tex_resource_word4;
     uint32_t sq_tex_resource_word5, sq_tex_resource_word6;
+    uint32_t array_mode, pitch;
+
+#if defined(XF86DRM_MODE)
+    if (tex_res->surface) {
+	switch (tex_res->surface->level[0].mode) {
+	case RADEON_SURF_MODE_1D:
+		array_mode = 2;
+		break;
+	case RADEON_SURF_MODE_2D:
+		array_mode = 4;
+		break;
+	default:
+		array_mode = 0;
+		break;
+	}
+	pitch = tex_res->surface->level[0].nblk_x >> 3;
+    } else
+#endif
+    {
+	array_mode = tex_res->tile_mode;
+	pitch = (tex_res->pitch + 7) >> 3;
+    }
 
     sq_tex_resource_word0 = ((tex_res->dim << DIM_shift) |
-			     (tex_res->tile_mode << SQ_TEX_RESOURCE_WORD0_0__TILE_MODE_shift));
+		     (array_mode << SQ_TEX_RESOURCE_WORD0_0__TILE_MODE_shift));
 
     if (tex_res->w)
-	sq_tex_resource_word0 |= (((((tex_res->pitch + 7) >> 3) - 1) << PITCH_shift) |
+	sq_tex_resource_word0 |= (((pitch - 1) << PITCH_shift) |
 				  ((tex_res->w - 1) << TEX_WIDTH_shift));
 
     if (tex_res->tile_type)
@@ -1125,7 +1161,7 @@ r600_set_default_state(ScrnInfoPtr pScrn, drmBufPtr ib)
     r600_fs_setup(pScrn, ib, &fs_conf, RADEON_GEM_DOMAIN_VRAM);
 
     // VGT
-    BEGIN_BATCH(43);
+    BEGIN_BATCH(46);
     PACK0(ib, VGT_MAX_VTX_INDX, 4);
     E32(ib, 0xffffff); // VGT_MAX_VTX_INDX
     E32(ib, 0); // VGT_MIN_VTX_INDX
@@ -1164,6 +1200,7 @@ r600_set_default_state(ScrnInfoPtr pScrn, drmBufPtr ib)
     E32(ib, 0); // VGT_VTX_CNT_EN
 
     EREG(ib, VGT_STRMOUT_BUFFER_EN,               0);
+    EREG(ib, SX_MISC,                             0);
     END_BATCH();
 }
 

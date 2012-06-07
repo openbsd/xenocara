@@ -75,6 +75,57 @@ evergreen_start_3d(ScrnInfoPtr pScrn)
 
 }
 
+unsigned eg_tile_split(unsigned tile_split)
+{
+	switch (tile_split) {
+	case 64:	tile_split = 0;	break;
+	case 128:	tile_split = 1;	break;
+	case 256:	tile_split = 2;	break;
+	case 512:	tile_split = 3;	break;
+	case 1024:	tile_split = 4;	break;
+	case 2048:	tile_split = 5;	break;
+	default:
+	case 4096:	tile_split = 6;	break;
+	}
+	return tile_split;
+}
+
+static unsigned eg_macro_tile_aspect(unsigned macro_tile_aspect)
+{
+	switch (macro_tile_aspect) {
+	default:
+	case 1:	macro_tile_aspect = 0;	break;
+	case 2:	macro_tile_aspect = 1;	break;
+	case 4:	macro_tile_aspect = 2;	break;
+	case 8:	macro_tile_aspect = 3;	break;
+	}
+	return macro_tile_aspect;
+}
+
+static unsigned eg_bank_wh(unsigned bankwh)
+{
+	switch (bankwh) {
+	default:
+	case 1:	bankwh = 0;	break;
+	case 2:	bankwh = 1;	break;
+	case 4:	bankwh = 2;	break;
+	case 8:	bankwh = 3;	break;
+	}
+	return bankwh;
+}
+
+static unsigned eg_nbanks(unsigned nbanks)
+{
+	switch (nbanks) {
+	default:
+	case 2: nbanks = 0; break;
+	case 4: nbanks = 1; break;
+	case 8: nbanks = 2; break;
+	case 16: nbanks = 3; break;
+	}
+	return nbanks;
+}
+
 /*
  * Setup of functional groups
  */
@@ -154,12 +205,59 @@ void
 evergreen_set_render_target(ScrnInfoPtr pScrn, cb_config_t *cb_conf, uint32_t domain)
 {
     uint32_t cb_color_info, cb_color_attrib = 0, cb_color_dim;
-    int pitch, slice, h;
+    unsigned pitch, slice, w, h, array_mode, nbanks;
+    uint32_t tile_split, macro_aspect, bankw, bankh;
     RADEONInfoPtr info = RADEONPTR(pScrn);
 
+#if defined(XF86DRM_MODE)
+    if (cb_conf->surface) {
+	switch (cb_conf->surface->level[0].mode) {
+	case RADEON_SURF_MODE_1D:
+		array_mode = 2;
+		break;
+	case RADEON_SURF_MODE_2D:
+		array_mode = 4;
+		break;
+	default:
+		array_mode = 0;
+		break;
+	}
+	w = cb_conf->surface->level[0].npix_x;
+	h = cb_conf->surface->level[0].npix_y;
+	pitch = (cb_conf->surface->level[0].nblk_x >> 3) - 1;
+	slice = ((cb_conf->surface->level[0].nblk_x * cb_conf->surface->level[0].nblk_y) / 64) - 1;
+	tile_split = cb_conf->surface->tile_split;
+	macro_aspect = cb_conf->surface->mtilea;
+	bankw = cb_conf->surface->bankw;
+	bankh = cb_conf->surface->bankh;
+	tile_split = eg_tile_split(tile_split);
+	macro_aspect = eg_macro_tile_aspect(macro_aspect);
+	bankw = eg_bank_wh(bankw);
+	bankh = eg_bank_wh(bankh);
+    } else
+#endif
+    {
+	pitch = (cb_conf->w / 8) - 1;
+	h = RADEON_ALIGN(cb_conf->h, 8);
+	slice = ((cb_conf->w * h) / 64) - 1;
+	array_mode = cb_conf->array_mode;
+	w = cb_conf->w;
+	tile_split = 4;
+	macro_aspect = 0;
+	bankw = 0;
+	bankh = 0;
+    }
+    nbanks = info->num_banks;
+    nbanks = eg_nbanks(nbanks);
+
+    cb_color_attrib |= (tile_split << CB_COLOR0_ATTRIB__TILE_SPLIT_shift)|
+		       (nbanks << CB_COLOR0_ATTRIB__NUM_BANKS_shift) |
+		       (bankw << CB_COLOR0_ATTRIB__BANK_WIDTH_shift) |
+		       (bankh << CB_COLOR0_ATTRIB__BANK_HEIGHT_shift) |
+		       (macro_aspect << CB_COLOR0_ATTRIB__MACRO_TILE_ASPECT_shift);
     cb_color_info = ((cb_conf->endian      << ENDIAN_shift)				|
 		     (cb_conf->format      << CB_COLOR0_INFO__FORMAT_shift)		|
-		     (cb_conf->array_mode  << CB_COLOR0_INFO__ARRAY_MODE_shift)		|
+		     (array_mode  << CB_COLOR0_INFO__ARRAY_MODE_shift)		|
 		     (cb_conf->number_type << NUMBER_TYPE_shift)			|
 		     (cb_conf->comp_swap   << COMP_SWAP_shift)				|
 		     (cb_conf->source_format << SOURCE_FORMAT_shift)                    |
@@ -185,10 +283,6 @@ evergreen_set_render_target(ScrnInfoPtr pScrn, cb_config_t *cb_conf, uint32_t do
     if (cb_conf->non_disp_tiling)
 	cb_color_attrib |= CB_COLOR0_ATTRIB__NON_DISP_TILING_ORDER_bit;
 
-    pitch = (cb_conf->w / 8) - 1;
-    h = RADEON_ALIGN(cb_conf->h, 8);
-    slice = ((cb_conf->w * h) / 64) - 1;
-
     switch (cb_conf->resource_type) {
     case BUFFER:
 	/* number of elements in the surface */
@@ -196,7 +290,7 @@ evergreen_set_render_target(ScrnInfoPtr pScrn, cb_config_t *cb_conf, uint32_t do
 	break;
     default:
 	/* w/h of the surface */
-	cb_color_dim = (((cb_conf->w - 1) << WIDTH_MAX_shift) |
+	cb_color_dim = (((w - 1) << WIDTH_MAX_shift) |
 			((cb_conf->h - 1) << HEIGHT_MAX_shift));
 	break;
     }
@@ -284,9 +378,6 @@ void evergreen_cp_wait_vline_sync(ScrnInfoPtr pScrn, PixmapPtr pPix,
 
     drmmode_crtc = crtc->driver_private;
 
-    if (stop < start)
-        return;
-
     if (!crtc->enabled)
         return;
 
@@ -306,15 +397,11 @@ void evergreen_cp_wait_vline_sync(ScrnInfoPtr pScrn, PixmapPtr pPix,
 	    return;
     }
 
-    start = max(start, 0);
-    stop = min(stop, crtc->mode.VDisplay);
+    start = max(start, crtc->y);
+    stop = min(stop, crtc->y + crtc->mode.VDisplay);
 
-    if (start > crtc->mode.VDisplay)
+    if (start >= stop)
         return;
-
-    /* on r5xx+ vline starts at viewport_y */
-    start += crtc->y;
-    stop += crtc->y;
 
     BEGIN_BATCH(11);
     /* set the VLINE range */
@@ -479,6 +566,17 @@ evergreen_set_alu_consts(ScrnInfoPtr pScrn, const_config_t *const_conf, uint32_t
     if (size == 0)
 	size = 1;
 
+#if X_BYTE_ORDER == X_BIG_ENDIAN
+    {
+	    uint32_t count = size << 4, *p = const_conf->cpu_ptr;
+
+	    while(count--) {
+		    *p = cpu_to_le32(*p);
+		    p++;
+	    }
+    }
+#endif
+
     /* flush SQ cache */
     evergreen_cp_set_surface_sync(pScrn, SH_ACTION_ENA_bit,
 				  const_conf->size_bytes, const_conf->const_addr,
@@ -563,7 +661,8 @@ evergreen_set_vtx_resource(ScrnInfoPtr pScrn, vtx_resource_t *res, uint32_t doma
 	(info->ChipFamily == CHIP_FAMILY_SUMO) ||
 	(info->ChipFamily == CHIP_FAMILY_SUMO2) ||
 	(info->ChipFamily == CHIP_FAMILY_CAICOS) ||
-	(info->ChipFamily == CHIP_FAMILY_CAYMAN))
+	(info->ChipFamily == CHIP_FAMILY_CAYMAN) ||
+	(info->ChipFamily == CHIP_FAMILY_ARUBA))
 	evergreen_cp_set_surface_sync(pScrn, TC_ACTION_ENA_bit,
 				      accel_state->vbo.vb_offset, accel_state->vbo.vb_mc_addr,
 				      res->bo,
@@ -597,17 +696,53 @@ evergreen_set_tex_resource(ScrnInfoPtr pScrn, tex_resource_t *tex_res, uint32_t 
     RADEONInfoPtr info = RADEONPTR(pScrn);
     uint32_t sq_tex_resource_word0, sq_tex_resource_word1, sq_tex_resource_word4;
     uint32_t sq_tex_resource_word5, sq_tex_resource_word6, sq_tex_resource_word7;
+    uint32_t array_mode, pitch, tile_split, macro_aspect, bankw, bankh, nbanks;
+
+#if defined(XF86DRM_MODE)
+    if (tex_res->surface) {
+	switch (tex_res->surface->level[0].mode) {
+	case RADEON_SURF_MODE_1D:
+		array_mode = 2;
+		break;
+	case RADEON_SURF_MODE_2D:
+		array_mode = 4;
+		break;
+	default:
+		array_mode = 0;
+		break;
+	}
+	pitch = tex_res->surface->level[0].nblk_x >> 3;
+	tile_split = tex_res->surface->tile_split;
+	macro_aspect = tex_res->surface->mtilea;
+	bankw = tex_res->surface->bankw;
+	bankh = tex_res->surface->bankh;
+	tile_split = eg_tile_split(tile_split);
+	macro_aspect = eg_macro_tile_aspect(macro_aspect);
+	bankw = eg_bank_wh(bankw);
+	bankh = eg_bank_wh(bankh);
+    } else
+#endif
+    {
+	array_mode = tex_res->array_mode;
+	pitch = (tex_res->pitch + 7) >> 3;
+	tile_split = 4;
+	macro_aspect = 0;
+	bankw = 0;
+	bankh = 0;
+    }
+    nbanks = info->num_banks;
+    nbanks = eg_nbanks(nbanks);
 
     sq_tex_resource_word0 = (tex_res->dim << DIM_shift);
 
     if (tex_res->w)
-	sq_tex_resource_word0 |= (((((tex_res->pitch + 7) >> 3) - 1) << PITCH_shift) |
-				  ((tex_res->w - 1) << TEX_WIDTH_shift));
+	sq_tex_resource_word0 |= ( ((pitch - 1) << PITCH_shift) |
+				   ((tex_res->w - 1) << TEX_WIDTH_shift) );
 
     if (tex_res->tile_type)
 	sq_tex_resource_word0 |= SQ_TEX_RESOURCE_WORD0_0__NON_DISP_TILING_ORDER_bit;
 
-    sq_tex_resource_word1 = (tex_res->array_mode << SQ_TEX_RESOURCE_WORD1_0__ARRAY_MODE_shift);
+    sq_tex_resource_word1 = (array_mode << SQ_TEX_RESOURCE_WORD1_0__ARRAY_MODE_shift);
 
     if (tex_res->h)
 	sq_tex_resource_word1 |= ((tex_res->h - 1) << TEX_HEIGHT_shift);
@@ -636,12 +771,17 @@ evergreen_set_tex_resource(ScrnInfoPtr pScrn, tex_resource_t *tex_res, uint32_t 
 			     (tex_res->last_array << LAST_ARRAY_shift));
 
     sq_tex_resource_word6 = ((tex_res->min_lod << SQ_TEX_RESOURCE_WORD6_0__MIN_LOD_shift) |
-			     (tex_res->perf_modulation << PERF_MODULATION_shift));
+			     (tex_res->perf_modulation << PERF_MODULATION_shift) |
+			     (tile_split << SQ_TEX_RESOURCE_WORD6_0__TILE_SPLIT_shift));
 
     if (tex_res->interlaced)
 	sq_tex_resource_word6 |= INTERLACED_bit;
 
     sq_tex_resource_word7 = ((tex_res->format << SQ_TEX_RESOURCE_WORD7_0__DATA_FORMAT_shift) |
+			     (macro_aspect << SQ_TEX_RESOURCE_WORD7_0__MACRO_TILE_ASPECT_shift) |
+			     (nbanks << SQ_TEX_RESOURCE_WORD7_0__NUM_BANKS_shift) |
+			     (bankw << SQ_TEX_RESOURCE_WORD7_0__BANK_WIDTH_shift) |
+			     (bankh << SQ_TEX_RESOURCE_WORD7_0__BANK_HEIGHT_shift) |
 			     (SQ_TEX_VTX_VALID_TEXTURE << SQ_TEX_RESOURCE_WORD7_0__TYPE_shift));
 
     /* flush texture cache */
@@ -725,8 +865,8 @@ evergreen_fix_scissor_coordinates(ScrnInfoPtr pScrn, int *x1, int *y1, int *x2, 
     if (*y2 == 0)
 	*y1 = 1;
 
-    /* cayman only */
-    if (info->ChipFamily == CHIP_FAMILY_CAYMAN) {
+    /* cayman/tn only */
+    if (info->ChipFamily >= CHIP_FAMILY_CAYMAN) {
 	/* cliprects aren't affected so we can use them to clip if we need
 	 * a true 1x1 clip region
 	 */
@@ -831,7 +971,7 @@ evergreen_set_default_state(ScrnInfoPtr pScrn)
     RADEONInfoPtr info = RADEONPTR(pScrn);
     struct radeon_accel_state *accel_state = info->accel_state;
 
-    if (info->ChipFamily == CHIP_FAMILY_CAYMAN) {
+    if (info->ChipFamily >= CHIP_FAMILY_CAYMAN) {
 	cayman_set_default_state(pScrn);
 	return;
     }
