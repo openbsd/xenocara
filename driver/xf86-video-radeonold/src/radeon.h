@@ -699,7 +699,9 @@ struct radeon_accel_state {
 typedef struct {
     EntityInfoPtr     pEnt;
     pciVideoPtr       PciInfo;
+#ifndef XSERVER_LIBPCIACCESS
     PCITAG            PciTag;
+#endif
     int               Chipset;
     RADEONChipFamily  ChipFamily;
     RADEONErrata      ChipErrata;

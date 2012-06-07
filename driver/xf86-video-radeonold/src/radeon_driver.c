@@ -2836,9 +2836,11 @@ Bool RADEONPreInit(ScrnInfoPtr pScrn, int flags)
     }
 
     info->PciInfo = xf86GetPciInfoForEntity(info->pEnt->index);
+#ifndef XSERVER_LIBPCIACCESS
     info->PciTag  = pciTag(PCI_DEV_BUS(info->PciInfo),
 			   PCI_DEV_DEV(info->PciInfo),
 			   PCI_DEV_FUNC(info->PciInfo));
+#endif
     info->MMIOAddr = PCI_REGION_BASE(info->PciInfo, 2, REGION_MEM) & ~0xffULL;
     info->MMIOSize = PCI_REGION_SIZE(info->PciInfo, 2);
 	xf86DrvMsg(pScrn->scrnIndex, X_INFO, "TOTO SAYS %016llx\n", 
