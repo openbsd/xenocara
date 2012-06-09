@@ -65,6 +65,7 @@
 #include "xf86Xinput.h"
 #include "xf86_OSproc.h"
 #include "xf86OSmouse.h"
+#include "xf86Priv.h"
 #include "compiler.h"
 
 #if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 7
@@ -339,6 +340,16 @@ VMMousePreInit(InputDriverPtr drv, IDevPtr dev, int flags)
 #endif
 
    /*
+    * enable hardware access
+    */
+   if (!xorgHWAccess) {
+      if (xf86EnableIO())
+          xorgHWAccess = TRUE;
+      else
+          return NULL;
+   }
+
+   /*
     * try to enable vmmouse here
     */
    if (!VMMouseClient_Enable()) {
@@ -398,6 +409,16 @@ VMMousePreInit(InputDriverPtr drv, InputInfoPtr pInfo, int flags)
    MouseDevPtr pMse = NULL;
    VMMousePrivPtr mPriv = NULL;
    int rc = Success;
+
+   /* Enable hardware access. */
+   if (!xorgHWAccess) {
+      if (xf86EnableIO())
+          xorgHWAccess = TRUE;
+      else {
+          rc = BadValue;
+          goto error;
+      }
+   }
 
 #if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 12
    /* For ABI < 12, we need to return the wrapped driver's pInfo (see

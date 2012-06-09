@@ -22,12 +22,14 @@
 
 AC_PREREQ(2.57)
 AC_INIT([xf86-input-vmmouse],
-        [12.8.0],
+        [12.9.0],
         [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],
         xf86-input-vmmouse)
 
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_AUX_DIR(.)
+AC_CONFIG_HEADERS([config.h])
+
 AM_INIT_AUTOMAKE([foreign dist-bzip2])
 
 AM_MAINTAINER_MODE
@@ -40,8 +42,6 @@ XORG_DEFAULT_OPTIONS
 
 DRIVER_NAME=vmmouse
 AC_SUBST([DRIVER_NAME])
-
-AM_CONFIG_HEADER([config.h])
 
 # Checks for programs.
 AC_DISABLE_STATIC

@@ -1,3 +1,52 @@
+commit 3a828d876772d05577b9372e8f6dc068794f4704
+Author: Jakob Bornecrantz <jakob@vmware.com>
+Date:   Tue May 22 20:14:25 2012 +0200
+
+    vmmouse 12.8.0
+    
+    Signed-off-by: Jakob Bornecrantz <jakob@vmware.com>
+
+commit 2a321a39350aa020a8103813bed61ff559088195
+Author: Zack Rusin <zackr@vmware.com>
+Date:   Thu May 10 19:55:01 2012 -0400
+
+    Revert "Adjust the kernel name in the udev file."
+    
+    This reverts commit 189dc266a66485d48303acbc1a4fbe4642c75e9f.
+    
+    It seems that for some reason the device routing is breaking with this.
+    Possibly related to Win7 x64 hosts because it's not reproducible on
+    GNU/Linux hosts. Semantially we'd still like to match only on mouse
+    kernel but for the time being this seems to cause more problems
+    than it solves. Hence the revert.
+
+commit 55efac85ca9bd2041240ca29316ca716ddc2185d
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue May 1 16:20:59 2012 -0400
+
+    config: replace obsolete AM_CONFIG_HEADER with AC_CONFIG_HEADERS
+    
+    Moved up in the autoconf init section.
+    It has been removed from Automake 1.12.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+    Signed-off-by: Zack Rusin <zackr@vmware.com>
+
+commit 840dcbf947dd9d1383777c3cd811ff680cef5f16
+Author: Michal Srb <msrb@suse.com>
+Date:   Thu May 3 17:55:24 2012 +0200
+
+    Enable hardware access during vmmouse preinit.
+    
+    Vmmouse driver uses outl calls but never requests hardware access.
+    In case there are no other drivers that requests it, vmmouse
+    initialization will fail. (Found on KVM virtual machine with fbdev
+    graphics driver and vmmouse input driver.)
+    
+    Request hardware access in same way xf86-input-keyboard does.
+    
+    Signed-off-by: Zack Rusin <zackr@vmware.com>
+
 commit e925b2e6e9d548db5a6646a76d513fb6881f69b4
 Author: Zack Rusin <zackr@vmware.com>
 Date:   Thu Mar 8 09:51:48 2012 -0500
