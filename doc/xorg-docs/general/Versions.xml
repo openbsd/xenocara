@@ -2,7 +2,7 @@
 	  "http://www.oasis-open.org/docbook/xml/4.3/docbookx.dtd" [
 ]>
 
-<article>
+<article id='Versions'>
 
 <articleinfo>
 
@@ -27,7 +27,7 @@ basic scheme is the same.  This document reflects the policy that X.Org uses.
 
 </articleinfo>
 
-<sect1>
+<sect1 id='Module_Versions'>
 <title>Module Versions</title>
 
 <para>
@@ -52,8 +52,8 @@ from 7.2 to 1.3.
 </para>
 </sect1>
 
-<sect1>
-<title>Releases, Development Streams and Branches</title>
+<sect1 id='Releases_Development_Streams_and_Branches'>
+<title>Releases, Development Streams, and Branches</title>
 
 <para>
 X.Org has two release branches for the X server software, and several
@@ -95,7 +95,7 @@ has an identifiable version number.
 
 </sect1>
 
-<sect1>
+<sect1 id='Current_Version_Numbering_Scheme'>
 <title>Current Version Numbering Scheme</title>
 
 <para>
@@ -116,7 +116,7 @@ present only for between-release snapshots of the development and
 stable branches.
 </para>
 
-<sect2>
+<sect2 id='Development_Branch'>
 <title>Development Branch</title>
 
 <para>
@@ -198,7 +198,7 @@ branch snapshot after creating the 1.8 stable branch.
 
 </sect2>
 
-<sect2>
+<sect2 id='Stable_Branch'>
 <title>Stable Branch</title>
 
 <para>
@@ -276,7 +276,7 @@ The 1.8.2 release.
 
 </sect1>
 
-<sect1>
+<sect1 id='Finding_the_X.Org_X_Server_Version_From_a_Client'>
 <title>Finding the X.Org X Server Version From a Client</title>
 
 <para>

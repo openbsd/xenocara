@@ -1,10 +1,10 @@
 <!DOCTYPE article PUBLIC "-//OASIS//DTD DocBook XML V4.3//EN"
                       "http://www.oasis-open.org/docbook/xml/4.3/docbookx.dtd"
 [
-<!ENTITY % defs SYSTEM "/xorg-sgml-doctools/X11/defs.ent"> %defs;
+<!ENTITY % defs SYSTEM "defs.ent"> %defs;
 ]>
 
-<article>
+<article id='README'>
 
 <articleinfo>
 
@@ -31,7 +31,7 @@ the X11 standard.
 
 </articleinfo>
 
-<sect1>
+<sect1 id='What_is_X11R&relvers;'>
 <title>What is X11R&relvers;?</title>
 
 <!-- We only do release notes for full releases now.
@@ -53,10 +53,6 @@ issues, fixes for driver bugs, and fixes that improve stability.
 -->
 <para>
 X11R&relvers; is the &whichfullrel; release in the X11R&majorvers; series.
-Tarballs for packages that have had updates since the &prevrelvers; release
-are included in this release. To build this release, you will first need to
-get the packages from X11R&prevrelvers; and then add the new packages from
-X11R&relvers; to them.
 </para>
 <!--
 ]]>
@@ -89,8 +85,8 @@ hardware support, functional enhancements and bug fixes.
 ]]>
 <![ %haverelnotes [
  -->
-Specific release enhancements can be viewed in the <ulink
-url="ReleaseNotes.html">Release Notes</ulink>.
+Specific release enhancements can be viewed in the <olink
+targetdoc="ReleaseNotes" targetptr="ReleaseNotes">Release Notes</olink>.
 <!--
 ]]>
  -->
@@ -99,8 +95,8 @@ url="ReleaseNotes.html">Release Notes</ulink>.
 <para>
 Most modern PC video hardware is supported in this release, and most PC
 video hardware that isn't supported explicitly can be used with the
-"vesa" driver.  The <ulink
-url="ReleaseNotes.html">Release Notes</ulink>
+"vesa" driver.  The <olink
+targetdoc="ReleaseNotes" targetptr="ReleaseNotes">Release Notes</olink>
 has a table showing the drivers provided with X11R&relvers;, and links to
 related documentation.
 </para>
@@ -128,11 +124,11 @@ users alike.
 
 <!--
 <![ %snapshot [
-<sect1>
+<sect1 id='Redistribution_of_Snapshots'>
 <title>Redistribution of Snapshots</title>
 <para>
-While the X.Org Foundation <ulink
-url="LICENSE.html">License</ulink>
+While the X.Org Foundation <olink
+targetdoc="License" targetptr="License>License</olink>
 doesn't
 prohibit vendors and others redistributing binaries of this snapshot
 release, we don't recommend including them in production releases.
@@ -141,7 +137,7 @@ release, we don't recommend including them in production releases.
 ]]>
  -->
 
-<sect1>
+<sect1 id='Licensing'>
 <title>Licensing</title>
 
 <para>
@@ -194,10 +190,10 @@ url="http://www.fsf.org/philosophy/free-sw.html"
 <para>
 Copyright and Licensing information for X, including the reproduction
 of copyright and/or license notices and attributions required by some
-of the licenses for binary distributions, can be found in the <ulink
-url="License.html">License Document</ulink>.  If you find any omissions
-in that document, please contact us with details at
-<email>xorg@lists.freedesktop.org</email>.
+of the licenses for binary distributions, can be found in the <olink
+targetdoc="License" targetptr="License">License Document</olink>.
+If you find any omissions in that document, please contact us with details at
+<email>xorg@lists.x.org</email>.
 While the current licenses are all open source licenses, the
 X.Org Foundation is attempting, with time, to bring as much as
 possible of the code's licenses in the distribution into compliance with the
@@ -207,7 +203,7 @@ possible of the code's licenses in the distribution into compliance with the
 
 </sect1>
 
-<sect1>
+<sect1 id='Pointers_to_additional_information'>
 <title>Pointers to additional information</title>
 
 <para>
@@ -217,7 +213,8 @@ url="http://www.x.org/">X.Org web site</ulink>.
 
 <para>
 The X11 version numbering system (including historical information)
-can be found in the <ulink url="Versions.html">Versions Document</ulink>.
+can be found in the <olink targetdoc="Versions" targetptr="Versions">Versions
+Document</olink>.
 </para>
 
 <para>
@@ -227,7 +224,7 @@ Additional information may be available at the <ulink url="http://wiki.x.org/"
 
 </sect1>
 
-<sect1>
+<sect1 id='The_Public_Mailing_Lists'>
 <title>The Public Mailing Lists</title>
 
 <para>
@@ -241,7 +238,7 @@ page</ulink>.
 
 </sect1>
 
-<sect1>
+<sect1 id='Contributing_to_the_X.Org_Foundations_X_efforts.'>
 <title>Contributing to the X.Org Foundation's X efforts.</title>
 
 <para>
@@ -258,7 +255,7 @@ SubmittingPatches</ulink> page of the X.Org wiki.
 
 </sect1>
 
-<sect1>
+<sect1 id='How_to_get_the_release'>
 <title>How to get the release</title>
 
 <!--
@@ -282,7 +279,7 @@ mirrors of this server.
 ]]>
  -->
 
-<sect2>
+<sect2 id='X11R&relvers;'>
 <title>X11R&relvers;</title>
 
 <para>
@@ -305,7 +302,7 @@ build system and modular code base.
 
 </sect2>
 
-<sect2>
+<sect2 id='The_current_development_tree'>
 <title>The current development tree</title>
 
 <para>
@@ -325,7 +322,7 @@ To check out the latest development version, don't specify any tag.
 
 </sect1>
 
-<sect1>
+<sect1 id='Reporting_Bugs'>
 <title>Reporting Bugs</title>
 
 <para>

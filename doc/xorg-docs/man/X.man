@@ -461,22 +461,6 @@ The \fIcataloguelist\fP specifies a list of catalogue names,
 with '+' as a separator.
 .PP
 Examples: \fItcp/x.org:7100\fP, \fItcp/198.112.45.11:7100/all\fP.
-.PP
-One of the following forms can be used to name a font server that
-accepts DECnet connections:
-.sp
-.nf
-    decnet/\fInodename\fP::font$\fIobjname\fP
-    decnet/\fInodename\fP::font$\fIobjname\fP/\fIcataloguelist\fP
-.fi
-.PP
-The \fInodename\fP specifies the name (or decimal numeric address)
-of the machine on which the font server is running.
-The \fIobjname\fP is a normal, case-insensitive DECnet object name.
-The \fIcataloguelist\fP specifies a list of catalogue names,
-with '+' as a separator.
-.PP
-Examples: \fIDECnet/SRVNOD::FONT$DEFAULT\fP, \fIdecnet/44.70::font$special/symbols\fP.
 .SH "COLOR NAMES"
 Most applications provide ways of tailoring (usually through resources or
 command line arguments) the colors of various elements

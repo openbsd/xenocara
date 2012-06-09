@@ -1,13 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE article PUBLIC "-//OASIS//DTD DocBook XML V4.3//EN"
                       "http://www.oasis-open.org/docbook/xml/4.3/docbookx.dtd"
-[]>
+[
+<!ENTITY % defs SYSTEM "defs.ent"> %defs;
+]>
 
-<article>
+<article id='XKB-Enhancing'>
 
   <articleinfo>
 
     <title>How to further enhance XKB configuration</title>
+    <releaseinfo>X Version 11, Release &fullrelvers;</releaseinfo>
     <authorgroup>
       <author>
 	<firstname>Kamil</firstname><surname>Toman</surname>
@@ -29,7 +32,7 @@ keyboard layout. Unlike other documents this guide accents the keymap developer'
 
   </articleinfo>
 
-  <sect1>
+  <sect1 id='Overview'>
     <title>Overview</title>
 
     <para>
@@ -59,7 +62,7 @@ are to be made to XFree86 version 4.3 and X11R6.7.0 and above.
 
   </sect1>
 
-  <sect1>
+  <sect1 id='The_Basics'>
     <title>The Basics</title>
 
     <para>
@@ -165,7 +168,7 @@ in subdirectories with the same names (usually in
 
   </sect1>
 
-  <sect1>
+  <sect1 id='Enhancing_XKB_Configuration'>
     <title>Enhancing XKB Configuration</title>
 
     <para>
@@ -205,7 +208,7 @@ Even if there is nothing similar you may get some ideas about basic
 concepts and used tricks.
     </para>
 
-    <sect2>
+    <sect2 id='Levels_And_Groups'>
       <title>Levels And Groups</title>
 
       <para>
@@ -237,7 +240,7 @@ modifiers so it its row has only one column defined.
 
       <para>
 Note that in XKB there is no prior assumption that certain modifiers are bound
-to certain columns. By editing proper files (see <xref linkend="keytypes" />)
+to certain columns. By editing proper files (see <xref linkend='Key_Types' xrefstyle='select: title'/>)
 this mapping can be changed as well.
       </para>
 
@@ -321,7 +324,7 @@ behaviour
 
   </sect1>
 
-  <sect1>
+  <sect1 id='Defining_New_Layouts'>
     <title>Defining New Layouts</title>
 
 <!--
@@ -342,7 +345,7 @@ See <ulink url="http://www.tsu.ru/~pascal/en/xkb/gram-common.html"
 syntax of xkb configuration files.
     </para>
 
-    <sect2>
+    <sect2 id='Predefined_XKB_Symbol_Sets'>
       <title>Predefined XKB Symbol Sets</title>
 
       <para>
@@ -416,8 +419,8 @@ definition and altering what may be needed.
 
     </sect2>
 
-    <sect2 id="keytypes" xreflabel="keytypes">
-      <title>Key Types</title>
+    <sect2 id='Key_Types'>
+<title>Key Types</title>
 
       <para>
 The differences in the number of columns (shift levels) are caused by
@@ -610,7 +613,7 @@ Don't alter any of existing key types. If you need a different behaviour
 create a new one.
       </para>
 
-      <sect3>
+      <sect3 id='More_On_Definitions_Of_Types'>
 	<title>More On Definitions Of Types</title>
 
 	<para>
@@ -699,7 +702,7 @@ type definitions.
 
     </sect2>
 
-    <sect2>
+    <sect2 id='Rules'>
       <title>Rules</title>
 
       <para>
@@ -811,7 +814,7 @@ symbols in appropriate variants as a default.
   TODO: better and more complex explanation of rules
 -->
 
-    <sect2>
+    <sect2 id='Descriptive_Files_of_Rules'>
       <title>Descriptive Files of Rules</title>
 
       <para>
@@ -825,7 +828,7 @@ this file) know what is your work about.
     TODO: format and semantics
 -->
 
-      <sect3>
+      <sect3 id='Old_Descriptive_Files'>
 	<title>Old Descriptive Files</title>
 
 	<para>

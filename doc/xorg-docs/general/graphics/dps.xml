@@ -3,7 +3,7 @@
           "http://www.oasis-open.org/docbook/xml/4.3/docbookx.dtd" [
 ]>
 
-<article>
+<article id='dps'>
 
 <articleinfo>
 
@@ -28,7 +28,7 @@ Updated by Jim Gettys and Juliusz Chroboczek.
 
 </para>
 
-<sect1>
+<sect1 id='Notice_of_Obsolescence_and_Removal_from_X.Org_Releases'>
 <title>Notice of Obsolescence and Removal from X.Org Releases</title>
 
 <para>

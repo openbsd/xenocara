@@ -1,6 +1,9 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE article PUBLIC "-//OASIS//DTD DocBook XML V4.3//EN"
-                   "http://www.oasis-open.org/docbook/xml/4.3/docbookx.dtd">
+                   "http://www.oasis-open.org/docbook/xml/4.3/docbookx.dtd"
+[
+<!ENTITY % defs SYSTEM "defs.ent"> %defs;
+]>
 
 
 <!-- lifted from troff+ms+XMan by doclifter -->
@@ -9,16 +12,15 @@
 <articleinfo>
    <title>Compound Text Encoding</title>
    <subtitle>X Consortium Standard</subtitle>
-   <releaseinfo>X Version 11, Release 6.8</releaseinfo>
    <authorgroup>
       <author>
          <firstname>Robert</firstname><othername>W.</othername><surname>Scheifler</surname>
+         <affiliation><orgname>X Consortium</orgname></affiliation>
       </author>
    </authorgroup>
-   <corpname>X Consortium Standard</corpname>
    <copyright><year>1989</year><holder>X Consortium</holder></copyright>
+   <releaseinfo>X Version 11, Release &fullrelvers;</releaseinfo>
    <releaseinfo>Version 1.1</releaseinfo>
-   <affiliation><orgname>X Consortium</orgname></affiliation>
 
 <legalnotice>
 <para>
@@ -36,7 +38,7 @@ all copies or substantial portions of the Software.
 </para>
 
 <para>
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+THE SOFTWARE IS PROVIDED &ldquo;AS IS&rdquo;, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE
 X CONSORTIUM BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN
@@ -49,6 +51,7 @@ Except as contained in this notice, the name of the X Consortium shall not be
 used in advertising or otherwise to promote the sale, use or other dealings
 in this Software without prior written authorization from the X Consortium.
 </para>
+<para>X Window System is a trademark of The Open Group.</para>
 </legalnotice>
 </articleinfo>
 <sect1 id="Overview">
@@ -95,23 +98,24 @@ For our purposes, the octet encoding space is divided into four ranges:
 </para>
 
 <informaltable frame="none">
-  <tgroup cols='2' align='left'>
-  <colspec colname='c1' colsep="0" colwidth="1*"/>
-  <colspec colname='c2' colsep="0" colwidth="9*"/>
+  <?dbfo keep-together="always" ?>
+  <tgroup cols='2' align='left'  colsep='0' rowsep='0'>
+  <colspec colname='c1' colwidth="1.0*"/>
+  <colspec colname='c2' colwidth="9.0*"/>
   <tbody>
-    <row rowsep="0">
+    <row>
       <entry>C0</entry>
       <entry>octets from 00/00 to 01/15</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>GL</entry>
       <entry>octets from 02/00 to 07/15</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>C1</entry>
       <entry>octets from 08/00 to 09/15</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>GR</entry>
       <entry>octets from 10/00 to 15/15</entry>
     </row>
@@ -141,22 +145,23 @@ In C0, only the following values will be used:
 </para>
 
 <informaltable frame="none">
-  <tgroup cols='3' align='left'>
-  <colspec colname='c1' colsep="0" colwidth="1*"/>
-  <colspec colname='c2' colsep="0" colwidth="1*"/>
-  <colspec colname='c3' colsep="0" colwidth="5*"/>
+  <?dbfo keep-together="always" ?>
+  <tgroup cols='3' align='left' colsep='0' rowsep='0'>
+  <colspec colname='c1' colwidth="1.0*"/>
+  <colspec colname='c2' colwidth="1.0*"/>
+  <colspec colname='c3' colwidth="5.0*"/>
   <tbody>
-    <row rowsep="0">
+    <row>
       <entry>00/09</entry>
       <entry>HT</entry>
       <entry>HORIZONTAL TABULATION</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>00/10</entry>
       <entry>NL</entry>
       <entry>NEW LINE</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>01/11</entry>
       <entry>ESC</entry>
       <entry>(ESCAPE)</entry>
@@ -170,12 +175,13 @@ In C1, only the following value will be used:
 </para>
 
 <informaltable frame="none">
-  <tgroup cols='3' align='left'>
-  <colspec colname='c1' colsep="0" colwidth="1*"/>
-  <colspec colname='c2' colsep="0" colwidth="1*"/>
-  <colspec colname='c3' colsep="0" colwidth="5*"/>
+  <?dbfo keep-together="always" ?>
+  <tgroup cols='3' align='left' colsep='0' rowsep='0'>
+  <colspec colname='c1' colwidth="1.0*"/>
+  <colspec colname='c2' colwidth="1.0*"/>
+  <colspec colname='c3' colwidth="5.0*"/>
   <tbody>
-    <row rowsep="0">
+    <row>
       <entry>09/11</entry>
       <entry>CSI</entry>
       <entry>CONTROL SEQUENCE INTRODUCER</entry>
@@ -247,19 +253,20 @@ the GL set, one of the following control sequences is used:
 </para>
 
 <informaltable frame="none">
-  <tgroup cols='4' align='left'>
-  <colspec colname='c1' colsep="0" colwidth="1*"/>
-  <colspec colname='c2' colsep="0" colwidth="1*"/>
-  <colspec colname='c3' colsep="0" colwidth="2*"/>
-  <colspec colname='c4' colsep="0" colwidth="8*"/>
+  <?dbfo keep-together="always" ?>
+  <tgroup cols='4' align='left' colsep='0' rowsep='0'>
+  <colspec colname='c1' colwidth="1.0*"/>
+  <colspec colname='c2' colwidth="1.0*"/>
+  <colspec colname='c3' colwidth="2.0*"/>
+  <colspec colname='c4' colwidth="8.0*"/>
   <tbody>
-    <row rowsep="0">
+    <row>
       <entry>01/11</entry>
       <entry>02/08</entry>
       <entry>{I} F</entry>
       <entry>94 character set</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>01/11</entry>
       <entry>02/04</entry>
       <entry>02/08{I} F</entry>
@@ -276,25 +283,26 @@ the GR set, one of the following control sequences is used:
 </para>
 
 <informaltable frame="none">
-  <tgroup cols='4' align='left'>
-  <colspec colname='c1' colsep="0" colwidth="1*"/>
-  <colspec colname='c2' colsep="0" colwidth="1*"/>
-  <colspec colname='c3' colsep="0" colwidth="2*"/>
-  <colspec colname='c4' colsep="0" colwidth="8*"/>
+  <?dbfo keep-together="always" ?>
+  <tgroup cols='4' align='left' colsep='0' rowsep='0'>
+  <colspec colname='c1' colwidth="1.0*"/>
+  <colspec colname='c2' colwidth="1.0*"/>
+  <colspec colname='c3' colwidth="2.0*"/>
+  <colspec colname='c4' colwidth="8.0*"/>
   <tbody>
-    <row rowsep="0">
+    <row>
       <entry>01/11</entry>
       <entry>02/09</entry>
       <entry>{I} F</entry>
       <entry>94 character set</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>01/11</entry>
       <entry>02/13</entry>
       <entry>{I} F</entry>
       <entry>96 character set</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>01/11</entry>
       <entry>02/04</entry>
       <entry>02/09 {I} F</entry>
@@ -336,19 +344,20 @@ The value of N is derived from the column value for F:
 </para>
 
 <informaltable frame="none">
-  <tgroup cols='2' align='left'>
-  <colspec colname='c1' colsep="0" colwidth="1*"/>
-  <colspec colname='c2' colsep="0" colwidth="3*"/>
+  <?dbfo keep-together="always" ?>
+  <tgroup cols='2' align='left' colsep='0' rowsep='0'>
+  <colspec colname='c1' colwidth="1.0*"/>
+  <colspec colname='c2' colwidth="3.0*"/>
   <tbody>
-    <row rowsep="0">
+    <row>
       <entry>column 04 or 05</entry>
       <entry>2 octets</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>column 06</entry>
       <entry>3 octets</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>column 07</entry>
       <entry>4 or more octets</entry>
     </row>
@@ -395,20 +404,21 @@ still deal with Intermediate characters in the event that additional encodings
 are later added to this list.
 </para>
 
-<informaltable frame="none">
-  <tgroup cols='3' align='left'>
-  <colspec colname='c1' colsep="0" colwidth="1*"/>
-  <colspec colname='c2' colsep="0" colwidth="1*"/>
-  <colspec colname='c3' colsep="0" colwidth="5*"/>
+<informaltable frame="topbot">
+  <?dbfo keep-together="auto" ?>
+  <tgroup cols='3' align='left' colsep='0' rowsep='0'>
+  <colspec colname='c1' colwidth="1.0*"/>
+  <colspec colname='c2' colwidth="1.0*"/>
+  <colspec colname='c3' colwidth="10.0*"/>
   <thead>
-    <row>
+    <row rowsep='1'>
       <entry>{I} F</entry>
       <entry>94/96</entry>
       <entry>Description</entry>
     </row>
   </thead>
   <tbody>
-    <row rowsep="0">
+    <row>
       <entry>4/02</entry>
       <entry>94</entry>
       <entry>
@@ -513,27 +523,28 @@ following sequences:
 </para>
 
 <informaltable frame="none">
-  <tgroup cols='2' align='left'>
-  <colspec colname='c1' colsep="0" colwidth="1*"/>
-  <colspec colname='c2' colsep="0" colwidth="2*"/>
+  <?dbfo keep-together="always" ?>
+  <tgroup cols='2' align='left' colsep='0' rowsep='0'>
+  <colspec colname='c1' colwidth="1.0*"/>
+  <colspec colname='c2' colwidth="2.0*"/>
   <tbody>
-    <row rowsep="0">
+    <row>
       <entry>01/11 2/05 02/15 03/00 M L</entry>
       <entry>variable number of octets per character</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>01/11 2/05 02/15 03/01 M L</entry>
       <entry>1 octet per character</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>01/11 2/05 02/15 03/02 M L</entry>
       <entry>2 octet per character</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>01/11 2/05 02/15 03/03 M L</entry>
       <entry>3 octet per character</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>01/11 2/05 02/15 03/04 M L</entry>
       <entry>4 octet per character</entry>
     </row>
@@ -603,19 +614,20 @@ control sequences:
 </para>
 
 <informaltable frame="none">
-  <tgroup cols='2' align='left'>
-  <colspec colname='c1' colsep="0" colwidth="1*"/>
-  <colspec colname='c2' colsep="0" colwidth="2*"/>
+  <?dbfo keep-together="always" ?>
+  <tgroup cols='2' align='left' colsep='0' rowsep='0'>
+  <colspec colname='c1' colwidth="1.0*"/>
+  <colspec colname='c2' colwidth="2.0*"/>
   <tbody>
-    <row rowsep="0">
+    <row>
       <entry>09/11 03/01 05/13</entry>
       <entry>begin left-to-right text</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>09/11 03/02 05/13</entry>
       <entry>begin right-to-left text</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>09/11 05/13</entry>
       <entry>end of string</entry>
     </row>
@@ -684,80 +696,81 @@ The following CharSet names for the standard character set encodings are
 registered for use in font names under the X Logical Font Description:
 </para>
 
-<informaltable frame="none">
-  <tgroup cols='3' align='left'>
-  <colspec colname='c1' colsep="0" colwidth="1*"/>
-  <colspec colname='c2' colsep="0" colwidth="1*"/>
-  <colspec colname='c3' colsep="0" colwidth="2*"/>
+<informaltable frame="topbot">
+  <?dbfo keep-together="auto" ?>
+  <tgroup cols='3' align='left' colsep='0' rowsep='0'>
+  <colspec colname='c1' colwidth="1.0*"/>
+  <colspec colname='c2' colwidth="2.0*"/>
+  <colspec colname='c3' colwidth="2.0*"/>
   <thead>
-    <row>
+    <row rowsep='1'>
       <entry>Name</entry>
       <entry>Encoding Standard</entry>
       <entry>Description</entry>
     </row>
   </thead>
   <tbody>
-    <row rowsep="0">
+    <row>
       <entry>ISO8859-1</entry>
       <entry>ISO8859-1</entry>
       <entry>Latinalphabet No. 1</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>ISO8859-2</entry>
       <entry>ISO8859-2</entry>
       <entry>Latinalphabet No. 2</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>ISO8859-3</entry>
       <entry>ISO8859-3</entry>
       <entry>Latinalphabet No. 3</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>ISO8859-4</entry>
       <entry>ISO8859-4</entry>
       <entry>Latinalphabet No. 4</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>ISO8859-5</entry>
       <entry>ISO 8859-5</entry>
       <entry>Latin/Cyrillic alphabet</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>ISO8859-6</entry>
       <entry>ISO 8859-6</entry>
       <entry>Latin/Arabic alphabet</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>ISO8859-7</entry>
       <entry>ISO8859-7</entry>
       <entry>Latin/Greekalphabet</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>ISO8859-8</entry>
       <entry>ISO8859-8</entry>
       <entry>Latin/Hebrew alphabet</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>ISO8859-9</entry>
       <entry>ISO8859-9</entry>
       <entry>Latinalphabet No. 5</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>JISX0201.1976-0</entry>
       <entry>JIS X0201-1976 (reaffirmed 1984)</entry>
       <entry>8-bit Alphanumeric-Katakana Code</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>GB2312.1980-0</entry>
       <entry>GB2312-1980, GL encoding</entry>
       <entry>China (PRC) Hanzi</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>JISX0208.1983-0</entry>
       <entry>JIS X0208-1983, GL encoding</entry>
       <entry>Japanese Graphic Character Set</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>KSC5601.1987-0</entry>
       <entry>KS C5601-1987, GL encoding</entry>
       <entry>Korean Graphic Character Set</entry>
@@ -832,15 +845,16 @@ control sequences:
 </para>
 
 <informaltable frame="none">
-  <tgroup cols='2' align='left'>
-  <colspec colname='c1' colsep="0" colwidth="1*"/>
-  <colspec colname='c2' colsep="0" colwidth="2*"/>
+  <?dbfo keep-together="always" ?>
+  <tgroup cols='2' align='left' colsep='0' rowsep='0'>
+  <colspec colname='c1' colwidth="1.0*"/>
+  <colspec colname='c2' colwidth="2.0*"/>
   <tbody>
-    <row rowsep="0">
+    <row>
       <entry>01/11 02/03 V 03/00</entry>
       <entry>ignoring extensions is OK</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>01/11 02/03 V 03/01</entry>
       <entry>ignoring extensions is not OK</entry>
     </row>

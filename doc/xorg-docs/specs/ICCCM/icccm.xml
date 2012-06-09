@@ -1,6 +1,9 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.3//EN"
-                   "http://www.oasis-open.org/docbook/xml/4.3/docbookx.dtd">
+                   "http://www.oasis-open.org/docbook/xml/4.3/docbookx.dtd"
+[
+<!ENTITY % defs SYSTEM "defs.ent"> %defs;
+]>
 
 
 <book id="icccm">
@@ -8,33 +11,23 @@
 <bookinfo>
    <title>Inter-Client Communication Conventions Manual</title>
    <subtitle>X Consortium Standard</subtitle>
-   <releaseinfo>Version 2.0</releaseinfo>
    <authorgroup>
       <author>
          <firstname>David</firstname><surname>Rosenthal</surname>
          <affiliation><orgname>Sun Microsystems, Inc.</orgname></affiliation>
       </author>
-      <othercredit>
-         <contrib>Version 2 edited by</contrib>
+      <editor>
          <firstname>Stuart</firstname><othername>W.</othername><surname>Marks</surname>
          <affiliation><orgname>SunSoft, Inc.</orgname></affiliation>
-      </othercredit>
+      </editor>
    </authorgroup>
-   <corpname>X Consortium Standard</corpname>
-   <affiliation><orgname>X Consortium</orgname></affiliation>
-   <productnumber>X Version 11, Release 6.8</productnumber>
-
-
-<legalnotice>
-<para>
-X Window System is a trademark of The Open Group
-</para>
-</legalnotice>
+   <releaseinfo>X Version 11, Release &fullrelvers;</releaseinfo>
+   <releaseinfo>Version 2.0</releaseinfo>
+   <copyright><year>1988</year><year>1991</year><year>1993</year><year>1994</year>
+      <holder>X Consortium</holder>
+   </copyright>
 
 <legalnotice>
-<para>
-Copyright &copy; 1988, 1991, 1993, 1994 X Consortium
-</para>
 <para>
 Permission is hereby granted, free of charge, to any person obtaining
 a copy of this software and associated documentation files (the
@@ -49,7 +42,7 @@ The above copyright notice and this permission notice shall be included
 in all copies or substantial portions of the Software.
 </para>
 <para>
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+THE SOFTWARE IS PROVIDED &ldquo;AS IS&rdquo;, WITHOUT WARRANTY OF ANY KIND, EXPRESS
 OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
 MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
 IN NO EVENT SHALL THE X CONSORTIUM BE LIABLE FOR ANY CLAIM, DAMAGES OR
@@ -63,10 +56,11 @@ not be used in advertising or otherwise to promote the sale, use or
 other dealings in this Software without prior written authorization
 from the X Consortium.
 </para>
+<para>X Window System is a trademark of The Open Group.</para>
 </legalnotice>
 
 <legalnotice>
-<para>
+<para role="multiLicensing">
 Copyright &copy; 1987, 1988, 1989, 1993, 1994 Sun Microsystems, Inc
 </para>
 <para>
@@ -200,7 +194,7 @@ John Interrante   John Thomas
 </literallayout>
 </preface>
 
-<chapter id="introduction">
+<chapter id='Introduction'>
 <title>Introduction</title>
 <para>
 It was an explicit design goal of X Version 11 to specify mechanism,
@@ -262,7 +256,7 @@ and to the equivalent interfaces for other languages
 is the subject of other documents.
 </para>
 
-<sect1 id="evolution_of_the_conventions">
+<sect1 id='Evolution_of_the_Conventions'>
 <title>Evolution of the Conventions</title>
 <para>
 In the interests of timely acceptance,
@@ -303,7 +297,7 @@ appropriate to protocol minor revision
 </para>
 </sect1>
 
-<sect1 id="atoms">
+<sect1 id='Atoms'>
 <title>Atoms</title>
 <para>
 Many of the conventions use atoms.
@@ -311,7 +305,7 @@ To assist the reader,
 the following sections attempt to amplify the description of atoms
 that is provided in the protocol specification.
 </para>
-<sect2 id="what_are_atoms">
+<sect2 id='What_Are_Atoms'>
 <title>What Are Atoms?</title>
 <para>
 At the conceptual level,
@@ -349,7 +343,7 @@ The inverse operator is also available
 </para>
 </sect2>
 
-<sect2 id="predefined_atoms">
+<sect2 id='Predefined_Atoms'>
 <title>Predefined Atoms</title>
 <para>
 The protocol specifies a number of atoms as being predefined:
@@ -385,7 +379,7 @@ and will typically initialize this cache with the predefined atoms.
 </para>
 </sect2>
 
-<sect2 id="naming_conventions">
+<sect2 id='Naming_Conventions'>
 <title>Naming Conventions</title>
 <para>
 The built-in atoms are composed of uppercase ASCII characters with the
@@ -407,7 +401,7 @@ special quoting conventions would have to be used.
 </para>
 </sect2>
 
-<sect2 id="semantics">
+<sect2 id='Semantics'>
 <title>Semantics</title>
 <para>
 The core protocol imposes no semantics on atoms except as they are used in
@@ -416,7 +410,7 @@ For further information on FONTPROP semantics,
 see the <emphasis remap='I'>X Logical Font Description Conventions</emphasis>.
 </para>
 </sect2>
-<sect2 id="name_spaces">
+<sect2 id='Name_Spaces'>
 <title>Name Spaces</title>
 <para>
 The protocol defines six distinct spaces in which atoms are interpreted.
@@ -424,46 +418,45 @@ Any particular atom may or may not have some valid interpretation
 with respect to each of these name spaces.
 </para>
 
-<informaltable frame="none">
-  <tgroup cols='4' align='left'>
-  <colspec colname='c1' colsep="0"/>
-  <colspec colname='c2' colsep="0"/>
-  <colspec colname='c3' colsep="0"/>
-  <colspec colname='c4' colsep="0"/>
+<informaltable frame="topbot">
+  <tgroup cols='3' align='left' colsep='0' rowsep='0'>
+  <colspec colname='c1' colwidth='1.5*'/>
+  <colspec colname='c2' colwidth='1.0*'/>
+  <colspec colname='c3' colwidth='3.0*'/>
   <thead>
-    <row rowsep="0">
+    <row rowsep='1'>
       <entry>Space</entry>
       <entry>Briefly</entry>
       <entry>Examples</entry>
     </row>
   </thead>
   <tbody>
-    <row rowsep="0">
+    <row>
       <entry>Property name</entry>
       <entry>Name</entry>
       <entry>WM_HINTS, WM_NAME, RGB_BEST_MAP, ...</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>Property type</entry>
       <entry>Type</entry>
       <entry>WM_HINTS, CURSOR, RGB_COLOR_MAP, ...</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>Selection name</entry>
       <entry>Selection</entry>
       <entry>PRIMARY, SECONDARY, CLIPBOARD</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>Selection target</entry>
       <entry>Target</entry>
       <entry>FILE_NAME, POSTSCRIPT, PIXMAP, ...</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>Font property</entry>
       <entry></entry>
       <entry>QUAD_WIDTH, POINT_SIZE, ...</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry><function>ClientMessage</function> type</entry>
       <entry></entry>
       <entry>WM_SAVE_YOURSELF, _DEC_SAVE_EDITS, &amp;...</entry>
@@ -473,7 +466,7 @@ with respect to each of these name spaces.
 </informaltable>
 </sect2>
 
-<sect2 id="discriminated_names">
+<sect2 id='Discriminated_Names'>
 <title>Discriminated Names</title>
 <para>
 Sometimes a protocol requires an arbitrary number of similar
@@ -504,26 +497,26 @@ exactly 8 digits, and using uppercase letters, then such discriminated names
 shall have the form:
 </para>
 
-<informaltable frame="none">
-  <tgroup cols='4' align='left'>
-  <colspec colname='c1' colsep="0"/>
-  <colspec colname='c2' colsep="0"/>
-  <colspec colname='c3' colsep="0"/>
-  <colspec colname='c4' colsep="0"/>
+<informaltable frame="topbot">
+  <?dbfo keep-together="always" ?>
+  <tgroup cols='3' align='left' colsep='0' rowsep='0'>
+  <colspec colname='c1' colwidth='2.0*'/>
+  <colspec colname='c2' colwidth='1.0*'/>
+  <colspec colname='c3' colwidth='2.0*'/>
   <thead>
-    <row rowsep="0">
+    <row rowsep='1'>
       <entry>Name Discriminated by</entry>
       <entry>Form</entry>
       <entry>Example</entry>
     </row>
   </thead>
   <tbody>
-    <row rowsep="0">
+    <row>
       <entry>screen number</entry>
       <entry><emphasis remap='I'>name</emphasis>_S<emphasis remap='I'>d</emphasis></entry>
       <entry>WM_COMMS_S2</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>X resource</entry>
       <entry><emphasis remap='I'>name</emphasis>_R<emphasis remap='I'>x</emphasis></entry>
       <entry>GROUP_LEADER_R1234ABCD</entry>
@@ -588,7 +581,7 @@ conventions.
 </sect1>
 </chapter>
 
-<chapter id="peer_to_peer_communication_by_means_of_selections">
+<chapter id='Peer_to_Peer_Communication_by_Means_of_Selections'>
 <title>Peer-to-Peer Communication by Means of Selections</title>
 <para>
 Selections are the primary mechanism that X Version 11 defines
@@ -596,8 +589,7 @@ for the exchange of information between clients,
 for example, by cutting and pasting between windows.
 Note that there can be an arbitrary number of selections
 (each named by an atom) and that they are global to the server.
-<link linkend="use_of_selection_atoms">
-<xref linkend="use_of_selection_atoms"></xref></link>.
+<xref linkend='Use_of_Selection_Atoms' xrefstyle='select: title'/>.
 discusses the choice of an atom.
 Each selection is owned by a client and is attached to a window.
 </para>
@@ -679,7 +671,7 @@ Thus, passing indirect references to data
 is permitted only if both clients specifically agree.
 </para>
 
-<sect1 id="acquiring_selection_ownership">
+<sect1 id='Acquiring_Selection_Ownership'>
 <title>Acquiring Selection Ownership</title>
 <para>
 A client wishing to acquire ownership of a particular selection
@@ -693,19 +685,20 @@ which is defined as follows:
 </para>
 
 <informaltable frame="none">
-  <tgroup cols='1' align='left'>
-  <colspec colname='c1' colsep="0"/>
+  <?dbfo keep-together="always" ?>
+  <tgroup cols='1' align='left' colsep='0' rowsep='0'>
+  <colspec colname='c1' colwidth='1.0*'/>
   <tbody>
-    <row rowsep="0">
+    <row>
       <entry><emphasis remap='I'>selection</emphasis>: ATOM</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>
 <emphasis remap='I'>owner</emphasis>: WINDOW or
 <function>None</function>
       </entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>
 <emphasis remap='I'>time</emphasis>: TIMESTAMP or
 <function>CurrentTime</function>
@@ -786,16 +779,17 @@ which is defined as follows:
 </para>
 
 <informaltable frame="none">
-  <tgroup cols='1' align='left'>
-  <colspec colname='c1' colsep="0"/>
+  <?dbfo keep-together="always" ?>
+  <tgroup cols='1' align='left' colsep='0' rowsep='0'>
+  <colspec colname='c1' colwidth='1.0*'/>
   <tbody>
-    <row rowsep="0">
+    <row>
       <entry><emphasis remap='I'>selection</emphasis>: ATOM</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>-&gt;</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>
 <emphasis remap='I'>owner</emphasis>: WINDOW or
 <function>None</function>
@@ -830,7 +824,7 @@ of the selection for the time period starting at the specified time.
 </para>
 </sect1>
 
-<sect1 id="responsibilities_of_the_selection_owner">
+<sect1 id='Responsibilities_of_the_Selection_Owner'>
 <title>Responsibilities of the Selection Owner</title>
 <para>
 When a requestor wants the value of a selection,
@@ -844,29 +838,30 @@ event, which is defined as follows:
 </para>
 
 <informaltable frame="none">
-  <tgroup cols='1' align='left'>
-  <colspec colname='c1' colsep="0"/>
+  <?dbfo keep-together="always" ?>
+  <tgroup cols='1' align='left' colsep='0' rowsep='0'>
+  <colspec colname='c1' colwidth='1.0*'/>
   <tbody>
-    <row rowsep="0">
+    <row>
       <entry><emphasis remap='I'>owner</emphasis>: WINDOW</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry><emphasis remap='I'>selection</emphasis>: ATOM</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry><emphasis remap='I'>selection</emphasis>: ATOM</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry><emphasis remap='I'>target</emphasis>: ATOM</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry><emphasis remap='I'>property</emphasis>: ATOM or
 <function>None</function></entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry><emphasis remap='I'>requestor</emphasis>: WINDOW</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry><emphasis remap='I'>time</emphasis>: TIMESTAMP or
 <function>CurrentTime</function></entry>
     </row>
@@ -949,8 +944,7 @@ the owner must refuse the
 <function>SelectionRequest</function>,
 as previously described.
 See also
-<link linkend="large_data_transfers">
-<xref linkend="large_data_transfers"></xref></link>.
+<xref linkend='Large_Data_Transfers' xrefstyle='select: title'/>.
 
 </para>
 
@@ -973,25 +967,26 @@ is defined as follows:
 
 
 <informaltable frame="none">
-  <tgroup cols='1' align='left'>
-  <colspec colname='c1' colsep="0"/>
+  <?dbfo keep-together="always" ?>
+  <tgroup cols='1' align='left' colsep='0' rowsep='0'>
+  <colspec colname='c1' colwidth='1.0*'/>
   <tbody>
-    <row rowsep="0">
+    <row>
       <entry><emphasis remap='I'>requestor</emphasis>: WINDOW</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>
 <emphasis remap='I'>selection</emphasis>,
 <emphasis remap='I'>target</emphasis>: ATOM
       </entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>
 <emphasis remap='I'>property</emphasis>: ATOM or
 <function>None</function>
       </entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>
 <emphasis remap='I'>time</emphasis>: TIMESTAMP or
 <function>CurrentTime</function>
@@ -1056,8 +1051,7 @@ Selection requestors are responsible for deleting properties whose
 names they receive in
 <function>SelectionNotify</function>
 events (See
-<link linkend="requesting_a_selection">
-<xref linkend="requesting_a_selection"></xref></link>
+<xref linkend='Requesting_a_Selection' xrefstyle='select: title'/>
 ) or in properties with type MULTIPLE.
 </para>
 </blockquote>
@@ -1095,20 +1089,21 @@ event, which is defined as follows:
 </para>
 
 <informaltable frame="none">
-  <tgroup cols='1' align='left'>
-  <colspec colname='c1' colsep="0"/>
+  <?dbfo keep-together="always" ?>
+  <tgroup cols='1' align='left' colsep='0' rowsep='0'>
+  <colspec colname='c1' colwidth='1.0*'/>
   <tbody>
-    <row rowsep="0">
+    <row>
       <entry>
 <emphasis remap='I'>owner</emphasis>: WINDOW
       </entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>
 <emphasis remap='I'>selection</emphasis>: ATOM
       </entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>
 <emphasis remap='I'>time</emphasis>: TIMESTAMP
       </entry>
@@ -1150,14 +1145,14 @@ the owner should take no action.
 
 </sect1>
 
-<sect1 id="giving_up_selection_ownership">
+<sect1 id='Giving_Up_Selection_Ownership'>
 <title>Giving Up Selection Ownership</title>
 <para>
 Clients may either give up selection ownership voluntarily
 or lose it forcibly as the result of some other client's actions.
 </para>
 
-<sect2 id="voluntarily_giving_up_selection_ownership">
+<sect2 id='Voluntarily_Giving_Up_Selection_Ownership'>
 <title>Voluntarily Giving Up Selection Ownership</title>
 <para>
 To relinquish ownership of a selection voluntarily,
@@ -1179,7 +1174,7 @@ the ownership of the selection involved will revert to
 </para>
 </sect2>
 
-<sect2 id="forcibly_giving_up_selection_ownership">
+<sect2 id='Forcibly_Giving_Up_Selection_Ownership'>
 <title>Forcibly Giving Up Selection Ownership</title>
 <para>
 If a client gives up ownership of a selection
@@ -1191,8 +1186,7 @@ the previous owner will receive a
 event. For the definition of a
 <function>SelectionClear</function>
 event, see
-<link linkend="responsibilities_of_the_selection_owner">
-<xref linkend="responsibilities_of_the_selection_owner"></xref></link>
+<xref linkend='Responsibilities_of_the_Selection_Owner' xrefstyle='select: title'/>
 </para>
 
 <para>
@@ -1205,7 +1199,7 @@ request.
 </sect2>
 </sect1>
 
-<sect1 id="requesting_a_selection">
+<sect1 id='Requesting_a_Selection'>
 <title>Requesting a Selection</title>
 <para>
 A client that wishes to obtain the value of a selection in a particular
@@ -1220,27 +1214,28 @@ request, which is defined as follows:
 </para>
 
 <informaltable frame="none">
-  <tgroup cols='1' align='left'>
-  <colspec colname='c1' colsep="0"/>
+  <?dbfo keep-together="always" ?>
+  <tgroup cols='1' align='left' colsep='0' rowsep='0'>
+  <colspec colname='c1' colwidth='1.0*'/>
   <tbody>
-    <row rowsep="0">
+    <row>
       <entry>
 <emphasis remap='I'>selection</emphasis>,
 <emphasis remap='I'>target</emphasis>: ATOM
       </entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>
 <emphasis remap='I'>property</emphasis>: ATOM or
 <function>None</function>
       </entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>
 <emphasis remap='I'>requestor</emphasis>: WINDOW
       </entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>
 <emphasis remap='I'>time</emphasis>: TIMESTAMP or
 <function>CurrentTime</function>
@@ -1255,8 +1250,7 @@ The selection argument specifies the particular selection involved,
 and the target argument specifies the required form of the information.
 For information about the choice of suitable atoms to use,
 see
-<link linkend="use_of_selection_atoms">
-<xref linkend="use_of_selection_atoms"></xref></link>
+<xref linkend='Use_of_Selection_Atoms' xrefstyle='select: title'/>
 The requestor should set the requestor argument to a window that it created;
 the owner will place the reply property there.
 The requestor should set the time argument to the timestamp on the event
@@ -1369,8 +1363,7 @@ event will be received.
 For the definition of a
 <function>SelectionNotify</function>
 event, see
-<link linkend="responsibilities_of_the_selection_owner">
-<xref linkend="responsibilities_of_the_selection_owner"></xref></link>.
+<xref linkend='Responsibilities_of_the_Selection_Owner' xrefstyle='select: title'/>.
 </para>
 
 <para>
@@ -1405,57 +1398,57 @@ request, which is defined as follows:
 </para>
 
 <informaltable frame="none">
-  <tgroup cols='1' align='left'>
-  <colspec colname='c1' colsep="0"/>
+  <tgroup cols='1' align='left' colsep='0' rowsep='0'>
+  <colspec colname='c1' colwidth='1.0*'/>
   <tbody>
-    <row rowsep="0">
+    <row>
       <entry>
 <emphasis remap='I'>window</emphasis>: WINDOW
       </entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>
 <emphasis remap='I'>property</emphasis>: ATOM
       </entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>
 <emphasis remap='I'>type</emphasis>: ATOM or
 <function>AnyPropertyType</function>
       </entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>
 <emphasis remap='I'>long-offset</emphasis>,
 <emphasis remap='I'>long-length</emphasis>: CARD32
       </entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>
 <emphasis remap='I'>delete</emphasis>: BOOL
       </entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>
 -&gt;
       </entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>
 type: ATOM or <function>None</function>
       </entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>
 format: {0, 8, 16, 32}
       </entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>
 bytes-after: CARD32
       </entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>
 value: LISTofINT8 or LISTofINT16 or LISTofINT32
       </entry>
@@ -1480,8 +1473,7 @@ Several
 requests may be needed to retrieve all the data in the selection;
 each should set the long-offset argument to the amount of data received so far,
 and the size argument to some reasonable buffer size (see
-<link linkend="large_data_transfers">
-<xref linkend="large_data_transfers"></xref></link>.
+<xref linkend='Large_Data_Transfers' xrefstyle='select: title'/>.
 ).
 If the returned value of bytes-after is zero, <!-- xref -->
 the whole property has been transferred.
@@ -1491,8 +1483,7 @@ the whole property has been transferred.
 Once all the data in the selection has been retrieved
 (which may require getting the values of several properties --
 see
-<link linkend="use_of_selection_properties">
-<xref linkend="use_of_selection_properties"></xref></link>.
+<xref linkend='Use_of_Selection_Properties' xrefstyle='select: title'/>.
 ),
 the requestor should delete the property in the
 <function>SelectionNotify</function>
@@ -1518,14 +1509,13 @@ The requestor should invoke either
 after it has successfully retrieved all the data in the selection.
 For further information,
 see
-<link linkend="large_data_transfers">
-<xref linkend="large_data_transfers"></xref></link>.
+<xref linkend='Large_Data_Transfers' xrefstyle='select: title'/>.
 
 </para>
 </blockquote>
 </sect1>
 
-<sect1 id="large_data_transfers">
+<sect1 id='Large_Data_Transfers'>
 <title>Large Data Transfers</title>
 <para>
 Selections can get large, which poses two problems:
@@ -1565,8 +1555,7 @@ Selection owners should transfer the data describing a large selection
 (relative to the maximum-request-size they received
 in the connection handshake) using the INCR property mechanism
 (see
-<link linkend="incr_properties">
-<xref linkend="incr_properties"></xref></link>.
+<xref linkend='INCR_Properties' xrefstyle='select: title'/>.
 ). <!-- xref -->
     </para>
   </listitem>
@@ -1579,7 +1568,7 @@ to acquire selection ownership should arrange to process
 errors in property change requests.
 For clients using Xlib,
 this involves using the
-<function>XSetErrorHandler</function>
+<olink targetdoc='libX11' targetptr='XSetErrorHandler'><function>XSetErrorHandler</function></olink>
 function to override the default handler.
     </para>
   </listitem>
@@ -1613,8 +1602,7 @@ all properties stored for this selection should be deleted
 and the
 <function>ConvertSelection</function>
 request should be refused (see
-<link linkend="responsibilities_of_the_selection_owner">
-<xref linkend="responsibilities_of_the_selection_owner"></xref></link>.
+<xref linkend='Responsibilities_of_the_Selection_Owner' xrefstyle='select: title'/>.
 ). <!-- xref -->
     </para>
   </listitem>
@@ -1638,7 +1626,7 @@ data transfers.
 </blockquote>
 </sect1>
 
-<sect1 id="use_of_selection_atoms">
+<sect1 id='Use_of_Selection_Atoms'>
 <title>Use of Selection Atoms</title>
 <para>
 Defining a new atom consumes resources in the server
@@ -1647,7 +1635,7 @@ Thus, reducing the need for newly minted atoms is an important goal
 for the use of the selection atoms.
 </para>
 
-<sect2 id="selection_atoms">
+<sect2 id='Selection_Atoms'>
 <title>Selection Atoms</title>
 <para>
 There can be an arbitrary number of selections, each named by an atom.
@@ -1677,7 +1665,7 @@ Other selections may be used freely for private communication among
 related groups of clients.
 </para>
 
-<sect3 id="the_primary_Selection">
+<sect3 id='The_PRIMARY_Selection'>
 <title>The PRIMARY Selection</title>
 <para>
 The selection named by the atom PRIMARY is used for all commands
@@ -1686,7 +1674,7 @@ between clients that use the selection mechanism.
 </para>
 </sect3>
 
-<sect3 id="the_secondary_Selection">
+<sect3 id='The_SECONDARY_Selection'>
 <title>The SECONDARY Selection</title>
 <para>
 The selection named by the atom SECONDARY is used:
@@ -1707,7 +1695,7 @@ and the user does not want to disturb it
 </itemizedlist>
 
 </sect3>
-<sect3 id="the_clipboard_selection">
+<sect3 id='The_CLIPBOARD_Selection'>
 <title>The CLIPBOARD Selection</title>
 <para>
 The selection named by the atom CLIPBOARD is used to hold data
@@ -1853,7 +1841,7 @@ Flexibility - The clipboard data may be available as more than one target.
 </sect3>
 </sect2>
 
-<sect2 id="target_atoms">
+<sect2 id='Target_Atoms'>
 <title>Target Atoms</title>
 <para>
 The atom that a requestor supplies as the target of a
@@ -1874,86 +1862,84 @@ embedded in the table.  This means that the auto-numbering needs to be
 dinked around with after the end of the table.
 -->
 
-<informaltable frame="none">
-  <tgroup cols='3' align='left'>
-  <colspec colname='c1' colsep="0"/>
-  <colspec colname='c2' colsep="0"/>
-  <colspec colname='c3' colsep="0"/>
+<informaltable frame="topbot">
+  <tgroup cols='3' align='left' colsep='0' rowsep='0'>
+  <colspec colname='c1' colwidth='1.5*'/>
+  <colspec colname='c2' colwidth='1.0*'/>
+  <colspec colname='c3' colwidth='1.5*'/>
   <thead>
-    <row rowsep="0">
+    <row rowsep='1'>
       <entry>Atom</entry>
       <entry>Type </entry>
       <entry>Data Received</entry>
     </row>
   </thead>
   <tbody>
-    <row rowsep="0">
-      <entry>ADOBE_PORTABLE_DOCUMENT_FORMAT</entry>
+    <row>
+      <entry>ADOBE_PORTABLE_&shy;DOCUMENT_&shy;FORMAT</entry>
       <entry>STRING</entry>
       <entry>[1]</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>APPLE_PICT</entry>
       <entry>APPLE_PICT</entry>
       <entry>[2]</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>BACKGROUND</entry>
       <entry>PIXEL</entry>
       <entry>A list of pixel values</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>BITMAP</entry>
       <entry>BITMAP</entry>
       <entry>A list of bitmap IDs</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>CHARACTER_POSITION</entry>
       <entry>SPAN</entry>
       <entry>The start and end of the selection in bytes</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>CLASS</entry>
       <entry>TEXT</entry>
       <entry>(see
-<link linkend="wm_class_property">
-<xref linkend="wm_class_property"></xref></link>.
+<xref linkend='WM_CLASS_Property' xrefstyle='select: title'/>.
 )</entry> <!-- xref -->
     </row>
-    <row rowsep="0">
+    <row>
       <entry>CLIENT_WINDOW</entry>
       <entry>WINDOW</entry>
       <entry>Any top-level window owned by the selection owner</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>COLORMAP</entry>
       <entry>COLORMAP</entry>
       <entry>A list of colormap IDs</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>COLUMN_NUMBER</entry>
       <entry>SPAN</entry>
       <entry>The start and end column numbers</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>COMPOUND_TEXT</entry>
       <entry>COMPOUND_TEXT</entry>
       <entry>Compound Text</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>DELETE</entry>
       <entry>NULL</entry>
       <entry>(see
-<link linkend="delete">
-<xref linkend="delete"></xref></link>.
+<xref linkend='DELETE' xrefstyle='select: title'/>.
 )</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>DRAWABLE</entry>
       <entry>DRAWABLE</entry>
       <entry>A list of drawable IDs</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>ENCAPSULATED_POSTSCRIPT</entry>
       <entry>STRING</entry>
       <entry>[3], Appendix H
@@ -1965,46 +1951,43 @@ type as well to allow for compatibility with older clients.
 </para></footnote>
       </entry>
     </row>
-    <row rowsep="0">
-      <entry>ENCAPSULATED_POSTSCRIPT_INTERCHANGE</entry>
+    <row>
+      <entry>ENCAPSULATED_POSTSCRIPT_&shy;INTERCHANGE</entry>
       <entry>STRING</entry>
       <entry>[3], Appendix H</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>FILE_NAME</entry>
       <entry>TEXT</entry>
       <entry>The full path name of a file</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>FOREGROUND</entry>
       <entry>PIXEL</entry>
       <entry>A list of pixel values</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>HOST_NAME</entry>
       <entry>TEXT</entry>
       <entry>(see
-<link linkend="wm_client_machine_property">
-<xref linkend="wm_client_machine_property"></xref></link>.
+<xref linkend='WM_CLIENT_MACHINE_Property' xrefstyle='select: title'/>.
 )</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>INSERT_PROPERTY</entry>
       <entry>NULL</entry>
       <entry>(see
-<link linkend="insert_property">
-<xref linkend="insert_property"></xref></link>.
+<xref linkend='INSERT_PROPERTY' xrefstyle='select: title'/>.
 )</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>INSERT_SELECTION</entry>
       <entry>NULL</entry>
       <entry>(see
-<link linkend="insert_selection">
-<xref linkend="insert_selection"></xref></link>.
+<xref linkend='INSERT_SELECTION' xrefstyle='select: title'/>.
 )</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>LENGTH</entry>
       <entry>INTEGER</entry>
       <entry>The number of bytes in the selection
@@ -2017,45 +2000,44 @@ backward compatibility.
 </para></footnote>
       </entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>LINE_NUMBER</entry>
       <entry>SPAN</entry>
       <entry>The start and end line numbers</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>LIST_LENGTH</entry>
       <entry>INTEGER</entry>
       <entry>The number of disjoint parts of the selection</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>MODULE</entry>
       <entry>TEXT</entry>
       <entry>The name of the selected procedure</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>MULTIPLE</entry>
       <entry>ATOM_PAIR</entry>
       <entry>(see the discussion that follows)</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>NAME</entry>
       <entry>TEXT</entry>
       <entry>(see
-<link linkend="wm_name_property">
-<xref linkend="wm_name_property"></xref></link>.
+<xref linkend='WM_NAME_Property' xrefstyle='select: title'/>.
 )</entry> <!-- xref -->
     </row>
-    <row rowsep="0">
+    <row>
       <entry>ODIF</entry>
       <entry>TEXT</entry>
       <entry>ISO Office Document Interchange Format</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>OWNER_OS</entry>
       <entry>TEXT</entry>
       <entry>The operating system of the owner client</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>PIXMAP</entry>
       <entry>PIXMAP
 <footnote>
@@ -2070,47 +2052,47 @@ the result of a conversion to LENGTH; its use is thus deprecated.
       </entry>
       <entry>A list of pixmap IDs</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>POSTSCRIPT</entry>
       <entry>STRING</entry>
       <entry>[3]</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>PROCEDURE</entry>
       <entry>TEXT</entry>
       <entry>The name of the selected procedure</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>PROCESS</entry>
       <entry>INTEGER, TEXT</entry>
       <entry>The process ID of the owner</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>STRING</entry>
       <entry>STRING</entry>
       <entry>ISO Latin-1 (+TAB+NEWLINE) text</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>TARGETS</entry>
       <entry>ATOM</entry>
       <entry>A list of valid target atoms</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>TASK</entry>
       <entry>INTEGER, TEXT</entry>
       <entry>The task ID of the owner</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>TEXT</entry>
       <entry>TEXT</entry>
       <entry>The text in the owner's choice of encoding</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>TIMESTAMP</entry>
       <entry>INTEGER</entry>
       <entry>The timestamp used to acquire the selection</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>USER</entry>
       <entry>TEXT</entry>
       <entry>The name of the user running the owner</entry>
@@ -2250,8 +2232,7 @@ The entries in a MULTIPLE property must be processed in the order
 they appear in the property.
 For further information,
 see
-<link linkend="selection_targets_with_side_effects">
-<xref linkend="selection_targets_with_side_effects"></xref></link>.
+<xref linkend='Selection_Targets_with_Side_Effects' xrefstyle='select: title'/>.
         </para>
     </blockquote>
     <para>
@@ -2284,7 +2265,7 @@ returning the timestamp they used to obtain the selection.
 </itemizedlist>
 </sect2>
 
-<sect2 id="selection_targets_with_side_effects">
+<sect2 id='Selection_Targets_with_Side_Effects'>
 <title>Selection Targets with Side Effects</title>
 <para>
 Some targets (for example, DELETE) have side effects.
@@ -2345,7 +2326,7 @@ These side-effect targets are used to implement operations such as
 "exchange PRIMARY and SECONDARY selections."
 </para>
 
-<sect3 id="delete">
+<sect3 id='DELETE'>
 <title>DELETE</title>
 <para>
 When the owner of a selection receives a request to convert it to DELETE,
@@ -2355,7 +2336,7 @@ and return a zero-length property of type NULL if the deletion was successful.
 </para>
 </sect3>
 
-<sect3 id="insert_selection">
+<sect3 id='INSERT_SELECTION'>
 <title>INSERT_SELECTION</title>
 <para>
 When the owner of a selection receives a request to convert it to
@@ -2369,7 +2350,7 @@ for which it got the INSERT_SELECTION request
 (whatever doing so means for its internal data structures).
 </para>
 </sect3>
-<sect3 id="insert_property">
+<sect3 id='INSERT_PROPERTY'>
 <title>INSERT_PROPERTY</title>
 <para>
 When the owner of a selection receives a request to convert it to
@@ -2382,7 +2363,7 @@ of the selection for which it got the INSERT_SELECTION request
 </sect2>
 </sect1>
 
-<sect1 id="use_of_selection_properties">
+<sect1 id='Use_of_Selection_Properties'>
 <title>Use of Selection Properties</title>
 <para>
 The names of the properties used in selection data transfer are chosen by
@@ -2429,90 +2410,90 @@ For variable-length items such as text,
 the separators are also listed.
 </para>
 
-<informaltable frame="none">
-  <tgroup cols='3' align='left'>
-  <colspec colname='c1' colsep="0"/>
-  <colspec colname='c2' colsep="0"/>
-  <colspec colname='c3' colsep="0"/>
+<informaltable frame="topbot">
+  <tgroup cols='3' align='left' colsep='0' rowsep='0'>
+  <colspec colname='c1' colwidth='1.5*'/>
+  <colspec colname='c2' colwidth='1.0*'/>
+  <colspec colname='c3' colwidth='3.0*'/>
   <thead>
-    <row rowsep="0">
+    <row rowsep='1'>
       <entry>Type Atom</entry>
       <entry>Format</entry>
       <entry>Separator</entry>
     </row>
   </thead>
   <tbody>
-    <row rowsep="0">
+    <row>
       <entry>APPLE_PICT</entry>
       <entry>8</entry>
       <entry>Self-sizing</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>ATOM</entry>
       <entry>32</entry>
       <entry>Fixed-size</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>ATOM_PAIR</entry>
       <entry>32</entry>
       <entry>Fixed-size</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>BITMAP</entry>
       <entry>32</entry>
       <entry>Fixed-size</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>C_STRING</entry>
       <entry>8</entry>
       <entry>Zero</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>COLORMAP</entry>
       <entry>32</entry>
       <entry>Fixed-size</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>COMPOUND_TEXT</entry>
       <entry>8</entry>
       <entry>Zero</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>DRAWABLE</entry>
       <entry>32</entry>
       <entry>Fixed-size</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>INCR</entry>
       <entry>32</entry>
       <entry>Fixed-size</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>INTEGER</entry>
       <entry>32</entry>
       <entry>Fixed-size</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>PIXEL</entry>
       <entry>32</entry>
       <entry>Fixed-size</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>PIXMAP</entry>
       <entry>32</entry>
       <entry>Fixed-size</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>SPAN</entry>
       <entry>32</entry>
       <entry>Fixed-size</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>STRING</entry>
       <entry>8</entry>
       <entry>Zero</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>WINDOW</entry>
       <entry>32</entry>
       <entry>Fixed-size</entry>
@@ -2525,7 +2506,7 @@ the separators are also listed.
 It is expected that this table will grow over time.
 </para>
 
-<sect2 id="text_properties">
+<sect2 id='TEXT_Properties'>
 <title>TEXT Properties</title>
 <para>
 In general,
@@ -2554,8 +2535,7 @@ it should request conversion into the name of that encoding.
 
 <para>
 In the table in
-<link linkend="target_atoms">
-<xref linkend="target_atoms"></xref></link>,
+<xref linkend='Target_Atoms' xrefstyle='select: title'/>,
 the word TEXT (in the Type column) is used to indicate one
 of the registered encoding names.
 The type would not actually be TEXT;
@@ -2614,7 +2594,7 @@ specify an appropriate list format.
 </para>
 </sect2>
 
-<sect2 id="incr_properties">
+<sect2 id='INCR_Properties'>
 <title>INCR Properties</title>
 <para>
 Requestors may receive a property of type INCR
@@ -2726,7 +2706,7 @@ The remaining partial properties must have the same type.
 </para>
 </sect2>
 
-<sect2 id="drawable_properties">
+<sect2 id='DRAWABLE_Properties'>
 <title>DRAWABLE Properties</title>
 <para>
 Requestors may receive properties of type PIXMAP, BITMAP, DRAWABLE, or WINDOW,
@@ -2758,8 +2738,7 @@ Colormap ID
 <para>
 In general,
 requestors converting into targets whose returned type in the table in
-<link linkend="target_atoms">
-<xref linkend="target_atoms"></xref></link>
+<xref linkend='Target_Atoms' xrefstyle='select: title'/>
 is one of the DRAWABLE types should expect to convert also
 into the following targets (using the MULTIPLE mechanism):
 </para>
@@ -2785,7 +2764,7 @@ COLORMAP returns a colormap ID.
 
 </sect2>
 
-<sect2 id="span_properties">
+<sect2 id='SPAN_Properties'>
 <title>SPAN Properties</title>
 <para>
 Properties with type SPAN contain a list of cardinal-pairs
@@ -2801,18 +2780,16 @@ such as LINE_NUMBER or CHARACTER_POSITION.
 </sect2>
 </sect1>
 
-<sect1 id="manager_selections">
+<sect1 id='Manager_Selections'>
 <title>Manager Selections</title>
 <para>
 Certain clients, often called managers, take on responsibility
 for managing shared resources.  A client that manages a shared
 resource should take ownership of an appropriate selection,
 named using the conventions described in
-<link linkend="naming_conventions">
-<xref linkend="naming_conventions"></xref></link>
+<xref linkend='Naming_Conventions' xrefstyle='select: title'/>
 and
-<link linkend="discriminated_names">
-<xref linkend="discriminated_names"></xref></link>.
+<xref linkend='Discriminated_Names' xrefstyle='select: title'/>.
 A client that manages multiple
 shared resources (or groups of resources) should take
 ownership of a selection for each one.
@@ -2836,15 +2813,12 @@ replace the old one.  If so, it may then take ownership of the selection.
 Managers should acquire the selection using a window created expressly for
 this purpose.  Managers must conform to the rules for selection owners
 described in
-<link linkend="acquiring_selection_ownership">
-<xref linkend="acquiring_selection_ownership"></xref></link>
+<xref linkend='Acquiring_Selection_Ownership' xrefstyle='select: title'/>
 and
-<link linkend="responsibilities_of_the_selection_owner">
-<xref linkend="responsibilities_of_the_selection_owner"></xref></link>
+<xref linkend='Responsibilities_of_the_Selection_Owner' xrefstyle='select: title'/>
 , and they must also support the required
 targets listed in
-<link linkend="use_of_selection_atoms">
-<xref linkend="use_of_selection_atoms"></xref></link>.
+<xref linkend='Use_of_Selection_Atoms' xrefstyle='select: title'/>.
 </para>
 
 <para>
@@ -2904,51 +2878,46 @@ protocol request with the following arguments:
 
 <!-- .br -->
 <!-- .ne 6 -->
-<informaltable frame="none">
-  <tgroup cols='3' align='left'>
-  <colspec colname='c1' colsep="0"/>
-  <colspec colname='c2' colsep="0"/>
-  <colspec colname='c3' colsep="0"/>
+<informaltable frame="topbot">
+  <tgroup cols='2' align='left' colsep='0' rowsep='0'>
+  <colspec colname='c1' colwidth='1.0*'/>
+  <colspec colname='c2' colwidth='3.0*'/>
   <thead>
-    <row>
-      <entry namest="c1" nameend="c2">Argument</entry>
+    <row rowsep='1'>
+      <entry>Argument</entry>
       <entry>Value</entry>
     </row>
   </thead>
   <tbody>
-    <row rowsep="0">
-      <entry namest="c1" nameend="c2">destination:</entry>
+    <row>
+      <entry>destination:</entry>
       <entry>
 the root window of screen 0, or the root
 window of the appropriate screen if the
 manager is managing a screen-specific resource</entry>
     </row>
-    <row rowsep="0">
-      <entry namest="c1" nameend="c2">propogate:</entry>
+    <row>
+      <entry>propogate:</entry>
       <entry>False</entry>
     </row>
-    <row rowsep="0">
-      <entry namest="c1" nameend="c2">event-mask:</entry>
+    <row>
+      <entry>event-mask:</entry>
       <entry><function>StructureNotify</function></entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>event:</entry>
-      <entry></entry>
       <entry><function>ClientMessage</function></entry>
     </row>
-    <row rowsep="0">
-      <entry></entry>
-      <entry>type:</entry>
+    <row>
+      <entry>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;type:</entry>
       <entry>MANAGER</entry>
     </row>
-    <row rowsep="0">
-      <entry></entry>
-      <entry>format:</entry>
+    <row>
+      <entry>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;format:</entry>
       <entry>32</entry>
     </row>
-    <row rowsep="0">
-      <entry></entry>
-      <entry>data[0]
+    <row>
+      <entry>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;data[0]
 <footnote>
 <para>
 We use the notation data[n] to indicate the n
@@ -2962,24 +2931,20 @@ The list is indexed from zero.
       </entry>
       <entry>timestamp</entry>
     </row>
-    <row rowsep="0">
-      <entry></entry>
-      <entry>data[1]:</entry>
+    <row>
+      <entry>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;data[1]:</entry>
       <entry>manager selection atom</entry>
     </row>
-    <row rowsep="0">
-      <entry></entry>
-      <entry>data[2]:</entry>
+    <row>
+      <entry>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;data[2]:</entry>
       <entry>the window owning the selection</entry>
     </row>
-    <row rowsep="0">
-      <entry></entry>
-      <entry>data[3]:</entry>
+    <row>
+      <entry>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;data[3]:</entry>
       <entry>manager-selection-specific data</entry>
     </row>
-    <row rowsep="0">
-      <entry></entry>
-      <entry>data[4]:</entry>
+    <row>
+      <entry>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;data[4]:</entry>
       <entry>manager-selection-specific data</entry>
     </row>
   </tbody>
@@ -2996,7 +2961,7 @@ on the appropriate root window and should watch for the appropriate MANAGER
 </sect1>
 </chapter>
 
-<chapter id="peer_to_peer_communication_by_means_of_cut_buffers">
+<chapter id='Peer_to_Peer_Communication_by_Means_of_Cut_Buffers'>
 <title>Peer-to-Peer Communication by Means of Cut Buffers</title>
 <para>
 The cut buffer mechanism is much simpler but much less powerful
@@ -3028,7 +2993,7 @@ and CUT_BUFFER7 to CUT_BUFFER0.
 It then must store the data into CUT_BUFFER0 by using a
 <function>ChangeProperty</function>
 request in mode
-<function>Replace</function>.
+<olink targetdoc='libXaw' targetptr='Replace'><function>Replace</function></olink>.
 </para>
 
 <para>
@@ -3054,7 +3019,7 @@ and need to be able to identify operations that transfer data to and fro.
 </para>
 </chapter>
 
-<chapter id="client_to_window_manager_communication">
+<chapter id='Client_to_Window_Manager_Communication'>
 <title>Client-to-Window-Manager Communication</title>
 <para>
 To permit window managers to perform their role of mediating the competing
@@ -3115,7 +3080,7 @@ and it should be run under a window manager that allows other windows
 (for example, the debugger) to appear on top.
 </para>
 
-<sect1 id="clients_ctions">
+<sect1 id='Clients_Actions'>
 <title>Client's Actions</title>
 <para>
 In general,
@@ -3143,7 +3108,7 @@ Being prepared for resource allocations to change at any time
   </listitem>
 </itemizedlist>
 
-<sect2 id="creating_a_top_level_window">
+<sect2 id='Creating_a_Top_Level_Window'>
 <title>Creating a Top-Level Window</title>
 <para>
 A client's
@@ -3218,15 +3183,13 @@ Newly created windows start in the Withdrawn state.
 Transitions between states happen when the top-level window is mapped
 and unmapped and when the window manager receives certain messages.
 For further details, see
-<link linkend="wm_hints_property">
-<xref linkend="wm_hints_property"></xref></link>.
+<xref linkend='WM_HINTS_Property' xrefstyle='select: title'/>.
  and
-<link linkend="changing_window_state">
-<xref linkend="changing_window_state"></xref></link>.
+<xref linkend='Changing_Window_State' xrefstyle='select: title'/>.
 </para>
 </sect2>
 
-<sect2 id="client_properties">
+<sect2 id='Client_Properties'>
 <title>Client Properties</title>
 <para>
 Once the client has one or more top-level windows,
@@ -3244,11 +3207,11 @@ and will monitor some properties for changes while the window is
 in the Iconic or Normal state.
 When the client changes one of these properties,
 it must use
-<function>Replace</function>
+<olink targetdoc='libXaw' targetptr='Replace'><function>Replace</function></olink>
 mode to overwrite the entire property with new data;
 the window manager will retain no memory of the old value of the property.
 All fields of the property must be set to suitable values in a single
-<function>Replace</function>
+<olink targetdoc='libXaw' targetptr='Replace'><function>Replace</function></olink>
 mode <function>ChangeProperty</function>
 request.
 This ensures that the full contents of the property will be
@@ -3280,8 +3243,7 @@ should take place using separate properties.
 The only exception to this rule is the WM_PROTOCOLS property, which may be
 of arbitrary length and which may contain atoms representing private
 protocols (see
-<link linkend="wm_protocols_property">
-<xref linkend="wm_protocols_property"></xref></link>
+<xref linkend='WM_PROTOCOLS_Property' xrefstyle='select: title'/>
 ).
 </para>
 
@@ -3289,12 +3251,11 @@ protocols (see
 The next sections describe each of the properties the clients
 need to set, in turn.
 They are summarized in the table in
-<link linkend="summary_of_window_manager_property_types">
-<xref linkend="summary_of_window_manager_property_types"></xref></link>
+<xref linkend='Summary_of_Window_Manager_Property_Types' xrefstyle='select: title'/>
 
 </para>
 
-<sect3 id="wm_name_property">
+<sect3 id='WM_NAME_Property'>
 <title>WM_NAME Property</title>
 <para>
 The WM_NAME property is an uninterpreted string
@@ -3306,8 +3267,7 @@ The encoding used for this string
 (and all other uninterpreted string properties)
 is implied by the type of the property.
 The type atoms to be used for this purpose are described in
-<link linkend="text_properties">
-<xref linkend="text_properties"></xref></link>.
+<xref linkend='TEXT_Properties' xrefstyle='select: title'/>.
 </para>
 
 <para>
@@ -3339,7 +3299,7 @@ brevity here will pay dividends.
 </para>
 </sect3>
 
-<sect3 id="wm_icon_name_property">
+<sect3 id='WM_ICON_NAME_Property'>
 <title>WM_ICON_NAME Property</title>
 <para>
 The WM_ICON_NAME property is an uninterpreted string
@@ -3357,81 +3317,81 @@ or windows; rather, they should rely on the window manager to do so.
 </para>
 </sect3>
 
-<sect3 id="wm_normal_hints_property">
+<sect3 id='WM_NORMAL_HINTS_Property'>
 <title>WM_NORMAL_HINTS Property</title>
 <para>
 The type of the WM_NORMAL_HINTS property is WM_SIZE_HINTS.
 Its contents are as follows:
 </para>
 
-<informaltable frame="none">
-  <tgroup cols='3' align='left'>
-  <colspec colname='c1' colsep="0"/>
-  <colspec colname='c2' colsep="0"/>
-  <colspec colname='c3' colsep="0"/>
+<informaltable frame="topbot">
+  <tgroup cols='3' align='left' colsep='0' rowsep='0'>
+  <colspec colname='c1' colwidth='1.0*'/>
+  <colspec colname='c2' colwidth='1.0*'/>
+  <colspec colname='c3' colwidth='1.0*'/>
   <thead>
-    <row rowsep="0">
+    <row rowsep='1'>
       <entry>Field</entry>
       <entry>Type</entry>
       <entry>Comments</entry>
     </row>
   </thead>
   <tbody>
-    <row rowsep="0">
+    <row>
       <entry>flags</entry>
       <entry>CARD32</entry>
       <entry>(see the next table)</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>pad</entry>
       <entry>4*CARD32</entry>
       <entry>For backwards compatibility</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>min_width</entry>
       <entry>INT32</entry>
       <entry>If missing, assume base_width</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>min_height</entry>
       <entry>INT32</entry>
       <entry>If missing, assume base_height</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>max_width</entry>
       <entry>INT32</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>max_height</entry>
       <entry>INT32</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>width_inc</entry>
       <entry>INT32</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>height_inc</entry>
       <entry>INT32</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>min_aspect</entry>
       <entry>(INT32,INT32)</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>max_aspect</entry>
       <entry>(INT32,INT32)</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>base_width</entry>
       <entry>INT32</entry>
       <entry>If missing, assume min_width</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>base_height</entry>
       <entry>INT32</entry>
       <entry>If missing, assume min_height</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>win_gravity</entry>
       <entry>INT32</entry>
       <entry>If missing, assume <function>NorthWest</function></entry>
@@ -3444,65 +3404,65 @@ Its contents are as follows:
 The WM_SIZE_HINTS.flags bit definitions are as follows:
 </para>
 
-<informaltable frame="none">
-  <tgroup cols='3' align='left'>
-  <colspec colname='c1' colsep="0"/>
-  <colspec colname='c2' colsep="0"/>
-  <colspec colname='c3' colsep="0"/>
+<informaltable frame="topbot">
+  <tgroup cols='3' align='left' colsep='0' rowsep='0'>
+  <colspec colname='c1' colwidth='2.0*'/>
+  <colspec colname='c2' colwidth='1.0*'/>
+  <colspec colname='c3' colwidth='3.0*'/>
   <thead>
-    <row rowsep="0">
+    <row rowsep='1'>
       <entry>Name</entry>
       <entry>Value</entry>
       <entry>Field</entry>
     </row>
   </thead>
   <tbody>
-    <row rowsep="0">
+    <row>
       <entry><function>USPosition</function></entry>
       <entry>1</entry>
       <entry>User-specified x, y</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry><function>USSize</function></entry>
       <entry>2</entry>
       <entry>User-specified width, height</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry><function>PPosition</function></entry>
       <entry>4</entry>
       <entry>Program-specified position</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry><function>PSize</function></entry>
       <entry>8</entry>
       <entry>Program-specified size</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry><function>PMinSize</function></entry>
       <entry>16</entry>
       <entry>Program-specified minimum size</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry><function>PMaxSize</function></entry>
       <entry>32</entry>
       <entry>Program-specified maximum size</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry><function>PResizeInc</function></entry>
       <entry>64</entry>
       <entry>Program-specified resize increments</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry><function>PAspect</function></entry>
       <entry>128</entry>
       <entry>Program-specified min and max aspect ratios</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry><function>PBaseSize</function></entry>
       <entry>256</entry>
       <entry>Program-specified base size</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry><function>PWinGravity</function></entry>
       <entry>512</entry>
       <entry>Program-specified window gravity</entry>
@@ -3625,7 +3585,7 @@ place of the base size for this purpose.)
 </para>
 </sect3>
 
-<sect3 id="wm_hints_property">
+<sect3 id='WM_HINTS_Property'>
 <title>WM_HINTS Property</title>
 <para>
 The WM_HINTS property (whose type is WM_HINTS)
@@ -3640,59 +3600,59 @@ which need separate properties, such as WM_NAME.
 The contents of the properties are as follows:
 </para>
 
-<informaltable frame="none">
-  <tgroup cols='3' align='left'>
-  <colspec colname='c1' colsep="0"/>
-  <colspec colname='c2' colsep="0"/>
-  <colspec colname='c3' colsep="0"/>
+<informaltable frame="topbot">
+  <tgroup cols='3' align='left' colsep='0' rowsep='0'>
+  <colspec colname='c1' colwidth='1.3*'/>
+  <colspec colname='c2' colwidth='1.0*'/>
+  <colspec colname='c3' colwidth='3.0*'/>
   <thead>
-    <row rowsep="0">
+    <row rowsep='1'>
       <entry>Field</entry>
       <entry>Type</entry>
       <entry>Comments</entry>
     </row>
   </thead>
   <tbody>
-    <row rowsep="0">
+    <row>
       <entry>flags</entry>
       <entry>CARD32</entry>
       <entry>(see the next table)</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>input</entry>
       <entry>CARD32</entry>
       <entry>The client's input model</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>initial_state</entry>
       <entry>CARD32</entry>
       <entry>The state when first mapped</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>icon_pixmap</entry>
       <entry>PIXMAP</entry>
       <entry>The pixmap for the icon image</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>icon_window</entry>
       <entry>WINDOW</entry>
       <entry>The window for the icon image</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>icon_x</entry>
       <entry>INT32</entry>
       <entry>The icon location</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>icon_y</entry>
       <entry>INT32</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>icon_mask</entry>
       <entry>PIXMAP</entry>
       <entry>The mask for the icon shape</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>window_group</entry>
       <entry>WINDOW</entry>
       <entry>The ID of the group leader window</entry>
@@ -3705,13 +3665,13 @@ The contents of the properties are as follows:
 The WM_HINTS.flags bit definitions are as follows:
 </para>
 
-<informaltable frame="none">
-  <tgroup cols='3' align='left'>
-  <colspec colname='c1' colsep="0"/>
-  <colspec colname='c2' colsep="0"/>
-  <colspec colname='c3' colsep="0"/>
+<informaltable frame="topbot">
+  <tgroup cols='3' align='left' colsep='0' rowsep='0'>
+  <colspec colname='c1' colwidth='1.3*'/>
+  <colspec colname='c2' colwidth='1.0*'/>
+  <colspec colname='c3' colwidth='3.0*'/>
   <thead>
-    <row rowsep="0">
+    <row rowsep='1'>
       <entry>Name</entry>
       <entry>Value</entry>
       <entry>Field</entry>
@@ -3723,42 +3683,42 @@ The WM_HINTS.flags bit definitions are as follows:
       <entry>1</entry>
       <entry>input</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry><function>StateHint</function></entry>
       <entry>2</entry>
       <entry>initial_state</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry><function>IconPixmapHint</function></entry>
       <entry>4</entry>
       <entry>icon_pixmap</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry><function>IconWindowHint</function></entry>
       <entry>8</entry>
       <entry>icon_window</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry><function>IconPositionHint</function></entry>
       <entry>16</entry>
       <entry>icon_x &amp; icon_y</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry><function>IconMaskHint</function></entry>
       <entry>32</entry>
       <entry>icon_mask</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry><function>WindowGroupHint</function></entry>
       <entry>64</entry>
       <entry>window_group</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry><function>MessageHint</function></entry>
       <entry>128</entry>
       <entry>(this bit is obsolete)</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry><function>UrgencyHint</function></entry>
       <entry>256</entry>
       <entry>urgency</entry>
@@ -3775,8 +3735,7 @@ the WM_HINTS property if a window is mapped without one.
 <para>
 The input field is used to communicate to the window manager the input focus
 model used by the client (see
-<link linkend="input_focus">
-<xref linkend="input_focus"></xref></link>
+<xref linkend='Input_Focus' xrefstyle='select: title'/>
 ).
 </para>
 
@@ -3815,8 +3774,7 @@ Withdrawn
 
 <para>
 The semantics of these states are described in
-<link linkend="changing_window_state">
-<xref linkend="changing_window_state"></xref></link>.
+<xref linkend='Changing_Window_State' xrefstyle='select: title'/>.
 Newly created windows start in the Withdrawn state.
 Transitions between states happen when a
 top-level window is mapped and unmapped
@@ -3829,25 +3787,26 @@ wishes to be in at the time the top-level window is mapped
 from the Withdrawn state, as shown in the following table:
 </para>
 
-<informaltable frame="none">
-  <tgroup cols='3' align='left'>
-  <colspec colname='c1' colsep="0"/>
-  <colspec colname='c2' colsep="0"/>
-  <colspec colname='c3' colsep="0"/>
+<informaltable frame="topbot">
+  <?dbfo keep-together="always" ?>
+  <tgroup cols='3' align='left' colsep='0' rowsep='0'>
+  <colspec colname='c1' colwidth='1.3*'/>
+  <colspec colname='c2' colwidth='1.0*'/>
+  <colspec colname='c3' colwidth='3.0*'/>
   <thead>
-    <row rowsep="0">
+    <row rowsep='1'>
       <entry>State</entry>
       <entry>Value</entry>
       <entry>Comments</entry>
     </row>
   </thead>
   <tbody>
-    <row rowsep="0">
+    <row>
       <entry>NormalState</entry>
       <entry>1</entry>
       <entry>The window is visible</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>IconicState</entry>
       <entry>3</entry>
       <entry>The icon is visible</entry>
@@ -3866,8 +3825,7 @@ This pixmap should be:
     <para>
 One of the sizes specified in the WM_ICON_SIZE property
 on the root if it exists (see
-<link linkend="wm_icon_size_property">
-<xref linkend="wm_icon_size_property"></xref></link>
+<xref linkend='WM_ICON_SIZE_Property' xrefstyle='select: title'/>
 ).
     </para>
   </listitem>
@@ -3897,8 +3855,7 @@ Clients should not attempt to remedy the omission by working around it.
 Clients that need more capabilities from the icons than a simple 2-color
 bitmap should use icon windows.
 Rules for clients that do are set out in
-<link linkend="icons">
-<xref linkend="icons"></xref></link>.
+<xref linkend='Icons' xrefstyle='select: title'/>.
 </para>
 
 <para>
@@ -3956,8 +3913,7 @@ in a backwards compatibility mode.
 </para>
 </footnote>
 rather than the WM_PROTOCOLS mechanism of
-<link linkend="wm_protocols_property">
-<xref linkend="wm_protocols_property"></xref></link>
+<xref linkend='WM_PROTOCOLS_Property' xrefstyle='select: title'/>
 </para>
 
 <para>
@@ -3993,7 +3949,7 @@ window is iconic) or by raising it to the top of the stack.
 </blockquote>
 </sect3>
 
-<sect3 id="wm_class_property">
+<sect3 id='WM_CLASS_Property'>
 <title>WM_CLASS Property</title>
 <para>
 The WM_CLASS property (of type STRING without control characters)
@@ -4065,7 +4021,7 @@ This inconsistency is necessary for backwards compatibility.
 </para>
 </sect3>
 
-<sect3 id="wm_transient_for_property">
+<sect3 id='WM_TRANSIENT_FOR_Property'>
 <title>WM_TRANSIENT_FOR Property</title>
 <para>
 The WM_TRANSIENT_FOR property (of type WINDOW)
@@ -4092,7 +4048,7 @@ use override-redirect and grab the pointer while the window is mapped.
 </para>
 </sect3>
 
-<sect3 id="wm_protocols_property">
+<sect3 id='WM_PROTOCOLS_Property'>
 <title>WM_PROTOCOLS Property</title>
 <para>
 The WM_PROTOCOLS property (of type ATOM) is a list of atoms.
@@ -4108,8 +4064,7 @@ involve the window manager sending the client a
 event and the client taking appropriate action.
 For details of the contents of the event,
 see
-<link linkend="clientmessage_events">
-<xref linkend="clientmessage_events"></xref></link>
+<xref linkend='ClientMessage_Events' xrefstyle='select: title'/>
 In each case,
 the protocol transactions are initiated by the window manager.
 </para>
@@ -4124,37 +4079,36 @@ in the name space.
 The following table lists the protocols that have been defined to date.
 </para>
 
-<informaltable frame="none">
-  <tgroup cols='3' align='left'>
-  <colspec colname='c1' colsep="0"/>
-  <colspec colname='c2' colsep="0"/>
-  <colspec colname='c3' colsep="0"/>
+<informaltable frame="topbot">
+  <?dbfo keep-together="always" ?>
+  <tgroup cols='3' align='left' colsep='0' rowsep='0'>
+  <colspec colname='c1' colwidth='1.0*'/>
+  <colspec colname='c2' colwidth='1.0*'/>
+  <colspec colname='c3' colwidth='1.5*'/>
   <thead>
-    <row>
+    <row rowsep='1'>
       <entry>Protocol</entry>
       <entry>Section</entry>
       <entry>Purpose</entry>
     </row>
   </thead>
   <tbody>
-    <row rowsep="0">
+    <row>
       <entry>WM_TAKE_FOCUS</entry>
       <entry>
-<link linkend="input_focus">
-<xref linkend="input_focus"></xref></link>
+<xref linkend='Input_Focus' xrefstyle='select: title'/>
       </entry>
       <entry>Assignment of input focus</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>WM_SAVE_YOURSELF</entry>
       <entry>Appendix C</entry>
       <entry>Save client state request (deprecated)</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>WM_DELETE_WINDOW</entry>
       <entry>
-<link linkend="window_deletion">
-<xref linkend="window_deletion"></xref></link>
+<xref linkend='Window_Deletion' xrefstyle='select: title'/>
       </entry>
       <entry>Request to delete top-level window</entry>
     </row>
@@ -4167,7 +4121,7 @@ It is expected that this table will grow over time.
 </para>
 </sect3>
 
-<sect3 id="wm_colormap_windows_property">
+<sect3 id='WM_COLORMAP_WINDOWS_Property'>
 <title>WM_COLORMAP_WINDOWS Property</title>
 <para>
 The WM_COLORMAP_WINDOWS property (of type WINDOW) on a top-level window
@@ -4178,12 +4132,11 @@ colormap attributes.
 The top-level window is always (implicitly or explicitly) on the watch list.
 For the details of this mechanism,
 see
-<link linkend="colormaps">
-<xref linkend="colormaps"></xref></link>
+<xref linkend='Colormaps' xrefstyle='select: title'/>
 </para>
 </sect3>
 
-<sect3 id="wm_client_machine_property">
+<sect3 id='WM_CLIENT_MACHINE_Property'>
 <title>WM_CLIENT_MACHINE Property</title>
 <para>
 The client should set the WM_CLIENT_MACHINE property (of one of the TEXT
@@ -4193,7 +4146,7 @@ seen from the machine running the server.
 </sect3>
 </sect2>
 
-<sect2 id="window_manager_properties">
+<sect2 id='Window_Manager_Properties'>
 <title>Window Manager Properties</title>
 <para>
 The properties that were described in the previous section are those
@@ -4202,7 +4155,7 @@ This section describes the properties that the window manager places on
 client's top-level windows and on the root.
 </para>
 
-<sect3 id="wm_state_property">
+<sect3 id='WM_STATE_Property'>
 <title>WM_STATE Property</title>
 <para>
 The window manager will place a WM_STATE property (of type WM_STATE) on each
@@ -4229,25 +4182,26 @@ child-of-root window if one is present beneath the selected location.
 The contents of the WM_STATE property are defined as follows:
 </para>
 
-<informaltable frame="none">
-  <tgroup cols='3' align='left'>
-  <colspec colname='c1' colsep="0"/>
-  <colspec colname='c2' colsep="0"/>
-  <colspec colname='c3' colsep="0"/>
+<informaltable frame="topbot">
+  <?dbfo keep-together="always" ?>
+  <tgroup cols='3' align='left' colsep='0' rowsep='0'>
+  <colspec colname='c1' colwidth='1.3*'/>
+  <colspec colname='c2' colwidth='1.0*'/>
+  <colspec colname='c3' colwidth='3.0*'/>
   <thead>
-    <row>
+    <row rowsep='1'>
       <entry>Field</entry>
       <entry>Type</entry>
       <entry>Comments</entry>
     </row>
   </thead>
   <tbody>
-    <row rowsep="0">
+    <row>
       <entry>state</entry>
       <entry>CARD32</entry>
       <entry>(see the next table)</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>icon</entry>
       <entry>WINDOW</entry>
       <entry>ID of icon window</entry>
@@ -4260,26 +4214,27 @@ The contents of the WM_STATE property are defined as follows:
 The following table lists the WM_STATE.state values:
 </para>
 
-<informaltable frame="none">
-  <tgroup cols='2' align='left'>
-  <colspec colname='c1' colsep="0"/>
-  <colspec colname='c2' colsep="0"/>
+<informaltable frame="topbot">
+  <?dbfo keep-together="always" ?>
+  <tgroup cols='2' align='left' colsep='0' rowsep='0'>
+  <colspec colname='c1' colwidth='1.3*'/>
+  <colspec colname='c2' colwidth='5.0*'/>
   <thead>
-    <row>
+    <row rowsep='1'>
       <entry>State</entry>
       <entry>Value</entry>
     </row>
   </thead>
   <tbody>
-    <row rowsep="0">
+    <row>
       <entry>WithdrawnState</entry>
       <entry>0</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>NormalState</entry>
       <entry>1</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>IconicState</entry>
       <entry>3</entry>
     </row>
@@ -4328,7 +4283,7 @@ client's icon window.
 </para>
 </sect3>
 
-<sect3 id="wm_icon_size_property">
+<sect3 id='WM_ICON_SIZE_Property'>
 <title>WM_ICON_SIZE Property</title>
 <para>
 A window manager that wishes to place constraints on the sizes of icon
@@ -4336,41 +4291,42 @@ pixmaps and/or windows should place a property called WM_ICON_SIZE on the root.
 The contents of this property are listed in the following table.
 </para>
 
-<informaltable frame="none">
-  <tgroup cols='3' align='left'>
-  <colspec colname='c1' colsep="0"/>
-  <colspec colname='c2' colsep="0"/>
-  <colspec colname='c3' colsep="0"/>
+<informaltable frame="topbot">
+  <?dbfo keep-together="always" ?>
+  <tgroup cols='3' align='left' colsep='0' rowsep='0'>
+  <colspec colname='c1' colwidth='1.0*'/>
+  <colspec colname='c2' colwidth='1.0*'/>
+  <colspec colname='c3' colwidth='3.0*'/>
   <thead>
-    <row rowsep="0">
+    <row rowsep='1'>
       <entry>Field</entry>
       <entry>Type</entry>
       <entry>Comments</entry>
     </row>
   </thead>
   <tbody>
-    <row rowsep="0">
+    <row>
       <entry>min_width</entry>
       <entry>CARD32</entry>
       <entry>The data for the icon size series</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>min_height</entry>
       <entry>CARD32</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>max_width</entry>
       <entry>CARD32</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>max_height</entry>
       <entry>CARD32</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>width_inc</entry>
       <entry>CARD32</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>height_inc</entry>
       <entry>CARD32</entry>
     </row>
@@ -4385,7 +4341,7 @@ For more details see section 14.1.12 in  <!-- xref -->
 </sect3>
 </sect2>
 
-<sect2 id="changing_window_state">
+<sect2 id='Changing_Window_State'>
 <title>Changing Window State</title>
 <para>
 From the client's point of view,
@@ -4521,48 +4477,43 @@ using a
 request with the following arguments:
 </para>
 
-<informaltable frame="none">
-  <tgroup cols='3' align='left'>
-  <colspec colname='c1' colsep="0"/>
-  <colspec colname='c2' colsep="0"/>
-  <colspec colname='c3' colsep="0"/>
+<informaltable frame="topbot">
+  <?dbfo keep-together="always" ?>
+  <tgroup cols='2' align='left' colsep='0' rowsep='0'>
+  <colspec colname='c2' colwidth='1.0*'/>
+  <colspec colname='c3' colwidth='3.0*'/>
   <thead>
-    <row rowsep="0">
-      <entry namest="c1" nameend="c2">Argument</entry>
+    <row rowsep='1'>
+      <entry>Argument</entry>
       <entry>Value</entry>
     </row>
   </thead>
   <tbody>
-    <row rowsep="0">
-      <entry namest="c1" nameend="c2">destination</entry>
+    <row>
+      <entry>destination</entry>
       <entry>The root</entry>
     </row>
-    <row rowsep="0">
-      <entry namest="c1" nameend="c2">propogate</entry>
+    <row>
+      <entry>propogate</entry>
       <entry><emphasis role="bold">False</emphasis></entry>
     </row>
-    <row rowsep="0">
-      <entry namest="c1" nameend="c2">event-mask</entry>
+    <row>
+      <entry>event-mask</entry>
       <entry>(<emphasis role="bold">SubstructureRedirect|SubstructureNotify</emphasis>)</entry>
     </row>
-    <row rowsep="0">
-      <entry namest="c1" nameend="c2">
-event: an <function>UnmapNotify</function> with:
-      </entry>
+    <row>
+      <entry>event: an <function>UnmapNotify</function> with:</entry>
     </row>
-    <row rowsep="0">
-      <entry></entry>
-      <entry>event:</entry>
+    <row>
+      <entry>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;event:</entry>
       <entry>The root</entry>
     </row>
-    <row rowsep="0">
-      <entry></entry>
-      <entry>window:</entry>
+    <row>
+      <entry>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;window:</entry>
       <entry>The window itself</entry>
     </row>
-    <row rowsep="0">
-      <entry></entry>
-      <entry>from-configure:</entry>
+    <row>
+      <entry>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;from-configure:</entry>
       <entry><emphasis role="bold">False</emphasis></entry>
     </row>
   </tbody>
@@ -4599,8 +4550,7 @@ on a window for which they have not yet received a real
 When a client withdraws a window,
 the window manager will then update or remove the WM_STATE
 property as described in
-<link linkend="wm_state_property">
-<xref linkend="wm_state_property"></xref></link>.
+<xref linkend='WM_STATE_Property' xrefstyle='select: title'/>.
 Clients that want to re-use a client window (e.g., by mapping it again or
 reparenting it elsewhere) after withdrawing it must wait for the
 withdrawal to be complete before proceeding.  The preferred method for
@@ -4664,8 +4614,7 @@ The format of this
 event does not match the format of
 <function>ClientMessages</function>
 in
-<link linkend="clientmessage_events">
-<xref linkend="clientmessage_events"></xref></link>.
+<xref linkend='ClientMessage_Events' xrefstyle='select: title'/>.
 This is because they are sent by the window manager to clients,
 and this message is sent by clients to the window manager.
 </para>
@@ -4710,7 +4659,7 @@ advised to withdraw transients for the window.
 
 </sect2>
 
-<sect2 id="configuring_the_window">
+<sect2 id='Configuring_the_Window'>
 <title>Configuring the Window</title>
 <para>
 Clients can resize and reposition their top-level windows by using the
@@ -4752,8 +4701,7 @@ to be used are those most recently requested by the client.
 Client configure requests are interpreted by the window manager
 in the same manner as the initial window geometry mapped from
 the Withdrawn state, as described in
-<link linkend="wm_normal_hints_property">
-<xref linkend="wm_normal_hints_property"></xref></link>
+<xref linkend='WM_NORMAL_HINTS_Property' xrefstyle='select: title'/>
 Clients must be aware that there is no guarantee that the window manager
 will allocate them the requested size or location and must be prepared to
 deal with any size and location.
@@ -4921,48 +4869,43 @@ event by invoking a
 request with the following arguments:
 </para>
 
-<informaltable frame="none">
-  <tgroup cols='3' align='left'>
-  <colspec colname='c1' colsep="0"/>
-  <colspec colname='c2' colsep="0"/>
-  <colspec colname='c3' colsep="0"/>
+<informaltable frame="topbot">
+  <?dbfo keep-together="always" ?>
+  <tgroup cols='2' align='left' colsep='0' rowsep='0'>
+  <colspec colname='c1' colwidth='1.0*'/>
+  <colspec colname='c2' colwidth='3.0*'/>
   <thead>
-    <row rowsep="0">
-      <entry namest="c1" nameend="c2">Argument</entry>
+    <row rowsep='1'>
+      <entry>Argument</entry>
       <entry>Value</entry>
     </row>
   </thead>
   <tbody>
-    <row rowsep="0">
-      <entry namest="c1" nameend="c2">destination</entry>
+    <row>
+      <entry>destination</entry>
       <entry>The root</entry>
     </row>
-    <row rowsep="0">
-      <entry namest="c1" nameend="c2">propogate</entry>
+    <row>
+      <entry>propogate</entry>
       <entry><emphasis role="bold">False</emphasis></entry>
     </row>
-    <row rowsep="0">
-      <entry namest="c1" nameend="c2">event-mask</entry>
+    <row>
+      <entry>event-mask</entry>
       <entry>(<emphasis role="bold">SubstructureRedirect|SubstructureNotify</emphasis>)</entry>
     </row>
-    <row rowsep="0">
-      <entry namest="c1" nameend="c2">
-event: an <function>ConfigureRequest</function> with:
-      </entry>
+    <row>
+      <entry>event: an <function>ConfigureRequest</function> with:</entry>
     </row>
-    <row rowsep="0">
-      <entry></entry>
-      <entry>event:</entry>
+    <row>
+      <entry>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;event:</entry>
       <entry>The root</entry>
     </row>
-    <row rowsep="0">
-      <entry></entry>
-      <entry>window:</entry>
+    <row>
+      <entry>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;window:</entry>
       <entry>The window itself</entry>
     </row>
-    <row rowsep="0">
-      <entry></entry>
-      <entry>...</entry>
+    <row>
+      <entry>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;...</entry>
       <entry>Other parameters from the <emphasis role="bold">ConfigureWindow</emphasis> request</entry>
     </row>
   </tbody>
@@ -4980,7 +4923,7 @@ contain useful information.
 </para>
 </sect2>
 
-<sect2 id="changing_window_attributes">
+<sect2 id='Changing_Window_Attributes'>
 <title>Changing Window Attributes</title>
 <para>
 The attributes that may be supplied when a window is created may be
@@ -4990,66 +4933,66 @@ request.
 The window attributes are listed in the following table:
 </para>
 
-<informaltable frame="none">
-  <tgroup cols='2' align='left'>
-  <colspec colname='c1' colsep="0"/>
-  <colspec colname='c2' colsep="0"/>
+<informaltable frame="topbot">
+  <tgroup cols='2' align='left' colsep='0' rowsep='0'>
+  <colspec colname='c1' colwidth='1.0*'/>
+  <colspec colname='c2' colwidth='3.0*'/>
   <thead>
-    <row rowsep="0">
+    <row rowsep='1'>
       <entry>Attribute</entry>
       <entry>Private to Client</entry>
     </row>
   </thead>
   <tbody>
-    <row rowsep="0">
+    <row>
       <entry>Background pixmap</entry>
       <entry>Yes</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>Background pixel</entry>
       <entry>Yes</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>Border pixmap</entry>
       <entry>Yes</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>Border pixel</entry>
       <entry>Yes</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>Bit gravity</entry>
       <entry>Yes</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>Window gravity</entry>
       <entry>No</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>Backing-store hint</entry>
       <entry>Yes</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>Save-under hint</entry>
       <entry>No</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>Event Mask</entry>
       <entry>No</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>Do-not-propagate mask</entry>
       <entry>Yes</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>Override-redirect flag</entry>
       <entry>No</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>Colormap</entry>
       <entry>Yes</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>Cursor</entry>
       <entry>Yes</entry>
     </row>
@@ -5091,18 +5034,16 @@ windows.
     <para>
 Clients can set override-redirect on top-level windows but are
 encouraged not to do so except as described in
-<link linkend="pop_up_windows">
-<xref linkend="pop_up_windows"></xref></link>.
+<xref linkend='Pop_up_Windows' xrefstyle='select: title'/>.
 and
-<link linkend="redirecting_requests">
-<xref linkend="redirecting_requests"></xref></link>.
+<xref linkend='Redirecting_Requests' xrefstyle='select: title'/>.
 <!-- xref -->
     </para>
   </listitem>
 </itemizedlist>
 </sect2>
 
-<sect2 id="input_focus">
+<sect2 id='Input_Focus'>
 <title>Input Focus</title>
 <para>
 There are four models of input handling:
@@ -5164,35 +5105,36 @@ and the presence or absence of the WM_TAKE_FOCUS atom in the
 WM_PROTOCOLS property are listed in the following table:
 </para>
 
-<informaltable frame="none">
-  <tgroup cols='3' align='left'>
-  <colspec colname='c1' colsep="0"/>
-  <colspec colname='c2' colsep="0"/>
-  <colspec colname='c3' colsep="0"/>
+<informaltable frame="topbot">
+  <?dbfo keep-together="always" ?>
+  <tgroup cols='3' align='left' colsep='0' rowsep='0'>
+  <colspec colname='c1' colwidth='1.0*'/>
+  <colspec colname='c2' colwidth='1.0*'/>
+  <colspec colname='c3' colwidth='3.0*'/>
   <thead>
-    <row rowsep="0">
+    <row rowsep='1'>
       <entry>Input Model</entry>
       <entry>Input Field</entry>
       <entry>WM_TAKE_FOCUS</entry>
     </row>
   </thead>
   <tbody>
-    <row rowsep="0">
+    <row>
       <entry>No Input</entry>
       <entry><emphasis role="bold">False</emphasis></entry>
       <entry>Absent</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>Passive</entry>
       <entry><emphasis role="bold">True</emphasis></entry>
       <entry>Absent</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>Locally Active</entry>
       <entry><emphasis role="bold">True</emphasis></entry>
       <entry>Present</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>Globally Active</entry>
       <entry><emphasis role="bold">False</emphasis></entry>
       <entry>Present</entry>
@@ -5280,8 +5222,7 @@ Windows with the atom WM_TAKE_FOCUS in their WM_PROTOCOLS property
 may receive a
 <function>ClientMessage</function>
 event from the window manager (as described in
-<link linkend="clientmessage_events">
-<xref linkend="clientmessage_events"></xref></link>.
+<xref linkend='ClientMessage_Events' xrefstyle='select: title'/>.
 )
 with WM_TAKE_FOCUS in its data[0] field and a valid timestamp
 (i.e., not
@@ -5295,8 +5236,7 @@ that last had the input focus or to their default input window,
 and the time field set to the timestamp in the message.
 For further information,
 see
-<link linkend="input_focus">
-<xref linkend="input_focus"></xref></link>
+<xref linkend='Input_Focus' xrefstyle='select: title'/>
 </para>
 <para>
 <!-- .LP -->
@@ -5393,7 +5333,7 @@ They should ignore input that they receive instead.
 </blockquote>
 </sect2>
 
-<sect2 id="colormaps">
+<sect2 id='Colormaps'>
 <title>Colormaps</title>
 <para>
 The window manager is responsible for installing and uninstalling
@@ -5438,8 +5378,7 @@ WM_COLORMAP_WINDOWS property.  This property contains a list of IDs for
 windows whose colormaps the window manager should attempt to have installed
 when, in the course of its individual colormap focus policy, it assigns the
 colormap focus to the top-level window (see
-<link linkend="wm_colormap_windows_property">
-<xref linkend="wm_colormap_windows_property"></xref></link>
+<xref linkend='WM_COLORMAP_WINDOWS_Property' xrefstyle='select: title'/>
 ).  The list is
 ordered by the importance to the client of having the colormaps installed.
 The window manager will track changes to this property and will track
@@ -5502,85 +5441,76 @@ The client notifies the window manager by issuing a
 request with the following arguments:
 </para>
 
-<informaltable frame="none">
-  <tgroup cols='3' align='left'>
-  <colspec colname='c1' colsep="0"/>
-  <colspec colname='c2' colsep="0"/>
-  <colspec colname='c3' colsep="0"/>
+<informaltable frame="topbot">
+  <?dbfo keep-together="always" ?>
+  <tgroup cols='2' align='left' colsep='0' rowsep='0'>
+  <colspec colname='c1' colwidth='1.0*'/>
+  <colspec colname='c2' colwidth='3.0*'/>
   <thead>
-    <row rowsep="0">
-      <entry namest="c1" nameend="c2">Argument</entry>
+    <row rowsep='1'>
+      <entry>Argument</entry>
       <entry>Value</entry>
     </row>
   </thead>
   <tbody>
-    <row rowsep="0">
-      <entry namest="c1" nameend="c2">destination</entry>
+    <row>
+      <entry>destination</entry>
       <entry>
 The root window of the screen on which the colormap is installed
       </entry>
     </row>
-    <row rowsep="0">
-      <entry namest="c1" nameend="c2">propogate</entry>
+    <row>
+      <entry>propogate</entry>
       <entry><emphasis role="bold">False</emphasis></entry>
     </row>
-    <row rowsep="0">
-      <entry namest="c1" nameend="c2">event-mask</entry>
+    <row>
+      <entry>event-mask</entry>
       <entry><emphasis role="bold">ColormapChange</emphasis></entry>
     </row>
-    <row rowsep="0">
-      <entry namest="c1" nameend="c2">
-event: an <function>ClientMessage</function> with:
-      </entry>
-    </row>
-    <row rowsep="0">
+    <row>
+      <entry>event: an <function>ClientMessage</function> with:</entry>
       <entry></entry>
-      <entry>window:</entry>
+    </row>
+    <row>
+      <entry>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;window:</entry>
       <entry>The root window, as above</entry>
     </row>
-    <row rowsep="0">
-      <entry></entry>
-      <entry>type:</entry>
+    <row>
+      <entry>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;type:</entry>
       <entry>WM_COLORMAP_NOTIFY</entry>
     </row>
-    <row rowsep="0">
-      <entry></entry>
-      <entry>format</entry>
+    <row>
+      <entry>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;format</entry>
       <entry>32</entry>
     </row>
-    <row rowsep="0">
-      <entry></entry>
-      <entry>data[0]</entry>
+    <row>
+      <entry>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;data[0]</entry>
       <entry>
 the timestampe of the event that caused the client to start or stop
 installing colormaps
       </entry>
     </row>
-    <row rowsep="0">
-      <entry></entry>
-      <entry>data[1]</entry>
+    <row>
+      <entry>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;data[1]</entry>
       <entry>
 1 if the client is starting colormap installation,
 0 if the client is finished with colormap installation
       </entry>
     </row>
-    <row rowsep="0">
-      <entry></entry>
-      <entry>data[2]</entry>
+    <row>
+      <entry>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;data[2]</entry>
       <entry>
 reserved, must be zero
       </entry>
     </row>
-    <row rowsep="0">
-      <entry></entry>
-      <entry>data[3]</entry>
+    <row>
+      <entry>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;data[3]</entry>
       <entry>
 reserved, must be zero
       </entry>
     </row>
-    <row rowsep="0">
-      <entry></entry>
-      <entry>data[4]</entry>
+    <row>
+      <entry>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;data[4]</entry>
       <entry>
 reserved, must be zero
       </entry>
@@ -5596,8 +5526,7 @@ This feature was introduced in version 2.0 of this document, and there will
 be a significant period of time before all window managers can be expected
 to implement this feature.  Before using this feature, clients must check
 the compliance level of the window manager (using the mechanism described in
-<link linkend="communication_with_the_window_manager_by_means_of_selections">
-<xref linkend="communication_with_the_window_manager_by_means_of_selections"></xref></link>
+<xref linkend='Communication_with_the_Window_Manager_by_Means_of_Selections' xrefstyle='select: title'/>
 ) to verify that it supports this feature.  This is necessary to
 prevent colormap installation conflicts between clients and older window
 managers.
@@ -5645,7 +5574,7 @@ colormap installation policy in response to a command from the user.
 </blockquote>
 </sect2>
 
-<sect2 id="icons">
+<sect2 id='Icons'>
 <title>Icons</title>
 <para>
 A client can hint to the window manager about the desired appearance
@@ -5810,7 +5739,7 @@ properties they find on icon windows.
 </para>
 </sect2>
 
-<sect2 id="pop_up_windows">
+<sect2 id='Pop_up_Windows'>
 <title>Pop-up Windows</title>
 <para>
 Clients that wish to pop up a window can do one of three things:
@@ -5859,8 +5788,7 @@ client must have another top-level window that is not override-redirect and
 that has selected the Locally Active or Globally Active focus model.  The
 client may set the focus to the override-redirect window when the other
 window receives a WM_TAKE_FOCUS message or one of the events listed in
-<link linkend="input_focus">
-<xref linkend="input_focus"></xref></link>
+<xref linkend='Input_Focus' xrefstyle='select: title'/>
 in the description of the Globally Active focus model.
 </para>
 </blockquote>
@@ -5877,7 +5805,7 @@ to enforce.
 </para>
 </sect2>
 
-<sect2 id="window_groups">
+<sect2 id='Window_Groups'>
 <title>Window Groups</title>
 <para>
 A set of top-level windows that should be treated from the user's point of view
@@ -5910,7 +5838,7 @@ as opposed to an individual, operation.
 </sect2>
 </sect1>
 
-<sect1 id="client_responses_to_window_manager_actions">
+<sect1 id='Client_Responses_to_Window_Manager_Actions'>
 <title>Client Responses to Window Manager Actions</title>
 <para>
 The window manager performs a number of operations on client resources,
@@ -5919,7 +5847,7 @@ Clients must not try to fight this but may elect to receive notification
 of the window manager's operations.
 </para>
 
-<sect2 id="reparenting">
+<sect2 id='Reparenting'>
 <title>Reparenting</title>
 <para>
 Clients must be aware that some window managers will reparent
@@ -5954,13 +5882,11 @@ request in the new parent's coordinate space.
 In fact, they usually will not be interpreted by the server
 because a reparenting window manager usually will have intercepted
 these operations (see
-<link linkend="redirection_of_operations">
-<xref linkend="redirection_of_operations"></xref></link>
+<xref linkend='Redirection_of_Operations' xrefstyle='select: title'/>
 ).
 Clients should use the root coordinate space for these requests
 (see
-<link linkend="configuring_the_window">
-<xref linkend="configuring_the_window"></xref></link>
+<xref linkend='Configuring_the_Window' xrefstyle='select: title'/>
 ).
     </para>
   </listitem>
@@ -5971,8 +5897,7 @@ Clients should use the root coordinate space for these requests
 requests that name a specific sibling window may fail because the window named,
 which used to be a sibling, no longer is after the reparenting operation
 (see
-<link linkend="configuring_the_window">
-<xref linkend="configuring_the_window"></xref></link>
+<xref linkend='Configuring_the_Window' xrefstyle='select: title'/>
 ).
     </para>
   </listitem>
@@ -6026,7 +5951,7 @@ including transient windows and client icon windows.
 </para>
 </sect2>
 
-<sect2 id="redirection_of_operations">
+<sect2 id='Redirection_of_Operations'>
 <title>Redirection of Operations</title>
 <para>
 Clients must be aware that some window managers will arrange
@@ -6138,14 +6063,12 @@ A window with the override-redirect bit set is immune from redirection,
 but the bit should be set on top-level windows only in cases
 where other windows should be prevented from processing input
 while the override-redirect window is mapped (see
-<link linkend="pop_up_windows">
-<xref linkend="pop_up_windows"></xref></link>
+<xref linkend='Pop_up_Windows' xrefstyle='select: title'/>
 )
 and while responding to
 <function>ResizeRequest</function>
 events (see
-<link linkend="redirecting_requests">
-<xref linkend="redirecting_requests"></xref></link>
+<xref linkend='Redirecting_Requests' xrefstyle='select: title'/>
 ).
 </para>
 
@@ -6179,7 +6102,7 @@ less demanding clients.
 </para>
 </sect2>
 
-<sect2 id="window_move">
+<sect2 id='Window_Move'>
 <title>Window Move</title>
 
 <para>
@@ -6209,26 +6132,27 @@ The window manager will send these events by using a
 request with the following arguments:
 </para>
 
-<informaltable frame="none">
-  <tgroup cols='2' align='left'>
-  <colspec colname='c1' colsep="0"/>
-  <colspec colname='c2' colsep="0"/>
+<informaltable frame="topbot">
+  <?dbfo keep-together="always" ?>
+  <tgroup cols='2' align='left' colsep='0' rowsep='0'>
+  <colspec colname='c1' colwidth='1.0*'/>
+  <colspec colname='c2' colwidth='3.0*'/>
   <thead>
-    <row rowsep="0">
+    <row rowsep='1'>
       <entry>Argument</entry>
       <entry>Value</entry>
     </row>
   </thead>
   <tbody>
-    <row rowsep="0">
+    <row>
       <entry>destination</entry>
       <entry>The client's window</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>propagate</entry>
       <entry><emphasis role="bold">False</emphasis></entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>event-mask</entry>
       <entry><emphasis role="bold">StructureNotify</emphasis></entry>
     </row>
@@ -6238,7 +6162,7 @@ request with the following arguments:
 </sect2>
 
 
-<sect2 id="window_resize">
+<sect2 id='Window_Resize'>
 <title>Window Resize</title>
 <para>
 The client can elect to receive notification of being resized by selecting for
@@ -6261,7 +6185,7 @@ clients are free to request to change to the Iconic state.
 </para>
 </sect2>
 
-<sect2 id="iconify_and_deiconify">
+<sect2 id='Iconify_and_Deiconify'>
 <title>Iconify and Deiconify</title>
 <para>
 A top-level window that is not Withdrawn will be
@@ -6283,7 +6207,7 @@ event when it goes Normal.
 </para>
 </sect2>
 
-<sect2 id="colormap_change">
+<sect2 id='Colormap_Change'>
 <title>Colormap Change</title>
 <para>
 Clients that wish to be notified of their colormaps being installed
@@ -6298,7 +6222,7 @@ is installed or uninstalled.
 </para>
 </sect2>
 
-<sect2 id="input_focus_2">
+<sect2 id='Input_Focus_2'>
 <title>Input Focus</title>
 <para>
 Clients can request notification that they have the input focus by selecting
@@ -6329,15 +6253,13 @@ and actually have the input focus in one of their top-level windows
 Set the input field of WM_HINTS to
 <function>False</function>
 and have received a suitable event as described in
-<link linkend="input_focus">
-<xref linkend="input_focus"></xref></link>.
+<xref linkend='Input_Focus' xrefstyle='select: title'/>.
     </para>
   </listitem>
   <listitem>
     <para>
 Have received a WM_TAKE_FOCUS message as described in
-<link linkend="input_focus">
-<xref linkend="input_focus"></xref></link>.
+<xref linkend='Input_Focus' xrefstyle='select: title'/>.
     </para>
   </listitem>
 </itemizedlist>
@@ -6346,8 +6268,7 @@ Clients should not warp the pointer in an attempt to transfer the focus;
 they should set the focus and leave the pointer alone.
 For further information,
 see
-<link linkend="the_pointer">
-<xref linkend="the_pointer"></xref></link>.
+<xref linkend='The_Pointer' xrefstyle='select: title'/>.
 </para>
 <para>
 <!-- .LP -->
@@ -6363,8 +6284,9 @@ request, which is defined as follows:
 </para>
 
 <informaltable frame="none">
-  <tgroup cols='1' align='left'>
-  <colspec colname='c1' colsep="0"/>
+  <?dbfo keep-together="always" ?>
+  <tgroup cols='1' align='left' colsep='0' rowsep='0'>
+  <colspec colname='c1' colwidth='1.0*'/>
   <tbody>
     <row>
       <entry>
@@ -6428,7 +6350,7 @@ the revert-to field to
 
 </sect2>
 
-<sect2 id="clientmessage_events">
+<sect2 id='ClientMessage_Events'>
 <title>ClientMessage Events</title>
 <para>
 There is no way for clients to prevent themselves being sent
@@ -6440,8 +6362,7 @@ Top-level windows with a WM_PROTOCOLS property may be sent
 <function>ClientMessage</function>
 events specific to the protocols named by the atoms in the property
 (see
-<link linkend="wm_protocols_property">
-<xref linkend="wm_protocols_property"></xref></link>
+<xref linkend='WM_PROTOCOLS_Property' xrefstyle='select: title'/>
 ).
 For all protocols, the
 <function>ClientMessage</function>
@@ -6483,30 +6404,31 @@ These events will be sent by using a
 request with the following arguments:
 </para>
 
-<informaltable frame="none">
-  <tgroup cols='2' align='left'>
-  <colspec colname='c1' colsep="0"/>
-  <colspec colname='c2' colsep="0"/>
+<informaltable frame="topbot">
+  <?dbfo keep-together="always" ?>
+  <tgroup cols='2' align='left' colsep='0' rowsep='0'>
+  <colspec colname='c1' colwidth='1.0*'/>
+  <colspec colname='c2' colwidth='3.0*'/>
   <thead>
-    <row rowsep="0">
+    <row rowsep='1'>
       <entry>Argument</entry>
       <entry>Value</entry>
     </row>
   </thead>
   <tbody>
-    <row rowsep="0">
+    <row>
       <entry>destination</entry>
       <entry>The client's window</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>propagate</entry>
       <entry><emphasis role="bold">False</emphasis></entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>event-mask</entry>
       <entry>() empty</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>event</entry>
       <entry>As specified by the protocol</entry>
     </row>
@@ -6514,7 +6436,7 @@ request with the following arguments:
   </tgroup>
 </informaltable>
 
-<sect3 id="window_deletion">
+<sect3 id='Window_Deletion'>
 <title>Window Deletion</title>
 <para>
 Clients, usually those with multiple top-level windows, whose server
@@ -6536,8 +6458,7 @@ and, if they decide to complete the deletion, should do the following:
   <listitem>
     <para>
 Either change the window's state to Withdrawn (as described in
-<link linkend="changing_window_state">
-<xref linkend="changing_window_state"></xref></link>
+<xref linkend='Changing_Window_State' xrefstyle='select: title'/>
 )
 or destroy the window.
     </para>
@@ -6579,7 +6500,7 @@ if the user asks for one of the client's top-level windows to be deleted.
 </sect3>
 </sect2>
 
-<sect2 id="redirecting_requests">
+<sect2 id='Redirecting_Requests'>
 <title>Redirecting Requests</title>
 <para>
 Normal clients can use the redirection mechanism just as window managers do
@@ -6661,19 +6582,17 @@ the client.
 </sect2>
 </sect1>
 
-<sect1 id="communication_with_the_window_manager_by_means_of_selections">
+<sect1 id='Communication_with_the_Window_Manager_by_Means_of_Selections'>
 <title>Communication with the Window Manager by Means of Selections</title>
 <para>
 For each screen they manage, window managers will acquire ownership of a
 selection named WM_S<emphasis remap='I'>n</emphasis>, where
 <emphasis remap='I'>n</emphasis> is the screen number, as
 described in
-<link linkend="discriminated_names">
-<xref linkend="discriminated_names"></xref></link>
+<xref linkend='Discriminated_Names' xrefstyle='select: title'/>
 Window managers should comply with the
 conventions for "Manager Selections" described in
-<link linkend="manager_selections">
-<xref linkend="manager_selections"></xref></link>.
+<xref linkend='Manager_Selections' xrefstyle='select: title'/>.
 The
 intent is for clients to be able to request a variety of information or
 services by issuing conversion requests on this selection.  Window managers
@@ -6681,20 +6600,21 @@ should support conversion of the following target on their manager
 selection:
 </para>
 
-<informaltable frame="none">
-  <tgroup cols='3' align='left'>
-  <colspec colname='c1' colsep="0"/>
-  <colspec colname='c2' colsep="0"/>
-  <colspec colname='c3' colsep="0"/>
+<informaltable frame="topbot">
+  <?dbfo keep-together="always" ?>
+  <tgroup cols='3' align='left' colsep='0' rowsep='0'>
+  <colspec colname='c1' colwidth='1.0*'/>
+  <colspec colname='c2' colwidth='1.0*'/>
+  <colspec colname='c3' colwidth='3.0*'/>
   <thead>
-    <row rowsep="0">
+    <row rowsep='1'>
       <entry>Atom</entry>
       <entry>Type</entry>
       <entry>Data Received</entry>
     </row>
   </thead>
   <tbody>
-    <row rowsep="0">
+    <row>
       <entry>VERSION</entry>
       <entry>INTEGER</entry>
       <entry>
@@ -6719,7 +6639,7 @@ or later.
 </informaltable>
 </sect1>
 
-<sect1 id="summary_of_window_manager_property_types">
+<sect1 id='Summary_of_Window_Manager_Property_Types'>
 <title>Summary of Window Manager Property Types</title>
 <para>
 The window manager properties are summarized in the following table
@@ -6727,14 +6647,14 @@ The window manager properties are summarized in the following table
 <emphasis remap='I'>Xlib - C Language X Interface</emphasis>).
 </para>
 
-<informaltable frame="none">
-  <tgroup cols='4' align='left'>
-  <colspec colname='c1' colsep="0"/>
-  <colspec colname='c2' colsep="0"/>
-  <colspec colname='c3' colsep="0"/>
-  <colspec colname='c4' colsep="0"/>
+<informaltable frame="topbot">
+  <tgroup cols='4' align='left' colsep='0' rowsep='0'>
+  <colspec colname='c1' colwidth='3.0*'/>
+  <colspec colname='c2' colwidth='2.0*'/>
+  <colspec colname='c3' colwidth='1.0*'/>
+  <colspec colname='c4' colwidth='3.0*'/>
   <thead>
-    <row rowsep="0">
+    <row rowsep='1'>
       <entry>Name</entry>
       <entry>Type</entry>
       <entry>Format</entry>
@@ -6742,103 +6662,92 @@ The window manager properties are summarized in the following table
     </row>
   </thead>
   <tbody>
-    <row rowsep="0">
+    <row>
       <entry>WM_CLASS</entry>
       <entry>STRING</entry>
       <entry>8</entry>
       <entry>
-<link linkend="wm_class_property">
-<xref linkend="wm_class_property"></xref></link>
+<xref linkend='WM_CLASS_Property' xrefstyle='select: title'/>
       </entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>WM_CLIENT_MACHINE</entry>
       <entry>TEXT</entry>
       <entry></entry>
       <entry>
-<link linkend="wm_client_machine_property">
-<xref linkend="wm_client_machine_property"></xref></link>
+<xref linkend='WM_CLIENT_MACHINE_Property' xrefstyle='select: title'/>
       </entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>WM_COLORMAP_WINDOWS</entry>
       <entry>WINDOW</entry>
       <entry>32</entry>
       <entry>
-<link linkend="wm_colormap_windows_property">
-<xref linkend="wm_colormap_windows_property"></xref></link>
+<xref linkend='WM_COLORMAP_WINDOWS_Property' xrefstyle='select: title'/>
       </entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>WM_HINTS</entry>
       <entry>WM_HINTS</entry>
       <entry>32</entry>
       <entry>
-<link linkend="wm_hints_property">
-<xref linkend="wm_hints_property"></xref></link>
+<xref linkend='WM_HINTS_Property' xrefstyle='select: title'/>
       </entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>WM_ICON_NAME</entry>
       <entry>TEXT</entry>
       <entry></entry>
       <entry>
-<link linkend="wm_icon_name_property">
-<xref linkend="wm_icon_name_property"></xref></link>
+<xref linkend='WM_ICON_NAME_Property' xrefstyle='select: title'/>
       </entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>WM_ICON_SIZE</entry>
       <entry>WM_ICON_SIZE</entry>
       <entry>32</entry>
       <entry>
-<link linkend="wm_icon_size_property">
-<xref linkend="wm_icon_size_property"></xref></link>
+<xref linkend='WM_ICON_SIZE_Property' xrefstyle='select: title'/>
       </entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>WM_NAME</entry>
       <entry>TEXT</entry>
       <entry></entry>
       <entry>
-<link linkend="wm_name_property">
-<xref linkend="wm_name_property"></xref></link>
+<xref linkend='WM_NAME_Property' xrefstyle='select: title'/>
       </entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>WM_NORMAL_HINTS</entry>
       <entry>WM_SIZE_HINTS</entry>
       <entry>32</entry>
       <entry>
-<link linkend="wm_normal_hints_property">
-<xref linkend="wm_normal_hints_property"></xref></link>
+<xref linkend='WM_NORMAL_HINTS_Property' xrefstyle='select: title'/>
       </entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>WM_PROTOCOLS</entry>
       <entry>ATOM</entry>
       <entry>32</entry>
       <entry>
-<link linkend="wm_protocols_property">
-<xref linkend="wm_protocols_property"></xref></link>
+<xref linkend='WM_PROTOCOLS_Property' xrefstyle='select: title'/>
       </entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>WM_STATE</entry>
       <entry>WM_STATE</entry>
       <entry>32</entry>
       <entry>
-<link linkend="wm_state_property">
-<xref linkend="wm_state_property"></xref></link>
+<xref linkend='WM_STATE_Property' xrefstyle='select: title'/>
       </entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>WM_TRANSIENT_FOR</entry>
       <entry>WINDOW</entry>
       <entry>32</entry>
       <entry>
-<link linkend="wm_transient_for_property">
-<xref linkend="wm_transient_for_property"></xref></link>
+<xref linkend='WM_TRANSIENT_FOR_Property' xrefstyle='select: title'/>
       </entry>
     </row>
   </tbody>
@@ -6847,7 +6756,7 @@ The window manager properties are summarized in the following table
 </sect1>
 </chapter>
 
-<chapter id="session_management_and_additional_inter_Client_exchanges">
+<chapter id='Session_Management_and_Additional_Inter_Client_Exchanges'>
 <title>Session Management and Additional Inter-Client Exchanges</title>
 <para>
 This section contains some conventions for clients that participate in
@@ -6858,7 +6767,7 @@ expect their window state (e.g., WM_STATE, position, size, and stacking order)
 to be preserved across sessions.
 </para>
 
-<sect1 id="client_support_for_session_management">
+<sect1 id='Client_Support_for_Session_Management'>
 <title>Client Support for Session Management</title>
 <para>
 Each session participant will obtain a unique client identifier (client-ID)
@@ -6968,7 +6877,7 @@ Contain a string restricted to the XPCS characters, encoded in ISO 8859-1
 </itemizedlist>
 </sect1>
 
-<sect1 id="window_manager_support_for_session_management">
+<sect1 id='Window_Manager_Support_for_Session_Management'>
 <title>Window Manager Support for Session Management</title>
 <para>
 A window manager supporting session management must register with the
@@ -6983,7 +6892,7 @@ second checkpoint phase and save clients' state only during that phase.
 </para>
 </sect1>
 
-<sect1 id="support_for_ice_client_rendezvous">
+<sect1 id='Support_for_ICE_Client_Rendezvous'>
 <title>Support for ICE Client Rendezvous</title>
 <para>
 The Inter-Client Exchange protocol (ICE) defined as of X11R6
@@ -7002,7 +6911,7 @@ events.  Refer to that specification for complete details.
 </sect1>
 </chapter>
 
-<chapter id="manipulation_of_shared_resources">
+<chapter id='Manipulation_of_Shared_Resources'>
 <title>Manipulation of Shared Resources</title>
 <para>
 X Version 11 permits clients to manipulate a number of shared resources,
@@ -7010,7 +6919,7 @@ for example, the input focus, the pointer, and colormaps.
 Conventions are required so that clients share resources in an
 orderly fashion.
 </para>
-<sect1 id="the_input_focus">
+<sect1 id='The_Input_Focus'>
 <title>The Input Focus</title>
 <para>
 Clients that explicitly set the input focus must observe one of two modes:
@@ -7064,7 +6973,7 @@ request, not
 
 </sect1>
 
-<sect1 id="the_pointer">
+<sect1 id='The_Pointer'>
 <title>The Pointer</title>
 <para>
 In general, clients should not warp the pointer.
@@ -7095,7 +7004,7 @@ request set to one of their windows.
 </blockquote>
 </sect1>
 
-<sect1 id="grabs">
+<sect1 id='Grabs'>
 <title>Grabs</title>
 <para>
 A client's attempt to establish a button or a key grab on a window
@@ -7113,7 +7022,7 @@ the available keys and buttons.
 </para>
 
 <blockquote>
-<title> Convention</title>
+<title>Convention</title>
 <para>
 Window managers should ensure that they provide some mechanism for
 their clients to receive events from all keys and all buttons,
@@ -7226,11 +7135,10 @@ by which the user can send an event from any key or button to the client
 </itemizedlist>
 
 </sect1>
-<sect1 id="colormaps_2">
+<sect1 id='Colormaps_2'>
 <title>Colormaps</title>
 <para>
-<link linkend="colormaps">
-<xref linkend="colormaps"></xref></link>
+<xref linkend='Colormaps' xrefstyle='select: title'/>
 prescribes conventions for clients to communicate with the
 window manager about their colormap needs.  If your clients are
 <function>DirectColor</function>
@@ -7246,65 +7154,65 @@ the root window of the appropriate screen.
 The contents of the RGB_COLOR_MAP type property are as follows:
 </para>
 
-<informaltable frame="none">
-  <tgroup cols='3' align='left'>
-  <colspec colname='c1' colsep="0"/>
-  <colspec colname='c2' colsep="0"/>
-  <colspec colname='c3' colsep="0"/>
+<informaltable frame="topbot">
+  <tgroup cols='3' align='left' colsep='0' rowsep='0'>
+  <colspec colname='c1' colwidth='1.0*'/>
+  <colspec colname='c2' colwidth='1.0*'/>
+  <colspec colname='c3' colwidth='3.0*'/>
   <thead>
-    <row rowsep="0">
+    <row rowsep='1'>
       <entry>Field</entry>
       <entry>Type</entry>
       <entry>Comments</entry>
     </row>
   </thead>
   <tbody>
-    <row rowsep="0">
+    <row>
       <entry>colormap</entry>
       <entry>COLORMAP</entry>
       <entry>ID of the colormap described</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>red_max</entry>
       <entry>CARD32</entry>
       <entry>Values for pixel calculations</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>red_mult</entry>
       <entry>CARD32</entry>
       <entry></entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>green_max</entry>
       <entry>CARD32</entry>
       <entry></entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>green_mult</entry>
       <entry>CARD32</entry>
       <entry></entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>blue_max</entry>
       <entry>CARD32</entry>
       <entry></entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>blue_mult</entry>
       <entry>CARD32</entry>
       <entry></entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>base_pixel</entry>
       <entry>CARD32</entry>
       <entry></entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>visual_id</entry>
       <entry>VISUALID</entry>
       <entry>Visual to which colormap belongs</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>kill_id</entry>
       <entry>CARD32</entry>
       <entry>ID for destroying the resources</entry>
@@ -7359,7 +7267,7 @@ if they use the root visual.
 </para>
 </sect1>
 
-<sect1 id="the_keyboard_mapping">
+<sect1 id='The_Keyboard_Mapping'>
 <title>The Keyboard Mapping</title>
 <para>
 The X server contains a table (which is read by
@@ -7453,7 +7361,7 @@ events should update any internal keycode translation tables they are using.
 
 </sect1>
 
-<sect1 id="the_modifier_mapping">
+<sect1 id='The_Modifier_Mapping'>
 <title>The Modifier Mapping</title>
 <para>
 X Version 11 supports 8 modifier bits of which 3 are preassigned
@@ -7595,7 +7503,7 @@ pair in these transactions atomic.
 </sect1>
 </chapter>
 
-<chapter id="device_color_characterization">
+<chapter id='Device_Color_Characterization'>
 <title>Device Color Characterization</title>
 <!-- .EQ -->
 <!--
@@ -7685,7 +7593,7 @@ If other device types are eventually necessary, additional
 properties will be required to describe them.
 </para>
 
-<sect1 id="xyz_rgb_conversion_matrices">
+<sect1 id='XYZ_lt_gt_RGB_Conversion_Matrices'>
 <title>XYZ &lt;-&gt; RGB Conversion Matrices</title>
 <para>
 Because of the limited dynamic range of both XYZ and RGB intensity,
@@ -7706,55 +7614,55 @@ each screen, using values appropriate for that screen.
 This will be encoded as shown in the following table:
 </para>
 
-<informaltable frame="none">
-  <tgroup cols='3' align='left'>
-  <colspec colname='c1' colsep="0"/>
-  <colspec colname='c2' colsep="0"/>
-  <colspec colname='c3' colsep="0"/>
+<informaltable frame="topbot">
+  <tgroup cols='3' align='left' colsep='0' rowsep='0'>
+  <colspec colname='c1' colwidth='1.0*'/>
+  <colspec colname='c2' colwidth='1.0*'/>
+  <colspec colname='c3' colwidth='3.0*'/>
   <thead>
-    <row rowsep="0">
+    <row rowsep='1'>
       <entry>Field</entry>
       <entry>Type</entry>
       <entry>Comments</entry>
     </row>
   </thead>
   <tbody>
-    <row rowsep="0">
+    <row>
       <entry>M<subscript>0,0</subscript></entry>
       <entry>INT32</entry>
       <entry>Interpreted as a fixed-point number -16 &le; x &lt; 16</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>M<subscript>0,1</subscript></entry>
       <entry>INT32</entry>
       <entry></entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>...</entry>
       <entry>INT32</entry>
       <entry></entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>M<subscript>3,3</subscript></entry>
       <entry>INT32</entry>
       <entry></entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>M<superscript>-1</superscript><subscript>0,0</subscript></entry>
       <entry>INT32</entry>
       <entry></entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>M<superscript>-1</superscript><subscript>0,1</subscript></entry>
       <entry>INT32</entry>
       <entry></entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>...</entry>
       <entry>INT32</entry>
       <entry></entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>M<superscript>-1</superscript><subscript>3,3</subscript></entry>
       <entry>INT32</entry>
       <entry></entry>
@@ -7764,7 +7672,7 @@ This will be encoded as shown in the following table:
 </informaltable>
 </sect1>
 
-<sect1 id="intensity_da_rgb_value_conversion">
+<sect1 id='Intensity_dA_RGB_Value_Conversion'>
 <title>Intensity (dA RGB Value Conversion</title>
 <para>
 XDCCC provides two representations for describing the conversion
@@ -7819,35 +7727,35 @@ This will be encoded as shown in the following table:
 <para>
 XDCCC_LINEAR_RGB_CORRECTION Property Contents for Type 0 Correction
 </para>
-<informaltable frame="none">
-  <tgroup cols='3' align='left'>
-  <colspec colname='c1' colsep="0"/>
-  <colspec colname='c2' colsep="0"/>
-  <colspec colname='c3' colsep="0"/>
+<informaltable frame="topbot">
+  <tgroup cols='3' align='left' colsep='0' rowsep='0'>
+  <colspec colname='c1' colwidth='1.0*'/>
+  <colspec colname='c2' colwidth='1.0*'/>
+  <colspec colname='c3' colwidth='3.0*'/>
   <thead>
-    <row rowsep="0">
+    <row rowsep='1'>
       <entry>Field</entry>
       <entry>Type</entry>
       <entry>Comments</entry>
     </row>
   </thead>
   <tbody>
-    <row rowsep="0">
+    <row>
       <entry>VisualID0</entry>
       <entry>CARD</entry>
       <entry>Most significant portion of VisualID</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>VisualID1</entry>
       <entry>CARD</entry>
       <entry>Exists if and only if the property format is 8</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>VisualID2</entry>
       <entry>CARD</entry>
       <entry>Exists if and only if the property format is 8</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>VisualID3</entry>
       <entry>CARD</entry>
       <entry>
@@ -7855,34 +7763,34 @@ Least significant portion, exists if and only if the property
 format is 8 or 16
       </entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>type</entry>
       <entry>CARD</entry>
       <entry>0 for this type of correction</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>count</entry>
       <entry>CARD</entry>
       <entry>Number of tables following (either 1 or 3)</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>length</entry>
       <entry>CARD</entry>
       <entry>Number of pairs -1 following in this table</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>value</entry>
       <entry>CARD</entry>
       <entry>X Protocol RBG value</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>intensity</entry>
       <entry>CARD</entry>
       <entry>
 Interpret as number 0 &le; <emphasis>intensity</emphasis> &le; 1
       </entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>...</entry>
       <entry>...</entry>
       <entry>
@@ -7890,7 +7798,7 @@ Total of <emphasis remap='I'>length+1</emphasis> pairs of
 value/intensity values
       </entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>lengthg</entry>
       <entry>CARD</entry>
       <entry>
@@ -7898,19 +7806,19 @@ Number of pairs -1 following in this table (if and only if
 <emphasis>count</emphasis> is 3
       </entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>value</entry>
       <entry>CARD</entry>
       <entry>X Protocol RBG value</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>intensity</entry>
       <entry>CARD</entry>
       <entry>
 Interpret as a number 0 &le; <emphasis>intensity</emphasis> &le; 1
       </entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>...</entry>
       <entry>...</entry>
       <entry>
@@ -7918,7 +7826,7 @@ Total of <emphasis remap='I'>length+1</emphasis> pairs of
 value/intensity values
       </entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>lengthb</entry>
       <entry>CARD</entry>
       <entry>
@@ -7926,19 +7834,19 @@ Number of pairs -1 following in this table (if and only if
 <emphasis>count</emphasis> is 3
       </entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>value</entry>
       <entry>CARD</entry>
       <entry>X Protocol RBG value</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>intensity</entry>
       <entry>CARD</entry>
       <entry>
 Interpret as a number 0 &le; <emphasis>intensity</emphasis> &le; 1
       </entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>...</entry>
       <entry>...</entry>
       <entry>
@@ -7987,35 +7895,35 @@ This will be encoded as shown in the following table:
 XDCCC_LINEAR_RGB_CORRECTION Property Contents for Type 1 Correction
 </para>
 
-<informaltable frame="none">
-  <tgroup cols='3' align='left'>
-  <colspec colname='c1' colsep="0"/>
-  <colspec colname='c2' colsep="0"/>
-  <colspec colname='c3' colsep="0"/>
+<informaltable frame="topbot">
+  <tgroup cols='3' align='left' colsep='0' rowsep='0'>
+  <colspec colname='c1' colwidth='1.0*'/>
+  <colspec colname='c2' colwidth='1.0*'/>
+  <colspec colname='c3' colwidth='3.0*'/>
   <thead>
-    <row rowsep="0">
+    <row rowsep='1'>
       <entry>Field</entry>
       <entry>Type</entry>
       <entry>Comments</entry>
     </row>
   </thead>
   <tbody>
-    <row rowsep="0">
+    <row>
       <entry>VisualID0</entry>
       <entry>CARD</entry>
       <entry>Most significant portion of VisualID</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>VisualID1</entry>
       <entry>CARD</entry>
       <entry>Exists if and only if the property format is 8</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>VisualID2</entry>
       <entry>CARD</entry>
       <entry>Exists if and only if the property format is 8</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>VisualID3</entry>
       <entry>CARD</entry>
       <entry>
@@ -8023,29 +7931,29 @@ Least significant portion, exists if and only if the property
 format is 8 or 16
       </entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>type</entry>
       <entry>CARD</entry>
       <entry>1 for this type of correction</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>count</entry>
       <entry>CARD</entry>
       <entry>Number of tables following (either 1 or 3)</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>length</entry>
       <entry>CARD</entry>
       <entry>Number of pairs -1 following in this table</entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>intensity</entry>
       <entry>CARD</entry>
       <entry>
 Interpret as number 0 &le; <emphasis>intensity</emphasis> &le; 1
       </entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>...</entry>
       <entry>...</entry>
       <entry>
@@ -8053,7 +7961,7 @@ Total of <emphasis remap='I'>length+1</emphasis> pairs of
 value/intensity values
       </entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>lengthg</entry>
       <entry>CARD</entry>
       <entry>
@@ -8061,14 +7969,14 @@ Number of pairs -1 following in this table (if and only if
 <emphasis>count</emphasis> is 3
       </entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>intensity</entry>
       <entry>CARD</entry>
       <entry>
 Interpret as a number 0 &le; <emphasis>intensity</emphasis> &le; 1
       </entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>...</entry>
       <entry>...</entry>
       <entry>
@@ -8076,7 +7984,7 @@ Total of <emphasis remap='I'>length+1</emphasis> pairs of
 value/intensity values
       </entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>lengthb</entry>
       <entry>CARD</entry>
       <entry>
@@ -8084,14 +7992,14 @@ Number of pairs -1 following in this table (if and only if
 <emphasis>count</emphasis> is 3
       </entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>intensity</entry>
       <entry>CARD</entry>
       <entry>
 Interpret as a number 0 &le; <emphasis>intensity</emphasis> &le; 1
       </entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>...</entry>
       <entry>...</entry>
       <entry>
@@ -8105,7 +8013,7 @@ value/intensity values
 </sect1>
 </chapter>
 
-<chapter id="conclusion">
+<chapter id='Conclusion'>
 <title>Conclusion</title>
 <para>
 This document provides the protocol-level specification of the minimal
@@ -8120,7 +8028,7 @@ for information on session management, and to
 for information on general-purpose communication among clients.
 </para>
 
-<sect1 id="the_x_registry">
+<sect1 id='The_X_Registry'>
 <title>The X Registry</title>
 <!-- .IN "X Registry" -->
 <para>
@@ -8170,7 +8078,7 @@ and the postal address of where to write to obtain the document.
 This appendix describes the revision history of this document and
 summarizes the incompatibilities between this and earlier versions.
 </para>
-<sect1 id="the_x11r2_draft">
+<sect1 id='The_X11R2_Draft'>
 <title>The X11R2 Draft</title>
 <para>
 The February 25, 1988, draft that was distributed as part of X Version 11,
@@ -8184,7 +8092,7 @@ in the X11R2 draft would still work.
 </para>
 </sect1>
 
-<sect1 id="the_july_draft">
+<sect1 id='The_July_27_1988_Draft'>
 <title>The July 27, 1988, Draft</title>
 <para>
 The Consortium review was based on a draft dated July 27, 1988.  This draft
@@ -8260,7 +8168,7 @@ sets a short property.
 </itemizedlist>
 </sect1>
 
-<sect1 id="the_public_review_drafts">
+<sect1 id='The_Public_Review_Drafts'>
 <title>The Public Review Drafts</title>
 <para>
 The Consortium review resulted in several incompatible changes.  These
@@ -8337,7 +8245,7 @@ These are the only cases in which they would have worked, anyway.
 </itemizedlist>
 </sect1>
 
-<sect1 id="version_1.0_july_1989">
+<sect1 id='Version_10_July_1989'>
 <title>Version 1.0, July 1989</title>
 <para>
 The public review resulted in a set of mostly editorial changes.  The
@@ -8348,8 +8256,7 @@ the earlier drafts are:
   <listitem>
     <para>
 A new section (
-<link linkend="grabs">
-<xref linkend="grabs"></xref></link>
+<xref linkend='Grabs' xrefstyle='select: title'/>
 ) was added covering the window manager's
 use of Grabs.
 The restrictions it imposes should affect only window managers.
@@ -8435,7 +8342,7 @@ and the cases that would have worked will still work.
 </itemizedlist>
 </sect1>
 
-<sect1 id="version_1.1">
+<sect1 id='Version_11'>
 <title>Version 1.1</title>
 <para>
 Version 1.1 was released with X11R5 in September 1991.  In addition to some
@@ -8466,7 +8373,7 @@ Appropriate references to Compound Text were added.
 </itemizedlist>
 </sect1>
 
-<sect1 id="public_review_draft_december_1993">
+<sect1 id='Public_Review_Draft_December_1993'>
 <title>Public Review Draft, December 1993</title>
 <para>
 The following changes have been made in preparing the public review draft
@@ -8491,8 +8398,7 @@ top-level window has been added.
     <para>
 <!-- .bP -->
 [P06]
-<link linkend="colormaps">
-<xref linkend="colormaps"></xref></link>
+<xref linkend='Colormaps' xrefstyle='select: title'/>
 , on colormaps, has been rewritten.  A new feature that
 allows clients to install their own colormaps has also been added.
     </para>
@@ -8682,7 +8588,7 @@ Numerous editorial and typographical improvements have been made.
 </itemizedlist>
 </sect1>
 
-<sect1 id="version_2.0_april_1994">
+<sect1 id='Version_20_April_1994'>
 <title>Version 2.0, April 1994</title>
 <para>
 The following changes have been made in preparation for releasing
@@ -8821,7 +8727,7 @@ session management, see
 <emphasis remap='I'>X Session Management Protocol</emphasis>.
 </para>
 
-<sect1 id="properties">
+<sect1 id='Properties'>
 <title>Properties</title>
 <para>
 The client communicates with the session manager by placing two properties
@@ -8835,7 +8741,7 @@ on each top-level client window for use by session managers and other clients
 that need to be able to identify top-level client windows and their state.
 </para>
 
-<sect2 id="wm_command_property">
+<sect2 id='WM_COMMAND_Property'>
 <title>WM_COMMAND Property</title>
 <para>
 The WM_COMMAND property represents the command used to start or restart the
@@ -8886,17 +8792,16 @@ messages on other top-level windows but will otherwise be ignored.
 </para>
 </sect2>
 
-<sect2 id="wm_client_machine_property_2">
+<sect2 id='WM_CLIENT_MACHINE_Property_2'>
 <title>WM_CLIENT_MACHINE Property</title>
 <para>
 This property is described in
-<link linkend="wm_client_machine_property">
-<xref linkend="wm_client_machine_property"></xref></link>.
+<xref linkend='WM_CLIENT_MACHINE_Property' xrefstyle='select: title'/>.
 </para>
 </sect2>
 </sect1>
 
-<sect1 id="termination">
+<sect1 id='Termination'>
 <title>Termination</title>
 <para>
 Because they communicate by means of unreliable network connections, clients
@@ -8914,7 +8819,7 @@ question, and it will not be revived if the session is revived.
 </para>
 </sect1>
 
-<sect1 id="client_responses_to_session_manager_actions">
+<sect1 id='Client_Responses_to_Session_Manager_Actions'>
 <title>Client Responses to Session Manager Actions</title>
 <para>
 Clients may need to respond to session manager actions in two ways:
@@ -8934,7 +8839,7 @@ Deleting a window
   </listitem>
 </itemizedlist>
 
-<sect2 id="saving_client_state">
+<sect2 id='Saving_Client_State'>
 <title>Saving Client State</title>
 <para>
 Clients that want to be warned when the session manager feels
@@ -8945,8 +8850,7 @@ in the WM_SAVE_YOURSELF protocol.
 They will receive a
 <function>ClientMessage</function>
 event as described in
-<link linkend="clientmessage_events">
-<xref linkend="clientmessage_events"></xref></link>
+<xref linkend='ClientMessage_Events' xrefstyle='select: title'/>
 with the atom WM_SAVE_YOURSELF in its data[0] field.
 </para>
 
@@ -9033,31 +8937,31 @@ with the X Consortium.
 </para>
 </sect2>
 
-<sect2 id="window_deletion_2">
+<sect2 id='Window_Deletion_2'>
 <title>Window Deletion</title>
 <para>
 Windows are deleted using the WM_DELETE_WINDOW protocol, which
 is described in
-<link linkend="window_deletion">
-<xref linkend="window_deletion"></xref></link>.
+<xref linkend='Window_Deletion' xrefstyle='select: title'/>.
 </para>
 </sect2>
 </sect1>
 
-<sect1 id="summary_of_session_manager_property_types">
+<sect1 id='Summary_of_Session_Manager_Property_Types'>
 <title>Summary of Session Manager Property Types</title>
 <para>
 The session manager properties are listed in the following table:
 </para>
 
-<informaltable frame="none">
-  <tgroup cols='4' align='left'>
-  <colspec colname='c1' colsep="0"/>
-  <colspec colname='c2' colsep="0"/>
-  <colspec colname='c3' colsep="0"/>
-  <colspec colname='c4' colsep="0"/>
+<informaltable frame="topbot">
+  <?dbfo keep-together="always" ?>
+  <tgroup cols='4' align='left' colsep='0' rowsep='0'>
+  <colspec colname='c1' colwidth='2.0*'/>
+  <colspec colname='c2' colwidth='1.0*'/>
+  <colspec colname='c3' colwidth='1.0*'/>
+  <colspec colname='c4' colwidth='3.0*'/>
   <thead>
-    <row rowsep="0">
+    <row rowsep='1'>
       <entry>Name</entry>
       <entry>Type</entry>
       <entry>Format</entry>
@@ -9065,31 +8969,28 @@ The session manager properties are listed in the following table:
     </row>
   </thead>
   <tbody>
-    <row rowsep="0">
+    <row>
       <entry>WM_CLIENT_MACHINE</entry>
       <entry>TEXT</entry>
       <entry></entry>
       <entry>
-<link linkend="wm_client_machine_property">
-<xref linkend="wm_client_machine_property"></xref></link>
+<xref linkend='WM_CLIENT_MACHINE_Property' xrefstyle='select: title'/>
       </entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>WM_COMMAND</entry>
       <entry>TEXT</entry>
       <entry></entry>
       <entry>
-<link linkend="wm_command_property">
-<xref linkend="wm_command_property"></xref></link>
+<xref linkend='WM_COMMAND_Property' xrefstyle='select: title'/>
       </entry>
     </row>
-    <row rowsep="0">
+    <row>
       <entry>WM_STATE</entry>
       <entry>WM_STATE</entry>
       <entry>32</entry>
       <entry>
-<link linkend="wm_state_property">
-<xref linkend="wm_state_property"></xref></link>
+<xref linkend='WM_STATE_Property' xrefstyle='select: title'/>
       </entry>
     </row>
   </tbody>

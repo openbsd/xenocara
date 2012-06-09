@@ -1,6 +1,9 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.3//EN"
-                   "http://www.oasis-open.org/docbook/xml/4.3/docbookx.dtd">
+                   "http://www.oasis-open.org/docbook/xml/4.3/docbookx.dtd"
+[
+<!ENTITY % defs SYSTEM "defs.ent"> %defs;
+]>
 
 
 <!-- by TeX4ht (http://www.cse.ohio-state.edu/~gurari/TeX4ht/)
@@ -11,29 +14,49 @@ xhtml,docbook,html,refcaption
 
 <bookinfo>
    <title>Analysis of the X Protocol for Security Concerns</title>
-   <subtitle>Draft Version 2</subtitle>
-   <date>May 10, 1996</date>
+   <pubdate>May 10, 1996</pubdate>
    <authorgroup>
       <author>
-         <firstname>David</firstname><surname>Wiggins</surname>
+         <firstname>David</firstname><othername>P.</othername><surname>Wiggins</surname>
+         <affiliation><orgname>X Consortium</orgname></affiliation>
       </author>
    </authorgroup>
-   <corpname>X Consortium Standard</corpname>
+   <releaseinfo>X Version 11, Release &fullrelvers;</releaseinfo>
+   <releaseinfo>Draft Version 2</releaseinfo>
    <copyright><year>1996</year><holder>X Consortium</holder></copyright>
-   <affiliation><orgname>X Consortium</orgname></affiliation>
-
-   <othercredit>
-      <firstname>Matt</firstname><surname>Dew</surname>
-      <contrib>conversion from tex to docbook</contrib>
-   </othercredit>
 
 <legalnotice>
-<para>THE SOFTWARE IS PROVIDED &ldquo;AS IS&rdquo;, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE X CONSORTIUM BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.</para>
-
-<para>Except as contained in this notice, the name of the X Consortium shall not be used in advertising or otherwise to promote the sale, use or other dealings in this Software without prior written authorization from the X Consortium.</para>
-
+<para>
+Permission is hereby granted, free of charge, to any person obtaining
+a copy of this software and associated documentation files (the
+"Software"), to deal in the Software without restriction, including
+without limitation the rights to use, copy, modify, merge, publish,
+distribute, sublicense, and/or sell copies of the Software, and to
+permit persons to whom the Software is furnished to do so, subject to
+the following conditions:
+</para>
+<para>
+The above copyright notice and this permission notice shall be included
+in all copies or substantial portions of the Software.
+</para>
+<para>
+THE SOFTWARE IS PROVIDED &ldquo;AS IS&rdquo;, WITHOUT WARRANTY OF ANY KIND, EXPRESS
+OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+IN NO EVENT SHALL THE X CONSORTIUM BE LIABLE FOR ANY CLAIM, DAMAGES OR
+OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+OTHER DEALINGS IN THE SOFTWARE.
+</para>
+<para>
+Except as contained in this notice, the name of the X Consortium shall
+not be used in advertising or otherwise to promote the sale, use or
+other dealings in this Software without prior written authorization
+from the X Consortium.
+</para>
 <para>X Window System is a trademark of The Open Group.</para>
 </legalnotice>
+
 <abstract>
 <para>
 This paper attempts to list all instances of certain types of security
@@ -45,7 +68,7 @@ the semantics of the X Protocol to reduce these risks.
 </abstract>
 </bookinfo>
 
-<chapter id="definition_of_threats">
+<chapter id='Definition_of_Threats'>
 <title>Definition of Threats</title>
 
 <para>
@@ -122,7 +145,7 @@ more damage.
 </para>
 </chapter>
 
-<chapter id="general_security_concerns_and_remedies">
+<chapter id='General_security_concerns_and_remedies'>
 <title>General security concerns and remedies</title>
 
 <para>
@@ -193,7 +216,7 @@ resource. The disallowed operations cause Access errors. The resiource at
 issue is usually a root window.
 </para>
 
-<sect1 id="access_to_server_resources">
+<sect1 id='Access_to_Server_Resources'>
 <title>Access to Server Resources</title>
 <para>
 The X protocol allows clients to manipulate resources (objects) belonging to
@@ -255,10 +278,10 @@ or the ICCCM that breaks if you hide resources?
 
 </sect1>
 
-<sect1 id="denial_of_service">
+<sect1 id='Denial_of_Service'>
 <title>Denial of Service</title>
 
-<sect2 id="memory_exhaustion">
+<sect2 id='Memory_Exhaustion'>
 <title>Memory Exhaustion</title>
 
 <para>
@@ -325,7 +348,7 @@ mentioned as a defense in the list below.
 </sect2>
 
 
-<sect2 id="cpu_monopolization">
+<sect2 id='CPU_Monopolization'>
 <title>CPU Monopolization</title>
 
 <para>
@@ -352,10 +375,10 @@ already exists in the server to support it, so this should be simple to add.
 </chapter>
 
 
-<chapter id="security_concerns_with_specific_window_attributes">
+<chapter id='Security_concerns_with_specific_window_attributes'>
 <title>Security concerns with specific window attributes</title>
 
-<sect1 id="background_pixmap">
+<sect1 id='Background_pixmap'>
 <title>Background-pixmap</title>
 <para>
 Clients can use windows with the background-pixmap attribute set to None
@@ -408,7 +431,7 @@ contains bits from trusted windows?
 
 </sect1>
 
-<sect1 id="parentrelative_and_copyfromparent">
+<sect1 id='ParentRelative_and_CopyFromParent'>
 <title>ParentRelative and CopyFromParent</title>
 
 <para>
@@ -431,7 +454,7 @@ below). We recommend that nothing more be done to counter this threat.
 
 </sect1>
 
-<sect1 id="override_redirect">
+<sect1 id='Override_redirect'>
 <title>Override-redirect</title>
 <para>
 Windows with the override-redirect bit set to True are generally ignored by
@@ -450,15 +473,14 @@ windows of untrusted clients.
 Override-redirect windows also make some spoofing attacks easier since the
 client can more carefully control the presentation of the window to mimic
 another client.  Defenses against spoofing will be given under
-<link linkend="mapwindow">
-<xref linkend="mapwindow"></xref></link>
+<xref linkend='MapWindow' xrefstyle='select: title'/>
 .
 </para>
 
 </sect1>
 </chapter>
 
-<chapter id="security_concerns_with_specific_requests">
+<chapter id='Security_concerns_with_specific_requests'>
 <title>Security concerns with specific requests</title>
 
 <para>
@@ -475,7 +497,7 @@ Resources owned by the server, such as the root window and the default
 colormap, are considered to be owned by a trusted client.
 </para>
 
-<sect1 id="create_window">
+<sect1 id='CreateWindow'>
 <title>CreateWindow</title>
 
 <para>
@@ -528,13 +550,12 @@ Defense: quotas.
 </para>
 <para>
 Also
-<link linkend="security_concerns_with_specific_window_attributes">
-<xref linkend="security_concerns_with_specific_window_attributes"></xref></link>
+<xref linkend='Security_concerns_with_specific_window_attributes' xrefstyle='select: title'/>
 </para>
 </sect1>
 
 
-<sect1 id="changewindowattributes">
+<sect1 id='ChangeWindowAttributes'>
 <title>ChangeWindowAttributes</title>
 
 <para>
@@ -576,13 +597,12 @@ Defense: send Pixmap, Colormap, or Cursor error.
 </para>
 <para>
 Also
-<link linkend="security_concerns_with_specific_window_attributes">
-<xref linkend="security_concerns_with_specific_window_attributes"></xref></link>
+<xref linkend='Security_concerns_with_specific_window_attributes' xrefstyle='select: title'/>
 </para>
 
 </sect1>
 
-<sect1 id="getwindowattributes">
+<sect1 id='GetWindowAttributes'>
 <title>GetWindowAttributes</title>
 
 <para>
@@ -597,7 +617,7 @@ Defense for both of the above: send Window error.
 
 </sect1>
 
-<sect1 id="destroywindow__destroysubwindows">
+<sect1 id='DestroyWindow_DestroySubwindows'>
 <title>DestroyWindow, DestroySubwindows</title>
 
 <para>
@@ -611,7 +631,7 @@ Defense for both of the above: send Window error.
 </para>
 </sect1>
 
-<sect1 id="changesaveset">
+<sect1 id='ChangeSaveSet'>
 <title>ChangeSaveSet</title>
 
 <para>
@@ -635,7 +655,7 @@ Defense: send Window error.
 </sect1>
 
 
-<sect1 id="mapwindow">
+<sect1 id='MapWindow'>
 <title>MapWindow</title>
 
 <para>
@@ -710,7 +730,7 @@ unobscurable windows.
 </sect1>
 
 
-<sect1 id="window_operations">
+<sect1 id='Window_Operations'>
 <title>Window Operations</title>
 
 <para>
@@ -733,7 +753,7 @@ window, in which case we should send an Access error.
 
 </sect1>
 
-<sect1 id="getgeometry">
+<sect1 id='GetGeometry'>
 <title>GetGeometry</title>
 
 <para>
@@ -750,7 +770,7 @@ will be allowed.
 
 </sect1>
 
-<sect1 id="querytree">
+<sect1 id='QueryTree'>
 <title>QueryTree</title>
 
 <para>
@@ -785,15 +805,14 @@ window?
 <para>
 ISSUE: the Motif drag protocol (both preregister and dynamic) needs to be able
 to locate other top-level windows for potential drop sites. See also
-<link linkend="access_to_server_resources">
-<xref linkend="access_to_server_resources"></xref></link>
+<xref linkend='Access_to_Server_Resources' xrefstyle='select: title'/>
 .
 </para>
 </note>
 
 </sect1>
 
-<sect1 id="internatom">
+<sect1 id='InternAtom'>
 <title>InternAtom</title>
 
 <para>
@@ -818,7 +837,7 @@ Defense: quotas.
 
 </sect1>
 
-<sect1 id="getatomname">
+<sect1 id='GetAtomName'>
 <title>GetAtomName</title>
 
 <para>
@@ -834,7 +853,7 @@ threat.
 
 </sect1>
 
-<sect1 id="changeproperty">
+<sect1 id='ChangeProperty'>
 <title>ChangeProperty</title>
 
 <para>
@@ -875,7 +894,7 @@ Defense: quotas.
 </para>
 </sect1>
 
-<sect1 id="deleteproperty">
+<sect1 id='DeleteProperty'>
 <title>DeleteProperty</title>
 
 <para>
@@ -892,7 +911,7 @@ Defense for both of the above: send Window error.
 
 </sect1>
 
-<sect1 id="getproperty">
+<sect1 id='GetProperty'>
 <title>GetProperty</title>
 
 <para>
@@ -927,7 +946,7 @@ have fixed names.
 
 </sect1>
 
-<sect1 id="rotateproperties">
+<sect1 id='RotateProperties'>
 <title>RotateProperties</title>
 
 <para>
@@ -943,7 +962,7 @@ Defense for both of the above: send Window error.
 </para>
 </sect1>
 
-<sect1 id="listproperties">
+<sect1 id='ListProperties'>
 <title>ListProperties</title>
 
 <para>
@@ -965,7 +984,7 @@ ISSUE: should certain root window properties be listable?
 </note>
 </sect1>
 
-<sect1 id="setselectionowner">
+<sect1 id='SetSelectionOwner'>
 <title>SetSelectionOwner</title>
 
 <para>
@@ -998,7 +1017,7 @@ Defense: send Window error.
 </para>
 </sect1>
 
-<sect1 id="getselectionowner">
+<sect1 id='GetSelectionOwner'>
 <title>GetSelectionOwner</title>
 
 <para>
@@ -1018,7 +1037,7 @@ ISSUE: how does the security manager get involved here?
 </note>
 </sect1>
 
-<sect1 id="convertselection">
+<sect1 id='ConvertSelection'>
 <title>ConvertSelection</title>
 
 <para>
@@ -1044,7 +1063,7 @@ Defense: send Window error.
 </sect1>
 
 
-<sect1 id="sendevent">
+<sect1 id='SendEvent'>
 <title>SendEvent</title>
 
 <para>
@@ -1078,7 +1097,7 @@ Defense: send Window error.
 </sect1>
 
 
-<sect1 id="keyboard_and_pointer_grabs">
+<sect1 id='Keyboard_and_Pointer_Grabs'>
 <title>Keyboard and Pointer Grabs</title>
 
 <para>
@@ -1095,8 +1114,7 @@ input may not have been intended for the grabbing client.
 <para>
 Defense: provide a way to break grabs via some keystroke combination, and
 have a status area that shows which client is getting input. (See
-<link linkend="mapwindow">
-<xref linkend="mapwindow"></xref></link>
+<xref linkend='MapWindow' xrefstyle='select: title'/>
 ).
 </para>
 
@@ -1112,7 +1130,7 @@ Defense: send Window or Cursor error.
 
 
 
-<sect1 id="changeactivepointergrab">
+<sect1 id='ChangeActivePointerGrab'>
 <title>ChangeActivePointerGrab</title>
 
 <para>
@@ -1125,7 +1143,7 @@ Defense: send Cursor error.
 </sect1>
 
 
-<sect1 id="grabserver">
+<sect1 id='GrabServer'>
 <title>GrabServer</title>
 
 <para>
@@ -1139,7 +1157,7 @@ Defense: provide a way to break grabs via some keystroke combination.
 </sect1>
 
 
-<sect1 id="querypointer">
+<sect1 id='QueryPointer'>
 <title>QueryPointer</title>
 
 <para>
@@ -1161,7 +1179,7 @@ Defense: send Window error.
 </para>
 </sect1>
 
-<sect1 id="getmotionevents">
+<sect1 id='GetMotionEvents'>
 <title>GetMotionEvents</title>
 
 <para>
@@ -1184,7 +1202,7 @@ Defense: send Window error.
 </para>
 </sect1>
 
-<sect1 id="translatecoordinates">
+<sect1 id='TranslateCoordinates'>
 <title>TranslateCoordinates</title>
 
 <para>
@@ -1206,7 +1224,7 @@ Defense: send Window error.
 </para>
 </sect1>
 
-<sect1 id="warppointer">
+<sect1 id='WarpPointer'>
 <title>WarpPointer</title>
 
 <para>
@@ -1233,7 +1251,7 @@ Defense: send Window error.
 </para>
 </sect1>
 
-<sect1 id="setinputfocus">
+<sect1 id='SetInputFocus'>
 <title>SetInputFocus</title>
 
 <para>
@@ -1269,7 +1287,7 @@ Defense: send Window error.
 </sect1>
 
 
-<sect1 id="getinputfocus">
+<sect1 id='GetInputFocus'>
 <title>GetInputFocus</title>
 
 <para>
@@ -1282,7 +1300,7 @@ the input focus.
 </sect1>
 
 
-<sect1 id="querykeymap">
+<sect1 id='QueryKeymap'>
 <title>QueryKeymap</title>
 
 <para>
@@ -1295,7 +1313,7 @@ the input focus.
 </para>
 </sect1>
 
-<sect1 id="font_requests">
+<sect1 id='Font_Requests'>
 <title>Font Requests</title>
 
 <para>
@@ -1343,7 +1361,7 @@ Defense: quotas.
 </sect1>
 
 
-<sect1 id="closefont">
+<sect1 id='CloseFont'>
 <title>CloseFont</title>
 
 <para>
@@ -1354,7 +1372,7 @@ Defense: send Font error.
 </para>
 </sect1>
 
-<sect1 id="setfontpath">
+<sect1 id='SetFontPath'>
 <title>SetFontPath</title>
 
 <para>
@@ -1381,7 +1399,7 @@ surface.
 </note>
 </sect1>
 
-<sect1 id="getfontpath">
+<sect1 id='GetFontPath'>
 <title>GetFontPath</title>
 
 <para>
@@ -1398,7 +1416,7 @@ untrusted clients, as described in the Font Requests section.
 </sect1>
 
 
-<sect1 id="createpixmap">
+<sect1 id='CreatePixmap'>
 <title>CreatePixmap</title>
 
 <para>
@@ -1415,7 +1433,7 @@ Defense: quotas.
 </para>
 </sect1>
 
-<sect1 id="freepixma">
+<sect1 id='FreePixmap'>
 <title>FreePixmap</title>
 
 <para>
@@ -1426,7 +1444,7 @@ Defense: send Pixmap error.
 </para>
 </sect1>
 
-<sect1 id="creategc">
+<sect1 id='CreateGC'>
 <title>CreateGC</title>
 
 <para>
@@ -1444,7 +1462,7 @@ Defense: quotas.
 </sect1>
 
 
-<sect1 id="copygc">
+<sect1 id='CopyGC'>
 <title>CopyGC</title>
 
 <para>
@@ -1459,7 +1477,7 @@ Defense for both of the above: send GC error.
 </sect1>
 
 
-<sect1 id="changegc__setdashes__setcliprectangles">
+<sect1 id='ChangeGC_SetDashes_SetClipRectangles'>
 <title>ChangeGC, SetDashes, SetClipRectangles</title>
 
 <para>
@@ -1474,7 +1492,7 @@ Defense for both of the above: send GC error.
 </para>
 </sect1>
 
-<sect1 id="freegc">
+<sect1 id='FreeGC'>
 <title>FreeGC</title>
 
 <para>
@@ -1487,7 +1505,7 @@ Defense: send GC error.
 </sect1>
 
 
-<sect1 id="drawing_requests">
+<sect1 id='Drawing_Requests'>
 <title>Drawing Requests</title>
 
 <para>
@@ -1516,14 +1534,13 @@ Spoofing: draw to a window to make it resemble a window of another client.
 </para>
 <para>
 Defense: see
-<link linkend="mapwindow">
-<xref linkend="mapwindow"></xref></link>
+<xref linkend='MapWindow' xrefstyle='select: title'/>
 .
 </para>
 </sect1>
 
 
-<sect1 id="getimage">
+<sect1 id='GetImage'>
 <title>GetImage</title>
 
 <para>
@@ -1545,7 +1562,7 @@ from trusted windows.
 </para>
 </sect1>
 
-<sect1 id="createcolormap">
+<sect1 id='CreateColormap'>
 <title>CreateColormap</title>
 
 <para>
@@ -1564,7 +1581,7 @@ Defense: quotas.
 </para>
 </sect1>
 
-<sect1 id="freecolormap">
+<sect1 id='FreeColormap'>
 <title>FreeColormap</title>
 
 <para>
@@ -1576,7 +1593,7 @@ Defense: send Colormap error.
 </sect1>
 
 
-<sect1 id="copycolormapandfree">
+<sect1 id='CopyColormapAndFree'>
 <title>CopyColormapAndFree</title>
 
 <para>
@@ -1601,7 +1618,7 @@ Defense: quotas.
 </para>
 </sect1>
 
-<sect1 id="installcolormap__uninstallcolormap">
+<sect1 id='InstallColormap_UninstallColormap'>
 <title>InstallColormap, UninstallColormap</title>
 
 <para>
@@ -1628,7 +1645,7 @@ has the pointer grabbed. Do we need to allow that too?
 </note>
 </sect1>
 
-<sect1 id="listinstalledcolormaps">
+<sect1 id='ListInstalledColormaps'>
 <title>ListInstalledColormaps</title>
 
 <para>
@@ -1647,7 +1664,7 @@ colormaps and colormaps of untrusted clients.
 </para>
 </sect1>
 
-<sect1 id="color_allocation_requests">
+<sect1 id='Color_Allocation_Requests'>
 <title>Color Allocation Requests</title>
 
 <para>
@@ -1668,7 +1685,7 @@ colormaps will be allowed.
 </para>
 </sect1>
 
-<sect1 id="freecolors">
+<sect1 id='FreeColors'>
 <title>FreeColors</title>
 
 <para>
@@ -1679,7 +1696,7 @@ Defense: send Colormap error. However, default colormaps will be allowed.
 </para>
 </sect1>
 
-<sect1 id="storecolors__storenamedcolor">
+<sect1 id='StoreColors_StoreNamedColor'>
 <title>StoreColors, StoreNamedColor</title>
 
 <para>
@@ -1695,7 +1712,7 @@ colormaps will be allowed.
 </sect1>
 
 
-<sect1 id="querycolors__lookupcolor">
+<sect1 id='QueryColors_LookupColor'>
 <title>QueryColors, LookupColor</title>
 
 <para>
@@ -1710,7 +1727,7 @@ colormaps will be allowed.
 </para>
 </sect1>
 
-<sect1 id="createcursor__createglyphcursor">
+<sect1 id='CreateCursor_CreateGlyphCursor'>
 <title>CreateCursor, CreateGlyphCursor</title>
 
 <para>
@@ -1727,7 +1744,7 @@ Defense: quotas.
 </para>
 </sect1>
 
-<sect1 id="freecursor">
+<sect1 id='FreeCursor'>
 <title>FreeCursor</title>
 
 <para>
@@ -1738,7 +1755,7 @@ Defense: send Cursor error.
 </para>
 </sect1>
 
-<sect1 id="recolorcursor">
+<sect1 id='RecolorCursor'>
 <title>RecolorCursor</title>
 
 <para>
@@ -1752,7 +1769,7 @@ Defense for both of the above: send Cursor error.
 </para>
 </sect1>
 
-<sect1 id="querybestsize">
+<sect1 id='QueryBestSize'>
 <title>QueryBestSize</title>
 
 <para>
@@ -1763,7 +1780,7 @@ Defense: send Drawable error.
 </para>
 </sect1>
 
-<sect1 id="listextensions__queryextension">
+<sect1 id='ListExtensions_QueryExtension'>
 <title>ListExtensions, QueryExtension</title>
 
 <para>
@@ -1777,7 +1794,7 @@ about extensions that claim to be safe.
 </para>
 </sect1>
 
-<sect1 id="keyboard_configuration_requests">
+<sect1 id='Keyboard_configuration_requests'>
 <title>Keyboard configuration requests</title>
 
 <para>
@@ -1800,7 +1817,7 @@ Defense for both of the above: treat these requests as a no-op.
 </sect1>
 
 
-<sect1 id="keyboard_query_requets">
+<sect1 id='Keyboard_query_requests'>
 <title>Keyboard query requests</title>
 
 <para>
@@ -1816,7 +1833,7 @@ threat.
 </sect1>
 
 
-<sect1 id="changepointercontrol__setpointermapping">
+<sect1 id='ChangePointerControl_SetPointerMapping'>
 <title>ChangePointerControl, SetPointerMapping</title>
 
 <para>
@@ -1832,7 +1849,7 @@ Defense for both of the above: treat these requests as a no-op.
 </para>
 </sect1>
 
-<sect1 id="getpointercontrol__getpointermapping">
+<sect1 id='GetPointerControl_GetPointerMapping'>
 <title>GetPointerControl, GetPointerMapping</title>
 
 <para>
@@ -1844,7 +1861,7 @@ threat.
 </para>
 </sect1>
 
-<sect1 id="setscreensaver">
+<sect1 id='SetScreenSaver'>
 <title>SetScreenSaver</title>
 
 <para>
@@ -1861,7 +1878,7 @@ Defense for both of the above: treat these requests as a no-op.
 </sect1>
 
 
-<sect1 id="getscreensaver">
+<sect1 id='GetScreenSaver'>
 <title>GetScreenSaver</title>
 
 <para>
@@ -1873,7 +1890,7 @@ threat.
 </para>
 </sect1>
 
-<sect1 id="forcescreensaver">
+<sect1 id='ForceScreenSaver'>
 <title>ForceScreenSaver</title>
 
 <para>
@@ -1889,7 +1906,7 @@ Defense for both of the above: treat these requests as a no-op.
 </para>
 </sect1>
 
-<sect1 id="changehost">
+<sect1 id='ChangeHost'>
 <title>ChangeHost</title>
 
 <para>
@@ -1910,7 +1927,7 @@ Defense for both of the above: return Access error.
 </sect1>
 
 
-<sect1 id="listhosts">
+<sect1 id='ListHosts'>
 <title>ListHosts</title>
 
 <para>
@@ -1926,7 +1943,7 @@ Defense for both of the above: return only untrusted hosts.
 </sect1>
 
 
-<sect1 id="setaccesscontrol">
+<sect1 id='SetAccessControl'>
 <title>SetAccessControl</title>
 
 <para>
@@ -1945,7 +1962,7 @@ Defense for both of the above: return Access error.
 </para>
 </sect1>
 
-<sect1 id="setclosedownmode">
+<sect1 id='SetCloseDownMode'>
 <title>SetCloseDownMode</title>
 
 <para>
@@ -1962,7 +1979,7 @@ Defense: treat this request as a no-op.
 </para>
 </sect1>
 
-<sect1 id="killclient">
+<sect1 id='KillClient'>
 <title>KillClient</title>
 
 <para>
@@ -1981,7 +1998,7 @@ Defense for all of the above: return Value error.
 </para>
 </sect1>
 
-<sect1 id="clean_requests">
+<sect1 id='Clean_Requests'>
 <title>Clean Requests</title>
 
 <para>
@@ -1992,7 +2009,7 @@ UngrabKey, UngrabServer, NoOperation, and Bell.
 </sect1>
 </chapter>
 
-<chapter id="events">
+<chapter id='Events'>
 <title>Events</title>
 
 <para>
@@ -2002,7 +2019,7 @@ assuming that the client only selects for events on its own resources,
 then asking whether the events provide information about other clients.
 </para>
 
-<sect1 id="keymapnotify">
+<sect1 id='KeymapNotify'>
 <title>KeymapNotify</title>
 
 <para>
@@ -2016,7 +2033,7 @@ input focus.
 </para>
 </sect1>
 
-<sect1 id="expose">
+<sect1 id='Expose'>
 <title>Expose</title>
 
 <para>
@@ -2032,7 +2049,7 @@ memory. We propose to do nothing about this threat.
 </para>
 </sect1>
 
-<sect1 id="graphicsexposure">
+<sect1 id='GraphicsExposure'>
 <title>GraphicsExposure</title>
 
 <para>
@@ -2045,7 +2062,7 @@ Defense: see Expose above. We propose to do nothing about this threat.
 </para>
 </sect1>
 
-<sect1 id="visibilitynotify">
+<sect1 id='VisibilityNotify'>
 <title>VisibilityNotify</title>
 
 <para>
@@ -2058,7 +2075,7 @@ do nothing about this threat.
 </para>
 </sect1>
 
-<sect1 id="reparentnotify">
+<sect1 id='ReparentNotify'>
 <title>ReparentNotify</title>
 
 <para>
@@ -2079,7 +2096,7 @@ ISSUE: what is the application impact?
 </sect1>
 
 
-<sect1 id="configurenotify">
+<sect1 id='ConfigureNotify'>
 <title>ConfigureNotify</title>
 
 
@@ -2099,7 +2116,7 @@ ISSUE: what is the application impact?
 </sect1>
 
 
-<sect1 id="configurerequest">
+<sect1 id='ConfigureRequest'>
 <title>ConfigureRequest</title>
 
 <para>
@@ -2114,7 +2131,7 @@ ISSUE: what is the application impact?
 </sect1>
 
 
-<sect1 id="selectionclear">
+<sect1 id='SelectionClear'>
 <title>SelectionClear</title>
 
 <para>
@@ -2125,7 +2142,7 @@ Defense: return None for the owner window if it belongs to a trusted client.
 </para>
 </sect1>
 
-<sect1 id="selectionrequest">
+<sect1 id='SelectionRequest'>
 <title>SelectionRequest</title>
 
 <para>
@@ -2141,7 +2158,7 @@ selections.
 </sect1>
 
 
-<sect1 id="mappingnotify">
+<sect1 id='MappingNotify'>
 <title>MappingNotify</title>
 
 <para>
@@ -2156,7 +2173,7 @@ likely to confuse the user. We propose to do nothing about this threat.
 </sect1>
 </chapter>
 
-<chapter id="errors">
+<chapter id='Errors'>
 <title>Errors</title>
 
 <para>
@@ -2168,7 +2185,7 @@ There appear to be no threats related to procotol errors.
 
 
 
-<chapter id="future_work">
+<chapter id='Future_Work'>
 <title>Future Work</title>
 
 <para>
@@ -2180,7 +2197,7 @@ questions.
 </chapter>
 
 
-<chapter id="references">
+<chapter id='References'>
 <title>References</title>
 
 <para>

@@ -16,7 +16,7 @@ by component within each subsystem, rather than alphabetically on maintainer
 name.
 
 P: Person
-M: Mail patches to
+M: Mail patches to (but cc the mailing list as well)
 L: Mailing list that is relevant to this area
 W: Web-page with status/info
 S: Status, one of the following:
@@ -107,7 +107,7 @@ S:	Maintained
 
 xdm
 P:	Alan Coopersmith
-M:	alan.coopersmith@sun.com
+M:	alan.coopersmith@oracle.com
 L:	xorg-devel@lists.x.org
 W:	http://wiki.x.org
 S:	Maintained
@@ -130,7 +130,7 @@ xkbcomp
 P:	Daniel Stone
 M:	daniel@fooishbar.org
 L:	xorg-devel@lists.x.org
-W:	htp://wiki.x.org
+W:	http://wiki.x.org
 S:	Maintained
 S:	XKB being overhauled
 S:	Please contact Daniel if you're planning to work on this
@@ -185,6 +185,7 @@ XRes
 XScrnSaver
 Xau
 Xaw
+S:	Unmaintained
 
 X11, Xcomposite, Xcursor, Xdamage, Xfixes, Xrandr, Xrender
 P:	Keith Packard
@@ -194,40 +195,64 @@ W:	http://wiki.x.org
 S:	Maintained
 
 Xdmcp
+S:	Unmaintained
+
 Xevie
+S:	Obsolete
+
 Xext
 Xfont
+S:	Unmaintained
+
 Xfontcache
+S:	Obsolete
+
 Xft
 Xinerama
+S:	Unmaintained
 
-Xi, xkbfile, xkbui
+Xi
+P:	Peter Hutterer
+M:	peter.hutterer@who-t.net
+L:	xorg-devel@lists.x.org
+W:	http://wiki.x.org
+S:	Maintained
+
+xkbfile, xkbui
 P:	Daniel Stone
 M:	daniel@fooishbar.org
 L:	xorg-devel@lists.x.org
-W:	htp://wiki.x.org
+W:	http://wiki.x.org
 S:	Maintained
 S:	XKB being overhauled
 S:	Please contact Daniel if you're planning to work on this
 
 Xmu
-Xp
 Xpm
-XprintAppUtil
-XprintUtil
+S:	Unmaintained
+
+Xp
+S:	Obsolete
+S:	maintained solely for binary compatibilty for software like Motif
+
+XprintAppUtil, XprintUtil
+S:	Obsolete
+
 Xt
 Xtst
 Xv
 XvMC
 Xxf86dga
-Xxf86misc
+S:	Unmaintained
 
+Xxf86misc
 Xxf86rush
 S:	Obsolete
 
 Xxf86vm
 dmx
 fontenc
+S:	Unmaintained
 
 lbxutil
 S:	Obsolete
@@ -459,7 +484,7 @@ S:	Unmaintained (libraries/apps) ; Obsolete/Removed (Xorg server)
 
 Solaris (x86 & sparc)
 P:	Alan Coopersmith
-M:	alan.coopersmith@sun.com
+M:	alan.coopersmith@oracle.com
 L:	xorg-devel@lists.x.org
 W:	http://wiki.x.org & http://opensolaris.org/os/community/x_win/
 S:	Maintained
@@ -496,11 +521,11 @@ S:	Maintained
 Drivers
 -------
 xf86-input-acecad
-P:	Giuseppe Bilotta
-M:	giuseppe.bilotta@gmail.org
+P:	?
+M:	?
 L:	xorg-devel@lists.x.org
 W:	http://wiki.x.org
-S:	Maintained
+S:	Unmaintained
 
 xf86-input-aiptek
 P:	?
@@ -595,7 +620,7 @@ S:	Maintained
 
 xf86-input-keyboard
 P:	Alan Coopersmith
-M:	alan.coopersmith@sun.com
+M:	alan.coopersmith@oracle.com
 L:	xorg-devel@lists.x.org
 W:	http://wiki.x.org
 S:	Maintained
@@ -619,11 +644,11 @@ P:	?
 M:	?
 L:	xorg-devel@lists.x.org
 W:	http://wiki.x.org
-S:	Unmaintained
+S:	Deactivated
 
 xf86-input-mouse
 P:	Alan Coopersmith
-M:	alan.coopersmith@sun.com
+M:	alan.coopersmith@oracle.com
 L:	xorg-devel@lists.x.org
 W:	http://wiki.x.org
 S:	Maintained
@@ -671,8 +696,6 @@ W:	http://wiki.x.org
 S:	Deactivated
 
 xf86-input-synaptics
-P:	Christoph Brill
-M:	egore911@egore911.de
 P:	Peter Hutterer
 M:	peter.hutterer@who-t.net
 L:	xorg-devel@lists.x.org
@@ -733,7 +756,7 @@ P:	Alex Deucher
 P:      Ben Herrenschmidt
 P:      et al
 M:	?
-L:	xorg-devel@lists.x.org
+L:	xorg-driver-ati@lists.x.org
 W:	http://wiki.x.org
 S:	Maintained
 
@@ -754,9 +777,9 @@ S:	Unmaintained
 xf86-video-cyrix
 P:	?
 M:	?
-L:	xorg-devel@lists.x.org
-W:	http://wiki.x.org
-S:	Unmaintained
+L:	xorg-driver-geode@lists.x.org
+W:	http://www.x.org/wiki/GeodeDriver
+S:	Obsolete - mostly replaced by xf86-video-geode
 
 xf86-video-dummy
 P:	Adam Jackson
@@ -771,6 +794,14 @@ M:	?
 L:	xorg-devel@lists.x.org
 W:	http://wiki.x.org
 S:	Unmaintained
+
+xf86-video-geode
+P:	?
+M:	?
+L:	xorg-driver-geode@lists.x.org
+W:	http://lists.x.org/mailman/listinfo/xorg-driver-geode
+W:	http://www.x.org/wiki/GeodeDriver
+S:	Maintained
 
 xf86-video-glide
 P:	Guillem Jover
@@ -804,14 +835,14 @@ S:	Unmaintained
 xf86-video-intel
 P:	Eric Anholt
 M:	eric@anholt.net
-L:	xorg-devel@lists.x.org
-W:	http://wiki.x.org
-S:	Maintained
+L:	intel-gfx@lists.freedesktop.org
+W:	http://intellinuxgraphics.org/
+S:	Supported
 
 xf86-video-mach64
 P:      Luc Verhaegen
 M:      libv@skynet.be
-L:      xorg-devel@lists.x.org
+L:	xorg-driver-ati@lists.x.org
 W:      http://wiki.x.org
 S:	Maintained
 
@@ -829,9 +860,23 @@ L:	xorg-devel@lists.x.org
 W:	http://wiki.x.org
 S:	Maintained
 
+xf86-video-modesetting
+P:	Dave Airlie
+M:	airlied@redhat.com
+L:	xorg-devel@lists.x.org
+W:	http://wiki.x.org
+S:	Maintained
+
 xf86-video-neomagic
 P:	Egbert Eich
 M:	eich@freedesktop.org
+L:	xorg-devel@lists.x.org
+W:	http://wiki.x.org
+S:	Maintained
+
+xf86-video-nested
+P:	?
+M:	?
 L:	xorg-devel@lists.x.org
 W:	http://wiki.x.org
 S:	Maintained
@@ -846,13 +891,20 @@ S:	Unmaintained
 xf86-video-nsc
 P:	Alan Hourihane
 M:	alanh@fairlite.demon.co.uk
-L:	xorg-devel@lists.x.org
-W:	http://wiki.x.org
-S:	Maintained
+L:	xorg-driver-geode@lists.x.org
+W:	http://www.x.org/wiki/GeodeDriver
+S:	Obsolete - mostly replaced by xf86-video-geode
 
 xf86-video-nv
 P:	Aaron Plattner
 M:	aplattner@freedesktop.org
+L:	xorg-devel@lists.x.org
+W:	http://wiki.x.org
+S:	Maintained
+
+xf86-video-qxl
+P:	?
+M:	?
 L:	xorg-devel@lists.x.org
 W:	http://wiki.x.org
 S:	Maintained
@@ -869,17 +921,17 @@ P:	Alex Deucher
 P:      Ben Herrenschmidt
 P:      et al
 M:	?
-L:	xorg-devel@lists.x.org
+L:	xorg-driver-ati@lists.x.org
 W:	http://wiki.x.org
 S:	Maintained
 
-xf86-video-radeon
+radeon driver (xf86-video-ati)
 P:	Alex Deucher
 P:      Ben Herrenschmidt
 P:      et al
 M:	?
-L:	xorg-devel@lists.x.org
-W:	http://wiki.x.org
+L:	xorg-driver-ati@lists.x.org
+W:	http://www.x.org/wiki/radeon
 S:	Maintained
 
 xf86-video-s3
@@ -1016,20 +1068,10 @@ W:	http://wiki.x.org
 S:	Maintained
 
 xf86-video-vga
-P:	?
-M:	?
-L:	xorg-devel@lists.x.org
-W:	http://wiki.x.org
 S:	Obsolete - use xf86-video-vesa instead
 
 xf86-video-via
-P:	Luc Verhaegen
-P:      Thomas Hellström
-M:	?
-L:	xorg-devel@lists.x.org
-W:	http://wiki.x.org
-W:      http://unichrome.sf.net
-S:	Unmaintained
+S:	Obsolete - use xf86-video-openchrome or xf86-video-unichrome instead
 
 xf86-video-vmware
 P:	Thomas Hellstrom
@@ -1058,6 +1100,13 @@ M:	?
 L:	xorg-devel@lists.x.org
 W:	http://wiki.x.org
 S:	Maintained
+
+xf86-video-xgixp
+P:	?
+M:	?
+L:	xorg-devel@lists.x.org
+W:	http://wiki.x.org
+S:	Unmaintained
 
 Other modules
 -------------

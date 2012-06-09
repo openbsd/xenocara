@@ -2,10 +2,10 @@
 <!DOCTYPE article PUBLIC "-//OASIS//DTD DocBook XML V4.3//EN"
                       "http://www.oasis-open.org/docbook/xml/4.3/docbookx.dtd"
 [
-<!ENTITY % defs SYSTEM "/xorg-sgml-doctools/X11/defs.ent"> %defs;
+<!ENTITY % defs SYSTEM "defs.ent"> %defs;
 ]>
 
-<article>
+<article id='License'>
 
 <articleinfo>
 
@@ -14,7 +14,7 @@
 <pubdate>&reldate;</pubdate>
 </articleinfo>
 
-<sect1>
+<sect1 id='Introduction'>
 <title>Introduction</title>
 
 <para>
@@ -51,7 +51,7 @@ possible of the code's licenses in the distribution into compliance with the
 
 </sect1>
 
-<sect1>
+<sect1 id='X.Org_Preferred_License'>
 <title>X.Org Preferred License</title>
 
 <para>
@@ -102,7 +102,7 @@ before Daniel Stone).
 
 </sect1>
 
-<sect1>
+<sect1 id='XFree86_License_1.0'>
 <title>XFree86 License 1.0</title>
 
 <para>
@@ -153,7 +153,7 @@ No software incorporating the XFree86 1.1 license has been incorporated.
 
 </sect1>
 
-<sect1>
+<sect1 id='Other_Licenses'>
 <title>Other Licenses</title>
 
 <para>
@@ -161,10 +161,10 @@ Portions of code are covered by the following licenses/copyrights.  See
 individual files for the copyright dates.
 </para>
 
-<sect2>
+<sect2 id='X_MIT_Copyrights'>
 <title>X/MIT Copyrights</title>
 
-<sect3>
+<sect3 id='X_Consortium'>
 <title>X Consortium</title>
 
 <para>
@@ -208,7 +208,7 @@ X Window System is a trademark of X Consortium, Inc.
 
 </sect3>
 
-<sect3>
+<sect3 id='The_Open_Group'>
 <title>The Open Group</title>
 
 <para>
@@ -247,10 +247,10 @@ in this Software without prior written authorization from The Open Group.
 
 </sect2>
 
-<sect2>
-<title>Berkeley-based copyrights:</title>
+<sect2 id='Berkeley-based_copyrights'>
+<title>Berkeley-based copyrights</title>
 
-<sect3>
+<sect3 id='General'>
 <title>General</title>
 
 <para>
@@ -290,7 +290,7 @@ derived from this software without specific prior written permission.
 </para>
 
 <para>
-THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+THIS SOFTWARE IS PROVIDED BY THE AUTHOR <quote>AS IS</quote> AND ANY EXPRESS OR
 IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
 OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
 IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
@@ -304,7 +304,7 @@ THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 </sect3>
 
-<sect3>
+<sect3 id='UCB_LBL'>
 <title>UCB/LBL</title>
 
 <para>
@@ -372,7 +372,7 @@ without specific prior written permission.
 </para>
 
 <para>
-THIS SOFTWARE IS PROVIDED BY THE REGENTS AND CONTRIBUTORS ``AS IS'' AND
+THIS SOFTWARE IS PROVIDED BY THE REGENTS AND CONTRIBUTORS <quote>AS IS</quote> AND
 ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
 IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
 ARE DISCLAIMED.  IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE
@@ -387,7 +387,7 @@ SUCH DAMAGE.
 
 </sect3>
 
-<sect3>
+<sect3 id='The_NetBSD_Foundation_Inc.'>
 <title>The NetBSD Foundation, Inc.</title>
 
 <para>
@@ -428,7 +428,7 @@ documentation and/or other materials provided with the distribution.
 
 <para>
 THIS SOFTWARE IS PROVIDED BY THE NETBSD FOUNDATION, INC. AND CONTRIBUTORS
-``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
+<quote>AS IS</quote> AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
 TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
 PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE FOUNDATION OR CONTRIBUTORS
 BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
@@ -442,8 +442,8 @@ POSSIBILITY OF SUCH DAMAGE.
 
 </sect3>
 
-<sect3>
-<title>Theodore Ts'o.</title>
+<sect3 id='Theodore_Tso'>
+<title>Theodore Ts'o</title>
 
 <para>
 Copyright Theodore Ts'o, 1994, 1995, 1996, 1997, 1998, 1999.  All
@@ -486,7 +486,7 @@ written permission.
 </para>
 
 <para>
-THIS SOFTWARE IS PROVIDED ``AS IS'' AND ANY EXPRESS OR IMPLIED
+THIS SOFTWARE IS PROVIDED <quote>AS IS</quote> AND ANY EXPRESS OR IMPLIED
 WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
 OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE, ALL OF
 WHICH ARE HEREBY DISCLAIMED.  IN NO EVENT SHALL THE AUTHOR BE
@@ -502,7 +502,7 @@ DAMAGE.
 
 </sect3>
 
-<sect3>
+<sect3 id='Theo_de_Raadt_and_Damien_Miller'>
 <title>Theo de Raadt and Damien Miller</title>
 
 <para>
@@ -537,7 +537,7 @@ documentation and/or other materials provided with the distribution.
 </para>
 
 <para>
-THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+THIS SOFTWARE IS PROVIDED BY THE AUTHOR <quote>AS IS</quote> AND ANY EXPRESS OR
 IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
 OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
 IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
@@ -551,7 +551,7 @@ THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 </sect3>
 
-<sect3>
+<sect3 id='Todd_C._Miller'>
 <title>Todd C. Miller</title>
 
 <para>
@@ -576,7 +576,7 @@ CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 </sect3>
 
-<sect3>
+<sect3 id='Thomas_Winischhofer'>
 <title>Thomas Winischhofer</title>
 
 <para>
@@ -619,7 +619,7 @@ derived from this software without specific prior written permission.
 </para>
 
 <para>
-THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESSED OR
+THIS SOFTWARE IS PROVIDED BY THE AUTHOR <quote>AS IS</quote> AND ANY EXPRESSED OR
 IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
 WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
 DISCLAIMED. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT,
@@ -636,7 +636,7 @@ POSSIBILITY OF SUCH DAMAGE.
 
 </sect2>
 
-<sect2>
+<sect2 id='SGI_Free_Software_License_B'>
 <title>SGI Free Software License B</title>
 
 <para>
@@ -675,7 +675,7 @@ SOFTWARE.
 
 </sect2>
 
-<sect2>
+<sect2 id='Bigelow_Holmes_Inc_and_URW_GmbH_Luxi_font_license'>
 <title>Bigelow &amp; Holmes Inc and URW++ GmbH Luxi font license</title>
 
 <para>

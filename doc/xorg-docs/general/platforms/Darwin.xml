@@ -2,19 +2,20 @@
 <!DOCTYPE article PUBLIC "-//OASIS//DTD DocBook XML V4.3//EN"
                       "http://www.oasis-open.org/docbook/xml/4.3/docbookx.dtd"
 [
-<!ENTITY % defs SYSTEM "/xorg-sgml-doctools/X11/defs.ent"> %defs;
+<!ENTITY % defs SYSTEM "defs.ent"> %defs;
 ]>
 
-<article>
+<article id='Darwin'>
 
   <articleinfo>
 
-    <title>X.Org X11R&relvers; on Darwin and Mac OS X</title>
-    <pubdate>October 2009</pubdate>
+    <title>X on Darwin and Mac OS X</title>
+    <releaseinfo>X Version 11, Release &fullrelvers;</releaseinfo>
+   <pubdate>October 2009</pubdate>
 
   </articleinfo>
 
-  <sect1>
+  <sect1 id='Introduction'>
     <title>Introduction</title>
 
     <para>

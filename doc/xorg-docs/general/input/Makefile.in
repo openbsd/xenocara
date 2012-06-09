@@ -15,26 +15,19 @@
 @SET_MAKE@
 
 #
-# Copyright (c) 2010, Oracle and/or its affiliates. All rights reserved.
+# Generate output formats for a single DocBook/XML with/without chapters
 #
-# Permission is hereby granted, free of charge, to any person obtaining a
-# copy of this software and associated documentation files (the "Software"),
-# to deal in the Software without restriction, including without limitation
-# the rights to use, copy, modify, merge, publish, distribute, sublicense,
-# and/or sell copies of the Software, and to permit persons to whom the
-# Software is furnished to do so, subject to the following conditions:
+# Variables set by the calling Makefile:
+# shelfdir: the location where the docs/specs are installed. Typically $(docdir)
+# docbook:  the main DocBook/XML file, no chapters, appendix or image files
+# chapters: all files pulled in by an XInclude statement and images.
 #
-# The above copyright notice and this permission notice (including the next
-# paragraph) shall be included in all copies or substantial portions of the
-# Software.
+
 #
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
-# THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-# FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
-# DEALINGS IN THE SOFTWARE.
+# This makefile is intended for Users Documentation and Functional Specifications.
+# Do not use for Developer Documentation which is not installed and does not require olink.
+# Refer to http://www.x.org/releases/X11R7.6/doc/xorg-docs/ReleaseNotes.html#id2584393
+# for an explanation on documents classification.
 #
 
 srcdir = @srcdir@
@@ -46,9 +39,9 @@ pkgincludedir = $(includedir)/@PACKAGE@
 top_builddir = ../..
 am__cd = CDPATH="$${ZSH_VERSION+.}$(PATH_SEPARATOR)" && cd
 INSTALL = @INSTALL@
-install_sh_DATA = $(install_sh) -c -m 644
-install_sh_PROGRAM = $(install_sh) -c
-install_sh_SCRIPT = $(install_sh) -c
+install_sh_DATA = ${SHELL} $(install_sh) -c -m 644
+install_sh_PROGRAM = ${SHELL} $(install_sh) -c
+install_sh_SCRIPT = ${SHELL} $(install_sh) -c
 INSTALL_HEADER = $(INSTALL_DATA)
 transform = $(program_transform_name)
 NORMAL_INSTALL = :
@@ -59,10 +52,14 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
-DIST_COMMON = $(am__dist_xml_DATA_DIST) $(srcdir)/Makefile.am \
-	$(srcdir)/Makefile.in $(top_srcdir)/xmlrules.in
-@ENABLE_DOCS_TRUE@@HAVE_FOP_TRUE@@HAVE_XMLTO_TRUE@am__append_1 = $(doc_sources:.xml=.ps) $(doc_sources:.xml=.pdf)
-@ENABLE_DOCS_TRUE@@HAVE_XMLTO_TEXT_TRUE@@HAVE_XMLTO_TRUE@am__append_2 = $(doc_sources:.xml=.txt)
+DIST_COMMON = $(am__dist_shelf_DATA_DIST) $(srcdir)/Makefile.am \
+	$(srcdir)/Makefile.in $(top_srcdir)/docbook.am
+@ENABLE_DOCS_TRUE@@HAVE_STYLESHEETS_TRUE@@HAVE_XMLTO_TRUE@am__append_1 = $(docbook:.xml=.html)
+@ENABLE_DOCS_TRUE@@HAVE_STYLESHEETS_TRUE@@HAVE_XMLTO_TEXT_TRUE@@HAVE_XMLTO_TRUE@am__append_2 = $(docbook:.xml=.txt)
+@ENABLE_DOCS_TRUE@@HAVE_FOP_TRUE@@HAVE_STYLESHEETS_TRUE@@HAVE_XMLTO_TRUE@am__append_3 = $(docbook:.xml=.pdf) \
+@ENABLE_DOCS_TRUE@@HAVE_FOP_TRUE@@HAVE_STYLESHEETS_TRUE@@HAVE_XMLTO_TRUE@	$(docbook:.xml=.ps)
+@ENABLE_DOCS_TRUE@@HAVE_STYLESHEETS_TRUE@@HAVE_XMLTO_TRUE@@HAVE_XSLTPROC_TRUE@am__append_4 = $(docbook:.xml=.html.db) \
+@ENABLE_DOCS_TRUE@@HAVE_STYLESHEETS_TRUE@@HAVE_XMLTO_TRUE@@HAVE_XSLTPROC_TRUE@	$(docbook:.xml=.pdf.db)
 subdir = general/input
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/configure.ac
@@ -72,17 +69,17 @@ mkinstalldirs = $(SHELL) $(install_sh) -d
 CONFIG_CLEAN_FILES =
 SOURCES =
 DIST_SOURCES =
-am__dist_xml_DATA_DIST = XKB-Config.xml XKB-Enhancing.xml
+am__dist_shelf_DATA_DIST = XKB-Config.xml XKB-Enhancing.xml
 am__vpath_adj_setup = srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`;
 am__vpath_adj = case $$p in \
     $(srcdir)/*) f=`echo "$$p" | sed "s|^$$srcdirstrip/||"`;; \
     *) f=$$p;; \
   esac;
 am__strip_dir = `echo $$p | sed -e 's|^.*/||'`;
-am__installdirs = "$(DESTDIR)$(xmldir)" "$(DESTDIR)$(xmldir)"
-dist_xmlDATA_INSTALL = $(INSTALL_DATA)
-xmlDATA_INSTALL = $(INSTALL_DATA)
-DATA = $(dist_xml_DATA) $(xml_DATA)
+am__installdirs = "$(DESTDIR)$(shelfdir)" "$(DESTDIR)$(shelfdir)"
+dist_shelfDATA_INSTALL = $(INSTALL_DATA)
+shelfDATA_INSTALL = $(INSTALL_DATA)
+DATA = $(dist_shelf_DATA) $(shelf_DATA)
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
 ACLOCAL = @ACLOCAL@
 ADMIN_MAN_DIR = @ADMIN_MAN_DIR@
@@ -97,6 +94,7 @@ AUTOCONF = @AUTOCONF@
 AUTOHEADER = @AUTOHEADER@
 AUTOMAKE = @AUTOMAKE@
 AWK = @AWK@
+BASE_CFLAGS = @BASE_CFLAGS@
 CC = @CC@
 CCDEPMODE = @CCDEPMODE@
 CFLAGS = @CFLAGS@
@@ -130,6 +128,8 @@ HAVE_XMLTO_FALSE = @HAVE_XMLTO_FALSE@
 HAVE_XMLTO_TEXT_FALSE = @HAVE_XMLTO_TEXT_FALSE@
 HAVE_XMLTO_TEXT_TRUE = @HAVE_XMLTO_TEXT_TRUE@
 HAVE_XMLTO_TRUE = @HAVE_XMLTO_TRUE@
+HAVE_XSLTPROC_FALSE = @HAVE_XSLTPROC_FALSE@
+HAVE_XSLTPROC_TRUE = @HAVE_XSLTPROC_TRUE@
 INSTALL_CMD = @INSTALL_CMD@
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
@@ -160,12 +160,14 @@ PKG_CONFIG = @PKG_CONFIG@
 SED = @SED@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
+STRICT_CFLAGS = @STRICT_CFLAGS@
 STRIP = @STRIP@
 STYLESHEET_SRCDIR = @STYLESHEET_SRCDIR@
 VERSION = @VERSION@
 XMLTO = @XMLTO@
 XORG_MAN_PAGE = @XORG_MAN_PAGE@
 XORG_SGML_PATH = @XORG_SGML_PATH@
+XSLTPROC = @XSLTPROC@
 XSL_STYLESHEET = @XSL_STYLESHEET@
 ac_ct_CC = @ac_ct_CC@
 am__fastdepCC_FALSE = @am__fastdepCC_FALSE@
@@ -210,26 +212,73 @@ sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 sysconfdir = @sysconfdir@
 target_alias = @target_alias@
-@ENABLE_DOCS_TRUE@doc_sources = XKB-Config.xml XKB-Enhancing.xml
-@ENABLE_DOCS_TRUE@xmldir = $(docdir)/input
-@ENABLE_DOCS_TRUE@dist_xml_DATA = $(doc_sources)
-@ENABLE_DOCS_TRUE@@HAVE_XMLTO_TRUE@xml_DATA =  \
-@ENABLE_DOCS_TRUE@@HAVE_XMLTO_TRUE@	$(doc_sources:.xml=.html) \
-@ENABLE_DOCS_TRUE@@HAVE_XMLTO_TRUE@	$(am__append_1) \
-@ENABLE_DOCS_TRUE@@HAVE_XMLTO_TRUE@	$(am__append_2)
-@ENABLE_DOCS_TRUE@@HAVE_STYLESHEETS_TRUE@@HAVE_XMLTO_TRUE@XMLTO_FLAGS = \
-@ENABLE_DOCS_TRUE@@HAVE_STYLESHEETS_TRUE@@HAVE_XMLTO_TRUE@	-m $(XSL_STYLESHEET)						\
-@ENABLE_DOCS_TRUE@@HAVE_STYLESHEETS_TRUE@@HAVE_XMLTO_TRUE@	--searchpath $(XORG_SGML_PATH)/X11				\
-@ENABLE_DOCS_TRUE@@HAVE_STYLESHEETS_TRUE@@HAVE_XMLTO_TRUE@	--stringparam html.stylesheet=$(STYLESHEET_SRCDIR)/xorg.css	\
-@ENABLE_DOCS_TRUE@@HAVE_STYLESHEETS_TRUE@@HAVE_XMLTO_TRUE@	--stringparam img.src.path=$(abs_builddir)/
 
-@ENABLE_DOCS_TRUE@@HAVE_XMLTO_TRUE@CLEANFILES = $(xml_DATA)
-@ENABLE_DOCS_TRUE@@HAVE_XMLTO_TRUE@SUFFIXES = .xml .ps .pdf .txt .html
+# Main DocBook/XML files (DOCTYPE book)
+@ENABLE_DOCS_TRUE@docbook = XKB-Config.xml XKB-Enhancing.xml
+
+# The location where the DocBook/XML files and their generated formats are installed
+@ENABLE_DOCS_TRUE@shelfdir = $(docdir)/input
+
+# DocBook/XML generated output formats to be installed
+@ENABLE_DOCS_TRUE@shelf_DATA = $(am__append_1) $(am__append_2) \
+@ENABLE_DOCS_TRUE@	$(am__append_3) $(am__append_4)
+
+# DocBook/XML file with chapters, appendix and images it includes
+@ENABLE_DOCS_TRUE@dist_shelf_DATA = $(docbook) $(chapters)
+@ENABLE_DOCS_TRUE@@HAVE_STYLESHEETS_TRUE@@HAVE_XMLTO_TRUE@XMLTO_SEARCHPATH_FLAGS = \
+@ENABLE_DOCS_TRUE@@HAVE_STYLESHEETS_TRUE@@HAVE_XMLTO_TRUE@	--searchpath "$(XORG_SGML_PATH)/X11" 		\
+@ENABLE_DOCS_TRUE@@HAVE_STYLESHEETS_TRUE@@HAVE_XMLTO_TRUE@	--searchpath "$(abs_top_builddir)"
+
+@ENABLE_DOCS_TRUE@@HAVE_STYLESHEETS_TRUE@@HAVE_XMLTO_TRUE@XMLTO_HTML_OLINK_FLAGS = \
+@ENABLE_DOCS_TRUE@@HAVE_STYLESHEETS_TRUE@@HAVE_XMLTO_TRUE@	--stringparam target.database.document=$(XORG_SGML_PATH)/X11/dbs/masterdb.html.xml \
+@ENABLE_DOCS_TRUE@@HAVE_STYLESHEETS_TRUE@@HAVE_XMLTO_TRUE@	--stringparam current.docid="$(<:.xml=)"
+
+@ENABLE_DOCS_TRUE@@HAVE_STYLESHEETS_TRUE@@HAVE_XMLTO_TRUE@XMLTO_HTML_STYLESHEET_FLAGS = -x $(STYLESHEET_SRCDIR)/xorg-xhtml.xsl
+@ENABLE_DOCS_TRUE@@HAVE_STYLESHEETS_TRUE@@HAVE_XMLTO_TRUE@XMLTO_HTML_FLAGS = \
+@ENABLE_DOCS_TRUE@@HAVE_STYLESHEETS_TRUE@@HAVE_XMLTO_TRUE@	$(XMLTO_SEARCHPATH_FLAGS)			\
+@ENABLE_DOCS_TRUE@@HAVE_STYLESHEETS_TRUE@@HAVE_XMLTO_TRUE@	$(XMLTO_HTML_STYLESHEET_FLAGS)			\
+@ENABLE_DOCS_TRUE@@HAVE_STYLESHEETS_TRUE@@HAVE_XMLTO_TRUE@	$(XMLTO_HTML_OLINK_FLAGS)
+
+@ENABLE_DOCS_TRUE@@HAVE_FOP_TRUE@@HAVE_STYLESHEETS_TRUE@@HAVE_XMLTO_TRUE@XMLTO_FO_IMAGEPATH_FLAGS = --stringparam img.src.path=$(abs_builddir)/
+@ENABLE_DOCS_TRUE@@HAVE_FOP_TRUE@@HAVE_STYLESHEETS_TRUE@@HAVE_XMLTO_TRUE@XMLTO_PDF_OLINK_FLAGS = \
+@ENABLE_DOCS_TRUE@@HAVE_FOP_TRUE@@HAVE_STYLESHEETS_TRUE@@HAVE_XMLTO_TRUE@	--stringparam target.database.document=$(XORG_SGML_PATH)/X11/dbs/masterdb.pdf.xml \
+@ENABLE_DOCS_TRUE@@HAVE_FOP_TRUE@@HAVE_STYLESHEETS_TRUE@@HAVE_XMLTO_TRUE@	--stringparam current.docid="$(<:.xml=)"
+
+@ENABLE_DOCS_TRUE@@HAVE_FOP_TRUE@@HAVE_STYLESHEETS_TRUE@@HAVE_XMLTO_TRUE@XMLTO_FO_STYLESHEET_FLAGS = -x $(STYLESHEET_SRCDIR)/xorg-fo.xsl
+@ENABLE_DOCS_TRUE@@HAVE_FOP_TRUE@@HAVE_STYLESHEETS_TRUE@@HAVE_XMLTO_TRUE@XMLTO_FO_FLAGS = \
+@ENABLE_DOCS_TRUE@@HAVE_FOP_TRUE@@HAVE_STYLESHEETS_TRUE@@HAVE_XMLTO_TRUE@	$(XMLTO_SEARCHPATH_FLAGS)			\
+@ENABLE_DOCS_TRUE@@HAVE_FOP_TRUE@@HAVE_STYLESHEETS_TRUE@@HAVE_XMLTO_TRUE@	$(XMLTO_FO_STYLESHEET_FLAGS)			\
+@ENABLE_DOCS_TRUE@@HAVE_FOP_TRUE@@HAVE_STYLESHEETS_TRUE@@HAVE_XMLTO_TRUE@	$(XMLTO_FO_IMAGEPATH_FLAGS)			\
+@ENABLE_DOCS_TRUE@@HAVE_FOP_TRUE@@HAVE_STYLESHEETS_TRUE@@HAVE_XMLTO_TRUE@	$(XMLTO_PDF_OLINK_FLAGS)
+
+
+# Generate documents cross-reference target databases
+@ENABLE_DOCS_TRUE@@HAVE_STYLESHEETS_TRUE@@HAVE_XMLTO_TRUE@@HAVE_XSLTPROC_TRUE@XSLT_SEARCHPATH_FLAGS = \
+@ENABLE_DOCS_TRUE@@HAVE_STYLESHEETS_TRUE@@HAVE_XMLTO_TRUE@@HAVE_XSLTPROC_TRUE@	--path "$(XORG_SGML_PATH)/X11"			\
+@ENABLE_DOCS_TRUE@@HAVE_STYLESHEETS_TRUE@@HAVE_XMLTO_TRUE@@HAVE_XSLTPROC_TRUE@	--path "$(abs_top_builddir)"
+
+@ENABLE_DOCS_TRUE@@HAVE_STYLESHEETS_TRUE@@HAVE_XMLTO_TRUE@@HAVE_XSLTPROC_TRUE@XSLT_OLINK_FLAGS = \
+@ENABLE_DOCS_TRUE@@HAVE_STYLESHEETS_TRUE@@HAVE_XMLTO_TRUE@@HAVE_XSLTPROC_TRUE@	--stringparam targets.filename "$@" 		\
+@ENABLE_DOCS_TRUE@@HAVE_STYLESHEETS_TRUE@@HAVE_XMLTO_TRUE@@HAVE_XSLTPROC_TRUE@	--stringparam collect.xref.targets "only" 	\
+@ENABLE_DOCS_TRUE@@HAVE_STYLESHEETS_TRUE@@HAVE_XMLTO_TRUE@@HAVE_XSLTPROC_TRUE@	--stringparam olink.base.uri "$(@:.db=)"
+
+@ENABLE_DOCS_TRUE@@HAVE_STYLESHEETS_TRUE@@HAVE_XMLTO_TRUE@@HAVE_XSLTPROC_TRUE@XSLT_HTML_FLAGS = \
+@ENABLE_DOCS_TRUE@@HAVE_STYLESHEETS_TRUE@@HAVE_XMLTO_TRUE@@HAVE_XSLTPROC_TRUE@	$(XSLT_SEARCHPATH_FLAGS) 			\
+@ENABLE_DOCS_TRUE@@HAVE_STYLESHEETS_TRUE@@HAVE_XMLTO_TRUE@@HAVE_XSLTPROC_TRUE@	$(XSLT_OLINK_FLAGS)				\
+@ENABLE_DOCS_TRUE@@HAVE_STYLESHEETS_TRUE@@HAVE_XMLTO_TRUE@@HAVE_XSLTPROC_TRUE@	--nonet --xinclude				\
+@ENABLE_DOCS_TRUE@@HAVE_STYLESHEETS_TRUE@@HAVE_XMLTO_TRUE@@HAVE_XSLTPROC_TRUE@	$(STYLESHEET_SRCDIR)/xorg-xhtml.xsl
+
+@ENABLE_DOCS_TRUE@@HAVE_STYLESHEETS_TRUE@@HAVE_XMLTO_TRUE@@HAVE_XSLTPROC_TRUE@XSLT_PDF_FLAGS = \
+@ENABLE_DOCS_TRUE@@HAVE_STYLESHEETS_TRUE@@HAVE_XMLTO_TRUE@@HAVE_XSLTPROC_TRUE@	$(XSLT_SEARCHPATH_FLAGS) 			\
+@ENABLE_DOCS_TRUE@@HAVE_STYLESHEETS_TRUE@@HAVE_XMLTO_TRUE@@HAVE_XSLTPROC_TRUE@	$(XSLT_OLINK_FLAGS)				\
+@ENABLE_DOCS_TRUE@@HAVE_STYLESHEETS_TRUE@@HAVE_XMLTO_TRUE@@HAVE_XSLTPROC_TRUE@	--nonet --xinclude				\
+@ENABLE_DOCS_TRUE@@HAVE_STYLESHEETS_TRUE@@HAVE_XMLTO_TRUE@@HAVE_XSLTPROC_TRUE@	$(STYLESHEET_SRCDIR)/xorg-fo.xsl
+
+@ENABLE_DOCS_TRUE@CLEANFILES = $(shelf_DATA)
 all: all-am
 
 .SUFFIXES:
-.SUFFIXES: .xml .ps .pdf .txt .html
-$(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am $(top_srcdir)/xmlrules.in $(am__configure_deps)
+$(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am $(top_srcdir)/docbook.am $(am__configure_deps)
 	@for dep in $?; do \
 	  case '$(am__configure_deps)' in \
 	    *$$dep*) \
@@ -259,39 +308,39 @@ $(top_srcdir)/configure: @MAINTAINER_MODE_TRUE@ $(am__configure_deps)
 $(ACLOCAL_M4): @MAINTAINER_MODE_TRUE@ $(am__aclocal_m4_deps)
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
 uninstall-info-am:
-install-dist_xmlDATA: $(dist_xml_DATA)
+install-dist_shelfDATA: $(dist_shelf_DATA)
 	@$(NORMAL_INSTALL)
-	test -z "$(xmldir)" || $(mkdir_p) "$(DESTDIR)$(xmldir)"
-	@list='$(dist_xml_DATA)'; for p in $$list; do \
+	test -z "$(shelfdir)" || $(mkdir_p) "$(DESTDIR)$(shelfdir)"
+	@list='$(dist_shelf_DATA)'; for p in $$list; do \
 	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
 	  f=$(am__strip_dir) \
-	  echo " $(dist_xmlDATA_INSTALL) '$$d$$p' '$(DESTDIR)$(xmldir)/$$f'"; \
-	  $(dist_xmlDATA_INSTALL) "$$d$$p" "$(DESTDIR)$(xmldir)/$$f"; \
+	  echo " $(dist_shelfDATA_INSTALL) '$$d$$p' '$(DESTDIR)$(shelfdir)/$$f'"; \
+	  $(dist_shelfDATA_INSTALL) "$$d$$p" "$(DESTDIR)$(shelfdir)/$$f"; \
 	done
 
-uninstall-dist_xmlDATA:
+uninstall-dist_shelfDATA:
 	@$(NORMAL_UNINSTALL)
-	@list='$(dist_xml_DATA)'; for p in $$list; do \
+	@list='$(dist_shelf_DATA)'; for p in $$list; do \
 	  f=$(am__strip_dir) \
-	  echo " rm -f '$(DESTDIR)$(xmldir)/$$f'"; \
-	  rm -f "$(DESTDIR)$(xmldir)/$$f"; \
+	  echo " rm -f '$(DESTDIR)$(shelfdir)/$$f'"; \
+	  rm -f "$(DESTDIR)$(shelfdir)/$$f"; \
 	done
-install-xmlDATA: $(xml_DATA)
+install-shelfDATA: $(shelf_DATA)
 	@$(NORMAL_INSTALL)
-	test -z "$(xmldir)" || $(mkdir_p) "$(DESTDIR)$(xmldir)"
-	@list='$(xml_DATA)'; for p in $$list; do \
+	test -z "$(shelfdir)" || $(mkdir_p) "$(DESTDIR)$(shelfdir)"
+	@list='$(shelf_DATA)'; for p in $$list; do \
 	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
 	  f=$(am__strip_dir) \
-	  echo " $(xmlDATA_INSTALL) '$$d$$p' '$(DESTDIR)$(xmldir)/$$f'"; \
-	  $(xmlDATA_INSTALL) "$$d$$p" "$(DESTDIR)$(xmldir)/$$f"; \
+	  echo " $(shelfDATA_INSTALL) '$$d$$p' '$(DESTDIR)$(shelfdir)/$$f'"; \
+	  $(shelfDATA_INSTALL) "$$d$$p" "$(DESTDIR)$(shelfdir)/$$f"; \
 	done
 
-uninstall-xmlDATA:
+uninstall-shelfDATA:
 	@$(NORMAL_UNINSTALL)
-	@list='$(xml_DATA)'; for p in $$list; do \
+	@list='$(shelf_DATA)'; for p in $$list; do \
 	  f=$(am__strip_dir) \
-	  echo " rm -f '$(DESTDIR)$(xmldir)/$$f'"; \
-	  rm -f "$(DESTDIR)$(xmldir)/$$f"; \
+	  echo " rm -f '$(DESTDIR)$(shelfdir)/$$f'"; \
+	  rm -f "$(DESTDIR)$(shelfdir)/$$f"; \
 	done
 tags: TAGS
 TAGS:
@@ -332,7 +381,7 @@ check-am: all-am
 check: check-am
 all-am: Makefile $(DATA)
 installdirs:
-	for dir in "$(DESTDIR)$(xmldir)" "$(DESTDIR)$(xmldir)"; do \
+	for dir in "$(DESTDIR)$(shelfdir)" "$(DESTDIR)$(shelfdir)"; do \
 	  test -z "$$dir" || $(mkdir_p) "$$dir"; \
 	done
 install: install-am
@@ -360,11 +409,9 @@ distclean-generic:
 maintainer-clean-generic:
 	@echo "This command is intended for maintainers to use"
 	@echo "it deletes files that may require special tools to rebuild."
-@ENABLE_DOCS_FALSE@clean-local:
-@HAVE_XMLTO_FALSE@clean-local:
 clean: clean-am
 
-clean-am: clean-generic clean-local mostlyclean-am
+clean-am: clean-generic mostlyclean-am
 
 distclean: distclean-am
 	-rm -f Makefile
@@ -380,7 +427,7 @@ info: info-am
 
 info-am:
 
-install-data-am: install-dist_xmlDATA install-xmlDATA
+install-data-am: install-dist_shelfDATA install-shelfDATA
 
 install-exec-am:
 
@@ -406,37 +453,33 @@ ps: ps-am
 
 ps-am:
 
-uninstall-am: uninstall-dist_xmlDATA uninstall-info-am \
-	uninstall-xmlDATA
+uninstall-am: uninstall-dist_shelfDATA uninstall-info-am \
+	uninstall-shelfDATA
 
-.PHONY: all all-am check check-am clean clean-generic clean-local \
-	distclean distclean-generic distdir dvi dvi-am html html-am \
-	info info-am install install-am install-data install-data-am \
-	install-dist_xmlDATA install-exec install-exec-am install-info \
-	install-info-am install-man install-strip install-xmlDATA \
-	installcheck installcheck-am installdirs maintainer-clean \
-	maintainer-clean-generic mostlyclean mostlyclean-generic pdf \
-	pdf-am ps ps-am uninstall uninstall-am uninstall-dist_xmlDATA \
-	uninstall-info-am uninstall-xmlDATA
+.PHONY: all all-am check check-am clean clean-generic distclean \
+	distclean-generic distdir dvi dvi-am html html-am info info-am \
+	install install-am install-data install-data-am \
+	install-dist_shelfDATA install-exec install-exec-am \
+	install-info install-info-am install-man install-shelfDATA \
+	install-strip installcheck installcheck-am installdirs \
+	maintainer-clean maintainer-clean-generic mostlyclean \
+	mostlyclean-generic pdf pdf-am ps ps-am uninstall uninstall-am \
+	uninstall-dist_shelfDATA uninstall-info-am uninstall-shelfDATA
 
+@ENABLE_DOCS_TRUE@@HAVE_STYLESHEETS_TRUE@@HAVE_XMLTO_TRUE@%.html: %.xml $(chapters)
+@ENABLE_DOCS_TRUE@@HAVE_STYLESHEETS_TRUE@@HAVE_XMLTO_TRUE@	$(AM_V_GEN)$(XMLTO) $(XMLTO_HTML_FLAGS) xhtml-nochunks $<
+@ENABLE_DOCS_TRUE@@HAVE_STYLESHEETS_TRUE@@HAVE_XMLTO_TEXT_TRUE@@HAVE_XMLTO_TRUE@%.txt: %.xml $(chapters)
+@ENABLE_DOCS_TRUE@@HAVE_STYLESHEETS_TRUE@@HAVE_XMLTO_TEXT_TRUE@@HAVE_XMLTO_TRUE@	$(AM_V_GEN)$(XMLTO) $(XMLTO_HTML_FLAGS) txt $<
+@ENABLE_DOCS_TRUE@@HAVE_FOP_TRUE@@HAVE_STYLESHEETS_TRUE@@HAVE_XMLTO_TRUE@%.pdf: %.xml $(chapters)
+@ENABLE_DOCS_TRUE@@HAVE_FOP_TRUE@@HAVE_STYLESHEETS_TRUE@@HAVE_XMLTO_TRUE@	$(AM_V_GEN)$(XMLTO) $(XMLTO_FO_FLAGS) --with-fop pdf $<
+@ENABLE_DOCS_TRUE@@HAVE_FOP_TRUE@@HAVE_STYLESHEETS_TRUE@@HAVE_XMLTO_TRUE@%.ps: %.xml $(chapters)
+@ENABLE_DOCS_TRUE@@HAVE_FOP_TRUE@@HAVE_STYLESHEETS_TRUE@@HAVE_XMLTO_TRUE@	$(AM_V_GEN)$(XMLTO) $(XMLTO_FO_FLAGS) --with-fop ps $<
+@ENABLE_DOCS_TRUE@@HAVE_STYLESHEETS_TRUE@@HAVE_XMLTO_TRUE@@HAVE_XSLTPROC_TRUE@%.html.db: %.xml  $(chapters)
+@ENABLE_DOCS_TRUE@@HAVE_STYLESHEETS_TRUE@@HAVE_XMLTO_TRUE@@HAVE_XSLTPROC_TRUE@	$(AM_V_GEN)$(XSLTPROC) $(XSLT_HTML_FLAGS) $<
+@ENABLE_DOCS_TRUE@@HAVE_STYLESHEETS_TRUE@@HAVE_XMLTO_TRUE@@HAVE_XSLTPROC_TRUE@%.pdf.db: %.xml $(chapters)
+@ENABLE_DOCS_TRUE@@HAVE_STYLESHEETS_TRUE@@HAVE_XMLTO_TRUE@@HAVE_XSLTPROC_TRUE@	$(AM_V_GEN)$(XSLTPROC) $(XSLT_PDF_FLAGS) $<
 
-@ENABLE_DOCS_TRUE@@HAVE_XMLTO_TRUE@%.txt: %.xml $(dist_xml_DATA)
-@ENABLE_DOCS_TRUE@@HAVE_XMLTO_TRUE@	$(AM_V_GEN)$(XMLTO) $(XMLTO_FLAGS) txt $<
-
-@ENABLE_DOCS_TRUE@@HAVE_XMLTO_TRUE@%.html: %.xml $(dist_xml_DATA)
-@ENABLE_DOCS_TRUE@@HAVE_XMLTO_TRUE@	$(AM_V_GEN)$(XMLTO) $(XMLTO_FLAGS) xhtml-nochunks $<
-
-@ENABLE_DOCS_TRUE@@HAVE_XMLTO_TRUE@%.pdf: %.xml $(dist_xml_DATA)
-@ENABLE_DOCS_TRUE@@HAVE_XMLTO_TRUE@	$(AM_V_GEN)$(XMLTO) $(XMLTO_FLAGS) --with-fop pdf $<
-
-@ENABLE_DOCS_TRUE@@HAVE_XMLTO_TRUE@%.ps: %.xml $(dist_xml_DATA)
-@ENABLE_DOCS_TRUE@@HAVE_XMLTO_TRUE@	$(AM_V_GEN)$(XMLTO) $(XMLTO_FLAGS) --with-fop ps $<
-
-@ENABLE_DOCS_TRUE@@HAVE_XMLTO_TRUE@chunked-html: $(doc_sources)
-@ENABLE_DOCS_TRUE@@HAVE_XMLTO_TRUE@	$(AM_V_GEN)$(XMLTO) $(XMLTO_FLAGS) -o html xhtml $(doc_sources)
-
-@ENABLE_DOCS_TRUE@@HAVE_XMLTO_TRUE@clean-local:
-@ENABLE_DOCS_TRUE@@HAVE_XMLTO_TRUE@	$(AM_V_GEN)rm -fr html/
+# Generate DocBook/XML output formats with or without stylesheets
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:

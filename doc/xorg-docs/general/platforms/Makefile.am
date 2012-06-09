@@ -1,12 +1,13 @@
+
 if ENABLE_DOCS
 
-doc_sources = \
-	Darwin.xml \
-	Solaris.xml
+# Main DocBook/XML files (DOCTYPE book)
+docbook = Darwin.xml Solaris.xml
 
-xmldir = $(docdir)/platforms
-dist_xml_DATA = $(doc_sources)
+# The location where the DocBook/XML files and their generated formats are installed
+shelfdir = $(docdir)/platforms
 
-include $(top_srcdir)/xmlrules.in
+# Generate DocBook/XML output formats with or without stylesheets
+include $(top_srcdir)/docbook.am
 
 endif ENABLE_DOCS

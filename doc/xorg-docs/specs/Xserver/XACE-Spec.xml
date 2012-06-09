@@ -1,17 +1,20 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 <!DOCTYPE article PUBLIC "-//OASIS//DTD DocBook XML V4.3//EN"
                       "http://www.oasis-open.org/docbook/xml/4.3/docbookx.dtd"
-[]>
+[
+<!ENTITY % defs SYSTEM "defs.ent"> %defs;
+]>
 
 <article>
   <articleinfo>
     <author><firstname>Eamon</firstname><othername>F.</othername><surname>Walsh</surname></author>
     <authorinitials>efw</authorinitials>
     <publisher><publishername>National Security Agency</publishername></publisher>
-    <pubdate>2009</pubdate>
     <title>X Access Control Extension Specification</title>
     <titleabbrev>XACE-Spec</titleabbrev>
-    <revhistory>
+    <releaseinfo>X Version 11, Release &fullrelvers;</releaseinfo>
+    <pubdate>2009</pubdate>
+   <revhistory>
       <revision>
 	<revnumber>1.0</revnumber>
 	<date>19 Oct 2006</date>
@@ -38,7 +41,30 @@
       </revision>
     </revhistory>
     <legalnotice>
-      <para>THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OF OR OTHER DEALINGS IN THE SOFTWARE.</para>
+    <para>
+    Permission is hereby granted, free of charge, to any person obtaining a
+    copy of this software and associated documentation files (the "Software"),
+    to deal in the Software without restriction, including without limitation
+    the rights to use, copy, modify, merge, publish, distribute, sublicense,
+    and/or sell copies of the Software, and to permit persons to whom the
+    Software is furnished to do so, subject to the following conditions:
+    </para>
+
+    <para>
+    The above copyright notice and this permission notice (including the next
+    paragraph) shall be included in all copies or substantial portions of the
+    Software.
+    </para>
+
+    <para>
+    THE SOFTWARE IS PROVIDED &ldquo;AS IS&rdquo;, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+    IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+    FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+    AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+    LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+    FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+    DEALINGS IN THE SOFTWARE.
+    </para>
     </legalnotice>
     <abstract>
     <para>The X Access Control Extension (XACE) is a set of generic "hooks" that can be used by other X extensions to perform access checks. The goal of XACE is to prevent clutter in the core dix/os code by providing a common mechanism for doing these sorts of checks. The concept is identical to the Linux Security Module (LSM) in the Linux Kernel.</para>
@@ -156,10 +182,10 @@
 	    </funcprototype>
 	  </funcsynopsis>
 	</blockquote>
-	When the callback is called, <parameter>pcbl</parameter> points to the callback list itself.  The X callback mechanism allows the list to be manipulated in various ways, but XACE callbacks should not do this.  Remember that other security extensions may be registered on the same hook.  <parameter>userdata</parameter> is set to the data argument that was passed to <function>XaceRegisterCallback</function> at registration time; this can be used by your extension to pass data into the callback.  <parameter>calldata</parameter> points to a value or structure which is specific to each XACE hook.  These are discussed in the documentation for each specific hook, below.  Your extension must cast this argument to the appropriate pointer type.</para>
-	<para>To register a callback on a given hook, use <function>XaceRegisterCallback</function>:
+	When the callback is called, <parameter>pcbl</parameter> points to the callback list itself.  The X callback mechanism allows the list to be manipulated in various ways, but XACE callbacks should not do this.  Remember that other security extensions may be registered on the same hook.  <parameter>userdata</parameter> is set to the data argument that was passed to <xref linkend='XaceRegisterCallback' xrefstyle='select: title'/> at registration time; this can be used by your extension to pass data into the callback.  <parameter>calldata</parameter> points to a value or structure which is specific to each XACE hook.  These are discussed in the documentation for each specific hook, below.  Your extension must cast this argument to the appropriate pointer type.</para>
+	<para>To register a callback on a given hook, use <xref linkend='XaceRegisterCallback' xrefstyle='select: title'/>:
 	<blockquote>
-	  <funcsynopsis>
+	  <funcsynopsis id='XaceRegisterCallback'>
 	    <funcprototype><funcdef>Bool <function>XaceRegisterCallback</function></funcdef>
 	    <paramdef>
 	      <parameter>int hook</parameter>
@@ -169,10 +195,10 @@
 	    </funcprototype>
 	  </funcsynopsis>
 	</blockquote>
-	Where <parameter>hook</parameter> is the XACE hook you wish to register on, <parameter>callback</parameter> is the callback function you wish to register, and <parameter>userdata</parameter> will be passed through to the callback as its second argument, as described above.  See <xref linkend="hooks_tab"/> for the list of XACE hook codes.  <function>XaceRegisterCallback</function> is typically called from the extension initialization code; see the SECURITY source for examples.  The return value is <literal>TRUE</literal> for success, <literal>FALSE</literal> otherwise.</para>
-	<para>To unregister a callback, use <function>XaceDeleteCallback</function>:
+	Where <parameter>hook</parameter> is the XACE hook you wish to register on, <parameter>callback</parameter> is the callback function you wish to register, and <parameter>userdata</parameter> will be passed through to the callback as its second argument, as described above.  See <xref linkend="hooks_tab"/> for the list of XACE hook codes.  <xref linkend='XaceRegisterCallback' xrefstyle='select: title'/> is typically called from the extension initialization code; see the SECURITY source for examples.  The return value is <literal>TRUE</literal> for success, <literal>FALSE</literal> otherwise.</para>
+	<para>To unregister a callback, use <xref linkend='XaceDeleteCallback' xrefstyle='select: title'/>:
 	<blockquote>
-	  <funcsynopsis>
+	  <funcsynopsis id='XaceDeleteCallback'>
 	    <funcprototype><funcdef>Bool <function>XaceDeleteCallback</function></funcdef>
 	    <paramdef>
 	      <parameter>int hook</parameter>
@@ -182,7 +208,7 @@
 	    </funcprototype>
 	  </funcsynopsis>
 	</blockquote>
-	where the three arguments are identical to those used in the call to <function>XaceRegisterCallback</function>.  The return value is <literal>TRUE</literal> for success, <literal>FALSE</literal> otherwise.</para>
+	where the three arguments are identical to those used in the call to <xref linkend='XaceRegisterCallback' xrefstyle='select: title'/>.  The return value is <literal>TRUE</literal> for success, <literal>FALSE</literal> otherwise.</para>
       </section>
 
       <section>

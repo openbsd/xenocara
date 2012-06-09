@@ -1,12 +1,17 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<!DOCTYPE article
-          PUBLIC "-//OASIS//DTD DocBook XML V4.3//EN"
-          "http://www.oasis-open.org/docbook/xml/4.3/docbookx.dtd">
+<!DOCTYPE article PUBLIC "-//OASIS//DTD DocBook XML V4.3//EN"
+                      "http://www.oasis-open.org/docbook/xml/4.3/docbookx.dtd"
+[
+<!ENTITY % defs SYSTEM "defs.ent"> %defs;
+]>
 
 <article id='lbxalg'>
-<title>LBX X Consortium Algorithms</title>
+  <articleinfo>
+    <title>LBX X Consortium Algorithms</title>
+    <releaseinfo>X Version 11, Release &fullrelvers;</releaseinfo>
+</articleinfo>
 
-<sect1 id='introduction'>
+<sect1 id='Introduction'>
 <title>Introduction</title>
 <para>
 The Low Bandwidth X extension allows for negotiating various algorithms used
@@ -15,7 +20,7 @@ implementation of LBX in the X11 Release 6.4.
 </para>
 
 </sect1>
-<sect1 id='streaming_compression'>
+<sect1 id='Streaming_Compression'>
 <title>Streaming Compression</title>
 
 <para>
@@ -42,7 +47,7 @@ If the compflag is false, then the contents of the block are not compressed.
 
 </sect1>
 
-<sect1 id='bitmap_compression'>
+<sect1 id='Bitmap_Compression'>
 <title>Bitmap Compression</title>
 <para>
 LBX also negotiates for bitmap compression. The consortium
@@ -52,7 +57,7 @@ which uses the CCITT Group 4 2D compression algorithm.
 
 </sect1>
 
-<sect1 id='pixmap_compression'>
+<sect1 id='Pixmap_Compression'>
 <title>Pixmap Compression</title>
 
 <para>
@@ -65,7 +70,7 @@ stream compressor to compress the image.
 
 </sect1>
 
-<sect1 id='colormap_algorithm'>
+<sect1 id='Colormap_Algorithm'>
 <title>Colormap Algorithm</title>
 <para>
 LBX negotiates for use of a colormap algorithm, used for color

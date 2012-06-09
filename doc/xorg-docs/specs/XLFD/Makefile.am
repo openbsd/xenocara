@@ -1,9 +1,13 @@
+
 if ENABLE_SPECS
 
-xmldir = $(docdir)/$(subdir)
-doc_sources = xlfd.xml
-dist_xml_DATA = $(doc_sources)
+# Main DocBook/XML files (DOCTYPE book)
+docbook = xlfd.xml
 
-include $(top_srcdir)/xmlrules.in
+# The location where the DocBook/XML files and their generated formats are installed
+shelfdir = $(docdir)/xlfd
+
+# Generate DocBook/XML output formats with or without stylesheets
+include $(top_srcdir)/docbook.am
 
 endif ENABLE_SPECS

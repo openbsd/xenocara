@@ -2,38 +2,39 @@
 <!DOCTYPE article PUBLIC "-//OASIS//DTD DocBook XML V4.3//EN"
                       "http://www.oasis-open.org/docbook/xml/4.3/docbookx.dtd"
 [
-<!ENTITY % defs SYSTEM "/xorg-sgml-doctools/X11/defs.ent"> %defs;
+<!ENTITY % defs SYSTEM "defs.ent"> %defs;
 ]>
 
-<article>
+<article id='fonts'>
 
 <articleinfo>
 
 <title>Fonts in X11R&relvers;</title>
+<releaseinfo>X Version 11, Release &fullrelvers;</releaseinfo>
 <author><firstname>Juliusz</firstname><surname>Chroboczek</surname>
 <email>jch@freedesktop.org</email>
 </author>
-<pubdate>23 October 2009</pubdate>
+<pubdate>16 March 2012</pubdate>
 
 </articleinfo>
 
-<sect1>
+<sect1 id='Introduction'>
 <title>Introduction</title>
 
 <para>
 This document describes the support for fonts in X11R&relvers;.
-<xref linkend="sec-installing"/> is aimed at the
+<xref linkend='Installing_fonts' xrefstyle='select: title'/> is aimed at the
 casual user wishing to install fonts in X11R&relvers; the rest of the
 document describes the font support in more detail.
 </para>
 
 <para>
 We assume some familiarity with digital fonts.  If anything is not
-clear to you, please consult <xref linkend="sec-background" /> at the
+clear to you, please consult <xref linkend='Appendix_background_and_terminology' xrefstyle='select: title'/> at the
 end of this document for background information.
 </para>
 
-<sect2>
+<sect2 id='Two_font_systems'>
 <title>Two font systems</title>
 
 <para>
@@ -72,7 +73,7 @@ possible.
 
 </sect1>
 
-<sect1 id="sec-installing" xreflabel="Installing fonts">
+<sect1 id='Installing_fonts'>
 <title>Installing fonts</title>
 
 <para>
@@ -80,7 +81,7 @@ This section explains how to configure both Xft and the core fonts
 system to access newly-installed fonts.
 </para>
 
-<sect2 id="sec-configuring-xft">
+<sect2 id='Configuring_Xft'>
 <title>Configuring Xft</title>
 
 <para>
@@ -91,14 +92,14 @@ not specific to the X Window system, and does not rely on any
 particular font output mechanism.
 </para>
 
-<sect3>
+<sect3 id='Installing_fonts_in_Xft'>
 <title>Installing fonts in Xft</title>
 
 <para>
 Fontconfig looks for fonts in a set of well-known directories that
 include all of X11R&relvers;'s standard font directories
-(`<filename>/usr/share/fonts/X11/*</filename>') by default) as well as a
-directory called `<filename>.fonts/</filename>' in the user's home directory.
+(<quote><filename>/usr/share/fonts/X11/*</filename></quote>) by default) as well as a
+directory called <quote><filename>.fonts/</filename></quote> in the user's home directory.
 Installing a font for use by Xft applications is as simple
 as copying a font file into one of these directories.
 
@@ -108,7 +109,7 @@ $ cp lucbr.ttf ~/.fonts/
 
 Fontconfig will notice the new font at the next opportunity and rebuild its
 list of fonts.  If you want to trigger this update from the command
-line, you may run the command `<command>fc-cache</command>'.
+line, you may run the command <quote><command>fc-cache</command></quote>.
 
 <screen>
 $ fc-cache
@@ -128,16 +129,16 @@ $ su -c fc-cache
 
 </sect3>
 
-<sect3>
+<sect3 id='Fine-tuning_Xft'>
 <title>Fine-tuning Xft</title>
 
 <para>
 Fontconfig's behaviour is controlled by a set of configuration
-files: a standard configuration file, `<filename>/etc/fonts/fonts.conf</filename>',
-a host-specific configuration file, `<filename>/etc/fonts/local.conf</filename>',
-and a user-specific file called `<filename>.fonts.conf</filename>' in the user's
+files: a standard configuration file, <quote><filename>/etc/fonts/fonts.conf</filename></quote>,
+a host-specific configuration file, <quote><filename>/etc/fonts/local.conf</filename></quote>,
+and a user-specific file called <quote><filename>.fonts.conf</filename></quote> in the user's
 home directory (this can be overridden with the
-`<envar>FONTCONFIG&lowbar;FILE</envar>' environment variable).
+<quote><envar>FONTCONFIG&lowbar;FILE</envar></quote> environment variable).
 </para>
 
 <para>
@@ -161,7 +162,7 @@ following line:
 
 <para>
 The default Fontconfig configuration file includes the directory
-`<filename>&tilde;/.fonts/</filename>' in the list of directories searched for font
+<quote><filename>&tilde;/.fonts/</filename></quote> in the list of directories searched for font
 files, and this is where user-specific font files should be installed.
 In the unlikely case that a new font directory needs to be added, this
 can be done with the following syntax:
@@ -222,18 +223,18 @@ syntax:
 &lt;/match&gt;
 </screen>
 
-The string `<literal remap="tt">rgb</literal>' within the
-`<literal remap="tt">&lt;const&gt;</literal>'...`<literal remap="tt">&lt;/const&gt;</literal>'
+The string <quote><literal remap="tt">rgb</literal></quote> within the
+<quote><literal remap="tt">&lt;const&gt;</literal></quote>...<quote><literal remap="tt">&lt;/const&gt;</literal></quote>
 specifies the order of pixel components on your display, and should be
-changed to match your hardware; it can be one of `<literal remap="tt">rgb</literal> (normal
-LCD screen), `<literal remap="tt">bgr</literal>' (backwards LCD screen), `<literal remap="tt">vrgb</literal>' (LCD
-screen rotated clockwise) or `<literal remap="tt">vbgr</literal>' (LCD screen rotated
+changed to match your hardware; it can be one of <quote><literal remap="tt">rgb</literal></quote> (normal
+LCD screen), <quote><literal remap="tt">bgr</literal></quote> (backwards LCD screen), <quote><literal remap="tt">vrgb</literal></quote> (LCD
+screen rotated clockwise) or <quote><literal remap="tt">vbgr</literal></quote> (LCD screen rotated
 counterclockwise).
 </para>
 
 </sect3>
 
-<sect3>
+<sect3 id='Configuring_applications'>
 <title>Configuring applications</title>
 
 <para>
@@ -244,7 +245,7 @@ configured to use Xft.
 
 <para>
 A case in point is XTerm, which can be set to use Xft by using the
-`<literal remap="tt">-fa</literal>' command line option or by setting the `<literal remap="tt">XTerm*faceName</literal>'
+<quote><literal remap="tt">-fa</literal></quote> command line option or by setting the <quote><literal remap="tt">XTerm*faceName</literal></quote>
 resource:
 
 <screen>
@@ -260,8 +261,8 @@ $ xterm -fa "Courier"
 </para>
 
 <para>
-For KDE applications, you should select ``Anti-alias fonts'' in the
-``Fonts'' panel of KDE's ``Control Center''.  Note that this option is
+For KDE applications, you should select <quote>Anti-alias fonts</quote> in the
+<quote>Fonts</quote> panel of KDE's <quote>Control Center</quote>.  Note that this option is
 misnamed: it switches KDE to using Xft but doesn't enable
 anti-aliasing in case it was disabled by your Xft configuration file.
 </para>
@@ -274,7 +275,7 @@ Gnome applications and Mozilla Firefox will use Xft by default.
 
 </sect2>
 
-<sect2>
+<sect2 id='Configuring_the_core_X11_fonts_system'>
 <title>Configuring the core X11 fonts system</title>
 
 <para>
@@ -285,7 +286,7 @@ inform the X server of the existence of this new directory by
 including it in the <emphasis remap="it">font path</emphasis>.
 </para>
 
-<sect3>
+<sect3 id='Installing_bitmap_fonts'>
 <title>Installing bitmap fonts</title>
 
 <para>
@@ -298,13 +299,13 @@ BDF format and the somewhat more efficient binary PCF format.
 Bitmap fonts are normally distributed in the BDF format.  Before
 installing such fonts, it is desirable (but not absolutely necessary)
 to convert the font files to the PCF format.  This is done by using the
-command `<command>bdftopcf</command>', <emphasis remap="it">e.g.</emphasis>
+command <quote><command>bdftopcf</command></quote>, <emphasis remap="it">e.g.</emphasis>
 
 <screen>
 $ bdftopcf courier12.bdf
 </screen>
 
-You will then want to compress the resulting PCF font files:
+You may then want to compress the resulting PCF font files:
 
 <screen>
 $ gzip courier12.pcf
@@ -315,8 +316,8 @@ $ gzip courier12.pcf
 <para>
 After the fonts have been converted, you should copy all the font
 files that you wish to make available into a arbitrary directory, say
-`<filename>/usr/local/share/fonts/bitmap/</filename>'.  You should then create the
-index file `<filename>fonts.dir</filename>' by running the command `<command>mkfontdir</command>'
+<quote><filename>/usr/local/share/fonts/bitmap/</filename></quote>.  You should then create the
+index file <quote><filename>fonts.dir</filename></quote> by running the command <quote><command>mkfontdir</command></quote>
 (please see the <ulink
 url="mkfontdir.1.html"
 >mkfontdir(1)</ulink
@@ -333,12 +334,12 @@ $ mkfontdir /usr/local/share/fonts/bitmap/
 
 <para>
 All that remains is to tell the X server about the existence of the
-new font directory; see <xref linkend="sec-set-font-path"/> below.
+new font directory; see <xref linkend='Setting_the_servers_font_path' xrefstyle='select: title'/> below.
 </para>
 
 </sect3>
 
-<sect3>
+<sect3 id='Installing_scalable_fonts'>
 <title>Installing scalable fonts</title>
 
 <para>
@@ -350,16 +351,16 @@ CID scalable font formats, but that is not included in current releases.)
 
 <para>
 Installing scalable fonts is very similar to installing bitmap fonts:
-you create a directory with the font files, and run `<command>mkfontdir</command>'
-to create an index file called `<filename>fonts.dir</filename>'.
+you create a directory with the font files, and run <quote><command>mkfontdir</command></quote>
+to create an index file called <quote><filename>fonts.dir</filename></quote>.
 </para>
 
 <para>
-There is, however, a big difference: `<command>mkfontdir</command>' cannot
+There is, however, a big difference: <quote><command>mkfontdir</command></quote> cannot
 automatically recognise scalable font files.  For that reason, you
 must first index all the font files in a file called
-`<filename>fonts.scale</filename>'.  While this can be done by hand, it is best done
-by using the `<command>mkfontscale</command>' utility.
+<quote><filename>fonts.scale</filename></quote>.  While this can be done by hand, it is best done
+by using the <quote><command>mkfontscale</command></quote> utility.
 
 <screen>
 $ mkfontscale /usr/local/share/fonts/Type1/
@@ -367,21 +368,21 @@ $ mkfontdir /usr/local/share/fonts/Type1/
 </screen>
 
 Under some circumstances, it may be necessary to modify the
-`<filename>fonts.scale</filename>' file generated by <command>mkfontscale</command>; for more
+<quote><filename>fonts.scale</filename></quote> file generated by <command>mkfontscale</command>; for more
 information, please see the <ulink
 url="mkfontdir.1.html"
 >mkfontdir(1)</ulink
 > and <ulink
 url="mkfontscale.1.html"
 >mkfontscale(1)</ulink
-> manual pages and <xref linkend="sec-internationalisation"/>
+> manual pages and <xref linkend='Core_fonts_and_internationalisation' xrefstyle='select: title'/>
 later in this document.
 </para>
 
 </sect3>
 
-<sect3 id="sec-cid-fonts" xreflabel="Installing CIDFonts">
-<title>CID-keyed fonts </title>
+<sect3 id='CID_keyed_fonts'>
+<title>CID-keyed fonts</title>
 
 <para>
 The CID-keyed font format was designed by Adobe Systems for fonts
@@ -392,8 +393,8 @@ support for CID-keyed fonts has been removed from X11.
 
 </sect3>
 
-<sect3 id="sec-set-font-path" xreflabel="Setting the server font path">
-<title>Setting the server's font path </title>
+<sect3 id='Setting_the_servers_font_path'>
+<title>Setting the server's font path</title>
 
 <para>
 The list of directories where the server looks for fonts is known
@@ -413,7 +414,7 @@ the second, it searches for fonts suitable for scaling.
 For best results, scalable fonts should appear in the font path before
 the bitmap fonts; this way, the server will prefer bitmap fonts to
 scalable fonts when an exact match is possible, but will avoid scaling
-bitmap fonts when a scalable font can be used.  (The `<literal remap="tt">:unscaled</literal>'
+bitmap fonts when a scalable font can be used.  (The <quote><literal remap="tt">:unscaled</literal></quote>
 hack, while still supported, should no longer be necessary in X11R&relvers;.)
 </para>
 
@@ -426,7 +427,7 @@ $ xset q
 
 </para>
 
-<sect4>
+<sect4 id='Font_path_catalogue_directories'>
 <title>Font path catalogue directories</title>
 
 <para>
@@ -471,11 +472,11 @@ setting the following font path:
 </para>
 </sect4>
 
-<sect4>
+<sect4 id='Temporary_modification_of_the_font_path'>
 <title>Temporary modification of the font path</title>
 
 <para>
-The `<command>xset</command>' utility may be used to modify the font path for the
+The <quote><command>xset</command></quote> utility may be used to modify the font path for the
 current session.  The font path is set with the command <command>xset fp</command>;
 a new element is added to the front with <command>xset +fp</command>, and added to
 the end with <command>xset fp+</command>.  For example,
@@ -489,9 +490,9 @@ $ xset fp+ /usr/local/fonts/bitmap
 
 <para>
 Conversely, an element may be removed from the front of the font path
-with `<command>xset -fp</command>', and removed from the end with `<command>xset fp-</command>'.
+with <quote><command>xset -fp</command></quote>, and removed from the end with <quote><command>xset fp-</command></quote>.
 You may reset the font path to its default value with
-`<command>xset fp default</command>'.
+<quote><command>xset fp default</command></quote>.
 </para>
 
 <para>
@@ -503,16 +504,16 @@ url="xset.1.html"
 
 </sect4>
 
-<sect4>
+<sect4 id='Permanent_modification_of_the_font_path'>
 <title>Permanent modification of the font path</title>
 
 <para>
 The default font path (the one used just after server startup or
-after `<command>xset fp default</command>') may be specified in the
+after <quote><command>xset fp default</command></quote>) may be specified in the
 X server's
-`<filename>xorg.conf</filename>' file.  It is computed by appending all the
-directories mentioned in the `<literal remap="tt">FontPath</literal>' entries of the
-`<literal remap="tt">Files</literal>' section in the order in which they appear.   If no font path is specified in a config file, the server uses a default
+<quote><filename>xorg.conf</filename></quote> file.  It is computed by appending all the
+directories mentioned in the <quote><literal remap="tt">FontPath</literal></quote> entries of the
+<quote><literal remap="tt">Files</literal></quote> section in the order in which they appear.   If no font path is specified in a config file, the server uses a default
 value specified when it was built.
 
 <screen>
@@ -534,12 +535,12 @@ url="xorg.conf.5.html"
 
 </sect3>
 
-<sect3 id="sec-troubleshooting-core">
-<title>Troubleshooting </title>
+<sect3 id='Troubleshooting'>
+<title>Troubleshooting</title>
 
 <para>
 If you seem to be unable to use some of the fonts you have
-installed, the first thing to check is that the `<filename>fonts.dir</filename>' files
+installed, the first thing to check is that the <quote><filename>fonts.dir</filename></quote> files
 are correct and that they are readable by the server (the X server
 usually runs as root, beware of NFS-mounted font directories).  If
 this doesn't help, it is quite possible that you are trying to use a
@@ -563,21 +564,21 @@ these modules:
 
 	      <para>
 		<literal remap="tt">"bitmap"</literal>:
-		bitmap fonts (`<filename>*.bdf</filename>',
-		`<filename>*.pcf</filename>'
-		and `<filename>*.snf</filename>');
+		bitmap fonts (<quote><filename>*.bdf</filename></quote>,
+		<quote><filename>*.pcf</filename></quote>
+		and <quote><filename>*.snf</filename></quote>);
 	      </para>
 	    </listitem>
 	    <listitem>
 
 	      <para>
 		<literal remap="tt">"freetype"</literal>:
-		TrueType fonts (`<filename>*.ttf</filename>' and
-		`<filename>*.ttc</filename>'),
-		OpenType fonts (`<filename>*.otf</filename>' and
-		`<filename>*.otc</filename>') and
-		Type&nbsp;1 fonts (`<filename>*.pfa</filename>'
-		and `<filename>*.pfb</filename>').
+		TrueType fonts (<quote><filename>*.ttf</filename></quote> and
+		<quote><filename>*.ttc</filename></quote>),
+		OpenType fonts (<quote><filename>*.otf</filename></quote> and
+		<quote><filename>*.otc</filename></quote>) and
+		Type&nbsp;1 fonts (<quote><filename>*.pfa</filename></quote>
+		and <quote><filename>*.pfb</filename></quote>).
 	      </para>
 	    </listitem>
 
@@ -591,15 +592,15 @@ these modules:
 
 </sect1>
 
-<sect1>
+<sect1 id='Fonts_included_with_X11'>
 <title>Fonts included with X11R&relvers;</title>
 
-<sect2>
+<sect2 id='Standard_bitmap_fonts'>
 <title>Standard bitmap fonts</title>
 
 <para>
 The Sample Implementation of X11 (SI) comes with a large number of
-bitmap fonts, including the `<literal remap="tt">fixed</literal>' family, and bitmap versions
+bitmap fonts, including the <quote><literal remap="tt">fixed</literal></quote> family, and bitmap versions
 of Courier, Times, Helvetica and some members of the Lucida family.
 </para>
 
@@ -624,7 +625,7 @@ with XLFD
 -misc-fixed-medium-r-semicondensed--13-120-75-75-c-60-iso10646-1
 </screen>
 
-is a Unicode-encoded version of the standard `<literal remap="tt">fixed</literal>' font with
+is a Unicode-encoded version of the standard <quote><literal remap="tt">fixed</literal></quote> font with
 added support for the Latin, Greek, Cyrillic, Georgian, Armenian, IPA
 and other scripts plus numerous technical symbols.  It contains over
 2800 glyphs, covering all characters of ISO&nbsp;8859 parts 1-5,
@@ -652,7 +653,7 @@ with respective XLFDs
 -misc-fixed-medium-r-normal--13-120-75-75-c-60-koi8-r
 </screen>
 
-The standard short name `<literal remap="tt">fixed</literal>' is normally an alias for
+The standard short name <quote><literal remap="tt">fixed</literal></quote> is normally an alias for
 
 <screen>
 -misc-fixed-medium-r-normal--13-120-75-75-c-60-iso8859-1
@@ -662,7 +663,7 @@ The standard short name `<literal remap="tt">fixed</literal>' is normally an ali
 
 </sect2>
 
-<sect2>
+<sect2 id='The_ClearlyU_Unicode_font_family'>
 <title>The ClearlyU Unicode font family</title>
 
 <para>
@@ -721,14 +722,14 @@ may be useful for improved presentation of text.
 
 </sect2>
 
-<sect2>
+<sect2 id='Standard_scalable_fonts'>
 <title>Standard scalable fonts</title>
 
 <para>
 X11R&relvers; includes all the scalable fonts distributed with X11R6.
 </para>
 
-<sect3>
+<sect3 id='Standard_Type1_fonts'>
 <title>Standard Type&nbsp;1 fonts</title>
 
 <para>
@@ -785,7 +786,7 @@ and reside in the font files
 
 </sect2>
 
-<sect2>
+<sect2 id='The_Bigelow_and__Holmes_Luxi_family'>
 <title>The Bigelow &amp; Holmes Luxi family</title>
 
 <para>
@@ -839,8 +840,10 @@ of core fonts bundled with popular operating and window systems.
 
 <para>
 The license terms for the Luxi fonts are included in the file
-`<filename>COPYRIGHT.BH</filename>', as well as in the <ulink
-url="../LICENSE.html">License document</ulink>.
+<quote><filename>COPYRIGHT.BH</filename></quote>, as well as in the <olink
+targetdoc='License'
+targetptr='Bigelow_Holmes_Inc_and_URW_GmbH_Luxi_font_license'>License
+document</olink>.
 </para>
 
 <para>
@@ -872,22 +875,21 @@ name have been removed from X11R&relvers;.
 
 </sect1>
 
-<sect1 id="sec-more-core">
-<title>More about core fonts </title>
+<sect1 id='More_about_core_fonts'>
+<title>More about core fonts</title>
 
 <para>
-This section describes X11R&relvers;-specific enhancements to the core
-X11 fonts system.
+This section describes XFree86-created enhancements to the core
+X11 fonts system that were adopted by X.Org.
 </para>
 
-<sect2 id="sec-internationalisation" xreflabel="Core fonts and
-internationalisation">
-<title>Core fonts and internationalisation </title>
+<sect2 id='Core_fonts_and_internationalisation'>
+<title>Core fonts and internationalisation</title>
 
 <para>
 The scalable font backends (Type&nbsp;1 and TrueType) can
 automatically re-encode fonts to the encoding specified in the
-XLFD in `<filename>fonts.dir</filename>'.  For example, a `<filename>fonts.dir</filename>' file can
+XLFD in <quote><filename>fonts.dir</filename></quote>.  For example, a <quote><filename>fonts.dir</filename></quote> file can
 contain entries for the Type&nbsp;1 Courier font such as
 
 <screen>
@@ -899,8 +901,8 @@ which will lead to the font being recoded to ISO&nbsp;8859-1 and
 ISO&nbsp;8859-2 respectively.
 </para>
 
-<sect3 id="sec-fontenc">
-<title>The <emphasis remap="it">fontenc</emphasis> layer </title>
+<sect3 id='The_fontenc_layer'>
+<title>The <emphasis remap="it">fontenc</emphasis> layer</title>
 
 <para>
 Two of the scalable backends (Type&nbsp;1 and the
@@ -913,7 +915,7 @@ font type.
 <para>
 <emphasis remap="it">Please note:</emphasis> the X-TrueType (X-TT) backend is not included
 in X11R&relvers;.  That functionality has been merged into the FreeType
-backend.&#62;
+backend.
 </para>
 
 <para>
@@ -922,7 +924,7 @@ In the <emphasis remap="it">fontenc</emphasis> layer, an encoding is defined by 
 an ordered collection of mappings.  A mapping defines the way the
 encoding can be mapped into one of the <emphasis remap="it">target encodings</emphasis> known to
 <emphasis remap="it">fontenc</emphasis>; currently, these consist of Unicode, Adobe glyph names,
-and arbitrary TrueType ``cmap''s.
+and arbitrary TrueType <quote>cmap</quote>s.
 </para>
 
 <para>
@@ -1025,14 +1027,14 @@ Western-European);
 <listitem>
 
 <para>
- <literal remap="tt">koi8-uni</literal>: KOI8 ``Unified'' (Russian, Ukrainian, and
+ <literal remap="tt">koi8-uni</literal>: KOI8 <quote>Unified</quote> (Russian, Ukrainian, and
 Byelorussian);
 </para>
 </listitem>
 <listitem>
 
 <para>
- <literal remap="tt">koi8-e</literal>: KOI8 ``European,'' ISO-IR-111, or ECMA-Cyrillic;
+ <literal remap="tt">koi8-e</literal>: KOI8 <quote>European,</quote> ISO-IR-111, or ECMA-Cyrillic;
 </para>
 </listitem>
 <listitem>
@@ -1052,11 +1054,11 @@ Additional encodings can be added by defining <emphasis remap="it">encoding file
 When a font encoding is requested that the <emphasis remap="it">fontenc</emphasis> layer doesn't
 know about, the backend checks the directory in which the font file
 resides (not necessarily the directory with <filename>fonts.dir</filename>!) for a
-file named `<filename>encodings.dir</filename>'.  If found, this file is scanned for
+file named <quote><filename>encodings.dir</filename></quote>.  If found, this file is scanned for
 the requested encoding, and the relevant encoding definition file is
-read in.  The `<command>mkfontdir</command>' utility, when invoked with the
-`<literal remap="tt">-e</literal>' option followed by the name of a directory containing
-encoding files, can be used to automatically build `<filename>encodings.dir</filename>'
+read in.  The <quote><command>mkfontdir</command></quote> utility, when invoked with the
+<quote><literal remap="tt">-e</literal></quote> option followed by the name of a directory containing
+encoding files, can be used to automatically build <quote><filename>encodings.dir</filename></quote>
 files.  Please see the <ulink
 url="mkfontdir.1.html"
 >mkfontdir(1)</ulink
@@ -1067,16 +1069,17 @@ manual page for more details.
 <para>
 A number of encoding files for common encodings are included with
 X11R&relvers;.  Information on writing new encoding files can be found in
-<xref linkend="sec-format-encoding-directory-files"/> and <xref linkend="sec-format-encoding-files"/> later in this document.
+<xref linkend='Format_of_encoding_directory_files' xrefstyle='select: title'/>
+and <xref linkend='Format_of_encoding_files' xrefstyle='select: title'/> later in this document.
 </para>
 
 </sect3>
 
-<sect3>
+<sect3 id='Backend-specific_notes_about_fontenc'>
 <title>Backend-specific notes about fontenc</title>
 
-<sect4 id="sec-fontenc-freetype">
-<title>The <emphasis remap="it">FreeType</emphasis> backend </title>
+<sect4 id='The_FreeType_backend'>
+<title>The <emphasis remap="it">FreeType</emphasis> backend</title>
 
 <para>
 For TrueType and OpenType fonts, the FreeType backend scans the
@@ -1097,7 +1100,8 @@ points that have been assigned names by Adobe.
 <para>
 Specifying an encoding value of <literal remap="tt">adobe-fontspecific</literal> for a
 Type&nbsp;1 font disables the encoding mechanism.  This is useful with
-symbol and incorrectly encoded fonts (see <xref linkend="sec-incorrect-encoding"/> below).
+symbol and incorrectly encoded fonts (see 
+<xref linkend='Hints_about_using_badly_encoded_fonts' xrefstyle='select: title'/> below).
 </para>
 
 <para>
@@ -1109,20 +1113,19 @@ ISO&nbsp;8859-1.
 
 </sect3>
 
-<sect3 id="sec-format-encoding-directory-files" xreflabel="Format of
-encodings directory files">
-<title>Format of encoding directory files </title>
+<sect3 id='Format_of_encoding_directory_files'>
+<title>Format of encoding directory files</title>
 
 <para>
 In order to use a font in an encoding that the font backend does
-not know about, you need to have an `<filename>encodings.dir</filename>' file either
+not know about, you need to have an <quote><filename>encodings.dir</filename></quote> file either
 in the same directory as the font file used or in a system-wide
-location (`<filename>/usr/share/fonts/X11/encodings/</filename>' by default).
+location (<quote><filename>/usr/share/fonts/X11/encodings/</filename></quote> by default).
 </para>
 
 <para>
-The `<filename>encodings.dir</filename>' file has a similar format to
-`<filename>fonts.dir</filename>'.  Its first line specifies the number of encodings,
+The <quote><filename>encodings.dir</filename></quote> file has a similar format to
+<quote><filename>fonts.dir</filename></quote>.  Its first line specifies the number of encodings,
 while every successive line has two columns, the name of the encoding,
 and the name of the encoding file; this can be relative to the current
 directory, or absolute.  Every encoding name should agree with the
@@ -1142,8 +1145,8 @@ mulearabic-2 /usr/share/fonts/X11/encodings/mulearabic-2.enc
 
 <para>
 The name of an encoding <emphasis remap="it">must</emphasis> be specified in the encoding file's
-`<literal remap="tt">STARTENCODING</literal>' or `<literal remap="tt">ALIAS</literal>' line.  It is not enough to create
-an `<filename>encodings.dir</filename>' entry.
+<quote><literal remap="tt">STARTENCODING</literal></quote> or <quote><literal remap="tt">ALIAS</literal></quote> line.  It is not enough to create
+an <quote><filename>encodings.dir</filename></quote> entry.
 </para>
 
 <para>
@@ -1152,8 +1155,8 @@ compressed or gzipped.
 </para>
 
 <para>
-The `<filename>encoding.dir</filename>' files are best maintained by the
-`<command>mkfontdir</command>' utility.  Please see the <ulink
+The <quote><filename>encoding.dir</filename></quote> files are best maintained by the
+<quote><command>mkfontdir</command></quote> utility.  Please see the <ulink
 url="mkfontdir.1.html"
 >mkfontdir(1)</ulink
 > manual page for more information.
@@ -1161,26 +1164,26 @@ url="mkfontdir.1.html"
 
 </sect3>
 
-<sect3 id="sec-format-encoding-files" xreflabel="Format of encoding files">
-<title>Format of encoding files </title>
+<sect3 id='Format_of_encoding_files'>
+<title>Format of encoding files</title>
 
 <para>
-The encoding files are ``free form,'' <emphasis remap="it">i.e.</emphasis> any string of
+The encoding files are <quote>free form,</quote> <emphasis remap="it">i.e.</emphasis> any string of
 whitespace is equivalent to a single space.  Keywords are parsed in a
-non-case-sensitive manner, meaning that `<literal remap="tt">size</literal>', `<literal remap="tt">SIZE</literal>', and
-`<literal remap="tt">SiZE</literal>' all parse as the same keyword; on the other hand, case is
+non-case-sensitive manner, meaning that <quote><literal remap="tt">size</literal></quote>, <quote><literal remap="tt">SIZE</literal></quote>, and
+<quote><literal remap="tt">SiZE</literal></quote> all parse as the same keyword; on the other hand, case is
 significant in glyph names.
 </para>
 
 <para>
-Numbers can be written in decimal, as in `<literal remap="tt">256</literal>', in hexadecimal,
-as in `<literal remap="tt">0x100</literal>', or in octal, as in `<literal remap="tt">0400</literal>'.
+Numbers can be written in decimal, as in <quote><literal remap="tt">256</literal></quote>, in hexadecimal,
+as in <quote><literal remap="tt">0x100</literal></quote>, or in octal, as in <quote><literal remap="tt">0400</literal></quote>.
 </para>
 
 <para>
-Comments are introduced by a hash sign `<literal remap="tt">&num;</literal>'.  A `<literal remap="tt">&num;</literal>' may
+Comments are introduced by a hash sign <quote><literal remap="tt">&num;</literal></quote>.  A <quote><literal remap="tt">&num;</literal></quote> may
 appear at any point in a line, and all characters following the
-`<literal remap="tt">&num;</literal>' are ignored, up to the end of the line.
+<quote><literal remap="tt">&num;</literal></quote> are ignored, up to the end of the line.
 </para>
 
 <para>
@@ -1193,7 +1196,7 @@ ALIAS arabic-0
 </screen>
 
 The name of the encoding and its aliases should be suitable for use in
-an XLFD font name, and therefore contain exactly one dash `<literal remap="tt">-</literal>'.
+an XLFD font name, and therefore contain exactly one dash <quote><literal remap="tt">-</literal></quote>.
 </para>
 
 <para>
@@ -1207,7 +1210,7 @@ SIZE 0x2B
 
 For a matrix encoding, it should specify two numbers.  The first is
 the number of the last row plus one, the other, the highest column
-number plus one.  In the case of `<literal remap="tt">jisx0208.1990-0</literal>'
+number plus one.  In the case of <quote><literal remap="tt">jisx0208.1990-0</literal></quote>
 (JIS&nbsp;X&nbsp;0208(1990), double-byte encoding, high bit clear), it
 should be
 
@@ -1215,36 +1218,36 @@ should be
 SIZE 0x75 0x80
 </screen>
 
-In the case of a matrix encoding, a `<literal remap="tt">FIRSTINDEX</literal>' line may be
+In the case of a matrix encoding, a <quote><literal remap="tt">FIRSTINDEX</literal></quote> line may be
 included to specify the minimum glyph index in an encoding.  The
-keyword `<literal remap="tt">FIRSTINDEX</literal>' is followed by two integers, the minimum row
+keyword <quote><literal remap="tt">FIRSTINDEX</literal></quote> is followed by two integers, the minimum row
 number followed by the minimum column number:
 
 <screen>
 FIRSTINDEX 0x20 0x20
 </screen>
 
-In the case of a linear encoding, a `<literal remap="tt">FIRSTINDEX</literal>' line is not very
+In the case of a linear encoding, a <quote><literal remap="tt">FIRSTINDEX</literal></quote> line is not very
 useful.  If for some reason however you chose to include on, it should
 be followed by a single integer.
 </para>
 
 <para>
-Note that in most font backends inclusion of a `<literal remap="tt">FIRSTINDEX</literal>' line
+Note that in most font backends inclusion of a <quote><literal remap="tt">FIRSTINDEX</literal></quote> line
 has the side effect of disabling default glyph generation, and this
 keyword should therefore be avoided unless absolutely necessary.
 </para>
 
 <para>
-Codes outside the region defined by the `<literal remap="tt">SIZE</literal>' and
-`<literal remap="tt">FIRSTINDEX</literal>' lines are understood to be undefined.  Encodings
+Codes outside the region defined by the <quote><literal remap="tt">SIZE</literal></quote> and
+<quote><literal remap="tt">FIRSTINDEX</literal></quote> lines are understood to be undefined.  Encodings
 default to linear encoding with a size of 256 (0x100).  This means
 that you must declare the size of all 16 bit encodings.
 </para>
 
 <para>
 What follows is one or more mapping sections.  A mapping section
-starts with a `<literal remap="tt">STARTMAPPING</literal>' line stating the target of the mapping.
+starts with a <quote><literal remap="tt">STARTMAPPING</literal></quote> line stating the target of the mapping.
 The target may be one of:
 
 <itemizedlist>
@@ -1262,7 +1265,7 @@ STARTMAPPING unicode
 <listitem>
 
 <para>
-a given TrueType ``cmap'':
+a given TrueType <quote>cmap</quote>:
 
 <screen>
 STARTMAPPING cmap 3 1
@@ -1337,7 +1340,7 @@ is an abbreviation for
 Codes not listed are assumed to map through the identity (<emphasis remap="it">i.e.</emphasis> to
 the same numerical value).  In order to override this default mapping,
 you may specify a range of codes to be undefined by using an
-`<literal remap="tt">UNDEFINE</literal>' line:
+<quote><literal remap="tt">UNDEFINE</literal></quote> line:
 
 <screen>
 UNDEFINE 0x00 0x2A
@@ -1388,8 +1391,8 @@ sections with an unknown target.
 
 </sect3>
 
-<sect3 id="sec-symbol-fonts">
-<title>Using symbol fonts </title>
+<sect3 id='Using_symbol_fonts'>
+<title>Using symbol fonts</title>
 
 <para>
 Type&nbsp;1 symbol fonts should be installed using the
@@ -1409,13 +1412,13 @@ In order to guarantee consistent results (especially between
 Type&nbsp;1 and TrueType versions of the same font), it is possible to
 define a special encoding for a given font. This has already been done
 for the <literal remap="tt">ZapfDingbats</literal> font; see the file
-`<filename>encodings/adobe-dingbats.enc</filename>'.
+<quote><filename>encodings/adobe-dingbats.enc</filename></quote>.
 </para>
 
 </sect3>
 
-<sect3 id="sec-incorrect-encoding" xreflabel="Incorrectly encoded fonts">
-<title>Hints about using badly encoded fonts </title>
+<sect3 id='Hints_about_using_badly_encoded_fonts'>
+<title>Hints about using badly encoded fonts</title>
 
 <para>
 A number of text fonts are incorrectly encoded. Incorrect encoding
@@ -1433,56 +1436,56 @@ encoding they were designed for, and creating an <emphasis remap="it">ad hoc</em
 file.
 </para>
 
-<sect4>
+<sect4 id='Using_fonts_with_the_designers_encoding'>
 <title>Using fonts with the designer's encoding</title>
 
 <para>
 In the case of Type&nbsp;1 fonts, the font designer can specify a
 default encoding; this encoding is requested by using the
-`<literal remap="tt">adobe-fontspecific</literal>' encoding in the XLFD name. Sometimes, the
+<quote><literal remap="tt">adobe-fontspecific</literal></quote> encoding in the XLFD name. Sometimes, the
 font designer omitted to specify a reasonable default encoding, in
-which case you should experiment with `<literal remap="tt">adobe-standard</literal>',
-`<literal remap="tt">iso8859-1</literal>', `<literal remap="tt">microsoft-cp1252</literal>', and
-`<literal remap="tt">microsoft-win3.1</literal>'. (The encoding `<literal remap="tt">microsoft-symbol</literal>' doesn't
+which case you should experiment with <quote><literal remap="tt">adobe-standard</literal></quote>,
+<quote><literal remap="tt">iso8859-1</literal></quote>, <quote><literal remap="tt">microsoft-cp1252</literal></quote>, and
+<quote><literal remap="tt">microsoft-win3.1</literal></quote>. (The encoding <quote><literal remap="tt">microsoft-symbol</literal></quote> doesn't
 make sense for Type&nbsp;1 fonts).
 </para>
 
 <para>
 TrueType fonts do not have a default encoding.  However, most TrueType
 fonts are designed with either Microsoft or Apple platforms in mind,
-so one of `<literal remap="tt">microsoft-symbol</literal>', `<literal remap="tt">microsoft-cp1252</literal>',
-`<literal remap="tt">microsoft-win3.1</literal>', or `<literal remap="tt">apple-roman</literal>' should yield reasonable
+so one of <quote><literal remap="tt">microsoft-symbol</literal></quote>, <quote><literal remap="tt">microsoft-cp1252</literal></quote>,
+<quote><literal remap="tt">microsoft-win3.1</literal></quote>, or <quote><literal remap="tt">apple-roman</literal></quote> should yield reasonable
 results.
 </para>
 
 </sect4>
 
-<sect4>
+<sect4 id='Specifying_an_ad_hoc_encoding_file'>
 <title>Specifying an <emphasis remap="it">ad hoc</emphasis> encoding file</title>
 
 <para>
 It is always possible to define an encoding file to put the glyphs
 in a font in any desired order. Again, see the
-`<filename>encodings/adobe-dingbats.enc</filename>' file to see how this is done.
+<quote><filename>encodings/adobe-dingbats.enc</filename></quote> file to see how this is done.
 </para>
 
 </sect4>
 
-<sect4>
+<sect4 id='Specifying_font_aliases'>
 <title>Specifying font aliases</title>
 
 <para>
 By following the directions above, you will find yourself with a
 number of fonts with unusual names --- with encodings such as
-`<literal remap="tt">adobe-fontspecific</literal>', `<literal remap="tt">microsoft-win3.1</literal>' <emphasis remap="it">etc</emphasis>.  In order
+<quote><literal remap="tt">adobe-fontspecific</literal></quote>, <quote><literal remap="tt">microsoft-win3.1</literal></quote> <emphasis remap="it">etc</emphasis>.  In order
 to use these fonts with standard applications, it may be useful to
 remap them to their proper names.
 </para>
 
 <para>
-This is done by writing a `<filename>fonts.alias</filename>' file. The format of this file
+This is done by writing a <quote><filename>fonts.alias</filename></quote> file. The format of this file
 is very simple: it consists of a series of lines each mapping an alias
-name to a font name.  A `<filename>fonts.alias</filename>' file might look as follows:
+name to a font name.  A <quote><filename>fonts.alias</filename></quote> file might look as follows:
 
 <screen>
 "-ogonki-alamakota-medium-r-normal--0-0-0-0-p-0-iso8859-2" \
@@ -1490,7 +1493,7 @@ name to a font name.  A `<filename>fonts.alias</filename>' file might look as fo
 </screen>
 
 (both XLFD names on a single line).  The syntax of the
-`<filename>fonts.alias</filename>' file is more precisely described in the
+<quote><filename>fonts.alias</filename></quote> file is more precisely described in the
 <ulink
 url="mkfontdir.1.html"
 >mkfontdir(1)</ulink
@@ -1503,11 +1506,11 @@ url="mkfontdir.1.html"
 
 </sect2>
 
-<sect2>
+<sect2 id='Additional_notes_about_scalable_core_fonts'>
 <title>Additional notes about scalable core fonts</title>
 
 
-<sect3>
+<sect3 id='About_the_FreeType_backend'>
 <title>About the <emphasis remap="it">FreeType</emphasis> backend</title>
 
 <para>
@@ -1521,10 +1524,11 @@ Project (see <ulink
 url="http://x-tt.sourceforge.jp/"
 >the After X-TT Project web site</ulink
 >).  The <emphasis remap="it">FreeType</emphasis> backend has support for the
-``fontenc'' style of internationalisation (see <xref linkend="sec-fontenc"/>).  This backend supports TrueType font files
-(`<filename>*.ttf</filename>'), OpenType font files (`<filename>*.otf</filename>'), TrueType Collections
-(`<filename>*.ttc</filename>'), OpenType Collections (`<filename>*.otc</filename>') and Type 1 font
-files (`<filename>*.pfa</filename>' and `<filename>*.pfb</filename>').
+<quote>fontenc</quote> style of internationalisation (see
+<xref linkend='The_fontenc_layer' xrefstyle='select: title'/>).  This backend supports TrueType font files
+(<quote><filename>*.ttf</filename></quote>), OpenType font files (<quote><filename>*.otf</filename></quote>), TrueType Collections
+(<quote><filename>*.ttc</filename></quote>), OpenType Collections (<quote><filename>*.otc</filename></quote>) and Type 1 font
+files (<quote><filename>*.pfa</filename></quote> and <quote><filename>*.pfb</filename></quote>).
 </para>
 
 <para>
@@ -1542,13 +1546,13 @@ within a pair of colons, or by setting the 'fn' TTCap option.  For example,
 </para>
 
 <para>
-refers to face 1 in the `<filename>mincho.ttc</filename>' TrueType Collection file.
+refers to face 1 in the <quote><filename>mincho.ttc</filename></quote> TrueType Collection file.
 </para>
 
 <para>
 The new <emphasis remap="it">FreeType</emphasis> backend supports the extended
-`<filename>fonts.dir</filename>' syntax introduced by X-TrueType with a number
-of options, collectively known as `TTCap'.  A `TTCap' entry follows the
+<quote><filename>fonts.dir</filename></quote> syntax introduced by X-TrueType with a number
+of options, collectively known as <quote>TTCap</quote>.  A <quote>TTCap</quote> entry follows the
 general syntax
 </para>
 
@@ -1563,8 +1567,8 @@ option=value:
 <para>
 and should be specified before the filename.  The new <emphasis remap="it">FreeType</emphasis>
 almost perfectly supports TTCap options that are compatible with X-TT
-1.4.  The Automatic Italic (`<literal remap="tt">ai</literal>'), Double Strike (`<literal remap="tt">ds</literal>') and
-Bounding box Width (`<literal remap="tt">bw</literal>') options are indispensable in CJKV.
+1.4.  The Automatic Italic (<quote><literal remap="tt">ai</literal></quote>), Double Strike (<quote><literal remap="tt">ds</literal></quote>) and
+Bounding box Width (<quote><literal remap="tt">bw</literal></quote>) options are indispensable in CJKV.
 For example,
 </para>
 
@@ -1593,37 +1597,38 @@ url="http://x-tt.sourceforge.jp/"
 
 <para>
 The <emphasis remap="it">FreeType</emphasis> backend uses the <emphasis remap="it">fontenc</emphasis> layer in order to support
-recoding of fonts; this was described in <xref linkend="sec-fontenc"/> and especially <xref linkend="sec-fontenc-freetype"/> earlier in this document.
+recoding of fonts; this was described in <xref linkend='The_fontenc_layer' xrefstyle='select: title'/>
+and especially <xref linkend='The_FreeType_backend' xrefstyle='select: title'/> earlier in this document.
 </para>
 
 </sect3>
 
-<sect3>
+<sect3 id='Delayed_glyph_rasterisation'>
 <title>Delayed glyph rasterisation</title>
 
 <para>
 When loading a proportional fonts which contain a huge number of glyphs,
 the old <emphasis remap="it">FreeType</emphasis> delayed glyph rasterisation until the time at which
 the glyph was first used.   The new FreeType (libfreetype-xtt2) has an
-improved `very lazy' metric calculation method to speed up the process when
+improved <quote>very lazy</quote> metric calculation method to speed up the process when
 loading TrueType or OpenType fonts.   Although the <emphasis remap="it">X-TT</emphasis> module also
 has this method, the "<literal remap="tt">vl=y</literal>" TTCap option must be set if you want to
 use it.  This is the default method for <emphasis remap="it">FreeType</emphasis> when it loads
 multi-byte fonts.   Even if you use a unicode font which has tens of
 thousands of glyphs, this delay will not be worrisome as long as you use
-the new <emphasis remap="it">FreeType</emphasis> backend -- its `very lazy' method is super-fast.
+the new <emphasis remap="it">FreeType</emphasis> backend -- its <quote>very lazy</quote> method is super-fast.
 </para>
 
 <para>
-The maximum error of bitmap position using `very lazy' method is 1 pixel,
+The maximum error of bitmap position using <quote>very lazy</quote> method is 1 pixel,
 and is the same as that of a character-cell spacing.  When the X-TT
-backend is used with the `<literal remap="tt">vl=y</literal>' option, a chipped bitmap is displayed
+backend is used with the <quote><literal remap="tt">vl=y</literal></quote> option, a chipped bitmap is displayed
 with certain fonts.  However, the new FreeType backend has minimal problem
 with this, since it corrects left- and right-side bearings using
-`italicAngle' in the TrueType/OpenType post table, and does automatic
+<quote>italicAngle</quote> in the TrueType/OpenType post table, and does automatic
 correction of bitmap positions when rasterisation so that chipped bitmaps
-are not displayed.  Nevertheless if you don't want to use the `very lazy'
-method when using multi-bytes fonts, set `<literal remap="tt">vl=n</literal>' in the TTCap option to
+are not displayed.  Nevertheless if you don't want to use the <quote>very lazy</quote>
+method when using multi-bytes fonts, set <quote><literal remap="tt">vl=n</literal></quote> in the TTCap option to
 disable it:
 </para>
 
@@ -1638,7 +1643,7 @@ vl=n:luxirr.ttf -b&amp;h-Luxi Serif-medium-r-normal--0-0-0-0-p-0-iso10646-1
 <para>
 Of course, both backends also support an optimisation for character-cell
 fonts (fonts with all glyph metrics equal, or terminal fonts).  A font
-with an XLFD specifying a character-cell spacing `<literal remap="tt">c</literal>', as in
+with an XLFD specifying a character-cell spacing <quote><literal remap="tt">c</literal></quote>, as in
 </para>
 
 <para>
@@ -1674,10 +1679,10 @@ that not all monospaced fonts are character-cell fonts.
 
 </sect1>
 
-<sect1 id="sec-background" xreflabel="Appendix: Background">
-<title>Appendix: background and terminology </title>
+<sect1 id='Appendix_background_and_terminology'>
+<title>Appendix: background and terminology</title>
 
-<sect2>
+<sect2 id='Characters_and_glyphs'>
 <title>Characters and glyphs</title>
 
 <para>
@@ -1716,8 +1721,8 @@ character sets are necessary for ideographic writing systems.
 
 </sect2>
 
-<sect2 id="sec-xlfd">
-<title>Font files, fonts, and XLFD </title>
+<sect2 id='Font_files_fonts_and_XLFD'>
+<title>Font files, fonts, and XLFD</title>
 
 <para>
 Traditionally, typographers speak about <emphasis remap="it">typefaces</emphasis> and
@@ -1759,14 +1764,14 @@ indexed according to a given encoding.
 <para>
 X11 core font instances are usually specified using a notation known
 as the <emphasis remap="it">X Logical Font Description</emphasis> (XLFD).  An XLFD starts with a
-dash `<literal remap="tt">-</literal>', and consists of fourteen fields separated by dashes,
+dash <quote><literal remap="tt">-</literal></quote>, and consists of fourteen fields separated by dashes,
 for example:
 
 <screen>
 -adobe-courier-medium-r-normal--12-120-75-75-m-70-iso8859-1
 </screen>
 
-Or particular interest are the last two fields `<literal remap="tt">iso8859-1</literal>', which
+Or particular interest are the last two fields <quote><literal remap="tt">iso8859-1</literal></quote>, which
 specify the font instance's encoding.
 </para>
 
@@ -1785,14 +1790,14 @@ X11 font instances may also be specified by short name.  Unlike an
 XLFD, a short name has no structure and is simply a conventional name
 for a font instance.  Two short names are of particular interest, as
 the server will not start if font instances with these names cannot be
-opened.  These are `<literal remap="tt">fixed</literal>', which specifies the fallback font to
-use when the requested font cannot be opened, and `<literal remap="tt">cursor</literal>', which
+opened.  These are <quote><literal remap="tt">fixed</literal></quote>, which specifies the fallback font to
+use when the requested font cannot be opened, and <quote><literal remap="tt">cursor</literal></quote>, which
 specifies the set of glyphs to be used by the mouse pointer.
 </para>
 
 <para>
 Short names are usually implemented as aliases to XLFDs; the
-standard `<literal remap="tt">fixed</literal>' and `<literal remap="tt">cursor</literal>' aliases are defined in
+standard <quote><literal remap="tt">fixed</literal></quote> and <quote><literal remap="tt">cursor</literal></quote> aliases are defined in
 
 <screen>
 /usr/share/font/X11/misc/fonts.alias
@@ -1802,7 +1807,7 @@ standard `<literal remap="tt">fixed</literal>' and `<literal remap="tt">cursor</
 
 </sect2>
 
-<sect2>
+<sect2 id='Unicode'>
 <title>Unicode</title>
 
 <para>
@@ -1833,14 +1838,14 @@ equivalent, and we often use the terms <emphasis remap="it">Unicode</emphasis> a
 
 <para>
 When used in the X11 core fonts system, Unicode-encoded fonts should
-have the last two fields of their XLFD set to `<literal remap="tt">iso10646-1</literal>'.
+have the last two fields of their XLFD set to <quote><literal remap="tt">iso10646-1</literal></quote>.
 </para>
 
 </sect2>
 
 </sect1>
 
-<sect1>
+<sect1 id='References'>
 <title>References</title>
 
 <para>
@@ -1873,9 +1878,8 @@ url="xlsfonts.1.html"
 > and <ulink
 url="showfont.1.html"
 >showfont(1)</ulink
->.  In addition, you may want to read the X Logical
-Font Description document, by Jim Flowers, which is provided in the file
-`<filename>xc/doc/xlfd.PS.Z</filename>'.
+>.  In addition, you may want to read the <olink targetdoc='xlfd'
+targetptr='xlfd'>X Logical Font Description document</olink> by Jim Flowers.
 </para>
 
 <para>
@@ -1891,7 +1895,7 @@ of information about digital fonts.
 Xft and Fontconfig are described on
 <ulink
 url="http://www.fontconfig.org"
->Keith Packard's Fontconfig site</ulink
+>the Fontconfig site</ulink
 >.
 </para>
 
@@ -1907,7 +1911,7 @@ however still find some of the information that it contains useful.
 url="http://www.joerg-pommnitz.de/TrueType/xfsft.html"
 >Joerg Pommnitz' xfsft page</ulink
 >
-is the canonical source for the `<command>ttmkfdir</command>' utility, which is the
+is the canonical source for the <quote><command>ttmkfdir</command></quote> utility, which is the
 ancestor of <command>mkfontscale</command>.
 </para>
 
@@ -1940,9 +1944,10 @@ url="http://www.cl.cam.ac.uk/~mgk25/unicode.html"
 </para>
 
 <para>
-The IANA RFC documents, available from a number of sites throughout
+The IETF RFC documents, available from a number of sites throughout
 the world, often provide interesting information about character set
-issues; see for example RFC&nbsp;373.
+issues; see for example <ulink
+url="https://datatracker.ietf.org/doc/rfc373/">RFC&nbsp;373</ulink>.
 </para>
 
 </sect1>

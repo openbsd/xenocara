@@ -1,6 +1,9 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.3//EN"
-                   "http://www.oasis-open.org/docbook/xml/4.3/docbookx.dtd">
+                   "http://www.oasis-open.org/docbook/xml/4.3/docbookx.dtd"
+[
+<!ENTITY % defs SYSTEM "defs.ent"> %defs;
+]>
 
 
 <!--translated from secint.tex, on 2010-06-27 15:38:00,
@@ -12,36 +15,48 @@ xhtml,docbook,html,refcaption -->
 <bookinfo>
    <title>Security Extension Server Design Draft</title>
    <subtitle>X Consortium Standard</subtitle>
-   <releaseinfo>June 27, 2010</releaseinfo>
    <authorgroup>
       <author>
-         <firstname>David</firstname><surname>Wiggins</surname>
+         <firstname>David</firstname><othername>P.</othername><surname>Wiggins</surname>
+         <affiliation><orgname>X Consortium</orgname></affiliation>
       </author>
    </authorgroup>
-   <corpname>X Consortium Standard</corpname>
-   <copyright><year>1996</year><holder>X Consortium</holder></copyright>
+   <releaseinfo>X Version 11, Release &fullrelvers;</releaseinfo>
    <releaseinfo>Version 3.0</releaseinfo>
-   <affiliation><orgname>X Consortium</orgname></affiliation>
-   <productnumber>X Version 11, Release 7</productnumber>
+   <copyright><year>1996</year><holder>X Consortium</holder></copyright>
 
 <legalnotice>
-<para>THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY
-KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
-WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR
-PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE X
-CONSORTIUM BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
-OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH
-THE SOFTWARE OR THE USE OF OR OTHER DEALINGS IN THE
-SOFTWARE.
+<para>
+Permission is hereby granted, free of charge, to any person obtaining
+a copy of this software and associated documentation files (the
+"Software"), to deal in the Software without restriction, including
+without limitation the rights to use, copy, modify, merge, publish,
+distribute, sublicense, and/or sell copies of the Software, and to
+permit persons to whom the Software is furnished to do so, subject to
+the following conditions:
 </para>
-<para>Except as contained in this notice, the name of the X Consortium shall
-not be used in advertising or otherwise to promote the sale, use or other
-dealings in this Software without prior written authorization from the X
-Consortium.
+<para>
+The above copyright notice and this permission notice shall be included
+in all copies or substantial portions of the Software.
 </para>
-
+<para>
+THE SOFTWARE IS PROVIDED &ldquo;AS IS&rdquo;, WITHOUT WARRANTY OF ANY KIND, EXPRESS
+OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+IN NO EVENT SHALL THE X CONSORTIUM BE LIABLE FOR ANY CLAIM, DAMAGES OR
+OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+OTHER DEALINGS IN THE SOFTWARE.
+</para>
+<para>
+Except as contained in this notice, the name of the X Consortium shall
+not be used in advertising or otherwise to promote the sale, use or
+other dealings in this Software without prior written authorization
+from the X Consortium.
+</para>
+<para>X Window System is a trademark of The Open Group.</para>
 </legalnotice>
+<pubdate>June 27, 2010</pubdate>
 
 <abstract>
 <para>This paper describes the implementation strategy used to implement
@@ -52,7 +67,7 @@ Consortium.
 </bookinfo>
 
 
-<chapter id="generate_authorization_request">
+<chapter id='Generate_Authorization_Request'>
 <title>Generate Authorization Request</title>
 
 <para>
@@ -103,7 +118,7 @@ Return the authorization ID and generated auth data to the client.
 </para>
 
 </chapter>
-<chapter id="client_connection">
+<chapter id='Client_Connection'>
 <title>Client Connection</title>
 
 <para>
@@ -149,7 +164,7 @@ authorization structure.
 </para>
 </chapter>
 
-<chapter id="client_disconnection">
+<chapter id='Client_disconnection'>
 <title>Client disconnection</title>
 
 <para>
@@ -176,7 +191,7 @@ yet.
 </para>
 </chapter>
 
-<chapter id="resource_id_security">
+<chapter id='Resource_ID_Security'>
 <title>Resource ID Security</title>
 
 <para>
@@ -226,7 +241,7 @@ the server uses essentially the same code as before for resource lookups.
 </para>
 
 </chapter>
-<chapter id="extension_security">
+<chapter id='Extension_Security'>
 <title>Extension Security</title>
 
 <para>
@@ -235,7 +250,7 @@ extension is considered secure. It is initialized to FALSE by AddExtension.
 The following new dix function can be used to set the secure field:
 </para>
 
-<funcsynopsis>
+<funcsynopsis id='DeclareExtensionSecurity'>
 <funcprototype>
   <funcdef>void <function>DeclareExtensionSecurity</function></funcdef>
     <paramdef>char <parameter> *extname</parameter></paramdef>
@@ -248,7 +263,7 @@ The name of the extension and the desired value of the secure field are
 passed. If an extension is secure, a call to this function with
 secure = TRUE will typically appear right after the call to
 <function>AddExtension</function>.
-<function>DeclareExtensionSecurity</function>
+<xref linkend='DeclareExtensionSecurity' xrefstyle='select: title'/>
 should be called during server reset. It should not
 be called after the first client has connected. Passing the name of an
 extension that has not been initialized has no effect (the secure value will
@@ -270,15 +285,15 @@ opcode, one of two new Proc vectors are used by untusted clients,
 as <function>ProcVector</function> and
 <function>SwappedProcVector</function> respectively for the first 128
 entries. Entries 128 through 255 are initialized to ProcBadRequest. If
-<function>DeclareExtensionSecurity</function> is called with secure =
+<xref linkend='DeclareExtensionSecurity' xrefstyle='select: title'/> is called with secure =
 TRUE, that extension's dispatch function is plugged into the appropriate entry
 so that the extension can be used. If
-<function>DeclareExtensionSecurity</function> is called with secure =
+<xref linkend='DeclareExtensionSecurity' xrefstyle='select: title'/> is called with secure =
 FALSE, the appropriate entry is reset to ProcBadRequest.
 </para>
 
 <para>
-Now we can explain why <function>DeclareExtensionSecurity</function>
+Now we can explain why <xref linkend='DeclareExtensionSecurity' xrefstyle='select: title'/>
 should not be called after the first client connects. In some cases,
 the Record extension gives clients a private copy of the proc vector,
 which it then changes to intercept certain requests. Changing entries in

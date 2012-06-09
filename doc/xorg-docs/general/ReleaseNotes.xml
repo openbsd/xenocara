@@ -2,10 +2,10 @@
 <!DOCTYPE article PUBLIC "-//OASIS//DTD DocBook XML V4.3//EN"
                       "http://www.oasis-open.org/docbook/xml/4.3/docbookx.dtd"
 [
-<!ENTITY % defs SYSTEM "/xorg-sgml-doctools/X11/defs.ent"> %defs;
+<!ENTITY % defs SYSTEM "defs.ent"> %defs;
 ]>
 
-<article>
+<article id='ReleaseNotes'>
 
   <articleinfo>
 
@@ -30,20 +30,7 @@
 
   </articleinfo>
 
-  <sect1>
-    <title>Dedication</title>
-
-    <para><emphasis>
-	Two of the early leaders of the X Window System community were
-	lost to cancer this year &mdash; Smokey Wallace, who led the DEC
-	WSL team which created the initial implementation of X11, and
-	Hideki Hiura from Sun Microsystems who helped design the X11R6
-	internationalization framework.  This release is dedicated to
-	their memory.
-    </emphasis></para>
-  </sect1>
-
-  <sect1>
+  <sect1 id='Introduction_to_the_X11R&relvers;_Release'>
     <title>Introduction to the X11R&relvers; Release</title>
 
     <para>
@@ -84,7 +71,7 @@
     <para>
       Once their window system build is established, most builders watch for
       announcements of individual module updates on the <ulink
-	url="http://lists.freedesktop.org/mailman/listinfo/xorg-announce"
+	url="http://lists.x.org/mailman/listinfo/xorg-announce"
 	>xorg-announce mailing list</ulink> and update to those as needed.
       The X.Org Foundation currently releases the X Window System
       katamari releases approximately once a year, but many modules,
@@ -114,7 +101,7 @@
 The release numbering is based on the original MIT X numbering system.
 X11 refers to the version of the network protocol that the X Window
 system is based on: Version 11 was first released in 1988 and has been
-stable for 22 years, with only upward compatible additions to the core X
+stable for nearly 25 years, with only upward compatible additions to the core X
 protocol, a record of stability envied in computing.  Formal releases of
 X started with X version 9 from MIT; the first commercial X products
 were based on X version 10.  The MIT X Consortium and its successors,
@@ -148,7 +135,7 @@ The next section describes what is new in the latest version
 
 <!--
 <![ %updaterel [
-<sect1>
+<sect1 id='Summary_of_updates_in_&relvers;'>
     <title>Summary of updates in &relvers;</title>
     <para>
     </para>
@@ -156,7 +143,7 @@ The next section describes what is new in the latest version
 ]]>
 -->
 
-<sect1>
+<sect1 id='Summary_of_new_features_in_X11R&relvers;'>
     <title>Summary of new features in X11R&relvers;</title>
 
     <para>
@@ -170,65 +157,90 @@ The next section describes what is new in the latest version
       <itemizedlist>
         <listitem>
 	  <para>
-	    <firstterm>InputClass</firstterm> sections in Xorg configuration
-	    files are used to apply configuration options to any input
-	    device matching specified rules, such as device path,
-	    type of device, device manufacturer, or other data provided
-	    by the input hotplug backend.  Details can be found in the
-	    <literal>INPUTCLASS</literal> section of the
-	    <ulink url="xorg.conf.5.html">xorg.conf(5)</ulink> manual page.
+	    <firstterm>Multi-touch</firstterm> events are now supported for
+	    touchpads and touchscreens which can report position information
+	    on more than one finger providing input at the same time, such as
+	    found on many tablets and recent laptops.  These are exposed by
+	    Xorg server 1.12 and later via the Xinput extension version 2.2.
 	  </para>
         </listitem>
 
         <listitem>
 	  <para>
-	    <firstterm>Xorg configuration directories</firstterm> are
-	    used to allow fragments of the X server configuration to be
-	    delivered in individual files.   For instance, the input device
-	    driver matching rules previously provided in HAL
-	    <filename>.fdi</filename> files are now provided as
-	    <literal>InputClass</literal> sections in
-	    <filename>.conf</filename> files in a
-	    <filename>xorg.conf.d</filename> directory.
-	  </para>
-        </listitem>
-
-	<listitem>
-	  <para>
-	    <firstterm>udev</firstterm> is now used by the X server on
-	    Linux systems for input device discovery and hot-plug
-	    notification.  Other platforms continue to use the HAL
-	    framework for these tasks for now.
+	    Additional <firstterm>Xinput extension</firstterm> features were
+	    introduced in version 2.1, as supported in Xorg server 1.11,
+	    including allowing clients to track raw events from input devices,
+	    additional detail in scrolling events so that clients may perform
+	    smoother scrolling, and additional constants in the Xlib-based
+	    libXi API.
 	  </para>
         </listitem>
 
         <listitem>
 	  <para>
-	    <firstterm>X protocol C-language Binding (XCB)</firstterm>
-	    is now included in the katamari, and is required by several
-	    client-side modules, including
-	    <systemitem class="library">libX11</systemitem>,
-	    <command>xlsatoms</command>, <command>xlsclients</command>
-	    and <command>xwininfo</command>.
-
-	    XCB is a replacement for Xlib featuring a small footprint,
-	    latency hiding, direct access to the protocol, improved threading
-	    support, and extensibility.   More information can be found on
-	    the XCB website at <ulink url="http://xcb.freedesktop.org/" />.
-	  </para>
-        </listitem>
-
-        <listitem>
-	  <para>
-	    Major progress has been made on the X.Org Documentation
-	    modernization - most of the library and protocol specifications
-	    are now included in the modules for those libraries and protocols
-	    so they can be updated in sync with new versions, and many have
-	    been converted to DocBook XML from the variety of formats they
-	    were previously in.   On most systems these documents will be
+	    More progress has been made on the X.Org Documentation
+	    modernization - the rest of the library and protocol specifications
+	    have been converted to DocBook XML from the variety of formats they
+	    were previously in, and support for cross-linking between documents
+	    hase been added.  On most systems these documents will be
 	    installed under <filename>/usr/share/doc/</filename>.  They
 	    are also posted on the X.Org website at
-	    <ulink url="http://www.x.org/releases/X11R7.6/" />.
+	    <ulink url="http://www.x.org/releases/X11R7.7/" />.
+	  </para>
+        </listitem>
+
+        <listitem>
+	  <para>
+            <firstterm>Fence</firstterm> objects are now available in Version
+            3.1 of the <olink targetdoc="sync" targetptr="sync">Synchronization
+            (<quote>Sync</quote>) extension</olink>.   These allow clients
+            to create a object that is either in <quote>triggered</quote>
+            or <quote>not-triggered</quote> state, and to perform actions
+            when the object becomes triggered.   When a client requests a
+            fence be triggered, the X server will first complete all rendering
+            from previous requests that affects resources owned by the fence's
+            screen before changing the state, so that clients may synchronize
+            with such rendering.  Support for these has been added to both
+	    the <filename class="libraryfile">libxcb-sync</filename> and
+	    <filename class="libraryfile">libXext</filename> API's.
+          </para>
+        </listitem>
+
+        <listitem>
+          <para>
+            <firstterm>Pointer barriers</firstterm> were added by X Fixes
+            extension Version 5.0.  Compositing managers and desktop
+            environments may have UI elements in particular screen locations
+            such that for a single-headed display they correspond to easy
+            targets, for example, the top left corner.  For a multi-headed
+            environment these corners should still be semi-impermeable.
+            Pointer barriers allow the application to define additional
+            constraint on cursor motion so that these areas behave as
+            expected even in the face of multiple displays.
+	  </para>
+        </listitem>
+
+	<!-- Skip for 7.7, since only the proto headers landed in time.
+	     Restore for 7.8 once the server & client bits land.
+        <listitem>
+	  <para>
+	    Version 1.2 of the X Resource extension provides new requests
+	    that allow clients to query for additional identification
+	    information about other clients, such as their process id,
+	    and to request size information about the resources clients
+	    have allocated in the X server, to allow better observability
+	    and easier debugging of client resource allocations in the server.
+	  </para>
+        </listitem>
+	-->
+
+        <listitem>
+	  <para>
+	    The XCB libraries have begun adding support for the GLX and XKB
+	    extensions.   This work is not yet complete in this release,
+	    and not all of the functionality available through these extensions
+	    is accessibile via the XCB APIs.  Some of this effort was funded
+	    by past Google Summer of Code projects.
 	  </para>
         </listitem>
 
@@ -249,7 +261,7 @@ The next section describes what is new in the latest version
     </para>
   </sect1>
 
-  <sect1>
+  <sect1 id='Overview_of_X11R&relvers;'>
     <title>Overview of X11R&relvers;</title>
 
     <para>
@@ -330,10 +342,10 @@ The next section describes what is new in the latest version
     </para>
   </sect1>
 
-  <sect1>
+  <sect1 id='Details_of_X11R&relvers;_components'>
     <title>Details of X11R&relvers; components</title>
 
-    <sect2>
+    <sect2 id='Video_Drivers'>
     <title>Video Drivers</title>
 
     <para>
@@ -341,22 +353,19 @@ The next section describes what is new in the latest version
     </para>
 
     <para>
-    <informaltable id="drivertables" xreflabel="driver tables">
-        <tgroup cols="3">
-            <colspec align="left" colsep="1"></colspec>
-            <colspec align="left" colsep="1"></colspec>
-            <colspec align="left" colsep="1"></colspec>
-        <tbody>
-            <row>
+    <informaltable id="drivertables" xreflabel="driver tables" frame='topbot'>
+        <tgroup cols="3" colsep='0' rowsep='0'>
+            <colspec align="left" colwidth="1.0*"/>
+            <colspec align="left" colwidth="2.0*"/>
+            <colspec align="left" colwidth="2.0*"/>
+        <thead>
+            <row rowsep='1'>
                 <entry>Driver Name</entry>
                 <entry>Description</entry>
                 <entry>Further Information</entry>
             </row>
-            <row>
-                <entry><literal remap="tt">apm</literal></entry>
-                <entry>Alliance Pro Motion</entry>
-                <entry><ulink url="apm.html">README.apm</ulink></entry>
-            </row>
+        </thead>
+        <tbody>
             <row>
                 <entry><literal remap="tt">ark</literal></entry>
                 <entry>Ark Logic</entry>
@@ -368,15 +377,13 @@ The next section describes what is new in the latest version
                 <entry>&nbsp;</entry>
             </row>
             <row>
-                <entry><literal remap="tt">chips</literal></entry>
-                <entry>Chips &amp; Technologies</entry>
-                <entry><ulink url="chips.html">README.chips</ulink>,
-                    <ulink url="chips.4.html">chips(4)</ulink>
-                </entry>
-            </row>
-            <row>
                 <entry><literal remap="tt">cirrus</literal></entry>
                 <entry>Cirrus Logic</entry>
+                <entry>&nbsp;</entry>
+            </row>
+            <row>
+                <entry><literal remap="tt">dummy</literal></entry>
+                <entry>Virtual/offscreen framebuffer</entry>
                 <entry>&nbsp;</entry>
             </row>
             <row>
@@ -390,6 +397,11 @@ The next section describes what is new in the latest version
                 <entry>&nbsp;</entry>
             </row>
             <row>
+                <entry><literal remap="tt">glide</literal></entry>
+                <entry>3Dfx Voodoo 1, 2, Banshee, 3, 4 &amp; 5</entry>
+                <entry><ulink url="glide.4.html">glide(4)</ulink></entry>
+            </row>
+            <row>
                 <entry><literal remap="tt">glint</literal></entry>
                 <entry>3Dlabs, TI</entry>
                 <entry><ulink url="glint.4.html">glint(4)</ulink></entry>
@@ -397,29 +409,19 @@ The next section describes what is new in the latest version
             <row>
                 <entry><literal remap="tt">i128</literal></entry>
                 <entry>Number Nine</entry>
-                <entry><ulink url="I128.html">README.I128</ulink>,
+                <entry><ulink url="I128.txt">README.I128</ulink>,
                     <ulink url="i128.4.html">i128(4)</ulink></entry>
             </row>
             <row>
-                <entry><literal remap="tt">i740</literal></entry>
-                <entry>Intel i740</entry>
-                <entry><ulink url="i740.html">README.i740</ulink></entry>
-            </row>
-            <row>
-                <entry><literal remap="tt">imstt</literal></entry>
-                <entry>Integrated Micro Solns</entry>
-                <entry>&nbsp;</entry>
-            </row>
-            <row>
                 <entry><literal remap="tt">intel</literal></entry>
-                <entry>Intel i8xx/i9xx</entry>
-                <entry><ulink url="intel.html">README.intel</ulink>,
+                <entry>Intel Integrated Graphics Processors</entry>
+                <entry><ulink url="intel.txt">README.intel</ulink>,
                     <ulink url="intel.4.html">intel(4)</ulink></entry>
             </row>
             <row>
                 <entry><literal remap="tt">mach64</literal></entry>
                 <entry>ATI Mach64</entry>
-                <entry><ulink url="ati.html">README.ati</ulink></entry>
+                <entry><ulink url="ati.txt">README.ati</ulink></entry>
             </row>
             <row>
                 <entry><literal remap="tt">mga</literal></entry>
@@ -434,13 +436,8 @@ The next section describes what is new in the latest version
             <row>
                 <entry><literal remap="tt">newport</literal> (-)</entry>
                 <entry>SGI Newport</entry>
-                <entry><ulink url="newport.html">README.newport</ulink>,
+                <entry><ulink url="newport.txt">README.newport</ulink>,
                     <ulink url="newport.4.html">newport(4)</ulink></entry>
-            </row>
-            <row>
-                <entry><literal remap="tt">nsc</literal></entry>
-                <entry>National Semiconductor</entry>
-                <entry><ulink url="nsc.4.html">nsc(4)</ulink></entry>
             </row>
             <row>
                 <entry><literal remap="tt">nv</literal></entry>
@@ -450,31 +447,13 @@ The next section describes what is new in the latest version
             <row>
                 <entry><literal remap="tt">r128</literal></entry>
                 <entry>ATI Rage128</entry>
-                <entry><ulink url="r128.html">README.r128</ulink>,
+                <entry><ulink url="r128.txt">README.r128</ulink>,
 			<ulink url="r128.4.html">r128(4)</ulink></entry>
             </row>
             <row>
                 <entry><literal remap="tt">radeon</literal></entry>
                 <entry>ATI Radeon</entry>
                 <entry><ulink url="radeon.4.html">radeon(4)</ulink></entry>
-            </row>
-
-            <row>
-                <entry><literal remap="tt">rendition</literal></entry>
-                <entry>Rendition</entry>
-                <entry><ulink url="rendition.html">README.rendition</ulink>,
-                    <ulink url="rendition.4.html">rendition(4)</ulink></entry>
-            </row>
-            <row>
-                <entry><literal remap="tt">s3</literal></entry>
-                <entry>S3 (not ViRGE or Savage)</entry>
-                <entry>&nbsp;</entry>
-            </row>
-            <row>
-                <entry><literal remap="tt">s3virge</literal></entry>
-                <entry>S3 ViRGE</entry>
-                <entry><ulink url="s3virge.html">README.s3virge</ulink>,
-                    <ulink url="s3virge.4.html">s3virge(4)</ulink></entry>
             </row>
             <row>
                 <entry><literal remap="tt">savage</literal></entry>
@@ -489,23 +468,8 @@ The next section describes what is new in the latest version
             <row>
                 <entry><literal remap="tt">sis</literal></entry>
                 <entry>SiS</entry>
-                <entry><ulink url="SiS.html">README.SiS</ulink>,
+                <entry><ulink url="SiS.txt">README.SiS</ulink>,
                     <ulink url="sis.4.html">sis(4)</ulink></entry>
-            </row>
-            <row>
-                <entry><literal remap="tt">sisusb</literal></entry>
-                <entry>SiS USB</entry>
-                <entry><ulink url="sisusb.4.html">sisusb(4)</ulink></entry>
-            </row>
-            <row>
-                <entry><literal remap="tt">suncg14</literal> (+)</entry>
-                <entry>Sun cg14</entry>
-                <entry>&nbsp;</entry>
-            </row>
-            <row>
-                <entry><literal remap="tt">suncg3</literal> (+)</entry>
-                <entry>Sun cg3</entry>
-                <entry>&nbsp;</entry>
             </row>
             <row>
                 <entry><literal remap="tt">suncg6</literal> (+)</entry>
@@ -515,17 +479,6 @@ The next section describes what is new in the latest version
             <row>
                 <entry><literal remap="tt">sunffb</literal> (+)</entry>
                 <entry>Sun Creator/3D, Elite 3D</entry>
-                <entry>&nbsp;</entry>
-            </row>
-            <row>
-                <entry><literal remap="tt">sunleo</literal> (+)</entry>
-                <entry>Sun Leo (ZX)</entry>
-                <entry>&nbsp;</entry>
-            </row>
-            <row>
-                <entry>
-                <literal remap="tt">suntcx</literal> (+)</entry>
-                <entry>Sun TCX</entry>
                 <entry>&nbsp;</entry>
             </row>
             <row>
@@ -542,11 +495,6 @@ The next section describes what is new in the latest version
                 <entry><literal remap="tt">trident</literal></entry>
                 <entry>Trident</entry>
                 <entry><ulink url="trident.4.html">trident(4)</ulink></entry>
-            </row>
-            <row>
-                <entry><literal remap="tt">tseng</literal></entry>
-                <entry>Tseng Labs</entry>
-                <entry>&nbsp;</entry>
             </row>
             <row>
                 <entry><literal remap="tt">v4l</literal></entry>
@@ -573,16 +521,6 @@ The next section describes what is new in the latest version
                 <entry>Workstation Framebuffer</entry>
                 <entry><ulink url="wsfb.4.html">wsfb(4)</ulink></entry>
             </row>
-            <row>
-                <entry><literal remap="tt">xgi</literal></entry>
-                <entry>XGI</entry>
-                <entry><ulink url="xgi.4.html">xgi(4)</ulink></entry>
-            </row>
-            <row>
-                <entry><literal remap="tt">xgixp</literal></entry>
-                <entry>XGI XP</entry>
-                <entry><ulink url="xgixp.4.html">xgixp(4)</ulink></entry>
-            </row>
 	  </tbody>
        </tgroup>
     </informaltable>
@@ -602,7 +540,7 @@ The next section describes what is new in the latest version
     </para>
     </sect2>
 
-    <sect2>
+    <sect2 id='Input_Drivers'>
     <title>Input Drivers</title>
 
     <para>
@@ -611,27 +549,20 @@ The next section describes what is new in the latest version
 
     <para>
 
-    <informaltable>
-        <tgroup cols="3">
-            <colspec align="left" colsep="1"></colspec>
-            <colspec align="left" colsep="1"></colspec>
-            <colspec align="left" colsep="1"></colspec>
-        <tbody>
-            <row>
+    <informaltable frame='topbot'>
+        <?dbfo keep-together="always" ?>
+        <tgroup cols="3" colsep='0' rowsep='0'>
+            <colspec colname='c1' align="left" colwidth="1.0*"/>
+            <colspec colname='c2' align="left" colwidth="1.0*"/>
+            <colspec colname='c3' align="left" colwidth="1.0*"/>
+        <thead>
+            <row rowsep='1'>
                 <entry>Driver Name</entry>
                 <entry>Description</entry>
                 <entry>Further Information</entry>
             </row>
-            <row>
-                <entry><literal remap="tt">acecad</literal></entry>
-                <entry>Acecad Flair</entry>
-                <entry><ulink url="aiptek.4.html">acecad(4)</ulink></entry>
-            </row>
-            <row>
-                <entry><literal remap="tt">aiptek(*)</literal></entry>
-                <entry>Aiptek USB tablet</entry>
-                <entry><ulink url="aiptek.4.html">aiptek(4)</ulink></entry>
-            </row>
+        </thead>
+        <tbody>
             <row>
                 <entry><literal remap="tt">evdev(*)</literal></entry>
                 <entry>Linux kernel EvDev</entry>
@@ -678,9 +609,9 @@ The next section describes what is new in the latest version
 
     </sect2>
 
-    <sect2>
+    <sect2 id='Xorg_server'>
       <title>Xorg server</title>
-      <sect3>
+      <sect3 id='Loader_and_Modules'>
         <title>Loader and Modules</title>
 
         <para>
@@ -694,27 +625,26 @@ The next section describes what is new in the latest version
         <para>
         The module interfaces (both API and ABI) used in this release are
         subject to change without notice.  While we will attempt to provide
-        backward compatibility for the module interfaces, we cannot
-        guarantee this. Compatibility in the other direction is explicitly
-        not guaranteed because new modules may rely on interfaces added in
-        new releases.
+        backward compatibility for the module interfaces in stable releases,
+        we cannot guarantee this. Compatibility in the other direction is
+        explicitly not guaranteed because new modules may rely on interfaces
+        added in new releases, nor is compatibility across stable release
+        branches (such as between Xorg 1.11 and 1.12).
         </para>
 
         <warning>
         <title>Note about module security</title>
-        <para>The X server runs with root privileges, i.e.,
-        the X server loadable modules also run with these privileges.
+        <para>The Xorg server runs with root privileges, so
+        the Xorg server loadable modules also run with these privileges.
         For this reason we recommend that all users be careful to only
         use loadable modules from reliable sources,  otherwise the
-        introduction of viruses and contaminated code can occur and
-        wreak havoc on your system.  We hope to have a mechanism for
-        signing/verifying the modules that we provide available in a
-        future release.
+        introduction of malware and contaminated code can occur and
+        wreak havoc on your system.
         </para></warning>
       </sect3>
 
-      <sect3 id="config">
-        <title>Configuration File</title>
+      <sect3 id='Configuration_File'>
+<title>Configuration File</title>
 
         <para>
         The Xorg server uses a configuration file as the primary mechanism
@@ -726,7 +656,9 @@ The next section describes what is new in the latest version
         <para>
         Note that this release features significant improvements
         for running the server without a configuration file, so many users
-        may find that that they don't need a configuration file.
+        may find that that they don't need a configuration file, or may
+	rely on just snippets of configuration placed in the
+	<filename class="directory">xorg.conf.d</filename> directory.
         </para>
 
         <para>
@@ -749,18 +681,21 @@ The next section describes what is new in the latest version
 
       </sect3>
 
-      <sect3>
+      <sect3 id='Command_Line_Options'>
         <title>Command Line Options</title>
 
         <para>
         Command line options can be used to override some default
         parameters and parameters provided in the configuration file.
-        These command line options are described in the <ulink
-        url="Xorg.1.html">Xorg(1)</ulink> manual page.
+        Command line options available for use with all X servers in
+        this release are described in the <ulink
+        url="Xserver.1.html">Xserver(1)</ulink> manual page.
+        Command line options specific to the Xorg server are described in
+        the <ulink url="Xorg.1.html">Xorg(1)</ulink> manual page.
         </para>
       </sect3>
 
-      <sect3>
+      <sect3 id='Multi-head'>
         <title>Multi-head</title>
 
         <para>
@@ -782,7 +717,7 @@ The next section describes what is new in the latest version
         </para>
       </sect3>
 
-      <sect3>
+      <sect3 id='Xinerama'>
         <title>Xinerama</title>
         <para>
         <firstterm>Xinerama</firstterm> is an X server extension that
@@ -802,7 +737,7 @@ The next section describes what is new in the latest version
         </para>
       </sect3>
 
-      <sect3>
+      <sect3 id='DDC'>
         <title>DDC</title>
 
         <para>
@@ -830,22 +765,30 @@ The next section describes what is new in the latest version
         configuration file don't match those that are detected.
         </para>
 
-        <sect4>
-            <title>Changed behavior caused by DDC.</title>
+        <sect4 id='Changed_behavior_in_handling_information_from_DDC'>
+            <title>Changed behavior in handling information from DDC</title>
 
             <para>
-            Several drivers use DDC information to set the screen size and
-            pitch.  This can be overridden by explicitly resetting it to
-            the and non-DDC default value 75 with the <option>-dpi 75</option>
-	    command line option for the X
-            server, or by specifying appropriate screen dimensions with the
-            "DisplaySize" keyword in the "Monitor" section of the config
-            file.
+              The X server previously used DDC information to detect screen
+              size and pitch, and compute DPI automatically, allowing fonts
+              and other UI elements to automatically scale to appropriate
+              sizes.  This mechanism worked reasonably well for many
+              single-monitor cases, but did not compute accurate DPI values
+              for multi-monitor cases or less common single-display setups.
+              Thus, this autodetection has been removed, and the X server no
+              longer tries to compute an appropriate DPI value.  All users
+              wanting fonts, physical measurement units, and other UI elements
+              scaled appropriately for their display (including users for whom
+              autodetection previously worked) must now set DPI or some other
+              scaling factor explicitly, either via the X server's
+              <option>-dpi</option> option, a DPI setting in their graphical
+              enironment, or an alternate scaling mechanism provided by their
+              environment.
             </para>
         </sect4>
       </sect3>
 
-      <sect3>
+      <sect3 id='GLX_and_the_Direct_Rendering_Infrastructure_DRI'>
         <title>GLX and the Direct Rendering Infrastructure (DRI)</title>
 
         <para>
@@ -867,7 +810,7 @@ The next section describes what is new in the latest version
         </para>
       </sect3>
 
-      <sect3>
+      <sect3 id='Terminate_Server_keystroke'>
 	<title>Terminate Server keystroke</title>
 
 	<para>
@@ -891,19 +834,68 @@ The next section describes what is new in the latest version
 	  <screen>
 	setxkbmap -option "terminate:ctrl_alt_bksp"
 	  </screen>
-	  <ulink url="input/XKB-Config.html">The XKB Configuration
-	    Guide</ulink> also includes
-	  <ulink url="input/XKB-Config.html#zap">an example xorg.conf.d
-	    file that sets the
+	  <olink targetdoc="XKB-Config" targetptr="XKB-Config">The XKB
+	    Configuration Guide</olink> also includes
+	  <olink targetdoc="XKB-Config" targetptr="zap">an example
+	    xorg.conf.d file that sets the
 	    &ldquo;<option>terminate:ctrl_alt_bksp</option>&rdquo;
-	    option by default on all keyboards</ulink>.
+	    option by default on all keyboards</olink>.
 	  Many desktop environments include XKB configuration options in
 	  their preferences to enable this as well.
 	</para>
       </sect3>
 
+<sect3 id='Grab_debugging_keystrokes'>
+        <title>Grab debugging keystrokes</title>
 
-      <sect3>
+        <para>
+          The Xorg server in this release provides various functions
+          that can be mapped to keystrokes to aid in the debugging of
+          programs with errant input grabs.
+        </para>
+        <para>
+          The keysyms <keysym>XF86LogGrabInfo</keysym> and
+          <keysym>XF86LogWindowTree</keysym> are defined to
+          print information to the Xorg log file on the current set
+          of input grabs, and the window tree of the current display.
+          By default, these are available for use, but not mapped to any key.
+        </para>
+        <para>
+          The keysym <keysym>XF86Ungrab</keysym> forces the X server
+          to release all active grabs, which may leave the clients holding
+          them in an inconsistent state.  <keysym>XF86ClearGrab</keysym>
+          goes further, killing the client connection of any client holding
+          an active grab when it is pressed.   These keystrokes are
+          intended to allow developers to debug clients which are not
+          properly releasing grabs or have problems occur while input is
+          grabbed.   Since grabs are a fundamental part of the X
+          client security model, these keystrokes come with risks, such
+          as the ability to bypass or kill screen locks without knowing
+          the password, and thus are not available by default.
+        </para>
+        <para>
+          Users who are willing to accept the security risk and wish to enable
+          this functionality may do so via the XKB configuration option
+          &ldquo;<option>grab:break_actions</option>&rdquo;.
+        </para>
+        <warning>
+          <title>Security issue in older xkeyboard-config releases</title>
+          <para>
+            The xkeyboard-config data files included in this release have
+            the grab disabling keys correctly disabled by default, but
+            versions before xkeyboard-config 2.5 had them enabled, leading
+            to the security risk described above.   When upgrading to the
+            X server in this release be sure to also ensure xkeyboard-config
+            is a safe version.   More details about this issue may be found
+            in <ulink
+url="http://who-t.blogspot.com/2012/01/xkb-breaking-grabs-cve-2012-0064.html"
+            >advisories for CVE-2012-0064</ulink>.
+          </para>
+        </warning>
+      </sect3>
+
+
+      <sect3 id='X_Server_startup_state'>
 	<title>X Server startup state</title>
 
 	<para>
@@ -917,14 +909,14 @@ The next section describes what is new in the latest version
     </sect2>
 
 <!--
-    <sect2>
+    <sect2 id='Other_extensions'>
         <title>Other extensions</title>
         <para></para>
     </sect2>
 -->
 
 <!--
-<sect1>
+<sect1 id='X_libraries_and_clients'>
 <title>X libraries and clients</title>
 <para>
 </para>
@@ -932,23 +924,23 @@ The next section describes what is new in the latest version
 -->
 
 <!--
-<sect1>
+<sect1 id='Fonts_and_Internationalisation'>
 <title>Fonts and Internationalisation</title>
 <para>
 </para>
 </sect1>
 -->
 
-    <sect2 id="font">
-        <title>Font support</title>
+    <sect2 id='Font_support'>
+<title>Font support</title>
 
         <para>
         Details about the font support in X11R&relvers; can be
-        found in the <quote><ulink url="fonts/fonts.html"
-	   >Fonts in X11R&relvers;</ulink></quote> document.
+        found in the <quote><olink targetdoc="fonts" targetptr="fonts"
+	   >Fonts in X11R&relvers;</olink></quote> document.
         </para>
 
-	<sect3>
+	<sect3 id='Default_font_installation_directory'>
 	  <title>Default font installation directory</title>
 
 	  <para>
@@ -973,7 +965,7 @@ The next section describes what is new in the latest version
 	  </para>
 	</sect3>
 
-	<sect3>
+	<sect3 id='Bitmap_font_compression_methods'>
 	  <title>Bitmap font compression methods</title>
 
 	  <para>
@@ -996,7 +988,7 @@ The next section describes what is new in the latest version
 	  </para>
 	</sect3>
 
-	<sect3>
+	<sect3 id='Type1_Font_support'>
 	  <title>Type1 Font support</title>
 
 	  <para>
@@ -1007,7 +999,7 @@ The next section describes what is new in the latest version
 	  </para>
 	</sect3>
 
-	<sect3>
+	<sect3 id='CID_Font_support'>
 	  <title>CID Font support</title>
 
 	  <para>
@@ -1023,10 +1015,33 @@ The next section describes what is new in the latest version
 
   </sect1>
 
-  <sect1>
+  <sect1 id='Build_changes_and_issues'>
     <title>Build changes and issues</title>
 
-    <sect2>
+    <sect2 id='Strict_compilation_flags'>
+      <title>Strict compilation flags</title>
+
+      <para>
+        Most of the modules in this release use stricter compiler flags
+        when building with the GNU gcc, LLVM clang, Oracle Solaris Studio,
+        or Intel compilers.   These flags both enable more warnings, and
+        promote some warnings to fatal errors in the build.   If these
+        flags cause your build to fail, you can disable the flags that
+        turn these selected warnings into errors by adding
+        <option>--disable-selective-werror</option> to the configure command
+        for the affected module.   If that is necessary for any X.Org modules,
+        please report a bug in the xorg product on
+        <ulink url="https://bugs.freedesktop.org/" />.
+      </para>
+
+      <para>
+        Builders seeking even stricter compiler checks can instead pass
+        <option>--enable-strict-compilation</option> to the configure command
+        to make all warnings become errors.
+      </para>
+    </sect2>
+
+    <sect2 id='Silent_build_rules'>
       <title>Silent build rules</title>
 
       <para>
@@ -1044,7 +1059,7 @@ The next section describes what is new in the latest version
       </para>
     </sect2>
 
-    <sect2>
+    <sect2 id='New_configure_options_for_font_modules'>
       <title>New configure options for font modules</title>
 
       <para>
@@ -1056,7 +1071,7 @@ The next section describes what is new in the latest version
       </para>
     </sect2>
 
-    <sect2>
+    <sect2 id='New_configure_options_for_documentation_in_modules'>
       <title>New configure options for documentation in modules</title>
 
       <para>
@@ -1129,7 +1144,7 @@ The next section describes what is new in the latest version
 
   </sect1>
 
-  <sect1>
+  <sect1 id='Miscellaneous'>
     <title>Miscellaneous</title>
 
     <para>
@@ -1137,7 +1152,7 @@ The next section describes what is new in the latest version
     X11R&relvers; release.
     </para>
 
-    <sect2>
+    <sect2 id='Socket_directory_ownership_and_permissions'>
         <title>Socket directory ownership and permissions</title>
 
       <para>
@@ -1179,7 +1194,7 @@ The next section describes what is new in the latest version
 
   </sect1>
 
-  <sect1>
+  <sect1 id='Deprecated_components_and_removal_plans'>
     <title>Deprecated components and removal plans</title>
 
     <para>
@@ -1191,13 +1206,13 @@ The next section describes what is new in the latest version
     distribution in the core X11 releases outweighs the benefits of doing
     so.  In some cases, this is simply because no one has volunteered to do
     continued maintenance, so if software is listed here that you need, you
-    can contact <email>xorg@lists.freedesktop.org</email> to volunteer to
+    can contact <email>xorg-devel@lists.x.org</email> to volunteer to
     take over maintainership, either inside or outside of the Xorg release
     process.
     </para>
 
 
-    <sect2>
+    <sect2 id='Future_Removals'>
       <title>Future Removals</title>
 
       <variablelist>
@@ -1221,12 +1236,12 @@ The next section describes what is new in the latest version
 	  <term>Input device discovery via HAL</term>
 	  <listitem>
 	    <para>
-	      The Xorg server currently uses the <ulink
+	      Xorg server 1.4 started using the <ulink
 	      url="http://www.freedesktop.org/wiki/Software/hal">HAL
 	      framework</ulink> to discover connected input devices,
 	      receive notification of hotplug events for them, and to
 	      retrieve configuration parameters for them. The HAL
-	      maintainers have deprecated HAL, so the X.Org developers
+	      maintainers have since deprecated HAL, so the X.Org developers
 	      have begun replacement with alternatives.  As a result,
 	      configuration of input devices via HAL
 	      <filename>*.fdi</filename> files is no longer supported
@@ -1235,34 +1250,64 @@ The next section describes what is new in the latest version
 	    </para>
 	  </listitem>
         </varlistentry>
+
+	<varlistentry>
+	  <term>Nested and virtual X servers</term>
+	  <listitem>
+	    <para>
+	      As described in <xref linkend='Overview_of_X11R&relvers;' />,
+	      this release contains several X servers that either display
+	      onto another X server (<command>Xephyr</command> &amp;
+	      <command>Xnest</command>), or render into a virtual memory
+	      framebuffer (<command>Xvfb</command> &amp;
+	      <command>Xfake</command>).   These may be replaced in a future
+	      release by use of the <command>Xorg</command> server with the
+	      <literal remap="tt">xf86-video-nested</literal> and
+	      <literal remap="tt">xf86-video-dummy</literal> drivers
+	      which perform the same tasks.
+	    </para>
+	  </listitem>
+        </varlistentry>
       </variablelist>
     </sect2>
 
-    <sect2>
+    <sect2 id='Removed_in_this_Release'>
       <title>Removed in this Release</title>
 	<para>
 	  <variablelist>
-	    <varlistentry>
-	    <term>Xprint</term>
+
+	  <varlistentry>
+	    <term>Unmaintained drivers</term>
 	    <listitem>
 	      <para>
-		The Xprint server and extension were previously removed
-		from X11R7.5.  This release removes Xprint support from
-		a number of client programs that still had it.
+		This release no longer contains the following drivers,
+		due to lack of maintainers with relevant hardware.
+		Existing driver versions may work with current Xorg servers,
+		but they are not being actively updated to support Xorg
+		driver API &amp; ABI changes.
+		<itemizedlist>
+		  <listitem><para>xf86-input-acecad: Acecad Flair</para></listitem>
+		  <listitem><para>xf86-input-aiptek: Aiptek USB tablet</para></listitem>
+		  <listitem><para>xf86-video-apm: Alliance Pro Motion</para></listitem>
+		  <listitem><para>xf86-video-chips: Chips &amp; Technologies</para></listitem>
+		  <listitem><para>xf86-video-i740: Intel i740</para></listitem>
+		  <listitem><para>xf86-video-rendition: Rendition Verite</para></listitem>
+		  <listitem><para>xf86-video-s3: S3 (not ViRGE or Savage)</para></listitem>
+		  <listitem><para>xf86-video-s3virge: S3 ViRGE</para></listitem>
+		  <listitem><para>xf86-video-sisusb: SiS Net2280-based USB</para></listitem>
+		  <listitem><para>xf86-video-suncg14: Sun CG14</para></listitem>
+		  <listitem><para>xf86-video-suncg3: Sun CG3</para></listitem>
+		  <listitem><para>xf86-video-sunleo: Sun Leo (ZX)</para></listitem>
+		  <listitem><para>xf86-video-suntcx: Sun TCX</para></listitem>
+		  <listitem><para>xf86-video-tseng: Tseng Labs</para></listitem>
+		  <listitem><para>xf86-video-xgi: XGI</para></listitem>
+		  <listitem><para>xf86-video-xgixp: XGI Volari 8300</para></listitem>
+		</itemizedlist>
 	      </para>
 	    </listitem>
-	    </varlistentry>
+	  </varlistentry>
 
-	    <varlistentry>
-	      <term>Xsdl server</term>
-	      <listitem>
-		<para>
-		  The experimental Xsdl server has never been finished or
-		  maintained, and was removed in this release.
-		</para>
-	      </listitem>
-            </varlistentry>
-
+<!--
 	  <varlistentry>
 	    <term>Unmaintained extensions</term>
 	    <listitem>
@@ -1276,12 +1321,13 @@ The next section describes what is new in the latest version
 	      </para>
 	    </listitem>
 	  </varlistentry>
+ -->
 	</variablelist>
       </para>
     </sect2>
   </sect1>
 
-  <sect1>
+  <sect1 id='Attributions_Acknowledgements_Credits'>
     <title>Attributions/Acknowledgements/Credits</title>
 
 <!--
@@ -1318,266 +1364,392 @@ The next section describes what is new in the latest version
       since the release of X11R&prevrelvers;:
 
       <simplelist type='vert' columns='2'>
-	<member>邓逸昕</member>
+	<member>Aapo Rantalainen</member>
+	<member>Aaron Culich</member>
 	<member>Aaron Plattner</member>
-	<member>Aaron Zang</member>
+	<member>Abdoulaye Walsimou Gaye</member>
 	<member>Adam Jackson</member>
 	<member>Adam Tkac</member>
-	<member>Adrian 'Dagurashibanipal' von Bidder</member>
 	<member>Adrian Bunk</member>
 	<member>Alan Coopersmith</member>
-	<member>Alberto Milone</member>
+	<member>Alan Curry</member>
+	<member>Alan Hourihane</member>
+	<member>Alban Browaeys</member>
+	<member>Albert Damen</member>
+	<member>Aldis Berjoza</member>
+	<member>Alessandro Guido</member>
 	<member>Alex Deucher</member>
-	<member>Alex Warg</member>
-	<member>Alexander Kabaev</member>
-	<member>Alp Toker</member>
-	<member>Andrej Gelenberg</member>
-	<member>Andres Salomon</member>
-	<member>Andrew Chant</member>
+	<member>Alex Plotnick</member>
+	<member>Alexander Polakov</member>
+	<member>Alexandr Shadchin</member>
+	<member>Alexandre Julliard</member>
+	<member>Alexey Shumitsky</member>
+	<member>Alistair Leslie-Hughes</member>
+	<member>Ander Conselvan de Oliveira</member>
+	<member>Andrea Canciani</member>
+	<member>Andreas Schwab</member>
+	<member>Andreas Wettstein</member>
 	<member>Andrew Randrianasulu</member>
-	<member>Andrzej Hajda</member>
+	<member>Andrew Turner</member>
 	<member>Andy Furniss</member>
-	<member>Andy Ritger</member>
-	<member>Antoine Latter</member>
+	<member>Anssi Hannula</member>
+	<member>Antoine Martin</member>
 	<member>Arkadiusz Miśkiewicz</member>
+	<member>Armin K</member>
 	<member>Arnaud Fontaine</member>
-	<member>Auke Kok</member>
-	<member>Bart Massey</member>
-	<member>Bartek Iwaniec</member>
+	<member>Arthur Taylor</member>
+	<member>Arvind Umrao</member>
+	<member>Avram Lyon</member>
 	<member>Bartosz Brachaczek</member>
-	<member>Ben Byer</member>
+	<member>Bartosz Kosiorek</member>
+	<member>Bastian Blank</member>
+	<member>Bastien Nocera</member>
 	<member>Ben Hutchings</member>
-	<member>Ben Skeggs</member>
 	<member>Benjamin Close</member>
+	<member>Benjamin Herrenschmidt</member>
+	<member>Benjamin Otte</member>
 	<member>Benjamin Tissoires</member>
-	<member>Bernhard R. Link</member>
-	<member>Bob Ham</member>
-	<member>Brian Paul</member>
-	<member>Brice Goglin</member>
+	<member>Bernie Innocenti</member>
+	<member>Bill Nottingham</member>
+	<member>Bjørn Mork</member>
+	<member>Bodo Graumann</member>
 	<member>Bryce Harrington</member>
 	<member>Carl Worth</member>
 	<member>Carlos Garnacho</member>
-	<member>Carsten Meier</member>
-	<member>Cedric Cellier</member>
+	<member>Casper Dik</member>
+	<member>Cédric Cano</member>
+	<member>Chad Versace</member>
 	<member>Chase Douglas</member>
+	<member>Choe Hwanjin</member>
 	<member>Chris Bagwell</member>
 	<member>Chris Ball</member>
-	<member>Chris Dekter</member>
-	<member>Chris Humbert</member>
+	<member>Chris Halse Rogers</member>
 	<member>Chris Wilson</member>
-	<member>Christian Bühler</member>
-	<member>Christian Hartmann</member>
-	<member>Christian Zander</member>
-	<member>Christoph Pfister</member>
+	<member>Christian König</member>
+	<member>Christian Toutant</member>
+	<member>Christian Weisgerber</member>
+	<member>Christoph Brill</member>
+	<member>Christoph Reimann</member>
+	<member>Christophe Roland</member>
 	<member>Christopher James Halse Rogers</member>
-	<member>Cody Maloney</member>
+	<member>Christopher Yeleighton</member>
+	<member>Clemens Eisserer</member>
 	<member>Colin Harrison</member>
-	<member>Colin Watson</member>
-	<member>Cooper Yuan</member>
-	<member>Corbin Simpson</member>
-	<member>Csillag Kristof</member>
+	<member>Cristian Rodríguez</member>
 	<member>Cyril Brulebois</member>
+	<member>Daiki Ueno</member>
+	<member>Dan Horák</member>
 	<member>Dan Nicholson</member>
+	<member>Daniel A. Steffen</member>
 	<member>Daniel Drake</member>
-	<member>Daniel Kahn Gillmor</member>
+	<member>Daniel Kurtz</member>
 	<member>Daniel Stone</member>
+	<member>Daniel Vetter</member>
 	<member>Dave Airlie</member>
+	<member>David Barksdale</member>
+	<member>David Coles</member>
+	<member>David Coppa</member>
+	<member>David Fries</member>
 	<member>David Ge</member>
-	<member>David James</member>
+	<member>David Nusinow</member>
+	<member>David Reveman</member>
 	<member>David Ronis</member>
-	<member>David Woodhouse</member>
-	<member>Diego 'Flameeyes' Pettenò</member>
-	<member>Dima Kogan</member>
+	<member>Denis 'GNUtoo' Carikli</member>
+	<member>Derek Buitenhuis</member>
+	<member>Derek Foreman</member>
+	<member>Derek Wang</member>
+	<member>Devin J. Pohly</member>
+	<member>Diego Elio Pettenò</member>
 	<member>Dirk Wallenstein</member>
-	<member>Dmitry Torokhov</member>
-	<member>Dominik Jasiok</member>
-	<member>Donnie Berkholz</member>
+	<member>dtakahashi42</member>
 	<member>Eamon Walsh</member>
 	<member>Ed Schouten</member>
-	<member>Edward Moy</member>
-	<member>Edward O'Callaghan</member>
+	<member>Edward Sheldrake</member>
 	<member>Egbert Eich</member>
+	<member>Eitan Adler</member>
+	<member>Elias Probst</member>
+	<member>Elie Bleton</member>
+	<member>Elvis Pranskevichus</member>
+	<member>Emanuele Giaquinta</member>
+	<member>Eoghan Sherry</member>
 	<member>Eric Anholt</member>
-	<member>Éric Piel</member>
-	<member>Eric Sesterhenn</member>
+	<member>Erik Kilfoil</member>
+	<member>Erik Saule</member>
+	<member>Erkki Seppälä</member>
+	<member>Eugeni Dodonov</member>
+	<member>Evan Broder</member>
 	<member>Fabio Pedretti</member>
+	<member>Federico Mena Quintero</member>
 	<member>Fernando Carrijo</member>
+	<member>Ferry Huberts</member>
 	<member>Francisco Jerez</member>
 	<member>Frank Huang</member>
+	<member>Frank Mariak</member>
+	<member>Frédéric Boiteux</member>
 	<member>Fredrik Höglund</member>
-	<member>Gabor Z. Papp</member>
+	<member>Fryderyk Dziarmagowski</member>
 	<member>Gaetan Nadon</member>
-	<member>Geoffrey Li</member>
+	<member>George Staplin</member>
+	<member>Giuseppe Bilotta</member>
+	<member>Glenn Burkhardt</member>
 	<member>Guillem Jover</member>
-	<member>Hans Nieser</member>
-	<member>Heikki Lindholm</member>
-	<member>Henning Sten</member>
+	<member>György Balló</member>
+	<member>Hans Verkuil</member>
+	<member>Hans-Juergen Mauser</member>
+	<member>Hans-Peter Budek</member>
+	<member>Harshula Jayasuriya</member>
+	<member>Havoc Pennington</member>
 	<member>Henry Zhao</member>
-	<member>Hiroyuki Ikezoe</member>
-	<member>Horst Wente</member>
-	<member>Hunk Cui</member>
 	<member>Ian Osgood</member>
 	<member>Ian Romanick</member>
-	<member>Ingmar Vanhassel</member>
+	<member>Ilija Hadzic</member>
+	<member>Ivan Bulatovic</member>
 	<member>Jakob Bornecrantz</member>
 	<member>James Cloos</member>
 	<member>James Jones</member>
-	<member>James Le Cuirot</member>
+	<member>James Simmons</member>
 	<member>Jamey Sharp</member>
+	<member>Jamie Kennea</member>
 	<member>Jan Hauffa</member>
-	<member>Jens Petersen</member>
+	<member>Jan Kriho</member>
+	<member>Janne Huttunen</member>
+	<member>Jari Aalto</member>
+	<member>Javier Acosta</member>
+	<member>Javier Jardón</member>
+	<member>Javier Pello</member>
+	<member>Jay Cotton</member>
+	<member>Jeetu Golani</member>
+	<member>Jeff Chua</member>
+	<member>Jens Elkner</member>
 	<member>Jeremy Huddleston</member>
-	<member>Jeremy Kolb</member>
-	<member>Jeroen Hoek</member>
+	<member>Jerome Carretero</member>
 	<member>Jerome Glisse</member>
 	<member>Jesse Adkins</member>
 	<member>Jesse Barnes</member>
-	<member>Jim Ingram</member>
-	<member>Jim Ramsay</member>
-	<member>Joachim Breitner</member>
+	<member>Jian Zhao</member>
+	<member>JJ Ding</member>
+	<member>Joe Nahmias</member>
+	<member>Joe Shaw</member>
+	<member>Joerg Sonnenberger</member>
+	<member>Johannes Obermayr</member>
+	<member>John Martin</member>
+	<member>Jon Nettleton</member>
 	<member>Jon TURNEY</member>
+	<member>Jools Wills</member>
+	<member>Jordan Hayes</member>
+	<member>Jörn Horstmann</member>
 	<member>Josh Triplett</member>
 	<member>Julien Cristau</member>
 	<member>Julien Danjou</member>
-	<member>Juliusz Chroboczek</member>
+	<member>Justin Dou</member>
 	<member>Justin Mattock</member>
-	<member>Kalle Olavi Niemitalo</member>
-	<member>Karl Tomlinson</member>
+	<member>Kai-Uwe Behrmann</member>
 	<member>Kees Cook</member>
 	<member>Keith Packard</member>
 	<member>Kenneth Graunke</member>
-	<member>Kevin E Martin</member>
-	<member>Kevin Van Vechten</member>
-	<member>Kim Woelders</member>
-	<member>Kok, Auke</member>
+	<member>Kent Baxley</member>
+	<member>Kirill Elagin</member>
+	<member>Knut Petersen</member>
+	<member>Konstantin Belousov</member>
 	<member>Kristian Høgsberg</member>
+	<member>Kristof Szabo</member>
+	<member>Krzysztof Halasa</member>
 	<member>Kusanagi Kouichi</member>
-	<member>Lee Leahu</member>
-	<member>Leif Middelschulte</member>
-	<member>Leonardo Chiquitto</member>
-	<member>Lubos Lunak</member>
+	<member>Lennart Poettering</member>
+	<member>Lev Nezhdanov</member>
+	<member>Linus Arver</member>
 	<member>Luc Verhaegen</member>
-	<member>Luca Tettamanti</member>
-	<member>Ma Ling</member>
+	<member>Maarten Lankhorst</member>
 	<member>Maarten Maathuis</member>
 	<member>Macpaul Lin</member>
 	<member>Magnus Kessler</member>
-	<member>Marc Majka</member>
-	<member>Marcin Baczyński</member>
 	<member>Marcin Kościelnicki</member>
 	<member>Marcin Slusarz</member>
+	<member>Marcin Woliński</member>
 	<member>Marek Olšák</member>
 	<member>Mario Kleiner</member>
+	<member>Mark Dokter</member>
 	<member>Mark Kettenis</member>
+	<member>Mark Schreiber</member>
+	<member>Marko Macek</member>
 	<member>Marko Myllynen</member>
 	<member>Markus Duft</member>
-	<member>Markus Gapp</member>
-	<member>Markus Strobl</member>
+	<member>Markus Fleschutz</member>
 	<member>Mart Raudsepp</member>
-	<member>Martin Ettl</member>
-	<member>Martin Otte</member>
-	<member>Martin Pärtel</member>
+	<member>Martin Langhoff</member>
 	<member>Martin-Éric Racine</member>
-	<member>Márton Németh</member>
+	<member>Marton Balint</member>
+	<member>Matěj Cepl</member>
+	<member>Mathias Krause</member>
+	<member>Mathieu Bérard</member>
+	<member>Mathieu Taillefumier</member>
 	<member>Matt Dew</member>
 	<member>Matt Turner</member>
-	<member>Matteo Delfino</member>
+	<member>Matthew D. Fuller</member>
+	<member>matthew green</member>
+	<member>Matthias Clasen</member>
 	<member>Matthias Hopf</member>
 	<member>Matthieu Herrb</member>
-	<member>Matthijs Kooijman</member>
-	<member>Michael Cree</member>
-	<member>Michael Jansen</member>
+	<member>Matti Hamalainen</member>
+	<member>Max Schwarz</member>
+	<member>Maxim Iorsh</member>
+	<member>Mehdi Dogguy</member>
+	<member>meng</member>
+	<member>Michael Chang</member>
+	<member>Michael Larabel</member>
 	<member>Michael Olbrich</member>
-	<member>Michael Ost</member>
 	<member>Michael Stapelberg</member>
-	<member>Michael Vogt</member>
+	<member>Michael Thayer</member>
 	<member>Michał Górny</member>
+	<member>Michal Marek</member>
+	<member>Michał Masłowski</member>
+	<member>Michal Suchanek</member>
 	<member>Michel Dänzer</member>
+	<member>Michel Hummel</member>
+	<member>Mikael Magnusson</member>
+	<member>Mike Frysinger</member>
+	<member>Mike Stroyan</member>
 	<member>Mikhail Gusarov</member>
-	<member>Nicolai Hähnle</member>
-	<member>Nicolas Boullis</member>
-	<member>Nicolas George</member>
-	<member>Nicolas Reinecke</member>
-	<member>Nigel Tamplin</member>
-	<member>Nirbheek Chauhan</member>
+	<member>Modestas Vainius</member>
+	<member>Mohammed Sameer</member>
+	<member>Nick Bowler</member>
+	<member>Nicolai Stange</member>
+	<member>Nicolas Cavallari</member>
+	<member>Nicolas Joly</member>
+	<member>Nicolas Kaiser</member>
+	<member>Nicolas Kalkhof</member>
+	<member>Nicolas Peninguy</member>
+	<member>Nikolai Kondrashov</member>
+	<member>Nils Wallménius</member>
+	<member>Nithin Nayak Sujir</member>
+	<member>Nobuhiro Iwamatsu</member>
+	<member>Olaf Buddenhagen</member>
 	<member>Oldřich Jedlička</member>
+	<member>Oleh Nykyforchyn</member>
 	<member>Oliver McFadden</member>
-	<member>Olivier Samyn</member>
-	<member>Osamu Sayama</member>
-	<member>Oswald Buddenhagen</member>
-	<member>Otavio Salvador</member>
-	<member>Owain G. Ainsworth</member>
-	<member>Owen W. Taylor</member>
-	<member>Patrick Caulfield</member>
+	<member>Oliver Schmidt</member>
+	<member>Olivier Fourdan</member>
+	<member>Olli Vertanen</member>
+	<member>Ondrej Zary</member>
+	<member>Owen Taylor</member>
+	<member>Pander</member>
+	<member>Pär Lidberg</member>
+	<member>Parag Nemade</member>
 	<member>Patrick Curran</member>
 	<member>Patrick E. Kane</member>
-	<member>Patrick Guimond</member>
-	<member>Paul Bender</member>
-	<member>Paul Loewenstein</member>
-	<member>Paul &quot;TBBle&quot; Hampson</member>
+	<member>Paul Fox</member>
+	<member>Paul Menzel</member>
+	<member>Paul Neumann</member>
 	<member>Pauli Nieminen</member>
-	<member>Paulo César Pereira de Andrade</member>
-	<member>Paulo Ricardo Zanoni</member>
+	<member>Paulius Zaleckas</member>
+	<member>Paulo Zanoni</member>
+	<member>Pelle Johansson</member>
+	<member>Pete Beardmore</member>
+	<member>Peter Clifton</member>
 	<member>Peter Harris</member>
 	<member>Peter Hutterer</member>
 	<member>Peter Korsgaard</member>
-	<member>Petr Salinger</member>
-	<member>Philippe Ribet</member>
+	<member>Peter Zotov</member>
+	<member>Philip Langdale</member>
+	<member>Philipp Reh</member>
+	<member>Phillp Haddad</member>
 	<member>Pierre-Loup A. Griffais</member>
+	<member>Priit Laes</member>
+	<member>Promathesh Mandal</member>
 	<member>Rami Ylimäki</member>
+	<member>Reinhard Karcher</member>
 	<member>Rémi Cardona</member>
-	<member>Rémi Denis-Courmont</member>
-	<member>Richard Barnette</member>
-	<member>Richard Purdie</member>
-	<member>Rob Taylor</member>
+	<member>Richard Hartmann</member>
+	<member>Rob Clark</member>
+	<member>Robert Ancell</member>
 	<member>Robert Bragg</member>
 	<member>Robert Hooker</member>
 	<member>Robert Morell</member>
-	<member>Roel Kluin</member>
+	<member>Roberto Branciforti</member>
+	<member>Roger Cruz</member>
+	<member>Roland Cassard</member>
 	<member>Roland Scheidegger</member>
-	<member>Ruediger Oertel</member>
-	<member>Ryan Hajdaj</member>
-	<member>Sam Lau</member>
-	<member>Sami Farin</member>
+	<member>Roman Jarosz</member>
+	<member>Ross Burton</member>
+	<member>Rui Matos</member>
+	<member>Ryan Pavlik</member>
+	<member>Sam Spilsbury</member>
 	<member>Samuel Thibault</member>
 	<member>Sascha Hlusiak</member>
+	<member>Satoshi KImura</member>
+	<member>Scott James Remnant</member>
+	<member>Sebastian Glita</member>
 	<member>Sedat Dilek</member>
-	<member>Shunichi Fuji</member>
+	<member>Sergey Samokhin</member>
+	<member>Sergey V. Udaltsov</member>
+	<member>Servaas Vandenberghe</member>
+	<member>Siddhesh Poyarekar</member>
 	<member>Simon Farnsworth</member>
+	<member>Simon Que</member>
 	<member>Simon Thum</member>
+	<member>Sitsofe Wheeler</member>
 	<member>Søren Sandmann Pedersen</member>
-	<member>Thien-Thi Nguyen</member>
-	<member>Thomas Coppi</member>
-	<member>Thomas Hellstrom</member>
-	<member>Thomas Hunger</member>
-	<member>Thomas Jaeger</member>
+	<member>Stefan Dirsch</member>
+	<member>Stefan Glasenhardt</member>
+	<member>Stefan Kost</member>
+	<member>Stefan Potyra</member>
+	<member>Stephan Hilb</member>
+	<member>Stephane Marchesin</member>
+	<member>Stephen Turnbull</member>
+	<member>Stuart Kreitman</member>
+	<member>Takashi Iwai</member>
+	<member>Terry Lambert</member>
+	<member>Thierry Vignaud</member>
+	<member>Thomas Bächler</member>
+	<member>Thomas Fjellstrom</member>
+	<member>Thomas Hellström</member>
+	<member>Thomas Hoger</member>
+	<member>Thordur Bjornsson</member>
 	<member>Tiago Vignatti</member>
-	<member>Tilman Sauerbeck</member>
+	<member>Till Matthiesen</member>
+	<member>Tim van der Molen</member>
 	<member>Tim Yamin</member>
 	<member>Timo Aaltonen</member>
-	<member>Timo Myyra</member>
 	<member>Tobias Droste</member>
-	<member>Tobias Koch</member>
 	<member>Tollef Fog Heen</member>
+	<member>Tom "spot" Callaway</member>
+	<member>Tom Fogal</member>
 	<member>Tomas Carnecky</member>
-	<member>Tomáš Chvátal</member>
+	<member>Tomas Frydrych</member>
+	<member>Tomas Hoger</member>
+	<member>Tomáš Trnka</member>
+	<member>Toralf Förster</member>
 	<member>Tormod Volden</member>
 	<member>Trevor Woerner</member>
+	<member>U. Artie Eoff</member>
+	<member>Uli Schlachter</member>
+	<member>Ulrich Müller</member>
+	<member>Van de Bugger</member>
+	<member>Vasily Khoruzhick</member>
+	<member>Vasyĺ V. Vercynśkyj</member>
+	<member>Victor Machado</member>
+	<member>Ville Skyttä</member>
 	<member>Ville Syrjälä</member>
 	<member>Vincent Torri</member>
+	<member>Walter Bender</member>
 	<member>Walter Harms</member>
-	<member>Will Thompson</member>
-	<member>Wolfram</member>
-	<member>Xavier Chantry</member>
-	<member>Xiaoyang Yu (Max)</member>
+	<member>William Jon McCann</member>
+	<member>Xavier Bachelot</member>
+	<member>Xiang, Haihao</member>
+	<member>Xue Wei</member>
+	<member>Xunx Fang</member>
 	<member>Y.C. Chen</member>
 	<member>Yaakov Selkowitz</member>
-	<member>Yang Zhao</member>
 	<member>Yann Droneaud</member>
 	<member>Yannick Heneault</member>
-	<member>Zephaniah E. Hull</member>
+	<member>Zack Rusin</member>
 	<member>Zhao Yakui</member>
+	<member>Zhenyu Wang</member>
+	<member>Zhigang Gong</member>
+	<member>Zou Nan hai</member>
       </simplelist>
+      and the members of <ulink url="http://translationproject.org/">the
+      Translation Project</ulink>.
     </para>
 
     <para>

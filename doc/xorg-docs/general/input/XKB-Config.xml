@@ -1,13 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE article PUBLIC "-//OASIS//DTD DocBook XML V4.3//EN"
-          "http://www.oasis-open.org/docbook/xml/4.3/docbookx.dtd" [
+          "http://www.oasis-open.org/docbook/xml/4.3/docbookx.dtd"
+[
+<!ENTITY % defs SYSTEM "defs.ent"> %defs;
 ]>
 
-<article>
+<article id='XKB-Config'>
 
   <articleinfo>
 
     <title>The XKB Configuration Guide</title>
+    <releaseinfo>X Version 11, Release &fullrelvers;</releaseinfo>
     <authorgroup>
       <author>
 	<firstname>Kamil</firstname><surname>Toman</surname>
@@ -36,7 +39,7 @@ url="http://www.freedesktop.org/wiki/Software/XKeyboardConfig"
 
   </articleinfo>
 
-  <sect1>
+  <sect1 id='Overview'>
     <title>Overview</title>
 
     <para>
@@ -57,7 +60,7 @@ than those tools provide.
 
   </sect1>
 
-  <sect1>
+  <sect1 id='Selecting_XKB_Configuration'>
     <title>Selecting XKB Configuration</title>
 
     <para>
@@ -132,7 +135,7 @@ the xkb configuration subdirectory <filename>rules</filename>
 (for example <filename>/usr/share/X11/xkb/rules</filename>).
     </para>
 
-    <sect2>
+    <sect2 id='Basic_Configuration'>
       <title>Basic Configuration</title>
 
       <para>
@@ -199,7 +202,7 @@ setxkbmap -option "terminate:ctrl_alt_bksp"
 
     </sect2>
 
-    <sect2>
+    <sect2 id='Advanced_Configuration'>
       <title>Advanced Configuration</title>
 
       <para>
@@ -245,7 +248,7 @@ setxkbmap -model logicordless -layout "us,cz,de" \
 
     </sect2>
 
-    <sect2>
+    <sect2 id='Even_More_Advanced_Configuration'>
       <title>Even More Advanced Configuration</title>
 
       <para>
@@ -285,7 +288,7 @@ setxkbmap -model logicordless -layout "us,cz,de" \
 
     </sect2>
 
-    <sect2>
+    <sect2 id='Basic_Global_Options'>
       <title>Basic Global Options</title>
 
       <para>
@@ -302,7 +305,7 @@ see the section starting with <quote><literal>! option</literal></quote> in the
 
   </sect1>
 
-  <sect1>
+  <sect1 id='Keymap_XKB_Configuration'>
     <title>Keymap XKB Configuration</title>
 
     <para>

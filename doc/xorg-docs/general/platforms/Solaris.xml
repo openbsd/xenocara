@@ -2,17 +2,16 @@
 <!DOCTYPE article PUBLIC "-//OASIS//DTD DocBook XML V4.3//EN"
                       "http://www.oasis-open.org/docbook/xml/4.3/docbookx.dtd"
 [
-<!ENTITY % defs SYSTEM "/xorg-sgml-doctools/X11/defs.ent"> %defs;
+<!ENTITY % defs SYSTEM "defs.ent"> %defs;
 ]>
 
-<article>
+<article id='Solaris'>
 
 <!-- Title information -->
 <articleinfo>
 
- <title>X Window System support for <trademark>Solaris</trademark> &amp;
-      <trademark>OpenSolaris</trademark> from X.Org
- </title>
+ <title>X Window System on <trademark>Solaris</trademark></title>
+ <releaseinfo>X Version 11, Release &fullrelvers;</releaseinfo>
  <authorgroup>
   <author>
     <firstname>David</firstname><surname>Holland</surname>
@@ -28,18 +27,18 @@
 
   <author>
       <firstname>Alan</firstname><surname>Coopersmith</surname>
-      <affiliation><orgname><ulink url="http://www.sun.com/">Sun
-	      Microsystems, Inc.</ulink></orgname></affiliation>
+      <affiliation><orgname><ulink url="http://www.oracle.com/">Oracle
+	      Corp.</ulink></orgname></affiliation>
   </author>
  </authorgroup>
 
- <date>2009 September 16</date>
+ <date>2012 March 20</date>
 </articleinfo>
 
 <!-- Table of contents -->
 
 <!-- Begin the document -->
-<sect1>
+<sect1 id='The_VT-switching_sub-system_in_Solaris'>
 <title>The VT-switching sub-system in Solaris</title>
 
 <para>
@@ -53,11 +52,12 @@ If you use this form of virtual terminals, you do so at
 </para>
 
 <para>
-A new virtual terminal sub-system has been introduced in Solaris 11
-(currently available in pre-release development builds).   This version
-is supported on both SPARC and x86 platforms, though SPARC support is
-limited to devices with "Coherent Console" support in the kernel frame buffer
-driver.   Support for it is found only in Xorg 1.7 and later releases.
+A new virtual terminal sub-system has been introduced in Solaris 11,
+and is also available in systems based on the OpenSolaris or illumos sources.
+This version is supported on both SPARC and x86 platforms, though SPARC
+support is limited to devices with "Coherent Console" support in the kernel
+frame buffer driver.  Support for it is found only in Xorg 1.7 and later
+server releases.
 </para>
 
 <para>
@@ -67,7 +67,7 @@ most other VT sub-systems.
 
 </sect1>
 
-<sect1>
+<sect1 id='Notes_for_building_X11R&relvers;_on_Solaris'>
 <title>Notes for building X11R&relvers; on Solaris</title>
 
 <para>
@@ -119,7 +119,7 @@ these programs must be found before any possible GNU versions.
 
 </sect1>
 
-<sect1>
+<sect1 id='Notes_for_running_Xorg_on_Solaris'>
 <title>Notes for running Xorg on Solaris</title>
 
 <para>
@@ -160,7 +160,7 @@ Xqueue is <emphasis remap="bf">NOT</emphasis> supported under Solaris.
 </sect1>
 
 
-<sect1>
+<sect1 id='Bug_Notification'>
 <title>Bug Notification</title>
 
 <para>
