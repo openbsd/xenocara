@@ -25,9 +25,9 @@ dnl          an unwitting cast of miscellaneous others
 dnl
 dnl Process this file with autoconf to create configure.
 
-AC_PREREQ(2.57)
-AC_INIT([xorg-server], 1.11.4, [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg], xorg-server)
-RELEASE_DATE="2012-01-27"
+AC_PREREQ(2.60)
+AC_INIT([xorg-server], 1.12.2, [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg], xorg-server)
+RELEASE_DATE="2012-05-29"
 AC_CONFIG_SRCDIR([Makefile.am])
 AM_INIT_AUTOMAKE([foreign dist-bzip2])
 AM_MAINTAINER_MODE
@@ -45,7 +45,7 @@ XORG_WITH_XMLTO(0.0.20)
 XORG_WITH_FOP
 XORG_WITH_XSLTPROC
 XORG_ENABLE_UNIT_TESTS
-XORG_LD_WRAP
+XORG_LD_WRAP([optional])
 
 m4_ifndef([XORG_FONT_MACROS_VERSION], [m4_fatal([must install fontutil 1.1 or later before running autoconf/autogen])])
 XORG_FONT_MACROS_VERSION(1.1)
@@ -76,7 +76,6 @@ AC_PROG_LN_S
 AC_LIBTOOL_WIN32_DLL
 AC_DISABLE_STATIC
 AC_PROG_LIBTOOL
-AC_PROG_MAKE_SET
 PKG_PROG_PKG_CONFIG
 AC_PROG_LEX
 AC_PROG_YACC
@@ -86,6 +85,12 @@ XORG_PROG_RAWCPP
 # Quoted so that make will expand $(CWARNFLAGS) in makefiles to allow
 # easier overrides at build time.
 XSERVER_CFLAGS='$(CWARNFLAGS)'
+
+dnl Explicitly add -fno-strict-aliasing since this option should disappear
+dnl from util-macros CWARNFLAGS
+if  test "x$GCC" = xyes ; then
+    XSERVER_CFLAGS="$XSERVER_CFLAGS -fno-strict-aliasing"
+fi
 
 dnl Check for dtrace program (needed to build Xserver dtrace probes)
 dnl Also checks for <sys/sdt.h>, since some Linux distros have an 
@@ -207,32 +212,14 @@ AC_CHECK_FUNC([dlopen], [],
 AC_SUBST(DLOPEN_LIBS)
 
 dnl Checks for library functions.
-AC_FUNC_VPRINTF
-AC_CHECK_FUNCS([geteuid getuid link memmove memset mkstemp strchr strrchr \
-		strtol getopt getopt_long vsnprintf walkcontext backtrace \
-		getisax getzoneid shmctl64 strcasestr ffs vasprintf])
-AC_FUNC_ALLOCA
-dnl Old HAS_* names used in os/*.c.
-AC_CHECK_FUNC([getdtablesize],
-	AC_DEFINE(HAS_GETDTABLESIZE, 1, [Have the 'getdtablesize' function.]))
-AC_CHECK_FUNC([getifaddrs],
-	AC_DEFINE(HAS_GETIFADDRS, 1, [Have the 'getifaddrs' function.]))
-AC_CHECK_FUNC([getpeereid],
-	AC_DEFINE(HAS_GETPEEREID, 1, [Have the 'getpeereid' function.]))
-AC_CHECK_FUNC([getpeerucred],
-	AC_DEFINE(HAS_GETPEERUCRED, 1, [Have the 'getpeerucred' function.]))
-AC_CHECK_FUNC([strlcat], HAVE_STRLCAT=yes, HAVE_STRLCAT=no)
-AM_CONDITIONAL(NEED_STRLCAT, [test x$HAVE_STRLCAT = xno])	
-AC_CHECK_FUNC([strlcpy], AC_DEFINE(HAS_STRLCPY, 1, [Have the 'strlcpy' function]))
+AC_CHECK_FUNCS([backtrace ffs geteuid getuid issetugid getresuid \
+	getdtablesize getifaddrs getpeereid getpeerucred getzoneid \
+	mmap shmctl64 strncasecmp vasprintf vsnprintf walkcontext])
+AC_REPLACE_FUNCS([strcasecmp strcasestr strlcat strlcpy strndup])
 
-AM_CONDITIONAL(NEED_VSNPRINTF, [test x$HAVE_VSNPRINTF = xno])
-
-dnl Check for mmap support for Xvfb
-AC_CHECK_FUNC([mmap], AC_DEFINE(HAS_MMAP, 1, [Have the 'mmap' function.]))
-
-dnl Find the math libary
+dnl Find the math libary, then check for cbrt function in it.
 AC_CHECK_LIB(m, sqrt)
-AC_CHECK_LIB(m, cbrt, AC_DEFINE(HAVE_CBRT, 1, [Have the 'cbrt' function]))
+AC_CHECK_FUNCS([cbrt])
 
 AC_CHECK_HEADERS([ndbm.h dbm.h rpcsvc/dbm.h])
 
@@ -605,9 +592,6 @@ AC_ARG_ENABLE(install-libxf86config,
 AC_ARG_ENABLE(visibility,     AC_HELP_STRING([--enable-visibility], [Enable symbol visibility (default: auto)]),
 				[SYMBOL_VISIBILITY=$enableval],
 				[SYMBOL_VISIBILITY=auto])
-AC_ARG_ENABLE(pc98,     	AC_HELP_STRING([--enable-pc98], [Enable PC98 support in Xorg (default: auto)]),
-				[SUPPORT_PC98=$enableval],
-				[SUPPORT_PC98=auto])
 
 dnl GLX build options
 AC_ARG_ENABLE(aiglx,          AS_HELP_STRING([--enable-aiglx], [Build accelerated indirect GLX (default: enabled)]),
@@ -641,7 +625,7 @@ AM_CONDITIONAL(X_PRIVSEP, [test x$ENABLE_PRIVSEP = xyes])
 dnl Extensions.
 AC_ARG_ENABLE(registry,       AS_HELP_STRING([--disable-registry], [Build string registry module (default: enabled)]), [XREGISTRY=$enableval], [XREGISTRY=yes])
 AC_ARG_ENABLE(composite,      AS_HELP_STRING([--disable-composite], [Build Composite extension (default: enabled)]), [COMPOSITE=$enableval], [COMPOSITE=yes])
-AC_ARG_ENABLE(mitshm,         AS_HELP_STRING([--disable-shm], [Build SHM extension (default: enabled)]), [MITSHM=$enableval], [MITSHM=yes])
+AC_ARG_ENABLE(mitshm,         AS_HELP_STRING([--disable-mitshm], [Build SHM extension (default: enabled)]), [MITSHM=$enableval], [MITSHM=yes])
 AC_ARG_ENABLE(xres,           AS_HELP_STRING([--disable-xres], [Build XRes extension (default: enabled)]), [RES=$enableval], [RES=yes])
 AC_ARG_ENABLE(record,         AS_HELP_STRING([--disable-record], [Build Record extension (default: enabled)]), [RECORD=$enableval], [RECORD=yes])
 AC_ARG_ENABLE(xv,             AS_HELP_STRING([--disable-xv], [Build Xv extension (default: enabled)]), [XV=$enableval], [XV=yes])
@@ -674,6 +658,7 @@ AC_ARG_ENABLE(int10-module,     AS_HELP_STRING([--enable-int10-module], [Build X
 AC_ARG_ENABLE(windowswm,      AS_HELP_STRING([--enable-windowswm], [Build XWin with WindowsWM extension (default: no)]), [WINDOWSWM=$enableval], [WINDOWSWM=no])
 AC_ARG_ENABLE(libdrm,         AS_HELP_STRING([--enable-libdrm], [Build Xorg with libdrm support (default: enabled)]), [DRM=$enableval],[DRM=yes])
 AC_ARG_ENABLE(clientids,      AS_HELP_STRING([--disable-clientids], [Build Xorg with client ID tracking (default: enabled)]), [CLIENTIDS=$enableval], [CLIENTIDS=yes])
+AC_ARG_ENABLE(pciaccess, AS_HELP_STRING([--enable-pciaccess], [Build Xorg with pciaccess library (default: enabled)]), [PCI=$enableval], [PCI=yes])
 
 dnl DDXes.
 AC_ARG_ENABLE(xorg,    	      AS_HELP_STRING([--enable-xorg], [Build Xorg server (default: auto)]), [XORG=$enableval], [XORG=auto])
@@ -739,10 +724,6 @@ AM_CONDITIONAL(SECURE_RPC, [test "x$SECURE_RPC" = xyes])
 AM_CONDITIONAL(INT10_VM86, [test "x$INT10" = xvm86])
 AM_CONDITIONAL(INT10_X86EMU, [test "x$INT10" = xx86emu])
 AM_CONDITIONAL(INT10_STUB, [test "x$INT10" = xstub])
-if test "x$INT10" = xyes; then
-	dnl VM86 headers
-	AC_CHECK_HEADERS([sys/vm86.h sys/io.h])
-fi
 
 dnl Handle installing libxf86config
 AM_CONDITIONAL(INSTALL_LIBXF86CONFIG, [test "x$INSTALL_LIBXF86CONFIG" = xyes])
@@ -758,13 +739,18 @@ case $host_os in
 		XV=no
 		;;
 	darwin*)
+		PCI=no
+		INT10MODULE=no
+		VGAHW=no
+		VBE=no
+		DRM=no
 		DRI2=no
 
 		if test x$XQUARTZ = xauto; then
 			AC_CACHE_CHECK([whether to build Xquartz],xorg_cv_Carbon_framework,[
 		 		save_LDFLAGS=$LDFLAGS
 				LDFLAGS="$LDFLAGS -framework Carbon"
-				AC_LINK_IFELSE([char FSFindFolder(); int main() { FSFindFolder(); return 0;}],
+				AC_LINK_IFELSE([AC_LANG_SOURCE([char FSFindFolder(); int main() { FSFindFolder(); return 0;}])],
 				               [xorg_cv_Carbon_framework=yes],
 				               [xorg_cv_Carbon_framework=no])
 			        LDFLAGS=$save_LDFLAGS])
@@ -818,10 +804,19 @@ VIDMODEPROTO="xf86vidmodeproto >= 2.2.99.1"
 WINDOWSWMPROTO="windowswmproto"
 APPLEWMPROTO="applewmproto >= 1.4"
 
-dnl Core modules for most extensions, et al.
-SDK_REQUIRED_MODULES="[xproto >= 7.0.22] [randrproto >= 1.2.99.3] [renderproto >= 0.11] [xextproto >= 7.1.99] [inputproto >= 1.9.99.902] [kbproto >= 1.0.3] fontsproto"
-# Make SDK_REQUIRED_MODULES available for inclusion in xorg-server.pc
-AC_SUBST(SDK_REQUIRED_MODULES)
+dnl Required modules
+XPROTO="xproto >= 7.0.22"
+RANDRPROTO="randrproto >= 1.2.99.3"
+RENDERPROTO="renderproto >= 0.11"
+XEXTPROTO="xextproto >= 7.1.99"
+INPUTPROTO="inputproto >= 2.1.99.6"
+KBPROTO="kbproto >= 1.0.3"
+FONTSPROTO="fontsproto"
+FIXESPROTO="fixesproto >= 5.0"
+DAMAGEPROTO="damageproto >= 1.1"
+XCMISCPROTO="xcmiscproto >= 1.2.0"
+BIGREQSPROTO="bigreqsproto >= 1.1.0"
+XTRANS="xtrans >= 1.2.2"
 
 dnl List of libraries that require a specific version
 LIBAPPLEWM="applewm >= 1.4"
@@ -833,7 +828,7 @@ LIBXEXT="xext >= 1.0.99.4"
 LIBXFONT="xfont >= 1.4.2"
 LIBXI="xi >= 1.2.99.1"
 LIBXTST="xtst >= 1.0.99.2"
-LIBPCIACCESS="pciaccess >= 0.8.0"
+LIBPCIACCESS="pciaccess >= 0.12.901"
 LIBUDEV="libudev >= 143"
 LIBSELINUX="libselinux >= 2.0.86"
 LIBDBUS="dbus-1 >= 1.0"
@@ -844,7 +839,12 @@ dnl specific modules against it
 PKG_CHECK_MODULES(PIXMAN, $LIBPIXMAN)
 REQUIRED_LIBS="$REQUIRED_LIBS $LIBPIXMAN $LIBXFONT xau"
 
-REQUIRED_MODULES="[fixesproto >= 5.0] [damageproto >= 1.1] [xcmiscproto >= 1.2.0] [xtrans >= 1.2.2] [bigreqsproto >= 1.1.0] $SDK_REQUIRED_MODULES"
+dnl Core modules for most extensions, et al.
+SDK_REQUIRED_MODULES="$XPROTO $RANDRPROTO $RENDERPROTO $XEXTPROTO $INPUTPROTO $KBPROTO $FONTSPROTO $LIBPIXMAN"
+# Make SDK_REQUIRED_MODULES available for inclusion in xorg-server.pc
+AC_SUBST(SDK_REQUIRED_MODULES)
+
+REQUIRED_MODULES="$FIXESPROTO $DAMAGEPROTO $XCMISCPROTO $XTRANS $BIGREQSPROTO $SDK_REQUIRED_MODULES"
 
 if test "x$CONFIG_UDEV" = xyes &&
  { test "x$CONFIG_DBUS_API" = xyes || test "x$CONFIG_HAL" = xyes; }; then
@@ -863,6 +863,15 @@ if test "x$CONFIG_UDEV" = xyes; then
 		AC_MSG_ERROR([udev configuration API requested, but libudev is not installed])
 	fi
 	AC_DEFINE(CONFIG_UDEV, 1, [Use libudev for input hotplug])
+
+	SAVE_LIBS=$LIBS
+	SAVE_CFLAGS=$CFLAGS
+	CFLAGS=$UDEV_CFLAGS
+	LIBS=$UDEV_LIBS
+	AC_CHECK_FUNCS([udev_monitor_filter_add_match_tag])
+	AC_CHECK_FUNCS([udev_enumerate_add_match_tag])
+	LIBS=$SAVE_LIBS
+	CFLAGS=$SAVE_CFLAGS
 fi
 
 dnl HAVE_DBUS is true if we actually have the D-Bus library, whereas
@@ -930,12 +939,12 @@ AC_DEFINE_UNQUOTED([USE_SIGIO_BY_DEFAULT], [$USE_SIGIO_BY_DEFAULT_VALUE],
 		   [Use SIGIO handlers for input device events by default])
 
 AC_MSG_CHECKING([for glibc...])
-AC_PREPROC_IFELSE([
+AC_PREPROC_IFELSE([AC_LANG_SOURCE([
 #include <features.h>
 #ifndef __GLIBC__
 #error
 #endif
-], glibc=yes, glibc=no)
+])], glibc=yes, glibc=no)
 AC_MSG_RESULT([$glibc])
 
 AC_CHECK_FUNCS([clock_gettime], [have_clock_gettime=yes],
@@ -959,7 +968,7 @@ if ! test "x$have_clock_gettime" = xno; then
         CPPFLAGS="$CPPFLAGS -D_POSIX_C_SOURCE=200112L"
     fi
 
-    AC_RUN_IFELSE([
+    AC_RUN_IFELSE([AC_LANG_SOURCE([
 #include <time.h>
 
 int main(int argc, char *argv[[]]) {
@@ -970,7 +979,7 @@ int main(int argc, char *argv[[]]) {
     else
         return 1;
 }
-    ], [MONOTONIC_CLOCK=yes], [MONOTONIC_CLOCK=no],
+    ])], [MONOTONIC_CLOCK=yes], [MONOTONIC_CLOCK=no],
        [MONOTONIC_CLOCK="cross compiling"])
 
     LIBS="$LIBS_SAVE"
@@ -1265,13 +1274,6 @@ XKB_LIB='$(top_builddir)/xkb/libxkb.la'
 XKB_STUB_LIB='$(top_builddir)/xkb/libxkbstubs.la'
 REQUIRED_MODULES="$REQUIRED_MODULES xkbfile"
 
-AC_CHECK_FUNC(strcasecmp, [], AC_DEFINE([NEED_STRCASECMP], 1,
-                                        [Do not have 'strcasecmp'.]))
-AC_CHECK_FUNC(strncasecmp, [], AC_DEFINE([NEED_STRNCASECMP], 1,
-                                        [Do not have 'strncasecmp'.]))
-AC_CHECK_FUNC(strcasestr, [], AC_DEFINE([NEED_STRCASESTR], 1,
-                                       [Do not have 'strcasestr'.]))
-
 PKG_CHECK_MODULES([XDMCP], [xdmcp], [have_libxdmcp="yes"], [have_libxdmcp="no"])
 if test "x$have_libxdmcp" = xyes; then
 	AC_CHECK_LIB(Xdmcp, XdmcpWrap, [have_xdmcpwrap="yes"], [have_xdmcpwrap="no"], [$XDMCP_LIBS])
@@ -1308,7 +1310,6 @@ if test "x$XDMAUTH" = xyes; then
 fi
 
 AC_DEFINE_DIR(COMPILEDDEFAULTFONTPATH, FONTPATH, [Default font path])
-AC_DEFINE_DIR(PCI_TXT_IDS_PATH, PCI_TXT_IDS_DIR, [Default PCI text file ID path])
 AC_DEFINE_DIR(SERVER_MISC_CONFIG_PATH, SERVERCONFIG, [Server miscellaneous config path])
 AC_DEFINE_DIR(BASE_FONT_PATH, FONTROOTDIR, [Default base font path])
 dridriverdir=`$PKG_CONFIG --variable=dridriverdir dri`
@@ -1571,16 +1572,12 @@ if test "x$XORG" = xauto; then
 fi
 AC_MSG_RESULT([$XORG])
 
-xorg_bus_linuxpci=no
-xorg_bus_bsdpci=no
-xorg_bus_sparc=no
-
 if test "x$XORG" = xyes; then
 	XORG_DDXINCS='-I$(top_srcdir)/hw/xfree86 -I$(top_srcdir)/hw/xfree86/include -I$(top_srcdir)/hw/xfree86/common'
 	XORG_OSINCS='-I$(top_srcdir)/hw/xfree86/os-support -I$(top_srcdir)/hw/xfree86/os-support/bus -I$(top_srcdir)/os'
 	XORG_INCS="$XORG_DDXINCS $XORG_OSINCS"
 	XORG_CFLAGS="$XORGSERVER_CFLAGS -DHAVE_XORG_CONFIG_H"
-	XORG_LIBS="$COMPOSITE_LIB $FIXES_LIB $XEXTXORG_LIB $GLX_LIBS $RANDR_LIB $RENDER_LIB $DAMAGE_LIB $MIEXT_SYNC_LIB $MIEXT_DAMAGE_LIB $MIEXT_SHADOW_LIB $XI_LIB $XKB_LIB"
+	XORG_LIBS="$COMPOSITE_LIB $FIXES_LIB $XEXTXORG_LIB $GLX_LIBS $RANDR_LIB $RENDER_LIB $DAMAGE_LIB $MIEXT_SYNC_LIB $MIEXT_DAMAGE_LIB $XI_LIB $XKB_LIB"
 
 	dnl ==================================================================
 	dnl symbol visibility
@@ -1599,7 +1596,8 @@ if test "x$XORG" = xyes; then
 	    fi
 	    if test x$have_visibility != xno; then
 		save_CFLAGS="$CFLAGS"
-		CFLAGS="$CFLAGS $VISIBILITY_CFLAGS"
+		proto_inc=`$PKG_CONFIG --cflags xproto`
+		CFLAGS="$CFLAGS $VISIBILITY_CFLAGS $proto_inc"
 		AC_TRY_COMPILE(
 		    [#include <X11/Xfuncproto.h>
 		     extern _X_HIDDEN int hidden_int;
@@ -1622,38 +1620,58 @@ if test "x$XORG" = xyes; then
 	AC_SUBST([symbol_visibility])
 	dnl ===================================================================
 
+	dnl ===================================================================
+	dnl ================= beginning of PCI configuration ==================
+	dnl ===================================================================
+	xorg_bus_bsdpci=no
+	xorg_bus_sparc=no
+
+	AC_MSG_CHECKING([whether to build Xorg PCI functions])
+	if test "x$PCI" = xyes; then
+
 	PKG_CHECK_MODULES([PCIACCESS], $LIBPCIACCESS)
-	SAVE_LIBS=$LIBS
-	SAVE_CFLAGS=$CFLAGS
-	CFLAGS=$PCIACCESS_CFLAGS
-	LIBS=$PCIACCESS_LIBS
-	AC_CHECK_FUNCS([pci_system_init_dev_mem])
-	AC_CHECK_FUNCS([pci_device_enable])
-	AC_CHECK_FUNCS([pci_device_is_boot_vga])
-	AC_CHECK_FUNCS([pci_device_vgaarb_init])
-	LIBS=$SAVE_LIBS
-	CFLAGS=$SAVE_CFLAGS
+	SDK_REQUIRED_MODULES="$SDK_REQUIRED_MODULES $LIBPCIACCESS"
 	XORG_SYS_LIBS="$XORG_SYS_LIBS $PCIACCESS_LIBS $GLX_SYS_LIBS"
 	XORG_CFLAGS="$XORG_CFLAGS $PCIACCESS_CFLAGS"
+
+	AC_DEFINE(XSERVER_LIBPCIACCESS, 1, [Use libpciaccess for all pci manipulation])
+	AC_DEFINE_DIR(PCI_TXT_IDS_PATH, PCI_TXT_IDS_DIR, [Default PCI text file ID path])
+	case $host_os in
+	  gnu* | freebsd* | kfreebsd*-gnu | netbsd* | openbsd* | solaris* | dragonfly*)
+		xorg_bus_bsdpci="yes"
+		;;
+	esac
+	case $host_cpu in
+	  sparc*)
+		case $host_os in
+		  openbsd*)
+		    xorg_bus_sparc="no"
+		    ;;
+		  *)
+		    xorg_bus_sparc="yes"
+		    ;;
+		esac
+		;;
+	esac
+	fi
+	AC_MSG_RESULT([$PCI])
+
+	dnl ===================================================================
+	dnl ==================== end of PCI configuration =====================
+	dnl ===================================================================
 
 	case $host_os in
 	  linux*)
 		if test "x$LNXAPM" = xyes; then
 			XORG_CFLAGS="$XORG_CFLAGS -DXF86PM"
 		fi
-	  	XORG_OS="linux"
 		XORG_OS_SUBDIR="linux"
-		xorg_bus_linuxpci="yes"
 		linux_acpi="no"
 		case $host_cpu in
-		  ia64*)
-			linux_ia64=yes
-			linux_acpi="yes"
-			;;
 		  alpha*)
 		  	linux_alpha=yes
 			;;
-		  i*86|amd64*|x86_64*)
+		  i*86|amd64*|x86_64*|ia64*)
 			linux_acpi="yes"
 			;;
 		  *)
@@ -1661,31 +1679,21 @@ if test "x$XORG" = xyes; then
 		esac
 		;;
 	  freebsd* | kfreebsd*-gnu | dragonfly*)
-	  	XORG_OS="freebsd"
 		XORG_OS_SUBDIR="bsd"
-		xorg_bus_bsdpci="yes"
 		;;
 	  netbsd*)
-	  	XORG_OS="netbsd"
 		XORG_OS_SUBDIR="bsd"
-		xorg_bus_bsdpci="yes"
 		;;
 	  openbsd*)
 		if test "x$ac_cv_BSD_APM" = xyes \
 			-o "x$ac_cv_BSD_KQUEUE_APM" = xyes; then
 			XORG_CFLAGS="$XORG_CFLAGS -DXF86PM"
 		fi
-	  	XORG_OS="openbsd"
 		XORG_OS_SUBDIR="bsd"
-		xorg_bus_bsdpci="yes"
 		;;
 	  solaris*)
-	  	XORG_OS="solaris"
 		XORG_OS_SUBDIR="solaris"
 		XORG_CFLAGS="$XORG_CFLAGS -DXF86PM"
-		# Use the same stubs as BSD for old functions, since we now
-		# use libpciaccess for PCI
-		xorg_bus_bsdpci="yes"
 		AC_CHECK_HEADERS([sys/kd.h])
 		AC_CHECK_HEADERS([sys/vt.h], [solaris_vt=yes], [solaris_vt=no])
 		# Check for minimum supported release
@@ -1727,21 +1735,13 @@ if test "x$XORG" = xyes; then
 			XORG_CFLAGS="${XORG_CFLAGS} "'$(SOLARIS_ASM_CFLAGS)'
 		fi
 		AC_SUBST([SOLARIS_ASM_CFLAGS])
-		if test "x$SUPPORT_PC98" = xauto; then
-			SUPPORT_PC98="no"
-		fi
 		;;
 	  gnu*)
-	  	XORG_OS="gnu"
 		XORG_OS_SUBDIR="hurd"
-		# Use the same stubs as BSD for old functions, since we now
-		# use libpciaccess for PCI
-		xorg_bus_bsdpci="yes"
 		;;
 	  *)
-	  	XORG_OS="unknown"
-		XORG_OS_SUBDIR="unknown"
-		AC_MSG_ERROR([m4_text_wrap(m4_join([ ],
+		XORG_OS_SUBDIR="stub"
+		AC_MSG_NOTICE([m4_text_wrap(m4_join([ ],
 		[Your OS is unknown. Xorg currently only supports Linux,],
 		[Free/Open/Net/DragonFlyBSD, Solaris/OpenSolaris, & GNU Hurd.],
 		[If you are interested in porting Xorg to your platform,],
@@ -1749,33 +1749,6 @@ if test "x$XORG" = xyes; then
 		;;
 	esac
 
-	case $host_cpu in
-	  sparc*)
-		case $host_os in
-		  openbsd*)
-		    xorg_bus_sparc="no"
-		    ;;
-		  *)
-		    xorg_bus_sparc="yes"
-		    ;;
-		esac
-		;;
-	  i*86)
-		if test "x$SUPPORT_PC98" = xauto; then
-			SUPPORT_PC98="yes"
-		fi
-		;;
-	esac
-
-	if test "x$SUPPORT_PC98" = xauto; then
-		SUPPORT_PC98="no"
-	fi
-	if test "x$SUPPORT_PC98" = xyes; then
-		AC_DEFINE(SUPPORT_PC98, 1, [Support PC98])
-	fi
-	if test "x$XORG_OS_PCI" = x ; then
-		XORG_OS_PCI=$XORG_OS
-	fi
 	if test "x$DGA" = xauto; then
 		PKG_CHECK_MODULES(DGA, $DGAPROTO, [DGA=yes], [DGA=no])
 	fi
@@ -1804,7 +1777,6 @@ if test "x$XORG" = xyes; then
 	AC_SUBST([XORG_LIBS])
 	AC_SUBST([XORG_SYS_LIBS])
 	AC_SUBST([XORG_INCS])
-	AC_SUBST([XORG_OS])
 	AC_SUBST([XORG_OS_SUBDIR])
 	AC_SUBST([XORG_CFLAGS])
 
@@ -1829,7 +1801,6 @@ if test "x$XORG" = xyes; then
 	AC_DEFINE_DIR(DEFAULT_LIBRARY_PATH, libdir, [Default library install path])
 	AC_DEFINE_DIR(DEFAULT_LOGPREFIX, LOGPREFIX, [Default log location])
 	AC_DEFINE_UNQUOTED(__VENDORDWEBSUPPORT__, ["$VENDOR_WEB"], [Vendor web address for support])
-	AC_DEFINE(XSERVER_LIBPCIACCESS, 1, [Use libpciaccess for all pci manipulation])
 	if test "x$VGAHW" = xyes; then
 		AC_DEFINE(WITH_VGAHW, 1, [Building vgahw module])
 	fi
@@ -1859,10 +1830,9 @@ if test "x$XORG" = xyes; then
 	AC_SUBST([abi_extension])
 fi
 AM_CONDITIONAL([XORG], [test "x$XORG" = xyes])
-AM_CONDITIONAL([XORG_BUS_LINUXPCI], [test "x$xorg_bus_linuxpci" = xyes])
+AM_CONDITIONAL([XORG_BUS_PCI], [test "x$PCI" = xyes])
 AM_CONDITIONAL([XORG_BUS_BSDPCI], [test "x$xorg_bus_bsdpci" = xyes])
 AM_CONDITIONAL([XORG_BUS_SPARC], [test "x$xorg_bus_sparc" = xyes])
-AM_CONDITIONAL([LINUX_IA64], [test "x$linux_ia64" = xyes])
 AM_CONDITIONAL([LINUX_ALPHA], [test "x$linux_alpha" = xyes])
 AM_CONDITIONAL([LNXACPI], [test "x$linux_acpi" = xyes])
 AM_CONDITIONAL([SOLARIS_ASM_INLINE], [test "x$solaris_asm_inline" = xyes])
@@ -2277,6 +2247,7 @@ hw/xfree86/os-support/hurd/Makefile
 hw/xfree86/os-support/misc/Makefile
 hw/xfree86/os-support/linux/Makefile
 hw/xfree86/os-support/solaris/Makefile
+hw/xfree86/os-support/stub/Makefile
 hw/xfree86/parser/Makefile
 hw/xfree86/ramdac/Makefile
 hw/xfree86/shadowfb/Makefile

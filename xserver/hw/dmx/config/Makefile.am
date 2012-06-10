@@ -21,6 +21,7 @@ BUILT_SOURCES = parser.c parser.h scanner.c
 MAINTAINERCLEANFILES = $(BUILT_SOURCES)
 
 libdmxconfig_a_SOURCES = $(LIBSRCS)
+libdmxconfig_a_SOURCES += $(top_srcdir)/os/strlcpy.c
 
 if GLX
 GLX_DEFS = @GL_CFLAGS@

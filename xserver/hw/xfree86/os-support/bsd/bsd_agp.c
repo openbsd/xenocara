@@ -1,4 +1,4 @@
-/*	$OpenBSD: bsd_agp.c,v 1.4 2011/01/28 19:34:22 matthieu Exp $ */
+/*	$OpenBSD: bsd_agp.c,v 1.5 2012/06/10 13:21:25 matthieu Exp $ */
 /*
  * Abstraction of the AGP GART interface.
  *
@@ -234,7 +234,7 @@ xf86DeallocateGARTMemory(int screenNum, int key)
 		return FALSE;
 	}
 
-	if (ioctl(gartFd, AGPIOC_DEALLOCATE, (int *)key) != 0) {
+	if (ioctl(gartFd, AGPIOC_DEALLOCATE, (int *)(intptr_t)key) != 0) {
 		xf86DrvMsg(screenNum, X_WARNING,"xf86DeAllocateGARTMemory: "
                    "deallocation gart memory with key %d failed\n\t(%s)\n",
                    key, strerror(errno));

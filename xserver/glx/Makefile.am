@@ -43,7 +43,6 @@ glapi_sources =					\
 	glapi.c					\
 	glapi.h					\
 	glapi_gentable.c			\
-	glapioffsets.h				\
 	glprocs.h				\
 	glthread.c				\
 	glthread.h
@@ -63,6 +62,8 @@ libglxdri_la_LIBADD = $(DLOPEN_LIBS)
 libglx_la_SOURCES = \
 	$(indirect_sources) \
 	$(glapi_sources) \
+	clientinfo.c \
+	createcontext.c \
 	extension_string.c \
 	extension_string.h \
 	indirect_util.c \

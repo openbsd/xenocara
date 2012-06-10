@@ -43,11 +43,12 @@
 
 /** Cursor private area. */
 typedef struct _dmxCursorPriv {
-    Cursor  cursor;
+    Cursor cursor;
 } dmxCursorPrivRec, *dmxCursorPrivPtr;
 
 /** Cursor functions for mi layer. \see dmxcursor.c \see dmxscrinit.c */
 extern miPointerScreenFuncRec dmxPointerCursorFuncs;
+
 /** Sprite functions for mi layer. \see dmxcursor.c \see dmxscrinit.c */
 extern miPointerSpriteFuncRec dmxPointerSpriteFuncs;
 
@@ -57,16 +58,16 @@ extern void dmxInitOverlap(void);
 extern void dmxCursorNoMulti(void);
 extern void dmxMoveCursor(DeviceIntPtr pDev, ScreenPtr pScreen, int x, int y);
 extern void dmxCheckCursor(void);
-extern int  dmxOnScreen(int x, int y, DMXScreenInfo *dmxScreen);
-extern void dmxHideCursor(DMXScreenInfo *dmxScreen);
+extern int dmxOnScreen(int x, int y, DMXScreenInfo * dmxScreen);
+extern void dmxHideCursor(DMXScreenInfo * dmxScreen);
 
 extern void dmxBECreateCursor(ScreenPtr pScreen, CursorPtr pCursor);
 extern Bool dmxBEFreeCursor(ScreenPtr pScreen, CursorPtr pCursor);
 
 #define DMX_GET_CURSOR_PRIV(_pCursor, _pScreen) ((dmxCursorPrivPtr) \
-    dixLookupPrivate(&(_pCursor)->devPrivates, CursorScreenKey(_pScreen)))
+    dixLookupScreenPrivate(&(_pCursor)->devPrivates, CursorScreenKey, _pScreen))
 
 #define DMX_SET_CURSOR_PRIV(_pCursor, _pScreen, v) \
-    dixSetPrivate(&(_pCursor)->devPrivates, CursorScreenKey(_pScreen), v)
+    dixSetScreenPrivate(&(_pCursor)->devPrivates, CursorScreenKey, _pScreen, v)
 
-#endif /* DMXCURSOR_H */
+#endif                          /* DMXCURSOR_H */

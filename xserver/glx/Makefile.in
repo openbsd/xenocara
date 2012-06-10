@@ -65,8 +65,8 @@ libglx_la_DEPENDENCIES = $(am__DEPENDENCIES_1)
 am__objects_1 = indirect_dispatch.lo indirect_dispatch_swap.lo \
 	indirect_reqsize.lo indirect_size_get.lo indirect_table.lo \
 	glapi.lo glapi_gentable.lo glthread.lo
-am_libglx_la_OBJECTS = $(am__objects_1) extension_string.lo \
-	indirect_util.lo indirect_program.lo \
+am_libglx_la_OBJECTS = $(am__objects_1) clientinfo.lo createcontext.lo \
+	extension_string.lo indirect_util.lo indirect_program.lo \
 	indirect_texture_compression.lo glxcmds.lo glxcmdsswap.lo \
 	glxext.lo glxdriswrast.lo glxdricommon.lo glxscreens.lo \
 	render2.lo render2swap.lo renderpix.lo renderpixswap.lo \
@@ -103,7 +103,6 @@ AGP_FALSE = @AGP_FALSE@
 AGP_TRUE = @AGP_TRUE@
 AIGLX_DRI_LOADER_FALSE = @AIGLX_DRI_LOADER_FALSE@
 AIGLX_DRI_LOADER_TRUE = @AIGLX_DRI_LOADER_TRUE@
-ALLOCA = @ALLOCA@
 ALPHA_VIDEO_FALSE = @ALPHA_VIDEO_FALSE@
 ALPHA_VIDEO_TRUE = @ALPHA_VIDEO_TRUE@
 AMDEP_FALSE = @AMDEP_FALSE@
@@ -122,6 +121,7 @@ AUTOCONF = @AUTOCONF@
 AUTOHEADER = @AUTOHEADER@
 AUTOMAKE = @AUTOMAKE@
 AWK = @AWK@
+BASE_CFLAGS = @BASE_CFLAGS@
 BASE_FONT_PATH = @BASE_FONT_PATH@
 BSD_APM_FALSE = @BSD_APM_FALSE@
 BSD_APM_TRUE = @BSD_APM_TRUE@
@@ -329,8 +329,6 @@ LIB_MAN_DIR = @LIB_MAN_DIR@
 LIB_MAN_SUFFIX = @LIB_MAN_SUFFIX@
 LINUX_ALPHA_FALSE = @LINUX_ALPHA_FALSE@
 LINUX_ALPHA_TRUE = @LINUX_ALPHA_TRUE@
-LINUX_IA64_FALSE = @LINUX_IA64_FALSE@
-LINUX_IA64_TRUE = @LINUX_IA64_TRUE@
 LIPO = @LIPO@
 LNXACPI_FALSE = @LNXACPI_FALSE@
 LNXACPI_TRUE = @LNXACPI_TRUE@
@@ -349,10 +347,6 @@ MISC_MAN_DIR = @MISC_MAN_DIR@
 MISC_MAN_SUFFIX = @MISC_MAN_SUFFIX@
 MITSHM_FALSE = @MITSHM_FALSE@
 MITSHM_TRUE = @MITSHM_TRUE@
-NEED_STRLCAT_FALSE = @NEED_STRLCAT_FALSE@
-NEED_STRLCAT_TRUE = @NEED_STRLCAT_TRUE@
-NEED_VSNPRINTF_FALSE = @NEED_VSNPRINTF_FALSE@
-NEED_VSNPRINTF_TRUE = @NEED_VSNPRINTF_TRUE@
 NM = @NM@
 NMEDIT = @NMEDIT@
 OBJC = @OBJC@
@@ -496,18 +490,18 @@ XNEST_SYS_LIBS = @XNEST_SYS_LIBS@
 XNEST_TRUE = @XNEST_TRUE@
 XORG_BUS_BSDPCI_FALSE = @XORG_BUS_BSDPCI_FALSE@
 XORG_BUS_BSDPCI_TRUE = @XORG_BUS_BSDPCI_TRUE@
-XORG_BUS_LINUXPCI_FALSE = @XORG_BUS_LINUXPCI_FALSE@
-XORG_BUS_LINUXPCI_TRUE = @XORG_BUS_LINUXPCI_TRUE@
+XORG_BUS_PCI_FALSE = @XORG_BUS_PCI_FALSE@
+XORG_BUS_PCI_TRUE = @XORG_BUS_PCI_TRUE@
 XORG_BUS_SPARC_FALSE = @XORG_BUS_SPARC_FALSE@
 XORG_BUS_SPARC_TRUE = @XORG_BUS_SPARC_TRUE@
 XORG_CFLAGS = @XORG_CFLAGS@
 XORG_FALSE = @XORG_FALSE@
 XORG_INCS = @XORG_INCS@
 XORG_LIBS = @XORG_LIBS@
+XORG_MALLOC_DEBUG_ENV = @XORG_MALLOC_DEBUG_ENV@
 XORG_MAN_PAGE = @XORG_MAN_PAGE@
 XORG_MODULES_CFLAGS = @XORG_MODULES_CFLAGS@
 XORG_MODULES_LIBS = @XORG_MODULES_LIBS@
-XORG_OS = @XORG_OS@
 XORG_OS_SUBDIR = @XORG_OS_SUBDIR@
 XORG_SGML_PATH = @XORG_SGML_PATH@
 XORG_SYS_LIBS = @XORG_SYS_LIBS@
@@ -668,7 +662,6 @@ glapi_sources = \
 	glapi.c					\
 	glapi.h					\
 	glapi_gentable.c			\
-	glapioffsets.h				\
 	glprocs.h				\
 	glthread.c				\
 	glthread.h
@@ -678,6 +671,8 @@ libglxdri_la_LIBADD = $(DLOPEN_LIBS)
 libglx_la_SOURCES = \
 	$(indirect_sources) \
 	$(glapi_sources) \
+	clientinfo.c \
+	createcontext.c \
 	extension_string.c \
 	extension_string.h \
 	indirect_util.c \
@@ -768,6 +763,8 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/clientinfo.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/createcontext.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/extension_string.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/glapi.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/glapi_gentable.Plo@am__quote@

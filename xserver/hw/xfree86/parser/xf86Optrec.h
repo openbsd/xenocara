@@ -52,7 +52,6 @@
  * authorization from the copyright holder(s) and author(s).
  */
 
-
 /* 
  * This file contains the Option Record that is passed between the Parser,
  * and Module setup procs.
@@ -65,48 +64,30 @@
 #define _xf86Optrec_h_
 #include <stdio.h>
 #include <string.h>
+#include "xf86Optionstr.h"
 
 #include <X11/Xfuncproto.h>
 
-/* 
- * all records that need to be linked lists should contain a GenericList as
- * their first field.
- */
-typedef struct generic_list_rec
-{
-	void *next;
-}
-GenericListRec, *GenericListPtr, *glp;
-
-/*
- * All options are stored using this data type.
- */
-typedef struct
-{
-	GenericListRec list;
-	char *opt_name;
-	char *opt_val;
-	int opt_used;
-	char *opt_comment;
-}
-XF86OptionRec, *XF86OptionPtr;
-
-
-extern _X_EXPORT XF86OptionPtr xf86addNewOption(XF86OptionPtr head, char *name, char *val);
+extern _X_EXPORT XF86OptionPtr xf86addNewOption(XF86OptionPtr head, char *name,
+                                                char *val);
 extern _X_EXPORT XF86OptionPtr xf86optionListDup(XF86OptionPtr opt);
 extern _X_EXPORT void xf86optionListFree(XF86OptionPtr opt);
 extern _X_EXPORT char *xf86optionName(XF86OptionPtr opt);
 extern _X_EXPORT char *xf86optionValue(XF86OptionPtr opt);
 extern _X_EXPORT XF86OptionPtr xf86newOption(char *name, char *value);
 extern _X_EXPORT XF86OptionPtr xf86nextOption(XF86OptionPtr list);
-extern _X_EXPORT XF86OptionPtr xf86findOption(XF86OptionPtr list, const char *name);
-extern _X_EXPORT char *xf86findOptionValue(XF86OptionPtr list, const char *name);
-extern _X_EXPORT XF86OptionPtr xf86optionListCreate(const char **options, int count, int used);
-extern _X_EXPORT XF86OptionPtr xf86optionListMerge(XF86OptionPtr head, XF86OptionPtr tail);
-extern _X_EXPORT int xf86nameCompare (const char *s1, const char *s2);
+extern _X_EXPORT XF86OptionPtr xf86findOption(XF86OptionPtr list,
+                                              const char *name);
+extern _X_EXPORT const char *xf86findOptionValue(XF86OptionPtr list,
+                                                 const char *name);
+extern _X_EXPORT XF86OptionPtr xf86optionListCreate(const char **options,
+                                                    int count, int used);
+extern _X_EXPORT XF86OptionPtr xf86optionListMerge(XF86OptionPtr head,
+                                                   XF86OptionPtr tail);
+extern _X_EXPORT int xf86nameCompare(const char *s1, const char *s2);
 extern _X_EXPORT char *xf86uLongToString(unsigned long i);
 extern _X_EXPORT XF86OptionPtr xf86parseOption(XF86OptionPtr head);
-extern _X_EXPORT void xf86printOptionList(FILE *fp, XF86OptionPtr list, int tabs);
+extern _X_EXPORT void xf86printOptionList(FILE * fp, XF86OptionPtr list,
+                                          int tabs);
 
-
-#endif /* _xf86Optrec_h_ */
+#endif                          /* _xf86Optrec_h_ */

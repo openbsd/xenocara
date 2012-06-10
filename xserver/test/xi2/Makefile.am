@@ -10,9 +10,11 @@ noinst_PROGRAMS =  \
         protocol-xipassivegrabdevice \
         protocol-xiquerypointer \
         protocol-xiwarppointer \
-        protocol-eventconvert
+        protocol-eventconvert \
+        xi2
 
 TESTS=$(noinst_PROGRAMS)
+TESTS_ENVIRONMENT = $(XORG_MALLOC_DEBUG_ENV)
 
 AM_CFLAGS = $(DIX_CFLAGS) @XORG_CFLAGS@
 INCLUDES = @XORG_INCS@
@@ -33,6 +35,7 @@ protocol_xiquerypointer_LDADD=$(TEST_LDADD)
 protocol_xipassivegrabdevice_LDADD=$(TEST_LDADD)
 protocol_xiwarppointer_LDADD=$(TEST_LDADD)
 protocol_eventconvert_LDADD=$(TEST_LDADD)
+xi2_LDADD=$(TEST_LDADD)
 
 protocol_xiqueryversion_LDFLAGS=$(AM_LDFLAGS) -Wl,-wrap,WriteToClient
 protocol_xiquerydevice_LDFLAGS=$(AM_LDFLAGS) -Wl,-wrap,WriteToClient
@@ -43,6 +46,7 @@ protocol_xigetclientpointer_LDFLAGS=$(AM_LDFLAGS) -Wl,-wrap,WriteToClient -Wl,-w
 protocol_xipassivegrabdevice_LDFLAGS=$(AM_LDFLAGS) -Wl,-wrap,GrabButton -Wl,-wrap,dixLookupWindow -Wl,-wrap,WriteToClient
 protocol_xiquerypointer_LDFLAGS=$(AM_LDFLAGS) -Wl,-wrap,WriteToClient -Wl,-wrap,dixLookupWindow
 protocol_xiwarppointer_LDFLAGS=$(AM_LDFLAGS) -Wl,-wrap,WriteToClient -Wl,-wrap,dixLookupWindow
+xi2_LDFLAGS=$(AM_LDFLAGS)
 
 protocol_xiqueryversion_SOURCES=$(COMMON_SOURCES) protocol-xiqueryversion.c
 protocol_xiquerydevice_SOURCES=$(COMMON_SOURCES) protocol-xiquerydevice.c
@@ -53,5 +57,14 @@ protocol_xigetclientpointer_SOURCES=$(COMMON_SOURCES) protocol-xigetclientpointe
 protocol_xiquerypointer_SOURCES=$(COMMON_SOURCES) protocol-xiquerypointer.c
 protocol_xipassivegrabdevice_SOURCES=$(COMMON_SOURCES) protocol-xipassivegrabdevice.c
 protocol_xiwarppointer_SOURCES=$(COMMON_SOURCES) protocol-xiwarppointer.c
+else
+# Print that xi2-tests were skipped (exit code 77 for automake test harness)
+TESTS = xi2-tests
+CLEANFILES = $(TESTS)
+
+xi2-tests:
+	@echo 'echo "ld -wrap support required for xi2 unit tests, skipping"' > $@
+	@echo 'exit 77' >> $@
+	$(AM_V_GEN)chmod +x $@
 endif
 endif

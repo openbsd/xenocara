@@ -22,7 +22,6 @@ Except as contained in this notice, the name of The Open Group shall not be
 used in advertising or otherwise to promote the sale, use or other dealings
 in this Software without prior written authorization from The Open Group.
 
-
 Copyright 1987 by Digital Equipment Corporation, Maynard, Massachusetts.
 
                         All Rights Reserved
@@ -45,7 +44,6 @@ SOFTWARE.
 
 ********************************************************/
 
-
 #ifdef HAVE_DIX_CONFIG_H
 #include <dix-config.h>
 #endif
@@ -55,69 +53,65 @@ SOFTWARE.
 #include <X11/Xprotostr.h>
 #include "misc.h"
 #include "dixstruct.h"
-#include "extnsionst.h"	/* for SendEvent */
+#include "extnsionst.h"         /* for SendEvent */
 #include "swapreq.h"
 
 /* Thanks to Jack Palevich for testing and subsequently rewriting all this */
 
 /* Byte swap a list of longs */
 void
-SwapLongs (CARD32 *list, unsigned long count)
+SwapLongs(CARD32 *list, unsigned long count)
 {
-	char n;
-
-	while (count >= 8) {
-	    swapl(list+0, n);
-	    swapl(list+1, n);
-	    swapl(list+2, n);
-	    swapl(list+3, n);
-	    swapl(list+4, n);
-	    swapl(list+5, n);
-	    swapl(list+6, n);
-	    swapl(list+7, n);
-	    list += 8;
-	    count -= 8;
-	}
-	if (count != 0) {
-	    do {
-		swapl(list, n);
-		list++;
-	    } while (--count != 0);
-	}
+    while (count >= 8) {
+        swapl(list + 0);
+        swapl(list + 1);
+        swapl(list + 2);
+        swapl(list + 3);
+        swapl(list + 4);
+        swapl(list + 5);
+        swapl(list + 6);
+        swapl(list + 7);
+        list += 8;
+        count -= 8;
+    }
+    if (count != 0) {
+        do {
+            swapl(list);
+            list++;
+        } while (--count != 0);
+    }
 }
 
 /* Byte swap a list of shorts */
 void
-SwapShorts (short *list, unsigned long count)
+SwapShorts(short *list, unsigned long count)
 {
-	char n;
-
-	while (count >= 16) {
-	    swaps(list+0, n);
-	    swaps(list+1, n);
-	    swaps(list+2, n);
-	    swaps(list+3, n);
-	    swaps(list+4, n);
-	    swaps(list+5, n);
-	    swaps(list+6, n);
-	    swaps(list+7, n);
-	    swaps(list+8, n);
-	    swaps(list+9, n);
-	    swaps(list+10, n);
-	    swaps(list+11, n);
-	    swaps(list+12, n);
-	    swaps(list+13, n);
-	    swaps(list+14, n);
-	    swaps(list+15, n);
-	    list += 16;
-	    count -= 16;
-	}
-	if (count != 0) {
-	    do {
-		swaps(list, n);
-		list++;
-	    } while (--count != 0);
-	}
+    while (count >= 16) {
+        swaps(list + 0);
+        swaps(list + 1);
+        swaps(list + 2);
+        swaps(list + 3);
+        swaps(list + 4);
+        swaps(list + 5);
+        swaps(list + 6);
+        swaps(list + 7);
+        swaps(list + 8);
+        swaps(list + 9);
+        swaps(list + 10);
+        swaps(list + 11);
+        swaps(list + 12);
+        swaps(list + 13);
+        swaps(list + 14);
+        swaps(list + 15);
+        list += 16;
+        count -= 16;
+    }
+    if (count != 0) {
+        do {
+            swaps(list);
+            list++;
+        } while (--count != 0);
+    }
 }
 
 /* The following is used for all requests that have
@@ -125,11 +119,9 @@ SwapShorts (short *list, unsigned long count)
 int
 SProcSimpleReq(ClientPtr client)
 {
-    char n;
-
     REQUEST(xReq);
-    swaps(&stuff->length, n);
-    return(*ProcVector[stuff->reqType])(client);
+    swaps(&stuff->length);
+    return (*ProcVector[stuff->reqType]) (client);
 }
 
 /* The following is used for all requests that have
@@ -138,523 +130,484 @@ SProcSimpleReq(ClientPtr client)
 int
 SProcResourceReq(ClientPtr client)
 {
-    char n;
-
     REQUEST(xResourceReq);
-    swaps(&stuff->length, n);
-    REQUEST_AT_LEAST_SIZE(xResourceReq); /* not EXACT */
-    swapl(&stuff->id, n);
-    return(*ProcVector[stuff->reqType])(client);
+    swaps(&stuff->length);
+    REQUEST_AT_LEAST_SIZE(xResourceReq);        /* not EXACT */
+    swapl(&stuff->id);
+    return (*ProcVector[stuff->reqType]) (client);
 }
 
 int
 SProcCreateWindow(ClientPtr client)
 {
-    char n;
-
     REQUEST(xCreateWindowReq);
-    swaps(&stuff->length, n);
+    swaps(&stuff->length);
     REQUEST_AT_LEAST_SIZE(xCreateWindowReq);
-    swapl(&stuff->wid, n);
-    swapl(&stuff->parent, n);
-    swaps(&stuff->x, n);
-    swaps(&stuff->y, n);
-    swaps(&stuff->width, n);
-    swaps(&stuff->height, n);
-    swaps(&stuff->borderWidth, n);
-    swaps(&stuff->class, n);
-    swapl(&stuff->visual, n);
-    swapl(&stuff->mask, n);
+    swapl(&stuff->wid);
+    swapl(&stuff->parent);
+    swaps(&stuff->x);
+    swaps(&stuff->y);
+    swaps(&stuff->width);
+    swaps(&stuff->height);
+    swaps(&stuff->borderWidth);
+    swaps(&stuff->class);
+    swapl(&stuff->visual);
+    swapl(&stuff->mask);
     SwapRestL(stuff);
-    return((* ProcVector[X_CreateWindow])(client));
+    return ((*ProcVector[X_CreateWindow]) (client));
 }
 
 int
 SProcChangeWindowAttributes(ClientPtr client)
 {
-    char n;
-
     REQUEST(xChangeWindowAttributesReq);
-    swaps(&stuff->length, n);
+    swaps(&stuff->length);
     REQUEST_AT_LEAST_SIZE(xChangeWindowAttributesReq);
-    swapl(&stuff->window, n);
-    swapl(&stuff->valueMask, n);
+    swapl(&stuff->window);
+    swapl(&stuff->valueMask);
     SwapRestL(stuff);
-    return((* ProcVector[X_ChangeWindowAttributes])(client));
+    return ((*ProcVector[X_ChangeWindowAttributes]) (client));
 }
 
 int
 SProcReparentWindow(ClientPtr client)
 {
-    char n;
     REQUEST(xReparentWindowReq);
-    swaps(&stuff->length, n);
+    swaps(&stuff->length);
     REQUEST_SIZE_MATCH(xReparentWindowReq);
-    swapl(&stuff->window, n);
-    swapl(&stuff->parent, n);
-    swaps(&stuff->x, n);
-    swaps(&stuff->y, n);
-    return((* ProcVector[X_ReparentWindow])(client));
+    swapl(&stuff->window);
+    swapl(&stuff->parent);
+    swaps(&stuff->x);
+    swaps(&stuff->y);
+    return ((*ProcVector[X_ReparentWindow]) (client));
 }
 
 int
 SProcConfigureWindow(ClientPtr client)
 {
-    char n;
     REQUEST(xConfigureWindowReq);
-    swaps(&stuff->length, n);
+    swaps(&stuff->length);
     REQUEST_AT_LEAST_SIZE(xConfigureWindowReq);
-    swapl(&stuff->window, n);
-    swaps(&stuff->mask, n);
+    swapl(&stuff->window);
+    swaps(&stuff->mask);
     SwapRestL(stuff);
-    return((* ProcVector[X_ConfigureWindow])(client));
+    return ((*ProcVector[X_ConfigureWindow]) (client));
 
 }
-
 
 int
 SProcInternAtom(ClientPtr client)
 {
-    char n;
     REQUEST(xInternAtomReq);
-    swaps(&stuff->length, n);
+    swaps(&stuff->length);
     REQUEST_AT_LEAST_SIZE(xInternAtomReq);
-    swaps(&stuff->nbytes, n);
-    return((* ProcVector[X_InternAtom])(client));
+    swaps(&stuff->nbytes);
+    return ((*ProcVector[X_InternAtom]) (client));
 }
 
 int
 SProcChangeProperty(ClientPtr client)
 {
-    char n;
     REQUEST(xChangePropertyReq);
-    swaps(&stuff->length, n);
+    swaps(&stuff->length);
     REQUEST_AT_LEAST_SIZE(xChangePropertyReq);
-    swapl(&stuff->window, n);
-    swapl(&stuff->property, n);
-    swapl(&stuff->type, n);
-    swapl(&stuff->nUnits, n);
-    switch ( stuff->format ) {
-        case 8 :
-	    break;
-        case 16:
-	    SwapRestS(stuff);
-	    break;
-	case 32:
-	    SwapRestL(stuff);
-	    break;
-	}
-    return((* ProcVector[X_ChangeProperty])(client));
+    swapl(&stuff->window);
+    swapl(&stuff->property);
+    swapl(&stuff->type);
+    swapl(&stuff->nUnits);
+    switch (stuff->format) {
+    case 8:
+        break;
+    case 16:
+        SwapRestS(stuff);
+        break;
+    case 32:
+        SwapRestL(stuff);
+        break;
+    }
+    return ((*ProcVector[X_ChangeProperty]) (client));
 }
 
 int
 SProcDeleteProperty(ClientPtr client)
 {
-    char n;
     REQUEST(xDeletePropertyReq);
-    swaps(&stuff->length, n);
+    swaps(&stuff->length);
     REQUEST_SIZE_MATCH(xDeletePropertyReq);
-    swapl(&stuff->window, n);
-    swapl(&stuff->property, n);
-    return((* ProcVector[X_DeleteProperty])(client));
-              
+    swapl(&stuff->window);
+    swapl(&stuff->property);
+    return ((*ProcVector[X_DeleteProperty]) (client));
+
 }
 
 int
 SProcGetProperty(ClientPtr client)
 {
-    char n;
     REQUEST(xGetPropertyReq);
-    swaps(&stuff->length, n);
+    swaps(&stuff->length);
     REQUEST_SIZE_MATCH(xGetPropertyReq);
-    swapl(&stuff->window, n);
-    swapl(&stuff->property, n);
-    swapl(&stuff->type, n);
-    swapl(&stuff->longOffset, n);
-    swapl(&stuff->longLength, n);
-    return((* ProcVector[X_GetProperty])(client));
+    swapl(&stuff->window);
+    swapl(&stuff->property);
+    swapl(&stuff->type);
+    swapl(&stuff->longOffset);
+    swapl(&stuff->longLength);
+    return ((*ProcVector[X_GetProperty]) (client));
 }
 
 int
 SProcSetSelectionOwner(ClientPtr client)
 {
-    char n;
     REQUEST(xSetSelectionOwnerReq);
-    swaps(&stuff->length, n);
+    swaps(&stuff->length);
     REQUEST_SIZE_MATCH(xSetSelectionOwnerReq);
-    swapl(&stuff->window, n);
-    swapl(&stuff->selection, n);
-    swapl(&stuff->time, n);
-    return((* ProcVector[X_SetSelectionOwner])(client));
+    swapl(&stuff->window);
+    swapl(&stuff->selection);
+    swapl(&stuff->time);
+    return ((*ProcVector[X_SetSelectionOwner]) (client));
 }
 
 int
 SProcConvertSelection(ClientPtr client)
 {
-    char n;
     REQUEST(xConvertSelectionReq);
-    swaps(&stuff->length, n);
+    swaps(&stuff->length);
     REQUEST_SIZE_MATCH(xConvertSelectionReq);
-    swapl(&stuff->requestor, n);
-    swapl(&stuff->selection, n);
-    swapl(&stuff->target, n);
-    swapl(&stuff->property, n);
-    swapl(&stuff->time, n);
-    return((* ProcVector[X_ConvertSelection])(client));
+    swapl(&stuff->requestor);
+    swapl(&stuff->selection);
+    swapl(&stuff->target);
+    swapl(&stuff->property);
+    swapl(&stuff->time);
+    return ((*ProcVector[X_ConvertSelection]) (client));
 }
 
 int
 SProcSendEvent(ClientPtr client)
 {
-    char n;
     xEvent eventT;
     EventSwapPtr proc;
+
     REQUEST(xSendEventReq);
-    swaps(&stuff->length, n);
+    swaps(&stuff->length);
     REQUEST_SIZE_MATCH(xSendEventReq);
-    swapl(&stuff->destination, n);
-    swapl(&stuff->eventMask, n);
+    swapl(&stuff->destination);
+    swapl(&stuff->eventMask);
 
     /* Swap event */
     proc = EventSwapVector[stuff->event.u.u.type & 0177];
-    if (!proc ||  proc == NotImplemented)    /* no swapping proc; invalid event type? */
-       return BadValue;
-    (*proc)(&stuff->event, &eventT);
+    if (!proc || proc == NotImplemented)        /* no swapping proc; invalid event type? */
+        return BadValue;
+    (*proc) (&stuff->event, &eventT);
     stuff->event = eventT;
 
-    return((* ProcVector[X_SendEvent])(client));
+    return ((*ProcVector[X_SendEvent]) (client));
 }
 
 int
 SProcGrabPointer(ClientPtr client)
 {
-    char n;
     REQUEST(xGrabPointerReq);
-    swaps(&stuff->length, n);
+    swaps(&stuff->length);
     REQUEST_SIZE_MATCH(xGrabPointerReq);
-    swapl(&stuff->grabWindow, n);
-    swaps(&stuff->eventMask, n);
-    swapl(&stuff->confineTo, n);
-    swapl(&stuff->cursor, n);
-    swapl(&stuff->time, n);
-    return((* ProcVector[X_GrabPointer])(client));
+    swapl(&stuff->grabWindow);
+    swaps(&stuff->eventMask);
+    swapl(&stuff->confineTo);
+    swapl(&stuff->cursor);
+    swapl(&stuff->time);
+    return ((*ProcVector[X_GrabPointer]) (client));
 }
 
 int
 SProcGrabButton(ClientPtr client)
 {
-    char n;
     REQUEST(xGrabButtonReq);
-    swaps(&stuff->length, n);
+    swaps(&stuff->length);
     REQUEST_SIZE_MATCH(xGrabButtonReq);
-    swapl(&stuff->grabWindow, n);
-    swaps(&stuff->eventMask, n);
-    swapl(&stuff->confineTo, n);
-    swapl(&stuff->cursor, n);
-    swaps(&stuff->modifiers, n);
-    return((* ProcVector[X_GrabButton])(client));
+    swapl(&stuff->grabWindow);
+    swaps(&stuff->eventMask);
+    swapl(&stuff->confineTo);
+    swapl(&stuff->cursor);
+    swaps(&stuff->modifiers);
+    return ((*ProcVector[X_GrabButton]) (client));
 }
 
 int
 SProcUngrabButton(ClientPtr client)
 {
-    char n;
     REQUEST(xUngrabButtonReq);
-    swaps(&stuff->length, n);
+    swaps(&stuff->length);
     REQUEST_SIZE_MATCH(xUngrabButtonReq);
-    swapl(&stuff->grabWindow, n);
-    swaps(&stuff->modifiers, n);
-    return((* ProcVector[X_UngrabButton])(client));
+    swapl(&stuff->grabWindow);
+    swaps(&stuff->modifiers);
+    return ((*ProcVector[X_UngrabButton]) (client));
 }
 
 int
 SProcChangeActivePointerGrab(ClientPtr client)
 {
-    char n;
     REQUEST(xChangeActivePointerGrabReq);
-    swaps(&stuff->length, n);
+    swaps(&stuff->length);
     REQUEST_SIZE_MATCH(xChangeActivePointerGrabReq);
-    swapl(&stuff->cursor, n);
-    swapl(&stuff->time, n);
-    swaps(&stuff->eventMask, n);
-    return((* ProcVector[X_ChangeActivePointerGrab])(client));
+    swapl(&stuff->cursor);
+    swapl(&stuff->time);
+    swaps(&stuff->eventMask);
+    return ((*ProcVector[X_ChangeActivePointerGrab]) (client));
 }
 
 int
 SProcGrabKeyboard(ClientPtr client)
 {
-    char n;
     REQUEST(xGrabKeyboardReq);
-    swaps(&stuff->length, n);
+    swaps(&stuff->length);
     REQUEST_SIZE_MATCH(xGrabKeyboardReq);
-    swapl(&stuff->grabWindow, n);
-    swapl(&stuff->time, n);
-    return((* ProcVector[X_GrabKeyboard])(client));
+    swapl(&stuff->grabWindow);
+    swapl(&stuff->time);
+    return ((*ProcVector[X_GrabKeyboard]) (client));
 }
 
 int
 SProcGrabKey(ClientPtr client)
 {
-    char n;
     REQUEST(xGrabKeyReq);
-    swaps(&stuff->length, n);
+    swaps(&stuff->length);
     REQUEST_SIZE_MATCH(xGrabKeyReq);
-    swapl(&stuff->grabWindow, n);
-    swaps(&stuff->modifiers, n);
-    return((* ProcVector[X_GrabKey])(client));
+    swapl(&stuff->grabWindow);
+    swaps(&stuff->modifiers);
+    return ((*ProcVector[X_GrabKey]) (client));
 }
 
 int
 SProcUngrabKey(ClientPtr client)
 {
-    char n;
     REQUEST(xUngrabKeyReq);
-    swaps(&stuff->length, n);
+    swaps(&stuff->length);
     REQUEST_SIZE_MATCH(xUngrabKeyReq);
-    swapl(&stuff->grabWindow, n);
-    swaps(&stuff->modifiers, n);
-    return((* ProcVector[X_UngrabKey])(client));
+    swapl(&stuff->grabWindow);
+    swaps(&stuff->modifiers);
+    return ((*ProcVector[X_UngrabKey]) (client));
 }
 
 int
 SProcGetMotionEvents(ClientPtr client)
 {
-    char n;
     REQUEST(xGetMotionEventsReq);
-    swaps(&stuff->length, n);
+    swaps(&stuff->length);
     REQUEST_SIZE_MATCH(xGetMotionEventsReq);
-    swapl(&stuff->window, n);
-    swapl(&stuff->start, n);
-    swapl(&stuff->stop, n);
-    return((* ProcVector[X_GetMotionEvents])(client));
+    swapl(&stuff->window);
+    swapl(&stuff->start);
+    swapl(&stuff->stop);
+    return ((*ProcVector[X_GetMotionEvents]) (client));
 }
 
 int
 SProcTranslateCoords(ClientPtr client)
 {
-    char n;
     REQUEST(xTranslateCoordsReq);
-    swaps(&stuff->length, n);
+    swaps(&stuff->length);
     REQUEST_SIZE_MATCH(xTranslateCoordsReq);
-    swapl(&stuff->srcWid, n);
-    swapl(&stuff->dstWid, n);
-    swaps(&stuff->srcX, n);
-    swaps(&stuff->srcY, n);
-    return((* ProcVector[X_TranslateCoords])(client));
+    swapl(&stuff->srcWid);
+    swapl(&stuff->dstWid);
+    swaps(&stuff->srcX);
+    swaps(&stuff->srcY);
+    return ((*ProcVector[X_TranslateCoords]) (client));
 }
 
 int
 SProcWarpPointer(ClientPtr client)
 {
-    char n;
     REQUEST(xWarpPointerReq);
-    swaps(&stuff->length, n);
+    swaps(&stuff->length);
     REQUEST_SIZE_MATCH(xWarpPointerReq);
-    swapl(&stuff->srcWid, n);
-    swapl(&stuff->dstWid, n);
-    swaps(&stuff->srcX, n);
-    swaps(&stuff->srcY, n);
-    swaps(&stuff->srcWidth, n);
-    swaps(&stuff->srcHeight, n);
-    swaps(&stuff->dstX, n);
-    swaps(&stuff->dstY, n);
-    return((* ProcVector[X_WarpPointer])(client));
+    swapl(&stuff->srcWid);
+    swapl(&stuff->dstWid);
+    swaps(&stuff->srcX);
+    swaps(&stuff->srcY);
+    swaps(&stuff->srcWidth);
+    swaps(&stuff->srcHeight);
+    swaps(&stuff->dstX);
+    swaps(&stuff->dstY);
+    return ((*ProcVector[X_WarpPointer]) (client));
 }
 
 int
 SProcSetInputFocus(ClientPtr client)
 {
-    char n;
     REQUEST(xSetInputFocusReq);
-    swaps(&stuff->length, n);
+    swaps(&stuff->length);
     REQUEST_SIZE_MATCH(xSetInputFocusReq);
-    swapl(&stuff->focus, n);
-    swapl(&stuff->time, n);
-    return((* ProcVector[X_SetInputFocus])(client));
+    swapl(&stuff->focus);
+    swapl(&stuff->time);
+    return ((*ProcVector[X_SetInputFocus]) (client));
 }
 
 int
 SProcOpenFont(ClientPtr client)
 {
-    char n;
     REQUEST(xOpenFontReq);
-    swaps(&stuff->length, n);
+    swaps(&stuff->length);
     REQUEST_AT_LEAST_SIZE(xOpenFontReq);
-    swapl(&stuff->fid, n);
-    swaps(&stuff->nbytes, n);
-    return((* ProcVector[X_OpenFont])(client));
+    swapl(&stuff->fid);
+    swaps(&stuff->nbytes);
+    return ((*ProcVector[X_OpenFont]) (client));
 }
 
 int
 SProcListFonts(ClientPtr client)
 {
-    char n;
     REQUEST(xListFontsReq);
-    swaps(&stuff->length, n);
+    swaps(&stuff->length);
     REQUEST_AT_LEAST_SIZE(xListFontsReq);
-    swaps(&stuff->maxNames, n);
-    swaps(&stuff->nbytes, n);
-    return((* ProcVector[X_ListFonts])(client));
+    swaps(&stuff->maxNames);
+    swaps(&stuff->nbytes);
+    return ((*ProcVector[X_ListFonts]) (client));
 }
 
 int
 SProcListFontsWithInfo(ClientPtr client)
 {
-    char n;
     REQUEST(xListFontsWithInfoReq);
-    swaps(&stuff->length, n);
+    swaps(&stuff->length);
     REQUEST_AT_LEAST_SIZE(xListFontsWithInfoReq);
-    swaps(&stuff->maxNames, n);
-    swaps(&stuff->nbytes, n);
-    return((* ProcVector[X_ListFontsWithInfo])(client));
+    swaps(&stuff->maxNames);
+    swaps(&stuff->nbytes);
+    return ((*ProcVector[X_ListFontsWithInfo]) (client));
 }
 
 int
 SProcSetFontPath(ClientPtr client)
 {
-    char n;
     REQUEST(xSetFontPathReq);
-    swaps(&stuff->length, n);
+    swaps(&stuff->length);
     REQUEST_AT_LEAST_SIZE(xSetFontPathReq);
-    swaps(&stuff->nFonts, n);
-    return((* ProcVector[X_SetFontPath])(client));
+    swaps(&stuff->nFonts);
+    return ((*ProcVector[X_SetFontPath]) (client));
 }
 
 int
 SProcCreatePixmap(ClientPtr client)
 {
-    char n;
     REQUEST(xCreatePixmapReq);
 
-    swaps(&stuff->length, n);
+    swaps(&stuff->length);
     REQUEST_SIZE_MATCH(xCreatePixmapReq);
-    swapl(&stuff->pid, n);
-    swapl(&stuff->drawable, n);
-    swaps(&stuff->width, n);
-    swaps(&stuff->height, n);
-    return((* ProcVector[X_CreatePixmap])(client));
+    swapl(&stuff->pid);
+    swapl(&stuff->drawable);
+    swaps(&stuff->width);
+    swaps(&stuff->height);
+    return ((*ProcVector[X_CreatePixmap]) (client));
 }
 
 int
 SProcCreateGC(ClientPtr client)
 {
-    char n;
     REQUEST(xCreateGCReq);
-    swaps(&stuff->length, n);
+    swaps(&stuff->length);
     REQUEST_AT_LEAST_SIZE(xCreateGCReq);
-    swapl(&stuff->gc, n);
-    swapl(&stuff->drawable, n);
-    swapl(&stuff->mask, n);
+    swapl(&stuff->gc);
+    swapl(&stuff->drawable);
+    swapl(&stuff->mask);
     SwapRestL(stuff);
-    return((* ProcVector[X_CreateGC])(client));
+    return ((*ProcVector[X_CreateGC]) (client));
 }
 
 int
 SProcChangeGC(ClientPtr client)
 {
-    char n;
     REQUEST(xChangeGCReq);
-    swaps(&stuff->length, n);
+    swaps(&stuff->length);
     REQUEST_AT_LEAST_SIZE(xChangeGCReq);
-    swapl(&stuff->gc, n);
-    swapl(&stuff->mask, n);
+    swapl(&stuff->gc);
+    swapl(&stuff->mask);
     SwapRestL(stuff);
-    return((* ProcVector[X_ChangeGC])(client));
+    return ((*ProcVector[X_ChangeGC]) (client));
 }
 
 int
 SProcCopyGC(ClientPtr client)
 {
-    char n;
     REQUEST(xCopyGCReq);
-    swaps(&stuff->length, n);
+    swaps(&stuff->length);
     REQUEST_SIZE_MATCH(xCopyGCReq);
-    swapl(&stuff->srcGC, n);
-    swapl(&stuff->dstGC, n);
-    swapl(&stuff->mask, n);
-    return((* ProcVector[X_CopyGC])(client));
+    swapl(&stuff->srcGC);
+    swapl(&stuff->dstGC);
+    swapl(&stuff->mask);
+    return ((*ProcVector[X_CopyGC]) (client));
 }
 
 int
 SProcSetDashes(ClientPtr client)
 {
-    char n;
     REQUEST(xSetDashesReq);
-    swaps(&stuff->length, n);
+    swaps(&stuff->length);
     REQUEST_AT_LEAST_SIZE(xSetDashesReq);
-    swapl(&stuff->gc, n);
-    swaps(&stuff->dashOffset, n);
-    swaps(&stuff->nDashes, n);
-    return((* ProcVector[X_SetDashes])(client));
+    swapl(&stuff->gc);
+    swaps(&stuff->dashOffset);
+    swaps(&stuff->nDashes);
+    return ((*ProcVector[X_SetDashes]) (client));
 
 }
 
 int
 SProcSetClipRectangles(ClientPtr client)
 {
-    char n;
     REQUEST(xSetClipRectanglesReq);
-    swaps(&stuff->length, n);
+    swaps(&stuff->length);
     REQUEST_AT_LEAST_SIZE(xSetClipRectanglesReq);
-    swapl(&stuff->gc, n);
-    swaps(&stuff->xOrigin, n);
-    swaps(&stuff->yOrigin, n);
+    swapl(&stuff->gc);
+    swaps(&stuff->xOrigin);
+    swaps(&stuff->yOrigin);
     SwapRestS(stuff);
-    return((* ProcVector[X_SetClipRectangles])(client));
+    return ((*ProcVector[X_SetClipRectangles]) (client));
 }
 
 int
 SProcClearToBackground(ClientPtr client)
 {
-    char n;
     REQUEST(xClearAreaReq);
-    swaps(&stuff->length, n);
+    swaps(&stuff->length);
     REQUEST_SIZE_MATCH(xClearAreaReq);
-    swapl(&stuff->window, n);
-    swaps(&stuff->x, n);
-    swaps(&stuff->y, n);
-    swaps(&stuff->width, n);
-    swaps(&stuff->height, n);
-    return((* ProcVector[X_ClearArea])(client));
+    swapl(&stuff->window);
+    swaps(&stuff->x);
+    swaps(&stuff->y);
+    swaps(&stuff->width);
+    swaps(&stuff->height);
+    return ((*ProcVector[X_ClearArea]) (client));
 }
 
 int
 SProcCopyArea(ClientPtr client)
 {
-    char n;
     REQUEST(xCopyAreaReq);
-    swaps(&stuff->length, n);
+    swaps(&stuff->length);
     REQUEST_SIZE_MATCH(xCopyAreaReq);
-    swapl(&stuff->srcDrawable, n);
-    swapl(&stuff->dstDrawable, n);
-    swapl(&stuff->gc, n);
-    swaps(&stuff->srcX, n);
-    swaps(&stuff->srcY, n);
-    swaps(&stuff->dstX, n);
-    swaps(&stuff->dstY, n);
-    swaps(&stuff->width, n);
-    swaps(&stuff->height, n);
-    return((* ProcVector[X_CopyArea])(client));
+    swapl(&stuff->srcDrawable);
+    swapl(&stuff->dstDrawable);
+    swapl(&stuff->gc);
+    swaps(&stuff->srcX);
+    swaps(&stuff->srcY);
+    swaps(&stuff->dstX);
+    swaps(&stuff->dstY);
+    swaps(&stuff->width);
+    swaps(&stuff->height);
+    return ((*ProcVector[X_CopyArea]) (client));
 }
 
 int
 SProcCopyPlane(ClientPtr client)
 {
-    char n;
     REQUEST(xCopyPlaneReq);
-    swaps(&stuff->length, n);
+    swaps(&stuff->length);
     REQUEST_SIZE_MATCH(xCopyPlaneReq);
-    swapl(&stuff->srcDrawable, n);
-    swapl(&stuff->dstDrawable, n);
-    swapl(&stuff->gc, n);
-    swaps(&stuff->srcX, n);
-    swaps(&stuff->srcY, n);
-    swaps(&stuff->dstX, n);
-    swaps(&stuff->dstY, n);
-    swaps(&stuff->width, n);
-    swaps(&stuff->height, n);
-    swapl(&stuff->bitPlane, n);
-    return((* ProcVector[X_CopyPlane])(client));
+    swapl(&stuff->srcDrawable);
+    swapl(&stuff->dstDrawable);
+    swapl(&stuff->gc);
+    swaps(&stuff->srcX);
+    swaps(&stuff->srcY);
+    swaps(&stuff->dstX);
+    swaps(&stuff->dstY);
+    swaps(&stuff->width);
+    swaps(&stuff->height);
+    swapl(&stuff->bitPlane);
+    return ((*ProcVector[X_CopyPlane]) (client));
 }
 
 /* The following routine is used for all Poly drawing requests
@@ -662,15 +615,13 @@ SProcCopyPlane(ClientPtr client)
 int
 SProcPoly(ClientPtr client)
 {
-    char n;
-
     REQUEST(xPolyPointReq);
-    swaps(&stuff->length, n);
+    swaps(&stuff->length);
     REQUEST_AT_LEAST_SIZE(xPolyPointReq);
-    swapl(&stuff->drawable, n);
-    swapl(&stuff->gc, n);
+    swapl(&stuff->drawable);
+    swapl(&stuff->gc);
     SwapRestS(stuff);
-    return((* ProcVector[stuff->reqType])(client));
+    return ((*ProcVector[stuff->reqType]) (client));
 }
 
 /* cannot use SProcPoly for this one, because xFillPolyReq
@@ -679,49 +630,45 @@ SProcPoly(ClientPtr client)
 int
 SProcFillPoly(ClientPtr client)
 {
-    char n;
-
     REQUEST(xFillPolyReq);
-    swaps(&stuff->length, n);
+    swaps(&stuff->length);
     REQUEST_AT_LEAST_SIZE(xFillPolyReq);
-    swapl(&stuff->drawable, n);
-    swapl(&stuff->gc, n);
+    swapl(&stuff->drawable);
+    swapl(&stuff->gc);
     SwapRestS(stuff);
-    return((* ProcVector[X_FillPoly])(client));
+    return ((*ProcVector[X_FillPoly]) (client));
 }
 
 int
 SProcPutImage(ClientPtr client)
 {
-    char n;
     REQUEST(xPutImageReq);
-    swaps(&stuff->length, n);
+    swaps(&stuff->length);
     REQUEST_AT_LEAST_SIZE(xPutImageReq);
-    swapl(&stuff->drawable, n);
-    swapl(&stuff->gc, n);
-    swaps(&stuff->width, n);
-    swaps(&stuff->height, n);
-    swaps(&stuff->dstX, n);
-    swaps(&stuff->dstY, n);
+    swapl(&stuff->drawable);
+    swapl(&stuff->gc);
+    swaps(&stuff->width);
+    swaps(&stuff->height);
+    swaps(&stuff->dstX);
+    swaps(&stuff->dstY);
     /* Image should already be swapped */
-    return((* ProcVector[X_PutImage])(client));
+    return ((*ProcVector[X_PutImage]) (client));
 
 }
 
 int
 SProcGetImage(ClientPtr client)
 {
-    char n;
     REQUEST(xGetImageReq);
-    swaps(&stuff->length, n);
+    swaps(&stuff->length);
     REQUEST_SIZE_MATCH(xGetImageReq);
-    swapl(&stuff->drawable, n);
-    swaps(&stuff->x, n);
-    swaps(&stuff->y, n);
-    swaps(&stuff->width, n);
-    swaps(&stuff->height, n);
-    swapl(&stuff->planeMask, n);
-    return((* ProcVector[X_GetImage])(client));
+    swapl(&stuff->drawable);
+    swaps(&stuff->x);
+    swaps(&stuff->y);
+    swaps(&stuff->width);
+    swaps(&stuff->height);
+    swapl(&stuff->planeMask);
+    return ((*ProcVector[X_GetImage]) (client));
 }
 
 /* ProcPolyText used for both PolyText8 and PolyText16 */
@@ -729,15 +676,14 @@ SProcGetImage(ClientPtr client)
 int
 SProcPolyText(ClientPtr client)
 {
-    char n;
     REQUEST(xPolyTextReq);
-    swaps(&stuff->length, n);
+    swaps(&stuff->length);
     REQUEST_AT_LEAST_SIZE(xPolyTextReq);
-    swapl(&stuff->drawable, n);
-    swapl(&stuff->gc, n);
-    swaps(&stuff->x, n);
-    swaps(&stuff->y, n);
-    return((* ProcVector[stuff->reqType])(client));
+    swapl(&stuff->drawable);
+    swapl(&stuff->gc);
+    swaps(&stuff->x);
+    swaps(&stuff->y);
+    return ((*ProcVector[stuff->reqType]) (client));
 }
 
 /* ProcImageText used for both ImageText8 and ImageText16 */
@@ -745,355 +691,322 @@ SProcPolyText(ClientPtr client)
 int
 SProcImageText(ClientPtr client)
 {
-    char n;
     REQUEST(xImageTextReq);
-    swaps(&stuff->length, n);
+    swaps(&stuff->length);
     REQUEST_AT_LEAST_SIZE(xImageTextReq);
-    swapl(&stuff->drawable, n);
-    swapl(&stuff->gc, n);
-    swaps(&stuff->x, n);
-    swaps(&stuff->y, n);
-    return((* ProcVector[stuff->reqType])(client));
+    swapl(&stuff->drawable);
+    swapl(&stuff->gc);
+    swaps(&stuff->x);
+    swaps(&stuff->y);
+    return ((*ProcVector[stuff->reqType]) (client));
 }
 
 int
 SProcCreateColormap(ClientPtr client)
 {
-    char n;
     REQUEST(xCreateColormapReq);
-    swaps(&stuff->length, n);
+    swaps(&stuff->length);
     REQUEST_SIZE_MATCH(xCreateColormapReq);
-    swapl(&stuff->mid, n);
-    swapl(&stuff->window, n);
-    swapl(&stuff->visual, n);
-    return((* ProcVector[X_CreateColormap])(client));
+    swapl(&stuff->mid);
+    swapl(&stuff->window);
+    swapl(&stuff->visual);
+    return ((*ProcVector[X_CreateColormap]) (client));
 }
-
 
 int
 SProcCopyColormapAndFree(ClientPtr client)
 {
-    char n;
     REQUEST(xCopyColormapAndFreeReq);
-    swaps(&stuff->length, n);
+    swaps(&stuff->length);
     REQUEST_SIZE_MATCH(xCopyColormapAndFreeReq);
-    swapl(&stuff->mid, n);
-    swapl(&stuff->srcCmap, n);
-    return((* ProcVector[X_CopyColormapAndFree])(client));
+    swapl(&stuff->mid);
+    swapl(&stuff->srcCmap);
+    return ((*ProcVector[X_CopyColormapAndFree]) (client));
 
 }
 
 int
 SProcAllocColor(ClientPtr client)
 {
-    char n;
     REQUEST(xAllocColorReq);
-    swaps(&stuff->length, n);
+    swaps(&stuff->length);
     REQUEST_SIZE_MATCH(xAllocColorReq);
-    swapl(&stuff->cmap, n);
-    swaps(&stuff->red, n);
-    swaps(&stuff->green, n);
-    swaps(&stuff->blue, n);
-    return((* ProcVector[X_AllocColor])(client));
+    swapl(&stuff->cmap);
+    swaps(&stuff->red);
+    swaps(&stuff->green);
+    swaps(&stuff->blue);
+    return ((*ProcVector[X_AllocColor]) (client));
 }
 
 int
 SProcAllocNamedColor(ClientPtr client)
 {
-    char n;
-
     REQUEST(xAllocNamedColorReq);
-    swaps(&stuff->length, n);
+    swaps(&stuff->length);
     REQUEST_AT_LEAST_SIZE(xAllocNamedColorReq);
-    swapl(&stuff->cmap, n);
-    swaps(&stuff->nbytes, n);
-    return((* ProcVector[X_AllocNamedColor])(client));
+    swapl(&stuff->cmap);
+    swaps(&stuff->nbytes);
+    return ((*ProcVector[X_AllocNamedColor]) (client));
 }
 
 int
 SProcAllocColorCells(ClientPtr client)
 {
-    char n;
     REQUEST(xAllocColorCellsReq);
-    swaps(&stuff->length, n);
+    swaps(&stuff->length);
     REQUEST_SIZE_MATCH(xAllocColorCellsReq);
-    swapl(&stuff->cmap, n);
-    swaps(&stuff->colors, n);
-    swaps(&stuff->planes, n);
-    return((* ProcVector[X_AllocColorCells])(client));
+    swapl(&stuff->cmap);
+    swaps(&stuff->colors);
+    swaps(&stuff->planes);
+    return ((*ProcVector[X_AllocColorCells]) (client));
 }
 
 int
 SProcAllocColorPlanes(ClientPtr client)
 {
-    char n;
     REQUEST(xAllocColorPlanesReq);
-    swaps(&stuff->length, n);
+    swaps(&stuff->length);
     REQUEST_SIZE_MATCH(xAllocColorPlanesReq);
-    swapl(&stuff->cmap, n);
-    swaps(&stuff->colors, n);
-    swaps(&stuff->red, n);
-    swaps(&stuff->green, n);
-    swaps(&stuff->blue, n);
-    return((* ProcVector[X_AllocColorPlanes])(client));
+    swapl(&stuff->cmap);
+    swaps(&stuff->colors);
+    swaps(&stuff->red);
+    swaps(&stuff->green);
+    swaps(&stuff->blue);
+    return ((*ProcVector[X_AllocColorPlanes]) (client));
 }
 
 int
 SProcFreeColors(ClientPtr client)
 {
-    char n;
     REQUEST(xFreeColorsReq);
-    swaps(&stuff->length, n);
+    swaps(&stuff->length);
     REQUEST_AT_LEAST_SIZE(xFreeColorsReq);
-    swapl(&stuff->cmap, n);
-    swapl(&stuff->planeMask, n);
+    swapl(&stuff->cmap);
+    swapl(&stuff->planeMask);
     SwapRestL(stuff);
-    return((* ProcVector[X_FreeColors])(client));
+    return ((*ProcVector[X_FreeColors]) (client));
 
 }
 
 void
-SwapColorItem(xColorItem *pItem)
+SwapColorItem(xColorItem * pItem)
 {
-    char n;
-
-    swapl(&pItem->pixel, n);
-    swaps(&pItem->red, n);
-    swaps(&pItem->green, n);
-    swaps(&pItem->blue, n);
+    swapl(&pItem->pixel);
+    swaps(&pItem->red);
+    swaps(&pItem->green);
+    swaps(&pItem->blue);
 }
 
 int
 SProcStoreColors(ClientPtr client)
 {
-    char n;
     long count;
-    xColorItem 	*pItem;
+    xColorItem *pItem;
 
     REQUEST(xStoreColorsReq);
-    swaps(&stuff->length, n);
+    swaps(&stuff->length);
     REQUEST_AT_LEAST_SIZE(xStoreColorsReq);
-    swapl(&stuff->cmap, n);
+    swapl(&stuff->cmap);
     pItem = (xColorItem *) &stuff[1];
-    for(count = LengthRestB(stuff)/sizeof(xColorItem); --count >= 0; )
-	SwapColorItem(pItem++);
-    return((* ProcVector[X_StoreColors])(client));
+    for (count = LengthRestB(stuff) / sizeof(xColorItem); --count >= 0;)
+        SwapColorItem(pItem++);
+    return ((*ProcVector[X_StoreColors]) (client));
 }
 
 int
-SProcStoreNamedColor (ClientPtr client)
+SProcStoreNamedColor(ClientPtr client)
 {
-    char n;
     REQUEST(xStoreNamedColorReq);
-    swaps(&stuff->length, n);
+    swaps(&stuff->length);
     REQUEST_AT_LEAST_SIZE(xStoreNamedColorReq);
-    swapl(&stuff->cmap, n);
-    swapl(&stuff->pixel, n);
-    swaps(&stuff->nbytes, n);
-    return((* ProcVector[X_StoreNamedColor])(client));
+    swapl(&stuff->cmap);
+    swapl(&stuff->pixel);
+    swaps(&stuff->nbytes);
+    return ((*ProcVector[X_StoreNamedColor]) (client));
 }
 
 int
-SProcQueryColors (ClientPtr client)
+SProcQueryColors(ClientPtr client)
 {
-    char n;
     REQUEST(xQueryColorsReq);
-    swaps(&stuff->length, n);
+    swaps(&stuff->length);
     REQUEST_AT_LEAST_SIZE(xQueryColorsReq);
-    swapl(&stuff->cmap, n);
+    swapl(&stuff->cmap);
     SwapRestL(stuff);
-    return((* ProcVector[X_QueryColors])(client));
-} 
+    return ((*ProcVector[X_QueryColors]) (client));
+}
 
 int
-SProcLookupColor (ClientPtr client)
+SProcLookupColor(ClientPtr client)
 {
-    char n;
     REQUEST(xLookupColorReq);
-    swaps(&stuff->length, n);
+    swaps(&stuff->length);
     REQUEST_AT_LEAST_SIZE(xLookupColorReq);
-    swapl(&stuff->cmap, n);
-    swaps(&stuff->nbytes, n);
-    return((* ProcVector[X_LookupColor])(client));
+    swapl(&stuff->cmap);
+    swaps(&stuff->nbytes);
+    return ((*ProcVector[X_LookupColor]) (client));
 }
 
 int
-SProcCreateCursor (ClientPtr client)
+SProcCreateCursor(ClientPtr client)
 {
-    char n;
     REQUEST(xCreateCursorReq);
-    swaps(&stuff->length, n);
+    swaps(&stuff->length);
     REQUEST_SIZE_MATCH(xCreateCursorReq);
-    swapl(&stuff->cid, n);
-    swapl(&stuff->source, n);
-    swapl(&stuff->mask, n);
-    swaps(&stuff->foreRed, n);
-    swaps(&stuff->foreGreen, n);
-    swaps(&stuff->foreBlue, n);
-    swaps(&stuff->backRed, n);
-    swaps(&stuff->backGreen, n);
-    swaps(&stuff->backBlue, n);
-    swaps(&stuff->x, n);
-    swaps(&stuff->y, n);
-    return((* ProcVector[X_CreateCursor])(client));
+    swapl(&stuff->cid);
+    swapl(&stuff->source);
+    swapl(&stuff->mask);
+    swaps(&stuff->foreRed);
+    swaps(&stuff->foreGreen);
+    swaps(&stuff->foreBlue);
+    swaps(&stuff->backRed);
+    swaps(&stuff->backGreen);
+    swaps(&stuff->backBlue);
+    swaps(&stuff->x);
+    swaps(&stuff->y);
+    return ((*ProcVector[X_CreateCursor]) (client));
 }
 
 int
-SProcCreateGlyphCursor (ClientPtr client)
+SProcCreateGlyphCursor(ClientPtr client)
 {
-    char n;
     REQUEST(xCreateGlyphCursorReq);
-    swaps(&stuff->length, n);
+    swaps(&stuff->length);
     REQUEST_SIZE_MATCH(xCreateGlyphCursorReq);
-    swapl(&stuff->cid, n);
-    swapl(&stuff->source, n);
-    swapl(&stuff->mask, n);
-    swaps(&stuff->sourceChar, n);
-    swaps(&stuff->maskChar, n);
-    swaps(&stuff->foreRed, n);
-    swaps(&stuff->foreGreen, n);
-    swaps(&stuff->foreBlue, n);
-    swaps(&stuff->backRed, n);
-    swaps(&stuff->backGreen, n);
-    swaps(&stuff->backBlue, n);
-    return((* ProcVector[X_CreateGlyphCursor])(client));
+    swapl(&stuff->cid);
+    swapl(&stuff->source);
+    swapl(&stuff->mask);
+    swaps(&stuff->sourceChar);
+    swaps(&stuff->maskChar);
+    swaps(&stuff->foreRed);
+    swaps(&stuff->foreGreen);
+    swaps(&stuff->foreBlue);
+    swaps(&stuff->backRed);
+    swaps(&stuff->backGreen);
+    swaps(&stuff->backBlue);
+    return ((*ProcVector[X_CreateGlyphCursor]) (client));
 }
 
-
 int
-SProcRecolorCursor (ClientPtr client)
+SProcRecolorCursor(ClientPtr client)
 {
-    char n;
     REQUEST(xRecolorCursorReq);
-    swaps(&stuff->length, n);
+    swaps(&stuff->length);
     REQUEST_SIZE_MATCH(xRecolorCursorReq);
-    swapl(&stuff->cursor, n);
-    swaps(&stuff->foreRed, n);
-    swaps(&stuff->foreGreen, n);
-    swaps(&stuff->foreBlue, n);
-    swaps(&stuff->backRed, n);
-    swaps(&stuff->backGreen, n);
-    swaps(&stuff->backBlue, n);
-    return((* ProcVector[X_RecolorCursor])(client));
+    swapl(&stuff->cursor);
+    swaps(&stuff->foreRed);
+    swaps(&stuff->foreGreen);
+    swaps(&stuff->foreBlue);
+    swaps(&stuff->backRed);
+    swaps(&stuff->backGreen);
+    swaps(&stuff->backBlue);
+    return ((*ProcVector[X_RecolorCursor]) (client));
 }
 
 int
-SProcQueryBestSize (ClientPtr client)
+SProcQueryBestSize(ClientPtr client)
 {
-    char n;
     REQUEST(xQueryBestSizeReq);
-    swaps(&stuff->length, n);
+    swaps(&stuff->length);
     REQUEST_SIZE_MATCH(xQueryBestSizeReq);
-    swapl(&stuff->drawable, n);
-    swaps(&stuff->width, n);
-    swaps(&stuff->height, n);
-    return((* ProcVector[X_QueryBestSize])(client));
+    swapl(&stuff->drawable);
+    swaps(&stuff->width);
+    swaps(&stuff->height);
+    return ((*ProcVector[X_QueryBestSize]) (client));
 
 }
 
 int
-SProcQueryExtension (ClientPtr client)
+SProcQueryExtension(ClientPtr client)
 {
-    char n;
     REQUEST(xQueryExtensionReq);
-    swaps(&stuff->length, n);
+    swaps(&stuff->length);
     REQUEST_AT_LEAST_SIZE(xQueryExtensionReq);
-    swaps(&stuff->nbytes, n);
-    return((* ProcVector[X_QueryExtension])(client));
+    swaps(&stuff->nbytes);
+    return ((*ProcVector[X_QueryExtension]) (client));
 }
 
 int
-SProcChangeKeyboardMapping (ClientPtr client)
+SProcChangeKeyboardMapping(ClientPtr client)
 {
-    char n;
     REQUEST(xChangeKeyboardMappingReq);
-    swaps(&stuff->length, n);
+    swaps(&stuff->length);
     REQUEST_AT_LEAST_SIZE(xChangeKeyboardMappingReq);
     SwapRestL(stuff);
-    return((* ProcVector[X_ChangeKeyboardMapping])(client));
+    return ((*ProcVector[X_ChangeKeyboardMapping]) (client));
 }
 
-
 int
-SProcChangeKeyboardControl (ClientPtr client)
+SProcChangeKeyboardControl(ClientPtr client)
 {
-    char n;
     REQUEST(xChangeKeyboardControlReq);
-    swaps(&stuff->length, n);
+    swaps(&stuff->length);
     REQUEST_AT_LEAST_SIZE(xChangeKeyboardControlReq);
-    swapl(&stuff->mask, n);
+    swapl(&stuff->mask);
     SwapRestL(stuff);
-    return((* ProcVector[X_ChangeKeyboardControl])(client));
+    return ((*ProcVector[X_ChangeKeyboardControl]) (client));
 }
 
 int
-SProcChangePointerControl (ClientPtr client)
+SProcChangePointerControl(ClientPtr client)
 {
-    char n;
     REQUEST(xChangePointerControlReq);
-    swaps(&stuff->length, n);
+    swaps(&stuff->length);
     REQUEST_SIZE_MATCH(xChangePointerControlReq);
-    swaps(&stuff->accelNum, n);
-    swaps(&stuff->accelDenum, n);
-    swaps(&stuff->threshold, n);
-    return((* ProcVector[X_ChangePointerControl])(client));
+    swaps(&stuff->accelNum);
+    swaps(&stuff->accelDenum);
+    swaps(&stuff->threshold);
+    return ((*ProcVector[X_ChangePointerControl]) (client));
 }
 
-
 int
-SProcSetScreenSaver (ClientPtr client)
+SProcSetScreenSaver(ClientPtr client)
 {
-    char n;
     REQUEST(xSetScreenSaverReq);
-    swaps(&stuff->length, n);
+    swaps(&stuff->length);
     REQUEST_SIZE_MATCH(xSetScreenSaverReq);
-    swaps(&stuff->timeout, n);
-    swaps(&stuff->interval, n);
-    return((* ProcVector[X_SetScreenSaver])(client));
+    swaps(&stuff->timeout);
+    swaps(&stuff->interval);
+    return ((*ProcVector[X_SetScreenSaver]) (client));
 }
 
 int
-SProcChangeHosts (ClientPtr client)
+SProcChangeHosts(ClientPtr client)
 {
-    char n;
-
     REQUEST(xChangeHostsReq);
-    swaps(&stuff->length, n);
+    swaps(&stuff->length);
     REQUEST_AT_LEAST_SIZE(xChangeHostsReq);
-    swaps(&stuff->hostLength, n);
-    return((* ProcVector[X_ChangeHosts])(client));
+    swaps(&stuff->hostLength);
+    return ((*ProcVector[X_ChangeHosts]) (client));
 
 }
 
-int SProcRotateProperties (ClientPtr client)
+int
+SProcRotateProperties(ClientPtr client)
 {
-    char n;
     REQUEST(xRotatePropertiesReq);
-    swaps(&stuff->length, n);
+    swaps(&stuff->length);
     REQUEST_AT_LEAST_SIZE(xRotatePropertiesReq);
-    swapl(&stuff->window, n);
-    swaps(&stuff->nAtoms, n);
-    swaps(&stuff->nPositions, n);
+    swapl(&stuff->window);
+    swaps(&stuff->nAtoms);
+    swaps(&stuff->nPositions);
     SwapRestL(stuff);
-    return ((* ProcVector[X_RotateProperties])(client));
+    return ((*ProcVector[X_RotateProperties]) (client));
 }
 
 int
 SProcNoOperation(ClientPtr client)
 {
-    char n;
     REQUEST(xReq);
-    swaps(&stuff->length, n);
-    return ((* ProcVector[X_NoOperation])(client));
+    swaps(&stuff->length);
+    return ((*ProcVector[X_NoOperation]) (client));
 }
 
 void
-SwapConnClientPrefix(xConnClientPrefix *pCCP)
+SwapConnClientPrefix(xConnClientPrefix * pCCP)
 {
-    char n;
-
-    swaps(&pCCP->majorVersion, n);
-    swaps(&pCCP->minorVersion, n);
-    swaps(&pCCP->nbytesAuthProto, n);
-    swaps(&pCCP->nbytesAuthString, n);
+    swaps(&pCCP->majorVersion);
+    swaps(&pCCP->minorVersion);
+    swaps(&pCCP->nbytesAuthProto);
+    swaps(&pCCP->nbytesAuthString);
 }

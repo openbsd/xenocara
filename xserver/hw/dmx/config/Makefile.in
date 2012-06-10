@@ -65,7 +65,7 @@ libdmxconfig_a_AR = $(AR) $(ARFLAGS)
 libdmxconfig_a_LIBADD =
 am__objects_1 = parser.$(OBJEXT) scanner.$(OBJEXT) dmxparse.$(OBJEXT) \
 	dmxprint.$(OBJEXT) dmxcompat.$(OBJEXT) dmxconfig.$(OBJEXT)
-am_libdmxconfig_a_OBJECTS = $(am__objects_1)
+am_libdmxconfig_a_OBJECTS = $(am__objects_1) strlcpy.$(OBJEXT)
 libdmxconfig_a_OBJECTS = $(am_libdmxconfig_a_OBJECTS)
 am__installdirs = "$(DESTDIR)$(bindir)"
 binPROGRAMS_INSTALL = $(INSTALL_PROGRAM)
@@ -114,7 +114,6 @@ AGP_FALSE = @AGP_FALSE@
 AGP_TRUE = @AGP_TRUE@
 AIGLX_DRI_LOADER_FALSE = @AIGLX_DRI_LOADER_FALSE@
 AIGLX_DRI_LOADER_TRUE = @AIGLX_DRI_LOADER_TRUE@
-ALLOCA = @ALLOCA@
 ALPHA_VIDEO_FALSE = @ALPHA_VIDEO_FALSE@
 ALPHA_VIDEO_TRUE = @ALPHA_VIDEO_TRUE@
 AMDEP_FALSE = @AMDEP_FALSE@
@@ -133,6 +132,7 @@ AUTOCONF = @AUTOCONF@
 AUTOHEADER = @AUTOHEADER@
 AUTOMAKE = @AUTOMAKE@
 AWK = @AWK@
+BASE_CFLAGS = @BASE_CFLAGS@
 BASE_FONT_PATH = @BASE_FONT_PATH@
 BSD_APM_FALSE = @BSD_APM_FALSE@
 BSD_APM_TRUE = @BSD_APM_TRUE@
@@ -340,8 +340,6 @@ LIB_MAN_DIR = @LIB_MAN_DIR@
 LIB_MAN_SUFFIX = @LIB_MAN_SUFFIX@
 LINUX_ALPHA_FALSE = @LINUX_ALPHA_FALSE@
 LINUX_ALPHA_TRUE = @LINUX_ALPHA_TRUE@
-LINUX_IA64_FALSE = @LINUX_IA64_FALSE@
-LINUX_IA64_TRUE = @LINUX_IA64_TRUE@
 LIPO = @LIPO@
 LNXACPI_FALSE = @LNXACPI_FALSE@
 LNXACPI_TRUE = @LNXACPI_TRUE@
@@ -360,10 +358,6 @@ MISC_MAN_DIR = @MISC_MAN_DIR@
 MISC_MAN_SUFFIX = @MISC_MAN_SUFFIX@
 MITSHM_FALSE = @MITSHM_FALSE@
 MITSHM_TRUE = @MITSHM_TRUE@
-NEED_STRLCAT_FALSE = @NEED_STRLCAT_FALSE@
-NEED_STRLCAT_TRUE = @NEED_STRLCAT_TRUE@
-NEED_VSNPRINTF_FALSE = @NEED_VSNPRINTF_FALSE@
-NEED_VSNPRINTF_TRUE = @NEED_VSNPRINTF_TRUE@
 NM = @NM@
 NMEDIT = @NMEDIT@
 OBJC = @OBJC@
@@ -507,18 +501,18 @@ XNEST_SYS_LIBS = @XNEST_SYS_LIBS@
 XNEST_TRUE = @XNEST_TRUE@
 XORG_BUS_BSDPCI_FALSE = @XORG_BUS_BSDPCI_FALSE@
 XORG_BUS_BSDPCI_TRUE = @XORG_BUS_BSDPCI_TRUE@
-XORG_BUS_LINUXPCI_FALSE = @XORG_BUS_LINUXPCI_FALSE@
-XORG_BUS_LINUXPCI_TRUE = @XORG_BUS_LINUXPCI_TRUE@
+XORG_BUS_PCI_FALSE = @XORG_BUS_PCI_FALSE@
+XORG_BUS_PCI_TRUE = @XORG_BUS_PCI_TRUE@
 XORG_BUS_SPARC_FALSE = @XORG_BUS_SPARC_FALSE@
 XORG_BUS_SPARC_TRUE = @XORG_BUS_SPARC_TRUE@
 XORG_CFLAGS = @XORG_CFLAGS@
 XORG_FALSE = @XORG_FALSE@
 XORG_INCS = @XORG_INCS@
 XORG_LIBS = @XORG_LIBS@
+XORG_MALLOC_DEBUG_ENV = @XORG_MALLOC_DEBUG_ENV@
 XORG_MAN_PAGE = @XORG_MAN_PAGE@
 XORG_MODULES_CFLAGS = @XORG_MODULES_CFLAGS@
 XORG_MODULES_LIBS = @XORG_MODULES_LIBS@
-XORG_OS = @XORG_OS@
 XORG_OS_SUBDIR = @XORG_OS_SUBDIR@
 XORG_SGML_PATH = @XORG_SGML_PATH@
 XORG_SYS_LIBS = @XORG_SYS_LIBS@
@@ -659,7 +653,7 @@ LIBSRCS = parser.y \
 
 BUILT_SOURCES = parser.c parser.h scanner.c
 MAINTAINERCLEANFILES = $(BUILT_SOURCES)
-libdmxconfig_a_SOURCES = $(LIBSRCS)
+libdmxconfig_a_SOURCES = $(LIBSRCS) $(top_srcdir)/os/strlcpy.c
 @GLX_TRUE@GLX_DEFS = @GL_CFLAGS@
 AM_YFLAGS = -d
 AM_CFLAGS = \
@@ -792,6 +786,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dmxtodmx.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/parser.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/scanner.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/strlcpy.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/vdltodmx.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xdmxconfig-Canvas.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xdmxconfig-dmxlog.Po@am__quote@
@@ -817,6 +812,20 @@ distclean-compile:
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$<' object='$@' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(LTCOMPILE) -c -o $@ $<
+
+strlcpy.o: $(top_srcdir)/os/strlcpy.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT strlcpy.o -MD -MP -MF "$(DEPDIR)/strlcpy.Tpo" -c -o strlcpy.o `test -f '$(top_srcdir)/os/strlcpy.c' || echo '$(srcdir)/'`$(top_srcdir)/os/strlcpy.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/strlcpy.Tpo" "$(DEPDIR)/strlcpy.Po"; else rm -f "$(DEPDIR)/strlcpy.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$(top_srcdir)/os/strlcpy.c' object='strlcpy.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o strlcpy.o `test -f '$(top_srcdir)/os/strlcpy.c' || echo '$(srcdir)/'`$(top_srcdir)/os/strlcpy.c
+
+strlcpy.obj: $(top_srcdir)/os/strlcpy.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT strlcpy.obj -MD -MP -MF "$(DEPDIR)/strlcpy.Tpo" -c -o strlcpy.obj `if test -f '$(top_srcdir)/os/strlcpy.c'; then $(CYGPATH_W) '$(top_srcdir)/os/strlcpy.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/os/strlcpy.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/strlcpy.Tpo" "$(DEPDIR)/strlcpy.Po"; else rm -f "$(DEPDIR)/strlcpy.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$(top_srcdir)/os/strlcpy.c' object='strlcpy.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o strlcpy.obj `if test -f '$(top_srcdir)/os/strlcpy.c'; then $(CYGPATH_W) '$(top_srcdir)/os/strlcpy.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/os/strlcpy.c'; fi`
 
 xdmxconfig-xdmxconfig.o: xdmxconfig.c
 @am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(xdmxconfig_CFLAGS) $(CFLAGS) -MT xdmxconfig-xdmxconfig.o -MD -MP -MF "$(DEPDIR)/xdmxconfig-xdmxconfig.Tpo" -c -o xdmxconfig-xdmxconfig.o `test -f 'xdmxconfig.c' || echo '$(srcdir)/'`xdmxconfig.c; \

@@ -51,7 +51,9 @@ cat > sdksyms.c << EOF
  */
 #include "geext.h"
 #include "geint.h"
+#ifdef MITSHM
 #include "shmint.h"
+#endif
 #include "syncsdk.h"
 #if XINERAMA
 # include "panoramiXsrv.h"
@@ -117,14 +119,15 @@ cat > sdksyms.c << EOF
 #include "xf86.h"
 #include "xf86Module.h"
 #include "xf86Opt.h"
-#include "xf86PciInfo.h"
+#ifdef XSERVER_LIBPCIACCESS
+ #include "xf86VGAarbiter.h"
+#endif
 #include "xf86Priv.h"
 #include "xf86Privstr.h"
 #include "xf86cmap.h"
 #include "xf86fbman.h"
 #include "xf86str.h"
 #include "xf86Xinput.h"
-#include "xf86VGAarbiter.h"
 #include "xisb.h"
 #if XV
 # include "xf86xv.h"
@@ -169,7 +172,9 @@ cat > sdksyms.c << EOF
 
 
 /* hw/xfree86/os-support/bus/Makefile.am */
-#include "xf86Pci.h"
+#ifdef XSERVER_LIBPCIACCESS
+# include "xf86Pci.h"
+#endif
 #if defined(__sparc__) || defined(__sparc)
 # include "xf86Sbus.h"
 #endif
@@ -326,7 +331,8 @@ topdir=$1
 shift
 LC_ALL=C
 export LC_ALL
-${CPP:-cpp} "$@" -DXorgLoader sdksyms.c | ${AWK:-awk} -v topdir=$topdir -v nini=$n '
+${CPP:-cpp} "$@" -DXorgLoader sdksyms.c > /dev/null || exit $?
+${CPP:-cpp} "$@" -DXorgLoader sdksyms.c | ${AWK:-awk} -v topdir=$topdir '
 BEGIN {
     sdk = 0;
     print("/*");
@@ -360,12 +366,13 @@ BEGIN {
 
 /^extern[ 	]/  {
     if (sdk) {
-	n = nini;
+	n = 3;
+
         printf("/* %s */\n", $0)
 	# skip attribute, if any
 	while ($n ~ /^(__attribute__|__global)/ ||
 	    # skip modifiers, if any
-	    $n ~ /^\*?(unsigned|const|volatile|struct)$/ ||
+	    $n ~ /^\*?(unsigned|const|volatile|struct|_X_EXPORT)$/ ||
 	    # skip pointer
 	    $n ~ /^[a-zA-Z0-9_]*\*$/)
 	    n++;
@@ -396,6 +403,9 @@ BEGIN {
 	if ($n == "" || $n ~ /^\*+$/) {
 	    getline;
 	    n = 1;
+	    # indent may have inserted a blank link
+	    if ($0 == "")
+		getline;
 	}
 
 	# dont modify $0 or $n

@@ -33,43 +33,42 @@
 #include <dix-config.h>
 #endif
 
-#include "inputstr.h"	/* DeviceIntPtr      */
-#include "windowstr.h"	/* window structure  */
+#include "inputstr.h"           /* DeviceIntPtr      */
+#include "windowstr.h"          /* window structure  */
 #include <X11/extensions/XI2.h>
 #include <X11/extensions/XI2proto.h>
 #include "swaprep.h"
 
-#include "exglobals.h" /* BadDevice */
+#include "exglobals.h"          /* BadDevice */
 #include "exevents.h"
 #include "xipassivegrab.h"
 #include "dixgrabs.h"
 #include "misc.h"
+#include "inpututils.h"
 
 int
 SProcXIPassiveGrabDevice(ClientPtr client)
 {
     int i;
-    char n;
     xXIModifierInfo *mods;
 
     REQUEST(xXIPassiveGrabDeviceReq);
 
-    swaps(&stuff->length, n);
-    swaps(&stuff->deviceid, n);
-    swapl(&stuff->grab_window, n);
-    swapl(&stuff->cursor, n);
-    swapl(&stuff->time, n);
-    swapl(&stuff->detail, n);
-    swaps(&stuff->mask_len, n);
-    swaps(&stuff->num_modifiers, n);
+    swaps(&stuff->length);
+    swaps(&stuff->deviceid);
+    swapl(&stuff->grab_window);
+    swapl(&stuff->cursor);
+    swapl(&stuff->time);
+    swapl(&stuff->detail);
+    swaps(&stuff->mask_len);
+    swaps(&stuff->num_modifiers);
 
-    mods = (xXIModifierInfo*)&stuff[1];
+    mods = (xXIModifierInfo *) &stuff[1];
 
-    for (i = 0; i < stuff->num_modifiers; i++, mods++)
-    {
-        swapl(&mods->base_mods, n);
-        swapl(&mods->latched_mods, n);
-        swapl(&mods->locked_mods, n);
+    for (i = 0; i < stuff->num_modifiers; i++, mods++) {
+        swapl(&mods->base_mods);
+        swapl(&mods->latched_mods);
+        swapl(&mods->locked_mods);
     }
 
     return ProcXIPassiveGrabDevice(client);
@@ -81,14 +80,12 @@ ProcXIPassiveGrabDevice(ClientPtr client)
     DeviceIntPtr dev, mod_dev;
     xXIPassiveGrabDeviceReply rep;
     int i, ret = Success;
-    uint8_t status;
     uint32_t *modifiers;
     xXIGrabModifierInfo *modifiers_failed;
-    GrabMask mask;
+    GrabMask mask = { 0 };
     GrabParameters param;
     void *tmp;
     int mask_len;
-    int n;
 
     REQUEST(xXIPassiveGrabDeviceReq);
     REQUEST_AT_LEAST_SIZE(xXIPassiveGrabDeviceReq);
@@ -97,11 +94,9 @@ ProcXIPassiveGrabDevice(ClientPtr client)
         dev = inputInfo.all_devices;
     else if (stuff->deviceid == XIAllMasterDevices)
         dev = inputInfo.all_master_devices;
-    else
-    {
+    else {
         ret = dixLookupDevice(&dev, stuff->deviceid, client, DixGrabAccess);
-        if (ret != Success)
-        {
+        if (ret != Success) {
             client->errorValue = stuff->deviceid;
             return ret;
         }
@@ -110,26 +105,37 @@ ProcXIPassiveGrabDevice(ClientPtr client)
     if (stuff->grab_type != XIGrabtypeButton &&
         stuff->grab_type != XIGrabtypeKeycode &&
         stuff->grab_type != XIGrabtypeEnter &&
-        stuff->grab_type != XIGrabtypeFocusIn)
-    {
+        stuff->grab_type != XIGrabtypeFocusIn &&
+        stuff->grab_type != XIGrabtypeTouchBegin) {
         client->errorValue = stuff->grab_type;
         return BadValue;
     }
 
     if ((stuff->grab_type == XIGrabtypeEnter ||
-         stuff->grab_type == XIGrabtypeFocusIn) && stuff->detail != 0)
-    {
+         stuff->grab_type == XIGrabtypeFocusIn ||
+         stuff->grab_type == XIGrabtypeTouchBegin) && stuff->detail != 0) {
         client->errorValue = stuff->detail;
         return BadValue;
     }
 
-    if (XICheckInvalidMaskBits(client, (unsigned char*)&stuff[1],
+    if (stuff->grab_type == XIGrabtypeTouchBegin &&
+        (stuff->grab_mode != XIGrabModeTouch ||
+         stuff->paired_device_mode != GrabModeAsync)) {
+        client->errorValue = stuff->grab_mode;
+        return BadValue;
+    }
+
+    if (XICheckInvalidMaskBits(client, (unsigned char *) &stuff[1],
                                stuff->mask_len * 4) != Success)
         return BadValue;
 
-    mask_len = min(sizeof(mask.xi2mask[stuff->deviceid]), stuff->mask_len * 4);
-    memset(mask.xi2mask, 0, sizeof(mask.xi2mask));
-    memcpy(mask.xi2mask[stuff->deviceid], &stuff[1], mask_len * 4);
+    mask.xi2mask = xi2mask_new();
+    if (!mask.xi2mask)
+        return BadAlloc;
+
+    mask_len = min(xi2mask_mask_size(mask.xi2mask), stuff->mask_len * 4);
+    xi2mask_set_one_mask(mask.xi2mask, stuff->deviceid,
+                         (unsigned char *) &stuff[1], mask_len * 4);
 
     rep.repType = X_Reply;
     rep.RepType = X_XIPassiveGrabDevice;
@@ -138,7 +144,7 @@ ProcXIPassiveGrabDevice(ClientPtr client)
     rep.num_modifiers = 0;
 
     memset(&param, 0, sizeof(param));
-    param.grabtype = GRABTYPE_XI2;
+    param.grabtype = XI2;
     param.ownerEvents = stuff->owner_events;
     param.grabWindow = stuff->grab_window;
     param.cursor = stuff->cursor;
@@ -146,65 +152,70 @@ ProcXIPassiveGrabDevice(ClientPtr client)
     if (IsKeyboardDevice(dev)) {
         param.this_device_mode = stuff->grab_mode;
         param.other_devices_mode = stuff->paired_device_mode;
-    } else {
+    }
+    else {
         param.this_device_mode = stuff->paired_device_mode;
         param.other_devices_mode = stuff->grab_mode;
     }
 
-    if (stuff->cursor != None)
-    {
-        status = dixLookupResourceByType(&tmp, stuff->cursor,
-                                         RT_CURSOR, client, DixUseAccess);
-	if (status != Success)
-	{
-	    client->errorValue = stuff->cursor;
-	    return status;
-	}
+    if (stuff->cursor != None) {
+        ret = dixLookupResourceByType(&tmp, stuff->cursor,
+                                      RT_CURSOR, client, DixUseAccess);
+        if (ret != Success) {
+            client->errorValue = stuff->cursor;
+            goto out;
+        }
     }
 
-    status = dixLookupWindow((WindowPtr*)&tmp, stuff->grab_window, client, DixSetAttrAccess);
-    if (status != Success)
-	return status;
+    ret =
+        dixLookupWindow((WindowPtr *) &tmp, stuff->grab_window, client,
+                        DixSetAttrAccess);
+    if (ret != Success)
+        goto out;
 
-    status = CheckGrabValues(client, &param);
-    if (status != Success)
-        return status;
+    ret = CheckGrabValues(client, &param);
+    if (ret != Success)
+        goto out;
 
-    modifiers = (uint32_t*)&stuff[1] + stuff->mask_len;
-    modifiers_failed = calloc(stuff->num_modifiers, sizeof(xXIGrabModifierInfo));
-    if (!modifiers_failed)
-        return BadAlloc;
+    modifiers = (uint32_t *) &stuff[1] + stuff->mask_len;
+    modifiers_failed =
+        calloc(stuff->num_modifiers, sizeof(xXIGrabModifierInfo));
+    if (!modifiers_failed) {
+        ret = BadAlloc;
+        goto out;
+    }
 
     mod_dev = (IsFloating(dev)) ? dev : GetMaster(dev, MASTER_KEYBOARD);
 
-    for (i = 0; i < stuff->num_modifiers; i++, modifiers++)
-    {
+    for (i = 0; i < stuff->num_modifiers; i++, modifiers++) {
+        uint8_t status = Success;
+
         param.modifiers = *modifiers;
-        switch(stuff->grab_type)
-        {
-            case XIGrabtypeButton:
-                status = GrabButton(client, dev, mod_dev, stuff->detail,
-                                    &param, GRABTYPE_XI2, &mask);
-                break;
-            case XIGrabtypeKeycode:
-                status = GrabKey(client, dev, mod_dev, stuff->detail,
-                                 &param, GRABTYPE_XI2, &mask);
-                break;
-            case XIGrabtypeEnter:
-            case XIGrabtypeFocusIn:
-                status = GrabWindow(client, dev, stuff->grab_type,
-                                    &param, &mask);
-                break;
+        switch (stuff->grab_type) {
+        case XIGrabtypeButton:
+            status = GrabButton(client, dev, mod_dev, stuff->detail,
+                                &param, XI2, &mask);
+            break;
+        case XIGrabtypeKeycode:
+            status = GrabKey(client, dev, mod_dev, stuff->detail,
+                             &param, XI2, &mask);
+            break;
+        case XIGrabtypeEnter:
+        case XIGrabtypeFocusIn:
+            status = GrabWindow(client, dev, stuff->grab_type, &param, &mask);
+            break;
+        case XIGrabtypeTouchBegin:
+            status = GrabTouch(client, dev, mod_dev, &param, &mask);
+            break;
         }
 
-        if (status != GrabSuccess)
-        {
+        if (status != GrabSuccess) {
             xXIGrabModifierInfo *info = modifiers_failed + rep.num_modifiers;
 
             info->status = status;
             info->modifiers = *modifiers;
             if (client->swapped)
-                swapl(&info->modifiers, n);
+                swapl(&info->modifiers);
 
             rep.num_modifiers++;
             rep.length += bytes_to_int32(sizeof(xXIGrabModifierInfo));
@@ -213,9 +224,11 @@ ProcXIPassiveGrabDevice(ClientPtr client)
 
     WriteReplyToClient(client, sizeof(rep), &rep);
     if (rep.num_modifiers)
-        WriteToClient(client, rep.length * 4, (char*)modifiers_failed);
+        WriteToClient(client, rep.length * 4, (char *) modifiers_failed);
 
     free(modifiers_failed);
+ out:
+    xi2mask_free(&mask.xi2mask);
     return ret;
 }
 
@@ -223,34 +236,31 @@ void
 SRepXIPassiveGrabDevice(ClientPtr client, int size,
                         xXIPassiveGrabDeviceReply * rep)
 {
-    char n;
+    swaps(&rep->sequenceNumber);
+    swapl(&rep->length);
+    swaps(&rep->num_modifiers);
 
-    swaps(&rep->sequenceNumber, n);
-    swapl(&rep->length, n);
-    swaps(&rep->num_modifiers, n);
-
-    WriteToClient(client, size, (char *)rep);
+    WriteToClient(client, size, (char *) rep);
 }
 
 int
 SProcXIPassiveUngrabDevice(ClientPtr client)
 {
-    char n;
     int i;
     uint32_t *modifiers;
 
     REQUEST(xXIPassiveUngrabDeviceReq);
 
-    swaps(&stuff->length, n);
-    swapl(&stuff->grab_window, n);
-    swaps(&stuff->deviceid, n);
-    swapl(&stuff->detail, n);
-    swaps(&stuff->num_modifiers, n);
+    swaps(&stuff->length);
+    swapl(&stuff->grab_window);
+    swaps(&stuff->deviceid);
+    swapl(&stuff->detail);
+    swaps(&stuff->num_modifiers);
 
-    modifiers = (uint32_t*)&stuff[1];
+    modifiers = (uint32_t *) &stuff[1];
 
     for (i = 0; i < stuff->num_modifiers; i++, modifiers++)
-        swapl(modifiers, n);
+        swapl(modifiers);
 
     return ProcXIPassiveUngrabDevice(client);
 }
@@ -260,8 +270,8 @@ ProcXIPassiveUngrabDevice(ClientPtr client)
 {
     DeviceIntPtr dev, mod_dev;
     WindowPtr win;
-    GrabRec tempGrab;
-    uint32_t* modifiers;
+    GrabPtr tempGrab;
+    uint32_t *modifiers;
     int i, rc;
 
     REQUEST(xXIPassiveUngrabDeviceReq);
@@ -271,25 +281,24 @@ ProcXIPassiveUngrabDevice(ClientPtr client)
         dev = inputInfo.all_devices;
     else if (stuff->deviceid == XIAllMasterDevices)
         dev = inputInfo.all_master_devices;
-    else
-    {
+    else {
         rc = dixLookupDevice(&dev, stuff->deviceid, client, DixGrabAccess);
         if (rc != Success)
-	    return rc;
+            return rc;
     }
 
     if (stuff->grab_type != XIGrabtypeButton &&
         stuff->grab_type != XIGrabtypeKeycode &&
         stuff->grab_type != XIGrabtypeEnter &&
-        stuff->grab_type != XIGrabtypeFocusIn)
-    {
+        stuff->grab_type != XIGrabtypeFocusIn &&
+        stuff->grab_type != XIGrabtypeTouchBegin) {
         client->errorValue = stuff->grab_type;
         return BadValue;
     }
 
     if ((stuff->grab_type == XIGrabtypeEnter ||
-         stuff->grab_type == XIGrabtypeFocusIn) && stuff->detail != 0)
-    {
+         stuff->grab_type == XIGrabtypeFocusIn ||
+         stuff->grab_type == XIGrabtypeTouchBegin) && stuff->detail != 0) {
         client->errorValue = stuff->detail;
         return BadValue;
     }
@@ -300,29 +309,44 @@ ProcXIPassiveUngrabDevice(ClientPtr client)
 
     mod_dev = (IsFloating(dev)) ? dev : GetMaster(dev, MASTER_KEYBOARD);
 
-    tempGrab.resource = client->clientAsMask;
-    tempGrab.device = dev;
-    tempGrab.window = win;
-    switch(stuff->grab_type)
-    {
-        case XIGrabtypeButton:  tempGrab.type = XI_ButtonPress; break;
-        case XIGrabtypeKeycode:  tempGrab.type = XI_KeyPress;    break;
-        case XIGrabtypeEnter:   tempGrab.type = XI_Enter;       break;
-        case XIGrabtypeFocusIn: tempGrab.type = XI_FocusIn;     break;
-    }
-    tempGrab.grabtype = GRABTYPE_XI2;
-    tempGrab.modifierDevice = mod_dev;
-    tempGrab.modifiersDetail.pMask = NULL;
-    tempGrab.detail.exact = stuff->detail;
-    tempGrab.detail.pMask = NULL;
+    tempGrab = AllocGrab();
+    if (!tempGrab)
+        return BadAlloc;
 
-    modifiers = (uint32_t*)&stuff[1];
-
-    for (i = 0; i < stuff->num_modifiers; i++, modifiers++)
-    {
-        tempGrab.modifiersDetail.exact = *modifiers;
-        DeletePassiveGrabFromList(&tempGrab);
+    tempGrab->resource = client->clientAsMask;
+    tempGrab->device = dev;
+    tempGrab->window = win;
+    switch (stuff->grab_type) {
+    case XIGrabtypeButton:
+        tempGrab->type = XI_ButtonPress;
+        break;
+    case XIGrabtypeKeycode:
+        tempGrab->type = XI_KeyPress;
+        break;
+    case XIGrabtypeEnter:
+        tempGrab->type = XI_Enter;
+        break;
+    case XIGrabtypeFocusIn:
+        tempGrab->type = XI_FocusIn;
+        break;
+    case XIGrabtypeTouchBegin:
+        tempGrab->type = XI_TouchBegin;
+        break;
     }
+    tempGrab->grabtype = XI2;
+    tempGrab->modifierDevice = mod_dev;
+    tempGrab->modifiersDetail.pMask = NULL;
+    tempGrab->detail.exact = stuff->detail;
+    tempGrab->detail.pMask = NULL;
+
+    modifiers = (uint32_t *) &stuff[1];
+
+    for (i = 0; i < stuff->num_modifiers; i++, modifiers++) {
+        tempGrab->modifiersDetail.exact = *modifiers;
+        DeletePassiveGrabFromList(tempGrab);
+    }
+
+    FreeGrab(tempGrab);
 
     return Success;
 }

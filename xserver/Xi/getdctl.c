@@ -54,7 +54,7 @@ SOFTWARE.
 #include <dix-config.h>
 #endif
 
-#include "inputstr.h"	/* DeviceIntPtr      */
+#include "inputstr.h"           /* DeviceIntPtr      */
 #include <X11/extensions/XI.h>
 #include <X11/extensions/XIproto.h>
 #include "exglobals.h"
@@ -71,12 +71,10 @@ SOFTWARE.
 int
 SProcXGetDeviceControl(ClientPtr client)
 {
-    char n;
-
     REQUEST(xGetDeviceControlReq);
-    swaps(&stuff->length, n);
+    swaps(&stuff->length);
     REQUEST_SIZE_MATCH(xGetDeviceControlReq);
-    swaps(&stuff->control, n);
+    swaps(&stuff->control);
     return (ProcXGetDeviceControl(client));
 }
 
@@ -88,9 +86,8 @@ SProcXGetDeviceControl(ClientPtr client)
 
 static void
 CopySwapDeviceResolution(ClientPtr client, ValuatorClassPtr v, char *buf,
-			 int length)
+                         int length)
 {
-    char n;
     AxisInfoPtr a;
     xDeviceResolutionState *r;
     int i, *iptr;
@@ -100,27 +97,27 @@ CopySwapDeviceResolution(ClientPtr client, ValuatorClassPtr v, char *buf,
     r->length = length;
     r->num_valuators = v->numAxes;
     buf += sizeof(xDeviceResolutionState);
-    iptr = (int *)buf;
+    iptr = (int *) buf;
     for (i = 0, a = v->axes; i < v->numAxes; i++, a++)
-	*iptr++ = a->resolution;
+        *iptr++ = a->resolution;
     for (i = 0, a = v->axes; i < v->numAxes; i++, a++)
-	*iptr++ = a->min_resolution;
+        *iptr++ = a->min_resolution;
     for (i = 0, a = v->axes; i < v->numAxes; i++, a++)
-	*iptr++ = a->max_resolution;
+        *iptr++ = a->max_resolution;
     if (client->swapped) {
-	swaps(&r->control, n);
-	swaps(&r->length, n);
-	swapl(&r->num_valuators, n);
-	iptr = (int *)buf;
-	for (i = 0; i < (3 * v->numAxes); i++, iptr++) {
-	    swapl(iptr, n);
-	}
+        swaps(&r->control);
+        swaps(&r->length);
+        swapl(&r->num_valuators);
+        iptr = (int *) buf;
+        for (i = 0; i < (3 * v->numAxes); i++, iptr++) {
+            swapl(iptr);
+        }
     }
 }
 
-static void CopySwapDeviceCore (ClientPtr client, DeviceIntPtr dev, char *buf)
+static void
+CopySwapDeviceCore(ClientPtr client, DeviceIntPtr dev, char *buf)
 {
-    char n;
     xDeviceCoreState *c = (xDeviceCoreState *) buf;
 
     c->control = DEVICE_CORE;
@@ -129,15 +126,14 @@ static void CopySwapDeviceCore (ClientPtr client, DeviceIntPtr dev, char *buf)
     c->iscore = (dev == inputInfo.keyboard || dev == inputInfo.pointer);
 
     if (client->swapped) {
-        swaps(&c->control, n);
-        swaps(&c->length, n);
-        swaps(&c->status, n);
+        swaps(&c->control);
+        swaps(&c->length);
     }
 }
 
-static void CopySwapDeviceEnable (ClientPtr client, DeviceIntPtr dev, char *buf)
+static void
+CopySwapDeviceEnable(ClientPtr client, DeviceIntPtr dev, char *buf)
 {
-    char n;
     xDeviceEnableState *e = (xDeviceEnableState *) buf;
 
     e->control = DEVICE_ENABLE;
@@ -145,9 +141,8 @@ static void CopySwapDeviceEnable (ClientPtr client, DeviceIntPtr dev, char *buf)
     e->enable = dev->enabled;
 
     if (client->swapped) {
-        swaps(&e->control, n);
-        swaps(&e->length, n);
-        swaps(&e->enable, n);
+        swaps(&e->control);
+        swaps(&e->length);
     }
 }
 
@@ -161,11 +156,9 @@ static void CopySwapDeviceEnable (ClientPtr client, DeviceIntPtr dev, char *buf)
 void
 SRepXGetDeviceControl(ClientPtr client, int size, xGetDeviceControlReply * rep)
 {
-    char n;
-
-    swaps(&rep->sequenceNumber, n);
-    swapl(&rep->length, n);
-    WriteToClient(client, size, (char *)rep);
+    swaps(&rep->sequenceNumber);
+    swapl(&rep->length);
+    WriteToClient(client, size, (char *) rep);
 }
 
 /***********************************************************************
@@ -187,7 +180,7 @@ ProcXGetDeviceControl(ClientPtr client)
 
     rc = dixLookupDevice(&dev, stuff->deviceid, client, DixGetAttrAccess);
     if (rc != Success)
-	return rc;
+        return rc;
 
     rep.repType = X_Reply;
     rep.RepType = X_GetDeviceControl;
@@ -196,11 +189,11 @@ ProcXGetDeviceControl(ClientPtr client)
 
     switch (stuff->control) {
     case DEVICE_RESOLUTION:
-	if (!dev->valuator)
-	    return BadMatch;
-	total_length = sizeof(xDeviceResolutionState) +
-	    (3 * sizeof(int) * dev->valuator->numAxes);
-	break;
+        if (!dev->valuator)
+            return BadMatch;
+        total_length = sizeof(xDeviceResolutionState) +
+            (3 * sizeof(int) * dev->valuator->numAxes);
+        break;
     case DEVICE_ABS_CALIB:
     case DEVICE_ABS_AREA:
         return BadMatch;
@@ -211,18 +204,18 @@ ProcXGetDeviceControl(ClientPtr client)
         total_length = sizeof(xDeviceEnableState);
         break;
     default:
-	return BadValue;
+        return BadValue;
     }
 
-    buf = (char *)malloc(total_length);
+    buf = (char *) malloc(total_length);
     if (!buf)
-	return BadAlloc;
+        return BadAlloc;
     savbuf = buf;
 
     switch (stuff->control) {
     case DEVICE_RESOLUTION:
-	CopySwapDeviceResolution(client, dev->valuator, buf, total_length);
-	break;
+        CopySwapDeviceResolution(client, dev->valuator, buf, total_length);
+        break;
     case DEVICE_CORE:
         CopySwapDeviceCore(client, dev, buf);
         break;
@@ -230,7 +223,7 @@ ProcXGetDeviceControl(ClientPtr client)
         CopySwapDeviceEnable(client, dev, buf);
         break;
     default:
-	break;
+        break;
     }
 
     rep.length = bytes_to_int32(total_length);

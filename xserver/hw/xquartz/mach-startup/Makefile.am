@@ -12,11 +12,18 @@ x11app_PROGRAMS = X11.bin
 dist_X11_bin_SOURCES = \
 	bundle-main.c 
 
+# strndup(3) was added in Mac OS X 10.7, but we do this unconditionally to deal
+# with the case where we build on Lion but target Snow Leopard as the minimum
+# OS version.
+#if NEED_STRNDUP
+dist_X11_bin_SOURCES += $(top_srcdir)/os/strndup.c
+#endif
+
 nodist_X11_bin_SOURCES = \
 	mach_startupServer.c \
 	mach_startupUser.c
 
-X11_bin_LDADD = \
+X11_bin_DEPENDENCIES = \
 	$(top_builddir)/hw/xquartz/libXquartz.la \
 	$(top_builddir)/hw/xquartz/xpr/libXquartzXpr.la \
 	$(top_builddir)/dix/dixfonts.lo \
@@ -24,8 +31,12 @@ X11_bin_LDADD = \
 	$(top_builddir)/hw/xquartz/pbproxy/libxpbproxy.la \
 	$(XQUARTZ_LIBS) $(XSERVER_LIBS)
 
+# $(XSERVER_SYS_LIBS) is placed here in order to set command line ordering
+# to work around build issues on Tiger.
+X11_bin_LDADD = $(X11_bin_DEPENDENCIES) $(XSERVER_SYS_LIBS)
+
 X11_bin_LDFLAGS =  \
-	$(XSERVER_SYS_LIBS) -lXplugin \
+	-lXplugin \
 	-XCClinker -Objc \
 	-Wl,-u,_miDCInitialize \
 	-Wl,-framework,Carbon \
@@ -34,7 +45,7 @@ X11_bin_LDFLAGS =  \
 	-Wl,-framework,IOKit
 
 if GLX
-X11_bin_LDADD += \
+X11_bin_DEPENDENCIES += \
 	$(top_builddir)/hw/xquartz/GL/libCGLCore.la \
 	$(top_builddir)/glx/libglx.la
 
@@ -48,11 +59,9 @@ X11_bin_LDFLAGS += \
 endif
 
 if RECORD
-X11_bin_LDADD += \
+X11_bin_DEPENDENCIES += \
 	$(top_builddir)/record/librecord.la
 endif
-
-X11_bin_DEPENDENCIES = $(X11_bin_LDADD)
 
 bin_PROGRAMS = Xquartz
 

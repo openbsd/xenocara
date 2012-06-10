@@ -44,7 +44,6 @@ typedef struct {
     CARD32 id;
 } SELinuxListItemRec;
 
-
 /*
  * Extension Dispatch
  */
@@ -53,8 +52,9 @@ static security_context_t
 SELinuxCopyContext(char *ptr, unsigned len)
 {
     security_context_t copy = malloc(len + 1);
+
     if (!copy)
-	return NULL;
+        return NULL;
     strncpy(copy, ptr, len);
     copy[len] = '\0';
     return copy;
@@ -71,13 +71,12 @@ ProcSELinuxQueryVersion(ClientPtr client)
     rep.server_major = SELINUX_MAJOR_VERSION;
     rep.server_minor = SELINUX_MINOR_VERSION;
     if (client->swapped) {
-	int n;
-	swaps(&rep.sequenceNumber, n);
-	swapl(&rep.length, n);
-	swaps(&rep.server_major, n);
-	swaps(&rep.server_minor, n);
+        swaps(&rep.sequenceNumber);
+        swapl(&rep.length);
+        swaps(&rep.server_major);
+        swaps(&rep.server_minor);
     }
-    WriteToClient(client, sizeof(rep), (char *)&rep);
+    WriteToClient(client, sizeof(rep), (char *) &rep);
     return Success;
 }
 
@@ -89,9 +88,9 @@ SELinuxSendContextReply(ClientPtr client, security_id_t sid)
     int len = 0;
 
     if (sid) {
-	if (avc_sid_to_context_raw(sid, &ctx) < 0)
-	    return BadValue;
-	len = strlen(ctx) + 1;
+        if (avc_sid_to_context_raw(sid, &ctx) < 0)
+            return BadValue;
+        len = strlen(ctx) + 1;
     }
 
     rep.type = X_Reply;
@@ -100,13 +99,12 @@ SELinuxSendContextReply(ClientPtr client, security_id_t sid)
     rep.context_len = len;
 
     if (client->swapped) {
-	int n;
-	swapl(&rep.length, n);
-	swaps(&rep.sequenceNumber, n);
-	swapl(&rep.context_len, n);
+        swapl(&rep.length);
+        swaps(&rep.sequenceNumber);
+        swapl(&rep.context_len);
     }
 
-    WriteToClient(client, sizeof(SELinuxGetContextReply), (char *)&rep);
+    WriteToClient(client, sizeof(SELinuxGetContextReply), (char *) &rep);
     WriteToClient(client, len, ctx);
     freecon(ctx);
     return Success;
@@ -125,20 +123,20 @@ ProcSELinuxSetCreateContext(ClientPtr client, unsigned offset)
     REQUEST_FIXED_SIZE(SELinuxSetCreateContextReq, stuff->context_len);
 
     if (stuff->context_len > 0) {
-	ctx = SELinuxCopyContext((char *)(stuff + 1), stuff->context_len);
-	if (!ctx)
-	    return BadAlloc;
+        ctx = SELinuxCopyContext((char *) (stuff + 1), stuff->context_len);
+        if (!ctx)
+            return BadAlloc;
     }
 
     ptr = dixLookupPrivate(privPtr, subjectKey);
-    pSid = (security_id_t *)(ptr + offset);
+    pSid = (security_id_t *) (ptr + offset);
     *pSid = NULL;
 
     rc = Success;
     if (stuff->context_len > 0) {
-	if (security_check_context_raw(ctx) < 0 ||
-	    avc_context_to_sid_raw(ctx, pSid) < 0)
-	    rc = BadValue;
+        if (security_check_context_raw(ctx) < 0 ||
+            avc_context_to_sid_raw(ctx, pSid) < 0)
+            rc = BadValue;
     }
 
     free(ctx);
@@ -154,11 +152,11 @@ ProcSELinuxGetCreateContext(ClientPtr client, unsigned offset)
     REQUEST_SIZE_MATCH(SELinuxGetCreateContextReq);
 
     if (offset == CTX_DEV)
-	ptr = dixLookupPrivate(&serverClient->devPrivates, subjectKey);
+        ptr = dixLookupPrivate(&serverClient->devPrivates, subjectKey);
     else
-	ptr = dixLookupPrivate(&client->devPrivates, subjectKey);
+        ptr = dixLookupPrivate(&client->devPrivates, subjectKey);
 
-    pSid = (security_id_t *)(ptr + offset);
+    pSid = (security_id_t *) (ptr + offset);
     return SELinuxSendContextReply(client, *pSid);
 }
 
@@ -176,19 +174,19 @@ ProcSELinuxSetDeviceContext(ClientPtr client)
     REQUEST_FIXED_SIZE(SELinuxSetContextReq, stuff->context_len);
 
     if (stuff->context_len < 1)
-	return BadLength;
-    ctx = SELinuxCopyContext((char *)(stuff + 1), stuff->context_len);
+        return BadLength;
+    ctx = SELinuxCopyContext((char *) (stuff + 1), stuff->context_len);
     if (!ctx)
-	return BadAlloc;
+        return BadAlloc;
 
     rc = dixLookupDevice(&dev, stuff->id, client, DixManageAccess);
     if (rc != Success)
-	goto out;
+        goto out;
 
     if (security_check_context_raw(ctx) < 0 ||
-	avc_context_to_sid_raw(ctx, &sid) < 0) {
-	rc = BadValue;
-	goto out;
+        avc_context_to_sid_raw(ctx, &sid) < 0) {
+        rc = BadValue;
+        goto out;
     }
 
     subj = dixLookupPrivate(&dev->devPrivates, subjectKey);
@@ -197,7 +195,7 @@ ProcSELinuxSetDeviceContext(ClientPtr client)
     obj->sid = sid;
 
     rc = Success;
-out:
+ out:
     free(ctx);
     return rc;
 }
@@ -214,7 +212,7 @@ ProcSELinuxGetDeviceContext(ClientPtr client)
 
     rc = dixLookupDevice(&dev, stuff->id, client, DixGetAttrAccess);
     if (rc != Success)
-	return rc;
+        return rc;
 
     subj = dixLookupPrivate(&dev->devPrivates, subjectKey);
     return SELinuxSendContextReply(client, subj->sid);
@@ -233,12 +231,12 @@ ProcSELinuxGetDrawableContext(ClientPtr client)
 
     rc = dixLookupDrawable(&pDraw, stuff->id, client, 0, DixGetAttrAccess);
     if (rc != Success)
-	return rc;
+        return rc;
 
     if (pDraw->type == DRAWABLE_PIXMAP)
-	privatePtr = &((PixmapPtr)pDraw)->devPrivates;
+        privatePtr = &((PixmapPtr) pDraw)->devPrivates;
     else
-	privatePtr = &((WindowPtr)pDraw)->devPrivates;
+        privatePtr = &((WindowPtr) pDraw)->devPrivates;
 
     obj = dixLookupPrivate(privatePtr, objectKey);
     return SELinuxSendContextReply(client, obj->sid);
@@ -257,12 +255,12 @@ ProcSELinuxGetPropertyContext(ClientPtr client, pointer privKey)
 
     rc = dixLookupWindow(&pWin, stuff->window, client, DixGetPropAccess);
     if (rc != Success)
-	return rc;
+        return rc;
 
     rc = dixLookupProperty(&pProp, pWin, stuff->property, client,
-			   DixGetAttrAccess);
+                           DixGetAttrAccess);
     if (rc != Success)
-	return rc;
+        return rc;
 
     obj = dixLookupPrivate(&pProp->devPrivates, privKey);
     return SELinuxSendContextReply(client, obj->sid);
@@ -280,7 +278,7 @@ ProcSELinuxGetSelectionContext(ClientPtr client, pointer privKey)
 
     rc = dixLookupSelection(&pSel, stuff->id, client, DixGetAttrAccess);
     if (rc != Success)
-	return rc;
+        return rc;
 
     obj = dixLookupPrivate(&pSel->devPrivates, privKey);
     return SELinuxSendContextReply(client, obj->sid);
@@ -298,23 +296,23 @@ ProcSELinuxGetClientContext(ClientPtr client)
 
     rc = dixLookupClient(&target, stuff->id, client, DixGetAttrAccess);
     if (rc != Success)
-	return rc;
+        return rc;
 
     subj = dixLookupPrivate(&target->devPrivates, subjectKey);
     return SELinuxSendContextReply(client, subj->sid);
 }
 
 static int
-SELinuxPopulateItem(SELinuxListItemRec *i, PrivateRec **privPtr, CARD32 id,
-		    int *size)
+SELinuxPopulateItem(SELinuxListItemRec * i, PrivateRec ** privPtr, CARD32 id,
+                    int *size)
 {
     SELinuxObjectRec *obj = dixLookupPrivate(privPtr, objectKey);
     SELinuxObjectRec *data = dixLookupPrivate(privPtr, dataKey);
 
     if (avc_sid_to_context_raw(obj->sid, &i->octx) < 0)
-	return BadValue;
+        return BadValue;
     if (avc_sid_to_context_raw(data->sid, &i->dctx) < 0)
-	return BadValue;
+        return BadValue;
 
     i->id = id;
     i->octx_len = bytes_to_int32(strlen(i->octx) + 1);
@@ -325,51 +323,52 @@ SELinuxPopulateItem(SELinuxListItemRec *i, PrivateRec **privPtr, CARD32 id,
 }
 
 static void
-SELinuxFreeItems(SELinuxListItemRec *items, int count)
+SELinuxFreeItems(SELinuxListItemRec * items, int count)
 {
     int k;
+
     for (k = 0; k < count; k++) {
-	freecon(items[k].octx);
-	freecon(items[k].dctx);
+        freecon(items[k].octx);
+        freecon(items[k].dctx);
     }
     free(items);
 }
 
 static int
-SELinuxSendItemsToClient(ClientPtr client, SELinuxListItemRec *items,
-			 int size, int count)
+SELinuxSendItemsToClient(ClientPtr client, SELinuxListItemRec * items,
+                         int size, int count)
 {
-    int rc, k, n, pos = 0;
+    int rc, k, pos = 0;
     SELinuxListItemsReply rep;
     CARD32 *buf;
 
     buf = calloc(size, sizeof(CARD32));
     if (size && !buf) {
-	rc = BadAlloc;
-	goto out;
+        rc = BadAlloc;
+        goto out;
     }
 
     /* Fill in the buffer */
     for (k = 0; k < count; k++) {
-	buf[pos] = items[k].id;
-	if (client->swapped)
-	    swapl(buf + pos, n);
-	pos++;
+        buf[pos] = items[k].id;
+        if (client->swapped)
+            swapl(buf + pos);
+        pos++;
 
-	buf[pos] = items[k].octx_len * 4;
-	if (client->swapped)
-	    swapl(buf + pos, n);
-	pos++;
+        buf[pos] = items[k].octx_len * 4;
+        if (client->swapped)
+            swapl(buf + pos);
+        pos++;
 
-	buf[pos] = items[k].dctx_len * 4;
-	if (client->swapped)
-	    swapl(buf + pos, n);
-	pos++;
+        buf[pos] = items[k].dctx_len * 4;
+        if (client->swapped)
+            swapl(buf + pos);
+        pos++;
 
-	memcpy((char *)(buf + pos), items[k].octx, strlen(items[k].octx) + 1);
-	pos += items[k].octx_len;
-	memcpy((char *)(buf + pos), items[k].dctx, strlen(items[k].dctx) + 1);
-	pos += items[k].dctx_len;
+        memcpy((char *) (buf + pos), items[k].octx, strlen(items[k].octx) + 1);
+        pos += items[k].octx_len;
+        memcpy((char *) (buf + pos), items[k].dctx, strlen(items[k].dctx) + 1);
+        pos += items[k].dctx_len;
     }
 
     /* Send reply to client */
@@ -379,18 +378,18 @@ SELinuxSendItemsToClient(ClientPtr client, SELinuxListItemRec *items,
     rep.count = count;
 
     if (client->swapped) {
-	swapl(&rep.length, n);
-	swaps(&rep.sequenceNumber, n);
-	swapl(&rep.count, n);
+        swapl(&rep.length);
+        swaps(&rep.sequenceNumber);
+        swapl(&rep.count);
     }
 
-    WriteToClient(client, sizeof(SELinuxListItemsReply), (char *)&rep);
-    WriteToClient(client, size * 4, (char *)buf);
+    WriteToClient(client, sizeof(SELinuxListItemsReply), (char *) &rep);
+    WriteToClient(client, size * 4, (char *) buf);
 
     /* Free stuff and return */
     rc = Success;
     free(buf);
-out:
+ out:
     SELinuxFreeItems(items, count);
     return rc;
 }
@@ -409,27 +408,27 @@ ProcSELinuxListProperties(ClientPtr client)
 
     rc = dixLookupWindow(&pWin, stuff->id, client, DixListPropAccess);
     if (rc != Success)
-	return rc;
+        return rc;
 
     /* Count the number of properties and allocate items */
     count = 0;
     for (pProp = wUserProps(pWin); pProp; pProp = pProp->next)
-	count++;
+        count++;
     items = calloc(count, sizeof(SELinuxListItemRec));
     if (count && !items)
-	return BadAlloc;
+        return BadAlloc;
 
     /* Fill in the items and calculate size */
     i = 0;
     size = 0;
     for (pProp = wUserProps(pWin); pProp; pProp = pProp->next) {
-	id = pProp->propertyName;
-	rc = SELinuxPopulateItem(items + i, &pProp->devPrivates, id, &size);
-	if (rc != Success) {
-	    SELinuxFreeItems(items, count);
-	    return rc;
-	}
-	i++;
+        id = pProp->propertyName;
+        rc = SELinuxPopulateItem(items + i, &pProp->devPrivates, id, &size);
+        if (rc != Success) {
+            SELinuxFreeItems(items, count);
+            return rc;
+        }
+        i++;
     }
 
     return SELinuxSendItemsToClient(client, items, size, count);
@@ -448,22 +447,22 @@ ProcSELinuxListSelections(ClientPtr client)
     /* Count the number of selections and allocate items */
     count = 0;
     for (pSel = CurrentSelections; pSel; pSel = pSel->next)
-	count++;
+        count++;
     items = calloc(count, sizeof(SELinuxListItemRec));
     if (count && !items)
-	return BadAlloc;
+        return BadAlloc;
 
     /* Fill in the items and calculate size */
     i = 0;
     size = 0;
     for (pSel = CurrentSelections; pSel; pSel = pSel->next) {
-	id = pSel->selection;
-	rc = SELinuxPopulateItem(items + i, &pSel->devPrivates, id, &size);
-	if (rc != Success) {
-	    SELinuxFreeItems(items, count);
-	    return rc;
-	}
-	i++;
+        id = pSel->selection;
+        rc = SELinuxPopulateItem(items + i, &pSel->devPrivates, id, &size);
+        if (rc != Success) {
+            SELinuxFreeItems(items, count);
+            return rc;
+        }
+        i++;
     }
 
     return SELinuxSendItemsToClient(client, items, size, count);
@@ -475,53 +474,53 @@ ProcSELinuxDispatch(ClientPtr client)
     REQUEST(xReq);
     switch (stuff->data) {
     case X_SELinuxQueryVersion:
-	return ProcSELinuxQueryVersion(client);
+        return ProcSELinuxQueryVersion(client);
     case X_SELinuxSetDeviceCreateContext:
-	return ProcSELinuxSetCreateContext(client, CTX_DEV);
+        return ProcSELinuxSetCreateContext(client, CTX_DEV);
     case X_SELinuxGetDeviceCreateContext:
-	return ProcSELinuxGetCreateContext(client, CTX_DEV);
+        return ProcSELinuxGetCreateContext(client, CTX_DEV);
     case X_SELinuxSetDeviceContext:
-	return ProcSELinuxSetDeviceContext(client);
+        return ProcSELinuxSetDeviceContext(client);
     case X_SELinuxGetDeviceContext:
-	return ProcSELinuxGetDeviceContext(client);
+        return ProcSELinuxGetDeviceContext(client);
     case X_SELinuxSetDrawableCreateContext:
-	return ProcSELinuxSetCreateContext(client, CTX_WIN);
+        return ProcSELinuxSetCreateContext(client, CTX_WIN);
     case X_SELinuxGetDrawableCreateContext:
-	return ProcSELinuxGetCreateContext(client, CTX_WIN);
+        return ProcSELinuxGetCreateContext(client, CTX_WIN);
     case X_SELinuxGetDrawableContext:
-	return ProcSELinuxGetDrawableContext(client);
+        return ProcSELinuxGetDrawableContext(client);
     case X_SELinuxSetPropertyCreateContext:
-	return ProcSELinuxSetCreateContext(client, CTX_PRP);
+        return ProcSELinuxSetCreateContext(client, CTX_PRP);
     case X_SELinuxGetPropertyCreateContext:
-	return ProcSELinuxGetCreateContext(client, CTX_PRP);
+        return ProcSELinuxGetCreateContext(client, CTX_PRP);
     case X_SELinuxSetPropertyUseContext:
-	return ProcSELinuxSetCreateContext(client, USE_PRP);
+        return ProcSELinuxSetCreateContext(client, USE_PRP);
     case X_SELinuxGetPropertyUseContext:
-	return ProcSELinuxGetCreateContext(client, USE_PRP);
+        return ProcSELinuxGetCreateContext(client, USE_PRP);
     case X_SELinuxGetPropertyContext:
-	return ProcSELinuxGetPropertyContext(client, objectKey);
+        return ProcSELinuxGetPropertyContext(client, objectKey);
     case X_SELinuxGetPropertyDataContext:
-	return ProcSELinuxGetPropertyContext(client, dataKey);
+        return ProcSELinuxGetPropertyContext(client, dataKey);
     case X_SELinuxListProperties:
-	return ProcSELinuxListProperties(client);
+        return ProcSELinuxListProperties(client);
     case X_SELinuxSetSelectionCreateContext:
-	return ProcSELinuxSetCreateContext(client, CTX_SEL);
+        return ProcSELinuxSetCreateContext(client, CTX_SEL);
     case X_SELinuxGetSelectionCreateContext:
-	return ProcSELinuxGetCreateContext(client, CTX_SEL);
+        return ProcSELinuxGetCreateContext(client, CTX_SEL);
     case X_SELinuxSetSelectionUseContext:
-	return ProcSELinuxSetCreateContext(client, USE_SEL);
+        return ProcSELinuxSetCreateContext(client, USE_SEL);
     case X_SELinuxGetSelectionUseContext:
-	return ProcSELinuxGetCreateContext(client, USE_SEL);
+        return ProcSELinuxGetCreateContext(client, USE_SEL);
     case X_SELinuxGetSelectionContext:
-	return ProcSELinuxGetSelectionContext(client, objectKey);
+        return ProcSELinuxGetSelectionContext(client, objectKey);
     case X_SELinuxGetSelectionDataContext:
-	return ProcSELinuxGetSelectionContext(client, dataKey);
+        return ProcSELinuxGetSelectionContext(client, dataKey);
     case X_SELinuxListSelections:
-	return ProcSELinuxListSelections(client);
+        return ProcSELinuxListSelections(client);
     case X_SELinuxGetClientContext:
-	return ProcSELinuxGetClientContext(client);
+        return ProcSELinuxGetClientContext(client);
     default:
-	return BadRequest;
+        return BadRequest;
     }
 }
 
@@ -535,10 +534,9 @@ static int
 SProcSELinuxSetCreateContext(ClientPtr client, unsigned offset)
 {
     REQUEST(SELinuxSetCreateContextReq);
-    int n;
 
     REQUEST_AT_LEAST_SIZE(SELinuxSetCreateContextReq);
-    swapl(&stuff->context_len, n);
+    swapl(&stuff->context_len);
     return ProcSELinuxSetCreateContext(client, offset);
 }
 
@@ -546,11 +544,10 @@ static int
 SProcSELinuxSetDeviceContext(ClientPtr client)
 {
     REQUEST(SELinuxSetContextReq);
-    int n;
 
     REQUEST_AT_LEAST_SIZE(SELinuxSetContextReq);
-    swapl(&stuff->id, n);
-    swapl(&stuff->context_len, n);
+    swapl(&stuff->id);
+    swapl(&stuff->context_len);
     return ProcSELinuxSetDeviceContext(client);
 }
 
@@ -558,10 +555,9 @@ static int
 SProcSELinuxGetDeviceContext(ClientPtr client)
 {
     REQUEST(SELinuxGetContextReq);
-    int n;
 
     REQUEST_SIZE_MATCH(SELinuxGetContextReq);
-    swapl(&stuff->id, n);
+    swapl(&stuff->id);
     return ProcSELinuxGetDeviceContext(client);
 }
 
@@ -569,10 +565,9 @@ static int
 SProcSELinuxGetDrawableContext(ClientPtr client)
 {
     REQUEST(SELinuxGetContextReq);
-    int n;
 
     REQUEST_SIZE_MATCH(SELinuxGetContextReq);
-    swapl(&stuff->id, n);
+    swapl(&stuff->id);
     return ProcSELinuxGetDrawableContext(client);
 }
 
@@ -580,11 +575,10 @@ static int
 SProcSELinuxGetPropertyContext(ClientPtr client, pointer privKey)
 {
     REQUEST(SELinuxGetPropertyContextReq);
-    int n;
 
     REQUEST_SIZE_MATCH(SELinuxGetPropertyContextReq);
-    swapl(&stuff->window, n);
-    swapl(&stuff->property, n);
+    swapl(&stuff->window);
+    swapl(&stuff->property);
     return ProcSELinuxGetPropertyContext(client, privKey);
 }
 
@@ -592,10 +586,9 @@ static int
 SProcSELinuxGetSelectionContext(ClientPtr client, pointer privKey)
 {
     REQUEST(SELinuxGetContextReq);
-    int n;
 
     REQUEST_SIZE_MATCH(SELinuxGetContextReq);
-    swapl(&stuff->id, n);
+    swapl(&stuff->id);
     return ProcSELinuxGetSelectionContext(client, privKey);
 }
 
@@ -603,10 +596,9 @@ static int
 SProcSELinuxListProperties(ClientPtr client)
 {
     REQUEST(SELinuxGetContextReq);
-    int n;
 
     REQUEST_SIZE_MATCH(SELinuxGetContextReq);
-    swapl(&stuff->id, n);
+    swapl(&stuff->id);
     return ProcSELinuxListProperties(client);
 }
 
@@ -614,10 +606,9 @@ static int
 SProcSELinuxGetClientContext(ClientPtr client)
 {
     REQUEST(SELinuxGetContextReq);
-    int n;
 
     REQUEST_SIZE_MATCH(SELinuxGetContextReq);
-    swapl(&stuff->id, n);
+    swapl(&stuff->id);
     return ProcSELinuxGetClientContext(client);
 }
 
@@ -625,69 +616,67 @@ static int
 SProcSELinuxDispatch(ClientPtr client)
 {
     REQUEST(xReq);
-    int n;
 
-    swaps(&stuff->length, n);
+    swaps(&stuff->length);
 
     switch (stuff->data) {
     case X_SELinuxQueryVersion:
-	return SProcSELinuxQueryVersion(client);
+        return SProcSELinuxQueryVersion(client);
     case X_SELinuxSetDeviceCreateContext:
-	return SProcSELinuxSetCreateContext(client, CTX_DEV);
+        return SProcSELinuxSetCreateContext(client, CTX_DEV);
     case X_SELinuxGetDeviceCreateContext:
-	return ProcSELinuxGetCreateContext(client, CTX_DEV);
+        return ProcSELinuxGetCreateContext(client, CTX_DEV);
     case X_SELinuxSetDeviceContext:
-	return SProcSELinuxSetDeviceContext(client);
+        return SProcSELinuxSetDeviceContext(client);
     case X_SELinuxGetDeviceContext:
-	return SProcSELinuxGetDeviceContext(client);
+        return SProcSELinuxGetDeviceContext(client);
     case X_SELinuxSetDrawableCreateContext:
-	return SProcSELinuxSetCreateContext(client, CTX_WIN);
+        return SProcSELinuxSetCreateContext(client, CTX_WIN);
     case X_SELinuxGetDrawableCreateContext:
-	return ProcSELinuxGetCreateContext(client, CTX_WIN);
+        return ProcSELinuxGetCreateContext(client, CTX_WIN);
     case X_SELinuxGetDrawableContext:
-	return SProcSELinuxGetDrawableContext(client);
+        return SProcSELinuxGetDrawableContext(client);
     case X_SELinuxSetPropertyCreateContext:
-	return SProcSELinuxSetCreateContext(client, CTX_PRP);
+        return SProcSELinuxSetCreateContext(client, CTX_PRP);
     case X_SELinuxGetPropertyCreateContext:
-	return ProcSELinuxGetCreateContext(client, CTX_PRP);
+        return ProcSELinuxGetCreateContext(client, CTX_PRP);
     case X_SELinuxSetPropertyUseContext:
-	return SProcSELinuxSetCreateContext(client, USE_PRP);
+        return SProcSELinuxSetCreateContext(client, USE_PRP);
     case X_SELinuxGetPropertyUseContext:
-	return ProcSELinuxGetCreateContext(client, USE_PRP);
+        return ProcSELinuxGetCreateContext(client, USE_PRP);
     case X_SELinuxGetPropertyContext:
-	return SProcSELinuxGetPropertyContext(client, objectKey);
+        return SProcSELinuxGetPropertyContext(client, objectKey);
     case X_SELinuxGetPropertyDataContext:
-	return SProcSELinuxGetPropertyContext(client, dataKey);
+        return SProcSELinuxGetPropertyContext(client, dataKey);
     case X_SELinuxListProperties:
-	return SProcSELinuxListProperties(client);
+        return SProcSELinuxListProperties(client);
     case X_SELinuxSetSelectionCreateContext:
-	return SProcSELinuxSetCreateContext(client, CTX_SEL);
+        return SProcSELinuxSetCreateContext(client, CTX_SEL);
     case X_SELinuxGetSelectionCreateContext:
-	return ProcSELinuxGetCreateContext(client, CTX_SEL);
+        return ProcSELinuxGetCreateContext(client, CTX_SEL);
     case X_SELinuxSetSelectionUseContext:
-	return SProcSELinuxSetCreateContext(client, USE_SEL);
+        return SProcSELinuxSetCreateContext(client, USE_SEL);
     case X_SELinuxGetSelectionUseContext:
-	return ProcSELinuxGetCreateContext(client, USE_SEL);
+        return ProcSELinuxGetCreateContext(client, USE_SEL);
     case X_SELinuxGetSelectionContext:
-	return SProcSELinuxGetSelectionContext(client, objectKey);
+        return SProcSELinuxGetSelectionContext(client, objectKey);
     case X_SELinuxGetSelectionDataContext:
-	return SProcSELinuxGetSelectionContext(client, dataKey);
+        return SProcSELinuxGetSelectionContext(client, dataKey);
     case X_SELinuxListSelections:
-	return ProcSELinuxListSelections(client);
+        return ProcSELinuxListSelections(client);
     case X_SELinuxGetClientContext:
-	return SProcSELinuxGetClientContext(client);
+        return SProcSELinuxGetClientContext(client);
     default:
-	return BadRequest;
+        return BadRequest;
     }
 }
-
 
 /*
  * Extension Setup / Teardown
  */
 
 static void
-SELinuxResetProc(ExtensionEntry *extEntry)
+SELinuxResetProc(ExtensionEntry * extEntry)
 {
     SELinuxFlaskReset();
     SELinuxLabelReset();
@@ -700,15 +689,15 @@ SELinuxExtensionInit(INITARGS)
 
     /* Check SELinux mode on system, configuration file, and boolean */
     if (!is_selinux_enabled()) {
-	LogMessage(X_INFO, "SELinux: Disabled on system\n");
-	return;
+        LogMessage(X_INFO, "SELinux: Disabled on system\n");
+        return;
     }
     if (selinuxEnforcingState == SELINUX_MODE_DISABLED) {
-	LogMessage(X_INFO, "SELinux: Disabled in configuration file\n");
-	return;
+        LogMessage(X_INFO, "SELinux: Disabled in configuration file\n");
+        return;
     }
     if (!security_get_boolean_active("xserver_object_manager")) {
-	LogMessage(X_INFO, "SELinux: Disabled by boolean\n");
+        LogMessage(X_INFO, "SELinux: Disabled by boolean\n");
         return;
     }
 
@@ -718,9 +707,9 @@ SELinuxExtensionInit(INITARGS)
 
     /* Add extension to server */
     extEntry = AddExtension(SELINUX_EXTENSION_NAME,
-			    SELinuxNumberEvents, SELinuxNumberErrors,
-			    ProcSELinuxDispatch, SProcSELinuxDispatch,
-			    SELinuxResetProc, StandardMinorOpcode);
+                            SELinuxNumberEvents, SELinuxNumberErrors,
+                            ProcSELinuxDispatch, SProcSELinuxDispatch,
+                            SELinuxResetProc, StandardMinorOpcode);
 
     AddExtensionAlias("Flask", extEntry);
 }

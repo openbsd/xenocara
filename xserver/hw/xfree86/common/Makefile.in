@@ -61,26 +61,26 @@ CONFIG_HEADER = $(top_builddir)/include/do-not-use-config.h \
 CONFIG_CLEAN_FILES = xf86Build.h
 LTLIBRARIES = $(noinst_LTLIBRARIES)
 libcommon_la_DEPENDENCIES = $(top_builddir)/config/libconfig.la
-am__libcommon_la_SOURCES_DIST = xf86Configure.c xf86ShowOpts.c \
-	xf86Bus.c xf86Config.c xf86Cursor.c xf86DGA.c xf86DPMS.c \
-	xf86Events.c xf86Globals.c xf86AutoConfig.c xf86Option.c \
-	xf86Init.c xf86VGAarbiter.c xf86VidMode.c xf86fbman.c \
-	xf86cmap.c xf86Helper.c xf86PM.c xf86Xinput.c xisb.c \
-	xf86Mode.c xorgHelper.c xf86xv.c xf86xvmc.c xf86pciBus.c \
-	xf86fbBus.c xf86noBus.c xf86sbusBus.c xf86RandR.c
+am__libcommon_la_SOURCES_DIST = xf86Configure.c xf86Bus.c xf86Config.c \
+	xf86Cursor.c xf86DGA.c xf86DPMS.c xf86Events.c xf86Globals.c \
+	xf86AutoConfig.c xf86Option.c xf86Init.c xf86VidMode.c \
+	xf86fbman.c xf86cmap.c xf86Helper.c xf86PM.c xf86Xinput.c \
+	xisb.c xf86Mode.c xorgHelper.c xf86xv.c xf86xvmc.c xf86fbBus.c \
+	xf86noBus.c xf86pciBus.c xf86VGAarbiter.c xf86VGAarbiter.h \
+	xf86VGAarbiterPriv.h xf86sbusBus.c xf86RandR.c
 @DGA_TRUE@am__objects_1 = xf86DGA.lo
 @XV_TRUE@am__objects_2 = xf86xv.lo xf86xvmc.lo
-@XORG_BUS_SPARC_TRUE@am__objects_3 = xf86sbusBus.lo
-am__objects_4 = xf86pciBus.lo xf86fbBus.lo xf86noBus.lo \
-	$(am__objects_3)
-am__objects_5 = xf86RandR.lo
-am_libcommon_la_OBJECTS = xf86Configure.lo xf86ShowOpts.lo xf86Bus.lo \
-	xf86Config.lo xf86Cursor.lo $(am__objects_1) xf86DPMS.lo \
-	xf86Events.lo xf86Globals.lo xf86AutoConfig.lo xf86Option.lo \
-	xf86Init.lo xf86VGAarbiter.lo xf86VidMode.lo xf86fbman.lo \
-	xf86cmap.lo xf86Helper.lo xf86PM.lo xf86Xinput.lo xisb.lo \
-	xf86Mode.lo xorgHelper.lo $(am__objects_2) $(am__objects_4) \
-	$(am__objects_5)
+@XORG_BUS_PCI_TRUE@am__objects_3 = xf86pciBus.lo xf86VGAarbiter.lo
+@XORG_BUS_SPARC_TRUE@am__objects_4 = xf86sbusBus.lo
+am__objects_5 = xf86fbBus.lo xf86noBus.lo $(am__objects_3) \
+	$(am__objects_4)
+am__objects_6 = xf86RandR.lo
+am_libcommon_la_OBJECTS = xf86Configure.lo xf86Bus.lo xf86Config.lo \
+	xf86Cursor.lo $(am__objects_1) xf86DPMS.lo xf86Events.lo \
+	xf86Globals.lo xf86AutoConfig.lo xf86Option.lo xf86Init.lo \
+	xf86VidMode.lo xf86fbman.lo xf86cmap.lo xf86Helper.lo \
+	xf86PM.lo xf86Xinput.lo xisb.lo xf86Mode.lo xorgHelper.lo \
+	$(am__objects_2) $(am__objects_5) $(am__objects_6)
 nodist_libcommon_la_OBJECTS = xf86DefModeSet.lo
 libcommon_la_OBJECTS = $(am_libcommon_la_OBJECTS) \
 	$(nodist_libcommon_la_OBJECTS)
@@ -101,7 +101,7 @@ am__sdk_HEADERS_DIST = compiler.h fourcc.h xf86.h xf86Module.h \
 	xf86Opt.h xf86PciInfo.h xf86Priv.h xf86Privstr.h xf86cmap.h \
 	xf86fbman.h xf86str.h xf86Xinput.h xisb.h xf86xv.h xf86xvmc.h \
 	xf86xvpriv.h vidmodeproc.h xorgVersion.h xf86sbusBus.h \
-	xf86VGAarbiter.h
+	xf86VGAarbiter.h xf86Optionstr.h
 am__vpath_adj_setup = srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`;
 am__vpath_adj = case $$p in \
     $(srcdir)/*) f=`echo "$$p" | sed "s|^$$srcdirstrip/||"`;; \
@@ -121,7 +121,6 @@ AGP_FALSE = @AGP_FALSE@
 AGP_TRUE = @AGP_TRUE@
 AIGLX_DRI_LOADER_FALSE = @AIGLX_DRI_LOADER_FALSE@
 AIGLX_DRI_LOADER_TRUE = @AIGLX_DRI_LOADER_TRUE@
-ALLOCA = @ALLOCA@
 ALPHA_VIDEO_FALSE = @ALPHA_VIDEO_FALSE@
 ALPHA_VIDEO_TRUE = @ALPHA_VIDEO_TRUE@
 AMDEP_FALSE = @AMDEP_FALSE@
@@ -140,6 +139,7 @@ AUTOCONF = @AUTOCONF@
 AUTOHEADER = @AUTOHEADER@
 AUTOMAKE = @AUTOMAKE@
 AWK = @AWK@
+BASE_CFLAGS = @BASE_CFLAGS@
 BASE_FONT_PATH = @BASE_FONT_PATH@
 BSD_APM_FALSE = @BSD_APM_FALSE@
 BSD_APM_TRUE = @BSD_APM_TRUE@
@@ -347,8 +347,6 @@ LIB_MAN_DIR = @LIB_MAN_DIR@
 LIB_MAN_SUFFIX = @LIB_MAN_SUFFIX@
 LINUX_ALPHA_FALSE = @LINUX_ALPHA_FALSE@
 LINUX_ALPHA_TRUE = @LINUX_ALPHA_TRUE@
-LINUX_IA64_FALSE = @LINUX_IA64_FALSE@
-LINUX_IA64_TRUE = @LINUX_IA64_TRUE@
 LIPO = @LIPO@
 LNXACPI_FALSE = @LNXACPI_FALSE@
 LNXACPI_TRUE = @LNXACPI_TRUE@
@@ -367,10 +365,6 @@ MISC_MAN_DIR = @MISC_MAN_DIR@
 MISC_MAN_SUFFIX = @MISC_MAN_SUFFIX@
 MITSHM_FALSE = @MITSHM_FALSE@
 MITSHM_TRUE = @MITSHM_TRUE@
-NEED_STRLCAT_FALSE = @NEED_STRLCAT_FALSE@
-NEED_STRLCAT_TRUE = @NEED_STRLCAT_TRUE@
-NEED_VSNPRINTF_FALSE = @NEED_VSNPRINTF_FALSE@
-NEED_VSNPRINTF_TRUE = @NEED_VSNPRINTF_TRUE@
 NM = @NM@
 NMEDIT = @NMEDIT@
 OBJC = @OBJC@
@@ -514,18 +508,18 @@ XNEST_SYS_LIBS = @XNEST_SYS_LIBS@
 XNEST_TRUE = @XNEST_TRUE@
 XORG_BUS_BSDPCI_FALSE = @XORG_BUS_BSDPCI_FALSE@
 XORG_BUS_BSDPCI_TRUE = @XORG_BUS_BSDPCI_TRUE@
-XORG_BUS_LINUXPCI_FALSE = @XORG_BUS_LINUXPCI_FALSE@
-XORG_BUS_LINUXPCI_TRUE = @XORG_BUS_LINUXPCI_TRUE@
+XORG_BUS_PCI_FALSE = @XORG_BUS_PCI_FALSE@
+XORG_BUS_PCI_TRUE = @XORG_BUS_PCI_TRUE@
 XORG_BUS_SPARC_FALSE = @XORG_BUS_SPARC_FALSE@
 XORG_BUS_SPARC_TRUE = @XORG_BUS_SPARC_TRUE@
 XORG_CFLAGS = @XORG_CFLAGS@ $(am__append_1)
 XORG_FALSE = @XORG_FALSE@
 XORG_INCS = @XORG_INCS@
 XORG_LIBS = @XORG_LIBS@
+XORG_MALLOC_DEBUG_ENV = @XORG_MALLOC_DEBUG_ENV@
 XORG_MAN_PAGE = @XORG_MAN_PAGE@
 XORG_MODULES_CFLAGS = @XORG_MODULES_CFLAGS@
 XORG_MODULES_LIBS = @XORG_MODULES_LIBS@
-XORG_OS = @XORG_OS@
 XORG_OS_SUBDIR = @XORG_OS_SUBDIR@
 XORG_SGML_PATH = @XORG_SGML_PATH@
 XORG_SYS_LIBS = @XORG_SYS_LIBS@
@@ -652,20 +646,23 @@ sysconfdir = @sysconfdir@
 sysconfigdir = @sysconfigdir@
 target_alias = @target_alias@
 noinst_LTLIBRARIES = libcommon.la
+@XORG_BUS_PCI_TRUE@PCI_SOURCES = xf86pciBus.c xf86VGAarbiter.c xf86VGAarbiter.h \
+@XORG_BUS_PCI_TRUE@              xf86VGAarbiterPriv.h
+
 @XORG_BUS_SPARC_TRUE@SBUS_SOURCES = xf86sbusBus.c
 @XV_TRUE@XVSOURCES = xf86xv.c xf86xvmc.c
 @XV_TRUE@XVSDKINCS = xf86xv.h xf86xvmc.h xf86xvpriv.h
 @XF86VIDMODE_TRUE@XF86VMODE_SDK = vidmodeproc.h
 @DGA_TRUE@DGASOURCES = xf86DGA.c
 RANDRSOURCES = xf86RandR.c
-BUSSOURCES = xf86pciBus.c xf86fbBus.c xf86noBus.c $(SBUS_SOURCES)
+BUSSOURCES = xf86fbBus.c xf86noBus.c $(PCI_SOURCES) $(SBUS_SOURCES)
 MODEDEFSOURCES = $(srcdir)/vesamodes $(srcdir)/extramodes
 BUILT_SOURCES = xf86DefModeSet.c
 AM_LDFLAGS = -r
-libcommon_la_SOURCES = xf86Configure.c xf86ShowOpts.c xf86Bus.c xf86Config.c \
+libcommon_la_SOURCES = xf86Configure.c xf86Bus.c xf86Config.c \
                       xf86Cursor.c $(DGASOURCES) xf86DPMS.c \
                       xf86Events.c xf86Globals.c xf86AutoConfig.c \
-                      xf86Option.c xf86Init.c xf86VGAarbiter.c \
+                      xf86Option.c xf86Init.c \
                       xf86VidMode.c xf86fbman.c xf86cmap.c \
                       xf86Helper.c xf86PM.c xf86Xinput.c xisb.c \
                       xf86Mode.c xorgHelper.c \
@@ -683,7 +680,7 @@ sdk_HEADERS = compiler.h fourcc.h xf86.h xf86Module.h xf86Opt.h \
               xf86PciInfo.h xf86Priv.h xf86Privstr.h \
               xf86cmap.h xf86fbman.h xf86str.h xf86Xinput.h xisb.h \
               $(XVSDKINCS) $(XF86VMODE_SDK) xorgVersion.h \
-              xf86sbusBus.h xf86VGAarbiter.h
+              xf86sbusBus.h xf86VGAarbiter.h xf86Optionstr.h
 
 DISTCLEANFILES = xf86Build.h
 CLEANFILES = $(BUILT_SOURCES)
@@ -787,7 +784,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xf86Option.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xf86PM.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xf86RandR.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xf86ShowOpts.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xf86VGAarbiter.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xf86VidMode.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xf86Xinput.Plo@am__quote@

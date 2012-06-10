@@ -39,11 +39,11 @@ build_triplet = @build@
 host_triplet = @host@
 @SECURE_RPC_TRUE@am__append_1 = $(SECURERPC_SRCS)
 @XDMCP_TRUE@am__append_2 = $(XDMCP_SRCS)
-@NEED_STRLCAT_TRUE@am__append_3 = $(STRLCAT_SRCS)
-@X_PRIVSEP_TRUE@am__append_4 = $(PRIVSEP_SRCS)
+@X_PRIVSEP_TRUE@am__append_3 = $(PRIVSEP_SRCS)
 @SPECIAL_DTRACE_OBJECTS_TRUE@noinst_PROGRAMS = os.O$(EXEEXT)
 subdir = os
-DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in
+DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in strcasecmp.c \
+	strcasestr.c strlcat.c strlcpy.c strndup.c
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/m4/ac_define_dir.m4 \
 	$(top_srcdir)/m4/libtool.m4 $(top_srcdir)/m4/ltoptions.m4 \
@@ -64,26 +64,24 @@ CONFIG_HEADER = $(top_builddir)/include/do-not-use-config.h \
 CONFIG_CLEAN_FILES =
 LTLIBRARIES = $(noinst_LTLIBRARIES)
 am__DEPENDENCIES_1 =
-libos_la_DEPENDENCIES = $(am__DEPENDENCIES_1)
+am__DEPENDENCIES_2 = @LTLIBOBJS@
+libos_la_DEPENDENCIES = $(am__DEPENDENCIES_1) $(am__DEPENDENCIES_2)
 am__libos_la_SOURCES_DIST = WaitFor.c access.c auth.c backtrace.c \
 	client.c connection.c io.c mitauth.c oscolor.c osdep.h \
-	osinit.c utils.c strcasecmp.c strcasestr.c xdmauth.c xsha1.c \
-	xstrans.c xprintf.c log.c rpcauth.c xdmcp.c strlcat.c \
-	strlcpy.c privsep.c
+	osinit.c utils.c xdmauth.c xsha1.c xstrans.c xprintf.c log.c \
+	rpcauth.c xdmcp.c privsep.c
 am__objects_1 = log.lo
 am__objects_2 = rpcauth.lo
 @SECURE_RPC_TRUE@am__objects_3 = $(am__objects_2)
 am__objects_4 = xdmcp.lo
 @XDMCP_TRUE@am__objects_5 = $(am__objects_4)
-am__objects_6 = strlcat.lo strlcpy.lo
-@NEED_STRLCAT_TRUE@am__objects_7 = $(am__objects_6)
-am__objects_8 = privsep.lo
-@X_PRIVSEP_TRUE@am__objects_9 = $(am__objects_8)
+am__objects_6 = privsep.lo
+@X_PRIVSEP_TRUE@am__objects_7 = $(am__objects_6)
 am_libos_la_OBJECTS = WaitFor.lo access.lo auth.lo backtrace.lo \
 	client.lo connection.lo io.lo mitauth.lo oscolor.lo osinit.lo \
-	utils.lo strcasecmp.lo strcasestr.lo xdmauth.lo xsha1.lo \
-	xstrans.lo xprintf.lo $(am__objects_1) $(am__objects_3) \
-	$(am__objects_5) $(am__objects_7) $(am__objects_9)
+	utils.lo xdmauth.lo xsha1.lo xstrans.lo xprintf.lo \
+	$(am__objects_1) $(am__objects_3) $(am__objects_5) \
+	$(am__objects_7)
 libos_la_OBJECTS = $(am_libos_la_OBJECTS)
 PROGRAMS = $(noinst_PROGRAMS)
 am_os_O_OBJECTS =
@@ -112,7 +110,6 @@ AGP_FALSE = @AGP_FALSE@
 AGP_TRUE = @AGP_TRUE@
 AIGLX_DRI_LOADER_FALSE = @AIGLX_DRI_LOADER_FALSE@
 AIGLX_DRI_LOADER_TRUE = @AIGLX_DRI_LOADER_TRUE@
-ALLOCA = @ALLOCA@
 ALPHA_VIDEO_FALSE = @ALPHA_VIDEO_FALSE@
 ALPHA_VIDEO_TRUE = @ALPHA_VIDEO_TRUE@
 AMDEP_FALSE = @AMDEP_FALSE@
@@ -131,6 +128,7 @@ AUTOCONF = @AUTOCONF@
 AUTOHEADER = @AUTOHEADER@
 AUTOMAKE = @AUTOMAKE@
 AWK = @AWK@
+BASE_CFLAGS = @BASE_CFLAGS@
 BASE_FONT_PATH = @BASE_FONT_PATH@
 BSD_APM_FALSE = @BSD_APM_FALSE@
 BSD_APM_TRUE = @BSD_APM_TRUE@
@@ -338,8 +336,6 @@ LIB_MAN_DIR = @LIB_MAN_DIR@
 LIB_MAN_SUFFIX = @LIB_MAN_SUFFIX@
 LINUX_ALPHA_FALSE = @LINUX_ALPHA_FALSE@
 LINUX_ALPHA_TRUE = @LINUX_ALPHA_TRUE@
-LINUX_IA64_FALSE = @LINUX_IA64_FALSE@
-LINUX_IA64_TRUE = @LINUX_IA64_TRUE@
 LIPO = @LIPO@
 LNXACPI_FALSE = @LNXACPI_FALSE@
 LNXACPI_TRUE = @LNXACPI_TRUE@
@@ -358,10 +354,6 @@ MISC_MAN_DIR = @MISC_MAN_DIR@
 MISC_MAN_SUFFIX = @MISC_MAN_SUFFIX@
 MITSHM_FALSE = @MITSHM_FALSE@
 MITSHM_TRUE = @MITSHM_TRUE@
-NEED_STRLCAT_FALSE = @NEED_STRLCAT_FALSE@
-NEED_STRLCAT_TRUE = @NEED_STRLCAT_TRUE@
-NEED_VSNPRINTF_FALSE = @NEED_VSNPRINTF_FALSE@
-NEED_VSNPRINTF_TRUE = @NEED_VSNPRINTF_TRUE@
 NM = @NM@
 NMEDIT = @NMEDIT@
 OBJC = @OBJC@
@@ -505,18 +497,18 @@ XNEST_SYS_LIBS = @XNEST_SYS_LIBS@
 XNEST_TRUE = @XNEST_TRUE@
 XORG_BUS_BSDPCI_FALSE = @XORG_BUS_BSDPCI_FALSE@
 XORG_BUS_BSDPCI_TRUE = @XORG_BUS_BSDPCI_TRUE@
-XORG_BUS_LINUXPCI_FALSE = @XORG_BUS_LINUXPCI_FALSE@
-XORG_BUS_LINUXPCI_TRUE = @XORG_BUS_LINUXPCI_TRUE@
+XORG_BUS_PCI_FALSE = @XORG_BUS_PCI_FALSE@
+XORG_BUS_PCI_TRUE = @XORG_BUS_PCI_TRUE@
 XORG_BUS_SPARC_FALSE = @XORG_BUS_SPARC_FALSE@
 XORG_BUS_SPARC_TRUE = @XORG_BUS_SPARC_TRUE@
 XORG_CFLAGS = @XORG_CFLAGS@
 XORG_FALSE = @XORG_FALSE@
 XORG_INCS = @XORG_INCS@
 XORG_LIBS = @XORG_LIBS@
+XORG_MALLOC_DEBUG_ENV = @XORG_MALLOC_DEBUG_ENV@
 XORG_MAN_PAGE = @XORG_MAN_PAGE@
 XORG_MODULES_CFLAGS = @XORG_MODULES_CFLAGS@
 XORG_MODULES_LIBS = @XORG_MODULES_LIBS@
-XORG_OS = @XORG_OS@
 XORG_OS_SUBDIR = @XORG_OS_SUBDIR@
 XORG_SGML_PATH = @XORG_SGML_PATH@
 XORG_SYS_LIBS = @XORG_SYS_LIBS@
@@ -646,18 +638,14 @@ noinst_LTLIBRARIES = libos.la
 AM_CFLAGS = $(DIX_CFLAGS) $(SHA1_CFLAGS)
 SECURERPC_SRCS = rpcauth.c
 XDMCP_SRCS = xdmcp.c
-STRLCAT_SRCS = strlcat.c strlcpy.c
 PRIVSEP_SRCS = privsep.c
 XORG_SRCS = log.c
 libos_la_SOURCES = WaitFor.c access.c auth.c backtrace.c client.c \
 	connection.c io.c mitauth.c oscolor.c osdep.h osinit.c utils.c \
-	strcasecmp.c strcasestr.c xdmauth.c xsha1.c xstrans.c \
-	xprintf.c $(XORG_SRCS) $(am__append_1) $(am__append_2) \
-	$(am__append_3) $(am__append_4)
-libos_la_LIBADD = @SHA1_LIBS@ $(DLOPEN_LIBS)
-EXTRA_DIST = $(SECURERPC_SRCS) $(INTERNALMALLOC_SRCS) \
-     $(XDMCP_SRCS) $(STRLCAT_SRCS)
-
+	xdmauth.c xsha1.c xstrans.c xprintf.c $(XORG_SRCS) \
+	$(am__append_1) $(am__append_2) $(am__append_3)
+libos_la_LIBADD = @SHA1_LIBS@ $(DLOPEN_LIBS) $(LTLIBOBJS)
+EXTRA_DIST = $(SECURERPC_SRCS) $(XDMCP_SRCS)
 @SPECIAL_DTRACE_OBJECTS_TRUE@os_O_SOURCES = 
 all: all-am
 
@@ -720,6 +708,11 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/strcasecmp.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/strcasestr.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/strlcat.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/strlcpy.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/strndup.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/WaitFor.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/access.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/auth.Plo@am__quote@
@@ -733,10 +726,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/osinit.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/privsep.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rpcauth.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/strcasecmp.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/strcasestr.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/strlcat.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/strlcpy.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/utils.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xdmauth.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xdmcp.Plo@am__quote@
@@ -884,7 +873,7 @@ clean-am: clean-generic clean-libtool clean-noinstLTLIBRARIES \
 	clean-noinstPROGRAMS mostlyclean-am
 
 distclean: distclean-am
-	-rm -rf ./$(DEPDIR)
+	-rm -rf $(DEPDIR) ./$(DEPDIR)
 	-rm -f Makefile
 distclean-am: clean-am distclean-compile distclean-generic \
 	distclean-libtool distclean-tags
@@ -910,7 +899,7 @@ install-man:
 installcheck-am:
 
 maintainer-clean: maintainer-clean-am
-	-rm -rf ./$(DEPDIR)
+	-rm -rf $(DEPDIR) ./$(DEPDIR)
 	-rm -f Makefile
 maintainer-clean-am: distclean-am maintainer-clean-generic
 

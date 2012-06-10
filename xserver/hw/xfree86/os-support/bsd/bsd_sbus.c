@@ -34,7 +34,7 @@ sbusDevice sbusInfo;
 void
 xf86SbusProbe(void)
 {
-	int fd = xf86Info.screenFd;
+	int fd = xf86Info.consoleFd;
 	u_int gtype;
 
 	if (ioctl(fd, WSDISPLAYIO_GTYPE, &gtype) == -1)
@@ -119,7 +119,7 @@ xf86MatchSbusInstances(const char *driverName, int sbusDevId,
 		xf86AddDevToEntity(num, devList[0]);
 		p->active = TRUE;
 		p->inUse = FALSE;
-		retEntities = xalloc(sizeof(int));
+		retEntities = malloc(sizeof(int));
 		retEntities[0] = num;
 		*foundEntities = retEntities;
 		return 1;
@@ -137,7 +137,7 @@ xf86GetSbusInfoForEntity(int entityIndex)
 _X_EXPORT void
 xf86SbusUseBuiltinMode(ScrnInfoPtr pScrn, sbusDevicePtr psdp)
 {
-	int fd = xf86Info.screenFd;
+	int fd = xf86Info.consoleFd;
 	struct wsdisplay_fbinfo wdf;
 	DisplayModePtr mode;
 
@@ -145,7 +145,7 @@ xf86SbusUseBuiltinMode(ScrnInfoPtr pScrn, sbusDevicePtr psdp)
 		FatalError("%s: could not get mode (%s)",
 			   "xf86SbusUseBuiltinMode", strerror(errno));
 
-	mode = xnfcalloc(sizeof(DisplayModeRec), 1);
+	mode = calloc(1, sizeof(DisplayModeRec));
 	mode->name = "current";
 	mode->next = mode;
 	mode->prev = mode;

@@ -54,8 +54,8 @@ SOFTWARE.
 #include <dix-config.h>
 #endif
 
-#include "windowstr.h"	/* focus struct      */
-#include "inputstr.h"	/* DeviceIntPtr      */
+#include "windowstr.h"          /* focus struct      */
+#include "inputstr.h"           /* DeviceIntPtr      */
 #include <X11/extensions/XI.h>
 #include <X11/extensions/XIproto.h>
 #include "exglobals.h"
@@ -71,10 +71,8 @@ SOFTWARE.
 int
 SProcXGetDeviceFocus(ClientPtr client)
 {
-    char n;
-
     REQUEST(xGetDeviceFocusReq);
-    swaps(&stuff->length, n);
+    swaps(&stuff->length);
     return (ProcXGetDeviceFocus(client));
 }
 
@@ -97,9 +95,9 @@ ProcXGetDeviceFocus(ClientPtr client)
 
     rc = dixLookupDevice(&dev, stuff->deviceid, client, DixGetFocusAccess);
     if (rc != Success)
-	return rc;
+        return rc;
     if (!dev->focus)
-	return BadDevice;
+        return BadDevice;
 
     rep.repType = X_Reply;
     rep.RepType = X_GetDeviceFocus;
@@ -109,13 +107,13 @@ ProcXGetDeviceFocus(ClientPtr client)
     focus = dev->focus;
 
     if (focus->win == NoneWin)
-	rep.focus = None;
+        rep.focus = None;
     else if (focus->win == PointerRootWin)
-	rep.focus = PointerRoot;
+        rep.focus = PointerRoot;
     else if (focus->win == FollowKeyboardWin)
-	rep.focus = FollowKeyboard;
+        rep.focus = FollowKeyboard;
     else
-	rep.focus = focus->win->drawable.id;
+        rep.focus = focus->win->drawable.id;
 
     rep.time = focus->time.milliseconds;
     rep.revertTo = focus->revert;
@@ -133,11 +131,9 @@ ProcXGetDeviceFocus(ClientPtr client)
 void
 SRepXGetDeviceFocus(ClientPtr client, int size, xGetDeviceFocusReply * rep)
 {
-    char n;
-
-    swaps(&rep->sequenceNumber, n);
-    swapl(&rep->length, n);
-    swapl(&rep->focus, n);
-    swapl(&rep->time, n);
-    WriteToClient(client, size, (char *)rep);
+    swaps(&rep->sequenceNumber);
+    swapl(&rep->length);
+    swapl(&rep->focus);
+    swapl(&rep->time);
+    WriteToClient(client, size, (char *) rep);
 }

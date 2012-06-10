@@ -75,7 +75,7 @@ am__installdirs = "$(DESTDIR)$(bindir)" "$(DESTDIR)$(x11appdir)"
 binPROGRAMS_INSTALL = $(INSTALL_PROGRAM)
 x11appPROGRAMS_INSTALL = $(INSTALL_PROGRAM)
 PROGRAMS = $(bin_PROGRAMS) $(x11app_PROGRAMS)
-dist_X11_bin_OBJECTS = bundle-main.$(OBJEXT)
+dist_X11_bin_OBJECTS = bundle-main.$(OBJEXT) strndup.$(OBJEXT)
 nodist_X11_bin_OBJECTS = mach_startupServer.$(OBJEXT) \
 	mach_startupUser.$(OBJEXT)
 X11_bin_OBJECTS = $(dist_X11_bin_OBJECTS) $(nodist_X11_bin_OBJECTS)
@@ -84,6 +84,13 @@ am__DEPENDENCIES_1 =
 @GLX_TRUE@	$(top_builddir)/hw/xquartz/GL/libCGLCore.la \
 @GLX_TRUE@	$(top_builddir)/glx/libglx.la
 @RECORD_TRUE@am__DEPENDENCIES_3 = $(top_builddir)/record/librecord.la
+am__DEPENDENCIES_4 = $(top_builddir)/hw/xquartz/libXquartz.la \
+	$(top_builddir)/hw/xquartz/xpr/libXquartzXpr.la \
+	$(top_builddir)/dix/dixfonts.lo \
+	$(top_builddir)/miext/rootless/librootless.la \
+	$(top_builddir)/hw/xquartz/pbproxy/libxpbproxy.la \
+	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) \
+	$(am__DEPENDENCIES_2) $(am__DEPENDENCIES_3)
 dist_Xquartz_OBJECTS = stub.$(OBJEXT) launchd_fd.$(OBJEXT)
 nodist_Xquartz_OBJECTS = mach_startupUser.$(OBJEXT)
 Xquartz_OBJECTS = $(dist_Xquartz_OBJECTS) $(nodist_Xquartz_OBJECTS)
@@ -112,7 +119,6 @@ AGP_FALSE = @AGP_FALSE@
 AGP_TRUE = @AGP_TRUE@
 AIGLX_DRI_LOADER_FALSE = @AIGLX_DRI_LOADER_FALSE@
 AIGLX_DRI_LOADER_TRUE = @AIGLX_DRI_LOADER_TRUE@
-ALLOCA = @ALLOCA@
 ALPHA_VIDEO_FALSE = @ALPHA_VIDEO_FALSE@
 ALPHA_VIDEO_TRUE = @ALPHA_VIDEO_TRUE@
 AMDEP_FALSE = @AMDEP_FALSE@
@@ -131,6 +137,7 @@ AUTOCONF = @AUTOCONF@
 AUTOHEADER = @AUTOHEADER@
 AUTOMAKE = @AUTOMAKE@
 AWK = @AWK@
+BASE_CFLAGS = @BASE_CFLAGS@
 BASE_FONT_PATH = @BASE_FONT_PATH@
 BSD_APM_FALSE = @BSD_APM_FALSE@
 BSD_APM_TRUE = @BSD_APM_TRUE@
@@ -338,8 +345,6 @@ LIB_MAN_DIR = @LIB_MAN_DIR@
 LIB_MAN_SUFFIX = @LIB_MAN_SUFFIX@
 LINUX_ALPHA_FALSE = @LINUX_ALPHA_FALSE@
 LINUX_ALPHA_TRUE = @LINUX_ALPHA_TRUE@
-LINUX_IA64_FALSE = @LINUX_IA64_FALSE@
-LINUX_IA64_TRUE = @LINUX_IA64_TRUE@
 LIPO = @LIPO@
 LNXACPI_FALSE = @LNXACPI_FALSE@
 LNXACPI_TRUE = @LNXACPI_TRUE@
@@ -358,10 +363,6 @@ MISC_MAN_DIR = @MISC_MAN_DIR@
 MISC_MAN_SUFFIX = @MISC_MAN_SUFFIX@
 MITSHM_FALSE = @MITSHM_FALSE@
 MITSHM_TRUE = @MITSHM_TRUE@
-NEED_STRLCAT_FALSE = @NEED_STRLCAT_FALSE@
-NEED_STRLCAT_TRUE = @NEED_STRLCAT_TRUE@
-NEED_VSNPRINTF_FALSE = @NEED_VSNPRINTF_FALSE@
-NEED_VSNPRINTF_TRUE = @NEED_VSNPRINTF_TRUE@
 NM = @NM@
 NMEDIT = @NMEDIT@
 OBJC = @OBJC@
@@ -505,18 +506,18 @@ XNEST_SYS_LIBS = @XNEST_SYS_LIBS@
 XNEST_TRUE = @XNEST_TRUE@
 XORG_BUS_BSDPCI_FALSE = @XORG_BUS_BSDPCI_FALSE@
 XORG_BUS_BSDPCI_TRUE = @XORG_BUS_BSDPCI_TRUE@
-XORG_BUS_LINUXPCI_FALSE = @XORG_BUS_LINUXPCI_FALSE@
-XORG_BUS_LINUXPCI_TRUE = @XORG_BUS_LINUXPCI_TRUE@
+XORG_BUS_PCI_FALSE = @XORG_BUS_PCI_FALSE@
+XORG_BUS_PCI_TRUE = @XORG_BUS_PCI_TRUE@
 XORG_BUS_SPARC_FALSE = @XORG_BUS_SPARC_FALSE@
 XORG_BUS_SPARC_TRUE = @XORG_BUS_SPARC_TRUE@
 XORG_CFLAGS = @XORG_CFLAGS@
 XORG_FALSE = @XORG_FALSE@
 XORG_INCS = @XORG_INCS@
 XORG_LIBS = @XORG_LIBS@
+XORG_MALLOC_DEBUG_ENV = @XORG_MALLOC_DEBUG_ENV@
 XORG_MAN_PAGE = @XORG_MAN_PAGE@
 XORG_MODULES_CFLAGS = @XORG_MODULES_CFLAGS@
 XORG_MODULES_LIBS = @XORG_MODULES_LIBS@
-XORG_OS = @XORG_OS@
 XORG_OS_SUBDIR = @XORG_OS_SUBDIR@
 XORG_SGML_PATH = @XORG_SGML_PATH@
 XORG_SYS_LIBS = @XORG_SYS_LIBS@
@@ -650,25 +651,32 @@ AM_CPPFLAGS = \
 
 AM_CFLAGS = $(DIX_CFLAGS)
 x11appdir = $(APPLE_APPLICATIONS_DIR)/$(APPLE_APPLICATION_NAME).app/Contents/MacOS
-dist_X11_bin_SOURCES = \
-	bundle-main.c 
 
+# strndup(3) was added in Mac OS X 10.7, but we do this unconditionally to deal
+# with the case where we build on Lion but target Snow Leopard as the minimum
+# OS version.
+#if NEED_STRNDUP
+dist_X11_bin_SOURCES = bundle-main.c $(top_srcdir)/os/strndup.c
+#endif
 nodist_X11_bin_SOURCES = \
 	mach_startupServer.c \
 	mach_startupUser.c
 
-X11_bin_LDADD = $(top_builddir)/hw/xquartz/libXquartz.la \
+X11_bin_DEPENDENCIES = $(top_builddir)/hw/xquartz/libXquartz.la \
 	$(top_builddir)/hw/xquartz/xpr/libXquartzXpr.la \
 	$(top_builddir)/dix/dixfonts.lo \
 	$(top_builddir)/miext/rootless/librootless.la \
 	$(top_builddir)/hw/xquartz/pbproxy/libxpbproxy.la \
 	$(XQUARTZ_LIBS) $(XSERVER_LIBS) $(am__append_1) \
 	$(am__append_4)
-X11_bin_LDFLAGS = $(XSERVER_SYS_LIBS) -lXplugin -XCClinker -Objc \
-	-Wl,-u,_miDCInitialize -Wl,-framework,Carbon \
-	-Wl,-framework,Cocoa -Wl,-framework,CoreAudio \
-	-Wl,-framework,IOKit $(am__append_2) $(am__append_3)
-X11_bin_DEPENDENCIES = $(X11_bin_LDADD)
+
+# $(XSERVER_SYS_LIBS) is placed here in order to set command line ordering
+# to work around build issues on Tiger.
+X11_bin_LDADD = $(X11_bin_DEPENDENCIES) $(XSERVER_SYS_LIBS)
+X11_bin_LDFLAGS = -lXplugin -XCClinker -Objc -Wl,-u,_miDCInitialize \
+	-Wl,-framework,Carbon -Wl,-framework,Cocoa \
+	-Wl,-framework,CoreAudio -Wl,-framework,IOKit $(am__append_2) \
+	$(am__append_3)
 dist_Xquartz_SOURCES = \
 	stub.c \
 	launchd_fd.c
@@ -800,6 +808,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/launchd_fd.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mach_startupServer.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mach_startupUser.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/strndup.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/stub.Po@am__quote@
 
 .c.o:
@@ -822,6 +831,20 @@ distclean-compile:
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$<' object='$@' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(LTCOMPILE) -c -o $@ $<
+
+strndup.o: $(top_srcdir)/os/strndup.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT strndup.o -MD -MP -MF "$(DEPDIR)/strndup.Tpo" -c -o strndup.o `test -f '$(top_srcdir)/os/strndup.c' || echo '$(srcdir)/'`$(top_srcdir)/os/strndup.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/strndup.Tpo" "$(DEPDIR)/strndup.Po"; else rm -f "$(DEPDIR)/strndup.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$(top_srcdir)/os/strndup.c' object='strndup.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o strndup.o `test -f '$(top_srcdir)/os/strndup.c' || echo '$(srcdir)/'`$(top_srcdir)/os/strndup.c
+
+strndup.obj: $(top_srcdir)/os/strndup.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT strndup.obj -MD -MP -MF "$(DEPDIR)/strndup.Tpo" -c -o strndup.obj `if test -f '$(top_srcdir)/os/strndup.c'; then $(CYGPATH_W) '$(top_srcdir)/os/strndup.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/os/strndup.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/strndup.Tpo" "$(DEPDIR)/strndup.Po"; else rm -f "$(DEPDIR)/strndup.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$(top_srcdir)/os/strndup.c' object='strndup.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o strndup.obj `if test -f '$(top_srcdir)/os/strndup.c'; then $(CYGPATH_W) '$(top_srcdir)/os/strndup.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/os/strndup.c'; fi`
 
 mostlyclean-libtool:
 	-rm -f *.lo

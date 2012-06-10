@@ -71,12 +71,13 @@ am__sdk_HEADERS_DIST = XIstubs.h Xprintf.h callback.h client.h \
 	cursor.h cursorstr.h dix.h dixaccess.h dixevents.h dixfont.h \
 	dixfontstr.h dixgrabs.h dixstruct.h events.h exevents.h \
 	extension.h extinit.h extnsionst.h gc.h gcstruct.h globals.h \
-	input.h inputstr.h list.h misc.h miscstruct.h opaque.h os.h \
-	pixmap.h pixmapstr.h privates.h property.h propertyst.h \
-	ptrveloc.h region.h regionstr.h registry.h resource.h rgb.h \
-	screenint.h scrnintstr.h selection.h servermd.h site.h \
-	swaprep.h swapreq.h validate.h window.h windowstr.h xkbfile.h \
-	xkbsrv.h xkbstr.h xkbrules.h xserver-properties.h
+	input.h inputstr.h list.h misc.h miscstruct.h opaque.h \
+	optionstr.h os.h pixmap.h pixmapstr.h privates.h property.h \
+	propertyst.h ptrveloc.h region.h regionstr.h registry.h \
+	resource.h rgb.h screenint.h scrnintstr.h selection.h \
+	servermd.h site.h swaprep.h swapreq.h validate.h window.h \
+	windowstr.h xkbfile.h xkbsrv.h xkbstr.h xkbrules.h \
+	xserver-properties.h
 sdkHEADERS_INSTALL = $(INSTALL_HEADER)
 HEADERS = $(nodist_sdk_HEADERS) $(sdk_HEADERS)
 ETAGS = etags
@@ -89,7 +90,6 @@ AGP_FALSE = @AGP_FALSE@
 AGP_TRUE = @AGP_TRUE@
 AIGLX_DRI_LOADER_FALSE = @AIGLX_DRI_LOADER_FALSE@
 AIGLX_DRI_LOADER_TRUE = @AIGLX_DRI_LOADER_TRUE@
-ALLOCA = @ALLOCA@
 ALPHA_VIDEO_FALSE = @ALPHA_VIDEO_FALSE@
 ALPHA_VIDEO_TRUE = @ALPHA_VIDEO_TRUE@
 AMDEP_FALSE = @AMDEP_FALSE@
@@ -108,6 +108,7 @@ AUTOCONF = @AUTOCONF@
 AUTOHEADER = @AUTOHEADER@
 AUTOMAKE = @AUTOMAKE@
 AWK = @AWK@
+BASE_CFLAGS = @BASE_CFLAGS@
 BASE_FONT_PATH = @BASE_FONT_PATH@
 BSD_APM_FALSE = @BSD_APM_FALSE@
 BSD_APM_TRUE = @BSD_APM_TRUE@
@@ -315,8 +316,6 @@ LIB_MAN_DIR = @LIB_MAN_DIR@
 LIB_MAN_SUFFIX = @LIB_MAN_SUFFIX@
 LINUX_ALPHA_FALSE = @LINUX_ALPHA_FALSE@
 LINUX_ALPHA_TRUE = @LINUX_ALPHA_TRUE@
-LINUX_IA64_FALSE = @LINUX_IA64_FALSE@
-LINUX_IA64_TRUE = @LINUX_IA64_TRUE@
 LIPO = @LIPO@
 LNXACPI_FALSE = @LNXACPI_FALSE@
 LNXACPI_TRUE = @LNXACPI_TRUE@
@@ -335,10 +334,6 @@ MISC_MAN_DIR = @MISC_MAN_DIR@
 MISC_MAN_SUFFIX = @MISC_MAN_SUFFIX@
 MITSHM_FALSE = @MITSHM_FALSE@
 MITSHM_TRUE = @MITSHM_TRUE@
-NEED_STRLCAT_FALSE = @NEED_STRLCAT_FALSE@
-NEED_STRLCAT_TRUE = @NEED_STRLCAT_TRUE@
-NEED_VSNPRINTF_FALSE = @NEED_VSNPRINTF_FALSE@
-NEED_VSNPRINTF_TRUE = @NEED_VSNPRINTF_TRUE@
 NM = @NM@
 NMEDIT = @NMEDIT@
 OBJC = @OBJC@
@@ -482,18 +477,18 @@ XNEST_SYS_LIBS = @XNEST_SYS_LIBS@
 XNEST_TRUE = @XNEST_TRUE@
 XORG_BUS_BSDPCI_FALSE = @XORG_BUS_BSDPCI_FALSE@
 XORG_BUS_BSDPCI_TRUE = @XORG_BUS_BSDPCI_TRUE@
-XORG_BUS_LINUXPCI_FALSE = @XORG_BUS_LINUXPCI_FALSE@
-XORG_BUS_LINUXPCI_TRUE = @XORG_BUS_LINUXPCI_TRUE@
+XORG_BUS_PCI_FALSE = @XORG_BUS_PCI_FALSE@
+XORG_BUS_PCI_TRUE = @XORG_BUS_PCI_TRUE@
 XORG_BUS_SPARC_FALSE = @XORG_BUS_SPARC_FALSE@
 XORG_BUS_SPARC_TRUE = @XORG_BUS_SPARC_TRUE@
 XORG_CFLAGS = @XORG_CFLAGS@
 XORG_FALSE = @XORG_FALSE@
 XORG_INCS = @XORG_INCS@
 XORG_LIBS = @XORG_LIBS@
+XORG_MALLOC_DEBUG_ENV = @XORG_MALLOC_DEBUG_ENV@
 XORG_MAN_PAGE = @XORG_MAN_PAGE@
 XORG_MODULES_CFLAGS = @XORG_MODULES_CFLAGS@
 XORG_MODULES_LIBS = @XORG_MODULES_LIBS@
-XORG_OS = @XORG_OS@
 XORG_OS_SUBDIR = @XORG_OS_SUBDIR@
 XORG_SGML_PATH = @XORG_SGML_PATH@
 XORG_SYS_LIBS = @XORG_SYS_LIBS@
@@ -652,6 +647,7 @@ target_alias = @target_alias@
 @XORG_TRUE@	misc.h		\
 @XORG_TRUE@	miscstruct.h	\
 @XORG_TRUE@	opaque.h	\
+@XORG_TRUE@	optionstr.h	\
 @XORG_TRUE@	os.h		\
 @XORG_TRUE@	pixmap.h	\
 @XORG_TRUE@	pixmapstr.h	\

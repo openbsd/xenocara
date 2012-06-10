@@ -2,7 +2,7 @@
 #ifndef _XSERV_GLOBAL_H_
 #define _XSERV_GLOBAL_H_
 
-#include "window.h"	/* for WindowPtr */
+#include "window.h"             /* for WindowPtr */
 
 /* Global X server variables that are visible to mi, dix, os, and ddx */
 
@@ -21,7 +21,7 @@ extern _X_EXPORT int defaultColorVisualClass;
 
 extern _X_EXPORT int GrabInProgress;
 extern _X_EXPORT Bool noTestExtensions;
-
+extern _X_EXPORT char *SeatId;
 extern _X_EXPORT char *ConnectionInfo;
 
 #ifdef DPMSExtension
@@ -122,4 +122,4 @@ extern _X_EXPORT Bool noXvExtension;
 extern _X_EXPORT Bool noDRI2Extension;
 #endif
 
-#endif /* !_XSERV_GLOBAL_H_ */
+#endif                          /* !_XSERV_GLOBAL_H_ */

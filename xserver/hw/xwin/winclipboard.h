@@ -39,7 +39,6 @@
 #include <sys/select.h>
 #else
 #include <X11/Xwinsock.h>
-#define HAS_WINSOCK
 #endif
 #include <fcntl.h>
 #include <setjmp.h>
@@ -55,12 +54,11 @@
 /* Windows headers */
 #include <X11/Xwindows.h>
 
-
 /* Clipboard module constants */
 #define WIN_CLIPBOARD_WINDOW_CLASS		"xwinclip"
 #define WIN_CLIPBOARD_WINDOW_TITLE		"xwinclip"
 #ifdef HAS_DEVWINDOWS
-# define WIN_MSG_QUEUE_FNAME			"/dev/windows"
+#define WIN_MSG_QUEUE_FNAME			"/dev/windows"
 #endif
 #define WIN_CONNECT_RETRIES			40
 #define WIN_CONNECT_DELAY			4
@@ -71,6 +69,8 @@
 #define WIN_XEVENTS_SHUTDOWN			1
 #define WIN_XEVENTS_CONVERT			2
 #define WIN_XEVENTS_NOTIFY			3
+#define WIN_CLIPBOARD_RETRIES			40
+#define WIN_CLIPBOARD_DELAY			1
 
 #define WM_WM_REINIT                           (WM_USER + 1)
 
@@ -79,71 +79,60 @@
  */
 
 extern char *display;
-extern void ErrorF (const char* /*f*/, ...);
-extern void winDebug (const char *format, ...);
-extern void winErrorFVerb (int verb, const char *format, ...);
-
+extern void ErrorF(const char * /*f */ , ...);
+extern void winDebug(const char *format, ...);
+extern void winErrorFVerb(int verb, const char *format, ...);
 
 /*
  * winclipboardinit.c
  */
 
 Bool
-winInitClipboard (void);
+ winInitClipboard(void);
 
-HWND
-winClipboardCreateMessagingWindow (void);
-
+HWND winClipboardCreateMessagingWindow(void);
 
 /*
  * winclipboardtextconv.c
  */
 
 void
-winClipboardDOStoUNIX (char *pszData, int iLength);
+ winClipboardDOStoUNIX(char *pszData, int iLength);
 
 void
-winClipboardUNIXtoDOS (unsigned char **ppszData, int iLength);
-
+ winClipboardUNIXtoDOS(unsigned char **ppszData, int iLength);
 
 /*
  * winclipboardthread.c
  */
 
-void *
-winClipboardProc (void *);
+void *winClipboardProc(void *);
 
 void
-winDeinitClipboard (void);
-
+ winDeinitClipboard(void);
 
 /*
  * winclipboardunicode.c
  */
 
 Bool
-winClipboardDetectUnicodeSupport (void);
-
+ winClipboardDetectUnicodeSupport(void);
 
 /*
  * winclipboardwndproc.c
  */
 
-BOOL
-winClipboardFlushWindowsMessageQueue (HWND hwnd);
+BOOL winClipboardFlushWindowsMessageQueue(HWND hwnd);
 
 LRESULT CALLBACK
-winClipboardWindowProc (HWND hwnd, UINT message, 
-			WPARAM wParam, LPARAM lParam);
-
+winClipboardWindowProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
 
 /*
  * winclipboardxevents.c
  */
 
 int
-winClipboardFlushXEvents (HWND hwnd,
-			  int iWindow,
-			  Display *pDisplay,
-			  Bool fUnicodeSupport);
+
+winClipboardFlushXEvents(HWND hwnd,
+                         int iWindow, Display * pDisplay, Bool fUnicodeSupport);
 #endif

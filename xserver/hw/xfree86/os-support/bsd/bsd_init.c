@@ -6,19 +6,19 @@
  * documentation for any purpose is hereby granted without fee, provided that
  * the above copyright notice appear in all copies and that both that
  * copyright notice and this permission notice appear in supporting
- * documentation, and that the names of Rich Murphey and David Wexelblat 
- * not be used in advertising or publicity pertaining to distribution of 
+ * documentation, and that the names of Rich Murphey and David Wexelblat
+ * not be used in advertising or publicity pertaining to distribution of
  * the software without specific, written prior permission.  Rich Murphey and
- * David Wexelblat make no representations about the suitability of this 
- * software for any purpose.  It is provided "as is" without express or 
+ * David Wexelblat make no representations about the suitability of this
+ * software for any purpose.  It is provided "as is" without express or
  * implied warranty.
  *
- * RICH MURPHEY AND DAVID WEXELBLAT DISCLAIM ALL WARRANTIES WITH REGARD TO 
- * THIS SOFTWARE, INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND 
- * FITNESS, IN NO EVENT SHALL RICH MURPHEY OR DAVID WEXELBLAT BE LIABLE FOR 
- * ANY SPECIAL, INDIRECT OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER 
- * RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF 
- * CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN 
+ * RICH MURPHEY AND DAVID WEXELBLAT DISCLAIM ALL WARRANTIES WITH REGARD TO
+ * THIS SOFTWARE, INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND
+ * FITNESS, IN NO EVENT SHALL RICH MURPHEY OR DAVID WEXELBLAT BE LIABLE FOR
+ * ANY SPECIAL, INDIRECT OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER
+ * RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF
+ * CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
  * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
  */
@@ -46,11 +46,11 @@
 #include <errno.h>
 
 static Bool KeepTty = FALSE;
+
 static int devConsoleFd = -1;
 #if defined (SYSCONS_SUPPORT) || defined (PCVT_SUPPORT)
 static int VTnum = -1;
 static int initialVT = -1;
-static Bool ShareVTs = FALSE;
 #endif
 
 #ifdef PCCONS_SUPPORT
@@ -70,9 +70,9 @@ static Bool ShareVTs = FALSE;
 #ifdef PCVT_SUPPORT
 /* Hellmuth Michaelis' pcvt driver */
 #ifndef __OpenBSD__
-#  define PCVT_CONSOLE_DEV "/dev/ttyv0"
+#define PCVT_CONSOLE_DEV "/dev/ttyv0"
 #else
-#  define PCVT_CONSOLE_DEV "/dev/ttyC0"
+#define PCVT_CONSOLE_DEV "/dev/ttyC0"
 #endif
 #define PCVT_CONSOLE_MODE O_RDWR|O_NDELAY
 #endif
@@ -91,16 +91,16 @@ static Bool ShareVTs = FALSE;
 
 static char *supported_drivers[] = {
 #ifdef PCCONS_SUPPORT
-	"pccons (with X support)",
+    "pccons (with X support)",
 #endif
 #ifdef SYSCONS_SUPPORT
-	"syscons",
+    "syscons",
 #endif
 #ifdef PCVT_SUPPORT
-	"pcvt",
+    "pcvt",
 #endif
 #ifdef WSCONS_SUPPORT
-	"wscons",
+    "wscons",
 #endif
 };
 
@@ -166,175 +166,153 @@ xf86OpenConsole()
 #endif
     vtmode_t vtmode;
 #endif
-    
+
     if (xf86Info.consoleFd != -1) {
-	    return;
+        return;
     }
-    if (serverGeneration == 1)
-    {
-	/* check if we are run with euid==0 */
-	if (geteuid() != 0 && issetugid())
-	{
-	    FatalError("xf86OpenConsole: Server must either be suid root"
-			" or without privileges at all");
-	}
+    if (serverGeneration == 1) {
+        /* check if we are run with euid==0 */
+        if (geteuid() != 0 && issetugid()) {
+            FatalError("xf86OpenConsole: Server must either be suid root"
+                       " or without privileges at all");
+        }
 
-	if (!KeepTty)
-	{
-	    /*
-	     * detaching the controlling tty solves problems of kbd character
-	     * loss.  This is not interesting for CO driver, because it is 
-	     * exclusive.
-	     */
-	    setpgrp(0, getpid());
-	    if ((i = open("/dev/tty",O_RDWR)) >= 0)
-	    {
-		ioctl(i,TIOCNOTTY,(char *)0);
-		close(i);
-	    }
-	}
+        if (!KeepTty) {
+            /*
+             * detaching the controlling tty solves problems of kbd character
+             * loss.  This is not interesting for CO driver, because it is
+             * exclusive.
+             */
+            setpgrp(0, getpid());
+            if ((i = open("/dev/tty",O_RDWR)) >= 0) {
+                ioctl(i,TIOCNOTTY,(char *)0);
+                close(i);
+            }
+        }
 
-	/* detect which driver we are running on */
-	for (driver = xf86ConsTab; *driver; driver++)
-	{
-	    if ((fd = (*driver)()) >= 0)
-		break;
-	}
+        /* detect which driver we are running on */
+        for (driver = xf86ConsTab; *driver; driver++) {
+            if ((fd = (*driver)()) >= 0)
+                break;
+        }
 
-	/* Check that a supported console driver was found */
-	if (fd < 0)
-	{
-	    char cons_drivers[80] = {0, };
-	    for (i = 0; i < sizeof(supported_drivers) / sizeof(char *); i++)
-	    {
-		if (i)
-		{
-		    strcat(cons_drivers, ", ");
-		}
-		strcat(cons_drivers, supported_drivers[i]);
-	    }
-	    FatalError(
-		"%s: No console driver found\n\tSupported drivers: %s\n\t%s",
-		"xf86OpenConsole", cons_drivers, CHECK_DRIVER_MSG);
-	}
-#if 0 /* stdin is already closed in OsInit() */
-	fclose(stdin);
-#endif
-	xf86Info.consoleFd = fd;
-	xf86Info.screenFd = fd;
+        /* Check that a supported console driver was found */
+        if (fd < 0) {
+            char cons_drivers[80] = {0, };
+            for (i = 0; i < sizeof(supported_drivers) / sizeof(char *); i++) {
+                if (i) {
+                    strcat(cons_drivers, ", ");
+                }
+                strcat(cons_drivers, supported_drivers[i]);
+            }
+            FatalError
+                ("%s: No console driver found\n\tSupported drivers: %s\n\t%s",
+                 "xf86OpenConsole", cons_drivers, CHECK_DRIVER_MSG);
+        }
+        xf86Info.consoleFd = fd;
 
-	switch (xf86Info.consType)
-	{
+        switch (xf86Info.consType) {
 #ifdef PCCONS_SUPPORT
-	case PCCONS:
-	    if (ioctl (xf86Info.consoleFd, CONSOLE_X_MODE_ON, 0) < 0)
-	    {
-		FatalError("%s: CONSOLE_X_MODE_ON failed (%s)\n%s",
-			   "xf86OpenConsole", strerror(errno),
-			   CHECK_DRIVER_MSG);
-	    }
-	    /*
-	     * Hack to prevent keyboard hanging when syslogd closes
-	     * /dev/console
-	     */
-	    if ((devConsoleFd = open("/dev/console", O_WRONLY,0)) < 0)
-	    {
-		xf86Msg(X_WARNING,
-			"xf86OpenConsole: couldn't open /dev/console (%s)\n",
-			strerror(errno));
-	    }
-	    break;
+        case PCCONS:
+            if (ioctl (xf86Info.consoleFd, CONSOLE_X_MODE_ON, 0) < 0) {
+                FatalError("%s: CONSOLE_X_MODE_ON failed (%s)\n%s",
+                           "xf86OpenConsole", strerror(errno),
+                           CHECK_DRIVER_MSG);
+            }
+            /*
+             * Hack to prevent keyboard hanging when syslogd closes
+             * /dev/console
+             */
+            if ((devConsoleFd = open("/dev/console", O_WRONLY,0)) < 0) {
+                xf86Msg(X_WARNING,
+                        "xf86OpenConsole: couldn't open /dev/console (%s)\n",
+                        strerror(errno));
+            }
+            break;
 #endif
 #if defined (SYSCONS_SUPPORT) || defined (PCVT_SUPPORT)
-	case SYSCONS:
-	    /* as of FreeBSD 2.2.8, syscons driver does not need the #1 vt
-	     * switching anymore. Here we check for FreeBSD 3.1 and up.
-	     * Add cases for other *BSD that behave the same.
-	    */
+        case SYSCONS:
+            /* as of FreeBSD 2.2.8, syscons driver does not need the #1 vt
+             * switching anymore. Here we check for FreeBSD 3.1 and up.
+             * Add cases for other *BSD that behave the same.
+            */
 #if defined(__FreeBSD__) || defined(__FreeBSD_kernel__)
-	    uname (&uts);
-	    i = atof(uts.release) * 100;
-	    if (i >= 310) goto acquire_vt;
+            uname (&uts);
+            i = atof(uts.release) * 100;
+            if (i >= 310) goto acquire_vt;
 #endif
-	    /* otherwise fall through */
-	case PCVT:
+            /* otherwise fall through */
+        case PCVT:
 #if !(defined(__NetBSD__) && (__NetBSD_Version__ >= 200000000))
-	    /*
-	     * First activate the #1 VT.  This is a hack to allow a server
-	     * to be started while another one is active.  There should be
-	     * a better way.
-	     */
-	    if (initialVT != 1) {
+            /*
+             * First activate the #1 VT.  This is a hack to allow a server
+             * to be started while another one is active.  There should be
+             * a better way.
+             */
+            if (initialVT != 1) {
 
-		if (ioctl(xf86Info.consoleFd, VT_ACTIVATE, 1) != 0)
-		{
-		    xf86Msg(X_WARNING,
-				"xf86OpenConsole: VT_ACTIVATE failed\n");
-		}
-		sleep(1);
-	    }
+                if (ioctl(xf86Info.consoleFd, VT_ACTIVATE, 1) != 0) {
+                    xf86Msg(X_WARNING,
+                            "xf86OpenConsole: VT_ACTIVATE failed\n");
+                }
+                sleep(1);
+            }
 #endif
 acquire_vt:
-	    if (!ShareVTs) {
-		    /*
-		     * now get the VT
-		     */
-		    SYSCALL(result =
-			    ioctl(xf86Info.consoleFd, VT_ACTIVATE, xf86Info.vtno));
-		    if (result != 0)
-		    {
-			xf86Msg(X_WARNING, "xf86OpenConsole: VT_ACTIVATE failed\n");
-		    }
-		    SYSCALL(result =
-		    ioctl(xf86Info.consoleFd, VT_WAITACTIVE, xf86Info.vtno));
-		    if (result != 0)
-		    {
-			xf86Msg(X_WARNING, "xf86OpenConsole: VT_WAITACTIVE failed\n");
-		    }
+            if (!xf86Info.ShareVTs) {
+                /*
+                 * now get the VT
+                 */
+                SYSCALL(result =
+                        ioctl(xf86Info.consoleFd, VT_ACTIVATE, xf86Info.vtno));
+                if (result != 0) {
+                    xf86Msg(X_WARNING, "xf86OpenConsole: VT_ACTIVATE failed\n");
+                }
+                SYSCALL(result =
+                        ioctl(xf86Info.consoleFd, VT_WAITACTIVE, xf86Info.vtno));
+                if (result != 0) {
+                    xf86Msg(X_WARNING, "xf86OpenConsole: VT_WAITACTIVE failed\n");
+                }
 
-		    signal(SIGUSR2, xf86VTRequest);
+                signal(SIGUSR2, xf86VTRequest);
 
-		    vtmode.mode = VT_PROCESS;
-		    vtmode.relsig = SIGUSR2;
-		    vtmode.acqsig = SIGUSR2;
-		    vtmode.frsig = SIGUSR2;
-		    if (ioctl(xf86Info.consoleFd, VT_SETMODE, &vtmode) < 0) 
-		    {
-			FatalError("xf86OpenConsole: VT_SETMODE VT_PROCESS failed");
-		    }
+                vtmode.mode = VT_PROCESS;
+                vtmode.relsig = SIGUSR2;
+                vtmode.acqsig = SIGUSR2;
+                vtmode.frsig = SIGUSR2;
+                if (ioctl(xf86Info.consoleFd, VT_SETMODE, &vtmode) < 0) {
+                    FatalError("xf86OpenConsole: VT_SETMODE VT_PROCESS failed");
+                }
 #if !defined(__0penBSD__) && !defined(USE_DEV_IO) && !defined(USE_I386_IOPL)
-		    if (ioctl(xf86Info.consoleFd, KDENABIO, 0) < 0)
-		    {
-			FatalError("xf86OpenConsole: KDENABIO failed (%s)",
-				   strerror(errno));
-		    }
+                if (ioctl(xf86Info.consoleFd, KDENABIO, 0) < 0) {
+                    FatalError("xf86OpenConsole: KDENABIO failed (%s)",
+                               strerror(errno));
+                }
 #endif
-		    if (ioctl(xf86Info.consoleFd, KDSETMODE, KD_GRAPHICS) < 0)
-		    {
-			FatalError("xf86OpenConsole: KDSETMODE KD_GRAPHICS failed");
-		    }
-	    } else { /* ShareVTs */
-		    close(xf86Info.consoleFd);
-	    }	
-  	    break; 
+                if (ioctl(xf86Info.consoleFd, KDSETMODE, KD_GRAPHICS) < 0) {
+                    FatalError("xf86OpenConsole: KDSETMODE KD_GRAPHICS failed");
+                }
+            }
+            else { /* xf86Info.ShareVTs */
+                close(xf86Info.consoleFd);
+            }
+            break;
 #endif /* SYSCONS_SUPPORT || PCVT_SUPPORT */
 #ifdef WSCONS_SUPPORT
-	case WSCONS:
-	    /* Nothing to do */
-   	    break; 
+        case WSCONS:
+            /* Nothing to do */
+            break;
 #endif
         }
     }
-    else 
-    {
-	/* serverGeneration != 1 */
+    else {
+        /* serverGeneration != 1 */
 #if defined (SYSCONS_SUPPORT) || defined (PCVT_SUPPORT)
-    	if (!ShareVTs) if (xf86Info.consType == SYSCONS || xf86Info.consType == PCVT)
-    	{
-	    if (ioctl(xf86Info.consoleFd, VT_ACTIVATE, xf86Info.vtno) != 0)
-	    {
-	        xf86Msg(X_WARNING, "xf86OpenConsole: VT_ACTIVATE failed\n");
-	    }
+        if (!xf86Info.ShareVTs &&
+            (xf86Info.consType == SYSCONS || xf86Info.consType == PCVT)) {
+            if (ioctl(xf86Info.consoleFd, VT_ACTIVATE, xf86Info.vtno) != 0) {
+                xf86Msg(X_WARNING, "xf86OpenConsole: VT_ACTIVATE failed\n");
+            }
         }
 #endif /* SYSCONS_SUPPORT || PCVT_SUPPORT */
     }
@@ -350,21 +328,19 @@ xf86OpenPccons()
     int fd = -1;
 
     if ((fd = open(PCCONS_CONSOLE_DEV1, PCCONS_CONSOLE_MODE, 0))
-	>= 0 ||
-	(fd = open(PCCONS_CONSOLE_DEV2, PCCONS_CONSOLE_MODE, 0))
-	>= 0)
-    {
-	if (ioctl(fd, CONSOLE_X_MODE_OFF, 0) < 0)
-	{
-	    FatalError(
-		"%s: CONSOLE_X_MODE_OFF failed (%s)\n%s\n%s",
-		"xf86OpenPccons",
-		strerror(errno),
-		"Was expecting pccons driver with X support",
-		CHECK_DRIVER_MSG);
-	}
-	xf86Info.consType = PCCONS;
-	xf86Msg(X_PROBED, "Using pccons driver with X support\n");
+        >= 0 ||
+        (fd = open(PCCONS_CONSOLE_DEV2, PCCONS_CONSOLE_MODE, 0))
+        >= 0) {
+        if (ioctl(fd, CONSOLE_X_MODE_OFF, 0) < 0) {
+            FatalError(
+                "%s: CONSOLE_X_MODE_OFF failed (%s)\n%s\n%s",
+                "xf86OpenPccons",
+                strerror(errno),
+                "Was expecting pccons driver with X support",
+                CHECK_DRIVER_MSG);
+        }
+        xf86Info.consType = PCCONS;
+        xf86Msg(X_PROBED, "Using pccons driver with X support\n");
     }
     return fd;
 }
@@ -379,126 +355,101 @@ xf86OpenSyscons()
     int fd = -1;
     vtmode_t vtmode;
     char vtname[12];
-    struct stat status;
     long syscons_version;
     MessageType from;
 
     /* Check for syscons */
     if ((fd = open(SYSCONS_CONSOLE_DEV1, SYSCONS_CONSOLE_MODE, 0)) >= 0
-	|| (fd = open(SYSCONS_CONSOLE_DEV2, SYSCONS_CONSOLE_MODE, 0)) >= 0)
-    {
-	if (ioctl(fd, VT_GETMODE, &vtmode) >= 0)
-	{
-	    /* Get syscons version */
-	    if (ioctl(fd, CONS_GETVERS, &syscons_version) < 0)
-	    {
-		syscons_version = 0;
-	    }
+        || (fd = open(SYSCONS_CONSOLE_DEV2, SYSCONS_CONSOLE_MODE, 0)) >= 0) {
+        if (ioctl(fd, VT_GETMODE, &vtmode) >= 0) {
+            /* Get syscons version */
+            if (ioctl(fd, CONS_GETVERS, &syscons_version) < 0) {
+                syscons_version = 0;
+            }
 
-	    xf86Info.vtno = VTnum;
-	    from = X_CMDLINE;
+            xf86Info.vtno = VTnum;
+            from = X_CMDLINE;
 
 #ifdef VT_GETACTIVE
-	    if (ioctl(fd, VT_GETACTIVE, &initialVT) < 0)
-		initialVT = -1;
+            if (ioctl(fd, VT_GETACTIVE, &initialVT) < 0)
+                initialVT = -1;
 #endif
-            if (ShareVTs)
-		xf86Info.vtno = initialVT;
+            if (xf86Info.ShareVTs)
+                xf86Info.vtno = initialVT;
 
-	    if (xf86Info.vtno == -1)
-	    {
-		/*
-		 * For old syscons versions (<0x100), VT_OPENQRY returns
-		 * the current VT rather than the next free VT.  In this
-		 * case, the server gets started on the current VT instead
-		 * of the next free VT.
-		 */
+            if (xf86Info.vtno == -1) {
+                /*
+                 * For old syscons versions (<0x100), VT_OPENQRY returns
+                 * the current VT rather than the next free VT.  In this
+                 * case, the server gets started on the current VT instead
+                 * of the next free VT.
+                 */
 
 #if 0
-		/* check for the fixed VT_OPENQRY */
-		if (syscons_version >= 0x100)
-		{
+                /* check for the fixed VT_OPENQRY */
+                if (syscons_version >= 0x100) {
 #endif
-		    if (ioctl(fd, VT_OPENQRY, &xf86Info.vtno) < 0)
-		    {
-			/* No free VTs */
-			xf86Info.vtno = -1;
-		    }
+                    if (ioctl(fd, VT_OPENQRY, &xf86Info.vtno) < 0) {
+                        /* No free VTs */
+                        xf86Info.vtno = -1;
+                    }
 #if 0
-		}
+                }
 #endif
 
-		if (xf86Info.vtno == -1)
-		{
-		    /*
-		     * All VTs are in use.  If initialVT was found, use it.
-		     * Otherwise, if stdin is a VT, use that one.
-		     * XXX stdin is already closed, so this won't work.
-		     */
-		    if (initialVT != -1)
-		    {
-			xf86Info.vtno = initialVT;
-		    }
-		    else if ((fstat(0, &status) >= 0)
-			     && S_ISCHR(status.st_mode)
-			     && (ioctl(0, VT_GETMODE, &vtmode) >= 0))
-		    {
-			/* stdin is a VT */
-			xf86Info.vtno = minor(status.st_rdev) + 1;
-		    }
-		    else
-		    {
-			if (syscons_version >= 0x100)
-			{
-			    FatalError("%s: Cannot find a free VT",
-				       "xf86OpenSyscons");
-			}
-			/* Should no longer reach here */
-			FatalError("%s: %s %s\n\t%s %s",
-				   "xf86OpenSyscons",
-				   "syscons versions prior to 1.0 require",
-				   "either the",
-				   "server's stdin be a VT",
-				   "or the use of the vtxx server option");
-		    }
-		}
-		from = X_PROBED;
-	    }
+                if (xf86Info.vtno == -1) {
+                    /*
+                     * All VTs are in use.  If initialVT was found, use it.
+                     */
+                    if (initialVT != -1) {
+                        xf86Info.vtno = initialVT;
+                    }
+                    else {
+                        if (syscons_version >= 0x100) {
+                            FatalError("%s: Cannot find a free VT",
+                                       "xf86OpenSyscons");
+                        }
+                        /* Should no longer reach here */
+                        FatalError("%s: %s %s\n\t%s %s",
+                                   "xf86OpenSyscons",
+                                   "syscons versions prior to 1.0 require",
+                                   "either the",
+                                   "server's stdin be a VT",
+                                   "or the use of the vtxx server option");
+                    }
+                }
+                from = X_PROBED;
+            }
 
-	    close(fd);
+            close(fd);
 #ifndef __OpenBSD__
-	    sprintf(vtname, "/dev/ttyv%01x", xf86Info.vtno - 1);
-#else 
-	    sprintf(vtname, "/dev/ttyC%01x", xf86Info.vtno - 1);
-#endif	    
-	    if ((fd = open(vtname, SYSCONS_CONSOLE_MODE, 0)) < 0)
-	    {
-		FatalError("xf86OpenSyscons: Cannot open %s (%s)",
-			   vtname, strerror(errno));
-	    }
-	    if (ioctl(fd, VT_GETMODE, &vtmode) < 0)
-	    {
-		FatalError("xf86OpenSyscons: VT_GETMODE failed");
-	    }
-	    xf86Info.consType = SYSCONS;
-	    xf86Msg(X_PROBED, "Using syscons driver with X support");
-	    if (syscons_version >= 0x100)
-	    {
-		xf86ErrorF(" (version %ld.%ld)\n", syscons_version >> 8,
-			   syscons_version & 0xFF);
-	    }
-	    else
-	    {
-		xf86ErrorF(" (version 0.x)\n");
-	    }
-	    xf86Msg(from, "using VT number %d\n\n", xf86Info.vtno);
-	}
-	else
-	{
-	    /* VT_GETMODE failed, probably not syscons */
-	    close(fd);
-	    fd = -1;
-	}
+            snprintf(vtname, sizeof(vtname), "/dev/ttyv%01x", xf86Info.vtno - 1);
+#else
+            sprintf(vtname, sizeof(vtname), "/dev/ttyC%01x", xf86Info.vtno - 1);
+#endif
+            if ((fd = open(vtname, SYSCONS_CONSOLE_MODE, 0)) < 0) {
+                FatalError("xf86OpenSyscons: Cannot open %s (%s)",
+                           vtname, strerror(errno));
+            }
+            if (ioctl(fd, VT_GETMODE, &vtmode) < 0) {
+                FatalError("xf86OpenSyscons: VT_GETMODE failed");
+            }
+            xf86Info.consType = SYSCONS;
+            xf86Msg(X_PROBED, "Using syscons driver with X support");
+            if (syscons_version >= 0x100) {
+                xf86ErrorF(" (version %ld.%ld)\n", syscons_version >> 8,
+                           syscons_version & 0xFF);
+            }
+            else {
+                xf86ErrorF(" (version 0.x)\n");
+            }
+            xf86Msg(from, "using VT number %d\n\n", xf86Info.vtno);
+        }
+        else {
+            /* VT_GETMODE failed, probably not syscons */
+            close(fd);
+            fd = -1;
+        }
     }
     return fd;
 }
@@ -515,7 +466,6 @@ xf86OpenPcvt()
     int fd = -1;
     vtmode_t vtmode;
     char vtname[12], *vtprefix;
-    struct stat status;
     struct pcvtid pcvt_version;
 
 #ifndef __OpenBSD__
@@ -525,103 +475,83 @@ xf86OpenPcvt()
 #endif
 
     if (VTnum != -1) {
-	    snprintf(vtname, sizeof(vtname), "%s%x", vtprefix, VTnum - 1);
-	    fd  = open(vtname, PCVT_CONSOLE_MODE, 0);
-    } else {
-	    fd = open(PCVT_CONSOLE_DEV, PCVT_CONSOLE_MODE, 0);
+            snprintf(vtname, sizeof(vtname), "%s%x", vtprefix, VTnum - 1);
+            fd  = open(vtname, PCVT_CONSOLE_MODE, 0);
+    }
+    else {
+        fd = open(PCVT_CONSOLE_DEV, PCVT_CONSOLE_MODE, 0);
     }
 #ifdef WSCONS_PCVT_COMPAT_CONSOLE_DEV
-    if (fd < 0)
-    {
-	fd = open(WSCONS_PCVT_COMPAT_CONSOLE_DEV, PCVT_CONSOLE_MODE, 0);
-	vtprefix = "/dev/ttyE";
+    if (fd < 0) {
+        fd = open(WSCONS_PCVT_COMPAT_CONSOLE_DEV, PCVT_CONSOLE_MODE, 0);
+        vtprefix = "/dev/ttyE";
     }
 #endif
-    if (fd >= 0) 
-    {
-	if (ioctl(fd, VGAPCVTID, &pcvt_version) >= 0)
-	{
-	    if(ioctl(fd, VT_GETMODE, &vtmode) < 0)
-	    {
-		FatalError("%s: VT_GETMODE failed\n%s%s\n%s",
-			   "xf86OpenPcvt",
-			   "Found pcvt driver but X11 seems to be",
-			   " not supported.", CHECK_DRIVER_MSG);
-	    }
+    if (fd >= 0) {
+        if (ioctl(fd, VGAPCVTID, &pcvt_version) >= 0) {
+            if(ioctl(fd, VT_GETMODE, &vtmode) < 0) {
+                FatalError("%s: VT_GETMODE failed\n%s%s\n%s",
+                           "xf86OpenPcvt",
+                           "Found pcvt driver but X11 seems to be",
+                           " not supported.", CHECK_DRIVER_MSG);
+            }
 
-	    xf86Info.vtno = VTnum;
-		
-	    if (ioctl(fd, VT_GETACTIVE, &initialVT) < 0)
-		initialVT = -1;
+            xf86Info.vtno = VTnum;
 
-	    if (xf86Info.vtno == -1)
-	    {
-		if (ioctl(fd, VT_OPENQRY, &xf86Info.vtno) < 0)
-		{
-		    /* No free VTs */
-		    xf86Info.vtno = -1;
-		}
+            if (ioctl(fd, VT_GETACTIVE, &initialVT) < 0)
+                initialVT = -1;
 
-		if (xf86Info.vtno == -1)
-		{
-		    /*
-		     * All VTs are in use.  If initialVT was found, use it.
-		     * Otherwise, if stdin is a VT, use that one.
-		     * XXX stdin is already closed, so this won't work.
-		     */
-		    if (initialVT != -1)
-		    {
-			xf86Info.vtno = initialVT;
-		    }
-		    else if ((fstat(0, &status) >= 0)
-			     && S_ISCHR(status.st_mode)
-			     && (ioctl(0, VT_GETMODE, &vtmode) >= 0))
-		    {
-			/* stdin is a VT */
-			xf86Info.vtno = minor(status.st_rdev) + 1;
-		    }
-		    else
-		    {
-			FatalError("%s: Cannot find a free VT",
-				   "xf86OpenPcvt");
-		    }
-		}
-	    }
+            if (xf86Info.vtno == -1) {
+                if (ioctl(fd, VT_OPENQRY, &xf86Info.vtno) < 0) {
+                    /* No free VTs */
+                    xf86Info.vtno = -1;
+                }
 
-	    close(fd);
-            sprintf(vtname, "%s%01x", vtprefix, xf86Info.vtno - 1);
-	    if ((fd = open(vtname, PCVT_CONSOLE_MODE, 0)) < 0)
-	    {
-		ErrorF("xf86OpenPcvt: Cannot open %s (%s)",
-			   vtname, strerror(errno));
-		xf86Info.vtno = initialVT;
-	        sprintf(vtname, "%s%01x", vtprefix, xf86Info.vtno - 1);
-		if ((fd = open(vtname, PCVT_CONSOLE_MODE, 0)) < 0) {
-			FatalError("xf86OpenPcvt: Cannot open %s (%s)",
-			   	vtname, strerror(errno));
-		}
-	    }
-	    if (ioctl(fd, VT_GETMODE, &vtmode) < 0)
-	    {
-		FatalError("xf86OpenPcvt: VT_GETMODE failed");
-	    }
-	    xf86Info.consType = PCVT;
+                if (xf86Info.vtno == -1) {
+                    /*
+                     * All VTs are in use.  If initialVT was found, use it.
+                     */
+                    if (initialVT != -1) {
+                        xf86Info.vtno = initialVT;
+                    }
+                    else {
+                        FatalError("%s: Cannot find a free VT",
+                                   "xf86OpenPcvt");
+                    }
+                }
+            }
+
+            close(fd);
+            snprintf(vtname, sizeof(vtname), "%s%01x", vtprefix, xf86Info.vtno - 1);
+            if ((fd = open(vtname, PCVT_CONSOLE_MODE, 0)) < 0) {
+                ErrorF("xf86OpenPcvt: Cannot open %s (%s)",
+                           vtname, strerror(errno));
+                xf86Info.vtno = initialVT;
+                snprintf(vtname, sizeof(vtname), "%s%01x", vtprefix, xf86Info.vtno - 1);
+                if ((fd = open(vtname, PCVT_CONSOLE_MODE, 0)) < 0) {
+                        FatalError("xf86OpenPcvt: Cannot open %s (%s)",
+                                vtname, strerror(errno));
+                }
+            }
+            if (ioctl(fd, VT_GETMODE, &vtmode) < 0) {
+                FatalError("xf86OpenPcvt: VT_GETMODE failed");
+            }
+            xf86Info.consType = PCVT;
 #ifdef WSCONS_SUPPORT
-	    xf86Msg(X_PROBED,
-		    "Using wscons driver on %s in pcvt compatibility mode "
-		    "(version %d.%d)\n", vtname,
-		    pcvt_version.rmajor, pcvt_version.rminor);
+            xf86Msg(X_PROBED,
+                    "Using wscons driver on %s in pcvt compatibility mode "
+                    "(version %d.%d)\n", vtname,
+                    pcvt_version.rmajor, pcvt_version.rminor);
 #else
-	    xf86Msg(X_PROBED, "Using pcvt driver (version %d.%d)\n",
-		    pcvt_version.rmajor, pcvt_version.rminor);
+            xf86Msg(X_PROBED, "Using pcvt driver (version %d.%d)\n",
+                    pcvt_version.rmajor, pcvt_version.rminor);
 #endif
-	}
-	else
-	{
-	    /* Not pcvt */
-	    close(fd);
-	    fd = -1;
-	}
+        }
+        else {
+            /* Not pcvt */
+            close(fd);
+            fd = -1;
+        }
     }
     return fd;
 }
@@ -646,34 +576,34 @@ xf86OpenWScons()
     mib[1] = KERN_CONSDEV;
     len = sizeof(dev);
     if (sysctl(mib, 2, &dev, &len, NULL, 0) != -1) {
-	snprintf(ttyname, sizeof(ttyname), "/dev/%s", devname(dev, S_IFCHR));
-	if ((fd = open(ttyname, 2)) != -1) {
-	    if (ioctl(fd, WSDISPLAYIO_GTYPE, &i) == -1) {
-	        close(fd);
-		fd = -1;
-	    }
-	}
+        snprintf(ttyname, sizeof(ttyname), "/dev/%s", devname(dev, S_IFCHR));
+        if ((fd = open(ttyname, 2)) != -1) {
+            if (ioctl(fd, WSDISPLAYIO_GTYPE, &i) == -1) {
+                close(fd);
+                fd = -1;
+            }
+        }
     }
 #endif
     if (fd == -1) {
-	for (i = 0; i < 8; i++) {
+        for (i = 0; i < 8; i++) {
 #if defined(__NetBSD__)
-	    sprintf(ttyname, "/dev/ttyE%d", i);
+            snprintf(ttyname, sizeof(ttyname), "/dev/ttyE%d", i);
 #elif defined(__OpenBSD__)
-	    sprintf(ttyname, "/dev/ttyC%x", i);
+            snprintf(ttyname,  sizeof(ttyname), "/dev/ttyC%x", i);
 #endif
-	    if ((fd = open(ttyname, 2)) != -1)
-		break;
+            if ((fd = open(ttyname, 2)) != -1)
+                break;
         }
     }
     if (fd != -1) {
-	if (ioctl(fd, WSDISPLAYIO_SMODE, &mode) < 0) {
-	    FatalError("%s: WSDISPLAYIO_MODE_MAPPED failed (%s)\n%s",
-		       "xf86OpenConsole", strerror(errno),
-		       CHECK_DRIVER_MSG);
-	}
-	xf86Info.consType = WSCONS;
-	xf86Msg(X_PROBED, "Using wscons driver\n");
+        if (ioctl(fd, WSDISPLAYIO_SMODE, &mode) < 0) {
+            FatalError("%s: WSDISPLAYIO_MODE_MAPPED failed (%s)\n%s",
+                       "xf86OpenConsole", strerror(errno),
+                       CHECK_DRIVER_MSG);
+        }
+        xf86Info.consType = WSCONS;
+        xf86Msg(X_PROBED, "Using wscons driver\n");
     }
     return fd;
 }
@@ -687,141 +617,121 @@ xf86CloseConsole()
     struct vt_mode   VT;
 #endif
 
-    if (ShareVTs) return;
+    if (xf86Info.ShareVTs) return;
 
-    switch (xf86Info.consType)
-    {
+    switch (xf86Info.consType) {
 #ifdef PCCONS_SUPPORT
     case PCCONS:
-	ioctl (xf86Info.consoleFd, CONSOLE_X_MODE_OFF, 0);
-	break;
+        ioctl (xf86Info.consoleFd, CONSOLE_X_MODE_OFF, 0);
+        break;
 #endif /* PCCONS_SUPPORT */
 #if defined (SYSCONS_SUPPORT) || defined (PCVT_SUPPORT)
     case SYSCONS:
     case PCVT:
         ioctl(xf86Info.consoleFd, KDSETMODE, KD_TEXT);  /* Back to text mode */
-        if (ioctl(xf86Info.consoleFd, VT_GETMODE, &VT) != -1)
-        {
-	    VT.mode = VT_AUTO;
-	    ioctl(xf86Info.consoleFd, VT_SETMODE, &VT); /* dflt vt handling */
+        if (ioctl(xf86Info.consoleFd, VT_GETMODE, &VT) != -1) {
+            VT.mode = VT_AUTO;
+            ioctl(xf86Info.consoleFd, VT_SETMODE, &VT); /* dflt vt handling */
         }
 #if !defined(OpenBSD) && !defined(USE_DEV_IO) && !defined(USE_I386_IOPL)
-        if (ioctl(xf86Info.consoleFd, KDDISABIO, 0) < 0)
-        {
+        if (ioctl(xf86Info.consoleFd, KDDISABIO, 0) < 0) {
             xf86FatalError("xf86CloseConsole: KDDISABIO failed (%s)",
-	                   strerror(errno));
+                           strerror(errno));
         }
 #endif
-	if (initialVT != -1)
-		ioctl(xf86Info.consoleFd, VT_ACTIVATE, initialVT);
+        if (initialVT != -1)
+            ioctl(xf86Info.consoleFd, VT_ACTIVATE, initialVT);
         break;
 #endif /* SYSCONS_SUPPORT || PCVT_SUPPORT */
 #ifdef WSCONS_SUPPORT
-    case WSCONS:
-      {
-	int mode = WSDISPLAYIO_MODE_EMUL;
-	ioctl(xf86Info.screenFd, WSDISPLAYIO_SMODE, &mode);
-	break;
+    case WSCONS: {
+        int mode = WSDISPLAYIO_MODE_EMUL;
+        ioctl(xf86Info.consoleFd, WSDISPLAYIO_SMODE, &mode);
+        break;
       }
 #endif
     }
 
-    if (xf86Info.screenFd != xf86Info.consoleFd)
-    {
-	close(xf86Info.screenFd);
-	close(xf86Info.consoleFd);
-	if ((xf86Info.consoleFd = open("/dev/console",O_RDONLY,0)) <0)
-	{
-	    xf86FatalError("xf86CloseConsole: Cannot open /dev/console (%s)",
-			   strerror(errno));
-	}
-    }
     close(xf86Info.consoleFd);
 #ifdef X_PRIVSEP
     xf86Info.consoleFd = -1;
 #endif
+#ifdef PCCONS_SUPPORT
     if (devConsoleFd >= 0)
-	close(devConsoleFd);
+        close(devConsoleFd);
+#endif
     return;
 }
 
 int
 xf86ProcessArgument(int argc, char *argv[], int i)
 {
-	/*
-	 * Keep server from detaching from controlling tty.  This is useful 
-	 * when debugging (so the server can receive keyboard signals.
-	 */
-	if (!strcmp(argv[i], "-keeptty"))
-	{
-		KeepTty = TRUE;
-		return 1;
-	}
+    /*
+     * Keep server from detaching from controlling tty.  This is useful
+     * when debugging (so the server can receive keyboard signals.
+     */
+    if (!strcmp(argv[i], "-keeptty")) {
+        KeepTty = TRUE;
+        return 1;
+    }
 #if defined (SYSCONS_SUPPORT) || defined (PCVT_SUPPORT)
-	if (!strcmp(argv[i], "-sharevts"))
-	{	
-		ShareVTs = TRUE;
-		return 1;
-	}
-	if ((argv[i][0] == 'v') && (argv[i][1] == 't'))
-	{
-		if (sscanf(argv[i], "vt%2d", &VTnum) == 0 ||
-		    VTnum < 1 || VTnum > 12)
-		{
-			UseMsg();
-			VTnum = -1;
-			return 0;
-		}
-		return 1;
-	}
+    if ((argv[i][0] == 'v') && (argv[i][1] == 't')) {
+        if (sscanf(argv[i], "vt%2d", &VTnum) == 0 ||
+            VTnum < 1 || VTnum > 12) {
+            UseMsg();
+            VTnum = -1;
+            return 0;
+        }
+        return 1;
+    }
 #endif /* SYSCONS_SUPPORT || PCVT_SUPPORT */
-	return 0;
+    return 0;
 }
 
 void
 xf86UseMsg()
 {
 #if defined (SYSCONS_SUPPORT) || defined (PCVT_SUPPORT)
-	ErrorF("vtXX                   use the specified VT number (1-12)\n");
-	ErrorF("-sharevts              share VTs with another X server\n");
+    ErrorF("vtXX                   use the specified VT number (1-12)\n");
 #endif /* SYSCONS_SUPPORT || PCVT_SUPPORT */
-	ErrorF("-keeptty               ");
-	ErrorF("don't detach controlling tty (for debugging only)\n");
-	return;
+    ErrorF("-keeptty               ");
+    ErrorF("don't detach controlling tty (for debugging only)\n");
+    return;
 }
 
 #ifdef X_PRIVSEP
 /*
  * Revoke privileges after init.
- * If the X server is started as root (xdm case), then switch to _x11 
+ * If the X server is started as root (xdm case), then switch to _x11
  * if it exists.
  * Otherwise use the real uid.
  */
 void
 xf86DropPriv(char *disp)
 {
-	struct passwd *pw;
+    struct passwd *pw;
 
-	/* revoke privileges */
-	if (getuid() == 0) {
-		/* Running as root */
-		pw = getpwnam("_x11");
-		if (!pw)
-			return;
-		/* give away lock file to unpriviledged user */
-		if (ChownLock(pw->pw_uid, pw->pw_gid) == -1) {
-			FatalError("Chown Lock");
-		}
-		
-		/* Start privileged child */
-		if (priv_init(pw->pw_uid, pw->pw_gid) == -1) {
-			FatalError("priv_init");
-		}
-	} else {
-		/* Normal user */
-		if (priv_init(getuid(), getgid()) == -1) {
-			FatalError("priv_init");
-		}
-	}
+    /* revoke privileges */
+    if (getuid() == 0) {
+        /* Running as root */
+        pw = getpwnam("_x11");
+        if (!pw)
+            return;
+        /* give away lock file to unpriviledged user */
+        if (ChownLock(pw->pw_uid, pw->pw_gid) == -1) {
+            FatalError("Chown Lock");
+        }
+
+        /* Start privileged child */
+        if (priv_init(pw->pw_uid, pw->pw_gid) == -1) {
+            FatalError("priv_init");
+        }
+    }
+    else {
+        /* Normal user */
+        if (priv_init(getuid(), getgid()) == -1) {
+            FatalError("priv_init");
+        }
+    }
 }
 #endif

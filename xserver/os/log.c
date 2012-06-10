@@ -24,7 +24,6 @@ not be used in advertising or otherwise to promote the sale, use or
 other dealings in this Software without prior written authorization
 from The Open Group.
 
-
 Copyright 1987 by Digital Equipment Corporation, Maynard, Massachusetts,
 Copyright 1994 Quarterdeck Office Systems.
 
@@ -76,7 +75,6 @@ OR PERFORMANCE OF THIS SOFTWARE.
  * authorization from the copyright holder(s) and author(s).
  */
 
-
 #ifdef HAVE_DIX_CONFIG_H
 #include <dix-config.h>
 #endif
@@ -86,8 +84,7 @@ OR PERFORMANCE OF THIS SOFTWARE.
 #include <time.h>
 #include <sys/stat.h>
 #include <stdarg.h>
-#include <stdlib.h>	/* for malloc() */
-#include <errno.h>
+#include <stdlib.h>             /* for malloc() */
 
 #include "input.h"
 #include "site.h"
@@ -107,7 +104,7 @@ OR PERFORMANCE OF THIS SOFTWARE.
 #endif
 
 #ifdef DDXOSVERRORF
-void (*OsVendorVErrorFProc)(const char *, va_list args) = NULL;
+void (*OsVendorVErrorFProc) (const char *, va_list args) = NULL;
 #endif
 
 static FILE *logFile = NULL;
@@ -124,13 +121,15 @@ static Bool needBuffer = TRUE;
 #ifdef __APPLE__
 #include <AvailabilityMacros.h>
 
-static char __crashreporter_info_buff__[4096] = {0};
-static const char *__crashreporter_info__ __attribute__((__used__)) = &__crashreporter_info_buff__[0];
+static char __crashreporter_info_buff__[4096] = { 0 };
+
+static const char *__crashreporter_info__ __attribute__ ((__used__)) =
+    &__crashreporter_info_buff__[0];
 #if MAC_OS_X_VERSION_MIN_REQUIRED >= 1050
 // This is actually a toolchain requirement, but I'm not sure the correct check,        
 // but it should be fine to just only include it for Leopard and later.  This line
 // just tells the linker to never strip this symbol (such as for space optimization)
-asm (".desc ___crashreporter_info__, 0x10");
+asm(".desc ___crashreporter_info__, 0x10");
 #endif
 #endif
 
@@ -165,6 +164,9 @@ asm (".desc ___crashreporter_info__, 0x10");
 #ifndef X_NOT_IMPLEMENTED_STRING
 #define X_NOT_IMPLEMENTED_STRING	"(NI)"
 #endif
+#ifndef X_NONE_STRING
+#define X_NONE_STRING			""
+#endif
 
 /*
  * LogInit is called to start logging to a file.  It is also called (with
@@ -181,39 +183,39 @@ LogInit(const char *fname, const char *backup)
     char *logFileName = NULL;
 
     if (fname && *fname) {
-	if (asprintf(&logFileName, fname, display) == -1)
-	    FatalError("Cannot allocate space for the log file name\n");
+        if (asprintf(&logFileName, fname, display) == -1)
+            FatalError("Cannot allocate space for the log file name\n");
 
-	if (backup && *backup) {
-	    struct stat buf;
+        if (backup && *backup) {
+            struct stat buf;
 
-	    if (!stat(logFileName, &buf) && S_ISREG(buf.st_mode)) {
-		char *suffix;
-		char *oldLog;
+            if (!stat(logFileName, &buf) && S_ISREG(buf.st_mode)) {
+                char *suffix;
+                char *oldLog;
 
-		if ((asprintf(&suffix, backup, display) == -1) ||
-		    (asprintf(&oldLog, "%s%s", logFileName, suffix) == -1))
-		    FatalError("Cannot allocate space for the log file name\n");
-		free(suffix);
-		if (rename(logFileName, oldLog) == -1) {
-		    FatalError("Cannot move old log file \"%s\" to \"%s\"\n",
-			       logFileName, oldLog);
-		}
-		free(oldLog);
-	    }
-	}
-	if ((logFile = fopen(logFileName, "w")) == NULL)
-	    FatalError("Cannot open log file \"%s\"\n", logFileName);
-	setvbuf(logFile, NULL, _IONBF, 0);
+                if ((asprintf(&suffix, backup, display) == -1) ||
+                    (asprintf(&oldLog, "%s%s", logFileName, suffix) == -1))
+                    FatalError("Cannot allocate space for the log file name\n");
+                free(suffix);
+                if (rename(logFileName, oldLog) == -1) {
+                    FatalError("Cannot move old log file \"%s\" to \"%s\"\n",
+                               logFileName, oldLog);
+                }
+                free(oldLog);
+            }
+        }
+        if ((logFile = fopen(logFileName, "w")) == NULL)
+            FatalError("Cannot open log file \"%s\"\n", logFileName);
+        setvbuf(logFile, NULL, _IONBF, 0);
 
-	/* Flush saved log information. */
-	if (saveBuffer && bufferSize > 0) {
-	    fwrite(saveBuffer, bufferPos, 1, logFile);
-	    fflush(logFile);
+        /* Flush saved log information. */
+        if (saveBuffer && bufferSize > 0) {
+            fwrite(saveBuffer, bufferPos, 1, logFile);
+            fflush(logFile);
 #ifndef WIN32
-	    fsync(fileno(logFile));
+            fsync(fileno(logFile));
 #endif
-	}
+        }
     }
 
     /*
@@ -221,9 +223,9 @@ LogInit(const char *fname, const char *backup)
      * needed.
      */
     if (saveBuffer && bufferSize > 0) {
-	free(saveBuffer);	/* Must be free(), not free() */
-	saveBuffer = NULL;
-	bufferSize = 0;
+        free(saveBuffer);
+        saveBuffer = NULL;
+        bufferSize = 0;
     }
     needBuffer = FALSE;
 
@@ -234,10 +236,10 @@ void
 LogClose(enum ExitCode error)
 {
     if (logFile) {
-	ErrorF("Server terminated %s (%d). Closing log file.\n",
-		(error == EXIT_NO_ERROR) ? "successfully" : "with error", error);
-	fclose(logFile);
-	logFile = NULL;
+        ErrorF("Server terminated %s (%d). Closing log file.\n",
+               (error == EXIT_NO_ERROR) ? "successfully" : "with error", error);
+        fclose(logFile);
+        logFile = NULL;
     }
 }
 
@@ -246,70 +248,63 @@ LogSetParameter(LogParameter param, int value)
 {
     switch (param) {
     case XLOG_FLUSH:
-	logFlush = value ? TRUE : FALSE;
-	return TRUE;
+        logFlush = value ? TRUE : FALSE;
+        return TRUE;
     case XLOG_SYNC:
-	logSync = value ? TRUE : FALSE;
-	return TRUE;
+        logSync = value ? TRUE : FALSE;
+        return TRUE;
     case XLOG_VERBOSITY:
-	logVerbosity = value;
-	return TRUE;
+        logVerbosity = value;
+        return TRUE;
     case XLOG_FILE_VERBOSITY:
-	logFileVerbosity = value;
-	return TRUE;
+        logFileVerbosity = value;
+        return TRUE;
     default:
-	return FALSE;
+        return FALSE;
     }
 }
 
 /* This function does the actual log message writes. */
+static void
+LogSWrite(int verb, const char *buf, size_t len, Bool end_line)
+{
+    static Bool newline = TRUE;
+
+    if (verb < 0 || logVerbosity >= verb)
+        fwrite(buf, len, 1, stderr);
+    if (verb < 0 || logFileVerbosity >= verb) {
+        if (logFile) {
+            if (newline)
+                fprintf(logFile, "[%10.3f] ", GetTimeInMillis() / 1000.0);
+            newline = end_line;
+            fwrite(buf, len, 1, logFile);
+            if (logFlush) {
+                fflush(logFile);
+#ifndef WIN32
+                if (logSync)
+                    fsync(fileno(logFile));
+#endif
+            }
+        }
+        else if (needBuffer) {
+            if (len > bufferUnused) {
+                bufferSize += 1024;
+                bufferUnused += 1024;
+                saveBuffer = realloc(saveBuffer, bufferSize);
+                if (!saveBuffer)
+                    FatalError("realloc() failed while saving log messages\n");
+            }
+            bufferUnused -= len;
+            memcpy(saveBuffer + bufferPos, buf, len);
+            bufferPos += len;
+        }
+    }
+}
 
 void
 LogVWrite(int verb, const char *f, va_list args)
 {
-    static char tmpBuffer[1024];
-    int len = 0;
-    static Bool newline = TRUE;
-
-    if (newline) {
-	sprintf(tmpBuffer, "[%10.3f] ", GetTimeInMillis() / 1000.0);
-	len = strlen(tmpBuffer);
-	if (logFile)
-	    fwrite(tmpBuffer, len, 1, logFile);
-    }
-
-    /*
-     * Since a va_list can only be processed once, write the string to a
-     * buffer, and then write the buffer out to the appropriate output
-     * stream(s).
-     */
-    if (verb < 0 || logFileVerbosity >= verb || logVerbosity >= verb) {
-	vsnprintf(tmpBuffer, sizeof(tmpBuffer), f, args);
-	len = strlen(tmpBuffer);
-    }
-    newline = (tmpBuffer[len-1] == '\n');
-    if ((verb < 0 || logVerbosity >= verb) && len > 0)
-	write(2, tmpBuffer, len);
-    if ((verb < 0 || logFileVerbosity >= verb) && len > 0) {
-	if (logFile) {
-	    write(fileno(logFile), tmpBuffer, len);
-#ifndef WIN32
-	    if (logFlush && logSync)
-		fsync(fileno(logFile));
-#endif
-	} else if (needBuffer) {
-	    if (len > bufferUnused) {
-		bufferSize += 1024;
-		bufferUnused += 1024;
-		saveBuffer = realloc(saveBuffer, bufferSize);
-		if (!saveBuffer)
-		    FatalError("realloc() failed while saving log messages\n");
-	    }
-	    bufferUnused -= len;
-	    memcpy(saveBuffer + bufferPos, tmpBuffer, len);
-	    bufferPos += len;
-	}
-    }
+    return LogVMessageVerb(X_NONE, verb, f, args);
 }
 
 void
@@ -322,58 +317,71 @@ LogWrite(int verb, const char *f, ...)
     va_end(args);
 }
 
+/* Returns the Message Type string to prepend to a logging message, or NULL
+ * if the message will be dropped due to insufficient verbosity. */
+static const char *
+LogMessageTypeVerbString(MessageType type, int verb)
+{
+    if (type == X_ERROR)
+        verb = 0;
+
+    if (logVerbosity < verb && logFileVerbosity < verb)
+        return NULL;
+
+    switch (type) {
+    case X_PROBED:
+        return X_PROBE_STRING;
+    case X_CONFIG:
+        return X_CONFIG_STRING;
+    case X_DEFAULT:
+        return X_DEFAULT_STRING;
+    case X_CMDLINE:
+        return X_CMDLINE_STRING;
+    case X_NOTICE:
+        return X_NOTICE_STRING;
+    case X_ERROR:
+        return X_ERROR_STRING;
+    case X_WARNING:
+        return X_WARNING_STRING;
+    case X_INFO:
+        return X_INFO_STRING;
+    case X_NOT_IMPLEMENTED:
+        return X_NOT_IMPLEMENTED_STRING;
+    case X_UNKNOWN:
+        return X_UNKNOWN_STRING;
+    case X_NONE:
+        return X_NONE_STRING;
+    default:
+        return X_UNKNOWN_STRING;
+    }
+}
+
 void
 LogVMessageVerb(MessageType type, int verb, const char *format, va_list args)
 {
-    const char *s  = X_UNKNOWN_STRING;
-    char tmpBuf[1024];
+    const char *type_str;
+    char buf[1024];
+    const size_t size = sizeof(buf);
+    Bool newline;
+    size_t len = 0;
 
-    /* Ignore verbosity for X_ERROR */
-    if (logVerbosity >= verb || logFileVerbosity >= verb || type == X_ERROR) {
-	switch (type) {
-	case X_PROBED:
-	    s = X_PROBE_STRING;
-	    break;
-	case X_CONFIG:
-	    s = X_CONFIG_STRING;
-	    break;
-	case X_DEFAULT:
-	    s = X_DEFAULT_STRING;
-	    break;
-	case X_CMDLINE:
-	    s = X_CMDLINE_STRING;
-	    break;
-	case X_NOTICE:
-	    s = X_NOTICE_STRING;
-	    break;
-	case X_ERROR:
-	    s = X_ERROR_STRING;
-	    if (verb > 0)
-		verb = 0;
-	    break;
-	case X_WARNING:
-	    s = X_WARNING_STRING;
-	    break;
-	case X_INFO:
-	    s = X_INFO_STRING;
-	    break;
-	case X_NOT_IMPLEMENTED:
-	    s = X_NOT_IMPLEMENTED_STRING;
-	    break;
-	case X_UNKNOWN:
-	    s = X_UNKNOWN_STRING;
-	    break;
-	case X_NONE:
-	    s = NULL;
-	    break;
-	}
+    type_str = LogMessageTypeVerbString(type, verb);
+    if (!type_str)
+        return;
 
-        /* if s is not NULL we need a space before format */
-        snprintf(tmpBuf, sizeof(tmpBuf), "%s%s%s", s ? s : "",
-                                                   s ? " " : "",
-                                                   format);
-        LogVWrite(verb, tmpBuf, args);
-    }
+    /* if type_str is not "", prepend it and ' ', to message */
+    if (type_str[0] != '\0')
+        len += Xscnprintf(&buf[len], size - len, "%s ", type_str);
+
+    if (size - len > 1)
+        len += Xvscnprintf(&buf[len], size - len, format, args);
+
+    /* Force '\n' at end of truncated line */
+    if (size - len == 1)
+        buf[len - 1] = '\n';
+
+    newline = (buf[len - 1] == '\n');
+    LogSWrite(verb, buf, len, newline);
 }
 
 /* Log message with verbosity level specified. */
@@ -399,7 +407,62 @@ LogMessage(MessageType type, const char *format, ...)
 }
 
 void
-AbortServer(void) _X_NORETURN;
+LogVHdrMessageVerb(MessageType type, int verb, const char *msg_format,
+                   va_list msg_args, const char *hdr_format, va_list hdr_args)
+{
+    const char *type_str;
+    char buf[1024];
+    const size_t size = sizeof(buf);
+    Bool newline;
+    size_t len = 0;
+
+    type_str = LogMessageTypeVerbString(type, verb);
+    if (!type_str)
+        return;
+
+    /* if type_str is not "", prepend it and ' ', to message */
+    if (type_str[0] != '\0')
+        len += Xscnprintf(&buf[len], size - len, "%s ", type_str);
+
+    if (hdr_format && size - len > 1)
+        len += Xvscnprintf(&buf[len], size - len, hdr_format, hdr_args);
+
+    if (msg_format && size - len > 1)
+        len += Xvscnprintf(&buf[len], size - len, msg_format, msg_args);
+
+    /* Force '\n' at end of truncated line */
+    if (size - len == 1)
+        buf[len - 1] = '\n';
+
+    newline = (buf[len - 1] == '\n');
+    LogSWrite(verb, buf, len, newline);
+}
+
+void
+LogHdrMessageVerb(MessageType type, int verb, const char *msg_format,
+                  va_list msg_args, const char *hdr_format, ...)
+{
+    va_list hdr_args;
+
+    va_start(hdr_args, hdr_format);
+    LogVHdrMessageVerb(type, verb, msg_format, msg_args, hdr_format, hdr_args);
+    va_end(hdr_args);
+}
+
+void
+LogHdrMessage(MessageType type, const char *msg_format, va_list msg_args,
+              const char *hdr_format, ...)
+{
+    va_list hdr_args;
+
+    va_start(hdr_args, hdr_format);
+    LogVHdrMessageVerb(type, 1, msg_format, msg_args, hdr_format, hdr_args);
+    va_end(hdr_args);
+}
+
+void
+AbortServer(void)
+    _X_NORETURN;
 
 void
 AbortServer(void)
@@ -413,13 +476,13 @@ AbortServer(void)
     AbortDDX(EXIT_ERR_ABORT);
     fflush(stderr);
     if (CoreDump)
-	OsAbort();
-    exit (1);
+        OsAbort();
+    exit(1);
 }
 
 #define AUDIT_PREFIX "AUDIT: %s: %ld: "
 #ifndef AUDIT_TIMEOUT
-#define AUDIT_TIMEOUT ((CARD32)(120 * 1000)) /* 2 mn */
+#define AUDIT_TIMEOUT ((CARD32)(120 * 1000))    /* 2 mn */
 #endif
 
 static int nrepeat = 0;
@@ -430,10 +493,10 @@ void
 FreeAuditTimer(void)
 {
     if (auditTimer != NULL) {
-	/* Force output of pending messages */
-	TimerForce(auditTimer);
-	TimerFree(auditTimer);
-	auditTimer = NULL;
+        /* Force output of pending messages */
+        TimerForce(auditTimer);
+        TimerFree(auditTimer);
+        auditTimer = NULL;
     }
 }
 
@@ -448,17 +511,17 @@ AuditPrefix(void)
     time(&tm);
     autime = ctime(&tm);
     if ((s = strchr(autime, '\n')))
-	*s = '\0';
+        *s = '\0';
     len = strlen(AUDIT_PREFIX) + strlen(autime) + 10 + 1;
     tmpBuf = malloc(len);
     if (!tmpBuf)
-	return NULL;
-    snprintf(tmpBuf, len, AUDIT_PREFIX, autime, (unsigned long)getpid());
+        return NULL;
+    snprintf(tmpBuf, len, AUDIT_PREFIX, autime, (unsigned long) getpid());
     return tmpBuf;
 }
 
 void
-AuditF(const char * f, ...)
+AuditF(const char *f, ...)
 {
     va_list args;
 
@@ -474,16 +537,17 @@ AuditFlush(OsTimerPtr timer, CARD32 now, pointer arg)
     char *prefix;
 
     if (nrepeat > 0) {
-	prefix = AuditPrefix();
-	ErrorF("%slast message repeated %d times\n",
-	       prefix != NULL ? prefix : "", nrepeat);
-	nrepeat = 0;
-	free(prefix);
-	return AUDIT_TIMEOUT;
-    } else {
-	/* if the timer expires without anything to print, flush the message */
-	oldlen = -1;
-	return 0;
+        prefix = AuditPrefix();
+        ErrorF("%slast message repeated %d times\n",
+               prefix != NULL ? prefix : "", nrepeat);
+        nrepeat = 0;
+        free(prefix);
+        return AUDIT_TIMEOUT;
+    }
+    else {
+        /* if the timer expires without anything to print, flush the message */
+        oldlen = -1;
+        return 0;
     }
 }
 
@@ -499,17 +563,18 @@ VAuditF(const char *f, va_list args)
     len = vsnprintf(buf, sizeof(buf), f, args);
 
     if (len == oldlen && strcmp(buf, oldbuf) == 0) {
-	/* Message already seen */
-	nrepeat++;
-    } else {
-	/* new message */
-	if (auditTimer != NULL)
-	    TimerForce(auditTimer);
-	ErrorF("%s%s", prefix != NULL ? prefix : "", buf);
-	strlcpy(oldbuf, buf, sizeof(oldbuf));
-	oldlen = len;
-	nrepeat = 0;
-	auditTimer = TimerSet(auditTimer, 0, AUDIT_TIMEOUT, AuditFlush, NULL);
+        /* Message already seen */
+        nrepeat++;
+    }
+    else {
+        /* new message */
+        if (auditTimer != NULL)
+            TimerForce(auditTimer);
+        ErrorF("%s%s", prefix != NULL ? prefix : "", buf);
+        strlcpy(oldbuf, buf, sizeof(oldbuf));
+        oldlen = len;
+        nrepeat = 0;
+        auditTimer = TimerSet(auditTimer, 0, AUDIT_TIMEOUT, AuditFlush, NULL);
     }
     free(prefix);
 }
@@ -521,16 +586,18 @@ FatalError(const char *f, ...)
     static Bool beenhere = FALSE;
 
     if (beenhere)
-	ErrorF("\nFatalError re-entered, aborting\n");
+        ErrorF("\nFatalError re-entered, aborting\n");
     else
-	ErrorF("\nFatal server error:\n");
+        ErrorF("\nFatal server error:\n");
 
     va_start(args, f);
 #ifdef __APPLE__
     {
         va_list args2;
+
         va_copy(args2, args);
-        (void)vsnprintf(__crashreporter_info_buff__, sizeof(__crashreporter_info_buff__), f, args2);
+        (void) vsnprintf(__crashreporter_info_buff__,
+                         sizeof(__crashreporter_info_buff__), f, args2);
         va_end(args2);
     }
 #endif
@@ -538,49 +605,36 @@ FatalError(const char *f, ...)
     va_end(args);
     ErrorF("\n");
     if (!beenhere)
-	OsVendorFatalError();
+        OsVendorFatalError();
     if (!beenhere) {
-	beenhere = TRUE;
-	AbortServer();
-    } else
-	OsAbort();
-    /*NOTREACHED*/
-}
+        beenhere = TRUE;
+        AbortServer();
+    }
+    else
+        OsAbort();
+ /*NOTREACHED*/}
 
 void
 VErrorF(const char *f, va_list args)
 {
 #ifdef DDXOSVERRORF
     if (OsVendorVErrorFProc)
-	OsVendorVErrorFProc(f, args);
+        OsVendorVErrorFProc(f, args);
     else
-	LogVWrite(-1, f, args);
+        LogVWrite(-1, f, args);
 #else
     LogVWrite(-1, f, args);
 #endif
 }
 
 void
-ErrorF(const char * f, ...)
+ErrorF(const char *f, ...)
 {
     va_list args;
 
     va_start(args, f);
     VErrorF(f, args);
     va_end(args);
-}
-
-/* A perror() workalike. */
-
-void
-Error(const char *str)
-{
-    const char *err = strerror(errno);
-
-    if (str)
-	LogWrite(-1, "%s: %s", str, err);
-    else
-	LogWrite(-1, "%s", err);
 }
 
 void
@@ -599,4 +653,3 @@ LogPrintMarkers(void)
     LogMessageVerb(X_NOT_IMPLEMENTED, 0, "not implemented, ");
     LogMessageVerb(X_UNKNOWN, 0, "unknown.\n");
 }
-

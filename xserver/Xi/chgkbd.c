@@ -54,7 +54,7 @@ SOFTWARE.
 #include <dix-config.h>
 #endif
 
-#include "inputstr.h"	/* DeviceIntPtr      */
+#include "inputstr.h"           /* DeviceIntPtr      */
 #include <X11/extensions/XI.h>
 #include <X11/extensions/XIproto.h>
 #include "XIstubs.h"
@@ -75,10 +75,8 @@ SOFTWARE.
 int
 SProcXChangeKeyboardDevice(ClientPtr client)
 {
-    char n;
-
     REQUEST(xChangeKeyboardDeviceReq);
-    swaps(&stuff->length, n);
+    swaps(&stuff->length);
     REQUEST_SIZE_MATCH(xChangeKeyboardDeviceReq);
     return (ProcXChangeKeyboardDevice(client));
 }

@@ -54,7 +54,7 @@ SOFTWARE.
 #include <dix-config.h>
 #endif
 
-#include "inputstr.h"	/* DeviceIntPtr      */
+#include "inputstr.h"           /* DeviceIntPtr      */
 #include <X11/extensions/XI.h>
 #include <X11/extensions/XIproto.h>
 #include "exevents.h"
@@ -71,13 +71,11 @@ SOFTWARE.
 int
 SProcXGetDeviceMotionEvents(ClientPtr client)
 {
-    char n;
-
     REQUEST(xGetDeviceMotionEventsReq);
-    swaps(&stuff->length, n);
+    swaps(&stuff->length);
     REQUEST_SIZE_MATCH(xGetDeviceMotionEventsReq);
-    swapl(&stuff->start, n);
-    swapl(&stuff->stop, n);
+    swapl(&stuff->start);
+    swapl(&stuff->stop);
     return (ProcXGetDeviceMotionEvents(client));
 }
 
@@ -105,53 +103,51 @@ ProcXGetDeviceMotionEvents(ClientPtr client)
     REQUEST_SIZE_MATCH(xGetDeviceMotionEventsReq);
     rc = dixLookupDevice(&dev, stuff->deviceid, client, DixReadAccess);
     if (rc != Success)
-	return rc;
+        return rc;
     v = dev->valuator;
     if (v == NULL || v->numAxes == 0)
-	return BadMatch;
+        return BadMatch;
     if (dev->valuator->motionHintWindow)
-	MaybeStopDeviceHint(dev, client);
+        MaybeStopDeviceHint(dev, client);
     axes = v->numAxes;
     rep.repType = X_Reply;
     rep.RepType = X_GetDeviceMotionEvents;
     rep.sequenceNumber = client->sequence;
     rep.nEvents = 0;
     rep.axes = axes;
-    rep.mode = Absolute; /* XXX we don't do relative at the moment */
+    rep.mode = Absolute;        /* XXX we don't do relative at the moment */
     rep.length = 0;
     start = ClientTimeToServerTime(stuff->start);
     stop = ClientTimeToServerTime(stuff->stop);
     if (CompareTimeStamps(start, stop) == LATER ||
-	CompareTimeStamps(start, currentTime) == LATER) {
-	WriteReplyToClient(client, sizeof(xGetDeviceMotionEventsReply), &rep);
-	return Success;
+        CompareTimeStamps(start, currentTime) == LATER) {
+        WriteReplyToClient(client, sizeof(xGetDeviceMotionEventsReply), &rep);
+        return Success;
     }
     if (CompareTimeStamps(stop, currentTime) == LATER)
-	stop = currentTime;
+        stop = currentTime;
     num_events = v->numMotionEvents;
     if (num_events) {
         size = sizeof(Time) + (axes * sizeof(INT32));
-	rep.nEvents = GetMotionHistory(dev, (xTimecoord **) &coords,/* XXX */
-					start.milliseconds, stop.milliseconds,
-					(ScreenPtr) NULL, FALSE);
+        rep.nEvents = GetMotionHistory(dev, (xTimecoord **) & coords,   /* XXX */
+                                       start.milliseconds, stop.milliseconds,
+                                       (ScreenPtr) NULL, FALSE);
     }
     if (rep.nEvents > 0) {
-	length = bytes_to_int32(rep.nEvents * size);
-	rep.length = length;
+        length = bytes_to_int32(rep.nEvents * size);
+        rep.length = length;
     }
     nEvents = rep.nEvents;
     WriteReplyToClient(client, sizeof(xGetDeviceMotionEventsReply), &rep);
     if (nEvents) {
-	if (client->swapped) {
-	    char n;
-
-	    bufptr = coords;
-	    for (i = 0; i < nEvents * (axes + 1); i++) {
-		swapl(bufptr, n);
-		bufptr++;
-	    }
-	}
-	WriteToClient(client, length * 4, (char *)coords);
+        if (client->swapped) {
+            bufptr = coords;
+            for (i = 0; i < nEvents * (axes + 1); i++) {
+                swapl(bufptr);
+                bufptr++;
+            }
+        }
+        WriteToClient(client, length * 4, (char *) coords);
     }
     free(coords);
     return Success;
@@ -166,12 +162,10 @@ ProcXGetDeviceMotionEvents(ClientPtr client)
 
 void
 SRepXGetDeviceMotionEvents(ClientPtr client, int size,
-			   xGetDeviceMotionEventsReply * rep)
+                           xGetDeviceMotionEventsReply * rep)
 {
-    char n;
-
-    swaps(&rep->sequenceNumber, n);
-    swapl(&rep->length, n);
-    swapl(&rep->nEvents, n);
-    WriteToClient(client, size, (char *)rep);
+    swaps(&rep->sequenceNumber);
+    swapl(&rep->length);
+    swapl(&rep->nEvents);
+    WriteToClient(client, size, (char *) rep);
 }

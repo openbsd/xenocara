@@ -45,7 +45,8 @@ host_triplet = @host@
 @ENABLE_UNIT_TESTS_TRUE@@HAVE_LD_WRAP_TRUE@	protocol-xipassivegrabdevice$(EXEEXT) \
 @ENABLE_UNIT_TESTS_TRUE@@HAVE_LD_WRAP_TRUE@	protocol-xiquerypointer$(EXEEXT) \
 @ENABLE_UNIT_TESTS_TRUE@@HAVE_LD_WRAP_TRUE@	protocol-xiwarppointer$(EXEEXT) \
-@ENABLE_UNIT_TESTS_TRUE@@HAVE_LD_WRAP_TRUE@	protocol-eventconvert$(EXEEXT)
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_LD_WRAP_TRUE@	protocol-eventconvert$(EXEEXT) \
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_LD_WRAP_TRUE@	xi2$(EXEEXT)
 @ENABLE_UNIT_TESTS_TRUE@@HAVE_LD_WRAP_TRUE@@SPECIAL_DTRACE_OBJECTS_TRUE@am__append_1 = $(OS_LIB) $(DIX_LIB)
 subdir = test/xi2
 DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in
@@ -149,6 +150,9 @@ am__protocol_xiwarppointer_SOURCES_DIST = protocol-common.h \
 @ENABLE_UNIT_TESTS_TRUE@@HAVE_LD_WRAP_TRUE@	protocol-xiwarppointer.$(OBJEXT)
 protocol_xiwarppointer_OBJECTS = $(am_protocol_xiwarppointer_OBJECTS)
 @ENABLE_UNIT_TESTS_TRUE@@HAVE_LD_WRAP_TRUE@protocol_xiwarppointer_DEPENDENCIES = $(am__DEPENDENCIES_3)
+xi2_SOURCES = xi2.c
+xi2_OBJECTS = xi2.$(OBJEXT)
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_LD_WRAP_TRUE@xi2_DEPENDENCIES = $(am__DEPENDENCIES_3)
 DEFAULT_INCLUDES = -I. -I$(srcdir) -I$(top_builddir)/include -I$(top_builddir)/include -I$(top_builddir)/include -I$(top_builddir)/include -I$(top_builddir)/include -I$(top_builddir)/include -I$(top_builddir)/include -I$(top_builddir)/include
 depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__depfiles_maybe = depfiles
@@ -169,7 +173,7 @@ SOURCES = protocol-eventconvert.c \
 	$(protocol_xiqueryversion_SOURCES) \
 	$(protocol_xiselectevents_SOURCES) \
 	$(protocol_xisetclientpointer_SOURCES) \
-	$(protocol_xiwarppointer_SOURCES)
+	$(protocol_xiwarppointer_SOURCES) xi2.c
 DIST_SOURCES = protocol-eventconvert.c \
 	$(am__protocol_xigetclientpointer_SOURCES_DIST) \
 	$(am__protocol_xigetselectedevents_SOURCES_DIST) \
@@ -179,7 +183,7 @@ DIST_SOURCES = protocol-eventconvert.c \
 	$(am__protocol_xiqueryversion_SOURCES_DIST) \
 	$(am__protocol_xiselectevents_SOURCES_DIST) \
 	$(am__protocol_xisetclientpointer_SOURCES_DIST) \
-	$(am__protocol_xiwarppointer_SOURCES_DIST)
+	$(am__protocol_xiwarppointer_SOURCES_DIST) xi2.c
 ETAGS = etags
 CTAGS = ctags
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
@@ -190,7 +194,6 @@ AGP_FALSE = @AGP_FALSE@
 AGP_TRUE = @AGP_TRUE@
 AIGLX_DRI_LOADER_FALSE = @AIGLX_DRI_LOADER_FALSE@
 AIGLX_DRI_LOADER_TRUE = @AIGLX_DRI_LOADER_TRUE@
-ALLOCA = @ALLOCA@
 ALPHA_VIDEO_FALSE = @ALPHA_VIDEO_FALSE@
 ALPHA_VIDEO_TRUE = @ALPHA_VIDEO_TRUE@
 AMDEP_FALSE = @AMDEP_FALSE@
@@ -209,6 +212,7 @@ AUTOCONF = @AUTOCONF@
 AUTOHEADER = @AUTOHEADER@
 AUTOMAKE = @AUTOMAKE@
 AWK = @AWK@
+BASE_CFLAGS = @BASE_CFLAGS@
 BASE_FONT_PATH = @BASE_FONT_PATH@
 BSD_APM_FALSE = @BSD_APM_FALSE@
 BSD_APM_TRUE = @BSD_APM_TRUE@
@@ -416,8 +420,6 @@ LIB_MAN_DIR = @LIB_MAN_DIR@
 LIB_MAN_SUFFIX = @LIB_MAN_SUFFIX@
 LINUX_ALPHA_FALSE = @LINUX_ALPHA_FALSE@
 LINUX_ALPHA_TRUE = @LINUX_ALPHA_TRUE@
-LINUX_IA64_FALSE = @LINUX_IA64_FALSE@
-LINUX_IA64_TRUE = @LINUX_IA64_TRUE@
 LIPO = @LIPO@
 LNXACPI_FALSE = @LNXACPI_FALSE@
 LNXACPI_TRUE = @LNXACPI_TRUE@
@@ -436,10 +438,6 @@ MISC_MAN_DIR = @MISC_MAN_DIR@
 MISC_MAN_SUFFIX = @MISC_MAN_SUFFIX@
 MITSHM_FALSE = @MITSHM_FALSE@
 MITSHM_TRUE = @MITSHM_TRUE@
-NEED_STRLCAT_FALSE = @NEED_STRLCAT_FALSE@
-NEED_STRLCAT_TRUE = @NEED_STRLCAT_TRUE@
-NEED_VSNPRINTF_FALSE = @NEED_VSNPRINTF_FALSE@
-NEED_VSNPRINTF_TRUE = @NEED_VSNPRINTF_TRUE@
 NM = @NM@
 NMEDIT = @NMEDIT@
 OBJC = @OBJC@
@@ -583,18 +581,18 @@ XNEST_SYS_LIBS = @XNEST_SYS_LIBS@
 XNEST_TRUE = @XNEST_TRUE@
 XORG_BUS_BSDPCI_FALSE = @XORG_BUS_BSDPCI_FALSE@
 XORG_BUS_BSDPCI_TRUE = @XORG_BUS_BSDPCI_TRUE@
-XORG_BUS_LINUXPCI_FALSE = @XORG_BUS_LINUXPCI_FALSE@
-XORG_BUS_LINUXPCI_TRUE = @XORG_BUS_LINUXPCI_TRUE@
+XORG_BUS_PCI_FALSE = @XORG_BUS_PCI_FALSE@
+XORG_BUS_PCI_TRUE = @XORG_BUS_PCI_TRUE@
 XORG_BUS_SPARC_FALSE = @XORG_BUS_SPARC_FALSE@
 XORG_BUS_SPARC_TRUE = @XORG_BUS_SPARC_TRUE@
 XORG_CFLAGS = @XORG_CFLAGS@
 XORG_FALSE = @XORG_FALSE@
 XORG_INCS = @XORG_INCS@
 XORG_LIBS = @XORG_LIBS@
+XORG_MALLOC_DEBUG_ENV = @XORG_MALLOC_DEBUG_ENV@
 XORG_MAN_PAGE = @XORG_MAN_PAGE@
 XORG_MODULES_CFLAGS = @XORG_MODULES_CFLAGS@
 XORG_MODULES_LIBS = @XORG_MODULES_LIBS@
-XORG_OS = @XORG_OS@
 XORG_OS_SUBDIR = @XORG_OS_SUBDIR@
 XORG_SGML_PATH = @XORG_SGML_PATH@
 XORG_SYS_LIBS = @XORG_SYS_LIBS@
@@ -720,7 +718,10 @@ symbol_visibility = @symbol_visibility@
 sysconfdir = @sysconfdir@
 sysconfigdir = @sysconfigdir@
 target_alias = @target_alias@
+# Print that xi2-tests were skipped (exit code 77 for automake test harness)
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_LD_WRAP_FALSE@TESTS = xi2-tests
 @ENABLE_UNIT_TESTS_TRUE@@HAVE_LD_WRAP_TRUE@TESTS = $(noinst_PROGRAMS)
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_LD_WRAP_TRUE@TESTS_ENVIRONMENT = $(XORG_MALLOC_DEBUG_ENV)
 @ENABLE_UNIT_TESTS_TRUE@@HAVE_LD_WRAP_TRUE@AM_CFLAGS = $(DIX_CFLAGS) @XORG_CFLAGS@
 @ENABLE_UNIT_TESTS_TRUE@@HAVE_LD_WRAP_TRUE@INCLUDES = @XORG_INCS@
 @ENABLE_UNIT_TESTS_TRUE@@HAVE_LD_WRAP_TRUE@TEST_LDADD = ../libxservertest.la \
@@ -738,6 +739,7 @@ target_alias = @target_alias@
 @ENABLE_UNIT_TESTS_TRUE@@HAVE_LD_WRAP_TRUE@protocol_xipassivegrabdevice_LDADD = $(TEST_LDADD)
 @ENABLE_UNIT_TESTS_TRUE@@HAVE_LD_WRAP_TRUE@protocol_xiwarppointer_LDADD = $(TEST_LDADD)
 @ENABLE_UNIT_TESTS_TRUE@@HAVE_LD_WRAP_TRUE@protocol_eventconvert_LDADD = $(TEST_LDADD)
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_LD_WRAP_TRUE@xi2_LDADD = $(TEST_LDADD)
 @ENABLE_UNIT_TESTS_TRUE@@HAVE_LD_WRAP_TRUE@protocol_xiqueryversion_LDFLAGS = $(AM_LDFLAGS) -Wl,-wrap,WriteToClient
 @ENABLE_UNIT_TESTS_TRUE@@HAVE_LD_WRAP_TRUE@protocol_xiquerydevice_LDFLAGS = $(AM_LDFLAGS) -Wl,-wrap,WriteToClient
 @ENABLE_UNIT_TESTS_TRUE@@HAVE_LD_WRAP_TRUE@protocol_xiselectevents_LDFLAGS = $(AM_LDFLAGS) -Wl,-wrap,dixLookupWindow -Wl,-wrap,XISetEventMask
@@ -747,6 +749,7 @@ target_alias = @target_alias@
 @ENABLE_UNIT_TESTS_TRUE@@HAVE_LD_WRAP_TRUE@protocol_xipassivegrabdevice_LDFLAGS = $(AM_LDFLAGS) -Wl,-wrap,GrabButton -Wl,-wrap,dixLookupWindow -Wl,-wrap,WriteToClient
 @ENABLE_UNIT_TESTS_TRUE@@HAVE_LD_WRAP_TRUE@protocol_xiquerypointer_LDFLAGS = $(AM_LDFLAGS) -Wl,-wrap,WriteToClient -Wl,-wrap,dixLookupWindow
 @ENABLE_UNIT_TESTS_TRUE@@HAVE_LD_WRAP_TRUE@protocol_xiwarppointer_LDFLAGS = $(AM_LDFLAGS) -Wl,-wrap,WriteToClient -Wl,-wrap,dixLookupWindow
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_LD_WRAP_TRUE@xi2_LDFLAGS = $(AM_LDFLAGS)
 @ENABLE_UNIT_TESTS_TRUE@@HAVE_LD_WRAP_TRUE@protocol_xiqueryversion_SOURCES = $(COMMON_SOURCES) protocol-xiqueryversion.c
 @ENABLE_UNIT_TESTS_TRUE@@HAVE_LD_WRAP_TRUE@protocol_xiquerydevice_SOURCES = $(COMMON_SOURCES) protocol-xiquerydevice.c
 @ENABLE_UNIT_TESTS_TRUE@@HAVE_LD_WRAP_TRUE@protocol_xiselectevents_SOURCES = $(COMMON_SOURCES) protocol-xiselectevents.c
@@ -756,6 +759,7 @@ target_alias = @target_alias@
 @ENABLE_UNIT_TESTS_TRUE@@HAVE_LD_WRAP_TRUE@protocol_xiquerypointer_SOURCES = $(COMMON_SOURCES) protocol-xiquerypointer.c
 @ENABLE_UNIT_TESTS_TRUE@@HAVE_LD_WRAP_TRUE@protocol_xipassivegrabdevice_SOURCES = $(COMMON_SOURCES) protocol-xipassivegrabdevice.c
 @ENABLE_UNIT_TESTS_TRUE@@HAVE_LD_WRAP_TRUE@protocol_xiwarppointer_SOURCES = $(COMMON_SOURCES) protocol-xiwarppointer.c
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_LD_WRAP_FALSE@CLEANFILES = $(TESTS)
 all: all-am
 
 .SUFFIXES:
@@ -826,6 +830,9 @@ protocol-xisetclientpointer$(EXEEXT): $(protocol_xisetclientpointer_OBJECTS) $(p
 protocol-xiwarppointer$(EXEEXT): $(protocol_xiwarppointer_OBJECTS) $(protocol_xiwarppointer_DEPENDENCIES) 
 	@rm -f protocol-xiwarppointer$(EXEEXT)
 	$(LINK) $(protocol_xiwarppointer_LDFLAGS) $(protocol_xiwarppointer_OBJECTS) $(protocol_xiwarppointer_LDADD) $(LIBS)
+xi2$(EXEEXT): $(xi2_OBJECTS) $(xi2_DEPENDENCIES) 
+	@rm -f xi2$(EXEEXT)
+	$(LINK) $(xi2_LDFLAGS) $(xi2_OBJECTS) $(xi2_LDADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
@@ -844,6 +851,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/protocol-xiselectevents.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/protocol-xisetclientpointer.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/protocol-xiwarppointer.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xi2.Po@am__quote@
 
 .c.o:
 @am__fastdepCC_TRUE@	if $(COMPILE) -MT $@ -MD -MP -MF "$(DEPDIR)/$*.Tpo" -c -o $@ $<; \
@@ -1046,6 +1054,7 @@ install-strip:
 mostlyclean-generic:
 
 clean-generic:
+	-test -z "$(CLEANFILES)" || rm -f $(CLEANFILES)
 
 distclean-generic:
 	-test -z "$(CONFIG_CLEAN_FILES)" || rm -f $(CONFIG_CLEAN_FILES)
@@ -1116,6 +1125,11 @@ uninstall-am: uninstall-info-am
 	mostlyclean-generic mostlyclean-libtool pdf pdf-am ps ps-am \
 	tags uninstall uninstall-am uninstall-info-am
 
+
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_LD_WRAP_FALSE@xi2-tests:
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_LD_WRAP_FALSE@	@echo 'echo "ld -wrap support required for xi2 unit tests, skipping"' > $@
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_LD_WRAP_FALSE@	@echo 'exit 77' >> $@
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_LD_WRAP_FALSE@	$(AM_V_GEN)chmod +x $@
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:

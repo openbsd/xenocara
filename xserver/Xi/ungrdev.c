@@ -54,8 +54,8 @@ SOFTWARE.
 #include <dix-config.h>
 #endif
 
-#include "inputstr.h"	/* DeviceIntPtr      */
-#include "windowstr.h"	/* window structure  */
+#include "inputstr.h"           /* DeviceIntPtr      */
+#include "windowstr.h"          /* window structure  */
 #include <X11/extensions/XIproto.h>
 #include "exglobals.h"
 
@@ -70,12 +70,10 @@ SOFTWARE.
 int
 SProcXUngrabDevice(ClientPtr client)
 {
-    char n;
-
     REQUEST(xUngrabDeviceReq);
-    swaps(&stuff->length, n);
+    swaps(&stuff->length);
     REQUEST_SIZE_MATCH(xUngrabDeviceReq);
-    swapl(&stuff->time, n);
+    swapl(&stuff->time);
     return (ProcXUngrabDevice(client));
 }
 
@@ -98,13 +96,13 @@ ProcXUngrabDevice(ClientPtr client)
 
     rc = dixLookupDevice(&dev, stuff->deviceid, client, DixGetAttrAccess);
     if (rc != Success)
-	return rc;
+        return rc;
     grab = dev->deviceGrab.grab;
 
     time = ClientTimeToServerTime(stuff->time);
     if ((CompareTimeStamps(time, currentTime) != LATER) &&
-	(CompareTimeStamps(time, dev->deviceGrab.grabTime) != EARLIER) &&
-	(grab) && SameClient(grab, client) && grab->grabtype == GRABTYPE_XI)
-	(*dev->deviceGrab.DeactivateGrab) (dev);
+        (CompareTimeStamps(time, dev->deviceGrab.grabTime) != EARLIER) &&
+        (grab) && SameClient(grab, client) && grab->grabtype == XI)
+        (*dev->deviceGrab.DeactivateGrab) (dev);
     return Success;
 }

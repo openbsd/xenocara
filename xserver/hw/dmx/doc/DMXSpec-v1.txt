@@ -2,7 +2,7 @@
 
             Client-to-Server DMX Extension to the X Protocol
 
-           $Date: 2011/11/05 13:32:49 $, $Revision: 1.6 $
+           $Date: 2012/06/10 13:21:22 $, $Revision: 1.7 $
 
                Rickard E. (Rik) Faith (faith@redhat.com)
                     Kevin E. Martin (kem@redhat.com)

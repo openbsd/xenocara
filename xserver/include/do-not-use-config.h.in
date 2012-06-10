@@ -48,11 +48,6 @@
 /* Use wscons for input auto configuration */
 #undef CONFIG_WSCONS
 
-/* Define to one of `_getb67', `GETB67', `getb67' for Cray-2 and Cray-YMP
-   systems. This function is required for `alloca.c' support on those systems.
-   */
-#undef CRAY_STACKSEG_END
-
 /* System is BSD-like */
 #undef CSRG_BASED
 
@@ -64,9 +59,6 @@
 
 /* Debug messages for window handling */
 #undef CYGWINDOWING_DEBUG
-
-/* Define to 1 if using `alloca.c'. */
-#undef C_ALLOCA
 
 /* Support Damage extension */
 #undef DAMAGE
@@ -122,21 +114,6 @@
 /* Cygwin has /dev/windows for signaling new win32 messages */
 #undef HAS_DEVWINDOWS
 
-/* Have the 'getdtablesize' function. */
-#undef HAS_GETDTABLESIZE
-
-/* Have the 'getifaddrs' function. */
-#undef HAS_GETIFADDRS
-
-/* Have the 'getpeereid' function. */
-#undef HAS_GETPEEREID
-
-/* Have the 'getpeerucred' function. */
-#undef HAS_GETPEERUCRED
-
-/* Have the 'mmap' function. */
-#undef HAS_MMAP
-
 /* Define to 1 if NetBSD built-in MTRR support is available */
 #undef HAS_MTRR_BUILTIN
 
@@ -146,18 +123,8 @@
 /* Support SHM */
 #undef HAS_SHM
 
-/* Have the 'strlcpy' function */
-#undef HAS_STRLCPY
-
 /* Use Windows sockets */
 #undef HAS_WINSOCK
-
-/* Define to 1 if you have `alloca', as a function or macro. */
-#undef HAVE_ALLOCA
-
-/* Define to 1 if you have <alloca.h> and it should be used (not on Ultrix).
-   */
-#undef HAVE_ALLOCA_H
 
 /* Define to 1 if you have the <asm/mtrr.h> header file. */
 #undef HAVE_ASM_MTRR_H
@@ -174,7 +141,7 @@
 /* Define to 1 if you have the <byteswap.h> header file. */
 #undef HAVE_BYTESWAP_H
 
-/* Have the 'cbrt' function */
+/* Define to 1 if you have the `cbrt' function. */
 #undef HAVE_CBRT
 
 /* Define to 1 if you have the `clock_gettime' function. */
@@ -193,9 +160,6 @@
 /* Define to 1 if you have the <dlfcn.h> header file. */
 #undef HAVE_DLFCN_H
 
-/* Define to 1 if you don't have `vprintf' but do have `_doprnt.' */
-#undef HAVE_DOPRNT
-
 /* Have execinfo.h */
 #undef HAVE_EXECINFO_H
 
@@ -208,17 +172,23 @@
 /* Define to 1 if you have the <fnmatch.h> header file. */
 #undef HAVE_FNMATCH_H
 
+/* Define to 1 if you have the `getdtablesize' function. */
+#undef HAVE_GETDTABLESIZE
+
 /* Define to 1 if you have the `geteuid' function. */
 #undef HAVE_GETEUID
 
-/* Define to 1 if you have the `getisax' function. */
-#undef HAVE_GETISAX
+/* Define to 1 if you have the `getifaddrs' function. */
+#undef HAVE_GETIFADDRS
 
-/* Define to 1 if you have the `getopt' function. */
-#undef HAVE_GETOPT
+/* Define to 1 if you have the `getpeereid' function. */
+#undef HAVE_GETPEEREID
 
-/* Define to 1 if you have the `getopt_long' function. */
-#undef HAVE_GETOPT_LONG
+/* Define to 1 if you have the `getpeerucred' function. */
+#undef HAVE_GETPEERUCRED
+
+/* Define to 1 if you have the `getresuid' function. */
+#undef HAVE_GETRESUID
 
 /* Define to 1 if you have the `getuid' function. */
 #undef HAVE_GETUID
@@ -228,6 +198,9 @@
 
 /* Define to 1 if you have the <inttypes.h> header file. */
 #undef HAVE_INTTYPES_H
+
+/* Define to 1 if you have the `issetugid' function. */
+#undef HAVE_ISSETUGID
 
 /* Define to 1 if you have the `audit' library (-laudit). */
 #undef HAVE_LIBAUDIT
@@ -244,9 +217,6 @@
 /* Define to 1 if you have the `ws2_32' library (-lws2_32). */
 #undef HAVE_LIBWS2_32
 
-/* Define to 1 if you have the `link' function. */
-#undef HAVE_LINK
-
 /* Define to 1 if you have the <linux/agpgart.h> header file. */
 #undef HAVE_LINUX_AGPGART_H
 
@@ -259,35 +229,17 @@
 /* Define to 1 if you have the <machine/mtrr.h> header file. */
 #undef HAVE_MACHINE_MTRR_H
 
-/* Define to 1 if you have the `memmove' function. */
-#undef HAVE_MEMMOVE
-
 /* Define to 1 if you have the <memory.h> header file. */
 #undef HAVE_MEMORY_H
 
-/* Define to 1 if you have the `memset' function. */
-#undef HAVE_MEMSET
-
-/* Define to 1 if you have the `mkstemp' function. */
-#undef HAVE_MKSTEMP
+/* Define to 1 if you have the `mmap' function. */
+#undef HAVE_MMAP
 
 /* Define to 1 if you have the <ndbm.h> header file. */
 #undef HAVE_NDBM_H
 
 /* Define to 1 if you have the <ndir.h> header file, and it defines `DIR'. */
 #undef HAVE_NDIR_H
-
-/* Define to 1 if you have the `pci_device_enable' function. */
-#undef HAVE_PCI_DEVICE_ENABLE
-
-/* Define to 1 if you have the `pci_device_is_boot_vga' function. */
-#undef HAVE_PCI_DEVICE_IS_BOOT_VGA
-
-/* Define to 1 if you have the `pci_device_vgaarb_init' function. */
-#undef HAVE_PCI_DEVICE_VGAARB_INIT
-
-/* Define to 1 if you have the `pci_system_init_dev_mem' function. */
-#undef HAVE_PCI_SYSTEM_INIT_DEV_MEM
 
 /* Define to 1 if you have the <rpcsvc/dbm.h> header file. */
 #undef HAVE_RPCSVC_DBM_H
@@ -319,11 +271,11 @@
 /* Define to 1 if you have the <stdlib.h> header file. */
 #undef HAVE_STDLIB_H
 
+/* Define to 1 if you have the `strcasecmp' function. */
+#undef HAVE_STRCASECMP
+
 /* Define to 1 if you have the `strcasestr' function. */
 #undef HAVE_STRCASESTR
-
-/* Define to 1 if you have the `strchr' function. */
-#undef HAVE_STRCHR
 
 /* Define to 1 if you have the <strings.h> header file. */
 #undef HAVE_STRINGS_H
@@ -331,14 +283,20 @@
 /* Define to 1 if you have the <string.h> header file. */
 #undef HAVE_STRING_H
 
+/* Define to 1 if you have the `strlcat' function. */
+#undef HAVE_STRLCAT
+
+/* Define to 1 if you have the `strlcpy' function. */
+#undef HAVE_STRLCPY
+
+/* Define to 1 if you have the `strncasecmp' function. */
+#undef HAVE_STRNCASECMP
+
+/* Define to 1 if you have the `strndup' function. */
+#undef HAVE_STRNDUP
+
 /* Define to 1 if you have the <stropts.h> header file. */
 #undef HAVE_STROPTS_H
-
-/* Define to 1 if you have the `strrchr' function. */
-#undef HAVE_STRRCHR
-
-/* Define to 1 if you have the `strtol' function. */
-#undef HAVE_STRTOL
 
 /* Define to 1 if SYSV IPC is available */
 #undef HAVE_SYSV_IPC
@@ -352,9 +310,6 @@
 /* Define to 1 if you have the <sys/dir.h> header file, and it defines `DIR'.
    */
 #undef HAVE_SYS_DIR_H
-
-/* Define to 1 if you have the <sys/io.h> header file. */
-#undef HAVE_SYS_IO_H
 
 /* Define to 1 if you have the <sys/kd.h> header file. */
 #undef HAVE_SYS_KD_H
@@ -378,20 +333,21 @@
 /* Define to 1 if you have the <sys/utsname.h> header file. */
 #undef HAVE_SYS_UTSNAME_H
 
-/* Define to 1 if you have the <sys/vm86.h> header file. */
-#undef HAVE_SYS_VM86_H
-
 /* Define to 1 if you have the <sys/vt.h> header file. */
 #undef HAVE_SYS_VT_H
+
+/* Define to 1 if you have the `udev_enumerate_add_match_tag' function. */
+#undef HAVE_UDEV_ENUMERATE_ADD_MATCH_TAG
+
+/* Define to 1 if you have the `udev_monitor_filter_add_match_tag' function.
+   */
+#undef HAVE_UDEV_MONITOR_FILTER_ADD_MATCH_TAG
 
 /* Define to 1 if you have the <unistd.h> header file. */
 #undef HAVE_UNISTD_H
 
 /* Define to 1 if you have the `vasprintf' function. */
 #undef HAVE_VASPRINTF
-
-/* Define to 1 if you have the `vprintf' function. */
-#undef HAVE_VPRINTF
 
 /* Define to 1 if you have the `vsnprintf' function. */
 #undef HAVE_VSNPRINTF
@@ -432,15 +388,6 @@
 
 /* Have monotonic clock from clock_gettime() */
 #undef MONOTONIC_CLOCK
-
-/* Do not have 'strcasecmp'. */
-#undef NEED_STRCASECMP
-
-/* Do not have 'strcasestr'. */
-#undef NEED_STRCASESTR
-
-/* Do not have 'strncasecmp'. */
-#undef NEED_STRNCASECMP
 
 /* Need XFree86 helper functions */
 #undef NEED_XF86_PROTOTYPES
@@ -532,22 +479,11 @@
 /* The size of `unsigned long', as computed by sizeof. */
 #undef SIZEOF_UNSIGNED_LONG
 
-/* If using the C implementation of alloca, define if you know the
-   direction of stack growth for your system; otherwise it will be
-   automatically deduced at runtime.
-	STACK_DIRECTION > 0 => grows toward higher addresses
-	STACK_DIRECTION < 0 => grows toward lower addresses
-	STACK_DIRECTION = 0 => direction of growth unknown */
-#undef STACK_DIRECTION
-
 /* Build a standalone xpbproxy */
 #undef STANDALONE_XPBPROXY
 
 /* Define to 1 if you have the ANSI C header files. */
 #undef STDC_HEADERS
-
-/* Support PC98 */
-#undef SUPPORT_PC98
 
 /* Define to 1 on systems derived from System V Release 4 */
 #undef SVR4

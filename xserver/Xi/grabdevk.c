@@ -54,8 +54,8 @@ SOFTWARE.
 #include <dix-config.h>
 #endif
 
-#include "inputstr.h"	/* DeviceIntPtr      */
-#include "windowstr.h"	/* window structure  */
+#include "inputstr.h"           /* DeviceIntPtr      */
+#include "windowstr.h"          /* window structure  */
 #include <X11/extensions/XI.h>
 #include <X11/extensions/XIproto.h>
 #include "exevents.h"
@@ -74,14 +74,12 @@ SOFTWARE.
 int
 SProcXGrabDeviceKey(ClientPtr client)
 {
-    char n;
-
     REQUEST(xGrabDeviceKeyReq);
-    swaps(&stuff->length, n);
+    swaps(&stuff->length);
     REQUEST_AT_LEAST_SIZE(xGrabDeviceKeyReq);
-    swapl(&stuff->grabWindow, n);
-    swaps(&stuff->modifiers, n);
-    swaps(&stuff->event_count, n);
+    swapl(&stuff->grabWindow);
+    swaps(&stuff->modifiers);
+    swaps(&stuff->event_count);
     REQUEST_FIXED_SIZE(xGrabDeviceKeyReq, stuff->event_count * sizeof(CARD32));
     SwapLongs((CARD32 *) (&stuff[1]), stuff->event_count);
     return (ProcXGrabDeviceKey(client));
@@ -107,37 +105,38 @@ ProcXGrabDeviceKey(ClientPtr client)
     REQUEST(xGrabDeviceKeyReq);
     REQUEST_AT_LEAST_SIZE(xGrabDeviceKeyReq);
 
-    if (stuff->length != bytes_to_int32(sizeof(xGrabDeviceKeyReq)) + stuff->event_count)
-	return BadLength;
+    if (stuff->length !=
+        bytes_to_int32(sizeof(xGrabDeviceKeyReq)) + stuff->event_count)
+        return BadLength;
 
     ret = dixLookupDevice(&dev, stuff->grabbed_device, client, DixGrabAccess);
     if (ret != Success)
-	return ret;
+        return ret;
 
     if (stuff->modifier_device != UseXKeyboard) {
-	ret = dixLookupDevice(&mdev, stuff->modifier_device, client,
-			      DixUseAccess);
-	if (ret != Success)
-	    return ret;
-	if (mdev->key == NULL)
-	    return BadMatch;
-    } else {
-	mdev = PickKeyboard(client);
-	ret = XaceHook(XACE_DEVICE_ACCESS, client, mdev, DixUseAccess);
-	if (ret != Success)
-	    return ret;
+        ret = dixLookupDevice(&mdev, stuff->modifier_device, client,
+                              DixUseAccess);
+        if (ret != Success)
+            return ret;
+        if (mdev->key == NULL)
+            return BadMatch;
+    }
+    else {
+        mdev = PickKeyboard(client);
+        ret = XaceHook(XACE_DEVICE_ACCESS, client, mdev, DixUseAccess);
+        if (ret != Success)
+            return ret;
     }
 
-    class = (XEventClass *) (&stuff[1]);	/* first word of values */
+    class = (XEventClass *) (&stuff[1]);        /* first word of values */
 
     if ((ret = CreateMaskFromList(client, class,
-				  stuff->event_count, tmp, dev,
-				  X_GrabDeviceKey)) != Success)
-	return ret;
-
+                                  stuff->event_count, tmp, dev,
+                                  X_GrabDeviceKey)) != Success)
+        return ret;
 
     memset(&param, 0, sizeof(param));
-    param.grabtype = GRABTYPE_XI;
+    param.grabtype = XI;
     param.ownerEvents = stuff->ownerEvents;
     param.this_device_mode = stuff->this_device_mode;
     param.other_devices_mode = stuff->other_devices_mode;
@@ -145,7 +144,7 @@ ProcXGrabDeviceKey(ClientPtr client)
     param.modifiers = stuff->modifiers;
     mask.xi = tmp[stuff->grabbed_device].mask;
 
-    ret = GrabKey(client, dev, mdev, stuff->key, &param, GRABTYPE_XI, &mask);
+    ret = GrabKey(client, dev, mdev, stuff->key, &param, XI, &mask);
 
     return ret;
 }

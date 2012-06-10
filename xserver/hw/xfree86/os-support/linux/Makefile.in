@@ -66,10 +66,9 @@ am__liblinux_la_SOURCES_DIST = lnx_init.c lnx_video.c lnx_agp.c \
 	$(srcdir)/../shared/VTsw_usl.c $(srcdir)/../shared/posix_tty.c \
 	$(srcdir)/../shared/vidmem.c $(srcdir)/../shared/sigio.c \
 	lnx_acpi.c lnx_apm.c $(srcdir)/lnx_axp.c \
-	$(srcdir)/../shared/xf86Axp.c $(srcdir)/../shared/ia64Pci.c
+	$(srcdir)/../shared/xf86Axp.c
 @LNXACPI_TRUE@am__objects_1 = lnx_acpi.lo lnx_apm.lo
 @LNXAPM_TRUE@am__objects_2 = lnx_apm.lo
-@LINUX_ALPHA_FALSE@@LINUX_IA64_TRUE@am__objects_3 = ia64Pci.lo
 @LINUX_ALPHA_TRUE@am__objects_3 = lnx_axp.lo xf86Axp.lo
 am_liblinux_la_OBJECTS = lnx_init.lo lnx_video.lo lnx_agp.lo \
 	lnx_kmod.lo lnx_bell.lo bios_mmap.lo VTsw_usl.lo posix_tty.lo \
@@ -106,7 +105,6 @@ AGP_FALSE = @AGP_FALSE@
 AGP_TRUE = @AGP_TRUE@
 AIGLX_DRI_LOADER_FALSE = @AIGLX_DRI_LOADER_FALSE@
 AIGLX_DRI_LOADER_TRUE = @AIGLX_DRI_LOADER_TRUE@
-ALLOCA = @ALLOCA@
 ALPHA_VIDEO_FALSE = @ALPHA_VIDEO_FALSE@
 ALPHA_VIDEO_TRUE = @ALPHA_VIDEO_TRUE@
 AMDEP_FALSE = @AMDEP_FALSE@
@@ -125,6 +123,7 @@ AUTOCONF = @AUTOCONF@
 AUTOHEADER = @AUTOHEADER@
 AUTOMAKE = @AUTOMAKE@
 AWK = @AWK@
+BASE_CFLAGS = @BASE_CFLAGS@
 BASE_FONT_PATH = @BASE_FONT_PATH@
 BSD_APM_FALSE = @BSD_APM_FALSE@
 BSD_APM_TRUE = @BSD_APM_TRUE@
@@ -332,8 +331,6 @@ LIB_MAN_DIR = @LIB_MAN_DIR@
 LIB_MAN_SUFFIX = @LIB_MAN_SUFFIX@
 LINUX_ALPHA_FALSE = @LINUX_ALPHA_FALSE@
 LINUX_ALPHA_TRUE = @LINUX_ALPHA_TRUE@
-LINUX_IA64_FALSE = @LINUX_IA64_FALSE@
-LINUX_IA64_TRUE = @LINUX_IA64_TRUE@
 LIPO = @LIPO@
 LNXACPI_FALSE = @LNXACPI_FALSE@
 LNXACPI_TRUE = @LNXACPI_TRUE@
@@ -352,10 +349,6 @@ MISC_MAN_DIR = @MISC_MAN_DIR@
 MISC_MAN_SUFFIX = @MISC_MAN_SUFFIX@
 MITSHM_FALSE = @MITSHM_FALSE@
 MITSHM_TRUE = @MITSHM_TRUE@
-NEED_STRLCAT_FALSE = @NEED_STRLCAT_FALSE@
-NEED_STRLCAT_TRUE = @NEED_STRLCAT_TRUE@
-NEED_VSNPRINTF_FALSE = @NEED_VSNPRINTF_FALSE@
-NEED_VSNPRINTF_TRUE = @NEED_VSNPRINTF_TRUE@
 NM = @NM@
 NMEDIT = @NMEDIT@
 OBJC = @OBJC@
@@ -499,18 +492,18 @@ XNEST_SYS_LIBS = @XNEST_SYS_LIBS@
 XNEST_TRUE = @XNEST_TRUE@
 XORG_BUS_BSDPCI_FALSE = @XORG_BUS_BSDPCI_FALSE@
 XORG_BUS_BSDPCI_TRUE = @XORG_BUS_BSDPCI_TRUE@
-XORG_BUS_LINUXPCI_FALSE = @XORG_BUS_LINUXPCI_FALSE@
-XORG_BUS_LINUXPCI_TRUE = @XORG_BUS_LINUXPCI_TRUE@
+XORG_BUS_PCI_FALSE = @XORG_BUS_PCI_FALSE@
+XORG_BUS_PCI_TRUE = @XORG_BUS_PCI_TRUE@
 XORG_BUS_SPARC_FALSE = @XORG_BUS_SPARC_FALSE@
 XORG_BUS_SPARC_TRUE = @XORG_BUS_SPARC_TRUE@
 XORG_CFLAGS = @XORG_CFLAGS@ $(am__append_2) $(am__append_3)
 XORG_FALSE = @XORG_FALSE@
 XORG_INCS = @XORG_INCS@
 XORG_LIBS = @XORG_LIBS@
+XORG_MALLOC_DEBUG_ENV = @XORG_MALLOC_DEBUG_ENV@
 XORG_MAN_PAGE = @XORG_MAN_PAGE@
 XORG_MODULES_CFLAGS = @XORG_MODULES_CFLAGS@
 XORG_MODULES_LIBS = @XORG_MODULES_LIBS@
-XORG_OS = @XORG_OS@
 XORG_OS_SUBDIR = @XORG_OS_SUBDIR@
 XORG_SGML_PATH = @XORG_SGML_PATH@
 XORG_SYS_LIBS = @XORG_SYS_LIBS@
@@ -641,8 +634,6 @@ noinst_LTLIBRARIES = liblinux.la $(am__append_1)
 @LINUX_ALPHA_TRUE@       $(srcdir)/lnx_axp.c \
 @LINUX_ALPHA_TRUE@       $(srcdir)/../shared/xf86Axp.c
 
-@LINUX_IA64_TRUE@PLATFORM_PCI_SUPPORT = $(srcdir)/../shared/ia64Pci.c
-@LINUX_IA64_TRUE@PLATFORM_INCLUDES = -I$(srcdir)/../shared
 @LINUX_ALPHA_TRUE@liblinuxev56_la_CFLAGS = $(AM_CFLAGS) -mcpu=ev56
 @LINUX_ALPHA_TRUE@liblinuxev56_la_SOURCES = lnx_ev56.c
 @LNXACPI_TRUE@ACPI_SRCS = lnx_acpi.c lnx_apm.c
@@ -719,7 +710,6 @@ distclean-compile:
 
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/VTsw_usl.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bios_mmap.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ia64Pci.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/liblinuxev56_la-lnx_ev56.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/lnx_acpi.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/lnx_agp.Plo@am__quote@
@@ -803,13 +793,6 @@ xf86Axp.lo: $(srcdir)/../shared/xf86Axp.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$(srcdir)/../shared/xf86Axp.c' object='xf86Axp.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o xf86Axp.lo `test -f '$(srcdir)/../shared/xf86Axp.c' || echo '$(srcdir)/'`$(srcdir)/../shared/xf86Axp.c
-
-ia64Pci.lo: $(srcdir)/../shared/ia64Pci.c
-@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT ia64Pci.lo -MD -MP -MF "$(DEPDIR)/ia64Pci.Tpo" -c -o ia64Pci.lo `test -f '$(srcdir)/../shared/ia64Pci.c' || echo '$(srcdir)/'`$(srcdir)/../shared/ia64Pci.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/ia64Pci.Tpo" "$(DEPDIR)/ia64Pci.Plo"; else rm -f "$(DEPDIR)/ia64Pci.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$(srcdir)/../shared/ia64Pci.c' object='ia64Pci.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o ia64Pci.lo `test -f '$(srcdir)/../shared/ia64Pci.c' || echo '$(srcdir)/'`$(srcdir)/../shared/ia64Pci.c
 
 liblinuxev56_la-lnx_ev56.lo: lnx_ev56.c
 @am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(liblinuxev56_la_CFLAGS) $(CFLAGS) -MT liblinuxev56_la-lnx_ev56.lo -MD -MP -MF "$(DEPDIR)/liblinuxev56_la-lnx_ev56.Tpo" -c -o liblinuxev56_la-lnx_ev56.lo `test -f 'lnx_ev56.c' || echo '$(srcdir)/'`lnx_ev56.c; \

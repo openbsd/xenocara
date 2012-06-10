@@ -54,8 +54,8 @@ SOFTWARE.
 #include <dix-config.h>
 #endif
 
-#include "windowstr.h"	/* focus struct      */
-#include "inputstr.h"	/* DeviceIntPtr      */
+#include "windowstr.h"          /* focus struct      */
+#include "inputstr.h"           /* DeviceIntPtr      */
 #include <X11/extensions/XI.h>
 #include <X11/extensions/XIproto.h>
 
@@ -74,13 +74,11 @@ SOFTWARE.
 int
 SProcXSetDeviceFocus(ClientPtr client)
 {
-    char n;
-
     REQUEST(xSetDeviceFocusReq);
-    swaps(&stuff->length, n);
+    swaps(&stuff->length);
     REQUEST_SIZE_MATCH(xSetDeviceFocusReq);
-    swapl(&stuff->focus, n);
-    swapl(&stuff->time, n);
+    swapl(&stuff->focus);
+    swapl(&stuff->time);
     return (ProcXSetDeviceFocus(client));
 }
 
@@ -101,12 +99,12 @@ ProcXSetDeviceFocus(ClientPtr client)
 
     ret = dixLookupDevice(&dev, stuff->device, client, DixSetFocusAccess);
     if (ret != Success)
-	return ret;
+        return ret;
     if (!dev->focus)
-	return BadDevice;
+        return BadDevice;
 
     ret = SetInputFocus(client, dev, stuff->focus, stuff->revertTo,
-			stuff->time, TRUE);
+                        stuff->time, TRUE);
 
     return ret;
 }

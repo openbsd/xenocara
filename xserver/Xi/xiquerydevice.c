@@ -41,23 +41,22 @@
 #include "xserver-properties.h"
 #include "exevents.h"
 #include "xace.h"
+#include "inpututils.h"
 
 #include "xiquerydevice.h"
 
 static Bool ShouldSkipDevice(ClientPtr client, int deviceid, DeviceIntPtr d);
 static int
-ListDeviceInfo(ClientPtr client, DeviceIntPtr dev, xXIDeviceInfo* info);
+ ListDeviceInfo(ClientPtr client, DeviceIntPtr dev, xXIDeviceInfo * info);
 static int SizeDeviceInfo(DeviceIntPtr dev);
-static void SwapDeviceInfo(DeviceIntPtr dev, xXIDeviceInfo* info);
+static void SwapDeviceInfo(DeviceIntPtr dev, xXIDeviceInfo * info);
 int
 SProcXIQueryDevice(ClientPtr client)
 {
-    char n;
-
     REQUEST(xXIQueryDeviceReq);
 
-    swaps(&stuff->length, n);
-    swaps(&stuff->deviceid, n);
+    swaps(&stuff->length);
+    swaps(&stuff->deviceid);
 
     return ProcXIQueryDevice(client);
 }
@@ -75,31 +74,27 @@ ProcXIQueryDevice(ClientPtr client)
     REQUEST(xXIQueryDeviceReq);
     REQUEST_SIZE_MATCH(xXIQueryDeviceReq);
 
-    if (stuff->deviceid != XIAllDevices && stuff->deviceid != XIAllMasterDevices)
-    {
+    if (stuff->deviceid != XIAllDevices &&
+        stuff->deviceid != XIAllMasterDevices) {
         rc = dixLookupDevice(&dev, stuff->deviceid, client, DixGetAttrAccess);
-        if (rc != Success)
-        {
+        if (rc != Success) {
             client->errorValue = stuff->deviceid;
             return rc;
         }
         len += SizeDeviceInfo(dev);
     }
-    else
-    {
+    else {
         skip = calloc(sizeof(Bool), inputInfo.numDevices);
         if (!skip)
             return BadAlloc;
 
-        for (dev = inputInfo.devices; dev; dev = dev->next, i++)
-        {
+        for (dev = inputInfo.devices; dev; dev = dev->next, i++) {
             skip[i] = ShouldSkipDevice(client, stuff->deviceid, dev);
             if (!skip[i])
                 len += SizeDeviceInfo(dev);
         }
 
-        for (dev = inputInfo.off_devices; dev; dev = dev->next, i++)
-        {
+        for (dev = inputInfo.off_devices; dev; dev = dev->next, i++) {
             skip[i] = ShouldSkipDevice(client, stuff->deviceid, dev);
             if (!skip[i])
                 len += SizeDeviceInfo(dev);
@@ -116,39 +111,34 @@ ProcXIQueryDevice(ClientPtr client)
     rep.repType = X_Reply;
     rep.RepType = X_XIQueryDevice;
     rep.sequenceNumber = client->sequence;
-    rep.length = len/4;
+    rep.length = len / 4;
     rep.num_devices = 0;
 
     ptr = info;
-    if (dev)
-    {
-        len = ListDeviceInfo(client, dev, (xXIDeviceInfo*)info);
+    if (dev) {
+        len = ListDeviceInfo(client, dev, (xXIDeviceInfo *) info);
         if (client->swapped)
-            SwapDeviceInfo(dev, (xXIDeviceInfo*)info);
+            SwapDeviceInfo(dev, (xXIDeviceInfo *) info);
         info += len;
         rep.num_devices = 1;
-    } else
-    {
+    }
+    else {
         i = 0;
-        for (dev = inputInfo.devices; dev; dev = dev->next, i++)
-        {
-            if (!skip[i])
-            {
-                len = ListDeviceInfo(client, dev, (xXIDeviceInfo*)info);
+        for (dev = inputInfo.devices; dev; dev = dev->next, i++) {
+            if (!skip[i]) {
+                len = ListDeviceInfo(client, dev, (xXIDeviceInfo *) info);
                 if (client->swapped)
-                    SwapDeviceInfo(dev, (xXIDeviceInfo*)info);
+                    SwapDeviceInfo(dev, (xXIDeviceInfo *) info);
                 info += len;
                 rep.num_devices++;
             }
         }
 
-        for (dev = inputInfo.off_devices; dev; dev = dev->next, i++)
-        {
-            if (!skip[i])
-            {
-                len = ListDeviceInfo(client, dev, (xXIDeviceInfo*)info);
+        for (dev = inputInfo.off_devices; dev; dev = dev->next, i++) {
+            if (!skip[i]) {
+                len = ListDeviceInfo(client, dev, (xXIDeviceInfo *) info);
                 if (client->swapped)
-                    SwapDeviceInfo(dev, (xXIDeviceInfo*)info);
+                    SwapDeviceInfo(dev, (xXIDeviceInfo *) info);
                 info += len;
                 rep.num_devices++;
             }
@@ -164,19 +154,16 @@ ProcXIQueryDevice(ClientPtr client)
 }
 
 void
-SRepXIQueryDevice(ClientPtr client, int size, xXIQueryDeviceReply *rep)
+SRepXIQueryDevice(ClientPtr client, int size, xXIQueryDeviceReply * rep)
 {
-    char n;
-
-    swaps(&rep->sequenceNumber, n);
-    swapl(&rep->length, n);
-    swaps(&rep->num_devices, n);
+    swaps(&rep->sequenceNumber);
+    swapl(&rep->length);
+    swaps(&rep->num_devices);
 
     /* Device info is already swapped, see ProcXIQueryDevice */
 
-    WriteToClient(client, size, (char *)rep);
+    WriteToClient(client, size, (char *) rep);
 }
-
 
 /**
  * @return Whether the device should be included in the returned list.
@@ -185,9 +172,9 @@ static Bool
 ShouldSkipDevice(ClientPtr client, int deviceid, DeviceIntPtr dev)
 {
     /* if all devices are not being queried, only master devices are */
-    if (deviceid == XIAllDevices || IsMaster(dev))
-    {
+    if (deviceid == XIAllDevices || IsMaster(dev)) {
         int rc = XaceHook(XACE_DEVICE_ACCESS, client, dev, DixGetAttrAccess);
+
         if (rc == Success)
             return FALSE;
     }
@@ -218,56 +205,65 @@ SizeDeviceClasses(DeviceIntPtr dev)
 {
     int len = 0;
 
-    if (dev->button)
-    {
+    if (dev->button) {
         len += sizeof(xXIButtonInfo);
         len += dev->button->numButtons * sizeof(Atom);
         len += pad_to_int32(bits_to_bytes(dev->button->numButtons));
     }
 
-    if (dev->key)
-    {
+    if (dev->key) {
         XkbDescPtr xkb = dev->key->xkbInfo->desc;
+
         len += sizeof(xXIKeyInfo);
         len += (xkb->max_key_code - xkb->min_key_code + 1) * sizeof(uint32_t);
     }
 
-    if (dev->valuator)
-        len += sizeof(xXIValuatorInfo) * dev->valuator->numAxes;
+    if (dev->valuator) {
+        int i;
+
+        len += (sizeof(xXIValuatorInfo)) * dev->valuator->numAxes;
+
+        for (i = 0; i < dev->valuator->numAxes; i++) {
+            if (dev->valuator->axes[i].scroll.type != SCROLL_TYPE_NONE)
+                len += sizeof(xXIScrollInfo);
+        }
+    }
+
+    if (dev->touch)
+        len += sizeof(xXITouchInfo);
 
     return len;
 }
-
 
 /**
  * Write button information into info.
  * @return Number of bytes written into info.
  */
 int
-ListButtonInfo(DeviceIntPtr dev, xXIButtonInfo* info, Bool reportState)
+ListButtonInfo(DeviceIntPtr dev, xXIButtonInfo * info, Bool reportState)
 {
     unsigned char *bits;
     int mask_len;
     int i;
 
     if (!dev || !dev->button)
-	return 0;
+        return 0;
 
     mask_len = bytes_to_int32(bits_to_bytes(dev->button->numButtons));
 
     info->type = ButtonClass;
     info->num_buttons = dev->button->numButtons;
     info->length = bytes_to_int32(sizeof(xXIButtonInfo)) +
-                   info->num_buttons + mask_len;
+        info->num_buttons + mask_len;
     info->sourceid = dev->button->sourceid;
 
-    bits = (unsigned char*)&info[1];
+    bits = (unsigned char *) &info[1];
     memset(bits, 0, mask_len * 4);
 
     if (reportState)
-	for (i = 0; i < dev->button->numButtons; i++)
-	    if (BitIsOn(dev->button->down, i))
-		SetBit(bits, i);
+        for (i = 0; i < dev->button->numButtons; i++)
+            if (BitIsOn(dev->button->down, i))
+                SetBit(bits, i);
 
     bits += mask_len * 4;
     memcpy(bits, dev->button->labels, dev->button->numButtons * sizeof(Atom));
@@ -276,19 +272,19 @@ ListButtonInfo(DeviceIntPtr dev, xXIButtonInfo* info, Bool reportState)
 }
 
 static void
-SwapButtonInfo(DeviceIntPtr dev, xXIButtonInfo* info)
+SwapButtonInfo(DeviceIntPtr dev, xXIButtonInfo * info)
 {
-    char n;
     Atom *btn;
     int i;
-    swaps(&info->type, n);
-    swaps(&info->length, n);
-    swaps(&info->sourceid, n);
 
-    for (i = 0, btn = (Atom*)&info[1]; i < info->num_buttons; i++, btn++)
-        swaps(btn, n);
+    swaps(&info->type);
+    swaps(&info->length);
+    swaps(&info->sourceid);
 
-    swaps(&info->num_buttons, n);
+    for (i = 0, btn = (Atom *) &info[1]; i < info->num_buttons; i++, btn++)
+        swapl(btn);
+
+    swaps(&info->num_buttons);
 }
 
 /**
@@ -296,7 +292,7 @@ SwapButtonInfo(DeviceIntPtr dev, xXIButtonInfo* info)
  * @return Number of bytes written into info.
  */
 int
-ListKeyInfo(DeviceIntPtr dev, xXIKeyInfo* info)
+ListKeyInfo(DeviceIntPtr dev, xXIKeyInfo * info)
 {
     int i;
     XkbDescPtr xkb = dev->key->xkbInfo->desc;
@@ -304,10 +300,10 @@ ListKeyInfo(DeviceIntPtr dev, xXIKeyInfo* info)
 
     info->type = KeyClass;
     info->num_keycodes = xkb->max_key_code - xkb->min_key_code + 1;
-    info->length = sizeof(xXIKeyInfo)/4 + info->num_keycodes;
+    info->length = sizeof(xXIKeyInfo) / 4 + info->num_keycodes;
     info->sourceid = dev->key->sourceid;
 
-    kc = (uint32_t*)&info[1];
+    kc = (uint32_t *) & info[1];
     for (i = xkb->min_key_code; i <= xkb->max_key_code; i++, kc++)
         *kc = i;
 
@@ -315,19 +311,20 @@ ListKeyInfo(DeviceIntPtr dev, xXIKeyInfo* info)
 }
 
 static void
-SwapKeyInfo(DeviceIntPtr dev, xXIKeyInfo* info)
+SwapKeyInfo(DeviceIntPtr dev, xXIKeyInfo * info)
 {
-    char n;
     uint32_t *key;
     int i;
-    swaps(&info->type, n);
-    swaps(&info->length, n);
-    swaps(&info->sourceid, n);
 
-    for (i = 0, key = (uint32_t*)&info[1]; i < info->num_keycodes; i++, key++)
-        swapl(key, n);
+    swaps(&info->type);
+    swaps(&info->length);
+    swaps(&info->sourceid);
 
-    swaps(&info->num_keycodes, n);
+    for (i = 0, key = (uint32_t *) & info[1]; i < info->num_keycodes;
+         i++, key++)
+        swapl(key);
+
+    swaps(&info->num_keycodes);
 }
 
 /**
@@ -336,61 +333,135 @@ SwapKeyInfo(DeviceIntPtr dev, xXIKeyInfo* info)
  * @return The number of bytes written into info.
  */
 int
-ListValuatorInfo(DeviceIntPtr dev, xXIValuatorInfo* info, int axisnumber,
-		 Bool reportState)
+ListValuatorInfo(DeviceIntPtr dev, xXIValuatorInfo * info, int axisnumber,
+                 Bool reportState)
 {
     ValuatorClassPtr v = dev->valuator;
 
     info->type = ValuatorClass;
-    info->length = sizeof(xXIValuatorInfo)/4;
+    info->length = sizeof(xXIValuatorInfo) / 4;
     info->label = v->axes[axisnumber].label;
     info->min.integral = v->axes[axisnumber].min_value;
     info->min.frac = 0;
     info->max.integral = v->axes[axisnumber].max_value;
     info->max.frac = 0;
-    info->value.integral = (int)v->axisVal[axisnumber];
-    info->value.frac = (int)(v->axisVal[axisnumber] * (1 << 16) * (1 << 16));
+    info->value = double_to_fp3232(v->axisVal[axisnumber]);
     info->resolution = v->axes[axisnumber].resolution;
     info->number = axisnumber;
     info->mode = valuator_get_mode(dev, axisnumber);
     info->sourceid = v->sourceid;
 
     if (!reportState)
-	info->value = info->min;
+        info->value = info->min;
 
     return info->length * 4;
 }
 
 static void
-SwapValuatorInfo(DeviceIntPtr dev, xXIValuatorInfo* info)
+SwapValuatorInfo(DeviceIntPtr dev, xXIValuatorInfo * info)
 {
-    char n;
-    swaps(&info->type, n);
-    swaps(&info->length, n);
-    swapl(&info->label, n);
-    swapl(&info->min.integral, n);
-    swapl(&info->min.frac, n);
-    swapl(&info->max.integral, n);
-    swapl(&info->max.frac, n);
-    swaps(&info->number, n);
-    swaps(&info->sourceid, n);
+    swaps(&info->type);
+    swaps(&info->length);
+    swapl(&info->label);
+    swapl(&info->min.integral);
+    swapl(&info->min.frac);
+    swapl(&info->max.integral);
+    swapl(&info->max.frac);
+    swaps(&info->number);
+    swaps(&info->sourceid);
 }
 
-int GetDeviceUse(DeviceIntPtr dev, uint16_t *attachment)
+int
+ListScrollInfo(DeviceIntPtr dev, xXIScrollInfo * info, int axisnumber)
+{
+    ValuatorClassPtr v = dev->valuator;
+    AxisInfoPtr axis = &v->axes[axisnumber];
+
+    if (axis->scroll.type == SCROLL_TYPE_NONE)
+        return 0;
+
+    info->type = XIScrollClass;
+    info->length = sizeof(xXIScrollInfo) / 4;
+    info->number = axisnumber;
+    switch (axis->scroll.type) {
+    case SCROLL_TYPE_VERTICAL:
+        info->scroll_type = XIScrollTypeVertical;
+        break;
+    case SCROLL_TYPE_HORIZONTAL:
+        info->scroll_type = XIScrollTypeHorizontal;
+        break;
+    default:
+        ErrorF("[Xi] Unknown scroll type %d. This is a bug.\n",
+               axis->scroll.type);
+        break;
+    }
+    info->increment = double_to_fp3232(axis->scroll.increment);
+    info->sourceid = v->sourceid;
+
+    info->flags = 0;
+
+    if (axis->scroll.flags & SCROLL_FLAG_DONT_EMULATE)
+        info->flags |= XIScrollFlagNoEmulation;
+    if (axis->scroll.flags & SCROLL_FLAG_PREFERRED)
+        info->flags |= XIScrollFlagPreferred;
+
+    return info->length * 4;
+}
+
+static void
+SwapScrollInfo(DeviceIntPtr dev, xXIScrollInfo * info)
+{
+    swaps(&info->type);
+    swaps(&info->length);
+    swaps(&info->number);
+    swaps(&info->sourceid);
+    swaps(&info->scroll_type);
+    swapl(&info->increment.integral);
+    swapl(&info->increment.frac);
+}
+
+/**
+ * List multitouch information
+ *
+ * @return The number of bytes written into info.
+ */
+int
+ListTouchInfo(DeviceIntPtr dev, xXITouchInfo * touch)
+{
+    touch->type = XITouchClass;
+    touch->length = sizeof(xXITouchInfo) >> 2;
+    touch->sourceid = touch->sourceid;
+    touch->mode = dev->touch->mode;
+    touch->num_touches = dev->touch->num_touches;
+
+    return touch->length << 2;
+}
+
+static void
+SwapTouchInfo(DeviceIntPtr dev, xXITouchInfo * touch)
+{
+    swaps(&touch->type);
+    swaps(&touch->length);
+    swaps(&touch->sourceid);
+}
+
+int
+GetDeviceUse(DeviceIntPtr dev, uint16_t * attachment)
 {
     DeviceIntPtr master = GetMaster(dev, MASTER_ATTACHED);
     int use;
 
-    if (IsMaster(dev))
-    {
+    if (IsMaster(dev)) {
         DeviceIntPtr paired = GetPairedDevice(dev);
+
         use = IsPointerDevice(dev) ? XIMasterPointer : XIMasterKeyboard;
         *attachment = (paired ? paired->id : 0);
-    } else if (!IsFloating(dev))
-    {
+    }
+    else if (!IsFloating(dev)) {
         use = IsPointerDevice(master) ? XISlavePointer : XISlaveKeyboard;
         *attachment = master->id;
-    } else
+    }
+    else
         use = XIFloatingSlave;
 
     return use;
@@ -402,9 +473,9 @@ int GetDeviceUse(DeviceIntPtr dev, uint16_t *attachment)
  * @return The number of bytes used.
  */
 static int
-ListDeviceInfo(ClientPtr client, DeviceIntPtr dev, xXIDeviceInfo* info)
+ListDeviceInfo(ClientPtr client, DeviceIntPtr dev, xXIDeviceInfo * info)
 {
-    char *any = (char*)&info[1];
+    char *any = (char *) &info[1];
     int len = 0, total_len = 0;
 
     info->deviceid = dev->id;
@@ -431,7 +502,7 @@ ListDeviceInfo(ClientPtr client, DeviceIntPtr dev, xXIDeviceInfo* info)
  */
 int
 ListDeviceClasses(ClientPtr client, DeviceIntPtr dev,
-		  char *any, uint16_t *nclasses)
+                  char *any, uint16_t * nclasses)
 {
     int total_len = 0;
     int len;
@@ -441,26 +512,38 @@ ListDeviceClasses(ClientPtr client, DeviceIntPtr dev,
     /* Check if the current device state should be suppressed */
     rc = XaceHook(XACE_DEVICE_ACCESS, client, dev, DixReadAccess);
 
-    if (dev->button)
-    {
+    if (dev->button) {
         (*nclasses)++;
-        len = ListButtonInfo(dev, (xXIButtonInfo*)any, rc == Success);
+        len = ListButtonInfo(dev, (xXIButtonInfo *) any, rc == Success);
         any += len;
         total_len += len;
     }
 
-    if (dev->key)
-    {
+    if (dev->key) {
         (*nclasses)++;
-        len = ListKeyInfo(dev, (xXIKeyInfo*)any);
+        len = ListKeyInfo(dev, (xXIKeyInfo *) any);
         any += len;
         total_len += len;
     }
 
-    for (i = 0; dev->valuator && i < dev->valuator->numAxes; i++)
-    {
+    for (i = 0; dev->valuator && i < dev->valuator->numAxes; i++) {
         (*nclasses)++;
-        len = ListValuatorInfo(dev, (xXIValuatorInfo*)any, i, rc == Success);
+        len = ListValuatorInfo(dev, (xXIValuatorInfo *) any, i, rc == Success);
+        any += len;
+        total_len += len;
+    }
+
+    for (i = 0; dev->valuator && i < dev->valuator->numAxes; i++) {
+        len = ListScrollInfo(dev, (xXIScrollInfo *) any, i);
+        if (len)
+            (*nclasses)++;
+        any += len;
+        total_len += len;
+    }
+
+    if (dev->touch) {
+        (*nclasses)++;
+        len = ListTouchInfo(dev, (xXITouchInfo *) any);
         any += len;
         total_len += len;
     }
@@ -469,38 +552,43 @@ ListDeviceClasses(ClientPtr client, DeviceIntPtr dev,
 }
 
 static void
-SwapDeviceInfo(DeviceIntPtr dev, xXIDeviceInfo* info)
+SwapDeviceInfo(DeviceIntPtr dev, xXIDeviceInfo * info)
 {
-    char n;
-    char *any = (char*)&info[1];
+    char *any = (char *) &info[1];
     int i;
 
     /* Skip over name */
     any += pad_to_int32(info->name_len);
 
-    for (i = 0; i < info->num_classes; i++)
-    {
-        int len = ((xXIAnyInfo*)any)->length;
-        switch(((xXIAnyInfo*)any)->type)
-        {
-            case XIButtonClass:
-                SwapButtonInfo(dev, (xXIButtonInfo*)any);
-                break;
-            case XIKeyClass:
-                SwapKeyInfo(dev, (xXIKeyInfo*)any);
-                break;
-            case XIValuatorClass:
-                SwapValuatorInfo(dev, (xXIValuatorInfo*)any);
-                break;
+    for (i = 0; i < info->num_classes; i++) {
+        int len = ((xXIAnyInfo *) any)->length;
+
+        switch (((xXIAnyInfo *) any)->type) {
+        case XIButtonClass:
+            SwapButtonInfo(dev, (xXIButtonInfo *) any);
+            break;
+        case XIKeyClass:
+            SwapKeyInfo(dev, (xXIKeyInfo *) any);
+            break;
+        case XIValuatorClass:
+            SwapValuatorInfo(dev, (xXIValuatorInfo *) any);
+            break;
+        case XIScrollClass:
+            SwapScrollInfo(dev, (xXIScrollInfo *) any);
+            break;
+        case XITouchClass:
+            SwapTouchInfo(dev, (xXITouchInfo *) any);
+            break;
+
         }
 
         any += len * 4;
     }
 
-    swaps(&info->deviceid, n);
-    swaps(&info->use, n);
-    swaps(&info->attachment, n);
-    swaps(&info->num_classes, n);
-    swaps(&info->name_len, n);
+    swaps(&info->deviceid);
+    swaps(&info->use);
+    swaps(&info->attachment);
+    swaps(&info->num_classes);
+    swaps(&info->name_len);
 
 }

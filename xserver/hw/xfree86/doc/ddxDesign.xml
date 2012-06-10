@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 <!DOCTYPE article PUBLIC "-//OASIS//DTD DocBook XML V4.3//EN"
  "http://www.oasis-open.org/docbook/xml/4.3/docbookx.dtd" [
+ <!ENTITY % xorg-defs SYSTEM "defs.ent"> %xorg-defs;
  <!ENTITY % defs SYSTEM "/xserver/doc/xml/xserver.ent"> %defs;
  <!-- config file keyword markup -->
  <!-- specific config file keywords -->
@@ -19,13 +20,11 @@
 <article id="ddxDesign">
   <articleinfo>
 
-    <title>XFree86 DDX Design (Xorg server version &xserver.version;)</title>
+    <title>XFree86 DDX Design</title>
 
     <authorgroup>
-      <corpauthor><ulink url="http://www.xfree86.org/">
-	The XFree86 Project, Inc.</ulink></corpauthor>
-      <corpauthor><ulink url="http://www.x.org/">
-	The X.Org Foundation, Inc.</ulink></corpauthor>
+      <corpauthor>The XFree86 Project</corpauthor>
+      <corpauthor>The X.Org Foundation</corpauthor>
 
       <othercredit>
 	<firstname>Jim</firstname><surname>Gettys</surname>
@@ -34,7 +33,8 @@
     </authorgroup>
 
     <pubdate>&xserver.reldate;</pubdate>
-    <releaseinfo>Xorg server version &xserver.version;</releaseinfo>
+    <releaseinfo>X Version 11, Release &fullrelvers;</releaseinfo>
+    <releaseinfo>X Server Version &xserver.version;</releaseinfo>
 
   </articleinfo>
 
@@ -189,7 +189,7 @@ following changes:
 	  <varlistentry><term><emphasis>Keyboard</emphasis></term>
 	    <listitem><literallayout>
              &k.identifier; "Implicit Core Keyboard"
-             &k.driver; "keyboard"
+             &k.driver; "kbd"
 	      </literallayout></listitem></varlistentry>
 	  <varlistentry><term><emphasis>Pointer</emphasis></term>
 	    <listitem><literallayout>
@@ -206,7 +206,7 @@ following changes:
     is no &k.serverlayout; section, if the <option>-screen</option> command
     line options is used, or if the &k.serverlayout; section doesn't
     reference any &k.inputdevice; sections.  In this case, the first
-    sections with drivers "keyboard" and "mouse" are used as the core
+    sections with drivers "kbd" and "mouse" are used as the core
     keyboard and pointer respectively.
       </para>
     </sect2>
@@ -662,11 +662,6 @@ Here is what <function>InitOutput()</function> does:
 
       <para>
     This is done at the start of the first server generation only.
-      </para>
-
-      <para>
-    The core server contains a list of mandatory modules.  These are loaded
-    first.  Currently the only module on this list is the bitmap font module.
       </para>
 
       <para>
@@ -3175,7 +3170,7 @@ would not need to use these directly.
 
     <blockquote><para>
 	<programlisting>
-    pointer xf86FindOption(pointer options, const char *name);
+    XF86OptionPtr xf86FindOption(XF86OptionPtr options, const char *name);
 	</programlisting>
 	<blockquote><para>
       Takes a list of options and an option name, and returns a handle
@@ -3187,7 +3182,7 @@ would not need to use these directly.
 
     <blockquote><para>
 	<programlisting>
-    char *xf86FindOptionValue(pointer options, const char *name);
+    const char *xf86FindOptionValue(XF86OptionPtr options, const char *name);
 	</programlisting>
 	<blockquote><para>
       Takes a list of options and an option name, and returns the value
@@ -3201,7 +3196,7 @@ would not need to use these directly.
 
     <blockquote><para>
 	<programlisting>
-    void xf86MarkOptionUsed(pointer option);
+    void xf86MarkOptionUsed(XF86OptionPtr option);
 	</programlisting>
 	<blockquote><para>
       Takes a handle for an option, and marks that option as used.
@@ -3211,7 +3206,7 @@ would not need to use these directly.
 
     <blockquote><para>
 	<programlisting>
-    void xf86MarkOptionUsedByName(pointer options, const char *name);
+    void xf86MarkOptionUsedByName(XF86OptionPtr options, const char *name);
 	</programlisting>
 	<blockquote><para>
       Takes a list of options and an option name and marks the first
@@ -3225,7 +3220,7 @@ Next, the higher level functions that most drivers would use.
     </para>
     <blockquote><para>
 	<programlisting>
-    void xf86CollectOptions(ScrnInfoPtr pScrn, pointer extraOpts);
+    void xf86CollectOptions(ScrnInfoPtr pScrn, XF86OptionPtr extraOpts);
 	</programlisting>
 	<blockquote><para>
       Collect the options from each of the config file sections used by
@@ -3245,7 +3240,7 @@ Next, the higher level functions that most drivers would use.
 
     <blockquote><para>
 	<programlisting>
-    void xf86ProcessOptions(int scrnIndex, pointer options,
+    void xf86ProcessOptions(int scrnIndex, XF86OptionPtr options,
                             OptionInfoPtr optinfo);
 	</programlisting>
 	<blockquote><para>
@@ -3354,7 +3349,7 @@ Next, the higher level functions that most drivers would use.
 
     <blockquote><para>
 	<programlisting>
-    void xf86ShowUnusedOptions(int scrnIndex, pointer options);
+    void xf86ShowUnusedOptions(int scrnIndex, XF86OptionPtr options);
 	</programlisting>
 	<blockquote><para>
       Prints out warning messages for each option in the list of options
@@ -3550,13 +3545,6 @@ The following include files are typically required by video drivers:
     "compiler.h"
 	      </filename></literallayout>
   Note: in drivers, this must be included after <filename>"xf86_ansic.h"</filename>.
-	  </para>
-
-	  <para>
-  Drivers that need to access PCI vendor/device definitions need this:
-	    <literallayout><filename>
-    "xf86PciInfo.h"
-	      </filename></literallayout>
 	  </para>
 
 	  <para>
@@ -5996,26 +5984,6 @@ typedef struct {
     Bool                *disablePtr;
     InitExtension       setupFunc;
 } ExtensionModule;
-	      </programlisting>
-	    </para>
-
-	  </blockquote></para></blockquote>
-
-      <blockquote><para>
-	  <programlisting>
-    void LoadFont(FontModule *font);
-	  </programlisting>
-	  <blockquote><para>
-    This registers the entry points for the font rasteriser module
-    identified by <parameter>font</parameter>.  The <structname>FontModule</structname>
-    struct is defined as:
-
-	      <programlisting>
- typedef struct {
-    InitFont    initFunc;
-    char *      name;
-    pointer     module;
-} FontModule;
 	      </programlisting>
 	    </para>
 

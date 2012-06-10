@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 <!DOCTYPE article PUBLIC "-//OASIS//DTD DocBook XML V4.3//EN"
  "http://www.oasis-open.org/docbook/xml/4.3/docbookx.dtd" [
+ <!ENTITY % defs SYSTEM "/xserver/doc/xml/xserver.ent"> %defs;
 ]>
 
 <article>
@@ -14,6 +15,7 @@
       <author><firstname>Rickard E.</firstname><surname>Faith</surname></author>
     </authorgroup>
     <pubdate>29 June 2004 (created 25 July 2001)</pubdate>
+    <releaseinfo>X Server Version &xserver.version;</releaseinfo>
     <abstract><para>
         This document covers the motivation, background, design, and
         implementation of the distributed multihead X (DMX) system.  It
@@ -967,16 +969,9 @@ event queue.  It is simply passed the event to be queued.
 </para>
 
 <para>The cursor position should be updated when motion events are
-enqueued, by calling either miPointerAbsoluteCursor() or
-miPointerDeltaCursor():
+enqueued by calling miPointerDeltaCursor():
 
 <variablelist>
-<varlistentry>
-<term>miPointerAbsoluteCursor()</term>
-<listitem>
-<para>This MI function is used to move the
-cursor to the absolute coordinates provided.
-</para></listitem></varlistentry>
 <varlistentry>
 <term>miPointerDeltaCursor()</term>
 <listitem>
@@ -3392,7 +3387,7 @@ Unrepaired warnings are as follows:
 <orderedlist>
     <listitem><para>
         Fixed-size buffers are used in many areas, but code has been
-        added to protect against buffer overflows (e.g., XmuSnprint).
+        added to protect against buffer overflows (e.g., snprintf).
         The only instances that have not yet been fixed are in
         config/xdmxconfig.c (which is not part of the Xdmx server) and
         input/usb-common.c.

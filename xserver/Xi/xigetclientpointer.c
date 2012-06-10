@@ -27,15 +27,15 @@
 #include <dix-config.h>
 #endif
 
-#include <X11/X.h>	/* for inputstr.h    */
-#include <X11/Xproto.h>	/* Request macro     */
-#include "inputstr.h"	/* DeviceIntPtr      */
-#include "windowstr.h"	/* window structure  */
-#include "scrnintstr.h"	/* screen structure  */
+#include <X11/X.h>              /* for inputstr.h    */
+#include <X11/Xproto.h>         /* Request macro     */
+#include "inputstr.h"           /* DeviceIntPtr      */
+#include "windowstr.h"          /* window structure  */
+#include "scrnintstr.h"         /* screen structure  */
 #include <X11/extensions/XI.h>
 #include <X11/extensions/XI2proto.h>
 #include "extnsionst.h"
-#include "extinit.h"	/* LookupDeviceIntRec */
+#include "extinit.h"            /* LookupDeviceIntRec */
 #include "exevents.h"
 #include "exglobals.h"
 
@@ -49,30 +49,30 @@
 int
 SProcXIGetClientPointer(ClientPtr client)
 {
-    char n;
     REQUEST(xXIGetClientPointerReq);
 
-    swaps(&stuff->length, n);
-    swapl(&stuff->win, n);
+    swaps(&stuff->length);
+    swapl(&stuff->win);
     return ProcXIGetClientPointer(client);
 }
 
-int ProcXIGetClientPointer(ClientPtr client)
+int
+ProcXIGetClientPointer(ClientPtr client)
 {
     int rc;
     ClientPtr winclient;
     xXIGetClientPointerReply rep;
+
     REQUEST(xXIGetClientPointerReq);
     REQUEST_SIZE_MATCH(xXIGetClientPointerReq);
 
-    if (stuff->win != None)
-    {
-        rc = dixLookupClient(&winclient, stuff->win, client,
-                DixGetAttrAccess);
+    if (stuff->win != None) {
+        rc = dixLookupClient(&winclient, stuff->win, client, DixGetAttrAccess);
 
         if (rc != Success)
             return BadWindow;
-    } else
+    }
+    else
         winclient = client;
 
     rep.repType = X_Reply;
@@ -95,12 +95,10 @@ int ProcXIGetClientPointer(ClientPtr client)
 
 void
 SRepXIGetClientPointer(ClientPtr client, int size,
-        xXIGetClientPointerReply* rep)
+                       xXIGetClientPointerReply * rep)
 {
-    char n;
-    swaps(&rep->sequenceNumber, n);
-    swapl(&rep->length, n);
-    swaps(&rep->deviceid, n);
-    WriteToClient(client, size, (char *)rep);
+    swaps(&rep->sequenceNumber);
+    swapl(&rep->length);
+    swaps(&rep->deviceid);
+    WriteToClient(client, size, (char *) rep);
 }
-

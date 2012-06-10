@@ -1,4 +1,4 @@
-/* $OpenBSD: privsep.c,v 1.19 2012/04/04 20:34:55 matthieu Exp $ */
+/* $OpenBSD: privsep.c,v 1.20 2012/06/10 13:21:31 matthieu Exp $ */
 /*
  * Copyright 2001 Niels Provos <provos@citi.umich.edu>
  * All rights reserved.
@@ -30,6 +30,10 @@
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  */
+#ifdef HAVE_DIX_CONFIG_H
+#include <dix-config.h>
+#endif
+
 #include <sys/param.h>
 #include <sys/uio.h>
 #include <sys/types.h>
@@ -43,6 +47,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+
+#include "os.h"
 
 enum cmd_types {
 	PRIV_OPEN_DEVICE,

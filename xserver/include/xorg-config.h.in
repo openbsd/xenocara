@@ -1,5 +1,5 @@
 /* xorg-config.h.in: not at all generated.                      -*- c -*-
- * 
+ *
  * This file differs from xorg-server.h.in in that -server is installed
  * with the rest of the SDK for external drivers/modules to use, whereas
  * -config is for internal use only (i.e. building the DDX).
@@ -118,29 +118,23 @@
 /* Have execinfo.h */
 #undef HAVE_EXECINFO_H
 
-/* Have pci_system_init_dev_mem() */
-#undef HAVE_PCI_SYSTEM_INIT_DEV_MEM
-
-/* Define to 1 if you have the `pci_device_is_boot_vga' function. */
-#undef HAVE_PCI_DEVICE_IS_BOOT_VGA
-
-/* Have pci_enable_device */
-#undef HAVE_PCI_DEVICE_ENABLE
-
-/* Define to 1 if you have the `pci_device_vgaarb_init' function. */
-#undef HAVE_PCI_DEVICE_VGAARB_INIT
-
 /* Path to text files containing PCI IDs */
 #undef PCI_TXT_IDS_PATH
 
 /* Use SIGIO handlers for input device events by default */
 #undef USE_SIGIO_BY_DEFAULT
 
-/* Support PC98 */
-#undef SUPPORT_PC98
-
 /* Build with libdrm support */
 #undef WITH_LIBDRM
+
+/* Use libpciaccess */
+#undef XSERVER_LIBPCIACCESS
+
+/* Have setugid */
+#undef HAVE_ISSETUGID
+
+/* Have getresuid */
+#undef HAVE_GETRESUID
 
 /* Use X server privilege separation */
 #undef X_PRIVSEP

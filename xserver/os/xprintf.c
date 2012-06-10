@@ -64,20 +64,22 @@
 #include "os.h"
 #include <stdarg.h>
 #include <stdio.h>
+#include <errno.h>
+#include <string.h>
 
 #ifdef asprintf
-# undef asprintf
+#undef asprintf
 #endif
 #ifdef vasprintf
-# undef vasprintf
+#undef vasprintf
 #endif
 
 #ifndef va_copy
-# ifdef __va_copy
-#  define va_copy __va_copy
-# else
-#  error "no working va_copy was found"
-# endif
+#ifdef __va_copy
+#define va_copy __va_copy
+#else
+#error "no working va_copy was found"
+#endif
 #endif
 
 /**
@@ -91,7 +93,7 @@
  * @return        size of allocated buffer, or -1 on error.
  */
 int
-Xvasprintf(char **ret, const char * _X_RESTRICT_KYWD format, va_list va)
+Xvasprintf(char **ret, const char *_X_RESTRICT_KYWD format, va_list va)
 {
 #ifdef HAVE_VASPRINTF
     return vasprintf(ret, format, va);
@@ -114,7 +116,7 @@ Xvasprintf(char **ret, const char * _X_RESTRICT_KYWD format, va_list va)
 }
 
 #ifndef HAVE_VASPRINTF
-# define vasprintf Xvasprintf
+#define vasprintf Xvasprintf
 #endif
 
 /**
@@ -128,10 +130,11 @@ Xvasprintf(char **ret, const char * _X_RESTRICT_KYWD format, va_list va)
  * @return        size of allocated buffer, or -1 on error.
  */
 int
-Xasprintf(char ** ret, const char * _X_RESTRICT_KYWD format, ...)
+Xasprintf(char **ret, const char *_X_RESTRICT_KYWD format, ...)
 {
     int size;
     va_list va;
+
     va_start(va, format);
     size = vasprintf(ret, format, va);
     va_end(va);
@@ -150,12 +153,12 @@ Xasprintf(char ** ret, const char * _X_RESTRICT_KYWD format, ...)
  * @return        size of allocated buffer
  */
 int
-XNFvasprintf(char **ret, const char * _X_RESTRICT_KYWD format, va_list va)
+XNFvasprintf(char **ret, const char *_X_RESTRICT_KYWD format, va_list va)
 {
     int size = vasprintf(ret, format, va);
+
     if ((size == -1) || (*ret == NULL)) {
-	Error("XNFvasprintf");
-	FatalError("XNFvasprintf failed");
+        FatalError("XNFvasprintf failed: %s", strerror(errno));
     }
     return size;
 }
@@ -172,14 +175,59 @@ XNFvasprintf(char **ret, const char * _X_RESTRICT_KYWD format, va_list va)
  * @return        size of allocated buffer
  */
 int
-XNFasprintf(char ** ret, const char * _X_RESTRICT_KYWD format, ...)
+XNFasprintf(char **ret, const char *_X_RESTRICT_KYWD format, ...)
 {
     int size;
     va_list va;
+
     va_start(va, format);
     size = XNFvasprintf(ret, format, va);
     va_end(va);
     return size;
+}
+
+/**
+ * Varargs snprintf that returns the actual number of bytes (excluding final
+ * '\0') that were copied into the buffer.
+ * This is opposed to the normal sprintf() usually returns the number of bytes
+ * that would have been written.
+ *
+ * @param s       buffer to copy into
+ * @param n       size of buffer s
+ * @param format  printf style format string
+ * @param va      variable argument list
+ * @return        number of bytes actually copied, excluding final '\0'
+ */
+int
+Xvscnprintf(char *s, int n, const char *format, va_list args)
+{
+    int x;
+    if (n == 0)
+        return 0;
+    x = vsnprintf(s, n , format, args);
+    return (x >= n) ? (n - 1) : x;
+}
+
+/**
+ * snprintf that returns the actual number of bytes (excluding final '\0') that
+ * were copied into the buffer.
+ * This is opposed to the normal sprintf() usually returns the number of bytes
+ * that would have been written.
+ *
+ * @param s       buffer to copy into
+ * @param n       size of buffer s
+ * @param format  printf style format string
+ * @param ...     arguments for specified format
+ * @return        number of bytes actually copied, excluding final '\0'
+ */
+int Xscnprintf(char *s, int n, const char *format, ...)
+{
+    int x;
+    va_list ap;
+    va_start(ap, format);
+    x = Xvscnprintf(s, n, format, ap);
+    va_end(ap);
+    return x;
 }
 
 /* Old api, now deprecated, may be removed in the future */
@@ -189,18 +237,20 @@ Xvprintf(const char *format, va_list va)
     char *ret;
 
     if (vasprintf(&ret, format, va) == -1)
-	ret = NULL;
+        ret = NULL;
 
     return ret;
 }
 
-char *Xprintf(const char *format, ...)
+char *
+Xprintf(const char *format, ...)
 {
     char *ret;
     va_list va;
+
     va_start(va, format);
     if (vasprintf(&ret, format, va) == -1)
-	ret = NULL;
+        ret = NULL;
     va_end(va);
     return ret;
 }
@@ -215,10 +265,12 @@ XNFvprintf(const char *format, va_list va)
     return ret;
 }
 
-char *XNFprintf(const char *format, ...)
+char *
+XNFprintf(const char *format, ...)
 {
     char *ret;
     va_list va;
+
     va_start(va, format);
     XNFvasprintf(&ret, format, va);
     va_end(va);

@@ -54,7 +54,7 @@ SOFTWARE.
 #include <dix-config.h>
 #endif
 
-#include "inputstr.h"	/* DeviceIntPtr      */
+#include "inputstr.h"           /* DeviceIntPtr      */
 #include <X11/extensions/XI.h>
 #include <X11/extensions/XIproto.h>
 #include "XIstubs.h"
@@ -71,10 +71,8 @@ SOFTWARE.
 int
 SProcXSetDeviceMode(ClientPtr client)
 {
-    char n;
-
     REQUEST(xSetDeviceModeReq);
-    swaps(&stuff->length, n);
+    swaps(&stuff->length);
     return (ProcXSetDeviceMode(client));
 }
 
@@ -101,27 +99,26 @@ ProcXSetDeviceMode(ClientPtr client)
 
     rc = dixLookupDevice(&dev, stuff->deviceid, client, DixSetAttrAccess);
     if (rc != Success)
-	return rc;
+        return rc;
     if (dev->valuator == NULL)
-	return BadMatch;
+        return BadMatch;
     if ((dev->deviceGrab.grab) && !SameClient(dev->deviceGrab.grab, client))
-	rep.status = AlreadyGrabbed;
+        rep.status = AlreadyGrabbed;
     else
-	rep.status = SetDeviceMode(client, dev, stuff->mode);
+        rep.status = SetDeviceMode(client, dev, stuff->mode);
 
     if (rep.status == Success)
         valuator_set_mode(dev, VALUATOR_MODE_ALL_AXES, stuff->mode);
-    else if (rep.status != AlreadyGrabbed)
-    {
-	switch(rep.status) {
-	    case BadMatch:
-	    case BadImplementation:
-	    case BadAlloc:
-		break;
-	    default:
-		rep.status = BadMode;
-	}
-	return rep.status;
+    else if (rep.status != AlreadyGrabbed) {
+        switch (rep.status) {
+        case BadMatch:
+        case BadImplementation:
+        case BadAlloc:
+            break;
+        default:
+            rep.status = BadMode;
+        }
+        return rep.status;
     }
 
     WriteReplyToClient(client, sizeof(xSetDeviceModeReply), &rep);
@@ -138,9 +135,7 @@ ProcXSetDeviceMode(ClientPtr client)
 void
 SRepXSetDeviceMode(ClientPtr client, int size, xSetDeviceModeReply * rep)
 {
-    char n;
-
-    swaps(&rep->sequenceNumber, n);
-    swapl(&rep->length, n);
-    WriteToClient(client, size, (char *)rep);
+    swaps(&rep->sequenceNumber);
+    swapl(&rep->length);
+    WriteToClient(client, size, (char *) rep);
 }

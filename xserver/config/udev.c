@@ -35,6 +35,7 @@
 #include "hotplug.h"
 #include "config-backends.h"
 #include "os.h"
+#include "globals.h"
 
 #define UDEV_XKB_PROP_KEY "xkb"
 
@@ -59,12 +60,13 @@ device_added(struct udev_device *udev_device)
     const char *syspath;
     const char *tags_prop;
     const char *key, *value, *tmp;
-    InputOption *options = NULL, *tmpo;
-    InputAttributes attrs = {};
+    InputOption *input_options;
+    InputAttributes attrs = { };
     DeviceIntPtr dev = NULL;
     struct udev_list_entry *set, *entry;
     struct udev_device *parent;
     int rc;
+    const char *dev_seat;
 
     path = udev_device_get_devnode(udev_device);
 
@@ -73,22 +75,26 @@ device_added(struct udev_device *udev_device)
     if (!path || !syspath)
         return;
 
+    dev_seat = udev_device_get_property_value(udev_device, "ID_SEAT");
+    if (!dev_seat)
+        dev_seat = "seat0";
+
+    if (SeatId && strcmp(dev_seat, SeatId))
+        return;
+
+    if (!SeatId && strcmp(dev_seat, "seat0"))
+        return;
+
     if (!udev_device_get_property_value(udev_device, "ID_INPUT")) {
         LogMessageVerb(X_INFO, 10,
                        "config/udev: ignoring device %s without "
-                       "property ID_INPUT set\n",
-                       path);
+                       "property ID_INPUT set\n", path);
         return;
     }
 
-    options = calloc(sizeof(*options), 1);
-    if (!options)
+    input_options = input_option_new(NULL, "_source", "server/udev");
+    if (!input_options)
         return;
-
-    options->key = strdup("_source");
-    options->value = strdup("server/udev");
-    if (!options->key || !options->value)
-        goto unwind;
 
     parent = udev_device_get_parent(udev_device);
     if (parent) {
@@ -109,7 +115,8 @@ device_added(struct udev_device *udev_device)
         LOG_SYSATTR(ppath, "id", pnp_id);
 
         /* construct USB ID in lowercase hex - "0000:ffff" */
-        if (product && sscanf(product, "%*x/%4x/%4x/%*x", &usb_vendor, &usb_model) == 2) {
+        if (product &&
+            sscanf(product, "%*x/%4x/%4x/%*x", &usb_vendor, &usb_model) == 2) {
             if (asprintf(&attrs.usb_id, "%04x:%04x", usb_vendor, usb_model)
                 == -1)
                 attrs.usb_id = NULL;
@@ -121,10 +128,9 @@ device_added(struct udev_device *udev_device)
         name = "(unnamed)";
     else
         attrs.product = strdup(name);
-    add_option(&options, "name", name);
-
-    add_option(&options, "path", path);
-    add_option(&options, "device", path);
+    input_options = input_option_new(input_options, "name", name);
+    input_options = input_option_new(input_options, "path", path);
+    input_options = input_option_new(input_options, "device", path);
     if (path)
         attrs.device = strdup(path);
 
@@ -139,7 +145,7 @@ device_added(struct udev_device *udev_device)
 
     if (device_is_duplicate(config_info)) {
         LogMessage(X_WARNING, "config/udev: device %s already added. "
-                              "Ignoring.\n", name);
+                   "Ignoring.\n", name);
         goto unwind;
     }
 
@@ -149,60 +155,66 @@ device_added(struct udev_device *udev_device)
         if (!key)
             continue;
         value = udev_list_entry_get_value(entry);
-        if (!strncasecmp(key, UDEV_XKB_PROP_KEY,
-                                sizeof(UDEV_XKB_PROP_KEY) - 1)) {
+        if (!strncasecmp(key, UDEV_XKB_PROP_KEY, sizeof(UDEV_XKB_PROP_KEY) - 1)) {
             LOG_PROPERTY(path, key, value);
             tmp = key + sizeof(UDEV_XKB_PROP_KEY) - 1;
             if (!strcasecmp(tmp, "rules"))
-                add_option(&options, "xkb_rules", value);
+                input_options =
+                    input_option_new(input_options, "xkb_rules", value);
             else if (!strcasecmp(tmp, "layout"))
-                add_option(&options, "xkb_layout", value);
+                input_options =
+                    input_option_new(input_options, "xkb_layout", value);
             else if (!strcasecmp(tmp, "variant"))
-                add_option(&options, "xkb_variant", value);
+                input_options =
+                    input_option_new(input_options, "xkb_variant", value);
             else if (!strcasecmp(tmp, "model"))
-                add_option(&options, "xkb_model", value);
+                input_options =
+                    input_option_new(input_options, "xkb_model", value);
             else if (!strcasecmp(tmp, "options"))
-                add_option(&options, "xkb_options", value);
-        } else if (!strcmp(key, "ID_VENDOR")) {
+                input_options =
+                    input_option_new(input_options, "xkb_options", value);
+        }
+        else if (!strcmp(key, "ID_VENDOR")) {
             LOG_PROPERTY(path, key, value);
             attrs.vendor = strdup(value);
-        } else if (!strcmp(key, "ID_INPUT_KEY")) {
+        }
+        else if (!strcmp(key, "ID_INPUT_KEY")) {
             LOG_PROPERTY(path, key, value);
             attrs.flags |= ATTR_KEYBOARD;
-        } else if (!strcmp(key, "ID_INPUT_MOUSE")) {
+        }
+        else if (!strcmp(key, "ID_INPUT_MOUSE")) {
             LOG_PROPERTY(path, key, value);
             attrs.flags |= ATTR_POINTER;
-        } else if (!strcmp(key, "ID_INPUT_JOYSTICK")) {
+        }
+        else if (!strcmp(key, "ID_INPUT_JOYSTICK")) {
             LOG_PROPERTY(path, key, value);
             attrs.flags |= ATTR_JOYSTICK;
-        } else if (!strcmp(key, "ID_INPUT_TABLET")) {
+        }
+        else if (!strcmp(key, "ID_INPUT_TABLET")) {
             LOG_PROPERTY(path, key, value);
             attrs.flags |= ATTR_TABLET;
-        } else if (!strcmp(key, "ID_INPUT_TOUCHPAD")) {
+        }
+        else if (!strcmp(key, "ID_INPUT_TOUCHPAD")) {
             LOG_PROPERTY(path, key, value);
             attrs.flags |= ATTR_TOUCHPAD;
-        } else if (!strcmp(key, "ID_INPUT_TOUCHSCREEN")) {
+        }
+        else if (!strcmp(key, "ID_INPUT_TOUCHSCREEN")) {
             LOG_PROPERTY(path, key, value);
             attrs.flags |= ATTR_TOUCHSCREEN;
         }
     }
 
-    add_option(&options, "config_info", config_info);
+    input_options = input_option_new(input_options, "config_info", config_info);
 
     LogMessage(X_INFO, "config/udev: Adding input device %s (%s)\n",
                name, path);
-    rc = NewInputDeviceRequest(options, &attrs, &dev);
+    rc = NewInputDeviceRequest(input_options, &attrs, &dev);
     if (rc != Success)
         goto unwind;
 
  unwind:
     free(config_info);
-    while ((tmpo = options)) {
-        options = tmpo->next;
-        free(tmpo->key);        /* NULL if dev != NULL */
-        free(tmpo->value);      /* NULL if dev != NULL */
-        free(tmpo);
-    }
+    input_option_free_list(&input_options);
 
     free(attrs.usb_id);
     free(attrs.pnp_id);
@@ -211,6 +223,7 @@ device_added(struct udev_device *udev_device)
     free(attrs.vendor);
     if (attrs.tags) {
         char **tag = attrs.tags;
+
         while (*tag) {
             free(*tag);
             tag++;
@@ -245,7 +258,7 @@ wakeup_handler(pointer data, int err, pointer read_mask)
     if (err < 0)
         return;
 
-    if (FD_ISSET(udev_fd, (fd_set *)read_mask)) {
+    if (FD_ISSET(udev_fd, (fd_set *) read_mask)) {
         udev_device = udev_monitor_receive_device(udev_monitor);
         if (!udev_device)
             return;
@@ -281,8 +294,14 @@ config_udev_init(void)
     if (!udev_monitor)
         return 0;
 
-    udev_monitor_filter_add_match_subsystem_devtype(udev_monitor, "input", NULL);
+    udev_monitor_filter_add_match_subsystem_devtype(udev_monitor, "input",
+                                                    NULL);
     udev_monitor_filter_add_match_subsystem_devtype(udev_monitor, "tty", NULL); /* For Wacom serial devices */
+
+#ifdef HAVE_UDEV_MONITOR_FILTER_ADD_MATCH_TAG
+    if (SeatId && strcmp(SeatId, "seat0"))
+        udev_monitor_filter_add_match_tag(udev_monitor, SeatId);
+#endif
 
     if (udev_monitor_enable_receiving(udev_monitor)) {
         ErrorF("config/udev: failed to bind the udev monitor\n");
@@ -296,11 +315,17 @@ config_udev_init(void)
     udev_enumerate_add_match_subsystem(enumerate, "input");
     udev_enumerate_add_match_subsystem(enumerate, "tty");
 
+#ifdef HAVE_UDEV_ENUMERATE_ADD_MATCH_TAG
+    if (SeatId && strcmp(SeatId, "seat0"))
+        udev_enumerate_add_match_tag(enumerate, SeatId);
+#endif
+
     udev_enumerate_scan_devices(enumerate);
     devices = udev_enumerate_get_list_entry(enumerate);
     udev_list_entry_foreach(device, devices) {
         const char *syspath = udev_list_entry_get_name(device);
-        struct udev_device *udev_device = udev_device_new_from_syspath(udev, syspath);
+        struct udev_device *udev_device =
+            udev_device_new_from_syspath(udev, syspath);
 
         /* Device might be gone by the time we try to open it */
         if (!udev_device)
