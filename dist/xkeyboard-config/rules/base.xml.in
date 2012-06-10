@@ -3148,6 +3148,12 @@
         </variant>
         <variant>
           <configItem>
+            <name>qwerty</name>
+            <_description>German (qwerty)</_description>
+          </configItem>
+        </variant>
+        <variant>
+          <configItem>
             <name>ru</name>
             <_description>Russian (Germany, phonetic)</_description>
             <languageList>
@@ -3462,6 +3468,12 @@
           <configItem>
             <name>mac</name>
             <_description>Japanese (Macintosh)</_description>
+          </configItem>
+        </variant>
+        <variant>
+          <configItem>
+            <name>dvorak</name>
+            <_description>Japanese (Dvorak)</_description>
           </configItem>
         </variant>
       </variantList>

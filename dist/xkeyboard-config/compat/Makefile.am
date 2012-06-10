@@ -2,10 +2,10 @@ compatdir = $(xkb_base)/compat
 
 dist_compat_DATA = \
 accessx basic caps complete \
-default iso9995 \
-japan keypad ledcaps \
+iso9995 \
+japan ledcaps \
 lednum ledscroll level5 \
-misc mousekeys norepeat \
+misc mousekeys \
 olpc pc pc98 xfree86 \
 xtest README
 

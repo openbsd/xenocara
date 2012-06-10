@@ -48,13 +48,17 @@ xkb_symbols "olpc" {
 
     name[Group1]="French";
 
-    key <AD02>	{ [ z,  Z,  VoidSymbol, guillemotleft ]	};
+    key <I219>	{ [ less, greater ]	};
+    key <AD11>	{ [ dead_circumflex, dead_diaeresis, notsign, dead_abovering ]	};
+    key <AB08>	{ [ semicolon, period, underscore, multiply ]	};
+    key <TLDE>	{ [ twosuperior, asciitilde, VoidSymbol, VoidSymbol ]	};
 
-    key <AC02>	{ [ s,  S,  VoidSymbol, ssharp ] };
-
-    key <AB02>	{ [  x,  X,  VoidSymbol,     guillemotright ] };
-
-    key <I219>  { [ less, greater ] };
+    // Some keys only have the Shift+AltGr character printed on them (alongside
+    // the unmodified one). Make such keys shift-invariant so that the printed
+    // value is achieved by pressing AltGr or Shift+AltGr.
+    key <AB02>	{ [ x,  X,  guillemotright, guillemotright ]	};
+    key <AC02>	{ [ s,  S,  ssharp, ssharp ]	};
+    key <AD02>	{ [ z,  Z,  guillemotleft, guillemotleft ]	};
 };
 
 partial alphanumeric_keys
@@ -125,7 +129,8 @@ xkb_symbols "oss" {
 
     include "latin"
     include "level3(ralt_switch)"
-    include "nbsp(level4nl)"
+    include "nbsp(level4n)"
+    include "level5(rctrl_switch)"
     include "keypad(oss)"
 
     name[Group1]="French (alternative)";
@@ -527,7 +532,7 @@ xkb_symbols "bepo" {
     key <AB05> { [               k,            K,     asciitilde                 ] }; // k K ~
     key <AB06> { [      apostrophe,     question,   questiondown,      dead_hook ] }; // ' ? ¿ ̉
     key <AB07> { [               q,            Q, dead_abovering,  dead_belowdot ] }; // q Q ˚ ̣
-    key <AB08> { [               g,            G,             mu                 ] }; // g G µ
+    key <AB08> { [               g,            G,     dead_greek                 ] }; // g G µ
     key <AB09> { [               h,            H,         dagger,   doubledagger ] }; // h H † ‡
     key <AB10> { [               f,            F,    dead_ogonek,    ordfeminine ] }; // f F ̨ ª
 
@@ -809,7 +814,7 @@ xkb_symbols "bre" {
 partial alphanumeric_keys
 xkb_symbols "oci" {
 
-    include "keypad(oss)"
+    include "fr(oss)"
 
     name[Group1]= "Occitan";
 
