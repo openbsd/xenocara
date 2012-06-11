@@ -26,7 +26,8 @@ programming language. Other higher-level abstractions (for example,
 those provided by the toolkits for X) are built on top of the Xlib
 library. For further information about these higher-level libraries,
 see the appropriate toolkit documentation.
-The <citetitle>X Window System Protocol</citetitle> provides the
+The <olink targetdoc='x11protocol' targetptr='x11protocol'
+><citetitle>X Window System Protocol</citetitle></olink> provides the
 definitive word on the behavior of X.
 Although additional information appears here, the protocol document is
 the ruling document.
@@ -684,7 +685,7 @@ What you do inside of your top-level window, however,
 is up to your application.
 For further information,
 see <link linkend='Inter_Client_Communication_Functions'>chapter 14</link>
-and the <citetitle>Inter-Client Communication Conventions Manual</citetitle>.
+and the <olink targetdoc='icccm' targetptr='icccm'><citetitle>Inter-Client Communication Conventions Manual</citetitle></olink>.
     </para>
   </listitem>
 </itemizedlist>

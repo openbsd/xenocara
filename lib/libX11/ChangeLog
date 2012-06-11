@@ -1,3 +1,178 @@
+commit 6c5cb2a90a6479f56855e5167039c37c234cdfe7
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Jun 1 23:37:09 2012 -0700
+
+    libX11 1.5.0
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 05c587ec3be880721131a17c1dd4366e458fdd8b
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat May 26 14:37:28 2012 -0700
+
+    libX11 1.4.99.902 (1.5 RC2)
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit d817834d9772e3500d5102e2eae868b04a33c31f
+Author: Pander <pander@users.sourceforge.net>
+Date:   Sat May 5 19:02:10 2012 +0200
+
+    Compose: Reassigned squences with minus and a or o
+    
+    Reassigned squences with minus and a or o (vice versa and lower and
+    upper case) to conform existing series and not resulting in tilde.
+    Also added noe missing underscore sequence.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 6bfd1dca6e7cb2046ee6bf9dbbddc0af5ef7cc00
+Author: Pander <pander@users.sourceforge.net>
+Date:   Sat May 5 16:56:05 2012 +0200
+
+    Compose: Removed <slash> <U> and vice versa
+    
+    Combination with lower case u suffices
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 3a8b1637132d1e36eb5e11f52dfb284081772d14
+Author: Pander <pander@users.sourceforge.net>
+Date:   Sat May 5 16:44:31 2012 +0200
+
+    Compose: Removed <n> <minus> for n with tilde, also vice versa & for upper case
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit fd514d7a35119dd4413b51c84f2a536f2ca501a6
+Author: Pander <pander@users.sourceforge.net>
+Date:   Sat May 5 16:40:20 2012 +0200
+
+    Compose: Removed <S> in combination with a numeral for superscript
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 1b5cad3ca54410c4edbca79c23c463e9e088bc0d
+Author: Pander <pander@users.sourceforge.net>
+Date:   Sat May 5 16:28:01 2012 +0200
+
+    Compose: Reassigned <o> <apostrophe> to oacute, also for upper case.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 0bbc0d5e605e2a4a3eb00a229b651d4546e8aef4
+Author: James Cloos <cloos@jhcloos.com>
+Date:   Thu May 10 12:27:28 2012 -0400
+
+    Remove duplicate compose sequences from commit e51e37c118ae.
+    
+    The compose-check script only handles compiled Compose files, not
+    the Compose.pre files.  One must remember to use:
+    
+        ./autogen.sh; make; make check
+    
+    when reviewing patches to the Compose.pre files....
+    
+    Signed-off-by: James Cloos <cloos@jhcloos.com>
+
+commit e51e37c118ae6cb9ced8244ce1c410677e0279ce
+Author: Geoff Streeter <geoff@dyalog.com>
+Date:   Thu Mar 22 15:02:00 2012 +0000
+
+    Add APL support to compose
+    
+    Signed-off-by: Geoff Streeter <geoff@dyalog.com>
+    Signed-off-by: James Cloos <cloos@jhcloos.com>
+
+commit dac90324cee224df977a428afe80d960dceca769
+Author: Julien Cristau <jcristau@debian.org>
+Date:   Sat May 5 16:05:07 2012 +0200
+
+    configure: make previous change work with older autoconf
+    
+    autoconf 2.63 doesn't seem to like the nested AC_CHECK_DECL/FUNC.  So do
+    the tests separately.
+    
+    Reported-by: Dave Airlie
+    Signed-off-by: Julien Cristau <jcristau@debian.org>
+
+commit f5b50af4324186962e258ffe9be78d5ee4681982
+Author: Julien Cristau <jcristau@debian.org>
+Date:   Sun Apr 29 16:43:09 2012 +0200
+
+    configure: check if issetugid is declared
+    
+    GNU/kFreeBSD has issetugid in libc (for legacy apps?), but doesn't
+    declare it anywhere, causing gcc to error out with
+    -Werror=implicit-function-declaration.  Use AC_CHECK_DECL in addition to
+    AC_CHECK_FUNC so we disable this code instead of failing to build it.
+    
+    Debian bug#669670 <http://bugs.debian.org/669670>
+    
+    Signed-off-by: Julien Cristau <jcristau@debian.org>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 52e1b5cc3b6de76ccf4285b55652474a522ed9a8
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Mon Apr 30 16:36:47 2012 +1000
+
+    Typo fix
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit b64969f0e510d5d3300cf968741a3726a6409577
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Apr 17 18:12:02 2012 -0700
+
+    Add X11R7 sections to the libX11 & XKBlib credits to cover Docbook conversion
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 9ea611696f317ac3b3fb67893f1d6d87d49e3b5e
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Apr 17 18:01:36 2012 -0700
+
+    Add olinks from libX11 & localedb specs to ICCCM spec
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit b3c1b8cdab7d14220426c9b997ac362dc16318fc
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Apr 17 17:49:44 2012 -0700
+
+    Add olinks from libX11 spec to ICCCM spec
+    
+    Also convert ICCCM title mentions from <emphasis> to <citetitle>
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit ebebb65e753007ad01966dccc90bd6ca9a826488
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Apr 14 23:40:01 2012 -0700
+
+    libX11 AppC: Fix section headers that didn't translate from nroff properly
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Acked-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit d5ab4ae0e74ae1fb30fb72add0751effe2759bf2
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Apr 14 23:13:05 2012 -0700
+
+    Add olinks from libX11 spec to x11protocol spec
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Acked-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 83878a0e34fffd255597300dd3e6cd43fcd645b0
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Apr 14 22:28:53 2012 -0700
+
+    libX11 spec: Remove .br nroff macro left behind in XGetWindowProperty prototype
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit abc523fce31fcf2687229697a8eb656e343ecb0c
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Thu Mar 15 22:14:45 2012 -0700

@@ -1,7 +1,7 @@
 
 # Initialize Autoconf
 AC_PREREQ([2.60])
-AC_INIT([libX11], [1.4.99.901],
+AC_INIT([libX11], [1.5.0],
         [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg], [libX11])
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_HEADERS([src/config.h include/X11/XlibConf.h])
@@ -223,8 +223,12 @@ AC_CHECK_HEADERS([sys/select.h])
 AC_CHECK_FUNCS([strtol seteuid])
 # Used in lcFile.c (see also --enable-xlocaledir settings below)
 XLOCALEDIR_IS_SAFE="no"
-AC_CHECK_FUNC([issetugid], [XLOCALEDIR_IS_SAFE="yes"]
-	AC_DEFINE(HASSETUGID,1,[Has issetugid() function]))
+AC_CHECK_DECL([issetugid])
+AC_CHECK_FUNC([issetugid])
+if test "$ac_cv_have_decl_issetugid" = yes && test "$ac_cv_func_issetugid" = yes; then
+    XLOCALEDIR_IS_SAFE="yes"
+    AC_DEFINE(HASSETUGID,1,[Has issetugid() function])
+fi
 AC_CHECK_FUNC([getresuid], [XLOCALEDIR_IS_SAFE="yes"]
 	AC_DEFINE(HASGETRESUID,1,[Has getresuid() & getresgid() functions]))
 # Used in Font.c
