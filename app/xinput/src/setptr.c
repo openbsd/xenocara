@@ -48,7 +48,7 @@ set_pointer(Display	*display,
     info = find_device_info(display, argv[0], True);
 
     if (!info) {
-	fprintf(stderr, "unable to find device %s\n", argv[0]);
+	fprintf(stderr, "unable to find device '%s'\n", argv[0]);
 	return EXIT_FAILURE;
     }
 

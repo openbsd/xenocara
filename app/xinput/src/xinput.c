@@ -68,7 +68,7 @@ static entry drivers[] =
      set_mode
     },
     {"list",
-     "[--short || --long] [<device name>...]",
+     "[--short || --long || --name-only || --id-only] [<device name>...]",
      list
     },
     {"query-state",
@@ -104,6 +104,10 @@ static entry drivers[] =
       "<device>",
       test_xi2,
     },
+    { "map-to-output",
+      "<device> <output name>",
+      map_to_output,
+    },
 #endif
     { "list-props",
       "<device> [<device> ...]",
@@ -133,14 +137,24 @@ static entry drivers[] =
       "<device> [--type=atom|float|int] [--format=8|16|32] <property> <val> [<val> ...]",
       set_prop
     },
+    {
+      "disable",
+      "<device>",
+      disable,
+    },
+    {
+      "enable",
+      "<device>",
+      enable,
+    },
     {NULL, NULL, NULL
     }
 };
 
 static const char version_id[] = VERSION;
 
-int
-print_version()
+static int
+print_version(void)
 {
     XExtensionVersion	*version;
     Display *display;
@@ -184,6 +198,23 @@ xinput_version(Display	*display)
 	XFree(version);
     }
 
+#if HAVE_XI2
+    /* Announce our supported version so the server treats us correctly. */
+    if (vers >= XI_2_Major)
+    {
+        int maj = 2,
+            min = 0;
+
+#if HAVE_XI21
+        min = 1;
+#elif HAVE_XI22
+        min = 2;
+#endif
+
+        XIQueryVersion(display, &maj, &min);
+    }
+#endif
+
     return vers;
 }
 
@@ -219,7 +250,7 @@ find_device_info(Display	*display,
 	     (is_id && devices[loop].id == id))) {
 	    if (found) {
 	        fprintf(stderr,
-	                "Warning: There are multiple devices named \"%s\".\n"
+	                "Warning: There are multiple devices named '%s'.\n"
 	                "To ensure the correct one is selected, please use "
 	                "the device ID instead.\n\n", name);
 		return NULL;
@@ -327,33 +358,37 @@ main(int argc, char * argv[])
     char        *func;
     int event, error;
 
-    if (argc < 2) {
-	usage();
-	return EXIT_FAILURE;
+    if (argc > 1) {
+	func = argv[1];
+	while(func[0] == '-') func++;
+    } else {
+	func = "list";
     }
 
-    func = argv[1];
-    while((*func) == '-') func++;
-
     if (strcmp("version", func) == 0) {
-        return print_version(argv[0]);
+        return print_version();
+    }
+
+    if (strcmp("help", func) == 0) {
+        usage();
+        return 0;
     }
 
     display = XOpenDisplay(NULL);
 
     if (display == NULL) {
 	fprintf(stderr, "Unable to connect to X server\n");
-	return EXIT_FAILURE;
+	goto out;
     }
 
     if (!XQueryExtension(display, "XInputExtension", &xi_opcode, &event, &error)) {
         printf("X Input extension not available.\n");
-        return EXIT_FAILURE;
+        goto out;
     }
 
     if (!xinput_version(display)) {
 	fprintf(stderr, "%s extension not available\n", INAME);
-	return EXIT_FAILURE;
+	goto out;
     }
 
     while(driver->func_name) {
@@ -369,6 +404,9 @@ main(int argc, char * argv[])
 
     usage();
 
+out:
+    if (display)
+        XCloseDisplay(display);
     return EXIT_FAILURE;
 }
 

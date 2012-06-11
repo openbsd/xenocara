@@ -17,12 +17,18 @@ of the program and the version supported by the server. This option does not
 require a device name.
 .PP
 .TP 8
-.B --list [--short || --long] [\fIdevice\fP]
+.B --list [--short || --long || --name-only || --id-only] [\fIdevice\fP]
 If no argument is given list all the input devices. If an argument is given,
 show all the features of \fIdevice\fP.
 If --long is provided, the output includes detailed information about the
 capabilities of each devices. Otherwise, or if --short is provided, only the
 device names and some minimal information is listed.
+If --name-only is provided, the output is limited to the device names. One
+device name is listed per line. Note that the order the devices are listed
+is undefined.
+If --id-only is provided, the output is limited to the device IDs. One
+device ID is listed per line. Note that the order the devices are listed is
+undefined.
 .PP
 .TP 8
 .B --get-feedbacks \fIdevice\fP
@@ -40,7 +46,7 @@ Change the mode of \fIdevice\fP.
 .TP 8
 .B --set-ptr-feedback \fIdevice\fP \fIthreshold\fP \fInum\fP \fIdenom\fP
 Change the pointer acceleration (or feedback) parameters of \fIdevice\fP.
-The xset(1) man page has more details. For X.Org Server 1.7
+The xset(__appmansuffix__) man page has more details. For X.Org Server 1.7
 and above, there are additional device properties pertaining to pointer
 acceleration. These do not replace, but complement the pointer feedback
 setting.
@@ -98,9 +104,9 @@ loop displaying events received. If the -proximity is given, ProximityIn
 and ProximityOut are registered.
 .PP
 .TP 8
-.B --test_xi2
-Register for a number of XI2 events and display them. This option does not
-take a device argument.
+.B --test-xi2 [\fIdevice\fP]
+Register for a number of XI2 events and display them. If a device is given,
+only events on this device are displayed.
 .PP
 .TP 8
 .B --create-master \fIprefix\fP [sendCore] [enable]
@@ -133,6 +139,25 @@ Remove \fIslave\fP from its current master device.
 Set the ClientPointer for the client owning \fIwindow\fP to \fImaster\fP.
 \fImaster\fP must specify a master pointer.
 .PP
+.TP 8
+.B --map-to-output \fIdevice\fP \fIcrtc\fP
+Restricts the movements of the absolute \fIdevice\fP to the RandR
+\fIcrtc\fP. The output name must match a currently connected output (see
+\fIxrandr(__appmansuffix__)\fP). If the NVIDIA binary driver is
+detected or RandR 1.2 or later is not available, a Xinerama output may be
+specified as "HEAD-N", with N being the Xinerama screen number. This option
+has no effect on relative devices.
+.PP
+.TP 8
+.B --enable \fIdevice\fP
+Enable the \fIdevice\fP. This call is equivalent to
+.B xinput --set-prop device \fI"Device Enabled"\fP 1
+.PP
+.TP 8
+.B --disable \fIdevice\fP
+Disable the \fIdevice\fP. This call is equivalent to
+.B xinput --set-prop device \fI"Device Enabled"\fP 0
+.PP
 \fIdevice\fP can be the device name as a string or the XID of the
 device.
 .PP
@@ -145,18 +170,22 @@ device.
 \fIproperty\fP can be the property as a string or the Atom value.
 .PP
 .SH "SEE ALSO"
-X(__miscmansuffix__), xset(1)
+X(__miscmansuffix__), xset(__appmansuffix__), xrandr(__appmansuffix__)
 .SH COPYRIGHT
 Copyright 1996,1997, Frederic Lepied.
 .PP
+Copyright 2007, Peter Hutterer.
+.PP
 Copyright 2008, Philip Langdale.
+.PP
+Copyright 2009-2011, Red Hat, Inc.
 
 .SH AUTHORS
 
 .nf
+Peter Hutterer <peter.hutterer@who-t.net>
 Philip Langdale, <philipl@alumni.utexas.net>
 Frederic Lepied, France <Frederic.Lepied@sugix.frmug.org>
-Peter Hutterer <peter.hutterer@who-t.net>
 Julien Cristau <jcristau@debian.org>
 Thomas Jaeger <ThJaeger@gmail.com>
 and more.

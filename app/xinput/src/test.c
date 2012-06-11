@@ -54,7 +54,7 @@ register_events(Display		*dpy,
     device = XOpenDevice(dpy, info->id);
 
     if (!device) {
-	fprintf(stderr, "unable to open device %s\n", dev_name);
+	fprintf(stderr, "unable to open device '%s'\n", dev_name);
 	return 0;
     }
 
@@ -181,7 +181,7 @@ test(Display	*display,
 	info = find_device_info(display, argv[idx], True);
 
 	if (!info) {
-	    fprintf(stderr, "unable to find device %s\n", argv[idx]);
+	    fprintf(stderr, "unable to find device '%s'\n", argv[idx]);
 	    return EXIT_FAILURE;
 	} else {
 	    if (register_events(display, info, argv[idx], handle_proximity)) {

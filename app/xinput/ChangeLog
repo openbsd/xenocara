@@ -1,12 +1,325 @@
-commit 3a0a3a8e36710b04553774f147f09fd016e9895b
+commit 60fe84e83b14576fb70d79c5d39755a281906607
 Author: Peter Hutterer <peter.hutterer@who-t.net>
-Date:   Thu Dec 22 10:28:50 2011 +1000
+Date:   Tue May 15 15:47:45 2012 +1000
 
-    xinput 1.5.4
+    xinput 1.6.0
     
     Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
 
-commit 302686104e7c1d62eff2ac45ad1d12759e33290b
+commit 2c52e836b8e5a98a1faa5243cb4deb149091c52c
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Mon May 14 17:27:55 2012 +1000
+
+    Add --enable/--disable support
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Chase Douglas <chase.douglas@canonical.com>
+
+commit bfac9503e99a266e19bc21805cb4fc38efd16612
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Mon Apr 16 12:39:58 2012 +1000
+
+    xinput 1.5.99.901
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 286edaa10022fad59acd6d1eabb3a74769c99892
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Apr 10 09:28:36 2012 +1000
+
+    Print the sourceid for raw events
+    
+    Due to http://bugs.freedesktop.org/show_bug.cgi?id=34240 this will display 0
+    for XI < 2.2 and libXi < 1.6.1.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Chase Douglas <chase.douglas@canonical.com>
+
+commit 8caaf2f872be80e6aa222505d96d6025cf4f8d80
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Feb 21 11:57:19 2012 +1000
+
+    Handle XA_CARDINAL as property type
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Chase Douglas <chase.douglas@canonical.com>
+
+commit b181658db7c72b664d40f2736fe425819421ce52
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri Feb 17 14:34:23 2012 +1000
+
+    Replace NVIDIA-specific output checking
+    
+    If the binary driver drives at least one screen, the old method did
+    not allow for randr-style screen binding (on the other screen).
+    
+    Change the logic to:
+    - check if the output an randr output
+    - if not, check if the "default" randr output is present and the output name
+      was "HEAD-n"
+      - if so, use Xinerama-style mapping
+    
+    This keeps the current behaviour of not allowing Xinerama-style mapping if
+    all outputs are RandR capable.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Aaron Plattner <aplattner@nvidia.com>
+    Tested-by: Aaron Plattner <aplattner@nvidia.com>
+
+commit eb40d9cc5d59321263fd8fa3f76ddd912d1fb804
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri Feb 17 14:33:56 2012 +1000
+
+    Add find_output_xrandr to check for output presence
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 5d32964533e4ebe3c69f1dfa34c709a1f447ad86
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri Feb 17 13:23:08 2012 +1000
+
+    Don't leak output_info
+    
+    This inverts the logic to have a more obvious flow for freeing the
+    output_info.
+    
+    ==26716== 1,161 bytes in 8 blocks are definitely lost in loss record 5 of 7
+    ==26716==    at 0x4A074CD: malloc (vg_replace_malloc.c:236)
+    ==26716==    by 0x395D804ABA: XRRGetOutputInfo (in /usr/lib64/libXrandr.so.2.2.0)
+    ==26716==    by 0x40932B: map_output_xrandr (transform.c:150)
+    ==26716==    by 0x40982F: map_to_output (transform.c:263)
+    ==26716==    by 0x4070A4: main (xinput.c:386)
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit e1686fdbb8729f9f639ecab6860690103bb25db1
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri Feb 17 13:19:42 2012 +1000
+
+    Always call XCloseDisplay()
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Chase Douglas <chase.douglas@canonical.com>
+
+commit f427c74b6cd7089690c000c257468629a762b1eb
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri Feb 17 10:33:06 2012 +1000
+
+    Enclose property and device names in quotes
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Chase Douglas <chase.douglas@canonical.com>
+
+commit c591231a666d8dfdac4d301c0de49f34ac3e4aac
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Wed Feb 8 20:46:29 2012 +1000
+
+    Fix XRRCrtcInfo memory leaks
+    
+    crtc_info isn't used until later, move down to the block it is used to avoid
+    leaking.
+    
+    Reported-by: Aaron Plattner <aplattner@nvidia.com>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Aaron Plattner <aplattner@nvidia.com>
+
+commit a0e4d4e1067de2a25e05272238a8503691c5b01a
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Feb 7 18:20:37 2012 +1000
+
+    Rename map-to-crtc to map-to-output
+    
+    xrandr uses "output", let's be consistent there.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Aaron Plattner <aplattner@nvidia.com>
+
+commit 30f9ee3f859eb8413099be9eb8dfceaa195a5aa9
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Thu Jan 12 16:08:35 2012 +1000
+
+    xinput 1.5.99.1
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit fb6f41ced063c558f7bf8f10898f027612e2ad34
+Merge: c690fad 7f2f41d
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Thu Jan 12 16:01:28 2012 +1000
+
+    Merge branch 'multitouch'
+
+commit c690fad9aa0dbc9d574d25e014d1dc15281b0870
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Dec 21 21:31:51 2011 -0800
+
+    print_version expects no arguments, so give it none
+    
+    Fixes Solaris Studio compiler warning:
+    "xinput.c", line 357: warning: argument mismatch: 1 arg passed, 0 expected
+    
+    gcc ignored it because the function declaration didn't specify arguments.
+    Once you specify (void) for the arguments, gcc then throws up:
+    xinput.c: In function ‘main’:
+    xinput.c:357:9: error: too many arguments to function ‘print_version’
+    xinput.c:147:1: note: declared here
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit ab352ec2789130cfcb7b61ae5bf36d6af4daa4a3
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Tue Nov 29 23:52:53 2011 -0800
+
+    Print usage when run with --help
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+    Reviewed-by: Bryce Harrington <bryce@canonical.com>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit b8f54d5c5874827fa24970029a23be06fe02bca1
+Author: Bryce Harrington <bryce@canonical.com>
+Date:   Tue Nov 29 17:33:23 2011 -0800
+
+    xinput: Assume 'list' by default if no args given.
+    
+    xrandr lists all outputs by default when run with no args.  So, make
+    xinput list all inputs by default when run the same way, so the tools
+    are consistent.
+    
+    Signed-off-by: Bryce Harrington <bryce@canonical.com>
+    Reviewed-by: Chase Douglas <chase.douglas@canonical.com>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 7f2f41d2c8fa7dad9596c34160a85fea026afccb
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Wed Nov 2 12:13:57 2011 +1000
+
+    add support for touch raw events
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 609039e67ef62f3e4efd0e04572bdcd86ea45d34
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Wed Oct 26 14:42:36 2011 +1000
+
+    test-xi2: check return value of list, exit on failure
+    
+    If list() fails, the server doesn't support XI2 or the device is invalid. In
+    either case, exit.
+    
+    Fixes crashes when a nonexisting device is given.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 9c3baacbd819eae122a4c0b679efc3c36895cff9
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Oct 25 13:48:57 2011 +1000
+
+    test-xi2: add basic touch support
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 9aea497432322054ff61711abe1d5028a108bcaf
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Oct 25 13:45:34 2011 +1000
+
+    test-xi2: Use the longest mask we can get
+    
+    Avoids ifdefs for touch events lateron
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 01ea71c11d1eae6787ae16ef4044c7d2b34e1800
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Wed Oct 26 08:03:20 2011 +1000
+
+    We support XI 2.1 now
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Julien Cristau <jcristau@debian.org>
+
+commit c95ba34858f3fd7db284a11a2f00cf77990e4f9e
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Thu Oct 27 09:46:27 2011 +1000
+
+    list: drop XIQueryVersion call
+    
+    main() calls it for us before we get here, no need to have it twice.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Julien Cristau <jcristau@debian.org>
+
+commit 960ed57f624e200467d5b7801da0d11337d8eba4
+Merge: fa9fc75 7bbf462
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri Sep 23 08:36:47 2011 +1000
+
+    Merge branch 'smooth-scrolling'
+    
+    Conflicts:
+    	src/test_xi2.c
+
+commit 7bbf4624b8be1bcac7a782057b9c2db5e8bbcc75
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri Aug 19 13:07:57 2011 +1000
+
+    Support the new Scroll class
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Jeremy Huddleston <jeremyhu@apple.com>
+    Reviewed-by: Daniel Stone <daniel@fooishbar.org>
+
+commit fa9fc75016e3587389040d6b91f03a3b80323a52
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Wed Aug 24 07:50:00 2011 +1000
+
+    Only try to print XIPointerEmulated flag if it is defined.
+    
+    This flag is part of the future (currently unreleased) XI 2.1 protocol.
+    Introduced in 2c5187d0099e6c7588828ba9931d27f5c64bbaec
+    
+    Reported-by: Chris Ball <cjb@laptop.org>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit 4d082915a7f178c4d656fc1f56033b758adef97f
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri Aug 19 15:24:30 2011 +1000
+
+    Enclose button labels with quotes to improve readability
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Julien Cristau <jcristau@debian.org>
+
+commit 32992f829262322a63e29b3118943e07481abb50
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri Aug 19 13:16:17 2011 +1000
+
+    test-xi2: support a device option
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Julien Cristau <jcristau@debian.org>
+
+commit dcfa38899b2eae1beec9486063281ef0fb0bda76
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri Aug 19 13:11:04 2011 +1000
+
+    Print the class type when listing devices.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Julien Cristau <jcristau@debian.org>
+
+commit 2c5187d0099e6c7588828ba9931d27f5c64bbaec
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Aug 16 11:39:02 2011 +1000
+
+    test-xi2: print the correct flags, depending on the event type
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Julien Cristau <jcristau@debian.org>
+
+commit 4be60c90008ac48e72e819e078ce957fd003a509
 Author: Peter Hutterer <peter.hutterer@who-t.net>
 Date:   Fri Aug 12 14:20:21 2011 +1000
 
@@ -18,7 +331,355 @@ Date:   Fri Aug 12 14:20:21 2011 +1000
     
     Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
     Reviewed-by: Jeremy Huddleston <jeremyhu@apple.com>
-    (cherry picked from commit 4be60c90008ac48e72e819e078ce957fd003a509)
+
+commit 8563e64fa4eeaf7b56374fd6695f026d98f1696d
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Thu Jun 2 10:20:42 2011 +1000
+
+    Add support for device-to-screen mapping
+    
+    xinput map-to-crtc "device name" "VGA0" will map to the CRTC "VGA0" by
+    manipulating the transformation matrix accordingly. And because the NVIDIA
+    binary driver still exists, Xinerama is supported to. Maybe in another 5
+    years, they'll catch up.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Simon Thum <simon.thum@gmx.de>
+
+commit 9877e11586b1f6a99e9ce5bb9b008efa4351a9ed
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Wed Jul 6 08:38:50 2011 +1000
+
+    man: Move my name to the top of the authors list
+    
+    It's reasonably likely that someone looking at the list of authors will
+    email the first one on the list. Let that be the current maintainer, it's
+    more likely that there will be the desired response.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Cyril Brulebois <kibi@debian.org>
+
+commit fb0eef1a8f1aa3cb4f67fbb5360635ee4bdb4284
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Wed Jul 6 08:38:08 2011 +1000
+
+    man: update missing copyrights
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Cyril Brulebois <kibi@debian.org>
+
+commit e2abaa21a751bd4330f78e4b28920c600067835e
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Jun 20 16:09:32 2011 -0400
+
+    Update Copyright notices.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 3198664a8a54c1b53a29b71507ea5603d9ee7224
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Jun 20 16:09:31 2011 -0400
+
+    Apply standard configuration init, layout and comments
+    
+    http://www.x.org/wiki/NewModuleGuidelines#Configurationfilescontentguidelines
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit a426665bb3cb777a9107bfe6b84ea7d78bcf74aa
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sat Jun 18 14:41:34 2011 -0400
+
+    Remove redundant definition of the VERSION Automake variable
+    
+    This variable is defined by Automake:
+    In config.status:
+    S["VERSION"]="1.5.3"
+    In config.h:
+    
+    Reverts commit \58c513b0b9f6
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 43b22327c6de3f3410ea77988b23332db86d8d41
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sat Jun 18 14:41:35 2011 -0400
+
+    Man pages Makefile: fix whitespace
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit afad669f560387105570bc5de7466898ecf57f08
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sat Jun 18 14:41:31 2011 -0400
+
+    Use the value of MAN_SUBSTS from util-macros for man pages
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit a3bb5a5d495ee8fa390b72bfcd76061f1ca241c7
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Thu Jun 2 11:43:13 2011 +1000
+
+    Remove superfluous comment.
+    
+    We can't remove this part if we want to keep working against 1.7 and 1.8.1.
+    No big deal, if this operation in xinput is the performance-critical path of
+    a system, things have gone bad a long time ago.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Acked-by: Julien Cristau <jcristau@debian.org>
+
+commit c51bb9182d1225def39b49ab57612a070e3a192e
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Thu Jun 2 09:14:40 2011 +1000
+
+    Announce support for XI 2.0 to the server.
+    
+    Technically, we're required to announce support for XI 2.0 through
+    XIQueryVersion. The behaviour of XI2 for clients that have not done so is
+    undefined, it just happens to work.
+    
+    With XI 2.1 on the horizon, this may change so make sure we're clamining our
+    version correctly
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Julien Cristau <jcristau@debian.org>
+
+commit bdcb5b2a1b547059cf75b8337f854dbb136705f6
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue May 3 17:05:45 2011 +1000
+
+    Initialize a few more values to defaults.
+    
+    If we ever print <undefined> for those, we have a buggy X server that's
+    breaking the protocol. Until that happens this is just to shut up clang.
+    
+    All three are assigned constant strings only, no free() needed.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit ea0db37521c0fce8599c1838e9a919bb3292d413
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue May 3 17:02:48 2011 +1000
+
+    Silence compiler warning
+    
+    Static analysis claims that ptr += size may assign garbage. But since the
+    protocol requires format to be 8, 16 or 32, size should always have a valid
+    value. Initialize to 0 to shut up clang.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit ca5d977e5c5f8a951321edeed7e69f8ed1ec53d3
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Fri Mar 4 20:37:44 2011 -0500
+
+    man: replace hard coded section number with __appmansuffix__
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 9e8d95799a31f297065f1b3ce346a2567b7cc07a
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Jan 18 13:20:58 2011 +1000
+
+    Fix broken "xinput list <devicename>".
+    
+    Default behaviour for --list is to list --short if no device is given and
+    --long if a device is given. Restore this behaviour.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Dirk Wallenstein <halsmit@t-online.de>
+    Tested-by: Dirk Wallenstein <halsmit@t-online.de>
+
+commit 976c989af7978277061d0166d8e2a82cb8b1e795
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Jan 18 13:02:20 2011 +1000
+
+    Add --id-only flag for 'xinput list'.
+    
+    The default output of xinput list is hard to parse by scripts. Provide a
+    --id-only option to print the device ID only, without any other
+    information.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Dirk Wallenstein <halsmit@t-online.de>
+    Tested-by: Dirk Wallenstein <halsmit@t-online.de>
+
+commit ab90151162d39607e264e715a582e783e0da3c3a
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Jan 18 12:55:46 2011 +1000
+
+    Add --name-only flag for 'xinput list'.
+    
+    The default output of xinput list is hard to parse by scripts. Provide a
+    --name-only option to print the device name only, without any other
+    information.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Dirk Wallenstein <halsmit@t-online.de>
+    Tested-by: Dirk Wallenstein <halsmit@t-online.de>
+
+commit ff1ff82438d35e6d68d1bf3b16bfc3520120247c
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Jan 18 12:47:33 2011 +1000
+
+    Switch list to use an enum of printing formats.
+    
+    Currently long and short, same as before. No functional changes, preparation
+    for further formats.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Dirk Wallenstein <halsmit@t-online.de>
+    Tested-by: Dirk Wallenstein <halsmit@t-online.de>
+
+commit 8acb2a91d9595b5138bd30ddf55eb3f7e6ce111b
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jan 12 16:28:02 2011 -0500
+
+    config: replace deprecated AM_CONFIG_HEADER with AC_CONFIG_HEADERS
+    
+    This silences an Autoconf warning
+
+commit 437aedaa8775ff43a144b5ab80abf153b230cbde
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jan 12 15:12:08 2011 -0500
+
+    config: remove unrequired AC_SUBST([*_LIBS])
+    
+    This macro is called by PKG_CHECK_MODULES
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 362189fef8bcb907e9cd756ac3bfa0a3801413a7
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jan 12 13:33:48 2011 -0500
+
+    config: remove unrequired AC_SUBST([*_CFLAGS])
+    
+    This macro is called by PKG_CHECK_MODULES
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 3697929d913904343868e459621ad07ea147b150
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jan 12 13:10:21 2011 -0500
+
+    config: remove AC_PROG_CC as it overrides AC_PROG_C_C99
+    
+    XORG_STRICT_OPTION from XORG_DEFAULT_OPTIONS calls
+    AC_PROG_C_C99. This sets gcc with -std=gnu99.
+    If AC_PROG_CC macro is called afterwards, it resets CC to gcc.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit c68d1a0c3f113cd429c8792537d40784bbd6e11d
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jan 12 11:54:40 2011 -0500
+
+    config: use AC_PROG_INSTALL now supplied by XORG_DEFAULT_OPTIONS
+    
+    It depends on util-macros 1.8 or later
+    The existing statement can now be removed from the configuration file.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit bd4f7ad11fd37a3f3814dd12b0b542449b3e83a6
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jan 12 11:46:04 2011 -0500
+
+    config: use AC_PROG_SED now supplied by XORG_DEFAULT_OPTIONS
+    
+    It depends on util-macros 1.8 or later
+    The existing statement can now be removed from the configuration file.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit cd159b6f9ee998fbbf7616c1a5dd8a7d682bd6f2
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jan 12 11:23:52 2011 -0500
+
+    config: upgrade to util-macros 1.8 for additional man page support
+    
+    Use MAN_SUBST now supplied in XORG_MANPAGE_SECTIONS
+    The value of MAN_SUBST is the same for all X.Org packages.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 6055d90840b47be4ad5ce4eed496130a6c7e6053
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jan 12 10:21:24 2011 -0500
+
+    config: update AC_PREREQ statement to 2.60
+    
+    Unrelated to the previous patches, the new value simply reflects
+    the reality that the minimum level for autoconf to configure
+    all x.org modules in one pass is 2.60 dated June 2006.
+    
+    A version later than 2.60 can be used, but no new features from such
+    a later version can be used in configure.ac.
+    
+    Although the code in this module can be configured with a version earlier
+    than 2.60, most of code is now contained in macros from util-macros
+    which use features of version 2.60, at the present or in the future.
+    
+    ftp://ftp.gnu.org/gnu/autoconf/autoconf-2.60.tar.gz
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit f01d266c9fa6665b9c0a7c32fcf413c04c36008e
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Wed Dec 22 12:57:00 2010 +1000
+
+    Remove unneeded include.
+    
+    This include was added during the MPX/XI2 development cycle, likely when the
+    headers weren't in an acceptable state and clients needed stuff defined in
+    the proto headers. Normal clients shouldn't need the proto headers though
+    and xinput builds fine without it.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Daniel Stone <daniel@fooishbar.org>
+
+commit cd17b196a833c87cf72505c4fafa74f68bb1d1f9
+Author: David Fries <david@fries.net>
+Date:   Wed Dec 1 08:39:12 2010 -0800
+
+    Fix typo in man page for the --test-xi2 option.
+    
+    Signed-off-by: David Fries <david@fries.net>
+    Signed-off-by: Philip Langdale <philipl@overt.org>
+
+commit 72c6ec92dcb647dbd7930f4fc3e60b1868f1a225
+Author: Chase Douglas <chase.douglas@canonical.com>
+Date:   Wed Nov 17 10:42:38 2010 -0500
+
+    Zero out entire mask when selecting for different events
+    
+    Signed-off-by: Chase Douglas <chase.douglas@canonical.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 746d437b60662b6da62af8dbd38f594a896b1db5
+Author: Chase Douglas <chase.douglas@ubuntu.com>
+Date:   Fri Nov 12 17:35:15 2010 -0500
+
+    Print XI2 device event child window in hex too
+    
+    This fixes an obvious error in the current print formatting.
+    
+    Signed-off-by: Chase Douglas <chase.douglas@canonical.com>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
 
 commit 13d9a0906acca18a268b8898addc1a192c5a2b12
 Author: Peter Hutterer <peter.hutterer@who-t.net>

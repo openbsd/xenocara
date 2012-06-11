@@ -48,7 +48,19 @@ static void print_deviceevent(XIDeviceEvent* event)
 
     printf("    device: %d (%d)\n", event->deviceid, event->sourceid);
     printf("    detail: %d\n", event->detail);
-    printf("    flags: %s\n", (event->flags & XIKeyRepeat) ? "repeat" : "");
+    switch(event->evtype) {
+        case XI_KeyPress:
+        case XI_KeyRelease:
+            printf("    flags: %s\n", (event->flags & XIKeyRepeat) ?  "repeat" : "");
+            break;
+#if HAVE_XI21
+        case XI_ButtonPress:
+        case XI_ButtonRelease:
+        case XI_Motion:
+            printf("    flags: %s\n", (event->flags & XIPointerEmulated) ?  "emulated" : "");
+            break;
+#endif
+    }
 
     printf("    root: %.2f/%.2f\n", event->root_x, event->root_y);
     printf("    event: %.2f/%.2f\n", event->event_x, event->event_y);
@@ -72,7 +84,7 @@ static void print_deviceevent(XIDeviceEvent* event)
         if (XIMaskIsSet(event->valuators.mask, i))
             printf("        %i: %.2f\n", i, *val++);
 
-    printf("    windows: root 0x%lx event 0x%lx child 0x%ld\n",
+    printf("    windows: root 0x%lx event 0x%lx child 0x%lx\n",
             event->root, event->event, event->child);
 }
 
@@ -99,7 +111,7 @@ static void print_hierarchychangedevent(XIHierarchyEvent *event)
 
     for (i = 0; i < event->num_info; i++)
     {
-        char *use;
+        char *use = "<undefined>";
         switch(event->info[i].use)
         {
             case XIMasterPointer: use = "master pointer"; break;
@@ -135,9 +147,18 @@ static void print_rawevent(XIRawEvent *event)
     int i;
     double *val, *raw_val;
 
-    printf("    device: %d\n", event->deviceid);
+    printf("    device: %d (%d)\n", event->deviceid, event->sourceid);
     printf("    detail: %d\n", event->detail);
     printf("    valuators:\n");
+#if HAVE_XI21
+    switch(event->evtype) {
+        case XI_RawButtonPress:
+        case XI_RawButtonRelease:
+        case XI_RawMotion:
+            printf("    flags: %s\n", (event->flags & XIPointerEmulated) ?  "emulated" : "");
+            break;
+    }
+#endif
 
     val = event->valuators.values;
     raw_val = event->raw_values;
@@ -149,7 +170,8 @@ static void print_rawevent(XIRawEvent *event)
 
 static void print_enterleave(XILeaveEvent* event)
 {
-    char *mode, *detail;
+    char *mode = "<undefined>",
+         *detail = "<undefined>";
     int i;
 
     printf("    device: %d (%d)\n", event->deviceid, event->sourceid);
@@ -279,6 +301,12 @@ static const char* type_to_name(int evtype)
         case XI_RawButtonPress:   name = "RawButtonPress";      break;
         case XI_RawButtonRelease: name = "RawButtonRelease";    break;
         case XI_RawMotion:        name = "RawMotion";           break;
+        case XI_TouchBegin:       name = "TouchBegin";          break;
+        case XI_TouchUpdate:      name = "TouchUpdate";         break;
+        case XI_TouchEnd:         name = "TouchEnd";            break;
+        case XI_RawTouchBegin:    name = "RawTouchBegin";       break;
+        case XI_RawTouchUpdate:   name = "RawTouchUpdate";      break;
+        case XI_RawTouchEnd:      name = "RawTouchEnd";         break;
         default:
                                   name = "unknown event type"; break;
     }
@@ -295,13 +323,23 @@ test_xi2(Display	*display,
 {
     XIEventMask mask;
     Window win;
+    int deviceid = -1;
+    int rc;
 
-    list(display, argc, argv, name, desc);
+    rc = list(display, argc, argv, name, desc);
+    if (rc != EXIT_SUCCESS)
+        return rc;
+
+    if (argc >= 1) {
+        XIDeviceInfo *info;
+        info = xi2_find_device_info(display, argv[0]);
+        deviceid = info->deviceid;
+    }
     win = create_win(display);
 
     /* Select for motion events */
-    mask.deviceid = XIAllDevices;
-    mask.mask_len = XIMaskLen(XI_RawMotion);
+    mask.deviceid = (deviceid == -1) ? XIAllDevices : deviceid;
+    mask.mask_len = XIMaskLen(XI_LASTEVENT);
     mask.mask = calloc(mask.mask_len, sizeof(char));
     XISetMask(mask.mask, XI_ButtonPress);
     XISetMask(mask.mask, XI_ButtonRelease);
@@ -313,7 +351,13 @@ test_xi2(Display	*display,
     XISetMask(mask.mask, XI_Leave);
     XISetMask(mask.mask, XI_FocusIn);
     XISetMask(mask.mask, XI_FocusOut);
-    XISetMask(mask.mask, XI_HierarchyChanged);
+#ifdef HAVE_XI22
+    XISetMask(mask.mask, XI_TouchBegin);
+    XISetMask(mask.mask, XI_TouchUpdate);
+    XISetMask(mask.mask, XI_TouchEnd);
+#endif
+    if (mask.deviceid == XIAllDevices)
+        XISetMask(mask.mask, XI_HierarchyChanged);
     XISetMask(mask.mask, XI_PropertyEvent);
     XISelectEvents(display, win, &mask, 1);
     XMapWindow(display, win);
@@ -324,7 +368,7 @@ test_xi2(Display	*display,
         int nmods = sizeof(modifiers)/sizeof(modifiers[0]);
 
         mask.deviceid = 2;
-        memset(mask.mask, 0, 2);
+        memset(mask.mask, 0, mask.mask_len);
         XISetMask(mask.mask, XI_KeyPress);
         XISetMask(mask.mask, XI_KeyRelease);
         XISetMask(mask.mask, XI_ButtonPress);
@@ -338,13 +382,18 @@ test_xi2(Display	*display,
         XIUngrabKeycode(display, 3, 24 /* q */, win, nmods - 2, &modifiers[2]);
     }
 
-    mask.deviceid = XIAllMasterDevices;
-    memset(mask.mask, 0, 2);
+    mask.deviceid = (deviceid == -1) ? XIAllMasterDevices : deviceid;
+    memset(mask.mask, 0, mask.mask_len);
     XISetMask(mask.mask, XI_RawKeyPress);
     XISetMask(mask.mask, XI_RawKeyRelease);
     XISetMask(mask.mask, XI_RawButtonPress);
     XISetMask(mask.mask, XI_RawButtonRelease);
     XISetMask(mask.mask, XI_RawMotion);
+#ifdef HAVE_XI22
+    XISetMask(mask.mask, XI_RawTouchBegin);
+    XISetMask(mask.mask, XI_RawTouchUpdate);
+    XISetMask(mask.mask, XI_RawTouchEnd);
+#endif
     XISelectEvents(display, DefaultRootWindow(display), &mask, 1);
 
     free(mask.mask);
@@ -383,6 +432,9 @@ test_xi2(Display	*display,
                 case XI_RawButtonPress:
                 case XI_RawButtonRelease:
                 case XI_RawMotion:
+                case XI_RawTouchBegin:
+                case XI_RawTouchUpdate:
+                case XI_RawTouchEnd:
                     print_rawevent(cookie->data);
                     break;
                 case XI_Enter:

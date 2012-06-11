@@ -69,6 +69,8 @@ int set_atom_prop( Display* display, int argc, char *argv[], char *prog_name, ch
 int watch_props( Display* display, int argc, char *argv[], char *prog_name, char *prog_desc);
 int delete_prop( Display* display, int argc, char *argv[], char *prog_name, char *prog_desc);
 int set_prop( Display* display, int argc, char *argv[], char *prog_name, char *prog_desc);
+int disable( Display* display, int argc, char *argv[], char *prog_name, char *prog_desc);
+int enable( Display* display, int argc, char *argv[], char *prog_name, char *prog_desc);
 
 /* X Input 2.0 */
 int create_master( Display* display, int argc, char *argv[], char *prog_name, char *prog_desc);
@@ -77,5 +79,6 @@ int change_attachment( Display* display, int argc, char *argv[], char *prog_name
 int float_device( Display* display, int argc, char *argv[], char *prog_name, char *prog_desc);
 int set_clientpointer( Display* display, int argc, char *argv[], char *prog_name, char *prog_desc);
 int test_xi2( Display* display, int argc, char *argv[], char *prog_name, char *prog_desc);
+int map_to_output( Display* display, int argc, char *argv[], char *prog_name, char *prog_desc);
 
 /* end of xinput.h */

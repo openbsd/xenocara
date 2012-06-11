@@ -1,28 +1,25 @@
 /*
- * Copyright 2007 Peter Hutterer
+ * Copyright © 2007 Peter Hutterer
+ * Copyright © 2009 Red Hat, Inc.
  *
- * Permission to use, copy, modify, distribute, and sell this software and its
- * documentation for any purpose is hereby granted without fee, provided that
- * the above copyright notice appear in all copies and that both that
- * copyright notice and this permission notice appear in supporting
- * documentation.
+ * Permission is hereby granted, free of charge, to any person obtaining a
+ * copy of this software and associated documentation files (the "Software"),
+ * to deal in the Software without restriction, including without limitation
+ * the rights to use, copy, modify, merge, publish, distribute, sublicense,
+ * and/or sell copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included
- * in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice (including the next
+ * paragraph) shall be included in all copies or substantial portions of the
+ * Software.
  *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
- * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
- * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
- * IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY CLAIM, DAMAGES OR
- * OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
- * ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
- * OTHER DEALINGS IN THE SOFTWARE.
- *
- * Except as contained in this notice, the name of the author shall
- * not be used in advertising or otherwise to promote the sale, use or
- * other dealings in this Software without prior written authorization
- * from the author.
- *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
+ * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+ * DEALINGS IN THE SOFTWARE.
  */
 
 #include <ctype.h>
@@ -59,7 +56,7 @@ print_property(Display *dpy, XDevice* dev, Atom property)
     int                 act_format;
     unsigned long       nitems, bytes_after;
     unsigned char       *data, *ptr;
-    int                 j, done = False, size;
+    int                 j, done = False, size = 0;
 
     name = XGetAtomName(dpy, property);
     printf("\t%s (%ld):\t", name, property);
@@ -100,6 +97,20 @@ print_property(Display *dpy, XDevice* dev, Atom property)
                             break;
                     }
                     break;
+                case XA_CARDINAL:
+                    switch(act_format)
+                    {
+                        case 8:
+                            printf("%u", *((unsigned char*)ptr));
+                            break;
+                        case 16:
+                            printf("%u", *((unsigned short*)ptr));
+                            break;
+                        case 32:
+                            printf("%lu", *((unsigned long*)ptr));
+                            break;
+                    }
+                    break;
                 case XA_STRING:
                     if (act_format != 8)
                     {
@@ -128,7 +139,7 @@ print_property(Display *dpy, XDevice* dev, Atom property)
                         break;
                     }
 
-                    printf("\t... of unknown type %s\n",
+                    printf("\t... of unknown type '%s'\n",
                             XGetAtomName(dpy, act_type));
                     done = True;
                     break;
@@ -168,7 +179,7 @@ list_props_xi1(Display *dpy, int argc, char** argv, char* name, char *desc)
         info = find_device_info(dpy, argv[i], False);
         if (!info)
         {
-            fprintf(stderr, "unable to find device %s\n", argv[i]);
+            fprintf(stderr, "unable to find device '%s'\n", argv[i]);
             continue;
         }
 
@@ -215,7 +226,7 @@ int watch_props(Display *dpy, int argc, char** argv, char* n, char *desc)
     info = find_device_info(dpy, argv[0], False);
     if (!info)
     {
-        fprintf(stderr, "unable to find device %s\n", argv[0]);
+        fprintf(stderr, "unable to find device '%s'\n", argv[0]);
         return EXIT_FAILURE;
     }
 
@@ -256,7 +267,7 @@ delete_prop_xi1(Display *dpy, int argc, char** argv, char* n, char *desc)
     info = find_device_info(dpy, argv[0], False);
     if (!info)
     {
-        fprintf(stderr, "unable to find device %s\n", argv[0]);
+        fprintf(stderr, "unable to find device '%s'\n", argv[0]);
         return EXIT_FAILURE;
     }
 
@@ -306,14 +317,14 @@ do_set_prop_xi1(Display *dpy, Atom type, int format, int argc, char **argv, char
     info = find_device_info(dpy, argv[0], False);
     if (!info)
     {
-        fprintf(stderr, "unable to find device %s\n", argv[0]);
+        fprintf(stderr, "unable to find device '%s'\n", argv[0]);
         return EXIT_FAILURE;
     }
 
     dev = XOpenDevice(dpy, info->id);
     if (!dev)
     {
-        fprintf(stderr, "unable to open device %s\n", argv[0]);
+        fprintf(stderr, "unable to open device '%s'\n", argv[0]);
         return EXIT_FAILURE;
     }
 
@@ -322,7 +333,7 @@ do_set_prop_xi1(Display *dpy, Atom type, int format, int argc, char **argv, char
     prop = parse_atom(dpy, name);
 
     if (prop == None) {
-        fprintf(stderr, "invalid property %s\n", name);
+        fprintf(stderr, "invalid property '%s'\n", name);
         return EXIT_FAILURE;
     }
 
@@ -333,7 +344,7 @@ do_set_prop_xi1(Display *dpy, Atom type, int format, int argc, char **argv, char
         if (XGetDeviceProperty(dpy, dev, prop, 0, 0, False, AnyPropertyType,
                                &old_type, &old_format, &act_nitems,
                                &bytes_after, &data.c) != Success) {
-            fprintf(stderr, "failed to get property type and format for %s\n",
+            fprintf(stderr, "failed to get property type and format for '%s'\n",
                     name);
             return EXIT_FAILURE;
         } else {
@@ -347,7 +358,7 @@ do_set_prop_xi1(Display *dpy, Atom type, int format, int argc, char **argv, char
     }
 
     if (type == None) {
-        fprintf(stderr, "property %s doesn't exist, you need to specify "
+        fprintf(stderr, "property '%s' doesn't exist, you need to specify "
                 "its type and format\n", name);
         return EXIT_FAILURE;
     }
@@ -356,7 +367,7 @@ do_set_prop_xi1(Display *dpy, Atom type, int format, int argc, char **argv, char
 
     for (i = 0; i < nelements; i++)
     {
-        if (type == XA_INTEGER) {
+        if (type == XA_INTEGER || type == XA_CARDINAL) {
             switch (format)
             {
                 case 8:
@@ -369,29 +380,29 @@ do_set_prop_xi1(Display *dpy, Atom type, int format, int argc, char **argv, char
                     data.l[i] = atoi(argv[2 + i]);
                     break;
                 default:
-                    fprintf(stderr, "unexpected size for property %s", name);
+                    fprintf(stderr, "unexpected size for property '%s'", name);
                     return EXIT_FAILURE;
             }
         } else if (type == float_atom) {
             if (format != 32) {
-                fprintf(stderr, "unexpected format %d for property %s\n",
+                fprintf(stderr, "unexpected format %d for property '%s'\n",
                         format, name);
                 return EXIT_FAILURE;
             }
             *(float *)(data.l + i) = strtod(argv[2 + i], &endptr);
             if (endptr == argv[2 + i]) {
-                fprintf(stderr, "argument %s could not be parsed\n", argv[2 + i]);
+                fprintf(stderr, "argument '%s' could not be parsed\n", argv[2 + i]);
                 return EXIT_FAILURE;
             }
         } else if (type == XA_ATOM) {
             if (format != 32) {
-                fprintf(stderr, "unexpected format %d for property %s\n",
+                fprintf(stderr, "unexpected format %d for property '%s'\n",
                         format, name);
                 return EXIT_FAILURE;
             }
             data.a[i] = parse_atom(dpy, argv[2 + i]);
         } else {
-            fprintf(stderr, "unexpected type for property %s\n", name);
+            fprintf(stderr, "unexpected type for property '%s'\n", name);
             return EXIT_FAILURE;
         }
     }
@@ -443,6 +454,20 @@ print_property_xi2(Display *dpy, int deviceid, Atom property)
                             break;
                         case 32:
                             printf("%d", *((int32_t*)ptr));
+                            break;
+                    }
+                    break;
+                case XA_CARDINAL:
+                    switch(act_format)
+                    {
+                        case 8:
+                            printf("%u", *((uint8_t*)ptr));
+                            break;
+                        case 16:
+                            printf("%u", *((uint16_t*)ptr));
+                            break;
+                        case 32:
+                            printf("%u", *((uint32_t*)ptr));
                             break;
                     }
                     break;
@@ -595,7 +620,7 @@ do_set_prop_xi2(Display *dpy, Atom type, int format, int argc, char **argv, char
     prop = parse_atom(dpy, name);
 
     if (prop == None) {
-        fprintf(stderr, "invalid property %s\n", name);
+        fprintf(stderr, "invalid property '%s'\n", name);
         return EXIT_FAILURE;
     }
 
@@ -606,7 +631,7 @@ do_set_prop_xi2(Display *dpy, Atom type, int format, int argc, char **argv, char
         if (XIGetProperty(dpy, info->deviceid, prop, 0, 0, False,
                           AnyPropertyType, &old_type, &old_format, &act_nitems,
                           &bytes_after, &data.c) != Success) {
-            fprintf(stderr, "failed to get property type and format for %s\n",
+            fprintf(stderr, "failed to get property type and format for '%s'\n",
                     name);
             return EXIT_FAILURE;
         } else {
@@ -620,7 +645,7 @@ do_set_prop_xi2(Display *dpy, Atom type, int format, int argc, char **argv, char
     }
 
     if (type == None) {
-        fprintf(stderr, "property %s doesn't exist, you need to specify "
+        fprintf(stderr, "property '%s' doesn't exist, you need to specify "
                 "its type and format\n", name);
         return EXIT_FAILURE;
     }
@@ -629,7 +654,7 @@ do_set_prop_xi2(Display *dpy, Atom type, int format, int argc, char **argv, char
 
     for (i = 0; i < nelements; i++)
     {
-        if (type == XA_INTEGER) {
+        if (type == XA_INTEGER || type == XA_CARDINAL) {
             switch (format)
             {
                 case 8:
@@ -647,7 +672,7 @@ do_set_prop_xi2(Display *dpy, Atom type, int format, int argc, char **argv, char
             }
         } else if (type == float_atom) {
             if (format != 32) {
-                fprintf(stderr, "unexpected format %d for property %s\n",
+                fprintf(stderr, "unexpected format %d for property '%s'\n",
                         format, name);
                 return EXIT_FAILURE;
             }
@@ -658,13 +683,13 @@ do_set_prop_xi2(Display *dpy, Atom type, int format, int argc, char **argv, char
             }
         } else if (type == XA_ATOM) {
             if (format != 32) {
-                fprintf(stderr, "unexpected format %d for property %s\n",
+                fprintf(stderr, "unexpected format %d for property '%s'\n",
                         format, name);
                 return EXIT_FAILURE;
             }
             data.l[i] = parse_atom(dpy, argv[2 + i]);
         } else {
-            fprintf(stderr, "unexpected type for property %s\n", name);
+            fprintf(stderr, "unexpected type for property '%s'\n", name);
             return EXIT_FAILURE;
         }
     }
@@ -784,11 +809,11 @@ int set_prop(Display *display, int argc, char *argv[], char *name,
         } else if (!strncmp(argv[i], "--format=", strlen("--format="))) {
             format = atoi(option + 1);
             if (format != 8 && format != 16 && format != 32) {
-                fprintf(stderr, "invalid property format %s\n", option + 1);
+                fprintf(stderr, "invalid property format '%s'\n", option + 1);
                 return EXIT_FAILURE;
             }
         } else {
-            fprintf(stderr, "invalid option %s\n", argv[i]);
+            fprintf(stderr, "invalid option '%s'\n", argv[i]);
             return EXIT_FAILURE;
         }
 
@@ -798,4 +823,16 @@ int set_prop(Display *display, int argc, char *argv[], char *name,
     }
 
     return do_set_prop(display, type, format, argc, argv, name, desc);
+}
+
+int disable(Display *display, int argc, char *argv[], char *name, char *desc)
+{
+    char *new_argv[3] = { argv[0], "Device Enabled", "0" };
+    return set_prop(display, 3, new_argv, name, desc);
+}
+
+int enable(Display *display, int argc, char *argv[], char *name, char *desc)
+{
+    char *new_argv[3] = { argv[0], "Device Enabled", "1" };
+    return set_prop(display, 3, new_argv, name, desc);
 }

@@ -30,6 +30,12 @@
 /* XI2 available */
 #undef HAVE_XI2
 
+/* XI2.1 available */
+#undef HAVE_XI21
+
+/* XI2.2 available */
+#undef HAVE_XI22
+
 /* Name of package */
 #undef PACKAGE
 

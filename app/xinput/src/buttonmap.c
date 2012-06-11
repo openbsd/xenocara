@@ -45,7 +45,7 @@ get_button_map(Display	*display,
     info = find_device_info(display, argv[0], False);
 
     if (!info) {
-	fprintf(stderr, "unable to find device %s\n", argv[0]);
+	fprintf(stderr, "unable to find device '%s'\n", argv[0]);
 	return EXIT_FAILURE;
     }
 
@@ -109,7 +109,7 @@ set_button_map(Display	*display,
     info = find_device_info(display, argv[0], False);
 
     if (!info) {
-	fprintf(stderr, "unable to find device %s\n", argv[0]);
+	fprintf(stderr, "unable to find device '%s'\n", argv[0]);
 	return EXIT_FAILURE;
     }
 

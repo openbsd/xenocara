@@ -48,14 +48,14 @@ query_state(Display	*display,
     info = find_device_info(display, argv[0], True);
 
     if (!info) {
-	fprintf(stderr, "unable to find device %s\n", argv[0]);
+	fprintf(stderr, "unable to find device '%s'\n", argv[0]);
 	return 1;
     }
 
     device = XOpenDevice(display, info->id);
 
     if (!device) {
-	fprintf(stderr, "unable to open device %s\n", argv[0]);
+	fprintf(stderr, "unable to open device '%s'\n", argv[0]);
 	return 1;
     }
 
