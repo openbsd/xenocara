@@ -2,12 +2,12 @@
 .\"     Title: xiquerydevice
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
 .\" Generator: DocBook XSL Stylesheets v1.76.1 <http://docbook.sf.net/>
-.\"      Date: 12/20/2011
+.\"      Date: 12/22/2011
 .\"    Manual: [FIXME: manual]
 .\"    Source: [FIXME: source]
 .\"  Language: English
 .\"
-.TH "XIQUERYDEVICE" "libmansuffix" "12/20/2011" "[FIXME: source]" "[FIXME: manual]"
+.TH "XIQUERYDEVICE" "libmansuffix" "12/22/2011" "[FIXME: source]" "[FIXME: manual]"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -217,7 +217,8 @@ typedef struct
 .nf
 The type field specifies the type of the input class\&.
 Currently, the following types are defined:
-    XIKeyClass, XIButtonClass, XIValuatorClass
+    XIKeyClass, XIButtonClass, XIValuatorClass, XIScrollClass,
+    XITouchClass
 .fi
 .if n \{\
 .RE
@@ -462,6 +463,174 @@ units/m\&.
 The mode specifies the mode of this axis\&. If the mode is
 XIModeAbsolute this axis sends absolute coordinates\&. If the
 mode is XIModeRelative, this device sends relative coordinates\&.
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+typedef struct
+{
+    int         type;
+    int         sourceid;
+    int         number;
+    int         scroll_type;
+    double      increment;
+    int         flags;
+} XIScrollClassInfo;
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+This class describes scrolling capability on a valuator\&. For
+each XIScrollClassInfo, an XIValuatorClassInfo with the same
+number is present on the device\&.
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+The number field specifies the valuator number on the physical
+device that this scroll information applies to\&. See the
+respective XIValuatorClassInfo for detailed information on this
+valuator\&.
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+The scroll_type field specifies the type of scrolling, either
+XIScrollTypeVertical or XIScrollTypeHorizontal\&.
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+The increment specifies the value change considered one unit of
+scrolling down\&.
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+The flags field specifies flags that apply to this scrolling
+information:
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+If XIScrollFlagNoEmulation is set, the server will not
+emulate legacy button events for valuator changes on this
+valuator\&.
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+If XIScrollFlagPreferred is set, this axis is the
+preferred axis for this scroll type and will be used for
+the emulation of XI_Motion events when the driver submits
+legacy scroll button events\&.
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+typedef struct
+{
+    int         type;
+    int         sourceid;
+    int         mode;
+    int         num_touches;
+} XITouchClassInfo;
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+A device may have zero or one XITouchClassInfo, denoting
+multi\-touch capability on the device\&. A device with a XITouchClassInfo
+may send TouchBegin, TouchUpdate, TouchEnd and TouchOwnership events\&.
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+The mode field is either XIDirectTouch for direct\-input touch devices
+such as touchscreens or XIDependentTouch for indirect input devices such
+as touchpads\&. For XIDirectTouch devices, touch events are sent to window
+at the position the touch occured\&. For XIDependentTouch devices, touch
+events are sent to the window at the position of the device\*(Aqs sprite\&.
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+The num_touches field defines the maximum number of simultaneous touches
+the device supports\&. A num_touches of 0 means the maximum number of
+simultaneous touches is undefined or unspecified\&. This field should be
+used as a guide only, devices will lie about their capabilities\&.
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+A device with an XITouchClassInfo may still send pointer events\&. The
+valuators must be defined with the respective XIValuatorClass
+classes\&. A valuator may send both pointer and touch\-events\&.
 .fi
 .if n \{\
 .RE

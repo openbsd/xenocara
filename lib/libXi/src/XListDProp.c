@@ -69,7 +69,7 @@ XListDeviceProperties(Display* dpy, XDevice* dev, int *nprops_return)
             goto cleanup;
         }
 
-        _XRead32(dpy, props, rep.nAtoms << 2);
+        _XRead32(dpy, (long*)props, rep.nAtoms << 2);
     }
 
     *nprops_return = rep.nAtoms;

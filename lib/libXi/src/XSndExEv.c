@@ -49,6 +49,9 @@ SOFTWARE.
  * XSendExtensionEvent - send an extension event to a client.
  *
  */
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
 
 #include <X11/extensions/XI.h>
 #include <X11/extensions/XIproto.h>
@@ -56,6 +59,11 @@ SOFTWARE.
 #include <X11/extensions/XInput.h>
 #include <X11/extensions/extutil.h>
 #include "XIint.h"
+
+/* Xlib's wire_vec is defined for a single event only, libXi may return
+ * multiple events.
+ */
+typedef Status (*ext_event_to_wire)(Display*, XEvent*, xEvent**, int*);
 
 Status
 XSendExtensionEvent(
@@ -71,7 +79,7 @@ XSendExtensionEvent(
     int ev_size;
     xSendExtensionEventReq *req;
     xEvent *ev;
-    register Status(**fp) (Display *, XEvent*, xEvent **, int *);
+    ext_event_to_wire *fp;
     Status status;
     XExtDisplayInfo *info = XInput_find_display(dpy);
 
@@ -81,10 +89,10 @@ XSendExtensionEvent(
 
     /* call through display to find proper conversion routine */
 
-    fp = &dpy->wire_vec[event->type & 0177];
+    fp = (ext_event_to_wire*)&dpy->wire_vec[event->type & 0177];
     if (*fp == NULL)
 	*fp = _XiEventToWire;
-    status = (**fp) (dpy, event, &ev, &num_events);
+    status = (*fp) (dpy, event, &ev, &num_events);
 
     if (status) {
 	GetReq(SendExtensionEvent, req);

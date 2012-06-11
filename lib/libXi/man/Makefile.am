@@ -157,6 +157,13 @@ endif
 # Unable to use __libmansuffix__ as underscores are lost in txt --> xml conversion
 MAN_SUBSTS += -e 's/libmansuffix/$(LIB_MAN_SUFFIX)/g'
 
+# asciidoc is generating [FIXME...] values in the .TH line we should fix.
+MAN_SUBSTS += -e 's/\[FIXME: source\]/$(XORG_MAN_PAGE)/'
+MAN_SUBSTS += -e 's/\[FIXME: manual\]/XINPUT FUNCTIONS/'
+
+# asciidoc generates shadow page references without the man section directory
+MAN_SUBSTS += -e 's/^\.so X/.so man$(LIB_MAN_SUFFIX)\/X/'
+
 SUFFIXES = .man .$(LIB_MAN_SUFFIX)
 .man.$(LIB_MAN_SUFFIX):
 	$(AM_V_GEN)$(SED) $(MAN_SUBSTS) < $< > $@
@@ -168,13 +175,13 @@ SUFFIXES += .txt .xml
 	$(AM_V_GEN)$(ASCIIDOC) -b docbook -d manpage -o $@ $<
 .xml.man:
 	$(AM_V_GEN)$(XMLTO) man $<
-	$(AM_V_GEN)mv -f $(@:.man=.libmansuffix) $@
+	$(AM_V_at)mv -f $(@:.man=.libmansuffix) $@
 
 # Invoke asciidoc/xmlto main man page generation for shadow pages
 $(libman_shadows):
 	@if test ! -f $(@:.man=.libmansuffix); then \
-	  $(AM_V_GEN)rm -f $<; \
-	  $(AM_V_GEN)$(MAKE) $(AM_MAKEFLAGS) $< || exit 1; \
+	  rm -f $<; \
+	  $(MAKE) $(AM_MAKEFLAGS) $< || exit 1; \
 	fi
-	$(AM_V_GEN)mv -f $(@:.man=.libmansuffix) $@
+	$(AM_V_at)mv -f $(@:.man=.libmansuffix) $@
 endif

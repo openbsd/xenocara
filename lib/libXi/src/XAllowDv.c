@@ -49,6 +49,9 @@ SOFTWARE.
  * XAllowDeviceEvents - Thaw a frozen extension device.
  *
  */
+#if HAVE_CONFIG_H
+#include <config.h>
+#endif
 
 #include <X11/extensions/XI.h>
 #include <X11/extensions/XIproto.h>

@@ -2,12 +2,12 @@
 .\"     Title: xigrabenter
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
 .\" Generator: DocBook XSL Stylesheets v1.76.1 <http://docbook.sf.net/>
-.\"      Date: 12/20/2011
+.\"      Date: 12/21/2011
 .\"    Manual: [FIXME: manual]
 .\"    Source: [FIXME: source]
 .\"  Language: English
 .\"
-.TH "XIGRABENTER" "libmansuffix" "12/20/2011" "[FIXME: source]" "[FIXME: manual]"
+.TH "XIGRABENTER" "libmansuffix" "12/21/2011" "[FIXME: source]" "[FIXME: manual]"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -123,14 +123,14 @@ mask
 .nf
 grab_mode
        Specifies further processing of events from this device\&.
-       You can pass GrabModeSync or GrabModeAsync\&.
+       You can pass XIGrabModeSync or XIGrabModeAsync\&.
 .fi
 .sp
 .nf
 paired_device_mode
        Specifies further processing of events from the paired
-       master device\&. You can pass GrabModeSync or
-       GrabModeAsync\&. If deviceid specifies a floating slave
+       master device\&. You can pass XIGrabModeSync or
+       XIGrabModeAsync\&. If deviceid specifies a floating slave
        device, this parameter is ignored\&.
 .fi
 .SH "DESCRIPTION"
@@ -349,6 +349,19 @@ BadValue
 BadWindow
        A value for a Window argument does not name a defined
        Window\&.
+.fi
+.if n \{\
+.RE
+.\}
+.SH "BUGS"
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+The protocol headers for XI 2\&.0 did not provide
+XIGrabModeAsync or XIGrabModeSync\&. Use GrabModeSync and
+GrabModeAsync instead, respectively\&.
 .fi
 .if n \{\
 .RE

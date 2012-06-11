@@ -42,8 +42,12 @@ DESCRIPTION
    cases major_version_inout and minor_version_inout are set to the 
    server's supported version.
 
-   XIQueryVersion can generate a BadValue error.
+   Consecutive calls to XIQueryVersion by the same client always return the
+   first returned major.minor version. If the client requests a version
+   lower than the first returned major.minor version in a subsequent call, a
+   BadValue error occurs.
 
+   XIQueryVersion can generate a BadValue error.
 
 EXAMPLES
 --------

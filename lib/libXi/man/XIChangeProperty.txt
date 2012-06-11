@@ -76,7 +76,7 @@ SYNOPSIS
           quantities) where the data is to be retrieved.
 
    mode
-          One of PropModeAppend, PropModePrepend or PropModeReplace.
+          One of XIPropModeAppend, XIPropModePrepend or XIPropModeReplace.
 
    num_items
           Number of items in data in the format specified.
@@ -121,7 +121,7 @@ XIGetProperty sets the return arguments as follows:
    nitems_return argument is empty.
 
    - If the specified property exists and either you assign 
-   AnyPropertyType to the req_type argument or the specified type 
+   XIAnyPropertyType to the req_type argument or the specified type
    matches the actual property type, XIGetProperty returns the 
    actual property type to actual_type_return and the actual property 
    format (never zero) to actual_format_return.  It also returns a value 
@@ -165,10 +165,10 @@ The XIChangeProperty function alters the property for the specified device
 and causes the X server to generate a XIPropertyNotify event for that
 device.  XIChangeProperty performs the following:
 
-- If mode is PropModeReplace, XIChangeProperty discards the previous
+- If mode is XIPropModeReplace, XIChangeProperty discards the previous
   property value and stores the new data.
 
-- If mode is PropModePrepend or PropModeAppend, XIChangeProperty
+- If mode is XIPropModePrepend or XIPropModeAppend, XIChangeProperty
   inserts the specified data before the beginning of the existing
   data or onto the end of the existing data, respectively.  The type
   and format must match the existing property value, or a BadMatch
@@ -220,6 +220,14 @@ BadDevice
 BadAtom
        An invalid property was specified. The property does not
        exist.
+
+BUGS
+----
+
+   The protocol headers for XI 2.0 did not provide
+   XIAnyPropertyType, XIPropModeReplace, XIPropModePrepend or
+   XIPropModeAppend. Use AnyPropertyType, PropModeReplace,
+   PropModePrepend and PropModeAppend instead, respectively.
 
 SEE ALSO
 --------

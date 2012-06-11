@@ -22,6 +22,10 @@
  *
  */
 
+#if HAVE_CONFIG_H
+#include <config.h>
+#endif
+
 #include <stdint.h>
 #include <X11/Xlibint.h>
 #include <X11/extensions/XI2proto.h>
@@ -29,10 +33,16 @@
 #include <X11/extensions/extutil.h>
 #include "XIint.h"
 
-Status
-XIAllowEvents(Display *dpy, int deviceid, int event_mode, Time time)
+/* for GetRequest() to work */
+#define X_XI2_2AllowEvents X_XIAllowEvents
+
+static Status
+_XIAllowEvents(Display *dpy, int deviceid, int event_mode, Time time,
+                    unsigned int touchid, Window grab_window)
 {
+    Bool have_XI22 = True;
     xXIAllowEventsReq *req;
+    xXI2_2AllowEventsReq *req_XI22;
 
     XExtDisplayInfo *extinfo = XInput_find_display(dpy);
 
@@ -40,14 +50,53 @@ XIAllowEvents(Display *dpy, int deviceid, int event_mode, Time time)
     if (_XiCheckExtInit(dpy, XInput_2_0, extinfo) == -1)
 	return (NoSuchExtension);
 
-    GetReq(XIAllowEvents, req);
+    if (_XiCheckExtInit(dpy, XInput_2_2, extinfo) == 0)
+        have_XI22 = True;
+
+    if (have_XI22)
+    {
+        GetReq(XI2_2AllowEvents, req_XI22);
+        req = (xXIAllowEventsReq*)req_XI22;
+    } else
+        GetReq(XIAllowEvents, req);
+
     req->reqType = extinfo->codes->major_opcode;
     req->ReqType = X_XIAllowEvents;
     req->deviceid = deviceid;
     req->mode = event_mode;
     req->time = time;
 
+    if (have_XI22) {
+        req_XI22->touchid = touchid;
+        req_XI22->grab_window = grab_window;
+    }
+
     UnlockDisplay(dpy);
     SyncHandle();
     return Success;
+}
+
+Status
+XIAllowEvents(Display *dpy, int deviceid, int event_mode, Time time)
+{
+    return _XIAllowEvents(dpy, deviceid, event_mode, time, 0, None);
+}
+
+Status
+XIAllowTouchEvents(Display *dpy, int deviceid, unsigned int touchid,
+                   Window grab_window, int event_mode)
+{
+    int status;
+    XExtDisplayInfo *extinfo = XInput_find_display(dpy);
+
+    LockDisplay(dpy);
+    if (_XiCheckExtInit(dpy, XInput_2_2, extinfo) == -1)
+	return (NoSuchExtension);
+
+    status = _XIAllowEvents(dpy, deviceid, event_mode, CurrentTime, touchid, grab_window);
+
+    UnlockDisplay(dpy);
+    SyncHandle();
+
+    return status;
 }

@@ -2,12 +2,12 @@
 .\"     Title: xiqueryversion
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
 .\" Generator: DocBook XSL Stylesheets v1.76.1 <http://docbook.sf.net/>
-.\"      Date: 09/23/2011
+.\"      Date: 04/23/2012
 .\"    Manual: [FIXME: manual]
 .\"    Source: [FIXME: source]
 .\"  Language: English
 .\"
-.TH "XIQUERYVERSION" "libmansuffix" "09/23/2011" "[FIXME: source]" "[FIXME: manual]"
+.TH "XIQUERYVERSION" "libmansuffix" "04/23/2012" "[FIXME: source]" "[FIXME: manual]"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -83,6 +83,19 @@ If the server does not support XI2, XIQueryVersion returns BadRequest
 to the client\&. Otherwise, XIQueryVersion returns Success\&. In both
 cases major_version_inout and minor_version_inout are set to the
 server\*(Aqs supported version\&.
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+Consecutive calls to XIQueryVersion by the same client always return the
+first returned major\&.minor version\&. If the client requests a version
+lower than the first returned major\&.minor version in a subsequent call, a
+BadValue error occurs\&.
 .fi
 .if n \{\
 .RE

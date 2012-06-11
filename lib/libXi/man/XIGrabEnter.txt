@@ -77,12 +77,12 @@ SYNOPSIS
 
    grab_mode
           Specifies further processing of events from this device.
-          You can pass GrabModeSync or GrabModeAsync.
+          You can pass XIGrabModeSync or XIGrabModeAsync.
 
    paired_device_mode
           Specifies further processing of events from the paired
-          master device. You can pass GrabModeSync or
-          GrabModeAsync. If deviceid specifies a floating slave
+          master device. You can pass XIGrabModeSync or
+          XIGrabModeAsync. If deviceid specifies a floating slave
           device, this parameter is ignored.
 
 DESCRIPTION
@@ -181,6 +181,13 @@ DIAGNOSTICS
    BadWindow
           A value for a Window argument does not name a defined
           Window.
+
+BUGS
+----
+
+   The protocol headers for XI 2.0 did not provide
+   XIGrabModeAsync or XIGrabModeSync. Use GrabModeSync and
+   GrabModeAsync instead, respectively.
 
 SEE ALSO
 --------

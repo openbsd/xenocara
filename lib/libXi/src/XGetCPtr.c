@@ -29,6 +29,9 @@ in this Software without prior written authorization from The Open Group.
  * XIGetClientPointer - Get the clientPointer setting for a client.
  *
  */
+#if HAVE_CONFIG_H
+#include <config.h>
+#endif
 
 #include <stdint.h>
 #include <X11/extensions/XI2proto.h>

@@ -98,6 +98,7 @@ AUTOCONF = @AUTOCONF@
 AUTOHEADER = @AUTOHEADER@
 AUTOMAKE = @AUTOMAKE@
 AWK = @AWK@
+BASE_CFLAGS = @BASE_CFLAGS@
 CC = @CC@
 CCDEPMODE = @CCDEPMODE@
 CFLAGS = @CFLAGS@
@@ -117,6 +118,8 @@ ECHO_C = @ECHO_C@
 ECHO_N = @ECHO_N@
 ECHO_T = @ECHO_T@
 EGREP = @EGREP@
+ENABLE_DOCS_FALSE = @ENABLE_DOCS_FALSE@
+ENABLE_DOCS_TRUE = @ENABLE_DOCS_TRUE@
 ENABLE_SPECS_FALSE = @ENABLE_SPECS_FALSE@
 ENABLE_SPECS_TRUE = @ENABLE_SPECS_TRUE@
 EXEEXT = @EXEEXT@
@@ -137,6 +140,8 @@ HAVE_XMLTO_FALSE = @HAVE_XMLTO_FALSE@
 HAVE_XMLTO_TEXT_FALSE = @HAVE_XMLTO_TEXT_FALSE@
 HAVE_XMLTO_TEXT_TRUE = @HAVE_XMLTO_TEXT_TRUE@
 HAVE_XMLTO_TRUE = @HAVE_XMLTO_TRUE@
+HAVE_XSLTPROC_FALSE = @HAVE_XSLTPROC_FALSE@
+HAVE_XSLTPROC_TRUE = @HAVE_XSLTPROC_TRUE@
 INSTALL_CMD = @INSTALL_CMD@
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_MANPAGES_FALSE = @INSTALL_MANPAGES_FALSE@
@@ -163,7 +168,14 @@ MANIFEST_TOOL = @MANIFEST_TOOL@
 
 # String replacements in MAN_SUBSTS now come from xorg-macros.m4 via configure
 # Unable to use __libmansuffix__ as underscores are lost in txt --> xml conversion
-MAN_SUBSTS = @MAN_SUBSTS@ -e 's/libmansuffix/$(LIB_MAN_SUFFIX)/g'
+
+# asciidoc is generating [FIXME...] values in the .TH line we should fix.
+
+# asciidoc generates shadow page references without the man section directory
+MAN_SUBSTS = @MAN_SUBSTS@ -e 's/libmansuffix/$(LIB_MAN_SUFFIX)/g' -e \
+	's/\[FIXME: source\]/$(XORG_MAN_PAGE)/' -e 's/\[FIXME: \
+	manual\]/XINPUT FUNCTIONS/' -e 's/^\.so X/.so \
+	man$(LIB_MAN_SUFFIX)\/X/'
 MISC_MAN_DIR = @MISC_MAN_DIR@
 MISC_MAN_SUFFIX = @MISC_MAN_SUFFIX@
 NM = @NM@
@@ -194,6 +206,7 @@ XMALLOC_ZERO_CFLAGS = @XMALLOC_ZERO_CFLAGS@
 XMLTO = @XMLTO@
 XORG_MAN_PAGE = @XORG_MAN_PAGE@
 XORG_SGML_PATH = @XORG_SGML_PATH@
+XSLTPROC = @XSLTPROC@
 XSL_STYLESHEET = @XSL_STYLESHEET@
 XTMALLOC_ZERO_CFLAGS = @XTMALLOC_ZERO_CFLAGS@
 ac_ct_AR = @ac_ct_AR@
@@ -559,15 +572,15 @@ uninstall-am: uninstall-info-am uninstall-libmanDATA
 @HAVE_DOCTOOLS_TRUE@	$(AM_V_GEN)$(ASCIIDOC) -b docbook -d manpage -o $@ $<
 @HAVE_DOCTOOLS_TRUE@.xml.man:
 @HAVE_DOCTOOLS_TRUE@	$(AM_V_GEN)$(XMLTO) man $<
-@HAVE_DOCTOOLS_TRUE@	$(AM_V_GEN)mv -f $(@:.man=.libmansuffix) $@
+@HAVE_DOCTOOLS_TRUE@	$(AM_V_at)mv -f $(@:.man=.libmansuffix) $@
 
 # Invoke asciidoc/xmlto main man page generation for shadow pages
 @HAVE_DOCTOOLS_TRUE@$(libman_shadows):
 @HAVE_DOCTOOLS_TRUE@	@if test ! -f $(@:.man=.libmansuffix); then \
-@HAVE_DOCTOOLS_TRUE@	  $(AM_V_GEN)rm -f $<; \
-@HAVE_DOCTOOLS_TRUE@	  $(AM_V_GEN)$(MAKE) $(AM_MAKEFLAGS) $< || exit 1; \
+@HAVE_DOCTOOLS_TRUE@	  rm -f $<; \
+@HAVE_DOCTOOLS_TRUE@	  $(MAKE) $(AM_MAKEFLAGS) $< || exit 1; \
 @HAVE_DOCTOOLS_TRUE@	fi
-@HAVE_DOCTOOLS_TRUE@	$(AM_V_GEN)mv -f $(@:.man=.libmansuffix) $@
+@HAVE_DOCTOOLS_TRUE@	$(AM_V_at)mv -f $(@:.man=.libmansuffix) $@
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:

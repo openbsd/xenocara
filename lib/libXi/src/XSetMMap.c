@@ -49,6 +49,9 @@ SOFTWARE.
  * XSetDeviceModifierMapping - set the modifier map of an extension device.
  *
  */
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
 
 #include <X11/extensions/XI.h>
 #include <X11/extensions/XIproto.h>

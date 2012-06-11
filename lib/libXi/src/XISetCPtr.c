@@ -32,6 +32,9 @@ in this Software without prior written authorization from The Open Group.
  * Ideally, the window manager will always send a SetClientPointer request
  * before the client interacts with an application.
  */
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
 
 #include <stdint.h>
 #include <X11/extensions/XI2proto.h>

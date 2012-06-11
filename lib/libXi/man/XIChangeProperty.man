@@ -2,12 +2,12 @@
 .\"     Title: xichangeproperty
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
 .\" Generator: DocBook XSL Stylesheets v1.76.1 <http://docbook.sf.net/>
-.\"      Date: 12/20/2011
+.\"      Date: 12/21/2011
 .\"    Manual: [FIXME: manual]
 .\"    Source: [FIXME: source]
 .\"  Language: English
 .\"
-.TH "XICHANGEPROPERTY" "libmansuffix" "12/20/2011" "[FIXME: source]" "[FIXME: manual]"
+.TH "XICHANGEPROPERTY" "libmansuffix" "12/21/2011" "[FIXME: source]" "[FIXME: manual]"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -124,7 +124,7 @@ offset
 .sp
 .nf
 mode
-       One of PropModeAppend, PropModePrepend or PropModeReplace\&.
+       One of XIPropModeAppend, XIPropModePrepend or XIPropModeReplace\&.
 .fi
 .sp
 .nf
@@ -189,7 +189,7 @@ If the specified property exists but its type does not match the specified type,
 .sp -1
 .IP \(bu 2.3
 .\}
-If the specified property exists and either you assign AnyPropertyType to the req_type argument or the specified type matches the actual property type, XIGetProperty returns the actual property type to actual_type_return and the actual property format (never zero) to actual_format_return\&. It also returns a value to bytes_after_return and nitems_return, by defining the following values:
+If the specified property exists and either you assign XIAnyPropertyType to the req_type argument or the specified type matches the actual property type, XIGetProperty returns the actual property type to actual_type_return and the actual property format (never zero) to actual_format_return\&. It also returns a value to bytes_after_return and nitems_return, by defining the following values:
 .sp
 .if n \{\
 .RS 4
@@ -228,7 +228,7 @@ The XIChangeProperty function alters the property for the specified device and c
 .sp -1
 .IP \(bu 2.3
 .\}
-If mode is PropModeReplace, XIChangeProperty discards the previous property value and stores the new data\&.
+If mode is XIPropModeReplace, XIChangeProperty discards the previous property value and stores the new data\&.
 .RE
 .sp
 .RS 4
@@ -239,7 +239,7 @@ If mode is PropModeReplace, XIChangeProperty discards the previous property valu
 .sp -1
 .IP \(bu 2.3
 .\}
-If mode is PropModePrepend or PropModeAppend, XIChangeProperty inserts the specified data before the beginning of the existing data or onto the end of the existing data, respectively\&. The type and format must match the existing property value, or a BadMatch error results\&. If the property is undefined, it is treated as defined with the correct type and format with zero\-length data\&.
+If mode is XIPropModePrepend or XIPropModeAppend, XIChangeProperty inserts the specified data before the beginning of the existing data or onto the end of the existing data, respectively\&. The type and format must match the existing property value, or a BadMatch error results\&. If the property is undefined, it is treated as defined with the correct type and format with zero\-length data\&.
 .RE
 .sp
 If the specified format is 8, the property data must be a char array\&. If the specified format is 16, the property data must be a uint16_t array\&. If the specified format is 32, the property data must be a uint32_t array\&.
@@ -262,6 +262,20 @@ BadValue Some numeric value falls outside the range of values accepted by the re
 BadDevice An invalid device was specified\&. The device does not exist\&.
 .sp
 BadAtom An invalid property was specified\&. The property does not exist\&.
+.SH "BUGS"
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+The protocol headers for XI 2\&.0 did not provide
+XIAnyPropertyType, XIPropModeReplace, XIPropModePrepend or
+XIPropModeAppend\&. Use AnyPropertyType, PropModeReplace,
+PropModePrepend and PropModeAppend instead, respectively\&.
+.fi
+.if n \{\
+.RE
+.\}
 .SH "SEE ALSO"
 .sp
 XIListProperties(libmansuffix)

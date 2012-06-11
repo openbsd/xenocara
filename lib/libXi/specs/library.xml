@@ -1,5 +1,5 @@
 <chapter><title>Input Extension</title>
-<sect1 id="Input_Extension_Overview">
+<sect1 id='Overview'>
 <title>Overview</title>
 <!-- .XS -->
 <!-- (SN Input Extension Overview -->
@@ -211,7 +211,7 @@ The device supports feedbacks.
 <!-- .LP -->
 Additional classes may be added in the future.
 Functions that support multiple input classes, such as the 
-<function>XListInputDevices</function>
+<xref linkend='XListInputDevices' xrefstyle='select: title'/>
 function that lists all available input devices,
 organize the data they return by input class.  Client programs that
 use these functions should not access data unless it matches a 
@@ -235,24 +235,24 @@ that a client would make is as follows:
 <itemizedlist>
   <listitem>
     <para>
-<function>XListInputDevices</function>
+<xref linkend='XListInputDevices' xrefstyle='select: title'/>
 - lists all of the available input devices.  From the 
 information returned by this request, determine whether the desired input
 device is attached to the server.  For a description of the 
-<function>XListInputDevices</function>
+<xref linkend='XListInputDevices' xrefstyle='select: title'/>
 request, see the section entitled ``Listing Available Devices.''
     </para>
   </listitem>
   <listitem>
     <para>
-<function>XOpenDevice</function>
+<xref linkend='XOpenDevice' xrefstyle='select: title'/>
 - requests that the server open the device for access by this client.
 This request returns an 
 <function>XDevice</function>
 structure that is used
 by most other input extension requests to identify the specified device.
 For a description of the 
-<function>XOpenDevice</function>
+<xref linkend='XOpenDevice' xrefstyle='select: title'/>
 request, see the section entitled ``Enabling and Disabling Extension Devices.''
     </para>
   </listitem>
@@ -269,7 +269,7 @@ see the section entitled ``Selecting Extension Device Events.''
   </listitem>
   <listitem>
     <para>
-<function>XSelectExtensionEvent</function>
+<xref linkend='XSelectExtensionEvent' xrefstyle='select: title'/>
 - selects the desired events from the server.
 For a description of the 
 <function>XSelextExtensionEvent</function>
@@ -278,9 +278,9 @@ request, see the section entitled ``Selecting Extension Device Events.''
   </listitem>
   <listitem>
     <para>
-<function>XNextEvent</function>
+<olink targetdoc='libX11' targetptr='XNextEvent'><function>XNextEvent</function></olink>
 - receives the next available event.  This is the core
-<function>XNextEvent</function>
+<olink targetdoc='libX11' targetptr='XNextEvent'><function>XNextEvent</function></olink>
 function provided by the standard X libarary.
     </para>
   </listitem>
@@ -457,7 +457,7 @@ is treated as a core device until it is in turn replaced by another
 request or until the server terminates.  The termination
 of the client that changed the device will not cause it to change back.
 Attempts to use the
-<function>XCloseDevice</function>
+<xref linkend='XCloseDevice' xrefstyle='select: title'/>
 request to close the new core device will fail with a
 <function>BadDevice</function>
 error.
@@ -466,7 +466,7 @@ error.
 <para>
 <!-- .LP -->
 To change which physical device is used as the X keyboard, use the 
-<function>XChangeKeyboardDevice</function>
+<xref linkend='XChangeKeyboardDevice' xrefstyle='select: title'/>
 function.
 The specified device must support input class 
 <function>Keys</function>
@@ -479,7 +479,7 @@ error.
 <para>
 <!-- .LP -->
 <!-- .sM -->
-<funcsynopsis>
+<funcsynopsis id='XChangeKeyboardDevice'>
 <funcprototype>
   <funcdef>int <function> XChangeKeyboardDevice</function></funcdef>
   <paramdef>Display<parameter> *display</parameter></paramdef>
@@ -514,7 +514,7 @@ Specifies the desired device.
 <!-- .LP -->
 <!-- .eM -->
 If no error occurs, 
-<function>XChangeKeyboardDevice</function>
+<xref linkend='XChangeKeyboardDevice' xrefstyle='select: title'/>
 returns 
 <function>Success .</function>
 A 
@@ -534,7 +534,7 @@ the focus state of the old X keyboard.
 </para>
 <para>
 <!-- .LP -->
-<function>XChangeKeyboardDevice</function>
+<xref linkend='XChangeKeyboardDevice' xrefstyle='select: title'/>
 can generate
 <function>AlreadyGrabbed ,</function>
 <function>BadDevice ,</function>
@@ -548,12 +548,12 @@ errors.
 <!-- .LP -->
 To change which physical device is used as the X pointer,
 use the
-<function>XChangePointerDevice</function>
+<xref linkend='XChangePointerDevice' xrefstyle='select: title'/>
 function.
 The specified device must support input class 
 <function>Valuators</function>
 (as reported in the
-<function>XListInputDevices</function>
+<xref linkend='XListInputDevices' xrefstyle='select: title'/>
 request) and report at least two axes of motion,
 or the request will fail with a 
 <function>BadMatch</function>
@@ -570,7 +570,7 @@ X pointer, the request will fail with a
 <function>BadDevice</function>
 error.
 <!-- .sM -->
-<funcsynopsis>
+<funcsynopsis id='XChangePointerDevice'>
 <funcprototype>
   <funcdef>int <function> XChangePointerDevice</function></funcdef>
   <paramdef>Display<parameter> *display</parameter></paramdef>
@@ -629,7 +629,7 @@ pointer device.
 <!-- .LP -->
 <!-- .eM -->
 If no error occurs, 
-<function>XChangePointerDevice</function>
+<xref linkend='XChangePointerDevice' xrefstyle='select: title'/>
 returns 
 <function>Success .</function>
 A 
@@ -647,7 +647,7 @@ available as an extension input device.
 </para>
 <para>
 <!-- .LP -->
-<function>XChangePointerDevice</function>
+<xref linkend='XChangePointerDevice' xrefstyle='select: title'/>
 can generate
 <function>AlreadyGrabbed ,</function>
 <function>BadDevice ,</function>
@@ -674,15 +674,15 @@ with a single request.
 The core grab requests require a pointer_mode and keyboard_mode
 argument.  The meaning of these modes is changed by the input extension.
 For the
-<function>XGrabPointer</function>
+<olink targetdoc='libX11' targetptr='XGrabPointer'><function>XGrabPointer</function></olink>
 and 
-<function>XGrabButton</function>
+<olink targetdoc='libX11' targetptr='XGrabButton'><function>XGrabButton</function></olink>
 requests, pointer_mode controls synchronization of the pointer device, 
 and keyboard_mode controls the synchronization of all other input devices.  
 For the 
-<function>XGrabKeyboard</function>
+<olink targetdoc='libX11' targetptr='XGrabKeyboard'><function>XGrabKeyboard</function></olink>
 and
-<function>XGrabKey</function>
+<olink targetdoc='libX11' targetptr='XGrabKey'><function>XGrabKey</function></olink>
 requests, pointer_mode controls the synchronization
 of all input devices, except the X keyboard, while keyboard_mode controls
 the synchronization of the keyboard.  When using one of the core grab
@@ -699,40 +699,40 @@ is controlled by the mode specified for the device not being grabbed.
 <!-- .LP -->
 Active grabs of
 extension devices are supported via the 
-<function>XGrabDevice</function>
+<xref linkend='XGrabDevice' xrefstyle='select: title'/>
 function in the same way that core devices are grabbed using the core 
-<function>XGrabKeyboard</function>
+<olink targetdoc='libX11' targetptr='XGrabKeyboard'><function>XGrabKeyboard</function></olink>
 function, except that an extension input device
 is passed as a function parameter.  
 The 
-<function>XUngrabDevice</function>
+<xref linkend='XUngrabDevice' xrefstyle='select: title'/>
 function allows a previous active grab for an extension device to be released.
 </para>
 <para>
 <!-- .LP -->
 Passive grabs of buttons and keys on extension devices are supported
 via the 
-<function>XGrabDeviceButton</function>
+<xref linkend='XGrabDeviceButton' xrefstyle='select: title'/>
 and 
-<function>XGrabDeviceKey</function>
+<xref linkend='XGrabDeviceKey' xrefstyle='select: title'/>
 functions.
 These passive grabs are released via the
-<function>XUngrabDeviceKey</function>
+<xref linkend='XUngrabDeviceKey' xrefstyle='select: title'/>
 and
-<function>XUngrabDeviceButton</function>
+<xref linkend='XUngrabDeviceButton' xrefstyle='select: title'/>
 functions.
 <!-- .sp -->
 </para>
 <para>
 <!-- .LP -->
 To grab an extension device, use the
-<function>XGrabDevice</function>
+<xref linkend='XGrabDevice' xrefstyle='select: title'/>
 function.
 The device must have previously been opened using the
-<function>XOpenDevice</function>
+<xref linkend='XOpenDevice' xrefstyle='select: title'/>
 function.
 <!-- .sM -->
-<funcsynopsis>
+<funcsynopsis id='XGrabDevice'>
 <funcprototype>
   <funcdef>int <function> XGrabDevice</function></funcdef>
   <paramdef>Display<parameter> *display</parameter></paramdef>
@@ -859,7 +859,7 @@ milliseconds or
 <para>
 <!-- .LP -->
 <!-- .eM -->
-<function>XGrabDevice</function>
+<xref linkend='XGrabDevice' xrefstyle='select: title'/>
 actively grabs an extension input device and generates 
 <function>DeviceFocusIn</function>
 and 
@@ -903,7 +903,7 @@ the state of the grabbed device
 (as seen by client applications) appears to freeze,
 and no further device events are generated by the server until the
 grabbing client issues a releasing 
-<function>XAllowDeviceEvents</function>
+<xref linkend='XAllowDeviceEvents' xrefstyle='select: title'/>
 call or until the device grab is released.
 Actual device input events are not lost while the device is frozen; they are
 simply queued for later processing.
@@ -921,9 +921,9 @@ the state of all devices except the grabbed device
 (as seen by client applications) appears to freeze, and no further
 events are generated by the server until the grabbing client issues a
 releasing 
-<function>XAllowEvents</function>
+<olink targetdoc='libX11' targetptr='XAllowEvents'><function>XAllowEvents</function></olink>
 or 
-<function>XAllowDeviceEvents</function>
+<xref linkend='XAllowDeviceEvents' xrefstyle='select: title'/>
 call or until the device grab is released.
 Actual events are not lost
 while the other devices are frozen; they are simply queued for later
@@ -933,7 +933,7 @@ processing.
 </itemizedlist>
 <para>
 <!-- .LP -->
-<function>XGrabDevice</function>
+<xref linkend='XGrabDevice' xrefstyle='select: title'/>
 fails on the following conditions:
 </para>
 <itemizedlist>
@@ -979,7 +979,7 @@ of the requesting client, it is thawed.
 </para>
 <para>
 <!-- .LP -->
-<function>XGrabDevice</function>
+<xref linkend='XGrabDevice' xrefstyle='select: title'/>
 can generate
 <function>BadClass ,</function>
 <function>BadDevice ,</function>
@@ -992,13 +992,13 @@ errors.
 <para>
 <!-- .LP -->
 To release a grab of an extension device, use the
-<function>XUngrabDevice</function>
+<xref linkend='XUngrabDevice' xrefstyle='select: title'/>
 function.
 </para>
 <para>
 <!-- .LP -->
 <!-- .sM -->
-<funcsynopsis>
+<funcsynopsis id='XUngrabDevice'>
 <funcprototype>
   <funcdef>int <function> XUngrabDevice</function></funcdef>
   <paramdef>Display<parameter> *display</parameter></paramdef>
@@ -1045,14 +1045,14 @@ milliseconds, or
 <para>
 <!-- .LP -->
 <!-- .eM -->
-<function>XUngrabDevice</function>
+<xref linkend='XUngrabDevice' xrefstyle='select: title'/>
 allows a client to release an extension input device and any
 queued events if this client has it grabbed from either
-<function>XGrabDevice</function>
+<xref linkend='XGrabDevice' xrefstyle='select: title'/>
 or
 <function>XGrabDeviceKey .</function>
 If any other devices are frozen by the grab,
-<function>XUngrabDevice</function>
+<xref linkend='XUngrabDevice' xrefstyle='select: title'/>
 thaws them. 
 This function does not release the device and any
 queued events if the specified time is earlier than the last-device-grab
@@ -1061,13 +1061,13 @@ time or is later than the current X server time.  It also generates
 and 
 <function>DeviceFocusOut</function>
 events.  The X server automatically performs an
-<function>XUngrabDevice</function>
+<xref linkend='XUngrabDevice' xrefstyle='select: title'/>
 if the event window for an active device grab becomes not viewable
 or if the client terminates without releasing the grab.
 </para>
 <para>
 <!-- .LP -->
-<function>XUngrabDevice</function>
+<xref linkend='XUngrabDevice' xrefstyle='select: title'/>
 can generate
 <function>BadDevice</function>
 errors.
@@ -1083,7 +1083,7 @@ errors.
 To passively grab a single key on an extension device, use
 <function>XGrabDeviceKey .</function>
 That device must have previously been opened using the
-<function>XOpenDevice</function>
+<xref linkend='XOpenDevice' xrefstyle='select: title'/>
 function, or the request will fail with a
 <function>BadDevice</function>
 error.  
@@ -1093,7 +1093,7 @@ the request will fail with a
 <function>BadMatch</function>
 error.
 <!-- .sM -->
-<funcsynopsis>
+<funcsynopsis id='XGrabDeviceKey'>
 <funcprototype>
   <funcdef>int <function> XGrabDeviceKey</function></funcdef>
   <paramdef>Display<parameter> *display</parameter></paramdef>
@@ -1265,13 +1265,13 @@ or
 <para>
 <!-- .LP -->
 <!-- .eM -->
-<function>XGrabDeviceKey</function>
+<xref linkend='XGrabDeviceKey' xrefstyle='select: title'/>
 is analogous to the core 
-<function>XGrabKey</function>
+<olink targetdoc='libX11' targetptr='XGrabKey'><function>XGrabKey</function></olink>
 function.  It creates an
 explicit passive grab for a key on an extension device.
 The 
-<function>XGrabDeviceKey</function>
+<xref linkend='XGrabDeviceKey' xrefstyle='select: title'/>
 function establishes a passive grab on a device.
 Consequently, in the future, 
 </para>
@@ -1341,21 +1341,21 @@ is equivalent to issuing
 the request for all possible keycodes.  Otherwise, the key must be in
 the range specified by min_keycode and max_keycode in the 
 information returned by the
-<function>XListInputDevices</function>
+<xref linkend='XListInputDevices' xrefstyle='select: title'/>
 function.
 If it is not within that range, 
-<function>XGrabDeviceKey</function>
+<xref linkend='XGrabDeviceKey' xrefstyle='select: title'/>
 generates a
 <function>BadValue</function>
 error.
 </para>
 <para>
 <!-- .LP -->
-<function>XGrabDeviceKey</function>
+<xref linkend='XGrabDeviceKey' xrefstyle='select: title'/>
 generates a
 <function>BadAccess</function>
 error if some other client has issued a 
-<function>XGrabDeviceKey</function>
+<xref linkend='XGrabDeviceKey' xrefstyle='select: title'/>
 with the same device and key combination on the same window.
 When using
 <function>AnyModifier</function>
@@ -1368,14 +1368,14 @@ for any combination.
 </para>
 <para>
 <!-- .LP -->
-<function>XGrabDeviceKey</function>
+<xref linkend='XGrabDeviceKey' xrefstyle='select: title'/>
 returns
 <function>Success</function>
 upon successful completion of the request.
 </para>
 <para>
 <!-- .LP -->
-<function>XGrabDeviceKey</function>
+<xref linkend='XGrabDeviceKey' xrefstyle='select: title'/>
 can generate
 <function>BadAccess ,</function>
 <function>BadClass ,</function>
@@ -1392,7 +1392,7 @@ errors.
 To release a passive grab of a single key on an extension device, use
 <function>XUngrabDeviceKey .</function>
 <!-- .sM -->
-<funcsynopsis>
+<funcsynopsis id='XUngrabDeviceKey'>
 <funcprototype>
   <funcdef>int <function> XUngrabDeviceKey</function></funcdef>
   <paramdef>Display<parameter> *display</parameter></paramdef>
@@ -1497,15 +1497,15 @@ Specifies the ID of a window associated with the device specified above.
 <para>
 <!-- .LP -->
 <!-- .eM -->
-<function>XUngrabDeviceKey</function>
+<xref linkend='XUngrabDeviceKey' xrefstyle='select: title'/>
 is analogous to the core
-<function>XUngrabKey</function>
+<olink targetdoc='libX11' targetptr='XUngrabKey'><function>XUngrabKey</function></olink>
 function.  It releases an explicit passive grab for a key 
 on an extension input device.
 </para>
 <para>
 <!-- .LP -->
-<function>XUngrabDeviceKey</function>
+<xref linkend='XUngrabDeviceKey' xrefstyle='select: title'/>
 can generate
 <function>BadAlloc ,</function>
 <function>BadDevice ,</function>
@@ -1526,7 +1526,7 @@ errors.
 To establish a passive grab for a single button on an extension device, use
 <function>XGrabDeviceButton .</function>
 The specified device must have previously been opened using the
-<function>XOpenDevice</function>
+<xref linkend='XOpenDevice' xrefstyle='select: title'/>
 function, or the request will fail with a 
 <function>BadDevice</function>
 error.  If the specified device does not support input class
@@ -1535,7 +1535,7 @@ the request will fail with a
 <function>BadMatch</function>
 error.
 <!-- .sM -->
-<funcsynopsis>
+<funcsynopsis id='XGrabDeviceButton'>
 <funcprototype>
   <funcdef>int <function> XGrabDeviceButton</function></funcdef>
   <paramdef>Display<parameter> *display</parameter></paramdef>
@@ -1707,22 +1707,22 @@ or
 <para>
 <!-- .LP -->
 <!-- .eM -->
-<function>XGrabDeviceButton </function>
+<xref linkend='XGrabDeviceButton' xrefstyle='select: title'/>
 is analogous to the core
-<function>XGrabButton</function>
+<olink targetdoc='libX11' targetptr='XGrabButton'><function>XGrabButton</function></olink>
 function.  
 It creates an explicit passive grab for a button on an extension input device.
 Because the server does not track extension devices,
 no cursor is specified with this request.
 For the same reason, there is no confine_to parameter.
 The device must have previously been opened using the
-<function>XOpenDevice</function>
+<xref linkend='XOpenDevice' xrefstyle='select: title'/>
 function.
 </para>
 <para>
 <!-- .LP -->
 The
-<function>XGrabDeviceButton</function>
+<xref linkend='XGrabDeviceButton' xrefstyle='select: title'/>
 function establishes a passive grab on a device.
 Consequently, in the future, 
 </para>
@@ -1790,11 +1790,11 @@ specified button be assigned to a physical button.
 </para>
 <para>
 <!-- .LP -->
-<function>XGrabDeviceButton</function>
+<xref linkend='XGrabDeviceButton' xrefstyle='select: title'/>
 generates a
 <function>BadAccess</function>
 error if some other client has issued a 
-<function>XGrabDeviceButton</function>
+<xref linkend='XGrabDeviceButton' xrefstyle='select: title'/>
 with the same device and button combination on the same window.  
 When using
 <function>AnyModifier</function>
@@ -1807,7 +1807,7 @@ established if there is a conflicting grab for any combination.
 </para>
 <para>
 <!-- .LP -->
-<function>XGrabDeviceButton</function>
+<xref linkend='XGrabDeviceButton' xrefstyle='select: title'/>
 can generate
 <function>BadAccess , </function>
 <function>BadClass ,</function>
@@ -1824,7 +1824,7 @@ errors.
 To release a passive grab of a button on an extension device, use 
 <function>XUngrabDeviceButton .</function>
 <!-- .sM -->
-<funcsynopsis>
+<funcsynopsis id='XUngrabDeviceButton'>
 <funcprototype>
   <funcdef>int <function> XUngrabDeviceButton</function></funcdef>
   <paramdef>Display<parameter> *display</parameter></paramdef>
@@ -1929,13 +1929,13 @@ Specifies the ID of a window associated with the device specified above.
 <para>
 <!-- .LP -->
 <!-- .eM -->
-<function>XUngrabDeviceButton </function>
+<xref linkend='XUngrabDeviceButton' xrefstyle='select: title'/>
 is analogous to the core
-<function>XUngrabButton</function>
+<olink targetdoc='libX11' targetptr='XUngrabButton'><function>XUngrabButton</function></olink>
 function.  It releases an explicit passive grab for a button
 on an extension device.
 That device must have previously been opened using the
-<function>XOpenDevice</function>
+<xref linkend='XOpenDevice' xrefstyle='select: title'/>
 function, or a
 <function>BadDevice</function>
 error will result.
@@ -1950,7 +1950,7 @@ modifiers).
 </para>
 <para>
 <!-- .LP -->
-<function>XUngrabDeviceButton </function>
+<xref linkend='XUngrabDeviceButton' xrefstyle='select: title'/>
 can generate
 <function>BadAlloc , </function>
 <function>BadDevice ,</function>
@@ -1971,7 +1971,7 @@ errors.
 To allow further events to be processed when a device has been frozen, use
 <function>XAllowDeviceEvents .</function>
 <!-- .sM -->
-<funcsynopsis>
+<funcsynopsis id='XAllowDeviceEvents'>
 <funcprototype>
   <funcdef>int <function> XAllowDeviceEvents</function></funcdef>
   <paramdef>Display<parameter> *display</parameter></paramdef>
@@ -2036,7 +2036,7 @@ milliseconds, or
 <para>
 <!-- .LP -->
 <!-- .eM -->
-<function>XAllowDeviceEvents</function>
+<xref linkend='XAllowDeviceEvents' xrefstyle='select: title'/>
 releases some queued events if the client has caused a device to freeze.
 It has no effect if the specified time is earlier than the last-grab 
 time of the most recent active grab for the client and device, 
@@ -2198,7 +2198,7 @@ again be processed.
 </para>
 <para>
 <!-- .LP -->
-<function>XAllowDeviceEvents</function>
+<xref linkend='XAllowDeviceEvents' xrefstyle='select: title'/>
 can generate
 <function>BadDevice</function>
 and 
@@ -2215,12 +2215,12 @@ errors.
 <!-- .LP -->
 The current focus window for an extension input device can be 
 determined using the
-<function>XGetDeviceFocus</function>
+<xref linkend='XGetDeviceFocus' xrefstyle='select: title'/>
 function.
 Extension devices are focused using the
-<function>XSetDeviceFocus</function>
+<xref linkend='XSetDeviceFocus' xrefstyle='select: title'/>
 function in the same way that the keyboard is focused using the core
-<function>XSetInputFocus</function>
+<olink targetdoc='libX11' targetptr='XSetInputFocus'><function>XSetInputFocus</function></olink>
 function, except that a device ID is passed as
 a function parameter.  One additional focus state,
 <function>FollowKeyboard ,</function>
@@ -2232,7 +2232,7 @@ To get the current focus state, revert state,
 and focus time of an extension device, use
 <function>XGetDeviceFocus .</function>
 <!-- .sM -->
-<funcsynopsis>
+<funcsynopsis id='XGetDeviceFocus'>
 <funcprototype>
   <funcdef>int <function> XGetDeviceFocus</function></funcdef>
   <paramdef>Display<parameter> *display</parameter></paramdef>
@@ -2306,13 +2306,13 @@ return the focus time last set for the device.
 <para>
 <!-- .LP -->
 <!-- .eM -->
-<function>XGetDeviceFocus</function>
+<xref linkend='XGetDeviceFocus' xrefstyle='select: title'/>
 returns the focus state, the revert-to state,
 and the last-focus-time for an extension input device.
 </para>
 <para>
 <!-- .LP -->
-<function>XGetDeviceFocus</function>
+<xref linkend='XGetDeviceFocus' xrefstyle='select: title'/>
 can generate
 <function>BadDevice</function>
 and
@@ -2325,7 +2325,7 @@ errors.
 To set the focus of an extension device, use
 <function>XSetDeviceFocus .</function>
 <!-- .sM -->
-<funcsynopsis>
+<funcsynopsis id='XSetDeviceFocus'>
 <funcprototype>
   <funcdef>int <function> XSetDeviceFocus</function></funcdef>
   <paramdef>Display<parameter> *display</parameter></paramdef>
@@ -2406,7 +2406,7 @@ milliseconds, or
 <para>
 <!-- .LP -->
 <!-- .eM -->
-<function>XSetDeviceFocus</function>
+<xref linkend='XSetDeviceFocus' xrefstyle='select: title'/>
 changes the focus for an extension input device and the 
 last-focus-change-time.  It has no effect if the specified 
 time is earlier than the last-focus-change-time or is later than the
@@ -2462,7 +2462,7 @@ of the X keyboard at each input event.
 <para>
 <!-- .LP -->
 The specified focus window must be viewable at the time
-<function>XSetDeviceFocus</function>
+<xref linkend='XSetDeviceFocus' xrefstyle='select: title'/>
 is called.  Otherwise, it generates a
 <function>BadMatch</function>
 error.
@@ -2502,7 +2502,7 @@ events, but the last-focus-change time is not affected.
 </para>
 <para>
 <!-- .LP -->
-<function>XSetDeviceFocus</function>
+<xref linkend='XSetDeviceFocus' xrefstyle='select: title'/>
 can generate
 <function>BadDevice ,</function>
 <function>BadMatch , </function>
@@ -2522,7 +2522,7 @@ errors.
 To determine the current feedback settings of an extension input device, use
 <function>XGetFeedbackControl .</function>
 <!-- .sM -->
-<funcsynopsis>
+<funcsynopsis id='XGetFeedbackControl'>
 <funcprototype>
   <funcdef>XFeedbackState * <function> XGetFeedbackControl</function></funcdef>
   <paramdef>Display<parameter> *display</parameter></paramdef>
@@ -2567,7 +2567,7 @@ Returns the number of feedbacks supported by the device.
 <para>
 <!-- .LP -->
 <!-- .eM -->
-<function>XGetFeedbackControl</function>
+<xref linkend='XGetFeedbackControl' xrefstyle='select: title'/>
 returns a list of
 <function>FeedbackState</function>
 structures that describe the feedbacks supported by the specified device.
@@ -2821,7 +2821,7 @@ Clients set these feedbacks by passing a list of
 <function>KeySyms</function>
 to be displayed.
 The 
-<function>XGetFeedbackControl</function>
+<xref linkend='XGetFeedbackControl' xrefstyle='select: title'/>
 function returns the
 set of key symbols that the feedback can display, as well as the 
 maximum number of symbols that can be displayed.
@@ -2940,7 +2940,7 @@ typedef struct {
 <para>
 <!-- .LP -->
 <!-- .eM -->
-<function>XGetFeedbackControl</function>
+<xref linkend='XGetFeedbackControl' xrefstyle='select: title'/>
 can generate
 <function>BadDevice</function>
 and
@@ -2951,11 +2951,11 @@ errors.
 <para>
 <!-- .LP -->
 To free the information returned by the
-<function>XGetFeedbackControl</function>
+<xref linkend='XGetFeedbackControl' xrefstyle='select: title'/>
 function, use 
 <function>XFreeFeedbackList .</function>
 <!-- .sM -->
-<funcsynopsis>
+<funcsynopsis id='XFreeFeedbackList'>
 <funcprototype>
   <funcdef>void <function> XFreeFeedbackList</function></funcdef>
   <paramdef>XFeedbackState<parameter> *list</parameter></paramdef>
@@ -2982,7 +2982,7 @@ a previous call to
 <para>
 <!-- .LP -->
 <!-- .eM -->
-<function>XFreeFeedbackList</function>
+<xref linkend='XFreeFeedbackList' xrefstyle='select: title'/>
 frees the list of feedback control information.
 <!-- .sp -->
 </para>
@@ -2996,7 +2996,7 @@ using information passed in the appropriate
 structure for the feedback.
 Which values are modified depends on the valuemask passed.
 <!-- .sM -->
-<funcsynopsis>
+<funcsynopsis id='XChangeFeedbackControl'>
 <funcprototype>
   <funcdef>int <function> XChangeFeedbackControl</function></funcdef>
   <paramdef>Display<parameter> *display</parameter></paramdef>
@@ -3056,7 +3056,7 @@ structure.
 <para>
 <!-- .LP -->
 <!-- .eM -->
-<function>XChangeFeedbackControl</function>
+<xref linkend='XChangeFeedbackControl' xrefstyle='select: title'/>
 controls the device characteristics described by the
 <function>XFeedbackControl</function>
 structure. 
@@ -3211,7 +3211,7 @@ has its mode changed from
 to
 <function>Absolute</function>
 by an
-<function>XSetDeviceMode</function>
+<xref linkend='XSetDeviceMode' xrefstyle='select: title'/>
 request, valuator control values
 will be ignored by the server while the device is in that mode.
 </para>
@@ -3366,7 +3366,7 @@ Valid masks are as follows:
 <para>
 <!-- .LP -->
 <!-- .eM -->
-<function>XChangeFeedbackControl</function>
+<xref linkend='XChangeFeedbackControl' xrefstyle='select: title'/>
 can generate
 <function>BadDevice ,</function>
 <function>BadFeedBack ,</function>
@@ -3386,7 +3386,7 @@ errors.
 To ring a bell on an extension input device, use
 <function>XDeviceBell .</function>
 <!-- .sM -->
-<funcsynopsis>
+<funcsynopsis id='XDeviceBell'>
 <funcprototype>
   <funcdef>int <function> XDeviceBell</function></funcdef>
   <paramdef>Display<parameter> *display</parameter></paramdef>
@@ -3455,9 +3455,9 @@ Specifies the volume in the range -100 (quiet) to 100 percent (loud).
 <para>
 <!-- .LP -->
 <!-- .eM -->
-<function>XDeviceBell</function>
+<xref linkend='XDeviceBell' xrefstyle='select: title'/>
 is analogous to the core 
-<function>XBell</function>
+<olink targetdoc='libX11' targetptr='XBell'><function>XBell</function></olink>
 function.  It rings the specified bell on the specified input device feedback,
 using the specified volume.
 The specified volume is relative to the base volume for the feedback.
@@ -3491,7 +3491,7 @@ To change the base volume of the bell, use
 </para>
 <para>
 <!-- .LP -->
-<function>XDeviceBell</function>
+<xref linkend='XDeviceBell' xrefstyle='select: title'/>
 can generate
 <function>BadDevice</function>
 and
@@ -3511,7 +3511,7 @@ To get the key mapping of an extension device that supports input class
 use 
 <function>XGetDeviceKeyMapping .</function>
 <!-- .sM -->
-<funcsynopsis>
+<funcsynopsis id='XGetDeviceKeyMapping'>
 <funcprototype>
   <funcdef>KeySym * <function> XGetDeviceKeyMapping</function></funcdef>
   <paramdef>Display<parameter> *display</parameter></paramdef>
@@ -3578,23 +3578,23 @@ Returns the number of keysyms per keycode.
 <para>
 <!-- .LP -->
 <!-- .eM -->
-<function>XGetDeviceKeyMapping </function>
+<xref linkend='XGetDeviceKeyMapping' xrefstyle='select: title'/>
 is analogous to the core
-<function>XGetKeyboardMapping</function>
+<olink targetdoc='libX11' targetptr='XGetKeyboardMapping'><function>XGetKeyboardMapping</function></olink>
 function.  
 It returns the symbols for the specified number of keycodes for the 
 specified extension device.
 </para>
 <para>
 <!-- .LP -->
-<function>XGetDeviceKeyMapping </function>
+<xref linkend='XGetDeviceKeyMapping' xrefstyle='select: title'/>
 returns the symbols for the 
 specified number of keycodes for the 
 specified extension device, starting with the specified keycode.
 The first_keycode_wanted must be greater than or equal to
 min-keycode as returned 
 by the
-<function>XListInputDevices</function>
+<xref linkend='XListInputDevices' xrefstyle='select: title'/>
 request (else a 
 <function>BadValue</function>
 error results). The following value:
@@ -3606,7 +3606,7 @@ first_keycode_wanted + keycode_count - 1
 <!-- .LP -->
 must be less than or equal to max-keycode as returned 
 by the 
-<function>XListInputDevices</function>
+<xref linkend='XListInputDevices' xrefstyle='select: title'/>
 request (else a 
 <function>BadValue</function>
 error results).
@@ -3634,7 +3634,7 @@ is used to fill in unused elements for individual keycodes.
 <para>
 <!-- .LP -->
 To free the data returned by this function, use
-<function>XFree .</function>
+<olink targetdoc='libX11' targetptr='XFree'><function>XFree</function></olink>.
 </para>
 <para>
 <!-- .LP -->
@@ -3651,7 +3651,7 @@ error.
 </para>
 <para>
 <!-- .LP -->
-<function>XGetDeviceKeyMapping </function>
+<xref linkend='XGetDeviceKeyMapping' xrefstyle='select: title'/>
 can generate
 <function>BadDevice ,</function>
 <function>BadMatch ,</function>
@@ -3667,7 +3667,7 @@ To change the keyboard mapping of an extension device that supports input class
 use 
 <function>XChangeDeviceKeyMapping .</function>
 <!-- .sM -->
-<funcsynopsis>
+<funcsynopsis id='XChangeDeviceKeyMapping'>
 <funcprototype>
   <funcdef>int <function> XChangeDeviceKeyMapping</function></funcdef>
   <paramdef>Display<parameter> *display</parameter></paramdef>
@@ -3745,9 +3745,9 @@ Specifies the number of keycodes that are to be changed.
 <para>
 <!-- .LP -->
 <!-- .eM -->
-<function>XChangeDeviceKeyMapping</function>
+<xref linkend='XChangeDeviceKeyMapping' xrefstyle='select: title'/>
 is analogous to the core
-<function>XChangeKeyboardMapping</function>
+<olink targetdoc='libX11' targetptr='XChangeKeyboardMapping'><function>XChangeKeyboardMapping</function></olink>
 function.  
 It defines the symbols for the specified number of keycodes for the 
 specified extension keyboard device.
@@ -3769,7 +3769,7 @@ error.
 <!-- .LP -->
 The number of elements in the keysyms list must be a multiple of
 keysyms_per_keycode.  Otherwise,
-<function>XChangeDeviceKeyMapping</function>
+<xref linkend='XChangeDeviceKeyMapping' xrefstyle='select: title'/>
 generates a
 <function>BadLength</function>
 error.
@@ -3790,7 +3790,7 @@ error:
 </para>
 <para>
 <!-- .LP -->
-<function>XChangeDeviceKeyMapping</function>
+<xref linkend='XChangeDeviceKeyMapping' xrefstyle='select: title'/>
 can generate
 <function>BadAlloc ,</function>
 <function>BadDevice ,</function>
@@ -3808,7 +3808,7 @@ extension device that supports input class
 use
 <function>XGetDeviceModifierMapping .</function>
 <!-- .sM -->
-<funcsynopsis>
+<funcsynopsis id='XGetDeviceModifierMapping'>
 <funcprototype>
   <funcdef>XModifierKeymap * <function> XGetDeviceModifierMapping</function></funcdef>
   <paramdef>Display<parameter> *display</parameter></paramdef>
@@ -3842,12 +3842,12 @@ Specifies the desired device.
 <para>
 <!-- .LP -->
 <!-- .eM -->
-<function>XGetDeviceModifierMapping</function>
+<xref linkend='XGetDeviceModifierMapping' xrefstyle='select: title'/>
 is analogous to the core
-<function>XGetModifierMapping</function>
+<olink targetdoc='libX11' targetptr='XGetModifierMapping'><function>XGetModifierMapping</function></olink>
 function.  
 The
-<function>XGetDeviceModifierMapping</function>
+<xref linkend='XGetDeviceModifierMapping' xrefstyle='select: title'/>
 function returns a newly created
 <function>XModifierKeymap</function>
 structure that contains the keys being used as
@@ -3859,7 +3859,7 @@ that modifier is disabled.
 </para>
 <para>
 <!-- .LP -->
-<function>XGetDeviceModifierMapping</function>
+<xref linkend='XGetDeviceModifierMapping' xrefstyle='select: title'/>
 can generate
 <function>BadDevice</function>
 and
@@ -3872,7 +3872,7 @@ errors.
 To set which keycodes are to be used as modifiers for an extension device, use
 <function>XSetDeviceModifierMapping .</function>
 <!-- .sM -->
-<funcsynopsis>
+<funcsynopsis id='XSetDeviceModifierMapping'>
 <funcprototype>
   <funcdef>int <function> XSetDeviceModifierMapping</function></funcdef>
   <paramdef>Display<parameter> *display</parameter></paramdef>
@@ -3919,17 +3919,17 @@ structure.
 <para>
 <!-- .LP -->
 <!-- .eM -->
-<function>XSetDeviceModifierMapping</function>
+<xref linkend='XSetDeviceModifierMapping' xrefstyle='select: title'/>
 is analogous to the core
-<function>XSetModifierMapping</function>
+<olink targetdoc='libX11' targetptr='XSetModifierMapping'><function>XSetModifierMapping</function></olink>
 function.  
 The 
-<function>XSetDeviceModifierMapping</function>
+<xref linkend='XSetDeviceModifierMapping' xrefstyle='select: title'/>
 function specifies the keycodes of the keys, if any, 
 that are to be used as modifiers.  A zero value means
 that no key should be used.  No two arguments can have the same nonzero
 keycode value.  Otherwise,
-<function>XSetDeviceModifierMapping</function>
+<xref linkend='XSetDeviceModifierMapping' xrefstyle='select: title'/>
 generates a
 <function>BadValue</function>
 error.
@@ -3950,10 +3950,10 @@ Only nonzero keycodes have meaning in each set, and zero keycodes
 are ignored.
 In addition, all of the nonzero keycodes must be in the range specified by 
 min_keycode and max_keycode reported by the
-<function>XListInputDevices</function>
+<xref linkend='XListInputDevices' xrefstyle='select: title'/>
 function.
 Otherwise,
-<function>XSetModifierMapping</function>
+<olink targetdoc='libX11' targetptr='XSetModifierMapping'><function>XSetModifierMapping</function></olink>
 generates a
 <function>BadValue</function>
 error.
@@ -3978,7 +3978,7 @@ in the logically down state,
 the status reply is
 <function>MappingBusy , </function>
 and none of the modifiers are changed.
-<function>XSetModifierMapping</function>
+<olink targetdoc='libX11' targetptr='XSetModifierMapping'><function>XSetModifierMapping</function></olink>
 generates a
 <function>DeviceMappingNotify</function>
 event on a
@@ -3987,7 +3987,7 @@ status.
 </para>
 <para>
 <!-- .LP -->
-<function>XSetDeviceModifierMapping</function>
+<xref linkend='XSetDeviceModifierMapping' xrefstyle='select: title'/>
 can generate
 <function>BadAlloc ,</function>
 <function>BadDevice ,</function>
@@ -4007,7 +4007,7 @@ errors.
 To set the mapping of the buttons on an extension device, use
 <function>XSetDeviceButtonMapping .</function>
 <!-- .sM -->
-<funcsynopsis>
+<funcsynopsis id='XSetDeviceButtonMapping'>
 <funcprototype>
   <funcdef>int <function> XSetDeviceButtonMapping</function></funcdef>
   <paramdef>Display<parameter> *display</parameter></paramdef>
@@ -4063,17 +4063,17 @@ Specifies the number of items in the mapping list.
 <para>
 <!-- .LP -->
 <!-- .eM -->
-<function>XSetDeviceButtonMapping</function>
+<xref linkend='XSetDeviceButtonMapping' xrefstyle='select: title'/>
 sets the mapping of the buttons on an extension device.
 If it succeeds, the X server generates a
 <function>DeviceMappingNotify</function>
 event, and
-<function>XSetDeviceButtonMapping</function>
+<xref linkend='XSetDeviceButtonMapping' xrefstyle='select: title'/>
 returns
 <function>MappingSuccess .</function>
 Elements of the list are indexed starting from one.
 The length of the list must be the same as
-<function>XGetDeviceButtonMapping</function>
+<xref linkend='XGetDeviceButtonMapping' xrefstyle='select: title'/>
 would return, or a 
 <function>BadValue</function>
 error results.
@@ -4085,14 +4085,14 @@ However, no two elements can have the same nonzero value, or a
 <function>BadValue</function>
 error results.
 If any of the buttons to be altered are logically in the down state,
-<function>XSetDeviceButtonMapping</function>
+<xref linkend='XSetDeviceButtonMapping' xrefstyle='select: title'/>
 returns
 <function>MappingBusy ,</function>
 and the mapping is not changed.
 </para>
 <para>
 <!-- .LP -->
-<function>XSetDeviceButtonMapping</function>
+<xref linkend='XSetDeviceButtonMapping' xrefstyle='select: title'/>
 can generate
 <function>BadDevice ,</function>
 <function>BadMatch ,</function>
@@ -4106,7 +4106,7 @@ errors.
 To get the button mapping, use
 <function>XGetDeviceButtonMapping .</function>
 <!-- .sM -->
-<funcsynopsis>
+<funcsynopsis id='XGetDeviceButtonMapping'>
 <funcprototype>
   <funcdef>int <function> XGetDeviceButtonMapping</function></funcdef>
   <paramdef>Display<parameter> *display</parameter></paramdef>
@@ -4162,10 +4162,10 @@ Specifies the number of items in the mapping list.
 <para>
 <!-- .LP -->
 <!-- .eM -->
-<function>XGetDeviceButtonMapping</function>
+<xref linkend='XGetDeviceButtonMapping' xrefstyle='select: title'/>
 returns the current mapping of the specified extension device.
 Elements of the list are indexed starting from one.
-<function>XGetDeviceButtonMapping</function>
+<xref linkend='XGetDeviceButtonMapping' xrefstyle='select: title'/>
 returns the number of physical buttons actually on the pointer.
 The nominal mapping for the buttons is the identity mapping: map[i]=i.
 The nmap argument specifies the length of the array where the button
@@ -4174,7 +4174,7 @@ in map_return.
 </para>
 <para>
 <!-- .LP -->
-<function>XGetDeviceButtonMapping</function>
+<xref linkend='XGetDeviceButtonMapping' xrefstyle='select: title'/>
 can generate
 <function>BadDevice</function>
 and
@@ -4193,7 +4193,7 @@ To obtain information that describes the state of the keys, buttons, and
 valuators of an extension device, use
 <function>XQueryDeviceState .</function>
 <!-- .sM -->
-<funcsynopsis>
+<funcsynopsis id='XQueryDeviceState'>
 <funcprototype>
   <funcdef>XDeviceState * <function> XQueryDeviceState</function></funcdef>
   <paramdef>Display<parameter> *display</parameter></paramdef>
@@ -4227,7 +4227,7 @@ Specifies the desired device.
 <para>
 <!-- .LP -->
 <!-- .eM -->
-<function>XQueryDeviceState</function>
+<xref linkend='XQueryDeviceState' xrefstyle='select: title'/>
 returns a pointer to an
 <function>XDeviceState</function>
 structure, which points to a list of
@@ -4371,7 +4371,7 @@ typedef struct {
 <para>
 <!-- .LP -->
 <!-- .eM -->
-<function>XQueryDeviceState</function>
+<xref linkend='XQueryDeviceState' xrefstyle='select: title'/>
 can generate
 <function>BadDevice</function>
 errors.
@@ -4382,7 +4382,7 @@ errors.
 To free the data returned by this function, use
 <function>XFreeDeviceState .</function>
 <!-- .sM -->
-<funcsynopsis>
+<funcsynopsis id='XFreeDeviceState'>
 <funcprototype>
   <funcdef>void <function> XFreeDeviceState</function></funcdef>
   <paramdef>XDeviceState<parameter> *state</parameter></paramdef>
@@ -4408,7 +4408,7 @@ data returned by a previous call to
 <para>
 <!-- .LP -->
 <!-- .eM -->
-<function>XFreeDeviceState</function>
+<xref linkend='XFreeDeviceState' xrefstyle='select: title'/>
 frees the device state data.
 </para>
 </sect3>
@@ -4467,7 +4467,7 @@ types must be obtained by the client from the server.
 <!-- .LP -->
 The client program determines the event type for an extension event by using
 the information returned by the
-<function>XOpenDevice</function>
+<xref linkend='XOpenDevice' xrefstyle='select: title'/>
 request.
 This type can then be used for comparison with the type field
 of events received by the client.
@@ -4575,10 +4575,10 @@ classes must be obtained by the client from the server.
 <!-- .LP -->
 The event class for an extension event and device is obtained from
 information returned by the 
-<function>XOpenDevice</function>
+<xref linkend='XOpenDevice' xrefstyle='select: title'/>
 function. 
 This class can then be used in an
-<function>XSelectExtensionEvent</function>
+<xref linkend='XSelectExtensionEvent' xrefstyle='select: title'/>
 request to ask that events of that type from that device be sent to
 the client program.
 </para>
@@ -4684,7 +4684,7 @@ Set from the serial number reported in the protocol but expanded from the
 Set to 
 <function>True</function>
 if the event came from an
-<function>XSendEvent</function>
+<olink targetdoc='libX11' targetptr='XSendEvent'><function>XSendEvent</function></olink>
 request.
       </para>
     </listitem>
@@ -5243,7 +5243,7 @@ Get motion history
 <para>
 <!-- .LP -->
 <!-- .sM -->
-<funcsynopsis>
+<funcsynopsis id='XGetExtensionVersion'>
 <funcprototype>
   <funcdef>XExtensionVersion * <function> XGetExtensionVersion</function></funcdef>
   <paramdef>Display<parameter> *display</parameter></paramdef>
@@ -5277,7 +5277,7 @@ Specifies the name of the desired extension.
 <para>
 <!-- .LP -->
 <!-- .eM -->
-<function>XGetExtensionVersion</function>
+<xref linkend='XGetExtensionVersion' xrefstyle='select: title'/>
 allows a client to determine whether a server supports
 the desired version of the input extension.
 </para>
@@ -5312,7 +5312,7 @@ Each version is a superset of the previous versions.
 <para>
 <!-- .LP -->
 You should use 
-<function>XFree</function>
+<olink targetdoc='libX11' targetptr='XFree'><function>XFree</function></olink>.
 to free the data returned by this function.
 </para>
 </sect3>
@@ -5326,22 +5326,22 @@ to free the data returned by this function.
 A client program that wishes to access a specific device
 must first determine whether that device is connected to the X server.  This
 is done through the
-<function>XListInputDevices</function>
+<xref linkend='XListInputDevices' xrefstyle='select: title'/>
 function, which will return a list of all devices that can be opened
 by the X server.  The client program can use one
 of the names defined in the
 <function>&lt; X11/extensions/XI.h &gt;</function>
 header file in an
-<function>XInternAtom </function>
+<olink targetdoc='libX11' targetptr='XInternAtom'><function>XInternAtom</function></olink>
 request to determine the device type of the desired device.  This type 
 can then be compared with the device types returned by the 
-<function>XListInputDevices</function>
+<xref linkend='XListInputDevices' xrefstyle='select: title'/>
 request.
 </para>
 <para>
 <!-- .LP -->
 <!-- .sM -->
-<funcsynopsis>
+<funcsynopsis id='XListInputDevices'>
 <funcprototype>
   <funcdef>XDeviceInfo * <function> XListInputDevices</function></funcdef>
   <paramdef>Display<parameter> *display</parameter></paramdef>
@@ -5376,7 +5376,7 @@ can return the number of input devices available to the X server.
 <para>
 <!-- .LP -->
 <!-- .eM -->
-<function>XListInputDevices</function>
+<xref linkend='XListInputDevices' xrefstyle='select: title'/>
 allows a client to determine which devices 
 are available for X input and information about those devices.
 An array of
@@ -5533,7 +5533,7 @@ TRACKBALL     NINE_KNOB\s+1
 <para>
 <!-- .LP -->
 These names can be used in an
-<function>XInternAtom</function>
+<olink targetdoc='libX11' targetptr='XInternAtom'><function>XInternAtom</function></olink>
 request to return an atom that can be used for comparison
 with the type member of the 
 <function>XDeviceInfo</function>
@@ -5541,7 +5541,7 @@ structure.
 </para>
 <para>
 <!-- .LP -->
-<function>XListInputDevices</function>
+<xref linkend='XListInputDevices' xrefstyle='select: title'/>
 returns NULL if there are no input devices to list.
 <!-- .sp -->
 </para>
@@ -5556,7 +5556,7 @@ use
 <para>
 <!-- .LP -->
 <!-- .sM -->
-<funcsynopsis>
+<funcsynopsis id='XFreeDeviceList'>
 <funcprototype>
   <funcdef>void <function> XFreeDeviceList</function></funcdef>
   <paramdef>XDeviceInfo<parameter> *list</parameter></paramdef>
@@ -5582,7 +5582,7 @@ array returned by a previous call to
 <para>
 <!-- .LP -->
 <!-- .eM -->
-<function>XFreeDeviceList</function>
+<xref linkend='XFreeDeviceList' xrefstyle='select: title'/>
 frees the list of input device information.
 </para>
 </sect3>
@@ -5595,10 +5595,10 @@ frees the list of input device information.
 <!-- .LP -->
 Each client program that wishes to access an extension device must request
 that the server open that device by calling the
-<function>XOpenDevice</function>
+<xref linkend='XOpenDevice' xrefstyle='select: title'/>
 function.
 <!-- .sM -->
-<funcsynopsis>
+<funcsynopsis id='XOpenDevice'>
 <funcprototype>
   <funcdef>XDevice * <function> XOpenDevice</function></funcdef>
   <paramdef>Display<parameter> *display</parameter></paramdef>
@@ -5625,7 +5625,7 @@ Specifies the connection to the X server.
       <para>
 Specifies the ID that uniquely identifies the device to be opened.
 This ID is obtained from the
-<function>XListInputDevices</function>
+<xref linkend='XListInputDevices' xrefstyle='select: title'/>
 request.
     </para>
   </listitem>
@@ -5635,7 +5635,7 @@ request.
 <para>
 <!-- .LP -->
 <!-- .eM -->
-<function>XOpenDevice</function>
+<xref linkend='XOpenDevice' xrefstyle='select: title'/>
 opens the device for the requesting client and, on success, returns an
 <function>XDevice</function>
 structure, which is defined as follows:
@@ -5702,14 +5702,14 @@ input is desired, for example:
 <para>
 <!-- .LP -->
 The macro will fill in the values of the event class to be used in an
-<function>XSelectExtensionEvent</function>
+<xref linkend='XSelectExtensionEvent' xrefstyle='select: title'/>
 request to select the event and the event type to be used in comparing
 with the event types of events received via
-<function>XNextEvent .</function>
+<olink targetdoc='libX11' targetptr='XNextEvent'><function>XNextEvent</function></olink>.
 </para>
 <para>
 <!-- .LP -->
-<function>XOpenDevice</function>
+<xref linkend='XOpenDevice' xrefstyle='select: title'/>
 can generate
 <function>BadDevice</function>
 errors.
@@ -5719,10 +5719,10 @@ errors.
 <!-- .LP -->
 Before terminating, the client program should request that the server close
 the device by calling the
-<function>XCloseDevice</function>
+<xref linkend='XCloseDevice' xrefstyle='select: title'/>
 function.
 <!-- .sM -->
-<funcsynopsis>
+<funcsynopsis id='XCloseDevice'>
 <funcprototype>
   <funcdef>int <function> XCloseDevice</function></funcdef>
   <paramdef>Display<parameter> *display</parameter></paramdef>
@@ -5756,7 +5756,7 @@ Specifies the device to be closed.
 <para>
 <!-- .LP -->
 <!-- .eM -->
-<function>XCloseDevice</function>
+<xref linkend='XCloseDevice' xrefstyle='select: title'/>
 closes the device for the requesting client and frees the associated
 <function>XDevice</function>
 structure.
@@ -5769,7 +5769,7 @@ after the first successful one return an additional
 structure
 with the same information as the first, but otherwise have no effect.
 A single
-<function>XCloseDevice</function>
+<xref linkend='XCloseDevice' xrefstyle='select: title'/>
 request will terminate that client's access to the device.
 </para>
 <para>
@@ -5786,7 +5786,7 @@ affect any other clients that may be accessing that device.
 </para>
 <para>
 <!-- .LP -->
-<function>XCloseDevice</function>
+<xref linkend='XCloseDevice' xrefstyle='select: title'/>
 can generate
 <function>BadDevice</function>
 errors.
@@ -5804,7 +5804,7 @@ data.
 To change the mode of a device from relative to absolute, use
 <function>XSetDeviceMode .</function>
 <!-- .sM -->
-<funcsynopsis>
+<funcsynopsis id='XSetDeviceMode'>
 <funcprototype>
   <funcdef>int <function> XSetDeviceMode</function></funcdef>
   <paramdef>Display<parameter> *display</parameter></paramdef>
@@ -5852,12 +5852,12 @@ or
 <para>
 <!-- .LP -->
 <!-- .eM -->
-<function>XSetDeviceMode</function>
+<xref linkend='XSetDeviceMode' xrefstyle='select: title'/>
 allows a client to request the server to change the mode of a 
 device that is capable of reporting either absolute positional data or relative
 motion data.  If the device is invalid or if the client has not previously 
 requested that the server open the device via an
-<function>XOpenDevice</function>
+<xref linkend='XOpenDevice' xrefstyle='select: title'/>
 request, this request will fail with a
 <function>BadDevice</function>
 error.
@@ -5876,7 +5876,7 @@ if another client has already opened the device and requested a different mode.
 </para>
 <para>
 <!-- .LP -->
-<function>XSetDeviceMode</function>
+<xref linkend='XSetDeviceMode' xrefstyle='select: title'/>
 can generate
 <function>BadDevice ,</function>
 <function>BadMatch ,</function>
@@ -5905,7 +5905,7 @@ to a starting value after the mode of the device is changed to
 To initialize the valuators on such a device, use 
 <function>XSetDeviceValuators .</function>
 <!-- .sM -->
-<funcsynopsis>
+<funcsynopsis id='XSetDeviceValuators'>
 <funcprototype>
   <funcdef>Status <function> XSetDeviceValuators</function></funcdef>
   <paramdef>Display<parameter> *display</parameter></paramdef>
@@ -5970,7 +5970,7 @@ Specifies the number of valuators to be set.
 <para>
 <!-- .LP -->
 <!-- .eM -->
-<function>XSetDeviceValuators</function>
+<xref linkend='XSetDeviceValuators' xrefstyle='select: title'/>
 initializes the specified valuators on the specified extension
 input device.  Valuators are numbered beginning with zero.  Only the valuators
 in the range specified by first_valuator and num_valuators are set.  
@@ -5995,7 +5995,7 @@ will be returned.
 </para>
 <para>
 <!-- .LP -->
-<function>XSetDeviceValuators</function>
+<xref linkend='XSetDeviceValuators' xrefstyle='select: title'/>
 can generate
 <function>BadDevice ,</function>
 <function>BadLength ,</function>
@@ -6031,7 +6031,7 @@ by data structures unique to that device control.
 To query a device control, use
 <function>XGetDeviceControl .</function>
 <!-- .sM -->
-<funcsynopsis>
+<funcsynopsis id='XGetDeviceControl'>
 <funcprototype>
   <funcdef>XDeviceControl * <function> XGetDeviceControl</function></funcdef>
   <paramdef>Display<parameter> *display</parameter></paramdef>
@@ -6076,7 +6076,7 @@ Identifies the specific device control to be queried.
 <para>
 <!-- .LP -->
 <!-- .eM -->
-<function>XGetDeviceControl</function>
+<xref linkend='XGetDeviceControl' xrefstyle='select: title'/>
 returns the current state of the specified device control.
 If the target X server does not support that device control, a
 <function>BadValue</function>
@@ -6153,14 +6153,14 @@ maximum valid setting.
 <para>
 <!-- .LP -->
 When this control is specified,
-<function>XGetDeviceControl</function>
+<xref linkend='XGetDeviceControl' xrefstyle='select: title'/>
 fails with a
 <function>BadMatch</function>
 error if the specified device has no valuators.
 </para>
 <para>
 <!-- .LP -->
-<function>XGetDeviceControl</function>
+<xref linkend='XGetDeviceControl' xrefstyle='select: title'/>
 can generate
 <function>BadMatch</function>
 and
@@ -6198,7 +6198,7 @@ by data structures unique to that device control.
 To change a device control, use
 <function>XChangeDeviceControl .</function>
 <!-- .sM -->
-<funcsynopsis>
+<funcsynopsis id='XChangeDeviceControl'>
 <funcprototype>
   <funcdef>Status <function> XChangeDeviceControl</function></funcdef>
   <paramdef>Display<parameter> *display</parameter></paramdef>
@@ -6257,7 +6257,7 @@ and how it is to be changed.
 <para>
 <!-- .LP -->
 <!-- .eM -->
-<function>XChangeDeviceControl</function>
+<xref linkend='XChangeDeviceControl' xrefstyle='select: title'/>
 changes the current state of the specified device control.
 If the target X server does not support that device control, a
 <function>BadValue</function>
@@ -6341,14 +6341,14 @@ specifies the number of valuators in the resolutions list.
 <para>
 <!-- .LP -->
 When this control is specified,
-<function>XChangeDeviceControl</function>
+<xref linkend='XChangeDeviceControl' xrefstyle='select: title'/>
 fails with a
 <function>BadMatch</function>
 error if the specified device has no valuators.
 If a resolution is specified that is not within the range of valid values 
 (as returned by
 <function>XGetDeviceControl ),</function>
-<function>XChangeDeviceControl</function>
+<xref linkend='XChangeDeviceControl' xrefstyle='select: title'/>
 fails with a
 <function>BadValue</function>
 error.
@@ -6367,7 +6367,7 @@ is less than the following expression:
 </para>
 <para>
 <!-- .LP   -->
-<function>XChangeDeviceControl</function>
+<xref linkend='XChangeDeviceControl' xrefstyle='select: title'/>
 can generate
 <function>BadMatch</function>
 and
@@ -6389,7 +6389,7 @@ a list of classes that define the desired event types and devices, a count
 of the number of elements in the list, and the ID of the window from which 
 events are desired.
 <!-- .sM -->
-<funcsynopsis>
+<funcsynopsis id='XSelectExtensionEvent'>
 <funcprototype>
   <funcdef>int <function> XSelectExtensionEvent</function></funcdef>
   <paramdef>Display<parameter> *display</parameter></paramdef>
@@ -6446,7 +6446,7 @@ Specifies the number of elements in the event_list.
 <para>
 <!-- .LP -->
 <!-- .eM -->
-<function>XSelectExtensionEvent</function>
+<xref linkend='XSelectExtensionEvent' xrefstyle='select: title'/>
 requests the server to send events that match the events and
 devices described by the event list and that come from the requested 
 window.  
@@ -6456,7 +6456,7 @@ array are the event_class values
 obtained by invoking a macro with the pointer to an
 <function>XDevice</function>
 structure returned by the
-<function>XOpenDevice</function>
+<xref linkend='XOpenDevice' xrefstyle='select: title'/>
 request.
 For example, the
 <function>DeviceKeyPress</function>
@@ -6501,21 +6501,21 @@ Macros are defined for the following event classes:
 <para>
 <!-- .LP -->
 To get the next available event from within a client program, use the core
-<function>XNextEvent</function>
+<olink targetdoc='libX11' targetptr='XNextEvent'><function>XNextEvent</function></olink>
 function.  This returns the next event whether it
 came from a core device or an extension device.
 </para>
 <para>
 <!-- .LP -->
 Succeeding
-<function>XSelectExtensionEvent</function>
+<xref linkend='XSelectExtensionEvent' xrefstyle='select: title'/>
 requests using event classes
 for the same device as was specified on a previous request will replace
 the previous set of selected events from that device with the new set.
 </para>
 <para>
 <!-- .LP -->
-<function>XSelectExtensionEvent</function>
+<xref linkend='XSelectExtensionEvent' xrefstyle='select: title'/>
 can generate
 <function>BadAccess , </function>
 <function>BadClass ,</function>
@@ -6536,7 +6536,7 @@ To determine which extension events are currently selected from a given
 window, use
 <function>XGetSelectedExtensionEvents .</function>
 <!-- .sM -->
-<funcsynopsis>
+<funcsynopsis id='XGetSelectedExtensionEvents'>
 <funcprototype>
   <funcdef>int <function> XGetSelectedExtensionEvents</function></funcdef>
   <paramdef>Display<parameter> *display</parameter></paramdef>
@@ -6620,7 +6620,7 @@ selected by all clients.
 <para>
 <!-- .LP -->
 <!-- .eM -->
-<function>XGetSelectedExtensionEvents</function>
+<xref linkend='XGetSelectedExtensionEvents' xrefstyle='select: title'/>
 returns pointers to two event class arrays.  
 One lists the extension events selected by this client from
 the specified window.  The other lists the extension events selected by
@@ -6628,14 +6628,14 @@ all clients from the specified window.  This information is analogous
 to that returned in your_event_mask and all_event_masks of the
 <function>XWindowAttributes</function>
 structure when an 
-<function>XGetWindowAttributes</function>
+<olink targetdoc='libX11' targetptr='XGetWindowAttributes'><function>XGetWindowAttributes</function></olink>
 request is made.
 To free the two arrays returned by this function, use
-<function>XFree .</function>
+<olink targetdoc='libX11' targetptr='XFree'><function>XFree</function></olink>.
 </para>
 <para>
 <!-- .LP -->
-<function>XGetSelectedExtensionEvents</function>
+<xref linkend='XGetSelectedExtensionEvents' xrefstyle='select: title'/>
 can generate
 <function>BadWindow</function>
 errors.
@@ -6659,14 +6659,14 @@ particular extension event.
 <!-- .LP -->
 Client programs may control event propagation through the use
 of the following two functions:
-<function>XChangeDeviceDontPropagateList</function>
+<xref linkend='XChangeDeviceDontPropagateList' xrefstyle='select: title'/>
 and
 <function>XGetDeviceDontPropagateList .  </function>
 </para>
 <para>
 <!-- .LP -->
 <!-- .sM -->
-<funcsynopsis>
+<funcsynopsis id='XChangeDeviceDontPropagateList'>
 <funcprototype>
   <funcdef>int <function> XChangeDeviceDontPropagateList</function></funcdef>
   <paramdef>Display<parameter> *display</parameter></paramdef>
@@ -6736,7 +6736,7 @@ or
 <para>
 <!-- .LP -->
 <!-- .eM -->
-<function>XChangeDeviceDontPropagateList</function>
+<xref linkend='XChangeDeviceDontPropagateList' xrefstyle='select: title'/>
 adds an event to or deletes an event from the do_not_propagate list 
 of extension events for the specified window.
 There is one list per window, and the list remains for the life of the window.
@@ -6753,7 +6753,7 @@ error results.
 </para>
 <para>
 <!-- .LP -->
-<function>XChangeDeviceDontPropagateList</function>
+<xref linkend='XChangeDeviceDontPropagateList' xrefstyle='select: title'/>
 can generate
 <function>BadClass ,</function>
 <function>BadMode ,</function>
@@ -6765,7 +6765,7 @@ errors.
 <para>
 <!-- .LP -->
 <!-- .sM -->
-<funcsynopsis>
+<funcsynopsis id='XGetDeviceDontPropagateList'>
 <funcprototype>
   <funcdef>XEventClass * <function> XGetDeviceDontPropagateList</function></funcdef>
   <paramdef>Display<parameter> *display</parameter></paramdef>
@@ -6810,7 +6810,7 @@ Returns the number of elements in the array returned by this function.
 <para>
 <!-- .LP -->
 <!-- .eM -->
-<function>XGetDeviceDontPropagateList</function>
+<xref linkend='XGetDeviceDontPropagateList' xrefstyle='select: title'/>
 allows a client to determine the do_not_propagate list of extension events
 for the specified window.
 It returns an array of
@@ -6819,11 +6819,11 @@ each
 <function>XEventClass</function>
 representing a device/event type pair.
 To free the data returned by this function, use
-<function>XFree .</function>
+<olink targetdoc='libX11' targetptr='XFree'><function>XFree</function></olink>.
 </para>
 <para>
 <!-- .LP -->
-<function>XGetDeviceDontPropagateList</function>
+<xref linkend='XGetDeviceDontPropagateList' xrefstyle='select: title'/>
 can generate
 <function>BadWindow</function>
 errors.
@@ -6839,7 +6839,7 @@ errors.
 To send an extension event to another client, use
 <function>XSendExtensionEvent .</function>
 <!-- .sM -->
-<funcsynopsis>
+<funcsynopsis id='XSendExtensionEvent'>
 <funcprototype>
   <funcdef>int <function> XSendExtensionEvent</function></funcdef>
   <paramdef>Display<parameter> *display</parameter></paramdef>
@@ -6935,19 +6935,19 @@ Specifies a pointer to the event that is to be sent.
 <para>
 <!-- .LP -->
 <!-- .eM -->
-<function>XSendExtensionEvent</function>
+<xref linkend='XSendExtensionEvent' xrefstyle='select: title'/>
 identifies the destination window, determines which clients should receive
 the specified event, and ignores any active grabs.
 It requires a list of
 <function>XEventClass</function>
 to be specified.
 These are obtained by opening an input device with the
-<function>XOpenDevice</function>
+<xref linkend='XOpenDevice' xrefstyle='select: title'/>
 request.
 </para>
 <para>
 <!-- .LP -->
-<function>XSendExtensionEvent</function>
+<xref linkend='XSendExtensionEvent' xrefstyle='select: title'/>
 uses the window argument to identify the destination window as follows:
 </para>
 <itemizedlist>
@@ -6972,7 +6972,7 @@ the destination window is the focus window.
 <para>
 <!-- .LP -->
 To determine which clients should receive the specified events, 
-<function>XSendExtensionEvent</function>
+<xref linkend='XSendExtensionEvent' xrefstyle='select: title'/>
 uses the propagate argument as follows:
 </para>
 <itemizedlist>
@@ -7017,13 +7017,13 @@ in the forwarded event and to set the sequence number in the event correctly.
 </para>
 <para>
 <!-- .LP -->
-<function>XSendExtensionEvent</function>
+<xref linkend='XSendExtensionEvent' xrefstyle='select: title'/>
 returns zero if the conversion-to-wire protocol failed;
 otherwise, it returns nonzero.
 </para>
 <para>
 <!-- .LP -->
-<function>XSendExtensionEvent</function>
+<xref linkend='XSendExtensionEvent' xrefstyle='select: title'/>
 can generate
 <function>BadClass ,</function>
 <function>BadDevice ,</function>
@@ -7041,7 +7041,7 @@ errors.
 <para>
 <!-- .LP -->
 <!-- .sM -->
-<funcsynopsis>
+<funcsynopsis id='XGetDeviceMotionEvents'>
 <funcprototype>
   <funcdef>XDeviceTimeCoord * <function> XGetDeviceMotionEvents</function></funcdef>
   <paramdef><parameter> axis_count_return)</parameter></paramdef>
@@ -7135,7 +7135,7 @@ Returns the number of axes reported in each of the positions returned.
 <para>
 <!-- .LP -->
 <!-- .eM -->
-<function>XGetDeviceMotionEvents</function>
+<xref linkend='XGetDeviceMotionEvents' xrefstyle='select: title'/>
 returns all positions in the device's motion history buffer
 that fall between the specified start and stop times inclusive.
 If the start time is in the future or is later than the stop time,
@@ -7180,7 +7180,7 @@ that it reports.  The maximum value for each axis is reported in
 the max_val member of the
 <function>XAxisInfo</function>
 structure, which is part of the information returned by the
-<function>XListInputDevices</function>
+<xref linkend='XListInputDevices' xrefstyle='select: title'/>
 request.
 </para>
 <para>
@@ -7195,15 +7195,15 @@ accumulating these relative values.
 <para>
 <!-- .LP -->
 Consecutive calls to
-<function>XGetDeviceMotionEvents</function>
+<xref linkend='XGetDeviceMotionEvents' xrefstyle='select: title'/>
 can return data of different modes, that is, if
 some client program has changed the mode of the device via an
-<function>XSetDeviceMode</function>
+<xref linkend='XSetDeviceMode' xrefstyle='select: title'/>
 request.
 </para>
 <para>
 <!-- .LP -->
-<function>XGetDeviceMotionEvents</function>
+<xref linkend='XGetDeviceMotionEvents' xrefstyle='select: title'/>
 can generate
 <function>BadDevice</function>
 and
@@ -7221,7 +7221,7 @@ use
 <para>
 <!-- .LP -->
 <!-- .sM -->
-<funcsynopsis>
+<funcsynopsis id='XFreeDeviceMotionEvents'>
 <funcprototype>
   <funcdef>void <function> XFreeDeviceMotionEvents</function></funcdef>
   <paramdef>XDeviceTimeCoord<parameter> *events</parameter></paramdef>
@@ -7247,7 +7247,7 @@ array returned by a previous call to
 <para>
 <!-- .LP -->
 <!-- .eM -->
-<function>XFreeDeviceMotionEvents</function>
+<xref linkend='XFreeDeviceMotionEvents' xrefstyle='select: title'/>
 frees the specified array of motion information.
 <!-- .\" -->
 <!-- .\" -->

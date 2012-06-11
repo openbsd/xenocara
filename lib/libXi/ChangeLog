@@ -1,34 +1,265 @@
-commit d58150cf5cf11c0449fc9e9f3c7fc4d29764f6e5
+commit ae163b6202d844a46541928d00049b29cbdf930f
 Author: Peter Hutterer <peter.hutterer@who-t.net>
-Date:   Tue Dec 20 10:18:28 2011 +1000
+Date:   Thu May 3 16:01:35 2012 +1000
 
-    libXi 1.4.5
+    libXi 1.6.1
     
     Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
 
-commit 7a30bc136fb6c1561f5cd91606bca01fb877f167
+commit fd5e000308925f703ecd15c288127ab33a456425
 Author: Peter Hutterer <peter.hutterer@who-t.net>
-Date:   Fri Aug 12 14:24:26 2011 +1000
+Date:   Mon Apr 23 13:32:59 2012 +1000
 
-    Don't use the protocol defines for 2.0 versioning.
+    man: update XIQueryVersion for current server behaviour
     
-    Otherwise we run into the old problem again: recompiling libXi against
-    newer inputproto headers will appear to change the version support,
-    potentially causing errors or other misbehaviours.
+    XIQueryVersion(v1);
+    XIQueryVersion(v2);
+    
+    is now ok as long as v1 <= v2.
     
     Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
     Reviewed-by: Jeremy Huddleston <jeremyhu@apple.com>
-    (cherry picked from commit ca73cd3b7630e7eb7d26c61c4af10d35dbce5465)
 
-commit e423bfa6045a2b2eeb02080ae39dbee44e062bfa
+commit f8f44f42eb543ecd944a84facba6c09bf48e7711
+Author: Chase Douglas <chase.douglas@canonical.com>
+Date:   Fri Apr 20 15:30:30 2012 -0700
+
+    Destroy extension record after last display is removed
+    
+    The extension record is currently leaked and never freed.
+    
+    Signed-off-by: Chase Douglas <chase.douglas@canonical.com>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 2ac185d2fd2b884f4f59a7f7f61f414d139859aa
 Author: Peter Hutterer <peter.hutterer@who-t.net>
-Date:   Fri Dec 16 07:43:45 2011 +1000
+Date:   Mon Mar 26 09:07:34 2012 +1000
 
-    libXi 1.4.4
+    Set the RawEvent sourceid (#34240)
+    
+    XI 2.2 and later include the sourceid in raw events.
+    
+    X.Org Bug 34240 <http://bugs.freedesktop.org/show_bug.cgi?id=34240>
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Chase Douglas <chase.douglas@canonical.com>
+
+commit dfc101e4c6cdac4ff9a51732b2754287fbdc8582
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Mon Mar 26 09:05:24 2012 +1000
+
+    Move version comparison into a helper function.
+    
+    No functional changes, this simply introduces a version helper function that
+    returns -1, 0 or 1 depending on the version comparison result. To be used
+    internally only.
+    
+    Needed for fix to #34240
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Chase Douglas <chase.douglas@canonical.com>
+
+commit 8436c920953f288aea2d6d5f370f8eaaaef82d97
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Thu Mar 15 11:51:41 2012 +1000
+
+    Fix wrong button label and mask copy on OS X
+    
+    Regression introduced in c1a5a70b51f12dedf354102217c7cd4247ed3a4b.
+    
+    If double-padding is applied, the length of the mask on the wire may be
+    smaller than libXi's mask_len. When copying, only the wire length must be
+    copied, with the remainder set to 0.
+    When advancing to the button labels, the wire length matters, not libXi's
+    internal length.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Jeremy Huddleston <jeremyhu@apple.com>
+    Tested-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit 70b730b0548ca9e408f14f2576b972beb32a0ad0
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Thu Mar 8 16:03:50 2012 +1000
+
+    libXi 1.6.0
     
     Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
 
-commit 30bff38c7436daad4140fedf867c546bea839b93
+commit 1b9f0394c3d4d3833f8560ae8170a4d5842419ab
+Author: Chase Douglas <chase.douglas@canonical.com>
+Date:   Wed Mar 7 14:52:54 2012 -0800
+
+    Fix XIScrollClass increment value on 32-bit machines
+    
+    This fixes scroll class increment values on 32-bit machines. Performing
+    1UL << 32 shifts the bit off the end of a 32-bit unsigned long value. By
+    expanding to 1ULL, we have the full 64-bits of an unsigned long long
+    including on 32-bit machines.
+    
+    Before this change, xinput list --long would output scroll increment
+    values of -nan.
+    
+    Signed-off-by: Chase Douglas <chase.douglas@canonical.com>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit c1a5a70b51f12dedf354102217c7cd4247ed3a4b
+Author: Michał Masłowski <mtjm@mtjm.eu>
+Date:   Tue Feb 21 20:54:40 2012 +0100
+
+    Fix bus error on MIPS N32 for bug #38331.
+    
+    XIValuatorClassInfo and XIScrollClassInfo might have an address
+    of 4 bytes modulo 8, while they contain doubles which need 8 byte
+    alignment.  This is fixed by adding extra padding after each structure
+    or array in sizeDeviceClassType and adding helper functions to
+    determine sizes and padding only in one place.
+    
+    Fixes: https://bugs.freedesktop.org/show_bug.cgi?id=38331
+    Signed-off-by: Michał Masłowski <mtjm@mtjm.eu>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 34964b05c16161de65709d60799b9ad97ce56296
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri Jan 27 15:35:44 2012 +1000
+
+    libXi 1.5.99.3
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit b355b7300235395717de06809ee6631ce55d3189
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri Jan 27 13:28:52 2012 +1000
+
+    Handle new XIAllowEvent request size
+    
+    inputproto 2.1.99.6 restored the previous request for ABI compatibility
+    reasons, and it introduced a new XI 2.2 specific define.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Keith Packard <keithp@keithp.com>
+
+commit 07ced7b48219e3bc0c98806f3d7106f86d1b2ca0
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Jan 17 21:26:14 2012 +0100
+
+    Force class alignment to a multiple of sizeof(XID).
+    
+    Calculate length field to a multiples of sizeof(XID). XIDs are typedefs
+    to ulong and thus may be 8 bytes on some platforms. This can trigger a
+    SIGBUS if a class ends up not being 8-aligned (e.g. after XAxisInfo).
+    
+    Reported-by: Nicolai Stange <nicolai.stange@zmaw.de>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Matthieu Herrb <matthieu.herrb@laas.fr>
+
+commit 15feb92b30e13e7439a3434bea9f454645b97444
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Thu Jan 5 13:55:41 2012 +1000
+
+    man: fix typo Mappiing → Mapping
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 8576ae6b9ee974829e2fb8a834087652a6e9e1a2
+Author: Cyril Brulebois <kibi@debian.org>
+Date:   Thu Dec 22 15:50:47 2011 +0100
+
+    configure.ac: Fix a typo in comments.
+    
+    Signed-off-by: Cyril Brulebois <kibi@debian.org>
+    Reviewed-by: Chase Douglas <chase.douglas@canonical.com>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit ae0187c8708d2378373889827117911086581fdd
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Thu Dec 22 09:42:43 2011 +1000
+
+    libXi 1.5.99.2
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 47f3d887a7731f4ab68a69ed31dbe7acf6d13270
+Merge: 82a6312 e73e2fe
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Wed Dec 21 15:40:37 2011 +1000
+
+    Merge branch 'multitouch'
+    
+    Conflicts:
+    	configure.ac
+
+commit 82a631263ef4e6f46c1f33748089db8bf603b095
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Wed Dec 21 15:33:17 2011 +1000
+
+    libXi 1.5.0
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit e73e2fe95dab3e0048b24d16327adbe54326ff3f
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Wed Sep 14 22:33:57 2011 -0700
+
+    Implement support for XI 2.2
+    
+    Adds support for the new TouchClass for multitouch-capable servers/devices.
+    
+    New events:
+      XITouchOwnershipEvent
+    
+    New event types handled:
+      XITouchBegin, XITouchUpdate, XITouchEnd
+      XIRawTouchBegin, XIRawTouchUpdate, XIRawTouchEnd
+    
+    New functions:
+      XIGrabTouchBegin ... passive grabs on touches
+      XIUngrabTouchBegin
+      XIAllowTouchEvents ... Allow/reject touch event sequences
+    
+    New XIQueryDevice classes:
+      XITouchClassInfo
+    
+    Requires libX11 1.5 for GetReqSized
+    
+    Co-authored by: Chase Douglas <chase.douglas@canonical.com>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 7888d14a499062a1c3b333f31f1330cecf1e97c1
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Oct 25 13:30:47 2011 +1000
+
+    Bump to 1.5.99.1
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit fa6505f0a86b296e8f12f0fb8f472ef17b501fdb
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Mon Dec 19 09:36:34 2011 +1000
+
+    man: minor formatting fix in XIGrabButton
+
+commit 49408e39e4b084fe362e9ee197bfa0aa1c55384d
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri Nov 11 15:32:21 2011 +1000
+
+    Include config.h from source files
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Gaetan Nadon <memsize@videotron.ca>
+    Reviewed-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit ba83a1e58592e41f207524f106ba26dd71fe4171
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Wed Oct 26 08:55:35 2011 +1000
+
+    Stop unnecessary calls to size_classes
+    
+    Xmalloc is a macro evaluating its argument twice.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit 6d6ae8fc8b9620bf864ac7dff8d818573eee3e4f
 Author: Peter Hutterer <peter.hutterer@who-t.net>
 Date:   Wed Oct 26 08:54:53 2011 +1000
 
@@ -41,18 +272,16 @@ Date:   Wed Oct 26 08:54:53 2011 +1000
     
     Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
     Reviewed-by: Jeremy Huddleston <jeremyhu@apple.com>
-    (cherry picked from commit 6d6ae8fc8b9620bf864ac7dff8d818573eee3e4f)
 
-commit db739c0770d49e8b47da90f160b99c76be996a18
+commit 323730f7fa70190d2ea00e62c6964fee524ca430
 Author: Peter Hutterer <peter.hutterer@who-t.net>
 Date:   Thu Oct 27 10:27:49 2011 +1000
 
     man: passive grabs return the number of failed modifier combinations
     
     Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
-    (cherry picked from commit 323730f7fa70190d2ea00e62c6964fee524ca430)
 
-commit d21fdd9653b0e38e54692735b5a040a7acf22164
+commit 5189df57e18c79327848fb117a8ede59868c8fdb
 Author: Peter Hutterer <peter.hutterer@who-t.net>
 Date:   Fri Oct 21 08:49:31 2011 +1000
 
@@ -62,9 +291,8 @@ Date:   Fri Oct 21 08:49:31 2011 +1000
     particular grab.
     
     Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
-    (cherry picked from commit 5189df57e18c79327848fb117a8ede59868c8fdb)
 
-commit cb2028ed23d3f23829241de166a14c4ef9494bd5
+commit 05aaf65b3b6b7dc7268137ce4ee516f08eefb62f
 Author: Peter Hutterer <peter.hutterer@who-t.net>
 Date:   Fri Oct 21 08:07:45 2011 +1000
 
@@ -72,9 +300,152 @@ Date:   Fri Oct 21 08:07:45 2011 +1000
     
     Reported-by: Matthias Clasen <mclasen@redhat.com>
     Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
-    (cherry picked from commit 05aaf65b3b6b7dc7268137ce4ee516f08eefb62f)
 
-commit 22e9ace88d57803ecda95db7c9355a614db1902a
+commit c25debae73be50b9a77454ed4d72ffeaab726846
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Mon Oct 10 10:24:38 2011 +1000
+
+    Bump to 1.4.99.1
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 7ca05f3094958c04e8f78a786061124c58f8e1f3
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Wed Sep 28 11:16:42 2011 +1000
+
+    Remove superfluous assignment of lib->classes in XIQueryDevices.
+    
+    A few lines south from here we malloc lib->classes, this assignment is a
+    leftover from 225071e2e67fb65a0258397212f9826c9b25e078.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Chase Douglas <chase.douglas@canonical.com>
+
+commit e97c3dd00369b47af067e30e910335b199a2f147
+Author: Matt Dew <marcoz@osource.org>
+Date:   Mon Oct 3 22:05:51 2011 -0600
+
+        1 - fix the capitalization of the ID attriutes to match either the
+            <title> or <funcdef> string it goes with.
+        2 - fix any <linkend>'s that were affected by 1.
+        3 - any <function> in the docs that has an actual funcdef,
+            will become an olink.
+    
+        Signed-off-by: Matt Dew <marcoz@osource.org>
+
+commit 5f9df47340e192d095127e3c7da180b0fb3dc286
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri Sep 23 09:04:21 2011 +1000
+
+    Use a separate nclasses variable in XIQueryDevice
+    
+    No functional changes, just clarifying the code. If we skip over unknown
+    classes, lib->num_classes != wire->num_classe. Use a separate variable to
+    make that change more explicit and align the code closer with
+    wireToDeviceChangedEvent.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Daniel Stone <daniel@fooishbar.org>
+
+commit 2eb34db82dbd8429594c7ce1d361cabf3571edf1
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Sep 16 21:00:19 2011 -0700
+
+    Make shadow man pages generated by asciidoc work with Solaris man
+    
+    Solaris man requires .so entries in man pages include the man section
+    directory, not just the man page filename, even when it's in the same
+    directory, so use sed to add it in.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    
+    This may be a temporary fix only. See
+    http://lists.freedesktop.org/archives/xorg-devel/2011-September/025219.html
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit a43c0a5d2a6cf80df314c96e0b58804dd87868be
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Sep 20 15:11:13 2011 -0400
+
+    specs: refactor and complete copyright legal text
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 552f60789263ad2a1d983cf5b479af63d90f7591
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Sun Sep 18 00:53:56 2011 -0700
+
+    Use AM_CPPFLAGS to use in tree headers before installed headers
+    
+    This addresses a build failure found by the tinderbox.
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+    Reviewed-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 69f2580fd47cfe24105892e9ffb79cd046954b7d
+Merge: fc5d478 3ed1b46
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Sat Sep 17 06:41:30 2011 +1000
+
+    Merge branch 'smooth-scrolling'
+    
+    Conflicts:
+    	src/XExtInt.c
+
+commit 3ed1b463205295a5ebba7d570a4cb8dfade51a38
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Wed Aug 17 14:50:39 2011 +1000
+
+    Support XI 2.1 XIScrollClass
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 00382417331d0b38373796fd31757be9fd3e9971
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Thu Jun 2 13:23:32 2011 +1000
+
+    Support XI 2.1 internally
+    
+    Add the required constants to pretend to support XI 2.1.
+    Having named constants for 2.1 seems a bit pointless, so let's just use the
+    numbers directly.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit fc5d47895c1361763aa7f088b6d8cb3859e3fda8
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Sat Sep 17 06:40:01 2011 +1000
+
+    Require inputproto 2.0.99.1 or later
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 4dcbad7e10289317edc22113c1f451d79df221e1
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri Jun 3 15:46:47 2011 +1000
+
+    man: update property and grab man pages for new constants
+    
+    Suggest the use of the new XIGrabModeAsync, etc. defines instead of the core
+    defines. Add a BUGS section to each man page explaining
+    backwards-compatibility.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Daniel Stone <daniel@fooishbar.org>
+
+commit 14f674296bc23b3cd50f6d302c3064250132c2c1
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Mon Aug 22 13:55:56 2011 +1000
+
+    man: fix typo in XIQueryDevice man page
+    
+    struct name is XIValuatorClassInfo.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 91f928a70246c26cbee00bf59a8e318e9317142e
 Author: Peter Hutterer <peter.hutterer@who-t.net>
 Date:   Wed Aug 17 15:20:48 2011 +1000
 
@@ -89,9 +460,105 @@ Date:   Wed Aug 17 15:20:48 2011 +1000
     handlers so to automatically skip any unknown classes.
     
     Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
-    (cherry picked from commit 91f928a70246c26cbee00bf59a8e318e9317142e)
 
-commit b6a431df65a1d98272f3c9742b2bfe2cf185d7a0
+commit f5b4ff2b4bbac5477af337ed63d019b1f1bc21c9
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Sep 15 11:58:31 2011 -0400
+
+    inputlib: restore original title "X Input Device Extension Library"
+    
+    Somehow the title got changed during troff to docbook conversion.
+    Latest troff version:
+    ftp://www.x.org/pub/X11R7.0/doc/PDF/XiLib.pdf
+    
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 5174411eb67ff672abb3301268bd4fe06851ce3e
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Sep 15 11:57:12 2011 -0400
+
+    inputlib: prefix 1.0 with the word Version
+    
+    To be consistent with all other docs
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit b695f07ac85e76c7502a743343aacb2c93318ac5
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Sep 15 11:56:33 2011 -0400
+
+    inputlib: fix copyright statements
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit d8aea9731674ecb4e313051f866966113473e395
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Sep 12 16:54:45 2011 -0400
+
+    docs: use the &fullrelvers; entity to set X11 release information
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit b4690e1d9d0a27e04c7204614c0e88edef210ba7
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Sep 11 19:49:54 2011 -0400
+
+    docs: remove <productnumber> which is not used by default
+    
+    This element is not rendered by default on the title. A template
+    customization is required to display it.
+    X Window System does not have a product number.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 83a3f9d1b06391d5c25602c0b6a3dba63e7abc81
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Sep 8 20:00:00 2011 -0400
+
+    docbook.am: embed css styles inside the HTML HEAD element
+    
+    Rather than referring to the external xorg.css stylesheet, embed the content
+    of the file in the html output produced. This is accomplished by using
+    version 1.10 of xorg-xhtml.xsl.
+    
+    This makes the whole html docs tree much more relocatable.
+    In addition, it eliminates xorg.css as a runtime file which makes
+    xorg-sgml-doctools a build time only package.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit bd4c9c82e889d737f3488c234659216a218d8eb2
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Sep 7 10:31:04 2011 -0400
+
+    docbook.am: global maintenance update - entities, images and olinking
+    
+    Adding support in libX11 for html chunking caused a reorg of docbook.am
+    as well as the xorg-sgml-doctools masterdb for olinking.
+    The parameter img.src.path is added for pdf images.
+    A searchpath to the root builddir is added for local entities, if present.
+    
+    The docbook.am makefile hides all the details and is identical for
+    all 22 modules having DocBook documentation. It is included by a thin
+    Makefile.am which requires no docbook knowledge.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 942dd55eb370e0acea3184de78619766a09f7670
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri Jun 3 15:46:47 2011 +1000
+
+    man: update property and grab man pages for new constants
+    
+    Suggest the use of the new XIGrabModeAsync, etc. defines instead of the core
+    defines. Add a BUGS section to each man page explaining
+    backwards-compatibility.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Daniel Stone <daniel@fooishbar.org>
+
+commit eb5039859810a0fc4e4e594a4a1ccd99c5fecf85
 Author: Peter Hutterer <peter.hutterer@who-t.net>
 Date:   Mon Aug 22 13:55:56 2011 +1000
 
@@ -100,9 +567,67 @@ Date:   Mon Aug 22 13:55:56 2011 +1000
     struct name is XIValuatorClassInfo.
     
     Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
-    (cherry picked from commit 14f674296bc23b3cd50f6d302c3064250132c2c1)
 
-commit a15593744048d23e407906e34530beb5a57e3c2c
+commit 635c2c029b1e73311c3f650bcaf7eeb9e782134b
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Wed Aug 17 15:20:48 2011 +1000
+
+    Handle unknown device classes.
+    
+    If the server sends an unknown device class in response to an XIQueryDevice
+    call, no memory is allocated for these classes but we still write type
+    and sourceid as well as setting to->classes[i]. The latter causes multiple
+    classes to point to the same memory field.
+    
+    Move the common code of assigning these three into the respective class type
+    handlers so to automatically skip any unknown classes.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit ca73cd3b7630e7eb7d26c61c4af10d35dbce5465
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri Aug 12 14:24:26 2011 +1000
+
+    Don't use the protocol defines for 2.0 versioning.
+    
+    Otherwise we run into the old problem again: recompiling libXi against
+    newer inputproto headers will appear to change the version support,
+    potentially causing errors or other misbehaviours.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit 5a299d1731d3db16ccdd3a66246c81ca522f1702
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Aug 1 16:47:38 2011 -0700
+
+    Fix the FIXME output in man page .TH macros generated by asciidoc
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit e8531dd6a981c6cf19a1d256c29e886e34e8f51a
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Sep 7 15:21:31 2010 +1000
+
+    Add XI2 library-internal array offsets to XIint.h
+    
+    These defines are currently defined in XI.h and XI2.h. Their only use is as
+    offset into a library-internal array. Add them to XIint.h to have them where
+    they belong.
+    
+    These defines do not have any effect on the protocol. They are simply
+    offsets into an array for libXi-specific version checking. The defines are
+    added to this header for readability, given that we cannot remove them from
+    the protocol without potentially breaking clients (who should never use
+    these anyway, but...) means they will never get hit.
+    
+    Future defines for these offsets will only be added to libXi, not the
+    protocol.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 653b45b7cc275a560c1ea213216a908c125e443d
 Author: Peter Hutterer <peter.hutterer@who-t.net>
 Date:   Fri Jun 24 10:09:10 2011 +1000
 
@@ -112,35 +637,99 @@ Date:   Fri Jun 24 10:09:10 2011 +1000
     actual header.
     
     Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
-    (cherry picked from commit 653b45b7cc275a560c1ea213216a908c125e443d)
 
-commit 9fd7b9a9652ecebb8eb533c2a30b9fa7bb186b90
+commit 809c9e936b9f5234de03148376d389fdcfa6d40a
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Jun 12 18:39:46 2011 -0400
+
+    Install xml versions of specs even if HAVE_XMLTO is false
+    
+    DocBook/XML input source is also a usefull output format that can be viewed
+    with an XML viewer or editor and by some O/S help system.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 94f585af88a6486148ad6514f1f74eb83ce547ef
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Jun 5 16:27:37 2011 -0400
+
+    Install target dbs alongside generated documents
+    
+    This matches a change in xorg-sgml-docs whereby the masterdb will look for
+    the target dbs into the same location as the generated documents.
+    
+    The target dbs are now installed alongside the generated documents.
+    Previously they are installed in $prefix/sgml/X11/dbs alongside masterdb which
+    has the potential of installing outside the package prefix and cause
+    distcheck to fail when user does not have write permission in this package.
+    
+    Requires XORG_CHECK_SGML_DOCTOOLS(1.8) which was released 2011-06-11
+
+commit 2d2581479c64b8b44ab91e90ecb04acd5d106ea2
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Jun 9 15:59:23 2011 -0400
+
+    make: use AM_V_at rather than AM_V_GEN to prefix the mv command
+    
+    This will prevent outputting a "GEN" prefix. Moving and removing files
+    is not "generating" anything.
+    
+    Reviewed-by: Dan Nicholson <dbn.lists@gmail.com>
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit f4bdafebaf123c584e1b5e4ff1bc48f7cf4c5b26
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Jun 9 15:49:23 2011 -0400
+
+    make: remove unneeded AM_V_GEN silent rule directive.
+    
+    It happens to be in the middle of the script statement and cause this
+    incorrect output:
+    
+     rm XCloseDevice.man && make
+      GEN    XOpenDevice.3
+    /bin/bash: line 1: @echo: command not found
+    /bin/bash: line 2: @echo: command not found
+    [...]
+    
+    Reviewed-by: Dan Nicholson <dbn.lists@gmail.com>
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit f4930482c24a22c8cdf9da3c96516936ddd1f7b9
 Author: Peter Hutterer <peter.hutterer@who-t.net>
-Date:   Tue Jun 7 13:32:11 2011 +1000
+Date:   Tue Jun 7 14:12:08 2011 +1000
 
-    libXi 1.4.3
+    Bump to 1.4.99
     
     Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
 
-commit 7bdaa3635b7eb4bd993c317922d35cad7ed0cab9
+commit 938ef832b892fdefe0d5c2bb4510c91bbbccca9f
 Author: Peter Hutterer <peter.hutterer@who-t.net>
 Date:   Fri Jun 3 15:10:27 2011 +1000
 
     man: Fix typo in XIChangeProperty
     
     Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
-    (cherry picked from commit 938ef832b892fdefe0d5c2bb4510c91bbbccca9f)
 
-commit 63027b24113b349720f1612a4426933c1364ea28
+commit 597a6a51721d30c4354d1133bb6da6bd2e12446e
 Author: Peter Hutterer <peter.hutterer@who-t.net>
 Date:   Fri Jun 3 15:02:35 2011 +1000
 
     man: Fix wrong event names in XIGrabButton.
     
     Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
-    (cherry picked from commit 597a6a51721d30c4354d1133bb6da6bd2e12446e)
 
-commit 9affea8cfd3f583647e9c6ea2b5debb97e6904c5
+commit 7736957fa2598800c14a88cae1dd7809b184d743
+Author: Matt Dew <marcoz@osource.org>
+Date:   Tue May 31 20:03:23 2011 -0600
+
+    Add id attributes to funcsynopsis to allow other docs to olink to them.
+    
+    Signed-off-by: Matt Dew <marcoz@osource.org>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 9faab2bc0bdd4d98a04e572a7a5201bfcd3bdc70
 Author: Peter Hutterer <peter.hutterer@who-t.net>
 Date:   Thu Jun 2 16:21:59 2011 +1000
 
@@ -152,16 +741,45 @@ Date:   Thu Jun 2 16:21:59 2011 +1000
     
     Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
     Reviewed-by: Jeremy Huddleston <jeremyhu@apple.com>
-    (cherry picked from commit 9faab2bc0bdd4d98a04e572a7a5201bfcd3bdc70)
 
-commit 641d1e9943208a8b2c2aef843bd17cb22f833b06
+commit 67441d30df756eb715a262d3439865dedd4055e8
 Author: Peter Hutterer <peter.hutterer@who-t.net>
 Date:   Thu Jun 2 14:17:44 2011 +1000
 
     man: fix missing comma in XIGrabEnter man page
-    (cherry picked from commit 67441d30df756eb715a262d3439865dedd4055e8)
 
-commit f37dee93cb288f11d286c7bc4222b2f571ccfd65
+commit 4a694b3f4f5c92d62526ea1c5461c59df86c13db
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Thu May 5 09:30:21 2011 +1000
+
+    Silence compiler warning due to differnent event conversion procs
+    
+    XExtInt.c:161:5: warning: initialization from incompatible pointer type
+    
+    XSndExEv.c: In function 'XSendExtensionEvent':
+    XSndExEv.c:84:8: warning: assignment from incompatible pointer type
+    
+    Xlib and libXi differ in the conversion functions. libXi takes an xEvent**
+    and a num_events parameter since it may split an event into multiple
+    xEvents.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit fd680f025b1db22b1069aed2f142f670181574e5
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Thu May 5 09:20:23 2011 +1000
+
+    Silence compiler warning in XListDProp.c
+    
+    XListDProp.c: In function 'XListDeviceProperties':
+    XListDProp.c:72:9: warning: pointer targets in passing argument 2 of
+    '_XRead32' differ in signedness
+    /usr/include/X11/Xlibint.h:652:13: note: expected 'long int *' but argument
+    is of type 'Atom *'
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit aa2432240ad02c54280f2d11c007969c3eb9b79f
 Author: Peter Hutterer <peter.hutterer@who-t.net>
 Date:   Thu May 5 09:43:32 2011 +1000
 
@@ -172,9 +790,29 @@ Date:   Thu May 5 09:43:32 2011 +1000
     paragraph are just realignment due to the linebreak.
     
     Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
-    (cherry picked from commit aa2432240ad02c54280f2d11c007969c3eb9b79f)
 
-commit 89c7eff322c60d78c814693ecb28fa6c65159d3e
+commit f148a6279f07f029fc6a5b0a6556ff6622e6686a
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Feb 2 17:01:52 2011 -0800
+
+    Move Xinput server API documentation from libXi to xserver
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 4cc2b17a3d069b296837edbd6e81af5bbf9821b4
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue May 3 14:51:12 2011 +1000
+
+    Remove a few unused assignments.
+    
+    Found by static analyzer.
+    
+    Reported-by: Jeremy Huddleston <jeremyhu@apple.com>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit cc6feecae23b321952921cf927bc965386844c8c
 Author: Peter Hutterer <peter.hutterer@who-t.net>
 Date:   Tue May 3 14:34:22 2011 +1000
 
@@ -187,9 +825,8 @@ Date:   Tue May 3 14:34:22 2011 +1000
     Reported-by: Jeremy Huddleston <jeremyhu@apple.com>
     Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
     Reviewed-by: Jeremy Huddleston <jeremyhu@apple.com>
-    (cherry picked from commit cc6feecae23b321952921cf927bc965386844c8c)
 
-commit 7c6003718458ede0542233a213e05d67731d3e28
+commit af65475b1f6b7209750220a74aaad9968d54aaf7
 Author: Peter Hutterer <peter.hutterer@who-t.net>
 Date:   Tue May 3 13:21:02 2011 +1000
 
@@ -226,9 +863,8 @@ Date:   Tue May 3 13:21:02 2011 +1000
     Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
     Reviewed-by: Jeremy Huddleston <jeremyhu@apple.com>
     Reviewed-by: Daniel Stone <daniel@fooishbar.org>
-    (cherry picked from commit af65475b1f6b7209750220a74aaad9968d54aaf7)
 
-commit 8abdde71b83ff37b8500282e4856c323be508f67
+commit 18177afd4fb3934d0a9083c599fb96701eec2ad9
 Author: Matthieu Herrb <matthieu.herrb@laas.fr>
 Date:   Fri Apr 1 22:49:09 2011 +0200
 
@@ -239,7 +875,36 @@ Date:   Fri Apr 1 22:49:09 2011 +0200
     architectures.
     
     Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
-    (cherry picked from commit 18177afd4fb3934d0a9083c599fb96701eec2ad9)
+
+commit 75dc4029316c321d8f09fae584024f36c5c85c7f
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Feb 27 15:06:18 2011 -0500
+
+    Documentation: add Docbook external references support
+    
+    When writing technical documentation, it is often necessary to cross
+    reference to other information. When that other information is not in the
+    current document, additional support is needed, namely <olink>.
+    
+    A new feature with version 1.7 of xorg-sgml-doctools adds references to
+    other documents within or outside this package.
+    
+    This patch adds technical support for this feature but does not change
+    the content of the documentation as seen by the end user.
+    
+    Each book or article must generate a database containing the href
+    of sections that can be referred to from another document. This database
+    is installed in DATAROOTDIR/sgml/X11/dbs. There is a requirement that
+    the value of DATAROOTDIR for xorg-sgml-doctools and for the package
+    documentation is the same. This forms a virtual document tree.
+    
+    This database is consulted by other documents while they are being generated
+    in order to fulfill the missing information for linking.
+    Refer to the xorg-sgml-doctools for further technical information.
+    
+    Co-authored-by: Matt Dew <marcoz@osource.org>
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
 
 commit 32236a7779f721d252d633d06ade306f246421a3
 Author: Jeremy Huddleston <jeremyhu@apple.com>

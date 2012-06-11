@@ -2,12 +2,12 @@
 .\"     Title: xigrabbutton
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
 .\" Generator: DocBook XSL Stylesheets v1.76.1 <http://docbook.sf.net/>
-.\"      Date: 12/20/2011
+.\"      Date: 12/22/2011
 .\"    Manual: [FIXME: manual]
 .\"    Source: [FIXME: source]
 .\"  Language: English
 .\"
-.TH "XIGRABBUTTON" "libmansuffix" "12/20/2011" "[FIXME: source]" "[FIXME: manual]"
+.TH "XIGRABBUTTON" "libmansuffix" "12/22/2011" "[FIXME: source]" "[FIXME: manual]"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -60,24 +60,42 @@ int XIUngrabButton( Display *display,
 .sp
 .nf
 int XIGrabKeycode( Display *display,
-                  int deviceid,
-                  int keycode,
-                  Window grab_window,
-                  int grab_mode,
-                  int paired_device_mode,
-                  Bool owner_events,
-                  XIEventMask *mask,
-                  int num_modifiers,
-                  XIGrabModifiers *modifiers_inout);
+                   int deviceid,
+                   int keycode,
+                   Window grab_window,
+                   int grab_mode,
+                   int paired_device_mode,
+                   Bool owner_events,
+                   XIEventMask *mask,
+                   int num_modifiers,
+                   XIGrabModifiers *modifiers_inout);
 .fi
 .sp
 .nf
 int XIUngrabKeycode( Display *display,
-                    int deviceid,
-                    int keycode,
-                    Window grab_window,
-                    int num_modifiers,
-                    XIGrabModifiers *modifiers);
+                     int deviceid,
+                     int keycode,
+                     Window grab_window,
+                     int num_modifiers,
+                     XIGrabModifiers *modifiers);
+.fi
+.sp
+.nf
+int XIGrabTouchBegin( Display *display,
+                      int deviceid,
+                      Window grab_window,
+                      Bool owner_events,
+                      XIEventMask *mask,
+                      int num_modifiers,
+                      XIGrabModifiers *modifiers_inout);
+.fi
+.sp
+.nf
+int XIUngrabTouchBegin( Display *display,
+                        int deviceid,
+                        Window grab_window,
+                        int num_modifiers,
+                        XIGrabModifiers *modifiers);
 .fi
 .sp
 .nf
@@ -142,14 +160,14 @@ mask
 .nf
 grab_mode
        Specifies further processing of events from this device\&.
-       You can pass GrabModeSync or GrabModeAsync\&.
+       You can pass XIGrabModeSync or XIGrabModeAsync\&.
 .fi
 .sp
 .nf
 paired_device_mode
        Specifies further processing of events from the paired
-       master device\&. You can pass GrabModeSync or
-       GrabModeAsync\&. If deviceid specifies a floating slave
+       master device\&. You can pass XIGrabModeSync or
+       XIGrabModeAsync\&. If deviceid specifies a floating slave
        device, this parameter is ignored\&.
 .fi
 .SH "DESCRIPTION"
@@ -158,8 +176,8 @@ paired_device_mode
 .RS 4
 .\}
 .nf
-XIGrabButton and XIGrabKeycode establishes a passive grab\&. The
-modifier device for a button grab is the paired master device
+XIGrabButton, XIGrabKeycode and XIGrabTouchBegin establish a passive
+grab\&. The modifier device for a button grab is the paired master device
 if deviceid specifies a master pointer\&. Otherwise, the modifier
 device is the device specified with deviceid\&. In the future,
 the device is actively grabbed (as for XIGrabDevice, the
@@ -167,9 +185,9 @@ last\-grab time is set to the time at which the button or keycode
 was pressed and the XI_ButtonPress or XI_KeyPress event is
 reported if all of the following conditions are true:
   * The device is not grabbed, and the specified button or
-    keycode is logically pressed when the specified modifier
-    keys are logically down on the modifier device and no other
-    buttons or modifier keys are logically down\&.
+    keycode is logically pressed or a touch event occurs when the
+    specified modifier keys are logically down on the modifier device
+    and no other buttons or modifier keys are logically down\&.
   * Either the grab window is an ancestor of (or is) the focus
     window, OR the grab window is a descendent of the focus
     window and contains the device\&.
@@ -261,10 +279,10 @@ active grab\&.
 .RS 4
 .\}
 .nf
-On success, XIGrabButton and XIGrabKeycode return 0;
+On success, XIGrabButton, XIGrabKeycode and XIGrabTouchBegin return 0;
 If one or more modifier combinations could not be grabbed,
-XIGrabButton and XIGrabKeycode return the number of failed
-combinations and modifiers_inout contains the failed combinations
+XIGrabButton, XIGrabKeycode and XIGrabTouchBegin return the number of
+failed combinations and modifiers_inout contains the failed combinations
 and their respective error codes\&.
 .fi
 .if n \{\
@@ -275,8 +293,8 @@ and their respective error codes\&.
 .RS 4
 .\}
 .nf
-XIGrabButton and XIGrabKeycode can generate BadClass, BadDevice,
-BadMatch, BadValue, and BadWindow errors\&.
+XIGrabButton, XIGrabKeycode and XIGrabTouchBegin can generate BadClass,
+BadDevice, BadMatch, BadValue, and BadWindow errors\&.
 .fi
 .if n \{\
 .RE
@@ -286,10 +304,10 @@ BadMatch, BadValue, and BadWindow errors\&.
 .RS 4
 .\}
 .nf
-XIUngrabButton and XIUngrabKeycode releases the passive grab for
-a button/modifier or keycode/modifier combination on the
-specified window if it was grabbed by this client\&. A modifier
-of XIAnyModifier is equivalent to issuing the ungrab request
+XIUngrabButton, XIUngrabKeycode and XIUngrabTouchBegin release the
+passive grab for a button/modifier, keycode/modifier or touch/modifier
+combination on the specified window if it was grabbed by this client\&. A
+modifier of XIAnyModifier is equivalent to issuing the ungrab request
 for all possible modifier combinations, including the
 combination of no modifiers\&. A button of XIAnyButton is
 equivalent to issuing the request for all possible buttons\&.
@@ -304,8 +322,8 @@ grab\&.
 .RS 4
 .\}
 .nf
-XIUngrabButton and XIUngrabKeycode can generate BadDevice,
-BadMatch, BadValue and BadWindow errors\&.
+XIUngrabButton, XIUngrabKeycode and XIUngrabTouchBegin can generate
+BadDevice, BadMatch, BadValue and BadWindow errors\&.
 .fi
 .if n \{\
 .RE
@@ -316,11 +334,12 @@ BadMatch, BadValue and BadWindow errors\&.
 .RS 4
 .\}
 .nf
-XIGrabButton and XIGrabKeycode return the number of modifier combination
-that could not establish a passive grab\&. The modifiers are returned in
-modifiers_inout, along with the respective error for this modifier
-combination\&. If XIGrabButton or XIGrabKeycode return zero, passive grabs
-with all requested modifier combinations were established successfully\&.
+XIGrabButton, XIGrabKeycode and XIGrabTouchBegin return the number of
+modifier combination that could not establish a passive grab\&. The
+modifiers are returned in modifiers_inout, along with the respective
+error for this modifier combination\&. If XIGrabButton, XIGrabKeycode
+or XIGrabTouchBegin return zero, passive grabs with all requested
+modifier combinations were established successfully\&.
 .fi
 .if n \{\
 .RE
@@ -345,7 +364,8 @@ BadDevice
 BadMatch
        This error may occur if XIGrabButton specified a device
        that has no buttons, or XIGrabKeycode specified a device
-       that has no keys\&.
+       that has no keys, or XIGrabTouchBegin specified a device
+       that is not touch\-capable\&.
 .fi
 .if n \{\
 .RE
@@ -373,6 +393,19 @@ BadValue
 BadWindow
        A value for a Window argument does not name a defined
        Window\&.
+.fi
+.if n \{\
+.RE
+.\}
+.SH "BUGS"
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+The protocol headers for XI 2\&.0 did not provide
+XIGrabModeAsync or XIGrabModeSync\&. Use GrabModeSync and
+GrabModeAsync instead, respectively\&.
 .fi
 .if n \{\
 .RE

@@ -1,7 +1,7 @@
 
 # Initialize Autoconf
 AC_PREREQ([2.60])
-AC_INIT([libXi], [1.4.5],
+AC_INIT([libXi], [1.6.1],
 	[https://bugs.freedesktop.org/enter_bug.cgi?product=xorg], [libXi])
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_HEADERS([src/config.h])
@@ -13,20 +13,22 @@ AM_MAINTAINER_MODE
 # Initialize libtool
 AC_PROG_LIBTOOL
 
-# Require xorg-macros minimum of 1.10 for DocBook XML documentation
+# Require xorg-macros minimum of 1.12 for DocBook external references
 m4_ifndef([XORG_MACROS_VERSION],
-          [m4_fatal([must install xorg-macros 1.10 or later before running autoconf/autogen])])
-XORG_MACROS_VERSION(1.10)
+          [m4_fatal([must install xorg-macros 1.12 or later before running autoconf/autogen])])
+XORG_MACROS_VERSION(1.12)
 XORG_DEFAULT_OPTIONS
+XORG_ENABLE_DOCS
 XORG_ENABLE_SPECS
-XORG_WITH_XMLTO(0.0.20)
+XORG_WITH_XMLTO(0.0.22)
 XORG_WITH_FOP
-XORG_CHECK_SGML_DOCTOOLS(1.5)
+XORG_WITH_XSLTPROC
+XORG_CHECK_SGML_DOCTOOLS(1.8)
 XORG_WITH_ASCIIDOC(8.4.5)
 XORG_CHECK_MALLOC_ZERO
 
-# Obtain compiler/linker options for depedencies
-PKG_CHECK_MODULES(XI, [xproto >= 7.0.13] [x11 >= 1.2.99.1] [xextproto >= 7.0.3] [xext >= 1.0.99.1] [inputproto >= 1.9.99.902])
+# Obtain compiler/linker options for dependencies
+PKG_CHECK_MODULES(XI, [xproto >= 7.0.13] [x11 >= 1.4.99.1] [xextproto >= 7.0.3] [xext >= 1.0.99.1] [inputproto >= 2.1.99.6])
 
 # Check for xmlto and asciidoc for man page conversion
 # (only needed by people building tarballs)
@@ -49,7 +51,6 @@ AM_CONDITIONAL([INSTALL_MANPAGES],
 AC_CONFIG_FILES([Makefile
 		src/Makefile
 		man/Makefile
-		doc/Makefile
 		specs/Makefile
 		xi.pc])
 AC_OUTPUT

@@ -22,6 +22,10 @@
  *
  */
 
+#if HAVE_CONFIG_H
+#include <config.h>
+#endif
+
 #include <stdint.h>
 #include <X11/Xlibint.h>
 #include <X11/extensions/XI2proto.h>

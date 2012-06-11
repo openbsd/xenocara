@@ -21,6 +21,9 @@
  * DEALINGS IN THE SOFTWARE.
  *
  */
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
 
 #include <stdint.h>
 #include <X11/Xlibint.h>
@@ -145,6 +148,25 @@ XIGrabFocusIn(Display *dpy, int deviceid, Window grab_window, int grab_mode,
                                 modifiers_inout);
 }
 
+int
+XIGrabTouchBegin(Display *dpy, int deviceid, Window grab_window,
+                 Bool owner_events, XIEventMask *mask,
+                 int num_modifiers, XIGrabModifiers *modifiers_inout)
+{
+    XExtDisplayInfo *extinfo = XInput_find_display(dpy);
+
+    LockDisplay(dpy);
+    if (_XiCheckExtInit(dpy, XInput_2_2, extinfo) == -1)
+	return -1;
+
+    /* FIXME: allow selection of GrabMode for paired devices? */
+    return _XIPassiveGrabDevice(dpy, deviceid, XIGrabtypeTouchBegin, 0,
+                                grab_window, None, XIGrabModeTouch,
+                                GrabModeAsync, owner_events, mask,
+                                num_modifiers, modifiers_inout);
+}
+
+
 static int
 _XIPassiveUngrabDevice(Display* dpy, int deviceid, int grabtype, int detail,
                        Window grab_window, int num_modifiers, XIGrabModifiers *modifiers)
@@ -206,5 +228,19 @@ XIUngrabFocusIn(Display* display, int deviceid, Window grab_window,
                int num_modifiers, XIGrabModifiers *modifiers)
 {
     return _XIPassiveUngrabDevice(display, deviceid, XIGrabtypeFocusIn, 0,
+                                  grab_window, num_modifiers, modifiers);
+}
+
+int
+XIUngrabTouchBegin(Display* display, int deviceid, Window grab_window,
+                   int num_modifiers, XIGrabModifiers *modifiers)
+{
+    XExtDisplayInfo *extinfo = XInput_find_display(display);
+
+    LockDisplay(display);
+    if (_XiCheckExtInit(display, XInput_2_2, extinfo) == -1)
+	return -1;
+
+    return _XIPassiveUngrabDevice(display, deviceid, XIGrabtypeTouchBegin, 0,
                                   grab_window, num_modifiers, modifiers);
 }

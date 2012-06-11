@@ -86,7 +86,7 @@ DESCRIPTION
    defined macros include DeviceKeyPress, DeviceKeyRelease,
    DeviceButtonPress, DeviceButtonRelese, DeviceMotionNotify,
    DeviceFocusIn, DeviceFocusOut, ProximityIn, ProximityOut,
-   DeviceStateNotify, DeviceMappiingNotify, ChangeDeviceNotify,
+   DeviceStateNotify, DeviceMappingNotify, ChangeDeviceNotify,
    DevicePointerMotionHint, DeviceButton1Motion,
    DeviceButton2Motion, DeviceButton3Motion, DeviceButton4Motion,
    DeviceButton5Motion, DeviceButtonMotion, DeviceOwnerGrabButton,

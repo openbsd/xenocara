@@ -29,6 +29,9 @@ in this Software without prior written authorization from The Open Group.
  * XIWarpPointer - Warp the pointer of an extension input device.
  *
  */
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
 
 #include <stdint.h>
 #include <X11/extensions/XI2proto.h>

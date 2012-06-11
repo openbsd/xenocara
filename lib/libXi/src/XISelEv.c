@@ -30,6 +30,9 @@ in this Software without prior written authorization from the author.
  *
  */
 
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
 
 #include <stdint.h>
 #include <X11/Xlibint.h>

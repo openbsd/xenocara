@@ -2,12 +2,12 @@
 .\"     Title: xselectextensionevent
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
 .\" Generator: DocBook XSL Stylesheets v1.76.1 <http://docbook.sf.net/>
-.\"      Date: 09/23/2011
+.\"      Date: 01/18/2012
 .\"    Manual: [FIXME: manual]
 .\"    Source: [FIXME: source]
 .\"  Language: English
 .\"
-.TH "XSELECTEXTENSIONEVEN" "libmansuffix" "09/23/2011" "[FIXME: source]" "[FIXME: manual]"
+.TH "XSELECTEXTENSIONEVEN" "libmansuffix" "01/18/2012" "[FIXME: source]" "[FIXME: manual]"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -154,7 +154,7 @@ clients use in making XSelectExtensionEvent requests\&. Currently
 defined macros include DeviceKeyPress, DeviceKeyRelease,
 DeviceButtonPress, DeviceButtonRelese, DeviceMotionNotify,
 DeviceFocusIn, DeviceFocusOut, ProximityIn, ProximityOut,
-DeviceStateNotify, DeviceMappiingNotify, ChangeDeviceNotify,
+DeviceStateNotify, DeviceMappingNotify, ChangeDeviceNotify,
 DevicePointerMotionHint, DeviceButton1Motion,
 DeviceButton2Motion, DeviceButton3Motion, DeviceButton4Motion,
 DeviceButton5Motion, DeviceButtonMotion, DeviceOwnerGrabButton,

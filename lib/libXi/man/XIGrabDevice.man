@@ -2,12 +2,12 @@
 .\"     Title: xigrabdevice
 .\"    Author: [FIXME: author] [see http://docbook.sf.net/el/author]
 .\" Generator: DocBook XSL Stylesheets v1.76.1 <http://docbook.sf.net/>
-.\"      Date: 12/20/2011
+.\"      Date: 12/21/2011
 .\"    Manual: [FIXME: manual]
 .\"    Source: [FIXME: source]
 .\"  Language: English
 .\"
-.TH "XIGRABDEVICE" "libmansuffix" "12/20/2011" "[FIXME: source]" "[FIXME: manual]"
+.TH "XIGRABDEVICE" "libmansuffix" "12/21/2011" "[FIXME: source]" "[FIXME: manual]"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -144,10 +144,10 @@ mask\&.
 .RS 4
 .\}
 .nf
-If the grab_mode argument is GrabModeAsync, device event
+If the grab_mode argument is XIGrabModeAsync, device event
 processing continues as usual\&. If the device is currently
 frozen by this client, then processing of device events is
-resumed\&. If the grab_mode argument is GrabModeSync, the state
+resumed\&. If the grab_mode argument is XIGrabModeSync, the state
 of the device (as seen by client applications) appears to
 freeze, and the X server generates no further device events
 until the grabbing client issues a releasing XIAllowEvents call
@@ -163,9 +163,9 @@ the server for later processing\&.
 .RS 4
 .\}
 .nf
-If paired_device_mode is GrabModeAsync, processing of events
+If paired_device_mode is XIGrabModeAsync, processing of events
 from the paired master device is unaffected by activation of
-the grab\&. If paired_device_mode is GrabModeSync, the state of
+the grab\&. If paired_device_mode is XIGrabModeSync, the state of
 the paired master device (as seen by client applications)
 appears to freeze, and the X server generates no further events
 from this device until the grabbing client issues a releasing
@@ -288,6 +288,19 @@ BadMatch
 BadWindow
        A value for a Window argument does not name a defined
        Window\&.
+.fi
+.if n \{\
+.RE
+.\}
+.SH "BUGS"
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+The protocol headers for XI 2\&.0 did not provide
+XIGrabModeAsync or XIGrabModeSync\&. Use GrabModeSync and
+GrabModeAsync instead, respectively\&.
 .fi
 .if n \{\
 .RE

@@ -64,10 +64,11 @@ libXi_la_SOURCES = \
 
 libXi_la_LIBADD = $(XI_LIBS)
 
-AM_CFLAGS = -I$(top_srcdir)/include \
-            -I$(top_srcdir)/include/X11 \
-            -I$(top_srcdir)/include/X11/extensions \
-            $(XI_CFLAGS) \
+AM_CPPFLAGS = -I$(top_srcdir)/include \
+              -I$(top_srcdir)/include/X11 \
+              -I$(top_srcdir)/include/X11/extensions
+
+AM_CFLAGS = $(XI_CFLAGS) \
             $(MALLOC_ZERO_CFLAGS) \
             $(CWARNFLAGS)
 

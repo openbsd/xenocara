@@ -29,6 +29,9 @@ in this Software without prior written authorization from The Open Group.
  * XIChangeHierarchy - change the device hierarchy, i.e. which slave
  * device is attached to which master, etc.
  */
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
 
 #include <stdint.h>
 #include <X11/extensions/XI2proto.h>

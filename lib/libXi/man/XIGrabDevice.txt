@@ -74,10 +74,10 @@ DESCRIPTION
    grab_window, and is only reported if specified in the event
    mask.
 
-   If the grab_mode argument is GrabModeAsync, device event
+   If the grab_mode argument is XIGrabModeAsync, device event
    processing continues as usual. If the device is currently
    frozen by this client, then processing of device events is
-   resumed. If the grab_mode argument is GrabModeSync, the state
+   resumed. If the grab_mode argument is XIGrabModeSync, the state
    of the device (as seen by client applications) appears to
    freeze, and the X server generates no further device events
    until the grabbing client issues a releasing XIAllowEvents call
@@ -85,9 +85,9 @@ DESCRIPTION
    not lost while the device is frozen; they are simply queued in
    the server for later processing.
 
-   If paired_device_mode is GrabModeAsync, processing of events
+   If paired_device_mode is XIGrabModeAsync, processing of events
    from the paired master device is unaffected by activation of
-   the grab. If paired_device_mode is GrabModeSync, the state of
+   the grab. If paired_device_mode is XIGrabModeSync, the state of
    the paired master device (as seen by client applications)
    appears to freeze, and the X server generates no further events
    from this device until the grabbing client issues a releasing
@@ -140,6 +140,13 @@ DIAGNOSTICS
    BadWindow
           A value for a Window argument does not name a defined
           Window.
+
+BUGS
+----
+
+   The protocol headers for XI 2.0 did not provide
+   XIGrabModeAsync or XIGrabModeSync. Use GrabModeSync and
+   GrabModeAsync instead, respectively.
 
 SEE ALSO
 --------

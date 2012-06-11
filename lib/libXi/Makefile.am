@@ -1,4 +1,4 @@
-SUBDIRS = src man doc specs
+SUBDIRS = src man specs
 
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = xi.pc
