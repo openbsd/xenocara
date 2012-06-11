@@ -1,3 +1,34 @@
+commit 0847b64af14acefaa7aa86b3cec8632497babe73
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jun 2 09:36:29 2012 -0700
+
+    libXft 2.3.1
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 1066d2b34db6124fbb0105f5d30f560217fd2a5a
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Sat Mar 10 23:09:21 2012 -0800
+
+    Dead code removal
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit 84b8b5b46773f9b686d57f28092824b86bffed9d
+Author: Mikael Magnusson <mikachu@gmail.com>
+Date:   Sun Mar 11 02:41:55 2012 +0100
+
+    Fixup for 550b2f76401c2 which broke bold fonts
+    
+    The commit removed the line
+    AC_CHECK_FUNCS(FT_Get_Next_Char FT_Get_BDF_Property FT_Get_PS_Font_Info FT_Has_PS_Glyph_Names FT_GlyphSlot_Embolden)
+    but failed to remove the #if lines that this commit removes, resulting
+    in that code never being executed.
+    
+    Fixes: https://bugs.freedesktop.org/attachment.cgi?id=58280
+    
+    Reviewed-by: Jeremy Huddleston <jeremyhu@apple.com>
+
 commit b543efafefb71fb1f87ee9c1c261e86c8ca29e76
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Wed Mar 7 20:12:27 2012 -0800
