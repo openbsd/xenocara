@@ -1749,6 +1749,12 @@ ViaModeSet(ScrnInfoPtr pScrn, DisplayModePtr mode)
         (pVia->Chipset == VIA_K8M800) || 
         (pVia->Chipset == VIA_VX900) )) {
         pBIOSInfo->FirstCRTC->IsActive=TRUE;
+        if (pVia->DDC1) {
+	    pBIOSInfo->SecondCRTC->IsActive=TRUE;
+        } else { 
+            //We need to disable the secondary to properly work XVideo on VX900
+            pBIOSInfo->SecondCRTC->IsActive=FALSE;
+        }
         ViaModeFirstCRTC(pScrn, mode);
     }
     if (pBIOSInfo->Simultaneous->IsActive) {

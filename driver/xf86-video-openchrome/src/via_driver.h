@@ -104,7 +104,7 @@
 #define DRIVER_NAME     "openchrome"
 #define VERSION_MAJOR   0
 #define VERSION_MINOR   2
-#define PATCHLEVEL      905
+#define PATCHLEVEL      906
 #define VIA_VERSION     ((VERSION_MAJOR<<24) | (VERSION_MINOR<<16) | PATCHLEVEL)
 
 #define VIA_VQ_SIZE             (256 * 1024)

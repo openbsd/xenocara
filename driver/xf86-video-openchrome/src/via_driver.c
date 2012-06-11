@@ -682,7 +682,8 @@ VIASetupDefaultOptions(ScrnInfoPtr pScrn)
 
     pVia->shadowFB = FALSE;
     pVia->NoAccel = FALSE;
-    pVia->noComposite = FALSE;
+    pVia->noComposite = TRUE;
+    pVia->useEXA = TRUE;
     pVia->exaScratchSize = VIA_SCRATCH_SIZE / 1024;
     pVia->hwcursor = TRUE;
     pVia->VQEnable = TRUE;
@@ -1215,12 +1216,12 @@ VIAPreInit(ScrnInfoPtr pScrn, int flags)
     if (!pVia->NoAccel) {
         from = X_DEFAULT;
         if ((s = (char *)xf86GetOptValString(VIAOptions, OPTION_ACCELMETHOD))) {
-            if (!xf86NameCmp(s, "XAA")) {
-                from = X_CONFIG;
-                pVia->useEXA = FALSE;
-            } else if (!xf86NameCmp(s, "EXA")) {
+            if (!xf86NameCmp(s, "EXA")) {
                 from = X_CONFIG;
                 pVia->useEXA = TRUE;
+            } else if (!xf86NameCmp(s, "XAA")) {
+                from = X_CONFIG;
+                pVia->useEXA = FALSE;
             }
         }
         xf86DrvMsg(pScrn->scrnIndex, from,
@@ -1809,10 +1810,11 @@ VIAPreInit(ScrnInfoPtr pScrn, int flags)
                 VIAFreeRec(pScrn);
                 return FALSE;
             }
-        }
-        if (!xf86LoadSubModule(pScrn, "xaa")) {
-            VIAFreeRec(pScrn);
-            return FALSE;
+        } else {
+            if (!xf86LoadSubModule(pScrn, "xaa")) {
+                VIAFreeRec(pScrn);
+                return FALSE;
+            }
         }
     }
 

@@ -55,11 +55,8 @@ KNOWN BUGS/LIMITATIONS :
 - CX700, VX800 and VX855 integrated TMDS is supported.
 
 * Chrome9
-- Chrome9 chipsets' family (P4M900, K8M890, VX800, VX855) currently doesn't
-  support neither AGP DMA nor 3D acceleration. 
-
-* VX900
-- Xv is not yet supported.
+- Chrome9 chipsets' family (P4M900, K8M890, VX800, VX855, VX900) currently
+  doesn't support neither AGP DMA nor 3D acceleration. 
 
 
 Please note that 3D acceleration is provided by Mesa (http://mesa3d.org) and is

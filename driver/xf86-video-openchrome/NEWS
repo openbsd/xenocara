@@ -1,3 +1,14 @@
+openchrome 0.2.906 (15/05/2012)
+-------------------------------
+* New features :
+- VX900 Xv support.
+- EXA is now the default although compositing is buggy and thus disabled.
+
+* Bugfixes and enhancements :
+- Fix I420 Xv surface on CME engine.
+- Fix EXA to not require XAA module in X server.
+
+
 openchrome 0.2.905 (10/02/2012)
 -------------------------------
 * New features :

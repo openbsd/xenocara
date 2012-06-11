@@ -260,7 +260,7 @@
 #define V1_EXPIRE_NUM_A         0x000a0000
 #define V1_EXPIRE_NUM_F         0x000f0000 /* jason */
 #define V1_FIFO_EXTENDED        0x00200000
-#define V1_ON_CRT               0x00000000
+#define V1_ON_PRI               0x00000000
 #define V1_ON_SND_DISPLAY       0x80000000
 #define V1_FIFO_32V1_32V2       0x00000000
 #define V1_FIFO_48V1_32V2       0x00200000
@@ -607,7 +607,8 @@
 #define HQV_DST_DATA_OFFSET_CTRL1           0x180
 #define HQV_DST_DATA_OFFSET_CTRL2           0x184  
 #define HQV_DST_DATA_OFFSET_CTRL3           0x188  
-#define HQV_DST_DATA_OFFSET_CTRL4           0x18C 
+#define HQV_DST_DATA_OFFSET_CTRL4           0x18C
+#define HQV_SHARPNESS_DECODER_HANDSHAKE_CTRL_410 0x1A4 
 #define HQV_RESIDUE_PIXEL_FRAME_STARTADDR   0x1BC
 #define HQV_BACKGROUND_DATA_OFFSET          0x1CC
 #define HQV_SUBP_HSCALE_CTRL                0x1E0
