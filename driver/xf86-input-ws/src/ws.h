@@ -35,17 +35,17 @@ extern int ws_debug_level;
 
 /* axis specific data for wheel */
 typedef struct {
-    int negative;
-    int positive;
-    int traveled_distance;
+	int negative;
+	int positive;
+	int traveled_distance;
 } WheelAxis, *WheelAxisPtr;
 
 typedef struct WSDevice {
-	char *devName;		/* device name */
-	int type;		/* ws device type */
-	unsigned int lastButtons; /* last state of buttons */
+	char *devName;			/* device name */
+	int type;			/* ws device type */
+	unsigned int lastButtons;	/* last state of buttons */
 	int old_ax, old_ay;
-	int min_x, max_x, min_y, max_y; /* coord space */
+	int min_x, max_x, min_y, max_y;	/* coord space */
 	int swap_axes;
 	int raw;
 	int inv_x, inv_y;
