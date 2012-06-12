@@ -13,7 +13,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
-/* $OpenBSD: ws.c,v 1.52 2012/06/12 17:04:43 shadchin Exp $ */
+/* $OpenBSD: ws.c,v 1.53 2012/06/12 17:10:03 shadchin Exp $ */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -670,17 +670,25 @@ wsInitCalibProperty(DeviceIntPtr device)
 	    strlen(WS_PROP_CALIBRATION), TRUE);
 	rc = XIChangeDeviceProperty(device, prop_calibration, XA_INTEGER, 32,
 	    PropModeReplace, 4, &priv->min_x, FALSE);
-	if (rc != Success)
+	if (rc != Success) {
+		xf86IDrvMsg(pInfo, X_ERROR,
+		    "cannot create device property %s: %d\n",
+		    WS_PROP_CALIBRATION, rc);
 		return;
-
+	}
 	XISetDevicePropertyDeletable(device, prop_calibration, FALSE);
 
 	prop_swap = MakeAtom(WS_PROP_SWAP_AXES,
 	    strlen(WS_PROP_SWAP_AXES), TRUE);
 	rc = XIChangeDeviceProperty(device, prop_swap, XA_INTEGER, 8,
 	    PropModeReplace, 1, &priv->swap_axes, FALSE);
-	if (rc != Success)
+	if (rc != Success) {
+		xf86IDrvMsg(pInfo, X_ERROR,
+		    "cannot create device property %s: %d\n",
+		    WS_PROP_SWAP_AXES, rc);
 		return;
+	}
+	XISetDevicePropertyDeletable(device, prop_swap, FALSE);
 
 	XIRegisterPropertyHandler(device, wsSetCalibProperty, NULL, NULL);
 
