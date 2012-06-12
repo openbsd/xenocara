@@ -13,7 +13,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
-/* $OpenBSD: ws.c,v 1.51 2011/12/29 13:48:05 matthieu Exp $ */
+/* $OpenBSD: ws.c,v 1.52 2012/06/12 17:04:43 shadchin Exp $ */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -772,7 +772,7 @@ wsSetCalibProperty(DeviceIntPtr device, Atom atom, XIPropertyValuePtr val,
 
 void
 wsWheelHandleButtonMap(InputInfoPtr pInfo, WheelAxisPtr pAxis,
-    char* axis_name, char* default_value)
+    const char* axis_name, const char* default_value)
 {
 	WSDevicePtr priv = (WSDevicePtr)pInfo->private;
 	char *option_string;

@@ -95,5 +95,6 @@ extern BOOL wsWheelEmuFilterButton(InputInfoPtr, unsigned int, int);
 extern BOOL wsWheelEmuFilterMotion(InputInfoPtr, int, int);
 extern void wsWheelEmuInitProperty(DeviceIntPtr);
 
-extern void wsWheelHandleButtonMap(InputInfoPtr, WheelAxisPtr, char *, char *);
+extern void wsWheelHandleButtonMap(InputInfoPtr, WheelAxisPtr, const char *,
+    const char *);
 extern void wsButtonClicks(InputInfoPtr, int, int);
