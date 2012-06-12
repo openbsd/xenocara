@@ -1,4 +1,4 @@
-.\"	$OpenBSD: ws.man,v 1.12 2011/11/28 23:49:59 shadchin Exp $
+.\"	$OpenBSD: ws.man,v 1.13 2012/06/12 17:12:50 shadchin Exp $
 .\"
 .\" Copyright (c) 2005,2009,2011 Matthieu Herrb
 .\"
@@ -52,6 +52,16 @@ uts(4), USB touchscreens and ums(4), generic USB mouse devices.
 Please refer to __xconfigfile__(__filemansuffix__) for general configuration
 details and for options that can be used with all input drivers.
 This section only covers configuration details specific to this driver.
+.TP 4
+.BI "Option \*qButtonMapping\*q \*q" string \*q
+Sets the button mapping for this device. The mapping is a space-separated list
+of button mappings that correspond in order to the physical buttons on the
+device (i.e. the first number is the mapping for button 1, etc.). The default
+mapping is "1 2 3 ... 32". A mapping of 0 deactivates the button. Multiple
+buttons can have the same mapping.
+For example, a left-handed mouse with deactivated scroll-wheel would use a
+mapping of "3 2 1 0 0". Invalid mappings are ignored and the default mapping
+is used. Buttons not specified in the user's mapping use the default mapping.
 .TP 4
 .BI "Option \*qButtons\*q \*q" integer \*q
 Specifies the number of mouse buttons.
