@@ -1,4 +1,4 @@
-/*	$OpenBSD: emumb.c,v 1.9 2011/11/19 13:09:16 shadchin Exp $ */
+/*	$OpenBSD: emumb.c,v 1.10 2012/06/12 17:06:43 shadchin Exp $ */
 /*
  * Copyright 1990,91 by Thomas Roell, Dinkelscherben, Germany.
  * Copyright 1993 by David Dawes <dawes@xfree86.org>
@@ -206,7 +206,8 @@ wsmbEmuTimer(InputInfoPtr pInfo)
 		priv->emulateMB.state =
 		    stateTab[priv->emulateMB.state][4][2];
 	} else {
-		ErrorF("Got unexpected buttonTimer in state %d\n",
+		xf86IDrvMsg(pInfo, X_ERROR,
+		    "Got unexpected buttonTimer in state %d\n",
 		    priv->emulateMB.state);
 	}
 
