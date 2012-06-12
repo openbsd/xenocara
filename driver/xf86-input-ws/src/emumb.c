@@ -1,4 +1,4 @@
-/*	$OpenBSD: emumb.c,v 1.10 2012/06/12 17:06:43 shadchin Exp $ */
+/*	$OpenBSD: emumb.c,v 1.11 2012/06/12 17:11:23 shadchin Exp $ */
 /*
  * Copyright 1990,91 by Thomas Roell, Dinkelscherben, Germany.
  * Copyright 1993 by David Dawes <dawes@xfree86.org>
@@ -395,9 +395,6 @@ wsmbEmuInitProperty(DeviceIntPtr dev)
 
 	DBG(1, ErrorF("wsmbEmuInitProperty\n"));
 
-	if (!dev->button) /* don't init prop for keyboards */
-		return;
-
 	prop_mbemu = MakeAtom(WS_PROP_MIDBUTTON,
 	    strlen(WS_PROP_MIDBUTTON), TRUE);
 	rc = XIChangeDeviceProperty(dev, prop_mbemu, XA_INTEGER, 8,
@@ -411,12 +408,9 @@ wsmbEmuInitProperty(DeviceIntPtr dev)
 	XISetDevicePropertyDeletable(dev, prop_mbemu, FALSE);
 
 	prop_mbtimeout = MakeAtom(WS_PROP_MIDBUTTON_TIMEOUT,
-	    strlen(WS_PROP_MIDBUTTON_TIMEOUT),
-	    TRUE);
-	rc = XIChangeDeviceProperty(dev, prop_mbtimeout,
-	    XA_INTEGER, 32, PropModeReplace, 1,
-	    &priv->emulateMB.timeout, FALSE);
-
+	    strlen(WS_PROP_MIDBUTTON_TIMEOUT), TRUE);
+	rc = XIChangeDeviceProperty(dev, prop_mbtimeout, XA_INTEGER, 32,
+	    PropModeReplace, 1, &priv->emulateMB.timeout, FALSE);
 	if (rc != Success) {
 		xf86IDrvMsg(pInfo, X_ERROR,
 		    "cannot create device property %s: %d\n",
