@@ -1,44 +1,1464 @@
-commit a1457c3a4c70f875b807f9488d241b5d05e238b8
+commit e0f5688994baa85a8c658120681575cdd0ba2a58
 Author: Peter Hutterer <peter.hutterer@who-t.net>
-Date:   Mon Mar 26 11:17:06 2012 +1000
+Date:   Fri May 11 10:30:21 2012 +1000
 
-    synaptics 1.5.2
+    synaptics 1.6.1
     
     Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
 
-commit 9a71f6dc88152f2599a8752ccdca1b09e6e975e4
-Author: Daniel Stone <daniel@fooishbar.org>
-Date:   Thu Jun 9 20:03:05 2011 +0100
+commit 7f2d9d88204c62de3cb63b48001b9e2408d3a20d
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri May 11 10:54:47 2012 +1000
 
-    Adjust acceleration scheme for input ABI v14
+    tools: coasting speed is not capped at 20, cap it at 255
     
-    v14 wants doubles, rather than floats, from acceleration schemes.
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    (cherry picked from commit 0352c67fa2a7224b5a3bf03a934b3c7af42b4f51)
+
+commit ace20a02c371478f6a9d224dfd31ea219d91fc46
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Wed May 9 14:26:40 2012 +1000
+
+    Fix coasting speed trigger
     
-    Signed-off-by: Daniel Stone <daniel@fooishbar.org>
+    CoastingSpeed is defined as scrolls/s. The previous code just used
+    delta/seconds which depended on the device coordinate range and exceeded the
+    default CoastingSpeed at almost any scroll event.
+    
+    Divide the estimated delta by the scroll distance to get the accurate
+    scrolls/s number. Since that now changes the contents of what's in
+    coast_speed_y, change the users of that too.
+    
+    http://bugzilla.redhat.com/813686
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    (cherry picked from commit 0de4445ff8e75aab208faf6383e76045934c6720)
+
+commit 04d24116db59872d4cd00f38a0d1c87957fe4914
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Wed May 9 12:23:46 2012 +1000
+
+    Don't check for soft buttons if a button is already down
+    
+    Moving into a different soft button's area during drag-n-drop would trigger
+    a click of that button.
+    
+    We only have the current button state and we mess with it, so the conditions
+    for a possible clickpad soft-button event are:
+    - hw->left is down now
+    - none of left|right|middle were down before. since we change hw->left to
+      hw->right/left we need to check all three
+    
+    If hw->left is down but one of the other buttons was already down, copy that
+    button state and continue.
+    
+    http://bugzilla.redhat.com/819348
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Chase Douglas <chase.douglas@canonical.com>
+    (cherry picked from commit a1d6784d790f081f8a6ea3a10d3cfa578aa10d5b)
+
+commit 4e8ddb3a6f1ba1f7642f0a23d6f22a8c40d68cf0
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Thu May 3 12:00:50 2012 +1000
+
+    whitespace fix
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Chase Douglas <chase.douglas@canonical.com>
+
+commit d1eebac72e4a5cc7a67efead13fbd32f9cd1fbd9
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Thu May 3 14:21:24 2012 +1000
+
+    tools: undo indentation in synclient's parameter list
+    
+    more more readable this way
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Chase Douglas <chase.douglas@canonical.com>
+
+commit 0434d7776640861d0c8c19a02c2445d2f61627f8
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Thu May 3 11:49:31 2012 +1000
+
+    Indent consistently
+    
+    x-indent-all.sh from xorg/util/modular as of
+    c2d630fab65dbe3409af3947f6f442782ddb026f
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Chase Douglas <chase.douglas@canonical.com>
+
+commit a1162f80324c379bc7581e53275e8ff6d569f8b0
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Thu May 3 08:06:32 2012 +1000
+
+    synaptics 1.6.0
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 52e194b76c9598e0fbf556e3aa97168ed4f0e2b6
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Wed May 2 10:16:30 2012 +1000
+
+    Fix coasting for negative scroll directions
+    
+    1874094f0e99d8db319f6cf769ce5a25c9bc490c introduced negative scroll
+    directions. Coasting assumed always-positive increments and triggered an
+    endless scrolling loop.
+    
+    Reported-by: Matthias Clasen <mclasen@redhat.com>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Chase Douglas <chase.douglas@canonical.com>
+
+commit 6f086b86e4bd3c720289e91fdbb933bf3e559e72
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Wed May 2 09:16:27 2012 +1000
+
+    Fail if no backends can be found
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Chase Douglas <chase.douglas@canonical.com>
+
+commit 655d3100fc3f06e714ec4aa01607d86509952e4b
+Author: Niveditha Rau <niveditha.rau@oracle.com>
+Date:   Mon Apr 30 14:51:07 2012 -0700
+
+    Include a build for solaris
+    
+    Signed-off-by: Niveditha Rau <niveditha.rau@oracle.com>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit d13e83b921a398b9472b07874cf5061c8a0ea6a6
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Mon Apr 30 11:39:49 2012 +1000
+
+    Force SLOTSTATE_EMPTY on DeviceOff
+    
+    SLOTSTATE_OPEN_EMPTY on resume leads to erroneously detected touches.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Chase Douglas <chase.douglas@canonical.com>
+
+commit cc595bd323aab2b0ef7b41fded2f0b5571cf0a8e
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Mon Apr 30 10:47:14 2012 +1000
+
+    Reset all hardware state on DEVICE_OFF (#49161)
+    
+    Reset all state on DeviceOff to avoid stuck buttons on resume.
+    
+    X.Org Bug 49161 <http://bugs.freedesktop.org/show_bug.cgi?id=49161>
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Chase Douglas <chase.douglas@canonical.com>
+
+commit e19fff64f76200291c22d6b822bb4e8b06816745
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Mon Apr 30 09:30:53 2012 +1000
+
+    man: fix hyphenation
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 3cc828b4764c101f9acd0db9ee3638036ec7a948
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Mon Apr 30 09:28:39 2012 +1000
+
+    man: drop mention of shm configuration
+    
+    SHM is for debugging only now, not configuration.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 085662e9fe13d46b9633f1b7b9e8f95bacdec30c
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri Apr 27 09:20:56 2012 +1000
+
+    synaptics 1.5.99.904
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 58581bfbecfc15e7fa63c2fa4be20d2b0654f9b8
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Thu Apr 26 12:00:49 2012 +1000
+
+    Reset scroll delta when no finger is touching
+    
+    Provides for a more consistent scrolling experience, otherwise delta
+    leftovers may trigger extra events even when the actual scrolling action
+    stays the same.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Chase Douglas <chase.douglas@canonical.com>
+
+commit 1a76d9f00e1e54ba912a47aa665968e0cfe1b8a0
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Thu Apr 26 11:47:19 2012 +1000
+
+    Don't unconditionally divide by scroll_dist_vert (#46617)
+    
+    Regression introduced in cddab79c408db3b13905a2be72aff4f7bf1406f8.
+    
+    If an event has a delta of less than scroll_dist_vert, the delta is
+    unconditionally divided by the distance, leaving some remainder close to 0
+    and never actually triggering the scroll amount.
+    
+    Fix this by working with the increment, not the normalised values.
+    
+    X.Org Bug 46617 <http://bugs.freedesktop.org/show_bug.cgi?id=46617>
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Chase Douglas <chase.douglas@canonical.com>
+
+commit ba31b09ba8aff6b8f3b0590e724183b0d2802ffc
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Thu Apr 26 10:03:28 2012 +1000
+
+    ClickPad is most definitely a bool option.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Chase Douglas <chase.douglas@canonical.com>
+
+commit f0c2f1d82a21de315a0088dd28ffeb394cf32c8e
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Thu Apr 26 09:27:05 2012 +1000
+
+    Init num_touches to 0 on start
+    
+    We implicitly rely on this already since we calloc the struct. Do it
+    expliclity on DeviceOn().
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Chase Douglas <chase.douglas@canonical.com>
+
+commit 9ecf505c6473c65cd850a58b1b6eeb86f7d390e6
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Apr 24 15:31:36 2012 +1000
+
+    Reset touch state on DeviceOff (#49161)
+    
+    Don't leave touches lingering around during suspend.
+    
+    Test case:
+    1) leave finger on touchpad
+    2) xinput set-prop "SynPS/2 Synaptics TouchPad" "Device Enabled" 0
+    3) lift fingers
+    4) xinput set-prop "SynPS/2 Synaptics TouchPad" "Device Enabled" 1
+    
+    X.Org Bug 49161 <http://bugs.freedesktop.org/show_bug.cgi?id=49161>
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Chase Douglas <chase.douglas@canonical.com>
+
+commit f300adb027b856c944e0e25d0f32948823fe6b62
+Author: Chase Douglas <chase.douglas@canonical.com>
+Date:   Mon Apr 23 15:39:57 2012 -0700
+
+    Update src/synproto.c license to the preferred MIT/X11 license
+    
+    Signed-off-by: Chase Douglas <chase.douglas@canonical.com>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 5a176dc23d7dfb4648fef50ac0af144026b45078
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri Apr 20 11:13:16 2012 +1000
+
+    Don't release the button on TS_3 if TapAndDrag is disabled (#31854)
+    
+    TS_3 is second tap down. Unconditionally set the button as down, later, in
+    HandleTapProcessing we have the required conditions to reset it to TS_START
+    and TBS_BUTTON_UP.
+    
+    Meanwhile, TBS_BUTTON_DOWN stays down, so the second tap is counted and sent
+    as button event. This restores double-tapping if TapAndDrag is disabled.
+    
+    X.Org Bug 31854 <http://bugs.freedesktop.org/show_bug.cgi?id=31854>
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 0322d301844a7e78fc9aa4ec6493bf50bc7f926c
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri Apr 20 11:10:47 2012 +1000
+
+    Print millis as unsigned int
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 3822d58777768b351940e58d8608ba9ab877d134
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Thu Apr 19 16:39:41 2012 +1000
+
+    Ensure hw millis are monotonic (#48777)
+    
+    The eventcomm backend takes the timestamp from the kernel, but the timer
+    uses the timer's "now". This timestamp may be later than the one from the
+    next event we read from the kernel, causing a negative dtime in get_delta()
+    and a cursor jump by (unsigned int)-1.
+    
+    Ensure that the new event's timestamp is at least the last used one.
+    
+    X.Org Bug 48777 <http://bugs.freedesktop.org/show_bug.cgi?id=48777>
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
     Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
-    (cherry picked from commit 7c0361d4ec6b1f1325cb6551d0ee2e7f5cfae15b)
+    Tested-by: Gavin Troy <gavtroy@gmail.com>
 
-commit 75550077e66cb8bdf15d6e1cf5b28f884f508fc5
-Author: Daniel Stone <daniel@fooishbar.org>
-Date:   Tue Jun 14 17:07:11 2011 +0100
-
-    Properties: Generalise InitTypedAtom from InitAtom
-    
-    Add InitTypedAtom, which does exactly the same thing as InitAtom, but
-    takes an additional type argument.
-    
-    Signed-off-by: Daniel Stone <daniel@fooishbar.org>
-    (cherry picked from commit 627b09e5bd0726ad31bfeb4f07b8f8287d8ec46f)
-
-commit a85e2926b5e23557e3bd1395da198b5cc74719b3
+commit 11d8929647a67258ca86121a45ea638ca7299237
 Author: Peter Hutterer <peter.hutterer@who-t.net>
-Date:   Wed Mar 21 11:12:57 2012 +1000
+Date:   Wed Apr 18 09:30:06 2012 +1000
 
-    synaptics 1.5.1
+    man: move ClickPad documentation into a single area
+    
+    Having to read only one section is a tad easier than collecting the separate
+    options.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Chase Douglas <chase.douglas@canonical.com>
+
+commit 1c155f644824133315ac5b3dac9076db71430eb6
+Author: Chow Loong Jin <hyperair@debian.org>
+Date:   Mon Apr 16 11:39:44 2012 +0800
+
+    Fix coasting friction
+    
+    As a result of commit 5a1612d4496b51682c9043aa064025c545249de6, coasting speed
+    was bumped up to a different scale by removing the divisor during the
+    calculation of initial coasting speed. This caused coasting friction to have
+    little to no effect, resulting in coasting that lasted virtually forever using
+    the default coasting friction value of 50.
+    
+    This patch multiplies the scroll_dist_{horiz,vert} which was previously used as
+    a divisor for initial coasting speed to the coasting friction before deducting
+    it at each step, thus bringing coasting friction back under control.
+    
+    Signed-off-by: Chow Loong Jin <hyperair@debian.org>
+    Tested-by: <Magnus.Kessler@gmx.net>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 50124d3ddf9bbc4be6734b47a273dbd46b4db0ba
+Author: Pierre Lulé <pierre@lule.fr>
+Date:   Mon Apr 16 12:01:56 2012 +0200
+
+    Stop coasting when two-finger scroll begins
+    
+    There is currently a problem that can lead the coasting to continue while scrolling in a particular situation :
+    with
+     Option "VertTwoFingerScroll" "on"
+     Option "CornerCoasting" "0"
+     Option "CoastingSpeed" "10"
+     Option "CoastingFriction" "50"
+     Option "CornerCoasting" "0"
+    If you scroll down with two finger then raise a finger, coasting will start. But if you put down that finger and try to
+    scroll up, the inertia will still scroll down while you scroll up. This can look like a very particular situation, but
+    happens to me often while scrolling in a big document.
+    
+    This (awfully simple) patch stop coasting when detecting two-finger scroll.
+    
+    Signed-off-by: Pierre Lulé <pierre@lule.fr>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit d90003383cbec75da88bf1a88b886b1131597f3f
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Mon Apr 16 16:47:38 2012 +1000
+
+    synaptics 1.5.99.903
     
     Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
 
-commit be5fb886021d6a9ef27e35ad90b4ab6ca60a8c1d
+commit 1874094f0e99d8db319f6cf769ce5a25c9bc490c
+Author: Alyssa Hung <ahung@isisview.org>
+Date:   Fri Apr 13 01:04:38 2012 -0400
+
+    Support inverted scroll direction.
+    
+    This patch allows scroll direction to be inverted by allowing
+    VertScrollDelta and HorizScrollDelta to be set to negative values. This
+    enables behaviour that is consistent with modern touchscreen devices,
+    where the content scrolls in the same direction as the user's finger
+    movement.
+    
+    Signed-off-by: Alyssa Hung <ahung@isisview.org>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 38b93b71c812c6d7b7085f40d049b0a4927e52dd
+Author: Chase Douglas <chase.douglas@canonical.com>
+Date:   Mon Apr 2 11:23:05 2012 -0700
+
+    Use maximum number of touches reported by evdev
+    
+    This resolves a regression from da461b91659d0c64aa6827e065aee2682116a57e
+    where three touch tap and click actions on certain devices no longer
+    work.
+    
+    Some devices report a higher touch count than the number of touches they
+    can provide data for. For example, many Synaptics touchpads can report
+    up to five touches, but only provide data for two of them. We need to be
+    able to report the correct number of touches for these devices when
+    there are three touches. Using the maximum of the reported touch count
+    and the number of touches provided ensures the count is accurate for all
+    device types.
+    
+    Signed-off-by: Chase Douglas <chase.douglas@canonical.com>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 5a1612d4496b51682c9043aa064025c545249de6
+Author: Pierre Lulé <pierre@lule.fr>
+Date:   Wed Mar 28 00:13:30 2012 +0200
+
+    Fix coasting speed
+    
+    Fixes a bug introduced in commit 2603ad69b997c999404ecc441e0d64ea2cc22018
+    (Use the scroll distances as increment for scrolling valuator axes)
+    
+    Since this commit, scroll distance was set with SetScrollValuator function
+    but it was still used as a divisor to calculate coasting,
+    thus making coasting too slow. (at least on my computer)
+    
+    Deleting the divisor fixes the issue.
+    
+    A report of the same bug : https://bugs.archlinux.org/task/28955
+    
+    Signed-off-by: Pierre Lulé <pierre@lule.fr>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit f68ddd9be4202333a1c3ccf536966a96dc0bfde7
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Apr 10 13:06:49 2012 +1000
+
+    Don't count fingers twice when guessing distance (#48316)
+    
+    A finger may be closer than the required distance to more than one finger.
+    e.g. for fingers A, B, C, AB, AC and BC may trigger the check and count
+    C twice -resulting in a 4 finger click.
+    
+    Avoid double-counting by marking those fingers already close enough to a
+    previous finger to avoid overcounting.
+    
+    X.Org Bug 48316 <http://bugs.freedesktop.org/show_bug.cgi?id=48316>
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Chase Douglas <chase.douglas@canonical.com>
+
+commit c745604461541c7b21779c60c9bd09ff1a390df2
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Wed Apr 11 10:15:07 2012 +1000
+
+    tools: skip non-existing properties
+    
+    If a property doesn't exist on a device, skip it.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Chase Douglas <chase.douglas@canonical.com>
+
+commit 8e297cb586ab855dc7c018c6f3f2f42c08db0419
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Apr 10 13:03:35 2012 +1000
+
+    Replace hardcoded max number of touches with a define.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Chase Douglas <chase.douglas@canonical.com>
+
+commit 3f9794a8a0f019a4b153941c9ec1927c7797ce6f
+Author: Chase Douglas <chase.douglas@canonical.com>
+Date:   Mon Apr 9 11:38:16 2012 -0700
+
+    Check touch record bounds before access
+    
+    We guess ten simultaneous touches if the device does not tell us. The
+    Linux drivers for the Apple multitouch trackpads do not tell the number
+    of simultaneous touches, but they can do more than ten. When this
+    occurs, the array index into the touch records will be invalid. We must
+    not process the touch or else we will segfault.
+    
+    Signed-off-by: Chase Douglas <chase.douglas@canonical.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 4c87455f3ecd1b82a3612a3050e463a0efb90f0c
+Author: Chase Douglas <chase.douglas@canonical.com>
+Date:   Fri Mar 23 10:51:59 2012 -0700
+
+    Do not perform a tap action when more than three touches
+    
+    Though this looks like a behavior change, it really isn't since the
+    maximum tap_max_fingers that was previously possible was already handled.
+    The only real change is that if a tap is recognized but the
+    tap_max_fingers is zero, a tap will no longer be emitted. This shouldn't
+    happen in the real world.
+    
+    Signed-off-by: Chase Douglas <chase.douglas@canonical.com>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit da461b91659d0c64aa6827e065aee2682116a57e
+Author: Chase Douglas <chase.douglas@canonical.com>
+Date:   Fri Mar 23 10:51:58 2012 -0700
+
+    Count number of multitouch touches for multitouch finger count
+    
+    The evdev protocol only goes up to three touches for non-multitouch
+    devices. If you perform a four touch tap, the finger count will only go
+    up to three touches if you roll your fingers, or will always be 0 if all
+    four touches land at the same time.
+    
+    This change ensures the correct finger count is reported.
+    
+    Signed-off-by: Chase Douglas <chase.douglas@canonical.com>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit bc95d90be17d52726b85c785a8e7503512e8fa3d
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Sat Mar 24 19:52:35 2012 +1000
+
+    Define various EVIOCGPROP bits if non-existent
+    
+    And make the ioctl conditional.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Chase Douglas <chase.douglas@canonical.com>
+
+commit 291fdc69801c91310839fc8667ba7aa2e9a66b95
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri Mar 23 15:45:10 2012 +1000
+
+    conf: the bcm5974 doesn't have Apple in the product name
+    
+    But it's still a single-button device from the known fruit manufacturer.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 4a80c0dc38ea4dafcb112191c2dd7e0082193263
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri Mar 23 10:38:20 2012 +1000
+
+    synaptics 1.5.99.902
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit b6779458bcdb049480310ba1acb3991ad061ffc7
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Thu Mar 22 15:15:47 2012 +1000
+
+    conf: enable right-button click by default on non-Apple clickpads
+    
+    The right-half of the bottom 18% of the touchpad are enabled as right button
+    by default. On Apple touchpads (these don't have marking for the right
+    button) disable them by default.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit c9cf8827b129a553ad3cd3d7ee6f463a6e94227d
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Thu Mar 22 15:20:45 2012 +1000
+
+    use xf86SetStrOption for SoftButtonAreas
+    
+    This way the option is reported in the log when parsed.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit cea97dd5e09b165c2a4b2bbbb5741a03f152ed37
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Wed Mar 14 16:47:26 2012 +1000
+
+    Allow soft button areas to be specified in % of the touchpad
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Chase Douglas <chase.douglas@canonical.com>
+
+commit b3348eb7e4e2187e11aa3c1cec2a58512759e6aa
+Author: Chase Douglas <chase.douglas@canonical.com>
+Date:   Wed Mar 21 12:58:30 2012 -0700
+
+    Include open but unchanged touches when guessing clickfingers
+    
+    On a clickpad, when the button is pressed the clickfinger guessing will
+    only work properly if all touches have new data to report. If a touch
+    has not changed, then it will not be counted. This leads to inaccurate
+    finger counts.
+    
+    This change ensures that all active touches are counted. Note that the X
+    and Y valuators of active but unchanged touches are still valid.
+    
+    Signed-off-by: Chase Douglas <chase.douglas@canonical.com>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit eba82d203e5e817a61180c6510d8de0d063ed05d
+Author: Chase Douglas <chase.douglas@canonical.com>
+Date:   Wed Mar 21 12:58:29 2012 -0700
+
+    Keep track of which touch slots are open
+    
+    This change adds a new touch slot state that denotes when the slot is
+    open but does not have any new data to report.
+    
+    Signed-off-by: Chase Douglas <chase.douglas@canonical.com>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 73ec252b6f2d25cc49557b1d3789b459b60b8d4e
+Author: Chase Douglas <chase.douglas@canonical.com>
+Date:   Wed Mar 21 12:58:28 2012 -0700
+
+    Fix clickfinger actions when buttons other than 1 are reported
+    
+    The "old" logical state now holds the clickfinger action button. In
+    order to check for proper clickpad press transition, we need to check if
+    any of the left, middle, and right logical button states are pressed.
+    
+    Signed-off-by: Chase Douglas <chase.douglas@canonical.com>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 93c72117e169624854f6eb63591702d7e4dae97c
+Author: Chase Douglas <chase.douglas@canonical.com>
+Date:   Wed Mar 21 12:58:27 2012 -0700
+
+    Fix clickfinger actions when middle button emulation is enabled
+    
+    When MBE is enabled, a physical left button press is delayed until a
+    timeout is reached. This results in the logical left button being
+    depressed while the physical left button is pressed. The physical state
+    is stored as the "old" hw state, and it is used for detecting a
+    transition from depressed to pressed for clickfinger actions. Since the
+    "old" hw state shows the left button pressed, but the current logical
+    state shows the left button unpressed, when the MBE timeout fires and we
+    set the logical left button pressed the transition check fails.
+    
+    Since the "old" hw state is only used for clickfinger left button press
+    transitions, redefining it to hold the previous logical hw state is
+    sufficient for fixing the bug and should not cause any regressions.
+    
+    Signed-off-by: Chase Douglas <chase.douglas@canonical.com>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 5cde789fcafaed47c2533c4315e5c7d5548605f5
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Wed Mar 14 13:24:32 2012 +1000
+
+    Fix inverted circular scrolling direction
+    
+    Introduced in 26831a6eeac6762ad4d99532f62ebbab0827de10.
+    In said commit, the old-style button events were changed to delta
+    accumulation. Alas, for circular scrolling, a positive delta is up whereas
+    for everything else a positive delta is down.
+    
+    Reported-by: Thomas Bächler <thomas@archlinux.org>
+    Tested-by: Thomas Bächler <thomas@archlinux.org>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Chase Douglas <chase.douglas@canonical.com>
+
+commit dd650a064b98b1c325a38e1370cc11059c257b07
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Wed Mar 14 08:56:45 2012 +1000
+
+    synaptics 1.5.99.901
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 6c457c0c61a0834361f45a073148db7b4c9be40b
+Merge: defc1d0 fee18d8
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Wed Mar 14 08:48:00 2012 +1000
+
+    Merge branch 'clickpad-v3'
+
+commit fee18d8567efd2e5abf6b29eb1ae9ee0e3858013
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Mar 13 16:08:12 2012 +1000
+
+    Soft buttons are only available on clickpad devices, disable them otherwise.
+    
+    If the clickpad support is runtime enabled/disabled, the property
+    appears/disappears accordingly.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Chase Douglas <chase.douglas@canonical.com>
+
+commit c546779b32d8be23475b3b062e3ebc9235365c0d
+Author: Chase Douglas <chase.douglas@canonical.com>
+Date:   Thu Feb 9 16:56:29 2012 -0800
+
+    Ignore motion during touch count changes on semi-mt devices
+    
+    Semi-mt devices do not track touches. The locations of touches are
+    unknown, we only have the bounding box of two of them. When the number of
+    fingers changes, the bounding box coordinates may change as well, but
+    the cumulative relative motion updates at that instant are invalid.
+    
+    To work around this, ignore changes in cumulative relative motion if the
+    touch count changes.
+    
+    Signed-off-by: Chase Douglas <chase.douglas@canonical.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 405f1643e26b57ee97063e76e71179ba8e9fbc92
+Author: Chase Douglas <chase.douglas@canonical.com>
+Date:   Mon Feb 6 17:33:11 2012 -0800
+
+    Add soft button areas property
+    
+    Some clickpad devices have button areas painted on them. Set this
+    property to the area of the right and middle buttons to enable proper
+    click actions when clicking in the areas.
+    
+    Signed-off-by: Chase Douglas <chase.douglas@canonical.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit f198522064501726d76bef4e11c02cfc778bb0c5
+Author: Chase Douglas <chase.douglas@canonical.com>
+Date:   Thu Feb 9 11:18:25 2012 -0800
+
+    Calculate touch data for semi-mt devices, but don't send touch events
+    
+    Previously, all touch data from semi-mt devices was ignored because the
+    X server doesn't support them. However, the touch data must be used for
+    proper clickpad handling.
+    
+    Instead of ignoring semi-mt device touch events, mark the device as
+    being semi-mt and allow initialization of the touch state. The touches
+    will then be used in calculating the cumulative_d{x,y} values that are
+    needed for clickpad support.
+    
+    When handling the touch data for X event processing, simply skip over
+    reporting the touches.
+    
+    Signed-off-by: Chase Douglas <chase.douglas@canonical.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit a6361e2d2c093c4170bab63307526702fe9903ad
+Author: Chase Douglas <chase.douglas@canonical.com>
+Date:   Tue Feb 14 14:46:07 2012 -0800
+
+    Disable scrolling when beginning a clickpad press
+    
+    There really isn't a point to scrolling while a clickpad is pressed. In
+    particular, the clickpad button areas and the horizontal edge scrolling
+    areas overlap, so horizontal edge scrolling must be disabled. Also,
+    performing two finger scrolling while a third finger presses the button
+    would require us to inhibit touch events until four touches are present.
+    That is enough reason to disable two finger scrolling as well.
+    
+    Signed-off-by: Chase Douglas <chase.douglas@canonical.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit de75ad6b073c1a36d5a60190de5ffe6611520637
+Author: Chase Douglas <chase.douglas@canonical.com>
+Date:   Thu Feb 9 10:57:00 2012 -0800
+
+    Enable clickpad click and drag with two fingers
+    
+    Use cumulative relative touch motion when the clickpad is pressed. If
+    more than one touch is active, assume one of the touches is designated
+    solely for pressing the clickpad button. Thus, decrement the number of
+    reported touches.
+    
+    Signed-off-by: Chase Douglas <chase.douglas@canonical.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 500243ac60ffeb5372e2edbce2f4443a07877d2e
+Author: Chase Douglas <chase.douglas@canonical.com>
+Date:   Thu Feb 9 10:43:08 2012 -0800
+
+    Add cumulative_d{x,y} to SynapticsHwState
+    
+    These values will be used for clickpad press and drag with two fingers.
+    
+    While the clickpad button is not pressed, cumulative_d{x,y} will match x
+    and y values. Once the clickpad button is pressed, cumulative_d{x,y}
+    will be updated with the relative motion of each active touch on the
+    touchpad. This allows for dragging with one finger while another finger
+    stays stationary holding the clickpad button down.
+    
+    This is an easier and less latent approach than trying to guess which
+    touch was the "dragging" touch.
+    
+    [fixed build error for mt off]
+    
+    Signed-off-by: Chase Douglas <chase.douglas@canonical.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 420e0abef663729b3ce6e9d26360e616b7270ba6
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri Mar 9 14:30:58 2012 +1000
+
+    Guess the number of clickpad ClickFingers based on finger distance
+    
+    The actual distance should be done in cm, based on touchpad resolution etc.
+    That is left as an exercise for the reader.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Chase Douglas <chase.douglas@canonical.com>
+
+commit 739cf056685772e69744f009f567e54324bc9dd0
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri Mar 9 15:33:56 2012 +1000
+
+    Disable middle mouse button emulation on clickpads
+    
+    Because, well, really, how?
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Chase Douglas <chase.douglas@canonical.com>
+
+commit 331dd969536aad48fae107e2215bfdd3e95db77e
+Author: Chase Douglas <chase.douglas@canonical.com>
+Date:   Thu Feb 9 11:26:06 2012 -0800
+
+    Add clickpad device property
+    
+    Add it as a writable device property. We may not know how to probe some
+    clickpads so allow the user to override it.
+    
+    Signed-off-by: Chase Douglas <chase.douglas@canonical.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit a64e1632836067091be5ca45d0444c416bf48948
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri Mar 9 15:38:25 2012 +1000
+
+    Add a BTN_EMULATED_FLAG to mark emulated buttons on clickfingers
+    
+    And when copying the hardware state, don't copy those buttons that were set
+    through emulation.
+    
+    This is a temporary fix only, we should add new fields to the hw struct that
+    represent the various features as they are enabled/disabled and then treat
+    them accordingly.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Chase Douglas <chase.douglas@canonical.com>
+
+commit 70b4e983c6626b9b20bdf59324f64b3fd99c5202
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri Mar 9 14:29:28 2012 +1000
+
+    Only handle ClickFingers on left button press events
+    
+    ClickFingers doesn't need to be handled on every state, only when the actual
+    button state changes.
+    
+    This is a break from the previous behaviour which allowed pressing the
+    button followed by a two-finger tap to trigger the ClickFinger2 action.
+    Let's see if anyone complains.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Chase Douglas <chase.douglas@canonical.com>
+
+commit f6c1efbc6d22f41fb8a4abd2f57db173a2ac3171
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri Mar 9 14:20:35 2012 +1000
+
+    Add an old_hw_state field to remember the last values
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Chase Douglas <chase.douglas@canonical.com>
+
+commit bad1b75524f2fa882e9b6ac7160463fbd3b5cccf
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri Mar 9 13:43:04 2012 +1000
+
+    Move resetting hw state to separate function.
+    
+    No functional changes.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Chase Douglas <chase.douglas@canonical.com>
+
+commit f0381f48a9383313e65508ec710b5c690b16286a
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri Mar 9 13:39:32 2012 +1000
+
+    Move filtering into a separate function
+    
+    No functional changes.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Chase Douglas <chase.douglas@canonical.com>
+
+commit 4eea50d513bca888d8fe13759d0cc44de67bc4c0
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri Mar 9 13:25:27 2012 +1000
+
+    Move st->mt scaling to helper function
+    
+    No functional changes.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Chase Douglas <chase.douglas@canonical.com>
+
+commit 5bf7018783d1a96c9fac7a9074274e9b8606604d
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri Mar 9 13:22:53 2012 +1000
+
+    Use arrays for st->mt scaling
+    
+    No functional changes
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Chase Douglas <chase.douglas@canonical.com>
+
+commit 893ac427d0a7952c0f949071296fc2255790465e
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Mar 13 11:41:53 2012 +1000
+
+    If the middle button timeout is 0, don't even attempt to emulate.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Chase Douglas <chase.douglas@canonical.com>
+
+commit defc1d008e5674306a7e9b9cb0c750d9787990b7
+Author: Chase Douglas <chase.douglas@canonical.com>
+Date:   Thu Feb 9 16:22:35 2012 -0800
+
+    Don't use linear regression when calculating touchpad motion deltas
+    
+    The results depend on the data rate of the device. A device with a
+    higher data rate, and thus lower individual deltas, will behave
+    differently with the regression calculation.
+    
+    This can be verified on Synaptics semi-mt clickpads. The data rate is
+    halved when two or more touches are on the device. When trying to press
+    a button and drag the cursor with another touch, the motion will feel
+    faster than dragging with only one touch on the device.
+    
+    Signed-off-by: Chase Douglas <chase.douglas@canonical.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 7f5bd79b2e361a89a8c2716c218e4ae70b7164b8
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Mar 13 11:28:17 2012 +1000
+
+    tools: add hysteresis support to synclient
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Chase Douglas <chase.douglas@canonical.com>
+
+commit 90d6633d11aa3691b6b39df3931a4024b832eb05
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Mon Mar 12 09:45:05 2012 +1000
+
+    Fix build error - duplicate typedef (#47168)
+    
+    Introduced in c34cf307f9982b62c6e6dfa2687e1b16f527f2a4.
+    synapticsstr.h includes synproto.h, which now contains the typedef.
+    
+    X.Org Bug 47168 <http://bugs.freedesktop.org/show_bug.cgi?id=47168>
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Chase Douglas <chase.douglas@canonical.com>
+
+commit fadf9cf5e8659ca8500faac498327e6cadcd2652
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri Mar 9 12:18:46 2012 +1000
+
+    Always require mtdev on eventcomm
+    
+    Since a missing mtdev disables all of multitouch on eventcomm, we might as
+    well always require it.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Chase Douglas <chase.douglas@canonical.com>
+
+commit 65243aedd8512d8cb439f7597862a545e8ca52ea
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Wed Mar 7 09:12:55 2012 +1000
+
+    Fix horiz/vert scroll delta mixup
+    
+    No effect as both have the same value anyway.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Chase Douglas <chase.douglas@canonical.com>
+
+commit 704c0fa3b677d5d648d0ab9d65cd03043797f3bf
+Author: Peter Zotov <whitequark@whitequark.org>
+Date:   Fri Mar 2 11:21:36 2012 +1000
+
+    Implement a workaround for Elantech touchpads
+    
+    All Elantech touchpads report the number of fingers explicitly,
+    and at least the v3 version of the hardware can report any
+    pressure values down to zero. This interferes with the tap
+    detection hysteresis, which is required for dumb touchpads.
+    
+    This commit implements a vendor-specific workaround for Elantech
+    touchpads which sets the FingerLow and FingerHigh options to 1
+    by default, effectively disabling the hysteresis mechanism.
+    
+    Signed-off-by: Peter Zotov <whitequark@whitequark.org>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Chase Douglas <chase.douglas@canonical.com>
+
+commit cddab79c408db3b13905a2be72aff4f7bf1406f8
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Thu Mar 1 16:27:01 2012 +1000
+
+    Fix scoll increment for non-smooth scrolling (#46617)
+    
+    Introduced in 2603ad69b997c999404ecc441e0d64ea2cc22018. Previously, the
+    delta was incremented by (actual delta/scroll dist), button clicks where
+    then sent while (delta-- >= 1).
+    
+    After 2603ad69b997c999404ecc441e0d64ea2cc22018, the delta was incremented by
+    the delta only, scroll dist was used as increment in the smooth scrolling
+    information. On non-smooth-scrolling servers, the driver would now send
+    too many events. Restore the old behaviour by dividing by the scroll
+    distance before entering the button click loop.
+    
+    X.Org Bug 46617 <http://bugs.freedesktop.org/show_bug.cgi?id=46617>
+    
+    Tested-by: Peter Zotov <whitequark@whitequark.org>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 0a2fd560aa965ceac64c8fb047ca90006408a6f4
+Author: Chase Douglas <chase.douglas@canonical.com>
+Date:   Tue Feb 21 21:42:16 2012 +0100
+
+    Update touch state when device is off too
+    
+    If the device is turned off, usually by syndaemon to disable the
+    touchpad while the typing, the touch state will not be updated with the
+    latest hardware state changes. If a touch begins while the device is
+    off and ends while the device is on, then the touch count will be
+    decremented without any previous increment. A similar effect will occur
+    if the device is on when the touch begins, but off when the touch ends.
+    
+    If the touch count goes negative, the index into the touch slot mask
+    array will be out of bounds. This can corrupt memory and cause random
+    crashes.
+    
+    Signed-off-by: Chase Douglas <chase.douglas@canonical.com>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit dfc3a8ed713c2878407c6443c4d3092da3125e0c
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Feb 21 11:32:40 2012 +1000
+
+    synclient: accept XA_CARDINAL as 32-bit type (#46330)
+    
+    PressureMotionMaxZ and PressureMotionMinZ were changed from float to
+    XA_CARDINAL in 24c44375025576dd600ccf370ba365e5d94dc22. Accept the new type.
+    
+    Fixes:
+      PressureMotionMinZ      = format mismatch (32)
+      PressureMotionMaxZ      = format mismatch (32)
+    
+    X.Org Bug 46330 <http://bugs.freedesktop.org/show_bug.cgi?id=46330>
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit c25ff549c9636ad89a81fbf364159c7f040d163b
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri Feb 17 11:49:43 2012 +1000
+
+    Revert "Don't store fake events in the motion history"
+    
+    This commit introduced a regression. On some touchpads, the pointer keeps
+    moving in the last direction when the finger movement stops but the finger
+    is left on the touchpad.
+    
+    Cause appears to be get_delta() which calculates the deltas based on the
+    motion history but has no control flow for the lack of fake motion events
+    in the history after this commit. Thus, under some conditions, the delta is
+    always non-zero as the history does not change.
+    
+    Reproducer attached to bug
+    https://bugs.freedesktop.org/show_bug.cgi?id=45278#c11
+    
+    X.Org Bug 45278 <http://bugs.freedesktop.org/show_bug.cgi?id=45278>
+    
+    This reverts commit c8b098214b44cf0585d78c460401ea7d143769f3.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Chase Douglas <chase.douglas@canonical.com>
+    Acked-by: Daniel Stone <daniel@fooishbar.org>
+
+commit 0646cdb99d708e03137afc9aabd8957f3559546a
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri Feb 17 11:46:12 2012 +1000
+
+    Fix build error if HAVE_MTDEV is false
+    
+    priv->has_touch is conditional on HAVE_MTDEV
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Chase Douglas <chase.douglas@canonical.com>
+    Reviewed-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit f9a906590e59383aef3c53faca98f0de40859f17
+Author: Chase Douglas <chase.douglas@canonical.com>
+Date:   Sat Feb 11 18:57:20 2012 +0100
+
+    Prefer multitouch over single-touch axis ranges
+    
+    We still use single-touch data in most cases, but sometimes the
+    multitouch axes have higher resolution. Since we use the same XI
+    valuators to report ST and MT data, we must pick one axis and scale the
+    other to match. This change picks the MT axis ranges.
+    
+    Signed-off-by: Chase Douglas <chase.douglas@canonical.com>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit e6032c34515a19ebac09090028f806d82ddfb62d
+Author: Chase Douglas <chase.douglas@canonical.com>
+Date:   Thu Feb 9 10:06:54 2012 -0800
+
+    Filter touch events if two-finger scrolling is enabled
+    
+    Signed-off-by: Chase Douglas <chase.douglas@canonical.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 796e0d43917de99757c08fd2998134cf6f5583c9
+Author: Chase Douglas <chase.douglas@canonical.com>
+Date:   Thu Feb 9 10:01:49 2012 -0800
+
+    Filter touch events if tap actions are enabled
+    
+    Signed-off-by: Chase Douglas <chase.douglas@canonical.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 061e4a259644408899e03ba5abdd979691a02b1a
+Author: Chase Douglas <chase.douglas@canonical.com>
+Date:   Thu Feb 9 09:55:17 2012 -0800
+
+    Filter touch events if click actions are enabled
+    
+    Signed-off-by: Chase Douglas <chase.douglas@canonical.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 336f9a09d090a8c3a9c976ab04ffb17bcdc2c2ea
+Author: Chase Douglas <chase.douglas@canonical.com>
+Date:   Wed Feb 8 15:06:33 2012 -0800
+
+    Move X touch event processing into synaptics.c
+    
+    Signed-off-by: Chase Douglas <chase.douglas@canonical.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 673c5fa14bff669d82f5711511a37bd3abe75471
+Author: Chase Douglas <chase.douglas@canonical.com>
+Date:   Wed Feb 8 16:08:02 2012 -0800
+
+    Add open_slots array to SynapticsPrivate
+    
+    Initialize touch stuff in a separate function for readability.
+    
+    Signed-off-by: Chase Douglas <chase.douglas@canonical.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 5cb5bb573491058c35bbaac5c4c4fceea4626f57
+Author: Chase Douglas <chase.douglas@canonical.com>
+Date:   Tue Feb 7 14:45:11 2012 -0800
+
+    Add touch valuator mask to hw state structure
+    
+    Signed-off-by: Chase Douglas <chase.douglas@canonical.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 0df994b3d80006d2fb114226d8b488e98d0e03d4
+Author: Chase Douglas <chase.douglas@canonical.com>
+Date:   Wed Feb 8 15:07:38 2012 -0800
+
+    Rename num_touches to max_touches
+    
+    Signed-off-by: Chase Douglas <chase.douglas@canonical.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 5486ab3486e1ba4a0ef8fc9efe4d243ea90f5794
+Author: Chase Douglas <chase.douglas@canonical.com>
+Date:   Tue Feb 7 14:38:33 2012 -0800
+
+    Introduce SynapticsCopyHwState function
+    
+    Signed-off-by: Chase Douglas <chase.douglas@canonical.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 5658a2f643cf7440009dde2fa74287332237c0b9
+Author: Chase Douglas <chase.douglas@canonical.com>
+Date:   Wed Feb 8 16:59:54 2012 -0800
+
+    Allocate priv->hwState
+    
+    This is needed for when SynapticsHwState can't be allocated on the stack.
+    
+    Signed-off-by: Chase Douglas <chase.douglas@canonical.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 7bcbf8eb110b1f7c6c085d3dcd69f66b00df2b8a
+Author: Chase Douglas <chase.douglas@canonical.com>
+Date:   Tue Feb 7 15:35:03 2012 -0800
+
+    Allocate SynapticsPrivate.comm->hwState
+    
+    This is needed for when SynapticsHwState can't be allocated on the stack.
+    
+    Signed-off-by: Chase Douglas <chase.douglas@canonical.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit a78d55d021c9cd3be6501760d6fca3464ea6dec8
+Author: Chase Douglas <chase.douglas@canonical.com>
+Date:   Tue Feb 7 15:23:43 2012 -0800
+
+    Allocate SynapticsHwStruct for local function use
+    
+    SynapticsHwStruct (SHS) will soon include ValuatorMasks, which can only
+    be allocated on the heap. The input driver callbacks are called in
+    signal context, so we can't instantiate a new SHS when that occurs.
+    Since we only ever need one SHS, allocate one at device init time and
+    use it in place of local SHS instances.
+    
+    Signed-off-by: Chase Douglas <chase.douglas@canonical.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit e5cd694ed1028b94fdbe10d76dbea1e03455f8fb
+Author: Chase Douglas <chase.douglas@canonical.com>
+Date:   Fri Feb 10 10:24:04 2012 -0800
+
+    Transition eventcomm-test to new SynapticsHwState instantiation scheme
+    
+    Signed-off-by: Chase Douglas <chase.douglas@canonical.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit c34cf307f9982b62c6e6dfa2687e1b16f527f2a4
+Author: Chase Douglas <chase.douglas@canonical.com>
+Date:   Tue Feb 7 15:14:05 2012 -0800
+
+    Introduce SynapticsHwStateAlloc() and SynapticsHwStateFree()
+    
+    Put them in a new file so eventcomm-test can access them.
+    
+    Signed-off-by: Chase Douglas <chase.douglas@canonical.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 146edc2baad1388f49a7a857c2003faa171876c7
+Author: Chase Douglas <chase.douglas@canonical.com>
+Date:   Fri Feb 10 10:48:44 2012 -0800
+
+    Allocate proto data in eventcomm-test
+    
+    Provide a helper function for allocating proto data and use it in
+    eventcomm-test. This ensures a null pointer for priv->proto_data is not
+    dereferenced.
+    
+    Signed-off-by: Chase Douglas <chase.douglas@canonical.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 49f6109032f2ce6171d1aad02672479d2c78c083
+Author: Chase Douglas <chase.douglas@canonical.com>
+Date:   Tue Feb 7 13:07:07 2012 -0800
+
+    Revert "Replace the motion estimator"
+    
+    The algorithm is completely wrong because it uses subtraction of
+    unsigned variables. The negative effects of this commit manifest in
+    cursor warps to edges or corners of the screen.
+    
+    Since the algorithm has never worked right, previous testing must be
+    disregarded. Revert it until we have a tested algorithm.
+    
+    This reverts commit b26125e412a130b7a8f8b6adf9ffc8e9cc8df42c.
+    
+    Conflicts:
+    
+    	src/synaptics.c
+    
+    Signed-off-by: Chase Douglas <chase.douglas@canonical.com>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 141d9120b1ff4a88a09a1df7d63a4854447346ec
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Feb 7 03:33:01 2012 +1000
+
+    Submit the right number of MT axes
+    
+    For devices with only x/y, num_mt_axes is 0, since x/y are already counted
+    elsewhere. The server will then fail to init the TouchClassRec since it
+    expects at least 2 touch axes. Fix this, assume we always have at least two
+    touch axes if we have any touch axes at all.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Chase Douglas <chase.douglas@canonical.com>
+
+commit e4ee51e771a6da247362549044a076462791022b
+Merge: da0d20d 6b808dc
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Feb 7 02:51:08 2012 +1000
+
+    Merge branch 'fixes' of git://people.freedesktop.org/~cndougla/xf86-input-synaptics
+
+commit 6b808dc766a0d1e64e19e4d5fad5f8a1a4e0d62d
+Author: Chase Douglas <chase.douglas@canonical.com>
+Date:   Wed Feb 1 15:23:00 2012 -0800
+
+    Don't initialize semi-multitouch devices for touch device class
+    
+    Signed-off-by: Chase Douglas <chase.douglas@canonical.com>
+
+commit a8b065eeb847493afd31e49623fac9c952811993
+Author: Chase Douglas <chase.douglas@canonical.com>
+Date:   Wed Feb 1 15:42:21 2012 -0800
+
+    Don't initialize touch state if device does is not multitouch
+    
+    And don't attempt to use it either.
+    
+    Signed-off-by: Chase Douglas <chase.douglas@canonical.com>
+
+commit 4824f67e7b9cf402a2df10c17f583916c4ef83eb
+Author: Chase Douglas <chase.douglas@canonical.com>
+Date:   Wed Feb 1 14:26:29 2012 -0800
+
+    Don't emit touch sequences if only one touch is active
+    
+    When a second touch begins, emit a touch begin for the first touch with
+    the current valuator values. When a touch ends and we are going from two
+    touches down to one touch, end both touches. This ensures we don't send
+    a touch sequence at the same time we are moving the pointer.
+    
+    Signed-off-by: Chase Douglas <chase.douglas@canonical.com>
+
+commit da0d20d0fd5cce3707b54146e54e2df0c697e1b4
+Author: Benjamin Otte <otte@redhat.com>
+Date:   Mon Feb 6 00:45:23 2012 +0100
+
+    eventcomm: Fix initialization code
+    
+    num_mt_axes contains the number of non-x/y multitouch axes, and the valuator
+    mask needs to contains x, y, followed by two empy values for the scroll
+    valuators, followed by the remaining MT axes.
+    
+    https://bugs.freedesktop.org/show_bug.cgi?id=45663
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 3822705204f454fea6cc0bf61904c4b7186abee2
+Author: Chase Douglas <chase.douglas@canonical.com>
+Date:   Thu Feb 2 13:19:16 2012 -0800
+
+    Only move the cursor when one touch is on a touchpad
+    
+    Otherwise, we might post motion events and touch events for the same
+    physical interaction.
+    
+    Signed-off-by: Chase Douglas <chase.douglas@canonical.com>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit dfdcf8b34363ed2504347d00957a3606f82c0b0d
+Author: Chase Douglas <chase.douglas@canonical.com>
+Date:   Thu Feb 2 13:19:15 2012 -0800
+
+    Ensure delta computation does not go crazy
+    
+    I have seen this a couple times, but I haven't been able to catch it
+    when it starts. It's a feedback loop, so once you miss the entrance of
+    the loop, you can't see what really went wrong.
+    
+    This patch papers over the issue for now.
+    
+    Signed-off-by: Chase Douglas <chase.douglas@canonical.com>
+    Acked-by: Daniel Stone <daniel@fooishbar.org>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 782c7fb6fe20ed21b02808096de12d3cbf1afc8b
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Mon Feb 6 23:43:32 2012 +1000
+
+    Remove compiler warning: unused variable "atom"
+    
+    synaptics.c: In function 'DeviceInit':
+    synaptics.c:1161:18: warning: unused variable 'atom' [-Wunused-variable]
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 53adb8399d468d429cd879516aa24a8420f60f60
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Sat Feb 4 23:23:28 2012 +1000
+
+    synclient: fix indentation of "format mismatch" parameters
+    
+    Prefix is 4 spaces, not three.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit d15c391544e9ba094b17c9217a837c58d88879f8
+Author: Chase Douglas <chase.douglas@canonical.com>
+Date:   Thu Jan 19 13:05:50 2012 -0800
+
+    eventcomm: Add touch event handling
+    
+    Signed-off-by: Chase Douglas <chase.douglas@canonical.com>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit efdc34859bdbcf0622e88aaf8af99944c1fc2141
+Author: Chase Douglas <chase.douglas@canonical.com>
+Date:   Thu Jan 19 13:05:49 2012 -0800
+
+    eventcomm: Read evdev events from mtdev where multitouch is available
+    
+    Signed-off-by: Chase Douglas <chase.douglas@canonical.com>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit b1b9745979babd480574b41af155dfe5c06591f8
+Author: Chase Douglas <chase.douglas@canonical.com>
+Date:   Thu Jan 19 13:05:48 2012 -0800
+
+    eventcomm: Initialize touch device and axes
+    
+    Use mtdev to ensure touches are tracked and of evdev MT protocol type
+    B.
+    
+    Signed-off-by: Chase Douglas <chase.douglas@canonical.com>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 56d32619b95eb472104068c35ea7146dccb8d1bf
+Author: Chase Douglas <chase.douglas@canonical.com>
+Date:   Thu Jan 19 13:05:47 2012 -0800
+
+    Add touch device class support
+    
+    Signed-off-by: Chase Douglas <chase.douglas@canonical.com>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 7ef9150d832d6ede991c5def02d2964c8047ad4f
+Author: Chase Douglas <chase.douglas@canonical.com>
+Date:   Thu Jan 19 13:05:46 2012 -0800
+
+    Allocate axis labels array dynamically
+    
+    Signed-off-by: Chase Douglas <chase.douglas@canonical.com>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 3804a0ee0bec455fcc61a469dd907738ff5589bd
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Wed Jan 4 17:02:30 2012 +0000
+
+    Constify priv->device
+    
+    Fixes a compiler warning due to discarding the const qualifier as it
+    comes back from the option code.
+    
+    Signed-off-by: Daniel Stone <daniel@fooishbar.org>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit c861d4568c2c6cc56db8e683a8d7035bef711262
 Author: Peter Hutterer <peter.hutterer@who-t.net>
 Date:   Tue Jan 3 11:03:14 2012 +1000
 
@@ -51,9 +1471,32 @@ Date:   Tue Jan 3 11:03:14 2012 +1000
     
     Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
     Reviewed-by: Chase Douglas <chase.douglas@canonical.com>
-    (cherry picked from commit c861d4568c2c6cc56db8e683a8d7035bef711262)
 
-commit fd4aacb1341dae98bac53716423e209c4782c1ad
+commit f5c60a6d1e87353975a340f8fb2f318c8edceea0
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Jan 3 10:59:46 2012 +1000
+
+    Remove unused variable 'thr'
+    
+    synaptics.c: In function 'SynapticsAccelerationProfile':
+    synaptics.c:619:12: warning: unused variable 'thr' [-Wunused-variable]
+    
+    On input ABIs < 14.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Chase Douglas <chase.douglas@canonical.com>
+
+commit 3ec93218d2211420ede260e298ff5e23202556ff
+Author: JJ Ding <dgdunix@gmail.com>
+Date:   Wed Dec 28 14:46:02 2011 +0800
+
+    fix wrong finger width range
+    
+    Signed-off-by: JJ Ding <dgdunix@gmail.com>
+    Reviewed-by: Jeremy Huddleston <jeremyhu@apple.com>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 9f9b55ab55ed5251c1607c59d8817231d076d82c
 Author: Peter Hutterer <peter.hutterer@who-t.net>
 Date:   Mon Dec 12 11:35:37 2011 +1000
 
@@ -63,21 +1506,8 @@ Date:   Mon Dec 12 11:35:37 2011 +1000
         Fix gcc -Wwrite-strings warnings in xf86 ddx
     
     Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
-    (cherry picked from commit 9f9b55ab55ed5251c1607c59d8817231d076d82c)
 
-commit 0a9c26d1a3ee92932f0d611652b39ebbd4a65c75
-Author: Peter Hutterer <peter.hutterer@who-t.net>
-Date:   Wed Oct 12 11:20:06 2011 +1000
-
-    test: wrap ABI 14 xf86OptionRec type changes
-    
-    ABI 13 still uses pointer as type for most option calls, ABI 14 uses the
-    proper type now. Wrap this so we can build against both versions.
-    
-    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
-    (cherry picked from commit a15af628154ac37f24896a30614f3be6ecdb65c4)
-
-commit 9ea30b70a33fcd3cb0ddbf04339d5bfed24eac5e
+commit b7e65f04f5f0c17ac8a26393134cc7e8418ccdec
 Author: Cyril Brulebois <kibi@debian.org>
 Date:   Mon Dec 12 01:35:27 2011 +0100
 
@@ -104,9 +1534,8 @@ Date:   Mon Dec 12 01:35:27 2011 +0100
     
     Bugzilla: http://bugs.debian.org/648488
     Signed-off-by: Cyril Brulebois <kibi@debian.org>
-    (cherry picked from commit b7e65f04f5f0c17ac8a26393134cc7e8418ccdec)
 
-commit 3356dcb8f20cbcff4c08ba6a856a6c8d41f659d7
+commit 0cd5a77c3a455e942929eb4d5412fa51630ed13f
 Author: Peter Hutterer <peter.hutterer@who-t.net>
 Date:   Wed Nov 30 09:59:37 2011 +1000
 
@@ -118,9 +1547,372 @@ Date:   Wed Nov 30 09:59:37 2011 +1000
     
     Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
     Reviewed-by: Jeremy Huddleston <jeremyhu@apple.com>
-    (cherry picked from commit 0cd5a77c3a455e942929eb4d5412fa51630ed13f)
 
-commit df427ef5cc45c33a4159b7852cd40da6f7cc4b94
+commit d1301412d7b7acd6325f0561c109f2b8e1c7a999
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Wed Nov 30 09:39:12 2011 +1000
+
+    Return true/false from SetDeviceAndProtocol
+    
+    Instead of requiring the caller to know which private field indicates
+    failure, just return true on success or false on failure.
+    
+    No functional change.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Chase Douglas <chase.douglas@canonical.com>
+    Reviewed-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit 2603ad69b997c999404ecc441e0d64ea2cc22018
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Oct 18 15:46:03 2011 +1000
+
+    Use the scroll distances as increment for scrolling valuator axes
+    
+    XI2.1 allows an 'increment' for each scrolling variable. Use that instead of
+    hiding it away inside the driver.
+    
+    For circular scrolling, the increment is the one of the respective scrolling
+    axis.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 4f46057a33b20df62d919e49a394ab6cb7aa6aa1
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Thu Jun 9 20:03:11 2011 +0100
+
+    Scroll: Initial smooth scrolling support
+    
+    Post smooth-scrolling events through the new X server API when
+    available, rather than legacy jerky button events.
+    
+    [Amended to use the final smooth scrolling API]
+    
+    Signed-off-by: Daniel Stone <daniel@fooishbar.org>
+    Amendments-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 15bef1f7092d37aeaa916ed7642ae3b6e684660c
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri Oct 21 16:52:57 2011 +1000
+
+    eventcomm: print strerror(errno), not of rc
+    
+    Found by coverity.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Dirk Wallenstein <halsmit@t-online.de>
+
+commit cefc85ad44af340b3d2cad76ec1dc54ceba0558f
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Oct 18 15:46:57 2011 +1000
+
+    Fix compiler warning - unused variable 'para'
+    
+    synaptics.c: In function 'post_scroll_events':
+    synaptics.c:2426:26: warning: unused variable 'para' [-Wunused-variable]
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 26831a6eeac6762ad4d99532f62ebbab0827de10
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Thu Jun 9 20:03:10 2011 +0100
+
+    Scroll: Prepare ScrollData for smooth scrolling
+    
+    Convert ScrollData from up/down/left/right members for button presses,
+    to more fine-grained delta_x and delta_y members, and move these to
+    priv->scroll.
+    
+    Signed-off-by: Daniel Stone <daniel@fooishbar.org>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 7c0361d4ec6b1f1325cb6551d0ee2e7f5cfae15b
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Thu Jun 9 20:03:05 2011 +0100
+
+    Adjust acceleration scheme for input ABI v14
+    
+    v14 wants doubles, rather than floats, from acceleration schemes.
+    
+    Signed-off-by: Daniel Stone <daniel@fooishbar.org>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit a15af628154ac37f24896a30614f3be6ecdb65c4
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Wed Oct 12 11:20:06 2011 +1000
+
+    test: wrap ABI 14 xf86OptionRec type changes
+    
+    ABI 13 still uses pointer as type for most option calls, ABI 14 uses the
+    proper type now. Wrap this so we can build against both versions.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit ba981e223ae4449b08ff972b69220d435a735075
+Author: Casper Dik <casper.dik@oracle.com>
+Date:   Fri Sep 2 10:32:50 2011 -0700
+
+    Extra buttons on Acer Ferrari 4000 laptop touchpad are not recognized
+    
+    The code was checking for a value of exactly 1, while the Synaptics
+    docs at http://www.synaptics.com/sites/default/files/511-000275-01rA.pdf
+    say:
+    
+        Extended Model ID. This query returns the product ID, additional
+        capability bits, and additional bits to widen the infoSensor
+        field. infoSensor is a part of the Model ID query (query $03).
+        The Extended Model ID query is only present if nExtendedQueries
+        is *greater than* or equal to 1.
+    
+    Signed-off-by: Casper Dik <casper.dik@oracle.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit bc789cc7a057357e27faf1c6727dc95f6d02fcea
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Mon Sep 5 09:26:56 2011 +1000
+
+    man: note that a PS/2 device is not supported
+    
+    If all we see is a PS/2 Mouse or similar, then the kernel doesn't give us
+    the required bits to provide all the functionality we want. Note that in the
+    man-page.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Cyril Brulebois <kibi@debian.org>
+
+commit 7a72af1ce105fd857214bb641a8fa2cfd150a5f7
+Author: Alexandr Shadchin <alexandr.shadchin@gmail.com>
+Date:   Fri Aug 26 18:42:08 2011 +0600
+
+    The correct maximum values for pressure and finger width
+    
+    Signed-off-by: Alexandr Shadchin <Alexandr.Shadchin@gmail.com>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 45d4a6bec01deac5cca6639c55062b110462155f
+Author: Alexandr Shadchin <alexandr.shadchin@gmail.com>
+Date:   Fri Aug 26 18:42:07 2011 +0600
+
+    On/Off hooks to return boolean so we can bail out of the caller
+    
+    Signed-off-by: Alexandr Shadchin <Alexandr.Shadchin@gmail.com>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 2034e1e26497bce815eae0429f7e29faf2d9adaf
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Thu Aug 25 10:58:43 2011 +1000
+
+    Fix compiler warning: unused variable "wakupTime"
+    
+    Introduced in 458c7251295e767fae7a0ac3366212361bce25a6
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 4fe1b58c2c6903961a84077363a0c8de5736c650
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Thu Jun 9 20:03:09 2011 +0100
+
+    Scroll: Modify ScrollData in repeat_scrollbuttons
+    
+    repeat_scrollbuttons used to read the scroll repeat values and then post
+    button events directly.  Instead, make it modify ScrollData and let
+    post_scroll_events take care of sending the scroll events, which
+    requires moving the repeat_scrollbuttons call upwards.
+    
+    Signed-off-by: Daniel Stone <daniel@fooishbar.org>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit df68486254b38b7f08f7d510ce1b75aaef9e52fd
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Thu Jun 23 15:02:26 2011 +0100
+
+    Scroll: Move coasting variables to priv->scroll
+    
+    Also rename (e.g. autoscroll_x -> coast_delta_x, and
+    autoscroll_xspd -> coast_speed_x) variables to clarify things a bit.
+    
+    Signed-off-by: Daniel Stone <daniel@fooishbar.org>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit aae994cc0c08e6da270c199af429315a3a2092bf
+Author: Derek Foreman <derek.foreman@collabora.co.uk>
+Date:   Fri Jun 3 18:28:59 2011 +0100
+
+    Scroll: Add last_millis to track scroll event timing
+    
+    Stopping a little short of having a full scroll history, adding
+    last_millis lets us track when the last scroll event we sent was,
+    for more accurate timing of coasting in particular.
+    
+    Signed-off-by: Derek Foreman <derek.foreman@collabora.co.uk>
+    Reviewed-by: Daniel Stone <daniel@fooishbar.org>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit fb7c0c5965b6843f38e9c881f4c349006ec0da32
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Thu Jun 23 13:58:31 2011 +0100
+
+    Scroll: Move scroll_[xya] into new priv->scroll struct
+    
+    And rename them to last_x, last_y and last_a respectively, as they're
+    used to store the values as of the last scroll event sent.
+    
+    Signed-off-by: Daniel Stone <daniel@fooishbar.org>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 81a8ddb4a768bee3a4b304716fa4cfead49a2761
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Thu Jun 9 20:03:08 2011 +0100
+
+    Scroll: Clarify rep_buttons assignment
+    
+    Instead of a combined variable declaration with two ternary expressions
+    using raw hex values, expand it to have two genuine if statements,
+    setting with a more clear bitshift.
+    
+    Signed-off-by: Daniel Stone <daniel@fooishbar.org>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit f40bbf7494a6122d464e3fff4309f69af2a20e4a
+Author: Derek Foreman <derek.foreman@collabora.co.uk>
+Date:   Mon Mar 7 17:49:42 2011 -0500
+
+    Revise palm check logic
+    
+    Make the palm-check logic more stable and reliable, and make sure that
+    any palms are blocked for the duration of their presses.
+    
+    Signed-off-by: Derek Foreman <derek.foreman@collabora.co.uk>
+    Reviewed-by: Daniel Stone <daniel@fooishbar.org>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 86dfe5086ff672e4d3c354980b999c6f3a27ebec
+Author: Derek Foreman <derek.foreman@collabora.co.uk>
+Date:   Wed Mar 23 14:12:36 2011 -0700
+
+    More accurate extrapolated fake motion events
+    
+    Use better time estimates so we can provide better fake motion events.
+    This reduces the difference between motion with one and two fingers down
+    to be almost imperceptible, despite the reporting rate being halved on
+    PS/2 devices.
+    
+    Signed-off-by: Derek Foreman <derek.foreman@collabora.co.uk>
+    Reviewed-by: Daniel Stone <daniel@fooishbar.org>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit b26125e412a130b7a8f8b6adf9ffc8e9cc8df42c
+Author: Derek Foreman <derek.foreman@collabora.co.uk>
+Date:   Wed Mar 2 12:31:58 2011 -0500
+
+    Replace the motion estimator
+    
+    Use a smarter motion estimator that attempts to draw a best-fit line
+    through the history where possible, including taking acceleration into
+    account.
+    
+    Signed-off-by: Derek Foreman <derek.foreman@collabora.co.uk>
+    Reviewed-by: Daniel Stone <daniel@fooishbar.org>
+    Reviewed-by: Simon Thum <simon.thum@gmx.de>
+
+commit ffed18dfffda32de7282e44c5b8d1fb7d5454b54
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Tue Jun 14 17:41:58 2011 +0100
+
+    Update count_packet_finger in store_history, not get_delta
+    
+    Seems more sensible to update the count of packets in the history when
+    we update the history, rather than somewhere else entirely.
+    
+    Signed-off-by: Daniel Stone <daniel@fooishbar.org>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit c8b098214b44cf0585d78c460401ea7d143769f3
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Tue Jun 14 17:24:24 2011 +0100
+
+    Don't store fake events in the motion history
+    
+    As the subject says: don't store any synthesised events in the motion
+    history, since we can recreate those algorithmically.
+    
+    Signed-off-by: Daniel Stone <daniel@fooishbar.org>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 458c7251295e767fae7a0ac3366212361bce25a6
+Author: Derek Foreman <derek.foreman@collabora.co.uk>
+Date:   Thu Mar 31 14:29:43 2011 -0700
+
+    Use hardware time where possible
+    
+    Rather than always setting hw->millis as the time when we received the
+    event in our SIGIO handler, use the time provided by the kernel if
+    applicable (i.e. if we're using evdev rather than PS/2 or similar).
+    
+    Signed-off-by: Derek Foreman <derek.foreman@collabora.co.uk>
+    Reviewed-by: Daniel Stone <daniel@fooishbar.org>
+    
+    [from_timer is in preparation for a future patch, currently unused]
+    
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 495e0fe1b7afa9de04ee0341da1ade4d3d4f50b8
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Thu Jun 23 11:19:18 2011 +0100
+
+    Use CARD32 for timestamps
+    
+    As GetTimeInMillis() returns a CARD32, switch every timestamp usage to
+    follow.
+    
+    Signed-off-by: Daniel Stone <daniel@fooishbar.org>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 2ebf984262d6bd471b4b5f1333785865e8d3c25f
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Thu Jun 9 20:02:58 2011 +0100
+
+    Introduce POLL_MS for packet frequency
+    
+    We expect to be receiving a steady 80 packets/sec (which gives 40
+    reports/sec with more than one finger on the pad, as Advanced Gesture
+    Mode requires two PS/2 packets per report).  Instead of a random
+    scattering of magic 13 and 20ms numbers scattered throughout the driver,
+    introduce POLL_MS as 14ms.
+    
+    Having this here allows us to call back at a steady frequency to ensure
+    that the finger motion remains steady.
+    
+    Signed-off-by: Daniel Stone <daniel@fooishbar.org>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 6d1f8f9886cbd4b3073502f3f37c4dd618971361
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Thu Jun 9 20:02:49 2011 +0100
+
+    Give FingerState enums explicit values
+    
+    Since we depend so heavily on ordering and numbering, just give all the
+    enum explicit number values.
+    
+    Signed-off-by: Daniel Stone <daniel@fooishbar.org>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 0f171af28410f939a915064af9fb9af38118455d
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Thu Jun 9 20:02:52 2011 +0100
+
+    Add HIST_DELTA macro for differences in history
+    
+    HIST_DELTA(a, b, e) is equivalent to HIST(a).e - HIST(b).e.  Replace the
+    one user of this pattern with a HIST_DELTA call.
+    
+    Signed-off-by: Daniel Stone <daniel@fooishbar.org>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit a24c44375025576dd600ccf370ba365e5d94dc22
 Author: Derek Foreman <derek.foreman@collabora.co.uk>
 Date:   Mon Mar 21 16:01:29 2011 -0700
 
@@ -130,25 +1922,46 @@ Date:   Mon Mar 21 16:01:29 2011 -0700
     
     Signed-off-by: Derek Foreman <derek.foreman@collabora.co.uk>
     Reviewed-by: Daniel Stone <daniel@fooishbar.org>
-    (cherry picked from commit a24c44375025576dd600ccf370ba365e5d94dc22)
 
-commit 065a0b495d2a7eb76b61f9eec85248aefae4c8ee
+commit 627b09e5bd0726ad31bfeb4f07b8f8287d8ec46f
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Tue Jun 14 17:07:11 2011 +0100
+
+    Properties: Generalise InitTypedAtom from InitAtom
+    
+    Add InitTypedAtom, which does exactly the same thing as InitAtom, but
+    takes an additional type argument.
+    
+    Signed-off-by: Daniel Stone <daniel@fooishbar.org>
+
+commit 299a44cd2035e84859b9d6c84854064326f8d124
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Thu Jun 23 10:58:43 2011 +0100
+
+    Bump minimum xorg-server requirement to 1.7
+    
+    This means we can also drop support for pre-ABI v7.
+    
+    Signed-off-by: Daniel Stone <daniel@fooishbar.org>
+
+commit 05fb9b5f248aacb121997f02d7a6e7cbbfb5ed1c
 Author: Peter Hutterer <peter.hutterer@who-t.net>
-Date:   Fri Sep 2 16:04:07 2011 +1000
+Date:   Thu Aug 25 09:50:27 2011 +1000
 
-    synaptics 1.5.0
+    Bump to 1.5.99
     
     Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
 
-commit 3489e2467d43217971f17b9344fc2772cc0f164d
-Author: Alexandr Shadchin <alexandr.shadchin@gmail.com>
-Date:   Fri Aug 26 18:42:08 2011 +0600
+commit f5141b6c663d97f771fc7c86b32d8d43a1a003c0
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Tue Jun 14 17:43:36 2011 +0100
 
-    The correct maximum values for pressure and finger width
+    Shuffle include order around
     
-    Signed-off-by: Alexandr Shadchin <Alexandr.Shadchin@gmail.com>
-    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
-    (cherry picked from commit 7a72af1ce105fd857214bb641a8fa2cfd150a5f7)
+    Group X protocol/server includes together, and synaptics-internal
+    includes together.
+    
+    Signed-off-by: Daniel Stone <daniel@fooishbar.org>
 
 commit 98e8481cf4911506403b8963fc32c61a74cf679e
 Author: Peter Hutterer <peter.hutterer@who-t.net>

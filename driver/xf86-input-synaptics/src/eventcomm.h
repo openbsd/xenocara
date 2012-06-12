@@ -36,8 +36,13 @@
 #define DEV_INPUT_EVENT "/dev/input"
 #define EVENT_DEV_NAME "event"
 
-extern Bool
-EventReadHwState(InputInfoPtr pInfo,
-		 struct CommData *comm, struct SynapticsHwState *hwRet);
+struct eventcomm_proto_data;
 
-#endif /* _EVENTCOMM_H_ */
+extern struct eventcomm_proto_data *EventProtoDataAlloc(void);
+
+extern Bool
+
+EventReadHwState(InputInfoPtr pInfo,
+                 struct CommData *comm, struct SynapticsHwState *hwRet);
+
+#endif                          /* _EVENTCOMM_H_ */

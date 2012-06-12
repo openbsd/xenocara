@@ -1,38 +1,38 @@
 #include "fake-symbols.h"
 
 _X_EXPORT
-int xf86ReadSerial (int fd, void *buf, int count)
-{
-    return 0;
-}
-
-
-_X_EXPORT int
-xf86WriteSerial (int fd, const void *buf, int count)
+    int
+xf86ReadSerial(int fd, void *buf, int count)
 {
     return 0;
 }
 
 _X_EXPORT int
-xf86CloseSerial (int fd)
+xf86WriteSerial(int fd, const void *buf, int count)
 {
     return 0;
 }
 
 _X_EXPORT int
-xf86WaitForInput (int fd, int timeout)
+xf86CloseSerial(int fd)
 {
     return 0;
 }
 
 _X_EXPORT int
-xf86OpenSerial (OPTTYPE options)
+xf86WaitForInput(int fd, int timeout)
 {
     return 0;
 }
 
 _X_EXPORT int
-xf86SetSerialSpeed (int fd, int speed)
+xf86OpenSerial(OPTTYPE options)
+{
+    return 0;
+}
+
+_X_EXPORT int
+xf86SetSerialSpeed(int fd, int speed)
 {
     return 0;
 }
@@ -60,6 +60,7 @@ xf86AddNewOption(OPTTYPE head, const char *name, const char *val)
 {
     return NULL;
 }
+
 _X_EXPORT CONST char *
 xf86FindOptionValue(OPTTYPE options, const char *name)
 {
@@ -115,32 +116,27 @@ xf86AddInputDriver(InputDriverPtr driver, pointer module, int flags)
 }
 
 _X_EXPORT int
-xf86ScaleAxis(int	Cx,
-              int	to_max,
-              int	to_min,
-              int	from_max,
-              int	from_min )
+xf86ScaleAxis(int Cx, int to_max, int to_min, int from_max, int from_min)
 {
     int X;
     int64_t to_width = to_max - to_min;
     int64_t from_width = from_max - from_min;
 
     if (from_width) {
-	X = (int)(((to_width * (Cx - from_min)) / from_width) + to_min);
+        X = (int) (((to_width * (Cx - from_min)) / from_width) + to_min);
     }
     else {
-	X = 0;
-        /*ErrorF ("Divide by Zero in xf86ScaleAxis\n");*/
+        X = 0;
+        /*ErrorF ("Divide by Zero in xf86ScaleAxis\n"); */
     }
 
     if (X > to_max)
-	X = to_max;
+        X = to_max;
     if (X < to_min)
-	X = to_min;
+        X = to_min;
 
     return X;
 }
-
 
 _X_EXPORT void
 DeleteInputDeviceRequest(DeviceIntPtr pDev)
@@ -148,33 +144,28 @@ DeleteInputDeviceRequest(DeviceIntPtr pDev)
     return;
 }
 
-
 #if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 11
 _X_EXPORT void
-FreeInputAttributes(InputAttributes *attrs)
+FreeInputAttributes(InputAttributes * attrs)
 {
     return;
 }
 #endif
 
 _X_EXPORT void
-xf86PostButtonEvent(DeviceIntPtr	device,
-                    int			is_absolute,
-                    int			button,
-                    int			is_down,
-                    int			first_valuator,
-                    int			num_valuators,
-                    ...)
+xf86PostButtonEvent(DeviceIntPtr device,
+                    int is_absolute,
+                    int button,
+                    int is_down, int first_valuator, int num_valuators, ...)
 {
     return;
 }
 
 _X_EXPORT int
-Xasprintf(char ** ret, const char * format, ...)
+Xasprintf(char **ret, const char *format, ...)
 {
     return 0;
 }
-
 
 _X_EXPORT int
 XISetDevicePropertyDeletable(DeviceIntPtr dev, Atom property, Bool deletable)
@@ -182,13 +173,11 @@ XISetDevicePropertyDeletable(DeviceIntPtr dev, Atom property, Bool deletable)
     return 0;
 }
 
-
 _X_EXPORT InputInfoPtr
 xf86FirstLocalDevice(void)
 {
     return NULL;
 }
-
 
 _X_EXPORT void
 xf86DeleteInput(InputInfoPtr pInp, int flags)
@@ -203,23 +192,22 @@ xf86OptionListDuplicate(OPTTYPE options)
 }
 
 _X_EXPORT Bool
-InitButtonClassDeviceStruct(DeviceIntPtr dev, int numButtons, Atom* labels,
+InitButtonClassDeviceStruct(DeviceIntPtr dev, int numButtons, Atom *labels,
                             CARD8 *map)
 {
     return FALSE;
 }
 
 _X_EXPORT void
-InitValuatorAxisStruct(DeviceIntPtr dev, int axnum, Atom label, int minval, int maxval,
-		       int resolution, int min_res, int max_res, int mode)
+InitValuatorAxisStruct(DeviceIntPtr dev, int axnum, Atom label, int minval,
+                       int maxval, int resolution, int min_res, int max_res,
+                       int mode)
 {
     return;
 }
 
 _X_EXPORT void
-xf86PostKeyboardEvent(DeviceIntPtr      device,
-                      unsigned int      key_code,
-                      int               is_down)
+xf86PostKeyboardEvent(DeviceIntPtr device, unsigned int key_code, int is_down)
 {
     return;
 }
@@ -231,16 +219,14 @@ xf86SetIntOption(OPTTYPE optlist, const char *name, int deflt)
 }
 
 _X_EXPORT void
-xf86PostButtonEventP(DeviceIntPtr	device,
-                     int		is_absolute,
-                     int		button,
-                     int		is_down,
-                     int		first_valuator,
-                     int		num_valuators,
+xf86PostButtonEventP(DeviceIntPtr device,
+                     int is_absolute,
+                     int button,
+                     int is_down, int first_valuator, int num_valuators,
 #if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 12
                      const
 #endif
-                           int		*valuators)
+                     int *valuators)
 {
     return;
 }
@@ -252,41 +238,38 @@ InitPtrFeedbackClassDeviceStruct(DeviceIntPtr dev, PtrCtrlProcPtr controlProc)
 }
 
 _X_EXPORT int
-XIChangeDeviceProperty (DeviceIntPtr dev, Atom property, Atom type,
-                        int format, int mode, unsigned long len,
-                        OPTTYPE value, Bool sendevent)
+XIChangeDeviceProperty(DeviceIntPtr dev, Atom property, Atom type,
+                       int format, int mode, unsigned long len,
+                       OPTTYPE value, Bool sendevent)
 {
     return 0;
 }
 
 _X_EXPORT CARD32
-GetTimeInMillis (void)
+GetTimeInMillis(void)
 {
     return 0;
 }
-
 
 _X_EXPORT int
-NewInputDeviceRequest (InputOption *options,
+NewInputDeviceRequest(InputOption *options,
 #if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 11
-                       InputAttributes *attrs,
+                      InputAttributes * attrs,
 #endif
-                       DeviceIntPtr *pdev)
+                      DeviceIntPtr *pdev)
 {
     return 0;
 }
 
-
 _X_EXPORT Bool
-InitLedFeedbackClassDeviceStruct (DeviceIntPtr dev, LedCtrlProcPtr controlProc)
+InitLedFeedbackClassDeviceStruct(DeviceIntPtr dev, LedCtrlProcPtr controlProc)
 {
     return FALSE;
 }
 
-
 #if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 11
-_X_EXPORT InputAttributes*
-DuplicateInputAttributes(InputAttributes *attrs)
+_X_EXPORT InputAttributes *
+DuplicateInputAttributes(InputAttributes * attrs)
 {
     return NULL;
 }
@@ -299,14 +282,14 @@ ValidAtom(Atom atom)
 }
 
 _X_EXPORT Bool
-InitKeyboardDeviceStruct(DeviceIntPtr dev, XkbRMLVOSet *rmlvo,
+InitKeyboardDeviceStruct(DeviceIntPtr dev, XkbRMLVOSet * rmlvo,
                          BellProcPtr bell_func, KbdCtrlProcPtr ctrl_func)
 {
     return FALSE;
 }
 
 _X_EXPORT long
-XIRegisterPropertyHandler(DeviceIntPtr         dev,
+XIRegisterPropertyHandler(DeviceIntPtr dev,
                           int (*SetProperty) (DeviceIntPtr dev,
                                               Atom property,
                                               XIPropertyValuePtr prop,
@@ -324,7 +307,6 @@ InitProximityClassDeviceStruct(DeviceIntPtr dev)
 {
     return 0;
 }
-
 
 _X_EXPORT void
 xf86Msg(MessageType type, const char *format, ...)
@@ -344,20 +326,16 @@ xf86IDrvMsg(InputInfoPtr dev, MessageType type, const char *format, ...)
     return;
 }
 
-
 _X_EXPORT void
-xf86PostMotionEventP(DeviceIntPtr	device,
-                    int			is_absolute,
-                    int			first_valuator,
-                    int			num_valuators,
+xf86PostMotionEventP(DeviceIntPtr device,
+                     int is_absolute, int first_valuator, int num_valuators,
 #if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 12
-                    const
+                     const
 #endif
-                          int		*valuators)
+                     int *valuators)
 {
     return;
 }
-
 
 _X_EXPORT Bool
 InitValuatorClassDeviceStruct(DeviceIntPtr dev, int numAxes, Atom *labels,
@@ -366,13 +344,11 @@ InitValuatorClassDeviceStruct(DeviceIntPtr dev, int numAxes, Atom *labels,
     return FALSE;
 }
 
-
 _X_EXPORT OPTTYPE
-xf86ReplaceStrOption(OPTTYPE optlist, const char *name, const char* val)
+xf86ReplaceStrOption(OPTTYPE optlist, const char *name, const char *val)
 {
     return NULL;
 }
-
 
 _X_EXPORT OPTTYPE
 xf86NextOption(OPTTYPE list)
@@ -380,13 +356,11 @@ xf86NextOption(OPTTYPE list)
     return NULL;
 }
 
-
 _X_EXPORT int
-XIGetDeviceProperty (DeviceIntPtr dev, Atom property, XIPropertyValuePtr *value)
+XIGetDeviceProperty(DeviceIntPtr dev, Atom property, XIPropertyValuePtr *value)
 {
     return 0;
 }
-
 
 _X_EXPORT Atom
 MakeAtom(const char *string, unsigned len, Bool makeit)
@@ -394,27 +368,22 @@ MakeAtom(const char *string, unsigned len, Bool makeit)
     return None;
 }
 
-
 _X_EXPORT int
 GetMotionHistorySize(void)
 {
     return 0;
 }
 
-
 _X_EXPORT void
-xf86PostProximityEventP(DeviceIntPtr	device,
-                        int		is_in,
-                        int		first_valuator,
-                        int		num_valuators,
+xf86PostProximityEventP(DeviceIntPtr device,
+                        int is_in, int first_valuator, int num_valuators,
 #if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 12
                         const
 #endif
-                           int		*valuators)
+                        int *valuators)
 {
     return;
 }
-
 
 _X_EXPORT Bool
 InitFocusClassDeviceStruct(DeviceIntPtr dev)
@@ -430,12 +399,12 @@ xf86ProcessCommonOptions(InputInfoPtr pInfo, OPTTYPE list)
 
 void
 xf86CollectInputOptions(InputInfoPtr pInfo,
-                        const char **defaultOpts,
-                        OPTTYPE extraOpts)
+                        const char **defaultOpts, OPTTYPE extraOpts)
 {
 }
 
-InputInfoPtr xf86AllocateInput(InputDriverPtr drv, int flags)
+InputInfoPtr
+xf86AllocateInput(InputDriverPtr drv, int flags)
 {
     return NULL;
 }
@@ -444,9 +413,63 @@ InputInfoPtr xf86AllocateInput(InputDriverPtr drv, int flags)
 
 ClientPtr serverClient;
 
-Bool QueueWorkProc (
-    Bool (*function)(ClientPtr /* pClient */, pointer /* closure */),
-    ClientPtr client, pointer closure)
+Bool
+QueueWorkProc(Bool (*function)
+              (ClientPtr /* pClient */ , pointer /* closure */ ),
+              ClientPtr client, pointer closure)
 {
     return FALSE;
 }
+
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 12
+_X_EXPORT ValuatorMask *
+valuator_mask_new(int num_valuators)
+{
+    return NULL;
+}
+
+_X_EXPORT void
+valuator_mask_free(ValuatorMask **mask)
+{
+}
+
+_X_EXPORT int
+valuator_mask_get(const ValuatorMask *mask, int valuator)
+{
+    return 0;
+}
+
+_X_EXPORT void
+valuator_mask_set(ValuatorMask *mask, int valuator, int data)
+{
+}
+
+extern _X_EXPORT void
+valuator_mask_unset(ValuatorMask *mask, int bit)
+{
+}
+
+_X_EXPORT int
+valuator_mask_num_valuators(const ValuatorMask *mask)
+{
+    return 0;
+}
+
+_X_EXPORT void
+valuator_mask_zero(ValuatorMask *mask)
+{
+}
+
+_X_EXPORT void
+valuator_mask_copy(ValuatorMask *dest, const ValuatorMask *src)
+{
+}
+#endif
+
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 16
+_X_EXPORT void
+xf86PostTouchEvent(DeviceIntPtr dev, uint32_t touchid,
+                   uint16_t type, uint32_t flags, const ValuatorMask *mask)
+{
+}
+#endif

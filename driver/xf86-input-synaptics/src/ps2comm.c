@@ -43,7 +43,7 @@
 #include "ps2comm.h"
 #include <xf86.h>
 
-#define MAX_UNSYNC_PACKETS 10				/* i.e. 10 to 60 bytes */
+#define MAX_UNSYNC_PACKETS 10   /* i.e. 10 to 60 bytes */
 /*
  * The x/y limits are taken from the Synaptics TouchPad interfacing Guide,
  * section 2.3.2, which says that they should be valid regardless of the
@@ -91,15 +91,15 @@
  * Read a byte from the ps/2 port
  */
 static Bool
-ps2_getbyte(int fd, byte *b)
+ps2_getbyte(int fd, byte * b)
 {
     if (xf86WaitForInput(fd, 50000) > 0) {
-	if (xf86ReadSerial(fd, b, 1) != 1) {
-	    PS2DBG(ErrorF("ps2_getbyte: No byte read\n"));
-	    return FALSE;
-	}
-	PS2DBG(ErrorF("ps2_getbyte: byte %02X read\n", *b));
-	return TRUE;
+        if (xf86ReadSerial(fd, b, 1) != 1) {
+            PS2DBG(ErrorF("ps2_getbyte: No byte read\n"));
+            return FALSE;
+        }
+        PS2DBG(ErrorF("ps2_getbyte: byte %02X read\n", *b));
+        return TRUE;
     }
     PS2DBG(ErrorF("ps2_getbyte: timeout xf86WaitForInput\n"));
     return FALSE;
@@ -114,17 +114,17 @@ ps2_putbyte(int fd, byte b)
     byte ack;
 
     if (xf86WriteSerial(fd, &b, 1) != 1) {
-	PS2DBG(ErrorF("ps2_putbyte: error xf86WriteSerial\n"));
-	return FALSE;
+        PS2DBG(ErrorF("ps2_putbyte: error xf86WriteSerial\n"));
+        return FALSE;
     }
     PS2DBG(ErrorF("ps2_putbyte: byte %02X send\n", b));
     /* wait for an ACK */
     if (!ps2_getbyte(fd, &ack)) {
-	return FALSE;
+        return FALSE;
     }
     if (ack != PS2_ACK) {
-	PS2DBG(ErrorF("ps2_putbyte: wrong acknowledge 0x%02x\n", ack));
-	return FALSE;
+        PS2DBG(ErrorF("ps2_putbyte: wrong acknowledge 0x%02x\n", ack));
+        return FALSE;
     }
     return TRUE;
 }
@@ -142,14 +142,14 @@ ps2_special_cmd(int fd, byte cmd)
 
     /* initialize with 'inert' command */
     if (!ps2_putbyte(fd, PS2_CMD_SET_SCALING_1_1))
-	return FALSE;
+        return FALSE;
 
     /* send 4x 2-bits with set resolution command */
     for (i = 0; i < 4; i++) {
-	if (!ps2_putbyte(fd, PS2_CMD_SET_RESOLUTION) ||
-	    !ps2_putbyte(fd, (cmd >> 6) & 0x3))
-	    return FALSE;
-	cmd <<= 2;
+        if (!ps2_putbyte(fd, PS2_CMD_SET_RESOLUTION) ||
+            !ps2_putbyte(fd, (cmd >> 6) & 0x3))
+            return FALSE;
+        cmd <<= 2;
     }
     return TRUE;
 }
@@ -161,8 +161,7 @@ static Bool
 ps2_send_cmd(int fd, byte c)
 {
     PS2DBG(ErrorF("send command: 0x%02X\n", c));
-    return (ps2_special_cmd(fd, c) &&
-	    ps2_putbyte(fd, PS2_CMD_STATUS_REQUEST));
+    return (ps2_special_cmd(fd, c) && ps2_putbyte(fd, PS2_CMD_STATUS_REQUEST));
 }
 
 /*****************************************************************************
@@ -177,8 +176,7 @@ ps2_synaptics_set_mode(int fd, byte mode)
 {
     PS2DBG(ErrorF("set mode byte to: 0x%02X\n", mode));
     return (ps2_special_cmd(fd, mode) &&
-	    ps2_putbyte(fd, PS2_CMD_SET_SAMPLE_RATE) &&
-	    ps2_putbyte(fd, 0x14));
+            ps2_putbyte(fd, PS2_CMD_SET_SAMPLE_RATE) && ps2_putbyte(fd, 0x14));
 }
 
 /*
@@ -192,18 +190,20 @@ ps2_synaptics_reset(int fd)
     xf86FlushInput(fd);
     PS2DBG(ErrorF("Reset the Touchpad...\n"));
     if (!ps2_putbyte(fd, PS2_CMD_RESET)) {
-	PS2DBG(ErrorF("...failed\n"));
-	return FALSE;
+        PS2DBG(ErrorF("...failed\n"));
+        return FALSE;
     }
     xf86WaitForInput(fd, 4000000);
     if (ps2_getbyte(fd, &r[0]) && ps2_getbyte(fd, &r[1])) {
-	if (r[0] == 0xAA && r[1] == 0x00) {
-	    PS2DBG(ErrorF("...done\n"));
-	    return TRUE;
-	} else {
-	    PS2DBG(ErrorF("...failed. Wrong reset ack 0x%02x, 0x%02x\n", r[0], r[1]));
-	    return FALSE;
-	}
+        if (r[0] == 0xAA && r[1] == 0x00) {
+            PS2DBG(ErrorF("...done\n"));
+            return TRUE;
+        }
+        else {
+            PS2DBG(ErrorF
+                   ("...failed. Wrong reset ack 0x%02x, 0x%02x\n", r[0], r[1]));
+            return FALSE;
+        }
     }
     PS2DBG(ErrorF("...failed\n"));
     return FALSE;
@@ -222,13 +222,12 @@ ps2_synaptics_model_id(int fd, struct PS2SynapticsHwInfo *synhw)
 
     synhw->model_id = 0;
     if (ps2_send_cmd(fd, SYN_QUE_MODEL) &&
-	ps2_getbyte(fd, &mi[0]) &&
-	ps2_getbyte(fd, &mi[1]) &&
-	ps2_getbyte(fd, &mi[2])) {
-	synhw->model_id = (mi[0] << 16) | (mi[1] << 8) | mi[2];
-	PS2DBG(ErrorF("model-id %06X\n", synhw->model_id));
-	PS2DBG(ErrorF("...done.\n"));
-	return TRUE;
+        ps2_getbyte(fd, &mi[0]) &&
+        ps2_getbyte(fd, &mi[1]) && ps2_getbyte(fd, &mi[2])) {
+        synhw->model_id = (mi[0] << 16) | (mi[1] << 8) | mi[2];
+        PS2DBG(ErrorF("model-id %06X\n", synhw->model_id));
+        PS2DBG(ErrorF("...done.\n"));
+        return TRUE;
     }
     PS2DBG(ErrorF("...failed.\n"));
     return FALSE;
@@ -248,27 +247,27 @@ ps2_synaptics_capability(int fd, struct PS2SynapticsHwInfo *synhw)
     synhw->capabilities = 0;
     synhw->ext_cap = 0;
     if (ps2_send_cmd(fd, SYN_QUE_CAPABILITIES) &&
-	ps2_getbyte(fd, &cap[0]) &&
-	ps2_getbyte(fd, &cap[1]) &&
-	ps2_getbyte(fd, &cap[2])) {
-	synhw->capabilities = (cap[0] << 16) | (cap[1] << 8) | cap[2];
-	PS2DBG(ErrorF("capabilities %06X\n", synhw->capabilities));
-	if (SYN_CAP_VALID(synhw)) {
-	    if (SYN_EXT_CAP_REQUESTS(synhw)) {
-		if (ps2_send_cmd(fd, SYN_QUE_EXT_CAPAB) &&
-		    ps2_getbyte(fd, &cap[0]) &&
-		    ps2_getbyte(fd, &cap[1]) &&
-		    ps2_getbyte(fd, &cap[2])) {
-		    synhw->ext_cap = (cap[0] << 16) | (cap[1] << 8) | cap[2];
-		    PS2DBG(ErrorF("ext-capability %06X\n", synhw->ext_cap));
-		} else {
-		    PS2DBG(ErrorF("synaptics says, that it has extended-capabilities, "
-				  "but I cannot read them."));
-		}
-	    }
-	    PS2DBG(ErrorF("...done.\n"));
-	    return TRUE;
-	}
+        ps2_getbyte(fd, &cap[0]) &&
+        ps2_getbyte(fd, &cap[1]) && ps2_getbyte(fd, &cap[2])) {
+        synhw->capabilities = (cap[0] << 16) | (cap[1] << 8) | cap[2];
+        PS2DBG(ErrorF("capabilities %06X\n", synhw->capabilities));
+        if (SYN_CAP_VALID(synhw)) {
+            if (SYN_EXT_CAP_REQUESTS(synhw)) {
+                if (ps2_send_cmd(fd, SYN_QUE_EXT_CAPAB) &&
+                    ps2_getbyte(fd, &cap[0]) &&
+                    ps2_getbyte(fd, &cap[1]) && ps2_getbyte(fd, &cap[2])) {
+                    synhw->ext_cap = (cap[0] << 16) | (cap[1] << 8) | cap[2];
+                    PS2DBG(ErrorF("ext-capability %06X\n", synhw->ext_cap));
+                }
+                else {
+                    PS2DBG(ErrorF
+                           ("synaptics says, that it has extended-capabilities, "
+                            "but I cannot read them."));
+                }
+            }
+            PS2DBG(ErrorF("...done.\n"));
+            return TRUE;
+        }
     }
     PS2DBG(ErrorF("...failed.\n"));
     return FALSE;
@@ -287,15 +286,14 @@ ps2_synaptics_identify(int fd, struct PS2SynapticsHwInfo *synhw)
 
     synhw->identity = 0;
     if (ps2_send_cmd(fd, SYN_QUE_IDENTIFY) &&
-	ps2_getbyte(fd, &id[0]) &&
-	ps2_getbyte(fd, &id[1]) &&
-	ps2_getbyte(fd, &id[2])) {
-	synhw->identity = (id[0] << 16) | (id[1] << 8) | id[2];
-	PS2DBG(ErrorF("ident %06X\n", synhw->identity));
-	if (SYN_ID_IS_SYNAPTICS(synhw)) {
-	    PS2DBG(ErrorF("...done.\n"));
-	    return TRUE;
-	}
+        ps2_getbyte(fd, &id[0]) &&
+        ps2_getbyte(fd, &id[1]) && ps2_getbyte(fd, &id[2])) {
+        synhw->identity = (id[0] << 16) | (id[1] << 8) | id[2];
+        PS2DBG(ErrorF("ident %06X\n", synhw->identity));
+        if (SYN_ID_IS_SYNAPTICS(synhw)) {
+            PS2DBG(ErrorF("...done.\n"));
+            return TRUE;
+        }
     }
     PS2DBG(ErrorF("...failed.\n"));
     return FALSE;
@@ -315,103 +313,111 @@ ps2_synaptics_disable_device(int fd)
 }
 
 static Bool
-ps2_query_is_synaptics(InputInfoPtr pInfo, int fd, struct PS2SynapticsHwInfo* synhw)
+ps2_query_is_synaptics(InputInfoPtr pInfo, int fd,
+                       struct PS2SynapticsHwInfo *synhw)
 {
     int i;
 
     for (i = 0; i < 3; i++) {
-	if (ps2_synaptics_disable_device(fd))
-	    break;
+        if (ps2_synaptics_disable_device(fd))
+            break;
     }
 
     xf86WaitForInput(fd, 20000);
     xf86FlushInput(fd);
     if (ps2_synaptics_identify(fd, synhw)) {
-	return TRUE;
-    } else {
-	xf86IDrvMsg(pInfo, X_ERROR, "Query no Synaptics: %06X\n", synhw->identity);
-	return FALSE;
+        return TRUE;
+    }
+    else {
+        xf86IDrvMsg(pInfo, X_ERROR, "Query no Synaptics: %06X\n",
+                    synhw->identity);
+        return FALSE;
     }
 }
 
 void
 ps2_print_ident(InputInfoPtr pInfo, const struct PS2SynapticsHwInfo *synhw)
 {
-    xf86IDrvMsg(pInfo, X_PROBED, " Synaptics Touchpad, model: %d\n", SYN_ID_MODEL(synhw));
+    xf86IDrvMsg(pInfo, X_PROBED, " Synaptics Touchpad, model: %d\n",
+                SYN_ID_MODEL(synhw));
     xf86IDrvMsg(pInfo, X_PROBED, " Firmware: %d.%d\n", SYN_ID_MAJOR(synhw),
-	    SYN_ID_MINOR(synhw));
+                SYN_ID_MINOR(synhw));
 
     if (SYN_MODEL_ROT180(synhw))
-	xf86IDrvMsg(pInfo, X_PROBED, " 180 degree mounted touchpad\n");
+        xf86IDrvMsg(pInfo, X_PROBED, " 180 degree mounted touchpad\n");
     if (SYN_MODEL_PORTRAIT(synhw))
-	xf86IDrvMsg(pInfo, X_PROBED, " portrait touchpad\n");
+        xf86IDrvMsg(pInfo, X_PROBED, " portrait touchpad\n");
     xf86IDrvMsg(pInfo, X_PROBED, " Sensor: %d\n", SYN_MODEL_SENSOR(synhw));
     if (SYN_MODEL_NEWABS(synhw))
-	xf86IDrvMsg(pInfo, X_PROBED, " new absolute packet format\n");
+        xf86IDrvMsg(pInfo, X_PROBED, " new absolute packet format\n");
     if (SYN_MODEL_PEN(synhw))
-	xf86IDrvMsg(pInfo, X_PROBED, " pen detection\n");
+        xf86IDrvMsg(pInfo, X_PROBED, " pen detection\n");
 
     if (SYN_CAP_EXTENDED(synhw)) {
-	xf86IDrvMsg(pInfo, X_PROBED, " Touchpad has extended capability bits\n");
-	if (SYN_CAP_MULTI_BUTTON_NO(synhw))
-	    xf86IDrvMsg(pInfo, X_PROBED, " -> %d multi buttons, i.e. besides standard buttons\n",
-		    (int)(SYN_CAP_MULTI_BUTTON_NO(synhw)));
-	if (SYN_CAP_MIDDLE_BUTTON(synhw))
-	    xf86IDrvMsg(pInfo, X_PROBED, " -> middle button\n");
-	if (SYN_CAP_FOUR_BUTTON(synhw))
-	    xf86IDrvMsg(pInfo, X_PROBED, " -> four buttons\n");
-	if (SYN_CAP_MULTIFINGER(synhw))
-	    xf86IDrvMsg(pInfo, X_PROBED, " -> multifinger detection\n");
-	if (SYN_CAP_PALMDETECT(synhw))
-	    xf86IDrvMsg(pInfo, X_PROBED, " -> palm detection\n");
-	if (SYN_CAP_PASSTHROUGH(synhw))
-	    xf86IDrvMsg(pInfo, X_PROBED, " -> pass-through port\n");
+        xf86IDrvMsg(pInfo, X_PROBED,
+                    " Touchpad has extended capability bits\n");
+        if (SYN_CAP_MULTI_BUTTON_NO(synhw))
+            xf86IDrvMsg(pInfo, X_PROBED,
+                        " -> %d multi buttons, i.e. besides standard buttons\n",
+                        (int) (SYN_CAP_MULTI_BUTTON_NO(synhw)));
+        if (SYN_CAP_MIDDLE_BUTTON(synhw))
+            xf86IDrvMsg(pInfo, X_PROBED, " -> middle button\n");
+        if (SYN_CAP_FOUR_BUTTON(synhw))
+            xf86IDrvMsg(pInfo, X_PROBED, " -> four buttons\n");
+        if (SYN_CAP_MULTIFINGER(synhw))
+            xf86IDrvMsg(pInfo, X_PROBED, " -> multifinger detection\n");
+        if (SYN_CAP_PALMDETECT(synhw))
+            xf86IDrvMsg(pInfo, X_PROBED, " -> palm detection\n");
+        if (SYN_CAP_PASSTHROUGH(synhw))
+            xf86IDrvMsg(pInfo, X_PROBED, " -> pass-through port\n");
     }
 }
 
-static void
+static Bool
 PS2DeviceOffHook(InputInfoPtr pInfo)
 {
     ps2_synaptics_reset(pInfo->fd);
     ps2_synaptics_enable_device(pInfo->fd);
+
+    return TRUE;
 }
 
 static Bool
 PS2QueryHardware(InputInfoPtr pInfo)
 {
     int mode;
-    SynapticsPrivate *priv = (SynapticsPrivate *)pInfo->private;
+    SynapticsPrivate *priv = (SynapticsPrivate *) pInfo->private;
     struct PS2SynapticsHwInfo *synhw;
 
     if (!priv->proto_data)
         priv->proto_data = calloc(1, sizeof(struct PS2SynapticsHwInfo));
-    synhw = (struct PS2SynapticsHwInfo*)priv->proto_data;
+    synhw = (struct PS2SynapticsHwInfo *) priv->proto_data;
 
     /* is the synaptics touchpad active? */
     if (!ps2_query_is_synaptics(pInfo, pInfo->fd, synhw))
-	return FALSE;
+        return FALSE;
 
     xf86IDrvMsg(pInfo, X_PROBED, "synaptics touchpad found\n");
 
     if (!ps2_synaptics_reset(pInfo->fd))
-	xf86IDrvMsg(pInfo, X_ERROR, "reset failed\n");
+        xf86IDrvMsg(pInfo, X_ERROR, "reset failed\n");
 
     if (!ps2_synaptics_identify(pInfo->fd, synhw))
-	return FALSE;
+        return FALSE;
 
     if (!ps2_synaptics_model_id(pInfo->fd, synhw))
-	return FALSE;
+        return FALSE;
 
     if (!ps2_synaptics_capability(pInfo->fd, synhw))
-	return FALSE;
+        return FALSE;
 
     mode = SYN_BIT_ABSOLUTE_MODE | SYN_BIT_HIGH_RATE;
     if (SYN_ID_MAJOR(synhw) >= 4)
-	mode |= SYN_BIT_DISABLE_GESTURE;
+        mode |= SYN_BIT_DISABLE_GESTURE;
     if (SYN_CAP_EXTENDED(synhw))
-	mode |= SYN_BIT_W_MODE;
+        mode |= SYN_BIT_W_MODE;
     if (!ps2_synaptics_set_mode(pInfo->fd, mode))
-	return FALSE;
+        return FALSE;
 
     ps2_synaptics_enable_device(pInfo->fd);
 
@@ -430,23 +436,23 @@ ps2_packet_ok(struct PS2SynapticsHwInfo *synhw, struct CommData *comm)
     int newabs = SYN_MODEL_NEWABS(synhw);
 
     if (newabs ? ((buf[0] & 0xC0) != 0x80) : ((buf[0] & 0xC0) != 0xC0)) {
-	DBG(4, "Synaptics driver lost sync at 1st byte\n");
-	return FALSE;
+        DBG(4, "Synaptics driver lost sync at 1st byte\n");
+        return FALSE;
     }
 
     if (!newabs && ((buf[1] & 0x60) != 0x00)) {
-	DBG(4, "Synaptics driver lost sync at 2nd byte\n");
-	return FALSE;
+        DBG(4, "Synaptics driver lost sync at 2nd byte\n");
+        return FALSE;
     }
 
     if ((newabs ? ((buf[3] & 0xC0) != 0xC0) : ((buf[3] & 0xC0) != 0x80))) {
-	DBG(4, "Synaptics driver lost sync at 4th byte\n");
-	return FALSE;
+        DBG(4, "Synaptics driver lost sync at 4th byte\n");
+        return FALSE;
     }
 
     if (!newabs && ((buf[4] & 0x60) != 0x00)) {
-	DBG(4, "Synaptics driver lost sync at 5th byte\n");
-	return FALSE;
+        DBG(4, "Synaptics driver lost sync at 5th byte\n");
+        return FALSE;
     }
 
     return TRUE;
@@ -454,60 +460,64 @@ ps2_packet_ok(struct PS2SynapticsHwInfo *synhw, struct CommData *comm)
 
 static Bool
 ps2_synaptics_get_packet(InputInfoPtr pInfo, struct PS2SynapticsHwInfo *synhw,
-			 struct SynapticsProtocolOperations *proto_ops,
-			 struct CommData *comm)
+                         struct SynapticsProtocolOperations *proto_ops,
+                         struct CommData *comm)
 {
     int count = 0;
     int c;
     unsigned char u;
 
     while ((c = XisbRead(comm->buffer)) >= 0) {
-	u = (unsigned char)c;
+        u = (unsigned char) c;
 
-	/* test if there is a reset sequence received */
-	if ((c == 0x00) && (comm->lastByte == 0xAA)) {
-	    if (xf86WaitForInput(pInfo->fd, 50000) == 0) {
-		DBG(7, "Reset received\n");
-		proto_ops->QueryHardware(pInfo);
-	    } else
-		DBG(3, "faked reset received\n");
-	}
-	comm->lastByte = u;
+        /* test if there is a reset sequence received */
+        if ((c == 0x00) && (comm->lastByte == 0xAA)) {
+            if (xf86WaitForInput(pInfo->fd, 50000) == 0) {
+                DBG(7, "Reset received\n");
+                proto_ops->QueryHardware(pInfo);
+            }
+            else
+                DBG(3, "faked reset received\n");
+        }
+        comm->lastByte = u;
 
-	/* to avoid endless loops */
-	if (count++ > 30) {
-	    xf86IDrvMsg(pInfo, X_ERROR, "Synaptics driver lost sync... got gigantic packet!\n");
-	    return FALSE;
-	}
+        /* to avoid endless loops */
+        if (count++ > 30) {
+            xf86IDrvMsg(pInfo, X_ERROR,
+                        "Synaptics driver lost sync... got gigantic packet!\n");
+            return FALSE;
+        }
 
-	comm->protoBuf[comm->protoBufTail++] = u;
+        comm->protoBuf[comm->protoBufTail++] = u;
 
-	/* Check that we have a valid packet. If not, we are out of sync,
-	   so we throw away the first byte in the packet.*/
-	if (comm->protoBufTail >= 6) {
-	    if (!ps2_packet_ok(synhw, comm)) {
-		int i;
-		for (i = 0; i < comm->protoBufTail - 1; i++)
-		    comm->protoBuf[i] = comm->protoBuf[i + 1];
-		comm->protoBufTail--;
-		comm->outOfSync++;
-		if (comm->outOfSync > MAX_UNSYNC_PACKETS) {
-		    comm->outOfSync = 0;
-		    DBG(3, "Synaptics synchronization lost too long -> reset touchpad.\n");
-		    proto_ops->QueryHardware(pInfo); /* including a reset */
-		    continue;
-		}
-	    }
-	}
+        /* Check that we have a valid packet. If not, we are out of sync,
+           so we throw away the first byte in the packet. */
+        if (comm->protoBufTail >= 6) {
+            if (!ps2_packet_ok(synhw, comm)) {
+                int i;
 
-	if (comm->protoBufTail >= 6) { /* Full packet received */
-	    if (comm->outOfSync > 0) {
-		comm->outOfSync = 0;
-		DBG(4, "Synaptics driver resynced.\n");
-	    }
-	    comm->protoBufTail = 0;
-	    return TRUE;
-	}
+                for (i = 0; i < comm->protoBufTail - 1; i++)
+                    comm->protoBuf[i] = comm->protoBuf[i + 1];
+                comm->protoBufTail--;
+                comm->outOfSync++;
+                if (comm->outOfSync > MAX_UNSYNC_PACKETS) {
+                    comm->outOfSync = 0;
+                    DBG(3,
+                        "Synaptics synchronization lost too long -> reset touchpad.\n");
+                    proto_ops->QueryHardware(pInfo);    /* including a reset */
+                    continue;
+                }
+            }
+        }
+
+        if (comm->protoBufTail >= 6) {  /* Full packet received */
+            if (comm->outOfSync > 0) {
+                comm->outOfSync = 0;
+                DBG(4, "Synaptics driver resynced.\n");
+            }
+            comm->protoBufTail = 0;
+            return TRUE;
+        }
     }
 
     return FALSE;
@@ -515,20 +525,19 @@ ps2_synaptics_get_packet(InputInfoPtr pInfo, struct PS2SynapticsHwInfo *synhw,
 
 Bool
 PS2ReadHwStateProto(InputInfoPtr pInfo,
-	       struct SynapticsProtocolOperations *proto_ops,
-	       struct CommData *comm, struct SynapticsHwState *hwRet)
+                    struct SynapticsProtocolOperations *proto_ops,
+                    struct CommData *comm, struct SynapticsHwState *hwRet)
 {
     unsigned char *buf = comm->protoBuf;
-    struct SynapticsHwState *hw = &(comm->hwState);
-    SynapticsPrivate *priv = (SynapticsPrivate *)pInfo->private;
+    struct SynapticsHwState *hw = comm->hwState;
+    SynapticsPrivate *priv = (SynapticsPrivate *) pInfo->private;
     SynapticsParameters *para = &priv->synpara;
     struct PS2SynapticsHwInfo *synhw;
     int newabs;
     int w, i;
 
-    synhw = (struct PS2SynapticsHwInfo*)priv->proto_data;
-    if (!synhw)
-    {
+    synhw = (struct PS2SynapticsHwInfo *) priv->proto_data;
+    if (!synhw) {
         xf86IDrvMsg(pInfo, X_ERROR,
                     "PS2ReadHwState, synhw is NULL. This is a bug.\n");
         return FALSE;
@@ -537,118 +546,113 @@ PS2ReadHwStateProto(InputInfoPtr pInfo,
     newabs = SYN_MODEL_NEWABS(synhw);
 
     if (!ps2_synaptics_get_packet(pInfo, synhw, proto_ops, comm))
-	return FALSE;
+        return FALSE;
 
     /* Handle normal packets */
     hw->x = hw->y = hw->z = hw->numFingers = hw->fingerWidth = 0;
     hw->left = hw->right = hw->up = hw->down = hw->middle = FALSE;
     for (i = 0; i < 8; i++)
-	hw->multi[i] = FALSE;
+        hw->multi[i] = FALSE;
 
-    if (newabs) {			    /* newer protos...*/
-	DBG(7, "using new protocols\n");
-	hw->x = (((buf[3] & 0x10) << 8) |
-		 ((buf[1] & 0x0f) << 8) |
-		 buf[4]);
-	hw->y = (((buf[3] & 0x20) << 7) |
-		 ((buf[1] & 0xf0) << 4) |
-		 buf[5]);
+    if (newabs) {               /* newer protos... */
+        DBG(7, "using new protocols\n");
+        hw->x = (((buf[3] & 0x10) << 8) | ((buf[1] & 0x0f) << 8) | buf[4]);
+        hw->y = (((buf[3] & 0x20) << 7) | ((buf[1] & 0xf0) << 4) | buf[5]);
 
-	hw->z = buf[2];
-	w = (((buf[0] & 0x30) >> 2) |
-	     ((buf[0] & 0x04) >> 1) |
-	     ((buf[3] & 0x04) >> 2));
+        hw->z = buf[2];
+        w = (((buf[0] & 0x30) >> 2) |
+             ((buf[0] & 0x04) >> 1) | ((buf[3] & 0x04) >> 2));
 
-	hw->left  = (buf[0] & 0x01) ? 1 : 0;
-	hw->right = (buf[0] & 0x02) ? 1 : 0;
+        hw->left = (buf[0] & 0x01) ? 1 : 0;
+        hw->right = (buf[0] & 0x02) ? 1 : 0;
 
-	if (SYN_CAP_EXTENDED(synhw)) {
-	    if (SYN_CAP_MIDDLE_BUTTON(synhw)) {
-		hw->middle = ((buf[0] ^ buf[3]) & 0x01) ? 1 : 0;
-	    }
-	    if (SYN_CAP_FOUR_BUTTON(synhw)) {
-		hw->up = ((buf[3] & 0x01)) ? 1 : 0;
-		if (hw->left)
-		    hw->up = !hw->up;
-		hw->down = ((buf[3] & 0x02)) ? 1 : 0;
-		if (hw->right)
-		    hw->down = !hw->down;
-	    }
-	    if (SYN_CAP_MULTI_BUTTON_NO(synhw)) {
-		if ((buf[3] & 2) ? !hw->right : hw->right) {
-		    switch (SYN_CAP_MULTI_BUTTON_NO(synhw) & ~0x01) {
-		    default:
-			break;
-		    case 8:
-			hw->multi[7] = ((buf[5] & 0x08)) ? 1 : 0;
-			hw->multi[6] = ((buf[4] & 0x08)) ? 1 : 0;
-		    case 6:
-			hw->multi[5] = ((buf[5] & 0x04)) ? 1 : 0;
-			hw->multi[4] = ((buf[4] & 0x04)) ? 1 : 0;
-		    case 4:
-			hw->multi[3] = ((buf[5] & 0x02)) ? 1 : 0;
-			hw->multi[2] = ((buf[4] & 0x02)) ? 1 : 0;
-		    case 2:
-			hw->multi[1] = ((buf[5] & 0x01)) ? 1 : 0;
-			hw->multi[0] = ((buf[4] & 0x01)) ? 1 : 0;
-		    }
-		}
-	    }
-	}
-    } else {			    /* old proto...*/
-	DBG(7, "using old protocol\n");
-	hw->x = (((buf[1] & 0x1F) << 8) |
-		 buf[2]);
-	hw->y = (((buf[4] & 0x1F) << 8) |
-		 buf[5]);
+        if (SYN_CAP_EXTENDED(synhw)) {
+            if (SYN_CAP_MIDDLE_BUTTON(synhw)) {
+                hw->middle = ((buf[0] ^ buf[3]) & 0x01) ? 1 : 0;
+            }
+            if (SYN_CAP_FOUR_BUTTON(synhw)) {
+                hw->up = ((buf[3] & 0x01)) ? 1 : 0;
+                if (hw->left)
+                    hw->up = !hw->up;
+                hw->down = ((buf[3] & 0x02)) ? 1 : 0;
+                if (hw->right)
+                    hw->down = !hw->down;
+            }
+            if (SYN_CAP_MULTI_BUTTON_NO(synhw)) {
+                if ((buf[3] & 2) ? !hw->right : hw->right) {
+                    switch (SYN_CAP_MULTI_BUTTON_NO(synhw) & ~0x01) {
+                    default:
+                        break;
+                    case 8:
+                        hw->multi[7] = ((buf[5] & 0x08)) ? 1 : 0;
+                        hw->multi[6] = ((buf[4] & 0x08)) ? 1 : 0;
+                    case 6:
+                        hw->multi[5] = ((buf[5] & 0x04)) ? 1 : 0;
+                        hw->multi[4] = ((buf[4] & 0x04)) ? 1 : 0;
+                    case 4:
+                        hw->multi[3] = ((buf[5] & 0x02)) ? 1 : 0;
+                        hw->multi[2] = ((buf[4] & 0x02)) ? 1 : 0;
+                    case 2:
+                        hw->multi[1] = ((buf[5] & 0x01)) ? 1 : 0;
+                        hw->multi[0] = ((buf[4] & 0x01)) ? 1 : 0;
+                    }
+                }
+            }
+        }
+    }
+    else {                      /* old proto... */
+        DBG(7, "using old protocol\n");
+        hw->x = (((buf[1] & 0x1F) << 8) | buf[2]);
+        hw->y = (((buf[4] & 0x1F) << 8) | buf[5]);
 
-	hw->z = (((buf[0] & 0x30) << 2) |
-		 (buf[3] & 0x3F));
-	w = (((buf[1] & 0x80) >> 4) |
-	     ((buf[0] & 0x04) >> 1));
+        hw->z = (((buf[0] & 0x30) << 2) | (buf[3] & 0x3F));
+        w = (((buf[1] & 0x80) >> 4) | ((buf[0] & 0x04) >> 1));
 
-	hw->left  = (buf[0] & 0x01) ? 1 : 0;
-	hw->right = (buf[0] & 0x02) ? 1 : 0;
+        hw->left = (buf[0] & 0x01) ? 1 : 0;
+        hw->right = (buf[0] & 0x02) ? 1 : 0;
     }
 
     hw->y = YMAX_NOMINAL + YMIN_NOMINAL - hw->y;
 
     if (hw->z >= para->finger_high) {
-	int w_ok = 0;
-	/*
-	 * Use capability bits to decide if the w value is valid.
-	 * If not, set it to 5, which corresponds to a finger of
-	 * normal width.
-	 */
-	if (SYN_CAP_EXTENDED(synhw)) {
-	    if ((w >= 0) && (w <= 1)) {
-		w_ok = SYN_CAP_MULTIFINGER(synhw);
-	    } else if (w == 2) {
-		w_ok = SYN_MODEL_PEN(synhw);
-	    } else if ((w >= 4) && (w <= 15)) {
-		w_ok = SYN_CAP_PALMDETECT(synhw);
-	    }
-	}
-	if (!w_ok)
-	    w = 5;
+        int w_ok = 0;
 
-	switch (w) {
-	case 0:
-	    hw->numFingers = 2;
-	    hw->fingerWidth = 5;
-	    break;
-	case 1:
-	    hw->numFingers = 3;
-	    hw->fingerWidth = 5;
-	    break;
-	default:
-	    hw->numFingers = 1;
-	    hw->fingerWidth = w;
-	    break;
-	}
+        /*
+         * Use capability bits to decide if the w value is valid.
+         * If not, set it to 5, which corresponds to a finger of
+         * normal width.
+         */
+        if (SYN_CAP_EXTENDED(synhw)) {
+            if ((w >= 0) && (w <= 1)) {
+                w_ok = SYN_CAP_MULTIFINGER(synhw);
+            }
+            else if (w == 2) {
+                w_ok = SYN_MODEL_PEN(synhw);
+            }
+            else if ((w >= 4) && (w <= 15)) {
+                w_ok = SYN_CAP_PALMDETECT(synhw);
+            }
+        }
+        if (!w_ok)
+            w = 5;
+
+        switch (w) {
+        case 0:
+            hw->numFingers = 2;
+            hw->fingerWidth = 5;
+            break;
+        case 1:
+            hw->numFingers = 3;
+            hw->fingerWidth = 5;
+            break;
+        default:
+            hw->numFingers = 1;
+            hw->fingerWidth = w;
+            break;
+        }
     }
-
-    *hwRet = *hw;
+    hw->millis = GetTimeInMillis();
+    SynapticsCopyHwState(hwRet, hw);
     return TRUE;
 }
 

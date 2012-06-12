@@ -90,22 +90,30 @@ WSConsReadEvent(InputInfoPtr pInfo, struct wscons_event *event)
     return rc;
 }
 
-static void
+static Bool
 WSConsDeviceOnHook(InputInfoPtr pInfo, SynapticsParameters *para)
 {
     int wsmouse_mode = WSMOUSE_NATIVE;
 
-    if (ioctl(pInfo->fd, WSMOUSEIO_SETMODE, &wsmouse_mode) == -1)
+    if (ioctl(pInfo->fd, WSMOUSEIO_SETMODE, &wsmouse_mode) == -1) {
         xf86IDrvMsg(pInfo, X_ERROR, "cannot set native mode\n");
+        return FALSE;
+    }
+
+    return TRUE;
 }
 
-static void
+static Bool
 WSConsDeviceOffHook(InputInfoPtr pInfo)
 {
     int wsmouse_mode = WSMOUSE_COMPAT;
 
-    if (ioctl(pInfo->fd, WSMOUSEIO_SETMODE, &wsmouse_mode) == -1)
+    if (ioctl(pInfo->fd, WSMOUSEIO_SETMODE, &wsmouse_mode) == -1) {
         xf86IDrvMsg(pInfo, X_ERROR, "cannot set compat mode\n");
+        return FALSE;
+    }
+
+    return TRUE;
 }
 
 static Bool
@@ -119,7 +127,7 @@ WSConsReadHwState(InputInfoPtr pInfo,
     struct CommData *comm, struct SynapticsHwState *hwRet)
 {
     SynapticsPrivate *priv = (SynapticsPrivate *)pInfo->private;
-    struct SynapticsHwState *hw = &(comm->hwState);
+    struct SynapticsHwState *hw = comm->hwState;
     struct wscons_event event;
     Bool v;
 
@@ -201,7 +209,9 @@ WSConsReadHwState(InputInfoPtr pInfo,
         return FALSE;
     }
 
-    *hwRet = *hw;
+    hw->millis = GetTimeInMillis();
+
+    SynapticsCopyHwState(hwRet, hw);
     return TRUE;
 }
 

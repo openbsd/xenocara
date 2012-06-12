@@ -49,6 +49,9 @@
 #define SYNAPTICS_PROP_TAP_DURATIONS "Synaptics Tap Durations"
 
 /* 8 bit (BOOL) */
+#define SYNAPTICS_PROP_CLICKPAD "Synaptics ClickPad"
+
+/* 8 bit (BOOL) */
 #define SYNAPTICS_PROP_TAP_FAST "Synaptics Tap FastTap"
 
 /* 32 bit */
@@ -155,7 +158,10 @@
 /* 32 bit, 4 values, left, right, top, bottom */
 #define SYNAPTICS_PROP_AREA "Synaptics Area"
 
+/* 32 bit, 4 values, left, right, top, buttom */
+#define SYNAPTICS_PROP_SOFTBUTTON_AREAS "Synaptics Soft Button Areas"
+
 /* 32 Bit Integer, 2 values, horizontal hysteresis, vertical hysteresis */
 #define SYNAPTICS_PROP_NOISE_CANCELLATION "Synaptics Noise Cancellation"
 
-#endif /* _SYNAPTICS_PROPERTIES_H_ */
+#endif                          /* _SYNAPTICS_PROPERTIES_H_ */

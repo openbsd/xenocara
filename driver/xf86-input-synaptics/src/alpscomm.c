@@ -39,14 +39,14 @@
 #include "ps2comm.h"
 #include <xf86.h>
 
-
 /* Wait for the channel to go silent, which means we're in sync */
 static void
 ALPS_sync(int fd)
 {
     byte buffer[64];
+
     while (xf86WaitForInput(fd, 250000) > 0) {
-	xf86ReadSerial(fd, &buffer, 64);
+        xf86ReadSerial(fd, &buffer, 64);
     }
 }
 
@@ -98,7 +98,7 @@ ALPS_packet_ok(struct CommData *comm)
 {
     /* ALPS absolute mode packets start with 0b11111mrl */
     if ((comm->protoBuf[0] & 0xf8) == 0xf8)
-	return TRUE;
+        return TRUE;
     return FALSE;
 }
 
@@ -108,24 +108,23 @@ ALPS_get_packet(struct CommData *comm, InputInfoPtr pInfo)
     int c;
 
     while ((c = XisbRead(comm->buffer)) >= 0) {
-	unsigned char u = (unsigned char)c;
+        unsigned char u = (unsigned char) c;
 
-	comm->protoBuf[comm->protoBufTail++] = u;
+        comm->protoBuf[comm->protoBufTail++] = u;
 
-	if (comm->protoBufTail == 3) { /* PS/2 packet received? */
-	    if ((comm->protoBuf[0] & 0xc8) == 0x08) {
-		comm->protoBufTail = 0;
-		return TRUE;
-	    }
-	}
+        if (comm->protoBufTail == 3) {  /* PS/2 packet received? */
+            if ((comm->protoBuf[0] & 0xc8) == 0x08) {
+                comm->protoBufTail = 0;
+                return TRUE;
+            }
+        }
 
-	if (comm->protoBufTail >= 6) { /* Full packet received */
-	    comm->protoBufTail = 0;
-	    if (ALPS_packet_ok(comm))
-		return TRUE;
-	    while ((c = XisbRead(comm->buffer)) >= 0)
-		;		   /* If packet is invalid, re-sync */
-	}
+        if (comm->protoBufTail >= 6) {  /* Full packet received */
+            comm->protoBufTail = 0;
+            if (ALPS_packet_ok(comm))
+                return TRUE;
+            while ((c = XisbRead(comm->buffer)) >= 0);  /* If packet is invalid, re-sync */
+        }
     }
 
     return FALSE;
@@ -155,48 +154,52 @@ ALPS_process_packet(unsigned char *packet, struct SynapticsHwState *hw)
     int left = 0, right = 0, middle = 0;
     int i;
 
-    x = (packet[1] & 0x7f) | ((packet[2] & 0x78) << (7-3));
-    y = (packet[4] & 0x7f) | ((packet[3] & 0x70) << (7-4));
+    hw->millis = GetTimeInMillis();
+
+    x = (packet[1] & 0x7f) | ((packet[2] & 0x78) << (7 - 3));
+    y = (packet[4] & 0x7f) | ((packet[3] & 0x70) << (7 - 4));
     z = packet[5];
 
-    if (z == 127) {    /* DualPoint stick is relative, not absolute */
-	hw->left  = packet[3] & 1;
-	hw->right = (packet[3] >> 1) & 1;
-	return;
+    if (z == 127) {             /* DualPoint stick is relative, not absolute */
+        hw->left = packet[3] & 1;
+        hw->right = (packet[3] >> 1) & 1;
+        return;
     }
 
     /* Handle normal packets */
     hw->x = hw->y = hw->z = hw->numFingers = hw->fingerWidth = 0;
     hw->left = hw->right = hw->up = hw->down = hw->middle = FALSE;
     for (i = 0; i < 8; i++)
-	hw->multi[i] = FALSE;
+        hw->multi[i] = FALSE;
 
     if (z > 0) {
-	hw->x = x;
-	hw->y = y;
+        hw->x = x;
+        hw->y = y;
     }
     hw->z = z;
     hw->numFingers = (z > 0) ? 1 : 0;
     hw->fingerWidth = 5;
 
-    left  |= (packet[2]     ) & 1;
-    left  |= (packet[3]     ) & 1;
+    left |= (packet[2]) & 1;
+    left |= (packet[3]) & 1;
     right |= (packet[3] >> 1) & 1;
     if (packet[0] == 0xff) {
-	int back    = (packet[3] >> 2) & 1;
-	int forward = (packet[2] >> 2) & 1;
-	if (back && forward) {
-	    middle = 1;
-	    back = 0;
-	    forward = 0;
-	}
-	hw->down = back;
-	hw->up = forward;
-    } else {
-	left   |= (packet[0]     ) & 1;
-	right  |= (packet[0] >> 1) & 1;
-	middle |= (packet[0] >> 2) & 1;
-	middle |= (packet[3] >> 2) & 1;
+        int back = (packet[3] >> 2) & 1;
+        int forward = (packet[2] >> 2) & 1;
+
+        if (back && forward) {
+            middle = 1;
+            back = 0;
+            forward = 0;
+        }
+        hw->down = back;
+        hw->up = forward;
+    }
+    else {
+        left |= (packet[0]) & 1;
+        right |= (packet[0] >> 1) & 1;
+        middle |= (packet[0] >> 2) & 1;
+        middle |= (packet[3] >> 2) & 1;
     }
 
     hw->left = left;
@@ -206,17 +209,17 @@ ALPS_process_packet(unsigned char *packet, struct SynapticsHwState *hw)
 
 static Bool
 ALPSReadHwState(InputInfoPtr pInfo,
-		struct CommData *comm, struct SynapticsHwState *hwRet)
+                struct CommData *comm, struct SynapticsHwState *hwRet)
 {
     unsigned char *buf = comm->protoBuf;
-    struct SynapticsHwState *hw = &(comm->hwState);
+    struct SynapticsHwState *hw = comm->hwState;
 
     if (!ALPS_get_packet(comm, pInfo))
-	return FALSE;
+        return FALSE;
 
     ALPS_process_packet(buf, hw);
 
-    *hwRet = *hw;
+    SynapticsCopyHwState(hwRet, hw);
     return TRUE;
 }
 

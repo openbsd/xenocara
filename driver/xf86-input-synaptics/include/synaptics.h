@@ -29,36 +29,35 @@
  *			Used by driver and the shared memory configurator
  *****************************************************************************/
 typedef enum {
-    RT_TAP = 0,				    /* Right top corner */
-    RB_TAP,				    /* Right bottom corner */
-    LT_TAP,				    /* Left top corner */
-    LB_TAP,				    /* Left bottom corner */
-    F1_TAP,				    /* Non-corner tap, one finger */
-    F2_TAP,				    /* Non-corner tap, two fingers */
-    F3_TAP,				    /* Non-corner tap, three fingers */
+    RT_TAP = 0,                 /* Right top corner */
+    RB_TAP,                     /* Right bottom corner */
+    LT_TAP,                     /* Left top corner */
+    LB_TAP,                     /* Left bottom corner */
+    F1_TAP,                     /* Non-corner tap, one finger */
+    F2_TAP,                     /* Non-corner tap, two fingers */
+    F3_TAP,                     /* Non-corner tap, three fingers */
     MAX_TAP
 } TapEvent;
 
 typedef enum {
-    F1_CLICK1 = 0,			    /* Click left, one finger */
-    F2_CLICK1,				    /* Click left, two fingers */
-    F3_CLICK1,				    /* Click left, three fingers */
+    F1_CLICK1 = 0,              /* Click left, one finger */
+    F2_CLICK1,                  /* Click left, two fingers */
+    F3_CLICK1,                  /* Click left, three fingers */
     MAX_CLICK
 } ClickFingerEvent;
 
-#define SYN_MAX_BUTTONS 12		    /* Max number of mouse buttons */
+#define SYN_MAX_BUTTONS 12      /* Max number of mouse buttons */
 
 #define SHM_SYNAPTICS 23947
-typedef struct _SynapticsSHM
-{
-    int version;			    /* Driver version */
+typedef struct _SynapticsSHM {
+    int version;                /* Driver version */
 
     /* Current device state */
-    int x, y;				    /* actual x, y coordinates */
-    int z;				    /* pressure value */
-    int numFingers;			    /* number of fingers */
-    int fingerWidth;			    /* finger width value */
-    int left, right, up, down;		    /* left/right/up/down buttons */
+    int x, y;                   /* actual x, y coordinates */
+    int z;                      /* pressure value */
+    int numFingers;             /* number of fingers */
+    int fingerWidth;            /* finger width value */
+    int left, right, up, down;  /* left/right/up/down buttons */
     Bool multi[8];
     Bool middle;
 } SynapticsSHM;
@@ -69,4 +68,4 @@ typedef struct _SynapticsSHM
 #define SBR_MIN 10
 #define SBR_MAX 1000
 
-#endif /* _SYNAPTICS_H_ */
+#endif                          /* _SYNAPTICS_H_ */

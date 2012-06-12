@@ -32,6 +32,7 @@ AM_CPPFLAGS = -I$(top_srcdir)/include
 AM_CFLAGS = $(XORG_CFLAGS)
 
 @DRIVER_NAME@_drv_la_SOURCES = @DRIVER_NAME@.c synapticsstr.h \
+	synproto.c \
 	synproto.h \
 	properties.c
 
@@ -44,6 +45,8 @@ endif
 if BUILD_EVENTCOMM
 @DRIVER_NAME@_drv_la_SOURCES += \
 	eventcomm.c eventcomm.h
+@DRIVER_NAME@_drv_la_LIBADD = \
+	$(MTDEV_LIBS)
 endif
 
 if BUILD_PSMCOMM

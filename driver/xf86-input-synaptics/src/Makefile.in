@@ -87,17 +87,19 @@ am__strip_dir = `echo $$p | sed -e 's|^.*/||'`;
 am__installdirs = "$(DESTDIR)$(@DRIVER_NAME@_drv_ladir)"
 @DRIVER_NAME@_drv_laLTLIBRARIES_INSTALL = $(INSTALL)
 LTLIBRARIES = $(@DRIVER_NAME@_drv_la_LTLIBRARIES)
-@DRIVER_NAME@_drv_la_LIBADD =
+am__DEPENDENCIES_1 =
+@BUILD_EVENTCOMM_TRUE@@DRIVER_NAME@_drv_la_DEPENDENCIES =  \
+@BUILD_EVENTCOMM_TRUE@	$(am__DEPENDENCIES_1)
 am__@DRIVER_NAME@_drv_la_SOURCES_DIST = @DRIVER_NAME@.c synapticsstr.h \
-	synproto.h properties.c alpscomm.c ps2comm.c ps2comm.h \
-	eventcomm.c eventcomm.h psmcomm.c wsconscomm.c
+	synproto.c synproto.h properties.c alpscomm.c ps2comm.c \
+	ps2comm.h eventcomm.c eventcomm.h psmcomm.c wsconscomm.c
 @BUILD_PS2COMM_TRUE@am__objects_1 = alpscomm.lo ps2comm.lo
 @BUILD_EVENTCOMM_TRUE@am__objects_2 = eventcomm.lo
 @BUILD_PSMCOMM_TRUE@am__objects_3 = psmcomm.lo
 @BUILD_WSCONSCOMM_TRUE@am__objects_4 = wsconscomm.lo
-am_@DRIVER_NAME@_drv_la_OBJECTS = @DRIVER_NAME@.lo properties.lo \
-	$(am__objects_1) $(am__objects_2) $(am__objects_3) \
-	$(am__objects_4)
+am_@DRIVER_NAME@_drv_la_OBJECTS = @DRIVER_NAME@.lo synproto.lo \
+	properties.lo $(am__objects_1) $(am__objects_2) \
+	$(am__objects_3) $(am__objects_4)
 @DRIVER_NAME@_drv_la_OBJECTS = $(am_@DRIVER_NAME@_drv_la_OBJECTS)
 DEFAULT_INCLUDES = -I. -I$(srcdir) -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/depcomp
@@ -192,6 +194,8 @@ MANIFEST_TOOL = @MANIFEST_TOOL@
 MAN_SUBSTS = @MAN_SUBSTS@
 MISC_MAN_DIR = @MISC_MAN_DIR@
 MISC_MAN_SUFFIX = @MISC_MAN_SUFFIX@
+MTDEV_CFLAGS = @MTDEV_CFLAGS@
+MTDEV_LIBS = @MTDEV_LIBS@
 NM = @NM@
 NMEDIT = @NMEDIT@
 OBJDUMP = @OBJDUMP@
@@ -213,6 +217,8 @@ SHELL = @SHELL@
 STRICT_CFLAGS = @STRICT_CFLAGS@
 STRIP = @STRIP@
 VERSION = @VERSION@
+XI22_CFLAGS = @XI22_CFLAGS@
+XI22_LIBS = @XI22_LIBS@
 XI_CFLAGS = @XI_CFLAGS@
 XI_LIBS = @XI_LIBS@
 XORG_CFLAGS = @XORG_CFLAGS@
@@ -281,8 +287,11 @@ target_alias = @target_alias@
 AM_CPPFLAGS = -I$(top_srcdir)/include
 AM_CFLAGS = $(XORG_CFLAGS)
 @DRIVER_NAME@_drv_la_SOURCES = @DRIVER_NAME@.c synapticsstr.h \
-	synproto.h properties.c $(am__append_1) $(am__append_2) \
-	$(am__append_3) $(am__append_4)
+	synproto.c synproto.h properties.c $(am__append_1) \
+	$(am__append_2) $(am__append_3) $(am__append_4)
+@BUILD_EVENTCOMM_TRUE@@DRIVER_NAME@_drv_la_LIBADD = \
+@BUILD_EVENTCOMM_TRUE@	$(MTDEV_LIBS)
+
 all: all-am
 
 .SUFFIXES:
@@ -358,6 +367,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/properties.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ps2comm.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/psmcomm.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/synproto.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/wsconscomm.Plo@am__quote@
 
 .c.o:

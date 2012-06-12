@@ -27,7 +27,7 @@
 #include "xf86_OSproc.h"
 
 /* acknowledge for commands and parameter */
-#define PS2_ACK 			0xFA
+#define PS2_ACK				0xFA
 #define PS2_ERROR			0xFC
 
 /* standard PS/2 commands */
@@ -56,7 +56,7 @@
 #define SYN_BIT_W_MODE			(1 << 0)
 
 /* synaptics model ID bits */
-#define SYN_MODEL_ROT180(synhw) 	((synhw)->model_id & (1 << 23))
+#define SYN_MODEL_ROT180(synhw)		((synhw)->model_id & (1 << 23))
 #define SYN_MODEL_PORTRAIT(synhw)	((synhw)->model_id & (1 << 22))
 #define SYN_MODEL_SENSOR(synhw)		(((synhw)->model_id >> 16) & 0x3f)
 #define SYN_MODEL_HARDWARE(synhw)	(((synhw)->model_id >> 9) & 0x7f)
@@ -74,7 +74,7 @@
 #define SYN_CAP_MULTIFINGER(synhw)	((synhw)->capabilities & (1 << 1))
 #define SYN_CAP_PALMDETECT(synhw)	((synhw)->capabilities & (1 << 0))
 #define SYN_CAP_VALID(synhw)		((((synhw)->capabilities & 0x00ff00) >> 8) == 0x47)
-#define SYN_EXT_CAP_REQUESTS(synhw)	(((synhw)->capabilities & 0x700000) == 0x100000)
+#define SYN_EXT_CAP_REQUESTS(synhw)	(((synhw)->capabilities & 0x700000) != 0)
 #define SYN_CAP_MULTI_BUTTON_NO(synhw)	(((synhw)->ext_cap & 0x00f000) >> 12)
 
 /* synaptics modes query bits */
@@ -95,16 +95,17 @@
 typedef unsigned char byte;
 
 struct PS2SynapticsHwInfo {
-    unsigned int model_id;		/* Model-ID */
-    unsigned int capabilities;		/* Capabilities */
-    unsigned int ext_cap;		/* Extended Capabilities */
-    unsigned int identity;		/* Identification */
+    unsigned int model_id;      /* Model-ID */
+    unsigned int capabilities;  /* Capabilities */
+    unsigned int ext_cap;       /* Extended Capabilities */
+    unsigned int identity;      /* Identification */
 };
 
 Bool ps2_putbyte(int fd, byte b);
-void ps2_print_ident(InputInfoPtr pInfo, const struct PS2SynapticsHwInfo *synhw);
+void ps2_print_ident(InputInfoPtr pInfo,
+                     const struct PS2SynapticsHwInfo *synhw);
 Bool PS2ReadHwStateProto(InputInfoPtr pInfo,
-			struct SynapticsProtocolOperations *proto_ops,
-			struct CommData *comm, struct SynapticsHwState *hwRet);
+                         struct SynapticsProtocolOperations *proto_ops,
+                         struct CommData *comm, struct SynapticsHwState *hwRet);
 
-#endif /* _PS2COMM_H_ */
+#endif                          /* _PS2COMM_H_ */
