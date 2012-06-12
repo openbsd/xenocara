@@ -13,7 +13,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
-/* $OpenBSD: ws.c,v 1.54 2012/06/12 17:12:50 shadchin Exp $ */
+/* $OpenBSD: ws.c,v 1.55 2012/06/12 17:59:01 shadchin Exp $ */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -354,7 +354,7 @@ wsDeviceInit(DeviceIntPtr pWS)
 		xmax = ymax;
 		ymax = tmp;
 	}
-	if ((priv->type == WSMOUSE_TYPE_TPANEL)) {
+	if (priv->type == WSMOUSE_TYPE_TPANEL) {
 		axes_labels[0] = XIGetKnownProperty(AXIS_LABEL_PROP_ABS_X);
 		axes_labels[1] = XIGetKnownProperty(AXIS_LABEL_PROP_ABS_Y);
 	} else {
