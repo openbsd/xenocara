@@ -1543,7 +1543,8 @@ NVPreInit(ScrnInfoPtr pScrn, int flags)
 	xf86FreeInt10(pNv->pInt);
 	return FALSE;
     }
-    
+    vgaHWSetStdFuncs(VGAHWPTR(pScrn));
+
     /* We use a programmable clock */
     pScrn->progClock = TRUE;
 
