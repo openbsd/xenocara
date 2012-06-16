@@ -1,4 +1,4 @@
-/* $OpenBSD: hppa_video.c,v 1.6 2012/06/10 13:21:25 matthieu Exp $ */
+/* $OpenBSD: hppa_video.c,v 1.7 2012/06/16 15:08:08 matthieu Exp $ */
 /*
  * Copyright 1992 by Rich Murphey <Rich@Rice.edu>
  * Copyright 1993 by David Wexelblat <dwex@goblin.org>
@@ -57,7 +57,7 @@ xf86OSInitVidMem(VidMemInfoPtr pVidMem)
 	pVidMem->mapMem = hppaMapVidMem;
 	pVidMem->unmapMem = hppaUnmapVidMem;
 #if HAVE_PCI_SYSTEM_INIT_DEV_MEM
-       pci_system_init_dev_mem(xf86Info.screenFd);
+       pci_system_init_dev_mem(xf86Info.consoleFd);
 #endif
 	pVidMem->initialised = TRUE;
 }
@@ -68,7 +68,7 @@ volatile unsigned char *ioBase = MAP_FAILED;
 static pointer
 hppaMapVidMem(int ScreenNum, unsigned long Base, unsigned long Size, int flags)
 {
-	int fd = xf86Info.screenFd;
+	int fd = xf86Info.consoleFd;
 	pointer base;
 
 #ifdef DEBUG
