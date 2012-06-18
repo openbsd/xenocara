@@ -49,7 +49,7 @@
 ./usr/X11R6/lib/libXfont.so.9.0
 ./usr/X11R6/lib/libXfontcache.so.4.0
 ./usr/X11R6/lib/libXft.so.8.0
-./usr/X11R6/lib/libXi.so.11.0
+./usr/X11R6/lib/libXi.so.11.1
 ./usr/X11R6/lib/libXinerama.so.5.0
 ./usr/X11R6/lib/libXmu.so.10.0
 ./usr/X11R6/lib/libXmuu.so.5.0
