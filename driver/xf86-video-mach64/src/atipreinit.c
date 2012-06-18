@@ -716,11 +716,14 @@ ATIPreInit
 #ifndef TV_OUT
     /* De-activate VBE */
     vbeFree(pVBE);
+#if GET_ABI_MAJOR(ABI_VIDEODRV_VERSION) < 12
     xf86UnloadSubModule(pVBEModule);
-
+#endif
     /* De-activate int10 */
     xf86FreeInt10(pInt10Info);
+#if GET_ABI_MAJOR(ABI_VIDEODRV_VERSION) < 12
     xf86UnloadSubModule(pInt10Module);
+#endif
 #else
     pATI->pInt10 = pInt10Info;
     pATI->pVBE = pVBE;
@@ -735,8 +738,9 @@ ATIPreInit
     }
 
     /* DDC module is no longer needed at this point */
+#if GET_ABI_MAJOR(ABI_VIDEODRV_VERSION) < 12
     xf86UnloadSubModule(pDDCModule);
-
+#endif
 #endif /* AVOID_CPIO */
 
     if (flags & PROBE_DETECT)
