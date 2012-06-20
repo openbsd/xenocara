@@ -1,8 +1,0 @@
-Post-installation instructions for X.Org on OpenBSD/mac68k
-----------------------------------------------------------
-
-There is no X server for mac68k.  Only userland X.
-
-problem_blurb
-
-$OpenBSD: README.mac68k,v 1.3 2012/02/07 19:53:13 matthieu Exp $

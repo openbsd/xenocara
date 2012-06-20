@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.50 2012/06/02 23:23:12 matthieu Exp $
+# $OpenBSD: Makefile,v 1.51 2012/06/20 19:56:34 matthieu Exp $
 
 # Check for Xserver 1.12 or later
 USING_XSERVER_112 != if pkg-config --atleast-version 1.10 xorg-server; then \
@@ -32,8 +32,6 @@ INPUT_DRV_i386= ${INPUT_DRV_COMMON} xf86-input-synaptics xf86-input-vmmouse
 INPUT_DRV_landisk=
 
 INPUT_DRV_loongson= ${INPUT_DRV_DEFAULT}
-
-INPUT_DRV_mac68k=
 
 INPUT_DRV_macppc= ${INPUT_DRV_COMMON}
 
@@ -94,8 +92,6 @@ VIDEO_DRV_landisk=
 
 VIDEO_DRV_loongson= \
 	xf86-video-wsfb
-
-VIDEO_DRV_mac68k=
 
 VIDEO_DRV_macppc= \
 	xf86-video-ati xf86-video-mach64 xf86-video-nv xf86-video-r128 \
