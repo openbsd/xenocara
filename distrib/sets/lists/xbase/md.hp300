@@ -27,6 +27,7 @@
 ./usr/X11R6/include/xorg/joystick-properties.h
 ./usr/X11R6/include/xorg/list.h
 ./usr/X11R6/include/xorg/mioverlay.h
+./usr/X11R6/include/xorg/optionstr.h
 ./usr/X11R6/include/xorg/panoramiX.h
 ./usr/X11R6/include/xorg/panoramiXsrv.h
 ./usr/X11R6/include/xorg/privates.h
@@ -36,6 +37,7 @@
 ./usr/X11R6/include/xorg/shmint.h
 ./usr/X11R6/include/xorg/vidmodeproc.h
 ./usr/X11R6/include/xorg/ws-properties.h
+./usr/X11R6/include/xorg/xf86Optionstr.h
 ./usr/X11R6/include/xorg/xf86VGAarbiter.h
 ./usr/X11R6/include/xorg/xfixes.h
 ./usr/X11R6/include/xorg/xkbfile.h

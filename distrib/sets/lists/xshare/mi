@@ -727,8 +727,6 @@
 ./usr/X11R6/include/xcb/xtest.h
 ./usr/X11R6/include/xcb/xv.h
 ./usr/X11R6/include/xcb/xvmc.h
-./usr/X11R6/include/xorg/optionstr.h
-./usr/X11R6/include/xorg/xf86Optionstr.h
 ./usr/X11R6/lib/X11/config
 ./usr/X11R6/lib/X11/config/Amoeba.cf
 ./usr/X11R6/lib/X11/config/DGUX.cf
