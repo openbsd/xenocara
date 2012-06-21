@@ -1785,7 +1785,11 @@ NVPreInit(ScrnInfoPtr pScrn, int flags)
     }
     xf86DrvMsg(pScrn->scrnIndex, from, "MMIO registers at 0x%lX\n",
 	       (unsigned long)pNv->IOAddress);
-     
+
+#if defined(__powerpc__)
+    vgaHWSetMmioFuncs(VGAHWPTR(pScrn), (CARD8 *)pNv->IOAddress, 0);
+#endif
+
 #ifndef XSERVER_LIBPCIACCESS
     if (xf86RegisterResources(pNv->pEnt->index, NULL, ResExclusive)) {
 	xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
