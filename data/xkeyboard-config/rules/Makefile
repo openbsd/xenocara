@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.6 2011/10/16 17:18:56 shadchin Exp $
+#	$OpenBSD: Makefile,v 1.7 2012/06/24 17:17:27 matthieu Exp $
 
 SUBDIR=		compat
 
@@ -49,7 +49,7 @@ all:	depend ${BASE_RULES} _SUBDIRUSE
 depend:	_SUBDIRUSE
 
 base:	${BASE_PARTS}
-	HDR="${XKB_DIR}/${XKB_SUBDIR}/HDR" ${XKB_DIR}/${XKB_SUBDIR}/merge.sh $@ ${BASE_PARTS}
+	HDR="${XKB_DIR}/${XKB_SUBDIR}/HDR" ${SHELL} ${XKB_DIR}/${XKB_SUBDIR}/merge.sh $@ ${BASE_PARTS}
 
 base.lst:	base.xml
 	perl ${XKB_DIR}/${XKB_SUBDIR}/xml2lst.pl < base.xml > $@
