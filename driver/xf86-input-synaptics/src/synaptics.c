@@ -1156,6 +1156,9 @@ SynapticsReset(SynapticsPrivate * priv)
     priv->lastButtons = 0;
     priv->prev_z = 0;
     priv->prevFingers = 0;
+#ifdef HAVE_MULTITOUCH
+    memset(priv->open_slots, 0, priv->num_slots * sizeof(int));
+#endif
 }
 
 static Bool
@@ -2743,7 +2746,7 @@ HandleScrolling(SynapticsPrivate * priv, struct SynapticsHwState *hw,
         double dtime = (hw->millis - priv->scroll.last_millis) / 1000.0;
         double ddy = para->coasting_friction * dtime;
 
-        priv->scroll.delta_y += priv->scroll.coast_speed_y * dtime * para->scroll_dist_vert;
+        priv->scroll.delta_y += priv->scroll.coast_speed_y * dtime * abs(para->scroll_dist_vert);
         delay = MIN(delay, POLL_MS);
         if (abs(priv->scroll.coast_speed_y) < ddy) {
             priv->scroll.coast_speed_y = 0;
@@ -2758,7 +2761,7 @@ HandleScrolling(SynapticsPrivate * priv, struct SynapticsHwState *hw,
     if (priv->scroll.coast_speed_x) {
         double dtime = (hw->millis - priv->scroll.last_millis) / 1000.0;
         double ddx = para->coasting_friction * dtime;
-        priv->scroll.delta_x += priv->scroll.coast_speed_x * dtime * para->scroll_dist_vert;
+        priv->scroll.delta_x += priv->scroll.coast_speed_x * dtime * abs(para->scroll_dist_horiz);
         delay = MIN(delay, POLL_MS);
         if (abs(priv->scroll.coast_speed_x) < ddx) {
             priv->scroll.coast_speed_x = 0;
@@ -3131,7 +3134,9 @@ UpdateTouchState(InputInfoPtr pInfo, struct SynapticsHwState *hw)
                     priv->open_slots[j] = priv->open_slots[j + 1];
             }
 
-            priv->num_active_touches--;
+            BUG_WARN(priv->num_active_touches == 0);
+            if (priv->num_active_touches > 0)
+                priv->num_active_touches--;
         }
     }
 
@@ -3274,6 +3279,19 @@ HandleState(InputInfoPtr pInfo, struct SynapticsHwState *hw, CARD32 now,
     if (para->touchpad_off == 1) {
         UpdateTouchState(pInfo, hw);
         return delay;
+    }
+
+    /* We need both and x/y, the driver can't handle just one of the two
+     * yet. But since it's possible to hit a phys button on non-clickpads
+     * without ever getting motion data first, we must continue with 0/0 for
+     * that case. */
+    if (hw->x == INT_MIN || hw->y == INT_MAX) {
+        if (para->clickpad)
+            return delay;
+        else if (hw->left || hw->right || hw->middle) {
+            hw->x = (hw->x == INT_MIN) ? 0 : hw->x;
+            hw->y = (hw->y == INT_MIN) ? 0 : hw->y;
+        }
     }
 
     /* If a physical button is pressed on a clickpad, use cumulative relative

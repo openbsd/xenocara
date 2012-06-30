@@ -134,8 +134,8 @@ void
 SynapticsResetHwState(struct SynapticsHwState *hw)
 {
     hw->millis = 0;
-    hw->x = 0;
-    hw->y = 0;
+    hw->x = INT_MIN;
+    hw->y = INT_MIN;
     hw->z = 0;
     hw->cumulative_dx = 0;
     hw->cumulative_dy = 0;

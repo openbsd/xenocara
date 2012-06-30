@@ -1,3 +1,133 @@
+commit d5ff9d8b0b186cf39695df84a10984eac559b746
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Jun 12 13:46:34 2012 +1000
+
+    synaptics 1.6.2
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit c1aae820601a911432c64938f03eab62bafaab2f
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri May 18 09:38:50 2012 +1000
+
+    synaptics 1.6.1.901
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 7ccca8e7d8fbf2ccb5a2dbbfbf06ff4dbd6b7149
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Thu May 17 12:10:04 2012 +1000
+
+    Don't allow for scroll distances of 0 (#49965)
+    
+    It'll either hang the server or blow up with divisions by 0, whichever one
+    comes first.
+    
+    X.Org Bug 49965 <http://bugs.freedesktop.org/show_bug.cgi?id=49965>
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Chase Douglas <chase.douglas@canonical.com>
+    (cherry picked from commit 6d47d334d8a876e7e094306c313246b87016b78a)
+
+commit f8d970e191e6df05a8f2c26afdeea3e27b941a62
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Thu May 17 11:02:02 2012 +1000
+
+    Reset hw->x/y to INT_MIN and skip HandleState until we have x/y events
+    
+    The driver assumes x/y is always valid but after coming from a resume we may
+    get a few events with either ABS_X or ABS_Y (not both). Thus we process with
+    hw->x == 0 and hw->y == somevalue, causing cursor jumps when calculating
+    deltas whenver the real hw->x comes in.
+    
+    Fix this by resetting hw->x/y to INT_MIN and skip state processing until
+    both axes are available.
+    
+    For clickpads, this means handling of data will be delayed until we get
+    at least one motion on each axis. Button presses won't be recognised either
+    until that happens. It requires some skill to not trigger motion on both
+    axes, even more to press a button without doing so.
+    
+    For non-clickpads, handling of motion events will be delayed likewise. If a
+    physical button is pressed immediately after resume we have to assume deltas
+    of x/y.
+    - If the next event is a new touch, it will have ABS_X/ABS_Y set anyway
+    - If the finger was already down, a button event is generated, and the
+      finger has generated ABS_X or ABS_Y only before the event, the next event
+      containing the missing data will cause a jump. The fix for this is more
+      invasive and this is quite a corner-case.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Chase Douglas <chase.douglas@canonical.com>
+    (cherry picked from commit cd569377cda9b5a4ee00c0137db14f625c76c40f)
+
+commit 739175d198372a3226ce061b118d8fe5bbc8f6bf
+Author: Chase Douglas <chase.douglas@canonical.com>
+Date:   Wed May 16 07:49:25 2012 -0700
+
+    Reset open slots array on device disable
+    
+    The open slots array is used for clickpad cumulative delta computation.
+    If the array is not reset and becomes corrupted during the device
+    disable/enable cycle, the cumulative deltas may be wrong. This manifests
+    as jumpy cursor behavior on some clickpads after suspend/resume.
+    
+    Signed-off-by: Chase Douglas <chase.douglas@canonical.com>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    (cherry picked from commit 0054b144f3daf00e46a35b2f165befb209df94fc)
+
+commit 67a02d676c96d5b3d4729290cd96af0201eb76bb
+Author: Chun Yang <Chuck.Yang@gmail.com>
+Date:   Tue May 15 14:51:42 2012 -0500
+
+    Fix coasting for negative ScrollDelta
+    
+    Fix the coasting direction for when VertScrollDelta or HorizScrollDelta is
+    negative.
+    
+    Fixes: https://bugs.freedesktop.org/show_bug.cgi?id=49966
+    
+    Regression introduced in 0de4445ff8e75aab208faf6383e76045934c6720
+    
+    Signed-off-by: Chun Yang <Chuck.Yang@gmail.com>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    (cherry picked from commit 53557a5cab1e253dc8f4393207954ae0fe76068f)
+
+commit 23e87b57bb874326c88a7ad7292bec51959fb876
+Author: Chase Douglas <chase.douglas@canonical.com>
+Date:   Mon May 14 10:20:01 2012 -0700
+
+    Ignore pre-existing touches
+    
+    If a touch is physically active when the device is enabled, then all
+    events for that touch must be ignored. In particular, we cannot close
+    the touch or we will decrement touch count counters below zero. If these
+    counters go below zero memory corruption can occur.
+    
+    Note that a device is disabled and enabled every time the user types on
+    the keyboard if synclient is used to disable the trackpad while typing.
+    This is a very common option.
+    
+    Signed-off-by: Chase Douglas <chase.douglas@canonical.com>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    (cherry picked from commit 55fc42e7c9b4948cadd4f98ef7b6a3b12e268e3e)
+
+commit 23065a974e5dcdf0d6a436a0547bb7887d306a6f
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri May 11 12:27:39 2012 +1000
+
+    Avoid out-of-bounds access by running num_active_touches < 0 (#49439)
+    
+    If a touch is active during driver init, the slot will be set to
+    SLOTSTATE_CLOSE when it finishes. That could decrease num_active_touches to
+    less than 0, causing out-of-bounds access.
+    
+    X.Org Bug 49439 <http://bugs.freedesktop.org/show_bug.cgi?id=49439>
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Chase Douglas <chase.douglas@canonical.com>
+    (cherry picked from commit 77d766b1d535dff9a27c7db343ede85d9f44850b)
+
 commit e0f5688994baa85a8c658120681575cdd0ba2a58
 Author: Peter Hutterer <peter.hutterer@who-t.net>
 Date:   Fri May 11 10:30:21 2012 +1000
