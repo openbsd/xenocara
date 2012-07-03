@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: xevents.c,v 1.60 2012/05/16 21:57:21 okan Exp $
+ * $OpenBSD: xevents.c,v 1.61 2012/07/03 13:49:03 okan Exp $
  */
 
 /*
@@ -207,7 +207,7 @@ xev_handle_propertynotify(XEvent *ee)
 				goto test;
 		return;
 test:
-		if (e->atom == _NET_DESKTOP_NAMES)
+		if (e->atom == ewmh[_NET_DESKTOP_NAMES].atom)
 			group_update_names(sc);
 	}
 }
