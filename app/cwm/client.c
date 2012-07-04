@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: client.c,v 1.95 2012/07/03 13:49:03 okan Exp $
+ * $OpenBSD: client.c,v 1.96 2012/07/04 18:00:13 okan Exp $
  */
 
 #include <sys/param.h>
@@ -519,7 +519,7 @@ client_update(struct client_ctx *cc)
 	int	 i;
 	long	 n;
 
-	if ((n = xu_getprop(cc->win, WM_PROTOCOLS,
+	if ((n = xu_getprop(cc->win, cwmh[WM_PROTOCOLS].atom,
 		 XA_ATOM, 20L, (u_char **)&p)) <= 0)
 		return;
 
