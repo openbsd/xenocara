@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: screen.c,v 1.29 2012/07/03 13:49:03 okan Exp $
+ * $OpenBSD: screen.c,v 1.30 2012/07/05 17:35:13 okan Exp $
  */
 
 #include <sys/param.h>
@@ -109,10 +109,10 @@ screen_find_xinerama(struct screen_ctx *sc, int x, int y)
 }
 
 void
-screen_update_geometry(struct screen_ctx *sc, int width, int height)
+screen_update_geometry(struct screen_ctx *sc)
 {
-	sc->xmax = width;
-	sc->ymax = height;
+	sc->xmax = DisplayWidth(X_Dpy, sc->which);
+	sc->ymax = DisplayHeight(X_Dpy, sc->which);
 
 	xu_ewmh_net_desktop_geometry(sc);
 	xu_ewmh_net_workarea(sc);

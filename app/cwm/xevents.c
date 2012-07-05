@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: xevents.c,v 1.61 2012/07/03 13:49:03 okan Exp $
+ * $OpenBSD: xevents.c,v 1.62 2012/07/05 17:35:13 okan Exp $
  */
 
 /*
@@ -365,7 +365,7 @@ xev_handle_randr(XEvent *ee)
 	TAILQ_FOREACH(sc, &Screenq, entry) {
 		if (sc->which == (u_int)i) {
 			XRRUpdateConfiguration(ee);
-			screen_update_geometry(sc, rev->width, rev->height);
+			screen_update_geometry(sc);
 			screen_init_xinerama(sc);
 		}
 	}

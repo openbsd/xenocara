@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: calmwm.c,v 1.61 2012/05/16 01:17:14 okan Exp $
+ * $OpenBSD: calmwm.c,v 1.62 2012/07/05 17:35:13 okan Exp $
  */
 
 #include <sys/param.h>
@@ -167,8 +167,8 @@ x_setupscreen(struct screen_ctx *sc, u_int which)
 	xu_ewmh_net_supported_wm_check(sc);
 
 	conf_gap(&Conf, sc);
-	screen_update_geometry(sc, DisplayWidth(X_Dpy, sc->which),
-	    DisplayHeight(X_Dpy, sc->which));
+
+	screen_update_geometry(sc);
 
 	conf_color(&Conf, sc);
 
