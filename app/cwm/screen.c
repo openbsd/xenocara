@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: screen.c,v 1.30 2012/07/05 17:35:13 okan Exp $
+ * $OpenBSD: screen.c,v 1.31 2012/07/06 14:18:00 okan Exp $
  */
 
 #include <sys/param.h>
@@ -29,6 +29,8 @@
 #include <unistd.h>
 
 #include "calmwm.h"
+
+static void	 screen_init_xinerama(struct screen_ctx *);
 
 struct screen_ctx *
 screen_fromroot(Window rootwin)
@@ -65,6 +67,10 @@ screen_updatestackingorder(struct screen_ctx *sc)
 	XFree(wins);
 }
 
+/*
+ * If we're using RandR then we'll redo this whenever the screen
+ * changes since a CTRC may have been added or removed
+ */
 void
 screen_init_xinerama(struct screen_ctx *sc)
 {
@@ -113,6 +119,8 @@ screen_update_geometry(struct screen_ctx *sc)
 {
 	sc->xmax = DisplayWidth(X_Dpy, sc->which);
 	sc->ymax = DisplayHeight(X_Dpy, sc->which);
+
+	screen_init_xinerama(sc);
 
 	xu_ewmh_net_desktop_geometry(sc);
 	xu_ewmh_net_workarea(sc);

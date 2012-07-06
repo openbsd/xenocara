@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: calmwm.c,v 1.62 2012/07/05 17:35:13 okan Exp $
+ * $OpenBSD: calmwm.c,v 1.63 2012/07/06 14:18:00 okan Exp $
  */
 
 #include <sys/param.h>
@@ -97,7 +97,7 @@ main(int argc, char **argv)
 static void
 dpy_init(const char *dpyname)
 {
-	int	i;
+	int	i, fake;
 
 	XSetErrorHandler(x_errorhandler);
 
@@ -110,6 +110,9 @@ dpy_init(const char *dpyname)
 	XSync(X_Dpy, False);
 	XSetErrorHandler(x_errorhandler);
 
+	if (XineramaQueryExtension(X_Dpy, &fake, &fake) == 1 &&
+	    ((HasXinerama = XineramaIsActive(X_Dpy)) == 1))
+		HasXinerama = 1;
 	HasRandr = XRRQueryExtension(X_Dpy, &Randr_ev, &i);
 }
 
@@ -157,7 +160,6 @@ x_setupscreen(struct screen_ctx *sc, u_int which)
 	Window			*wins, w0, w1;
 	XWindowAttributes	 winattr;
 	XSetWindowAttributes	 rootattr;
-	int			 fake;
 	u_int			 nwins, i;
 
 	sc->which = which;
@@ -201,17 +203,8 @@ x_setupscreen(struct screen_ctx *sc, u_int which)
 
 	screen_updatestackingorder(sc);
 
-	if (XineramaQueryExtension(X_Dpy, &fake, &fake) == 1 &&
-	    ((HasXinerama = XineramaIsActive(X_Dpy)) == 1))
-		HasXinerama = 1;
 	if (HasRandr)
 		XRRSelectInput(X_Dpy, sc->rootwin, RRScreenChangeNotifyMask);
-	/*
-	 * initial setup of xinerama screens, if we're using RandR then we'll
-	 * redo this whenever the screen changes since a CTRC may have been
-	 * added or removed
-	 */
-	screen_init_xinerama(sc);
 
 	XSync(X_Dpy, False);
 }
