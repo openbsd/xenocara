@@ -1,4 +1,4 @@
-.\"	$OpenBSD: cwmrc.5,v 1.42 2011/11/06 02:03:47 okan Exp $
+.\"	$OpenBSD: cwmrc.5,v 1.43 2012/07/06 08:41:29 dcoppa Exp $
 .\"
 .\" Copyright (c) 2004,2005 Marius Aamodt Eriksen <marius@monkey.org>
 .\"
@@ -14,7 +14,7 @@
 .\" ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 .\" OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 .\"
-.Dd $Mdocdate: November 6 2011 $
+.Dd $Mdocdate: July 6 2012 $
 .Dt CWMRC 5
 .Os
 .Sh NAME
@@ -244,6 +244,10 @@ ignore xclock
 bind CM-r	label
 bind CS-Return	"xterm -e top"
 bind 4-o	unmap
+bind CM-equal	unmap
+bind CMS-equal	unmap
+bind C4-equal	vmaximize
+bind C4S-equal	hmaximize
 bind M-1	grouponly1
 bind M-2	grouponly2
 bind M-3	grouponly3
