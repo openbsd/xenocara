@@ -1,8 +1,8 @@
-#	$OpenBSD: Makefile,v 1.24 2012/04/14 09:45:45 matthieu Exp $
+#	$OpenBSD: Makefile,v 1.25 2012/07/07 16:45:03 dcoppa Exp $
 
 FREETYPESRC=	${.CURDIR}/src
 
-FT_VERSION_INFO= 14.1.8 # Get it from builds/unix/configure.ac
+FT_VERSION_INFO= 15.0.9 # Get it from builds/unix/configure.ac
 
 .ifmake includes
 SUBDIR=	include

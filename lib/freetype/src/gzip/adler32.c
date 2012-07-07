@@ -3,6 +3,7 @@
  * For conditions of distribution and use, see copyright notice in zlib.h
  */
 
+/* @(#) $Id: adler32.c,v 1.3 2012/07/07 16:45:04 dcoppa Exp $ */
 
 #include "zlib.h"
 
