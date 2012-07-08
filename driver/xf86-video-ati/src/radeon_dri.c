@@ -1153,24 +1153,6 @@ static Bool RADEONDRIPciInit(RADEONInfoPtr info, ScreenPtr pScreen)
     return TRUE;
 }
 
-/* Add a map for the MMIO registers that will be accessed by any
- * DRI-based clients.
- */
-static Bool RADEONDRIMapInit(RADEONInfoPtr info, ScreenPtr pScreen)
-{
-				/* Map registers */
-    info->dri->registerSize = info->MMIOSize;
-    if (drmAddMap(info->dri->drmFD, info->MMIOAddr, info->dri->registerSize,
-		  DRM_REGISTERS, DRM_READ_ONLY, &info->dri->registerHandle) < 0) {
-	return FALSE;
-    }
-    xf86DrvMsg(pScreen->myNum, X_INFO,
-	       "[drm] register handle = 0x%08x\n",
-	       (unsigned int)info->dri->registerHandle);
-
-    return TRUE;
-}
-
 /* Initialize the kernel data structures */
 static int RADEONDRIKernelInit(RADEONInfoPtr info, ScreenPtr pScreen)
 {
@@ -1206,7 +1188,7 @@ static int RADEONDRIKernelInit(RADEONInfoPtr info, ScreenPtr pScreen)
     drmInfo.depth_pitch         = info->dri->depthPitch * drmInfo.depth_bpp / 8;
 
     drmInfo.fb_offset           = info->dri->fbHandle;
-    drmInfo.mmio_offset         = info->dri->registerHandle;
+    drmInfo.mmio_offset         = -1;
     drmInfo.ring_offset         = info->dri->ringHandle;
     drmInfo.ring_rptr_offset    = info->dri->ringReadPtrHandle;
     drmInfo.buffers_offset      = info->dri->bufHandle;
@@ -1684,15 +1666,6 @@ Bool RADEONDRIScreenInit(ScreenPtr pScreen)
 	return FALSE;
     }
 
-				/* DRIScreenInit doesn't add all the
-				 * common mappings.  Add additional
-				 * mappings here.
-				 */
-    if (!RADEONDRIMapInit(info, pScreen)) {
-	RADEONDRICloseScreen(pScreen);
-	return FALSE;
-    }
-
 				/* DRIScreenInit adds the frame buffer
 				   map, but we need it as well */
     {
@@ -1797,8 +1770,8 @@ Bool RADEONDRIFinishScreenInit(ScreenPtr pScreen)
     pRADEONDRI->textureSize       = info->dri->textureSize;
     pRADEONDRI->log2TexGran       = info->dri->log2TexGran;
 
-    pRADEONDRI->registerHandle    = info->dri->registerHandle;
-    pRADEONDRI->registerSize      = info->dri->registerSize;
+    pRADEONDRI->registerHandle    = -1;
+    pRADEONDRI->registerSize      = -1;
 
     pRADEONDRI->statusHandle      = info->dri->ringReadPtrHandle;
     pRADEONDRI->statusSize        = info->dri->ringReadMapSize;

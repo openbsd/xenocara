@@ -1805,6 +1805,7 @@ radeon_add_encoder(ScrnInfoPtr pScrn, uint32_t encoder_id, uint32_t device_suppo
 	for (i = 0; i < RADEON_MAX_BIOS_CONNECTOR; i++) {
 	    if ((info->encoders[i] != NULL) && (info->encoders[i]->encoder_id == encoder_id)) {
 		info->encoders[device_index] = info->encoders[i];
+		info->encoders[device_index]->ref_count++;
 		switch (encoder_id) {
 		case ENCODER_OBJECT_ID_INTERNAL_UNIPHY:
 		case ENCODER_OBJECT_ID_INTERNAL_KLDSCP_LVTMA:
@@ -1830,6 +1831,7 @@ radeon_add_encoder(ScrnInfoPtr pScrn, uint32_t encoder_id, uint32_t device_suppo
 
 	info->encoders[device_index] = (radeon_encoder_ptr)calloc(1,sizeof(radeon_encoder_rec));
 	if (info->encoders[device_index] != NULL) {
+	    info->encoders[device_index]->ref_count++;
 	    info->encoders[device_index]->encoder_id = encoder_id;
 	    info->encoders[device_index]->devices = 0;
 	    info->encoders[device_index]->dev_priv = NULL;

@@ -515,9 +515,6 @@ struct radeon_dri {
 
     drm_handle_t      fbHandle;
 
-    drmSize           registerSize;
-    drm_handle_t      registerHandle;
-
     drmSize           pciSize;
     drm_handle_t      pciMemHandle;
     unsigned char     *PCI;             /* Map */

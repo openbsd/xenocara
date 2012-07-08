@@ -384,6 +384,9 @@ void RADEONFreeRec(ScrnInfoPtr pScrn)
 
     for (i = 0; i < RADEON_MAX_BIOS_CONNECTOR; i++) {
 	if (info->encoders[i]) {
+	    info->encoders[i]->ref_count--;
+	    if (info->encoders[i]->ref_count != 0)
+		continue;
 	    if (info->encoders[i]->dev_priv) {
 		free(info->encoders[i]->dev_priv);
 		info->encoders[i]->dev_priv = NULL;
@@ -3513,7 +3516,7 @@ Bool RADEONScreenInit(int scrnIndex, ScreenPtr pScreen,
 		    info->MaxSurfaceWidth);
 	info->allowColorTiling = FALSE;
     }
-    if (info->allowColorTiling) {
+    if (info->allowColorTiling && pScrn->currentMode != NULL) {
         info->tilingEnabled = (pScrn->currentMode->Flags & (V_DBLSCAN | V_INTERLACE)) ? FALSE : TRUE;
     }
 
@@ -3883,11 +3886,12 @@ Bool RADEONScreenInit(int scrnIndex, ScreenPtr pScreen,
         }
     }
 
+    /* xf86SetDesiredModes() accesses pScrn->pScreen */
+    pScrn->pScreen = pScreen;
+
     /* Clear the framebuffer */
     memset(info->FB + pScrn->fbOffset, 0,
            pScrn->virtualY * pScrn->displayWidth * info->CurrentLayout.pixel_bytes);
-
-    pScrn->pScreen = pScreen;
 
     /* set the modes with desired rotation, etc. */
     if (!xf86SetDesiredModes (pScrn))
@@ -3903,7 +3907,7 @@ Bool RADEONScreenInit(int scrnIndex, ScreenPtr pScreen,
     info->CreateScreenResources = pScreen->CreateScreenResources;
     pScreen->CreateScreenResources = RADEONCreateScreenResources;
 
-   if (!xf86CrtcScreenInit (pScreen))
+    if (!xf86CrtcScreenInit (pScreen))
        return FALSE;
 
     /* Colormap setup */
@@ -5885,7 +5889,7 @@ static void RADEONRestore(ScrnInfoPtr pScrn)
      * corrupted.  This hack solves the problem 99% of the time.  A
      * correct fix is being worked on.
      */
-    usleep(1000000);
+    usleep(100000);
 #endif
 
     if (info->ChipFamily < CHIP_FAMILY_R600)

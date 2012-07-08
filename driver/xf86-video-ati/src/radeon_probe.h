@@ -242,6 +242,7 @@ typedef struct _RADEONCrtcPrivateRec {
 typedef struct _radeon_encoder {
     uint16_t encoder_id;
     int devices;
+    int ref_count;
     void *dev_priv;
 } radeon_encoder_rec, *radeon_encoder_ptr;
 
