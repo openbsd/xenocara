@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: xutil.c,v 1.41 2012/07/03 13:49:03 okan Exp $
+ * $OpenBSD: xutil.c,v 1.42 2012/07/08 02:50:41 okan Exp $
  */
 
 #include <sys/param.h>
@@ -207,7 +207,7 @@ xu_getstate(struct client_ctx *cc, int *state)
 {
 	long	*p = NULL;
 
-	if (xu_getprop(cc->win, cwmh[WM_STATE].atom, WM_STATE, 2L,
+	if (xu_getprop(cc->win, cwmh[WM_STATE].atom, cwmh[WM_STATE].atom, 2L,
 	    (u_char **)&p) <= 0)
 		return (-1);
 
