@@ -1,4 +1,4 @@
-/*	$OpenBSD: emumb.c,v 1.11 2012/06/12 17:11:23 shadchin Exp $ */
+/*	$OpenBSD: emumb.c,v 1.12 2012/07/08 13:51:11 shadchin Exp $ */
 /*
  * Copyright 1990,91 by Thomas Roell, Dinkelscherben, Germany.
  * Copyright 1993 by David Dawes <dawes@xfree86.org>
@@ -194,7 +194,7 @@ static signed char stateTab[11][5][3] = {
 int
 wsmbEmuTimer(InputInfoPtr pInfo)
 {
-	WSDevicePtr priv = pInfo->private;
+	WSDevicePtr priv = (WSDevicePtr)pInfo->private;
 	int sigstate;
 	int id;
 
@@ -203,8 +203,7 @@ wsmbEmuTimer(InputInfoPtr pInfo)
 	priv->emulateMB.pending = FALSE;
 	if ((id = stateTab[priv->emulateMB.state][4][0]) != 0) {
 		xf86PostButtonEvent(pInfo->dev, 0, abs(id), (id >= 0), 0, 0);
-		priv->emulateMB.state =
-		    stateTab[priv->emulateMB.state][4][2];
+		priv->emulateMB.state = stateTab[priv->emulateMB.state][4][2];
 	} else {
 		xf86IDrvMsg(pInfo, X_ERROR,
 		    "Got unexpected buttonTimer in state %d\n",
@@ -227,7 +226,7 @@ wsmbEmuTimer(InputInfoPtr pInfo)
 BOOL
 wsmbEmuFilterEvent(InputInfoPtr pInfo, int button, BOOL press)
 {
-	WSDevicePtr priv = pInfo->private;
+	WSDevicePtr priv = (WSDevicePtr)pInfo->private;
 	int id;
 	int *btstate;
 	int ret = FALSE;
@@ -274,9 +273,7 @@ wsmbEmuFilterEvent(InputInfoPtr pInfo, int button, BOOL press)
 }
 
 void
-wsmbEmuWakeupHandler(pointer data,
-    int i,
-    pointer LastSelectMask)
+wsmbEmuWakeupHandler(pointer data, int i, pointer LastSelectMask)
 {
 	InputInfoPtr pInfo = (InputInfoPtr)data;
 	WSDevicePtr priv = (WSDevicePtr)pInfo->private;
@@ -290,12 +287,11 @@ wsmbEmuWakeupHandler(pointer data,
 }
 
 void
-wsmbEmuBlockHandler(pointer data,
-    struct timeval **waitTime,
+wsmbEmuBlockHandler(pointer data, struct timeval **waitTime,
     pointer LastSelectMask)
 {
-	InputInfoPtr pInfo = (InputInfoPtr) data;
-	WSDevicePtr priv= (WSDevicePtr) pInfo->private;
+	InputInfoPtr pInfo = (InputInfoPtr)data;
+	WSDevicePtr priv= (WSDevicePtr)pInfo->private;
 	int ms;
 
 	if (priv->emulateMB.pending) {
@@ -352,8 +348,8 @@ static int
 wsmbEmuSetProperty(DeviceIntPtr dev, Atom atom, XIPropertyValuePtr val,
     BOOL checkonly)
 {
-	InputInfoPtr pInfo  = dev->public.devicePrivate;
-	WSDevicePtr priv = pInfo->private;
+	InputInfoPtr pInfo = (InputInfoPtr)dev->public.devicePrivate;
+	WSDevicePtr priv = (WSDevicePtr)pInfo->private;
 
 	DBG(1, ErrorF("wsmbEmuSetProperty %s\n", NameForAtom(atom)));
 
@@ -389,8 +385,8 @@ wsmbEmuSetProperty(DeviceIntPtr dev, Atom atom, XIPropertyValuePtr val,
 void
 wsmbEmuInitProperty(DeviceIntPtr dev)
 {
-	InputInfoPtr pInfo  = dev->public.devicePrivate;
-	WSDevicePtr priv = pInfo->private;
+	InputInfoPtr pInfo = (InputInfoPtr)dev->public.devicePrivate;
+	WSDevicePtr priv = (WSDevicePtr)pInfo->private;
 	int rc;
 
 	DBG(1, ErrorF("wsmbEmuInitProperty\n"));

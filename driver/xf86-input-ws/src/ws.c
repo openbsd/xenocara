@@ -13,7 +13,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
-/* $OpenBSD: ws.c,v 1.55 2012/06/12 17:59:01 shadchin Exp $ */
+/* $OpenBSD: ws.c,v 1.56 2012/07/08 13:51:11 shadchin Exp $ */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -83,8 +83,11 @@ static XF86ModuleVersionInfo VersionRec = {
 	{0, 0, 0, 0}
 };
 
-_X_EXPORT XF86ModuleData wsModuleData = {&VersionRec,
-			       SetupProc, TearDownProc };
+_X_EXPORT XF86ModuleData wsModuleData = {
+	&VersionRec,
+	SetupProc,
+	TearDownProc
+};
 
 _X_EXPORT InputDriverRec WS = {
 	1,
@@ -278,7 +281,7 @@ fail:
 static void
 wsUnInit(InputDriverPtr drv, InputInfoPtr pInfo, int flags)
 {
-	WSDevicePtr priv = pInfo->private;
+	WSDevicePtr priv = (WSDevicePtr)pInfo->private;
 
 	if (priv) {
 		free(priv->devName);
@@ -311,9 +314,9 @@ wsProc(DeviceIntPtr pWS, int what)
 	default:
 		xf86IDrvMsg(pInfo, X_ERROR, "unknown command %d\n", what);
 		return !Success;
-	} /* switch */
+	}
 	return Success;
-} /* wsProc */
+}
 
 static int
 wsDeviceInit(DeviceIntPtr pWS)
@@ -362,11 +365,8 @@ wsDeviceInit(DeviceIntPtr pWS)
 		axes_labels[1] = XIGetKnownProperty(AXIS_LABEL_PROP_REL_Y);
 	}
 	if (!InitValuatorClassDeviceStruct(pWS,
-		NAXES,
-		axes_labels,
-		GetMotionHistorySize(),
-		priv->type == WSMOUSE_TYPE_TPANEL ?
-		Absolute : Relative))
+	    NAXES, axes_labels, GetMotionHistorySize(),
+	    priv->type == WSMOUSE_TYPE_TPANEL ? Absolute : Relative))
 		return !Success;
 	if (!InitPtrFeedbackClassDeviceStruct(pWS, wsControlProc))
 		return !Success;
@@ -406,7 +406,7 @@ wsDeviceOn(DeviceIntPtr pWS)
 	if ((pInfo->fd < 0) && (wsOpen(pInfo) != Success)) {
 		xf86IDrvMsg(pInfo, X_ERROR, "wsOpen failed %s\n",
 		    strerror(errno));
-			return !Success;
+		return !Success;
 	}
 
 	if (priv->type == WSMOUSE_TYPE_TPANEL) {
@@ -421,7 +421,7 @@ wsDeviceOn(DeviceIntPtr pWS)
 		if (coords.samplelen != priv->raw) {
 			coords.samplelen = priv->raw;
 			if (ioctl(pInfo->fd, WSMOUSEIO_SCALIBCOORDS,
-				&coords) != 0) {
+			    &coords) != 0) {
 				xf86IDrvMsg(pInfo, X_ERROR,
 				    "SCALIBCOORS failed %s\n", strerror(errno));
 				return !Success;
@@ -445,7 +445,7 @@ static void
 wsDeviceOff(DeviceIntPtr pWS)
 {
 	InputInfoPtr pInfo = (InputInfoPtr)pWS->public.devicePrivate;
-	WSDevicePtr priv = pInfo->private;
+	WSDevicePtr priv = (WSDevicePtr)pInfo->private;
 	struct wsmouse_calibcoords coords;
 
 	DBG(1, ErrorF("WS DEVICE OFF\n"));
@@ -472,13 +472,11 @@ wsDeviceOff(DeviceIntPtr pWS)
 static void
 wsReadInput(InputInfoPtr pInfo)
 {
-	WSDevicePtr priv;
+	WSDevicePtr priv = (WSDevicePtr)pInfo->private;
 	static struct wscons_event eventList[NUMEVENTS];
 	int n, c;
 	struct wscons_event *event = eventList;
 	unsigned char *pBuf;
-
-	priv = pInfo->private;
 
 	XisbBlockDuration(priv->buffer, -1);
 	pBuf = (unsigned char *)eventList;
@@ -491,18 +489,17 @@ wsReadInput(InputInfoPtr pInfo)
 		return;
 
 	n /= sizeof(struct wscons_event);
-	while( n-- ) {
+	while (n--) {
 		int buttons = priv->lastButtons;
 		int dx = 0, dy = 0, dz = 0, dw = 0, ax = 0, ay = 0;
 		int zbutton = 0, wbutton = 0;
 
 		switch (event->type) {
 		case WSCONS_EVENT_MOUSE_UP:
-
 			buttons &= ~(1 << event->value);
 			DBG(4, ErrorF("Button %d up %x\n", event->value,
 				buttons));
-		break;
+			break;
 		case WSCONS_EVENT_MOUSE_DOWN:
 			buttons |= (1 << event->value);
 			DBG(4, ErrorF("Button %d down %x\n", event->value,
@@ -548,7 +545,7 @@ wsReadInput(InputInfoPtr pInfo)
 			    "bad wsmouse event type=%d\n", event->type);
 			++event;
 			continue;
-		} /* case */
+		}
 		++event;
 
 		if (dx || dy) {
@@ -607,7 +604,7 @@ wsReadInput(InputInfoPtr pInfo)
 		}
 	}
 	return;
-} /* wsReadInput */
+}
 
 static void
 wsSendButtons(InputInfoPtr pInfo, int buttons)
@@ -631,7 +628,7 @@ wsSendButtons(InputInfoPtr pInfo, int buttons)
 		DBG(3, ErrorF("post button event %d %d\n", button, press));
 	}
 	priv->lastButtons = buttons;
-} /* wsSendButtons */
+}
 
 static int
 wsSwitchMode(ClientPtr client, DeviceIntPtr dev, int mode)
@@ -650,8 +647,8 @@ wsOpen(InputInfoPtr pInfo)
 	DBG(1, ErrorF("WS open %s\n", priv->devName));
 	pInfo->fd = xf86OpenSerial(pInfo->options);
 	if (pInfo->fd == -1) {
-	    xf86IDrvMsg(pInfo, X_ERROR, "cannot open input device\n");
-	    return !Success;
+		xf86IDrvMsg(pInfo, X_ERROR, "cannot open input device\n");
+		return !Success;
 	}
 #ifdef __NetBSD__
 	if (ioctl(pInfo->fd, WSMOUSEIO_SETVERSION, &version) == -1) {
@@ -680,7 +677,7 @@ wsControlProc(DeviceIntPtr device, PtrCtrl *ctrl)
 static void
 wsInitCalibProperty(DeviceIntPtr device)
 {
-	InputInfoPtr pInfo = device->public.devicePrivate;
+	InputInfoPtr pInfo = (InputInfoPtr)device->public.devicePrivate;
 	WSDevicePtr priv = (WSDevicePtr)pInfo->private;
 	int rc;
 
@@ -719,7 +716,7 @@ static int
 wsSetCalibProperty(DeviceIntPtr device, Atom atom, XIPropertyValuePtr val,
     BOOL checkonly)
 {
-	InputInfoPtr pInfo = device->public.devicePrivate;
+	InputInfoPtr pInfo = (InputInfoPtr)device->public.devicePrivate;
 	WSDevicePtr priv = (WSDevicePtr)pInfo->private;
 	struct wsmouse_calibcoords coords;
 	int need_update = 0;

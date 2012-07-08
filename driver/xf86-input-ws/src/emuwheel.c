@@ -1,4 +1,4 @@
-/*	$OpenBSD: emuwheel.c,v 1.1 2011/11/28 23:49:59 shadchin Exp $	*/
+/*	$OpenBSD: emuwheel.c,v 1.2 2012/07/08 13:51:11 shadchin Exp $	*/
 /*
 * Copyright 1990,91 by Thomas Roell, Dinkelscherben, Germany.
 * Copyright 1993 by David Dawes <dawes@xfree86.org>
@@ -225,7 +225,7 @@ wsWheelEmuSetProperty(DeviceIntPtr dev, Atom atom, XIPropertyValuePtr val,
 			return BadMatch;
 
 		if (!checkonly)
-			priv->emulateWheel.enabled = *((BOOL*)val->data) != 0;
+			priv->emulateWheel.enabled = *((BOOL*)val->data);
 	} else if (atom == prop_wheel_button) {
 		int button;
 
