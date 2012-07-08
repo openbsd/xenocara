@@ -13,7 +13,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
-/* $OpenBSD: ws.c,v 1.56 2012/07/08 13:51:11 shadchin Exp $ */
+/* $OpenBSD: ws.c,v 1.57 2012/07/08 14:22:03 shadchin Exp $ */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -498,12 +498,12 @@ wsReadInput(InputInfoPtr pInfo)
 		case WSCONS_EVENT_MOUSE_UP:
 			buttons &= ~(1 << event->value);
 			DBG(4, ErrorF("Button %d up %x\n", event->value,
-				buttons));
+			    buttons));
 			break;
 		case WSCONS_EVENT_MOUSE_DOWN:
 			buttons |= (1 << event->value);
 			DBG(4, ErrorF("Button %d down %x\n", event->value,
-				buttons));
+			    buttons));
 			break;
 		case WSCONS_EVENT_MOUSE_DELTA_X:
 			dx = event->value;

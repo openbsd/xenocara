@@ -1,4 +1,4 @@
-/*	$OpenBSD: emumb.c,v 1.12 2012/07/08 13:51:11 shadchin Exp $ */
+/*	$OpenBSD: emumb.c,v 1.13 2012/07/08 14:22:03 shadchin Exp $ */
 /*
  * Copyright 1990,91 by Thomas Roell, Dinkelscherben, Germany.
  * Copyright 1993 by David Dawes <dawes@xfree86.org>
@@ -291,7 +291,7 @@ wsmbEmuBlockHandler(pointer data, struct timeval **waitTime,
     pointer LastSelectMask)
 {
 	InputInfoPtr pInfo = (InputInfoPtr)data;
-	WSDevicePtr priv= (WSDevicePtr)pInfo->private;
+	WSDevicePtr priv = (WSDevicePtr)pInfo->private;
 	int ms;
 
 	if (priv->emulateMB.pending) {
