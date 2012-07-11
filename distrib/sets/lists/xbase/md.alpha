@@ -72,7 +72,7 @@
 ./usr/X11R6/lib/libdrm_pic.a
 ./usr/X11R6/lib/libfontconfig.so.7.0
 ./usr/X11R6/lib/libfontenc.so.3.0
-./usr/X11R6/lib/libfreetype.so.18.2
+./usr/X11R6/lib/libfreetype.so.18.3
 ./usr/X11R6/lib/libfreetype_pic.a
 ./usr/X11R6/lib/libpciaccess.so.1.1
 ./usr/X11R6/lib/libpixman-1.a
