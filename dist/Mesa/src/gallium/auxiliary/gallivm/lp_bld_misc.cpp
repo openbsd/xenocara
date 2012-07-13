@@ -120,13 +120,18 @@ lp_debug_dump_value(LLVMValueRef value)
 extern "C" void
 lp_register_oprofile_jit_event_listener(LLVMExecutionEngineRef EE)
 {
+#if HAVE_LLVM >= 0x0301
+   llvm::unwrap(EE)->RegisterJITEventListener(llvm::JITEventListener::createOProfileJITEventListener());
+#else
    llvm::unwrap(EE)->RegisterJITEventListener(llvm::createOProfileJITEventListener());
+#endif
 }
 
 
 extern "C" void
 lp_set_target_options(void)
 {
+#if HAVE_LLVM <= 0x0300
 #if defined(DEBUG)
 #if HAVE_LLVM >= 0x0207
    llvm::JITEmitDebugInfo = true;
@@ -156,6 +161,7 @@ lp_set_target_options(void)
 #if 0
    llvm::UnsafeFPMath = true;
 #endif
+#endif  /* HAVE_LLVM <= 0x0300 */
 
 #if HAVE_LLVM < 0x0209
    /*
@@ -186,7 +192,6 @@ lp_set_target_options(void)
       llvm::cl::ParseCommandLineOptions(2, const_cast<char**>(options));
       first = FALSE;
    }
-#endif
 
    /*
     * By default LLVM adds a signal handler to output a pretty stack trace.
@@ -194,6 +199,7 @@ lp_set_target_options(void)
     * shared object where the gallium driver resides.
     */
    llvm::DisablePrettyStackTrace = true;
+#endif
 }
 
 
