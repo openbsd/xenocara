@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: calmwm.h,v 1.149 2012/07/06 14:18:00 okan Exp $
+ * $OpenBSD: calmwm.h,v 1.150 2012/07/13 14:18:04 okan Exp $
  */
 
 #ifndef _CALMWM_H_
@@ -94,6 +94,13 @@ enum cwmcolor {
 struct color {
 	char		*name;
 	unsigned long	 pixel;
+};
+
+struct geom {
+	int		 x;
+	int		 y;
+	int		 w;
+	int		 h;
 };
 
 struct gap {
@@ -206,6 +213,8 @@ struct screen_ctx {
 	int			 cycling;
 	int			 xmax;
 	int			 ymax;
+	struct geom		 view; /* viewable area */
+	struct geom		 work; /* workable area, gap-applied */
 	struct gap		 gap;
 	struct cycle_entry_q	 mruq;
 	XftColor		 xftcolor;
