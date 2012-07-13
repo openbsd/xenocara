@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: kbfunc.c,v 1.60 2012/07/04 23:42:03 okan Exp $
+ * $OpenBSD: kbfunc.c,v 1.61 2012/07/13 15:21:35 okan Exp $
  */
 
 #include <sys/param.h>
@@ -90,20 +90,20 @@ kbfunc_moveresize(struct client_ctx *cc, union arg *arg)
 		cc->geom.y += my;
 		if (cc->geom.y + cc->geom.height < 0)
 			cc->geom.y = -cc->geom.height;
-		if (cc->geom.y > sc->ymax - 1)
-			cc->geom.y = sc->ymax - 1;
+		if (cc->geom.y > sc->view.h - 1)
+			cc->geom.y = sc->view.h - 1;
 
 		cc->geom.x += mx;
 		if (cc->geom.x + cc->geom.width < 0)
 			cc->geom.x = -cc->geom.width;
-		if (cc->geom.x > sc->xmax - 1)
-			cc->geom.x = sc->xmax - 1;
+		if (cc->geom.x > sc->view.w - 1)
+			cc->geom.x = sc->view.w - 1;
 
 		cc->geom.x += client_snapcalc(cc->geom.x,
-		    cc->geom.width, sc->xmax,
+		    cc->geom.width, sc->view.w,
 		    cc->bwidth, Conf.snapdist);
 		cc->geom.y += client_snapcalc(cc->geom.y,
-		    cc->geom.height, sc->ymax,
+		    cc->geom.height, sc->view.h,
 		    cc->bwidth, Conf.snapdist);
 
 		client_move(cc);
