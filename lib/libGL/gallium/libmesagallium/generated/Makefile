@@ -1,6 +1,6 @@
-# $OpenBSD: Makefile,v 1.1.1.1 2012/07/13 12:43:34 mpi Exp $
+# $OpenBSD: Makefile,v 1.2 2012/07/13 15:42:03 mpi Exp $
 
-MESA=	${.CURDIR}/../../../../dist/Mesa/src/mesa
+MESA=	${.CURDIR}/../../../../../dist/Mesa/src/mesa
 
 PYTHON=		python${PYTHON_VERSION}
 PYTHON_FLAGS=	-t -O -O
