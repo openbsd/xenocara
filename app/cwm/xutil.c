@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: xutil.c,v 1.44 2012/07/13 15:21:35 okan Exp $
+ * $OpenBSD: xutil.c,v 1.45 2012/07/13 17:01:05 okan Exp $
  */
 
 #include <sys/param.h>
@@ -128,8 +128,8 @@ xu_configure(struct client_ctx *cc)
 	ce.window = cc->win;
 	ce.x = cc->geom.x;
 	ce.y = cc->geom.y;
-	ce.width = cc->geom.width;
-	ce.height = cc->geom.height;
+	ce.width = cc->geom.w;
+	ce.height = cc->geom.h;
 	ce.border_width = cc->bwidth;
 	ce.above = None;
 	ce.override_redirect = 0;
