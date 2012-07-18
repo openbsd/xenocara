@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: screen.c,v 1.35 2012/07/16 01:42:00 okan Exp $
+ * $OpenBSD: screen.c,v 1.36 2012/07/18 21:53:22 okan Exp $
  */
 
 #include <sys/param.h>
@@ -74,21 +74,11 @@ screen_updatestackingorder(struct screen_ctx *sc)
 void
 screen_init_xinerama(struct screen_ctx *sc)
 {
-	XineramaScreenInfo	*info;
-	int			 no;
+	XineramaScreenInfo	*info = NULL;
+	int			 no = 0;
 
-	if (HasXinerama == 0 || XineramaIsActive(X_Dpy) == 0) {
-		HasXinerama = 0;
-		sc->xinerama_no = 0;
-	}
-
-	info = XineramaQueryScreens(X_Dpy, &no);
-	if (info == NULL) {
-		/* Is xinerama actually off, instead of a malloc failure? */
-		if (sc->xinerama == NULL)
-			HasXinerama = 0;
-		return;
-	}
+	if (XineramaIsActive(X_Dpy))
+		info = XineramaQueryScreens(X_Dpy, &no);
 
 	if (sc->xinerama != NULL)
 		XFree(sc->xinerama);
@@ -105,7 +95,7 @@ screen_find_xinerama(struct screen_ctx *sc, int x, int y)
 	XineramaScreenInfo	*info;
 	int			 i;
 
-	if (HasXinerama == 0)
+	if (sc->xinerama == NULL)
 		return (NULL);
 
 	for (i = 0; i < sc->xinerama_no; i++) {
