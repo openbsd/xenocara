@@ -9,50 +9,58 @@ Conventions used in this document:
 1. Make sure your system has support for X enabled:
 
    You must have "option APERTURE" in your kernel configuration and
-   uncomment the line that says:  
+   uncomment the line that says:
 
-        machdep.allowaperture=2
+	machdep.allowaperture=2
 
    in /etc/sysctl.conf.  See xf86(4) for more details about security
    issues related to this.  After changing this variable in sysctl.conf,
    you will need to reboot for the change to take effect.
 
-2. Find out about your hardware:
-
-   Find out what chipset is used by your video board.  Write this
-   information down. The dmesg(8) command output is useful.
-
-   What kind of mouse do you have and which port is it connected to?
-   The two most common cases are a PS/2 style or USB mouse, for which
-   OpenBSD uses the wsmouse(4) protocol with the /dev/wsmouse device.
-   If you have a serial mouse, connected to /dev/tty00 (MS Windows
-   COM1: port) or /dev/tty01 (COM2: port) you probably want to try the
-   "auto" protocol first.
-
-3. Create the configuration file for your server.
-
-   For many users of X.Org's servers, an xorg.conf file is not needed,
-   simply start X, and it will automatically detect and use your
-   hardware.  If your hardware is not properly autodetected or supported
-   or not supported as you wish, you will have to create a configuration
-   file.
-
-   Run Xorg -configure as root and move the resulting xorg.conf.new
-   file to /etc/X11/xorg.conf. Edit it to adjust it for your hardware.
-
-   See also Xorg(1), xorg.conf(5).
-
-4. Start either xdm(1) or startx(1).
+2. Start either xdm(1) or startx(1).
 
    a. Start xdm(1), the X display manager by activating the xdm_flags option
-      in /etc/rc.conf(8) or /etc/rc.conf.local(8).
+      in /etc/rc.conf(r8) or /etc/rc.conf.local(8).
 
    b. Start startx(1) from a console shell.  It is the X script that starts
       the X server and a few X applications, including a window manager.
- 
-5. With X.Org XOrgVersion, you can use antialiased fonts in many applications. 
-   visit http://www.openbsd.org/faq/truetype.html for more information. 
+
+3. If needed, Create the configuration file for your server.
+
+   For many users of X.Org's servers, an xorg.conf file is not needed,
+   X, will automatically detect and use your hardware.
+
+   For the few cases where your hardware is not properly autodetected
+   or supported or not supported as you wish, you will have to create
+   a configuration file.
+
+   Report to http://www.openbsd.org/faq/faq11.html#amd64i386 for details.
+
+   See also Xorg(1), xorg.conf(5).
+
+3.1. Note about Radeon cards.
+
+   OpenBSD provides two versions of the X.Org driver for ATI Radeon cards.
+
+   - radeonold(4) is an older version of the driver, which is known to
+     work on most of the Radeon cards, except the newer ones. It is
+     robust and also works in "ZapHod" mode (one X screen per physical
+     screen). It is selected by default.
+
+   - radeon(4) is the current X.Org driver. It has more support for
+     recent hardware, but unfortunately also exposes a few regressions,
+     leading to screen corruption on some hardware, and is known not
+     to work in ZapHod mode. It needs to be enabled explicitly by
+     creating a simple /etc/X11/xorg.conf file containing:
+
+     Section "Device"
+     	     Identifier "Radeon"
+	     Driver "radeon"
+     EndSection
+
+4. With X.Org XOrgVersion, you can use anti-aliased fonts in many applications.
+   visit http://www.openbsd.org/faq/truetype.html for more information.
 
 problem_blurb
 
-$OpenBSD: README.i386,v 1.3 2011/02/17 20:49:51 matthieu Exp $
+$OpenBSD: README.i386,v 1.4 2012/07/22 19:12:13 matthieu Exp $
