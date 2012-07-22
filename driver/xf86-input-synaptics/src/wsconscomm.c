@@ -131,88 +131,94 @@ WSConsReadHwState(InputInfoPtr pInfo,
     struct wscons_event event;
     Bool v;
 
-    if (WSConsReadEvent(pInfo, &event) == FALSE)
-        return FALSE;
-
-    switch (event.type) {
-    case WSCONS_EVENT_MOUSE_UP:
-    case WSCONS_EVENT_MOUSE_DOWN:
-        v = (event.type == WSCONS_EVENT_MOUSE_DOWN) ? TRUE : FALSE;
-        switch (event.value) {
-        case 0:
-            hw->left = v;
-            break;
-        case 1:
-            hw->middle = v;
-            break;
-        case 2:
-            hw->right = v;
-            break;
-        case 3:
-            hw->up = v;
-            break;
-        case 4:
-            hw->down = v;
-            break;
-        case 5:
-            hw->multi[0] = v;
-            break;
-        case 6:
-            hw->multi[1] = v;
-            break;
-        case 7:
-            hw->multi[2] = v;
-            break;
-        case 8:
-            hw->multi[3] = v;
-            break;
-        case 9:
-            hw->multi[4] = v;
-            break;
-        case 10:
-            hw->multi[5] = v;
-            break;
-        case 11:
-            hw->multi[6] = v;
-            break;
-        case 12:
-            hw->multi[7] = v;
-            break;
-        }
-        break;
-    case WSCONS_EVENT_MOUSE_ABSOLUTE_X:
-        hw->x = event.value;
-        break;
-    case WSCONS_EVENT_MOUSE_ABSOLUTE_Y:
-        hw->y = priv->maxy - event.value + priv->miny;
-        break;
-    case WSCONS_EVENT_MOUSE_ABSOLUTE_Z:
-        hw->z = event.value;
-        break;
-    case WSCONS_EVENT_MOUSE_ABSOLUTE_W:
-        switch (event.value) {
-        case 0:
-            hw->fingerWidth = 5;
-            hw->numFingers = 2;
-            break;
-        case 1:
-            hw->fingerWidth = 5;
-            hw->numFingers = 3;
-            break;
-        case 4 ... 5:
-            hw->fingerWidth = event.value;
-            hw->numFingers = 1;
-            break;
-        }
-        break;
-    default:
-        return FALSE;
+    /* Reset cumulative values if buttons were not previously pressed */
+    if (!hw->left && !hw->right && !hw->middle) {
+        hw->cumulative_dx = hw->x;
+        hw->cumulative_dy = hw->y;
     }
 
-    hw->millis = GetTimeInMillis();
+    while (WSConsReadEvent(pInfo, &event)) {
+        switch (event.type) {
+        case WSCONS_EVENT_MOUSE_UP:
+        case WSCONS_EVENT_MOUSE_DOWN:
+            v = (event.type == WSCONS_EVENT_MOUSE_DOWN) ? TRUE : FALSE;
+            switch (event.value) {
+            case 0:
+                hw->left = v;
+                break;
+            case 1:
+                hw->middle = v;
+                break;
+            case 2:
+                hw->right = v;
+                break;
+            case 3:
+                hw->up = v;
+                break;
+            case 4:
+                hw->down = v;
+                break;
+            case 5:
+                hw->multi[0] = v;
+                break;
+            case 6:
+                hw->multi[1] = v;
+                break;
+            case 7:
+                hw->multi[2] = v;
+                break;
+            case 8:
+                hw->multi[3] = v;
+                break;
+            case 9:
+                hw->multi[4] = v;
+                break;
+            case 10:
+                hw->multi[5] = v;
+                break;
+            case 11:
+                hw->multi[6] = v;
+                break;
+            case 12:
+                hw->multi[7] = v;
+                break;
+            }
+            break;
+        case WSCONS_EVENT_MOUSE_ABSOLUTE_X:
+            hw->x = event.value;
+            break;
+        case WSCONS_EVENT_MOUSE_ABSOLUTE_Y:
+            hw->y = priv->maxy - event.value + priv->miny;
+            break;
+        case WSCONS_EVENT_MOUSE_ABSOLUTE_Z:
+            hw->z = event.value;
+            break;
+        case WSCONS_EVENT_MOUSE_ABSOLUTE_W:
+            switch (event.value) {
+            case 0:
+                hw->fingerWidth = 5;
+                hw->numFingers = 2;
+                break;
+            case 1:
+                hw->fingerWidth = 5;
+                hw->numFingers = 3;
+                break;
+            case 4 ... 5:
+                hw->fingerWidth = event.value;
+                hw->numFingers = 1;
+                break;
+            }
+            break;
+        case WSCONS_EVENT_SYNC:
+            hw->millis = 1000 * event.time.tv_sec + event.time.tv_nsec / 1000000;
+            SynapticsCopyHwState(hwRet, hw);
+            return TRUE;
+        default:
+            return FALSE;
+        }
+    }
 
-    SynapticsCopyHwState(hwRet, hw);
-    return TRUE;
+    return FALSE;
 }
 
 static Bool
