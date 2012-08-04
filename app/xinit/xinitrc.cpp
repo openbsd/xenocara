@@ -1,5 +1,5 @@
 XCOMM!SHELL_CMD
-XCOMM $OpenBSD: xinitrc.cpp,v 1.6 2011/03/19 15:40:02 matthieu Exp $
+XCOMM $OpenBSD: xinitrc.cpp,v 1.7 2012/08/04 20:41:42 matthieu Exp $
 
 userresources=$HOME/.Xresources
 usermodmap=$HOME/.Xmodmap
@@ -49,6 +49,11 @@ if [ -x /usr/bin/ssh-agent ] && [ -f $id1 -o -f $id2 -o -f $id3 -o -f $id4 ];
 then
 	eval `ssh-agent -s`
 	ssh-add < /dev/null
+fi
+
+XCOMM if dbus is installed, start its daemon
+if test -x /usr/local/bin/dbus-launch -a -z "$DBUS_SESSION_BUS_ADDRESS" ; then
+        eval `dbus-launch --sh-syntax --exit-with-session`
 fi
 
 XCOMM start some nice programs
