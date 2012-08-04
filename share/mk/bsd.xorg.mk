@@ -1,4 +1,4 @@
-# $OpenBSD: bsd.xorg.mk,v 1.41 2012/03/11 10:08:59 matthieu Exp $ -*- makefile  -*-
+# $OpenBSD: bsd.xorg.mk,v 1.42 2012/08/04 17:10:01 matthieu Exp $ -*- makefile  -*-
 #
 # Copyright © 2006,2012 Matthieu Herrb
 #
@@ -19,8 +19,8 @@
 .include "${.CURDIR}/../Makefile.inc"
 .endif
 
-AUTOMAKE_VERSION=	1.9
-AUTOCONF_VERSION=	2.62
+AUTOMAKE_VERSION=	1.12
+AUTOCONF_VERSION=	2.68
 PYTHON_VERSION=		2.7
 
 # Where source lives
@@ -58,6 +58,8 @@ CONFIGURE_ENV=	PKG_CONFIG_LIBDIR="$(PKG_CONFIG_LIBDIR)" \
 		CONFIG_SITE=$(CONFIG_SITE) \
 		CFLAGS="$(CFLAGS:C/ *$//)" \
 		MAKE="${MAKE}"
+
+CONFIGURE_ARGS+= --disable-silent-rules
 
 AUTOTOOLS_ENV=  AUTOMAKE_VERSION="$(AUTOMAKE_VERSION)" \
 		AUTOCONF_VERSION="$(AUTOCONF_VERSION)" \
