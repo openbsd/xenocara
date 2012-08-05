@@ -977,7 +977,7 @@ OsVendorInit(void)
 	  xf86DropPriv(display);
   }
 #endif
-
+    xf86UnblockSIGIO(0);
     beenHere = TRUE;
 }
 
