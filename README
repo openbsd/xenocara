@@ -76,8 +76,8 @@ However if you start modifying things in the automake build
 system used by many packages, you will need to have the following
 GNU autotools packages installed:
 
-    - automake 1.12 (devel/automake/1.11)
-    - autoconf 2.68 (devel/autoconf/2.68)
+    - automake 1.12 (devel/automake/1.12)
+    - autoconf 2.69 (devel/autoconf/2.69)
     - metaauto 0.9 (or later) (devel/metaauto)
     - libtool 2.4.2 (or later) (devel/libtool)
 
@@ -202,4 +202,4 @@ The core dump will be in /var/crash.
 See also <http://xorg.freedesktop.org/wiki/Development/Documentation/ServerDebugging>
 
 -- 
-$OpenBSD: README,v 1.30 2012/08/04 17:10:01 matthieu Exp $
+$OpenBSD: README,v 1.31 2012/08/05 18:08:05 matthieu Exp $
