@@ -1,4 +1,4 @@
-# $OpenBSD: config.site,v 1.5 2011/12/10 15:02:12 matthieu Exp $
+# $OpenBSD: config.site,v 1.6 2012/08/05 19:52:22 matthieu Exp $
 ac_cv_c_compiler_gnu=${ac_cv_c_compiler_gnu=yes}
 ac_cv_c_const=${ac_cv_c_const=yes}
 ac_cv_cxx_compiler_gnu=${ac_cv_cxx_compiler_gnu=yes}
@@ -15,6 +15,7 @@ ac_cv_path_install=${ac_cv_path_install='/usr/bin/install -p'}
 ac_cv_path_GREP=${ac_cv_path_GREP=/usr/bin/grep}
 ac_cv_path_EGREP=${ac_cv_path_EGREP=/usr/bin/egrep}
 ac_cv_path_FGREP=${ac_cv_path_EGREP=/usr/bin/fgrep}
+ac_cv_path_mkdir=${ac_cv_path_mkdir=/bin/mkdir}
 am_cv_prog_tar_ustar=${am_cv_prog_tar_ustar=/usr/bin/tar}
 ac_cv_prog_AWK=${ac_cv_prog_AWK=awk}
 ac_cv_prog_HAS_PERL=${ac_cv_prog_HAS_PERL=yes}
