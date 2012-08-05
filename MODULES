@@ -1,4 +1,4 @@
-# $OpenBSD: MODULES,v 1.224 2012/08/04 16:59:11 matthieu Exp $
+# $OpenBSD: MODULES,v 1.225 2012/08/05 18:17:34 matthieu Exp $
 #
 # X.Org maintained modules
 #
@@ -208,7 +208,7 @@ lib/libxcb			1.8.1	7.7
 lib/libxkbfile			1.0.8	7.7
 lib/libxkbui			1.0.2
 lib/libxtrans			1.2.7	7.7
-lib/pixman			0.26.0		needs-update
+lib/pixman			0.26.2		needs-update
 lib/xcb-util			0.3.9		needs-update
 lib/xcb-util-image		0.3.9		needs-import
 lib/xcb-util-keysyms		0.3.9		needs-import
@@ -250,4 +250,4 @@ util/imake			1.0.5
 util/macros			1.17	7.7
 util/makedepend			1.0.4	7.7
 
-xserver				1.12.2	7.7
+xserver				1.12.3	7.7+
