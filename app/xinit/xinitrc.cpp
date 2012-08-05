@@ -1,5 +1,5 @@
 XCOMM!SHELL_CMD
-XCOMM $OpenBSD: xinitrc.cpp,v 1.7 2012/08/04 20:41:42 matthieu Exp $
+XCOMM $OpenBSD: xinitrc.cpp,v 1.8 2012/08/05 07:27:34 ajacoutot Exp $
 
 userresources=$HOME/.Xresources
 usermodmap=$HOME/.Xmodmap
@@ -53,7 +53,7 @@ fi
 
 XCOMM if dbus is installed, start its daemon
 if test -x /usr/local/bin/dbus-launch -a -z "$DBUS_SESSION_BUS_ADDRESS" ; then
-        eval `dbus-launch --sh-syntax --exit-with-session`
+	eval `dbus-launch --sh-syntax --exit-with-session`
 fi
 
 XCOMM start some nice programs
