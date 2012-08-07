@@ -1,4 +1,4 @@
-/* $OpenBSD: privsep.c,v 1.21 2012/08/07 20:13:18 matthieu Exp $ */
+/* $OpenBSD: privsep.c,v 1.22 2012/08/07 20:15:23 matthieu Exp $ */
 /*
  * Copyright 2001 Niels Provos <provos@citi.umich.edu>
  * All rights reserved.
@@ -239,8 +239,6 @@ priv_init(uid_t uid, gid_t gid)
 	priv_cmd_t cmd;
 	struct okdev *dev;
 
-	parent_pid = getppid();
-
 	/* Create sockets */
 	if (socketpair(AF_LOCAL, SOCK_STREAM, PF_UNSPEC, socks) == -1) {
 		return -1;
@@ -290,7 +288,8 @@ priv_init(uid_t uid, gid_t gid)
 				close(fd);
 			break;
 		case PRIV_SIG_PARENT:
-			kill(parent_pid, SIGUSR1);
+			if (parent_pid > 1)
+				kill(parent_pid, SIGUSR1);
 			break;
 		default:
 			errx(1, "%s: unknown command %d", __func__, cmd.cmd);
@@ -322,8 +321,14 @@ priv_open_device(const char *path)
 	}
 }
 
+void
+priv_init_parent_process(pid_t ppid)
+{
+	parent_pid = ppid;
+}
+
 /* send signal to parent process */
-int 
+void
 priv_signal_parent(void)
 {
 	priv_cmd_t cmd;
@@ -335,9 +340,9 @@ priv_signal_parent(void)
 		}
 		cmd.cmd = PRIV_SIG_PARENT;
 		write(priv_fd, &cmd, sizeof(cmd));
-		return 0;
-	} else 
-		return kill(getppid(), SIGUSR1);
+	} else
+		if (parent_pid > 1)
+			kill(parent_pid, SIGUSR1);
 }
 
 #ifdef TEST

@@ -343,6 +343,9 @@ InitParentProcess(void)
         RunFromSmartParent = TRUE;
     OsSignal(SIGUSR1, handler);
     ParentProcess = getppid();
+#ifdef X_PRIVSEP
+    priv_init_parent_process(ParentProcess);
+#endif
 #endif
 }
 
