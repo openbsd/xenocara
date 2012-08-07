@@ -978,6 +978,7 @@ OsVendorInit(void)
   }
 #endif
     xf86UnblockSIGIO(0);
+
     beenHere = TRUE;
 }
 
