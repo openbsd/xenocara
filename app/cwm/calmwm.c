@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: calmwm.c,v 1.64 2012/07/18 21:53:22 okan Exp $
+ * $OpenBSD: calmwm.c,v 1.65 2012/08/07 14:05:49 okan Exp $
  */
 
 #include <sys/param.h>
@@ -25,6 +25,7 @@
 #include <err.h>
 #include <errno.h>
 #include <getopt.h>
+#include <locale.h>
 #include <signal.h>
 #include <stdlib.h>
 #include <string.h>
@@ -61,6 +62,10 @@ main(int argc, char **argv)
 	const char	*conf_file = NULL;
 	char		*display_name = NULL;
 	int		 ch;
+
+	if (!setlocale(LC_CTYPE, "") || !XSupportsLocale())
+		warnx("no locale support");
+	mbtowc(NULL, NULL, MB_CUR_MAX);
 
 	while ((ch = getopt(argc, argv, "c:d:")) != -1) {
 		switch (ch) {
