@@ -1,4 +1,4 @@
-/* $OpenBSD: privsep.c,v 1.22 2012/08/07 20:15:23 matthieu Exp $ */
+/* $OpenBSD: privsep.c,v 1.23 2012/08/07 20:16:12 matthieu Exp $ */
 /*
  * Copyright 2001 Niels Provos <provos@citi.umich.edu>
  * All rights reserved.
@@ -49,6 +49,7 @@
 #include <unistd.h>
 
 #include "os.h"
+#include "osdep.h"
 
 enum cmd_types {
 	PRIV_OPEN_DEVICE,

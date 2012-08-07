@@ -269,4 +269,11 @@ extern void XdmcpRegisterBroadcastAddress(const struct sockaddr_in *addr);
 extern void XdmAuthenticationInit(const char *cookie, int cookie_length);
 #endif
 
+#ifdef X_PRIVSEP
+extern int priv_init(uid_t, gid_t);
+extern int priv_open_device(const char *);
+extern void priv_init_parent_process(pid_t);
+extern void priv_signal_parent(void);
+#endif
+
 #endif                          /* _OSDEP_H_ */
