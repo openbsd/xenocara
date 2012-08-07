@@ -1,4 +1,4 @@
-/* $OpenBSD: privsep.c,v 1.20 2012/06/10 13:21:31 matthieu Exp $ */
+/* $OpenBSD: privsep.c,v 1.21 2012/08/07 20:13:18 matthieu Exp $ */
 /*
  * Copyright 2001 Niels Provos <provos@citi.umich.edu>
  * All rights reserved.
@@ -144,7 +144,7 @@ open_ok(const char *path)
 }
 
 static void
-send_fd(int socket, int fd)
+send_fd(int s, int fd)
 {
 	struct msghdr msg;
 	union {
@@ -175,15 +175,15 @@ send_fd(int socket, int fd)
 	msg.msg_iov = &vec;
 	msg.msg_iovlen = 1;
 	
-	if ((n = sendmsg(socket, &msg, 0)) == -1)
-		warn("%s: sendmsg(%d)", __func__, socket);
+	if ((n = sendmsg(s, &msg, 0)) == -1)
+		warn("%s: sendmsg(%d)", __func__, s);
 	if (n != sizeof(int))
 		warnx("%s: sendmsg: expected sent 1 got %ld",
 		    __func__, (long)n);
 }
 
 static int
-receive_fd(int socket)
+receive_fd(int s)
 {
 	struct msghdr msg;
 	union {
@@ -205,7 +205,7 @@ receive_fd(int socket)
 	msg.msg_controllen = sizeof(cmsgbuf.buf);
 
 	do
-		n = recvmsg(socket, &msg, 0);	
+		n = recvmsg(s, &msg, 0);
 	while (n == -1 && errno == EINTR);
 
 	if (n != sizeof(int)) {
