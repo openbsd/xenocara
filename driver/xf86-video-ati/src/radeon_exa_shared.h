@@ -40,6 +40,7 @@ extern void RADEONVlineHelperClear(ScrnInfoPtr pScrn);
 extern void RADEONVlineHelperSet(ScrnInfoPtr pScrn, int x1, int y1, int x2, int y2);
 extern Bool RADEONValidPM(uint32_t pm, int bpp);
 extern Bool RADEONCheckBPP(int bpp);
+extern PixmapPtr RADEONSolidPixmap(ScreenPtr pScreen, uint32_t solid);
 
 #define RADEON_TRACE_FALL 0
 #define RADEON_TRACE_DRAW 0

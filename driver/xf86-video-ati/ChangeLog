@@ -1,3 +1,405 @@
+commit 008eb209d506ed7195fd544dfa91be9783946fd5
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Fri Jun 29 14:46:55 2012 +0100
+
+    configure: bump version number to 6.14.6 pre-release
+    
+    Signed-off-by: Dave Airlie <airlied@redhat.com>
+
+commit 72fea2635a56c4f572c07fc50fc58f703a21eb4f
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Fri Jun 29 14:46:17 2012 +0100
+
+    radeon: require libdrm 2.4.36 for KMS support.
+    
+    This is due to some commits to the surface manager that fix bugs.
+    
+    Signed-off-by: Dave Airlie <airlied@redhat.com>
+
+commit 179b035835bfa99283d44ba2d5ee17e686196535
+Author: Michel Dänzer <michel.daenzer@amd.com>
+Date:   Wed Jun 27 19:26:51 2012 +0200
+
+    Fix up displayWidth vs. virtualX confusion in radeon_setup_kernel_mem().
+    
+    It was using the pitch (displayWidth) for the virtual width (virtualX). This
+    prevented using page flipping in some cases, as displayWidth was already
+    overaligned for virtualX, so the DRI2 front and back buffers ended up having
+    a different pitch.
+    
+    Signed-off-by: Michel Dänzer <michel.daenzer@amd.com>
+    Reviewed-by: Jerome Glisse <jglisse@redhat.com>
+
+commit 5dc5012320536f7b1e86a81ed3b823e3626828e1
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Mon Jun 25 09:23:04 2012 +0100
+
+    radeon: dixPrivateKeyRegistered is only in server 1.9
+    
+    just fallback to the old behaviour on older servers.
+    
+    should fix: https://bugs.freedesktop.org/show_bug.cgi?id=51388
+    Review-over-irc: Michel Dänzer <michel.daenzer@amd.com>
+    Signed-off-by: Dave Airlie <airlied@redhat.com>
+
+commit 248e912c487636d7352cfad43c03fc9f19fc2215
+Author: Michel Dänzer <michel.daenzer@amd.com>
+Date:   Fri Jun 8 12:18:48 2012 +0200
+
+    UMS: Fix CRTC DPMS state check.
+    
+    Signed-off-by: Michel Dänzer <michel.daenzer@amd.com>
+
+commit 58883711136fa6671d4f3250d4ee973e2953ebb4
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Thu Jun 7 11:47:21 2012 -0400
+
+    configure: bump version post release
+    
+    Signed-off-by: Alex Deucher <alexdeucher@gmail.com>
+
+commit 3a9103f855c67bbcd7b97ee2e96836353e0d789d
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Thu Jun 7 11:27:08 2012 -0400
+
+    configure: bump for release
+    
+    Signed-off-by: Alex Deucher <alexdeucher@gmail.com>
+
+commit f1693ee09e9b251eb75e3e5fe0ee7699fec6fb98
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Thu Jun 7 11:23:31 2012 -0400
+
+    configure: bump libdrm_radeon requirement
+    
+    Signed-off-by: Alex Deucher <alexdeucher@gmail.com>
+
+commit 77a056c1725c9c44a328ed324687bdf35144e9e2
+Author: Michel Dänzer <michel.daenzer@amd.com>
+Date:   Wed Jun 6 12:29:37 2012 +0200
+
+    Don't page-flip or wait on a CRTC while we're VT-switched away.
+    
+    We don't know what the CRTC state is.
+    
+    Signed-off-by: Michel Dänzer <michel.daenzer@amd.com>
+
+commit 1d9f1eb7e65c57c52759ccbfa51e8bdd5a10acac
+Author: Michel Dänzer <michel.daenzer@amd.com>
+Date:   Wed Jun 6 12:16:08 2012 +0200
+
+    Don't wait on a CRTC which has been disabled via DPMS (bug #49761).
+    
+    Fixes https://bugs.freedesktop.org/show_bug.cgi?id=49761 .
+    
+    Signed-off-by: Michel Dänzer <michel.daenzer@amd.com>
+
+commit 4603285aa8efaf2614f15a38254465cec2075f11
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Tue Jun 5 09:48:59 2012 -0400
+
+    radeon: add new PCI ids
+    
+    Signed-off-by: Alex Deucher <alexdeucher@gmail.com>
+
+commit 9307609420b4b209767d2057b4803bcb16cc1455
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Sat Jun 2 17:16:34 2012 +0100
+
+    radeon: improve smooth startup fallbacks.
+    
+    If we can't handover the framebuffer, memset it to black.
+    
+    mostly ported from nouveau.
+    
+    Signed-off-by: Dave Airlie <airlied@redhat.com>
+
+commit 89a4c79a43a2b6963e41d7812e8fe5beedb556af
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Sat Jun 2 17:14:14 2012 +0100
+
+    radeon: fix smooth startup with tiling enabled.
+    
+    We need to use the surface we worked out when we allocated the front bo,
+    not work out a new surface from scratch.
+    
+    This fixes smooth handover from plymouth to gdm on F17.
+    
+    Signed-off-by: Dave Airlie <airlied@redhat.com>
+
+commit c1b9b2c9d71a87a0b98ccdb542da8a30c8c4d99a
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Fri Jun 1 12:22:06 2012 +0100
+
+    radeon: fix compat api for newest planned API.
+    
+    Signed-off-by: Dave Airlie <airlied@redhat.com>
+
+commit 68c51d148b22ee8cbe98b5d5441e3494804ee808
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Fri Jun 1 12:21:34 2012 +0100
+
+    drmmode: drop flags arg to adjust frame.
+    
+    Signed-off-by: Dave Airlie <airlied@redhat.com>
+
+commit b1e9c3081d2b975682a62389aa29063b79f9655c
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Thu May 24 17:54:41 2012 +0100
+
+    radeon: move include down further
+    
+    fixes tinderbox build.
+    
+    Signed-off-by: Dave Airlie <airlied@redhat.com>
+
+commit 5ed959585f35a4eff2cd803ae222b46d164f210d
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Thu May 24 08:17:11 2012 +0100
+
+    radeon: update compat-api.h for block handler + enable/disable fb.
+    
+    This updates the compat stuff for the latest block handler code,
+    and the enable/disable interface.
+    
+    Signed-off-by: Dave Airlie <airlied@redhat.com>
+
+commit 2de17efdcb502f91fb145130c12be3cb164f03c5
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Thu May 24 08:16:39 2012 +0100
+
+    radeon/xvmc: fix build with new API.
+    
+    This was missing the compat include.
+    
+    Signed-off-by: Dave Airlie <airlied@redhat.com>
+
+commit a1f47768309aa8b14b13f05ba01bb490024c4cbc
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Thu May 24 07:55:14 2012 +0100
+
+    radeon: fix a few more RHDAtomBiosFunc uses
+    
+    I missed these in my initial search/replace for some reason.
+    
+    Signed-off-by: Dave Airlie <airlied@redhat.com>
+
+commit c26e40cf60eb6a2bffb5ec7cba1f1bbffcbf1d53
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Wed May 23 12:12:54 2012 +0100
+
+    radeon/atombios: rewrite atombios parser code to not use xf86Screens.
+    
+    Just pass the ScrnInfoPtr around instead.
+    
+    Signed-off-by: Dave Airlie <airlied@redhat.com>
+
+commit 14122214edabd2a574b66577289a7c8732f4e953
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Wed May 23 11:57:35 2012 +0100
+
+    radeon/generic_bus: stop passing scrnIndex
+    
+    Just pass a pointer to the screen, removes usage of xf86Screens lookup
+    
+    Signed-off-by: Dave Airlie <airlied@redhat.com>
+
+commit 2101e485480e3ffd6a17ed12f5287b8b1e4e0223
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Tue May 22 16:17:55 2012 +0100
+
+    compat for new server API
+
+commit 9d2549057ffced996bfaeb8df4901ef57da636c7
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Wed May 16 15:45:53 2012 +0100
+
+    ati: convert to new screen conversion APIs
+    
+    The compat header takes care of the old server vs new server.
+    
+    this commit was autogenerated from util/modular/x-driver-screen-scrn-conv.sh
+    
+    Signed-off-by: Dave Airlie <airlied@redhat.com>
+
+commit 80a45bfc26e20d1d481f13cb15c0720d165a8306
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Wed May 16 15:42:59 2012 +0100
+
+    radeon: add compat-api.h
+
+commit 84c3900b5179a8d2cc5f925e94ed5b2bbdee1ad9
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Wed May 23 08:49:45 2012 +0100
+
+    radeon/xaa: drop scrnIndex parameter to some functions
+    
+    This isn't needed, and makes api changes later easier.
+    
+    Signed-off-by: Dave Airlie <airlied@redhat.com>
+
+commit 3fb694b308ebadd1b849836059b6b56bb19385f7
+Author: Thierry Vignaud <thierry.vignaud@gmail.com>
+Date:   Wed May 16 14:43:53 2012 +0200
+
+    UMS/EXA: Add reminder for potential solid picture performance issue.
+
+commit 4b9bad959438725e4434e2aa4f142542d8dcc260
+Author: Roland Scheidegger <rscheidegger_lists@hispeed.ch>
+Date:   Fri May 11 05:25:32 2012 +0200
+
+    radeon: use GB_GR and BG_RG formats for packed yuv video for r600+
+    
+    Those formats were invented for exactly that purpose so use them.
+    This saves some code and also some hw resources (only need one
+    sampler instead of two for packed yuv).
+    Only tested on EG.
+
+commit 37786e9027b8c8d1f9ec9928915784dd28853766
+Author: Roland Scheidegger <rscheidegger_lists@hispeed.ch>
+Date:   Fri May 11 05:25:33 2012 +0200
+
+    radeon: avoid rounding errors in texture coords for textured xv on EG+
+    
+    make sure the division is done with floats, otherwise the coordinate
+    can be wrong up to 1 texel.
+    Particularly visible with clipping and small source scaled up (since one
+    texel can be a shift of several pixels) but could be seen even unscaled.
+    Should provide more accurate coords without clipping too depending on the
+    scale factor probably.
+    This is a straight port of 688c8a54a00b01e73a11970ad2abe858f8c7c5c4
+    when I apparently forgot the eg code...
+
+commit faea3aafa8c9a7c1bc866ffcd847972c5569c8bc
+Author: Anisse Astier <anisse@astier.eu>
+Date:   Thu May 10 17:22:59 2012 +0200
+
+    Fail more gracefully when drm surface manager can't be initialized
+    
+    Should make bugs like https://bugs.freedesktop.org/show_bug.cgi?id=48138
+    easier to diagnose.
+    
+    [ Michel Dänzer: Appended newline to error message. ]
+    
+    Signed-off-by: Anisse Astier <anisse@astier.eu>
+    Singed-off-by: Michel Dänzer <michel.daenzer@amd.com>
+
+commit b0b7d8d26fd107df342b5c87b0a38e5bb08101a9
+Author: Michel Dänzer <michel.daenzer@amd.com>
+Date:   Wed May 9 11:08:49 2012 +0200
+
+    EXA/UMS: Synchronize to the GPU before writing solid colour to scratch pixmap.
+    
+    UMS doesn't do this automagically. It's a big hammer that will probably suck
+    for performance, but I don't have any better ideas right now.
+    
+    Signed-off-by: Michel Dänzer <michel.daenzer@amd.com>
+
+commit 6bda7ceda645e838723883d133d614def1511d16
+Author: Michel Dänzer <michel.daenzer@amd.com>
+Date:   Thu May 3 15:07:30 2012 +0200
+
+    EXA: Attempt to fix solid picture acceleration with UMS.
+    
+    Only compile tested, but should fix
+    https://bugs.freedesktop.org/show_bug.cgi?id=49182 .
+    
+    Signed-off-by: Michel Dänzer <michel.daenzer@amd.com>
+
+commit b33cf9cf9dce5add8aaccab10ba5aaa64247c8ce
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Wed May 2 09:55:16 2012 -0400
+
+    radeon: add MacModel entry for SAM440ep embedded board
+    
+    Signed-off-by: Alex Deucher <alexdeucher@gmail.com>
+
+commit 0bda305f7ab2a4720b3fea3f318ab2a73be151e5
+Author: Alex Deucher <alexander.deucher@amd.com>
+Date:   Fri Apr 13 13:28:10 2012 -0400
+
+    EXA: Support acceleration of solid pictures on R2xx.
+    
+    Signed-off-by: Alex Deucher <alexander.deucher@amd.com>
+    Reviewed-by: Michel Dänzer <michel.daenzer@amd.com>
+
+commit a7754b076e355fef3aea082b6e2d3aefbb8e7a9b
+Author: Alex Deucher <alexander.deucher@amd.com>
+Date:   Fri Apr 13 13:24:46 2012 -0400
+
+    EXA: Support acceleration of solid pictures on R1xx.
+    
+    Signed-off-by: Alex Deucher <alexander.deucher@amd.com>
+    Reviewed-by: Michel Dänzer <michel.daenzer@amd.com>
+
+commit cac2d7ed54918579418fc762558497d3ec547fad
+Author: Alex Deucher <alexander.deucher@amd.com>
+Date:   Sat Apr 14 08:53:39 2012 -0400
+
+    EXA: Support acceleration of solid pictures on Evergreen/NI.
+    
+    Signed-off-by: Alex Deucher <alexander.deucher@amd.com>
+    Reviewed-by: Michel Dänzer <michel.daenzer@amd.com>
+
+commit d88b9700137ee407c483f263bb55c77cd6f92fef
+Author: Michel Dänzer <michel.daenzer@amd.com>
+Date:   Fri Apr 13 09:35:38 2012 +0200
+
+    EXA: Support acceleration of solid pictures on R3xx-R7xx.
+    
+    Allocate 1x1 scratch pixmaps to hold the solid picture colours.
+    
+    This works around https://bugs.freedesktop.org/show_bug.cgi?id=47266 and might
+    improve performance in other cases as well.
+    
+    Signed-off-by: Michel Dänzer <michel.daenzer@amd.com>
+
+commit 66b586b9b9cdaf70f0fcd547b5a04f044d848d44
+Author: Michel Dänzer <michel.daenzer@amd.com>
+Date:   Mon Apr 16 15:33:36 2012 +0200
+
+    RADEONCopySwap: Fix RADEON_HOST_DATA_SWAP_16BIT case.
+    
+    It was the same code as for RADEON_HOST_DATA_SWAP_32BIT. This caused bus errors
+    on FreeBSD/PPC, but I'm not sure how it could not cause problems anywhere...
+    
+    Reported-by: Andreas Tobler <andreast@fgznet.ch>
+    Signed-off-by: Michel Dänzer <michel.daenzer@amd.com>
+    Reviewed-by: Alex Deucher <alexander.deucher@amd.com>
+
+commit 1e656cd5973bbcf85b63406638ede0bccd65e28f
+Author: Michel Dänzer <michel.daenzer@amd.com>
+Date:   Mon Apr 16 15:44:01 2012 +0200
+
+    Make radeon_setup_kernel_mem failures more graceful and verbose.
+    
+    So that bugs like https://bugs.freedesktop.org/show_bug.cgi?id=48138 can be
+    diagnosed more easily.
+    
+    Signed-off-by: Michel Dänzer <michel.daenzer@amd.com>
+
+commit d282719a9c2fb0ee32830aa75b8dfbb9392954ed
+Author: Jerome Glisse <jglisse@redhat.com>
+Date:   Wed Apr 4 17:08:30 2012 -0400
+
+    r6xx-r9xx: force 1D tiling for buffer with height < 64
+    
+    Due to some old kernel issue, height is 8 aligned insided the ddx
+    For buffer with height btw 57 & 63 this lead ddx to believe it can
+    allocate a 2D tiled surface while mesa will not align height and
+    will assume 1D tiled leading to disagreement and rendering issue.
+    This patch force buffer with height < 64 to be 1D tiled.
+    
+    Signed-off-by: Jerome Glisse <jglisse@redhat.com>
+
+commit de2419e5509398328903ca61f4ea80852cba6bc4
+Author: Alex Deucher <alexdeucher@gmail.com>
+Date:   Thu Mar 29 00:28:39 2012 -0400
+
+    configure: bump version post release
+    
+    Signed-off-by: Alex Deucher <alexdeucher@gmail.com>
+
 commit 9425c50e93903fb64d9e569cfdc1e2c35d16ce25
 Author: Alex Deucher <alexdeucher@gmail.com>
 Date:   Thu Mar 29 00:19:12 2012 -0400

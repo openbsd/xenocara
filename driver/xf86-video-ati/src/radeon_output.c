@@ -2460,6 +2460,62 @@ static Bool RADEONSetupAppleConnectors(ScrnInfoPtr pScrn)
 				ATOM_DEVICE_TV1_SUPPORT))
 	    return FALSE;
 	return TRUE;
+    case RADEON_MAC_SAM440EP:
+	/* LVDS header */
+	info->BiosConnector[0].ddc_i2c = legacy_setup_i2c_bus(0);
+	info->BiosConnector[0].ConnectorType = CONNECTOR_LVDS;
+	info->BiosConnector[0].valid = TRUE;
+	info->BiosConnector[0].devices = ATOM_DEVICE_LCD1_SUPPORT;
+	if (!radeon_add_encoder(pScrn,
+				radeon_get_encoder_id_from_supported_device(pScrn,
+									    ATOM_DEVICE_LCD1_SUPPORT,
+									    0),
+				ATOM_DEVICE_LCD1_SUPPORT))
+	    return FALSE;
+
+	/* DVI-I port */
+	info->BiosConnector[1].ddc_i2c = legacy_setup_i2c_bus(RADEON_GPIO_DVI_DDC);
+	info->BiosConnector[1].ConnectorType = CONNECTOR_DVI_I;
+	info->BiosConnector[1].valid = TRUE;
+	info->BiosConnector[1].devices = ATOM_DEVICE_CRT2_SUPPORT | ATOM_DEVICE_DFP1_SUPPORT;
+	if (!radeon_add_encoder(pScrn,
+				radeon_get_encoder_id_from_supported_device(pScrn,
+									    ATOM_DEVICE_CRT2_SUPPORT,
+									    2),
+				ATOM_DEVICE_CRT2_SUPPORT))
+	    return FALSE;
+	if (!radeon_add_encoder(pScrn,
+				radeon_get_encoder_id_from_supported_device(pScrn,
+									    ATOM_DEVICE_DFP1_SUPPORT,
+									    0),
+				ATOM_DEVICE_DFP1_SUPPORT))
+	    return FALSE;
+
+	/* VGA header */
+	info->BiosConnector[2].ddc_i2c = legacy_setup_i2c_bus(RADEON_GPIO_VGA_DDC);
+	info->BiosConnector[2].ConnectorType = CONNECTOR_VGA;
+	info->BiosConnector[2].valid = TRUE;
+	info->BiosConnector[2].devices = ATOM_DEVICE_CRT1_SUPPORT;
+	if (!radeon_add_encoder(pScrn,
+				radeon_get_encoder_id_from_supported_device(pScrn,
+									    ATOM_DEVICE_CRT1_SUPPORT,
+									    1),
+				ATOM_DEVICE_CRT1_SUPPORT))
+	    return FALSE;
+
+	/* s-video */
+	info->BiosConnector[3].ConnectorType = CONNECTOR_STV;
+	info->BiosConnector[3].load_detection = FALSE;
+	info->BiosConnector[3].ddc_i2c.valid = FALSE;
+	info->BiosConnector[3].valid = TRUE;
+	info->BiosConnector[3].devices = ATOM_DEVICE_TV1_SUPPORT;
+	if (!radeon_add_encoder(pScrn,
+				radeon_get_encoder_id_from_supported_device(pScrn,
+									    ATOM_DEVICE_TV1_SUPPORT,
+									    2),
+				ATOM_DEVICE_TV1_SUPPORT))
+	    return FALSE;
+	return TRUE;
     default:
 	return FALSE;
     }
@@ -2939,6 +2995,8 @@ Bool RADEONSetupConnectors(ScrnInfoPtr pScrn)
 	    info->MacModel = RADEON_MAC_IMAC_G5_ISIGHT;
 	else if (!strncmp("emac", optstr, strlen("emac")))
 	    info->MacModel = RADEON_MAC_EMAC;
+	else if (!strncmp("sam440ep", optstr, strlen("sam440ep")))
+	    info->MacModel = RADEON_MAC_SAM440EP;
 	else {
 	    xf86DrvMsg(pScrn->scrnIndex, X_ERROR, "Invalid Mac Model: %s\n", optstr);
 	}

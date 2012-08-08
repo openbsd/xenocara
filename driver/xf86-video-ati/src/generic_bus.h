@@ -19,7 +19,7 @@
 typedef struct _GENERIC_BUS_Rec *GENERIC_BUS_Ptr;
 
 typedef struct _GENERIC_BUS_Rec{
-        int scrnIndex;
+        ScrnInfoPtr pScrn;
         DevUnion  DriverPrivate;
 	Bool (*ioctl)(GENERIC_BUS_Ptr, long, long, char *);
 	Bool (*read)(GENERIC_BUS_Ptr, uint32_t,  uint32_t, uint8_t *);

@@ -331,7 +331,7 @@ EVERGREENDisplayTexturedVideo(ScrnInfoPtr pScrn, RADEONPortPrivPtr pPriv)
     default:
 	accel_state->src_size[0] = accel_state->src_obj[0].pitch * pPriv->h;
 
-	/* Y texture */
+	/* YUV texture */
 	tex_res.id                  = 0;
 	tex_res.w                   = accel_state->src_obj[0].width;
 	tex_res.h                   = accel_state->src_obj[0].height;
@@ -345,13 +345,13 @@ EVERGREENDisplayTexturedVideo(ScrnInfoPtr pScrn, RADEONPortPrivPtr pPriv)
 	tex_res.mip_bo              = accel_state->src_obj[0].bo;
 	tex_res.surface             = NULL;
 
-	tex_res.format              = FMT_8_8;
 	if (pPriv->id == FOURCC_UYVY)
-	    tex_res.dst_sel_x           = SQ_SEL_Y; /* Y */
+	    tex_res.format              = FMT_GB_GR;
 	else
-	    tex_res.dst_sel_x           = SQ_SEL_X; /* Y */
-	tex_res.dst_sel_y           = SQ_SEL_1;
-	tex_res.dst_sel_z           = SQ_SEL_1;
+	    tex_res.format              = FMT_BG_RG;
+	tex_res.dst_sel_x           = SQ_SEL_Y;
+	tex_res.dst_sel_y           = SQ_SEL_X;
+	tex_res.dst_sel_z           = SQ_SEL_Z;
 	tex_res.dst_sel_w           = SQ_SEL_1;
 
 	tex_res.base_level          = 0;
@@ -362,7 +362,7 @@ EVERGREENDisplayTexturedVideo(ScrnInfoPtr pScrn, RADEONPortPrivPtr pPriv)
 	    tex_res.array_mode          = 1;
 	evergreen_set_tex_resource(pScrn, &tex_res, accel_state->src_obj[0].domain);
 
-	/* Y sampler */
+	/* YUV sampler */
 	tex_samp.id                 = 0;
 	tex_samp.clamp_x            = SQ_TEX_CLAMP_LAST_TEXEL;
 	tex_samp.clamp_y            = SQ_TEX_CLAMP_LAST_TEXEL;
@@ -375,33 +375,6 @@ EVERGREENDisplayTexturedVideo(ScrnInfoPtr pScrn, RADEONPortPrivPtr pPriv)
 	tex_samp.mip_filter         = 0;			/* no mipmap */
 	evergreen_set_tex_sampler(pScrn, &tex_samp);
 
-	/* UV texture */
-	tex_res.id                  = 1;
-	tex_res.format              = FMT_8_8_8_8;
-	tex_res.w                   = accel_state->src_obj[0].width >> 1;
-	tex_res.h                   = accel_state->src_obj[0].height;
-	tex_res.pitch               = accel_state->src_obj[0].pitch >> 2;
-	if (pPriv->id == FOURCC_UYVY) {
-	    tex_res.dst_sel_x           = SQ_SEL_X; /* V */
-	    tex_res.dst_sel_y           = SQ_SEL_Z; /* U */
-	} else {
-	    tex_res.dst_sel_x           = SQ_SEL_Y; /* V */
-	    tex_res.dst_sel_y           = SQ_SEL_W; /* U */
-	}
-	tex_res.dst_sel_z           = SQ_SEL_1;
-	tex_res.dst_sel_w           = SQ_SEL_1;
-	tex_res.interlaced          = 0;
-
-	tex_res.base                = accel_state->src_obj[0].offset;
-	tex_res.mip_base            = accel_state->src_obj[0].offset;
-	tex_res.size                = accel_state->src_size[0];
-	if (accel_state->src_obj[0].tiling_flags == 0)
-	    tex_res.array_mode          = 1;
-	evergreen_set_tex_resource(pScrn, &tex_res, accel_state->src_obj[0].domain);
-
-	/* UV sampler */
-	tex_samp.id                 = 1;
-	evergreen_set_tex_sampler(pScrn, &tex_samp);
 	break;
     }
 
@@ -508,7 +481,7 @@ EVERGREENDisplayTexturedVideo(ScrnInfoPtr pScrn, RADEONPortPrivPtr pPriv)
     }
 
     while (nBox--) {
-	int srcX, srcY, srcw, srch;
+	float srcX, srcY, srcw, srch;
 	int dstX, dstY, dstw, dsth;
 	float *vb;
 
@@ -520,13 +493,13 @@ EVERGREENDisplayTexturedVideo(ScrnInfoPtr pScrn, RADEONPortPrivPtr pPriv)
 
 	srcX = pPriv->src_x;
 	srcX += ((pBox->x1 - pPriv->drw_x) *
-		 pPriv->src_w) / pPriv->dst_w;
+		 pPriv->src_w) / (float)pPriv->dst_w;
 	srcY = pPriv->src_y;
 	srcY += ((pBox->y1 - pPriv->drw_y) *
-		 pPriv->src_h) / pPriv->dst_h;
+		 pPriv->src_h) / (float)pPriv->dst_h;
 
-	srcw = (pPriv->src_w * dstw) / pPriv->dst_w;
-	srch = (pPriv->src_h * dsth) / pPriv->dst_h;
+	srcw = (pPriv->src_w * dstw) / (float)pPriv->dst_w;
+	srch = (pPriv->src_h * dsth) / (float)pPriv->dst_h;
 
 	vb = radeon_vbo_space(pScrn, &accel_state->vbo, 16);
 

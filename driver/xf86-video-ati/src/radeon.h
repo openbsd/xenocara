@@ -42,6 +42,7 @@
 #include <sys/time.h>		/* For gettimeofday() */
 
 #include "config.h"
+
 #include "xf86str.h"
 #include "compiler.h"
 #include "xf86fbman.h"
@@ -100,6 +101,8 @@
 #ifdef RENDER
 #include "picturestr.h"
 #endif
+
+#include "compat-api.h"
 
 #include "simple_list.h"
 #include "atipcirename.h"
@@ -404,7 +407,8 @@ typedef enum {
     RADEON_MAC_MINI_EXTERNAL,
     RADEON_MAC_MINI_INTERNAL,
     RADEON_MAC_IMAC_G5_ISIGHT,
-    RADEON_MAC_EMAC
+    RADEON_MAC_EMAC,
+    RADEON_MAC_SAM440EP
 } RADEONMacModel;
 #endif
 
@@ -511,7 +515,7 @@ struct radeon_dri {
     int               numVisualConfigs;
     __GLXvisualConfig *pVisualConfigs;
     RADEONConfigPrivPtr pVisualConfigsPriv;
-    Bool             (*DRICloseScreen)(int, ScreenPtr);
+    Bool             (*DRICloseScreen)(CLOSE_SCREEN_ARGS_DECL);
 
     drm_handle_t      fbHandle;
 
@@ -858,9 +862,9 @@ typedef struct {
 
     RADEONSavePtr     SavedReg;         /* Original (text) mode              */
     RADEONSavePtr     ModeReg;          /* Current mode                      */
-    Bool              (*CloseScreen)(int, ScreenPtr);
+    Bool              (*CloseScreen)(CLOSE_SCREEN_ARGS_DECL);
 
-    void              (*BlockHandler)(int, pointer, pointer, pointer);
+    void              (*BlockHandler)(BLOCKHANDLER_ARGS_DECL);
 
     Bool              PaletteSavedOnVT; /* Palette saved on last VT switch   */
 
@@ -1116,7 +1120,7 @@ extern void RADEONCPFlushIndirect(ScrnInfoPtr pScrn, int discard);
 extern void RADEONCPReleaseIndirect(ScrnInfoPtr pScrn);
 extern int RADEONCPStop(ScrnInfoPtr pScrn,  RADEONInfoPtr info);
 #  ifdef USE_XAA
-extern Bool RADEONSetupMemXAA_DRI(int scrnIndex, ScreenPtr pScreen);
+extern Bool RADEONSetupMemXAA_DRI(ScreenPtr pScreen);
 #  endif
 uint32_t radeonGetPixmapOffset(PixmapPtr pPix);
 #endif
@@ -1125,7 +1129,7 @@ extern int radeon_cs_space_remaining(ScrnInfoPtr pScrn);
 #ifdef USE_XAA
 /* radeon_accelfuncs.c */
 extern void RADEONAccelInitMMIO(ScreenPtr pScreen, XAAInfoRecPtr a);
-extern Bool RADEONSetupMemXAA(int scrnIndex, ScreenPtr pScreen);
+extern Bool RADEONSetupMemXAA(ScreenPtr pScreen);
 #endif
 
 /* radeon_bios.c */

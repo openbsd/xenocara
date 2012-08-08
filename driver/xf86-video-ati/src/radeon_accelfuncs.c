@@ -1152,7 +1152,7 @@ FUNC_NAME(RADEONDisableClipping)(ScrnInfoPtr pScrn)
 void
 FUNC_NAME(RADEONAccelInit)(ScreenPtr pScreen, XAAInfoRecPtr a)
 {
-    ScrnInfoPtr    pScrn = xf86Screens[pScreen->myNum];
+    ScrnInfoPtr    pScrn = xf86ScreenToScrn(pScreen);
     RADEONInfoPtr  info  = RADEONPTR(pScrn);
 
     a->Flags                            = (PIXMAP_CACHE

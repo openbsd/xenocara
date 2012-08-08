@@ -29,11 +29,12 @@
 #include "config.h"
 #endif
 
+#include <xf86.h>
 #include "radeon_video.h"
+#include "compat-api.h"
 
 #include <X11/extensions/Xv.h>
 #include <X11/extensions/XvMC.h>
-#include <xf86.h>
 #include "fourcc.h"
 
 #define FOURCC_RGB	0x0000003
@@ -126,7 +127,7 @@ RADEONCreateAdaptorXvMC(ScreenPtr pScreen, char *xv_adaptor_name)
 
 	assert(pScreen);
 
-	pScrn = xf86Screens[pScreen->myNum];
+	pScrn = xf86ScreenToScrn(pScreen);
 	adaptor = xf86XvMCCreateAdaptorRec();
 
 	if (!adaptor)

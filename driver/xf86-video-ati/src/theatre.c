@@ -1150,7 +1150,7 @@ _X_EXPORT void RT_SetStandard (TheatrePtr t, uint16_t wStandard)
     uint16_t   wFrameTotal = 0;
     double dbSPPeriod = 4.70;
 
-    xf86DrvMsg(t->VIP->scrnIndex,X_INFO,"Rage Theatre setting standard 0x%04x\n",
+    xf86DrvMsg(t->VIP->pScrn->scrnIndex,X_INFO,"Rage Theatre setting standard 0x%04x\n",
     		wStandard);
     t->wStandard = wStandard;
     	
@@ -1798,7 +1798,7 @@ void RT_SetConnector (TheatrePtr t, uint16_t wConnector, int tunerFlag)
     	counter++;
 	}
     dwTempContrast = ReadRT_fld (fld_LP_CONTRAST);
-    if(counter>=10000)xf86DrvMsg(t->VIP->scrnIndex, X_INFO,
+    if(counter>=10000)xf86DrvMsg(t->VIP->pScrn->scrnIndex, X_INFO,
 				 "Rage Theatre: timeout waiting for line count (%u)\n",
 				 (unsigned)ReadRT_fld (fld_VS_LINE_COUNT));
 
@@ -1848,14 +1848,14 @@ void RT_SetConnector (TheatrePtr t, uint16_t wConnector, int tunerFlag)
     {
       i--;
     }
-    if(i<0) xf86DrvMsg(t->VIP->scrnIndex, X_INFO, "Rage Theatre: waiting for fld_HS_GENLOCKED failed\n");
+    if(i<0) xf86DrvMsg(t->VIP->pScrn->scrnIndex, X_INFO, "Rage Theatre: waiting for fld_HS_GENLOCKED failed\n");
     /* now we are waiting for a non-visible line.. and there is absolutely no point to wait too long */
     counter = 0;
     while (!((ReadRT_fld (fld_VS_LINE_COUNT)> 1) && (ReadRT_fld (fld_VS_LINE_COUNT)<20)) && (counter < 10000)){
     	counter++;
 	}
     WriteRT_fld (fld_LP_CONTRAST, dwTempContrast);
-    if(counter>=10000)xf86DrvMsg(t->VIP->scrnIndex, X_INFO,
+    if(counter>=10000)xf86DrvMsg(t->VIP->pScrn->scrnIndex, X_INFO,
 				 "Rage Theatre: timeout waiting for line count (%u)\n",
 				 (unsigned)ReadRT_fld (fld_VS_LINE_COUNT));
 
@@ -1948,7 +1948,7 @@ _X_EXPORT void DumpRageTheatreRegs(TheatrePtr t)
     for(i=0;i<0x900;i+=4)
     {
        RT_regr(i, &data);
-       xf86DrvMsg(t->VIP->scrnIndex, X_INFO,
+       xf86DrvMsg(t->VIP->pScrn->scrnIndex, X_INFO,
 		  "register 0x%04x is equal to 0x%08x\n", i, (unsigned)data);
     }   
 
@@ -2154,7 +2154,7 @@ void DumpRageTheatreRegsByName(TheatrePtr t)
 
     for(i=0; rt_reg_list[i].name!=NULL;i++){
         RT_regr(rt_reg_list[i].addr, &data);
-        xf86DrvMsg(t->VIP->scrnIndex, X_INFO,
+        xf86DrvMsg(t->VIP->pScrn->scrnIndex, X_INFO,
 		   "register (0x%04lx) %s is equal to 0x%08x\n",
 		   rt_reg_list[i].addr, rt_reg_list[i].name, (unsigned)data);
     	}

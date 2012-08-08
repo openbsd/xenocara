@@ -22,6 +22,9 @@
  * authorization from the author.
  *
  * $Log: theatre200.c,v $
+ * Revision 1.7  2012/08/08 16:25:22  matthieu
+ * Update to xf86-video-ati 6.14.6. Tested by mpi@, brad, eric@, ajacoutot@.
+ *
  * Revision 1.6  2012/03/04 16:01:20  matthieu
  * Re-update xf86-video-ati to 6.14.3.
  *
@@ -362,7 +365,7 @@ static int dsp_init(TheatrePtr t, struct rt200_microc_data* microc_datap)
 {
 	uint32_t data;
 	int i = 0;
-	int screen = t->VIP->scrnIndex;
+	int screen = t->VIP->pScrn->scrnIndex;
 
 	/* Map FIFOD to DSP Port I/O port */
 	RT_regr(VIP_HOSTINTF_PORT_CNTL, &data);
@@ -391,7 +394,7 @@ static int dsp_load(TheatrePtr t, struct rt200_microc_data* microc_datap)
 	uint32_t tries = 0;
 	uint32_t result = 0;
 	uint32_t seg_id = 0;
-	int screen = t->VIP->scrnIndex;
+	int screen = t->VIP->pScrn->scrnIndex;
 		  
 	DEBUG("Microcode: before everything: %x\n", data8);
 
@@ -631,7 +634,7 @@ static uint32_t dsp_set_video_input_connector(TheatrePtr t, uint32_t connector)
 {
 	uint32_t fb_scratch0 = 0;
 	uint32_t result;
-	int screen = t->VIP->scrnIndex;
+	int screen = t->VIP->pScrn->scrnIndex;
 
 	fb_scratch0 = ((connector << 8) & 0xff00) | (55 & 0xff);
 
@@ -647,7 +650,7 @@ static uint32_t dsp_reset(TheatrePtr t)
 {
 	uint32_t fb_scratch0 = 0;
 	uint32_t result;
-	int screen = t->VIP->scrnIndex;
+	int screen = t->VIP->pScrn->scrnIndex;
 
 	fb_scratch0 = ((2 << 8) & 0xff00) | (8 & 0xff);
 
@@ -663,7 +666,7 @@ static uint32_t dsp_set_lowpowerstate(TheatrePtr t, uint32_t pstate)
 {
 	uint32_t fb_scratch0 = 0;
 	uint32_t result;
-	int screen = t->VIP->scrnIndex;
+	int screen = t->VIP->pScrn->scrnIndex;
 
 	fb_scratch0 = ((pstate << 8) & 0xff00) | (82 & 0xff);
 
@@ -677,7 +680,7 @@ static uint32_t dsp_set_video_standard(TheatrePtr t, uint32_t standard)
 {
 	uint32_t fb_scratch0 = 0;
 	uint32_t result;
-	int screen = t->VIP->scrnIndex;
+	int screen = t->VIP->pScrn->scrnIndex;
 
 	fb_scratch0 = ((standard << 8) & 0xff00) | (52 & 0xff);
 
@@ -692,7 +695,7 @@ static uint32_t dsp_set_videostreamformat(TheatrePtr t, uint32_t format)
 {
 	uint32_t fb_scratch0 = 0;
 	uint32_t result;
-	int screen = t->VIP->scrnIndex;
+	int screen = t->VIP->pScrn->scrnIndex;
 
 	fb_scratch0 = ((format << 8) & 0xff00) | (65 & 0xff);
 
@@ -707,7 +710,7 @@ static uint32_t dsp_video_standard_detection(TheatrePtr t)
 {
 	uint32_t fb_scratch0 = 0;
 	uint32_t result;
-	int screen = t->VIP->scrnIndex;
+	int screen = t->VIP->pScrn->scrnIndex;
 
 	fb_scratch0 = 0 | (54 & 0xff);
 
@@ -724,7 +727,7 @@ static uint32_t dsp_get_signallockstatus(TheatrePtr t)
 	uint32_t fb_scratch1 = 0;
 	uint32_t fb_scratch0 = 0;
 	uint32_t result;
-	int screen = t->VIP->scrnIndex;
+	int screen = t->VIP->pScrn->scrnIndex;
 
 	fb_scratch0 = 0 | (77 & 0xff);
 
@@ -741,7 +744,7 @@ static uint32_t dsp_get_signallinenumber(TheatrePtr t)
 	uint32_t fb_scratch1 = 0;
 	uint32_t fb_scratch0 = 0;
 	uint32_t result;
-	int screen = t->VIP->scrnIndex;
+	int screen = t->VIP->pScrn->scrnIndex;
 
 	fb_scratch0 = 0 | (78 & 0xff);
 
@@ -759,7 +762,7 @@ static uint32_t dsp_set_brightness(TheatrePtr t, uint8_t brightness)
 	uint32_t fb_scratch1 = 0;
 	uint32_t fb_scratch0 = 0;
 	uint32_t result;
-	int screen = t->VIP->scrnIndex;
+	int screen = t->VIP->pScrn->scrnIndex;
 
 	fb_scratch0 = ((brightness << 8) & 0xff00) | (67 & 0xff);
 
@@ -775,7 +778,7 @@ static uint32_t dsp_set_contrast(TheatrePtr t, uint8_t contrast)
 	uint32_t fb_scratch1 = 0;
 	uint32_t fb_scratch0 = 0;
 	uint32_t result;
-	int screen = t->VIP->scrnIndex;
+	int screen = t->VIP->pScrn->scrnIndex;
 
 	fb_scratch0 = ((contrast << 8) & 0xff00) | (71 & 0xff);
 
@@ -792,7 +795,7 @@ static uint32_t dsp_set_sharpness(TheatrePtr t, int sharpness)
 	uint32_t fb_scratch1 = 0;
 	uint32_t fb_scratch0 = 0;
 	uint32_t result;
-	int screen = t->VIP->scrnIndex;
+	int screen = t->VIP->pScrn->scrnIndex;
 
 	fb_scratch0 = 0 | (73 & 0xff);
 
@@ -809,7 +812,7 @@ static uint32_t dsp_set_tint(TheatrePtr t, uint8_t tint)
 	uint32_t fb_scratch1 = 0;
 	uint32_t fb_scratch0 = 0;
 	uint32_t result;
-	int screen = t->VIP->scrnIndex;
+	int screen = t->VIP->pScrn->scrnIndex;
 
 	fb_scratch0 = ((tint << 8) & 0xff00) | (75 & 0xff);
 
@@ -825,7 +828,7 @@ static uint32_t dsp_set_saturation(TheatrePtr t, uint8_t saturation)
 	uint32_t fb_scratch1 = 0;
 	uint32_t fb_scratch0 = 0;
 	uint32_t result;
-	int screen = t->VIP->scrnIndex;
+	int screen = t->VIP->pScrn->scrnIndex;
 
 	fb_scratch0 = ((saturation << 8) & 0xff00) | (69 & 0xff);
 
@@ -841,7 +844,7 @@ static uint32_t dsp_set_video_scaler_horizontal(TheatrePtr t, uint16_t output_wi
 	uint32_t fb_scratch1 = 0;
 	uint32_t fb_scratch0 = 0;
 	uint32_t result;
-	int screen = t->VIP->scrnIndex;
+	int screen = t->VIP->pScrn->scrnIndex;
 
 	fb_scratch0 = ((output_width << 8) & 0x00ffff00) | (195 & 0xff);
 	fb_scratch1 = ((horz_end << 16) & 0xffff0000) | (horz_start & 0xffff);
@@ -858,7 +861,7 @@ static uint32_t dsp_set_video_scaler_vertical(TheatrePtr t, uint16_t output_heig
 	uint32_t fb_scratch1 = 0;
 	uint32_t fb_scratch0 = 0;
 	uint32_t result;
-	int screen = t->VIP->scrnIndex;
+	int screen = t->VIP->pScrn->scrnIndex;
 
 	fb_scratch0 = ((output_height << 8) & 0x00ffff00) | (196 & 0xff);
 	fb_scratch1 = ((vert_end << 16) & 0xffff0000) | (vert_start & 0xffff);
@@ -875,7 +878,7 @@ static uint32_t dsp_audio_mute(TheatrePtr t, uint8_t left, uint8_t right)
 	uint32_t fb_scratch1 = 0;
 	uint32_t fb_scratch0 = 0;
 	uint32_t result;
-	int screen = t->VIP->scrnIndex;
+	int screen = t->VIP->pScrn->scrnIndex;
 
 	fb_scratch0 = ((right << 16) & 0xff0000) | ((left << 8) & 0xff00) | (21 & 0xff);
 
@@ -891,7 +894,7 @@ static uint32_t dsp_set_audio_volume(TheatrePtr t, uint8_t left, uint8_t right, 
 	uint32_t fb_scratch1 = 0;
 	uint32_t fb_scratch0 = 0;
 	uint32_t result;
-	int screen = t->VIP->scrnIndex;
+	int screen = t->VIP->pScrn->scrnIndex;
   
 	fb_scratch0 = ((auto_mute << 24) & 0xff000000) | ((right << 16) & 0xff0000) | ((left << 8) & 0xff00) | (22 & 0xff);
 
@@ -908,7 +911,7 @@ static uint32_t dsp_audio_detection(TheatrePtr t, uint8_t option)
 	uint32_t fb_scratch1 = 0;
 	uint32_t fb_scratch0 = 0;
 	uint32_t result;
-	int screen = t->VIP->scrnIndex;
+	int screen = t->VIP->pScrn->scrnIndex;
 
 	fb_scratch0 = ((option << 8) & 0xff00) | (16 & 0xff);
 
@@ -925,7 +928,7 @@ static uint32_t dsp_configure_i2s_port(TheatrePtr t, uint8_t tx_mode, uint8_t rx
 	uint32_t fb_scratch1 = 0;
 	uint32_t fb_scratch0 = 0;
 	uint32_t result;
-	int screen = t->VIP->scrnIndex;
+	int screen = t->VIP->pScrn->scrnIndex;
 
 	fb_scratch0 = ((clk_mode << 24) & 0xff000000) | ((rx_mode << 16) & 0xff0000) | ((tx_mode << 8) & 0xff00) | (40 & 0xff);
 
@@ -941,7 +944,7 @@ static uint32_t dsp_configure_spdif_port(TheatrePtr t, uint8_t state)
 	uint32_t fb_scratch1 = 0;
 	uint32_t fb_scratch0 = 0;
 	uint32_t result;
-	int screen = t->VIP->scrnIndex;
+	int screen = t->VIP->pScrn->scrnIndex;
 
 	fb_scratch0 = ((state << 8) & 0xff00) | (41 & 0xff);
 
@@ -1671,7 +1674,7 @@ _X_EXPORT void RT_SetInterlace (TheatrePtr t, uint8_t bInterlace)
  ****************************************************************************/
 _X_EXPORT void RT_SetStandard (TheatrePtr t, uint16_t wStandard)
 {
-	xf86DrvMsg(t->VIP->scrnIndex,X_INFO,"Rage Theatre setting standard 0x%04x\n",
+	xf86DrvMsg(t->VIP->pScrn->scrnIndex,X_INFO,"Rage Theatre setting standard 0x%04x\n",
 		wStandard);
 	
 	t->wStandard = wStandard;
@@ -1815,11 +1818,11 @@ _X_EXPORT void RT_SetConnector (TheatrePtr t, uint16_t wConnector, int tunerFlag
 	t->wConnector = wConnector;
 
 	theatre_read(t, VIP_GPIO_CNTL, &data);
-	xf86DrvMsg(t->VIP->scrnIndex,X_INFO,"VIP_GPIO_CNTL: %x\n",
+	xf86DrvMsg(t->VIP->pScrn->scrnIndex,X_INFO,"VIP_GPIO_CNTL: %x\n",
 		   (unsigned)data);
 
 	theatre_read(t, VIP_GPIO_INOUT, &data);
-	xf86DrvMsg(t->VIP->scrnIndex,X_INFO,"VIP_GPIO_INOUT: %x\n",
+	xf86DrvMsg(t->VIP->pScrn->scrnIndex,X_INFO,"VIP_GPIO_INOUT: %x\n",
 		   (unsigned)data);
 	
 	switch (wConnector)
@@ -1869,11 +1872,11 @@ _X_EXPORT void RT_SetConnector (TheatrePtr t, uint16_t wConnector, int tunerFlag
 	}
 
 	theatre_read(t, VIP_GPIO_CNTL, &data);
-	xf86DrvMsg(t->VIP->scrnIndex,X_INFO,"VIP_GPIO_CNTL: %x\n",
+	xf86DrvMsg(t->VIP->pScrn->scrnIndex,X_INFO,"VIP_GPIO_CNTL: %x\n",
 		   (unsigned)data);
 
 	theatre_read(t, VIP_GPIO_INOUT, &data);
-	xf86DrvMsg(t->VIP->scrnIndex,X_INFO,"VIP_GPIO_INOUT: %x\n",
+	xf86DrvMsg(t->VIP->pScrn->scrnIndex,X_INFO,"VIP_GPIO_INOUT: %x\n",
 		   (unsigned)data);
 
 
@@ -1933,19 +1936,19 @@ _X_EXPORT void InitTheatre(TheatrePtr t)
 	if (t->microc_path == NULL)
 	{
 		t->microc_path = DEFAULT_MICROC_PATH;
-		xf86DrvMsg(t->VIP->scrnIndex, X_INFO, "Microcode: Use default microcode path: %s\n", DEFAULT_MICROC_PATH);
+		xf86DrvMsg(t->VIP->pScrn->scrnIndex, X_INFO, "Microcode: Use default microcode path: %s\n", DEFAULT_MICROC_PATH);
 	}
 	else
-		xf86DrvMsg(t->VIP->scrnIndex, X_INFO, "Microcode: Use microcode path: %s\n", t->microc_path);
+		xf86DrvMsg(t->VIP->pScrn->scrnIndex, X_INFO, "Microcode: Use microcode path: %s\n", t->microc_path);
 
 
 	if (t->microc_type == NULL)
 	{
 		t->microc_type = DEFAULT_MICROC_TYPE;
-		xf86DrvMsg(t->VIP->scrnIndex, X_INFO, "Microcode: Use default microcode type: %s\n", DEFAULT_MICROC_TYPE);
+		xf86DrvMsg(t->VIP->pScrn->scrnIndex, X_INFO, "Microcode: Use default microcode type: %s\n", DEFAULT_MICROC_TYPE);
 	}
 	else
-		xf86DrvMsg(t->VIP->scrnIndex, X_INFO, "Microcode: Use microcode type: %s\n", t->microc_type);
+		xf86DrvMsg(t->VIP->pScrn->scrnIndex, X_INFO, "Microcode: Use microcode type: %s\n", t->microc_type);
 
 	if (DownloadMicrocode(t) < 0)
 	{
@@ -1964,45 +1967,45 @@ static int DownloadMicrocode(TheatrePtr t)
 	struct rt200_microc_data microc_data;
 	microc_data.microc_seg_list = NULL;
 
-	if (microc_load(t->microc_path, t->microc_type, &microc_data, t->VIP->scrnIndex) < 0)
+	if (microc_load(t->microc_path, t->microc_type, &microc_data, t->VIP->pScrn->scrnIndex) < 0)
 	{
-		xf86DrvMsg(t->VIP->scrnIndex, X_ERROR, "Microcode: cannot load microcode\n");
+		xf86DrvMsg(t->VIP->pScrn->scrnIndex, X_ERROR, "Microcode: cannot load microcode\n");
 		goto err_exit;
 	}
 	else
 	{
-		xf86DrvMsg(t->VIP->scrnIndex, X_INFO, "Microcode: device_id: %x\n", microc_data.microc_head.device_id);
-		xf86DrvMsg(t->VIP->scrnIndex, X_INFO, "Microcode: vendor_id: %x\n", microc_data.microc_head.vendor_id);
-		xf86DrvMsg(t->VIP->scrnIndex, X_INFO, "Microcode: rev_id: %x\n", microc_data.microc_head.revision_id);
-		xf86DrvMsg(t->VIP->scrnIndex, X_INFO, "Microcode: num_seg: %x\n", microc_data.microc_head.num_seg);
+		xf86DrvMsg(t->VIP->pScrn->scrnIndex, X_INFO, "Microcode: device_id: %x\n", microc_data.microc_head.device_id);
+		xf86DrvMsg(t->VIP->pScrn->scrnIndex, X_INFO, "Microcode: vendor_id: %x\n", microc_data.microc_head.vendor_id);
+		xf86DrvMsg(t->VIP->pScrn->scrnIndex, X_INFO, "Microcode: rev_id: %x\n", microc_data.microc_head.revision_id);
+		xf86DrvMsg(t->VIP->pScrn->scrnIndex, X_INFO, "Microcode: num_seg: %x\n", microc_data.microc_head.num_seg);
 	}
 	
 	if (dsp_init(t, &microc_data) < 0)
 	{
-		xf86DrvMsg(t->VIP->scrnIndex, X_ERROR, "Microcode: dsp_init failed\n");
+		xf86DrvMsg(t->VIP->pScrn->scrnIndex, X_ERROR, "Microcode: dsp_init failed\n");
 		goto err_exit;
 	}
 	else
 	{
-		xf86DrvMsg(t->VIP->scrnIndex, X_INFO, "Microcode: dsp_init OK\n");
+		xf86DrvMsg(t->VIP->pScrn->scrnIndex, X_INFO, "Microcode: dsp_init OK\n");
 	}
 
 	if (dsp_load(t, &microc_data) < 0)
 	{
-		xf86DrvMsg(t->VIP->scrnIndex, X_ERROR, "Microcode: dsp_download failed\n");
+		xf86DrvMsg(t->VIP->pScrn->scrnIndex, X_ERROR, "Microcode: dsp_download failed\n");
 		goto err_exit;
 	}
 	else
 	{
-		xf86DrvMsg(t->VIP->scrnIndex, X_INFO, "Microcode: dsp_download OK\n");
+		xf86DrvMsg(t->VIP->pScrn->scrnIndex, X_INFO, "Microcode: dsp_download OK\n");
 	}
 
-	microc_clean(&microc_data, t->VIP->scrnIndex);
+	microc_clean(&microc_data, t->VIP->pScrn->scrnIndex);
 	return 0;
 
 err_exit:
 
-	microc_clean(&microc_data, t->VIP->scrnIndex);
+	microc_clean(&microc_data, t->VIP->pScrn->scrnIndex);
 	return -1;
 				
 }
@@ -2027,7 +2030,7 @@ _X_EXPORT void DumpRageTheatreRegs(TheatrePtr t)
     for(i=0;i<0x900;i+=4)
     {
        RT_regr(i, &data);
-       xf86DrvMsg(t->VIP->scrnIndex, X_INFO,
+       xf86DrvMsg(t->VIP->pScrn->scrnIndex, X_INFO,
 		  "register 0x%04x is equal to 0x%08x\n", i, (unsigned)data);
     }   
 
@@ -2233,7 +2236,7 @@ void DumpRageTheatreRegsByName(TheatrePtr t)
 
     for(i=0; rt_reg_list[i].name!=NULL;i++){
         RT_regr(rt_reg_list[i].addr, &data);
-        xf86DrvMsg(t->VIP->scrnIndex, X_INFO,
+        xf86DrvMsg(t->VIP->pScrn->scrnIndex, X_INFO,
 		   "register (0x%04lx) %s is equal to 0x%08x\n",
 		   rt_reg_list[i].addr, rt_reg_list[i].name, (unsigned)data);
     	}

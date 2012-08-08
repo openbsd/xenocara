@@ -555,7 +555,7 @@ void RADEONEngineInit(ScrnInfoPtr pScrn)
 
 uint32_t radeonGetPixmapOffset(PixmapPtr pPix)
 {
-    ScrnInfoPtr pScrn = xf86Screens[pPix->drawable.pScreen->myNum];
+    ScrnInfoPtr pScrn = xf86ScreenToScrn(pPix->drawable.pScreen);
     RADEONInfoPtr info = RADEONPTR(pScrn);
     uint32_t offset = 0;
     if (info->cs)
@@ -982,10 +982,9 @@ void RADEONCopySwap(uint8_t *dst, uint8_t *src, unsigned int size, int swap)
 
 	    for (; nwords > 0; --nwords, ++d, ++s)
 #ifdef __powerpc__
-		asm volatile("stwbrx %0,0,%1" : : "r" (*s), "r" (d));
+		asm volatile("sthbrx %0,0,%1" : : "r" (*s), "r" (d));
 #else
-	        *d = ((*s >> 24) & 0xff) | ((*s >> 8) & 0xff00)
-			| ((*s & 0xff00) << 8) | ((*s & 0xff) << 24);
+	        *d = (*s >> 8) | (*s << 8);
 #endif
 	    return;
 	}
@@ -1066,7 +1065,7 @@ RADEONHostDataBlitCopyPass(
 
 Bool RADEONAccelInit(ScreenPtr pScreen)
 {
-    ScrnInfoPtr    pScrn = xf86Screens[pScreen->myNum];
+    ScrnInfoPtr    pScrn = xf86ScreenToScrn(pScreen);
     RADEONInfoPtr  info  = RADEONPTR(pScrn);
 
 #ifdef USE_EXA
@@ -1151,9 +1150,9 @@ void RADEONInit3DEngine(ScrnInfoPtr pScrn)
 #ifdef USE_XAA
 #ifdef XF86DRI
 Bool
-RADEONSetupMemXAA_DRI(int scrnIndex, ScreenPtr pScreen)
+RADEONSetupMemXAA_DRI(ScreenPtr pScreen)
 {
-    ScrnInfoPtr    pScrn = xf86Screens[pScreen->myNum];
+    ScrnInfoPtr    pScrn = xf86ScreenToScrn(pScreen);
     RADEONInfoPtr  info  = RADEONPTR(pScrn);
     int            cpp = info->CurrentLayout.pixel_bytes;
     int            depthCpp = (info->dri->depthBits - 8) / 4;
@@ -1325,7 +1324,7 @@ RADEONSetupMemXAA_DRI(int scrnIndex, ScreenPtr pScreen)
     MemBox.y2 = scanlines;
 
     if (!xf86InitFBManager(pScreen, &MemBox)) {
-        xf86DrvMsg(scrnIndex, X_ERROR,
+        xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
 		   "Memory manager initialization to "
 		   "(%d,%d) (%d,%d) failed\n",
 		   MemBox.x1, MemBox.y1, MemBox.x2, MemBox.y2);
@@ -1333,7 +1332,7 @@ RADEONSetupMemXAA_DRI(int scrnIndex, ScreenPtr pScreen)
     } else {
 	int  width, height;
 
-	xf86DrvMsg(scrnIndex, X_INFO,
+	xf86DrvMsg(pScrn->scrnIndex, X_INFO,
 		   "Memory manager initialized to (%d,%d) (%d,%d)\n",
 		   MemBox.x1, MemBox.y1, MemBox.x2, MemBox.y2);
 	/* why oh why can't we just request modes which are guaranteed to be 16 lines
@@ -1345,19 +1344,19 @@ RADEONSetupMemXAA_DRI(int scrnIndex, ScreenPtr pScreen)
 						- pScrn->virtualY + 2 : 2,
 						0, NULL, NULL,
 						NULL))) {
-	    xf86DrvMsg(scrnIndex, X_INFO,
+	    xf86DrvMsg(pScrn->scrnIndex, X_INFO,
 		       "Reserved area from (%d,%d) to (%d,%d)\n",
 		       fbarea->box.x1, fbarea->box.y1,
 		       fbarea->box.x2, fbarea->box.y2);
 	} else {
-	    xf86DrvMsg(scrnIndex, X_ERROR, "Unable to reserve area\n");
+	    xf86DrvMsg(pScrn->scrnIndex, X_ERROR, "Unable to reserve area\n");
 	}
 
 	RADEONDRIAllocatePCIGARTTable(pScreen);
 
 	if (xf86QueryLargestOffscreenArea(pScreen, &width,
 					  &height, 0, 0, 0)) {
-	    xf86DrvMsg(scrnIndex, X_INFO,
+	    xf86DrvMsg(pScrn->scrnIndex, X_INFO,
 		       "Largest offscreen area available: %d x %d\n",
 		       width, height);
 
@@ -1371,28 +1370,28 @@ RADEONSetupMemXAA_DRI(int scrnIndex, ScreenPtr pScreen)
 					       - info->dri->depthTexLines);
 	    info->dri->backArea	    = NULL;
 	} else {
-	    xf86DrvMsg(scrnIndex, X_ERROR,
+	    xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
 		       "Unable to determine largest offscreen area "
 		       "available\n");
 	    return FALSE;
 	}
     }
 
-    xf86DrvMsg(scrnIndex, X_INFO,
+    xf86DrvMsg(pScrn->scrnIndex, X_INFO,
 	       "Will use front buffer at offset 0x%x\n",
 	       info->dri->frontOffset);
 
-    xf86DrvMsg(scrnIndex, X_INFO,
+    xf86DrvMsg(pScrn->scrnIndex, X_INFO,
 	       "Will use back buffer at offset 0x%x\n",
 	       info->dri->backOffset);
-    xf86DrvMsg(scrnIndex, X_INFO,
+    xf86DrvMsg(pScrn->scrnIndex, X_INFO,
 	       "Will use depth buffer at offset 0x%x\n",
 	       info->dri->depthOffset);
     if (info->cardType==CARD_PCIE)
-    	xf86DrvMsg(scrnIndex, X_INFO,
+    	xf86DrvMsg(pScrn->scrnIndex, X_INFO,
 	           "Will use %d kb for PCI GART table at offset 0x%x\n",
 		   info->dri->pciGartSize/1024, (unsigned)info->dri->pciGartOffset);
-    xf86DrvMsg(scrnIndex, X_INFO,
+    xf86DrvMsg(pScrn->scrnIndex, X_INFO,
 	       "Will use %d kb for textures at offset 0x%x\n",
 	       info->dri->textureSize/1024, info->dri->textureOffset);
 
@@ -1409,9 +1408,9 @@ RADEONSetupMemXAA_DRI(int scrnIndex, ScreenPtr pScreen)
 #endif /* XF86DRI */
 
 Bool
-RADEONSetupMemXAA(int scrnIndex, ScreenPtr pScreen)
+RADEONSetupMemXAA(ScreenPtr pScreen)
 {
-    ScrnInfoPtr    pScrn = xf86Screens[pScreen->myNum];
+    ScrnInfoPtr    pScrn = xf86ScreenToScrn(pScreen);
     RADEONInfoPtr  info  = RADEONPTR(pScrn);
     BoxRec         MemBox;
     int            y2;
@@ -1434,7 +1433,7 @@ RADEONSetupMemXAA(int scrnIndex, ScreenPtr pScreen)
 	MemBox.y2 = 8191;
 
     if (!xf86InitFBManager(pScreen, &MemBox)) {
-	xf86DrvMsg(scrnIndex, X_ERROR,
+	xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
 		   "Memory manager initialization to "
 		   "(%d,%d) (%d,%d) failed\n",
 		   MemBox.x1, MemBox.y1, MemBox.x2, MemBox.y2);
@@ -1443,7 +1442,7 @@ RADEONSetupMemXAA(int scrnIndex, ScreenPtr pScreen)
 	int       width, height;
 	FBAreaPtr fbarea;
 
-	xf86DrvMsg(scrnIndex, X_INFO,
+	xf86DrvMsg(pScrn->scrnIndex, X_INFO,
 		   "Memory manager initialized to (%d,%d) (%d,%d)\n",
 		   MemBox.x1, MemBox.y1, MemBox.x2, MemBox.y2);
 	if ((fbarea = xf86AllocateOffscreenArea(pScreen,
@@ -1453,16 +1452,16 @@ RADEONSetupMemXAA(int scrnIndex, ScreenPtr pScreen)
 						- pScrn->virtualY + 2 : 2,
 						0, NULL, NULL,
 						NULL))) {
-	    xf86DrvMsg(scrnIndex, X_INFO,
+	    xf86DrvMsg(pScrn->scrnIndex, X_INFO,
 		       "Reserved area from (%d,%d) to (%d,%d)\n",
 		       fbarea->box.x1, fbarea->box.y1,
 		       fbarea->box.x2, fbarea->box.y2);
 	} else {
-	    xf86DrvMsg(scrnIndex, X_ERROR, "Unable to reserve area\n");
+	    xf86DrvMsg(pScrn->scrnIndex, X_ERROR, "Unable to reserve area\n");
 	}
 	if (xf86QueryLargestOffscreenArea(pScreen, &width, &height,
 					      0, 0, 0)) {
-	    xf86DrvMsg(scrnIndex, X_INFO,
+	    xf86DrvMsg(pScrn->scrnIndex, X_INFO,
 		       "Largest offscreen area available: %d x %d\n",
 		       width, height);
 	}

@@ -48,7 +48,7 @@ static Bool RADEONVIP_ioctl(GENERIC_BUS_Ptr b, long ioctl, long arg1, char *arg2
 
 static uint32_t RADEONVIP_idle(GENERIC_BUS_Ptr b)
 {
-   ScrnInfoPtr pScrn = xf86Screens[b->scrnIndex];
+   ScrnInfoPtr pScrn = b->pScrn;
    RADEONInfoPtr info = RADEONPTR(pScrn);
    unsigned char *RADEONMMIO = info->MMIO;
 
@@ -69,7 +69,7 @@ static uint32_t RADEONVIP_idle(GENERIC_BUS_Ptr b)
 
 static uint32_t RADEONVIP_fifo_idle(GENERIC_BUS_Ptr b, uint8_t channel)
 {
-   ScrnInfoPtr pScrn = xf86Screens[b->scrnIndex];
+   ScrnInfoPtr pScrn = b->pScrn;
    RADEONInfoPtr info = RADEONPTR(pScrn);
    unsigned char *RADEONMMIO = info->MMIO;
 
@@ -79,7 +79,7 @@ static uint32_t RADEONVIP_fifo_idle(GENERIC_BUS_Ptr b, uint8_t channel)
    timeout = INREG(VIPH_TIMEOUT_STAT);
    if((timeout & 0x0000000f) & channel) /* lockup ?? */
    {
-       xf86DrvMsg(b->scrnIndex, X_INFO, "RADEON_fifo_idle\n");
+       xf86DrvMsg(b->pScrn->scrnIndex, X_INFO, "RADEON_fifo_idle\n");
        RADEONWaitForFifo(pScrn, 2);
        OUTREG(VIPH_TIMEOUT_STAT, (timeout & 0xfffffff0) | channel);
        RADEONWaitForIdleMMIO(pScrn);
@@ -107,7 +107,7 @@ static uint32_t RADEONVIP_fifo_idle(GENERIC_BUS_Ptr b, uint8_t channel)
 
 static Bool RADEONVIP_read(GENERIC_BUS_Ptr b, uint32_t address, uint32_t count, uint8_t *buffer)
 {
-   ScrnInfoPtr pScrn = xf86Screens[b->scrnIndex];
+   ScrnInfoPtr pScrn = b->pScrn;
    RADEONInfoPtr info = RADEONPTR(pScrn);
    unsigned char *RADEONMMIO = info->MMIO;
    uint32_t status,tmp;
@@ -173,7 +173,7 @@ static Bool RADEONVIP_read(GENERIC_BUS_Ptr b, uint32_t address, uint32_t count, 
 
 static Bool RADEONVIP_fifo_read(GENERIC_BUS_Ptr b, uint32_t address, uint32_t count, uint8_t *buffer)
 {
-   ScrnInfoPtr pScrn = xf86Screens[b->scrnIndex];
+   ScrnInfoPtr pScrn = b->pScrn;
    RADEONInfoPtr info = RADEONPTR(pScrn);
    unsigned char *RADEONMMIO = info->MMIO;
    uint32_t status,tmp;
@@ -247,7 +247,7 @@ static Bool RADEONVIP_fifo_read(GENERIC_BUS_Ptr b, uint32_t address, uint32_t co
 
 static Bool RADEONVIP_write(GENERIC_BUS_Ptr b, uint32_t address, uint32_t count, uint8_t *buffer)
 {
-    ScrnInfoPtr pScrn = xf86Screens[b->scrnIndex];
+    ScrnInfoPtr pScrn = b->pScrn;
     RADEONInfoPtr info = RADEONPTR(pScrn);
     unsigned char *RADEONMMIO = info->MMIO;
     
@@ -280,7 +280,7 @@ static Bool RADEONVIP_write(GENERIC_BUS_Ptr b, uint32_t address, uint32_t count,
 
 static Bool RADEONVIP_fifo_write(GENERIC_BUS_Ptr b, uint32_t address, uint32_t count, uint8_t *buffer)
 {
-    ScrnInfoPtr pScrn = xf86Screens[b->scrnIndex];
+    ScrnInfoPtr pScrn = b->pScrn;
     RADEONInfoPtr info = RADEONPTR(pScrn);
     unsigned char *RADEONMMIO = info->MMIO;
     
@@ -350,7 +350,7 @@ void RADEONVIP_reset(ScrnInfoPtr pScrn, RADEONPortPrivPtr pPriv)
 void RADEONVIP_init(ScrnInfoPtr pScrn, RADEONPortPrivPtr pPriv)
 {
     pPriv->VIP=calloc(1,sizeof(GENERIC_BUS_Rec));
-    pPriv->VIP->scrnIndex=pScrn->scrnIndex;
+    pPriv->VIP->pScrn=pScrn;
     pPriv->VIP->DriverPrivate.ptr=pPriv;
     pPriv->VIP->ioctl=RADEONVIP_ioctl;
     pPriv->VIP->read=RADEONVIP_read;

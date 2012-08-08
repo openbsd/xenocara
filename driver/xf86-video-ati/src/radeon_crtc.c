@@ -492,7 +492,6 @@ radeon_crtc_mode_set(xf86CrtcPtr crtc, DisplayModePtr mode,
     ScrnInfoPtr pScrn = crtc->scrn;
     RADEONInfoPtr info = RADEONPTR(pScrn);
 
-    xf86DrvMsg(pScrn->scrnIndex, X_INFO, "mode_set: x %d y %d\n", x, y);
     if (IS_AVIVO_VARIANT || info->r4xx_atom) {
 	atombios_crtc_mode_set(crtc, mode, adjusted_mode, x, y);
     } else {
@@ -1120,7 +1119,7 @@ RADEONSetTiling(ScrnInfoPtr pScrn)
 	    xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
 		       "[drm] failed changing tiling status\n");
 	/* if this is called during ScreenInit() we don't have pScrn->pScreen yet */
-	pSAREAPriv = DRIGetSAREAPrivate(screenInfo.screens[pScrn->scrnIndex]);
+	pSAREAPriv = DRIGetSAREAPrivate(xf86ScrnToScreen(pScrn));
 	info->tilingEnabled = pSAREAPriv->tiling_enabled ? TRUE : FALSE;
     }
 #endif

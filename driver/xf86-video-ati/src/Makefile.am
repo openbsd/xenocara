@@ -137,6 +137,7 @@ EXTRA_DIST = \
 	cayman_reg.h \
 	cayman_reg_auto.h \
 	cayman_shader.h \
+	compat-api.h \
 	ati.h \
 	ativersion.h \
 	bicubic_table.h \

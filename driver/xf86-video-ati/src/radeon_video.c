@@ -19,6 +19,14 @@
 #include "atipciids.h"
 #include "xf86fbman.h"
 
+/* DPMS */
+#ifdef HAVE_XEXTPROTO_71
+#include <X11/extensions/dpmsconst.h>
+#else
+#define DPMS_SERVER
+#include <X11/extensions/dpms.h>
+#endif
+
 #include <X11/extensions/Xv.h>
 #include "fourcc.h"
 
@@ -135,6 +143,22 @@ radeon_box_area(BoxPtr box)
     return (int) (box->x2 - box->x1) * (int) (box->y2 - box->y1);
 }
 
+static Bool
+radeon_crtc_is_enabled(xf86CrtcPtr crtc)
+{
+    RADEONCrtcPrivatePtr radeon_crtc;
+
+#ifdef XF86DRM_MODE
+    if (RADEONPTR(crtc->scrn)->cs) {
+	drmmode_crtc_private_ptr drmmode_crtc = crtc->driver_private;
+	return drmmode_crtc->dpms_mode == DPMSModeOn;
+    }
+#endif
+
+    radeon_crtc = crtc->driver_private;
+    return radeon_crtc->enabled;
+}
+
 xf86CrtcPtr
 radeon_pick_best_crtc(ScrnInfoPtr pScrn,
 		      int x1, int x2, int y1, int y2)
@@ -145,6 +169,9 @@ radeon_pick_best_crtc(ScrnInfoPtr pScrn,
     RROutputPtr         primary_output = NULL;
     xf86CrtcPtr         best_crtc = NULL, primary_crtc = NULL;
 
+    if (!pScrn->vtSema)
+	return NULL;
+
     box.x1 = x1;
     box.x2 = x2;
     box.y1 = y1;
@@ -152,7 +179,10 @@ radeon_pick_best_crtc(ScrnInfoPtr pScrn,
     best_coverage = 0;
 
     /* Prefer the CRTC of the primary output */
-    if (dixPrivateKeyRegistered(rrPrivKey)) {
+#ifdef HAS_DIXREGISTERPRIVATEKEY
+    if (dixPrivateKeyRegistered(rrPrivKey))
+#endif
+    {
 	primary_output = RRFirstOutput(pScrn->pScreen);
     }
     if (primary_output && primary_output->crtc)
@@ -160,6 +190,10 @@ radeon_pick_best_crtc(ScrnInfoPtr pScrn,
 
     for (c = 0; c < xf86_config->num_crtc; c++) {
 	xf86CrtcPtr crtc = xf86_config->crtc[c];
+
+	if (!radeon_crtc_is_enabled(crtc))
+	    continue;
+
 	radeon_crtc_box(crtc, &crtc_box);
 	radeon_box_intersect(&cover_box, &crtc_box, &box);
 	coverage = radeon_box_area(&cover_box);
@@ -279,7 +313,7 @@ radeon_crtc_clip_video(ScrnInfoPtr pScrn,
 
 void RADEONInitVideo(ScreenPtr pScreen)
 {
-    ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+    ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
     RADEONInfoPtr    info = RADEONPTR(pScrn);
     RADEONEntPtr pRADEONEnt = RADEONEntPriv(pScrn);
     XF86VideoAdaptorPtr *adaptors, *newAdaptors = NULL;
@@ -1616,7 +1650,7 @@ skip_theatre:
 static XF86VideoAdaptorPtr
 RADEONSetupImageVideo(ScreenPtr pScreen)
 {
-    ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+    ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
     RADEONPortPrivPtr pPriv;
     XF86VideoAdaptorPtr adapt;
 
@@ -3391,7 +3425,7 @@ RADEONDisplaySurface(
 static void
 RADEONInitOffscreenImages(ScreenPtr pScreen)
 {
-/*  ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+/*  ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
     RADEONInfoPtr info = RADEONPTR(pScrn); */
     XF86OffscreenImagePtr offscreenImages;
     /* need to free this someplace */

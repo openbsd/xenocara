@@ -81,7 +81,7 @@ radeon_dri2_create_buffers(DrawablePtr drawable,
                            int count)
 {
     ScreenPtr pScreen = drawable->pScreen;
-    ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+    ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
     RADEONInfoPtr info = RADEONPTR(pScrn);
     BufferPtr buffers;
     struct dri2_buffer_priv *privates;
@@ -245,7 +245,7 @@ radeon_dri2_create_buffer(DrawablePtr drawable,
                           unsigned int format)
 {
     ScreenPtr pScreen = drawable->pScreen;
-    ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+    ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
     RADEONInfoPtr info = RADEONPTR(pScrn);
     BufferPtr buffers;
     struct dri2_buffer_priv *privates;
@@ -414,7 +414,7 @@ radeon_dri2_destroy_buffer(DrawablePtr drawable, BufferPtr buffers)
 
         /* Trying to free an already freed buffer is unlikely to end well */
         if (private->refcnt == 0) {
-            ScrnInfoPtr scrn = xf86Screens[pScreen->myNum];
+            ScrnInfoPtr scrn = xf86ScreenToScrn(pScreen);
 
             xf86DrvMsg(scrn->scrnIndex, X_WARNING, 
                        "Attempted to destroy previously destroyed buffer.\
@@ -443,7 +443,7 @@ radeon_dri2_copy_region(DrawablePtr drawable,
     struct dri2_buffer_priv *src_private = src_buffer->driverPrivate;
     struct dri2_buffer_priv *dst_private = dest_buffer->driverPrivate;
     ScreenPtr pScreen = drawable->pScreen;
-    ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+    ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
     DrawablePtr src_drawable;
     DrawablePtr dst_drawable;
     RegionPtr copy_clip;
@@ -620,7 +620,7 @@ radeon_dri2_client_state_changed(CallbackListPtr *ClientStateCallback, pointer d
 static int radeon_dri2_drawable_crtc(DrawablePtr pDraw)
 {
     ScreenPtr pScreen = pDraw->pScreen;
-    ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+    ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
     xf86CrtcPtr crtc;
     int crtc_id = -1;
 
@@ -744,6 +744,7 @@ can_flip(ScrnInfoPtr pScrn, DrawablePtr draw,
 {
     return draw->type == DRAWABLE_WINDOW &&
 	   RADEONPTR(pScrn)->allowPageFlip &&
+	   pScrn->vtSema &&
 	   DRI2CanFlip(draw) &&
 	   can_exchange(pScrn, draw, front, back);
 }
@@ -773,7 +774,7 @@ radeon_dri2_exchange_buffers(DrawablePtr draw, DRI2BufferPtr front, DRI2BufferPt
 
     /* Do we need to update the Screen? */
     screen = draw->pScreen;
-    info = RADEONPTR(xf86Screens[screen->myNum]);
+    info = RADEONPTR(xf86ScreenToScrn(screen));
     if (front_radeon->bo == info->front_bo) {
 	radeon_bo_unref(info->front_bo);
 	info->front_bo = back_radeon->bo;
@@ -804,7 +805,7 @@ void radeon_dri2_frame_event_handler(unsigned int frame, unsigned int tv_sec,
         goto cleanup;
 
     screen = drawable->pScreen;
-    scrn = xf86Screens[screen->myNum];
+    scrn = xf86ScreenToScrn(screen);
 
     switch (event->type) {
     case DRI2_FLIP:
@@ -885,7 +886,7 @@ static drmVBlankSeqType populate_vbl_request_type(RADEONInfoPtr info, int crtc)
 static int radeon_dri2_get_msc(DrawablePtr draw, CARD64 *ust, CARD64 *msc)
 {
     ScreenPtr screen = draw->pScreen;
-    ScrnInfoPtr scrn = xf86Screens[screen->myNum];
+    ScrnInfoPtr scrn = xf86ScreenToScrn(screen);
     RADEONInfoPtr info = RADEONPTR(scrn);
     drmVBlank vbl;
     int ret;
@@ -925,7 +926,7 @@ static int radeon_dri2_schedule_wait_msc(ClientPtr client, DrawablePtr draw,
                                          CARD64 remainder)
 {
     ScreenPtr screen = draw->pScreen;
-    ScrnInfoPtr scrn = xf86Screens[screen->myNum];
+    ScrnInfoPtr scrn = xf86ScreenToScrn(screen);
     RADEONInfoPtr info = RADEONPTR(scrn);
     DRI2FrameEventPtr wait_info = NULL;
     drmVBlank vbl;
@@ -1061,7 +1062,7 @@ void radeon_dri2_flip_event_handler(unsigned int frame, unsigned int tv_sec,
     }
 
     screen = drawable->pScreen;
-    scrn = xf86Screens[screen->myNum];
+    scrn = xf86ScreenToScrn(screen);
 
     pixmap = screen->GetScreenPixmap(screen);
     xf86DrvMsgVerb(scrn->scrnIndex, X_INFO, RADEON_LOGLEVEL_DEBUG,
@@ -1123,7 +1124,7 @@ static int radeon_dri2_schedule_swap(ClientPtr client, DrawablePtr draw,
                                      void *data)
 {
     ScreenPtr screen = draw->pScreen;
-    ScrnInfoPtr scrn = xf86Screens[screen->myNum];
+    ScrnInfoPtr scrn = xf86ScreenToScrn(screen);
     RADEONInfoPtr info = RADEONPTR(scrn);
     drmVBlank vbl;
     int ret, crtc= radeon_dri2_drawable_crtc(draw), flip = 0;
@@ -1309,7 +1310,7 @@ blit_fallback:
 Bool
 radeon_dri2_screen_init(ScreenPtr pScreen)
 {
-    ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+    ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
     RADEONInfoPtr info = RADEONPTR(pScrn);
     DRI2InfoRec dri2_info = { 0 };
 #ifdef USE_DRI2_SCHEDULING
@@ -1413,7 +1414,7 @@ radeon_dri2_screen_init(ScreenPtr pScreen)
 
 void radeon_dri2_close_screen(ScreenPtr pScreen)
 {
-    ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+    ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
     RADEONInfoPtr info = RADEONPTR(pScrn);
 #ifdef USE_DRI2_SCHEDULING
     RADEONEntPtr pRADEONEnt   = RADEONEntPriv(pScrn);

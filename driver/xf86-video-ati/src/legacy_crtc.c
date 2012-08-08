@@ -853,7 +853,7 @@ RADEONInitCrtcBase(xf86CrtcPtr crtc, RADEONSavePtr save,
         /*** NOTE: r3/4xx will need sarea and drm pageflip updates to handle the xytile regs for
 	 *** pageflipping!
 	 ***/
-	pSAREAPriv = DRIGetSAREAPrivate(screenInfo.screens[pScrn->scrnIndex]);
+	pSAREAPriv = DRIGetSAREAPrivate(xf86ScrnToScreen(pScrn));
 	/* can't get at sarea in a semi-sane way? */
 	pSAREA = (void *)((char*)pSAREAPriv - sizeof(XF86DRISAREARec));
 
@@ -1074,7 +1074,7 @@ RADEONInitCrtc2Base(xf86CrtcPtr crtc, RADEONSavePtr save,
         /*** NOTE: r3/4xx will need sarea and drm pageflip updates to handle the xytile regs for
 	 *** pageflipping!
 	 ***/
-	pSAREAPriv = DRIGetSAREAPrivate(screenInfo.screens[pScrn->scrnIndex]);
+	pSAREAPriv = DRIGetSAREAPrivate(xf86ScrnToScreen(pScrn));
 	/* can't get at sarea in a semi-sane way? */
 	pSAREA = (void *)((char*)pSAREAPriv - sizeof(XF86DRISAREARec));
 
@@ -1884,10 +1884,10 @@ legacy_crtc_mode_set(xf86CrtcPtr crtc, DisplayModePtr mode,
 	/* need to redraw front buffer, I guess this can be considered a hack ? */
 	/* if this is called during ScreenInit() we don't have pScrn->pScreen yet */
 	if (pScrn->pScreen)
-	    xf86EnableDisableFBAccess(pScrn->scrnIndex, FALSE);
+	    xf86EnableDisableFBAccess(XF86_ENABLEDISABLEFB_ARG(pScrn), FALSE);
 	RADEONChangeSurfaces(pScrn);
 	if (pScrn->pScreen)
-	    xf86EnableDisableFBAccess(pScrn->scrnIndex, TRUE);
+	    xf86EnableDisableFBAccess(XF86_ENABLEDISABLEFB_ARG(pScrn), TRUE);
 	/* xf86SetRootClip would do, but can't access that here */
     }
 

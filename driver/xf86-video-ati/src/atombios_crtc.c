@@ -86,7 +86,7 @@ atombios_lock_crtc(atomBiosHandlePtr atomBIOS, int crtc, int lock)
     data.exec.dataSpace = (void *)&space;
     data.exec.pspace = &crtc_data;
 
-    if (RHDAtomBiosFunc(atomBIOS->scrnIndex, atomBIOS, ATOMBIOS_EXEC, &data) == ATOM_SUCCESS) {
+    if (RHDAtomBiosFunc(atomBIOS->pScrn, atomBIOS, ATOMBIOS_EXEC, &data) == ATOM_SUCCESS) {
 	ErrorF("%s CRTC %d success\n", lock? "Lock":"Unlock", crtc);
 	return ATOM_SUCCESS ;
     }
@@ -109,7 +109,7 @@ atombios_enable_crtc(atomBiosHandlePtr atomBIOS, int crtc, int state)
     data.exec.dataSpace = (void *)&space;
     data.exec.pspace = &crtc_data;
 
-    if (RHDAtomBiosFunc(atomBIOS->scrnIndex, atomBIOS, ATOMBIOS_EXEC, &data) == ATOM_SUCCESS) {
+    if (RHDAtomBiosFunc(atomBIOS->pScrn, atomBIOS, ATOMBIOS_EXEC, &data) == ATOM_SUCCESS) {
 	ErrorF("%s CRTC %d success\n", state? "Enable":"Disable", crtc);
 	return ATOM_SUCCESS ;
     }
@@ -132,7 +132,7 @@ atombios_enable_crtc_memreq(atomBiosHandlePtr atomBIOS, int crtc, int state)
     data.exec.dataSpace = (void *)&space;
     data.exec.pspace = &crtc_data;
 
-    if (RHDAtomBiosFunc(atomBIOS->scrnIndex, atomBIOS, ATOMBIOS_EXEC, &data) == ATOM_SUCCESS) {
+    if (RHDAtomBiosFunc(atomBIOS->pScrn, atomBIOS, ATOMBIOS_EXEC, &data) == ATOM_SUCCESS) {
 	ErrorF("%s CRTC memreq %d success\n", state? "Enable":"Disable", crtc);
 	return ATOM_SUCCESS ;
     }
@@ -156,7 +156,7 @@ atombios_blank_crtc(atomBiosHandlePtr atomBIOS, int crtc, int state)
     data.exec.dataSpace = (void *)&space;
     data.exec.pspace = &crtc_data;
 
-    if (RHDAtomBiosFunc(atomBIOS->scrnIndex, atomBIOS, ATOMBIOS_EXEC, &data) == ATOM_SUCCESS) {
+    if (RHDAtomBiosFunc(atomBIOS->pScrn, atomBIOS, ATOMBIOS_EXEC, &data) == ATOM_SUCCESS) {
 	ErrorF("%s CRTC %d success\n", state? "Blank":"Unblank", crtc);
 	return ATOM_SUCCESS ;
     }
@@ -230,7 +230,7 @@ atombios_set_crtc_timing(xf86CrtcPtr crtc, DisplayModePtr mode)
     data.exec.dataSpace = (void *)&space;
     data.exec.pspace = &param;
 
-    if (RHDAtomBiosFunc(info->atomBIOS->scrnIndex, info->atomBIOS, ATOMBIOS_EXEC, &data) == ATOM_SUCCESS) {
+    if (RHDAtomBiosFunc(info->atomBIOS->pScrn, info->atomBIOS, ATOMBIOS_EXEC, &data) == ATOM_SUCCESS) {
 	ErrorF("Set CRTC Timing success\n");
 	return ATOM_SUCCESS ;
     }
@@ -281,7 +281,7 @@ atombios_set_crtc_dtd_timing(xf86CrtcPtr crtc, DisplayModePtr mode)
     data.exec.dataSpace = (void *)&space;
     data.exec.pspace = &param;
 
-    if (RHDAtomBiosFunc(info->atomBIOS->scrnIndex, info->atomBIOS, ATOMBIOS_EXEC, &data) == ATOM_SUCCESS) {
+    if (RHDAtomBiosFunc(info->atomBIOS->pScrn, info->atomBIOS, ATOMBIOS_EXEC, &data) == ATOM_SUCCESS) {
 	ErrorF("Set DTD CRTC Timing success\n");
 	return ATOM_SUCCESS ;
     }
@@ -450,7 +450,7 @@ static uint32_t atombios_adjust_pll(xf86CrtcPtr crtc, DisplayModePtr mode, int *
 		args.v1.ucEncodeMode = atombios_get_encoder_mode(output);
 
 		ErrorF("before %d\n", args.v1.usPixelClock);
-		if (RHDAtomBiosFunc(info->atomBIOS->scrnIndex, info->atomBIOS, ATOMBIOS_EXEC, &data) == ATOM_SUCCESS) {
+		if (RHDAtomBiosFunc(info->atomBIOS->pScrn, info->atomBIOS, ATOMBIOS_EXEC, &data) == ATOM_SUCCESS) {
 		    adjusted_clock = le16_to_cpu(args.v1.usPixelClock) * 10;
 		}
 		ErrorF("after %d\n", args.v1.usPixelClock);
@@ -468,7 +468,7 @@ static uint32_t atombios_adjust_pll(xf86CrtcPtr crtc, DisplayModePtr mode, int *
 		//    args.v3.sInput.ucDispPllConfig |= DISPPLL_CONFIG_SS_ENABLE;
 
 		ErrorF("before %d 0x%x\n", args.v3.sInput.usPixelClock, args.v3.sInput.ucDispPllConfig);
-		if (RHDAtomBiosFunc(info->atomBIOS->scrnIndex, info->atomBIOS, ATOMBIOS_EXEC, &data) == ATOM_SUCCESS) {
+		if (RHDAtomBiosFunc(info->atomBIOS->pScrn, info->atomBIOS, ATOMBIOS_EXEC, &data) == ATOM_SUCCESS) {
 		    adjusted_clock = args.v3.sOutput.ulDispPllFreq * 10;
 		    if (args.v3.sOutput.ucRefDiv) {
 			pll_flags |= RADEON_PLL_USE_REF_DIV;
@@ -567,7 +567,7 @@ atombios_crtc_set_dcpll(xf86CrtcPtr crtc)
     data.exec.dataSpace = (void *)&space;
     data.exec.pspace = &args;
 
-    if (RHDAtomBiosFunc(info->atomBIOS->scrnIndex, info->atomBIOS, ATOMBIOS_EXEC, &data) == ATOM_SUCCESS) {
+    if (RHDAtomBiosFunc(info->atomBIOS->pScrn, info->atomBIOS, ATOMBIOS_EXEC, &data) == ATOM_SUCCESS) {
 	ErrorF("Set DCPLL success\n");
 	return;
     }
@@ -709,7 +709,7 @@ atombios_crtc_set_pll(xf86CrtcPtr crtc, DisplayModePtr mode)
     data.exec.dataSpace = (void *)&space;
     data.exec.pspace = &args;
 
-    if (RHDAtomBiosFunc(info->atomBIOS->scrnIndex, info->atomBIOS, ATOMBIOS_EXEC, &data) == ATOM_SUCCESS) {
+    if (RHDAtomBiosFunc(info->atomBIOS->pScrn, info->atomBIOS, ATOMBIOS_EXEC, &data) == ATOM_SUCCESS) {
 	ErrorF("Set CRTC %d PLL success\n", radeon_crtc->crtc_id);
 	return;
     }
@@ -1025,10 +1025,10 @@ atombios_crtc_mode_set(xf86CrtcPtr crtc,
 	/* need to redraw front buffer, I guess this can be considered a hack ? */
 	/* if this is called during ScreenInit() we don't have pScrn->pScreen yet */
 	if (pScrn->pScreen)
-	    xf86EnableDisableFBAccess(pScrn->scrnIndex, FALSE);
+	    xf86EnableDisableFBAccess(XF86_ENABLEDISABLEFB_ARG(pScrn), FALSE);
 	RADEONChangeSurfaces(pScrn);
 	if (pScrn->pScreen)
-	    xf86EnableDisableFBAccess(pScrn->scrnIndex, TRUE);
+	    xf86EnableDisableFBAccess(XF86_ENABLEDISABLEFB_ARG(pScrn), TRUE);
 	/* xf86SetRootClip would do, but can't access that here */
     }
 

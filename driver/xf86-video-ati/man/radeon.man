@@ -663,6 +663,8 @@ imac-g5-isight       \-\- iMac G5 iSight
 .br
 emac                 \-\- eMac G4
 .br
+sam440ep             \-\- SAM440ep embedded board
+.br
 The default value is
 .B undefined.
 .TP

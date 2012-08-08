@@ -358,7 +358,7 @@ R600DisplayTexturedVideo(ScrnInfoPtr pScrn, RADEONPortPrivPtr pPriv)
     default:
 	accel_state->src_size[0] = accel_state->src_obj[0].pitch * pPriv->h;
 
-	/* Y texture */
+	/* YUV texture */
 	tex_res.id                  = 0;
 	tex_res.w                   = accel_state->src_obj[0].width;
 	tex_res.h                   = accel_state->src_obj[0].height;
@@ -371,13 +371,13 @@ R600DisplayTexturedVideo(ScrnInfoPtr pScrn, RADEONPortPrivPtr pPriv)
 	tex_res.bo                  = accel_state->src_obj[0].bo;
 	tex_res.mip_bo              = accel_state->src_obj[0].bo;
 
-	tex_res.format              = FMT_8_8;
 	if (pPriv->id == FOURCC_UYVY)
-	    tex_res.dst_sel_x           = SQ_SEL_Y; /* Y */
+	    tex_res.format              = FMT_GB_GR;
 	else
-	    tex_res.dst_sel_x           = SQ_SEL_X; /* Y */
-	tex_res.dst_sel_y           = SQ_SEL_1;
-	tex_res.dst_sel_z           = SQ_SEL_1;
+	    tex_res.format              = FMT_BG_RG;
+	tex_res.dst_sel_x           = SQ_SEL_Y;
+	tex_res.dst_sel_y           = SQ_SEL_X;
+	tex_res.dst_sel_z           = SQ_SEL_Z;
 	tex_res.dst_sel_w           = SQ_SEL_1;
 
 	tex_res.request_size        = 1;
@@ -389,7 +389,7 @@ R600DisplayTexturedVideo(ScrnInfoPtr pScrn, RADEONPortPrivPtr pPriv)
 	    tex_res.tile_mode           = 1;
 	r600_set_tex_resource(pScrn, accel_state->ib, &tex_res, accel_state->src_obj[0].domain);
 
-	/* Y sampler */
+	/* YUV sampler */
 	tex_samp.id                 = 0;
 	tex_samp.clamp_x            = SQ_TEX_CLAMP_LAST_TEXEL;
 	tex_samp.clamp_y            = SQ_TEX_CLAMP_LAST_TEXEL;
@@ -403,33 +403,6 @@ R600DisplayTexturedVideo(ScrnInfoPtr pScrn, RADEONPortPrivPtr pPriv)
 	tex_samp.mip_filter         = 0;			/* no mipmap */
 	r600_set_tex_sampler(pScrn, accel_state->ib, &tex_samp);
 
-	/* UV texture */
-	tex_res.id                  = 1;
-	tex_res.format              = FMT_8_8_8_8;
-	tex_res.w                   = accel_state->src_obj[0].width >> 1;
-	tex_res.h                   = accel_state->src_obj[0].height;
-	tex_res.pitch               = accel_state->src_obj[0].pitch >> 2;
-	if (pPriv->id == FOURCC_UYVY) {
-	    tex_res.dst_sel_x           = SQ_SEL_X; /* V */
-	    tex_res.dst_sel_y           = SQ_SEL_Z; /* U */
-	} else {
-	    tex_res.dst_sel_x           = SQ_SEL_Y; /* V */
-	    tex_res.dst_sel_y           = SQ_SEL_W; /* U */
-	}
-	tex_res.dst_sel_z           = SQ_SEL_1;
-	tex_res.dst_sel_w           = SQ_SEL_1;
-	tex_res.interlaced          = 0;
-
-	tex_res.base                = accel_state->src_obj[0].offset;
-	tex_res.mip_base            = accel_state->src_obj[0].offset;
-	tex_res.size                = accel_state->src_size[0];
-	if (accel_state->src_obj[0].tiling_flags == 0)
-	    tex_res.tile_mode           = 1;
-	r600_set_tex_resource(pScrn, accel_state->ib, &tex_res, accel_state->src_obj[0].domain);
-
-	/* UV sampler */
-	tex_samp.id                 = 1;
-	r600_set_tex_sampler(pScrn, accel_state->ib, &tex_samp);
 	break;
     }
 

@@ -71,7 +71,7 @@ FUNC_NAME(RADEONMarkSync)(ScreenPtr pScreen)
 static void
 FUNC_NAME(RADEONSync)(ScreenPtr pScreen, int marker)
 {
-    ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+    ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
     RADEONInfoPtr info = RADEONPTR(pScrn);
 
     if (info->cs)

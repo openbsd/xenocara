@@ -811,7 +811,7 @@ static void radeon_unload_bicubic_texture(ScrnInfoPtr pScrn)
 XF86VideoAdaptorPtr
 RADEONSetupImageTexturedVideo(ScreenPtr pScreen)
 {
-    ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+    ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
     RADEONInfoPtr    info = RADEONPTR(pScrn);
     RADEONPortPrivPtr pPortPriv;
     XF86VideoAdaptorPtr adapt;

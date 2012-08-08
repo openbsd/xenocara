@@ -22,6 +22,9 @@
  * authorization from the author.
  *
  * $Log: theatre_detect.c,v $
+ * Revision 1.7  2012/08/08 16:25:22  matthieu
+ * Update to xf86-video-ati 6.14.6. Tested by mpi@, brad, eric@, ajacoutot@.
+ *
  * Revision 1.6  2012/03/04 16:01:20  matthieu
  * Re-update xf86-video-ati to 6.14.3.
  *
@@ -90,7 +93,7 @@ _X_EXPORT TheatrePtr DetectTheatre(GENERIC_BUS_Ptr b)
    
    b->ioctl(b,GB_IOCTL_GET_TYPE,20,s);
    if(strcmp(VIP_TYPE, s)){
-   xf86DrvMsg(b->scrnIndex, X_ERROR, "DetectTheatre must be called with bus of type \"%s\", not \"%s\"\n",
+   xf86DrvMsg(b->pScrn->scrnIndex, X_ERROR, "DetectTheatre must be called with bus of type \"%s\", not \"%s\"\n",
           VIP_TYPE, s);
    return NULL;
    }
@@ -105,7 +108,7 @@ _X_EXPORT TheatrePtr DetectTheatre(GENERIC_BUS_Ptr b)
    {
 	if(b->read(b, ((i & 0x03)<<14) | VIP_VIP_VENDOR_DEVICE_ID, 4, (uint8_t *)&val))
         {
-	  if(val)xf86DrvMsg(b->scrnIndex, X_INFO,
+	  if(val)xf86DrvMsg(b->pScrn->scrnIndex, X_INFO,
 			    "Device %d on VIP bus ids as 0x%08x\n", i,
 			    (unsigned)val);
 	  if(t->theatre_num>=0)continue; /* already found one instance */
@@ -120,10 +123,10 @@ _X_EXPORT TheatrePtr DetectTheatre(GENERIC_BUS_Ptr b)
 		   break;
                 }
 	} else {
-	  xf86DrvMsg(b->scrnIndex, X_INFO, "No response from device %d on VIP bus\n",i);	
+	  xf86DrvMsg(b->pScrn->scrnIndex, X_INFO, "No response from device %d on VIP bus\n",i);	
 	}
    }
-   if(t->theatre_num>=0)xf86DrvMsg(b->scrnIndex, X_INFO,
+   if(t->theatre_num>=0)xf86DrvMsg(b->pScrn->scrnIndex, X_INFO,
 				   "Detected Rage Theatre as device %d on VIP bus with id 0x%08x\n",
 				   t->theatre_num, (unsigned)t->theatre_id);
 
@@ -134,7 +137,7 @@ _X_EXPORT TheatrePtr DetectTheatre(GENERIC_BUS_Ptr b)
    }
 
    RT_regr(VIP_VIP_REVISION_ID, &val);
-   xf86DrvMsg(b->scrnIndex, X_INFO, "Detected Rage Theatre revision %8.8X\n",
+   xf86DrvMsg(b->pScrn->scrnIndex, X_INFO, "Detected Rage Theatre revision %8.8X\n",
 	      (unsigned)val);
 
 #if 0

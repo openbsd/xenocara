@@ -105,10 +105,11 @@ typedef union AtomBiosArg
     DisplayModePtr		modes;
     AtomExecRec			exec;
     AtomFbRec			fb;
+    ScrnInfoPtr                 pScrn;
 } AtomBiosArgRec, *AtomBiosArgPtr;
 
 extern AtomBiosResult
-RHDAtomBiosFunc(int scrnIndex, atomBiosHandlePtr handle,
+RHDAtomBiosFunc(ScrnInfoPtr pScrn, atomBiosHandlePtr handle,
 		AtomBiosRequestID id, AtomBiosArgPtr data);
 
 extern Bool
@@ -254,7 +255,7 @@ typedef struct _atomDataTables
 } atomDataTables, *atomDataTablesPtr;
 
 typedef struct _atomBiosHandle {
-    int scrnIndex;
+    ScrnInfoPtr pScrn;
     unsigned char *BIOSBase;
     atomDataTablesPtr atomDataPtr;
     unsigned int cmd_offset;

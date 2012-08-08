@@ -73,6 +73,7 @@ typedef struct {
     struct radeon_bo *cursor_bo;
     struct radeon_bo *rotate_bo;
     unsigned rotate_fb_id;
+    int dpms_mode;
     uint16_t lut_r[256], lut_g[256], lut_b[256];
 } drmmode_crtc_private_rec, *drmmode_crtc_private_ptr;
 
@@ -102,7 +103,7 @@ extern Bool drmmode_pre_init(ScrnInfoPtr pScrn, drmmode_ptr drmmode, int cpp);
 extern void drmmode_init(ScrnInfoPtr pScrn, drmmode_ptr drmmode);
 extern Bool drmmode_set_bufmgr(ScrnInfoPtr pScrn, drmmode_ptr drmmode, struct radeon_bo_manager *bufmgr);
 extern void drmmode_set_cursor(ScrnInfoPtr scrn, drmmode_ptr drmmode, int id, struct radeon_bo *bo);
-void drmmode_adjust_frame(ScrnInfoPtr pScrn, drmmode_ptr drmmode, int x, int y, int flags);
+void drmmode_adjust_frame(ScrnInfoPtr pScrn, drmmode_ptr drmmode, int x, int y);
 extern Bool drmmode_set_desired_modes(ScrnInfoPtr pScrn, drmmode_ptr drmmode);
 extern void drmmode_copy_fb(ScrnInfoPtr pScrn, drmmode_ptr drmmode);
 extern Bool drmmode_setup_colormap(ScreenPtr pScreen, ScrnInfoPtr pScrn);

@@ -407,7 +407,7 @@ radeon_crtc_load_cursor_argb (xf86CrtcPtr crtc, CARD32 *image)
 /* Initialize hardware cursor support. */
 Bool RADEONCursorInit(ScreenPtr pScreen)
 {
-    ScrnInfoPtr        pScrn   = xf86Screens[pScreen->myNum];
+    ScrnInfoPtr        pScrn   = xf86ScreenToScrn(pScreen);
     RADEONInfoPtr      info    = RADEONPTR(pScrn);
     unsigned char     *RADEONMMIO = info->MMIO;
     xf86CrtcConfigPtr  xf86_config = XF86_CRTC_CONFIG_PTR(pScrn);

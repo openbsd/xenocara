@@ -18,7 +18,7 @@ radeon_legacy_allocate_memory(ScrnInfoPtr pScrn,
 		       int align,
 		       int domain)
 {
-    ScreenPtr pScreen = screenInfo.screens[pScrn->scrnIndex];
+    ScreenPtr pScreen = xf86ScrnToScreen(pScrn);
     RADEONInfoPtr info = RADEONPTR(pScrn);
     uint32_t offset = 0;
 
@@ -121,7 +121,7 @@ radeon_legacy_free_memory(ScrnInfoPtr pScrn,
     }
 #endif
 #ifdef USE_EXA
-    ScreenPtr pScreen = screenInfo.screens[pScrn->scrnIndex];
+    ScreenPtr pScreen = xf86ScrnToScreen(pScrn);
 
     if (info->useEXA) {
 	ExaOffscreenArea *area = mem_struct;

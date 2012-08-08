@@ -496,7 +496,7 @@ RADEONProbeOutputModes(xf86OutputPtr output)
 	    else
 		modes = RADEONTVModes(output);
 	} else if (radeon_output->active_device & (ATOM_DEVICE_CV_SUPPORT)) {
-	    atomBiosResult = RHDAtomBiosFunc(pScrn->scrnIndex, info->atomBIOS,
+	    atomBiosResult = RHDAtomBiosFunc(pScrn, info->atomBIOS,
 					     ATOMBIOS_GET_CV_MODES, &atomBiosArg);
 	    if (atomBiosResult == ATOM_SUCCESS) {
 		modes = atomBiosArg.modes;
@@ -514,7 +514,7 @@ RADEONProbeOutputModes(xf86OutputPtr output)
 #endif
 	    if (modes == NULL) {
 		if ((radeon_output->active_device & (ATOM_DEVICE_LCD_SUPPORT)) && info->IsAtomBios) {
-		    atomBiosResult = RHDAtomBiosFunc(pScrn->scrnIndex,
+		    atomBiosResult = RHDAtomBiosFunc(pScrn,
 						     info->atomBIOS,
 						     ATOMBIOS_GET_PANEL_EDID, &atomBiosArg);
 		    if (atomBiosResult == ATOM_SUCCESS) {
