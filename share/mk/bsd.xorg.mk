@@ -1,4 +1,4 @@
-# $OpenBSD: bsd.xorg.mk,v 1.43 2012/08/05 18:08:05 matthieu Exp $ -*- makefile  -*-
+# $OpenBSD: bsd.xorg.mk,v 1.44 2012/08/08 21:54:33 matthieu Exp $ -*- makefile  -*-
 #
 # Copyright © 2006,2012 Matthieu Herrb
 #
@@ -155,6 +155,7 @@ config.status:
 .if defined(XENOCARA_RERUN_AUTOCONF) && ${XENOCARA_RERUN_AUTOCONF:L} == "yes"
 	cd ${_SRCDIR}; ${AUTOTOOLS_ENV} exec autoreconf -v --install --force
 .else
+.if !defined(NO_REORDER)
 	@sed -e '/^#/d' ${REORDER_DEPENDENCIES} | \
 	  tsort -r|while read f; do \
 	    cd ${_SRCDIR}; \
@@ -169,6 +170,7 @@ config.status:
 			fi \
 			;; \
 		esac; done
+.endif
 .endif
 	${CONFIGURE_ENV} PATH=$(XENOCARA_PATH) \
 		exec sh ${_SRCDIR}/configure --prefix=${X11BASE} \
