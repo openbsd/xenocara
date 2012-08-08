@@ -515,7 +515,7 @@ static void
 fixup_video_driver_list(char **drivers)
 {
     static const char *fallback[4] = { "vesa", "fbdev", "wsfb", NULL };
-    static const char *blacklist[] = { "radeonhd", "radeon", NULL };
+    static const char *blacklist[] = { "radeonhd", "radeonold", NULL };
     char **end, **drv, **d;
     char *x;
     int i;
