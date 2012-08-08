@@ -69,7 +69,7 @@
 /* names duplicated from version headers */
 #define MACH64_DRIVER_NAME  "mach64"
 #define R128_DRIVER_NAME    "r128"
-#define RADEON_DRIVER_NAME  "radeonold"
+#define RADEON_DRIVER_NAME  "radeon"
 
 enum
 {
