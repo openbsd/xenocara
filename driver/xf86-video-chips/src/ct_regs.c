@@ -58,9 +58,6 @@
 /* Everything using inb/outb, etc needs "compiler.h" */
 #include "compiler.h"
 
-/* Drivers for PCI hardware need this */
-#include "xf86PciInfo.h"
-
 /* Drivers that need to access the PCI config space directly need this */
 #include "xf86Pci.h"
 

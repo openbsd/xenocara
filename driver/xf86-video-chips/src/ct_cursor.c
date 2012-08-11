@@ -36,9 +36,6 @@
 /* Everything using inb/outb, etc needs "compiler.h" */
 #include "compiler.h"   
 
-/* Drivers for PCI hardware need this */
-#include "xf86PciInfo.h"
-
 /* Drivers that need to access the PCI config space directly need this */
 #include "xf86Pci.h"
 
@@ -434,7 +431,7 @@ CHIPSLoadCursorImage(ScrnInfoPtr pScrn, unsigned char *src)
 static Bool
 CHIPSUseHWCursor(ScreenPtr pScreen, CursorPtr pCurs)
 {
-    ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+    ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
     CHIPSPtr cPtr = CHIPSPTR(pScrn);
     
     return (((cPtr->Flags & ChipsHWCursor) != 0)
@@ -444,7 +441,7 @@ CHIPSUseHWCursor(ScreenPtr pScreen, CursorPtr pCurs)
 Bool
 CHIPSCursorInit(ScreenPtr pScreen)
 {
-    ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+    ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
     CHIPSPtr cPtr = CHIPSPTR(pScrn);
     xf86CursorInfoPtr infoPtr;
 

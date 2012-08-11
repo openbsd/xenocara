@@ -10,9 +10,6 @@
 /* Everything using inb/outb, etc needs "compiler.h" */
 #include "compiler.h"
 
-/* Drivers for PCI hardware need this */
-#include "xf86PciInfo.h"
-
 /* Drivers that need to access the PCI config space directly need this */
 #include "xf86Pci.h"
 
@@ -96,7 +93,7 @@ chips_ddc1(ScrnInfoPtr pScrn)
 	xf86DrvMsg(pScrn->scrnIndex, X_PROBED, "DDC1 found\n");	
     else return;
 
-    xf86PrintEDID(xf86DoEDID_DDC1(pScrn->scrnIndex, vgaHWddc1SetSpeedWeak(),
+    xf86PrintEDID(xf86DoEDID_DDC1(XF86_SCRN_ARG(pScrn), vgaHWddc1SetSpeedWeak(),
 				  chips_ddc1Read));
 
     /* restore */

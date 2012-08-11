@@ -52,4 +52,5 @@ chips_drv_la_SOURCES = \
 	 ct_pcirename.h \
          ct_regs.c \
          ct_shadow.c \
-         ct_video.c
+         ct_video.c \
+         compat-api.h

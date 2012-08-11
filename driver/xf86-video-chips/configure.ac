@@ -23,7 +23,7 @@
 # Initialize Autoconf
 AC_PREREQ([2.60])
 AC_INIT([xf86-video-chips],
-        [1.2.4],
+        [1.2.5],
         [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],
         [xf86-video-chips])
 AC_CONFIG_SRCDIR([Makefile.am])
@@ -43,9 +43,6 @@ XORG_DEFAULT_OPTIONS
 # Initialize libtool
 AC_DISABLE_STATIC
 AC_PROG_LIBTOOL
-
-# Checks for programs.
-AM_PROG_CC_C_O
 
 AH_TOP([#include "xorg-server.h"])
 
@@ -80,6 +77,23 @@ if test "x$XSERVER_LIBPCIACCESS" = xyes; then
     XORG_CFLAGS="$XORG_CFLAGS $PCIACCESS_CFLAGS"
 fi
 AM_CONDITIONAL(XSERVER_LIBPCIACCESS, test "x$XSERVER_LIBPCIACCESS" = xyes)
+AC_ARG_ENABLE(xaa,
+              AS_HELP_STRING([--enable-xaa],
+                             [Enable legacy X Acceleration Architecture (XAA) [default=auto]]),
+              [XAA="$enableval"],
+              [XAA=auto])
+if test "x$XAA" != xno; then
+        save_CFLAGS=$CFLAGS
+        save_CPPFLAGS=$CPPFLAGS
+        CFLAGS=$XORG_CFLAGS
+        CPPFLAGS="$XORG_CFLAGS"
+        AC_CHECK_HEADERS([xaa.h], XAA=yes, XAA=no)
+        CFLAGS=$save_CFLAGS
+        CPPFLAGS=$save_CPPFLAGS
+fi
+AC_MSG_CHECKING([whether to include XAA support])
+AM_CONDITIONAL(XAA, test "x$XAA" = xyes)
+AC_MSG_RESULT([$XAA])
 
 save_CFLAGS="$CFLAGS"
 CFLAGS="$XORG_CFLAGS"

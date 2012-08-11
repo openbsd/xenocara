@@ -5,7 +5,6 @@
 
 #include "xf86.h"
 #include "xf86_OSproc.h"
-#include "xf86PciInfo.h"
 #include "xf86Pci.h"
 #include "shadowfb.h"
 #include "servermd.h"
@@ -39,9 +38,9 @@ chipsRefreshArea(ScrnInfoPtr pScrn, int num, BoxPtr pbox)
 } 
 
 void
-chipsPointerMoved(int index, int x, int y)
+chipsPointerMoved(SCRN_ARG_TYPE arg, int x, int y)
 {
-    ScrnInfoPtr pScrn = xf86Screens[index];
+    SCRN_INFO_PTR(arg);
     CHIPSPtr cPtr = CHIPSPTR(pScrn);
     int newX, newY;
     
@@ -53,7 +52,7 @@ chipsPointerMoved(int index, int x, int y)
 	newY = pScrn->pScreen->width - x - 1;
     }
 
-    (*cPtr->PointerMoved)(index, newX, newY);
+    (*cPtr->PointerMoved)(arg, newX, newY);
 }
 
 void

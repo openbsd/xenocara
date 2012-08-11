@@ -165,9 +165,6 @@ Force the use of memory mapped IO where it can be used. Default: off
 Force driver to leave centering and stretching registers alone. This
 can fix some laptop suspend/resume problems. Default: off
 .TP
-.BI "Option \*qOverlay\*q"
-Enable 8+24 overlay mode.  Only appropriate for depth 24.  Default: off.
-.TP
 .BI "Option \*qColorKey\*q \*q" integer \*q
 Set the colormap index used for the transparency key for the depth 8 plane
 when operating in 8+16 overlay mode.  The value must be in the range

@@ -27,9 +27,11 @@
 #define _CT_DRIVER_H_
 
 #include "ct_pcirename.h"
+#ifdef HAVE_XAA_H
 #include "xaa.h"
-#include "vbe.h"
 #include "xaalocal.h"		/* XAA internals as we replace some of XAA */
+#endif
+#include "vbe.h"
 #include "xf86Cursor.h"
 #include "xf86i2c.h"
 #include "xf86DDC.h"
@@ -37,6 +39,8 @@
 #include "vgaHW.h"
 #include <string.h>
 #include <unistd.h>
+
+#include "compat-api.h"
 
 /* Supported chipsets */
 typedef enum {
@@ -114,7 +118,6 @@ typedef struct {
 /* Options flags for the C&T chipsets */
 #define ChipsHWCursor		0x00001000
 #define ChipsShadowFB		0x00002000
-#define ChipsOverlay8plus16	0x00004000
 #define ChipsUseNewFB		0x00008000
 
 /* Architecture type flags */
@@ -272,11 +275,13 @@ typedef struct {
 
 typedef struct _CHIPSRec {
     pciVideoPtr		PciInfo;
+#ifndef XSERVER_LIBPCIACCESS
     PCITAG		PciTag;
+#endif
     int			Chipset;
     EntityInfoPtr       pEnt;
-    IOADDRESS		PIOBase;
-    CARD32		IOAddress;
+    unsigned long	PIOBase;
+    unsigned long	IOAddress;
     unsigned long	FbAddress;
     unsigned int	IOBase;
     unsigned char *	FbBase;
@@ -288,7 +293,7 @@ typedef struct _CHIPSRec {
     unsigned char *	ShadowPtr;
     int			ShadowPitch;
     int                 Rotate;
-    void		(*PointerMoved)(int index, int x, int y);
+    void		(*PointerMoved)(SCRN_ARG_TYPE arg, int x, int y);
     int                 FbOffset16;
     int                 FbSize16;  
     OptionInfoPtr	Options;
@@ -321,7 +326,9 @@ typedef struct _CHIPSRec {
     unsigned int *	Regs32;
     unsigned int	Flags;
     CARD32		Bus;
+#ifdef HAVE_XAA_H
     XAAInfoRecPtr	AccelInfoRec;
+#endif
     xf86CursorInfoPtr	CursorInfoRec;
     CHIPSACLRec		Accel;
     unsigned int	HWCursorContents;
@@ -381,8 +388,8 @@ extern unsigned int ChipsReg32HiQV[];
 
 /* Prototypes */
 
-void CHIPSAdjustFrame(int scrnIndex, int x, int y, int flags);
-Bool CHIPSSwitchMode(int scrnIndex, DisplayModePtr mode, int flags);
+void CHIPSAdjustFrame(ADJUST_FRAME_ARGS_DECL);
+Bool CHIPSSwitchMode(SWITCH_MODE_ARGS_DECL);
 
 /* video */
 void CHIPSInitVideo(ScreenPtr pScreen);
@@ -431,7 +438,7 @@ void     chipsRefreshArea8(ScrnInfoPtr pScrn, int num, BoxPtr pbox);
 void     chipsRefreshArea16(ScrnInfoPtr pScrn, int num, BoxPtr pbox);
 void     chipsRefreshArea24(ScrnInfoPtr pScrn, int num, BoxPtr pbox);
 void     chipsRefreshArea32(ScrnInfoPtr pScrn, int num, BoxPtr pbox);
-void     chipsPointerMoved(int index, int x, int y);
+void     chipsPointerMoved(SCRN_ARG_TYPE arg, int x, int y);
 
 #if X_BYTE_ORDER == X_BIG_ENDIAN
 # define BE_SWAP_APRETURE(pScrn,cPtr) \

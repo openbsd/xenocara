@@ -6,15 +6,12 @@
 #include "xf86.h"
 #include "xf86_OSproc.h"
 #include "compiler.h"
-#include "xf86PciInfo.h"
 #include "xf86Pci.h"
 #include "xf86fbman.h"
 #include "regionstr.h"
 
 #include "ct_driver.h"
 #include <X11/extensions/Xv.h>
-#include "xaa.h"
-#include "xaalocal.h"
 #include "dixstruct.h"
 #include "fourcc.h"
 
@@ -50,14 +47,13 @@ static Atom xvColorKey;
 void 
 CHIPSInitVideo(ScreenPtr pScreen)
 {
-    ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+    ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
     XF86VideoAdaptorPtr *adaptors, *newAdaptors = NULL;
     XF86VideoAdaptorPtr newAdaptor = NULL;
     CHIPSPtr cPtr = CHIPSPTR(pScrn);
     int num_adaptors;
 	
-    if (!(cPtr->Flags & ChipsOverlay8plus16) &&
-       (cPtr->Flags & ChipsVideoSupport)) {
+    if ((cPtr->Flags & ChipsVideoSupport)) {
 	newAdaptor = CHIPSSetupImageVideo(pScreen);
 	CHIPSInitOffscreenImages(pScreen);
     }
@@ -230,7 +226,7 @@ CHIPSResetVideo(ScrnInfoPtr pScrn)
 static XF86VideoAdaptorPtr 
 CHIPSSetupImageVideo(ScreenPtr pScreen)
 {
-    ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+    ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
     CHIPSPtr cPtr = CHIPSPTR(pScrn);
     XF86VideoAdaptorPtr adapt;
     CHIPSPortPrivPtr pPriv;
@@ -464,7 +460,7 @@ CHIPSAllocateMemory(
 	xf86FreeOffscreenLinear(linear);
    }
 
-   pScreen = screenInfo.screens[pScrn->scrnIndex];
+   pScreen = xf86ScrnToScreen(pScrn);
 
    new_linear = xf86AllocateOffscreenLinear(pScreen, size, 8, 
    						NULL, NULL, NULL);

@@ -6,9 +6,6 @@
 #include "xf86.h"
 #include "xf86_OSproc.h"
 #include "xf86Pci.h"
-#include "xf86PciInfo.h"
-#include "xaa.h"
-#include "xaalocal.h"
 #include "ct_driver.h"
 #include "dgaproc.h"
 
@@ -18,11 +15,13 @@ static Bool CHIPS_OpenFramebuffer(ScrnInfoPtr, char **, unsigned char **,
 static Bool CHIPS_SetMode(ScrnInfoPtr, DGAModePtr);
 static int  CHIPS_GetViewport(ScrnInfoPtr);
 static void CHIPS_SetViewport(ScrnInfoPtr, int, int, int);
+#ifdef HAVE_XAA_H
 static void CHIPS_FillRect(ScrnInfoPtr, int, int, int, int, unsigned long);
 static void CHIPS_BlitRect(ScrnInfoPtr, int, int, int, int, int, int);
 #if 0
 static void CHIPS_BlitTransRect(ScrnInfoPtr, int, int, int, int, int, int, 
 					unsigned long);
+#endif
 #endif
 
 static
@@ -32,6 +31,7 @@ DGAFunctionRec CHIPS_DGAFuncs = {
    CHIPS_SetMode,
    CHIPS_SetViewport,
    CHIPS_GetViewport,
+#ifdef HAVE_XAA_H
    CHIPSSync,
    CHIPS_FillRect,
    CHIPS_BlitRect,
@@ -39,6 +39,9 @@ DGAFunctionRec CHIPS_DGAFuncs = {
    CHIPS_BlitTransRect
 #else
    NULL
+#endif
+#else
+   NULL, NULL, NULL, NULL
 #endif
 };
 
@@ -49,6 +52,7 @@ DGAFunctionRec CHIPS_MMIODGAFuncs = {
    CHIPS_SetMode,
    CHIPS_SetViewport,
    CHIPS_GetViewport,
+#ifdef HAVE_XAA_H
    CHIPSMMIOSync,
    CHIPS_FillRect,
    CHIPS_BlitRect,
@@ -56,6 +60,9 @@ DGAFunctionRec CHIPS_MMIODGAFuncs = {
    CHIPS_BlitTransRect
 #else
    NULL
+#endif
+#else
+   NULL, NULL, NULL, NULL
 #endif
 };
 
@@ -66,6 +73,7 @@ DGAFunctionRec CHIPS_HiQVDGAFuncs = {
    CHIPS_SetMode,
    CHIPS_SetViewport,
    CHIPS_GetViewport,
+#ifdef HAVE_XAA_H
    CHIPSHiQVSync,
    CHIPS_FillRect,
    CHIPS_BlitRect,
@@ -74,13 +82,16 @@ DGAFunctionRec CHIPS_HiQVDGAFuncs = {
 #else
    NULL
 #endif
+#else
+   NULL, NULL, NULL, NULL
+#endif
 };
 
 
 Bool
 CHIPSDGAInit(ScreenPtr pScreen)
 {   
-   ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+   ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
    CHIPSPtr cPtr = CHIPSPTR(pScrn);
    DGAModePtr modes = NULL, newmodes = NULL, currentMode;
    DisplayModePtr pMode, firstMode;
@@ -115,9 +126,11 @@ SECOND_PASS:
 
 	currentMode->mode = pMode;
 	currentMode->flags = DGA_CONCURRENT_ACCESS | DGA_PIXMAP_AVAILABLE;
+#ifdef HAVE_XAA_H
 	if(cPtr->Flags & ChipsAccelSupport)
 	   currentMode->flags |= (cPtr->Flags & ChipsAccelSupport) 
 	     ? (DGA_FILL_RECT | DGA_BLIT_RECT) : 0;
+#endif
 	if(pMode->Flags & V_DBLSCAN)
 	   currentMode->flags |= DGA_DOUBLESCAN;
 	if(pMode->Flags & V_INTERLACE)
@@ -198,21 +211,21 @@ CHIPS_SetMode(
 	/* put the ScreenParameters back */
        if (cPtr->DGAactive) {
            pScrn->displayWidth = OldDisplayWidth[index];
-	   pScrn->EnterVT(pScrn->scrnIndex,0);
+	   pScrn->EnterVT(VT_FUNC_ARGS);
 
 	   cPtr->DGAactive = FALSE;
        }
    } else {
 	if(!cPtr->DGAactive) {  /* save the old parameters */
 	    OldDisplayWidth[index] = pScrn->displayWidth;
-	    pScrn->LeaveVT(pScrn->scrnIndex,0);
+	    pScrn->LeaveVT(VT_FUNC_ARGS);
 	    cPtr->DGAactive = TRUE;
 	}
 
 	pScrn->displayWidth = pMode->bytesPerScanline / 
 			      (pMode->bitsPerPixel >> 3);
 
-        CHIPSSwitchMode(index, pMode->mode, 0);
+        CHIPSSwitchMode(SWITCH_MODE_ARGS(pScrn, pMode->mode));
    }
    
    return TRUE;
@@ -243,10 +256,11 @@ CHIPS_SetViewport(
 	while (!((hwp->readST01(hwp)) & 0x08)){};
     }
 
-    CHIPSAdjustFrame(pScrn->pScreen->myNum, x, y, flags);
+    CHIPSAdjustFrame(ADJUST_FRAME_ARGS(pScrn, x, y));
     cPtr->DGAViewportStatus = 0;  /* CHIPSAdjustFrame loops until finished */
 }
 
+#ifdef HAVE_XAA_H
 static void 
 CHIPS_FillRect (
    ScrnInfoPtr pScrn, 
@@ -296,7 +310,7 @@ CHIPS_BlitTransRect(
      prohibit usage of ~0 as the key */
 }
 #endif
-
+#endif
 static Bool 
 CHIPS_OpenFramebuffer(
    ScrnInfoPtr pScrn, 
