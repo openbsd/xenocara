@@ -50,7 +50,7 @@ Bool
 I128IBMHWCursorInit(ScrnInfoPtr pScrn)
 {
    xf86CursorInfoPtr infoPtr;
-   ScreenPtr pScreen = screenInfo.screens[pScrn->scrnIndex];
+   ScreenPtr pScreen = xf86ScrnToScreen(pScrn);
    I128Ptr pI128 = I128PTR(pScrn);
 
    if (!pI128->HWCursor)

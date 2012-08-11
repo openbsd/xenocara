@@ -26,8 +26,7 @@
 #include "config.h"
 #endif
 
-#include "xaa.h"
-#include "xaalocal.h"
+
 #include "xf86fbman.h"
 #include "miline.h"
 #include "servermd.h"
@@ -39,6 +38,9 @@
 
 #include "i128.h"
 #include "i128reg.h"
+
+#ifdef HAVE_XAA_H
+#include "xaalocal.h"
 
 static void I128BitBlit(ScrnInfoPtr pScrn, int x1, int y1, int x2, int y2,
 	int w, int h);
@@ -62,6 +64,7 @@ static void I128ScreenToScreenBitBlt(ScrnInfoPtr pScrn, int nbox,
         unsigned planemask);
 #endif
 
+#endif
 #define ENG_PIPELINE_READY() { while (pI128->mem.rbase_a[BUSY] & BUSY_BUSY) ; }
 #define ENG_DONE() { while (pI128->mem.rbase_a[FLOW] & (FLOW_DEB | FLOW_MCB | FLOW_PRV)) ;}
 
@@ -100,7 +103,7 @@ I128EngineDone(ScrnInfoPtr pScrn)
 	ENG_DONE();
 }
 
-
+#ifdef HAVE_XAA_H
 static void
 I128BitBlit(ScrnInfoPtr pScrn, int x1, int y1, int x2, int y2, int w, int h)
 {
@@ -412,11 +415,14 @@ I128ScreenToScreenBitBlt(ScrnInfoPtr pScrn, int nbox, DDXPointPtr pptSrc,
 }
 #endif
 
+#endif
+
 Bool
 I128XaaInit(ScreenPtr pScreen)
 {
+#ifdef HAVE_XAA_H
 	XAAInfoRecPtr infoPtr;
-	ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+	ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
 	I128Ptr pI128 = I128PTR(pScrn);
 	BoxRec AvailFBArea;
 	CARD32 buf_ctrl;
@@ -519,4 +525,7 @@ I128XaaInit(ScreenPtr pScreen)
 	}
 
 	return(XAAInit(pScreen, infoPtr));
+#else
+	return FALSE;
+#endif
 }

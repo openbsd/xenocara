@@ -1,3 +1,29 @@
+commit da79e51c46b9394b17927a3234af90376ad69b00
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Tue Jul 17 16:05:09 2012 +1000
+
+    xf86-video-i128: bump to version 1.3.6
+    
+    Signed-off-by: Dave Airlie <airlied@redhat.com>
+
+commit c829ff70025e927bdec58e270e80c7097537a567
+Author: Dave Airlie <airlied@gmail.com>
+Date:   Mon Jul 16 18:23:39 2012 +1000
+
+    i128: build against xaa-less server.
+    
+    Signed-off-by: Dave Airlie <airlied@redhat.com>
+
+commit 659390ecdb36bb5e65b41a867257f3b9583e45de
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Wed Jun 6 12:44:53 2012 +0100
+
+    i128: convert to compat API.
+    
+    convert i128 to new compat API.
+    
+    Signed-off-by: Dave Airlie <airlied@redhat.com>
+
 commit 2228b7f80cc2f2a13dc00fd659b592407f1bbef1
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Fri Mar 23 18:51:51 2012 -0700

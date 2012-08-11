@@ -41,11 +41,11 @@
 #include "i128reg.h"
 
 #define PI128_FROM_PIXMAP(x) \
-    I128Ptr pI128 = I128PTR(xf86Screens[x->drawable.pScreen->myNum])
+    I128Ptr pI128 = I128PTR(xf86ScreenToScrn(x->drawable.pScreen))
 #define PI128_FROM_SCREEN(x) \
-    I128Ptr pI128 = I128PTR(xf86Screens[x->myNum])
+    I128Ptr pI128 = I128PTR(xf86ScreenToScrn(x))
 #define PI128_FROM_PICTURE(x) \
-    I128Ptr pI128 = I128PTR(xf86Screens[x->pDrawable->pScreen->myNum])
+    I128Ptr pI128 = I128PTR(xf86ScreenToScrn(x->pDrawable->pScreen))
 
 /* we might be able to do something smarter than this */
 #define ENG_PIPELINE_READY() \
@@ -604,7 +604,7 @@ Bool
 I128ExaInit(ScreenPtr pScreen)
 {
     ExaDriverPtr pExa;
-    ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+    ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
     I128Ptr pI128 = I128PTR(pScrn);
 
     if (!(pExa = exaDriverAlloc())) {

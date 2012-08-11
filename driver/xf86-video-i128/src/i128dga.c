@@ -7,8 +7,6 @@
 #include "xf86_OSproc.h"
 #include "xf86Pci.h"
 #include "xf86PciInfo.h"
-#include "xaa.h"
-#include "xaalocal.h"
 #include "i128.h"
 #include "dgaproc.h"
 
@@ -18,11 +16,13 @@ static Bool I128_OpenFramebuffer(ScrnInfoPtr, char **, unsigned char **,
 static Bool I128_SetMode(ScrnInfoPtr, DGAModePtr);
 static int  I128_GetViewport(ScrnInfoPtr);
 static void I128_SetViewport(ScrnInfoPtr, int, int, int);
+#ifdef HAVE_XAA_H
 static void I128_FillRect(ScrnInfoPtr, int, int, int, int, unsigned long);
 static void I128_BlitRect(ScrnInfoPtr, int, int, int, int, int, int);
 #if 0
 static void I128_BlitTransRect(ScrnInfoPtr, int, int, int, int, int, int, 
 					unsigned long);
+#endif
 #endif
 
 static
@@ -33,6 +33,7 @@ DGAFunctionRec I128_DGAFuncs = {
    I128_SetViewport,
    I128_GetViewport,
    I128EngineDone,
+#ifdef HAVE_XAA_H
    I128_FillRect,
    I128_BlitRect,
 #if 0
@@ -40,13 +41,16 @@ DGAFunctionRec I128_DGAFuncs = {
 #else
    NULL
 #endif
+#else
+   NULL, NULL, NULL
+#endif
 };
 
 
 Bool
 I128DGAInit(ScreenPtr pScreen)
 {   
-   ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+   ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
    I128Ptr pI128 = I128PTR(pScrn);
    DGAModePtr modes = NULL, newmodes = NULL, currentMode;
    DisplayModePtr pMode, firstMode;
@@ -153,7 +157,7 @@ I128_SetMode(
 	
 	pScrn->displayWidth = OldDisplayWidth[index];
 	
-        I128SwitchMode(index, pScrn->currentMode, 0);
+        I128SwitchMode(SWITCH_MODE_ARGS(pScrn, pScrn->currentMode));
 	pI128->DGAactive = FALSE;
    } else {
 	if(!pI128->DGAactive) {  /* save the old parameters */
@@ -165,7 +169,7 @@ I128_SetMode(
 	pScrn->displayWidth = pMode->bytesPerScanline / 
 			      (pMode->bitsPerPixel >> 3);
 
-        I128SwitchMode(index, pMode->mode, 0);
+        I128SwitchMode(SWITCH_MODE_ARGS(pScrn, pMode->mode));
    }
    
    return TRUE;
@@ -190,10 +194,11 @@ I128_SetViewport(
 ){
    I128Ptr pI128 = I128PTR(pScrn);
 
-   I128AdjustFrame(pScrn->pScreen->myNum, x, y, flags);
+   I128AdjustFrame(ADJUST_FRAME_ARGS(pScrn, x, y));
    pI128->DGAViewportStatus = 0;  /* I128AdjustFrame loops until finished */
 }
 
+#ifdef HAVE_XAA_H
 static void 
 I128_FillRect (
    ScrnInfoPtr pScrn, 
@@ -253,7 +258,7 @@ I128_BlitTransRect(
     }
 }
 #endif
-
+#endif
 static Bool 
 I128_OpenFramebuffer(
    ScrnInfoPtr pScrn, 
