@@ -45,6 +45,7 @@
 #include "glint_regs.h"
 #include "glint.h"
 
+#ifdef HAVE_XAA_H
 #include "xaalocal.h"	/* For replacements */
 
 static void SXSync(ScrnInfoPtr pScrn);
@@ -160,12 +161,13 @@ SXInitializeEngine(ScrnInfoPtr pScrn)
     GLINT_SLOW_WRITE_REG(0, dXSub);
     GLINT_SLOW_WRITE_REG(1<<16, dY);
 }
-
+#endif
 Bool
 SXAccelInit(ScreenPtr pScreen)
 {
+#ifdef HAVE_XAA_H
     XAAInfoRecPtr infoPtr;
-    ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+    ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
     GLINTPtr pGlint = GLINTPTR(pScrn);
     long memory = pGlint->FbMapSize;
     BoxRec AvailFBArea;
@@ -252,8 +254,12 @@ SXAccelInit(ScreenPtr pScreen)
     xf86InitFBManager(pScreen, &AvailFBArea);
 
     return (XAAInit(pScreen, infoPtr));
+#else
+    return FALSE;
+#endif
 }
 
+#ifdef HAVE_XAA_H
 static void SXLoadCoord(
 	ScrnInfoPtr pScrn,
 	int x, int y,
@@ -871,3 +877,4 @@ SXSubsequentSolidBresenhamLine( ScrnInfoPtr pScrn,
                 (octant & YMAJOR) ? Y_AXIS : X_AXIS,
                 x, y,  e, dmin, -dmaj, len);
 }
+#endif

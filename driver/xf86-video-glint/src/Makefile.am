@@ -29,6 +29,7 @@ glint_drv_la_LDFLAGS = -module -avoid-version
 glint_drv_ladir = @moduledir@/drivers
 
 glint_drv_la_SOURCES = \
+         compat-api.h \
          glint_dga.c \
          glint_driver.c \
          glint.h \

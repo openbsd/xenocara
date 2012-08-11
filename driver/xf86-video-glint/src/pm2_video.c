@@ -2984,7 +2984,7 @@ Permedia2VideoUninit(ScrnInfoPtr pScrn)
 void
 Permedia2VideoInit(ScreenPtr pScreen)
 {
-    ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+    ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
     GLINTPtr pGlint = GLINTPTR(pScrn);
     AdaptorPrivPtr pAPriv;
     DevUnion Private[PORTS];

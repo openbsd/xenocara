@@ -136,7 +136,7 @@ glintTIReadData (ScrnInfoPtr pScrn)
 Bool 
 glintTIHWCursorInit(ScreenPtr pScreen)
 {
-    ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+    ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
     GLINTPtr pGlint = GLINTPTR(pScrn);
     xf86CursorInfoPtr infoPtr;
 

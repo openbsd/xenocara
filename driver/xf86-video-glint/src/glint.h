@@ -35,13 +35,17 @@
 
 #include "glintpcirename.h"
 
+#ifdef HAVE_XAA_H
 #include "xaa.h"
+#endif
+#include "xf86fbman.h"
 #include "xf86RamDac.h"
 #include "xf86cmap.h"
 #include "xf86i2c.h"
 #include "xf86DDC.h"
 #include "xf86xv.h"
 
+#include "compat-api.h"
 #define GLINT_MAX_MULTI_DEVICES 2
 
 #define GLINT_VERSION 4000
@@ -141,7 +145,9 @@ typedef struct {
     CARD32		PixelWidth;
     RamDacRecPtr	RamDacRec;
     xf86CursorInfoPtr	CursorInfoRec;
+#ifdef HAVE_XAA_H
     XAAInfoRecPtr	AccelInfoRec;
+#endif
     CloseScreenProcPtr	CloseScreen;
     ScreenBlockHandlerProcPtr BlockHandler;
     GCPtr		CurrentGC;
@@ -315,8 +321,8 @@ void Permedia2vOutIndReg(ScrnInfoPtr pScrn,
 		   CARD32, unsigned char mask, unsigned char data);
 unsigned char Permedia2vInIndReg(ScrnInfoPtr pScrn, CARD32);
 
-Bool GLINTSwitchMode(int scrnIndex, DisplayModePtr mode, int flags);
-void GLINTAdjustFrame(int scrnIndex, int x, int y, int flags);
+Bool GLINTSwitchMode(SWITCH_MODE_ARGS_DECL);
+void GLINTAdjustFrame(ADJUST_FRAME_ARGS_DECL);
 
 extern int partprodPermedia[];
 

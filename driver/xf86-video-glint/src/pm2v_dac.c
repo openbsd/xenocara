@@ -540,7 +540,7 @@ Permedia2vUseHWCursor(ScreenPtr pScr, CursorPtr pCurs)
 Bool 
 Permedia2vHWCursorInit(ScreenPtr pScreen)
 {
-    ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+    ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
     GLINTPtr pGlint = GLINTPTR(pScrn);
     xf86CursorInfoPtr infoPtr;
 

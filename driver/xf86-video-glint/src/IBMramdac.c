@@ -111,7 +111,7 @@ glintIBMReadData (ScrnInfoPtr pScrn)
 Bool 
 glintIBMHWCursorInit(ScreenPtr pScreen)
 {
-    ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+    ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
     GLINTPtr pGlint = GLINTPTR(pScrn);
     xf86CursorInfoPtr infoPtr;
 

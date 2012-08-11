@@ -90,16 +90,15 @@ static const OptionInfoRec *	GLINTAvailableOptions(int chipid, int busid);
 static void	GLINTIdentify(int flags);
 static Bool	GLINTProbe(DriverPtr drv, int flags);
 static Bool	GLINTPreInit(ScrnInfoPtr pScrn, int flags);
-static Bool	GLINTScreenInit(int Index, ScreenPtr pScreen, int argc,
-			      char **argv);
-static Bool	GLINTEnterVT(int scrnIndex, int flags);
-static void	GLINTLeaveVT(int scrnIndex, int flags);
-static Bool	GLINTCloseScreen(int scrnIndex, ScreenPtr pScreen);
+static Bool	GLINTScreenInit(SCREEN_INIT_ARGS_DECL);
+static Bool	GLINTEnterVT(VT_FUNC_ARGS_DECL);
+static void	GLINTLeaveVT(VT_FUNC_ARGS_DECL);
+static Bool	GLINTCloseScreen(CLOSE_SCREEN_ARGS_DECL);
 static Bool	GLINTSaveScreen(ScreenPtr pScreen, int mode);
 
 /* Optional functions */
-static void	GLINTFreeScreen(int scrnIndex, int flags);
-static ModeStatus GLINTValidMode(int scrnIndex, DisplayModePtr mode,
+static void	GLINTFreeScreen(FREE_SCREEN_ARGS_DECL);
+static ModeStatus GLINTValidMode(SCRN_ARG_TYPE arg, DisplayModePtr mode,
 				 Bool verbose, int flags);
 
 /* Internally used functions */
@@ -108,7 +107,7 @@ static Bool	GLINTUnmapMem(ScrnInfoPtr pScrn);
 static void	GLINTSave(ScrnInfoPtr pScrn);
 static void	GLINTRestore(ScrnInfoPtr pScrn);
 static Bool	GLINTModeInit(ScrnInfoPtr pScrn, DisplayModePtr mode);
-static void 	GLINTBlockHandler(int, pointer, pointer, pointer);
+static void 	GLINTBlockHandler(BLOCKHANDLER_ARGS_DECL);
 
 /*
  * This is intentionally screen-independent.  It indicates the binding
@@ -1938,7 +1937,7 @@ GLINTPreInit(ScrnInfoPtr pScrn, int flags)
 	
 	if (pGlint->DDCBus) {
 	    GLINTMapMem(pScrn);
-	    pMon = xf86DoEDID_DDC2(pScrn->scrnIndex, pGlint->DDCBus);
+	    pMon = xf86DoEDID_DDC2(XF86_SCRN_ARG(pScrn), pGlint->DDCBus);
 	    GLINTUnmapMem(pScrn);
 	}
 	
@@ -2718,9 +2717,9 @@ GLINTRestore(ScrnInfoPtr pScrn)
 /* This gets called at the start of each server generation */
 
 static Bool
-GLINTScreenInit(int scrnIndex, ScreenPtr pScreen, int argc, char **argv)
+GLINTScreenInit(SCREEN_INIT_ARGS_DECL)
 {
-    ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+    ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
     GLINTPtr pGlint = GLINTPTR(pScrn);
     int ret, displayWidth;
     unsigned char *FBStart;
@@ -2734,7 +2733,7 @@ GLINTScreenInit(int scrnIndex, ScreenPtr pScreen, int argc, char **argv)
     if (pGlint->FBDev) {
 	fbdevHWSave(pScrn);
  	if (!fbdevHWModeInit(pScrn, pScrn->currentMode)) {
-		xf86DrvMsg(scrnIndex, X_ERROR,
+		xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
 		   "Internal error: invalid mode\n");
 		return FALSE;
 	}
@@ -2744,14 +2743,14 @@ GLINTScreenInit(int scrnIndex, ScreenPtr pScreen, int argc, char **argv)
 
     /* Initialise the first mode */
     if ( (!pGlint->FBDev) && !(GLINTModeInit(pScrn, pScrn->currentMode))) {
-	xf86DrvMsg(scrnIndex, X_ERROR,
+	xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
 		   "Internal error: invalid mode\n");
 	return FALSE;
     }   
 
     /* Darken the screen for aesthetic reasons and set the viewport */
     GLINTSaveScreen(pScreen, SCREEN_SAVER_ON);
-    GLINTAdjustFrame(scrnIndex, pScrn->frameX0, pScrn->frameY0, 0);
+    GLINTAdjustFrame(ADJUST_FRAME_ARGS(pScrn, pScrn->frameX0, pScrn->frameY0));
 
     /*
      * The next step is to setup the screen's visuals, and initialise the
@@ -2821,7 +2820,7 @@ GLINTScreenInit(int scrnIndex, ScreenPtr pScreen, int argc, char **argv)
 			displayWidth, pScrn->bitsPerPixel);
 	break;
     default:
-	xf86DrvMsg(scrnIndex, X_ERROR,
+	xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
 		   "Internal error: invalid bpp (%d) in GLINTScrnInit\n",
 		   pScrn->bitsPerPixel);
 	    ret = FALSE;
@@ -3033,17 +3032,16 @@ GLINTScreenInit(int scrnIndex, ScreenPtr pScreen, int argc, char **argv)
 
 /* Usually mandatory */
 Bool
-GLINTSwitchMode(int scrnIndex, DisplayModePtr mode, int flags)
+GLINTSwitchMode(SWITCH_MODE_ARGS_DECL)
 {
-    ScrnInfoPtr pScrn;
+    SCRN_INFO_PTR(arg);
     GLINTPtr pGlint;
 
-    pScrn = xf86Screens[scrnIndex];
     pGlint = GLINTPTR(pScrn);
     TRACE_ENTER("GLINTSwitchMode");
 	
     if (pGlint->FBDev) {
-	Bool ret = fbdevHWSwitchMode(scrnIndex, mode, flags);
+	Bool ret = fbdevHWSwitchMode(SWITCH_MODE_ARGS(pScrn, mode));
 
 	if (!pGlint->NoAccel) {
     	    switch (pGlint->Chipset) {
@@ -3097,7 +3095,7 @@ GLINTSwitchMode(int scrnIndex, DisplayModePtr mode, int flags)
     }
 
     TRACE_EXIT("GLINTSwitchMode (normal)");
-    return GLINTModeInit(xf86Screens[scrnIndex], mode);
+    return GLINTModeInit(pScrn, mode);
 }
 
 
@@ -3107,18 +3105,17 @@ GLINTSwitchMode(int scrnIndex, DisplayModePtr mode, int flags)
  */
 /* Usually mandatory */
 void 
-GLINTAdjustFrame(int scrnIndex, int x, int y, int flags)
+GLINTAdjustFrame(ADJUST_FRAME_ARGS_DECL)
 {
-    ScrnInfoPtr pScrn;
+    SCRN_INFO_PTR(arg);
     CARD32 base;
     GLINTPtr pGlint;
 
-    pScrn = xf86Screens[scrnIndex];
     pGlint = GLINTPTR(pScrn);
     TRACE_ENTER("GLINTAdjustFrame");
     
     if (pGlint->FBDev) {
-    	fbdevHWAdjustFrame(scrnIndex, x, y, flags);
+    	fbdevHWAdjustFrame(ADJUST_FRAME_ARGS(pScrn, x, y));
 	TRACE_EXIT("GLINTAdjustFrame (fbdev)");
 	return;
     }
@@ -3170,15 +3167,15 @@ GLINTAdjustFrame(int scrnIndex, int x, int y, int flags)
 
 /* Mandatory */
 static Bool
-GLINTEnterVT(int scrnIndex, int flags)
+GLINTEnterVT(VT_FUNC_ARGS_DECL)
 {
-    ScrnInfoPtr pScrn = xf86Screens[scrnIndex];
+    SCRN_INFO_PTR(arg);
     GLINTPtr pGlint = GLINTPTR(pScrn);
 
     TRACE_ENTER("GLINTEnterVT");
 
     if (pGlint->FBDev)
-    	fbdevHWEnterVT(scrnIndex, flags);
+    	fbdevHWEnterVT(VT_FUNC_ARGS);
     else
     	/* Should we re-save the text mode on each VT enter? */
     	if (!GLINTModeInit(pScrn, pScrn->currentMode))
@@ -3253,9 +3250,9 @@ GLINTEnterVT(int scrnIndex, int flags)
 
 /* Mandatory */
 static void
-GLINTLeaveVT(int scrnIndex, int flags)
+GLINTLeaveVT(VT_FUNC_ARGS_DECL)
 {
-    ScrnInfoPtr pScrn = xf86Screens[scrnIndex];
+    SCRN_INFO_PTR(arg);
     GLINTPtr pGlint = GLINTPTR(pScrn);
 
     TRACE_ENTER("GLINTLeaveVT");
@@ -3278,9 +3275,9 @@ GLINTLeaveVT(int scrnIndex, int flags)
 
 /* Mandatory */
 static Bool
-GLINTCloseScreen(int scrnIndex, ScreenPtr pScreen)
+GLINTCloseScreen(CLOSE_SCREEN_ARGS_DECL)
 {
-    ScrnInfoPtr pScrn = xf86Screens[scrnIndex];
+    ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
     GLINTPtr pGlint = GLINTPTR(pScrn);
 
     TRACE_ENTER("GLINTCloseScreen");
@@ -3304,8 +3301,10 @@ GLINTCloseScreen(int scrnIndex, ScreenPtr pScreen)
 	}
         GLINTUnmapMem(pScrn);
     }
+#ifdef HAVE_XAA_H
     if(pGlint->AccelInfoRec)
 	XAADestroyInfoRec(pGlint->AccelInfoRec);
+#endif
     if(pGlint->CursorInfoRec)
 	xf86DestroyCursorInfoRec(pGlint->CursorInfoRec);
     free(pGlint->ShadowPtr);
@@ -3323,7 +3322,7 @@ GLINTCloseScreen(int scrnIndex, ScreenPtr pScreen)
 
     pScreen->CloseScreen = pGlint->CloseScreen;
     TRACE_EXIT("GLINTCloseScreen");
-    return (*pScreen->CloseScreen)(scrnIndex, pScreen);
+    return (*pScreen->CloseScreen)(CLOSE_SCREEN_ARGS);
 }
 
 
@@ -3331,17 +3330,15 @@ GLINTCloseScreen(int scrnIndex, ScreenPtr pScreen)
 
 /* Optional */
 static void
-GLINTFreeScreen(int scrnIndex, int flags)
+GLINTFreeScreen(FREE_SCREEN_ARGS_DECL)
 {
-#if DEBUG
-    ScrnInfoPtr pScrn = xf86Screens[scrnIndex];
-#endif
+    SCRN_INFO_PTR(arg);
     TRACE_ENTER("GLINTFreeScreen");
     if (xf86LoaderCheckSymbol("fbdevHWFreeRec"))
-	fbdevHWFreeRec(xf86Screens[scrnIndex]);
+        fbdevHWFreeRec(pScrn);
     if (xf86LoaderCheckSymbol("RamDacFreeRec"))
-    	RamDacFreeRec(xf86Screens[scrnIndex]);
-    GLINTFreeRec(xf86Screens[scrnIndex]);
+	RamDacFreeRec(pScrn);
+    GLINTFreeRec(pScrn);
     TRACE_EXIT("GLINTFreeScreen");
 }
 
@@ -3350,9 +3347,9 @@ GLINTFreeScreen(int scrnIndex, int flags)
 
 /* Optional */
 static ModeStatus
-GLINTValidMode(int scrnIndex, DisplayModePtr mode, Bool verbose, int flags)
+GLINTValidMode(SCRN_ARG_TYPE arg, DisplayModePtr mode, Bool verbose, int flags)
 {
-    ScrnInfoPtr pScrn = xf86Screens[scrnIndex];
+    SCRN_INFO_PTR(arg);
     GLINTPtr pGlint = GLINTPTR(pScrn);
 
     if (mode->Flags & V_INTERLACE)
@@ -3408,7 +3405,7 @@ GLINTValidMode(int scrnIndex, DisplayModePtr mode, Bool verbose, int flags)
 static Bool
 GLINTSaveScreen(ScreenPtr pScreen, int mode)
 {
-    ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+    ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
     GLINTPtr pGlint = GLINTPTR(pScrn);
     CARD32 temp;
     Bool unblank;
@@ -3462,14 +3459,10 @@ GLINTSaveScreen(ScreenPtr pScreen, int mode)
 }
 
 static void
-GLINTBlockHandler (
-    int i,
-    pointer     blockData,
-    pointer     pTimeout,
-    pointer     pReadmask
-){
-    ScreenPtr      pScreen = screenInfo.screens[i];
-    ScrnInfoPtr    pScrn = xf86Screens[i];
+GLINTBlockHandler (BLOCKHANDLER_ARGS_DECL)
+{
+    SCREEN_PTR(arg);
+    ScrnInfoPtr    pScrn = xf86ScreenToScrn(pScreen);
     GLINTPtr       pGlint = GLINTPTR(pScrn);
     int sigstate = xf86BlockSIGIO();
 
@@ -3482,7 +3475,7 @@ GLINTBlockHandler (
     xf86UnblockSIGIO(sigstate);
 
     pScreen->BlockHandler = pGlint->BlockHandler;
-    (*pScreen->BlockHandler) (i, blockData, pTimeout, pReadmask);
+    (*pScreen->BlockHandler) (BLOCKHANDLER_ARGS);
     pScreen->BlockHandler = GLINTBlockHandler;
 
     if(pGlint->VideoTimerCallback) {

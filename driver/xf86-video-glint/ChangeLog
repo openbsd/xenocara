@@ -1,3 +1,29 @@
+commit be79ca10f6f3fd6d7f8aac2e5ae5d8b84480bd83
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Tue Jul 17 16:05:09 2012 +1000
+
+    xf86-video-glint: bump to version 1.2.8
+    
+    Signed-off-by: Dave Airlie <airlied@redhat.com>
+
+commit e85b1f9595aa3cf7f2747b2aa1add1decd57ab2e
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Mon Jul 16 04:20:02 2012 +0100
+
+    glint: build against server with no XAA support.
+    
+    This removes the XAA bits so it builds against latest server.
+    
+    Signed-off-by: Dave Airlie <airlied@redhat.com>
+
+commit 062923d3ca1a9ab5ee5226c0d87bc5ec6d5e62c4
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Wed Jun 6 12:14:42 2012 +0100
+
+    glint: port to new compat API
+    
+    Signed-off-by: Dave Airlie <airlied@redhat.com>
+
 commit c4796200c2d322a59ccf2eeb2df3be874507fd48
 Author: Matt Turner <mattst88@gmail.com>
 Date:   Wed Feb 15 23:12:23 2012 -0500

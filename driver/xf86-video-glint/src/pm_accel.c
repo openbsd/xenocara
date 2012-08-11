@@ -43,6 +43,7 @@
 #include "glint_regs.h"
 #include "glint.h"
 
+#ifdef HAVE_XAA_H
 #include "miline.h"		/* for octants */
 #include "xaalocal.h"		/* For replacements */
 
@@ -176,12 +177,14 @@ PermediaInitializeEngine(ScrnInfoPtr pScrn)
     GLINT_WRITE_REG(0,dXDom);
     GLINT_WRITE_REG(1<<16,dY);
 }
+#endif
 
 Bool
 PermediaAccelInit(ScreenPtr pScreen)
 {
+#ifdef HAVE_XAA_H
     XAAInfoRecPtr infoPtr;
-    ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+    ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
     GLINTPtr pGlint = GLINTPTR(pScrn);
     BoxRec AvailFBArea;
 
@@ -276,8 +279,12 @@ PermediaAccelInit(ScreenPtr pScreen)
     xf86InitFBManager(pScreen, &AvailFBArea);
 
     return (XAAInit(pScreen, infoPtr));
+#else
+    return FALSE;
+#endif
 }
 
+#ifdef HAVE_XAA_H
 static void PermediaLoadCoord(
 	ScrnInfoPtr pScrn,
 	int x, int y,
@@ -1195,3 +1202,4 @@ PermediaSubsequentSolidBresenhamLine( ScrnInfoPtr pScrn,
                 (octant & YMAJOR) ? Y_AXIS : X_AXIS,
                 x, y,  e, dmin, -dmaj, len);
 }
+#endif
