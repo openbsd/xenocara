@@ -20,7 +20,7 @@ Conventions used in this document:
 2. Start either xdm(1) or startx(1).
 
    a. Start xdm(1), the X display manager by activating the xdm_flags option
-      in /etc/rc.conf(r8) or /etc/rc.conf.local(8).
+      in /etc/rc.conf(8) or /etc/rc.conf.local(8).
 
    b. Start startx(1) from a console shell.  It is the X script that starts
       the X server and a few X applications, including a window manager.
@@ -63,4 +63,4 @@ Conventions used in this document:
 
 problem_blurb
 
-$OpenBSD: README.i386,v 1.4 2012/07/22 19:12:13 matthieu Exp $
+$OpenBSD: README.i386,v 1.5 2012/08/11 06:49:52 shadchin Exp $
