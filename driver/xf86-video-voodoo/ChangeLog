@@ -1,3 +1,185 @@
+commit e505d6b24873046285b18446df43ef505b650663
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Tue Jul 17 16:05:09 2012 +1000
+
+    xf86-video-voodoo: bump to version 1.2.5
+    
+    Signed-off-by: Dave Airlie <airlied@redhat.com>
+
+commit 7dd9360b9d9cdd76fed73323cc5cd8f6cc6c4adc
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Tue Jul 17 15:39:50 2012 +1000
+
+    voodoo: fix build against older X servers.
+    
+    Signed-off-by: Dave Airlie <airlied@redhat.com>
+
+commit f9e303905639ba84cb4eea909faa942d515c1968
+Author: Dave Airlie <airlied@gmail.com>
+Date:   Mon Jul 16 18:52:50 2012 +1000
+
+    voodoo: fix build against XAA-less server.
+    
+    Signed-off-by: Dave Airlie <airlied@redhat.com>
+
+commit a5a9f9d7f69f812ef81557a50451efaa2f577cfb
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Wed Jun 6 12:39:10 2012 +0100
+
+    voodoo: add compat API.
+    
+    Signed-off-by: Dave Airlie <airlied@redhat.com>
+
+commit 8c1121725c4dc1a81dd1af74b83405a1cb69562e
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Mon Dec 19 17:40:16 2011 -0500
+
+    Drop useless vgaHW include
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit b835f5083cfef2aad6575277fb168a60bbb76af4
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Mon Dec 19 17:39:44 2011 -0500
+
+    Fall back to shadowfb if XAA is unavailable
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit d2f109c4179c13c3367b08f1ee4f4baa3a2a68ad
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Sat Oct 29 19:02:46 2011 -0700
+
+    Fix implicit declaration warning
+    
+    voodoo_driver.c:898:7: warning: implicit declaration of function 'VoodooRestorePassThrough' [-Wimplicit-function-declaration]
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit 614ccdf6a5dcc496d254aa361cc06ef70f2792f5
+Author: Trevor Woerner <twoerner@gmail.com>
+Date:   Fri Oct 22 14:51:16 2010 -0400
+
+    Update xf86dgastr.h include.
+    
+    To xf86dgaproto.h.
+    
+    Signed-off-by: Trevor Woerner <twoerner@gmail.com>
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit ae5f55acea3753ae83bd3b78bba86137f9b4b7f3
+Author: Trevor Woerner <twoerner@gmail.com>
+Date:   Fri Oct 22 14:51:01 2010 -0400
+
+    Convert x+m/calloc/free to m/calloc/free.
+    
+    Signed-off-by: Trevor Woerner <twoerner@gmail.com>
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit db25d980b71396430c1a93f61687bbb971b02f7b
+Author: Jesse Adkins <jesserayadkins@gmail.com>
+Date:   Tue Sep 28 13:29:52 2010 -0700
+
+    Purge cvs tags.
+    
+    Signed-off-by: Jesse Adkins <jesserayadkins@gmail.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 83be53038fc95cfceb3dec53d68e52fd82026998
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jul 21 16:49:04 2010 -0400
+
+    config: add comments for main statements
+
+commit 1f0d72b11e212eb250c3614b2b799b84bd4e021b
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jul 21 16:07:00 2010 -0400
+
+    config: replace deprecated use of AC_OUTPUT with AC_CONFIG_FILES
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit dfa89c2014813e080a34aac5a650d475d31479db
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jul 21 14:37:42 2010 -0400
+
+    config: replace deprecated AC_HELP_STRING with AS_HELP_STRING
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 54a332ac745af89d60ca4b3c5907e592a40a37d6
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jul 21 14:05:23 2010 -0400
+
+    config: replace deprecated AM_CONFIG_HEADER with AC_CONFIG_HEADERS
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit a3dcd95353834098f7a64ada7062288f2667587f
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jul 21 09:27:42 2010 -0400
+
+    config: complete AC_INIT m4 quoting
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit beb44a9dbdbe8376738f5476333405e727ce17e6
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Jul 20 21:44:58 2010 -0400
+
+    config: remove unrequired AC_SUBST([XORG_CFLAGS])
+    
+    This macro is called by PKG_CHECK_MODULES
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 3e43d913b90e2bd3930c3a22951f9a248c746941
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Jul 20 20:24:42 2010 -0400
+
+    config: remove unrequired AC_HEADER_STDC
+    
+    Autoconf says:
+    "This macro is obsolescent, as current systems have conforming
+    header files. New programs need not use this macro".
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit d251e3bbec7ca5feae7480dd60ea4e4814feaaf9
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Jul 20 19:41:31 2010 -0400
+
+    config: remove AC_PROG_CC as it overrides AC_PROG_C_C99
+    
+    XORG_STRICT_OPTION from XORG_DEFAULT_OPTIONS calls
+    AC_PROG_C_C99. This sets gcc with -std=gnu99.
+    If AC_PROG_CC macro is called afterwards, it resets CC to gcc.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 1b4cf228ef6c9c8bb28447f3e61eb523b22b309b
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Jul 20 18:45:19 2010 -0400
+
+    config: update AC_PREREQ statement to 2.60
+    
+    Unrelated to the previous patches, the new value simply reflects
+    the reality that the minimum level for autoconf to configure
+    all x.org modules is 2.60 dated June 2006.
+    
+    ftp://ftp.gnu.org/gnu/autoconf/autoconf-2.60.tar.gz
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 494fd2ae23a845efd722cdf8b8c26d9a8dd4bbce
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Jul 20 16:15:30 2010 -0400
+
+    config: upgrade to util-macros 1.8 for additional man page support
+    
+    Use MAN_SUBST now supplied in XORG_MANPAGE_SECTIONS
+    The value of MAN_SUBST is the same for all X.Org packages.
+
 commit e58d315815dca51b6fcecdeceb267fc8a7cb19e1
 Author: Dave Airlie <airlied@redhat.com>
 Date:   Mon Jul 5 14:39:03 2010 +1000

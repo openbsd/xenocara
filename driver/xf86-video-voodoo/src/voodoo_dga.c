@@ -47,13 +47,14 @@
 #include "shadowfb.h"
 #include "vgaHW.h"
 #include "compiler.h"
-#include "xaa.h"
 #include "dgaproc.h"
-
+#ifdef HAVE_XAA_H
+#include "xaa.h"
+#endif
 #include "voodoo.h"
 
 #define _XF86DGA_SERVER_
-#include <X11/extensions/xf86dgastr.h>
+#include <X11/extensions/xf86dgaproto.h>
 
 #include "opaque.h"
 #ifdef HAVE_XEXTPROTO_71
@@ -105,7 +106,7 @@ static Bool VoodooDGASetMode(ScrnInfoPtr pScrn, DGAModePtr pDGAMode)
 	frameY0 = pScrn->frameY0;
     }
 
-    if (!(*pScrn->SwitchMode)(scrnIdx, pMode, 0))
+    if (!(*pScrn->SwitchMode)(SWITCH_MODE_ARGS(pScrn, pMode)))
 	return FALSE;
     return TRUE;
 }
@@ -136,7 +137,7 @@ static void VoodooDGAAddModes(ScrnInfoPtr pScrn)
     DGAModePtr pDGAMode;
 
     do {
-	pDGAMode = xrealloc(pVoo->pDGAMode,
+	pDGAMode = realloc(pVoo->pDGAMode,
 			    (pVoo->nDGAMode + 1) * sizeof(DGAModeRec));
 	if (!pDGAMode)
 	    break;

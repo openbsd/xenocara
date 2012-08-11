@@ -29,6 +29,7 @@ voodoo_drv_la_LDFLAGS = -module -avoid-version
 voodoo_drv_ladir = @moduledir@/drivers
 
 voodoo_drv_la_SOURCES = \
+         compat-api.h \
          voodoo_dga.c \
          voodoo_driver.c \
          voodoo.h \

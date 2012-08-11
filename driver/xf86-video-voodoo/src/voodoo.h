@@ -1,6 +1,8 @@
 #include "voodoo_pcirename.h"
 #include <string.h>
 
+#include "compat-api.h"
+
 typedef struct {
   CARD32		m;
   CARD32		n;
@@ -11,7 +13,9 @@ typedef struct {
   CARD8 *             ShadowPtr;	/* Shadow buffer */
   CARD32              ShadowPitch;
   CloseScreenProcPtr  CloseScreen;	/* Wrapped Close */
+#ifdef HAVE_XAA_H
   XAAInfoRecPtr	      AccelInfoRec;	/* Cached Accel rec for close */
+#endif
   Bool                Blanked;
   Bool                PassThrough;     /* Set to restore pass through on exit */
   EntityInfoPtr       pEnt;
@@ -102,7 +106,7 @@ extern void Voodoo2XAAInit(ScreenPtr pScreen);
 extern void VoodooSync(ScrnInfoPtr pScrn);
 extern void VoodooReadBank(ScreenPtr pScreen, int bank);
 extern void VoodooWriteBank(ScreenPtr pScreen, int bank);
-extern void VoodooReadBank(ScreenPtr pScreen, int bank);
+extern void VoodooRestorePassThrough(VoodooPtr pVoo);
 
 /*
  *	DGA
