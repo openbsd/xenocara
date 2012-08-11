@@ -38,7 +38,7 @@ verite_initboard(ScrnInfoPtr pScreenInfo)
 {
     renditionPtr pRendition = RENDITIONPTR(pScreenInfo);
 
-    IOADDRESS iob=pRendition->board.io_base;
+    unsigned long iob=pRendition->board.io_base;
     vu8 *vmb;
     vu32 offset;
     vu8 memendian;
@@ -207,7 +207,7 @@ void
 verite_check_csucode(ScrnInfoPtr pScreenInfo)
 {
   renditionPtr pRendition = RENDITIONPTR(pScreenInfo);
-  IOADDRESS iob=pRendition->board.io_base;
+  unsigned long iob=pRendition->board.io_base;
   vu8 *vmb;
   vu32 offset;
   int c;

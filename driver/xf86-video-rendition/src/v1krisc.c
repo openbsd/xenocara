@@ -83,20 +83,20 @@
  * local function prototypes
  */
 
-static void verite_iopoll(IOADDRESS port, vu32 data, vu32 mask);
-static void verite_iopoll8(IOADDRESS port, vu8 data, vu8 mask);
+static void verite_iopoll(unsigned long port, vu32 data, vu32 mask);
+static void verite_iopoll8(unsigned long port, vu8 data, vu8 mask);
 
-static vu32 readRF(IOADDRESS io_base, vu8 index);
-static void writeRF(IOADDRESS io_base, vu8 index, vu32 data);
+static vu32 readRF(unsigned long io_base, vu8 index);
+static void writeRF(unsigned long io_base, vu8 index, vu32 data);
 
-static vu32 risc_readmem(IOADDRESS io_base, vu32 addr, vu8 read_type);
-static void risc_writemem(IOADDRESS io_base, vu32 addr, vu32 data, vu8 write_type);
+static vu32 risc_readmem(unsigned long io_base, vu32 addr, vu8 read_type);
+static void risc_writemem(unsigned long io_base, vu32 addr, vu32 data, vu8 write_type);
 
 #if 0
-static void risc_step(IOADDRESS io_base, vu32 count);
+static void risc_step(unsigned long io_base, vu32 count);
 #endif
-static void risc_forcestep(IOADDRESS io_base, vu32 instruction);
-static void risc_continue(IOADDRESS io_base);
+static void risc_forcestep(unsigned long io_base, vu32 instruction);
+static void risc_continue(unsigned long io_base);
 
 
 
@@ -113,7 +113,7 @@ void
 v1k_start(ScrnInfoPtr pScreenInfo, vu32 pc)
 {
   renditionPtr pRendition = RENDITIONPTR(pScreenInfo);
-  IOADDRESS io_base=pRendition->board.io_base;
+  unsigned long io_base=pRendition->board.io_base;
 
   v1k_stop(pScreenInfo);
   risc_forcestep(io_base, NOP_INSTR);
@@ -152,7 +152,7 @@ v1k_stop(ScrnInfoPtr pScreenInfo)
 {
   renditionPtr pRendition = RENDITIONPTR(pScreenInfo);
   vu8	debugreg, statusreg;
-  IOADDRESS io_base=pRendition->board.io_base;
+  unsigned long io_base=pRendition->board.io_base;
   vu16 STATUS = 0x4A;   /* v2x00 io register offset */
   int c;
 
@@ -207,7 +207,7 @@ v1k_flushicache(ScrnInfoPtr pScreenInfo)
 {
   renditionPtr pRendition = RENDITIONPTR(pScreenInfo);
   vu32 c, p1, p2;
-  IOADDRESS io_base=pRendition->board.io_base;
+  unsigned long io_base=pRendition->board.io_base;
 
   /* first flush store accumulation buffers so data is all in memory */
   p1=risc_readmem(io_base, 0, READ_WORD);
@@ -255,7 +255,7 @@ void
 v1k_softreset(ScrnInfoPtr pScreenInfo)
 {
   renditionPtr pRendition = RENDITIONPTR(pScreenInfo);
-  IOADDRESS io_base=pRendition->board.io_base;
+  unsigned long io_base=pRendition->board.io_base;
 
   verite_out8(io_base+DEBUGREG, SOFTRESET|HOLDRISC);
   verite_out8(io_base+STATEINDEX, STATEINDEX_PC);
@@ -300,12 +300,12 @@ v1k_getriscprocs(verite_board_desc *boardDesc)
  */
 
 /* 
- * static void verite_iopoll(IOADDRESS port, vu32 data, vu32 mask)
+ * static void verite_iopoll(unsigned long port, vu32 data, vu32 mask)
  *
  * Loop on IO read until expected data is read or VERITE_MAX_POLLS is reached.
  */
 static void
-verite_iopoll(IOADDRESS port, vu32 data, vu32 mask)
+verite_iopoll(unsigned long port, vu32 data, vu32 mask)
 {
   vu32 c;
 
@@ -320,12 +320,12 @@ verite_iopoll(IOADDRESS port, vu32 data, vu32 mask)
 
 
 /* 
- * static void verite_iopoll8(IOADDRESS port, vu8 data, vu8 mask)
+ * static void verite_iopoll8(unsigned long port, vu8 data, vu8 mask)
  *
  * Loop on IO read until expected data is read or VERITE_MAX_POLLS is reached.
  */
 static void
-verite_iopoll8(IOADDRESS port, vu8 data, vu8 mask)
+verite_iopoll8(unsigned long port, vu8 data, vu8 mask)
 {
   vu32 c;
 
@@ -340,12 +340,12 @@ verite_iopoll8(IOADDRESS port, vu8 data, vu8 mask)
 
 
 /*
- * static vu32 readRF(IOADDRESS io_base, vu8 index)
+ * static vu32 readRF(unsigned long io_base, vu8 index)
  *
  * Reads data from register file.
  */
 static vu32
-readRF(IOADDRESS io_base, vu8 index)
+readRF(unsigned long io_base, vu8 index)
 {
   vu32 data, instr;
   vu8 debug, stateindex;
@@ -378,12 +378,12 @@ readRF(IOADDRESS io_base, vu8 index)
 
 
 /*
- * static void writeRF(IOADDRESS io_base, vu8 index, vu32 data)
+ * static void writeRF(unsigned long io_base, vu8 index, vu32 data)
  *
  * Set RF register, being careful on how to set regs below 64.
  */
 static void
-writeRF(IOADDRESS io_base, vu8 index, vu32 data)
+writeRF(unsigned long io_base, vu8 index, vu32 data)
 {
   vu8 special=0;
 
@@ -417,12 +417,12 @@ writeRF(IOADDRESS io_base, vu8 index, vu32 data)
 
 
 /*
- * static vu32 risc_readmem(IOADDRESS io_base, vu32 addr, vu8 read_type)
+ * static vu32 risc_readmem(unsigned long io_base, vu32 addr, vu8 read_type)
  *
  * NOTE: Assumes RISC is in hold mode.
  */
 static vu32
-risc_readmem(IOADDRESS io_base, vu32 addr, vu8 read_type)
+risc_readmem(unsigned long io_base, vu32 addr, vu8 read_type)
 {
   vu32 data;
 
@@ -445,12 +445,12 @@ risc_readmem(IOADDRESS io_base, vu32 addr, vu8 read_type)
 
 
 /*
- * static vu32 risc_writemem(IOADDRESS io_base, vu32 addr, vu32 data, vu8 write_type)
+ * static vu32 risc_writemem(unsigned long io_base, vu32 addr, vu32 data, vu8 write_type)
  *
  * NOTE: Assumes RISC is in hold mode.
  */
 static void
-risc_writemem(IOADDRESS io_base, vu32 addr, vu32 data, vu8 write_type)
+risc_writemem(unsigned long io_base, vu32 addr, vu32 data, vu8 write_type)
 {
   writeRF(io_base, RISC_RA, addr);          /* point to memory */
   writeRF(io_base, RISC_FP, data);          /* set data */
@@ -466,12 +466,12 @@ risc_writemem(IOADDRESS io_base, vu32 addr, vu32 data, vu8 write_type)
 
 #if 0
 /*
- * static void risc_step(IOADDRESS io_base, vu32 count)
+ * static void risc_step(unsigned long io_base, vu32 count)
  *
  * Single step the RISC. NOTE: Do not force instruction into RISCIR!
  */
 static void
-risc_step(IOADDRESS io_base, vu32 count)
+risc_step(unsigned long io_base, vu32 count)
 {
   vu32 c, d;
   vu8 debugreg;
@@ -494,12 +494,12 @@ risc_step(IOADDRESS io_base, vu32 count)
 
 
 /*
- * static void risc_forcestep(IOADDRESS io_base, vu32 instruction)
+ * static void risc_forcestep(unsigned long io_base, vu32 instruction)
  *
  * Single step RISC; force instruction; assumes RISC held.
  */
 static void
-risc_forcestep(IOADDRESS io_base, vu32 instruction)
+risc_forcestep(unsigned long io_base, vu32 instruction)
 {
   vu32 c;
   vu8 debugreg, stateindex;
@@ -525,12 +525,12 @@ risc_forcestep(IOADDRESS io_base, vu32 instruction)
 
 
 /*
- * static void risc_continue(IOADDRESS io_base)
+ * static void risc_continue(unsigned long io_base)
  *
  * Turn off hold bit.    
  */
 static void
-risc_continue(IOADDRESS io_base)
+risc_continue(unsigned long io_base)
 {
   vu8 debugreg;
 

@@ -75,9 +75,9 @@ RenditionHWCursorRelease (ScrnInfoPtr pScreenInfo)
 
 
 Bool
-RenditionHWCursorInit(int scrnIndex, ScreenPtr pScreen)
+RenditionHWCursorInit(ScreenPtr pScreen)
 {
-    ScrnInfoPtr  pScreenInfo = xf86Screens[scrnIndex];
+    ScrnInfoPtr  pScreenInfo = xf86ScreenToScrn(pScreen);
     renditionPtr pRendition = RENDITIONPTR(pScreenInfo);
     xf86CursorInfoPtr infoPtr;
 

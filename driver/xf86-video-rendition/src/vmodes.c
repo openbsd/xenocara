@@ -20,6 +20,7 @@
 #include "v1kregs.h"
 #include "v2kregs.h"
 
+#include <unistd.h>
 
 #undef DEBUG
 
@@ -201,7 +202,7 @@ struct V1000ClocksStr {
  * local function prototypes
  */
 
-static void set_PLL(IOADDRESS iob, vu32 value);
+static void set_PLL(unsigned long iob, vu32 value);
 static double V1000CalcClock(double target, int *M, int *N, int *P);
 static double V2200CalcClock(double target, int *m, int *n, int *p);
 
@@ -300,8 +301,8 @@ verite_setmode(ScrnInfoPtr pScreenInfo, struct verite_modeinfo_t *mode)
         pRendition->board.mode.virtualwidth=pRendition->board.mode.screenwidth;
 
     pRendition->board.init=1;
-    (*pScreenInfo->AdjustFrame)(pScreenInfo->scrnIndex,
-        pScreenInfo->frameX0, pScreenInfo->frameY0, 0);
+    (*pScreenInfo->AdjustFrame)(ADJUST_FRAME_ARGS(pScreenInfo,
+						  pScreenInfo->frameX0, pScreenInfo->frameY0));
 
     /* Need to fix up syncs */
 
@@ -509,13 +510,13 @@ verite_getstride(ScrnInfoPtr pScreenInfo, int *width,
  */
 
 /*
- * void set_PLL(IOADDRESS iob, vu32 value)
+ * void set_PLL(unsigned long iob, vu32 value)
  *
  * Set PLL clock to desired frequency for the V1000.
  */
 
 void
-set_PLL(IOADDRESS iob, vu32 value)
+set_PLL(unsigned long iob, vu32 value)
 {
     vu32 ulD;
     int b;

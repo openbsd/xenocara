@@ -103,7 +103,7 @@ verite_load_ucfile(ScrnInfoPtr pScreenInfo, char *file_name)
   sz=SW16(ehdr.e_phentsize);
   num=SW16(ehdr.e_phnum);
   if (0!=sz && 0!=num) {
-	orig_pphdr=pphdr=(Elf32_Phdr *)xalloc(sz*num);
+	orig_pphdr=pphdr=(Elf32_Phdr *)malloc(sz*num);
 	if (!pphdr) {
 	  ErrorF("RENDITION: Cannot allocate global memory (1)\n"); 
 	  close(fd);
@@ -125,7 +125,7 @@ verite_load_ucfile(ScrnInfoPtr pScreenInfo, char *file_name)
     sz=SW16(ehdr.e_shentsize);
     num=SW16(ehdr.e_shnum);
     if (0!=sz && 0!=num) {
-      orig_pshdr=pshdr=(Elf32_Shdr *)xalloc(sz*num);
+      orig_pshdr=pshdr=(Elf32_Shdr *)malloc(sz*num);
       if (!pshdr) {
         ErrorF("RENDITION: Cannot allocate global memory (2)\n"); 
         close(fd);
@@ -148,7 +148,7 @@ verite_load_ucfile(ScrnInfoPtr pScreenInfo, char *file_name)
         loadSegment2board(pScreenInfo, fd, pphdr);
         pphdr=(Elf32_Phdr *)(((char *)pphdr)+sz);
       } while (--num);
-      xfree(orig_pphdr);
+      free(orig_pphdr);
   }
   else {
     do {
@@ -158,7 +158,7 @@ verite_load_ucfile(ScrnInfoPtr pScreenInfo, char *file_name)
         loadSection2board(pScreenInfo, fd, pshdr);
 	  pshdr=(Elf32_Shdr *)(((char *)pshdr)+sz);
 	} while (--num) ;
-	xfree(orig_pshdr);
+	free(orig_pshdr);
   }
   close(fd);
 
@@ -195,7 +195,7 @@ loadSegment2board(ScrnInfoPtr pScreenInfo, int fd, Elf32_Phdr *phdr)
     return;
   }
 
-  data=(vu8 *)xalloc(size);
+  data=(vu8 *)malloc(size);
   if (NULL == data){
 	ErrorF("RENDITION: GlobalAllocPtr couldn't allocate %lx bytes",
 		(unsigned long)size);
@@ -210,7 +210,7 @@ loadSegment2board(ScrnInfoPtr pScreenInfo, int fd, Elf32_Phdr *phdr)
 
   mmve(pScreenInfo, size, data, physAddr);
 
-  xfree(data);
+  free(data);
 }
 
 

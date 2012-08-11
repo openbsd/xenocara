@@ -12,7 +12,7 @@ void renditionRefreshArea8(ScrnInfoPtr pScrn, int num, BoxPtr pbox);
 void renditionRefreshArea16(ScrnInfoPtr pScrn, int num, BoxPtr pbox);
 void renditionRefreshArea24(ScrnInfoPtr pScrn, int num, BoxPtr pbox);
 void renditionRefreshArea32(ScrnInfoPtr pScrn, int num, BoxPtr pbox);
-void renditionPointerMoved(int index, int x, int y);
+void renditionPointerMoved(SCRN_ARG_TYPE arg, int x, int y);
 
 
 #endif 

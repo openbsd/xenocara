@@ -133,7 +133,7 @@ RENDITIONAccelPreInit(ScrnInfoPtr pScreenInfo)
 void
 RENDITIONAccelXAAInit(ScreenPtr pScreen)
 {
-    ScrnInfoPtr  pScreenInfo = xf86Screens[pScreen->myNum];
+    ScrnInfoPtr  pScreenInfo = xf86ScreenToScrn(pScreen);
     renditionPtr pRendition = RENDITIONPTR(pScreenInfo);
     XAAInfoRecPtr pXAAinfo;
 
@@ -289,7 +289,7 @@ int
 RENDITIONInitUcode(ScrnInfoPtr pScreenInfo)
 {
     renditionPtr pRendition = RENDITIONPTR(pScreenInfo);
-    IOADDRESS iob = pRendition->board.io_base;
+    unsigned long iob = pRendition->board.io_base;
 
     if (0 == verite_getstride(pScreenInfo, NULL,
 			 &pRendition->board.mode.stride0, 
@@ -367,7 +367,7 @@ void
 RENDITIONRestoreUcode(ScrnInfoPtr pScreenInfo)
 {
     renditionPtr pRendition = RENDITIONPTR(pScreenInfo);
-    IOADDRESS iob = pRendition->board.io_base;
+    unsigned long iob = pRendition->board.io_base;
 
     vu8 memend;
 
@@ -410,7 +410,7 @@ void
 RENDITIONSaveUcode(ScrnInfoPtr pScreenInfo)
 {
     renditionPtr pRendition = RENDITIONPTR(pScreenInfo);
-    IOADDRESS iob = pRendition->board.io_base;
+    unsigned long iob = pRendition->board.io_base;
     vu8 memend;
 
 #ifdef DEBUG
@@ -445,7 +445,7 @@ void
 RENDITIONSyncV1000(ScrnInfoPtr pScreenInfo)
 {
     renditionPtr pRendition = RENDITIONPTR(pScreenInfo);
-    IOADDRESS iob = pRendition->board.io_base;
+    unsigned long iob = pRendition->board.io_base;
 
     int c;
 
@@ -555,7 +555,7 @@ RENDITIONSubsequentScreenToScreenCopy(ScrnInfoPtr pScreenInfo,
 					   int w, int h)
 {
     renditionPtr pRendition = RENDITIONPTR(pScreenInfo);
-    IOADDRESS iob = pRendition->board.io_base;
+    unsigned long iob = pRendition->board.io_base;
 
 
 #ifdef DEBUG
@@ -607,7 +607,7 @@ RENDITIONSubsequentSolidFillRect(ScrnInfoPtr pScreenInfo,
 				      int x, int y, int w, int h)
 {
     renditionPtr pRendition = RENDITIONPTR(pScreenInfo);
-    IOADDRESS iob = pRendition->board.io_base;
+    unsigned long iob = pRendition->board.io_base;
 
 
 #ifdef DEBUG
@@ -639,7 +639,7 @@ RENDITIONSubsequentTwoPointLine(ScrnInfoPtr pScreenInfo,
 				     int bias)
 {
     renditionPtr pRendition = RENDITIONPTR(pScreenInfo);
-    IOADDRESS iob = pRendition->board.io_base;
+    unsigned long iob = pRendition->board.io_base;
 
 
 #ifdef DEBUG

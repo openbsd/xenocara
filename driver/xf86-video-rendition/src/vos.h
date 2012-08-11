@@ -23,18 +23,18 @@
 /*
  * function prototypes
  */
-#define /*void*/ verite_out8(/*IOADDRESS*/ port, /*vu8*/ data) \
+#define /*void*/ verite_out8(/*unsigned long*/ port, /*vu8*/ data) \
                    outb(port, data)
 
-#define /*void*/ verite_out16(/*IOADDRESS*/ port, /*vu16*/ data) \
+#define /*void*/ verite_out16(/*unsigned long*/ port, /*vu16*/ data) \
                    outw(port, data)
 
-#define /*void*/ verite_out32(/*IOADDRESS*/ port, /*vu32*/ data) \
+#define /*void*/ verite_out32(/*unsigned long*/ port, /*vu32*/ data) \
                    outl(port, data)
 
-#define /*vu8*/  verite_in8(/*IOADDRESS*/ io_base)  ((vu8)inb(io_base))
-#define /*vu16*/ verite_in16(/*IOADDRESS*/ io_base) ((vu16)inw(io_base))
-#define /*vu32*/ verite_in32(/*IOADDRESS*/ io_base) ((vu32)inl(io_base))
+#define /*vu8*/  verite_in8(/*unsigned long*/ io_base)  ((vu8)inb(io_base))
+#define /*vu16*/ verite_in16(/*unsigned long*/ io_base) ((vu16)inw(io_base))
+#define /*vu32*/ verite_in32(/*unsigned long*/ io_base) ((vu32)inl(io_base))
 
 /* memory accesses */
 #define verite_read_memory32(base, offset) MMIO_IN32(base, offset)

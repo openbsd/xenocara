@@ -1,3 +1,197 @@
+commit 07026400300a985ea19346a6745685bb8dfea56f
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Tue Jul 17 16:05:09 2012 +1000
+
+    xf86-video-rendition: bump to version 4.2.5
+    
+    Signed-off-by: Dave Airlie <airlied@redhat.com>
+
+commit dcba90a3398321b2e24a5db54defa516efa4c817
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Tue Jul 17 15:32:56 2012 +1000
+
+    rendition: fix build against older X servers.
+    
+    Signed-off-by: Dave Airlie <airlied@redhat.com>
+
+commit 23a14278543eaa1cd37709eb8ccad2ab2babc81b
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Mon Jul 16 03:44:40 2012 +0100
+
+    rendition: port to non-XAA server
+    
+    even though rendition never actually had working XAA support, ah well.
+    
+    Signed-off-by: Dave Airlie <airlied@redhat.com>
+
+commit effa2938ee2b576b8eb6cd7f774d8b1656c50e82
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Wed Jun 6 14:13:48 2012 +0100
+
+    rendition: port to new compat API.
+    
+    Signed-off-by: Dave Airlie <airlied@redhat.com>
+
+commit 7b26793ba2572c412f03e9a4acf83237fbec71bd
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Mon Dec 19 17:13:29 2011 -0500
+
+    Fix for new vgahw ABI
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit b08572f7b60481eb3b7ab6058b74a56fd646d133
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Mon Dec 19 17:11:45 2011 -0500
+
+    Unhook the pretense of XAA support
+    
+    This has never shipped enabled in any Xorg release.  I'm pretty sure the
+    same is true of XFree86 4.x releases.
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit 810c279e9106a96aa6c6d395610ade3cd1b61fba
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Wed Oct 19 00:31:41 2011 -0700
+
+    Include <unistd.h> for usleep
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit 99d960880e3aedc35238e26841e13e12f317395d
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Wed Oct 19 00:31:05 2011 -0700
+
+    Build fix for ABI Version 12
+    
+    ABI Version 12 removes support for multiple PCI domains.  If you need to
+    use this driver on a system with more than one PCI domain, you should
+    either port this driver to using libpciaccess directly or stick with an
+    older server.
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit efcd0f31433ddbcf04ca040f8474f6cb8a080271
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Wed Oct 19 00:29:28 2011 -0700
+
+    Use unsigned long rather than deprecated IOADDRESS
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit 11c189cd7b183561432736e4042f36c556de7a05
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Wed Oct 19 00:29:27 2011 -0700
+
+    Use malloc/calloc/realloc/free directly
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit 541d11934b86873382e14ac3c42ad52044fb5412
+Author: Jesse Adkins <jesserayadkins@gmail.com>
+Date:   Tue Sep 28 13:29:51 2010 -0700
+
+    Purge cvs tags.
+    
+    Signed-off-by: Jesse Adkins <jesserayadkins@gmail.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit e017b31636fa1dd952f6b7d32cacf9ddbd2884ba
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jul 21 16:49:04 2010 -0400
+
+    config: add comments for main statements
+
+commit 896ed2af07f113326e923b9b2c9a9069975444c0
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jul 21 16:07:00 2010 -0400
+
+    config: replace deprecated use of AC_OUTPUT with AC_CONFIG_FILES
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 30b6c93f9546c917ccc25c208efa46629e6a59b0
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jul 21 14:37:41 2010 -0400
+
+    config: replace deprecated AC_HELP_STRING with AS_HELP_STRING
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 01701fbb98e8c9eb1a3212994993bf21d0ab08db
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jul 21 14:05:23 2010 -0400
+
+    config: replace deprecated AM_CONFIG_HEADER with AC_CONFIG_HEADERS
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 7733285ce1fe060fd77cb3575acad895729930a0
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jul 21 09:27:42 2010 -0400
+
+    config: complete AC_INIT m4 quoting
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit f4a705078774bdde74f0d4322c304e2d23883a1e
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Jul 20 21:44:58 2010 -0400
+
+    config: remove unrequired AC_SUBST([XORG_CFLAGS])
+    
+    This macro is called by PKG_CHECK_MODULES
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 5da3af011abb82f8084b233f059bb9dc9e6eac14
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Jul 20 20:24:42 2010 -0400
+
+    config: remove unrequired AC_HEADER_STDC
+    
+    Autoconf says:
+    "This macro is obsolescent, as current systems have conforming
+    header files. New programs need not use this macro".
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 658fee588cbbbb3cc204c8b4f05a7ae3be22f0a8
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Jul 20 19:41:31 2010 -0400
+
+    config: remove AC_PROG_CC as it overrides AC_PROG_C_C99
+    
+    XORG_STRICT_OPTION from XORG_DEFAULT_OPTIONS calls
+    AC_PROG_C_C99. This sets gcc with -std=gnu99.
+    If AC_PROG_CC macro is called afterwards, it resets CC to gcc.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 8065ec598bd0eb538aff41dd3912b0d0caf9c06e
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Jul 20 18:45:19 2010 -0400
+
+    config: update AC_PREREQ statement to 2.60
+    
+    Unrelated to the previous patches, the new value simply reflects
+    the reality that the minimum level for autoconf to configure
+    all x.org modules is 2.60 dated June 2006.
+    
+    ftp://ftp.gnu.org/gnu/autoconf/autoconf-2.60.tar.gz
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit c76be66441dd76c7d130606774782132aff96f6c
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Jul 20 16:15:29 2010 -0400
+
+    config: upgrade to util-macros 1.8 for additional man page support
+    
+    Use MAN_SUBST now supplied in XORG_MANPAGE_SECTIONS
+    The value of MAN_SUBST is the same for all X.Org packages.
+
 commit 0bf606d19d9357ffc5ccffe90279453d39c259ac
 Author: Dave Airlie <airlied@redhat.com>
 Date:   Mon Jul 5 14:56:30 2010 +1000

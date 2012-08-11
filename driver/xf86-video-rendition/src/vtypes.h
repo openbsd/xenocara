@@ -123,16 +123,13 @@ struct verite_board_t {
     vu16  chip;
 
     /* */
-    IOADDRESS io_base, vgaio_base;
+    unsigned long io_base, vgaio_base;
     vu32 mmio_base;
     vu32 vmmio_base;
     vu32 mem_size;
     vu8 *mem_base;
     vu8 *vmem_base;
     Bool init;
-
-    /* */
-    Bool accel;
 
     /* */
     vu32 csucode_base;
@@ -164,7 +161,7 @@ struct verite_board_t {
     Bool shadowfb;          /* Use ShadowFB ? */
     vu8 *shadowPtr;
     vu32 shadowPitch;
-    void (*PointerMoved)(int index, int x, int y);
+    void (*PointerMoved)(SCRN_ARG_TYPE arg, int x, int y);
 
     int rotate;             /* Rotate clockwise or counterclockwise */
 
@@ -188,7 +185,9 @@ typedef struct _renditionRec
     EntityInfoPtr pEnt;                 /* entity information */
     CloseScreenProcPtr CloseScreen;     /* wrap CloseScreen */
     xf86CursorInfoPtr CursorInfoRec;    /* Cursor data */
+#ifdef HAVE_XAA_H
     XAAInfoRecPtr AccelInfoRec;         /* Needed for XAA */
+#endif
     OptionInfoPtr Options;
     RenditionRegRec saveRegs;
 } renditionRec, *renditionPtr;

@@ -29,10 +29,9 @@ rendition_drv_la_LDFLAGS = -module -avoid-version
 rendition_drv_ladir = @moduledir@/drivers
 
 rendition_drv_la_SOURCES = \
-         accel.h \
-         accelX.c \
          cmd2d.h \
          commonregs.h \
+         compat-api.h \
          cscode.h \
          hwcursor.c \
          hwcursor.h \
@@ -64,6 +63,8 @@ dist_driver_DATA = \
 	v20002d.uc
 
 EXTRA_DIST = \
+        accel.h \
+        accelX.c \
 	README.uc \
 	vgafont-std.data \
 	vgafont-vrx.data \
