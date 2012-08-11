@@ -41,7 +41,11 @@ vgaHWWriteBank(vgaHWPtr hwp, CARD8 value)
     if (hwp->MMIOBase)
 	MMIO_OUT8(hwp->MMIOBase, hwp->MMIOOffset + VGA_BANK, value);
     else
+#if GET_ABI_MAJOR(ABI_VIDEODRV_VERSION) < 12
 	outb(hwp->PIOOffset + VGA_BANK, value);
+#else
+	pci_io_write8(hwp->io, VGA_BANK, value);
+#endif
 }
 
 CARD8
@@ -50,7 +54,11 @@ vgaHWReadBank(vgaHWPtr hwp)
     if (hwp->MMIOBase)
 	return MMIO_IN8(hwp->MMIOBase, hwp->MMIOOffset + VGA_BANK);
     else
+#if GET_ABI_MAJOR(ABI_VIDEODRV_VERSION) < 12
 	return inb(hwp->PIOOffset + VGA_BANK);
+#else
+	return pci_io_read8(hwp->io, VGA_BANK);
+#endif
 }
 
 #define VGA_SEGMENT 0x3CD
@@ -61,7 +69,11 @@ vgaHWWriteSegment(vgaHWPtr hwp, CARD8 value)
     if (hwp->MMIOBase)
 	MMIO_OUT8(hwp->MMIOBase, hwp->MMIOOffset + VGA_SEGMENT, value);
     else
+#if GET_ABI_MAJOR(ABI_VIDEODRV_VERSION) < 12
 	outb(hwp->PIOOffset + VGA_SEGMENT, value);
+#else
+	pci_io_write8(hwp->io, VGA_SEGMENT, value);
+#endif
 }
 
 CARD8
@@ -70,7 +82,11 @@ vgaHWReadSegment(vgaHWPtr hwp)
     if (hwp->MMIOBase)
 	return MMIO_IN8(hwp->MMIOBase, hwp->MMIOOffset + VGA_SEGMENT);
     else
+#if GET_ABI_MAJOR(ABI_VIDEODRV_VERSION) < 12
 	return inb(hwp->PIOOffset + VGA_SEGMENT);
+#else
+	return pci_io_read8(hwp->io, VGA_SEGMENT);
+#endif
 }
 
 /*
@@ -84,8 +100,12 @@ vgaHWWriteModeControl(vgaHWPtr hwp, CARD8 value)
     if (hwp->MMIOBase)
         MMIO_OUT8(hwp->MMIOBase,
                   hwp->MMIOOffset + hwp->IOBase + VGA_MODE_CONTROL, value);
-    else  
-        outb(hwp->IOBase + hwp->PIOOffset + VGA_MODE_CONTROL, value);
+    else
+#if GET_ABI_MAJOR(ABI_VIDEODRV_VERSION) < 12
+	outb(hwp->PIOOffset + VGA_MODE_CONTROL, value);
+#else
+	pci_io_write8(hwp->io, VGA_MODE_CONTROL, value);
+#endif
 }
 
 /*
@@ -110,14 +130,22 @@ vgaHWHerculesSecondPage(vgaHWPtr hwp, Bool Enable)
 
         MMIO_OUT8(hwp->MMIOBase, hwp->MMIOOffset + VGA_HERCULES, tmp);
     } else {
-        tmp = inb(hwp->PIOOffset + VGA_HERCULES);
+#if GET_ABI_MAJOR(ABI_VIDEODRV_VERSION) < 12
+	tmp = inb(hwp->PIOOffset + VGA_HERCULES);
+#else
+	tmp = pci_io_read8(hwp->io, VGA_HERCULES);
+#endif
 
         if (Enable)
             tmp |= 0x02;
         else
             tmp &= ~0x02;
 
-        outb(hwp->PIOOffset + VGA_HERCULES, tmp);
+#if GET_ABI_MAJOR(ABI_VIDEODRV_VERSION) < 12
+	outb(hwp->PIOOffset + VGA_HERCULES, tmp);
+#else
+	pci_io_write8(hwp->io, VGA_HERCULES, tmp);
+#endif
     }
 }
 
@@ -954,9 +982,9 @@ ET6000CalcClock(long freq, int min_m, int min_n1, int max_n1, int min_n2,
  * adjust the current video frame (viewport) to display the mousecursor.
  */
 void
-TsengAdjustFrame(int scrnIndex, int x, int y, int flags)
+TsengAdjustFrame(ADJUST_FRAME_ARGS_DECL)
 {
-    ScrnInfoPtr pScrn = xf86Screens[scrnIndex];
+    SCRN_INFO_PTR(arg);
     TsengPtr pTseng = TsengPTR(pScrn);
     vgaHWPtr hwp = VGAHWPTR(pScrn);
     int Base;
@@ -983,7 +1011,7 @@ TsengAdjustFrame(int scrnIndex, int x, int y, int flags)
  *
  */
 ModeStatus
-TsengValidMode(int scrnIndex, DisplayModePtr mode, Bool verbose, int flags)
+TsengValidMode(SCRN_ARG_TYPE arg, DisplayModePtr mode, Bool verbose, int flags)
 {
 
     PDEBUG("	TsengValidMode\n");
@@ -1502,7 +1530,7 @@ TsengModeInit(ScrnInfoPtr pScrn, DisplayModePtr OrigMode)
 
     /* clean up */
     if (new->RAMDAC)
-        xfree(new->RAMDAC);
+        free(new->RAMDAC);
 
     return TRUE;
 }

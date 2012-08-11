@@ -159,7 +159,7 @@ TsengSetCursorColors(ScrnInfoPtr pScrn, int bg, int fg)
     }
 }
 
-void 
+static void 
 TsengLoadCursorImage(ScrnInfoPtr pScrn, unsigned char *bits)
 {
     vgaHWPtr hwp = VGAHWPTR(pScrn);
@@ -223,7 +223,7 @@ TsengLoadCursorImage(ScrnInfoPtr pScrn, unsigned char *bits)
 Bool 
 TsengHWCursorInit(ScreenPtr pScreen)
 {
-    ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+    ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
     TsengPtr pTseng = TsengPTR(pScrn);
     xf86CursorInfoPtr infoPtr;
 

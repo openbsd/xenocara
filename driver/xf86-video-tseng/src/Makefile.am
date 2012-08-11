@@ -36,4 +36,5 @@ tseng_drv_la_SOURCES = \
          tseng_driver.c \
          tseng.h \
          tseng_mode.c \
-	 tseng_pcirename.h
+         tseng_pcirename.h \
+         compat-api.h

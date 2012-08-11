@@ -26,6 +26,7 @@
 #include "tseng.h"
 #include "tseng_accel.h"
 
+#ifdef HAVE_XAA_H
 #include "miline.h"
 
 /*
@@ -1257,6 +1258,7 @@ TsengSubsequentFillTrapezoidSolid(ytop, height, left, dxL, dyL, eL, right, dxR, 
 
 #endif
 
+#endif
 
 /*
  * The following function sets up the supported acceleration. Call it from
@@ -1266,7 +1268,8 @@ TsengSubsequentFillTrapezoidSolid(ytop, height, left, dxL, dyL, eL, right, dxR, 
 Bool
 TsengXAAInit(ScreenPtr pScreen)
 {
-    ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+#ifdef HAVE_XAA_H
+    ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
     TsengPtr pTseng = TsengPTR(pScrn);
     XAAInfoRecPtr pXAAinfo;
     BoxRec AvailFBArea;
@@ -1542,5 +1545,7 @@ TsengXAAInit(ScreenPtr pScreen)
     xf86InitFBManager(pScreen, &AvailFBArea);
 
     return (XAAInit(pScreen, pXAAinfo));
-
+#else
+    return FALSE;
+#endif
 }

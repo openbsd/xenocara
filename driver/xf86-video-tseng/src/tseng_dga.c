@@ -36,12 +36,14 @@ static Bool Tseng_SetMode(ScrnInfoPtr, DGAModePtr);
 static void Tseng_Sync(ScrnInfoPtr);
 static int  Tseng_GetViewport(ScrnInfoPtr);
 static void Tseng_SetViewport(ScrnInfoPtr, int, int, int);
+#ifdef HAVE_XAA_H
 static void Tseng_FillRect(ScrnInfoPtr, int, int, int, int, unsigned long);
 static void Tseng_BlitRect(ScrnInfoPtr, int, int, int, int, int, int);
 /*
 static void Tseng_BlitTransRect(ScrnInfoPtr, int, int, int, int, int, int, 
                                 unsigned long);
 */
+#endif
 
 static
 DGAFunctionRec TsengDGAFuncs = {
@@ -51,9 +53,13 @@ DGAFunctionRec TsengDGAFuncs = {
    Tseng_SetViewport,
    Tseng_GetViewport,
    Tseng_Sync,
+#ifdef HAVE_XAA_H
    Tseng_FillRect,
    Tseng_BlitRect,
    NULL  /* Tseng_BlitTransRect */
+#else
+   NULL, NULL, NULL
+#endif
 };
 
 
@@ -62,7 +68,7 @@ DGAFunctionRec TsengDGAFuncs = {
 Bool
 TsengDGAInit(ScreenPtr pScreen)
 {
-  ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+  ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
   TsengPtr pTseng = TsengPTR(pScrn);
   DGAModePtr modes = NULL, newmodes = NULL, currentMode;
   DisplayModePtr pMode, firstMode;
@@ -74,9 +80,9 @@ TsengDGAInit(ScreenPtr pScreen)
   if (!pTseng->DGAnumModes) {
     pMode = firstMode = pScrn->modes;
     while (pMode) {
-      newmodes = xrealloc(modes, (num + 1) * sizeof (DGAModeRec));
+      newmodes = realloc(modes, (num + 1) * sizeof (DGAModeRec));
       if (!newmodes) {
-	xfree(modes);
+	free(modes);
 	return FALSE;
       }
       modes = newmodes;
@@ -84,8 +90,10 @@ TsengDGAInit(ScreenPtr pScreen)
       num++;
       (void)memset(currentMode, 1, sizeof(DGAModeRec));
       currentMode->mode = pMode;
-      currentMode->flags = DGA_PIXMAP_AVAILABLE
-	  | ((pTseng->UseAccel) ? (DGA_FILL_RECT | DGA_BLIT_RECT) : 0);
+      currentMode->flags = DGA_PIXMAP_AVAILABLE;
+#ifdef HAVE_XAA_H
+      currentMode->flags |= ((pTseng->UseAccel) ? (DGA_FILL_RECT | DGA_BLIT_RECT) : 0);
+#endif
       if (pMode->Flags & V_DBLSCAN)
 	currentMode->flags |= DGA_DOUBLESCAN;
       if(pMode->Flags & V_INTERLACE)
@@ -135,7 +143,7 @@ Tseng_OpenFramebuffer(
     TsengPtr pTseng = TsengPTR(pScrn);
 
     *name = NULL; 		/* no special device */
-    *mem = (unsigned char*)pTseng->FbAddress;
+    *mem = (unsigned char*)(uintptr_t)pTseng->FbAddress;
     *size = pTseng->FbMapSize;
     *offset = 0;                /* Always */
     *flags = 0;                 /* Root permissions OS-dependent */
@@ -182,7 +190,7 @@ Tseng_SetViewport(
    TsengPtr pTseng = TsengPTR(pScrn);
    vgaHWPtr hwp = VGAHWPTR(pScrn);
 
-   TsengAdjustFrame(pScrn->pScreen->myNum, x, y, flags);
+   TsengAdjustFrame(ADJUST_FRAME_ARGS(pScrn, x, y));
    while((hwp->readST01(hwp) & 0x08));
    while(!(hwp->readST01(hwp) & 0x08));
 
@@ -205,12 +213,14 @@ Tseng_Sync(
    ScrnInfoPtr pScrn
 ){
     TsengPtr pTseng = TsengPTR(pScrn);
-
+#ifdef HAVE_XAA_H
     if(pTseng->AccelInfoRec) {
 	(*pTseng->AccelInfoRec->Sync)(pScrn);
     }
+#endif
 }
 
+#ifdef HAVE_XAA_H
 static void 
 Tseng_FillRect (
    ScrnInfoPtr pScrn, 
@@ -246,3 +256,4 @@ Tseng_BlitRect(
 	SET_SYNC_FLAG(pTseng->AccelInfoRec);
     }
 }
+#endif
