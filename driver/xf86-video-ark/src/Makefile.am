@@ -32,6 +32,7 @@ ark_drv_la_LDFLAGS = -module -avoid-version
 ark_drv_ladir = @moduledir@/drivers
 
 ark_drv_la_SOURCES = \
+         compat-api.h \
          ark_accel.c \
          ark_driver.c \
          ark.h \

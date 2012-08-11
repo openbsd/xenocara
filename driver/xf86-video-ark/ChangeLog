@@ -1,3 +1,43 @@
+commit 8d63c607ceab903dbe36eccf2315065e6830a47e
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Tue Jul 17 16:05:09 2012 +1000
+
+    xf86-video-ark: bump to version 0.7.5
+    
+    Signed-off-by: Dave Airlie <airlied@redhat.com>
+
+commit daf57a350326ff886de77609702944ec939a3495
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Tue Jul 17 14:51:38 2012 +1000
+
+    convert to new X screen conversion api
+    
+    Signed-off-by: Dave Airlie <airlied@redhat.com>
+
+commit 8c29d34510d7dfd786660827a09d1d60454ea32a
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Tue Jul 17 13:59:15 2012 +1000
+
+    ark: update for compat X server ABI.
+    
+    Signed-off-by: Dave Airlie <airlied@redhat.com>
+
+commit 7f115c9df7431e73b558b18aba7b64a1e253bb0a
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Tue Jul 17 13:53:00 2012 +1000
+
+    ark: make build against XAA-less server.
+    
+    Signed-off-by: Dave Airlie <airlied@redhat.com>
+
+commit da0262acee5ea37ea8c69ebadbf5e9e34d83b5f3
+Author: Matt Turner <mattst88@gmail.com>
+Date:   Thu Feb 16 18:39:50 2012 -0500
+
+    Don't check for unneeded proto headers.
+    
+    Signed-off-by: Matt Turner <mattst88@gmail.com>
+
 commit e7baf1df0bbc45e1cd697f5df959586ab27103f9
 Author: Matt Turner <mattst88@gmail.com>
 Date:   Thu Jan 26 18:04:34 2012 -0500

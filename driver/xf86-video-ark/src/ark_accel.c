@@ -34,15 +34,13 @@
 #include <X11/Xarch.h>
 #include "xf86.h"
 #include "xf86_OSproc.h"
-#include "xaa.h"
 #include "compiler.h"
 
 #include "ark.h"
 #include "ark_reg.h"
 
-
+#ifdef HAVE_XAA_H
 static int curx, cury, cmd_flags;
-
 
 static void ARKSync(ScrnInfoPtr pScrn)
 {
@@ -186,11 +184,12 @@ static void ARKSubsequentScreenToScreenCopy(ScrnInfoPtr pScrn,
 			  BITBLT | cmd_flags);
 }
 
-
+#endif
 
 Bool ARKAccelInit(ScreenPtr pScreen)
 {
-	ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+#ifdef HAVE_XAA_H
+	ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
 	ARKPtr pARK = ARKPTR(pScrn);
 	XAAInfoRecPtr pXAA;
 
@@ -228,4 +227,7 @@ Bool ARKAccelInit(ScreenPtr pScreen)
 				LINEAR_DST_ADDR);
 
 	return XAAInit(pScreen, pXAA);
+#else
+        return FALSE;
+#endif
 }
