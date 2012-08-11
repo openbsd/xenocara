@@ -1,3 +1,45 @@
+commit 736cb01bfafc2cbb1dfa4e449866b5bc333cfc86
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Tue Jul 17 16:05:09 2012 +1000
+
+    xf86-video-apm: bump to version 1.2.5
+    
+    Signed-off-by: Dave Airlie <airlied@redhat.com>
+
+commit 09c6ce0beab11d378e661dbdc57e311b16c35aea
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Tue Jul 17 15:22:37 2012 +1000
+
+    apm: fix make dist.
+    
+    Signed-off-by: Dave Airlie <airlied@redhat.com>
+
+commit a57b784ddfdc9369f6dfe498333c25bfea883e8f
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Tue Jul 17 14:52:05 2012 +1000
+
+    apm: convert to new screen conversion apis.
+    
+    Signed-off-by: Dave Airlie <airlied@redhat.com>
+
+commit d9a3071242724325d4e3672b3e70d8457f993f78
+Author: Dave Airlie <airlied@gmail.com>
+Date:   Fri Jul 13 14:54:06 2012 +1000
+
+    apm: handle xaa removal
+    
+    Signed-off-by: Dave Airlie <airlied@redhat.com>
+
+commit 01bdd7d3d18f5d5c94aa99ccd7677f5928b37392
+Author: Dave Airlie <airlied@gmail.com>
+Date:   Fri Jul 13 14:56:12 2012 +1000
+
+    apm: initial compat api
+    
+    Port to new server compat API.
+    
+    Signed-off-by: Dave Airlie <airlied@redhat.com>
+
 commit d63d7c600cb3927a5a2a5e223252cfd9a44112d4
 Author: Julien Cristau <jcristau@debian.org>
 Date:   Sat May 12 12:46:11 2012 +0200

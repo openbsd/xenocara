@@ -6,6 +6,7 @@
 #include "apm.h"
 #include "miline.h"
 
+#ifdef HAVE_XAA_H
 /* Defines */
 #define MAXLOOP 1000000
 
@@ -206,7 +207,7 @@ void ApmAccelReserveSpace(ApmPtr pApm)
 {
     memType	mem, ScratchMemOffset;
 
-    mem			= xf86Screens[pApm->pScreen->myNum]->videoRam << 10;
+    mem			= xf86ScreenToScrn(pApm->pScreen)->videoRam << 10;
     /*
      * Reserve at least four lines for mono to color expansion
      */
@@ -224,7 +225,7 @@ void ApmAccelReserveSpace(ApmPtr pApm)
 int
 ApmAccelInit(ScreenPtr pScreen)
 {
-    ScrnInfoPtr		pScrn = xf86Screens[pScreen->myNum];
+    ScrnInfoPtr		pScrn = xf86ScreenToScrn(pScreen);
     APMDECL(pScrn);
     XAAInfoRecPtr	pXAAinfo;
     BoxRec		AvailFBArea;
@@ -355,7 +356,7 @@ void ApmSetupXAAInfo(ApmPtr pApm, XAAInfoRecPtr pXAAinfo)
            pApm->CurrentLayout.Setup_DEC |= DEC_BITDEPTH_32;
            break;
       default:
-           xf86DrvMsg(xf86Screens[pApm->pScreen->myNum]->scrnIndex, X_WARNING,
+           xf86DrvMsg(xf86ScreenToScrn(pApm->pScreen)->scrnIndex, X_WARNING,
 		    "Cannot set up drawing engine control for bpp = %d\n",
 		    pApm->CurrentLayout.bitsPerPixel);
            break;
@@ -382,7 +383,7 @@ void ApmSetupXAAInfo(ApmPtr pApm, XAAInfoRecPtr pXAAinfo)
            pApm->CurrentLayout.Setup_DEC |= DEC_WIDTH_1600;
            break;
       default:
-           xf86DrvMsg(xf86Screens[pApm->pScreen->myNum]->scrnIndex, X_WARNING,
+           xf86DrvMsg(xf86ScreenToScrn(pApm->pScreen)->scrnIndex, X_WARNING,
 		       "Cannot set up drawing engine control "
 		       "for screen width = %d\n", pApm->CurrentLayout.displayWidth);
            break;
@@ -563,3 +564,4 @@ void ApmSetupXAAInfo(ApmPtr pApm, XAAInfoRecPtr pXAAinfo)
 #undef XAA
     }
 }
+#endif

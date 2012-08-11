@@ -29,19 +29,19 @@
 #define RDXL_M(addr)     (MMIO_IN32(pApm->MemMap, (addr)))
 #define WRXB_M(addr,val)  do { if (check08((addr), (val))) { \
 			MMIO_OUT8 (pApm->MemMap, (addr), (val));	\
-			/*xf86DrvMsg(xf86Screens[pApm->pScreen->myNum]->scrnIndex, X_INFO, \
+			/*xf86DrvMsg(xf86ScreenToScrn(pApm->pScreen)->scrnIndex, X_INFO, \
 				    "File %s, line %d,	%02X <-       %02X\n", \
 				    __FILE__, __LINE__, (addr), (val) & 255); */\
 			curr08[MIN((addr), 0x80)] = (val); }} while (0)
 #define WRXW_M(addr,val)  do { if (check16((addr), (val))) { \
 			MMIO_OUT16(pApm->MemMap, (addr), (val));	\
-			/*xf86DrvMsg(xf86Screens[pApm->pScreen->myNum]->scrnIndex, X_INFO, \
+			/*xf86DrvMsg(xf86ScreenToScrn(pApm->pScreen)->scrnIndex, X_INFO, \
 				    "File %s, line %d,	%02X <-     %04X\n", \
 				    __FILE__, __LINE__, (addr), (val)&65535); */\
 			curr16[MIN(((addr) / 2), 0x40)] = (val); }} while (0)
 #define WRXL_M(addr,val)  do { if (check32((addr), (val))) { \
 			MMIO_OUT32(pApm->MemMap, (addr), (val));	\
-			/*xf86DrvMsg(xf86Screens[pApm->pScreen->myNum]->scrnIndex, X_INFO, \
+			/*xf86DrvMsg(xf86ScreenToScrn(pApm->pScreen)->scrnIndex, X_INFO, \
 				    "File %s, line %d,	%02X <- %08X\n", \
 				    __FILE__, __LINE__, (addr), (val)); */\
 			curr32[MIN(((addr) / 4), 0x20)] = (val); }} while (0)

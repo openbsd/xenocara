@@ -23,7 +23,7 @@
 # Initialize Autoconf
 AC_PREREQ([2.60])
 AC_INIT([xf86-video-apm],
-        [1.2.4],
+        [1.2.5],
         [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],
         [xf86-video-apm])
 AC_CONFIG_SRCDIR([Makefile.am])
@@ -89,6 +89,25 @@ if test "x$have_xv" = xyes; then
 	CFLAGS="$SAVED_CFLAGS"
 fi
 AM_CONDITIONAL(XV_NEW_REPUT, test x$XV_NEW_REPUT = xyes)
+
+AC_ARG_ENABLE(xaa,
+              AS_HELP_STRING([--enable-xaa],
+                             [Enable legacy X Acceleration Architecture (XAA) [default=auto]]),
+              [XAA="$enableval"],
+              [XAA=auto])
+if test "x$XAA" != xno; then
+        save_CFLAGS=$CFLAGS
+        save_CPPFLAGS=$CPPFLAGS
+        CFLAGS=$XORG_CFLAGS
+        CPPFLAGS="$XORG_CFLAGS"
+        AC_CHECK_HEADERS([xaa.h], XAA=yes, XAA=no)
+        CFLAGS=$save_CFLAGS
+        CPPFLAGS=$save_CPPFLAGS
+fi
+AC_MSG_CHECKING([whether to include XAA support])
+AM_CONDITIONAL(XAA, test "x$XAA" = xyes)
+AC_MSG_RESULT([$XAA])
+
 
 AC_CONFIG_FILES([
                 Makefile

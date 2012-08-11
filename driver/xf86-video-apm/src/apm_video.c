@@ -43,7 +43,7 @@ static void	A(XvRemoveCB)(FBAreaPtr);
 
 void A(InitVideo)(ScreenPtr pScreen)
 {
-    ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+    ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
     XF86VideoAdaptorPtr *adaptors, *newAdaptors;
     XF86VideoAdaptorPtr newAdaptor;
     APMDECL(pScrn);
@@ -296,7 +296,7 @@ A(ResetVideo)(ScrnInfoPtr pScrn)
 static XF86VideoAdaptorPtr
 A(SetupImageVideo)(ScreenPtr pScreen)
 {
-    ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+    ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
     APMDECL(pScrn);
     XF86VideoAdaptorPtr adapt;
     ApmPortPrivPtr pPriv;

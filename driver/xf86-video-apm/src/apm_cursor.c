@@ -56,14 +56,14 @@ void ApmHWCursorReserveSpace(ApmPtr pApm)
 {
   pApm->OffscreenReserved	+= 2 * CURSORALIGN;
   pApm->DisplayedCursorAddress	= pApm->BaseCursorAddress =
-  pApm->CursorAddress	= 1024 * xf86Screens[pApm->pScreen->myNum]->videoRam -
+  pApm->CursorAddress	= 1024 * xf86ScreenToScrn(pApm->pScreen)->videoRam -
 					pApm->OffscreenReserved;
 }
 
 
 int ApmHWCursorInit(ScreenPtr pScreen)
 {
-  ScrnInfoPtr		pScrn = xf86Screens[pScreen->myNum];
+  ScrnInfoPtr		pScrn = xf86ScreenToScrn(pScreen);
   APMDECL(pScrn);
   xf86CursorInfoPtr	infoPtr;
   u32			i;
@@ -116,7 +116,7 @@ ApmHideCursor(ScrnInfoPtr pScrn)
 
 static Bool ApmUseHWCursor(ScreenPtr pScreen, CursorPtr pCurs)
 {
-    return APMPTR(xf86Screens[pScreen->myNum])->CurrentLayout.bitsPerPixel >= 8;
+    return APMPTR(xf86ScreenToScrn(pScreen))->CurrentLayout.bitsPerPixel >= 8;
 }
 
 static void
