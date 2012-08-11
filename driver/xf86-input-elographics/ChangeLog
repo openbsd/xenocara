@@ -1,3 +1,89 @@
+commit c65d8e4c3307add220af82b8db3c75629f96067d
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Mon Jul 30 14:03:43 2012 +1000
+
+    elographics 1.4.0
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit ad74c47b0adaacc88449a123f353a0f4e182b2f9
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Mon Jul 30 13:47:34 2012 +1000
+
+    Constify a few strings
+    
+    xf86Elo.c:74:5: warning: initialization discards 'const' qualifier from
+    pointer target type [enabled by default]
+    
+    several of:
+    xf86Elo.c:915:3: warning: initialization discards 'const' qualifier from
+    pointer target type [enabled by default]
+    (input ABI 18 only)
+    
+    xf86Elo.c:1012:9: warning: assignment discards 'const' qualifier from
+    pointer target type [enabled by default]
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 461d74ba17339ea228e8d8b40efd996e3e4757a4
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Mon Jul 30 13:43:39 2012 +1000
+
+    Swap calls to Error() to ErrorF
+    
+    Error doesn't exist anymore, removed in xorg-server-1.11.0-182-g09dbfcb
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 1bdc3c58e7ad8da51f0aed6711a096bac48b168b
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Jul 19 10:54:59 2011 +1000
+
+    Test the device in PreInit and fail if it cannot be opened.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit de753ac30874f1c66bdf66d964959cd47c6b81f9
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Jul 19 10:47:45 2011 +1000
+
+    Don't free on init failure, let UnInit take care of it.
+    
+    Avoid double-frees when the server calls Uninit.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit d743407c0e95194b5745a866b296de862a96515e
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Jul 19 10:41:16 2011 +1000
+
+    Use xf86SetStrOption for Option Device
+    
+    Let the device be printed in the logs
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 38bcc4322a378affb5ca142ff39df81908e990eb
+Author: Terry Lambert <tlambert@chromium.org>
+Date:   Fri Jul 15 17:23:20 2011 -0700
+
+    Return proper default for unknown values in pInfo->device_control.
+    
+    Signed-off-by: Terry Lambert <tlambert@chromium.org>
+    Reviewed-by: Stephane Marchesin <marcheu@chromium.org>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 55f337f61fdcb2d7ec77ec42d1b8b700d467196e
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri Jul 8 14:07:34 2011 +1000
+
+    Fix name and type_name for elographics
+    
+    Don't overwrite the user-assigned name and use XI_TOUCHSCREEN for type_name.
+    Don't allow Option "DeviceName", use Identifier instead.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
 commit 7c324ede65c17e5c747b28f40b9fd19f21b79d9d
 Author: Peter Hutterer <peter.hutterer@who-t.net>
 Date:   Mon Jun 27 14:48:11 2011 +1000

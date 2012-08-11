@@ -66,7 +66,7 @@
 
 typedef struct {
     int         type;
-    char        *name;
+    const char  *name;
 } Model;
 
 static Model SupportedModels[] =
@@ -248,7 +248,7 @@ xf86EloGetPacket(unsigned char	*buffer,
    * Okay, give up.
    */
   if (num_bytes < 0) {
-    Error("System error while reading from Elographics touchscreen.");
+    ErrorF("System error while reading from Elographics touchscreen.");
     return !Success;
   }
   DBG(4, ErrorF("Read %d bytes\n", num_bytes));
@@ -758,7 +758,7 @@ xf86EloControl(DeviceIntPtr	dev,
       DBG(2, ErrorF("Elographics touchscreen opening : %s\n", priv->input_dev));
       pInfo->fd = xf86OpenSerial(pInfo->options);
       if (pInfo->fd < 0) {
-	Error("Unable to open Elographics touchscreen device");
+	ErrorF("Unable to open Elographics touchscreen device");
 	return !Success;
       }
 
@@ -850,7 +850,7 @@ xf86EloControl(DeviceIntPtr	dev,
 
   default:
       ErrorF("unsupported mode=%d\n", mode);
-      return !Success;
+      return BadValue;
   }
 }
 
@@ -892,7 +892,7 @@ xf86EloAllocate(InputDriverPtr drv, InputInfoPtr pInfo)
   pInfo->control_proc = NULL;
   pInfo->switch_mode  = NULL;
   pInfo->private      = priv;
-  pInfo->type_name    = "Elographics TouchScreen";
+  pInfo->type_name    = XI_TOUCHSCREEN;
 
   return Success;
 }
@@ -911,7 +911,11 @@ xf86EloUninit(InputDriverPtr	drv,
   xf86DeleteInput(pInfo, 0);
 }
 
-static char *default_options[] = {
+static
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 18
+const
+#endif
+char *default_options[] = {
   "BaudRate", "9600",
   "StopBits", "1",
   "DataBits", "8",
@@ -926,7 +930,7 @@ xf86EloInit(InputDriverPtr	drv,
 	    int			flags)
 {
   EloPrivatePtr		priv=NULL;
-  char			*str;
+  const char		*str;
   int			portrait = 0;
   int			height, width;
   char			*opt_model;
@@ -940,18 +944,21 @@ xf86EloInit(InputDriverPtr	drv,
 
   priv = pInfo->private;
 
-  str = xf86FindOptionValue(pInfo->options, "Device");
+  str = xf86SetStrOption(pInfo->options, "Device", NULL);
   if (!str) {
     xf86Msg(X_ERROR, "%s: No Device specified in Elographics module config.\n",
 	    pInfo->name);
-    if (priv) {
-      if (priv->input_dev) {
-	free(priv->input_dev);
-      }
-      free(priv);
-    }
     return BadValue;
+  } else {
+      pInfo->fd = xf86OpenSerial(pInfo->options);
+      if (pInfo->fd < 0) {
+	xf86Msg(X_ERROR, "%s: Unable to open Elographics touchscreen device %s", pInfo->name, str);
+	return BadValue;
+      }
+      xf86CloseSerial(pInfo->fd);
+      pInfo->fd = -1;
   }
+
   priv->input_dev = strdup(str);
 
   opt_model = xf86SetStrOption(pInfo->options, "Model", NULL);
@@ -967,8 +974,6 @@ xf86EloInit(InputDriverPtr	drv,
       model++;
   }
 
-  pInfo->name = xf86SetStrOption(pInfo->options, "DeviceName", XI_TOUCHSCREEN);
-  xf86Msg(X_CONFIG, "Elographics X device name: %s\n", pInfo->name);
   priv->screen_no = xf86SetIntOption(pInfo->options, "ScreenNo", 0);
   xf86Msg(X_CONFIG, "Elographics associated screen: %d\n", priv->screen_no);
   priv->untouch_delay = xf86SetIntOption(pInfo->options, "UntouchDelay", ELO_UNTOUCH_DELAY);

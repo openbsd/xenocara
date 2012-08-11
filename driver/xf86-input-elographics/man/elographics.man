@@ -38,9 +38,6 @@ The following driver options are supported:
 The device that is attached to the touchscreen interface. Default is
 "/dev/ttyS1".
 .TP
-.BI "Option \*qDeviceName\*q \*q" string \*q
-Set the X11 device name for the touchscreen. Default is "TOUCHSCREEN".
-.TP
 .BI "Option \*qMinX\*q \*q" integer \*q
 Set the minimum value for the touchscreen X axis. Default is 600.
 .TP
