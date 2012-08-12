@@ -1,4 +1,4 @@
-/* $OpenBSD: privsep.c,v 1.23 2012/08/07 20:16:12 matthieu Exp $ */
+/* $OpenBSD: privsep.c,v 1.24 2012/08/12 14:06:42 matthieu Exp $ */
 /*
  * Copyright 2001 Niels Provos <provos@citi.umich.edu>
  * All rights reserved.
@@ -123,7 +123,7 @@ struct okdev {
 
 /* return 1 if allowed to open said path */
 static struct okdev *
-open_ok(const char *path) 
+open_ok(const char *path)
 {
 	struct okdev *p;
 	struct stat sb;
@@ -175,7 +175,7 @@ send_fd(int s, int fd)
 	vec.iov_len = sizeof(int);
 	msg.msg_iov = &vec;
 	msg.msg_iovlen = 1;
-	
+
 	if ((n = sendmsg(s, &msg, 0)) == -1)
 		warn("%s: sendmsg(%d)", __func__, s);
 	if (n != sizeof(int))
@@ -240,6 +240,8 @@ priv_init(uid_t uid, gid_t gid)
 	priv_cmd_t cmd;
 	struct okdev *dev;
 
+	parent_pid = getppid();
+
 	/* Create sockets */
 	if (socketpair(AF_LOCAL, SOCK_STREAM, PF_UNSPEC, socks) == -1) {
 		return -1;
@@ -259,14 +261,14 @@ priv_init(uid_t uid, gid_t gid)
 			return -1;
 		if (seteuid(uid) == -1)
 			return -1;
-		if (setuid(uid) == -1) 
+		if (setuid(uid) == -1)
 			return -1;
 		close(socks[0]);
 		priv_fd = socks[1];
 		return 0;
 	}
 	/* son */
-	for (i = 1; i <= _NSIG; i++) 
+	for (i = 1; i <= _NSIG; i++)
 		signal(i, SIG_DFL);
 	setproctitle("[priv]");
 	close(socks[1]);
@@ -285,7 +287,7 @@ priv_init(uid_t uid, gid_t gid)
 				errno = EPERM;
 			}
 			send_fd(socks[0], fd);
-			if (fd >= 0) 
+			if (fd >= 0)
 				close(fd);
 			break;
 		case PRIV_SIG_PARENT:
@@ -335,10 +337,8 @@ priv_signal_parent(void)
 	priv_cmd_t cmd;
 
 	if (priv_fd != -1) {
-		if (parent_pid == -1) {
-			warnx("parent_pid == -1");
-			return -1;
-		}
+		if (parent_pid == -1)
+			warnx("parent_pid == -1\n");
 		cmd.cmd = PRIV_SIG_PARENT;
 		write(priv_fd, &cmd, sizeof(cmd));
 	} else
