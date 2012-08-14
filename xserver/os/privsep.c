@@ -1,4 +1,4 @@
-/* $OpenBSD: privsep.c,v 1.24 2012/08/12 14:06:42 matthieu Exp $ */
+/* $OpenBSD: privsep.c,v 1.25 2012/08/14 15:57:57 matthieu Exp $ */
 /*
  * Copyright 2001 Niels Provos <provos@citi.umich.edu>
  * All rights reserved.
@@ -107,13 +107,12 @@ struct okdev {
 	{"/dev/ttyC6", O_RDWR | O_NONBLOCK | O_EXCL},
 	{"/dev/ttyC7", O_RDWR | O_NONBLOCK | O_EXCL},
 	{"/dev/ttyD0", O_RDWR | O_NONBLOCK | O_EXCL},
-	{"/dev/ttyD1", O_RDWR | O_NONBLOCK | O_EXCL},
-	{"/dev/ttyD2", O_RDWR | O_NONBLOCK | O_EXCL},
-	{"/dev/ttyD3", O_RDWR | O_NONBLOCK | O_EXCL},
-	{"/dev/ttyD4", O_RDWR | O_NONBLOCK | O_EXCL},
-	{"/dev/ttyD5", O_RDWR | O_NONBLOCK | O_EXCL},
-	{"/dev/ttyD6", O_RDWR | O_NONBLOCK | O_EXCL},
-	{"/dev/ttyD7", O_RDWR | O_NONBLOCK | O_EXCL},
+	{"/dev/ttyE0", O_RDWR | O_NONBLOCK | O_EXCL},
+	{"/dev/ttyF0", O_RDWR | O_NONBLOCK | O_EXCL},
+	{"/dev/ttyG0", O_RDWR | O_NONBLOCK | O_EXCL},
+	{"/dev/ttyH0", O_RDWR | O_NONBLOCK | O_EXCL},
+	{"/dev/ttyI0", O_RDWR | O_NONBLOCK | O_EXCL},
+	{"/dev/ttyJ0", O_RDWR | O_NONBLOCK | O_EXCL},
 	{"/dev/pci", O_RDWR | O_NONBLOCK | O_EXCL},
 	{"/dev/agp0", O_RDWR | O_NONBLOCK | O_EXCL},
 	{"/dev/drm0", O_RDWR },
