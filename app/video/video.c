@@ -1,4 +1,4 @@
-/*	$OpenBSD: video.c,v 1.10 2011/04/11 17:23:18 jakemsr Exp $	*/
+/*	$OpenBSD: video.c,v 1.11 2012/08/14 12:09:33 matthieu Exp $	*/
 /*
  * Copyright (c) 2010 Jacob Meuser <jakemsr@openbsd.org>
  *
@@ -879,7 +879,7 @@ dev_get_ctrls(struct video *vid)
 		if (ioctl(d->fd, VIDIOC_QUERYCTRL, &qctl) == -1) {
 			if (errno == EINVAL)
 				continue;
-			warn("VIDIOC_QUERYCTL");
+			warn("VIDIOC_QUERYCTRL");
 			return 0;
 		}
 		if (qctl.flags & V4L2_CTRL_FLAG_DISABLED)
