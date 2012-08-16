@@ -1,3 +1,180 @@
+commit 29dbd85c4617a062d2003e0673806b92f8397492
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Jul 31 09:39:38 2012 +1000
+
+    xf86-input-mouse 1.8.1
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 5a5f41659d4e43330407fa8895710c865d2b5328
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Jul 30 15:56:18 2012 -0700
+
+    Fix compiler warning in sun_mouse.c (Solaris-only)
+    
+    sun_mouse.c: In function 'vuidRemoveMouse':
+    sun_mouse.c:150:42: warning: declaration of 'time' shadows a global declaration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 5748979008acafd1a8b28f47e292ed6a9706474c
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Jul 31 08:28:27 2012 +1000
+
+    Rename xf86-mouse.pc to xorg-mouse.pc
+    
+    Other input drivers already shipping pkgconfig files use this naming scheme
+    and since the 1.8 release didn't install the file anyway, renaming is still
+    acceptable at this point.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit a5630a5668793e3bdc6190b5e2ee22d7c28dda0c
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Mon Jul 30 09:06:49 2012 +1000
+
+    Install xf86-mouse.pc file
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Jeremy Huddleston <jeremyhu@apple.com>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 7c1e63ef00777553cca66781b8db0272bd405db0
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Mon Jul 30 15:53:22 2012 +1000
+
+    Fix compiler warnings
+    
+    pnp.c: In function 'probePs2ProtocolPnP':
+    pnp.c:711:31: warning: declaration of 'seq' shadows a previous local
+    [-Wshadow]
+    pnp.c:705:23: warning: shadowed declaration is here [-Wshadow]
+    
+    mouse.c: In function 'MouseCommonOptions':
+    mouse.c:330:13: warning: declaration of 'i' shadows a previous local
+    [-Wshadow]
+    mouse.c:279:9: warning: shadowed declaration is here [-Wshadow]
+    
+    mouse.c: In function 'autoProbeMouse':
+    mouse.c:3602:29: warning: declaration of 'proto' shadows a global
+    declaration [-Wshadow]
+    mouse.c:2482:22: warning: shadowed declaration is here [-Wshadow]
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Jeremy Huddleston Sequoia <jeremyhu@apple.com>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 3c0c022672324286b0e936977ca267c6b04dc0f2
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Jul 26 23:10:47 2012 -0700
+
+    xf86-input-mouse 1.8.0
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 66792aff9562a3cd69576739e4dae116edb31efd
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Jul 25 22:12:02 2012 -0700
+
+    Fix vuidMouseAdjustFrame to build with Xorg 1.13 ABI
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit a2494e6fe3168b03f2ebc7d584db0256657c891f
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Jul 23 22:11:57 2012 -0700
+
+    Raise bar for xorg-server to 1.7 for XINPUT ABI 7
+    
+    Not all of the button label settings were wrapped in ABI #ifdefs,
+    so just drop all #ifdefs for GET_ABI_MAJOR(ABI_XINPUT_VERSION) < 7
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Jeremy Huddleston Sequoia <jeremyhu@apple.com>
+
+commit 88e90dde7a5ffff67da9e091e59c09f2a0828582
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Apr 30 20:36:40 2012 -0700
+
+    Expand tabs to spaces
+    
+    Existing code had a mix of places tab & space characters were used.
+    Make them all spaces for consistency, since that's the new style
+    chosen for xorg-server.
+    
+    "git diff -w" shows no changes - this is pure whitespace adjustment.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 580e739de0b15df9b7982213d2e2d9b84413b157
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Apr 30 20:33:27 2012 -0700
+
+    Strip trailing whitespace
+    
+    cleanup done via: perl -p -i -e 's/[\t ]*$//'
+    "git diff -w" shows no changes - this is pure whitespace adjustment.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 1816cd91981c0f9673cf56dc4f5b0021e9cbbc65
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Apr 27 17:36:01 2012 -0700
+
+    Add settable properties for middle mouse button emulation
+    
+    Based on evdev's similar properties, including using the name "middle"
+    button, to avoid confusion with evdev's 3rd button emulation for
+    emulating the right button on a single button mouse.
+    
+    Allows manual enable & disable at runtime.
+    
+    Exports new xf86-mouse.pc & xf86-mouse-properties.h for property name
+    definitions.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Alexandr Shadchin <alexandr.shadchin@gmail.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 84090b15ea6346d0764a0e0be3f0bd65a7e0fe7c
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Apr 27 15:57:28 2012 -0700
+
+    Set button & axis labels
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Alexandr Shadchin <alexandr.shadchin@gmail.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 4b6738c8409fe73596863b37a8fcad8ae352d121
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Apr 27 15:44:00 2012 -0700
+
+    Set XI_PROP_DEVICE_NODE property to string from "Device" option
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Alexandr Shadchin <alexandr.shadchin@gmail.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 5583a77bbadd2e89cbc69a66f27deee1a5da982c
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Apr 27 14:31:20 2012 -0700
+
+    sun_mouse.c: Remove redundant option checks
+    
+    Previously they checked pInfo->options, then fell back to
+    pInfo->conf_idev->commonOptions - but then 7bf22a368c752fe76dc
+    replaced the latter with the former, resulting in some redunancy.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Alexandr Shadchin <alexandr.shadchin@gmail.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+
 commit 80d724d13a8de585722967f7d18a65b4b555badd
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Thu Mar 15 23:34:21 2012 -0700

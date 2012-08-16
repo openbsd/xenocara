@@ -1,0 +1,6 @@
+sdkdir=@sdkdir@
+
+Name: xorg-mouse
+Description: X.Org mouse input driver for non-evdev OS'es
+Version: @PACKAGE_VERSION@
+Cflags: -I${sdkdir}

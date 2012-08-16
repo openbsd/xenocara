@@ -14,9 +14,9 @@ mouse \- __xservername__ mouse input driver
 .B EndSection
 .fi
 .SH DESCRIPTION
-.B mouse 
-is an __xservername__ input driver for mice.  The driver supports most 
-available mouse types and interfaces, though the level of support for 
+.B mouse
+is an __xservername__ input driver for mice.  The driver supports most
+available mouse types and interfaces, though the level of support for
 types of mice depends on the OS.
 .PP
 The
@@ -52,23 +52,23 @@ so that the host computer can automatically detect the mouse
 and load an appropriate driver.
 This driver supports this specification and can detect
 popular PnP serial mouse models on most platforms.
-.TP 
+.TP
 Bus mouse
 The bus mouse connects to a dedicated interface card in an expansion
 slot.
 Some older video cards, notably those from ATI, and integrated I/O
 cards may also have a bus mouse connector.
 .PP
-The interface type of the mouse can be determined by looking at the connector 
+The interface type of the mouse can be determined by looking at the connector
 of the mouse.
 USB mice have a thin rectangular connector.
 PS/2 mice are equipped with a small, round DIN 6-pin connector.
 Serial mouse have a D-Sub female 9- or 25-pin connector.
-Bus mice have either a D-Sub male 9-pin connector 
+Bus mice have either a D-Sub male 9-pin connector
 or a round DIN 9-pin connector.
-Some mice come with adapters with which the connector can 
+Some mice come with adapters with which the connector can
 be converted to another.  If you are to use such an adapter,
-remember that the connector at the very end of the mouse/adapter pair is 
+remember that the connector at the very end of the mouse/adapter pair is
 what matters.
 .SH CONFIGURATION DETAILS
 .PP
@@ -113,8 +113,9 @@ protocol setting is platform-specific.
 .BI "Option \*qDevice\*q \*q" string \*q
 Specifies the device through which the mouse can be accessed.  A common
 setting is "/dev/mouse", which is often a symbolic link to the real
-device.  This option is mandatory, and there is no default setting. The server
+device.  This option is mandatory, and there is no default setting. The driver
 may however attempt to probe some default devices if this option is missing.
+Property: "Device Node" (read-only).
 .TP 7
 .BI "Option \*qButtons\*q \*q" integer \*q
 Specifies the number of mouse buttons.  In cases where the number of buttons
@@ -124,12 +125,12 @@ cannot be auto-detected, the default value is 3.  The maximum number is 24.
 Enable/disable the emulation of the third (middle) mouse button for mice
 which only have two physical buttons.  The third button is emulated by
 pressing both buttons simultaneously.  Default: on, until a press of a
-physical button 3 is detected.
+physical button 3 is detected.  Property: "Mouse Middle Button Emulation"
 .TP 7
 .BI "Option \*qEmulate3Timeout\*q \*q" integer \*q
 Sets the timeout (in milliseconds) that the driver waits before deciding
 if two buttons where pressed "simultaneously" when 3 button emulation is
-enabled.  Default: 50.
+enabled.  Default: 50.   Property: "Mouse Middle Button Timeout"
 .TP 7
 .BI "Option \*qChordMiddle\*q \*q" boolean \*q
 Enable/disable handling of mice that send left+right events when the middle
@@ -275,7 +276,7 @@ number that is the target of the lock button.
 .TP 7
 .BI "Option \*qDragLockButtons\*q \*q" "M1" \*q
 Sets a \*qmaster drag lock button\*q that acts as a \*qMeta Key\*q
-indicating that the next button pressed is to be 
+indicating that the next button pressed is to be
 \*qdrag locked\*q.
 .TP 7
 .BI "Option \*qClearDTR\*q \*q" boolean \*q

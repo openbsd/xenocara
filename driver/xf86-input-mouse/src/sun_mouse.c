@@ -69,7 +69,7 @@
 # include <sys/vuid_wheel.h>
 #endif
 
-/* Support for scaling absolute coordinates to screen size in 
+/* Support for scaling absolute coordinates to screen size in
  * Solaris 10 updates and beyond */
 #if !defined(HAVE_ABSOLUTE_MOUSE_SCALING)
 # ifdef MSIOSRESOLUTION /* Defined in msio.h if scaling support present */
@@ -80,40 +80,42 @@
 /* Names of protocols that are handled internally here. */
 
 static const char *internalNames[] = {
-	"VUID",
-	NULL
+        "VUID",
+        NULL
 };
 
 static const char *solarisMouseDevs[] = {
-    /* Device file:	Protocol: 			*/
-    "/dev/mouse",	"VUID",		/* USB or SPARC */
+    /* Device file:     Protocol:                       */
+    "/dev/mouse",       "VUID",         /* USB or SPARC */
 #if defined(__i386) || defined(__x86)
-    "/dev/kdmouse",	"PS/2",		/* PS/2 */
+    "/dev/kdmouse",     "PS/2",         /* PS/2 */
 #endif
     NULL
 };
 
 typedef struct _VuidMseRec {
-    struct _VuidMseRec *next;    
-    InputInfoPtr	pInfo;
-    Firm_event 		event;
-    unsigned char *	buffer;
-    char *		strmod;
+    struct _VuidMseRec *next;
+    InputInfoPtr        pInfo;
+    Firm_event          event;
+    unsigned char *     buffer;
+    char *              strmod;
     Bool(*wrapped_device_control)(DeviceIntPtr device, int what);
 #ifdef HAVE_ABSOLUTE_MOUSE_SCALING
-    Ms_screen_resolution	 absres;
+    Ms_screen_resolution         absres;
 #endif
-    OsTimerPtr		remove_timer;   /* Callback for removal on ENODEV */
+    OsTimerPtr          remove_timer;   /* Callback for removal on ENODEV */
 } VuidMseRec, *VuidMsePtr;
 
-static VuidMsePtr	vuidMouseList = NULL;
+static VuidMsePtr       vuidMouseList = NULL;
 
 static int  vuidMouseProc(DeviceIntPtr pPointer, int what);
 static void vuidReadInput(InputInfoPtr pInfo);
 
 #ifdef HAVE_ABSOLUTE_MOUSE_SCALING
+# include "compat-api.h"
+
 static void vuidMouseSendScreenSize(ScreenPtr pScreen, VuidMsePtr pVuidMse);
-static void vuidMouseAdjustFrame(int index, int x, int y, int flags);
+static void vuidMouseAdjustFrame(ADJUST_FRAME_ARGS_DECL);
 
 static int vuidMouseGeneration = 0;
 
@@ -135,7 +137,7 @@ VuidMsePtr getVuidMsePriv(InputInfoPtr pInfo)
     VuidMsePtr m = vuidMouseList;
 
     while ((m != NULL) && (m->pInfo != pInfo)) {
-	m = m->next;
+        m = m->next;
     }
 
     return m;
@@ -145,7 +147,7 @@ VuidMsePtr getVuidMsePriv(InputInfoPtr pInfo)
    list or changing pInfo->fd while xf86Wakeup is looping through the list
    causes server crashes */
 static CARD32
-vuidRemoveMouse(OsTimerPtr timer, CARD32 time, pointer arg)
+vuidRemoveMouse(OsTimerPtr timer, CARD32 now, pointer arg)
 {
     InputInfoPtr pInfo = (InputInfoPtr) arg;
 
@@ -174,20 +176,20 @@ vuidMouseWheelInit(InputInfoPtr pInfo)
 
     SYSCALL(i = ioctl(pInfo->fd, VUIDGWHEELCOUNT, &nwheel));
     if (i != 0)
-	return (0);
+        return (0);
 
     SYSCALL(i = ioctl(pInfo->fd, VUIDGWHEELSTATE, &wstate));
     if (i != 0) {
-	xf86Msg(X_WARNING, "%s: couldn't get wheel state\n", pInfo->name);
-	return (0);
+        xf86Msg(X_WARNING, "%s: couldn't get wheel state\n", pInfo->name);
+        return (0);
     }
 
     wstate.stateflags |= VUID_WHEEL_STATE_ENABLED;
 
     SYSCALL(i = ioctl(pInfo->fd, VUIDSWHEELSTATE, &wstate));
     if (i != 0) {
-	xf86Msg(X_WARNING, "%s: couldn't enable wheel\n", pInfo->name);
-	return (0);
+        xf86Msg(X_WARNING, "%s: couldn't enable wheel\n", pInfo->name);
+        return (0);
     }
 
     return (1);
@@ -206,13 +208,13 @@ vuidPreInit(InputInfoPtr pInfo, const char *protocol, int flags)
 
     /* Ensure we don't add the same device twice */
     if (getVuidMsePriv(pInfo) != NULL)
-	return TRUE;
+        return TRUE;
 
     pVuidMse = calloc(sizeof(VuidMseRec), 1);
     if (pVuidMse == NULL) {
-	xf86Msg(X_ERROR, "%s: cannot allocate VuidMouseRec\n", pInfo->name);
-	free(pMse);
-	return FALSE;
+        xf86Msg(X_ERROR, "%s: cannot allocate VuidMouseRec\n", pInfo->name);
+        free(pMse);
+        return FALSE;
     }
 
     pVuidMse->buffer = (unsigned char *)&pVuidMse->event;
@@ -225,11 +227,11 @@ vuidPreInit(InputInfoPtr pInfo, const char *protocol, int flags)
 
     pMse->xisbscale = sizeof(Firm_event);
 
-#ifdef HAVE_ABSOLUTE_MOUSE_SCALING    
+#ifdef HAVE_ABSOLUTE_MOUSE_SCALING
     pVuidMse->absres.height = pVuidMse->absres.width = 0;
 #endif
     pVuidMse->pInfo = pInfo;
-    pVuidMse->next = vuidMouseList; 
+    pVuidMse->next = vuidMouseList;
     vuidMouseList = pVuidMse;
 
 #if GET_ABI_MAJOR(ABI_XINPUT_VERSION) < 12
@@ -239,31 +241,31 @@ vuidPreInit(InputInfoPtr pInfo, const char *protocol, int flags)
 }
 
 static void
-vuidFlushAbsEvents(InputInfoPtr pInfo, int absX, int absY, 
-		   Bool *absXset, Bool *absYset)
+vuidFlushAbsEvents(InputInfoPtr pInfo, int absX, int absY,
+                   Bool *absXset, Bool *absYset)
 {
 #ifdef DEBUG
-    ErrorF("vuidFlushAbsEvents: %d,%d (set: %d, %d)\n", absX, absY, 
-	   *absXset, *absYset);
+    ErrorF("vuidFlushAbsEvents: %d,%d (set: %d, %d)\n", absX, absY,
+           *absXset, *absYset);
 #endif
     if ((*absXset) && (*absYset)) {
-	xf86PostMotionEvent(pInfo->dev, 
-			    /* is_absolute: */    TRUE,
-			    /* first_valuator: */ 0,
-			    /* num_valuators: */  2,
-			    absX, absY);
+        xf86PostMotionEvent(pInfo->dev,
+                            /* is_absolute: */    TRUE,
+                            /* first_valuator: */ 0,
+                            /* num_valuators: */  2,
+                            absX, absY);
     } else if (*absXset) {
-	xf86PostMotionEvent(pInfo->dev, 
-			    /* is_absolute: */    TRUE,
-			    /* first_valuator: */ 0,
-			    /* num_valuators: */  1,
-			    absX);
+        xf86PostMotionEvent(pInfo->dev,
+                            /* is_absolute: */    TRUE,
+                            /* first_valuator: */ 0,
+                            /* num_valuators: */  1,
+                            absX);
     } else if (*absYset) {
-	xf86PostMotionEvent(pInfo->dev, 
-			    /* is_absolute: */    TRUE,
-			    /* first_valuator: */ 1,
-			    /* num_valuators: */  1,
-			    absY);
+        xf86PostMotionEvent(pInfo->dev,
+                            /* is_absolute: */    TRUE,
+                            /* first_valuator: */ 1,
+                            /* num_valuators: */  1,
+                            absY);
     }
 
     *absXset = FALSE;
@@ -289,105 +291,105 @@ vuidReadInput(InputInfoPtr pInfo)
     n = 0;
 
     do {
-	n = read(pInfo->fd, pBuf, sizeof(Firm_event));
+        n = read(pInfo->fd, pBuf, sizeof(Firm_event));
 
-	if (n == 0) {
-	    break;
-	} else if (n == -1) {
-	    switch (errno) {
-		case EAGAIN: /* Nothing to read now */
-		    n = 0;   /* End loop, go on to flush events & return */
-		    continue;
-		case EINTR:  /* Interrupted, try again */
-		    continue;
-		case ENODEV: /* May happen when USB mouse is unplugged */
-		    /* We use X_NONE here because it doesn't alloc since we
-		       may be called from SIGIO handler */
-		    xf86MsgVerb(X_NONE, 0,
-				"%s: Device no longer present - removing.\n",
-				pInfo->name);
-		    xf86RemoveEnabledDevice(pInfo);
-		    pVuidMse->remove_timer =
-			TimerSet(pVuidMse->remove_timer, 0, 1,
-				 vuidRemoveMouse, pInfo);
-		    return;
-		default:     /* All other errors */
-		    /* We use X_NONE here because it doesn't alloc since we
-		       may be called from SIGIO handler */
-		    xf86MsgVerb(X_NONE, 0, "%s: Read error: %s\n", pInfo->name,
-				strerror(errno));
-		    return;
-	    }
-	} else if (n != sizeof(Firm_event)) {
-	    xf86Msg(X_WARNING, "%s: incomplete packet, size %d\n",
-			pInfo->name, n);
-	}
+        if (n == 0) {
+            break;
+        } else if (n == -1) {
+            switch (errno) {
+                case EAGAIN: /* Nothing to read now */
+                    n = 0;   /* End loop, go on to flush events & return */
+                    continue;
+                case EINTR:  /* Interrupted, try again */
+                    continue;
+                case ENODEV: /* May happen when USB mouse is unplugged */
+                    /* We use X_NONE here because it doesn't alloc since we
+                       may be called from SIGIO handler */
+                    xf86MsgVerb(X_NONE, 0,
+                                "%s: Device no longer present - removing.\n",
+                                pInfo->name);
+                    xf86RemoveEnabledDevice(pInfo);
+                    pVuidMse->remove_timer =
+                        TimerSet(pVuidMse->remove_timer, 0, 1,
+                                 vuidRemoveMouse, pInfo);
+                    return;
+                default:     /* All other errors */
+                    /* We use X_NONE here because it doesn't alloc since we
+                       may be called from SIGIO handler */
+                    xf86MsgVerb(X_NONE, 0, "%s: Read error: %s\n", pInfo->name,
+                                strerror(errno));
+                    return;
+            }
+        } else if (n != sizeof(Firm_event)) {
+            xf86Msg(X_WARNING, "%s: incomplete packet, size %d\n",
+                        pInfo->name, n);
+        }
 
 #ifdef DEBUG
-	ErrorF("vuidReadInput: event type: %3d value: %5d\n",
-	       pVuidMse->event.id, pVuidMse->event.value);
+        ErrorF("vuidReadInput: event type: %3d value: %5d\n",
+               pVuidMse->event.id, pVuidMse->event.value);
 #endif
 
-	if (pVuidMse->event.id >= BUT_FIRST && pVuidMse->event.id <= BUT_LAST) {
-	    /* button */
-	    int butnum = pVuidMse->event.id - BUT_FIRST;
+        if (pVuidMse->event.id >= BUT_FIRST && pVuidMse->event.id <= BUT_LAST) {
+            /* button */
+            int butnum = pVuidMse->event.id - BUT_FIRST;
 
-	    if (butnum < 3)
-		butnum = 2 - butnum;
-	    if (!pVuidMse->event.value)
-		buttons &= ~(1 << butnum);
-	    else
-		buttons |= (1 << butnum);
-	} else if (pVuidMse->event.id >= VLOC_FIRST &&
-		   pVuidMse->event.id <= VLOC_LAST) {
-	    /* axis */
-	    int delta = pVuidMse->event.value;
-	    switch(pVuidMse->event.id) {
-	    case LOC_X_DELTA:
-		dx += delta;
-		break;
-	    case LOC_Y_DELTA:
-		dy -= delta;
-		break;
-	    case LOC_X_ABSOLUTE:
-		if (absXset) {
-		    vuidFlushAbsEvents(pInfo, absX, absY, &absXset, &absYset);
-		}
-		absX = delta;
-		absXset = TRUE;
-		break;
-	    case LOC_Y_ABSOLUTE:
-		if (absYset) {
-		    vuidFlushAbsEvents(pInfo, absX, absY, &absXset, &absYset);
-		}
-		absY = delta;
-		absYset = TRUE;
-		break;
-	    }
-	} 
+            if (butnum < 3)
+                butnum = 2 - butnum;
+            if (!pVuidMse->event.value)
+                buttons &= ~(1 << butnum);
+            else
+                buttons |= (1 << butnum);
+        } else if (pVuidMse->event.id >= VLOC_FIRST &&
+                   pVuidMse->event.id <= VLOC_LAST) {
+            /* axis */
+            int delta = pVuidMse->event.value;
+            switch(pVuidMse->event.id) {
+            case LOC_X_DELTA:
+                dx += delta;
+                break;
+            case LOC_Y_DELTA:
+                dy -= delta;
+                break;
+            case LOC_X_ABSOLUTE:
+                if (absXset) {
+                    vuidFlushAbsEvents(pInfo, absX, absY, &absXset, &absYset);
+                }
+                absX = delta;
+                absXset = TRUE;
+                break;
+            case LOC_Y_ABSOLUTE:
+                if (absYset) {
+                    vuidFlushAbsEvents(pInfo, absX, absY, &absXset, &absYset);
+                }
+                absY = delta;
+                absYset = TRUE;
+                break;
+            }
+        }
 #ifdef HAVE_VUID_WHEEL
-	else if (vuid_in_range(VUID_WHEEL, pVuidMse->event.id)) {
-	    if (vuid_id_offset(pVuidMse->event.id) == 0)
-		dz -= VUID_WHEEL_GETDELTA(pVuidMse->event.value);
-	    else
-		dw -= VUID_WHEEL_GETDELTA(pVuidMse->event.value);
-	}
+        else if (vuid_in_range(VUID_WHEEL, pVuidMse->event.id)) {
+            if (vuid_id_offset(pVuidMse->event.id) == 0)
+                dz -= VUID_WHEEL_GETDELTA(pVuidMse->event.value);
+            else
+                dw -= VUID_WHEEL_GETDELTA(pVuidMse->event.value);
+        }
 #endif
 #ifdef HAVE_ABSOLUTE_MOUSE_SCALING
-	else if (pVuidMse->event.id == MOUSE_TYPE_ABSOLUTE) {
-	    ScreenPtr 	ptrCurScreen;
+        else if (pVuidMse->event.id == MOUSE_TYPE_ABSOLUTE) {
+            ScreenPtr   ptrCurScreen;
 
-	    /* force sending absolute resolution scaling ioctl */
-	    pVuidMse->absres.height = pVuidMse->absres.width = 0;
-	    ptrCurScreen = miPointerGetScreen(pInfo->dev);
-	    vuidMouseSendScreenSize(ptrCurScreen, pVuidMse);
-	}
+            /* force sending absolute resolution scaling ioctl */
+            pVuidMse->absres.height = pVuidMse->absres.width = 0;
+            ptrCurScreen = miPointerGetScreen(pInfo->dev);
+            vuidMouseSendScreenSize(ptrCurScreen, pVuidMse);
+        }
 #endif
 
     } while (n != 0);
 
     if (absXset || absYset) {
-	vuidFlushAbsEvents(pInfo, absX, absY, &absXset, &absYset);
+        vuidFlushAbsEvents(pInfo, absX, absY, &absXset, &absYset);
     }
 
     pMse->PostEvent(pInfo, buttons, dx, dy, dz, dw);
@@ -402,54 +404,54 @@ static void vuidMouseSendScreenSize(ScreenPtr pScreen, VuidMsePtr pVuidMse)
     int result;
 
     if (!pScr->currentMode)
-	return;
+        return;
 
-    if ((pVuidMse->absres.width != pScr->currentMode->HDisplay) || 
-	(pVuidMse->absres.height != pScr->currentMode->VDisplay))
+    if ((pVuidMse->absres.width != pScr->currentMode->HDisplay) ||
+        (pVuidMse->absres.height != pScr->currentMode->VDisplay))
     {
-	pVuidMse->absres.width = pScr->currentMode->HDisplay;
-	pVuidMse->absres.height = pScr->currentMode->VDisplay;
+        pVuidMse->absres.width = pScr->currentMode->HDisplay;
+        pVuidMse->absres.height = pScr->currentMode->VDisplay;
 
-	do {
-	    result = ioctl(pInfo->fd, MSIOSRESOLUTION, &(pVuidMse->absres));
-	} while ( (result != 0) && (errno == EINTR) );
+        do {
+            result = ioctl(pInfo->fd, MSIOSRESOLUTION, &(pVuidMse->absres));
+        } while ( (result != 0) && (errno == EINTR) );
 
-	if (result != 0) {
-	    xf86Msg(X_WARNING, 
-		    "%s: couldn't set absolute mouse scaling resolution: %s\n",
-		    pInfo->name, strerror(errno));
+        if (result != 0) {
+            xf86Msg(X_WARNING,
+                    "%s: couldn't set absolute mouse scaling resolution: %s\n",
+                    pInfo->name, strerror(errno));
 #ifdef DEBUG
-	} else {
-	    xf86Msg(X_INFO, 
-		    "%s: absolute mouse scaling resolution set to %d x %d\n", 
-		    pInfo->name, 
-		    pVuidMse->absres.width, pVuidMse->absres.height);
+        } else {
+            xf86Msg(X_INFO,
+                    "%s: absolute mouse scaling resolution set to %d x %d\n",
+                    pInfo->name,
+                    pVuidMse->absres.width, pVuidMse->absres.height);
 #endif
-	}
+        }
     }
 }
 
-static void vuidMouseAdjustFrame(int index, int x, int y, int flags)
+static void vuidMouseAdjustFrame(ADJUST_FRAME_ARGS_DECL)
 {
-      ScrnInfoPtr	pScrn = xf86Screens[index];
-      ScreenPtr		pScreen = pScrn->pScreen;
-      xf86AdjustFrameProc *wrappedAdjustFrame 
-	  = (xf86AdjustFrameProc *) vuidMouseGetScreenPrivate(pScreen);
-      VuidMsePtr	m;
-      ScreenPtr 	ptrCurScreen;
+      SCRN_INFO_PTR(arg);
+      ScreenPtr         pScreen = xf86ScrnToScreen(pScrn);
+      xf86AdjustFrameProc *wrappedAdjustFrame
+          = (xf86AdjustFrameProc *) vuidMouseGetScreenPrivate(pScreen);
+      VuidMsePtr        m;
+      ScreenPtr         ptrCurScreen;
 
-      if(wrappedAdjustFrame) {
-        pScrn->AdjustFrame = wrappedAdjustFrame;
-        (*pScrn->AdjustFrame)(index, x, y, flags);
-        pScrn->AdjustFrame = vuidMouseAdjustFrame;
+      if (wrappedAdjustFrame) {
+          pScrn->AdjustFrame = wrappedAdjustFrame;
+          (*pScrn->AdjustFrame)(ADJUST_FRAME_ARGS(pScrn, x, y));
+          pScrn->AdjustFrame = vuidMouseAdjustFrame;
       }
 
       for (m = vuidMouseList; m != NULL ; m = m->next) {
-	  ptrCurScreen = miPointerGetScreen(m->pInfo->dev);
-	  if (ptrCurScreen == pScreen)
-	  {
-	      vuidMouseSendScreenSize(pScreen, m);
-	  }
+          ptrCurScreen = miPointerGetScreen(m->pInfo->dev);
+          if (ptrCurScreen == pScreen)
+          {
+              vuidMouseSendScreenSize(pScreen, m);
+          }
       }
 }
 #endif /* HAVE_ABSOLUTE_MOUSE_SCALING */
@@ -470,97 +472,97 @@ vuidMouseProc(DeviceIntPtr pPointer, int what)
 
     pVuidMse = getVuidMsePriv(pInfo);
     if (pVuidMse == NULL) {
-	return BadImplementation;
+        return BadImplementation;
     }
-    
+
     switch (what) {
 
     case DEVICE_INIT:
 #ifdef HAVE_ABSOLUTE_MOUSE_SCALING
 
 #if HAS_DEVPRIVATEKEYREC
-	if (!dixRegisterPrivateKey(&vuidMouseScreenIndex, PRIVATE_SCREEN, 0))
-		return BadAlloc;
+        if (!dixRegisterPrivateKey(&vuidMouseScreenIndex, PRIVATE_SCREEN, 0))
+                return BadAlloc;
 #endif  /* HAS_DEVPRIVATEKEYREC */
 
-	if (vuidMouseGeneration != serverGeneration) {
-		for (i = 0; i < screenInfo.numScreens; i++) {
-		    ScreenPtr pScreen = screenInfo.screens[i];
-		    ScrnInfoPtr pScrn = XF86SCRNINFO(pScreen);
-		    vuidMouseSetScreenPrivate(pScreen, pScrn->AdjustFrame);
-		    pScrn->AdjustFrame = vuidMouseAdjustFrame;
-		}
-	    vuidMouseGeneration = serverGeneration;
-	}
-#endif    	
-	ret = pVuidMse->wrapped_device_control(pPointer, what);
-	break;
-	
+        if (vuidMouseGeneration != serverGeneration) {
+                for (i = 0; i < screenInfo.numScreens; i++) {
+                    ScreenPtr pScreen = screenInfo.screens[i];
+                    ScrnInfoPtr pScrn = XF86SCRNINFO(pScreen);
+                    vuidMouseSetScreenPrivate(pScreen, pScrn->AdjustFrame);
+                    pScrn->AdjustFrame = vuidMouseAdjustFrame;
+                }
+            vuidMouseGeneration = serverGeneration;
+        }
+#endif
+        ret = pVuidMse->wrapped_device_control(pPointer, what);
+        break;
+
     case DEVICE_ON:
-	ret = pVuidMse->wrapped_device_control(pPointer, DEVICE_ON);
+        ret = pVuidMse->wrapped_device_control(pPointer, DEVICE_ON);
 
-	if ((ret == Success) && (pInfo->fd != -1)) {
-	    int fmt = VUID_FIRM_EVENT;
-	    
-	    if (pVuidMse->strmod) {
-		/* Check to see if module is already pushed */
-		SYSCALL(i = ioctl(pInfo->fd, I_FIND, pVuidMse->strmod));
+        if ((ret == Success) && (pInfo->fd != -1)) {
+            int fmt = VUID_FIRM_EVENT;
 
-		if (i == 0) { /* Not already pushed */
-		    SYSCALL(i = ioctl(pInfo->fd, I_PUSH, pVuidMse->strmod));
-		    if (i < 0) {
-			xf86Msg(X_WARNING, "%s: cannot push module '%s' "
-				"onto mouse device: %s\n", pInfo->name,
-				pVuidMse->strmod, strerror(errno));
-			free(pVuidMse->strmod);
-			pVuidMse->strmod = NULL;
-		    }
-		}
-	    }
+            if (pVuidMse->strmod) {
+                /* Check to see if module is already pushed */
+                SYSCALL(i = ioctl(pInfo->fd, I_FIND, pVuidMse->strmod));
 
-	    SYSCALL(i = ioctl(pInfo->fd, VUIDSFORMAT, &fmt));
-	    if (i < 0) {
-		xf86Msg(X_WARNING,
-			"%s: cannot set mouse device to VUID mode: %s\n",
-			pInfo->name, strerror(errno));
-	    }
-	    vuidMouseWheelInit(pInfo);
-#ifdef HAVE_ABSOLUTE_MOUSE_SCALING	    
-	    vuidMouseSendScreenSize(screenInfo.screens[0], pVuidMse);
-#endif	    
-	    xf86FlushInput(pInfo->fd);
+                if (i == 0) { /* Not already pushed */
+                    SYSCALL(i = ioctl(pInfo->fd, I_PUSH, pVuidMse->strmod));
+                    if (i < 0) {
+                        xf86Msg(X_WARNING, "%s: cannot push module '%s' "
+                                "onto mouse device: %s\n", pInfo->name,
+                                pVuidMse->strmod, strerror(errno));
+                        free(pVuidMse->strmod);
+                        pVuidMse->strmod = NULL;
+                    }
+                }
+            }
 
-	    /* Allocate here so we don't alloc in ReadInput which may be called
-	       from SIGIO handler. */
-	    if (pVuidMse->remove_timer == NULL) {
-		pVuidMse->remove_timer = TimerSet(pVuidMse->remove_timer,
-						  0, 0, NULL, NULL);
-	    }
-	}
-	break;
+            SYSCALL(i = ioctl(pInfo->fd, VUIDSFORMAT, &fmt));
+            if (i < 0) {
+                xf86Msg(X_WARNING,
+                        "%s: cannot set mouse device to VUID mode: %s\n",
+                        pInfo->name, strerror(errno));
+            }
+            vuidMouseWheelInit(pInfo);
+#ifdef HAVE_ABSOLUTE_MOUSE_SCALING
+            vuidMouseSendScreenSize(screenInfo.screens[0], pVuidMse);
+#endif
+            xf86FlushInput(pInfo->fd);
+
+            /* Allocate here so we don't alloc in ReadInput which may be called
+               from SIGIO handler. */
+            if (pVuidMse->remove_timer == NULL) {
+                pVuidMse->remove_timer = TimerSet(pVuidMse->remove_timer,
+                                                  0, 0, NULL, NULL);
+            }
+        }
+        break;
 
     case DEVICE_OFF:
     case DEVICE_CLOSE:
-	if (pInfo->fd != -1) {
-	    if (pVuidMse->strmod) {
-		SYSCALL(i = ioctl(pInfo->fd, I_POP, pVuidMse->strmod));
-		if (i == -1) {
-		    xf86Msg(X_WARNING,
-		      "%s: cannot pop module '%s' off mouse device: %s\n",
-		      pInfo->name, pVuidMse->strmod, strerror(errno));
-		}
-	    }
-	}
-	if (pVuidMse->remove_timer) {
-	    TimerFree(pVuidMse->remove_timer);
-	    pVuidMse->remove_timer = NULL;
-	}
-	ret = pVuidMse->wrapped_device_control(pPointer, what);
-	break;
+        if (pInfo->fd != -1) {
+            if (pVuidMse->strmod) {
+                SYSCALL(i = ioctl(pInfo->fd, I_POP, pVuidMse->strmod));
+                if (i == -1) {
+                    xf86Msg(X_WARNING,
+                      "%s: cannot pop module '%s' off mouse device: %s\n",
+                      pInfo->name, pVuidMse->strmod, strerror(errno));
+                }
+            }
+        }
+        if (pVuidMse->remove_timer) {
+            TimerFree(pVuidMse->remove_timer);
+            pVuidMse->remove_timer = NULL;
+        }
+        ret = pVuidMse->wrapped_device_control(pPointer, what);
+        break;
 
     default: /* Should never be called, but just in case */
-	ret = pVuidMse->wrapped_device_control(pPointer, what);
-	break;
+        ret = pVuidMse->wrapped_device_control(pPointer, what);
+        break;
     }
     return ret;
 }
@@ -570,10 +572,10 @@ sunMousePreInit(InputInfoPtr pInfo, const char *protocol, int flags)
 {
     /* The protocol is guaranteed to be one of the internalNames[] */
     if (xf86NameCmp(protocol, "VUID") == 0) {
-	return vuidPreInit(pInfo, protocol, flags);
+        return vuidPreInit(pInfo, protocol, flags);
     }
     return TRUE;
-}    
+}
 
 static const char **
 BuiltinNames(void)
@@ -587,8 +589,8 @@ CheckProtocol(const char *protocol)
     int i;
 
     for (i = 0; internalNames[i]; i++)
-	if (xf86NameCmp(protocol, internalNames[i]) == 0)
-	    return TRUE;
+        if (xf86NameCmp(protocol, internalNames[i]) == 0)
+            return TRUE;
 
     return FALSE;
 }
@@ -600,8 +602,8 @@ DefaultProtocol(void)
 }
 
 static Bool
-solarisMouseAutoProbe(InputInfoPtr pInfo, const char **protocol, 
-	const char **device)
+solarisMouseAutoProbe(InputInfoPtr pInfo, const char **protocol,
+        const char **device)
 {
     const char **pdev, **pproto;
     int fd = -1;
@@ -609,60 +611,54 @@ solarisMouseAutoProbe(InputInfoPtr pInfo, const char **protocol,
     char *strmod;
 
     if (*device == NULL) {
-	/* Check to see if xorg.conf or HAL specified a device to use */
-	*device = xf86CheckStrOption(pInfo->options, "Device", NULL);
-	if (*device == NULL) {
-	    *device = xf86CheckStrOption(pInfo->options, "Device", NULL);
-	}
+        /* Check to see if xorg.conf or HAL specified a device to use */
+        *device = xf86CheckStrOption(pInfo->options, "Device", NULL);
     }
 
     if (*device != NULL) {
-	strmod = xf86CheckStrOption(pInfo->options, "StreamsModule", NULL);
-	if (strmod == NULL) {
-	    strmod = xf86CheckStrOption(pInfo->options, "StreamsModule", NULL);
-	}
-	if (strmod) {
-	    /* if a device name is already known, and a StreamsModule is
-	       specified to convert events to VUID, then we don't need to
-	       probe further */
-	    *protocol = "VUID";
-	    return TRUE;
-	}
+        strmod = xf86CheckStrOption(pInfo->options, "StreamsModule", NULL);
+        if (strmod) {
+            /* if a device name is already known, and a StreamsModule is
+               specified to convert events to VUID, then we don't need to
+               probe further */
+            *protocol = "VUID";
+            return TRUE;
+        }
     }
 
 
     for (pdev = solarisMouseDevs; *pdev; pdev += 2) {
-	pproto = pdev + 1;
-	if ((*protocol != NULL) && (strcmp(*protocol, "Auto") != 0) &&
-	  (*pproto != NULL) && (strcmp(*pproto, *protocol) != 0)) {
-	    continue;
-	}
-	if ((*device != NULL) && (strcmp(*device, *pdev) != 0)) {
-	    continue;
-	}
+        pproto = pdev + 1;
+        if ((*protocol != NULL) && (strcmp(*protocol, "Auto") != 0) &&
+          (*pproto != NULL) && (strcmp(*pproto, *protocol) != 0)) {
+            continue;
+        }
+        if ((*device != NULL) && (strcmp(*device, *pdev) != 0)) {
+            continue;
+        }
         SYSCALL (fd = open(*pdev, O_RDWR | O_NONBLOCK));
-	if (fd == -1) {
+        if (fd == -1) {
 #ifdef DEBUG
-	    ErrorF("Cannot open %s (%s)\n", pdev, strerror(errno));
+            ErrorF("Cannot open %s (%s)\n", pdev, strerror(errno));
 #endif
-	} else {
-	    found = TRUE;
-	    if ((*pproto != NULL) && (strcmp(*pproto, "VUID") == 0)) {
-		int i, r;
-		SYSCALL(r = ioctl(fd, VUIDGFORMAT, &i));
-    		if (r < 0) {
-		    found = FALSE;
-		}
-	    }
-	    close(fd);
-	    if (found == TRUE) {
-		if (*pproto != NULL) {
-		    *protocol = *pproto;
-		}
-		*device = *pdev;
-		return TRUE;
-	    }
-	}
+        } else {
+            found = TRUE;
+            if ((*pproto != NULL) && (strcmp(*pproto, "VUID") == 0)) {
+                int i, r;
+                SYSCALL(r = ioctl(fd, VUIDGFORMAT, &i));
+                if (r < 0) {
+                    found = FALSE;
+                }
+            }
+            close(fd);
+            if (found == TRUE) {
+                if (*pproto != NULL) {
+                    *protocol = *pproto;
+                }
+                *device = *pdev;
+                return TRUE;
+            }
+        }
     }
     return FALSE;
 }
@@ -675,20 +671,20 @@ SetupAuto(InputInfoPtr pInfo, int *protoPara)
     MouseDevPtr pMse = pInfo->private;
 
     if (pInfo->fd == -1) {
-	/* probe to find device/protocol to use */
-	if (solarisMouseAutoProbe(pInfo, &pproto, &pdev) != FALSE) {
-	    /* Set the Device option. */
-	    pInfo->options =
-	     xf86AddNewOption(pInfo->options, "Device", pdev);
-	    xf86Msg(X_INFO, "%s: Setting Device option to \"%s\"\n",
-	      pInfo->name, pdev);
-	}
+        /* probe to find device/protocol to use */
+        if (solarisMouseAutoProbe(pInfo, &pproto, &pdev) != FALSE) {
+            /* Set the Device option. */
+            pInfo->options =
+             xf86AddNewOption(pInfo->options, "Device", pdev);
+            xf86Msg(X_INFO, "%s: Setting Device option to \"%s\"\n",
+              pInfo->name, pdev);
+        }
     } else if (pMse->protocolID == PROT_AUTO) {
-	pdev = xf86CheckStrOption(pInfo->options,
-		"Device", NULL);
-	if ((solarisMouseAutoProbe(pInfo, &pproto, &pdev) != FALSE) &&
-	    (pproto != NULL))
-	    sunMousePreInit(pInfo, pproto, 0);
+        pdev = xf86CheckStrOption(pInfo->options,
+                "Device", NULL);
+        if ((solarisMouseAutoProbe(pInfo, &pproto, &pdev) != FALSE) &&
+            (pproto != NULL))
+            sunMousePreInit(pInfo, pproto, 0);
     }
     return pproto;
 }
@@ -700,11 +696,11 @@ FindDevice(InputInfoPtr pInfo, const char *protocol, int flags)
     const char *pproto = protocol;
 
     if (solarisMouseAutoProbe(pInfo, &pproto, &pdev) != FALSE) {
-	/* Set the Device option. */
-	pInfo->options =
-	  xf86AddNewOption(pInfo->options, "Device", pdev);
-	xf86Msg(X_INFO, "%s: Setting Device option to \"%s\"\n",
-	  pInfo->name, pdev);
+        /* Set the Device option. */
+        pInfo->options =
+          xf86AddNewOption(pInfo->options, "Device", pdev);
+        xf86Msg(X_INFO, "%s: Setting Device option to \"%s\"\n",
+          pInfo->name, pdev);
     }
     return pdev;
 }
@@ -723,7 +719,7 @@ OSMouseInit(int flags)
 
     p = calloc(sizeof(OSMouseInfoRec), 1);
     if (!p)
-	return NULL;
+        return NULL;
     p->SupportedInterfaces = SupportedInterfaces;
     p->BuiltinNames = BuiltinNames;
     p->CheckProtocol = CheckProtocol;
