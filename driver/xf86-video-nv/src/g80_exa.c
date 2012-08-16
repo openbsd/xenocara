@@ -33,7 +33,7 @@
 static void
 waitMarker(ScreenPtr pScreen, int marker)
 {
-    G80Sync(xf86Screens[pScreen->myNum]);
+    G80Sync(xf86ScreenToScrn(pScreen));
 }
 
 static Bool
@@ -103,7 +103,7 @@ prepareSolid(PixmapPtr      pPixmap,
              Pixel          planemask,
              Pixel          fg)
 {
-    ScrnInfoPtr pScrn = xf86Screens[pPixmap->drawable.pScreen->myNum];
+    ScrnInfoPtr pScrn = xf86ScreenToScrn(pPixmap->drawable.pScreen);
     G80Ptr pNv = G80PTR(pScrn);
 
     if(pPixmap->drawable.depth > 24) return FALSE;
@@ -123,7 +123,7 @@ prepareSolid(PixmapPtr      pPixmap,
 static void
 solid(PixmapPtr pPixmap, int x1, int y1, int x2, int y2)
 {
-    ScrnInfoPtr pScrn = xf86Screens[pPixmap->drawable.pScreen->myNum];
+    ScrnInfoPtr pScrn = xf86ScreenToScrn(pPixmap->drawable.pScreen);
     G80Ptr pNv = G80PTR(pScrn);
 
     G80DmaStart(pNv, 0x600, 4);
@@ -151,7 +151,7 @@ prepareCopy(PixmapPtr       pSrcPixmap,
             int             alu,
             Pixel           planemask)
 {
-    ScrnInfoPtr pScrn = xf86Screens[pDstPixmap->drawable.pScreen->myNum];
+    ScrnInfoPtr pScrn = xf86ScreenToScrn(pDstPixmap->drawable.pScreen);
     G80Ptr pNv = G80PTR(pScrn);
 
     if(!setSrc(pNv, pSrcPixmap)) return FALSE;
@@ -176,7 +176,7 @@ copy(PixmapPtr pDstPixmap,
      int       width,
      int       height)
 {
-    ScrnInfoPtr pScrn = xf86Screens[pDstPixmap->drawable.pScreen->myNum];
+    ScrnInfoPtr pScrn = xf86ScreenToScrn(pDstPixmap->drawable.pScreen);
     G80Ptr pNv = G80PTR(pScrn);
 
     G80DmaStart(pNv, 0x110, 1);
@@ -226,7 +226,7 @@ upload(PixmapPtr pDst,
        char      *src,
        int       src_pitch)
 {
-    ScrnInfoPtr pScrn = xf86Screens[pDst->drawable.pScreen->myNum];
+    ScrnInfoPtr pScrn = xf86ScreenToScrn(pDst->drawable.pScreen);
     G80Ptr pNv = G80PTR(pScrn);
     const int Bpp = pDst->drawable.bitsPerPixel >> 3;
     int line_dwords = (w * Bpp + 3) / 4;

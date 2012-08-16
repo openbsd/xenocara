@@ -270,7 +270,7 @@ NVLoadCursorARGB(ScrnInfoPtr pScrn, CursorPtr pCurs)
 Bool 
 NVCursorInit(ScreenPtr pScreen)
 {
-    ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+    ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
     NVPtr pNv = NVPTR(pScrn);
     xf86CursorInfoPtr infoPtr;
 

@@ -1,12 +1,15 @@
-#include <xaa.h>
 #include <exa.h>
 #include <xf86.h>
 #include <xf86int10.h>
 #include <xf86Cursor.h>
 #include <xf86DDC.h>
 #include <xf86Crtc.h>
-#include <xf86int10.h>
 
+#ifdef HAVE_XAA_H
+#include <xaa.h>
+#endif
+#include <xf86fbman.h>
+#include "compat-api.h"
 #define G80_NUM_I2C_PORTS 10
 
 typedef enum Head {
@@ -73,7 +76,9 @@ typedef struct G80Rec {
     Bool                AllowDualLink;
 
     /* XAA */
+#ifdef HAVE_XAA_H
     XAAInfoRecPtr       xaa;
+#endif
     CARD32              currentRop;
 
     /* EXA */

@@ -3,7 +3,6 @@
 
 #include "colormapst.h"
 #include "vgaHW.h"
-#include "xaa.h"
 #include "xf86Cursor.h"
 #include "xf86int10.h"
 
@@ -126,14 +125,15 @@ typedef struct {
     volatile U008 *PDIO0;
     volatile U008 *PDIO;
     volatile U032 *PRAMDAC;
-
+#ifdef HAVE_XAA_H
     XAAInfoRecPtr       AccelInfoRec;
+#endif
     xf86CursorInfoPtr   CursorInfoRec;
     DGAModePtr          DGAModes;
     int                 numDGAModes;
     Bool                DGAactive;
     int                 DGAViewportStatus;
-    void		(*PointerMoved)(int index, int x, int y);
+    void		(*PointerMoved)(SCRN_ARG_TYPE arg, int x, int y);
     ScreenBlockHandlerProcPtr BlockHandler;
     CloseScreenProcPtr  CloseScreen;
     xf86EnableDisableFBAccessProc *EnableDisableFBAccess;

@@ -37,17 +37,16 @@
  */
 /* Mandatory functions */
 static Bool    RivaPreInit(ScrnInfoPtr pScrn, int flags);
-static Bool    RivaScreenInit(int Index, ScreenPtr pScreen, int argc,
-                            char **argv);
-static Bool    RivaEnterVT(int scrnIndex, int flags);
-static Bool    RivaEnterVTFBDev(int scrnIndex, int flags);
-static void    RivaLeaveVT(int scrnIndex, int flags);
-static Bool    RivaCloseScreen(int scrnIndex, ScreenPtr pScreen);
+static Bool    RivaScreenInit(SCREEN_INIT_ARGS_DECL);
+static Bool    RivaEnterVT(VT_FUNC_ARGS_DECL);
+static Bool    RivaEnterVTFBDev(VT_FUNC_ARGS_DECL);
+static void    RivaLeaveVT(VT_FUNC_ARGS_DECL);
+static Bool    RivaCloseScreen(CLOSE_SCREEN_ARGS_DECL);
 static Bool    RivaSaveScreen(ScreenPtr pScreen, int mode);
 
 /* Optional functions */
-static void    RivaFreeScreen(int scrnIndex, int flags);
-static ModeStatus RivaValidMode(int scrnIndex, DisplayModePtr mode,
+static void    RivaFreeScreen(FREE_SCREEN_ARGS_DECL);
+static ModeStatus RivaValidMode(SCRN_ARG_TYPE arg, DisplayModePtr mode,
 				Bool verbose, int flags);
 
 /* Internally used functions */
@@ -162,9 +161,10 @@ RivaGetScrnInfoRec(PciChipsets *chips, int chip)
 
 /* Usually mandatory */
 Bool
-RivaSwitchMode(int scrnIndex, DisplayModePtr mode, int flags)
+RivaSwitchMode(SWITCH_MODE_ARGS_DECL)
 {
-    return RivaModeInit(xf86Screens[scrnIndex], mode);
+    SCRN_INFO_PTR(arg);
+    return RivaModeInit(pScrn, mode);
 }
 
 /*
@@ -173,9 +173,9 @@ RivaSwitchMode(int scrnIndex, DisplayModePtr mode, int flags)
  */
 /* Usually mandatory */
 void 
-RivaAdjustFrame(int scrnIndex, int x, int y, int flags)
+RivaAdjustFrame(ADJUST_FRAME_ARGS_DECL)
 {
-    ScrnInfoPtr pScrn = xf86Screens[scrnIndex];
+    SCRN_INFO_PTR(arg);
     int startAddr;
     RivaPtr pRiva = RivaPTR(pScrn);
     RivaFBLayout *pLayout = &pRiva->CurrentLayout;
@@ -197,21 +197,22 @@ RivaAdjustFrame(int scrnIndex, int x, int y, int flags)
 
 /* Mandatory */
 static Bool
-RivaEnterVT(int scrnIndex, int flags)
+RivaEnterVT(VT_FUNC_ARGS_DECL)
 {
-    ScrnInfoPtr pScrn = xf86Screens[scrnIndex];
+    SCRN_INFO_PTR(arg);
 
     if (!RivaModeInit(pScrn, pScrn->currentMode))
         return FALSE;
-    RivaAdjustFrame(scrnIndex, pScrn->frameX0, pScrn->frameY0, 0);
+    RivaAdjustFrame(ADJUST_FRAME_ARGS(pScrn, pScrn->frameX0, pScrn->frameY0));
 
     return TRUE;
 }
 
 static Bool
-RivaEnterVTFBDev(int scrnIndex, int flags)
+RivaEnterVTFBDev(VT_FUNC_ARGS_DECL)
 {
-    fbdevHWEnterVT(scrnIndex,flags);
+    SCRN_INFO_PTR(arg);
+    fbdevHWEnterVT(VT_FUNC_ARGS);
     return TRUE;
 }
 
@@ -224,9 +225,9 @@ RivaEnterVTFBDev(int scrnIndex, int flags)
 
 /* Mandatory */
 static void
-RivaLeaveVT(int scrnIndex, int flags)
+RivaLeaveVT(VT_FUNC_ARGS_DECL)
 {
-    ScrnInfoPtr pScrn = xf86Screens[scrnIndex];
+    SCRN_INFO_PTR(arg);
     RivaPtr pRiva = RivaPTR(pScrn);
 
     RivaRestore(pScrn);
@@ -244,9 +245,9 @@ RivaLeaveVT(int scrnIndex, int flags)
 
 /* Mandatory */
 static Bool
-RivaCloseScreen(int scrnIndex, ScreenPtr pScreen)
+RivaCloseScreen(CLOSE_SCREEN_ARGS_DECL)
 {
-    ScrnInfoPtr pScrn = xf86Screens[scrnIndex];
+    ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
     RivaPtr pRiva = RivaPTR(pScrn);
 
     if (pScrn->vtSema) {
@@ -256,8 +257,10 @@ RivaCloseScreen(int scrnIndex, ScreenPtr pScreen)
 
     RivaUnmapMem(pScrn);
     vgaHWUnmapMem(pScrn);
+#ifdef HAVE_XAA_H
     if (pRiva->AccelInfoRec)
         XAADestroyInfoRec(pRiva->AccelInfoRec);
+#endif
     if (pRiva->CursorInfoRec)
         xf86DestroyCursorInfoRec(pRiva->CursorInfoRec);
     if (pRiva->ShadowPtr)
@@ -269,22 +272,23 @@ RivaCloseScreen(int scrnIndex, ScreenPtr pScreen)
 
     pScrn->vtSema = FALSE;
     pScreen->CloseScreen = pRiva->CloseScreen;
-    return (*pScreen->CloseScreen)(scrnIndex, pScreen);
+    return (*pScreen->CloseScreen)(CLOSE_SCREEN_ARGS);
 }
 
 /* Free up any persistent data structures */
 
 /* Optional */
 static void
-RivaFreeScreen(int scrnIndex, int flags)
+RivaFreeScreen(FREE_SCREEN_ARGS_DECL)
 {
+    SCRN_INFO_PTR(arg);
     /*
      * This only gets called when a screen is being deleted.  It does not
      * get called routinely at the end of a server generation.
      */
     if (xf86LoaderCheckSymbol("vgaHWFreeHWRec"))
-	vgaHWFreeHWRec(xf86Screens[scrnIndex]);
-    RivaFreeRec(xf86Screens[scrnIndex]);
+	vgaHWFreeHWRec(pScrn);
+    RivaFreeRec(pScrn);
 }
 
 
@@ -292,7 +296,7 @@ RivaFreeScreen(int scrnIndex, int flags)
 
 /* Optional */
 static ModeStatus
-RivaValidMode(int scrnIndex, DisplayModePtr mode, Bool verbose, int flags)
+RivaValidMode(SCRN_ARG_TYPE arg, DisplayModePtr mode, Bool verbose, int flags)
 {
     return (MODE_OK);
 }
@@ -484,6 +488,7 @@ RivaPreInit(ScrnInfoPtr pScrn, int flags)
 	xf86FreeInt10(pRiva->pInt);
 	return FALSE;
     }
+    vgaHWSetStdFuncs(VGAHWPTR(pScrn));
     
     /* We use a programmable clock */
     pScrn->progClock = TRUE;
@@ -769,9 +774,9 @@ RivaPreInit(ScrnInfoPtr pScrn, int flags)
     /* Load XAA if needed */
     if (!pRiva->NoAccel) {
 	if (!xf86LoadSubModule(pScrn, "xaa")) {
-	    xf86FreeInt10(pRiva->pInt);
-	    RivaFreeRec(pScrn);
-	    return FALSE;
+	    xf86DrvMsg(pScrn->scrnIndex, X_INFO, "Falling back to shadowfb\n");
+	    pRiva->NoAccel = 1;
+	    pRiva->ShadowFB = 1;
 	}
     }
 
@@ -998,7 +1003,7 @@ RivaDPMSSet(ScrnInfoPtr pScrn, int PowerManagementMode, int flags)
 /* This gets called at the start of each server generation */
 
 static Bool
-RivaScreenInit(int scrnIndex, ScreenPtr pScreen, int argc, char **argv)
+RivaScreenInit(SCREEN_INIT_ARGS_DECL)
 {
     ScrnInfoPtr pScrn;
     vgaHWPtr hwp;
@@ -1013,7 +1018,7 @@ RivaScreenInit(int scrnIndex, ScreenPtr pScreen, int argc, char **argv)
     /* 
      * First get the ScrnInfoRec
      */
-    pScrn = xf86Screens[pScreen->myNum];
+    pScrn = xf86ScreenToScrn(pScreen);
 
 
     hwp = VGAHWPTR(pScrn);
@@ -1051,7 +1056,7 @@ RivaScreenInit(int scrnIndex, ScreenPtr pScreen, int argc, char **argv)
 
     /* Darken the screen for aesthetic reasons and set the viewport */
     RivaSaveScreen(pScreen, SCREEN_SAVER_ON);
-    pScrn->AdjustFrame(scrnIndex, pScrn->frameX0, pScrn->frameY0, 0);
+    pScrn->AdjustFrame(ADJUST_FRAME_ARGS(pScrn, pScrn->frameX0, pScrn->frameY0));
 
 
     /*
@@ -1120,7 +1125,7 @@ RivaScreenInit(int scrnIndex, ScreenPtr pScreen, int argc, char **argv)
                                displayWidth, pScrn->bitsPerPixel);
             break;
         default:
-            xf86DrvMsg(scrnIndex, X_ERROR,
+            xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
                        "Internal error: invalid bpp (%d) in RivaScreenInit\n",
                        pScrn->bitsPerPixel);
             ret = FALSE;

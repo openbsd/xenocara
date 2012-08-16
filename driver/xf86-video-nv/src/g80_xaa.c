@@ -105,6 +105,7 @@ G80SetClip(G80Ptr pNv, int x, int y, int w, int h)
     G80DmaNext (pNv, h);
 }
 
+#ifdef HAVE_XAA_H
 /* Screen to screen copies */
 
 static void
@@ -481,12 +482,13 @@ G80DisableClipping(ScrnInfoPtr pScrn)
 
     G80SetClip(pNv, 0, 0, 0x7fff, 0x7fff);
 }
-
+#endif
 
 Bool
 G80XAAInit(ScreenPtr pScreen)
 {
-    ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+#ifdef HAVE_XAA_H
+    ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
     G80Ptr pNv = G80PTR(pScrn);
     XAAInfoRecPtr xaa;
 
@@ -551,4 +553,7 @@ G80XAAInit(ScreenPtr pScreen)
     miSetZeroLineBias(pScreen, OCTANT1 | OCTANT3 | OCTANT4 | OCTANT6);
 
     return XAAInit(pScreen, xaa);
+#else
+    return FALSE;
+#endif
 }

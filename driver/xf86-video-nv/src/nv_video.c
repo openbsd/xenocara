@@ -12,8 +12,6 @@
 
 #include "xf86xv.h"
 #include <X11/extensions/Xv.h>
-#include "xaa.h"
-#include "xaalocal.h"
 #include "dixstruct.h"
 #include "fourcc.h"
 
@@ -239,7 +237,7 @@ NVAllocateOverlayMemory(
         xf86FreeOffscreenLinear(linear);
    }
 
-   pScreen = screenInfo.screens[pScrn->scrnIndex];
+   pScreen = xf86ScrnToScreen(pScrn);
 
    new_linear = xf86AllocateOffscreenLinear(pScreen, size, 32, 
                                                 NULL, NULL, NULL);
@@ -287,7 +285,7 @@ static void NVFreeBlitMemory(ScrnInfoPtr pScrnInfo)
 
 void NVInitVideo (ScreenPtr pScreen)
 {
-    ScrnInfoPtr 	pScrn = xf86Screens[pScreen->myNum];
+    ScrnInfoPtr 	pScrn = xf86ScreenToScrn(pScreen);
     XF86VideoAdaptorPtr *adaptors, *newAdaptors = NULL;
     XF86VideoAdaptorPtr overlayAdaptor = NULL;
     XF86VideoAdaptorPtr blitAdaptor = NULL;
@@ -343,7 +341,7 @@ void NVInitVideo (ScreenPtr pScreen)
 static XF86VideoAdaptorPtr
 NVSetupBlitVideo (ScreenPtr pScreen)
 {
-    ScrnInfoPtr pScrnInfo = xf86Screens[pScreen->myNum];
+    ScrnInfoPtr pScrnInfo = xf86ScreenToScrn(pScreen);
     NVPtr       pNv       = NVPTR(pScrnInfo);
     XF86VideoAdaptorPtr adapt;
     NVPortPrivPtr       pPriv;
@@ -406,7 +404,7 @@ NVSetupBlitVideo (ScreenPtr pScreen)
 static XF86VideoAdaptorPtr 
 NVSetupOverlayVideo (ScreenPtr pScreen)
 {
-    ScrnInfoPtr pScrnInfo = xf86Screens[pScreen->myNum];
+    ScrnInfoPtr pScrnInfo = xf86ScreenToScrn(pScreen);
     NVPtr       pNv       = NVPTR(pScrnInfo);
     XF86VideoAdaptorPtr adapt;
     NVPortPrivPtr       pPriv;
@@ -631,8 +629,9 @@ NVPutBlitImage (
     }
 
     NVDmaKickoff(pNv);
+#ifdef HAVE_XAA_H
     SET_SYNC_FLAG(pNv->AccelInfoRec);
-
+#endif
     pPriv->videoStatus = FREE_TIMER;
     pPriv->videoTime = currentTime.milliseconds + FREE_DELAY;
     pNv->VideoTimerCallback = NVVideoTimerCallback;

@@ -42,9 +42,9 @@ NVRefreshArea(ScrnInfoPtr pScrn, int num, BoxPtr pbox)
 } 
 
 void
-NVPointerMoved(int index, int x, int y)
+NVPointerMoved(SCRN_ARG_TYPE arg, int x, int y)
 {
-    ScrnInfoPtr pScrn = xf86Screens[index];
+    SCRN_INFO_PTR(arg);
     NVPtr pNv = NVPTR(pScrn);
     int newX, newY;
 
@@ -56,7 +56,7 @@ NVPointerMoved(int index, int x, int y)
 	newY = pScrn->pScreen->width - x - 1;
     }
 
-    (*pNv->PointerMoved)(index, newX, newY);
+    (*pNv->PointerMoved)(arg, newX, newY);
 }
 
 void

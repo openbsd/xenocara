@@ -40,7 +40,10 @@
 
 #include "fb.h"
 
+#ifdef HAVE_XAA_H
 #include "xaa.h"
+#endif
+#include "xf86fbman.h"
 #include "xf86cmap.h"
 #include "shadowfb.h"
 #include "fbdevhw.h"
@@ -58,6 +61,7 @@
 #include <X11/extensions/randr.h>
 #endif
 
+#include "compat-api.h"
 #include "nv_local.h"
 #include "nv_type.h"
 #include "nv_proto.h"

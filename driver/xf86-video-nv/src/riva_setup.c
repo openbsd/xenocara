@@ -168,9 +168,9 @@ RivaProbeDDC (ScrnInfoPtr pScrn)
     xf86DrvMsg(pScrn->scrnIndex, X_INFO, "Probing for EDID...\n");
 
 #ifdef EDID_COMPLETE_RAWDATA
-    MonInfo = xf86DoEEDID(pScrn->scrnIndex, pRiva->I2C, TRUE);
+    MonInfo = xf86DoEEDID(XF86_SCRN_ARG(pScrn), pRiva->I2C, TRUE);
 #else
-    MonInfo = xf86DoEDID_DDC2(pScrn->scrnIndex, pRiva->I2C);
+    MonInfo = xf86DoEDID_DDC2(XF86_SCRN_ARG(pScrn), pRiva->I2C);
 #endif
     if (MonInfo) {
        xf86DrvMsg(pScrn->scrnIndex, X_INFO,

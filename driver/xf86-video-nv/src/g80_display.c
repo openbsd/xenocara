@@ -213,7 +213,7 @@ G80CrtcSetPClk(xf86CrtcPtr crtc)
     if(pNv->architecture <= 0xa0 ||
        pNv->architecture == 0xaa ||
        pNv->architecture == 0xac) {
-        int lo_n, lo_m, hi_n, hi_m, p, i;
+        int lo_n, lo_m, hi_n, hi_m, p;
         CARD32 lo = pNv->reg[(0x00614104+headOff)/4];
         CARD32 hi = pNv->reg[(0x00614108+headOff)/4];
 

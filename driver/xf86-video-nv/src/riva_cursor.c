@@ -144,7 +144,7 @@ RivaUseHWCursor(ScreenPtr pScreen, CursorPtr pCurs)
 Bool 
 RivaCursorInit(ScreenPtr pScreen)
 {
-    ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+    ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
     RivaPtr pRiva = RivaPTR(pScrn);
     xf86CursorInfoPtr infoPtr;
 

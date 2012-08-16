@@ -1,3 +1,120 @@
+commit e82fddd3e962189ad4493e2bf98ba533cf36d8c3
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Tue Jul 17 16:49:24 2012 +1000
+
+    nv: bump version to 2.1.20
+    
+    Signed-off-by: Dave Airlie <airlied@redhat.com>
+
+commit 0d4ea629bcfd72c7242dadbd2d71d9a7034a9467
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Tue Jul 17 16:48:56 2012 +1000
+
+    nv: add missing fbman includes.
+    
+    Signed-off-by: Dave Airlie <airlied@redhat.com>
+
+commit 86e83109d6309455e505d636e7760942177b1519
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Tue Jul 17 16:05:09 2012 +1000
+
+    xf86-video-nv: bump to version 2.1.19
+    
+    Signed-off-by: Dave Airlie <airlied@redhat.com>
+
+commit e5e3e733d933fc3accdd6c3c7a02df5950530cae
+Author: Dave Airlie <airlied@gmail.com>
+Date:   Mon Jul 16 18:48:32 2012 +1000
+
+    nv: make XAA optional.
+    
+    This allows nv to build without XAA.
+    
+    Signed-off-by: Dave Airlie <airlied@redhat.com>
+
+commit 713e9501b87465cf2a62c27605b6fc4a454dad95
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Thu Jun 7 15:52:16 2012 +0100
+
+    nv: port to new compat API.
+    
+    Signed-off-by: Dave Airlie <airlied@redhat.com>
+
+commit b3d61828837661c9b383378a7d6006752659108b
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Mon Dec 19 16:57:40 2011 -0500
+
+    Fix for new vgahw ABI
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit 5b7f07f8171dd5ca4f13d7da25d7d91140b036e1
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Mon Dec 19 16:55:30 2011 -0500
+
+    Make failure to XAA non-fatal
+    
+    Fall back to NoAccel on G80 since there's no shadowfb support there,
+    otherwise fall to shadowfb.
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit 4b03459a835ee43d940054cbdaefa7c330bff385
+Author: Nicolas Kaiser <nikai@nikai.net>
+Date:   Mon Apr 25 04:26:33 2011 -0700
+
+    remove duplicated includes
+    
+    Remove duplicated includes of guarded headers.
+    
+    Signed-off-by: Nicolas Kaiser <nikai@nikai.net>
+    Reviewed-by: Aaron Plattner <aplattner@nvidia.com>
+    Signed-off-by: Aaron Plattner <aplattner@nvidia.com>
+
+commit 2b17d1ac579ee426f631f4c62c9f0cf617a06e51
+Author: Cyril Brulebois <kibi@debian.org>
+Date:   Tue Mar 1 17:09:10 2011 -0800
+
+    Fix compiler warning.
+    
+    Get rid of this with CFLAGS="-Wall -Werror":
+    |   CC     g80_display.lo
+    | cc1: warnings being treated as errors
+    | g80_display.c: In function ‘G80CrtcSetPClk’:
+    | g80_display.c:216: error: unused variable ‘i’
+    
+    Signed-off-by: Cyril Brulebois <kibi@debian.org>
+    Signed-off-by: Aaron Plattner <aplattner@nvidia.com>
+    Reviewed-by: Aaron Plattner <aplattner@nvidia.com>
+    Tested-by: Aaron Plattner <aplattner@nvidia.com>
+
+commit 95108089e22d33723488baba22467f2f3c4f1bf6
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Oct 30 09:53:33 2010 -0700
+
+    Correct copyright date in previous commit
+    
+    Oops, pasted in the new template and forgot to restore the original date
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit d7727e5307c5c3fd0dbc51394893385cb3b01101
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Oct 30 09:39:39 2010 -0700
+
+    Sun's copyrights now belong to Oracle
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit cb93a9b513b5814b18594de7a3b67bb225fb9c34
+Author: Jesse Adkins <jesserayadkins@gmail.com>
+Date:   Tue Sep 28 13:29:51 2010 -0700
+
+    Purge cvs tags.
+    
+    Signed-off-by: Jesse Adkins <jesserayadkins@gmail.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit 41de275248cf02db8cf0d4ab5df7596b23ea573d
 Author: Aaron Plattner <aplattner@nvidia.com>
 Date:   Fri Jul 30 14:14:59 2010 -0700

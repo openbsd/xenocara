@@ -373,7 +373,11 @@ NVDACLoadPalette(ScrnInfoPtr pScrn, int numColors, int *indices, LOCO *colors,
 static void
 NV_I2CGetBits(I2CBusPtr b, int *clock, int *data)
 {
+#ifdef XF86_SCRN_INTERFACE
+    NVPtr pNv = NVPTR(b->pScrn);
+#else
     NVPtr pNv = NVPTR(xf86Screens[b->scrnIndex]);
+#endif
     unsigned char val;
 
     /* Get the result. */
@@ -387,7 +391,11 @@ NV_I2CGetBits(I2CBusPtr b, int *clock, int *data)
 static void
 NV_I2CPutBits(I2CBusPtr b, int clock, int data)
 {
+#ifdef XF86_SCRN_INTERFACE
+    NVPtr pNv = NVPTR(b->pScrn);
+#else
     NVPtr pNv = NVPTR(xf86Screens[b->scrnIndex]);
+#endif
     unsigned char val;
 
     VGA_WR08(pNv->PCIO, 0x3d4, pNv->DDCBase + 1);
@@ -419,6 +427,9 @@ NVDACi2cInit(ScrnInfoPtr pScrn)
 
     I2CPtr->BusName    = "DDC";
     I2CPtr->scrnIndex  = pScrn->scrnIndex;
+#ifdef XF86_SCRN_INTERFACE
+    I2CPtr->pScrn = pScrn;
+#endif
     I2CPtr->I2CPutBits = NV_I2CPutBits;
     I2CPtr->I2CGetBits = NV_I2CGetBits;
     I2CPtr->AcknTimeout = 5;

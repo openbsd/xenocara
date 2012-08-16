@@ -6,7 +6,9 @@
 #include "nv_include.h"
 #include "nv_type.h"
 #include "nv_proto.h"
+#ifdef HAVE_XAA_H
 #include "xaalocal.h"
+#endif
 #include "dgaproc.h"
 
 
@@ -15,10 +17,12 @@ static Bool NV_OpenFramebuffer(ScrnInfoPtr, char **, unsigned char **,
 static Bool NV_SetMode(ScrnInfoPtr, DGAModePtr);
 static int  NV_GetViewport(ScrnInfoPtr);
 static void NV_SetViewport(ScrnInfoPtr, int, int, int);
+#ifdef HAVE_XAA_H
 static void NV_FillRect(ScrnInfoPtr, int, int, int, int, unsigned long);
 static void NV_BlitRect(ScrnInfoPtr, int, int, int, int, int, int);
 static void NV_BlitTransRect(ScrnInfoPtr, int, int, int, int, int, int, 
 					unsigned long);
+#endif
 
 static
 DGAFunctionRec NV_DGAFuncs = {
@@ -28,9 +32,13 @@ DGAFunctionRec NV_DGAFuncs = {
    NV_SetViewport,
    NV_GetViewport,
    NVSync,
+#ifdef HAVE_XAA_H
    NV_FillRect,
    NV_BlitRect,
    NV_BlitTransRect
+#else
+   NULL, NULL, NULL
+#endif
 };
 
 
@@ -80,8 +88,10 @@ SECOND_PASS:
 
 	    if(pixmap)
 		mode->flags |= DGA_PIXMAP_AVAILABLE;
+#ifdef HAVE_XAA_H
 	    if(!pNv->NoAccel)
 		mode->flags |= DGA_FILL_RECT | DGA_BLIT_RECT;
+#endif
 	    if(pMode->Flags & V_DBLSCAN)
 		mode->flags |= DGA_DOUBLESCAN;
 	    if(pMode->Flags & V_INTERLACE)
@@ -128,7 +138,7 @@ SECOND_PASS:
 Bool
 NVDGAInit(ScreenPtr pScreen)
 {   
-   ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+   ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
    NVPtr pNv = NVPTR(pScrn);
    DGAModePtr modes = NULL;
    int num = 0;
@@ -191,8 +201,8 @@ NV_SetMode(
         memcpy(&pNv->CurrentLayout, &SavedLayouts[index], sizeof(NVFBLayout));
                 
       pScrn->currentMode = pNv->CurrentLayout.mode;
-      NVSwitchMode(index, pScrn->currentMode, 0);
-      NVAdjustFrame(index, pScrn->frameX0, pScrn->frameY0, 0);
+      NVSwitchMode(SWITCH_MODE_ARGS(pScrn, pScrn->currentMode));
+      NVAdjustFrame(ADJUST_FRAME_ARGS(pScrn, pScrn->frameX0, pScrn->frameY0));
       pNv->DGAactive = FALSE;
    } else {
       if(!pNv->DGAactive) {  /* save the old parameters */
@@ -209,7 +219,7 @@ NV_SetMode(
       pNv->CurrentLayout.weight.green = BitsSet(pMode->green_mask);
       pNv->CurrentLayout.weight.blue = BitsSet(pMode->blue_mask);
       /* NVModeInit() will set the mode field */
-      NVSwitchMode(index, pMode->mode, 0);
+      NVSwitchMode(SWITCH_MODE_ARGS(pScrn, pMode->mode));
    }
    
    return TRUE;
@@ -234,7 +244,7 @@ NV_SetViewport(
 ){
    NVPtr pNv = NVPTR(pScrn);
 
-   NVAdjustFrame(pScrn->pScreen->myNum, x, y, flags);
+   NVAdjustFrame(ADJUST_FRAME_ARGS(pScrn, x, y));
 
    while(VGA_RD08(pNv->PCIO, 0x3da) & 0x08);
    while(!(VGA_RD08(pNv->PCIO, 0x3da) & 0x08));
@@ -242,6 +252,7 @@ NV_SetViewport(
    pNv->DGAViewportStatus = 0;  
 }
 
+#ifdef HAVE_XAA_H
 static void 
 NV_FillRect (
    ScrnInfoPtr pScrn, 
@@ -291,7 +302,7 @@ NV_BlitTransRect(
 ){
    /* not implemented */
 }
-
+#endif
 
 static Bool 
 NV_OpenFramebuffer(

@@ -29,9 +29,10 @@
 #endif
 
 #include "riva_include.h"
+#ifdef HAVE_XAA_H
 #include "xaalocal.h"
+#endif
 #include "xaarop.h"
-
 #include "miline.h"
 
 static void
@@ -78,7 +79,9 @@ RivaSetRopSolid(RivaPtr pRiva, int rop)
             RivaSetPattern(pRiva, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF);
         pRiva->currentRop = rop;
         RIVA_FIFO_FREE(pRiva->riva, Rop, 1);
+#ifdef HAVE_XAA_H
         pRiva->riva.Rop->Rop3 = XAAGetCopyROP(rop);
+#endif
     }
 }
 
@@ -91,7 +94,7 @@ RivaSetRopPattern(RivaPtr pRiva, int rop)
         pRiva->riva.Rop->Rop3 = XAAGetPatternROP(rop);
     }
 }
-
+#ifdef HAVE_XAA_H
 /*
  * Fill solid rectangles.
  */
@@ -192,7 +195,7 @@ RivaSubsequentMono8x8PatternFillRect(ScrnInfoPtr pScrn,
     pRiva->riva.Bitmap->UnclippedRectangle[0].WidthHeight = (w << 16) | h;
     write_mem_barrier();
 }
-
+#endif
 
 void
 RivaResetGraphics(ScrnInfoPtr pScrn)
@@ -220,6 +223,7 @@ void RivaSync(ScrnInfoPtr pScrn)
     RIVA_BUSY(pRiva->riva);
 }
 
+#ifdef HAVE_XAA_H
 /* Color expansion */
 static void
 RivaSetupForScanlineCPUToScreenColorExpandFill(ScrnInfoPtr pScrn,
@@ -451,13 +455,15 @@ RivaValidatePolyPoint(
    if(pGC->alu != GXcopy)
         pGC->ops->PolyPoint = miPolyPoint;
 }
+#endif
 
 /* Initialize XAA acceleration info */
 Bool
 RivaAccelInit(ScreenPtr pScreen) 
 {
+#ifdef HAVE_XAA_H
     XAAInfoRecPtr infoPtr;
-    ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+    ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
     RivaPtr pRiva = RivaPTR(pScrn);
 
     pRiva->AccelInfoRec = infoPtr = XAACreateInfoRec();
@@ -536,4 +542,7 @@ RivaAccelInit(ScreenPtr pScreen)
     RivaResetGraphics(pScrn);
 
     return(XAAInit(pScreen, infoPtr));
+#else
+    return FALSE;
+#endif
 }

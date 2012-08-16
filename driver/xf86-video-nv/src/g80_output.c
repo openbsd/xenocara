@@ -254,13 +254,21 @@ static CARD32 i2cAddr(const int port)
 
 static void G80_I2CPutBits(I2CBusPtr b, int clock, int data)
 {
+#ifdef XF86_SCRN_INTERFACE
+    G80Ptr pNv = G80PTR(b->pScrn);
+#else
     G80Ptr pNv = G80PTR(xf86Screens[b->scrnIndex]);
+#endif
     pNv->reg[i2cAddr(b->DriverPrivate.val)/4] = 4 | clock | data << 1;
 }
 
 static void G80_I2CGetBits(I2CBusPtr b, int *clock, int *data)
 {
+#ifdef XF86_SCRN_INTERFACE
+    G80Ptr pNv = G80PTR(b->pScrn);
+#else
     G80Ptr pNv = G80PTR(xf86Screens[b->scrnIndex]);
+#endif
     unsigned char val;
 
     val = pNv->reg[i2cAddr(b->DriverPrivate.val)/4];
@@ -279,6 +287,9 @@ G80I2CInit(ScrnInfoPtr pScrn, const char *name, const int port)
 
     i2c->BusName = strdup(name);
     i2c->scrnIndex = pScrn->scrnIndex;
+#ifdef XF86_SCRN_INTERFACE
+    i2c->pScrn = pScrn;
+#endif
     i2c->I2CPutBits = G80_I2CPutBits;
     i2c->I2CGetBits = G80_I2CGetBits;
     i2c->ByteTimeout = 2200; /* VESA DDC spec 3 p. 43 (+10 %) */
@@ -339,9 +350,9 @@ ProbeDDC(I2CBusPtr i2c)
     pNv->reg[addr/4] = 7;
     /* Should probably use xf86OutputGetEDID here */
 #ifdef EDID_COMPLETE_RAWDATA
-    monInfo = xf86DoEEDID(pScrn->scrnIndex, i2c, TRUE);
+    monInfo = xf86DoEEDID(XF86_SCRN_ARG(pScrn), i2c, TRUE);
 #else
-    monInfo = xf86DoEDID_DDC2(pScrn->scrnIndex, i2c);
+    monInfo = xf86DoEDID_DDC2(XF86_SCRN_ARG(pScrn), i2c);
 #endif
     pNv->reg[addr/4] = 3;
 

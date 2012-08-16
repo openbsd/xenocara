@@ -26,7 +26,9 @@
 #endif
 
 #include "nv_include.h"
+#ifdef HAVE_XAA_H
 #include "xaalocal.h"
+#endif
 #include "miline.h"
 #include "nv_dma.h"
 
@@ -298,7 +300,7 @@ NVDMAKickoffCallback (ScrnInfoPtr pScrn)
    pNv->DMAKickoffCallback = NULL;
 }
 
-
+#ifdef HAVE_XAA_H
 static void
 NVSetupForScreenToScreenCopy(
    ScrnInfoPtr pScrn, 
@@ -646,12 +648,14 @@ NVDisableClipping(ScrnInfoPtr pScrn)
     NVDmaNext (pNv, 0x7FFF7FFF);
 }
 
+#endif
 
 /* Initialize XAA acceleration info */
 Bool
 NVAccelInit(ScreenPtr pScreen) 
 {
-   ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+#ifdef HAVE_XAA_H
+   ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
    NVPtr pNv = NVPTR(pScrn);
    XAAInfoRecPtr accel;
 
@@ -710,4 +714,7 @@ NVAccelInit(ScreenPtr pScreen)
    miSetZeroLineBias(pScreen, OCTANT1 | OCTANT3 | OCTANT4 | OCTANT6);
 
    return (XAAInit(pScreen, accel));
+#else
+   return FALSE;
+#endif
 }

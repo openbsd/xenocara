@@ -2,8 +2,8 @@
 #define __NV_PROTO_H__
 
 /* in nv_driver.c */
-Bool   NVSwitchMode(int scrnIndex, DisplayModePtr mode, int flags);
-void   NVAdjustFrame(int scrnIndex, int x, int y, int flags);
+Bool   NVSwitchMode(SWITCH_MODE_ARGS_DECL);
+void   NVAdjustFrame(ADJUST_FRAME_ARGS_DECL);
 Bool   NVI2CInit(ScrnInfoPtr pScrn);
 
 
@@ -53,6 +53,6 @@ void NVRefreshArea(ScrnInfoPtr pScrn, int num, BoxPtr pbox);
 void NVRefreshArea8(ScrnInfoPtr pScrn, int num, BoxPtr pbox);
 void NVRefreshArea16(ScrnInfoPtr pScrn, int num, BoxPtr pbox);
 void NVRefreshArea32(ScrnInfoPtr pScrn, int num, BoxPtr pbox);
-void NVPointerMoved(int index, int x, int y);
+void NVPointerMoved(SCRN_ARG_TYPE arg, int x, int y);
 
 #endif /* __NV_PROTO_H__ */

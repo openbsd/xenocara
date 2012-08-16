@@ -230,9 +230,9 @@ NVProbeDDC (ScrnInfoPtr pScrn, int bus)
                "Probing for EDID on I2C bus %s...\n", bus ? "B" : "A");
 
 #ifdef EDID_COMPLETE_RAWDATA
-    MonInfo = xf86DoEEDID(pScrn->scrnIndex, pNv->I2C, TRUE);
+    MonInfo = xf86DoEEDID(XF86_SCRN_ARG(pScrn), pNv->I2C, TRUE);
 #else
-    MonInfo = xf86DoEDID_DDC2(pScrn->scrnIndex, pNv->I2C);
+    MonInfo = xf86DoEDID_DDC2(XF86_SCRN_ARG(pScrn), pNv->I2C);
 #endif
     if (MonInfo) {
        xf86DrvMsg(pScrn->scrnIndex, X_PROBED,

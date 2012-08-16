@@ -39,7 +39,10 @@
 
 #include "fb.h"
 
+#ifdef HAVE_XAA_H
 #include "xaa.h"
+#endif
+#include "xf86fbman.h"
 #include "xf86cmap.h"
 #include "shadowfb.h"
 #include "fbdevhw.h"
@@ -50,10 +53,10 @@
 #include "vgaHW.h"
 
 #include "xf86Cursor.h"
-#include "xf86DDC.h"
 
 #include "region.h"
 
+#include "compat-api.h"
 #include "riva_local.h"
 #include "riva_type.h"
 #include "riva_proto.h"
