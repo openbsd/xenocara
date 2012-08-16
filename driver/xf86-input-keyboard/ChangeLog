@@ -1,8 +1,71 @@
-commit 26a7180bd6b173ac8bc9eb61715fd120d59c7db1
+commit 6e51df6dd4255cbe311ec98e21a1cc94975271a1
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Jul 23 22:04:45 2012 -0700
+
+    xf86-input-keyboard 1.6.2
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 8d3edb688115d3100d7ac6fa9ed407494e435c43
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu May 24 21:36:17 2012 -0700
+
+    Link with $(XORG_LIBS) to support no-undefined linking
+    
+    Will be empty on most platforms, set to the -z parent=Xorg flag on
+    Solaris if building with the support for enforcing no undefined symbols.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit dd6f110c4568dc0922bae47530906b01396e2d41
+Author: François Tigeot <ftigeot@wolfpond.org>
+Date:   Sat May 5 13:12:10 2012 +0200
+
+    Recognize DragonFly as a BSD system.
+    
+    This patch has actually been present for more than 4 years in the
+    pkgsrc tree.
+    
+    Originally-from: Jörg Sonnenberger
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit da5ccb256acf6cbb817d68499e0d9f533f750628
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Apr 30 19:34:44 2012 -0700
+
+    Solaris: ensure "Device" option is set, even if HAL didn't set it for us
+    
+    Handles fallback to default /dev/kbd when AutoAddDevices is False and
+    Device option is not manually set in xorg.conf, so that xinput device
+    node property can be correctly set to it.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit e63cb5ecc5ab7239c9c285920244cc89e5853920
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Apr 27 17:51:22 2012 -0700
+
+    Set XI_PROP_DEVICE_NODE property to string from "Device" option
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Alexandr Shadchin <alexandr.shadchin@gmail.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit ed35abe0da1a9134ee126df88608b33892ae4313
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Jan 18 18:13:08 2012 -0800
+
+    Solaris: Use uchar_t, not int, for led masks in KIOCSLED/KIOCGLED ioctls
+    
+    Avoids checking/setting the wrong bits on big endian machines like SPARC.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit a6a0dee4178600a5a9403f69c22bd4eb483fbd34
 Author: Peter Hutterer <peter.hutterer@who-t.net>
 Date:   Wed Jan 4 10:45:09 2012 +1000
 
-    xf86-input-keyboard 1.6.1
+    keyboard 1.6.1
     
     Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
 

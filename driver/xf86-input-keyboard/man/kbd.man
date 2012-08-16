@@ -40,7 +40,7 @@ are supported:
 .TP 7
 .BI "Option \*qDevice\*q \*q" string \*q
 Specify the keyboard device.  Default: the OS's default console keyboard
-input source.
+input source.  Property: "Device Node" (read-only).
 .TP 7
 .BI "Option \*qProtocol\*q \*q" string \*q
 Specify the keyboard protocol.  Valid protocol types include:

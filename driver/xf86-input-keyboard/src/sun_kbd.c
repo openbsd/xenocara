@@ -70,8 +70,9 @@ static void
 sunKbdSetLeds(InputInfoPtr pInfo, int leds)
 {
     int i;
+    uchar_t setleds = (uchar_t) (leds & 0xFF);
 
-    SYSCALL(i = ioctl(pInfo->fd, KIOCSLED, &leds));
+    SYSCALL(i = ioctl(pInfo->fd, KIOCSLED, &setleds));
     if (i < 0) {
 	xf86Msg(X_ERROR, "%s: Failed to set keyboard LED's: %s\n",
                 pInfo->name, strerror(errno));
@@ -82,14 +83,15 @@ sunKbdSetLeds(InputInfoPtr pInfo, int leds)
 static int
 sunKbdGetLeds(InputInfoPtr pInfo)
 {
-    int i, leds = 0;
+    int i;
+    uchar_t leds = 0;
 
     SYSCALL(i = ioctl(pInfo->fd, KIOCGLED, &leds));
     if (i < 0) {
         xf86Msg(X_ERROR, "%s: Failed to get keyboard LED's: %s\n",
                 pInfo->name, strerror(errno));
     }
-    return leds;
+    return (int) leds;
 }
 
 
@@ -495,6 +497,8 @@ OpenKeyboard(InputInfoPtr pInfo)
 		    kbdPath);
 	pInfo->read_input = ReadInput;
 	ret = TRUE;
+	/* in case it wasn't set and we fell back to default */
+	xf86ReplaceStrOption(pInfo->options, "Device", kbdPath);
     }
 
     free(kbdPath);
