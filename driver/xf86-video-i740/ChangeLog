@@ -1,3 +1,35 @@
+commit c754f573590b74b16d0deb9f86d6505bffa028bf
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Tue Jul 17 16:05:09 2012 +1000
+
+    xf86-video-i740: bump to version 1.3.4
+    
+    Signed-off-by: Dave Airlie <airlied@redhat.com>
+
+commit e3f81a683f3f5d3c70c4320568b756fb50bec527
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Tue Jul 17 14:52:33 2012 +1000
+
+    i740: convert to new X server screen conv api.
+    
+    Signed-off-by: Dave Airlie <airlied@redhat.com>
+
+commit a4b43ddf74966bff74e92b0d2bdd4573730d97a8
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Tue Jul 17 14:17:42 2012 +1000
+
+    i740: bump to new X server compat API.
+    
+    Signed-off-by: Dave Airlie <airlied@redhat.com>
+
+commit 018440b3e852304b6a1aa46ae8ed358635d70ff4
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Tue Jul 17 14:06:43 2012 +1000
+
+    i740: fix build after XAA removal from server.
+    
+    Signed-off-by: Dave Airlie <airlied@redhat.com>
+
 commit 94a2eb3193867502d0d52d88a8e1bb990cad2b2a
 Author: Julien Cristau <jcristau@debian.org>
 Date:   Sat May 12 13:19:28 2012 +0200

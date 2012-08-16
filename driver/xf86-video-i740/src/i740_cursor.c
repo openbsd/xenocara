@@ -61,7 +61,7 @@ I740CursorInit(ScreenPtr pScreen)
   xf86CursorInfoPtr infoPtr;
   FBAreaPtr fbarea;
 
-  pScrn = xf86Screens[pScreen->myNum];
+  pScrn = xf86ScreenToScrn(pScreen);
   pI740 = I740PTR(pScrn);
   pI740->CursorInfoRec = infoPtr = xf86CreateCursorInfoRec();
   if (!infoPtr) return FALSE;
@@ -117,7 +117,7 @@ I740UseHWCursor(ScreenPtr pScreen, CursorPtr pCurs) {
   ScrnInfoPtr pScrn;
   I740Ptr pI740;
 
-  pScrn = xf86Screens[pScreen->myNum];
+  pScrn = xf86ScreenToScrn(pScreen);
   pI740 = I740PTR(pScrn);
   if (pScrn->currentMode->Flags&V_DBLSCAN)
     return FALSE;

@@ -67,8 +67,6 @@
 
 #include "xf86xv.h"
 #include <X11/extensions/Xv.h>
-#include "xaa.h"
-#include "xaalocal.h"
 #include "dixstruct.h"
 #include "fourcc.h"
 
@@ -600,7 +598,7 @@ static FBLinearPtr I740AllocateMemory(ScrnInfoPtr pScrn, FBLinearPtr linear, int
       xf86FreeOffscreenLinear(linear);
     }
 
-  pScreen = screenInfo.screens[pScrn->scrnIndex];
+  pScreen = xf86ScrnToScreen(pScrn);
 
   new_linear = xf86AllocateOffscreenLinear(pScreen, size, 4, NULL, NULL, NULL);
 
@@ -830,10 +828,10 @@ static int I740QueryImageAttributes(ScrnInfoPtr pScrn, int id, unsigned short *w
   return size;
 }
 
-static void I740BlockHandler(int i, pointer blockData, pointer pTimeout, pointer pReadmask)
+static void I740BlockHandler(BLOCKHANDLER_ARGS_DECL)
 {
-  ScreenPtr   pScreen = screenInfo.screens[i];
-  ScrnInfoPtr pScrn = xf86Screens[i];
+  SCREEN_PTR(arg);
+  ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
   I740Ptr      pI740 = I740PTR(pScrn);
   I740PortPrivPtr pPriv = GET_PORT_PRIVATE(pScrn);
 
@@ -841,7 +839,7 @@ static void I740BlockHandler(int i, pointer blockData, pointer pTimeout, pointer
 
   pScreen->BlockHandler = pI740->BlockHandler;
     
-  (*pScreen->BlockHandler) (i, blockData, pTimeout, pReadmask);
+  (*pScreen->BlockHandler) (BLOCKHANDLER_ARGS);
 
   pScreen->BlockHandler = I740BlockHandler;
 
@@ -1124,7 +1122,7 @@ static void I740InitOffscreenImages(ScreenPtr pScreen)
 {
   XF86OffscreenImagePtr offscreenImages;
   {
-    ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+    ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
     xf86DrvMsg(pScrn->scrnIndex, X_CONFIG, "I740InitOffscreenImages entered\n");  /* ### */
   }
 
@@ -1171,7 +1169,7 @@ static XF86VideoAdaptorPtr I740SetupImageVideo(ScreenPtr pScreen)
     {15, TrueColor}, {16, TrueColor}, {24, TrueColor},  {8, PseudoColor}
   };
 
-  ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+  ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
   I740Ptr pI740 = I740PTR(pScrn);
   XF86VideoAdaptorPtr adapt;
   I740PortPrivPtr pPriv;
@@ -1240,7 +1238,7 @@ static XF86VideoAdaptorPtr I740SetupImageVideo(ScreenPtr pScreen)
 
 void I740InitVideo(ScreenPtr pScreen)
 {
-  ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+  ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
   XF86VideoAdaptorPtr newAdaptor = NULL;
   xf86DrvMsg(pScrn->scrnIndex, X_CONFIG, "I740InitVideo entered\n");  /* ### */
 

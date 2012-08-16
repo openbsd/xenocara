@@ -44,12 +44,12 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include "xf86Pci.h"
 #include "xf86PciInfo.h"
 
-#include "xaa.h"
 #include "vgaHW.h"
 
 #include "xf86xv.h"
 #include "i740.h"
 
+#ifdef HAVE_XAA_H
 static unsigned int i740Rop[16] = {
     0x00, /* GXclear      */
     0x88, /* GXand        */
@@ -115,6 +115,7 @@ static void I740SubsequentCPUToScreenColorExpandFill(ScrnInfoPtr pScrn,
 						     int x, int y, int w, int h,
 						     int skipleft);
 #endif
+#endif
 /*
  * The following function sets up the supported acceleration. Call it
  * from the FbInit() function in the SVGA driver, or before ScreenInit
@@ -122,8 +123,9 @@ static void I740SubsequentCPUToScreenColorExpandFill(ScrnInfoPtr pScrn,
  */
 Bool
 I740AccelInit(ScreenPtr pScreen) {
+#ifdef HAVE_XAA_H
   XAAInfoRecPtr infoPtr;
-  ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+  ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
   I740Ptr pI740 = I740PTR(pScrn);
 
   pI740->AccelInfoRec = infoPtr = XAACreateInfoRec();
@@ -192,7 +194,12 @@ I740AccelInit(ScreenPtr pScreen) {
 #endif
 #endif
   return XAAInit(pScreen, infoPtr);
+#else
+  return FALSE;
+#endif
 }
+
+#ifdef HAVE_XAA_H
 
 static void
 I740SyncPIO(ScrnInfoPtr pScrn) {
@@ -395,4 +402,6 @@ I740SubsequentCPUToScreenColorExpandFill(ScrnInfoPtr pScrn, int x, int y,
 #endif
   OUTREG(LP_FIFO, (h << 16) | (w * pI740->cpp));
 }
+#endif
+
 #endif
