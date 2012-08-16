@@ -10,7 +10,6 @@
 #include "compiler.h"
 
 #include "xf86Pci.h"
-#include "xf86PciInfo.h"
 
 #include "vgaHW.h"
 
@@ -18,6 +17,7 @@
 #define _ALP_PRIVATE_
 #include "alp.h"
 
+#ifdef HAVE_XAA_H
 #ifdef DEBUG
 #define minb(p) \
         (ErrorF("minb(%X)\n", p),\
@@ -222,7 +222,7 @@ AlpAccelEngineInit(ScrnInfoPtr pScrn)
 Bool
 AlpXAAInitMMIO(ScreenPtr pScreen)
 {
-	ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+	ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
 	CirPtr pCir = CIRPTR(pScrn);
 	XAAInfoRecPtr XAAPtr;
 	
@@ -267,7 +267,4 @@ AlpXAAInitMMIO(ScreenPtr pScreen)
 	return TRUE;
 }
 
-
-
-
-
+#endif

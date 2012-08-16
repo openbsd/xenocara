@@ -146,4 +146,28 @@ typedef struct pci_device *pciVideoPtr;
 
 #endif /* XSERVER_LIBPCIACCESS */
 
+#ifndef _XF86_PCIINFO_H
+
+#define PCI_VENDOR_CIRRUS		0x1013
+/* Cirrus Logic */
+#define PCI_CHIP_GD7548			0x0038
+#define PCI_CHIP_GD7555			0x0040
+#define PCI_CHIP_GD7556                 0x004C
+#define PCI_CHIP_GD5430			0x00A0
+#define PCI_CHIP_GD5434_4		0x00A4
+#define PCI_CHIP_GD5434_8		0x00A8
+#define PCI_CHIP_GD5436			0x00AC
+#define PCI_CHIP_GD5446			0x00B8
+#define PCI_CHIP_GD5480			0x00BC
+#define PCI_CHIP_GD5462			0x00D0
+#define PCI_CHIP_GD5464			0x00D4
+#define PCI_CHIP_GD5464BD		0x00D5
+#define PCI_CHIP_GD5465			0x00D6
+#define PCI_CHIP_6729			0x1100
+#define PCI_CHIP_6832			0x1110
+#define PCI_CHIP_GD7542			0x1200
+#define PCI_CHIP_GD7543			0x1202
+#define PCI_CHIP_GD7541			0x1204
+
+#endif
 #endif /* CIRPCIRENAME_H */

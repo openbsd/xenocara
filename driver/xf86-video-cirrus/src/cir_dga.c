@@ -30,9 +30,10 @@
 #include "xf86.h"
 #include "xf86_OSproc.h"
 #include "xf86Pci.h"
-#include "xf86PciInfo.h"
+#ifdef HAVE_XAA_H
 #include "xaa.h"
 #include "xaalocal.h"
+#endif
 #include "vgaHW.h"
 #include "cir.h"
 #include "dgaproc.h"
@@ -40,15 +41,17 @@
 static Bool Cir_OpenFramebuffer(ScrnInfoPtr, char **, unsigned char **, 
 				  int *, int *, int *);
 static Bool Cir_SetMode(ScrnInfoPtr, DGAModePtr);
-static void Cir_Sync(ScrnInfoPtr);
 static int  Cir_GetViewport(ScrnInfoPtr);
 static void Cir_SetViewport(ScrnInfoPtr, int, int, int);
+#ifdef HAVE_XAA_H
+static void Cir_Sync(ScrnInfoPtr);
 static void Cir_FillRect(ScrnInfoPtr, int, int, int, int, unsigned long);
 static void Cir_BlitRect(ScrnInfoPtr, int, int, int, int, int, int);
 /*
 static void Cir_BlitTransRect(ScrnInfoPtr, int, int, int, int, int, int, 
                                 unsigned long);
 */
+#endif
 
 static
 DGAFunctionRec CirDGAFuncs = {
@@ -57,9 +60,13 @@ DGAFunctionRec CirDGAFuncs = {
    Cir_SetMode,
    Cir_SetViewport,
    Cir_GetViewport,
+#ifdef HAVE_XAA_H
    Cir_Sync,
    Cir_FillRect,
    Cir_BlitRect,
+#else
+   NULL, NULL, NULL,
+#endif
    NULL  /* Cir_BlitTransRect */
 };
 
@@ -69,7 +76,7 @@ DGAFunctionRec CirDGAFuncs = {
 _X_EXPORT Bool
 CirDGAInit(ScreenPtr pScreen)
 {
-  ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+  ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
   CirPtr pCir = CIRPTR(pScrn);
   DGAModePtr modes = NULL, newmodes = NULL, currentMode;
   DisplayModePtr pMode, firstMode;
@@ -191,7 +198,7 @@ Cir_SetViewport(
    CirPtr pCir = CIRPTR(pScrn);
    vgaHWPtr hwp = VGAHWPTR(pScrn);
 
-   pScrn->AdjustFrame(pScrn->pScreen->myNum, x, y, flags);
+   pScrn->AdjustFrame(ADJUST_FRAME_ARGS(pScrn, x, y));
 
    while((hwp->readST01(hwp) & 0x08));
    while(!(hwp->readST01(hwp) & 0x08));
@@ -208,14 +215,12 @@ Cir_GetViewport(
     return pCir->DGAViewportStatus;
 }
 
-
-
+#ifdef HAVE_XAA_H
 static void 
 Cir_Sync(
    ScrnInfoPtr pScrn
 ){
     CirPtr pCir = CIRPTR(pScrn);
-
     if(pCir->AccelInfoRec) {
 	(*pCir->AccelInfoRec->Sync)(pScrn);
     }
@@ -256,3 +261,4 @@ Cir_BlitRect(
 	SET_SYNC_FLAG(pCir->AccelInfoRec);
     }
 }
+#endif

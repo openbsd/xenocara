@@ -9,7 +9,6 @@
 #include "compiler.h"
 
 #include "xf86Pci.h"
-#include "xf86PciInfo.h"
 
 #include "vgaHW.h"
 
@@ -17,6 +16,7 @@
 #define _ALP_PRIVATE_
 #include "alp.h"
 
+#ifdef HAVE_XAA_H
 #define WAIT	outb(pCir->PIOReg, 0x31); \
 		while(inb(pCir->PIOReg + 1) & pCir->chip.alp->waitMsk){};
 #define WAIT_1	outb(pCir->PIOReg, 0x31); \
@@ -588,7 +588,7 @@ AlpAccelEngineInit(ScrnInfoPtr pScrn)
 Bool
 AlpXAAInit(ScreenPtr pScreen)
 {
-    ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+    ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
     CirPtr pCir = CIRPTR(pScrn);
     AlpPtr pAlp = ALPPTR(pCir);
     XAAInfoRecPtr XAAPtr;
@@ -684,4 +684,4 @@ AlpXAAInit(ScreenPtr pScreen)
 
     return TRUE;
 }
-
+#endif

@@ -24,13 +24,6 @@
 /* Everything using inb/outb, etc needs "compiler.h" */
 #include "compiler.h"
 
-/* Drivers for PCI hardware need this */
-#include "xf86PciInfo.h"
-
-#ifndef PCI_CHIP_GD7556  /*  for old xf86PciInfo.h  */
-#define PCI_CHIP_GD7556            0x004C
-#endif
-
 /* Drivers that need to access the PCI config space directly need this */
 #include "xf86Pci.h"
 
@@ -92,20 +85,20 @@ static void AlpProbeI2C(int scrnIndex);
 /* Mandatory functions */
 
 Bool AlpPreInit(ScrnInfoPtr pScrn, int flags);
-Bool AlpScreenInit(int Index, ScreenPtr pScreen, int argc, char **argv);
-Bool AlpEnterVT(int scrnIndex, int flags);
-void AlpLeaveVT(int scrnIndex, int flags);
-static Bool	AlpCloseScreen(int scrnIndex, ScreenPtr pScreen);
+Bool AlpScreenInit(SCREEN_INIT_ARGS_DECL);
+Bool AlpEnterVT(VT_FUNC_ARGS_DECL);
+void AlpLeaveVT(VT_FUNC_ARGS_DECL);
+static Bool	AlpCloseScreen(CLOSE_SCREEN_ARGS_DECL);
 static Bool	AlpSaveScreen(ScreenPtr pScreen, int mode);
 
 /* Required if the driver supports mode switching */
-Bool AlpSwitchMode(int scrnIndex, DisplayModePtr mode, int flags);
+Bool AlpSwitchMode(SWITCH_MODE_ARGS_DECL);
 /* Required if the driver supports moving the viewport */
-void AlpAdjustFrame(int scrnIndex, int x, int y, int flags);
+void AlpAdjustFrame(ADJUST_FRAME_ARGS_DECL);
 
 /* Optional functions */
-void AlpFreeScreen(int scrnIndex, int flags);
-ModeStatus AlpValidMode(int scrnIndex, DisplayModePtr mode,
+void AlpFreeScreen(FREE_SCREEN_ARGS_DECL);
+ModeStatus AlpValidMode(SCRN_ARG_TYPE arg, DisplayModePtr mode,
 			Bool verbose, int flags);
 /* Internally used functions */
 static void	AlpSave(ScrnInfoPtr pScrn);
@@ -781,7 +774,7 @@ AlpPreInit(ScrnInfoPtr pScrn, int flags)
      }
      else
  	xf86SetDDCproperties(pScrn,xf86PrintEDID(
- 	    xf86DoEDID_DDC2(pScrn->scrnIndex,pCir->I2CPtr1)));
+		 xf86DoEDID_DDC2(XF86_SCRN_ARG(pScrn),pCir->I2CPtr1)));
  
      /* Probe the possible LCD display */
      AlpProbeLCD(pScrn);
@@ -1095,13 +1088,19 @@ AlpPreInit(ScrnInfoPtr pScrn, int flags)
 
 	/* Load XAA if needed */
 	if (!pCir->NoAccel) {
-		if (!xf86LoadSubModule(pScrn, "xaa")) {
+#ifdef HAVE_XAA_H
+		if (!xf86LoadSubModule(pScrn, "xaa"))
+#else
+		if (1)
+#endif
+                {
 			xf86DrvMsg(pScrn->scrnIndex, X_INFO,
 				   "Falling back to shadowfb\n");
 			pCir->NoAccel = TRUE;
 			pCir->shadowFB = TRUE;
 		}
 	}
+
 
 	/* Load ramdac if needed */
 	if (pCir->HWCursor) {
@@ -1457,9 +1456,9 @@ AlpRestore(ScrnInfoPtr pScrn)
 /* This gets called at the start of each server generation */
 
 Bool
-AlpScreenInit(int scrnIndex, ScreenPtr pScreen, int argc, char **argv)
+AlpScreenInit(SCREEN_INIT_ARGS_DECL)
 {
-	ScrnInfoPtr pScrn;
+	ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
 	vgaHWPtr hwp;
 	CirPtr pCir;
 	int i, ret;
@@ -1472,11 +1471,6 @@ AlpScreenInit(int scrnIndex, ScreenPtr pScreen, int argc, char **argv)
 #ifdef ALP_DEBUG
 	ErrorF("AlpScreenInit\n");
 #endif
-
-	/*
-	 * First get the ScrnInfoRec
-	 */
-	pScrn = xf86Screens[pScreen->myNum];
 
 	hwp = VGAHWPTR(pScrn);
 	pCir = CIRPTR(pScrn);
@@ -1513,7 +1507,7 @@ AlpScreenInit(int scrnIndex, ScreenPtr pScreen, int argc, char **argv)
 	AlpSaveScreen(pScreen, SCREEN_SAVER_ON);
 
 	/* Set the viewport */
-	AlpAdjustFrame(scrnIndex, pScrn->frameX0, pScrn->frameY0, 0);
+	AlpAdjustFrame(ADJUST_FRAME_ARGS(pScrn, pScrn->frameX0, pScrn->frameY0));
 
 	/*
 	 * The next step is to setup the screen's visuals, and initialise the
@@ -1591,7 +1585,7 @@ AlpScreenInit(int scrnIndex, ScreenPtr pScreen, int argc, char **argv)
 	    init_picture = 1;
 	    break;
 	default:
-	    xf86DrvMsg(scrnIndex, X_ERROR,
+	    xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
 		       "X11: Internal error: invalid bpp (%d) in AlpScreenInit\n",
 		       pScrn->bitsPerPixel);
 	    ret = FALSE;
@@ -1662,10 +1656,12 @@ AlpScreenInit(int scrnIndex, ScreenPtr pScreen, int argc, char **argv)
 
 	if (!pCir->NoAccel) { /* Initialize XAA functions */
 	    AlpOffscreenAccelInit(pScrn);
+#ifdef HAVE_XAA_H
 	    if (!(pCir->UseMMIO ? AlpXAAInitMMIO(pScreen) :
 		  AlpXAAInit(pScreen)))
 	      xf86DrvMsg(pScrn->scrnIndex, X_ERROR, 
 			 "Could not initialize XAA\n");
+#endif
 	}
 
 #if 1
@@ -1747,9 +1743,10 @@ AlpScreenInit(int scrnIndex, ScreenPtr pScreen, int argc, char **argv)
 
 /* Usually mandatory */
 Bool
-AlpSwitchMode(int scrnIndex, DisplayModePtr mode, int flags)
+AlpSwitchMode(SWITCH_MODE_ARGS_DECL)
 {
-	return AlpModeInit(xf86Screens[scrnIndex], mode);
+	SCRN_INFO_PTR(arg);
+	return AlpModeInit(pScrn, mode);
 }
 
 
@@ -1759,13 +1756,12 @@ AlpSwitchMode(int scrnIndex, DisplayModePtr mode, int flags)
  */
 /* Usually mandatory */
 void
-AlpAdjustFrame(int scrnIndex, int x, int y, int flags)
+AlpAdjustFrame(ADJUST_FRAME_ARGS_DECL)
 {
-	ScrnInfoPtr pScrn;
+	SCRN_INFO_PTR(arg);
 	int Base, tmp;
 	vgaHWPtr hwp;
 
-	pScrn = xf86Screens[scrnIndex];
 	hwp = VGAHWPTR(pScrn);
 
 	Base = ((y * pScrn->displayWidth + x) / 8);
@@ -1803,9 +1799,9 @@ AlpAdjustFrame(int scrnIndex, int x, int y, int flags)
 
 /* Mandatory */
 Bool
-AlpEnterVT(int scrnIndex, int flags)
+AlpEnterVT(VT_FUNC_ARGS_DECL)
 {
-	ScrnInfoPtr pScrn = xf86Screens[scrnIndex];
+	SCRN_INFO_PTR(arg);
 	CirPtr pCir = CIRPTR(pScrn);
 	Bool ret;
 
@@ -1833,9 +1829,9 @@ AlpEnterVT(int scrnIndex, int flags)
 
 /* Mandatory */
 void
-AlpLeaveVT(int scrnIndex, int flags)
+AlpLeaveVT(VT_FUNC_ARGS_DECL)
 {
-	ScrnInfoPtr pScrn = xf86Screens[scrnIndex];
+	SCRN_INFO_PTR(arg);
 	vgaHWPtr hwp = VGAHWPTR(pScrn);
 #ifdef ALP_DEBUG
 	ErrorF("AlpLeaveVT\n");
@@ -1860,9 +1856,9 @@ AlpLeaveVT(int scrnIndex, int flags)
 
 /* Mandatory */
 static Bool
-AlpCloseScreen(int scrnIndex, ScreenPtr pScreen)
+AlpCloseScreen(CLOSE_SCREEN_ARGS_DECL)
 {
-	ScrnInfoPtr pScrn = xf86Screens[scrnIndex];
+	ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
 	vgaHWPtr hwp = VGAHWPTR(pScrn);
 	CirPtr pCir = CIRPTR(pScrn);
 
@@ -1872,9 +1868,11 @@ AlpCloseScreen(int scrnIndex, ScreenPtr pScreen)
 	    CirUnmapMem(pCir, pScrn->scrnIndex);
 	}
 
+#ifdef HAVE_XAA_H
 	if (pCir->AccelInfoRec)
 		XAADestroyInfoRec(pCir->AccelInfoRec);
 	pCir->AccelInfoRec = NULL;
+#endif
 	if (pCir->CursorInfoRec)
 		xf86DestroyCursorInfoRec(pCir->CursorInfoRec);
 	pCir->CursorInfoRec = NULL;
@@ -1891,7 +1889,7 @@ AlpCloseScreen(int scrnIndex, ScreenPtr pScreen)
 #endif
 
 	pScreen->CloseScreen = pCir->CloseScreen;
-	return (*pScreen->CloseScreen)(scrnIndex, pScreen);
+	return (*pScreen->CloseScreen)(CLOSE_SCREEN_ARGS);
 }
 
 
@@ -1899,8 +1897,9 @@ AlpCloseScreen(int scrnIndex, ScreenPtr pScreen)
 
 /* Optional */
 void
-AlpFreeScreen(int scrnIndex, int flags)
+AlpFreeScreen(FREE_SCREEN_ARGS_DECL)
 {
+	SCRN_INFO_PTR(arg);
 #ifdef ALP_DEBUG
 	ErrorF("AlpFreeScreen\n");
 #endif
@@ -1909,8 +1908,8 @@ AlpFreeScreen(int scrnIndex, int flags)
 	 * get called routinely at the end of a server generation.
 	 */
 	if (xf86LoaderCheckSymbol("vgaHWFreeHWRec"))
-		vgaHWFreeHWRec(xf86Screens[scrnIndex]);
-	AlpFreeRec(xf86Screens[scrnIndex]);
+		vgaHWFreeHWRec(pScrn);
+	AlpFreeRec(pScrn);
 }
 
 
@@ -1918,7 +1917,7 @@ AlpFreeScreen(int scrnIndex, int flags)
 
 /* Optional */
 ModeStatus
-AlpValidMode(int scrnIndex, DisplayModePtr mode, Bool verbose, int flags)
+AlpValidMode(SCRN_ARG_TYPE arg, DisplayModePtr mode, Bool verbose, int flags)
 {
 	int lace;
 

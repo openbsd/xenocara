@@ -9,7 +9,6 @@
 #include "compiler.h"
 
 #include "xf86Pci.h"
-#include "xf86PciInfo.h"
 
 #include "vgaHW.h"
 
@@ -187,7 +186,7 @@ AlpShowCursor(ScrnInfoPtr pScrn)
 static Bool
 AlpUseHWCursor(ScreenPtr pScreen, CursorPtr pCurs)
 {
-	ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+	ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
 #ifdef ALP_DEBUG
 	ErrorF("AlpUseHWCursor\n");
 #endif
@@ -200,7 +199,7 @@ AlpUseHWCursor(ScreenPtr pScreen, CursorPtr pCurs)
 Bool
 AlpHWCursorInit(ScreenPtr pScreen, int size)
 {
-	ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+	ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
 	const CirPtr pCir = CIRPTR(pScrn);
 	const AlpPtr pAlp = ALPPTR(pCir);
 	

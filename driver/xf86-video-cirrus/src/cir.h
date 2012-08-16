@@ -4,11 +4,14 @@
 #define CIR_H
 
 #include "xf86Cursor.h"
+#ifdef HAVE_XAA_H
 #include "xaa.h"
+#endif
 #include "xf86i2c.h"
 #include <string.h>
 #include <stdlib.h>
 
+#include "compat-api.h"
 #include "cir_pcirename.h"
 
 /* Card-specific driver information */
@@ -43,7 +46,9 @@ typedef struct {
 	Bool			NoAccel;
 	Bool			HWCursor;
 	Bool			UseMMIO;
+#ifdef HAVE_XAA_H
 	XAAInfoRecPtr		AccelInfoRec;
+#endif
 	xf86CursorInfoPtr	CursorInfoRec;
 	int			DGAnumModes;
 	DGAModePtr		DGAModes;
@@ -59,7 +64,7 @@ typedef struct {
 	int			rotate;
 	int			ShadowPitch;
 	unsigned char *		ShadowPtr;
-	void			(*PointerMoved)(int index, int x, int y);
+	void			(*PointerMoved)(SCRN_ARG_TYPE arg, int x, int y);
 	int			pitch;
 
 	unsigned char **	ScanlineColorExpandBuffers;
@@ -85,7 +90,7 @@ extern void cirProbeDDC(ScrnInfoPtr pScrn, int index);
 extern Bool CirDGAInit(ScreenPtr pScreen);
 
 /* in cir_shadow.c */
-void cirPointerMoved(int index, int x, int y);
+void cirPointerMoved(SCRN_ARG_TYPE arg, int x, int y);
 void cirRefreshArea(ScrnInfoPtr pScrn, int num, BoxPtr pbox);
 void cirRefreshArea8(ScrnInfoPtr pScrn, int num, BoxPtr pbox);
 void cirRefreshArea16(ScrnInfoPtr pScrn, int num, BoxPtr pbox);

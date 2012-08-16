@@ -1,3 +1,65 @@
+commit 129076c2a9c20ab515736bb7141b4f334699e21b
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Tue Jul 17 16:05:09 2012 +1000
+
+    xf86-video-cirrus: bump to version 1.5.1
+    
+    Signed-off-by: Dave Airlie <airlied@redhat.com>
+
+commit e443ede15981549ff5f6b01f42c3cb8dc909d778
+Author: Dave Airlie <airlied@gmail.com>
+Date:   Fri Jul 13 14:47:40 2012 +1000
+
+    cirrus: handle server with no XAA
+    
+    this fixes cirrus to work with a server with no XAA module.
+    
+    Signed-off-by: Dave Airlie <airlied@redhat.com>
+
+commit 46a9e962c6f33509e89d664115a9a2db51c9b67d
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Mon Jul 2 11:57:59 2012 +0100
+
+    cirrus: bump to 1.5.0 for release.
+    
+    Signed-off-by: Dave Airlie <airlied@redhat.com>
+
+commit 7ae890b29b12609d410f5558640bb0407b0fdd2d
+Author: Johannes Obermayr <johannesobermayr@gmx.de>
+Date:   Sat Jun 9 11:29:02 2012 +0100
+
+    use int scrnIndex instead of int i in macro SCREEN_INIT_ARGS_DECL.
+    
+    Signed-off-by: Dave Airlie <airlied@redhat.com>
+
+commit bab8041291ff81c81a98aca385cce561ecddc9d1
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Tue Jun 5 19:35:39 2012 +0100
+
+    cirrus: drop xf86PciInfo.
+    
+    This drops usage of deprecated header file.
+    
+    Signed-off-by: Dave Airlie <airlied@redhat.com>
+
+commit 9a5e19597be4f5ee4c1030e4a716207789e78668
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Tue Jun 5 19:26:15 2012 +0100
+
+    cirrus: convert to compat server API.
+    
+    Signed-off-by: Dave Airlie <airlied@redhat.com>
+
+commit 2e35bc316d7b74feca177c87a49a8050a2a0ff00
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Thu May 17 10:23:34 2012 +0100
+
+    cirrus: don't bind if there is a PCI kernel driver loaded.
+    
+    this should ensure we end up using -modesetting under kms.
+    
+    Signed-off-by: Dave Airlie <airlied@redhat.com>
+
 commit 52ae4d254fee97a215ac497a45b69b4c83470b2b
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Fri Mar 23 18:48:04 2012 -0700

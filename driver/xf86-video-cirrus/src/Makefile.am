@@ -34,7 +34,8 @@ cirrus_drv_la_SOURCES = \
          cir.h \
          CirrusClk.c \
          cir_shadow.c \
-         cir_pcirename.h
+         cir_pcirename.h \
+         compat-api.h
 
 cirrus_alpine_la_LTLIBRARIES = cirrus_alpine.la
 cirrus_alpine_la_LDFLAGS = -module -avoid-version

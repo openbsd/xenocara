@@ -20,7 +20,6 @@
 #include "compiler.h"
 
 #include "xf86Pci.h"
-#include "xf86PciInfo.h"
 
 #include "vgaHW.h"
 
@@ -328,7 +327,7 @@ void LgShowCursor(ScrnInfoPtr pScrn)
  */
 static Bool LgUseHWCursor(ScreenPtr pScreen, CursorPtr pCurs)
 {
-  ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+  ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
 
 #ifdef LG_CURSOR_DEBUG
   ErrorF("LgUseHWCursor\n");
@@ -346,7 +345,7 @@ static Bool LgUseHWCursor(ScreenPtr pScreen, CursorPtr pCurs)
  */
 Bool LgHWCursorInit(ScreenPtr pScreen)
 {
-  ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+  ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
   CirPtr pCir = CIRPTR(pScrn);
   xf86CursorInfoPtr infoPtr;
 

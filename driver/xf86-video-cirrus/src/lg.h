@@ -59,8 +59,10 @@ typedef struct {
 /* lg_driver.c */
 extern LgLineDataRec LgLineData[];
 
+#ifdef HAVE_XAA_H
 /* lg_xaa.c */
 extern Bool LgXAAInit(ScreenPtr pScreen);
+#endif
 
 /* lg_hwcurs.c */
 extern Bool LgHWCursorInit(ScreenPtr pScreen);

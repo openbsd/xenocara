@@ -24,13 +24,6 @@
 #endif
 /* All drivers need this */
 
-/* Drivers for PCI hardware need this */
-#include "xf86PciInfo.h"
-
-#ifndef PCI_CHIP_GD7556  /*  for old xf86PciInfo.h  */
-#define PCI_CHIP_GD7556            0x004C
-#endif
-
 /* Drivers that need to access the PCI config space directly need this */
 #include "xf86Pci.h"
 
@@ -256,6 +249,17 @@ CIRProbe(DriverPtr drv, int flags)
  	   they should be handled in this driver (as opposed to their
  	   own driver). */
 	pPci = xf86GetPciInfoForEntity(usedChips[i]);
+
+#ifdef XSERVER_LIBPCIACCESS
+    if (pci_device_has_kernel_driver(pPci)) {
+        xf86DrvMsg(0, X_ERROR,
+                   "cirrus: The PCI device 0x%x at %2.2d@%2.2d:%2.2d:%1.1d has a kernel module claiming it.\n",
+                   pPci->device_id, pPci->bus, pPci->domain, pPci->dev, pPci->func);
+        xf86DrvMsg(0, X_ERROR,
+                   "cirrus: This driver cannot operate until it has been unloaded.\n");
+        return FALSE;
+    }
+#endif
 	pScrn = NULL;
  	if (pPci && (PCI_DEV_DEVICE_ID(pPci) == PCI_CHIP_GD5462 ||
 		     PCI_DEV_DEVICE_ID(pPci) == PCI_CHIP_GD5464 ||
