@@ -1,3 +1,37 @@
+commit 7a10cbda5a0a9ae31e33c5cc77c6b1bda8cae852
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Tue Jul 17 16:05:09 2012 +1000
+
+    xf86-video-neomagic: bump to version 1.2.7
+    
+    Signed-off-by: Dave Airlie <airlied@redhat.com>
+
+commit 808aa999ad78ccc3384d08d501d43688795bee5e
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Mon Jul 16 03:29:55 2012 +0100
+
+    neomagic: fix build when XAA is unavailable.
+    
+    Signed-off-by: Dave Airlie <airlied@redhat.com>
+
+commit 9b33cc9fe94d97c8b954a3614ead34622d293bc3
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Wed Jun 6 12:21:55 2012 +0100
+
+    neomagic: port to new compat API.
+    
+    Signed-off-by: Dave Airlie <airlied@redhat.com>
+
+commit 3b06ee079494b0d08913a9f724c3661f9ac35907
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Wed Apr 18 10:50:28 2012 -0400
+
+    Use DamageRegion for shadow damage
+    
+    The 'damage' member is an ancient compatibility hack I want to destroy.
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
 commit 25c7bb8b063777f31db678db743191265f17e7be
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Fri Mar 23 19:08:03 2012 -0700

@@ -46,8 +46,11 @@ CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 /* Everything using inb/outb, etc needs "compiler.h" */
 #include "compiler.h"
 
+#ifdef HAVE_XAA_H
 #include "xaa.h"
 #include "xaalocal.h"		/* XAA internals as we replace some of XAA */
+#endif
+#include "xf86fbman.h"
 #include "xf86Cursor.h"
 
 #include "shadowfb.h"
@@ -71,6 +74,7 @@ CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #include "neo_reg.h"
 #include "neo_macros.h"
 
+#include "compat-api.h"
 /* Supported chipsets */
 typedef enum {
     NM2070,
@@ -86,8 +90,8 @@ typedef enum {
 
 /* function prototypes */
 
-extern Bool NEOSwitchMode(int scrnIndex, DisplayModePtr mode, int flags);
-extern void NEOAdjustFrame(int scrnIndex, int x, int y, int flags);
+extern Bool NEOSwitchMode(SWITCH_MODE_ARGS_DECL);
+extern void NEOAdjustFrame(ADJUST_FRAME_ARGS_DECL);
 
 /* in neo_2070.c */
 extern Bool Neo2070AccelInit(ScreenPtr pScreen);
@@ -111,7 +115,7 @@ extern Bool neo_I2CInit(ScrnInfoPtr pScrn);
 
 /* in neo_shadow.c */
 void neoShadowUpdate (ScreenPtr pScreen, shadowBufPtr pBuf);
-void neoPointerMoved(int index, int x, int y);
+void neoPointerMoved(SCRN_ARG_TYPE arg, int x, int y);
 void neoRefreshArea(ScrnInfoPtr pScrn, int num, BoxPtr pbox);
 void neoRefreshArea8(ScrnInfoPtr pScrn, int num, BoxPtr pbox);
 void neoRefreshArea16(ScrnInfoPtr pScrn, int num, BoxPtr pbox);
@@ -201,7 +205,9 @@ typedef struct neoRec
     PCITAG      PciTag;
 #endif
     EntityInfoPtr pEnt;
+#ifdef HAVE_XAA_H
     XAAInfoRecPtr	AccelInfoRec;
+#endif
     NEOACLRec Accel;
     unsigned long NeoMMIOAddr;
     unsigned long NeoLinearAddr;
@@ -256,7 +262,7 @@ typedef struct neoRec
     unsigned char * ShadowPtr;
     int ShadowPitch;
     RefreshAreaFuncPtr refreshArea;
-    void	(*PointerMoved)(int index, int x, int y);
+    void	(*PointerMoved)(SCRN_ARG_TYPE arg, int x, int y);
     int rotate;
     Bool showcache;
     Bool video;

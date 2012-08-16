@@ -243,7 +243,7 @@ neoLoadCursorImage(ScrnInfoPtr pScrn, unsigned char *src)
 static Bool
 neoUseHWCursor(ScreenPtr pScr, CursorPtr pCurs)
 {
-    NEOACLPtr nAcl = NEOACLPTR(xf86Screens[pScr->myNum]);
+    NEOACLPtr nAcl = NEOACLPTR(xf86ScreenToScrn(pScr));
 
     return(nAcl->UseHWCursor && !nAcl->NoCursorMode);
 }
@@ -291,7 +291,7 @@ neoRealizeCursor(xf86CursorInfoPtr infoPtr, CursorPtr pCurs)
 Bool
 NeoCursorInit(ScreenPtr pScreen)
 {
-    ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+    ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
     NEOPtr nPtr = NEOPTR(pScrn);
     xf86CursorInfoPtr infoPtr;
     infoPtr = xf86CreateCursorInfoRec();

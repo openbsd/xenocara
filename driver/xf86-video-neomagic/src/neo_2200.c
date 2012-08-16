@@ -51,6 +51,7 @@ CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #include "neo_reg.h"
 #include "neo_macros.h"
 
+#ifdef HAVE_XAA_H
 static void Neo2200Sync(ScrnInfoPtr pScrn);
 static void Neo2200SetupForScreenToScreenCopy(ScrnInfoPtr pScrn, int xdir,
 					      int ydir, int rop,
@@ -115,11 +116,13 @@ static unsigned int neo2200Rop[16] = {
     0x0f0000     /* 0x1111 - GXset           */
 };
 
+#endif
 Bool 
 Neo2200AccelInit(ScreenPtr pScreen)
 {
+#ifdef HAVE_XAA_H
     XAAInfoRecPtr infoPtr;
-    ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+    ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
     NEOPtr nPtr = NEOPTR(pScrn);
     NEOACLPtr nAcl = NEOACLPTR(pScrn);
 
@@ -254,8 +257,12 @@ Neo2200AccelInit(ScreenPtr pScreen)
     }
 
     return(XAAInit(pScreen, infoPtr));
+#else
+    return FALSE;
+#endif
 }
 
+#ifdef HAVE_XAA_H
 static void
 Neo2200Sync(ScrnInfoPtr pScrn)
 {
@@ -646,4 +653,5 @@ Neo2200SubsequentMono8x8PatternFill(ScrnInfoPtr pScrn,
     OUTREG(NEOREG_DSTSTARTOFF, (y<<16) | (x & 0xffff));
     OUTREG(NEOREG_XYEXT, (h<<16) | (w & 0xffff));
 }
+#endif
 #endif

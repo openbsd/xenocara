@@ -53,6 +53,7 @@ CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #include "neo_reg.h"
 #include "neo_macros.h"
 
+#ifdef HAVE_XAA_H
 static unsigned int neo2090Rop[16] = {
     0x000000,    /* 0x0000 - GXclear         */
     0x080000,    /* 0x1000 - GXand           */
@@ -95,12 +96,13 @@ static void Neo2093SubsequentScanlineCPUToScreenColorExpandFill(
 							int w, int h,
 							int skipleft);
 static void Neo2093SubsequentColorExpandScanline(ScrnInfoPtr pScrn, int bufno);
-
+#endif
 Bool 
 Neo2090AccelInit(ScreenPtr pScreen)
 {
+#ifdef HAVE_XAA_H
     XAAInfoRecPtr infoPtr;
-    ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+    ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
     NEOPtr nPtr = NEOPTR(pScrn);
     NEOACLPtr nAcl = NEOACLPTR(pScrn);
 
@@ -198,8 +200,12 @@ Neo2090AccelInit(ScreenPtr pScreen)
     nAcl->BltCntlFlags |= NEO_BC3_FIFO_EN;
 
     return(XAAInit(pScreen, infoPtr));
+#else
+    return FALSE;
+#endif
 }
 
+#ifdef HAVE_XAA_H
 static void
 Neo2090Sync(ScrnInfoPtr pScrn)
 {
@@ -363,6 +369,4 @@ Neo2093SubsequentColorExpandScanline(ScrnInfoPtr pScrn,	int bufno)
     OUTREG(NEOREG_XYEXT, (1<<16)
 	   | (nAcl->CPUToScreenColorExpandFill_w & 0xffff));
 }
-
-
-
+#endif

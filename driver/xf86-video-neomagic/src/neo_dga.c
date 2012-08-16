@@ -30,8 +30,6 @@
 #include "xf86_OSproc.h"
 #include "xf86Pci.h"
 #include "xf86PciInfo.h"
-#include "xaa.h"
-#include "xaalocal.h"
 #include "neo.h"
 #include "neo_reg.h"
 #include "dgaproc.h"
@@ -43,11 +41,13 @@ static Bool NEO_SetMode(ScrnInfoPtr, DGAModePtr);
 static void NEO_Sync(ScrnInfoPtr);
 static int  NEO_GetViewport(ScrnInfoPtr);
 static void NEO_SetViewport(ScrnInfoPtr, int, int, int);
+#ifdef HAVE_XAA_H
 static void NEO_FillRect(ScrnInfoPtr, int, int, int, int, unsigned long);
 static void NEO_BlitRect(ScrnInfoPtr, int, int, int, int, int, int);
 #if 0
 static void NEO_BlitTransRect(ScrnInfoPtr, int, int, int, int, int, int, 
 					unsigned long);
+#endif
 #endif
 
 static
@@ -58,6 +58,7 @@ DGAFunctionRec NEODGAFuncs = {
    NEO_SetViewport,
    NEO_GetViewport,
    NEO_Sync,
+#ifdef HAVE_XAA_H
    NEO_FillRect,
    NEO_BlitRect,
 #if 0
@@ -65,12 +66,15 @@ DGAFunctionRec NEODGAFuncs = {
 #else
    NULL
 #endif
+#else
+   NULL, NULL, NULL
+#endif
 };
 
 Bool
 NEODGAInit(ScreenPtr pScreen)
 {   
-   ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+   ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
    NEOPtr pNEO = NEOPTR(pScrn);
    DGAModePtr modes = NULL, newmodes = NULL, currentMode;
    DisplayModePtr pMode, firstMode;
@@ -99,8 +103,10 @@ NEODGAInit(ScreenPtr pScreen)
 
 	currentMode->mode = pMode;
 	currentMode->flags = DGA_CONCURRENT_ACCESS | DGA_PIXMAP_AVAILABLE;
+#ifdef HAVE_XAA_H
 	if (!pNEO->noAccel)
 	    currentMode->flags |= (DGA_FILL_RECT | DGA_BLIT_RECT);
+#endif
 	if(pMode->Flags & V_DBLSCAN)
 	   currentMode->flags |= DGA_DOUBLESCAN;
 	if(pMode->Flags & V_INTERLACE)
@@ -155,8 +161,8 @@ NEO_SetMode(
    if(!pMode) { /* restore the original mode */
  	if(pNEO->DGAactive) {	
 	    pScrn->currentMode = NEOSavedDGAModes[index];
-            NEOSwitchMode(index, pScrn->currentMode, 0);
-	    NEOAdjustFrame(index, 0, 0, 0);
+            NEOSwitchMode(SWITCH_MODE_ARGS(pScrn, pScrn->currentMode));
+	    NEOAdjustFrame(ADJUST_FRAME_ARGS(pScrn, 0, 0));
  	    pNEO->DGAactive = FALSE;
 	}
    } else {
@@ -165,7 +171,7 @@ NEO_SetMode(
 	    pNEO->DGAactive = TRUE;
 	}
 
-        NEOSwitchMode(index, pMode->mode, 0);
+        NEOSwitchMode(SWITCH_MODE_ARGS(pScrn, pMode->mode));
    }
    
    return TRUE;
@@ -189,7 +195,7 @@ NEO_SetViewport(
    NEOPtr pNEO = NEOPTR(pScrn);
    vgaHWPtr hwp = VGAHWPTR(pScrn);
    
-   NEOAdjustFrame(pScrn->pScreen->myNum, x, y, flags);
+   NEOAdjustFrame(ADJUST_FRAME_ARGS(pScrn, x, y));
    /* wait for retrace */
    while((hwp->readST01(hwp) & 0x08));
    while(!(hwp->readST01(hwp) & 0x08));
@@ -197,6 +203,7 @@ NEO_SetViewport(
    pNEO->DGAViewportStatus = 0;  
 }
 
+#ifdef HAVE_XAA_H
 static void 
 NEO_FillRect (
    ScrnInfoPtr pScrn, 
@@ -212,15 +219,17 @@ NEO_FillRect (
     }
 }
 
+
 static void 
 NEO_Sync(
    ScrnInfoPtr pScrn
 ){
     NEOPtr pNEO = NEOPTR(pScrn);
-
+#ifdef HAVE_XAA_H
     if(pNEO->AccelInfoRec) {
 	(*pNEO->AccelInfoRec->Sync)(pScrn);
     }
+#endif
 }
 
 static void 
@@ -257,7 +266,7 @@ NEO_BlitTransRect(
      prohibit usage of ~0 as the key */
 }
 #endif
-
+#endif
 static Bool 
 NEO_OpenFramebuffer(
    ScrnInfoPtr pScrn, 
@@ -277,3 +286,4 @@ NEO_OpenFramebuffer(
 
     return TRUE;
 }
+

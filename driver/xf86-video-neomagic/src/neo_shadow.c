@@ -19,9 +19,9 @@
 void
 neoShadowUpdate (ScreenPtr pScreen, shadowBufPtr pBuf)
 {
-    RegionPtr damage = &pBuf->damage;
+    RegionPtr damage = DamageRegion(pBuf->pDamage);
     ScrnInfoPtr pScrn;
-    pScrn = xf86Screens[pScreen->myNum];
+    pScrn = xf86ScreenToScrn(pScreen);
     
     (NEOPTR(pScrn))->refreshArea (pScrn, REGION_NUM_RECTS(damage), 
 				      REGION_RECTS(damage));
@@ -55,9 +55,9 @@ neoRefreshArea(ScrnInfoPtr pScrn, int num, BoxPtr pbox)
 } 
 
 void
-neoPointerMoved(int index, int x, int y)
+neoPointerMoved(SCRN_ARG_TYPE arg, int x, int y)
 {
-    ScrnInfoPtr pScrn = xf86Screens[index];
+    SCRN_INFO_PTR(arg);
     NEOPtr nPtr = NEOPTR(pScrn);
     int newX, newY;
 
@@ -69,7 +69,7 @@ neoPointerMoved(int index, int x, int y)
 	newY = pScrn->pScreen->width - x - 1;
     }
 
-    (*nPtr->PointerMoved)(index, newX, newY);
+    (*nPtr->PointerMoved)(arg, newX, newY);
 }
 
 void

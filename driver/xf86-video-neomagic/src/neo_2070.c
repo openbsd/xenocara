@@ -52,6 +52,7 @@ CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #include "neo_reg.h"
 #include "neo_macros.h"
 
+#ifdef HAVE_XAA_H
 /* Memory Mapped I/O for BitBlt */
 #define NEO2070_BLTSTAT		0x00
 #define NEO2070_BLTCNTL		0x04
@@ -99,11 +100,14 @@ static void Neo2070SetupForSolidFillRect(ScrnInfoPtr pScrn, int color, int rop,
 static void Neo2070SubsequentSolidFillRect(ScrnInfoPtr pScrn, int x, int y,
 					   int w, int h);
 
+#endif
+
 Bool 
 Neo2070AccelInit(ScreenPtr pScreen)
 {
+#ifdef HAVE_XAA_H
     XAAInfoRecPtr infoPtr;
-    ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+    ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
     NEOPtr nPtr = NEOPTR(pScrn);
     NEOACLPtr nAcl = NEOACLPTR(pScrn);
 
@@ -160,9 +164,12 @@ Neo2070AccelInit(ScreenPtr pScreen)
     }
     
     return(XAAInit(pScreen, infoPtr));
-
+#else
+    return FALSE;
+#endif
 }
 
+#ifdef HAVE_XAA_H
 static void
 Neo2070Sync(ScrnInfoPtr pScrn)
 {
@@ -260,8 +267,5 @@ Neo2070SubsequentSolidFillRect(ScrnInfoPtr pScrn, int x, int y, int w, int h)
     OUTREG(NEO2070_XYEXT, ((h-1)<<16) | ((w-1) & 0xffff));
     OUTREG(NEO2070_DSTSTART, (y * nAcl->Pitch) + (x * nAcl->PixelWidth));
 }
-
-
-
-
+#endif
 

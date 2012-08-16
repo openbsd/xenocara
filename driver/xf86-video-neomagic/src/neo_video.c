@@ -38,8 +38,6 @@ CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #define MAKE_ATOM(a)	MakeAtom(a, sizeof(a) - 1, TRUE)
 
 #include "dixstruct.h"
-#include "xaa.h"
-#include "xaalocal.h"
 
 static XF86VideoAdaptorPtr NEOSetupVideo(ScreenPtr);
 
@@ -78,7 +76,7 @@ static Atom xvColorKey, xvBrightness, xvInterlace;
 void
 NEOInitVideo(ScreenPtr pScreen)
 {
-    ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+    ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
     NEOPtr nPtr = NEOPTR(pScrn);
     XF86VideoAdaptorPtr *overlayAdaptors, *newAdaptors = NULL;
     XF86VideoAdaptorPtr newAdaptor = NULL;
@@ -202,7 +200,7 @@ static XF86ImageRec NEOVideoImages[] =
 static XF86VideoAdaptorPtr
 NEOSetupVideo(ScreenPtr pScreen)
 {
-    ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+    ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
     NEOPtr nPtr = NEOPTR(pScrn);
     NEOPortPtr pPriv;
     XF86VideoAdaptorPtr overlayAdaptor;
@@ -916,7 +914,7 @@ NEOInitOffscreenImages(ScreenPtr pScreen)
     XF86OffscreenImagePtr offscreenImages;
 
 #ifdef DEBUG
-    xf86DrvMsg(xf86Screens[pScreen->myNum]->scrnIndex,X_INFO,"NEOInitOffscreenImages\n");
+    xf86DrvMsg(xf86ScreenToScrn(pScreen)->scrnIndex,X_INFO,"NEOInitOffscreenImages\n");
 #endif
     if ((offscreenImages = malloc(sizeof(XF86OffscreenImageRec))) == NULL){
 	return;
@@ -968,7 +966,7 @@ NEOAllocateMemory(ScrnInfoPtr pScrn, FBLinearPtr linear, int size)
     }
 
 
-    pScreen = screenInfo.screens[pScrn->scrnIndex];
+    pScreen = xf86ScrnToScreen(pScrn);
     if ((new_linear = xf86AllocateOffscreenLinear(pScreen, size, 16, NULL,
 						  NULL, NULL)) == NULL){
 	int max_size;

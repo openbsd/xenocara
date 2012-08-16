@@ -56,6 +56,7 @@ CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #include "neo_reg.h"
 #include "neo_macros.h"
 
+#ifdef HAVE_XAA_H
 static void Neo2097Sync(ScrnInfoPtr pScrn);
 static void Neo2097SetupForScreenToScreenCopy(ScrnInfoPtr pScrn, int xdir,
 					      int ydir, int rop,
@@ -118,13 +119,14 @@ static unsigned int neo2097Rop[16] = {
     0x070000,    /* 0x0111 - GXnand          */
     0x0f0000     /* 0x1111 - GXset           */
 };
-
+#endif
 
 Bool 
 Neo2097AccelInit(ScreenPtr pScreen)
 {
+#ifdef HAVE_XAA_H
     XAAInfoRecPtr infoPtr;
-    ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+    ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
     NEOPtr nPtr = NEOPTR(pScrn);
     NEOACLPtr nAcl = NEOACLPTR(pScrn);
 
@@ -249,8 +251,12 @@ Neo2097AccelInit(ScreenPtr pScreen)
     }
     
     return(XAAInit(pScreen, infoPtr));
+#else
+    return FALSE;
+#endif
 }
 
+#ifdef HAVE_XAA_H
 static void
 Neo2097Sync(ScrnInfoPtr pScrn)
 {
@@ -544,3 +550,4 @@ Neo2097SubsequentImageWriteScanline(
 ){
     /* should I be checking for fifo slots here ? */
 }
+#endif
