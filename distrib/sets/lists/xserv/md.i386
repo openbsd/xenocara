@@ -116,6 +116,7 @@
 ./usr/X11R6/include/xorg/xaarop.h
 ./usr/X11R6/include/xorg/xace.h
 ./usr/X11R6/include/xorg/xacestr.h
+./usr/X11R6/include/xorg/xf86-mouse-properties.h
 ./usr/X11R6/include/xorg/xf86.h
 ./usr/X11R6/include/xorg/xf86Cursor.h
 ./usr/X11R6/include/xorg/xf86DDC.h
@@ -315,6 +316,7 @@
 ./usr/X11R6/lib/modules/v10002d.uc
 ./usr/X11R6/lib/modules/v20002d.uc
 ./usr/X11R6/lib/pkgconfig/libdrm_radeon.pc
+./usr/X11R6/lib/pkgconfig/xorg-mouse.pc
 ./usr/X11R6/lib/pkgconfig/xorg-server.pc
 ./usr/X11R6/lib/pkgconfig/xorg-synaptics.pc
 ./usr/X11R6/man/man1/Xephyr.1
