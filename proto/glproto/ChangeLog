@@ -1,3 +1,29 @@
+commit ec1eec4355ee4a6c5134f2178192f10b6d28a87a
+Author: Dave Airlie <airlied@gmail.com>
+Date:   Thu Jul 12 22:55:53 2012 +1000
+
+    glproto: bump version to 1.4.16 for release.
+    
+    Signed-off-by: Dave Airlie <airlied@redhat.com>
+
+commit 458a9eb2660b6c9fcc5b63ad55d0529c22803138
+Author: Ian Romanick <ian.d.romanick@intel.com>
+Date:   Wed May 23 13:49:36 2012 -0700
+
+    glproto: Add define for GLX_EXT_create_context_es2_profile
+    
+    Signed-off-by: Ian Romanick <ian.d.romanick@intel.com>
+    Reviewed-by: Matt Turner <mattst88@gmail.com>
+
+commit ec3f3387211f428886dfdee2443e16f45e00e77b
+Author: Ian Romanick <ian.d.romanick@intel.com>
+Date:   Wed May 23 13:47:52 2012 -0700
+
+    glproto: Fix typo in name of GLX_LOSE_CONTEXT_ON_RESET_ARB
+    
+    Signed-off-by: Ian Romanick <ian.d.romanick@intel.com>
+    Reviewed-by: Matt Turner <mattst88@gmail.com>
+
 commit 29d5b553b30755a25300c30b67d39b37c9a76466
 Author: Ian Romanick <ian.d.romanick@intel.com>
 Date:   Mon Nov 28 10:53:17 2011 -0800
