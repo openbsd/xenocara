@@ -32,6 +32,8 @@
 #include "main/glheader.h"
 #include "main/context.h"
 #include "main/hash.h"
+#include "main/mfeatures.h"
+#include "main/mtypes.h"
 #include "main/shaderobj.h"
 #include "program/program.h"
 #include "program/prog_parameter.h"
@@ -70,7 +72,8 @@ _mesa_reference_shader(struct gl_context *ctx, struct gl_shader **ptr,
       deleteFlag = (old->RefCount == 0);
 
       if (deleteFlag) {
-         _mesa_HashRemove(ctx->Shared->ShaderObjects, old->Name);
+	 if (old->Name != 0)
+	    _mesa_HashRemove(ctx->Shared->ShaderObjects, old->Name);
          ctx->Driver.DeleteShader(ctx, old);
       }
 
@@ -211,7 +214,8 @@ _mesa_reference_shader_program(struct gl_context *ctx,
       deleteFlag = (old->RefCount == 0);
 
       if (deleteFlag) {
-         _mesa_HashRemove(ctx->Shared->ShaderObjects, old->Name);
+	 if (old->Name != 0)
+	    _mesa_HashRemove(ctx->Shared->ShaderObjects, old->Name);
          ctx->Driver.DeleteShaderProgram(ctx, old);
       }
 
@@ -240,6 +244,8 @@ _mesa_init_shader_program(struct gl_context *ctx, struct gl_shader_program *prog
    prog->Geom.InputType = GL_TRIANGLES;
    prog->Geom.OutputType = GL_TRIANGLE_STRIP;
 #endif
+
+   prog->InfoLog = ralloc_strdup(prog, "");
 }
 
 /**
@@ -279,6 +285,10 @@ _mesa_clear_shader_program_data(struct gl_context *ctx,
       _mesa_free_parameter_list(shProg->Varying);
       shProg->Varying = NULL;
    }
+
+   assert(shProg->InfoLog != NULL);
+   ralloc_free(shProg->InfoLog);
+   shProg->InfoLog = ralloc_strdup(shProg, "");
 }
 
 
@@ -311,11 +321,6 @@ _mesa_free_shader_program_data(struct gl_context *ctx,
    if (shProg->Shaders) {
       free(shProg->Shaders);
       shProg->Shaders = NULL;
-   }
-
-   if (shProg->InfoLog) {
-      ralloc_free(shProg->InfoLog);
-      shProg->InfoLog = NULL;
    }
 
    /* Transform feedback varying vars */
@@ -406,6 +411,5 @@ _mesa_init_shader_object_functions(struct dd_function_table *driver)
    driver->DeleteShader = _mesa_delete_shader;
    driver->NewShaderProgram = _mesa_new_shader_program;
    driver->DeleteShaderProgram = _mesa_delete_shader_program;
-   driver->CompileShader = _mesa_ir_compile_shader;
    driver->LinkShader = _mesa_ir_link_shader;
 }

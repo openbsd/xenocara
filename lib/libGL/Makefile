@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.30 2012/06/04 10:18:45 mpi Exp $
+# $OpenBSD: Makefile,v 1.31 2012/08/17 13:57:59 mpi Exp $
 .include <bsd.xconf.mk>
 
 .if ${XENOCARA_BUILD_DRI:L} == "yes"
@@ -15,8 +15,8 @@ MESA_INCLUDE=	${.CURDIR}/../../dist/Mesa/include
 MESA_DRI=	${.CURDIR}/../../dist/Mesa/src/mesa/drivers/dri
 
 MESA_MAJOR=	7
-MESA_MINOR=	10
-MESA_TINY=	3
+MESA_MINOR=	11
+MESA_TINY=	2
 
 DRI_DRIVER_INSTALL_DIR=	${X11BASE}/lib/modules/dri
 
@@ -48,6 +48,7 @@ CPPFLAGS+= \
 	-DPTHREADS \
 	-DHAVE_ALIAS \
 	-D_REENTRANT \
+	-DMAPI_MODE_UTIL \
 	-DMAPI_GLAPI_CURRENT
 
 .if ${XENOCARA_BUILD_DRI:L} == "yes"
@@ -76,9 +77,11 @@ INCS= \
 GLAPI_SOURCES= \
 	glapi_dispatch.c \
 	glapi_entrypoint.c \
+	glapi_gentable.c \
 	glapi_getproc.c \
 	glapi_nop.c \
 	glthread.c \
+	glapi.c \
 	$(ASM_API)
 
 .if ${MACHINE_ARCH} == i386

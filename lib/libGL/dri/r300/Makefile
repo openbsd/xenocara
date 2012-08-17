@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.5 2011/10/23 13:57:36 matthieu Exp $
+#	$OpenBSD: Makefile,v 1.6 2012/08/17 13:58:00 mpi Exp $
 
 LIB=	r300_dri.so
 
@@ -9,7 +9,7 @@ CS_SOURCES = \
 
 COMMON_SOURCES = \
 	driverfuncs.c \
-	mm.c \
+	drirenderbuffer.c \
 	utils.c \
 	texmem.c \
 	vblank.c \
@@ -70,12 +70,15 @@ COMPILER_SOURCES = \
 		radeon_pair_translate.c \
 		radeon_pair_schedule.c \
 		radeon_pair_regalloc.c \
+		radeon_pair_dead_sources.c \
 		radeon_dataflow.c \
 		radeon_dataflow_deadcode.c \
 		radeon_dataflow_swizzles.c \
+		radeon_list.c \
 		radeon_optimize.c \
 		radeon_remove_constants.c \
 		radeon_rename_regs.c \
+		radeon_variable.c \
 		r3xx_fragprog.c \
 		r300_fragprog.c \
 		r300_fragprog_swizzle.c \

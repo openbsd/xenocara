@@ -32,11 +32,11 @@ struct intel_texture_object
 {
    struct gl_texture_object base;       /* The "parent" object */
 
-   /* The mipmap tree must include at least these levels once
-    * validated:
+   /* This is a mirror of base._MaxLevel, updated at validate time,
+    * except that we don't bother with the non-base levels for
+    * non-mipmapped textures.
     */
-   GLuint firstLevel;
-   GLuint lastLevel;
+   unsigned int _MaxLevel;
 
    /* Offset for firstLevel image:
     */
@@ -63,6 +63,36 @@ struct intel_texture_image
     */
    struct intel_mipmap_tree *mt;
    GLboolean used_as_render_target;
+
+   /**
+    * \name Renderbuffers for faking packed depth/stencil
+    *
+    * These renderbuffers are non-null only if the intel_context is using
+    * separate stencil and this texture has a packed depth/stencil format. When
+    * glFramebufferTexture is called on this image, the resultant renderbuffer
+    * wrapper reuses these renderbuffers as its own.
+    *
+    * \see intel_wrap_texture
+    * \see intel_tex_image_s8z24_create_renderbuffers
+    * \see intel_tex_image_s8z24_scatter
+    * \see intel_tex_image_s8z24_gather
+    *
+    * \{
+    */
+
+   /**
+    * The depth buffer has format X8_Z24. The x8 bits are undefined unless
+    * intel_tex_image_s8z24_gather has been immediately called. The depth buffer
+    * resuses the image miptree's region and hiz_region as its own.
+    */
+   struct gl_renderbuffer *depth_rb;
+
+   /**
+    * The stencil buffer has format S8 and keeps its data in its own region.
+    */
+   struct gl_renderbuffer *stencil_rb;
+
+   /** \} */
 };
 
 static INLINE struct intel_texture_object *

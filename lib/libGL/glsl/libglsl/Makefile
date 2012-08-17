@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.4 2011/10/31 18:36:06 matthieu Exp $
+# $OpenBSD: Makefile,v 1.5 2012/08/17 13:58:00 mpi Exp $
 .include <bsd.xconf.mk>
 
 MESA=	${.CURDIR}/../../../../dist/Mesa/src/mesa
@@ -15,6 +15,7 @@ LIBGLCPP_SOURCES = \
 
 GLCPP_SOURCES = \
 	$(LIBGLCPP_SOURCES) \
+	ralloc.c \
 	glcpp.c
 
 C_SOURCES = \
@@ -41,6 +42,7 @@ CXX_SOURCES = \
 	ir_expression_flattening.cpp \
 	ir_function.cpp \
 	ir_function_can_inline.cpp \
+	ir_function_detect_recursion.cpp \
 	ir_hierarchical_visitor.cpp \
 	ir_hv_accept.cpp \
 	ir_import_prototypes.cpp \
@@ -73,6 +75,7 @@ CXX_SOURCES = \
 	opt_constant_propagation.cpp \
 	opt_constant_variable.cpp \
 	opt_copy_propagation.cpp \
+	opt_copy_propagation_elements.cpp \
 	opt_dead_code.cpp \
 	opt_dead_code_local.cpp \
 	opt_dead_functions.cpp \
@@ -90,7 +93,7 @@ LIB=	libglsl
 
 SRCS=	\
 	$(C_SOURCES) \
-	$(CXX_SOURCES)
+	$(CXX_SOURCES) \
 
 OBJS+= $(C_SOURCES:.c=.so) $(CXX_SOURCES:.cpp=.so)
 

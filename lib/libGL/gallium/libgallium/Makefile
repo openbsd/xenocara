@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.1.1.1 2012/07/13 12:43:30 mpi Exp $
+# $OpenBSD: Makefile,v 1.2 2012/08/17 13:58:00 mpi Exp $
 
 LIB=	gallium
 
@@ -50,7 +50,7 @@ C_SOURCES = \
 	draw_vs_exec.c \
 	draw_vs_ppc.c \
 	draw_vs_sse.c \
-	draw_vs_varient.c \
+	draw_vs_variant.c \
 	u_indices_gen.c \
 	u_unfilled_gen.c \
 	os_misc.c \
@@ -113,10 +113,13 @@ C_SOURCES = \
 	u_caps.c \
 	u_cpu_detect.c \
 	u_dl.c \
+	u_draw.c \
 	u_draw_quad.c \
 	u_format.c \
 	u_format_other.c \
+	u_format_latc.c \
 	u_format_s3tc.c \
+	u_format_rgtc.c \
 	u_format_srgb.c \
 	u_format_table.c \
 	u_format_tests.c \
@@ -135,6 +138,7 @@ C_SOURCES = \
 	u_network.c \
 	u_math.c \
 	u_mm.c \
+	u_pstipple.c \
 	u_rect.c \
 	u_ringbuffer.c \
 	u_sampler.c \
@@ -148,7 +152,8 @@ C_SOURCES = \
 	u_tile.c \
 	u_transfer.c \
 	u_resource.c \
-	u_upload_mgr.c
+	u_upload_mgr.c \
+	u_vbuf_mgr.c
 
 GALLIVM_SOURCES = \
         lp_bld_arit.c \
@@ -156,7 +161,6 @@ GALLIVM_SOURCES = \
         lp_bld_bitarit.c \
         lp_bld_const.c \
         lp_bld_conv.c \
-        lp_bld_debug.c \
         lp_bld_flow.c \
         lp_bld_format_aos.c \
         lp_bld_format_soa.c \
@@ -184,6 +188,7 @@ GALLIVM_SOURCES = \
         draw_pt_fetch_shade_pipeline_llvm.c
 
 GALLIVM_CPP_SOURCES = \
+        lp_bld_debug.cpp \
 	lp_bld_misc.cpp
 
 SRCS=	${C_SOURCES}

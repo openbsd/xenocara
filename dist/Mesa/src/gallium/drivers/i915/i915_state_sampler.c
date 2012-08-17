@@ -208,10 +208,8 @@ static uint translate_texture_format(enum pipe_format pipeFormat)
       return MAPSURF_32BIT | MT_32BIT_XRGB8888;
    case PIPE_FORMAT_R8G8B8A8_UNORM:
       return MAPSURF_32BIT | MT_32BIT_ABGR8888;
-#if 0
    case PIPE_FORMAT_R8G8B8X8_UNORM:
       return MAPSURF_32BIT | MT_32BIT_XBGR8888;
-#endif
    case PIPE_FORMAT_YUYV:
       return (MAPSURF_422 | MT_422_YCRCB_NORMAL);
    case PIPE_FORMAT_UYVY:
@@ -223,15 +221,13 @@ static uint translate_texture_format(enum pipe_format pipeFormat)
 #endif
    case PIPE_FORMAT_Z16_UNORM:
       return (MAPSURF_16BIT | MT_16BIT_L16);
-#if 0
-   case PIPE_FORMAT_RGBA_DXT1:
-   case PIPE_FORMAT_RGB_DXT1:
+   case PIPE_FORMAT_DXT1_RGBA:
+   case PIPE_FORMAT_DXT1_RGB:
       return (MAPSURF_COMPRESSED | MT_COMPRESS_DXT1);
-   case PIPE_FORMAT_RGBA_DXT3:
+   case PIPE_FORMAT_DXT3_RGBA:
       return (MAPSURF_COMPRESSED | MT_COMPRESS_DXT2_3);
-   case PIPE_FORMAT_RGBA_DXT5:
+   case PIPE_FORMAT_DXT5_RGBA:
       return (MAPSURF_COMPRESSED | MT_COMPRESS_DXT4_5);
-#endif
    case PIPE_FORMAT_Z24_UNORM_S8_USCALED:
    case PIPE_FORMAT_Z24X8_UNORM:
       return (MAPSURF_32BIT | MT_32BIT_xI824);

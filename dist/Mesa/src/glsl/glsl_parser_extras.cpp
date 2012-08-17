@@ -254,11 +254,16 @@ static const _mesa_glsl_extension _mesa_glsl_supported_extensions[] = {
    /*                                  target availability  API availability */
    /* name                             VS     GS     FS     GL     ES         supported flag */
    EXT(ARB_draw_buffers,               false, false, true,  true,  false,     dummy_true),
+   EXT(ARB_draw_instanced,             true,  false, false, true,  false,     ARB_draw_instanced),
    EXT(ARB_explicit_attrib_location,   true,  false, true,  true,  false,     ARB_explicit_attrib_location),
    EXT(ARB_fragment_coord_conventions, true,  false, true,  true,  false,     ARB_fragment_coord_conventions),
    EXT(ARB_texture_rectangle,          true,  false, true,  true,  false,     dummy_true),
    EXT(EXT_texture_array,              true,  false, true,  true,  false,     EXT_texture_array),
+   EXT(ARB_shader_texture_lod,         true,  false, true,  true,  false,     ARB_shader_texture_lod),
    EXT(ARB_shader_stencil_export,      false, false, true,  true,  false,     ARB_shader_stencil_export),
+   EXT(AMD_conservative_depth,         true,  false, true,  true,  false,     AMD_conservative_depth),
+   EXT(AMD_shader_stencil_export,      false, false, true,  true,  false,     ARB_shader_stencil_export),
+   EXT(OES_texture_3D,                 true,  false, true,  false, true,      EXT_texture3D),
 };
 
 #undef EXT
@@ -540,7 +545,7 @@ ast_expression::print(void) const
       printf("? ");
       subexpressions[1]->print();
       printf(": ");
-      subexpressions[1]->print();
+      subexpressions[2]->print();
       break;
 
    case ast_array_index:
@@ -890,6 +895,7 @@ do_common_optimization(exec_list *ir, bool linked, unsigned max_unroll_iteration
    progress = do_if_simplification(ir) || progress;
    progress = do_discard_simplification(ir) || progress;
    progress = do_copy_propagation(ir) || progress;
+   progress = do_copy_propagation_elements(ir) || progress;
    if (linked)
       progress = do_dead_code(ir) || progress;
    else
@@ -911,8 +917,10 @@ do_common_optimization(exec_list *ir, bool linked, unsigned max_unroll_iteration
    progress = optimize_redundant_jumps(ir) || progress;
 
    loop_state *ls = analyze_loop_variables(ir);
-   progress = set_loop_controls(ir, ls) || progress;
-   progress = unroll_loops(ir, ls, max_unroll_iterations) || progress;
+   if (ls->loop_found) {
+      progress = set_loop_controls(ir, ls) || progress;
+      progress = unroll_loops(ir, ls, max_unroll_iterations) || progress;
+   }
    delete ls;
 
    return progress;

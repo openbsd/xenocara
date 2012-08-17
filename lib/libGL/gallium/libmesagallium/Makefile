@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.1.1.1 2012/07/13 12:43:34 mpi Exp $
+# $OpenBSD: Makefile,v 1.2 2012/08/17 13:58:00 mpi Exp $
 
 LIB=	mesagallium
 
@@ -103,6 +103,7 @@ MAIN_SOURCES = \
 	multisample.c \
 	nvprogram.c \
 	pack.c \
+	pbo.c \
 	pixel.c \
 	pixelstore.c \
 	pixeltransfer.c \
@@ -114,6 +115,7 @@ MAIN_SOURCES = \
 	readpix.c \
 	remap.c \
 	renderbuffer.c \
+	samplerobj.c \
 	scissor.c \
 	shaderapi.c \
 	shaderobj.c \
@@ -122,10 +124,10 @@ MAIN_SOURCES = \
 	stencil.c \
 	syncobj.c \
 	texcompress.c \
+	texcompress_rgtc.c \
 	texcompress_s3tc.c \
 	texcompress_fxt1.c \
 	texenv.c \
-	texenvprogram.c \
 	texfetch.c \
 	texformat.c \
 	texgen.c \
@@ -134,9 +136,9 @@ MAIN_SOURCES = \
 	texobj.c \
 	texpal.c \
 	texparam.c \
-	texrender.c \
 	texstate.c \
 	texstore.c \
+	texturebarrier.c \
 	transformfeedback.c \
 	uniforms.c \
 	varray.c \
@@ -144,6 +146,9 @@ MAIN_SOURCES = \
 	viewport.c \
 	vtxfmt.c \
 	${MAIN_ES_SOURCES}
+
+MAIN_CXX_SOURCES = \
+	ff_fragment_shader.cpp
 
 # math
 MATH_SOURCES= \
@@ -203,8 +208,10 @@ STATETRACKER_SOURCES = \
 	st_cb_queryobj.c \
 	st_cb_rasterpos.c \
 	st_cb_readpixels.c \
+	st_cb_syncobj.c \
 	st_cb_strings.c \
 	st_cb_texture.c \
+	st_cb_texturebarrier.c \
 	st_cb_viewport.c \
 	st_cb_xformfb.c \
 	st_context.c \
@@ -272,6 +279,7 @@ MESAGALLIUM_SOURCES = \
 	${DRISW_SOURCES}
 
 MESAGALLIUM_CXX_SOURCES = \
+	${MAIN_CXX_SOURCES} \
 	${SHADER_CXX_SOURCES}
 
 SRCS=	${MESAGALLIUM_SOURCES}	\

@@ -149,11 +149,6 @@ intel_region_alloc_internal(struct intel_screen *screen,
 {
    struct intel_region *region;
 
-   if (buffer == NULL) {
-      _DBG("%s <-- NULL\n", __FUNCTION__);
-      return NULL;
-   }
-
    region = calloc(sizeof(*region), 1);
    if (region == NULL)
       return region;
@@ -180,6 +175,7 @@ intel_region_alloc(struct intel_screen *screen,
    drm_intel_bo *buffer;
    unsigned long flags = 0;
    unsigned long aligned_pitch;
+   struct intel_region *region;
 
    if (expect_accelerated_upload)
       flags |= BO_ALLOC_FOR_RENDER;
@@ -187,9 +183,17 @@ intel_region_alloc(struct intel_screen *screen,
    buffer = drm_intel_bo_alloc_tiled(screen->bufmgr, "region",
 				     width, height, cpp,
 				     &tiling, &aligned_pitch, flags);
+   if (buffer == NULL)
+      return NULL;
 
-   return intel_region_alloc_internal(screen, cpp, width, height,
-				      aligned_pitch / cpp, tiling, buffer);
+   region = intel_region_alloc_internal(screen, cpp, width, height,
+                                        aligned_pitch / cpp, tiling, buffer);
+   if (region == NULL) {
+      drm_intel_bo_unreference(buffer);
+      return NULL;
+   }
+
+   return region;
 }
 
 GLboolean
@@ -260,12 +264,15 @@ intel_region_alloc_for_handle(struct intel_screen *screen,
 void
 intel_region_reference(struct intel_region **dst, struct intel_region *src)
 {
-   if (src)
-      _DBG("%s %p %d\n", __FUNCTION__, src, src->refcount);
+   _DBG("%s: %p(%d) -> %p(%d)\n", __FUNCTION__,
+	*dst, *dst ? (*dst)->refcount : 0, src, src ? src->refcount : 0);
 
-   assert(*dst == NULL);
-   if (src) {
-      src->refcount++;
+   if (src != *dst) {
+      if (*dst)
+	 intel_region_release(dst);
+
+      if (src)
+         src->refcount++;
       *dst = src;
    }
 }
@@ -491,7 +498,7 @@ intel_region_cow(struct intel_context *intel, struct intel_region *region)
 
    assert(region->cpp * region->pitch * region->height == pbo->Base.Size);
 
-   _DBG("%s %p (%d bytes)\n", __FUNCTION__, region, pbo->Base.Size);
+   _DBG("%s %p (%d bytes)\n", __FUNCTION__, region, (int)pbo->Base.Size);
 
    /* Now blit from the texture buffer to the new buffer: 
     */

@@ -417,25 +417,14 @@ static void emit_interp( struct brw_wm_compile *c,
 		 src_undef());
       }
       else {
-         if (c->key.linear_color) {
-            emit_op(c,
-                    WM_LINTERP,
-                    dst,
-                    0,
-                    interp,
-                    deltas,
-                    src_undef());
-         }
-         else {
-            /* perspective-corrected color interpolation */
-            emit_op(c,
-                    WM_PINTERP,
-                    dst,
-                    0,
-                    interp,
-                    deltas,
-                    get_pixel_w(c));
-         }
+	 /* perspective-corrected color interpolation */
+	 emit_op(c,
+		 WM_PINTERP,
+		 dst,
+		 0,
+		 interp,
+		 deltas,
+		 get_pixel_w(c));
       }
       break;
    case FRAG_ATTRIB_FOGC:
@@ -574,13 +563,14 @@ static void precalc_dst( struct brw_wm_compile *c,
    struct prog_src_register src0 = inst->SrcReg[0];
    struct prog_src_register src1 = inst->SrcReg[1];
    struct prog_dst_register dst = inst->DstReg;
-   
+   struct prog_dst_register temp = get_temp(c);
+
    if (dst.WriteMask & WRITEMASK_Y) {      
       /* dst.y = mul src0.y, src1.y
        */
       emit_op(c,
 	      OPCODE_MUL,
-	      dst_mask(dst, WRITEMASK_Y),
+	      dst_mask(temp, WRITEMASK_Y),
 	      inst->SaturateMode,
 	      src0,
 	      src1,
@@ -595,7 +585,7 @@ static void precalc_dst( struct brw_wm_compile *c,
        */
       swz = emit_op(c,
 		    OPCODE_SWZ,
-		    dst_mask(dst, WRITEMASK_XZ),
+		    dst_mask(temp, WRITEMASK_XZ),
 		    inst->SaturateMode,
 		    src_swizzle(src0, SWIZZLE_ONE, z, z, z),
 		    src_undef(),
@@ -608,12 +598,26 @@ static void precalc_dst( struct brw_wm_compile *c,
        */
       emit_op(c,
 	      OPCODE_MOV,
-	      dst_mask(dst, WRITEMASK_W),
+	      dst_mask(temp, WRITEMASK_W),
 	      inst->SaturateMode,
 	      src1,
 	      src_undef(),
 	      src_undef());
    }
+
+   /* This will get optimized out in general, but it ensures that we
+    * don't overwrite src operands in our channel-wise splitting
+    * above.  See piglit fp-dst-aliasing-[12].
+    */
+   emit_op(c,
+	   OPCODE_MOV,
+	   dst,
+	   0,
+	   src_reg_from_dst(temp),
+	   src_undef(),
+	   src_undef());
+
+   release_temp(c, temp);
 }
 
 
@@ -622,7 +626,17 @@ static void precalc_lit( struct brw_wm_compile *c,
 {
    struct prog_src_register src0 = inst->SrcReg[0];
    struct prog_dst_register dst = inst->DstReg;
-   
+
+   if (dst.WriteMask & WRITEMASK_YZ) {
+      emit_op(c,
+	      OPCODE_LIT,
+	      dst_mask(dst, WRITEMASK_YZ),
+	      inst->SaturateMode,
+	      src0,
+	      src_undef(),
+	      src_undef());
+   }
+
    if (dst.WriteMask & WRITEMASK_XW) {
       struct prog_instruction *swz;
 
@@ -637,16 +651,6 @@ static void precalc_lit( struct brw_wm_compile *c,
 		    src_undef());
       /* Avoid letting the negation flag of src0 affect our 1 constant. */
       swz->SrcReg[0].Negate = NEGATE_NONE;
-   }
-
-   if (dst.WriteMask & WRITEMASK_YZ) {
-      emit_op(c,
-	      OPCODE_LIT,
-	      dst_mask(dst, WRITEMASK_YZ),
-	      inst->SaturateMode,
-	      src0,
-	      src_undef(),
-	      src_undef());
    }
 }
 
@@ -961,35 +965,31 @@ static void emit_render_target_writes( struct brw_wm_compile *c )
    struct prog_src_register outcolor;
    GLuint i;
 
-   struct prog_instruction *inst, *last_inst = NULL;
+   struct prog_instruction *inst = NULL;
 
    /* The inst->Aux field is used for FB write target and the EOT marker */
 
-   if (c->key.nr_color_regions > 1) {
-      for (i = 0 ; i < c->key.nr_color_regions; i++) {
-         outcolor = src_reg(PROGRAM_OUTPUT, FRAG_RESULT_DATA0 + i);
-         last_inst = inst = emit_op(c, WM_FB_WRITE, dst_mask(dst_undef(), 0),
-                                    0, outcolor, payload_r0_depth, outdepth);
-         inst->Aux = INST_AUX_TARGET(i);
-         if (c->fp_fragcolor_emitted) {
-            outcolor = src_reg(PROGRAM_OUTPUT, FRAG_RESULT_COLOR);
-            last_inst = inst = emit_op(c, WM_FB_WRITE, dst_mask(dst_undef(), 0),
-                                       0, outcolor, payload_r0_depth, outdepth);
-            inst->Aux = INST_AUX_TARGET(i);
-         }
+   for (i = 0; i < c->key.nr_color_regions; i++) {
+      if (c->fp->program.Base.OutputsWritten & (1 << FRAG_RESULT_COLOR)) {
+	 outcolor = src_reg(PROGRAM_OUTPUT, FRAG_RESULT_COLOR);
+      } else {
+	 outcolor = src_reg(PROGRAM_OUTPUT, FRAG_RESULT_DATA0 + i);
       }
-      last_inst->Aux |= INST_AUX_EOT;
+      inst = emit_op(c, WM_FB_WRITE, dst_mask(dst_undef(), 0),
+		     0, outcolor, payload_r0_depth, outdepth);
+      inst->Aux = INST_AUX_TARGET(i);
    }
-   else {
-      /* if gl_FragData[0] is written, use it, else use gl_FragColor */
-      if (c->fp->program.Base.OutputsWritten & BITFIELD64_BIT(FRAG_RESULT_DATA0))
-         outcolor = src_reg(PROGRAM_OUTPUT, FRAG_RESULT_DATA0);
-      else 
-         outcolor = src_reg(PROGRAM_OUTPUT, FRAG_RESULT_COLOR);
 
-      inst = emit_op(c, WM_FB_WRITE, dst_mask(dst_undef(),0),
-                     0, outcolor, payload_r0_depth, outdepth);
-      inst->Aux = INST_AUX_EOT | INST_AUX_TARGET(0);
+   /* Mark the last FB write as final, or emit a dummy write if we had
+    * no render targets bound.
+    */
+   if (c->key.nr_color_regions != 0) {
+      inst->Aux |= INST_AUX_EOT;
+   } else {
+      inst = emit_op(c, WM_FB_WRITE, dst_mask(dst_undef(), 0),
+		     0, src_reg(PROGRAM_OUTPUT, FRAG_RESULT_COLOR),
+		     payload_r0_depth, outdepth);
+      inst->Aux = INST_AUX_TARGET(0) | INST_AUX_EOT;
    }
 }
 
@@ -1013,16 +1013,6 @@ static void validate_src_regs( struct brw_wm_compile *c,
 	    emit_interp(c, idx);
 	 }
       }
-   }
-}
-	 
-static void validate_dst_regs( struct brw_wm_compile *c,
-			       const struct prog_instruction *inst )
-{
-   if (inst->DstReg.File == PROGRAM_OUTPUT) {
-      GLuint idx = inst->DstReg.Index;
-      if (idx == FRAG_RESULT_COLOR)
-         c->fp_fragcolor_emitted = 1;
    }
 }
 
@@ -1083,7 +1073,6 @@ void brw_wm_pass_fp( struct brw_wm_compile *c )
    for (insn = 0; insn < fp->program.Base.NumInstructions; insn++) {
       const struct prog_instruction *inst = &fp->program.Base.Instructions[insn];
       validate_src_regs(c, inst);
-      validate_dst_regs(c, inst);
    }
 
    /* Loop over all instructions doing assorted simplifications and

@@ -181,6 +181,7 @@ i915_vbuf_render_new_buf(struct i915_vbuf_render *i915_render, size_t size)
    struct i915_winsys *iws = i915->iws;
 
    if (i915_render->vbo) {
+      iws->buffer_unmap(iws, i915_render->vbo);
       iws->buffer_destroy(iws, i915_render->vbo);
       /*
        * XXX If buffers where referenced then this should be done in
@@ -208,6 +209,7 @@ i915_vbuf_render_new_buf(struct i915_vbuf_render *i915_render, size_t size)
 
    i915_render->vbo = iws->buffer_create(iws, i915_render->vbo_size,
                                          I915_NEW_VERTEX);
+   i915_render->vbo_ptr = iws->buffer_map(iws, i915_render->vbo, TRUE);
 }
 
 /**
@@ -262,16 +264,13 @@ i915_vbuf_render_map_vertices(struct vbuf_render *render)
 {
    struct i915_vbuf_render *i915_render = i915_vbuf_render(render);
    struct i915_context *i915 = i915_render->i915;
-   struct i915_winsys *iws = i915->iws;
 
    if (i915->vbo_flushed)
       debug_printf("%s bad vbo flush occured stalling on hw\n", __FUNCTION__);
 
 #ifdef VBUF_MAP_BUFFER
-   i915_render->vbo_ptr = iws->buffer_map(iws, i915_render->vbo, TRUE);
    return (unsigned char *)i915_render->vbo_ptr + i915_render->vbo_sw_offset;
 #else
-   (void)iws;
    return (unsigned char *)i915_render->vbo_ptr;
 #endif
 }
@@ -288,7 +287,7 @@ i915_vbuf_render_unmap_vertices(struct vbuf_render *render,
    i915_render->vbo_max_index = max_index;
    i915_render->vbo_max_used = MAX2(i915_render->vbo_max_used, i915_render->vertex_size * (max_index + 1));
 #ifdef VBUF_MAP_BUFFER
-   iws->buffer_unmap(iws, i915_render->vbo);
+   (void)iws;
 #else
    i915_render->map_used_start = i915_render->vertex_size * min_index;
    i915_render->map_used_end = i915_render->vertex_size * (max_index + 1);
@@ -466,16 +465,15 @@ draw_arrays_fallback(struct vbuf_render *render,
    if (i915->hardware_dirty)
       i915_emit_hardware_state(i915);
 
-   if (!BEGIN_BATCH(1 + (nr_indices + 1)/2, 1)) {
+   if (!BEGIN_BATCH(1 + (nr_indices + 1)/2)) {
       FLUSH_BATCH(NULL);
 
       /* Make sure state is re-emitted after a flush:
        */
-      i915_update_derived(i915);
       i915_emit_hardware_state(i915);
       i915->vbo_flushed = 1;
 
-      if (!BEGIN_BATCH(1 + (nr_indices + 1)/2, 1)) {
+      if (!BEGIN_BATCH(1 + (nr_indices + 1)/2)) {
          assert(0);
          goto out;
       }
@@ -489,6 +487,7 @@ draw_arrays_fallback(struct vbuf_render *render,
 
    draw_arrays_generate_indices(render, start, nr, i915_render->fallback);
 
+   i915_flush_heuristically(i915, nr_indices);
 out:
    return;
 }
@@ -515,16 +514,15 @@ i915_vbuf_render_draw_arrays(struct vbuf_render *render,
    if (i915->hardware_dirty)
       i915_emit_hardware_state(i915);
 
-   if (!BEGIN_BATCH(2, 0)) {
+   if (!BEGIN_BATCH(2)) {
       FLUSH_BATCH(NULL);
 
       /* Make sure state is re-emitted after a flush:
        */
-      i915_update_derived(i915);
       i915_emit_hardware_state(i915);
       i915->vbo_flushed = 1;
 
-      if (!BEGIN_BATCH(2, 0)) {
+      if (!BEGIN_BATCH(2)) {
          assert(0);
          goto out;
       }
@@ -537,6 +535,7 @@ i915_vbuf_render_draw_arrays(struct vbuf_render *render,
              nr);
    OUT_BATCH(start); /* Beginning vertex index */
 
+   i915_flush_heuristically(i915, nr);
 out:
    return;
 }
@@ -636,16 +635,15 @@ i915_vbuf_render_draw_elements(struct vbuf_render *render,
    if (i915->hardware_dirty)
       i915_emit_hardware_state(i915);
 
-   if (!BEGIN_BATCH(1 + (nr_indices + 1)/2, 1)) {
+   if (!BEGIN_BATCH(1 + (nr_indices + 1)/2)) {
       FLUSH_BATCH(NULL);
 
       /* Make sure state is re-emitted after a flush: 
        */
-      i915_update_derived(i915);
       i915_emit_hardware_state(i915);
       i915->vbo_flushed = 1;
 
-      if (!BEGIN_BATCH(1 + (nr_indices + 1)/2, 1)) {
+      if (!BEGIN_BATCH(1 + (nr_indices + 1)/2)) {
          assert(0);
          goto out;
       }
@@ -661,6 +659,7 @@ i915_vbuf_render_draw_elements(struct vbuf_render *render,
                          save_nr_indices,
                          i915_render->fallback);
 
+   i915_flush_heuristically(i915, nr_indices);
 out:
    return;
 }
@@ -684,6 +683,15 @@ static void
 i915_vbuf_render_destroy(struct vbuf_render *render)
 {
    struct i915_vbuf_render *i915_render = i915_vbuf_render(render);
+   struct i915_context *i915 = i915_render->i915;
+   struct i915_winsys *iws = i915->iws;
+
+   if (i915_render->vbo) {
+      i915->vbo = NULL;
+      iws->buffer_unmap(iws, i915_render->vbo);
+      iws->buffer_destroy(iws, i915_render->vbo);
+   }
+
    FREE(i915_render);
 }
 

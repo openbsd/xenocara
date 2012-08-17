@@ -335,6 +335,7 @@ static const struct glx_context_vtable indirect_context_vtable = {
    indirect_use_x_font,
    indirect_bind_tex_image,
    indirect_release_tex_image,
+   NULL, /* get_proc_address */
 };
 
 /**
@@ -404,10 +405,7 @@ indirect_create_context(struct glx_screen *psc,
 
    /*
     ** PERFORMANCE NOTE: A mode dependent fill image can speed things up.
-    ** Other code uses the fastImageUnpack bit, but it is never set
-    ** to GL_TRUE.
     */
-   gc->fastImageUnpack = GL_FALSE;
    gc->fillImage = __glFillImage;
    gc->pc = gc->buf;
    gc->bufEnd = gc->buf + bufSize;

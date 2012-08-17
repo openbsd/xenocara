@@ -28,10 +28,12 @@
 #ifndef INTEL_FBO_H
 #define INTEL_FBO_H
 
+#include <stdbool.h>
 #include "main/formats.h"
 #include "intel_screen.h"
 
 struct intel_context;
+struct intel_texture_image;
 
 /**
  * Intel renderbuffer, derived from gl_renderbuffer.
@@ -40,6 +42,23 @@ struct intel_renderbuffer
 {
    struct gl_renderbuffer Base;
    struct intel_region *region;
+
+   /** Only used by depth renderbuffers for which HiZ is enabled. */
+   struct intel_region *hiz_region;
+
+   /**
+    * \name Packed depth/stencil unwrappers
+    *
+    * If the intel_context is using separate stencil and this renderbuffer has
+    * a a packed depth/stencil format, then wrapped_depth and wrapped_stencil
+    * are the real renderbuffers.
+    */
+   struct gl_renderbuffer *wrapped_depth;
+   struct gl_renderbuffer *wrapped_stencil;
+
+   /** \} */
+
+   GLuint draw_x, draw_y; /**< Offset of drawing within the region */
 };
 
 
@@ -69,15 +88,70 @@ intel_renderbuffer(struct gl_renderbuffer *rb)
 
 
 /**
- * Return a framebuffer's renderbuffer, named by a BUFFER_x index.
+ * \brief Return the framebuffer attachment specified by attIndex.
+ *
+ * If the framebuffer lacks the specified attachment, then return null.
+ *
+ * If the attached renderbuffer is a wrapper, then return wrapped
+ * renderbuffer.
  */
 static INLINE struct intel_renderbuffer *
-intel_get_renderbuffer(struct gl_framebuffer *fb, int attIndex)
+intel_get_renderbuffer(struct gl_framebuffer *fb, gl_buffer_index attIndex)
 {
-   if (attIndex >= 0)
-      return intel_renderbuffer(fb->Attachment[attIndex].Renderbuffer);
+   struct gl_renderbuffer *rb;
+   struct intel_renderbuffer *irb;
+
+   /* XXX: Who passes -1 to intel_get_renderbuffer? */
+   if (attIndex < 0)
+      return NULL;
+
+   rb = fb->Attachment[attIndex].Renderbuffer;
+   if (!rb)
+      return NULL;
+
+   irb = intel_renderbuffer(rb);
+   if (!irb)
+      return NULL;
+
+   switch (attIndex) {
+   case BUFFER_DEPTH:
+      if (irb->wrapped_depth) {
+	 irb = intel_renderbuffer(irb->wrapped_depth);
+      }
+      break;
+   case BUFFER_STENCIL:
+      if (irb->wrapped_stencil) {
+	 irb = intel_renderbuffer(irb->wrapped_stencil);
+      }
+      break;
+   default:
+      break;
+   }
+
+   return irb;
+}
+
+/**
+ * If the framebuffer has a depth buffer attached, then return its HiZ region.
+ * The HiZ region may be null.
+ */
+static INLINE struct intel_region*
+intel_framebuffer_get_hiz_region(struct gl_framebuffer *fb)
+{
+   struct intel_renderbuffer *rb = NULL;
+   if (fb)
+      rb = intel_get_renderbuffer(fb, BUFFER_DEPTH);
+
+   if (rb)
+      return rb->hiz_region;
    else
       return NULL;
+}
+
+static INLINE bool
+intel_framebuffer_has_hiz(struct gl_framebuffer *fb)
+{
+   return intel_framebuffer_get_hiz_region(fb) != NULL;
 }
 
 
@@ -86,10 +160,25 @@ intel_renderbuffer_set_region(struct intel_context *intel,
 			      struct intel_renderbuffer *irb,
 			      struct intel_region *region);
 
+extern void
+intel_renderbuffer_set_hiz_region(struct intel_context *intel,
+				  struct intel_renderbuffer *rb,
+				  struct intel_region *region);
+
 
 extern struct intel_renderbuffer *
 intel_create_renderbuffer(gl_format format);
 
+struct gl_renderbuffer*
+intel_create_wrapped_renderbuffer(struct gl_context * ctx,
+				  int width, int height,
+				  gl_format format);
+
+GLboolean
+intel_alloc_renderbuffer_storage(struct gl_context * ctx,
+				 struct gl_renderbuffer *rb,
+                                 GLenum internalFormat,
+                                 GLuint width, GLuint height);
 
 extern void
 intel_fbo_init(struct intel_context *intel);
@@ -98,6 +187,15 @@ intel_fbo_init(struct intel_context *intel);
 extern void
 intel_flip_renderbuffers(struct gl_framebuffer *fb);
 
+void
+intel_renderbuffer_set_draw_offset(struct intel_renderbuffer *irb,
+				   struct intel_texture_image *intel_image,
+				   int zoffset);
+
+uint32_t
+intel_renderbuffer_tile_offsets(struct intel_renderbuffer *irb,
+				uint32_t *tile_x,
+				uint32_t *tile_y);
 
 static INLINE struct intel_region *
 intel_get_rb_region(struct gl_framebuffer *fb, GLuint attIndex)
@@ -108,6 +206,5 @@ intel_get_rb_region(struct gl_framebuffer *fb, GLuint attIndex)
    else
       return NULL;
 }
-
 
 #endif /* INTEL_FBO_H */

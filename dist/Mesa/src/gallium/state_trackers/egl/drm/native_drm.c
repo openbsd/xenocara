@@ -23,6 +23,7 @@
  * DEALINGS IN THE SOFTWARE.
  */
 
+#include <string.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -32,9 +33,11 @@
 
 #include "native_drm.h"
 
-/* see get_drm_screen_name */
-#include <radeon_drm.h>
-#include "radeon/drm/radeon_drm_public.h"
+#include "gbm_gallium_drmint.h"
+
+#ifdef HAVE_LIBUDEV
+#include <libudev.h>
+#endif
 
 static boolean
 drm_display_is_format_supported(struct native_display *ndpy,
@@ -43,7 +46,7 @@ drm_display_is_format_supported(struct native_display *ndpy,
    return ndpy->screen->is_format_supported(ndpy->screen,
          fmt, PIPE_TEXTURE_2D, 0,
          (is_color) ? PIPE_BIND_RENDER_TARGET :
-         PIPE_BIND_DEPTH_STENCIL, 0);
+         PIPE_BIND_DEPTH_STENCIL);
 }
 
 static const struct native_config **
@@ -124,8 +127,12 @@ drm_display_destroy(struct native_display *ndpy)
 
    drm_display_fini_modeset(&drmdpy->base);
 
-   if (drmdpy->base.screen)
-      drmdpy->base.screen->destroy(drmdpy->base.screen);
+   /* gbm owns screen */
+   ndpy->screen = NULL;
+   ndpy_uninit(ndpy);
+
+   if (drmdpy->device_name)
+      FREE(drmdpy->device_name);
 
    if (drmdpy->fd >= 0)
       close(drmdpy->fd);
@@ -133,84 +140,126 @@ drm_display_destroy(struct native_display *ndpy)
    FREE(drmdpy);
 }
 
-static const char *
-get_drm_screen_name(int fd, drmVersionPtr version)
+static struct native_display_buffer drm_display_buffer = {
+   /* use the helpers */
+   drm_display_import_native_buffer,
+   drm_display_export_native_buffer
+};
+
+static int
+drm_display_authenticate(void *user_data, uint32_t magic)
 {
-   const char *name = version->name;
+   struct native_display *ndpy = user_data;
+   struct drm_display *drmdpy = drm_display(ndpy);
 
-   if (name && !strcmp(name, "radeon")) {
-      int chip_id;
-      struct drm_radeon_info info;
-
-      memset(&info, 0, sizeof(info));
-      info.request = RADEON_INFO_DEVICE_ID;
-      info.value = pointer_to_intptr(&chip_id);
-      if (drmCommandWriteRead(fd, DRM_RADEON_INFO, &info, sizeof(info)) != 0)
-         return NULL;
-
-      name = is_r3xx(chip_id) ? "r300" : "r600";
-   }
-
-   return name;
+   return drmAuthMagic(drmdpy->fd, magic);
 }
 
-/**
- * Initialize KMS and pipe screen.
- */
+static char *
+drm_get_device_name(int fd)
+{
+   char *device_name = NULL;
+#ifdef HAVE_LIBUDEV
+   struct udev *udev;
+   struct udev_device *device;
+   struct stat buf;
+   const char *tmp;
+
+   udev = udev_new();
+   if (fstat(fd, &buf) < 0) {
+      _eglLog(_EGL_WARNING, "failed to stat fd %d", fd);
+      goto out;
+   }
+
+   device = udev_device_new_from_devnum(udev, 'c', buf.st_rdev);
+   if (device == NULL) {
+      _eglLog(_EGL_WARNING,
+              "could not create udev device for fd %d", fd);
+      goto out;
+   }
+
+   tmp = udev_device_get_devnode(device);
+   if (!tmp)
+      goto out;
+   device_name = strdup(tmp);
+
+out:
+   udev_device_unref(device);
+   udev_unref(udev);
+
+#endif
+   return device_name;
+}
+
+#ifdef HAVE_WAYLAND_BACKEND
+
+static struct wayland_drm_callbacks wl_drm_callbacks = {
+   drm_display_authenticate,
+   egl_g3d_wl_drm_helper_reference_buffer,
+   egl_g3d_wl_drm_helper_unreference_buffer
+};
+
 static boolean
-drm_display_init_screen(struct native_display *ndpy)
+drm_display_bind_wayland_display(struct native_display *ndpy,
+                                  struct wl_display *wl_dpy)
 {
    struct drm_display *drmdpy = drm_display(ndpy);
-   drmVersionPtr version;
-   const char *name;
 
-   version = drmGetVersion(drmdpy->fd);
-   if (!version) {
-      _eglLog(_EGL_WARNING, "invalid fd %d", drmdpy->fd);
+   if (drmdpy->wl_server_drm)
       return FALSE;
-   }
 
-   name = get_drm_screen_name(drmdpy->fd, version);
-   if (name) {
-      drmdpy->base.screen =
-         drmdpy->event_handler->new_drm_screen(&drmdpy->base, name, drmdpy->fd);
-   }
-   drmFreeVersion(version);
+   drmdpy->wl_server_drm = wayland_drm_init(wl_dpy,
+         drmdpy->device_name,
+         &wl_drm_callbacks, ndpy);
 
-   if (!drmdpy->base.screen) {
-      _eglLog(_EGL_WARNING, "failed to create DRM screen");
+   if (!drmdpy->wl_server_drm)
       return FALSE;
-   }
+   
+   return TRUE;
+}
+
+static boolean
+drm_display_unbind_wayland_display(struct native_display *ndpy,
+                                    struct wl_display *wl_dpy)
+{
+   struct drm_display *drmdpy = drm_display(ndpy);
+
+   if (!drmdpy->wl_server_drm)
+      return FALSE;
+
+   wayland_drm_uninit(drmdpy->wl_server_drm);
+   drmdpy->wl_server_drm = NULL;
 
    return TRUE;
 }
 
-static struct pipe_resource *
-drm_display_import_buffer(struct native_display *ndpy,
-                          const struct pipe_resource *templ,
-                          void *buf)
+static struct native_display_wayland_bufmgr drm_display_wayland_bufmgr = {
+   drm_display_bind_wayland_display,
+   drm_display_unbind_wayland_display,
+   egl_g3d_wl_drm_common_wl_buffer_get_resource
+};
+
+#endif /* HAVE_WAYLAND_BACKEND */
+
+static struct native_surface *
+drm_create_pixmap_surface(struct native_display *ndpy,
+                              EGLNativePixmapType pix,
+                              const struct native_config *nconf)
 {
-   return ndpy->screen->resource_from_handle(ndpy->screen,
-         templ, (struct winsys_handle *) buf);
+   struct gbm_gallium_drm_bo *bo = (void *) pix;
+
+   return drm_display_create_surface_from_resource(ndpy, bo->resource);
 }
 
 static boolean
-drm_display_export_buffer(struct native_display *ndpy,
-                          struct pipe_resource *res,
-                          void *buf)
+drm_display_init_screen(struct native_display *ndpy)
 {
-   return ndpy->screen->resource_get_handle(ndpy->screen,
-         res, (struct winsys_handle *) buf);
+   return TRUE;
 }
 
-static struct native_display_buffer drm_display_buffer = {
-   drm_display_import_buffer,
-   drm_display_export_buffer
-};
-
 static struct native_display *
-drm_create_display(int fd, struct native_event_handler *event_handler,
-                   void *user_data)
+drm_create_display(struct gbm_gallium_drm_device *gbmdrm,
+                   const struct native_event_handler *event_handler)
 {
    struct drm_display *drmdpy;
 
@@ -218,41 +267,57 @@ drm_create_display(int fd, struct native_event_handler *event_handler,
    if (!drmdpy)
       return NULL;
 
-   drmdpy->fd = fd;
+   drmdpy->fd = gbmdrm->base.base.fd;
+   drmdpy->device_name = drm_get_device_name(drmdpy->fd);
+
+   gbmdrm->lookup_egl_image = (struct pipe_resource *(*)(void *, void *))
+      event_handler->lookup_egl_image;
+   gbmdrm->lookup_egl_image_data = &drmdpy->base;
+
    drmdpy->event_handler = event_handler;
-   drmdpy->base.user_data = user_data;
 
-   if (!drm_display_init_screen(&drmdpy->base)) {
-      drm_display_destroy(&drmdpy->base);
-      return NULL;
-   }
+   drmdpy->base.screen = gbmdrm->screen;
 
+   drmdpy->base.init_screen = drm_display_init_screen;
    drmdpy->base.destroy = drm_display_destroy;
    drmdpy->base.get_param = drm_display_get_param;
    drmdpy->base.get_configs = drm_display_get_configs;
 
+   drmdpy->base.create_pixmap_surface = drm_create_pixmap_surface;
+
    drmdpy->base.buffer = &drm_display_buffer;
+#ifdef HAVE_WAYLAND_BACKEND
+   if (drmdpy->device_name)
+      drmdpy->base.wayland_bufmgr = &drm_display_wayland_bufmgr;
+#endif
    drm_display_init_modeset(&drmdpy->base);
 
    return &drmdpy->base;
 }
 
+static const struct native_event_handler *drm_event_handler;
+
 static struct native_display *
-native_create_display(void *dpy, struct native_event_handler *event_handler,
-                      void *user_data)
+native_create_display(void *dpy, boolean use_sw)
 {
+   struct gbm_gallium_drm_device *gbm;
    int fd;
 
-   if (dpy) {
-      fd = dup((int) pointer_to_intptr(dpy));
-   }
-   else {
+   gbm = dpy;
+
+   if (gbm == NULL) {
       fd = open("/dev/dri/card0", O_RDWR);
+      gbm = gbm_gallium_drm_device(gbm_create_device(fd));
    }
-   if (fd < 0)
+
+   if (gbm == NULL)
+      return NULL;
+   
+   if (strcmp(gbm_device_get_backend_name(&gbm->base.base), "drm") != 0 ||
+       gbm->base.type != GBM_DRM_DRIVER_TYPE_GALLIUM)
       return NULL;
 
-   return drm_create_display(fd, event_handler, user_data);
+   return drm_create_display(gbm, drm_event_handler);
 }
 
 static const struct native_platform drm_platform = {
@@ -261,7 +326,8 @@ static const struct native_platform drm_platform = {
 };
 
 const struct native_platform *
-native_get_drm_platform(void)
+native_get_drm_platform(const struct native_event_handler *event_handler)
 {
+   drm_event_handler = event_handler;
    return &drm_platform;
 }

@@ -29,6 +29,8 @@
 
 #include "u_format.h"
 #include "u_format_s3tc.h"
+#include "u_format_rgtc.h"
+#include "u_format_latc.h"
 
 
 #include "pipe/p_compiler.h"
@@ -2116,6 +2118,127 @@ util_format_b10g10r10a2_unorm_pack_rgba_8unorm(uint8_t *dst_row, unsigned dst_st
    }
 }
 
+union util_format_b2g3r3_unorm {
+   uint8_t value;
+   struct {
+      unsigned b:2;
+      unsigned g:3;
+      unsigned r:3;
+   } chan;
+};
+
+static INLINE void
+util_format_b2g3r3_unorm_unpack_rgba_float(float *dst_row, unsigned dst_stride, const uint8_t *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      float *dst = dst_row;
+      const uint8_t *src = src_row;
+      for(x = 0; x < width; x += 1) {
+         uint8_t value = *(const uint8_t *)src;
+         uint8_t b;
+         uint8_t g;
+         uint8_t r;
+         b = (value) & 0x3;
+         g = (value >> 2) & 0x7;
+         r = value >> 5;
+         dst[0] = (float)(r * (1.0f/0x7)); /* r */
+         dst[1] = (float)(g * (1.0f/0x7)); /* g */
+         dst[2] = (float)(b * (1.0f/0x3)); /* b */
+         dst[3] = 1; /* a */
+         src += 1;
+         dst += 4;
+      }
+      src_row += src_stride;
+      dst_row += dst_stride/sizeof(*dst_row);
+   }
+}
+
+static INLINE void
+util_format_b2g3r3_unorm_pack_rgba_float(uint8_t *dst_row, unsigned dst_stride, const float *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      const float *src = src_row;
+      uint8_t *dst = dst_row;
+      for(x = 0; x < width; x += 1) {
+         uint8_t value = 0;
+         value |= ((uint8_t)(CLAMP(src[2], 0, 1) * 0x3)) & 0x3;
+         value |= (((uint8_t)(CLAMP(src[1], 0, 1) * 0x7)) & 0x7) << 2;
+         value |= ((uint8_t)(CLAMP(src[0], 0, 1) * 0x7)) << 5;
+         *(uint8_t *)dst = value;
+         src += 4;
+         dst += 1;
+      }
+      dst_row += dst_stride;
+      src_row += src_stride/sizeof(*src_row);
+   }
+}
+
+static INLINE void
+util_format_b2g3r3_unorm_fetch_rgba_float(float *dst, const uint8_t *src, unsigned i, unsigned j)
+{
+         uint8_t value = *(const uint8_t *)src;
+         uint8_t b;
+         uint8_t g;
+         uint8_t r;
+         b = (value) & 0x3;
+         g = (value >> 2) & 0x7;
+         r = value >> 5;
+         dst[0] = (float)(r * (1.0f/0x7)); /* r */
+         dst[1] = (float)(g * (1.0f/0x7)); /* g */
+         dst[2] = (float)(b * (1.0f/0x3)); /* b */
+         dst[3] = 1; /* a */
+}
+
+static INLINE void
+util_format_b2g3r3_unorm_unpack_rgba_8unorm(uint8_t *dst_row, unsigned dst_stride, const uint8_t *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      uint8_t *dst = dst_row;
+      const uint8_t *src = src_row;
+      for(x = 0; x < width; x += 1) {
+         uint8_t value = *(const uint8_t *)src;
+         uint8_t b;
+         uint8_t g;
+         uint8_t r;
+         b = (value) & 0x3;
+         g = (value >> 2) & 0x7;
+         r = value >> 5;
+         dst[0] = (uint8_t)(((uint32_t)r) * 0xff / 0x7); /* r */
+         dst[1] = (uint8_t)(((uint32_t)g) * 0xff / 0x7); /* g */
+         dst[2] = (uint8_t)(((uint32_t)b) * 0xff / 0x3); /* b */
+         dst[3] = 255; /* a */
+         src += 1;
+         dst += 4;
+      }
+      src_row += src_stride;
+      dst_row += dst_stride/sizeof(*dst_row);
+   }
+}
+
+static INLINE void
+util_format_b2g3r3_unorm_pack_rgba_8unorm(uint8_t *dst_row, unsigned dst_stride, const uint8_t *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      const uint8_t *src = src_row;
+      uint8_t *dst = dst_row;
+      for(x = 0; x < width; x += 1) {
+         uint8_t value = 0;
+         value |= ((uint8_t)(src[2] >> 6)) & 0x3;
+         value |= (((uint8_t)(src[1] >> 5)) & 0x7) << 2;
+         value |= ((uint8_t)(src[0] >> 5)) << 5;
+         *(uint8_t *)dst = value;
+         src += 4;
+         dst += 1;
+      }
+      dst_row += dst_stride;
+      src_row += src_stride/sizeof(*src_row);
+   }
+}
+
 union util_format_l8_unorm {
    uint8_t value;
    struct {
@@ -2776,6 +2899,2092 @@ util_format_l16_unorm_pack_rgba_8unorm(uint8_t *dst_row, unsigned dst_stride, co
          *(uint16_t *)dst = value;
          src += 4;
          dst += 2;
+      }
+      dst_row += dst_stride;
+      src_row += src_stride/sizeof(*src_row);
+   }
+}
+
+union util_format_a16_unorm {
+   uint16_t value;
+   struct {
+      uint16_t a;
+   } chan;
+};
+
+static INLINE void
+util_format_a16_unorm_unpack_rgba_float(float *dst_row, unsigned dst_stride, const uint8_t *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      float *dst = dst_row;
+      const uint8_t *src = src_row;
+      for(x = 0; x < width; x += 1) {
+         uint16_t value = *(const uint16_t *)src;
+         uint16_t a;
+#ifdef PIPE_ARCH_BIG_ENDIAN
+         value = util_bswap16(value);
+#endif
+         a = value;
+         dst[0] = 0; /* r */
+         dst[1] = 0; /* g */
+         dst[2] = 0; /* b */
+         dst[3] = (float)(a * (1.0f/0xffff)); /* a */
+         src += 2;
+         dst += 4;
+      }
+      src_row += src_stride;
+      dst_row += dst_stride/sizeof(*dst_row);
+   }
+}
+
+static INLINE void
+util_format_a16_unorm_pack_rgba_float(uint8_t *dst_row, unsigned dst_stride, const float *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      const float *src = src_row;
+      uint8_t *dst = dst_row;
+      for(x = 0; x < width; x += 1) {
+         uint16_t value = 0;
+         value |= (uint16_t)(CLAMP(src[3], 0, 1) * 0xffff);
+#ifdef PIPE_ARCH_BIG_ENDIAN
+         value = util_bswap16(value);
+#endif
+         *(uint16_t *)dst = value;
+         src += 4;
+         dst += 2;
+      }
+      dst_row += dst_stride;
+      src_row += src_stride/sizeof(*src_row);
+   }
+}
+
+static INLINE void
+util_format_a16_unorm_fetch_rgba_float(float *dst, const uint8_t *src, unsigned i, unsigned j)
+{
+         uint16_t value = *(const uint16_t *)src;
+         uint16_t a;
+#ifdef PIPE_ARCH_BIG_ENDIAN
+         value = util_bswap16(value);
+#endif
+         a = value;
+         dst[0] = 0; /* r */
+         dst[1] = 0; /* g */
+         dst[2] = 0; /* b */
+         dst[3] = (float)(a * (1.0f/0xffff)); /* a */
+}
+
+static INLINE void
+util_format_a16_unorm_unpack_rgba_8unorm(uint8_t *dst_row, unsigned dst_stride, const uint8_t *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      uint8_t *dst = dst_row;
+      const uint8_t *src = src_row;
+      for(x = 0; x < width; x += 1) {
+         uint16_t value = *(const uint16_t *)src;
+         uint16_t a;
+#ifdef PIPE_ARCH_BIG_ENDIAN
+         value = util_bswap16(value);
+#endif
+         a = value;
+         dst[0] = 0; /* r */
+         dst[1] = 0; /* g */
+         dst[2] = 0; /* b */
+         dst[3] = (uint8_t)(a >> 8); /* a */
+         src += 2;
+         dst += 4;
+      }
+      src_row += src_stride;
+      dst_row += dst_stride/sizeof(*dst_row);
+   }
+}
+
+static INLINE void
+util_format_a16_unorm_pack_rgba_8unorm(uint8_t *dst_row, unsigned dst_stride, const uint8_t *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      const uint8_t *src = src_row;
+      uint8_t *dst = dst_row;
+      for(x = 0; x < width; x += 1) {
+         uint16_t value = 0;
+         value |= (uint16_t)(((uint32_t)src[3]) * 0xffff / 0xff);
+#ifdef PIPE_ARCH_BIG_ENDIAN
+         value = util_bswap16(value);
+#endif
+         *(uint16_t *)dst = value;
+         src += 4;
+         dst += 2;
+      }
+      dst_row += dst_stride;
+      src_row += src_stride/sizeof(*src_row);
+   }
+}
+
+union util_format_i16_unorm {
+   uint16_t value;
+   struct {
+      uint16_t rgba;
+   } chan;
+};
+
+static INLINE void
+util_format_i16_unorm_unpack_rgba_float(float *dst_row, unsigned dst_stride, const uint8_t *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      float *dst = dst_row;
+      const uint8_t *src = src_row;
+      for(x = 0; x < width; x += 1) {
+         uint16_t value = *(const uint16_t *)src;
+         uint16_t rgba;
+#ifdef PIPE_ARCH_BIG_ENDIAN
+         value = util_bswap16(value);
+#endif
+         rgba = value;
+         dst[0] = (float)(rgba * (1.0f/0xffff)); /* r */
+         dst[1] = (float)(rgba * (1.0f/0xffff)); /* g */
+         dst[2] = (float)(rgba * (1.0f/0xffff)); /* b */
+         dst[3] = (float)(rgba * (1.0f/0xffff)); /* a */
+         src += 2;
+         dst += 4;
+      }
+      src_row += src_stride;
+      dst_row += dst_stride/sizeof(*dst_row);
+   }
+}
+
+static INLINE void
+util_format_i16_unorm_pack_rgba_float(uint8_t *dst_row, unsigned dst_stride, const float *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      const float *src = src_row;
+      uint8_t *dst = dst_row;
+      for(x = 0; x < width; x += 1) {
+         uint16_t value = 0;
+         value |= (uint16_t)(CLAMP(src[3], 0, 1) * 0xffff);
+#ifdef PIPE_ARCH_BIG_ENDIAN
+         value = util_bswap16(value);
+#endif
+         *(uint16_t *)dst = value;
+         src += 4;
+         dst += 2;
+      }
+      dst_row += dst_stride;
+      src_row += src_stride/sizeof(*src_row);
+   }
+}
+
+static INLINE void
+util_format_i16_unorm_fetch_rgba_float(float *dst, const uint8_t *src, unsigned i, unsigned j)
+{
+         uint16_t value = *(const uint16_t *)src;
+         uint16_t rgba;
+#ifdef PIPE_ARCH_BIG_ENDIAN
+         value = util_bswap16(value);
+#endif
+         rgba = value;
+         dst[0] = (float)(rgba * (1.0f/0xffff)); /* r */
+         dst[1] = (float)(rgba * (1.0f/0xffff)); /* g */
+         dst[2] = (float)(rgba * (1.0f/0xffff)); /* b */
+         dst[3] = (float)(rgba * (1.0f/0xffff)); /* a */
+}
+
+static INLINE void
+util_format_i16_unorm_unpack_rgba_8unorm(uint8_t *dst_row, unsigned dst_stride, const uint8_t *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      uint8_t *dst = dst_row;
+      const uint8_t *src = src_row;
+      for(x = 0; x < width; x += 1) {
+         uint16_t value = *(const uint16_t *)src;
+         uint16_t rgba;
+#ifdef PIPE_ARCH_BIG_ENDIAN
+         value = util_bswap16(value);
+#endif
+         rgba = value;
+         dst[0] = (uint8_t)(rgba >> 8); /* r */
+         dst[1] = (uint8_t)(rgba >> 8); /* g */
+         dst[2] = (uint8_t)(rgba >> 8); /* b */
+         dst[3] = (uint8_t)(rgba >> 8); /* a */
+         src += 2;
+         dst += 4;
+      }
+      src_row += src_stride;
+      dst_row += dst_stride/sizeof(*dst_row);
+   }
+}
+
+static INLINE void
+util_format_i16_unorm_pack_rgba_8unorm(uint8_t *dst_row, unsigned dst_stride, const uint8_t *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      const uint8_t *src = src_row;
+      uint8_t *dst = dst_row;
+      for(x = 0; x < width; x += 1) {
+         uint16_t value = 0;
+         value |= (uint16_t)(((uint32_t)src[3]) * 0xffff / 0xff);
+#ifdef PIPE_ARCH_BIG_ENDIAN
+         value = util_bswap16(value);
+#endif
+         *(uint16_t *)dst = value;
+         src += 4;
+         dst += 2;
+      }
+      dst_row += dst_stride;
+      src_row += src_stride/sizeof(*src_row);
+   }
+}
+
+union util_format_l16a16_unorm {
+   uint32_t value;
+   struct {
+      uint16_t rgb;
+      uint16_t a;
+   } chan;
+};
+
+static INLINE void
+util_format_l16a16_unorm_unpack_rgba_float(float *dst_row, unsigned dst_stride, const uint8_t *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      float *dst = dst_row;
+      const uint8_t *src = src_row;
+      for(x = 0; x < width; x += 1) {
+         uint32_t value = *(const uint32_t *)src;
+         uint32_t rgb;
+         uint32_t a;
+#ifdef PIPE_ARCH_BIG_ENDIAN
+         value = util_bswap32(value);
+#endif
+         rgb = (value) & 0xffff;
+         a = value >> 16;
+         dst[0] = (float)(rgb * (1.0f/0xffff)); /* r */
+         dst[1] = (float)(rgb * (1.0f/0xffff)); /* g */
+         dst[2] = (float)(rgb * (1.0f/0xffff)); /* b */
+         dst[3] = (float)(a * (1.0f/0xffff)); /* a */
+         src += 4;
+         dst += 4;
+      }
+      src_row += src_stride;
+      dst_row += dst_stride/sizeof(*dst_row);
+   }
+}
+
+static INLINE void
+util_format_l16a16_unorm_pack_rgba_float(uint8_t *dst_row, unsigned dst_stride, const float *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      const float *src = src_row;
+      uint8_t *dst = dst_row;
+      for(x = 0; x < width; x += 1) {
+         uint32_t value = 0;
+         value |= ((uint16_t)(CLAMP(src[2], 0, 1) * 0xffff)) & 0xffff;
+         value |= ((uint16_t)(CLAMP(src[3], 0, 1) * 0xffff)) << 16;
+#ifdef PIPE_ARCH_BIG_ENDIAN
+         value = util_bswap32(value);
+#endif
+         *(uint32_t *)dst = value;
+         src += 4;
+         dst += 4;
+      }
+      dst_row += dst_stride;
+      src_row += src_stride/sizeof(*src_row);
+   }
+}
+
+static INLINE void
+util_format_l16a16_unorm_fetch_rgba_float(float *dst, const uint8_t *src, unsigned i, unsigned j)
+{
+         uint32_t value = *(const uint32_t *)src;
+         uint32_t rgb;
+         uint32_t a;
+#ifdef PIPE_ARCH_BIG_ENDIAN
+         value = util_bswap32(value);
+#endif
+         rgb = (value) & 0xffff;
+         a = value >> 16;
+         dst[0] = (float)(rgb * (1.0f/0xffff)); /* r */
+         dst[1] = (float)(rgb * (1.0f/0xffff)); /* g */
+         dst[2] = (float)(rgb * (1.0f/0xffff)); /* b */
+         dst[3] = (float)(a * (1.0f/0xffff)); /* a */
+}
+
+static INLINE void
+util_format_l16a16_unorm_unpack_rgba_8unorm(uint8_t *dst_row, unsigned dst_stride, const uint8_t *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      uint8_t *dst = dst_row;
+      const uint8_t *src = src_row;
+      for(x = 0; x < width; x += 1) {
+         uint32_t value = *(const uint32_t *)src;
+         uint32_t rgb;
+         uint32_t a;
+#ifdef PIPE_ARCH_BIG_ENDIAN
+         value = util_bswap32(value);
+#endif
+         rgb = (value) & 0xffff;
+         a = value >> 16;
+         dst[0] = (uint8_t)(rgb >> 8); /* r */
+         dst[1] = (uint8_t)(rgb >> 8); /* g */
+         dst[2] = (uint8_t)(rgb >> 8); /* b */
+         dst[3] = (uint8_t)(a >> 8); /* a */
+         src += 4;
+         dst += 4;
+      }
+      src_row += src_stride;
+      dst_row += dst_stride/sizeof(*dst_row);
+   }
+}
+
+static INLINE void
+util_format_l16a16_unorm_pack_rgba_8unorm(uint8_t *dst_row, unsigned dst_stride, const uint8_t *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      const uint8_t *src = src_row;
+      uint8_t *dst = dst_row;
+      for(x = 0; x < width; x += 1) {
+         uint32_t value = 0;
+         value |= ((uint16_t)(((uint32_t)src[2]) * 0xffff / 0xff)) & 0xffff;
+         value |= ((uint16_t)(((uint32_t)src[3]) * 0xffff / 0xff)) << 16;
+#ifdef PIPE_ARCH_BIG_ENDIAN
+         value = util_bswap32(value);
+#endif
+         *(uint32_t *)dst = value;
+         src += 4;
+         dst += 4;
+      }
+      dst_row += dst_stride;
+      src_row += src_stride/sizeof(*src_row);
+   }
+}
+
+union util_format_a8_snorm {
+   uint8_t value;
+   struct {
+      int8_t a;
+   } chan;
+};
+
+static INLINE void
+util_format_a8_snorm_unpack_rgba_float(float *dst_row, unsigned dst_stride, const uint8_t *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      float *dst = dst_row;
+      const uint8_t *src = src_row;
+      for(x = 0; x < width; x += 1) {
+         uint8_t value = *(const uint8_t *)src;
+         int8_t a;
+         a = (int8_t)(value) ;
+         dst[0] = 0; /* r */
+         dst[1] = 0; /* g */
+         dst[2] = 0; /* b */
+         dst[3] = (float)(a * (1.0f/0x7f)); /* a */
+         src += 1;
+         dst += 4;
+      }
+      src_row += src_stride;
+      dst_row += dst_stride/sizeof(*dst_row);
+   }
+}
+
+static INLINE void
+util_format_a8_snorm_pack_rgba_float(uint8_t *dst_row, unsigned dst_stride, const float *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      const float *src = src_row;
+      uint8_t *dst = dst_row;
+      for(x = 0; x < width; x += 1) {
+         uint8_t value = 0;
+         value |= (uint8_t)((int8_t)(CLAMP(src[3], -1, 1) * 0x7f)) ;
+         *(uint8_t *)dst = value;
+         src += 4;
+         dst += 1;
+      }
+      dst_row += dst_stride;
+      src_row += src_stride/sizeof(*src_row);
+   }
+}
+
+static INLINE void
+util_format_a8_snorm_fetch_rgba_float(float *dst, const uint8_t *src, unsigned i, unsigned j)
+{
+         uint8_t value = *(const uint8_t *)src;
+         int8_t a;
+         a = (int8_t)(value) ;
+         dst[0] = 0; /* r */
+         dst[1] = 0; /* g */
+         dst[2] = 0; /* b */
+         dst[3] = (float)(a * (1.0f/0x7f)); /* a */
+}
+
+static INLINE void
+util_format_a8_snorm_unpack_rgba_8unorm(uint8_t *dst_row, unsigned dst_stride, const uint8_t *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      uint8_t *dst = dst_row;
+      const uint8_t *src = src_row;
+      for(x = 0; x < width; x += 1) {
+         uint8_t value = *(const uint8_t *)src;
+         int8_t a;
+         a = (int8_t)(value) ;
+         dst[0] = 0; /* r */
+         dst[1] = 0; /* g */
+         dst[2] = 0; /* b */
+         dst[3] = (uint8_t)(((uint32_t)MAX2(a, 0)) * 0xff / 0x7f); /* a */
+         src += 1;
+         dst += 4;
+      }
+      src_row += src_stride;
+      dst_row += dst_stride/sizeof(*dst_row);
+   }
+}
+
+static INLINE void
+util_format_a8_snorm_pack_rgba_8unorm(uint8_t *dst_row, unsigned dst_stride, const uint8_t *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      const uint8_t *src = src_row;
+      uint8_t *dst = dst_row;
+      for(x = 0; x < width; x += 1) {
+         uint8_t value = 0;
+         value |= (uint8_t)((int8_t)(src[3] >> 1)) ;
+         *(uint8_t *)dst = value;
+         src += 4;
+         dst += 1;
+      }
+      dst_row += dst_stride;
+      src_row += src_stride/sizeof(*src_row);
+   }
+}
+
+union util_format_l8_snorm {
+   uint8_t value;
+   struct {
+      int8_t rgb;
+   } chan;
+};
+
+static INLINE void
+util_format_l8_snorm_unpack_rgba_float(float *dst_row, unsigned dst_stride, const uint8_t *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      float *dst = dst_row;
+      const uint8_t *src = src_row;
+      for(x = 0; x < width; x += 1) {
+         uint8_t value = *(const uint8_t *)src;
+         int8_t rgb;
+         rgb = (int8_t)(value) ;
+         dst[0] = (float)(rgb * (1.0f/0x7f)); /* r */
+         dst[1] = (float)(rgb * (1.0f/0x7f)); /* g */
+         dst[2] = (float)(rgb * (1.0f/0x7f)); /* b */
+         dst[3] = 1; /* a */
+         src += 1;
+         dst += 4;
+      }
+      src_row += src_stride;
+      dst_row += dst_stride/sizeof(*dst_row);
+   }
+}
+
+static INLINE void
+util_format_l8_snorm_pack_rgba_float(uint8_t *dst_row, unsigned dst_stride, const float *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      const float *src = src_row;
+      uint8_t *dst = dst_row;
+      for(x = 0; x < width; x += 1) {
+         uint8_t value = 0;
+         value |= (uint8_t)((int8_t)(CLAMP(src[2], -1, 1) * 0x7f)) ;
+         *(uint8_t *)dst = value;
+         src += 4;
+         dst += 1;
+      }
+      dst_row += dst_stride;
+      src_row += src_stride/sizeof(*src_row);
+   }
+}
+
+static INLINE void
+util_format_l8_snorm_fetch_rgba_float(float *dst, const uint8_t *src, unsigned i, unsigned j)
+{
+         uint8_t value = *(const uint8_t *)src;
+         int8_t rgb;
+         rgb = (int8_t)(value) ;
+         dst[0] = (float)(rgb * (1.0f/0x7f)); /* r */
+         dst[1] = (float)(rgb * (1.0f/0x7f)); /* g */
+         dst[2] = (float)(rgb * (1.0f/0x7f)); /* b */
+         dst[3] = 1; /* a */
+}
+
+static INLINE void
+util_format_l8_snorm_unpack_rgba_8unorm(uint8_t *dst_row, unsigned dst_stride, const uint8_t *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      uint8_t *dst = dst_row;
+      const uint8_t *src = src_row;
+      for(x = 0; x < width; x += 1) {
+         uint8_t value = *(const uint8_t *)src;
+         int8_t rgb;
+         rgb = (int8_t)(value) ;
+         dst[0] = (uint8_t)(((uint32_t)MAX2(rgb, 0)) * 0xff / 0x7f); /* r */
+         dst[1] = (uint8_t)(((uint32_t)MAX2(rgb, 0)) * 0xff / 0x7f); /* g */
+         dst[2] = (uint8_t)(((uint32_t)MAX2(rgb, 0)) * 0xff / 0x7f); /* b */
+         dst[3] = 255; /* a */
+         src += 1;
+         dst += 4;
+      }
+      src_row += src_stride;
+      dst_row += dst_stride/sizeof(*dst_row);
+   }
+}
+
+static INLINE void
+util_format_l8_snorm_pack_rgba_8unorm(uint8_t *dst_row, unsigned dst_stride, const uint8_t *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      const uint8_t *src = src_row;
+      uint8_t *dst = dst_row;
+      for(x = 0; x < width; x += 1) {
+         uint8_t value = 0;
+         value |= (uint8_t)((int8_t)(src[2] >> 1)) ;
+         *(uint8_t *)dst = value;
+         src += 4;
+         dst += 1;
+      }
+      dst_row += dst_stride;
+      src_row += src_stride/sizeof(*src_row);
+   }
+}
+
+union util_format_l8a8_snorm {
+   uint16_t value;
+   struct {
+      int8_t rgb;
+      int8_t a;
+   } chan;
+};
+
+static INLINE void
+util_format_l8a8_snorm_unpack_rgba_float(float *dst_row, unsigned dst_stride, const uint8_t *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      float *dst = dst_row;
+      const uint8_t *src = src_row;
+      for(x = 0; x < width; x += 1) {
+         uint16_t value = *(const uint16_t *)src;
+         int16_t rgb;
+         int16_t a;
+#ifdef PIPE_ARCH_BIG_ENDIAN
+         value = util_bswap16(value);
+#endif
+         rgb = ((int16_t)(value << 8) ) >> 8;
+         a = ((int16_t)(value) ) >> 8;
+         dst[0] = (float)(rgb * (1.0f/0x7f)); /* r */
+         dst[1] = (float)(rgb * (1.0f/0x7f)); /* g */
+         dst[2] = (float)(rgb * (1.0f/0x7f)); /* b */
+         dst[3] = (float)(a * (1.0f/0x7f)); /* a */
+         src += 2;
+         dst += 4;
+      }
+      src_row += src_stride;
+      dst_row += dst_stride/sizeof(*dst_row);
+   }
+}
+
+static INLINE void
+util_format_l8a8_snorm_pack_rgba_float(uint8_t *dst_row, unsigned dst_stride, const float *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      const float *src = src_row;
+      uint8_t *dst = dst_row;
+      for(x = 0; x < width; x += 1) {
+         uint16_t value = 0;
+         value |= (uint16_t)(((int8_t)(CLAMP(src[2], -1, 1) * 0x7f)) & 0xff) ;
+         value |= (uint16_t)(((int8_t)(CLAMP(src[3], -1, 1) * 0x7f)) << 8) ;
+#ifdef PIPE_ARCH_BIG_ENDIAN
+         value = util_bswap16(value);
+#endif
+         *(uint16_t *)dst = value;
+         src += 4;
+         dst += 2;
+      }
+      dst_row += dst_stride;
+      src_row += src_stride/sizeof(*src_row);
+   }
+}
+
+static INLINE void
+util_format_l8a8_snorm_fetch_rgba_float(float *dst, const uint8_t *src, unsigned i, unsigned j)
+{
+         uint16_t value = *(const uint16_t *)src;
+         int16_t rgb;
+         int16_t a;
+#ifdef PIPE_ARCH_BIG_ENDIAN
+         value = util_bswap16(value);
+#endif
+         rgb = ((int16_t)(value << 8) ) >> 8;
+         a = ((int16_t)(value) ) >> 8;
+         dst[0] = (float)(rgb * (1.0f/0x7f)); /* r */
+         dst[1] = (float)(rgb * (1.0f/0x7f)); /* g */
+         dst[2] = (float)(rgb * (1.0f/0x7f)); /* b */
+         dst[3] = (float)(a * (1.0f/0x7f)); /* a */
+}
+
+static INLINE void
+util_format_l8a8_snorm_unpack_rgba_8unorm(uint8_t *dst_row, unsigned dst_stride, const uint8_t *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      uint8_t *dst = dst_row;
+      const uint8_t *src = src_row;
+      for(x = 0; x < width; x += 1) {
+         uint16_t value = *(const uint16_t *)src;
+         int16_t rgb;
+         int16_t a;
+#ifdef PIPE_ARCH_BIG_ENDIAN
+         value = util_bswap16(value);
+#endif
+         rgb = ((int16_t)(value << 8) ) >> 8;
+         a = ((int16_t)(value) ) >> 8;
+         dst[0] = (uint8_t)(((uint32_t)MAX2(rgb, 0)) * 0xff / 0x7f); /* r */
+         dst[1] = (uint8_t)(((uint32_t)MAX2(rgb, 0)) * 0xff / 0x7f); /* g */
+         dst[2] = (uint8_t)(((uint32_t)MAX2(rgb, 0)) * 0xff / 0x7f); /* b */
+         dst[3] = (uint8_t)(((uint32_t)MAX2(a, 0)) * 0xff / 0x7f); /* a */
+         src += 2;
+         dst += 4;
+      }
+      src_row += src_stride;
+      dst_row += dst_stride/sizeof(*dst_row);
+   }
+}
+
+static INLINE void
+util_format_l8a8_snorm_pack_rgba_8unorm(uint8_t *dst_row, unsigned dst_stride, const uint8_t *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      const uint8_t *src = src_row;
+      uint8_t *dst = dst_row;
+      for(x = 0; x < width; x += 1) {
+         uint16_t value = 0;
+         value |= (uint16_t)(((int8_t)(src[2] >> 1)) & 0xff) ;
+         value |= (uint16_t)(((int8_t)(src[3] >> 1)) << 8) ;
+#ifdef PIPE_ARCH_BIG_ENDIAN
+         value = util_bswap16(value);
+#endif
+         *(uint16_t *)dst = value;
+         src += 4;
+         dst += 2;
+      }
+      dst_row += dst_stride;
+      src_row += src_stride/sizeof(*src_row);
+   }
+}
+
+union util_format_i8_snorm {
+   uint8_t value;
+   struct {
+      int8_t rgba;
+   } chan;
+};
+
+static INLINE void
+util_format_i8_snorm_unpack_rgba_float(float *dst_row, unsigned dst_stride, const uint8_t *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      float *dst = dst_row;
+      const uint8_t *src = src_row;
+      for(x = 0; x < width; x += 1) {
+         uint8_t value = *(const uint8_t *)src;
+         int8_t rgba;
+         rgba = (int8_t)(value) ;
+         dst[0] = (float)(rgba * (1.0f/0x7f)); /* r */
+         dst[1] = (float)(rgba * (1.0f/0x7f)); /* g */
+         dst[2] = (float)(rgba * (1.0f/0x7f)); /* b */
+         dst[3] = (float)(rgba * (1.0f/0x7f)); /* a */
+         src += 1;
+         dst += 4;
+      }
+      src_row += src_stride;
+      dst_row += dst_stride/sizeof(*dst_row);
+   }
+}
+
+static INLINE void
+util_format_i8_snorm_pack_rgba_float(uint8_t *dst_row, unsigned dst_stride, const float *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      const float *src = src_row;
+      uint8_t *dst = dst_row;
+      for(x = 0; x < width; x += 1) {
+         uint8_t value = 0;
+         value |= (uint8_t)((int8_t)(CLAMP(src[3], -1, 1) * 0x7f)) ;
+         *(uint8_t *)dst = value;
+         src += 4;
+         dst += 1;
+      }
+      dst_row += dst_stride;
+      src_row += src_stride/sizeof(*src_row);
+   }
+}
+
+static INLINE void
+util_format_i8_snorm_fetch_rgba_float(float *dst, const uint8_t *src, unsigned i, unsigned j)
+{
+         uint8_t value = *(const uint8_t *)src;
+         int8_t rgba;
+         rgba = (int8_t)(value) ;
+         dst[0] = (float)(rgba * (1.0f/0x7f)); /* r */
+         dst[1] = (float)(rgba * (1.0f/0x7f)); /* g */
+         dst[2] = (float)(rgba * (1.0f/0x7f)); /* b */
+         dst[3] = (float)(rgba * (1.0f/0x7f)); /* a */
+}
+
+static INLINE void
+util_format_i8_snorm_unpack_rgba_8unorm(uint8_t *dst_row, unsigned dst_stride, const uint8_t *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      uint8_t *dst = dst_row;
+      const uint8_t *src = src_row;
+      for(x = 0; x < width; x += 1) {
+         uint8_t value = *(const uint8_t *)src;
+         int8_t rgba;
+         rgba = (int8_t)(value) ;
+         dst[0] = (uint8_t)(((uint32_t)MAX2(rgba, 0)) * 0xff / 0x7f); /* r */
+         dst[1] = (uint8_t)(((uint32_t)MAX2(rgba, 0)) * 0xff / 0x7f); /* g */
+         dst[2] = (uint8_t)(((uint32_t)MAX2(rgba, 0)) * 0xff / 0x7f); /* b */
+         dst[3] = (uint8_t)(((uint32_t)MAX2(rgba, 0)) * 0xff / 0x7f); /* a */
+         src += 1;
+         dst += 4;
+      }
+      src_row += src_stride;
+      dst_row += dst_stride/sizeof(*dst_row);
+   }
+}
+
+static INLINE void
+util_format_i8_snorm_pack_rgba_8unorm(uint8_t *dst_row, unsigned dst_stride, const uint8_t *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      const uint8_t *src = src_row;
+      uint8_t *dst = dst_row;
+      for(x = 0; x < width; x += 1) {
+         uint8_t value = 0;
+         value |= (uint8_t)((int8_t)(src[3] >> 1)) ;
+         *(uint8_t *)dst = value;
+         src += 4;
+         dst += 1;
+      }
+      dst_row += dst_stride;
+      src_row += src_stride/sizeof(*src_row);
+   }
+}
+
+union util_format_a16_snorm {
+   uint16_t value;
+   struct {
+      int16_t a;
+   } chan;
+};
+
+static INLINE void
+util_format_a16_snorm_unpack_rgba_float(float *dst_row, unsigned dst_stride, const uint8_t *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      float *dst = dst_row;
+      const uint8_t *src = src_row;
+      for(x = 0; x < width; x += 1) {
+         uint16_t value = *(const uint16_t *)src;
+         int16_t a;
+#ifdef PIPE_ARCH_BIG_ENDIAN
+         value = util_bswap16(value);
+#endif
+         a = (int16_t)(value) ;
+         dst[0] = 0; /* r */
+         dst[1] = 0; /* g */
+         dst[2] = 0; /* b */
+         dst[3] = (float)(a * (1.0f/0x7fff)); /* a */
+         src += 2;
+         dst += 4;
+      }
+      src_row += src_stride;
+      dst_row += dst_stride/sizeof(*dst_row);
+   }
+}
+
+static INLINE void
+util_format_a16_snorm_pack_rgba_float(uint8_t *dst_row, unsigned dst_stride, const float *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      const float *src = src_row;
+      uint8_t *dst = dst_row;
+      for(x = 0; x < width; x += 1) {
+         uint16_t value = 0;
+         value |= (uint16_t)((int16_t)(CLAMP(src[3], -1, 1) * 0x7fff)) ;
+#ifdef PIPE_ARCH_BIG_ENDIAN
+         value = util_bswap16(value);
+#endif
+         *(uint16_t *)dst = value;
+         src += 4;
+         dst += 2;
+      }
+      dst_row += dst_stride;
+      src_row += src_stride/sizeof(*src_row);
+   }
+}
+
+static INLINE void
+util_format_a16_snorm_fetch_rgba_float(float *dst, const uint8_t *src, unsigned i, unsigned j)
+{
+         uint16_t value = *(const uint16_t *)src;
+         int16_t a;
+#ifdef PIPE_ARCH_BIG_ENDIAN
+         value = util_bswap16(value);
+#endif
+         a = (int16_t)(value) ;
+         dst[0] = 0; /* r */
+         dst[1] = 0; /* g */
+         dst[2] = 0; /* b */
+         dst[3] = (float)(a * (1.0f/0x7fff)); /* a */
+}
+
+static INLINE void
+util_format_a16_snorm_unpack_rgba_8unorm(uint8_t *dst_row, unsigned dst_stride, const uint8_t *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      uint8_t *dst = dst_row;
+      const uint8_t *src = src_row;
+      for(x = 0; x < width; x += 1) {
+         uint16_t value = *(const uint16_t *)src;
+         int16_t a;
+#ifdef PIPE_ARCH_BIG_ENDIAN
+         value = util_bswap16(value);
+#endif
+         a = (int16_t)(value) ;
+         dst[0] = 0; /* r */
+         dst[1] = 0; /* g */
+         dst[2] = 0; /* b */
+         dst[3] = (uint8_t)(MAX2(a, 0) >> 7); /* a */
+         src += 2;
+         dst += 4;
+      }
+      src_row += src_stride;
+      dst_row += dst_stride/sizeof(*dst_row);
+   }
+}
+
+static INLINE void
+util_format_a16_snorm_pack_rgba_8unorm(uint8_t *dst_row, unsigned dst_stride, const uint8_t *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      const uint8_t *src = src_row;
+      uint8_t *dst = dst_row;
+      for(x = 0; x < width; x += 1) {
+         uint16_t value = 0;
+         value |= (uint16_t)((int16_t)(((uint32_t)src[3]) * 0x7fff / 0xff)) ;
+#ifdef PIPE_ARCH_BIG_ENDIAN
+         value = util_bswap16(value);
+#endif
+         *(uint16_t *)dst = value;
+         src += 4;
+         dst += 2;
+      }
+      dst_row += dst_stride;
+      src_row += src_stride/sizeof(*src_row);
+   }
+}
+
+union util_format_l16_snorm {
+   uint16_t value;
+   struct {
+      int16_t rgb;
+   } chan;
+};
+
+static INLINE void
+util_format_l16_snorm_unpack_rgba_float(float *dst_row, unsigned dst_stride, const uint8_t *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      float *dst = dst_row;
+      const uint8_t *src = src_row;
+      for(x = 0; x < width; x += 1) {
+         uint16_t value = *(const uint16_t *)src;
+         int16_t rgb;
+#ifdef PIPE_ARCH_BIG_ENDIAN
+         value = util_bswap16(value);
+#endif
+         rgb = (int16_t)(value) ;
+         dst[0] = (float)(rgb * (1.0f/0x7fff)); /* r */
+         dst[1] = (float)(rgb * (1.0f/0x7fff)); /* g */
+         dst[2] = (float)(rgb * (1.0f/0x7fff)); /* b */
+         dst[3] = 1; /* a */
+         src += 2;
+         dst += 4;
+      }
+      src_row += src_stride;
+      dst_row += dst_stride/sizeof(*dst_row);
+   }
+}
+
+static INLINE void
+util_format_l16_snorm_pack_rgba_float(uint8_t *dst_row, unsigned dst_stride, const float *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      const float *src = src_row;
+      uint8_t *dst = dst_row;
+      for(x = 0; x < width; x += 1) {
+         uint16_t value = 0;
+         value |= (uint16_t)((int16_t)(CLAMP(src[2], -1, 1) * 0x7fff)) ;
+#ifdef PIPE_ARCH_BIG_ENDIAN
+         value = util_bswap16(value);
+#endif
+         *(uint16_t *)dst = value;
+         src += 4;
+         dst += 2;
+      }
+      dst_row += dst_stride;
+      src_row += src_stride/sizeof(*src_row);
+   }
+}
+
+static INLINE void
+util_format_l16_snorm_fetch_rgba_float(float *dst, const uint8_t *src, unsigned i, unsigned j)
+{
+         uint16_t value = *(const uint16_t *)src;
+         int16_t rgb;
+#ifdef PIPE_ARCH_BIG_ENDIAN
+         value = util_bswap16(value);
+#endif
+         rgb = (int16_t)(value) ;
+         dst[0] = (float)(rgb * (1.0f/0x7fff)); /* r */
+         dst[1] = (float)(rgb * (1.0f/0x7fff)); /* g */
+         dst[2] = (float)(rgb * (1.0f/0x7fff)); /* b */
+         dst[3] = 1; /* a */
+}
+
+static INLINE void
+util_format_l16_snorm_unpack_rgba_8unorm(uint8_t *dst_row, unsigned dst_stride, const uint8_t *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      uint8_t *dst = dst_row;
+      const uint8_t *src = src_row;
+      for(x = 0; x < width; x += 1) {
+         uint16_t value = *(const uint16_t *)src;
+         int16_t rgb;
+#ifdef PIPE_ARCH_BIG_ENDIAN
+         value = util_bswap16(value);
+#endif
+         rgb = (int16_t)(value) ;
+         dst[0] = (uint8_t)(MAX2(rgb, 0) >> 7); /* r */
+         dst[1] = (uint8_t)(MAX2(rgb, 0) >> 7); /* g */
+         dst[2] = (uint8_t)(MAX2(rgb, 0) >> 7); /* b */
+         dst[3] = 255; /* a */
+         src += 2;
+         dst += 4;
+      }
+      src_row += src_stride;
+      dst_row += dst_stride/sizeof(*dst_row);
+   }
+}
+
+static INLINE void
+util_format_l16_snorm_pack_rgba_8unorm(uint8_t *dst_row, unsigned dst_stride, const uint8_t *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      const uint8_t *src = src_row;
+      uint8_t *dst = dst_row;
+      for(x = 0; x < width; x += 1) {
+         uint16_t value = 0;
+         value |= (uint16_t)((int16_t)(((uint32_t)src[2]) * 0x7fff / 0xff)) ;
+#ifdef PIPE_ARCH_BIG_ENDIAN
+         value = util_bswap16(value);
+#endif
+         *(uint16_t *)dst = value;
+         src += 4;
+         dst += 2;
+      }
+      dst_row += dst_stride;
+      src_row += src_stride/sizeof(*src_row);
+   }
+}
+
+union util_format_l16a16_snorm {
+   uint32_t value;
+   struct {
+      int16_t rgb;
+      int16_t a;
+   } chan;
+};
+
+static INLINE void
+util_format_l16a16_snorm_unpack_rgba_float(float *dst_row, unsigned dst_stride, const uint8_t *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      float *dst = dst_row;
+      const uint8_t *src = src_row;
+      for(x = 0; x < width; x += 1) {
+         uint32_t value = *(const uint32_t *)src;
+         int32_t rgb;
+         int32_t a;
+#ifdef PIPE_ARCH_BIG_ENDIAN
+         value = util_bswap32(value);
+#endif
+         rgb = ((int32_t)(value << 16) ) >> 16;
+         a = ((int32_t)(value) ) >> 16;
+         dst[0] = (float)(rgb * (1.0f/0x7fff)); /* r */
+         dst[1] = (float)(rgb * (1.0f/0x7fff)); /* g */
+         dst[2] = (float)(rgb * (1.0f/0x7fff)); /* b */
+         dst[3] = (float)(a * (1.0f/0x7fff)); /* a */
+         src += 4;
+         dst += 4;
+      }
+      src_row += src_stride;
+      dst_row += dst_stride/sizeof(*dst_row);
+   }
+}
+
+static INLINE void
+util_format_l16a16_snorm_pack_rgba_float(uint8_t *dst_row, unsigned dst_stride, const float *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      const float *src = src_row;
+      uint8_t *dst = dst_row;
+      for(x = 0; x < width; x += 1) {
+         uint32_t value = 0;
+         value |= (uint32_t)(((int16_t)(CLAMP(src[2], -1, 1) * 0x7fff)) & 0xffff) ;
+         value |= (uint32_t)(((int16_t)(CLAMP(src[3], -1, 1) * 0x7fff)) << 16) ;
+#ifdef PIPE_ARCH_BIG_ENDIAN
+         value = util_bswap32(value);
+#endif
+         *(uint32_t *)dst = value;
+         src += 4;
+         dst += 4;
+      }
+      dst_row += dst_stride;
+      src_row += src_stride/sizeof(*src_row);
+   }
+}
+
+static INLINE void
+util_format_l16a16_snorm_fetch_rgba_float(float *dst, const uint8_t *src, unsigned i, unsigned j)
+{
+         uint32_t value = *(const uint32_t *)src;
+         int32_t rgb;
+         int32_t a;
+#ifdef PIPE_ARCH_BIG_ENDIAN
+         value = util_bswap32(value);
+#endif
+         rgb = ((int32_t)(value << 16) ) >> 16;
+         a = ((int32_t)(value) ) >> 16;
+         dst[0] = (float)(rgb * (1.0f/0x7fff)); /* r */
+         dst[1] = (float)(rgb * (1.0f/0x7fff)); /* g */
+         dst[2] = (float)(rgb * (1.0f/0x7fff)); /* b */
+         dst[3] = (float)(a * (1.0f/0x7fff)); /* a */
+}
+
+static INLINE void
+util_format_l16a16_snorm_unpack_rgba_8unorm(uint8_t *dst_row, unsigned dst_stride, const uint8_t *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      uint8_t *dst = dst_row;
+      const uint8_t *src = src_row;
+      for(x = 0; x < width; x += 1) {
+         uint32_t value = *(const uint32_t *)src;
+         int32_t rgb;
+         int32_t a;
+#ifdef PIPE_ARCH_BIG_ENDIAN
+         value = util_bswap32(value);
+#endif
+         rgb = ((int32_t)(value << 16) ) >> 16;
+         a = ((int32_t)(value) ) >> 16;
+         dst[0] = (uint8_t)(MAX2(rgb, 0) >> 7); /* r */
+         dst[1] = (uint8_t)(MAX2(rgb, 0) >> 7); /* g */
+         dst[2] = (uint8_t)(MAX2(rgb, 0) >> 7); /* b */
+         dst[3] = (uint8_t)(MAX2(a, 0) >> 7); /* a */
+         src += 4;
+         dst += 4;
+      }
+      src_row += src_stride;
+      dst_row += dst_stride/sizeof(*dst_row);
+   }
+}
+
+static INLINE void
+util_format_l16a16_snorm_pack_rgba_8unorm(uint8_t *dst_row, unsigned dst_stride, const uint8_t *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      const uint8_t *src = src_row;
+      uint8_t *dst = dst_row;
+      for(x = 0; x < width; x += 1) {
+         uint32_t value = 0;
+         value |= (uint32_t)(((int16_t)(((uint32_t)src[2]) * 0x7fff / 0xff)) & 0xffff) ;
+         value |= (uint32_t)(((int16_t)(((uint32_t)src[3]) * 0x7fff / 0xff)) << 16) ;
+#ifdef PIPE_ARCH_BIG_ENDIAN
+         value = util_bswap32(value);
+#endif
+         *(uint32_t *)dst = value;
+         src += 4;
+         dst += 4;
+      }
+      dst_row += dst_stride;
+      src_row += src_stride/sizeof(*src_row);
+   }
+}
+
+union util_format_i16_snorm {
+   uint16_t value;
+   struct {
+      int16_t rgba;
+   } chan;
+};
+
+static INLINE void
+util_format_i16_snorm_unpack_rgba_float(float *dst_row, unsigned dst_stride, const uint8_t *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      float *dst = dst_row;
+      const uint8_t *src = src_row;
+      for(x = 0; x < width; x += 1) {
+         uint16_t value = *(const uint16_t *)src;
+         int16_t rgba;
+#ifdef PIPE_ARCH_BIG_ENDIAN
+         value = util_bswap16(value);
+#endif
+         rgba = (int16_t)(value) ;
+         dst[0] = (float)(rgba * (1.0f/0x7fff)); /* r */
+         dst[1] = (float)(rgba * (1.0f/0x7fff)); /* g */
+         dst[2] = (float)(rgba * (1.0f/0x7fff)); /* b */
+         dst[3] = (float)(rgba * (1.0f/0x7fff)); /* a */
+         src += 2;
+         dst += 4;
+      }
+      src_row += src_stride;
+      dst_row += dst_stride/sizeof(*dst_row);
+   }
+}
+
+static INLINE void
+util_format_i16_snorm_pack_rgba_float(uint8_t *dst_row, unsigned dst_stride, const float *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      const float *src = src_row;
+      uint8_t *dst = dst_row;
+      for(x = 0; x < width; x += 1) {
+         uint16_t value = 0;
+         value |= (uint16_t)((int16_t)(CLAMP(src[3], -1, 1) * 0x7fff)) ;
+#ifdef PIPE_ARCH_BIG_ENDIAN
+         value = util_bswap16(value);
+#endif
+         *(uint16_t *)dst = value;
+         src += 4;
+         dst += 2;
+      }
+      dst_row += dst_stride;
+      src_row += src_stride/sizeof(*src_row);
+   }
+}
+
+static INLINE void
+util_format_i16_snorm_fetch_rgba_float(float *dst, const uint8_t *src, unsigned i, unsigned j)
+{
+         uint16_t value = *(const uint16_t *)src;
+         int16_t rgba;
+#ifdef PIPE_ARCH_BIG_ENDIAN
+         value = util_bswap16(value);
+#endif
+         rgba = (int16_t)(value) ;
+         dst[0] = (float)(rgba * (1.0f/0x7fff)); /* r */
+         dst[1] = (float)(rgba * (1.0f/0x7fff)); /* g */
+         dst[2] = (float)(rgba * (1.0f/0x7fff)); /* b */
+         dst[3] = (float)(rgba * (1.0f/0x7fff)); /* a */
+}
+
+static INLINE void
+util_format_i16_snorm_unpack_rgba_8unorm(uint8_t *dst_row, unsigned dst_stride, const uint8_t *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      uint8_t *dst = dst_row;
+      const uint8_t *src = src_row;
+      for(x = 0; x < width; x += 1) {
+         uint16_t value = *(const uint16_t *)src;
+         int16_t rgba;
+#ifdef PIPE_ARCH_BIG_ENDIAN
+         value = util_bswap16(value);
+#endif
+         rgba = (int16_t)(value) ;
+         dst[0] = (uint8_t)(MAX2(rgba, 0) >> 7); /* r */
+         dst[1] = (uint8_t)(MAX2(rgba, 0) >> 7); /* g */
+         dst[2] = (uint8_t)(MAX2(rgba, 0) >> 7); /* b */
+         dst[3] = (uint8_t)(MAX2(rgba, 0) >> 7); /* a */
+         src += 2;
+         dst += 4;
+      }
+      src_row += src_stride;
+      dst_row += dst_stride/sizeof(*dst_row);
+   }
+}
+
+static INLINE void
+util_format_i16_snorm_pack_rgba_8unorm(uint8_t *dst_row, unsigned dst_stride, const uint8_t *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      const uint8_t *src = src_row;
+      uint8_t *dst = dst_row;
+      for(x = 0; x < width; x += 1) {
+         uint16_t value = 0;
+         value |= (uint16_t)((int16_t)(((uint32_t)src[3]) * 0x7fff / 0xff)) ;
+#ifdef PIPE_ARCH_BIG_ENDIAN
+         value = util_bswap16(value);
+#endif
+         *(uint16_t *)dst = value;
+         src += 4;
+         dst += 2;
+      }
+      dst_row += dst_stride;
+      src_row += src_stride/sizeof(*src_row);
+   }
+}
+
+union util_format_a16_float {
+   uint16_t value;
+   struct {
+      uint16_t a;
+   } chan;
+};
+
+static INLINE void
+util_format_a16_float_unpack_rgba_float(float *dst_row, unsigned dst_stride, const uint8_t *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      float *dst = dst_row;
+      const uint8_t *src = src_row;
+      for(x = 0; x < width; x += 1) {
+         union util_format_a16_float pixel;
+         memcpy(&pixel, src, sizeof pixel);
+         dst[0] = 0; /* r */
+         dst[1] = 0; /* g */
+         dst[2] = 0; /* b */
+         dst[3] = util_half_to_float(pixel.chan.a); /* a */
+         src += 2;
+         dst += 4;
+      }
+      src_row += src_stride;
+      dst_row += dst_stride/sizeof(*dst_row);
+   }
+}
+
+static INLINE void
+util_format_a16_float_pack_rgba_float(uint8_t *dst_row, unsigned dst_stride, const float *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      const float *src = src_row;
+      uint8_t *dst = dst_row;
+      for(x = 0; x < width; x += 1) {
+         union util_format_a16_float pixel;
+         pixel.chan.a = util_float_to_half(src[3]);
+         memcpy(dst, &pixel, sizeof pixel);
+         src += 4;
+         dst += 2;
+      }
+      dst_row += dst_stride;
+      src_row += src_stride/sizeof(*src_row);
+   }
+}
+
+static INLINE void
+util_format_a16_float_fetch_rgba_float(float *dst, const uint8_t *src, unsigned i, unsigned j)
+{
+         union util_format_a16_float pixel;
+         memcpy(&pixel, src, sizeof pixel);
+         dst[0] = 0; /* r */
+         dst[1] = 0; /* g */
+         dst[2] = 0; /* b */
+         dst[3] = util_half_to_float(pixel.chan.a); /* a */
+}
+
+static INLINE void
+util_format_a16_float_unpack_rgba_8unorm(uint8_t *dst_row, unsigned dst_stride, const uint8_t *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      uint8_t *dst = dst_row;
+      const uint8_t *src = src_row;
+      for(x = 0; x < width; x += 1) {
+         union util_format_a16_float pixel;
+         memcpy(&pixel, src, sizeof pixel);
+         dst[0] = 0; /* r */
+         dst[1] = 0; /* g */
+         dst[2] = 0; /* b */
+         dst[3] = float_to_ubyte(util_half_to_float(pixel.chan.a)); /* a */
+         src += 2;
+         dst += 4;
+      }
+      src_row += src_stride;
+      dst_row += dst_stride/sizeof(*dst_row);
+   }
+}
+
+static INLINE void
+util_format_a16_float_pack_rgba_8unorm(uint8_t *dst_row, unsigned dst_stride, const uint8_t *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      const uint8_t *src = src_row;
+      uint8_t *dst = dst_row;
+      for(x = 0; x < width; x += 1) {
+         union util_format_a16_float pixel;
+         pixel.chan.a = util_float_to_half((float)(src[3] * (1.0f/0xff)));
+         memcpy(dst, &pixel, sizeof pixel);
+         src += 4;
+         dst += 2;
+      }
+      dst_row += dst_stride;
+      src_row += src_stride/sizeof(*src_row);
+   }
+}
+
+union util_format_l16_float {
+   uint16_t value;
+   struct {
+      uint16_t rgb;
+   } chan;
+};
+
+static INLINE void
+util_format_l16_float_unpack_rgba_float(float *dst_row, unsigned dst_stride, const uint8_t *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      float *dst = dst_row;
+      const uint8_t *src = src_row;
+      for(x = 0; x < width; x += 1) {
+         union util_format_l16_float pixel;
+         memcpy(&pixel, src, sizeof pixel);
+         dst[0] = util_half_to_float(pixel.chan.rgb); /* r */
+         dst[1] = util_half_to_float(pixel.chan.rgb); /* g */
+         dst[2] = util_half_to_float(pixel.chan.rgb); /* b */
+         dst[3] = 1; /* a */
+         src += 2;
+         dst += 4;
+      }
+      src_row += src_stride;
+      dst_row += dst_stride/sizeof(*dst_row);
+   }
+}
+
+static INLINE void
+util_format_l16_float_pack_rgba_float(uint8_t *dst_row, unsigned dst_stride, const float *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      const float *src = src_row;
+      uint8_t *dst = dst_row;
+      for(x = 0; x < width; x += 1) {
+         union util_format_l16_float pixel;
+         pixel.chan.rgb = util_float_to_half(src[2]);
+         memcpy(dst, &pixel, sizeof pixel);
+         src += 4;
+         dst += 2;
+      }
+      dst_row += dst_stride;
+      src_row += src_stride/sizeof(*src_row);
+   }
+}
+
+static INLINE void
+util_format_l16_float_fetch_rgba_float(float *dst, const uint8_t *src, unsigned i, unsigned j)
+{
+         union util_format_l16_float pixel;
+         memcpy(&pixel, src, sizeof pixel);
+         dst[0] = util_half_to_float(pixel.chan.rgb); /* r */
+         dst[1] = util_half_to_float(pixel.chan.rgb); /* g */
+         dst[2] = util_half_to_float(pixel.chan.rgb); /* b */
+         dst[3] = 1; /* a */
+}
+
+static INLINE void
+util_format_l16_float_unpack_rgba_8unorm(uint8_t *dst_row, unsigned dst_stride, const uint8_t *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      uint8_t *dst = dst_row;
+      const uint8_t *src = src_row;
+      for(x = 0; x < width; x += 1) {
+         union util_format_l16_float pixel;
+         memcpy(&pixel, src, sizeof pixel);
+         dst[0] = float_to_ubyte(util_half_to_float(pixel.chan.rgb)); /* r */
+         dst[1] = float_to_ubyte(util_half_to_float(pixel.chan.rgb)); /* g */
+         dst[2] = float_to_ubyte(util_half_to_float(pixel.chan.rgb)); /* b */
+         dst[3] = 255; /* a */
+         src += 2;
+         dst += 4;
+      }
+      src_row += src_stride;
+      dst_row += dst_stride/sizeof(*dst_row);
+   }
+}
+
+static INLINE void
+util_format_l16_float_pack_rgba_8unorm(uint8_t *dst_row, unsigned dst_stride, const uint8_t *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      const uint8_t *src = src_row;
+      uint8_t *dst = dst_row;
+      for(x = 0; x < width; x += 1) {
+         union util_format_l16_float pixel;
+         pixel.chan.rgb = util_float_to_half((float)(src[2] * (1.0f/0xff)));
+         memcpy(dst, &pixel, sizeof pixel);
+         src += 4;
+         dst += 2;
+      }
+      dst_row += dst_stride;
+      src_row += src_stride/sizeof(*src_row);
+   }
+}
+
+union util_format_l16a16_float {
+   uint32_t value;
+   struct {
+      uint16_t rgb;
+      uint16_t a;
+   } chan;
+};
+
+static INLINE void
+util_format_l16a16_float_unpack_rgba_float(float *dst_row, unsigned dst_stride, const uint8_t *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      float *dst = dst_row;
+      const uint8_t *src = src_row;
+      for(x = 0; x < width; x += 1) {
+         union util_format_l16a16_float pixel;
+         memcpy(&pixel, src, sizeof pixel);
+         dst[0] = util_half_to_float(pixel.chan.rgb); /* r */
+         dst[1] = util_half_to_float(pixel.chan.rgb); /* g */
+         dst[2] = util_half_to_float(pixel.chan.rgb); /* b */
+         dst[3] = util_half_to_float(pixel.chan.a); /* a */
+         src += 4;
+         dst += 4;
+      }
+      src_row += src_stride;
+      dst_row += dst_stride/sizeof(*dst_row);
+   }
+}
+
+static INLINE void
+util_format_l16a16_float_pack_rgba_float(uint8_t *dst_row, unsigned dst_stride, const float *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      const float *src = src_row;
+      uint8_t *dst = dst_row;
+      for(x = 0; x < width; x += 1) {
+         union util_format_l16a16_float pixel;
+         pixel.chan.rgb = util_float_to_half(src[2]);
+         pixel.chan.a = util_float_to_half(src[3]);
+         memcpy(dst, &pixel, sizeof pixel);
+         src += 4;
+         dst += 4;
+      }
+      dst_row += dst_stride;
+      src_row += src_stride/sizeof(*src_row);
+   }
+}
+
+static INLINE void
+util_format_l16a16_float_fetch_rgba_float(float *dst, const uint8_t *src, unsigned i, unsigned j)
+{
+         union util_format_l16a16_float pixel;
+         memcpy(&pixel, src, sizeof pixel);
+         dst[0] = util_half_to_float(pixel.chan.rgb); /* r */
+         dst[1] = util_half_to_float(pixel.chan.rgb); /* g */
+         dst[2] = util_half_to_float(pixel.chan.rgb); /* b */
+         dst[3] = util_half_to_float(pixel.chan.a); /* a */
+}
+
+static INLINE void
+util_format_l16a16_float_unpack_rgba_8unorm(uint8_t *dst_row, unsigned dst_stride, const uint8_t *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      uint8_t *dst = dst_row;
+      const uint8_t *src = src_row;
+      for(x = 0; x < width; x += 1) {
+         union util_format_l16a16_float pixel;
+         memcpy(&pixel, src, sizeof pixel);
+         dst[0] = float_to_ubyte(util_half_to_float(pixel.chan.rgb)); /* r */
+         dst[1] = float_to_ubyte(util_half_to_float(pixel.chan.rgb)); /* g */
+         dst[2] = float_to_ubyte(util_half_to_float(pixel.chan.rgb)); /* b */
+         dst[3] = float_to_ubyte(util_half_to_float(pixel.chan.a)); /* a */
+         src += 4;
+         dst += 4;
+      }
+      src_row += src_stride;
+      dst_row += dst_stride/sizeof(*dst_row);
+   }
+}
+
+static INLINE void
+util_format_l16a16_float_pack_rgba_8unorm(uint8_t *dst_row, unsigned dst_stride, const uint8_t *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      const uint8_t *src = src_row;
+      uint8_t *dst = dst_row;
+      for(x = 0; x < width; x += 1) {
+         union util_format_l16a16_float pixel;
+         pixel.chan.rgb = util_float_to_half((float)(src[2] * (1.0f/0xff)));
+         pixel.chan.a = util_float_to_half((float)(src[3] * (1.0f/0xff)));
+         memcpy(dst, &pixel, sizeof pixel);
+         src += 4;
+         dst += 4;
+      }
+      dst_row += dst_stride;
+      src_row += src_stride/sizeof(*src_row);
+   }
+}
+
+union util_format_i16_float {
+   uint16_t value;
+   struct {
+      uint16_t rgba;
+   } chan;
+};
+
+static INLINE void
+util_format_i16_float_unpack_rgba_float(float *dst_row, unsigned dst_stride, const uint8_t *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      float *dst = dst_row;
+      const uint8_t *src = src_row;
+      for(x = 0; x < width; x += 1) {
+         union util_format_i16_float pixel;
+         memcpy(&pixel, src, sizeof pixel);
+         dst[0] = util_half_to_float(pixel.chan.rgba); /* r */
+         dst[1] = util_half_to_float(pixel.chan.rgba); /* g */
+         dst[2] = util_half_to_float(pixel.chan.rgba); /* b */
+         dst[3] = util_half_to_float(pixel.chan.rgba); /* a */
+         src += 2;
+         dst += 4;
+      }
+      src_row += src_stride;
+      dst_row += dst_stride/sizeof(*dst_row);
+   }
+}
+
+static INLINE void
+util_format_i16_float_pack_rgba_float(uint8_t *dst_row, unsigned dst_stride, const float *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      const float *src = src_row;
+      uint8_t *dst = dst_row;
+      for(x = 0; x < width; x += 1) {
+         union util_format_i16_float pixel;
+         pixel.chan.rgba = util_float_to_half(src[3]);
+         memcpy(dst, &pixel, sizeof pixel);
+         src += 4;
+         dst += 2;
+      }
+      dst_row += dst_stride;
+      src_row += src_stride/sizeof(*src_row);
+   }
+}
+
+static INLINE void
+util_format_i16_float_fetch_rgba_float(float *dst, const uint8_t *src, unsigned i, unsigned j)
+{
+         union util_format_i16_float pixel;
+         memcpy(&pixel, src, sizeof pixel);
+         dst[0] = util_half_to_float(pixel.chan.rgba); /* r */
+         dst[1] = util_half_to_float(pixel.chan.rgba); /* g */
+         dst[2] = util_half_to_float(pixel.chan.rgba); /* b */
+         dst[3] = util_half_to_float(pixel.chan.rgba); /* a */
+}
+
+static INLINE void
+util_format_i16_float_unpack_rgba_8unorm(uint8_t *dst_row, unsigned dst_stride, const uint8_t *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      uint8_t *dst = dst_row;
+      const uint8_t *src = src_row;
+      for(x = 0; x < width; x += 1) {
+         union util_format_i16_float pixel;
+         memcpy(&pixel, src, sizeof pixel);
+         dst[0] = float_to_ubyte(util_half_to_float(pixel.chan.rgba)); /* r */
+         dst[1] = float_to_ubyte(util_half_to_float(pixel.chan.rgba)); /* g */
+         dst[2] = float_to_ubyte(util_half_to_float(pixel.chan.rgba)); /* b */
+         dst[3] = float_to_ubyte(util_half_to_float(pixel.chan.rgba)); /* a */
+         src += 2;
+         dst += 4;
+      }
+      src_row += src_stride;
+      dst_row += dst_stride/sizeof(*dst_row);
+   }
+}
+
+static INLINE void
+util_format_i16_float_pack_rgba_8unorm(uint8_t *dst_row, unsigned dst_stride, const uint8_t *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      const uint8_t *src = src_row;
+      uint8_t *dst = dst_row;
+      for(x = 0; x < width; x += 1) {
+         union util_format_i16_float pixel;
+         pixel.chan.rgba = util_float_to_half((float)(src[3] * (1.0f/0xff)));
+         memcpy(dst, &pixel, sizeof pixel);
+         src += 4;
+         dst += 2;
+      }
+      dst_row += dst_stride;
+      src_row += src_stride/sizeof(*src_row);
+   }
+}
+
+union util_format_a32_float {
+   uint32_t value;
+   struct {
+      float a;
+   } chan;
+};
+
+static INLINE void
+util_format_a32_float_unpack_rgba_float(float *dst_row, unsigned dst_stride, const uint8_t *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      float *dst = dst_row;
+      const uint8_t *src = src_row;
+      for(x = 0; x < width; x += 1) {
+         union util_format_a32_float pixel;
+         memcpy(&pixel, src, sizeof pixel);
+         dst[0] = 0; /* r */
+         dst[1] = 0; /* g */
+         dst[2] = 0; /* b */
+         dst[3] = pixel.chan.a; /* a */
+         src += 4;
+         dst += 4;
+      }
+      src_row += src_stride;
+      dst_row += dst_stride/sizeof(*dst_row);
+   }
+}
+
+static INLINE void
+util_format_a32_float_pack_rgba_float(uint8_t *dst_row, unsigned dst_stride, const float *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      const float *src = src_row;
+      uint8_t *dst = dst_row;
+      for(x = 0; x < width; x += 1) {
+         union util_format_a32_float pixel;
+         pixel.chan.a = src[3];
+         memcpy(dst, &pixel, sizeof pixel);
+         src += 4;
+         dst += 4;
+      }
+      dst_row += dst_stride;
+      src_row += src_stride/sizeof(*src_row);
+   }
+}
+
+static INLINE void
+util_format_a32_float_fetch_rgba_float(float *dst, const uint8_t *src, unsigned i, unsigned j)
+{
+         union util_format_a32_float pixel;
+         memcpy(&pixel, src, sizeof pixel);
+         dst[0] = 0; /* r */
+         dst[1] = 0; /* g */
+         dst[2] = 0; /* b */
+         dst[3] = pixel.chan.a; /* a */
+}
+
+static INLINE void
+util_format_a32_float_unpack_rgba_8unorm(uint8_t *dst_row, unsigned dst_stride, const uint8_t *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      uint8_t *dst = dst_row;
+      const uint8_t *src = src_row;
+      for(x = 0; x < width; x += 1) {
+         union util_format_a32_float pixel;
+         memcpy(&pixel, src, sizeof pixel);
+         dst[0] = 0; /* r */
+         dst[1] = 0; /* g */
+         dst[2] = 0; /* b */
+         dst[3] = float_to_ubyte(pixel.chan.a); /* a */
+         src += 4;
+         dst += 4;
+      }
+      src_row += src_stride;
+      dst_row += dst_stride/sizeof(*dst_row);
+   }
+}
+
+static INLINE void
+util_format_a32_float_pack_rgba_8unorm(uint8_t *dst_row, unsigned dst_stride, const uint8_t *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      const uint8_t *src = src_row;
+      uint8_t *dst = dst_row;
+      for(x = 0; x < width; x += 1) {
+         union util_format_a32_float pixel;
+         pixel.chan.a = ubyte_to_float(src[3]);
+         memcpy(dst, &pixel, sizeof pixel);
+         src += 4;
+         dst += 4;
+      }
+      dst_row += dst_stride;
+      src_row += src_stride/sizeof(*src_row);
+   }
+}
+
+union util_format_l32_float {
+   uint32_t value;
+   struct {
+      float rgb;
+   } chan;
+};
+
+static INLINE void
+util_format_l32_float_unpack_rgba_float(float *dst_row, unsigned dst_stride, const uint8_t *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      float *dst = dst_row;
+      const uint8_t *src = src_row;
+      for(x = 0; x < width; x += 1) {
+         union util_format_l32_float pixel;
+         memcpy(&pixel, src, sizeof pixel);
+         dst[0] = pixel.chan.rgb; /* r */
+         dst[1] = pixel.chan.rgb; /* g */
+         dst[2] = pixel.chan.rgb; /* b */
+         dst[3] = 1; /* a */
+         src += 4;
+         dst += 4;
+      }
+      src_row += src_stride;
+      dst_row += dst_stride/sizeof(*dst_row);
+   }
+}
+
+static INLINE void
+util_format_l32_float_pack_rgba_float(uint8_t *dst_row, unsigned dst_stride, const float *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      const float *src = src_row;
+      uint8_t *dst = dst_row;
+      for(x = 0; x < width; x += 1) {
+         union util_format_l32_float pixel;
+         pixel.chan.rgb = src[2];
+         memcpy(dst, &pixel, sizeof pixel);
+         src += 4;
+         dst += 4;
+      }
+      dst_row += dst_stride;
+      src_row += src_stride/sizeof(*src_row);
+   }
+}
+
+static INLINE void
+util_format_l32_float_fetch_rgba_float(float *dst, const uint8_t *src, unsigned i, unsigned j)
+{
+         union util_format_l32_float pixel;
+         memcpy(&pixel, src, sizeof pixel);
+         dst[0] = pixel.chan.rgb; /* r */
+         dst[1] = pixel.chan.rgb; /* g */
+         dst[2] = pixel.chan.rgb; /* b */
+         dst[3] = 1; /* a */
+}
+
+static INLINE void
+util_format_l32_float_unpack_rgba_8unorm(uint8_t *dst_row, unsigned dst_stride, const uint8_t *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      uint8_t *dst = dst_row;
+      const uint8_t *src = src_row;
+      for(x = 0; x < width; x += 1) {
+         union util_format_l32_float pixel;
+         memcpy(&pixel, src, sizeof pixel);
+         dst[0] = float_to_ubyte(pixel.chan.rgb); /* r */
+         dst[1] = float_to_ubyte(pixel.chan.rgb); /* g */
+         dst[2] = float_to_ubyte(pixel.chan.rgb); /* b */
+         dst[3] = 255; /* a */
+         src += 4;
+         dst += 4;
+      }
+      src_row += src_stride;
+      dst_row += dst_stride/sizeof(*dst_row);
+   }
+}
+
+static INLINE void
+util_format_l32_float_pack_rgba_8unorm(uint8_t *dst_row, unsigned dst_stride, const uint8_t *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      const uint8_t *src = src_row;
+      uint8_t *dst = dst_row;
+      for(x = 0; x < width; x += 1) {
+         union util_format_l32_float pixel;
+         pixel.chan.rgb = ubyte_to_float(src[2]);
+         memcpy(dst, &pixel, sizeof pixel);
+         src += 4;
+         dst += 4;
+      }
+      dst_row += dst_stride;
+      src_row += src_stride/sizeof(*src_row);
+   }
+}
+
+union util_format_l32a32_float {
+   uint64_t value;
+   struct {
+      float rgb;
+      float a;
+   } chan;
+};
+
+static INLINE void
+util_format_l32a32_float_unpack_rgba_float(float *dst_row, unsigned dst_stride, const uint8_t *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      float *dst = dst_row;
+      const uint8_t *src = src_row;
+      for(x = 0; x < width; x += 1) {
+         union util_format_l32a32_float pixel;
+         memcpy(&pixel, src, sizeof pixel);
+         dst[0] = pixel.chan.rgb; /* r */
+         dst[1] = pixel.chan.rgb; /* g */
+         dst[2] = pixel.chan.rgb; /* b */
+         dst[3] = pixel.chan.a; /* a */
+         src += 8;
+         dst += 4;
+      }
+      src_row += src_stride;
+      dst_row += dst_stride/sizeof(*dst_row);
+   }
+}
+
+static INLINE void
+util_format_l32a32_float_pack_rgba_float(uint8_t *dst_row, unsigned dst_stride, const float *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      const float *src = src_row;
+      uint8_t *dst = dst_row;
+      for(x = 0; x < width; x += 1) {
+         union util_format_l32a32_float pixel;
+         pixel.chan.rgb = src[2];
+         pixel.chan.a = src[3];
+         memcpy(dst, &pixel, sizeof pixel);
+         src += 4;
+         dst += 8;
+      }
+      dst_row += dst_stride;
+      src_row += src_stride/sizeof(*src_row);
+   }
+}
+
+static INLINE void
+util_format_l32a32_float_fetch_rgba_float(float *dst, const uint8_t *src, unsigned i, unsigned j)
+{
+         union util_format_l32a32_float pixel;
+         memcpy(&pixel, src, sizeof pixel);
+         dst[0] = pixel.chan.rgb; /* r */
+         dst[1] = pixel.chan.rgb; /* g */
+         dst[2] = pixel.chan.rgb; /* b */
+         dst[3] = pixel.chan.a; /* a */
+}
+
+static INLINE void
+util_format_l32a32_float_unpack_rgba_8unorm(uint8_t *dst_row, unsigned dst_stride, const uint8_t *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      uint8_t *dst = dst_row;
+      const uint8_t *src = src_row;
+      for(x = 0; x < width; x += 1) {
+         union util_format_l32a32_float pixel;
+         memcpy(&pixel, src, sizeof pixel);
+         dst[0] = float_to_ubyte(pixel.chan.rgb); /* r */
+         dst[1] = float_to_ubyte(pixel.chan.rgb); /* g */
+         dst[2] = float_to_ubyte(pixel.chan.rgb); /* b */
+         dst[3] = float_to_ubyte(pixel.chan.a); /* a */
+         src += 8;
+         dst += 4;
+      }
+      src_row += src_stride;
+      dst_row += dst_stride/sizeof(*dst_row);
+   }
+}
+
+static INLINE void
+util_format_l32a32_float_pack_rgba_8unorm(uint8_t *dst_row, unsigned dst_stride, const uint8_t *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      const uint8_t *src = src_row;
+      uint8_t *dst = dst_row;
+      for(x = 0; x < width; x += 1) {
+         union util_format_l32a32_float pixel;
+         pixel.chan.rgb = ubyte_to_float(src[2]);
+         pixel.chan.a = ubyte_to_float(src[3]);
+         memcpy(dst, &pixel, sizeof pixel);
+         src += 4;
+         dst += 8;
+      }
+      dst_row += dst_stride;
+      src_row += src_stride/sizeof(*src_row);
+   }
+}
+
+union util_format_i32_float {
+   uint32_t value;
+   struct {
+      float rgba;
+   } chan;
+};
+
+static INLINE void
+util_format_i32_float_unpack_rgba_float(float *dst_row, unsigned dst_stride, const uint8_t *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      float *dst = dst_row;
+      const uint8_t *src = src_row;
+      for(x = 0; x < width; x += 1) {
+         union util_format_i32_float pixel;
+         memcpy(&pixel, src, sizeof pixel);
+         dst[0] = pixel.chan.rgba; /* r */
+         dst[1] = pixel.chan.rgba; /* g */
+         dst[2] = pixel.chan.rgba; /* b */
+         dst[3] = pixel.chan.rgba; /* a */
+         src += 4;
+         dst += 4;
+      }
+      src_row += src_stride;
+      dst_row += dst_stride/sizeof(*dst_row);
+   }
+}
+
+static INLINE void
+util_format_i32_float_pack_rgba_float(uint8_t *dst_row, unsigned dst_stride, const float *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      const float *src = src_row;
+      uint8_t *dst = dst_row;
+      for(x = 0; x < width; x += 1) {
+         union util_format_i32_float pixel;
+         pixel.chan.rgba = src[3];
+         memcpy(dst, &pixel, sizeof pixel);
+         src += 4;
+         dst += 4;
+      }
+      dst_row += dst_stride;
+      src_row += src_stride/sizeof(*src_row);
+   }
+}
+
+static INLINE void
+util_format_i32_float_fetch_rgba_float(float *dst, const uint8_t *src, unsigned i, unsigned j)
+{
+         union util_format_i32_float pixel;
+         memcpy(&pixel, src, sizeof pixel);
+         dst[0] = pixel.chan.rgba; /* r */
+         dst[1] = pixel.chan.rgba; /* g */
+         dst[2] = pixel.chan.rgba; /* b */
+         dst[3] = pixel.chan.rgba; /* a */
+}
+
+static INLINE void
+util_format_i32_float_unpack_rgba_8unorm(uint8_t *dst_row, unsigned dst_stride, const uint8_t *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      uint8_t *dst = dst_row;
+      const uint8_t *src = src_row;
+      for(x = 0; x < width; x += 1) {
+         union util_format_i32_float pixel;
+         memcpy(&pixel, src, sizeof pixel);
+         dst[0] = float_to_ubyte(pixel.chan.rgba); /* r */
+         dst[1] = float_to_ubyte(pixel.chan.rgba); /* g */
+         dst[2] = float_to_ubyte(pixel.chan.rgba); /* b */
+         dst[3] = float_to_ubyte(pixel.chan.rgba); /* a */
+         src += 4;
+         dst += 4;
+      }
+      src_row += src_stride;
+      dst_row += dst_stride/sizeof(*dst_row);
+   }
+}
+
+static INLINE void
+util_format_i32_float_pack_rgba_8unorm(uint8_t *dst_row, unsigned dst_stride, const uint8_t *src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      const uint8_t *src = src_row;
+      uint8_t *dst = dst_row;
+      for(x = 0; x < width; x += 1) {
+         union util_format_i32_float pixel;
+         pixel.chan.rgba = ubyte_to_float(src[3]);
+         memcpy(dst, &pixel, sizeof pixel);
+         src += 4;
+         dst += 4;
       }
       dst_row += dst_stride;
       src_row += src_stride/sizeof(*src_row);
@@ -4669,131 +6878,6 @@ util_format_r10g10b10a2_uscaled_pack_rgba_8unorm(uint8_t *dst_row, unsigned dst_
       dst_row += dst_stride;
       src_row += src_stride/sizeof(*src_row);
    }
-}
-
-static INLINE void
-util_format_r11g11b10_float_unpack_rgba_float(float *dst_row, unsigned dst_stride, const uint8_t *src_row, unsigned src_stride, unsigned width, unsigned height)
-{
-}
-
-static INLINE void
-util_format_r11g11b10_float_pack_rgba_float(uint8_t *dst_row, unsigned dst_stride, const float *src_row, unsigned src_stride, unsigned width, unsigned height)
-{
-}
-
-static INLINE void
-util_format_r11g11b10_float_fetch_rgba_float(float *dst, const uint8_t *src, unsigned i, unsigned j)
-{
-}
-
-static INLINE void
-util_format_r11g11b10_float_unpack_rgba_8unorm(uint8_t *dst_row, unsigned dst_stride, const uint8_t *src_row, unsigned src_stride, unsigned width, unsigned height)
-{
-}
-
-static INLINE void
-util_format_r11g11b10_float_pack_rgba_8unorm(uint8_t *dst_row, unsigned dst_stride, const uint8_t *src_row, unsigned src_stride, unsigned width, unsigned height)
-{
-}
-
-static INLINE void
-util_format_rgtc1_unorm_unpack_rgba_float(float *dst_row, unsigned dst_stride, const uint8_t *src_row, unsigned src_stride, unsigned width, unsigned height)
-{
-}
-
-static INLINE void
-util_format_rgtc1_unorm_pack_rgba_float(uint8_t *dst_row, unsigned dst_stride, const float *src_row, unsigned src_stride, unsigned width, unsigned height)
-{
-}
-
-static INLINE void
-util_format_rgtc1_unorm_fetch_rgba_float(float *dst, const uint8_t *src, unsigned i, unsigned j)
-{
-}
-
-static INLINE void
-util_format_rgtc1_unorm_unpack_rgba_8unorm(uint8_t *dst_row, unsigned dst_stride, const uint8_t *src_row, unsigned src_stride, unsigned width, unsigned height)
-{
-}
-
-static INLINE void
-util_format_rgtc1_unorm_pack_rgba_8unorm(uint8_t *dst_row, unsigned dst_stride, const uint8_t *src_row, unsigned src_stride, unsigned width, unsigned height)
-{
-}
-
-static INLINE void
-util_format_rgtc1_snorm_unpack_rgba_float(float *dst_row, unsigned dst_stride, const uint8_t *src_row, unsigned src_stride, unsigned width, unsigned height)
-{
-}
-
-static INLINE void
-util_format_rgtc1_snorm_pack_rgba_float(uint8_t *dst_row, unsigned dst_stride, const float *src_row, unsigned src_stride, unsigned width, unsigned height)
-{
-}
-
-static INLINE void
-util_format_rgtc1_snorm_fetch_rgba_float(float *dst, const uint8_t *src, unsigned i, unsigned j)
-{
-}
-
-static INLINE void
-util_format_rgtc1_snorm_unpack_rgba_8unorm(uint8_t *dst_row, unsigned dst_stride, const uint8_t *src_row, unsigned src_stride, unsigned width, unsigned height)
-{
-}
-
-static INLINE void
-util_format_rgtc1_snorm_pack_rgba_8unorm(uint8_t *dst_row, unsigned dst_stride, const uint8_t *src_row, unsigned src_stride, unsigned width, unsigned height)
-{
-}
-
-static INLINE void
-util_format_rgtc2_unorm_unpack_rgba_float(float *dst_row, unsigned dst_stride, const uint8_t *src_row, unsigned src_stride, unsigned width, unsigned height)
-{
-}
-
-static INLINE void
-util_format_rgtc2_unorm_pack_rgba_float(uint8_t *dst_row, unsigned dst_stride, const float *src_row, unsigned src_stride, unsigned width, unsigned height)
-{
-}
-
-static INLINE void
-util_format_rgtc2_unorm_fetch_rgba_float(float *dst, const uint8_t *src, unsigned i, unsigned j)
-{
-}
-
-static INLINE void
-util_format_rgtc2_unorm_unpack_rgba_8unorm(uint8_t *dst_row, unsigned dst_stride, const uint8_t *src_row, unsigned src_stride, unsigned width, unsigned height)
-{
-}
-
-static INLINE void
-util_format_rgtc2_unorm_pack_rgba_8unorm(uint8_t *dst_row, unsigned dst_stride, const uint8_t *src_row, unsigned src_stride, unsigned width, unsigned height)
-{
-}
-
-static INLINE void
-util_format_rgtc2_snorm_unpack_rgba_float(float *dst_row, unsigned dst_stride, const uint8_t *src_row, unsigned src_stride, unsigned width, unsigned height)
-{
-}
-
-static INLINE void
-util_format_rgtc2_snorm_pack_rgba_float(uint8_t *dst_row, unsigned dst_stride, const float *src_row, unsigned src_stride, unsigned width, unsigned height)
-{
-}
-
-static INLINE void
-util_format_rgtc2_snorm_fetch_rgba_float(float *dst, const uint8_t *src, unsigned i, unsigned j)
-{
-}
-
-static INLINE void
-util_format_rgtc2_snorm_unpack_rgba_8unorm(uint8_t *dst_row, unsigned dst_stride, const uint8_t *src_row, unsigned src_stride, unsigned width, unsigned height)
-{
-}
-
-static INLINE void
-util_format_rgtc2_snorm_pack_rgba_8unorm(uint8_t *dst_row, unsigned dst_stride, const uint8_t *src_row, unsigned src_stride, unsigned width, unsigned height)
-{
 }
 
 union util_format_r64_float {
@@ -12797,6 +14881,44 @@ util_format_b10g10r10a2_unorm_description = {
 };
 
 const struct util_format_description
+util_format_b2g3r3_unorm_description = {
+   PIPE_FORMAT_B2G3R3_UNORM,
+   "PIPE_FORMAT_B2G3R3_UNORM",
+   "b2g3r3_unorm",
+   {1, 1, 8},	/* block */
+   UTIL_FORMAT_LAYOUT_PLAIN,
+   3,	/* nr_channels */
+   FALSE,	/* is_array */
+   TRUE,	/* is_bitmask */
+   FALSE,	/* is_mixed */
+   {
+      {UTIL_FORMAT_TYPE_UNSIGNED, TRUE, 2},	/* x = b */
+      {UTIL_FORMAT_TYPE_UNSIGNED, TRUE, 3},	/* y = g */
+      {UTIL_FORMAT_TYPE_UNSIGNED, TRUE, 3},	/* z = r */
+      {0, 0, 0}
+   },
+   {
+      UTIL_FORMAT_SWIZZLE_Z,	/* r */
+      UTIL_FORMAT_SWIZZLE_Y,	/* g */
+      UTIL_FORMAT_SWIZZLE_X,	/* b */
+      UTIL_FORMAT_SWIZZLE_1	/* a */
+   },
+   UTIL_FORMAT_COLORSPACE_RGB,
+   &util_format_b2g3r3_unorm_unpack_rgba_8unorm,
+   &util_format_b2g3r3_unorm_pack_rgba_8unorm,
+   NULL, /* fetch_rgba_8unorm */
+   &util_format_b2g3r3_unorm_unpack_rgba_float,
+   &util_format_b2g3r3_unorm_pack_rgba_float,
+   &util_format_b2g3r3_unorm_fetch_rgba_float,
+   NULL, /* unpack_z_32unorm */
+   NULL, /* pack_z_32unorm */
+   NULL, /* unpack_z_float */
+   NULL, /* pack_z_float */
+   NULL, /* unpack_s_8uscaled */
+   NULL /* pack_s_8uscaled */
+};
+
+const struct util_format_description
 util_format_l8_unorm_description = {
    PIPE_FORMAT_L8_UNORM,
    "PIPE_FORMAT_L8_UNORM",
@@ -13016,6 +15138,728 @@ util_format_l16_unorm_description = {
    &util_format_l16_unorm_unpack_rgba_float,
    &util_format_l16_unorm_pack_rgba_float,
    &util_format_l16_unorm_fetch_rgba_float,
+   NULL, /* unpack_z_32unorm */
+   NULL, /* pack_z_32unorm */
+   NULL, /* unpack_z_float */
+   NULL, /* pack_z_float */
+   NULL, /* unpack_s_8uscaled */
+   NULL /* pack_s_8uscaled */
+};
+
+const struct util_format_description
+util_format_a16_unorm_description = {
+   PIPE_FORMAT_A16_UNORM,
+   "PIPE_FORMAT_A16_UNORM",
+   "a16_unorm",
+   {1, 1, 16},	/* block */
+   UTIL_FORMAT_LAYOUT_PLAIN,
+   1,	/* nr_channels */
+   TRUE,	/* is_array */
+   TRUE,	/* is_bitmask */
+   FALSE,	/* is_mixed */
+   {
+      {UTIL_FORMAT_TYPE_UNSIGNED, TRUE, 16},	/* x = a */
+      {0, 0, 0},
+      {0, 0, 0},
+      {0, 0, 0}
+   },
+   {
+      UTIL_FORMAT_SWIZZLE_0,	/* r */
+      UTIL_FORMAT_SWIZZLE_0,	/* g */
+      UTIL_FORMAT_SWIZZLE_0,	/* b */
+      UTIL_FORMAT_SWIZZLE_X	/* a */
+   },
+   UTIL_FORMAT_COLORSPACE_RGB,
+   &util_format_a16_unorm_unpack_rgba_8unorm,
+   &util_format_a16_unorm_pack_rgba_8unorm,
+   NULL, /* fetch_rgba_8unorm */
+   &util_format_a16_unorm_unpack_rgba_float,
+   &util_format_a16_unorm_pack_rgba_float,
+   &util_format_a16_unorm_fetch_rgba_float,
+   NULL, /* unpack_z_32unorm */
+   NULL, /* pack_z_32unorm */
+   NULL, /* unpack_z_float */
+   NULL, /* pack_z_float */
+   NULL, /* unpack_s_8uscaled */
+   NULL /* pack_s_8uscaled */
+};
+
+const struct util_format_description
+util_format_i16_unorm_description = {
+   PIPE_FORMAT_I16_UNORM,
+   "PIPE_FORMAT_I16_UNORM",
+   "i16_unorm",
+   {1, 1, 16},	/* block */
+   UTIL_FORMAT_LAYOUT_PLAIN,
+   1,	/* nr_channels */
+   TRUE,	/* is_array */
+   TRUE,	/* is_bitmask */
+   FALSE,	/* is_mixed */
+   {
+      {UTIL_FORMAT_TYPE_UNSIGNED, TRUE, 16},	/* x = rgba */
+      {0, 0, 0},
+      {0, 0, 0},
+      {0, 0, 0}
+   },
+   {
+      UTIL_FORMAT_SWIZZLE_X,	/* r */
+      UTIL_FORMAT_SWIZZLE_X,	/* g */
+      UTIL_FORMAT_SWIZZLE_X,	/* b */
+      UTIL_FORMAT_SWIZZLE_X	/* a */
+   },
+   UTIL_FORMAT_COLORSPACE_RGB,
+   &util_format_i16_unorm_unpack_rgba_8unorm,
+   &util_format_i16_unorm_pack_rgba_8unorm,
+   NULL, /* fetch_rgba_8unorm */
+   &util_format_i16_unorm_unpack_rgba_float,
+   &util_format_i16_unorm_pack_rgba_float,
+   &util_format_i16_unorm_fetch_rgba_float,
+   NULL, /* unpack_z_32unorm */
+   NULL, /* pack_z_32unorm */
+   NULL, /* unpack_z_float */
+   NULL, /* pack_z_float */
+   NULL, /* unpack_s_8uscaled */
+   NULL /* pack_s_8uscaled */
+};
+
+const struct util_format_description
+util_format_l16a16_unorm_description = {
+   PIPE_FORMAT_L16A16_UNORM,
+   "PIPE_FORMAT_L16A16_UNORM",
+   "l16a16_unorm",
+   {1, 1, 32},	/* block */
+   UTIL_FORMAT_LAYOUT_PLAIN,
+   2,	/* nr_channels */
+   TRUE,	/* is_array */
+   TRUE,	/* is_bitmask */
+   FALSE,	/* is_mixed */
+   {
+      {UTIL_FORMAT_TYPE_UNSIGNED, TRUE, 16},	/* x = rgb */
+      {UTIL_FORMAT_TYPE_UNSIGNED, TRUE, 16},	/* y = a */
+      {0, 0, 0},
+      {0, 0, 0}
+   },
+   {
+      UTIL_FORMAT_SWIZZLE_X,	/* r */
+      UTIL_FORMAT_SWIZZLE_X,	/* g */
+      UTIL_FORMAT_SWIZZLE_X,	/* b */
+      UTIL_FORMAT_SWIZZLE_Y	/* a */
+   },
+   UTIL_FORMAT_COLORSPACE_RGB,
+   &util_format_l16a16_unorm_unpack_rgba_8unorm,
+   &util_format_l16a16_unorm_pack_rgba_8unorm,
+   NULL, /* fetch_rgba_8unorm */
+   &util_format_l16a16_unorm_unpack_rgba_float,
+   &util_format_l16a16_unorm_pack_rgba_float,
+   &util_format_l16a16_unorm_fetch_rgba_float,
+   NULL, /* unpack_z_32unorm */
+   NULL, /* pack_z_32unorm */
+   NULL, /* unpack_z_float */
+   NULL, /* pack_z_float */
+   NULL, /* unpack_s_8uscaled */
+   NULL /* pack_s_8uscaled */
+};
+
+const struct util_format_description
+util_format_a8_snorm_description = {
+   PIPE_FORMAT_A8_SNORM,
+   "PIPE_FORMAT_A8_SNORM",
+   "a8_snorm",
+   {1, 1, 8},	/* block */
+   UTIL_FORMAT_LAYOUT_PLAIN,
+   1,	/* nr_channels */
+   TRUE,	/* is_array */
+   TRUE,	/* is_bitmask */
+   FALSE,	/* is_mixed */
+   {
+      {UTIL_FORMAT_TYPE_SIGNED, TRUE, 8},	/* x = a */
+      {0, 0, 0},
+      {0, 0, 0},
+      {0, 0, 0}
+   },
+   {
+      UTIL_FORMAT_SWIZZLE_0,	/* r */
+      UTIL_FORMAT_SWIZZLE_0,	/* g */
+      UTIL_FORMAT_SWIZZLE_0,	/* b */
+      UTIL_FORMAT_SWIZZLE_X	/* a */
+   },
+   UTIL_FORMAT_COLORSPACE_RGB,
+   &util_format_a8_snorm_unpack_rgba_8unorm,
+   &util_format_a8_snorm_pack_rgba_8unorm,
+   NULL, /* fetch_rgba_8unorm */
+   &util_format_a8_snorm_unpack_rgba_float,
+   &util_format_a8_snorm_pack_rgba_float,
+   &util_format_a8_snorm_fetch_rgba_float,
+   NULL, /* unpack_z_32unorm */
+   NULL, /* pack_z_32unorm */
+   NULL, /* unpack_z_float */
+   NULL, /* pack_z_float */
+   NULL, /* unpack_s_8uscaled */
+   NULL /* pack_s_8uscaled */
+};
+
+const struct util_format_description
+util_format_l8_snorm_description = {
+   PIPE_FORMAT_L8_SNORM,
+   "PIPE_FORMAT_L8_SNORM",
+   "l8_snorm",
+   {1, 1, 8},	/* block */
+   UTIL_FORMAT_LAYOUT_PLAIN,
+   1,	/* nr_channels */
+   TRUE,	/* is_array */
+   TRUE,	/* is_bitmask */
+   FALSE,	/* is_mixed */
+   {
+      {UTIL_FORMAT_TYPE_SIGNED, TRUE, 8},	/* x = rgb */
+      {0, 0, 0},
+      {0, 0, 0},
+      {0, 0, 0}
+   },
+   {
+      UTIL_FORMAT_SWIZZLE_X,	/* r */
+      UTIL_FORMAT_SWIZZLE_X,	/* g */
+      UTIL_FORMAT_SWIZZLE_X,	/* b */
+      UTIL_FORMAT_SWIZZLE_1	/* a */
+   },
+   UTIL_FORMAT_COLORSPACE_RGB,
+   &util_format_l8_snorm_unpack_rgba_8unorm,
+   &util_format_l8_snorm_pack_rgba_8unorm,
+   NULL, /* fetch_rgba_8unorm */
+   &util_format_l8_snorm_unpack_rgba_float,
+   &util_format_l8_snorm_pack_rgba_float,
+   &util_format_l8_snorm_fetch_rgba_float,
+   NULL, /* unpack_z_32unorm */
+   NULL, /* pack_z_32unorm */
+   NULL, /* unpack_z_float */
+   NULL, /* pack_z_float */
+   NULL, /* unpack_s_8uscaled */
+   NULL /* pack_s_8uscaled */
+};
+
+const struct util_format_description
+util_format_l8a8_snorm_description = {
+   PIPE_FORMAT_L8A8_SNORM,
+   "PIPE_FORMAT_L8A8_SNORM",
+   "l8a8_snorm",
+   {1, 1, 16},	/* block */
+   UTIL_FORMAT_LAYOUT_PLAIN,
+   2,	/* nr_channels */
+   TRUE,	/* is_array */
+   TRUE,	/* is_bitmask */
+   FALSE,	/* is_mixed */
+   {
+      {UTIL_FORMAT_TYPE_SIGNED, TRUE, 8},	/* x = rgb */
+      {UTIL_FORMAT_TYPE_SIGNED, TRUE, 8},	/* y = a */
+      {0, 0, 0},
+      {0, 0, 0}
+   },
+   {
+      UTIL_FORMAT_SWIZZLE_X,	/* r */
+      UTIL_FORMAT_SWIZZLE_X,	/* g */
+      UTIL_FORMAT_SWIZZLE_X,	/* b */
+      UTIL_FORMAT_SWIZZLE_Y	/* a */
+   },
+   UTIL_FORMAT_COLORSPACE_RGB,
+   &util_format_l8a8_snorm_unpack_rgba_8unorm,
+   &util_format_l8a8_snorm_pack_rgba_8unorm,
+   NULL, /* fetch_rgba_8unorm */
+   &util_format_l8a8_snorm_unpack_rgba_float,
+   &util_format_l8a8_snorm_pack_rgba_float,
+   &util_format_l8a8_snorm_fetch_rgba_float,
+   NULL, /* unpack_z_32unorm */
+   NULL, /* pack_z_32unorm */
+   NULL, /* unpack_z_float */
+   NULL, /* pack_z_float */
+   NULL, /* unpack_s_8uscaled */
+   NULL /* pack_s_8uscaled */
+};
+
+const struct util_format_description
+util_format_i8_snorm_description = {
+   PIPE_FORMAT_I8_SNORM,
+   "PIPE_FORMAT_I8_SNORM",
+   "i8_snorm",
+   {1, 1, 8},	/* block */
+   UTIL_FORMAT_LAYOUT_PLAIN,
+   1,	/* nr_channels */
+   TRUE,	/* is_array */
+   TRUE,	/* is_bitmask */
+   FALSE,	/* is_mixed */
+   {
+      {UTIL_FORMAT_TYPE_SIGNED, TRUE, 8},	/* x = rgba */
+      {0, 0, 0},
+      {0, 0, 0},
+      {0, 0, 0}
+   },
+   {
+      UTIL_FORMAT_SWIZZLE_X,	/* r */
+      UTIL_FORMAT_SWIZZLE_X,	/* g */
+      UTIL_FORMAT_SWIZZLE_X,	/* b */
+      UTIL_FORMAT_SWIZZLE_X	/* a */
+   },
+   UTIL_FORMAT_COLORSPACE_RGB,
+   &util_format_i8_snorm_unpack_rgba_8unorm,
+   &util_format_i8_snorm_pack_rgba_8unorm,
+   NULL, /* fetch_rgba_8unorm */
+   &util_format_i8_snorm_unpack_rgba_float,
+   &util_format_i8_snorm_pack_rgba_float,
+   &util_format_i8_snorm_fetch_rgba_float,
+   NULL, /* unpack_z_32unorm */
+   NULL, /* pack_z_32unorm */
+   NULL, /* unpack_z_float */
+   NULL, /* pack_z_float */
+   NULL, /* unpack_s_8uscaled */
+   NULL /* pack_s_8uscaled */
+};
+
+const struct util_format_description
+util_format_a16_snorm_description = {
+   PIPE_FORMAT_A16_SNORM,
+   "PIPE_FORMAT_A16_SNORM",
+   "a16_snorm",
+   {1, 1, 16},	/* block */
+   UTIL_FORMAT_LAYOUT_PLAIN,
+   1,	/* nr_channels */
+   TRUE,	/* is_array */
+   TRUE,	/* is_bitmask */
+   FALSE,	/* is_mixed */
+   {
+      {UTIL_FORMAT_TYPE_SIGNED, TRUE, 16},	/* x = a */
+      {0, 0, 0},
+      {0, 0, 0},
+      {0, 0, 0}
+   },
+   {
+      UTIL_FORMAT_SWIZZLE_0,	/* r */
+      UTIL_FORMAT_SWIZZLE_0,	/* g */
+      UTIL_FORMAT_SWIZZLE_0,	/* b */
+      UTIL_FORMAT_SWIZZLE_X	/* a */
+   },
+   UTIL_FORMAT_COLORSPACE_RGB,
+   &util_format_a16_snorm_unpack_rgba_8unorm,
+   &util_format_a16_snorm_pack_rgba_8unorm,
+   NULL, /* fetch_rgba_8unorm */
+   &util_format_a16_snorm_unpack_rgba_float,
+   &util_format_a16_snorm_pack_rgba_float,
+   &util_format_a16_snorm_fetch_rgba_float,
+   NULL, /* unpack_z_32unorm */
+   NULL, /* pack_z_32unorm */
+   NULL, /* unpack_z_float */
+   NULL, /* pack_z_float */
+   NULL, /* unpack_s_8uscaled */
+   NULL /* pack_s_8uscaled */
+};
+
+const struct util_format_description
+util_format_l16_snorm_description = {
+   PIPE_FORMAT_L16_SNORM,
+   "PIPE_FORMAT_L16_SNORM",
+   "l16_snorm",
+   {1, 1, 16},	/* block */
+   UTIL_FORMAT_LAYOUT_PLAIN,
+   1,	/* nr_channels */
+   TRUE,	/* is_array */
+   TRUE,	/* is_bitmask */
+   FALSE,	/* is_mixed */
+   {
+      {UTIL_FORMAT_TYPE_SIGNED, TRUE, 16},	/* x = rgb */
+      {0, 0, 0},
+      {0, 0, 0},
+      {0, 0, 0}
+   },
+   {
+      UTIL_FORMAT_SWIZZLE_X,	/* r */
+      UTIL_FORMAT_SWIZZLE_X,	/* g */
+      UTIL_FORMAT_SWIZZLE_X,	/* b */
+      UTIL_FORMAT_SWIZZLE_1	/* a */
+   },
+   UTIL_FORMAT_COLORSPACE_RGB,
+   &util_format_l16_snorm_unpack_rgba_8unorm,
+   &util_format_l16_snorm_pack_rgba_8unorm,
+   NULL, /* fetch_rgba_8unorm */
+   &util_format_l16_snorm_unpack_rgba_float,
+   &util_format_l16_snorm_pack_rgba_float,
+   &util_format_l16_snorm_fetch_rgba_float,
+   NULL, /* unpack_z_32unorm */
+   NULL, /* pack_z_32unorm */
+   NULL, /* unpack_z_float */
+   NULL, /* pack_z_float */
+   NULL, /* unpack_s_8uscaled */
+   NULL /* pack_s_8uscaled */
+};
+
+const struct util_format_description
+util_format_l16a16_snorm_description = {
+   PIPE_FORMAT_L16A16_SNORM,
+   "PIPE_FORMAT_L16A16_SNORM",
+   "l16a16_snorm",
+   {1, 1, 32},	/* block */
+   UTIL_FORMAT_LAYOUT_PLAIN,
+   2,	/* nr_channels */
+   TRUE,	/* is_array */
+   TRUE,	/* is_bitmask */
+   FALSE,	/* is_mixed */
+   {
+      {UTIL_FORMAT_TYPE_SIGNED, TRUE, 16},	/* x = rgb */
+      {UTIL_FORMAT_TYPE_SIGNED, TRUE, 16},	/* y = a */
+      {0, 0, 0},
+      {0, 0, 0}
+   },
+   {
+      UTIL_FORMAT_SWIZZLE_X,	/* r */
+      UTIL_FORMAT_SWIZZLE_X,	/* g */
+      UTIL_FORMAT_SWIZZLE_X,	/* b */
+      UTIL_FORMAT_SWIZZLE_Y	/* a */
+   },
+   UTIL_FORMAT_COLORSPACE_RGB,
+   &util_format_l16a16_snorm_unpack_rgba_8unorm,
+   &util_format_l16a16_snorm_pack_rgba_8unorm,
+   NULL, /* fetch_rgba_8unorm */
+   &util_format_l16a16_snorm_unpack_rgba_float,
+   &util_format_l16a16_snorm_pack_rgba_float,
+   &util_format_l16a16_snorm_fetch_rgba_float,
+   NULL, /* unpack_z_32unorm */
+   NULL, /* pack_z_32unorm */
+   NULL, /* unpack_z_float */
+   NULL, /* pack_z_float */
+   NULL, /* unpack_s_8uscaled */
+   NULL /* pack_s_8uscaled */
+};
+
+const struct util_format_description
+util_format_i16_snorm_description = {
+   PIPE_FORMAT_I16_SNORM,
+   "PIPE_FORMAT_I16_SNORM",
+   "i16_snorm",
+   {1, 1, 16},	/* block */
+   UTIL_FORMAT_LAYOUT_PLAIN,
+   1,	/* nr_channels */
+   TRUE,	/* is_array */
+   TRUE,	/* is_bitmask */
+   FALSE,	/* is_mixed */
+   {
+      {UTIL_FORMAT_TYPE_SIGNED, TRUE, 16},	/* x = rgba */
+      {0, 0, 0},
+      {0, 0, 0},
+      {0, 0, 0}
+   },
+   {
+      UTIL_FORMAT_SWIZZLE_X,	/* r */
+      UTIL_FORMAT_SWIZZLE_X,	/* g */
+      UTIL_FORMAT_SWIZZLE_X,	/* b */
+      UTIL_FORMAT_SWIZZLE_X	/* a */
+   },
+   UTIL_FORMAT_COLORSPACE_RGB,
+   &util_format_i16_snorm_unpack_rgba_8unorm,
+   &util_format_i16_snorm_pack_rgba_8unorm,
+   NULL, /* fetch_rgba_8unorm */
+   &util_format_i16_snorm_unpack_rgba_float,
+   &util_format_i16_snorm_pack_rgba_float,
+   &util_format_i16_snorm_fetch_rgba_float,
+   NULL, /* unpack_z_32unorm */
+   NULL, /* pack_z_32unorm */
+   NULL, /* unpack_z_float */
+   NULL, /* pack_z_float */
+   NULL, /* unpack_s_8uscaled */
+   NULL /* pack_s_8uscaled */
+};
+
+const struct util_format_description
+util_format_a16_float_description = {
+   PIPE_FORMAT_A16_FLOAT,
+   "PIPE_FORMAT_A16_FLOAT",
+   "a16_float",
+   {1, 1, 16},	/* block */
+   UTIL_FORMAT_LAYOUT_PLAIN,
+   1,	/* nr_channels */
+   TRUE,	/* is_array */
+   FALSE,	/* is_bitmask */
+   FALSE,	/* is_mixed */
+   {
+      {UTIL_FORMAT_TYPE_FLOAT, FALSE, 16},	/* x = a */
+      {0, 0, 0},
+      {0, 0, 0},
+      {0, 0, 0}
+   },
+   {
+      UTIL_FORMAT_SWIZZLE_0,	/* r */
+      UTIL_FORMAT_SWIZZLE_0,	/* g */
+      UTIL_FORMAT_SWIZZLE_0,	/* b */
+      UTIL_FORMAT_SWIZZLE_X	/* a */
+   },
+   UTIL_FORMAT_COLORSPACE_RGB,
+   &util_format_a16_float_unpack_rgba_8unorm,
+   &util_format_a16_float_pack_rgba_8unorm,
+   NULL, /* fetch_rgba_8unorm */
+   &util_format_a16_float_unpack_rgba_float,
+   &util_format_a16_float_pack_rgba_float,
+   &util_format_a16_float_fetch_rgba_float,
+   NULL, /* unpack_z_32unorm */
+   NULL, /* pack_z_32unorm */
+   NULL, /* unpack_z_float */
+   NULL, /* pack_z_float */
+   NULL, /* unpack_s_8uscaled */
+   NULL /* pack_s_8uscaled */
+};
+
+const struct util_format_description
+util_format_l16_float_description = {
+   PIPE_FORMAT_L16_FLOAT,
+   "PIPE_FORMAT_L16_FLOAT",
+   "l16_float",
+   {1, 1, 16},	/* block */
+   UTIL_FORMAT_LAYOUT_PLAIN,
+   1,	/* nr_channels */
+   TRUE,	/* is_array */
+   FALSE,	/* is_bitmask */
+   FALSE,	/* is_mixed */
+   {
+      {UTIL_FORMAT_TYPE_FLOAT, FALSE, 16},	/* x = rgb */
+      {0, 0, 0},
+      {0, 0, 0},
+      {0, 0, 0}
+   },
+   {
+      UTIL_FORMAT_SWIZZLE_X,	/* r */
+      UTIL_FORMAT_SWIZZLE_X,	/* g */
+      UTIL_FORMAT_SWIZZLE_X,	/* b */
+      UTIL_FORMAT_SWIZZLE_1	/* a */
+   },
+   UTIL_FORMAT_COLORSPACE_RGB,
+   &util_format_l16_float_unpack_rgba_8unorm,
+   &util_format_l16_float_pack_rgba_8unorm,
+   NULL, /* fetch_rgba_8unorm */
+   &util_format_l16_float_unpack_rgba_float,
+   &util_format_l16_float_pack_rgba_float,
+   &util_format_l16_float_fetch_rgba_float,
+   NULL, /* unpack_z_32unorm */
+   NULL, /* pack_z_32unorm */
+   NULL, /* unpack_z_float */
+   NULL, /* pack_z_float */
+   NULL, /* unpack_s_8uscaled */
+   NULL /* pack_s_8uscaled */
+};
+
+const struct util_format_description
+util_format_l16a16_float_description = {
+   PIPE_FORMAT_L16A16_FLOAT,
+   "PIPE_FORMAT_L16A16_FLOAT",
+   "l16a16_float",
+   {1, 1, 32},	/* block */
+   UTIL_FORMAT_LAYOUT_PLAIN,
+   2,	/* nr_channels */
+   TRUE,	/* is_array */
+   FALSE,	/* is_bitmask */
+   FALSE,	/* is_mixed */
+   {
+      {UTIL_FORMAT_TYPE_FLOAT, FALSE, 16},	/* x = rgb */
+      {UTIL_FORMAT_TYPE_FLOAT, FALSE, 16},	/* y = a */
+      {0, 0, 0},
+      {0, 0, 0}
+   },
+   {
+      UTIL_FORMAT_SWIZZLE_X,	/* r */
+      UTIL_FORMAT_SWIZZLE_X,	/* g */
+      UTIL_FORMAT_SWIZZLE_X,	/* b */
+      UTIL_FORMAT_SWIZZLE_Y	/* a */
+   },
+   UTIL_FORMAT_COLORSPACE_RGB,
+   &util_format_l16a16_float_unpack_rgba_8unorm,
+   &util_format_l16a16_float_pack_rgba_8unorm,
+   NULL, /* fetch_rgba_8unorm */
+   &util_format_l16a16_float_unpack_rgba_float,
+   &util_format_l16a16_float_pack_rgba_float,
+   &util_format_l16a16_float_fetch_rgba_float,
+   NULL, /* unpack_z_32unorm */
+   NULL, /* pack_z_32unorm */
+   NULL, /* unpack_z_float */
+   NULL, /* pack_z_float */
+   NULL, /* unpack_s_8uscaled */
+   NULL /* pack_s_8uscaled */
+};
+
+const struct util_format_description
+util_format_i16_float_description = {
+   PIPE_FORMAT_I16_FLOAT,
+   "PIPE_FORMAT_I16_FLOAT",
+   "i16_float",
+   {1, 1, 16},	/* block */
+   UTIL_FORMAT_LAYOUT_PLAIN,
+   1,	/* nr_channels */
+   TRUE,	/* is_array */
+   FALSE,	/* is_bitmask */
+   FALSE,	/* is_mixed */
+   {
+      {UTIL_FORMAT_TYPE_FLOAT, FALSE, 16},	/* x = rgba */
+      {0, 0, 0},
+      {0, 0, 0},
+      {0, 0, 0}
+   },
+   {
+      UTIL_FORMAT_SWIZZLE_X,	/* r */
+      UTIL_FORMAT_SWIZZLE_X,	/* g */
+      UTIL_FORMAT_SWIZZLE_X,	/* b */
+      UTIL_FORMAT_SWIZZLE_X	/* a */
+   },
+   UTIL_FORMAT_COLORSPACE_RGB,
+   &util_format_i16_float_unpack_rgba_8unorm,
+   &util_format_i16_float_pack_rgba_8unorm,
+   NULL, /* fetch_rgba_8unorm */
+   &util_format_i16_float_unpack_rgba_float,
+   &util_format_i16_float_pack_rgba_float,
+   &util_format_i16_float_fetch_rgba_float,
+   NULL, /* unpack_z_32unorm */
+   NULL, /* pack_z_32unorm */
+   NULL, /* unpack_z_float */
+   NULL, /* pack_z_float */
+   NULL, /* unpack_s_8uscaled */
+   NULL /* pack_s_8uscaled */
+};
+
+const struct util_format_description
+util_format_a32_float_description = {
+   PIPE_FORMAT_A32_FLOAT,
+   "PIPE_FORMAT_A32_FLOAT",
+   "a32_float",
+   {1, 1, 32},	/* block */
+   UTIL_FORMAT_LAYOUT_PLAIN,
+   1,	/* nr_channels */
+   TRUE,	/* is_array */
+   FALSE,	/* is_bitmask */
+   FALSE,	/* is_mixed */
+   {
+      {UTIL_FORMAT_TYPE_FLOAT, FALSE, 32},	/* x = a */
+      {0, 0, 0},
+      {0, 0, 0},
+      {0, 0, 0}
+   },
+   {
+      UTIL_FORMAT_SWIZZLE_0,	/* r */
+      UTIL_FORMAT_SWIZZLE_0,	/* g */
+      UTIL_FORMAT_SWIZZLE_0,	/* b */
+      UTIL_FORMAT_SWIZZLE_X	/* a */
+   },
+   UTIL_FORMAT_COLORSPACE_RGB,
+   &util_format_a32_float_unpack_rgba_8unorm,
+   &util_format_a32_float_pack_rgba_8unorm,
+   NULL, /* fetch_rgba_8unorm */
+   &util_format_a32_float_unpack_rgba_float,
+   &util_format_a32_float_pack_rgba_float,
+   &util_format_a32_float_fetch_rgba_float,
+   NULL, /* unpack_z_32unorm */
+   NULL, /* pack_z_32unorm */
+   NULL, /* unpack_z_float */
+   NULL, /* pack_z_float */
+   NULL, /* unpack_s_8uscaled */
+   NULL /* pack_s_8uscaled */
+};
+
+const struct util_format_description
+util_format_l32_float_description = {
+   PIPE_FORMAT_L32_FLOAT,
+   "PIPE_FORMAT_L32_FLOAT",
+   "l32_float",
+   {1, 1, 32},	/* block */
+   UTIL_FORMAT_LAYOUT_PLAIN,
+   1,	/* nr_channels */
+   TRUE,	/* is_array */
+   FALSE,	/* is_bitmask */
+   FALSE,	/* is_mixed */
+   {
+      {UTIL_FORMAT_TYPE_FLOAT, FALSE, 32},	/* x = rgb */
+      {0, 0, 0},
+      {0, 0, 0},
+      {0, 0, 0}
+   },
+   {
+      UTIL_FORMAT_SWIZZLE_X,	/* r */
+      UTIL_FORMAT_SWIZZLE_X,	/* g */
+      UTIL_FORMAT_SWIZZLE_X,	/* b */
+      UTIL_FORMAT_SWIZZLE_1	/* a */
+   },
+   UTIL_FORMAT_COLORSPACE_RGB,
+   &util_format_l32_float_unpack_rgba_8unorm,
+   &util_format_l32_float_pack_rgba_8unorm,
+   NULL, /* fetch_rgba_8unorm */
+   &util_format_l32_float_unpack_rgba_float,
+   &util_format_l32_float_pack_rgba_float,
+   &util_format_l32_float_fetch_rgba_float,
+   NULL, /* unpack_z_32unorm */
+   NULL, /* pack_z_32unorm */
+   NULL, /* unpack_z_float */
+   NULL, /* pack_z_float */
+   NULL, /* unpack_s_8uscaled */
+   NULL /* pack_s_8uscaled */
+};
+
+const struct util_format_description
+util_format_l32a32_float_description = {
+   PIPE_FORMAT_L32A32_FLOAT,
+   "PIPE_FORMAT_L32A32_FLOAT",
+   "l32a32_float",
+   {1, 1, 64},	/* block */
+   UTIL_FORMAT_LAYOUT_PLAIN,
+   2,	/* nr_channels */
+   TRUE,	/* is_array */
+   FALSE,	/* is_bitmask */
+   FALSE,	/* is_mixed */
+   {
+      {UTIL_FORMAT_TYPE_FLOAT, FALSE, 32},	/* x = rgb */
+      {UTIL_FORMAT_TYPE_FLOAT, FALSE, 32},	/* y = a */
+      {0, 0, 0},
+      {0, 0, 0}
+   },
+   {
+      UTIL_FORMAT_SWIZZLE_X,	/* r */
+      UTIL_FORMAT_SWIZZLE_X,	/* g */
+      UTIL_FORMAT_SWIZZLE_X,	/* b */
+      UTIL_FORMAT_SWIZZLE_Y	/* a */
+   },
+   UTIL_FORMAT_COLORSPACE_RGB,
+   &util_format_l32a32_float_unpack_rgba_8unorm,
+   &util_format_l32a32_float_pack_rgba_8unorm,
+   NULL, /* fetch_rgba_8unorm */
+   &util_format_l32a32_float_unpack_rgba_float,
+   &util_format_l32a32_float_pack_rgba_float,
+   &util_format_l32a32_float_fetch_rgba_float,
+   NULL, /* unpack_z_32unorm */
+   NULL, /* pack_z_32unorm */
+   NULL, /* unpack_z_float */
+   NULL, /* pack_z_float */
+   NULL, /* unpack_s_8uscaled */
+   NULL /* pack_s_8uscaled */
+};
+
+const struct util_format_description
+util_format_i32_float_description = {
+   PIPE_FORMAT_I32_FLOAT,
+   "PIPE_FORMAT_I32_FLOAT",
+   "i32_float",
+   {1, 1, 32},	/* block */
+   UTIL_FORMAT_LAYOUT_PLAIN,
+   1,	/* nr_channels */
+   TRUE,	/* is_array */
+   FALSE,	/* is_bitmask */
+   FALSE,	/* is_mixed */
+   {
+      {UTIL_FORMAT_TYPE_FLOAT, FALSE, 32},	/* x = rgba */
+      {0, 0, 0},
+      {0, 0, 0},
+      {0, 0, 0}
+   },
+   {
+      UTIL_FORMAT_SWIZZLE_X,	/* r */
+      UTIL_FORMAT_SWIZZLE_X,	/* g */
+      UTIL_FORMAT_SWIZZLE_X,	/* b */
+      UTIL_FORMAT_SWIZZLE_X	/* a */
+   },
+   UTIL_FORMAT_COLORSPACE_RGB,
+   &util_format_i32_float_unpack_rgba_8unorm,
+   &util_format_i32_float_pack_rgba_8unorm,
+   NULL, /* fetch_rgba_8unorm */
+   &util_format_i32_float_unpack_rgba_float,
+   &util_format_i32_float_pack_rgba_float,
+   &util_format_i32_float_fetch_rgba_float,
    NULL, /* unpack_z_32unorm */
    NULL, /* pack_z_32unorm */
    NULL, /* unpack_z_float */
@@ -14170,15 +17014,15 @@ util_format_r11g11b10_float_description = {
    "PIPE_FORMAT_R11G11B10_FLOAT",
    "r11g11b10_float",
    {1, 1, 32},	/* block */
-   UTIL_FORMAT_LAYOUT_PLAIN,
-   3,	/* nr_channels */
+   UTIL_FORMAT_LAYOUT_OTHER,
+   1,	/* nr_channels */
    FALSE,	/* is_array */
    FALSE,	/* is_bitmask */
    FALSE,	/* is_mixed */
    {
-      {UTIL_FORMAT_TYPE_FLOAT, FALSE, 11},	/* x = r */
-      {UTIL_FORMAT_TYPE_FLOAT, FALSE, 11},	/* y = g */
-      {UTIL_FORMAT_TYPE_FLOAT, FALSE, 10},	/* z = b */
+      {UTIL_FORMAT_TYPE_VOID, FALSE, 32},	/* x = x */
+      {0, 0, 0},
+      {0, 0, 0},
       {0, 0, 0}
    },
    {
@@ -14646,7 +17490,7 @@ util_format_rgtc1_unorm_description = {
    UTIL_FORMAT_COLORSPACE_RGB,
    &util_format_rgtc1_unorm_unpack_rgba_8unorm,
    &util_format_rgtc1_unorm_pack_rgba_8unorm,
-   NULL, /* fetch_rgba_8unorm */
+   &util_format_rgtc1_unorm_fetch_rgba_8unorm,
    &util_format_rgtc1_unorm_unpack_rgba_float,
    &util_format_rgtc1_unorm_pack_rgba_float,
    &util_format_rgtc1_unorm_fetch_rgba_float,
@@ -14684,7 +17528,7 @@ util_format_rgtc1_snorm_description = {
    UTIL_FORMAT_COLORSPACE_RGB,
    &util_format_rgtc1_snorm_unpack_rgba_8unorm,
    &util_format_rgtc1_snorm_pack_rgba_8unorm,
-   NULL, /* fetch_rgba_8unorm */
+   &util_format_rgtc1_snorm_fetch_rgba_8unorm,
    &util_format_rgtc1_snorm_unpack_rgba_float,
    &util_format_rgtc1_snorm_pack_rgba_float,
    &util_format_rgtc1_snorm_fetch_rgba_float,
@@ -14722,7 +17566,7 @@ util_format_rgtc2_unorm_description = {
    UTIL_FORMAT_COLORSPACE_RGB,
    &util_format_rgtc2_unorm_unpack_rgba_8unorm,
    &util_format_rgtc2_unorm_pack_rgba_8unorm,
-   NULL, /* fetch_rgba_8unorm */
+   &util_format_rgtc2_unorm_fetch_rgba_8unorm,
    &util_format_rgtc2_unorm_unpack_rgba_float,
    &util_format_rgtc2_unorm_pack_rgba_float,
    &util_format_rgtc2_unorm_fetch_rgba_float,
@@ -14760,10 +17604,162 @@ util_format_rgtc2_snorm_description = {
    UTIL_FORMAT_COLORSPACE_RGB,
    &util_format_rgtc2_snorm_unpack_rgba_8unorm,
    &util_format_rgtc2_snorm_pack_rgba_8unorm,
-   NULL, /* fetch_rgba_8unorm */
+   &util_format_rgtc2_snorm_fetch_rgba_8unorm,
    &util_format_rgtc2_snorm_unpack_rgba_float,
    &util_format_rgtc2_snorm_pack_rgba_float,
    &util_format_rgtc2_snorm_fetch_rgba_float,
+   NULL, /* unpack_z_32unorm */
+   NULL, /* pack_z_32unorm */
+   NULL, /* unpack_z_float */
+   NULL, /* pack_z_float */
+   NULL, /* unpack_s_8uscaled */
+   NULL /* pack_s_8uscaled */
+};
+
+const struct util_format_description
+util_format_latc1_unorm_description = {
+   PIPE_FORMAT_LATC1_UNORM,
+   "PIPE_FORMAT_LATC1_UNORM",
+   "latc1_unorm",
+   {4, 4, 64},	/* block */
+   UTIL_FORMAT_LAYOUT_RGTC,
+   1,	/* nr_channels */
+   FALSE,	/* is_array */
+   FALSE,	/* is_bitmask */
+   FALSE,	/* is_mixed */
+   {
+      {UTIL_FORMAT_TYPE_VOID, FALSE, 64},	/* x = x */
+      {0, 0, 0},
+      {0, 0, 0},
+      {0, 0, 0}
+   },
+   {
+      UTIL_FORMAT_SWIZZLE_X,	/* r */
+      UTIL_FORMAT_SWIZZLE_X,	/* g */
+      UTIL_FORMAT_SWIZZLE_X,	/* b */
+      UTIL_FORMAT_SWIZZLE_1	/* a */
+   },
+   UTIL_FORMAT_COLORSPACE_RGB,
+   &util_format_latc1_unorm_unpack_rgba_8unorm,
+   &util_format_latc1_unorm_pack_rgba_8unorm,
+   &util_format_latc1_unorm_fetch_rgba_8unorm,
+   &util_format_latc1_unorm_unpack_rgba_float,
+   &util_format_latc1_unorm_pack_rgba_float,
+   &util_format_latc1_unorm_fetch_rgba_float,
+   NULL, /* unpack_z_32unorm */
+   NULL, /* pack_z_32unorm */
+   NULL, /* unpack_z_float */
+   NULL, /* pack_z_float */
+   NULL, /* unpack_s_8uscaled */
+   NULL /* pack_s_8uscaled */
+};
+
+const struct util_format_description
+util_format_latc1_snorm_description = {
+   PIPE_FORMAT_LATC1_SNORM,
+   "PIPE_FORMAT_LATC1_SNORM",
+   "latc1_snorm",
+   {4, 4, 64},	/* block */
+   UTIL_FORMAT_LAYOUT_RGTC,
+   1,	/* nr_channels */
+   FALSE,	/* is_array */
+   FALSE,	/* is_bitmask */
+   FALSE,	/* is_mixed */
+   {
+      {UTIL_FORMAT_TYPE_VOID, FALSE, 64},	/* x = x */
+      {0, 0, 0},
+      {0, 0, 0},
+      {0, 0, 0}
+   },
+   {
+      UTIL_FORMAT_SWIZZLE_X,	/* r */
+      UTIL_FORMAT_SWIZZLE_X,	/* g */
+      UTIL_FORMAT_SWIZZLE_X,	/* b */
+      UTIL_FORMAT_SWIZZLE_1	/* a */
+   },
+   UTIL_FORMAT_COLORSPACE_RGB,
+   &util_format_latc1_snorm_unpack_rgba_8unorm,
+   &util_format_latc1_snorm_pack_rgba_8unorm,
+   &util_format_latc1_snorm_fetch_rgba_8unorm,
+   &util_format_latc1_snorm_unpack_rgba_float,
+   &util_format_latc1_snorm_pack_rgba_float,
+   &util_format_latc1_snorm_fetch_rgba_float,
+   NULL, /* unpack_z_32unorm */
+   NULL, /* pack_z_32unorm */
+   NULL, /* unpack_z_float */
+   NULL, /* pack_z_float */
+   NULL, /* unpack_s_8uscaled */
+   NULL /* pack_s_8uscaled */
+};
+
+const struct util_format_description
+util_format_latc2_unorm_description = {
+   PIPE_FORMAT_LATC2_UNORM,
+   "PIPE_FORMAT_LATC2_UNORM",
+   "latc2_unorm",
+   {4, 4, 128},	/* block */
+   UTIL_FORMAT_LAYOUT_RGTC,
+   1,	/* nr_channels */
+   FALSE,	/* is_array */
+   FALSE,	/* is_bitmask */
+   FALSE,	/* is_mixed */
+   {
+      {UTIL_FORMAT_TYPE_VOID, FALSE, 128},	/* x = x */
+      {0, 0, 0},
+      {0, 0, 0},
+      {0, 0, 0}
+   },
+   {
+      UTIL_FORMAT_SWIZZLE_X,	/* r */
+      UTIL_FORMAT_SWIZZLE_X,	/* g */
+      UTIL_FORMAT_SWIZZLE_X,	/* b */
+      UTIL_FORMAT_SWIZZLE_Y	/* a */
+   },
+   UTIL_FORMAT_COLORSPACE_RGB,
+   &util_format_latc2_unorm_unpack_rgba_8unorm,
+   &util_format_latc2_unorm_pack_rgba_8unorm,
+   &util_format_latc2_unorm_fetch_rgba_8unorm,
+   &util_format_latc2_unorm_unpack_rgba_float,
+   &util_format_latc2_unorm_pack_rgba_float,
+   &util_format_latc2_unorm_fetch_rgba_float,
+   NULL, /* unpack_z_32unorm */
+   NULL, /* pack_z_32unorm */
+   NULL, /* unpack_z_float */
+   NULL, /* pack_z_float */
+   NULL, /* unpack_s_8uscaled */
+   NULL /* pack_s_8uscaled */
+};
+
+const struct util_format_description
+util_format_latc2_snorm_description = {
+   PIPE_FORMAT_LATC2_SNORM,
+   "PIPE_FORMAT_LATC2_SNORM",
+   "latc2_snorm",
+   {4, 4, 128},	/* block */
+   UTIL_FORMAT_LAYOUT_RGTC,
+   1,	/* nr_channels */
+   FALSE,	/* is_array */
+   FALSE,	/* is_bitmask */
+   FALSE,	/* is_mixed */
+   {
+      {UTIL_FORMAT_TYPE_VOID, FALSE, 128},	/* x = x */
+      {0, 0, 0},
+      {0, 0, 0},
+      {0, 0, 0}
+   },
+   {
+      UTIL_FORMAT_SWIZZLE_X,	/* r */
+      UTIL_FORMAT_SWIZZLE_X,	/* g */
+      UTIL_FORMAT_SWIZZLE_X,	/* b */
+      UTIL_FORMAT_SWIZZLE_Y	/* a */
+   },
+   UTIL_FORMAT_COLORSPACE_RGB,
+   &util_format_latc2_snorm_unpack_rgba_8unorm,
+   &util_format_latc2_snorm_pack_rgba_8unorm,
+   &util_format_latc2_snorm_fetch_rgba_8unorm,
+   &util_format_latc2_snorm_unpack_rgba_float,
+   &util_format_latc2_snorm_pack_rgba_float,
+   &util_format_latc2_snorm_fetch_rgba_float,
    NULL, /* unpack_z_32unorm */
    NULL, /* pack_z_32unorm */
    NULL, /* unpack_z_float */
@@ -17318,6 +20314,8 @@ util_format_description(enum pipe_format format)
       return &util_format_r10g10b10a2_unorm_description;
    case PIPE_FORMAT_B10G10R10A2_UNORM:
       return &util_format_b10g10r10a2_unorm_description;
+   case PIPE_FORMAT_B2G3R3_UNORM:
+      return &util_format_b2g3r3_unorm_description;
    case PIPE_FORMAT_L8_UNORM:
       return &util_format_l8_unorm_description;
    case PIPE_FORMAT_A8_UNORM:
@@ -17330,6 +20328,44 @@ util_format_description(enum pipe_format format)
       return &util_format_l8a8_unorm_description;
    case PIPE_FORMAT_L16_UNORM:
       return &util_format_l16_unorm_description;
+   case PIPE_FORMAT_A16_UNORM:
+      return &util_format_a16_unorm_description;
+   case PIPE_FORMAT_I16_UNORM:
+      return &util_format_i16_unorm_description;
+   case PIPE_FORMAT_L16A16_UNORM:
+      return &util_format_l16a16_unorm_description;
+   case PIPE_FORMAT_A8_SNORM:
+      return &util_format_a8_snorm_description;
+   case PIPE_FORMAT_L8_SNORM:
+      return &util_format_l8_snorm_description;
+   case PIPE_FORMAT_L8A8_SNORM:
+      return &util_format_l8a8_snorm_description;
+   case PIPE_FORMAT_I8_SNORM:
+      return &util_format_i8_snorm_description;
+   case PIPE_FORMAT_A16_SNORM:
+      return &util_format_a16_snorm_description;
+   case PIPE_FORMAT_L16_SNORM:
+      return &util_format_l16_snorm_description;
+   case PIPE_FORMAT_L16A16_SNORM:
+      return &util_format_l16a16_snorm_description;
+   case PIPE_FORMAT_I16_SNORM:
+      return &util_format_i16_snorm_description;
+   case PIPE_FORMAT_A16_FLOAT:
+      return &util_format_a16_float_description;
+   case PIPE_FORMAT_L16_FLOAT:
+      return &util_format_l16_float_description;
+   case PIPE_FORMAT_L16A16_FLOAT:
+      return &util_format_l16a16_float_description;
+   case PIPE_FORMAT_I16_FLOAT:
+      return &util_format_i16_float_description;
+   case PIPE_FORMAT_A32_FLOAT:
+      return &util_format_a32_float_description;
+   case PIPE_FORMAT_L32_FLOAT:
+      return &util_format_l32_float_description;
+   case PIPE_FORMAT_L32A32_FLOAT:
+      return &util_format_l32a32_float_description;
+   case PIPE_FORMAT_I32_FLOAT:
+      return &util_format_i32_float_description;
    case PIPE_FORMAT_L8_SRGB:
       return &util_format_l8_srgb_description;
    case PIPE_FORMAT_L8A8_SRGB:
@@ -17422,6 +20458,14 @@ util_format_description(enum pipe_format format)
       return &util_format_rgtc2_unorm_description;
    case PIPE_FORMAT_RGTC2_SNORM:
       return &util_format_rgtc2_snorm_description;
+   case PIPE_FORMAT_LATC1_UNORM:
+      return &util_format_latc1_unorm_description;
+   case PIPE_FORMAT_LATC1_SNORM:
+      return &util_format_latc1_snorm_description;
+   case PIPE_FORMAT_LATC2_UNORM:
+      return &util_format_latc2_unorm_description;
+   case PIPE_FORMAT_LATC2_SNORM:
+      return &util_format_latc2_snorm_description;
    case PIPE_FORMAT_R64_FLOAT:
       return &util_format_r64_float_description;
    case PIPE_FORMAT_R64G64_FLOAT:

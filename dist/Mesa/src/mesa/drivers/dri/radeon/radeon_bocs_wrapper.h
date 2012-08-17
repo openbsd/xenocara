@@ -1,6 +1,10 @@
 #ifndef RADEON_CS_WRAPPER_H
 #define RADEON_CS_WRAPPER_H
 
+/* to be used to build locally in mesa with no libdrm bits */
+#include "../radeon/radeon_bo_drm.h"
+#include "../radeon/radeon_cs_drm.h"
+
 #ifdef HAVE_LIBDRM_RADEON
 
 #include "radeon_bo.h"
@@ -23,10 +27,6 @@
 #define RADEON_TILING_SURFACE 0x8 /* this object requires a surface
 				   * when mapped - i.e. front buffer */
 #endif
-
-/* to be used to build locally in mesa with no libdrm bits */
-#include "../radeon/radeon_bo_drm.h"
-#include "../radeon/radeon_cs_drm.h"
 
 #ifndef DRM_RADEON_GEM_INFO
 #define DRM_RADEON_GEM_INFO 0x1c
@@ -67,6 +67,9 @@ struct drm_radeon_info {
 #define DRM_RADEON_INFO 0x1
 #endif
 
+static inline void radeon_gem_get_kernel_name(struct radeon_bo *dummy, uint32_t *value)
+{
+}
 
 static inline uint32_t radeon_gem_name_bo(struct radeon_bo *dummy)
 {

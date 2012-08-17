@@ -45,8 +45,17 @@ struct i915_buffer {
    boolean free_on_destroy;
 };
 
-#define I915_MAX_TEXTURE_2D_LEVELS 11  /* max 1024x1024 */
-#define I915_MAX_TEXTURE_3D_LEVELS  8  /* max 128x128x128 */
+
+/* Texture transfer. */
+struct i915_transfer {
+   /* Base class. */
+   struct pipe_transfer b;
+   struct pipe_resource *staging_texture;
+};
+
+
+#define I915_MAX_TEXTURE_2D_LEVELS 12  /* max 2048x2048 */
+#define I915_MAX_TEXTURE_3D_LEVELS  9  /* max 256x256x256 */
 
 
 struct offset_pair {
@@ -101,7 +110,8 @@ static INLINE struct i915_buffer *i915_buffer(struct pipe_resource *resource)
 
 struct pipe_resource *
 i915_texture_create(struct pipe_screen *screen,
-                    const struct pipe_resource *template);
+                    const struct pipe_resource *template,
+                    boolean force_untiled);
 
 struct pipe_resource *
 i915_texture_from_handle(struct pipe_screen * screen,

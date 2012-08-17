@@ -21,6 +21,7 @@
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 #include "r600_pipe.h"
+#include "r600d.h"
 
 static struct pipe_query *r600_create_query(struct pipe_context *ctx, unsigned query_type)
 {
@@ -42,7 +43,7 @@ static void r600_begin_query(struct pipe_context *ctx, struct pipe_query *query)
 	struct r600_query *rquery = (struct r600_query *)query;
 
 	rquery->result = 0;
-	rquery->num_results = 0;
+	rquery->results_start = rquery->results_end;
 	r600_query_begin(&rctx->ctx, (struct r600_query *)query);
 }
 
@@ -60,10 +61,39 @@ static boolean r600_get_query_result(struct pipe_context *ctx,
 	struct r600_pipe_context *rctx = (struct r600_pipe_context *)ctx;
 	struct r600_query *rquery = (struct r600_query *)query;
 
-	if (rquery->num_results) {
-		ctx->flush(ctx, 0, NULL);
+	return r600_context_query_result(&rctx->ctx, rquery, wait, vresult);
+}
+
+static void r600_render_condition(struct pipe_context *ctx,
+				  struct pipe_query *query,
+				  uint mode)
+{
+	struct r600_pipe_context *rctx = (struct r600_pipe_context *)ctx;
+	struct r600_query *rquery = (struct r600_query *)query;
+	int wait_flag = 0;
+
+	/* If we already have nonzero result, render unconditionally */
+	if (query != NULL && rquery->result != 0)
+		return;
+
+	rctx->current_render_cond = query;
+	rctx->current_render_cond_mode = mode;
+
+	if (query == NULL) {
+		if (rctx->ctx.predicate_drawing) {
+			rctx->ctx.predicate_drawing = false;
+			r600_query_predication(&rctx->ctx, NULL, PREDICATION_OP_CLEAR, 1);
+		}
+		return;
 	}
-	return r600_context_query_result(&rctx->ctx, (struct r600_query *)query, wait, vresult);
+
+	if (mode == PIPE_RENDER_COND_WAIT ||
+	    mode == PIPE_RENDER_COND_BY_REGION_WAIT) {
+		wait_flag = 1;
+	}
+
+	rctx->ctx.predicate_drawing = true;
+	r600_query_predication(&rctx->ctx, rquery, PREDICATION_OP_ZPASS, wait_flag);
 }
 
 void r600_init_query_functions(struct r600_pipe_context *rctx)
@@ -73,4 +103,7 @@ void r600_init_query_functions(struct r600_pipe_context *rctx)
 	rctx->context.begin_query = r600_begin_query;
 	rctx->context.end_query = r600_end_query;
 	rctx->context.get_query_result = r600_get_query_result;
+
+	if (r600_get_num_backends(rctx->screen->radeon) > 0)
+	    rctx->context.render_condition = r600_render_condition;
 }

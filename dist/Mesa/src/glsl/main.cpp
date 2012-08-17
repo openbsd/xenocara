@@ -20,14 +20,7 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
  * DEALINGS IN THE SOFTWARE.
  */
-#include <stdlib.h>
-#include <stdio.h>
 #include <getopt.h>
-
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <unistd.h>
 
 #include "ast.h"
 #include "glsl_parser_extras.h"
@@ -79,9 +72,11 @@ initialize_context(struct gl_context *ctx, gl_api api)
 
    ctx->Extensions.ARB_ES2_compatibility = GL_TRUE;
    ctx->Extensions.ARB_draw_buffers = GL_TRUE;
+   ctx->Extensions.ARB_draw_instanced = GL_TRUE;
    ctx->Extensions.ARB_fragment_coord_conventions = GL_TRUE;
    ctx->Extensions.EXT_texture_array = GL_TRUE;
    ctx->Extensions.NV_texture_rectangle = GL_TRUE;
+   ctx->Extensions.EXT_texture3D = GL_TRUE;
 
    /* GLSL 1.30 isn't fully supported, but we need to advertise 1.30 so that
     * the built-in functions for 1.30 can be built.
@@ -116,38 +111,40 @@ static char *
 load_text_file(void *ctx, const char *file_name)
 {
 	char *text = NULL;
-	struct stat st;
-	ssize_t total_read = 0;
-	int fd = open(file_name, O_RDONLY);
+	size_t size;
+	size_t total_read = 0;
+	FILE *fp = fopen(file_name, "rb");
 
-	if (fd < 0) {
+	if (!fp) {
 		return NULL;
 	}
 
-	if (fstat(fd, & st) == 0) {
-	   text = (char *) ralloc_size(ctx, st.st_size + 1);
-		if (text != NULL) {
-			do {
-				ssize_t bytes = read(fd, text + total_read,
-						     st.st_size - total_read);
-				if (bytes < 0) {
-					free(text);
-					text = NULL;
-					break;
-				}
+	fseek(fp, 0L, SEEK_END);
+	size = ftell(fp);
+	fseek(fp, 0L, SEEK_SET);
 
-				if (bytes == 0) {
-					break;
-				}
+	text = (char *) ralloc_size(ctx, size + 1);
+	if (text != NULL) {
+		do {
+			size_t bytes = fread(text + total_read,
+					     1, size - total_read, fp);
+			if (bytes < size - total_read) {
+				free(text);
+				text = NULL;
+				break;
+			}
 
-				total_read += bytes;
-			} while (total_read < st.st_size);
+			if (bytes == 0) {
+				break;
+			}
 
-			text[total_read] = '\0';
-		}
+			total_read += bytes;
+		} while (total_read < size);
+
+		text[total_read] = '\0';
 	}
 
-	close(fd);
+	fclose(fp);
 
 	return text;
 }
@@ -194,7 +191,7 @@ compile_shader(struct gl_context *ctx, struct gl_shader *shader)
 
    const char *source = shader->Source;
    state->error = preprocess(state, &source, &state->info_log,
-			     state->extensions, ctx->API);
+			     state->extensions, ctx->API) != 0;
 
    if (!state->error) {
       _mesa_glsl_lexer_ctor(state, source);
@@ -278,6 +275,7 @@ main(int argc, char **argv)
 
    whole_program = rzalloc (NULL, struct gl_shader_program);
    assert(whole_program != NULL);
+   whole_program->InfoLog = ralloc_strdup(whole_program, "");
 
    for (/* empty */; argc > optind; optind++) {
       whole_program->Shaders =

@@ -129,7 +129,8 @@ static void init_prog(struct program *p)
 			}
 		};
 
-		p->vbuf = pipe_buffer_create(p->screen, PIPE_BIND_VERTEX_BUFFER, sizeof(vertices));
+		p->vbuf = pipe_buffer_create(p->screen, PIPE_BIND_VERTEX_BUFFER,
+					     PIPE_USAGE_STATIC, sizeof(vertices));
 		pipe_buffer_write(p->pipe, p->vbuf, 0, sizeof(vertices), vertices);
 	}
 
@@ -211,7 +212,7 @@ static void init_prog(struct program *p)
 	p->sampler.mag_img_filter = PIPE_TEX_MIPFILTER_LINEAR;
 	p->sampler.normalized_coords = 1;
 
-	surf_tmpl.format = templat.format;
+	surf_tmpl.format = PIPE_FORMAT_B8G8R8A8_UNORM; /* All drivers support this */
 	surf_tmpl.usage = PIPE_BIND_RENDER_TARGET;
 	surf_tmpl.u.tex.level = 0;
 	surf_tmpl.u.tex.first_layer = 0;
@@ -328,13 +329,13 @@ static void draw(struct program *p)
 	/* vertex element data */
 	cso_set_vertex_elements(p->cso, 2, p->velem);
 
-	util_draw_vertex_buffer(p->pipe,
+	util_draw_vertex_buffer(p->pipe, p->cso,
 	                        p->vbuf, 0,
 	                        PIPE_PRIM_QUADS,
 	                        4,  /* verts */
 	                        2); /* attribs/vert */
 
-	p->pipe->flush(p->pipe, PIPE_FLUSH_RENDER_CACHE, NULL);
+        p->pipe->flush(p->pipe, NULL);
 
 	debug_dump_surface_bmp(p->pipe, "result.bmp", p->framebuffer.cbufs[0]);
 }

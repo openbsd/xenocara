@@ -129,6 +129,12 @@ struct _mesa_glsl_parse_state {
     */
    class ir_function_signature *current_function;
 
+   /**
+    * During AST to IR conversion, pointer to the toplevel IR
+    * instruction list being generated.
+    */
+   exec_list *toplevel_ir;
+
    /** Have we found a return statement in this function? */
    bool found_return;
 
@@ -158,6 +164,8 @@ struct _mesa_glsl_parse_state {
    /*@{*/
    bool ARB_draw_buffers_enable;
    bool ARB_draw_buffers_warn;
+   bool ARB_draw_instanced_enable;
+   bool ARB_draw_instanced_warn;
    bool ARB_explicit_attrib_location_enable;
    bool ARB_explicit_attrib_location_warn;
    bool ARB_fragment_coord_conventions_enable;
@@ -166,8 +174,16 @@ struct _mesa_glsl_parse_state {
    bool ARB_texture_rectangle_warn;
    bool EXT_texture_array_enable;
    bool EXT_texture_array_warn;
+   bool ARB_shader_texture_lod_enable;
+   bool ARB_shader_texture_lod_warn;
    bool ARB_shader_stencil_export_enable;
    bool ARB_shader_stencil_export_warn;
+   bool AMD_conservative_depth_enable;
+   bool AMD_conservative_depth_warn;
+   bool AMD_shader_stencil_export_enable;
+   bool AMD_shader_stencil_export_warn;
+   bool OES_texture_3D_enable;
+   bool OES_texture_3D_warn;
    /*@}*/
 
    /** Extensions supported by the OpenGL implementation. */
@@ -262,8 +278,8 @@ extern "C" {
 extern int preprocess(void *ctx, const char **shader, char **info_log,
                       const struct gl_extensions *extensions, int api);
 
-extern void _mesa_destroy_shader_compiler();
-extern void _mesa_destroy_shader_compiler_caches();
+extern void _mesa_destroy_shader_compiler(void);
+extern void _mesa_destroy_shader_compiler_caches(void);
 
 #ifdef __cplusplus
 }

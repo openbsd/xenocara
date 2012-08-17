@@ -34,10 +34,12 @@
 #if defined(GLX_USE_APPLEGL)
 
 #include <stdbool.h>
+#include <dlfcn.h>
 
 #include "glxclient.h"
 #include "apple_glx_context.h"
 #include "apple_glx.h"
+#include "apple_cgl.h"
 #include "glx_error.h"
 
 static void
@@ -59,12 +61,32 @@ applegl_bind_context(struct glx_context *gc, struct glx_context *old,
    if (error)
       return 1; /* GLXBadContext is the same as Success (0) */
 
+   apple_glapi_set_dispatch();
+
    return Success;
 }
 
 static void
 applegl_unbind_context(struct glx_context *gc, struct glx_context *new)
 {
+   Display *dpy;
+   bool error;
+
+   /* If we don't have a context, then we have nothing to unbind */
+   if (!gc)
+      return;
+
+   /* If we have a new context, keep this one around and remove it during bind. */
+   if (new)
+      return;
+
+   dpy = gc->psc->dpy;
+
+   error = apple_glx_make_current_context(dpy,
+					  (gc != &dummyContext) ? gc->driContext : NULL,
+					  NULL, None);
+
+   apple_glx_diagnostic("%s: error %s\n", __func__, error ? "YES" : "NO");
 }
 
 static void
@@ -80,6 +102,12 @@ applegl_wait_x(struct glx_context *gc)
    apple_glx_waitx(dpy, gc->driContext);
 }
 
+static void *
+applegl_get_proc_address(const char *symbol)
+{
+   return dlsym(apple_cgl_get_dl_handle(), symbol);
+}
+
 static const struct glx_context_vtable applegl_context_vtable = {
    applegl_destroy_context,
    applegl_bind_context,
@@ -89,6 +117,7 @@ static const struct glx_context_vtable applegl_context_vtable = {
    DRI_glXUseXFont,
    NULL, /* bind_tex_image, */
    NULL, /* release_tex_image, */
+   applegl_get_proc_address,
 };
 
 struct glx_context *

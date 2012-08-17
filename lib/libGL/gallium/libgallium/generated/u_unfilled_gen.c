@@ -154,13 +154,9 @@ static void generate_polygon_ushort(
   ushort *out = (ushort*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr; j+=6, i++) { 
-      (out+j)[0] = (ushort)(0);
-      (out+j)[1] = (ushort)(i+1);
-      (out+j+2)[0] = (ushort)(i+1);
-      (out+j+2)[1] = (ushort)(i+2);
-      (out+j+4)[0] = (ushort)(i+2);
-      (out+j+4)[1] = (ushort)(0);
+  for (j = i = 0; j < nr; j+=2, i++) { 
+      (out+j)[0] = (ushort)(i);
+      (out+j)[1] = (ushort)((i+1)%(nr/2));
    }
 }
 static void generate_tris_uint(
@@ -254,13 +250,9 @@ static void generate_polygon_uint(
   uint *out = (uint*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr; j+=6, i++) { 
-      (out+j)[0] = (uint)(0);
-      (out+j)[1] = (uint)(i+1);
-      (out+j+2)[0] = (uint)(i+1);
-      (out+j+2)[1] = (uint)(i+2);
-      (out+j+4)[0] = (uint)(i+2);
-      (out+j+4)[1] = (uint)(0);
+  for (j = i = 0; j < nr; j+=2, i++) { 
+      (out+j)[0] = (uint)(i);
+      (out+j)[1] = (uint)((i+1)%(nr/2));
    }
 }
 static void translate_tris_ubyte2ushort(
@@ -366,13 +358,9 @@ static void translate_polygon_ubyte2ushort(
   ushort *out = (ushort*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr; j+=6, i++) { 
-      (out+j)[0] = (ushort)in[0];
-      (out+j)[1] = (ushort)in[i+1];
-      (out+j+2)[0] = (ushort)in[i+1];
-      (out+j+2)[1] = (ushort)in[i+2];
-      (out+j+4)[0] = (ushort)in[i+2];
-      (out+j+4)[1] = (ushort)in[0];
+  for (j = i = 0; j < nr; j+=2, i++) { 
+      (out+j)[0] = (ushort)in[i];
+      (out+j)[1] = (ushort)in[(i+1)%(nr/2)];
    }
 }
 static void translate_tris_ubyte2uint(
@@ -478,13 +466,9 @@ static void translate_polygon_ubyte2uint(
   uint *out = (uint*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr; j+=6, i++) { 
-      (out+j)[0] = (uint)in[0];
-      (out+j)[1] = (uint)in[i+1];
-      (out+j+2)[0] = (uint)in[i+1];
-      (out+j+2)[1] = (uint)in[i+2];
-      (out+j+4)[0] = (uint)in[i+2];
-      (out+j+4)[1] = (uint)in[0];
+  for (j = i = 0; j < nr; j+=2, i++) { 
+      (out+j)[0] = (uint)in[i];
+      (out+j)[1] = (uint)in[(i+1)%(nr/2)];
    }
 }
 static void translate_tris_ushort2ushort(
@@ -590,13 +574,9 @@ static void translate_polygon_ushort2ushort(
   ushort *out = (ushort*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr; j+=6, i++) { 
-      (out+j)[0] = (ushort)in[0];
-      (out+j)[1] = (ushort)in[i+1];
-      (out+j+2)[0] = (ushort)in[i+1];
-      (out+j+2)[1] = (ushort)in[i+2];
-      (out+j+4)[0] = (ushort)in[i+2];
-      (out+j+4)[1] = (ushort)in[0];
+  for (j = i = 0; j < nr; j+=2, i++) { 
+      (out+j)[0] = (ushort)in[i];
+      (out+j)[1] = (ushort)in[(i+1)%(nr/2)];
    }
 }
 static void translate_tris_ushort2uint(
@@ -702,13 +682,9 @@ static void translate_polygon_ushort2uint(
   uint *out = (uint*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr; j+=6, i++) { 
-      (out+j)[0] = (uint)in[0];
-      (out+j)[1] = (uint)in[i+1];
-      (out+j+2)[0] = (uint)in[i+1];
-      (out+j+2)[1] = (uint)in[i+2];
-      (out+j+4)[0] = (uint)in[i+2];
-      (out+j+4)[1] = (uint)in[0];
+  for (j = i = 0; j < nr; j+=2, i++) { 
+      (out+j)[0] = (uint)in[i];
+      (out+j)[1] = (uint)in[(i+1)%(nr/2)];
    }
 }
 static void translate_tris_uint2ushort(
@@ -814,13 +790,9 @@ static void translate_polygon_uint2ushort(
   ushort *out = (ushort*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr; j+=6, i++) { 
-      (out+j)[0] = (ushort)in[0];
-      (out+j)[1] = (ushort)in[i+1];
-      (out+j+2)[0] = (ushort)in[i+1];
-      (out+j+2)[1] = (ushort)in[i+2];
-      (out+j+4)[0] = (ushort)in[i+2];
-      (out+j+4)[1] = (ushort)in[0];
+  for (j = i = 0; j < nr; j+=2, i++) { 
+      (out+j)[0] = (ushort)in[i];
+      (out+j)[1] = (ushort)in[(i+1)%(nr/2)];
    }
 }
 static void translate_tris_uint2uint(
@@ -926,13 +898,9 @@ static void translate_polygon_uint2uint(
   uint *out = (uint*)_out;
   unsigned i, j;
   (void)j;
-  for (j = i = 0; j < nr; j+=6, i++) { 
-      (out+j)[0] = (uint)in[0];
-      (out+j)[1] = (uint)in[i+1];
-      (out+j+2)[0] = (uint)in[i+1];
-      (out+j+2)[1] = (uint)in[i+2];
-      (out+j+4)[0] = (uint)in[i+2];
-      (out+j+4)[1] = (uint)in[0];
+  for (j = i = 0; j < nr; j+=2, i++) { 
+      (out+j)[0] = (uint)in[i];
+      (out+j)[1] = (uint)in[(i+1)%(nr/2)];
    }
 }
 void u_unfilled_init( void )

@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.13 2011/12/03 15:36:21 miod Exp $
+# $OpenBSD: Makefile,v 1.14 2012/08/17 13:58:00 mpi Exp $
 
 MESA=	${.CURDIR}/../../../dist/Mesa/src/mesa
 MAPI=	${.CURDIR}/../../../dist/Mesa/src/mapi
@@ -102,6 +102,7 @@ MAIN_SOURCES = \
 	multisample.c \
 	nvprogram.c \
 	pack.c \
+	pbo.c \
 	pixel.c \
 	pixelstore.c \
 	pixeltransfer.c \
@@ -113,6 +114,7 @@ MAIN_SOURCES = \
 	readpix.c \
 	remap.c \
 	renderbuffer.c \
+	samplerobj.c \
 	scissor.c \
 	shaderapi.c \
 	shaderobj.c \
@@ -121,10 +123,10 @@ MAIN_SOURCES = \
 	stencil.c \
 	syncobj.c \
 	texcompress.c \
+	texcompress_rgtc.c \
 	texcompress_s3tc.c \
 	texcompress_fxt1.c \
 	texenv.c \
-	texenvprogram.c \
 	texfetch.c \
 	texformat.c \
 	texgen.c \
@@ -133,9 +135,9 @@ MAIN_SOURCES = \
 	texobj.c \
 	texpal.c \
 	texparam.c \
-	texrender.c \
 	texstate.c \
 	texstore.c \
+	texturebarrier.c \
 	transformfeedback.c \
 	uniforms.c \
 	varray.c \
@@ -143,6 +145,9 @@ MAIN_SOURCES = \
 	viewport.c \
 	vtxfmt.c \
 	$(MAIN_ES_SOURCES)
+
+MAIN_CXX_SOURCES = \
+	ff_fragment_shader.cpp
 
 # math
 MATH_SOURCES= \
@@ -184,6 +189,7 @@ SWRAST_SOURCES= \
 	s_stencil.c \
 	s_texcombine.c \
 	s_texfilter.c \
+	s_texrender.c \
 	s_triangle.c \
 	s_zoom.c
 
@@ -319,6 +325,7 @@ MESA_SOURCES = \
 	$(ASM_C_SOURCES)
 
 MESA_CXX_SOURCES = \
+	$(MAIN_CXX_SOURCES) \
 	$(SHADER_CXX_SOURCES)
 
 SRCS=	${MESA_SOURCES}	\

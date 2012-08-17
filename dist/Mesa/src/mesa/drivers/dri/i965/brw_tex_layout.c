@@ -49,10 +49,13 @@ GLboolean brw_miptree_layout(struct intel_context *intel,
    switch (mt->target) {
    case GL_TEXTURE_CUBE_MAP:
       if (intel->gen >= 5) {
-          GLuint align_h = 2;
+          GLuint align_w;
+          GLuint align_h;
           GLuint level;
           GLuint qpitch = 0;
 	  int h0, h1, q;
+
+	  intel_get_texture_alignment_unit(mt->format, &align_w, &align_h);
 
 	  /* On Ironlake, cube maps are finally represented as just a series
 	   * of MIPLAYOUT_BELOW 2D textures (like 2D texture arrays), separated
@@ -60,8 +63,8 @@ GLboolean brw_miptree_layout(struct intel_context *intel,
 	   * given in Volume 1 of the BSpec.
 	   */
 	  h0 = ALIGN(mt->height0, align_h);
-	  h1 = ALIGN(minify(h0), align_h);
-	  qpitch = (h0 + h1 + 11 * align_h);
+	  h1 = ALIGN(minify(mt->height0), align_h);
+	  qpitch = (h0 + h1 + (intel->gen >= 7 ? 12 : 11) * align_h);
           if (mt->compressed)
 	     qpitch /= 4;
 
@@ -88,7 +91,7 @@ GLboolean brw_miptree_layout(struct intel_context *intel,
       GLuint align_w = 4;
 
       mt->total_height = 0;
-      intel_get_texture_alignment_unit(mt->internal_format, &align_w, &align_h);
+      intel_get_texture_alignment_unit(mt->format, &align_w, &align_h);
 
       if (mt->compressed) {
           mt->total_width = ALIGN(width, align_w);
@@ -152,9 +155,6 @@ GLboolean brw_miptree_layout(struct intel_context *intel,
        * in the texture surfaces run, so they may be "vertical" through
        * memory.  As a result, the docs say in Surface Padding Requirements:
        * Sampling Engine Surfaces that two extra rows of padding are required.
-       * We don't know of similar requirements for pre-965, but given that
-       * those docs are silent on padding requirements in general, let's play
-       * it safe.
        */
       if (mt->target == GL_TEXTURE_CUBE_MAP)
 	 mt->total_height += 2;

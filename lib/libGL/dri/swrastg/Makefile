@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.1.1.1 2012/07/13 12:54:20 mpi Exp $
+#	$OpenBSD: Makefile,v 1.2 2012/08/17 13:58:00 mpi Exp $
 
 LIB=	swrast_dri.so
 
@@ -45,7 +45,7 @@ LDADD=	../../gallium/libmesagallium/libmesagallium_pic.a \
 # XXX This is wrong but the gallium drivers depend on libpthread
 # and some bindings still fail even with the LD_PRELOAD hack when
 # starting X.
-#LDADD+= -lpthread
+LDADD+= -lpthread
 DPADD=	../../gallium/libmesagallium/libmesagallium_pic.a
 
 .include "../../gallium/Makefile.inc"

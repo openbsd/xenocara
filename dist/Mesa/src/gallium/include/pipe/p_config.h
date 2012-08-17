@@ -46,7 +46,7 @@
 #ifndef P_CONFIG_H_
 #define P_CONFIG_H_
 
-
+#include <limits.h>
 /*
  * Compiler
  */
@@ -99,9 +99,9 @@
 #endif
 #endif
 
-#if defined(__PPC__)
+#if defined(__ppc__) || defined(__ppc64__) || defined(__PPC__)
 #define PIPE_ARCH_PPC
-#if defined(__PPC64__)
+#if defined(__ppc64__) || defined(__PPC64__)
 #define PIPE_ARCH_PPC_64
 #endif
 #endif
@@ -111,16 +111,37 @@
  * Endian detection.
  */
 
+#ifdef __GLIBC__
+#include <endian.h>
+
+#if __BYTE_ORDER == __LITTLE_ENDIAN
+# define PIPE_ARCH_LITTLE_ENDIAN
+#elif __BYTE_ORDER == __BIG_ENDIAN
+# define PIPE_ARCH_BIG_ENDIAN
+#endif
+
+#elif defined(__APPLE__)
+#include <machine/endian.h>
+
+#if __DARWIN_BYTE_ORDER == __DARWIN_LITTLE_ENDIAN
+# define PIPE_ARCH_LITTLE_ENDIAN
+#elif __DARWIN_BYTE_ORDER == __DARWIN_BIG_ENDIAN
+# define PIPE_ARCH_BIG_ENDIAN
+#endif
+
+#else
+
 #if defined(PIPE_ARCH_X86) || defined(PIPE_ARCH_X86_64)
 #define PIPE_ARCH_LITTLE_ENDIAN
 #elif defined(PIPE_ARCH_PPC) || defined(PIPE_ARCH_PPC_64)
 #define PIPE_ARCH_BIG_ENDIAN
-#else
-#define PIPE_ARCH_UNKNOWN_ENDIAN
 #endif
 
+#endif
 
-#if !defined(PIPE_OS_EMBEDDED)
+#if !defined(PIPE_ARCH_LITTLE_ENDIAN) && !defined(PIPE_ARCH_BIG_ENDIAN)
+#error Unknown Endianness
+#endif
 
 /*
  * Auto-detect the operating system family.
@@ -207,8 +228,6 @@
 #endif /* !_WIN32_WCE */
 #endif
 #endif /* PIPE_OS_WINDOWS */
-
-#endif /* !PIPE_OS_EMBEDDED */
 
 
 #endif /* P_CONFIG_H_ */

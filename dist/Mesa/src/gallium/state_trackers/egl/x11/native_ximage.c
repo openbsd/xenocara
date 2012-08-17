@@ -38,17 +38,12 @@
 #include "native_x11.h"
 #include "x11_screen.h"
 
-enum ximage_surface_type {
-   XIMAGE_SURFACE_TYPE_WINDOW,
-   XIMAGE_SURFACE_TYPE_PIXMAP,
-};
-
 struct ximage_display {
    struct native_display base;
    Display *dpy;
    boolean own_dpy;
 
-   struct native_event_handler *event_handler;
+   const struct native_event_handler *event_handler;
 
    struct x11_screen *xscr;
    int xscr_number;
@@ -60,7 +55,6 @@ struct ximage_display {
 struct ximage_surface {
    struct native_surface base;
    Drawable drawable;
-   enum ximage_surface_type type;
    enum pipe_format color_format;
    XVisualInfo visual;
    struct ximage_display *xdpy;
@@ -245,7 +239,6 @@ ximage_surface_destroy(struct native_surface *nsurf)
 
 static struct ximage_surface *
 ximage_display_create_surface(struct native_display *ndpy,
-                              enum ximage_surface_type type,
                               Drawable drawable,
                               const struct native_config *nconf)
 {
@@ -258,7 +251,6 @@ ximage_display_create_surface(struct native_display *ndpy,
       return NULL;
 
    xsurf->xdpy = xdpy;
-   xsurf->type = type;
    xsurf->color_format = xconf->base.color_format;
    xsurf->drawable = drawable;
 
@@ -297,9 +289,35 @@ ximage_display_create_window_surface(struct native_display *ndpy,
 {
    struct ximage_surface *xsurf;
 
-   xsurf = ximage_display_create_surface(ndpy, XIMAGE_SURFACE_TYPE_WINDOW,
-         (Drawable) win, nconf);
+   xsurf = ximage_display_create_surface(ndpy, (Drawable) win, nconf);
    return (xsurf) ? &xsurf->base : NULL;
+}
+
+static enum pipe_format
+get_pixmap_format(struct native_display *ndpy, EGLNativePixmapType pix)
+{
+   struct ximage_display *xdpy = ximage_display(ndpy);
+   enum pipe_format fmt;
+   uint depth;
+
+   depth = x11_drawable_get_depth(xdpy->xscr, (Drawable) pix);
+
+   switch (depth) {
+   case 32:
+      fmt = PIPE_FORMAT_B8G8R8A8_UNORM;
+      break;
+   case 24:
+      fmt = PIPE_FORMAT_B8G8R8X8_UNORM;
+      break;
+   case 16:
+      fmt = PIPE_FORMAT_B5G6R5_UNORM;
+      break;
+   default:
+      fmt = PIPE_FORMAT_NONE;
+      break;
+   }
+
+   return fmt;
 }
 
 static struct native_surface *
@@ -309,8 +327,26 @@ ximage_display_create_pixmap_surface(struct native_display *ndpy,
 {
    struct ximage_surface *xsurf;
 
-   xsurf = ximage_display_create_surface(ndpy, XIMAGE_SURFACE_TYPE_PIXMAP,
-         (Drawable) pix, nconf);
+   /* find the config */
+   if (!nconf) {
+      struct ximage_display *xdpy = ximage_display(ndpy);
+      enum pipe_format fmt = get_pixmap_format(&xdpy->base, pix);
+      int i;
+
+      if (fmt != PIPE_FORMAT_NONE) {
+         for (i = 0; i < xdpy->num_configs; i++) {
+            if (xdpy->configs[i].base.color_format == fmt) {
+               nconf = &xdpy->configs[i].base;
+               break;
+            }
+         }
+      }
+
+      if (!nconf)
+         return NULL;
+   }
+
+   xsurf = ximage_display_create_surface(ndpy, (Drawable) pix, nconf);
    return (xsurf) ? &xsurf->base : NULL;
 }
 
@@ -384,8 +420,6 @@ ximage_display_get_configs(struct native_display *ndpy, int *num_configs)
          xconf->base.native_visual_type = xconf->visual->class;
 #endif
 
-         xconf->base.slow_config = TRUE;
-
          count++;
       }
 
@@ -408,24 +442,7 @@ ximage_display_is_pixmap_supported(struct native_display *ndpy,
                                    const struct native_config *nconf)
 {
    struct ximage_display *xdpy = ximage_display(ndpy);
-   enum pipe_format fmt;
-   uint depth;
-
-   depth = x11_drawable_get_depth(xdpy->xscr, (Drawable) pix);
-   switch (depth) {
-   case 32:
-      fmt = PIPE_FORMAT_B8G8R8A8_UNORM;
-      break;
-   case 24:
-      fmt = PIPE_FORMAT_B8G8R8X8_UNORM;
-      break;
-   case 16:
-      fmt = PIPE_FORMAT_B5G6R5_UNORM;
-      break;
-   default:
-      fmt = PIPE_FORMAT_NONE;
-      break;
-   }
+   enum pipe_format fmt = get_pixmap_format(&xdpy->base, pix);
 
    return (fmt == nconf->color_format);
 }
@@ -459,7 +476,7 @@ ximage_display_destroy(struct native_display *ndpy)
    if (xdpy->configs)
       FREE(xdpy->configs);
 
-   xdpy->base.screen->destroy(xdpy->base.screen);
+   ndpy_uninit(ndpy);
 
    x11_screen_destroy(xdpy->xscr);
    if (xdpy->own_dpy)
@@ -467,13 +484,32 @@ ximage_display_destroy(struct native_display *ndpy)
    FREE(xdpy);
 }
 
+static boolean
+ximage_display_init_screen(struct native_display *ndpy)
+{
+   struct ximage_display *xdpy = ximage_display(ndpy);
+   struct sw_winsys *winsys;
+
+   winsys = xlib_create_sw_winsys(xdpy->dpy);
+   if (!winsys)
+      return FALSE;
+
+   xdpy->base.screen =
+      xdpy->event_handler->new_sw_screen(&xdpy->base, winsys);
+   if (!xdpy->base.screen) {
+      if (winsys->destroy)
+         winsys->destroy(winsys);
+      return FALSE;
+   }
+
+   return TRUE;
+}
+
 struct native_display *
 x11_create_ximage_display(Display *dpy,
-                          struct native_event_handler *event_handler,
-                          void *user_data)
+                          const struct native_event_handler *event_handler)
 {
    struct ximage_display *xdpy;
-   struct sw_winsys *winsys = NULL;
 
    xdpy = CALLOC_STRUCT(ximage_display);
    if (!xdpy)
@@ -490,22 +526,17 @@ x11_create_ximage_display(Display *dpy,
    }
 
    xdpy->event_handler = event_handler;
-   xdpy->base.user_data = user_data;
 
    xdpy->xscr_number = DefaultScreen(xdpy->dpy);
    xdpy->xscr = x11_screen_create(xdpy->dpy, xdpy->xscr_number);
-   if (!xdpy->xscr)
-      goto fail;
+   if (!xdpy->xscr) {
+      if (xdpy->own_dpy)
+         XCloseDisplay(xdpy->dpy);
+      FREE(xdpy);
+      return NULL;
+   }
 
-   winsys = xlib_create_sw_winsys(xdpy->dpy);
-   if (!winsys)
-      goto fail;
-
-   xdpy->base.screen =
-      xdpy->event_handler->new_sw_screen(&xdpy->base, winsys);
-   if (!xdpy->base.screen)
-      goto fail;
-
+   xdpy->base.init_screen = ximage_display_init_screen;
    xdpy->base.destroy = ximage_display_destroy;
    xdpy->base.get_param = ximage_display_get_param;
 
@@ -515,14 +546,4 @@ x11_create_ximage_display(Display *dpy,
    xdpy->base.create_pixmap_surface = ximage_display_create_pixmap_surface;
 
    return &xdpy->base;
-
-fail:
-   if (winsys && winsys->destroy)
-      winsys->destroy(winsys);
-   if (xdpy->xscr)
-      x11_screen_destroy(xdpy->xscr);
-   if (xdpy->dpy && xdpy->own_dpy)
-      XCloseDisplay(xdpy->dpy);
-   FREE(xdpy);
-   return NULL;
 }

@@ -270,7 +270,7 @@ static XtResource backgroundResources[] = {
 static XtResource otherColorResources[] = {
   {XmNforeground,XmCForeground,XmRPixel, 
    sizeof(Pixel),XtOffset(GLwDrawingAreaWidget,primitive.foreground),
-   XmRString,(XtPointer)"lighgrey"},
+   XmRString,(XtPointer)"lightgrey"},
    /*XmRCallProc, (XtPointer) _XmForegroundColorDefault},*/
 
   {XmNhighlightColor,XmCHighlightColor,XmRPixel,sizeof(Pixel),

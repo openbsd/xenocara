@@ -30,6 +30,7 @@
 #include "context.h"
 #include "light.h"
 #include "macros.h"
+#include "mfeatures.h"
 #include "dlist.h"
 #include "eval.h"
 #include "main/dispatch.h"
@@ -891,6 +892,8 @@ _mesa_noop_EvalMesh1( GLenum mode, GLint i1, GLint i2 )
    GLfloat u, du;
    GLenum prim;
 
+   ASSERT_OUTSIDE_BEGIN_END(ctx);
+
    switch (mode) {
    case GL_POINT:
       prim = GL_POINTS;
@@ -928,6 +931,8 @@ _mesa_noop_EvalMesh2( GLenum mode, GLint i1, GLint i2, GLint j1, GLint j2 )
    GET_CURRENT_CONTEXT(ctx);
    GLfloat u, du, v, dv, v1, u1;
    GLint i, j;
+
+   ASSERT_OUTSIDE_BEGIN_END(ctx);
 
    switch (mode) {
    case GL_POINT:

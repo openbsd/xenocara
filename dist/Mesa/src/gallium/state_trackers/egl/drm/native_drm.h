@@ -37,6 +37,10 @@
 #include "common/native.h"
 #include "common/native_helper.h"
 
+#ifdef HAVE_WAYLAND_BACKEND
+#include "common/native_wayland_drm_bufmgr_helper.h"
+#endif
+
 struct drm_config;
 struct drm_crtc;
 struct drm_connector;
@@ -46,9 +50,10 @@ struct drm_surface;
 struct drm_display {
    struct native_display base;
 
-   struct native_event_handler *event_handler;
+   const struct native_event_handler *event_handler;
 
    int fd;
+   char *device_name;
    struct drm_config *config;
 
    /* for modesetting */
@@ -59,6 +64,10 @@ struct drm_display {
    struct drm_surface **shown_surfaces;
    /* save the original settings of the CRTCs */
    struct drm_crtc *saved_crtcs;
+
+#ifdef HAVE_WAYLAND_BACKEND
+   struct wl_drm *wl_server_drm; /* for EGL_WL_bind_wayland_display */
+#endif
 };
 
 struct drm_config {
@@ -91,6 +100,8 @@ struct drm_surface {
 
    boolean is_shown;
    struct drm_crtc current_crtc;
+
+   boolean have_pageflip;
 };
 
 struct drm_connector {
@@ -142,5 +153,9 @@ drm_display_init_modeset(struct native_display *ndpy);
 
 void
 drm_display_fini_modeset(struct native_display *ndpy);
+
+struct native_surface *
+drm_display_create_surface_from_resource(struct native_display *ndpy,
+                                         struct pipe_resource *resource);
 
 #endif /* _NATIVE_DRM_H_ */

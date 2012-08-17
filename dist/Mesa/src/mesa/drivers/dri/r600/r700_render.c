@@ -276,6 +276,16 @@ static void r700RunRenderPrimitive(struct gl_context * ctx, int start, int end,
             SETfield(vgt_index_type, DI_INDEX_SIZE_16_BIT, INDEX_TYPE_shift, INDEX_TYPE_mask);
     }
 
+	/* 16-bit indexes are packed in a 32-bit value */
+	SETfield(vgt_index_type,
+#if MESA_BIG_ENDIAN
+			VGT_DMA_SWAP_32_BIT,
+#else
+			VGT_DMA_SWAP_NONE,
+#endif
+			SWAP_MODE_shift, SWAP_MODE_mask);
+
+
     vgt_num_indices = num_indices;
     SETfield(vgt_draw_initiator, DI_SRC_SEL_DMA, SOURCE_SELECT_shift, SOURCE_SELECT_mask);
     SETfield(vgt_draw_initiator, DI_MAJOR_MODE_0, MAJOR_MODE_shift, MAJOR_MODE_mask);
@@ -319,7 +329,7 @@ static void r700RunRenderPrimitiveImmediate(struct gl_context * ctx, int start, 
 {
     context_t *context = R700_CONTEXT(ctx);
     BATCH_LOCALS(&context->radeon);
-    int type, i;
+    int type;
     uint32_t num_indices, total_emit = 0;
     uint32_t vgt_draw_initiator = 0;
     uint32_t vgt_index_type     = 0;
@@ -348,25 +358,19 @@ static void r700RunRenderPrimitiveImmediate(struct gl_context * ctx, int start, 
             SETfield(vgt_index_type, DI_INDEX_SIZE_16_BIT, INDEX_TYPE_shift, INDEX_TYPE_mask);
     }
 
+	/* 16-bit indexes are packed in a 32-bit value */
+	SETfield(vgt_index_type,
+#if MESA_BIG_ENDIAN
+			VGT_DMA_SWAP_32_BIT,
+#else
+			VGT_DMA_SWAP_NONE,
+#endif
+			SWAP_MODE_shift, SWAP_MODE_mask);
+
     vgt_num_indices = num_indices;
     SETfield(vgt_draw_initiator, DI_MAJOR_MODE_0, MAJOR_MODE_shift, MAJOR_MODE_mask);
 
-    if (start == 0)
-    {
-	SETfield(vgt_draw_initiator, DI_SRC_SEL_AUTO_INDEX, SOURCE_SELECT_shift, SOURCE_SELECT_mask);
-    }
-    else
-    {
-	if (num_indices > 0xffff)
-	{
-		total_emit += num_indices;
-	}
-	else
-	{
-		total_emit += (num_indices + 1) / 2;
-	}
-	SETfield(vgt_draw_initiator, DI_SRC_SEL_IMMEDIATE, SOURCE_SELECT_shift, SOURCE_SELECT_mask);
-    }
+    SETfield(vgt_draw_initiator, DI_SRC_SEL_AUTO_INDEX, SOURCE_SELECT_shift, SOURCE_SELECT_mask);
 
     total_emit +=   3 /* VGT_PRIMITIVE_TYPE */
 	          + 2 /* VGT_INDEX_TYPE */
@@ -387,45 +391,13 @@ static void r700RunRenderPrimitiveImmediate(struct gl_context * ctx, int start, 
     /* offset */
     R600_OUT_BATCH(CP_PACKET3(R600_IT_SET_CTL_CONST, 2));
     R600_OUT_BATCH(mmSQ_VTX_BASE_VTX_LOC - ASIC_CTL_CONST_BASE_INDEX);
-    R600_OUT_BATCH(0); //VTX_BASE_VTX_LOC
+    R600_OUT_BATCH(start); //VTX_BASE_VTX_LOC
     R600_OUT_BATCH(0); //VTX_START_INST_LOC
     // draw packet
-    if(start == 0)
-    {
-        R600_OUT_BATCH(CP_PACKET3(R600_IT_DRAW_INDEX_AUTO, 1));
-        R600_OUT_BATCH(vgt_num_indices);
-        R600_OUT_BATCH(vgt_draw_initiator);
-    }
-    else
-    {
-	if (num_indices > 0xffff)
-        {
-	    R600_OUT_BATCH(CP_PACKET3(R600_IT_DRAW_INDEX_IMMD, (num_indices + 1)));
-	    R600_OUT_BATCH(vgt_num_indices);
-	    R600_OUT_BATCH(vgt_draw_initiator);
-	    for (i = start; i < (start + num_indices); i++)
-	    {
-		R600_OUT_BATCH(i);
-	    }
-	}
-	else
-        {
-	    R600_OUT_BATCH(CP_PACKET3(R600_IT_DRAW_INDEX_IMMD, (((num_indices + 1) / 2) + 1)));
-	    R600_OUT_BATCH(vgt_num_indices);
-	    R600_OUT_BATCH(vgt_draw_initiator);
-	    for (i = start; i < (start + num_indices); i += 2)
-	    {
-		if ((i + 1) == (start + num_indices))
-		{
-		    R600_OUT_BATCH(i);
-		}
-		else
-		{
-		    R600_OUT_BATCH(((i + 1) << 16) | (i));
-		}
-	    }
-	}
-    }
+    
+    R600_OUT_BATCH(CP_PACKET3(R600_IT_DRAW_INDEX_AUTO, 1));
+    R600_OUT_BATCH(vgt_num_indices);
+    R600_OUT_BATCH(vgt_draw_initiator);
 
     END_BATCH();
     COMMIT_BATCH();
@@ -450,12 +422,7 @@ static GLuint r700PredictRenderSize(struct gl_context* ctx,
     else {
 	    for (i = 0; i < nr_prims; ++i)
 	    {
-		    if (prim[i].start == 0)
-			    dwords += 14;
-		    else if (prim[i].count > 0xffff)
-			    dwords += prim[i].count + 14;
-		    else
-			    dwords += ((prim[i].count + 1) / 2) + 14;
+	        dwords += 14;
 	    }
     }
 
@@ -580,6 +547,7 @@ static void r700ConvertAttrib(struct gl_context *ctx, int count,
     }
 }
 
+#if 0 /* unused */
 static void r700AlignDataToDword(struct gl_context *ctx, 
                                  const struct gl_client_array *input, 
                                  int count, 
@@ -621,6 +589,7 @@ static void r700AlignDataToDword(struct gl_context *ctx,
 
     attr->stride = dst_stride;
 }
+#endif
 
 static void r700SetupStreams(struct gl_context *ctx, const struct gl_client_array *input[], int count)
 {

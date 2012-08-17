@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile.inc,v 1.13 2012/07/13 12:55:32 mpi Exp $
+# $OpenBSD: Makefile.inc,v 1.14 2012/08/17 13:58:00 mpi Exp $
 .include <bsd.xconf.mk>
 
 MESA= ${.CURDIR}/../../../../dist/Mesa/src/mesa
@@ -15,8 +15,7 @@ COMMON_GALLIUM_SOURCES = \
 COMMON_SOURCES = $(COMMON_GALLIUM_SOURCES) \
 	driverfuncs.c \
 	texmem.c \
-	drirenderbuffer.c \
-	dri_metaops.c
+	drirenderbuffer.c
 
 CFLAGS+= -g -DIN_DRI_DRIVER -DGLX_DIRECT_RENDERING -DPTHREADS \
 	 $(INCLUDES) $(DRIVER_DEFINES)
@@ -29,6 +28,7 @@ INCLUDES = \
 	-I$(TOP)/src/mesa/drivers/dri/common \
 	-I$(TOP)/include \
 	-I$(TOP)/include/GL/internal \
+	-I$(TOP)/src/glsl \
 	-I$(TOP)/src/mesa \
 	-I$(TOP)/src/mesa/main \
 	-I$(TOP)/src/mapi \

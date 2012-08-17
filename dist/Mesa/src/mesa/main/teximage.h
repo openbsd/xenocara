@@ -42,6 +42,14 @@ _mesa_alloc_texmemory(GLsizei bytes);
 extern void
 _mesa_free_texmemory(void *m);
 
+/** Is any of the dimensions of given texture equal to zero? */
+static inline GLboolean
+_mesa_is_zero_size_texture(const struct gl_texture_image *texImage)
+{
+   return (texImage->Width == 0 ||
+           texImage->Height == 0 ||
+           texImage->Depth == 0);
+}
 
 /** \name Internal functions */
 /*@{*/
@@ -59,7 +67,8 @@ _mesa_new_texture_image( struct gl_context *ctx );
 
 
 extern void
-_mesa_delete_texture_image( struct gl_context *ctx, struct gl_texture_image *teximage );
+_mesa_delete_texture_image( struct gl_context *ctx,
+                            struct gl_texture_image *teximage );
 
 extern void
 _mesa_free_texture_image_data( struct gl_context *ctx, 
@@ -82,7 +91,8 @@ _mesa_choose_texture_format(struct gl_context *ctx,
 
 
 extern void
-_mesa_clear_texture_image(struct gl_context *ctx, struct gl_texture_image *texImage);
+_mesa_clear_texture_image(struct gl_context *ctx,
+                          struct gl_texture_image *texImage);
 
 
 extern void
@@ -92,7 +102,8 @@ _mesa_set_tex_image(struct gl_texture_object *tObj,
 
 
 extern struct gl_texture_object *
-_mesa_select_tex_object(struct gl_context *ctx, const struct gl_texture_unit *texUnit,
+_mesa_select_tex_object(struct gl_context *ctx,
+                        const struct gl_texture_unit *texUnit,
                         GLenum target);
 
 extern struct gl_texture_object *
@@ -100,7 +111,8 @@ _mesa_get_current_tex_object(struct gl_context *ctx, GLenum target);
 
 
 extern struct gl_texture_image *
-_mesa_select_tex_image(struct gl_context *ctx, const struct gl_texture_object *texObj,
+_mesa_select_tex_image(struct gl_context *ctx,
+                       const struct gl_texture_object *texObj,
                        GLenum target, GLint level);
 
 
@@ -126,6 +138,8 @@ _mesa_test_proxy_teximage(struct gl_context *ctx, GLenum target, GLint level,
 extern GLuint
 _mesa_tex_target_to_face(GLenum target);
 
+extern GLint
+_mesa_get_texture_dimensions(GLenum target);
 
 /**
  * Lock a texture for updating.  See also _mesa_lock_context_textures().
@@ -268,6 +282,11 @@ _mesa_CompressedTexSubImage3DARB(GLenum target, GLint level, GLint xoffset,
                                  GLint yoffset, GLint zoffset, GLsizei width,
                                  GLsizei height, GLsizei depth, GLenum format,
                                  GLsizei imageSize, const GLvoid *data);
+
+
+extern void GLAPIENTRY
+_mesa_TexBuffer(GLenum target, GLenum internalFormat, GLuint buffer);
+
 
 /*@}*/
 

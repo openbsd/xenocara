@@ -1097,12 +1097,16 @@ choose_visual( Display *dpy, int screen, const int *list, GLboolean fbConfig )
             parselist++;
             break;
          case GLX_FBCONFIG_ID:
+         case GLX_VISUAL_ID:
             if (!fbConfig)
                return NULL;
             parselist++;
             desiredVisualID = *parselist++;
             break;
          case GLX_X_RENDERABLE:
+         case GLX_MAX_PBUFFER_WIDTH:
+         case GLX_MAX_PBUFFER_HEIGHT:
+         case GLX_MAX_PBUFFER_PIXELS:
             if (!fbConfig)
                return NULL;
             parselist += 2;
@@ -1292,7 +1296,7 @@ Fake_glXCreateContext( Display *dpy, XVisualInfo *visinfo,
 
    /* deallocate unused windows/buffers */
 #if 0
-   XMesaGarbageCollect();
+   XMesaGarbageCollect(dpy);
 #endif
 
    xmvis = find_glx_visual( dpy, visinfo );
@@ -1533,7 +1537,7 @@ Fake_glXDestroyContext( Display *dpy, GLXContext ctx )
    MakeCurrent_PrevDrawBuffer = 0;
    MakeCurrent_PrevReadBuffer = 0;
    XMesaDestroyContext( glxCtx->xmesaContext );
-   XMesaGarbageCollect();
+   XMesaGarbageCollect(dpy);
    free(glxCtx);
 }
 
@@ -2327,7 +2331,7 @@ Fake_glXCreateNewContext( Display *dpy, GLXFBConfig config,
       return 0;
 
    /* deallocate unused windows/buffers */
-   XMesaGarbageCollect();
+   XMesaGarbageCollect(dpy);
 
    glxCtx->xmesaContext = XMesaCreateContext(xmvis,
                                    shareCtx ? shareCtx->xmesaContext : NULL);
@@ -2542,7 +2546,7 @@ Fake_glXCreateContextWithConfigSGIX(Display *dpy, GLXFBConfigSGIX config, int re
       return 0;
 
    /* deallocate unused windows/buffers */
-   XMesaGarbageCollect();
+   XMesaGarbageCollect(dpy);
 
    glxCtx->xmesaContext = XMesaCreateContext(xmvis,
                                    shareCtx ? shareCtx->xmesaContext : NULL);

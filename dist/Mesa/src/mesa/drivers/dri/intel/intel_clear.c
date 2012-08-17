@@ -28,6 +28,7 @@
 
 #include "main/glheader.h"
 #include "main/mtypes.h"
+#include "main/condrender.h"
 #include "swrast/swrast.h"
 #include "drivers/common/meta.h"
 
@@ -88,6 +89,9 @@ intelClear(struct gl_context *ctx, GLbitfield mask)
    struct intel_renderbuffer *irb;
    int i;
 
+   if (!_mesa_check_conditional_render(ctx))
+      return;
+
    if (mask & (BUFFER_BIT_FRONT_LEFT | BUFFER_BIT_FRONT_RIGHT)) {
       intel->front_buffer_dirty = GL_TRUE;
    }
@@ -140,6 +144,12 @@ intelClear(struct gl_context *ctx, GLbitfield mask)
 	     */
             tri_mask |= BUFFER_BIT_STENCIL;
          }
+	 else if (intel->has_separate_stencil &&
+	       stencilRegion->tiling == I915_TILING_NONE) {
+	    /* The stencil buffer is actually W tiled, which the hardware
+	     * cannot blit to. */
+	    tri_mask |= BUFFER_BIT_STENCIL;
+	 }
          else {
             /* clearing all stencil bits, use blitting */
             blit_mask |= BUFFER_BIT_STENCIL;

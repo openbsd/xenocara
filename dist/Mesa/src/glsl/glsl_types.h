@@ -70,7 +70,7 @@ struct glsl_type {
    GLenum gl_type;
    glsl_base_type base_type;
 
-   unsigned sampler_dimensionality:3;
+   unsigned sampler_dimensionality:3; /**< \see glsl_sampler_dim */
    unsigned sampler_shadow:1;
    unsigned sampler_array:1;
    unsigned sampler_type:2;    /**< Type of data returned using this sampler.
@@ -224,6 +224,41 @@ struct glsl_type {
     */
    unsigned component_slots() const;
 
+   /**
+    * \brief Can this type be implicitly converted to another?
+    *
+    * \return True if the types are identical or if this type can be converted
+    *         to \c desired according to Section 4.1.10 of the GLSL spec.
+    *
+    * \verbatim
+    * From page 25 (31 of the pdf) of the GLSL 1.50 spec, Section 4.1.10
+    * Implicit Conversions:
+    *
+    *     In some situations, an expression and its type will be implicitly
+    *     converted to a different type. The following table shows all allowed
+    *     implicit conversions:
+    *
+    *     Type of expression | Can be implicitly converted to
+    *     --------------------------------------------------
+    *     int                  float
+    *     uint
+    *
+    *     ivec2                vec2
+    *     uvec2
+    *
+    *     ivec3                vec3
+    *     uvec3
+    *
+    *     ivec4                vec4
+    *     uvec4
+    *
+    *     There are no implicit array or structure conversions. For example,
+    *     an array of int cannot be implicitly converted to an array of float.
+    *     There are no implicit conversions between signed and unsigned
+    *     integers.
+    * \endverbatim
+    */
+   bool can_implicitly_convert_to(const glsl_type *desired) const;
 
    /**
     * Query whether or not a type is a scalar (non-vector and non-matrix).
@@ -433,6 +468,7 @@ private:
    /*@{*/
    static const glsl_type _error_type;
    static const glsl_type _void_type;
+   static const glsl_type _sampler3D_type;
    static const glsl_type builtin_core_types[];
    static const glsl_type builtin_structure_types[];
    static const glsl_type builtin_110_deprecated_structure_types[];
@@ -459,6 +495,7 @@ private:
    static void generate_130_types(glsl_symbol_table *);
    static void generate_ARB_texture_rectangle_types(glsl_symbol_table *, bool);
    static void generate_EXT_texture_array_types(glsl_symbol_table *, bool);
+   static void generate_OES_texture_3D_types(glsl_symbol_table *, bool);
    /*@}*/
 
    /**

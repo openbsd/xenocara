@@ -7,12 +7,12 @@
 
 static struct pipe_resource *
 i915_resource_create(struct pipe_screen *screen,
-                    const struct pipe_resource *template)
+                     const struct pipe_resource *template)
 {
    if (template->target == PIPE_BUFFER)
       return i915_buffer_create(screen, template);
    else
-      return i915_texture_create(screen, template);
+      return i915_texture_create(screen, template, FALSE);
 
 }
 
@@ -31,7 +31,6 @@ i915_resource_from_handle(struct pipe_screen * screen,
 void
 i915_init_resource_functions(struct i915_context *i915 )
 {
-   i915->base.is_resource_referenced = u_default_is_resource_referenced;
    i915->base.get_transfer = u_get_transfer_vtbl;
    i915->base.transfer_map = u_transfer_map_vtbl;
    i915->base.transfer_flush_region = u_transfer_flush_region_vtbl;

@@ -577,17 +577,45 @@ This instruction replicates its result.
 
 .. opcode:: TEX - Texture Lookup
 
-  TBD
+.. math::
+
+  coord = src0
+
+  bias = 0.0
+
+  dst = texture_sample(unit, coord, bias)
 
 
 .. opcode:: TXD - Texture Lookup with Derivatives
 
-  TBD
+.. math::
+
+  coord = src0
+
+  ddx = src1
+
+  ddy = src2
+
+  bias = 0.0
+
+  dst = texture_sample_deriv(unit, coord, bias, ddx, ddy)
 
 
 .. opcode:: TXP - Projective Texture Lookup
 
-  TBD
+.. math::
+
+  coord.x = src0.x / src.w
+
+  coord.y = src0.y / src.w
+
+  coord.z = src0.z / src.w
+
+  coord.w = src0.w
+
+  bias = 0.0
+
+  dst = texture_sample(unit, coord, bias)
 
 
 .. opcode:: UP2H - Unpack Two 16-Bit Floats
@@ -729,7 +757,19 @@ This instruction replicates its result.
 
 .. opcode:: TXB - Texture Lookup With Bias
 
-  TBD
+.. math::
+
+  coord.x = src.x
+
+  coord.y = src.y
+
+  coord.z = src.z
+
+  coord.w = 1.0
+
+  bias = src.z
+
+  dst = texture_sample(unit, coord, bias)
 
 
 .. opcode:: NRM - 3-component Vector Normalise
@@ -767,9 +807,21 @@ This instruction replicates its result.
   dst = src0.x \times src1.x + src0.y \times src1.y
 
 
-.. opcode:: TXL - Texture Lookup With LOD
+.. opcode:: TXL - Texture Lookup With explicit LOD
 
-  TBD
+.. math::
+
+  coord.x = src0.x
+
+  coord.y = src0.y
+
+  coord.z = src0.z
+
+  coord.w = 1.0
+
+  lod = src0.w
+
+  dst = texture_sample(unit, coord, lod)
 
 
 .. opcode:: BRK - Break
@@ -1198,6 +1250,157 @@ This opcode is the inverse of :opcode:`DFRACEXP`.
    dst.zw = \sqrt{src.zw}
 
 
+.. _resourceopcodes:
+
+Resource Access Opcodes
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+Those opcodes follow very closely semantics of the respective Direct3D
+instructions. If in doubt double check Direct3D documentation.
+
+.. opcode:: LOAD - Simplified alternative to the "SAMPLE" instruction.
+               Using the provided integer address, LOAD fetches data
+               from the specified buffer/texture without any filtering.
+               The source data may come from any resource type other
+               than CUBE.
+               LOAD dst, address, resource
+               e.g.
+               LOAD TEMP[0], TEMP[1], RES[0]
+               The 'address' is specified as unsigned integers. If the
+               'address' is out of range [0...(# texels - 1)] the
+               result of the fetch is always 0 in all components.
+               As such the instruction doesn't honor address wrap
+               modes, in cases where that behavior is desirable
+               'sample' instruction should be used.
+               address.w always provides an unsigned integer mipmap
+               level. If the value is out of the range then the
+               instruction always returns 0 in all components.
+               address.yz are ignored for buffers and 1d textures.
+               address.z is ignored for 1d texture arrays and 2d
+               textures.
+               For 1D texture arrays address.y provides the array
+               index (also as unsigned integer). If the value is
+               out of the range of available array indices
+               [0... (array size - 1)] then the opcode always returns
+               0 in all components.
+               For 2D texture arrays address.z provides the array
+               index, otherwise it exhibits the same behavior as in
+               the case for 1D texture arrays.
+               The exeact semantics of the source address are presented
+               in the table below:
+               resource type         X     Y     Z       W
+               -------------         ------------------------
+               PIPE_BUFFER           x                ignored
+               PIPE_TEXTURE_1D       x                  mpl
+               PIPE_TEXTURE_2D       x     y            mpl
+               PIPE_TEXTURE_3D       x     y     z      mpl
+               PIPE_TEXTURE_RECT     x     y            mpl
+               PIPE_TEXTURE_CUBE     not allowed as source
+               PIPE_TEXTURE_1D_ARRAY x    idx           mpl
+               PIPE_TEXTURE_2D_ARRAY x     y    idx     mpl
+
+               Where 'mpl' is a mipmap level and 'idx' is the
+               array index.
+
+
+.. opcode:: LOAD_MS - Just like LOAD but allows fetch data from
+               multi-sampled surfaces.
+
+.. opcode:: SAMPLE - Using provided address, sample data from the
+               specified texture using the filtering mode identified
+               by the gven sampler. The source data may come from
+               any resource type other than buffers.
+               SAMPLE dst, address, resource, sampler
+               e.g.
+               SAMPLE TEMP[0], TEMP[1], RES[0], SAMP[0]
+
+.. opcode:: SAMPLE_B - Just like the SAMPLE instruction with the
+               exception that an additiona bias is applied to the
+               level of detail computed as part of the instruction
+               execution.
+               SAMPLE_B dst, address, resource, sampler, lod_bias
+               e.g.
+               SAMPLE_B TEMP[0], TEMP[1], RES[0], SAMP[0], TEMP[2].x
+
+.. opcode:: SAMPLE_C - Similar to the SAMPLE instruction but it
+               performs a comparison filter. The operands to SAMPLE_C
+               are identical to SAMPLE, except that tere is an additional
+               float32 operand, reference value, which must be a register
+               with single-component, or a scalar literal.
+               SAMPLE_C makes the hardware use the current samplers
+               compare_func (in pipe_sampler_state) to compare
+               reference value against the red component value for the
+               surce resource at each texel that the currently configured
+               texture filter covers based on the provided coordinates.
+               SAMPLE_C dst, address, resource.r, sampler, ref_value
+               e.g.
+               SAMPLE_C TEMP[0], TEMP[1], RES[0].r, SAMP[0], TEMP[2].x
+
+.. opcode:: SAMPLE_C_LZ - Same as SAMPLE_C, but LOD is 0 and derivatives
+               are ignored. The LZ stands for level-zero.
+               SAMPLE_C_LZ dst, address, resource.r, sampler, ref_value
+               e.g.
+               SAMPLE_C_LZ TEMP[0], TEMP[1], RES[0].r, SAMP[0], TEMP[2].x
+
+
+.. opcode:: SAMPLE_D - SAMPLE_D is identical to the SAMPLE opcode except
+               that the derivatives for the source address in the x
+               direction and the y direction are provided by extra
+               parameters.
+               SAMPLE_D dst, address, resource, sampler, der_x, der_y
+               e.g.
+               SAMPLE_D TEMP[0], TEMP[1], RES[0], SAMP[0], TEMP[2], TEMP[3]
+
+.. opcode:: SAMPLE_L - SAMPLE_L is identical to the SAMPLE opcode except
+               that the LOD is provided directly as a scalar value,
+               representing no anisotropy. Source addresses A channel
+               is used as the LOD.
+               SAMPLE_L dst, address, resource, sampler
+               e.g.
+               SAMPLE_L TEMP[0], TEMP[1], RES[0], SAMP[0]
+
+
+.. opcode:: GATHER4 - Gathers the four texels to be used in a bi-linear
+               filtering operation and packs them into a single register.
+               Only woth with 2D, 2D array, cubemaps, and cubemaps arrays.
+               For 2D textures, only the addressing modes of the sampler and
+               the top level of any mip pyramid are used. Set W to zero.
+               It behaves like the SAMPLE instruction, but a filtered
+               sample is not generated. The four samples that contribute
+               to filtering are places into xyzw in cunter-clockwise order,
+               starting with the (u,v) texture coordinate delta at the
+               following locations (-, +), (+, +), (+, -), (-, -), where
+               the magnitude of the deltas are half a texel.
+
+
+.. opcode:: RESINFO - query the dimensions of a given input buffer.
+               dst receives width, height, depth or array size and
+               number of mipmap levels. The dst can have a writemask
+               which will specify what info is the caller interested
+               in.
+               RESINFO dst, src_mip_level, resource
+               e.g.
+               RESINFO TEMP[0], TEMP[1].x, RES[0]
+               src_mip_level is an unsigned integer scalar. If it's
+               out of range then returns 0 for width, height and
+               depth/array size but the total number of mipmap is
+               still returned correctly for the given resource.
+               The returned width, height and depth values are for
+               the mipmap level selected by the src_mip_level and
+               are in the number of texels.
+               For 1d texture array width is in dst.x, array size
+               is in dst.y and dst.zw are always 0.
+
+.. opcode:: SAMPLE_POS - query the position of a given sample.
+               dst receives float4 (x, y, 0, 0) indicated where the
+               sample is located. If the resource is not a multi-sample
+               resource and not a render target, the result is 0.
+
+.. opcode:: SAMPLE_INFO - dst receives number of samples in x.
+               If the resource is not a multi-sample resource and
+               not a render target, the result is 0.
+
+
 Explanation of symbols used
 ------------------------------
 
@@ -1279,6 +1482,8 @@ files. It specifies which register components should be subject to cylindrical
 wrapping when interpolating by the rasteriser. If TGSI_CYLINDRICAL_WRAP_X
 is set to 1, the X component should be interpolated according to cylindrical
 wrapping rules.
+
+If file is TGSI_FILE_RESOURCE, a Declaration Resource token follows.
 
 
 Declaration Semantic
@@ -1423,6 +1628,23 @@ is a writable stencil reference value. Only the Y component is writable.
 This allows the fragment shader to change the fragments stencilref value.
 
 
+Declaration Resource
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+   Follows Declaration token if file is TGSI_FILE_RESOURCE.
+
+   DCL RES[#], resource, type(s)
+
+   Declares a shader input resource and assigns it to a RES[#]
+   register.
+
+   resource can be one of BUFFER, 1D, 2D, 3D, CUBE, 1DArray and
+   2DArray.
+
+   type must be 1 or 4 entries (if specifying on a per-component
+   level) out of UNORM, SNORM, SINT, UINT and FLOAT.
+
+
 Properties
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -1464,6 +1686,11 @@ GL_ARB_fragment_coord_conventions extension.
 DirectX 9 uses INTEGER.
 DirectX 10 uses HALF_INTEGER.
 
+FS_COLOR0_WRITES_ALL_CBUFS
+""""""""""""""""""""""""""
+Specifies that writes to the fragment shader color 0 are replicated to all
+bound cbufs. This facilitates OpenGL's fragColor output vs fragData[0] where
+fragData is directed to a single color buffer, but fragColor is broadcast.
 
 
 Texture Sampling and Texture Formats
