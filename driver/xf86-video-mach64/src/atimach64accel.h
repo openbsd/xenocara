@@ -25,7 +25,9 @@
 
 #include "atipriv.h"
 
+#ifdef HAVE_XAA_H
 #include "xaa.h"
+#endif
 #include "exa.h"
 
 #define ATIMach64MaxX  4095

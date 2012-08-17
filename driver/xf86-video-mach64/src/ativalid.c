@@ -24,11 +24,11 @@
 #include "config.h"
 #endif
 
+#include "xf86.h"
 #include "atichip.h"
 #include "atistruct.h"
 #include "ativalid.h"
 
-#include "xf86.h"
 
 /*
  * ATIValidMode --
@@ -38,13 +38,13 @@
 ModeStatus
 ATIValidMode
 (
-    int iScreen,
+    SCRN_ARG_TYPE arg,
     DisplayModePtr pMode,
     Bool Verbose,
     int flags
 )
 {
-    ScrnInfoPtr pScreenInfo = xf86Screens[iScreen];
+    SCRN_INFO_PTR(arg);
     ATIPtr      pATI        = ATIPTR(pScreenInfo);
     int         HBlankWidth, HAdjust, VScan, VInterlace;
 

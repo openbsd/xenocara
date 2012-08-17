@@ -1,3 +1,60 @@
+commit 2776fc9cd69f18ba6f09f39ca747f3a9333bf9e4
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Tue Jul 17 16:05:09 2012 +1000
+
+    xf86-video-mach64: bump to version 6.9.3
+    
+    Signed-off-by: Dave Airlie <airlied@redhat.com>
+
+commit a2213da6d87baa8b5f49d3894513ced2c6974259
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Mon Jul 16 04:29:53 2012 +0100
+
+    mach64: fix build against server without XAA
+    
+    Signed-off-by: Dave Airlie <airlied@redhat.com>
+
+commit 3fce61b475355820f735e50b7070ee6fc906083d
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Mon Jul 2 12:23:03 2012 +0100
+
+    mach64: bump to 6.9.2
+    
+    Signed-off-by: Dave Airlie <airlied@redhat.com>
+
+commit 68572c1e41cf6de2f0ef2c9442111384ce863308
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Wed Jun 6 10:42:26 2012 +0100
+
+    ati: only include deprecated file in one place.
+    
+    reduces warnings.
+    
+    Signed-off-by: Dave Airlie <airlied@redhat.com>
+
+commit a9f3a66e355b9f19c312d399771fb1d8eb2e046d
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Wed Jun 6 10:41:11 2012 +0100
+
+    mach64: port to new compat API.
+    
+    Signed-off-by: Dave Airlie <airlied@redhat.com>
+
+commit 84468ba28853fa57170025d9c25cb0029a386ff4
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Mar 30 19:02:07 2012 -0700
+
+    Readme updates
+    
+    Stop saying Radeon & Rage128 are not "yet" supported by this driver,
+    since no one is working on reuniting the ATI driver family.
+    
+    Update URL to check for latest X.Org code releases.
+    
+    Stop calling it an "XAA" driver now that it also supports EXA.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit 5e09e744b27b5ada9dd064e250fa98eddf1a58c3
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Fri Mar 23 18:56:44 2012 -0700

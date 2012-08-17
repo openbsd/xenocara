@@ -28,12 +28,12 @@
 #include <string.h>
 
 #include "ati.h"
-#include "atiadjust.h"
 #include "atichip.h"
 #include "atidac.h"
 #include "atidga.h"
 #include "atimode.h"
 #include "atistruct.h"
+#include "atiadjust.h"
 
 #include "dgaproc.h"
 
@@ -94,7 +94,6 @@ ATIDGASetMode
 {
     ATIPtr         pATI    = ATIPTR(pScreenInfo);
     DisplayModePtr pMode;
-    int            iScreen = pScreenInfo->scrnIndex;
     int            frameX0, frameY0;
 
     if (pDGAMode)
@@ -128,11 +127,11 @@ ATIDGASetMode
     ATIAdjustPreInit(pATI);
     ATIModePreInit(pScreenInfo, pATI, &pATI->NewHW);
 
-    if (!(*pScreenInfo->SwitchMode)(iScreen, pMode, 0))
+    if (!(*pScreenInfo->SwitchMode)(SWITCH_MODE_ARGS(pScreenInfo, pMode)))
         return FALSE;
     if (!pDGAMode)
         pATI->currentMode = NULL;
-    (*pScreenInfo->AdjustFrame)(iScreen, frameX0, frameY0, 0);
+    (*pScreenInfo->AdjustFrame)(ADJUST_FRAME_ARGS(pScreenInfo, frameX0, frameY0));
 
     return TRUE;
 }
@@ -151,7 +150,7 @@ ATIDGASetViewport
     int         flags
 )
 {
-    (*pScreenInfo->AdjustFrame)(pScreenInfo->pScreen->myNum, x, y, flags);
+    (*pScreenInfo->AdjustFrame)(ADJUST_FRAME_ARGS(pScreenInfo, x, y));
 }
 
 /*

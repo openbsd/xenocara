@@ -65,6 +65,8 @@
 
 #include "atipcirename.h"
 
+#include "compat-api.h"
+
 #define CacheSlotOf(____Register) ((____Register) / UnitOf(DWORD_SELECT))
 
 /*

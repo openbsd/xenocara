@@ -25,7 +25,6 @@
 
 #include <unistd.h>
 #include "xf86Pci.h"
-#include "xf86PciInfo.h"
 
 #include "xf86.h"
 

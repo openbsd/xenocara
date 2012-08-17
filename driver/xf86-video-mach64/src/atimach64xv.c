@@ -524,7 +524,7 @@ ATIMach64RemoveLinearCallback
     FBLinearPtr pLinear
 )
 {
-    ATIPtr pATI = ATIPTR(xf86Screens[pLinear->pScreen->myNum]);
+    ATIPtr pATI = ATIPTR(xf86ScreenToScrn(pLinear->pScreen));
 
     pATI->pXVBuffer = NULL;
     outf(OVERLAY_SCALE_CNTL, SCALE_EN);
@@ -1349,7 +1349,7 @@ ATIMach64XVInitialiseAdaptor
     XF86VideoAdaptorPtr **pppAdaptor
 )
 {
-    ScreenPtr           pScreen    = screenInfo.screens[pScreenInfo->scrnIndex];
+    ScreenPtr           pScreen    = xf86ScrnToScreen(pScreenInfo);
     ATIPtr              pATI       = ATIPTR(pScreenInfo);
     XF86VideoAdaptorPtr *ppAdaptor = NULL;
     XF86VideoAdaptorPtr pAdaptor;

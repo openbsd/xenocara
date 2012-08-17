@@ -25,6 +25,6 @@
 
 #include "xf86str.h"
 
-extern ModeStatus ATIValidMode(int, DisplayModePtr, Bool, int);
+extern ModeStatus ATIValidMode(SCRN_ARG_TYPE arg, DisplayModePtr, Bool, int);
 
 #endif /* ___ATIVALID_H___ */

@@ -30,7 +30,6 @@
 
 #include "xorgVersion.h"
 #include "ati.h"
-#include "aticonsole.h"
 #include "atii2c.h"
 #include "atilock.h"
 #include "atimach64.h"
@@ -39,6 +38,7 @@
 #include "atistruct.h"
 #include "ativga.h"
 #include "atividmem.h"
+#include "aticonsole.h"
 
 #ifdef XF86DRI_DEVEL
 #include "mach64_common.h"
@@ -75,7 +75,7 @@ ATISaveScreen
     if (!pScreen)
         return TRUE;
 
-    pScreenInfo = xf86Screens[pScreen->myNum];
+    pScreenInfo = xf86ScreenToScrn(pScreen);
     if (!pScreenInfo->vtSema)
         return TRUE;
 
@@ -558,8 +558,8 @@ ATIEnterGraphics
        (void)ATISaveScreen(pScreen, SCREEN_SAVER_ON);
 
     /* Position the screen */
-    (*pScreenInfo->AdjustFrame)(pScreenInfo->scrnIndex,
-        pScreenInfo->frameX0, pScreenInfo->frameY0, 0);
+    (*pScreenInfo->AdjustFrame)(ADJUST_FRAME_ARGS(pScreenInfo,
+        pScreenInfo->frameX0, pScreenInfo->frameY0));
 
     SetTimeSinceLastInputEvent();
 
@@ -621,18 +621,13 @@ ATILeaveGraphics
  * This function switches to another graphics video state.
  */
 Bool
-ATISwitchMode
-(
-    int            iScreen,
-    DisplayModePtr pMode,
-    int            flags
-)
+ATISwitchMode(SWITCH_MODE_ARGS_DECL)
 {
-    ScrnInfoPtr pScreenInfo = xf86Screens[iScreen];
+    SCRN_INFO_PTR(arg);
     ATIPtr      pATI        = ATIPTR(pScreenInfo);
 
     /* Calculate new hardware data */
-    if (!ATIModeCalculate(iScreen, pATI, &pATI->NewHW, pMode))
+    if (!ATIModeCalculate(pScreenInfo->scrnIndex, pATI, &pATI->NewHW, pMode))
         return FALSE;
 
     /* Set new hardware state */
@@ -680,13 +675,9 @@ ATISwitchMode
  * This function sets the server's virtual console to a graphics video state.
  */
 Bool
-ATIEnterVT
-(
-    int iScreen,
-    int flags
-)
+ATIEnterVT(VT_FUNC_ARGS_DECL)
 {
-    ScrnInfoPtr pScreenInfo = xf86Screens[iScreen];
+    SCRN_INFO_PTR(arg);
     ScreenPtr   pScreen     = pScreenInfo->pScreen;
     ATIPtr      pATI        = ATIPTR(pScreenInfo);
     PixmapPtr   pScreenPixmap;
@@ -757,13 +748,9 @@ ATIEnterVT
  * entry.
  */
 void
-ATILeaveVT
-(
-    int iScreen,
-    int flags
-)
+ATILeaveVT(VT_FUNC_ARGS_DECL)
 {
-    ScrnInfoPtr pScreenInfo = xf86Screens[iScreen];
+    SCRN_INFO_PTR(arg);
     ScreenPtr   pScreen     = pScreenInfo->pScreen;
     ATIPtr      pATI        = ATIPTR(pScreenInfo);
 
@@ -786,16 +773,12 @@ ATILeaveVT
  * This function frees all driver data related to a screen.
  */
 void
-ATIFreeScreen
-(
-    int iScreen,
-    int flags
-)
+ATIFreeScreen(FREE_SCREEN_ARGS_DECL)
 {
-    ScrnInfoPtr pScreenInfo = xf86Screens[iScreen];
+    SCRN_INFO_PTR(arg);
     ATIPtr      pATI        = ATIPTR(pScreenInfo);
 
-    ATII2CFreeScreen(iScreen);
+    ATII2CFreeScreen(pScreenInfo->scrnIndex);
 
 #ifndef AVOID_CPIO
 

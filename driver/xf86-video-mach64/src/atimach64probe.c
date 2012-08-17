@@ -38,6 +38,8 @@
 #include "atiadjust.h"
 #include "ativalid.h"
 
+#include "xf86PciInfo.h"
+
 #ifndef XSERVER_LIBPCIACCESS
 static Bool Mach64Probe(DriverPtr pDriver, int flags);
 #endif

@@ -33,11 +33,11 @@ extern void ATISetDPMSMode(ScrnInfoPtr, int, int);
 extern Bool ATIEnterGraphics(ScreenPtr, ScrnInfoPtr, ATIPtr);
 extern void ATILeaveGraphics(ScrnInfoPtr, ATIPtr);
 
-extern Bool ATISwitchMode(int, DisplayModePtr, int);
+extern Bool ATISwitchMode(SWITCH_MODE_ARGS_DECL);
 
-extern Bool ATIEnterVT(int, int);
-extern void ATILeaveVT(int, int);
+extern Bool ATIEnterVT(VT_FUNC_ARGS_DECL);
+extern void ATILeaveVT(VT_FUNC_ARGS_DECL);
 
-extern void ATIFreeScreen(int, int);
+extern void ATIFreeScreen(FREE_SCREEN_ARGS_DECL);
 
 #endif /* ___ATICONSOLE_H___ */

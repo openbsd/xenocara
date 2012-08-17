@@ -583,7 +583,7 @@ Mach64BlendCntl(Mach64ContextRegs3D *m3d, int op)
 static Bool
 Mach64PrepareTexture(PicturePtr pPict, PixmapPtr pPix)
 {
-    ScrnInfoPtr pScreenInfo = xf86Screens[pPix->drawable.pScreen->myNum];
+    ScrnInfoPtr pScreenInfo = xf86ScreenToScrn(pPix->drawable.pScreen);
     ATIPtr pATI = ATIPTR(pScreenInfo);
     Mach64ContextRegs3D *m3d = &pATI->m3d;
 
@@ -671,7 +671,7 @@ Mach64PrepareComposite
     PixmapPtr  pDst
 )
 {
-    ScrnInfoPtr pScreenInfo = xf86Screens[pDst->drawable.pScreen->myNum];
+    ScrnInfoPtr pScreenInfo = xf86ScreenToScrn(pDst->drawable.pScreen);
     ATIPtr pATI = ATIPTR(pScreenInfo);
     Mach64ContextRegs3D *m3d = &pATI->m3d;
 
@@ -818,7 +818,7 @@ Mach64Composite
     int       h
 )
 {
-    ScrnInfoPtr pScreenInfo = xf86Screens[pDst->drawable.pScreen->myNum];
+    ScrnInfoPtr pScreenInfo = xf86ScreenToScrn(pDst->drawable.pScreen);
     ATIPtr pATI = ATIPTR(pScreenInfo);
     Mach64ContextRegs3D *m3d = &pATI->m3d;
 
@@ -895,7 +895,7 @@ Mach64Composite
 void
 Mach64DoneComposite(PixmapPtr pDst)
 {
-    ScrnInfoPtr pScreenInfo = xf86Screens[pDst->drawable.pScreen->myNum];
+    ScrnInfoPtr pScreenInfo = xf86ScreenToScrn(pDst->drawable.pScreen);
     ATIPtr pATI = ATIPTR(pScreenInfo);
 
     ATIDRISync(pScreenInfo);

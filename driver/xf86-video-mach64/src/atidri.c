@@ -67,7 +67,7 @@ static char ATIClientDriverName[] = "mach64";
  */
 static Bool ATIInitVisualConfigs( ScreenPtr pScreen )
 {
-   ScrnInfoPtr pScreenInfo = xf86Screens[pScreen->myNum];
+   ScrnInfoPtr pScreenInfo = xf86ScreenToScrn(pScreen);
    ATIPtr pATI = ATIPTR(pScreenInfo);
    int numConfigs = 0;
    __GLXvisualConfig *pConfigs = NULL;
@@ -290,7 +290,7 @@ static void ATIDestroyContext( ScreenPtr pScreen, drm_context_t hwContext,
  */
 static void ATIEnterServer( ScreenPtr pScreen )
 {
-   ScrnInfoPtr pScreenInfo = xf86Screens[pScreen->myNum];
+   ScrnInfoPtr pScreenInfo = xf86ScreenToScrn(pScreen);
    ATIPtr pATI = ATIPTR(pScreenInfo);
 
    if ( pATI->directRenderingEnabled ) { 
@@ -336,7 +336,7 @@ static void ATIDRISwapContext( ScreenPtr pScreen,
 #ifdef USE_XAA
 static void ATIDRITransitionTo2d(ScreenPtr pScreen)
 {
-   ScrnInfoPtr pScreenInfo = xf86Screens[pScreen->myNum];
+   ScrnInfoPtr pScreenInfo = xf86ScreenToScrn(pScreen);
    ATIPtr pATI = ATIPTR(pScreenInfo);
 
    if (pATI->backArea) {
@@ -352,7 +352,7 @@ static void ATIDRITransitionTo2d(ScreenPtr pScreen)
 
 static void ATIDRITransitionTo3d(ScreenPtr pScreen)
 {
-   ScrnInfoPtr pScreenInfo = xf86Screens[pScreen->myNum];
+   ScrnInfoPtr pScreenInfo = xf86ScreenToScrn(pScreen);
    ATIPtr pATI = ATIPTR(pScreenInfo);
    FBAreaPtr fbArea;
    int width, height;
@@ -406,31 +406,31 @@ static void ATIDRITransitionTo3d(ScreenPtr pScreen)
 #ifdef USE_EXA
 static void ATIDRITransitionTo2d_EXA(ScreenPtr pScreen)
 {
-   ScrnInfoPtr pScreenInfo = xf86Screens[pScreen->myNum];
+   ScrnInfoPtr pScreenInfo = xf86ScreenToScrn(pScreen);
    ATIPtr pATI = ATIPTR(pScreenInfo);
    ATIDRIServerInfoPtr pATIDRIServer = pATI->pDRIServerInfo;
 
-   exaEnableDisableFBAccess(pScreen->myNum, FALSE);
+   exaEnableDisableFBAccess(SCREEN_ARG(pScreen), FALSE);
 
    pATI->pExa->offScreenBase = pATIDRIServer->backOffset;
 
-   exaEnableDisableFBAccess(pScreen->myNum, TRUE);
+   exaEnableDisableFBAccess(SCREEN_ARG(pScreen), TRUE);
 
    pATI->have3DWindows = FALSE;
 }
 
 static void ATIDRITransitionTo3d_EXA(ScreenPtr pScreen)
 {
-   ScrnInfoPtr pScreenInfo = xf86Screens[pScreen->myNum];
+   ScrnInfoPtr pScreenInfo = xf86ScreenToScrn(pScreen);
    ATIPtr pATI = ATIPTR(pScreenInfo);
    ATIDRIServerInfoPtr pATIDRIServer = pATI->pDRIServerInfo;
 
-   exaEnableDisableFBAccess(pScreen->myNum, FALSE);
+   exaEnableDisableFBAccess(SCREEN_ARG(pScreen), FALSE);
 
    pATI->pExa->offScreenBase = pATIDRIServer->textureOffset +
 			       pATIDRIServer->textureSize;
 
-   exaEnableDisableFBAccess(pScreen->myNum, TRUE);
+   exaEnableDisableFBAccess(SCREEN_ARG(pScreen), TRUE);
 
    pATI->have3DWindows = TRUE;
 }
@@ -441,7 +441,7 @@ static void ATIDRIInitBuffers( WindowPtr pWin, RegionPtr prgn, CARD32 indx )
 {
 #ifdef USE_XAA
    ScreenPtr   pScreen = pWin->drawable.pScreen;
-   ScrnInfoPtr pScreenInfo   = xf86Screens[pScreen->myNum];
+   ScrnInfoPtr pScreenInfo   = xf86ScreenToScrn(pScreen);
    ATIPtr pATI = ATIPTR(pScreenInfo);
    ATIDRIServerInfoPtr pATIDRIServer = pATI->pDRIServerInfo;
    XAAInfoRecPtr pXAAInfo = pATI->pXAAInfo;
@@ -508,7 +508,7 @@ static void ATIDRIMoveBuffers( WindowPtr pWin, DDXPointRec ptOldOrg,
 {
 #ifdef USE_XAA
     ScreenPtr pScreen = pWin->drawable.pScreen;
-    ScrnInfoPtr pScreenInfo = xf86Screens[pScreen->myNum];
+    ScrnInfoPtr pScreenInfo = xf86ScreenToScrn(pScreen);
     ATIPtr pATI = ATIPTR(pScreenInfo);
     XAAInfoRecPtr pXAAInfo = pATI->pXAAInfo;
 
@@ -686,7 +686,7 @@ static int Mach64MinBits(int val)
 
 static Bool ATIDRISetBufSize( ScreenPtr pScreen, unsigned int maxSize )
 {
-   ScrnInfoPtr pScreenInfo = xf86Screens[pScreen->myNum];
+   ScrnInfoPtr pScreenInfo = xf86ScreenToScrn(pScreen);
    ATIPtr pATI = ATIPTR(pScreenInfo);
    ATIDRIServerInfoPtr pATIDRIServer = pATI->pDRIServerInfo;
 
@@ -716,7 +716,7 @@ static Bool ATIDRISetBufSize( ScreenPtr pScreen, unsigned int maxSize )
 
 static Bool ATIDRISetAgpMode( ScreenPtr pScreen )
 {
-   ScrnInfoPtr pScreenInfo = xf86Screens[pScreen->myNum];
+   ScrnInfoPtr pScreenInfo = xf86ScreenToScrn(pScreen);
    ATIPtr pATI = ATIPTR(pScreenInfo);
    ATIDRIServerInfoPtr pATIDRIServer = pATI->pDRIServerInfo;
 
@@ -791,7 +791,7 @@ static Bool ATIDRISetAgpMode( ScreenPtr pScreen )
  */
 static Bool ATIDRIAgpInit( ScreenPtr pScreen )
 {
-   ScrnInfoPtr pScreenInfo = xf86Screens[pScreen->myNum];
+   ScrnInfoPtr pScreenInfo = xf86ScreenToScrn(pScreen);
    ATIPtr pATI = ATIPTR(pScreenInfo);
    ATIDRIServerInfoPtr pATIDRIServer = pATI->pDRIServerInfo;
 
@@ -961,7 +961,7 @@ static Bool ATIDRIAgpInit( ScreenPtr pScreen )
 
 static Bool ATIDRIPciInit( ScreenPtr pScreen )
 {
-   ScrnInfoPtr pScreenInfo = xf86Screens[pScreen->myNum];
+   ScrnInfoPtr pScreenInfo = xf86ScreenToScrn(pScreen);
    ATIPtr pATI = ATIPTR(pScreenInfo);
    ATIDRIServerInfoPtr pATIDRIServer = pATI->pDRIServerInfo;
 
@@ -1013,7 +1013,7 @@ static Bool ATIDRIPciInit( ScreenPtr pScreen )
  */
 static Bool ATIDRIMapInit( ScreenPtr pScreen )
 {
-   ScrnInfoPtr pScreenInfo = xf86Screens[pScreen->myNum];
+   ScrnInfoPtr pScreenInfo = xf86ScreenToScrn(pScreen);
    ATIPtr pATI = ATIPTR(pScreenInfo);
    ATIDRIServerInfoPtr pATIDRIServer = pATI->pDRIServerInfo;
 
@@ -1036,7 +1036,7 @@ static Bool ATIDRIMapInit( ScreenPtr pScreen )
 /* Initialize the kernel data structures. */
 static Bool ATIDRIKernelInit( ScreenPtr pScreen )
 {
-   ScrnInfoPtr pScreenInfo = xf86Screens[pScreen->myNum];
+   ScrnInfoPtr pScreenInfo = xf86ScreenToScrn(pScreen);
    ATIPtr pATI = ATIPTR(pScreenInfo);
    ATIDRIServerInfoPtr pATIDRIServer = pATI->pDRIServerInfo;
    drmMach64Init info;
@@ -1077,7 +1077,7 @@ static Bool ATIDRIKernelInit( ScreenPtr pScreen )
  */
 static Bool ATIDRIAddBuffers( ScreenPtr pScreen )
 {
-   ScrnInfoPtr pScreenInfo = xf86Screens[pScreen->myNum];
+   ScrnInfoPtr pScreenInfo = xf86ScreenToScrn(pScreen);
    ATIPtr pATI = ATIPTR(pScreenInfo);
    ATIDRIServerInfoPtr pATIDRIServer = pATI->pDRIServerInfo;
 
@@ -1109,7 +1109,7 @@ static Bool ATIDRIAddBuffers( ScreenPtr pScreen )
 
 static Bool ATIDRIMapBuffers( ScreenPtr pScreen )
 {
-   ScrnInfoPtr pScreenInfo = xf86Screens[pScreen->myNum];
+   ScrnInfoPtr pScreenInfo = xf86ScreenToScrn(pScreen);
    ATIPtr pATI = ATIPTR(pScreenInfo);
    ATIDRIServerInfoPtr pATIDRIServer = pATI->pDRIServerInfo;
 
@@ -1129,7 +1129,7 @@ static Bool ATIDRIMapBuffers( ScreenPtr pScreen )
 
 static Bool ATIDRIIrqInit( ScreenPtr pScreen )
 {
-   ScrnInfoPtr pScreenInfo = xf86Screens[pScreen->myNum];
+   ScrnInfoPtr pScreenInfo = xf86ScreenToScrn(pScreen);
    ATIPtr pATI = ATIPTR(pScreenInfo);
 
    if ( pATI->irq <= 0 ) {
@@ -1173,7 +1173,7 @@ static Bool ATIDRIIrqInit( ScreenPtr pScreen )
  */
 Bool ATIDRIScreenInit( ScreenPtr pScreen )
 {
-   ScrnInfoPtr pScreenInfo = xf86Screens[pScreen->myNum];
+   ScrnInfoPtr pScreenInfo = xf86ScreenToScrn(pScreen);
    ATIPtr pATI = ATIPTR(pScreenInfo);
    DRIInfoPtr pDRIInfo;
    ATIDRIPtr pATIDRI;
@@ -1445,7 +1445,7 @@ Bool ATIDRIScreenInit( ScreenPtr pScreen )
  */
 Bool ATIDRIFinishScreenInit( ScreenPtr pScreen )
 {
-   ScrnInfoPtr pScreenInfo = xf86Screens[pScreen->myNum];
+   ScrnInfoPtr pScreenInfo = xf86ScreenToScrn(pScreen);
    ATIPtr pATI = ATIPTR(pScreenInfo);
    ATISAREAPrivPtr pSAREAPriv;
    ATIDRIPtr pATIDRI;
@@ -1538,7 +1538,7 @@ Bool ATIDRIFinishScreenInit( ScreenPtr pScreen )
  */
 void ATIDRIResume( ScreenPtr pScreen )
 {
-   ScrnInfoPtr pScreenInfo = xf86Screens[pScreen->myNum];
+   ScrnInfoPtr pScreenInfo = xf86ScreenToScrn(pScreen);
    ATIPtr pATI = ATIPTR(pScreenInfo);
    ATIDRIServerInfoPtr pATIDRIServer = pATI->pDRIServerInfo;
 
@@ -1558,7 +1558,7 @@ void ATIDRIResume( ScreenPtr pScreen )
  */
 void ATIDRICloseScreen( ScreenPtr pScreen )
 {
-   ScrnInfoPtr pScreenInfo = xf86Screens[pScreen->myNum];
+   ScrnInfoPtr pScreenInfo = xf86ScreenToScrn(pScreen);
    ATIPtr pATI = ATIPTR(pScreenInfo);
    ATIDRIServerInfoPtr pATIDRIServer = pATI->pDRIServerInfo;
    drmMach64Init info;

@@ -976,7 +976,7 @@ ATIMach64AccelInit
     ScreenPtr pScreen
 )
 {
-    ScrnInfoPtr   pScreenInfo = xf86Screens[pScreen->myNum];
+    ScrnInfoPtr   pScreenInfo = xf86ScreenToScrn(pScreen);
     ATIPtr        pATI        = ATIPTR(pScreenInfo);
     XAAInfoRecPtr pXAAInfo;
 

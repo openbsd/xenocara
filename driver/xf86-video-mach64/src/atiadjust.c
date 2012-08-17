@@ -25,11 +25,13 @@
 #endif
 
 #include "ati.h"
-#include "atiadjust.h"
+#include "atistruct.h"
 #include "atichip.h"
 #include "atilock.h"
 #include "atimach64io.h"
 #include "atiwonderio.h"
+
+#include "atiadjust.h"
 
 /*
  * The display start address is expressed in units of 32-bit (VGA) or 64-bit
@@ -83,15 +85,9 @@ ATIAdjustPreInit
  * window.
  */
 void
-ATIAdjustFrame
-(
-    int scrnIndex,
-    int x,
-    int y,
-    int flags
-)
+ATIAdjustFrame(ADJUST_FRAME_ARGS_DECL)
 {
-    ScrnInfoPtr pScreenInfo = xf86Screens[scrnIndex];
+    SCRN_INFO_PTR(arg);
     ATIPtr      pATI = ATIPTR(pScreenInfo);
     int         Base, xy;
 

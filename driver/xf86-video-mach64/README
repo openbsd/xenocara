@@ -2,7 +2,7 @@
   Marc Aurele La France
   2002 February 12
 
-  This is the README for the XAA ATI driver included in this release.
+  This is the README for the ATI Mach64 driver included in this release.
   ______________________________________________________________________
 
   Table of Contents
@@ -51,7 +51,7 @@
   based on the Mach64 series or older chipsets, providing maximum video
   function within hardware limitations.  The driver is also intended to
   optionally provide the same level of support for generic VGA or 8514/A
-  adapters.  The newer Rage 128 and Radeon chips are not yet supported
+  adapters.  The newer Rage 128 and Radeon chips are not supported
   by this driver.  Rage 128's and Radeon's are, however, supported by
   separate drivers, and owners of such adapters should consult the
   documentation provided with these drivers.  This driver will also
@@ -130,7 +130,7 @@
   VGA CRTC).
 
 
-  The newer Rage 128 and Radeon chips are not yet supported by this
+  The newer Rage 128 and Radeon chips are not supported by this
   driver.  Rage 128's and Radeon's are, however, supported by separate
   drivers, and owners of such adapters should consult the documentation
   provided with these drivers.  This driver will also invoke the
@@ -754,7 +754,7 @@
   If you are experiencing problems that are not already recorded in this
   document, first ensure that you have the latest current release of
   this driver and the Xorg X server.  Check the server's log (usually
-  found in /var/log/Xorg.0.log) and ftp://ftp.freedesktop.org/pub/Xorg
+  found in /var/log/Xorg.0.log) and http://www.x.org/releases/individual/
   if you are uncertain.
 
   Secondly, please check Xorg's doc directory for additional

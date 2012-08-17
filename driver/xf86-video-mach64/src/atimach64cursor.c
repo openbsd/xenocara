@@ -346,7 +346,7 @@ ATIMach64UseHWCursor
     CursorPtr pCursor
 )
 {
-    ScrnInfoPtr pScreenInfo = xf86Screens[pScreen->myNum];
+    ScrnInfoPtr pScreenInfo = xf86ScreenToScrn(pScreen);
     ATIPtr      pATI        = ATIPTR(pScreenInfo);
 
     if (!pATI->CursorBase)
@@ -367,7 +367,7 @@ ATIMach64CursorInit
     ScreenPtr pScreen
 )
 {
-    ScrnInfoPtr       pScreenInfo = xf86Screens[pScreen->myNum];
+    ScrnInfoPtr       pScreenInfo = xf86ScreenToScrn(pScreen);
     ATIPtr            pATI        = ATIPTR(pScreenInfo);
     xf86CursorInfoPtr pCursorInfo;
 
