@@ -1,4 +1,4 @@
-# $OpenBSD: 3RDPARTY,v 1.135 2012/08/05 18:17:34 matthieu Exp $
+# $OpenBSD: 3RDPARTY,v 1.136 2012/08/17 22:18:59 matthieu Exp $
 #
 
 Package: 	Freetype
@@ -14,7 +14,7 @@ Maintainer:	Thomas E. Dickey
 Archive Site:	http://invisible-island.net/xterm/xterm.html
 
 Package:	Mesa
-Version		7.10.3
+Version		7.11.2
 Current Vers:	8.0.4
 Maintainer:	Brian Paul
 Archive Site:	http://www.mesa3d.org/
@@ -27,7 +27,7 @@ Archive Site:	http://dri.freedesktop.org/
 
 Package:	fontconfig
 Version:	2.8.0
-Current Vers:	2.9.0
+Current Vers:	2.10.1
 Maintainer:	Akira TAGOH
 Archive Site:	http://www.fontconfig.org/
 
