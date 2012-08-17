@@ -92,14 +92,51 @@ endif
 
 # iwmmxt code
 if USE_ARM_IWMMXT
-noinst_LTLIBRARIES += libpixman-iwmmxt.la
 libpixman_iwmmxt_la_SOURCES = pixman-mmx.c
-libpixman_iwmmxt_la_CFLAGS = $(DEP_CFLAGS) $(IWMMXT_CFLAGS)
-libpixman_iwmmxt_la_LIBADD = $(DEP_LIBS)
-libpixman_1_la_LDFLAGS += $(IWMMXT_LDFLAGS)
+noinst_LTLIBRARIES += libpixman-iwmmxt.la
 libpixman_1_la_LIBADD += libpixman-iwmmxt.la
 
-ASM_CFLAGS_IWMMXT=$(IWMMXT_CFLAGS)
+libpixman_iwmmxt_la-pixman-mmx.lo: pixman-mmx.c
+	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(CFLAGS) $(IWMMXT_CFLAGS) -MT libpixman_iwmmxt_la-pixman-mmx.lo -MD -MP -MF $(DEPDIR)/libpixman_iwmmxt_la-pixman-mmx.Tpo -c -o libpixman_iwmmxt_la-pixman-mmx.lo `test -f 'pixman-mmx.c' || echo '$(srcdir)/'`pixman-mmx.c
+	$(AM_V_at)$(am__mv) $(DEPDIR)/libpixman_iwmmxt_la-pixman-mmx.Tpo $(DEPDIR)/libpixman_iwmmxt_la-pixman-mmx.Plo
+
+libpixman_iwmmxt_la_DEPENDENCIES = $(am__DEPENDENCIES_1)
+libpixman_iwmmxt_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
+        $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
+	$(CFLAGS) $(IWMMXT_CFLAGS) $(AM_LDFLAGS) \
+	$(LDFLAGS) -o $@
+libpixman_iwmmxt_la_LIBADD = $(DEP_LIBS)
+
+libpixman-iwmmxt.la: libpixman_iwmmxt_la-pixman-mmx.lo $(libpixman_iwmmxt_la_DEPENDENCIES) 
+	$(AM_V_CCLD)$(libpixman_iwmmxt_la_LINK) libpixman_iwmmxt_la-pixman-mmx.lo $(libpixman_iwmmxt_la_LIBADD) $(LIBS)
+endif
+
+# mips dspr2 code
+if USE_MIPS_DSPR2
+noinst_LTLIBRARIES += libpixman-mips-dspr2.la
+libpixman_mips_dspr2_la_SOURCES = \
+        pixman-mips-dspr2.c \
+        pixman-mips-dspr2.h \
+        pixman-mips-dspr2-asm.S \
+        pixman-mips-dspr2-asm.h \
+        pixman-mips-memcpy-asm.S
+libpixman_mips_dspr2_la_CFLAGS = $(DEP_CFLAGS)
+libpixman_mips_dspr2_la_LIBADD = $(DEP_LIBS)
+libpixman_1_la_LIBADD += libpixman-mips-dspr2.la
+
+ASM_CFLAGS_mips_dspr2=
+endif
+
+# loongson code
+if USE_LOONGSON_MMI
+noinst_LTLIBRARIES += libpixman-loongson-mmi.la
+libpixman_loongson_mmi_la_SOURCES = pixman-mmx.c loongson-mmintrin.h
+libpixman_loongson_mmi_la_CFLAGS = $(DEP_CFLAGS) $(LS_CFLAGS)
+libpixman_loongson_mmi_la_LIBADD = $(DEP_LIBS)
+libpixman_1_la_LDFLAGS += $(LS_LDFLAGS)
+libpixman_1_la_LIBADD += libpixman-loongson-mmi.la
+
+ASM_CFLAGS_ls=$(LS_CFLAGS)
 endif
 
 .c.s : $(libpixmaninclude_HEADERS) $(BUILT_SOURCES)

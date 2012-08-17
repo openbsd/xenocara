@@ -381,11 +381,11 @@ bits_image_fetch_pixel_convolution (bits_image_t   *image,
     int y_off = (params[1] - pixman_fixed_1) >> 1;
     int32_t cwidth = pixman_fixed_to_int (params[0]);
     int32_t cheight = pixman_fixed_to_int (params[1]);
-    int32_t srtot, sgtot, sbtot, satot;
     int32_t i, j, x1, x2, y1, y2;
     pixman_repeat_t repeat_mode = image->common.repeat;
     int width = image->width;
     int height = image->height;
+    int srtot, sgtot, sbtot, satot;
 
     params += 2;
 
@@ -421,10 +421,10 @@ bits_image_fetch_pixel_convolution (bits_image_t   *image,
 		    pixel = get_pixel (image, rx, ry, TRUE);
 		}
 
-		srtot += RED_8 (pixel) * f;
-		sgtot += GREEN_8 (pixel) * f;
-		sbtot += BLUE_8 (pixel) * f;
-		satot += ALPHA_8 (pixel) * f;
+		srtot += (int)RED_8 (pixel) * f;
+		sgtot += (int)GREEN_8 (pixel) * f;
+		sbtot += (int)BLUE_8 (pixel) * f;
+		satot += (int)ALPHA_8 (pixel) * f;
 	    }
 
 	    params++;
@@ -970,28 +970,6 @@ replicate_pixel_64 (bits_image_t *   bits,
 }
 
 static void
-bits_image_fetch_solid_32 (pixman_image_t * image,
-                           int              x,
-                           int              y,
-                           int              width,
-                           uint32_t *       buffer,
-                           const uint32_t * mask)
-{
-    replicate_pixel_32 (&image->bits, 0, 0, width, buffer);
-}
-
-static void
-bits_image_fetch_solid_64 (pixman_image_t * image,
-                           int              x,
-                           int              y,
-                           int              width,
-                           uint32_t *       b,
-                           const uint32_t * unused)
-{
-    replicate_pixel_64 (&image->bits, 0, 0, width, b);
-}
-
-static void
 bits_image_fetch_untransformed_repeat_none (bits_image_t *image,
                                             pixman_bool_t wide,
                                             int           x,
@@ -1131,12 +1109,6 @@ typedef struct
 
 static const fetcher_info_t fetcher_info[] =
 {
-    { PIXMAN_solid,
-      FAST_PATH_NO_ALPHA_MAP,
-      bits_image_fetch_solid_32,
-      bits_image_fetch_solid_64
-    },
-
     { PIXMAN_any,
       (FAST_PATH_NO_ALPHA_MAP			|
        FAST_PATH_ID_TRANSFORM			|

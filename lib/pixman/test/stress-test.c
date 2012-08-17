@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include "utils.h"
 #include <sys/types.h>
 
@@ -165,7 +166,8 @@ fake_reader (const void *src, int size)
     uint32_t r = lcg_rand_u32 ();
 
     assert (size == 1 || size == 2 || size == 4);
-    return r & ((1 << (size * 8)) - 1);
+
+    return r >> (32 - (size * 8));
 }
 
 static void
@@ -410,6 +412,7 @@ set_general_properties (pixman_image_t *image, pixman_bool_t allow_alpha_map)
 
 	case 6: case 7:
 	    n_rects = 3;
+	    break;
 
 	default:
 	    n_rects = lcg_rand_n (100);
@@ -795,10 +798,10 @@ main (int argc, char **argv)
 {
     int verbose = FALSE;
     uint32_t seed = 1;
-    uint32_t n_tests = 0xffffffff;
+    uint32_t n_tests = 8000;
     uint32_t mod = 0;
     pixman_bool_t use_threads = TRUE;
-    uint32_t i;
+    int32_t i;
 
     pixman_disable_out_of_bounds_workaround ();
 
@@ -845,9 +848,6 @@ main (int argc, char **argv)
 	}
     }
 
-    if (n_tests == 0xffffffff)
-	n_tests = 8000;
-
     if (getenv ("PIXMAN_RANDOMIZE_TESTS"))
     {
 	seed = get_random_seed();
@@ -859,13 +859,13 @@ main (int argc, char **argv)
 #ifdef USE_OPENMP
 #   pragma omp parallel for default(none) shared(verbose, n_tests, mod, seed)
 #endif
-	for (i = seed; i < seed + n_tests; ++i)
-	    run_test (i, verbose, mod);
+	for (i = 0; i < (int32_t)n_tests; ++i)
+	    run_test (seed + i, verbose, mod);
     }
     else
     {
-	for (i = seed; i < seed + n_tests; ++i)
-	    run_test (i, verbose, mod);
+	for (i = 0; i < (int32_t)n_tests; ++i)
+	    run_test (seed + i, verbose, mod);
     }
 
     return 0;

@@ -5,7 +5,6 @@
  * Script 'fuzzer-find-diff.pl' can be used to narrow down the problem in
  * the case of test failure.
  */
-#include <assert.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include "utils.h"
@@ -104,7 +103,7 @@ free_random_image (uint32_t initcrc,
 		mask <<= (PIXMAN_FORMAT_BPP (fmt) - PIXMAN_FORMAT_DEPTH (fmt));
 	    }
 
-	    for (i = 0; i < 32; i++)
+	    for (i = 0; i * PIXMAN_FORMAT_BPP (fmt) < 32; i++)
 		mask |= mask << (i * PIXMAN_FORMAT_BPP (fmt));
 
 	    for (i = 0; i < stride * height / 4; i++)
@@ -281,7 +280,7 @@ test_composite (int testnum, int verbose)
 
     lcg_srand (testnum);
 
-    op = op_list[lcg_rand_n (sizeof (op_list) / sizeof (op_list[0]))];
+    op = op_list[lcg_rand_n (ARRAY_LENGTH (op_list))];
 
     if (lcg_rand_n (8))
     {
@@ -425,6 +424,6 @@ main (int argc, const char *argv[])
     }
 
     return fuzzer_test_main("blitters", 2000000,
-			    0x3EDA4108,
+			    0xA364B5BF,
 			    test_composite, argc, argv);
 }

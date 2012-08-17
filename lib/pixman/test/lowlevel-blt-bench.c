@@ -25,10 +25,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
-#define PIXMAN_USE_INTERNAL_API
-#include <pixman.h>
-
 #include "utils.h"
 
 #define SOLID_FLAG 1
@@ -586,6 +582,8 @@ tests_tbl[] =
     { "add_1555_1555",         PIXMAN_a1r5g5b5,    0, PIXMAN_OP_ADD,     PIXMAN_null,     0, PIXMAN_a1r5g5b5 },
     { "add_0565_2x10",         PIXMAN_r5g6b5,      0, PIXMAN_OP_ADD,     PIXMAN_null,     0, PIXMAN_x2r10g10b10 },
     { "add_2a10_2a10",         PIXMAN_a2r10g10b10, 0, PIXMAN_OP_ADD,     PIXMAN_null,     0, PIXMAN_a2r10g10b10 },
+    { "in_n_8_8",              PIXMAN_a8r8g8b8,    1, PIXMAN_OP_IN,      PIXMAN_a8,       0, PIXMAN_a8 },
+    { "in_8_8",                PIXMAN_a8,          0, PIXMAN_OP_IN,      PIXMAN_null,     0, PIXMAN_a8 },
     { "src_n_2222",            PIXMAN_a8r8g8b8,    1, PIXMAN_OP_SRC,     PIXMAN_null,     0, PIXMAN_a2r2g2b2 },
     { "src_n_0565",            PIXMAN_a8r8g8b8,    1, PIXMAN_OP_SRC,     PIXMAN_null,     0, PIXMAN_r5g6b5 },
     { "src_n_1555",            PIXMAN_a8r8g8b8,    1, PIXMAN_OP_SRC,     PIXMAN_null,     0, PIXMAN_a1r5g5b5 },
@@ -630,6 +628,7 @@ tests_tbl[] =
     { "over_n_0565",           PIXMAN_a8r8g8b8,    1, PIXMAN_OP_OVER,    PIXMAN_null,     0, PIXMAN_r5g6b5 },
     { "over_n_1555",           PIXMAN_a8r8g8b8,    1, PIXMAN_OP_OVER,    PIXMAN_null,     0, PIXMAN_a1r5g5b5 },
     { "over_8888_0565",        PIXMAN_a8r8g8b8,    0, PIXMAN_OP_OVER,    PIXMAN_null,     0, PIXMAN_r5g6b5 },
+    { "over_8888_8888",        PIXMAN_a8r8g8b8,    0, PIXMAN_OP_OVER,    PIXMAN_null,     0, PIXMAN_a8r8g8b8 },
     { "over_8888_x888",        PIXMAN_a8r8g8b8,    0, PIXMAN_OP_OVER,    PIXMAN_null,     0, PIXMAN_x8r8g8b8 },
     { "over_x888_8_0565",      PIXMAN_x8r8g8b8,    0, PIXMAN_OP_OVER,    PIXMAN_a8,       0, PIXMAN_r5g6b5 },
     { "over_x888_8_8888",      PIXMAN_x8r8g8b8,    0, PIXMAN_OP_OVER,    PIXMAN_a8,       0, PIXMAN_a8r8g8b8 },
@@ -653,6 +652,7 @@ tests_tbl[] =
     { "over_8888_n_x888",      PIXMAN_a8r8g8b8,    0, PIXMAN_OP_OVER,    PIXMAN_a8,       1, PIXMAN_x8r8g8b8 },
     { "over_8888_n_0565",      PIXMAN_a8r8g8b8,    0, PIXMAN_OP_OVER,    PIXMAN_a8,       1, PIXMAN_r5g6b5 },
     { "over_8888_n_1555",      PIXMAN_a8r8g8b8,    0, PIXMAN_OP_OVER,    PIXMAN_a8,       1, PIXMAN_a1r5g5b5 },
+    { "over_x888_n_8888",      PIXMAN_x8r8g8b8,    0, PIXMAN_OP_OVER,    PIXMAN_a8,       1, PIXMAN_a8r8g8b8 },
     { "outrev_n_8_0565",       PIXMAN_a8r8g8b8,    1, PIXMAN_OP_OUT_REV, PIXMAN_a8,       0, PIXMAN_r5g6b5 },
     { "outrev_n_8_1555",       PIXMAN_a8r8g8b8,    1, PIXMAN_OP_OUT_REV, PIXMAN_a8,       0, PIXMAN_a1r5g5b5 },
     { "outrev_n_8_x888",       PIXMAN_a8r8g8b8,    1, PIXMAN_OP_OUT_REV, PIXMAN_a8,       0, PIXMAN_x8r8g8b8 },
@@ -707,7 +707,7 @@ main (int argc, char *argv[])
             x / 1000000., x / 4000000);
     printf ("---\n");
 
-    for (i = 0; i < sizeof(tests_tbl) / sizeof(tests_tbl[0]); i++)
+    for (i = 0; i < ARRAY_LENGTH (tests_tbl); i++)
     {
 	if (strcmp (pattern, "all") == 0 || strstr (tests_tbl[i].testname, pattern))
 	{

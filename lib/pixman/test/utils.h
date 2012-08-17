@@ -2,7 +2,6 @@
 #include <config.h>
 #endif
 
-#include <stdlib.h>
 #include <assert.h>
 #include "pixman-private.h" /* For 'inline' definition */
 
@@ -108,6 +107,15 @@ fail_after (int seconds, const char *msg);
 /* If possible, enable traps for floating point exceptions */
 void enable_fp_exceptions(void);
 
+/* Converts a8r8g8b8 pixels to pixels that
+ *  - are not premultiplied,
+ *  - are stored in this order in memory: R, G, B, A, regardless of
+ *    the endianness of the computer.
+ * It is allowed for @src and @dst to point to the same memory buffer.
+ */
+void
+a8r8g8b8_to_rgba_np (uint32_t *dst, uint32_t *src, int n_pixels);
+
 pixman_bool_t
 write_png (pixman_image_t *image, const char *filename);
 
@@ -152,3 +160,38 @@ aligned_malloc (size_t align, size_t size);
 
 void
 initialize_palette (pixman_indexed_t *palette, uint32_t depth, int is_rgb);
+
+typedef struct
+{
+    double r, g, b, a;
+} color_t;
+
+void
+round_color (pixman_format_code_t format, color_t *color);
+
+typedef struct
+{
+    pixman_format_code_t format;
+    uint32_t am, rm, gm, bm;
+    uint32_t as, rs, gs, bs;
+    uint32_t aw, rw, gw, bw;
+} pixel_checker_t;
+
+void
+pixel_checker_init (pixel_checker_t *checker, pixman_format_code_t format);
+
+void
+pixel_checker_split_pixel (const pixel_checker_t *checker, uint32_t pixel,
+			   int *a, int *r, int *g, int *b);
+
+void
+pixel_checker_get_max (const pixel_checker_t *checker, color_t *color,
+		       int *a, int *r, int *g, int *b);
+
+void
+pixel_checker_get_min (const pixel_checker_t *checker, color_t *color,
+		       int *a, int *r, int *g, int *b);
+
+pixman_bool_t
+pixel_checker_check (const pixel_checker_t *checker,
+		     uint32_t pixel, color_t *color);

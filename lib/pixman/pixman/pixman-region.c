@@ -828,8 +828,7 @@ pixman_op (region_type_t *  new_reg,               /* Place to store result	    
     {
         if (!pixman_rect_alloc (new_reg, new_size))
         {
-            if (old_data)
-		free (old_data);
+            free (old_data);
             return FALSE;
 	}
     }
@@ -1005,8 +1004,7 @@ pixman_op (region_type_t *  new_reg,               /* Place to store result	    
         APPEND_REGIONS (new_reg, r2_band_end, r2_end);
     }
 
-    if (old_data)
-	free (old_data);
+    free (old_data);
 
     if (!(numRects = new_reg->data->numRects))
     {
@@ -1027,8 +1025,7 @@ pixman_op (region_type_t *  new_reg,               /* Place to store result	    
     return TRUE;
 
 bail:
-    if (old_data)
-	free (old_data);
+    free (old_data);
 
     return pixman_break (new_reg);
 }
@@ -2357,6 +2354,16 @@ PREFIX (_reset) (region_type_t *region, box_type_t *box)
     FREE_DATA (region);
 
     region->data = NULL;
+}
+
+PIXMAN_EXPORT void
+PREFIX (_clear) (region_type_t *region)
+{
+    GOOD (region);
+    FREE_DATA (region);
+
+    region->extents = *pixman_region_empty_box;
+    region->data = pixman_region_empty_data;
 }
 
 /* box is "return" value */

@@ -145,11 +145,8 @@ _pixman_image_fini (pixman_image_t *image)
 
 	pixman_region32_fini (&common->clip_region);
 
-	if (common->transform)
-	    free (common->transform);
-
-	if (common->filter_params)
-	    free (common->filter_params);
+	free (common->transform);
+	free (common->filter_params);
 
 	if (common->alpha_map)
 	    pixman_image_unref ((pixman_image_t *)common->alpha_map);
@@ -302,13 +299,12 @@ compute_image_info (pixman_image_t *image)
 	             image->common.transform->matrix[1][1] == 0)
 	    {
 		pixman_fixed_t m01 = image->common.transform->matrix[0][1];
-		if (m01 == -image->common.transform->matrix[1][0])
-		{
-			if (m01 == -pixman_fixed_1)
-			    flags |= FAST_PATH_ROTATE_90_TRANSFORM;
-			else if (m01 == pixman_fixed_1)
-			    flags |= FAST_PATH_ROTATE_270_TRANSFORM;
-		}
+		pixman_fixed_t m10 = image->common.transform->matrix[1][0];
+
+		if (m01 == -1 && m10 == 1)
+		    flags |= FAST_PATH_ROTATE_90_TRANSFORM;
+		else if (m01 == 1 && m10 == -1)
+		    flags |= FAST_PATH_ROTATE_270_TRANSFORM;
 	    }
 	}
 

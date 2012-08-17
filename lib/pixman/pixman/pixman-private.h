@@ -475,34 +475,11 @@ pixman_implementation_t *
 _pixman_implementation_create (pixman_implementation_t *delegate,
 			       const pixman_fast_path_t *fast_paths);
 
-void
-_pixman_implementation_combine_32 (pixman_implementation_t *imp,
-                                   pixman_op_t              op,
-                                   uint32_t *               dest,
-                                   const uint32_t *         src,
-                                   const uint32_t *         mask,
-                                   int                      width);
-void
-_pixman_implementation_combine_64 (pixman_implementation_t *imp,
-                                   pixman_op_t              op,
-                                   uint64_t *               dest,
-                                   const uint64_t *         src,
-                                   const uint64_t *         mask,
-                                   int                      width);
-void
-_pixman_implementation_combine_32_ca (pixman_implementation_t *imp,
-                                      pixman_op_t              op,
-                                      uint32_t *               dest,
-                                      const uint32_t *         src,
-                                      const uint32_t *         mask,
-                                      int                      width);
-void
-_pixman_implementation_combine_64_ca (pixman_implementation_t *imp,
-                                      pixman_op_t              op,
-                                      uint64_t *               dest,
-                                      const uint64_t *         src,
-                                      const uint64_t *         mask,
-                                      int                      width);
+pixman_combine_32_func_t
+_pixman_implementation_lookup_combiner (pixman_implementation_t *imp,
+					pixman_op_t		 op,
+					pixman_bool_t		 component_alpha,
+					pixman_bool_t		 wide);
 
 pixman_bool_t
 _pixman_implementation_blt (pixman_implementation_t *imp,
@@ -562,7 +539,7 @@ _pixman_implementation_create_fast_path (pixman_implementation_t *fallback);
 pixman_implementation_t *
 _pixman_implementation_create_noop (pixman_implementation_t *fallback);
 
-#if defined USE_X86_MMX || defined USE_ARM_IWMMXT
+#if defined USE_X86_MMX || defined USE_ARM_IWMMXT || defined USE_LOONGSON_MMI
 pixman_implementation_t *
 _pixman_implementation_create_mmx (pixman_implementation_t *fallback);
 #endif
@@ -580,6 +557,11 @@ _pixman_implementation_create_arm_simd (pixman_implementation_t *fallback);
 #ifdef USE_ARM_NEON
 pixman_implementation_t *
 _pixman_implementation_create_arm_neon (pixman_implementation_t *fallback);
+#endif
+
+#ifdef USE_MIPS_DSPR2
+pixman_implementation_t *
+_pixman_implementation_create_mips_dspr2 (pixman_implementation_t *fallback);
 #endif
 
 #ifdef USE_VMX
@@ -954,10 +936,11 @@ _pixman_log_error (const char *function, const char *message);
 static inline uint64_t
 oil_profile_stamp_rdtsc (void)
 {
-    uint64_t ts;
+    uint32_t hi, lo;
 
-    __asm__ __volatile__ ("rdtsc\n" : "=A" (ts));
-    return ts;
+    __asm__ __volatile__ ("rdtsc\n" : "=a" (lo), "=d" (hi));
+
+    return lo | (((uint64_t)hi) << 32);
 }
 
 #define OIL_STAMP oil_profile_stamp_rdtsc

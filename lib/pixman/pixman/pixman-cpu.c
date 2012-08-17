@@ -24,6 +24,7 @@
 #endif
 
 #include <string.h>
+#include <stdlib.h>
 
 #if defined(USE_ARM_SIMD) && defined(_MSC_VER)
 /* Needed for EXCEPTION_ILLEGAL_INSTRUCTION */
@@ -328,7 +329,6 @@ pixman_arm_read_auxv_or_cpu_features ()
 
 #elif defined (__linux__) /* linux ELF */
 
-#include <stdlib.h>
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -426,6 +426,70 @@ pixman_have_arm_iwmmxt (void)
 #endif
 
 #endif /* USE_ARM_SIMD || USE_ARM_NEON || USE_ARM_IWMMXT */
+
+#if defined(USE_MIPS_DSPR2) || defined(USE_LOONGSON_MMI)
+
+#if defined (__linux__) /* linux ELF */
+
+static pixman_bool_t
+pixman_have_mips_feature (const char *search_string)
+{
+    const char *file_name = "/proc/cpuinfo";
+    /* Simple detection of MIPS features at runtime for Linux.
+     * It is based on /proc/cpuinfo, which reveals hardware configuration
+     * to user-space applications.  According to MIPS (early 2010), no similar
+     * facility is universally available on the MIPS architectures, so it's up
+     * to individual OSes to provide such.
+     */
+
+    char cpuinfo_line[256];
+
+    FILE *f = NULL;
+
+    if ((f = fopen (file_name, "r")) == NULL)
+        return FALSE;
+
+    while (fgets (cpuinfo_line, sizeof (cpuinfo_line), f) != NULL)
+    {
+        if (strstr (cpuinfo_line, search_string) != NULL)
+        {
+            fclose (f);
+            return TRUE;
+        }
+    }
+
+    fclose (f);
+
+    /* Did not find string in the proc file. */
+    return FALSE;
+}
+
+#if defined(USE_MIPS_DSPR2)
+pixman_bool_t
+pixman_have_mips_dspr2 (void)
+{
+     /* Only currently available MIPS core that supports DSPr2 is 74K. */
+    return pixman_have_mips_feature ("MIPS 74K");
+}
+#endif
+
+#if defined(USE_LOONGSON_MMI)
+pixman_bool_t
+pixman_have_loongson_mmi (void)
+{
+    /* I really don't know if some Loongson CPUs don't have MMI. */
+    return pixman_have_mips_feature ("Loongson");
+}
+#endif
+
+#else /* linux ELF */
+
+#define pixman_have_mips_dspr2() FALSE
+#define pixman_have_loongson_mmi() FALSE
+
+#endif /* linux ELF */
+
+#endif /* USE_MIPS_DSPR2 || USE_LOONGSON_MMI */
 
 #if defined(USE_X86_MMX) || defined(USE_SSE2)
 /* The CPU detection code needs to be in a file not compiled with
@@ -618,6 +682,7 @@ detect_cpu_features (void)
     return features;
 }
 
+#ifdef USE_X86_MMX
 static pixman_bool_t
 pixman_have_mmx (void)
 {
@@ -633,6 +698,7 @@ pixman_have_mmx (void)
 
     return mmx_present;
 }
+#endif
 
 #ifdef USE_SSE2
 static pixman_bool_t
@@ -663,46 +729,87 @@ pixman_have_sse2 (void)
 #endif /* __amd64__ */
 #endif
 
+static pixman_bool_t
+disabled (const char *name)
+{
+    const char *env;
+
+    if ((env = getenv ("PIXMAN_DISABLE")))
+    {
+	do
+	{
+	    const char *end;
+	    int len;
+
+	    if ((end = strchr (env, ' ')))
+		len = end - env;
+	    else
+		len = strlen (env);
+
+	    if (strlen (name) == len && strncmp (name, env, len) == 0)
+	    {
+		printf ("pixman: Disabled %s implementation\n", name);
+		return TRUE;
+	    }
+
+	    env += len;
+	}
+	while (*env++);
+    }
+
+    return FALSE;
+}
+
 pixman_implementation_t *
 _pixman_choose_implementation (void)
 {
     pixman_implementation_t *imp;
 
     imp = _pixman_implementation_create_general();
-    imp = _pixman_implementation_create_fast_path (imp);
-    
+
+    if (!disabled ("fast"))
+	imp = _pixman_implementation_create_fast_path (imp);
+
 #ifdef USE_X86_MMX
-    if (pixman_have_mmx ())
+    if (!disabled ("mmx") && pixman_have_mmx ())
 	imp = _pixman_implementation_create_mmx (imp);
 #endif
 
 #ifdef USE_SSE2
-    if (pixman_have_sse2 ())
+    if (!disabled ("sse2") && pixman_have_sse2 ())
 	imp = _pixman_implementation_create_sse2 (imp);
 #endif
 
 #ifdef USE_ARM_SIMD
-    if (pixman_have_arm_simd ())
+    if (!disabled ("arm-simd") && pixman_have_arm_simd ())
 	imp = _pixman_implementation_create_arm_simd (imp);
 #endif
 
 #ifdef USE_ARM_IWMMXT
-    if (pixman_have_arm_iwmmxt ())
+    if (!disabled ("arm-iwmmxt") && pixman_have_arm_iwmmxt ())
 	imp = _pixman_implementation_create_mmx (imp);
 #endif
-
+#ifdef USE_LOONGSON_MMI
+    if (!disabled ("loongson-mmi") && pixman_have_loongson_mmi ())
+	imp = _pixman_implementation_create_mmx (imp);
+#endif
 #ifdef USE_ARM_NEON
-    if (pixman_have_arm_neon ())
+    if (!disabled ("arm-neon") && pixman_have_arm_neon ())
 	imp = _pixman_implementation_create_arm_neon (imp);
 #endif
 
+#ifdef USE_MIPS_DSPR2
+    if (!disabled ("mips-dspr2") && pixman_have_mips_dspr2 ())
+	imp = _pixman_implementation_create_mips_dspr2 (imp);
+#endif
+
 #ifdef USE_VMX
-    if (pixman_have_vmx ())
+    if (!disabled ("vmx") && pixman_have_vmx ())
 	imp = _pixman_implementation_create_vmx (imp);
 #endif
 
     imp = _pixman_implementation_create_noop (imp);
-    
+
     return imp;
 }
 
