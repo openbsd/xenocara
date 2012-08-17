@@ -132,6 +132,7 @@
 ./usr/X11R6/include/xorg/xaarop.h
 ./usr/X11R6/include/xorg/xace.h
 ./usr/X11R6/include/xorg/xacestr.h
+./usr/X11R6/include/xorg/xf86-mouse-properties.h
 ./usr/X11R6/include/xorg/xf86.h
 ./usr/X11R6/include/xorg/xf86Crtc.h
 ./usr/X11R6/include/xorg/xf86Cursor.h
@@ -233,6 +234,7 @@
 ./usr/X11R6/lib/modules/multimedia/tda9885_drv.so
 ./usr/X11R6/lib/modules/multimedia/uda1380_drv.la
 ./usr/X11R6/lib/modules/multimedia/uda1380_drv.so
+./usr/X11R6/lib/pkgconfig/xorg-mouse.pc
 ./usr/X11R6/lib/pkgconfig/xorg-server.pc
 ./usr/X11R6/man/man1/Xephyr.1
 ./usr/X11R6/man/man1/Xnest.1
