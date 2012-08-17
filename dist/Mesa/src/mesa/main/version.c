@@ -25,7 +25,6 @@
 #include "imports.h"
 #include "mtypes.h"
 #include "version.h"
-#include "git_sha1.h"
 
 
 
