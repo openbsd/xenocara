@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.46 2012/04/01 23:00:24 matthieu Exp $
+# $OpenBSD: Makefile,v 1.47 2012/08/18 10:38:39 espie Exp $
 .include <bsd.own.mk>
 .include <bsd.xconf.mk>
 
@@ -28,44 +28,33 @@ SUBDIR+= distrib/notes
 
 NOOBJ=
 
-build: beforebuild _SUBDIRUSE
+build: 
+	exec ${SUDO} ${MAKE} bootstrap-root
+	cd util/macros && exec ${MAKE} -f Makefile.bsd-wrapper
+	exec ${SUDO} ${MAKE} beforebuild
+	exec ${MAKE} realbuild
+	exec ${SUDO} ${MAKE} afterbuild
+
+realbuild: _SUBDIRUSE
+	# that's all folks
 
 bootstrap:
-	${SUDO} ${MAKE} distrib-dirs
-	cd ${.CURDIR}/share/mk \
-		&& exec ${SUDO} ${MAKE} X11BASE=${X11BASE} install
+	exec ${SUDO} ${MAKE} bootstrap-root
 
-beforebuild: bootstrap
-	cd ${.CURDIR}/util/macros \
-		&& ${MAKE} -f Makefile.bsd-wrapper \
-		&& exec ${SUDO} ${MAKE} -f Makefile.bsd-wrapper install
-	exec ${SUDO} ${MAKE} includes
+bootstrap-root:
+	exec ${MAKE} distrib-dirs
+	exec ${MAKE} install-mk
 
-beforeinstall:
-	${MAKE} distrib-dirs
-	${MAKE} includes
+beforeinstall beforebuild:
+	cd util/macros && exec ${MAKE} -f Makefile.bsd-wrapper install
+	exec ${MAKE} includes
 
-afterinstall:
-	${MAKE} install-mk
-	${MAKE} fix-appd
-	${MAKE} font-cache
+afterinstall afterbuild:
+	exec ${MAKE} fix-appd
 	/usr/libexec/makewhatis -v ${DESTDIR}/usr/X11R6/man
 
-realinstall: _SUBDIRUSE
-
 install-mk:
-.if defined(DESTDIR) && (${DESTDIR} != "" || ${DESTDIR} != "/")
-	cd ${.CURDIR}/share/mk \
-		&& ${MAKE} X11BASE=${X11BASE} install
-.endif
-
-font-cache:
-	@echo "running fc-cache"
-	if test -z "$(DESTDIR)"; then \
-		fc-cache -s -v ;\
-	else\
-		fc-cache -c ${DESTDIR} -s -v ;\
-	fi
+	cd share/mk && exec ${MAKE} X11BASE=${X11BASE} install
 
 fix-appd:
 	# Make sure /usr/local/lib/X11/app-defaults is a link
@@ -78,8 +67,11 @@ fix-appd:
 	    ln -s ${REALAPPD} ${DESTDIR}${LOCALAPPD}; \
 	fi
 
-release: release-clean distrib-dirs release-install dist
-.ORDER: release-clean distrib-dirs release-install dist
+font-cache:
+	cd font/alias && exec ${MAKE} -f Makefile.bsd-wrapper afterinstall
+
+release: release-clean release-install dist
+.ORDER: release-clean release-install dist
 
 release-clean:
 .if ! ( defined(DESTDIR) && defined(RELEASEDIR) )
@@ -97,7 +89,8 @@ release-clean:
 	fi
 
 release-install:
-	@${MAKE} install
+	@exec ${SUDO} ${MAKE} bootstrap-root
+	@exec ${MAKE} install
 .if ${MACHINE} == zaurus
 	@if [ -f $(DESTDIR)/etc/X11/xorg.conf ]; then \
 	 echo "Not overwriting existing" $(DESTDIR)/etc/X11/xorg.conf; \
@@ -119,19 +112,22 @@ dist-rel:
 dist:
 	cd distrib/sets && \
 		env MACHINE=${MACHINE} ksh ./maketars ${OSrev} ${OSREV} && \
-		(env MACHINE=${MACHINE} ksh ./checkflist ${OSREV} || true)
+		{ env MACHINE=${MACHINE} ksh ./checkflist ${OSREV} || true ; }
 
 
 distrib-dirs:
 .if defined(DESTDIR) && ${DESTDIR} != ""
+	# running mtree under ${DESTDIR}
 	mtree -qdef /etc/mtree/BSD.x11.dist -p ${DESTDIR} -U
 .else
+	# running mtree
 	mtree -qdef /etc/mtree/BSD.x11.dist -p / -U
 .endif
 
 
 .PHONY: all build beforeinstall install afterinstall release clean cleandir \
-	dist distrib-dirs fix-appd
+	dist distrib-dirs fix-appd beforebuild bootstrap afterbuild realbuild \
+	install-mk bootstrap-root
 
 .include <bsd.subdir.mk>
 .include <bsd.xorg.mk>
