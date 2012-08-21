@@ -1,4 +1,4 @@
-# $OpenBSD: bsd.xorg.mk,v 1.44 2012/08/08 21:54:33 matthieu Exp $ -*- makefile  -*-
+# $OpenBSD: bsd.xorg.mk,v 1.45 2012/08/21 20:18:48 espie Exp $ -*- makefile  -*-
 #
 # Copyright © 2006,2012 Matthieu Herrb
 #
@@ -150,6 +150,8 @@ all:	config.status
 REORDER_DEPENDENCIES += ${X11BASE}/share/mk/automake.dep
 ECHO_REORDER ?= :
 
+foo:
+	cd ${_SRCDIR}; ${AUTOTOOLS_ENV} exec autoreconf -v --install --force
 .if !target(config.status)
 config.status:
 .if defined(XENOCARA_RERUN_AUTOCONF) && ${XENOCARA_RERUN_AUTOCONF:L} == "yes"
@@ -213,7 +215,7 @@ build:
 	cd ${.CURDIR} && exec ${SUDO} ${MAKE} ${_wrapper} install
 .endif
 
-.if !target(clean)
+.if !target(clean) && ${MAKEFILE:T} != "Makefile"
 clean:
 	-@if [ -f Makefile ]; then exec ${MAKE} clean; fi
 .endif
