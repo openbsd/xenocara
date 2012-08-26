@@ -1,8 +1,8 @@
-# $OpenBSD: Makefile,v 1.31 2012/08/17 13:57:59 mpi Exp $
+# $OpenBSD: Makefile,v 1.32 2012/08/26 18:46:42 mpi Exp $
 .include <bsd.xconf.mk>
 
 .if ${XENOCARA_BUILD_DRI:L} == "yes"
-SUBDIR=glsl libmesa dri
+SUBDIR=glsl mesa dri
 .endif
 
 LIB=	GL

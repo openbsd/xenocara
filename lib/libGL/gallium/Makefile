@@ -1,6 +1,6 @@
-# $OpenBSD: Makefile,v 1.1.1.1 2012/07/13 12:43:30 mpi Exp $
+# $OpenBSD: Makefile,v 1.2 2012/08/26 18:46:42 mpi Exp $
 
-SUBDIR= libgallium libmesagallium drivers
+SUBDIR= libgallium drivers
 
 build depend all install clean cleandir: _SUBDIRUSE
 

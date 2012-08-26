@@ -1,10 +1,11 @@
-# $OpenBSD: Makefile,v 1.14 2012/08/17 13:58:00 mpi Exp $
+# $OpenBSD: Makefile.inc,v 1.1 2012/08/26 18:46:42 mpi Exp $
 
-MESA=	${.CURDIR}/../../../dist/Mesa/src/mesa
-MAPI=	${.CURDIR}/../../../dist/Mesa/src/mapi
-GLSL=	${.CURDIR}/../../../dist/Mesa/src/glsl
+MESA=		${.CURDIR}/../../../../dist/Mesa/src/mesa
+MAPI=		${.CURDIR}/../../../../dist/Mesa/src/mapi
+GLSL=		${.CURDIR}/../../../../dist/Mesa/src/glsl
+GALLIUM=	${.CURDIR}/../../../../dist/Mesa/src/gallium
 
-MESA_INCLUDE=	${.CURDIR}/../../../dist/Mesa/include
+MESA_INCLUDE=	${.CURDIR}/../../../../dist/Mesa/include
 
 CPP=	cpp -notraditional
 
@@ -20,10 +21,6 @@ CPPFLAGS+= \
 	-I${GLSL} \
 	-I${.OBJDIR}/shader/slang \
 	-I${X11BASE}/include \
-	-I/usr/include/dev/pci/drm \
-	-DGLX_INDIRECT_RENDERING \
-	-DGLX_DIRECT_RENDERING \
-	-DUSE_EXTERNAL_DXTN_LIB=1 \
 	-DPTHREADS \
 	-DHAVE_ALIAS \
 	-D_REENTRANT \
@@ -234,6 +231,56 @@ VBO_SOURCES = \
 	vbo_save_draw.c \
 	vbo_save_loopback.c 
 
+STATETRACKER_SOURCES = \
+	st_atom.c \
+	st_atom_blend.c \
+	st_atom_clip.c \
+	st_atom_constbuf.c \
+	st_atom_depth.c \
+	st_atom_framebuffer.c \
+	st_atom_msaa.c \
+	st_atom_pixeltransfer.c \
+	st_atom_sampler.c \
+	st_atom_scissor.c \
+	st_atom_shader.c \
+	st_atom_rasterizer.c \
+	st_atom_stipple.c \
+	st_atom_texture.c \
+	st_atom_viewport.c \
+	st_cb_accum.c \
+	st_cb_bitmap.c \
+	st_cb_blit.c \
+	st_cb_bufferobjects.c \
+	st_cb_clear.c \
+	st_cb_condrender.c \
+	st_cb_flush.c \
+	st_cb_drawpixels.c \
+	st_cb_drawtex.c \
+	st_cb_eglimage.c \
+	st_cb_fbo.c \
+	st_cb_feedback.c \
+	st_cb_program.c \
+	st_cb_queryobj.c \
+	st_cb_rasterpos.c \
+	st_cb_readpixels.c \
+	st_cb_syncobj.c \
+	st_cb_strings.c \
+	st_cb_texture.c \
+	st_cb_texturebarrier.c \
+	st_cb_viewport.c \
+	st_cb_xformfb.c \
+	st_context.c \
+	st_debug.c \
+	st_draw.c \
+	st_draw_feedback.c \
+	st_extensions.c \
+	st_format.c \
+	st_gen_mipmap.c \
+	st_manager.c \
+	st_mesa_to_tgsi.c \
+	st_program.c \
+	st_texture.c
+
 PROGRAM_SOURCES = \
 	arbprogparse.c \
 	hash_table.c \
@@ -312,6 +359,14 @@ COMMON_DRIVER_SOURCES = \
 	driverfuncs.c		\
 	meta.c
 
+# drisw
+DRISW_SOURCES = \
+	dri_sw_winsys.c \
+        dri_context.c \
+        dri_screen.c \
+        dri_drawable.c \
+        drisw.c
+
 MESA_SOURCES = \
 	$(MAIN_SOURCES)		\
 	$(MATH_SOURCES)		\
@@ -328,16 +383,22 @@ MESA_CXX_SOURCES = \
 	$(MAIN_CXX_SOURCES) \
 	$(SHADER_CXX_SOURCES)
 
-SRCS=	${MESA_SOURCES}	\
-	${MESA_CXX_SOURCES} \
-	${ASM_SOURCES} \
-	_atexit.c
+MESAGALLIUM_SOURCES = \
+	${MAIN_SOURCES}		\
+	${MATH_SOURCES}		\
+	${VBO_SOURCES}		\
+	${PROGRAM_SOURCES}	\
+	${STATETRACKER_SOURCES} \
+	${ASM_C_SOURCES}	\
+	${DRISW_SOURCES}
+
+MESAGALLIUM_CXX_SOURCES = \
+	${MAIN_CXX_SOURCES} \
+	${SHADER_CXX_SOURCES}
 
 OBJS+=  ${SRCS:N*.h:R:S/$/.so/g}
 
-LIB=	libmesa
-
-all: ${LIB}_pic.a
+all: lib${LIB}_pic.a
 
 obj: _xenocara_obj
 
@@ -345,7 +406,7 @@ install:
 	@echo "Not installing libmesa"
 
 clean: 
-	rm -f ${LIB}_pic.a ${OBJS} $(CLEANFILES)
+	rm -f lib${LIB}_pic.a ${OBJS} $(CLEANFILES)
 
 cleandir:	clean
 
@@ -382,10 +443,10 @@ prog_execute.so: prog_execute.c
 	@rm -f ${.TARGET}.o
 
 
-${LIB}_pic.a:	${OBJS} $(DPADD)
-	@rm -f ${LIB}_pic.a
-	@${AR} cq ${LIB}_pic.a `${LORDER} ${OBJS} | tsort -q`
-	${RANLIB} ${LIB}_pic.a
+lib${LIB}_pic.a:	${OBJS} $(DPADD)
+	@rm -f lib${LIB}_pic.a
+	@${AR} cq lib${LIB}_pic.a `${LORDER} ${OBJS} | tsort -q`
+	${RANLIB} lib${LIB}_pic.a
 
 .if ${MACHINE_ARCH} == i386 || ${MACHINE_ARCH} == amd64
 gen_matypes: gen_matypes.c
@@ -436,12 +497,15 @@ x86_xform4.so: matypes.h
 .PATH: ${MESA}/swrast
 .PATH: ${MESA}/swrast_setup
 .PATH: ${MESA}/tnl
+.PATH: ${MESA}/state_tracker
 .PATH: ${MESA}/program
 .PATH: ${MESA}/vbo
 .PATH: ${MESA}/drivers/common
-.PATH: ${.CURDIR}/generated
-
-.include <bsd.xorg.mk>
+.PATH: ${GALLIUM}/winsys/sw/dri
+.PATH: ${GALLIUM}/state_trackers/dri/sw
+.PATH: ${GALLIUM}/state_trackers/dri/common
+.PATH: ${.CURDIR}/..
+.PATH: ${.CURDIR}/../generated
 
 .if ${MACHINE_ARCH} == powerpc || ${MACHINE_ARCH} == sparc
 PICFLAG=-fPIC

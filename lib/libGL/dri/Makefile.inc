@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile.inc,v 1.14 2012/08/17 13:58:00 mpi Exp $
+# $OpenBSD: Makefile.inc,v 1.15 2012/08/26 18:46:42 mpi Exp $
 .include <bsd.xconf.mk>
 
 MESA= ${.CURDIR}/../../../../dist/Mesa/src/mesa
@@ -52,10 +52,10 @@ CPPFLAGS += \
 CPPFLAGS += -DUSE_X86_64_ASM
 .endif
 
-LDADD?=	../../libmesa/libmesa_pic.a \
+LDADD?=	../../mesa/libmesa/libmesa_pic.a \
 	../../glsl/libglsl/libglsl_pic.a \
 	-L${X11BASE}/lib  -lexpat -ldrm -lm -lstdc++ -lc
-DPADD?=	../../libmesa/libmesa_pic.a
+DPADD?=	../../mesa/libmesa/libmesa_pic.a
 
 .PATH: ${MESA}/drivers/dri/common
 .PATH: ${MESA}/drivers/common

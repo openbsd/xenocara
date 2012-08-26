@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.1 2011/10/23 13:57:36 matthieu Exp $
+# $OpenBSD: Makefile,v 1.1 2012/08/26 18:46:42 mpi Exp $
 
 MESA=	${.CURDIR}/../../../../dist/Mesa/src/mesa
 
@@ -28,4 +28,4 @@ api_exec_es2.c: APIspec.xml es_generator.py APIspecutil.py APIspec.py
 
 .PATH:	${MESA}/main
 
-.include <bsd.xorg.mk>
+.include <bsd.own.mk>

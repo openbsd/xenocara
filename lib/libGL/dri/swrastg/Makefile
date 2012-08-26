@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.3 2012/08/21 10:34:07 mpi Exp $
+#	$OpenBSD: Makefile,v 1.4 2012/08/26 18:46:42 mpi Exp $
 
 LIB=	swrast_dri.so
 
@@ -37,12 +37,12 @@ SRCS = \
 	${SWRAST_COMMON_SOURCES} \
 	${DRIVER_SOURCES}
 
-LDADD=	../../gallium/libmesagallium/libmesagallium_pic.a \
+LDADD=	../../mesa/libmesagallium/libmesagallium_pic.a \
 	../../glsl/libglsl/libglsl_pic.a \
 	${DRIVER_LIBS} \
 	../../gallium/libgallium/libgallium_pic.a \
 	-L${X11BASE}/lib -lexpat -lm -lstdc++ -lc -lpthread
-DPADD=	../../gallium/libmesagallium/libmesagallium_pic.a
+DPADD=	../../mesa/libmesagallium/libmesagallium_pic.a
 
 .include "../../gallium/Makefile.inc"
 .include <bsd.xorg.mk>
