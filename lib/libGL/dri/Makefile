@@ -1,9 +1,11 @@
-#	$OpenBSD: Makefile,v 1.12 2011/10/23 13:57:36 matthieu Exp $
+#	$OpenBSD: Makefile,v 1.13 2012/08/29 12:52:39 mpi Exp $
 
 SUBDIR= swrast
 
 .if ${MACHINE} == i386 || ${MACHINE} == amd64
 SUBDIR+= i810 i915 i965 radeon r200 r300 r600
+.elif ${MACHINE} == macppc
+SUBDIR+= r200 r300
 .endif
 
 build depend all install clean cleandir: _SUBDIRUSE
