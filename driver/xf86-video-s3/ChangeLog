@@ -1,3 +1,35 @@
+commit 73304078ffd138ba642587af1131a80720bfe65c
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Tue Jul 17 16:05:09 2012 +1000
+
+    xf86-video-s3: bump to version 0.6.5
+    
+    Signed-off-by: Dave Airlie <airlied@redhat.com>
+
+commit 8f35d7311ee74e8eb8c4c957e793bf230941a7b5
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Tue Jul 17 14:50:10 2012 +1000
+
+    s3: fixup scrn/screen conversion.
+    
+    Signed-off-by: Dave Airlie <airlied@redhat.com>
+
+commit 2c02712a860abb0a8584290a197071b8c0aa3fed
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Tue Jul 17 14:33:15 2012 +1000
+
+    s3: port to new X server compat API
+    
+    Signed-off-by: Dave Airlie <airlied@redhat.com>
+
+commit 09c3c15aa3bfb44e35325c3beee1de08f9366734
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Tue Jul 17 14:24:57 2012 +1000
+
+    s3: convert to XAA-less server world.
+    
+    Signed-off-by: Dave Airlie <airlied@redhat.com>
+
 commit ba2e11464f17ba17d65214e0344422a5b00b1acb
 Author: Julien Cristau <jcristau@debian.org>
 Date:   Sat May 12 13:50:32 2012 +0200
