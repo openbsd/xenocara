@@ -1,4 +1,4 @@
-# $OpenBSD: MODULES,v 1.228 2012/08/17 22:18:59 matthieu Exp $
+# $OpenBSD: MODULES,v 1.229 2012/09/08 15:36:28 matthieu Exp $
 #
 # X.Org maintained modules
 #
@@ -110,12 +110,12 @@ driver/xf86-video-geode		2.11.13	7.7
 driver/xf86-video-glint		1.2.8	7.7+
 driver/xf86-video-i128		1.3.6	7.7+
 driver/xf86-video-i740		1.3.4
-driver/xf86-video-intel		2.20.3	7.7+	needs-update
+driver/xf86-video-intel		2.20.6	7.7+	needs-update
 driver/xf86-video-mach64	6.9.3	7.7+
 driver/xf86-video-mga		1.6.1	7.7+	needs-update
 driver/xf86-video-neomagic	1.2.7	7.7+
 driver/xf86-video-nv		2.1.20	7.7+
-driver/xf86-video-openchrome	0.2.906	7.7
+driver/xf86-video-openchrome	0.3.1	7.7+	needs-update
 driver/xf86-video-r128		6.8.4	7.7+	needs-update
 driver/xf86-video-rendition	4.2.5
 driver/xf86-video-s3		0.6.5		needs-update
@@ -250,4 +250,4 @@ util/imake			1.0.5
 util/macros			1.17	7.7
 util/makedepend			1.0.4	7.7
 
-xserver				1.12.3	7.7+
+xserver				1.13.0	7.7+	needs-update
