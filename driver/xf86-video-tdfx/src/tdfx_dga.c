@@ -15,10 +15,12 @@ static Bool TDFX_OpenFramebuffer(ScrnInfoPtr, char **, unsigned char **,
 static Bool TDFX_SetMode(ScrnInfoPtr, DGAModePtr);
 static int  TDFX_GetViewport(ScrnInfoPtr);
 static void TDFX_SetViewport(ScrnInfoPtr, int, int, int);
+#ifdef HAVE_XAA_H
 static void TDFX_FillRect(ScrnInfoPtr, int, int, int, int, unsigned long);
 static void TDFX_BlitRect(ScrnInfoPtr, int, int, int, int, int, int);
 static void TDFX_BlitTransRect(ScrnInfoPtr, int, int, int, int, int, int, 
 			       unsigned long);
+#endif
 
 
 static
@@ -29,16 +31,20 @@ DGAFunctionRec TDFX_DGAFuncs = {
   TDFX_SetViewport,
   TDFX_GetViewport,
   TDFXSync,
+#ifdef HAVE_XAA_H
   TDFX_FillRect,
   TDFX_BlitRect,
   TDFX_BlitTransRect
+#else
+  NULL, NULL, NULL
+#endif
 };
 
 
 Bool
 TDFXDGAInit(ScreenPtr pScreen)
 {
-  ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+  ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
   TDFXPtr pTDFX;
   DisplayModePtr pMode, firstMode;
   DGAModePtr modes=0, newmodes=0, currentMode;
@@ -60,8 +66,10 @@ TDFXDGAInit(ScreenPtr pScreen)
     num++;
     currentMode->mode = pMode;
     currentMode->flags = DGA_CONCURRENT_ACCESS | DGA_PIXMAP_AVAILABLE;
+#ifdef HAVE_XAA_H
     if (!pTDFX->NoAccel)
       currentMode->flags |= DGA_FILL_RECT | DGA_BLIT_RECT;
+#endif
     if (pMode->Flags & V_DBLSCAN)
       currentMode->flags |= DGA_DOUBLESCAN;
     if (pMode->Flags & V_INTERLACE)
@@ -111,8 +119,8 @@ TDFX_SetMode(ScrnInfoPtr pScrn, DGAModePtr pMode)
    if (!pMode) { /* restore the original mode */
      /* put the ScreenParameters back */
      if(pTDFX->DGAactive) {
-	TDFXSwitchMode(index, OldModes[index], 0);
-	TDFXAdjustFrame(pScrn->pScreen->myNum, 0, 0, 0);
+	TDFXSwitchMode(SWITCH_MODE_ARGS(pScrn, OldModes[index]));
+	TDFXAdjustFrame(ADJUST_FRAME_ARGS(pScrn, 0, 0));
 	pTDFX->DGAactive = FALSE;
      }
    } else {
@@ -121,7 +129,7 @@ TDFX_SetMode(ScrnInfoPtr pScrn, DGAModePtr pMode)
         pTDFX->DGAactive = TRUE;
      }
 
-     TDFXSwitchMode(index, pMode->mode, 0);
+     TDFXSwitchMode(SWITCH_MODE_ARGS(pScrn, pMode->mode));
    }
    
    return TRUE;
@@ -141,7 +149,7 @@ TDFX_SetViewport(ScrnInfoPtr pScrn, int x, int y, int flags)
    TDFXPtr pTDFX = TDFXPTR(pScrn);
    vgaHWPtr hwp = VGAHWPTR(pScrn);
 
-   TDFXAdjustFrame(pScrn->pScreen->myNum, x, y, flags);
+   TDFXAdjustFrame(ADJUST_FRAME_ARGS(pScrn, x, y));
 
    /* fixme */
    while(hwp->readST01(hwp) & 0x08);
@@ -150,6 +158,7 @@ TDFX_SetViewport(ScrnInfoPtr pScrn, int x, int y, int flags)
    pTDFX->DGAViewportStatus = 0;  
 }
 
+#ifdef HAVE_XAA_H
 static void 
 TDFX_FillRect(ScrnInfoPtr pScrn, int x, int y, int w, int h, 
 	      unsigned long color)
@@ -189,6 +198,7 @@ TDFX_BlitTransRect(
   /* this one should be separate since the XAA function would
      prohibit usage of ~0 as the key */
 }
+#endif
 
 
 static Bool 

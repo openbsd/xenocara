@@ -29,6 +29,7 @@ tdfx_drv_la_LDFLAGS = -module -avoid-version
 tdfx_drv_ladir = @moduledir@/drivers
 
 tdfx_drv_la_SOURCES = \
+         compat-api.h \
          tdfx_accel.c \
          tdfxdefs.h \
          tdfx_dga.c \

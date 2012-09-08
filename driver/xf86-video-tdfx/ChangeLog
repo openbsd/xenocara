@@ -1,3 +1,27 @@
+commit a1037f73cf5da0ee3fec1867a5f20305d9267e63
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Tue Jul 17 16:05:09 2012 +1000
+
+    xf86-video-tdfx: bump to version 1.4.5
+    
+    Signed-off-by: Dave Airlie <airlied@redhat.com>
+
+commit 42706433782656adcf831588cf9dde203e50402b
+Author: Dave Airlie <airlied@gmail.com>
+Date:   Mon Jul 16 19:01:23 2012 +1000
+
+    tdfx: fix build against XAA-less server.
+    
+    Signed-off-by: Dave Airlie <airlied@redhat.com>
+
+commit abeb6ba8edac356b510ae6e8427c3cb8a0cf6e7a
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Wed Jun 6 19:34:08 2012 +0100
+
+    tdfx: port to new compat API
+    
+    Signed-off-by: Dave Airlie <airlied@redhat.com>
+
 commit 98d24dd99052322c71d1676e6d66c2c724f6066a
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Fri Mar 23 19:59:33 2012 -0700

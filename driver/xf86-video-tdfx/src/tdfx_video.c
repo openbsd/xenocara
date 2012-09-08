@@ -122,7 +122,7 @@ static XF86ImageRec TextureImages[] =
 
 void TDFXInitVideo(ScreenPtr pScreen)
 {
-    ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+    ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
     XF86VideoAdaptorPtr *adaptors, *newAdaptors = NULL;
     XF86VideoAdaptorPtr newAdaptor = NULL;
     TDFXPtr pTDFX = TDFXPTR(pScrn);
@@ -208,7 +208,7 @@ TDFXAllocAdaptor(ScrnInfoPtr pScrn, int numberPorts)
 static XF86VideoAdaptorPtr
 TDFXSetupImageVideoOverlay(ScreenPtr pScreen)
 {
-    ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+    ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
     TDFXPtr pTDFX = TDFXPTR(pScrn);
     TDFXPortPrivPtr pPriv;
     XF86VideoAdaptorPtr adapt;
@@ -252,7 +252,7 @@ TDFXSetupImageVideoOverlay(ScreenPtr pScreen)
 static XF86VideoAdaptorPtr
 TDFXSetupImageVideoTexture(ScreenPtr pScreen)
 {
-    ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+    ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
     TDFXPtr pTDFX = TDFXPTR(pScrn);
     XF86VideoAdaptorPtr adapt;
     int i;
@@ -1096,7 +1096,7 @@ TDFXAllocateMemoryArea (ScrnInfoPtr pScrn, FBAreaPtr area, int width, int height
     xf86FreeOffscreenArea(area);
   }
 
-  pScreen = screenInfo.screens[pScrn->scrnIndex];
+  pScreen = xf86ScrnToScreen(pScrn);
 
   new_area = xf86AllocateOffscreenArea(pScreen, width, height, pTDFX->cpp, NULL, NULL, NULL);
 
@@ -1132,7 +1132,7 @@ TDFXAllocateMemoryLinear (ScrnInfoPtr pScrn, FBLinearPtr linear, int size)
         xf86FreeOffscreenLinear(linear);
    }
 
-   pScreen = screenInfo.screens[pScrn->scrnIndex];
+   pScreen = xf86ScrnToScreen(pScrn);
 
    new_linear = xf86AllocateOffscreenLinear(pScreen, size, 4, NULL, NULL, NULL);
 

@@ -192,7 +192,7 @@ Bool TDFXInitFifo(ScreenPtr pScreen)
   ScrnInfoPtr pScrn;
   TDFXPtr pTDFX;
 
-  pScrn = xf86Screens[pScreen->myNum];
+  pScrn = xf86ScreenToScrn(pScreen);
   pTDFX=TDFXPTR(pScrn);
 #ifdef DEBUG_FIFO
   pTDFX->fifoMirrorBase=0;
@@ -212,7 +212,7 @@ void TDFXShutdownFifo(ScreenPtr pScreen)
   ScrnInfoPtr pScrn;
   TDFXPtr pTDFX;
 
-  pScrn = xf86Screens[pScreen->myNum];
+  pScrn = xf86ScreenToScrn(pScreen);
   pTDFX=TDFXPTR(pScrn);
   TDFXWriteLongMMIO(pTDFX, SST_FIFO_BASESIZE0, 0);
   pTDFX->sync=TDFXSync;
@@ -242,7 +242,7 @@ void TDFXSwapContextFifo(ScreenPtr pScreen)
   int dummy, readPos;
   TDFXSAREAPriv *sPriv;
 
-  pScrn = xf86Screens[pScreen->myNum];
+  pScrn = xf86ScreenToScrn(pScreen);
   pTDFX=TDFXPTR(pScrn);
   sPriv=(TDFXSAREAPriv*)DRIGetSAREAPrivate(pScreen);
   /* if (sPriv)

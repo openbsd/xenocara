@@ -31,7 +31,7 @@ TDFXCursorInit(ScreenPtr pScreen)
   xf86CursorInfoPtr infoPtr;
 
   TDFXTRACECURS("TDFXCursorInit start\n");
-  pScrn = xf86Screens[pScreen->myNum];
+  pScrn = xf86ScreenToScrn(pScreen);
   pTDFX = TDFXPTR(pScrn);
   pTDFX->CursorInfoRec = infoPtr = xf86CreateCursorInfoRec();
   if (!infoPtr) return FALSE;
@@ -146,7 +146,7 @@ TDFXUseHWCursor(ScreenPtr pScreen, CursorPtr pCurs)
   TDFXPtr pTDFX;
 
   TDFXTRACECURS("TDFXUseHWCursor start\n");
-  pScrn = xf86Screens[pScreen->myNum];
+  pScrn = xf86ScreenToScrn(pScreen);
   pTDFX = TDFXPTR(pScrn);
   if (pScrn->currentMode->Flags&V_DBLSCAN)
     return FALSE;
