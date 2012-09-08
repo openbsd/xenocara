@@ -72,7 +72,7 @@ extern void		SiS_DisplayOn(struct SiS_Private *SiS_Pr);
 extern unsigned char	SiS_GetSetModeID(ScrnInfoPtr pScrn, unsigned char id);
 extern void		SiS_SetEnableDstn(struct SiS_Private *SiS_Pr, int enable);
 extern void		SiS_SetEnableFstn(struct SiS_Private *SiS_Pr, int enable);
-extern void		SiSRegInit(struct SiS_Private *SiS_Pr, unsigned short BaseAddr);
-extern void		SiSSetLVDSetc(struct SiS_Private *SiS_Pr, unsigned short ModeNo);
+extern void		SiSRegInit(struct SiS_Private *SiS_Pr, SISIOADDRESS BaseAddr);
+extern void		SiSSetLVDSetc(struct SiS_Private *SiS_Pr);
 extern void		SiS_GetVBType(struct SiS_Private *SiS_Pr);
 /* End of init.c/init301.c imports */

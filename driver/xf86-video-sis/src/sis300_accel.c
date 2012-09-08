@@ -884,7 +884,7 @@ static const unsigned short dstcol[] = { 0x0000, 0x8000, 0xc000 };
 static void
 SiSEXASync(ScreenPtr pScreen, int marker)
 {
-	SISPtr pSiS = SISPTR(xf86Screens[pScreen->myNum]);
+	SISPtr pSiS = SISPTR(xf86ScreenToScrn(pScreen));
 
 	SiSIdle
 }
@@ -892,7 +892,7 @@ SiSEXASync(ScreenPtr pScreen, int marker)
 static Bool
 SiSPrepareSolid(PixmapPtr pPixmap, int alu, Pixel planemask, Pixel fg)
 {
-	ScrnInfoPtr pScrn = xf86Screens[pPixmap->drawable.pScreen->myNum];
+	ScrnInfoPtr pScrn = xf86ScreenToScrn(pPixmap->drawable.pScreen);
 	SISPtr pSiS = SISPTR(pScrn);
 	CARD32 dstbase;
 
@@ -940,7 +940,7 @@ SiSPrepareSolid(PixmapPtr pPixmap, int alu, Pixel planemask, Pixel fg)
 static void
 SiSSolid(PixmapPtr pPixmap, int x1, int y1, int x2, int y2)
 {
-	ScrnInfoPtr pScrn = xf86Screens[pPixmap->drawable.pScreen->myNum];
+	ScrnInfoPtr pScrn = xf86ScreenToScrn(pPixmap->drawable.pScreen);
 	SISPtr pSiS = SISPTR(pScrn);
 
 	SiSSetupDSTXY(x1, y1)
@@ -960,7 +960,7 @@ static Bool
 SiSPrepareCopy(PixmapPtr pSrcPixmap, PixmapPtr pDstPixmap, int xdir, int ydir,
 					int alu, Pixel planemask)
 {
-	ScrnInfoPtr pScrn = xf86Screens[pDstPixmap->drawable.pScreen->myNum];
+	ScrnInfoPtr pScrn = xf86ScreenToScrn(pDstPixmap->drawable.pScreen);
 	SISPtr pSiS = SISPTR(pScrn);
 	CARD32 srcbase, dstbase;
 
@@ -1015,7 +1015,7 @@ SiSPrepareCopy(PixmapPtr pSrcPixmap, PixmapPtr pDstPixmap, int xdir, int ydir,
 static void
 SiSCopy(PixmapPtr pDstPixmap, int srcX, int srcY, int dstX, int dstY, int width, int height)
 {
-	ScrnInfoPtr pScrn = xf86Screens[pDstPixmap->drawable.pScreen->myNum];
+	ScrnInfoPtr pScrn = xf86ScreenToScrn(pDstPixmap->drawable.pScreen);
 	SISPtr pSiS = SISPTR(pScrn);
 
 	if(!(pSiS->CommandReg & X_INC))  {
@@ -1064,7 +1064,7 @@ SiSDGABlitRect(ScrnInfoPtr pScrn, int srcx, int srcy, int dstx, int dsty, int w,
 Bool
 SiS300AccelInit(ScreenPtr pScreen)
 {
-	ScrnInfoPtr     pScrn = xf86Screens[pScreen->myNum];
+	ScrnInfoPtr     pScrn = xf86ScreenToScrn(pScreen);
 	SISPtr          pSiS = SISPTR(pScrn);
 #ifdef SIS_USE_XAA
 	XAAInfoRecPtr   infoPtr = NULL;

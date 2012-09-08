@@ -7413,7 +7413,7 @@ SISSave(ScrnInfoPtr pScrn)
 #ifdef SIS_PC_PLATFORM
        if(pSiS->VGAMemBase) {
           SiSRegInit(pSiS->SiS_Pr, pSiS->RelIO+0x30);
-          SiSSetLVDSetc(pSiS->SiS_Pr, 0);
+          SiSSetLVDSetc(pSiS->SiS_Pr);
           SiS_GetVBType(pSiS->SiS_Pr);
           SiS_DisableBridge(pSiS->SiS_Pr);
           SiSVGASave(pScrn, sisReg, SISVGA_SR_FONTS);
@@ -7586,9 +7586,9 @@ SISModeInit(ScrnInfoPtr pScrn, DisplayModePtr mode)
 	     }
 	     SiSPostSetMode(pScrn, &pSiS->ModeReg);
 	     if(pSiSEnt->pScrn_2) {
-		SISAdjustFrame(pSiSEnt->pScrn_2->scrnIndex,
+		SISAdjustFrame(ADJUST_FRAME_ARGS(pSiSEnt->pScrn_2,
 			       pSiSEnt->pScrn_2->frameX0,
-			       pSiSEnt->pScrn_2->frameY0, 0);
+						 pSiSEnt->pScrn_2->frameY0));
 	     }
 	  } else {
 	     /* Head 2 (slave) is always CRT1 */
@@ -7599,9 +7599,9 @@ SISModeInit(ScrnInfoPtr pScrn, DisplayModePtr mode)
 	     }
 	     SiSPostSetMode(pScrn, &pSiS->ModeReg);
 	     if(pSiSEnt->pScrn_1) {
-		SISAdjustFrame(pSiSEnt->pScrn_1->scrnIndex,
+		SISAdjustFrame(ADJUST_FRAME_ARGS(pSiSEnt->pScrn_1,
 			       pSiSEnt->pScrn_1->frameX0,
-			       pSiSEnt->pScrn_1->frameY0, 0);
+			       pSiSEnt->pScrn_1->frameY0));
 	     }
 	  }
 
@@ -8089,7 +8089,7 @@ SISRestore(ScrnInfoPtr pScrn)
 
 	   if(flags & SISVGA_SR_FONTS) {
               SiSRegInit(pSiS->SiS_Pr, pSiS->RelIO+0x30);
-	      SiSSetLVDSetc(pSiS->SiS_Pr, 0);
+	      SiSSetLVDSetc(pSiS->SiS_Pr);
 	      SiS_GetVBType(pSiS->SiS_Pr);
 	      SiS_DisableBridge(pSiS->SiS_Pr);
 	      SiSVGAProtect(pScrn, TRUE);
@@ -8212,14 +8212,14 @@ SISBridgeRestore(ScrnInfoPtr pScrn)
 
 /* Our BlockHandler */
 static void
-SISBlockHandler(int i, pointer blockData, pointer pTimeout, pointer pReadmask)
+SISBlockHandler(BLOCKHANDLER_ARGS_DECL)
 {
-    ScreenPtr pScreen = screenInfo.screens[i];
-    ScrnInfoPtr pScrn = xf86Screens[i];
+    SCREEN_PTR(arg);
+    ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
     SISPtr pSiS = SISPTR(pScrn);
 
     pScreen->BlockHandler = pSiS->BlockHandler;
-    (*pScreen->BlockHandler) (i, blockData, pTimeout, pReadmask);
+    (*pScreen->BlockHandler) (BLOCKHANDLER_ARGS);
     pScreen->BlockHandler = SISBlockHandler;
 
 #ifdef SISDUALHEAD
@@ -8297,7 +8297,7 @@ SiSHandleBackLight(SISPtr pSiS, Bool blon)
 static Bool
 SISSaveScreen(ScreenPtr pScreen, int mode)
 {
-    ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+    ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
     SISPtr pSiS;
     Bool IsUnblank = xf86IsUnblank(mode) ? TRUE : FALSE;
 
@@ -8325,7 +8325,7 @@ SISSaveScreen(ScreenPtr pScreen, int mode)
 static Bool
 SISSaveScreenDH(ScreenPtr pScreen, int mode)
 {
-    ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+    ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
     SISPtr pSiS;
     Bool IsUnblank = xf86IsUnblank(mode) ? TRUE : FALSE;
 
@@ -8517,9 +8517,9 @@ SISDisplayPowerManagementSet(ScrnInfoPtr pScrn, int PowerManagementMode, int fla
  * depth, bitsPerPixel)
  */
 static Bool
-SISScreenInit(int scrnIndex, ScreenPtr pScreen, int argc, char **argv)
+SISScreenInit(SCREEN_INIT_ARGS_DECL)
 {
-    ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+    ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
     SISPtr pSiS = SISPTR(pScrn);
     VisualPtr visual;
     ULong OnScreenSize;
@@ -8671,7 +8671,7 @@ SISScreenInit(int scrnIndex, ScreenPtr pScreen, int argc, char **argv)
     SISSaveScreen(pScreen, SCREEN_SAVER_ON);
 
     /* Set the viewport */
-    SISAdjustFrame(scrnIndex, pScrn->frameX0, pScrn->frameY0, 0);
+    SISAdjustFrame(ADJUST_FRAME_ARGS(pScrn, pScrn->frameX0, pScrn->frameY0));
 
     /* Reset visual list. */
     miClearVisualTypes();
@@ -9084,7 +9084,7 @@ SISScreenInit(int scrnIndex, ScreenPtr pScreen, int argc, char **argv)
 	     pSiS->SiS_SD_Flags |= SiS_SD_PSEUDOXINERAMA;
 	     if(pSiS->HaveNonRect) {
 		/* Reset the viewport (now eventually non-recangular) */
-		SISAdjustFrame(scrnIndex, pScrn->frameX0, pScrn->frameY0, 0);
+		SISAdjustFrame(ADJUST_FRAME_ARGS(pScrn, pScrn->frameX0, pScrn->frameY0));
 	     }
 	  }
        } else {
@@ -9177,20 +9177,20 @@ SISScreenInit(int scrnIndex, ScreenPtr pScreen, int argc, char **argv)
 
 /* Usually mandatory */
 Bool
-SISSwitchMode(int scrnIndex, DisplayModePtr mode, int flags)
+SISSwitchMode(SWITCH_MODE_ARGS_DECL)
 {
-    ScrnInfoPtr pScrn = xf86Screens[scrnIndex];
+    SCRN_INFO_PTR(arg);
     SISPtr pSiS = SISPTR(pScrn);
 
     if(!pSiS->skipswitchcheck) {
-       if(SISValidMode(scrnIndex, mode, TRUE, flags) != MODE_OK) {
+       if(SISValidMode(arg, mode, TRUE, 0) != MODE_OK) {
           return FALSE;
        }
     }
 
     (*pSiS->SyncAccel)(pScrn);
 
-    if(!(SISModeInit(xf86Screens[scrnIndex], mode))) return FALSE;
+    if(!(SISModeInit(pScrn, mode))) return FALSE;
 
     /* Since RandR (indirectly) uses SwitchMode(), we need to
      * update our Xinerama info here, too, in case of resizing
@@ -9275,9 +9275,10 @@ SISAdjustFrameHW_CRT2(ScrnInfoPtr pScrn, int x, int y)
 }
 
 static void
-SISMergedPointerMoved(int scrnIndex, int x, int y)
+SISMergedPointerMoved(SCRN_ARG_TYPE arg, int x, int y)
 {
-  ScrnInfoPtr	pScrn1 = xf86Screens[scrnIndex];
+  SCRN_INFO_PTR(arg);
+  ScrnInfoPtr	pScrn1 = pScrn;
   SISPtr	pSiS = SISPTR(pScrn1);
   ScrnInfoPtr	pScrn2 = pSiS->CRT2pScrn;
   region	out, in1, in2, f2, f1;
@@ -9554,9 +9555,10 @@ SISMergedPointerMoved(int scrnIndex, int x, int y)
 }
 
 static void
-SISAdjustFrameMerged(int scrnIndex, int x, int y, int flags)
+SISAdjustFrameMerged(ADJUST_FRAME_ARGS_DECL)
 {
-    ScrnInfoPtr pScrn1 = xf86Screens[scrnIndex];
+    SCRN_INFO_PTR(arg);
+    ScrnInfoPtr pScrn1 = pScrn;
     SISPtr pSiS = SISPTR(pScrn1);
     ScrnInfoPtr pScrn2 = pSiS->CRT2pScrn;
     int HTotal = pSiS->CurrentLayout.mode->HDisplay;
@@ -9658,16 +9660,16 @@ SISAdjustFrameMerged(int scrnIndex, int x, int y, int flags)
  * Usually mandatory
  */
 void
-SISAdjustFrame(int scrnIndex, int x, int y, int flags)
+SISAdjustFrame(ADJUST_FRAME_ARGS_DECL)
 {
-    ScrnInfoPtr   pScrn = xf86Screens[scrnIndex];
+    SCRN_INFO_PTR(arg);
     SISPtr        pSiS = SISPTR(pScrn);
     ULong base;
     UChar temp, cr11backup;
 
 #ifdef SISMERGED
     if(pSiS->MergedFB) {
-	SISAdjustFrameMerged(scrnIndex, x, y, flags);
+        SISAdjustFrameMerged(ADJUST_FRAME_ARGS(pScrn, x, y));
 	return;
     }
 #endif
@@ -9756,9 +9758,9 @@ SISAdjustFrame(int scrnIndex, int x, int y, int flags)
  * Mandatory!
  */
 static Bool
-SISEnterVT(int scrnIndex, int flags)
+SISEnterVT(VT_FUNC_ARGS_DECL)
 {
-    ScrnInfoPtr pScrn = xf86Screens[scrnIndex];
+    SCRN_INFO_PTR(arg);
     SISPtr pSiS = SISPTR(pScrn);
 
     SiS_SiSFB_Lock(pScrn, TRUE);
@@ -9776,11 +9778,11 @@ SISEnterVT(int scrnIndex, int flags)
        return FALSE;
     }
 
-    SISAdjustFrame(scrnIndex, pScrn->frameX0, pScrn->frameY0, 0);
+    SISAdjustFrame(ADJUST_FRAME_ARGS(pScrn, pScrn->frameX0, pScrn->frameY0));
 
 #ifdef SISDRI
     if(pSiS->directRenderingEnabled) {
-       DRIUnlock(screenInfo.screens[scrnIndex]);
+       DRIUnlock(xf86ScrnToScreen(pScrn));
     }
 #endif
 
@@ -9800,15 +9802,15 @@ SISEnterVT(int scrnIndex, int flags)
  * Mandatory!
  */
 static void
-SISLeaveVT(int scrnIndex, int flags)
+SISLeaveVT(VT_FUNC_ARGS_DECL)
 {
-    ScrnInfoPtr pScrn = xf86Screens[scrnIndex];
+    SCRN_INFO_PTR(arg);
     SISPtr pSiS = SISPTR(pScrn);
 #ifdef SISDRI
     ScreenPtr pScreen;
 
     if(pSiS->directRenderingEnabled) {
-       pScreen = screenInfo.screens[scrnIndex];
+       pScreen = xf86ScrnToScreen(pScrn);
        DRILock(pScreen, 0);
     }
 #endif
@@ -9876,9 +9878,9 @@ SISLeaveVT(int scrnIndex, int flags)
  * Mandatory!
  */
 static Bool
-SISCloseScreen(int scrnIndex, ScreenPtr pScreen)
+SISCloseScreen(CLOSE_SCREEN_ARGS_DECL)
 {
-    ScrnInfoPtr pScrn = xf86Screens[scrnIndex];
+    ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
     SISPtr pSiS = SISPTR(pScrn);
 #ifdef SISDUALHEAD
     SISEntPtr pSiSEnt = pSiS->entityPrivate;
@@ -10032,7 +10034,7 @@ SISCloseScreen(int scrnIndex, ScreenPtr pScreen)
 
     pScreen->CloseScreen = pSiS->CloseScreen;
 
-    return(*pScreen->CloseScreen)(scrnIndex, pScreen);
+    return(*pScreen->CloseScreen)(CLOSE_SCREEN_ARGS);
 }
 
 
@@ -10040,10 +10042,10 @@ SISCloseScreen(int scrnIndex, ScreenPtr pScreen)
 
 /* Optional */
 static void
-SISFreeScreen(int scrnIndex, int flags)
+SISFreeScreen(FREE_SCREEN_ARGS_DECL)
 {
+    SCRN_INFO_PTR(arg);
 #ifdef SIS_NEED_MAP_IOP
-    ScrnInfoPtr pScrn = xf86Screens[scrnIndex];
     SISPtr pSiS = SISPTR(pScrn);
 
     if(pSiS) {
@@ -10057,16 +10059,16 @@ SISFreeScreen(int scrnIndex, int flags)
     }
 #endif
 
-    SISFreeRec(xf86Screens[scrnIndex]);
+    SISFreeRec(pScrn);
 }
 
 
 /* Checks if a mode is suitable for the selected chipset. */
 
 static ModeStatus
-SISValidMode(int scrnIndex, DisplayModePtr mode, Bool verbose, int flags)
+SISValidMode(SCRN_ARG_TYPE arg, DisplayModePtr mode, Bool verbose, int flags)
 {
-    ScrnInfoPtr pScrn = xf86Screens[scrnIndex];
+    SCRN_INFO_PTR(arg);
     SISPtr pSiS = SISPTR(pScrn);
 
     if(pSiS->UseVESA) {

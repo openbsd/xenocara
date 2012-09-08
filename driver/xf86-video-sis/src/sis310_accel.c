@@ -199,7 +199,7 @@ SiSCalcRenderAccelArray(ScrnInfoPtr pScrn)
 void
 SiSScratchSave(ScreenPtr pScreen, ExaOffscreenArea *area)
 {
-	SISPtr pSiS = SISPTR(xf86Screens[pScreen->myNum]);
+	SISPtr pSiS = SISPTR(xf86ScreenToScrn(pScreen));
 
 	pSiS->exa_scratch = NULL;
 }
@@ -1689,7 +1689,7 @@ SiSSubsequentCPUToScreenTexture(ScrnInfoPtr pScrn,
 static void
 SiSEXASync(ScreenPtr pScreen, int marker)
 {
-	SISPtr pSiS = SISPTR(xf86Screens[pScreen->myNum]);
+	SISPtr pSiS = SISPTR(xf86ScreenToScrn(pScreen));
 
 	SiSIdle
 }
@@ -1697,7 +1697,7 @@ SiSEXASync(ScreenPtr pScreen, int marker)
 static Bool
 SiSPrepareSolid(PixmapPtr pPixmap, int alu, Pixel planemask, Pixel fg)
 {
-	ScrnInfoPtr pScrn = xf86Screens[pPixmap->drawable.pScreen->myNum];
+	ScrnInfoPtr pScrn = xf86ScreenToScrn(pPixmap->drawable.pScreen);
 	SISPtr pSiS = SISPTR(pScrn);
 
 	/* Planemask not supported */
@@ -1738,7 +1738,7 @@ SiSPrepareSolid(PixmapPtr pPixmap, int alu, Pixel planemask, Pixel fg)
 static void
 SiSSolid(PixmapPtr pPixmap, int x1, int y1, int x2, int y2)
 {
-	ScrnInfoPtr pScrn = xf86Screens[pPixmap->drawable.pScreen->myNum];
+	ScrnInfoPtr pScrn = xf86ScreenToScrn(pPixmap->drawable.pScreen);
 	SISPtr pSiS = SISPTR(pScrn);
 
 	/* SiSSetupCMDFlag(BITBLT)  - BITBLT = 0 */
@@ -1757,7 +1757,7 @@ static Bool
 SiSPrepareCopy(PixmapPtr pSrcPixmap, PixmapPtr pDstPixmap, int xdir, int ydir,
 					int alu, Pixel planemask)
 {
-	ScrnInfoPtr pScrn = xf86Screens[pDstPixmap->drawable.pScreen->myNum];
+	ScrnInfoPtr pScrn = xf86ScreenToScrn(pDstPixmap->drawable.pScreen);
 	SISPtr pSiS = SISPTR(pScrn);
 	CARD32 srcbase, dstbase;
 
@@ -1805,7 +1805,7 @@ SiSPrepareCopy(PixmapPtr pSrcPixmap, PixmapPtr pDstPixmap, int xdir, int ydir,
 static void
 SiSCopy(PixmapPtr pDstPixmap, int srcX, int srcY, int dstX, int dstY, int width, int height)
 {
-	ScrnInfoPtr pScrn = xf86Screens[pDstPixmap->drawable.pScreen->myNum];
+	ScrnInfoPtr pScrn = xf86ScreenToScrn(pDstPixmap->drawable.pScreen);
 	SISPtr pSiS = SISPTR(pScrn);
 
 	SiSCheckQueue(16 * 2);
@@ -1823,7 +1823,7 @@ static Bool
 SiSCheckComposite(int op, PicturePtr pSrcPicture, PicturePtr pMaskPicture,
 				PicturePtr pDstPicture)
 {
-	ScrnInfoPtr pScrn = xf86Screens[pDstPicture->pDrawable->pScreen->myNum];
+	ScrnInfoPtr pScrn = xf86ScreenToScrn(pDstPicture->pDrawable->pScreen);
 	SISPtr pSiS = SISPTR(pScrn);
 
 	xf86DrvMsg(0, 0, "CC: %d Src %x (fi %d ca %d) Msk %x (%d %d) Dst %x (%d %d)\n",
@@ -1847,7 +1847,7 @@ SiSPrepareComposite(int op, PicturePtr pSrcPicture, PicturePtr pMaskPicture,
 				PicturePtr pDstPicture, PixmapPtr pSrc, PixmapPtr pMask, PixmapPtr pDst)
 {
 #if 0
-	ScrnInfoPtr pScrn = xf86Screens[pDst->drawable.pScreen->myNum];
+	ScrnInfoPtr pScrn = xf86ScreenToScrn(pDst->drawable.pScreen);
 	SISPtr pSiS = SISPTR(pScrn);
 #endif
 	return FALSE;
@@ -1858,7 +1858,7 @@ SiSComposite(PixmapPtr pDst, int srcX, int srcY, int maskX, int maskY, int dstX,
 				int width, int height)
 {
 #if 0
-	ScrnInfoPtr pScrn = xf86Screens[pDst->drawable.pScreen->myNum];
+	ScrnInfoPtr pScrn = xf86ScreenToScrn(pDst->drawable.pScreen);
 	SISPtr pSiS = SISPTR(pScrn);
 #endif
 }
@@ -1872,7 +1872,7 @@ SiSDoneComposite(PixmapPtr pDst)
 Bool
 SiSUploadToScreen(PixmapPtr pDst, int x, int y, int w, int h, char *src, int src_pitch)
 {
-	ScrnInfoPtr pScrn = xf86Screens[pDst->drawable.pScreen->myNum];
+	ScrnInfoPtr pScrn = xf86ScreenToScrn(pDst->drawable.pScreen);
 	SISPtr pSiS = SISPTR(pScrn);
 	unsigned char *dst = pDst->devPrivate.ptr;
 	int dst_pitch = exaGetPixmapPitch(pDst);
@@ -1896,7 +1896,7 @@ SiSUploadToScreen(PixmapPtr pDst, int x, int y, int w, int h, char *src, int src
 Bool
 SiSUploadToScratch(PixmapPtr pSrc, PixmapPtr pDst)
 {
-	ScrnInfoPtr pScrn = xf86Screens[pSrc->drawable.pScreen->myNum];
+	ScrnInfoPtr pScrn = xf86ScreenToScrn(pSrc->drawable.pScreen);
 	SISPtr pSiS = SISPTR(pScrn);
 	unsigned char *src, *dst;
 	int src_pitch = exaGetPixmapPitch(pSrc);
@@ -1951,7 +1951,7 @@ SiSUploadToScratch(PixmapPtr pSrc, PixmapPtr pDst)
 Bool
 SiSDownloadFromScreen(PixmapPtr pSrc, int x, int y, int w, int h, char *dst, int dst_pitch)
 {
-	ScrnInfoPtr pScrn = xf86Screens[pSrc->drawable.pScreen->myNum];
+	ScrnInfoPtr pScrn = xf86ScreenToScrn(pSrc->drawable.pScreen);
 	SISPtr pSiS = SISPTR(pScrn);
 	unsigned char *src = pSrc->devPrivate.ptr;
 	int src_pitch = exaGetPixmapPitch(pSrc);
@@ -2013,7 +2013,7 @@ SiSDGABlitRect(ScrnInfoPtr pScrn, int srcx, int srcy, int dstx, int dsty, int w,
 Bool
 SiS315AccelInit(ScreenPtr pScreen)
 {
-	ScrnInfoPtr     pScrn = xf86Screens[pScreen->myNum];
+	ScrnInfoPtr     pScrn = xf86ScreenToScrn(pScreen);
 	SISPtr          pSiS = SISPTR(pScrn);
 #ifdef SIS_USE_XAA
 	XAAInfoRecPtr   infoPtr = NULL;

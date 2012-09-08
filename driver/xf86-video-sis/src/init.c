@@ -59,6 +59,7 @@
 #endif
 
 #include "init.h"
+#include "sis_dac.h"
 
 #ifdef SIS300
 #include "300vtbl.h"

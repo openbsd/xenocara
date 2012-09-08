@@ -1,3 +1,84 @@
+commit 8c5127a6815935635b84835055bf4c2501c0bf6e
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Tue Jul 17 16:05:09 2012 +1000
+
+    xf86-video-sis: bump to version 0.10.7
+    
+    Signed-off-by: Dave Airlie <airlied@redhat.com>
+
+commit c3d8d70edd06b8ecedd341df8b33ba71c01e64b3
+Author: Dave Airlie <airlied@gmail.com>
+Date:   Sun Jul 15 19:55:19 2012 +1000
+
+    sis: add xaa configure support
+    
+    SIS is already plumbed to not need XAA, just hook it up.
+    
+    Signed-off-by: Dave Airlie <airlied@redhat.com>
+
+commit 314d56d0addfaa5c24d14de675416b3aca7f4a19
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Jun 29 20:40:01 2012 -0700
+
+    Make SiSRegInit & SiSSetLVDSetc args match in both headers that define them
+    
+    Adds include of "sis_dac.h" to init.c to force compilers to compare the
+    definitions, making it obvious that sis_dac.h defined an extra argument
+    to SiSSetLVDSetc that the function itself didn't have, and that SiSRegInit
+    expected an unsigned long (in the form of SISIOADDRESS), not the unsigned
+    short that sis_dac.h claimed to pass it.
+    
+    Found by the Parfait 1.0 bug checking tool:
+    
+    Error: Function Call Mismatch
+       Function call with extra args: Forward declaration of function 'SiSSetLVDSetc' does not match its definition
+          Function expects 1 argument (SiS_Private*); given 2 (SiS_Private*, unsigned short)
+            at line 604 of driver/xf86-video-sis/src/sis_dac.c in function 'SiS300Restore'.
+              Function defined at line 1153 of driver/xf86-video-sis/src/init.c.
+    [repeated for each call]
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit aa79b0f5dbbeda194916365539d06c3c090b80d2
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Mon Jul 2 13:19:04 2012 +0100
+
+    sis 0.10.6 release.
+    
+    Signed-off-by: Dave Airlie <airlied@redhat.com>
+
+commit df17d3039e856c13b0476122a01b8c20f7d2de88
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Mon Jul 2 13:16:26 2012 +0100
+
+    sis: fix build against older servers.
+    
+    Signed-off-by: Dave Airlie <airlied@redhat.com>
+
+commit 331c276b47af1140a64125bff39901f8a8271eb7
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Mon Jul 2 13:13:42 2012 +0100
+
+    sis: 0.10.5 release
+    
+    Signed-off-by: Dave Airlie <airlied@redhat.com>
+
+commit f6d49466ca538c65fa8c66352e421c2624e204f1
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Wed Jun 6 09:50:31 2012 +0100
+
+    sis: drop xf86PciInfo.h
+    
+    Signed-off-by: Dave Airlie <airlied@redhat.com>
+
+commit 1b20cd63a974f792bd15e13d1c6caa3bbabbe106
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Wed Jun 6 09:46:42 2012 +0100
+
+    sis: port to new compat API.
+    
+    Signed-off-by: Dave Airlie <airlied@redhat.com>
+
 commit e067fc080c653a5d47cd319ca1a7afeebe6c7c4e
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Fri Mar 23 19:52:38 2012 -0700

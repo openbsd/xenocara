@@ -1054,7 +1054,7 @@ static unsigned int SiS_GetCpuFeatures(ScrnInfoPtr pScrn)
 static vidCopyFunc
 SiSVidCopyInitGen(ScreenPtr pScreen, SISMCFuncData *MCFunctions, vidCopyFunc *UMemCpy, Bool from)
 {
-    ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+    ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
     SISPtr pSiS = SISPTR(pScrn);
     void *fbhandle = NULL;
     char  *frqBuf = NULL;

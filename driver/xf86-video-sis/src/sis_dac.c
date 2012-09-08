@@ -601,7 +601,7 @@ SiS300Restore(ScrnInfoPtr pScrn, SISRegPtr sisReg)
     if(!(pSiS->UseVESA)) {
        if(pSiS->VBFlags2 & VB2_LVDS) {
 	  SiSRegInit(pSiS->SiS_Pr, pSiS->RelIO + 0x30);
-	  SiSSetLVDSetc(pSiS->SiS_Pr, 0);
+	  SiSSetLVDSetc(pSiS->SiS_Pr);
 	  SiS_GetVBType(pSiS->SiS_Pr);
 	  SiS_UnLockCRT2(pSiS->SiS_Pr);
 	  SiS_DisableBridge(pSiS->SiS_Pr);
@@ -990,7 +990,7 @@ SiS301Restore(ScrnInfoPtr pScrn, SISRegPtr sisReg)
     Part4max = 0x1b;
 
     SiSRegInit(pSiS->SiS_Pr, pSiS->RelIO + 0x30);
-    SiSSetLVDSetc(pSiS->SiS_Pr, 0);
+    SiSSetLVDSetc(pSiS->SiS_Pr);
     SiS_GetVBType(pSiS->SiS_Pr);
     SiS_DisableBridge(pSiS->SiS_Pr);
     SiS_UnLockCRT2(pSiS->SiS_Pr);
@@ -1084,7 +1084,7 @@ SiS301BRestore(ScrnInfoPtr pScrn, SISRegPtr sisReg)
     } /* TODO for 307 */
 
     SiSRegInit(pSiS->SiS_Pr, pSiS->RelIO + 0x30);
-    SiSSetLVDSetc(pSiS->SiS_Pr, 0);
+    SiSSetLVDSetc(pSiS->SiS_Pr);
     SiS_GetVBType(pSiS->SiS_Pr);
     SiS_DisableBridge(pSiS->SiS_Pr);
     SiS_UnLockCRT2(pSiS->SiS_Pr);
@@ -1193,7 +1193,7 @@ SiSLVDSChrontelRestore(ScrnInfoPtr pScrn, SISRegPtr sisReg)
     int i;
 
     SiSRegInit(pSiS->SiS_Pr, pSiS->RelIO + 0x30);
-    SiSSetLVDSetc(pSiS->SiS_Pr, 0);
+    SiSSetLVDSetc(pSiS->SiS_Pr);
     SiS_GetVBType(pSiS->SiS_Pr);
     SiS_DisableBridge(pSiS->SiS_Pr);
     if(pSiS->ChipType == SIS_730) {

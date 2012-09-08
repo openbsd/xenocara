@@ -23,7 +23,7 @@
 # Initialize Autoconf
 AC_PREREQ([2.60])
 AC_INIT([xf86-video-sis],
-        [0.10.4],
+        [0.10.7],
         [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],
         [xf86-video-sis])
 AC_CONFIG_SRCDIR([Makefile.am])
@@ -102,6 +102,24 @@ if test "$DRI" = yes; then
         AC_DEFINE(SISDRI,1,[Enable DRI driver support])
         AC_DEFINE(SISDRI_DEVEL,1,[Enable developmental DRI driver support])
 fi
+
+AC_ARG_ENABLE(xaa,
+              AS_HELP_STRING([--enable-xaa],
+                             [Enable legacy X Acceleration Architecture (XAA) [default=auto]]),
+              [XAA="$enableval"],
+              [XAA=auto])
+if test "x$XAA" != xno; then
+        save_CFLAGS=$CFLAGS
+        save_CPPFLAGS=$CPPFLAGS
+        CFLAGS=$XORG_CFLAGS
+        CPPFLAGS="$XORG_CFLAGS"
+        AC_CHECK_HEADERS([xaa.h], XAA=yes, XAA=no)
+        CFLAGS=$save_CFLAGS
+        CPPFLAGS=$save_CPPFLAGS
+fi
+AC_MSG_CHECKING([whether to include XAA support])
+AM_CONDITIONAL(XAA, test "x$XAA" = xyes)
+AC_MSG_RESULT([$XAA])
 
 # technically this should be a configure flag.  meh.
 AC_DEFINE(XF86EXA, 1, [Build support for Exa])
