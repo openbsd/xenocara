@@ -32,6 +32,8 @@ authorization from the XFree86 Project and silicon Motion.
 #include "smi.h"
 #include "smi_501.h"
 
+#ifdef HAVE_XAA_H
+
 #include "miline.h"
 #include "xaalocal.h"
 #include "xaarop.h"
@@ -62,11 +64,13 @@ static void SMI_SetupForImageWrite(ScrnInfoPtr, int, unsigned int, int, int,
 static void SMI_SubsequentImageWriteRect(ScrnInfoPtr, int, int, int, int, int);
 #endif
 
+#endif
 Bool
 SMI_XAAInit(ScreenPtr pScreen)
 {
+#ifdef HAVE_XAA_H
     XAAInfoRecPtr infoPtr;
-    ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+    ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
     SMIPtr pSmi = SMIPTR(pScrn);
     /*BoxRec AvailFBArea;*/
     Bool ret;
@@ -187,8 +191,13 @@ SMI_XAAInit(ScreenPtr pScreen)
     ret = XAAInit(pScreen, infoPtr);
 
     LEAVE(ret);
+#else
+    return FALSE;
+#endif
 }
 
+
+#ifdef HAVE_XAA_H
 /******************************************************************************/
 /*	Screen to Screen Copies						      */
 /******************************************************************************/
@@ -719,4 +728,5 @@ SMI_SubsequentImageWriteRect(ScrnInfoPtr pScrn, int x, int y, int w, int h,
 
     LEAVE();
 }
+#endif
 #endif

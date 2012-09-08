@@ -91,7 +91,7 @@ SMI_DoneComposite(PixmapPtr pDst);
 Bool
 SMI_EXAInit(ScreenPtr pScreen)
 {
-    ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+    ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
     SMIPtr pSmi = SMIPTR(pScrn);
 	
     ENTER();
@@ -187,7 +187,7 @@ SMI_EXAInit(ScreenPtr pScreen)
 static void
 SMI_EXASync(ScreenPtr pScreen, int marker)
 {
-    ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+    ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
 
     ENTER();
 
@@ -222,7 +222,7 @@ static Bool
 SMI_PrepareCopy(PixmapPtr pSrcPixmap, PixmapPtr pDstPixmap, int xdir, int ydir,
 		int alu, Pixel planemask)
 {
-    ScrnInfoPtr pScrn = xf86Screens[pDstPixmap->drawable.pScreen->myNum];
+    ScrnInfoPtr pScrn = xf86ScreenToScrn(pDstPixmap->drawable.pScreen);
     SMIPtr pSmi = SMIPTR(pScrn);
     int src_pitch, dst_pitch;
     unsigned long src_offset, dst_offset;
@@ -289,7 +289,7 @@ static void
 SMI_Copy(PixmapPtr pDstPixmap, int srcX, int srcY, int dstX,
 	 int dstY, int width, int height)
 {
-    ScrnInfoPtr pScrn = xf86Screens[pDstPixmap->drawable.pScreen->myNum];
+    ScrnInfoPtr pScrn = xf86ScreenToScrn(pDstPixmap->drawable.pScreen);
     SMIPtr pSmi = SMIPTR(pScrn);
 
     ENTER();
@@ -367,7 +367,7 @@ CARD8 SMI_SolidRop[16] =	/* table stolen from KAA */
 static Bool
 SMI_PrepareSolid(PixmapPtr pPixmap, int alu, Pixel planemask, Pixel fg)
 {
-    ScrnInfoPtr pScrn = xf86Screens[pPixmap->drawable.pScreen->myNum];
+    ScrnInfoPtr pScrn = xf86ScreenToScrn(pPixmap->drawable.pScreen);
     SMIPtr pSmi = SMIPTR(pScrn);
     int dst_pitch;
     unsigned long dst_offset;
@@ -437,7 +437,7 @@ SMI_PrepareSolid(PixmapPtr pPixmap, int alu, Pixel planemask, Pixel fg)
 static void
 SMI_Solid(PixmapPtr pPixmap, int x1, int y1, int x2, int y2)
 {
-    ScrnInfoPtr pScrn = xf86Screens[pPixmap->drawable.pScreen->myNum];
+    ScrnInfoPtr pScrn = xf86ScreenToScrn(pPixmap->drawable.pScreen);
     SMIPtr pSmi = SMIPTR(pScrn);
     int w, h;
 
@@ -509,7 +509,7 @@ Bool
 SMI_UploadToScreen(PixmapPtr pDst, int x, int y, int w, int h,
 		   char *src, int src_pitch)
 {
-    ScrnInfoPtr pScrn = xf86Screens[pDst->drawable.pScreen->myNum];
+    ScrnInfoPtr pScrn = xf86ScreenToScrn(pDst->drawable.pScreen);
     SMIPtr pSmi = SMIPTR(pScrn);
     int dst_pixelpitch, src_pixelpitch, align, aligned_pitch;
     unsigned long dst_offset;
@@ -621,7 +621,7 @@ static Bool
 SMI_PrepareComposite(int op, PicturePtr pSrcPicture, PicturePtr pMaskPicture, PicturePtr pDstPicture,
 		       PixmapPtr pSrc, PixmapPtr pMask, PixmapPtr pDst)
 {
-    ScrnInfoPtr pScrn = xf86Screens[pDst->drawable.pScreen->myNum];
+    ScrnInfoPtr pScrn = xf86ScreenToScrn(pDst->drawable.pScreen);
     SMIPtr pSmi = SMIPTR(pScrn);
     int src_pitch = exaGetPixmapPitch(pSrc) / (pSrc->drawable.bitsPerPixel >> 3);
     int dst_pitch = exaGetPixmapPitch(pDst) / (pDst->drawable.bitsPerPixel >> 3);
@@ -671,7 +671,7 @@ static void
 SMI_Composite(PixmapPtr pDst, int srcX, int srcY, int maskX, int maskY,
 		int dstX, int dstY, int width, int height)
 {
-    ScrnInfoPtr pScrn = xf86Screens[pDst->drawable.pScreen->myNum];
+    ScrnInfoPtr pScrn = xf86ScreenToScrn(pDst->drawable.pScreen);
     SMIPtr pSmi = SMIPTR(pScrn);
     PictTransformPtr t = pSmi->renderTransform;
     PictVector v;
@@ -711,7 +711,7 @@ static void
 SMI730_Composite(PixmapPtr pDst, int srcX, int srcY, int maskX, int maskY,
 		int dstX, int dstY, int width, int height)
 {
-    ScrnInfoPtr pScrn = xf86Screens[pDst->drawable.pScreen->myNum];
+    ScrnInfoPtr pScrn = xf86ScreenToScrn(pDst->drawable.pScreen);
     SMIPtr pSmi = SMIPTR(pScrn);
     int maxPixels;
 

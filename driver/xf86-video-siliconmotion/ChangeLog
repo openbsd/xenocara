@@ -1,3 +1,33 @@
+commit 2beb25bd41508ab5e2af39c696485fcb5f0ca7d6
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Tue Jul 17 16:05:09 2012 +1000
+
+    xf86-video-siliconmotion: bump to version 1.7.7
+    
+    Signed-off-by: Dave Airlie <airlied@redhat.com>
+
+commit 4b4b8e9c047bd34c516ca8ab2b15fd1c541d05d5
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Tue Jul 17 14:53:30 2012 +1000
+
+    smi: convert to new X server screen conversion apis.
+    
+    Signed-off-by: Dave Airlie <airlied@redhat.com>
+
+commit 1aad7b44e3e141bd8d3e589b7cd410e791050bd0
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Tue Jul 17 02:01:07 2012 +0100
+
+    smi: port to compat-api for new server.
+    
+    Signed-off-by: Dave Airlie <airlied@redhat.com>
+
+commit 891ea02395079b1480faf701156185ad01405e6d
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Tue Jul 17 01:52:45 2012 +0100
+
+    smi: fix build against XAA-less server
+
 commit e4660be7c12de53cac57c0b7d4e792a071b4fcfc
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Fri Mar 23 19:49:14 2012 -0700

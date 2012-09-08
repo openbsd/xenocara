@@ -123,8 +123,7 @@ static void SMI_DisplayVideo0501(ScrnInfoPtr pScrn, int id, int offset,
 static void SMI_DisplayVideo0730(ScrnInfoPtr pScrn, int id, int offset,
 		short width, short height, int pitch, int x1, int y1, int x2, int y2,
 		BoxPtr dstBox, short vid_w, short vid_h, short drw_w, short drw_h);
-static void SMI_BlockHandler(int i, pointer blockData, pointer pTimeout,
-		pointer pReadMask);
+static void SMI_BlockHandler(BLOCKHANDLER_ARGS_DECL);
 /*static int SMI_SendI2C(ScrnInfoPtr pScrn, CARD8 device, char *devName,
         SMI_I2CDataPtr i2cData);*/
 
@@ -612,7 +611,7 @@ SMI_BuildEncodings(SMI_PortPtr p)
 void
 SMI_InitVideo(ScreenPtr pScreen)
 {
-    ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+    ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
     XF86VideoAdaptorPtr *ptrAdaptors, *newAdaptors = NULL;
     XF86VideoAdaptorPtr newAdaptor = NULL;
     int numAdaptors;
@@ -815,7 +814,7 @@ SetAttrSAA7111(ScrnInfoPtr pScrn, int i, int value)
 static XF86VideoAdaptorPtr
 SMI_SetupVideo(ScreenPtr pScreen)
 {
-    ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+    ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
     SMIPtr pSmi = SMIPTR(pScrn);
     SMI_PortPtr smiPortPtr;
     XF86VideoAdaptorPtr ptrAdaptor;
@@ -2060,20 +2059,15 @@ SMI_DisplayVideo0730(
 }
 
 static void
-SMI_BlockHandler(
-	int	i,
-	pointer	blockData,
-	pointer	pTimeout,
-	pointer	pReadMask
-)
+SMI_BlockHandler(BLOCKHANDLER_ARGS_DECL)
 {
-    ScreenPtr	pScreen = screenInfo.screens[i];
-    ScrnInfoPtr	pScrn	= xf86Screens[i];
+    SCREEN_PTR(arg);
+    ScrnInfoPtr	pScrn	= xf86ScreenToScrn(pScreen);
     SMIPtr	pSmi    = SMIPTR(pScrn);
     SMI_PortPtr pPort = (SMI_PortPtr) pSmi->ptrAdaptor->pPortPrivates[0].ptr;
 
     pScreen->BlockHandler = pSmi->BlockHandler;
-    (*pScreen->BlockHandler)(i, blockData, pTimeout, pReadMask);
+    (*pScreen->BlockHandler)(BLOCKHANDLER_ARGS);
     pScreen->BlockHandler = SMI_BlockHandler;
 
     if (pPort->videoStatus & TIMER_MASK) {
@@ -2156,7 +2150,7 @@ SMI_InitOffscreenImages(
 )
 {
     XF86OffscreenImagePtr offscreenImages;
-    ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+    ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
     SMIPtr pSmi = SMIPTR(pScrn);
     SMI_PortPtr pPort = (SMI_PortPtr) pSmi->ptrAdaptor->pPortPrivates[0].ptr;
 
@@ -2194,7 +2188,7 @@ SMI_InitOffscreenImages(
 static void
 SMI_VideoSave(ScreenPtr pScreen, ExaOffscreenArea *area)
 {
-    ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+    ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
     SMIPtr pSmi = SMIPTR(pScrn);
     SMI_PortPtr pPort = pSmi->ptrAdaptor->pPortPrivates[0].ptr;
 	
@@ -2209,7 +2203,7 @@ SMI_VideoSave(ScreenPtr pScreen, ExaOffscreenArea *area)
 CARD32
 SMI_AllocateMemory(ScrnInfoPtr pScrn, void **mem_struct, int size)
 {
-    ScreenPtr	pScreen = screenInfo.screens[pScrn->scrnIndex];
+    ScreenPtr	pScreen = xf86ScrnToScreen(pScrn);
     SMIPtr	pSmi = SMIPTR(pScrn);
     int		offset = 0;
 
