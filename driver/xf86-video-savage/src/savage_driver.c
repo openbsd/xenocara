@@ -73,7 +73,6 @@
 #include "savage_sarea.h"
 #endif
 
-
 /*
  * prototypes
  */
@@ -91,25 +90,24 @@ static int LookupChipID(PciChipsets* pset, int ChipID);
 #endif
 static Bool SavagePreInit(ScrnInfoPtr pScrn, int flags);
 
-static Bool SavageEnterVT(int scrnIndex, int flags);
-static void SavageLeaveVT(int scrnIndex, int flags);
+static Bool SavageEnterVT(VT_FUNC_ARGS_DECL);
+static void SavageLeaveVT(VT_FUNC_ARGS_DECL);
 static void SavageSave(ScrnInfoPtr pScrn);
 static void SavageWriteMode(ScrnInfoPtr pScrn, vgaRegPtr, SavageRegPtr, Bool);
 
 static void SavageInitStatus(ScrnInfoPtr pScrn);
 static void SavageInitShadowStatus(ScrnInfoPtr pScrn);
 
-static Bool SavageScreenInit(int scrnIndex, ScreenPtr pScreen, int argc,
-			     char **argv);
-static int SavageInternalScreenInit(int scrnIndex, ScreenPtr pScreen);
-static ModeStatus SavageValidMode(int index, DisplayModePtr mode,
+static Bool SavageScreenInit(SCREEN_INIT_ARGS_DECL);
+static int SavageInternalScreenInit(ScreenPtr pScreen);
+static ModeStatus SavageValidMode(SCRN_ARG_TYPE arg, DisplayModePtr mode,
 				  Bool verbose, int flags);
 
 void SavageDGAInit(ScreenPtr);
 static Bool SavageMapMem(ScrnInfoPtr pScrn);
 static void SavageUnmapMem(ScrnInfoPtr pScrn, int All);
 static Bool SavageModeInit(ScrnInfoPtr pScrn, DisplayModePtr mode);
-static Bool SavageCloseScreen(int scrnIndex, ScreenPtr pScreen);
+static Bool SavageCloseScreen(CLOSE_SCREEN_ARGS_DECL);
 static Bool SavageSaveScreen(ScreenPtr pScreen, int mode);
 static void SavageLoadPalette(ScrnInfoPtr pScrn, int numColors,
 			      int *indicies, LOCO *colors,
@@ -125,7 +123,7 @@ static void SavageCalcClock(long freq, int min_m, int min_n1, int max_n1,
 void SavageGEReset(ScrnInfoPtr pScrn, int from_timeout, int line, char *file);
 void SavagePrintRegs(ScrnInfoPtr pScrn);
 static void SavageDPMS(ScrnInfoPtr pScrn, int mode, int flags);
-static Bool SavageDDC1(int scrnIndex);
+static Bool SavageDDC1(ScrnInfoPtr pScrn);
 static unsigned int SavageDDC1Read(ScrnInfoPtr pScrn);
 static void SavageProbeDDC(ScrnInfoPtr pScrn, int index);
 static void SavageGetTvMaxSize(SavagePtr psav);
@@ -899,7 +897,7 @@ static void SavageDoDDC(ScrnInfoPtr pScrn)
                 break;
         }
 
-        if (!SavageDDC1(pScrn->scrnIndex)) {
+        if (!SavageDDC1(pScrn)) {
             /* DDC1 failed,switch to DDC2 */
             if (xf86LoadSubModule(pScrn, "i2c")) {
                 if (SavageI2CInit(pScrn)) {
@@ -908,7 +906,7 @@ static void SavageDoDDC(ScrnInfoPtr pScrn)
                     
                     InI2CREG(tmp,psav->DDCPort);
                     OutI2CREG(tmp | 0x13,psav->DDCPort);
-                    pMon = xf86PrintEDID(xf86DoEDID_DDC2(pScrn->scrnIndex,psav->I2C));
+                    pMon = xf86PrintEDID(xf86DoEDID_DDC2(XF86_SCRN_ARG(pScrn),psav->I2C));
                     if (!psav->IgnoreEDID) xf86SetDDCproperties(pScrn, pMon);
                     OutI2CREG(tmp,psav->DDCPort);
                 }
@@ -2198,22 +2196,20 @@ static Bool SavagePreInit(ScrnInfoPtr pScrn, int flags)
 }
 
 
-static Bool SavageEnterVT(int scrnIndex, int flags)
+static Bool SavageEnterVT(VT_FUNC_ARGS_DECL)
 {
-    ScrnInfoPtr pScrn = xf86Screens[scrnIndex];
+    SCRN_INFO_PTR(arg);
 #ifdef SAVAGEDRI
     SavagePtr psav = SAVPTR(pScrn);
     ScreenPtr pScreen;
 #endif
-
-    TRACE(("SavageEnterVT(%d)\n", flags));
 
     gpScrn = pScrn;
     SavageEnableMMIO(pScrn);
 
 #ifdef SAVAGEDRI
     if (psav->directRenderingEnabled) {
-        pScreen = screenInfo.screens[scrnIndex];
+        pScreen = xf86ScrnToScreen(pScrn);
         SAVAGEDRIResume(pScreen);
         DRIUnlock(pScreen);
         psav->LockHeld = 0;
@@ -2232,9 +2228,9 @@ static Bool SavageEnterVT(int scrnIndex, int flags)
 }
 
 
-static void SavageLeaveVT(int scrnIndex, int flags)
+static void SavageLeaveVT(VT_FUNC_ARGS_DECL)
 {
-    ScrnInfoPtr pScrn = xf86Screens[scrnIndex];
+    SCRN_INFO_PTR(arg);
     vgaHWPtr hwp = VGAHWPTR(pScrn);
     SavagePtr psav = SAVPTR(pScrn);
     vgaRegPtr vgaSavePtr = &hwp->SavedReg;
@@ -2248,7 +2244,7 @@ static void SavageLeaveVT(int scrnIndex, int flags)
 
 #ifdef SAVAGEDRI
     if (psav->directRenderingEnabled) {
-        pScreen = screenInfo.screens[scrnIndex];
+        pScreen = xf86ScrnToScreen(pScrn);
         DRILock(pScreen, 0);
         psav->LockHeld = 1;
     }
@@ -2461,7 +2457,7 @@ static void SavageWriteMode(ScrnInfoPtr pScrn, vgaRegPtr vgaSavePtr,
 
 #ifdef SAVAGEDRI
     if (psav->directRenderingEnabled) {
-        DRILock(screenInfo.screens[pScrn->scrnIndex], 0);
+        DRILock(xf86ScrnToScreen(pScrn), 0);
         psav->LockHeld = 1;
     }
 #endif
@@ -2654,7 +2650,7 @@ static void SavageWriteMode(ScrnInfoPtr pScrn, vgaRegPtr vgaSavePtr,
 
 #ifdef SAVAGEDRI
     	if (psav->directRenderingEnabled)
-    	    DRIUnlock(screenInfo.screens[pScrn->scrnIndex]);
+    	    DRIUnlock(xf86ScrnToScreen(pScrn));
     	psav->LockHeld = 0;
 #endif
 
@@ -2910,7 +2906,7 @@ static void SavageWriteMode(ScrnInfoPtr pScrn, vgaRegPtr vgaSavePtr,
 
 #ifdef SAVAGEDRI
     if (psav->directRenderingEnabled)
-        DRIUnlock(screenInfo.screens[pScrn->scrnIndex]);
+        DRIUnlock(xf86ScrnToScreen(pScrn));
     psav->LockHeld = 0;
 #endif
 
@@ -3215,10 +3211,9 @@ static void SavageInitShadowStatus(ScrnInfoPtr pScrn)
 	psav->dwBCIWait2DIdle = 0xc0020000;
 }
 
-static Bool SavageScreenInit(int scrnIndex, ScreenPtr pScreen,
-			     int argc, char **argv)
+static Bool SavageScreenInit(SCREEN_INIT_ARGS_DECL)
 {
-    ScrnInfoPtr pScrn;
+    ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
     SavagePtr psav;
     EntityInfoPtr pEnt;
     int ret;
@@ -3226,7 +3221,6 @@ static Bool SavageScreenInit(int scrnIndex, ScreenPtr pScreen,
 
     TRACE(("SavageScreenInit()\n"));
 
-    pScrn = xf86Screens[pScreen->myNum];
     psav = SAVPTR(pScrn);
 
     pEnt = xf86GetEntityInfo(pScrn->entityList[0]); 
@@ -3268,16 +3262,16 @@ static Bool SavageScreenInit(int scrnIndex, ScreenPtr pScreen,
     } else if (xf86IsEntityShared(psav->pEnt->index)) {
 	    /* Xinerama has sync problem with DRI, disable it for now */
 	    psav->directRenderingEnabled = FALSE;
-	    xf86DrvMsg(scrnIndex, X_WARNING,
+	    xf86DrvMsg(pScrn->scrnIndex, X_WARNING,
 			"Direct Rendering Disabled -- "
 			"Dual-head configuration is not working with "
 			"DRI at present.\n");
     } else if (/*!psav->bTiled*/psav->bDisableTile) {
-            xf86DrvMsg(scrnIndex, X_WARNING, 
+            xf86DrvMsg(pScrn->scrnIndex, X_WARNING, 
 	    		"Direct Rendering requires a tiled framebuffer -- "
 			"Set Option \"DisableTile\" \"false\"\n");
     } else if (psav->cobSize == 0) {
-            xf86DrvMsg(scrnIndex, X_WARNING, 
+            xf86DrvMsg(pScrn->scrnIndex, X_WARNING, 
 	    		"Direct Rendering requires the COB -- "
 			"Set Option \"DisableCOB\" \"false\"\n");
     } else if (((psav->Chipset == S3_TWISTER)
@@ -3342,7 +3336,7 @@ static Bool SavageScreenInit(int scrnIndex, ScreenPtr pScreen,
      if (!miSetPixmapDepths ())
 	 return FALSE;
 
-    ret = SavageInternalScreenInit(scrnIndex, pScreen);
+    ret = SavageInternalScreenInit(pScreen);
     if (!ret)
 	return FALSE;
 
@@ -3524,7 +3518,7 @@ static Bool SavageScreenInit(int scrnIndex, ScreenPtr pScreen,
 }
 
 
-static int SavageInternalScreenInit(int scrnIndex, ScreenPtr pScreen)
+static int SavageInternalScreenInit(ScreenPtr pScreen)
 {
     int ret = TRUE;
     ScrnInfoPtr pScrn;
@@ -3534,7 +3528,7 @@ static int SavageInternalScreenInit(int scrnIndex, ScreenPtr pScreen)
 
     TRACE(("SavageInternalScreenInit()\n"));
 
-    pScrn = xf86Screens[pScreen->myNum];
+    pScrn = xf86ScreenToScrn(pScreen);
     psav = SAVPTR(pScrn);
 
     displayWidth = pScrn->displayWidth;
@@ -3609,10 +3603,10 @@ static int SavageGetRefresh(DisplayModePtr mode)
 }
 
 
-static ModeStatus SavageValidMode(int index, DisplayModePtr pMode,
+static ModeStatus SavageValidMode(SCRN_ARG_TYPE arg, DisplayModePtr pMode,
 				  Bool verbose, int flags)
 {
-    ScrnInfoPtr pScrn = xf86Screens[index];
+    SCRN_INFO_PTR(arg);
     SavagePtr psav = SAVPTR(pScrn);
     int refresh;
 
@@ -3702,7 +3696,7 @@ static Bool SavageModeInit(ScrnInfoPtr pScrn, DisplayModePtr mode)
 	    SavageInitSecondaryStream(pScrn);
         }
 
-        SavageAdjustFrame(pScrn->scrnIndex, pScrn->frameX0, pScrn->frameY0, 0);
+        SavageAdjustFrame(ADJUST_FRAME_ARGS(pScrn, pScrn->frameX0, pScrn->frameY0));
 	return TRUE;
     }
 
@@ -3965,15 +3959,15 @@ static Bool SavageModeInit(ScrnInfoPtr pScrn, DisplayModePtr mode)
 	SavageInitSecondaryStream(pScrn);
     }
 
-    SavageAdjustFrame(pScrn->scrnIndex, pScrn->frameX0, pScrn->frameY0, 0);
+    SavageAdjustFrame(ADJUST_FRAME_ARGS(pScrn, pScrn->frameX0, pScrn->frameY0));
 
     return TRUE;
 }
 
 
-static Bool SavageCloseScreen(int scrnIndex, ScreenPtr pScreen)
+static Bool SavageCloseScreen(CLOSE_SCREEN_ARGS_DECL)
 {
-    ScrnInfoPtr pScrn = xf86Screens[scrnIndex];
+    ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
     vgaHWPtr hwp = VGAHWPTR(pScrn);
     SavagePtr psav = SAVPTR(pScrn);
     vgaRegPtr vgaSavePtr = &hwp->SavedReg;
@@ -3995,10 +3989,12 @@ static Bool SavageCloseScreen(int scrnIndex, ScreenPtr pScreen)
 	psav->EXADriverPtr = NULL;
     }
 
+#ifdef HAVE_XAA_H
     if( psav->AccelInfoRec ) {
         XAADestroyInfoRec( psav->AccelInfoRec );
 	psav->AccelInfoRec = NULL;
     }
+#endif
 
     if( psav->DGAModes ) {
 	free( psav->DGAModes );
@@ -4022,13 +4018,13 @@ static Bool SavageCloseScreen(int scrnIndex, ScreenPtr pScreen)
     pScrn->vtSema = FALSE;
     pScreen->CloseScreen = psav->CloseScreen;
 
-    return (*pScreen->CloseScreen)(scrnIndex, pScreen);
+    return (*pScreen->CloseScreen)(CLOSE_SCREEN_ARGS);
 }
 
 
 static Bool SavageSaveScreen(ScreenPtr pScreen, int mode)
 {
-    ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+    ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
 
     TRACE(("SavageSaveScreen(0x%x)\n", mode));
 
@@ -4044,9 +4040,9 @@ static Bool SavageSaveScreen(ScreenPtr pScreen, int mode)
     return vgaHWSaveScreen(pScreen, mode);
 }
 
-void SavageAdjustFrame(int scrnIndex, int x, int y, int flags)
+void SavageAdjustFrame(ADJUST_FRAME_ARGS_DECL)
 {
-    ScrnInfoPtr    pScrn      = xf86Screens[scrnIndex];
+    SCRN_INFO_PTR(arg);
     SavagePtr psav = SAVPTR(pScrn);
 
     if (psav->IsSecondary) {
@@ -4121,18 +4117,18 @@ SavageDoAdjustFrame(ScrnInfoPtr pScrn, int x, int y, int crtc2)
     return;
 }
 
-Bool SavageSwitchMode(int scrnIndex, DisplayModePtr mode, int flags)
+Bool SavageSwitchMode(SWITCH_MODE_ARGS_DECL)
 {
-    ScrnInfoPtr    pScrn      = xf86Screens[scrnIndex];
+    SCRN_INFO_PTR(arg);
     SavagePtr psav = SAVPTR(pScrn);
     Bool success;
 
     TRACE(("SavageSwitchMode\n"));
 
     if (psav->FBStart2nd || (psav->videoFlags & VF_STREAMS_ON))
-        SavageStreamsOff(xf86Screens[scrnIndex]);
+        SavageStreamsOff(pScrn);
 
-    success = SavageModeInit(xf86Screens[scrnIndex], mode);
+    success = SavageModeInit(pScrn, mode);
 
     /* switching mode on primary will reset secondary.  it needs to be reset as well*/
     if (psav->IsPrimary) {
@@ -4580,9 +4576,8 @@ SavageDDC1Read(ScrnInfoPtr pScrn)
 }
 
 static Bool
-SavageDDC1(int scrnIndex)
+SavageDDC1(ScrnInfoPtr pScrn)
 {
-    ScrnInfoPtr pScrn = xf86Screens[scrnIndex];
     SavagePtr psav = SAVPTR(pScrn);
     unsigned char byte;
     xf86MonPtr pMon;
@@ -4593,7 +4588,7 @@ SavageDDC1(int scrnIndex)
     InI2CREG(byte,psav->I2CPort);
     OutI2CREG(byte | 0x12,psav->I2CPort);
 
-    pMon = xf86DoEDID_DDC1(scrnIndex,vgaHWddc1SetSpeedWeak(),SavageDDC1Read);
+    pMon = xf86DoEDID_DDC1(XF86_SCRN_ARG(pScrn),vgaHWddc1SetSpeedWeak(),SavageDDC1Read);
     if (!pMon)
         return FALSE;
     

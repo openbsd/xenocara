@@ -1274,7 +1274,7 @@ void SavageRestoreAccelState(ScrnInfoPtr pScrn)
 Bool 
 SavageInitAccel(ScreenPtr pScreen)
 {
-    ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+    ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
     SavagePtr psav = SAVPTR(pScrn);
 
 #ifdef SAVAGEDRI

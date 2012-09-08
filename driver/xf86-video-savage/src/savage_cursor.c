@@ -83,7 +83,7 @@ static void SavageSetCursorColors(ScrnInfoPtr pScrn, int bg, int fg);
 static Bool
 SavageUseHWCursor(ScreenPtr pScr, CursorPtr pCurs)
 {
-    ScrnInfoPtr pScrn = xf86Screens[pScr->myNum];
+    ScrnInfoPtr pScrn = xf86ScreenToScrn(pScr);
     SavagePtr psav = SAVPTR(pScrn);
 
     if (psav->PanelX != pScrn->currentMode->HDisplay 
@@ -100,7 +100,7 @@ SavageUseHWCursor(ScreenPtr pScr, CursorPtr pCurs)
 Bool 
 SavageHWCursorInit(ScreenPtr pScreen)
 {
-    ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+    ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
     SavagePtr psav = SAVPTR(pScrn);
     xf86CursorInfoPtr infoPtr;
 

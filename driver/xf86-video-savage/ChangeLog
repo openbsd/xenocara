@@ -1,3 +1,56 @@
+commit cb27a7a072c6e087a2e272d84c1d569dc717da8b
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Tue Jul 17 16:05:09 2012 +1000
+
+    xf86-video-savage: bump to version 2.3.6
+    
+    Signed-off-by: Dave Airlie <airlied@redhat.com>
+
+commit d7edd7c545473d5ed80c9a46c1405042267a7293
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Mon Jul 16 03:39:32 2012 +0100
+
+    savage: make build with no xaa server.
+    
+    This fixes savage build against the no XAA server.
+    
+    Signed-off-by: Dave Airlie <airlied@redhat.com>
+
+commit 508e0742b7d1ac1e4ff6b648d19bfa062c535d61
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Mon Jul 2 12:29:41 2012 +0100
+
+    savage: bump to 2.3.5
+    
+    Signed-off-by: Dave Airlie <airlied@redhat.com>
+
+commit 430b956b49b6c883189074ce13bc234545b714e0
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Wed Jun 6 11:24:31 2012 +0100
+
+    savage: i2c drop xf86Screens usage.
+    
+    Signed-off-by: Dave Airlie <airlied@redhat.com>
+
+commit a2714fb09e1e0badbb3e98e24d4b1ed92003bdb9
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Wed Jun 6 11:22:29 2012 +0100
+
+    savage: port to new compat API
+    
+    Signed-off-by: Dave Airlie <airlied@redhat.com>
+
+commit de22eab9a21df80fe965dc37d21ba3ac2b9f5fd0
+Author: Tormod Volden <debian.tormod@gmail.com>
+Date:   Wed Feb 15 22:20:37 2012 +0100
+
+    Refactor BIOS modes retrieval to call VBEGetVBEInfo only once
+    
+    Otherwise, calling it twice would trigger a VBE bug when using
+    xserver 1.12.
+    
+    Signed-off-by: Tormod Volden <debian.tormod@gmail.com>
+
 commit 63dd44674a28263c5d8d6aec8b72e95f94d3fe6c
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Fri Mar 23 19:46:12 2012 -0700

@@ -37,7 +37,11 @@ in this Software without prior written authorization from the XFree86 Project.
 static void
 SavageI2CPutBits(I2CBusPtr b, int clock,  int data)
 {
+#ifdef XF86_SCRN_INTERFACE
+    ScrnInfoPtr pScrn = b->pScrn;
+#else
     ScrnInfoPtr pScrn = (ScrnInfoPtr)(xf86Screens[b->scrnIndex]);
+#endif
     SavagePtr psav = SAVPTR(pScrn);
     unsigned char reg = 0x10;
 
@@ -51,7 +55,11 @@ SavageI2CPutBits(I2CBusPtr b, int clock,  int data)
 static void
 SavageI2CGetBits(I2CBusPtr b, int *clock, int *data)
 {
+#ifdef XF86_SCRN_INTERFACE
+    ScrnInfoPtr pScrn = b->pScrn;
+#else
     ScrnInfoPtr pScrn = (ScrnInfoPtr)(xf86Screens[b->scrnIndex]);
+#endif
     SavagePtr psav = SAVPTR(pScrn);
     unsigned char reg = 0x10;
 
@@ -76,6 +84,9 @@ SavageI2CInit(ScrnInfoPtr pScrn)
 
     I2CPtr->BusName    = "I2C bus";
     I2CPtr->scrnIndex  = pScrn->scrnIndex;
+#ifdef XF86_SCRN_INTERFACE
+    I2CPtr->pScrn  = pScrn;
+#endif
     I2CPtr->I2CPutBits = SavageI2CPutBits;
     I2CPtr->I2CGetBits = SavageI2CGetBits;
 

@@ -29,6 +29,7 @@ savage_drv_la_LDFLAGS = -module -avoid-version
 savage_drv_ladir = @moduledir@/drivers
 
 savage_drv_la_SOURCES = \
+         compat-api.h \
          savage_accel.c \
 	 savage_xaa.c \
 	 savage_exa.c \

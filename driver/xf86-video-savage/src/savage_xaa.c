@@ -14,10 +14,13 @@
 #endif
 
 #include <X11/Xarch.h>
+#include "savage_driver.h"
+#ifdef HAVE_XAA_H
 #include "xaalocal.h"
 #include "xaarop.h"
+
 #include "miline.h"
-#include "savage_driver.h"
+
 #include "savage_bci.h"
 
 extern int gSavageEntityIndex;
@@ -146,12 +149,13 @@ void SavageRestoreAccelState(ScrnInfoPtr pScrn)
 
     return;
 }
-
+#endif
 
 Bool 
 SavageXAAInit(ScreenPtr pScreen)
 {
-    ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+#ifdef HAVE_XAA_H
+    ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
     SavagePtr psav = SAVPTR(pScrn);
     XAAInfoRecPtr xaaptr;
     BoxRec AvailFBArea;
@@ -344,7 +348,9 @@ SavageXAAInit(ScreenPtr pScreen)
 
 
     return XAAInit(pScreen, xaaptr);
-
+#else
+    return FALSE;
+#endif
 }
 
 /* The sync function for the GE */
@@ -355,7 +361,7 @@ SavageAccelSync(ScrnInfoPtr pScrn)
     psav->WaitIdleEmpty(psav);
 }
 
-
+#ifdef HAVE_XAA_H
 /*
  * The XAA ROP helper routines all assume that a solid color is a 
  * "pattern".  The Savage chips, however, apply a non-stippled solid
@@ -1020,3 +1026,4 @@ void SavageSubsequentImageWriteRect
     BCI_SEND(BCI_W_H(w, h));
 }
 
+#endif

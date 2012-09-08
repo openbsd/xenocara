@@ -338,7 +338,7 @@ SavageClipVWindow(ScrnInfoPtr pScrn)
 
 void SavageInitVideo(ScreenPtr pScreen)
 {
-    ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+    ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
     XF86VideoAdaptorPtr *adaptors, *newAdaptors = NULL;
     XF86VideoAdaptorPtr newAdaptor = NULL;
     SavagePtr psav = SAVPTR(pScrn);
@@ -877,7 +877,7 @@ void SavageResetVideo(ScrnInfoPtr pScrn)
 static XF86VideoAdaptorPtr 
 SavageSetupImageVideo(ScreenPtr pScreen)
 {
-    ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+    ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
     SavagePtr psav = SAVPTR(pScrn);
     XF86VideoAdaptorPtr adapt;
     SavagePortPrivPtr pPriv;
@@ -1324,7 +1324,7 @@ SavageCopyPlanarData(
 static void
 SavageVideoSave(ScreenPtr pScreen, ExaOffscreenArea *area)
 {
-    ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+    ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
     SavagePtr psav = SAVPTR(pScrn);
     SavagePortPrivPtr pPriv = psav->adaptor->pPortPrivates[0].ptr;
 
@@ -1340,7 +1340,7 @@ SavageAllocateMemory(
     void **mem_struct,
     int size
 ){
-    ScreenPtr pScreen = screenInfo.screens[pScrn->scrnIndex];
+    ScreenPtr pScreen = xf86ScrnToScreen(pScrn);
     SavagePtr psav = SAVPTR(pScrn);
     int offset = 0;
 
@@ -2359,7 +2359,7 @@ static void
 SavageInitOffscreenImages(ScreenPtr pScreen)
 {
     XF86OffscreenImagePtr offscreenImages;
-    SavagePtr psav = SAVPTR(xf86Screens[pScreen->myNum]);
+    SavagePtr psav = SAVPTR(xf86ScreenToScrn(pScreen));
 
     /* need to free this someplace */
     if (!psav->offscreenImages) {

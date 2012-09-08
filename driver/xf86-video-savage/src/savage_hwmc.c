@@ -40,8 +40,9 @@
 #include "xf86xvmc.h"
 #include <X11/extensions/Xv.h>
 #include <X11/extensions/XvMC.h>
-#include "xaa.h"
+#ifdef HAVE_XAA_H
 #include "xaalocal.h"
+#endif
 #include "dixstruct.h"
 #include "fourcc.h"
 
@@ -181,7 +182,7 @@ static XF86MCAdaptorPtr ppAdapt[1] =
  **************************************************************************/
 Bool SAVAGEInitMC(ScreenPtr pScreen)
 {
-  ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+  ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
   SavagePtr pSAVAGE = SAVPTR(pScrn);
   DRIInfoPtr pDRIInfo = pSAVAGE->pDRIInfo;
   SAVAGEDRIPtr pSAVAGEDriPriv = (SAVAGEDRIPtr)pDRIInfo->devPrivate;

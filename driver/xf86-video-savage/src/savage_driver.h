@@ -63,7 +63,10 @@
 #include "fboverlay.h"
 #include "xf86cmap.h"
 #include "vbe.h"
+#ifdef HAVE_XAA_H
 #include "xaa.h"
+#endif
+#include "xf86fbman.h"
 #include "exa.h"
 #include "xf86xv.h"
 
@@ -81,6 +84,8 @@
 #include "dri.h"
 #include "GL/glxint.h"
 #include "xf86drm.h"
+
+#include "compat-api.h"
 
 /* Totals 2 Mbytes which equals 2^16 32-byte vertices divided among up
  * to 32 clients. */
@@ -407,7 +412,7 @@ typedef struct _Savage {
     /* Support for shadowFB and rotation */
     unsigned char *	ShadowPtr;
     int			ShadowPitch;
-    void		(*PointerMoved)(int index, int x, int y);
+    void		(*PointerMoved)(SCRN_ARG_TYPE arg, int x, int y);
 
     /* support for EXA */
     ExaDriverPtr        EXADriverPtr;
@@ -419,7 +424,9 @@ typedef struct _Savage {
     unsigned long	sbd_high;
 
     /* Support for XAA acceleration */
+#ifdef HAVE_XAA_H
     XAAInfoRecPtr	AccelInfoRec;
+#endif
     xRectangle		Rect;
     unsigned int	SavedBciCmd;
     unsigned int	SavedFgColor;
@@ -578,9 +585,9 @@ extern void SavageCommonCalcClock(long freq, int min_m, int min_n1,
 			int max_n1, int min_n2, int max_n2,
 			long freq_min, long freq_max,
 			unsigned char *mdiv, unsigned char *ndiv);
-void SavageAdjustFrame(int scrnIndex, int y, int x, int flags);
+void SavageAdjustFrame(ADJUST_FRAME_ARGS_DECL);
 void SavageDoAdjustFrame(ScrnInfoPtr pScrn, int y, int x, int crtc2);
-Bool SavageSwitchMode(int scrnIndex, DisplayModePtr mode, int flags);
+Bool SavageSwitchMode(SWITCH_MODE_ARGS_DECL);
 
 /* In savage_cursor.c. */
 
@@ -606,7 +613,7 @@ Bool SavageI2CInit(ScrnInfoPtr pScrn);
 
 /* In savage_shadow.c */
 
-void SavagePointerMoved(int index, int x, int y);
+void SavagePointerMoved(SCRN_ARG_TYPE arg, int x, int y);
 void SavageRefreshArea(ScrnInfoPtr pScrn, int num, BoxPtr pbox);
 void SavageRefreshArea8(ScrnInfoPtr pScrn, int num, BoxPtr pbox);
 void SavageRefreshArea16(ScrnInfoPtr pScrn, int num, BoxPtr pbox);
@@ -625,6 +632,7 @@ ModeStatus SavageMatchBiosMode(ScrnInfoPtr pScrn,int width,int height,int refres
 
 unsigned short SavageGetBIOSModes( 
     SavagePtr psav,
+    VbeInfoBlock *vbe,
     int iDepth,
     SavageModeEntryPtr s3vModeTable );
 

@@ -31,8 +31,10 @@
 #include "xf86.h"
 #include "xf86_OSproc.h"
 
+#ifdef HAVE_XAA_H
 #include "xaalocal.h"
 #include "xaarop.h"
+#endif
 
 #include "xf86Pci.h"
 #include "xf86fbman.h"
@@ -104,7 +106,7 @@ SAVAGEDRISubsequentScreenToScreenCopy(
  */
 static Bool SAVAGEInitVisualConfigs( ScreenPtr pScreen )
 {
-   ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+   ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
    SavagePtr psav = SAVPTR(pScrn);
    int numConfigs = 0;
    __GLXvisualConfig *pConfigs = 0;
@@ -243,7 +245,7 @@ static Bool SAVAGECreateContext( ScreenPtr pScreen, VisualPtr visual,
 			      drm_context_t hwContext, void *pVisualConfigPriv,
 			      DRIContextType contextStore )
 {
-    ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+    ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
     SavagePtr psav = SAVPTR(pScrn);
 
     if(psav->xvmcContext)
@@ -259,21 +261,20 @@ static Bool SAVAGECreateContext( ScreenPtr pScreen, VisualPtr visual,
 static void SAVAGEDestroyContext( ScreenPtr pScreen, drm_context_t hwContext,
 			       DRIContextType contextStore )
 {
-    ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+    ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
     SavagePtr psav = SAVPTR(pScrn);
 
     psav->DRIrunning--;
 }
 
-static void SAVAGEWakeupHandler( int screenNum, pointer wakeupData,
-				 unsigned long result, pointer pReadmask )
+static void SAVAGEWakeupHandler(WAKEUPHANDLER_ARGS_DECL)
 {
-   ScreenPtr pScreen = screenInfo.screens[screenNum];
-   ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+   SCREEN_PTR(arg);
+   ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
    SavagePtr psav = SAVPTR(pScrn);
 
    psav->pDRIInfo->wrap.WakeupHandler = psav->coreWakeupHandler;
-   (*psav->pDRIInfo->wrap.WakeupHandler) (screenNum, wakeupData, result, pReadmask);
+   (*psav->pDRIInfo->wrap.WakeupHandler) (WAKEUPHANDLER_ARGS);
    psav->pDRIInfo->wrap.WakeupHandler = SAVAGEWakeupHandler;
    psav->LockHeld = 1;
    if (psav->ShadowStatus) {
@@ -288,16 +289,17 @@ static void SAVAGEWakeupHandler( int screenNum, pointer wakeupData,
    }
    if (psav->useEXA)
 	exaMarkSync(pScreen);
+#ifdef HAVE_XAA_H
    else
 	psav->AccelInfoRec->NeedToSync = TRUE;
+#endif
    /* FK: this flag doesn't seem to be used. */
 }
 
-static void SAVAGEBlockHandler( int screenNum, pointer blockData,
-				pointer pTimeout, pointer pReadmask)
+static void SAVAGEBlockHandler(BLOCKHANDLER_ARGS_DECL)
 {
-   ScreenPtr pScreen = screenInfo.screens[screenNum];
-   ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+   SCREEN_PTR(arg);
+   ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
    SavagePtr psav = SAVPTR(pScrn);
 
    if (psav->ShadowStatus) {
@@ -316,7 +318,7 @@ static void SAVAGEBlockHandler( int screenNum, pointer blockData,
    }
    psav->LockHeld = 0;
    psav->pDRIInfo->wrap.BlockHandler = psav->coreBlockHandler;
-   (*psav->pDRIInfo->wrap.BlockHandler) (screenNum, blockData, pTimeout, pReadmask);
+   (*psav->pDRIInfo->wrap.BlockHandler) (BLOCKHANDLER_ARGS);
    psav->pDRIInfo->wrap.BlockHandler = SAVAGEBlockHandler;
 }
 
@@ -395,7 +397,7 @@ static Bool SAVAGESetAgpMode(SavagePtr psav, ScreenPtr pScreen)
 
 static Bool SAVAGEDRIAgpInit(ScreenPtr pScreen)
 {
-   ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+   ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
    SavagePtr psav = SAVPTR(pScrn);
    SAVAGEDRIServerPrivatePtr pSAVAGEDRIServer = psav->DRIServerInfo;
    unsigned int offset;
@@ -586,7 +588,7 @@ static Bool SAVAGEDRIAgpInit(ScreenPtr pScreen)
 
 static Bool SAVAGEDRIMapInit( ScreenPtr pScreen )
 {
-   ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+   ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
    SavagePtr psav = SAVPTR(pScrn);
    SAVAGEDRIServerPrivatePtr pSAVAGEDRIServer = psav->DRIServerInfo;
 
@@ -688,7 +690,7 @@ static Bool SAVAGEDRIMapInit( ScreenPtr pScreen )
 
 static Bool SAVAGEDRIBuffersInit( ScreenPtr pScreen )
 {
-   ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+   ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
    SavagePtr psav = SAVPTR(pScrn);
    SAVAGEDRIServerPrivatePtr pSAVAGEDRIServer = psav->DRIServerInfo;
    int count;
@@ -736,7 +738,7 @@ static Bool SAVAGEDRIBuffersInit( ScreenPtr pScreen )
 
 static Bool SAVAGEDRIKernelInit( ScreenPtr pScreen )
 {
-   ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+   ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
    SavagePtr psav = SAVPTR(pScrn);
    SAVAGEDRIServerPrivatePtr pSAVAGEDRIServer = psav->DRIServerInfo;
    drmSAVAGEInit init;
@@ -791,7 +793,7 @@ static Bool SAVAGEDRIKernelInit( ScreenPtr pScreen )
 
 Bool SAVAGEDRIScreenInit( ScreenPtr pScreen )
 {
-   ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+   ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
    SavagePtr psav = SAVPTR(pScrn);
    DRIInfoPtr pDRIInfo;
    SAVAGEDRIPtr pSAVAGEDRI;
@@ -1069,7 +1071,7 @@ static void SAVAGEDRISetupTiledSurfaceRegs( SavagePtr psav )
 
 Bool SAVAGEDRIFinishScreenInit( ScreenPtr pScreen )
 {
-   ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+   ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
    SavagePtr psav = SAVPTR(pScrn);
    SAVAGEDRIServerPrivatePtr pSAVAGEDRIServer = psav->DRIServerInfo;
    SAVAGEDRIPtr pSAVAGEDRI = (SAVAGEDRIPtr)psav->pDRIInfo->devPrivate;
@@ -1234,7 +1236,7 @@ Bool SAVAGEDRIFinishScreenInit( ScreenPtr pScreen )
 
 void SAVAGEDRIResume(ScreenPtr pScreen)
 {
-   ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+   ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
    SavagePtr psav = SAVPTR(pScrn);
    SAVAGESAREAPrivPtr pSAREAPriv =
 			(SAVAGESAREAPrivPtr)DRIGetSAREAPrivate(pScreen);
@@ -1250,7 +1252,7 @@ void SAVAGEDRIResume(ScreenPtr pScreen)
 
 void SAVAGEDRICloseScreen( ScreenPtr pScreen )
 {
-   ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+   ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
    SavagePtr psav = SAVPTR(pScrn);
    SAVAGEDRIServerPrivatePtr pSAVAGEDRIServer = psav->DRIServerInfo;
 
@@ -1346,7 +1348,7 @@ void
 SAVAGEDRIInitBuffers(WindowPtr pWin, RegionPtr prgn, CARD32 index)
 {
     ScreenPtr pScreen = pWin->drawable.pScreen;
-    ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+    ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
     SavagePtr psav = SAVPTR(pScrn);
     BoxPtr pbox = REGION_RECTS(prgn);
     int nbox  = REGION_NUM_RECTS(prgn);
@@ -1396,7 +1398,7 @@ SAVAGEDRIMoveBuffers(WindowPtr pParent, DDXPointRec ptOldOrg,
 		   RegionPtr prgnSrc, CARD32 index)
 {
     ScreenPtr pScreen = pParent->drawable.pScreen;
-    ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+    ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
     SavagePtr psav = SAVPTR(pScrn);
     int nbox;
     BoxPtr pbox, pboxTmp, pboxNext, pboxBase, pboxNew1, pboxNew2;
@@ -1537,8 +1539,10 @@ SAVAGEDRIMoveBuffers(WindowPtr pParent, DDXPointRec ptOldOrg,
     BCI_SEND(0xc0020000); /* wait for 2D idle */
     if (psav->useEXA)
 	exaMarkSync(pScreen);
+#ifdef HAVE_XAA_H
     else
 	psav->AccelInfoRec->NeedToSync = TRUE;
+#endif
 }
 
 /* Definition in savage_accel.c */
@@ -1613,7 +1617,7 @@ SAVAGEDRISubsequentScreenToScreenCopy(
 static Bool
 SAVAGEDRIOpenFullScreen(ScreenPtr pScreen)
 {
-  ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+  ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
   vgaHWPtr hwp = VGAHWPTR(pScrn);
   SavagePtr psav = SAVPTR(pScrn);
   unsigned int vgaCRIndex = hwp->IOBase + 4;
@@ -1678,7 +1682,7 @@ SAVAGEDRIOpenFullScreen(ScreenPtr pScreen)
 static Bool
 SAVAGEDRICloseFullScreen(ScreenPtr pScreen)
 {
-  ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+  ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
   SavagePtr psav = SAVPTR(pScrn);
   BCI_GET_PTR;
 
