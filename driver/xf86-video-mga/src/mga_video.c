@@ -5,7 +5,6 @@
 #include "xf86.h"
 #include "xf86_OSproc.h"
 #include "compiler.h"
-#include "xf86PciInfo.h"
 #include "xf86Pci.h"
 #include "xf86fbman.h"
 #include "regionstr.h"
@@ -15,7 +14,6 @@
 #include "mga_macros.h"
 #include "xf86xv.h"
 #include <X11/extensions/Xv.h>
-#include "xaa.h"
 
 #ifdef USE_XAA
 #include "xaa.h"
@@ -73,7 +71,7 @@ static Atom xvBrightness, xvContrast, xvColorKey, xvDoubleBuffer;
 static void
 MGAVideoSave(ScreenPtr pScreen, ExaOffscreenArea *area)
 {
-    ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+    ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
     MGAPtr pMga = MGAPTR(pScrn);
     MGAPortPrivPtr pPriv = pMga->portPrivate;
 
@@ -84,7 +82,7 @@ MGAVideoSave(ScreenPtr pScreen, ExaOffscreenArea *area)
 
 void MGAInitVideo(ScreenPtr pScreen)
 {
-    ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+    ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
     XF86VideoAdaptorPtr *adaptors, *newAdaptors = NULL;
     XF86VideoAdaptorPtr newAdaptor = NULL;
     MGAPtr pMga = MGAPTR(pScrn);
@@ -264,7 +262,7 @@ MGAAllocAdaptor(ScrnInfoPtr pScrn, Bool doublebuffer)
 static XF86VideoAdaptorPtr 
 MGASetupImageVideoOverlay(ScreenPtr pScreen)
 {
-    ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+    ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
     MGAPtr pMga = MGAPTR(pScrn);
     XF86VideoAdaptorPtr adapt;
 
@@ -313,7 +311,7 @@ MGASetupImageVideoOverlay(ScreenPtr pScreen)
 static XF86VideoAdaptorPtr 
 MGASetupImageVideoTexture(ScreenPtr pScreen)
 {
-    ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+    ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
     XF86VideoAdaptorPtr adapt;
     MGAPtr pMga = MGAPTR(pScrn);
 
@@ -568,7 +566,7 @@ MGAAllocateMemory(
    int size
 ){
    MGAPtr pMga = MGAPTR(pScrn);
-   ScreenPtr pScreen = screenInfo.screens[pScrn->scrnIndex];
+   ScreenPtr pScreen = xf86ScrnToScreen(pScrn);
    int offset = 0;
 
 #ifdef USE_EXA
@@ -1228,7 +1226,7 @@ MGADisplaySurface(
 static void 
 MGAInitOffscreenImages(ScreenPtr pScreen)
 {
-    ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+    ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
     MGAPtr pMga = MGAPTR(pScrn);
     int num = (pMga->Chipset == PCI_CHIP_MGAG400 || pMga->Chipset == PCI_CHIP_MGAG550) ? 2 : 1;
     XF86OffscreenImagePtr offscreenImages;
@@ -1297,7 +1295,7 @@ MGAInitOffscreenImages(ScreenPtr pScreen)
 static XF86VideoAdaptorPtr
 MGASetupImageVideoILOAD(ScreenPtr pScreen)
 {
-    ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+    ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
     XF86VideoAdaptorPtr adapt;
     MGAPtr pMga = MGAPTR(pScrn);
 
@@ -1988,9 +1986,11 @@ MGAPutImageILOAD(
 
     bpp = pScrn->bitsPerPixel >> 3;
 
+#ifdef HAVE_XAA_H
     if( pMga->AccelInfoRec->NeedToSync && ((long)data != pPriv->lastPort) ) {
 	MGAStormSync(pScrn);
     }
+#endif
 
     pPriv->lastPort = (long)data;
     nbox=REGION_NUM_RECTS(clipBoxes);
@@ -2020,8 +2020,9 @@ MGAPutImageILOAD(
 	pbox++;
     }
 
-
+#ifdef HAVE_XAA_H
     pMga->AccelInfoRec->NeedToSync = TRUE;
+#endif
     pPriv->videoStatus = FREE_TIMER;
     pPriv->freeTime = currentTime.milliseconds + FREE_DELAY;
     pMga->VideoTimerCallback = MGAVideoTimerCallback;

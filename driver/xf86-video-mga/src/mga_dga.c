@@ -5,9 +5,6 @@
 #include "xf86.h"
 #include "xf86_OSproc.h"
 #include "xf86Pci.h"
-#include "xf86PciInfo.h"
-#include "xaa.h"
-#include "xaalocal.h"
 #include "mga.h"
 #include "mga_reg.h"
 #include "dgaproc.h"
@@ -18,10 +15,12 @@ static Bool MGA_OpenFramebuffer(ScrnInfoPtr, char **, unsigned char **,
 static Bool MGA_SetMode(ScrnInfoPtr, DGAModePtr);
 static int  MGA_GetViewport(ScrnInfoPtr);
 static void MGA_SetViewport(ScrnInfoPtr, int, int, int);
+#ifdef HAVE_XAA_H
 static void MGA_FillRect(ScrnInfoPtr, int, int, int, int, unsigned long);
 static void MGA_BlitRect(ScrnInfoPtr, int, int, int, int, int, int);
 static void MGA_BlitTransRect(ScrnInfoPtr, int, int, int, int, int, int, 
 					unsigned long);
+#endif
 
 static
 DGAFunctionRec MGA_DGAFuncs = {
@@ -31,9 +30,13 @@ DGAFunctionRec MGA_DGAFuncs = {
    MGA_SetViewport,
    MGA_GetViewport,
    MGAStormSync,
+#ifdef HAVE_XAA_H
    MGA_FillRect,
    MGA_BlitRect,
    MGA_BlitTransRect
+#else
+   NULL, NULL, NULL
+#endif
 };
 
 
@@ -121,11 +124,13 @@ SECOND_PASS:
 	    mode->flags = DGA_CONCURRENT_ACCESS;
             if(pixmap)
 		mode->flags |= DGA_PIXMAP_AVAILABLE;
+#ifdef HAVE_XAA_H
 	    if(!pMga->NoAccel) {
 		mode->flags |= DGA_FILL_RECT | DGA_BLIT_RECT;
 		if((Bpp != 3) && (pMga->Chipset != PCI_CHIP_MGA2064))
 		    mode->flags |= DGA_BLIT_RECT_TRANS;
 	    }
+#endif
 	    if(pMode->Flags & V_DBLSCAN)
 		mode->flags |= DGA_DOUBLESCAN;
 	    if(pMode->Flags & V_INTERLACE)
@@ -198,7 +203,7 @@ SECOND_PASS:
 Bool
 MGADGAInit(ScreenPtr pScreen)
 {   
-   ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+   ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
    MGAPtr pMga = MGAPTR(pScrn);
    DGAModePtr modes = NULL;
    int num = 0;
@@ -311,8 +316,8 @@ MGA_SetMode(
         memcpy(&pMga->CurrentLayout, &SavedLayouts[index], sizeof(MGAFBLayout));
                 
       pScrn->currentMode = pMga->CurrentLayout.mode;
-      pScrn->SwitchMode(index, pScrn->currentMode, 0);
-      MGAAdjustFrame(index, pScrn->frameX0, pScrn->frameY0, 0);
+      pScrn->SwitchMode(SWITCH_MODE_ARGS(pScrn, pScrn->currentMode));
+      MGAAdjustFrame(ADJUST_FRAME_ARGS(pScrn, pScrn->frameX0, pScrn->frameY0));
       pMga->DGAactive = FALSE;
    } else {
       if(!pMga->DGAactive) {  /* save the old parameters */
@@ -329,7 +334,7 @@ MGA_SetMode(
       pMga->CurrentLayout.weight.blue = BitsSet(pMode->blue_mask);
       /* MGAModeInit() will set the mode field */
 
-      pScrn->SwitchMode(index, pMode->mode, 0);
+      pScrn->SwitchMode(SWITCH_MODE_ARGS(pScrn, pMode->mode));
       /* not strictly required but nice */
       mgaDGASetPalette(pScrn);
    }
@@ -356,10 +361,11 @@ MGA_SetViewport(
 ){
    MGAPtr pMga = MGAPTR(pScrn);
 
-   MGAAdjustFrame(pScrn->pScreen->myNum, x, y, flags);
+   MGAAdjustFrame(ADJUST_FRAME_ARGS(pScrn, x, y));
    pMga->DGAViewportStatus = 0;  /* MGAAdjustFrame loops until finished */
 }
 
+#ifdef HAVE_XAA_H
 static void 
 MGA_FillRect (
    ScrnInfoPtr pScrn, 
@@ -425,7 +431,7 @@ static void MGA_BlitTransRect( ScrnInfoPtr pScrn, int srcx, int srcy,
 	SET_SYNC_FLAG(pMga->AccelInfoRec);
     }
 }
-
+#endif
 
 static Bool 
 MGA_OpenFramebuffer(

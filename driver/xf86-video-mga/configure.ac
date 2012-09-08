@@ -23,7 +23,7 @@
 # Initialize Autoconf
 AC_PREREQ([2.60])
 AC_INIT([xf86-video-mga],
-        [1.5.0],
+        [1.6.1],
         [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],
         [xf86-video-mga])
 AC_CONFIG_SRCDIR([Makefile.am])
@@ -126,8 +126,24 @@ if test "x$XSERVER_LIBPCIACCESS" = xyes; then
 fi
 AM_CONDITIONAL(XSERVER_LIBPCIACCESS, test "x$XSERVER_LIBPCIACCESS" = xyes)
 
-AM_CONDITIONAL(USE_XAA, true)
-AC_DEFINE(USE_XAA, 1, [Build support for XAA])
+
+AC_ARG_ENABLE(xaa,
+              AS_HELP_STRING([--enable-xaa],
+                             [Enable legacy X Acceleration Architecture (XAA) [default=auto]]),
+              [XAA="$enableval"],
+              [XAA=auto])
+if test "x$XAA" != xno; then
+        save_CFLAGS=$CFLAGS
+        save_CPPFLAGS=$CPPFLAGS
+        CFLAGS=$XORG_CFLAGS
+        CPPFLAGS="$XORG_CFLAGS"
+        AC_CHECK_HEADERS([xaa.h], XAA=yes, XAA=no)
+        CFLAGS=$save_CFLAGS
+        CPPFLAGS=$save_CPPFLAGS
+fi
+AC_MSG_CHECKING([whether to include XAA support])
+AM_CONDITIONAL(XAA, test "x$XAA" = xyes)
+AC_MSG_RESULT([$XAA])
 
 # Properly handle EXA.
 AC_MSG_CHECKING([whether to enable EXA support])

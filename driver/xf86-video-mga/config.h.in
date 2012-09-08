@@ -32,6 +32,9 @@
 /* Define to 1 if you have the <unistd.h> header file. */
 #undef HAVE_UNISTD_H
 
+/* Define to 1 if you have the <xaa.h> header file. */
+#undef HAVE_XAA_H
+
 /* Have xf86ModeBandwidth */
 #undef HAVE_XF86MODEBANDWIDTH
 
@@ -60,6 +63,9 @@
 /* Define to the one symbol short name of this package. */
 #undef PACKAGE_TARNAME
 
+/* Define to the home page for this package. */
+#undef PACKAGE_URL
+
 /* Define to the version of this package. */
 #undef PACKAGE_VERSION
 
@@ -77,9 +83,6 @@
 
 /* Build support for Exa */
 #undef USE_EXA
-
-/* Build support for XAA */
-#undef USE_XAA
 
 /* Version number of package */
 #undef VERSION

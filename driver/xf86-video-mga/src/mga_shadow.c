@@ -9,7 +9,6 @@
 
 #include "xf86.h"
 #include "xf86_OSproc.h"
-#include "xf86PciInfo.h"
 #include "xf86Pci.h"
 #include "mga_reg.h"
 #include "mga.h"
@@ -46,9 +45,9 @@ MGARefreshArea(ScrnInfoPtr pScrn, int num, BoxPtr pbox)
 } 
 
 void
-MGAPointerMoved(int index, int x, int y)
+MGAPointerMoved(SCRN_ARG_TYPE arg, int x, int y)
 {
-    ScrnInfoPtr pScrn = xf86Screens[index];
+    SCRN_INFO_PTR(arg);
     MGAPtr pMga = MGAPTR(pScrn);
     int newX, newY;
 
@@ -60,7 +59,7 @@ MGAPointerMoved(int index, int x, int y)
 	newY = pScrn->pScreen->width - x - 1;
     }
 
-    (*pMga->PointerMoved)(index, newX, newY);
+    (*pMga->PointerMoved)(arg, newX, newY);
 }
 
 void

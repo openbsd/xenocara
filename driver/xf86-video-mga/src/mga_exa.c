@@ -45,7 +45,6 @@
 #include "mga_dri.h"
 #endif
 
-#include "xf86PciInfo.h"
 
 #if 0
 #define DEBUG_MSG(x)  ErrorF x
@@ -54,10 +53,10 @@
 #endif
 
 #define PMGA(x) \
-    MGAPtr pMga = xf86Screens[x->drawable.pScreen->myNum]->driverPrivate;
+    MGAPtr pMga = xf86ScreenToScrn(x->drawable.pScreen)->driverPrivate;
 
 #define QUIESCE_DMA(x) \
-    CHECK_DMA_QUIESCENT(pMga, xf86Screens[x->drawable.pScreen->myNum]);
+    CHECK_DMA_QUIESCENT(pMga, xf86ScreenToScrn(x->drawable.pScreen));
 
 /* stuff stolen from mga_storm.c */
 #define BLIT_LEFT   1
@@ -355,7 +354,7 @@ static Bool
 mgaCheckComposite(int op, PicturePtr pSrcPict, PicturePtr pMaskPict,
                   PicturePtr pDstPict)
 {
-    MGAPtr pMga = xf86Screens[pSrcPict->pDrawable->pScreen->myNum]->driverPrivate;
+    MGAPtr pMga = xf86ScreenToScrn(pSrcPict->pDrawable->pScreen)->driverPrivate;
 
     if (op >= sizeof(mgaBlendOp) / sizeof(mgaBlendOp[0])) {
         DEBUG_MSG(("unsupported op %x\n", op));
@@ -752,7 +751,7 @@ mgaDownloadFromScreen(PixmapPtr pSrc, int x, int y, int w, int h,
 static void
 mgaWaitMarker(ScreenPtr pScreen, int marker)
 {
-    ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+    ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
     MGAPtr pMga = pScrn->driverPrivate;
 
     WAITFIFO(1);
@@ -843,7 +842,7 @@ Bool
 mgaExaInit(ScreenPtr pScreen)
 {
     ExaDriverPtr pExa;
-    ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+    ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
     MGAPtr pMga = pScrn->driverPrivate;
 
     pExa = exaDriverAlloc();

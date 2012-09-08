@@ -6,7 +6,6 @@
 #include "xf86_OSproc.h"
 
 #include "xf86Pci.h"
-#include "xf86PciInfo.h"
 
 #include "mga.h"
 #include "mga_reg.h"
@@ -14,7 +13,7 @@
 Bool 
 MGAHWCursorInit(ScreenPtr pScreen)
 {
-    ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+    ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
     MGAPtr pMga = MGAPTR(pScrn);
     MGARamdacPtr MGAdac = &pMga->Dac;
     xf86CursorInfoPtr infoPtr;

@@ -1,3 +1,76 @@
+commit cd41eacaeabf8227197d605b055713ca654633d5
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Tue Jul 17 16:05:09 2012 +1000
+
+    xf86-video-mga: bump to version 1.6.1
+    
+    Signed-off-by: Dave Airlie <airlied@redhat.com>
+
+commit f11a407ceb0857bb0d33811511117b490a8ae6ee
+Author: Dave Airlie <airlied@gmail.com>
+Date:   Sun Jul 15 19:41:28 2012 +1000
+
+    mga: fix after XAA removal
+    
+    Fix mga build after XAA removal.
+    
+    Signed-off-by: Dave Airlie <airlied@redhat.com>
+
+commit fa0f3092ed38ce71ba9f65156bde306eb63feaf8
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Mon Jul 2 12:08:05 2012 +0100
+
+    mga: bump to 1.6.0
+    
+    Signed-off-by: Dave Airlie <airlied@redhat.com>
+
+commit 7b6dcc4d5768cc8d17a1f664155ebdc8ca8c042e
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Wed Jun 6 09:23:31 2012 +0100
+
+    mga: port to new compat API.
+    
+    Signed-off-by: Dave Airlie <airlied@redhat.com>
+
+commit 0cb8ba6dc5e7bf4179174f9f17e211df7d89bd41
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed May 23 23:40:32 2012 -0700
+
+    Add const qualifier to char *from in MGAdoDDC
+    
+    Only used to store arguments to pass as printf %s strings to xf86DrvMsg
+    
+    Fixes gcc warnings:
+    mga_driver.c: In function 'MGAdoDDC':
+    mga_driver.c:1338:7: warning: assignment discards qualifiers from pointer target type
+    mga_driver.c:1343:11: warning: assignment discards qualifiers from pointer target type
+    mga_driver.c:1351:8: warning: assignment discards qualifiers from pointer target type
+    mga_driver.c:1359:8: warning: assignment discards qualifiers from pointer target type
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Dave Airlie <airlied@redhat.com>
+
+commit 3d9631b819c5c6f64ebf9bda8aab93e1cc7f391f
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed May 23 23:34:07 2012 -0700
+
+    Move PCI vendor/device id defines into mga.h instead of using xf86PciInfo.h
+    
+    Silences deprecation warnings from xf86PciInfo.h in current Xorg servers
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Dave Airlie <airlied@redhat.com>
+
+commit 0af7dba78559ce82b4c3eed0862415efcde51863
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Thu May 17 10:19:21 2012 +0100
+
+    mga: don't bind to device if there is a kernel driver
+    
+    this should only pick up KMS drivers and not old drm drivers.
+    
+    Signed-off-by: Dave Airlie <airlied@redhat.com>
+
 commit 3991971c23ebe596742c004b1e583dfb1aa14ec4
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Fri Mar 23 19:02:40 2012 -0700

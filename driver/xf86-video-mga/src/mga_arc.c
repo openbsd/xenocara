@@ -39,8 +39,10 @@ in this Software without prior written authorization from The Open Group.
 #include "mizerarc.h"
 #include "mi.h"
 #include "scrnintstr.h"
+#ifdef HAVE_XAA_H
 #include "xaa.h"
 #include "xaalocal.h"
+#endif
 #include "xf86.h"
 #include "xf86_OSproc.h"
 

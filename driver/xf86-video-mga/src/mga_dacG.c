@@ -12,9 +12,6 @@
 #include "xf86.h"
 #include "xf86_OSproc.h"
 
-/* Drivers for PCI hardware need this */
-#include "xf86PciInfo.h"
-
 /* Drivers that need to access the PCI config space directly need this */
 #include "xf86Pci.h"
 
@@ -1797,7 +1794,7 @@ MGAGSetCursorColorsG100(ScrnInfoPtr pScrn, int bg, int fg)
 static Bool 
 MGAGUseHWCursor(ScreenPtr pScrn, CursorPtr pCurs)
 {
-    MGAPtr pMga = MGAPTR(xf86Screens[pScrn->myNum]);
+    MGAPtr pMga = MGAPTR(xf86ScreenToScrn(pScrn));
    /* This needs to detect if its on the second dac */
     if( XF86SCRNINFO(pScrn)->currentMode->Flags & V_DBLSCAN )
     	return FALSE;
