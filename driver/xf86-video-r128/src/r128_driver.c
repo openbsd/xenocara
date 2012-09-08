@@ -78,8 +78,6 @@
 #include "r128_sarea.h"
 #endif
 
-#include "fb.h"
-
 				/* colormap initialization */
 #include "micmap.h"
 
@@ -118,7 +116,7 @@
 #define USE_CRT_ONLY	0
 
 				/* Forward definitions for driver functions */
-static Bool R128CloseScreen(int scrnIndex, ScreenPtr pScreen);
+static Bool R128CloseScreen(CLOSE_SCREEN_ARGS_DECL);
 static Bool R128SaveScreen(ScreenPtr pScreen, int mode);
 static void R128Save(ScrnInfoPtr pScrn);
 static void R128Restore(ScrnInfoPtr pScrn);
@@ -1357,7 +1355,7 @@ static Bool R128GetDFPInfo(ScrnInfoPtr pScrn)
     OUTREG(info->DDCReg, INREG(info->DDCReg)
            & ~(CARD32)(R128_GPIO_MONID_A_0 | R128_GPIO_MONID_A_3));
 
-    MonInfo = xf86DoEDID_DDC2(pScrn->scrnIndex, info->pI2CBus);
+    MonInfo = xf86DoEDID_DDC2(XF86_SCRN_ARG(pScrn), info->pI2CBus);
     if(!MonInfo) {
         xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
                    "No DFP detected\n");
@@ -2165,10 +2163,10 @@ static void R128LoadPalette(ScrnInfoPtr pScrn, int numColors,
 }
 
 static void
-R128BlockHandler(int i, pointer blockData, pointer pTimeout, pointer pReadmask)
+R128BlockHandler(BLOCKHANDLER_ARGS_DECL)
 {
-    ScreenPtr   pScreen = screenInfo.screens[i];
-    ScrnInfoPtr pScrn   = xf86Screens[i];
+    SCREEN_PTR(arg);
+    ScrnInfoPtr pScrn   = xf86ScreenToScrn(pScreen);
     R128InfoPtr info    = R128PTR(pScrn);
 
 #ifdef R128DRI
@@ -2177,7 +2175,7 @@ R128BlockHandler(int i, pointer blockData, pointer pTimeout, pointer pReadmask)
 #endif
 
     pScreen->BlockHandler = info->BlockHandler;
-    (*pScreen->BlockHandler) (i, blockData, pTimeout, pReadmask);
+    (*pScreen->BlockHandler) (BLOCKHANDLER_ARGS);
     pScreen->BlockHandler = R128BlockHandler;
 
     if(info->VideoTimerCallback) {
@@ -2186,10 +2184,9 @@ R128BlockHandler(int i, pointer blockData, pointer pTimeout, pointer pReadmask)
 }
 
 /* Called at the start of each server generation. */
-Bool R128ScreenInit(int scrnIndex, ScreenPtr pScreen,
-                              int argc, char **argv)
+Bool R128ScreenInit(SCREEN_INIT_ARGS_DECL)
 {
-    ScrnInfoPtr pScrn  = xf86Screens[pScreen->myNum];
+    ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
     R128InfoPtr info   = R128PTR(pScrn);
     BoxRec      MemBox;
     int		y2;
@@ -2223,7 +2220,7 @@ Bool R128ScreenInit(int scrnIndex, ScreenPtr pScreen,
     }
 
     R128SaveScreen(pScreen, SCREEN_SAVER_ON);
-    pScrn->AdjustFrame(scrnIndex, pScrn->frameX0, pScrn->frameY0, 0);
+    pScrn->AdjustFrame(ADJUST_FRAME_ARGS(pScrn, pScrn->frameX0, pScrn->frameY0));
 
 				/* Visual setup */
     miClearVisualTypes();
@@ -2250,11 +2247,11 @@ Bool R128ScreenInit(int scrnIndex, ScreenPtr pScreen,
 	int maxy        = info->FbMapSize / width_bytes;
 
 	if (noAccel) {
-	    xf86DrvMsg(scrnIndex, X_WARNING,
+	    xf86DrvMsg(pScrn->scrnIndex, X_WARNING,
 		       "Acceleration disabled, not initializing the DRI\n");
 	    info->directRenderingEnabled = FALSE;
 	} else if (maxy <= pScrn->virtualY * 3) {
-	    xf86DrvMsg(scrnIndex, X_WARNING,
+	    xf86DrvMsg(pScrn->scrnIndex, X_WARNING,
 		       "Static buffer allocation failed -- "
 		       "need at least %d kB video memory\n",
 		       (pScrn->displayWidth * pScrn->virtualY *
@@ -2269,7 +2266,7 @@ Bool R128ScreenInit(int scrnIndex, ScreenPtr pScreen,
                 if(xf86IsEntityShared(pScrn->entityList[0]))
                 {
                     info->directRenderingEnabled = FALSE;
- 	            xf86DrvMsg(scrnIndex, X_WARNING,
+ 	            xf86DrvMsg(pScrn->scrnIndex, X_WARNING,
                         "Direct Rendering Disabled -- "
                         "Dual-head configuration is not working with DRI "
                         "at present.\nPlease use only one Device/Screen "
@@ -2403,29 +2400,29 @@ Bool R128ScreenInit(int scrnIndex, ScreenPtr pScreen,
 	MemBox.y2 = scanlines;
 
 	if (!xf86InitFBManager(pScreen, &MemBox)) {
-	    xf86DrvMsg(scrnIndex, X_ERROR,
+	    xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
 		       "Memory manager initialization to (%d,%d) (%d,%d) failed\n",
 		       MemBox.x1, MemBox.y1, MemBox.x2, MemBox.y2);
 	    return FALSE;
 	} else {
 	    int width, height;
 
-	    xf86DrvMsg(scrnIndex, X_INFO,
+	    xf86DrvMsg(pScrn->scrnIndex, X_INFO,
 		       "Memory manager initialized to (%d,%d) (%d,%d)\n",
 		       MemBox.x1, MemBox.y1, MemBox.x2, MemBox.y2);
 	    if ((fbarea = xf86AllocateOffscreenArea(pScreen,
 						    pScrn->displayWidth,
 						    2, 0, NULL, NULL, NULL))) {
-		xf86DrvMsg(scrnIndex, X_INFO,
+		xf86DrvMsg(pScrn->scrnIndex, X_INFO,
 			   "Reserved area from (%d,%d) to (%d,%d)\n",
 			   fbarea->box.x1, fbarea->box.y1,
 			   fbarea->box.x2, fbarea->box.y2);
 	    } else {
-		xf86DrvMsg(scrnIndex, X_ERROR, "Unable to reserve area\n");
+		xf86DrvMsg(pScrn->scrnIndex, X_ERROR, "Unable to reserve area\n");
 	    }
 	    if (xf86QueryLargestOffscreenArea(pScreen, &width,
 					      &height, 0, 0, 0)) {
-		xf86DrvMsg(scrnIndex, X_INFO,
+		xf86DrvMsg(pScrn->scrnIndex, X_INFO,
 			   "Largest offscreen area available: %d x %d\n",
 			   width, height);
 	    }
@@ -2436,7 +2433,7 @@ Bool R128ScreenInit(int scrnIndex, ScreenPtr pScreen,
 						pScrn->virtualX,
 						pScrn->virtualY,
 						32, NULL, NULL, NULL))) {
-	    xf86DrvMsg(scrnIndex, X_INFO,
+	    xf86DrvMsg(pScrn->scrnIndex, X_INFO,
 		       "Reserved back buffer from (%d,%d) to (%d,%d)\n",
 		       fbarea->box.x1, fbarea->box.y1,
 		       fbarea->box.x2, fbarea->box.y2);
@@ -2447,7 +2444,7 @@ Bool R128ScreenInit(int scrnIndex, ScreenPtr pScreen,
 				fbarea->box.x1 * cpp);
 	    info->backPitch = pScrn->displayWidth;
 	} else {
-	    xf86DrvMsg(scrnIndex, X_ERROR, "Unable to reserve back buffer\n");
+	    xf86DrvMsg(pScrn->scrnIndex, X_ERROR, "Unable to reserve back buffer\n");
 	    info->backX = -1;
 	    info->backY = -1;
 	    info->backOffset = -1;
@@ -2459,7 +2456,7 @@ Bool R128ScreenInit(int scrnIndex, ScreenPtr pScreen,
 						pScrn->virtualX,
 						pScrn->virtualY + 1,
 						32, NULL, NULL, NULL))) {
-	    xf86DrvMsg(scrnIndex, X_INFO,
+	    xf86DrvMsg(pScrn->scrnIndex, X_INFO,
 		       "Reserved depth buffer from (%d,%d) to (%d,%d)\n",
 		       fbarea->box.x1, fbarea->box.y1,
 		       fbarea->box.x2, fbarea->box.y2);
@@ -2471,11 +2468,11 @@ Bool R128ScreenInit(int scrnIndex, ScreenPtr pScreen,
 	    info->depthPitch = pScrn->displayWidth;
 	    info->spanOffset = ((fbarea->box.y2 - 1) * width_bytes +
 				fbarea->box.x1 * cpp);
-	    xf86DrvMsg(scrnIndex, X_INFO,
+	    xf86DrvMsg(pScrn->scrnIndex, X_INFO,
 		       "Reserved depth span from (%d,%d) offset 0x%x\n",
 		       fbarea->box.x1, fbarea->box.y2 - 1, info->spanOffset);
 	} else {
-	    xf86DrvMsg(scrnIndex, X_ERROR, "Unable to reserve depth buffer\n");
+	    xf86DrvMsg(pScrn->scrnIndex, X_ERROR, "Unable to reserve depth buffer\n");
 	    info->depthX = -1;
 	    info->depthY = -1;
 	    info->depthOffset = -1;
@@ -2483,7 +2480,7 @@ Bool R128ScreenInit(int scrnIndex, ScreenPtr pScreen,
 	    info->spanOffset = -1;
 	}
 
-	xf86DrvMsg(scrnIndex, X_INFO,
+	xf86DrvMsg(pScrn->scrnIndex, X_INFO,
 		   "Reserved %d kb for textures at offset 0x%x\n",
 		   info->textureSize/1024, info->textureOffset);
     }
@@ -2503,7 +2500,7 @@ Bool R128ScreenInit(int scrnIndex, ScreenPtr pScreen,
 	MemBox.y2 = y2;
 
 	if (!xf86InitFBManager(pScreen, &MemBox)) {
-	    xf86DrvMsg(scrnIndex, X_ERROR,
+	    xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
 		       "Memory manager initialization to (%d,%d) (%d,%d) failed\n",
 		       MemBox.x1, MemBox.y1, MemBox.x2, MemBox.y2);
 	    return FALSE;
@@ -2511,21 +2508,21 @@ Bool R128ScreenInit(int scrnIndex, ScreenPtr pScreen,
 	    int       width, height;
 	    FBAreaPtr fbarea;
 
-	    xf86DrvMsg(scrnIndex, X_INFO,
+	    xf86DrvMsg(pScrn->scrnIndex, X_INFO,
 		       "Memory manager initialized to (%d,%d) (%d,%d)\n",
 		       MemBox.x1, MemBox.y1, MemBox.x2, MemBox.y2);
 	    if ((fbarea = xf86AllocateOffscreenArea(pScreen, pScrn->displayWidth,
 						    2, 0, NULL, NULL, NULL))) {
-		xf86DrvMsg(scrnIndex, X_INFO,
+		xf86DrvMsg(pScrn->scrnIndex, X_INFO,
 			   "Reserved area from (%d,%d) to (%d,%d)\n",
 			   fbarea->box.x1, fbarea->box.y1,
 			   fbarea->box.x2, fbarea->box.y2);
 	    } else {
-		xf86DrvMsg(scrnIndex, X_ERROR, "Unable to reserve area\n");
+		xf86DrvMsg(pScrn->scrnIndex, X_ERROR, "Unable to reserve area\n");
 	    }
 	    if (xf86QueryLargestOffscreenArea(pScreen, &width, &height,
 					      0, 0, 0)) {
-		xf86DrvMsg(scrnIndex, X_INFO,
+		xf86DrvMsg(pScrn->scrnIndex, X_INFO,
 			   "Largest offscreen area available: %d x %d\n",
 			   width, height);
 	    }
@@ -2535,16 +2532,16 @@ Bool R128ScreenInit(int scrnIndex, ScreenPtr pScreen,
 				/* Acceleration setup */
     if (!noAccel) {
 	if (R128AccelInit(pScreen)) {
-	    xf86DrvMsg(scrnIndex, X_INFO, "Acceleration enabled\n");
+	    xf86DrvMsg(pScrn->scrnIndex, X_INFO, "Acceleration enabled\n");
 	    info->accelOn = TRUE;
 	} else {
-	    xf86DrvMsg(scrnIndex, X_ERROR,
+	    xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
 		       "Acceleration initialization failed\n");
-	    xf86DrvMsg(scrnIndex, X_INFO, "Acceleration disabled\n");
+	    xf86DrvMsg(pScrn->scrnIndex, X_INFO, "Acceleration disabled\n");
 	    info->accelOn = FALSE;
 	}
     } else {
-	xf86DrvMsg(scrnIndex, X_INFO, "Acceleration disabled\n");
+	xf86DrvMsg(pScrn->scrnIndex, X_INFO, "Acceleration disabled\n");
 	info->accelOn = FALSE;
     }
 
@@ -2571,18 +2568,18 @@ Bool R128ScreenInit(int scrnIndex, ScreenPtr pScreen,
 		       info->cursor_start / pScrn->displayWidth);
 	    if (xf86QueryLargestOffscreenArea(pScreen, &width, &height,
 					      0, 0, 0)) {
-		xf86DrvMsg(scrnIndex, X_INFO,
+		xf86DrvMsg(pScrn->scrnIndex, X_INFO,
 			   "Largest offscreen area available: %d x %d\n",
 			   width, height);
 	    }
 	} else {
-	    xf86DrvMsg(scrnIndex, X_ERROR,
+	    xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
 		       "Hardware cursor initialization failed\n");
-	    xf86DrvMsg(scrnIndex, X_INFO, "Using software cursor\n");
+	    xf86DrvMsg(pScrn->scrnIndex, X_INFO, "Using software cursor\n");
 	}
     } else {
 	info->cursor_start = 0;
-	xf86DrvMsg(scrnIndex, X_INFO, "Using software cursor\n");
+	xf86DrvMsg(pScrn->scrnIndex, X_INFO, "Using software cursor\n");
     }
 
 				/* Colormap setup */
@@ -4073,7 +4070,7 @@ static Bool R128ModeInit(ScrnInfoPtr pScrn, DisplayModePtr mode)
 
 static Bool R128SaveScreen(ScreenPtr pScreen, int mode)
 {
-    ScrnInfoPtr   pScrn = xf86Screens[pScreen->myNum];
+    ScrnInfoPtr   pScrn = xf86ScreenToScrn(pScreen);
     Bool unblank;
 
     unblank = xf86IsUnblank(mode);
@@ -4094,23 +4091,23 @@ static Bool R128SaveScreen(ScreenPtr pScreen, int mode)
  * The workaround is to switch the mode, then switch to another VT, then
  * switch back. --AGD
  */
-Bool R128SwitchMode(int scrnIndex, DisplayModePtr mode, int flags)
+Bool R128SwitchMode(SWITCH_MODE_ARGS_DECL)
 {
-    ScrnInfoPtr   pScrn       = xf86Screens[scrnIndex];
+    SCRN_INFO_PTR(arg);
     R128InfoPtr info        = R128PTR(pScrn);
     Bool ret;
 
     info->SwitchingMode = TRUE;
-    ret = R128ModeInit(xf86Screens[scrnIndex], mode);
+    ret = R128ModeInit(pScrn, mode);
     info->SwitchingMode = FALSE;
     return ret;
 }
 
 /* Used to disallow modes that are not supported by the hardware. */
-ModeStatus R128ValidMode(int scrnIndex, DisplayModePtr mode,
+ModeStatus R128ValidMode(SCRN_ARG_TYPE arg, DisplayModePtr mode,
                                    Bool verbose, int flags)
 {
-    ScrnInfoPtr   pScrn = xf86Screens[scrnIndex];
+    SCRN_INFO_PTR(arg);
     R128InfoPtr   info  = R128PTR(pScrn);
 
     if (info->BIOSDisplay == R128_BIOS_DISPLAY_CRT)
@@ -4186,9 +4183,9 @@ ModeStatus R128ValidMode(int scrnIndex, DisplayModePtr mode,
 
 /* Adjust viewport into virtual desktop such that (0,0) in viewport space
    is (x,y) in virtual space. */
-void R128AdjustFrame(int scrnIndex, int x, int y, int flags)
+void R128AdjustFrame(ADJUST_FRAME_ARGS_DECL)
 {
-    ScrnInfoPtr   pScrn     = xf86Screens[scrnIndex];
+    SCRN_INFO_PTR(arg);
     R128InfoPtr   info      = R128PTR(pScrn);
     unsigned char *R128MMIO = info->MMIO;
     int           Base;
@@ -4222,14 +4219,14 @@ void R128AdjustFrame(int scrnIndex, int x, int y, int flags)
 
 /* Called when VT switching back to the X server.  Reinitialize the video
    mode. */
-Bool R128EnterVT(int scrnIndex, int flags)
+Bool R128EnterVT(VT_FUNC_ARGS_DECL)
 {
-    ScrnInfoPtr pScrn = xf86Screens[scrnIndex];
+    SCRN_INFO_PTR(arg);
     R128InfoPtr info  = R128PTR(pScrn);
 
     R128TRACE(("R128EnterVT\n"));
     if (info->FBDev) {
-        if (!fbdevHWEnterVT(scrnIndex,flags)) return FALSE;
+        if (!fbdevHWEnterVT(VT_FUNC_ARGS)) return FALSE;
     } else
         if (!R128ModeInit(pScrn, pScrn->currentMode)) return FALSE;
     if (info->accelOn)
@@ -4248,16 +4245,16 @@ Bool R128EnterVT(int scrnIndex, int flags)
 #endif
 
     info->PaletteSavedOnVT = FALSE;
-    pScrn->AdjustFrame(scrnIndex, pScrn->frameX0, pScrn->frameY0, 0);
+    pScrn->AdjustFrame(ADJUST_FRAME_ARGS(pScrn, pScrn->frameX0, pScrn->frameY0));
 
     return TRUE;
 }
 
 /* Called when VT switching away from the X server.  Restore the original
    text mode. */
-void R128LeaveVT(int scrnIndex, int flags)
+void R128LeaveVT(VT_FUNC_ARGS_DECL)
 {
-    ScrnInfoPtr pScrn = xf86Screens[scrnIndex];
+    SCRN_INFO_PTR(arg);
     R128InfoPtr info  = R128PTR(pScrn);
     R128SavePtr save  = &info->ModeReg;
 
@@ -4271,7 +4268,7 @@ void R128LeaveVT(int scrnIndex, int flags)
     R128SavePalette(pScrn, save);
     info->PaletteSavedOnVT = TRUE;
     if (info->FBDev)
-        fbdevHWLeaveVT(scrnIndex,flags);
+        fbdevHWLeaveVT(VT_FUNC_ARGS);
     else
         R128Restore(pScrn);
 }
@@ -4280,9 +4277,9 @@ void R128LeaveVT(int scrnIndex, int flags)
 /* Called at the end of each server generation.  Restore the original text
    mode, unmap video memory, and unwrap and call the saved CloseScreen
    function.  */
-static Bool R128CloseScreen(int scrnIndex, ScreenPtr pScreen)
+static Bool R128CloseScreen(CLOSE_SCREEN_ARGS_DECL)
 {
-    ScrnInfoPtr pScrn = xf86Screens[scrnIndex];
+    ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
     R128InfoPtr info  = R128PTR(pScrn);
 
     R128TRACE(("R128CloseScreen\n"));
@@ -4300,8 +4297,10 @@ static Bool R128CloseScreen(int scrnIndex, ScreenPtr pScreen)
 	R128UnmapMem(pScrn);
     }
 
+#ifdef HAVE_XAA_H
     if (info->accel)             XAADestroyInfoRec(info->accel);
     info->accel                  = NULL;
+#endif
 
     if (info->scratch_save)      free(info->scratch_save);
     info->scratch_save           = NULL;
@@ -4322,12 +4321,12 @@ static Bool R128CloseScreen(int scrnIndex, ScreenPtr pScreen)
 
     pScreen->BlockHandler = info->BlockHandler;
     pScreen->CloseScreen = info->CloseScreen;
-    return (*pScreen->CloseScreen)(scrnIndex, pScreen);
+    return (*pScreen->CloseScreen)(CLOSE_SCREEN_ARGS);
 }
 
-void R128FreeScreen(int scrnIndex, int flags)
+void R128FreeScreen(FREE_SCREEN_ARGS_DECL)
 {
-    ScrnInfoPtr pScrn = xf86Screens[scrnIndex];
+    SCRN_INFO_PTR(arg);
     R128InfoPtr   info      = R128PTR(pScrn);
 
     R128TRACE(("R128FreeScreen\n"));

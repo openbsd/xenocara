@@ -40,6 +40,7 @@ r128_drv_la_SOURCES = \
 	r128_video.c r128_misc.c r128_probe.c $(R128_DRI_SRCS)
 
 EXTRA_DIST = \
+        compat-api.h \
 	r128_common.h \
 	r128_dri.h \
 	r128_dripriv.h \

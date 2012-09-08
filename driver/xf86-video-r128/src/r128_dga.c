@@ -29,10 +29,12 @@ static Bool R128_OpenFramebuffer(ScrnInfoPtr, char **, unsigned char **,
 static Bool R128_SetMode(ScrnInfoPtr, DGAModePtr);
 static int  R128_GetViewport(ScrnInfoPtr);
 static void R128_SetViewport(ScrnInfoPtr, int, int, int);
+#ifdef HAVE_XAA_H
 static void R128_FillRect(ScrnInfoPtr, int, int, int, int, unsigned long);
 static void R128_BlitRect(ScrnInfoPtr, int, int, int, int, int, int);
 static void R128_BlitTransRect(ScrnInfoPtr, int, int, int, int, int, int,
 			       unsigned long);
+#endif
 
 static DGAModePtr R128SetupDGAMode(ScrnInfoPtr pScrn,
 				     DGAModePtr modes,
@@ -81,6 +83,7 @@ SECOND_PASS:
 	    if (pixmap)
 		currentMode->flags     |= DGA_PIXMAP_AVAILABLE;
 
+#ifdef HAVE_XAA_H
 	    if (info->accel) {
 	      if (info->accel->SetupForSolidFill &&
 		  info->accel->SubsequentSolidFillRect)
@@ -93,6 +96,7 @@ SECOND_PASS:
 		   DGA_BLIT_RECT | DGA_BLIT_RECT_TRANS))
 		  currentMode->flags   &= ~DGA_CONCURRENT_ACCESS;
 	    }
+#endif
 	    if (pMode->Flags & V_DBLSCAN)
 		currentMode->flags     |= DGA_DOUBLESCAN;
 	    if (pMode->Flags & V_INTERLACE)
@@ -142,7 +146,7 @@ SECOND_PASS:
 Bool
 R128DGAInit(ScreenPtr pScreen)
 {
-   ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+   ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
    R128InfoPtr info = R128PTR(pScrn);
    DGAModePtr modes = NULL;
    int num = 0;
@@ -211,6 +215,7 @@ R128DGAInit(ScreenPtr pScreen)
    info->DGAFuncs.BlitRect           = NULL;
    info->DGAFuncs.BlitTransRect      = NULL;
 
+#ifdef HAVE_XAA_H
    if (info->accel) {
       info->DGAFuncs.Sync            = info->accel->Sync;
       if (info->accel->SetupForSolidFill &&
@@ -222,6 +227,7 @@ R128DGAInit(ScreenPtr pScreen)
 	info->DGAFuncs.BlitTransRect = R128_BlitTransRect;
       }
    }
+#endif
 
    return DGAInit(pScreen, &(info->DGAFuncs), modes, num);
 }
@@ -243,7 +249,7 @@ R128_SetMode(
 
 	pScrn->currentMode = info->CurrentLayout.mode;
 
-	pScrn->SwitchMode(indx, pScrn->currentMode, 0);
+	pScrn->SwitchMode(SWITCH_MODE_ARGS(pScrn, pScrn->currentMode));
 #ifdef R128DRI
 	if (info->directRenderingEnabled) {
 	    R128CCE_STOP(pScrn, info);
@@ -256,7 +262,7 @@ R128_SetMode(
 	    R128CCE_START(pScrn, info);
 	}
 #endif
-	pScrn->AdjustFrame(indx, 0, 0, 0);
+	pScrn->AdjustFrame(ADJUST_FRAME_ARGS(pScrn, 0, 0));
 	info->DGAactive = FALSE;
    } else {
 	if(!info->DGAactive) {  /* save the old parameters */
@@ -274,7 +280,7 @@ R128_SetMode(
 					  : pMode->depth);
 	/* R128ModeInit() will set the mode field */
 
-	pScrn->SwitchMode(indx, pMode->mode, 0);
+	pScrn->SwitchMode(SWITCH_MODE_ARGS(pScrn, pMode->mode));
 
 #ifdef R128DRI
 	if (info->directRenderingEnabled) {
@@ -313,11 +319,11 @@ R128_SetViewport(
 ){
    R128InfoPtr info = R128PTR(pScrn);
 
-   pScrn->AdjustFrame(pScrn->pScreen->myNum, x, y, flags);
+   pScrn->AdjustFrame(ADJUST_FRAME_ARGS(pScrn, x, y));
    info->DGAViewportStatus = 0;  /* FIXME */
 }
 
-
+#ifdef HAVE_XAA_H
 static void
 R128_FillRect (
    ScrnInfoPtr pScrn,
@@ -379,7 +385,7 @@ R128_BlitTransRect(
     if (pScrn->bitsPerPixel == info->CurrentLayout.bitsPerPixel)
 	SET_SYNC_FLAG(info->accel);
 }
-
+#endif
 
 static Bool
 R128_OpenFramebuffer(

@@ -1,3 +1,37 @@
+commit a4231073010096f689df72c1f8f1453852f28d81
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Tue Jul 17 16:05:09 2012 +1000
+
+    xf86-video-r128: bump to version 6.8.4
+    
+    Signed-off-by: Dave Airlie <airlied@redhat.com>
+
+commit 16df5622c550c64711a25a9d8ece9152c3047a94
+Author: Dave Airlie <airlied@gmail.com>
+Date:   Sun Jul 15 17:14:10 2012 +1000
+
+    r128: drop XAA support.
+    
+    this just makes XAA conditional.
+    
+    Signed-off-by: Dave Airlie <airlied@redhat.com>
+
+commit 734e9ff97b81af732ab7065761212e8eb8f6aa3c
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Mon Jul 2 12:26:11 2012 +0100
+
+    r128: bump 6.8.3 release
+    
+    Signed-off-by: Dave Airlie <airlied@redhat.com>
+
+commit b027633fcfc0e226b78036e27c66ccd76542e43f
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Wed Jun 6 11:02:27 2012 +0100
+
+    r128: port to new compat API.
+    
+    Signed-off-by: Dave Airlie <airlied@redhat.com>
+
 commit 1ac4cd4b41d0e8232660df78ff136df1214f3907
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Fri Mar 23 19:23:54 2012 -0700

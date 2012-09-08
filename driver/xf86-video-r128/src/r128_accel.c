@@ -101,6 +101,7 @@
 				/* X and server generic header files */
 #include "xf86.h"
 
+#ifdef HAVE_XAA_H
 static struct {
     int rop;
     int pattern;
@@ -122,6 +123,7 @@ static struct {
     { R128_ROP3_DSan, R128_ROP3_DPan }, /* GXnand         */
     { R128_ROP3_ONE,  R128_ROP3_ONE  }  /* GXset          */
 };
+#endif
 
 extern int getR128EntityIndex(void);
 
@@ -317,6 +319,7 @@ int R128CCEStop(ScrnInfoPtr pScrn)
 
 #endif
 
+#ifdef HAVE_XAA_H
 /* Setup for XAA SolidFill. */
 static void R128SetupForSolidFill(ScrnInfoPtr pScrn,
 				  int color, int rop, unsigned int planemask)
@@ -1006,6 +1009,7 @@ static void R128SubsequentImageWriteScanline(ScrnInfoPtr pScrn, int bufno)
 	}
     }
 }
+#endif
 
 /* Initialize the acceleration hardware. */
 void R128EngineInit(ScrnInfoPtr pScrn)
@@ -1097,6 +1101,8 @@ void R128EngineInit(ScrnInfoPtr pScrn)
 }
 
 #ifdef R128DRI
+
+#ifdef HAVE_XAA_H
 
 /* Setup for XAA SolidFill. */
 static void R128CCESetupForSolidFill(ScrnInfoPtr pScrn,
@@ -1540,6 +1546,7 @@ static void R128CCESubsequentMono8x8PatternFillRect(ScrnInfoPtr pScrn,
 
     ADVANCE_RING();
 }
+#endif
 
 /* Get an indirect buffer for the CCE 2D acceleration commands.
  */
@@ -1634,6 +1641,7 @@ void R128CCEFlushIndirect( ScrnInfoPtr pScrn, int discard )
     info->indirectStart = buffer->used;
 }
 
+#ifdef HAVE_XAA_H
 /* Flush and release the indirect buffer.
  */
 void R128CCEReleaseIndirect( ScrnInfoPtr pScrn )
@@ -1743,7 +1751,9 @@ static void R128CCEAccelInit(ScrnInfoPtr pScrn, XAAInfoRecPtr a)
 
 }
 #endif
+#endif
 
+#ifdef HAVE_XAA_H
 /* This callback is required for multihead cards using XAA */
 static
 void R128RestoreAccelState(ScrnInfoPtr pScrn)
@@ -1857,12 +1867,16 @@ static void R128MMIOAccelInit(ScrnInfoPtr pScrn, XAAInfoRecPtr a)
     }
 
 }
+#endif
 
 /* Initialize XAA for supported acceleration and also initialize the
    graphics hardware for acceleration. */
 Bool R128AccelInit(ScreenPtr pScreen)
 {
-    ScrnInfoPtr   pScrn = xf86Screens[pScreen->myNum];
+#ifndef HAVE_XAA_H
+    return FALSE;
+#else
+    ScrnInfoPtr   pScrn = xf86ScreenToScrn(pScreen);
     R128InfoPtr   info  = R128PTR(pScrn);
     XAAInfoRecPtr a;
 
@@ -1880,4 +1894,5 @@ Bool R128AccelInit(ScreenPtr pScreen)
 
     R128EngineInit(pScrn);
     return XAAInit(pScreen, a);
+#endif
 }

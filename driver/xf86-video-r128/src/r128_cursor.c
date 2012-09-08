@@ -241,7 +241,7 @@ static void R128ShowCursor(ScrnInfoPtr pScrn)
 /* Determine if hardware cursor is in use. */
 static Bool R128UseHWCursor(ScreenPtr pScreen, CursorPtr pCurs)
 {
-    ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+    ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
     R128InfoPtr info  = R128PTR(pScrn);
 
     return info->cursor_start ? TRUE : FALSE;
@@ -250,7 +250,7 @@ static Bool R128UseHWCursor(ScreenPtr pScreen, CursorPtr pCurs)
 /* Initialize hardware cursor support. */
 Bool R128CursorInit(ScreenPtr pScreen)
 {
-    ScrnInfoPtr           pScrn   = xf86Screens[pScreen->myNum];
+    ScrnInfoPtr           pScrn   = xf86ScreenToScrn(pScreen);
     R128InfoPtr           info    = R128PTR(pScrn);
     xf86CursorInfoPtr     cursor;
     FBAreaPtr             fbarea;
