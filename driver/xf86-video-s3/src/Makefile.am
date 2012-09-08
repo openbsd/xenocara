@@ -29,6 +29,7 @@ s3_drv_la_LDFLAGS = -module -avoid-version
 s3_drv_ladir = @moduledir@/drivers
 
 s3_drv_la_SOURCES = \
+         compat-api.h \
          newmmio.h \
          s3_bios.c \
          s3_cursor.c \

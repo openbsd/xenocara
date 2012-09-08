@@ -41,14 +41,16 @@
 static Bool S3_SetMode(ScrnInfoPtr pScrn, DGAModePtr pMode);
 static int S3_GetViewport(ScrnInfoPtr pScrn);
 static void S3_SetViewport(ScrnInfoPtr pScrn, int x, int y, int flags);
+#ifdef HAVE_XAA_H
 static void S3_FillRect(ScrnInfoPtr pScrn, int x, int y, int w, int h,
 		        unsigned long color);
 static void S3_BltRect(ScrnInfoPtr pScrn, int srcx, int srcy, int w, int h,
 		       int dstx, int dsty);
+static void S3_Sync(ScrnInfoPtr pScrn);
+#endif
 static Bool S3_OpenFramebuffer(ScrnInfoPtr pScrn, char **name,
 			       unsigned char **mem, int *size, int *offset,
 			       int *flags);
-static void S3_Sync(ScrnInfoPtr pScrn);
 
 
 static DGAFunctionRec S3_DGAFuncs = {
@@ -57,9 +59,13 @@ static DGAFunctionRec S3_DGAFuncs = {
 	S3_SetMode,
 	S3_SetViewport,
 	S3_GetViewport,
+#ifdef HAVE_XAA_H
 	S3_Sync,
 	S3_FillRect,
 	S3_BltRect,
+#else
+	NULL, NULL, NULL,
+#endif
 	NULL
 };
 
@@ -105,8 +111,10 @@ SECOND_PASS:
 		currentMode->flags = DGA_CONCURRENT_ACCESS;
 		if (pixmap)
 			currentMode->flags |= DGA_PIXMAP_AVAILABLE;
+#ifdef HAVE_XAA_H
 		if (pS3->pXAA)
 			currentMode->flags |= DGA_FILL_RECT | DGA_BLIT_RECT;
+#endif
 		if (pMode->Flags & V_DBLSCAN)
 			currentMode->flags |= DGA_DOUBLESCAN;
 		if (pMode->Flags & V_INTERLACE)
@@ -168,7 +176,7 @@ SECOND_PASS:
 
 Bool S3DGAInit(ScreenPtr pScreen)
 {
-	ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+	ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
 	S3Ptr pS3 = S3PTR(pScrn);
 	DGAModePtr modes = NULL;
 	int num = 0;
@@ -243,7 +251,7 @@ static Bool S3_SetMode(ScrnInfoPtr pScrn, DGAModePtr pMode)
 						 pMode->bitsPerPixel :
 						 pMode->depth);
 
-		S3SwitchMode(indx, pMode->mode, 0);
+		S3SwitchMode(SWITCH_MODE_ARGS(pScrn, pMode->mode));
 	}
 
 	return TRUE;
@@ -262,11 +270,12 @@ static void S3_SetViewport(ScrnInfoPtr pScrn, int x, int y, int flags)
 {
 	S3Ptr pS3 = S3PTR(pScrn);
 
-	pScrn->AdjustFrame(pScrn->pScreen->myNum, x, y, flags);
+	pScrn->AdjustFrame(ADJUST_FRAME_ARGS(pScrn, x, y));
 	pS3->DGAViewportStatus = 0;
 }
 
 
+#ifdef HAVE_XAA_H
 static void S3_FillRect(ScrnInfoPtr pScrn, int x, int y, int w, int h,
 		        unsigned long color)
 {
@@ -296,7 +305,7 @@ static void S3_BltRect(ScrnInfoPtr pScrn, int srcx, int srcy, int w, int h,
 		SET_SYNC_FLAG(pS3->pXAA);
 	}
 }
-
+#endif
 
 static Bool S3_OpenFramebuffer(ScrnInfoPtr pScrn, char **name,
 			       unsigned char **mem, int *size, int *offset,
@@ -313,8 +322,9 @@ static Bool S3_OpenFramebuffer(ScrnInfoPtr pScrn, char **name,
 	return TRUE;
 }
 
-
+#ifdef HAVE_XAA_H
 static void S3_Sync(ScrnInfoPtr pScrn)
 {
 	WaitIdle();
 }
+#endif

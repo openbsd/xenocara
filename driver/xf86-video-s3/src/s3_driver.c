@@ -50,7 +50,6 @@
 #include "xf86RAC.h"
 #endif
 #include "compiler.h"
-#include "xaa.h"
 #include "mipointer.h"
 #include "micmap.h"
 #include "mibstore.h"
@@ -94,18 +93,17 @@ static const OptionInfoRec * S3AvailableOptions(int chipid, int busid);
 static void S3Identify(int flags);
 static Bool S3Probe(DriverPtr drv, int flags);
 static Bool S3PreInit(ScrnInfoPtr pScrn, int flags);
-static Bool S3EnterVT(int scrnIndex, int flags);
-static void S3LeaveVT(int scrnIndex, int flags);
+static Bool S3EnterVT(VT_FUNC_ARGS_DECL);
+static void S3LeaveVT(VT_FUNC_ARGS_DECL);
 static void S3Save(ScrnInfoPtr pScrn);
-static Bool S3ScreenInit(int scrnIndex, ScreenPtr pScreen, int argc,
-			 char **argv);
+static Bool S3ScreenInit(SCREEN_INIT_ARGS_DECL);
 static Bool S3MapMem(ScrnInfoPtr pScrn);
 static void S3UnmapMem(ScrnInfoPtr pScrn);
 static Bool S3ModeInit(ScrnInfoPtr pScrn, DisplayModePtr mode);
-static void S3AdjustFrame(int scrnIndex, int x, int y, int flags);
-Bool S3CloseScreen(int scrnIndex, ScreenPtr pScreen);
+static void S3AdjustFrame(ADJUST_FRAME_ARGS_DECL);
+Bool S3CloseScreen(CLOSE_SCREEN_ARGS_DECL);
 Bool S3SaveScreen(ScreenPtr pScreen, int mode);
-static void S3FreeScreen(int scrnIndex, int flags);
+static void S3FreeScreen(FREE_SCREEN_ARGS_DECL);
 static void S3GenericLoadPalette(ScrnInfoPtr pScrn, int numColors,
                                  int *indicies, LOCO *colors,
                                  VisualPtr pVisual);
@@ -739,10 +737,9 @@ static Bool S3PreInit(ScrnInfoPtr pScrn, int flags)
 }
 
 
-static Bool S3ScreenInit(int scrnIndex, ScreenPtr pScreen, int argc,
-			 char **argv)
+static Bool S3ScreenInit(SCREEN_INIT_ARGS_DECL)
 {
-	ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+	ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
 	S3Ptr pS3 = S3PTR(pScrn);
 	BoxRec ScreenArea;
 	int width, height, displayWidth;
@@ -1079,9 +1076,9 @@ Bool S3SaveScreen(ScreenPtr pScreen, int mode)
 }
 
 
-static void S3FreeScreen(int scrnIndex, int flags)
+static void S3FreeScreen(FREE_SCREEN_ARGS_DECL)
 {
-        ScrnInfoPtr pScrn = xf86Screens[scrnIndex];
+	SCRN_INFO_PTR(arg);
                            
         vgaHWFreeHWRec(pScrn);
         
@@ -1089,9 +1086,9 @@ static void S3FreeScreen(int scrnIndex, int flags)
 }
 
 
-Bool S3CloseScreen(int scrnIndex, ScreenPtr pScreen)
+Bool S3CloseScreen(CLOSE_SCREEN_ARGS_DECL)
 {
-        ScrnInfoPtr pScrn = xf86Screens[scrnIndex];
+        ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
         S3Ptr pS3 = S3PTR(pScrn);
         vgaHWPtr hwp = VGAHWPTR(pScrn);
 
@@ -1108,14 +1105,14 @@ Bool S3CloseScreen(int scrnIndex, ScreenPtr pScreen)
         pScrn->vtSema = FALSE;
         pScreen->CloseScreen = pS3->CloseScreen;
                 
-        return (*pScreen->CloseScreen)(scrnIndex, pScreen);
+        return (*pScreen->CloseScreen)(CLOSE_SCREEN_ARGS);
 }
 
 
-Bool S3SwitchMode(int scrnIndex, DisplayModePtr mode, int flags)
+Bool S3SwitchMode(SWITCH_MODE_ARGS_DECL)
 {    
-	return S3ModeInit(xf86Screens[scrnIndex], mode);
-
+	SCRN_INFO_PTR(arg);
+	return S3ModeInit(pScrn, mode);
 }
 
 
@@ -1743,7 +1740,7 @@ static Bool S3ModeInit(ScrnInfoPtr pScrn, DisplayModePtr mode)
 		outb(0x3c5, 0x00);
 	}
 
-	pScrn->AdjustFrame(pScrn->scrnIndex, pScrn->frameX0, pScrn->frameY0, 0);
+	pScrn->AdjustFrame(ADJUST_FRAME_ARGS(pScrn, pScrn->frameX0, pScrn->frameY0));
 
        	vgaHWProtect(pScrn, FALSE);
 
@@ -1795,9 +1792,9 @@ static Bool S3ModeInit(ScrnInfoPtr pScrn, DisplayModePtr mode)
 }
 
 
-static Bool S3EnterVT(int scrnIndex, int flags)
+static Bool S3EnterVT(VT_FUNC_ARGS_DECL)
 {       
-        ScrnInfoPtr pScrn = xf86Screens[scrnIndex];
+	SCRN_INFO_PTR(arg);
         vgaHWPtr hwp = VGAHWPTR(pScrn);
 
         vgaHWUnlock(hwp);
@@ -1880,9 +1877,9 @@ static void S3Restore(ScrnInfoPtr pScrn)
 }
 
 
-static void S3LeaveVT(int scrnIndex, int flags)
+static void S3LeaveVT(VT_FUNC_ARGS_DECL)
 {
-        ScrnInfoPtr pScrn = xf86Screens[scrnIndex];
+	SCRN_INFO_PTR(arg);
         vgaHWPtr hwp = VGAHWPTR(pScrn);
 
         S3Restore(pScrn);
@@ -1892,9 +1889,9 @@ static void S3LeaveVT(int scrnIndex, int flags)
 }       
 
 
-static void S3AdjustFrame(int scrnIndex, int x, int y, int flags)
+static void S3AdjustFrame(ADJUST_FRAME_ARGS_DECL)
 {
-        ScrnInfoPtr pScrn = xf86Screens[scrnIndex];
+	SCRN_INFO_PTR(arg);
         S3Ptr pS3 = S3PTR(pScrn);
 	S3RegPtr regs = &pS3->ModeRegs;
         int vgaCRIndex = pS3->vgaCRIndex, vgaCRReg = pS3->vgaCRReg;

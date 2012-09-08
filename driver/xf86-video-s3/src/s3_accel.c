@@ -36,6 +36,7 @@
 #include "s3.h"
 #include "s3_reg.h"
 
+#ifdef HAVE_XAA_H
 
 #if 0
 static Bool NicePattern;
@@ -539,6 +540,7 @@ static void S3SubsequentDashedBresenhamLine32(ScrnInfoPtr pScrn,
 }
 
 #endif
+#endif
  	
 #ifdef S3_NEWMMIO
 Bool S3AccelInitNewMMIO(ScreenPtr pScreen)
@@ -546,7 +548,8 @@ Bool S3AccelInitNewMMIO(ScreenPtr pScreen)
 Bool S3AccelInitPIO(ScreenPtr pScreen)
 #endif
 {
-	ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+#ifdef HAVE_XAA_H
+	ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
 	S3Ptr pS3 = S3PTR(pScrn);
 	XAAInfoRecPtr pXAA;
 
@@ -625,4 +628,7 @@ Bool S3AccelInitPIO(ScreenPtr pScreen)
 #endif
 
 	return XAAInit(pScreen, pXAA);
+#else
+	return FALSE;
+#endif
 }

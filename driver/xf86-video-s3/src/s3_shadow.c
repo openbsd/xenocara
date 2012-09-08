@@ -69,9 +69,9 @@ S3RefreshArea(ScrnInfoPtr pScrn, int num, BoxPtr pbox)
 } 
 
 void
-S3PointerMoved(int index, int x, int y)
+S3PointerMoved(SCRN_ARG_TYPE arg, int x, int y)
 {
-    ScrnInfoPtr pScrn = xf86Screens[index];
+    SCRN_INFO_PTR(arg);
     S3Ptr pS3 = S3PTR(pScrn);
     int newX, newY;
 
@@ -83,7 +83,7 @@ S3PointerMoved(int index, int x, int y)
 	newY = pScrn->pScreen->width - x - 1;
     }
 
-    (*pS3->PointerMoved)(index, newX, newY);
+    (*pS3->PointerMoved)(arg, newX, newY);
 }
 
 void

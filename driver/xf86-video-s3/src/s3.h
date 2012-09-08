@@ -36,7 +36,10 @@
 #include "xf86Pci.h"
 #include "xf86PciInfo.h"
 #include "xf86RamDac.h"
+#ifdef HAVE_XAA_H
 #include "xaa.h"
+#endif
+#include "xf86fbman.h"
 #include "vbe.h"
 #include "vgaHW.h"
 
@@ -45,6 +48,7 @@
 #include <X11/extensions/Xv.h>
 #include "fourcc.h"
 
+#include "compat-api.h"
 
 typedef struct _S3RegRec {
 	unsigned char	cr31, cr32, cr33, cr34, cr3a, cr3b, cr3c;
@@ -110,7 +114,9 @@ typedef struct _S3Rec {
 	Bool			PCIRetry;
 	Bool			ColorExpandBug;
 
+#ifdef HAVE_XAA_H
         XAAInfoRecPtr           pXAA;
+#endif
 	xf86CursorInfoPtr	pCurs;
 	xf86Int10InfoPtr	pInt10;
         XF86VideoAdaptorPtr     adaptor;
@@ -156,7 +162,7 @@ typedef struct _S3Rec {
 					       int *indicies, LOCO *colors,
 					       VisualPtr pVisual);
 
-        Bool                    (*CloseScreen)(int, ScreenPtr);
+	Bool                    (*CloseScreen)(CLOSE_SCREEN_ARGS_DECL);
 
 	unsigned char		*imageBuffer;
 	int			imageWidth;
@@ -167,7 +173,7 @@ typedef struct _S3Rec {
 	int                     rotate;
 	unsigned char           * ShadowPtr;
 	int                     ShadowPitch;
-	void	                (*PointerMoved)(int index, int x, int y);
+	void	                (*PointerMoved)(SCRN_ARG_TYPE arg, int x, int y);
     
 } S3Rec, *S3Ptr;
 
@@ -193,7 +199,7 @@ Bool S3AccelInit(ScreenPtr pScreen);
 Bool S3AccelInitNewMMIO(ScreenPtr pScreen);
 Bool S3AccelInitPIO(ScreenPtr pScreen);
 Bool S3DGAInit(ScreenPtr pScreen);
-Bool S3SwitchMode(int scrnIndex, DisplayModePtr mode, int flags);
+Bool S3SwitchMode(SWITCH_MODE_ARGS_DECL);
 int S3GetRefClock(ScrnInfoPtr pScrn);
 
 void S3InitVideo(ScreenPtr pScreen);
@@ -231,7 +237,7 @@ void S3OutTiIndReg(ScrnInfoPtr pScrn, CARD32 reg, unsigned char mask,
 Bool S3_CursorInit(ScreenPtr pScreen);
 
 /* in s3_shadow.c */
-void S3PointerMoved(int index, int x, int y);
+void S3PointerMoved(SCRN_ARG_TYPE arg, int x, int y);
 void S3RefreshArea(ScrnInfoPtr pScrn, int num, BoxPtr pbox);
 void S3RefreshArea8(ScrnInfoPtr pScrn, int num, BoxPtr pbox);
 void S3RefreshArea16(ScrnInfoPtr pScrn, int num, BoxPtr pbox);
