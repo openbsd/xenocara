@@ -94,9 +94,9 @@ s3vRefreshArea(ScrnInfoPtr pScrn, int num, BoxPtr pbox)
 } 
 
 void
-s3vPointerMoved(int index, int x, int y)
+s3vPointerMoved(SCRN_ARG_TYPE arg, int x, int y)
 {
-    ScrnInfoPtr pScrn = xf86Screens[index];
+    SCRN_INFO_PTR(arg);
     S3VPtr ps3v = S3VPTR(pScrn);
     int newX, newY;
 
@@ -108,7 +108,7 @@ s3vPointerMoved(int index, int x, int y)
 	newY = pScrn->pScreen->width - x - 1;
     }
 
-    (*ps3v->PointerMoved)(index, newX, newY);
+    (*ps3v->PointerMoved)(arg, newX, newY);
 }
 
 void

@@ -105,7 +105,7 @@ int S3VQueryXvCapable(ScrnInfoPtr pScrn)
 
 void S3VInitVideo(ScreenPtr pScreen)
 {
-    ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+    ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
     XF86VideoAdaptorPtr *adaptors, *newAdaptors = NULL;
     XF86VideoAdaptorPtr newAdaptor = NULL;
     S3VPtr ps3v = S3VPTR(pScrn);
@@ -346,7 +346,7 @@ S3VAllocAdaptor(ScrnInfoPtr pScrn)
 static XF86VideoAdaptorPtr 
 S3VSetupImageVideoOverlay(ScreenPtr pScreen)
 {
-    ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+    ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
     S3VPtr ps3v = S3VPTR(pScrn);
     XF86VideoAdaptorPtr adapt;
 

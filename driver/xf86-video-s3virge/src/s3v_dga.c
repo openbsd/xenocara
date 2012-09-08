@@ -62,8 +62,6 @@ in this Software without prior written authorization from the XFree86 Project.
 #include "xf86.h"
 #include "xf86_OSproc.h"
 #include "xf86Pci.h"
-#include "xaa.h"
-#include "xaalocal.h"
 #include "s3v.h"
 
 #include "dgaproc.h"
@@ -74,8 +72,10 @@ static Bool S3V_OpenFramebuffer(ScrnInfoPtr, char **, unsigned char **,
 static Bool S3V_SetMode(ScrnInfoPtr, DGAModePtr);
 static int  S3V_GetViewport(ScrnInfoPtr);
 static void S3V_SetViewport(ScrnInfoPtr, int, int, int);
+#ifdef HAVE_XAA_H
 static void S3V_FillRect(ScrnInfoPtr, int, int, int, int, unsigned long);
 static void S3V_BlitRect(ScrnInfoPtr, int, int, int, int, int, int);
+#endif
 /* dummy... */
 
 
@@ -87,8 +87,12 @@ DGAFunctionRec S3V_DGAFuncs = {
    S3V_SetViewport,
    S3V_GetViewport,
    S3VAccelSync,
+#ifdef HAVE_XAA_H
    S3V_FillRect,
    S3V_BlitRect,
+#else
+   NULL, NULL,
+#endif
    NULL
    /* dummy... MGA_BlitTransRect */
 };
@@ -97,7 +101,7 @@ DGAFunctionRec S3V_DGAFuncs = {
 Bool
 S3VDGAInit(ScreenPtr pScreen)
 {   
-   ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+   ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
    S3VPtr ps3v = S3VPTR(pScrn);
    DGAModePtr modes = NULL, newmodes = NULL, currentMode;
    DisplayModePtr pMode, firstMode;
@@ -135,8 +139,10 @@ SECOND_PASS:
 
 	currentMode->mode = pMode;
 	currentMode->flags = DGA_CONCURRENT_ACCESS | DGA_PIXMAP_AVAILABLE;
+#ifdef HAVE_XAA_H
 	if(!ps3v->NoAccel)
 	   currentMode->flags |= DGA_FILL_RECT | DGA_BLIT_RECT;
+#endif
 	if(pMode->Flags & V_DBLSCAN)
 	   currentMode->flags |= DGA_DOUBLESCAN;
 	if(pMode->Flags & V_INTERLACE)
@@ -239,7 +245,7 @@ S3V_SetMode(
 	
 	pScrn->displayWidth = OldDisplayWidth[index];
 	
-        S3VSwitchMode(index, pScrn->currentMode, 0);
+        S3VSwitchMode(SWITCH_MODE_ARGS(pScrn, pScrn->currentMode));
 	ps3v->DGAactive = FALSE;
    } else {
 	if(!ps3v->DGAactive) {  /* save the old parameters */
@@ -251,7 +257,7 @@ S3V_SetMode(
 	pScrn->displayWidth = pMode->bytesPerScanline / 
 			      (pMode->bitsPerPixel >> 3);
 
-        S3VSwitchMode(index, pMode->mode, 0);
+        S3VSwitchMode(SWITCH_MODE_ARGS(pScrn, pMode->mode));
    }
    
    return TRUE;
@@ -276,10 +282,11 @@ S3V_SetViewport(
 ){
    S3VPtr ps3v = S3VPTR(pScrn);
 
-   S3VAdjustFrame(pScrn->pScreen->myNum, x, y, flags);
+   S3VAdjustFrame(ADJUST_FRAME_ARGS(pScrn, x, y));
    ps3v->DGAViewportStatus = 0;  /* MGAAdjustFrame loops until finished */
 }
 
+#ifdef HAVE_XAA_H
 static void 
 S3V_FillRect (
    ScrnInfoPtr pScrn, 
@@ -315,7 +322,7 @@ S3V_BlitRect(
 	SET_SYNC_FLAG(ps3v->AccelInfoRec);
     }
 }
-
+#endif
 
 
 static Bool 

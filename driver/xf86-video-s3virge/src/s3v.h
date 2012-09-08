@@ -60,8 +60,11 @@ in this Software without prior written authorization from the XFree86 Project.
 #include "fb.h"
 
 /* Drivers using the XAA interface ... */
+#ifdef HAVE_XAA_H
 #include "xaa.h"
 #include "xaalocal.h"
+#endif
+#include "xf86fbman.h"
 #include "xf86cmap.h"
 #include "xf86i2c.h"
 
@@ -71,6 +74,7 @@ in this Software without prior written authorization from the XFree86 Project.
 #include <X11/extensions/Xv.h>
 #include "fourcc.h"
 
+#include "compat-api.h"
 #ifndef _S3V_VGAHWMMIO_H
 #define _S3V_VGAHWMMIO_H
 
@@ -275,8 +279,10 @@ typedef struct tagS3VRec {
   /* Pointer used to save wrapped */
   /* CloseScreen function.	*/
   CloseScreenProcPtr	CloseScreen;
+#ifdef HAVE_XAA_H
   /* XAA info Rec 	*/
   XAAInfoRecPtr 	AccelInfoRec;
+#endif
   /* PCI info vars.	*/
   pciVideoPtr 	PciInfo;
 #ifndef XSERVER_LIBPCIACCESS
@@ -297,7 +303,7 @@ typedef struct tagS3VRec {
     int rotate;
     unsigned char * ShadowPtr;
     int ShadowPitch;
-    void	(*PointerMoved)(int index, int x, int y);
+    void	(*PointerMoved)(SCRN_ARG_TYPE arg, int x, int y);
 
     /* Used by ViRGE driver, but generic -end- */
   
@@ -392,14 +398,14 @@ void S3VWaitDummy(S3VPtr ps3v);
 extern Bool S3VHWCursorInit(ScreenPtr pScreen);
 
 /* s3v_driver.c */
-void S3VAdjustFrame(int scrnIndex, int x, int y, int flags);
-Bool S3VSwitchMode(int scrnIndex, DisplayModePtr mode, int flags);
+void S3VAdjustFrame(ADJUST_FRAME_ARGS_DECL);
+Bool S3VSwitchMode(SWITCH_MODE_ARGS_DECL);
 
 /* s3v_dga.c */
 Bool S3VDGAInit(ScreenPtr pScreen);
 
 /* in s3v_shadow.c */
-void s3vPointerMoved(int index, int x, int y);
+void s3vPointerMoved(SCRN_ARG_TYPE index, int x, int y);
 void s3vRefreshArea(ScrnInfoPtr pScrn, int num, BoxPtr pbox);
 void s3vRefreshArea8(ScrnInfoPtr pScrn, int num, BoxPtr pbox);
 void s3vRefreshArea16(ScrnInfoPtr pScrn, int num, BoxPtr pbox);

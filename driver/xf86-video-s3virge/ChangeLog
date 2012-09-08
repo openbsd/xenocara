@@ -1,3 +1,27 @@
+commit e7524461f8cb2a6e6e0bfb4f86bb3e3256708004
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Tue Jul 17 16:05:09 2012 +1000
+
+    xf86-video-s3virge: bump to version 1.10.6
+    
+    Signed-off-by: Dave Airlie <airlied@redhat.com>
+
+commit d930bc4864db7106e47304e2fe653267d1886463
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Tue Jul 17 14:49:26 2012 +1000
+
+    s3virge: port to new X server compat API.
+    
+    Signed-off-by: Dave Airlie <airlied@redhat.com>
+
+commit fffd73884a0b18bac6f5c35614f21fca609e15e3
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Tue Jul 17 14:38:38 2012 +1000
+
+    s3v: adjust to removal of XAA from server.
+    
+    Signed-off-by: Dave Airlie <airlied@redhat.com>
+
 commit 28f8c5f5f957c0fac99d089137d675bf18db5773
 Author: Julien Cristau <jcristau@debian.org>
 Date:   Sun May 13 10:43:13 2012 +0200

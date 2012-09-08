@@ -91,34 +91,32 @@ static void S3VIdentify(int flags);
 static Bool S3VProbe(DriverPtr drv, int flags);
 static Bool S3VPreInit(ScrnInfoPtr pScrn, int flags);
 
-static Bool S3VEnterVT(int scrnIndex, int flags);
-static void S3VLeaveVT(int scrnIndex, int flags);
+static Bool S3VEnterVT(VT_FUNC_ARGS_DECL);
+static void S3VLeaveVT(VT_FUNC_ARGS_DECL);
 static void S3VSave (ScrnInfoPtr pScrn);
 static void S3VWriteMode (ScrnInfoPtr pScrn, vgaRegPtr, S3VRegPtr);
 
 static void S3VSaveSTREAMS(ScrnInfoPtr pScrn, unsigned int *streams);
 static void S3VRestoreSTREAMS(ScrnInfoPtr pScrn, unsigned int *streams);
 static void S3VDisableSTREAMS(ScrnInfoPtr pScrn);
-static Bool S3VScreenInit(int scrnIndex, ScreenPtr pScreen, int argc, char **argv);
-static int S3VInternalScreenInit( int scrnIndex, ScreenPtr pScreen);
+static Bool S3VScreenInit(SCREEN_INIT_ARGS_DECL);
+static int S3VInternalScreenInit(ScrnInfoPtr pScrn, ScreenPtr pScreen);
 static void S3VPrintRegs(ScrnInfoPtr);
-static ModeStatus S3VValidMode(int index, DisplayModePtr mode, Bool verbose, int flags);
+static ModeStatus S3VValidMode(SCRN_ARG_TYPE arg, DisplayModePtr mode, Bool verbose, int flags);
 
 static Bool S3VMapMem(ScrnInfoPtr pScrn);
 static void S3VUnmapMem(ScrnInfoPtr pScrn);
 static Bool S3VModeInit(ScrnInfoPtr pScrn, DisplayModePtr mode);
-static Bool S3VCloseScreen(int scrnIndex, ScreenPtr pScreen);
+static Bool S3VCloseScreen(CLOSE_SCREEN_ARGS_DECL);
 static Bool S3VSaveScreen(ScreenPtr pScreen, int mode);
 static void S3VInitSTREAMS(ScrnInfoPtr pScrn, unsigned int *streams, DisplayModePtr mode);
-/* s3v.h - static void S3VAdjustFrame(int scrnIndex, int x, int y, int flags); */
-/* s3v.h - static Bool S3VSwitchMode(int scrnIndex, DisplayModePtr mode, int flags); */
 static void S3VLoadPalette(ScrnInfoPtr pScrn, int numColors, int *indicies, LOCO *colors, VisualPtr pVisual);
 
 static void S3VDisplayPowerManagementSet(ScrnInfoPtr pScrn,
 					 int PowerManagementMode,
 					 int flags);
-static Bool S3Vddc1(int scrnIndex);
-static Bool S3Vddc2(int scrnIndex);
+static Bool S3Vddc1(ScrnInfoPtr pScrn);
+static Bool S3Vddc2(ScrnInfoPtr pScrn);
 
 static unsigned int S3Vddc1Read(ScrnInfoPtr pScrn);
 static void S3VProbeDDC(ScrnInfoPtr pScrn, int index);
@@ -934,8 +932,8 @@ S3VPreInit(ScrnInfoPtr pScrn, int flags)
        if ((ps3v->pVbe) 
 	   && ((pMon = xf86PrintEDID(vbeDoEDID(ps3v->pVbe, NULL))) != NULL))
 	   xf86SetDDCproperties(pScrn,pMon);
-       else if (!S3Vddc1(pScrn->scrnIndex)) {
-	   S3Vddc2(pScrn->scrnIndex);
+       else if (!S3Vddc1(pScrn)) {
+	   S3Vddc2(pScrn);
        }
    }
    if (ps3v->pVbe) {
@@ -1386,9 +1384,9 @@ S3VPreInit(ScrnInfoPtr pScrn, int flags)
 
 /* Mandatory */
 static Bool
-S3VEnterVT(int scrnIndex, int flags)
+S3VEnterVT(VT_FUNC_ARGS_DECL)
 {
-    ScrnInfoPtr pScrn = xf86Screens[scrnIndex];
+    SCRN_INFO_PTR(arg);
 /*      ScreenPtr pScreen = xf86Screens[scrnIndex]->pScreen; */
     /*vgaHWPtr hwp = VGAHWPTR(pScrn);*/
 
@@ -1415,9 +1413,9 @@ S3VEnterVT(int scrnIndex, int flags)
 
 /* Mandatory */
 static void
-S3VLeaveVT(int scrnIndex, int flags)
+S3VLeaveVT(VT_FUNC_ARGS_DECL)
 {
-    ScrnInfoPtr pScrn = xf86Screens[scrnIndex];
+    SCRN_INFO_PTR(arg);
     vgaHWPtr hwp = VGAHWPTR(pScrn);
     S3VPtr ps3v = S3VPTR(pScrn);
     vgaRegPtr vgaSavePtr = &hwp->SavedReg;
@@ -2319,7 +2317,7 @@ S3VUnmapMem(ScrnInfoPtr pScrn)
 /* This gets called at the start of each server generation */
 
 static Bool
-S3VScreenInit(int scrnIndex, ScreenPtr pScreen, int argc, char **argv)
+S3VScreenInit(SCREEN_INIT_ARGS_DECL)
 {
   ScrnInfoPtr pScrn;
   S3VPtr ps3v;
@@ -2327,7 +2325,7 @@ S3VScreenInit(int scrnIndex, ScreenPtr pScreen, int argc, char **argv)
   
   PVERB5("	S3VScreenInit\n");
                                         /* First get the ScrnInfoRec */
-  pScrn = xf86Screens[pScreen->myNum];
+  pScrn = xf86ScreenToScrn(pScreen);
   					/* Get S3V rec */
   ps3v = S3VPTR(pScrn);
    					/* Map MMIO regs and framebuffer */
@@ -2383,7 +2381,7 @@ S3VScreenInit(int scrnIndex, ScreenPtr pScreen, int argc, char **argv)
 	    return FALSE;
   }
 
-  ret = S3VInternalScreenInit(scrnIndex, pScreen);
+  ret = S3VInternalScreenInit(pScrn, pScreen);
 
   if (!ret)
     return FALSE;
@@ -2503,16 +2501,12 @@ S3VScreenInit(int scrnIndex, ScreenPtr pScreen, int argc, char **argv)
 /* Common init routines needed in EnterVT and ScreenInit */
 
 static int
-S3VInternalScreenInit( int scrnIndex, ScreenPtr pScreen)
+S3VInternalScreenInit(ScrnInfoPtr pScrn, ScreenPtr pScreen)
 {
   int ret = TRUE;
-  ScrnInfoPtr pScrn;
   S3VPtr ps3v;
   int width, height, displayWidth;
   unsigned char* FBStart;
-
-  					/* First get the ScrnInfoRec */
-  pScrn = xf86Screens[pScreen->myNum];
 
   ps3v = S3VPTR(pScrn);
 
@@ -2551,7 +2545,7 @@ S3VInternalScreenInit( int scrnIndex, ScreenPtr pScreen)
 			       displayWidth, pScrn->bitsPerPixel);
 	    break;
 	default:
-	    xf86DrvMsg(scrnIndex, X_ERROR,
+	    xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
 		       "Internal error: invalid bpp (%d) in S3VScreenInit\n",
 		       pScrn->bitsPerPixel);
 	    ret = FALSE;
@@ -2566,9 +2560,9 @@ S3VInternalScreenInit( int scrnIndex, ScreenPtr pScreen)
 /* Checks if a mode is suitable for the selected chipset. */
 
 static ModeStatus
-S3VValidMode(int index, DisplayModePtr mode, Bool verbose, int flags)
+S3VValidMode(SCRN_ARG_TYPE arg, DisplayModePtr mode, Bool verbose, int flags)
 {
-    ScrnInfoPtr pScrn = xf86Screens[index];
+   SCRN_INFO_PTR(arg);
 
     if ((pScrn->bitsPerPixel + 7)/8 * mode->HDisplay > 4095)
 	return MODE_VIRTUAL_X;
@@ -3276,7 +3270,7 @@ S3VModeInit(ScrnInfoPtr pScrn, DisplayModePtr mode)
 					/* needed, etc.		    	    */
    S3VWriteMode( pScrn, vganew, new );
    					/* Adjust the viewport */
-   S3VAdjustFrame(pScrn->scrnIndex, pScrn->frameX0, pScrn->frameY0, 0);
+   S3VAdjustFrame(ADJUST_FRAME_ARGS(pScrn, pScrn->frameX0, pScrn->frameY0));
 
    return TRUE;
 }
@@ -3291,9 +3285,9 @@ S3VModeInit(ScrnInfoPtr pScrn, DisplayModePtr mode)
 
 /* Mandatory */
 static Bool
-S3VCloseScreen(int scrnIndex, ScreenPtr pScreen)
+S3VCloseScreen(CLOSE_SCREEN_ARGS_DECL)
 {
-  ScrnInfoPtr pScrn = xf86Screens[scrnIndex];
+  ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
   vgaHWPtr hwp = VGAHWPTR(pScrn);
   S3VPtr ps3v = S3VPTR(pScrn);
   vgaRegPtr vgaSavePtr = &hwp->SavedReg;
@@ -3308,8 +3302,10 @@ S3VCloseScreen(int scrnIndex, ScreenPtr pScreen)
       S3VUnmapMem(pScrn);
   }
 
+#ifdef HAVE_XAA_H
   if (ps3v->AccelInfoRec)
     XAADestroyInfoRec(ps3v->AccelInfoRec);
+#endif
   if (ps3v->DGAModes)
   	free(ps3v->DGAModes);
 
@@ -3317,7 +3313,7 @@ S3VCloseScreen(int scrnIndex, ScreenPtr pScreen)
 
   pScreen->CloseScreen = ps3v->CloseScreen;
 
-  return (*pScreen->CloseScreen)(scrnIndex, pScreen);
+  return (*pScreen->CloseScreen)(CLOSE_SCREEN_ARGS);
 }
 
 
@@ -3431,9 +3427,9 @@ S3VInitSTREAMS(ScrnInfoPtr pScrn, unsigned int *streams, DisplayModePtr mode)
  */
 
 void
-S3VAdjustFrame(int scrnIndex, int x, int y, int flags)
+S3VAdjustFrame(ADJUST_FRAME_ARGS_DECL)
 {
-   ScrnInfoPtr pScrn = xf86Screens[scrnIndex];
+   SCRN_INFO_PTR(arg);
    vgaHWPtr hwp = VGAHWPTR(pScrn);
    S3VPtr ps3v = S3VPTR(pScrn);
    int Base;
@@ -3481,9 +3477,10 @@ S3VAdjustFrame(int scrnIndex, int x, int y, int flags)
 
 /* Usually mandatory */
 Bool
-S3VSwitchMode(int scrnIndex, DisplayModePtr mode, int flags)
+S3VSwitchMode(SWITCH_MODE_ARGS_DECL)
 {
-    return S3VModeInit(xf86Screens[scrnIndex], mode);
+    SCRN_INFO_PTR(arg);
+    return S3VModeInit(pScrn, mode);
 }
 
 
@@ -3764,9 +3761,8 @@ S3Vddc1Read(ScrnInfoPtr pScrn)
 }
 
 static Bool
-S3Vddc1(int scrnIndex)
+S3Vddc1(ScrnInfoPtr pScrn)
 {
-    ScrnInfoPtr pScrn = xf86Screens[scrnIndex];
     S3VPtr ps3v = S3VPTR(pScrn);
     CARD32 tmp;
     Bool success = FALSE;
@@ -3777,7 +3773,7 @@ S3Vddc1(int scrnIndex)
     OUTREG(DDC_REG,(tmp | 0x12));
     
     if ((pMon = xf86PrintEDID(
-	xf86DoEDID_DDC1(scrnIndex,vgaHWddc1SetSpeedWeak(),
+		xf86DoEDID_DDC1(XF86_SCRN_ARG(pScrn),vgaHWddc1SetSpeedWeak(),
 	                S3Vddc1Read))) != NULL)
 	success = TRUE;
     xf86SetDDCproperties(pScrn,pMon);
@@ -3788,9 +3784,8 @@ S3Vddc1(int scrnIndex)
 }
 
 static Bool
-S3Vddc2(int scrnIndex)
+S3Vddc2(ScrnInfoPtr pScrn)
 {
-    ScrnInfoPtr pScrn = xf86Screens[scrnIndex];
     S3VPtr ps3v = S3VPTR(pScrn);
     
     if ( xf86LoadSubModule(pScrn, "i2c") ) {
@@ -3798,7 +3793,7 @@ S3Vddc2(int scrnIndex)
 	    CARD32 tmp = (INREG(DDC_REG));
 	    OUTREG(DDC_REG,(tmp | 0x13));
 	    xf86SetDDCproperties(pScrn,xf86PrintEDID(
-		xf86DoEDID_DDC2(pScrn->scrnIndex,ps3v->I2C)));
+			     xf86DoEDID_DDC2(XF86_SCRN_ARG(pScrn),ps3v->I2C)));
 	    OUTREG(DDC_REG,tmp);
 	    return TRUE;
 	}
