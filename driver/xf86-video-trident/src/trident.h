@@ -34,7 +34,10 @@
 
 #include "exa.h"
 #include "xf86Cursor.h"
+#ifdef HAVE_XAA_H
 #include "xaa.h"
+#endif
+#include "xf86fbman.h"
 #include "xf86RamDac.h"
 #include "compiler.h"
 #include "vgaHW.h"
@@ -46,6 +49,7 @@
 #include "xf86Pci.h"
 #include "vbe.h"
 
+#include "compat-api.h"
 /* Banked framebuffer only supported on ISA */
 #ifdef HAVE_ISA
 #define LINEAR() (pTrident->Linear)
@@ -110,7 +114,7 @@ typedef struct {
     unsigned char *	ShadowPtr;
     int			ShadowPitch;
     RefreshAreaFuncPtr  RefreshArea;
-    void	        (*PointerMoved)(int index, int x, int y);
+    void	        (*PointerMoved)(SCRN_ARG_TYPE arg, int x, int y);
     int                 Rotate;
     float		frequency;
     unsigned char	REGPCIReg;
@@ -150,7 +154,9 @@ typedef struct {
 #ifdef VBE_INFO
     vbeModeInfoPtr	vbeModes;
 #endif
+#ifdef HAVE_XAA_H
     XAAInfoRecPtr	AccelInfoRec;
+#endif
     CloseScreenProcPtr	CloseScreen;
     ScreenBlockHandlerProcPtr BlockHandler;
     int                 panelWidth;
@@ -225,8 +231,8 @@ typedef struct {
 /* Prototypes */
 
 Bool TRIDENTClockSelect(ScrnInfoPtr pScrn, int no);
-Bool TRIDENTSwitchMode(int scrnIndex, DisplayModePtr mode, int flags);
-void TRIDENTAdjustFrame(int scrnIndex, int x, int y, int flags);
+Bool TRIDENTSwitchMode(SWITCH_MODE_ARGS_DECL);
+void TRIDENTAdjustFrame(ADJUST_FRAME_ARGS_DECL);
 Bool TRIDENTDGAInit(ScreenPtr pScreen);
 Bool TRIDENTI2CInit(ScreenPtr pScreen);
 void TRIDENTInitVideo(ScreenPtr pScreen);
@@ -265,7 +271,7 @@ void TridentFindClock(ScrnInfoPtr pScrn, int clock);
 float CalculateMCLK(ScrnInfoPtr pScrn);
 void TRIDENTRefreshArea(ScrnInfoPtr pScrn, int num, BoxPtr pbox);
 void TRIDENTShadowUpdate (ScreenPtr pScreen, shadowBufPtr pBuf);
-void TRIDENTPointerMoved(int index, int x, int y);
+void TRIDENTPointerMoved(SCRN_ARG_TYPE arg, int x, int y);
 void TRIDENTRefreshArea8(ScrnInfoPtr pScrn, int num, BoxPtr pbox);
 void TRIDENTRefreshArea16(ScrnInfoPtr pScrn, int num, BoxPtr pbox);
 void TRIDENTRefreshArea24(ScrnInfoPtr pScrn, int num, BoxPtr pbox);

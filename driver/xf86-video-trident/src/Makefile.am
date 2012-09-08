@@ -32,6 +32,7 @@ trident_drv_ladir = @moduledir@/drivers
 trident_drv_la_SOURCES = \
          blade_accel.c \
          blade_accel_exa.c \
+         compat-api.h \
          image_accel.c \
          trident_accel.c \
          trident_bank.c \

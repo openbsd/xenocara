@@ -31,7 +31,6 @@
 #include "xf86.h"
 #include "xf86_OSproc.h"
 
-#include "xf86PciInfo.h"
 #include "xf86Pci.h"
 
 #include "miline.h"
@@ -39,6 +38,7 @@
 #include "trident.h"
 #include "trident_regs.h"
 
+#ifdef HAVE_XAA_H
 #include "xaalocal.h"
 #include "xaarop.h"
 
@@ -112,12 +112,14 @@ TridentInitializeAccelerator(ScrnInfoPtr pScrn)
 
     pTrident->PatternLocation = pScrn->displayWidth*pScrn->bitsPerPixel/8;
 }
+#endif
 
 Bool
 TridentAccelInit(ScreenPtr pScreen)
 {
+#ifdef HAVE_XAA_H
     XAAInfoRecPtr infoPtr;
-    ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+    ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
     TRIDENTPtr pTrident = TRIDENTPTR(pScrn);
 
     if (pTrident->NoAccel)
@@ -214,8 +216,12 @@ TridentAccelInit(ScreenPtr pScreen)
 #endif
 
     return(XAAInit(pScreen, infoPtr));
+#else
+    return FALSE;
+#endif
 }
 
+#ifdef HAVE_XAA_H
 static void
 TridentSync(ScrnInfoPtr pScrn)
 {
@@ -661,4 +667,5 @@ TridentSubsequentColorExpandScanline(ScrnInfoPtr pScrn, int bufno)
     	TGUI_COMMAND(GE_BLT);
     }
 }
+#endif
 #endif

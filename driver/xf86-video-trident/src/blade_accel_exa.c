@@ -37,7 +37,6 @@
 #include "xf86.h"
 #include "xf86_OSproc.h"
 
-#include "xf86PciInfo.h"
 #include "xf86Pci.h"
 
 #include "exa.h"
@@ -112,7 +111,7 @@ static Bool PrepareSolid(PixmapPtr pPixmap, int rop, Pixel planemask,
 			 Pixel color)
 {
     TRIDENTPtr pTrident =
-	TRIDENTPTR(xf86Screens[pPixmap->drawable.pScreen->myNum]);
+	TRIDENTPTR(xf86ScreenToScrn(pPixmap->drawable.pScreen));
 
     REPLICATE(color, pPixmap->drawable.bitsPerPixel);
     BLADE_OUT(GER_FGCOLOR, color);
@@ -125,7 +124,7 @@ static Bool PrepareSolid(PixmapPtr pPixmap, int rop, Pixel planemask,
 static void Solid(PixmapPtr pPixmap, int x, int y, int x2, int y2)
 {
     TRIDENTPtr pTrident =
-	TRIDENTPTR(xf86Screens[pPixmap->drawable.pScreen->myNum]);
+	TRIDENTPTR(xf86ScreenToScrn(pPixmap->drawable.pScreen));
     int dst_stride = (pPixmap->drawable.width + 7) / 8;
     int dst_off = exaGetPixmapOffset(pPixmap) / 8;
 
@@ -147,7 +146,7 @@ static Bool PrepareCopy(PixmapPtr pSrcPixmap, PixmapPtr pDstPixmap,
 			int xdir, int ydir, int alu, Pixel planemask)
 {
     TRIDENTPtr pTrident =
-	TRIDENTPTR(xf86Screens[pSrcPixmap->drawable.pScreen->myNum]);
+	TRIDENTPTR(xf86ScreenToScrn(pSrcPixmap->drawable.pScreen));
     int src_stride = (pSrcPixmap->drawable.width + 7) / 8;
     int src_off = exaGetPixmapOffset(pSrcPixmap) / 8;
     int dst_stride = (pDstPixmap->drawable.width + 7) / 8;
@@ -179,7 +178,7 @@ static void Copy(PixmapPtr pDstPixmap, int x1, int y1, int x2,
 		 int y2, int w, int h)
 {
     TRIDENTPtr pTrident =
-	TRIDENTPTR(xf86Screens[pDstPixmap->drawable.pScreen->myNum]);
+	TRIDENTPTR(xf86ScreenToScrn(pDstPixmap->drawable.pScreen));
 
     BLADE_OUT(GER_DRAW_CMD, GER_OP_BLT_HOST | GER_DRAW_SRC_COLOR |
 	      GER_ROP_ENABLE | GER_BLT_SRC_FB | pTrident->BltScanDirection);
@@ -233,7 +232,7 @@ static int MarkSync(ScreenPtr pScreen)
 
 static void WaitMarker(ScreenPtr pScreen, int marker)
 {
-    TRIDENTPtr pTrident = TRIDENTPTR(xf86Screens[pScreen->myNum]);
+    TRIDENTPtr pTrident = TRIDENTPTR(xf86ScreenToScrn(pScreen));
     int busy;
     int cnt = 10000000;
 
@@ -268,7 +267,7 @@ static void BladeInitializeAccelerator(ScrnInfoPtr pScrn)
 
 Bool BladeExaInit(ScreenPtr pScreen)
 {
-    ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+    ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
     TRIDENTPtr pTrident = TRIDENTPTR(pScrn);
     ExaDriverPtr ExaDriver;
 

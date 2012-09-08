@@ -31,7 +31,6 @@
 #include "xf86.h"
 #include "xf86_OSproc.h"
 
-#include "xf86PciInfo.h"
 #include "xf86Pci.h"
 
 #include "miline.h"
@@ -39,6 +38,7 @@
 #include "trident.h"
 #include "trident_regs.h"
 
+#ifdef HAVE_XAA_H
 #include "xaarop.h"
 #include "xaalocal.h"
 
@@ -94,6 +94,7 @@ static void ImageSubsequentScanlineCPUToScreenColorExpandFill(
 				int y, int w, int h, int skipleft);
 static void ImageSubsequentColorExpandScanline(ScrnInfoPtr pScrn, int bufno);
 
+
 static void
 ImageInitializeAccelerator(ScrnInfoPtr pScrn)
 {
@@ -129,12 +130,14 @@ ImageInitializeAccelerator(ScrnInfoPtr pScrn)
     pTrident->Clipping = FALSE;
     pTrident->DstEnable = FALSE;
 }
+#endif
 
 Bool
 ImageAccelInit(ScreenPtr pScreen)
 {
+#ifdef HAVE_XAA_H
     XAAInfoRecPtr infoPtr;
-    ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+    ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
     TRIDENTPtr pTrident = TRIDENTPTR(pScrn);
 
     if (pTrident->NoAccel)
@@ -245,8 +248,12 @@ ImageAccelInit(ScreenPtr pScreen)
   }
 
     return(XAAInit(pScreen, infoPtr));
+#else
+    return FALSE;
+#endif
 }
 
+#ifdef HAVE_XAA_H
 static void
 ImageSync(ScrnInfoPtr pScrn)
 {
@@ -637,3 +644,4 @@ ImageSubsequentImageWriteScanline(ScrnInfoPtr pScrn, int bufno)
     if (!pTrident->h)
 	ImageSync(pScrn);
 }
+#endif

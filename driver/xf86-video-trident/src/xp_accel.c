@@ -31,7 +31,6 @@
 #include "xf86.h"
 #include "xf86_OSproc.h"
 
-#include "xf86PciInfo.h"
 #include "xf86Pci.h"
 
 #include "miline.h"
@@ -39,7 +38,7 @@
 #include "trident.h"
 #include "trident_regs.h"
 
-#include "xaalocal.h"
+#ifdef HAVE_XAA_H
 #include "xaarop.h"
 
 static void XPSync(ScrnInfoPtr pScrn);
@@ -115,12 +114,14 @@ XPInitializeAccelerator(ScrnInfoPtr pScrn)
     MMIO_OUT32(pTrident->IOBase, 0x2150, (pScrn->displayWidth) << shift);
     MMIO_OUT8(pTrident->IOBase, 0x2126, 3);
 }
+#endif
 
 Bool
 XPAccelInit(ScreenPtr pScreen)
 {
+#ifdef HAVE_XAA_H
     XAAInfoRecPtr infoPtr;
-    ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+    ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
     TRIDENTPtr pTrident = TRIDENTPTR(pScrn);
 
     if (pTrident->NoAccel)
@@ -195,8 +196,12 @@ XPAccelInit(ScreenPtr pScreen)
 #endif
 
     return(XAAInit(pScreen, infoPtr));
+#else
+    return FALSE;
+#endif
 }
 
+#ifdef HAVE_XAA_H
 static void
 XPSync(ScrnInfoPtr pScrn)
 {
@@ -589,4 +594,5 @@ XPSubsequentColorExpandScanline(ScrnInfoPtr pScrn, int bufno)
     if (pTrident->h)
     	XPSync(pScrn);
 }
+#endif
 #endif

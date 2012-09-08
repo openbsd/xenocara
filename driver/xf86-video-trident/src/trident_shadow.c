@@ -10,7 +10,6 @@
 
 #include "xf86.h"
 #include "xf86_OSproc.h"
-#include "xf86PciInfo.h"
 #include "xf86Pci.h"
 #include "shadowfb.h"
 #include "servermd.h"
@@ -46,18 +45,18 @@ TRIDENTRefreshArea(ScrnInfoPtr pScrn, int num, BoxPtr pbox)
 void
 TRIDENTShadowUpdate (ScreenPtr pScreen, shadowBufPtr pBuf)
 {
-    RegionPtr damage = &pBuf->damage;
+    RegionPtr damage = DamageRegion(pBuf->pDamage);
     ScrnInfoPtr pScrn;
-    pScrn = xf86Screens[pScreen->myNum];
+    pScrn = xf86ScreenToScrn(pScreen);
     
     (TRIDENTPTR(pScrn))->RefreshArea (pScrn, REGION_NUM_RECTS(damage), 
 				      REGION_RECTS(damage));
 }
 
 void
-TRIDENTPointerMoved(int index, int x, int y)
+TRIDENTPointerMoved(SCRN_ARG_TYPE arg, int x, int y)
 {
-    ScrnInfoPtr pScrn = xf86Screens[index];
+    SCRN_INFO_PTR(arg);
     TRIDENTPtr pTrident = TRIDENTPTR(pScrn);
     int newX, newY;
 
@@ -69,7 +68,7 @@ TRIDENTPointerMoved(int index, int x, int y)
 	newY = pScrn->pScreen->width - x - 1;
     }
 
-    (*pTrident->PointerMoved)(index, newX, newY);
+    (*pTrident->PointerMoved)(arg, newX, newY);
 }
 
 void

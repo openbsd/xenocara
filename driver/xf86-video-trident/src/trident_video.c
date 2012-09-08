@@ -29,7 +29,6 @@
 #include "xf86.h"
 #include "xf86_OSproc.h"
 #include "compiler.h"
-#include "xf86PciInfo.h"
 #include "xf86Pci.h"
 #include "xf86fbman.h"
 #include "regionstr.h"
@@ -37,8 +36,6 @@
 #include "trident.h"
 #include "trident_regs.h"
 #include <X11/extensions/Xv.h>
-#include "xaa.h"
-#include "xaalocal.h"
 #include "dixstruct.h"
 #include "fourcc.h"
 
@@ -77,7 +74,7 @@ static Atom xvColorKey, xvSaturation, xvBrightness, xvHUE,  xvContrast;
 
 void TRIDENTInitVideo(ScreenPtr pScreen)
 {
-    ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+    ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
     XF86VideoAdaptorPtr *adaptors, *newAdaptors = NULL;
     XF86VideoAdaptorPtr newAdaptor = NULL;
     TRIDENTPtr pTrident = TRIDENTPTR(pScrn);
@@ -316,7 +313,7 @@ void TRIDENTResetVideo(ScrnInfoPtr pScrn)
 static XF86VideoAdaptorPtr 
 TRIDENTSetupImageVideo(ScreenPtr pScreen)
 {
-    ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+    ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
     TRIDENTPtr pTrident = TRIDENTPTR(pScrn);
     XF86VideoAdaptorPtr adapt;
     TRIDENTPortPrivPtr pPriv;
@@ -586,7 +583,7 @@ TRIDENTAllocateMemory(
 	xf86FreeOffscreenLinear(linear);
    }
 
-   pScreen = screenInfo.screens[pScrn->scrnIndex];
+   pScreen = xf86ScrnToScreen(pScrn);
 
    new_linear = xf86AllocateOffscreenLinear(pScreen, size, 16, 
    						NULL, NULL, NULL);
@@ -1123,7 +1120,7 @@ TRIDENTDisplaySurface(
 static void 
 TRIDENTInitOffscreenImages(ScreenPtr pScreen)
 {
-    ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+    ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
     TRIDENTPtr pTrident = TRIDENTPTR(pScrn);
     XF86OffscreenImagePtr offscreenImages;
 

@@ -31,7 +31,6 @@
 #include "xf86.h"
 #include "xf86_OSproc.h"
 
-#include "xf86PciInfo.h"
 #include "xf86Pci.h"
 
 #include "miline.h"
@@ -39,6 +38,7 @@
 #include "trident.h"
 #include "trident_regs.h"
 
+#ifdef HAVE_XAA_H
 #include "xaarop.h"
 #include "xaalocal.h"
 
@@ -146,12 +146,14 @@ BladeInitializeAccelerator(ScrnInfoPtr pScrn)
 #endif
     BLADE_OUT(0x216C, 0);
 }
+#endif
 
 Bool
 BladeXaaInit(ScreenPtr pScreen)
 {
+#ifdef HAVE_XAA_H
     XAAInfoRecPtr infoPtr;
-    ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+    ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
     TRIDENTPtr pTrident = TRIDENTPTR(pScrn);
 
     if (pTrident->NoAccel)
@@ -248,8 +250,12 @@ BladeXaaInit(ScreenPtr pScreen)
     infoPtr->ImageWriteRange = 0x10000;
 
     return(XAAInit(pScreen, infoPtr));
+#else
+    return FALSE;
+#endif
 }
 
+#ifdef HAVE_XAA_H
 static void
 BladeSync(ScrnInfoPtr pScrn)
 {
@@ -702,3 +708,4 @@ static void BladeSubsequentImageWriteRect(
     BLADE_OUT(0x2108, y<<16 | (x&0xfff));
     BLADE_OUT(0x210C, ((y+h-1)&0xfff)<<16 | ((x+w-1)&0xfff));
 }
+#endif

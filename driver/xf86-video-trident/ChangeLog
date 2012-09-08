@@ -1,3 +1,47 @@
+commit 3098fe7193cbfe4a885a60b93e71796b70e4fa2a
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Tue Jul 17 16:05:09 2012 +1000
+
+    xf86-video-trident: bump to version 1.3.6
+    
+    Signed-off-by: Dave Airlie <airlied@redhat.com>
+
+commit f02709607cb353db1e89a909ff01a6941f535ab4
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Mon Jul 16 03:17:51 2012 +0100
+
+    trident: add support for building without XAA
+    
+    fix build for removal of XAA from server.
+    
+    Signed-off-by: Dave Airlie <airlied@redhat.com>
+
+commit 177c93486647e71c088ac42697e34c47664eb666
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Wed Jun 6 11:49:16 2012 +0100
+
+    trident: convert to new compat API.
+    
+    Signed-off-by: Dave Airlie <airlied@redhat.com>
+
+commit 2301879bc334fd9f44cc7f23be613b5b4533568a
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Wed Jun 6 11:40:26 2012 +0100
+
+    trident: drop lots of xf86PciInfo.h includes
+    
+    Signed-off-by: Dave Airlie <airlied@redhat.com>
+
+commit f481290e6dbd73b484cad3e8583031c6e2ccb555
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Wed Apr 18 10:48:07 2012 -0400
+
+    Use DamageRegion for shadow damage
+    
+    The 'damage' member is an ancient compatibility hack I want to destroy.
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
 commit 16816e99bacbd8dfc51a2deba541a72fb27f156a
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Fri Mar 23 20:02:50 2012 -0700

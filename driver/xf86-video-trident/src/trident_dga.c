@@ -29,9 +29,6 @@
 #include "xf86.h"
 #include "xf86_OSproc.h"
 #include "xf86Pci.h"
-#include "xf86PciInfo.h"
-#include "xaa.h"
-#include "xaalocal.h"
 #include "trident.h"
 #include "trident_regs.h"
 #include "dgaproc.h"
@@ -43,11 +40,13 @@ static Bool TRIDENT_SetMode(ScrnInfoPtr, DGAModePtr);
 static void TRIDENT_Sync(ScrnInfoPtr);
 static int  TRIDENT_GetViewport(ScrnInfoPtr);
 static void TRIDENT_SetViewport(ScrnInfoPtr, int, int, int);
+#ifdef HAVE_XAA_H
 static void TRIDENT_FillRect(ScrnInfoPtr, int, int, int, int, unsigned long);
 static void TRIDENT_BlitRect(ScrnInfoPtr, int, int, int, int, int, int);
 #if 0
 static void TRIDENT_BlitTransRect(ScrnInfoPtr, int, int, int, int, int, int, 
 					unsigned long);
+#endif
 #endif
 
 static
@@ -58,6 +57,7 @@ DGAFunctionRec TRIDENTDGAFuncs = {
    TRIDENT_SetViewport,
    TRIDENT_GetViewport,
    TRIDENT_Sync,
+#ifdef HAVE_XAA_H
    TRIDENT_FillRect,
    TRIDENT_BlitRect,
 #if 0
@@ -65,12 +65,15 @@ DGAFunctionRec TRIDENTDGAFuncs = {
 #else
    NULL
 #endif
+#else
+   NULL, NULL, NULL
+#endif
 };
 
 Bool
 TRIDENTDGAInit(ScreenPtr pScreen)
 {   
-   ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+   ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
    TRIDENTPtr pTrident = TRIDENTPTR(pScrn);
    DGAModePtr modes = NULL, newmodes = NULL, currentMode;
    DisplayModePtr pMode, firstMode;
@@ -103,8 +106,10 @@ SECOND_PASS:
 
 	currentMode->mode = pMode;
 	currentMode->flags = DGA_CONCURRENT_ACCESS | DGA_PIXMAP_AVAILABLE;
+#ifdef HAVE_XAA_H
 	if(!pTrident->NoAccel)
 	   currentMode->flags |= DGA_FILL_RECT | DGA_BLIT_RECT;
+#endif
 	if(pMode->Flags & V_DBLSCAN)
 	   currentMode->flags |= DGA_DOUBLESCAN;
 	if(pMode->Flags & V_INTERLACE)
@@ -177,7 +182,7 @@ TRIDENT_SetMode(
 	
 	pScrn->displayWidth = OldDisplayWidth[index];
 	
-        TRIDENTSwitchMode(index, pScrn->currentMode, 0);
+        TRIDENTSwitchMode(SWITCH_MODE_ARGS(pScrn, pScrn->currentMode));
 	pTrident->DGAactive = FALSE;
    } else {
 	if(!pTrident->DGAactive) {  /* save the old parameters */
@@ -189,7 +194,7 @@ TRIDENT_SetMode(
 	pScrn->displayWidth = pMode->bytesPerScanline / 
 			      (pMode->bitsPerPixel >> 3);
 
-        TRIDENTSwitchMode(index, pMode->mode, 0);
+        TRIDENTSwitchMode(SWITCH_MODE_ARGS(pScrn, pMode->mode));
    }
    
    return TRUE;
@@ -214,10 +219,11 @@ TRIDENT_SetViewport(
 ){
    TRIDENTPtr pTrident = TRIDENTPTR(pScrn);
 
-   TRIDENTAdjustFrame(pScrn->pScreen->myNum, x, y, flags);
+   TRIDENTAdjustFrame(ADJUST_FRAME_ARGS(pScrn, x, y));
    pTrident->DGAViewportStatus = 0;  /* TRIDENTAdjustFrame loops until finished */
 }
 
+#ifdef HAVE_XAA_H
 static void 
 TRIDENT_FillRect (
    ScrnInfoPtr pScrn, 
@@ -277,6 +283,7 @@ TRIDENT_BlitTransRect(
   /* this one should be separate since the XAA function would
      prohibit usage of ~0 as the key */
 }
+#endif
 #endif
 
 static Bool 
