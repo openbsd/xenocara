@@ -24,7 +24,7 @@
  * SUCH DAMAGE.
  */
 
-/* $OpenBSD: usbtablet.c,v 1.13 2011/04/25 13:01:46 matthieu Exp $ */
+/* $OpenBSD: usbtablet.c,v 1.14 2012/09/08 13:16:09 matthieu Exp $ */
 
 /*
  * Driver for USB HID tablet devices.
@@ -155,10 +155,10 @@ static XF86ModuleVersionInfo VersionRec = {
 	{0, 0, 0, 0}		/* signature to be patched into the file */
 };
 
-XF86ModuleData usbtabletModuleData = {&VersionRec,
+_X_EXPORT XF86ModuleData usbtabletModuleData = {&VersionRec,
 				      SetupProc, TearDownProc };
 
-InputDriverRec USBTABLET = {
+_X_EXPORT InputDriverRec USBTABLET = {
 	1,
 	"usbtablet",
 	NULL,
