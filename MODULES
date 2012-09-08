@@ -1,4 +1,4 @@
-# $OpenBSD: MODULES,v 1.229 2012/09/08 15:36:28 matthieu Exp $
+# $OpenBSD: MODULES,v 1.230 2012/09/08 21:33:56 matthieu Exp $
 #
 # X.Org maintained modules
 #
@@ -112,22 +112,22 @@ driver/xf86-video-i128		1.3.6	7.7+
 driver/xf86-video-i740		1.3.4
 driver/xf86-video-intel		2.20.6	7.7+	needs-update
 driver/xf86-video-mach64	6.9.3	7.7+
-driver/xf86-video-mga		1.6.1	7.7+	needs-update
+driver/xf86-video-mga		1.6.1	7.7+
 driver/xf86-video-neomagic	1.2.7	7.7+
 driver/xf86-video-nv		2.1.20	7.7+
 driver/xf86-video-openchrome	0.3.1	7.7+	needs-update
-driver/xf86-video-r128		6.8.4	7.7+	needs-update
+driver/xf86-video-r128		6.8.4	7.7+
 driver/xf86-video-rendition	4.2.5
-driver/xf86-video-s3		0.6.5		needs-update
-driver/xf86-video-s3virge	1.10.6		needs-update
-driver/xf86-video-savage	2.3.6	7.7+	needs-update
-driver/xf86-video-siliconmotion	1.7.7	7.7+	needs-update
-driver/xf86-video-sis		0.10.7	7.7+	needs-update
+driver/xf86-video-s3		0.6.5
+driver/xf86-video-s3virge	1.10.6
+driver/xf86-video-savage	2.3.6	7.7+
+driver/xf86-video-siliconmotion	1.7.7	7.7+
+driver/xf86-video-sis		0.10.7	7.7+
 driver/xf86-video-sunffb	1.2.1	7.4+
-driver/xf86-video-tdfx		1.4.5	7.7+	needs-update
-driver/xf86-video-trident	1.3.6	7.7+	needs-update
+driver/xf86-video-tdfx		1.4.5	7.7+
+driver/xf86-video-trident	1.3.6	7.7+
 driver/xf86-video-tseng		1.2.5
-driver/xf86-video-vesa		2.3.2	7.7+	needs-update
+driver/xf86-video-vesa		2.3.2	7.7+
 driver/xf86-video-vmware	12.0.2	7.7
 driver/xf86-video-voodoo	1.2.5	7.7+
 driver/xf86-video-wsfb		0.4.0	7.7
@@ -208,7 +208,7 @@ lib/libxcb			1.8.1	7.7
 lib/libxkbfile			1.0.8	7.7
 lib/libxkbui			1.0.2
 lib/libxtrans			1.2.7	7.7
-lib/pixman			0.26.2		needs-update
+lib/pixman			0.26.2
 lib/xcb-util			0.3.9		needs-update
 lib/xcb-util-image		0.3.9		needs-import
 lib/xcb-util-keysyms		0.3.9		needs-import
