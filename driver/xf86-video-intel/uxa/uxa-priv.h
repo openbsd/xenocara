@@ -59,6 +59,8 @@
 #endif
 #include "damage.h"
 
+#include "../src/compat-api.h"
+
 /* Provide substitutes for gcc's __FUNCTION__ on other compilers */
 #if !defined(__GNUC__) && !defined(__FUNCTION__)
 # if defined(__STDC__) && (__STDC_VERSION__>=199901L)	/* C99 */
@@ -109,7 +111,7 @@ typedef struct {
 
 #define UXA_NUM_SOLID_CACHE 16
 
-typedef void (*EnableDisableFBAccessProcPtr) (int, Bool);
+typedef void (*EnableDisableFBAccessProcPtr) (SCRN_ARG_TYPE, Bool);
 typedef struct {
 	uxa_driver_t *info;
 	CreateGCProcPtr SavedCreateGC;

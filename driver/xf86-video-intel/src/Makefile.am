@@ -85,6 +85,7 @@ intel_drv_la_SOURCES = \
 	 i965_video.c \
 	 i965_render.c \
 	 drmmode_display.c \
+	 compat-api.h \
 	 $(NULL)
 
 if DRI
