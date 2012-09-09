@@ -1,4 +1,4 @@
-/*	$OpenBSD: wildcatfb_driver.c,v 1.9 2011/11/05 14:55:51 matthieu Exp $	*/
+/*	$OpenBSD: wildcatfb_driver.c,v 1.10 2012/09/09 12:33:12 matthieu Exp $	*/
 
 /*
  * Copyright (c) 2009 Miodrag Vallat.
@@ -129,6 +129,8 @@
 #include    "globals.h"
 #include    "gcstruct.h"
 
+#include "compat-api.h"
+
 #ifdef X_PRIVSEP
 extern int priv_open_device(const char *);
 #else
@@ -157,14 +159,14 @@ static const OptionInfoRec * WildcatFBAvailableOptions(int, int);
 static void WildcatFBIdentify(int);
 static Bool WildcatFBProbe(DriverPtr, int);
 static Bool WildcatFBPreInit(ScrnInfoPtr, int);
-static Bool WildcatFBScreenInit(int, ScreenPtr, int, char **);
-static Bool WildcatFBCloseScreen(int, ScreenPtr);
+static Bool WildcatFBScreenInit(SCREEN_INIT_ARGS_DECL);
+static Bool WildcatFBCloseScreen(CLOSE_SCREEN_ARGS_DECL);
 static void *WildcatFBWindowLinear(ScreenPtr, CARD32, CARD32, int, CARD32 *,
 			      void *);
-static Bool WildcatFBEnterVT(int, int);
-static void WildcatFBLeaveVT(int, int);
-static Bool WildcatFBSwitchMode(int, DisplayModePtr, int);
-static int WildcatFBValidMode(int, DisplayModePtr, Bool, int);
+static Bool WildcatFBEnterVT(VT_FUNC_ARGS_DECL);
+static void WildcatFBLeaveVT(VT_FUNC_ARGS_DECL);
+static Bool WildcatFBSwitchMode(SWITCH_MODE_ARGS_DECL);
+static int WildcatFBValidMode(SCRN_ARG_TYPE, DisplayModePtr, Bool, int);
 static void WildcatFBLoadPalette(ScrnInfoPtr, int, int *, LOCO *, VisualPtr);
 static Bool WildcatFBSaveScreen(ScreenPtr, int);
 static void WildcatFBSave(ScrnInfoPtr);
@@ -175,7 +177,7 @@ static Bool WildcatFBDriverFunc(ScrnInfoPtr pScrn, xorgDriverFuncOp op,
 				pointer ptr);
 
 /* Helper functions */
-static int wildcatfb_open(char *);
+static int wildcatfb_open(const char *);
 static pointer wildcatfb_mmap(size_t, off_t, int);
 
 #define WILDCATFB_VERSION 	0000
@@ -302,7 +304,7 @@ WildcatFBIdentify(int flags)
 
 /* Open the framebuffer device. */
 static int
-wildcatfb_open(char *dev)
+wildcatfb_open(const char *dev)
 {
 	int fd = -1;
 
@@ -356,7 +358,7 @@ WildcatFBProbe(DriverPtr drv, int flags)
 	int i, fd, entity;
        	GDevPtr *devSections;
 	int numDevSections;
-	char *dev;
+	const char *dev;
 	Bool foundScreen = FALSE;
 
 	TRACE("probe start");
@@ -407,7 +409,7 @@ WildcatFBPreInit(ScrnInfoPtr pScrn, int flags)
 {
 	WildcatFBPtr fPtr;
 	int defaultDepth, depths, wstype;
-	char *dev, *s;
+	const char *dev, *s;
 	Gamma zeros = {0.0, 0.0, 0.0};
 	DisplayModePtr mode;
 
@@ -577,7 +579,7 @@ WildcatFBPreInit(ScrnInfoPtr pScrn, int flags)
 static Bool
 WildcatFBCreateScreenResources(ScreenPtr pScreen)
 {
-	ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+	ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
 	WildcatFBPtr fPtr = WILDCATFBPTR(pScrn);
 	PixmapPtr pPixmap;
 	Bool ret;
@@ -601,7 +603,7 @@ WildcatFBCreateScreenResources(ScreenPtr pScreen)
 static Bool
 WildcatFBShadowInit(ScreenPtr pScreen)
 {
-	ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+	ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
 	WildcatFBPtr fPtr = WILDCATFBPTR(pScrn);
 
 	if (!shadowSetup(pScreen))
@@ -613,9 +615,9 @@ WildcatFBShadowInit(ScreenPtr pScreen)
 }
 
 static Bool
-WildcatFBScreenInit(int scrnIndex, ScreenPtr pScreen, int argc, char **argv)
+WildcatFBScreenInit(SCREEN_INIT_ARGS_DECL)
 {
-	ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+	ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
 	WildcatFBPtr fPtr = WILDCATFBPTR(pScrn);
 	VisualPtr visual;
 	int ret, flags, ncolors;
@@ -692,7 +694,7 @@ WildcatFBScreenInit(int scrnIndex, ScreenPtr pScreen, int argc, char **argv)
 			   "RENDER extension initialisation failed.");
 
 	if (!WildcatFBShadowInit(pScreen)) {
-		xf86DrvMsg(scrnIndex, X_ERROR,
+		xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
 		    "shadow framebuffer initialization failed\n");
 		return FALSE;
 	}
@@ -735,9 +737,9 @@ WildcatFBScreenInit(int scrnIndex, ScreenPtr pScreen, int argc, char **argv)
 }
 
 static Bool
-WildcatFBCloseScreen(int scrnIndex, ScreenPtr pScreen)
+WildcatFBCloseScreen(CLOSE_SCREEN_ARGS_DECL)
 {
-	ScrnInfoPtr pScrn = xf86Screens[scrnIndex];
+	ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
 	WildcatFBPtr fPtr = WILDCATFBPTR(pScrn);
 	PixmapPtr pPixmap = pScreen->GetScreenPixmap(pScreen);
 
@@ -763,14 +765,14 @@ WildcatFBCloseScreen(int scrnIndex, ScreenPtr pScreen)
 	/* Unwrap CloseScreen. */
 	pScreen->CloseScreen = fPtr->CloseScreen;
 	TRACE_EXIT("WildcatFBCloseScreen");
-	return (*pScreen->CloseScreen)(scrnIndex, pScreen);
+	return (*pScreen->CloseScreen)(CLOSE_SCREEN_ARGS);
 }
 
 static void *
 WildcatFBWindowLinear(ScreenPtr pScreen, CARD32 row, CARD32 offset, int mode,
 		CARD32 *size, void *closure)
 {
-	ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+	ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
 
 	xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
 		   "%s called, but never should be!\n", __func__);
@@ -779,9 +781,9 @@ WildcatFBWindowLinear(ScreenPtr pScreen, CARD32 row, CARD32 offset, int mode,
 }
 
 static Bool
-WildcatFBEnterVT(int scrnIndex, int flags)
+WildcatFBEnterVT(VT_FUNC_ARGS_DECL)
 {
-	ScrnInfoPtr pScrn = xf86Screens[scrnIndex];
+	SCRN_INFO_PTR(arg);
 	WildcatFBPtr fPtr = WILDCATFBPTR(pScrn);
 	int wsmode = WSDISPLAYIO_MODE_DUMBFB;
 
@@ -801,9 +803,9 @@ WildcatFBEnterVT(int scrnIndex, int flags)
 }
 
 static void
-WildcatFBLeaveVT(int scrnIndex, int flags)
+WildcatFBLeaveVT(VT_FUNC_ARGS_DECL)
 {
-	ScrnInfoPtr pScrn = xf86Screens[scrnIndex];
+	SCRN_INFO_PTR(arg);
 
 	TRACE_ENTER("LeaveVT");
 
@@ -813,10 +815,10 @@ WildcatFBLeaveVT(int scrnIndex, int flags)
 }
 
 static Bool
-WildcatFBSwitchMode(int scrnIndex, DisplayModePtr mode, int flags)
+WildcatFBSwitchMode(SWITCH_MODE_ARGS_DECL)
 {
 #if DEBUG
-	ScrnInfoPtr pScrn = xf86Screens[scrnIndex];
+	SCRN_INFO_PTR(arg);
 #endif
 
 	TRACE_ENTER("SwitchMode");
@@ -825,10 +827,11 @@ WildcatFBSwitchMode(int scrnIndex, DisplayModePtr mode, int flags)
 }
 
 static int
-WildcatFBValidMode(int scrnIndex, DisplayModePtr mode, Bool verbose, int flags)
+WildcatFBValidMode(SCRN_ARG_TYPE arg, DisplayModePtr mode,
+    Bool verbose, int flags)
 {
 #if DEBUG
-	ScrnInfoPtr pScrn = xf86Screens[scrnIndex];
+	SCRN_INFO_PTR(arg);
 #endif
 
 	TRACE_ENTER("ValidMode");
@@ -880,7 +883,7 @@ WildcatFBLoadPalette(ScrnInfoPtr pScrn, int numColors, int *indices,
 static Bool
 WildcatFBSaveScreen(ScreenPtr pScreen, int mode)
 {
-	ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+	ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
 	WildcatFBPtr fPtr = WILDCATFBPTR(pScrn);
 	int state;
 
@@ -968,7 +971,7 @@ WildcatFBDriverFunc(ScrnInfoPtr pScrn, xorgDriverFuncOp op, pointer ptr)
 static void
 WildcatFBShadowUpdate(ScreenPtr pScreen, shadowBufPtr pBuf)
 {
-    ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+    ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
     WildcatFBPtr fPtr = WILDCATFBPTR(pScrn);
     RegionPtr	damage = shadowDamage (pBuf);
     PixmapPtr	pShadow = pBuf->pPixmap;

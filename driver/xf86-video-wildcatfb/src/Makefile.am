@@ -29,4 +29,5 @@ wildcatfb_drv_la_LDFLAGS = -module -avoid-version
 wildcatfb_drv_ladir = @moduledir@/drivers
 
 wildcatfb_drv_la_SOURCES = \
-         wildcatfb_driver.c
+	wildcatfb_driver.c \
+	compat_api.h
