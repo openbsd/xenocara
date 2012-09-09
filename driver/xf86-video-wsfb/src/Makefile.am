@@ -29,4 +29,5 @@ wsfb_drv_la_LDFLAGS = -module -avoid-version
 wsfb_drv_ladir = @moduledir@/drivers
 
 wsfb_drv_la_SOURCES = \
-         wsfb_driver.c
+	compat_api.h \
+	wsfb_driver.c
