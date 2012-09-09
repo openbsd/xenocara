@@ -122,7 +122,7 @@
 #include "radeon_chipinfo_gen.h"
 
 				/* Forward definitions for driver functions */
-static Bool RADEONCloseScreen(int scrnIndex, ScreenPtr pScreen);
+static Bool RADEONCloseScreen(CLOSE_SCREEN_ARGS_DECL);
 static Bool RADEONSaveScreen(ScreenPtr pScreen, int mode);
 static void RADEONSave(ScrnInfoPtr pScrn);
 
@@ -3233,15 +3233,14 @@ static void RADEONLoadPalette(ScrnInfoPtr pScrn, int numColors,
 #endif
 }
 
-static void RADEONBlockHandler(int i, pointer blockData,
-			       pointer pTimeout, pointer pReadmask)
+static void RADEONBlockHandler(BLOCKHANDLER_ARGS_DECL)
 {
-    ScreenPtr      pScreen = screenInfo.screens[i];
-    ScrnInfoPtr    pScrn   = xf86Screens[i];
+    SCREEN_PTR(arg);
+    ScrnInfoPtr    pScrn   = xf86ScreenToScrn(pScreen);
     RADEONInfoPtr  info    = RADEONPTR(pScrn);
 
     pScreen->BlockHandler = info->BlockHandler;
-    (*pScreen->BlockHandler) (i, blockData, pTimeout, pReadmask);
+    (*pScreen->BlockHandler) (BLOCKHANDLER_ARGS);
     pScreen->BlockHandler = RADEONBlockHandler;
 
     if (info->VideoTimerCallback)
@@ -3258,9 +3257,9 @@ static void RADEONBlockHandler(int i, pointer blockData,
 }
 
 static void
-RADEONPointerMoved(int index, int x, int y)
+RADEONPointerMoved(SCRN_ARG_TYPE arg, int x, int y)
 {
-    ScrnInfoPtr pScrn = xf86Screens[index];
+    SCRN_INFO_PTR(arg);
     RADEONInfoPtr  info  = RADEONPTR(pScrn);
     int newX = x, newY = y;
 
@@ -3281,7 +3280,7 @@ RADEONPointerMoved(int index, int x, int y)
 	break;
     }
 
-    (*info->PointerMoved)(index, newX, newY);
+    (*info->PointerMoved)(arg, newX, newY);
 }
 
 static void
@@ -3332,10 +3331,9 @@ RADEONInitBIOSRegisters(ScrnInfoPtr pScrn)
 
 
 /* Called at the start of each server generation. */
-Bool RADEONScreenInit(int scrnIndex, ScreenPtr pScreen,
-                                int argc, char **argv)
+Bool RADEONScreenInit(SCREEN_INIT_ARGS_DECL)
 {
-    ScrnInfoPtr    pScrn = xf86Screens[pScreen->myNum];
+    ScrnInfoPtr    pScrn = xf86ScreenToScrn(pScreen);
     RADEONInfoPtr  info  = RADEONPTR(pScrn);
     int            hasDRI = 0;
 #ifdef RENDER
@@ -3533,14 +3531,14 @@ Bool RADEONScreenInit(int scrnIndex, ScreenPtr pScreen,
 		info->dri->textureSize = -1;
 	    }
 	}
-	if (!RADEONSetupMemXAA_DRI(scrnIndex, pScreen))
+	if (!RADEONSetupMemXAA_DRI(pScreen))
 	    return FALSE;
     	pScrn->fbOffset    = info->dri->frontOffset;
     }
 #endif
 
 #ifdef USE_XAA
-    if (!info->useEXA && !hasDRI && !RADEONSetupMemXAA(scrnIndex, pScreen))
+    if (!info->useEXA && !hasDRI && !RADEONSetupMemXAA(pScreen))
 	return FALSE;
 #endif
 
@@ -3562,9 +3560,9 @@ Bool RADEONScreenInit(int scrnIndex, ScreenPtr pScreen,
 	int  maxy        = info->FbMapSize / width_bytes;
 
 	if (maxy <= pScrn->virtualY * 3) {
-	    xf86DrvMsg(scrnIndex, X_ERROR,
+	    xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
 		       "Static buffer allocation failed.  Disabling DRI.\n");
-	    xf86DrvMsg(scrnIndex, X_ERROR,
+	    xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
 		       "At least %d kB of video memory needed at this "
 		       "resolution and depth.\n",
 		       (pScrn->displayWidth * pScrn->virtualY *
@@ -3713,16 +3711,16 @@ Bool RADEONScreenInit(int scrnIndex, ScreenPtr pScreen,
 	xf86DrvMsgVerb(pScrn->scrnIndex, X_INFO, RADEON_LOGLEVEL_DEBUG,
 		       "Initializing Acceleration\n");
 	if (RADEONAccelInit(pScreen)) {
-	    xf86DrvMsg(scrnIndex, X_INFO, "Acceleration enabled\n");
+	    xf86DrvMsg(pScrn->scrnIndex, X_INFO, "Acceleration enabled\n");
 	    info->accelOn = TRUE;
 	} else {
-	    xf86DrvMsg(scrnIndex, X_ERROR,
+	    xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
 		       "Acceleration initialization failed\n");
-	    xf86DrvMsg(scrnIndex, X_INFO, "Acceleration disabled\n");
+	    xf86DrvMsg(pScrn->scrnIndex, X_INFO, "Acceleration disabled\n");
 	    info->accelOn = FALSE;
 	}
     } else {
-	xf86DrvMsg(scrnIndex, X_INFO, "Acceleration disabled\n");
+	xf86DrvMsg(pScrn->scrnIndex, X_INFO, "Acceleration disabled\n");
 	info->accelOn = FALSE;
     }
 
@@ -3749,19 +3747,19 @@ Bool RADEONScreenInit(int scrnIndex, ScreenPtr pScreen,
 
 		if (xf86QueryLargestOffscreenArea(pScreen, &width, &height,
 					      0, 0, 0)) {
-		    xf86DrvMsg(scrnIndex, X_INFO,
+		    xf86DrvMsg(pScrn->scrnIndex, X_INFO,
 			       "Largest offscreen area available: %d x %d\n",
 			       width, height);
 		}
 	    }
 #endif /* USE_XAA */
 	} else {
-	    xf86DrvMsg(scrnIndex, X_ERROR,
+	    xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
 		       "Hardware cursor initialization failed\n");
-	    xf86DrvMsg(scrnIndex, X_INFO, "Using software cursor\n");
+	    xf86DrvMsg(pScrn->scrnIndex, X_INFO, "Using software cursor\n");
 	}
     } else {
-	xf86DrvMsg(scrnIndex, X_INFO, "Using software cursor\n");
+	xf86DrvMsg(pScrn->scrnIndex, X_INFO, "Using software cursor\n");
     }
 
     /* DGA setup */
@@ -5347,9 +5345,9 @@ static Bool RADEONSaveScreen(ScreenPtr pScreen, int mode)
     return TRUE;
 }
 
-Bool RADEONSwitchMode(int scrnIndex, DisplayModePtr mode, int flags)
+Bool RADEONSwitchMode(SWITCH_MODE_ARGS_DECL)
 {
-    ScrnInfoPtr    pScrn       = xf86Screens[scrnIndex];
+    SCRN_INFO_PTR(arg);
     RADEONInfoPtr  info        = RADEONPTR(pScrn);
     Bool           tilingOld   = info->tilingEnabled;
     Bool           ret;
@@ -5386,9 +5384,9 @@ Bool RADEONSwitchMode(int scrnIndex, DisplayModePtr mode, int flags)
 
     if (info->tilingEnabled != tilingOld) {
 	/* need to redraw front buffer, I guess this can be considered a hack ? */
-	xf86EnableDisableFBAccess(scrnIndex, FALSE);
+	xf86EnableDisableFBAccess(arg, FALSE);
 	RADEONChangeSurfaces(pScrn);
-	xf86EnableDisableFBAccess(scrnIndex, TRUE);
+	xf86EnableDisableFBAccess(arg, TRUE);
 	/* xf86SetRootClip would do, but can't access that here */
     }
 
@@ -5443,10 +5441,10 @@ xf86ModeBandwidth(DisplayModePtr mode, int depth)
 #endif
 
 /* Used to disallow modes that are not supported by the hardware */
-ModeStatus RADEONValidMode(int scrnIndex, DisplayModePtr mode,
+ModeStatus RADEONValidMode(SCRN_ARG_TYPE arg, DisplayModePtr mode,
                                      Bool verbose, int flag)
 {
-    ScrnInfoPtr pScrn = xf86Screens[scrnIndex];
+    SCRN_INFO_PTR(arg);
     RADEONInfoPtr info = RADEONPTR(pScrn);
     RADEONEntPtr pRADEONEnt = RADEONEntPriv(pScrn);
 
@@ -5590,9 +5588,9 @@ void RADEONDoAdjustFrame(ScrnInfoPtr pScrn, int x, int y, Bool crtc2)
     OUTREG(reg, Base);
 }
 
-void RADEONAdjustFrame(int scrnIndex, int x, int y, int flags)
+void RADEONAdjustFrame(ADJUST_FRAME_ARGS_DECL)
 {
-    ScrnInfoPtr    pScrn      = xf86Screens[scrnIndex];
+    SCRN_INFO_PTR(arg);
     RADEONInfoPtr  info       = RADEONPTR(pScrn);
     RADEONEntPtr pRADEONEnt = RADEONEntPriv(pScrn);
     xf86CrtcConfigPtr	config = XF86_CRTC_CONFIG_PTR(pScrn);
@@ -5628,9 +5626,9 @@ void RADEONAdjustFrame(int scrnIndex, int x, int y, int flags)
 /* Called when VT switching back to the X server.  Reinitialize the
  * video mode.
  */
-Bool RADEONEnterVT(int scrnIndex, int flags)
+Bool RADEONEnterVT(VT_FUNC_ARGS_DECL)
 {
-    ScrnInfoPtr    pScrn = xf86Screens[scrnIndex];
+    SCRN_INFO_PTR(arg);
     RADEONInfoPtr  info  = RADEONPTR(pScrn);
     xf86CrtcConfigPtr config = XF86_CRTC_CONFIG_PTR(pScrn);
     int i;
@@ -5736,9 +5734,9 @@ Bool RADEONEnterVT(int scrnIndex, int flags)
 /* Called when VT switching away from the X server.  Restore the
  * original text mode.
  */
-void RADEONLeaveVT(int scrnIndex, int flags)
+void RADEONLeaveVT(VT_FUNC_ARGS_DECL)
 {
-    ScrnInfoPtr    pScrn = xf86Screens[scrnIndex];
+    SCRN_INFO_PTR(arg);
     RADEONInfoPtr  info  = RADEONPTR(pScrn);
     xf86CrtcConfigPtr config = XF86_CRTC_CONFIG_PTR(pScrn);
     int i;
@@ -5821,9 +5819,9 @@ void RADEONLeaveVT(int scrnIndex, int flags)
  * text mode, unmap video memory, and unwrap and call the saved
  * CloseScreen function.
  */
-static Bool RADEONCloseScreen(int scrnIndex, ScreenPtr pScreen)
+static Bool RADEONCloseScreen(CLOSE_SCREEN_ARGS_DECL)
 {
-    ScrnInfoPtr    pScrn = xf86Screens[scrnIndex];
+    ScrnInfoPtr    pScrn = xf86ScreenToScrn(pScreen);
     RADEONInfoPtr  info  = RADEONPTR(pScrn);
     xf86CrtcConfigPtr config = XF86_CRTC_CONFIG_PTR(pScrn);
     int i;
@@ -5908,12 +5906,12 @@ static Bool RADEONCloseScreen(int scrnIndex, ScreenPtr pScreen)
 
     pScreen->BlockHandler = info->BlockHandler;
     pScreen->CloseScreen = info->CloseScreen;
-    return (*pScreen->CloseScreen)(scrnIndex, pScreen);
+    return (*pScreen->CloseScreen)(CLOSE_SCREEN_ARGS);
 }
 
-void RADEONFreeScreen(int scrnIndex, int flags)
+void RADEONFreeScreen(FREE_SCREEN_ARGS_DECL)
 {
-    ScrnInfoPtr  pScrn = xf86Screens[scrnIndex];
+    SCRN_INFO_PTR(arg);
     RADEONInfoPtr  info  = RADEONPTR(pScrn);
     
     xf86DrvMsgVerb(pScrn->scrnIndex, X_INFO, RADEON_LOGLEVEL_DEBUG,

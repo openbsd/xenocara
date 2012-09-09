@@ -1840,10 +1840,10 @@ legacy_crtc_mode_set(xf86CrtcPtr crtc, DisplayModePtr mode,
 	/* need to redraw front buffer, I guess this can be considered a hack ? */
 	/* if this is called during ScreenInit() we don't have pScrn->pScreen yet */
 	if (pScrn->pScreen)
-	    xf86EnableDisableFBAccess(pScrn->scrnIndex, FALSE);
+	    xf86EnableDisableFBAccess(XF86_ENABLEDISABLEFB_ARG(pScrn), FALSE);
 	RADEONChangeSurfaces(pScrn);
 	if (pScrn->pScreen)
-	    xf86EnableDisableFBAccess(pScrn->scrnIndex, TRUE);
+	    xf86EnableDisableFBAccess(XF86_ENABLEDISABLEFB_ARG(pScrn), TRUE);
 	/* xf86SetRootClip would do, but can't access that here */
     }
 

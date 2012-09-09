@@ -105,7 +105,7 @@ SECOND_PASS:
 	    if (secondPitch)
 		pitch = secondPitch;
 
-	    if (!(newmodes = xrealloc(modes, (*num + 1) * sizeof(DGAModeRec))))
+	    if (!(newmodes = realloc(modes, (*num + 1) * sizeof(DGAModeRec))))
 		break;
 
 	    modes       = newmodes;
@@ -161,7 +161,7 @@ SECOND_PASS:
 	    currentMode->yViewportStep  = 1;
 	    currentMode->viewportFlags  = DGA_FLIP_RETRACE;
 	    currentMode->offset         = 0;
-	    currentMode->address        = (unsigned char*)info->LinearAddr;
+	    currentMode->address        = (unsigned char*)(uintptr_t)info->LinearAddr;
 	    currentMode->bytesPerScanline = pitch * Bpp;
 	    currentMode->imageWidth     = pitch;
 	    currentMode->imageHeight    = (info->FbMapSize
@@ -298,7 +298,7 @@ static Bool RADEON_SetMode(ScrnInfoPtr pScrn, DGAModePtr pMode)
 
 	pScrn->currentMode = info->CurrentLayout.mode;
 
-	RADEONSwitchMode(indx, pScrn->currentMode, 0);
+	RADEONSwitchMode(SWITCH_MODE_ARGS(pScrn, pScrn->currentMode));
 #ifdef XF86DRI
 	if (info->directRenderingEnabled) {
 	    RADEONCP_STOP(pScrn, info);
@@ -311,7 +311,7 @@ static Bool RADEON_SetMode(ScrnInfoPtr pScrn, DGAModePtr pMode)
 	    RADEONCP_START(pScrn, info);
 	}
 #endif
-	RADEONAdjustFrame(indx, 0, 0, 0);
+	RADEONAdjustFrame(ADJUST_FRAME_ARGS(pScrn, 0, 0));
 	info->DGAactive = FALSE;
     } else {
 	if (!info->DGAactive) {  /* save the old parameters */
@@ -330,7 +330,7 @@ static Bool RADEON_SetMode(ScrnInfoPtr pScrn, DGAModePtr pMode)
 					    : pMode->depth);
 	/* RADEONModeInit() will set the mode field */
 
-	RADEONSwitchMode(indx, pMode->mode, 0);
+	RADEONSwitchMode(SWITCH_MODE_ARGS(pScrn, pMode->mode));
 
 #ifdef XF86DRI
 	if (info->directRenderingEnabled) {
@@ -360,7 +360,7 @@ static void RADEON_SetViewport(ScrnInfoPtr pScrn, int x, int y, int flags)
 {
     RADEONInfoPtr  info = RADEONPTR(pScrn);
 
-    RADEONAdjustFrame(pScrn->pScreen->myNum, x, y, flags);
+    RADEONAdjustFrame(ADJUST_FRAME_ARGS(pScrn, x, y));
     info->DGAViewportStatus = 0;  /* FIXME */
 }
 
@@ -457,7 +457,7 @@ static Bool RADEON_OpenFramebuffer(ScrnInfoPtr pScrn,
     RADEONInfoPtr  info = RADEONPTR(pScrn);
 
     *name   = NULL;             /* no special device */
-    *mem    = (unsigned char*)info->LinearAddr;
+    *mem    = (unsigned char*)(uintptr_t)info->LinearAddr;
     *size   = info->FbMapSize;
     *offset = 0;
     *flags  = 0; /* DGA_NEED_ROOT; -- don't need root, just /dev/mem access */

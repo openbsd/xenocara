@@ -90,6 +90,8 @@
 #include "picturestr.h"
 #endif
 
+#include "compat-api.h"
+
 #include "atipcirename.h"
 
 #ifndef MAX
@@ -471,7 +473,7 @@ struct radeon_dri {
     int               numVisualConfigs;
     __GLXvisualConfig *pVisualConfigs;
     RADEONConfigPrivPtr pVisualConfigsPriv;
-    Bool             (*DRICloseScreen)(int, ScreenPtr);
+    Bool             (*DRICloseScreen)(CLOSE_SCREEN_ARGS_DECL);
 
     drm_handle_t      fbHandle;
 
@@ -758,9 +760,9 @@ typedef struct {
 
     RADEONSavePtr     SavedReg;         /* Original (text) mode              */
     RADEONSavePtr     ModeReg;          /* Current mode                      */
-    Bool              (*CloseScreen)(int, ScreenPtr);
+    Bool              (*CloseScreen)(CLOSE_SCREEN_ARGS_DECL);
 
-    void              (*BlockHandler)(int, pointer, pointer, pointer);
+    void              (*BlockHandler)(BLOCKHANDLER_ARGS_DECL);
 
     Bool              PaletteSavedOnVT; /* Palette saved on last VT switch   */
 
@@ -871,7 +873,7 @@ typedef struct {
     unsigned char*      BIOSCopy;
 
     Rotation rotation;
-    void (*PointerMoved)(int, int, int);
+    void (*PointerMoved)(SCRN_ARG_TYPE, int, int);
     CreateScreenResourcesProcPtr CreateScreenResources;
 
     /* if no devices are connected at server startup */
@@ -970,14 +972,14 @@ extern void RADEONCPFlushIndirect(ScrnInfoPtr pScrn, int discard);
 extern void RADEONCPReleaseIndirect(ScrnInfoPtr pScrn);
 extern int RADEONCPStop(ScrnInfoPtr pScrn,  RADEONInfoPtr info);
 #  ifdef USE_XAA
-extern Bool RADEONSetupMemXAA_DRI(int scrnIndex, ScreenPtr pScreen);
+extern Bool RADEONSetupMemXAA_DRI(ScreenPtr pScreen);
 #  endif
 #endif
 
 #ifdef USE_XAA
 /* radeon_accelfuncs.c */
 extern void RADEONAccelInitMMIO(ScreenPtr pScreen, XAAInfoRecPtr a);
-extern Bool RADEONSetupMemXAA(int scrnIndex, ScreenPtr pScreen);
+extern Bool RADEONSetupMemXAA(ScreenPtr pScreen);
 #endif
 
 /* radeon_bios.c */

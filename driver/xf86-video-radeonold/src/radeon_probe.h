@@ -43,6 +43,7 @@
 
 #include "xf86Crtc.h"
 
+#include "compat-api.h"
 #ifdef USE_EXA
 #include "exa.h"
 #endif
@@ -619,17 +620,17 @@ extern PciChipsets          RADEONPciChipsets[];
 
 /* radeon_driver.c */
 extern Bool                 RADEONPreInit(ScrnInfoPtr, int);
-extern Bool                 RADEONScreenInit(int, ScreenPtr, int, char **);
-extern Bool                 RADEONSwitchMode(int, DisplayModePtr, int);
+extern Bool                 RADEONScreenInit(SCREEN_INIT_ARGS_DECL);
+extern Bool                 RADEONSwitchMode(SWITCH_MODE_ARGS_DECL);
 #ifdef X_XF86MiscPassMessage
 extern Bool                 RADEONHandleMessage(int, const char*, const char*,
 					        char**);
 #endif
-extern void                 RADEONAdjustFrame(int, int, int, int);
-extern Bool                 RADEONEnterVT(int, int);
-extern void                 RADEONLeaveVT(int, int);
-extern void                 RADEONFreeScreen(int, int);
-extern ModeStatus           RADEONValidMode(int, DisplayModePtr, Bool, int);
+extern void                 RADEONAdjustFrame(ADJUST_FRAME_ARGS_DECL);
+extern Bool                 RADEONEnterVT(VT_FUNC_ARGS_DECL);
+extern void                 RADEONLeaveVT(VT_FUNC_ARGS_DECL);
+extern void                 RADEONFreeScreen(FREE_SCREEN_ARGS_DECL);
+extern ModeStatus           RADEONValidMode(SCRN_ARG_TYPE, DisplayModePtr, Bool, int);
 
 extern const OptionInfoRec *RADEONOptionsWeak(void);
 
