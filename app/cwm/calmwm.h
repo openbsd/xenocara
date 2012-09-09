@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: calmwm.h,v 1.152 2012/07/13 17:01:04 okan Exp $
+ * $OpenBSD: calmwm.h,v 1.153 2012/09/09 19:47:47 okan Exp $
  */
 
 #ifndef _CALMWM_H_
@@ -327,7 +327,7 @@ struct client_ctx	*client_new(Window, struct screen_ctx *, int);
 void			 client_ptrsave(struct client_ctx *);
 void			 client_ptrwarp(struct client_ctx *);
 void			 client_raise(struct client_ctx *);
-void			 client_resize(struct client_ctx *);
+void			 client_resize(struct client_ctx *, int);
 void			 client_send_delete(struct client_ctx *);
 void			 client_setactive(struct client_ctx *, int);
 void			 client_setname(struct client_ctx *);

@@ -16,7 +16,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: mousefunc.c,v 1.37 2012/07/13 17:01:04 okan Exp $
+ * $OpenBSD: mousefunc.c,v 1.38 2012/09/09 19:47:47 okan Exp $
  */
 
 #include <sys/param.h>
@@ -110,12 +110,12 @@ mousefunc_window_resize(struct client_ctx *cc, void *arg)
 			/* don't resize more than 60 times / second */
 			if ((ev.xmotion.time - ltime) > (1000 / 60)) {
 				ltime = ev.xmotion.time;
-				client_resize(cc);
+				client_resize(cc, 1);
 			}
 			break;
 		case ButtonRelease:
 			if (ltime)
-				client_resize(cc);
+				client_resize(cc, 1);
 			XUnmapWindow(X_Dpy, sc->menuwin);
 			XReparentWindow(X_Dpy, sc->menuwin, sc->rootwin, 0, 0);
 			xu_ptr_ungrab();

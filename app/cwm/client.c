@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: client.c,v 1.100 2012/07/16 01:53:14 okan Exp $
+ * $OpenBSD: client.c,v 1.101 2012/09/09 19:47:47 okan Exp $
  */
 
 #include <sys/param.h>
@@ -306,7 +306,7 @@ client_maximize(struct client_ctx *cc)
 	cc->flags |= CLIENT_MAXIMIZED;
 
 resize:
-	client_resize(cc);
+	client_resize(cc, 0);
 }
 
 void
@@ -355,7 +355,7 @@ client_vertmaximize(struct client_ctx *cc)
 	cc->flags |= CLIENT_VMAXIMIZED;
 
 resize:
-	client_resize(cc);
+	client_resize(cc, 0);
 }
 
 void
@@ -404,12 +404,17 @@ client_horizmaximize(struct client_ctx *cc)
 	cc->flags |= CLIENT_HMAXIMIZED;
 
 resize:
-	client_resize(cc);
+	client_resize(cc, 0);
 }
 
 void
-client_resize(struct client_ctx *cc)
+client_resize(struct client_ctx *cc, int reset)
 {
+	if (reset) {
+		cc->flags &= ~CLIENT_MAXIMIZED;
+		cc->bwidth = Conf.bwidth;
+	}
+
 	client_draw_border(cc);
 
 	XMoveResizeWindow(X_Dpy, cc->win, cc->geom.x,
