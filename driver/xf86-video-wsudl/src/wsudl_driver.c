@@ -1,4 +1,4 @@
-/*	$OpenBSD: wsudl_driver.c,v 1.8 2011/11/05 14:55:09 matthieu Exp $ */
+/*	$OpenBSD: wsudl_driver.c,v 1.9 2012/09/09 11:42:57 matthieu Exp $ */
 
 /*
  * Copyright (c) 2009 Marcus Glocker <mglocker@openbsd.org>
@@ -84,6 +84,8 @@
 
 #include "damage.h"
 
+#include "compat-api.h"
+
 /*
  * Debugging.
  */
@@ -107,12 +109,13 @@ static Bool			WsudlGetRec(ScrnInfoPtr);
 static void			WsudlFreeRec(ScrnInfoPtr);
 static const OptionInfoRec *	WsudlAvailableOptions(int, int);
 static Bool			WsudlCreateScreenResources(ScreenPtr);
-static Bool			WsudlScreenInit(int, ScreenPtr, int, char **);
-static Bool			WsudlCloseScreen(int, ScreenPtr);
-static Bool			WsudlSwitchMode(int, DisplayModePtr, int);
-static Bool			WsudlEnterVT(int, int);
-static void			WsudlLeaveVT(int, int);
-static int			WsudlValidMode(int, DisplayModePtr, Bool, int);
+static Bool			WsudlScreenInit(SCREEN_INIT_ARGS_DECL);
+static Bool			WsudlCloseScreen(CLOSE_SCREEN_ARGS_DECL);
+static Bool			WsudlSwitchMode(SWITCH_MODE_ARGS_DECL);
+static Bool			WsudlEnterVT(VT_FUNC_ARGS_DECL);
+static void			WsudlLeaveVT(VT_FUNC_ARGS_DECL);
+static int			WsudlValidMode(SCRN_ARG_TYPE, DisplayModePtr,
+    				    Bool, int);
 static void			WsudlLoadPalette(ScrnInfoPtr, int, int *,
 				    LOCO *, VisualPtr);
 static Bool			WsudlSaveScreen(ScreenPtr, int);
@@ -122,7 +125,7 @@ static void			WsudlBlockHandler(pointer, struct timeval **,
 				    pointer);
 static void			WsudlWakeupHandler(pointer, int, pointer);
 /* helper functions */
-static int			wsudl_open(char *);
+static int			wsudl_open(const char *);
 
 /*
  * Respect privilege seperation when opening device nodes.
@@ -287,7 +290,7 @@ WsudlProbe(DriverPtr drv, int flags)
 	int numDevSections;
 	Bool foundScreen = FALSE;
 	GDevPtr *devSections;
-	char *dev;
+	const char *dev;
 
 	DEBUGP("WsudlProbe");
 
@@ -337,7 +340,7 @@ static Bool
 WsudlPreInit(ScrnInfoPtr pScrn, int flags)
 {
 	WsudlPtr fPtr;
-	char *dev;
+	const char *dev;
 	int r, wstype, defaultDepth, flags24;
 	Gamma zeros = { 0.0, 0.0, 0.0 };
 	DisplayModePtr mode;
@@ -522,7 +525,7 @@ WsudlAvailableOptions(int chipid, int busid)
 static Bool
 WsudlCreateScreenResources(ScreenPtr pScreen)
 {
-	ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+	ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
 	WsudlPtr fPtr = WSUDLPTR(pScrn);
 	PixmapPtr pPixmap;
 	Bool r;
@@ -553,10 +556,10 @@ WsudlCreateScreenResources(ScreenPtr pScreen)
 }
 
 static Bool
-WsudlScreenInit(int scrnIndex, ScreenPtr pScreen, int argc, char **argv)
+WsudlScreenInit(SCREEN_INIT_ARGS_DECL)
 {
 	int r, wsmode, flags, ncolors;
-	ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+	ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
 	WsudlPtr fPtr = WSUDLPTR(pScrn);
 	VisualPtr visual;
 
@@ -636,7 +639,7 @@ WsudlScreenInit(int scrnIndex, ScreenPtr pScreen, int argc, char **argv)
 
 	/* do damage initialization */
 	if (!WsudlDamageInit(pScreen)) {
-		xf86DrvMsg(scrnIndex, X_ERROR,
+		xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
 		    "damage initialization failed\n");
 		return (FALSE);
 	}
@@ -672,9 +675,9 @@ WsudlScreenInit(int scrnIndex, ScreenPtr pScreen, int argc, char **argv)
 }
 
 static Bool
-WsudlCloseScreen(int scrnIndex, ScreenPtr pScreen)
+WsudlCloseScreen(CLOSE_SCREEN_ARGS_DECL)
 {
-	ScrnInfoPtr pScrn = xf86Screens[scrnIndex];
+	ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
 	WsudlPtr fPtr = WSUDLPTR(pScrn);
 
 	DEBUGP("WsudlCloseScreen");
@@ -694,11 +697,11 @@ WsudlCloseScreen(int scrnIndex, ScreenPtr pScreen)
 	/* unwrap CloseScreen */
 	pScreen->CloseScreen = fPtr->CloseScreen;
 
-	return ((*pScreen->CloseScreen)(scrnIndex, pScreen));
+	return ((*pScreen->CloseScreen)(CLOSE_SCREEN_ARGS));
 }
 
 static Bool
-WsudlSwitchMode(int scrnIndex, DisplayModePtr mode, int flags)
+WsudlSwitchMode(SWITCH_MODE_ARGS_DECL)
 {
 	DEBUGP("WsudlSwitchMode");
 
@@ -706,7 +709,7 @@ WsudlSwitchMode(int scrnIndex, DisplayModePtr mode, int flags)
 }
 
 static Bool
-WsudlEnterVT(int scrnIndex, int flags)
+WsudlEnterVT(VT_FUNC_ARGS_DECL)
 {
 	DEBUGP("WsudlEnterVT (TODO)");
 
@@ -716,7 +719,7 @@ WsudlEnterVT(int scrnIndex, int flags)
 }
 
 static void
-WsudlLeaveVT(int scrnIndex, int flags)
+WsudlLeaveVT(VT_FUNC_ARGS_DECL)
 {
 	DEBUGP("WsudlLeaveVT (TODO)");
 
@@ -724,7 +727,7 @@ WsudlLeaveVT(int scrnIndex, int flags)
 }
 
 static int
-WsudlValidMode(int scrnIndex, DisplayModePtr mode, Bool verbose, int flags)
+WsudlValidMode(SCRN_ARG_TYPE arg, DisplayModePtr mode, Bool verbose, int flags)
 {
 	DEBUGP("WsudlValidMode");
 
@@ -855,7 +858,7 @@ WsudlWakeupHandler(pointer data, int i, pointer LastSelectMask)
 }
 
 static int
-wsudl_open(char *dev)
+wsudl_open(const char *dev)
 {
 	int fd = -1;
 

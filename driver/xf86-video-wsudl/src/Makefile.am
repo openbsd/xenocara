@@ -29,4 +29,5 @@ wsudl_drv_la_LDFLAGS = -module -avoid-version
 wsudl_drv_ladir = @moduledir@/drivers
 
 wsudl_drv_la_SOURCES = \
-         wsudl_driver.c
+	wsudl_driver.c \
+	compat_api.h
