@@ -23,7 +23,7 @@
 # Initialize Autoconf
 AC_PREREQ([2.60])
 AC_INIT([xf86-video-wsudl],
-        [0.2.1],
+        [0.2.2],
         [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],
         [xf86-video-wsudl])
 AC_CONFIG_SRCDIR([Makefile.am])
