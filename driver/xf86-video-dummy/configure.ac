@@ -23,7 +23,7 @@
 # Initialize Autoconf
 AC_PREREQ([2.60])
 AC_INIT([xf86-video-dummy],
-        [0.3.5],
+        [0.3.6],
         [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],
         [xf86-video-dummy])
 AC_CONFIG_SRCDIR([Makefile.am])
@@ -61,7 +61,7 @@ XORG_DRIVER_CHECK_EXT(XV, videoproto)
 
 if test "x$DGA" = xyes; then
 	XORG_DRIVER_CHECK_EXT(XFreeXDGA, xf86dgaproto)
-	AC_DEFINE(XFreeXDGA, 1, [Support DGA extension])
+	AC_DEFINE(USE_DGA, 1, [Support DGA extension])
 fi
 AC_SUBST([DGA])
 AM_CONDITIONAL([DGA], [test "x$DGA" = xyes])

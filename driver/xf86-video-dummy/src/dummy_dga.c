@@ -33,7 +33,7 @@ DGAFunctionRec DUMMYDGAFuncs = {
 Bool
 DUMMYDGAInit(ScreenPtr pScreen)
 {   
-   ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+   ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
    DUMMYPtr pDUMMY = DUMMYPTR(pScrn);
    DGAModePtr modes = NULL, newmodes = NULL, currentMode;
    DisplayModePtr pMode, firstMode;
@@ -116,8 +116,8 @@ DUMMY_SetMode(
    if(!pMode) { /* restore the original mode */
  	if(pDUMMY->DGAactive) {	
 	    pScrn->currentMode = DUMMYSavedDGAModes[index];
-            DUMMYSwitchMode(index, pScrn->currentMode, 0);
-	    DUMMYAdjustFrame(index, 0, 0, 0);
+            DUMMYSwitchMode(SWITCH_MODE_ARGS(pScrn, pScrn->currentMode));
+	    DUMMYAdjustFrame(ADJUST_FRAME_ARGS(pScrn, 0, 0));
  	    pDUMMY->DGAactive = FALSE;
 	}
    } else {
@@ -126,7 +126,7 @@ DUMMY_SetMode(
 	    pDUMMY->DGAactive = TRUE;
 	}
 
-        DUMMYSwitchMode(index, pMode->mode, 0);
+        DUMMYSwitchMode(SWITCH_MODE_ARGS(pScrn, pMode->mode));
    }
    
    return TRUE;
@@ -149,7 +149,7 @@ DUMMY_SetViewport(
 ){
    DUMMYPtr pDUMMY = DUMMYPTR(pScrn);
 
-   DUMMYAdjustFrame(pScrn->pScreen->myNum, x, y, flags);
+   DUMMYAdjustFrame(ADJUST_FRAME_ARGS(pScrn, x, y));
    pDUMMY->DGAViewportStatus = 0;  
 }
 

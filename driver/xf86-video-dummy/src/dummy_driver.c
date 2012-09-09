@@ -32,8 +32,10 @@
 
 #include "picturestr.h"
 
+#ifdef XvExtension
 #include "xf86xv.h"
 #include <X11/extensions/Xv.h>
+#endif
 
 /*
  * Driver data structures.
@@ -45,7 +47,7 @@
 #include <X11/Xproto.h>
 #include "scrnintstr.h"
 #include "servermd.h"
-#ifdef XFreeXDGA
+#ifdef USE_DGA
 #define _XF86DGA_SERVER_
 #include <X11/extensions/xf86dgaproto.h>
 #endif
@@ -55,14 +57,13 @@ static const OptionInfoRec *	DUMMYAvailableOptions(int chipid, int busid);
 static void     DUMMYIdentify(int flags);
 static Bool     DUMMYProbe(DriverPtr drv, int flags);
 static Bool     DUMMYPreInit(ScrnInfoPtr pScrn, int flags);
-static Bool     DUMMYScreenInit(int Index, ScreenPtr pScreen, int argc,
-                                  char **argv);
-static Bool     DUMMYEnterVT(int scrnIndex, int flags);
-static void     DUMMYLeaveVT(int scrnIndex, int flags);
-static Bool     DUMMYCloseScreen(int scrnIndex, ScreenPtr pScreen);
+static Bool     DUMMYScreenInit(SCREEN_INIT_ARGS_DECL);
+static Bool     DUMMYEnterVT(VT_FUNC_ARGS_DECL);
+static void     DUMMYLeaveVT(VT_FUNC_ARGS_DECL);
+static Bool     DUMMYCloseScreen(CLOSE_SCREEN_ARGS_DECL);
 static Bool     DUMMYCreateWindow(WindowPtr pWin);
-static void     DUMMYFreeScreen(int scrnIndex, int flags);
-static ModeStatus DUMMYValidMode(int scrnIndex, DisplayModePtr mode,
+static void     DUMMYFreeScreen(FREE_SCREEN_ARGS_DECL);
+static ModeStatus DUMMYValidMode(SCRN_ARG_TYPE arg, DisplayModePtr mode,
                                  Bool verbose, int flags);
 static Bool	DUMMYSaveScreen(ScreenPtr pScreen, int mode);
 
@@ -461,24 +462,24 @@ DUMMYPreInit(ScrnInfoPtr pScrn, int flags)
 
 /* Mandatory */
 static Bool
-DUMMYEnterVT(int scrnIndex, int flags)
+DUMMYEnterVT(VT_FUNC_ARGS_DECL)
 {
-    ScrnInfoPtr pScrn = xf86Screens[scrnIndex];
+    SCRN_INFO_PTR(arg);
     
     /* Should we re-save the text mode on each VT enter? */
     if(!dummyModeInit(pScrn, pScrn->currentMode))
       return FALSE;
 
-    DUMMYAdjustFrame(pScrn->scrnIndex, pScrn->frameX0, pScrn->frameY0, 0);    
+    DUMMYAdjustFrame(ADJUST_FRAME_ARGS(pScrn, pScrn->frameX0, pScrn->frameY0));
 
     return TRUE;
 }
 
 /* Mandatory */
 static void
-DUMMYLeaveVT(int scrnIndex, int flags)
+DUMMYLeaveVT(VT_FUNC_ARGS_DECL)
 {
-    ScrnInfoPtr pScrn = xf86Screens[scrnIndex];
+    SCRN_INFO_PTR(arg);
     dummyRestore(pScrn, TRUE);
 }
 
@@ -519,7 +520,7 @@ static ScrnInfoPtr DUMMYScrn; /* static-globalize it */
 
 /* Mandatory */
 static Bool
-DUMMYScreenInit(int scrnIndex, ScreenPtr pScreen, int argc, char **argv)
+DUMMYScreenInit(SCREEN_INIT_ARGS_DECL)
 {
     ScrnInfoPtr pScrn;
     DUMMYPtr dPtr;
@@ -530,7 +531,7 @@ DUMMYScreenInit(int scrnIndex, ScreenPtr pScreen, int argc, char **argv)
      * we need to get the ScrnInfoRec for this screen, so let's allocate
      * one first thing
      */
-    pScrn = xf86Screens[pScreen->myNum];
+    pScrn = xf86ScreenToScrn(pScreen);
     dPtr = DUMMYPTR(pScrn);
     DUMMYScrn = pScrn;
 
@@ -545,7 +546,7 @@ DUMMYScreenInit(int scrnIndex, ScreenPtr pScreen, int argc, char **argv)
     
     if (!dummyModeInit(pScrn,pScrn->currentMode))
 	return FALSE;
-    DUMMYAdjustFrame(scrnIndex, pScrn->frameX0, pScrn->frameY0, 0);
+    DUMMYAdjustFrame(ADJUST_FRAME_ARGS(pScrn, pScrn->frameX0, pScrn->frameY0));
 
     /*
      * Reset visual list.
@@ -592,12 +593,12 @@ DUMMYScreenInit(int scrnIndex, ScreenPtr pScreen, int argc, char **argv)
 
     xf86SetBlackWhitePixels(pScreen);
 
-#ifdef XFreeXDGA
+#ifdef USE_DGA
     DUMMYDGAInit(pScreen);
 #endif
     
     if (dPtr->swCursor)
-	xf86DrvMsg(scrnIndex, X_CONFIG, "Using Software Cursor.\n");
+	xf86DrvMsg(pScrn->scrnIndex, X_CONFIG, "Using Software Cursor.\n");
 
     {
 
@@ -627,7 +628,7 @@ DUMMYScreenInit(int scrnIndex, ScreenPtr pScreen, int argc, char **argv)
     if (!dPtr->swCursor) {
       /* HW cursor functions */
       if (!DUMMYCursorInit(pScreen)) {
-	  xf86DrvMsg(scrnIndex, X_ERROR,
+	  xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
 		     "Hardware cursor initialization failed\n");
 	  return FALSE;
       }
@@ -666,19 +667,18 @@ DUMMYScreenInit(int scrnIndex, ScreenPtr pScreen, int argc, char **argv)
 
 /* Mandatory */
 Bool
-DUMMYSwitchMode(int scrnIndex, DisplayModePtr mode, int flags)
+DUMMYSwitchMode(SWITCH_MODE_ARGS_DECL)
 {
-    return dummyModeInit(xf86Screens[scrnIndex], mode);
+    SCRN_INFO_PTR(arg);
+    return dummyModeInit(pScrn, mode);
 }
 
 /* Mandatory */
 void
-DUMMYAdjustFrame(int scrnIndex, int x, int y, int flags)
+DUMMYAdjustFrame(ADJUST_FRAME_ARGS_DECL)
 {
-    ScrnInfoPtr pScrn;
+    SCRN_INFO_PTR(arg);
     int Base; 
-
-    pScrn = xf86Screens[scrnIndex];
 
     Base = (y * pScrn->displayWidth + x) >> 2;
 
@@ -700,9 +700,9 @@ DUMMYAdjustFrame(int scrnIndex, int x, int y, int flags)
 
 /* Mandatory */
 static Bool
-DUMMYCloseScreen(int scrnIndex, ScreenPtr pScreen)
+DUMMYCloseScreen(CLOSE_SCREEN_ARGS_DECL)
 {
-    ScrnInfoPtr pScrn = xf86Screens[scrnIndex];
+    ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
     DUMMYPtr dPtr = DUMMYPTR(pScrn);
 
     if(pScrn->vtSema){
@@ -715,14 +715,15 @@ DUMMYCloseScreen(int scrnIndex, ScreenPtr pScreen)
 
     pScrn->vtSema = FALSE;
     pScreen->CloseScreen = dPtr->CloseScreen;
-    return (*pScreen->CloseScreen)(scrnIndex, pScreen);
+    return (*pScreen->CloseScreen)(CLOSE_SCREEN_ARGS);
 }
 
 /* Optional */
 static void
-DUMMYFreeScreen(int scrnIndex, int flags)
+DUMMYFreeScreen(FREE_SCREEN_ARGS_DECL)
 {
-    DUMMYFreeRec(xf86Screens[scrnIndex]);
+    SCRN_INFO_PTR(arg);
+    DUMMYFreeRec(pScrn);
 }
 
 static Bool
@@ -732,7 +733,7 @@ DUMMYSaveScreen(ScreenPtr pScreen, int mode)
     DUMMYPtr dPtr;
 
     if (pScreen != NULL) {
-	pScrn = xf86Screens[pScreen->myNum];
+	pScrn = xf86ScreenToScrn(pScreen);
 	dPtr = DUMMYPTR(pScrn);
 
 	dPtr->screenSaver = xf86IsUnblank(mode);
@@ -742,7 +743,7 @@ DUMMYSaveScreen(ScreenPtr pScreen, int mode)
 
 /* Optional */
 static ModeStatus
-DUMMYValidMode(int scrnIndex, DisplayModePtr mode, Bool verbose, int flags)
+DUMMYValidMode(SCRN_ARG_TYPE arg, DisplayModePtr mode, Bool verbose, int flags)
 {
     return(MODE_OK);
 }

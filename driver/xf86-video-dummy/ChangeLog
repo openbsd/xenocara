@@ -1,3 +1,72 @@
+commit fee6b520a620eed80e22840b8149abc50815f771
+Author: Dave Airlie <airlied@gmail.com>
+Date:   Wed Jul 18 19:39:32 2012 +1000
+
+    dummy: bump to 0.3.6 for release
+    
+    Signed-off-by: Dave Airlie <airlied@redhat.com>
+
+commit 1491470ee0745bf8303fa085bd30f7464098f1f2
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Tue Jun 5 11:14:37 2012 +0100
+
+    dummy: convert to the new server APIs.
+    
+    Signed-off-by: Dave Airlie <airlied@redhat.com>
+
+commit 6ff612955a1a8591bf21f6aa56e7b6ebd8e2db48
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Wed May 23 11:37:01 2012 +0100
+
+    dummy: convert to new scrn conversion APIs.
+    
+    Generated from util/modular/x-driver-screen-scrn-conv.sh
+    
+    Signed-off-by: Dave Airlie <airlied@redhat.com>
+
+commit 20fcd59d3f8d7393586d8b64bfac18adede726ca
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Wed May 23 11:36:22 2012 +0100
+
+    dummy: add scrn conversion api compat header.
+    
+    Signed-off-by: Dave Airlie <airlied@redhat.com>
+
+commit a78d524cfb332909dba89df5d709081515f0ed36
+Author: Yaakov Selkowitz <yselkowitz@users.sourceforge.net>
+Date:   Wed Mar 28 00:07:28 2012 -0500
+
+    Add XORG_LIBS to LIBADD
+    
+    This affects only Cygwin, where drivers must be linked against the
+    Xorg implib.  On other systems, XORG_LIBS will be empty.
+    
+    Signed-off-by: Yaakov Selkowitz <yselkowitz@users.sourceforge.net>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit 668223a665af38600b8b20152c7e53e731c76234
+Author: Yaakov Selkowitz <yselkowitz@users.sourceforge.net>
+Date:   Wed Mar 28 00:06:32 2012 -0500
+
+    Only include Xv headers if server supports it
+    
+    Signed-off-by: Yaakov Selkowitz <yselkowitz@users.sourceforge.net>
+    Reviewed-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit 02918fd53434a23a72fe878a90f4ec48ef0e0416
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Mon Jan 9 01:00:40 2012 -0800
+
+    Don't use XFreeXDGA to determine DGA support
+    
+    If our server supports DGA and we want to build the dummy driver without it,
+    XFreeXDGA will be defined by the server and will be picked up rather than
+    our configuration option.  This change forces us to honor our configuration
+    hoice.
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+
 commit bccf37f052748386902112b770b89d81bddfaeb8
 Author: Cyril Brulebois <kibi@debian.org>
 Date:   Sun Jan 1 07:15:36 2012 +0100

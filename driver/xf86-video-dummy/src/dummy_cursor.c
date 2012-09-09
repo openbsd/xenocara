@@ -62,7 +62,7 @@ dummyLoadCursorImage(ScrnInfoPtr pScrn, unsigned char *src)
 static Bool
 dummyUseHWCursor(ScreenPtr pScr, CursorPtr pCurs)
 {
-    DUMMYPtr dPtr = DUMMYPTR(xf86Screens[pScr->myNum]);
+    DUMMYPtr dPtr = DUMMYPTR(xf86ScreenToScrn(pScr));
     return(!dPtr->swCursor);
 }
 
@@ -77,7 +77,7 @@ dummyRealizeCursor(xf86CursorInfoPtr infoPtr, CursorPtr pCurs)
 Bool
 DUMMYCursorInit(ScreenPtr pScreen)
 {
-    DUMMYPtr dPtr = DUMMYPTR(xf86Screens[pScreen->myNum]);
+    DUMMYPtr dPtr = DUMMYPTR(xf86ScreenToScrn(pScreen));
 
     xf86CursorInfoPtr infoPtr;
     infoPtr = xf86CreateCursorInfoRec();
