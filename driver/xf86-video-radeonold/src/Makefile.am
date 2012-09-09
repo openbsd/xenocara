@@ -106,6 +106,7 @@ EXTRA_DIST = \
 	r600_reg_r7xx.h \
 	r600_shader.h \
 	r600_state.h \
+	compat-api.h \
 	bicubic_table.h \
 	generic_bus.h \
 	radeon_commonfuncs.c \
