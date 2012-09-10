@@ -214,7 +214,6 @@ AddToMenu Quit-Verify
 +			"Start flwm"	    Restart flwm
 +		      	"Start mwm"    	    Restart mwm
 +			"Start openbox"	    Restart openbox
-+	      	      	"Start scrotwm"     Restart scrotwm
 +		        "Start tvtwm"       Restart tvtwm
 +		      	""		    Nop
 +		      	"Start dummy%mini.xterm.xpm%"       Restart xterm
