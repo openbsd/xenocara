@@ -191,7 +191,7 @@ SECOND_PASS:
 Bool
 VIADGAInit(ScreenPtr pScreen)
 {
-    ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+    ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
     VIAPtr pVia = VIAPTR(pScrn);
     DGAModePtr modes = NULL;
     int num = 0;
@@ -246,7 +246,7 @@ VIADGASetMode(ScrnInfoPtr pScrn, DGAModePtr pMode)
         pScrn->bitsPerPixel = pVia->DGAOldBitsPerPixel;
         pScrn->depth = pVia->DGAOldDepth;
 
-        pScrn->SwitchMode(index, pScrn->currentMode, 0);
+        pScrn->SwitchMode(SWITCH_MODE_ARGS(pScrn, pScrn->currentMode));
         if (pVia->hwcursor)
             viaShowCursor(pScrn);
 
@@ -276,7 +276,7 @@ VIADGASetMode(ScrnInfoPtr pScrn, DGAModePtr pMode)
         pScrn->displayWidth = pMode->bytesPerScanline /
                               (pMode->bitsPerPixel >> 3);
 
-        pScrn->SwitchMode(index, pMode->mode, 0);
+        pScrn->SwitchMode(SWITCH_MODE_ARGS(pScrn, pMode->mode));
     }
 
     return TRUE;
@@ -296,7 +296,7 @@ VIADGASetViewport(ScrnInfoPtr pScrn, int x, int y, int flags)
 {
     VIAPtr pVia = VIAPTR(pScrn);
 
-    pScrn->AdjustFrame(pScrn->pScreen->myNum, x, y, flags);
+    pScrn->AdjustFrame(ADJUST_FRAME_ARGS(pScrn, x, y));
     pVia->DGAViewportStatus = 0;  /* MGAAdjustFrame loops until finished */
 }
 

@@ -63,6 +63,7 @@
 #include "vbe.h"
 #include "xaa.h"
 
+#include "compat-api.h"
 #include "via_regs.h"
 #include "via_bios.h"
 #include "via_priv.h"

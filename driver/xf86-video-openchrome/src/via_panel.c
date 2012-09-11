@@ -418,7 +418,7 @@ ViaPanelGetSizeFromDDCv1(ScrnInfoPtr pScrn, int *width, int *height)
     if (!xf86I2CProbeAddress(pVia->pI2CBus2, 0xA0))
         return FALSE;
 
-    pMon = xf86DoEEDID(pScrn->scrnIndex, pVia->pI2CBus2, TRUE);
+    pMon = xf86DoEEDID(XF86_SCRN_ARG(pScrn), pVia->pI2CBus2, TRUE);
     if (!pMon)
         return FALSE;
 

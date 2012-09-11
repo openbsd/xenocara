@@ -274,7 +274,7 @@ VIADRIAgpInit(ScreenPtr pScreen, VIAPtr pVia)
         return FALSE;
     }
 
-    if (!VIASetAgpMode(xf86Screens[pScreen->myNum])) {
+    if (!VIASetAgpMode(xf86ScreenToScrn(pScreen))) {
         xf86DrvMsg(pScreen->myNum, X_ERROR, "[drm] VIASetAgpMode failed\n");
         drmAgpRelease(pVia->drmFD);
         return FALSE;
@@ -362,7 +362,7 @@ VIADRIAgpInit(ScreenPtr pScreen, VIAPtr pVia)
 static Bool
 VIADRIFBInit(ScreenPtr pScreen, VIAPtr pVia)
 {
-    ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+    ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
     int FBSize = pVia->driSize;
     int FBOffset;
     VIADRIPtr pVIADRI = pVia->pDRIInfo->devPrivate;
@@ -421,7 +421,7 @@ VIADRIPciInit(ScreenPtr pScreen, VIAPtr pVia)
 static Bool
 VIAInitVisualConfigs(ScreenPtr pScreen)
 {
-    ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+    ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
     VIAPtr pVia = VIAPTR(pScrn);
     int numConfigs = 0;
     __GLXvisualConfig *pConfigs = 0;
@@ -546,7 +546,7 @@ VIAInitVisualConfigs(ScreenPtr pScreen)
 Bool
 VIADRIScreenInit(ScreenPtr pScreen)
 {
-    ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+    ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
     VIAPtr pVia = VIAPTR(pScrn);
     DRIInfoPtr pDRIInfo;
     VIADRIPtr pVIADRI;
@@ -733,7 +733,7 @@ VIADRIScreenInit(ScreenPtr pScreen)
 void
 VIADRICloseScreen(ScreenPtr pScreen)
 {
-    ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+    ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
     VIAPtr pVia = VIAPTR(pScrn);
     VIADRIPtr pVIADRI;
 
@@ -791,7 +791,7 @@ VIADestroyContext(ScreenPtr pScreen, drm_context_t hwContext,
 Bool
 VIADRIFinishScreenInit(ScreenPtr pScreen)
 {
-    ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+    ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
     VIAPtr pVia = VIAPTR(pScrn);
     VIADRIPtr pVIADRI;
 
@@ -857,7 +857,7 @@ VIADRISwapContext(ScreenPtr pScreen, DRISyncType syncType,
                   DRIContextType newContextType, void *newContext)
 {
 #if 0
-    ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+    ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
     VIAPtr pVia = VIAPTR(pScrn);
 #endif
     return;
@@ -868,7 +868,7 @@ VIADRIInitBuffers(WindowPtr pWin, RegionPtr prgn, CARD32 index)
 {
 #if 0
     ScreenPtr pScreen = pWin->drawable.pScreen;
-    ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+    ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
     VIAPtr pVia = VIAPTR(pScrn);
 #endif
     return;
@@ -880,7 +880,7 @@ VIADRIMoveBuffers(WindowPtr pParent, DDXPointRec ptOldOrg,
 {
 #if 0
     ScreenPtr pScreen = pParent->drawable.pScreen;
-    ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+    ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
     VIAPtr pVia = VIAPTR(pScrn);
 #endif
     return;

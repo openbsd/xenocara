@@ -58,7 +58,7 @@ static CARD32 mono_cursor_color[] = {
 Bool
 viaHWCursorInit(ScreenPtr pScreen)
 {
-    ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+    ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
     VIAPtr pVia = VIAPTR(pScrn);
     xf86CursorInfoPtr infoPtr;
 
@@ -422,7 +422,7 @@ viaSetCursorPosition(ScrnInfoPtr pScrn, int x, int y)
 static Bool
 viaUseHWCursorARGB(ScreenPtr pScreen, CursorPtr pCurs)
 {
-    ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+    ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
     VIAPtr pVia = VIAPTR(pScrn);
 
     return (pVia->hwcursor
@@ -443,7 +443,7 @@ viaUseHWCursorARGB(ScreenPtr pScreen, CursorPtr pCurs)
 static Bool
 viaUseHWCursor(ScreenPtr pScreen, CursorPtr pCurs)
 {
-    ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+    ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
     VIAPtr pVia = VIAPTR(pScrn);
 
     return (pVia->hwcursor

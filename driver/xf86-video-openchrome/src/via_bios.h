@@ -230,7 +230,7 @@ void ViaOutputsDetect(ScrnInfoPtr pScrn);
 Bool ViaOutputsSelect(ScrnInfoPtr pScrn);
 void ViaModesAttach(ScrnInfoPtr pScrn, MonPtr monitorp);
 CARD32 ViaGetMemoryBandwidth(ScrnInfoPtr pScrn);
-ModeStatus ViaValidMode(int scrnIndex, DisplayModePtr mode, Bool verbose, int flags);
+ModeStatus ViaValidMode(SCRN_ARG_TYPE arg, DisplayModePtr mode, Bool verbose, int flags);
 void ViaModePrimaryLegacy(ScrnInfoPtr pScrn, DisplayModePtr mode);
 void ViaModeSecondaryLegacy(ScrnInfoPtr pScrn, DisplayModePtr mode);
 void ViaLCDPower(ScrnInfoPtr pScrn, Bool On);

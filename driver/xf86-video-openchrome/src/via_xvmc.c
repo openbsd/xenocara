@@ -316,7 +316,7 @@ mpegDisable(VIAPtr pVia, CARD32 val)
 void
 ViaInitXVMC(ScreenPtr pScreen)
 {
-    ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+    ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
     VIAPtr pVia = VIAPTR(pScrn);
     ViaXvMCPtr vXvMC = &(pVia->xvmc);
     volatile ViaXvMCSAreaPriv *saPriv;

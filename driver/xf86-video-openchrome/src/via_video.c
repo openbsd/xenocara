@@ -637,7 +637,7 @@ viaExitVideo(ScrnInfoPtr pScrn)
 void
 viaInitVideo(ScreenPtr pScreen)
 {
-    ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+    ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
     VIAPtr pVia = VIAPTR(pScrn);
     XF86VideoAdaptorPtr *adaptors, *newAdaptors;
     int num_adaptors, num_new;
@@ -721,7 +721,7 @@ viaInitVideo(ScreenPtr pScreen)
 static unsigned
 viaSetupAdaptors(ScreenPtr pScreen, XF86VideoAdaptorPtr ** adaptors)
 {
-    ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+    ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
     viaPortPrivRec *viaPortPriv;
     DevUnion *pdevUnion;
     int i, j, usedPorts, numPorts;

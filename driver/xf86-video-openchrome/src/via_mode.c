@@ -308,7 +308,7 @@ ViaDFPDetect(ScrnInfoPtr pScrn)
     xf86MonPtr          monPtr = NULL;
 
     if (pVia->pI2CBus2)
-        monPtr = xf86DoEEDID(pScrn->scrnIndex, pVia->pI2CBus2, TRUE);
+        monPtr = xf86DoEEDID(XF86_SCRN_ARG(pScrn), pVia->pI2CBus2, TRUE);
     
     if (monPtr) {
         xf86PrintEDID(monPtr);
@@ -881,9 +881,9 @@ ViaModeDotClockTranslate(ScrnInfoPtr pScrn, DisplayModePtr mode);
  *
  */
 ModeStatus
-ViaValidMode(int scrnIndex, DisplayModePtr mode, Bool verbose, int flags)
+ViaValidMode(SCRN_ARG_TYPE arg, DisplayModePtr mode, Bool verbose, int flags)
 {
-    ScrnInfoPtr pScrn = xf86Screens[scrnIndex];
+    SCRN_INFO_PTR(arg);
     VIAPtr pVia = VIAPTR(pScrn);
     VIABIOSInfoPtr pBIOSInfo = pVia->pBIOSInfo;
     ModeStatus ret;
@@ -892,7 +892,7 @@ ViaValidMode(int scrnIndex, DisplayModePtr mode, Bool verbose, int flags)
     if (pVia->pVbe)
         return MODE_OK;
 
-    DEBUG(xf86DrvMsg(scrnIndex, X_INFO, "ViaValidMode: Validating %s (Clock: %d)\n",
+    DEBUG(xf86DrvMsg(pScrn->scrnIndex, X_INFO, "ViaValidMode: Validating %s (Clock: %d)\n",
                      mode->name, mode->Clock));
 
     if (mode->Flags & V_INTERLACE)
@@ -952,7 +952,7 @@ ViaValidMode(int scrnIndex, DisplayModePtr mode, Bool verbose, int flags)
     temp = mode->CrtcHDisplay * mode->CrtcVDisplay * mode->VRefresh
             * (pScrn->bitsPerPixel >> 3);
     if (pBIOSInfo->Bandwidth < temp) {
-        xf86DrvMsg(scrnIndex, X_INFO,
+        xf86DrvMsg(pScrn->scrnIndex, X_INFO,
                    "Required bandwidth is not available. (%u > %u)\n",
                    (unsigned)temp, (unsigned)pBIOSInfo->Bandwidth);
         return MODE_CLOCK_HIGH; /* since there is no MODE_BANDWIDTH */

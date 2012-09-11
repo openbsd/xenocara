@@ -1221,7 +1221,7 @@ viaSubsequentDashedTwoPointLine(ScrnInfoPtr pScrn, int x1, int y1, int x2,
 static int
 viaInitXAA(ScreenPtr pScreen)
 {
-    ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+    ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
     VIAPtr pVia = VIAPTR(pScrn);
     XAAInfoRecPtr xaaptr;
 
@@ -1358,7 +1358,7 @@ viaInitXAA(ScreenPtr pScreen)
 int
 viaAccelMarkSync(ScreenPtr pScreen)
 {
-    ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+    ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
     VIAPtr pVia = VIAPTR(pScrn);
 
     RING_VARS;
@@ -1385,7 +1385,7 @@ viaAccelMarkSync(ScreenPtr pScreen)
 void
 viaAccelWaitMarker(ScreenPtr pScreen, int marker)
 {
-    ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+    ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
     VIAPtr pVia = VIAPTR(pScrn);
     CARD32 uMarker = marker;
 
@@ -1441,7 +1441,7 @@ viaOrder(CARD32 val, CARD32 * shift)
 static Bool
 viaExaPrepareSolid(PixmapPtr pPixmap, int alu, Pixel planeMask, Pixel fg)
 {
-    ScrnInfoPtr pScrn = xf86Screens[pPixmap->drawable.pScreen->myNum];
+    ScrnInfoPtr pScrn = xf86ScreenToScrn(pPixmap->drawable.pScreen);
     VIAPtr pVia = VIAPTR(pScrn);
     ViaTwodContext *tdc = &pVia->td;
 
@@ -1467,7 +1467,7 @@ viaExaPrepareSolid(PixmapPtr pPixmap, int alu, Pixel planeMask, Pixel fg)
 static void
 viaExaSolid(PixmapPtr pPixmap, int x1, int y1, int x2, int y2)
 {
-    ScrnInfoPtr pScrn = xf86Screens[pPixmap->drawable.pScreen->myNum];
+    ScrnInfoPtr pScrn = xf86ScreenToScrn(pPixmap->drawable.pScreen);
     VIAPtr pVia = VIAPTR(pScrn);
     ViaTwodContext *tdc = &pVia->td;
     CARD32 dstPitch, dstOffset;
@@ -1493,7 +1493,7 @@ static Bool
 viaExaPrepareCopy(PixmapPtr pSrcPixmap, PixmapPtr pDstPixmap, int xdir,
                   int ydir, int alu, Pixel planeMask)
 {
-    ScrnInfoPtr pScrn = xf86Screens[pDstPixmap->drawable.pScreen->myNum];
+    ScrnInfoPtr pScrn = xf86ScreenToScrn(pDstPixmap->drawable.pScreen);
     VIAPtr pVia = VIAPTR(pScrn);
     ViaTwodContext *tdc = &pVia->td;
 
@@ -1530,7 +1530,7 @@ static void
 viaExaCopy(PixmapPtr pDstPixmap, int srcX, int srcY, int dstX, int dstY,
            int width, int height)
 {
-    ScrnInfoPtr pScrn = xf86Screens[pDstPixmap->drawable.pScreen->myNum];
+    ScrnInfoPtr pScrn = xf86ScreenToScrn(pDstPixmap->drawable.pScreen);
     VIAPtr pVia = VIAPTR(pScrn);
     ViaTwodContext *tdc = &pVia->td;
     CARD32 srcOffset = tdc->srcOffset;
@@ -1803,7 +1803,7 @@ static Bool
 viaExaDownloadFromScreen(PixmapPtr pSrc, int x, int y, int w, int h,
                          char *dst, int dst_pitch)
 {
-    ScrnInfoPtr pScrn = xf86Screens[pSrc->drawable.pScreen->myNum];
+    ScrnInfoPtr pScrn = xf86ScreenToScrn(pSrc->drawable.pScreen);
     VIAPtr pVia = VIAPTR(pScrn);
     unsigned srcPitch = exaGetPixmapPitch(pSrc);
     unsigned wBytes = (pSrc->drawable.bitsPerPixel * w + 7) >> 3;
@@ -1856,7 +1856,7 @@ static Bool
 viaExaTexUploadToScreen(PixmapPtr pDst, int x, int y, int w, int h, char *src,
                         int src_pitch)
 {
-    ScrnInfoPtr pScrn = xf86Screens[pDst->drawable.pScreen->myNum];
+    ScrnInfoPtr pScrn = xf86ScreenToScrn(pDst->drawable.pScreen);
     VIAPtr pVia = VIAPTR(pScrn);
     unsigned dstPitch = exaGetPixmapPitch(pDst);
     unsigned wBytes = (w * pDst->drawable.bitsPerPixel + 7) >> 3;
@@ -1977,7 +1977,7 @@ static Bool
 viaExaUploadToScreen(PixmapPtr pDst, int x, int y, int w, int h, char *src,
                      int src_pitch)
 {
-    ScrnInfoPtr pScrn = xf86Screens[pDst->drawable.pScreen->myNum];
+    ScrnInfoPtr pScrn = xf86ScreenToScrn(pDst->drawable.pScreen);
     VIAPtr pVia = VIAPTR(pScrn);
     drm_via_dmablit_t blit;
     unsigned dstPitch = exaGetPixmapPitch(pDst);
@@ -2036,7 +2036,7 @@ viaExaUploadToScreen(PixmapPtr pDst, int x, int y, int w, int h, char *src,
 static Bool
 viaExaUploadToScratch(PixmapPtr pSrc, PixmapPtr pDst)
 {
-    ScrnInfoPtr pScrn = xf86Screens[pSrc->drawable.pScreen->myNum];
+    ScrnInfoPtr pScrn = xf86ScreenToScrn(pSrc->drawable.pScreen);
     VIAPtr pVia = VIAPTR(pScrn);
     char *src, *dst;
     unsigned w, wBytes, srcPitch, h;
@@ -2086,7 +2086,7 @@ static Bool
 viaExaCheckComposite(int op, PicturePtr pSrcPicture,
                      PicturePtr pMaskPicture, PicturePtr pDstPicture)
 {
-    ScrnInfoPtr pScrn = xf86Screens[pDstPicture->pDrawable->pScreen->myNum];
+    ScrnInfoPtr pScrn = xf86ScreenToScrn(pDstPicture->pDrawable->pScreen);
     VIAPtr pVia = VIAPTR(pScrn);
     Via3DState *v3d = &pVia->v3d;
 
@@ -2186,7 +2186,7 @@ viaExaPrepareComposite(int op, PicturePtr pSrcPicture,
                        PixmapPtr pSrc, PixmapPtr pMask, PixmapPtr pDst)
 {
     CARD32 height, width;
-    ScrnInfoPtr pScrn = xf86Screens[pDst->drawable.pScreen->myNum];
+    ScrnInfoPtr pScrn = xf86ScreenToScrn(pDst->drawable.pScreen);
     VIAPtr pVia = VIAPTR(pScrn);
     Via3DState *v3d = &pVia->v3d;
     int curTex = 0;
@@ -2294,7 +2294,7 @@ static void
 viaExaComposite(PixmapPtr pDst, int srcX, int srcY, int maskX, int maskY,
                 int dstX, int dstY, int width, int height)
 {
-    ScrnInfoPtr pScrn = xf86Screens[pDst->drawable.pScreen->myNum];
+    ScrnInfoPtr pScrn = xf86ScreenToScrn(pDst->drawable.pScreen);
     VIAPtr pVia = VIAPTR(pScrn);
     Via3DState *v3d = &pVia->v3d;
     CARD32 col;
@@ -2321,7 +2321,7 @@ viaExaComposite(PixmapPtr pDst, int srcX, int srcY, int maskX, int maskY,
 static ExaDriverPtr
 viaInitExa(ScreenPtr pScreen)
 {
-    ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+    ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
     VIAPtr pVia = VIAPTR(pScrn);
     ExaDriverPtr pExa = exaDriverAlloc();
 
@@ -2399,7 +2399,7 @@ viaInitExa(ScreenPtr pScreen)
 Bool
 viaInitAccel(ScreenPtr pScreen)
 {
-    ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+    ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
     VIAPtr pVia = VIAPTR(pScrn);
     BoxRec AvailFBArea;
     int maxY;
@@ -2558,7 +2558,7 @@ viaInitAccel(ScreenPtr pScreen)
 void
 viaExitAccel(ScreenPtr pScreen)
 {
-    ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+    ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
     VIAPtr pVia = VIAPTR(pScrn);
 
     viaAccelSync(pScrn);
@@ -2608,7 +2608,7 @@ viaExitAccel(ScreenPtr pScreen)
 void
 viaFinishInitAccel(ScreenPtr pScreen)
 {
-    ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+    ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
     VIAPtr pVia = VIAPTR(pScrn);
 
 #ifdef OPENCHROMEDRI
