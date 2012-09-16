@@ -580,7 +580,7 @@ ATIScreenInit(SCREEN_INIT_ARGS_DECL)
 #ifdef TV_OUT
     /* Fix-up TV out after ImpacTV probe */
     if (pATI->OptionTvOut && pATI->Chip < ATI_CHIP_264GTPRO)
-        ATISwitchMode(0, pScreenInfo->currentMode, 0);
+        ATISwitchMode(SWITCH_MODE_ARGS(pScreenInfo, pScreenInfo->currentMode));
 #endif /* TV_OUT */
 
 #ifdef XF86DRI_DEVEL
