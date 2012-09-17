@@ -576,8 +576,8 @@ i830_lvds_save (xf86OutputPtr output)
     I830OutputPrivatePtr    intel_output = output->driver_private;
     struct i830_lvds_priv   *dev_priv = intel_output->dev_priv;
     ScrnInfoPtr		    scrn = output->scrn;
-   intel_screen_private    *intel = intel_get_screen_private(scrn);
-   uint32_t pp_on_reg, pp_off_reg, pp_ctl_reg, pp_div_reg, pwm_ctl_reg;
+    intel_screen_private    *intel = intel_get_screen_private(scrn);
+    uint32_t pp_on_reg, pp_off_reg, pp_ctl_reg, pp_div_reg, pwm_ctl_reg;
 
     if (HAS_PCH_SPLIT(intel)) {
 	pp_on_reg = PCH_PP_ON_DELAYS;
@@ -600,15 +600,17 @@ i830_lvds_save (xf86OutputPtr output)
     intel->savePP_CONTROL = INREG(pp_ctl_reg);
     intel->savePP_DIVISOR = INREG(pp_div_reg);
     intel->saveBLC_PWM_CTL = INREG(pwm_ctl_reg);
-    if ((INREG(PP_CONTROL) & POWER_TARGET_ON) && !dev_priv->dpmsoff) 
+    if ((intel->savePP_CONTROL & POWER_TARGET_ON) && !dev_priv->dpmsoff)
 	dev_priv->backlight_duty_cycle = dev_priv->get_backlight(output);
 }
 
 static void
 i830_lvds_restore(xf86OutputPtr output)
 {
-    ScrnInfoPtr	scrn = output->scrn;
-    intel_screen_private *intel = intel_get_screen_private(scrn);
+    I830OutputPrivatePtr    intel_output = output->driver_private;
+    struct i830_lvds_priv   *dev_priv = intel_output->dev_priv;
+    ScrnInfoPtr		    scrn = output->scrn;
+    intel_screen_private    *intel = intel_get_screen_private(scrn);
     uint32_t pp_on_reg, pp_off_reg, pp_ctl_reg, pp_div_reg;
     uint32_t pwm_ctl_reg;
 
@@ -638,6 +640,7 @@ i830_lvds_restore(xf86OutputPtr output)
 	i830SetLVDSPanelPower(output, TRUE);
     else
 	i830SetLVDSPanelPower(output, FALSE);
+    dev_priv->dpmsoff = TRUE;
 }
 
 static int

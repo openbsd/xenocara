@@ -1552,29 +1552,29 @@ static Bool I830PreInit(ScrnInfoPtr scrn, int flags)
 	}
 
 	if (!intel->use_drm_mode) {
-   /* console hack, stolen from G80 */
-	   if (IS_GEN5(intel)) {
-	       if (xf86LoadSubModule(scrn, "int10")) {
-	       intel->int10 = xf86InitInt10(pEnt->index);
-	       if (intel->int10) {
-		       intel->int10->num = 0x10;
-		       intel->int10->ax = 0x4f03;
-		       intel->int10->bx =
-		       intel->int10->cx =
-		       intel->int10->dx = 0;
-		       xf86ExecX86int10(intel->int10);
-		       intel->int10Mode = intel->int10->bx & 0x3fff;
-		       xf86DrvMsg(scrn->scrnIndex, X_PROBED,
-			  "Console VGA mode is 0x%x\n", intel->int10Mode);
-		   } else {
-		       xf86DrvMsg(scrn->scrnIndex, X_WARNING,
-			      "Failed int10 setup, VT switch won't work\n");
-		   }
-	       } else {
-		   xf86DrvMsg(scrn->scrnIndex, X_WARNING,
-		       "Failed to load int10module, ironlake vt switch broken");
-	       }
-	       }
+		/* console restore hack */
+		if (HAS_PCH_SPLIT(intel)) {
+		    if (xf86LoadSubModule(scrn, "int10")) {
+			intel->int10 = xf86InitInt10(pEnt->index);
+			if (intel->int10) {
+			    intel->int10->num = 0x10;
+			    intel->int10->ax = 0x4f03;
+			    intel->int10->bx =
+			    intel->int10->cx =
+			    intel->int10->dx = 0;
+			    xf86ExecX86int10(intel->int10);
+			    intel->int10Mode = intel->int10->bx & 0x3fff;
+			    xf86DrvMsg(scrn->scrnIndex, X_PROBED,
+				"Console VGA mode is 0x%x\n", intel->int10Mode);
+			} else {
+			    xf86DrvMsg(scrn->scrnIndex, X_WARNING,
+				"Failed int10 setup, VT switch won't work\n");
+			}
+		    } else {
+			xf86DrvMsg(scrn->scrnIndex, X_WARNING,
+			    "Failed to load int10module, ironlake vt switch broken");
+		    }
+		}
 
 		I830UnmapMMIO(scrn);
 
@@ -1659,8 +1659,15 @@ static Bool SaveHWState(ScrnInfoPtr scrn)
 	vgaRegPtr vgaReg = &hwp->SavedReg;
 	int i;
 
-	if (HAS_PCH_SPLIT(intel))
+	if (HAS_PCH_SPLIT(intel)) {
+		for (i = 0; i < xf86_config->num_output; i++) {
+			xf86OutputPtr   output = xf86_config->output[i];
+			if (output->funcs->save)
+				(*output->funcs->save) (output);
+		}
+
 		return TRUE;
+	}
 
 	/* Save video mode information for native mode-setting. */
 	if (!DSPARB_HWCONTROL(intel))
@@ -1780,8 +1787,16 @@ static Bool RestoreHWState(ScrnInfoPtr scrn)
 	vgaRegPtr vgaReg = &hwp->SavedReg;
 	int i;
 
-	if (HAS_PCH_SPLIT(intel))
+	if (HAS_PCH_SPLIT(intel)) {
+		/* Restore outputs */
+		for (i = 0; i < xf86_config->num_output; i++) {
+			xf86OutputPtr   output = xf86_config->output[i];
+			if (output->funcs->restore)
+				output->funcs->restore(output);
+		}
+
 		return TRUE;
+	}
 
 	DPRINTF(PFX, "RestoreHWState\n");
 
@@ -2601,8 +2616,14 @@ static void I830LeaveVT(VT_FUNC_ARGS_DECL)
 		RestoreHWState(scrn);
 
 		/* console restore hack */
-		if (IS_GEN5(intel) && intel->int10 && intel->int10Mode) {
+		if (HAS_PCH_SPLIT(intel) && intel->int10 && intel->int10Mode) {
 		    xf86Int10InfoPtr int10 = intel->int10;
+
+		    /* Unlock the PP_CONTROL register, otherwise the
+		     * int10 call fails to turn the panel back on.
+		     */
+		    OUTREG(PCH_PP_CONTROL,
+		        INREG(PCH_PP_CONTROL) | (0xabcd << 16));
 
 		    /* Use int10 to restore the console mode */
 		    int10->num = 0x10;
@@ -2611,7 +2632,6 @@ static void I830LeaveVT(VT_FUNC_ARGS_DECL)
 		    int10->cx = int10->dx = 0;
 		    xf86ExecX86int10(int10);
 		}
-
 	}
 
 	i830_unbind_all_memory(scrn);
