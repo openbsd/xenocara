@@ -1,6 +1,6 @@
-# $OpenBSD: Makefile,v 1.3 2006/12/17 19:52:56 matthieu Exp $
+# $OpenBSD: Makefile,v 1.4 2012/09/23 08:10:21 matthieu Exp $
 
-SUBDIR= macros cf imake makedepend gccmakedep
+SUBDIR= macros makedepend gccmakedep
 
 .include <bsd.subdir.mk>
 
