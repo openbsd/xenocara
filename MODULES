@@ -1,4 +1,4 @@
-# $OpenBSD: MODULES,v 1.232 2012/09/17 11:32:08 matthieu Exp $
+# $OpenBSD: MODULES,v 1.233 2012/09/23 08:27:20 matthieu Exp $
 #
 # X.Org maintained modules
 #
@@ -246,8 +246,6 @@ proto/xineramaproto		1.2.1	7.7
 
 util/cf				1.0.4
 util/gccmakedep			1.0.2
-util/imake			1.0.5
-util/macros			1.17	7.7
 util/makedepend			1.0.4	7.7
 
 xserver				1.13.0	7.7+	needs-update
