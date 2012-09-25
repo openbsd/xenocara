@@ -22,8 +22,6 @@
 ./usr/X11R6/bin/beforelight
 ./usr/X11R6/bin/bitmap
 ./usr/X11R6/bin/bmtoa
-./usr/X11R6/bin/ccmakedep
-./usr/X11R6/bin/cleanlinks
 ./usr/X11R6/bin/cwm
 ./usr/X11R6/bin/cxpm
 ./usr/X11R6/bin/dga
@@ -43,17 +41,14 @@
 ./usr/X11R6/bin/fvwm
 ./usr/X11R6/bin/iceauth
 ./usr/X11R6/bin/ico
-./usr/X11R6/bin/imake
 ./usr/X11R6/bin/koi8rxterm
 ./usr/X11R6/bin/listres
 ./usr/X11R6/bin/luit
 ./usr/X11R6/bin/makedepend
 ./usr/X11R6/bin/mkfontdir
 ./usr/X11R6/bin/mkfontscale
-./usr/X11R6/bin/mkhtmlindex
 ./usr/X11R6/bin/oclock
 ./usr/X11R6/bin/resize
-./usr/X11R6/bin/revpath
 ./usr/X11R6/bin/sessreg
 ./usr/X11R6/bin/setxkbmap
 ./usr/X11R6/bin/showfont
