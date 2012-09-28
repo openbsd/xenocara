@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.7 2012/06/24 17:17:27 matthieu Exp $
+#	$OpenBSD: Makefile,v 1.8 2012/09/28 19:00:00 espie Exp $
 
 SUBDIR=		compat
 
@@ -44,7 +44,13 @@ BASE_PARTS=	base.hdr.part base.lists.part \
 
 BASE_RULES=		base base.lst base.xml base.extras.xml
 
-all:	depend ${BASE_RULES} _SUBDIRUSE
+all:	parts_done ${BASE_RULES} _SUBDIRUSE
+
+parts_done:
+	cd ${.CURDIR} && exec ${MAKE} depend
+	touch $@
+
+${BASE_PARTS}: parts_done
 
 depend:	_SUBDIRUSE
 
@@ -68,7 +74,7 @@ install-files:	${BASE_RULES}
 	done
 
 clean:	_SUBDIRUSE
-	rm -f ${BASE_RULES}
+	rm -f ${BASE_RULES} parts_done
 
 .include <bsd.xorg.mk>
 .include <bsd.subdir.mk>
