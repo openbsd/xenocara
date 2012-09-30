@@ -440,6 +440,36 @@ The name of this extension is "DRI2".
 	DRI2SwapBuffers requests to swap at most once per interval frames,
 	which is useful useful for limiting the frame rate.
 
+┌───
+    DRI2GetParam
+	drawable: DRAWABLE
+	param: CARD32
+      ▶
+	is_param_recognized: BOOL
+	value: CARD64
+└───
+	Errors: Drawable
+
+	Get the value of a parameter.  The parameter's value is looked up on
+	the screen associated with 'drawable'.
+
+	Parameter names in which the value of the most significant byte is
+	0 are reserved for the X server. Currently, no such parameter names
+	are defined. (When any such names are defined, they will be defined in
+	this extension specification and its associated headers).
+
+	Parameter names in which the byte's value is 1 are reserved for the
+	DDX. Such names are private to each driver and shall be defined in the
+	respective driver's headers.
+
+	Parameter names in which the byte's value is neither 0 nor 1 are
+	reserved for future use.
+
+	Possible values of 'is_param_recognized' are true (1) and false (0).
+	If false, then 'value' is undefined.
+
+	This request is only available with protocol version 1.4 or later.
+
 			     ⚙ ⚙ ⚙  ⚙ ⚙ ⚙
 
 9. Extension Events
@@ -511,6 +541,8 @@ The DRI2 extension has undergone a number of revisions before
 	2.3: Added the DRI2InvalidateBuffers event.
 
 	2.6: Enlightenment attained.  Added the DRI2BufferHiz attachment.
+
+	2.7: Added the DRI2GetParam request.
 
 Compatibility up to 2.0 is not preserved, but was also never released.
 
@@ -658,7 +690,7 @@ A.2 Protocol Requests
 ┌───
     DRI2GetBuffers
 	1	CARD8			major opcode
-	1	3			DRI2 opcode
+	1	5			DRI2 opcode
 	2	3			length
 	4	DRAWABLE		drawable
 	4	n			number of attachments
@@ -678,7 +710,7 @@ A.2 Protocol Requests
 ┌───
     DRI2CopyRegion
 	1	CARD8			major opcode
-	1	4			DRI2 opcode
+	1	6			DRI2 opcode
 	2	3			length
 	4	DRAWABLE		drawable
 	4	REGION			region
@@ -695,7 +727,7 @@ A.2 Protocol Requests
 ┌───
     DRI2GetBuffersWithFormat
 	1	CARD8			major opcode
-	1	3			DRI2 opcode
+	1	7			DRI2 opcode
 	2	3			length
 	4	DRAWABLE		drawable
 	4	n			number of attachments
@@ -715,7 +747,7 @@ A.2 Protocol Requests
 ┌───
     DRI2SwapBuffers
 	1	CARD8			major opcode
-	1	7			DRI2 opcode
+	1	8			DRI2 opcode
 	2	8			length
 	4	DRAWABLE		drawable
       ▶	
@@ -736,7 +768,7 @@ A.2 Protocol Requests
 ┌───
     DRI2SwapBuffers
 	1	CARD8			major opcode
-	1	7			DRI2 opcode
+	1	8			DRI2 opcode
 	2	8			length
 	4	DRAWABLE		drawable
 	4	CARD32			target_msc_hi
@@ -758,7 +790,7 @@ A.2 Protocol Requests
 ┌───
     DRI2GetMSC
 	1	CARD8			major opcode
-	1	7			DRI2 opcode
+	1	9			DRI2 opcode
 	2	8			length
 	4	DRAWABLE		drawable
       ▶
@@ -777,7 +809,7 @@ A.2 Protocol Requests
 ┌───
     DRI2WaitMSC
 	1	CARD8			major opcode
-	1	7			DRI2 opcode
+	1	10			DRI2 opcode
 	2	8			length
 	4	DRAWABLE		drawable
 	4	CARD32			target_msc_hi
@@ -802,7 +834,7 @@ A.2 Protocol Requests
 ┌───
     DRI2WaitSBC
 	1	CARD8			major opcode
-	1	7			DRI2 opcode
+	1	11			DRI2 opcode
 	2	8			length
 	4	DRAWABLE		drawable
  	4	CARD32			swap_hi
@@ -823,11 +855,28 @@ A.2 Protocol Requests
 ┌───
     DRI2SwapInterval
 	1	CARD8			major opcode
-	1	7			DRI2 opcode
+	1	12			DRI2 opcode
 	2	8			length
 	4	DRAWABLE		drawable
  	4	CARD32			interval
      ▶
+└───
+
+┌───
+    DRI2GetParam
+	1	CARD8			major opcode
+	1	13			DRI2 opcode
+	2	8			length
+	4	DRAWABLE		drawable
+	4	CARD32			param
+     ▶
+	1	1			Reply
+	1	BOOL			is_param_recognized
+	2	CARD16			sequence number
+	4	0			reply length
+	4	CARD32			value_hi
+	4	CARD32			value_lo
+	16				unused
 └───
 
 A.3 Protocol Events

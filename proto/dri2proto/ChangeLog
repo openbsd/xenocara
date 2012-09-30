@@ -1,3 +1,69 @@
+commit 4eeacce4c4a300b938b7e3fb78a8e443c491780b
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Sat Jul 7 10:20:12 2012 +0100
+
+    dri2proto: bump package to 2.8
+    
+    this just so we can rely on 2.8 to build the server/mesa against.
+    
+    Signed-off-by: Dave Airlie <airlied@redhat.com>
+
+commit fb9e9339876d0a7c4821f9dbea1635a43a06da01
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Fri Jan 20 10:34:58 2012 +0000
+
+    dri2proto: add prime protocol support. (v2.1)
+    
+    So we reserve bits 16->19 for offload device ids, this means we can
+    have 6 offload devices, which is plenty for now, and we can bump
+    this further later without fear.
+    
+    v2: I suck at maths, that is all. Fixed up the maths to match reality.
+    v2.1: fix typo
+    
+    Reviewed-by: Michel Dänzer <michel.daenzer@amd.com>
+    Reviewed-by: Kristian Høgsberg <krh@bitplanet.net>
+    Signed-off-by: Dave Airlie <airlied@redhat.com>
+
+commit 652fe8d9dd2393127b11741ba63cb95a83ad454f
+Author: Chad Versace <chad.versace@linux.intel.com>
+Date:   Wed May 2 12:03:31 2012 -0700
+
+    dri2proto: Add DRI2GetParam request
+    
+    Bump protocol version to 1.4.
+    Bump package version to 2.7.
+    
+    This new protocol request effectively allows clients to perform feature
+    detection on the DDX.
+    
+    If I had DRI2GetParam in June 2011, when I was implementing support in the
+    Intel DDX and Mesa for new hardware that required a new DRI2 attachment
+    format, then I could have avoided a week of pain caused by the necessity
+    to write a horrid feature detection hack [1] in Mesa. In the future, when
+    the work begins to add MSAA support to the Intel DDX, having a clean way
+    to do feature detection will allow us to avoid revisiting and expanding
+    that hack.
+    
+    [1] mesa, commit aea2236a, function intel_verify_dri2_has_hi
+    
+    Reviewed-by: Eric Anholt <eric@anholt.net>
+    Reviewed-by: Ian Romanick <idr@freedesktop.org>
+    Signed-off-by: Chad Versace <chad.versace@linux.intel.com>
+
+commit 428688d1eaa3d0faa13a61613cdaeaabcb351f0e
+Author: Chad Versace <chad.versace@linux.intel.com>
+Date:   Wed May 2 11:56:37 2012 -0700
+
+    dri2proto: Fix documented opcodes
+    
+    Fix the documented opcodes in dri2proto.txt to be consistent with the
+    actual opcode values in dri2proto.h and in xcb/proto:src/dri2.xml. (It
+    looks like the opcodes were incorrect due to copy-paste errors).
+    
+    Reviewed-by: Kristian Høgsberg <krh@bitplanet.net
+    Signed-off-by: Chad Versace <chad.versace@linux.intel.com>
+
 commit 7fd18b15646a62bd82a4eb0eca60a34c1731813d
 Author: Chad Versace <chad@chad-versace.us>
 Date:   Wed May 11 12:50:11 2011 -0700

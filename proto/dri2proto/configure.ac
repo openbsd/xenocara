@@ -1,5 +1,5 @@
 AC_PREREQ([2.60])
-AC_INIT([DRI2Proto], [2.6], [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg])
+AC_INIT([DRI2Proto], [2.8], [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg])
 AM_INIT_AUTOMAKE([foreign dist-bzip2])
 AM_MAINTAINER_MODE
 

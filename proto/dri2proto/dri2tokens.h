@@ -45,6 +45,11 @@
 #define DRI2BufferDepthStencil		9
 #define DRI2BufferHiz			10
 
+/* keep bits 16 and above for prime IDs */
+#define DRI2DriverPrimeMask             7 /* 0 - 7 - allows for 6 devices*/
+#define DRI2DriverPrimeShift           16
+#define DRI2DriverPrimeId(x)         (((x) >> DRI2DriverPrimeShift) & (DRI2DriverPrimeMask))
+
 #define DRI2DriverDRI			0
 #define DRI2DriverVDPAU			1
 

@@ -35,11 +35,11 @@
 
 #define DRI2_NAME			"DRI2"
 #define DRI2_MAJOR			1
-#define DRI2_MINOR			3
+#define DRI2_MINOR			4
 
 #define DRI2NumberErrors		0
 #define DRI2NumberEvents		2
-#define DRI2NumberRequests		13
+#define DRI2NumberRequests		14
 
 #define X_DRI2QueryVersion		0
 #define X_DRI2Connect			1
@@ -54,6 +54,7 @@
 #define X_DRI2WaitMSC			10
 #define X_DRI2WaitSBC			11
 #define X_DRI2SwapInterval		12
+#define X_DRI2GetParam			13
 
 /*
  * Events
@@ -329,5 +330,28 @@ typedef struct {
     CARD32 pad6 B32;
 } xDRI2InvalidateBuffers;
 #define sz_xDRI2InvalidateBuffers 32
+
+typedef struct {
+    CARD8   reqType;
+    CARD8   dri2ReqType;
+    CARD16  length B16;
+    CARD32  drawable B32;
+    CARD32  param B32;
+} xDRI2GetParamReq;
+#define sz_xDRI2GetParamReq 12
+
+typedef struct {
+    BYTE    type; /*X_Reply*/
+    BOOL    is_param_recognized;
+    CARD16  sequenceNumber B16;
+    CARD32  length B32;
+    CARD32  value_hi B32;
+    CARD32  value_lo B32;
+    CARD32  pad1 B32;
+    CARD32  pad2 B32;
+    CARD32  pad3 B32;
+    CARD32  pad4 B32;
+} xDRI2GetParamReply;
+#define sz_xDRI2GetParamReply 32
 
 #endif
