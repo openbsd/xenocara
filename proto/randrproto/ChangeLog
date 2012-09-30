@@ -1,3 +1,238 @@
+commit 5f5cb2767618ad22a5608142513c7dd81927a8d5
+Author: Dave Airlie <airlied@gmail.com>
+Date:   Thu Jul 12 22:45:05 2012 +1000
+
+    bump to 1.4.0 (for release.sh)
+    
+    a trivial commit to make release.sh work.
+    
+    Signed-off-by: Dave Airlie <airlied@redhat.com>
+
+commit 74637d53fa8f5bf44258f773c4aaf60053cccfc4
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Jul 9 22:18:22 2012 -0700
+
+    1.4 spec: update Extension Versioning section to include 1.4
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Alex Deucher <alexander.deucher@amd.com>
+    Signed-off-by: Dave Airlie <airlied@gmail.com>
+
+commit 7b4b49760ff33022a8120841017bcfb7ffe5f6ac
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Jul 9 22:18:21 2012 -0700
+
+    1.4 spec: Add descriptions of new RRSELECTMASK bits
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Alex Deucher <alexander.deucher@amd.com>
+    Signed-off-by: Dave Airlie <airlied@gmail.com>
+
+commit 75a1d1aa8fb539ec5a7a6c8337e46ee8e5de4a36
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Jul 9 22:18:20 2012 -0700
+
+    1.4 spec: Change "LISTof ATOM" to "LISTofATOM" to match other LIST types
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Alex Deucher <alexander.deucher@amd.com>
+    Signed-off-by: Dave Airlie <airlied@gmail.com>
+
+commit ef99bda581449d6c8dab7233e287c7bfd578730c
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Fri Jan 20 17:38:16 2012 +0000
+
+    randr: add provider object (v8)
+    
+    A provider object represents a GPU or virtual device that provides
+    rendering or output services to the X server. This protocol
+    allow controlling provider objects for output and offload slave devices.
+    
+    v1.1: fix typo add missing define
+    
+    v2: rename nProperties back to nAtoms, makes server simpler to c-n-p,
+    add missing Get request/reply
+    
+    v3: bring back configure property, no point in diverging from the
+    output property code without good reason.
+    also fix typo pointed out on irc by rei4dan.
+    
+    v3.1: drop cut-n-paste, increase RRNumberRequests
+    
+    v4: reviewed by Aaron, address comments:
+    Fix provider error code
+    add missing notify, remove dri2 references, fix c-n-p issues.
+    
+    v5: add provider change notify event with current role.
+    v5.1: fix cut-n-paste
+    
+    v6:
+    document flags, fix whitespace, add better errors for SetProviderRoles,
+    add new events, fix pending language.
+    
+    v6.1: add missing change notify event struct + missing padding
+    
+    v7: fix a bunch more tab/spaces, add appendix sections for requests, events
+    and errors, remove multimaster flag in favour of max master counter,
+    move some members around to follow other events.
+    
+    v7.1 fix maxMaster + wrong comment, one whitespace
+    v7.2 bump to being randr 1.4, fix some too generic names.
+    v7.3 remove dynamic flag, fix some language
+    
+    v8 overhaul complete protocol, remove set provider roles, add specific
+    methods for setting offload sinks and output sources, add a list
+    of associated providers into the get provider info struct.
+    
+    Earlier-review-by: Aaron Plattner <aplattner@nvidia.com>
+    Reviewed-by: Keith Packard <keithp@keithp.com>
+    Signed-off-by: Dave Airlie <airlied@redhat.com>
+
+commit e0c94fa3a9e9f237c65c35e42aaa673994e55b7e
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Mon Jun 25 12:01:03 2012 +0100
+
+    Revert the unused 1.4.0 protocol
+    
+    This patch reverts:
+    Revert "Make SetCrtcConfigs take flags bits to allow partial configuration changes"
+    
+    This reverts commit 105a161a3f5fb67f5fe7e4119629d424672804aa.
+    
+    Revert "Define new semantics for scanout pixmap destruction."
+    
+    This reverts commit 0d32bb0780db35cec31e423faffa7061ec3e697f.
+    
+    Revert "Fix spelling errors, add description of SCANOUTPIXMAPINFO fields."
+    
+    This reverts commit 3e28d3098faa1a420cd0eb0474b2959cecc8813a.
+    
+    Revert "Add some informative text about the reasons for the PCP and ST bits"
+    
+    This reverts commit ebab32deea654d2ceb0538177e78d8ad48cf2a82.
+    
+    Revert "RandR version 1.4 additions"
+    
+    This reverts commit dd14a2275521b4cc50a588c95cc34cca7db51a91.
+    
+    None of this was ever used in the X server and I think it should
+    probably be addressed in smaller pieces later.
+    
+    Acked-by: Keith Packard <keithp@keithp.com>
+    Signed-off-by: Dave Airlie <airlied@redhat.com>
+
+commit 40cce2d010c1eff087301d5bb0098d0e041ed71f
+Author: Aaron Plattner <aplattner@nvidia.com>
+Date:   Wed Jul 27 22:57:56 2011 -0700
+
+    Add "Border" and "BorderDimensions" properties
+    
+    Signed-off-by: Aaron Plattner <aplattner@nvidia.com>
+    Reviewed-by: Stéphane Marchesin <marcheu@chromium.org>
+
+commit e151e053fbbcfd28b5465b6c495413f16e568e95
+Author: Aaron Plattner <aplattner@nvidia.com>
+Date:   Tue Aug 2 14:58:31 2011 -0700
+
+    Be more specific about property types
+    
+    RandR output properties are X properties, which have a type atom, a
+    "format" (i.e. an element size) and a number of items.  Be explicit
+    about these fields when describing properties in the protocol
+    document.  E.g., instead of specifying "int32 [2 * n] / Atom pairs,"
+    say "Type: INTEGER / Format: 32 / Num. items: 2*n."
+    
+    Signed-off-by: Aaron Plattner <aplattner@nvidia.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit b5c977ad70b845c278ef52c004d9e5fc3ec97cbf
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Thu May 19 16:26:27 2011 -0400
+
+    Remove nonsense paragraph about dual-link DVI
+    
+    I've never heard of any hardware that behaves so.
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit 105a161a3f5fb67f5fe7e4119629d424672804aa
+Author: Keith Packard <keithp@keithp.com>
+Date:   Wed Feb 16 22:44:30 2011 -0800
+
+    Make SetCrtcConfigs take flags bits to allow partial configuration changes
+    
+    Instead of requiring a complete new configuration to be computed,
+    allow the client to send a partial configuration with only the changed
+    values included. This simplifies clients so that they need not change
+    things they don't understand.
+    
+    This also removes the 'CurrentScanoutPixmap' hack as that is no longer
+    necessary.
+    
+    Signed-off-by: Keith Packard <keithp@keithp.com>
+
+commit 611a4e0c7bdc9831e0eda396030a27bcd2c11759
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Jan 6 22:13:22 2011 -0800
+
+    Add missing Red Hat copyright notice to COPYING
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 0d32bb0780db35cec31e423faffa7061ec3e697f
+Author: Keith Packard <keithp@keithp.com>
+Date:   Mon Dec 6 22:39:07 2010 -0800
+
+    Define new semantics for scanout pixmap destruction.
+    
+    This is not yet implemented in the X server...
+    
+    Signed-off-by: Keith Packard <keithp@keithp.com>
+
+commit 3e28d3098faa1a420cd0eb0474b2959cecc8813a
+Author: Keith Packard <keithp@keithp.com>
+Date:   Mon Dec 6 10:01:21 2010 -0800
+
+    Fix spelling errors, add description of SCANOUTPIXMAPINFO fields.
+    
+    Review results from Aaron Plattner.
+    
+    Signed-off-by: Keith Packard <keithp@keithp.com>
+
+commit ebab32deea654d2ceb0538177e78d8ad48cf2a82
+Author: Keith Packard <keithp@keithp.com>
+Date:   Sun Dec 5 23:22:26 2010 -0800
+
+    Add some informative text about the reasons for the PCP and ST bits
+    
+    Signed-off-by: Keith Packard <keithp@keithp.com>
+
+commit dd14a2275521b4cc50a588c95cc34cca7db51a91
+Author: Keith Packard <keithp@keithp.com>
+Date:   Sun Dec 5 20:31:18 2010 -0800
+
+    RandR version 1.4 additions
+    
+    This adds the specification and protocol header definitions for the
+    RandR 1.4 protocol changes, including
+    
+     * Per crtc pixmaps and pixmap origins
+     * Sprite position and image transforms
+     * SetCrtcConfigs request
+    
+    Signed-off-by: Keith Packard <keithp@keithp.com>
+
+commit 1325b011247e52cd8ffd0ca96408d77ea22ffaaa
+Author: Keith Packard <keithp@keithp.com>
+Date:   Sun Dec 5 20:30:43 2010 -0800
+
+    Whitespace cleanups in randrproto.txt
+    
+    This just eliminates some ugly space/tab combos
+    
+    Signed-off-by: Keith Packard <keithp@keithp.com>
+    Reviewed-by: Cyril Brulebois <kibi@debian.org>
+
 commit 75b7c5feed818291c8ba8ac1ee5b6a6ee4b61851
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Fri Oct 29 23:12:30 2010 -0700
