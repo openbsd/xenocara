@@ -1,5 +1,5 @@
 # -*- makefile -*- 
-# $OpenBSD: Makefile.inc,v 1.8 2011/06/23 22:48:59 naddy Exp $
+# $OpenBSD: Makefile.inc,v 1.9 2012/09/30 10:12:51 espie Exp $
 
 .ifndef FVWM_MAKEFILE_INC
 FVWM_MAKEFILE_INC = done
@@ -17,11 +17,5 @@ MANDIR=		${X11BASE}/man/man
 
 obj: _xenocara_obj
 
-.if exists(${.CURDIR}/../../libs/${__objdir})
-LDADD+=		-L${.CURDIR}/../../libs/${__objdir} -lfvwm
-DPADD+=		${.CURDIR}/../../libs/${__objdir}/libfvwm.a
-.else
-LDADD+=		-L${.CURDIR}/../../libs -lfvwm
-DPADD+= 	${.CURDIR}/../../libs/libfvwm.a
-.endif
+LDADD+=		-L${.CURDIR}/../../libs/${__objdir} -L${.CURDIR}/../../libs -lfvwm
 .endif
