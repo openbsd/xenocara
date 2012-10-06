@@ -1290,7 +1290,7 @@ xkb_symbols "intl-unicode" {
  // abovedot, caron
  key <AB09> { [ period, greater, U0307, U030C ] };
  // hook
- key <AB10> { [ slash, question, questiondown, 0309 ] };
+ key <AB10> { [ slash, question, questiondown, U0309 ] };
 
  // alt-intl compatibility
  // cedilla, caron
@@ -1313,8 +1313,7 @@ xkb_symbols "alt-intl-unicode" {
 
  name[Group1]= "English (US, international AltGr Unicode combining, alternative)";
 
- include "extras/us(intl-unicode)"
- include "level3(ralt_switch)"
+ include "us(intl-unicode)"
 
  // easier macron; em-dash.
  // em-dash is available via compose, but I added here since it's such

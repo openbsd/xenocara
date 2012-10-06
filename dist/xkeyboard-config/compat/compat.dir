@@ -1,7 +1,0 @@
--d------ -------- xtest(xtest)
--dp----- -------- pc(pc)
--dp----- -------- mousekeys(mousekeys)
--dp----- -------- iso9995(default)
--dp----- -------- ledscroll(scroll_lock)
---p----- -------- ledscroll(group_lock)
---p----- -------- ledscroll(shift_lock)

@@ -1,9 +1,8 @@
-#	$OpenBSD: Makefile,v 1.3 2011/03/12 10:16:01 shadchin Exp $
+#	$OpenBSD: Makefile,v 1.4 2012/10/06 15:41:12 shadchin Exp $
 
 SUBDIR=		digital_vndr sgi_vndr
 
 XKB_SUBDIR=	geometry
-DIR_DATA=	geometry.dir
 
 DATA=	amiga ataritt chicony dell everex fujitsu hhk hp keytronic kinesis \
 	macintosh microsoft nec nokia northgate pc sanwa sony thinkpad sun \

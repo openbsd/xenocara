@@ -3877,6 +3877,12 @@
             <_description>Norwegian (Macintosh, eliminate dead keys)</_description>
           </configItem>
         </variant>
+	<variant>
+          <configItem>
+            <name>colemak</name>
+            <_description>Norwegian (Colemak)</_description>
+          </configItem>
+        </variant>
       </variantList>
     </layout>
     <layout>
@@ -5464,6 +5470,24 @@
                           <iso639Id>phi</iso639Id>
                           <iso639Id>tgl</iso639Id>
                           <iso639Id>war</iso639Id></languageList>
+          </configItem>
+        </variant>
+      </variantList>
+    </layout>
+    <layout>
+      <configItem>
+        <name>md</name>
+        <_shortDescription>md</_shortDescription>
+        <_description>Moldavian</_description>
+        <languageList><iso639Id>rum</iso639Id></languageList>
+      </configItem>
+      <variantList>
+        <variant>
+          <configItem>
+            <name>gag</name>
+            <_shortDescription>gag</_shortDescription>
+            <_description>Gagauz</_description>
+            <languageList><iso639Id>gag</iso639Id></languageList>
           </configItem>
         </variant>
       </variantList>
