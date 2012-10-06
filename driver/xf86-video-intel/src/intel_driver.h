@@ -190,6 +190,7 @@
 #define PCI_CHIP_IVYBRIDGE_D_GT1	0x0152
 #define PCI_CHIP_IVYBRIDGE_D_GT2	0x0162
 #define PCI_CHIP_IVYBRIDGE_S_GT1	0x015a
+#define PCI_CHIP_IVYBRIDGE_S_GT2	0x016a
 
 #endif
 
@@ -242,6 +243,15 @@
 #define IS_IVYBRIDGE_M(pI810) (DEVICE_ID(pI810->PciInfo) == PCI_CHIP_IVYBRIDGE_M_GT1  || \
 			DEVICE_ID(pI810->PciInfo) == PCI_CHIP_IVYBRIDGE_M_GT2)
 
+#define IS_IVYBRIDGE_D(pI810) (DEVICE_ID(pI810->PciInfo) == PCI_CHIP_IVYBRIDGE_D_GT1 || \
+			DEVICE_ID(pI810->PciInfo) == PCI_CHIP_IVYBRIDGE_D_GT2)
+
+#define IS_IVYBRIDGE_S(pI810) (DEVICE_ID(pI810->PciInfo) == PCI_CHIP_IVYBRIDGE_S_GT1 || \
+			DEVICE_ID(pI810->PciInfo) == PCI_CHIP_IVYBRIDGE_S_GT2)
+
+#define IS_IVYBRIDGE(dev) (IS_IVYBRIDGE_M(dev) || IS_IVYBRIDGE_D(dev) || \
+			IS_IVYBRIDGE_S(dev))
+
 #define IS_MOBILE(dev) (IS_I830(dev) || IS_I85X(dev) || IS_I915GM(dev) || \
 	IS_I945GM(dev) || IS_CRESTLINE(dev) || IS_GM45(dev) || \
 	IS_PINEVIEW(dev) || IS_IRONLAKE_M(dev) || IS_SANDYBRIDGE_M(dev) || \
@@ -250,8 +260,10 @@
 #define SUPPORTS_TV(dev) (IS_I915GM(dev) || IS_I945GM(dev) || \
 	IS_CRESTLINE(dev) || IS_GM45(dev))
 
-#define HAS_PCH_SPLIT(dev) (IS_GEN5(dev) || IS_GEN6(dev))
-#define HAS_PCH_CPT(dev) (IS_GEN6(dev))	/* XXX */
+#define HAS_PCH_SPLIT(dev) (IS_GEN5(dev) || IS_GEN6(dev) || IS_GEN7(dev))
+#define HAS_PCH_IBX(dev) (IS_GEN5(dev))
+/* PantherPoint is CPT compatible */
+#define HAS_PCH_CPT(dev) (IS_GEN6(dev) || IS_GEN7(dev))	/* XXX */
 
 
 /* Some chips have specific errata (or limits) that we need to workaround. */
@@ -276,7 +288,8 @@
 			 DEVICE_ID(pI810->PciInfo) == PCI_CHIP_I965_GME || \
 			 IS_G4X(pI810) || \
 			 IS_GEN5(pI810) || \
-			 IS_GEN6(pI810))
+			 IS_GEN6(pI810) || \
+			 IS_GEN7(pI810))
 #define IS_G33CLASS(pI810) (DEVICE_ID(pI810->PciInfo) == PCI_CHIP_G33_G ||\
  			    DEVICE_ID(pI810->PciInfo) == PCI_CHIP_Q35_G ||\
 			    DEVICE_ID(pI810->PciInfo) == PCI_CHIP_Q33_G || \
@@ -292,16 +305,21 @@
 /* mark chipsets for using gfx VM offset for overlay */
 #define OVERLAY_NOPHYSICAL(pI810) (IS_G33CLASS(pI810) || IS_I965G(pI810))
 /* mark chipsets without overlay hw */
-#define OVERLAY_NOEXIST(pI810) (IS_G4X(pI810) || IS_GEN5(pI810) || IS_GEN6(pI810))
+#define OVERLAY_NOEXIST(pI810) (IS_G4X(pI810) || IS_GEN5(pI810) || \
+    IS_GEN6(pI810) || IS_GEN7(pI810))
 /* chipsets require graphics mem for hardware status page */
 #define HWS_NEED_GFX(pI810) (!pI810->use_drm_mode && \
 			     (IS_G33CLASS(pI810) ||\
-			      IS_G4X(pI810) || IS_GEN5(pI810) || IS_GEN6(pI810)))
+			      IS_G4X(pI810) || IS_GEN5(pI810) || IS_GEN6(pI810) || \
+			      IS_GEN7(pI810)))
 /* chipsets require status page in non stolen memory */
-#define HWS_NEED_NONSTOLEN(pI810) (IS_G4X(pI810) || IS_GEN5(pI810) || IS_GEN6(pI810))
-#define SUPPORTS_INTEGRATED_HDMI(pI810) (IS_G4X(pI810) || IS_GEN5(pI810) || IS_GEN6(pI810))
+#define HWS_NEED_NONSTOLEN(pI810) (IS_G4X(pI810) || IS_GEN5(pI810) || \
+    IS_GEN6(pI810) || IS_GEN7(pI810))
+#define SUPPORTS_INTEGRATED_HDMI(pI810) (IS_G4X(pI810) || IS_GEN5(pI810) || \
+    IS_GEN6(pI810) || IS_GEN7(pI810))
 /* dsparb controlled by hw only */
-#define DSPARB_HWCONTROL(pI810) (IS_G4X(pI810) || IS_GEN5(pI810) || IS_GEN6(pI810))
+#define DSPARB_HWCONTROL(pI810) (IS_G4X(pI810) || IS_GEN5(pI810) || \
+    IS_GEN6(pI810) || IS_GEN7(pI810))
 
 extern SymTabRec *intel_chipsets;
 

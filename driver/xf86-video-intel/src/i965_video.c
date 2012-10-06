@@ -1723,7 +1723,7 @@ gen7_upload_wm_state(ScrnInfoPtr scrn, Bool is_packed)
 
 	OUT_BATCH(0); /* scratch space base offset */
 	OUT_BATCH(
-		((86 - 1) << GEN7_PS_MAX_THREADS_SHIFT) |
+		((48 - 1) << GEN7_PS_MAX_THREADS_SHIFT) |
 		GEN7_PS_ATTRIBUTE_ENABLE |
 		GEN7_PS_16_DISPATCH_ENABLE);
 	OUT_BATCH(

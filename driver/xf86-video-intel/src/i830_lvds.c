@@ -1352,6 +1352,7 @@ i830_lvds_set_property(xf86OutputPtr output, Atom property,
     intel_screen_private    *intel = intel_get_screen_private(scrn);
     I830OutputPrivatePtr    intel_output = output->driver_private;
     struct i830_lvds_priv   *dev_priv = intel_output->dev_priv;
+    uint32_t		    ctl_reg;
     
     if (property == backlight_atom) {
 	INT32 val;
@@ -1402,7 +1403,12 @@ i830_lvds_set_property(xf86OutputPtr output, Atom property,
 		       "RRConfigureOutputProperty error, %d\n", ret);
 	}
 	/* Set the current value of the backlight property */
-	if ((INREG(PP_CONTROL) & POWER_TARGET_ON) && !dev_priv->dpmsoff) 
+	if (HAS_PCH_SPLIT(intel))
+		ctl_reg = PCH_PP_CONTROL;
+	else
+		ctl_reg = PP_CONTROL;
+	
+	if ((INREG(ctl_reg) & POWER_TARGET_ON) && !dev_priv->dpmsoff) 
 	    data = dev_priv->get_backlight(output);
 	else
 	    data = dev_priv->backlight_duty_cycle;
@@ -1462,6 +1468,7 @@ i830_lvds_get_property(xf86OutputPtr output, Atom property)
     I830OutputPrivatePtr    intel_output = output->driver_private;
     struct i830_lvds_priv   *dev_priv = intel_output->dev_priv;
     int ret;
+    uint32_t		    ctl_reg;
 
     /*
      * Only need to update properties that might change out from under
@@ -1469,7 +1476,12 @@ i830_lvds_get_property(xf86OutputPtr output, Atom property)
      */
     if (property == backlight_atom) {
 	int val;
-	if ((INREG(PP_CONTROL) & POWER_TARGET_ON) && !dev_priv->dpmsoff) {
+ 	if (HAS_PCH_SPLIT(intel))
+		ctl_reg = PCH_PP_CONTROL;
+	else
+		ctl_reg = PP_CONTROL;
+
+	if ((INREG(ctl_reg) & POWER_TARGET_ON) && !dev_priv->dpmsoff) {
 	    val = dev_priv->get_backlight(output);
 	    dev_priv->backlight_duty_cycle = val;
 	} else
@@ -1491,7 +1503,19 @@ i830_lvds_get_crtc(xf86OutputPtr output)
 {
     ScrnInfoPtr	scrn = output->scrn;
     intel_screen_private    *intel = intel_get_screen_private(scrn);
-    int pipe = !!(INREG(LVDS) & LVDS_PIPEB_SELECT);
+    uint32_t		    lvds_reg, pipeb_mask;
+
+    if (HAS_PCH_SPLIT(intel))
+        lvds_reg = PCH_LVDS;
+    else
+        lvds_reg = LVDS;
+
+    if (HAS_PCH_CPT(intel))
+        pipeb_mask = PORT_TRANS_B_SEL_CPT;
+    else
+        pipeb_mask = LVDS_PIPEB_SELECT;
+
+    int pipe = !!(INREG(lvds_reg) & pipeb_mask);
    
     return intel_pipe_to_crtc(scrn, pipe);
 }
@@ -1560,7 +1584,7 @@ i830_lvds_init(ScrnInfoPtr scrn)
     }
     intel_output->type = I830_OUTPUT_LVDS;
     intel_output->pipe_mask = (1 << 1);
-    if (0 && IS_IGDNG(intel)) /* XXX put me back */
+    if (HAS_PCH_SPLIT(intel))
 	intel_output->pipe_mask |= (1 << 0);
     intel_output->clone_mask = (1 << I830_OUTPUT_LVDS);
     

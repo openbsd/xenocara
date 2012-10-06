@@ -1491,6 +1491,123 @@ static void gen6_fdi_link_train(xf86CrtcPtr crtc)
     ErrorF("FDI train done\n");
 }
 
+/* Manual link training for Ivy Bridge A0 parts */
+static void ivb_manual_fdi_link_train(xf86CrtcPtr crtc)
+{
+	ScrnInfoPtr scrn = crtc->scrn;
+	intel_screen_private *intel = intel_get_screen_private(scrn);
+	I830CrtcPrivatePtr intel_crtc = crtc->driver_private;
+	int pipe = intel_crtc->pipe;
+	int fdi_tx_reg = (pipe == 0) ? FDI_TXA_CTL : FDI_TXB_CTL;
+	int fdi_rx_reg = (pipe == 0) ? FDI_RXA_CTL : FDI_RXB_CTL;
+	int fdi_rx_iir_reg = (pipe == 0) ? FDI_RXA_IIR : FDI_RXB_IIR;
+	int fdi_rx_imr_reg = (pipe == 0) ? FDI_RXA_IMR : FDI_RXB_IMR;
+
+	uint32_t temp, i;
+
+	/* Train 1: umask FDI RX Interrupt symbol_lock and bit_lock bit
+	   for train result */
+	temp = INREG(fdi_rx_imr_reg);
+	temp &= ~FDI_RX_SYMBOL_LOCK;
+	temp &= ~FDI_RX_BIT_LOCK;
+	OUTREG(fdi_rx_imr_reg, temp);
+	INREG(fdi_rx_imr_reg);
+	usleep(150);
+
+	/* enable CPU FDI TX and PCH FDI RX */
+	temp = INREG(fdi_tx_reg);
+	temp &= ~(7 << 19);
+	temp |= /*(intel_crtc->fdi_lanes - 1)*/3 << 19;
+	temp &= ~(FDI_LINK_TRAIN_AUTO | FDI_LINK_TRAIN_NONE_IVB);
+	temp |= FDI_LINK_TRAIN_PATTERN_1_IVB;
+	temp &= ~FDI_LINK_TRAIN_VOL_EMP_MASK;
+	temp |= FDI_LINK_TRAIN_400MV_0DB_SNB_B;
+	temp |= FDI_COMPOSITE_SYNC;
+	OUTREG(fdi_tx_reg, temp | FDI_TX_ENABLE);
+	INREG(fdi_tx_reg);
+
+	temp = INREG(fdi_rx_reg);
+	temp &= ~FDI_LINK_TRAIN_AUTO;
+	temp &= ~FDI_LINK_TRAIN_PATTERN_MASK_CPT;
+	temp |= FDI_LINK_TRAIN_PATTERN_1_CPT;
+	temp |= FDI_COMPOSITE_SYNC;
+	OUTREG(fdi_rx_reg, temp | FDI_RX_ENABLE);
+	INREG(fdi_rx_reg);
+
+	usleep(150);
+
+	if (HAS_PCH_CPT(intel)) {
+		temp = INREG(SOUTH_CHICKEN1);
+		temp |= FDI_PHASE_SYNC_OVR(pipe);
+		OUTREG(SOUTH_CHICKEN1, temp); /* once to unlock... */
+		temp |= FDI_PHASE_SYNC_EN(pipe);
+		OUTREG(SOUTH_CHICKEN1, temp); /* then again to enable */
+		INREG(SOUTH_CHICKEN1);
+		usleep(150);
+	}
+		
+	for (i = 0; i < 4; i++) {
+		temp = INREG(fdi_tx_reg);
+		temp &= ~FDI_LINK_TRAIN_VOL_EMP_MASK;
+		temp |= snb_b_fdi_train_param[i];
+		OUTREG(fdi_tx_reg, temp);
+		INREG(fdi_tx_reg);
+
+		usleep(500);
+
+		temp = INREG(fdi_rx_iir_reg);
+		ErrorF("FDI_RX_IIR 0x%x\n", temp);
+
+		if (temp & FDI_RX_BIT_LOCK) {
+			OUTREG(fdi_rx_iir_reg,
+			           temp | FDI_RX_BIT_LOCK);
+			ErrorF("FDI train 1 done.\n");
+			break;
+		}
+	}
+	if (i == 4)
+		ErrorF("FDI train 1 fail!\n");
+
+	/* Train 2 */
+	temp = INREG(fdi_tx_reg);
+	temp &= ~FDI_LINK_TRAIN_NONE_IVB;
+	temp |= FDI_LINK_TRAIN_PATTERN_2_IVB;
+	temp &= ~FDI_LINK_TRAIN_VOL_EMP_MASK;
+	temp |= FDI_LINK_TRAIN_400MV_0DB_SNB_B;
+	OUTREG(fdi_tx_reg, temp);
+
+	temp = INREG(fdi_rx_reg);
+	temp &= ~FDI_LINK_TRAIN_PATTERN_MASK_CPT;
+	temp |= FDI_LINK_TRAIN_PATTERN_2_CPT;
+	OUTREG(fdi_rx_reg, temp);
+
+	usleep(150);
+
+	for (i = 0; i < 4; i++) {
+		temp = INREG(fdi_tx_reg);
+		temp &= ~FDI_LINK_TRAIN_VOL_EMP_MASK;
+		temp |= snb_b_fdi_train_param[i];
+		OUTREG(fdi_tx_reg, temp);
+		INREG(fdi_tx_reg);
+
+		usleep(500);
+
+		temp = INREG(fdi_rx_iir_reg);
+		ErrorF("FDI_RX_IIR 0x%x\n", temp);
+
+		if (temp & FDI_RX_SYMBOL_LOCK) {
+			OUTREG(fdi_rx_iir_reg,
+			           temp | FDI_RX_SYMBOL_LOCK);
+			ErrorF("FDI train 2 done.\n");
+			break;
+		}
+	}
+	if (i == 4)
+		ErrorF("FDI train 2 fail!\n");
+
+	ErrorF("FDI train done\n");
+}
+
 static void
 ironlake_crtc_enable(xf86CrtcPtr crtc)
 {
@@ -1600,6 +1717,8 @@ ironlake_crtc_enable(xf86CrtcPtr crtc)
 	/* Train FDI. */
 	if (IS_GEN6(intel))
 		gen6_fdi_link_train(crtc);
+	else if (IS_IVYBRIDGE(intel))
+		ivb_manual_fdi_link_train(crtc);
 	else
 		ironlake_fdi_link_train(crtc);
 
@@ -1634,9 +1753,14 @@ ironlake_crtc_enable(xf86CrtcPtr crtc)
 
 	ErrorF("FDI TX link normal\n");
 	temp = INREG(fdi_tx_reg);
-	temp &= ~FDI_LINK_TRAIN_NONE;
-	OUTREG(fdi_tx_reg, temp | FDI_LINK_TRAIN_NONE |
-		   FDI_TX_ENHANCE_FRAME_ENABLE);
+	if (IS_IVYBRIDGE(intel)) {
+		temp &= ~FDI_LINK_TRAIN_NONE_IVB;
+		temp |= FDI_LINK_TRAIN_NONE_IVB | FDI_TX_ENHANCE_FRAME_ENABLE;
+	} else {
+		temp &= ~FDI_LINK_TRAIN_NONE;
+		temp |= FDI_LINK_TRAIN_NONE | FDI_TX_ENHANCE_FRAME_ENABLE;
+	}
+	OUTREG(fdi_tx_reg, temp);
 	INREG(fdi_tx_reg);
 
 	temp = INREG(fdi_rx_reg);
@@ -2534,16 +2658,14 @@ i830_crtc_mode_set(xf86CrtcPtr crtc, DisplayModePtr mode,
 
 	lvds = INREG(lvds_reg);
 	lvds |= LVDS_PORT_EN | LVDS_A0A2_CLKA_POWER_UP;
-	if (pipe == 1) {
-	    if (HAS_PCH_CPT(intel))
-		lvds |= PORT_TRANS_B_SEL_CPT;
-	    else
-		lvds |= LVDS_PIPEB_SELECT;
+	if (HAS_PCH_CPT(intel)) {
+	    lvds &= ~PORT_TRANS_SEL_MASK;
+	    lvds |= PORT_TRANS_SEL_CPT(pipe);
 	} else {
-	    if (HAS_PCH_CPT(intel))
-		lvds &= ~PORT_TRANS_SEL_MASK;
+	    if (pipe == 1)
+		lvds |= LVDS_PIPEB_SELECT;	
 	    else
-	    	lvds &= ~LVDS_PIPEB_SELECT;
+		lvds &= ~LVDS_PIPEB_SELECT;
 	}
 
 	/* Set the B0-B3 data pairs corresponding to whether we're going to
@@ -2646,7 +2768,7 @@ i830_crtc_mode_set(xf86CrtcPtr crtc, DisplayModePtr mode,
 
     if (HAS_PCH_SPLIT(intel)) {
 	OUTREG(data_m1_reg, TU_SIZE(m_n.tu) | m_n.gmch_m);
-	OUTREG(data_n1_reg, TU_SIZE(m_n.tu) | m_n.gmch_n);
+	OUTREG(data_n1_reg, m_n.gmch_n);
 	OUTREG(link_m1_reg, m_n.link_m);
 	OUTREG(link_n1_reg, m_n.link_n);
 

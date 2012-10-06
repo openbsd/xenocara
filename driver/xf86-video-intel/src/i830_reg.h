@@ -4096,11 +4096,18 @@ typedef enum {
 #define  TRANS_6BPC		(2<<5)
 #define  TRANS_12BPC		(3<<5)
 
+#define SOUTH_CHICKEN1          0xc2000
+#define  FDIA_PHASE_SYNC_SHIFT_OVR      19
+#define  FDIA_PHASE_SYNC_SHIFT_EN       18
+#define FDI_PHASE_SYNC_OVR(pipe) (1<<(FDIA_PHASE_SYNC_SHIFT_OVR - ((pipe) * 2)))
+#define FDI_PHASE_SYNC_EN(pipe) (1<<(FDIA_PHASE_SYNC_SHIFT_EN - ((pipe) * 2)))
+
 /* CPT */
 #define  PORT_TRANS_A_SEL_CPT   0
 #define  PORT_TRANS_B_SEL_CPT   (1<<29)
 #define  PORT_TRANS_C_SEL_CPT   (2<<29)
 #define  PORT_TRANS_SEL_MASK    (3<<29)
+#define  PORT_TRANS_SEL_CPT(pipe)       ((pipe) << 29)
 
 #define FDI_RXA_CHICKEN		0xc200c
 #define FDI_RXB_CHICKEN		0xc2010
@@ -4145,7 +4152,16 @@ typedef enum {
 #define  FDI_TX_ENHANCE_FRAME_ENABLE	(1<<18)
 /* IGDNG: hardwired to 1 */
 #define  FDI_TX_PLL_ENABLE		(1<<14)
+
+/* Ivybridge has different bits for lolz */
+#define  FDI_LINK_TRAIN_PATTERN_1_IVB       (0<<8)
+#define  FDI_LINK_TRAIN_PATTERN_2_IVB       (1<<8)
+#define  FDI_LINK_TRAIN_PATTERN_IDLE_IVB    (2<<8)
+#define  FDI_LINK_TRAIN_NONE_IVB            (3<<8)
+
 /* both Tx and Rx */
+#define  FDI_COMPOSITE_SYNC		(1<<11)
+#define  FDI_LINK_TRAIN_AUTO		(1<<10)
 #define  FDI_SCRAMBLING_ENABLE		(0<<7)
 #define  FDI_SCRAMBLING_DISABLE		(1<<7)
 
@@ -4155,6 +4171,8 @@ typedef enum {
 #define  FDI_RX_ENABLE		(1<<31)
 #define  FDI_RX_DISABLE		(0<<31)
 /* train, dp width same as FDI_TX */
+#define  FDI_FS_ERRC_ENABLE		(1<<27)
+#define  FDI_FE_ERRC_ENABLE		(1<<26)
 #define  FDI_DP_PORT_WIDTH_X8		(7<<19)
 #define  FDI_8BPC			(0<<16)
 #define  FDI_10BPC			(1<<16)
@@ -4262,9 +4280,13 @@ typedef enum {
 
 #define BLC_PWM_CPU_CTL2	0x48250
 #define  PWM_ENABLE		(1 << 31)
+#define  PWM_PIPE_SELECT	(1 << 29)
+#define  PWM_PIPE_SELECT_IVB	(3 << 29)
 #define  PWM_PIPE_A		(0 << 29)
 #define  PWM_PIPE_B		(1 << 29)
-#define BLC_PWM_CPU_CTL		0x48254
+#define  PWM_PIPE_C		(2 << 29) /* ivb + */
+#define  PWM_PIPE(pipe)		((pipe) << 29)
+#define  BLC_PWM_CPU_CTL	0x48254
 
 #define BLC_PWM_PCH_CTL1	0xc8250
 #define  PWM_PCH_ENABLE		(1 << 31)

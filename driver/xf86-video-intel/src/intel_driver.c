@@ -205,7 +205,7 @@ I830DetectMemory(ScrnInfoPtr scrn)
    int range;
    struct pci_device *bridge = intel_host_bridge ();
 
-   if (IS_GEN6(intel))
+   if (IS_GEN6(intel) || IS_GEN7(intel))
       pci_device_cfg_read_u16(bridge, &gmch_ctrl, SNB_GMCH_CTRL);
    else
       pci_device_cfg_read_u16(bridge, &gmch_ctrl, I830_GMCH_CTRL);
@@ -263,10 +263,11 @@ I830DetectMemory(ScrnInfoPtr scrn)
    range = gtt_size + 4;
 
    /* new 4 series hardware has seperate GTT stolen with GFX stolen */
-   if (IS_G4X(intel) || IS_IGD(intel) || IS_GEN5(intel) || IS_GEN6(intel))
+   if (IS_G4X(intel) || IS_IGD(intel) || IS_GEN5(intel) || IS_GEN6(intel) ||
+     IS_GEN7(intel))
        range = 4;
 
-   if (IS_GEN6(intel)) {
+   if (IS_GEN6(intel) || IS_GEN7(intel)) {
       switch (gmch_ctrl & SNB_GMCH_GMS_STOLEN_MASK) {
       case SNB_GMCH_GMS_STOLEN_32M:
 	 memsize = MB(32) - KB(range);
@@ -430,7 +431,8 @@ I830MapMMIO(ScrnInfoPtr scrn)
 
       if (IS_I965G(intel)) 
       {
-	 if (IS_G4X(intel) || IS_GEN5(intel) || IS_GEN6(intel)) {
+	 if (IS_G4X(intel) || IS_GEN5(intel) || IS_GEN6(intel) ||
+	    IS_GEN7(intel)) {
 	     gttaddr = intel->MMIOAddr + MB(2);
 	     intel->GTTMapSize = MB(2);
 	 } else {
@@ -710,7 +712,7 @@ static void i830_init_clock_gating(ScrnInfoPtr scrn)
 
     /* Disable clock gating reported to work incorrectly according to the specs.
      */
-	if (IS_GEN6(intel)) {
+	if (IS_GEN6(intel) || IS_GEN7(intel)) {
 		uint32_t dspclk_gate = VRHUNIT_CLOCK_GATE_DISABLE;
 		OUTREG(PCH_DSPCLK_GATE_D, dspclk_gate);
 	} else if (IS_G4X(intel)) {
@@ -1757,8 +1759,12 @@ static Bool SaveHWState(ScrnInfoPtr scrn)
 	if (IS_I965GM(intel) || IS_GM45(intel))
 		intel->savePWRCTXA = INREG(PWRCTXA);
 
-	if (IS_MOBILE(intel) && !IS_I830(intel))
-		intel->saveLVDS = INREG(LVDS);
+	if (IS_MOBILE(intel) && !IS_I830(intel)) {
+		if (HAS_PCH_SPLIT(intel))
+			intel->saveLVDS = INREG(PCH_LVDS);
+		else
+			intel->saveLVDS = INREG(LVDS);
+	}
 	intel->savePFIT_CONTROL = INREG(PFIT_CONTROL);
 
 	for (i = 0; i < xf86_config->num_output; i++) {
