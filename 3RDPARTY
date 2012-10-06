@@ -1,4 +1,4 @@
-# $OpenBSD: 3RDPARTY,v 1.137 2012/09/30 10:18:46 matthieu Exp $
+# $OpenBSD: 3RDPARTY,v 1.138 2012/10/06 15:46:47 shadchin Exp $
 #
 
 Package: 	Freetype
@@ -44,7 +44,7 @@ Maintainer:	bagleyd@tux.org
 Archive Site:	http://www.tux.org/~bagleyd/latest/
 
 Package:	xkeyboard-config
-Version:	2.6
+Version:	2.7
 Current Vers:	2.7
 Maintainer:	xkb@listserv.bat.ru
 Archive Site:	http://www.freedesktop.org/wiki/Software/XKeyboardConfig
