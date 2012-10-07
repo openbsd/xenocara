@@ -1,4 +1,4 @@
-! $OpenBSD: xdm-config.cpp,v 1.4 2011/11/15 20:53:45 matthieu Exp $
+! $OpenBSD: xdm-config.cpp,v 1.5 2012/10/07 15:55:28 matthieu Exp $
 !
 !
 !
@@ -33,7 +33,7 @@ DisplayManager._0.setup:	XDMSCRIPTDIR/Xsetup_0
 DisplayManager._0.startup:	XDMSCRIPTDIR/GiveConsole
 DisplayManager._0.reset:	XDMSCRIPTDIR/TakeConsole
 #if HAS_DES_AUTH == YES
-DisplayManager._0.authName:     MIT-MAGIC-COOKIE-1
+DisplayManager.*.authName:     MIT-MAGIC-COOKIE-1
 #endif
 #ifdef XPM
 DisplayManager*loginmoveInterval:	10
