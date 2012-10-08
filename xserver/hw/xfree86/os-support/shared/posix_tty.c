@@ -128,7 +128,7 @@ xf86OpenSerial(XF86OptionPtr options)
 #ifndef X_PRIVSEP
     SYSCALL(fd = open(dev, O_RDWR | O_NONBLOCK));
 #else
-        fd = priv_open_device (dev);
+    fd = priv_open_device (dev);
 #endif
     if (fd == -1) {
         xf86Msg(X_ERROR,
@@ -166,11 +166,7 @@ xf86OpenSerial(XF86OptionPtr options)
         return -1;
     }
 
-#ifndef X_PRIVSEP
     SYSCALL(i = fcntl(fd, F_GETFL, 0));
-#else
-    fd = priv_open_device (dev);
-#endif
     if (i == -1) {
         SYSCALL(close(fd));
         free(dev);
