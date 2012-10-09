@@ -3277,7 +3277,6 @@
 ./usr/X11R6/share/X11/rgb.txt
 ./usr/X11R6/share/X11/xkb
 ./usr/X11R6/share/X11/xkb/compat
-./usr/X11R6/share/X11/xkb/compat.dir
 ./usr/X11R6/share/X11/xkb/compat/README
 ./usr/X11R6/share/X11/xkb/compat/accessx
 ./usr/X11R6/share/X11/xkb/compat/basic
@@ -3297,7 +3296,6 @@
 ./usr/X11R6/share/X11/xkb/compat/xfree86
 ./usr/X11R6/share/X11/xkb/compat/xtest
 ./usr/X11R6/share/X11/xkb/geometry
-./usr/X11R6/share/X11/xkb/geometry.dir
 ./usr/X11R6/share/X11/xkb/geometry/README
 ./usr/X11R6/share/X11/xkb/geometry/amiga
 ./usr/X11R6/share/X11/xkb/geometry/ataritt
@@ -3330,7 +3328,6 @@
 ./usr/X11R6/share/X11/xkb/geometry/typematrix
 ./usr/X11R6/share/X11/xkb/geometry/winbook
 ./usr/X11R6/share/X11/xkb/keycodes
-./usr/X11R6/share/X11/xkb/keycodes.dir
 ./usr/X11R6/share/X11/xkb/keycodes/README
 ./usr/X11R6/share/X11/xkb/keycodes/aliases
 ./usr/X11R6/share/X11/xkb/keycodes/amiga
@@ -3352,10 +3349,6 @@
 ./usr/X11R6/share/X11/xkb/keycodes/sun
 ./usr/X11R6/share/X11/xkb/keycodes/xfree86
 ./usr/X11R6/share/X11/xkb/keycodes/xfree98
-./usr/X11R6/share/X11/xkb/keymap
-./usr/X11R6/share/X11/xkb/keymap/digital_vndr
-./usr/X11R6/share/X11/xkb/keymap/sgi_vndr
-./usr/X11R6/share/X11/xkb/keymap/sun_vndr
 ./usr/X11R6/share/X11/xkb/rules
 ./usr/X11R6/share/X11/xkb/rules/README
 ./usr/X11R6/share/X11/xkb/rules/base
@@ -3465,6 +3458,7 @@
 ./usr/X11R6/share/X11/xkb/symbols/macintosh_vndr/se
 ./usr/X11R6/share/X11/xkb/symbols/macintosh_vndr/us
 ./usr/X11R6/share/X11/xkb/symbols/mao
+./usr/X11R6/share/X11/xkb/symbols/md
 ./usr/X11R6/share/X11/xkb/symbols/me
 ./usr/X11R6/share/X11/xkb/symbols/mk
 ./usr/X11R6/share/X11/xkb/symbols/ml
@@ -3496,6 +3490,12 @@
 ./usr/X11R6/share/X11/xkb/symbols/se
 ./usr/X11R6/share/X11/xkb/symbols/sgi_vndr
 ./usr/X11R6/share/X11/xkb/symbols/sgi_vndr/jp
+./usr/X11R6/share/X11/xkb/symbols/sharp_vndr
+./usr/X11R6/share/X11/xkb/symbols/sharp_vndr/sl-c3x00
+./usr/X11R6/share/X11/xkb/symbols/sharp_vndr/ws003sh
+./usr/X11R6/share/X11/xkb/symbols/sharp_vndr/ws007sh
+./usr/X11R6/share/X11/xkb/symbols/sharp_vndr/ws011sh
+./usr/X11R6/share/X11/xkb/symbols/sharp_vndr/ws020sh
 ./usr/X11R6/share/X11/xkb/symbols/shift
 ./usr/X11R6/share/X11/xkb/symbols/si
 ./usr/X11R6/share/X11/xkb/symbols/sk
@@ -3554,9 +3554,7 @@
 ./usr/X11R6/share/X11/xkb/symbols/xfree68_vndr/amiga
 ./usr/X11R6/share/X11/xkb/symbols/xfree68_vndr/ataritt
 ./usr/X11R6/share/X11/xkb/symbols/za
-./usr/X11R6/share/X11/xkb/symbols/zaurus
 ./usr/X11R6/share/X11/xkb/types
-./usr/X11R6/share/X11/xkb/types.dir
 ./usr/X11R6/share/X11/xkb/types/README
 ./usr/X11R6/share/X11/xkb/types/basic
 ./usr/X11R6/share/X11/xkb/types/cancel
