@@ -1144,6 +1144,14 @@ if test "x$DRI2" = xyes; then
 fi
 AM_CONDITIONAL(DRI2_AIGLX, test "x$DRI2_AIGLX" = xyes)
 
+# link Xorg with pthreads for llvm-pipe driver on OpenBSD
+if test "x$DRI2" = xyes; then
+	case $host_os in
+	openbsd*)
+		XORG_SYS_LIBS="-lpthread"
+		;;
+	esac
+fi
 
 AM_CONDITIONAL(XINERAMA, [test "x$XINERAMA" = xyes])
 if test "x$XINERAMA" = xyes; then
