@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.47 2012/08/18 10:38:39 espie Exp $
+# $OpenBSD: Makefile,v 1.48 2012/10/17 08:48:43 espie Exp $
 .include <bsd.own.mk>
 .include <bsd.xconf.mk>
 
@@ -60,7 +60,7 @@ fix-appd:
 	# Make sure /usr/local/lib/X11/app-defaults is a link
 	if [ ! -L $(DESTDIR)${LOCALAPPD} ]; then \
 	    if [ -d $(DESTDIR)${LOCALAPPD} ]; then \
-		mv $(DESTDIR)${LOCALAPPD}/* $(DESTDIR)${REALAPPD}; \
+		mv $(DESTDIR)${LOCALAPPD}/* $(DESTDIR)${REALAPPD} || true; \
 		rmdir $(DESTDIR)${LOCALAPPD}; \
 	    fi; \
 	    mkdir -p ${DESTDIR}${LOCALAPPX}; \
