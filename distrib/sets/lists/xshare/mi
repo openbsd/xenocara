@@ -3356,9 +3356,7 @@
 ./usr/X11R6/share/X11/xkb/rules/base.lst
 ./usr/X11R6/share/X11/xkb/rules/base.xml
 ./usr/X11R6/share/X11/xkb/rules/xkb.dtd
-./usr/X11R6/share/X11/xkb/semantics
 ./usr/X11R6/share/X11/xkb/symbols
-./usr/X11R6/share/X11/xkb/symbols.dir
 ./usr/X11R6/share/X11/xkb/symbols/ad
 ./usr/X11R6/share/X11/xkb/symbols/af
 ./usr/X11R6/share/X11/xkb/symbols/al
