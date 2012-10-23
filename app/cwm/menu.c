@@ -16,7 +16,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: menu.c,v 1.36 2012/08/07 14:05:49 okan Exp $
+ * $OpenBSD: menu.c,v 1.37 2012/10/23 15:32:38 okan Exp $
  */
 
 #include <sys/param.h>
@@ -387,9 +387,14 @@ menu_draw(struct screen_ctx *sc, struct menu_ctx *mc, struct menu_q *menuq,
 	TAILQ_FOREACH(mi, resultq, resultentry) {
 		char *text = mi->print[0] != '\0' ?
 		    mi->print : mi->text;
+		int y = n * font_height(sc) + font_ascent(sc) + 1;
+
+		/* Stop drawing when menu doesn't fit inside the screen. */
+		if (mc->y + y > ymax)
+			break;
 
 		font_draw(sc, text, MIN(strlen(text), MENU_MAXENTRY),
-		    sc->menuwin, 0, n * font_height(sc) + font_ascent(sc) + 1);
+		    sc->menuwin, 0, y);
 		n++;
 	}
 
