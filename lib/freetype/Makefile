@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.26 2012/10/13 17:16:20 espie Exp $
+#	$OpenBSD: Makefile,v 1.27 2012/10/26 06:09:27 matthieu Exp $
 
 FREETYPESRC=	${.CURDIR}/src
 
@@ -47,8 +47,8 @@ includes::
 	${INSTALL_DATA} ${.CURDIR}/builds/unix/ftconfig.h \
 	  ${DESTDIR}${X11BASE}/include/freetype2/freetype/config/ftconfig.h
 
-includes:: freetype2.pc
-	${INSTALL_DATA} freetype2.pc ${DESTDIR}${X11BASE}/lib/pkgconfig
+install-pc: freetype2.pc
+	${INSTALL_DATA} freetype2.pc ${DESTDIR}${LIBDIR}/pkgconfig
 
 includes:: freetype-config
 	${INSTALL} ${INSTALL_COPY} -m 755 -o $(BINOWN) -g $(BINGRP) \
@@ -72,6 +72,8 @@ freetype-config: freetype-config.in
 		-e 's%@ft_version@%${FT_VERSION_INFO}%' -e 's%@wl@%%' \
 		< ${.CURDIR}/builds/unix/freetype-config.in \
 		> freetype-config
+
+realinstall:	install-pc
 
 NOPROFILE=
 
