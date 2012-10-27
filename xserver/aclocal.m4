@@ -1219,6 +1219,11 @@ AC_SUBST([am__untar])
 ]) # _AM_PROG_TAR
 
 m4_include([m4/ac_define_dir.m4])
+m4_include([m4/libtool.m4])
+m4_include([m4/ltoptions.m4])
+m4_include([m4/ltsugar.m4])
+m4_include([m4/ltversion.m4])
+m4_include([m4/lt~obsolete.m4])
 m4_include([m4/xorg-tls.m4])
 dnl fontutil.m4.  Generated from fontutil.m4.in by configure.
 dnl
@@ -1609,24 +1614,6 @@ AC_DEFUN([XORG_FONTSUBDIR],[
 
 AC_DEFUN([XORG_FONTDIR],[XORG_FONTSUBDIR([FONTDIR], [fontdir], [$1])])
 
-# $OpenBSD: aclocal.m4,v 1.24 2012/10/14 08:59:33 matthieu Exp $
-# Minimal libtool.m4 for use with OpenBSD's libtool
-# serial 100
-AC_DEFUN([LT_INIT],[
-	LIBTOOL="/usr/bin/libtool ${LT_OPTS}"
-	RANLIB="/usr/bin/ranlib"
-	AC_SUBST(LIBTOOL)
-	AC_SUBST(RANLIB)
-])
-AU_ALIAS([AC_PROG_LIBTOOL], [LT_INIT])
-AU_ALIAS([AM_PROG_LIBTOOL], [LT_INIT])
-AC_DEFUN([AC_LIBTOOL_WIN32_DLL], [])
-AC_DEFUN([AC_DISABLE_STATIC],[
-	LT_OPTS="--tag disable-static"
-	AC_SUBST(LT_OPTS)
-])
-AC_DEFUN([AC_LIBTOOL_DLOPEN])
-
 dnl xorg-macros.m4.  Generated from xorg-macros.m4.in xorgversion.m4 by configure.
 dnl
 dnl Copyright (c) 2005, 2006, Oracle and/or its affiliates. All rights reserved.
@@ -1666,7 +1653,7 @@ dnl DEALINGS IN THE SOFTWARE.
 # See the "minimum version" comment for each macro you use to see what 
 # version you require.
 m4_defun([XORG_MACROS_VERSION],[
-m4_define([vers_have], [1.16.2])
+m4_define([vers_have], [1.17])
 m4_define([maj_have], m4_substr(vers_have, 0, m4_index(vers_have, [.])))
 m4_define([maj_needed], m4_substr([$1], 0, m4_index([$1], [.])))
 m4_if(m4_cmp(maj_have, maj_needed), 0,,

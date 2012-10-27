@@ -56,7 +56,10 @@ DIST_COMMON = $(sdk_HEADERS) $(srcdir)/Makefile.am \
 	$(srcdir)/Makefile.in $(top_srcdir)/depcomp
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/m4/ac_define_dir.m4 \
-	$(top_srcdir)/m4/xorg-tls.m4 $(top_srcdir)/configure.ac
+	$(top_srcdir)/m4/libtool.m4 $(top_srcdir)/m4/ltoptions.m4 \
+	$(top_srcdir)/m4/ltsugar.m4 $(top_srcdir)/m4/ltversion.m4 \
+	$(top_srcdir)/m4/lt~obsolete.m4 $(top_srcdir)/m4/xorg-tls.m4 \
+	$(top_srcdir)/configure.ac
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
 mkinstalldirs = $(install_sh) -d
@@ -121,17 +124,18 @@ am__v_CPPAS_0 = @echo "  CPPAS   " $@;
 am__v_CPPAS_1 = 
 COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
 	$(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
-LTCOMPILE = $(LIBTOOL) $(AM_V_lt) $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
-	--mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
-	$(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
+LTCOMPILE = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
+	$(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) \
+	$(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) \
+	$(AM_CFLAGS) $(CFLAGS)
 AM_V_CC = $(am__v_CC_@AM_V@)
 am__v_CC_ = $(am__v_CC_@AM_DEFAULT_V@)
 am__v_CC_0 = @echo "  CC      " $@;
 am__v_CC_1 = 
 CCLD = $(CC)
-LINK = $(LIBTOOL) $(AM_V_lt) $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
-	--mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) \
-	$(LDFLAGS) -o $@
+LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
+	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
+	$(AM_LDFLAGS) $(LDFLAGS) -o $@
 AM_V_CCLD = $(am__v_CCLD_@AM_V@)
 am__v_CCLD_ = $(am__v_CCLD_@AM_DEFAULT_V@)
 am__v_CCLD_0 = @echo "  CCLD    " $@;
@@ -184,6 +188,8 @@ APPLE_APPLICATIONS_DIR = @APPLE_APPLICATIONS_DIR@
 APPLE_APPLICATION_NAME = @APPLE_APPLICATION_NAME@
 APP_MAN_DIR = @APP_MAN_DIR@
 APP_MAN_SUFFIX = @APP_MAN_SUFFIX@
+AR = @AR@
+AS = @AS@
 AUTOCONF = @AUTOCONF@
 AUTOHEADER = @AUTOHEADER@
 AUTOMAKE = @AUTOMAKE@
@@ -217,6 +223,7 @@ DGA_CFLAGS = @DGA_CFLAGS@
 DGA_LIBS = @DGA_LIBS@
 DIX_CFLAGS = @DIX_CFLAGS@
 DIX_LIB = @DIX_LIB@
+DLLTOOL = @DLLTOOL@
 DLOPEN_LIBS = @DLOPEN_LIBS@
 DMXEXAMPLES_DEP_CFLAGS = @DMXEXAMPLES_DEP_CFLAGS@
 DMXEXAMPLES_DEP_LIBS = @DMXEXAMPLES_DEP_LIBS@
@@ -236,12 +243,15 @@ DRIVER_MAN_SUFFIX = @DRIVER_MAN_SUFFIX@
 DRI_CFLAGS = @DRI_CFLAGS@
 DRI_DRIVER_PATH = @DRI_DRIVER_PATH@
 DRI_LIBS = @DRI_LIBS@
+DSYMUTIL = @DSYMUTIL@
 DTRACE = @DTRACE@
+DUMPBIN = @DUMPBIN@
 ECHO_C = @ECHO_C@
 ECHO_N = @ECHO_N@
 ECHO_T = @ECHO_T@
 EGREP = @EGREP@
 EXEEXT = @EXEEXT@
+FGREP = @FGREP@
 FILE_MAN_DIR = @FILE_MAN_DIR@
 FILE_MAN_SUFFIX = @FILE_MAN_SUFFIX@
 FONT100DPIDIR = @FONT100DPIDIR@
@@ -275,6 +285,7 @@ KDRIVE_PURE_LIBS = @KDRIVE_PURE_LIBS@
 KHRONOS_OPENGL_REGISTRY_CFLAGS = @KHRONOS_OPENGL_REGISTRY_CFLAGS@
 KHRONOS_OPENGL_REGISTRY_LIBS = @KHRONOS_OPENGL_REGISTRY_LIBS@
 KHRONOS_SPEC_DIR = @KHRONOS_SPEC_DIR@
+LD = @LD@
 LDFLAGS = @LDFLAGS@
 LD_EXPORT_SYMBOLS_FLAG = @LD_EXPORT_SYMBOLS_FLAG@
 LEX = @LEX@
@@ -289,25 +300,31 @@ LIBSHA1_LIBS = @LIBSHA1_LIBS@
 LIBTOOL = @LIBTOOL@
 LIB_MAN_DIR = @LIB_MAN_DIR@
 LIB_MAN_SUFFIX = @LIB_MAN_SUFFIX@
+LIPO = @LIPO@
 LN_S = @LN_S@
 LTLIBOBJS = @LTLIBOBJS@
-LT_OPTS = @LT_OPTS@
 MAINT = @MAINT@
 MAIN_LIB = @MAIN_LIB@
 MAKEINFO = @MAKEINFO@
+MANIFEST_TOOL = @MANIFEST_TOOL@
 MAN_SUBSTS = @MAN_SUBSTS@
 MISC_MAN_DIR = @MISC_MAN_DIR@
 MISC_MAN_SUFFIX = @MISC_MAN_SUFFIX@
 MKDIR_P = @MKDIR_P@
+NM = @NM@
+NMEDIT = @NMEDIT@
 OBJC = @OBJC@
 OBJCCLD = @OBJCCLD@
 OBJCDEPMODE = @OBJCDEPMODE@
 OBJCFLAGS = @OBJCFLAGS@
 OBJCLINK = @OBJCLINK@
+OBJDUMP = @OBJDUMP@
 OBJEXT = @OBJEXT@
 OPENSSL_CFLAGS = @OPENSSL_CFLAGS@
 OPENSSL_LIBS = @OPENSSL_LIBS@
 OS_LIB = @OS_LIB@
+OTOOL = @OTOOL@
+OTOOL64 = @OTOOL64@
 PACKAGE = @PACKAGE@
 PACKAGE_BUGREPORT = @PACKAGE_BUGREPORT@
 PACKAGE_NAME = @PACKAGE_NAME@
@@ -429,7 +446,9 @@ abs_builddir = @abs_builddir@
 abs_srcdir = @abs_srcdir@
 abs_top_builddir = @abs_top_builddir@
 abs_top_srcdir = @abs_top_srcdir@
+ac_ct_AR = @ac_ct_AR@
 ac_ct_CC = @ac_ct_CC@
+ac_ct_DUMPBIN = @ac_ct_DUMPBIN@
 am__include = @am__include@
 am__leading_dot = @am__leading_dot@
 am__quote = @am__quote@
@@ -616,46 +635,46 @@ distclean-compile:
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LTCOMPILE) -c -o $@ $<
 
 agp_noop.lo: $(srcdir)/../shared/agp_noop.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT agp_noop.lo -MD -MP -MF $(DEPDIR)/agp_noop.Tpo -c -o agp_noop.lo `test -f '$(srcdir)/../shared/agp_noop.c' || echo '$(srcdir)/'`$(srcdir)/../shared/agp_noop.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT agp_noop.lo -MD -MP -MF $(DEPDIR)/agp_noop.Tpo -c -o agp_noop.lo `test -f '$(srcdir)/../shared/agp_noop.c' || echo '$(srcdir)/'`$(srcdir)/../shared/agp_noop.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/agp_noop.Tpo $(DEPDIR)/agp_noop.Plo
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(srcdir)/../shared/agp_noop.c' object='agp_noop.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o agp_noop.lo `test -f '$(srcdir)/../shared/agp_noop.c' || echo '$(srcdir)/'`$(srcdir)/../shared/agp_noop.c
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o agp_noop.lo `test -f '$(srcdir)/../shared/agp_noop.c' || echo '$(srcdir)/'`$(srcdir)/../shared/agp_noop.c
 
 kmod_noop.lo: $(srcdir)/../shared/kmod_noop.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT kmod_noop.lo -MD -MP -MF $(DEPDIR)/kmod_noop.Tpo -c -o kmod_noop.lo `test -f '$(srcdir)/../shared/kmod_noop.c' || echo '$(srcdir)/'`$(srcdir)/../shared/kmod_noop.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT kmod_noop.lo -MD -MP -MF $(DEPDIR)/kmod_noop.Tpo -c -o kmod_noop.lo `test -f '$(srcdir)/../shared/kmod_noop.c' || echo '$(srcdir)/'`$(srcdir)/../shared/kmod_noop.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/kmod_noop.Tpo $(DEPDIR)/kmod_noop.Plo
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(srcdir)/../shared/kmod_noop.c' object='kmod_noop.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o kmod_noop.lo `test -f '$(srcdir)/../shared/kmod_noop.c' || echo '$(srcdir)/'`$(srcdir)/../shared/kmod_noop.c
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o kmod_noop.lo `test -f '$(srcdir)/../shared/kmod_noop.c' || echo '$(srcdir)/'`$(srcdir)/../shared/kmod_noop.c
 
 posix_tty.lo: $(srcdir)/../shared/posix_tty.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT posix_tty.lo -MD -MP -MF $(DEPDIR)/posix_tty.Tpo -c -o posix_tty.lo `test -f '$(srcdir)/../shared/posix_tty.c' || echo '$(srcdir)/'`$(srcdir)/../shared/posix_tty.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT posix_tty.lo -MD -MP -MF $(DEPDIR)/posix_tty.Tpo -c -o posix_tty.lo `test -f '$(srcdir)/../shared/posix_tty.c' || echo '$(srcdir)/'`$(srcdir)/../shared/posix_tty.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/posix_tty.Tpo $(DEPDIR)/posix_tty.Plo
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(srcdir)/../shared/posix_tty.c' object='posix_tty.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o posix_tty.lo `test -f '$(srcdir)/../shared/posix_tty.c' || echo '$(srcdir)/'`$(srcdir)/../shared/posix_tty.c
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o posix_tty.lo `test -f '$(srcdir)/../shared/posix_tty.c' || echo '$(srcdir)/'`$(srcdir)/../shared/posix_tty.c
 
 sigio.lo: $(srcdir)/../shared/sigio.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT sigio.lo -MD -MP -MF $(DEPDIR)/sigio.Tpo -c -o sigio.lo `test -f '$(srcdir)/../shared/sigio.c' || echo '$(srcdir)/'`$(srcdir)/../shared/sigio.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT sigio.lo -MD -MP -MF $(DEPDIR)/sigio.Tpo -c -o sigio.lo `test -f '$(srcdir)/../shared/sigio.c' || echo '$(srcdir)/'`$(srcdir)/../shared/sigio.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/sigio.Tpo $(DEPDIR)/sigio.Plo
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(srcdir)/../shared/sigio.c' object='sigio.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o sigio.lo `test -f '$(srcdir)/../shared/sigio.c' || echo '$(srcdir)/'`$(srcdir)/../shared/sigio.c
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o sigio.lo `test -f '$(srcdir)/../shared/sigio.c' || echo '$(srcdir)/'`$(srcdir)/../shared/sigio.c
 
 vidmem.lo: $(srcdir)/../shared/vidmem.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT vidmem.lo -MD -MP -MF $(DEPDIR)/vidmem.Tpo -c -o vidmem.lo `test -f '$(srcdir)/../shared/vidmem.c' || echo '$(srcdir)/'`$(srcdir)/../shared/vidmem.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT vidmem.lo -MD -MP -MF $(DEPDIR)/vidmem.Tpo -c -o vidmem.lo `test -f '$(srcdir)/../shared/vidmem.c' || echo '$(srcdir)/'`$(srcdir)/../shared/vidmem.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/vidmem.Tpo $(DEPDIR)/vidmem.Plo
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(srcdir)/../shared/vidmem.c' object='vidmem.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o vidmem.lo `test -f '$(srcdir)/../shared/vidmem.c' || echo '$(srcdir)/'`$(srcdir)/../shared/vidmem.c
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o vidmem.lo `test -f '$(srcdir)/../shared/vidmem.c' || echo '$(srcdir)/'`$(srcdir)/../shared/vidmem.c
 
 VTsw_noop.lo: $(srcdir)/../shared/VTsw_noop.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT VTsw_noop.lo -MD -MP -MF $(DEPDIR)/VTsw_noop.Tpo -c -o VTsw_noop.lo `test -f '$(srcdir)/../shared/VTsw_noop.c' || echo '$(srcdir)/'`$(srcdir)/../shared/VTsw_noop.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT VTsw_noop.lo -MD -MP -MF $(DEPDIR)/VTsw_noop.Tpo -c -o VTsw_noop.lo `test -f '$(srcdir)/../shared/VTsw_noop.c' || echo '$(srcdir)/'`$(srcdir)/../shared/VTsw_noop.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/VTsw_noop.Tpo $(DEPDIR)/VTsw_noop.Plo
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(srcdir)/../shared/VTsw_noop.c' object='VTsw_noop.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o VTsw_noop.lo `test -f '$(srcdir)/../shared/VTsw_noop.c' || echo '$(srcdir)/'`$(srcdir)/../shared/VTsw_noop.c
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o VTsw_noop.lo `test -f '$(srcdir)/../shared/VTsw_noop.c' || echo '$(srcdir)/'`$(srcdir)/../shared/VTsw_noop.c
 
 mostlyclean-libtool:
 	-rm -f *.lo

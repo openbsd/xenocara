@@ -60,7 +60,10 @@ DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in \
 	$(top_srcdir)/depcomp
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/m4/ac_define_dir.m4 \
-	$(top_srcdir)/m4/xorg-tls.m4 $(top_srcdir)/configure.ac
+	$(top_srcdir)/m4/libtool.m4 $(top_srcdir)/m4/ltoptions.m4 \
+	$(top_srcdir)/m4/ltsugar.m4 $(top_srcdir)/m4/ltversion.m4 \
+	$(top_srcdir)/m4/lt~obsolete.m4 $(top_srcdir)/m4/xorg-tls.m4 \
+	$(top_srcdir)/configure.ac
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
 mkinstalldirs = $(install_sh) -d
@@ -85,93 +88,93 @@ AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
 am__v_lt_0 = --silent
 am__v_lt_1 = 
-dmxaddinput_LINK = $(LIBTOOL) $(AM_V_lt) $(AM_LIBTOOLFLAGS) \
+dmxaddinput_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(dmxaddinput_CFLAGS) \
 	$(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
 am_dmxaddscreen_OBJECTS = dmxaddscreen-dmxaddscreen.$(OBJEXT)
 dmxaddscreen_OBJECTS = $(am_dmxaddscreen_OBJECTS)
 dmxaddscreen_DEPENDENCIES = $(am__DEPENDENCIES_1)
-dmxaddscreen_LINK = $(LIBTOOL) $(AM_V_lt) $(AM_LIBTOOLFLAGS) \
+dmxaddscreen_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(dmxaddscreen_CFLAGS) \
 	$(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
 am_dmxinfo_OBJECTS = dmxinfo-dmxinfo.$(OBJEXT)
 dmxinfo_OBJECTS = $(am_dmxinfo_OBJECTS)
 dmxinfo_DEPENDENCIES = $(am__DEPENDENCIES_1)
-dmxinfo_LINK = $(LIBTOOL) $(AM_V_lt) $(AM_LIBTOOLFLAGS) \
+dmxinfo_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(dmxinfo_CFLAGS) \
 	$(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
 am_dmxreconfig_OBJECTS = dmxreconfig-dmxreconfig.$(OBJEXT)
 dmxreconfig_OBJECTS = $(am_dmxreconfig_OBJECTS)
 dmxreconfig_DEPENDENCIES = $(am__DEPENDENCIES_1)
-dmxreconfig_LINK = $(LIBTOOL) $(AM_V_lt) $(AM_LIBTOOLFLAGS) \
+dmxreconfig_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(dmxreconfig_CFLAGS) \
 	$(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
 am_dmxresize_OBJECTS = dmxresize-dmxresize.$(OBJEXT)
 dmxresize_OBJECTS = $(am_dmxresize_OBJECTS)
 dmxresize_DEPENDENCIES = $(am__DEPENDENCIES_1)
-dmxresize_LINK = $(LIBTOOL) $(AM_V_lt) $(AM_LIBTOOLFLAGS) \
+dmxresize_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(dmxresize_CFLAGS) \
 	$(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
 am_dmxrminput_OBJECTS = dmxrminput-dmxrminput.$(OBJEXT)
 dmxrminput_OBJECTS = $(am_dmxrminput_OBJECTS)
 dmxrminput_DEPENDENCIES = $(am__DEPENDENCIES_1)
-dmxrminput_LINK = $(LIBTOOL) $(AM_V_lt) $(AM_LIBTOOLFLAGS) \
+dmxrminput_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(dmxrminput_CFLAGS) \
 	$(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
 am_dmxrmscreen_OBJECTS = dmxrmscreen-dmxrmscreen.$(OBJEXT)
 dmxrmscreen_OBJECTS = $(am_dmxrmscreen_OBJECTS)
 dmxrmscreen_DEPENDENCIES = $(am__DEPENDENCIES_1)
-dmxrmscreen_LINK = $(LIBTOOL) $(AM_V_lt) $(AM_LIBTOOLFLAGS) \
+dmxrmscreen_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(dmxrmscreen_CFLAGS) \
 	$(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
 am_dmxwininfo_OBJECTS = dmxwininfo-dmxwininfo.$(OBJEXT)
 dmxwininfo_OBJECTS = $(am_dmxwininfo_OBJECTS)
 dmxwininfo_DEPENDENCIES = $(am__DEPENDENCIES_1)
-dmxwininfo_LINK = $(LIBTOOL) $(AM_V_lt) $(AM_LIBTOOLFLAGS) \
+dmxwininfo_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(dmxwininfo_CFLAGS) \
 	$(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
 am_ev_OBJECTS = ev-ev.$(OBJEXT)
 ev_OBJECTS = $(am_ev_OBJECTS)
 ev_DEPENDENCIES =
-ev_LINK = $(LIBTOOL) $(AM_V_lt) $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
-	--mode=link $(CCLD) $(ev_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) \
-	$(LDFLAGS) -o $@
+ev_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
+	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(ev_CFLAGS) $(CFLAGS) \
+	$(AM_LDFLAGS) $(LDFLAGS) -o $@
 am_evi_OBJECTS = evi-evi.$(OBJEXT)
 evi_OBJECTS = $(am_evi_OBJECTS)
 evi_DEPENDENCIES = $(am__DEPENDENCIES_1)
-evi_LINK = $(LIBTOOL) $(AM_V_lt) $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
-	--mode=link $(CCLD) $(evi_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) \
-	$(LDFLAGS) -o $@
+evi_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
+	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(evi_CFLAGS) $(CFLAGS) \
+	$(AM_LDFLAGS) $(LDFLAGS) -o $@
 am_res_OBJECTS = res-res.$(OBJEXT)
 res_OBJECTS = $(am_res_OBJECTS)
 res_DEPENDENCIES = $(am__DEPENDENCIES_1)
-res_LINK = $(LIBTOOL) $(AM_V_lt) $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
-	--mode=link $(CCLD) $(res_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) \
-	$(LDFLAGS) -o $@
+res_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
+	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(res_CFLAGS) $(CFLAGS) \
+	$(AM_LDFLAGS) $(LDFLAGS) -o $@
 am_xbell_OBJECTS = xbell-xbell.$(OBJEXT)
 xbell_OBJECTS = $(am_xbell_OBJECTS)
 xbell_DEPENDENCIES = $(am__DEPENDENCIES_1)
-xbell_LINK = $(LIBTOOL) $(AM_V_lt) $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
-	--mode=link $(CCLD) $(xbell_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) \
-	$(LDFLAGS) -o $@
+xbell_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
+	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(xbell_CFLAGS) $(CFLAGS) \
+	$(AM_LDFLAGS) $(LDFLAGS) -o $@
 am_xinput_OBJECTS = xinput-xinput.$(OBJEXT)
 xinput_OBJECTS = $(am_xinput_OBJECTS)
 xinput_DEPENDENCIES = $(am__DEPENDENCIES_1)
-xinput_LINK = $(LIBTOOL) $(AM_V_lt) $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
-	--mode=link $(CCLD) $(xinput_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) \
-	$(LDFLAGS) -o $@
+xinput_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
+	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(xinput_CFLAGS) $(CFLAGS) \
+	$(AM_LDFLAGS) $(LDFLAGS) -o $@
 am_xled_OBJECTS = xled-xled.$(OBJEXT)
 xled_OBJECTS = $(am_xled_OBJECTS)
 xled_DEPENDENCIES = $(am__DEPENDENCIES_1)
-xled_LINK = $(LIBTOOL) $(AM_V_lt) $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
-	--mode=link $(CCLD) $(xled_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) \
-	$(LDFLAGS) -o $@
+xled_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
+	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(xled_CFLAGS) $(CFLAGS) \
+	$(AM_LDFLAGS) $(LDFLAGS) -o $@
 am_xtest_OBJECTS = xtest-xtest.$(OBJEXT)
 xtest_OBJECTS = $(am_xtest_OBJECTS)
 xtest_DEPENDENCIES = $(am__DEPENDENCIES_1)
-xtest_LINK = $(LIBTOOL) $(AM_V_lt) $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
-	--mode=link $(CCLD) $(xtest_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) \
-	$(LDFLAGS) -o $@
+xtest_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
+	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(xtest_CFLAGS) $(CFLAGS) \
+	$(AM_LDFLAGS) $(LDFLAGS) -o $@
 AM_V_P = $(am__v_P_@AM_V@)
 am__v_P_ = $(am__v_P_@AM_DEFAULT_V@)
 am__v_P_0 = false
@@ -190,17 +193,18 @@ am__depfiles_maybe = depfiles
 am__mv = mv -f
 COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
 	$(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
-LTCOMPILE = $(LIBTOOL) $(AM_V_lt) $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
-	--mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
-	$(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
+LTCOMPILE = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
+	$(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) \
+	$(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) \
+	$(AM_CFLAGS) $(CFLAGS)
 AM_V_CC = $(am__v_CC_@AM_V@)
 am__v_CC_ = $(am__v_CC_@AM_DEFAULT_V@)
 am__v_CC_0 = @echo "  CC      " $@;
 am__v_CC_1 = 
 CCLD = $(CC)
-LINK = $(LIBTOOL) $(AM_V_lt) $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
-	--mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) \
-	$(LDFLAGS) -o $@
+LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
+	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
+	$(AM_LDFLAGS) $(LDFLAGS) -o $@
 AM_V_CCLD = $(am__v_CCLD_@AM_V@)
 am__v_CCLD_ = $(am__v_CCLD_@AM_DEFAULT_V@)
 am__v_CCLD_0 = @echo "  CCLD    " $@;
@@ -234,6 +238,8 @@ APPLE_APPLICATIONS_DIR = @APPLE_APPLICATIONS_DIR@
 APPLE_APPLICATION_NAME = @APPLE_APPLICATION_NAME@
 APP_MAN_DIR = @APP_MAN_DIR@
 APP_MAN_SUFFIX = @APP_MAN_SUFFIX@
+AR = @AR@
+AS = @AS@
 AUTOCONF = @AUTOCONF@
 AUTOHEADER = @AUTOHEADER@
 AUTOMAKE = @AUTOMAKE@
@@ -267,6 +273,7 @@ DGA_CFLAGS = @DGA_CFLAGS@
 DGA_LIBS = @DGA_LIBS@
 DIX_CFLAGS = @DIX_CFLAGS@
 DIX_LIB = @DIX_LIB@
+DLLTOOL = @DLLTOOL@
 DLOPEN_LIBS = @DLOPEN_LIBS@
 DMXEXAMPLES_DEP_CFLAGS = @DMXEXAMPLES_DEP_CFLAGS@
 DMXEXAMPLES_DEP_LIBS = @DMXEXAMPLES_DEP_LIBS@
@@ -286,12 +293,15 @@ DRIVER_MAN_SUFFIX = @DRIVER_MAN_SUFFIX@
 DRI_CFLAGS = @DRI_CFLAGS@
 DRI_DRIVER_PATH = @DRI_DRIVER_PATH@
 DRI_LIBS = @DRI_LIBS@
+DSYMUTIL = @DSYMUTIL@
 DTRACE = @DTRACE@
+DUMPBIN = @DUMPBIN@
 ECHO_C = @ECHO_C@
 ECHO_N = @ECHO_N@
 ECHO_T = @ECHO_T@
 EGREP = @EGREP@
 EXEEXT = @EXEEXT@
+FGREP = @FGREP@
 FILE_MAN_DIR = @FILE_MAN_DIR@
 FILE_MAN_SUFFIX = @FILE_MAN_SUFFIX@
 FONT100DPIDIR = @FONT100DPIDIR@
@@ -325,6 +335,7 @@ KDRIVE_PURE_LIBS = @KDRIVE_PURE_LIBS@
 KHRONOS_OPENGL_REGISTRY_CFLAGS = @KHRONOS_OPENGL_REGISTRY_CFLAGS@
 KHRONOS_OPENGL_REGISTRY_LIBS = @KHRONOS_OPENGL_REGISTRY_LIBS@
 KHRONOS_SPEC_DIR = @KHRONOS_SPEC_DIR@
+LD = @LD@
 LDFLAGS = @LDFLAGS@
 LD_EXPORT_SYMBOLS_FLAG = @LD_EXPORT_SYMBOLS_FLAG@
 LEX = @LEX@
@@ -339,25 +350,31 @@ LIBSHA1_LIBS = @LIBSHA1_LIBS@
 LIBTOOL = @LIBTOOL@
 LIB_MAN_DIR = @LIB_MAN_DIR@
 LIB_MAN_SUFFIX = @LIB_MAN_SUFFIX@
+LIPO = @LIPO@
 LN_S = @LN_S@
 LTLIBOBJS = @LTLIBOBJS@
-LT_OPTS = @LT_OPTS@
 MAINT = @MAINT@
 MAIN_LIB = @MAIN_LIB@
 MAKEINFO = @MAKEINFO@
+MANIFEST_TOOL = @MANIFEST_TOOL@
 MAN_SUBSTS = @MAN_SUBSTS@
 MISC_MAN_DIR = @MISC_MAN_DIR@
 MISC_MAN_SUFFIX = @MISC_MAN_SUFFIX@
 MKDIR_P = @MKDIR_P@
+NM = @NM@
+NMEDIT = @NMEDIT@
 OBJC = @OBJC@
 OBJCCLD = @OBJCCLD@
 OBJCDEPMODE = @OBJCDEPMODE@
 OBJCFLAGS = @OBJCFLAGS@
 OBJCLINK = @OBJCLINK@
+OBJDUMP = @OBJDUMP@
 OBJEXT = @OBJEXT@
 OPENSSL_CFLAGS = @OPENSSL_CFLAGS@
 OPENSSL_LIBS = @OPENSSL_LIBS@
 OS_LIB = @OS_LIB@
+OTOOL = @OTOOL@
+OTOOL64 = @OTOOL64@
 PACKAGE = @PACKAGE@
 PACKAGE_BUGREPORT = @PACKAGE_BUGREPORT@
 PACKAGE_NAME = @PACKAGE_NAME@
@@ -479,7 +496,9 @@ abs_builddir = @abs_builddir@
 abs_srcdir = @abs_srcdir@
 abs_top_builddir = @abs_top_builddir@
 abs_top_srcdir = @abs_top_srcdir@
+ac_ct_AR = @ac_ct_AR@
 ac_ct_CC = @ac_ct_CC@
+ac_ct_DUMPBIN = @ac_ct_DUMPBIN@
 am__include = @am__include@
 am__leading_dot = @am__leading_dot@
 am__quote = @am__quote@

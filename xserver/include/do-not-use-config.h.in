@@ -379,6 +379,10 @@
 /* Support os-specific local connections */
 #undef LOCALCONN
 
+/* Define to the sub-directory in which libtool stores uninstalled libraries.
+   */
+#undef LT_OBJDIR
+
 /* Support MIT-SHM extension */
 #undef MITSHM
 
