@@ -1,4 +1,4 @@
-.\"	$OpenBSD: cwmrc.5,v 1.43 2012/07/06 08:41:29 dcoppa Exp $
+.\"	$OpenBSD: cwmrc.5,v 1.44 2012/10/28 20:13:02 okan Exp $
 .\"
 .\" Copyright (c) 2004,2005 Marius Aamodt Eriksen <marius@monkey.org>
 .\"
@@ -14,7 +14,7 @@
 .\" ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 .\" OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 .\"
-.Dd $Mdocdate: July 6 2012 $
+.Dd $Mdocdate: October 28 2012 $
 .Dt CWMRC 5
 .Os
 .Sh NAME
@@ -39,18 +39,26 @@ Arguments containing whitespace should be surrounded by double quotes
 The following options are accepted:
 .Pp
 .Bl -tag -width Ds -compact
-.It Ic autogroup Ar group windowname
+.It Ic autogroup Ar group windowclass
 .It Ic autogroup Ar group windowname,windowclass
-Control automatic window grouping, based on the name and/or class
-properties, where
+Automatically add new windows to
+.Ar group
+if their class property matches
+.Ar windowclass ,
+or if their name and class properties match
+.Ar windowname
+and
+.Ar windowclass ,
+respectively.
 .Ar group
 is a number between 0 and 9.
-If the group number is 0, then the window will not be grouped; this to
-allow for
-.Dq sticky
-windows in sticky group mode.
+If
+.Ar group
+is 0, matching windows will not be added to any group; this may be
+used to override
+.Dq sticky group mode .
 .Pp
-The name and class of a window may be obtained using
+The name and class values for existing windows may be obtained using
 .Xr xprop 1 .
 .Pp
 .It Ic bind Ar keys command
