@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: conf.c,v 1.99 2012/05/13 15:15:54 okan Exp $
+ * $OpenBSD: conf.c,v 1.100 2012/10/29 19:46:03 okan Exp $
  */
 
 #include <sys/param.h>
@@ -104,8 +104,13 @@ conf_reload(struct conf *c)
 		conf_font(c, sc);
 		menu_init(sc);
 	}
-	TAILQ_FOREACH(cc, &Clientq, entry)
+	TAILQ_FOREACH(cc, &Clientq, entry) {
+		conf_client(cc);
+		/* XXX Does not take hmax/vmax into account. */
+		if ((cc->flags & CLIENT_MAXFLAGS) == CLIENT_MAXIMIZED)
+			cc->bwidth = 0;
 		client_draw_border(cc);
+	}
 }
 
 static struct {
