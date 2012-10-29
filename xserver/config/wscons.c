@@ -236,6 +236,7 @@ wscons_add_pointers(void)
         switch (wsmouse_type) {
           case WSMOUSE_TYPE_SYNAPTICS:
           case WSMOUSE_TYPE_ALPS:
+          case WSMOUSE_TYPE_ELANTECH:
             wscons_add_pointer(devname, "synaptics",
                                ATTR_TOUCHPAD);
             break;
