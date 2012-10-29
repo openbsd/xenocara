@@ -61,7 +61,8 @@ WSConsIsTouchpad(InputInfoPtr pInfo, const char *device)
     }
 
     if (wsmouse_type == WSMOUSE_TYPE_SYNAPTICS ||
-        wsmouse_type == WSMOUSE_TYPE_ALPS)
+        wsmouse_type == WSMOUSE_TYPE_ALPS ||
+        wsmouse_type == WSMOUSE_TYPE_ELANTECH)
         rc = TRUE;
 
 out:
@@ -194,6 +195,13 @@ WSConsReadHwState(InputInfoPtr pInfo,
             hw->z = event.value;
             break;
         case WSCONS_EVENT_MOUSE_ABSOLUTE_W:
+	    if (priv->model == MODEL_ELANTECH) {
+		/* Elantech touchpads report number of fingers directly. */
+		hw->fingerWidth = 5;
+		hw->numFingers = event.value;
+	    	break;
+	    }
+	    /* XXX magic number mapping which is mirrored in pms driver */
             switch (event.value) {
             case 0:
                 hw->fingerWidth = 5;
@@ -291,6 +299,12 @@ WSConsReadDevDimensions(InputInfoPtr pInfo)
         priv->has_width = FALSE;
         priv->has_double = FALSE;
         priv->has_triple = FALSE;
+        break;
+    case WSMOUSE_TYPE_ELANTECH:
+        priv->model = MODEL_ELANTECH;
+        priv->has_width = TRUE;
+        priv->has_double = TRUE;
+        priv->has_triple = TRUE;
         break;
     }
 }
