@@ -1,9 +1,10 @@
-#	$OpenBSD: Makefile,v 1.27 2012/10/26 06:09:27 matthieu Exp $
+#	$OpenBSD: Makefile,v 1.28 2012/10/29 20:15:29 matthieu Exp $
 
 FREETYPESRC=	${.CURDIR}/src
 
 # Get it from builds/unix/configure.ac
 FT_VERSION_INFO= 15.0.9
+INSTALL_PROGRAM = ${INSTALL} ${INSTALL_COPY} -m 755 -o $(BINOWN) -g $(BINGRP)
 
 .ifmake includes
 SUBDIR=	include
@@ -41,6 +42,8 @@ includes:: _SUBDIRUSE
 	${INSTALL_DATA} ${.CURDIR}/builds/unix/ft2unix.h \
 	  ${DESTDIR}${X11BASE}/include/ft2build.h
 
+depend:	freetype-config freetype2.pc
+
 includes::
 	@cmp -s ${DESTDIR}${X11BASE}/include/freetype2/freetype/config/ftconfig.h \
 	  ${.CURDIR}/builds/unix/ftconfig.h || \
@@ -50,9 +53,8 @@ includes::
 install-pc: freetype2.pc
 	${INSTALL_DATA} freetype2.pc ${DESTDIR}${LIBDIR}/pkgconfig
 
-includes:: freetype-config
-	${INSTALL} ${INSTALL_COPY} -m 755 -o $(BINOWN) -g $(BINGRP) \
-	  freetype-config ${DESTDIR}${X11BASE}/bin
+install-config: freetype-config
+	${INSTALL_PROGRAM} freetype-config ${DESTDIR}${X11BASE}/bin
 
 freetype2.pc: freetype2.in Makefile
 	sed -e s%@prefix@%${X11BASE}% -e s%@exec_prefix@%${X11BASE}% \
@@ -73,7 +75,7 @@ freetype-config: freetype-config.in
 		< ${.CURDIR}/builds/unix/freetype-config.in \
 		> freetype-config
 
-realinstall:	install-pc
+realinstall:	install-pc install-config
 
 NOPROFILE=
 
