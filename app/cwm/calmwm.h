@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: calmwm.h,v 1.154 2012/10/31 19:30:19 okan Exp $
+ * $OpenBSD: calmwm.h,v 1.155 2012/10/31 22:06:24 okan Exp $
  */
 
 #ifndef _CALMWM_H_
@@ -273,7 +273,6 @@ struct conf {
 	struct keybinding_q	 keybindingq;
 	struct autogroupwin_q	 autogroupq;
 	struct winmatch_q	 ignoreq;
-	char			 conf_path[MAXPATHLEN];
 	struct cmd_q		 cmdq;
 	struct mousebinding_q	 mousebindingq;
 #define	CONF_STICKY_GROUPS		0x0001

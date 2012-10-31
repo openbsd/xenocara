@@ -1,4 +1,4 @@
-/*	$OpenBSD: parse.y,v 1.33 2011/09/08 12:35:33 okan Exp $ */
+/*	$OpenBSD: parse.y,v 1.34 2012/10/31 22:06:24 okan Exp $ */
 
 /*
  * Copyright (c) 2002, 2003, 2004 Henning Brauer <henning@openbsd.org>
@@ -515,8 +515,6 @@ parse_config(const char *filename, struct conf *xconf)
 		free(conf);
 		return (-1);
 	}
-
-	(void)strlcpy(conf->conf_path, filename, sizeof(conf->conf_path));
 
 	conf_init(conf);
 
