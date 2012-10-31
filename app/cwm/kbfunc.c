@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: kbfunc.c,v 1.63 2012/09/09 19:47:47 okan Exp $
+ * $OpenBSD: kbfunc.c,v 1.64 2012/10/31 19:30:19 okan Exp $
  */
 
 #include <sys/param.h>
@@ -35,6 +35,7 @@
 #define KNOWN_HOSTS	".ssh/known_hosts"
 #define HASH_MARKER	"|1|"
 
+extern char		**cwm_argv;
 extern sig_atomic_t	xev_quit;
 
 void
@@ -490,7 +491,8 @@ kbfunc_quit_wm(struct client_ctx *cc, union arg *arg)
 }
 
 void
-kbfunc_reload(struct client_ctx *cc, union arg *arg)
+kbfunc_restart(struct client_ctx *cc, union arg *arg)
 {
-	conf_reload(&Conf);
+	(void)setsid();
+	(void)execvp(cwm_argv[0], cwm_argv);
 }

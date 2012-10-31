@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: xutil.c,v 1.45 2012/07/13 17:01:05 okan Exp $
+ * $OpenBSD: xutil.c,v 1.46 2012/10/31 19:30:19 okan Exp $
  */
 
 #include <sys/param.h>
@@ -428,10 +428,4 @@ xu_getcolor(struct screen_ctx *sc, char *name)
 	}
 
 	return (color.pixel);
-}
-
-void
-xu_freecolor(struct screen_ctx *sc, unsigned long pixel)
-{
-	XFreeColors(X_Dpy, DefaultColormap(X_Dpy, sc->which), &pixel, 1, 0L);
 }
