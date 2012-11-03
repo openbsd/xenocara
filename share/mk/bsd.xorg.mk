@@ -1,4 +1,4 @@
-# $OpenBSD: bsd.xorg.mk,v 1.46 2012/10/11 16:57:57 espie Exp $ -*- makefile  -*-
+# $OpenBSD: bsd.xorg.mk,v 1.47 2012/11/03 15:19:02 espie Exp $ -*- makefile  -*-
 #
 # Copyright © 2006,2012 Matthieu Herrb
 #
@@ -72,9 +72,8 @@ AUTOTOOLS_ENV=  AUTOMAKE_VERSION="$(AUTOMAKE_VERSION)" \
 
 # pkgconfig
 .if defined(PKGCONFIG)
-.if !defined(PACKAGE_VERSION)
-PACKAGE_VERSION!=m4 ${XSRCDIR}/share/mk/package_version.m4 ${_SRCDIR}/configure.ac
-.endif
+
+PACKAGE_VERSION ?= `m4 ${DESTDIR}${X11BASE}/share/mk/package_version.m4 ${_SRCDIR}/configure.ac`
 
 all: ${PKGCONFIG}
 
@@ -85,7 +84,7 @@ ${PKGCONFIG}: ${PKGCONFIG}.in
 	    -e 's#@exec_prefix@#$${prefix}#g' \
 	    -e 's#@libdir@#$${exec_prefix}/lib#g' \
 	    -e 's#@includedir@#$${prefix}/include#g' \
-	    -e 's#@PACKAGE_VERSION@#${PACKAGE_VERSION}#g' \
+	    -e 's#@PACKAGE_VERSION@#'${PACKAGE_VERSION}'#g' \
 	    ${EXTRA_PKGCONFIG_SUBST} \
 	< $? > $@
 
