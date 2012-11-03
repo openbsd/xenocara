@@ -1,4 +1,4 @@
-# $OpenBSD: 3RDPARTY,v 1.138 2012/10/06 15:46:47 shadchin Exp $
+# $OpenBSD: 3RDPARTY,v 1.139 2012/11/03 15:24:50 matthieu Exp $
 #
 
 Package: 	Freetype
@@ -15,7 +15,7 @@ Archive Site:	http://invisible-island.net/xterm/xterm.html
 
 Package:	Mesa
 Version		7.11.2
-Current Vers:	8.0.4
+Current Vers:	8.0.5
 Maintainer:	Brian Paul
 Archive Site:	http://www.mesa3d.org/
 
@@ -39,7 +39,7 @@ Archive Site:	http://dejavu-fonts.org/
 
 Package:	xlockmore
 Version:	5.22
-Current Vers:	5.38
+Current Vers:	5.41
 Maintainer:	bagleyd@tux.org
 Archive Site:	http://www.tux.org/~bagleyd/latest/
 
