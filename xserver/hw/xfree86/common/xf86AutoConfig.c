@@ -40,7 +40,7 @@
 #include "xf86Priv.h"
 #include "xf86_OSlib.h"
 #include "xf86pciBus.h"
-#if defined(__sparc__) && !defined(__OpenBSD__)
+#if defined(__sparc__)
 #include "xf86sbusBus.h"
 #endif
 
