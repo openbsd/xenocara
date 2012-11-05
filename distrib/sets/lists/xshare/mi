@@ -3950,6 +3950,7 @@
 ./usr/X11R6/share/mk/automake.dep
 ./usr/X11R6/share/mk/bsd.xconf.mk
 ./usr/X11R6/share/mk/bsd.xorg.mk
+./usr/X11R6/share/mk/package_version.m4
 ./usr/X11R6/share/util-macros
 ./usr/X11R6/share/util-macros/INSTALL
 ./usr/X11R6/share/xcb/bigreq.xml
