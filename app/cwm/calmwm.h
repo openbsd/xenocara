@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: calmwm.h,v 1.156 2012/11/07 14:39:44 okan Exp $
+ * $OpenBSD: calmwm.h,v 1.157 2012/11/07 14:40:51 okan Exp $
  */
 
 #ifndef _CALMWM_H_
@@ -74,8 +74,8 @@
 #define CWM_INGROUP		0x0004
 
 /* menu */
-#define CWM_MENU_DUMMY 	0x0001
-#define CWM_MENU_FILE 		0x0002
+#define CWM_MENU_DUMMY		0x0001
+#define CWM_MENU_FILE		0x0002
 
 #define KBTOGROUP(X) ((X) - 1)
 
