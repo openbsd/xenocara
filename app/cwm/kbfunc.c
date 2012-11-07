@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: kbfunc.c,v 1.64 2012/10/31 19:30:19 okan Exp $
+ * $OpenBSD: kbfunc.c,v 1.65 2012/11/07 14:39:44 okan Exp $
  */
 
 #include <sys/param.h>
@@ -298,8 +298,9 @@ kbfunc_exec(struct client_ctx *cc, union arg *arg)
 	}
 	xfree(path);
 
-	if ((mi = menu_filter(sc, &menuq, label, NULL, 1,
-	    search_match_exec, NULL)) != NULL) {
+	if ((mi = menu_filter(sc, &menuq, label, NULL,
+	    CWM_MENU_DUMMY | CWM_MENU_FILE,
+	    search_match_exec_path, NULL)) != NULL) {
 		if (mi->text[0] == '\0')
 			goto out;
 		switch (cmd) {
@@ -376,7 +377,7 @@ kbfunc_ssh(struct client_ctx *cc, union arg *arg)
 	xfree(lbuf);
 	(void)fclose(fp);
 
-	if ((mi = menu_filter(sc, &menuq, "ssh", NULL, 1,
+	if ((mi = menu_filter(sc, &menuq, "ssh", NULL, CWM_MENU_DUMMY,
 	    search_match_exec, NULL)) != NULL) {
 		if (mi->text[0] == '\0')
 			goto out;
@@ -403,7 +404,7 @@ kbfunc_client_label(struct client_ctx *cc, union arg *arg)
 	TAILQ_INIT(&menuq);
 
 	/* dummy is set, so this will always return */
-	mi = menu_filter(cc->sc, &menuq, "label", cc->label, 1,
+	mi = menu_filter(cc->sc, &menuq, "label", cc->label, CWM_MENU_DUMMY,
 	    search_match_text, NULL);
 
 	if (!mi->abort) {

@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: calmwm.h,v 1.155 2012/10/31 22:06:24 okan Exp $
+ * $OpenBSD: calmwm.h,v 1.156 2012/11/07 14:39:44 okan Exp $
  */
 
 #ifndef _CALMWM_H_
@@ -72,6 +72,10 @@
 #define CWM_CYCLE		0x0001
 #define CWM_RCYCLE		0x0002
 #define CWM_INGROUP		0x0004
+
+/* menu */
+#define CWM_MENU_DUMMY 	0x0001
+#define CWM_MENU_FILE 		0x0002
 
 #define KBTOGROUP(X) ((X) - 1)
 
@@ -260,7 +264,7 @@ TAILQ_HEAD(cmd_q, cmd);
 struct menu {
 	TAILQ_ENTRY(menu)	 entry;
 	TAILQ_ENTRY(menu)	 resultentry;
-#define MENU_MAXENTRY		 50
+#define MENU_MAXENTRY		 200
 	char			 text[MENU_MAXENTRY + 1];
 	char			 print[MENU_MAXENTRY + 1];
 	void			*ctx;
@@ -354,6 +358,10 @@ void			 group_update_names(struct screen_ctx *);
 void			 search_match_client(struct menu_q *, struct menu_q *,
 			     char *);
 void			 search_match_exec(struct menu_q *, struct menu_q *,
+			     char *);
+void			 search_match_exec_path(struct menu_q *, struct menu_q *,
+			     char *);
+void			 search_match_path_any(struct menu_q *, struct menu_q *,
 			     char *);
 void			 search_match_text(struct menu_q *, struct menu_q *,
 			     char *);
