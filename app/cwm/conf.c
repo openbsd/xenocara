@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: conf.c,v 1.106 2012/11/07 21:04:55 okan Exp $
+ * $OpenBSD: conf.c,v 1.107 2012/11/07 21:10:32 okan Exp $
  */
 
 #include <sys/param.h>
@@ -461,9 +461,8 @@ conf_bindname(struct conf *c, char *name, char *binding)
 
 		/* skip past the modifiers */
 		substring++;
-	} else {
+	} else
 		substring = name;
-	}
 
 	if (substring[0] == '[' &&
 	    substring[strlen(substring)-1] == ']') {
