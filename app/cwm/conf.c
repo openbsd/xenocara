@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: conf.c,v 1.105 2012/11/07 21:01:48 okan Exp $
+ * $OpenBSD: conf.c,v 1.106 2012/11/07 21:04:55 okan Exp $
  */
 
 #include <sys/param.h>
@@ -571,6 +571,7 @@ conf_mousebind(struct conf *c, char *name, char *binding)
 	if (errstr)
 		warnx("number of buttons is %s: %s", errstr, substring);
 
+	/* We now have the correct binding, remove duplicates. */
 	conf_mouseunbind(c, current_binding);
 
 	if (strcmp("unmap", binding) == 0) {
