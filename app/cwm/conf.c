@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: conf.c,v 1.103 2012/11/07 20:34:39 okan Exp $
+ * $OpenBSD: conf.c,v 1.104 2012/11/07 20:37:55 okan Exp $
  */
 
 #include <sys/param.h>
@@ -483,8 +483,10 @@ conf_bindname(struct conf *c, char *name, char *binding)
 	/* We now have the correct binding, remove duplicates. */
 	conf_unbind(c, current_binding);
 
-	if (strcmp("unmap", binding) == 0)
+	if (strcmp("unmap", binding) == 0) {
+		free(current_binding);
 		return;
+	}
 
 	for (iter = 0; iter < nitems(name_to_kbfunc); iter++) {
 		if (strcmp(name_to_kbfunc[iter].tag, binding) != 0)
@@ -574,8 +576,10 @@ conf_mousebind(struct conf *c, char *name, char *binding)
 
 	conf_mouseunbind(c, current_binding);
 
-	if (strcmp("unmap", binding) == 0)
+	if (strcmp("unmap", binding) == 0) {
+		free(current_binding);
 		return;
+	}
 
 	for (iter = 0; iter < nitems(name_to_mousefunc); iter++) {
 		if (strcmp(name_to_mousefunc[iter].tag, binding) != 0)
