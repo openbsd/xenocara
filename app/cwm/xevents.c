@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: xevents.c,v 1.67 2012/09/12 15:09:33 okan Exp $
+ * $OpenBSD: xevents.c,v 1.68 2012/11/07 14:49:46 okan Exp $
  */
 
 /*
@@ -29,6 +29,7 @@
 
 #include <err.h>
 #include <errno.h>
+#include <signal.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
