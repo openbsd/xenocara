@@ -16,7 +16,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: group.c,v 1.60 2012/09/09 20:52:57 okan Exp $
+ * $OpenBSD: group.c,v 1.61 2012/11/07 20:34:39 okan Exp $
  */
 
 #include <sys/param.h>
@@ -129,7 +129,7 @@ group_show(struct screen_ctx *sc, struct group_ctx *gc)
 	}
 
 	XRestackWindows(X_Dpy, winlist, gc->nhidden);
-	xfree(winlist);
+	free(winlist);
 
 	gc->hidden = 0;
 	group_setactive(sc, gc->shortcut - 1);
@@ -387,7 +387,7 @@ group_menu(XButtonEvent *e)
 cleanup:
 	while ((mi = TAILQ_FIRST(&menuq)) != NULL) {
 		TAILQ_REMOVE(&menuq, mi, entry);
-		xfree(mi);
+		free(mi);
 	}
 }
 
@@ -491,7 +491,7 @@ group_update_names(struct screen_ctx *sc)
 	if (prop_ret != NULL)
 		XFree(prop_ret);
 	if (sc->group_nonames != 0)
-		xfree(sc->group_names);
+		free(sc->group_names);
 
 	sc->group_names = strings;
 	sc->group_nonames = n;

@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: client.c,v 1.101 2012/09/09 19:47:47 okan Exp $
+ * $OpenBSD: client.c,v 1.102 2012/11/07 20:34:39 okan Exp $
  */
 
 #include <sys/param.h>
@@ -166,12 +166,12 @@ client_delete(struct client_ctx *cc)
 	while ((wn = TAILQ_FIRST(&cc->nameq)) != NULL) {
 		TAILQ_REMOVE(&cc->nameq, wn, entry);
 		if (wn->name != emptystring)
-			xfree(wn->name);
-		xfree(wn);
+			free(wn->name);
+		free(wn);
 	}
 
 	client_freehints(cc);
-	xfree(cc);
+	free(cc);
 }
 
 void
@@ -582,8 +582,8 @@ match:
 		assert(wn != NULL);
 		TAILQ_REMOVE(&cc->nameq, wn, entry);
 		if (wn->name != emptystring)
-			xfree(wn->name);
-		xfree(wn);
+			free(wn->name);
+		free(wn);
 		cc->nameqlen--;
 	}
 }
