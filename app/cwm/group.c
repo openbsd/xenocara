@@ -16,7 +16,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: group.c,v 1.61 2012/11/07 20:34:39 okan Exp $
+ * $OpenBSD: group.c,v 1.62 2012/11/08 20:18:19 okan Exp $
  */
 
 #include <sys/param.h>
@@ -472,7 +472,7 @@ group_update_names(struct screen_ctx *sc)
 	strings = xmalloc((nstrings < CALMWM_NGROUPS ? CALMWM_NGROUPS :
 	    nstrings) * sizeof(*strings));
 
-	p = prop_ret;
+	p = (char *)prop_ret;
 	while (n < nstrings) {
 		strings[n++] = xstrdup(p);
 		p += strlen(p) + 1;
@@ -502,7 +502,7 @@ group_update_names(struct screen_ctx *sc)
 static void
 group_set_names(struct screen_ctx *sc)
 {
-	unsigned char	*p, *q;
+	char		*p, *q;
 	size_t		 len = 0, tlen, slen;
 	int		 i;
 
