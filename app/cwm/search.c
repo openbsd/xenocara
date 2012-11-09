@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: search.c,v 1.25 2012/11/07 14:39:44 okan Exp $
+ * $OpenBSD: search.c,v 1.26 2012/11/09 03:52:02 okan Exp $
  */
 
 #include <sys/param.h>
@@ -25,11 +25,11 @@
 #include <err.h>
 #include <errno.h>
 #include <fnmatch.h>
+#include <glob.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <stdio.h>
 #include <unistd.h>
-#include <glob.h>
 
 #include "calmwm.h"
 

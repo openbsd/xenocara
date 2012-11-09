@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: client.c,v 1.102 2012/11/07 20:34:39 okan Exp $
+ * $OpenBSD: client.c,v 1.103 2012/11/09 03:52:02 okan Exp $
  */
 
 #include <sys/param.h>
@@ -24,9 +24,9 @@
 #include <assert.h>
 #include <err.h>
 #include <errno.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <stdio.h>
 #include <unistd.h>
 
 #include "calmwm.h"

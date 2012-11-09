@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: kbfunc.c,v 1.67 2012/11/07 20:34:39 okan Exp $
+ * $OpenBSD: kbfunc.c,v 1.68 2012/11/09 03:52:02 okan Exp $
  */
 
 #include <sys/param.h>
@@ -26,9 +26,9 @@
 #include <errno.h>
 #include <paths.h>
 #include <signal.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <stdio.h>
 #include <unistd.h>
 
 #include "calmwm.h"
