@@ -144,7 +144,9 @@ typedef struct {
     drm_via_mem_t drm;			/* DRM management object */
 #endif
     void  *pVia;			/* VIA driver pointer */
+#ifdef USE_XAA
     FBLinearPtr linear;			/* X linear pool info ptr */
+#endif
     ExaOffscreenArea *exa;
     ScrnInfoPtr pScrn;
 } VIAMem;
@@ -172,7 +174,9 @@ typedef struct  {
     OVERLAYRECORD   overlayRecordV3;
 
     BoxRec  AvailFBArea;
+#ifdef USE_XAA
     FBLinearPtr   SWOVlinear;
+#endif
 
     Bool MPEG_ON;
     Bool SWVideo_ON;

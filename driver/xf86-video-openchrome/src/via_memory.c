@@ -74,14 +74,18 @@ VIAFreeLinear(VIAMemPtr mem)
 
                 if (pVia->useEXA && !pVia->NoAccel) {
                     exaOffscreenFree(mem->pScrn->pScreen, mem->exa);
+#ifdef USE_XAA
                     mem->linear = NULL;
+#endif
                     mem->pool = 0;
                     return;
                 }
             }
+#ifdef USE_XAA
             xf86FreeOffscreenLinear(mem->linear);
             mem->linear = NULL;
             mem->pool = 0;
+#endif
             return;
         case 2:
 #ifdef OPENCHROMEDRI
@@ -93,7 +97,6 @@ VIAFreeLinear(VIAMemPtr mem)
             return;
     }
 }
-
 int
 viaOffScreenLinear(VIAMemPtr mem, ScrnInfoPtr pScrn, unsigned long size)
 {
@@ -113,7 +116,7 @@ viaOffScreenLinear(VIAMemPtr mem, ScrnInfoPtr pScrn, unsigned long size)
         mem->pScrn = pScrn;
         return Success;
     }
-
+#ifdef USE_XAA
     mem->linear = xf86AllocateOffscreenLinear(pScrn->pScreen,
                                               (size + depth - 1) / depth,
                                               32, NULL, NULL, NULL);
@@ -122,6 +125,7 @@ viaOffScreenLinear(VIAMemPtr mem, ScrnInfoPtr pScrn, unsigned long size)
     mem->base = mem->linear->offset * depth;
     mem->pool = 1;
     mem->pScrn = pScrn;
+#endif
     return Success;
 }
 

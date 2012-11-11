@@ -97,6 +97,27 @@ CFLAGS="$XORG_CFLAGS"
 AC_CHECK_HEADER(xf86Modes.h,[XMODES=yes],[XMODES=no],[#include "xorg-server.h"])
 CFLAGS="$save_CFLAGS"
 
+AC_ARG_ENABLE(xaa,
+              AS_HELP_STRING([--enable-xaa],
+                             [Enable legacy X Acceleration Architecture (XAA) [default=auto]]),
+              [XAA="$enableval"],
+              [XAA=auto])
+if test "x$XAA" != xno; then
+        save_CFLAGS=$CFLAGS
+        save_CPPFLAGS=$CPPFLAGS
+        CFLAGS=$XORG_CFLAGS
+        CPPFLAGS="$XORG_CFLAGS"
+        AC_CHECK_HEADERS([xaa.h], XAA=yes, XAA=no)
+        CFLAGS=$save_CFLAGS
+        CPPFLAGS=$save_CPPFLAGS
+fi
+AC_MSG_CHECKING([whether to include XAA support])
+AM_CONDITIONAL(XAA, test "x$XAA" = xyes)
+if test "x$XAA" = xyes; then
+        AC_DEFINE(USE_XAA, test "x$XAA" = xyes, [Build support for XAA])
+fi
+AC_MSG_RESULT([$XAA])
+
 AC_CHECK_DECL(XSERVER_LIBPCIACCESS,
              [XSERVER_LIBPCIACCESS=yes],[XSERVER_LIBPCIACCESS=no],
              [#include "xorg/xorg-server.h"])

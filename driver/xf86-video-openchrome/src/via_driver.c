@@ -1218,9 +1218,11 @@ VIAPreInit(ScrnInfoPtr pScrn, int flags)
             if (!xf86NameCmp(s, "EXA")) {
                 from = X_CONFIG;
                 pVia->useEXA = TRUE;
+#ifdef USE_XAA
             } else if (!xf86NameCmp(s, "XAA")) {
                 from = X_CONFIG;
                 pVia->useEXA = FALSE;
+#endif
             }
         }
         xf86DrvMsg(pScrn->scrnIndex, from,
@@ -1809,11 +1811,13 @@ VIAPreInit(ScrnInfoPtr pScrn, int flags)
                 VIAFreeRec(pScrn);
                 return FALSE;
             }
+#ifdef USE_XAA
         } else {
             if (!xf86LoadSubModule(pScrn, "xaa")) {
                 VIAFreeRec(pScrn);
                 return FALSE;
             }
+#endif
         }
     }
 

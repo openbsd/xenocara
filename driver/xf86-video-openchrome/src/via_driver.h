@@ -61,7 +61,9 @@
 
 #include "xf86cmap.h"
 #include "vbe.h"
+#ifdef USE_XAA
 #include "xaa.h"
+#endif
 
 #include "compat-api.h"
 #include "via_regs.h"
@@ -274,7 +276,9 @@ typedef struct _VIA {
     void                (*PointerMoved)(int index, int x, int y);
 
     /* Support for XAA acceleration */
+#ifdef USE_XAA
     XAAInfoRecPtr       AccelInfoRec;
+#endif
     ViaTwodContext      td;
     Via3DState          v3d;
     Via3DState          *lastToUpload;

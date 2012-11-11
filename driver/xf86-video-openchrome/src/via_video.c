@@ -49,8 +49,10 @@
 
 #include "xf86xv.h"
 #include <X11/extensions/Xv.h>
+#ifdef USE_XAA
 #include "xaa.h"
 #include "xaalocal.h"
+#endif USE_XAA
 #include "dixstruct.h"
 #include "via_xvpriv.h"
 #include "via_swov.h"

@@ -34,7 +34,9 @@
 #endif
 
 #include <X11/Xarch.h>
+#ifdef USE_XAA
 #include "xaalocal.h"
+#endif
 #include "miline.h"
 
 #include "via.h"
@@ -1073,6 +1075,7 @@ viaSetupForSolidLine(ScrnInfoPtr pScrn, int color, int rop,
     ADVANCE_RING;
 }
 
+#ifdef USE_XAA
 static void
 viaSubsequentSolidTwoPointLine(ScrnInfoPtr pScrn, int x1, int y1,
                                int x2, int y2, int flags)
@@ -1349,6 +1352,7 @@ viaInitXAA(ScreenPtr pScreen)
 
 }
 
+#endif
 /*
  * Mark Sync using the 2D blitter for AGP. NoOp for PCI.
  * In the future one could even launch a NULL PCI DMA command
@@ -2594,10 +2598,12 @@ viaExitAccel(ScreenPtr pScreen)
         pVia->exaDriverPtr = NULL;
         return;
     }
+#ifdef _USE_XAA
     if (pVia->AccelInfoRec) {
         XAADestroyInfoRec(pVia->AccelInfoRec);
         pVia->AccelInfoRec = NULL;
     }
+#endif
 }
 
 /*

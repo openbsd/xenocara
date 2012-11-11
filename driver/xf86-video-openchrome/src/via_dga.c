@@ -26,7 +26,9 @@
 #include "config.h"
 #endif
 
+#ifdef USE_XAA
 #include "xaalocal.h"
+#endif
 #include "via_driver.h"
 #include "dgaproc.h"
 
