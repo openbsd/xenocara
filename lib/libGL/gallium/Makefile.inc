@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile.inc,v 1.1.1.1 2012/07/13 12:43:30 mpi Exp $
+# $OpenBSD: Makefile.inc,v 1.2 2012/11/11 12:09:09 mpi Exp $
 
 CPP=	cpp -notraditional
 
@@ -31,12 +31,12 @@ LLVM_CONFIG?=	/usr/local/bin/llvm-config
 
 LLVM_CFLAGS!=	${LLVM_CONFIG} --cflags
 LLVM_CPPFLAGS!=	${LLVM_CONFIG} --cxxflags
-LLVM_LDFLAGS!=	${LLVM_CONFIG} --ldflags
+LLVM_LIBDIR!=	${LLVM_CONFIG} --libdir
 LLVM_LIBS!=	${LLVM_CONFIG} --libs engine
 
 CFLAGS+=	${LLVM_CFLAGS} -std=gnu99
 CXXFLAGS=	${LLVM_CPPFLAGS}
-LDADD+=		${LLVM_LDFLAGS} ${LLVM_LIBS}
+LDADD+=		-L${LLVM_LIBDIR} ${LLVM_LIBS}
 
 CPPFLAGS+= \
 	-DGALLIUM_LLVMPIPE \

@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.32 2012/08/26 18:46:42 mpi Exp $
+# $OpenBSD: Makefile,v 1.33 2012/11/11 12:09:09 mpi Exp $
 .include <bsd.xconf.mk>
 
 .if ${XENOCARA_BUILD_DRI:L} == "yes"
@@ -27,6 +27,8 @@ INCSDIR=	${X11BASE}/include/GL
 .if ${XENOCARA_BUILD_DRI:L} == "yes"
 LDADD=		-L${X11BASE}/lib -lX11 -lXext -lXxf86vm -lXdamage -lXfixes \
 		-ldrm -lstdc++ -lm -lc
+# XXX link libGL with -lpthread to be able to dlopen() the llvm-pipe module
+LDADD+=		-lpthread
 .else
 LDADD=		-L${X11BASE}/lib -lX11 -lXext
 .endif

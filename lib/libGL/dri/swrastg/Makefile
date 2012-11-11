@@ -1,6 +1,6 @@
-#	$OpenBSD: Makefile,v 1.4 2012/08/26 18:46:42 mpi Exp $
+#	$OpenBSD: Makefile,v 1.5 2012/11/11 12:09:09 mpi Exp $
 
-LIB=	swrast_dri.so
+LIB=	swrastg_dri.so
 
 GALLIUM=	${.CURDIR}/../../../../dist/Mesa/src/gallium
 
@@ -41,7 +41,7 @@ LDADD=	../../mesa/libmesagallium/libmesagallium_pic.a \
 	../../glsl/libglsl/libglsl_pic.a \
 	${DRIVER_LIBS} \
 	../../gallium/libgallium/libgallium_pic.a \
-	-L${X11BASE}/lib -lexpat -lm -lstdc++ -lc -lpthread
+	-L${X11BASE}/lib -lexpat -lm -lstdc++ -lc
 DPADD=	../../mesa/libmesagallium/libmesagallium_pic.a
 
 .include "../../gallium/Makefile.inc"
