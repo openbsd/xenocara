@@ -44,5 +44,5 @@ if HAVE_XMLTO
 else
 .xml.man:
 	@echo "WARNING: configure did not find xmlto, cannot create $@ without it"
-	cp ${srcdir}/$@ .
+	-cp ${srcdir}/$@ .
 endif
