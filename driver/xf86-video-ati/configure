@@ -647,6 +647,8 @@ XF86DRM_MODE_FALSE
 XF86DRM_MODE_TRUE
 USE_EXA_FALSE
 USE_EXA_TRUE
+XAA_FALSE
+XAA_TRUE
 LIBUDEV_FALSE
 LIBUDEV_TRUE
 DRM_MODE_FALSE
@@ -820,6 +822,7 @@ with_xorg_module_dir
 enable_dri
 enable_exa
 enable_kms
+enable_xaa
 '
       ac_precious_vars='build_alias
 host_alias
@@ -1485,6 +1488,8 @@ Optional Features:
   --disable-dri           Disable DRI support [[default=auto]]
   --disable-exa           Disable EXA support [[default=enabled]]
   --disable-kms           Disable KMS support [[default=enabled]]
+  --enable-xaa            Enable legacy X Acceleration Architecture (XAA)
+                          [default=auto]
 
 Optional Packages:
   --with-PACKAGE[=ARG]    use PACKAGE [ARG=yes]
@@ -18802,10 +18807,6 @@ else
 fi
 
 
-
-$as_echo "#define USE_XAA 1" >>confdefs.h
-
-
 # Properly handle EXA.
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether to enable EXA support" >&5
 $as_echo_n "checking whether to enable EXA support... " >&6; }
@@ -18955,6 +18956,53 @@ $as_echo "#define HAVE_XORG_LIST 1" >>confdefs.h
 fi
 
 fi
+
+# Check whether --enable-xaa was given.
+if test "${enable_xaa+set}" = set; then :
+  enableval=$enable_xaa; XAA="$enableval"
+else
+  XAA=auto
+fi
+
+if test "x$XAA" != xno; then
+        save_CFLAGS=$CFLAGS
+        save_CPPFLAGS=$CPPFLAGS
+        CFLAGS=$XORG_CFLAGS
+        CPPFLAGS="$XORG_CFLAGS"
+        for ac_header in xaa.h
+do :
+  ac_fn_c_check_header_mongrel "$LINENO" "xaa.h" "ac_cv_header_xaa_h" "$ac_includes_default"
+if test "x$ac_cv_header_xaa_h" = xyes; then :
+  cat >>confdefs.h <<_ACEOF
+#define HAVE_XAA_H 1
+_ACEOF
+ XAA=yes
+else
+  XAA=no
+fi
+
+done
+
+        CFLAGS=$save_CFLAGS
+        CPPFLAGS=$save_CPPFLAGS
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking whether to include XAA support" >&5
+$as_echo_n "checking whether to include XAA support... " >&6; }
+ if test "x$XAA" = xyes; then
+  XAA_TRUE=
+  XAA_FALSE='#'
+else
+  XAA_TRUE='#'
+  XAA_FALSE=
+fi
+
+if test "x$XAA" = xyes; then
+
+$as_echo "#define USE_XAA test \"x\$XAA\" = xyes" >>confdefs.h
+
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $XAA" >&5
+$as_echo "$XAA" >&6; }
 
 CPPFLAGS="$SAVE_CPPFLAGS"
 
@@ -19387,6 +19435,10 @@ Usually this means the macro was only invoked conditionally." "$LINENO" 5
 fi
 if test -z "${LIBUDEV_TRUE}" && test -z "${LIBUDEV_FALSE}"; then
   as_fn_error $? "conditional \"LIBUDEV\" was never defined.
+Usually this means the macro was only invoked conditionally." "$LINENO" 5
+fi
+if test -z "${XAA_TRUE}" && test -z "${XAA_FALSE}"; then
+  as_fn_error $? "conditional \"XAA\" was never defined.
 Usually this means the macro was only invoked conditionally." "$LINENO" 5
 fi
 if test -z "${USE_EXA_TRUE}" && test -z "${USE_EXA_FALSE}"; then

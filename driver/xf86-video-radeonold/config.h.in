@@ -47,6 +47,9 @@
 /* Define to 1 if you have the <unistd.h> header file. */
 #undef HAVE_UNISTD_H
 
+/* Define to 1 if you have the <xaa.h> header file. */
+#undef HAVE_XAA_H
+
 /* Have xf86_crtc_clip_video_helper prototype */
 #undef HAVE_XF86CRTCCLIPVIDEOHELPER
 
