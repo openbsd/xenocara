@@ -163,8 +163,6 @@ fi
 AM_CONDITIONAL(DRM_MODE, test x$DRM_MODE = xyes)
 AM_CONDITIONAL(LIBUDEV, test x$LIBUDEV = xyes)
 
-AC_DEFINE(USE_XAA, 1, [Build support for XAA])
-
 # Properly handle EXA.
 AC_MSG_CHECKING([whether to enable EXA support])
 if test "x$EXA" = xyes; then
@@ -245,6 +243,27 @@ if test "x$have_list_h" = xyes; then
 		   #include "xorg-server.h"
 		   #include "list.h"])
 fi
+
+AC_ARG_ENABLE(xaa,
+              AS_HELP_STRING([--enable-xaa],
+                             [Enable legacy X Acceleration Architecture (XAA) [default=auto]]),
+              [XAA="$enableval"],
+              [XAA=auto])
+if test "x$XAA" != xno; then
+        save_CFLAGS=$CFLAGS
+        save_CPPFLAGS=$CPPFLAGS
+        CFLAGS=$XORG_CFLAGS
+        CPPFLAGS="$XORG_CFLAGS"
+        AC_CHECK_HEADERS([xaa.h], XAA=yes, XAA=no)
+        CFLAGS=$save_CFLAGS
+        CPPFLAGS=$save_CPPFLAGS
+fi
+AC_MSG_CHECKING([whether to include XAA support])
+AM_CONDITIONAL(XAA, test "x$XAA" = xyes)
+if test "x$XAA" = xyes; then
+        AC_DEFINE(USE_XAA, test "x$XAA" = xyes, [Build support for XAA])
+fi
+AC_MSG_RESULT([$XAA])
 
 CPPFLAGS="$SAVE_CPPFLAGS"
 
