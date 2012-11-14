@@ -16,7 +16,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: menu.c,v 1.44 2012/11/09 03:52:02 okan Exp $
+ * $OpenBSD: menu.c,v 1.45 2012/11/14 21:12:24 okan Exp $
  */
 
 #include <sys/param.h>
@@ -299,12 +299,10 @@ menu_handle_key(XEvent *e, struct menu_ctx *mc, struct menu_q *menuq,
 		if ((mi = TAILQ_FIRST(resultq)) != NULL) {
 			/* 
 			 * - We are in exec_path menu mode
-			 * - There's only one result
 			 * - It is equal to the input
 			 * We got a command, launch the file menu
 			 */
 			if ((mc->flags & CWM_MENU_FILE) &&
-			    (TAILQ_NEXT(mi, resultentry) == NULL) &&
 			    (strncmp(mc->searchstr, mi->text,
 					strlen(mi->text))) == 0)
 				return (menu_complete_path(mc));
