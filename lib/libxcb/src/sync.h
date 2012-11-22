@@ -776,6 +776,9 @@ xcb_sync_int64_next (xcb_sync_int64_iterator_t *i  /**< */);
 xcb_generic_iterator_t
 xcb_sync_int64_end (xcb_sync_int64_iterator_t i  /**< */);
 
+int
+xcb_sync_systemcounter_sizeof (const void  *_buffer  /**< */);
+
 
 /*****************************************************************************
  **
@@ -945,7 +948,7 @@ xcb_generic_iterator_t
 xcb_sync_waitcondition_end (xcb_sync_waitcondition_iterator_t i  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -970,7 +973,7 @@ xcb_sync_initialize (xcb_connection_t *c  /**< */,
                      uint8_t           desired_minor_version  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -1028,8 +1031,11 @@ xcb_sync_initialize_reply (xcb_connection_t              *c  /**< */,
                            xcb_sync_initialize_cookie_t   cookie  /**< */,
                            xcb_generic_error_t          **e  /**< */);
 
+int
+xcb_sync_list_system_counters_sizeof (const void  *_buffer  /**< */);
+
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -1050,7 +1056,7 @@ xcb_sync_list_system_counters_cookie_t
 xcb_sync_list_system_counters (xcb_connection_t *c  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -1131,7 +1137,7 @@ xcb_sync_list_system_counters_reply (xcb_connection_t                        *c 
                                      xcb_generic_error_t                    **e  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -1159,7 +1165,7 @@ xcb_sync_create_counter_checked (xcb_connection_t   *c  /**< */,
                                  xcb_sync_int64_t    initial_value  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -1184,7 +1190,7 @@ xcb_sync_create_counter (xcb_connection_t   *c  /**< */,
                          xcb_sync_int64_t    initial_value  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -1210,7 +1216,7 @@ xcb_sync_destroy_counter_checked (xcb_connection_t   *c  /**< */,
                                   xcb_sync_counter_t  counter  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -1233,7 +1239,7 @@ xcb_sync_destroy_counter (xcb_connection_t   *c  /**< */,
                           xcb_sync_counter_t  counter  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -1256,7 +1262,7 @@ xcb_sync_query_counter (xcb_connection_t   *c  /**< */,
                         xcb_sync_counter_t  counter  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -1312,8 +1318,12 @@ xcb_sync_query_counter_reply (xcb_connection_t                 *c  /**< */,
                               xcb_sync_query_counter_cookie_t   cookie  /**< */,
                               xcb_generic_error_t             **e  /**< */);
 
+int
+xcb_sync_await_sizeof (const void  *_buffer  /**< */,
+                       uint32_t     wait_list_len  /**< */);
+
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -1341,7 +1351,7 @@ xcb_sync_await_checked (xcb_connection_t               *c  /**< */,
                         const xcb_sync_waitcondition_t *wait_list  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -1366,7 +1376,7 @@ xcb_sync_await (xcb_connection_t               *c  /**< */,
                 const xcb_sync_waitcondition_t *wait_list  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -1394,7 +1404,7 @@ xcb_sync_change_counter_checked (xcb_connection_t   *c  /**< */,
                                  xcb_sync_int64_t    amount  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -1419,7 +1429,7 @@ xcb_sync_change_counter (xcb_connection_t   *c  /**< */,
                          xcb_sync_int64_t    amount  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -1447,7 +1457,7 @@ xcb_sync_set_counter_checked (xcb_connection_t   *c  /**< */,
                               xcb_sync_int64_t    value  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -1471,8 +1481,11 @@ xcb_sync_set_counter (xcb_connection_t   *c  /**< */,
                       xcb_sync_counter_t  counter  /**< */,
                       xcb_sync_int64_t    value  /**< */);
 
+int
+xcb_sync_create_alarm_sizeof (const void  *_buffer  /**< */);
+
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -1502,7 +1515,7 @@ xcb_sync_create_alarm_checked (xcb_connection_t *c  /**< */,
                                const uint32_t   *value_list  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -1528,8 +1541,11 @@ xcb_sync_create_alarm (xcb_connection_t *c  /**< */,
                        uint32_t          value_mask  /**< */,
                        const uint32_t   *value_list  /**< */);
 
+int
+xcb_sync_change_alarm_sizeof (const void  *_buffer  /**< */);
+
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -1559,7 +1575,7 @@ xcb_sync_change_alarm_checked (xcb_connection_t *c  /**< */,
                                const uint32_t   *value_list  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -1586,7 +1602,7 @@ xcb_sync_change_alarm (xcb_connection_t *c  /**< */,
                        const uint32_t   *value_list  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -1612,7 +1628,7 @@ xcb_sync_destroy_alarm_checked (xcb_connection_t *c  /**< */,
                                 xcb_sync_alarm_t  alarm  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -1635,7 +1651,7 @@ xcb_sync_destroy_alarm (xcb_connection_t *c  /**< */,
                         xcb_sync_alarm_t  alarm  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -1658,7 +1674,7 @@ xcb_sync_query_alarm (xcb_connection_t *c  /**< */,
                       xcb_sync_alarm_t  alarm  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -1715,7 +1731,7 @@ xcb_sync_query_alarm_reply (xcb_connection_t               *c  /**< */,
                             xcb_generic_error_t           **e  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -1743,7 +1759,7 @@ xcb_sync_set_priority_checked (xcb_connection_t *c  /**< */,
                                int32_t           priority  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -1768,7 +1784,7 @@ xcb_sync_set_priority (xcb_connection_t *c  /**< */,
                        int32_t           priority  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -1791,7 +1807,7 @@ xcb_sync_get_priority (xcb_connection_t *c  /**< */,
                        uint32_t          id  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -1848,7 +1864,7 @@ xcb_sync_get_priority_reply (xcb_connection_t                *c  /**< */,
                              xcb_generic_error_t            **e  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -1878,7 +1894,7 @@ xcb_sync_create_fence_checked (xcb_connection_t *c  /**< */,
                                uint8_t           initially_triggered  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -1905,7 +1921,7 @@ xcb_sync_create_fence (xcb_connection_t *c  /**< */,
                        uint8_t           initially_triggered  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -1931,7 +1947,7 @@ xcb_sync_trigger_fence_checked (xcb_connection_t *c  /**< */,
                                 xcb_sync_fence_t  fence  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -1954,7 +1970,7 @@ xcb_sync_trigger_fence (xcb_connection_t *c  /**< */,
                         xcb_sync_fence_t  fence  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -1980,7 +1996,7 @@ xcb_sync_reset_fence_checked (xcb_connection_t *c  /**< */,
                               xcb_sync_fence_t  fence  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -2003,7 +2019,7 @@ xcb_sync_reset_fence (xcb_connection_t *c  /**< */,
                       xcb_sync_fence_t  fence  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -2029,7 +2045,7 @@ xcb_sync_destroy_fence_checked (xcb_connection_t *c  /**< */,
                                 xcb_sync_fence_t  fence  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -2052,7 +2068,7 @@ xcb_sync_destroy_fence (xcb_connection_t *c  /**< */,
                         xcb_sync_fence_t  fence  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -2075,7 +2091,7 @@ xcb_sync_query_fence (xcb_connection_t *c  /**< */,
                       xcb_sync_fence_t  fence  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -2131,8 +2147,12 @@ xcb_sync_query_fence_reply (xcb_connection_t               *c  /**< */,
                             xcb_sync_query_fence_cookie_t   cookie  /**< */,
                             xcb_generic_error_t           **e  /**< */);
 
+int
+xcb_sync_await_fence_sizeof (const void  *_buffer  /**< */,
+                             uint32_t     fence_list_len  /**< */);
+
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -2160,7 +2180,7 @@ xcb_sync_await_fence_checked (xcb_connection_t       *c  /**< */,
                               const xcb_sync_fence_t *fence_list  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *

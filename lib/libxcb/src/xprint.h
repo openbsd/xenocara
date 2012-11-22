@@ -757,6 +757,19 @@ xcb_x_print_string8_next (xcb_x_print_string8_iterator_t *i  /**< */);
 xcb_generic_iterator_t
 xcb_x_print_string8_end (xcb_x_print_string8_iterator_t i  /**< */);
 
+int
+xcb_x_print_printer_serialize (void                        **_buffer  /**< */,
+                               const xcb_x_print_printer_t  *_aux  /**< */,
+                               const xcb_x_print_string8_t  *name  /**< */,
+                               const xcb_x_print_string8_t  *description  /**< */);
+
+int
+xcb_x_print_printer_unserialize (const void              *_buffer  /**< */,
+                                 xcb_x_print_printer_t  **_aux  /**< */);
+
+int
+xcb_x_print_printer_sizeof (const void  *_buffer  /**< */);
+
 
 /*****************************************************************************
  **
@@ -795,19 +808,6 @@ xcb_x_print_printer_name_length (const xcb_x_print_printer_t *R  /**< */);
  
 xcb_generic_iterator_t
 xcb_x_print_printer_name_end (const xcb_x_print_printer_t *R  /**< */);
-
-
-/*****************************************************************************
- **
- ** uint32_t xcb_x_print_printer_desc_len
- ** 
- ** @param const xcb_x_print_printer_t *R
- ** @returns uint32_t
- **
- *****************************************************************************/
- 
-uint32_t
-xcb_x_print_printer_desc_len (const xcb_x_print_printer_t *R  /**< */);
 
 
 /*****************************************************************************
@@ -935,7 +935,7 @@ xcb_generic_iterator_t
 xcb_x_print_pcontext_end (xcb_x_print_pcontext_iterator_t i  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -956,7 +956,7 @@ xcb_x_print_print_query_version_cookie_t
 xcb_x_print_print_query_version (xcb_connection_t *c  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -1010,8 +1010,11 @@ xcb_x_print_print_query_version_reply (xcb_connection_t                         
                                        xcb_x_print_print_query_version_cookie_t   cookie  /**< */,
                                        xcb_generic_error_t                      **e  /**< */);
 
+int
+xcb_x_print_print_get_printer_list_sizeof (const void  *_buffer  /**< */);
+
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -1040,7 +1043,7 @@ xcb_x_print_print_get_printer_list (xcb_connection_t            *c  /**< */,
                                     const xcb_x_print_string8_t *locale  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -1129,7 +1132,7 @@ xcb_x_print_print_get_printer_list_reply (xcb_connection_t                      
                                           xcb_generic_error_t                         **e  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -1153,7 +1156,7 @@ xcb_void_cookie_t
 xcb_x_print_print_rehash_printer_list_checked (xcb_connection_t *c  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -1173,8 +1176,11 @@ xcb_x_print_print_rehash_printer_list_checked (xcb_connection_t *c  /**< */);
 xcb_void_cookie_t
 xcb_x_print_print_rehash_printer_list (xcb_connection_t *c  /**< */);
 
+int
+xcb_x_print_create_context_sizeof (const void  *_buffer  /**< */);
+
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -1208,7 +1214,7 @@ xcb_x_print_create_context_checked (xcb_connection_t            *c  /**< */,
                                     const xcb_x_print_string8_t *locale  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -1239,7 +1245,7 @@ xcb_x_print_create_context (xcb_connection_t            *c  /**< */,
                             const xcb_x_print_string8_t *locale  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -1265,7 +1271,7 @@ xcb_x_print_print_set_context_checked (xcb_connection_t *c  /**< */,
                                        uint32_t          context  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -1288,7 +1294,7 @@ xcb_x_print_print_set_context (xcb_connection_t *c  /**< */,
                                uint32_t          context  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -1309,7 +1315,7 @@ xcb_x_print_print_get_context_cookie_t
 xcb_x_print_print_get_context (xcb_connection_t *c  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -1364,7 +1370,7 @@ xcb_x_print_print_get_context_reply (xcb_connection_t                        *c 
                                      xcb_generic_error_t                    **e  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -1390,7 +1396,7 @@ xcb_x_print_print_destroy_context_checked (xcb_connection_t *c  /**< */,
                                            uint32_t          context  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -1413,7 +1419,7 @@ xcb_x_print_print_destroy_context (xcb_connection_t *c  /**< */,
                                    uint32_t          context  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -1434,7 +1440,7 @@ xcb_x_print_print_get_screen_of_context_cookie_t
 xcb_x_print_print_get_screen_of_context (xcb_connection_t *c  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -1489,7 +1495,7 @@ xcb_x_print_print_get_screen_of_context_reply (xcb_connection_t                 
                                                xcb_generic_error_t                              **e  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -1515,7 +1521,7 @@ xcb_x_print_print_start_job_checked (xcb_connection_t *c  /**< */,
                                      uint8_t           output_mode  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -1538,7 +1544,7 @@ xcb_x_print_print_start_job (xcb_connection_t *c  /**< */,
                              uint8_t           output_mode  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -1564,7 +1570,7 @@ xcb_x_print_print_end_job_checked (xcb_connection_t *c  /**< */,
                                    uint8_t           cancel  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -1587,7 +1593,7 @@ xcb_x_print_print_end_job (xcb_connection_t *c  /**< */,
                            uint8_t           cancel  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -1613,7 +1619,7 @@ xcb_x_print_print_start_doc_checked (xcb_connection_t *c  /**< */,
                                      uint8_t           driver_mode  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -1636,7 +1642,7 @@ xcb_x_print_print_start_doc (xcb_connection_t *c  /**< */,
                              uint8_t           driver_mode  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -1662,7 +1668,7 @@ xcb_x_print_print_end_doc_checked (xcb_connection_t *c  /**< */,
                                    uint8_t           cancel  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -1684,8 +1690,13 @@ xcb_void_cookie_t
 xcb_x_print_print_end_doc (xcb_connection_t *c  /**< */,
                            uint8_t           cancel  /**< */);
 
+int
+xcb_x_print_print_put_document_data_sizeof (const void  *_buffer  /**< */,
+                                            uint32_t     doc_format_len  /**< */,
+                                            uint32_t     options_len  /**< */);
+
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -1727,7 +1738,7 @@ xcb_x_print_print_put_document_data_checked (xcb_connection_t            *c  /**
                                              const xcb_x_print_string8_t *options  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -1765,8 +1776,11 @@ xcb_x_print_print_put_document_data (xcb_connection_t            *c  /**< */,
                                      uint32_t                     options_len  /**< */,
                                      const xcb_x_print_string8_t *options  /**< */);
 
+int
+xcb_x_print_print_get_document_data_sizeof (const void  *_buffer  /**< */);
+
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -1791,7 +1805,7 @@ xcb_x_print_print_get_document_data (xcb_connection_t       *c  /**< */,
                                      uint32_t                max_bytes  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -1889,7 +1903,7 @@ xcb_x_print_print_get_document_data_reply (xcb_connection_t                     
                                            xcb_generic_error_t                          **e  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -1915,7 +1929,7 @@ xcb_x_print_print_start_page_checked (xcb_connection_t *c  /**< */,
                                       xcb_window_t      window  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -1938,7 +1952,7 @@ xcb_x_print_print_start_page (xcb_connection_t *c  /**< */,
                               xcb_window_t      window  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -1964,7 +1978,7 @@ xcb_x_print_print_end_page_checked (xcb_connection_t *c  /**< */,
                                     uint8_t           cancel  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -1986,8 +2000,11 @@ xcb_void_cookie_t
 xcb_x_print_print_end_page (xcb_connection_t *c  /**< */,
                             uint8_t           cancel  /**< */);
 
+int
+xcb_x_print_print_select_input_sizeof (const void  *_buffer  /**< */);
+
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -2017,7 +2034,7 @@ xcb_x_print_print_select_input_checked (xcb_connection_t       *c  /**< */,
                                         const uint32_t         *event_list  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -2043,8 +2060,21 @@ xcb_x_print_print_select_input (xcb_connection_t       *c  /**< */,
                                 uint32_t                event_mask  /**< */,
                                 const uint32_t         *event_list  /**< */);
 
+int
+xcb_x_print_print_input_selected_serialize (void                                           **_buffer  /**< */,
+                                            const xcb_x_print_print_input_selected_reply_t  *_aux  /**< */,
+                                            const uint32_t                                  *event_list  /**< */,
+                                            const uint32_t                                  *all_events_list  /**< */);
+
+int
+xcb_x_print_print_input_selected_unserialize (const void                                 *_buffer  /**< */,
+                                              xcb_x_print_print_input_selected_reply_t  **_aux  /**< */);
+
+int
+xcb_x_print_print_input_selected_sizeof (const void  *_buffer  /**< */);
+
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -2067,7 +2097,7 @@ xcb_x_print_print_input_selected (xcb_connection_t       *c  /**< */,
                                   xcb_x_print_pcontext_t  context  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -2130,19 +2160,6 @@ xcb_x_print_print_input_selected_event_list_length (const xcb_x_print_print_inpu
  
 xcb_generic_iterator_t
 xcb_x_print_print_input_selected_event_list_end (const xcb_x_print_print_input_selected_reply_t *R  /**< */);
-
-
-/*****************************************************************************
- **
- ** uint32_t xcb_x_print_print_input_selected_all_events_mask
- ** 
- ** @param const xcb_x_print_print_input_selected_reply_t *R
- ** @returns uint32_t
- **
- *****************************************************************************/
- 
-uint32_t
-xcb_x_print_print_input_selected_all_events_mask (const xcb_x_print_print_input_selected_reply_t *R  /**< */);
 
 
 /*****************************************************************************
@@ -2215,7 +2232,7 @@ xcb_x_print_print_input_selected_reply (xcb_connection_t                        
                                         xcb_generic_error_t                       **e  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -2240,7 +2257,7 @@ xcb_x_print_print_get_attributes (xcb_connection_t       *c  /**< */,
                                   uint8_t                 pool  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -2298,8 +2315,11 @@ xcb_x_print_print_get_attributes_reply (xcb_connection_t                        
                                         xcb_x_print_print_get_attributes_cookie_t   cookie  /**< */,
                                         xcb_generic_error_t                       **e  /**< */);
 
+int
+xcb_x_print_print_get_one_attributes_sizeof (const void  *_buffer  /**< */);
+
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -2328,7 +2348,7 @@ xcb_x_print_print_get_one_attributes (xcb_connection_t            *c  /**< */,
                                       const xcb_x_print_string8_t *name  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -2429,8 +2449,12 @@ xcb_x_print_print_get_one_attributes_reply (xcb_connection_t                    
                                             xcb_x_print_print_get_one_attributes_cookie_t   cookie  /**< */,
                                             xcb_generic_error_t                           **e  /**< */);
 
+int
+xcb_x_print_print_set_attributes_sizeof (const void  *_buffer  /**< */,
+                                         uint32_t     attributes_len  /**< */);
+
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -2466,7 +2490,7 @@ xcb_x_print_print_set_attributes_checked (xcb_connection_t            *c  /**< *
                                           const xcb_x_print_string8_t *attributes  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -2499,7 +2523,7 @@ xcb_x_print_print_set_attributes (xcb_connection_t            *c  /**< */,
                                   const xcb_x_print_string8_t *attributes  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -2522,7 +2546,7 @@ xcb_x_print_print_get_page_dimensions (xcb_connection_t       *c  /**< */,
                                        xcb_x_print_pcontext_t  context  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -2578,8 +2602,11 @@ xcb_x_print_print_get_page_dimensions_reply (xcb_connection_t                   
                                              xcb_x_print_print_get_page_dimensions_cookie_t   cookie  /**< */,
                                              xcb_generic_error_t                            **e  /**< */);
 
+int
+xcb_x_print_print_query_screens_sizeof (const void  *_buffer  /**< */);
+
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -2600,7 +2627,7 @@ xcb_x_print_print_query_screens_cookie_t
 xcb_x_print_print_query_screens (xcb_connection_t *c  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -2694,7 +2721,7 @@ xcb_x_print_print_query_screens_reply (xcb_connection_t                         
                                        xcb_generic_error_t                      **e  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -2719,7 +2746,7 @@ xcb_x_print_print_set_image_resolution (xcb_connection_t       *c  /**< */,
                                         uint16_t                image_resolution  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -2778,7 +2805,7 @@ xcb_x_print_print_set_image_resolution_reply (xcb_connection_t                  
                                               xcb_generic_error_t                             **e  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -2801,7 +2828,7 @@ xcb_x_print_print_get_image_resolution (xcb_connection_t       *c  /**< */,
                                         xcb_x_print_pcontext_t  context  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *

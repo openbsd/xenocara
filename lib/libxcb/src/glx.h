@@ -3526,8 +3526,12 @@ xcb_glx_context_tag_next (xcb_glx_context_tag_iterator_t *i  /**< */);
 xcb_generic_iterator_t
 xcb_glx_context_tag_end (xcb_glx_context_tag_iterator_t i  /**< */);
 
+int
+xcb_glx_render_sizeof (const void  *_buffer  /**< */,
+                       uint32_t     data_len  /**< */);
+
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -3557,7 +3561,7 @@ xcb_glx_render_checked (xcb_connection_t      *c  /**< */,
                         const uint8_t         *data  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -3583,8 +3587,11 @@ xcb_glx_render (xcb_connection_t      *c  /**< */,
                 uint32_t               data_len  /**< */,
                 const uint8_t         *data  /**< */);
 
+int
+xcb_glx_render_large_sizeof (const void  *_buffer  /**< */);
+
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -3618,7 +3625,7 @@ xcb_glx_render_large_checked (xcb_connection_t      *c  /**< */,
                               const uint8_t         *data  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -3649,7 +3656,7 @@ xcb_glx_render_large (xcb_connection_t      *c  /**< */,
                       const uint8_t         *data  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -3683,7 +3690,7 @@ xcb_glx_create_context_checked (xcb_connection_t  *c  /**< */,
                                 uint8_t            is_direct  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -3714,7 +3721,7 @@ xcb_glx_create_context (xcb_connection_t  *c  /**< */,
                         uint8_t            is_direct  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -3740,7 +3747,7 @@ xcb_glx_destroy_context_checked (xcb_connection_t  *c  /**< */,
                                  xcb_glx_context_t  context  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -3763,7 +3770,7 @@ xcb_glx_destroy_context (xcb_connection_t  *c  /**< */,
                          xcb_glx_context_t  context  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -3790,7 +3797,7 @@ xcb_glx_make_current (xcb_connection_t      *c  /**< */,
                       xcb_glx_context_tag_t  old_context_tag  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -3851,7 +3858,7 @@ xcb_glx_make_current_reply (xcb_connection_t               *c  /**< */,
                             xcb_generic_error_t           **e  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -3874,7 +3881,7 @@ xcb_glx_is_direct (xcb_connection_t  *c  /**< */,
                    xcb_glx_context_t  context  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -3931,7 +3938,7 @@ xcb_glx_is_direct_reply (xcb_connection_t            *c  /**< */,
                          xcb_generic_error_t        **e  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -3956,7 +3963,7 @@ xcb_glx_query_version (xcb_connection_t *c  /**< */,
                        uint32_t          minor_version  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -4015,7 +4022,7 @@ xcb_glx_query_version_reply (xcb_connection_t                *c  /**< */,
                              xcb_generic_error_t            **e  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -4041,7 +4048,7 @@ xcb_glx_wait_gl_checked (xcb_connection_t      *c  /**< */,
                          xcb_glx_context_tag_t  context_tag  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -4064,7 +4071,7 @@ xcb_glx_wait_gl (xcb_connection_t      *c  /**< */,
                  xcb_glx_context_tag_t  context_tag  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -4090,7 +4097,7 @@ xcb_glx_wait_x_checked (xcb_connection_t      *c  /**< */,
                         xcb_glx_context_tag_t  context_tag  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -4113,7 +4120,7 @@ xcb_glx_wait_x (xcb_connection_t      *c  /**< */,
                 xcb_glx_context_tag_t  context_tag  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -4145,7 +4152,7 @@ xcb_glx_copy_context_checked (xcb_connection_t      *c  /**< */,
                               xcb_glx_context_tag_t  src_context_tag  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -4174,7 +4181,7 @@ xcb_glx_copy_context (xcb_connection_t      *c  /**< */,
                       xcb_glx_context_tag_t  src_context_tag  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -4202,7 +4209,7 @@ xcb_glx_swap_buffers_checked (xcb_connection_t      *c  /**< */,
                               xcb_glx_drawable_t     drawable  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -4227,7 +4234,7 @@ xcb_glx_swap_buffers (xcb_connection_t      *c  /**< */,
                       xcb_glx_drawable_t     drawable  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -4261,7 +4268,7 @@ xcb_glx_use_x_font_checked (xcb_connection_t      *c  /**< */,
                             uint32_t               list_base  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -4292,7 +4299,7 @@ xcb_glx_use_x_font (xcb_connection_t      *c  /**< */,
                     uint32_t               list_base  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -4324,7 +4331,7 @@ xcb_glx_create_glx_pixmap_checked (xcb_connection_t *c  /**< */,
                                    xcb_glx_pixmap_t  glx_pixmap  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -4352,8 +4359,11 @@ xcb_glx_create_glx_pixmap (xcb_connection_t *c  /**< */,
                            xcb_pixmap_t      pixmap  /**< */,
                            xcb_glx_pixmap_t  glx_pixmap  /**< */);
 
+int
+xcb_glx_get_visual_configs_sizeof (const void  *_buffer  /**< */);
+
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -4376,7 +4386,7 @@ xcb_glx_get_visual_configs (xcb_connection_t *c  /**< */,
                             uint32_t          screen  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -4472,7 +4482,7 @@ xcb_glx_get_visual_configs_reply (xcb_connection_t                     *c  /**< 
                                   xcb_generic_error_t                 **e  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -4498,7 +4508,7 @@ xcb_glx_destroy_glx_pixmap_checked (xcb_connection_t *c  /**< */,
                                     xcb_glx_pixmap_t  glx_pixmap  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -4520,8 +4530,12 @@ xcb_void_cookie_t
 xcb_glx_destroy_glx_pixmap (xcb_connection_t *c  /**< */,
                             xcb_glx_pixmap_t  glx_pixmap  /**< */);
 
+int
+xcb_glx_vendor_private_sizeof (const void  *_buffer  /**< */,
+                               uint32_t     data_len  /**< */);
+
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -4553,7 +4567,7 @@ xcb_glx_vendor_private_checked (xcb_connection_t      *c  /**< */,
                                 const uint8_t         *data  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -4581,8 +4595,12 @@ xcb_glx_vendor_private (xcb_connection_t      *c  /**< */,
                         uint32_t               data_len  /**< */,
                         const uint8_t         *data  /**< */);
 
+int
+xcb_glx_vendor_private_with_reply_sizeof (const void  *_buffer  /**< */,
+                                          uint32_t     data_len  /**< */);
+
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -4611,7 +4629,7 @@ xcb_glx_vendor_private_with_reply (xcb_connection_t      *c  /**< */,
                                    const uint8_t         *data  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -4713,7 +4731,7 @@ xcb_glx_vendor_private_with_reply_reply (xcb_connection_t                       
                                          xcb_generic_error_t                        **e  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -4736,7 +4754,7 @@ xcb_glx_query_extensions_string (xcb_connection_t *c  /**< */,
                                  uint32_t          screen  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -4792,8 +4810,11 @@ xcb_glx_query_extensions_string_reply (xcb_connection_t                         
                                        xcb_glx_query_extensions_string_cookie_t   cookie  /**< */,
                                        xcb_generic_error_t                      **e  /**< */);
 
+int
+xcb_glx_query_server_string_sizeof (const void  *_buffer  /**< */);
+
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -4818,7 +4839,7 @@ xcb_glx_query_server_string (xcb_connection_t *c  /**< */,
                              uint32_t          name  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -4915,8 +4936,11 @@ xcb_glx_query_server_string_reply (xcb_connection_t                      *c  /**
                                    xcb_glx_query_server_string_cookie_t   cookie  /**< */,
                                    xcb_generic_error_t                  **e  /**< */);
 
+int
+xcb_glx_client_info_sizeof (const void  *_buffer  /**< */);
+
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -4948,7 +4972,7 @@ xcb_glx_client_info_checked (xcb_connection_t *c  /**< */,
                              const char       *string  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -4976,8 +5000,11 @@ xcb_glx_client_info (xcb_connection_t *c  /**< */,
                      uint32_t          str_len  /**< */,
                      const char       *string  /**< */);
 
+int
+xcb_glx_get_fb_configs_sizeof (const void  *_buffer  /**< */);
+
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -5000,7 +5027,7 @@ xcb_glx_get_fb_configs (xcb_connection_t *c  /**< */,
                         uint32_t          screen  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -5095,8 +5122,11 @@ xcb_glx_get_fb_configs_reply (xcb_connection_t                 *c  /**< */,
                               xcb_glx_get_fb_configs_cookie_t   cookie  /**< */,
                               xcb_generic_error_t             **e  /**< */);
 
+int
+xcb_glx_create_pixmap_sizeof (const void  *_buffer  /**< */);
+
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -5132,7 +5162,7 @@ xcb_glx_create_pixmap_checked (xcb_connection_t   *c  /**< */,
                                const uint32_t     *attribs  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -5165,7 +5195,7 @@ xcb_glx_create_pixmap (xcb_connection_t   *c  /**< */,
                        const uint32_t     *attribs  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -5191,7 +5221,7 @@ xcb_glx_destroy_pixmap_checked (xcb_connection_t *c  /**< */,
                                 xcb_glx_pixmap_t  glx_pixmap  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -5214,7 +5244,7 @@ xcb_glx_destroy_pixmap (xcb_connection_t *c  /**< */,
                         xcb_glx_pixmap_t  glx_pixmap  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -5250,7 +5280,7 @@ xcb_glx_create_new_context_checked (xcb_connection_t   *c  /**< */,
                                     uint8_t             is_direct  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -5282,8 +5312,11 @@ xcb_glx_create_new_context (xcb_connection_t   *c  /**< */,
                             xcb_glx_context_t   share_list  /**< */,
                             uint8_t             is_direct  /**< */);
 
+int
+xcb_glx_query_context_sizeof (const void  *_buffer  /**< */);
+
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -5306,7 +5339,7 @@ xcb_glx_query_context (xcb_connection_t  *c  /**< */,
                        xcb_glx_context_t  context  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -5402,7 +5435,7 @@ xcb_glx_query_context_reply (xcb_connection_t                *c  /**< */,
                              xcb_generic_error_t            **e  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -5431,7 +5464,7 @@ xcb_glx_make_context_current (xcb_connection_t      *c  /**< */,
                               xcb_glx_context_t      context  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -5493,8 +5526,11 @@ xcb_glx_make_context_current_reply (xcb_connection_t                       *c  /
                                     xcb_glx_make_context_current_cookie_t   cookie  /**< */,
                                     xcb_generic_error_t                   **e  /**< */);
 
+int
+xcb_glx_create_pbuffer_sizeof (const void  *_buffer  /**< */);
+
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -5528,7 +5564,7 @@ xcb_glx_create_pbuffer_checked (xcb_connection_t   *c  /**< */,
                                 const uint32_t     *attribs  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -5559,7 +5595,7 @@ xcb_glx_create_pbuffer (xcb_connection_t   *c  /**< */,
                         const uint32_t     *attribs  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -5585,7 +5621,7 @@ xcb_glx_destroy_pbuffer_checked (xcb_connection_t  *c  /**< */,
                                  xcb_glx_pbuffer_t  pbuffer  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -5607,8 +5643,11 @@ xcb_void_cookie_t
 xcb_glx_destroy_pbuffer (xcb_connection_t  *c  /**< */,
                          xcb_glx_pbuffer_t  pbuffer  /**< */);
 
+int
+xcb_glx_get_drawable_attributes_sizeof (const void  *_buffer  /**< */);
+
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -5631,7 +5670,7 @@ xcb_glx_get_drawable_attributes (xcb_connection_t   *c  /**< */,
                                  xcb_glx_drawable_t  drawable  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -5726,8 +5765,11 @@ xcb_glx_get_drawable_attributes_reply (xcb_connection_t                         
                                        xcb_glx_get_drawable_attributes_cookie_t   cookie  /**< */,
                                        xcb_generic_error_t                      **e  /**< */);
 
+int
+xcb_glx_change_drawable_attributes_sizeof (const void  *_buffer  /**< */);
+
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -5757,7 +5799,7 @@ xcb_glx_change_drawable_attributes_checked (xcb_connection_t   *c  /**< */,
                                             const uint32_t     *attribs  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -5783,8 +5825,11 @@ xcb_glx_change_drawable_attributes (xcb_connection_t   *c  /**< */,
                                     uint32_t            num_attribs  /**< */,
                                     const uint32_t     *attribs  /**< */);
 
+int
+xcb_glx_create_window_sizeof (const void  *_buffer  /**< */);
+
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -5820,7 +5865,7 @@ xcb_glx_create_window_checked (xcb_connection_t   *c  /**< */,
                                const uint32_t     *attribs  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -5853,7 +5898,7 @@ xcb_glx_create_window (xcb_connection_t   *c  /**< */,
                        const uint32_t     *attribs  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -5879,7 +5924,7 @@ xcb_glx_delete_window_checked (xcb_connection_t *c  /**< */,
                                xcb_glx_window_t  glxwindow  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -5901,8 +5946,11 @@ xcb_void_cookie_t
 xcb_glx_delete_window (xcb_connection_t *c  /**< */,
                        xcb_glx_window_t  glxwindow  /**< */);
 
+int
+xcb_glx_set_client_info_arb_sizeof (const void  *_buffer  /**< */);
+
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -5942,7 +5990,7 @@ xcb_glx_set_client_info_arb_checked (xcb_connection_t *c  /**< */,
                                      const char       *glx_extension_string  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -5978,8 +6026,11 @@ xcb_glx_set_client_info_arb (xcb_connection_t *c  /**< */,
                              const char       *gl_extension_string  /**< */,
                              const char       *glx_extension_string  /**< */);
 
+int
+xcb_glx_create_context_attribs_arb_sizeof (const void  *_buffer  /**< */);
+
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -6017,7 +6068,7 @@ xcb_glx_create_context_attribs_arb_checked (xcb_connection_t   *c  /**< */,
                                             const uint32_t     *attribs  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -6051,8 +6102,11 @@ xcb_glx_create_context_attribs_arb (xcb_connection_t   *c  /**< */,
                                     uint32_t            num_attribs  /**< */,
                                     const uint32_t     *attribs  /**< */);
 
+int
+xcb_glx_set_client_info_2arb_sizeof (const void  *_buffer  /**< */);
+
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -6092,7 +6146,7 @@ xcb_glx_set_client_info_2arb_checked (xcb_connection_t *c  /**< */,
                                       const char       *glx_extension_string  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -6129,7 +6183,7 @@ xcb_glx_set_client_info_2arb (xcb_connection_t *c  /**< */,
                               const char       *glx_extension_string  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -6159,7 +6213,7 @@ xcb_glx_new_list_checked (xcb_connection_t      *c  /**< */,
                           uint32_t               mode  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -6186,7 +6240,7 @@ xcb_glx_new_list (xcb_connection_t      *c  /**< */,
                   uint32_t               mode  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -6212,7 +6266,7 @@ xcb_glx_end_list_checked (xcb_connection_t      *c  /**< */,
                           xcb_glx_context_tag_t  context_tag  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -6235,7 +6289,7 @@ xcb_glx_end_list (xcb_connection_t      *c  /**< */,
                   xcb_glx_context_tag_t  context_tag  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -6265,7 +6319,7 @@ xcb_glx_delete_lists_checked (xcb_connection_t      *c  /**< */,
                               int32_t                range  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -6292,7 +6346,7 @@ xcb_glx_delete_lists (xcb_connection_t      *c  /**< */,
                       int32_t                range  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -6317,7 +6371,7 @@ xcb_glx_gen_lists (xcb_connection_t      *c  /**< */,
                    int32_t                range  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -6376,7 +6430,7 @@ xcb_glx_gen_lists_reply (xcb_connection_t            *c  /**< */,
                          xcb_generic_error_t        **e  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -6406,7 +6460,7 @@ xcb_glx_feedback_buffer_checked (xcb_connection_t      *c  /**< */,
                                  int32_t                type  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -6433,7 +6487,7 @@ xcb_glx_feedback_buffer (xcb_connection_t      *c  /**< */,
                          int32_t                type  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -6461,7 +6515,7 @@ xcb_glx_select_buffer_checked (xcb_connection_t      *c  /**< */,
                                int32_t                size  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -6485,8 +6539,11 @@ xcb_glx_select_buffer (xcb_connection_t      *c  /**< */,
                        xcb_glx_context_tag_t  context_tag  /**< */,
                        int32_t                size  /**< */);
 
+int
+xcb_glx_render_mode_sizeof (const void  *_buffer  /**< */);
+
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -6511,7 +6568,7 @@ xcb_glx_render_mode (xcb_connection_t      *c  /**< */,
                      uint32_t               mode  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -6609,7 +6666,7 @@ xcb_glx_render_mode_reply (xcb_connection_t              *c  /**< */,
                            xcb_generic_error_t          **e  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -6632,7 +6689,7 @@ xcb_glx_finish (xcb_connection_t      *c  /**< */,
                 xcb_glx_context_tag_t  context_tag  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -6689,7 +6746,7 @@ xcb_glx_finish_reply (xcb_connection_t         *c  /**< */,
                       xcb_generic_error_t     **e  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -6719,7 +6776,7 @@ xcb_glx_pixel_storef_checked (xcb_connection_t      *c  /**< */,
                               xcb_glx_float32_t      datum  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -6746,7 +6803,7 @@ xcb_glx_pixel_storef (xcb_connection_t      *c  /**< */,
                       xcb_glx_float32_t      datum  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -6776,7 +6833,7 @@ xcb_glx_pixel_storei_checked (xcb_connection_t      *c  /**< */,
                               int32_t                datum  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -6802,8 +6859,11 @@ xcb_glx_pixel_storei (xcb_connection_t      *c  /**< */,
                       uint32_t               pname  /**< */,
                       int32_t                datum  /**< */);
 
+int
+xcb_glx_read_pixels_sizeof (const void  *_buffer  /**< */);
+
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -6842,7 +6902,7 @@ xcb_glx_read_pixels (xcb_connection_t      *c  /**< */,
                      uint8_t                lsb_first  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -6953,8 +7013,11 @@ xcb_glx_read_pixels_reply (xcb_connection_t              *c  /**< */,
                            xcb_glx_read_pixels_cookie_t   cookie  /**< */,
                            xcb_generic_error_t          **e  /**< */);
 
+int
+xcb_glx_get_booleanv_sizeof (const void  *_buffer  /**< */);
+
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -6979,7 +7042,7 @@ xcb_glx_get_booleanv (xcb_connection_t      *c  /**< */,
                       int32_t                pname  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -7076,8 +7139,11 @@ xcb_glx_get_booleanv_reply (xcb_connection_t               *c  /**< */,
                             xcb_glx_get_booleanv_cookie_t   cookie  /**< */,
                             xcb_generic_error_t           **e  /**< */);
 
+int
+xcb_glx_get_clip_plane_sizeof (const void  *_buffer  /**< */);
+
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -7102,7 +7168,7 @@ xcb_glx_get_clip_plane (xcb_connection_t      *c  /**< */,
                         int32_t                plane  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -7199,8 +7265,11 @@ xcb_glx_get_clip_plane_reply (xcb_connection_t                 *c  /**< */,
                               xcb_glx_get_clip_plane_cookie_t   cookie  /**< */,
                               xcb_generic_error_t             **e  /**< */);
 
+int
+xcb_glx_get_doublev_sizeof (const void  *_buffer  /**< */);
+
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -7225,7 +7294,7 @@ xcb_glx_get_doublev (xcb_connection_t      *c  /**< */,
                      uint32_t               pname  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -7323,7 +7392,7 @@ xcb_glx_get_doublev_reply (xcb_connection_t              *c  /**< */,
                            xcb_generic_error_t          **e  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -7346,7 +7415,7 @@ xcb_glx_get_error (xcb_connection_t      *c  /**< */,
                    xcb_glx_context_tag_t  context_tag  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -7402,8 +7471,11 @@ xcb_glx_get_error_reply (xcb_connection_t            *c  /**< */,
                          xcb_glx_get_error_cookie_t   cookie  /**< */,
                          xcb_generic_error_t        **e  /**< */);
 
+int
+xcb_glx_get_floatv_sizeof (const void  *_buffer  /**< */);
+
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -7428,7 +7500,7 @@ xcb_glx_get_floatv (xcb_connection_t      *c  /**< */,
                     uint32_t               pname  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -7525,8 +7597,11 @@ xcb_glx_get_floatv_reply (xcb_connection_t             *c  /**< */,
                           xcb_glx_get_floatv_cookie_t   cookie  /**< */,
                           xcb_generic_error_t         **e  /**< */);
 
+int
+xcb_glx_get_integerv_sizeof (const void  *_buffer  /**< */);
+
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -7551,7 +7626,7 @@ xcb_glx_get_integerv (xcb_connection_t      *c  /**< */,
                       uint32_t               pname  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -7648,8 +7723,11 @@ xcb_glx_get_integerv_reply (xcb_connection_t               *c  /**< */,
                             xcb_glx_get_integerv_cookie_t   cookie  /**< */,
                             xcb_generic_error_t           **e  /**< */);
 
+int
+xcb_glx_get_lightfv_sizeof (const void  *_buffer  /**< */);
+
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -7676,7 +7754,7 @@ xcb_glx_get_lightfv (xcb_connection_t      *c  /**< */,
                      uint32_t               pname  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -7775,8 +7853,11 @@ xcb_glx_get_lightfv_reply (xcb_connection_t              *c  /**< */,
                            xcb_glx_get_lightfv_cookie_t   cookie  /**< */,
                            xcb_generic_error_t          **e  /**< */);
 
+int
+xcb_glx_get_lightiv_sizeof (const void  *_buffer  /**< */);
+
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -7803,7 +7884,7 @@ xcb_glx_get_lightiv (xcb_connection_t      *c  /**< */,
                      uint32_t               pname  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -7902,8 +7983,11 @@ xcb_glx_get_lightiv_reply (xcb_connection_t              *c  /**< */,
                            xcb_glx_get_lightiv_cookie_t   cookie  /**< */,
                            xcb_generic_error_t          **e  /**< */);
 
+int
+xcb_glx_get_mapdv_sizeof (const void  *_buffer  /**< */);
+
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -7930,7 +8014,7 @@ xcb_glx_get_mapdv (xcb_connection_t      *c  /**< */,
                    uint32_t               query  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -8029,8 +8113,11 @@ xcb_glx_get_mapdv_reply (xcb_connection_t            *c  /**< */,
                          xcb_glx_get_mapdv_cookie_t   cookie  /**< */,
                          xcb_generic_error_t        **e  /**< */);
 
+int
+xcb_glx_get_mapfv_sizeof (const void  *_buffer  /**< */);
+
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -8057,7 +8144,7 @@ xcb_glx_get_mapfv (xcb_connection_t      *c  /**< */,
                    uint32_t               query  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -8156,8 +8243,11 @@ xcb_glx_get_mapfv_reply (xcb_connection_t            *c  /**< */,
                          xcb_glx_get_mapfv_cookie_t   cookie  /**< */,
                          xcb_generic_error_t        **e  /**< */);
 
+int
+xcb_glx_get_mapiv_sizeof (const void  *_buffer  /**< */);
+
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -8184,7 +8274,7 @@ xcb_glx_get_mapiv (xcb_connection_t      *c  /**< */,
                    uint32_t               query  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -8283,8 +8373,11 @@ xcb_glx_get_mapiv_reply (xcb_connection_t            *c  /**< */,
                          xcb_glx_get_mapiv_cookie_t   cookie  /**< */,
                          xcb_generic_error_t        **e  /**< */);
 
+int
+xcb_glx_get_materialfv_sizeof (const void  *_buffer  /**< */);
+
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -8311,7 +8404,7 @@ xcb_glx_get_materialfv (xcb_connection_t      *c  /**< */,
                         uint32_t               pname  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -8410,8 +8503,11 @@ xcb_glx_get_materialfv_reply (xcb_connection_t                 *c  /**< */,
                               xcb_glx_get_materialfv_cookie_t   cookie  /**< */,
                               xcb_generic_error_t             **e  /**< */);
 
+int
+xcb_glx_get_materialiv_sizeof (const void  *_buffer  /**< */);
+
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -8438,7 +8534,7 @@ xcb_glx_get_materialiv (xcb_connection_t      *c  /**< */,
                         uint32_t               pname  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -8537,8 +8633,11 @@ xcb_glx_get_materialiv_reply (xcb_connection_t                 *c  /**< */,
                               xcb_glx_get_materialiv_cookie_t   cookie  /**< */,
                               xcb_generic_error_t             **e  /**< */);
 
+int
+xcb_glx_get_pixel_mapfv_sizeof (const void  *_buffer  /**< */);
+
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -8563,7 +8662,7 @@ xcb_glx_get_pixel_mapfv (xcb_connection_t      *c  /**< */,
                          uint32_t               map  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -8660,8 +8759,11 @@ xcb_glx_get_pixel_mapfv_reply (xcb_connection_t                  *c  /**< */,
                                xcb_glx_get_pixel_mapfv_cookie_t   cookie  /**< */,
                                xcb_generic_error_t              **e  /**< */);
 
+int
+xcb_glx_get_pixel_mapuiv_sizeof (const void  *_buffer  /**< */);
+
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -8686,7 +8788,7 @@ xcb_glx_get_pixel_mapuiv (xcb_connection_t      *c  /**< */,
                           uint32_t               map  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -8783,8 +8885,11 @@ xcb_glx_get_pixel_mapuiv_reply (xcb_connection_t                   *c  /**< */,
                                 xcb_glx_get_pixel_mapuiv_cookie_t   cookie  /**< */,
                                 xcb_generic_error_t               **e  /**< */);
 
+int
+xcb_glx_get_pixel_mapusv_sizeof (const void  *_buffer  /**< */);
+
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -8809,7 +8914,7 @@ xcb_glx_get_pixel_mapusv (xcb_connection_t      *c  /**< */,
                           uint32_t               map  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -8906,8 +9011,11 @@ xcb_glx_get_pixel_mapusv_reply (xcb_connection_t                   *c  /**< */,
                                 xcb_glx_get_pixel_mapusv_cookie_t   cookie  /**< */,
                                 xcb_generic_error_t               **e  /**< */);
 
+int
+xcb_glx_get_polygon_stipple_sizeof (const void  *_buffer  /**< */);
+
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -8932,7 +9040,7 @@ xcb_glx_get_polygon_stipple (xcb_connection_t      *c  /**< */,
                              uint8_t                lsb_first  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -9029,8 +9137,11 @@ xcb_glx_get_polygon_stipple_reply (xcb_connection_t                      *c  /**
                                    xcb_glx_get_polygon_stipple_cookie_t   cookie  /**< */,
                                    xcb_generic_error_t                  **e  /**< */);
 
+int
+xcb_glx_get_string_sizeof (const void  *_buffer  /**< */);
+
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -9055,7 +9166,7 @@ xcb_glx_get_string (xcb_connection_t      *c  /**< */,
                     uint32_t               name  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -9152,8 +9263,11 @@ xcb_glx_get_string_reply (xcb_connection_t             *c  /**< */,
                           xcb_glx_get_string_cookie_t   cookie  /**< */,
                           xcb_generic_error_t         **e  /**< */);
 
+int
+xcb_glx_get_tex_envfv_sizeof (const void  *_buffer  /**< */);
+
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -9180,7 +9294,7 @@ xcb_glx_get_tex_envfv (xcb_connection_t      *c  /**< */,
                        uint32_t               pname  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -9279,8 +9393,11 @@ xcb_glx_get_tex_envfv_reply (xcb_connection_t                *c  /**< */,
                              xcb_glx_get_tex_envfv_cookie_t   cookie  /**< */,
                              xcb_generic_error_t            **e  /**< */);
 
+int
+xcb_glx_get_tex_enviv_sizeof (const void  *_buffer  /**< */);
+
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -9307,7 +9424,7 @@ xcb_glx_get_tex_enviv (xcb_connection_t      *c  /**< */,
                        uint32_t               pname  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -9406,8 +9523,11 @@ xcb_glx_get_tex_enviv_reply (xcb_connection_t                *c  /**< */,
                              xcb_glx_get_tex_enviv_cookie_t   cookie  /**< */,
                              xcb_generic_error_t            **e  /**< */);
 
+int
+xcb_glx_get_tex_gendv_sizeof (const void  *_buffer  /**< */);
+
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -9434,7 +9554,7 @@ xcb_glx_get_tex_gendv (xcb_connection_t      *c  /**< */,
                        uint32_t               pname  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -9533,8 +9653,11 @@ xcb_glx_get_tex_gendv_reply (xcb_connection_t                *c  /**< */,
                              xcb_glx_get_tex_gendv_cookie_t   cookie  /**< */,
                              xcb_generic_error_t            **e  /**< */);
 
+int
+xcb_glx_get_tex_genfv_sizeof (const void  *_buffer  /**< */);
+
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -9561,7 +9684,7 @@ xcb_glx_get_tex_genfv (xcb_connection_t      *c  /**< */,
                        uint32_t               pname  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -9660,8 +9783,11 @@ xcb_glx_get_tex_genfv_reply (xcb_connection_t                *c  /**< */,
                              xcb_glx_get_tex_genfv_cookie_t   cookie  /**< */,
                              xcb_generic_error_t            **e  /**< */);
 
+int
+xcb_glx_get_tex_geniv_sizeof (const void  *_buffer  /**< */);
+
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -9688,7 +9814,7 @@ xcb_glx_get_tex_geniv (xcb_connection_t      *c  /**< */,
                        uint32_t               pname  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -9787,8 +9913,11 @@ xcb_glx_get_tex_geniv_reply (xcb_connection_t                *c  /**< */,
                              xcb_glx_get_tex_geniv_cookie_t   cookie  /**< */,
                              xcb_generic_error_t            **e  /**< */);
 
+int
+xcb_glx_get_tex_image_sizeof (const void  *_buffer  /**< */);
+
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -9821,7 +9950,7 @@ xcb_glx_get_tex_image (xcb_connection_t      *c  /**< */,
                        uint8_t                swap_bytes  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -9926,8 +10055,11 @@ xcb_glx_get_tex_image_reply (xcb_connection_t                *c  /**< */,
                              xcb_glx_get_tex_image_cookie_t   cookie  /**< */,
                              xcb_generic_error_t            **e  /**< */);
 
+int
+xcb_glx_get_tex_parameterfv_sizeof (const void  *_buffer  /**< */);
+
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -9954,7 +10086,7 @@ xcb_glx_get_tex_parameterfv (xcb_connection_t      *c  /**< */,
                              uint32_t               pname  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -10053,8 +10185,11 @@ xcb_glx_get_tex_parameterfv_reply (xcb_connection_t                      *c  /**
                                    xcb_glx_get_tex_parameterfv_cookie_t   cookie  /**< */,
                                    xcb_generic_error_t                  **e  /**< */);
 
+int
+xcb_glx_get_tex_parameteriv_sizeof (const void  *_buffer  /**< */);
+
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -10081,7 +10216,7 @@ xcb_glx_get_tex_parameteriv (xcb_connection_t      *c  /**< */,
                              uint32_t               pname  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -10180,8 +10315,11 @@ xcb_glx_get_tex_parameteriv_reply (xcb_connection_t                      *c  /**
                                    xcb_glx_get_tex_parameteriv_cookie_t   cookie  /**< */,
                                    xcb_generic_error_t                  **e  /**< */);
 
+int
+xcb_glx_get_tex_level_parameterfv_sizeof (const void  *_buffer  /**< */);
+
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -10210,7 +10348,7 @@ xcb_glx_get_tex_level_parameterfv (xcb_connection_t      *c  /**< */,
                                    uint32_t               pname  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -10311,8 +10449,11 @@ xcb_glx_get_tex_level_parameterfv_reply (xcb_connection_t                       
                                          xcb_glx_get_tex_level_parameterfv_cookie_t   cookie  /**< */,
                                          xcb_generic_error_t                        **e  /**< */);
 
+int
+xcb_glx_get_tex_level_parameteriv_sizeof (const void  *_buffer  /**< */);
+
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -10341,7 +10482,7 @@ xcb_glx_get_tex_level_parameteriv (xcb_connection_t      *c  /**< */,
                                    uint32_t               pname  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -10443,7 +10584,7 @@ xcb_glx_get_tex_level_parameteriv_reply (xcb_connection_t                       
                                          xcb_generic_error_t                        **e  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -10468,7 +10609,7 @@ xcb_glx_is_list (xcb_connection_t      *c  /**< */,
                  uint32_t               list  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -10527,7 +10668,7 @@ xcb_glx_is_list_reply (xcb_connection_t          *c  /**< */,
                        xcb_generic_error_t      **e  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -10553,7 +10694,7 @@ xcb_glx_flush_checked (xcb_connection_t      *c  /**< */,
                        xcb_glx_context_tag_t  context_tag  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -10575,8 +10716,11 @@ xcb_void_cookie_t
 xcb_glx_flush (xcb_connection_t      *c  /**< */,
                xcb_glx_context_tag_t  context_tag  /**< */);
 
+int
+xcb_glx_are_textures_resident_sizeof (const void  *_buffer  /**< */);
+
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -10603,7 +10747,7 @@ xcb_glx_are_textures_resident (xcb_connection_t      *c  /**< */,
                                const uint32_t        *textures  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -10702,8 +10846,11 @@ xcb_glx_are_textures_resident_reply (xcb_connection_t                        *c 
                                      xcb_glx_are_textures_resident_cookie_t   cookie  /**< */,
                                      xcb_generic_error_t                    **e  /**< */);
 
+int
+xcb_glx_delete_textures_sizeof (const void  *_buffer  /**< */);
+
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -10733,7 +10880,7 @@ xcb_glx_delete_textures_checked (xcb_connection_t      *c  /**< */,
                                  const uint32_t        *textures  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -10759,8 +10906,11 @@ xcb_glx_delete_textures (xcb_connection_t      *c  /**< */,
                          int32_t                n  /**< */,
                          const uint32_t        *textures  /**< */);
 
+int
+xcb_glx_gen_textures_sizeof (const void  *_buffer  /**< */);
+
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -10785,7 +10935,7 @@ xcb_glx_gen_textures (xcb_connection_t      *c  /**< */,
                       int32_t                n  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -10883,7 +11033,7 @@ xcb_glx_gen_textures_reply (xcb_connection_t               *c  /**< */,
                             xcb_generic_error_t           **e  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -10908,7 +11058,7 @@ xcb_glx_is_texture (xcb_connection_t      *c  /**< */,
                     uint32_t               texture  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -10966,8 +11116,11 @@ xcb_glx_is_texture_reply (xcb_connection_t             *c  /**< */,
                           xcb_glx_is_texture_cookie_t   cookie  /**< */,
                           xcb_generic_error_t         **e  /**< */);
 
+int
+xcb_glx_get_color_table_sizeof (const void  *_buffer  /**< */);
+
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -10998,7 +11151,7 @@ xcb_glx_get_color_table (xcb_connection_t      *c  /**< */,
                          uint8_t                swap_bytes  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -11101,8 +11254,11 @@ xcb_glx_get_color_table_reply (xcb_connection_t                  *c  /**< */,
                                xcb_glx_get_color_table_cookie_t   cookie  /**< */,
                                xcb_generic_error_t              **e  /**< */);
 
+int
+xcb_glx_get_color_table_parameterfv_sizeof (const void  *_buffer  /**< */);
+
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -11129,7 +11285,7 @@ xcb_glx_get_color_table_parameterfv (xcb_connection_t      *c  /**< */,
                                      uint32_t               pname  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -11228,8 +11384,11 @@ xcb_glx_get_color_table_parameterfv_reply (xcb_connection_t                     
                                            xcb_glx_get_color_table_parameterfv_cookie_t   cookie  /**< */,
                                            xcb_generic_error_t                          **e  /**< */);
 
+int
+xcb_glx_get_color_table_parameteriv_sizeof (const void  *_buffer  /**< */);
+
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -11256,7 +11415,7 @@ xcb_glx_get_color_table_parameteriv (xcb_connection_t      *c  /**< */,
                                      uint32_t               pname  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -11355,8 +11514,11 @@ xcb_glx_get_color_table_parameteriv_reply (xcb_connection_t                     
                                            xcb_glx_get_color_table_parameteriv_cookie_t   cookie  /**< */,
                                            xcb_generic_error_t                          **e  /**< */);
 
+int
+xcb_glx_get_convolution_filter_sizeof (const void  *_buffer  /**< */);
+
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -11387,7 +11549,7 @@ xcb_glx_get_convolution_filter (xcb_connection_t      *c  /**< */,
                                 uint8_t                swap_bytes  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -11490,8 +11652,11 @@ xcb_glx_get_convolution_filter_reply (xcb_connection_t                         *
                                       xcb_glx_get_convolution_filter_cookie_t   cookie  /**< */,
                                       xcb_generic_error_t                     **e  /**< */);
 
+int
+xcb_glx_get_convolution_parameterfv_sizeof (const void  *_buffer  /**< */);
+
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -11518,7 +11683,7 @@ xcb_glx_get_convolution_parameterfv (xcb_connection_t      *c  /**< */,
                                      uint32_t               pname  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -11617,8 +11782,11 @@ xcb_glx_get_convolution_parameterfv_reply (xcb_connection_t                     
                                            xcb_glx_get_convolution_parameterfv_cookie_t   cookie  /**< */,
                                            xcb_generic_error_t                          **e  /**< */);
 
+int
+xcb_glx_get_convolution_parameteriv_sizeof (const void  *_buffer  /**< */);
+
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -11645,7 +11813,7 @@ xcb_glx_get_convolution_parameteriv (xcb_connection_t      *c  /**< */,
                                      uint32_t               pname  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -11744,8 +11912,11 @@ xcb_glx_get_convolution_parameteriv_reply (xcb_connection_t                     
                                            xcb_glx_get_convolution_parameteriv_cookie_t   cookie  /**< */,
                                            xcb_generic_error_t                          **e  /**< */);
 
+int
+xcb_glx_get_separable_filter_sizeof (const void  *_buffer  /**< */);
+
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -11776,7 +11947,7 @@ xcb_glx_get_separable_filter (xcb_connection_t      *c  /**< */,
                               uint8_t                swap_bytes  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -11879,8 +12050,11 @@ xcb_glx_get_separable_filter_reply (xcb_connection_t                       *c  /
                                     xcb_glx_get_separable_filter_cookie_t   cookie  /**< */,
                                     xcb_generic_error_t                   **e  /**< */);
 
+int
+xcb_glx_get_histogram_sizeof (const void  *_buffer  /**< */);
+
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -11913,7 +12087,7 @@ xcb_glx_get_histogram (xcb_connection_t      *c  /**< */,
                        uint8_t                reset  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -12018,8 +12192,11 @@ xcb_glx_get_histogram_reply (xcb_connection_t                *c  /**< */,
                              xcb_glx_get_histogram_cookie_t   cookie  /**< */,
                              xcb_generic_error_t            **e  /**< */);
 
+int
+xcb_glx_get_histogram_parameterfv_sizeof (const void  *_buffer  /**< */);
+
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -12046,7 +12223,7 @@ xcb_glx_get_histogram_parameterfv (xcb_connection_t      *c  /**< */,
                                    uint32_t               pname  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -12145,8 +12322,11 @@ xcb_glx_get_histogram_parameterfv_reply (xcb_connection_t                       
                                          xcb_glx_get_histogram_parameterfv_cookie_t   cookie  /**< */,
                                          xcb_generic_error_t                        **e  /**< */);
 
+int
+xcb_glx_get_histogram_parameteriv_sizeof (const void  *_buffer  /**< */);
+
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -12173,7 +12353,7 @@ xcb_glx_get_histogram_parameteriv (xcb_connection_t      *c  /**< */,
                                    uint32_t               pname  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -12272,8 +12452,11 @@ xcb_glx_get_histogram_parameteriv_reply (xcb_connection_t                       
                                          xcb_glx_get_histogram_parameteriv_cookie_t   cookie  /**< */,
                                          xcb_generic_error_t                        **e  /**< */);
 
+int
+xcb_glx_get_minmax_sizeof (const void  *_buffer  /**< */);
+
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -12306,7 +12489,7 @@ xcb_glx_get_minmax (xcb_connection_t      *c  /**< */,
                     uint8_t                reset  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -12411,8 +12594,11 @@ xcb_glx_get_minmax_reply (xcb_connection_t             *c  /**< */,
                           xcb_glx_get_minmax_cookie_t   cookie  /**< */,
                           xcb_generic_error_t         **e  /**< */);
 
+int
+xcb_glx_get_minmax_parameterfv_sizeof (const void  *_buffer  /**< */);
+
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -12439,7 +12625,7 @@ xcb_glx_get_minmax_parameterfv (xcb_connection_t      *c  /**< */,
                                 uint32_t               pname  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -12538,8 +12724,11 @@ xcb_glx_get_minmax_parameterfv_reply (xcb_connection_t                         *
                                       xcb_glx_get_minmax_parameterfv_cookie_t   cookie  /**< */,
                                       xcb_generic_error_t                     **e  /**< */);
 
+int
+xcb_glx_get_minmax_parameteriv_sizeof (const void  *_buffer  /**< */);
+
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -12566,7 +12755,7 @@ xcb_glx_get_minmax_parameteriv (xcb_connection_t      *c  /**< */,
                                 uint32_t               pname  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -12665,8 +12854,11 @@ xcb_glx_get_minmax_parameteriv_reply (xcb_connection_t                         *
                                       xcb_glx_get_minmax_parameteriv_cookie_t   cookie  /**< */,
                                       xcb_generic_error_t                     **e  /**< */);
 
+int
+xcb_glx_get_compressed_tex_image_arb_sizeof (const void  *_buffer  /**< */);
+
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -12693,7 +12885,7 @@ xcb_glx_get_compressed_tex_image_arb (xcb_connection_t      *c  /**< */,
                                       int32_t                level  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -12792,8 +12984,11 @@ xcb_glx_get_compressed_tex_image_arb_reply (xcb_connection_t                    
                                             xcb_glx_get_compressed_tex_image_arb_cookie_t   cookie  /**< */,
                                             xcb_generic_error_t                           **e  /**< */);
 
+int
+xcb_glx_delete_queries_arb_sizeof (const void  *_buffer  /**< */);
+
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -12823,7 +13018,7 @@ xcb_glx_delete_queries_arb_checked (xcb_connection_t      *c  /**< */,
                                     const uint32_t        *ids  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -12849,8 +13044,11 @@ xcb_glx_delete_queries_arb (xcb_connection_t      *c  /**< */,
                             int32_t                n  /**< */,
                             const uint32_t        *ids  /**< */);
 
+int
+xcb_glx_gen_queries_arb_sizeof (const void  *_buffer  /**< */);
+
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -12875,7 +13073,7 @@ xcb_glx_gen_queries_arb (xcb_connection_t      *c  /**< */,
                          int32_t                n  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -12973,7 +13171,7 @@ xcb_glx_gen_queries_arb_reply (xcb_connection_t                  *c  /**< */,
                                xcb_generic_error_t              **e  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -12998,7 +13196,7 @@ xcb_glx_is_query_arb (xcb_connection_t      *c  /**< */,
                       uint32_t               id  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -13056,8 +13254,11 @@ xcb_glx_is_query_arb_reply (xcb_connection_t               *c  /**< */,
                             xcb_glx_is_query_arb_cookie_t   cookie  /**< */,
                             xcb_generic_error_t           **e  /**< */);
 
+int
+xcb_glx_get_queryiv_arb_sizeof (const void  *_buffer  /**< */);
+
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -13084,7 +13285,7 @@ xcb_glx_get_queryiv_arb (xcb_connection_t      *c  /**< */,
                          uint32_t               pname  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -13183,8 +13384,11 @@ xcb_glx_get_queryiv_arb_reply (xcb_connection_t                  *c  /**< */,
                                xcb_glx_get_queryiv_arb_cookie_t   cookie  /**< */,
                                xcb_generic_error_t              **e  /**< */);
 
+int
+xcb_glx_get_query_objectiv_arb_sizeof (const void  *_buffer  /**< */);
+
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -13211,7 +13415,7 @@ xcb_glx_get_query_objectiv_arb (xcb_connection_t      *c  /**< */,
                                 uint32_t               pname  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -13310,8 +13514,11 @@ xcb_glx_get_query_objectiv_arb_reply (xcb_connection_t                         *
                                       xcb_glx_get_query_objectiv_arb_cookie_t   cookie  /**< */,
                                       xcb_generic_error_t                     **e  /**< */);
 
+int
+xcb_glx_get_query_objectuiv_arb_sizeof (const void  *_buffer  /**< */);
+
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -13338,7 +13545,7 @@ xcb_glx_get_query_objectuiv_arb (xcb_connection_t      *c  /**< */,
                                  uint32_t               pname  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *

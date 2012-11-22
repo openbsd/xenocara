@@ -1468,6 +1468,9 @@ xcb_render_pictvisual_next (xcb_render_pictvisual_iterator_t *i  /**< */);
 xcb_generic_iterator_t
 xcb_render_pictvisual_end (xcb_render_pictvisual_iterator_t i  /**< */);
 
+int
+xcb_render_pictdepth_sizeof (const void  *_buffer  /**< */);
+
 
 /*****************************************************************************
  **
@@ -1549,6 +1552,9 @@ xcb_render_pictdepth_next (xcb_render_pictdepth_iterator_t *i  /**< */);
  
 xcb_generic_iterator_t
 xcb_render_pictdepth_end (xcb_render_pictdepth_iterator_t i  /**< */);
+
+int
+xcb_render_pictscreen_sizeof (const void  *_buffer  /**< */);
 
 
 /*****************************************************************************
@@ -1921,7 +1927,7 @@ xcb_generic_iterator_t
 xcb_render_glyphinfo_end (xcb_render_glyphinfo_iterator_t i  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -1946,7 +1952,7 @@ xcb_render_query_version (xcb_connection_t *c  /**< */,
                           uint32_t          client_minor_version  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -2004,8 +2010,11 @@ xcb_render_query_version_reply (xcb_connection_t                   *c  /**< */,
                                 xcb_render_query_version_cookie_t   cookie  /**< */,
                                 xcb_generic_error_t               **e  /**< */);
 
+int
+xcb_render_query_pict_formats_sizeof (const void  *_buffer  /**< */);
+
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -2026,7 +2035,7 @@ xcb_render_query_pict_formats_cookie_t
 xcb_render_query_pict_formats (xcb_connection_t *c  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -2184,8 +2193,11 @@ xcb_render_query_pict_formats_reply (xcb_connection_t                        *c 
                                      xcb_render_query_pict_formats_cookie_t   cookie  /**< */,
                                      xcb_generic_error_t                    **e  /**< */);
 
+int
+xcb_render_query_pict_index_values_sizeof (const void  *_buffer  /**< */);
+
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -2208,7 +2220,7 @@ xcb_render_query_pict_index_values (xcb_connection_t        *c  /**< */,
                                     xcb_render_pictformat_t  format  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -2303,8 +2315,11 @@ xcb_render_query_pict_index_values_reply (xcb_connection_t                      
                                           xcb_render_query_pict_index_values_cookie_t   cookie  /**< */,
                                           xcb_generic_error_t                         **e  /**< */);
 
+int
+xcb_render_create_picture_sizeof (const void  *_buffer  /**< */);
+
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -2338,7 +2353,7 @@ xcb_render_create_picture_checked (xcb_connection_t        *c  /**< */,
                                    const uint32_t          *value_list  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -2368,8 +2383,11 @@ xcb_render_create_picture (xcb_connection_t        *c  /**< */,
                            uint32_t                 value_mask  /**< */,
                            const uint32_t          *value_list  /**< */);
 
+int
+xcb_render_change_picture_sizeof (const void  *_buffer  /**< */);
+
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -2399,7 +2417,7 @@ xcb_render_change_picture_checked (xcb_connection_t     *c  /**< */,
                                    const uint32_t       *value_list  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -2425,8 +2443,12 @@ xcb_render_change_picture (xcb_connection_t     *c  /**< */,
                            uint32_t              value_mask  /**< */,
                            const uint32_t       *value_list  /**< */);
 
+int
+xcb_render_set_picture_clip_rectangles_sizeof (const void  *_buffer  /**< */,
+                                               uint32_t     rectangles_len  /**< */);
+
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -2460,7 +2482,7 @@ xcb_render_set_picture_clip_rectangles_checked (xcb_connection_t      *c  /**< *
                                                 const xcb_rectangle_t *rectangles  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -2491,7 +2513,7 @@ xcb_render_set_picture_clip_rectangles (xcb_connection_t      *c  /**< */,
                                         const xcb_rectangle_t *rectangles  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -2517,7 +2539,7 @@ xcb_render_free_picture_checked (xcb_connection_t     *c  /**< */,
                                  xcb_render_picture_t  picture  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -2540,7 +2562,7 @@ xcb_render_free_picture (xcb_connection_t     *c  /**< */,
                          xcb_render_picture_t  picture  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -2588,7 +2610,7 @@ xcb_render_composite_checked (xcb_connection_t     *c  /**< */,
                               uint16_t              height  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -2632,8 +2654,12 @@ xcb_render_composite (xcb_connection_t     *c  /**< */,
                       uint16_t              width  /**< */,
                       uint16_t              height  /**< */);
 
+int
+xcb_render_trapezoids_sizeof (const void  *_buffer  /**< */,
+                              uint32_t     traps_len  /**< */);
+
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -2673,7 +2699,7 @@ xcb_render_trapezoids_checked (xcb_connection_t             *c  /**< */,
                                const xcb_render_trapezoid_t *traps  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -2709,8 +2735,12 @@ xcb_render_trapezoids (xcb_connection_t             *c  /**< */,
                        uint32_t                      traps_len  /**< */,
                        const xcb_render_trapezoid_t *traps  /**< */);
 
+int
+xcb_render_triangles_sizeof (const void  *_buffer  /**< */,
+                             uint32_t     triangles_len  /**< */);
+
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -2750,7 +2780,7 @@ xcb_render_triangles_checked (xcb_connection_t            *c  /**< */,
                               const xcb_render_triangle_t *triangles  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -2786,8 +2816,12 @@ xcb_render_triangles (xcb_connection_t            *c  /**< */,
                       uint32_t                     triangles_len  /**< */,
                       const xcb_render_triangle_t *triangles  /**< */);
 
+int
+xcb_render_tri_strip_sizeof (const void  *_buffer  /**< */,
+                             uint32_t     points_len  /**< */);
+
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -2827,7 +2861,7 @@ xcb_render_tri_strip_checked (xcb_connection_t            *c  /**< */,
                               const xcb_render_pointfix_t *points  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -2863,8 +2897,12 @@ xcb_render_tri_strip (xcb_connection_t            *c  /**< */,
                       uint32_t                     points_len  /**< */,
                       const xcb_render_pointfix_t *points  /**< */);
 
+int
+xcb_render_tri_fan_sizeof (const void  *_buffer  /**< */,
+                           uint32_t     points_len  /**< */);
+
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -2904,7 +2942,7 @@ xcb_render_tri_fan_checked (xcb_connection_t            *c  /**< */,
                             const xcb_render_pointfix_t *points  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -2941,7 +2979,7 @@ xcb_render_tri_fan (xcb_connection_t            *c  /**< */,
                     const xcb_render_pointfix_t *points  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -2969,7 +3007,7 @@ xcb_render_create_glyph_set_checked (xcb_connection_t        *c  /**< */,
                                      xcb_render_pictformat_t  format  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -2994,7 +3032,7 @@ xcb_render_create_glyph_set (xcb_connection_t        *c  /**< */,
                              xcb_render_pictformat_t  format  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -3022,7 +3060,7 @@ xcb_render_reference_glyph_set_checked (xcb_connection_t      *c  /**< */,
                                         xcb_render_glyphset_t  existing  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -3047,7 +3085,7 @@ xcb_render_reference_glyph_set (xcb_connection_t      *c  /**< */,
                                 xcb_render_glyphset_t  existing  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -3073,7 +3111,7 @@ xcb_render_free_glyph_set_checked (xcb_connection_t      *c  /**< */,
                                    xcb_render_glyphset_t  glyphset  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -3095,8 +3133,12 @@ xcb_void_cookie_t
 xcb_render_free_glyph_set (xcb_connection_t      *c  /**< */,
                            xcb_render_glyphset_t  glyphset  /**< */);
 
+int
+xcb_render_add_glyphs_sizeof (const void  *_buffer  /**< */,
+                              uint32_t     data_len  /**< */);
+
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -3132,7 +3174,7 @@ xcb_render_add_glyphs_checked (xcb_connection_t             *c  /**< */,
                                const uint8_t                *data  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -3164,8 +3206,12 @@ xcb_render_add_glyphs (xcb_connection_t             *c  /**< */,
                        uint32_t                      data_len  /**< */,
                        const uint8_t                *data  /**< */);
 
+int
+xcb_render_free_glyphs_sizeof (const void  *_buffer  /**< */,
+                               uint32_t     glyphs_len  /**< */);
+
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -3195,7 +3241,7 @@ xcb_render_free_glyphs_checked (xcb_connection_t         *c  /**< */,
                                 const xcb_render_glyph_t *glyphs  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -3221,8 +3267,12 @@ xcb_render_free_glyphs (xcb_connection_t         *c  /**< */,
                         uint32_t                  glyphs_len  /**< */,
                         const xcb_render_glyph_t *glyphs  /**< */);
 
+int
+xcb_render_composite_glyphs_8_sizeof (const void  *_buffer  /**< */,
+                                      uint32_t     glyphcmds_len  /**< */);
+
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -3264,7 +3314,7 @@ xcb_render_composite_glyphs_8_checked (xcb_connection_t        *c  /**< */,
                                        const uint8_t           *glyphcmds  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -3302,8 +3352,12 @@ xcb_render_composite_glyphs_8 (xcb_connection_t        *c  /**< */,
                                uint32_t                 glyphcmds_len  /**< */,
                                const uint8_t           *glyphcmds  /**< */);
 
+int
+xcb_render_composite_glyphs_16_sizeof (const void  *_buffer  /**< */,
+                                       uint32_t     glyphcmds_len  /**< */);
+
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -3345,7 +3399,7 @@ xcb_render_composite_glyphs_16_checked (xcb_connection_t        *c  /**< */,
                                         const uint8_t           *glyphcmds  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -3383,8 +3437,12 @@ xcb_render_composite_glyphs_16 (xcb_connection_t        *c  /**< */,
                                 uint32_t                 glyphcmds_len  /**< */,
                                 const uint8_t           *glyphcmds  /**< */);
 
+int
+xcb_render_composite_glyphs_32_sizeof (const void  *_buffer  /**< */,
+                                       uint32_t     glyphcmds_len  /**< */);
+
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -3426,7 +3484,7 @@ xcb_render_composite_glyphs_32_checked (xcb_connection_t        *c  /**< */,
                                         const uint8_t           *glyphcmds  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -3464,8 +3522,12 @@ xcb_render_composite_glyphs_32 (xcb_connection_t        *c  /**< */,
                                 uint32_t                 glyphcmds_len  /**< */,
                                 const uint8_t           *glyphcmds  /**< */);
 
+int
+xcb_render_fill_rectangles_sizeof (const void  *_buffer  /**< */,
+                                   uint32_t     rects_len  /**< */);
+
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -3499,7 +3561,7 @@ xcb_render_fill_rectangles_checked (xcb_connection_t      *c  /**< */,
                                     const xcb_rectangle_t *rects  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -3530,7 +3592,7 @@ xcb_render_fill_rectangles (xcb_connection_t      *c  /**< */,
                             const xcb_rectangle_t *rects  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -3562,7 +3624,7 @@ xcb_render_create_cursor_checked (xcb_connection_t     *c  /**< */,
                                   uint16_t              y  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -3634,7 +3696,7 @@ xcb_generic_iterator_t
 xcb_render_transform_end (xcb_render_transform_iterator_t i  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -3662,7 +3724,7 @@ xcb_render_set_picture_transform_checked (xcb_connection_t       *c  /**< */,
                                           xcb_render_transform_t  transform  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -3686,8 +3748,11 @@ xcb_render_set_picture_transform (xcb_connection_t       *c  /**< */,
                                   xcb_render_picture_t    picture  /**< */,
                                   xcb_render_transform_t  transform  /**< */);
 
+int
+xcb_render_query_filters_sizeof (const void  *_buffer  /**< */);
+
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -3710,7 +3775,7 @@ xcb_render_query_filters (xcb_connection_t *c  /**< */,
                           xcb_drawable_t    drawable  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -3831,8 +3896,12 @@ xcb_render_query_filters_reply (xcb_connection_t                   *c  /**< */,
                                 xcb_render_query_filters_cookie_t   cookie  /**< */,
                                 xcb_generic_error_t               **e  /**< */);
 
+int
+xcb_render_set_picture_filter_sizeof (const void  *_buffer  /**< */,
+                                      uint32_t     values_len  /**< */);
+
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -3866,7 +3935,7 @@ xcb_render_set_picture_filter_checked (xcb_connection_t         *c  /**< */,
                                        const xcb_render_fixed_t *values  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -3939,8 +4008,12 @@ xcb_render_animcursorelt_next (xcb_render_animcursorelt_iterator_t *i  /**< */);
 xcb_generic_iterator_t
 xcb_render_animcursorelt_end (xcb_render_animcursorelt_iterator_t i  /**< */);
 
+int
+xcb_render_create_anim_cursor_sizeof (const void  *_buffer  /**< */,
+                                      uint32_t     cursors_len  /**< */);
+
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -3970,7 +4043,7 @@ xcb_render_create_anim_cursor_checked (xcb_connection_t                 *c  /**<
                                        const xcb_render_animcursorelt_t *cursors  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -4082,8 +4155,12 @@ xcb_render_trap_next (xcb_render_trap_iterator_t *i  /**< */);
 xcb_generic_iterator_t
 xcb_render_trap_end (xcb_render_trap_iterator_t i  /**< */);
 
+int
+xcb_render_add_traps_sizeof (const void  *_buffer  /**< */,
+                             uint32_t     traps_len  /**< */);
+
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -4117,7 +4194,7 @@ xcb_render_add_traps_checked (xcb_connection_t        *c  /**< */,
                               const xcb_render_trap_t *traps  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -4148,7 +4225,7 @@ xcb_render_add_traps (xcb_connection_t        *c  /**< */,
                       const xcb_render_trap_t *traps  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -4176,7 +4253,7 @@ xcb_render_create_solid_fill_checked (xcb_connection_t     *c  /**< */,
                                       xcb_render_color_t    color  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -4200,8 +4277,11 @@ xcb_render_create_solid_fill (xcb_connection_t     *c  /**< */,
                               xcb_render_picture_t  picture  /**< */,
                               xcb_render_color_t    color  /**< */);
 
+int
+xcb_render_create_linear_gradient_sizeof (const void  *_buffer  /**< */);
+
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -4237,7 +4317,7 @@ xcb_render_create_linear_gradient_checked (xcb_connection_t         *c  /**< */,
                                            const xcb_render_color_t *colors  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -4269,8 +4349,11 @@ xcb_render_create_linear_gradient (xcb_connection_t         *c  /**< */,
                                    const xcb_render_fixed_t *stops  /**< */,
                                    const xcb_render_color_t *colors  /**< */);
 
+int
+xcb_render_create_radial_gradient_sizeof (const void  *_buffer  /**< */);
+
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -4310,7 +4393,7 @@ xcb_render_create_radial_gradient_checked (xcb_connection_t         *c  /**< */,
                                            const xcb_render_color_t *colors  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -4346,8 +4429,11 @@ xcb_render_create_radial_gradient (xcb_connection_t         *c  /**< */,
                                    const xcb_render_fixed_t *stops  /**< */,
                                    const xcb_render_color_t *colors  /**< */);
 
+int
+xcb_render_create_conical_gradient_sizeof (const void  *_buffer  /**< */);
+
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -4383,7 +4469,7 @@ xcb_render_create_conical_gradient_checked (xcb_connection_t         *c  /**< */
                                             const xcb_render_color_t *colors  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *

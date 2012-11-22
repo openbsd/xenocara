@@ -602,7 +602,7 @@ xcb_generic_iterator_t
 xcb_dri2_attach_format_end (xcb_dri2_attach_format_iterator_t i  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -627,7 +627,7 @@ xcb_dri2_query_version (xcb_connection_t *c  /**< */,
                         uint32_t          minor_version  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -685,8 +685,11 @@ xcb_dri2_query_version_reply (xcb_connection_t                 *c  /**< */,
                               xcb_dri2_query_version_cookie_t   cookie  /**< */,
                               xcb_generic_error_t             **e  /**< */);
 
+int
+xcb_dri2_connect_sizeof (const void  *_buffer  /**< */);
+
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -711,7 +714,7 @@ xcb_dri2_connect (xcb_connection_t *c  /**< */,
                   uint32_t          driver_type  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -887,7 +890,7 @@ xcb_dri2_connect_reply (xcb_connection_t           *c  /**< */,
                         xcb_generic_error_t       **e  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -912,7 +915,7 @@ xcb_dri2_authenticate (xcb_connection_t *c  /**< */,
                        uint32_t          magic  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -971,7 +974,7 @@ xcb_dri2_authenticate_reply (xcb_connection_t                *c  /**< */,
                              xcb_generic_error_t            **e  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -997,7 +1000,7 @@ xcb_dri2_create_drawable_checked (xcb_connection_t *c  /**< */,
                                   xcb_drawable_t    drawable  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -1020,7 +1023,7 @@ xcb_dri2_create_drawable (xcb_connection_t *c  /**< */,
                           xcb_drawable_t    drawable  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -1046,7 +1049,7 @@ xcb_dri2_destroy_drawable_checked (xcb_connection_t *c  /**< */,
                                    xcb_drawable_t    drawable  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -1068,8 +1071,12 @@ xcb_void_cookie_t
 xcb_dri2_destroy_drawable (xcb_connection_t *c  /**< */,
                            xcb_drawable_t    drawable  /**< */);
 
+int
+xcb_dri2_get_buffers_sizeof (const void  *_buffer  /**< */,
+                             uint32_t     attachments_len  /**< */);
+
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -1098,7 +1105,7 @@ xcb_dri2_get_buffers (xcb_connection_t *c  /**< */,
                       const uint32_t   *attachments  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -1200,7 +1207,7 @@ xcb_dri2_get_buffers_reply (xcb_connection_t               *c  /**< */,
                             xcb_generic_error_t           **e  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -1229,7 +1236,7 @@ xcb_dri2_copy_region (xcb_connection_t *c  /**< */,
                       uint32_t          src  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -1291,8 +1298,12 @@ xcb_dri2_copy_region_reply (xcb_connection_t               *c  /**< */,
                             xcb_dri2_copy_region_cookie_t   cookie  /**< */,
                             xcb_generic_error_t           **e  /**< */);
 
+int
+xcb_dri2_get_buffers_with_format_sizeof (const void  *_buffer  /**< */,
+                                         uint32_t     attachments_len  /**< */);
+
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -1321,7 +1332,7 @@ xcb_dri2_get_buffers_with_format (xcb_connection_t               *c  /**< */,
                                   const xcb_dri2_attach_format_t *attachments  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -1423,7 +1434,7 @@ xcb_dri2_get_buffers_with_format_reply (xcb_connection_t                        
                                         xcb_generic_error_t                       **e  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -1458,7 +1469,7 @@ xcb_dri2_swap_buffers (xcb_connection_t *c  /**< */,
                        uint32_t          remainder_lo  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -1527,7 +1538,7 @@ xcb_dri2_swap_buffers_reply (xcb_connection_t                *c  /**< */,
                              xcb_generic_error_t            **e  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -1550,7 +1561,7 @@ xcb_dri2_get_msc (xcb_connection_t *c  /**< */,
                   xcb_drawable_t    drawable  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -1607,7 +1618,7 @@ xcb_dri2_get_msc_reply (xcb_connection_t           *c  /**< */,
                         xcb_generic_error_t       **e  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -1642,7 +1653,7 @@ xcb_dri2_wait_msc (xcb_connection_t *c  /**< */,
                    uint32_t          remainder_lo  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -1711,7 +1722,7 @@ xcb_dri2_wait_msc_reply (xcb_connection_t            *c  /**< */,
                          xcb_generic_error_t        **e  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -1738,7 +1749,7 @@ xcb_dri2_wait_sbc (xcb_connection_t *c  /**< */,
                    uint32_t          target_sbc_lo  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -1799,7 +1810,7 @@ xcb_dri2_wait_sbc_reply (xcb_connection_t            *c  /**< */,
                          xcb_generic_error_t        **e  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -1827,7 +1838,7 @@ xcb_dri2_swap_interval_checked (xcb_connection_t *c  /**< */,
                                 uint32_t          interval  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *

@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.3 2012/03/27 19:14:21 matthieu Exp $
+#	$OpenBSD: Makefile,v 1.4 2012/11/22 20:31:32 matthieu Exp $
 
 DATADIR=	${X11BASE}/share
 PYTHON=		python${PYTHON_VERSION}
@@ -50,4 +50,7 @@ clean:
 .xml.h:
 	${PYTHON} ${LIBXCB}/src/c_client.py -p ${PYTHONDIR} $<
 
+
 .include <bsd.xorg.mk>
+
+${SRCS} ${HDRS}: ${LIBXCB}/src/c_client.py

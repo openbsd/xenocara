@@ -130,7 +130,7 @@ typedef struct xcb_test_grab_control_request_t {
 } xcb_test_grab_control_request_t;
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -155,7 +155,7 @@ xcb_test_get_version (xcb_connection_t *c  /**< */,
                       uint16_t          minor_version  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -214,7 +214,7 @@ xcb_test_get_version_reply (xcb_connection_t               *c  /**< */,
                             xcb_generic_error_t           **e  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -239,7 +239,7 @@ xcb_test_compare_cursor (xcb_connection_t *c  /**< */,
                          xcb_cursor_t      cursor  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -298,7 +298,7 @@ xcb_test_compare_cursor_reply (xcb_connection_t                  *c  /**< */,
                                xcb_generic_error_t              **e  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -336,7 +336,7 @@ xcb_test_fake_input_checked (xcb_connection_t *c  /**< */,
                              uint8_t           deviceid  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -371,7 +371,7 @@ xcb_test_fake_input (xcb_connection_t *c  /**< */,
                      uint8_t           deviceid  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
@@ -397,7 +397,7 @@ xcb_test_grab_control_checked (xcb_connection_t *c  /**< */,
                                uint8_t           impervious  /**< */);
 
 /**
- * Delivers a request to the X server
+ *
  * @param c The connection
  * @return A cookie
  *
