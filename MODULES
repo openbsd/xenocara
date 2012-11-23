@@ -1,4 +1,4 @@
-# $OpenBSD: MODULES,v 1.236 2012/11/16 17:46:18 matthieu Exp $
+# $OpenBSD: MODULES,v 1.237 2012/11/23 21:08:19 matthieu Exp $
 #
 # X.Org maintained modules
 #
@@ -116,7 +116,7 @@ driver/xf86-video-mga		1.6.2	7.7+	needs-update
 driver/xf86-video-neomagic	1.2.7	7.7+
 driver/xf86-video-nv		2.1.20	7.7+
 driver/xf86-video-openchrome	0.3.1	7.7+	needs-update-and-dri
-driver/xf86-video-r128		6.9.1	7.7+	needs-update
+driver/xf86-video-r128		6.9.1	7.7+
 driver/xf86-video-rendition	4.2.5
 driver/xf86-video-s3		0.6.5
 driver/xf86-video-s3virge	1.10.6
@@ -204,11 +204,11 @@ lib/libdmx			1.1.2	7.7
 lib/libfontenc			1.1.1	7.7
 lib/libpciaccess		0.13.1	7.7
 lib/libpthread-stubs		0.3	7.7
-lib/libxcb			1.9	7.7+	needs-update
+lib/libxcb			1.9	7.7+
 lib/libxkbfile			1.0.8	7.7
 lib/libxkbui			1.0.2
 lib/libxtrans			1.2.7	7.7
-lib/pixman			0.28.0		needs-update
+lib/pixman			0.28.0
 lib/xcb-util			0.3.9		needs-update
 lib/xcb-util-image		0.3.9		needs-import
 lib/xcb-util-keysyms		0.3.9		needs-import
