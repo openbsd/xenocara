@@ -79,8 +79,7 @@ host_triplet = @host@
 @USE_EXA_TRUE@    mga_exa.c
 
 @XAA_TRUE@am__append_3 = \
-@XAA_TRUE@    mga_arc.c \
-@XAA_TRUE@    mga_storm.c
+@XAA_TRUE@    mga_arc.c
 
 subdir = src
 DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in \
@@ -128,16 +127,16 @@ am__mga_drv_la_SOURCES_DIST = binding.h client.h mga_bios.c \
 	mga_driver.c mga_esc.c mga_g450pll.c mga.h mga_halmod.c \
 	mga_hwcurs.c mga_macros.h mga_maven.h mga_merge.c mga_merge.h \
 	mgareg_flags.h mga_reg.h mga_sarea.h mga_shadow.c mga_ucode.h \
-	mga_vga.c mga_video.c compat-api.h mga_dri.c mga_dri.h \
-	mga_dripriv.h mga_exa.c mga_arc.c mga_storm.c
+	mga_vga.c mga_video.c mga_storm.c compat-api.h mga_dri.c \
+	mga_dri.h mga_dripriv.h mga_exa.c mga_arc.c
 @DRI_TRUE@am__objects_1 = mga_dri.lo
 @USE_EXA_TRUE@am__objects_2 = mga_exa.lo
-@XAA_TRUE@am__objects_3 = mga_arc.lo mga_storm.lo
+@XAA_TRUE@am__objects_3 = mga_arc.lo
 am_mga_drv_la_OBJECTS = mga_bios.lo mga_dac3026.lo mga_dacG.lo \
 	mga_dga.lo mga_dh.lo mga_driver.lo mga_esc.lo mga_g450pll.lo \
 	mga_halmod.lo mga_hwcurs.lo mga_merge.lo mga_shadow.lo \
-	mga_vga.lo mga_video.lo $(am__objects_1) $(am__objects_2) \
-	$(am__objects_3)
+	mga_vga.lo mga_video.lo mga_storm.lo $(am__objects_1) \
+	$(am__objects_2) $(am__objects_3)
 mga_drv_la_OBJECTS = $(am_mga_drv_la_OBJECTS)
 AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
@@ -349,7 +348,7 @@ mga_drv_la_SOURCES = binding.h client.h mga_bios.c mga_common.h \
 	mga_esc.c mga_g450pll.c mga.h mga_halmod.c mga_hwcurs.c \
 	mga_macros.h mga_maven.h mga_merge.c mga_merge.h \
 	mgareg_flags.h mga_reg.h mga_sarea.h mga_shadow.c mga_ucode.h \
-	mga_vga.c mga_video.c compat-api.h $(am__append_1) \
+	mga_vga.c mga_video.c mga_storm.c compat-api.h $(am__append_1) \
 	$(am__append_2) $(am__append_3)
 all: all-am
 

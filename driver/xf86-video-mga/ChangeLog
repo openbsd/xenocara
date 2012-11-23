@@ -1,3 +1,40 @@
+commit fcd27b2b4ab2a181d5263296e71cda2d8772ba2d
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Fri Sep 28 11:36:44 2012 +1000
+
+    mga: bump release to 1.6.2
+
+commit 29de36da0ed031815bd302f55f2ef5cc0cce6cc6
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Fri Sep 28 10:54:00 2012 +1000
+
+    mga: bring dri1 back to life.
+    
+    we need to at least setup the memory manager bits so dri1 clients
+    get a backbuffer. this at least gets gears working again without XAA.
+    
+    Signed-off-by: Dave Airlie <airlied@redhat.com>
+
+commit e777a2845bfeefad386db35d694e4b1cd74a0dd5
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Wed Sep 26 15:18:44 2012 +1000
+
+    mga: add stub storm functions if not using XAA
+    
+    If we aren't using XAA just add stub storm init/sync functions.
+    
+    This lets the driver load yay.
+    
+    Signed-off-by: Dave Airlie <airlied@redhat.com>
+
+commit 220e06fefe77175d9827954e61549eadda245d9a
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Tue Sep 25 08:54:42 2012 -0400
+
+    Remove mibstore.h
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
 commit cd41eacaeabf8227197d605b055713ca654633d5
 Author: Dave Airlie <airlied@redhat.com>
 Date:   Tue Jul 17 16:05:09 2012 +1000

@@ -922,13 +922,11 @@ static void MGADRIInitBuffersXAA(WindowPtr pWin, RegionPtr prgn,
 }
 #endif
 
-#ifdef USE_EXA
 static void MGADRIInitBuffersEXA(WindowPtr pWin, RegionPtr prgn,
                                  CARD32 index)
 {
     /* FIXME */
 }
-#endif
 
 #ifdef USE_XAA
 /*
@@ -1078,13 +1076,11 @@ static void MGADRIMoveBuffersXAA(WindowPtr pParent, DDXPointRec ptOldOrg,
 }
 #endif
 
-#ifdef USE_EXA
 static void MGADRIMoveBuffersEXA(WindowPtr pParent, DDXPointRec ptOldOrg,
                                  RegionPtr prgnSrc, CARD32 index)
 {
     /* FIXME */
 }
-#endif
 
 Bool MGADRIScreenInit( ScreenPtr pScreen )
 {
@@ -1231,6 +1227,8 @@ Bool MGADRIScreenInit( ScreenPtr pScreen )
       pDRIInfo->SwapContext = MGADRISwapContext;
    }
 
+   pDRIInfo->InitBuffers = MGADRIInitBuffersEXA;
+   pDRIInfo->MoveBuffers = MGADRIMoveBuffersEXA;
 #ifdef USE_EXA
     if (pMga->Exa) {
         pDRIInfo->InitBuffers = MGADRIInitBuffersEXA;

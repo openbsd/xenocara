@@ -73,9 +73,6 @@
 /* All drivers initialising the SW cursor need this */
 #include "mipointer.h"
 
-/* All drivers implementing backing store need this */
-#include "mibstore.h"
-
 #include "micmap.h"
 
 #include "xf86DDC.h"
@@ -3401,14 +3398,9 @@ MGAScreenInit(SCREEN_INIT_ARGS_DECL)
 	    mgaExaInit(pScreen);
 	else
 #endif
-#ifdef XAA
 	    MGAStormAccelInit(pScreen);
-#else
-	    ;
-#endif
     }
 
-    miInitializeBackingStore(pScreen);
     xf86SetBackingStore(pScreen);
     xf86SetSilkenMouse(pScreen);
 
@@ -4188,4 +4180,3 @@ MGAG100BlackMagic(ScrnInfoPtr pScrn)
     OUTREG(MGAREG_MACCESS, 1<<15);
     usleep(10);
 }
-

@@ -1,4 +1,4 @@
-# $OpenBSD: MODULES,v 1.237 2012/11/23 21:08:19 matthieu Exp $
+# $OpenBSD: MODULES,v 1.238 2012/11/23 21:31:16 matthieu Exp $
 #
 # X.Org maintained modules
 #
@@ -112,7 +112,7 @@ driver/xf86-video-i128		1.3.6	7.7+
 driver/xf86-video-i740		1.3.4
 driver/xf86-video-intel		2.20.13	7.7+	needs-update-and-kms
 driver/xf86-video-mach64	6.9.3	7.7+
-driver/xf86-video-mga		1.6.2	7.7+	needs-update
+driver/xf86-video-mga		1.6.2	7.7+
 driver/xf86-video-neomagic	1.2.7	7.7+
 driver/xf86-video-nv		2.1.20	7.7+
 driver/xf86-video-openchrome	0.3.1	7.7+	needs-update-and-dri

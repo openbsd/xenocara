@@ -55,6 +55,7 @@ mga_drv_la_SOURCES = \
          mga_ucode.h \
 	 mga_vga.c \
          mga_video.c \
+         mga_storm.c \
          compat-api.h
 
 if DRI
@@ -71,6 +72,5 @@ endif
 
 if XAA
 mga_drv_la_SOURCES += \
-    mga_arc.c \
-    mga_storm.c
+    mga_arc.c
 endif

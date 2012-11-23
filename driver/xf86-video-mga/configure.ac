@@ -23,7 +23,7 @@
 # Initialize Autoconf
 AC_PREREQ([2.60])
 AC_INIT([xf86-video-mga],
-        [1.6.1],
+        [1.6.2],
         [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],
         [xf86-video-mga])
 AC_CONFIG_SRCDIR([Makefile.am])

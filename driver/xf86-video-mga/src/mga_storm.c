@@ -15,8 +15,10 @@
 #include "xf86Pci.h"
 
 /* Drivers that use XAA need this */
+#ifdef HAVE_XAA_H
 #include "xaa.h"
 #include "xaalocal.h"
+#endif
 #include "xf86fbman.h"
 #include "miline.h"
 #include "servermd.h"
@@ -59,6 +61,7 @@ do { \
   XAAMoveDWORDS((d),(s),(c)); \
 } while (0)
 
+#ifdef HAVE_XAA_H
 static void mgaSetupForSolidFill( ScrnInfoPtr pScrn, int color,
     int rop, unsigned int planemask );
 
@@ -569,10 +572,13 @@ MGASubsequentCPUToScreenTexture (
 
 
 #endif /* defined(RENDER) */
+#endif
 
 Bool mgaAccelInit( ScreenPtr pScreen )
 {
+#ifdef HAVE_XAA_H
     XAAInfoRecPtr infoPtr;
+#endif
     ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
     MGAPtr pMga = MGAPTR(pScrn);
     int maxFastBlitMem, maxlines;
@@ -583,8 +589,10 @@ Bool mgaAccelInit( ScreenPtr pScreen )
     pMga->ScratchBuffer = malloc(((pScrn->displayWidth * pMga->CurrentLayout.bitsPerPixel) + 127) >> 3);
     if(!pMga->ScratchBuffer) return FALSE;
 
+#ifdef HAVE_XAA_H
     pMga->AccelInfoRec = infoPtr = XAACreateInfoRec();
     if(!infoPtr) return FALSE;
+#endif
 
     pMga->RenderTime = 0;
     pMga->LinearScratch = 0;
@@ -617,6 +625,7 @@ Bool mgaAccelInit( ScreenPtr pScreen )
 	pMga->AtypeNoBLK = MGAAtypeNoBLK;
     }
 
+#ifdef HAVE_XAA_H
     /* fill out infoPtr here */
     infoPtr->Flags = 	PIXMAP_CACHE |
 			OFFSCREEN_PIXMAPS |
@@ -782,6 +791,8 @@ Bool mgaAccelInit( ScreenPtr pScreen )
 	pMga->MaxFastBlitY = maxFastBlitMem / (pScrn->displayWidth * pMga->CurrentLayout.bitsPerPixel / 8);
     }
 
+#endif
+
     switch (pMga->Chipset) {
     case PCI_CHIP_MGAG200_SE_A_PCI:
     case PCI_CHIP_MGAG200_SE_B_PCI:
@@ -917,6 +928,7 @@ Bool mgaAccelInit( ScreenPtr pScreen )
 
     }
 
+#ifdef HAVE_XAA_H
     for (i = 0; i < pScrn->numEntities; i++) {
 	if (xf86IsEntityShared(pScrn->entityList[i])) {
 	    infoPtr->RestoreAccelState = mgaRestoreAccelState;
@@ -949,9 +961,13 @@ Bool mgaAccelInit( ScreenPtr pScreen )
 #endif /* defined(RENDER) */
 
     return(XAAInit(pScreen, infoPtr));
+#else
+    return TRUE;
+#endif
 }
 
 
+#ifdef HAVE_XAA_H
 /* Support for multiscreen */
 static void mgaRestoreAccelState(ScrnInfoPtr pScrn)
 {
@@ -994,7 +1010,7 @@ static void mgaRestoreAccelState(ScrnInfoPtr pScrn)
    OUTREG(MGAREG_YBOT, 0x007FFFFF);    /* maxPixelPointer */
    pMga->AccelFlags &= ~CLIPPER_ON;
 }
-
+#endif
 
 CARD32 MGAAtype[16] = {
    MGADWG_RPL  | 0x00000000, MGADWG_RSTR | 0x00080000,
@@ -1080,9 +1096,11 @@ void MGAStormEngineInit( ScrnInfoPtr pScrn )
     opmode &= ~0x30000;
 #endif
 
+#ifdef HAVE_XAA_H
     pMga->SetupForSolidFill = mgaSetupForSolidFill;
     pMga->SubsequentSolidFillRect = mgaSubsequentSolidFillRect;
     pMga->RestoreAccelState = mgaRestoreAccelState;
+#endif
 
 
     pMga->fifoCount = 0;
@@ -1155,6 +1173,7 @@ void MGAStormEngineInit( ScrnInfoPtr pScrn )
 }
 
 
+#ifdef HAVE_XAA_H
 static void
 MGASetClippingRectangle(
    ScrnInfoPtr pScrn,
@@ -2534,3 +2553,4 @@ MGAFillCacheBltRects(
 
     SET_SYNC_FLAG(infoRec);
 }
+#endif
