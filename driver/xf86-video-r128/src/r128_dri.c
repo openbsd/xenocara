@@ -301,10 +301,15 @@ static void R128DestroyContext(ScreenPtr pScreen, drm_context_t hwContext,
    can start/stop the engine. */
 static void R128EnterServer(ScreenPtr pScreen)
 {
-#ifdef HAVE_XAA_H
     ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
     R128InfoPtr info = R128PTR(pScrn);
+
+#ifdef HAVE_XAA_H
     if (info->accel) info->accel->NeedToSync = TRUE;
+#endif
+#ifdef USE_EXA
+    if (info->ExaDriver) exaMarkSync(pScreen);
+    info->state_2d.composite_setup = FALSE;
 #endif
 }
 
@@ -1390,11 +1395,10 @@ void R128DRICloseScreen(ScreenPtr pScreen)
 
 static void R128DRIRefreshArea(ScrnInfoPtr pScrn, int num, BoxPtr pbox)
 {
-#ifdef HAVE_XAA_H
     R128InfoPtr         info       = R128PTR(pScrn);
     int                 i;
-#endif
     R128SAREAPrivPtr    pSAREAPriv = DRIGetSAREAPrivate(pScrn->pScreen);
+    PixmapPtr		pPix	   = pScrn->pScreen->GetScreenPixmap(pScrn->pScreen);
 
     /* Don't want to do this when no 3d is active and pages are
      * right-way-round
@@ -1403,49 +1407,89 @@ static void R128DRIRefreshArea(ScrnInfoPtr pScrn, int num, BoxPtr pbox)
 	return;
 
 #ifdef HAVE_XAA_H
-    (*info->accel->SetupForScreenToScreenCopy)(pScrn,
+    if (!info->useEXA) {
+	(*info->accel->SetupForScreenToScreenCopy)(pScrn,
 					       1, 1, GXcopy,
 					       (CARD32)(-1), -1);
+    }
+#endif
+#ifdef USE_EXA
+    if (info->useEXA) {
+        CARD32 src_pitch_offset, dst_pitch_offset, datatype;
+
+	R128GetPixmapOffsetPitch(pPix, &src_pitch_offset);
+	dst_pitch_offset = src_pitch_offset + (info->backOffset >> 5);
+	R128GetDatatypeBpp(pScrn->bitsPerPixel, &datatype);
+	info->xdir = info->ydir = 1;
+
+	R128DoPrepareCopy(pScrn, src_pitch_offset, dst_pitch_offset, datatype, GXcopy, ~0);
+    }
+#endif
 
     for (i = 0 ; i < num ; i++, pbox++) {
 	int xa = max(pbox->x1, 0), xb = min(pbox->x2, pScrn->virtualX-1);
 	int ya = max(pbox->y1, 0), yb = min(pbox->y2, pScrn->virtualY-1);
 
 	if (xa <= xb && ya <= yb) {
-	    (*info->accel->SubsequentScreenToScreenCopy)(pScrn, xa, ya,
+#ifdef HAVE_XAA_H
+	    if (!info->useEXA) {
+	        (*info->accel->SubsequentScreenToScreenCopy)(pScrn, xa, ya,
 							 xa + info->backX,
 							 ya + info->backY,
 							 xb - xa + 1,
 							 yb - ya + 1);
+	    }
+#endif
+#ifdef USE_EXA
+	    if (info->useEXA) {
+		(*info->ExaDriver->Copy)(pPix, xa, ya, xa, ya, xb - xa + 1, yb - ya + 1);
+	    }
+#endif
 	}
     }
-#endif
 }
 
 static void R128EnablePageFlip(ScreenPtr pScreen)
 {
-#ifdef HAVE_XAA_H
     ScrnInfoPtr         pScrn      = xf86ScreenToScrn(pScreen);
     R128InfoPtr         info       = R128PTR(pScrn);
     R128SAREAPrivPtr    pSAREAPriv = DRIGetSAREAPrivate(pScreen);
+    PixmapPtr		pPix	   = pScreen->GetScreenPixmap(pScreen);
 
     if (info->allowPageFlip) {
 	/* Duplicate the frontbuffer to the backbuffer */
-	(*info->accel->SetupForScreenToScreenCopy)(pScrn,
+#ifdef HAVE_XAA_H
+	if (!info->useEXA) {
+	    (*info->accel->SetupForScreenToScreenCopy)(pScrn,
 						   1, 1, GXcopy,
 						   (CARD32)(-1), -1);
 
-	(*info->accel->SubsequentScreenToScreenCopy)(pScrn,
+	    (*info->accel->SubsequentScreenToScreenCopy)(pScrn,
 						     0,
 						     0,
 						     info->backX,
 						     info->backY,
 						     pScrn->virtualX,
 						     pScrn->virtualY);
+	}
+#endif
+#ifdef USE_EXA
+	if (info->useEXA) {
+	    CARD32 src_pitch_offset, dst_pitch_offset, datatype;
+
+	    R128GetPixmapOffsetPitch(pPix, &src_pitch_offset);
+	    dst_pitch_offset = src_pitch_offset + (info->backOffset >> 5);
+	    R128GetDatatypeBpp(pScrn->bitsPerPixel, &datatype);
+	    info->xdir = info->ydir = 1;
+
+            R128DoPrepareCopy(pScrn, src_pitch_offset, dst_pitch_offset, datatype, GXcopy, ~0);
+
+	    (*info->ExaDriver->Copy)(pPix, 0, 0, 0, 0, pScrn->virtualX, pScrn->virtualY);
+	}
+#endif
 
 	pSAREAPriv->pfAllowPageFlip = 1;
     }
-#endif
 }
 
 static void R128DisablePageFlip(ScreenPtr pScreen)

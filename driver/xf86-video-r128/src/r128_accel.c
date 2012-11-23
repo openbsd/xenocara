@@ -1641,7 +1641,6 @@ void R128CCEFlushIndirect( ScrnInfoPtr pScrn, int discard )
     info->indirectStart = buffer->used;
 }
 
-#ifdef HAVE_XAA_H
 /* Flush and release the indirect buffer.
  */
 void R128CCEReleaseIndirect( ScrnInfoPtr pScrn )
@@ -1666,6 +1665,7 @@ void R128CCEReleaseIndirect( ScrnInfoPtr pScrn )
                          &indirect, sizeof(drmR128Indirect));
 }
 
+#ifdef HAVE_XAA_H
 /* This callback is required for multihead cards using XAA */
 static
 void R128RestoreCCEAccelState(ScrnInfoPtr pScrn)
@@ -1873,15 +1873,42 @@ static void R128MMIOAccelInit(ScrnInfoPtr pScrn, XAAInfoRecPtr a)
    graphics hardware for acceleration. */
 Bool R128AccelInit(ScreenPtr pScreen)
 {
+    ScrnInfoPtr   pScrn = xf86ScreenToScrn(pScreen);
+    R128InfoPtr   info  = R128PTR(pScrn);
+
+#ifdef USE_EXA
+    if (info->useEXA) {
+        int errmaj = 0, errmin = 0;
+
+        info->exaReq.majorversion = EXA_VERSION_MAJOR;
+        info->exaReq.minorversion = EXA_VERSION_MINOR;
+
+        xf86DrvMsg(pScrn->scrnIndex,X_INFO,"Loading EXA module...\n");
+        if (!LoadSubModule(pScrn->module, "exa", NULL, NULL, NULL, &info->exaReq, &errmaj, &errmin)) {
+            LoaderErrorMsg(NULL, "exa", errmaj, errmin);
+            return FALSE;
+        }
+
+	/* Don't init EXA here because it'll be taken care of in mm init */
+	xf86DrvMsg(pScrn->scrnIndex, X_INFO, "Allocating EXA driver...\n");
+	info->ExaDriver = exaDriverAlloc();
+	if (!info->ExaDriver) {
+	    xf86DrvMsg(pScrn->scrnIndex, X_INFO, "Could not allocate EXA driver...\n");
+	    info->accelOn = FALSE;
+	}
+
+	return TRUE;
+    }
+#endif
+
 #ifndef HAVE_XAA_H
     return FALSE;
 #else
-    ScrnInfoPtr   pScrn = xf86ScreenToScrn(pScreen);
-    R128InfoPtr   info  = R128PTR(pScrn);
     XAAInfoRecPtr a;
 
-    if (!xf86LoadSubModule(pScrn, "xaa"))
-	return FALSE;
+    if (!info->useEXA) {
+        if (!xf86LoadSubModule(pScrn, "xaa")) return FALSE;
+    }
 
     if (!(a = info->accel = XAACreateInfoRec())) return FALSE;
 

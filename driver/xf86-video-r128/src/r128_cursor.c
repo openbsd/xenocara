@@ -54,6 +54,11 @@
 				/* X and server generic header files */
 #include "xf86.h"
 
+				/* Because for EXA we need to use a different allocator */
+#ifdef USE_EXA
+#include "exa.h"
+#endif
+
 #if X_BYTE_ORDER == X_BIG_ENDIAN
 #define P_SWAP32( a , b )                \
        ((char *)a)[0] = ((char *)b)[3];  \
@@ -253,11 +258,17 @@ Bool R128CursorInit(ScreenPtr pScreen)
     ScrnInfoPtr           pScrn   = xf86ScreenToScrn(pScreen);
     R128InfoPtr           info    = R128PTR(pScrn);
     xf86CursorInfoPtr     cursor;
-    FBAreaPtr             fbarea;
+    FBAreaPtr             fbarea  = NULL;
+#ifdef USE_EXA
+    ExaOffscreenArea*	  osArea  = NULL;
+#else
+    void*		  osArea  = NULL;
+#endif
     int                   width;
     int                   height;
     int                   size;
 
+    int                   cpp = info->CurrentLayout.pixel_bytes;
 
     if (!(cursor = info->cursor = xf86CreateCursorInfoRec())) return FALSE;
 
@@ -284,24 +295,35 @@ Bool R128CursorInit(ScreenPtr pScreen)
     size                      = (cursor->MaxWidth/4) * cursor->MaxHeight;
     width                     = pScrn->displayWidth;
     height                    = (size*2 + 1023) / pScrn->displayWidth;
-    fbarea                    = xf86AllocateOffscreenArea(pScreen,
-							  width,
-							  height,
-							  16,
-							  NULL,
-							  NULL,
-							  NULL);
 
-    if (!fbarea) {
+    if(!info->useEXA) {
+	fbarea = xf86AllocateOffscreenArea(pScreen, width, height,
+					   16, NULL, NULL, NULL);
+
+	if (fbarea) {
+	    info->cursor_start    = R128_ALIGN((fbarea->box.x1
+					    + width * fbarea->box.y1)
+					    * cpp, 16);
+	    info->cursor_end      = info->cursor_start + size;
+	}
+    }
+#ifdef USE_EXA
+    else {
+	osArea = exaOffscreenAlloc(pScreen, width * height, 16,
+				   TRUE, NULL, NULL);
+
+	if (osArea) {
+	    info->cursor_start	  = osArea->offset;
+	    info->cursor_end	  = osArea->offset + osArea->size;
+	}
+    }
+#endif
+
+    if ((!info->useEXA && !fbarea) || (info->useEXA && !osArea)) {
 	info->cursor_start    = 0;
 	xf86DrvMsg(pScrn->scrnIndex, X_WARNING,
 		   "Hardware cursor disabled"
 		   " due to insufficient offscreen memory\n");
-    } else {
-	info->cursor_start    = R128_ALIGN((fbarea->box.x1
-					    + width * fbarea->box.y1)
-					   * info->CurrentLayout.pixel_bytes, 16);
-	info->cursor_end      = info->cursor_start + size;
     }
 
     R128TRACE(("R128CursorInit (0x%08x-0x%08x)\n",

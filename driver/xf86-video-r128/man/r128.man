@@ -57,6 +57,27 @@ Enables or disables all hardware acceleration.  The default is to
 .B enable
 hardware acceleration.
 .TP
+.BI "Option \*qEnablePageFlip\*q \*q" boolean \*q
+Enable page flipping for 3D acceleration. This will increase performance
+but not work correctly in some rare cases, hence the default is
+.B off.
+.TP
+.BI "Option \*qRenderAccel\*q \*q" boolean \*q
+Enables or disables hardware Render acceleration.  It is only supported when
+using EXA acceleration and DRI.  The default is to
+.B enable
+Render acceleration.
+.TP
+.BI "Option \*qAccelMethod\*q \*q" "string" \*q
+Chooses between available acceleration architectures.  Valid options are
+.B XAA
+and
+.B EXA.
+XAA is the traditional acceleration architecture and support for it is very
+stable.  EXA is a newer acceleration architecture with better performance for
+the Render and Composite extensions.  The default is
+.B XAA.
+.TP
 .BI "Option \*qDac6Bit\*q \*q" boolean \*q
 Enables or disables the use of 6 bits per color component when in 8 bpp
 mode (emulates VGA mode).  By default, all 8 bits per color component

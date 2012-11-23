@@ -2,6 +2,9 @@
 
 #include "xorg-server.h"
 
+/* Define to 1 if you have the <byteswap.h> header file. */
+#undef HAVE_BYTESWAP_H
+
 /* Define to 1 if you have the <dlfcn.h> header file. */
 #undef HAVE_DLFCN_H
 
@@ -81,5 +84,20 @@
 /* Define to 1 if you have the ANSI C header files. */
 #undef STDC_HEADERS
 
+/* Build support for Exa */
+#undef USE_EXA
+
+/* Define to use byteswap macros from <sys/endian.h> */
+#undef USE_SYS_ENDIAN_H
+
 /* Version number of package */
 #undef VERSION
+
+/* Define to 16-bit byteswap macro */
+#undef bswap_16
+
+/* Define to 32-bit byteswap macro */
+#undef bswap_32
+
+/* Define to 64-bit byteswap macro */
+#undef bswap_64

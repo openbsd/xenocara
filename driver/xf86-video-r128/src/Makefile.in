@@ -119,11 +119,13 @@ am__installdirs = "$(DESTDIR)$(r128_drv_ladir)"
 LTLIBRARIES = $(r128_drv_la_LTLIBRARIES)
 r128_drv_la_LIBADD =
 am__r128_drv_la_SOURCES_DIST = r128_accel.c r128_cursor.c r128_dga.c \
-	r128_driver.c r128_video.c r128_misc.c r128_probe.c r128_dri.c
-@DRI_TRUE@am__objects_1 = r128_dri.lo
+	r128_driver.c r128_video.c r128_misc.c r128_probe.c r128_exa.c \
+	r128_dri.c
+@USE_EXA_TRUE@am__objects_1 = r128_exa.lo
+@DRI_TRUE@am__objects_2 = r128_dri.lo
 am_r128_drv_la_OBJECTS = r128_accel.lo r128_cursor.lo r128_dga.lo \
 	r128_driver.lo r128_video.lo r128_misc.lo r128_probe.lo \
-	$(am__objects_1)
+	$(am__objects_1) $(am__objects_2)
 r128_drv_la_OBJECTS = $(am_r128_drv_la_OBJECTS)
 AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
@@ -322,13 +324,14 @@ top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 @DRI_TRUE@R128_DRI_SRCS = r128_dri.c
+@USE_EXA_TRUE@R128_EXA_SRCS = r128_exa.c
 AM_CFLAGS = @XORG_CFLAGS@ @DRI_CFLAGS@
 r128_drv_la_LTLIBRARIES = r128_drv.la
 r128_drv_la_LDFLAGS = -module -avoid-version
 r128_drv_ladir = @moduledir@/drivers
 r128_drv_la_SOURCES = \
 	r128_accel.c r128_cursor.c r128_dga.c r128_driver.c \
-	r128_video.c r128_misc.c r128_probe.c $(R128_DRI_SRCS)
+	r128_video.c r128_misc.c r128_probe.c $(R128_EXA_SRCS) $(R128_DRI_SRCS)
 
 EXTRA_DIST = \
         compat-api.h \
@@ -340,6 +343,7 @@ EXTRA_DIST = \
 	r128_reg.h \
 	r128_sarea.h \
 	r128_version.h \
+	r128_exa_render.c \
 	atipcirename.h
 
 all: all-am
@@ -424,6 +428,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/r128_dga.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/r128_dri.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/r128_driver.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/r128_exa.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/r128_misc.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/r128_probe.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/r128_video.Plo@am__quote@

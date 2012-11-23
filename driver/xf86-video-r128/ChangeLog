@@ -1,3 +1,126 @@
+commit ef4467b4aac70b9a8a1ef1194eb02d7551be2602
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Fri Sep 28 11:25:17 2012 +1000
+
+    r128: bump to 6.9.1
+    
+    Signed-off-by: Dave Airlie <airlied@redhat.com>
+
+commit 1793fe6e84a0ee4e4924d90e9e777213a6a5ea20
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Fri Sep 28 11:24:53 2012 +1000
+
+    fix make distcheck
+    
+    Signed-off-by: Dave Airlie <airlied@redhat.com>
+
+commit e0222a5f5e7cad482044a542e4b1ebc32f774648
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Fri Sep 28 11:22:40 2012 +1000
+
+    r128: bump release to 6.9.0
+    
+    Signed-off-by: Dave Airlie <airlied@redhat.com>
+
+commit e8b741e8fd4acebd79ee495cdd5437746ae80c39
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Fri Sep 28 11:20:41 2012 +1000
+
+    r128: enable EXA by default if XAA isn't available at build time.
+    
+    Signed-off-by: Dave Airlie <airlied@redhat.com>
+
+commit 4ecd6e67fbbfd52e0ac77a6c48bd3c6a6d5598e7
+Author: Connor Behan <connor.behan@gmail.com>
+Date:   Fri Aug 31 00:19:21 2012 -0700
+
+    Scale Xv with the vertical stretch ratio
+    
+    If we are using a resolution lower than the native resolution of the
+    flat panel, the video overlay needs to know this. Otherwise a black bar
+    appears beneath the video. This is essentially Conn's patch from the bug
+    tracker except it doesn't always rely on info->PanelYRes. ACPI events
+    can change this without the driver's knowledge.
+    Fixes: https://bugs.freedesktop.org/show_bug.cgi?id=6493
+    
+    Signed-off-by: Connor Behan <connor.behan@gmail.com>
+
+commit 7f279e9d4e329ccb95de16f205ea4cd0ab37a65b
+Author: Connor Behan <connor.behan@gmail.com>
+Date:   Wed Aug 29 16:06:39 2012 -0700
+
+    Remove nested preprocessor checks
+    
+    When checking for R128DRI and RENDER, it is better to use two lines
+    instead of four.
+    
+    Signed-off-by: Connor Behan <connor.behan@gmail.com>
+
+commit deb05ac9cf58608b3d8d9947f52e9bcc5e0ae6b5
+Author: Connor Behan <connor.behan@gmail.com>
+Date:   Mon Jul 30 14:28:05 2012 +1000
+
+    Fix build without XAA again
+    
+    referring to info->accel instead of info->accelOn
+    
+    Signed-off-by: Connor Behan <connor.behan@gmail.com>
+    Signed-off-by: Dave Airlie <airlied@redhat.com>
+
+commit 310d998b7bb6d1befb1001deb565fb51a4b17013
+Author: Connor Behan <connor.behan@gmail.com>
+Date:   Fri Jul 27 11:49:38 2012 +1000
+
+    r128: fix missing preprocessor check for R128DRI
+    
+    This fixes one build problem seen in tinderbox.
+    
+    [airlied: split out from larger patch]
+    Signed-off-by: Connor Behan <connor.behan@gmail.com>
+    Signed-off-by: Dave Airlie <airlied@redhat.com>
+
+commit f83ee3144236bcca35eeadee2924e8bc15092447
+Author: Connor Behan <connor.behan@gmail.com>
+Date:   Tue Jul 17 22:53:17 2012 -0700
+
+    Fix build without EXA
+    
+    The offscreen area used by EXA needs to be declared even with lazy
+    evaluation.
+    
+    Signed-off-by: Connor Behan <connor.behan@gmail.com>
+
+commit 599c69a9cbf78c8717fb9ec92d9e764d9b358cf3
+Author: Connor Behan <connor.behan@gmail.com>
+Date:   Tue Jul 17 22:33:43 2012 -0700
+
+    Make debug mode work again
+    
+    The source should not assume that debugging is turned off. It should
+    build even if the user edits r128.h and enables it.
+    Fixes: https://bugs.freedesktop.org/show_bug.cgi?id=47785
+    
+    Signed-off-by: Connor Behan <connor.behan@gmail.com>
+
+commit c16d4e8bc068cb8127fa95347d26c7b80258f816
+Author: Connor Behan <connor.behan@gmail.com>
+Date:   Mon Jul 16 12:56:00 2012 -0700
+
+    Add EXA support
+    
+    This introduces EXA acceleration which can improve performance and allow
+    2D acceleration to be used without XAA. Implemented hooks are Solid,
+    Copy and Composite. They appear to pass all rendercheck tests, except
+    the gradient test which XAA also fails. Tested on multiple color depths,
+    with and without DRI, with and without the composite extension. Hardware
+    cursor, Xvideo and page flipping are supported as well.
+    Fixes: https://bugs.freedesktop.org/show_bug.cgi?id=47866
+    
+    [ Michel Dänzer: Drop unrelated addition of #include "r128_version.h" ]
+    
+    Signed-off-by: Connor Behan <connor.behan@gmail.com>
+    Signed-off-by: Michel Dänzer <michel.daenzer@amd.com>
+
 commit a4231073010096f689df72c1f8f1453852f28d81
 Author: Dave Airlie <airlied@redhat.com>
 Date:   Tue Jul 17 16:05:09 2012 +1000
