@@ -63,7 +63,12 @@ compute_crc32 (uint32_t    in_crc32,
 	       const void *buf,
 	       size_t      buf_len);
 
-/* Returns TRUE if running on a little endian system */
+uint32_t
+compute_crc32_for_image (uint32_t        in_crc32,
+			 pixman_image_t *image);
+
+/* Returns TRUE if running on a little endian system
+ */
 pixman_bool_t
 is_little_endian (void);
 
@@ -105,7 +110,7 @@ void
 fail_after (int seconds, const char *msg);
 
 /* If possible, enable traps for floating point exceptions */
-void enable_fp_exceptions(void);
+void enable_divbyzero_exceptions(void);
 
 /* Converts a8r8g8b8 pixels to pixels that
  *  - are not premultiplied,
@@ -157,6 +162,12 @@ write_png (pixman_image_t *image, const char *filename);
 /* Try to get an aligned memory chunk */
 void *
 aligned_malloc (size_t align, size_t size);
+
+double
+convert_srgb_to_linear (double component);
+
+double
+convert_linear_to_srgb (double component);
 
 void
 initialize_palette (pixman_indexed_t *palette, uint32_t depth, int is_rgb);

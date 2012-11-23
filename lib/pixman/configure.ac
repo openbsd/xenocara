@@ -53,8 +53,8 @@ AC_PREREQ([2.57])
 #
 
 m4_define([pixman_major], 0)
-m4_define([pixman_minor], 26)
-m4_define([pixman_micro], 2)
+m4_define([pixman_minor], 28)
+m4_define([pixman_micro], 0)
 
 m4_define([pixman_version],[pixman_major.pixman_minor.pixman_micro])
 
@@ -89,6 +89,9 @@ AC_DEFUN([PIXMAN_LINK_WITH_ENV],[dnl
 	LDFLAGS=""
 	LIBS=""
 	$1
+	CFLAGS="$save_CFLAGS $CFLAGS"
+	LDFLAGS="$save_LDFLAGS $LDFLAGS"
+	LIBS="$save_LIBS $LIBS"
 	AC_LINK_IFELSE(
 		[AC_LANG_SOURCE([$2])],
 		[pixman_cc_stderr=`test -f conftest.err && cat conftest.err`
@@ -181,12 +184,6 @@ AC_SUBST(LT_VERSION_INFO)
 
 PIXMAN_CHECK_CFLAG([-Wall])
 PIXMAN_CHECK_CFLAG([-fno-strict-aliasing])
-
-AC_PATH_PROG(PERL, perl, no)
-if test "x$PERL" = xno; then
-    AC_MSG_ERROR([Perl is required to build pixman.])
-fi
-AC_SUBST(PERL)
 
 dnl =========================================================================
 dnl OpenMP for the test suite?
@@ -351,12 +348,11 @@ AC_COMPILE_IFELSE([AC_LANG_SOURCE([[
 int main () {
     __m64 v = _mm_cvtsi32_si64 (1);
     __m64 w;
-    signed char x = 0;
 
     /* Some versions of clang will choke on K */
     asm ("pshufw %2, %1, %0\n\t"
         : "=y" (w)
-        : "y" (v), "K" (x)
+        : "y" (v), "K" (5)
     );
 
     return _mm_cvtsi64_si32 (v);
@@ -797,8 +793,6 @@ AM_CONDITIONAL(HAVE_GTK, [test "x$enable_gtk" = xyes])
 
 AC_SUBST(GTK_CFLAGS)
 AC_SUBST(GTK_LIBS)
-AC_SUBST(DEP_CFLAGS)
-AC_SUBST(DEP_LIBS)
 
 dnl =====================================
 dnl posix_memalign, sigaction, alarm, gettimeofday
@@ -931,8 +925,8 @@ if test $ac_cv_tls = none ; then
     AC_MSG_CHECKING(for pthread_setspecific)
 
     PIXMAN_CHECK_PTHREAD([CFLAGS=""; LIBS="-L/usr/X11R6/lib -lpthread-stubs"])
-    PIXMAN_CHECK_PTHREAD([CFLAGS="-D_REENTRANT"; LIBS="-lpthread"])
     PIXMAN_CHECK_PTHREAD([CFLAGS="-pthread"; LDFLAGS="-pthread"])
+    PIXMAN_CHECK_PTHREAD([CFLAGS="-D_REENTRANT"; LIBS="-lpthread"])
     PIXMAN_CHECK_PTHREAD([CFLAGS="-D_REENTRANT"; LDFLAGS="-lroot"])
     
     if test $support_for_pthread_setspecific = yes; then

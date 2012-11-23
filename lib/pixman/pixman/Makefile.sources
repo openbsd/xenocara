@@ -4,12 +4,16 @@ libpixman_sources =			\
 	pixman-access-accessors.c	\
 	pixman-bits-image.c		\
 	pixman-combine32.c		\
-	pixman-combine64.c		\
+	pixman-combine-float.c		\
 	pixman-conical-gradient.c	\
-	pixman-cpu.c			\
+	pixman-x86.c			\
+	pixman-mips.c			\
+	pixman-arm.c			\
+	pixman-ppc.c			\
 	pixman-edge.c			\
 	pixman-edge-accessors.c		\
 	pixman-fast-path.c		\
+	pixman-glyph.c			\
 	pixman-general.c		\
 	pixman-gradient-walker.c	\
 	pixman-image.c			\
@@ -30,26 +34,8 @@ libpixman_headers =			\
 	pixman.h			\
 	pixman-accessor.h		\
 	pixman-combine32.h		\
-	pixman-combine64.h		\
 	pixman-compiler.h		\
 	pixman-edge-imp.h		\
 	pixman-inlines.h		\
 	pixman-private.h		\
 	$(NULL)
-
-BUILT_SOURCES =				\
-	pixman-combine32.c		\
-	pixman-combine32.h		\
-	pixman-combine64.c		\
-	pixman-combine64.h		\
-	$(NULL)
-
-pixman-combine32.c: pixman-combine.c.template make-combine.pl
-	$(PERL) ${srcdir}/make-combine.pl 8 < ${srcdir}/pixman-combine.c.template > $@ || ($(RM) $@; exit 1)
-pixman-combine32.h: pixman-combine.h.template make-combine.pl
-	$(PERL) ${srcdir}/make-combine.pl 8 < ${srcdir}/pixman-combine.h.template > $@ || ($(RM) $@; exit 1)
-
-pixman-combine64.c: pixman-combine.c.template make-combine.pl
-	$(PERL) ${srcdir}/make-combine.pl 16 < ${srcdir}/pixman-combine.c.template > $@ || ($(RM) $@; exit 1)
-pixman-combine64.h: pixman-combine.h.template make-combine.pl
-	$(PERL) ${srcdir}/make-combine.pl 16 < ${srcdir}/pixman-combine.h.template > $@ || ($(RM) $@; exit 1)

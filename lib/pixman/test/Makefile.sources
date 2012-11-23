@@ -4,8 +4,11 @@ TESTPROGRAMS =			\
 	pdf-op-test		\
 	region-test		\
 	region-translate-test	\
+	combiner-test		\
 	fetch-test		\
+	rotate-test		\
 	oob-test		\
+	infinite-loop		\
 	trap-crasher		\
 	alpha-loop		\
 	scaling-crash-test	\
@@ -16,6 +19,7 @@ TESTPROGRAMS =			\
 	stress-test		\
 	composite-traps-test	\
 	blitters-test		\
+	glyph-test		\
 	scaling-test		\
 	affine-test		\
 	composite		\

@@ -1,6 +1,7 @@
 #define _GNU_SOURCE
 
 #include "utils.h"
+#include <math.h>
 #include <signal.h>
 #include <stdlib.h>
 
@@ -133,6 +134,107 @@ compute_crc32 (uint32_t    in_crc32,
 	crc32 = (crc32 >> 8) ^ crc_table[(crc32 ^ byte_buf[i]) & 0xFF];
 
     return (crc32 ^ 0xFFFFFFFF);
+}
+
+static uint32_t
+compute_crc32_for_image_internal (uint32_t        crc32,
+				  pixman_image_t *img,
+				  pixman_bool_t	  remove_alpha,
+				  pixman_bool_t	  remove_rgb)
+{
+    pixman_format_code_t fmt = pixman_image_get_format (img);
+    uint32_t *data = pixman_image_get_data (img);
+    int stride = pixman_image_get_stride (img);
+    int height = pixman_image_get_height (img);
+    uint32_t mask = 0xffffffff;
+    int i;
+
+    /* mask unused 'x' part */
+    if (PIXMAN_FORMAT_BPP (fmt) - PIXMAN_FORMAT_DEPTH (fmt) &&
+	PIXMAN_FORMAT_DEPTH (fmt) != 0)
+    {
+	uint32_t m = (1 << PIXMAN_FORMAT_DEPTH (fmt)) - 1;
+
+	if (PIXMAN_FORMAT_TYPE (fmt) == PIXMAN_TYPE_BGRA ||
+	    PIXMAN_FORMAT_TYPE (fmt) == PIXMAN_TYPE_RGBA)
+	{
+	    m <<= (PIXMAN_FORMAT_BPP (fmt) - PIXMAN_FORMAT_DEPTH (fmt));
+	}
+
+	mask &= m;
+    }
+
+    /* mask alpha channel */
+    if (remove_alpha && PIXMAN_FORMAT_A (fmt))
+    {
+	uint32_t m;
+
+	if (PIXMAN_FORMAT_BPP (fmt) == 32)
+	    m = 0xffffffff;
+	else
+	    m = (1 << PIXMAN_FORMAT_BPP (fmt)) - 1;
+
+	m >>= PIXMAN_FORMAT_A (fmt);
+
+	if (PIXMAN_FORMAT_TYPE (fmt) == PIXMAN_TYPE_BGRA ||
+	    PIXMAN_FORMAT_TYPE (fmt) == PIXMAN_TYPE_RGBA ||
+	    PIXMAN_FORMAT_TYPE (fmt) == PIXMAN_TYPE_A)
+	{
+	    /* Alpha is at the bottom of the pixel */
+	    m <<= PIXMAN_FORMAT_A (fmt);
+	}
+
+	mask &= m;
+    }
+
+    /* mask rgb channels */
+    if (remove_rgb && PIXMAN_FORMAT_RGB (fmt))
+    {
+	uint32_t m = ((uint32_t)~0) >> (32 - PIXMAN_FORMAT_BPP (fmt));
+	uint32_t size = PIXMAN_FORMAT_R (fmt) + PIXMAN_FORMAT_G (fmt) + PIXMAN_FORMAT_B (fmt);
+
+	m &= ~((1 << size) - 1);
+
+	if (PIXMAN_FORMAT_TYPE (fmt) == PIXMAN_TYPE_BGRA ||
+	    PIXMAN_FORMAT_TYPE (fmt) == PIXMAN_TYPE_RGBA)
+	{
+	    /* RGB channels are at the top of the pixel */
+	    m >>= size;
+	}
+
+	mask &= m;
+    }
+
+    for (i = 0; i * PIXMAN_FORMAT_BPP (fmt) < 32; i++)
+	mask |= mask << (i * PIXMAN_FORMAT_BPP (fmt));
+
+    for (i = 0; i < stride * height / 4; i++)
+	data[i] &= mask;
+
+    /* swap endiannes in order to provide identical results on both big
+     * and litte endian systems
+     */
+    image_endian_swap (img);
+
+    return compute_crc32 (crc32, data, stride * height);
+}
+
+uint32_t
+compute_crc32_for_image (uint32_t        crc32,
+			 pixman_image_t *img)
+{
+    if (img->common.alpha_map)
+    {
+	crc32 = compute_crc32_for_image_internal (crc32, img, TRUE, FALSE);
+	crc32 = compute_crc32_for_image_internal (
+	    crc32, (pixman_image_t *)img->common.alpha_map, FALSE, TRUE);
+    }
+    else
+    {
+	crc32 = compute_crc32_for_image_internal (crc32, img, FALSE, FALSE);
+    }
+
+    return crc32;
 }
 
 pixman_bool_t
@@ -585,9 +687,9 @@ gettime (void)
 uint32_t
 get_random_seed (void)
 {
-    double d = gettime();
-
-    lcg_srand (*(uint32_t *)&d);
+    union { double d; uint32_t u32; } t;
+    t.d = gettime();
+    lcg_srand (t.u32);
 
     return lcg_rand_u32 ();
 }
@@ -621,21 +723,11 @@ fail_after (int seconds, const char *msg)
 }
 
 void
-enable_fp_exceptions (void)
+enable_divbyzero_exceptions (void)
 {
 #ifdef HAVE_FENV_H
 #ifdef HAVE_FEENABLEEXCEPT
-    /* Note: we don't enable the FE_INEXACT trap because
-     * that happens quite commonly. It is possible that
-     * over- and underflow should similarly be considered
-     * okay, but for now the test suite passes with them
-     * enabled, and it's useful to know if they start
-     * occuring.
-     */
-    feenableexcept (FE_DIVBYZERO	|
-		    FE_INVALID		|
-		    FE_OVERFLOW		|
-		    FE_UNDERFLOW);
+    feenableexcept (FE_DIVBYZERO);
 #endif
 #endif
 }
@@ -663,6 +755,24 @@ aligned_malloc (size_t align, size_t size)
      (((((c) >> 16) & 0xff) * 153 +					\
        (((c) >>  8) & 0xff) * 301 +					\
        (((c)      ) & 0xff) * 58) >> 2))
+
+double
+convert_srgb_to_linear (double c)
+{
+    if (c <= 0.04045)
+        return c / 12.92;
+    else
+        return pow ((c + 0.055) / 1.055, 2.4);
+}
+
+double
+convert_linear_to_srgb (double c)
+{
+    if (c <= 0.0031308)
+        return c * 12.92;
+    else
+        return 1.055 * pow (c, 1.0/2.4) - 0.055;
+}
 
 void
 initialize_palette (pixman_indexed_t *palette, uint32_t depth, int is_rgb)
@@ -767,6 +877,7 @@ pixel_checker_init (pixel_checker_t *checker, pixman_format_code_t format)
 	break;
 
     case PIXMAN_TYPE_ARGB:
+    case PIXMAN_TYPE_ARGB_SRGB:
 	checker->bs = 0;
 	checker->gs = checker->bs + PIXMAN_FORMAT_B (format);
 	checker->rs = checker->gs + PIXMAN_FORMAT_G (format);
@@ -841,6 +952,18 @@ get_limits (const pixel_checker_t *checker, double limit,
 	    color_t *color,
 	    int *ao, int *ro, int *go, int *bo)
 {
+    color_t tmp;
+
+    if (PIXMAN_FORMAT_TYPE (checker->format) == PIXMAN_TYPE_ARGB_SRGB)
+    {
+	tmp.a = color->a;
+	tmp.r = convert_linear_to_srgb (color->r);
+	tmp.g = convert_linear_to_srgb (color->g);
+	tmp.b = convert_linear_to_srgb (color->b);
+
+	color = &tmp;
+    }
+    
     *ao = convert (color->a + limit, checker->aw, checker->am, checker->as, 1.0);
     *ro = convert (color->r + limit, checker->rw, checker->rm, checker->rs, 0.0);
     *go = convert (color->g + limit, checker->gw, checker->gm, checker->gs, 0.0);

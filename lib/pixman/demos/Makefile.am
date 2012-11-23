@@ -20,7 +20,9 @@ DEMOS =				\
 	trap-test		\
 	tri-test		\
 	quad2quad		\
-	checkerboard
+	checkerboard		\
+	srgb-trap-test		\
+	srgb-test
 
 EXTRA_DIST = parrot.c parrot.jpg
 
@@ -35,6 +37,8 @@ convolution_test_SOURCES = convolution-test.c $(GTK_UTILS)
 radial_test_SOURCES = radial-test.c $(GTK_UTILS)
 tri_test_SOURCES = tri-test.c $(GTK_UTILS)
 checkerboard_SOURCES = checkerboard.c $(GTK_UTILS)
+srgb_test_SOURCES = srgb-test.c $(GTK_UTILS)
+srgb_trap_test_SOURCES = srgb-trap-test.c $(GTK_UTILS)
 
 noinst_PROGRAMS = $(DEMOS)
 

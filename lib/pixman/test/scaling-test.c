@@ -20,6 +20,31 @@
 /*
  * Composite operation with pseudorandom images
  */
+
+static pixman_format_code_t
+get_format (int bpp)
+{
+    if (bpp == 4)
+    {
+	switch (lcg_rand_n (4))
+	{
+	default:
+	case 0:
+	    return PIXMAN_a8r8g8b8;
+	case 1:
+	    return PIXMAN_x8r8g8b8;
+	case 2:
+	    return PIXMAN_a8b8g8r8;
+	case 3:
+	    return PIXMAN_x8b8g8r8;
+	}
+    }
+    else
+    {
+	return PIXMAN_r5g6b5;
+    }
+}
+
 uint32_t
 test_composite (int      testnum,
 		int      verbose)
@@ -124,11 +149,8 @@ test_composite (int      testnum,
     for (i = 0; i < dst_stride * dst_height; i++)
 	*((uint8_t *)dstbuf + i) = lcg_rand_n (256);
 
-    src_fmt = src_bpp == 4 ? (lcg_rand_n (2) == 0 ?
-                              PIXMAN_a8r8g8b8 : PIXMAN_x8r8g8b8) : PIXMAN_r5g6b5;
-
-    dst_fmt = dst_bpp == 4 ? (lcg_rand_n (2) == 0 ?
-                              PIXMAN_a8r8g8b8 : PIXMAN_x8r8g8b8) : PIXMAN_r5g6b5;
+    src_fmt = get_format (src_bpp);
+    dst_fmt = get_format (dst_bpp);
 
     src_img = pixman_image_create_bits (
         src_fmt, src_width, src_height, srcbuf, src_stride);
@@ -322,7 +344,7 @@ test_composite (int      testnum,
 	pixman_image_composite (op, src_img, mask_img, dst_img,
                             src_x, src_y, mask_x, mask_y, dst_x, dst_y, w, h);
 
-    if (dst_fmt == PIXMAN_x8r8g8b8)
+    if (dst_fmt == PIXMAN_x8r8g8b8 || dst_fmt == PIXMAN_x8b8g8r8)
     {
 	/* ignore unused part */
 	for (i = 0; i < dst_stride * dst_height / 4; i++)
@@ -357,11 +379,21 @@ test_composite (int      testnum,
     return crc32;
 }
 
+#if BILINEAR_INTERPOLATION_BITS == 8
+#define CHECKSUM 0x8D3A7539
+#elif BILINEAR_INTERPOLATION_BITS == 7
+#define CHECKSUM 0x03A23E0C
+#elif BILINEAR_INTERPOLATION_BITS == 4
+#define CHECKSUM 0xE96D1A5E
+#else
+#define CHECKSUM 0x00000000
+#endif
+
 int
 main (int argc, const char *argv[])
 {
     pixman_disable_out_of_bounds_workaround ();
 
-    return fuzzer_test_main("scaling", 8000000, 0x80DF1CB2,
+    return fuzzer_test_main("scaling", 8000000, CHECKSUM,
 			    test_composite, argc, argv);
 }
