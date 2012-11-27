@@ -28,22 +28,39 @@
 #ifndef _INTEL_CHIPSET_H
 #define _INTEL_CHIPSET_H
 
-#define IS_830(dev) ((dev)->pci_device == 0x3577)
-#define IS_845(dev) ((dev)->pci_device == 0x2562)
-#define IS_85X(dev) ((dev)->pci_device == 0x3582)
-#define IS_865(dev) ((dev)->pci_device == 0x2572)
+#define PCI_CHIP_ILD_G                  0x0042
+#define PCI_CHIP_ILM_G                  0x0046
+
+#define PCI_CHIP_SANDYBRIDGE_GT1	0x0102 /* desktop */
+#define PCI_CHIP_SANDYBRIDGE_GT2	0x0112
+#define PCI_CHIP_SANDYBRIDGE_GT2_PLUS	0x0122
+#define PCI_CHIP_SANDYBRIDGE_M_GT1	0x0106 /* mobile */
+#define PCI_CHIP_SANDYBRIDGE_M_GT2	0x0116
+#define PCI_CHIP_SANDYBRIDGE_M_GT2_PLUS	0x0126
+#define PCI_CHIP_SANDYBRIDGE_S		0x010A /* server */
+
+#define PCI_CHIP_IVYBRIDGE_GT1		0x0152 /* desktop */
+#define PCI_CHIP_IVYBRIDGE_GT2		0x0162
+#define PCI_CHIP_IVYBRIDGE_M_GT1	0x0156 /* mobile */
+#define PCI_CHIP_IVYBRIDGE_M_GT2	0x0166
+#define PCI_CHIP_IVYBRIDGE_S		0x015a /* server */
+
+#define IS_830(dev) (dev == 0x3577)
+#define IS_845(dev) (dev == 0x2562)
+#define IS_85X(dev) (dev == 0x3582)
+#define IS_865(dev) (dev == 0x2572)
 
 #define IS_GEN2(dev) (IS_830(dev) ||				\
 		      IS_845(dev) ||				\
 		      IS_85X(dev) ||				\
 		      IS_865(dev))
 
-#define IS_915G(dev) ((dev)->pci_device == 0x2582 ||		\
-		       (dev)->pci_device == 0x258a)
-#define IS_915GM(dev) ((dev)->pci_device == 0x2592)
-#define IS_945G(dev) ((dev)->pci_device == 0x2772)
-#define IS_945GM(dev) ((dev)->pci_device == 0x27A2 ||		\
-                        (dev)->pci_device == 0x27AE)
+#define IS_915G(dev) (dev == 0x2582 ||		\
+		       dev == 0x258a)
+#define IS_915GM(dev) (dev == 0x2592)
+#define IS_945G(dev) (dev == 0x2772)
+#define IS_945GM(dev) (dev == 0x27A2 ||		\
+                        dev == 0x27AE)
 
 #define IS_915(dev) (IS_915G(dev) ||				\
 		     IS_915GM(dev))
@@ -53,49 +70,68 @@
 		     IS_G33(dev) ||				\
 		     IS_PINEVIEW(dev))
 
-#define IS_G33(dev)    ((dev)->pci_device == 0x29C2 ||		\
-                        (dev)->pci_device == 0x29B2 ||		\
-                        (dev)->pci_device == 0x29D2)
+#define IS_G33(dev)    (dev == 0x29C2 ||		\
+                        dev == 0x29B2 ||		\
+                        dev == 0x29D2)
 
-#define IS_PINEVIEW(dev) ((dev)->pci_device == 0xa001 ||	\
-			  (dev)->pci_device == 0xa011)
+#define IS_PINEVIEW(dev) (dev == 0xa001 ||	\
+			  dev == 0xa011)
 
 #define IS_GEN3(dev) (IS_915(dev) ||				\
 		      IS_945(dev) ||				\
 		      IS_G33(dev) ||				\
 		      IS_PINEVIEW(dev))
 
-#define IS_I965GM(dev) ((dev)->pci_device == 0x2A02)
+#define IS_I965GM(dev) (dev == 0x2A02)
 
-#define IS_GEN4(dev) ((dev)->pci_device == 0x2972 ||	\
-		      (dev)->pci_device == 0x2982 ||	\
-		      (dev)->pci_device == 0x2992 ||	\
-		      (dev)->pci_device == 0x29A2 ||	\
-		      (dev)->pci_device == 0x2A02 ||	\
-		      (dev)->pci_device == 0x2A12 ||	\
-		      (dev)->pci_device == 0x2A42 ||	\
-		      (dev)->pci_device == 0x2E02 ||	\
-		      (dev)->pci_device == 0x2E12 ||	\
-		      (dev)->pci_device == 0x2E22 ||	\
-		      (dev)->pci_device == 0x2E32 ||	\
-		      (dev)->pci_device == 0x2E42 ||	\
-		      (dev)->pci_device == 0x0042 ||	\
-		      (dev)->pci_device == 0x0046 ||	\
+#define IS_GEN4(dev) (dev == 0x2972 ||	\
+		      dev == 0x2982 ||	\
+		      dev == 0x2992 ||	\
+		      dev == 0x29A2 ||	\
+		      dev == 0x2A02 ||	\
+		      dev == 0x2A12 ||	\
+		      dev == 0x2A42 ||	\
+		      dev == 0x2E02 ||	\
+		      dev == 0x2E12 ||	\
+		      dev == 0x2E22 ||	\
+		      dev == 0x2E32 ||	\
+		      dev == 0x2E42 ||	\
+		      dev == 0x0042 ||	\
+		      dev == 0x0046 ||	\
 		      IS_I965GM(dev) || \
 		      IS_G4X(dev))
 
-#define IS_GM45(dev) ((dev)->pci_device == 0x2A42)
+#define IS_GM45(dev) (dev == 0x2A42)
 
-#define IS_G4X(dev) ((dev)->pci_device == 0x2E02 || \
-                     (dev)->pci_device == 0x2E12 || \
-                     (dev)->pci_device == 0x2E22 || \
-                     (dev)->pci_device == 0x2E32 || \
-                     (dev)->pci_device == 0x2E42 || \
+
+#define IS_GEN5(dev)	(dev == PCI_CHIP_ILD_G || \
+			 dev == PCI_CHIP_ILM_G)
+
+#define IS_GEN6(dev)	(dev == PCI_CHIP_SANDYBRIDGE_GT1 || \
+			 dev == PCI_CHIP_SANDYBRIDGE_GT2 || \
+			 dev == PCI_CHIP_SANDYBRIDGE_GT2_PLUS || \
+			 dev == PCI_CHIP_SANDYBRIDGE_M_GT1 || \
+			 dev == PCI_CHIP_SANDYBRIDGE_M_GT2 || \
+			 dev == PCI_CHIP_SANDYBRIDGE_M_GT2_PLUS || \
+			 dev == PCI_CHIP_SANDYBRIDGE_S)
+
+#define IS_GEN7(dev)	(dev == PCI_CHIP_IVYBRIDGE_GT1 || \
+			 dev == PCI_CHIP_IVYBRIDGE_GT2 || \
+			 dev == PCI_CHIP_IVYBRIDGE_M_GT1 || \
+			 dev == PCI_CHIP_IVYBRIDGE_M_GT2 || \
+			 dev == PCI_CHIP_IVYBRIDGE_S)
+
+#define IS_G4X(dev) (dev == 0x2E02 || \
+                     dev == 0x2E12 || \
+                     dev == 0x2E22 || \
+                     dev == 0x2E32 || \
+                     dev == 0x2E42 || \
 		     IS_GM45(dev))
 
 #define IS_9XX(dev) (IS_GEN3(dev) ||				\
 		     IS_GEN4(dev) ||				\
 		     IS_GEN5(dev) ||				\
-		     IS_GEN6(dev))
+		     IS_GEN6(dev) ||				\
+		     IS_GEN7(dev))
 
 #endif /* _INTEL_CHIPSET_H */

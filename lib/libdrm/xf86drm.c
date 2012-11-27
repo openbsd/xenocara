@@ -31,10 +31,14 @@
  * DEALINGS IN THE SOFTWARE.
  */
 
+#ifdef HAVE_CONFIG_H
+# include <config.h>
+#endif
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
+#include <strings.h>
 #include <ctype.h>
 #include <fcntl.h>
 #include <errno.h>
@@ -55,8 +59,16 @@
 
 #include "xf86drm.h"
 
-#ifndef DRM_MAX_MINOR
-#define DRM_MAX_MINOR 16
+#if defined(__FreeBSD__) || defined(__FreeBSD_kernel__) || defined(__DragonFly__)
+#define DRM_MAJOR 145
+#endif
+
+#ifdef __NetBSD__
+#define DRM_MAJOR 34
+#endif
+
+#ifndef DRM_MAJOR
+#define DRM_MAJOR 226		/* Linux */
 #endif
 
 /*
@@ -139,23 +151,6 @@ void drmFree(void *pt)
 	free(pt);
 }
 
-/* drmStrdup can't use strdup(3), since it doesn't call _DRM_MALLOC... */
-static char *drmStrdup(const char *s)
-{
-    char *retval;
-
-    if (!s)
-        return NULL;
-
-    retval = malloc(strlen(s)+1);
-    if (!retval)
-        return NULL;
-
-    strcpy(retval, s);
-
-    return retval;
-}
-
 /**
  * Call ioctl, restarting if it is interupted
  */
@@ -213,7 +208,7 @@ drmHashEntry *drmGetEntry(int fd)
  * PCI:b:d:f format and the newer pci:oooo:bb:dd.f format.  In the format, o is
  * domain, b is bus, d is device, f is function.
  */
-static int drmMatchBusID(const char *id1, const char *id2)
+static int drmMatchBusID(const char *id1, const char *id2, int pci_domain_ok)
 {
     /* First, check if the IDs are exactly the same */
     if (strcasecmp(id1, id2) == 0)
@@ -241,12 +236,49 @@ static int drmMatchBusID(const char *id1, const char *id2)
 		return 0;
 	}
 
+	/* If domains aren't properly supported by the kernel interface,
+	 * just ignore them, which sucks less than picking a totally random
+	 * card with "open by name"
+	 */
+	if (!pci_domain_ok)
+		o1 = o2 = 0;
+
 	if ((o1 != o2) || (b1 != b2) || (d1 != d2) || (f1 != f2))
 	    return 0;
 	else
 	    return 1;
     }
     return 0;
+}
+
+/**
+ * Handles error checking for chown call.
+ *
+ * \param path to file.
+ * \param id of the new owner.
+ * \param id of the new group.
+ *
+ * \return zero if success or -1 if failure.
+ *
+ * \internal
+ * Checks for failure. If failure was caused by signal call chown again.
+ * If any other failure happened then it will output error mesage using
+ * drmMsg() call.
+ */
+static int chown_check_return(const char *path, uid_t owner, gid_t group)
+{
+	int rv;
+
+	do {
+		rv = chown(path, owner, group);
+	} while (rv != 0 && errno == EINTR);
+
+	if (rv == 0)
+		return 0;
+
+	drmMsg("Failed to change owner or group for file %s! %d: %s\n",
+			path, errno, strerror(errno));
+	return -1;
 }
 
 /**
@@ -282,6 +314,54 @@ static int drmOpenDevice(long dev, int minor, int type)
 	group = (serv_group >= 0) ? serv_group : DRM_DEV_GID;
     }
 
+#ifndef __OpenBSD__
+#if !defined(UDEV)
+    if (stat(DRM_DIR_NAME, &st)) {
+	if (!isroot)
+	    return DRM_ERR_NOT_ROOT;
+	mkdir(DRM_DIR_NAME, DRM_DEV_DIRMODE);
+	chown_check_return(DRM_DIR_NAME, 0, 0); /* root:root */
+	chmod(DRM_DIR_NAME, DRM_DEV_DIRMODE);
+    }
+
+    /* Check if the device node exists and create it if necessary. */
+    if (stat(buf, &st)) {
+	if (!isroot)
+	    return DRM_ERR_NOT_ROOT;
+	remove(buf);
+	mknod(buf, S_IFCHR | devmode, dev);
+    }
+
+    if (drm_server_info) {
+	chown_check_return(buf, user, group);
+	chmod(buf, devmode);
+    }
+#else
+    /* if we modprobed then wait for udev */
+    {
+	int udev_count = 0;
+wait_for_udev:
+        if (stat(DRM_DIR_NAME, &st)) {
+		usleep(20);
+		udev_count++;
+
+		if (udev_count == 50)
+			return -1;
+		goto wait_for_udev;
+	}
+
+    	if (stat(buf, &st)) {
+		usleep(20);
+		udev_count++;
+
+		if (udev_count == 50)
+			return -1;
+		goto wait_for_udev;
+    	}
+    }
+#endif
+#endif /* __OpenBSD__ */
+
 #ifndef X_PRIVSEP
     fd = open(buf, O_RDWR, 0);
 #else
@@ -292,8 +372,29 @@ static int drmOpenDevice(long dev, int minor, int type)
     if (fd >= 0)
 	return fd;
 
+#if !defined(UDEV) && !defined(__OpenBSD__)
+    /* Check if the device node is not what we expect it to be, and recreate it
+     * and try again if so.
+     */
+    if (st.st_rdev != dev) {
+	if (!isroot)
+	    return DRM_ERR_NOT_ROOT;
+	remove(buf);
+	mknod(buf, S_IFCHR | devmode, dev);
+	if (drm_server_info) {
+	    chown_check_return(buf, user, group);
+	    chmod(buf, devmode);
+	}
+    }
+    fd = open(buf, O_RDWR, 0);
+    drmMsg("drmOpenDevice: open result is %d, (%s)\n",
+		fd, fd < 0 ? strerror(errno) : "OK");
+    if (fd >= 0)
+	return fd;
+
     drmMsg("drmOpenDevice: Open failed\n");
-    
+    remove(buf);
+#endif
     return -errno;
 }
 
@@ -380,7 +481,7 @@ int drmAvailable(void)
  */
 static int drmOpenByBusid(const char *busid)
 {
-    int        i;
+    int        i, pci_domain_ok = 1;
     int        fd;
     const char *buf;
     drmSetVersion sv;
@@ -390,14 +491,27 @@ static int drmOpenByBusid(const char *busid)
 	fd = drmOpenMinor(i, 1, DRM_NODE_RENDER);
 	drmMsg("drmOpenByBusid: drmOpenMinor returns %d\n", fd);
 	if (fd >= 0) {
+	    /* We need to try for 1.4 first for proper PCI domain support
+	     * and if that fails, we know the kernel is busted
+	     */
 	    sv.drm_di_major = 1;
-	    sv.drm_di_minor = 1;
+	    sv.drm_di_minor = 4;
 	    sv.drm_dd_major = -1;	/* Don't care */
 	    sv.drm_dd_minor = -1;	/* Don't care */
-	    drmSetInterfaceVersion(fd, &sv);
+	    if (drmSetInterfaceVersion(fd, &sv)) {
+#ifndef __alpha__
+		pci_domain_ok = 0;
+#endif
+		sv.drm_di_major = 1;
+		sv.drm_di_minor = 1;
+		sv.drm_dd_major = -1;       /* Don't care */
+		sv.drm_dd_minor = -1;       /* Don't care */
+		drmMsg("drmOpenByBusid: Interface 1.4 failed, trying 1.1\n",fd);
+		drmSetInterfaceVersion(fd, &sv);
+	    }
 	    buf = drmGetBusid(fd);
 	    drmMsg("drmOpenByBusid: drmGetBusid reports %s\n", buf);
-	    if (buf && drmMatchBusID(buf, busid)) {
+	    if (buf && drmMatchBusID(buf, busid, pci_domain_ok)) {
 		drmFreeBusid(buf);
 		return fd;
 	    }
@@ -604,11 +718,11 @@ static void drmCopyVersion(drmVersionPtr d, const drm_version_t *s)
     d->version_minor      = s->version_minor;
     d->version_patchlevel = s->version_patchlevel;
     d->name_len           = s->name_len;
-    d->name               = drmStrdup(s->name);
+    d->name               = strdup(s->name);
     d->date_len           = s->date_len;
-    d->date               = drmStrdup(s->date);
+    d->date               = strdup(s->date);
     d->desc_len           = s->desc_len;
-    d->desc               = drmStrdup(s->desc);
+    d->desc               = strdup(s->desc);
 }
 
 
@@ -703,6 +817,20 @@ drmVersionPtr drmGetLibVersion(int fd)
     return (drmVersionPtr)version;
 }
 
+int drmGetCap(int fd, uint64_t capability, uint64_t *value)
+{
+#ifndef __OpenBSD__
+	struct drm_get_cap cap = { capability, 0 };
+	int ret;
+
+	ret = drmIoctl(fd, DRM_IOCTL_GET_CAP, &cap);
+	if (ret)
+		return ret;
+
+	*value = cap.value;
+#endif
+	return 0;
+}
 
 /**
  * Free the bus ID information.
@@ -857,7 +985,7 @@ int drmAddMap(int fd, drm_handle_t offset, drmSize size, drmMapType type,
     if (drmIoctl(fd, DRM_IOCTL_ADD_MAP, &map))
 	return -errno;
     if (handle)
-	*handle = (drm_handle_t)map.handle;
+	*handle = (drm_handle_t)(uintptr_t)map.handle;
     return 0;
 }
 
@@ -865,7 +993,7 @@ int drmRmMap(int fd, drm_handle_t handle)
 {
     drm_map_t map;
 
-    map.handle = (void *)handle;
+    map.handle = (void *)(uintptr_t)handle;
 
     if(drmIoctl(fd, DRM_IOCTL_RM_MAP, &map))
 	return -errno;
@@ -2001,7 +2129,7 @@ int drmAddContextPrivateMapping(int fd, drm_context_t ctx_id,
     drm_ctx_priv_map_t map;
 
     map.ctx_id = ctx_id;
-    map.handle = (void *)handle;
+    map.handle = (void *)(uintptr_t)handle;
 
     if (drmIoctl(fd, DRM_IOCTL_SET_SAREA_CTX, &map))
 	return -errno;
@@ -2018,7 +2146,7 @@ int drmGetContextPrivateMapping(int fd, drm_context_t ctx_id,
     if (drmIoctl(fd, DRM_IOCTL_GET_SAREA_CTX, &map))
 	return -errno;
     if (handle)
-	*handle = (drm_handle_t)map.handle;
+	*handle = (drm_handle_t)(uintptr_t)map.handle;
 
     return 0;
 }
@@ -2390,23 +2518,16 @@ void drmCloseOnce(int fd)
 
 int drmSetMaster(int fd)
 {
-#ifdef NOTYET
-	int ret;
-
-	fprintf(stderr,"Setting master \n");
-	ret = ioctl(fd, DRM_IOCTL_SET_MASTER, 0);
-	return ret;
+#ifndef __OpenBSD__
+	return ioctl(fd, DRM_IOCTL_SET_MASTER, 0);
 #endif
 	return 0;
 }
 
 int drmDropMaster(int fd)
 {
-#ifdef NOTYET
-	int ret;
-	fprintf(stderr,"Dropping master \n");
-	ret = ioctl(fd, DRM_IOCTL_DROP_MASTER, 0);
-	return ret;
+#ifndef __OpenBSD__
+	return ioctl(fd, DRM_IOCTL_DROP_MASTER, 0);
 #endif
 	return 0;
 }
@@ -2434,7 +2555,7 @@ char *drmGetDeviceNameFromFd(int fd)
 	if (i == DRM_MAX_MINOR)
 		return NULL;
 
-	return drmStrdup(name);
+	return strdup(name);
 }
 
 #ifdef X_PRIVSEP

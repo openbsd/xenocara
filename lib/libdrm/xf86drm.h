@@ -39,6 +39,35 @@
 #include <stdint.h>
 #include <drm.h>
 
+#if defined(__cplusplus) || defined(c_plusplus)
+extern "C" {
+#endif
+
+#ifndef DRM_MAX_MINOR
+#define DRM_MAX_MINOR   16
+#endif
+
+#if defined(__linux__)
+
+#define DRM_IOCTL_NR(n)		_IOC_NR(n)
+#define DRM_IOC_VOID		_IOC_NONE
+#define DRM_IOC_READ		_IOC_READ
+#define DRM_IOC_WRITE		_IOC_WRITE
+#define DRM_IOC_READWRITE	_IOC_READ|_IOC_WRITE
+#define DRM_IOC(dir, group, nr, size) _IOC(dir, group, nr, size)
+
+#else /* One of the *BSDs */
+
+#include <sys/ioccom.h>
+#define DRM_IOCTL_NR(n)         ((n) & 0xff)
+#define DRM_IOC_VOID            IOC_VOID
+#define DRM_IOC_READ            IOC_OUT
+#define DRM_IOC_WRITE           IOC_IN
+#define DRM_IOC_READWRITE       IOC_INOUT
+#define DRM_IOC(dir, group, nr, size) _IOC(dir, group, nr, size)
+
+#endif
+
 				/* Defaults, if nothing set in xf86config */
 #define DRM_DEV_UID	 0
 #define DRM_DEV_GID	 0
@@ -46,7 +75,6 @@
 #define DRM_DEV_DIRMODE	 	\
 	(S_IRUSR|S_IWUSR|S_IXUSR|S_IRGRP|S_IXGRP|S_IROTH|S_IXOTH)
 #define DRM_DEV_MODE	 (S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP)
-
 
 #define DRM_DIR_NAME  "/dev"
 #define DRM_DEV_NAME  "%s/drm%d"
@@ -272,12 +300,15 @@ typedef struct _drmTextureRegion {
 typedef enum {
     DRM_VBLANK_ABSOLUTE = 0x0,	/**< Wait for specific vblank sequence number */
     DRM_VBLANK_RELATIVE = 0x1,	/**< Wait for given number of vblanks */
+    /* bits 1-6 are reserved for high crtcs */
+    DRM_VBLANK_HIGH_CRTC_MASK = 0x0000003e,
     DRM_VBLANK_EVENT = 0x4000000,	/**< Send event instead of blocking */
     DRM_VBLANK_FLIP = 0x8000000,	/**< Scheduled buffer swap should flip */
     DRM_VBLANK_NEXTONMISS = 0x10000000,	/**< If missed, wait for next vblank */
     DRM_VBLANK_SECONDARY = 0x20000000,	/**< Secondary display controller */
     DRM_VBLANK_SIGNAL   = 0x40000000	/* Send signal instead of blocking */
 } drmVBlankSeqType;
+#define DRM_VBLANK_HIGH_CRTC_SHIFT 1
 
 typedef struct _drmVBlankReq {
 	drmVBlankSeqType type;
@@ -518,6 +549,7 @@ extern int drmOpenControl(int minor);
 extern int           drmClose(int fd);
 extern drmVersionPtr drmGetVersion(int fd);
 extern drmVersionPtr drmGetLibVersion(int fd);
+extern int           drmGetCap(int fd, uint64_t capability, uint64_t *value);
 extern void          drmFreeVersion(drmVersionPtr);
 extern int           drmGetMagic(int fd, drm_magic_t * magic);
 extern char          *drmGetBusid(int fd);
@@ -669,7 +701,7 @@ extern void drmMsg(const char *format, ...);
 extern int drmSetMaster(int fd);
 extern int drmDropMaster(int fd);
 
-#define DRM_EVENT_CONTEXT_VERSION 1
+#define DRM_EVENT_CONTEXT_VERSION 2
 
 typedef struct _drmEventContext {
 
@@ -682,10 +714,21 @@ typedef struct _drmEventContext {
 			       unsigned int tv_sec,
 			       unsigned int tv_usec,
 			       void *user_data);
+
+	void (*page_flip_handler)(int fd,
+				  unsigned int sequence,
+				  unsigned int tv_sec,
+				  unsigned int tv_usec,
+				  void *user_data);
+
 } drmEventContext, *drmEventContextPtr;
 
 extern int drmHandleEvent(int fd, drmEventContextPtr evctx);
 
 extern char *drmGetDeviceNameFromFd(int fd);
+
+#if defined(__cplusplus) || defined(c_plusplus)
+}
+#endif
 
 #endif

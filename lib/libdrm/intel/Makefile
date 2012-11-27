@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.3 2010/05/08 14:15:29 matthieu Exp $
+# $OpenBSD: Makefile,v 1.4 2012/11/27 14:37:08 mpi Exp $
 .include <bsd.xconf.mk>
 
 LIB=		drm_intel
@@ -19,19 +19,7 @@ SRCS=		intel_bufmgr.c		\
 
 PKGCONFIG=	libdrm_intel.pc
 
-LDADD+=		-L${X11BASE}/lib -lX11
-
-includes:
-	cd ${.CURDIR}; for i in ${INCS}; do \
-	    j="cmp -s $$i ${DESTDIR}${INCSDIR}/$$i || \
-		${INSTALL_DATA} $$i ${DESTDIR}${INCSDIR}/"; \
-		echo "\tinstalling $$i"; \
-		eval "$$j"; \
-	done
-
-NOPROFILE =
-
-obj: _xenocara_obj
+LDADD+=		-L${X11BASE}/lib -lX11 -lpciaccess
 
 .include <bsd.lib.mk>
 .include <bsd.xorg.mk>

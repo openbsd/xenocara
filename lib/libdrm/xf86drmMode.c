@@ -46,10 +46,17 @@
 #include <drm.h>
 #include <string.h>
 #include <dirent.h>
+#include <unistd.h>
 #include <errno.h>
 
 #define U642VOID(x) ((void *)(unsigned long)(x))
 #define VOID2U64(x) ((uint64_t)(unsigned long)(x))
+
+static inline int DRM_IOCTL(int fd, unsigned long cmd, void *arg)
+{
+	int ret = drmIoctl(fd, cmd, arg);
+	return ret < 0 ? -errno : ret;
+}
 
 /*
  * Util functions
@@ -89,6 +96,10 @@ void drmModeFreeResources(drmModeResPtr ptr)
 	if (!ptr)
 		return;
 
+	drmFree(ptr->fbs);
+	drmFree(ptr->crtcs);
+	drmFree(ptr->connectors);
+	drmFree(ptr->encoders);
 	drmFree(ptr);
 
 }
@@ -135,35 +146,62 @@ void drmModeFreeEncoder(drmModeEncoderPtr ptr)
 
 drmModeResPtr drmModeGetResources(int fd)
 {
-	struct drm_mode_card_res res;
+	struct drm_mode_card_res res, counts;
 	drmModeResPtr r = 0;
 
+retry:
 	memset(&res, 0, sizeof(struct drm_mode_card_res));
-
 	if (drmIoctl(fd, DRM_IOCTL_MODE_GETRESOURCES, &res))
 		return 0;
 
-	if (res.count_fbs)
-		res.fb_id_ptr = VOID2U64(drmMalloc(res.count_fbs*sizeof(uint32_t)));
-	if (res.count_crtcs)
-		res.crtc_id_ptr = VOID2U64(drmMalloc(res.count_crtcs*sizeof(uint32_t)));
-	if (res.count_connectors)
-		res.connector_id_ptr = VOID2U64(drmMalloc(res.count_connectors*sizeof(uint32_t)));
-	if (res.count_encoders)
-		res.encoder_id_ptr = VOID2U64(drmMalloc(res.count_encoders*sizeof(uint32_t)));
+	counts = res;
 
-	if (drmIoctl(fd, DRM_IOCTL_MODE_GETRESOURCES, &res)) {
-		r = NULL;
+	if (res.count_fbs) {
+		res.fb_id_ptr = VOID2U64(drmMalloc(res.count_fbs*sizeof(uint32_t)));
+		if (!res.fb_id_ptr)
+			goto err_allocs;
+	}
+	if (res.count_crtcs) {
+		res.crtc_id_ptr = VOID2U64(drmMalloc(res.count_crtcs*sizeof(uint32_t)));
+		if (!res.crtc_id_ptr)
+			goto err_allocs;
+	}
+	if (res.count_connectors) {
+		res.connector_id_ptr = VOID2U64(drmMalloc(res.count_connectors*sizeof(uint32_t)));
+		if (!res.connector_id_ptr)
+			goto err_allocs;
+	}
+	if (res.count_encoders) {
+		res.encoder_id_ptr = VOID2U64(drmMalloc(res.count_encoders*sizeof(uint32_t)));
+		if (!res.encoder_id_ptr)
+			goto err_allocs;
+	}
+
+	if (drmIoctl(fd, DRM_IOCTL_MODE_GETRESOURCES, &res))
 		goto err_allocs;
+
+	/* The number of available connectors and etc may have changed with a
+	 * hotplug event in between the ioctls, in which case the field is
+	 * silently ignored by the kernel.
+	 */
+	if (counts.count_fbs < res.count_fbs ||
+	    counts.count_crtcs < res.count_crtcs ||
+	    counts.count_connectors < res.count_connectors ||
+	    counts.count_encoders < res.count_encoders)
+	{
+		drmFree(U642VOID(res.fb_id_ptr));
+		drmFree(U642VOID(res.crtc_id_ptr));
+		drmFree(U642VOID(res.connector_id_ptr));
+		drmFree(U642VOID(res.encoder_id_ptr));
+
+		goto retry;
 	}
 
 	/*
 	 * return
 	 */
-
-
 	if (!(r = drmMalloc(sizeof(*r))))
-		return 0;
+		goto err_allocs;
 
 	r->min_width     = res.min_width;
 	r->max_width     = res.max_width;
@@ -173,11 +211,23 @@ drmModeResPtr drmModeGetResources(int fd)
 	r->count_crtcs   = res.count_crtcs;
 	r->count_connectors = res.count_connectors;
 	r->count_encoders = res.count_encoders;
-	/* TODO we realy should test if these allocs fails. */
-	r->fbs           = drmAllocCpy(U642VOID(res.fb_id_ptr), res.count_fbs, sizeof(uint32_t));
-	r->crtcs         = drmAllocCpy(U642VOID(res.crtc_id_ptr), res.count_crtcs, sizeof(uint32_t));
-	r->connectors       = drmAllocCpy(U642VOID(res.connector_id_ptr), res.count_connectors, sizeof(uint32_t));
-	r->encoders      = drmAllocCpy(U642VOID(res.encoder_id_ptr), res.count_encoders, sizeof(uint32_t));
+
+	r->fbs        = drmAllocCpy(U642VOID(res.fb_id_ptr), res.count_fbs, sizeof(uint32_t));
+	r->crtcs      = drmAllocCpy(U642VOID(res.crtc_id_ptr), res.count_crtcs, sizeof(uint32_t));
+	r->connectors = drmAllocCpy(U642VOID(res.connector_id_ptr), res.count_connectors, sizeof(uint32_t));
+	r->encoders   = drmAllocCpy(U642VOID(res.encoder_id_ptr), res.count_encoders, sizeof(uint32_t));
+	if ((res.count_fbs && !r->fbs) ||
+	    (res.count_crtcs && !r->crtcs) ||
+	    (res.count_connectors && !r->connectors) ||
+	    (res.count_encoders && !r->encoders))
+	{
+		drmFree(r->fbs);
+		drmFree(r->crtcs);
+		drmFree(r->connectors);
+		drmFree(r->encoders);
+		drmFree(r);
+		r = 0;
+	}
 
 err_allocs:
 	drmFree(U642VOID(res.fb_id_ptr));
@@ -202,16 +252,41 @@ int drmModeAddFB(int fd, uint32_t width, uint32_t height, uint8_t depth,
 	f.depth  = depth;
 	f.handle = bo_handle;
 
-	if ((ret = drmIoctl(fd, DRM_IOCTL_MODE_ADDFB, &f)))
+	if ((ret = DRM_IOCTL(fd, DRM_IOCTL_MODE_ADDFB, &f)))
 		return ret;
 
 	*buf_id = f.fb_id;
 	return 0;
 }
 
+#ifndef __OpenBSD__
+int drmModeAddFB2(int fd, uint32_t width, uint32_t height,
+		  uint32_t pixel_format, uint32_t bo_handles[4],
+		  uint32_t pitches[4], uint32_t offsets[4],
+		  uint32_t *buf_id, uint32_t flags)
+{
+	struct drm_mode_fb_cmd2 f;
+	int ret;
+
+	f.width  = width;
+	f.height = height;
+	f.pixel_format = pixel_format;
+	f.flags = flags;
+	memcpy(f.handles, bo_handles, 4 * sizeof(bo_handles[0]));
+	memcpy(f.pitches, pitches, 4 * sizeof(pitches[0]));
+	memcpy(f.offsets, offsets, 4 * sizeof(offsets[0]));
+
+	if ((ret = DRM_IOCTL(fd, DRM_IOCTL_MODE_ADDFB2, &f)))
+		return ret;
+
+	*buf_id = f.fb_id;
+	return 0;
+}
+#endif
+
 int drmModeRmFB(int fd, uint32_t bufferId)
 {
-	return drmIoctl(fd, DRM_IOCTL_MODE_RMFB, &bufferId);
+	return DRM_IOCTL(fd, DRM_IOCTL_MODE_RMFB, &bufferId);
 
 
 }
@@ -239,6 +314,20 @@ drmModeFBPtr drmModeGetFB(int fd, uint32_t buf)
 
 	return r;
 }
+
+#ifndef __OpenBSD__
+int drmModeDirtyFB(int fd, uint32_t bufferId,
+		   drmModeClipPtr clips, uint32_t num_clips)
+{
+	struct drm_mode_fb_dirty_cmd dirty = { 0 };
+
+	dirty.fb_id = bufferId;
+	dirty.clips_ptr = VOID2U64(clips);
+	dirty.num_clips = num_clips;
+
+	return DRM_IOCTL(fd, DRM_IOCTL_MODE_DIRTYFB, &dirty);
+}
+#endif
 
 
 /*
@@ -292,7 +381,7 @@ int drmModeSetCrtc(int fd, uint32_t crtcId, uint32_t bufferId,
 	} else
 	  crtc.mode_valid = 0;
 
-	return drmIoctl(fd, DRM_IOCTL_MODE_SETCRTC, &crtc);
+	return DRM_IOCTL(fd, DRM_IOCTL_MODE_SETCRTC, &crtc);
 }
 
 /*
@@ -309,7 +398,7 @@ int drmModeSetCursor(int fd, uint32_t crtcId, uint32_t bo_handle, uint32_t width
 	arg.height = height;
 	arg.handle = bo_handle;
 
-	return drmIoctl(fd, DRM_IOCTL_MODE_CURSOR, &arg);
+	return DRM_IOCTL(fd, DRM_IOCTL_MODE_CURSOR, &arg);
 }
 
 int drmModeMoveCursor(int fd, uint32_t crtcId, int x, int y)
@@ -321,7 +410,7 @@ int drmModeMoveCursor(int fd, uint32_t crtcId, int x, int y)
 	arg.x = x;
 	arg.y = y;
 
-	return drmIoctl(fd, DRM_IOCTL_MODE_CURSOR, &arg);
+	return DRM_IOCTL(fd, DRM_IOCTL_MODE_CURSOR, &arg);
 }
 
 /*
@@ -358,36 +447,56 @@ drmModeEncoderPtr drmModeGetEncoder(int fd, uint32_t encoder_id)
 
 drmModeConnectorPtr drmModeGetConnector(int fd, uint32_t connector_id)
 {
-	struct drm_mode_get_connector conn;
+	struct drm_mode_get_connector conn, counts;
 	drmModeConnectorPtr r = NULL;
 
+retry:
+	memset(&conn, 0, sizeof(struct drm_mode_get_connector));
 	conn.connector_id = connector_id;
-	conn.connector_type_id = 0;
-	conn.connector_type  = 0;
-	conn.count_modes  = 0;
-	conn.modes_ptr    = 0;
-	conn.count_props  = 0;
-	conn.props_ptr    = 0;
-	conn.prop_values_ptr = 0;
-	conn.count_encoders  = 0;
-	conn.encoders_ptr = 0;
 
 	if (drmIoctl(fd, DRM_IOCTL_MODE_GETCONNECTOR, &conn))
 		return 0;
 
+	counts = conn;
+
 	if (conn.count_props) {
 		conn.props_ptr = VOID2U64(drmMalloc(conn.count_props*sizeof(uint32_t)));
+		if (!conn.props_ptr)
+			goto err_allocs;
 		conn.prop_values_ptr = VOID2U64(drmMalloc(conn.count_props*sizeof(uint64_t)));
+		if (!conn.prop_values_ptr)
+			goto err_allocs;
 	}
 
-	if (conn.count_modes)
+	if (conn.count_modes) {
 		conn.modes_ptr = VOID2U64(drmMalloc(conn.count_modes*sizeof(struct drm_mode_modeinfo)));
+		if (!conn.modes_ptr)
+			goto err_allocs;
+	}
 
-	if (conn.count_encoders)
+	if (conn.count_encoders) {
 		conn.encoders_ptr = VOID2U64(drmMalloc(conn.count_encoders*sizeof(uint32_t)));
+		if (!conn.encoders_ptr)
+			goto err_allocs;
+	}
 
 	if (drmIoctl(fd, DRM_IOCTL_MODE_GETCONNECTOR, &conn))
 		goto err_allocs;
+
+	/* The number of available connectors and etc may have changed with a
+	 * hotplug event in between the ioctls, in which case the field is
+	 * silently ignored by the kernel.
+	 */
+	if (counts.count_props < conn.count_props ||
+	    counts.count_modes < conn.count_modes ||
+	    counts.count_encoders < conn.count_encoders) {
+		drmFree(U642VOID(conn.props_ptr));
+		drmFree(U642VOID(conn.prop_values_ptr));
+		drmFree(U642VOID(conn.modes_ptr));
+		drmFree(U642VOID(conn.encoders_ptr));
+
+		goto retry;
+	}
 
 	if(!(r = drmMalloc(sizeof(*r)))) {
 		goto err_allocs;
@@ -401,7 +510,6 @@ drmModeConnectorPtr drmModeGetConnector(int fd, uint32_t connector_id)
 	/* convert subpixel from kernel to userspace */
 	r->subpixel     = conn.subpixel + 1;
 	r->count_modes  = conn.count_modes;
-	/* TODO we should test if these alloc & cpy fails. */
 	r->count_props  = conn.count_props;
 	r->props        = drmAllocCpy(U642VOID(conn.props_ptr), conn.count_props, sizeof(uint32_t));
 	r->prop_values  = drmAllocCpy(U642VOID(conn.prop_values_ptr), conn.count_props, sizeof(uint64_t));
@@ -411,8 +519,17 @@ drmModeConnectorPtr drmModeGetConnector(int fd, uint32_t connector_id)
 	r->connector_type  = conn.connector_type;
 	r->connector_type_id = conn.connector_type_id;
 
-	if (!r->props || !r->prop_values || !r->modes || !r->encoders)
-		goto err_allocs;
+	if ((r->count_props && !r->props) ||
+	    (r->count_props && !r->prop_values) ||
+	    (r->count_modes && !r->modes) ||
+	    (r->count_encoders && !r->encoders)) {
+		drmFree(r->props);
+		drmFree(r->prop_values);
+		drmFree(r->modes);
+		drmFree(r->encoders);
+		drmFree(r);
+		r = 0;
+	}
 
 err_allocs:
 	drmFree(U642VOID(conn.prop_values_ptr));
@@ -430,7 +547,7 @@ int drmModeAttachMode(int fd, uint32_t connector_id, drmModeModeInfoPtr mode_inf
 	memcpy(&res.mode, mode_info, sizeof(struct drm_mode_modeinfo));
 	res.connector_id = connector_id;
 
-	return drmIoctl(fd, DRM_IOCTL_MODE_ATTACHMODE, &res);
+	return DRM_IOCTL(fd, DRM_IOCTL_MODE_ATTACHMODE, &res);
 }
 
 int drmModeDetachMode(int fd, uint32_t connector_id, drmModeModeInfoPtr mode_info)
@@ -440,7 +557,7 @@ int drmModeDetachMode(int fd, uint32_t connector_id, drmModeModeInfoPtr mode_inf
 	memcpy(&res.mode, mode_info, sizeof(struct drm_mode_modeinfo));
 	res.connector_id = connector_id;
 
-	return drmIoctl(fd, DRM_IOCTL_MODE_DETACHMODE, &res);
+	return DRM_IOCTL(fd, DRM_IOCTL_MODE_DETACHMODE, &res);
 }
 
 
@@ -533,7 +650,7 @@ drmModePropertyBlobPtr drmModeGetPropertyBlob(int fd, uint32_t blob_id)
 	}
 
 	if (!(r = drmMalloc(sizeof(*r))))
-		return NULL;
+		goto err_allocs;
 
 	r->id = blob.blob_id;
 	r->length = blob.length;
@@ -557,16 +674,12 @@ int drmModeConnectorSetProperty(int fd, uint32_t connector_id, uint32_t property
 			     uint64_t value)
 {
 	struct drm_mode_connector_set_property osp;
-	int ret;
 
 	osp.connector_id = connector_id;
 	osp.prop_id = property_id;
 	osp.value = value;
 
-	if ((ret = drmIoctl(fd, DRM_IOCTL_MODE_SETPROPERTY, &osp)))
-		return ret;
-
-	return 0;
+	return DRM_IOCTL(fd, DRM_IOCTL_MODE_SETPROPERTY, &osp);
 }
 
 /*
@@ -635,7 +748,6 @@ int drmCheckModesettingSupported(const char *busid)
 int drmModeCrtcGetGamma(int fd, uint32_t crtc_id, uint32_t size,
 			uint16_t *red, uint16_t *green, uint16_t *blue)
 {
-	int ret;
 	struct drm_mode_crtc_lut l;
 
 	l.crtc_id = crtc_id;
@@ -644,16 +756,12 @@ int drmModeCrtcGetGamma(int fd, uint32_t crtc_id, uint32_t size,
 	l.green = VOID2U64(green);
 	l.blue = VOID2U64(blue);
 
-	if ((ret = drmIoctl(fd, DRM_IOCTL_MODE_GETGAMMA, &l)))
-		return ret;
-
-	return 0;
+	return DRM_IOCTL(fd, DRM_IOCTL_MODE_GETGAMMA, &l);
 }
 
 int drmModeCrtcSetGamma(int fd, uint32_t crtc_id, uint32_t size,
 			uint16_t *red, uint16_t *green, uint16_t *blue)
 {
-	int ret;
 	struct drm_mode_crtc_lut l;
 
 	l.crtc_id = crtc_id;
@@ -662,10 +770,7 @@ int drmModeCrtcSetGamma(int fd, uint32_t crtc_id, uint32_t size,
 	l.green = VOID2U64(green);
 	l.blue = VOID2U64(blue);
 
-	if ((ret = drmIoctl(fd, DRM_IOCTL_MODE_SETGAMMA, &l)))
-		return ret;
-
-	return 0;
+	return DRM_IOCTL(fd, DRM_IOCTL_MODE_SETGAMMA, &l);
 }
 
 int drmHandleEvent(int fd, drmEventContextPtr evctx)
@@ -699,6 +804,17 @@ int drmHandleEvent(int fd, drmEventContextPtr evctx)
 					      vblank->tv_usec,
 					      U642VOID (vblank->user_data));
 			break;
+		case DRM_EVENT_FLIP_COMPLETE:
+			if (evctx->version < 2 ||
+			    evctx->page_flip_handler == NULL)
+				break;
+			vblank = (struct drm_event_vblank *) e;
+			evctx->page_flip_handler(fd,
+						 vblank->sequence,
+						 vblank->tv_sec,
+						 vblank->tv_usec,
+						 U642VOID (vblank->user_data));
+			break;
 		default:
 			break;
 		}
@@ -707,3 +823,160 @@ int drmHandleEvent(int fd, drmEventContextPtr evctx)
 
 	return 0;
 }
+
+#ifndef __OpenBSD__
+int drmModePageFlip(int fd, uint32_t crtc_id, uint32_t fb_id,
+		    uint32_t flags, void *user_data)
+{
+	struct drm_mode_crtc_page_flip flip;
+
+	flip.fb_id = fb_id;
+	flip.crtc_id = crtc_id;
+	flip.user_data = VOID2U64(user_data);
+	flip.flags = flags;
+	flip.reserved = 0;
+
+	return DRM_IOCTL(fd, DRM_IOCTL_MODE_PAGE_FLIP, &flip);
+}
+
+int drmModeSetPlane(int fd, uint32_t plane_id, uint32_t crtc_id,
+		    uint32_t fb_id, uint32_t flags,
+		    uint32_t crtc_x, uint32_t crtc_y,
+		    uint32_t crtc_w, uint32_t crtc_h,
+		    uint32_t src_x, uint32_t src_y,
+		    uint32_t src_w, uint32_t src_h)
+
+{
+	struct drm_mode_set_plane s;
+
+	s.plane_id = plane_id;
+	s.crtc_id = crtc_id;
+	s.fb_id = fb_id;
+	s.flags = flags;
+	s.crtc_x = crtc_x;
+	s.crtc_y = crtc_y;
+	s.crtc_w = crtc_w;
+	s.crtc_h = crtc_h;
+	s.src_x = src_x;
+	s.src_y = src_y;
+	s.src_w = src_w;
+	s.src_h = src_h;
+
+	return DRM_IOCTL(fd, DRM_IOCTL_MODE_SETPLANE, &s);
+}
+
+
+drmModePlanePtr drmModeGetPlane(int fd, uint32_t plane_id)
+{
+	struct drm_mode_get_plane ovr, counts;
+	drmModePlanePtr r = 0;
+
+retry:
+	memset(&ovr, 0, sizeof(struct drm_mode_get_plane));
+	ovr.plane_id = plane_id;
+	if (drmIoctl(fd, DRM_IOCTL_MODE_GETPLANE, &ovr))
+		return 0;
+
+	counts = ovr;
+
+	if (ovr.count_format_types) {
+		ovr.format_type_ptr = VOID2U64(drmMalloc(ovr.count_format_types *
+							 sizeof(uint32_t)));
+		if (!ovr.format_type_ptr)
+			goto err_allocs;
+	}
+
+	if (drmIoctl(fd, DRM_IOCTL_MODE_GETPLANE, &ovr))
+		goto err_allocs;
+
+	if (counts.count_format_types < ovr.count_format_types) {
+		drmFree(U642VOID(ovr.format_type_ptr));
+		goto retry;
+	}
+
+	if (!(r = drmMalloc(sizeof(*r))))
+		goto err_allocs;
+
+	r->count_formats = ovr.count_format_types;
+	r->plane_id = ovr.plane_id;
+	r->crtc_id = ovr.crtc_id;
+	r->fb_id = ovr.fb_id;
+	r->possible_crtcs = ovr.possible_crtcs;
+	r->gamma_size = ovr.gamma_size;
+	r->formats = drmAllocCpy(U642VOID(ovr.format_type_ptr),
+				 ovr.count_format_types, sizeof(uint32_t));
+	if (ovr.count_format_types && !r->formats) {
+		drmFree(r->formats);
+		drmFree(r);
+		r = 0;
+	}
+
+err_allocs:
+	drmFree(U642VOID(ovr.format_type_ptr));
+
+	return r;
+}
+
+void drmModeFreePlane(drmModePlanePtr ptr)
+{
+	if (!ptr)
+		return;
+
+	drmFree(ptr->formats);
+	drmFree(ptr);
+}
+
+drmModePlaneResPtr drmModeGetPlaneResources(int fd)
+{
+	struct drm_mode_get_plane_res res, counts;
+	drmModePlaneResPtr r = 0;
+
+retry:
+	memset(&res, 0, sizeof(struct drm_mode_get_plane_res));
+	if (drmIoctl(fd, DRM_IOCTL_MODE_GETPLANERESOURCES, &res))
+		return 0;
+
+	counts = res;
+
+	if (res.count_planes) {
+		res.plane_id_ptr = VOID2U64(drmMalloc(res.count_planes *
+							sizeof(uint32_t)));
+		if (!res.plane_id_ptr)
+			goto err_allocs;
+	}
+
+	if (drmIoctl(fd, DRM_IOCTL_MODE_GETPLANERESOURCES, &res))
+		goto err_allocs;
+
+	if (counts.count_planes < res.count_planes) {
+		drmFree(U642VOID(res.plane_id_ptr));
+		goto retry;
+	}
+
+	if (!(r = drmMalloc(sizeof(*r))))
+		goto err_allocs;
+
+	r->count_planes = res.count_planes;
+	r->planes = drmAllocCpy(U642VOID(res.plane_id_ptr),
+				  res.count_planes, sizeof(uint32_t));
+	if (res.count_planes && !r->planes) {
+		drmFree(r->planes);
+		drmFree(r);
+		r = 0;
+	}
+
+err_allocs:
+	drmFree(U642VOID(res.plane_id_ptr));
+
+	return r;
+}
+
+void drmModeFreePlaneResources(drmModePlaneResPtr ptr)
+{
+	if (!ptr)
+		return;
+
+	drmFree(ptr->planes);
+	drmFree(ptr);
+}
+#endif
