@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: font.c,v 1.19 2012/11/09 03:52:02 okan Exp $
+ * $OpenBSD: font.c,v 1.20 2012/11/28 14:14:44 okan Exp $
  */
 
 #include <sys/param.h>
@@ -49,7 +49,7 @@ font_height(struct screen_ctx *sc)
 }
 
 void
-font_init(struct screen_ctx *sc, const char *color)
+font_init(struct screen_ctx *sc, const char *name, const char *color)
 {
 	sc->xftdraw = XftDrawCreate(X_Dpy, sc->rootwin,
 	    DefaultVisual(X_Dpy, sc->which), DefaultColormap(X_Dpy, sc->which));
@@ -59,6 +59,10 @@ font_init(struct screen_ctx *sc, const char *color)
 	if (!XftColorAllocName(X_Dpy, DefaultVisual(X_Dpy, sc->which),
 	    DefaultColormap(X_Dpy, sc->which), color, &sc->xftcolor))
 		errx(1, "XftColorAllocName");
+
+	sc->font = XftFontOpenName(X_Dpy, sc->which, name);
+	if (sc->font == NULL)
+		errx(1, "XftFontOpenName");
 }
 
 int
@@ -79,22 +83,4 @@ font_draw(struct screen_ctx *sc, const char *text, int len,
 	XftDrawChange(sc->xftdraw, d);
 	XftDrawStringUtf8(sc->xftdraw, &sc->xftcolor, sc->font, x, y,
 	    (const FcChar8*)text, len);
-}
-
-XftFont *
-font_make(struct screen_ctx *sc, const char *name)
-{
-	XftFont		*fn = NULL;
-	FcPattern	*pat, *patx;
-	XftResult	 res;
-
-	if ((pat = FcNameParse((const FcChar8*)name)) == NULL)
-		return (NULL);
-
-	if ((patx = XftFontMatch(X_Dpy, sc->which, pat, &res)) != NULL)
-		fn = XftFontOpenPattern(X_Dpy, patx);
-
-	FcPatternDestroy(pat);
-
-	return (fn);
 }
