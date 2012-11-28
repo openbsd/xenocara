@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: xmalloc.c,v 1.10 2012/11/16 14:15:48 okan Exp $
+ * $OpenBSD: xmalloc.c,v 1.11 2012/11/28 14:32:44 okan Exp $
  */
 
 #include <sys/param.h>
@@ -68,4 +68,20 @@ xstrdup(const char *str)
 		err(1, "strdup");
 
 	return (p);
+}
+
+int
+xasprintf(char **ret, const char *fmt, ...)
+{
+	va_list	 ap;
+	int	 i;
+
+	va_start(ap, fmt);
+	i = vasprintf(ret, fmt, ap);
+	va_end(ap);
+
+	if (i < 0 || *ret == NULL)
+		err(1, "asprintf");
+
+	return (i);
 }
