@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile.inc,v 1.1 2012/08/26 18:46:42 mpi Exp $
+# $OpenBSD: Makefile.inc,v 1.2 2012/11/28 13:53:16 mpi Exp $
 
 MESA=		${.CURDIR}/../../../../dist/Mesa/src/mesa
 MAPI=		${.CURDIR}/../../../../dist/Mesa/src/mapi
@@ -359,14 +359,6 @@ COMMON_DRIVER_SOURCES = \
 	driverfuncs.c		\
 	meta.c
 
-# drisw
-DRISW_SOURCES = \
-	dri_sw_winsys.c \
-        dri_context.c \
-        dri_screen.c \
-        dri_drawable.c \
-        drisw.c
-
 MESA_SOURCES = \
 	$(MAIN_SOURCES)		\
 	$(MATH_SOURCES)		\
@@ -389,8 +381,7 @@ MESAGALLIUM_SOURCES = \
 	${VBO_SOURCES}		\
 	${PROGRAM_SOURCES}	\
 	${STATETRACKER_SOURCES} \
-	${ASM_C_SOURCES}	\
-	${DRISW_SOURCES}
+	${ASM_C_SOURCES}
 
 MESAGALLIUM_CXX_SOURCES = \
 	${MAIN_CXX_SOURCES} \
@@ -501,9 +492,6 @@ x86_xform4.so: matypes.h
 .PATH: ${MESA}/program
 .PATH: ${MESA}/vbo
 .PATH: ${MESA}/drivers/common
-.PATH: ${GALLIUM}/winsys/sw/dri
-.PATH: ${GALLIUM}/state_trackers/dri/sw
-.PATH: ${GALLIUM}/state_trackers/dri/common
 .PATH: ${.CURDIR}/..
 .PATH: ${.CURDIR}/../generated
 

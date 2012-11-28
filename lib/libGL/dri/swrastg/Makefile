@@ -1,14 +1,13 @@
-#	$OpenBSD: Makefile,v 1.5 2012/11/11 12:09:09 mpi Exp $
+#	$OpenBSD: Makefile,v 1.6 2012/11/28 13:53:16 mpi Exp $
 
 LIB=	swrastg_dri.so
-
-GALLIUM=	${.CURDIR}/../../../../dist/Mesa/src/gallium
 
 CPPFLAGS= \
 	-I${GALLIUM}/include \
 	-I${GALLIUM}/auxiliary \
 	-I${GALLIUM}/drivers \
-	-I${GALLIUM}/winsys/sw/dri
+	-I${GALLIUM}/winsys/sw/dri \
+	-I${GALLIUM}/state_trackers/dri/common \
 
 DRIVER_LIBS= \
 	../../gallium/drivers/trace/libtrace_pic.a \
@@ -25,6 +24,15 @@ DRIVER_DEFINES = \
 	-DGALLIUM_RBUG \
 	-DGALLIUM_TRACE
 
+WINSYS_SOURCES = \
+	dri_sw_winsys.c
+
+DRISW_SOURCES = \
+        dri_context.c \
+        dri_screen.c \
+        dri_drawable.c \
+        drisw.c
+
 SWRAST_COMMON_SOURCES = \
 	utils.c \
 	drisw_util.c \
@@ -34,6 +42,8 @@ DRIVER_SOURCES = \
 	swrast_drm_api.c
 
 SRCS = \
+	${WINSYS_SOURCES} \
+	${DRISW_SOURCES} \
 	${SWRAST_COMMON_SOURCES} \
 	${DRIVER_SOURCES}
 
@@ -47,4 +57,7 @@ DPADD=	../../mesa/libmesagallium/libmesagallium_pic.a
 .include "../../gallium/Makefile.inc"
 .include <bsd.xorg.mk>
 
+.PATH: ${GALLIUM}/state_trackers/dri/common
+.PATH: ${GALLIUM}/state_trackers/dri/sw
 .PATH: ${GALLIUM}/targets/dri-swrast
+.PATH: ${GALLIUM}/winsys/sw/dri

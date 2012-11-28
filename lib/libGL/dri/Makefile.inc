@@ -1,8 +1,9 @@
-# $OpenBSD: Makefile.inc,v 1.15 2012/08/26 18:46:42 mpi Exp $
+# $OpenBSD: Makefile.inc,v 1.16 2012/11/28 13:53:16 mpi Exp $
 .include <bsd.xconf.mk>
 
-MESA= ${.CURDIR}/../../../../dist/Mesa/src/mesa
-TOP= ${.CURDIR}/../../../../dist/Mesa
+TOP=		${.CURDIR}/../../../../dist/Mesa
+MESA=		${.CURDIR}/../../../../dist/Mesa/src/mesa
+GALLIUM=	${.CURDIR}/../../../../dist/Mesa/src/gallium
 
 DRI_DRIVER_INSTALL_DIR=	${X11BASE}/lib/modules/dri
 
