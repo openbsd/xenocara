@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.8 2012/11/27 14:37:08 mpi Exp $
+# $OpenBSD: Makefile,v 1.9 2012/11/28 21:13:16 matthieu Exp $
 .include <bsd.xconf.mk>
 .include "${.CURDIR}/Makefile.inc"
 
@@ -25,7 +25,6 @@ SRCS=		xf86drm.c	\
 		xf86drmMode.c	\
 		xf86drmRandom.c	\
 		xf86drmSL.c	
-NOPROFILE=
 
 PKGCONFIG=	libdrm.pc
 

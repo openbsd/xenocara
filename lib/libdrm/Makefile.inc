@@ -1,6 +1,8 @@
-# $OpenBSD: Makefile.inc,v 1.3 2012/11/27 14:37:08 mpi Exp $
+# $OpenBSD: Makefile.inc,v 1.4 2012/11/28 21:13:16 matthieu Exp $
 
 PACKAGE_VERSION=	2.4.31
+
+NOPROFILE=
 
 includes: _SUBDIRUSE
 	cd ${.CURDIR}; for i in ${INCS}; do \
