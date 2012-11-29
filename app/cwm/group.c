@@ -16,7 +16,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: group.c,v 1.63 2012/11/09 03:52:02 okan Exp $
+ * $OpenBSD: group.c,v 1.64 2012/11/29 04:25:49 okan Exp $
  */
 
 #include <sys/param.h>
@@ -412,7 +412,7 @@ group_autogroup(struct client_ctx *cc)
 	struct screen_ctx	*sc = cc->sc;
 	struct autogroupwin	*aw;
 	struct group_ctx	*gc;
-	int			 no = -1;
+	int			 no = -1, both_match = 0;
 	long			*grpno;
 
 	if (cc->app_class == NULL || cc->app_name == NULL)
@@ -429,11 +429,13 @@ group_autogroup(struct client_ctx *cc)
 		XFree(grpno);
 	} else {
 		TAILQ_FOREACH(aw, &Conf.autogroupq, entry) {
-			if (strcmp(aw->class, cc->app_class) == 0 &&
-			    (aw->name == NULL ||
-			    strcmp(aw->name, cc->app_name) == 0)) {
-				no = aw->num;
-				break;
+			if (strcmp(aw->class, cc->app_class) == 0) {
+				if ((aw->name != NULL) &&
+				    (strcmp(aw->name, cc->app_name) == 0)) {
+					no = aw->num;
+					both_match = 1;
+				} else if (aw->name == NULL && !both_match)
+					no = aw->num;
 			}
 		}
 	}
