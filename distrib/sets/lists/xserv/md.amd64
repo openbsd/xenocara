@@ -5,6 +5,7 @@
 ./usr/X11R6/bin/Xvfb
 ./usr/X11R6/bin/cvt
 ./usr/X11R6/bin/gtf
+./usr/X11R6/include/r600_pci_ids.h
 ./usr/X11R6/include/radeon_bo.h
 ./usr/X11R6/include/radeon_bo_gem.h
 ./usr/X11R6/include/radeon_bo_int.h
@@ -145,7 +146,7 @@
 ./usr/X11R6/include/xorg/xvdix.h
 ./usr/X11R6/include/xorg/xvmcext.h
 ./usr/X11R6/lib/libdrm_radeon.a
-./usr/X11R6/lib/libdrm_radeon.so.1.0
+./usr/X11R6/lib/libdrm_radeon.so.1.1
 ./usr/X11R6/lib/modules/dri/i810_dri.so
 ./usr/X11R6/lib/modules/dri/i915_dri.so
 ./usr/X11R6/lib/modules/dri/i965_dri.so
