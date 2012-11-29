@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: calmwm.c,v 1.68 2012/11/29 03:54:46 okan Exp $
+ * $OpenBSD: calmwm.c,v 1.69 2012/11/29 16:50:03 okan Exp $
  */
 
 #include <sys/param.h>
@@ -92,9 +92,7 @@ main(int argc, char **argv)
 	conf_setup(&Conf, conf_file);
 	xu_getatoms();
 	x_setup();
-
 	xev_loop();
-
 	x_teardown();
 
 	return (0);
