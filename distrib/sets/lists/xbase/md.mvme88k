@@ -1,6 +1,10 @@
 ./usr/X11R6/bin/ucs2any
-./usr/X11R6/include/xorg/optionstr.h
-./usr/X11R6/include/xorg/xf86Optionstr.h
+./usr/X11R6/include/pixman-1/pixman-version.h
+./usr/X11R6/include/pixman-1/pixman.h
+./usr/X11R6/lib/libpixman-1.a
+./usr/X11R6/lib/libpixman-1.la
+./usr/X11R6/lib/pkgconfig/pixman-1.pc
+./usr/X11R6/lib/xorg/protocol.txt
 ./usr/X11R6/man/man1/bdftruncate.1
 ./usr/X11R6/man/man1/dga.1
 ./usr/X11R6/man/man1/ucs2any.1
@@ -56,6 +60,7 @@
 ./usr/X11R6/man/man3/XF86VidModeSwitchToMode.3
 ./usr/X11R6/man/man3/XF86VidModeValidateModeLine.3
 ./usr/X11R6/man/man3/XFree86-DGA.3
+./usr/X11R6/share/xcb/xkb.xml
 ./var/cache/fontconfig/0fe0af1d5898cfe43064332244d1dc15-be32d8.cache-3
 ./var/cache/fontconfig/1bd20f0f0c9d7d1d5fd55b69fcc2b3a3-be32d8.cache-3
 ./var/cache/fontconfig/2cee944125173ffd13126fb55c9a0dc1-be32d8.cache-3
