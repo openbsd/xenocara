@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.49 2012/10/29 21:19:16 matthieu Exp $
+# $OpenBSD: Makefile,v 1.50 2012/12/01 21:10:42 miod Exp $
 .include <bsd.own.mk>
 .include <bsd.xconf.mk>
 
@@ -13,7 +13,8 @@ XSERVER= xserver
 .endif
 
 .if defined(XENOCARA_BUILD_PIXMAN)
-.if ${COMPILER_VERSION:L:Mgcc[34]*} && ${XENOCARA_BUILD_PIXMAN:L} == "yes"
+.if ${COMPILER_VERSION:L:Mgcc[34]*} && ${XENOCARA_BUILD_PIXMAN:L} == "yes" && \
+    ${XENOCARA_HAVE_SHARED_LIBS:L} == "yes"
 XSERVER+= kdrive
 .endif
 .endif
