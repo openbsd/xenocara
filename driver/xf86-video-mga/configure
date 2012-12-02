@@ -18297,6 +18297,11 @@ fi
 
 done
 
+	if test "x$XAA" = xyes; then
+
+$as_echo "#define USE_XAA 1" >>confdefs.h
+
+	fi
         CFLAGS=$save_CFLAGS
         CPPFLAGS=$save_CPPFLAGS
 fi

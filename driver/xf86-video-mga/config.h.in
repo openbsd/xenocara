@@ -84,5 +84,8 @@
 /* Build support for Exa */
 #undef USE_EXA
 
+/* Build support for xaa */
+#undef USE_XAA
+
 /* Version number of package */
 #undef VERSION
