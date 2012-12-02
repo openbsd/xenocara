@@ -1186,7 +1186,8 @@ static Bool i830_user_modesetting_init(ScrnInfoPtr scrn)
 	intel_screen_private *intel = intel_get_screen_private(scrn);
 	int i, num_pipe;
 
-	I830MapMMIO(scrn);
+	if (!I830MapMMIO(scrn))
+		return FALSE;
 
 	if (DEVICE_ID(intel->PciInfo) == PCI_CHIP_E7221_G)
 		num_pipe = 1;
