@@ -138,6 +138,9 @@ if test "x$XAA" != xno; then
         CFLAGS=$XORG_CFLAGS
         CPPFLAGS="$XORG_CFLAGS"
         AC_CHECK_HEADERS([xaa.h], XAA=yes, XAA=no)
+	if test "x$XAA" = xyes; then
+		AC_DEFINE(USE_XAA, 1, [Build support for xaa])
+	fi
         CFLAGS=$save_CFLAGS
         CPPFLAGS=$save_CPPFLAGS
 fi

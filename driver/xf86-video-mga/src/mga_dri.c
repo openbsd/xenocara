@@ -355,7 +355,7 @@ void MGAGetQuiescence( ScrnInfoPtr pScrn )
       MGAWaitForIdleDMA( pScrn );
 
         /* FIXME what about EXA? */
-#ifdef XAA
+#ifdef USE_XAA
         if (!pMga->Exa && pMga->AccelInfoRec) {
       WAITFIFO( 11 );
       OUTREG( MGAREG_MACCESS, pMga->MAccess );
