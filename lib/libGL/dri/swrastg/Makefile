@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.6 2012/11/28 13:53:16 mpi Exp $
+#	$OpenBSD: Makefile,v 1.7 2012/12/04 14:06:32 mpi Exp $
 
 LIB=	swrastg_dri.so
 
@@ -8,6 +8,7 @@ CPPFLAGS= \
 	-I${GALLIUM}/drivers \
 	-I${GALLIUM}/winsys/sw/dri \
 	-I${GALLIUM}/state_trackers/dri/common \
+	-DHAVE_POSIX_MEMALIGN
 
 DRIVER_LIBS= \
 	../../gallium/drivers/trace/libtrace_pic.a \

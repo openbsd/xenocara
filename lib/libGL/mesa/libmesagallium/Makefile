@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.2 2012/11/28 13:53:16 mpi Exp $
+# $OpenBSD: Makefile,v 1.3 2012/12/04 14:06:32 mpi Exp $
 
 LIB=	mesagallium
 
@@ -6,7 +6,6 @@ CPPFLAGS+= \
 	-I${MESA}/drivers/dri/common \
 	-I${GALLIUM}/auxiliary \
 	-I${GALLIUM}/include \
-	-DHAVE_POSIX_MEMALIGN \
 	-D__NOT_HAVE_DRM_H
 
 SRCS=	${MESAGALLIUM_SOURCES}	\
