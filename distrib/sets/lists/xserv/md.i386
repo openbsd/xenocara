@@ -5,6 +5,7 @@
 ./usr/X11R6/bin/Xvfb
 ./usr/X11R6/bin/cvt
 ./usr/X11R6/bin/gtf
+./usr/X11R6/include/r600_pci_ids.h
 ./usr/X11R6/include/radeon_bo.h
 ./usr/X11R6/include/radeon_bo_gem.h
 ./usr/X11R6/include/radeon_bo_int.h
