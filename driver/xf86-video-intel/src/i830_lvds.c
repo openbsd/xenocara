@@ -1274,6 +1274,8 @@ i830_lvds_create_resources(xf86OutputPtr output)
     }
     /* Set the current value of the backlight property */
     data = dev_priv->backlight_duty_cycle;
+    if (data > dev_priv->backlight_max)
+        data = dev_priv->backlight_max;
     err = RRChangeOutputProperty(output->randr_output, backlight_atom,
 				 XA_INTEGER, 32, PropModeReplace, 1, &data,
 				 FALSE, TRUE);
@@ -1412,6 +1414,8 @@ i830_lvds_set_property(xf86OutputPtr output, Atom property,
 	    data = dev_priv->get_backlight(output);
 	else
 	    data = dev_priv->backlight_duty_cycle;
+	if (data > dev_priv->backlight_max)
+	    data = dev_priv->backlight_max;
 	ret = RRChangeOutputProperty(output->randr_output, backlight_atom,
 				     XA_INTEGER, 32, PropModeReplace, 1, &data,
 				     FALSE, TRUE);
