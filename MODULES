@@ -1,4 +1,4 @@
-# $OpenBSD: MODULES,v 1.238 2012/11/23 21:31:16 matthieu Exp $
+# $OpenBSD: MODULES,v 1.239 2012/12/16 18:21:26 matthieu Exp $
 #
 # X.Org maintained modules
 #
@@ -106,11 +106,11 @@ driver/xf86-video-ati		7.0.0	7.7+	needs-update-and-kms
 driver/xf86-video-chips		1.2.5
 driver/xf86-video-cirrus	1.5.1	7.7+
 driver/xf86-video-dummy		0.3.6	7.7+
-driver/xf86-video-geode		2.11.13	7.7
+driver/xf86-video-geode		2.11.14	7.7+	needs-update
 driver/xf86-video-glint		1.2.8	7.7+
 driver/xf86-video-i128		1.3.6	7.7+
 driver/xf86-video-i740		1.3.4
-driver/xf86-video-intel		2.20.13	7.7+	needs-update-and-kms
+driver/xf86-video-intel		2.20.16	7.7+	needs-update-and-kms
 driver/xf86-video-mach64	6.9.3	7.7+
 driver/xf86-video-mga		1.6.2	7.7+
 driver/xf86-video-neomagic	1.2.7	7.7+
@@ -208,7 +208,7 @@ lib/libxcb			1.9	7.7+
 lib/libxkbfile			1.0.8	7.7
 lib/libxkbui			1.0.2
 lib/libxtrans			1.2.7	7.7
-lib/pixman			0.28.0
+lib/pixman			0.28.2		needa-update
 lib/xcb-util			0.3.9		needs-update
 lib/xcb-util-image		0.3.9		needs-import
 lib/xcb-util-keysyms		0.3.9		needs-import
