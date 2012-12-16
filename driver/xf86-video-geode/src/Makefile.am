@@ -42,6 +42,7 @@ geode_drv_ladir = $(moduledir)/drivers
 geode_drv_la_SOURCES =		\
 	cimarron.c		\
 	cim_dev.h		\
+	compat-api.h		\
 	durango.c		\
 	geode_blend.h		\
 	geode_common.c		\

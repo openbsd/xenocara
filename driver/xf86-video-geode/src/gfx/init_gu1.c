@@ -43,7 +43,7 @@ gfx_gxm_config_read(unsigned char index)
     OUTB(0x22, GXM_CONFIG_CCR3);
     lock = INB(0x23);
     OUTB(0x22, GXM_CONFIG_CCR3);
-    OUTB(0x23, (unsigned char)(lock | 0x10));
+    OUTB(0x23, (unsigned char) (lock | 0x10));
     OUTB(0x22, index);
     value = INB(0x23);
     OUTB(0x22, GXM_CONFIG_CCR3);
@@ -103,7 +103,8 @@ gfx_get_core_freq(void)
         default:
             return (0);
         }
-    } else {
+    }
+    else {
         switch (dir0) {
         case 0:
         case 2:
@@ -150,7 +151,7 @@ gfx_get_cpu_register_base(void)
 {
     unsigned long base;
 
-    base = (unsigned long)gfx_gxm_config_read(GXM_CONFIG_GCR);
+    base = (unsigned long) gfx_gxm_config_read(GXM_CONFIG_GCR);
     base = (base & 0x03) << 30;
     return (base);
 }
@@ -175,7 +176,7 @@ gfx_get_frame_buffer_base(void)
 {
     unsigned long base;
 
-    base = (unsigned long)gfx_gxm_config_read(GXM_CONFIG_GCR);
+    base = (unsigned long) gfx_gxm_config_read(GXM_CONFIG_GCR);
     base = (base & 0x03) << 30;
     if (base)
         base |= 0x00800000;
@@ -225,7 +226,7 @@ gfx_get_vid_register_base(void)
 {
     unsigned long base;
 
-    base = (unsigned long)gfx_gxm_config_read(GXM_CONFIG_GCR);
+    base = (unsigned long) gfx_gxm_config_read(GXM_CONFIG_GCR);
     base = (base & 0x03) << 30;
     if (base)
         base |= 0x00010000;
@@ -254,7 +255,7 @@ gfx_get_vip_register_base(void)
     unsigned long base = 0;
 
     if ((gfx_cpu_version & 0xFF) == GFX_CPU_SC1200) {
-        base = (unsigned long)gfx_gxm_config_read(GXM_CONFIG_GCR);
+        base = (unsigned long) gfx_gxm_config_read(GXM_CONFIG_GCR);
         base = (base & 0x03) << 30;
         if (base)
             base |= 0x00015000;

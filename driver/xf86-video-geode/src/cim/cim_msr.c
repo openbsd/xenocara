@@ -50,7 +50,7 @@ GEODELINK_NODE msr_dev_lookup[MSR_DEVICE_EMPTY];
 int
 msr_init_table(void)
 {
-    Q_WORD msr_value = {0, 0};
+    Q_WORD msr_value = { 0, 0 };
     unsigned int i, j;
     int return_value = CIM_STATUS_OK;
 
@@ -93,19 +93,16 @@ msr_init_table(void)
 
         msr_dev_lookup[MSR_DEVICE_GEODELX_GLIU0].address_from_cpu =
             MSR_ADDRESS_GLIU0;
-        msr_dev_lookup[MSR_DEVICE_GEODELX_GLIU0].device_id =
-            MSR_DEVICE_PRESENT;
+        msr_dev_lookup[MSR_DEVICE_GEODELX_GLIU0].device_id = MSR_DEVICE_PRESENT;
         msr_dev_lookup[MSR_DEVICE_GEODELX_GLIU1].address_from_cpu =
             MSR_ADDRESS_GLIU1;
-        msr_dev_lookup[MSR_DEVICE_GEODELX_GLIU1].device_id =
-            MSR_DEVICE_PRESENT;
+        msr_dev_lookup[MSR_DEVICE_GEODELX_GLIU1].device_id = MSR_DEVICE_PRESENT;
         msr_dev_lookup[MSR_DEVICE_5535_GLIU].address_from_cpu =
             MSR_ADDRESS_GLIU2;
         msr_dev_lookup[MSR_DEVICE_5535_GLIU].device_id = MSR_DEVICE_PRESENT;
         msr_dev_lookup[MSR_DEVICE_GEODELX_VAIL].address_from_cpu =
             MSR_ADDRESS_VAIL;
-        msr_dev_lookup[MSR_DEVICE_GEODELX_VAIL].device_id =
-            MSR_DEVICE_PRESENT;
+        msr_dev_lookup[MSR_DEVICE_GEODELX_VAIL].device_id = MSR_DEVICE_PRESENT;
 
         for (i = 0; i < MSR_DEVICE_EMPTY; i++) {
             if (msr_dev_lookup[i].device_id == MSR_DEVICE_NOTFOUND) {
@@ -123,7 +120,8 @@ msr_init_table(void)
                 }
             }
         }
-    } else {
+    }
+    else {
         /* ERROR OUT THE GEODELINK TABLES */
 
         for (i = 0; i < 24; i++) {
@@ -157,7 +155,7 @@ msr_create_geodelink_table(GEODELINK_NODE * gliu_nodes)
     int glcp_count = 0;
     int usb_count = 0;
     int mpci_count = 0;
-    Q_WORD msr_value = {0, 0};
+    Q_WORD msr_value = { 0, 0 };
 
     /* ALL THREE GLIUS ARE IN ONE ARRAY                               */
     /* Entries 0-7 contain the port information for GLIU0, entries    */
@@ -199,7 +197,7 @@ msr_create_geodelink_table(GEODELINK_NODE * gliu_nodes)
             gliu_nodes[port].device_id = MSR_CLASS_CODE_UNPOPULATED;
         else {
             MSR_READ(MSR_GEODELINK_CAP, gliu_nodes[port].address_from_cpu,
-                &msr_value);
+                     &msr_value);
             gliu_nodes[port].device_id =
                 GET_DEVICE_ID(msr_value.high, msr_value.low);
         }
@@ -230,7 +228,7 @@ msr_create_geodelink_table(GEODELINK_NODE * gliu_nodes)
             gliu_nodes[index].device_id = MSR_CLASS_CODE_UNPOPULATED;
         else {
             MSR_READ(MSR_GEODELINK_CAP, gliu_nodes[index].address_from_cpu,
-                &msr_value);
+                     &msr_value);
             gliu_nodes[index].device_id =
                 GET_DEVICE_ID(msr_value.high, msr_value.low);
         }
@@ -272,7 +270,7 @@ msr_create_geodelink_table(GEODELINK_NODE * gliu_nodes)
             gliu_nodes[index].device_id = MSR_CLASS_CODE_UNPOPULATED;
         else {
             MSR_READ(MSR_GEODELINK_CAP, gliu_nodes[index].address_from_cpu,
-                &msr_value);
+                     &msr_value);
             gliu_nodes[index].device_id =
                 GET_DEVICE_ID(msr_value.high, msr_value.low);
         }
@@ -397,13 +395,12 @@ msr_create_device_list(GEODELINK_NODE * gliu_nodes, int max_devices)
  *-------------------------------------------------------------------*/
 
 int
-msr_read64(unsigned long device, unsigned long msr_register,
-    Q_WORD * msr_value)
+msr_read64(unsigned long device, unsigned long msr_register, Q_WORD * msr_value)
 {
     if (device < MSR_DEVICE_EMPTY) {
         if (msr_dev_lookup[device].device_id == MSR_DEVICE_PRESENT) {
             MSR_READ(msr_register, msr_dev_lookup[device].address_from_cpu,
-                msr_value);
+                     msr_value);
             return CIM_STATUS_OK;
         }
     }
@@ -421,12 +418,12 @@ msr_read64(unsigned long device, unsigned long msr_register,
 
 int
 msr_write64(unsigned long device, unsigned long msr_register,
-    Q_WORD * msr_value)
+            Q_WORD * msr_value)
 {
     if (device < MSR_DEVICE_EMPTY) {
         if (msr_dev_lookup[device].device_id == MSR_DEVICE_PRESENT) {
             MSR_WRITE(msr_register, msr_dev_lookup[device].address_from_cpu,
-                msr_value);
+                      msr_value);
             return CIM_STATUS_OK;
         }
     }

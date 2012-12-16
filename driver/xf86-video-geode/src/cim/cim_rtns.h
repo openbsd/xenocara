@@ -38,8 +38,7 @@
 /* COMPILER OPTION FOR C++ PROGRAMS */
 
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
 
 /*--------------------------*/
@@ -59,7 +58,7 @@ extern "C"
 /*----------------------------------------*/
 
     int init_detect_cpu(unsigned long *cpu_revision,
-        unsigned long *companion_revision);
+                        unsigned long *companion_revision);
     unsigned long init_read_pci(unsigned long address);
     int init_read_base_addresses(INIT_BASE_ADDRESSES * base_addresses);
     int init_read_cpu_frequency(unsigned long *cpu_frequency);
@@ -70,7 +69,7 @@ extern "C"
 
     void gp_set_limit_on_buffer_lead(unsigned long lead);
     void gp_set_command_buffer_base(unsigned long address,
-        unsigned long start, unsigned long stop);
+                                    unsigned long start, unsigned long stop);
     void gp_set_frame_buffer_base(unsigned long address, unsigned long size);
     void gp_set_bpp(int bpp);
     void gp_declare_blt(unsigned long flags);
@@ -78,69 +77,76 @@ extern "C"
     void gp_write_parameters(void);
     void gp_set_raster_operation(unsigned char ROP);
     void gp_set_alpha_operation(int alpha_operation, int alpha_type,
-        int channel, int apply_alpha, unsigned char alpha);
+                                int channel, int apply_alpha,
+                                unsigned char alpha);
     void gp_set_solid_pattern(unsigned long color);
     void gp_set_mono_pattern(unsigned long bgcolor, unsigned long fgcolor,
-        unsigned long data0, unsigned long data1, int transparent, int x,
-        int y);
+                             unsigned long data0, unsigned long data1,
+                             int transparent, int x, int y);
     void gp_set_pattern_origin(int x, int y);
-    void gp_set_color_pattern(unsigned long *pattern, int format, int x,
-        int y);
+    void gp_set_color_pattern(unsigned long *pattern, int format, int x, int y);
     void gp_set_mono_source(unsigned long bgcolor, unsigned long fgcolor,
-        int transparent);
+                            int transparent);
     void gp_set_solid_source(unsigned long color);
     void gp_set_source_transparency(unsigned long color, unsigned long mask);
     void gp_program_lut(unsigned long *colors, int full_lut);
     void gp_set_vector_pattern(unsigned long pattern, unsigned long color,
-        int length);
+                               int length);
     void gp_set_strides(unsigned long dst_stride, unsigned long src_stride);
     void gp_set_source_format(int format);
     void gp_pattern_fill(unsigned long dstoffset, unsigned long width,
-        unsigned long height);
+                         unsigned long height);
     void gp_screen_to_screen_blt(unsigned long dstoffset,
-        unsigned long srcoffset, unsigned long width,
-        unsigned long height, int flags);
+                                 unsigned long srcoffset, unsigned long width,
+                                 unsigned long height, int flags);
     void gp_screen_to_screen_convert(unsigned long dstoffset,
-        unsigned long srcoffset, unsigned long width,
-        unsigned long height, int nibble);
+                                     unsigned long srcoffset,
+                                     unsigned long width, unsigned long height,
+                                     int nibble);
     void gp_color_bitmap_to_screen_blt(unsigned long dstoffset,
-        unsigned long srcx, unsigned long width, unsigned long height,
-        unsigned char *data, long pitch);
+                                       unsigned long srcx, unsigned long width,
+                                       unsigned long height,
+                                       unsigned char *data, long pitch);
     void gp_color_convert_blt(unsigned long dstoffset, unsigned long srcx,
-        unsigned long width, unsigned long height, unsigned char *data,
-        long pitch);
+                              unsigned long width, unsigned long height,
+                              unsigned char *data, long pitch);
     void gp_custom_convert_blt(unsigned long dstoffset, unsigned long srcx,
-        unsigned long width, unsigned long height, unsigned char *data,
-        long pitch);
+                               unsigned long width, unsigned long height,
+                               unsigned char *data, long pitch);
     void gp_rotate_blt(unsigned long dstoffset, unsigned long srcoffset,
-        unsigned long width, unsigned long height, int degrees);
+                       unsigned long width, unsigned long height, int degrees);
     void gp_mono_bitmap_to_screen_blt(unsigned long dstoffset,
-        unsigned long srcx, unsigned long width, unsigned long height,
-        unsigned char *data, long stride);
+                                      unsigned long srcx, unsigned long width,
+                                      unsigned long height, unsigned char *data,
+                                      long stride);
     void gp_text_blt(unsigned long dstoffset, unsigned long width,
-        unsigned long height, unsigned char *data);
+                     unsigned long height, unsigned char *data);
     void gp_mono_expand_blt(unsigned long dstoffset, unsigned long srcoffset,
-        unsigned long srcx, unsigned long width, unsigned long height,
-        int byte_packed);
+                            unsigned long srcx, unsigned long width,
+                            unsigned long height, int byte_packed);
     void gp_antialiased_text(unsigned long dstoffset, unsigned long srcx,
-        unsigned long width, unsigned long height, unsigned char *data,
-        long stride, int fourbpp);
-  void gp_blend_mask_blt(unsigned long dstoffset, unsigned long srcx,
-	unsigned long width, unsigned long height, unsigned long,
-        long stride, int operation, int fourbpp);
-  void gp_masked_blt(unsigned long dstoffset, unsigned long width,
-        unsigned long height, unsigned long mono_srcx,
-        unsigned long color_srcx, unsigned char *mono_mask,
-        unsigned char *color_data, long mono_pitch, long color_pitch);
+                             unsigned long width, unsigned long height,
+                             unsigned char *data, long stride, int fourbpp);
+    void gp_blend_mask_blt(unsigned long dstoffset, unsigned long srcx,
+                           unsigned long width, unsigned long height,
+                           unsigned long, long stride, int operation,
+                           int fourbpp);
+    void gp_masked_blt(unsigned long dstoffset, unsigned long width,
+                       unsigned long height, unsigned long mono_srcx,
+                       unsigned long color_srcx, unsigned char *mono_mask,
+                       unsigned char *color_data, long mono_pitch,
+                       long color_pitch);
     void gp_screen_to_screen_masked(unsigned long dstoffset,
-        unsigned long srcoffset, unsigned long width,
-        unsigned long height, unsigned long mono_srcx,
-        unsigned char *mono_mask, long mono_pitch);
+                                    unsigned long srcoffset,
+                                    unsigned long width, unsigned long height,
+                                    unsigned long mono_srcx,
+                                    unsigned char *mono_mask, long mono_pitch);
     void gp_bresenham_line(unsigned long dstoffset, unsigned short length,
-        unsigned short initerr, unsigned short axialerr,
-        unsigned short diagerr, unsigned long flags);
+                           unsigned short initerr, unsigned short axialerr,
+                           unsigned short diagerr, unsigned long flags);
     void gp_line_from_endpoints(unsigned long dstoffset, unsigned long x0,
-        unsigned long y0, unsigned long x1, unsigned long y1, int inclusive);
+                                unsigned long y0, unsigned long x1,
+                                unsigned long y1, int inclusive);
 
     int gp_test_blt_pending(void);
     void gp_wait_blt_pending(void);
@@ -155,50 +161,54 @@ extern "C"
 
     int vg_delay_milliseconds(unsigned long ms);
     int vg_set_display_mode(unsigned long src_width, unsigned long src_height,
-        unsigned long dst_width, unsigned long dst_height, int bpp, int hz,
-        unsigned long flags);
+                            unsigned long dst_width, unsigned long dst_height,
+                            int bpp, int hz, unsigned long flags);
     int vg_set_panel_mode(unsigned long src_width, unsigned long src_height,
-        unsigned long dst_width, unsigned long dst_height,
-        unsigned long panel_width, unsigned long panel_height,
-        int bpp, unsigned long flags);
+                          unsigned long dst_width, unsigned long dst_height,
+                          unsigned long panel_width, unsigned long panel_height,
+                          int bpp, unsigned long flags);
     int vg_set_tv_mode(unsigned long *src_width, unsigned long *src_height,
-        unsigned long encoder, unsigned long tvres, int bpp,
-        unsigned long flags, unsigned long h_overscan,
-        unsigned long v_overscan);
+                       unsigned long encoder, unsigned long tvres, int bpp,
+                       unsigned long flags, unsigned long h_overscan,
+                       unsigned long v_overscan);
     int vg_set_custom_mode(VG_DISPLAY_MODE * mode_params, int bpp);
     int vg_set_display_bpp(int bpp);
     int vg_get_display_mode_index(VG_QUERY_MODE * query);
     int vg_get_display_mode_information(unsigned int index,
-        VG_DISPLAY_MODE * vg_mode);
+                                        VG_DISPLAY_MODE * vg_mode);
     int vg_get_display_mode_count(void);
     int vg_get_current_display_mode(VG_DISPLAY_MODE * current_display,
-        int *bpp);
+                                    int *bpp);
     int vg_set_scaler_filter_coefficients(long h_taps[][5], long v_taps[][3]);
     int vg_configure_flicker_filter(unsigned long flicker_strength,
-        int flicker_alpha);
+                                    int flicker_alpha);
     int vg_set_clock_frequency(unsigned long frequency,
-        unsigned long pll_flags);
+                               unsigned long pll_flags);
     int vg_set_border_color(unsigned long border_color);
     int vg_set_cursor_enable(int enable);
-    int vg_set_mono_cursor_colors(unsigned long bkcolor,
-        unsigned long fgcolor);
+    int vg_set_mono_cursor_colors(unsigned long bkcolor, unsigned long fgcolor);
     int vg_set_cursor_position(long xpos, long ypos,
-        VG_PANNING_COORDINATES * panning);
+                               VG_PANNING_COORDINATES * panning);
     int vg_set_mono_cursor_shape32(unsigned long memoffset,
-        unsigned long *andmask, unsigned long *xormask,
-        unsigned long x_hotspot, unsigned long y_hotspot);
+                                   unsigned long *andmask,
+                                   unsigned long *xormask,
+                                   unsigned long x_hotspot,
+                                   unsigned long y_hotspot);
     int vg_set_mono_cursor_shape64(unsigned long memoffset,
-        unsigned long *andmask, unsigned long *xormask,
-        unsigned long x_hotspot, unsigned long y_hotspot);
-    int vg_set_color_cursor_shape(unsigned long memoffset,
-        unsigned char *data, unsigned long width, unsigned long height,
-        long pitch, unsigned long x_hotspot, unsigned long y_hotspot);
+                                   unsigned long *andmask,
+                                   unsigned long *xormask,
+                                   unsigned long x_hotspot,
+                                   unsigned long y_hotspot);
+    int vg_set_color_cursor_shape(unsigned long memoffset, unsigned char *data,
+                                  unsigned long width, unsigned long height,
+                                  long pitch, unsigned long x_hotspot,
+                                  unsigned long y_hotspot);
     int vg_pan_desktop(unsigned long x, unsigned long y,
-        VG_PANNING_COORDINATES * panning);
+                       VG_PANNING_COORDINATES * panning);
     int vg_set_display_offset(unsigned long address);
     int vg_set_display_pitch(unsigned long pitch);
     int vg_set_display_palette_entry(unsigned long index,
-        unsigned long palette);
+                                     unsigned long palette);
     int vg_set_display_palette(unsigned long *palette);
     int vg_set_compression_enable(int enable);
     int vg_configure_compression(VG_COMPRESSION_DATA * comp_data);
@@ -218,17 +228,17 @@ extern "C"
 
     unsigned long vg_read_graphics_crc(int crc_source);
     unsigned long vg_read_window_crc(int crc_source, unsigned long x,
-        unsigned long y, unsigned long width, unsigned long height);
+                                     unsigned long y, unsigned long width,
+                                     unsigned long height);
     int vg_get_scaler_filter_coefficients(long h_taps[][5], long v_taps[][3]);
     int vg_get_flicker_filter_configuration(unsigned long *strength,
-        int *flicker_alpha);
+                                            int *flicker_alpha);
     unsigned long vg_get_display_pitch(void);
     unsigned long vg_get_frame_buffer_line_size(void);
     unsigned long vg_get_current_vline(void);
     unsigned long vg_get_display_offset(void);
     int vg_get_cursor_info(VG_CURSOR_DATA * cursor_data);
-    int vg_get_display_palette_entry(unsigned long index,
-        unsigned long *entry);
+    int vg_get_display_palette_entry(unsigned long index, unsigned long *entry);
     unsigned long vg_get_border_color(void);
     int vg_get_display_palette(unsigned long *palette);
     int vg_get_compression_info(VG_COMPRESSION_DATA * comp_data);
@@ -242,25 +252,24 @@ extern "C"
     int df_set_crt_enable(int crt_output);
     int df_set_panel_enable(int panel_output);
     int df_configure_video_source(DF_VIDEO_SOURCE_PARAMS * video_source_odd,
-        DF_VIDEO_SOURCE_PARAMS * video_source_even);
+                                  DF_VIDEO_SOURCE_PARAMS * video_source_even);
     int df_set_video_offsets(int even, unsigned long y_offset,
-        unsigned long u_offset, unsigned long v_offset);
+                             unsigned long u_offset, unsigned long v_offset);
     int df_set_video_scale(unsigned long src_width, unsigned long src_height,
-        unsigned long dst_width, unsigned long dst_height,
-        unsigned long flags);
+                           unsigned long dst_width, unsigned long dst_height,
+                           unsigned long flags);
     int df_set_video_position(DF_VIDEO_POSITION * video_window);
     int df_set_video_filter_coefficients(long taps[][4], int phase256);
     int df_set_video_enable(int enable, unsigned long flags);
     int df_set_video_color_key(unsigned long key, unsigned long mask,
-        int graphics);
+                               int graphics);
     int df_set_video_palette(unsigned long *palette);
-    int df_set_video_palette_entry(unsigned long index,
-        unsigned long palette);
+    int df_set_video_palette_entry(unsigned long index, unsigned long palette);
     int df_configure_video_cursor_color_key(DF_VIDEO_CURSOR_PARAMS *
-        cursor_color_key);
+                                            cursor_color_key);
     int df_set_video_cursor_color_key_enable(int enable);
     int df_configure_alpha_window(int window,
-        DF_ALPHA_REGION_PARAMS * alpha_data);
+                                  DF_ALPHA_REGION_PARAMS * alpha_data);
     int df_set_alpha_window_enable(int window, int enable);
     int df_set_no_ck_outside_alpha(int enable);
     int df_set_video_request(unsigned long x, unsigned long y);
@@ -276,25 +285,28 @@ extern "C"
 
     unsigned long df_read_composite_crc(int crc_source);
     unsigned long df_read_composite_window_crc(unsigned long x,
-        unsigned long y, unsigned long width, unsigned long height,
-        int source);
+                                               unsigned long y,
+                                               unsigned long width,
+                                               unsigned long height,
+                                               int source);
     unsigned long df_read_panel_crc(void);
     int df_get_video_enable(int *enable, unsigned long *flags);
     int df_get_video_source_configuration(DF_VIDEO_SOURCE_PARAMS *
-        video_source_odd, DF_VIDEO_SOURCE_PARAMS * video_source_even);
+                                          video_source_odd,
+                                          DF_VIDEO_SOURCE_PARAMS *
+                                          video_source_even);
     int df_get_video_position(DF_VIDEO_POSITION * video_window);
     int df_get_video_scale(unsigned long *x_scale, unsigned long *y_scale);
     int df_get_video_filter_coefficients(long taps[][4], int *phase256);
     int df_get_video_color_key(unsigned long *key, unsigned long *mask,
-        int *graphics);
-    int df_get_video_palette_entry(unsigned long index,
-        unsigned long *palette);
+                               int *graphics);
+    int df_get_video_palette_entry(unsigned long index, unsigned long *palette);
     int df_get_video_palette(unsigned long *palette);
     int df_get_video_cursor_color_key(DF_VIDEO_CURSOR_PARAMS *
-        cursor_color_key);
+                                      cursor_color_key);
     int df_get_video_cursor_color_key_enable(void);
     int df_get_alpha_window_configuration(int window,
-        DF_ALPHA_REGION_PARAMS * alpha_data);
+                                          DF_ALPHA_REGION_PARAMS * alpha_data);
     int df_get_alpha_window_enable(int window);
     int df_get_video_request(unsigned long *x, unsigned long *y);
     int df_get_output_color_space(int *color_space);
@@ -307,9 +319,9 @@ extern "C"
     int msr_create_geodelink_table(GEODELINK_NODE * gliu_nodes);
     int msr_create_device_list(GEODELINK_NODE * gliu_nodes, int max_devices);
     int msr_read64(unsigned long device, unsigned long msr_register,
-        Q_WORD * msr_value);
+                   Q_WORD * msr_value);
     int msr_write64(unsigned long device, unsigned long msr_register,
-        Q_WORD * msr_value);
+                    Q_WORD * msr_value);
 
 /*----------------------------------------*/
 /*        VIP ROUTINE DEFINITIONS         */
@@ -318,15 +330,15 @@ extern "C"
     int vip_initialize(VIPSETMODEBUFFER * buffer);
     int vip_update_601_params(VIP_601PARAMS * buffer);
     int vip_terminate(void);
-    int vip_configure_capture_buffers(int buffer_type,
-        VIPINPUTBUFFER * buffer);
+    int vip_configure_capture_buffers(int buffer_type, VIPINPUTBUFFER * buffer);
     int vip_toggle_video_offsets(int buffer_type, VIPINPUTBUFFER * buffer);
     int vip_max_address_enable(unsigned long max_address, int enable);
     int vip_set_interrupt_enable(unsigned long mask, int enable);
     unsigned long vip_get_interrupt_state(void);
     int vip_set_capture_state(unsigned long state);
     int vip_set_vsync_error(unsigned long vertical_count,
-        unsigned long window_before, unsigned long window_after, int enable);
+                            unsigned long window_before,
+                            unsigned long window_after, int enable);
     int vip_configure_fifo(unsigned long fifo_type, unsigned long fifo_size);
     int vip_set_loopback_enable(int bEnable);
     int vip_configure_genlock(VIPGENLOCKBUFFER * buffer);
@@ -352,8 +364,7 @@ extern "C"
 
     int vip_get_current_mode(VIPSETMODEBUFFER * buffer);
     int vip_get_601_configuration(VIP_601PARAMS * buffer);
-    int vip_get_buffer_configuration(int buffer_type,
-        VIPINPUTBUFFER * buffer);
+    int vip_get_buffer_configuration(int buffer_type, VIPINPUTBUFFER * buffer);
     int vip_get_genlock_configuration(VIPGENLOCKBUFFER * buffer);
     int vip_get_genlock_enable(void);
     int vip_is_buffer_update_latched(void);
@@ -391,5 +402,4 @@ extern "C"
 #ifdef __cplusplus
 }
 #endif
-
 #endif

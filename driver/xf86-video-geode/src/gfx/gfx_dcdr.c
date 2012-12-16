@@ -219,7 +219,7 @@ gfx_set_decoder_output_size(unsigned short width, unsigned short height)
  */
 int
 gfx_set_decoder_scale(unsigned short srcw, unsigned short srch,
-    unsigned short dstw, unsigned short dsth)
+                      unsigned short dstw, unsigned short dsth)
 {
     int status = GFX_STATUS_UNSUPPORTED;
 
@@ -409,7 +409,7 @@ gfx_get_decoder_hue(void)
     if (gfx_decoder_type == GFX_DECODER_SAA7114)
         hue = saa7114_get_decoder_hue();
 #endif
-    return ((char)hue);
+    return ((char) hue);
 }
 
 /*----------------------------------------------------------------------------
@@ -492,8 +492,8 @@ gfx_get_decoder_vbi_format(int line)
     return (format);
 }
 
-#endif /* GFX_READ_ROUTINES */
+#endif                          /* GFX_READ_ROUTINES */
 
-#endif /* GFX_DECODER_DYNAMIC */
+#endif                          /* GFX_DECODER_DYNAMIC */
 
 /* END OF FILE */

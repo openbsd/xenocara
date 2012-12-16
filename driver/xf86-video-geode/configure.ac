@@ -23,7 +23,7 @@
 # Initialize Autoconf
 AC_PREREQ(2.59)
 AC_INIT([xf86-video-geode],
-        [2.11.13],
+        [2.11.14],
         [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg&component=Driver%2Fgeode],
         [xf86-video-geode],
 	[http://www.x.org/wiki/GeodeDriver])
@@ -127,6 +127,33 @@ PKG_CHECK_MODULES(XORG, [xorg-server xproto fontsproto $REQUIRED_MODULES])
 PKG_CHECK_MODULES(XEXT, [xextproto >= 7.0.99.1],
                   HAVE_XEXTPROTO_71="yes"; AC_DEFINE(HAVE_XEXTPROTO_71, 1, [xextproto 7.1 available]),
                   HAVE_XEXTPROTO_71="no")
+
+# Define a configure option to enable/disable XAA support;
+# handles unavailability of XAA since xserver-1.13
+AC_ARG_ENABLE(xaa,
+    AS_HELP_STRING([--enable-xaa],
+                   [Enable legacy X Acceleration Architecture (XAA) [default=auto]]))
+
+AS_IF([test "x$enable_xaa" != "xno"],
+    [
+        save_CFLAGS=$CFLAGS
+        save_CPPFLAGS=$CPPFLAGS
+        CFLAGS=$XORG_CFLAGS
+        CPPFLAGS="$XORG_CFLAGS"
+        AC_CHECK_HEADERS([xaa.h], have_XAA=yes, have_XAA=no)
+        CFLAGS=$save_CFLAGS
+        CPPFLAGS=$save_CPPFLAGS
+])
+
+AC_MSG_CHECKING([whether to include XAA support])
+
+AS_IF([test "x$have_XAA" = "xyes"],
+    [AC_MSG_RESULT([yes])],
+    [AS_IF([test "x$enable_xaa" = "xyes"],
+        [AC_MSG_ERROR([XAA requested but not found (perhaps building against xserver-1.13 or newer?)])],
+        [AC_MSG_RESULT([no])
+    ])
+])
 
 # Checks for libpciaccess support.
 SAVE_CPPFLAGS="$CPPFLAGS"

@@ -34,24 +34,21 @@
 /* MSR DEFINITIONS */
 
 typedef enum DevStatus
-{ FOUND, NOT_KNOWN, REQ_NOT_FOUND, REQ_NOT_INSTALLED } DEV_STATUS;
+    { FOUND, NOT_KNOWN, REQ_NOT_FOUND, REQ_NOT_INSTALLED } DEV_STATUS;
 
-typedef struct msr
-{
-    DEV_STATUS Present;                /* Node enumeration status          */
-    unsigned char Id;                  /* Device ID (from MSR specs)       */
-    unsigned long Address;             /* Address - 32-bit MBus address at     */
+typedef struct msr {
+    DEV_STATUS Present;         /* Node enumeration status          */
+    unsigned char Id;           /* Device ID (from MSR specs)       */
+    unsigned long Address;      /* Address - 32-bit MBus address at     */
     /* which 'Id' is found                          */
 } MSR;
 
-typedef struct mValue
-{
+typedef struct mValue {
     unsigned long high;
     unsigned long low;
 } Q_WORD;
 
-typedef struct mbusNode
-{
+typedef struct mbusNode {
     unsigned long address;
     unsigned int deviceId;
     unsigned int claimed;
@@ -126,14 +123,12 @@ typedef struct mbusNode
 
 /* TV DEFINITIONS */
 
-typedef enum TVStandardType
-{
+typedef enum TVStandardType {
     TV_STANDARD_NTSC = 1,
     TV_STANDARD_PAL
 } TVStandardType;
 
-typedef enum GfxOnTVType
-{
+typedef enum GfxOnTVType {
     GFX_ON_TV_SQUARE_PIXELS = 1,
     GFX_ON_TV_NO_SCALING
 } GfxOnTVType;
@@ -195,14 +190,12 @@ typedef enum GfxOnTVType
 #define VIDEO_DOWNSCALE_KEEP_1_OF 0x1
 #define VIDEO_DOWNSCALE_DROP_1_OF 0x2
 
-typedef enum VideoSourceType
-{                                      /* The source from which the video processor shows full screen video */
+typedef enum VideoSourceType {  /* The source from which the video processor shows full screen video */
     VIDEO_SOURCE_MEMORY = 1,
     VIDEO_SOURCE_DVIP
 } VideoSourceType;
 
-typedef enum VbiSourceType
-{                                      /* The source from which the video processor takes VBI */
+typedef enum VbiSourceType {    /* The source from which the video processor takes VBI */
     VBI_SOURCE_MEMORY = 1,
     VBI_SOURCE_DVIP
 } VbiSourceType;
@@ -281,8 +274,7 @@ typedef enum VbiSourceType
 #define GFX_APS_TRIGGER_AGC_2_LINE 2
 #define GFX_APS_TRIGGER_AGC_4_LINE 3
 
-typedef struct
-{
+typedef struct {
     int xsize;
     int ysize;
     int hz;
@@ -312,8 +304,7 @@ typedef struct
 
 /* CHIP NAME AND REVISION */
 
-typedef enum ChipType
-{
+typedef enum ChipType {
     CHIP_NOT_DETECTED,
     SC1200_REV_A,
     SC1200_REV_B1_B2,
@@ -321,9 +312,9 @@ typedef enum ChipType
     SC1200_REV_C1,
     SC1200_REV_D1,
     SC1200_REV_D1_1,
-    SC1200_REV_D2_MVD,                 /* Macrovision disabled */
-    SC1200_REV_D2_MVE,                 /* Macrovision enabled  */
+    SC1200_REV_D2_MVD,          /* Macrovision disabled */
+    SC1200_REV_D2_MVE,          /* Macrovision enabled  */
     SC1200_FUTURE_REV
 } ChipType;
 
-#endif /* !_gfx_type_h */
+#endif                          /* !_gfx_type_h */

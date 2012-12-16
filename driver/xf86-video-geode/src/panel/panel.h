@@ -38,8 +38,7 @@
 #include "pnl_defs.h"
 
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
 
 /* CLOSE BRACKET FOR C++ COMPLILATION */
@@ -63,7 +62,7 @@ extern "C"
     void Pnl_GetPanelInfoFromBIOS(int *xres, int *yres, int *bpp, int *hz);
 /* from durango */
 
-#if defined(_WIN32)                    /* windows */
+#if defined(_WIN32)             /* windows */
     extern void gfx_delay_milliseconds(unsigned long milliseconds);
     extern unsigned long gfx_ind(unsigned short port);
     extern void gfx_outd(unsigned short port, unsigned long data);
@@ -74,7 +73,5 @@ extern "C"
 #ifdef __cplusplus
 }
 #endif
-
-#endif                                 /* !_panel_h */
-
+#endif                          /* !_panel_h */
 /* END OF FILE */

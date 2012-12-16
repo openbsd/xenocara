@@ -101,8 +101,7 @@
 /* on a GeodeLink Interface Unit (GLIU)        */
 /*---------------------------------------------*/
 
-typedef struct tagGeodeLinkNode
-{
+typedef struct tagGeodeLinkNode {
     unsigned long address_from_cpu;
     unsigned long device_id;
 
@@ -113,8 +112,7 @@ typedef struct tagGeodeLinkNode
 /* 64-bit data structure for MSR acess.        */
 /*---------------------------------------------*/
 
-typedef struct tagQ_WORD
-{
+typedef struct tagQ_WORD {
     unsigned long high;
     unsigned long low;
 
@@ -124,8 +122,7 @@ typedef struct tagQ_WORD
 /*       INITIALIZATION USER PARAMETERS              */
 /*===================================================*/
 
-typedef struct tagInitBaseAddresses
-{
+typedef struct tagInitBaseAddresses {
     unsigned long framebuffer_base;
     unsigned long gp_register_base;
     unsigned long vg_register_base;
@@ -212,8 +209,7 @@ typedef struct tagInitBaseAddresses
 /* USER STRUCTURE FOR SAVING/RESTORING GP STATE */
 /*----------------------------------------------*/
 
-typedef struct tagGPSaveRestore
-{
+typedef struct tagGPSaveRestore {
     unsigned long base_offset;
     unsigned long cmd_top;
     unsigned long cmd_bottom;
@@ -326,8 +322,7 @@ typedef struct tagGPSaveRestore
                                            VG_MODEFLAG_EXCLUDEPLL     | \
                                            VG_MODEFLAG_LINEARPITCH)
 
-typedef struct tagVGDisplayMode
-{
+typedef struct tagVGDisplayMode {
     /* DISPLAY MODE FLAGS */
     /* Includes BPP, refresh rate information, interlacing, etc. */
 
@@ -402,8 +397,7 @@ typedef struct tagVGDisplayMode
 /* USER STRUCTURE FOR QUERYING DISPLAY MODES */
 /*-------------------------------------------*/
 
-typedef struct tagQueryDisplayMode
-{
+typedef struct tagQueryDisplayMode {
     int interlaced;
     int halfclock;
     unsigned long active_width;
@@ -425,8 +419,7 @@ typedef struct tagQueryDisplayMode
 /* USER STRUCTURE FOR QUERYING CURSOR DATA   */
 /*-------------------------------------------*/
 
-typedef struct tagCursorData
-{
+typedef struct tagCursorData {
     int enable;
     int color_cursor;
     unsigned long cursor_offset;
@@ -451,8 +444,7 @@ typedef struct tagCursorData
 /* USER STRUCTURE FOR SETTING COMPRESSION DATA    */
 /*------------------------------------------------*/
 
-typedef struct tagCompressionData
-{
+typedef struct tagCompressionData {
     unsigned long compression_offset;
     unsigned long pitch;
     unsigned long size;
@@ -464,8 +456,7 @@ typedef struct tagCompressionData
 /* USER STRUCTURE FOR CONFIGURING LINE INTERRUPTS  */
 /*-------------------------------------------------*/
 
-typedef struct tagInterruptInfo
-{
+typedef struct tagInterruptInfo {
     unsigned long line;
     unsigned long flags;
     int enable;
@@ -476,8 +467,7 @@ typedef struct tagInterruptInfo
 /* USER STRUCTURE FOR PANNING THE DESKTOP          */
 /*-------------------------------------------------*/
 
-typedef struct tagPanningInfo
-{
+typedef struct tagPanningInfo {
     unsigned long start_x;
     unsigned long start_y;
     int start_updated;
@@ -488,8 +478,7 @@ typedef struct tagPanningInfo
 /* USER STRUCTURE FOR SAVING/RESTORING THE VG STATE */
 /*--------------------------------------------------*/
 
-typedef struct tagVGSaveRestore
-{
+typedef struct tagVGSaveRestore {
     /* VG REGISTERS */
 
     unsigned long unlock;
@@ -680,8 +669,7 @@ typedef struct tagVGSaveRestore
 #define DF_SOURCEFLAG_HDTVSOURCE          0x0001
 #define DF_SOURCEFLAG_IMPLICITSCALING     0x0002
 
-typedef struct tagVideoSourceInfo
-{
+typedef struct tagVideoSourceInfo {
     unsigned long video_format;
     unsigned long y_offset;
     unsigned long u_offset;
@@ -701,8 +689,7 @@ typedef struct tagVideoSourceInfo
 #define DF_POSFLAG_DIRECTCLIP             0x0001
 #define DF_POSFLAG_INCLUDEBORDER          0x0002
 
-typedef struct tagVideoPosition
-{
+typedef struct tagVideoPosition {
     long x;
     long y;
     unsigned long width;
@@ -717,8 +704,7 @@ typedef struct tagVideoPosition
 /* USER STRUCTURE FOR CONFIGURING THE VIDEO CURSOR */
 /*-------------------------------------------------*/
 
-typedef struct tagVideoCursorInfo
-{
+typedef struct tagVideoCursorInfo {
     unsigned long key;
     unsigned long mask;
     unsigned long color1;
@@ -735,8 +721,7 @@ typedef struct tagVideoCursorInfo
 #define DF_ALPHAFLAG_COLORENABLED         0x0001
 #define DF_ALPHAFLAG_PERPIXELENABLED      0x0002
 
-typedef struct tagAlphaRegionInfo
-{
+typedef struct tagAlphaRegionInfo {
     unsigned long x;
     unsigned long y;
     unsigned long width;
@@ -753,8 +738,7 @@ typedef struct tagAlphaRegionInfo
 /* USER STRUCTURE FOR SAVING/RESTORING DF DATA     */
 /*-------------------------------------------------*/
 
-typedef struct tagDFSaveRestore
-{
+typedef struct tagDFSaveRestore {
     unsigned long vcfg;
     unsigned long dcfg;
     unsigned long video_x;
@@ -828,8 +812,7 @@ typedef struct tagDFSaveRestore
 /* USER STRUCTURE FOR CONFIGURING 601 SETTINGS */
 /*---------------------------------------------*/
 
-typedef struct _TAG_VIP601PARAMS
-{
+typedef struct _TAG_VIP601PARAMS {
     unsigned long flags;
     unsigned long horz_start;
     unsigned long width;
@@ -886,8 +869,7 @@ typedef struct _TAG_VIP601PARAMS
 #define VIP_420CAPTURE_ALTERNATINGLINES   0x00000002
 #define VIP_420CAPTURE_ALTERNATINGFIELDS  0x00000003
 
-typedef struct _TAG_SETMODEBUFFER
-{
+typedef struct _TAG_SETMODEBUFFER {
     unsigned long flags;
     unsigned long stream_enables;
     unsigned long operating_mode;
@@ -929,8 +911,7 @@ typedef struct _TAG_SETMODEBUFFER
 /* USER STRUCTURE FOR CONFIGURING THE VG VSYNC GENLOCK    */
 /*--------------------------------------------------------*/
 
-typedef struct _TAG_GENLOCKBUFFER
-{
+typedef struct _TAG_GENLOCKBUFFER {
     unsigned long vip_signal_loss;
     unsigned long vsync_to_vg;
     unsigned long field_to_vg;
@@ -943,8 +924,7 @@ typedef struct _TAG_GENLOCKBUFFER
 /* USER STRUCTURE FOR CONFIGURING VIP ANCILLARY CAPTURE */
 /*------------------------------------------------------*/
 
-typedef struct _TAG_ANCILLARYBUFFER
-{
+typedef struct _TAG_ANCILLARYBUFFER {
     unsigned long msg1_base;
     unsigned long msg2_base;
     unsigned long msg_size;
@@ -975,8 +955,7 @@ typedef struct _TAG_ANCILLARYBUFFER
 #define VIP_BUFFER_B_ODD                  0x0007
 #define VIP_BUFFER_B_EVEN                 0x0008
 
-typedef struct _TAG_INPUTBUFFER_ADDR
-{
+typedef struct _TAG_INPUTBUFFER_ADDR {
     unsigned long even_base[VIP_MAX_BUFFERS];
     unsigned long odd_base[VIP_MAX_BUFFERS];
     unsigned long y_pitch;
@@ -990,8 +969,7 @@ typedef struct _TAG_INPUTBUFFER_ADDR
 
 } VIPINPUTBUFFER_ADDR;
 
-typedef struct _TAG_SETINPUTBUFFER
-{
+typedef struct _TAG_SETINPUTBUFFER {
     unsigned long flags;
     VIPINPUTBUFFER_ADDR offsets[VIP_BUFFER_MAX_TASKS];
     unsigned long current_buffer;
@@ -1004,8 +982,7 @@ typedef struct _TAG_SETINPUTBUFFER
 /* USER STRUCTURE FOR CONFIGURING VIP SUBWINDOW CAPTURE */
 /*------------------------------------------------------*/
 
-typedef struct _TAG_SUBWINDOWBUFFER
-{
+typedef struct _TAG_SUBWINDOWBUFFER {
     int enable;
     unsigned long start;
     unsigned long stop;
@@ -1016,8 +993,7 @@ typedef struct _TAG_SUBWINDOWBUFFER
 /* USER STRUCTURE FOR SAVING/RESTORING VIP REGISTERS      */
 /*--------------------------------------------------------*/
 
-typedef struct _TAG_VIPSTATEBUFFER
-{
+typedef struct _TAG_VIPSTATEBUFFER {
     unsigned long control1;
     unsigned long control2;
     unsigned long vip_int;
@@ -1108,8 +1084,7 @@ typedef struct _TAG_VIPSTATEBUFFER
 /* USER STRUCTURE FOR QUERYING VIP CAPABILITIES    */
 /*-------------------------------------------------*/
 
-typedef struct _TAG_CAPABILITIESBUFFER
-{
+typedef struct _TAG_CAPABILITIESBUFFER {
     unsigned long revision_id;
     unsigned long device_id;
     unsigned long n_clock_domains;
@@ -1121,8 +1096,7 @@ typedef struct _TAG_CAPABILITIESBUFFER
 /* USER STRUCTURE FOR CONFIGURING VIP POWER        */
 /*-------------------------------------------------*/
 
-typedef struct _TAG_POWERBUFFER
-{
+typedef struct _TAG_POWERBUFFER {
     int glink_clock_mode;
     int vip_clock_mode;
 
@@ -1132,8 +1106,7 @@ typedef struct _TAG_POWERBUFFER
 /* USER STRUCTURE FOR CONFIGURING VIP PRIORITIES   */
 /*-------------------------------------------------*/
 
-typedef struct _TAG_PRIORITYBUFFER
-{
+typedef struct _TAG_PRIORITYBUFFER {
     unsigned long secondary;
     unsigned long primary;
     unsigned long pid;
@@ -1164,8 +1137,7 @@ typedef struct _TAG_PRIORITYBUFFER
 #define VIP_DIAG_LOWER_FORMATTER          0x00000200
 #define VIP_DIAG_LOWER_INPUT_CONTROL      0x00000400
 
-typedef struct _TAG_DEBUGBUFFER
-{
+typedef struct _TAG_DEBUGBUFFER {
     unsigned long bist;
     unsigned long enable_upper;
     unsigned long select_upper;
@@ -1182,8 +1154,7 @@ typedef struct _TAG_DEBUGBUFFER
 /* USER STRUCTURE FOR CONFIGURING VBI CAPTURE           */
 /*------------------------------------------------------*/
 
-typedef struct _TAG_VBIWINDOWBUFFER
-{
+typedef struct _TAG_VBIWINDOWBUFFER {
     long horz_start;
     unsigned long vbi_width;
     unsigned long odd_line_capture_mask;
@@ -1217,8 +1188,7 @@ typedef struct _TAG_VBIWINDOWBUFFER
 #define VOP_601_RGB_8_8_8                 0x00000002
 #define VOP_601_YUV_4_4_4                 0x00000003
 
-typedef struct _TAG_VOP601
-{
+typedef struct _TAG_VOP601 {
     unsigned long flags;
     unsigned long vsync_shift;
     unsigned long vsync_shift_count;
@@ -1262,8 +1232,7 @@ typedef struct _TAG_VOP601
 #define VOP_MB_SYNCSEL_STATREG17          0x00000060
 #define VOP_MB_SYNCSEL_STATREG17_INV      0x00000080
 
-typedef struct _TAG_VOPMODECONFIGURATIONBUFFER
-{
+typedef struct _TAG_VOPMODECONFIGURATIONBUFFER {
     unsigned long flags;
     unsigned long mode;
     unsigned long conversion_mode;
@@ -1276,8 +1245,7 @@ typedef struct _TAG_VOPMODECONFIGURATIONBUFFER
 /* USER STRUCTURE FOR SAVING/RESTORING VOP REGISTERS      */
 /*--------------------------------------------------------*/
 
-typedef struct _TAG_VOPSTATEBUFFER
-{
+typedef struct _TAG_VOPSTATEBUFFER {
     unsigned long config;
 } VOPSTATEBUFFER;
 

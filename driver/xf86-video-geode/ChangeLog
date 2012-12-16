@@ -1,3 +1,249 @@
+commit a96a4e28a079499b18b441f0b6c05c50dd86ead6
+Author: Martin-Éric Racine <martin-eric.racine@iki.fi>
+Date:   Sun Nov 25 11:12:58 2012 +0200
+
+    Geode 2.11.14
+    
+    This release restores compatibility with xserver-1.13, cairo-1.12 and gtk-3:
+    
+    * Fix building with new xserver-1.13 (Maarten Lankhorst)
+      + Implement xserver-1.13 API changes.
+      + Make XAA support optional (dropped as of xserver-1.13).
+    * Implement solid source pictures acceleration for cairo-1.12 (Mart Raudsepp)
+    * Fix EXA Composite implementation in the LX component (Mart Raudsepp)
+      Restores icon and text rendering for GNOME 3 fallback mode.
+    
+    This release also improves compatibility with non-Linux/non-32-bit hardware:
+    * Fix compiling on 64-bit hosts (Dave Airlie)
+    * Fix compiling on non-Linux platforms (Martin-Éric Racine)
+    
+    VALIDATION PLATFORMS
+     * Debian (X server 1.7.7) on Artec DBE61.
+     * Debian (X server 1.12.14) on FIC ION603A.
+     * Fedora (X server 1.13) on OLPC XO-1.
+
+commit cec433840fde8be3ee6b8ce916b416f44d15a794
+Author: Martin-Éric Racine <martin-eric.racine@iki.fi>
+Date:   Sat Nov 24 12:02:32 2012 +0200
+
+    pre-release whitespace cleanup using ../modular/x-indent-all.sh
+
+commit 4e6f1e68344d52cd80f85843a2a9830add042a34
+Author: Mart Raudsepp <leio@gentoo.org>
+Date:   Tue Nov 20 09:14:31 2012 +0200
+
+    NEWS: Release notes for 2.11.14
+
+commit a02c099af60c96b440edcc2b0afbd0be0b349ee8
+Author: Mart Raudsepp <leio@gentoo.org>
+Date:   Tue Nov 20 08:30:13 2012 +0200
+
+    NEWS: Fix placement order of 2.11.10 NEWS compared to others
+
+commit 45ca66ee73bfe04a7ac17e2086f2e5d20bfa93e9
+Author: Mart Raudsepp <leio@gentoo.org>
+Date:   Sat Nov 17 23:51:39 2012 +0200
+
+    lx_exa: Improvements to negative srcX/Y PictOpSrc/Over operations
+    
+    Adds handling of negative srcX or srcY coordinates, which is used by gtk3
+    GtkTrayIcon implementation via cairo for centering icons on top of the
+    destination area.
+    
+    For now just handle the drawing within source pixmap bounds in these
+    cases, as full handling of the out of bound zero-vector for PictOpSrc
+    seems to require bigger refactoring, which is not suitable for the
+    impending stable release.
+    The approach implemented here should result in correct rendering for
+    PictOpOver (as out of bounds with non-repeat mode ends up meaning
+    transparency). For PictOpSrc no black borders are rendered where
+    appropriate, but before this approach, no source pixmap would even be
+    rendered at all, so it should be a net improvement for the upcoming
+    release, while fixing the gtk3 icons in GNOME3 fallback.
+    
+    The completely out of bounds special case check didn't work correctly for
+    negative srcX or srcY because exaScratch.srcWidth/Height are unsigned
+    types, so the negative srcX or srcY got casted to unsigned, which resulted
+    in a big number, so srcX >= 0 was always true (but GCC managed to not warn
+    of the implicit signedness cast).
+    
+    Fixes https://bugs.freedesktop.org/show_bug.cgi?id=51360
+
+commit a46486b05f4674fc17f36947c97bc281c1d00d26
+Author: Mart Raudsepp <leio@gentoo.org>
+Date:   Tue Oct 23 11:40:11 2012 +0300
+
+    lx_exa: Implement solid pictures support as source with a mask
+    
+    cairo-1.12 uses solid pictures instead of 1x1R pixmaps in glyph rendering
+    paths, so accelerate it.
+    In addition to acceleration, it avoids a bug in xserver-1.13.0 and earlier
+    which causes visible misrendering for fallback path, making cairo-1.12 a
+    viable and desired choice on GeodeLX systems.
+    Quick benchmarking suggests a 4-12% win in cairo-traces.
+
+commit 85f25321661b24324d9e8fb6415abc0fda12436d
+Author: Mart Raudsepp <leio@gentoo.org>
+Date:   Tue Oct 23 11:35:18 2012 +0300
+
+    lx_exa: Remove unused srcPixmap member from exaScratch
+    
+    Became redundant with commit 32a927b8e6
+
+commit 5cfd7591b2f6ccb57d698738faa3fa800088f972
+Author: Martin-Éric Racine <martin-eric.racine@iki.fi>
+Date:   Tue Oct 2 18:05:55 2012 +0300
+
+    Clarified the copyright and license of src/geode_msr.c src/geode_blend.h
+    
+    Debian's 'licensecheck' tool showed these two files to have unspecified
+    copyright and license. Git log clarifies that these had been created by
+    Jordan Crouse when he was still at AMD, so their stock copyright notice
+    was copied as-is from other files in src/
+
+commit 65d9954ef61b7e22252d38cc81db710a8ec0b22b
+Author: Mart Raudsepp <leio@gentoo.org>
+Date:   Tue Sep 18 08:43:51 2012 +0300
+
+    lx_exa: Downgrade src/dst format warnings to fallbacks to not spam the log
+    
+    We don't support 10bit wide color channels, BGRA and other types, which mainly
+    cause these fallbacks. The ErrorF's were unwarranted, these are just fallbacks
+    as any other, so don't output these warnings without GEODE_TRACE_FALL.
+
+commit 5f7797cadeaf8a28612b9d0c394f8507eb687c34
+Author: Mart Raudsepp <leio@gentoo.org>
+Date:   Tue Sep 18 08:41:53 2012 +0300
+
+    lx_exa: Fix crash with solid fills on PictOpAdd operations
+    
+    lx_check_composite has many special checks for PictOpAdd to return
+    successfully early, but these were done even earlier than the check
+    for solid fills. This resulted in lx_prepare_composite assuming
+    the source pixmap exists, which is not the case with solid fills.
+    Move the solid fill fallback checks before the others, so we are
+    guaranteed to always have a source pixmap in PrepareComposite and
+    Composite and don't crash trying to access a NULL pointer.
+    
+    Also move up the mask check to do less checks in the PictOpAdd logic.
+
+commit 4a20e8ac285cfe8a033f771ac8df25f873db9908
+Author: Martin-Éric Racine <martin-eric.racine@iki.fi>
+Date:   Wed Aug 29 12:53:00 2012 +0300
+
+    NEWS: add information about releases since 2.11.9
+    
+    ...and flip the location of the recent src/Makefile.am addition.
+
+commit 0e64b1252c51e380f72f6ff0bdb6836a6e27071d
+Author: Martin-Éric Racine <martin-eric.racine@iki.fi>
+Date:   Thu Aug 9 18:59:03 2012 +0300
+
+    src/Makefile.am: added missing compat-api.h to geode_drv_la_SOURCES
+
+commit 86a879a1ec9771c45b0bffb18f7fd13854b1e84a
+Author: Mart Raudsepp <leio@gentoo.org>
+Date:   Thu Jul 26 10:28:22 2012 +0300
+
+    configure: Make the new XAA checks work, and other improvements
+    
+    commit 68646c31 added XAA checks were too early, when XORG_CFLAGS isn't
+    declared yet, so it got never enabled. Move the block after xorg-server
+    pkg-config checks, which declare XORG_CFLAGS.
+    Change configure to fail if --enable-xaa is explicitly requested, but
+    XAA headers are not found.
+    Other tweaks for more autoconf-ism.
+    
+    Signed-off-by: Mart Raudsepp <leio@gentoo.org>
+
+commit a83fcb6f84995dc50b8adffc27e264a663fbd606
+Author: Maarten Lankhorst <maarten.lankhorst@canonical.com>
+Date:   Sat Jul 21 12:36:51 2012 +0200
+
+    Initial stab at converting geode to new X1.13 API
+    
+    Preparing to compile geode on X 1.13
+    All compiler errors are gone as far as I can tell,
+    but I lack the hardware to verify it works as well.
+
+commit 68646c3119a69a8391a49f2d565672d73829e2c9
+Author: Maarten Lankhorst <maarten.lankhorst@canonical.com>
+Date:   Sat Jul 21 12:36:17 2012 +0200
+
+    Allow building on Xservers without XAA
+
+commit cb0e67bbc019b170194b3b51e2a47fca8d3aeac1
+Author: Mart Raudsepp <leio@gentoo.org>
+Date:   Wed Jul 25 07:23:35 2012 +0300
+
+    lx_exa: Fix EXA minor version checks
+    
+    The old version of just checking for EXA_MINOR_VERSION >= 2 would
+    stop working if ever EXA gets a new major version, as minor would be
+    reset to 0, and start unexpectedly working again when minor gets bumped
+    gradually up to 2 again.
+    Other drivers also assume that a new major would still have the vfunc we use.
+
+commit dc0dbd41745f99dcd9ca3fda05acf5a5f11a6960
+Author: Mart Raudsepp <leio@gentoo.org>
+Date:   Wed Jul 25 04:44:18 2012 +0300
+
+    Fix an unused variable warning in geode_driver.c
+    
+    geode_driver.c:372:9: warning: variable 'cpu_detected' set but not used [-Wunused-but-set-variable]
+    Was used only in a DEBUGMSG, which has since been made not do anything ever, so just kill
+    it completely, as the debug message wasn't useful anyway.
+
+commit 1ed67d70ac9d3afd9b372c311aaf7b77e38b3e21
+Author: Martin-Éric Racine <martin-eric.racine@iki.fi>
+Date:   Wed Jul 11 15:50:28 2012 +0300
+
+    Whitespace cleanup using ../modular/x-indent.sh
+
+commit b9afafec0a26eaec49e7f0ff08297c2bb795a9c2
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Tue Apr 3 11:08:09 2012 +0100
+
+    geode: fix compile on x86-64 in tinderbox.
+    
+    geode_ddc.c: In function 'GeodeI2CInit':
+    geode_ddc.c:158: error: cast to pointer from integer of different size
+    
+    Signed-off-by: Dave Airlie <airlied@redhat.com>
+
+commit 048c67d6f351083741ef68e94a278a445c16436d
+Author: Martin-Éric Racine <martin-eric.racine@iki.fi>
+Date:   Mon Jan 2 17:49:10 2012 +0200
+
+    z4l.c: drop unnecessary #include linux/types.h
+    
+    On hybrid platforms, such as Debian GNU/KFreeBSD, that support V4L2
+    and yet without providing the full complement of Linux headers, ZTV
+    fails to compile because of this missing header.
+    
+    Given how removing this header does not adversely affect compiling,
+    plus it might improve portability, we went ahead and removed it.
+    
+    Nonetheless, as observed by Gaetan Nadon, z4l.c includes code that
+    explicitly disables the module on any OS other than Linux:
+    
+        LoaderGetOS(&osname, NULL, NULL, NULL);
+    
+        if (osname == NULL || strcmp(osname, "linux") != 0) {
+        if (errmaj)
+            *errmaj = LDR_BADOS;
+        if (errmin)
+            *errmin = 0;
+    
+        return NULL;
+        }
+    
+    Still, in the interest of OS neutrality, we decided to leave recent
+    autoconf magic in place and to let OS vendors figure out how to get
+    the module loaded on non-Linux OS themselves. Patches are welcome.
+    
+    Signed-off-by: Martin-Éric Racine <martin-eric.racine@iki.fi>
+
 commit e420d7956afceeb41f20179cedc28d46aebdb29f
 Author: Martin-Éric Racine <martin-eric.racine@iki.fi>
 Date:   Mon Dec 26 22:13:22 2011 +0200

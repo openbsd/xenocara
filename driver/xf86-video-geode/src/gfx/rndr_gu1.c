@@ -104,7 +104,8 @@ gfx_set_bpp(unsigned short bpp)
     }
     if ((gfx_cpu_version == GFX_CPU_PYRAMID) && (pitch > 2048)) {
         control |= BC_FB_WIDTH_4096;
-    } else if (pitch > 1024) {
+    }
+    else if (pitch > 1024) {
         control |= BC_FB_WIDTH_2048;
     }
     GFX_WAIT_BUSY;
@@ -143,8 +144,8 @@ gfx_set_solid_source(unsigned long color)
     /* POLL UNTIL ABLE TO WRITE THE SOURCE COLOR */
 
     GFX_WAIT_PENDING;
-    WRITE_REG16(GP_SRC_COLOR_0, (unsigned short)color);
-    WRITE_REG16(GP_SRC_COLOR_1, (unsigned short)color);
+    WRITE_REG16(GP_SRC_COLOR_0, (unsigned short) color);
+    WRITE_REG16(GP_SRC_COLOR_1, (unsigned short) color);
 }
 
 /*
@@ -159,11 +160,11 @@ gfx_set_solid_source(unsigned long color)
 #if GFX_2DACCEL_DYNAMIC
 void
 gu1_set_mono_source(unsigned long bgcolor, unsigned long fgcolor,
-    unsigned short transparent)
+                    unsigned short transparent)
 #else
 void
 gfx_set_mono_source(unsigned long bgcolor, unsigned long fgcolor,
-    unsigned short transparent)
+                    unsigned short transparent)
 #endif
 {
     /* SET TRANSPARENCY FLAG */
@@ -183,8 +184,8 @@ gfx_set_mono_source(unsigned long bgcolor, unsigned long fgcolor,
     /* POLL UNTIL ABLE TO WRITE THE SOURCE COLOR */
 
     GFX_WAIT_PENDING;
-    WRITE_REG16(GP_SRC_COLOR_0, (unsigned short)bgcolor);
-    WRITE_REG16(GP_SRC_COLOR_1, (unsigned short)fgcolor);
+    WRITE_REG16(GP_SRC_COLOR_0, (unsigned short) bgcolor);
+    WRITE_REG16(GP_SRC_COLOR_1, (unsigned short) fgcolor);
 }
 
 /*
@@ -231,7 +232,7 @@ gfx_set_solid_pattern(unsigned long color)
     /* POLL UNTIL ABLE TO WRITE THE PATTERN COLOR */
 
     GFX_WAIT_PENDING;
-    WRITE_REG16(GP_PAT_COLOR_0, (unsigned short)color);
+    WRITE_REG16(GP_PAT_COLOR_0, (unsigned short) color);
 }
 
 /*
@@ -244,11 +245,13 @@ gfx_set_solid_pattern(unsigned long color)
 #if GFX_2DACCEL_DYNAMIC
 void
 gu1_set_mono_pattern(unsigned long bgcolor, unsigned long fgcolor,
-    unsigned long data0, unsigned long data1, unsigned char transparent)
+                     unsigned long data0, unsigned long data1,
+                     unsigned char transparent)
 #else
 void
 gfx_set_mono_pattern(unsigned long bgcolor, unsigned long fgcolor,
-    unsigned long data0, unsigned long data1, unsigned char transparent)
+                     unsigned long data0, unsigned long data1,
+                     unsigned char transparent)
 #endif
 {
     /* CLEAR TRANSPARENCY FLAG */
@@ -273,8 +276,8 @@ gfx_set_mono_pattern(unsigned long bgcolor, unsigned long fgcolor,
     /* POLL UNTIL ABLE TO WRITE THE PATTERN COLORS AND DATA */
 
     GFX_WAIT_PENDING;
-    WRITE_REG16(GP_PAT_COLOR_0, (unsigned short)bgcolor);
-    WRITE_REG16(GP_PAT_COLOR_1, (unsigned short)fgcolor);
+    WRITE_REG16(GP_PAT_COLOR_0, (unsigned short) bgcolor);
+    WRITE_REG16(GP_PAT_COLOR_1, (unsigned short) fgcolor);
     WRITE_REG32(GP_PAT_DATA_0, data0);
     WRITE_REG32(GP_PAT_DATA_1, data1);
 }
@@ -289,13 +292,15 @@ gfx_set_mono_pattern(unsigned long bgcolor, unsigned long fgcolor,
 #if GFX_2DACCEL_DYNAMIC
 void
 gu1_set_color_pattern(unsigned long bgcolor, unsigned long fgcolor,
-    unsigned long data0, unsigned long data1, unsigned long data2,
-    unsigned long data3, unsigned char transparent)
+                      unsigned long data0, unsigned long data1,
+                      unsigned long data2, unsigned long data3,
+                      unsigned char transparent)
 #else
 void
 gfx_set_color_pattern(unsigned long bgcolor, unsigned long fgcolor,
-    unsigned long data0, unsigned long data1, unsigned long data2,
-    unsigned long data3, unsigned char transparent)
+                      unsigned long data0, unsigned long data1,
+                      unsigned long data2, unsigned long data3,
+                      unsigned char transparent)
 #endif
 {
     /* CLEAR TRANSPARENCY FLAG */
@@ -321,8 +326,8 @@ gfx_set_color_pattern(unsigned long bgcolor, unsigned long fgcolor,
     /* POLL UNTIL ABLE TO WRITE THE PATTERN COLORS AND DATA */
 
     GFX_WAIT_PENDING;
-    WRITE_REG16(GP_PAT_COLOR_0, (unsigned short)bgcolor);
-    WRITE_REG16(GP_PAT_COLOR_1, (unsigned short)fgcolor);
+    WRITE_REG16(GP_PAT_COLOR_0, (unsigned short) bgcolor);
+    WRITE_REG16(GP_PAT_COLOR_1, (unsigned short) fgcolor);
     WRITE_REG32(GP_PAT_DATA_0, data0);
     WRITE_REG32(GP_PAT_DATA_1, data1);
     if (GFXbpp > 8) {
@@ -392,7 +397,7 @@ gfx_set_raster_operation(unsigned char rop)
 
     /* GENERATE 16-BIT VERSION OF ROP WITH PATTERN FLAGS */
 
-    rop16 = (unsigned short)rop | GFXpatternFlags;
+    rop16 = (unsigned short) rop | GFXpatternFlags;
     if ((rop & 0x33) ^ ((rop >> 2) & 0x33))
         rop16 |= GFXsourceFlags;
 
@@ -440,7 +445,7 @@ gfx_set_raster_operation(unsigned char rop)
  */
 void
 gu1_solid_fill(unsigned short x, unsigned short y,
-    unsigned short width, unsigned short height, unsigned long color)
+               unsigned short width, unsigned short height, unsigned long color)
 {
     unsigned short section;
 
@@ -455,7 +460,7 @@ gu1_solid_fill(unsigned short x, unsigned short y,
     WRITE_REG16(GP_DST_YCOOR, y);
     WRITE_REG16(GP_HEIGHT, height);
     WRITE_REG16(GP_RASTER_MODE, 0x00F0);        /* PATCOPY */
-    WRITE_REG16(GP_PAT_COLOR_0, (unsigned short)color);
+    WRITE_REG16(GP_PAT_COLOR_0, (unsigned short) color);
 
     /* CHECK WIDTH FOR GX BUG WORKAROUND */
 
@@ -464,7 +469,8 @@ gu1_solid_fill(unsigned short x, unsigned short y,
 
         WRITE_REG16(GP_WIDTH, width);
         WRITE_REG16(GP_BLIT_MODE, 0);
-    } else {
+    }
+    else {
         /* DRAW FIRST PART OF RECTANGLE */
         /* Get to a 16 pixel boundary. */
 
@@ -500,11 +506,11 @@ gu1_solid_fill(unsigned short x, unsigned short y,
 #if GFX_2DACCEL_DYNAMIC
 void
 gu1_pattern_fill(unsigned short x, unsigned short y,
-    unsigned short width, unsigned short height)
+                 unsigned short width, unsigned short height)
 #else
 void
 gfx_pattern_fill(unsigned short x, unsigned short y,
-    unsigned short width, unsigned short height)
+                 unsigned short width, unsigned short height)
 #endif
 {
     unsigned short section, buffer_width, blit_mode;
@@ -517,10 +523,10 @@ gfx_pattern_fill(unsigned short x, unsigned short y,
         /* Need hardware workaround for fast "burst write" cases. */
 
     case 0x00F0:
-        gu1_solid_fill(x, y, width, height, (unsigned short)GFXsavedColor);
+        gu1_solid_fill(x, y, width, height, (unsigned short) GFXsavedColor);
         break;
     case 0x000F:
-        gu1_solid_fill(x, y, width, height, (unsigned short)~GFXsavedColor);
+        gu1_solid_fill(x, y, width, height, (unsigned short) ~GFXsavedColor);
         break;
     case 0x0000:
         gu1_solid_fill(x, y, width, height, 0x0000);
@@ -605,11 +611,13 @@ gfx_pattern_fill(unsigned short x, unsigned short y,
 #if GFX_2DACCEL_DYNAMIC
 void
 gu1_color_pattern_fill(unsigned short x, unsigned short y,
-    unsigned short width, unsigned short height, unsigned long *pattern)
+                       unsigned short width, unsigned short height,
+                       unsigned long *pattern)
 #else
 void
 gfx_color_pattern_fill(unsigned short x, unsigned short y,
-    unsigned short width, unsigned short height, unsigned long *pattern)
+                       unsigned short width, unsigned short height,
+                       unsigned long *pattern)
 #endif
 {
     unsigned short blit_mode, passes, cur_y, pat_y, i;
@@ -632,7 +640,8 @@ gfx_color_pattern_fill(unsigned short x, unsigned short y,
 
     GFX_WAIT_PENDING;
     WRITE_REG16(GP_RASTER_MODE,
-        (GFXsavedRop & ~RM_PAT_MASK & ~RM_PAT_TRANSPARENT) | RM_PAT_COLOR);
+                (GFXsavedRop & ~RM_PAT_MASK & ~RM_PAT_TRANSPARENT) |
+                RM_PAT_COLOR);
 
     /* WRITE THE REGISTERS THAT DO NOT CHANGE         */
     /* If destination data is required, the width and */
@@ -695,7 +704,8 @@ gfx_color_pattern_fill(unsigned short x, unsigned short y,
                 line_width -= section;
             }
 
-        } else {
+        }
+        else {
             while (cur_y < y + height) {
                 GFX_WAIT_PENDING;
                 WRITE_REG16(GP_DST_YCOOR, cur_y);
@@ -731,13 +741,13 @@ gfx_color_pattern_fill(unsigned short x, unsigned short y,
 #if GFX_2DACCEL_DYNAMIC
 void
 gu1_screen_to_screen_blt(unsigned short srcx, unsigned short srcy,
-    unsigned short dstx, unsigned short dsty, unsigned short width,
-    unsigned short height)
+                         unsigned short dstx, unsigned short dsty,
+                         unsigned short width, unsigned short height)
 #else
 void
 gfx_screen_to_screen_blt(unsigned short srcx, unsigned short srcy,
-    unsigned short dstx, unsigned short dsty, unsigned short width,
-    unsigned short height)
+                         unsigned short dstx, unsigned short dsty,
+                         unsigned short width, unsigned short height)
 #endif
 {
     unsigned short section, buffer_width;
@@ -811,7 +821,8 @@ gfx_screen_to_screen_blt(unsigned short srcx, unsigned short srcy,
             WRITE_REG16(GP_SRC_XCOOR, srcx);
             WRITE_REG16(GP_DST_XCOOR, dstx);
             WRITE_REG16(GP_BLIT_MODE, blit_mode);
-        } else {
+        }
+        else {
             /* POSITIVE X DIRECTION */
 
             WRITE_REG16(GP_SRC_XCOOR, srcx);
@@ -843,13 +854,15 @@ gfx_screen_to_screen_blt(unsigned short srcx, unsigned short srcy,
 #if GFX_2DACCEL_DYNAMIC
 void
 gu1_screen_to_screen_xblt(unsigned short srcx, unsigned short srcy,
-    unsigned short dstx, unsigned short dsty, unsigned short width,
-    unsigned short height, unsigned long color)
+                          unsigned short dstx, unsigned short dsty,
+                          unsigned short width, unsigned short height,
+                          unsigned long color)
 #else
 void
 gfx_screen_to_screen_xblt(unsigned short srcx, unsigned short srcy,
-    unsigned short dstx, unsigned short dsty, unsigned short width,
-    unsigned short height, unsigned long color)
+                          unsigned short dstx, unsigned short dsty,
+                          unsigned short width, unsigned short height,
+                          unsigned long color)
 #endif
 {
     unsigned short section, buffer_width;
@@ -947,7 +960,8 @@ gfx_screen_to_screen_xblt(unsigned short srcx, unsigned short srcy,
             WRITE_REG16(GP_SRC_XCOOR, srcx);
             WRITE_REG16(GP_DST_XCOOR, dstx);
             WRITE_REG16(GP_BLIT_MODE, blit_mode);
-        } else {
+        }
+        else {
             /* POSITIVE X DIRECTION */
 
             WRITE_REG16(GP_SRC_XCOOR, srcx);
@@ -985,13 +999,15 @@ gfx_screen_to_screen_xblt(unsigned short srcx, unsigned short srcy,
 #if GFX_2DACCEL_DYNAMIC
 void
 gu1_color_bitmap_to_screen_blt(unsigned short srcx, unsigned short srcy,
-    unsigned short dstx, unsigned short dsty, unsigned short width,
-    unsigned short height, unsigned char *data, long pitch)
+                               unsigned short dstx, unsigned short dsty,
+                               unsigned short width, unsigned short height,
+                               unsigned char *data, long pitch)
 #else
 void
 gfx_color_bitmap_to_screen_blt(unsigned short srcx, unsigned short srcy,
-    unsigned short dstx, unsigned short dsty, unsigned short width,
-    unsigned short height, unsigned char *data, long pitch)
+                               unsigned short dstx, unsigned short dsty,
+                               unsigned short width, unsigned short height,
+                               unsigned char *data, long pitch)
 #endif
 {
     unsigned short section, buffer_width;
@@ -1048,7 +1064,7 @@ gfx_color_bitmap_to_screen_blt(unsigned short srcx, unsigned short srcy,
         /* CALCULATE THE BITMAP OFFSET */
 
         array_offset =
-            (unsigned long)srcy *(long)pitch + ((long)srcx << bpp_shift);
+            (unsigned long) srcy *(long) pitch + ((long) srcx << bpp_shift);
 
         while (temp_height--) {
             GFX_WAIT_PIPELINE;
@@ -1059,7 +1075,7 @@ gfx_color_bitmap_to_screen_blt(unsigned short srcx, unsigned short srcy,
              * */
 
             WRITE_SCRATCH_STRING(dword_bytes_needed, bytes_extra, data,
-                array_offset);
+                                 array_offset);
             WRITE_REG16(GP_BLIT_MODE, blit_mode);
 
             array_offset += pitch;
@@ -1094,15 +1110,17 @@ gfx_color_bitmap_to_screen_blt(unsigned short srcx, unsigned short srcy,
 #if GFX_2DACCEL_DYNAMIC
 void
 gu1_color_bitmap_to_screen_xblt(unsigned short srcx, unsigned short srcy,
-    unsigned short dstx, unsigned short dsty, unsigned short width,
-    unsigned short height, unsigned char *data, long pitch,
-    unsigned long color)
+                                unsigned short dstx, unsigned short dsty,
+                                unsigned short width, unsigned short height,
+                                unsigned char *data, long pitch,
+                                unsigned long color)
 #else
 void
 gfx_color_bitmap_to_screen_xblt(unsigned short srcx, unsigned short srcy,
-    unsigned short dstx, unsigned short dsty, unsigned short width,
-    unsigned short height, unsigned char *data, long pitch,
-    unsigned long color)
+                                unsigned short dstx, unsigned short dsty,
+                                unsigned short width, unsigned short height,
+                                unsigned char *data, long pitch,
+                                unsigned long color)
 #endif
 {
     unsigned short section, buffer_width;
@@ -1178,7 +1196,7 @@ gfx_color_bitmap_to_screen_xblt(unsigned short srcx, unsigned short srcy,
         /* CALCULATE THE BITMAP OFFSET */
 
         array_offset =
-            (unsigned long)srcy *(long)pitch + ((long)srcx << bpp_shift);
+            (unsigned long) srcy *(long) pitch + ((long) srcx << bpp_shift);
 
         while (temp_height--) {
             GFX_WAIT_PIPELINE;
@@ -1188,7 +1206,7 @@ gfx_color_bitmap_to_screen_xblt(unsigned short srcx, unsigned short srcy,
             /* scratchpad offset set by the SET_SCRATCH_BASE macro.               */
 
             WRITE_SCRATCH_STRING(dword_bytes_needed, bytes_extra, data,
-                array_offset);
+                                 array_offset);
             WRITE_REG16(GP_BLIT_MODE, BM_READ_SRC_BB0);
 
             array_offset += pitch;
@@ -1219,13 +1237,15 @@ gfx_color_bitmap_to_screen_xblt(unsigned short srcx, unsigned short srcy,
 #if GFX_2DACCEL_DYNAMIC
 void
 gu1_mono_bitmap_to_screen_blt(unsigned short srcx, unsigned short srcy,
-    unsigned short dstx, unsigned short dsty, unsigned short width,
-    unsigned short height, unsigned char *data, short pitch)
+                              unsigned short dstx, unsigned short dsty,
+                              unsigned short width, unsigned short height,
+                              unsigned char *data, short pitch)
 #else
 void
 gfx_mono_bitmap_to_screen_blt(unsigned short srcx, unsigned short srcy,
-    unsigned short dstx, unsigned short dsty, unsigned short width,
-    unsigned short height, unsigned char *data, short pitch)
+                              unsigned short dstx, unsigned short dsty,
+                              unsigned short width, unsigned short height,
+                              unsigned char *data, short pitch)
 #endif
 {
     unsigned short section, buffer_width;
@@ -1242,7 +1262,8 @@ gfx_mono_bitmap_to_screen_blt(unsigned short srcx, unsigned short srcy,
     if (GFXusesDstData) {
         buffer_width = GFXbufferWidthPixels;
         blit_mode |= BM_READ_DST_FB1;
-    } else
+    }
+    else
         buffer_width = 3200;
 
     /* CHECK IF DATA ALREADY IN BLIT BUFFER */
@@ -1297,7 +1318,7 @@ gfx_mono_bitmap_to_screen_blt(unsigned short srcx, unsigned short srcy,
 
         /* CALCULATE THE BITMAP OFFSET */
 
-        array_offset = (unsigned long)srcy *(long)pitch + ((long)srcx >> 3);
+        array_offset = (unsigned long) srcy *(long) pitch + ((long) srcx >> 3);
 
         while (temp_height--) {
             GFX_WAIT_PIPELINE;
@@ -1307,7 +1328,7 @@ gfx_mono_bitmap_to_screen_blt(unsigned short srcx, unsigned short srcy,
             /* scratchpad offset set by the SET_SCRATCH_BASE macro.               */
 
             WRITE_SCRATCH_STRING(dword_bytes_needed, bytes_extra, data,
-                array_offset);
+                                 array_offset);
             WRITE_REG16(GP_BLIT_MODE, blit_mode);
 
             array_offset += pitch;
@@ -1335,11 +1356,11 @@ gfx_mono_bitmap_to_screen_blt(unsigned short srcx, unsigned short srcy,
 #if GFX_2DACCEL_DYNAMIC
 void
 gu1_text_blt(unsigned short dstx, unsigned short dsty, unsigned short width,
-    unsigned short height, unsigned char *data)
+             unsigned short height, unsigned char *data)
 #else
 void
 gfx_text_blt(unsigned short dstx, unsigned short dsty, unsigned short width,
-    unsigned short height, unsigned char *data)
+             unsigned short height, unsigned char *data)
 #endif
 {
     unsigned long dword_bytes_needed, bytes_extra;
@@ -1348,7 +1369,7 @@ gfx_text_blt(unsigned short dstx, unsigned short dsty, unsigned short width,
     /* CALCULATE DATA SIZE */
 
     pitch = (width + 7) >> 3;
-    data_bytes = (long)height *pitch;
+    data_bytes = (long) height *pitch;
 
     /* CHECK FOR SIMPLE CASE */
     /* This routine is designed to render a source copy text glyph.  If 
@@ -1363,7 +1384,7 @@ gfx_text_blt(unsigned short dstx, unsigned short dsty, unsigned short width,
 
     if (GFXusesDstData || data_bytes > buffer_bytes) {
         gfx_mono_bitmap_to_screen_blt(0, 0, dstx, dsty, width, height, data,
-            (short)pitch);
+                                      (short) pitch);
         return;
     }
 
@@ -1415,13 +1436,15 @@ gfx_text_blt(unsigned short dstx, unsigned short dsty, unsigned short width,
 #if GFX_2DACCEL_DYNAMIC
 void
 gu1_bresenham_line(unsigned short x, unsigned short y,
-    unsigned short length, unsigned short initerr,
-    unsigned short axialerr, unsigned short diagerr, unsigned short flags)
+                   unsigned short length, unsigned short initerr,
+                   unsigned short axialerr, unsigned short diagerr,
+                   unsigned short flags)
 #else
 void
 gfx_bresenham_line(unsigned short x, unsigned short y,
-    unsigned short length, unsigned short initerr,
-    unsigned short axialerr, unsigned short diagerr, unsigned short flags)
+                   unsigned short length, unsigned short initerr,
+                   unsigned short axialerr, unsigned short diagerr,
+                   unsigned short flags)
 #endif
 {
     unsigned short vector_mode = flags;

@@ -74,7 +74,7 @@
 #include <X11/extensions/dpms.h>
 #endif
 
-#endif /* DPMSExtension */
+#endif                          /* DPMSExtension */
 
 /* A few things all drivers should have */
 #define GEODE_NAME        "GEODE"
@@ -97,12 +97,12 @@ static Bool AmdProbe(DriverPtr, int);
 #ifdef XSERVER_LIBPCIACCESS
 static const struct pci_id_match amdDeviceMatch[] = {
     {PCI_VENDOR_ID_NS, PCI_CHIP_GEODEGX, PCI_MATCH_ANY, PCI_MATCH_ANY, 0, 0,
-	0},
+     0},
     {PCI_VENDOR_ID_AMD, PCI_CHIP_GEODELX, PCI_MATCH_ANY, PCI_MATCH_ANY, 0, 0,
-	0},
+     0},
     {0, 0, 0}
 };
-#endif /* XSERVER_LIBPCIACCESS */
+#endif                          /* XSERVER_LIBPCIACCESS */
 
 /* driver record contains the functions needed by the server after loading
  * the driver module.
@@ -146,12 +146,10 @@ _X_EXPORT DriverRec GEODE = {
 };
 
 /* Advanced Micro Devices Chip Models */
-typedef struct _DEVICE_MODEL
-{
+typedef struct _DEVICE_MODEL {
     int DeviceId;
     int Model;
-}
-DeviceModel;
+} DeviceModel;
 
 DeviceModel ChipModel[] = {
 #ifdef HAVE_LX
@@ -242,7 +240,7 @@ static XF86ModuleVersionInfo AmdVersionRec = {
     MODINFOSTRING2,
     XORG_VERSION_CURRENT,
     GEODE_VERSION_MAJOR, GEODE_VERSION_MINOR, GEODE_VERSION_PATCH,
-    ABI_CLASS_VIDEODRV,		       /* This is a video driver */
+    ABI_CLASS_VIDEODRV,         /* This is a video driver */
     ABI_VIDEODRV_VERSION,
     MOD_CLASS_VIDEODRV,
     {0, 0, 0, 0}
@@ -255,7 +253,7 @@ static XF86ModuleVersionInfo GeodeVersionRec = {
     MODINFOSTRING2,
     XORG_VERSION_CURRENT,
     GEODE_VERSION_MAJOR, GEODE_VERSION_MINOR, GEODE_VERSION_PATCH,
-    ABI_CLASS_VIDEODRV,		       /* This is a video driver */
+    ABI_CLASS_VIDEODRV,         /* This is a video driver */
     ABI_VIDEODRV_VERSION,
     MOD_CLASS_VIDEODRV,
     {0, 0, 0, 0}
@@ -271,8 +269,8 @@ GeodeSetup(pointer Module, pointer Options, int *ErrorMajor, int *ErrorMinor)
     flag = HaveDriverFuncs;
 #endif
     if (init) {
-	*ErrorMajor = LDR_ONCEONLY;
-	return (pointer) NULL;
+        *ErrorMajor = LDR_ONCEONLY;
+        return (pointer) NULL;
     }
 
     init = TRUE;
@@ -287,21 +285,21 @@ AmdSetup(pointer Module, pointer Options, int *ErrorMajor, int *ErrorMinor)
     static Bool Initialised = FALSE;
 
     if (!Initialised) {
-	Initialised = TRUE;
-	xf86AddDriver(&AMD, Module,
+        Initialised = TRUE;
+        xf86AddDriver(&AMD, Module,
 #ifdef XSERVER_LIBPCIACCESS
-	    HaveDriverFuncs
+                      HaveDriverFuncs
 #else
-	    0
+                      0
 #endif
-	    );
+            );
 
-	return (pointer) TRUE;
+        return (pointer) TRUE;
     }
 
     /*The return value must be non-NULL on success */
     if (ErrorMajor)
-	*ErrorMajor = LDR_ONCEONLY;
+        *ErrorMajor = LDR_ONCEONLY;
     return NULL;
 }
 
@@ -309,7 +307,7 @@ _X_EXPORT XF86ModuleData amdModuleData = { &AmdVersionRec, AmdSetup, NULL };
 _X_EXPORT XF86ModuleData geodeModuleData =
     { &GeodeVersionRec, GeodeSetup, NULL };
 
-#endif /*End of XFree86Loader */
+#endif                          /*End of XFree86Loader */
 
 /*-------------------------------------------------------------------------
  * AmdIdentify.
@@ -330,7 +328,7 @@ static void
 AmdIdentify(int flags)
 {
     xf86PrintChipsets(GEODE_NAME, "Driver for AMD Geode Chipsets",
-	GeodeChipsets);
+                      GeodeChipsets);
 }
 
 /*----------------------------------------------------------------------------
@@ -354,11 +352,11 @@ AmdAvailableOptions(int chipid, int busid)
     switch (chipid) {
 #ifdef HAVE_LX
     case PCI_CHIP_GEODELX:
-	return LX_GeodeOptions;
+        return LX_GeodeOptions;
 #endif
 #ifdef HAVE_GX
     case PCI_CHIP_GEODEGX:
-	return GX_GeodeOptions;
+        return GX_GeodeOptions;
 #endif
     }
     return no_GeodeOptions;
@@ -368,47 +366,41 @@ AmdAvailableOptions(int chipid, int busid)
 
 static Bool
 AmdPciProbe(DriverPtr driver,
-    int entity_num, struct pci_device *device, intptr_t match_data)
+            int entity_num, struct pci_device *device, intptr_t match_data)
 {
     ScrnInfoPtr scrn = NULL;
-    int cpu_detected;
 
     ErrorF("AmdPciProbe: Probing for supported devices!\n");
 
     scrn = xf86ConfigPciEntity(scrn, 0, entity_num, GeodePCIchipsets,
-	NULL, NULL, NULL, NULL, NULL);
+                               NULL, NULL, NULL, NULL, NULL);
 
     if (scrn != NULL) {
-	scrn->driverName = GEODE_DRIVER_NAME;
-	scrn->driverVersion = GEODE_VERSION;
-	scrn->name = GEODE_NAME;
-	scrn->Probe = NULL;
+        scrn->driverName = GEODE_DRIVER_NAME;
+        scrn->driverVersion = GEODE_VERSION;
+        scrn->name = GEODE_NAME;
+        scrn->Probe = NULL;
 
-	switch (device->device_id) {
+        switch (device->device_id) {
 #ifdef HAVE_LX
-	case PCI_CHIP_GEODELX:
-	    cpu_detected = LX;
-	    LXSetupChipsetFPtr(scrn);
-	    break;
+        case PCI_CHIP_GEODELX:
+            LXSetupChipsetFPtr(scrn);
+            break;
 #endif
 #ifdef HAVE_GX
-	case PCI_CHIP_GEODEGX:
-	    cpu_detected = GX;
-	    GXSetupChipsetFPtr(scrn);
-	    break;
+        case PCI_CHIP_GEODEGX:
+            GXSetupChipsetFPtr(scrn);
+            break;
 #endif
-	default:
-	    ErrorF("AmdPciProbe: unknown device ID\n");
-	    return FALSE;
-	}
-
-	DEBUGMSG(1, (0, X_INFO, "AmdPciProbe: CPUDetected %d!\n",
-		cpu_detected));
+        default:
+            ErrorF("AmdPciProbe: unknown device ID\n");
+            return FALSE;
+        }
     }
     return scrn != NULL;
 }
 
-#else /* XSERVER_LIBPCIACCESS */
+#else                           /* XSERVER_LIBPCIACCESS */
 
 /*----------------------------------------------------------------------------
  * AmdProbe.
@@ -446,85 +438,88 @@ AmdProbe(DriverPtr drv, int flags)
      * * driver, and return if there are none.
      */
     if ((numDevSections = xf86MatchDevice(GEODE_NAME, &devSections)) <= 0) {
-	DEBUGMSG(1, (0, X_INFO, "AmdProbe: failed 1!\n"));
-	return FALSE;
+        DEBUGMSG(1, (0, X_INFO, "AmdProbe: failed 1!\n"));
+        return FALSE;
     }
     DEBUGMSG(1, (0, X_INFO, "AmdProbe: Before MatchPciInstances!\n"));
     /* PCI BUS */
     if (xf86GetPciVideoInfo()) {
-	numUsed = xf86MatchPciInstances(GEODE_NAME, PCI_VENDOR_ID_NS,
-	    GeodeChipsets, GeodePCIchipsets,
-	    devSections, numDevSections, drv, &usedChips);
+        numUsed = xf86MatchPciInstances(GEODE_NAME, PCI_VENDOR_ID_NS,
+                                        GeodeChipsets, GeodePCIchipsets,
+                                        devSections, numDevSections, drv,
+                                        &usedChips);
 
-	if (numUsed <= 0)
-	    numUsed = xf86MatchPciInstances(GEODE_NAME, PCI_VENDOR_ID_AMD,
-		GeodeChipsets, GeodePCIchipsets,
-		devSections, numDevSections, drv, &usedChips);
+        if (numUsed <= 0)
+            numUsed = xf86MatchPciInstances(GEODE_NAME, PCI_VENDOR_ID_AMD,
+                                            GeodeChipsets, GeodePCIchipsets,
+                                            devSections, numDevSections, drv,
+                                            &usedChips);
 
-	DEBUGMSG(1, (0, X_INFO, "AmdProbe: MatchPCI (%d)!\n", numUsed));
+        DEBUGMSG(1, (0, X_INFO, "AmdProbe: MatchPCI (%d)!\n", numUsed));
 
-	if (numUsed > 0) {
-	    if (flags & PROBE_DETECT)
-		foundScreen = TRUE;
-	    else {
-		/* Durango only supports one instance, */
-		/* so take the first one */
-		for (i = 0; i < numUsed; i++) {
-		    /* Allocate a ScrnInfoRec  */
-		    ScrnInfoPtr pScrni = NULL;
-		    EntityInfoPtr pEnt = xf86GetEntityInfo(usedChips[i]);
-		    PciChipsets *p_id;
+        if (numUsed > 0) {
+            if (flags & PROBE_DETECT)
+                foundScreen = TRUE;
+            else {
+                /* Durango only supports one instance, */
+                /* so take the first one */
+                for (i = 0; i < numUsed; i++) {
+                    /* Allocate a ScrnInfoRec  */
+                    ScrnInfoPtr pScrni = NULL;
+                    EntityInfoPtr pEnt = xf86GetEntityInfo(usedChips[i]);
+                    PciChipsets *p_id;
 
-		    pScrni = xf86ConfigPciEntity(pScrni, 0, usedChips[i],
-						 GeodePCIchipsets, NULL, NULL, NULL, NULL, NULL);
-		    for (p_id = GeodePCIchipsets; p_id->numChipset != -1;
-			p_id++) {
-			if (pEnt->chipset == p_id->numChipset) {
-			    switch (pEnt->chipset) {
+                    pScrni = xf86ConfigPciEntity(pScrni, 0, usedChips[i],
+                                                 GeodePCIchipsets, NULL, NULL,
+                                                 NULL, NULL, NULL);
+                    for (p_id = GeodePCIchipsets; p_id->numChipset != -1;
+                         p_id++) {
+                        if (pEnt->chipset == p_id->numChipset) {
+                            switch (pEnt->chipset) {
 #ifdef HAVE_LX
-			    case PCI_CHIP_GEODELX:
-				CPUDetected = LX;
-				drvr_setup = &LXSetupChipsetFPtr;
-				break;
+                            case PCI_CHIP_GEODELX:
+                                CPUDetected = LX;
+                                drvr_setup = &LXSetupChipsetFPtr;
+                                break;
 #endif
 #ifdef HAVE_GX
-			    case PCI_CHIP_GEODEGX:
-				CPUDetected = GX;
-				drvr_setup = &GXSetupChipsetFPtr;
-				break;
+                            case PCI_CHIP_GEODEGX:
+                                CPUDetected = GX;
+                                drvr_setup = &GXSetupChipsetFPtr;
+                                break;
 #endif
-			    default:
-				break;
-			    }
-			    break;
-			}
-		    }
-		    free(pEnt);
-		    if (drvr_setup == NULL)
-			return FALSE;
+                            default:
+                                break;
+                            }
+                            break;
+                        }
+                    }
+                    free(pEnt);
+                    if (drvr_setup == NULL)
+                        return FALSE;
 
-		    DEBUGMSG(1, (0, X_INFO, "AmdProbe: CPUDetected %d!\n",
-			    CPUDetected));
+                    DEBUGMSG(1, (0, X_INFO, "AmdProbe: CPUDetected %d!\n",
+                                 CPUDetected));
 
-		    pScrni->driverName = GEODE_DRIVER_NAME;
-		    pScrni->driverVersion = GEODE_VERSION;
-		    pScrni->name = GEODE_NAME;
-		    pScrni->Probe = AmdProbe;
-		    drvr_setup(pScrni);
+                    pScrni->driverName = GEODE_DRIVER_NAME;
+                    pScrni->driverVersion = GEODE_VERSION;
+                    pScrni->name = GEODE_NAME;
+                    pScrni->Probe = AmdProbe;
+                    drvr_setup(pScrni);
 
-		    foundScreen = TRUE;
+                    foundScreen = TRUE;
 
-		}
-	    }
-	}
+                }
+            }
+        }
     }
 
     if (usedChips)
-	free(usedChips);
+        free(usedChips);
     if (devSections)
-	free(devSections);
+        free(devSections);
     DEBUGMSG(1, (0, X_INFO, "AmdProbe: result (%d)!\n", foundScreen));
     return foundScreen;
 }
 
-#endif /* else XSERVER_LIBPCIACCESS */
+#endif                          /* else XSERVER_LIBPCIACCESS */

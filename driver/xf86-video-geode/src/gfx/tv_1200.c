@@ -47,7 +47,7 @@ gfx_set_tv_format(TVStandardType format, GfxOnTVType resolution)
     /* Save TV output mode */
     ctrl2 =
         READ_VID32(SC1200_TVENC_TIM_CTRL_2) & (SC1200_TVENC_OUTPUT_YCBCR |
-        SC1200_TVENC_CFS_MASK);
+                                               SC1200_TVENC_CFS_MASK);
     /* Save flicker filter setting */
     mode =
         READ_VID32(SC1200_TVOUT_HORZ_SCALING) &
@@ -105,7 +105,8 @@ gfx_set_tv_format(TVStandardType format, GfxOnTVType resolution)
                 /* Horizontal display end is 919, i.e. 720 active pixels */
                 /* Total number of display lines per field is 240 */
                 WRITE_VID32(SC1200_TVOUT_LINE_END, 0x039700f0);
-            } else {                   /* Use new scaler available in Rev. C */
+            }
+            else {              /* Use new scaler available in Rev. C */
                 /* Horizontal Display start is 111 */
                 /* Total number of pixels per line is 857 */
                 WRITE_VID32(SC1200_TVOUT_HORZ_TIM, 0x006f0359);
@@ -214,7 +215,8 @@ gfx_set_tv_format(TVStandardType format, GfxOnTVType resolution)
                 /* Horizontal display end is 906, i.e. 704 active pixels */
                 /* Total number of display lines per field is 288 */
                 WRITE_VID32(SC1200_TVOUT_LINE_END, 0x038a0120);
-            } else {
+            }
+            else {
                 /* HSYNC generated in the TV Encoder module */
                 /* Interval between resets of TV Encoder is once every odd 
                  * field */
@@ -260,8 +262,7 @@ gfx_set_tv_output(int output)
     ctrl2 = READ_VID32(SC1200_TVENC_TIM_CTRL_2);
     ctrl3 = READ_VID32(SC1200_TVENC_TIM_CTRL_3);
     ctrl2 &= ~(SC1200_TVENC_OUTPUT_YCBCR | SC1200_TVENC_CFS_MASK);
-    ctrl3 &=
-        ~(SC1200_TVENC_CM | SC1200_TVENC_SYNCMODE_MASK | SC1200_TVENC_CS);
+    ctrl3 &= ~(SC1200_TVENC_CM | SC1200_TVENC_SYNCMODE_MASK | SC1200_TVENC_CS);
     switch (output) {
     case TV_OUTPUT_COMPOSITE:
         /* Analog outputs provide Y, C and CVBS */
@@ -279,16 +280,17 @@ gfx_set_tv_output(int output)
         /* Analog outputs provide Y, Cb and Cr */
         /* A 7.5 IRE setup is applied to the output */
         WRITE_VID32(SC1200_TVENC_TIM_CTRL_2,
-            ctrl2 | SC1200_TVENC_OUTPUT_YCBCR | SC1200_TVENC_CFS_BYPASS);
+                    ctrl2 | SC1200_TVENC_OUTPUT_YCBCR |
+                    SC1200_TVENC_CFS_BYPASS);
         WRITE_VID32(SC1200_TVENC_TIM_CTRL_3,
-            ctrl3 | SC1200_TVENC_CM | SC1200_TVENC_CS);
+                    ctrl3 | SC1200_TVENC_CM | SC1200_TVENC_CS);
         break;
     case TV_OUTPUT_SCART:
         /* Analog outputs provide SCART (RGB and CVBS) */
         /* Sync is added to green signal */
         WRITE_VID32(SC1200_TVENC_TIM_CTRL_2, ctrl2 | SC1200_TVENC_CFS_CVBS);
         WRITE_VID32(SC1200_TVENC_TIM_CTRL_3,
-            ctrl3 | SC1200_TVENC_CM | SC1200_TVENC_SYNC_ON_GREEN);
+                    ctrl3 | SC1200_TVENC_CM | SC1200_TVENC_SYNC_ON_GREEN);
         break;
     default:
         return (GFX_STATUS_BAD_PARAMETER);
@@ -336,7 +338,8 @@ gfx_set_tv_enable(int enable)
         value_dac &= ~SC1200_TVENC_POWER_DOWN;
         /* ENABLE GRAPHICS DISPLAY LOGIC IN VIDEO PROCESSOR */
         gfx_set_screen_enable(1);
-    } else {
+    }
+    else {
         value_tim &= ~SC1200_TVENC_VIDEO_TIMING_ENABLE;
         value_dac |= SC1200_TVENC_POWER_DOWN;
         /* Do not disable the graphics display logic because it might be
@@ -370,15 +373,15 @@ gfx_set_tv_flicker_filter(int ff)
     switch (ff) {
     case TV_FLICKER_FILTER_NONE:
         WRITE_VID32(SC1200_TVOUT_HORZ_SCALING,
-            mode | SC1200_TVOUT_FLICKER_FILTER_DISABLED);
+                    mode | SC1200_TVOUT_FLICKER_FILTER_DISABLED);
         break;
     case TV_FLICKER_FILTER_NORMAL:
         WRITE_VID32(SC1200_TVOUT_HORZ_SCALING,
-            mode | SC1200_TVOUT_FLICKER_FILTER_FOURTH_HALF_FOURTH);
+                    mode | SC1200_TVOUT_FLICKER_FILTER_FOURTH_HALF_FOURTH);
         break;
     case TV_FLICKER_FILTER_INTERLACED:
         WRITE_VID32(SC1200_TVOUT_HORZ_SCALING,
-            mode | SC1200_TVOUT_FLICKER_FILTER_HALF_ONE_HALF);
+                    mode | SC1200_TVOUT_FLICKER_FILTER_HALF_ONE_HALF);
         break;
     default:
         return GFX_STATUS_BAD_PARAMETER;
@@ -407,19 +410,19 @@ gfx_set_tv_sub_carrier_reset(int screset)
     switch (screset) {
     case TV_SUB_CARRIER_RESET_NEVER:
         WRITE_VID32(SC1200_TVENC_TIM_CTRL_1,
-            mode | SC1200_TVENC_SUB_CARRIER_RESET_NEVER);
+                    mode | SC1200_TVENC_SUB_CARRIER_RESET_NEVER);
         break;
     case TV_SUB_CARRIER_RESET_EVERY_TWO_LINES:
         WRITE_VID32(SC1200_TVENC_TIM_CTRL_1,
-            mode | SC1200_TVENC_SUB_CARRIER_RESET_EVERY_TWO_LINES);
+                    mode | SC1200_TVENC_SUB_CARRIER_RESET_EVERY_TWO_LINES);
         break;
     case TV_SUB_CARRIER_RESET_EVERY_TWO_FRAMES:
         WRITE_VID32(SC1200_TVENC_TIM_CTRL_1,
-            mode | SC1200_TVENC_SUB_CARRIER_RESET_EVERY_TWO_FRAMES);
+                    mode | SC1200_TVENC_SUB_CARRIER_RESET_EVERY_TWO_FRAMES);
         break;
     case TV_SUB_CARRIER_RESET_EVERY_FOUR_FRAMES:
         WRITE_VID32(SC1200_TVENC_TIM_CTRL_1,
-            mode | SC1200_TVENC_SUB_CARRIER_RESET_EVERY_FOUR_FRAMES);
+                    mode | SC1200_TVENC_SUB_CARRIER_RESET_EVERY_FOUR_FRAMES);
         break;
     default:
         return GFX_STATUS_BAD_PARAMETER;
@@ -474,19 +477,19 @@ gfx_set_tv_YC_delay(int delay)
     switch (delay) {
     case TV_YC_DELAY_NONE:
         WRITE_VID32(SC1200_TVOUT_HORZ_PRE_ENCODER_SCALE,
-            mode | SC1200_TVOUT_YC_DELAY_NONE);
+                    mode | SC1200_TVOUT_YC_DELAY_NONE);
         break;
     case TV_Y_DELAY_ONE_PIXEL:
         WRITE_VID32(SC1200_TVOUT_HORZ_PRE_ENCODER_SCALE,
-            mode | SC1200_TVOUT_Y_DELAY_ONE_PIXEL);
+                    mode | SC1200_TVOUT_Y_DELAY_ONE_PIXEL);
         break;
     case TV_C_DELAY_ONE_PIXEL:
         WRITE_VID32(SC1200_TVOUT_HORZ_PRE_ENCODER_SCALE,
-            mode | SC1200_TVOUT_C_DELAY_ONE_PIXEL);
+                    mode | SC1200_TVOUT_C_DELAY_ONE_PIXEL);
         break;
     case TV_C_DELAY_TWO_PIXELS:
         WRITE_VID32(SC1200_TVOUT_HORZ_PRE_ENCODER_SCALE,
-            mode | SC1200_TVOUT_C_DELAY_TWO_PIXELS);
+                    mode | SC1200_TVOUT_C_DELAY_TWO_PIXELS);
         break;
     default:
         return GFX_STATUS_BAD_PARAMETER;
@@ -516,23 +519,23 @@ gfx_set_tvenc_reset_interval(int interval)
     switch (interval) {
     case TVENC_RESET_EVERY_ODD_FIELD:
         WRITE_VID32(SC1200_TVOUT_HORZ_SCALING,
-            value | SC1200_TVENC_EXTERNAL_RESET_EVERY_ODD_FIELD);
+                    value | SC1200_TVENC_EXTERNAL_RESET_EVERY_ODD_FIELD);
         break;
     case TVENC_RESET_EVERY_EVEN_FIELD:
         WRITE_VID32(SC1200_TVOUT_HORZ_SCALING,
-            value | SC1200_TVENC_EXTERNAL_RESET_EVERY_EVEN_FIELD);
+                    value | SC1200_TVENC_EXTERNAL_RESET_EVERY_EVEN_FIELD);
         break;
     case TVENC_RESET_NEXT_ODD_FIELD:
         WRITE_VID32(SC1200_TVOUT_HORZ_SCALING,
-            value | SC1200_TVENC_EXTERNAL_RESET_NEXT_ODD_FIELD);
+                    value | SC1200_TVENC_EXTERNAL_RESET_NEXT_ODD_FIELD);
         break;
     case TVENC_RESET_NEXT_EVEN_FIELD:
         WRITE_VID32(SC1200_TVOUT_HORZ_SCALING,
-            value | SC1200_TVENC_EXTERNAL_RESET_NEXT_EVEN_FIELD);
+                    value | SC1200_TVENC_EXTERNAL_RESET_NEXT_EVEN_FIELD);
         break;
     case TVENC_RESET_EVERY_FIELD:
         WRITE_VID32(SC1200_TVOUT_HORZ_SCALING,
-            value | SC1200_TVENC_EXTERNAL_RESET_EVERY_FIELD);
+                    value | SC1200_TVENC_EXTERNAL_RESET_EVERY_FIELD);
         break;
     case TVENC_RESET_EVERY_X_ODD_FIELDS:
     case TVENC_RESET_EVERY_X_EVEN_FIELDS:
@@ -588,8 +591,8 @@ gfx_set_tv_display(int width, int height)
 
     for (i = 0; i < NUM_TV_MODES; i++) {
         pMode = &TVTimings[i];
-        if ((unsigned)width == pMode->hactive
-            && (unsigned)height == pMode->vactive)
+        if ((unsigned) width == pMode->hactive
+            && (unsigned) height == pMode->vactive)
             break;
     }
 
@@ -597,10 +600,12 @@ gfx_set_tv_display(int width, int height)
         return 0;
 
     gfx_set_display_timings(gfx_get_display_bpp(),
-        (unsigned short)pMode->flags, pMode->hactive, pMode->hblankstart,
-        pMode->hsyncstart, pMode->hsyncend, pMode->hblankend, pMode->htotal,
-        pMode->vactive, pMode->vblankstart, pMode->vsyncstart,
-        pMode->vsyncend, pMode->vblankend, pMode->vtotal, pMode->frequency);
+                            (unsigned short) pMode->flags, pMode->hactive,
+                            pMode->hblankstart, pMode->hsyncstart,
+                            pMode->hsyncend, pMode->hblankend, pMode->htotal,
+                            pMode->vactive, pMode->vblankstart,
+                            pMode->vsyncstart, pMode->vsyncend,
+                            pMode->vblankend, pMode->vtotal, pMode->frequency);
 
     return 1;
 }
@@ -719,7 +724,8 @@ gfx_set_tv_field_status_invert(int enable)
 
     if (enable) {
         value |= SC1200_TVOUT_FIELD_STATUS_INVERT;
-    } else {
+    }
+    else {
         value &= ~(SC1200_TVOUT_FIELD_STATUS_INVERT);
     }
 
@@ -744,8 +750,7 @@ gfx_get_tv_vphase(void)
 {
     unsigned long mode = READ_VID32(SC1200_TVENC_TIM_CTRL_1);
 
-    return (int)((mode & SC1200_TVENC_VPHASE_MASK) >>
-        SC1200_TVENC_VPHASE_POS);
+    return (int) ((mode & SC1200_TVENC_VPHASE_MASK) >> SC1200_TVENC_VPHASE_POS);
 }
 
 /*---------------------------------------------------------------------------
@@ -764,7 +769,7 @@ gfx_get_tv_enable(unsigned int *p_on)
 {
     unsigned long control = READ_VID32(SC1200_TVENC_DAC_CONTROL);
 
-    *p_on = (unsigned int)(!(control & SC1200_TVENC_POWER_DOWN));
+    *p_on = (unsigned int) (!(control & SC1200_TVENC_POWER_DOWN));
 
     return GFX_STATUS_OK;
 }
@@ -863,8 +868,8 @@ gfx_get_tv_display_mode(int *width, int *height, int *bpp, int *hz)
     frequency = gfx_get_clock_frequency();
 
     for (mode = 0; mode < NUM_TV_MODES; mode++) {
-        if (TVTimings[mode].hactive == (unsigned short)(*width) &&
-            TVTimings[mode].vactive == (unsigned short)(*height) &&
+        if (TVTimings[mode].hactive == (unsigned short) (*width) &&
+            TVTimings[mode].vactive == (unsigned short) (*height) &&
             TVTimings[mode].frequency == frequency) {
             flags = TVTimings[mode].flags;
 
@@ -890,11 +895,12 @@ gfx_get_tv_display_mode(int *width, int *height, int *bpp, int *hz)
 #if GFX_TV_DYNAMIC
 int
 sc1200_get_tv_display_mode_frequency(unsigned short width,
-    unsigned short height, TVStandardType format, int *frequency)
+                                     unsigned short height,
+                                     TVStandardType format, int *frequency)
 #else
 int
 gfx_get_tv_display_mode_frequency(unsigned short width, unsigned short height,
-    TVStandardType format, int *frequency)
+                                  TVStandardType format, int *frequency)
 #endif
 {
     unsigned long mode, flag;
@@ -933,11 +939,12 @@ gfx_get_tv_display_mode_frequency(unsigned short width, unsigned short height,
 #if GFX_TV_DYNAMIC
 int
 sc1200_is_tv_display_mode_supported(unsigned short width,
-    unsigned short height, TVStandardType format)
+                                    unsigned short height,
+                                    TVStandardType format)
 #else
 int
 gfx_is_tv_display_mode_supported(unsigned short width, unsigned short height,
-    TVStandardType format)
+                                 TVStandardType format)
 #endif
 {
     unsigned long mode, flag;
@@ -957,7 +964,7 @@ gfx_is_tv_display_mode_supported(unsigned short width, unsigned short height,
         if (TVTimings[mode].hactive == width &&
             TVTimings[mode].vactive == height &&
             (TVTimings[mode].flags & flag)) {
-            return ((int)mode);
+            return ((int) mode);
         }
     }
 

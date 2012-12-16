@@ -57,7 +57,8 @@ Dorado_Get_9211_Details(unsigned long flags, Pnl_PanelParams * pParam)
                 pParam->PanelChip = PNL_9211_A;
             else
                 pParam->PanelChip = PNL_UNKNOWN_CHIP;
-        } else {                       /* no 9211 present */
+        }
+        else {                  /* no 9211 present */
             pParam->PanelChip = PNL_UNKNOWN_CHIP;
         }
     }
@@ -75,22 +76,19 @@ Dorado_Get_9211_Details(unsigned long flags, Pnl_PanelParams * pParam)
         DPanelType = Dorado9211ReadReg(0x434);
         DPanelType = (DPanelType >> (DRD_LCDRESGPIO1 + 1));
         PanelTypeOrg = DPanelType >> 8;
-        Panel_2Byte = (unsigned char)PanelTypeOrg;
-        Panel_2Byte =
-            (Panel_2Byte >> (DRD_LCDRESGPIO2 - DRD_LCDRESGPIO1 - 1));
-        DPanelType = (DPanelType | ((unsigned int)Panel_2Byte << 8));
+        Panel_2Byte = (unsigned char) PanelTypeOrg;
+        Panel_2Byte = (Panel_2Byte >> (DRD_LCDRESGPIO2 - DRD_LCDRESGPIO1 - 1));
+        DPanelType = (DPanelType | ((unsigned int) Panel_2Byte << 8));
         DPanelType = DPanelType >> 1;
         PanelTypeOrg = DPanelType >> 8;
-        Panel_2Byte = (unsigned char)PanelTypeOrg;
-        Panel_2Byte =
-            (Panel_2Byte >> (DRD_LCDRESGPIO3 - DRD_LCDRESGPIO2 - 1));
-        DPanelType = (DPanelType | ((unsigned int)Panel_2Byte << 8));
+        Panel_2Byte = (unsigned char) PanelTypeOrg;
+        Panel_2Byte = (Panel_2Byte >> (DRD_LCDRESGPIO3 - DRD_LCDRESGPIO2 - 1));
+        DPanelType = (DPanelType | ((unsigned int) Panel_2Byte << 8));
         DPanelType = DPanelType >> 1;
         PanelTypeOrg = DPanelType >> 8;
-        Panel_2Byte = (unsigned char)PanelTypeOrg;
-        Panel_2Byte =
-            (Panel_2Byte >> (DRD_LCDRESGPIO4 - DRD_LCDRESGPIO3 - 1));
-        DPanelType = (DPanelType | ((unsigned int)Panel_2Byte << 8));
+        Panel_2Byte = (unsigned char) PanelTypeOrg;
+        Panel_2Byte = (Panel_2Byte >> (DRD_LCDRESGPIO4 - DRD_LCDRESGPIO3 - 1));
+        DPanelType = (DPanelType | ((unsigned int) Panel_2Byte << 8));
         DPanelType = DPanelType >> 5;
         DPanelType &= 0xf;
 
@@ -210,10 +208,10 @@ Dorado9211Init(Pnl_PanelStat * pstat)
             Dorado9211WriteReg(CS92xx_LCD_PAN_TIMING1, pMode->panel_timing1);
             Dorado9211WriteReg(CS92xx_LCD_PAN_TIMING2, pMode->panel_timing2);
             Dorado9211WriteReg(CS92xx_LCD_DITH_FR_CNTRL,
-                pMode->rev_C_dither_frc);
+                               pMode->rev_C_dither_frc);
             Dorado9211WriteReg(CS92xx_BLUE_LSFR_SEED, pMode->blue_lsfr_seed);
             Dorado9211WriteReg(CS92xx_RED_GREEN_LSFR_SEED,
-                pMode->red_green_lsfr_seed);
+                               pMode->red_green_lsfr_seed);
             DoradoProgramFRMload();
             Dorado9211WriteReg(CS92xx_LCD_MEM_CNTRL, pMode->memory_control);
             Dorado9211WriteReg(CS92xx_LCD_PWR_MAN, pMode->power_management);
@@ -235,8 +233,8 @@ Dorado9211Init(Pnl_PanelStat * pstat)
             orig_value &= 0xfff1ffff;
             WRITE_VID32(0X4, orig_value);
             return;
-        }                              /*end if() */
-    }                                  /*end for() */
+        }                       /*end if() */
+    }                           /*end for() */
 
 }
 
@@ -358,7 +356,8 @@ Dorado9211ReadReg(unsigned short index)
     for (i = 0; i < 12; i++) {
         if (index & 0x1) {
             Dorado9211SetDataOut();
-        } else {
+        }
+        else {
             Dorado9211ClearDataOut();
         }
         Dorado9211ToggleClock();
@@ -382,7 +381,7 @@ Dorado9211ReadReg(unsigned short index)
     for (i = 0; i < 32; i++) {
         Dorado9211ToggleClock();
         readbit = Dorado9211ReadDataIn();
-        data |= (((unsigned long)readbit) << i);
+        data |= (((unsigned long) readbit) << i);
     }
 
     Dorado9211ClearCS();
@@ -407,7 +406,8 @@ Dorado9211WriteReg(unsigned short index, unsigned long data)
     for (i = 0; i < 12; i++) {
         if (index & 0x1) {
             Dorado9211SetDataOut();
-        } else {
+        }
+        else {
             Dorado9211ClearDataOut();
         }
         Dorado9211ToggleClock();
@@ -420,7 +420,8 @@ Dorado9211WriteReg(unsigned short index, unsigned long data)
     for (i = 0; i < 32; i++) {
         if (data & 0x1) {
             Dorado9211SetDataOut();
-        } else {
+        }
+        else {
             Dorado9211ClearDataOut();
         }
         Dorado9211ToggleClock();
@@ -546,7 +547,7 @@ Dorado_Power_Up(void)
     Dorado9211WriteReg(CS92xx_LCD_PWR_MAN, 0x01000000);
     return;
 
-}                                      /* disable_Centaurus_Power */
+}                               /* disable_Centaurus_Power */
 
 /*****************************************************************************
  * void Dorado_Disable_Power((void);
@@ -560,7 +561,7 @@ Dorado_Power_Down(void)
     Dorado9211WriteReg(CS92xx_LCD_PWR_MAN, 0x0);
     return;
 
-}                                      /* disable_Centaurus_Power */
+}                               /* disable_Centaurus_Power */
 
 void
 Dorado_Save_Panel_State(void)
@@ -599,7 +600,7 @@ Dorado_Restore_Panel_State(void)
     Dorado9211WriteReg(CS92xx_LCD_DITH_FR_CNTRL, cs9211_regs.dither_frc_ctrl);
     Dorado9211WriteReg(CS92xx_BLUE_LSFR_SEED, cs9211_regs.blue_lsfr_seed);
     Dorado9211WriteReg(CS92xx_RED_GREEN_LSFR_SEED,
-        cs9211_regs.red_green_lsfr_seed);
+                       cs9211_regs.red_green_lsfr_seed);
 
     Dorado9211WriteReg(CS92xx_LCD_MEM_CNTRL, cs9211_regs.memory_control);
     /* Set the power register last. This will turn the panel on at the 9211 */

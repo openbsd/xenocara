@@ -30,7 +30,9 @@
 #include "geode_pcirename.h"
 #include "config.h"
 
+#ifdef HAVE_XAA_H
 #include "xaa.h"
+#endif
 #include "exa.h"
 #include "xf86Cursor.h"
 
@@ -41,6 +43,8 @@
 
 #include "xf86xv.h"
 
+#include "compat-api.h"
+
 /* We only support EXA version >=2 */
 
 #if (EXA_VERSION_MAJOR >= 2)
@@ -49,6 +53,12 @@
 #endif
 #else
 #undef XF86EXA
+#endif
+
+#ifdef HAVE_XAA_H
+#define XF86XAA 1
+#else
+#undef XF86XAA
 #endif
 
 #define CFB 0
@@ -71,10 +81,10 @@
 
 #define GFX_CPU_GEODELX   4
 
-#ifdef HAVE_GX
+#if defined(HAVE_GX) && XF86XAA
 #define GX_FILL_RECT_SUPPORT 1
 #define GX_BRES_LINE_SUPPORT 1
-#define GX_DASH_LINE_SUPPORT 0	       /* does not do dashed lines */
+#define GX_DASH_LINE_SUPPORT 0  /* does not do dashed lines */
 #define GX_MONO_8X8_PAT_SUPPORT 1
 #define GX_CLREXP_8X8_PAT_SUPPORT 1
 #define GX_SCR2SCREXP_SUPPORT 1
@@ -84,10 +94,10 @@
 #define GX_USE_OFFSCRN_MEM 0
 #define GX_ONE_LINE_AT_A_TIME 1
 #define GX_WRITE_PIXMAP_SUPPORT 1
+#endif
 
 #define GFX(func) gfx_##func
 #define GFX2(func) gfx2_##func
-#endif
 
 #define GEODEPTR(p) ((GeodeRec *)((p)->driverPrivate))
 
@@ -116,8 +126,7 @@ extern void cim_outd(unsigned short port, unsigned long data);
 
 #include "cim_rtns.h"
 
-typedef struct _CIM_DISPLAYTIMING
-{
+typedef struct _CIM_DISPLAYTIMING {
     unsigned short wPitch;
     unsigned short wBpp;
     VG_DISPLAY_MODE vgDisplayMode;
@@ -145,8 +154,7 @@ extern void gfx_outd(unsigned short port, unsigned long data);
 #undef Q_WORD
 #include "panel.h"
 
-typedef struct tag_GFX_DISPLAYTIMING
-{
+typedef struct tag_GFX_DISPLAYTIMING {
     unsigned int dwDotClock;
     unsigned short wPitch;
     unsigned short wBpp;
@@ -167,13 +175,11 @@ typedef struct tag_GFX_DISPLAYTIMING
 
 #endif
 
-typedef struct _VESARec
-{
+typedef struct _VESARec {
     xf86Int10InfoPtr pInt;
 } VESARec;
 
-typedef struct _GeodeMemRec
-{
+typedef struct _GeodeMemRec {
     struct _GeodeMemRec *next;
     struct _GeodeMemRec *prev;
     unsigned int offset;
@@ -186,14 +192,13 @@ typedef struct _GeodeMemRec
 #define OUTPUT_VOP   0x08
 #define OUTPUT_DCON  0x10
 
-typedef struct _geodeRec
-{
+typedef struct _geodeRec {
     /* Common for both GX and LX */
-    int Output;			       /* Bitmask indicating the valid output options */
+    int Output;                 /* Bitmask indicating the valid output options */
     Bool HWCursor;
     Bool NoAccel;
     Bool useVGA;
-    Bool VGAActive;		       /* Flag indicating if LX VGA is active */
+    Bool VGAActive;             /* Flag indicating if LX VGA is active */
     Bool Compression;
     Bool useEXA;
 
@@ -203,12 +208,12 @@ typedef struct _geodeRec
     Bool tryCompression;
     Bool tryHWCursor;
 
-    int mm_width, mm_height;           /* physical display size */
+    int mm_width, mm_height;    /* physical display size */
 
     unsigned long CursorStartOffset;
 
-    int Pitch;			       /* display FB pitch */
-    int displaySize;		       /* The size of the visibile area */
+    int Pitch;                  /* display FB pitch */
+    int displaySize;            /* The size of the visibile area */
 
     ExaOffscreenArea *shadowArea;
 
@@ -226,7 +231,7 @@ typedef struct _geodeRec
     /* Other structures */
 
     EntityInfoPtr pEnt;
-    ScreenBlockHandlerProcPtr BlockHandler;	/* needed for video */
+    ScreenBlockHandlerProcPtr BlockHandler;     /* needed for video */
     XF86VideoAdaptorPtr adaptor;
 
     /* State save structures */
@@ -245,16 +250,16 @@ typedef struct _geodeRec
 
     /* Hooks */
 
-    void (*PointerMoved) (int index, int x, int y);
+    void (*PointerMoved) (POINTER_MOVED_ARGS_DECL);
     CloseScreenProcPtr CloseScreen;
-        Bool(*CreateScreenResources) (ScreenPtr);
+    Bool (*CreateScreenResources) (ScreenPtr);
 
     /* ===== LX specific items ===== */
 
     /* Flags */
     Bool Scale;
 
-    DisplayModePtr panelMode;	       /* The mode for the panel (if attached) */
+    DisplayModePtr panelMode;   /* The mode for the panel (if attached) */
 
     /* Command buffer information */
     unsigned long CmdBfrOffset;
@@ -278,8 +283,8 @@ typedef struct _geodeRec
     int PanelX;
     int PanelY;
 
-    int displayPitch;		       /* The pitch ofthe visible area */
-    int displayOffset;		       /* The offset of the visible area */
+    int displayPitch;           /* The pitch ofthe visible area */
+    int displayOffset;          /* The offset of the visible area */
 
     DisplayModePtr curMode;
 
@@ -304,7 +309,9 @@ typedef struct _geodeRec
     int NoOfImgBuffers;
     unsigned char **AccelColorExpandBuffers;
     int NoOfColorExpandLines;
+#if XF86XAA
     XAAInfoRecPtr AccelInfoRec;
+#endif
 
     /* Save state */
     unsigned long FBCompressionOffset;
@@ -314,8 +321,8 @@ typedef struct _geodeRec
 
     /* Hooks */
     void (*WritePixmap) (ScrnInfoPtr pScrni, int x, int y, int w, int h,
-	unsigned char *src, int srcwidth, int rop,
-	unsigned int planemask, int trans, int bpp, int depth);
+                         unsigned char *src, int srcwidth, int rop,
+                         unsigned int planemask, int trans, int bpp, int depth);
 
     /* Video information */
     int video_x;
@@ -330,13 +337,11 @@ typedef struct _geodeRec
     int video_offset;
     ScrnInfoPtr video_scrnptr;
     BOOL OverlayON;
-}
-GeodeRec, *GeodePtr;
+} GeodeRec, *GeodePtr;
 
 /* option flags are self-explanatory */
 #ifdef HAVE_LX
-enum
-{
+enum {
     LX_OPTION_SW_CURSOR,
     LX_OPTION_HW_CURSOR,
     LX_OPTION_NOCOMPRESSION,
@@ -350,13 +355,11 @@ enum
     LX_OPTION_FBSIZE,
     LX_OPTION_PANEL_MODE,
     LX_OPTION_DONT_PROGRAM
-}
-LX_GeodeOpts;
+} LX_GeodeOpts;
 #endif
 
 #ifdef HAVE_GX
-enum
-{
+enum {
     GX_OPTION_SW_CURSOR,
     GX_OPTION_HW_CURSOR,
     GX_OPTION_NOCOMPRESSION,
@@ -373,8 +376,7 @@ enum
     GX_OPTION_FBSIZE,
     GX_OPTION_PANEL_GEOMETRY,
     GX_OPTION_DONT_PROGRAM
-}
-GX_GeodeOpts;
+} GX_GeodeOpts;
 #endif
 
 /* geode_dcon.c */
@@ -384,7 +386,7 @@ extern int DCONDPMSSet(ScrnInfoPtr pScrni, int mode);
 /* geode_common.c */
 
 void geode_memory_to_screen_blt(unsigned long, unsigned long,
-    unsigned long, unsigned long, long, long, int);
+                                unsigned long, unsigned long, long, long, int);
 int GeodeGetRefreshRate(DisplayModePtr);
 void GeodeCopyGreyscale(unsigned char *, unsigned char *, int, int, int, int);
 int GeodeGetSizeFromFB(unsigned int *);
@@ -392,8 +394,10 @@ int GeodeGetSizeFromFB(unsigned int *);
 /* gx_video.c */
 
 int
+
+
 GeodeQueryImageAttributes(ScrnInfoPtr, int id, unsigned short *w,
-    unsigned short *h, int *pitches, int *offsets);
+                          unsigned short *h, int *pitches, int *offsets);
 
 Bool RegionsEqual(RegionPtr A, RegionPtr B);
 
@@ -404,8 +408,8 @@ xf86MonPtr GeodeDoDDC(ScrnInfoPtr pScrni, int index);
 Bool GeodeI2CInit(ScrnInfoPtr pScrni, I2CBusPtr * ptr, char *name);
 
 int GeodeGetFPGeometry(const char *str, int *width, int *height);
-void GeodePointerMoved(int index, int x, int y);
-void GeodeFreeScreen(int scrnIndex, int flags);
+void GeodePointerMoved(POINTER_MOVED_ARGS_DECL);
+void GeodeFreeScreen(FREE_SCREEN_ARGS_DECL);
 int GeodeCalculatePitchBytes(unsigned int width, unsigned int bpp);
 void GXSetupChipsetFPtr(ScrnInfoPtr pScrn);
 
@@ -423,7 +427,7 @@ void GXShowCursor(ScrnInfoPtr pScrni);
 Rotation GXGetRotation(ScreenPtr pScreen);
 Bool GXRandRInit(ScreenPtr pScreen, int rotation);
 extern _X_EXPORT Bool GXRandRSetConfig(ScreenPtr pScreen, Rotation rotation,
-				       int rate, RRScreenSizePtr pSize);
+                                       int rate, RRScreenSizePtr pSize);
 
 /* gx_rotate.c */
 Bool GXRotate(ScrnInfoPtr pScrni, DisplayModePtr mode);
@@ -457,7 +461,7 @@ void LXSetupOutput(ScrnInfoPtr);
 DisplayModePtr LXGetLegacyPanelMode(ScrnInfoPtr pScrni);
 DisplayModePtr LXGetManualPanelMode(char *modestr);
 
-void LXAdjustFrame(int scrnIndex, int x, int y, int flags);
+void LXAdjustFrame(ADJUST_FRAME_ARGS_DECL);
 
 /* lx_display.c */
 void LXSetupCrtc(ScrnInfoPtr pScrni);

@@ -32,13 +32,12 @@
 #define CIMDEV_MINOR_DEV 156
 
 /* Block flags */
-#define CIM_F_FREE    0x01	       /* This block is marked as free */
-#define CIM_F_CMDBUF  0x02	       /* GP command buffer flag */
-#define CIM_F_PRIVATE 0x04	       /* This block is reserved only for its owner */
-#define CIM_F_PUBLIC  0x08	       /* This block can be used by the world */
+#define CIM_F_FREE    0x01      /* This block is marked as free */
+#define CIM_F_CMDBUF  0x02      /* GP command buffer flag */
+#define CIM_F_PRIVATE 0x04      /* This block is reserved only for its owner */
+#define CIM_F_PUBLIC  0x08      /* This block can be used by the world */
 
-typedef struct
-{
+typedef struct {
     /* These fields get populated by the client */
     char owner[10];
     char name[15];
@@ -49,8 +48,7 @@ typedef struct
     unsigned long offset;
 } cim_mem_req_t;
 
-typedef struct
-{
+typedef struct {
     char owner[10];
     unsigned long offset;
 } cim_mem_free_t;

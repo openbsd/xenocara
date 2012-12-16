@@ -127,8 +127,7 @@
 
 /* STRUCTURE DEFINITION */
 
-typedef struct tagDISPLAYMODE
-{
+typedef struct tagDISPLAYMODE {
     /* DISPLAY MODE FLAGS */
     /* Specify valid color depths and the refresh rate. */
 
@@ -157,8 +156,7 @@ typedef struct tagDISPLAYMODE
 } DISPLAYMODE;
 
 /* For Fixed timings */
-typedef struct tagFIXEDTIMINGS
-{
+typedef struct tagFIXEDTIMINGS {
     /* DISPLAY MODE FLAGS */
     /* Specify valid color depths and the refresh rate. */
 
@@ -189,6 +187,6 @@ typedef struct tagFIXEDTIMINGS
 
 } FIXEDTIMINGS;
 
-#endif /* !_gfx_mode_h */
+#endif                          /* !_gfx_mode_h */
 
 /* END OF FILE */

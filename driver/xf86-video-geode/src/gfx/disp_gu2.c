@@ -27,8 +27,8 @@
  * This file contains routines for the second generation display controller.
  * */
 
-void gu2_enable_compression(void);     /* private routine definition */
-void gu2_disable_compression(void);    /* private routine definition */
+void gu2_enable_compression(void);      /* private routine definition */
+void gu2_disable_compression(void);     /* private routine definition */
 int gfx_set_display_control(int sync_polarities);       /* private routine
                                                          * definition */
 void gfx_reset_video(void);
@@ -98,7 +98,7 @@ gfx_set_display_bpp(unsigned short bpp)
 
     dcfg =
         READ_REG32(MDC_DISPLAY_CFG) & ~(MDC_DCFG_DISP_MODE_MASK |
-        MDC_DCFG_16BPP_MODE_MASK);
+                                        MDC_DCFG_16BPP_MODE_MASK);
     lock = READ_REG32(MDC_UNLOCK);
 
     switch (bpp) {
@@ -207,7 +207,7 @@ gu2_set_specified_mode(DISPLAYMODE * pMode, int bpp)
     gfx_set_crt_enable(0);
 
     /* DISABLE THE TIMING GENERATOR */
-    dcfg &= ~(unsigned long)MDC_DCFG_TGEN;
+    dcfg &= ~(unsigned long) MDC_DCFG_TGEN;
     WRITE_REG32(MDC_DISPLAY_CFG, dcfg);
 
     /* DELAY: WAIT FOR PENDING MEMORY REQUESTS                            */
@@ -216,11 +216,11 @@ gu2_set_specified_mode(DISPLAYMODE * pMode, int bpp)
     gfx_delay_milliseconds(5);
 
     /* DISABLE DISPLAY FIFO LOAD */
-    gcfg &= ~(unsigned long)MDC_GCFG_DFLE;
+    gcfg &= ~(unsigned long) MDC_GCFG_DFLE;
     WRITE_REG32(MDC_GENERAL_CFG, gcfg);
 
     /* PRESERVE VIDEO INFORMATION */
-    gcfg &= (unsigned long)(MDC_GCFG_YUVM | MDC_GCFG_VDSE);
+    gcfg &= (unsigned long) (MDC_GCFG_YUVM | MDC_GCFG_VDSE);
     dcfg = 0;
 
     /* SET THE DOT CLOCK FREQUENCY             */
@@ -297,7 +297,7 @@ gu2_set_specified_mode(DISPLAYMODE * pMode, int bpp)
     /* ALWAYS ENABLE VIDEO AND GRAPHICS DATA            */
     /* These bits are relics from a previous design and */
     /* should always be enabled.                        */
-    dcfg |= (unsigned long)(MDC_DCFG_VDEN | MDC_DCFG_GDEN);
+    dcfg |= (unsigned long) (MDC_DCFG_VDEN | MDC_DCFG_GDEN);
 
     /* SET PIXEL FORMAT */
     dcfg |= bpp_mask;
@@ -305,8 +305,8 @@ gu2_set_specified_mode(DISPLAYMODE * pMode, int bpp)
     /* ENABLE TIMING GENERATOR, TIM. REG. UPDATES, PALETTE BYPASS */
     /* AND VERT. INT. SELECT                                      */
     dcfg |=
-        (unsigned long)(MDC_DCFG_TGEN | MDC_DCFG_TRUP | MDC_DCFG_PALB |
-        MDC_DCFG_VISL);
+        (unsigned long) (MDC_DCFG_TGEN | MDC_DCFG_TRUP | MDC_DCFG_PALB |
+                         MDC_DCFG_VISL);
 
     /* DISABLE ADDRESS MASKS */
     dcfg |= MDC_DCFG_A20M;
@@ -326,23 +326,23 @@ gu2_set_specified_mode(DISPLAYMODE * pMode, int bpp)
         dcfg |= MDC_DCFG_DCEN;
 
     /* COMBINE AND SET TIMING VALUES */
-    value = (unsigned long)(pMode->hactive - 1) |
-        (((unsigned long)(pMode->htotal - 1)) << 16);
+    value = (unsigned long) (pMode->hactive - 1) |
+        (((unsigned long) (pMode->htotal - 1)) << 16);
     WRITE_REG32(MDC_H_ACTIVE_TIMING, value);
-    value = (unsigned long)(pMode->hblankstart - 1) |
-        (((unsigned long)(pMode->hblankend - 1)) << 16);
+    value = (unsigned long) (pMode->hblankstart - 1) |
+        (((unsigned long) (pMode->hblankend - 1)) << 16);
     WRITE_REG32(MDC_H_BLANK_TIMING, value);
-    value = (unsigned long)(pMode->hsyncstart - 1) |
-        (((unsigned long)(pMode->hsyncend - 1)) << 16);
+    value = (unsigned long) (pMode->hsyncstart - 1) |
+        (((unsigned long) (pMode->hsyncend - 1)) << 16);
     WRITE_REG32(MDC_H_SYNC_TIMING, value);
-    value = (unsigned long)(pMode->vactive - 1) |
-        (((unsigned long)(pMode->vtotal - 1)) << 16);
+    value = (unsigned long) (pMode->vactive - 1) |
+        (((unsigned long) (pMode->vtotal - 1)) << 16);
     WRITE_REG32(MDC_V_ACTIVE_TIMING, value);
-    value = (unsigned long)(pMode->vblankstart - 1) |
-        (((unsigned long)(pMode->vblankend - 1)) << 16);
+    value = (unsigned long) (pMode->vblankstart - 1) |
+        (((unsigned long) (pMode->vblankend - 1)) << 16);
     WRITE_REG32(MDC_V_BLANK_TIMING, value);
-    value = (unsigned long)(pMode->vsyncstart - 1) |
-        (((unsigned long)(pMode->vsyncend - 1)) << 16);
+    value = (unsigned long) (pMode->vsyncstart - 1) |
+        (((unsigned long) (pMode->vsyncend - 1)) << 16);
     WRITE_REG32(MDC_V_SYNC_TIMING, value);
 
     WRITE_REG32(MDC_DISPLAY_CFG, dcfg);
@@ -350,15 +350,15 @@ gu2_set_specified_mode(DISPLAYMODE * pMode, int bpp)
 
     /* CONFIGURE DISPLAY OUTPUT FROM VIDEO PROCESSOR */
     gfx_set_display_control(((pMode->flags & GFX_MODE_NEG_HSYNC) ? 1 : 0) |
-        ((pMode->flags & GFX_MODE_NEG_VSYNC) ? 2 : 0));
+                            ((pMode->flags & GFX_MODE_NEG_VSYNC) ? 2 : 0));
 
     /* RESTORE VALUE OF MDC_UNLOCK */
     WRITE_REG32(MDC_UNLOCK, unlock);
 
     /* RESET THE PITCH VALUES IN THE GP */
-    gfx_reset_pitch((unsigned short)pitch);
+    gfx_reset_pitch((unsigned short) pitch);
 
-    gfx_set_bpp((unsigned short)bpp);
+    gfx_set_bpp((unsigned short) bpp);
 
     return GFX_STATUS_OK;
 }
@@ -388,8 +388,8 @@ gfx_is_display_mode_supported(int xres, int yres, int bpp, int hz)
         gfx_mode_bpp_conversion
         /* LOOP THROUGH THE AVAILABLE MODES TO FIND A MATCH */
         for (mode = 0; mode < NUM_RC_DISPLAY_MODES; mode++) {
-        if ((DisplayParams[mode].hactive == (unsigned short)xres) &&
-            (DisplayParams[mode].vactive == (unsigned short)yres) &&
+        if ((DisplayParams[mode].hactive == (unsigned short) xres) &&
+            (DisplayParams[mode].vactive == (unsigned short) yres) &&
             (DisplayParams[mode].flags & hz_flag) &&
             (DisplayParams[mode].flags & bpp_flag)) {
 
@@ -431,8 +431,7 @@ gfx_set_display_mode(int xres, int yres, int bpp, int hz)
 
     mode = gfx_is_display_mode_supported(xres, yres, bpp, hz);
     if (mode >= 0) {
-        if (gu2_set_specified_mode(&DisplayParams[mode],
-                bpp) == GFX_STATUS_OK)
+        if (gu2_set_specified_mode(&DisplayParams[mode], bpp) == GFX_STATUS_OK)
             return (1);
     }
     return (0);
@@ -450,21 +449,23 @@ gfx_set_display_mode(int xres, int yres, int bpp, int hz)
 #if GFX_DISPLAY_DYNAMIC
 int
 gu2_set_display_timings(unsigned short bpp, unsigned short flags,
-    unsigned short hactive, unsigned short hblankstart,
-    unsigned short hsyncstart, unsigned short hsyncend,
-    unsigned short hblankend, unsigned short htotal,
-    unsigned short vactive, unsigned short vblankstart,
-    unsigned short vsyncstart, unsigned short vsyncend,
-    unsigned short vblankend, unsigned short vtotal, unsigned long frequency)
+                        unsigned short hactive, unsigned short hblankstart,
+                        unsigned short hsyncstart, unsigned short hsyncend,
+                        unsigned short hblankend, unsigned short htotal,
+                        unsigned short vactive, unsigned short vblankstart,
+                        unsigned short vsyncstart, unsigned short vsyncend,
+                        unsigned short vblankend, unsigned short vtotal,
+                        unsigned long frequency)
 #else
 int
 gfx_set_display_timings(unsigned short bpp, unsigned short flags,
-    unsigned short hactive, unsigned short hblankstart,
-    unsigned short hsyncstart, unsigned short hsyncend,
-    unsigned short hblankend, unsigned short htotal,
-    unsigned short vactive, unsigned short vblankstart,
-    unsigned short vsyncstart, unsigned short vsyncend,
-    unsigned short vblankend, unsigned short vtotal, unsigned long frequency)
+                        unsigned short hactive, unsigned short hblankstart,
+                        unsigned short hsyncstart, unsigned short hsyncend,
+                        unsigned short hblankend, unsigned short htotal,
+                        unsigned short vactive, unsigned short vblankstart,
+                        unsigned short vsyncstart, unsigned short vsyncend,
+                        unsigned short vblankend, unsigned short vtotal,
+                        unsigned long frequency)
 #endif
 {
     /* SET MODE STRUCTURE WITH SPECIFIED VALUES */
@@ -531,13 +532,15 @@ gfx_set_vtotal(unsigned short vtotal)
     vblank = READ_REG32(MDC_V_BLANK_TIMING);
 
     /* DISABLE TIMING REGISTER UPDATES */
-    WRITE_REG32(MDC_DISPLAY_CFG, dcfg & ~(unsigned long)MDC_DCFG_TRUP);
+    WRITE_REG32(MDC_DISPLAY_CFG, dcfg & ~(unsigned long) MDC_DCFG_TRUP);
 
     /* WRITE NEW TIMING VALUES */
     WRITE_REG32(MDC_V_ACTIVE_TIMING,
-        (vactive & MDC_VAT_VA_MASK) | (unsigned long)(vtotal - 1) << 16);
+                (vactive & MDC_VAT_VA_MASK) | (unsigned long) (vtotal -
+                                                               1) << 16);
     WRITE_REG32(MDC_V_BLANK_TIMING,
-        (vblank & MDC_VBT_VBS_MASK) | (unsigned long)(vtotal - 1) << 16);
+                (vblank & MDC_VBT_VBS_MASK) | (unsigned long) (vtotal -
+                                                               1) << 16);
 
     /* RESTORE OLD RC VALUES */
     WRITE_REG32(MDC_DISPLAY_CFG, dcfg);
@@ -579,9 +582,9 @@ gfx_set_display_pitch(unsigned short pitch)
     value = READ_REG32(MDC_GENERAL_CFG);
 
     if (pitch == 1024 || pitch == 2048 || pitch == 4096 || pitch == 8192)
-        value &= ~(unsigned long)(MDC_GCFG_FDTY);
+        value &= ~(unsigned long) (MDC_GCFG_FDTY);
     else
-        value |= (unsigned long)(MDC_GCFG_FDTY);
+        value |= (unsigned long) (MDC_GCFG_FDTY);
 
     WRITE_REG32(MDC_GENERAL_CFG, value);
     WRITE_REG32(MDC_UNLOCK, lock);
@@ -622,7 +625,8 @@ gfx_set_display_offset(unsigned long offset)
             gfx_wait_vertical_blank();
             gu2_enable_compression();
         }
-    } else {
+    }
+    else {
         /* ONLY DISABLE COMPRESSION ONCE */
         if (gfx_compression_active)
             gu2_disable_compression();
@@ -766,19 +770,19 @@ gfx_set_cursor_colors(unsigned long bkcolor, unsigned long fgcolor)
 #if GFX_DISPLAY_DYNAMIC
 void
 gu2_set_cursor_position(unsigned long memoffset,
-    unsigned short xpos, unsigned short ypos,
-    unsigned short xhotspot, unsigned short yhotspot)
+                        unsigned short xpos, unsigned short ypos,
+                        unsigned short xhotspot, unsigned short yhotspot)
 #else
 void
 gfx_set_cursor_position(unsigned long memoffset,
-    unsigned short xpos, unsigned short ypos,
-    unsigned short xhotspot, unsigned short yhotspot)
+                        unsigned short xpos, unsigned short ypos,
+                        unsigned short xhotspot, unsigned short yhotspot)
 #endif
 {
     unsigned long unlock;
 
-    short x = (short)xpos - (short)xhotspot;
-    short y = (short)ypos - (short)yhotspot;
+    short x = (short) xpos - (short) xhotspot;
+    short y = (short) ypos - (short) yhotspot;
     short xoffset = 0;
     short yoffset = 0;
 
@@ -790,8 +794,8 @@ gfx_set_cursor_position(unsigned long memoffset,
     if (PanelEnable) {
         if ((ModeWidth > PanelWidth) || (ModeHeight > PanelHeight)) {
             gfx_enable_panning(xpos, ypos);
-            x = x - (unsigned short)panelLeft;
-            y = y - (unsigned short)panelTop;
+            x = x - (unsigned short) panelLeft;
+            y = y - (unsigned short) panelTop;
         }
     }
 
@@ -809,16 +813,16 @@ gfx_set_cursor_position(unsigned long memoffset,
         yoffset = -y;
         y = 0;
     }
-    memoffset += (unsigned long)yoffset << 4;
+    memoffset += (unsigned long) yoffset << 4;
 
     /* SET CURSOR POSITION */
     unlock = READ_REG32(MDC_UNLOCK);
     WRITE_REG32(MDC_UNLOCK, MDC_UNLOCK_VALUE);
     WRITE_REG32(MDC_CURS_ST_OFFSET, memoffset);
-    WRITE_REG32(MDC_CURSOR_X, (unsigned long)x |
-        (((unsigned long)xoffset) << 11));
-    WRITE_REG32(MDC_CURSOR_Y, (unsigned long)y |
-        (((unsigned long)yoffset) << 11));
+    WRITE_REG32(MDC_CURSOR_X, (unsigned long) x |
+                (((unsigned long) xoffset) << 11));
+    WRITE_REG32(MDC_CURSOR_Y, (unsigned long) y |
+                (((unsigned long) yoffset) << 11));
     WRITE_REG32(MDC_UNLOCK, unlock);
 }
 
@@ -834,11 +838,11 @@ gfx_set_cursor_position(unsigned long memoffset,
 #if GFX_DISPLAY_DYNAMIC
 void
 gu2_set_cursor_shape32(unsigned long memoffset,
-    unsigned long *andmask, unsigned long *xormask)
+                       unsigned long *andmask, unsigned long *xormask)
 #else
 void
 gfx_set_cursor_shape32(unsigned long memoffset,
-    unsigned long *andmask, unsigned long *xormask)
+                       unsigned long *andmask, unsigned long *xormask)
 #endif
 {
     int i;
@@ -876,11 +880,11 @@ gfx_set_cursor_shape32(unsigned long memoffset,
 #if GFX_DISPLAY_DYNAMIC
 void
 gu2_set_cursor_shape64(unsigned long memoffset,
-    unsigned long *andmask, unsigned long *xormask)
+                       unsigned long *andmask, unsigned long *xormask)
 #else
 void
 gfx_set_cursor_shape64(unsigned long memoffset,
-    unsigned long *andmask, unsigned long *xormask)
+                       unsigned long *andmask, unsigned long *xormask)
 #endif
 {
     int i;
@@ -943,11 +947,11 @@ gfx_set_icon_enable(int enable)
 #if GFX_DISPLAY_DYNAMIC
 void
 gu2_set_icon_colors(unsigned long color0, unsigned long color1,
-    unsigned long color2)
+                    unsigned long color2)
 #else
 void
 gfx_set_icon_colors(unsigned long color0, unsigned long color1,
-    unsigned long color2)
+                    unsigned long color2)
 #endif
 {
     /* ICON COLORS LOCATED AT PALETTE INDEXES 102-104h */
@@ -981,7 +985,7 @@ gfx_set_icon_position(unsigned long memoffset, unsigned short xpos)
     WRITE_REG32(MDC_ICON_ST_OFFSET, memoffset & 0x0FFFFFFF);
 
     /* PROGRAM THE XCOORDINATE */
-    WRITE_REG32(MDC_ICON_X, (unsigned long)(xpos & 0x07FF));
+    WRITE_REG32(MDC_ICON_X, (unsigned long) (xpos & 0x07FF));
 
     WRITE_REG32(MDC_UNLOCK, lock);
 }
@@ -995,11 +999,11 @@ gfx_set_icon_position(unsigned long memoffset, unsigned short xpos)
 #if GFX_DISPLAY_DYNAMIC
 void
 gu2_set_icon_shape64(unsigned long memoffset, unsigned long *andmask,
-    unsigned long *xormask, unsigned int lines)
+                     unsigned long *xormask, unsigned int lines)
 #else
 void
 gfx_set_icon_shape64(unsigned long memoffset, unsigned long *andmask,
-    unsigned long *xormask, unsigned int lines)
+                     unsigned long *xormask, unsigned int lines)
 #endif
 {
     unsigned short i, height;
@@ -1160,7 +1164,7 @@ gfx_set_compression_pitch(unsigned short pitch)
     /* SET REGISTER VALUE */
 
     line_delta = READ_REG32(MDC_GFX_PITCH) & 0x0000FFFF;
-    line_delta |= (((unsigned long)pitch << 13) & 0xFFFF0000);
+    line_delta |= (((unsigned long) pitch << 13) & 0xFFFF0000);
     WRITE_REG32(MDC_UNLOCK, MDC_UNLOCK_VALUE);
     WRITE_REG32(MDC_GFX_PITCH, line_delta);
     WRITE_REG32(MDC_UNLOCK, lock);
@@ -1196,7 +1200,7 @@ gfx_set_compression_size(unsigned short size)
 
     lock = READ_REG32(MDC_UNLOCK);
     buf_size = READ_REG32(MDC_LINE_SIZE) & 0xFF80FFFF;
-    buf_size |= ((((unsigned long)size >> 3) + 1) & 0x7F) << 16;
+    buf_size |= ((((unsigned long) size >> 3) + 1) & 0x7F) << 16;
     WRITE_REG32(MDC_UNLOCK, MDC_UNLOCK_VALUE);
     WRITE_REG32(MDC_LINE_SIZE, buf_size);
     WRITE_REG32(MDC_UNLOCK, lock);
@@ -1307,14 +1311,15 @@ gfx_set_display_video_size(unsigned short width, unsigned short height)
     if (yuv_420) {
         width >>= 1;
         width = (width + 7) & 0xFFF8;
-    } else {
+    }
+    else {
         width <<= 1;
         width = (width + 31) & 0xFFE0;
     }
 
     /* ONLY THE LINE SIZE IS PROGRAMMED IN THE DISPLAY CONTROLLER */
 
-    value |= ((unsigned long)width << 21);
+    value |= ((unsigned long) width << 21);
 
     /* WRITE THE REGISTER */
 
@@ -1357,11 +1362,11 @@ gfx_set_display_video_offset(unsigned long offset)
 #if GFX_DISPLAY_DYNAMIC
 void
 gu2_set_display_video_yuv_offsets(unsigned long yoffset,
-    unsigned long uoffset, unsigned long voffset)
+                                  unsigned long uoffset, unsigned long voffset)
 #else
 void
 gfx_set_display_video_yuv_offsets(unsigned long yoffset,
-    unsigned long uoffset, unsigned long voffset)
+                                  unsigned long uoffset, unsigned long voffset)
 #endif
 {
     unsigned long lock;
@@ -1431,7 +1436,7 @@ gfx_set_display_video_downscale(unsigned short srch, unsigned short dsth)
     if (dsth > srch || dsth <= (srch >> 1))
         delta = 0;
     else
-        delta = (((unsigned long)srch << 14) / (unsigned long)dsth) << 18;
+        delta = (((unsigned long) srch << 14) / (unsigned long) dsth) << 18;
 
     WRITE_REG32(MDC_UNLOCK, MDC_UNLOCK_VALUE);
     WRITE_REG32(MDC_VID_DS_DELTA, delta);
@@ -1518,8 +1523,8 @@ gfx_wait_vertical_blank(void)
 #endif
 {
     if (gfx_test_timing_active()) {
-        while (!gfx_test_vertical_active()) ;
-        while (gfx_test_vertical_active()) ;
+        while (!gfx_test_vertical_active());
+        while (gfx_test_vertical_active());
     }
     return (0);
 }
@@ -1549,8 +1554,8 @@ gfx_enable_panning(int x, int y)
 
     /* TEST FOR NO-WORK */
 
-    if (x >= DeltaX && x < ((int)PanelWidth + DeltaX) &&
-        y >= DeltaY && y < ((int)PanelHeight + DeltaY))
+    if (x >= DeltaX && x < ((int) PanelWidth + DeltaX) &&
+        y >= DeltaY && y < ((int) PanelHeight + DeltaY))
         return;
 
     /* ADJUST PANNING VARIABLES WHEN CURSOR EXCEEDS BOUNDARY       */
@@ -1560,14 +1565,14 @@ gfx_enable_panning(int x, int y)
     if (x < DeltaX)
         DeltaX = x;
 
-    else if (x >= (DeltaX + (int)PanelWidth))
-        DeltaX = x - (int)PanelWidth + 1;
+    else if (x >= (DeltaX + (int) PanelWidth))
+        DeltaX = x - (int) PanelWidth + 1;
 
     if (y < DeltaY)
         DeltaY = y;
 
-    else if (y >= (DeltaY + (int)PanelHeight))
-        DeltaY = y - (int)PanelHeight + 1;
+    else if (y >= (DeltaY + (int) PanelHeight))
+        DeltaY = y - (int) PanelHeight + 1;
 
     /* CALCULATE THE START OFFSET */
 
@@ -1596,11 +1601,13 @@ gfx_enable_panning(int x, int y)
 #if GFX_DISPLAY_DYNAMIC
 int
 gu2_is_panel_mode_supported(int panelResX, int panelResY,
-    unsigned short width, unsigned short height, unsigned short bpp)
+                            unsigned short width, unsigned short height,
+                            unsigned short bpp)
 #else
 int
 gfx_is_panel_mode_supported(int panelResX, int panelResY,
-    unsigned short width, unsigned short height, unsigned short bpp)
+                            unsigned short width, unsigned short height,
+                            unsigned short bpp)
 #endif
 {
     unsigned int mode;
@@ -1611,7 +1618,7 @@ gfx_is_panel_mode_supported(int panelResX, int panelResY,
             (FixedParams[mode].yres == height) &&
             (FixedParams[mode].panelresx == panelResX) &&
             (FixedParams[mode].panelresy == panelResY)) {
-            return ((int)mode);
+            return ((int) mode);
         }
     }
 
@@ -1626,19 +1633,19 @@ gfx_is_panel_mode_supported(int panelResX, int panelResY,
 #if GFX_DISPLAY_DYNAMIC
 int
 gu2_set_fixed_timings(int panelResX, int panelResY, unsigned short width,
-    unsigned short height, unsigned short bpp)
+                      unsigned short height, unsigned short bpp)
 #else
 int
 gfx_set_fixed_timings(int panelResX, int panelResY, unsigned short width,
-    unsigned short height, unsigned short bpp)
+                      unsigned short height, unsigned short bpp)
 #endif
 {
     unsigned int mode;
 
     ModeWidth = width;
     ModeHeight = height;
-    PanelWidth = (unsigned short)panelResX;
-    PanelHeight = (unsigned short)panelResY;
+    PanelWidth = (unsigned short) panelResX;
+    PanelHeight = (unsigned short) panelResY;
     PanelEnable = 1;
 
     /* LOOP THROUGH THE AVAILABLE MODES TO FIND A MATCH */
@@ -1652,14 +1659,16 @@ gfx_set_fixed_timings(int panelResX, int panelResY, unsigned short width,
             FIXEDTIMINGS *fmode = &FixedParams[mode];
 
             gfx_set_display_timings(bpp, 3, fmode->hactive,
-                fmode->hblankstart, fmode->hsyncstart, fmode->hsyncend,
-                fmode->hblankend, fmode->htotal, fmode->vactive,
-                fmode->vblankstart, fmode->vsyncstart, fmode->vsyncend,
-                fmode->vblankend, fmode->vtotal, fmode->frequency);
+                                    fmode->hblankstart, fmode->hsyncstart,
+                                    fmode->hsyncend, fmode->hblankend,
+                                    fmode->htotal, fmode->vactive,
+                                    fmode->vblankstart, fmode->vsyncstart,
+                                    fmode->vsyncend, fmode->vblankend,
+                                    fmode->vtotal, fmode->frequency);
 
             return (1);
-        }                              /* end if() */
-    }                                  /* end for() */
+        }                       /* end if() */
+    }                           /* end for() */
 
     return (-1);
 }
@@ -1671,11 +1680,11 @@ gfx_set_fixed_timings(int panelResX, int panelResY, unsigned short width,
 #if GFX_DISPLAY_DYNAMIC
 int
 gu2_set_panel_present(int panelResX, int panelResY, unsigned short width,
-    unsigned short height, unsigned short bpp)
+                      unsigned short height, unsigned short bpp)
 #else
 int
 gfx_set_panel_present(int panelResX, int panelResY, unsigned short width,
-    unsigned short height, unsigned short bpp)
+                      unsigned short height, unsigned short bpp)
 #endif
 {
     /* SET VALID BPP         */
@@ -1693,8 +1702,8 @@ gfx_set_panel_present(int panelResX, int panelResY, unsigned short width,
 
     ModeWidth = width;
     ModeHeight = height;
-    PanelWidth = (unsigned short)panelResX;
-    PanelHeight = (unsigned short)panelResY;
+    PanelWidth = (unsigned short) panelResX;
+    PanelHeight = (unsigned short) panelResY;
     PanelEnable = 1;
     gbpp = bpp;
 
@@ -1721,7 +1730,7 @@ unsigned short
 gfx_get_display_pitch(void)
 #endif
 {
-    return ((unsigned short)(READ_REG32(MDC_GFX_PITCH) & 0x0000FFFF) << 3);
+    return ((unsigned short) (READ_REG32(MDC_GFX_PITCH) & 0x0000FFFF) << 3);
 }
 
 /*----------------------------------------------------------------------------
@@ -1736,11 +1745,11 @@ gfx_get_display_pitch(void)
 #if GFX_DISPLAY_DYNAMIC
 int
 gu2_mode_frequency_supported(int xres, int yres, int bpp,
-    unsigned long frequency)
+                             unsigned long frequency)
 #else
 int
 gfx_mode_frequency_supported(int xres, int yres, int bpp,
-    unsigned long frequency)
+                             unsigned long frequency)
 #endif
 {
     unsigned int index;
@@ -1750,8 +1759,8 @@ gfx_mode_frequency_supported(int xres, int yres, int bpp,
     gfx_mode_bpp_conversion_def(bpp)
 
         for (index = 0; index < NUM_RC_DISPLAY_MODES; index++) {
-        if ((DisplayParams[index].hactive == (unsigned int)xres) &&
-            (DisplayParams[index].vactive == (unsigned int)yres) &&
+        if ((DisplayParams[index].hactive == (unsigned int) xres) &&
+            (DisplayParams[index].vactive == (unsigned int) yres) &&
             (DisplayParams[index].flags & bpp_flag) &&
             (DisplayParams[index].frequency == frequency)) {
             int hz = 0;
@@ -1790,11 +1799,11 @@ gfx_mode_frequency_supported(int xres, int yres, int bpp,
 #if GFX_DISPLAY_DYNAMIC
 int
 gu2_get_refreshrate_from_frequency(int xres, int yres, int bpp, int *hz,
-    unsigned long frequency)
+                                   unsigned long frequency)
 #else
 int
 gfx_get_refreshrate_from_frequency(int xres, int yres, int bpp, int *hz,
-    unsigned long frequency)
+                                   unsigned long frequency)
 #endif
 {
     unsigned int index, closematch = 0;
@@ -1810,10 +1819,10 @@ gfx_get_refreshrate_from_frequency(int xres, int yres, int bpp, int *hz,
         /* Search the table for the closest frequency (16.16 format). */
         min = 0x7fffffff;
     for (index = 0; index < NUM_RC_DISPLAY_MODES; index++) {
-        if ((DisplayParams[index].htotal == (unsigned int)xres) &&
-            (DisplayParams[index].vtotal == (unsigned int)yres) &&
+        if ((DisplayParams[index].htotal == (unsigned int) xres) &&
+            (DisplayParams[index].vtotal == (unsigned int) yres) &&
             (DisplayParams[index].flags & bpp_flag)) {
-            diff = (long)frequency - (long)DisplayParams[index].frequency;
+            diff = (long) frequency - (long) DisplayParams[index].frequency;
             if (diff < 0)
                 diff = -diff;
 
@@ -1857,11 +1866,11 @@ gfx_get_refreshrate_from_frequency(int xres, int yres, int bpp, int *hz,
 #if GFX_DISPLAY_DYNAMIC
 int
 gu2_get_refreshrate_from_mode(int xres, int yres, int bpp, int *hz,
-    unsigned long frequency)
+                              unsigned long frequency)
 #else
 int
 gfx_get_refreshrate_from_mode(int xres, int yres, int bpp, int *hz,
-    unsigned long frequency)
+                              unsigned long frequency)
 #endif
 {
     unsigned int index, closematch = 0;
@@ -1877,10 +1886,10 @@ gfx_get_refreshrate_from_mode(int xres, int yres, int bpp, int *hz,
         /* Search the table for the closest frequency (16.16 format). */
         min = 0x7fffffff;
     for (index = 0; index < NUM_RC_DISPLAY_MODES; index++) {
-        if ((DisplayParams[index].hactive == (unsigned int)xres) &&
-            (DisplayParams[index].vactive == (unsigned int)yres) &&
+        if ((DisplayParams[index].hactive == (unsigned int) xres) &&
+            (DisplayParams[index].vactive == (unsigned int) yres) &&
             (DisplayParams[index].flags & bpp_flag)) {
-            diff = (long)frequency - (long)DisplayParams[index].frequency;
+            diff = (long) frequency - (long) DisplayParams[index].frequency;
             if (diff < 0)
                 diff = -diff;
 
@@ -1922,11 +1931,11 @@ gfx_get_refreshrate_from_mode(int xres, int yres, int bpp, int *hz,
 #if GFX_DISPLAY_DYNAMIC
 int
 gu2_get_frequency_from_refreshrate(int xres, int yres, int bpp, int hz,
-    int *frequency)
+                                   int *frequency)
 #else
 int
 gfx_get_frequency_from_refreshrate(int xres, int yres, int bpp, int hz,
-    int *frequency)
+                                   int *frequency)
 #endif
 {
     unsigned int index;
@@ -1940,9 +1949,9 @@ gfx_get_frequency_from_refreshrate(int xres, int yres, int bpp, int hz,
 
         /* FIND THE REGISTER VALUES FOR THE DESIRED FREQUENCY */
         /* Search the table for the closest frequency (16.16 format). */
-        for (index = 0; index < NUM_RC_DISPLAY_MODES; index++) {
-        if ((DisplayParams[index].hactive == (unsigned short)xres) &&
-            (DisplayParams[index].vactive == (unsigned short)yres) &&
+    for (index = 0; index < NUM_RC_DISPLAY_MODES; index++) {
+        if ((DisplayParams[index].hactive == (unsigned short) xres) &&
+            (DisplayParams[index].vactive == (unsigned short) yres) &&
             (DisplayParams[index].flags & bpp_flag) &&
             (DisplayParams[index].flags & hz_flag)) {
             *frequency = DisplayParams[index].frequency;
@@ -1999,8 +2008,8 @@ gfx_get_display_mode(int *xres, int *yres, int *bpp, int *hz)
     gfx_mode_bpp_conversion_def(*bpp)
 
         for (mode = 0; mode < NUM_RC_DISPLAY_MODES; mode++) {
-        if ((DisplayParams[mode].hactive == (unsigned int)*xres) &&
-            (DisplayParams[mode].vactive == (unsigned int)*yres) &&
+        if ((DisplayParams[mode].hactive == (unsigned int) *xres) &&
+            (DisplayParams[mode].vactive == (unsigned int) *yres) &&
             (DisplayParams[mode].frequency == pll_freq) &&
             (DisplayParams[mode].flags & bpp_flag)) {
 
@@ -2122,7 +2131,7 @@ unsigned short
 gfx_get_hactive(void)
 #endif
 {
-    return ((unsigned short)((READ_REG32(MDC_H_ACTIVE_TIMING) & 0x0FF8) + 8));
+    return ((unsigned short) ((READ_REG32(MDC_H_ACTIVE_TIMING) & 0x0FF8) + 8));
 }
 
 /*---------------------------------------------------------------------------
@@ -2137,7 +2146,7 @@ unsigned short
 gfx_get_hsync_start(void)
 #endif
 {
-    return ((unsigned short)((READ_REG32(MDC_H_SYNC_TIMING) & 0x0FF8) + 8));
+    return ((unsigned short) ((READ_REG32(MDC_H_SYNC_TIMING) & 0x0FF8) + 8));
 }
 
 /*---------------------------------------------------------------------------
@@ -2152,8 +2161,8 @@ unsigned short
 gfx_get_hsync_end(void)
 #endif
 {
-    return ((unsigned short)(((READ_REG32(MDC_H_SYNC_TIMING) >> 16) & 0x0FF8)
-            + 8));
+    return ((unsigned short) (((READ_REG32(MDC_H_SYNC_TIMING) >> 16) & 0x0FF8)
+                              + 8));
 }
 
 /*---------------------------------------------------------------------------
@@ -2168,8 +2177,8 @@ unsigned short
 gfx_get_htotal(void)
 #endif
 {
-    return ((unsigned short)(((READ_REG32(MDC_H_ACTIVE_TIMING) >> 16) &
-                0x0FF8) + 8));
+    return ((unsigned short) (((READ_REG32(MDC_H_ACTIVE_TIMING) >> 16) &
+                               0x0FF8) + 8));
 }
 
 /*---------------------------------------------------------------------------
@@ -2184,7 +2193,7 @@ unsigned short
 gfx_get_vactive(void)
 #endif
 {
-    return ((unsigned short)((READ_REG32(MDC_V_ACTIVE_TIMING) & 0x07FF) + 1));
+    return ((unsigned short) ((READ_REG32(MDC_V_ACTIVE_TIMING) & 0x07FF) + 1));
 }
 
 /*---------------------------------------------------------------------------
@@ -2199,8 +2208,8 @@ unsigned short
 gfx_get_vsync_end(void)
 #endif
 {
-    return ((unsigned short)(((READ_REG32(MDC_V_SYNC_TIMING) >> 16) & 0x07FF)
-            + 1));
+    return ((unsigned short) (((READ_REG32(MDC_V_SYNC_TIMING) >> 16) & 0x07FF)
+                              + 1));
 }
 
 /*---------------------------------------------------------------------------
@@ -2215,8 +2224,8 @@ unsigned short
 gfx_get_vtotal(void)
 #endif
 {
-    return ((unsigned short)(((READ_REG32(MDC_V_ACTIVE_TIMING) >> 16) &
-                0x07FF) + 1));
+    return ((unsigned short) (((READ_REG32(MDC_V_ACTIVE_TIMING) >> 16) &
+                               0x07FF) + 1));
 }
 
 /*----------------------------------------------------------------------------
@@ -2275,11 +2284,11 @@ gfx_get_vline(void)
      * transitioning */
     do
         current_scan_line =
-            (unsigned short)(READ_REG32(MDC_LINE_CNT_STATUS) &
-            MDC_LNCNT_V_LINE_CNT);
+            (unsigned short) (READ_REG32(MDC_LINE_CNT_STATUS) &
+                              MDC_LNCNT_V_LINE_CNT);
     while (current_scan_line !=
-        (unsigned short)(READ_REG32(MDC_LINE_CNT_STATUS) &
-            MDC_LNCNT_V_LINE_CNT));
+           (unsigned short) (READ_REG32(MDC_LINE_CNT_STATUS) &
+                             MDC_LNCNT_V_LINE_CNT));
 
     return (current_scan_line >> 16);
 }
@@ -2332,7 +2341,7 @@ unsigned short
 gfx_get_hblank_start(void)
 #endif
 {
-    return ((unsigned short)((READ_REG32(MDC_H_BLANK_TIMING) & 0x0FF8) + 8));
+    return ((unsigned short) ((READ_REG32(MDC_H_BLANK_TIMING) & 0x0FF8) + 8));
 }
 
 /*---------------------------------------------------------------------------
@@ -2347,8 +2356,8 @@ unsigned short
 gfx_get_hblank_end(void)
 #endif
 {
-    return ((unsigned short)(((READ_REG32(MDC_H_BLANK_TIMING) >> 16) & 0x0FF8)
-            + 8));
+    return ((unsigned short) (((READ_REG32(MDC_H_BLANK_TIMING) >> 16) & 0x0FF8)
+                              + 8));
 }
 
 /*---------------------------------------------------------------------------
@@ -2363,7 +2372,7 @@ unsigned short
 gfx_get_vblank_start(void)
 #endif
 {
-    return ((unsigned short)((READ_REG32(MDC_V_BLANK_TIMING) & 0x07FF) + 1));
+    return ((unsigned short) ((READ_REG32(MDC_V_BLANK_TIMING) & 0x07FF) + 1));
 }
 
 /*---------------------------------------------------------------------------
@@ -2378,7 +2387,7 @@ unsigned short
 gfx_get_vsync_start(void)
 #endif
 {
-    return ((unsigned short)((READ_REG32(MDC_V_SYNC_TIMING) & 0x07FF) + 1));
+    return ((unsigned short) ((READ_REG32(MDC_V_SYNC_TIMING) & 0x07FF) + 1));
 }
 
 /*---------------------------------------------------------------------------
@@ -2393,8 +2402,8 @@ unsigned short
 gfx_get_vblank_end(void)
 #endif
 {
-    return ((unsigned short)(((READ_REG32(MDC_V_BLANK_TIMING) >> 16) & 0x07FF)
-            + 1));
+    return ((unsigned short) (((READ_REG32(MDC_V_BLANK_TIMING) >> 16) & 0x07FF)
+                              + 1));
 }
 
 /*----------------------------------------------------------------------------
@@ -2466,7 +2475,7 @@ gfx_get_cursor_position(void)
 #endif
 {
     return ((READ_REG32(MDC_CURSOR_X) & 0x07FF) |
-        ((READ_REG32(MDC_CURSOR_Y) << 16) & 0x07FF0000));
+            ((READ_REG32(MDC_CURSOR_Y) << 16) & 0x07FF0000));
 }
 
 /*----------------------------------------------------------------------------
@@ -2482,7 +2491,7 @@ gfx_get_cursor_clip(void)
 #endif
 {
     return (((READ_REG32(MDC_CURSOR_X) >> 11) & 0x03F) |
-        ((READ_REG32(MDC_CURSOR_Y) << 5) & 0x3F0000));
+            ((READ_REG32(MDC_CURSOR_Y) << 5) & 0x3F0000));
 }
 
 /*----------------------------------------------------------------------------
@@ -2499,7 +2508,8 @@ gfx_get_cursor_color(int color)
 {
     if (color) {
         WRITE_REG32(MDC_PAL_ADDRESS, 0x101);
-    } else {
+    }
+    else {
         WRITE_REG32(MDC_PAL_ADDRESS, 0x100);
     }
     return READ_REG32(MDC_PAL_DATA);
@@ -2617,7 +2627,7 @@ gfx_get_compression_pitch(void)
 {
     unsigned short pitch;
 
-    pitch = (unsigned short)(READ_REG32(MDC_GFX_PITCH) >> 16);
+    pitch = (unsigned short) (READ_REG32(MDC_GFX_PITCH) >> 16);
     return (pitch << 3);
 }
 
@@ -2635,7 +2645,7 @@ gfx_get_compression_size(void)
 {
     unsigned short size;
 
-    size = (unsigned short)((READ_REG32(MDC_LINE_SIZE) >> 16) & 0x7F) - 1;
+    size = (unsigned short) ((READ_REG32(MDC_LINE_SIZE) >> 16) & 0x7F) - 1;
     return ((size << 3) + 32);
 }
 
@@ -2658,7 +2668,7 @@ gfx_get_valid_bit(int line)
     offset |= line;
 
     WRITE_REG32(MDC_PHY_MEM_OFFSET, offset);
-    valid = (int)READ_REG32(MDC_DV_ACC) & 2;
+    valid = (int) READ_REG32(MDC_DV_ACC) & 2;
 
     if (valid)
         return 1;
@@ -2693,11 +2703,13 @@ gfx_get_display_video_offset(void)
 #if GFX_DISPLAY_DYNAMIC
 void
 gu2_get_display_video_yuv_offsets(unsigned long *yoffset,
-    unsigned long *uoffset, unsigned long *voffset)
+                                  unsigned long *uoffset,
+                                  unsigned long *voffset)
 #else
 void
 gfx_get_display_video_yuv_offsets(unsigned long *yoffset,
-    unsigned long *uoffset, unsigned long *voffset)
+                                  unsigned long *uoffset,
+                                  unsigned long *voffset)
 #endif
 {
     *yoffset = (READ_REG32(MDC_VID_Y_ST_OFFSET) & 0x0FFFFFFF);
@@ -2760,7 +2772,7 @@ int
 gfx_get_display_video_downscale_enable(void)
 #endif
 {
-    return ((int)((READ_REG32(MDC_GENERAL_CFG) >> 19) & 1));
+    return ((int) ((READ_REG32(MDC_GENERAL_CFG) >> 19) & 1));
 }
 
 /*---------------------------------------------------------------------------
@@ -2783,6 +2795,6 @@ gfx_get_display_video_size(void)
     return ((READ_REG32(MDC_LINE_SIZE) >> 21) & 0x000007FF);
 }
 
-#endif /* GFX_READ_ROUTINES */
+#endif                          /* GFX_READ_ROUTINES */
 
 /* END OF FILE */

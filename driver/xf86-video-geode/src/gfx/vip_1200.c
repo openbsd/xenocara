@@ -107,9 +107,9 @@ gfx_set_vip_base(unsigned long even, unsigned long odd)
 
     if (even)
         WRITE_VIP32(SC1200_VIP_EVEN_BASE,
-            even + (unsigned long)gfx_phys_fbptr);
+                    even + (unsigned long) gfx_phys_fbptr);
     if (odd)
-        WRITE_VIP32(SC1200_VIP_ODD_BASE, odd + (unsigned long)gfx_phys_fbptr);
+        WRITE_VIP32(SC1200_VIP_ODD_BASE, odd + (unsigned long) gfx_phys_fbptr);
     return (0);
 }
 
@@ -204,7 +204,7 @@ gfx_set_vbi_mode(int mode)
     config = READ_VIP32(SC1200_VIP_CONFIG);
     config &=
         ~(SC1200_VBI_ANCILLARY_TO_MEMORY | SC1200_VBI_TASK_A_TO_MEMORY |
-        SC1200_VBI_TASK_B_TO_MEMORY);
+          SC1200_VBI_TASK_B_TO_MEMORY);
 
     if (mode & VBI_ANCILLARY)
         config |= SC1200_VBI_ANCILLARY_TO_MEMORY;
@@ -275,9 +275,9 @@ gfx_set_vbi_direct(unsigned long even_lines, unsigned long odd_lines)
 #endif
 {
     WRITE_VIP32(SC1200_EVEN_DIRECT_VBI_LINE_ENABLE,
-        even_lines & SC1200_DIRECT_VBI_LINE_ENABLE_MASK);
+                even_lines & SC1200_DIRECT_VBI_LINE_ENABLE_MASK);
     WRITE_VIP32(SC1200_ODD_DIRECT_VBI_LINE_ENABLE,
-        odd_lines & SC1200_DIRECT_VBI_LINE_ENABLE_MASK);
+                odd_lines & SC1200_DIRECT_VBI_LINE_ENABLE_MASK);
     return (0);
 }
 
@@ -424,7 +424,8 @@ gfx_test_vip_fifo_overflow(void)
          * writing 1 */
         WRITE_VIP32(SC1200_VIP_STATUS, SC1200_VIP_FIFO_OVERFLOW);
         return (1);
-    } else {
+    }
+    else {
         return (0);
     }
 }
@@ -444,8 +445,8 @@ int
 gfx_get_vip_line(void)
 #endif
 {
-    return (int)(READ_VIP32(SC1200_VIP_CURRENT_LINE) &
-        SC1200_VIP_CURRENT_LINE_MASK);
+    return (int) (READ_VIP32(SC1200_VIP_CURRENT_LINE) &
+                  SC1200_VIP_CURRENT_LINE_MASK);
 }
 
 /*----------------------------------------------------------------------------
@@ -573,8 +574,9 @@ gfx_get_vbi_mode(void)
     int mode = 0;
 
     config =
-        (int)(READ_VIP32(SC1200_VIP_CONFIG) & (SC1200_VBI_ANCILLARY_TO_MEMORY
-            | SC1200_VBI_TASK_A_TO_MEMORY | SC1200_VBI_TASK_B_TO_MEMORY));
+        (int) (READ_VIP32(SC1200_VIP_CONFIG) & (SC1200_VBI_ANCILLARY_TO_MEMORY
+                                                | SC1200_VBI_TASK_A_TO_MEMORY |
+                                                SC1200_VBI_TASK_B_TO_MEMORY));
     if (config & SC1200_VBI_ANCILLARY_TO_MEMORY)
         mode |= VBI_ANCILLARY;
     if (config & SC1200_VBI_TASK_A_TO_MEMORY)
@@ -619,9 +621,9 @@ gfx_get_vbi_direct(int odd)
 
     if (odd)
         return (READ_VIP32(SC1200_ODD_DIRECT_VBI_LINE_ENABLE) &
-            SC1200_DIRECT_VBI_LINE_ENABLE_MASK);
+                SC1200_DIRECT_VBI_LINE_ENABLE_MASK);
     return (READ_VIP32(SC1200_EVEN_DIRECT_VBI_LINE_ENABLE) &
-        SC1200_DIRECT_VBI_LINE_ENABLE_MASK);
+            SC1200_DIRECT_VBI_LINE_ENABLE_MASK);
 }
 
 /*---------------------------------------------------------------------------
@@ -658,6 +660,6 @@ gfx_get_vip_bus_request_threshold_high(void)
     return (0);
 }
 
-#endif /* GFX_READ_ROUTINES */
+#endif                          /* GFX_READ_ROUTINES */
 
 /* END OF FILE */

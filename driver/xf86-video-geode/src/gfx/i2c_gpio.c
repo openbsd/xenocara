@@ -35,11 +35,11 @@ int gpio_data = 0;
 
 static int g_initialized = 0;
 
-#define	I2CWRITE		0x00   /* Write address         */
-#define	I2CREAD			0x01   /* Read address          */
+#define	I2CWRITE		0x00    /* Write address         */
+#define	I2CREAD			0x01    /* Read address          */
 
-#define	I2CACK			0x00   /* Ack value             */
-#define	I2CNACK			0x01   /* Not - ack value       */
+#define	I2CACK			0x00    /* Ack value             */
+#define	I2CNACK			0x01    /* Not - ack value       */
 
 #define		CS5530_ID	(0x80000000 | (0x00<<16) | (0x12<<11) | (0<<8) | 0x00)
 #define		CS5530_GPIO	(0x80000000 | (0x00<<16) | (0x12<<11) | (0<<8) | 0x90)
@@ -52,9 +52,9 @@ int I2C_init(void);
 void I2C_cleanup(void);
 
 int I2C_Read(unsigned char address, unsigned int reg, unsigned long *p_value,
-    unsigned int bytes);
+             unsigned int bytes);
 int I2C_Write(unsigned char address, unsigned int reg, unsigned long value,
-    unsigned int bytes);
+              unsigned int bytes);
 int I2CAL_init(void);
 void I2CAL_cleanup(void);
 
@@ -123,11 +123,11 @@ gfx_i2c_select_gpio(int clock, int data)
 #if GFX_I2C_DYNAMIC
 int
 gpio_i2c_write(unsigned char busnum, unsigned char address, unsigned char reg,
-    unsigned char bytes, unsigned char *value)
+               unsigned char bytes, unsigned char *value)
 #else
 int
 gfx_i2c_write(unsigned char busnum, unsigned char address, unsigned char reg,
-    unsigned char bytes, unsigned char *value)
+              unsigned char bytes, unsigned char *value)
 #endif
 {
     /* ### ADD ### CODE TO WRITE BYTE TO I2B BUS */
@@ -139,13 +139,13 @@ gfx_i2c_write(unsigned char busnum, unsigned char address, unsigned char reg,
         /* The address is shifted left by one to make room for Read/Write 
          * bit */
         SendI2CStart();
-        SendI2CData((char)((address << 1) | I2CWRITE));
+        SendI2CData((char) ((address << 1) | I2CWRITE));
         if (!ReceiveI2CAck()) {
             SendI2CStop();
             gfx_delay_milliseconds(10);
             continue;
         }
-        SendI2CData((unsigned char)reg);
+        SendI2CData((unsigned char) reg);
         if (!ReceiveI2CAck()) {
             SendI2CStop();
             gfx_delay_milliseconds(10);
@@ -189,11 +189,11 @@ gfx_i2c_write(unsigned char busnum, unsigned char address, unsigned char reg,
 #if GFX_I2C_DYNAMIC
 int
 gpio_i2c_read(unsigned char busnum, unsigned char address, unsigned char reg,
-    unsigned char bytes, unsigned char *p_value)
+              unsigned char bytes, unsigned char *p_value)
 #else
 int
 gfx_i2c_read(unsigned char busnum, unsigned char address, unsigned char reg,
-    unsigned char bytes, unsigned char *p_value)
+             unsigned char bytes, unsigned char *p_value)
 #endif
 {
     /* ### ADD ### CODE TO WRITE BYTE TO I2B BUS */
@@ -209,18 +209,18 @@ gfx_i2c_read(unsigned char busnum, unsigned char address, unsigned char reg,
         /* The address is shifted left by one to make room for Read/Write 
          * bit  */
         SendI2CStart();
-        SendI2CData((char)((address << 1) | I2CWRITE));
+        SendI2CData((char) ((address << 1) | I2CWRITE));
         if (!ReceiveI2CAck()) {
             SendI2CStop();
             gfx_delay_milliseconds(10);
             continue;
         }
-        SendI2CData((unsigned char)(reg & 0xFF));
+        SendI2CData((unsigned char) (reg & 0xFF));
         SendI2CNack();
 
         /* read the first data byte. */
         SendI2CStart();
-        SendI2CData((char)((address << 1) | I2CREAD));
+        SendI2CData((char) ((address << 1) | I2CREAD));
         if (!ReceiveI2CAck()) {
             SendI2CStop();
             gfx_delay_milliseconds(10);
@@ -490,7 +490,7 @@ I2CAL_init(void)
         return 1;
 
     l_reg = gfx_pci_config_read(CS5530_GPIO);
-    reg = (unsigned short)l_reg;
+    reg = (unsigned short) l_reg;
 
     /* both outputs, both high. */
     reg |= (SDADIR | SCLDIR | SDA | SCL);
@@ -525,11 +525,12 @@ I2CAL_output_clock(int inState)
     unsigned long value;
 
     value = gfx_pci_config_read(CS5530_GPIO);
-    reg = (unsigned short)value;
+    reg = (unsigned short) value;
 
-    if (inState) {                     /* write a 1. */
+    if (inState) {              /* write a 1. */
         reg |= SCL;
-    } else {                           /* write a 0. */
+    }
+    else {                      /* write a 0. */
         reg &= ~SCL;
     }
 
@@ -554,11 +555,12 @@ I2CAL_output_data(int inState)
     unsigned long value;
 
     value = gfx_pci_config_read(CS5530_GPIO);
-    reg = (unsigned short)value;
+    reg = (unsigned short) value;
 
-    if (inState) {                     /* write a 1. */
+    if (inState) {              /* write a 1. */
         reg |= SDA;
-    } else {
+    }
+    else {
         /* write a 0. */
         reg &= ~SDA;
     }
@@ -583,7 +585,7 @@ I2CAL_input_data(void)
     unsigned long value;
 
     value = gfx_pci_config_read(CS5530_GPIO);
-    reg = (unsigned short)value;
+    reg = (unsigned short) value;
 
     if (reg & SDA)
         return 1;
@@ -605,7 +607,7 @@ I2CAL_set_data_for_input(void)
     unsigned long value;
 
     value = gfx_pci_config_read(CS5530_GPIO);
-    reg = (unsigned short)value;
+    reg = (unsigned short) value;
 
     reg &= ~SDADIR;
 
@@ -628,7 +630,7 @@ I2CAL_set_data_for_output(void)
     unsigned long value;
 
     value = gfx_pci_config_read(CS5530_GPIO);
-    reg = (unsigned short)value;
+    reg = (unsigned short) value;
     reg |= SDADIR;
     value = reg;
 

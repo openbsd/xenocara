@@ -284,7 +284,6 @@
 
 #elif CIMARRON_MSR_HOOKS
 
-
 #define MSR_READ(msr_reg, device_add, data64_ptr)                  \
 {                                                                  \
     unsigned long addr, val1, val2;                                \
@@ -311,7 +310,7 @@
 }
 #endif
 
-#endif /* #ifdef CIMARRON_INCLUDE_MSR_MACROS */
+#endif                          /* #ifdef CIMARRON_INCLUDE_MSR_MACROS */
 
 /*-----------------------------------------------------------------*/
 /* STRING MACROS                                                   */
@@ -518,7 +517,7 @@
 
 #endif
 
-#endif /* #ifdef CIMARRON_INCLUDE_STRING_MACROS */
+#endif                          /* #ifdef CIMARRON_INCLUDE_STRING_MACROS */
 
 /*-----------------------------------------------------------------
  * WRITE_COMMAND_STRING8
@@ -585,14 +584,11 @@ void
 cim_outd(unsigned short port, unsigned long data)
 {
     _asm {
-    pushf mov eax, data mov dx, port out dx, eax popf}
-}
-
+pushf mov eax, data mov dx, port out dx, eax popf}}
 /*-------------------------------------------
  * IND
  * Reads one DWORD from a single I/O address.
  *-------------------------------------------*/
-
 #define IND(port) cim_ind(port)
 unsigned long
 cim_ind(unsigned short port)
@@ -600,8 +596,7 @@ cim_ind(unsigned short port)
     unsigned long data;
 
     _asm {
-    pushf mov dx, port in eax, dx mov data, eax popf}
-    return data;
+    pushf mov dx, port in eax, dx mov data, eax popf} return data;
 }
 
 /*-------------------------------------------
@@ -614,14 +609,11 @@ void
 cim_outw(unsigned short port, unsigned short data)
 {
     _asm {
-    pushf mov ax, data mov dx, port out dx, ax popf}
-}
-
+pushf mov ax, data mov dx, port out dx, ax popf}}
 /*-------------------------------------------
  * INW
  * Reads one WORD from a single I/O address.
  *-------------------------------------------*/
-
 #define INW(port) cim_inw(port)
 unsigned short
 cim_inw(unsigned short port)
@@ -629,8 +621,7 @@ cim_inw(unsigned short port)
     unsigned short data;
 
     _asm {
-    pushf mov dx, port in ax, dx mov data, ax popf}
-    return data;
+    pushf mov dx, port in ax, dx mov data, ax popf} return data;
 }
 
 /*-------------------------------------------
@@ -643,14 +634,11 @@ void
 cim_outb(unsigned short port, unsigned char data)
 {
     _asm {
-    pushf mov al, data mov dx, port out dx, al popf}
-}
-
+pushf mov al, data mov dx, port out dx, al popf}}
 /*-------------------------------------------
  * INB
  * Reads one BYTE from a single I/O address.
  *-------------------------------------------*/
-
 #define INB(port) cim_inb(port)
 unsigned char
 cim_inb(unsigned short port)
@@ -658,8 +646,7 @@ cim_inb(unsigned short port)
     unsigned char data;
 
     _asm {
-    pushf mov dx, port in al, dx mov data, al popf}
-    return data;
+    pushf mov dx, port in al, dx mov data, al popf} return data;
 }
 
 #elif CIMARRON_IO_ABSTRACTED_ASM
@@ -753,9 +740,9 @@ cim_outb(unsigned short port, unsigned char data)
 
 #endif
 
-#endif /* CIMARRON_INCLUDE_IO_MACROS */
+#endif                          /* CIMARRON_INCLUDE_IO_MACROS */
 
-extern void (*cim_rdmsr)(unsigned long, unsigned long *, unsigned long *);
-extern void (*cim_wrmsr)(unsigned long, unsigned long, unsigned long);
+extern void (*cim_rdmsr) (unsigned long, unsigned long *, unsigned long *);
+extern void (*cim_wrmsr) (unsigned long, unsigned long, unsigned long);
 
 #endif

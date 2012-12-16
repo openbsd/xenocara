@@ -128,7 +128,7 @@ gfx_set_solid_source(unsigned long color)
  */
 void
 gfx_set_mono_source(unsigned long bgcolor, unsigned long fgcolor,
-    unsigned short transparent)
+                    unsigned short transparent)
 {
 #if GFX_2DACCEL_GU1
     if (gfx_2daccel_type & GFX_2DACCEL_TYPE_GU1)
@@ -169,7 +169,8 @@ gfx_set_solid_pattern(unsigned long color)
  */
 void
 gfx_set_mono_pattern(unsigned long bgcolor, unsigned long fgcolor,
-    unsigned long data0, unsigned long data1, unsigned char transparent)
+                     unsigned long data0, unsigned long data1,
+                     unsigned char transparent)
 {
 #if GFX_2DACCEL_GU1
     if (gfx_2daccel_type & GFX_2DACCEL_TYPE_GU1)
@@ -187,18 +188,19 @@ gfx_set_mono_pattern(unsigned long bgcolor, unsigned long fgcolor,
  */
 void
 gfx_set_color_pattern(unsigned long bgcolor, unsigned long fgcolor,
-    unsigned long data0, unsigned long data1,
-    unsigned long data2, unsigned long data3, unsigned char transparent)
+                      unsigned long data0, unsigned long data1,
+                      unsigned long data2, unsigned long data3,
+                      unsigned char transparent)
 {
 #if GFX_2DACCEL_GU1
     if (gfx_2daccel_type & GFX_2DACCEL_TYPE_GU1)
         gu1_set_color_pattern(bgcolor, fgcolor, data0, data1, data2, data3,
-            transparent);
+                              transparent);
 #endif
 #if GFX_2DACCEL_GU2
     if (gfx_2daccel_type & GFX_2DACCEL_TYPE_GU2)
         gu2_set_color_pattern(bgcolor, fgcolor, data0, data1, data2, data3,
-            transparent);
+                              transparent);
 #endif
 }
 
@@ -242,7 +244,7 @@ gfx_set_raster_operation(unsigned char rop)
  */
 void
 gfx_pattern_fill(unsigned short x, unsigned short y,
-    unsigned short width, unsigned short height)
+                 unsigned short width, unsigned short height)
 {
 #if GFX_2DACCEL_GU1
     if (gfx_2daccel_type & GFX_2DACCEL_TYPE_GU1)
@@ -260,7 +262,8 @@ gfx_pattern_fill(unsigned short x, unsigned short y,
  */
 void
 gfx_color_pattern_fill(unsigned short x, unsigned short y,
-    unsigned short width, unsigned short height, unsigned long *pattern)
+                       unsigned short width, unsigned short height,
+                       unsigned long *pattern)
 {
 #if GFX_2DACCEL_GU1
     if (gfx_2daccel_type & GFX_2DACCEL_TYPE_GU1)
@@ -278,8 +281,8 @@ gfx_color_pattern_fill(unsigned short x, unsigned short y,
  */
 void
 gfx_screen_to_screen_blt(unsigned short srcx, unsigned short srcy,
-    unsigned short dstx, unsigned short dsty, unsigned short width,
-    unsigned short height)
+                         unsigned short dstx, unsigned short dsty,
+                         unsigned short width, unsigned short height)
 {
 #if GFX_2DACCEL_GU1
     if (gfx_2daccel_type & GFX_2DACCEL_TYPE_GU1)
@@ -297,18 +300,17 @@ gfx_screen_to_screen_blt(unsigned short srcx, unsigned short srcy,
  */
 void
 gfx_screen_to_screen_xblt(unsigned short srcx, unsigned short srcy,
-    unsigned short dstx, unsigned short dsty, unsigned short width,
-    unsigned short height, unsigned long color)
+                          unsigned short dstx, unsigned short dsty,
+                          unsigned short width, unsigned short height,
+                          unsigned long color)
 {
 #if GFX_2DACCEL_GU1
     if (gfx_2daccel_type & GFX_2DACCEL_TYPE_GU1)
-        gu1_screen_to_screen_xblt(srcx, srcy, dstx, dsty, width, height,
-            color);
+        gu1_screen_to_screen_xblt(srcx, srcy, dstx, dsty, width, height, color);
 #endif
 #if GFX_2DACCEL_GU2
     if (gfx_2daccel_type & GFX_2DACCEL_TYPE_GU2)
-        gu2_screen_to_screen_xblt(srcx, srcy, dstx, dsty, width, height,
-            color);
+        gu2_screen_to_screen_xblt(srcx, srcy, dstx, dsty, width, height, color);
 #endif
 }
 
@@ -318,18 +320,19 @@ gfx_screen_to_screen_xblt(unsigned short srcx, unsigned short srcy,
  */
 void
 gfx_color_bitmap_to_screen_blt(unsigned short srcx, unsigned short srcy,
-    unsigned short dstx, unsigned short dsty, unsigned short width,
-    unsigned short height, unsigned char *data, long pitch)
+                               unsigned short dstx, unsigned short dsty,
+                               unsigned short width, unsigned short height,
+                               unsigned char *data, long pitch)
 {
 #if GFX_2DACCEL_GU1
     if (gfx_2daccel_type & GFX_2DACCEL_TYPE_GU1)
         gu1_color_bitmap_to_screen_blt(srcx, srcy, dstx, dsty, width, height,
-            data, pitch);
+                                       data, pitch);
 #endif
 #if GFX_2DACCEL_GU2
     if (gfx_2daccel_type & GFX_2DACCEL_TYPE_GU2)
         gu2_color_bitmap_to_screen_blt(srcx, srcy, dstx, dsty, width, height,
-            data, pitch);
+                                       data, pitch);
 #endif
 }
 
@@ -339,19 +342,20 @@ gfx_color_bitmap_to_screen_blt(unsigned short srcx, unsigned short srcy,
  */
 void
 gfx_color_bitmap_to_screen_xblt(unsigned short srcx, unsigned short srcy,
-    unsigned short dstx, unsigned short dsty, unsigned short width,
-    unsigned short height, unsigned char *data, long pitch,
-    unsigned long color)
+                                unsigned short dstx, unsigned short dsty,
+                                unsigned short width, unsigned short height,
+                                unsigned char *data, long pitch,
+                                unsigned long color)
 {
 #if GFX_2DACCEL_GU1
     if (gfx_2daccel_type & GFX_2DACCEL_TYPE_GU1)
         gu1_color_bitmap_to_screen_xblt(srcx, srcy, dstx, dsty, width, height,
-            data, pitch, color);
+                                        data, pitch, color);
 #endif
 #if GFX_2DACCEL_GU2
     if (gfx_2daccel_type & GFX_2DACCEL_TYPE_GU2)
         gu2_color_bitmap_to_screen_xblt(srcx, srcy, dstx, dsty, width, height,
-            data, pitch, color);
+                                        data, pitch, color);
 #endif
 }
 
@@ -361,18 +365,19 @@ gfx_color_bitmap_to_screen_xblt(unsigned short srcx, unsigned short srcy,
  */
 void
 gfx_mono_bitmap_to_screen_blt(unsigned short srcx, unsigned short srcy,
-    unsigned short dstx, unsigned short dsty, unsigned short width,
-    unsigned short height, unsigned char *data, short pitch)
+                              unsigned short dstx, unsigned short dsty,
+                              unsigned short width, unsigned short height,
+                              unsigned char *data, short pitch)
 {
 #if GFX_2DACCEL_GU1
     if (gfx_2daccel_type & GFX_2DACCEL_TYPE_GU1)
         gu1_mono_bitmap_to_screen_blt(srcx, srcy, dstx, dsty, width, height,
-            data, pitch);
+                                      data, pitch);
 #endif
 #if GFX_2DACCEL_GU2
     if (gfx_2daccel_type & GFX_2DACCEL_TYPE_GU2)
         gu2_mono_bitmap_to_screen_blt(srcx, srcy, dstx, dsty, width, height,
-            data, pitch);
+                                      data, pitch);
 #endif
 }
 
@@ -382,7 +387,7 @@ gfx_mono_bitmap_to_screen_blt(unsigned short srcx, unsigned short srcy,
  */
 void
 gfx_text_blt(unsigned short dstx, unsigned short dsty, unsigned short width,
-    unsigned short height, unsigned char *data)
+             unsigned short height, unsigned char *data)
 {
 #if GFX_2DACCEL_GU1
     if (gfx_2daccel_type & GFX_2DACCEL_TYPE_GU1)
@@ -400,8 +405,9 @@ gfx_text_blt(unsigned short dstx, unsigned short dsty, unsigned short width,
  */
 void
 gfx_bresenham_line(unsigned short x, unsigned short y,
-    unsigned short length, unsigned short initerr,
-    unsigned short axialerr, unsigned short diagerr, unsigned short flags)
+                   unsigned short length, unsigned short initerr,
+                   unsigned short axialerr, unsigned short diagerr,
+                   unsigned short flags)
 {
 #if GFX_2DACCEL_GU1
     if (gfx_2daccel_type & GFX_2DACCEL_TYPE_GU1)
@@ -539,7 +545,7 @@ gfx2_set_alpha_value(unsigned char value)
  */
 void
 gfx2_pattern_fill(unsigned long dstoffset, unsigned short width,
-    unsigned short height)
+                  unsigned short height)
 {
 #if GFX_2DACCEL_GU2
     if (gfx_2daccel_type & GFX_2DACCEL_TYPE_GU2)
@@ -553,7 +559,7 @@ gfx2_pattern_fill(unsigned long dstoffset, unsigned short width,
  */
 void
 gfx2_color_pattern_fill(unsigned long dstoffset, unsigned short width,
-    unsigned short height, unsigned long *pattern)
+                        unsigned short height, unsigned long *pattern)
 {
 #if GFX_2DACCEL_GU2
     if (gfx_2daccel_type & GFX_2DACCEL_TYPE_GU2)
@@ -567,7 +573,8 @@ gfx2_color_pattern_fill(unsigned long dstoffset, unsigned short width,
  */
 void
 gfx2_screen_to_screen_blt(unsigned long srcoffset, unsigned long dstoffset,
-    unsigned short width, unsigned short height, int flags)
+                          unsigned short width, unsigned short height,
+                          int flags)
 {
 #if GFX_2DACCEL_GU2
     if (gfx_2daccel_type & GFX_2DACCEL_TYPE_GU2)
@@ -581,13 +588,14 @@ gfx2_screen_to_screen_blt(unsigned long srcoffset, unsigned long dstoffset,
  */
 void
 gfx2_mono_expand_blt(unsigned long srcbase, unsigned short srcx,
-    unsigned short srcy, unsigned long dstoffset, unsigned short width,
-    unsigned short height, int byte_packed)
+                     unsigned short srcy, unsigned long dstoffset,
+                     unsigned short width, unsigned short height,
+                     int byte_packed)
 {
 #if GFX_2DACCEL_GU2
     if (gfx_2daccel_type & GFX_2DACCEL_TYPE_GU2)
         gu22_mono_expand_blt(srcbase, srcx, srcy, dstoffset, width, height,
-            byte_packed);
+                             byte_packed);
 #endif
 }
 
@@ -597,13 +605,14 @@ gfx2_mono_expand_blt(unsigned long srcbase, unsigned short srcx,
  */
 void
 gfx2_color_bitmap_to_screen_blt(unsigned short srcx, unsigned short srcy,
-    unsigned long dstoffset, unsigned short width, unsigned short height,
-    unsigned char *data, short pitch)
+                                unsigned long dstoffset, unsigned short width,
+                                unsigned short height, unsigned char *data,
+                                short pitch)
 {
 #if GFX_2DACCEL_GU2
     if (gfx_2daccel_type & GFX_2DACCEL_TYPE_GU2)
         gu22_color_bitmap_to_screen_blt(srcx, srcy, dstoffset, width, height,
-            data, pitch);
+                                        data, pitch);
 #endif
 }
 
@@ -613,7 +622,7 @@ gfx2_color_bitmap_to_screen_blt(unsigned short srcx, unsigned short srcy,
  */
 void
 gfx2_text_blt(unsigned long dstoffset, unsigned short width,
-    unsigned short height, unsigned char *data)
+              unsigned short height, unsigned char *data)
 {
 #if GFX_2DACCEL_GU2
     if (gfx_2daccel_type & GFX_2DACCEL_TYPE_GU2)
@@ -627,13 +636,14 @@ gfx2_text_blt(unsigned long dstoffset, unsigned short width,
  */
 void
 gfx2_mono_bitmap_to_screen_blt(unsigned short srcx, unsigned short srcy,
-    unsigned long dstoffset, unsigned short width, unsigned short height,
-    unsigned char *data, short pitch)
+                               unsigned long dstoffset, unsigned short width,
+                               unsigned short height, unsigned char *data,
+                               short pitch)
 {
 #if GFX_2DACCEL_GU2
     if (gfx_2daccel_type & GFX_2DACCEL_TYPE_GU2)
         gu22_mono_bitmap_to_screen_blt(srcx, srcy, dstoffset, width, height,
-            data, pitch);
+                                       data, pitch);
 #endif
 }
 
@@ -643,13 +653,14 @@ gfx2_mono_bitmap_to_screen_blt(unsigned short srcx, unsigned short srcy,
  */
 void
 gfx2_bresenham_line(unsigned long dstoffset,
-    unsigned short length, unsigned short initerr,
-    unsigned short axialerr, unsigned short diagerr, unsigned short flags)
+                    unsigned short length, unsigned short initerr,
+                    unsigned short axialerr, unsigned short diagerr,
+                    unsigned short flags)
 {
 #if GFX_2DACCEL_GU2
     if (gfx_2daccel_type & GFX_2DACCEL_TYPE_GU2)
         gu22_bresenham_line(dstoffset, length, initerr, axialerr, diagerr,
-            flags);
+                            flags);
 #endif
 }
 
@@ -666,6 +677,6 @@ gfx2_sync_to_vblank(void)
 #endif
 }
 
-#endif /* GFX_2DACCEL_DYNAMIC */
+#endif                          /* GFX_2DACCEL_DYNAMIC */
 
 /* END OF FILE */

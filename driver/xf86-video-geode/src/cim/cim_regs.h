@@ -636,8 +636,7 @@
 /* and not the m, n and p from the PLL equation.  The PLL */
 /* equation adds 1 to each value.                         */
 
-typedef struct tagPLLFrequency
-{
+typedef struct tagPLLFrequency {
     unsigned long pll_value;
     unsigned long frequency;
 

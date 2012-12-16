@@ -129,23 +129,23 @@
 /* STATIC VARIABLES FOR VIDEO OVERLAY CONTROL */
 /* These are saved to allow these routines to do clipping. */
 
-unsigned long gfx_vid_offset = 0;      /* copy from last gfx_set_video_offset  */
-unsigned long gfx_vid_uoffset = 0;     /* copy from last 
-                                        * gfx_set_video_yuv_offsets                        */
-unsigned long gfx_vid_voffset = 0;     /* copy from last 
-                                        * gfx_set_video_yuv_offsets                        */
-unsigned long gfx_vid_srcw = 300;      /* copy from last gfx_set_video_scale       */
-unsigned long gfx_vid_srch = 300;      /* copy from last gfx_set_video_scale       */
-unsigned long gfx_vid_dstw = 300;      /* copy from last gfx_set_video_scale       */
-unsigned long gfx_vid_dsth = 300;      /* copy from last gfx_set_video_scale       */
-short gfx_vid_xpos = 0;                /* copy from last gfx_set_video_window      */
-short gfx_vid_ypos = 0;                /* copy from last gfx_set_video_window      */
-unsigned short gfx_vid_width = 0;      /* copy from last gfx_set_video_window      */
-unsigned short gfx_vid_height = 0;     /* copy from last gfx_set_video_window      */
+unsigned long gfx_vid_offset = 0;       /* copy from last gfx_set_video_offset  */
+unsigned long gfx_vid_uoffset = 0;      /* copy from last 
+                                         * gfx_set_video_yuv_offsets                        */
+unsigned long gfx_vid_voffset = 0;      /* copy from last 
+                                         * gfx_set_video_yuv_offsets                        */
+unsigned long gfx_vid_srcw = 300;       /* copy from last gfx_set_video_scale       */
+unsigned long gfx_vid_srch = 300;       /* copy from last gfx_set_video_scale       */
+unsigned long gfx_vid_dstw = 300;       /* copy from last gfx_set_video_scale       */
+unsigned long gfx_vid_dsth = 300;       /* copy from last gfx_set_video_scale       */
+short gfx_vid_xpos = 0;         /* copy from last gfx_set_video_window      */
+short gfx_vid_ypos = 0;         /* copy from last gfx_set_video_window      */
+unsigned short gfx_vid_width = 0;       /* copy from last gfx_set_video_window      */
+unsigned short gfx_vid_height = 0;      /* copy from last gfx_set_video_window      */
 
-int gfx_alpha_select = 0;              /* currently selected alpha region          */
+int gfx_alpha_select = 0;       /* currently selected alpha region          */
 
-int gfx_set_screen_enable(int enable); /* forward declaration                           */
+int gfx_set_screen_enable(int enable);  /* forward declaration                           */
 
 /* INCLUDE SUPPORT FOR CS5530, IF SPECIFIED. */
 
@@ -420,7 +420,7 @@ gfx_set_video_offset(unsigned long offset)
  */
 int
 gfx_set_video_yuv_offsets(unsigned long yoffset, unsigned long uoffset,
-    unsigned long voffset)
+                          unsigned long voffset)
 {
     int status = GFX_STATUS_UNSUPPORTED;
 
@@ -437,7 +437,7 @@ gfx_set_video_yuv_offsets(unsigned long yoffset, unsigned long uoffset,
  */
 int
 gfx_set_video_scale(unsigned short srcw, unsigned short srch,
-    unsigned short dstw, unsigned short dsth)
+                    unsigned short dstw, unsigned short dsth)
 {
     int status = GFX_STATUS_UNSUPPORTED;
 
@@ -462,7 +462,7 @@ gfx_set_video_scale(unsigned short srcw, unsigned short srch,
  */
 int
 gfx_set_video_upscale(unsigned short srcw, unsigned short srch,
-    unsigned short dstw, unsigned short dsth)
+                      unsigned short dstw, unsigned short dsth)
 {
     int status = GFX_STATUS_UNSUPPORTED;
 
@@ -528,21 +528,21 @@ gfx_set_video_downscale_config(unsigned short type, unsigned short m)
  */
 int
 gfx_set_video_downscale_coefficients(unsigned short coef1,
-    unsigned short coef2, unsigned short coef3, unsigned short coef4)
+                                     unsigned short coef2, unsigned short coef3,
+                                     unsigned short coef4)
 {
     int status = GFX_STATUS_UNSUPPORTED;
 
 #if GFX_VIDEO_SC1200
     if (gfx_video_type == GFX_VIDEO_TYPE_SC1200)
         status =
-            sc1200_set_video_downscale_coefficients(coef1, coef2, coef3,
-            coef4);
+            sc1200_set_video_downscale_coefficients(coef1, coef2, coef3, coef4);
 #endif
 #if GFX_VIDEO_REDCLOUD
     if (gfx_video_type == GFX_VIDEO_TYPE_REDCLOUD)
         status =
             redcloud_set_video_downscale_coefficients(coef1, coef2, coef3,
-            coef4);
+                                                      coef4);
 #endif
     return (status);
 }
@@ -951,7 +951,8 @@ gfx_set_genlock_enable(int flags)
  */
 int
 gfx_set_video_cursor(unsigned long key, unsigned long mask,
-    unsigned short select_color2, unsigned long color1, unsigned long color2)
+                     unsigned short select_color2, unsigned long color1,
+                     unsigned long color2)
 {
     int status = GFX_STATUS_UNSUPPORTED;
 
@@ -963,8 +964,7 @@ gfx_set_video_cursor(unsigned long key, unsigned long mask,
 #if GFX_VIDEO_REDCLOUD
     if (gfx_video_type == GFX_VIDEO_TYPE_REDCLOUD)
         status =
-            redcloud_set_video_cursor(key, mask, select_color2, color1,
-            color2);
+            redcloud_set_video_cursor(key, mask, select_color2, color1, color2);
 #endif
     return (status);
 }
@@ -1011,7 +1011,7 @@ gfx_set_alpha_enable(int enable)
  */
 int
 gfx_set_alpha_window(short x, short y,
-    unsigned short width, unsigned short height)
+                     unsigned short width, unsigned short height)
 {
     int status = GFX_STATUS_UNSUPPORTED;
 
@@ -1451,7 +1451,7 @@ gfx_get_video_offset(void)
  */
 void
 gfx_get_video_yuv_offsets(unsigned long *yoffset, unsigned long *uoffset,
-    unsigned long *voffset)
+                          unsigned long *voffset)
 {
 #if GFX_VIDEO_REDCLOUD
     if (gfx_video_type == GFX_VIDEO_TYPE_REDCLOUD)
@@ -1570,7 +1570,9 @@ gfx_get_video_downscale_config(unsigned short *type, unsigned short *m)
  */
 void
 gfx_get_video_downscale_coefficients(unsigned short *coef1,
-    unsigned short *coef2, unsigned short *coef3, unsigned short *coef4)
+                                     unsigned short *coef2,
+                                     unsigned short *coef3,
+                                     unsigned short *coef4)
 {
 #if GFX_VIDEO_SC1200
     if (gfx_video_type == GFX_VIDEO_TYPE_SC1200)
@@ -1802,7 +1804,7 @@ gfx_get_vbi_source(VbiSourceType * source)
 unsigned long
 gfx_get_vbi_lines(int odd)
 {
-    unsigned long lines = (unsigned long)GFX_STATUS_UNSUPPORTED;
+    unsigned long lines = (unsigned long) GFX_STATUS_UNSUPPORTED;
 
 #if GFX_VIDEO_SC1200
     if (gfx_video_type == GFX_VIDEO_TYPE_SC1200)
@@ -1818,7 +1820,7 @@ gfx_get_vbi_lines(int odd)
 unsigned long
 gfx_get_vbi_total(int odd)
 {
-    unsigned long total = (unsigned long)GFX_STATUS_UNSUPPORTED;
+    unsigned long total = (unsigned long) GFX_STATUS_UNSUPPORTED;
 
 #if GFX_VIDEO_SC1200
     if (gfx_video_type == GFX_VIDEO_TYPE_SC1200)
@@ -1882,7 +1884,7 @@ gfx_get_vertical_scaler_offset(char *offset)
 unsigned long
 gfx_get_genlock_delay(void)
 {
-    unsigned long delay = (unsigned long)GFX_STATUS_UNSUPPORTED;
+    unsigned long delay = (unsigned long) GFX_STATUS_UNSUPPORTED;
 
 #if GFX_VIDEO_SC1200
     if (gfx_video_type == GFX_VIDEO_TYPE_SC1200)
@@ -1913,8 +1915,8 @@ gfx_get_genlock_enable(void)
  */
 int
 gfx_get_video_cursor(unsigned long *key, unsigned long *mask,
-    unsigned short *select_color2, unsigned long *color1,
-    unsigned short *color2)
+                     unsigned short *select_color2, unsigned long *color1,
+                     unsigned short *color2)
 {
     int enable = GFX_STATUS_UNSUPPORTED;
 
@@ -1926,8 +1928,7 @@ gfx_get_video_cursor(unsigned long *key, unsigned long *mask,
 #if GFX_VIDEO_REDCLOUD
     if (gfx_video_type == GFX_VIDEO_TYPE_REDCLOUD)
         enable =
-            redcloud_get_video_cursor(key, mask, select_color2, color1,
-            color2);
+            redcloud_get_video_cursor(key, mask, select_color2, color1, color2);
 #endif
     return (enable);
 }
@@ -1978,7 +1979,7 @@ gfx_read_crc32(void)
  */
 unsigned long
 gfx_read_window_crc(int source, unsigned short x, unsigned short y,
-    unsigned short width, unsigned short height, int crc32)
+                    unsigned short width, unsigned short height, int crc32)
 {
     unsigned long crc = 0;
 
@@ -2029,7 +2030,7 @@ gfx_get_alpha_enable(int *enable)
  */
 void
 gfx_get_alpha_size(unsigned short *x, unsigned short *y,
-    unsigned short *width, unsigned short *height)
+                   unsigned short *width, unsigned short *height)
 {
 #if GFX_VIDEO_SC1200
     if (gfx_video_type == GFX_VIDEO_TYPE_SC1200)
@@ -2096,8 +2097,8 @@ gfx_get_alpha_color(unsigned long *color)
     return;
 }
 
-#endif /* GFX_READ_ROUTINES */
+#endif                          /* GFX_READ_ROUTINES */
 
-#endif /* GFX_VIDEO_DYNAMIC */
+#endif                          /* GFX_VIDEO_DYNAMIC */
 
 /* END OF FILE */

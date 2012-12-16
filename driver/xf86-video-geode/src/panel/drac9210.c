@@ -32,12 +32,12 @@
 
 #include "drac9210.h"
 
-#define	CS9210			0x40   /* Chip select pin       */
+#define	CS9210			0x40    /* Chip select pin       */
 
 /* 9210 on Draco */
-#define CLOCK9210		0x04   /* Clock pin             */
-#define	DATAIN9210		0x20   /* Data from 9210        */
-#define	DATAOUT9210		0x80   /* Data to 9210          */
+#define CLOCK9210		0x04    /* Clock pin             */
+#define	DATAIN9210		0x20    /* Data from 9210        */
+#define	DATAOUT9210		0x80    /* Data to 9210          */
 
 static void DracoWriteData(unsigned char data);
 static void DracoReadData(unsigned char *data);
@@ -393,13 +393,13 @@ Draco9210Init(Pnl_PanelStat * pstat)
     Draco9210ToggleClock();
     Draco9210ClearCS();
 
-#if defined(_WIN32)                    /* For Windows   */
+#if defined(_WIN32)             /* For Windows   */
     for (i = 0; i < 10; i++) {
         _asm {
         out 0ED h, al}
     }
 
-#elif defined(linux)                   /* Linux                 */
+#elif defined(linux)            /* Linux                 */
 
 #endif
 
@@ -422,7 +422,8 @@ DracoWriteData(unsigned char data)
         databit = data & mask;
         if (data & mask) {
             Draco9210SetDataOut();
-        } else {
+        }
+        else {
             Draco9210ClearDataOut();
         }
         mask >>= 1;
@@ -449,7 +450,7 @@ DracoReadData(unsigned char *data)
     *data = tmp;
 }
 
-#if defined(_WIN32)                    /* For Windows */
+#if defined(_WIN32)             /* For Windows */
 
 void
 Draco9210GpioInit()
@@ -471,14 +472,11 @@ Draco9210SetCS()
         Point to PCI address register mov dx, 0 CF8h;
         55 XX GPIO data register mov eax, CX55x0_ID + 090 h out dx, eax;
         Point to PCI data register (CFCh)
-    mov dx, 0 CFCh
+mov dx, 0 CFCh
             in ax, dx
             and ah, 30 h
             mov ah, c92DataReg
-            or ah, CS9210 mov c92DataReg, ah out dx, ax popf}
-}
-
-void
+            or ah, CS9210 mov c92DataReg, ah out dx, ax popf}} void
 Draco9210ClearCS()
 {
     _asm {
@@ -487,13 +485,10 @@ Draco9210ClearCS()
         55 XX GPIO data register mov eax, CX55x0_ID + 090 h out dx, eax;
         Point to PCI data register (CFCh)
         mov dx, 0 CFCh;
-    Set CS LOW
+Set CS LOW
             in ax, dx
             mov ah, c92DataReg
-            and ah, NOT CS9210 mov c92DataReg, ah out dx, ax popf}
-}
-
-void
+            and ah, NOT CS9210 mov c92DataReg, ah out dx, ax popf}} void
 Draco9210SetDataOut()
 {
     _asm {
@@ -502,30 +497,26 @@ Draco9210SetDataOut()
         55 XX GPIO data register mov eax, CX55x0_ID + 090 h out dx, eax;
         Point to PCI data register (CFCh)
         mov dx, 0 CFCh;
-    Set DATA HIGH
+Set DATA HIGH
             in ax, dx
             mov ah, c92DataReg
-            or ah, DATAOUT9210 mov c92DataReg, ah out dx, ax popf}
-}
-
-void
+            or ah, DATAOUT9210 mov c92DataReg, ah out dx, ax popf}} void
 Draco9210ClearDataOut()
 {
     _asm {
         pushf;
         Point to PCI address register
-            mov dx, 0 CF8h mov eax, CX55x0_ID + 090 h;
+        mov dx, 0 CF8h mov eax, CX55x0_ID + 090 h;
+
         ;
         55 XX GPIO data register out dx, eax;
         Point to PCI data register (CFCh)
         mov dx, 0 CFCh;
-    Set Data LOW
+Set Data LOW
             in ax, dx
             mov ah, c92DataReg
-            and ah, NOT DATAOUT9210 mov c92DataReg, ah out dx, ax popf}
-}
-
-unsigned char
+            and ah, NOT DATAOUT9210 mov c92DataReg, ah out dx, ax popf}}
+    unsigned char
 Draco9210ReadDataIn()
 {
     unsigned char readdata;
@@ -538,8 +529,7 @@ Draco9210ReadDataIn()
         mov dx, 0F Ch in ax, dx;
         Preserve just Data IN bit and ah, DATAIN9210 mov al, ah cmp al, 0;
         Is it LOW ? je readDataLow;
-    must be HIGH mov al, 1 readDataLow:mov readdata, al popf}
-    return (readdata);
+    must be HIGH mov al, 1 readDataLow:mov readdata, al popf} return (readdata);
 }
 
 void
@@ -552,45 +542,49 @@ Draco9210ToggleClock()
         Point to PCI data register (CFCh)
         out dx, eax mov dx, 0 CFCh;
         SET CLOCK in ax, dx mov ah, c92DataReg or ah, CLOCK9210 mov c92DataReg, ah out dx, ax out 0ED h, al     /* IOPAUSE      */
-           ;
+        ;
         Point to PCI address register mov dx, 0 CF8h;
         55 XX GPIO data register mov eax, CX55x0_ID + 090 h out dx, eax;
         Point to PCI data register (CFCh)
         mov dx, 0 CFCh;
 
         ;
-    CLEAR CLOCK
+CLEAR CLOCK
             in ax, dx
             mov ah, c92DataReg
-            and ah, NOT CLOCK9210 mov c92DataReg, ah out dx, ax popf}
-}
-
-#elif defined(linux)                   /* Linux         */
+            and ah, NOT CLOCK9210 mov c92DataReg, ah out dx, ax popf}}
+#elif defined(linux)            /* Linux         */
 
 void
 Draco9210GpioInit()
 {
 }
+
 void
 Draco9210SetCS()
 {
 }
+
 void
 Draco9210ClearCS()
 {
 }
+
 void
 Draco9210SetDataOut()
 {
 }
+
 void
 Draco9210ClearDataOut()
 {
 }
+
 unsigned char
 Draco9210ReadDataIn()
 {
 }
+
 void
 Draco9210ToggleClock()
 {

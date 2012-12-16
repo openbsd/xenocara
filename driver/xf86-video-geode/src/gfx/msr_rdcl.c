@@ -27,7 +27,7 @@
  * This file contains MSR access routines for Redcloud.
  * */
 
-void redcloud_build_mbus_tree(void);   /* private routine definition */
+void redcloud_build_mbus_tree(void);    /* private routine definition */
 int redcloud_init_msr_devices(MSR aDev[], unsigned int array_size);
 
                                                                                 /* private routine definition */
@@ -212,7 +212,7 @@ redcloud_build_mbus_tree(void)
             MBIU0[port].deviceId = NOT_POPULATED;
         else {
             MSR_READ(MBD_MSR_CAP, MBIU0[port].address, &(msrValue.high),
-                &(msrValue.low));
+                     &(msrValue.low));
             MBIU0[port].deviceId = GET_DEVICE_ID(msrValue.high, msrValue.low);
         }
     }
@@ -253,7 +253,7 @@ redcloud_build_mbus_tree(void)
             MBIU1[port].deviceId = NOT_POPULATED;
         else {
             MSR_READ(MBD_MSR_CAP, MBIU1[port].address, &(msrValue.high),
-                &(msrValue.low));
+                     &(msrValue.low));
             MBIU1[port].deviceId = GET_DEVICE_ID(msrValue.high, msrValue.low);
         }
     }
@@ -273,8 +273,7 @@ redcloud_build_mbus_tree(void)
         /* Query the MBIU for the port through which we are communicating. */
         /* We will avoid accesses to this port to avoid a self-reference.  */
 
-        MSR_READ(MBIU_WHOAMI, CP_MB0_MBIU0, &(msrValue.high),
-            &(msrValue.low));
+        MSR_READ(MBIU_WHOAMI, CP_MB0_MBIU0, &(msrValue.high), &(msrValue.low));
         reflective = msrValue.low & WHOAMI_MASK;
 
         /* ENUMERATE ALL PORTS */
@@ -298,12 +297,13 @@ redcloud_build_mbus_tree(void)
                 MBIU2[port].deviceId = NOT_POPULATED;
             else {
                 MSR_READ(MBD_MSR_CAP, MBIU2[port].address, &(msrValue.high),
-                    &(msrValue.low));
+                         &(msrValue.low));
                 MBIU2[port].deviceId =
                     GET_DEVICE_ID(msrValue.high, msrValue.low);
             }
         }
-    } else {
+    }
+    else {
         /* NO 5535                                                  */
         /* If the CS5535 is not installed, fill in the cached table */
         /* with the 'NOT_INSTALLED' flag.  Also, fill in the device */
@@ -544,10 +544,12 @@ gfx_get_glink_id_at_address(unsigned int *device, unsigned long address)
         if (MBIU0[port].address == address) {
             *device = MBIU0[port].deviceId;
             return FOUND;
-        } else if (MBIU1[port].address == address) {
+        }
+        else if (MBIU1[port].address == address) {
             *device = MBIU1[port].deviceId;
             return FOUND;
-        } else if (MBIU2[port].address == address) {
+        }
+        else if (MBIU2[port].address == address) {
             *device = MBIU2[port].deviceId;
             return FOUND;
         }
@@ -577,7 +579,7 @@ gfx_get_glink_id_at_address(unsigned int *device, unsigned long address)
 #if GFX_MSR_DYNAMIC
 DEV_STATUS
 redcloud_msr_read(unsigned int device, unsigned int msrRegister,
-    Q_WORD * msrValue)
+                  Q_WORD * msrValue)
 #else
 DEV_STATUS
 gfx_msr_read(unsigned int device, unsigned int msrRegister, Q_WORD * msrValue)
@@ -586,7 +588,7 @@ gfx_msr_read(unsigned int device, unsigned int msrRegister, Q_WORD * msrValue)
     if (device < NUM_DEVS) {
         if (msrDev[device].Present == FOUND)
             MSR_READ(msrRegister, msrDev[device].Address, &(msrValue->high),
-                &(msrValue->low));
+                     &(msrValue->low));
 
         return msrDev[device].Present;
     }
@@ -614,17 +616,16 @@ gfx_msr_read(unsigned int device, unsigned int msrRegister, Q_WORD * msrValue)
 #if GFX_MSR_DYNAMIC
 DEV_STATUS
 redcloud_msr_write(unsigned int device, unsigned int msrRegister,
-    Q_WORD * msrValue)
+                   Q_WORD * msrValue)
 #else
 DEV_STATUS
-gfx_msr_write(unsigned int device, unsigned int msrRegister,
-    Q_WORD * msrValue)
+gfx_msr_write(unsigned int device, unsigned int msrRegister, Q_WORD * msrValue)
 #endif
 {
     if (device < NUM_DEVS) {
         if (msrDev[device].Present == FOUND)
             MSR_WRITE(msrRegister, msrDev[device].Address, &(msrValue->high),
-                &(msrValue->low));
+                      &(msrValue->low));
 
         return msrDev[device].Present;
     }

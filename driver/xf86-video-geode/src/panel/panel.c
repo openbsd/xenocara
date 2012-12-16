@@ -30,7 +30,7 @@
  * SubModule:       Geode FlatPanel library
  * */
 
-#if defined(linux)                     /* Linux */
+#if defined(linux)              /* Linux */
 
 #ifdef __KERNEL__
 
@@ -43,8 +43,8 @@
 #include <linux/fs.h>
 #include <asm/mman.h>
 
-#endif /* __KERNEL__ */
-#elif defined(_WIN32)                  /* windows */
+#endif                          /* __KERNEL__ */
+#elif defined(_WIN32)           /* windows */
 
 #include <windows.h>
 

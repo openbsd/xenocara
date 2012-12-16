@@ -30,7 +30,7 @@
 #include "config.h"
 #endif
 
-#include <string.h>		       /* memcmp() */
+#include <string.h>             /* memcmp() */
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -74,7 +74,8 @@
 
 void
 geode_memory_to_screen_blt(unsigned long src, unsigned long dst,
-    unsigned long sp, unsigned long dp, long w, long h, int bpp)
+                           unsigned long sp, unsigned long dp, long w, long h,
+                           int bpp)
 {
     int d0, d1, d2;
     int n = w * (bpp >> 3);
@@ -82,33 +83,33 @@ geode_memory_to_screen_blt(unsigned long src, unsigned long dst,
 
     switch (n & 3) {
     case 0:
-	while (--h >= 0) {
-	    move0(dst, src, m);
-	    src += sp;
-	    dst += dp;
-	}
-	break;
+        while (--h >= 0) {
+            move0(dst, src, m);
+            src += sp;
+            dst += dp;
+        }
+        break;
     case 1:
-	while (--h >= 0) {
-	    move1(dst, src, m);
-	    src += sp;
-	    dst += dp;
-	}
-	break;
+        while (--h >= 0) {
+            move1(dst, src, m);
+            src += sp;
+            dst += dp;
+        }
+        break;
     case 2:
-	while (--h >= 0) {
-	    move2(dst, src, m);
-	    src += sp;
-	    dst += dp;
-	}
-	break;
+        while (--h >= 0) {
+            move2(dst, src, m);
+            src += sp;
+            dst += dp;
+        }
+        break;
     case 3:
-	while (--h >= 0) {
-	    move3(dst, src, m);
-	    src += sp;
-	    dst += dp;
-	}
-	break;
+        while (--h >= 0) {
+            move3(dst, src, m);
+            src += sp;
+            dst += dp;
+        }
+        break;
     }
 }
 
@@ -120,9 +121,9 @@ int
 GeodeGetRefreshRate(DisplayModePtr pMode)
 {
     if (pMode->VRefresh)
-	return (int)(pMode->VRefresh + 0.5);
+        return (int) (pMode->VRefresh + 0.5);
 
-    return (int)(pMode->Clock * 1000.0 / pMode->HTotal / pMode->VTotal + 0.5);
+    return (int) (pMode->Clock * 1000.0 / pMode->HTotal / pMode->VTotal + 0.5);
 }
 
 /* This is used by both GX and LX.  It could be accelerated for LX, probably, but
@@ -133,7 +134,7 @@ GeodeGetRefreshRate(DisplayModePtr pMode)
 
 void
 GeodeCopyGreyscale(unsigned char *src, unsigned char *dst,
-    int dstPitch, int srcPitch, int h, int w)
+                   int dstPitch, int srcPitch, int h, int w)
 {
     int i;
     unsigned char *src2 = src;
@@ -144,21 +145,21 @@ GeodeCopyGreyscale(unsigned char *src, unsigned char *dst,
     dstPitch <<= 1;
 
     while (h--) {
-	dst3 = dst2;
-	src3 = src2;
-	for (i = 0; i < w; i++) {
-	    *dst3++ = *src3++;	       /* Copy Y data */
-	    *dst3++ = 0x80;	       /* Fill UV with 0x80 - greyscale */
-	}
+        dst3 = dst2;
+        src3 = src2;
+        for (i = 0; i < w; i++) {
+            *dst3++ = *src3++;  /* Copy Y data */
+            *dst3++ = 0x80;     /* Fill UV with 0x80 - greyscale */
+        }
 
-	src3 = src2;
-	for (i = 0; i < w; i++) {
-	    *dst3++ = *src3++;	       /* Copy Y data */
-	    *dst3++ = 0x80;	       /* Fill UV with 0x80 - greyscale */
-	}
+        src3 = src2;
+        for (i = 0; i < w; i++) {
+            *dst3++ = *src3++;  /* Copy Y data */
+            *dst3++ = 0x80;     /* Fill UV with 0x80 - greyscale */
+        }
 
-	dst2 += dstPitch;
-	src2 += srcPitch;
+        dst2 += dstPitch;
+        src2 += srcPitch;
     }
 }
 
@@ -174,16 +175,16 @@ GeodeGetSizeFromFB(unsigned int *size)
     int fd = open("/dev/fb0", O_RDONLY);
 
     if (fd == -1)
-	return -1;
+        return -1;
 
     ret = ioctl(fd, FBIOGET_FSCREENINFO, &fix);
     close(fd);
 
     if (!ret) {
-	if (!memcmp(fix.id, "Geode", 5)) {
-	    *size = fix.smem_len;
-	    return 0;
-	}
+        if (!memcmp(fix.id, "Geode", 5)) {
+            *size = fix.smem_len;
+            return 0;
+        }
     }
 
     return -1;

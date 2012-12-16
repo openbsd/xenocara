@@ -83,10 +83,9 @@ unsigned long gfx_gamma_ram_1200[] = {
  *----------------------------------------------------------------------------
  */
 
-typedef struct tagSC1200PLL
-{
-    long frequency;                    /* 16.16 fixed point frequency */
-    unsigned long clock_select;        /* clock select register (0x2C) */
+typedef struct tagSC1200PLL {
+    long frequency;             /* 16.16 fixed point frequency */
+    unsigned long clock_select; /* clock select register (0x2C) */
 } SC1200PLL;
 
 SC1200PLL gfx_sc1200_clock_table[] = {
@@ -132,20 +131,20 @@ SC1200PLL gfx_sc1200_clock_table[] = {
     {(232L << 16) | ((0000L * 65536L) / 10000L), 0x0010AA04},   /* 232.50  */
 
     /* Precomputed inidces in the hardware */
-    {0x0018EC4D, 0x000F0000},          /*  24.923052 */
-    {0x00192CCC, 0x00000000},          /*  25.1750  */
-    {0x001B0000, 0x00300100},          /*  27.0000  */
-    {0x001F8000, 0x00010000},          /*  31.5000  */
-    {0x00240000, 0x00020000},          /*  36.0000  */
-    {0x00280000, 0x00030000},          /*  40.0000  */
-    {0x00318000, 0x00050000},          /*  49.5000  */
-    {0x00320000, 0x00040000},          /*  50.0000  */
-    {0x00384000, 0x00060000},          /*  56.2500  */
-    {0x00410000, 0x00080000},          /*  65.0000  */
-    {0x004E8000, 0x000A0000},          /*  78.5000  */
-    {0x005E8000, 0x000B0000},          /*  94.5000  */
-    {0x006C0000, 0x000C0000},          /* 108.0000  */
-    {0x00870000, 0x000D0000},          /* 135.0000  */
+    {0x0018EC4D, 0x000F0000},   /*  24.923052 */
+    {0x00192CCC, 0x00000000},   /*  25.1750  */
+    {0x001B0000, 0x00300100},   /*  27.0000  */
+    {0x001F8000, 0x00010000},   /*  31.5000  */
+    {0x00240000, 0x00020000},   /*  36.0000  */
+    {0x00280000, 0x00030000},   /*  40.0000  */
+    {0x00318000, 0x00050000},   /*  49.5000  */
+    {0x00320000, 0x00040000},   /*  50.0000  */
+    {0x00384000, 0x00060000},   /*  56.2500  */
+    {0x00410000, 0x00080000},   /*  65.0000  */
+    {0x004E8000, 0x000A0000},   /*  78.5000  */
+    {0x005E8000, 0x000B0000},   /*  94.5000  */
+    {0x006C0000, 0x000C0000},   /* 108.0000  */
+    {0x00870000, 0x000D0000},   /* 135.0000  */
 };
 
 #define NUM_SC1200_FREQUENCIES	\
@@ -186,10 +185,10 @@ gfx_reset_video(void)
     gfx_set_display_video_size(0, 0);
 
     if (gfx_test_timing_active()) {
-        while (!gfx_test_vertical_active()) ;
-        while (gfx_test_vertical_active()) ;
-        while (!gfx_test_vertical_active()) ;
-        while (gfx_test_vertical_active()) ;
+        while (!gfx_test_vertical_active());
+        while (gfx_test_vertical_active());
+        while (!gfx_test_vertical_active());
+        while (gfx_test_vertical_active());
     }
 }
 
@@ -222,11 +221,11 @@ gfx_set_display_control(int sync_polarities)
 
     dcfg = READ_VID32(SC1200_DISPLAY_CONFIG);
     dcfg &= ~(SC1200_DCFG_CRT_SYNC_SKW_MASK | SC1200_DCFG_PWR_SEQ_DLY_MASK |
-        SC1200_DCFG_CRT_HSYNC_POL | SC1200_DCFG_CRT_VSYNC_POL |
-        SC1200_DCFG_FP_PWR_EN | SC1200_DCFG_FP_DATA_EN);
+              SC1200_DCFG_CRT_HSYNC_POL | SC1200_DCFG_CRT_VSYNC_POL |
+              SC1200_DCFG_FP_PWR_EN | SC1200_DCFG_FP_DATA_EN);
 
     dcfg |= (SC1200_DCFG_CRT_SYNC_SKW_INIT |
-        SC1200_DCFG_PWR_SEQ_DLY_INIT | SC1200_DCFG_GV_PAL_BYP);
+             SC1200_DCFG_PWR_SEQ_DLY_INIT | SC1200_DCFG_GV_PAL_BYP);
 
     if (PanelEnable)
         dcfg |= SC1200_DCFG_FP_PWR_EN;
@@ -267,11 +266,11 @@ gfx_set_clock_frequency(unsigned long frequency)
     /* Search the table for the closest frequency (16.16 format). */
 
     value = gfx_sc1200_clock_table[0].clock_select;
-    min = (long)gfx_sc1200_clock_table[0].frequency - frequency;
+    min = (long) gfx_sc1200_clock_table[0].frequency - frequency;
     if (min < 0L)
         min = -min;
     for (index = 1; index < NUM_SC1200_FREQUENCIES; index++) {
-        diff = (long)gfx_sc1200_clock_table[index].frequency - frequency;
+        diff = (long) gfx_sc1200_clock_table[index].frequency - frequency;
         if (diff < 0L)
             diff = -diff;
         if (diff < min) {
@@ -338,30 +337,31 @@ gfx_set_crt_enable(int enable)
      */
 
     switch (enable) {
-    case CRT_DISABLE:                 /* HSync:Off VSync:Off */
+    case CRT_DISABLE:          /* HSync:Off VSync:Off */
         WRITE_VID32(SC1200_DISPLAY_CONFIG, config & ~(SC1200_DCFG_HSYNC_EN
-                | SC1200_DCFG_VSYNC_EN | SC1200_DCFG_DAC_BL_EN));
+                                                      | SC1200_DCFG_VSYNC_EN |
+                                                      SC1200_DCFG_DAC_BL_EN));
         WRITE_VID32(SC1200_VID_MISC, misc | SC1200_DAC_POWER_DOWN);
         break;
-    case CRT_ENABLE:                  /* Enable CRT display, including 
-                                        * display logic */
+    case CRT_ENABLE:           /* Enable CRT display, including 
+                                 * display logic */
         WRITE_VID32(SC1200_DISPLAY_CONFIG, config | SC1200_DCFG_HSYNC_EN
-            | SC1200_DCFG_VSYNC_EN | SC1200_DCFG_DAC_BL_EN);
+                    | SC1200_DCFG_VSYNC_EN | SC1200_DCFG_DAC_BL_EN);
         WRITE_VID32(SC1200_VID_MISC, misc & ~SC1200_DAC_POWER_DOWN);
 
         /* ENABLE GRAPHICS DISPLAY LOGIC */
         gfx_set_screen_enable(1);
         break;
-    case CRT_STANDBY:                 /* HSync:Off VSync:On */
+    case CRT_STANDBY:          /* HSync:Off VSync:On */
         WRITE_VID32(SC1200_DISPLAY_CONFIG, (config & ~(SC1200_DCFG_HSYNC_EN
-                    | SC1200_DCFG_DAC_BL_EN))
-            | SC1200_DCFG_VSYNC_EN);
+                                                       | SC1200_DCFG_DAC_BL_EN))
+                    | SC1200_DCFG_VSYNC_EN);
         WRITE_VID32(SC1200_VID_MISC, misc | SC1200_DAC_POWER_DOWN);
         break;
-    case CRT_SUSPEND:                 /* HSync:On VSync:Off */
+    case CRT_SUSPEND:          /* HSync:On VSync:Off */
         WRITE_VID32(SC1200_DISPLAY_CONFIG, (config & ~(SC1200_DCFG_VSYNC_EN
-                    | SC1200_DCFG_DAC_BL_EN))
-            | SC1200_DCFG_HSYNC_EN);
+                                                       | SC1200_DCFG_DAC_BL_EN))
+                    | SC1200_DCFG_HSYNC_EN);
         WRITE_VID32(SC1200_VID_MISC, misc | SC1200_DAC_POWER_DOWN);
         break;
     default:
@@ -391,9 +391,9 @@ gfx_set_video_enable(int enable)
 
     if (gfx_test_timing_active()) {
         if (!gfx_test_vertical_active()) {
-            while (!gfx_test_vertical_active()) ;
+            while (!gfx_test_vertical_active());
         }
-        while (gfx_test_vertical_active()) ;
+        while (gfx_test_vertical_active());
     }
 
     vcfg = READ_VID32(SC1200_VIDEO_CONFIG);
@@ -402,7 +402,8 @@ gfx_set_video_enable(int enable)
 
         vcfg |= SC1200_VCFG_VID_EN;
         WRITE_VID32(SC1200_VIDEO_CONFIG, vcfg);
-    } else {
+    }
+    else {
         /* DISABLE SC1200 VIDEO OVERLAY */
 
         vcfg &= ~SC1200_VCFG_VID_EN;
@@ -531,7 +532,7 @@ gfx_set_video_size(unsigned short width, unsigned short height)
     /* Use private routine to abstract the display controller. */
 
     /* Add 1 line to bypass issue #803 */
-    gfx_set_display_video_size(width, (unsigned short)(height + 2));
+    gfx_set_display_video_size(width, (unsigned short) (height + 2));
     return (0);
 }
 
@@ -571,11 +572,11 @@ gfx_set_video_offset(unsigned long offset)
 #if GFX_VIDEO_DYNAMIC
 int
 sc1200_set_video_upscale(unsigned short srcw, unsigned short srch,
-    unsigned short dstw, unsigned short dsth)
+                         unsigned short dstw, unsigned short dsth)
 #else
 int
 gfx_set_video_upscale(unsigned short srcw, unsigned short srch,
-    unsigned short dstw, unsigned short dsth)
+                      unsigned short dstw, unsigned short dsth)
 #endif
 {
     unsigned long xscale, yscale;
@@ -625,7 +626,7 @@ gfx_set_video_upscale(unsigned short srcw, unsigned short srch,
     /* amount of data that needs to be transferred. */
 
     gfx_set_video_window(gfx_vid_xpos, gfx_vid_ypos, gfx_vid_width,
-        gfx_vid_height);
+                         gfx_vid_height);
     return (0);
 }
 
@@ -639,11 +640,11 @@ gfx_set_video_upscale(unsigned short srcw, unsigned short srch,
 #if GFX_VIDEO_DYNAMIC
 int
 sc1200_set_video_scale(unsigned short srcw, unsigned short srch,
-    unsigned short dstw, unsigned short dsth)
+                       unsigned short dstw, unsigned short dsth)
 #else
 int
 gfx_set_video_scale(unsigned short srcw, unsigned short srch,
-    unsigned short dstw, unsigned short dsth)
+                    unsigned short dstw, unsigned short dsth)
 #endif
 {
     return gfx_set_video_upscale(srcw, srch, dstw, dsth);
@@ -673,7 +674,7 @@ gfx_set_video_downscale_config(unsigned short type, unsigned short m)
     downscale = READ_VID32(SC1200_VIDEO_DOWNSCALER_CONTROL);
     downscale &=
         ~(SC1200_VIDEO_DOWNSCALE_FACTOR_MASK |
-        SC1200_VIDEO_DOWNSCALE_TYPE_MASK);
+          SC1200_VIDEO_DOWNSCALE_TYPE_MASK);
     downscale |= ((m - 1l) << SC1200_VIDEO_DOWNSCALE_FACTOR_POS);
     switch (type) {
     case VIDEO_DOWNSCALE_KEEP_1_OF:
@@ -698,21 +699,24 @@ gfx_set_video_downscale_config(unsigned short type, unsigned short m)
 #if GFX_VIDEO_DYNAMIC
 int
 sc1200_set_video_downscale_coefficients(unsigned short coef1,
-    unsigned short coef2, unsigned short coef3, unsigned short coef4)
+                                        unsigned short coef2,
+                                        unsigned short coef3,
+                                        unsigned short coef4)
 #else
 int
 gfx_set_video_downscale_coefficients(unsigned short coef1,
-    unsigned short coef2, unsigned short coef3, unsigned short coef4)
+                                     unsigned short coef2, unsigned short coef3,
+                                     unsigned short coef4)
 #endif
 {
     if ((coef1 + coef2 + coef3 + coef4) != 16)
         return GFX_STATUS_BAD_PARAMETER;
 
     WRITE_VID32(SC1200_VIDEO_DOWNSCALER_COEFFICIENTS,
-        ((unsigned long)coef1 << SC1200_VIDEO_DOWNSCALER_COEF1_POS) |
-        ((unsigned long)coef2 << SC1200_VIDEO_DOWNSCALER_COEF2_POS) |
-        ((unsigned long)coef3 << SC1200_VIDEO_DOWNSCALER_COEF3_POS) |
-        ((unsigned long)coef4 << SC1200_VIDEO_DOWNSCALER_COEF4_POS));
+                ((unsigned long) coef1 << SC1200_VIDEO_DOWNSCALER_COEF1_POS) |
+                ((unsigned long) coef2 << SC1200_VIDEO_DOWNSCALER_COEF2_POS) |
+                ((unsigned long) coef3 << SC1200_VIDEO_DOWNSCALER_COEF3_POS) |
+                ((unsigned long) coef4 << SC1200_VIDEO_DOWNSCALER_COEF4_POS));
     return (0);
 }
 
@@ -786,37 +790,37 @@ gfx_set_video_window(short x, short y, unsigned short w, unsigned short h)
 
     /* HORIZONTAL START */
 
-    xstart = (unsigned long)x + hadjust;
+    xstart = (unsigned long) x + hadjust;
 
     /* HORIZONTAL END */
     /* End positions in register are non-inclusive (one more than the actual 
      * end) */
 
     if ((x + w) < gfx_get_hactive())
-        xend = (unsigned long)x + (unsigned long)w + hadjust;
-    else                               /* right clipping needed */
-        xend = (unsigned long)gfx_get_hactive() + hadjust;
+        xend = (unsigned long) x + (unsigned long) w + hadjust;
+    else                        /* right clipping needed */
+        xend = (unsigned long) gfx_get_hactive() + hadjust;
 
     /* VERTICAL START */
 
-    ystart = (unsigned long)y + vadjust;
+    ystart = (unsigned long) y + vadjust;
 
     /* VERTICAL END */
 
     if ((y + h) < gfx_get_vactive())
-        yend = (unsigned long)y + (unsigned long)h + vadjust;
-    else                               /* bottom clipping needed */
-        yend = (unsigned long)gfx_get_vactive() + vadjust;
+        yend = (unsigned long) y + (unsigned long) h + vadjust;
+    else                        /* bottom clipping needed */
+        yend = (unsigned long) gfx_get_vactive() + vadjust;
 
     /* SET VIDEO LINE INVERT BIT */
 
     control = READ_VID32(SC1200_VID_ALPHA_CONTROL);
     if (y & 0x1)
         WRITE_VID32(SC1200_VID_ALPHA_CONTROL,
-            control | SC1200_VIDEO_LINE_OFFSET_ODD);
+                    control | SC1200_VIDEO_LINE_OFFSET_ODD);
     else
         WRITE_VID32(SC1200_VID_ALPHA_CONTROL,
-            control & ~SC1200_VIDEO_LINE_OFFSET_ODD);
+                    control & ~SC1200_VIDEO_LINE_OFFSET_ODD);
 
     /* SET VIDEO POSITION */
 
@@ -849,7 +853,7 @@ gfx_set_video_left_crop(unsigned short x)
     /* Adjust initial read for scale, checking for divide by zero */
 
     if (gfx_vid_dstw)
-        initread = (unsigned long)x *gfx_vid_srcw / gfx_vid_dstw;
+        initread = (unsigned long) x *gfx_vid_srcw / gfx_vid_dstw;
 
     else
         initread = 0l;
@@ -879,8 +883,7 @@ gfx_set_video_left_crop(unsigned short x)
  */
 #if GFX_VIDEO_DYNAMIC
 int
-sc1200_set_video_color_key(unsigned long key, unsigned long mask,
-    int graphics)
+sc1200_set_video_color_key(unsigned long key, unsigned long mask, int graphics)
 #else
 int
 gfx_set_video_color_key(unsigned long key, unsigned long mask, int graphics)
@@ -956,9 +959,9 @@ gfx_set_video_palette(unsigned long *palette)
 
     if (gfx_test_timing_active()) {
         if (gfx_test_vertical_active()) {
-            while (gfx_test_vertical_active()) ;
+            while (gfx_test_vertical_active());
         }
-        while (!gfx_test_vertical_active()) ;
+        while (!gfx_test_vertical_active());
     }
 
     /* LOAD SC1200 VIDEO PALETTE */
@@ -1012,9 +1015,9 @@ gfx_set_video_palette_entry(unsigned long index, unsigned long palette)
 
     if (gfx_test_timing_active()) {
         if (gfx_test_vertical_active()) {
-            while (gfx_test_vertical_active()) ;
+            while (gfx_test_vertical_active());
         }
-        while (!gfx_test_vertical_active()) ;
+        while (!gfx_test_vertical_active());
     }
 
     /* SET A SINGLE ENTRY */
@@ -1091,8 +1094,8 @@ gfx_set_video_request(short x, short y)
         return GFX_STATUS_BAD_PARAMETER;
 
     WRITE_VID32(SC1200_VIDEO_REQUEST,
-        ((unsigned long)x << SC1200_VIDEO_X_REQUEST_POS) | ((unsigned long)y
-            << SC1200_VIDEO_Y_REQUEST_POS));
+                ((unsigned long) x << SC1200_VIDEO_X_REQUEST_POS) |
+                ((unsigned long) y << SC1200_VIDEO_Y_REQUEST_POS));
     return (0);
 }
 
@@ -1118,13 +1121,13 @@ gfx_set_video_source(VideoSourceType source)
     switch (source) {
     case VIDEO_SOURCE_MEMORY:
         WRITE_VID32(SC1200_VIDEO_DISPLAY_MODE,
-            (display_mode & ~SC1200_VIDEO_SOURCE_MASK) |
-            SC1200_VIDEO_SOURCE_GX1);
+                    (display_mode & ~SC1200_VIDEO_SOURCE_MASK) |
+                    SC1200_VIDEO_SOURCE_GX1);
         break;
     case VIDEO_SOURCE_DVIP:
         WRITE_VID32(SC1200_VIDEO_DISPLAY_MODE,
-            (display_mode & ~SC1200_VIDEO_SOURCE_MASK) |
-            SC1200_VIDEO_SOURCE_DVIP);
+                    (display_mode & ~SC1200_VIDEO_SOURCE_MASK) |
+                    SC1200_VIDEO_SOURCE_DVIP);
         break;
     default:
         return GFX_STATUS_BAD_PARAMETER;
@@ -1154,12 +1157,13 @@ gfx_set_vbi_source(VbiSourceType source)
     switch (source) {
     case VBI_SOURCE_MEMORY:
         WRITE_VID32(SC1200_VIDEO_DISPLAY_MODE,
-            (display_mode & ~SC1200_VBI_SOURCE_MASK) | SC1200_VBI_SOURCE_GX1);
+                    (display_mode & ~SC1200_VBI_SOURCE_MASK) |
+                    SC1200_VBI_SOURCE_GX1);
         break;
     case VBI_SOURCE_DVIP:
         WRITE_VID32(SC1200_VIDEO_DISPLAY_MODE,
-            (display_mode & ~SC1200_VBI_SOURCE_MASK) |
-            SC1200_VBI_SOURCE_DVIP);
+                    (display_mode & ~SC1200_VBI_SOURCE_MASK) |
+                    SC1200_VBI_SOURCE_DVIP);
         break;
     default:
         return GFX_STATUS_BAD_PARAMETER;
@@ -1183,9 +1187,9 @@ gfx_set_vbi_lines(unsigned long even, unsigned long odd)
 {
     /* SET SC1200 VBI LINES */
     WRITE_VID32(SC1200_VIDEO_EVEN_VBI_LINE_ENABLE,
-        even & SC1200_VIDEO_VBI_LINE_ENABLE_MASK);
+                even & SC1200_VIDEO_VBI_LINE_ENABLE_MASK);
     WRITE_VID32(SC1200_VIDEO_ODD_VBI_LINE_ENABLE,
-        odd & SC1200_VIDEO_VBI_LINE_ENABLE_MASK);
+                odd & SC1200_VIDEO_VBI_LINE_ENABLE_MASK);
     return (0);
 }
 
@@ -1206,9 +1210,9 @@ gfx_set_vbi_total(unsigned long even, unsigned long odd)
 {
     /* SET SC1200 VBI TOTAL */
     WRITE_VID32(SC1200_VIDEO_EVEN_VBI_TOTAL_COUNT,
-        even & SC1200_VIDEO_VBI_TOTAL_COUNT_MASK);
+                even & SC1200_VIDEO_VBI_TOTAL_COUNT_MASK);
     WRITE_VID32(SC1200_VIDEO_ODD_VBI_TOTAL_COUNT,
-        odd & SC1200_VIDEO_VBI_TOTAL_COUNT_MASK);
+                odd & SC1200_VIDEO_VBI_TOTAL_COUNT_MASK);
     return (0);
 }
 
@@ -1233,10 +1237,10 @@ gfx_set_video_interlaced(int enable)
     /* SET INTERLACED VIDEO */
     if (enable)
         WRITE_VID32(SC1200_VID_ALPHA_CONTROL,
-            control | SC1200_VIDEO_IS_INTERLACED);
+                    control | SC1200_VIDEO_IS_INTERLACED);
     else
         WRITE_VID32(SC1200_VID_ALPHA_CONTROL,
-            control & ~SC1200_VIDEO_IS_INTERLACED);
+                    control & ~SC1200_VIDEO_IS_INTERLACED);
     return (0);
 }
 
@@ -1274,7 +1278,8 @@ gfx_set_color_space_YUV(int enable)
         if (control & SC1200_VIDEO_INPUT_IS_RGB)
             return (GFX_STATUS_UNSUPPORTED);    /* Can't convert video from 
                                                  * RGB to YUV */
-    } else {
+    }
+    else {
         /* RGB BLENDING */
 
         control &= ~SC1200_CSC_GFX_RGB_TO_YUV;  /* Leave graphics in RGB */
@@ -1314,12 +1319,14 @@ gfx_set_vertical_scaler_offset(char offset)
         /* Set shifting value                                   */
         control |= SC1200_VERTICAL_SCALER_SHIFT_EN;
         /* Enable odd frame shifting                   */
-    } else if (offset == 0) {
+    }
+    else if (offset == 0) {
         control &= ~SC1200_VERTICAL_SCALER_SHIFT_EN;
         /* No shifting occurs                                   */
         control &= ~SC1200_VERTICAL_SCALER_SHIFT_MASK;
         /* Clear shifting value                                 */
-    } else
+    }
+    else
         return (GFX_STATUS_BAD_PARAMETER);
     /* TODO: how to program other values ?  */
     WRITE_VID32(SC1200_VID_ALPHA_CONTROL, control);
@@ -1451,18 +1458,20 @@ gfx_set_genlock_enable(int flags)
 #if GFX_VIDEO_DYNAMIC
 int
 sc1200_set_video_cursor(unsigned long key, unsigned long mask,
-    unsigned short select_color2, unsigned long color1, unsigned long color2)
+                        unsigned short select_color2, unsigned long color1,
+                        unsigned long color2)
 #else
 int
 gfx_set_video_cursor(unsigned long key, unsigned long mask,
-    unsigned short select_color2, unsigned long color1, unsigned long color2)
+                     unsigned short select_color2, unsigned long color1,
+                     unsigned long color2)
 #endif
 {
     if (select_color2 > SC1200_CURSOR_COLOR_BITS)
         return GFX_STATUS_BAD_PARAMETER;
     key =
-        (key & SC1200_COLOR_MASK) | ((unsigned long)select_color2 <<
-        SC1200_CURSOR_COLOR_KEY_OFFSET_POS);
+        (key & SC1200_COLOR_MASK) | ((unsigned long) select_color2 <<
+                                     SC1200_CURSOR_COLOR_KEY_OFFSET_POS);
     WRITE_VID32(SC1200_CURSOR_COLOR_KEY, key);
     WRITE_VID32(SC1200_CURSOR_COLOR_MASK, mask);
     WRITE_VID32(SC1200_CURSOR_COLOR_1, color1);
@@ -1488,7 +1497,7 @@ gfx_set_alpha_enable(int enable)
 
     if (gfx_alpha_select > 2)
         return (GFX_STATUS_UNSUPPORTED);
-    address = SC1200_ALPHA_CONTROL_1 + ((unsigned long)gfx_alpha_select << 4);
+    address = SC1200_ALPHA_CONTROL_1 + ((unsigned long) gfx_alpha_select << 4);
     value = READ_VID32(address);
     if (enable)
         value |= (SC1200_ACTRL_WIN_ENABLE | SC1200_ACTRL_LOAD_ALPHA);
@@ -1509,11 +1518,11 @@ gfx_set_alpha_enable(int enable)
 #if GFX_VIDEO_DYNAMIC
 int
 sc1200_set_alpha_window(short x, short y,
-    unsigned short width, unsigned short height)
+                        unsigned short width, unsigned short height)
 #else
 int
 gfx_set_alpha_window(short x, short y,
-    unsigned short width, unsigned short height)
+                     unsigned short width, unsigned short height)
 #endif
 {
     unsigned long address = 0;
@@ -1532,15 +1541,15 @@ gfx_set_alpha_window(short x, short y,
 
     if (gfx_alpha_select > 2)
         return (GFX_STATUS_UNSUPPORTED);
-    address = SC1200_ALPHA_XPOS_1 + ((unsigned long)gfx_alpha_select << 4);
+    address = SC1200_ALPHA_XPOS_1 + ((unsigned long) gfx_alpha_select << 4);
 
     /* End positions in register are non-inclusive (one more than the actual 
      * end) */
 
-    WRITE_VID32(address, (unsigned long)x |
-        ((unsigned long)(x + width) << 16));
-    WRITE_VID32(address + 4l, (unsigned long)y |
-        ((unsigned long)(y + height) << 16));
+    WRITE_VID32(address, (unsigned long) x |
+                ((unsigned long) (x + width) << 16));
+    WRITE_VID32(address + 4l, (unsigned long) y |
+                ((unsigned long) (y + height) << 16));
     return (GFX_STATUS_OK);
 }
 
@@ -1565,11 +1574,11 @@ gfx_set_alpha_value(unsigned char alpha, char delta)
 
     if (gfx_alpha_select > 2)
         return (GFX_STATUS_UNSUPPORTED);
-    address = SC1200_ALPHA_CONTROL_1 + ((unsigned long)gfx_alpha_select << 4);
+    address = SC1200_ALPHA_CONTROL_1 + ((unsigned long) gfx_alpha_select << 4);
     value = READ_VID32(address);
-    value &= SC1200_ACTRL_WIN_ENABLE;  /* keep only enable bit */
-    value |= (unsigned long)alpha;
-    value |= (((unsigned long)delta) & 0xff) << 8;
+    value &= SC1200_ACTRL_WIN_ENABLE;   /* keep only enable bit */
+    value |= (unsigned long) alpha;
+    value |= (((unsigned long) delta) & 0xff) << 8;
     value |= SC1200_ACTRL_LOAD_ALPHA;
     WRITE_VID32(address, value);
 
@@ -1580,12 +1589,12 @@ gfx_set_alpha_value(unsigned char alpha, char delta)
         /* WAIT FOR VERTICAL BLANK TO END */
         if (gfx_test_timing_active()) {
             if (gfx_test_vertical_active())
-                while (gfx_test_vertical_active()) ;
-            while (!gfx_test_vertical_active()) ;
+                while (gfx_test_vertical_active());
+            while (!gfx_test_vertical_active());
         }
         new_value =
-            (unsigned char)((READ_VID32(SC1200_ALPHA_WATCH) >>
-                (gfx_alpha_select << 3)) & 0xff);
+            (unsigned char) ((READ_VID32(SC1200_ALPHA_WATCH) >>
+                              (gfx_alpha_select << 3)) & 0xff);
         if (new_value == alpha)
             return GFX_STATUS_OK;
         if (++loop > 10)
@@ -1619,7 +1628,7 @@ gfx_set_alpha_priority(int priority)
     value = READ_VID32(SC1200_VID_ALPHA_CONTROL);
     pos = 16 + (gfx_alpha_select << 1);
     value &= ~(0x03l << pos);
-    value |= (unsigned long)priority << pos;
+    value |= (unsigned long) priority << pos;
     WRITE_VID32(SC1200_VID_ALPHA_CONTROL, value);
     return (GFX_STATUS_OK);
 }
@@ -1647,7 +1656,7 @@ gfx_set_alpha_color(unsigned long color)
 
     if (gfx_alpha_select > 2)
         return (GFX_STATUS_UNSUPPORTED);
-    address = SC1200_ALPHA_COLOR_1 + ((unsigned long)gfx_alpha_select << 4);
+    address = SC1200_ALPHA_COLOR_1 + ((unsigned long) gfx_alpha_select << 4);
 
     /* ONLY 24 VALID BITS */
     color &= 0xffffffl;
@@ -1676,7 +1685,7 @@ gfx_set_alpha_color_enable(int enable)
 
     if (gfx_alpha_select > 2)
         return (GFX_STATUS_UNSUPPORTED);
-    address = SC1200_ALPHA_COLOR_1 + ((unsigned long)gfx_alpha_select << 4);
+    address = SC1200_ALPHA_COLOR_1 + ((unsigned long) gfx_alpha_select << 4);
     color = READ_VID32(address);
     if (enable)
         color |= SC1200_ALPHA_COLOR_ENABLE;
@@ -1712,10 +1721,10 @@ gfx_set_no_ck_outside_alpha(int enable)
     value = READ_VID32(SC1200_VID_ALPHA_CONTROL);
     if (enable)
         WRITE_VID32(SC1200_VID_ALPHA_CONTROL,
-            value | SC1200_NO_CK_OUTSIDE_ALPHA);
+                    value | SC1200_NO_CK_OUTSIDE_ALPHA);
     else
         WRITE_VID32(SC1200_VID_ALPHA_CONTROL,
-            value & ~SC1200_NO_CK_OUTSIDE_ALPHA);
+                    value & ~SC1200_NO_CK_OUTSIDE_ALPHA);
     return (0);
 }
 
@@ -1995,7 +2004,8 @@ gfx_get_video_format(void)
         case SC1200_VCFG_YVYU_FORMAT:
             return VIDEO_FORMAT_Y1Y2Y3Y0;
         }
-    } else {
+    }
+    else {
         switch (vcfg & SC1200_VCFG_VID_INP_FORMAT) {
         case SC1200_VCFG_UYVY_FORMAT:
             return VIDEO_FORMAT_UYVY;
@@ -2158,8 +2168,8 @@ gfx_get_video_downscale_config(unsigned short *type, unsigned short *m)
     unsigned long downscale;
 
     downscale = READ_VID32(SC1200_VIDEO_DOWNSCALER_CONTROL);
-    *m = (unsigned short)((downscale & SC1200_VIDEO_DOWNSCALE_FACTOR_MASK) >>
-        SC1200_VIDEO_DOWNSCALE_FACTOR_POS) + 1;
+    *m = (unsigned short) ((downscale & SC1200_VIDEO_DOWNSCALE_FACTOR_MASK) >>
+                           SC1200_VIDEO_DOWNSCALE_FACTOR_POS) + 1;
 
     switch (downscale & SC1200_VIDEO_DOWNSCALE_TYPE_MASK) {
     case SC1200_VIDEO_DOWNSCALE_TYPE_A:
@@ -2184,28 +2194,32 @@ gfx_get_video_downscale_config(unsigned short *type, unsigned short *m)
 #if GFX_VIDEO_DYNAMIC
 void
 sc1200_get_video_downscale_coefficients(unsigned short *coef1,
-    unsigned short *coef2, unsigned short *coef3, unsigned short *coef4)
+                                        unsigned short *coef2,
+                                        unsigned short *coef3,
+                                        unsigned short *coef4)
 #else
 void
 gfx_get_video_downscale_coefficients(unsigned short *coef1,
-    unsigned short *coef2, unsigned short *coef3, unsigned short *coef4)
+                                     unsigned short *coef2,
+                                     unsigned short *coef3,
+                                     unsigned short *coef4)
 #endif
 {
     unsigned long coef;
 
     coef = READ_VID32(SC1200_VIDEO_DOWNSCALER_COEFFICIENTS);
     *coef1 =
-        (unsigned short)((coef >> SC1200_VIDEO_DOWNSCALER_COEF1_POS) &
-        SC1200_VIDEO_DOWNSCALER_COEF_MASK);
+        (unsigned short) ((coef >> SC1200_VIDEO_DOWNSCALER_COEF1_POS) &
+                          SC1200_VIDEO_DOWNSCALER_COEF_MASK);
     *coef2 =
-        (unsigned short)((coef >> SC1200_VIDEO_DOWNSCALER_COEF2_POS) &
-        SC1200_VIDEO_DOWNSCALER_COEF_MASK);
+        (unsigned short) ((coef >> SC1200_VIDEO_DOWNSCALER_COEF2_POS) &
+                          SC1200_VIDEO_DOWNSCALER_COEF_MASK);
     *coef3 =
-        (unsigned short)((coef >> SC1200_VIDEO_DOWNSCALER_COEF3_POS) &
-        SC1200_VIDEO_DOWNSCALER_COEF_MASK);
+        (unsigned short) ((coef >> SC1200_VIDEO_DOWNSCALER_COEF3_POS) &
+                          SC1200_VIDEO_DOWNSCALER_COEF_MASK);
     *coef4 =
-        (unsigned short)((coef >> SC1200_VIDEO_DOWNSCALER_COEF4_POS) &
-        SC1200_VIDEO_DOWNSCALER_COEF_MASK);
+        (unsigned short) ((coef >> SC1200_VIDEO_DOWNSCALER_COEF4_POS) &
+                          SC1200_VIDEO_DOWNSCALER_COEF_MASK);
     return;
 }
 
@@ -2282,10 +2296,10 @@ gfx_get_video_position(void)
     /* Use routines to abstract version of display controller. */
 
     hadjust =
-        (unsigned long)gfx_get_htotal() - (unsigned long)gfx_get_hsync_end() -
+        (unsigned long) gfx_get_htotal() - (unsigned long) gfx_get_hsync_end() -
         14l;
     vadjust =
-        (unsigned long)gfx_get_vtotal() - (unsigned long)gfx_get_vsync_end() +
+        (unsigned long) gfx_get_vtotal() - (unsigned long) gfx_get_vsync_end() +
         1l;
     xpos -= hadjust;
     ypos -= vadjust;
@@ -2385,7 +2399,7 @@ gfx_get_video_request(short *x, short *y)
 {
     int request = 0;
 
-    request = (int)(READ_VID32(SC1200_VIDEO_REQUEST));
+    request = (int) (READ_VID32(SC1200_VIDEO_REQUEST));
     *x = (request >> SC1200_VIDEO_X_REQUEST_POS) & SC1200_VIDEO_REQUEST_MASK;
     *y = (request >> SC1200_VIDEO_Y_REQUEST_POS) & SC1200_VIDEO_REQUEST_MASK;
 
@@ -2465,9 +2479,9 @@ gfx_get_vbi_lines(int odd)
 {
     if (odd)
         return (READ_VID32(SC1200_VIDEO_ODD_VBI_LINE_ENABLE) &
-            SC1200_VIDEO_VBI_LINE_ENABLE_MASK);
+                SC1200_VIDEO_VBI_LINE_ENABLE_MASK);
     return (READ_VID32(SC1200_VIDEO_EVEN_VBI_LINE_ENABLE) &
-        SC1200_VIDEO_VBI_LINE_ENABLE_MASK);
+            SC1200_VIDEO_VBI_LINE_ENABLE_MASK);
 }
 
 /*---------------------------------------------------------------------------
@@ -2486,9 +2500,9 @@ gfx_get_vbi_total(int odd)
 {
     if (odd)
         return (READ_VID32(SC1200_VIDEO_ODD_VBI_TOTAL_COUNT) &
-            SC1200_VIDEO_VBI_TOTAL_COUNT_MASK);
+                SC1200_VIDEO_VBI_TOTAL_COUNT_MASK);
     return (READ_VID32(SC1200_VIDEO_EVEN_VBI_TOTAL_COUNT) &
-        SC1200_VIDEO_VBI_TOTAL_COUNT_MASK);
+            SC1200_VIDEO_VBI_TOTAL_COUNT_MASK);
 }
 
 /*---------------------------------------------------------------------------
@@ -2564,7 +2578,8 @@ gfx_get_vertical_scaler_offset(char *offset)
         else
             return GFX_STATUS_ERROR;
         /* TODO: find the interpretation of other values */
-    } else
+    }
+    else
         *offset = 0;
     return (0);
 }
@@ -2619,24 +2634,24 @@ gfx_get_genlock_enable(void)
 #if GFX_VIDEO_DYNAMIC
 int
 sc1200_get_video_cursor(unsigned long *key, unsigned long *mask,
-    unsigned short *select_color2, unsigned long *color1,
-    unsigned short *color2)
+                        unsigned short *select_color2, unsigned long *color1,
+                        unsigned short *color2)
 #else
 int
 gfx_get_video_cursor(unsigned long *key, unsigned long *mask,
-    unsigned short *select_color2, unsigned long *color1,
-    unsigned short *color2)
+                     unsigned short *select_color2, unsigned long *color1,
+                     unsigned short *color2)
 #endif
 {
     *select_color2 =
-        (unsigned short)(READ_VID32(SC1200_CURSOR_COLOR_KEY) >>
-        SC1200_CURSOR_COLOR_KEY_OFFSET_POS);
+        (unsigned short) (READ_VID32(SC1200_CURSOR_COLOR_KEY) >>
+                          SC1200_CURSOR_COLOR_KEY_OFFSET_POS);
     *key = READ_VID32(SC1200_CURSOR_COLOR_KEY) & SC1200_COLOR_MASK;
     *mask = READ_VID32(SC1200_CURSOR_COLOR_MASK) & SC1200_COLOR_MASK;
     *color1 = READ_VID32(SC1200_CURSOR_COLOR_1) & SC1200_COLOR_MASK;
     *color2 =
-        (unsigned short)(READ_VID32(SC1200_CURSOR_COLOR_2) &
-        SC1200_COLOR_MASK);
+        (unsigned short) (READ_VID32(SC1200_CURSOR_COLOR_2) &
+                          SC1200_COLOR_MASK);
     return (0);
 }
 
@@ -2661,7 +2676,7 @@ gfx_read_crc(void)
     if (gfx_test_timing_active()) {
         /* WAIT UNTIL ACTIVE DISPLAY */
 
-        while (!gfx_test_vertical_active()) ;
+        while (!gfx_test_vertical_active());
 
         /* RESET CRC DURING ACTIVE DISPLAY */
 
@@ -2670,10 +2685,10 @@ gfx_read_crc(void)
 
         /* WAIT UNTIL NOT ACTIVE, THEN ACTIVE, NOT ACTIVE, THEN ACTIVE */
 
-        while (gfx_test_vertical_active()) ;
-        while (!gfx_test_vertical_active()) ;
-        while (gfx_test_vertical_active()) ;
-        while (!gfx_test_vertical_active()) ;
+        while (gfx_test_vertical_active());
+        while (!gfx_test_vertical_active());
+        while (gfx_test_vertical_active());
+        while (!gfx_test_vertical_active());
         crc = READ_VID32(SC1200_VID_CRC) >> 8;
     }
     return (crc);
@@ -2720,7 +2735,7 @@ gfx_get_alpha_enable(int *enable)
     if (gfx_alpha_select <= 2) {
         value =
             READ_VID32(SC1200_ALPHA_CONTROL_1 +
-            ((unsigned long)gfx_alpha_select << 4));
+                       ((unsigned long) gfx_alpha_select << 4));
         if (value & SC1200_ACTRL_WIN_ENABLE)
             *enable = 1;
     }
@@ -2736,11 +2751,11 @@ gfx_get_alpha_enable(int *enable)
 #if GFX_VIDEO_DYNAMIC
 void
 sc1200_get_alpha_size(unsigned short *x, unsigned short *y,
-    unsigned short *width, unsigned short *height)
+                      unsigned short *width, unsigned short *height)
 #else
 void
 gfx_get_alpha_size(unsigned short *x, unsigned short *y,
-    unsigned short *width, unsigned short *height)
+                   unsigned short *width, unsigned short *height)
 #endif
 {
     unsigned long value = 0;
@@ -2752,14 +2767,14 @@ gfx_get_alpha_size(unsigned short *x, unsigned short *y,
     if (gfx_alpha_select <= 2) {
         value =
             READ_VID32(SC1200_ALPHA_XPOS_1 +
-            ((unsigned long)gfx_alpha_select << 4));
-        *x = (unsigned short)(value & 0x000007FF);
-        *width = (unsigned short)((value >> 16) & 0x000007FF) - *x;
+                       ((unsigned long) gfx_alpha_select << 4));
+        *x = (unsigned short) (value & 0x000007FF);
+        *width = (unsigned short) ((value >> 16) & 0x000007FF) - *x;
         value =
             READ_VID32(SC1200_ALPHA_YPOS_1 +
-            ((unsigned long)gfx_alpha_select << 4));
-        *y = (unsigned short)(value & 0x000007FF);
-        *height = (unsigned short)((value >> 16) & 0x000007FF) - *y;
+                       ((unsigned long) gfx_alpha_select << 4));
+        *y = (unsigned short) (value & 0x000007FF);
+        *height = (unsigned short) ((value >> 16) & 0x000007FF) - *y;
     }
     *x -= gfx_get_htotal() - gfx_get_hsync_end() - 2;
     *y -= gfx_get_vtotal() - gfx_get_vsync_end() + 1;
@@ -2788,9 +2803,9 @@ gfx_get_alpha_value(unsigned char *alpha, char *delta)
     if (gfx_alpha_select <= 2) {
         value =
             READ_VID32(SC1200_ALPHA_CONTROL_1 +
-            ((unsigned long)gfx_alpha_select << 4));
-        *alpha = (unsigned char)(value & 0x00FF);
-        *delta = (char)((value >> 8) & 0x00FF);
+                       ((unsigned long) gfx_alpha_select << 4));
+        *alpha = (unsigned char) (value & 0x00FF);
+        *delta = (char) ((value >> 8) & 0x00FF);
     }
     return;
 }
@@ -2815,7 +2830,7 @@ gfx_get_alpha_priority(int *priority)
     if (gfx_alpha_select <= 2) {
         value = READ_VID32(SC1200_VID_ALPHA_CONTROL);
         pos = 16 + (gfx_alpha_select << 1);
-        *priority = (int)((value >> pos) & 3);
+        *priority = (int) ((value >> pos) & 3);
     }
     return;
 }
@@ -2839,11 +2854,11 @@ gfx_get_alpha_color(unsigned long *color)
     if (gfx_alpha_select <= 2) {
         *color =
             READ_VID32(SC1200_ALPHA_COLOR_1 +
-            ((unsigned long)gfx_alpha_select << 4));
+                       ((unsigned long) gfx_alpha_select << 4));
     }
     return;
 }
 
-#endif /* GFX_READ_ROUTINES */
+#endif                          /* GFX_READ_ROUTINES */
 
 /* END OF FILE */

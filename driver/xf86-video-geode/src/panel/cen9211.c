@@ -62,7 +62,7 @@ init_Centaurus_GPIO(void)
     /* set to bank 0 */
     if (reg_val & CENT_GPIO_BANK_SELECT) {
         gfx_outb(CENT_CONFIG_DATA,
-            (unsigned char)(reg_val & ~CENT_GPIO_BANK_SELECT));
+                 (unsigned char) (reg_val & ~CENT_GPIO_BANK_SELECT));
     }
 
     /* If this is the first time we have modified sioc2, we must 
@@ -108,7 +108,7 @@ init_Centaurus_GPIO(void)
     gfx_outb(CENT_PORT2_OUTPUT_TYPE, reg_val);
     return CENT_PASS;
 
-}                                      /* end init_GPIO() */
+}                               /* end init_GPIO() */
 
 /*********************************************************************
  *
@@ -135,7 +135,7 @@ init_Centaurus_9211(void)
     gfx_outb(CENT_97317_CHIP_SELECT, ReadData);
     return (CENT_PASS);
 
-}                                      /*end init_9211() */
+}                               /*end init_9211() */
 
 /******************************************************************
  *
@@ -166,10 +166,10 @@ restore_Centaurus_97317_SIOC2(void)
         else
             return (CENT_FAIL);
 
-    }                                  /* end if() */
+    }                           /* end if() */
     return (CENT_FAIL);
 
-}                                      /* end restore_97317_SIOC2bank() */
+}                               /* end restore_97317_SIOC2bank() */
 
 /* -----------------------------------------------------------------------
  *
@@ -199,11 +199,11 @@ set_Centaurus_92xx_mode(Pnl_PanelStat * pstat)
             /* SET THE 92xx FOR THE SELECTED MODE */
             set_Centaurus_92xx_mode_params(mode);
             return (CENT_PASS);
-        }                              /* end if() */
-    }                                  /* end for() */
+        }                       /* end if() */
+    }                           /* end for() */
     return (CENT_FAIL);
 
-}                                      /* end set_Centaurus_92xx_mode() */
+}                               /* end set_Centaurus_92xx_mode() */
 
 /*-------------------------------------------------------------------
  *
@@ -228,51 +228,53 @@ set_Centaurus_92xx_mode_params(int mode)
     /* set 9211 registers using the desired panel settings */
 
     Centaurus_write_gpio(FOUR_BYTES,
-        CS92xx_LCD_PAN_TIMING1, pMode->panel_timing1);
+                         CS92xx_LCD_PAN_TIMING1, pMode->panel_timing1);
 
     Centaurus_write_gpio(FOUR_BYTES,
-        CS92xx_LCD_PAN_TIMING2, pMode->panel_timing2);
+                         CS92xx_LCD_PAN_TIMING2, pMode->panel_timing2);
 
     if (Pnl_Rev_ID == PNL_9211_C) {
 
         /* load the LSFR seeds */
         Centaurus_write_gpio(FOUR_BYTES,
-            CS92xx_LCD_DITH_FR_CNTRL, pMode->rev_C_dither_frc);
+                             CS92xx_LCD_DITH_FR_CNTRL, pMode->rev_C_dither_frc);
 
         Centaurus_write_gpio(FOUR_BYTES,
-            CS92xx_BLUE_LSFR_SEED, pMode->blue_lsfr_seed);
+                             CS92xx_BLUE_LSFR_SEED, pMode->blue_lsfr_seed);
 
         Centaurus_write_gpio(FOUR_BYTES,
-            CS92xx_RED_GREEN_LSFR_SEED, pMode->red_green_lsfr_seed);
-    } else {
+                             CS92xx_RED_GREEN_LSFR_SEED,
+                             pMode->red_green_lsfr_seed);
+    }
+    else {
 
         Centaurus_write_gpio(FOUR_BYTES,
-            CS92xx_LCD_DITH_FR_CNTRL, pMode->pre_C_dither_frc);
+                             CS92xx_LCD_DITH_FR_CNTRL, pMode->pre_C_dither_frc);
 
         Centaurus_write_gpio(FOUR_BYTES,
-            CS92xx_LCD_BLOCK_SEL1, pMode->block_select1);
+                             CS92xx_LCD_BLOCK_SEL1, pMode->block_select1);
 
         Centaurus_write_gpio(FOUR_BYTES,
-            CS92xx_LCD_BLOCK_SEL2, pMode->block_select2);
+                             CS92xx_LCD_BLOCK_SEL2, pMode->block_select2);
 
         Centaurus_write_gpio(FOUR_BYTES,
-            CS92xx_LCD_DISPER1, pMode->dispersion1);
+                             CS92xx_LCD_DISPER1, pMode->dispersion1);
 
         Centaurus_write_gpio(FOUR_BYTES,
-            CS92xx_LCD_DISPER2, pMode->dispersion2);
+                             CS92xx_LCD_DISPER2, pMode->dispersion2);
 
         CentaurusProgramFRMload();
     }
 
     Centaurus_write_gpio(FOUR_BYTES, CS92xx_LCD_MEM_CNTRL,
-        pMode->memory_control);
+                         pMode->memory_control);
 
     /* Set the power register last. This will turn the panel on at the 9211. */
 
     Centaurus_write_gpio(FOUR_BYTES,
-        CS92xx_LCD_PWR_MAN, pMode->power_management);
+                         CS92xx_LCD_PWR_MAN, pMode->power_management);
 
-}                                      /* end set_Centaurus_92xx_mode_params() */
+}                               /* end set_Centaurus_92xx_mode_params() */
 
 void
 Centaurus_write_gpio(int width, ULONG address, unsigned long data)
@@ -291,7 +293,7 @@ Centaurus_write_gpio(int width, ULONG address, unsigned long data)
 
     /* Write the 12-bit address */
     for (count = 0; count < 12; count++) {
-        write_Centaurus_CX9211_GPIO((unsigned char)(Addr & 0x01));
+        write_Centaurus_CX9211_GPIO((unsigned char) (Addr & 0x01));
         /*the 9211 expects data LSB->MSB */
         Addr = Addr >> 1;
     }
@@ -309,7 +311,7 @@ Centaurus_write_gpio(int width, ULONG address, unsigned long data)
     }
     return;
 
-}                                      /* end Centaurus_write_gpio() */
+}                               /* end Centaurus_write_gpio() */
 
 unsigned long
 Centaurus_read_gpio(int width, unsigned long address)
@@ -329,7 +331,7 @@ Centaurus_read_gpio(int width, unsigned long address)
 
     /* Write the 12-bit address */
     for (count = 0; count < 12; count++) {
-        write_Centaurus_CX9211_GPIO((unsigned char)(Addr & 0x01));
+        write_Centaurus_CX9211_GPIO((unsigned char) (Addr & 0x01));
 
         /*the 9211 expects data LSB->MSB */
         Addr = Addr >> 1;
@@ -347,7 +349,7 @@ Centaurus_read_gpio(int width, unsigned long address)
     }
     return data;
 
-}                                      /* end Centaurus_read_gpio() */
+}                               /* end Centaurus_read_gpio() */
 
 /*******************************************************************
  *
@@ -365,9 +367,9 @@ enable_Centaurus_9211_chip_select(void)
     /* Set the chip select (GPIO20) high */
     cs_port_val = gfx_inb(CENT_97317_CHIP_SELECT);
     gfx_outb(CENT_97317_CHIP_SELECT,
-        (unsigned char)(cs_port_val | CENT_97317_CHIP_SEL_MASK));
+             (unsigned char) (cs_port_val | CENT_97317_CHIP_SEL_MASK));
     return;
-}                                      /* end enable_Centaurus_9211_chip_select() */
+}                               /* end enable_Centaurus_9211_chip_select() */
 
 /********************************************************************
  *
@@ -385,10 +387,10 @@ disable_Centaurus_9211_chip_select(void)
     /* Set the chip select (GPIO20) low */
     cs_port_val = gfx_inb(CENT_97317_CHIP_SELECT);
     gfx_outb(CENT_97317_CHIP_SELECT,
-        (unsigned char)(cs_port_val & ~CENT_97317_CHIP_SEL_MASK));
+             (unsigned char) (cs_port_val & ~CENT_97317_CHIP_SEL_MASK));
     return;
 
-}                                      /* end disable_Centaurus_9211_chip_select() */
+}                               /* end disable_Centaurus_9211_chip_select() */
 
 /**********************************************************************
  *
@@ -410,13 +412,13 @@ toggle_Centaurus_9211_clock(void)
     port_val = gfx_inb(CENT_97317_CLOCK_PORT);
     /* set the clock bit high */
     gfx_outb(CENT_97317_CLOCK_PORT,
-        (unsigned char)(port_val | CENT_97317_CLOCK_MASK));
+             (unsigned char) (port_val | CENT_97317_CLOCK_MASK));
 
     /* set the clock bit low */
     gfx_outb(CENT_97317_CLOCK_PORT,
-        (unsigned char)(port_val & ~CENT_97317_CLOCK_MASK));
+             (unsigned char) (port_val & ~CENT_97317_CLOCK_MASK));
 
-}                                      /* end toggle_Centaurus_9211_clock() */
+}                               /* end toggle_Centaurus_9211_clock() */
 
 /********************************************************************
  *
@@ -448,7 +450,7 @@ write_Centaurus_CX9211_GPIO(unsigned char databit)
     toggle_Centaurus_9211_clock();
     return;
 
-}                                      /* end write_Centaurus_CX9211_GPIO() */
+}                               /* end write_Centaurus_CX9211_GPIO() */
 
 /*****************************************************************
  *
@@ -473,14 +475,14 @@ write_Centaurus_CX9211_DWdata(unsigned long data)
 
     /* Now write the 32-bit Data */
     for (count = 0; count < 32; count++) {
-        write_Centaurus_CX9211_GPIO((unsigned char)(data & 0x01));
+        write_Centaurus_CX9211_GPIO((unsigned char) (data & 0x01));
 
         /* the 9211 expects the data LSB->MSB */
         data >>= 1;
     }
     return;
 
-}                                      /* end write_Centaurus_CX9211_DWdata() */
+}                               /* end write_Centaurus_CX9211_DWdata() */
 
 /*********************************************************************
  *
@@ -505,7 +507,7 @@ read_Centaurus_CX9211_GPIO(void)
     data_port_val >>= 1;
     return (data_port_val & 0x1);
 
-}                                      /* end read_Centaurus_CX9211_GPIO() */
+}                               /* end read_Centaurus_CX9211_GPIO() */
 
 /**********************************************************************
  *
@@ -541,12 +543,12 @@ read_Centaurus_CX9211_DWdata(void)
     for (count = 0; count < 32; count++) {
         ReadData = read_Centaurus_CX9211_GPIO();
         /* 9211 sends data  LSB->MSB */
-        Data = Data | (((unsigned long)ReadData) << count);
-    }                                  /* end for() */
+        Data = Data | (((unsigned long) ReadData) << count);
+    }                           /* end for() */
 
     return Data;
 
-}                                      /* end read_Centaurus_CX9211_DWdata() */
+}                               /* end read_Centaurus_CX9211_DWdata() */
 
 void
 Centaurus_Get_9211_Details(unsigned long flags, Pnl_PanelParams * pParam)
@@ -576,7 +578,8 @@ Centaurus_Get_9211_Details(unsigned long flags, Pnl_PanelParams * pParam)
                 pParam->PanelChip = PNL_9211_A;
             else
                 pParam->PanelChip = PNL_UNKNOWN_CHIP;
-        } else {                       /* no 9211 present */
+        }
+        else {                  /* no 9211 present */
             pParam->PanelChip = PNL_UNKNOWN_CHIP;
         }
         Pnl_Rev_ID = pParam->PanelChip;
@@ -770,7 +773,7 @@ Centaurus_Power_Up(void)
     Centaurus_write_gpio(FOUR_BYTES, CS92xx_LCD_PWR_MAN, off_data);
     return;
 
-}                                      /* Centaurus_Disable_Power */
+}                               /* Centaurus_Disable_Power */
 
 /***********************************************************************
  *
@@ -788,7 +791,7 @@ Centaurus_Power_Down(void)
     Centaurus_write_gpio(FOUR_BYTES, CS92xx_LCD_PWR_MAN, off_data);
     return;
 
-}                                      /* Centaurus_Disable_Power */
+}                               /* Centaurus_Disable_Power */
 
 void
 Centaurus_9211init(Pnl_PanelStat * pstat)
@@ -839,28 +842,28 @@ Centaurus_Restore_Panel_State(void)
     /* set 9211 registers using the desired panel settings */
 
     Centaurus_write_gpio(FOUR_BYTES, CS92xx_LCD_PAN_TIMING1,
-        cs9211_regs.panel_timing1);
+                         cs9211_regs.panel_timing1);
 
     Centaurus_write_gpio(FOUR_BYTES, CS92xx_LCD_PAN_TIMING2,
-        cs9211_regs.panel_timing2);
+                         cs9211_regs.panel_timing2);
 
     /* load the LSFR seeds */
 
     Centaurus_write_gpio(FOUR_BYTES, CS92xx_LCD_DITH_FR_CNTRL,
-        cs9211_regs.dither_frc_ctrl);
+                         cs9211_regs.dither_frc_ctrl);
 
     Centaurus_write_gpio(FOUR_BYTES, CS92xx_BLUE_LSFR_SEED,
-        cs9211_regs.blue_lsfr_seed);
+                         cs9211_regs.blue_lsfr_seed);
 
     Centaurus_write_gpio(FOUR_BYTES, CS92xx_RED_GREEN_LSFR_SEED,
-        cs9211_regs.red_green_lsfr_seed);
+                         cs9211_regs.red_green_lsfr_seed);
 
     Centaurus_write_gpio(FOUR_BYTES, CS92xx_LCD_MEM_CNTRL,
-        cs9211_regs.memory_control);
+                         cs9211_regs.memory_control);
 
     /* Set the power register last. This will turn the panel on at the 9211 */
 
     Centaurus_write_gpio(FOUR_BYTES, CS92xx_LCD_PWR_MAN,
-        cs9211_regs.power_management);
+                         cs9211_regs.power_management);
 
 }

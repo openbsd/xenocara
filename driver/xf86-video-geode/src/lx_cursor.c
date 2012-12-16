@@ -36,20 +36,20 @@ Bool
 LXCursorInit(ScreenPtr pScrn)
 {
     return xf86_cursors_init(pScrn,
-        LX_CURSOR_MAX_WIDTH, LX_CURSOR_MAX_HEIGHT,
-	HARDWARE_CURSOR_TRUECOLOR_AT_8BPP |
-	HARDWARE_CURSOR_INVERT_MASK |
-	HARDWARE_CURSOR_AND_SOURCE_WITH_MASK |
-	HARDWARE_CURSOR_SOURCE_MASK_INTERLEAVE_32 |
-	HARDWARE_CURSOR_ARGB);
+                             LX_CURSOR_MAX_WIDTH, LX_CURSOR_MAX_HEIGHT,
+                             HARDWARE_CURSOR_TRUECOLOR_AT_8BPP |
+                             HARDWARE_CURSOR_INVERT_MASK |
+                             HARDWARE_CURSOR_AND_SOURCE_WITH_MASK |
+                             HARDWARE_CURSOR_SOURCE_MASK_INTERLEAVE_32 |
+                             HARDWARE_CURSOR_ARGB);
 }
 
 void
 LXLoadARGBCursorImage(ScrnInfoPtr pScrni, unsigned char *src)
 {
     GeodeRec *pGeode = GEODEPTR(pScrni);
-    vg_set_color_cursor_shape(pGeode->CursorStartOffset, src,
-				  LX_CURSOR_MAX_WIDTH, LX_CURSOR_MAX_HEIGHT,
-				  LX_CURSOR_MAX_WIDTH * 4, 0, 0);
-}
 
+    vg_set_color_cursor_shape(pGeode->CursorStartOffset, src,
+                              LX_CURSOR_MAX_WIDTH, LX_CURSOR_MAX_HEIGHT,
+                              LX_CURSOR_MAX_WIDTH * 4, 0, 0);
+}

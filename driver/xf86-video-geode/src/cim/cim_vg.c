@@ -76,8 +76,8 @@ vg_delay_milliseconds(unsigned long ms)
 
 int
 vg_set_display_mode(unsigned long src_width, unsigned long src_height,
-    unsigned long dst_width, unsigned long dst_height,
-    int bpp, int hz, unsigned long flags)
+                    unsigned long dst_width, unsigned long dst_height,
+                    int bpp, int hz, unsigned long flags)
 {
     VG_QUERY_MODE crt_query;
     VG_DISPLAY_MODE crt_mode;
@@ -130,9 +130,9 @@ vg_set_display_mode(unsigned long src_width, unsigned long src_height,
 
 int
 vg_set_panel_mode(unsigned long src_width, unsigned long src_height,
-    unsigned long dst_width, unsigned long dst_height,
-    unsigned long panel_width, unsigned long panel_height,
-    int bpp, unsigned long flags)
+                  unsigned long dst_width, unsigned long dst_height,
+                  unsigned long panel_width, unsigned long panel_height,
+                  int bpp, unsigned long flags)
 {
     unsigned long sync_width;
     unsigned long sync_offset;
@@ -233,8 +233,9 @@ vg_set_panel_mode(unsigned long src_width, unsigned long src_height,
 
 int
 vg_set_tv_mode(unsigned long *src_width, unsigned long *src_height,
-    unsigned long encoder, unsigned long tvres, int bpp,
-    unsigned long flags, unsigned long h_overscan, unsigned long v_overscan)
+               unsigned long encoder, unsigned long tvres, int bpp,
+               unsigned long flags, unsigned long h_overscan,
+               unsigned long v_overscan)
 {
     unsigned long sync_width;
     unsigned long sync_offset;
@@ -260,17 +261,16 @@ vg_set_tv_mode(unsigned long *src_width, unsigned long *src_height,
          */
 
         if (!(*src_width) || !(*src_height)) {
-            *src_width = CimarronDisplayModes[mode].hactive -
-                (h_overscan << 1);
+            *src_width = CimarronDisplayModes[mode].hactive - (h_overscan << 1);
             *src_height = CimarronDisplayModes[mode].vactive;
 
             if (CimarronDisplayModes[mode].flags & VG_MODEFLAG_INTERLACED) {
                 if (((flags & VG_MODEFLAG_INT_OVERRIDE) &&
-                        (flags & VG_MODEFLAG_INT_MASK) ==
-                        VG_MODEFLAG_INT_LINEDOUBLE)
+                     (flags & VG_MODEFLAG_INT_MASK) ==
+                     VG_MODEFLAG_INT_LINEDOUBLE)
                     || (!(flags & VG_MODEFLAG_INT_OVERRIDE)
-                        && (CimarronDisplayModes[mode].
-                            flags & VG_MODEFLAG_INT_MASK) ==
+                        && (CimarronDisplayModes[mode].flags &
+                            VG_MODEFLAG_INT_MASK) ==
                         VG_MODEFLAG_INT_LINEDOUBLE)) {
                     if (CimarronDisplayModes[mode].vactive_even >
                         CimarronDisplayModes[mode].vactive)
@@ -279,11 +279,13 @@ vg_set_tv_mode(unsigned long *src_width, unsigned long *src_height,
                     /* ONLY 1/2 THE OVERSCAN FOR LINE DOUBLED MODES */
 
                     *src_height -= v_overscan;
-                } else {
+                }
+                else {
                     *src_height += CimarronDisplayModes[mode].vactive_even;
                     *src_height -= v_overscan << 1;
                 }
-            } else {
+            }
+            else {
                 *src_height -= v_overscan << 1;
             }
 
@@ -344,7 +346,8 @@ vg_set_tv_mode(unsigned long *src_width, unsigned long *src_height,
                 tv_mode.vsyncstart_even =
                     tv_mode.vblankstart_even + sync_offset;
                 tv_mode.vsyncend_even = tv_mode.vsyncstart_even + sync_width;
-            } else {
+            }
+            else {
                 tv_mode.vactive -= v_overscan << 1;
                 tv_mode.vblankstart = tv_mode.vactive + v_overscan;
                 tv_mode.vblankend = tv_mode.vtotal - v_overscan;
@@ -433,7 +436,8 @@ vg_set_custom_mode(VG_DISPLAY_MODE * mode_params, int bpp)
             hscale = (mode_params->src_width << 14) /
                 (mode_params->mode_width - 1);
             irq_ctl |= (DC3_IRQFILT_ALPHA_FILT_EN | DC3_IRQFILT_GFX_FILT_EN);
-        } else {
+        }
+        else {
             starting_width = mode_params->hactive;
             hscale = 0x4000;
         }
@@ -443,24 +447,28 @@ vg_set_custom_mode(VG_DISPLAY_MODE * mode_params, int bpp)
             vscale = (mode_params->src_height << 14) /
                 (mode_params->mode_height - 1);
             irq_ctl |= (DC3_IRQFILT_ALPHA_FILT_EN | DC3_IRQFILT_GFX_FILT_EN);
-        } else {
+        }
+        else {
             starting_height = output_height;
             vscale = 0x4000;
         }
-    } else {
+    }
+    else {
         starting_width = mode_params->src_width;
         starting_height = mode_params->src_height;
         if (mode_params->src_width != mode_params->hactive) {
             hscale = (mode_params->src_width << 14) /
                 (mode_params->hactive - 1);
             irq_ctl |= (DC3_IRQFILT_ALPHA_FILT_EN | DC3_IRQFILT_GFX_FILT_EN);
-        } else {
+        }
+        else {
             hscale = 0x4000;
         }
         if (mode_params->src_height != output_height) {
             vscale = (mode_params->src_height << 14) / (output_height - 1);
             irq_ctl |= (DC3_IRQFILT_ALPHA_FILT_EN | DC3_IRQFILT_GFX_FILT_EN);
-        } else {
+        }
+        else {
             vscale = 0x4000;
         }
     }
@@ -480,9 +488,9 @@ vg_set_custom_mode(VG_DISPLAY_MODE * mode_params, int bpp)
 
     if (mode_params->flags & VG_MODEFLAG_INTERLACED) {
         if ((((mode_params->flags & VG_MODEFLAG_INT_MASK) ==
-                    VG_MODEFLAG_INT_FLICKER) && (mode_params->hactive > 1024))
+              VG_MODEFLAG_INT_FLICKER) && (mode_params->hactive > 1024))
             || (((mode_params->flags & VG_MODEFLAG_INT_MASK) ==
-                    VG_MODEFLAG_INT_ADDRESS) && irq_ctl)) {
+                 VG_MODEFLAG_INT_ADDRESS) && irq_ctl)) {
             return CIM_STATUS_INVALIDSCALE;
         }
     }
@@ -536,8 +544,9 @@ vg_set_custom_mode(VG_DISPLAY_MODE * mode_params, int bpp)
         if ((mode_params->flags & VG_MODEFLAG_INVERT_SHFCLK) &&
             !(temp & DF_PM_INVERT_SHFCLK)) {
             WRITE_VID32(DF_POWER_MANAGEMENT, (temp | DF_PM_INVERT_SHFCLK));
-        } else if (!(mode_params->flags & VG_MODEFLAG_INVERT_SHFCLK) &&
-            (temp & DF_PM_INVERT_SHFCLK)) {
+        }
+        else if (!(mode_params->flags & VG_MODEFLAG_INVERT_SHFCLK) &&
+                 (temp & DF_PM_INVERT_SHFCLK)) {
             WRITE_VID32(DF_POWER_MANAGEMENT, (temp & ~DF_PM_INVERT_SHFCLK));
         }
 
@@ -552,13 +561,15 @@ vg_set_custom_mode(VG_DISPLAY_MODE * mode_params, int bpp)
                 dith_ctl = DF_DEFAULT_DITHCTL;
                 msr_value.low = DF_DEFAULT_XVGA_PAD_SEL_LOW;
                 msr_value.high = DF_DEFAULT_XVGA_PAD_SEL_HIGH;
-            } else if (mode_params->flags & VG_MODEFLAG_CUSTOM_PANEL) {
+            }
+            else if (mode_params->flags & VG_MODEFLAG_CUSTOM_PANEL) {
                 pmtim1 = mode_params->panel_tim1;
                 pmtim2 = mode_params->panel_tim2;
                 dith_ctl = mode_params->panel_dither_ctl;
                 msr_value.low = mode_params->panel_pad_sel_low;
                 msr_value.high = mode_params->panel_pad_sel_high;
-            } else {
+            }
+            else {
                 pmtim1 = DF_DEFAULT_TFT_PMTIM1;
                 pmtim2 = DF_DEFAULT_TFT_PMTIM2;
                 dith_ctl = DF_DEFAULT_DITHCTL;
@@ -585,7 +596,8 @@ vg_set_custom_mode(VG_DISPLAY_MODE * mode_params, int bpp)
 
         msr_write64(MSR_DEVICE_GEODELX_DF, MSR_GEODELINK_CONFIG, &msr_value);
 
-    } else if (mode_params->flags & VG_MODEFLAG_TVOUT) {
+    }
+    else if (mode_params->flags & VG_MODEFLAG_TVOUT) {
         vg3_panel_enable = 0;
 
         /* SET APPROPRIATE TV OUTPUT MODE */
@@ -607,7 +619,8 @@ vg_set_custom_mode(VG_DISPLAY_MODE * mode_params, int bpp)
         msr_value.low = DF_DEFAULT_TV_PAD_SEL_LOW;
         msr_value.high = DF_DEFAULT_TV_PAD_SEL_HIGH;
         msr_write64(MSR_DEVICE_GEODELX_DF, DF_MSR_PAD_SEL, &msr_value);
-    } else {
+    }
+    else {
         vg3_panel_enable = 0;
 
         /* SET OUTPUT TO CRT ONLY */
@@ -652,7 +665,7 @@ vg_set_custom_mode(VG_DISPLAY_MODE * mode_params, int bpp)
     /* DISABLE VG INTERRUPTS */
 
     WRITE_REG32(DC3_IRQ, DC3_IRQ_MASK | DC3_VSYNC_IRQ_MASK |
-        DC3_IRQ_STATUS | DC3_VSYNC_IRQ_STATUS);
+                DC3_IRQ_STATUS | DC3_VSYNC_IRQ_STATUS);
 
     /* DISABLE GENLOCK */
 
@@ -663,8 +676,7 @@ vg_set_custom_mode(VG_DISPLAY_MODE * mode_params, int bpp)
 
     WRITE_VIP32(VIP_CONTROL1, 0);
     WRITE_VIP32(VIP_CONTROL2, 0);
-    WRITE_VIP32(VIP_INTERRUPT,
-        VIP_ALL_INTERRUPTS | (VIP_ALL_INTERRUPTS >> 16));
+    WRITE_VIP32(VIP_INTERRUPT, VIP_ALL_INTERRUPTS | (VIP_ALL_INTERRUPTS >> 16));
 
     /* DISABLE COLOR KEYING
      * The color key mechanism should be disabled whenever a mode switch
@@ -686,8 +698,8 @@ vg_set_custom_mode(VG_DISPLAY_MODE * mode_params, int bpp)
 
     WRITE_VID32(DF_VID_MISC, (misc | DF_DAC_POWER_DOWN));
     WRITE_VID32(DF_DISPLAY_CONFIG,
-        (config & ~(DF_DCFG_DIS_EN | DF_DCFG_HSYNC_EN |
-                DF_DCFG_VSYNC_EN | DF_DCFG_DAC_BL_EN)));
+                (config & ~(DF_DCFG_DIS_EN | DF_DCFG_HSYNC_EN |
+                            DF_DCFG_VSYNC_EN | DF_DCFG_DAC_BL_EN)));
 
     /* DISABLE COMPRESSION  */
 
@@ -715,7 +727,7 @@ vg_set_custom_mode(VG_DISPLAY_MODE * mode_params, int bpp)
     /* WAIT FOR THE GP TO BE IDLE (JUST IN CASE) */
 
     while (((temp = READ_GP32(GP3_BLT_STATUS)) & GP3_BS_BLT_BUSY) ||
-        !(temp & GP3_BS_CB_EMPTY)) {
+           !(temp & GP3_BS_CB_EMPTY)) {
         ;
     }
 
@@ -752,7 +764,8 @@ vg_set_custom_mode(VG_DISPLAY_MODE * mode_params, int bpp)
     WRITE_REG32(DC3_CURS_ST_OFFSET, 0);
 
     genlk_ctl = READ_REG32(DC3_GENLK_CTL) & ~(DC3_GC_ALPHA_FLICK_ENABLE |
-        DC3_GC_FLICKER_FILTER_ENABLE | DC3_GC_FLICKER_FILTER_MASK);
+                                              DC3_GC_FLICKER_FILTER_ENABLE |
+                                              DC3_GC_FLICKER_FILTER_MASK);
 
     /* ENABLE INTERLACING */
 
@@ -763,7 +776,7 @@ vg_set_custom_mode(VG_DISPLAY_MODE * mode_params, int bpp)
             VG_MODEFLAG_INT_ADDRESS)
             irq_ctl |= DC3_IRQFILT_INTL_ADDR;
         else if ((mode_params->flags & VG_MODEFLAG_INT_MASK) ==
-            VG_MODEFLAG_INT_FLICKER) {
+                 VG_MODEFLAG_INT_FLICKER) {
             genlk_ctl |= DC3_GC_FLICKER_FILTER_1_8 |
                 DC3_GC_FLICKER_FILTER_ENABLE | DC3_GC_ALPHA_FLICK_ENABLE;
         }
@@ -835,7 +848,8 @@ vg_set_custom_mode(VG_DISPLAY_MODE * mode_params, int bpp)
 
             gcfg |= DC3_GCFG_FDTY;
             pitch = size;
-        } else {
+        }
+        else {
             WRITE_REG32(DC3_DV_TOP, 0);
         }
     }
@@ -866,8 +880,8 @@ vg_set_custom_mode(VG_DISPLAY_MODE * mode_params, int bpp)
     /* ENABLE TIMING GENERATOR, TIM. REG. UPDATES, PALETTE BYPASS */
     /* AND VERT. INT. SELECT                                      */
 
-    dcfg |= (unsigned long)(DC3_DCFG_TGEN | DC3_DCFG_TRUP | DC3_DCFG_PALB |
-        DC3_DCFG_VISL);
+    dcfg |= (unsigned long) (DC3_DCFG_TGEN | DC3_DCFG_TRUP | DC3_DCFG_PALB |
+                             DC3_DCFG_VISL);
 
     /* SET FIFO PRIORITIES AND DISPLAY FIFO LOAD ENABLE
      * Note that the bandwidth setting gets upgraded when scaling or flicker
@@ -876,15 +890,16 @@ vg_set_custom_mode(VG_DISPLAY_MODE * mode_params, int bpp)
 
     msr_read64(MSR_DEVICE_GEODELX_VG, DC3_SPARE_MSR, &msr_value);
     msr_value.low &= ~(DC3_SPARE_DISABLE_CFIFO_HGO |
-        DC3_SPARE_VFIFO_ARB_SELECT |
-        DC3_SPARE_LOAD_WM_LPEN_MASK | DC3_SPARE_WM_LPEN_OVRD |
-        DC3_SPARE_DISABLE_INIT_VID_PRI | DC3_SPARE_DISABLE_VFIFO_WM);
+                       DC3_SPARE_VFIFO_ARB_SELECT |
+                       DC3_SPARE_LOAD_WM_LPEN_MASK | DC3_SPARE_WM_LPEN_OVRD |
+                       DC3_SPARE_DISABLE_INIT_VID_PRI |
+                       DC3_SPARE_DISABLE_VFIFO_WM);
 
     if ((mode_params->flags & VG_MODEFLAG_BANDWIDTHMASK) ==
-        VG_MODEFLAG_HIGH_BAND
-        || ((mode_params->flags & VG_MODEFLAG_INTERLACED)
-            && (mode_params->flags & VG_MODEFLAG_INT_MASK) ==
-            VG_MODEFLAG_INT_FLICKER) || (irq_ctl & DC3_IRQFILT_GFX_FILT_EN)) {
+        VG_MODEFLAG_HIGH_BAND || ((mode_params->flags & VG_MODEFLAG_INTERLACED)
+                                  && (mode_params->flags & VG_MODEFLAG_INT_MASK)
+                                  == VG_MODEFLAG_INT_FLICKER) ||
+        (irq_ctl & DC3_IRQFILT_GFX_FILT_EN)) {
         /* HIGH BANDWIDTH */
         /* Set agressive watermarks and disallow forced low priority */
 
@@ -894,8 +909,9 @@ vg_set_custom_mode(VG_DISPLAY_MODE * mode_params, int bpp)
 
         msr_value.low |= DC3_SPARE_DISABLE_CFIFO_HGO |
             DC3_SPARE_VFIFO_ARB_SELECT | DC3_SPARE_WM_LPEN_OVRD;
-    } else if ((mode_params->flags & VG_MODEFLAG_BANDWIDTHMASK) ==
-        VG_MODEFLAG_AVG_BAND) {
+    }
+    else if ((mode_params->flags & VG_MODEFLAG_BANDWIDTHMASK) ==
+             VG_MODEFLAG_AVG_BAND) {
         /* AVERAGE BANDWIDTH
          * Set average watermarks and allow small regions of forced low
          * priority.
@@ -917,8 +933,9 @@ vg_set_custom_mode(VG_DISPLAY_MODE * mode_params, int bpp)
             temp = 127;
 
         acfg |= temp << 9;
-    } else if ((mode_params->flags & VG_MODEFLAG_BANDWIDTHMASK) ==
-        VG_MODEFLAG_LOW_BAND) {
+    }
+    else if ((mode_params->flags & VG_MODEFLAG_BANDWIDTHMASK) ==
+             VG_MODEFLAG_LOW_BAND) {
         /* LOW BANDWIDTH
          * Set low watermarks and allow larger regions of forced low priority
          */
@@ -939,7 +956,8 @@ vg_set_custom_mode(VG_DISPLAY_MODE * mode_params, int bpp)
             temp = 127;
 
         acfg |= temp << 9;
-    } else {
+    }
+    else {
         /* LEGACY CHARACTERISTICS */
         /* Arbitration from a single set of watermarks. */
 
@@ -965,19 +983,17 @@ vg_set_custom_mode(VG_DISPLAY_MODE * mode_params, int bpp)
     temp = (mode_params->hblankstart - 1) |
         ((mode_params->hblankend - 1) << 16);
     WRITE_REG32(DC3_H_BLANK_TIMING, temp);
-    temp = (mode_params->hsyncstart - 1) |
-        ((mode_params->hsyncend - 1) << 16);
+    temp = (mode_params->hsyncstart - 1) | ((mode_params->hsyncend - 1) << 16);
     WRITE_REG32(DC3_H_SYNC_TIMING, temp);
     temp = (mode_params->vactive - 1) | ((mode_params->vtotal - 1) << 16);
     WRITE_REG32(DC3_V_ACTIVE_TIMING, temp);
     temp = (mode_params->vblankstart - 1) |
         ((mode_params->vblankend - 1) << 16);
     WRITE_REG32(DC3_V_BLANK_TIMING, temp);
-    temp = (mode_params->vsyncstart - 1) |
-        ((mode_params->vsyncend - 1) << 16);
+    temp = (mode_params->vsyncstart - 1) | ((mode_params->vsyncend - 1) << 16);
     WRITE_REG32(DC3_V_SYNC_TIMING, temp);
     temp = (mode_params->vactive_even - 1) | ((mode_params->vtotal_even -
-            1) << 16);
+                                               1) << 16);
     WRITE_REG32(DC3_V_ACTIVE_EVEN, temp);
     temp = (mode_params->vblankstart_even - 1) |
         ((mode_params->vblankend_even - 1) << 16);
@@ -993,14 +1009,14 @@ vg_set_custom_mode(VG_DISPLAY_MODE * mode_params, int bpp)
     /* SET SOURCE DIMENSIONS */
 
     WRITE_REG32(DC3_FB_ACTIVE, ((starting_width - 1) << 16) |
-        (starting_height - 1));
+                (starting_height - 1));
 
     /* SET SYNC POLARITIES */
 
     temp = READ_VID32(DF_DISPLAY_CONFIG);
 
     temp &= ~(DF_DCFG_CRT_SYNC_SKW_MASK | DF_DCFG_PWR_SEQ_DLY_MASK |
-        DF_DCFG_CRT_HSYNC_POL | DF_DCFG_CRT_VSYNC_POL);
+              DF_DCFG_CRT_HSYNC_POL | DF_DCFG_CRT_VSYNC_POL);
 
     temp |= DF_DCFG_CRT_SYNC_SKW_INIT | DF_DCFG_PWR_SEQ_DLY_INIT;
 
@@ -1060,7 +1076,7 @@ vg_set_display_bpp(int bpp)
 
     unlock = READ_REG32(DC3_UNLOCK);
     dcfg = READ_REG32(DC3_DISPLAY_CFG) & ~(DC3_DCFG_DISP_MODE_MASK |
-        DC3_DCFG_16BPP_MODE_MASK);
+                                           DC3_DCFG_16BPP_MODE_MASK);
     dcfg |= bpp_mask;
 
     WRITE_REG32(DC3_UNLOCK, DC3_UNLOCK_VALUE);
@@ -1197,17 +1213,16 @@ vg_get_display_mode_index(VG_QUERY_MODE * query)
 
     for (mode = 0; mode < NUM_CIMARRON_DISPLAY_MODES; mode++) {
         if ((!(query->query_flags & VG_QUERYFLAG_PANEL) ||
-                (CimarronDisplayModes[mode].
-                    internal_flags & VG_SUPPORTFLAG_PANEL))
+             (CimarronDisplayModes[mode].internal_flags & VG_SUPPORTFLAG_PANEL))
             && (!(query->query_flags & VG_QUERYFLAG_TVOUT)
-                || (CimarronDisplayModes[mode].
-                    internal_flags & VG_SUPPORTFLAG_TVOUT))
+                || (CimarronDisplayModes[mode].internal_flags &
+                    VG_SUPPORTFLAG_TVOUT))
             && (!(query->query_flags & VG_QUERYFLAG_INTERLACED)
-                || (CimarronDisplayModes[mode].
-                    flags & VG_MODEFLAG_INTERLACED) == interlaced)
+                || (CimarronDisplayModes[mode].flags & VG_MODEFLAG_INTERLACED)
+                == interlaced)
             && (!(query->query_flags & VG_QUERYFLAG_HALFCLOCK)
-                || (CimarronDisplayModes[mode].
-                    flags & VG_MODEFLAG_HALFCLOCK) == halfclock)
+                || (CimarronDisplayModes[mode].flags & VG_MODEFLAG_HALFCLOCK) ==
+                halfclock)
             && (!(query->query_flags & VG_QUERYFLAG_PANELWIDTH)
                 || (CimarronDisplayModes[mode].panel_width ==
                     query->panel_width))
@@ -1215,11 +1230,9 @@ vg_get_display_mode_index(VG_QUERY_MODE * query)
                 || (CimarronDisplayModes[mode].panel_height ==
                     query->panel_height))
             && (!(query->query_flags & VG_QUERYFLAG_ACTIVEWIDTH)
-                || (CimarronDisplayModes[mode].hactive ==
-                    query->active_width))
+                || (CimarronDisplayModes[mode].hactive == query->active_width))
             && (!(query->query_flags & VG_QUERYFLAG_ACTIVEHEIGHT)
-                || (CimarronDisplayModes[mode].vactive ==
-                    query->active_height))
+                || (CimarronDisplayModes[mode].vactive == query->active_height))
             && (!(query->query_flags & VG_QUERYFLAG_TOTALWIDTH)
                 || (CimarronDisplayModes[mode].htotal == query->total_width))
             && (!(query->query_flags & VG_QUERYFLAG_TOTALHEIGHT)
@@ -1231,17 +1244,15 @@ vg_get_display_mode_index(VG_QUERY_MODE * query)
             && (!(query->query_flags & VG_QUERYFLAG_ENCODER)
                 || (CimarronDisplayModes[mode].internal_flags & enc_flag))
             && (!(query->query_flags & VG_QUERYFLAG_TVMODE)
-                || ((CimarronDisplayModes[mode].
-                        internal_flags & VG_SUPPORTFLAG_TVMODEMASK) ==
-                    tv_flag))
+                ||
+                ((CimarronDisplayModes[mode].internal_flags &
+                  VG_SUPPORTFLAG_TVMODEMASK) == tv_flag))
             && (!(query->query_flags & VG_QUERYFLAG_PIXELCLOCK)
-                || (CimarronDisplayModes[mode].frequency ==
-                    query->frequency))) {
+                || (CimarronDisplayModes[mode].frequency == query->frequency))) {
             /* ALLOW SEARCHING BASED ON AN APPROXIMATE PIXEL CLOCK */
 
             if (query->query_flags & VG_QUERYFLAG_PIXELCLOCK_APPROX) {
-                diff = query->frequency -
-                    CimarronDisplayModes[mode].frequency;
+                diff = query->frequency - CimarronDisplayModes[mode].frequency;
                 if (diff < 0)
                     diff = -diff;
 
@@ -1249,7 +1260,8 @@ vg_get_display_mode_index(VG_QUERY_MODE * query)
                     minimum = diff;
                     match = mode;
                 }
-            } else {
+            }
+            else {
                 match = mode;
                 break;
             }
@@ -1417,21 +1429,26 @@ vg_get_current_display_mode(VG_DISPLAY_MODE * current_display, int *bpp)
     if (temp == DC3_DCFG_DISP_MODE_8BPP) {
         iflags |= VG_SUPPORTFLAG_8BPP;
         *bpp = 8;
-    } else if (temp == DC3_DCFG_DISP_MODE_24BPP) {
+    }
+    else if (temp == DC3_DCFG_DISP_MODE_24BPP) {
         iflags |= VG_SUPPORTFLAG_24BPP;
         *bpp = 24;
-    } else if (temp == DC3_DCFG_DISP_MODE_32BPP) {
+    }
+    else if (temp == DC3_DCFG_DISP_MODE_32BPP) {
         iflags |= VG_SUPPORTFLAG_32BPP;
         *bpp = 32;
-    } else if (temp == DC3_DCFG_DISP_MODE_16BPP) {
+    }
+    else if (temp == DC3_DCFG_DISP_MODE_16BPP) {
         temp = READ_REG32(DC3_DISPLAY_CFG) & DC3_DCFG_16BPP_MODE_MASK;
         if (temp == DC3_DCFG_16BPP) {
             iflags |= VG_SUPPORTFLAG_16BPP;
             *bpp = 16;
-        } else if (temp == DC3_DCFG_15BPP) {
+        }
+        else if (temp == DC3_DCFG_15BPP) {
             iflags |= VG_SUPPORTFLAG_15BPP;
             *bpp = 15;
-        } else if (temp == DC3_DCFG_12BPP) {
+        }
+        else if (temp == DC3_DCFG_12BPP) {
             iflags |= VG_SUPPORTFLAG_12BPP;
             *bpp = 12;
         }
@@ -1488,8 +1505,7 @@ vg_get_current_display_mode(VG_DISPLAY_MODE * current_display, int *bpp)
         p = msr_value.high & 0xF;
         n = (msr_value.high >> 4) & 0xFF;
         m = (msr_value.high >> 12) & 0x7;
-        current_display->frequency =
-            (0x300000 * (n + 1)) / ((p + 1) * (m + 1));
+        current_display->frequency = (0x300000 * (n + 1)) / ((p + 1) * (m + 1));
 
         return CIM_STATUS_INEXACTMATCH;
     }
@@ -1572,13 +1588,14 @@ vg_set_scaler_filter_coefficients(long h_taps[][5], long v_taps[][3])
         if (!h_taps) {
             temp0 = CimarronHorizontalGraphicsFilter[i][0];
             temp1 = CimarronHorizontalGraphicsFilter[i][1];
-        } else {
-            temp0 = ((unsigned long)h_taps[i][0] & 0x3FF) |
-                (((unsigned long)h_taps[i][1] & 0x3FF) << 10) |
-                (((unsigned long)h_taps[i][2] & 0x3FF) << 20);
+        }
+        else {
+            temp0 = ((unsigned long) h_taps[i][0] & 0x3FF) |
+                (((unsigned long) h_taps[i][1] & 0x3FF) << 10) |
+                (((unsigned long) h_taps[i][2] & 0x3FF) << 20);
 
-            temp1 = ((unsigned long)h_taps[i][3] & 0x3FF) |
-                (((unsigned long)h_taps[i][4] & 0x3FF) << 10);
+            temp1 = ((unsigned long) h_taps[i][3] & 0x3FF) |
+                (((unsigned long) h_taps[i][4] & 0x3FF) << 10);
         }
         WRITE_REG32(DC3_FILT_COEFF1, temp0);
         WRITE_REG32(DC3_FILT_COEFF2, temp1);
@@ -1595,10 +1612,11 @@ vg_set_scaler_filter_coefficients(long h_taps[][5], long v_taps[][3])
 
         if (!v_taps) {
             temp0 = CimarronVerticalGraphicsFilter[i];
-        } else {
-            temp0 = ((unsigned long)v_taps[i][0] & 0x3FF) |
-                (((unsigned long)v_taps[i][1] & 0x3FF) << 10) |
-                (((unsigned long)v_taps[i][2] & 0x3FF) << 20);
+        }
+        else {
+            temp0 = ((unsigned long) v_taps[i][0] & 0x3FF) |
+                (((unsigned long) v_taps[i][1] & 0x3FF) << 10) |
+                (((unsigned long) v_taps[i][2] & 0x3FF) << 20);
         }
 
         WRITE_REG32(DC3_FILT_COEFF1, temp0);
@@ -1636,7 +1654,7 @@ vg_configure_flicker_filter(unsigned long flicker_strength, int flicker_alpha)
 
     unlock = READ_REG32(DC3_UNLOCK);
     genlk_ctl = READ_REG32(DC3_GENLK_CTL) & ~(DC3_GC_FLICKER_FILTER_MASK |
-        DC3_GC_ALPHA_FLICK_ENABLE);
+                                              DC3_GC_ALPHA_FLICK_ENABLE);
     genlk_ctl |= flicker_strength;
     if (flicker_alpha)
         genlk_ctl |= DC3_GC_ALPHA_FLICK_ENABLE;
@@ -1674,13 +1692,13 @@ vg_set_clock_frequency(unsigned long frequency, unsigned long pll_flags)
 
     pll_low = 0;
     if (!(pll_flags & VG_PLL_MANUAL)) {
-        min = (long)CimarronPLLFrequencies[0].frequency - (long)frequency;
+        min = (long) CimarronPLLFrequencies[0].frequency - (long) frequency;
         if (min < 0L)
             min = -min;
 
         for (i = 1; i < NUM_CIMARRON_PLL_FREQUENCIES; i++) {
-            diff = (long)CimarronPLLFrequencies[i].frequency -
-                (long)frequency;
+            diff = (long) CimarronPLLFrequencies[i].frequency -
+                (long) frequency;
             if (diff < 0L)
                 diff = -diff;
 
@@ -1691,7 +1709,8 @@ vg_set_clock_frequency(unsigned long frequency, unsigned long pll_flags)
         }
 
         pll_high = CimarronPLLFrequencies[index].pll_value & 0x00007FFF;
-    } else {
+    }
+    else {
         pll_high = frequency;
     }
 
@@ -1713,7 +1732,7 @@ vg_set_clock_frequency(unsigned long frequency, unsigned long pll_flags)
 
     if ((msr_value.low & GLCP_DOTPLL_LOCK) &&
         ((msr_value.low & (GLCP_DOTPLL_HALFPIX | GLCP_DOTPLL_BYPASS)) ==
-            pll_low) && (msr_value.high == pll_high)) {
+         pll_low) && (msr_value.high == pll_high)) {
         return CIM_STATUS_OK;
     }
 
@@ -1851,8 +1870,8 @@ vg_set_cursor_position(long xpos, long ypos, VG_PANNING_COORDINATES * panning)
     long y, yoffset;
 
     memoffset = vg3_cursor_offset;
-    x = xpos - (long)vg3_x_hotspot;
-    y = ypos - (long)vg3_y_hotspot;
+    x = xpos - (long) vg3_x_hotspot;
+    y = ypos - (long) vg3_y_hotspot;
 
     /* HANDLE NEGATIVE COORDINATES                                      */
     /* This routine supports operating systems that use negative        */
@@ -1873,9 +1892,10 @@ vg_set_cursor_position(long xpos, long ypos, VG_PANNING_COORDINATES * panning)
         if ((vg3_mode_width > vg3_panel_width)
             || (vg3_mode_height > vg3_panel_height)) {
             vg_pan_desktop(xpos, ypos, panning);
-            x = x - (unsigned short)vg3_delta_x;
-            y = y - (unsigned short)vg3_delta_y;
-        } else {
+            x = x - (unsigned short) vg3_delta_x;
+            y = y - (unsigned short) vg3_delta_y;
+        }
+        else {
             panning->start_x = 0;
             panning->start_y = 0;
             panning->start_updated = 0;
@@ -1891,21 +1911,23 @@ vg_set_cursor_position(long xpos, long ypos, VG_PANNING_COORDINATES * panning)
     if (x < 0) {
         xoffset = -x;
         x = 0;
-    } else {
+    }
+    else {
         xoffset = 0;
     }
     if (y < 0) {
         yoffset = -y;
         y = 0;
-    } else {
+    }
+    else {
         yoffset = 0;
     }
 
     if (vg3_color_cursor)
-        memoffset += (unsigned long)yoffset *192;
+        memoffset += (unsigned long) yoffset *192;
 
     else
-        memoffset += (unsigned long)yoffset << 4;
+        memoffset += (unsigned long) yoffset << 4;
 
     /* SET COLOR CURSOR BIT */
 
@@ -1921,10 +1943,10 @@ vg_set_cursor_position(long xpos, long ypos, VG_PANNING_COORDINATES * panning)
     WRITE_REG32(DC3_UNLOCK, DC3_UNLOCK_VALUE);
     WRITE_REG32(DC3_CURS_ST_OFFSET, memoffset);
     WRITE_REG32(DC3_GENERAL_CFG, gcfg);
-    WRITE_REG32(DC3_CURSOR_X, (unsigned long)x |
-        (((unsigned long)xoffset) << 11));
-    WRITE_REG32(DC3_CURSOR_Y, (unsigned long)y |
-        (((unsigned long)yoffset) << 11));
+    WRITE_REG32(DC3_CURSOR_X, (unsigned long) x |
+                (((unsigned long) xoffset) << 11));
+    WRITE_REG32(DC3_CURSOR_Y, (unsigned long) y |
+                (((unsigned long) yoffset) << 11));
     WRITE_REG32(DC3_UNLOCK, unlock);
 
     return CIM_STATUS_OK;
@@ -1940,7 +1962,8 @@ vg_set_cursor_position(long xpos, long ypos, VG_PANNING_COORDINATES * panning)
 
 int
 vg_set_mono_cursor_shape32(unsigned long memoffset, unsigned long *andmask,
-    unsigned long *xormask, unsigned long x_hotspot, unsigned long y_hotspot)
+                           unsigned long *xormask, unsigned long x_hotspot,
+                           unsigned long y_hotspot)
 {
     int i;
 
@@ -1990,7 +2013,8 @@ vg_set_mono_cursor_shape32(unsigned long memoffset, unsigned long *andmask,
 
 int
 vg_set_mono_cursor_shape64(unsigned long memoffset, unsigned long *andmask,
-    unsigned long *xormask, unsigned long x_hotspot, unsigned long y_hotspot)
+                           unsigned long *xormask, unsigned long x_hotspot,
+                           unsigned long y_hotspot)
 {
     int i;
 
@@ -2032,8 +2056,8 @@ vg_set_mono_cursor_shape64(unsigned long memoffset, unsigned long *andmask,
 
 int
 vg_set_color_cursor_shape(unsigned long memoffset, unsigned char *data,
-    unsigned long width, unsigned long height, long pitch,
-    unsigned long x_hotspot, unsigned long y_hotspot)
+                          unsigned long width, unsigned long height, long pitch,
+                          unsigned long x_hotspot, unsigned long y_hotspot)
 {
     unsigned long y;
 
@@ -2081,7 +2105,7 @@ vg_set_color_cursor_shape(unsigned long memoffset, unsigned char *data,
 
 int
 vg_pan_desktop(unsigned long x, unsigned long y,
-    VG_PANNING_COORDINATES * panning)
+               VG_PANNING_COORDINATES * panning)
 {
     unsigned long modeShiftPerPixel;
     unsigned long modeBytesPerScanline;
@@ -2162,7 +2186,7 @@ vg_set_display_offset(unsigned long address)
         if (READ_REG32(DC3_GENERAL_CFG) & DC3_GCFG_CMPE) {
             gcfg = READ_REG32(DC3_GENERAL_CFG);
             WRITE_REG32(DC3_GENERAL_CFG,
-                (gcfg & ~(DC3_GCFG_CMPE | DC3_GCFG_DECE)));
+                        (gcfg & ~(DC3_GCFG_CMPE | DC3_GCFG_DECE)));
         }
     }
 
@@ -2203,24 +2227,28 @@ vg_set_display_pitch(unsigned long pitch)
 
     if (pitch > 4096) {
         dvsize = DC3_DV_LINE_SIZE_8192;
-    } else if (pitch > 2048) {
+    }
+    else if (pitch > 2048) {
         dvsize = DC3_DV_LINE_SIZE_4096;
-    } else if (pitch > 1024) {
+    }
+    else if (pitch > 1024) {
         dvsize = DC3_DV_LINE_SIZE_2048;
-    } else {
+    }
+    else {
         dvsize = DC3_DV_LINE_SIZE_1024;
     }
 
     temp = READ_REG32(DC3_DV_CTL);
     WRITE_REG32(DC3_DV_CTL,
-        (temp & ~DC3_DV_LINE_SIZE_MASK) | dvsize | 0x00000001);
+                (temp & ~DC3_DV_LINE_SIZE_MASK) | dvsize | 0x00000001);
 
     value = READ_REG32(DC3_GENERAL_CFG);
 
     if (pitch == 1024 || pitch == 2048 || pitch == 4096 || pitch == 8192) {
         value &= ~DC3_GCFG_FDTY;
         dvtop = 0;
-    } else {
+    }
+    else {
         value |= DC3_GCFG_FDTY;
 
         dvtop = (READ_REG32(DC3_FB_ACTIVE) & 0xFFF) + 1;
@@ -2339,7 +2367,8 @@ vg_set_compression_enable(int enable)
         /* ENABLE COMPRESSION BITS */
 
         gcfg |= DC3_GCFG_CMPE | DC3_GCFG_DECE;
-    } else {
+    }
+    else {
         gcfg &= ~(DC3_GCFG_CMPE | DC3_GCFG_DECE);
     }
 
@@ -2442,8 +2471,8 @@ int
 vg_wait_vertical_blank(void)
 {
     if (vg_test_timing_active()) {
-        while (!vg_test_vertical_active()) ;
-        while (vg_test_vertical_active()) ;
+        while (!vg_test_vertical_active());
+        while (vg_test_vertical_active());
     }
     return CIM_STATUS_OK;
 }
@@ -2494,7 +2523,8 @@ vg_configure_line_interrupt(VG_INTERRUPT_PARAMS * interrupt_info)
     if (interrupt_info->enable) {
         WRITE_REG32(DC3_IRQ_FILT_CTL, irq_line);
         WRITE_REG32(DC3_IRQ, ((irq_enable & ~DC3_IRQ_MASK) | DC3_IRQ_STATUS));
-    } else {
+    }
+    else {
         WRITE_REG32(DC3_IRQ, (irq_enable | DC3_IRQ_MASK));
         WRITE_REG32(DC3_IRQ_FILT_CTL, irq_line);
     }
@@ -2680,17 +2710,15 @@ vg_save_state(VG_SAVE_RESTORE * vg_state)
 
     /* READ ALL VG MSRS */
 
-    msr_read64(MSR_DEVICE_GEODELX_VG, MSR_GEODELINK_CAP,
-        &(vg_state->msr_cap));
+    msr_read64(MSR_DEVICE_GEODELX_VG, MSR_GEODELINK_CAP, &(vg_state->msr_cap));
     msr_read64(MSR_DEVICE_GEODELX_VG, MSR_GEODELINK_CONFIG,
-        &(vg_state->msr_config));
-    msr_read64(MSR_DEVICE_GEODELX_VG, MSR_GEODELINK_SMI,
-        &(vg_state->msr_smi));
+               &(vg_state->msr_config));
+    msr_read64(MSR_DEVICE_GEODELX_VG, MSR_GEODELINK_SMI, &(vg_state->msr_smi));
     msr_read64(MSR_DEVICE_GEODELX_VG, MSR_GEODELINK_ERROR,
-        &(vg_state->msr_error));
+               &(vg_state->msr_error));
     msr_read64(MSR_DEVICE_GEODELX_VG, MSR_GEODELINK_PM, &(vg_state->msr_pm));
     msr_read64(MSR_DEVICE_GEODELX_VG, MSR_GEODELINK_DIAG,
-        &(vg_state->msr_diag));
+               &(vg_state->msr_diag));
     msr_read64(MSR_DEVICE_GEODELX_VG, DC3_SPARE_MSR, &(vg_state->msr_spare));
     msr_read64(MSR_DEVICE_GEODELX_VG, DC3_RAM_CTL, &(vg_state->msr_ram_ctl));
 
@@ -2799,8 +2827,8 @@ vg_restore_state(VG_SAVE_RESTORE * vg_state)
     /* RESTORE THE CURSOR DATA */
 
     memoffset = READ_REG32(DC3_CURS_ST_OFFSET) & 0x0FFFFFFF;
-    WRITE_FB_STRING32(memoffset, (unsigned char *)&(vg_state->cursor_data[0]),
-        3072);
+    WRITE_FB_STRING32(memoffset, (unsigned char *) &(vg_state->cursor_data[0]),
+                      3072);
 
     /* RESTORE THE PLL */
     /* Use a common routine to use common code to poll for lock bit */
@@ -2809,17 +2837,15 @@ vg_restore_state(VG_SAVE_RESTORE * vg_state)
 
     /* RESTORE ALL VG MSRS */
 
-    msr_write64(MSR_DEVICE_GEODELX_VG, MSR_GEODELINK_CAP,
-        &(vg_state->msr_cap));
+    msr_write64(MSR_DEVICE_GEODELX_VG, MSR_GEODELINK_CAP, &(vg_state->msr_cap));
     msr_write64(MSR_DEVICE_GEODELX_VG, MSR_GEODELINK_CONFIG,
-        &(vg_state->msr_config));
-    msr_write64(MSR_DEVICE_GEODELX_VG, MSR_GEODELINK_SMI,
-        &(vg_state->msr_smi));
+                &(vg_state->msr_config));
+    msr_write64(MSR_DEVICE_GEODELX_VG, MSR_GEODELINK_SMI, &(vg_state->msr_smi));
     msr_write64(MSR_DEVICE_GEODELX_VG, MSR_GEODELINK_ERROR,
-        &(vg_state->msr_error));
+                &(vg_state->msr_error));
     msr_write64(MSR_DEVICE_GEODELX_VG, MSR_GEODELINK_PM, &(vg_state->msr_pm));
     msr_write64(MSR_DEVICE_GEODELX_VG, MSR_GEODELINK_DIAG,
-        &(vg_state->msr_diag));
+                &(vg_state->msr_diag));
     msr_write64(MSR_DEVICE_GEODELX_VG, DC3_SPARE_MSR, &(vg_state->msr_spare));
     msr_write64(MSR_DEVICE_GEODELX_VG, DC3_RAM_CTL, &(vg_state->msr_ram_ctl));
 
@@ -2901,9 +2927,10 @@ vg_read_graphics_crc(int crc_source)
         do {
             line = READ_REG32(DC3_LINE_CNT_STATUS);
         } while ((line & DC3_LNCNT_EVEN_FIELD) != field ||
-            ((line & DC3_LNCNT_V_LINE_CNT) >> 16) < 10 ||
-            ((line & DC3_LNCNT_V_LINE_CNT) >> 16) > 15);
-    } else {
+                 ((line & DC3_LNCNT_V_LINE_CNT) >> 16) < 10 ||
+                 ((line & DC3_LNCNT_V_LINE_CNT) >> 16) > 15);
+    }
+    else {
         /* NON-INTERLACED - EVEN FIELD CRCS ARE INVALID */
 
         if (crc_source & VG_CRC_SOURCE_EVEN)
@@ -2917,7 +2944,7 @@ vg_read_graphics_crc(int crc_source)
 
     /* WAIT FOR THE CRC TO BE COMPLETED */
 
-    while (!(READ_REG32(DC3_LINE_CNT_STATUS) & DC3_LNCNT_SIGC)) ;
+    while (!(READ_REG32(DC3_LINE_CNT_STATUS) & DC3_LNCNT_SIGC));
 
     /* READ THE COMPLETED CRC */
 
@@ -2941,7 +2968,7 @@ vg_read_graphics_crc(int crc_source)
 
 unsigned long
 vg_read_window_crc(int crc_source, unsigned long x, unsigned long y,
-    unsigned long width, unsigned long height)
+                   unsigned long width, unsigned long height)
 {
     Q_WORD msr_value;
     unsigned long crc = 0;
@@ -3242,8 +3269,9 @@ vg_read_window_crc(int crc_source, unsigned long x, unsigned long y,
         msr_value.high = 0x00000000;
         msr_value.low = 0x002055AA;
         msr_write64(MSR_DEVICE_GEODELX_GLCP, GLCP_H0CTL + 3, &msr_value);
-    } else if (crc_source == VG_CRC_SOURCE_PREFLICKER
-        || crc_source == VG_CRC_SOURCE_PREFLICKER_EVEN) {
+    }
+    else if (crc_source == VG_CRC_SOURCE_PREFLICKER
+             || crc_source == VG_CRC_SOURCE_PREFLICKER_EVEN) {
         diag = 0x801F8032;
 
         /* ENABLE HW CLOCK GATING AND SET GLCP CLOCK TO GEODELINK CLOCK */
@@ -3276,7 +3304,8 @@ vg_read_window_crc(int crc_source, unsigned long x, unsigned long y,
         msr_value.high = 0x00000000;
         msr_value.low = 0x002D55AA;
         msr_write64(MSR_DEVICE_GEODELX_GLCP, GLCP_H0CTL + 3, &msr_value);
-    } else {
+    }
+    else {
         /* PREFILTER CRC */
 
         diag = 0x80138048;
@@ -3335,9 +3364,10 @@ vg_read_window_crc(int crc_source, unsigned long x, unsigned long y,
         do {
             line = READ_REG32(DC3_LINE_CNT_STATUS);
         } while ((line & DC3_LNCNT_EVEN_FIELD) != field ||
-            ((line & DC3_LNCNT_V_LINE_CNT) >> 16) < 1 ||
-            ((line & DC3_LNCNT_V_LINE_CNT) >> 16) > 5);
-    } else {
+                 ((line & DC3_LNCNT_V_LINE_CNT) >> 16) < 1 ||
+                 ((line & DC3_LNCNT_V_LINE_CNT) >> 16) > 5);
+    }
+    else {
         /* NON-INTERLACED - EVEN FIELD CRCS ARE INVALID */
 
         if (crc_source & VG_CRC_SOURCE_EVEN)
@@ -3362,11 +3392,11 @@ vg_read_window_crc(int crc_source, unsigned long x, unsigned long y,
 
     /* DELAY TWO FRAMES */
 
-    while (READ_REG32(DC3_LINE_CNT_STATUS) & DC3_LNCNT_VNA) ;
-    while (!(READ_REG32(DC3_LINE_CNT_STATUS) & DC3_LNCNT_VNA)) ;
-    while (READ_REG32(DC3_LINE_CNT_STATUS) & DC3_LNCNT_VNA) ;
-    while (!(READ_REG32(DC3_LINE_CNT_STATUS) & DC3_LNCNT_VNA)) ;
-    while (READ_REG32(DC3_LINE_CNT_STATUS) & DC3_LNCNT_VNA) ;
+    while (READ_REG32(DC3_LINE_CNT_STATUS) & DC3_LNCNT_VNA);
+    while (!(READ_REG32(DC3_LINE_CNT_STATUS) & DC3_LNCNT_VNA));
+    while (READ_REG32(DC3_LINE_CNT_STATUS) & DC3_LNCNT_VNA);
+    while (!(READ_REG32(DC3_LINE_CNT_STATUS) & DC3_LNCNT_VNA));
+    while (READ_REG32(DC3_LINE_CNT_STATUS) & DC3_LNCNT_VNA);
 
     /* VERIFY THAT XSTATE = 11 */
 
@@ -3468,8 +3498,7 @@ vg_get_scaler_filter_coefficients(long h_taps[][5], long v_taps[][3])
  *--------------------------------------------------------------------------*/
 
 int
-vg_get_flicker_filter_configuration(unsigned long *strength,
-    int *flicker_alpha)
+vg_get_flicker_filter_configuration(unsigned long *strength, int *flicker_alpha)
 {
     unsigned long genlk_ctl;
 
@@ -3530,7 +3559,7 @@ vg_get_current_vline(void)
         current_line = READ_REG32(DC3_LINE_CNT_STATUS) & DC3_LNCNT_V_LINE_CNT;
     }
     while (current_line !=
-        (READ_REG32(DC3_LINE_CNT_STATUS) & DC3_LNCNT_V_LINE_CNT));
+           (READ_REG32(DC3_LINE_CNT_STATUS) & DC3_LNCNT_V_LINE_CNT));
 
     return (current_line >> 16);
 }
@@ -3661,7 +3690,7 @@ vg_get_compression_info(VG_COMPRESSION_DATA * comp_data)
     comp_data->compression_offset = READ_REG32(DC3_CB_ST_OFFSET) & 0x0FFFFFFF;
     comp_data->pitch = (READ_REG32(DC3_GFX_PITCH) >> 13) & 0x7FFF8;
     comp_data->size = ((READ_REG32(DC3_LINE_SIZE) >> (DC3_LINE_SIZE_CB_SHIFT -
-                3)) & 0x3F8) + 24;
+                                                      3)) & 0x3F8) + 24;
 
     return CIM_STATUS_OK;
 }

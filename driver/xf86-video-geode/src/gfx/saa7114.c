@@ -31,8 +31,7 @@
 /*  TABLE OF DEFAULT VALUES  */
 /*---------------------------*/
 
-typedef struct tagGFX_SAA7114_INIT
-{
+typedef struct tagGFX_SAA7114_INIT {
     unsigned char index;
     unsigned char value;
 } GFX_SAA7114_INIT;
@@ -97,8 +96,7 @@ GFX_SAA7114_INIT gfx_saa7114_init_values[] = {
 
 int optimize_for_aliasing = 0;
 
-typedef struct tagGFX_SAA7114_FIR_PREFILTER
-{
+typedef struct tagGFX_SAA7114_FIR_PREFILTER {
     unsigned char prescaler;
     unsigned char acl_low;
     unsigned char prefilter_low;
@@ -255,7 +253,7 @@ gfx_set_decoder_defaults(void)
 
     for (i = 0; i < GFX_NUM_SAA7114_INIT_VALUES; i++) {
         saa7114_write_reg(gfx_saa7114_init_values[i].index,
-            gfx_saa7114_init_values[i].value);
+                          gfx_saa7114_init_values[i].value);
     }
 
     gfx_decoder_software_reset();
@@ -312,7 +310,7 @@ int
 gfx_set_decoder_contrast(unsigned char contrast)
 #endif
 {
-    saa7114_write_reg(SAA7114_CONTRAST, (unsigned char)(contrast >> 1));
+    saa7114_write_reg(SAA7114_CONTRAST, (unsigned char) (contrast >> 1));
     return (0);
 }
 
@@ -330,7 +328,7 @@ int
 gfx_set_decoder_hue(char hue)
 #endif
 {
-    saa7114_write_reg(SAA7114_HUE, (unsigned char)hue);
+    saa7114_write_reg(SAA7114_HUE, (unsigned char) hue);
     return (0);
 }
 
@@ -348,7 +346,7 @@ int
 gfx_set_decoder_saturation(unsigned char saturation)
 #endif
 {
-    saa7114_write_reg(SAA7114_SATURATION, (unsigned char)(saturation >> 1));
+    saa7114_write_reg(SAA7114_SATURATION, (unsigned char) (saturation >> 1));
     return (0);
 }
 
@@ -368,10 +366,10 @@ gfx_set_decoder_input_offset(unsigned short x, unsigned short y)
 {
     /* SET THE INPUT WINDOW OFFSET */
 
-    saa7114_write_reg(SAA7114_HORZ_OFFSET_LO, (unsigned char)(x & 0x00FF));
-    saa7114_write_reg(SAA7114_HORZ_OFFSET_HI, (unsigned char)(x >> 8));
-    saa7114_write_reg(SAA7114_VERT_OFFSET_LO, (unsigned char)(y & 0x00FF));
-    saa7114_write_reg(SAA7114_VERT_OFFSET_HI, (unsigned char)(y >> 8));
+    saa7114_write_reg(SAA7114_HORZ_OFFSET_LO, (unsigned char) (x & 0x00FF));
+    saa7114_write_reg(SAA7114_HORZ_OFFSET_HI, (unsigned char) (x >> 8));
+    saa7114_write_reg(SAA7114_VERT_OFFSET_LO, (unsigned char) (y & 0x00FF));
+    saa7114_write_reg(SAA7114_VERT_OFFSET_HI, (unsigned char) (y >> 8));
 
     gfx_decoder_software_reset();
     return (0);
@@ -397,11 +395,10 @@ gfx_set_decoder_input_size(unsigned short width, unsigned short height)
 
     /* SET THE INPUT WINDOW SIZE */
 
-    saa7114_write_reg(SAA7114_HORZ_INPUT_LO, (unsigned char)(width & 0x00FF));
-    saa7114_write_reg(SAA7114_HORZ_INPUT_HI, (unsigned char)(width >> 8));
-    saa7114_write_reg(SAA7114_VERT_INPUT_LO,
-        (unsigned char)(height & 0x00FF));
-    saa7114_write_reg(SAA7114_VERT_INPUT_HI, (unsigned char)(height >> 8));
+    saa7114_write_reg(SAA7114_HORZ_INPUT_LO, (unsigned char) (width & 0x00FF));
+    saa7114_write_reg(SAA7114_HORZ_INPUT_HI, (unsigned char) (width >> 8));
+    saa7114_write_reg(SAA7114_VERT_INPUT_LO, (unsigned char) (height & 0x00FF));
+    saa7114_write_reg(SAA7114_VERT_INPUT_HI, (unsigned char) (height >> 8));
 
     gfx_decoder_software_reset();
     return (0);
@@ -431,12 +428,11 @@ gfx_set_decoder_output_size(unsigned short width, unsigned short height)
 
     /* SET THE OUTPUT WINDOW SIZE */
 
-    saa7114_write_reg(SAA7114_HORZ_OUTPUT_LO,
-        (unsigned char)(width & 0x00FF));
-    saa7114_write_reg(SAA7114_HORZ_OUTPUT_HI, (unsigned char)(width >> 8));
+    saa7114_write_reg(SAA7114_HORZ_OUTPUT_LO, (unsigned char) (width & 0x00FF));
+    saa7114_write_reg(SAA7114_HORZ_OUTPUT_HI, (unsigned char) (width >> 8));
     saa7114_write_reg(SAA7114_VERT_OUTPUT_LO,
-        (unsigned char)(height & 0x00FF));
-    saa7114_write_reg(SAA7114_VERT_OUTPUT_HI, (unsigned char)(height >> 8));
+                      (unsigned char) (height & 0x00FF));
+    saa7114_write_reg(SAA7114_VERT_OUTPUT_HI, (unsigned char) (height >> 8));
 
     gfx_decoder_software_reset();
     return (0);
@@ -451,11 +447,11 @@ gfx_set_decoder_output_size(unsigned short width, unsigned short height)
 #if GFX_DECODER_DYNAMIC
 int
 saa7114_set_decoder_scale(unsigned short srcw, unsigned short srch,
-    unsigned short dstw, unsigned short dsth)
+                          unsigned short dstw, unsigned short dsth)
 #else
 int
 gfx_set_decoder_scale(unsigned short srcw, unsigned short srch,
-    unsigned short dstw, unsigned short dsth)
+                      unsigned short dstw, unsigned short dsth)
 #endif
 {
     unsigned char prescale = 0;
@@ -465,7 +461,7 @@ gfx_set_decoder_scale(unsigned short srcw, unsigned short srch,
     /* Downscale from 1 to 1/63 source size. */
 
     if (dstw)
-        prescale = (unsigned char)(srcw / dstw);
+        prescale = (unsigned char) (srcw / dstw);
     if (!prescale)
         prescale = 1;
     if (prescale > 63)
@@ -477,27 +473,32 @@ gfx_set_decoder_scale(unsigned short srcw, unsigned short srch,
     if (prescale < 36) {
         if (optimize_for_aliasing) {
             saa7114_write_reg(SAA7114_HORZ_ACL,
-                gfx_saa7114_fir_values[prescale - 1].acl_low);
+                              gfx_saa7114_fir_values[prescale - 1].acl_low);
             saa7114_write_reg(SAA7114_HORZ_FIR_PREFILTER,
-                gfx_saa7114_fir_values[prescale - 1].prefilter_low);
-        } else {
-            saa7114_write_reg(SAA7114_HORZ_ACL,
-                gfx_saa7114_fir_values[prescale - 1].acl_high);
-            saa7114_write_reg(SAA7114_HORZ_FIR_PREFILTER,
-                gfx_saa7114_fir_values[prescale - 1].prefilter_high);
+                              gfx_saa7114_fir_values[prescale -
+                                                     1].prefilter_low);
         }
-    } else {
+        else {
+            saa7114_write_reg(SAA7114_HORZ_ACL,
+                              gfx_saa7114_fir_values[prescale - 1].acl_high);
+            saa7114_write_reg(SAA7114_HORZ_FIR_PREFILTER,
+                              gfx_saa7114_fir_values[prescale -
+                                                     1].prefilter_high);
+        }
+    }
+    else {
         /* SAME SETTINGS FOR RATIO 1/35 DOWNTO 1/63 */
         if (optimize_for_aliasing) {
             saa7114_write_reg(SAA7114_HORZ_ACL,
-                gfx_saa7114_fir_values[34].acl_low);
+                              gfx_saa7114_fir_values[34].acl_low);
             saa7114_write_reg(SAA7114_HORZ_FIR_PREFILTER,
-                gfx_saa7114_fir_values[34].prefilter_low);
-        } else {
+                              gfx_saa7114_fir_values[34].prefilter_low);
+        }
+        else {
             saa7114_write_reg(SAA7114_HORZ_ACL,
-                gfx_saa7114_fir_values[34].acl_high);
+                              gfx_saa7114_fir_values[34].acl_high);
             saa7114_write_reg(SAA7114_HORZ_FIR_PREFILTER,
-                gfx_saa7114_fir_values[34].prefilter_high);
+                              gfx_saa7114_fir_values[34].prefilter_high);
         }
     }
 
@@ -508,13 +509,12 @@ gfx_set_decoder_scale(unsigned short srcw, unsigned short srch,
     scale = ((1024 * srcw * 1000) / (dstw * prescale)) / 1000;
     if ((scale > 8191) || (scale < 300))
         return (1);
-    saa7114_write_reg(SAA7114_HSCALE_LUMA_LO,
-        (unsigned char)(scale & 0x00FF));
-    saa7114_write_reg(SAA7114_HSCALE_LUMA_HI, (unsigned char)(scale >> 8));
+    saa7114_write_reg(SAA7114_HSCALE_LUMA_LO, (unsigned char) (scale & 0x00FF));
+    saa7114_write_reg(SAA7114_HSCALE_LUMA_HI, (unsigned char) (scale >> 8));
     scale >>= 1;
     saa7114_write_reg(SAA7114_HSCALE_CHROMA_LO,
-        (unsigned char)(scale & 0x00FF));
-    saa7114_write_reg(SAA7114_HSCALE_CHROMA_HI, (unsigned char)(scale >> 8));
+                      (unsigned char) (scale & 0x00FF));
+    saa7114_write_reg(SAA7114_HSCALE_CHROMA_HI, (unsigned char) (scale >> 8));
 
     /* SET THE VERTICAL SCALING (INTERPOLATION MODE) */
 
@@ -526,13 +526,12 @@ gfx_set_decoder_scale(unsigned short srcw, unsigned short srch,
 
     dsth = ((dsth + 1) >> 1) << 1;
 
-    scale = (int)((1024 * srch) / dsth);
-    saa7114_write_reg(SAA7114_VSCALE_LUMA_LO,
-        (unsigned char)(scale & 0x00FF));
-    saa7114_write_reg(SAA7114_VSCALE_LUMA_HI, (unsigned char)(scale >> 8));
+    scale = (int) ((1024 * srch) / dsth);
+    saa7114_write_reg(SAA7114_VSCALE_LUMA_LO, (unsigned char) (scale & 0x00FF));
+    saa7114_write_reg(SAA7114_VSCALE_LUMA_HI, (unsigned char) (scale >> 8));
     saa7114_write_reg(SAA7114_VSCALE_CHROMA_LO,
-        (unsigned char)(scale & 0x00FF));
-    saa7114_write_reg(SAA7114_VSCALE_CHROMA_HI, (unsigned char)(scale >> 8));
+                      (unsigned char) (scale & 0x00FF));
+    saa7114_write_reg(SAA7114_VSCALE_CHROMA_HI, (unsigned char) (scale >> 8));
 
     if (dsth >= (srch >> 1)) {
         /* USE INTERPOLATION MODE FOR SCALE FACTOR ABOVE 0.5 */
@@ -545,22 +544,27 @@ gfx_set_decoder_scale(unsigned short srcw, unsigned short srch,
         saa7114_write_reg(SAA7114_VSCALE_CHROMA_OFFS0, SAA7114_VSCALE_PHO);
         saa7114_write_reg(SAA7114_VSCALE_CHROMA_OFFS1, SAA7114_VSCALE_PHO);
         saa7114_write_reg(SAA7114_VSCALE_CHROMA_OFFS2,
-            (unsigned char)(SAA7114_VSCALE_PHO + scale / 64 - 16));
+                          (unsigned char) (SAA7114_VSCALE_PHO + scale / 64 -
+                                           16));
         saa7114_write_reg(SAA7114_VSCALE_CHROMA_OFFS3,
-            (unsigned char)(SAA7114_VSCALE_PHO + scale / 64 - 16));
+                          (unsigned char) (SAA7114_VSCALE_PHO + scale / 64 -
+                                           16));
 
         saa7114_write_reg(SAA7114_VSCALE_LUMINA_OFFS0, SAA7114_VSCALE_PHO);
         saa7114_write_reg(SAA7114_VSCALE_LUMINA_OFFS1, SAA7114_VSCALE_PHO);
         saa7114_write_reg(SAA7114_VSCALE_LUMINA_OFFS2,
-            (unsigned char)(SAA7114_VSCALE_PHO + scale / 64 - 16));
+                          (unsigned char) (SAA7114_VSCALE_PHO + scale / 64 -
+                                           16));
         saa7114_write_reg(SAA7114_VSCALE_LUMINA_OFFS3,
-            (unsigned char)(SAA7114_VSCALE_PHO + scale / 64 - 16));
+                          (unsigned char) (SAA7114_VSCALE_PHO + scale / 64 -
+                                           16));
 
         /* RESTORE CONTRAST AND SATURATION FOR INTERPOLATION MODE */
 
-        saa7114_write_reg(SAA7114_FILTER_CONTRAST, (unsigned char)0x40);
-        saa7114_write_reg(SAA7114_FILTER_SATURATION, (unsigned char)0x40);
-    } else {
+        saa7114_write_reg(SAA7114_FILTER_CONTRAST, (unsigned char) 0x40);
+        saa7114_write_reg(SAA7114_FILTER_SATURATION, (unsigned char) 0x40);
+    }
+    else {
         /* USE ACCUMULATION MODE FOR DOWNSCALING BY MORE THAN 2x */
 
         saa7114_write_reg(SAA7114_VSCALE_CONTROL, 0x01);
@@ -580,8 +584,8 @@ gfx_set_decoder_scale(unsigned short srcw, unsigned short srch,
 
         if (srch)
             scale = (64 * dsth) / srch;
-        saa7114_write_reg(SAA7114_FILTER_CONTRAST, (unsigned char)scale);
-        saa7114_write_reg(SAA7114_FILTER_SATURATION, (unsigned char)scale);
+        saa7114_write_reg(SAA7114_FILTER_CONTRAST, (unsigned char) scale);
+        saa7114_write_reg(SAA7114_FILTER_SATURATION, (unsigned char) scale);
     }
 
     gfx_decoder_software_reset();
@@ -610,20 +614,20 @@ gfx_set_decoder_vbi_format(int start, int end, int format)
         switch (format) {
         case VBI_FORMAT_VIDEO:
             data = 0xFF;
-            break;                     /* Active video */
+            break;              /* Active video */
         case VBI_FORMAT_RAW:
             data = 0x77;
-            break;                     /* Raw VBI data */
+            break;              /* Raw VBI data */
         case VBI_FORMAT_CC:
             data = 0x55;
-            break;                     /* US CC        */
+            break;              /* US CC        */
         case VBI_FORMAT_NABTS:
             data = 0xCC;
-            break;                     /* US NABTS     */
+            break;              /* US NABTS     */
         default:
             return GFX_STATUS_BAD_PARAMETER;
         }
-        saa7114_write_reg((unsigned char)(0x3F + i), data);
+        saa7114_write_reg((unsigned char) (0x3F + i), data);
     }
     return GFX_STATUS_OK;
 }
@@ -701,7 +705,7 @@ gfx_set_decoder_luminance_filter(unsigned char lufi)
 
     saa7114_read_reg(SAA7114_LUMINANCE_CONTROL, &data);
     saa7114_write_reg(SAA7114_LUMINANCE_CONTROL,
-        (unsigned char)((data & ~0x0F) | (lufi & 0x0F)));
+                      (unsigned char) ((data & ~0x0F) | (lufi & 0x0F)));
     return (0);
 }
 
@@ -769,7 +773,7 @@ gfx_get_decoder_hue(void)
     unsigned char hue = 0;
 
     saa7114_read_reg(SAA7114_HUE, &hue);
-    return ((char)hue);
+    return ((char) hue);
 }
 
 /*----------------------------------------------------------------------------
@@ -811,13 +815,13 @@ gfx_get_decoder_input_offset(void)
     unsigned char data;
 
     saa7114_read_reg(SAA7114_HORZ_OFFSET_LO, &data);
-    value = (unsigned long)data;
+    value = (unsigned long) data;
     saa7114_read_reg(SAA7114_HORZ_OFFSET_HI, &data);
-    value |= ((unsigned long)data) << 8;
+    value |= ((unsigned long) data) << 8;
     saa7114_read_reg(SAA7114_VERT_OFFSET_LO, &data);
-    value |= ((unsigned long)data) << 16;
+    value |= ((unsigned long) data) << 16;
     saa7114_read_reg(SAA7114_VERT_OFFSET_HI, &data);
-    value |= ((unsigned long)data) << 24;
+    value |= ((unsigned long) data) << 24;
     return (value);
 }
 
@@ -839,13 +843,13 @@ gfx_get_decoder_input_size(void)
     unsigned char data;
 
     saa7114_read_reg(SAA7114_HORZ_INPUT_LO, &data);
-    value = (unsigned long)data;
+    value = (unsigned long) data;
     saa7114_read_reg(SAA7114_HORZ_INPUT_HI, &data);
-    value |= ((unsigned long)data) << 8;
+    value |= ((unsigned long) data) << 8;
     saa7114_read_reg(SAA7114_VERT_INPUT_LO, &data);
-    value |= ((unsigned long)data) << 17;
+    value |= ((unsigned long) data) << 17;
     saa7114_read_reg(SAA7114_VERT_INPUT_HI, &data);
-    value |= ((unsigned long)data) << 25;
+    value |= ((unsigned long) data) << 25;
     return (value);
 }
 
@@ -867,13 +871,13 @@ gfx_get_decoder_output_size(void)
     unsigned char data;
 
     saa7114_read_reg(SAA7114_HORZ_OUTPUT_LO, &data);
-    value = (unsigned long)data;
+    value = (unsigned long) data;
     saa7114_read_reg(SAA7114_HORZ_OUTPUT_HI, &data);
-    value |= ((unsigned long)data) << 8;
+    value |= ((unsigned long) data) << 8;
     saa7114_read_reg(SAA7114_VERT_OUTPUT_LO, &data);
-    value |= ((unsigned long)data) << 17;
+    value |= ((unsigned long) data) << 17;
     saa7114_read_reg(SAA7114_VERT_OUTPUT_HI, &data);
-    value |= ((unsigned long)data) << 25;
+    value |= ((unsigned long) data) << 25;
     return (value);
 }
 
@@ -893,24 +897,24 @@ gfx_get_decoder_vbi_format(int line)
 {
     unsigned char format = 0, data;
 
-    saa7114_read_reg((unsigned char)(0x3F + line), &data);
+    saa7114_read_reg((unsigned char) (0x3F + line), &data);
     switch (data) {
     case 0xFF:
         format = VBI_FORMAT_VIDEO;
-        break;                         /* Active video */
+        break;                  /* Active video */
     case 0x77:
         format = VBI_FORMAT_RAW;
-        break;                         /* Raw VBI data */
+        break;                  /* Raw VBI data */
     case 0x55:
         format = VBI_FORMAT_CC;
-        break;                         /* US CC        */
+        break;                  /* US CC        */
     case 0xCC:
         format = VBI_FORMAT_NABTS;
-        break;                         /* US NABTS     */
+        break;                  /* US NABTS     */
     }
     return (format);
 }
 
-#endif /* GFX_READ_ROUTINES */
+#endif                          /* GFX_READ_ROUTINES */
 
 /* END OF FILE */

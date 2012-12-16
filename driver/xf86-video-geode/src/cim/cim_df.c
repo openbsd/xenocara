@@ -49,7 +49,7 @@ df_set_crt_enable(int crt_output)
     case DF_CRT_DISABLE:
 
         config &= ~(DF_DCFG_DIS_EN | DF_DCFG_HSYNC_EN |
-            DF_DCFG_VSYNC_EN | DF_DCFG_DAC_BL_EN);
+                    DF_DCFG_VSYNC_EN | DF_DCFG_DAC_BL_EN);
         misc |= DF_DAC_POWER_DOWN;
         break;
 
@@ -58,7 +58,7 @@ df_set_crt_enable(int crt_output)
     case DF_CRT_ENABLE:
 
         config |= (DF_DCFG_DIS_EN | DF_DCFG_HSYNC_EN |
-            DF_DCFG_VSYNC_EN | DF_DCFG_DAC_BL_EN);
+                   DF_DCFG_VSYNC_EN | DF_DCFG_DAC_BL_EN);
         misc &= ~(DF_DAC_POWER_DOWN | DF_ANALOG_POWER_DOWN);
         break;
 
@@ -67,7 +67,7 @@ df_set_crt_enable(int crt_output)
     case DF_CRT_STANDBY:
 
         config = (config & ~(DF_DCFG_DIS_EN | DF_DCFG_HSYNC_EN |
-                DF_DCFG_DAC_BL_EN)) | DF_DCFG_VSYNC_EN;
+                             DF_DCFG_DAC_BL_EN)) | DF_DCFG_VSYNC_EN;
         misc |= DF_DAC_POWER_DOWN;
         break;
 
@@ -76,7 +76,7 @@ df_set_crt_enable(int crt_output)
     case DF_CRT_SUSPEND:
 
         config = (config & ~(DF_DCFG_DIS_EN | DF_DCFG_VSYNC_EN |
-                DF_DCFG_DAC_BL_EN)) | DF_DCFG_HSYNC_EN;
+                             DF_DCFG_DAC_BL_EN)) | DF_DCFG_HSYNC_EN;
         misc |= DF_DAC_POWER_DOWN;
         break;
 
@@ -121,7 +121,7 @@ df_set_panel_enable(int enable)
 
 int
 df_configure_video_source(DF_VIDEO_SOURCE_PARAMS * video_source_odd,
-    DF_VIDEO_SOURCE_PARAMS * video_source_even)
+                          DF_VIDEO_SOURCE_PARAMS * video_source_even)
 {
     unsigned long pitch, ctrl, vcfg;
     unsigned long lock, vg_line, gcfg;
@@ -153,15 +153,15 @@ df_configure_video_source(DF_VIDEO_SOURCE_PARAMS * video_source_odd,
     /* PARAMETER - VIDEO PITCH */
 
     pitch =
-        (video_source_odd->y_pitch >> 3) | ((video_source_odd->
-            uv_pitch >> 3) << 16);
+        (video_source_odd->y_pitch >> 3) | ((video_source_odd->uv_pitch >> 3) <<
+                                            16);
 
     /* PARAMETER - VIDEO FORMAT */
 
     gcfg &= ~DC3_GCFG_YUV_420;
     vcfg &= ~(DF_VCFG_VID_INP_FORMAT | DF_VCFG_4_2_0_MODE);
     ctrl &= ~(DF_VIDEO_INPUT_IS_RGB | DF_CSC_VIDEO_YUV_TO_RGB | DF_HD_VIDEO |
-        DF_YUV_CSC_EN);
+              DF_YUV_CSC_EN);
 
     /* SELECT PIXEL ORDERING */
 
@@ -225,7 +225,7 @@ df_configure_video_source(DF_VIDEO_SOURCE_PARAMS * video_source_odd,
     /* appropriate pitch and clipping the video window.              */
 
     vcfg &= ~(DF_VCFG_LINE_SIZE_LOWER_MASK | DF_VCFG_LINE_SIZE_BIT8 |
-        DF_VCFG_LINE_SIZE_BIT9);
+              DF_VCFG_LINE_SIZE_BIT9);
 
     size = ((video_source_odd->width >> 1) + 7) & 0xFFF8;
 
@@ -286,7 +286,7 @@ df_configure_video_source(DF_VIDEO_SOURCE_PARAMS * video_source_odd,
 
 int
 df_set_video_offsets(int even, unsigned long y_offset,
-    unsigned long u_offset, unsigned long v_offset)
+                     unsigned long u_offset, unsigned long v_offset)
 {
     unsigned long lock = READ_REG32(DC3_UNLOCK);
 
@@ -296,7 +296,8 @@ df_set_video_offsets(int even, unsigned long y_offset,
         WRITE_REG32(DC3_VID_EVEN_Y_ST_OFFSET, y_offset);
         WRITE_REG32(DC3_VID_EVEN_U_ST_OFFSET, u_offset);
         WRITE_REG32(DC3_VID_EVEN_V_ST_OFFSET, v_offset);
-    } else {
+    }
+    else {
         WRITE_REG32(DC3_VID_Y_ST_OFFSET, y_offset);
         WRITE_REG32(DC3_VID_U_ST_OFFSET, u_offset);
         WRITE_REG32(DC3_VID_V_ST_OFFSET, v_offset);
@@ -317,7 +318,8 @@ df_set_video_offsets(int even, unsigned long y_offset,
 
 int
 df_set_video_scale(unsigned long src_width, unsigned long src_height,
-    unsigned long dst_width, unsigned long dst_height, unsigned long flags)
+                   unsigned long dst_width, unsigned long dst_height,
+                   unsigned long flags)
 {
     unsigned long temp, misc;
     unsigned long scale, gfxscale;
@@ -377,14 +379,14 @@ df_set_video_scale(unsigned long src_width, unsigned long src_height,
         scale = READ_VID32(DF_VIDEO_SCALER);
         vcfg = READ_VID32(DF_VIDEO_CONFIG);
         vcfg &= ~(DF_VCFG_LINE_SIZE_LOWER_MASK | DF_VCFG_LINE_SIZE_BIT8 |
-            DF_VCFG_LINE_SIZE_BIT9);
+                  DF_VCFG_LINE_SIZE_BIT9);
 
         if (dst_width < (src_width >> 2)) {
             src_width >>= 1;
             WRITE_VID32(DF_VIDEO_SCALER, scale | DF_SCALE_DOUBLE_H_DOWNSCALE);
-        } else {
-            WRITE_VID32(DF_VIDEO_SCALER,
-                scale & ~DF_SCALE_DOUBLE_H_DOWNSCALE);
+        }
+        else {
+            WRITE_VID32(DF_VIDEO_SCALER, scale & ~DF_SCALE_DOUBLE_H_DOWNSCALE);
         }
 
         /* PROGRAM A NEW LINE SIZE */
@@ -416,9 +418,9 @@ df_set_video_scale(unsigned long src_width, unsigned long src_height,
 
             WRITE_REG32(DC3_VID_DS_DELTA, downscale);
             WRITE_VID32(DF_VIDEO_YSCALE, 0x20000);
-        } else {
-            WRITE_VID32(DF_VIDEO_YSCALE,
-                ((0x10000 * src_height) / dst_height));
+        }
+        else {
+            WRITE_VID32(DF_VIDEO_YSCALE, ((0x10000 * src_height) / dst_height));
         }
         WRITE_REG32(DC3_GENERAL_CFG, gcfg);
         WRITE_REG32(DC3_UNLOCK, unlock);
@@ -431,7 +433,8 @@ df_set_video_scale(unsigned long src_width, unsigned long src_height,
     if ((READ_VID32(DF_VIDEO_XSCALE) == 0x10000) &&
         (READ_VID32(DF_VIDEO_YSCALE) == 0x10000)) {
         WRITE_VID32(DF_VIDEO_CONFIG, (temp | DF_VCFG_SC_BYP));
-    } else
+    }
+    else
         WRITE_VID32(DF_VIDEO_CONFIG, (temp & ~DF_VCFG_SC_BYP));
 
     return CIM_STATUS_OK;
@@ -487,7 +490,8 @@ df_set_video_position(DF_VIDEO_POSITION * video_window)
         border_y = vtotal - vblankend;
         hactive = hblankstart + htotal - hblankend;
         vactive = vblankstart + vtotal - vblankend;
-    } else {
+    }
+    else {
         border_x = border_y = 0;
     }
 
@@ -539,7 +543,8 @@ df_set_video_position(DF_VIDEO_POSITION * video_window)
         if (video_window->flags & DF_POSFLAG_INCLUDEBORDER) {
             border_y_even = vtotal_even - vblankend_even;
             vactive_even = vblankstart_even + vtotal_even - vblankend_even;
-        } else
+        }
+        else
             border_y_even = 0;
 
         /*
@@ -596,7 +601,8 @@ df_set_video_position(DF_VIDEO_POSITION * video_window)
             y <<= 1;
             height += height_even;
             adjust = border_y + border_y_even;
-        } else {
+        }
+        else {
             adjust = border_y;
             if (height_even > height)
                 height = height_even;
@@ -605,7 +611,8 @@ df_set_video_position(DF_VIDEO_POSITION * video_window)
             if (y > adjust) {
                 y -= adjust;
                 adjust = 0;
-            } else {
+            }
+            else {
                 adjust -= y;
                 if (height > adjust)
                     height -= adjust;
@@ -614,7 +621,8 @@ df_set_video_position(DF_VIDEO_POSITION * video_window)
             }
         }
 
-    } else {
+    }
+    else {
         y = y_copy;
 
         height = height_copy;
@@ -671,7 +679,8 @@ df_set_video_position(DF_VIDEO_POSITION * video_window)
         initread = (initread * xscale) / 0x10000;
         if (xscale)
             dst_clip = ((initread & 3) * 0x10000) / xscale;
-    } else
+    }
+    else
         dst_clip = video_window->dst_clip;
 
     /*
@@ -745,7 +754,8 @@ df_set_video_filter_coefficients(long taps[][4], int phase256)
     if (phase256) {
         WRITE_VID32(DF_VIDEO_SCALER, (scale & ~DF_SCALE_128_PHASES));
         defaults = CimarronVideoFilter256;
-    } else {
+    }
+    else {
         WRITE_VID32(DF_VIDEO_SCALER, (scale | DF_SCALE_128_PHASES));
         defaults = CimarronVideoFilter128;
     }
@@ -756,7 +766,8 @@ df_set_video_filter_coefficients(long taps[][4], int phase256)
         if (!taps) {
             coeff0 = defaults[i][0];
             coeff1 = defaults[i][1];
-        } else {
+        }
+        else {
             if (taps[i][1] < 0)
                 coeff0 = -taps[i][1] | 0x8000;
             else
@@ -842,13 +853,15 @@ df_set_video_enable(int enable, unsigned long flags)
 
             vg_ckey = READ_REG32(DC3_COLOR_KEY);
             WRITE_REG32(DC3_COLOR_KEY, (vg_ckey & ~DC3_CLR_KEY_ENABLE));
-        } else if (!(READ_VID32(DF_DISPLAY_CONFIG) & DF_DCFG_VG_CK)) {
+        }
+        else if (!(READ_VID32(DF_DISPLAY_CONFIG) & DF_DCFG_VG_CK)) {
             /* OTHERWISE RE-ENABLE COLOR KEYING */
 
             vg_ckey = READ_REG32(DC3_COLOR_KEY);
             WRITE_REG32(DC3_COLOR_KEY, (vg_ckey | DC3_CLR_KEY_ENABLE));
         }
-    } else {
+    }
+    else {
         WRITE_VID32(DF_VIDEO_CONFIG, (vcfg & ~DF_VCFG_VID_EN));
         WRITE_REG32(DC3_GENERAL_CFG, (gcfg & ~DC3_GCFG_VIDE));
 
@@ -898,7 +911,8 @@ df_set_video_color_key(unsigned long key, unsigned long mask, int graphics)
         WRITE_VID32(DF_DISPLAY_CONFIG, df_dcfg);
         WRITE_REG32(DC3_COLOR_KEY, vg_ckey);
         WRITE_REG32(DC3_COLOR_MASK, (mask & 0xFFFFFF));
-    } else {
+    }
+    else {
         /* CHROMA KEY - USE DF HARDWARE */
 
         df_dcfg |= DF_DCFG_VG_CK;
@@ -1016,8 +1030,9 @@ df_configure_video_cursor_color_key(DF_VIDEO_CURSOR_PARAMS * cursor_color_key)
         return CIM_STATUS_INVALIDPARAMS;
 
     key = READ_VID32(DF_CURSOR_COLOR_KEY) & DF_CURSOR_COLOR_KEY_ENABLE;
-    key = key | (cursor_color_key->key & 0xFFFFFF) | (cursor_color_key->
-        select_color2 << 24);
+    key =
+        key | (cursor_color_key->key & 0xFFFFFF) | (cursor_color_key->
+                                                    select_color2 << 24);
 
     WRITE_VID32(DF_CURSOR_COLOR_KEY, key);
     WRITE_VID32(DF_CURSOR_COLOR_MASK, (cursor_color_key->mask & 0xFFFFFF));
@@ -1143,8 +1158,7 @@ df_configure_alpha_window(int window, DF_ALPHA_REGION_PARAMS * alpha_data)
         if (yend > (vactive + vadjust))
             yend = vactive + vadjust;
 
-        WRITE_VID32((DF_ALPHA_YPOS_1 + (window << 5)),
-            (ystart | (yend << 16)));
+        WRITE_VID32((DF_ALPHA_YPOS_1 + (window << 5)), (ystart | (yend << 16)));
 
         /* SET Y POSITION FOR EVEN FIELD */
 
@@ -1158,8 +1172,9 @@ df_configure_alpha_window(int window, DF_ALPHA_REGION_PARAMS * alpha_data)
             yend = vactive_even + vadjust;
 
         WRITE_VID32((DF_VID_ALPHA_Y_EVEN_1 + (window << 3)),
-            (ystart | (yend << 16)));
-    } else {
+                    (ystart | (yend << 16)));
+    }
+    else {
         y = y_copy;
         height = height_copy;
         vadjust = vtotal - vsyncend + 1;
@@ -1170,8 +1185,7 @@ df_configure_alpha_window(int window, DF_ALPHA_REGION_PARAMS * alpha_data)
         if (yend > (vactive + vadjust))
             yend = vactive + vadjust;
 
-        WRITE_VID32((DF_ALPHA_YPOS_1 + (window << 5)),
-            (ystart | (yend << 16)));
+        WRITE_VID32((DF_ALPHA_YPOS_1 + (window << 5)), (ystart | (yend << 16)));
     }
 
     /* SET ALPHA X POSITION */
@@ -1200,7 +1214,7 @@ df_configure_alpha_window(int window, DF_ALPHA_REGION_PARAMS * alpha_data)
     alpha_ctl = READ_VID32(DF_ALPHA_CONTROL_1 + (window << 5)) &
         DF_ACTRL_WIN_ENABLE;
     alpha_ctl |= (alpha_data->alpha_value & 0xFF) | DF_ACTRL_LOAD_ALPHA |
-        (((unsigned long)alpha_data->delta & 0xFF) << 8);
+        (((unsigned long) alpha_data->delta & 0xFF) << 8);
     if (alpha_data->flags & DF_ALPHAFLAG_PERPIXELENABLED)
         alpha_ctl |= DF_ACTRL_PERPIXEL_EN;
 
@@ -1306,7 +1320,7 @@ df_set_output_color_space(int color_space)
     alpha_ctl = READ_VID32(DF_VID_ALPHA_CONTROL);
 
     alpha_ctl &= ~(DF_CSC_GRAPHICS_RGB_TO_YUV | DF_CSC_VIDEO_YUV_TO_RGB |
-        DF_HD_GRAPHICS | DF_YUV_CSC_EN | DF_ALPHA_DRGB);
+                   DF_HD_GRAPHICS | DF_YUV_CSC_EN | DF_ALPHA_DRGB);
 
     /* OUTPUT IS RGB */
     /* Enable YUV->RGB CSC if necessary and enable alpha output if  */
@@ -1333,7 +1347,8 @@ df_set_output_color_space(int color_space)
 
         if (color_space == DF_OUTPUT_HDTV)
             alpha_ctl |= DF_HD_GRAPHICS;
-    } else
+    }
+    else
         return CIM_STATUS_INVALIDPARAMS;
 
     WRITE_VID32(DF_VID_ALPHA_CONTROL, alpha_ctl);
@@ -1376,7 +1391,8 @@ df_set_output_path(int format)
         panel_pm &= ~DF_PM_PANEL_ON;
         panel_tim2 |= DF_PMTIM2_TFT_PASSHTHROUGH;
         output = DF_OUTPUT_PANEL | DF_SIMULTANEOUS_CRT_FP;
-    } else if (format == DF_DISPLAY_FP || format == DF_DISPLAY_CRT_FP) {
+    }
+    else if (format == DF_DISPLAY_FP || format == DF_DISPLAY_CRT_FP) {
         panel_pm |= DF_PM_PANEL_ON;
         panel_tim2 &= ~DF_PMTIM2_TFT_PASSHTHROUGH;
 
@@ -1384,7 +1400,8 @@ df_set_output_path(int format)
             output = DF_OUTPUT_PANEL;
         else if (format == DF_DISPLAY_CRT_FP)
             output = DF_OUTPUT_PANEL | DF_SIMULTANEOUS_CRT_FP;
-    } else {
+    }
+    else {
         switch (format) {
         case DF_DISPLAY_VOP:
             output = DF_OUTPUT_VOP;
@@ -1479,26 +1496,22 @@ df_save_state(DF_SAVE_RESTORE * df_state)
     /* READ FILTER COEFFICIENTS */
 
     for (i = 0; i < 512; i++)
-        df_state->coefficients[i] =
-            READ_VID32(DF_COEFFICIENT_BASE + (i << 2));
+        df_state->coefficients[i] = READ_VID32(DF_COEFFICIENT_BASE + (i << 2));
 
     /* READ ALL DF MSRS */
 
-    msr_read64(MSR_DEVICE_GEODELX_DF, MSR_GEODELINK_CAP,
-        &(df_state->msr_cap));
+    msr_read64(MSR_DEVICE_GEODELX_DF, MSR_GEODELINK_CAP, &(df_state->msr_cap));
     msr_read64(MSR_DEVICE_GEODELX_DF, MSR_GEODELINK_CONFIG,
-        &(df_state->msr_config));
-    msr_read64(MSR_DEVICE_GEODELX_DF, MSR_GEODELINK_SMI,
-        &(df_state->msr_smi));
+               &(df_state->msr_config));
+    msr_read64(MSR_DEVICE_GEODELX_DF, MSR_GEODELINK_SMI, &(df_state->msr_smi));
     msr_read64(MSR_DEVICE_GEODELX_DF, MSR_GEODELINK_ERROR,
-        &(df_state->msr_error));
+               &(df_state->msr_error));
     msr_read64(MSR_DEVICE_GEODELX_DF, MSR_GEODELINK_PM, &(df_state->msr_pm));
     msr_read64(MSR_DEVICE_GEODELX_DF, MSR_GEODELINK_DIAG,
-        &(df_state->msr_diag));
+               &(df_state->msr_diag));
     msr_read64(MSR_DEVICE_GEODELX_DF, DF_MBD_MSR_DIAG_DF,
-        &(df_state->msr_df_diag));
-    msr_read64(MSR_DEVICE_GEODELX_DF, DF_MSR_PAD_SEL,
-        &(df_state->msr_pad_sel));
+               &(df_state->msr_df_diag));
+    msr_read64(MSR_DEVICE_GEODELX_DF, DF_MSR_PAD_SEL, &(df_state->msr_pad_sel));
 
     return CIM_STATUS_OK;
 }
@@ -1521,21 +1534,19 @@ df_restore_state(DF_SAVE_RESTORE * df_state)
 
     /* RESTORE DF MSRS */
 
-    msr_write64(MSR_DEVICE_GEODELX_DF, MSR_GEODELINK_CAP,
-        &(df_state->msr_cap));
+    msr_write64(MSR_DEVICE_GEODELX_DF, MSR_GEODELINK_CAP, &(df_state->msr_cap));
     msr_write64(MSR_DEVICE_GEODELX_DF, MSR_GEODELINK_CONFIG,
-        &(df_state->msr_config));
-    msr_write64(MSR_DEVICE_GEODELX_DF, MSR_GEODELINK_SMI,
-        &(df_state->msr_smi));
+                &(df_state->msr_config));
+    msr_write64(MSR_DEVICE_GEODELX_DF, MSR_GEODELINK_SMI, &(df_state->msr_smi));
     msr_write64(MSR_DEVICE_GEODELX_DF, MSR_GEODELINK_ERROR,
-        &(df_state->msr_error));
+                &(df_state->msr_error));
     msr_write64(MSR_DEVICE_GEODELX_DF, MSR_GEODELINK_PM, &(df_state->msr_pm));
     msr_write64(MSR_DEVICE_GEODELX_DF, MSR_GEODELINK_DIAG,
-        &(df_state->msr_diag));
+                &(df_state->msr_diag));
     msr_write64(MSR_DEVICE_GEODELX_DF, DF_MBD_MSR_DIAG_DF,
-        &(df_state->msr_df_diag));
+                &(df_state->msr_df_diag));
     msr_write64(MSR_DEVICE_GEODELX_DF, DF_MSR_PAD_SEL,
-        &(df_state->msr_pad_sel));
+                &(df_state->msr_pad_sel));
 
     /* RESTORE ALL DF REGISTERS */
 
@@ -1584,8 +1595,7 @@ df_restore_state(DF_SAVE_RESTORE * df_state)
     /* RESTORE FILTER COEFFICIENTS */
 
     for (i = 0; i < 512; i++)
-        WRITE_VID32(DF_COEFFICIENT_BASE + (i << 2),
-            df_state->coefficients[i]);
+        WRITE_VID32(DF_COEFFICIENT_BASE + (i << 2), df_state->coefficients[i]);
 
     /* RESTORE DCFG AND VCFG */
 
@@ -1655,9 +1665,10 @@ df_read_composite_crc(int crc_source)
         do {
             line = READ_REG32(DC3_LINE_CNT_STATUS);
         } while ((line & DC3_LNCNT_EVEN_FIELD) != field ||
-            ((line & DC3_LNCNT_V_LINE_CNT) >> 16) < 10 ||
-            ((line & DC3_LNCNT_V_LINE_CNT) >> 16) > 15);
-    } else {
+                 ((line & DC3_LNCNT_V_LINE_CNT) >> 16) < 10 ||
+                 ((line & DC3_LNCNT_V_LINE_CNT) >> 16) > 15);
+    }
+    else {
         /* NON-INTERLACED - EVEN FIELD CRCS ARE INVALID */
 
         if (crc_source & DF_CRC_SOURCE_EVEN)
@@ -1670,7 +1681,7 @@ df_read_composite_crc(int crc_source)
 
     /* WAIT FOR THE CRC TO BE COMPLETED */
 
-    while (!(READ_VID32(DF_VID_CRC) & 4)) ;
+    while (!(READ_VID32(DF_VID_CRC) & 4));
 
     crc = READ_VID32(DF_VID_CRC32);
 
@@ -1686,7 +1697,8 @@ df_read_composite_crc(int crc_source)
 
 unsigned long
 df_read_composite_window_crc(unsigned long x, unsigned long y,
-    unsigned long width, unsigned long height, int source)
+                             unsigned long width, unsigned long height,
+                             int source)
 {
     Q_WORD msr_value;
     unsigned long interlaced;
@@ -1709,7 +1721,8 @@ df_read_composite_window_crc(unsigned long x, unsigned long y,
         vsyncstart = (READ_REG32(DC3_V_SYNC_EVEN) & 0xFFF) + 1;
         vactive = (READ_REG32(DC3_V_ACTIVE_EVEN) & 0xFFF) + 1;
         vblankstart = (READ_REG32(DC3_V_BLANK_EVEN) & 0xFFF) + 1;
-    } else {
+    }
+    else {
         vsyncend = ((READ_REG32(DC3_V_SYNC_TIMING) >> 16) & 0xFFF) + 1;
         vtotal = ((READ_REG32(DC3_V_ACTIVE_TIMING) >> 16) & 0xFFF) + 1;
         vsyncstart = (READ_REG32(DC3_V_SYNC_TIMING) & 0xFFF) + 1;
@@ -1942,9 +1955,10 @@ df_read_composite_window_crc(unsigned long x, unsigned long y,
         do {
             line = READ_REG32(DC3_LINE_CNT_STATUS);
         } while ((line & DC3_LNCNT_EVEN_FIELD) != field ||
-            ((line & DC3_LNCNT_V_LINE_CNT) >> 16) < 1 ||
-            ((line & DC3_LNCNT_V_LINE_CNT) >> 16) > 5);
-    } else {
+                 ((line & DC3_LNCNT_V_LINE_CNT) >> 16) < 1 ||
+                 ((line & DC3_LNCNT_V_LINE_CNT) >> 16) > 5);
+    }
+    else {
         /* NON-INTERLACED - EVEN FIELD CRCS ARE INVALID */
 
         if (source & DF_CRC_SOURCE_EVEN)
@@ -1970,11 +1984,11 @@ df_read_composite_window_crc(unsigned long x, unsigned long y,
 
     /* DELAY TWO FRAMES */
 
-    while (READ_REG32(DC3_LINE_CNT_STATUS) & DC3_LNCNT_VNA) ;
-    while (!(READ_REG32(DC3_LINE_CNT_STATUS) & DC3_LNCNT_VNA)) ;
-    while (READ_REG32(DC3_LINE_CNT_STATUS) & DC3_LNCNT_VNA) ;
-    while (!(READ_REG32(DC3_LINE_CNT_STATUS) & DC3_LNCNT_VNA)) ;
-    while (READ_REG32(DC3_LINE_CNT_STATUS) & DC3_LNCNT_VNA) ;
+    while (READ_REG32(DC3_LINE_CNT_STATUS) & DC3_LNCNT_VNA);
+    while (!(READ_REG32(DC3_LINE_CNT_STATUS) & DC3_LNCNT_VNA));
+    while (READ_REG32(DC3_LINE_CNT_STATUS) & DC3_LNCNT_VNA);
+    while (!(READ_REG32(DC3_LINE_CNT_STATUS) & DC3_LNCNT_VNA));
+    while (READ_REG32(DC3_LINE_CNT_STATUS) & DC3_LNCNT_VNA);
 
     /* VERIFY THAT XSTATE = 11 */
 
@@ -2033,7 +2047,7 @@ df_read_panel_crc(void)
 
     /* WAIT FOR THE CRC TO BE COMPLETED */
 
-    while (!(READ_VID32(DF_PANEL_CRC) & 4)) ;
+    while (!(READ_VID32(DF_PANEL_CRC) & 4));
 
     return READ_VID32(DF_PANEL_CRC32);
 }
@@ -2076,7 +2090,7 @@ df_get_video_enable(int *enable, unsigned long *flags)
 
 int
 df_get_video_source_configuration(DF_VIDEO_SOURCE_PARAMS * video_source_odd,
-    DF_VIDEO_SOURCE_PARAMS * video_source_even)
+                                  DF_VIDEO_SOURCE_PARAMS * video_source_even)
 {
     unsigned long format, temp;
     unsigned long size;
@@ -2171,7 +2185,8 @@ df_get_video_position(DF_VIDEO_POSITION * video_window)
     if (READ_REG32(DC3_IRQ_FILT_CTL) & DC3_IRQFILT_INTL_EN) {
         vsyncend = ((READ_REG32(DC3_V_SYNC_EVEN) >> 16) & 0xFFF) + 1;
         vtotal = ((READ_REG32(DC3_V_ACTIVE_EVEN) >> 16) & 0xFFF) + 1;
-    } else {
+    }
+    else {
         vsyncend = ((READ_REG32(DC3_V_SYNC_TIMING) >> 16) & 0xFFF) + 1;
         vtotal = ((READ_REG32(DC3_V_ACTIVE_TIMING) >> 16) & 0xFFF) + 1;
     }
@@ -2326,7 +2341,8 @@ df_get_video_color_key(unsigned long *key, unsigned long *mask, int *graphics)
         *graphics = 0;
         *key = READ_VID32(DF_VIDEO_COLOR_KEY) & 0xFFFFFF;
         *mask = READ_VID32(DF_VIDEO_COLOR_MASK) & 0xFFFFFF;
-    } else {
+    }
+    else {
         *graphics = 1;
 
         *key = READ_REG32(DC3_COLOR_KEY) & 0xFFFFFF;
@@ -2423,7 +2439,7 @@ df_get_video_cursor_color_key_enable(void)
 
 int
 df_get_alpha_window_configuration(int window,
-    DF_ALPHA_REGION_PARAMS * alpha_data)
+                                  DF_ALPHA_REGION_PARAMS * alpha_data)
 {
     unsigned long pos, color, alpha_ctl;
     unsigned long hsyncend, htotal;
@@ -2442,7 +2458,8 @@ df_get_alpha_window_configuration(int window,
     if (READ_REG32(DC3_IRQ_FILT_CTL) & DC3_IRQFILT_INTL_EN) {
         vtotal = ((READ_REG32(DC3_V_ACTIVE_EVEN) >> 16) & 0xFFF) + 1;
         vsyncend = ((READ_REG32(DC3_V_SYNC_EVEN) >> 16) & 0xFFF) + 1;
-    } else {
+    }
+    else {
         vtotal = ((READ_REG32(DC3_V_ACTIVE_TIMING) >> 16) & 0xFFF) + 1;
         vsyncend = ((READ_REG32(DC3_V_SYNC_TIMING) >> 16) & 0xFFF) + 1;
     }
@@ -2510,8 +2527,8 @@ df_get_alpha_window_configuration(int window,
     if (alpha_ctl & DF_ACTRL_PERPIXEL_EN)
         alpha_data->flags |= DF_ALPHAFLAG_PERPIXELENABLED;
 
-    delta = (char)((alpha_ctl >> 8) & 0xFF);
-    alpha_data->delta = (long)delta;
+    delta = (char) ((alpha_ctl >> 8) & 0xFF);
+    alpha_data->delta = (long) delta;
     return CIM_STATUS_OK;
 }
 
@@ -2579,7 +2596,8 @@ df_get_output_color_space(int *color_space)
             *color_space = DF_OUTPUT_ARGB;
         else
             *color_space = DF_OUTPUT_RGB;
-    } else {
+    }
+    else {
         *color_space = DF_OUTPUT_SDTV;
 
         if (alpha_ctl & DF_HD_GRAPHICS)

@@ -40,13 +40,13 @@
 
 /* GPIO Pin Configuration Registers */
 
-#define DRD_GEODE_GPPIN_SEL	0x20   /* GPIO Pin Configuration Select        */
-#define DRD_GEODE_GPPIN_CFG	0x24   /* GPIO Pin Configuration Access        */
-#define DRD_GEODE_GPPIN_RESET	0x28   /* GPIO Pin Reset                                       */
+#define DRD_GEODE_GPPIN_SEL	0x20    /* GPIO Pin Configuration Select        */
+#define DRD_GEODE_GPPIN_CFG	0x24    /* GPIO Pin Configuration Access        */
+#define DRD_GEODE_GPPIN_RESET	0x28    /* GPIO Pin Reset                                       */
 
-#define DRD_GEODE_GPIO_BASE	0x6400 /* F0 GPIO, IO mapped                           */
-#define DRD_GEODE_GPDI0		0x04   /* GPIO Data In 0                                       */
-#define DRD_GEODE_GPDO0		0x00   /* GPIO Data Out 0                                      */
+#define DRD_GEODE_GPIO_BASE	0x6400  /* F0 GPIO, IO mapped                           */
+#define DRD_GEODE_GPDI0		0x04    /* GPIO Data In 0                                       */
+#define DRD_GEODE_GPDO0		0x00    /* GPIO Data Out 0                                      */
 
 /* Data Ports in */
 #define	DRD_CLOCKP9211IN	DRD_GEODE_GPIO_BASE + DRD_GEODE_GPDI0
@@ -61,11 +61,11 @@
 #define DRD_CSP9211OUT		DRD_GEODE_GPIO_BASE + DRD_GEODE_GPDO0
 
 /* Pin MASKS */
-#define	DRD_CLOCK9211	0x00000080     /* gpio 7, clock output to 9211         */
-#define	DRD_DATAIN9211	0x00040000     /* gpio 18, data output to 9211         */
-#define	DRD_DATAOUT9211	0x00000800     /* gpio 11, data input from 9211        */
-#define	DRD_CS9211	0x00000200     /* gpio 9, chip select output to 9211
-                                        * */
+#define	DRD_CLOCK9211	0x00000080      /* gpio 7, clock output to 9211         */
+#define	DRD_DATAIN9211	0x00040000      /* gpio 18, data output to 9211         */
+#define	DRD_DATAOUT9211	0x00000800      /* gpio 11, data input from 9211        */
+#define	DRD_CS9211	0x00000200      /* gpio 9, chip select output to 9211
+                                         * */
 
 /* Gpio CFG values to select in  */
 #define	DRD_CLOCK9211CFG	0x00000007      /* gpio 7                                                       */
@@ -97,4 +97,4 @@ void Dorado_Save_Panel_State(void);
 void Dorado_Restore_Panel_State(void);
 void Dorado9211Init(Pnl_PanelStat * pstat);
 
-#endif /* !_DORA9211_h */
+#endif                          /* !_DORA9211_h */

@@ -524,8 +524,8 @@ gfx_get_vip_bus_request_threshold_high(void)
     return (enable);
 }
 
-#endif /* GFX_READ_ROUTINES */
+#endif                          /* GFX_READ_ROUTINES */
 
-#endif /* GFX_VIP_DYNAMIC */
+#endif                          /* GFX_VIP_DYNAMIC */
 
 /* END OF FILE */

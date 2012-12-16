@@ -45,11 +45,11 @@
 #include "gfx_defs.h"
 #include "geode.h"
 
-#define PLATFORM_DYNAMIC		1	/* runtime selection            */
-#define PLATFORM_DRACO			0	/* Draco + 9210                         */
-#define PLATFORM_CENTAURUS		1	/* Centaurus + 9211 RevA        */
-#define PLATFORM_DORADO			1	/* Dorado + 9211 RevC           */
-#define PLATFORM_GX2BASED		1	/* Redcloud                             */
+#define PLATFORM_DYNAMIC		1       /* runtime selection            */
+#define PLATFORM_DRACO			0       /* Draco + 9210                         */
+#define PLATFORM_CENTAURUS		1       /* Centaurus + 9211 RevA        */
+#define PLATFORM_DORADO			1       /* Dorado + 9211 RevC           */
+#define PLATFORM_GX2BASED		1       /* Redcloud                             */
 
 unsigned char *XpressROMPtr;
 

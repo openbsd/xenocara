@@ -45,20 +45,20 @@
  */
 
 #define GX2_FP_LCD_OFFSET       0x00000400
-#define CS9211_REDCLOUD         0x0400 /* Moved 9211 Rev C3 up to next major
-                                        * no.                                                          */
-#define GX2_FP_PAN_TIMING1      0x0400 /* FP timings 1                                         */
-#define GX2_FP_PAN_TIMING2      0x0408 /* FP timings 2                                         */
-#define GX2_FP_PWR_MAN          0x0410 /* FP power management                          */
-#define GX2_FP_DITH_FR_CNTRL    0x0418 /* FP dither and frame rate             */
-#define GX2_FP_BLFSR            0x0420 /* Blue LFSR seed                                       */
-#define GX2_FP_RLFSR            0x0428 /* Red and Green LFSR seed                      */
-#define GX2_FP_FMI              0x0430 /* FRM Memory Index                             */
-#define GX2_FP_FMD              0x0438 /* FRM Memory Data                                      */
-#define GX2_FP_DCA              0x0448 /* Dither ram control and address       */
-#define GX2_FP_DMD              0x0450 /* Dither memory data                           */
-#define GX2_FP_PAN_CRC_SIG      0x0458 /* FP CRC signature                             */
-#define GX2_FP_FBB              0x0460 /* Frame Buffer Base Address            */
+#define CS9211_REDCLOUD         0x0400  /* Moved 9211 Rev C3 up to next major
+                                         * no.                                                          */
+#define GX2_FP_PAN_TIMING1      0x0400  /* FP timings 1                                         */
+#define GX2_FP_PAN_TIMING2      0x0408  /* FP timings 2                                         */
+#define GX2_FP_PWR_MAN          0x0410  /* FP power management                          */
+#define GX2_FP_DITH_FR_CNTRL    0x0418  /* FP dither and frame rate             */
+#define GX2_FP_BLFSR            0x0420  /* Blue LFSR seed                                       */
+#define GX2_FP_RLFSR            0x0428  /* Red and Green LFSR seed                      */
+#define GX2_FP_FMI              0x0430  /* FRM Memory Index                             */
+#define GX2_FP_FMD              0x0438  /* FRM Memory Data                                      */
+#define GX2_FP_DCA              0x0448  /* Dither ram control and address       */
+#define GX2_FP_DMD              0x0450  /* Dither memory data                           */
+#define GX2_FP_PAN_CRC_SIG      0x0458  /* FP CRC signature                             */
+#define GX2_FP_FBB              0x0460  /* Frame Buffer Base Address            */
 
 /* GX2_FP_PAN_TIMING2 bits */
 
@@ -107,7 +107,8 @@
 void SetFPBaseAddr(unsigned long);
 void Redcloud_9211init(Pnl_PanelStat *);
 void protected_mode_access(unsigned long mode,
-    unsigned long width, unsigned long addr, char *pdata);
+                           unsigned long width, unsigned long addr,
+                           char *pdata);
 void write_video_reg64_low(unsigned long offset, unsigned long value);
 unsigned long read_video_reg64_low(unsigned long offset);
 void Redcloud_fp_reg(int mode, unsigned long address, unsigned long *data);

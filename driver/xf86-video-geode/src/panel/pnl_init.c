@@ -221,7 +221,8 @@ Pnl_PowerUp(void)
         dcfg |= (CS5530_DCFG_FP_PWR_EN | CS5530_DCFG_FP_DATA_EN);
         /* Enable the flatpanel power and data */
         WRITE_VID32(CS5530_DISPLAY_CONFIG, dcfg);
-    } else if (hw_video == GFX_VID_SC1200) {
+    }
+    else if (hw_video == GFX_VID_SC1200) {
         /* READ DISPLAY CONFIG FROM SC1200 */
         dcfg = READ_VID32(SC1200_DISPLAY_CONFIG);
 
@@ -229,7 +230,8 @@ Pnl_PowerUp(void)
         dcfg |= (SC1200_DCFG_FP_PWR_EN | SC1200_DCFG_FP_DATA_EN);
         /* Enable the flatpanel power and data */
         WRITE_VID32(SC1200_DISPLAY_CONFIG, dcfg);
-    } else if (hw_video == GFX_VID_REDCLOUD) {
+    }
+    else if (hw_video == GFX_VID_REDCLOUD) {
         /* READ DISPLAY CONFIG FROM REDCLOUD */
         dcfg = READ_VID32(RCDF_DISPLAY_CONFIG);
 
@@ -287,7 +289,8 @@ Pnl_PowerDown(void)
         dcfg &= ~(CS5530_DCFG_FP_PWR_EN | CS5530_DCFG_FP_DATA_EN);
         /* Disable the flatpanel power and data */
         WRITE_VID32(CS5530_DISPLAY_CONFIG, dcfg);
-    } else if (hw_video == GFX_VID_SC1200) {
+    }
+    else if (hw_video == GFX_VID_SC1200) {
         /* READ DISPLAY CONFIG FROM SC1200 */
         dcfg = READ_VID32(SC1200_DISPLAY_CONFIG);
 
@@ -295,7 +298,8 @@ Pnl_PowerDown(void)
         dcfg &= ~(SC1200_DCFG_FP_PWR_EN | SC1200_DCFG_FP_DATA_EN);
         /* Disable the flatpanel power and data */
         WRITE_VID32(SC1200_DISPLAY_CONFIG, dcfg);
-    } else if (hw_video == GFX_VID_REDCLOUD) {
+    }
+    else if (hw_video == GFX_VID_REDCLOUD) {
         /* READ DISPLAY CONFIG FROM REDCLOUD */
         dcfg = READ_VID32(RCDF_DISPLAY_CONFIG);
 
@@ -488,16 +492,17 @@ Pnl_InitPanel(Pnl_PanelParams * pParam)
 {
     Pnl_PanelParams *pPtr;
 
-    if (pParam == 0x0)                 /* NULL  use the static table */
+    if (pParam == 0x0)          /* NULL  use the static table */
         pPtr = &sPanelParam;
     else
         pPtr = pParam;
 
     if (!pPtr->PanelPresent) {
-        return -1;                     /* error */
-    } else {
+        return -1;              /* error */
+    }
+    else {
         if ((pPtr->PanelChip < 0) || (pPtr->Platform < 0))
-            return -1;                 /* error */
+            return -1;          /* error */
 
 #if PLATFORM_DRACO
         /* check we are init. the right one */
@@ -526,6 +531,6 @@ Pnl_InitPanel(Pnl_PanelParams * pParam)
             Redcloud_9211init(&(pPtr->PanelStat));
         }
 #endif
-    }                                  /* else  end */
+    }                           /* else  end */
     return 1;
 }

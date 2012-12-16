@@ -51,8 +51,7 @@
 #define WRITE	2
 #define READ_WRITE (READ | WRITE)
 
-typedef struct
-{
+typedef struct {
     char *name;
     unsigned long offset;
     unsigned char bit_length;
@@ -61,8 +60,7 @@ typedef struct
     char *bitfield_names[MAX_BITS];
 } S_REGISTER_DESCRIP;
 
-typedef struct
-{
+typedef struct {
     int source;
     char *name;
     S_REGISTER_DESCRIP registers[MAX_REGISTERS];
@@ -247,8 +245,7 @@ const S_SET_DESCRIP *gcc_regs(void);
  */
 #define TRACE(parameters) {}
 /*		GCC timing structure		*/
-typedef struct _S_TIMING_SPECS
-{
+typedef struct _S_TIMING_SPECS {
     int vga_width;
     int vga_lines;
     int tv_width;
@@ -302,15 +299,15 @@ DMAL_WriteUInt32(unsigned long phys_addr, unsigned long data)
 static int
 houston_ReadReg(unsigned int reg, unsigned long *p_value, unsigned int bytes)
 {
-    return gfx_i2c_read(1, PLAL_FS450_i2c_address(), (unsigned char)reg,
-        (unsigned char)bytes, (unsigned char *)p_value);
+    return gfx_i2c_read(1, PLAL_FS450_i2c_address(), (unsigned char) reg,
+                        (unsigned char) bytes, (unsigned char *) p_value);
 }
 
 static int
 houston_WriteReg(unsigned int reg, unsigned long value, unsigned int bytes)
 {
-    return gfx_i2c_write(1, PLAL_FS450_i2c_address(), (unsigned char)reg,
-        (unsigned char)bytes, (unsigned char *)&value);
+    return gfx_i2c_write(1, PLAL_FS450_i2c_address(), (unsigned char) reg,
+                         (unsigned char) bytes, (unsigned char *) &value);
 }
 
 /* TV configuration functions.			*/
@@ -324,7 +321,8 @@ static unsigned long supported_standards(void);
 static void config_tvout_mode(unsigned long tvout_mode);
 static void conget_tvout_mode(unsigned long *p_tvout_mode);
 static void config_overscan_xy(unsigned long tv_std, unsigned long vga_mode,
-    int overscan_x, int overscan_y, int pos_x, int pos_y);
+                               int overscan_x, int overscan_y, int pos_x,
+                               int pos_y);
 static void config_nco(unsigned long tv_std, unsigned long vga_mode);
 static void config_sharpness(int sharpness);
 static void conget_sharpness(int *p_sharpness);
@@ -333,20 +331,21 @@ static void conget_flicker(int *p_flicker);
 static void config_color(int color);
 static void conget_color(int *p_color);
 static void config_brightness_contrast(unsigned long tv_std,
-    unsigned int trigger_bits, int brightness, int contrast);
+                                       unsigned int trigger_bits,
+                                       int brightness, int contrast);
 static void conget_brightness_contrast(unsigned long tv_std,
-    unsigned int trigger_bits, int *p_brightness, int *p_contrast);
+                                       unsigned int trigger_bits,
+                                       int *p_brightness, int *p_contrast);
 static void config_yc_filter(unsigned long tv_std, int luma_filter,
-    int chroma_filter);
+                             int chroma_filter);
 static void conget_yc_filter(int *p_luma_filter, int *p_chroma_filter);
 static void config_macrovision(unsigned long tv_std,
-    unsigned int cp_trigger_bits);
+                               unsigned int cp_trigger_bits);
 static void conget_macrovision(unsigned long tv_std,
-    unsigned int *p_cp_trigger_bits);
+                               unsigned int *p_cp_trigger_bits);
 
 /* Device settings.			*/
-typedef struct _S_DEVICE_SETTINGS
-{
+typedef struct _S_DEVICE_SETTINGS {
     int tv_on;
     unsigned long vga_mode;
     unsigned long tv_std;
@@ -372,8 +371,7 @@ static S_DEVICE_SETTINGS d;
  *==========================================================================
  * */
 
-static const struct
-{
+static const struct {
     unsigned long chroma_freq[5];
     unsigned short chroma_phase[5];
     unsigned short cphase_rst[5];
@@ -496,8 +494,7 @@ static const struct
 
 /* MediaGX default underscan and centered position setups. */
 #define	SCANTABLE_ENTRIES	5
-struct _scantable
-{
+struct _scantable {
     unsigned long mode;
     unsigned short v_total[5];
     unsigned short v_sync[5];
@@ -508,56 +505,54 @@ struct _scantable
 
 static struct _scantable scantable[SCANTABLE_ENTRIES] = {
     {
-            GFX_VGA_MODE_640X480,
-            {617, 624, 617, 624, 624}, /* v_total      */
-            {69, 88, 69, 88, 88},      /* v_sync       */
-            {720, 720, 720, 720, 720}, /* iha          */
-            {0, 0, 0, 0, 0},           /* iho          */
-            {-12, 0, -6, 0, 0}         /* hsc          */
-        },
+     GFX_VGA_MODE_640X480,
+     {617, 624, 617, 624, 624}, /* v_total      */
+     {69, 88, 69, 88, 88},      /* v_sync       */
+     {720, 720, 720, 720, 720}, /* iha          */
+     {0, 0, 0, 0, 0},           /* iho          */
+     {-12, 0, -6, 0, 0}         /* hsc          */
+     },
     {
-            GFX_VGA_MODE_800X600,
-            {740, 740, 740, 740, 740}, /* v_total      */
-            {90, 88, 90, 88, 88},      /* v_sync       */
-            {720, 720, 508, 720, 720}, /* iha          */
-            {-8, 11, -8, -8, 11},      /* iho          */
-            {-27, -27, -27, -27, -27}  /* hsc          */
-        },
+     GFX_VGA_MODE_800X600,
+     {740, 740, 740, 740, 740}, /* v_total      */
+     {90, 88, 90, 88, 88},      /* v_sync       */
+     {720, 720, 508, 720, 720}, /* iha          */
+     {-8, 11, -8, -8, 11},      /* iho          */
+     {-27, -27, -27, -27, -27}  /* hsc          */
+     },
     {
-            GFX_VGA_MODE_720X487,
-            {525, 720, 525, 720, 720}, /* v_total      */
-            {23, 230, 23, 230, 230},   /* v_sync       */
-            {720, 720, 720, 720, 720}, /* iha          */
-            {0xa2, 0xa2, 0xa2, 0xa2, 0xa2},     /* iho          */
-            {0, 0, 0, 0, 0}            /* hsc          */
-        },
+     GFX_VGA_MODE_720X487,
+     {525, 720, 525, 720, 720}, /* v_total      */
+     {23, 230, 23, 230, 230},   /* v_sync       */
+     {720, 720, 720, 720, 720}, /* iha          */
+     {0xa2, 0xa2, 0xa2, 0xa2, 0xa2},    /* iho          */
+     {0, 0, 0, 0, 0}            /* hsc          */
+     },
     {
-            GFX_VGA_MODE_720X576,
-            {720, 625, 720, 625, 625}, /* v_total      */
-            {129, 25, 129, 25, 25},    /* v_sync       */
-            {720, 720, 720, 720, 720}, /* iha          */
-            {0xaa, 0xaa, 0xaa, 0xaa, 0xaa},     /* iho              */
-            {0, 0, 0, 0, 0}            /* hsc          */
-        },
+     GFX_VGA_MODE_720X576,
+     {720, 625, 720, 625, 625}, /* v_total      */
+     {129, 25, 129, 25, 25},    /* v_sync       */
+     {720, 720, 720, 720, 720}, /* iha          */
+     {0xaa, 0xaa, 0xaa, 0xaa, 0xaa},    /* iho              */
+     {0, 0, 0, 0, 0}            /* hsc          */
+     },
     {
-            GFX_VGA_MODE_1024X768,
-            {933, 942, 933, 806, 806}, /* v_total      */
-            {121, 112, 121, 88, 88},   /* v_sync       */
-            {600, 600, 600, 600, 600}, /* iha          */
-            {0x3c, 0x23, 0x3c, 0x65, 0x65},     /* iho              */
-            {35, 26, 35, 26, 26}       /* hsc          */
-        },
+     GFX_VGA_MODE_1024X768,
+     {933, 942, 933, 806, 806}, /* v_total      */
+     {121, 112, 121, 88, 88},   /* v_sync       */
+     {600, 600, 600, 600, 600}, /* iha          */
+     {0x3c, 0x23, 0x3c, 0x65, 0x65},    /* iho              */
+     {35, 26, 35, 26, 26}       /* hsc          */
+     },
 };
 
 /* Houston fifo configuration constants. */
-struct _ffolat
-{
+struct _ffolat {
     int v_total;
     unsigned short ffolat;
 };
 
-struct _ffolativo
-{
+struct _ffolativo {
     int v_total;
     unsigned short ivo;
     unsigned short ffolat;
@@ -668,7 +663,7 @@ static struct _ffolat ffo7x5pal[SIZE7X5PAL + 1] = {
 /* h_total=1056, vga_lines=600 */
 #define	SIZE8X6NTSC		37
 static struct _ffolat ffo8x6ntsc[SIZE8X6NTSC + 1] = {
-    {620, 0x40},                       /* v_total_min >= vsync+10 >= vga_lines+10 = 610 */
+    {620, 0x40},                /* v_total_min >= vsync+10 >= vga_lines+10 = 610 */
     {625, 0x58}, {630, 0x40}, {635, 0x40}, {640, 0x40},
     {645, 0x46}, {650, 0x46}, {655, 0x4f}, {660, 0x4c},
     {665, 0x4a}, {670, 0x50}, {675, 0x2f}, {680, 0x48},
@@ -862,7 +857,7 @@ FS450_init(void)
     d.brightness = 50;
     d.contrast = 60;
     config_brightness_contrast(d.tv_std, d.aps_trigger_bits, d.brightness,
-        d.contrast);
+                               d.contrast);
 
     /* get the current yc filtering */
     {
@@ -949,8 +944,9 @@ write_config(int req)
 
     if (REQ_OVERSCAN_POSITION_BIT & req) {
         config_overscan_xy(d.tv_std,
-            d.vga_mode,
-            d.overscan_x, d.overscan_y, d.position_x, d.position_y);
+                           d.vga_mode,
+                           d.overscan_x, d.overscan_y, d.position_x,
+                           d.position_y);
 
         /*h_timing and v_timing and syncs. */
         if (PLAL_IsTVOn())
@@ -971,13 +967,14 @@ write_config(int req)
 
     if (REQ_BRIGHTNESS_CONTRAST_BIT & req) {
         config_brightness_contrast(d.tv_std,
-            d.aps_trigger_bits, d.brightness, d.contrast);
+                                   d.aps_trigger_bits, d.brightness,
+                                   d.contrast);
     }
 
     if (REQ_YC_FILTER_BIT & req) {
         config_yc_filter(d.tv_std,
-            (d.yc_filter & GFX_LUMA_FILTER),
-            (d.yc_filter & GFX_CHROMA_FILTER));
+                         (d.yc_filter & GFX_LUMA_FILTER),
+                         (d.yc_filter & GFX_CHROMA_FILTER));
     }
 
     if (REQ_MACROVISION_BIT & req)
@@ -1054,9 +1051,9 @@ gfx_set_tv_enable(int on)
 
     /*configure encoder and nco. */
     write_config(REQ_VGA_MODE |
-        REQ_TV_STANDARD |
-        REQ_TVOUT_MODE |
-        REQ_OVERSCAN_POSITION | REQ_YC_FILTER | REQ_MACROVISION);
+                 REQ_TV_STANDARD |
+                 REQ_TVOUT_MODE |
+                 REQ_OVERSCAN_POSITION | REQ_YC_FILTER | REQ_MACROVISION);
 
     /*set LP_EN and UIM */
     houston_ReadReg(HOUSTON_CR, &reg, 2);
@@ -1664,19 +1661,19 @@ FS450_ReadRegister(S_REG_INFO * p_reg)
         switch (p_reg->size) {
         case 1:
         case 2:
-            {
-                houston_ReadReg((int)p_reg->offset, &tmp, (int)p_reg->size);
-                p_reg->value = tmp;
-            }
+        {
+            houston_ReadReg((int) p_reg->offset, &tmp, (int) p_reg->size);
+            p_reg->value = tmp;
+        }
             return 0;
 
         case 4:
-            {
-                houston_ReadReg((unsigned int)p_reg->offset, &tmp, 2);
-                p_reg->value = (tmp << 16);
-                houston_ReadReg((unsigned int)(p_reg->offset + 2), &tmp, 2);
-                p_reg->value |= tmp;
-            }
+        {
+            houston_ReadReg((unsigned int) p_reg->offset, &tmp, 2);
+            p_reg->value = (tmp << 16);
+            houston_ReadReg((unsigned int) (p_reg->offset + 2), &tmp, 2);
+            p_reg->value |= tmp;
+        }
             return 0;
         }
     }
@@ -1691,8 +1688,8 @@ FS450_WriteRegister(S_REG_INFO * p_reg)
         return 0;
 
     if (SOURCE_HOUSTON == p_reg->source) {
-        houston_WriteReg((unsigned int)p_reg->offset, p_reg->value,
-            p_reg->size);
+        houston_WriteReg((unsigned int) p_reg->offset, p_reg->value,
+                         p_reg->size);
 
         return 0;
     }
@@ -1736,7 +1733,7 @@ houston_init(void)
 
     /*read chip revision. */
     houston_ReadReg(HOUSTON_REV, &read, 2);
-    g_houston_rev = (int)read;
+    g_houston_rev = (int) read;
 
     /*ok. */
     return 0;
@@ -1793,8 +1790,7 @@ z2w10bit(unsigned short z)
 /* TV Standards																*/
 /*==========================================================================*/
 
-static const struct
-{
+static const struct {
     unsigned long standard;
     int tvsetup_index;
 } g_tv_standards[] = {
@@ -1853,7 +1849,8 @@ config_power(int on)
             houston_WriteReg(HOUSTON_CR, reg, 2);
             reg &= ~CR_RESET;
             houston_WriteReg(HOUSTON_CR, reg, 2);
-        } else {
+        }
+        else {
             houston_ReadReg(HOUSTON_CR, &reg, 2);
             reg |= CR_CLKOFF;
             houston_WriteReg(HOUSTON_CR, reg, 2);
@@ -1877,7 +1874,8 @@ config_power(int on)
         houston_ReadReg(HOUSTON_MISC, &reg, 2);
         reg &= ~MISC_GTLIO_PD;
         houston_WriteReg(HOUSTON_MISC, reg, 2);
-    } else {
+    }
+    else {
         /* CLKOFF, COMPOFF, YCOFF */
         houston_ReadReg(HOUSTON_CR, &reg, 2);
         reg |= (CR_CLKOFF | CR_COMPOFF | CR_YCOFF);
@@ -1899,8 +1897,7 @@ config_vga_mode(unsigned long vga_mode)
 {
     /*h_total must be evenly divisible by 32? */
 
-    static struct
-    {
+    static struct {
         unsigned long mode;
         int width;
         int lines;
@@ -1940,7 +1937,8 @@ config_vga_mode(unsigned long vga_mode)
          /*XGA*/ cr |= CR_UIM_DEC;
         misc |= MISC_VGACKDIV;
         byp |= (BYP_HDS_BYPASS | BYP_CAC_BYPASS);
-    } else {
+    }
+    else {
         /*VGA,SVGA */
         cr &= ~CR_UIM_DEC;
         misc &= ~MISC_VGACKDIV;
@@ -1981,10 +1979,10 @@ config_tv_std(unsigned long tv_std, unsigned int trigger_bits)
 
     /*setup the encoder. */
     l = tvsetup.chroma_freq[k];
-    houston_WriteReg(ENC_CHROMA_FREQ, (int)(l & 0x00ff), 1);
-    houston_WriteReg(ENC_CHROMA_FREQ + 1, (int)((l >> 8) & 0x00ff), 1);
-    houston_WriteReg(ENC_CHROMA_FREQ + 2, (int)((l >> 16) & 0x00ff), 1);
-    houston_WriteReg(ENC_CHROMA_FREQ + 3, (int)((l >> 24) & 0x00ff), 1);
+    houston_WriteReg(ENC_CHROMA_FREQ, (int) (l & 0x00ff), 1);
+    houston_WriteReg(ENC_CHROMA_FREQ + 1, (int) ((l >> 8) & 0x00ff), 1);
+    houston_WriteReg(ENC_CHROMA_FREQ + 2, (int) ((l >> 16) & 0x00ff), 1);
+    houston_WriteReg(ENC_CHROMA_FREQ + 3, (int) ((l >> 24) & 0x00ff), 1);
 
     houston_WriteReg(ENC_CHROMA_PHASE, tvsetup.chroma_phase[k], 1);
     houston_WriteReg(ENC_REG05, 0x00, 1);       /*reg 0x05 */
@@ -1999,11 +1997,11 @@ config_tv_std(unsigned long tv_std, unsigned int trigger_bits)
     if (trigger_bits == 0)
         w = w10bit2z(tvsetup.blank_level[k]);   /*blank level */
     else
-        w = w10bit2z((unsigned short)(tvsetup.blank_level[k] -
-                tvsetup.hamp_offset[k]));
+        w = w10bit2z((unsigned short) (tvsetup.blank_level[k] -
+                                       tvsetup.hamp_offset[k]));
     houston_WriteReg(ENC_BLANK_LEVEL, w & 0x00ff, 1);
     houston_WriteReg(ENC_BLANK_LEVEL + 1, w >> 8, 1);
-    w = w10bit2z(tvsetup.tv_lines[k]); /*num_lines */
+    w = w10bit2z(tvsetup.tv_lines[k]);  /*num_lines */
     houston_WriteReg(ENC_NUM_LINES, w & 0x00ff, 1);
     houston_WriteReg(ENC_NUM_LINES + 1, w >> 8, 1);
 
@@ -2022,7 +2020,7 @@ config_tv_std(unsigned long tv_std, unsigned int trigger_bits)
     if (trigger_bits == 0)
         w = w10bit2z(tvsetup.vbi_blank_level[k]);       /*blank level */
     else
-        w = w10bit2z((unsigned short)(tvsetup.vbi_blank_level[k] - 1));
+        w = w10bit2z((unsigned short) (tvsetup.vbi_blank_level[k] - 1));
     houston_WriteReg(ENC_VBI_BLANK_LEVEL, w & 0x00ff, 1);
     houston_WriteReg(ENC_VBI_BLANK_LEVEL + 1, w >> 8, 1);
 }
@@ -2115,7 +2113,8 @@ conget_tvout_mode(unsigned long *p_tvout_mode)
 
 static void
 get_ffolat_ivo(unsigned long vga_mode,
-    unsigned long tv_std, long i, unsigned short *ffolat, unsigned short *ivo)
+               unsigned long tv_std, long i, unsigned short *ffolat,
+               unsigned short *ivo)
 {
     switch (vga_mode) {
     case GFX_VGA_MODE_640X480:
@@ -2124,7 +2123,8 @@ get_ffolat_ivo(unsigned long vga_mode,
                 i = SIZE6X4NTSC - 1;
             *ffolat = ffo6x4ntsc[i].ffolat;
             *ivo = 0x20;
-        } else {
+        }
+        else {
             if (i > SIZE6X4PAL - 1)
                 i = SIZE6X4PAL - 1;
             *ffolat = ffo6x4pal[i].ffolat;
@@ -2138,7 +2138,8 @@ get_ffolat_ivo(unsigned long vga_mode,
                 i = SIZE8X6NTSC - 1;
             *ffolat = ffo8x6ntsc[i].ffolat;
             *ivo = 0x3a;
-        } else {
+        }
+        else {
             if (i > SIZE8X6PAL - 1)
                 i = SIZE8X6PAL - 1;
             *ffolat = ffo8x6pal[i].ffolat;
@@ -2147,12 +2148,12 @@ get_ffolat_ivo(unsigned long vga_mode,
         break;
 
     case GFX_VGA_MODE_720X487:
-        *ffolat = 0x40;                /*FFO7x4; */
+        *ffolat = 0x40;         /*FFO7x4; */
         *ivo = 0x1a;
         break;
 
     case GFX_VGA_MODE_720X576:
-        *ffolat = 0x40;                /*FFO7x5; */
+        *ffolat = 0x40;         /*FFO7x5; */
         *ivo = 0x1a;
         break;
 
@@ -2163,7 +2164,8 @@ get_ffolat_ivo(unsigned long vga_mode,
                 i = SIZE10X7NTSC - 1;
             *ffolat = ffo10x7ntsc[i].ffolat;
             *ivo = ffo10x7ntsc[i].ivo;
-        } else {
+        }
+        else {
             if (i > SIZE10X7PAL - 1)
                 i = SIZE10X7PAL - 1;
             *ffolat = ffo10x7pal[i].ffolat;
@@ -2177,7 +2179,8 @@ get_ffolat_ivo(unsigned long vga_mode,
 
 static void
 get_vtotal_min_max(unsigned long vga_mode,
-    unsigned long tv_std, int *v_total_min, int *v_total_max, int *v_step)
+                   unsigned long tv_std, int *v_total_min, int *v_total_max,
+                   int *v_step)
 {
     int k = map_tvstd_to_index(tv_std);
 
@@ -2186,7 +2189,8 @@ get_vtotal_min_max(unsigned long vga_mode,
         if (IS_NTSC(tv_std)) {
             *v_total_min = ffo6x4ntsc[0].v_total;
             *v_total_max = ffo6x4ntsc[SIZE6X4NTSC - 1].v_total;
-        } else {
+        }
+        else {
             *v_total_min = ffo6x4pal[0].v_total;
             *v_total_max = ffo6x4pal[SIZE6X4PAL - 1].v_total;
         }
@@ -2197,7 +2201,8 @@ get_vtotal_min_max(unsigned long vga_mode,
         if (IS_NTSC(tv_std)) {
             *v_total_min = ffo8x6ntsc[0].v_total;
             *v_total_max = ffo8x6ntsc[SIZE8X6NTSC - 1].v_total;
-        } else {
+        }
+        else {
             *v_total_min = ffo8x6pal[0].v_total;
             *v_total_max = ffo8x6pal[SIZE8X6PAL - 1].v_total;
         }
@@ -2215,7 +2220,8 @@ get_vtotal_min_max(unsigned long vga_mode,
         if (IS_NTSC(tv_std)) {
             *v_total_min = ffo10x7ntsc[0].v_total;
             *v_total_max = ffo10x7ntsc[SIZE10X7NTSC - 1].v_total;
-        } else {
+        }
+        else {
             *v_total_min = ffo10x7pal[0].v_total;
             *v_total_max = ffo10x7pal[SIZE10X7PAL - 1].v_total;
         }
@@ -2226,8 +2232,8 @@ get_vtotal_min_max(unsigned long vga_mode,
 
 static void
 config_overscan_xy(unsigned long tv_std,
-    unsigned long vga_mode,
-    int overscan_x, int overscan_y, int pos_x, int pos_y)
+                   unsigned long vga_mode,
+                   int overscan_x, int overscan_y, int pos_x, int pos_y)
 {
     unsigned int vga_index;
     unsigned long reg;
@@ -2266,7 +2272,7 @@ config_overscan_xy(unsigned long tv_std,
     TRACE(("v_total range = %d\n", range))
 
         /*map +/-1000 overscan y into +/-range. */
-        v_offset = (int)((((float)overscan_y * range) / 1000.f) + .5f);
+        v_offset = (int) ((((float) overscan_y * range) / 1000.f) + .5f);
     TRACE(("v_offset = %d\n", v_offset))
 
         /*range limit v_total. */
@@ -2283,26 +2289,27 @@ config_overscan_xy(unsigned long tv_std,
     houston_WriteReg(HOUSTON_IVO, ivo, 2);
 
     /*scale base sync offset by scaling ratio. */
-    r = (float)g_specs.v_total / (float)base_v_total;
-    v_offset = (int)(r * (float)scantable[vga_index].v_sync[k]);
+    r = (float) g_specs.v_total / (float) base_v_total;
+    v_offset = (int) (r * (float) scantable[vga_index].v_sync[k]);
 
     /*scale ivo. */
-    f = (float)ivo;
-    v_offset -= (int)(f - f / r);
+    f = (float) ivo;
+    v_offset -= (int) (f - f / r);
 
     /*compensate for center screen. */
-    f = (float)tvsetup.tv_active_lines[k] / 2.f;
-    v_offset += (int)(f * r - f);
+    f = (float) tvsetup.tv_active_lines[k] / 2.f;
+    v_offset += (int) (f * r - f);
 
     /*calculate vsync. */
     g_specs.v_sync = g_specs.v_total - v_offset + pos_y;
     TRACE(("desired v_total=%d, desired v_sync=%d\n", g_specs.v_total,
-            g_specs.v_sync))
+           g_specs.v_sync))
         if (g_specs.v_sync < g_specs.vga_lines + 10) {
         TRACE(("vsync too low\n"))
             /*d.v_total += d.vga_lines+10-d.v_sync; */
             g_specs.v_sync = g_specs.vga_lines + 10;
-    } else if (g_specs.v_sync > g_specs.v_total - 10) {
+    }
+    else if (g_specs.v_sync > g_specs.v_total - 10) {
         TRACE(("vsync too high\n"))
             g_specs.v_sync = g_specs.v_total - 10;
     }
@@ -2314,11 +2321,12 @@ config_overscan_xy(unsigned long tv_std,
     /* VSC. */
     vsc =
         (65536.0f * (1.0f -
-            (double)g_specs.tv_lines / (double)g_specs.v_total)) + 0.5f;
-    reg = ((unsigned long)-vsc) & 0xffff;
+                     (double) g_specs.tv_lines / (double) g_specs.v_total)) +
+        0.5f;
+    reg = ((unsigned long) -vsc) & 0xffff;
     TRACE(("vsc=%04x, tv_lines=%d, v_total=%d\n", reg, g_specs.tv_lines,
-            g_specs.v_total))
-        houston_WriteReg(HOUSTON_VSC, (int)reg, 2);
+           g_specs.v_total))
+        houston_WriteReg(HOUSTON_VSC, (int) reg, 2);
 
     /* horizontal scaling. */
 
@@ -2333,22 +2341,22 @@ config_overscan_xy(unsigned long tv_std,
     hscale_max = (720.0f / vga_pixels);
     hscale_min = fsmax((0.75f * hscale_max), (1.0f - (63.0f / 128.0f)));
     TRACE(("hscale_min = %u.%u, hscale_max = %u.%u\n",
-            (int)hscale_min,
-            (int)((hscale_min - (int)hscale_min) * 1000),
-            (int)hscale_max, (int)((hscale_max - (int)hscale_max) * 1000)))
+           (int) hscale_min,
+           (int) ((hscale_min - (int) hscale_min) * 1000),
+           (int) hscale_max, (int) ((hscale_max - (int) hscale_max) * 1000)))
 
         /* map overscan_x into min to max. */
         hscale =
         hscale_min + ((overscan_x + 1000.0f) / 2000.0f) * (hscale_max -
-        hscale_min);
-    TRACE(("hscale = %u.%u\n", (int)hscale,
-            (int)((hscale - (int)hscale) * 1000)))
+                                                           hscale_min);
+    TRACE(("hscale = %u.%u\n", (int) hscale,
+           (int) ((hscale - (int) hscale) * 1000)))
 
         /* determine hsc where hscale = (1 + hsc/128) */
         if (hscale >= 1.0f)
-        hsc = (int)(128.f * (hscale - 1.0f) + .5f);
+        hsc = (int) (128.f * (hscale - 1.0f) + .5f);
     else
-        hsc = (int)(128.f * (hscale - 1.0f) - .5f);
+        hsc = (int) (128.f * (hscale - 1.0f) - .5f);
 
     TRACE(("hsc = %d\n", hsc))
         if (hsc >= 0)
@@ -2358,15 +2366,15 @@ config_overscan_xy(unsigned long tv_std,
 
     /* recalculate hscale for future formulas */
     hscale = 1.0f + (hsc / 128.0f);
-    TRACE(("recalculated hscale = %u.%u\n", (int)hscale,
-            (int)((hscale - (int)hscale) * 1000)))
+    TRACE(("recalculated hscale = %u.%u\n", (int) hscale,
+           (int) ((hscale - (int) hscale) * 1000)))
 
         /* horizontal offset. */
         /* place hsync 40 before halfway from vga_width to htotal */
         /* but not less than vga_width + 10 */
         g_specs.h_sync =
         fsmax((g_specs.h_total + g_specs.vga_width) / 2 - 40,
-        g_specs.vga_width + 10);
+              g_specs.vga_width + 10);
     /* also, make it even */
     g_specs.h_sync &= ~1;
     TRACE(("hsync = %u\n", g_specs.h_sync))
@@ -2380,13 +2388,13 @@ config_overscan_xy(unsigned long tv_std,
         /* to skip, or subtract.  iho=0 maps to farthest right. */
         /* map -pos_x = +/-1000 into (0 to iho_max) */
         pre_pixels =
-        (int)((long)(g_specs.h_total -
-            g_specs.h_sync) * vga_pixels / g_specs.vga_width);
-    iho_max = (2 * pre_pixels) - ((int)(720.0f / hscale + 0.5f) - vga_pixels);
+        (int) ((long) (g_specs.h_total -
+                       g_specs.h_sync) * vga_pixels / g_specs.vga_width);
+    iho_max = (2 * pre_pixels) - ((int) (720.0f / hscale + 0.5f) - vga_pixels);
     TRACE(("iho_max = %u\n", iho_max))
         iho =
-        (int)range_limit(((long)(1000 - pos_x) * iho_max / 2000) +
-        scantable[vga_index].iho[k], 0, iho_max);
+        (int) range_limit(((long) (1000 - pos_x) * iho_max / 2000) +
+                          scantable[vga_index].iho[k], 0, iho_max);
     TRACE(("iho = %u\n", iho))
         houston_WriteReg(HOUSTON_IHO, iho, 2);
 
@@ -2396,17 +2404,17 @@ config_overscan_xy(unsigned long tv_std,
     /* additionally, ihw cannot exceed tv width / hscale */
     /* and if hsc is negative, (ihw)(-hsc/128) cannot exceed ~250. */
     /* and ihw should be even. */
-    ihw = fsmin(vga_pixels + pre_pixels - iho, (int)(720.0f / hscale));
+    ihw = fsmin(vga_pixels + pre_pixels - iho, (int) (720.0f / hscale));
     if (hsc < 0)
-        ihw = (int)fsmin(ihw, 253L * 128 / (-hsc));
+        ihw = (int) fsmin(ihw, 253L * 128 / (-hsc));
     ihw &= ~1;
     TRACE(("ihw = %u\n", ihw))
         houston_WriteReg(HOUSTON_IHA, ihw, 2);
 
-    f = (((float)g_specs.h_total * g_specs.v_total) * 27.f) /
-        ((float)g_specs.tv_width * g_specs.tv_lines);
+    f = (((float) g_specs.h_total * g_specs.v_total) * 27.f) /
+        ((float) g_specs.tv_width * g_specs.tv_lines);
 
-    TRACE(("freq=%u.%uMHz\n", (int)f, (int)((f - (int)f) * 1000)))
+    TRACE(("freq=%u.%uMHz\n", (int) f, (int) ((f - (int) f) * 1000)))
 }
 
 /*==========================================================================*/
@@ -2452,20 +2460,21 @@ config_nco(unsigned long tv_std, unsigned long vga_mode)
         houston_WriteReg(HOUSTON_MISC, misc, 2);
 
         /*NCON. */
-        reg = ((unsigned long)g_specs.v_total * g_specs.h_total) / 2;
+        reg = ((unsigned long) g_specs.v_total * g_specs.h_total) / 2;
         houston_WriteReg(HOUSTON_NCONH, reg >> 16, 2);
         houston_WriteReg(HOUSTON_NCONL, reg & 0xffff, 2);
 
         /*NCOD. */
         houston_WriteReg(HOUSTON_NCODL, tvsetup.houston_ncodl[k], 2);
         houston_WriteReg(HOUSTON_NCODH, tvsetup.houston_ncodh[k], 2);
-    } else {
+    }
+    else {
         /*setup for M and N load (Nco_load=2). */
         misc |= (MISC_NCO_LOAD1);
         houston_WriteReg(HOUSTON_MISC, misc, 2);
 
         /*NCON. */
-        reg = (unsigned long)g_specs.v_total * g_specs.h_total;
+        reg = (unsigned long) g_specs.v_total * g_specs.h_total;
         houston_WriteReg(HOUSTON_NCONH, reg >> 16, 2);
         houston_WriteReg(HOUSTON_NCONL, reg & 0xffff, 2);
 
@@ -2474,12 +2483,12 @@ config_nco(unsigned long tv_std, unsigned long vga_mode)
         houston_WriteReg(HOUSTON_NCODH, tvsetup.houston_ncodh[k], 2);
 
         TRACE(("NCON = %lu (0x%08lx), NCOD = %lu (0x%08lx)\n",
-                reg,
-                reg,
-                ((unsigned long)tvsetup.houston_ncodh[k] << 16) +
-                tvsetup.houston_ncodl[k],
-                ((unsigned long)tvsetup.houston_ncodh[k] << 16) +
-                tvsetup.houston_ncodl[k]))
+               reg,
+               reg,
+               ((unsigned long) tvsetup.houston_ncodh[k] << 16) +
+               tvsetup.houston_ncodl[k],
+               ((unsigned long) tvsetup.houston_ncodh[k] << 16) +
+               tvsetup.houston_ncodl[k]))
     }
 
     /*latch M/N and NCON/NCOD in. */
@@ -2499,7 +2508,7 @@ config_sharpness(int sharpness)
     unsigned int shp;
 
     /*map 0-1000 to 0-20. */
-    shp = (unsigned int)(0.5f + ((float)sharpness * 20.0f / 1000.0f));
+    shp = (unsigned int) (0.5f + ((float) sharpness * 20.0f / 1000.0f));
     shp = range_limit(shp, 0, 20);
 
     houston_WriteReg(HOUSTON_SHP, shp, 2);
@@ -2516,7 +2525,7 @@ conget_sharpness(int *p_sharpness)
     houston_ReadReg(HOUSTON_SHP, &shp, 2);
 
     /*map 0-20 to 0-1000. */
-    *p_sharpness = (int)(0.5f + ((float)shp * 1000.0f / 20.0f));
+    *p_sharpness = (int) (0.5f + ((float) shp * 1000.0f / 20.0f));
 }
 
 /*==========================================================================*/
@@ -2529,7 +2538,7 @@ config_flicker(int flicker)
     unsigned int flk;
 
     /*map 0-1000 to 0-16. */
-    flk = (unsigned int)(0.5f + ((float)flicker * 16.0f / 1000.0f));
+    flk = (unsigned int) (0.5f + ((float) flicker * 16.0f / 1000.0f));
     flk = range_limit(flk, 0, 16);
 
     houston_WriteReg(HOUSTON_FLK, flk, 2);
@@ -2546,7 +2555,7 @@ conget_flicker(int *p_flicker)
     houston_ReadReg(HOUSTON_FLK, &flk, 2);
 
     /*map 0-16 to 0-1000. */
-    *p_flicker = (int)(0.5f + ((float)flk * 1000.0f / 16.0f));
+    *p_flicker = (int) (0.5f + ((float) flk * 1000.0f / 16.0f));
 }
 
 /*==========================================================================*/
@@ -2561,7 +2570,7 @@ config_color(int color)
     /*map 0-100 to 0-255. */
     /*montreal production test needs 169 to be mappable, so */
     /*use .8 rounding factor, 169=(int)(66.*2.55+.8). */
-    clr = (unsigned long)(0.8f + ((float)color * 255.0f / 100.0f));
+    clr = (unsigned long) (0.8f + ((float) color * 255.0f / 100.0f));
     clr = range_limit(clr, 0, 255);
 
     houston_WriteReg(ENC_CR_GAIN, clr, 1);
@@ -2580,7 +2589,7 @@ conget_color(int *p_color)
     houston_ReadReg(ENC_CR_GAIN, &cr_gain, 1);
 
     /*map 0-255 to 0-100. */
-    *p_color = (int)(0.5f + ((float)cr_gain * 100.0f / 255.0f));
+    *p_color = (int) (0.5f + ((float) cr_gain * 100.0f / 255.0f));
 }
 
 /*==========================================================================*/
@@ -2594,7 +2603,7 @@ static const int max_white_level = 1023;
 
 static void
 config_brightness_contrast(unsigned long tv_std, unsigned int trigger_bits,
-    int brightness, int contrast)
+                           int brightness, int contrast)
 {
     int brightness_off;
     float contrast_mult;
@@ -2604,10 +2613,10 @@ config_brightness_contrast(unsigned long tv_std, unsigned int trigger_bits,
 
     /*0-100 maps to +/-220. */
     brightness_off =
-        (int)(0.5f + ((float)brightness * 440.0f / 100.0f)) - 220;
+        (int) (0.5f + ((float) brightness * 440.0f / 100.0f)) - 220;
 
     /*0-100 maps to .75-1.25. */
-    contrast_mult = ((float)contrast * 0.5f / 100.0f) + 0.75f;
+    contrast_mult = ((float) contrast * 0.5f / 100.0f) + 0.75f;
 
     black = tvsetup.black_level[k];
     if (trigger_bits != 0)
@@ -2617,24 +2626,24 @@ config_brightness_contrast(unsigned long tv_std, unsigned int trigger_bits,
     if (trigger_bits != 0)
         white -= tvsetup.hamp_offset[k];
 
-    black = (int)((float)(black + brightness_off) * contrast_mult);
-    white = (int)((float)(white + brightness_off) * contrast_mult);
+    black = (int) ((float) (black + brightness_off) * contrast_mult);
+    white = (int) ((float) (white + brightness_off) * contrast_mult);
     if (black < min_black_level)
         black = min_black_level;
     if (white > max_white_level)
         white = max_white_level;
 
-    w = w10bit2z((unsigned short)black);
+    w = w10bit2z((unsigned short) black);
     houston_WriteReg(ENC_BLACK_LEVEL, w & 0x00ff, 1);
     houston_WriteReg(ENC_BLACK_LEVEL + 1, w >> 8, 1);
-    w = w10bit2z((unsigned short)white);
+    w = w10bit2z((unsigned short) white);
     houston_WriteReg(ENC_WHITE_LEVEL, w & 0x00ff, 1);
     houston_WriteReg(ENC_WHITE_LEVEL + 1, w >> 8, 1);
 }
 
 static void
 conget_brightness_contrast(unsigned long tv_std, unsigned int trigger_bits,
-    int *p_brightness, int *p_contrast)
+                           int *p_brightness, int *p_contrast)
 {
     int brightness_off;
     float contrast_mult;
@@ -2649,32 +2658,32 @@ conget_brightness_contrast(unsigned long tv_std, unsigned int trigger_bits,
 
     houston_ReadReg(ENC_BLACK_LEVEL, &zl, 1);
     houston_ReadReg(ENC_BLACK_LEVEL + 1, &zh, 1);
-    black = z2w10bit((unsigned short)(zl + (zh << 8)));
+    black = z2w10bit((unsigned short) (zl + (zh << 8)));
     if (trigger_bits != 0)
         black += tvsetup.hamp_offset[k];
     houston_ReadReg(ENC_WHITE_LEVEL, &zl, 1);
     houston_ReadReg(ENC_WHITE_LEVEL + 1, &zh, 1);
-    white = z2w10bit((unsigned short)(zl + (zh << 8)));
+    white = z2w10bit((unsigned short) (zl + (zh << 8)));
     if (trigger_bits != 0)
         white += tvsetup.hamp_offset[k];
 
     /*this reverse computation does not account for clipping, but should */
     /*provide somewhat reasonable numbers */
     contrast_mult =
-        ((float)white - (float)black) / ((float)tvsetup.white_level[k] -
-        (float)tvsetup.black_level[k]);
+        ((float) white - (float) black) / ((float) tvsetup.white_level[k] -
+                                           (float) tvsetup.black_level[k]);
     brightness_off =
-        (int)(((float)black / contrast_mult) - tvsetup.black_level[k]);
+        (int) (((float) black / contrast_mult) - tvsetup.black_level[k]);
 
     /*+/-220 maps to 0-100. */
     *p_brightness =
-        range_limit((int)(0.5f + ((float)(brightness_off +
-                    220) * 100.0f / 440.0f)), 0, 100);
+        range_limit((int) (0.5f + ((float) (brightness_off +
+                                            220) * 100.0f / 440.0f)), 0, 100);
 
     /*.75-1.25 maps to 0-100. */
     *p_contrast =
-        range_limit((int)(0.5f + ((float)(contrast_mult -
-                    0.75f) * 100.0f / 0.5f)), 0, 100);
+        range_limit((int) (0.5f + ((float) (contrast_mult -
+                                            0.75f) * 100.0f / 0.5f)), 0, 100);
 }
 
 /*==========================================================================*/
@@ -2702,7 +2711,8 @@ config_yc_filter(unsigned long tv_std, int luma_filter, int chroma_filter)
     if (chroma_filter) {
         reg07 &= ~0x08;
         reg34 &= ~0x20;
-    } else {
+    }
+    else {
         reg07 |= 0x08;
         reg34 |= 0x20;
     }
@@ -2742,17 +2752,16 @@ static void
 config_macrovision(unsigned long tv_std, unsigned int trigger_bits)
 {
 /*Constants to index into mvsetup columns.*/
-#define	nNTSC_APS00		0      /*ntsc mv off.                   */
-#define	nNTSC_APS01		1      /*ntsc AGC only.                 */
-#define	nNTSC_APS10		2      /*ntsc AGC + 2-line CS.  */
-#define	nNTSC_APS11		3      /*ntsc AGC + 4-line CS.  */
-#define	nPAL_APS00		4      /*pal mv off.                    */
-#define	nPAL_APSXX		5      /*pal mv on.                     */
+#define	nNTSC_APS00		0       /*ntsc mv off.                   */
+#define	nNTSC_APS01		1       /*ntsc AGC only.                 */
+#define	nNTSC_APS10		2       /*ntsc AGC + 2-line CS.  */
+#define	nNTSC_APS11		3       /*ntsc AGC + 4-line CS.  */
+#define	nPAL_APS00		4       /*pal mv off.                    */
+#define	nPAL_APSXX		5       /*pal mv on.                     */
 #define	nMVModes		6
 
     /*Macrovision setup table. */
-    static const struct mvparms
-    {
+    static const struct mvparms {
         unsigned short n0[nMVModes];
         unsigned short n1[nMVModes];
         unsigned short n2[nMVModes];
@@ -2778,9 +2787,7 @@ config_macrovision(unsigned long tv_std, unsigned int trigger_bits)
         unsigned short n22[nMVModes];
         unsigned short agc_pulse_level[nMVModes];
         unsigned short bp_pulse_level[nMVModes];
-    }
-
-    mvsetup = {
+    } mvsetup = {
         /*    ntsc    ntsc    ntsc    ntsc    pal             pal */
         /*    MV      AGC     AGC +   AGC +   MV              MV */
         /*    off.    only    2-line  4-line  off.    on. */
@@ -2849,22 +2856,27 @@ config_macrovision(unsigned long tv_std, unsigned int trigger_bits)
         if (trigger_bits == 0) {
             /*turn Macrovision OFF. */
             nMode = nNTSC_APS00;
-        } else if (trigger_bits == 1) {
+        }
+        else if (trigger_bits == 1) {
             /*AGC Only. */
             nMode = nNTSC_APS01;
-        } else if (trigger_bits == 2) {
+        }
+        else if (trigger_bits == 2) {
             /*AGC + 2-line CS. */
             nMode = nNTSC_APS10;
-        } else {
+        }
+        else {
             /*AGC + 4-line CS. */
             nMode = nNTSC_APS11;
         }
-    } else {
+    }
+    else {
         /*PAL TV Standard. */
         if (trigger_bits == 0) {
             /*turn Macrovision OFF. */
             nMode = nPAL_APS00;
-        } else {
+        }
+        else {
             /*APS 01, 10, or 11. */
             nMode = nPAL_APSXX;
         }
@@ -2943,15 +2955,16 @@ conget_macrovision(unsigned long tv_std, unsigned int *p_cp_trigger_bits)
             break;
 
         case 0x3E:
-            {
-                if (0x1D == n1)
-                    *p_cp_trigger_bits = 2;
-                else
-                    *p_cp_trigger_bits = 3;
-            }
+        {
+            if (0x1D == n1)
+                *p_cp_trigger_bits = 2;
+            else
+                *p_cp_trigger_bits = 3;
+        }
             break;
         }
-    } else if (IS_PAL(tv_std)) {
+    }
+    else if (IS_PAL(tv_std)) {
         if (0 == n0)
             *p_cp_trigger_bits = 0;
         else {
@@ -3178,7 +3191,7 @@ PLAL_PrepForTVout(void)
     WriteGx(CX_TV_CONFIG, reg);
 
     /*invert FP clock */
-    reg = (int)ReadGx(CX_TV_CONFIG);
+    reg = (int) ReadGx(CX_TV_CONFIG);
     reg |= CX_INVERT_FPCLK;
     WriteGx(CX_TV_CONFIG, reg);
 
@@ -3240,12 +3253,12 @@ PLAL_FinalEnableTVout(unsigned long vga_mode)
     unsigned int reg;
 
     /*Cx5530 select tv dot clock. */
-    reg = (int)ReadGx(CX_DOT_CLK);
+    reg = (int) ReadGx(CX_DOT_CLK);
     reg |= CX_TVCLK_SELECT;
     WriteGx(CX_DOT_CLK, reg);
 
     /*2 x dclk (actually 1x) */
-    reg = (int)ReadGx(DC_GENERAL_CFG);
+    reg = (int) ReadGx(DC_GENERAL_CFG);
     reg &= ~GX_DCLK_MUL;
     WriteGx(DC_GENERAL_CFG, reg);
 
@@ -3253,7 +3266,7 @@ PLAL_FinalEnableTVout(unsigned long vga_mode)
     WriteGx(DC_GENERAL_CFG, reg);
 
     /*Cx5530 display configuration register. */
-    reg = (int)ReadGx(CX_DISPLAY_CONFIG);
+    reg = (int) ReadGx(CX_DISPLAY_CONFIG);
     reg |= (CX_FPVSYNC_POL | CX_FPHSYNC_POL | CX_FPDATA_ENB | CX_FPPOWER_ENB);
     WriteGx(CX_DISPLAY_CONFIG, reg);
 

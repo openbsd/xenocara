@@ -112,9 +112,9 @@
 /* ACCESS TO MSRS */
 
 void gfx_msr_asm_write(unsigned short msrReg, unsigned long msrAddr,
-    unsigned long *ptrHigh, unsigned long *ptrLow);
+                       unsigned long *ptrHigh, unsigned long *ptrLow);
 void gfx_msr_asm_read(unsigned short msrReg, unsigned long msrAddr,
-    unsigned long *ptrHigh, unsigned long *ptrLow);
+                      unsigned long *ptrHigh, unsigned long *ptrLow);
 
 #define MSR_READ( MBD_MSR_CAP, address, valueHigh_ptr, valueLow_ptr ) 	\
 	gfx_msr_asm_read( ((unsigned short)(MBD_MSR_CAP)), address, 		\

@@ -122,7 +122,8 @@ gfx_detect_chip(void)
         }
         if (rev > 0x6)
             gfx_chip_revision = SC1200_FUTURE_REV;
-    } else if (pid == 0x5) {
+    }
+    else if (pid == 0x5) {
         if (rev == 0x6)
             gfx_chip_revision = SC1200_REV_D2_MVE;
         else if (rev > 0x6)
@@ -184,12 +185,13 @@ gfx_detect_cpu(void)
                 /* Major version is one less than what appears in DIR1 */
                 if ((dir1 & 0xF0) < 0x70) {
 
-                    version = GFX_CPU_GXLV | (((((unsigned long)dir1 >> 4) - 1) << 8)) |        /* major - 1 */
-                        ((((unsigned long)dir1 & 0x0F)) << 16); /* minor */
-                } else {
-                    version = GFX_CPU_GXLV | ((((unsigned long)dir1 >> 4))
-                        << 8) |        /* major */
-                        ((((unsigned long)dir1 & 0x0F)) << 16); /* minor */
+                    version = GFX_CPU_GXLV | (((((unsigned long) dir1 >> 4) - 1) << 8)) |       /* major - 1 */
+                        ((((unsigned long) dir1 & 0x0F)) << 16);        /* minor */
+                }
+                else {
+                    version = GFX_CPU_GXLV | ((((unsigned long) dir1 >> 4))
+                                              << 8) |   /* major */
+                        ((((unsigned long) dir1 & 0x0F)) << 16);        /* minor */
                 }
                 /* Currently always CS5530 for video overlay. */
 
@@ -207,13 +209,14 @@ gfx_detect_cpu(void)
                 gfx_tv_type = GFX_TV_TYPE_FS451;
 #endif
             }
-        } else if (dir0 == 0xB0) {
+        }
+        else if (dir0 == 0xB0) {
             /* CHECK FOR SC1200 */
 
             if ((dir1 == 0x70) || (dir1 == 0x81)) {
-                version = GFX_CPU_SC1200 | ((((unsigned long)dir1 >> 4))
-                    << 8) |            /* major */
-                    ((((unsigned long)dir1 & 0x0F)) << 16);     /* minor */
+                version = GFX_CPU_SC1200 | ((((unsigned long) dir1 >> 4))
+                                            << 8) |     /* major */
+                    ((((unsigned long) dir1 & 0x0F)) << 16);    /* minor */
 
                 /* Detect SC1200 revision */
 
@@ -356,12 +359,12 @@ gfx_detect_cpu(void)
                     ((msr_value.low & 0x0F) << 16);     /* MINOR */
 
                 /* READ THE CORE FREQUENCY  */
-				/* I can't find GX implementations that need
-				 * this - we're trying to avoid virtual reads
-				 * anyway, so bail on it
-				 */
+                /* I can't find GX implementations that need
+                 * this - we're trying to avoid virtual reads
+                 * anyway, so bail on it
+                 */
 
-				/* gfx_cpu_frequency = gfx_get_core_freq(); */
+                /* gfx_cpu_frequency = gfx_get_core_freq(); */
 
                 /* SET THE GP SCRATCH AREA */
                 /* Color bitmap BLTs use the last 16K of frame buffer space */

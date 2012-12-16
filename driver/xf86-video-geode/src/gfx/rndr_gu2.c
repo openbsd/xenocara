@@ -214,11 +214,11 @@ gfx_set_solid_source(unsigned long color)
 #if GFX_2DACCEL_DYNAMIC
 void
 gu2_set_mono_source(unsigned long bgcolor, unsigned long fgcolor,
-    unsigned short transparent)
+                    unsigned short transparent)
 #else
 void
 gfx_set_mono_source(unsigned long bgcolor, unsigned long fgcolor,
-    unsigned short transparent)
+                    unsigned short transparent)
 #endif
 {
     /* SET TRANSPARENCY FLAG */
@@ -277,11 +277,13 @@ gfx_set_solid_pattern(unsigned long color)
 #if GFX_2DACCEL_DYNAMIC
 void
 gu2_set_mono_pattern(unsigned long bgcolor, unsigned long fgcolor,
-    unsigned long data0, unsigned long data1, unsigned char transparent)
+                     unsigned long data0, unsigned long data1,
+                     unsigned char transparent)
 #else
 void
 gfx_set_mono_pattern(unsigned long bgcolor, unsigned long fgcolor,
-    unsigned long data0, unsigned long data1, unsigned char transparent)
+                     unsigned long data0, unsigned long data1,
+                     unsigned char transparent)
 #endif
 {
     /* CLEAR TRANSPARENCY FLAG */
@@ -315,13 +317,15 @@ gfx_set_mono_pattern(unsigned long bgcolor, unsigned long fgcolor,
 #if GFX_2DACCEL_DYNAMIC
 void
 gu2_set_color_pattern(unsigned long bgcolor, unsigned long fgcolor,
-    unsigned long data0, unsigned long data1, unsigned long data2,
-    unsigned long data3, unsigned char transparent)
+                      unsigned long data0, unsigned long data1,
+                      unsigned long data2, unsigned long data3,
+                      unsigned char transparent)
 #else
 void
 gfx_set_color_pattern(unsigned long bgcolor, unsigned long fgcolor,
-    unsigned long data0, unsigned long data1, unsigned long data2,
-    unsigned long data3, unsigned char transparent)
+                      unsigned long data0, unsigned long data1,
+                      unsigned long data2, unsigned long data3,
+                      unsigned char transparent)
 #endif
 {
     /* REMOVE */
@@ -358,7 +362,7 @@ gfx_load_color_pattern_line(short y, unsigned long *pattern_8x8)
 
     GU2_WAIT_PENDING;
     WRITE_GP32(MGP_RASTER_MODE,
-        (gu2_rop32 & ~MGP_RM_PAT_FLAGS) | MGP_RM_PAT_COLOR);
+               (gu2_rop32 & ~MGP_RM_PAT_FLAGS) | MGP_RM_PAT_COLOR);
 
     /* LOAD THE PATTERN DATA */
     /* This routine is designed to work in tandem with gfx_pattern_fill.  */
@@ -384,7 +388,8 @@ gfx_load_color_pattern_line(short y, unsigned long *pattern_8x8)
         WRITE_GP32(MGP_PAT_COLOR_2, temp2);
         WRITE_GP32(MGP_PAT_COLOR_5, temp1);
         WRITE_GP32(MGP_PAT_COLOR_4, temp2);
-    } else if (gu2_xshift == 1) {
+    }
+    else if (gu2_xshift == 1) {
         pattern_8x8 += (y & 7) << 2;
         temp1 = WORD_SWIZZLE(pattern_8x8[0]);
         temp2 = WORD_SWIZZLE(pattern_8x8[1]);
@@ -401,7 +406,8 @@ gfx_load_color_pattern_line(short y, unsigned long *pattern_8x8)
         WRITE_GP32(MGP_PAT_COLOR_4, temp2);
         WRITE_GP32(MGP_PAT_COLOR_3, temp3);
         WRITE_GP32(MGP_PAT_COLOR_2, temp4);
-    } else {
+    }
+    else {
         pattern_8x8 += (y & 7) << 3;
 
         WRITE_GP32(MGP_PAT_COLOR_1, pattern_8x8[4]);
@@ -441,7 +447,7 @@ gfx_set_raster_operation(unsigned char rop)
 
     /* GENERATE 32-BIT VERSION OF ROP WITH PATTERN FLAGS */
 
-    gu2_rop32 = (unsigned long)rop | GFXpatternFlags | gu2_bpp;
+    gu2_rop32 = (unsigned long) rop | GFXpatternFlags | gu2_bpp;
 
     /* CHECK IF SOURCE FLAGS SHOULD BE MERGED */
 
@@ -457,7 +463,8 @@ gfx_set_raster_operation(unsigned char rop)
     if ((rop & 0x55) ^ ((rop >> 1) & 0x55)) {
         gu2_blt_mode |= MGP_BM_DST_REQ;
         gu2_vector_mode = MGP_VM_DST_REQ;
-    } else {
+    }
+    else {
         gu2_vector_mode = 0;
     }
 }
@@ -480,28 +487,28 @@ gfx_set_raster_operation(unsigned char rop)
 #if GFX_2DACCEL_DYNAMIC
 void
 gu2_pattern_fill(unsigned short x, unsigned short y,
-    unsigned short width, unsigned short height)
+                 unsigned short width, unsigned short height)
 #else
 void
 gfx_pattern_fill(unsigned short x, unsigned short y,
-    unsigned short width, unsigned short height)
+                 unsigned short width, unsigned short height)
 #endif
 {
     unsigned long offset = 0, size;
 
-    size = (((unsigned long)width) << 16) | height;
+    size = (((unsigned long) width) << 16) | height;
 
     /* CALCULATE STARTING OFFSET */
 
-    offset = (unsigned long)y *gu2_pitch + (((unsigned long)x) << gu2_xshift);
+    offset = (unsigned long) y *gu2_pitch + (((unsigned long) x) << gu2_xshift);
 
     /* CHECK IF PATTERN ORIGINS NEED TO BE SET */
 
     if (GFXpatternFlags) {
         /* COMBINE X AND Y PATTERN ORIGINS WITH OFFSET */
 
-        offset |= ((unsigned long)(x & 7)) << 26;
-        offset |= ((unsigned long)(y & 7)) << 29;
+        offset |= ((unsigned long) (x & 7)) << 26;
+        offset |= ((unsigned long) (y & 7)) << 29;
     }
 
     /* POLL UNTIL ABLE TO WRITE TO THE REGISTERS */
@@ -534,22 +541,24 @@ gfx_pattern_fill(unsigned short x, unsigned short y,
 #if GFX_2DACCEL_DYNAMIC
 void
 gu2_color_pattern_fill(unsigned short x, unsigned short y,
-    unsigned short width, unsigned short height, unsigned long *pattern)
+                       unsigned short width, unsigned short height,
+                       unsigned long *pattern)
 #else
 void
 gfx_color_pattern_fill(unsigned short x, unsigned short y,
-    unsigned short width, unsigned short height, unsigned long *pattern)
+                       unsigned short width, unsigned short height,
+                       unsigned long *pattern)
 #endif
 {
     /* CALL GFX2 ROUTINE TO AVOID DUPLICATION OF CODE */
 
-    unsigned long offset = (unsigned long)y * gu2_pitch +
-        (((unsigned long)x) << gu2_xshift);
+    unsigned long offset = (unsigned long) y * gu2_pitch +
+        (((unsigned long) x) << gu2_xshift);
     unsigned long origin = gu2_pattern_origin;
     unsigned long pitch = gu2_dst_pitch;
 
     gfx2_set_pattern_origin(x, y);
-    gfx2_set_destination_stride((unsigned short)gu2_pitch);
+    gfx2_set_destination_stride((unsigned short) gu2_pitch);
     gfx2_color_pattern_fill(offset, width, height, pattern);
 
     /* RESTORE GFX2 VALUES */
@@ -576,19 +585,19 @@ gfx_color_pattern_fill(unsigned short x, unsigned short y,
 #if GFX_2DACCEL_DYNAMIC
 void
 gu2_screen_to_screen_blt(unsigned short srcx, unsigned short srcy,
-    unsigned short dstx, unsigned short dsty, unsigned short width,
-    unsigned short height)
+                         unsigned short dstx, unsigned short dsty,
+                         unsigned short width, unsigned short height)
 #else
 void
 gfx_screen_to_screen_blt(unsigned short srcx, unsigned short srcy,
-    unsigned short dstx, unsigned short dsty, unsigned short width,
-    unsigned short height)
+                         unsigned short dstx, unsigned short dsty,
+                         unsigned short width, unsigned short height)
 #endif
 {
     unsigned long srcoffset, dstoffset, size;
     unsigned short blt_mode;
 
-    size = (((unsigned long)width) << 16) | height;
+    size = (((unsigned long) width) << 16) | height;
 
     /* CALCULATE THE DIRECTION OF THE BLT */
 
@@ -606,10 +615,10 @@ gfx_screen_to_screen_blt(unsigned short srcx, unsigned short srcy,
 
     /* CALCULATE STARTING OFFSETS */
 
-    srcoffset = (unsigned long)srcy *gu2_pitch +
-        (((unsigned long)srcx) << gu2_xshift);
-    dstoffset = ((unsigned long)dsty * gu2_pitch +
-        (((unsigned long)dstx) << gu2_xshift)) & 0xFFFFFF;
+    srcoffset = (unsigned long) srcy *gu2_pitch +
+        (((unsigned long) srcx) << gu2_xshift);
+    dstoffset = ((unsigned long) dsty * gu2_pitch +
+                 (((unsigned long) dstx) << gu2_xshift)) & 0xFFFFFF;
 
     /* MERGE PATTERN INFORMATION */
     /* This must be done after the x and y coordinates have been updated,  */
@@ -618,8 +627,8 @@ gfx_screen_to_screen_blt(unsigned short srcx, unsigned short srcy,
     if (GFXpatternFlags) {
         /* COMBINE X AND Y PATTERN ORIGINS WITH OFFSET */
 
-        dstoffset |= ((unsigned long)(dstx & 7)) << 26;
-        dstoffset |= ((unsigned long)(dsty & 7)) << 29;
+        dstoffset |= ((unsigned long) (dstx & 7)) << 26;
+        dstoffset |= ((unsigned long) (dsty & 7)) << 29;
     }
 
     /* TURN INTO BYTE ADDRESS IF NEGATIVE X DIRECTION */
@@ -661,13 +670,15 @@ gfx_screen_to_screen_blt(unsigned short srcx, unsigned short srcy,
 #if GFX_2DACCEL_DYNAMIC
 void
 gu2_screen_to_screen_xblt(unsigned short srcx, unsigned short srcy,
-    unsigned short dstx, unsigned short dsty, unsigned short width,
-    unsigned short height, unsigned long color)
+                          unsigned short dstx, unsigned short dsty,
+                          unsigned short width, unsigned short height,
+                          unsigned long color)
 #else
 void
 gfx_screen_to_screen_xblt(unsigned short srcx, unsigned short srcy,
-    unsigned short dstx, unsigned short dsty, unsigned short width,
-    unsigned short height, unsigned long color)
+                          unsigned short dstx, unsigned short dsty,
+                          unsigned short width, unsigned short height,
+                          unsigned long color)
 #endif
 {
     unsigned long rop32;
@@ -720,13 +731,15 @@ gfx_screen_to_screen_xblt(unsigned short srcx, unsigned short srcy,
 #if GFX_2DACCEL_DYNAMIC
 void
 gu2_color_bitmap_to_screen_blt(unsigned short srcx, unsigned short srcy,
-    unsigned short dstx, unsigned short dsty, unsigned short width,
-    unsigned short height, unsigned char *data, long pitch)
+                               unsigned short dstx, unsigned short dsty,
+                               unsigned short width, unsigned short height,
+                               unsigned char *data, long pitch)
 #else
 void
 gfx_color_bitmap_to_screen_blt(unsigned short srcx, unsigned short srcy,
-    unsigned short dstx, unsigned short dsty, unsigned short width,
-    unsigned short height, unsigned char *data, long pitch)
+                               unsigned short dstx, unsigned short dsty,
+                               unsigned short width, unsigned short height,
+                               unsigned char *data, long pitch)
 #endif
 {
     unsigned long dstoffset, srcoffset, size, bytes;
@@ -735,22 +748,22 @@ gfx_color_bitmap_to_screen_blt(unsigned short srcx, unsigned short srcy,
     unsigned short blt_mode;
 
     blt_mode = (gu2_blt_mode & ~MGP_BM_SRC_TYPE_MASK) | MGP_BM_SRC_FB;
-    size = (((unsigned long)width) << 16) | 1;
+    size = (((unsigned long) width) << 16) | 1;
 
     /* CALCULATE STARTING OFFSETS */
 
-    offset = (unsigned long)srcy *pitch + ((unsigned long)srcx << gu2_xshift);
+    offset = (unsigned long) srcy *pitch + ((unsigned long) srcx << gu2_xshift);
 
-    dstoffset = (unsigned long)dsty *gu2_pitch +
-        (((unsigned long)dstx) << gu2_xshift);
+    dstoffset = (unsigned long) dsty *gu2_pitch +
+        (((unsigned long) dstx) << gu2_xshift);
 
     /* CHECK IF PATTERN ORIGINS NEED TO BE SET */
 
     if (GFXpatternFlags) {
         /* COMBINE X AND Y PATTERN ORIGINS WITH OFFSET */
 
-        dstoffset |= ((unsigned long)(dstx & 7)) << 26;
-        dstoffset |= ((unsigned long)(dsty & 7)) << 29;
+        dstoffset |= ((unsigned long) (dstx & 7)) << 26;
+        dstoffset |= ((unsigned long) (dsty & 7)) << 29;
     }
 
     bytes = width << gu2_xshift;
@@ -786,13 +799,12 @@ gfx_color_bitmap_to_screen_blt(unsigned short srcx, unsigned short srcy,
         dstoffset += gu2_pitch;
         dstoffset += 0x20000000;
 
-        WRITE_FRAME_BUFFER_STRING32(srcoffset, dword_bytes, data,
-            temp_offset);
+        WRITE_FRAME_BUFFER_STRING32(srcoffset, dword_bytes, data, temp_offset);
         if (bytes_extra) {
             temp_offset += dword_bytes;
             srcoffset += dword_bytes;
             WRITE_FRAME_BUFFER_STRING8(srcoffset, bytes_extra, data,
-                temp_offset);
+                                       temp_offset);
         }
         WRITE_GP16(MGP_BLT_MODE, blt_mode);
         offset += pitch;
@@ -823,15 +835,17 @@ gfx_color_bitmap_to_screen_blt(unsigned short srcx, unsigned short srcy,
 #if GFX_2DACCEL_DYNAMIC
 void
 gu2_color_bitmap_to_screen_xblt(unsigned short srcx, unsigned short srcy,
-    unsigned short dstx, unsigned short dsty, unsigned short width,
-    unsigned short height, unsigned char *data, long pitch,
-    unsigned long color)
+                                unsigned short dstx, unsigned short dsty,
+                                unsigned short width, unsigned short height,
+                                unsigned char *data, long pitch,
+                                unsigned long color)
 #else
 void
 gfx_color_bitmap_to_screen_xblt(unsigned short srcx, unsigned short srcy,
-    unsigned short dstx, unsigned short dsty, unsigned short width,
-    unsigned short height, unsigned char *data, long pitch,
-    unsigned long color)
+                                unsigned short dstx, unsigned short dsty,
+                                unsigned short width, unsigned short height,
+                                unsigned char *data, long pitch,
+                                unsigned long color)
 #endif
 {
     unsigned long rop32;
@@ -856,7 +870,7 @@ gfx_color_bitmap_to_screen_xblt(unsigned short srcx, unsigned short srcy,
     /* CALL NORMAL COLOR BITMAP TO SCREEN BLT ROUTINE */
 
     gfx_color_bitmap_to_screen_blt(srcx, srcy, dstx, dsty, width, height,
-        data, pitch);
+                                   data, pitch);
 
     /* RESTORE RASTER SETTINGS */
 
@@ -882,13 +896,15 @@ gfx_color_bitmap_to_screen_xblt(unsigned short srcx, unsigned short srcy,
 #if GFX_2DACCEL_DYNAMIC
 void
 gu2_mono_bitmap_to_screen_blt(unsigned short srcx, unsigned short srcy,
-    unsigned short dstx, unsigned short dsty, unsigned short width,
-    unsigned short height, unsigned char *data, short pitch)
+                              unsigned short dstx, unsigned short dsty,
+                              unsigned short width, unsigned short height,
+                              unsigned char *data, short pitch)
 #else
 void
 gfx_mono_bitmap_to_screen_blt(unsigned short srcx, unsigned short srcy,
-    unsigned short dstx, unsigned short dsty, unsigned short width,
-    unsigned short height, unsigned char *data, short pitch)
+                              unsigned short dstx, unsigned short dsty,
+                              unsigned short width, unsigned short height,
+                              unsigned char *data, short pitch)
 #endif
 {
     unsigned long dstoffset, size, bytes;
@@ -896,22 +912,22 @@ gfx_mono_bitmap_to_screen_blt(unsigned short srcx, unsigned short srcy,
     unsigned long i, j = 0, fifo_lines, dwords_extra, bytes_extra;
     unsigned long shift = 0;
 
-    size = (((unsigned long)width) << 16) | height;
+    size = (((unsigned long) width) << 16) | height;
 
     /* CALCULATE STARTING OFFSETS */
 
-    offset = (unsigned long)srcy *pitch + ((unsigned long)srcx >> 3);
+    offset = (unsigned long) srcy *pitch + ((unsigned long) srcx >> 3);
 
-    dstoffset = (unsigned long)dsty *gu2_pitch +
-        (((unsigned long)dstx) << gu2_xshift);
+    dstoffset = (unsigned long) dsty *gu2_pitch +
+        (((unsigned long) dstx) << gu2_xshift);
 
     /* CHECK IF PATTERN ORIGINS NEED TO BE SET */
 
     if (GFXpatternFlags) {
         /* COMBINE X AND Y PATTERN ORIGINS WITH OFFSET */
 
-        dstoffset |= ((unsigned long)(dstx & 7)) << 26;
-        dstoffset |= ((unsigned long)(dsty & 7)) << 29;
+        dstoffset |= ((unsigned long) (dstx & 7)) << 26;
+        dstoffset |= ((unsigned long) (dsty & 7)) << 29;
     }
 
     bytes = ((srcx & 7) + width + 7) >> 3;
@@ -927,13 +943,13 @@ gfx_mono_bitmap_to_screen_blt(unsigned short srcx, unsigned short srcy,
 
     GU2_WAIT_PENDING;
     WRITE_GP32(MGP_RASTER_MODE, gu2_rop32 | GFXsourceFlags);
-    WRITE_GP32(MGP_SRC_OFFSET, ((unsigned long)srcx & 7) << 26);
+    WRITE_GP32(MGP_SRC_OFFSET, ((unsigned long) srcx & 7) << 26);
     WRITE_GP32(MGP_DST_OFFSET, dstoffset);
     WRITE_GP32(MGP_WID_HEIGHT, size);
     WRITE_GP32(MGP_STRIDE, gu2_pitch);
     WRITE_GP16(MGP_BLT_MODE,
-        (gu2_blt_mode & ~MGP_BM_SRC_TYPE_MASK) | MGP_BM_SRC_HOST |
-        MGP_BM_SRC_MONO);
+               (gu2_blt_mode & ~MGP_BM_SRC_TYPE_MASK) | MGP_BM_SRC_HOST |
+               MGP_BM_SRC_MONO);
 
     /* WAIT FOR BLT TO BE LATCHED */
 
@@ -949,7 +965,7 @@ gfx_mono_bitmap_to_screen_blt(unsigned short srcx, unsigned short srcy,
         for (i = 0; i < fifo_lines; i++) {
             GU2_WAIT_HALF_EMPTY;
             WRITE_GPREG_STRING32(MGP_HST_SOURCE, 8, j, data, temp_offset,
-                temp1);
+                                 temp1);
             temp_offset += 32;
         }
 
@@ -958,7 +974,7 @@ gfx_mono_bitmap_to_screen_blt(unsigned short srcx, unsigned short srcy,
         GU2_WAIT_HALF_EMPTY;
         if (dwords_extra) {
             WRITE_GPREG_STRING32(MGP_HST_SOURCE, dwords_extra, i, data,
-                temp_offset, temp1);
+                                 temp_offset, temp1);
             temp_offset += (dwords_extra << 2);
         }
 
@@ -967,7 +983,7 @@ gfx_mono_bitmap_to_screen_blt(unsigned short srcx, unsigned short srcy,
         shift = 0;
         if (bytes_extra)
             WRITE_GPREG_STRING8(MGP_HST_SOURCE, bytes_extra, shift, i, data,
-                temp_offset, temp1, temp2);
+                                temp_offset, temp1, temp2);
 
         offset += pitch;
     }
@@ -983,11 +999,11 @@ gfx_mono_bitmap_to_screen_blt(unsigned short srcx, unsigned short srcy,
 #if GFX_2DACCEL_DYNAMIC
 void
 gu2_text_blt(unsigned short dstx, unsigned short dsty, unsigned short width,
-    unsigned short height, unsigned char *data)
+             unsigned short height, unsigned char *data)
 #else
 void
 gfx_text_blt(unsigned short dstx, unsigned short dsty, unsigned short width,
-    unsigned short height, unsigned char *data)
+             unsigned short height, unsigned char *data)
 #endif
 {
     unsigned long size, bytes;
@@ -995,18 +1011,18 @@ gfx_text_blt(unsigned short dstx, unsigned short dsty, unsigned short width,
     unsigned long i, j = 0, fifo_lines, dwords_extra, bytes_extra;
     unsigned long shift;
 
-    size = (((unsigned long)width) << 16) | height;
+    size = (((unsigned long) width) << 16) | height;
 
-    dstoffset = (unsigned long)dsty *gu2_pitch +
-        (((unsigned long)dstx) << gu2_xshift);
+    dstoffset = (unsigned long) dsty *gu2_pitch +
+        (((unsigned long) dstx) << gu2_xshift);
 
     /* CHECK IF PATTERN ORIGINS NEED TO BE SET */
 
     if (GFXpatternFlags) {
         /* COMBINE X AND Y PATTERN ORIGINS WITH OFFSET */
 
-        dstoffset |= ((unsigned long)(dstx & 7)) << 26;
-        dstoffset |= ((unsigned long)(dsty & 7)) << 29;
+        dstoffset |= ((unsigned long) (dstx & 7)) << 26;
+        dstoffset |= ((unsigned long) (dsty & 7)) << 29;
     }
 
     /* CALCULATE STARTING OFFSETS */
@@ -1025,8 +1041,8 @@ gfx_text_blt(unsigned short dstx, unsigned short dsty, unsigned short width,
     WRITE_GP32(MGP_WID_HEIGHT, size);
     WRITE_GP32(MGP_STRIDE, gu2_pitch);
     WRITE_GP16(MGP_BLT_MODE,
-        (gu2_blt_mode & ~MGP_BM_SRC_TYPE_MASK) | MGP_BM_SRC_HOST |
-        MGP_BM_SRC_BP_MONO);
+               (gu2_blt_mode & ~MGP_BM_SRC_TYPE_MASK) | MGP_BM_SRC_HOST |
+               MGP_BM_SRC_BP_MONO);
 
     /* WAIT FOR BLT TO BE LATCHED */
 
@@ -1046,13 +1062,13 @@ gfx_text_blt(unsigned short dstx, unsigned short dsty, unsigned short width,
         GU2_WAIT_HALF_EMPTY;
         if (dwords_extra) {
             WRITE_GPREG_STRING32(MGP_HST_SOURCE, dwords_extra, i, data,
-                temp_offset, temp1);
+                                 temp_offset, temp1);
             temp_offset += (dwords_extra << 2);
         }
         if (bytes_extra) {
             shift = 0;
             WRITE_GPREG_STRING8(MGP_HST_SOURCE, bytes_extra, shift, i, data,
-                temp_offset, temp1, temp2);
+                                temp_offset, temp1, temp2);
         }
     }
 }
@@ -1079,23 +1095,25 @@ gfx_text_blt(unsigned short dstx, unsigned short dsty, unsigned short width,
 #if GFX_2DACCEL_DYNAMIC
 void
 gu2_bresenham_line(unsigned short x, unsigned short y,
-    unsigned short length, unsigned short initerr,
-    unsigned short axialerr, unsigned short diagerr, unsigned short flags)
+                   unsigned short length, unsigned short initerr,
+                   unsigned short axialerr, unsigned short diagerr,
+                   unsigned short flags)
 #else
 void
 gfx_bresenham_line(unsigned short x, unsigned short y,
-    unsigned short length, unsigned short initerr,
-    unsigned short axialerr, unsigned short diagerr, unsigned short flags)
+                   unsigned short length, unsigned short initerr,
+                   unsigned short axialerr, unsigned short diagerr,
+                   unsigned short flags)
 #endif
 {
     unsigned long offset;
-    unsigned long data1 = (((unsigned long)axialerr) << 16) | diagerr;
-    unsigned long data2 = (((unsigned long)length) << 16) | initerr;
+    unsigned long data1 = (((unsigned long) axialerr) << 16) | diagerr;
+    unsigned long data2 = (((unsigned long) length) << 16) | initerr;
     unsigned short vector_mode = gu2_vector_mode | flags;
 
     /* CALCULATE STARTING OFFSET */
 
-    offset = (unsigned long)y *gu2_pitch + (((unsigned long)x) << gu2_xshift);
+    offset = (unsigned long) y *gu2_pitch + (((unsigned long) x) << gu2_xshift);
 
     /* CHECK NULL LENGTH */
 
@@ -1129,7 +1147,7 @@ void
 gfx_wait_until_idle(void)
 #endif
 {
-    while (READ_GP32(MGP_BLT_STATUS) & MGP_BS_BLT_BUSY) ;
+    while (READ_GP32(MGP_BLT_STATUS) & MGP_BS_BLT_BUSY);
 }
 
 /*---------------------------------------------------------------------------
@@ -1177,7 +1195,7 @@ gfx2_set_source_stride(unsigned short stride)
 {
     /* SAVE STRIDE TO BE USED LATER */
 
-    gu2_src_pitch = (unsigned long)stride;
+    gu2_src_pitch = (unsigned long) stride;
 }
 
 /*---------------------------------------------------------------------------
@@ -1196,7 +1214,7 @@ gfx2_set_destination_stride(unsigned short stride)
 {
     /* SAVE STRIDE TO BE USED LATER */
 
-    gu2_dst_pitch = (unsigned long)stride;
+    gu2_dst_pitch = (unsigned long) stride;
 }
 
 /*---------------------------------------------------------------------------
@@ -1216,8 +1234,8 @@ gfx2_set_pattern_origin(int x, int y)
 {
     /* STORE IN FORMAT THAT CAN BE COMBINED WITH THE DESTINATION OFFSET */
 
-    gu2_pattern_origin = (((unsigned long)(x & 7)) << 26) |
-        (((unsigned long)(y & 7)) << 29);
+    gu2_pattern_origin = (((unsigned long) (x & 7)) << 26) |
+        (((unsigned long) (y & 7)) << 29);
 }
 
 /*---------------------------------------------------------------------------
@@ -1285,7 +1303,7 @@ gfx2_set_alpha_value(unsigned char value)
 {
     /* SAVE ALPHA VALUE TO BE USED LATER */
 
-    gu2_alpha_value = (unsigned long)value;
+    gu2_alpha_value = (unsigned long) value;
 
     /* SET GLOBAL FLAG */
     /* gfx2_* routines will use this flag to program alpha values */
@@ -1372,16 +1390,16 @@ gfx2_set_alpha_value(unsigned char value)
 #if GFX_2DACCEL_DYNAMIC
 void
 gu22_pattern_fill(unsigned long dstoffset, unsigned short width,
-    unsigned short height)
+                  unsigned short height)
 #else
 void
 gfx2_pattern_fill(unsigned long dstoffset, unsigned short width,
-    unsigned short height)
+                  unsigned short height)
 #endif
 {
     unsigned long size;
 
-    size = (((unsigned long)width) << 16) | height;
+    size = (((unsigned long) width) << 16) | height;
 
     /* POLL UNTIL ABLE TO WRITE TO THE REGISTERS */
     /* Put off poll for as long as possible (do most calculations first). */
@@ -1408,11 +1426,11 @@ gfx2_pattern_fill(unsigned long dstoffset, unsigned short width,
 #if GFX_2DACCEL_DYNAMIC
 void
 gu22_color_pattern_fill(unsigned long dstoffset, unsigned short width,
-    unsigned short height, unsigned long *pattern)
+                        unsigned short height, unsigned long *pattern)
 #else
 void
 gfx2_color_pattern_fill(unsigned long dstoffset, unsigned short width,
-    unsigned short height, unsigned long *pattern)
+                        unsigned short height, unsigned long *pattern)
 #endif
 {
     int pass;
@@ -1427,7 +1445,7 @@ gfx2_color_pattern_fill(unsigned long dstoffset, unsigned short width,
 
     GU2_WAIT_PENDING;
     WRITE_GP32(MGP_RASTER_MODE,
-        (gu2_rop32 & ~MGP_RM_PAT_FLAGS) | MGP_RM_PAT_COLOR);
+               (gu2_rop32 & ~MGP_RM_PAT_FLAGS) | MGP_RM_PAT_COLOR);
 
     /* ATTEMPT TO OPTIMIZE */
     /* If possible, we can perform the pattern fill in only a few passes    */
@@ -1439,7 +1457,7 @@ gfx2_color_pattern_fill(unsigned long dstoffset, unsigned short width,
         /* HANDLE VARIOUS COLOR DEPTHS DIFFERENTLY */
 
         switch (gu2_xshift) {
-        case 0:                       /* 8 BPP */
+        case 0:                /* 8 BPP */
 
             /* TWO PASSES FOR 8 BPP */
             /* Render every other line per pass by doubling the pitch. */
@@ -1453,16 +1471,16 @@ gfx2_color_pattern_fill(unsigned long dstoffset, unsigned short width,
                 lines = (height + 1 - pass) >> 1;
                 if (!lines)
                     break;
-                size = (((unsigned long)width) << 16) | lines;
+                size = (((unsigned long) width) << 16) | lines;
                 WRITE_GP32(MGP_WID_HEIGHT, size);
                 WRITE_GP32(MGP_STRIDE, gu2_dst_pitch << 1);
                 WRITE_GP32(MGP_PAT_DATA_1, BYTE_SWIZZLE(pattern[patoffset]));
                 WRITE_GP32(MGP_PAT_DATA_0,
-                    BYTE_SWIZZLE(pattern[patoffset + 1]));
+                           BYTE_SWIZZLE(pattern[patoffset + 1]));
                 patoffset = (patoffset + 4) & 0x0E;
                 WRITE_GP32(MGP_PAT_COLOR_1, BYTE_SWIZZLE(pattern[patoffset]));
                 WRITE_GP32(MGP_PAT_COLOR_0,
-                    BYTE_SWIZZLE(pattern[patoffset + 1]));
+                           BYTE_SWIZZLE(pattern[patoffset + 1]));
                 patoffset = (patoffset + 4) & 0x0E;
 
                 /* NEED TO WAIT UNTIL IDLE FOR COLORS 2 THROUGH 5 */
@@ -1471,11 +1489,11 @@ gfx2_color_pattern_fill(unsigned long dstoffset, unsigned short width,
                 GU2_WAIT_BUSY;
                 WRITE_GP32(MGP_PAT_COLOR_3, BYTE_SWIZZLE(pattern[patoffset]));
                 WRITE_GP32(MGP_PAT_COLOR_2,
-                    BYTE_SWIZZLE(pattern[patoffset + 1]));
+                           BYTE_SWIZZLE(pattern[patoffset + 1]));
                 patoffset = (patoffset + 4) & 0x0E;
                 WRITE_GP32(MGP_PAT_COLOR_5, BYTE_SWIZZLE(pattern[patoffset]));
                 WRITE_GP32(MGP_PAT_COLOR_4,
-                    BYTE_SWIZZLE(pattern[patoffset + 1]));
+                           BYTE_SWIZZLE(pattern[patoffset + 1]));
                 WRITE_GP16(MGP_BLT_MODE, gu2_blt_mode | gu2_bm_throttle);
                 gu2_bm_throttle = 0;
                 gu2_vm_throttle = 0;
@@ -1487,7 +1505,7 @@ gfx2_color_pattern_fill(unsigned long dstoffset, unsigned short width,
             }
             break;
 
-        case 1:                       /* 12, 15, OR 16 BPP */
+        case 1:                /* 12, 15, OR 16 BPP */
 
             /* FOUR PASSES FOR 16 BPP */
             /* Render every 4th line per pass by quadrupling the pitch. */
@@ -1501,16 +1519,16 @@ gfx2_color_pattern_fill(unsigned long dstoffset, unsigned short width,
                 lines = (height + 3 - pass) >> 2;
                 if (!lines)
                     break;
-                size = (((unsigned long)width) << 16) | lines;
+                size = (((unsigned long) width) << 16) | lines;
                 WRITE_GP32(MGP_WID_HEIGHT, size);
                 WRITE_GP32(MGP_STRIDE, gu2_dst_pitch << 2);
                 WRITE_GP32(MGP_PAT_COLOR_1, WORD_SWIZZLE(pattern[patoffset]));
                 WRITE_GP32(MGP_PAT_COLOR_0,
-                    WORD_SWIZZLE(pattern[patoffset + 1]));
+                           WORD_SWIZZLE(pattern[patoffset + 1]));
                 WRITE_GP32(MGP_PAT_DATA_1,
-                    WORD_SWIZZLE(pattern[patoffset + 2]));
+                           WORD_SWIZZLE(pattern[patoffset + 2]));
                 WRITE_GP32(MGP_PAT_DATA_0,
-                    WORD_SWIZZLE(pattern[patoffset + 3]));
+                           WORD_SWIZZLE(pattern[patoffset + 3]));
                 patoffset = (patoffset + 16) & 0x1C;
 
                 /* NEED TO WAIT UNTIL IDLE FOR COLORS 2 THROUGH 5 */
@@ -1519,11 +1537,11 @@ gfx2_color_pattern_fill(unsigned long dstoffset, unsigned short width,
                 GU2_WAIT_BUSY;
                 WRITE_GP32(MGP_PAT_COLOR_5, WORD_SWIZZLE(pattern[patoffset]));
                 WRITE_GP32(MGP_PAT_COLOR_4,
-                    WORD_SWIZZLE(pattern[patoffset + 1]));
+                           WORD_SWIZZLE(pattern[patoffset + 1]));
                 WRITE_GP32(MGP_PAT_COLOR_3,
-                    WORD_SWIZZLE(pattern[patoffset + 2]));
+                           WORD_SWIZZLE(pattern[patoffset + 2]));
                 WRITE_GP32(MGP_PAT_COLOR_2,
-                    WORD_SWIZZLE(pattern[patoffset + 3]));
+                           WORD_SWIZZLE(pattern[patoffset + 3]));
                 WRITE_GP16(MGP_BLT_MODE, gu2_blt_mode | gu2_bm_throttle);
                 gu2_bm_throttle = 0;
                 gu2_vm_throttle = 0;
@@ -1535,7 +1553,7 @@ gfx2_color_pattern_fill(unsigned long dstoffset, unsigned short width,
             }
             break;
 
-        case 2:                       /* 32 BPP */
+        case 2:                /* 32 BPP */
 
             /* EIGHT PASSES FOR 32 BPP */
             /* Render every 8th line per pass by setting pitch * 8. */
@@ -1549,7 +1567,7 @@ gfx2_color_pattern_fill(unsigned long dstoffset, unsigned short width,
                 lines = (height + 7 - pass) >> 3;
                 if (!lines)
                     break;
-                size = (((unsigned long)width) << 16) | lines;
+                size = (((unsigned long) width) << 16) | lines;
                 WRITE_GP32(MGP_WID_HEIGHT, size);
                 WRITE_GP32(MGP_STRIDE, gu2_dst_pitch << 3);
                 WRITE_GP32(MGP_PAT_COLOR_1, pattern[patoffset + 4]);
@@ -1582,7 +1600,7 @@ gfx2_color_pattern_fill(unsigned long dstoffset, unsigned short width,
         WRITE_GP32(MGP_STRIDE, gu2_dst_pitch);
 
         switch (gu2_xshift) {
-        case 0:                       /* 8 BPP - 4 LINES PER PASS */
+        case 0:                /* 8 BPP - 4 LINES PER PASS */
 
             patoffset = (gu2_pattern_origin >> 28) & 0x0E;
             while (height) {
@@ -1592,14 +1610,14 @@ gfx2_color_pattern_fill(unsigned long dstoffset, unsigned short width,
 
                 WRITE_GP32(MGP_DST_OFFSET, dstoffset | patxorigin);
                 WRITE_GP32(MGP_WID_HEIGHT,
-                    (((unsigned long)width) << 16) | lines);
+                           (((unsigned long) width) << 16) | lines);
                 WRITE_GP32(MGP_PAT_DATA_1, BYTE_SWIZZLE(pattern[patoffset]));
                 WRITE_GP32(MGP_PAT_DATA_0,
-                    BYTE_SWIZZLE(pattern[patoffset + 1]));
+                           BYTE_SWIZZLE(pattern[patoffset + 1]));
                 patoffset = (patoffset + 2) & 0x0E;
                 WRITE_GP32(MGP_PAT_COLOR_1, BYTE_SWIZZLE(pattern[patoffset]));
                 WRITE_GP32(MGP_PAT_COLOR_0,
-                    BYTE_SWIZZLE(pattern[patoffset + 1]));
+                           BYTE_SWIZZLE(pattern[patoffset + 1]));
                 patoffset = (patoffset + 2) & 0x0E;
 
                 /* NEED TO WAIT UNTIL IDLE FOR COLORS 2 THROUGH 5 */
@@ -1608,22 +1626,22 @@ gfx2_color_pattern_fill(unsigned long dstoffset, unsigned short width,
                 GU2_WAIT_BUSY;
                 WRITE_GP32(MGP_PAT_COLOR_3, BYTE_SWIZZLE(pattern[patoffset]));
                 WRITE_GP32(MGP_PAT_COLOR_2,
-                    BYTE_SWIZZLE(pattern[patoffset + 1]));
+                           BYTE_SWIZZLE(pattern[patoffset + 1]));
                 patoffset = (patoffset + 2) & 0x0E;
                 WRITE_GP32(MGP_PAT_COLOR_5, BYTE_SWIZZLE(pattern[patoffset]));
                 WRITE_GP32(MGP_PAT_COLOR_4,
-                    BYTE_SWIZZLE(pattern[patoffset + 1]));
+                           BYTE_SWIZZLE(pattern[patoffset + 1]));
                 patoffset = (patoffset + 2) & 0x0E;
                 WRITE_GP16(MGP_BLT_MODE, gu2_blt_mode | gu2_bm_throttle);
 
                 /* ADJUST FOR NEXT PASS */
 
                 dstoffset += gu2_dst_pitch << 2;
-                height -= (unsigned short)lines;
+                height -= (unsigned short) lines;
             }
             break;
 
-        case 1:                       /* 12, 15 AND 16 BPP - 2 LINES PER PASS */
+        case 1:                /* 12, 15 AND 16 BPP - 2 LINES PER PASS */
 
             patoffset = (gu2_pattern_origin >> 27) & 0x1C;
             while (height) {
@@ -1633,14 +1651,14 @@ gfx2_color_pattern_fill(unsigned long dstoffset, unsigned short width,
 
                 WRITE_GP32(MGP_DST_OFFSET, dstoffset | patxorigin);
                 WRITE_GP32(MGP_WID_HEIGHT,
-                    (((unsigned long)width) << 16) | lines);
+                           (((unsigned long) width) << 16) | lines);
                 WRITE_GP32(MGP_PAT_COLOR_1, WORD_SWIZZLE(pattern[patoffset]));
                 WRITE_GP32(MGP_PAT_COLOR_0,
-                    WORD_SWIZZLE(pattern[patoffset + 1]));
+                           WORD_SWIZZLE(pattern[patoffset + 1]));
                 WRITE_GP32(MGP_PAT_DATA_1,
-                    WORD_SWIZZLE(pattern[patoffset + 2]));
+                           WORD_SWIZZLE(pattern[patoffset + 2]));
                 WRITE_GP32(MGP_PAT_DATA_0,
-                    WORD_SWIZZLE(pattern[patoffset + 3]));
+                           WORD_SWIZZLE(pattern[patoffset + 3]));
                 patoffset = (patoffset + 4) & 0x1C;
 
                 /* NEED TO WAIT UNTIL IDLE FOR COLORS 2 THROUGH 5 */
@@ -1649,22 +1667,22 @@ gfx2_color_pattern_fill(unsigned long dstoffset, unsigned short width,
                 GU2_WAIT_BUSY;
                 WRITE_GP32(MGP_PAT_COLOR_5, WORD_SWIZZLE(pattern[patoffset]));
                 WRITE_GP32(MGP_PAT_COLOR_4,
-                    WORD_SWIZZLE(pattern[patoffset + 1]));
+                           WORD_SWIZZLE(pattern[patoffset + 1]));
                 WRITE_GP32(MGP_PAT_COLOR_3,
-                    WORD_SWIZZLE(pattern[patoffset + 2]));
+                           WORD_SWIZZLE(pattern[patoffset + 2]));
                 WRITE_GP32(MGP_PAT_COLOR_2,
-                    WORD_SWIZZLE(pattern[patoffset + 3]));
+                           WORD_SWIZZLE(pattern[patoffset + 3]));
                 patoffset = (patoffset + 4) & 0x1C;
                 WRITE_GP16(MGP_BLT_MODE, gu2_blt_mode | gu2_bm_throttle);
 
                 /* ADJUST FOR NEXT PASS */
 
                 dstoffset += gu2_dst_pitch << 1;
-                height -= (unsigned short)lines;
+                height -= (unsigned short) lines;
             }
             break;
 
-        case 2:                       /* 32 BPP - 1 LINE PER PASS */
+        case 2:                /* 32 BPP - 1 LINE PER PASS */
 
             patoffset = (gu2_pattern_origin >> 26) & 0x38;
             while (height) {
@@ -1672,7 +1690,7 @@ gfx2_color_pattern_fill(unsigned long dstoffset, unsigned short width,
 
                 WRITE_GP32(MGP_DST_OFFSET, dstoffset | patxorigin);
                 WRITE_GP32(MGP_WID_HEIGHT,
-                    (((unsigned long)width) << 16) | 1l);
+                           (((unsigned long) width) << 16) | 1l);
                 WRITE_GP32(MGP_PAT_COLOR_1, pattern[patoffset + 4]);
                 WRITE_GP32(MGP_PAT_COLOR_0, pattern[patoffset + 5]);
                 WRITE_GP32(MGP_PAT_DATA_1, pattern[patoffset + 6]);
@@ -1712,17 +1730,19 @@ gfx2_color_pattern_fill(unsigned long dstoffset, unsigned short width,
 #if GFX_2DACCEL_DYNAMIC
 void
 gu22_screen_to_screen_blt(unsigned long srcoffset, unsigned long dstoffset,
-    unsigned short width, unsigned short height, int flags)
+                          unsigned short width, unsigned short height,
+                          int flags)
 #else
 void
 gfx2_screen_to_screen_blt(unsigned long srcoffset, unsigned long dstoffset,
-    unsigned short width, unsigned short height, int flags)
+                          unsigned short width, unsigned short height,
+                          int flags)
 #endif
 {
     unsigned long size, xbytes;
     unsigned short blt_mode;
 
-    size = (((unsigned long)width) << 16) | height;
+    size = (((unsigned long) width) << 16) | height;
 
     /* USE ALPHA SETTINGS, IF REQUESTED */
 
@@ -1762,7 +1782,8 @@ gfx2_screen_to_screen_blt(unsigned long srcoffset, unsigned long dstoffset,
 
     if (gu2_alpha_active) {
         WRITE_GP32(MGP_RASTER_MODE, gu2_alpha32);
-    } else {
+    }
+    else {
         WRITE_GP32(MGP_RASTER_MODE, gu2_rop32 | GFXsourceFlags);
     }
 
@@ -1787,26 +1808,28 @@ gfx2_screen_to_screen_blt(unsigned long srcoffset, unsigned long dstoffset,
 #if GFX_2DACCEL_DYNAMIC
 void
 gu22_mono_expand_blt(unsigned long srcbase, unsigned short srcx,
-    unsigned short srcy, unsigned long dstoffset, unsigned short width,
-    unsigned short height, int byte_packed)
+                     unsigned short srcy, unsigned long dstoffset,
+                     unsigned short width, unsigned short height,
+                     int byte_packed)
 #else
 void
 gfx2_mono_expand_blt(unsigned long srcbase, unsigned short srcx,
-    unsigned short srcy, unsigned long dstoffset, unsigned short width,
-    unsigned short height, int byte_packed)
+                     unsigned short srcy, unsigned long dstoffset,
+                     unsigned short width, unsigned short height,
+                     int byte_packed)
 #endif
 {
     unsigned long size, srcoffset;
     unsigned short blt_mode;
 
-    size = (((unsigned long)width) << 16) | height;
+    size = (((unsigned long) width) << 16) | height;
 
     /* CALCULATE SOURCE OFFSET */
 
-    srcoffset = srcbase + (unsigned long)srcy *gu2_src_pitch;
+    srcoffset = srcbase + (unsigned long) srcy *gu2_src_pitch;
 
     srcoffset += srcx >> 3;
-    srcoffset |= ((unsigned long)srcx & 7) << 26;
+    srcoffset |= ((unsigned long) srcx & 7) << 26;
 
     /* POLL UNTIL ABLE TO WRITE TO THE REGISTERS */
     /* Put off poll for as long as possible (do most calculations first). */
@@ -1817,7 +1840,8 @@ gfx2_mono_expand_blt(unsigned long srcbase, unsigned short srcx,
         blt_mode = gu2_alpha_blt_mode;
 
         WRITE_GP32(MGP_RASTER_MODE, gu2_alpha32);
-    } else {
+    }
+    else {
         blt_mode = (gu2_blt_mode & ~MGP_BM_SRC_TYPE_MASK);
 
         WRITE_GP32(MGP_RASTER_MODE, gu2_rop32 | GFXsourceFlags);
@@ -1848,13 +1872,15 @@ gfx2_mono_expand_blt(unsigned long srcbase, unsigned short srcx,
 #if GFX_2DACCEL_DYNAMIC
 void
 gu22_color_bitmap_to_screen_blt(unsigned short srcx, unsigned short srcy,
-    unsigned long dstoffset, unsigned short width,
-    unsigned short height, unsigned char *data, short pitch)
+                                unsigned long dstoffset, unsigned short width,
+                                unsigned short height, unsigned char *data,
+                                short pitch)
 #else
 void
 gfx2_color_bitmap_to_screen_blt(unsigned short srcx, unsigned short srcy,
-    unsigned long dstoffset, unsigned short width,
-    unsigned short height, unsigned char *data, short pitch)
+                                unsigned long dstoffset, unsigned short width,
+                                unsigned short height, unsigned char *data,
+                                short pitch)
 #endif
 {
     unsigned long size, bytes;
@@ -1862,11 +1888,11 @@ gfx2_color_bitmap_to_screen_blt(unsigned short srcx, unsigned short srcy,
     unsigned long srcoffset, dword_bytes, bytes_extra;
     unsigned short blt_mode;
 
-    size = (((unsigned long)width) << 16) | 1;
+    size = (((unsigned long) width) << 16) | 1;
 
     /* CALCULATE STARTING OFFSETS */
 
-    offset = (unsigned long)srcy *pitch + ((unsigned long)srcx << gu2_xshift);
+    offset = (unsigned long) srcy *pitch + ((unsigned long) srcx << gu2_xshift);
 
     dstoffset |= gu2_pattern_origin;
 
@@ -1886,7 +1912,8 @@ gfx2_color_bitmap_to_screen_blt(unsigned short srcx, unsigned short srcy,
         blt_mode = gu2_alpha_blt_mode;
 
         WRITE_GP32(MGP_RASTER_MODE, gu2_alpha32);
-    } else {
+    }
+    else {
         blt_mode = (gu2_blt_mode & ~MGP_BM_SRC_TYPE_MASK);
 
         WRITE_GP32(MGP_RASTER_MODE, gu2_rop32 | GFXsourceFlags);
@@ -1916,13 +1943,12 @@ gfx2_color_bitmap_to_screen_blt(unsigned short srcx, unsigned short srcy,
         dstoffset += gu2_dst_pitch;
         dstoffset += 0x20000000;
 
-        WRITE_FRAME_BUFFER_STRING32(srcoffset, dword_bytes, data,
-            temp_offset);
+        WRITE_FRAME_BUFFER_STRING32(srcoffset, dword_bytes, data, temp_offset);
         if (bytes_extra) {
             temp_offset += dword_bytes;
             srcoffset += dword_bytes;
             WRITE_FRAME_BUFFER_STRING8(srcoffset, bytes_extra, data,
-                temp_offset);
+                                       temp_offset);
         }
         WRITE_GP16(MGP_BLT_MODE, blt_mode);
         offset += pitch;
@@ -1940,11 +1966,11 @@ gfx2_color_bitmap_to_screen_blt(unsigned short srcx, unsigned short srcy,
 #if GFX_2DACCEL_DYNAMIC
 void
 gu22_text_blt(unsigned long dstoffset, unsigned short width,
-    unsigned short height, unsigned char *data)
+              unsigned short height, unsigned char *data)
 #else
 void
 gfx2_text_blt(unsigned long dstoffset, unsigned short width,
-    unsigned short height, unsigned char *data)
+              unsigned short height, unsigned char *data)
 #endif
 {
     unsigned long size, bytes;
@@ -1953,7 +1979,7 @@ gfx2_text_blt(unsigned long dstoffset, unsigned short width,
     unsigned long shift;
     unsigned short blt_mode;
 
-    size = (((unsigned long)width) << 16) | height;
+    size = (((unsigned long) width) << 16) | height;
 
     /* CALCULATE STARTING OFFSETS */
 
@@ -1970,7 +1996,8 @@ gfx2_text_blt(unsigned long dstoffset, unsigned short width,
         blt_mode = gu2_alpha_blt_mode;
 
         WRITE_GP32(MGP_RASTER_MODE, gu2_alpha32);
-    } else {
+    }
+    else {
         blt_mode = (gu2_blt_mode & ~MGP_BM_SRC_TYPE_MASK);
 
         WRITE_GP32(MGP_RASTER_MODE, gu2_rop32 | GFXsourceFlags);
@@ -1981,7 +2008,7 @@ gfx2_text_blt(unsigned long dstoffset, unsigned short width,
     WRITE_GP32(MGP_WID_HEIGHT, size);
     WRITE_GP32(MGP_STRIDE, gu2_dst_pitch);
     WRITE_GP16(MGP_BLT_MODE, blt_mode | MGP_BM_SRC_HOST |
-        MGP_BM_SRC_BP_MONO | gu2_bm_throttle);
+               MGP_BM_SRC_BP_MONO | gu2_bm_throttle);
     gu2_bm_throttle = 0;
     gu2_vm_throttle = 0;
 
@@ -2003,13 +2030,13 @@ gfx2_text_blt(unsigned long dstoffset, unsigned short width,
         GU2_WAIT_HALF_EMPTY;
         if (dwords_extra) {
             WRITE_GPREG_STRING32(MGP_HST_SOURCE, dwords_extra, i, data,
-                temp_offset, temp1);
+                                 temp_offset, temp1);
             temp_offset += (dwords_extra << 2);
         }
         if (bytes_extra) {
             shift = 0;
             WRITE_GPREG_STRING8(MGP_HST_SOURCE, bytes_extra, shift, i, data,
-                temp_offset, temp1, temp2);
+                                temp_offset, temp1, temp2);
         }
     }
 }
@@ -2024,13 +2051,15 @@ gfx2_text_blt(unsigned long dstoffset, unsigned short width,
 #if GFX_2DACCEL_DYNAMIC
 void
 gu22_mono_bitmap_to_screen_blt(unsigned short srcx, unsigned short srcy,
-    unsigned long dstoffset, unsigned short width,
-    unsigned short height, unsigned char *data, short pitch)
+                               unsigned long dstoffset, unsigned short width,
+                               unsigned short height, unsigned char *data,
+                               short pitch)
 #else
 void
 gfx2_mono_bitmap_to_screen_blt(unsigned short srcx, unsigned short srcy,
-    unsigned long dstoffset, unsigned short width,
-    unsigned short height, unsigned char *data, short pitch)
+                               unsigned long dstoffset, unsigned short width,
+                               unsigned short height, unsigned char *data,
+                               short pitch)
 #endif
 {
     unsigned long size, bytes;
@@ -2039,11 +2068,11 @@ gfx2_mono_bitmap_to_screen_blt(unsigned short srcx, unsigned short srcy,
     unsigned long shift = 0;
     unsigned short blt_mode;
 
-    size = (((unsigned long)width) << 16) | height;
+    size = (((unsigned long) width) << 16) | height;
 
     /* CALCULATE STARTING OFFSETS */
 
-    offset = (unsigned long)srcy *pitch + ((unsigned long)srcx >> 3);
+    offset = (unsigned long) srcy *pitch + ((unsigned long) srcx >> 3);
 
     bytes = ((srcx & 7) + width + 7) >> 3;
     fifo_lines = bytes >> 5;
@@ -2058,18 +2087,19 @@ gfx2_mono_bitmap_to_screen_blt(unsigned short srcx, unsigned short srcy,
         blt_mode = gu2_alpha_blt_mode;
 
         WRITE_GP32(MGP_RASTER_MODE, gu2_alpha32);
-    } else {
+    }
+    else {
         blt_mode = (gu2_blt_mode & ~MGP_BM_SRC_TYPE_MASK);
 
         WRITE_GP32(MGP_RASTER_MODE, gu2_rop32 | GFXsourceFlags);
     }
 
-    WRITE_GP32(MGP_SRC_OFFSET, ((unsigned long)srcx & 7) << 26);
+    WRITE_GP32(MGP_SRC_OFFSET, ((unsigned long) srcx & 7) << 26);
     WRITE_GP32(MGP_DST_OFFSET, dstoffset | gu2_pattern_origin);
     WRITE_GP32(MGP_WID_HEIGHT, size);
     WRITE_GP32(MGP_STRIDE, gu2_dst_pitch);
     WRITE_GP16(MGP_BLT_MODE, blt_mode | MGP_BM_SRC_HOST |
-        MGP_BM_SRC_MONO | gu2_bm_throttle);
+               MGP_BM_SRC_MONO | gu2_bm_throttle);
     gu2_bm_throttle = 0;
     gu2_vm_throttle = 0;
 
@@ -2087,7 +2117,7 @@ gfx2_mono_bitmap_to_screen_blt(unsigned short srcx, unsigned short srcy,
         for (i = 0; i < fifo_lines; i++) {
             GU2_WAIT_HALF_EMPTY;
             WRITE_GPREG_STRING32(MGP_HST_SOURCE, 8, j, data, temp_offset,
-                temp1);
+                                 temp1);
             temp_offset += 32;
         }
 
@@ -2096,7 +2126,7 @@ gfx2_mono_bitmap_to_screen_blt(unsigned short srcx, unsigned short srcy,
         GU2_WAIT_HALF_EMPTY;
         if (dwords_extra)
             WRITE_GPREG_STRING32(MGP_HST_SOURCE, dwords_extra, i, data,
-                temp_offset, temp1);
+                                 temp_offset, temp1);
         temp_offset += (dwords_extra << 2);
 
         /* WRITE REMAINING BYTES */
@@ -2104,7 +2134,7 @@ gfx2_mono_bitmap_to_screen_blt(unsigned short srcx, unsigned short srcy,
         shift = 0;
         if (bytes_extra)
             WRITE_GPREG_STRING8(MGP_HST_SOURCE, bytes_extra, shift, i, data,
-                temp_offset, temp1, temp2);
+                                temp_offset, temp1, temp2);
 
         offset += pitch;
     }
@@ -2120,18 +2150,20 @@ gfx2_mono_bitmap_to_screen_blt(unsigned short srcx, unsigned short srcy,
 #if GFX_2DACCEL_DYNAMIC
 void
 gu22_bresenham_line(unsigned long dstoffset,
-    unsigned short length, unsigned short initerr,
-    unsigned short axialerr, unsigned short diagerr, unsigned short flags)
+                    unsigned short length, unsigned short initerr,
+                    unsigned short axialerr, unsigned short diagerr,
+                    unsigned short flags)
 #else
 void
 gfx2_bresenham_line(unsigned long dstoffset,
-    unsigned short length, unsigned short initerr,
-    unsigned short axialerr, unsigned short diagerr, unsigned short flags)
+                    unsigned short length, unsigned short initerr,
+                    unsigned short axialerr, unsigned short diagerr,
+                    unsigned short flags)
 #endif
 {
     unsigned long vector_mode = gu2_vector_mode | flags;
-    unsigned long data1 = (((unsigned long)axialerr) << 16) | diagerr;
-    unsigned long data2 = (((unsigned long)length) << 16) | initerr;
+    unsigned long data1 = (((unsigned long) axialerr) << 16) | diagerr;
+    unsigned long data2 = (((unsigned long) length) << 16) | initerr;
 
     /* CHECK NULL LENGTH */
 
@@ -2147,7 +2179,8 @@ gfx2_bresenham_line(unsigned long dstoffset,
         vector_mode = gu2_alpha_vec_mode | flags;
 
         WRITE_GP32(MGP_RASTER_MODE, gu2_alpha32);
-    } else
+    }
+    else
         WRITE_GP32(MGP_RASTER_MODE, gu2_rop32);
 
     WRITE_GP32(MGP_DST_OFFSET, dstoffset | gu2_pattern_origin);

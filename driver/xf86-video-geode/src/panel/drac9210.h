@@ -36,6 +36,6 @@
 #define _DRAC9210_h
 #define CX55x0_ID 	0x80009000
 static unsigned char c92DataReg = 0;
-#endif /* !_DRAC9210_h */
+#endif                          /* !_DRAC9210_h */
 
 /* END OF FILE */

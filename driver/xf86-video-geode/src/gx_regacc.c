@@ -66,11 +66,12 @@ unsigned long gfx_read_vid32(unsigned long offset);
 unsigned long gfx_read_vip32(unsigned long offset);
 void gfx_write_vip32(unsigned long offset, unsigned long value);
 void gfx_mono_bitmap_to_screen_blt_swp(unsigned short srcx,
-    unsigned short srcy,
-    unsigned short dstx,
-    unsigned short dsty,
-    unsigned short width,
-    unsigned short height, unsigned char *data, short pitch);
+                                       unsigned short srcy,
+                                       unsigned short dstx,
+                                       unsigned short dsty,
+                                       unsigned short width,
+                                       unsigned short height,
+                                       unsigned char *data, short pitch);
 unsigned int GetVideoMemSize(void);
 
 /* ROUTINES added accessing hardware reg */
@@ -91,6 +92,7 @@ gfx_write_reg32(unsigned long offset, unsigned long value)
 {
     WRITE_REG32(offset, value);
 }
+
 unsigned short
 gfx_read_reg16(unsigned long offset)
 {
@@ -99,6 +101,7 @@ gfx_read_reg16(unsigned long offset)
     value = READ_REG16(offset);
     return value;
 }
+
 unsigned long
 gfx_read_reg32(unsigned long offset)
 {
@@ -113,6 +116,7 @@ gfx_write_vid32(unsigned long offset, unsigned long value)
 {
     WRITE_VID32(offset, value);
 }
+
 unsigned long
 gfx_read_vid32(unsigned long offset)
 {
@@ -155,31 +159,31 @@ gfx_write_vip32(unsigned long offset, unsigned long value)
 
 void
 gfx_mono_bitmap_to_screen_blt_swp(unsigned short srcx, unsigned short srcy,
-    unsigned short dstx, unsigned short dsty,
-    unsigned short width, unsigned short height,
-    unsigned char *data, short pitch)
+                                  unsigned short dstx, unsigned short dsty,
+                                  unsigned short width, unsigned short height,
+                                  unsigned char *data, short pitch)
 {
     unsigned long dstoffset, size, bytes;
     unsigned long offset, temp_offset, temp1 = 0, temp2 = 0;
     unsigned long i, j = 0, fifo_lines, dwords_extra, bytes_extra;
     unsigned long shift = 0;
 
-    size = (((unsigned long)width) << 16) | height;
+    size = (((unsigned long) width) << 16) | height;
 
     /* CALCULATE STARTING OFFSETS */
 
-    offset = (unsigned long)srcy *pitch + ((unsigned long)srcx >> 3);
+    offset = (unsigned long) srcy *pitch + ((unsigned long) srcx >> 3);
 
-    dstoffset = (unsigned long)dsty *gu2_pitch +
-	(((unsigned long)dstx) << gu2_xshift);
+    dstoffset = (unsigned long) dsty *gu2_pitch +
+        (((unsigned long) dstx) << gu2_xshift);
 
     /* CHECK IF PATTERN ORIGINS NEED TO BE SET */
 
     if (GFXpatternFlags) {
-	/* COMBINE X AND Y PATTERN ORIGINS WITH OFFSET */
+        /* COMBINE X AND Y PATTERN ORIGINS WITH OFFSET */
 
-	dstoffset |= ((unsigned long)(dstx & 7)) << 26;
-	dstoffset |= ((unsigned long)(dsty & 7)) << 29;
+        dstoffset |= ((unsigned long) (dstx & 7)) << 26;
+        dstoffset |= ((unsigned long) (dsty & 7)) << 29;
     }
 
     bytes = ((srcx & 7) + width + 7) >> 3;
@@ -195,12 +199,11 @@ gfx_mono_bitmap_to_screen_blt_swp(unsigned short srcx, unsigned short srcy,
 
     GU2_WAIT_PENDING;
     WRITE_GP32(MGP_RASTER_MODE, gu2_rop32);
-    WRITE_GP32(MGP_SRC_OFFSET, ((unsigned long)srcx & 7) << 26);
+    WRITE_GP32(MGP_SRC_OFFSET, ((unsigned long) srcx & 7) << 26);
     WRITE_GP32(MGP_DST_OFFSET, dstoffset);
     WRITE_GP32(MGP_WID_HEIGHT, size);
     WRITE_GP32(MGP_STRIDE, gu2_pitch);
-    WRITE_GP16(MGP_BLT_MODE,
-	gu2_blt_mode | MGP_BM_SRC_HOST | MGP_BM_SRC_MONO);
+    WRITE_GP16(MGP_BLT_MODE, gu2_blt_mode | MGP_BM_SRC_HOST | MGP_BM_SRC_MONO);
 
     /* WAIT FOR BLT TO BE LATCHED */
 
@@ -209,34 +212,34 @@ gfx_mono_bitmap_to_screen_blt_swp(unsigned short srcx, unsigned short srcy,
     /* WRITE ALL OF THE DATA TO THE HOST SOURCE REGISTER */
 
     while (height--) {
-	temp_offset = offset;
+        temp_offset = offset;
 
-	/* WRITE ALL FULL FIFO LINES */
+        /* WRITE ALL FULL FIFO LINES */
 
-	for (i = 0; i < fifo_lines; i++) {
-	    GU2_WAIT_HALF_EMPTY;
-	    WRITE_GPREG_STRING32_SWP(MGP_HST_SOURCE, 8, j, data, temp_offset,
-		temp1);
-	    temp_offset += 32;
-	}
+        for (i = 0; i < fifo_lines; i++) {
+            GU2_WAIT_HALF_EMPTY;
+            WRITE_GPREG_STRING32_SWP(MGP_HST_SOURCE, 8, j, data, temp_offset,
+                                     temp1);
+            temp_offset += 32;
+        }
 
-	/* WRITE ALL FULL DWORDS */
+        /* WRITE ALL FULL DWORDS */
 
-	GU2_WAIT_HALF_EMPTY;
-	if (dwords_extra) {
-	    WRITE_GPREG_STRING32_SWP(MGP_HST_SOURCE, dwords_extra, i, data,
-		temp_offset, temp1);
-	    temp_offset += (dwords_extra << 2);
-	}
+        GU2_WAIT_HALF_EMPTY;
+        if (dwords_extra) {
+            WRITE_GPREG_STRING32_SWP(MGP_HST_SOURCE, dwords_extra, i, data,
+                                     temp_offset, temp1);
+            temp_offset += (dwords_extra << 2);
+        }
 
-	/* WRITE REMAINING BYTES */
+        /* WRITE REMAINING BYTES */
 
-	shift = 0;
-	if (bytes_extra)
-	    WRITE_GPREG_STRING8(MGP_HST_SOURCE, bytes_extra, shift, i, data,
-		temp_offset, temp1, temp2);
+        shift = 0;
+        if (bytes_extra)
+            WRITE_GPREG_STRING8(MGP_HST_SOURCE, bytes_extra, shift, i, data,
+                                temp_offset, temp1, temp2);
 
-	offset += pitch;
+        offset += pitch;
     }
 }
 
@@ -260,37 +263,37 @@ GetVideoMemSize(void)
     /* Calculate total memory size for GXm. */
 
     for (i = 0; i < 2; i++) {
-	if (((mcBankCfg >> dimmShift) & 0x7) != 0x7) {
-	    switch ((mcBankCfg >> (dimmShift + 4)) & 0x7) {
-	    case 0:
-		totalMem += 0x400000;
-		break;
-	    case 1:
-		totalMem += 0x800000;
-		break;
-	    case 2:
-		totalMem += 0x1000000;
-		break;
-	    case 3:
-		totalMem += 0x2000000;
-		break;
-	    case 4:
-		totalMem += 0x4000000;
-		break;
-	    case 5:
-		totalMem += 0x8000000;
-		break;
-	    case 6:
-		totalMem += 0x10000000;
-		break;
-	    case 7:
-		totalMem += 0x20000000;
-		break;
-	    default:
-		break;
-	    }
-	}
-	dimmShift += 16;
+        if (((mcBankCfg >> dimmShift) & 0x7) != 0x7) {
+            switch ((mcBankCfg >> (dimmShift + 4)) & 0x7) {
+            case 0:
+                totalMem += 0x400000;
+                break;
+            case 1:
+                totalMem += 0x800000;
+                break;
+            case 2:
+                totalMem += 0x1000000;
+                break;
+            case 3:
+                totalMem += 0x2000000;
+                break;
+            case 4:
+                totalMem += 0x4000000;
+                break;
+            case 5:
+                totalMem += 0x8000000;
+                break;
+            case 6:
+                totalMem += 0x10000000;
+                break;
+            case 7:
+                totalMem += 0x20000000;
+                break;
+            default:
+                break;
+            }
+        }
+        dimmShift += 16;
     }
 
     /* Calculate graphics memory base address */

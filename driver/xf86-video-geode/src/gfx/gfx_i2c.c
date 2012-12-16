@@ -90,7 +90,7 @@ gfx_i2c_select_gpio(int clock, int data)
  */
 int
 gfx_i2c_write(unsigned char busnum, unsigned char chipadr,
-    unsigned char subadr, unsigned char bytes, unsigned char *data)
+              unsigned char subadr, unsigned char bytes, unsigned char *data)
 {
     int status = -1;
 
@@ -111,7 +111,7 @@ gfx_i2c_write(unsigned char busnum, unsigned char chipadr,
  */
 int
 gfx_i2c_read(unsigned char busnum, unsigned char chipadr,
-    unsigned char subadr, unsigned char bytes, unsigned char *data)
+             unsigned char subadr, unsigned char bytes, unsigned char *data)
 {
     int status = -1;
 
@@ -163,6 +163,6 @@ gfx_i2c_cleanup(void)
 #endif
 }
 
-#endif /* GFX_I2C_DYNAMIC */
+#endif                          /* GFX_I2C_DYNAMIC */
 
 /* END OF FILE */

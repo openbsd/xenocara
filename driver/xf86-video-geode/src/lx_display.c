@@ -33,8 +33,7 @@
 #include "cim/cim_defs.h"
 #include "cim/cim_regs.h"
 
-typedef struct _LXOutputPrivateRec
-{
+typedef struct _LXOutputPrivateRec {
     int video_enable;
     unsigned long video_flags;
     GeodeMemPtr rotate_mem;
@@ -50,14 +49,14 @@ lx_enable_dac_power(ScrnInfoPtr pScrni, int option)
     /* Turn off the DAC if we don't need the CRT */
 
     if (option && (!(pGeode->Output & OUTPUT_CRT))) {
-	unsigned int misc = READ_VID32(DF_VID_MISC);
+        unsigned int misc = READ_VID32(DF_VID_MISC);
 
-	misc |= DF_DAC_POWER_DOWN;
-	WRITE_VID32(DF_VID_MISC, misc);
+        misc |= DF_DAC_POWER_DOWN;
+        WRITE_VID32(DF_VID_MISC, misc);
     }
 
     if (pGeode->Output & OUTPUT_PANEL)
-	df_set_panel_enable(1);
+        df_set_panel_enable(1);
 }
 
 static void
@@ -66,15 +65,15 @@ lx_disable_dac_power(ScrnInfoPtr pScrni, int option)
     GeodeRec *pGeode = GEODEPTR(pScrni);
 
     if (pGeode->Output & OUTPUT_PANEL)
-	df_set_panel_enable(0);
+        df_set_panel_enable(0);
 
     if (pGeode->Output & OUTPUT_CRT) {
 
-	/* Wait for the panel to finish its procedure */
+        /* Wait for the panel to finish its procedure */
 
-	if (pGeode->Output & OUTPUT_PANEL)
-	    while ((READ_VID32(DF_POWER_MANAGEMENT) & 2) == 0) ;
-	df_set_crt_enable(option);
+        if (pGeode->Output & OUTPUT_PANEL)
+            while ((READ_VID32(DF_POWER_MANAGEMENT) & 2) == 0);
+        df_set_crt_enable(option);
     }
 }
 
@@ -107,7 +106,7 @@ lx_set_panel_mode(VG_DISPLAY_MODE * mode, DisplayModePtr pMode)
     mode->vblankend_even = pMode->VTotal;
     mode->vtotal_even = pMode->VTotal;
 
-    mode->frequency = (int)((pMode->Clock / 1000.0) * 0x10000);
+    mode->frequency = (int) ((pMode->Clock / 1000.0) * 0x10000);
 
     /* In panel mode, Cimarron purposely swizzles these,
      * so we swizzle them first  */
@@ -148,7 +147,7 @@ lx_set_crt_mode(VG_DISPLAY_MODE * mode, DisplayModePtr pMode)
     mode->vblankend_even = pMode->CrtcVBlankEnd;
     mode->vtotal_even = pMode->CrtcVTotal;
 
-    mode->frequency = (int)((pMode->Clock / 1000.0) * 0x10000);
+    mode->frequency = (int) ((pMode->Clock / 1000.0) * 0x10000);
 
     hsync = (pMode->Flags & V_NHSYNC) ? 1 : 0;
     vsync = (pMode->Flags & V_NVSYNC) ? 1 : 0;
@@ -169,15 +168,15 @@ lx_set_mode(ScrnInfoPtr pScrni, DisplayModePtr pMode, int bpp)
     mode.flags |= pGeode->Output & OUTPUT_CRT ? VG_MODEFLAG_CRT_AND_FP : 0;
 
     if (pGeode->Output & OUTPUT_PANEL) {
-	mode.flags |= VG_MODEFLAG_PANELOUT;
-	if (pGeode->Output & OUTPUT_CRT)
-	    mode.flags |= VG_MODEFLAG_CRT_AND_FP;
+        mode.flags |= VG_MODEFLAG_PANELOUT;
+        if (pGeode->Output & OUTPUT_CRT)
+            mode.flags |= VG_MODEFLAG_CRT_AND_FP;
     }
 
     if (pGeode->Output & OUTPUT_PANEL && pGeode->Scale)
-	lx_set_panel_mode(&mode, pGeode->panelMode);
+        lx_set_panel_mode(&mode, pGeode->panelMode);
     else
-	lx_set_crt_mode(&mode, pMode);
+        lx_set_crt_mode(&mode, pMode);
 
     mode.src_width = pMode->HDisplay;
     mode.src_height = pMode->VDisplay;
@@ -196,24 +195,24 @@ lx_crtc_dpms(xf86CrtcPtr crtc, int mode)
     GeodeRec *pGeode = GEODEPTR(pScrni);
 
     if (pGeode->Output & OUTPUT_DCON)
-	DCONDPMSSet(pScrni, mode);
+        DCONDPMSSet(pScrni, mode);
 
     switch (mode) {
     case DPMSModeOn:
-	lx_enable_dac_power(pScrni, 1);
-	break;
+        lx_enable_dac_power(pScrni, 1);
+        break;
 
     case DPMSModeStandby:
-	lx_disable_dac_power(pScrni, DF_CRT_STANDBY);
-	break;
+        lx_disable_dac_power(pScrni, DF_CRT_STANDBY);
+        break;
 
     case DPMSModeSuspend:
-	lx_disable_dac_power(pScrni, DF_CRT_SUSPEND);
-	break;
+        lx_disable_dac_power(pScrni, DF_CRT_SUSPEND);
+        break;
 
     case DPMSModeOff:
-	lx_disable_dac_power(pScrni, DF_CRT_DISABLE);
-	break;
+        lx_disable_dac_power(pScrni, DF_CRT_DISABLE);
+        break;
     }
 }
 
@@ -240,7 +239,7 @@ lx_crtc_prepare(xf86CrtcPtr crtc)
     df_get_video_enable(&lx_crtc->video_enable, &lx_crtc->video_flags);
 
     if (lx_crtc->video_enable)
-	df_set_video_enable(0, 0);
+        df_set_video_enable(0, 0);
 
     /* Turn off compression */
     vg_set_compression_enable(0);
@@ -254,14 +253,14 @@ lx_crtc_prepare(xf86CrtcPtr crtc)
 
 static Bool
 lx_crtc_mode_fixup(xf86CrtcPtr crtc, DisplayModePtr mode,
-    DisplayModePtr adjusted_mode)
+                   DisplayModePtr adjusted_mode)
 {
     return TRUE;
 }
 
 static void
 lx_crtc_mode_set(xf86CrtcPtr crtc, DisplayModePtr mode,
-    DisplayModePtr adjusted_mode, int x, int y)
+                 DisplayModePtr adjusted_mode, int x, int y)
 {
     ScrnInfoPtr pScrni = crtc->scrn;
     GeodeRec *pGeode = GEODEPTR(pScrni);
@@ -275,7 +274,7 @@ lx_crtc_mode_set(xf86CrtcPtr crtc, DisplayModePtr mode,
      */
 
     if (lx_set_mode(pScrni, adjusted_mode, pScrni->bitsPerPixel))
-	ErrorF("ERROR!  Unable to set the mode!\n");
+        ErrorF("ERROR!  Unable to set the mode!\n");
 
     /* The output gets turned in in the output code as
      * per convention */
@@ -284,19 +283,19 @@ lx_crtc_mode_set(xf86CrtcPtr crtc, DisplayModePtr mode,
      * the retire frame as dirty.
      */
     if (crtc->rotatedData != NULL) {
-	rpitch = pScrni->displayWidth * (pScrni->bitsPerPixel / 8);
-	vg_set_display_pitch(rpitch);
+        rpitch = pScrni->displayWidth * (pScrni->bitsPerPixel / 8);
+        vg_set_display_pitch(rpitch);
     }
     else
-    vg_set_display_pitch(pGeode->Pitch);
+        vg_set_display_pitch(pGeode->Pitch);
     gp_set_bpp(pScrni->bitsPerPixel);
 
     /* Set the acceleration offset if we are drawing to a shadow */
     if (crtc->rotatedData != NULL)
-	vg_set_display_offset((unsigned int)((char *)crtc->rotatedData -
-		(char *)pGeode->FBBase));
+        vg_set_display_offset((unsigned int) ((char *) crtc->rotatedData -
+                                              (char *) pGeode->FBBase));
     else
-	vg_set_display_offset(0);
+        vg_set_display_offset(0);
 
     /* FIXME: Whats up with X and Y?  Does that come into play
      * here? */
@@ -319,29 +318,29 @@ lx_crtc_commit(xf86CrtcPtr crtc)
     /* Turn on compression */
 
     if (pGeode->Compression) {
-	vg_configure_compression(&(pGeode->CBData));
-	vg_set_compression_enable(1);
+        vg_configure_compression(&(pGeode->CBData));
+        vg_set_compression_enable(1);
     }
 
     /* Load the cursor */
     if (crtc->scrn->pScreen != NULL) {
-	xf86_reload_cursors(crtc->scrn->pScreen);
-	crtc->funcs->hide_cursor(crtc);
-	crtc->cursor_shown = FALSE;
+        xf86_reload_cursors(crtc->scrn->pScreen);
+        crtc->funcs->hide_cursor(crtc);
+        crtc->cursor_shown = FALSE;
     }
 
     /* Renable the video */
 
     if (lx_crtc->video_enable)
-	df_set_video_enable(lx_crtc->video_enable, lx_crtc->video_flags);
+        df_set_video_enable(lx_crtc->video_enable, lx_crtc->video_flags);
 
     lx_crtc->video_enable = 0;
     lx_crtc->video_flags = 0;
 }
 
 static void
-lx_crtc_gamma_set(xf86CrtcPtr crtc, CARD16 * red, CARD16 * green,
-    CARD16 * blue, int size)
+lx_crtc_gamma_set(xf86CrtcPtr crtc, CARD16 *red, CARD16 *green,
+                  CARD16 *blue, int size)
 {
     unsigned int dcfg;
     int i;
@@ -355,12 +354,13 @@ lx_crtc_gamma_set(xf86CrtcPtr crtc, CARD16 * red, CARD16 * green,
 
     for (i = 0; i < 256; i++) {
         unsigned int val;
+
         (*red) &= 0xff00;
         (*green) &= 0xff00;
         (*blue) &= 0xff00;
         val = (*(red++) << 8) | *(green++) | (*(blue++) >> 8);
 
-	df_set_video_palette_entry(i, val);
+        df_set_video_palette_entry(i, val);
     }
 
     /* df_set_video_palette_entry automatically turns on
@@ -384,27 +384,25 @@ lx_crtc_gamma_set(xf86CrtcPtr crtc, CARD16 * red, CARD16 * green,
      */
 static PixmapPtr
 lx_create_bo_pixmap(ScreenPtr pScreen,
-		int width, int height,
-		int depth, int bpp,
-		int pitch, pointer pPixData)
+                    int width, int height,
+                    int depth, int bpp, int pitch, pointer pPixData)
 {
     PixmapPtr pixmap;
 
-
 #if XORG_VERSION_CURRENT >= XORG_VERSION_NUMERIC(1,5,0,0,0)
-    pixmap = (*pScreen->CreatePixmap)(pScreen, 0, 0, depth, 0);
+    pixmap = (*pScreen->CreatePixmap) (pScreen, 0, 0, depth, 0);
 #else
-    pixmap = (*pScreen->CreatePixmap)(pScreen, 0, 0, depth);
+    pixmap = (*pScreen->CreatePixmap) (pScreen, 0, 0, depth);
 #endif
 
     if (!pixmap)
-	return NULL;
-    if (!(*pScreen->ModifyPixmapHeader)(pixmap, width, height,
-					depth, bpp, pitch, pPixData)) {
-    /* ModifyPixmapHeader failed, so we can't use it as scratch pixmap
-     */
-	(*pScreen->DestroyPixmap)(pixmap);
-	return NULL;
+        return NULL;
+    if (!(*pScreen->ModifyPixmapHeader) (pixmap, width, height,
+                                         depth, bpp, pitch, pPixData)) {
+        /* ModifyPixmapHeader failed, so we can't use it as scratch pixmap
+         */
+        (*pScreen->DestroyPixmap) (pixmap);
+        return NULL;
     }
 
     return pixmap;
@@ -415,7 +413,7 @@ lx_destory_bo_pixmap(PixmapPtr pixmap)
 {
     ScreenPtr pScreen = pixmap->drawable.pScreen;
 
-    (*pScreen->DestroyPixmap)(pixmap);
+    (*pScreen->DestroyPixmap) (pixmap);
 }
 
     /* Allocates shadow memory, and allocating a new space for Rotation.
@@ -429,19 +427,18 @@ LXAllocShadow(ScrnInfoPtr pScrni, int size)
     GeodeRec *pGeode = GEODEPTR(pScrni);
 
     if (pGeode->shadowArea) {
-	if (pGeode->shadowArea->size != size) {
-		exaOffscreenFree(pScrni->pScreen, pGeode->shadowArea);
-		pGeode->shadowArea = NULL;
-	}
+        if (pGeode->shadowArea->size != size) {
+            exaOffscreenFree(pScrni->pScreen, pGeode->shadowArea);
+            pGeode->shadowArea = NULL;
+        }
     }
 
     if (pGeode->shadowArea == NULL) {
-	pGeode->shadowArea =
-		exaOffscreenAlloc(pScrni->pScreen, size, 4, TRUE,
-		NULL, NULL);
+        pGeode->shadowArea =
+            exaOffscreenAlloc(pScrni->pScreen, size, 4, TRUE, NULL, NULL);
 
-	if (pGeode->shadowArea == NULL)
-		return FALSE;
+        if (pGeode->shadowArea == NULL)
+            return FALSE;
     }
 
     pScrni->fbOffset = pGeode->shadowArea->offset;
@@ -460,13 +457,13 @@ lx_crtc_shadow_allocate(xf86CrtcPtr crtc, int width, int height)
 
     /* Allocate shadow memory */
     if (LXAllocShadow(pScrni, size) == FALSE) {
-	xf86DrvMsg(pScrni->scrnIndex, X_ERROR,
-	    "Couldn't allocate the shadow memory for rotation\n");
-	xf86DrvMsg(pScrni->scrnIndex, X_ERROR,
-	    " You need 0x%x bytes, but only 0x%x bytes are available\n",
-	    size, GeodeOffscreenFreeSize(pGeode));
+        xf86DrvMsg(pScrni->scrnIndex, X_ERROR,
+                   "Couldn't allocate the shadow memory for rotation\n");
+        xf86DrvMsg(pScrni->scrnIndex, X_ERROR,
+                   " You need 0x%x bytes, but only 0x%x bytes are available\n",
+                   size, GeodeOffscreenFreeSize(pGeode));
 
-	return NULL;
+        return NULL;
     }
 
     memset(pGeode->FBBase + pGeode->shadowArea->offset, 0, size);
@@ -482,15 +479,15 @@ lx_crtc_shadow_create(xf86CrtcPtr crtc, void *data, int width, int height)
 
     rpitch = pScrni->displayWidth * (pScrni->bitsPerPixel / 8);
     if (!data)
-	data = lx_crtc_shadow_allocate(crtc, width, height);
+        data = lx_crtc_shadow_allocate(crtc, width, height);
 
     rpixmap = lx_create_bo_pixmap(pScrni->pScreen,
-	width, height, pScrni->depth, pScrni->bitsPerPixel, rpitch,
-	data);
+                                  width, height, pScrni->depth,
+                                  pScrni->bitsPerPixel, rpitch, data);
 
     if (rpixmap == NULL) {
-	xf86DrvMsg(pScrni->scrnIndex, X_ERROR,
-	    "Couldn't allocate shadow pixmap for rotated CRTC\n");
+        xf86DrvMsg(pScrni->scrnIndex, X_ERROR,
+                   "Couldn't allocate shadow pixmap for rotated CRTC\n");
     }
 
     return rpixmap;
@@ -503,15 +500,15 @@ lx_crtc_shadow_destroy(xf86CrtcPtr crtc, PixmapPtr rpixmap, void *data)
     GeodeRec *pGeode = GEODEPTR(pScrni);
 
     if (rpixmap)
-	lx_destory_bo_pixmap(rpixmap);
+        lx_destory_bo_pixmap(rpixmap);
 
     /* Free shadow memory */
     if (data) {
-	gp_wait_until_idle();
-	if (pGeode->shadowArea != NULL) {
-	exaOffscreenFree(pScrni->pScreen, pGeode->shadowArea);
-	pGeode->shadowArea = NULL;
-	}
+        gp_wait_until_idle();
+        if (pGeode->shadowArea != NULL) {
+            exaOffscreenFree(pScrni->pScreen, pGeode->shadowArea);
+            pGeode->shadowArea = NULL;
+        }
     }
 }
 
@@ -525,6 +522,7 @@ static void
 lx_crtc_set_cursor_position(xf86CrtcPtr crtc, int x, int y)
 {
     VG_PANNING_COORDINATES panning;
+
     vg_set_cursor_position(x, y, &panning);
 }
 
@@ -574,16 +572,16 @@ LXSetupCrtc(ScrnInfoPtr pScrni)
     crtc = xf86CrtcCreate(pScrni, &lx_crtc_funcs);
 
     if (crtc == NULL) {
-	ErrorF("ERROR - failed to create a CRTC\n");
-	return;
+        ErrorF("ERROR - failed to create a CRTC\n");
+        return;
     }
 
     lxpriv = xnfcalloc(1, sizeof(LXCrtcPrivateRec));
 
     if (!lxpriv) {
-	xf86CrtcDestroy(crtc);
-	ErrorF("unable to allocate memory for lxpriv\n");
-	return;
+        xf86CrtcDestroy(crtc);
+        ErrorF("unable to allocate memory for lxpriv\n");
+        return;
     }
 
     crtc->driver_private = lxpriv;

@@ -184,17 +184,17 @@
 #define DC_GCFG_CMPE		0x00000010      /* compression enable       */
 #define DC_GCFG_DECE		0x00000020      /* decompression enable     */
 #define DC_GCFG_DCLK_MASK	0x000000C0      /* dotclock multiplier      */
-#define DC_GCFG_DCLK_POS	6      /* dotclock multiplier      */
+#define DC_GCFG_DCLK_POS	6       /* dotclock multiplier      */
 #define DC_GCFG_DFHPSL_MASK	0x00000F00      /* FIFO high-priority start */
-#define DC_GCFG_DFHPSL_POS	8      /* FIFO high-priority start */
+#define DC_GCFG_DFHPSL_POS	8       /* FIFO high-priority start */
 #define DC_GCFG_DFHPEL_MASK	0x0000F000      /* FIFO high-priority end   */
-#define DC_GCFG_DFHPEL_POS	12     /* FIFO high-priority end   */
+#define DC_GCFG_DFHPEL_POS	12      /* FIFO high-priority end   */
 #define DC_GCFG_CIM_MASK	0x00030000      /* compressor insert mode   */
-#define DC_GCFG_CIM_POS		16     /* compressor insert mode   */
+#define DC_GCFG_CIM_POS		16      /* compressor insert mode   */
 #define DC_GCFG_FDTY		0x00040000      /* frame dirty mode         */
 #define DC_GCFG_RTPM		0x00080000      /* real-time perf. monitor  */
 #define DC_GCFG_DAC_RS_MASK	0x00700000      /* DAC register selects     */
-#define DC_GCFG_DAC_RS_POS	20     /* DAC register selects     */
+#define DC_GCFG_DAC_RS_POS	20      /* DAC register selects     */
 #define DC_GCFG_CKWR		0x00800000      /* clock write              */
 #define DC_GCFG_LDBL		0x01000000      /* line double              */
 #define DC_GCFG_DIAG		0x02000000      /* FIFO diagnostic mode     */
@@ -229,7 +229,7 @@
 #define DC_TCFG_PXDB		0x00008000      /* pixel double             */
 #define DC_TCFG_BKRT		0x00010000      /* blink rate               */
 #define DC_TCFG_PSD_MASK	0x000E0000      /* power sequence delay     */
-#define DC_TCFG_PSD_POS		17     /* power sequence delay     */
+#define DC_TCFG_PSD_POS		17      /* power sequence delay     */
 #define DC_TCFG_DDCI		0x08000000      /* DDC input (RO)           */
 #define DC_TCFG_SENS		0x10000000      /* monitor sense (RO)       */
 #define DC_TCFG_DNA			0x20000000      /* display not active (RO)  */
@@ -261,7 +261,7 @@
 
 /* MC_MEM_CNTRL1 BIT DEFINITIONS */
 
-#define MC_XBUSARB          0x00000008 /* 0 = GP priority < CPU priority */
+#define MC_XBUSARB          0x00000008  /* 0 = GP priority < CPU priority */
                                                                                         /* 1 = GP priority = CPU priority */
                                                                                         /* GXm databook V2.0 is wrong ! */
 /*----------*/
@@ -1200,14 +1200,14 @@
 
 /* GEODELINK DEVICE MSR REGISTER SUMMARY */
 
-#define MBD_MSR_CAP         0x2000     /* Device Capabilities              */
-#define MBD_MSR_CONFIG      0x2001     /* Device Master Configuration          */
+#define MBD_MSR_CAP         0x2000      /* Device Capabilities              */
+#define MBD_MSR_CONFIG      0x2001      /* Device Master Configuration          */
                                                                                 /*      Register                                                */
-#define MBD_MSR_SMI         0x2002     /* MBus Device SMI Register         */
-#define MBD_MSR_ERROR       0x2003     /* MBus Device Error                */
-#define MBD_MSR_PM          0x2004     /* MBus Device Power Management         */
+#define MBD_MSR_SMI         0x2002      /* MBus Device SMI Register         */
+#define MBD_MSR_ERROR       0x2003      /* MBus Device Error                */
+#define MBD_MSR_PM          0x2004      /* MBus Device Power Management         */
                                                                                 /*      Register                                                */
-#define MBD_MSR_DIAG        0x2005     /* Mbus Device Diagnostic Register  */
+#define MBD_MSR_DIAG        0x2005      /* Mbus Device Diagnostic Register  */
 
 /* DISPLAY FILTER MBD_MSR_DIAG DEFINITIONS */
 

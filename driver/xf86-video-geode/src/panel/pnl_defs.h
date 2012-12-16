@@ -33,8 +33,7 @@
 #ifndef _pnl_defs_h
 #define _pnl_defs_h
 
-typedef enum
-{
+typedef enum {
     MARMOT_PLATFORM = 0,
     UNICORN_PLATFORM,
     CENTAURUS_PLATFORM,
@@ -45,8 +44,7 @@ typedef enum
     DRACO_PLATFORM,
     REDCLOUD_PLATFORM,
     OTHER_PLATFORM
-}
-SYS_BOARD;
+} SYS_BOARD;
 
 #define PNL_9210             0x01
 #define PNL_9211_A           0x02
@@ -70,26 +68,22 @@ SYS_BOARD;
 #define PNL_OVERRIDE_STAT    0x10
 #define PNL_OVERRIDE_ALL     0x1F
 
-typedef struct _Pnl_PanelStat_
-{
+typedef struct _Pnl_PanelStat_ {
     int Type;
     int XRes;
     int YRes;
     int Depth;
     int MonoColor;
-}
-Pnl_PanelStat;
+} Pnl_PanelStat;
 
-typedef struct _Pnl_Params_
-{
+typedef struct _Pnl_Params_ {
     unsigned long Flags;
     int PanelPresent;
     int Platform;
     int PanelChip;
     Pnl_PanelStat PanelStat;
-}
-Pnl_PanelParams, *PPnl_PanelParams;
+} Pnl_PanelParams, *PPnl_PanelParams;
 
-#endif /* _pnl_defs_h */
+#endif                          /* _pnl_defs_h */
 
 /* END OF FILE */

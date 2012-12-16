@@ -44,8 +44,7 @@
 /* COMPILER OPTION FOR C++ PROGRAMS */
 
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
 
 /* DURANGO MEMORY POINTERS */
@@ -126,13 +125,13 @@ extern "C"
     int gfx_msr_init(void);
     DEV_STATUS gfx_id_msr_device(MSR * pDev, unsigned long address);
     DEV_STATUS gfx_get_msr_dev_address(unsigned int device,
-        unsigned long *address);
+                                       unsigned long *address);
     DEV_STATUS gfx_get_glink_id_at_address(unsigned int *device,
-        unsigned long address);
+                                           unsigned long address);
     DEV_STATUS gfx_msr_read(unsigned int device, unsigned int msrRegister,
-        Q_WORD * msrValue);
+                            Q_WORD * msrValue);
     DEV_STATUS gfx_msr_write(unsigned int device, unsigned int msrRegister,
-        Q_WORD * msrValue);
+                             Q_WORD * msrValue);
 
 /* ROUTINES IN GFX_DISP.C */
 
@@ -140,18 +139,22 @@ extern "C"
     int gfx_is_display_mode_supported(int xres, int yres, int bpp, int hz);
     int gfx_set_display_mode(int xres, int yres, int bpp, int hz);
     int gfx_set_display_timings(unsigned short bpp, unsigned short flags,
-        unsigned short hactive, unsigned short hblank_start,
-        unsigned short hsync_start, unsigned short hsync_end,
-        unsigned short hblank_end, unsigned short htotal,
-        unsigned short vactive, unsigned short vblank_start,
-        unsigned short vsync_start, unsigned short vsync_end,
-        unsigned short vblank_end, unsigned short vtotal,
-        unsigned long frequency);
+                                unsigned short hactive,
+                                unsigned short hblank_start,
+                                unsigned short hsync_start,
+                                unsigned short hsync_end,
+                                unsigned short hblank_end,
+                                unsigned short htotal, unsigned short vactive,
+                                unsigned short vblank_start,
+                                unsigned short vsync_start,
+                                unsigned short vsync_end,
+                                unsigned short vblank_end,
+                                unsigned short vtotal, unsigned long frequency);
     int gfx_set_vtotal(unsigned short vtotal);
     void gfx_set_display_pitch(unsigned short pitch);
     void gfx_set_display_offset(unsigned long offset);
     int gfx_set_display_palette_entry(unsigned long index,
-        unsigned long palette);
+                                      unsigned long palette);
     int gfx_set_display_palette(unsigned long *palette);
     void gfx_video_shutdown(void);
     void gfx_set_clock_frequency(unsigned long frequency);
@@ -159,18 +162,19 @@ extern "C"
     void gfx_set_cursor_enable(int enable);
     void gfx_set_cursor_colors(unsigned long bkcolor, unsigned long fgcolor);
     void gfx_set_cursor_position(unsigned long memoffset,
-        unsigned short xpos, unsigned short ypos,
-        unsigned short xhotspot, unsigned short yhotspot);
-    void gfx_set_cursor_shape32(unsigned long memoffset,
-        unsigned long *andmask, unsigned long *xormask);
-    void gfx_set_cursor_shape64(unsigned long memoffset,
-        unsigned long *andmask, unsigned long *xormask);
+                                 unsigned short xpos, unsigned short ypos,
+                                 unsigned short xhotspot,
+                                 unsigned short yhotspot);
+    void gfx_set_cursor_shape32(unsigned long memoffset, unsigned long *andmask,
+                                unsigned long *xormask);
+    void gfx_set_cursor_shape64(unsigned long memoffset, unsigned long *andmask,
+                                unsigned long *xormask);
     void gfx_set_icon_enable(int enable);
     void gfx_set_icon_colors(unsigned long color0, unsigned long color1,
-        unsigned long color2);
+                             unsigned long color2);
     void gfx_set_icon_position(unsigned long memoffset, unsigned short xpos);
     void gfx_set_icon_shape64(unsigned long memoffset, unsigned long *andmask,
-        unsigned long *xormask, unsigned int lines);
+                              unsigned long *xormask, unsigned int lines);
 
     int gfx_set_compression_enable(int enable);
     int gfx_set_compression_offset(unsigned long offset);
@@ -184,30 +188,33 @@ extern "C"
     void gfx_delay_microseconds(unsigned long microseconds);
     void gfx_enable_panning(int x, int y);
     int gfx_is_panel_mode_supported(int panelResX, int panelResY,
-        unsigned short width, unsigned short height, unsigned short bpp);
+                                    unsigned short width, unsigned short height,
+                                    unsigned short bpp);
     int gfx_set_fixed_timings(int panelResX, int panelResY,
-        unsigned short width, unsigned short height, unsigned short bpp);
+                              unsigned short width, unsigned short height,
+                              unsigned short bpp);
     int gfx_set_panel_present(int panelResX, int panelResY,
-        unsigned short width, unsigned short height, unsigned short bpp);
+                              unsigned short width, unsigned short height,
+                              unsigned short bpp);
     void gfx_reset_timing_lock(void);
 
 /* "READ" ROUTINES IN GFX_DISP.C */
 
     int gfx_get_display_details(unsigned int mode, int *xres, int *yres,
-        int *hz);
+                                int *hz);
     unsigned short gfx_get_display_pitch(void);
     int gfx_get_vsa2_softvga_enable(void);
     int gfx_get_sync_polarities(void);
     unsigned long gfx_get_clock_frequency(void);
     unsigned long gfx_get_max_supported_pixel_clock(void);
     int gfx_mode_frequency_supported(int xres, int yres, int bpp,
-        unsigned long frequency);
+                                     unsigned long frequency);
     int gfx_get_refreshrate_from_frequency(int xres, int yres, int bpp,
-        int *hz, unsigned long frequency);
+                                           int *hz, unsigned long frequency);
     int gfx_get_refreshrate_from_mode(int xres, int yres, int bpp, int *hz,
-        unsigned long frequency);
+                                      unsigned long frequency);
     int gfx_get_frequency_from_refreshrate(int xres, int yres, int bpp,
-        int hz, int *frequency);
+                                           int hz, int *frequency);
     int gfx_get_display_mode_count(void);
     int gfx_get_display_mode(int *xres, int *yres, int *bpp, int *hz);
     unsigned long gfx_get_frame_buffer_line_size(void);
@@ -227,7 +234,7 @@ extern "C"
     unsigned short gfx_get_display_bpp(void);
     unsigned long gfx_get_display_offset(void);
     int gfx_get_display_palette_entry(unsigned long index,
-        unsigned long *palette);
+                                      unsigned long *palette);
     void gfx_get_display_palette(unsigned long *palette);
     unsigned long gfx_get_cursor_enable(void);
     unsigned long gfx_get_cursor_offset(void);
@@ -250,44 +257,57 @@ extern "C"
     void gfx_set_bpp(unsigned short bpp);
     void gfx_set_solid_pattern(unsigned long color);
     void gfx_set_mono_pattern(unsigned long bgcolor, unsigned long fgcolor,
-        unsigned long data0, unsigned long data1, unsigned char transparency);
+                              unsigned long data0, unsigned long data1,
+                              unsigned char transparency);
     void gfx_set_color_pattern(unsigned long bgcolor, unsigned long fgcolor,
-        unsigned long data0, unsigned long data1, unsigned long data2,
-        unsigned long data3, unsigned char transparency);
+                               unsigned long data0, unsigned long data1,
+                               unsigned long data2, unsigned long data3,
+                               unsigned char transparency);
     void gfx_load_color_pattern_line(short y, unsigned long *pattern_8x8);
     void gfx_set_solid_source(unsigned long color);
     void gfx_set_mono_source(unsigned long bgcolor, unsigned long fgcolor,
-        unsigned short transparent);
+                             unsigned short transparent);
     void gfx_set_pattern_flags(unsigned short flags);
     void gfx_set_raster_operation(unsigned char rop);
     void gfx_pattern_fill(unsigned short x, unsigned short y,
-        unsigned short width, unsigned short height);
+                          unsigned short width, unsigned short height);
     void gfx_color_pattern_fill(unsigned short x, unsigned short y,
-        unsigned short width, unsigned short height, unsigned long *pattern);
+                                unsigned short width, unsigned short height,
+                                unsigned long *pattern);
     void gfx_screen_to_screen_blt(unsigned short srcx, unsigned short srcy,
-        unsigned short dstx, unsigned short dsty, unsigned short width,
-        unsigned short height);
+                                  unsigned short dstx, unsigned short dsty,
+                                  unsigned short width, unsigned short height);
     void gfx_screen_to_screen_xblt(unsigned short srcx, unsigned short srcy,
-        unsigned short dstx, unsigned short dsty, unsigned short width,
-        unsigned short height, unsigned long color);
+                                   unsigned short dstx, unsigned short dsty,
+                                   unsigned short width, unsigned short height,
+                                   unsigned long color);
     void gfx_color_bitmap_to_screen_blt(unsigned short srcx,
-        unsigned short srcy, unsigned short dstx, unsigned short dsty,
-        unsigned short width, unsigned short height, unsigned char *data,
-        long pitch);
+                                        unsigned short srcy,
+                                        unsigned short dstx,
+                                        unsigned short dsty,
+                                        unsigned short width,
+                                        unsigned short height,
+                                        unsigned char *data, long pitch);
     void gfx_color_bitmap_to_screen_xblt(unsigned short srcx,
-        unsigned short srcy, unsigned short dstx, unsigned short dsty,
-        unsigned short width, unsigned short height, unsigned char *data,
-        long pitch, unsigned long color);
-    void gfx_mono_bitmap_to_screen_blt(unsigned short srcx,
-        unsigned short srcy, unsigned short dstx, unsigned short dsty,
-        unsigned short width, unsigned short height, unsigned char *data,
-        short pitch);
+                                         unsigned short srcy,
+                                         unsigned short dstx,
+                                         unsigned short dsty,
+                                         unsigned short width,
+                                         unsigned short height,
+                                         unsigned char *data, long pitch,
+                                         unsigned long color);
+    void gfx_mono_bitmap_to_screen_blt(unsigned short srcx, unsigned short srcy,
+                                       unsigned short dstx, unsigned short dsty,
+                                       unsigned short width,
+                                       unsigned short height,
+                                       unsigned char *data, short pitch);
     void gfx_text_blt(unsigned short dstx, unsigned short dsty,
-        unsigned short width, unsigned short height, unsigned char *data);
+                      unsigned short width, unsigned short height,
+                      unsigned char *data);
     void gfx_bresenham_line(unsigned short x, unsigned short y,
-        unsigned short length, unsigned short initerr,
-        unsigned short axialerr, unsigned short diagerr,
-        unsigned short flags);
+                            unsigned short length, unsigned short initerr,
+                            unsigned short axialerr, unsigned short diagerr,
+                            unsigned short flags);
     void gfx_wait_until_idle(void);
     int gfx_test_blt_pending(void);
 
@@ -296,31 +316,39 @@ extern "C"
     void gfx2_set_source_stride(unsigned short stride);
     void gfx2_set_destination_stride(unsigned short stride);
     void gfx2_set_pattern_origin(int x, int y);
-    void gfx2_set_source_transparency(unsigned long color,
-        unsigned long mask);
+    void gfx2_set_source_transparency(unsigned long color, unsigned long mask);
     void gfx2_set_alpha_mode(int mode);
     void gfx2_set_alpha_value(unsigned char value);
     void gfx2_pattern_fill(unsigned long dstoffset, unsigned short width,
-        unsigned short height);
+                           unsigned short height);
     void gfx2_color_pattern_fill(unsigned long dstoffset,
-        unsigned short width, unsigned short height, unsigned long *pattern);
+                                 unsigned short width, unsigned short height,
+                                 unsigned long *pattern);
     void gfx2_screen_to_screen_blt(unsigned long srcoffset,
-        unsigned long dstoffset, unsigned short width, unsigned short height,
-        int flags);
+                                   unsigned long dstoffset,
+                                   unsigned short width, unsigned short height,
+                                   int flags);
     void gfx2_mono_expand_blt(unsigned long srcbase, unsigned short srcx,
-        unsigned short srcy, unsigned long dstoffset, unsigned short width,
-        unsigned short height, int byte_packed);
+                              unsigned short srcy, unsigned long dstoffset,
+                              unsigned short width, unsigned short height,
+                              int byte_packed);
     void gfx2_color_bitmap_to_screen_blt(unsigned short srcx,
-        unsigned short srcy, unsigned long dstoffset, unsigned short width,
-        unsigned short height, unsigned char *data, short pitch);
+                                         unsigned short srcy,
+                                         unsigned long dstoffset,
+                                         unsigned short width,
+                                         unsigned short height,
+                                         unsigned char *data, short pitch);
     void gfx2_mono_bitmap_to_screen_blt(unsigned short srcx,
-        unsigned short srcy, unsigned long dstoffset, unsigned short width,
-        unsigned short height, unsigned char *data, short pitch);
+                                        unsigned short srcy,
+                                        unsigned long dstoffset,
+                                        unsigned short width,
+                                        unsigned short height,
+                                        unsigned char *data, short pitch);
     void gfx2_text_blt(unsigned long dstoffset, unsigned short width,
-        unsigned short height, unsigned char *data);
+                       unsigned short height, unsigned char *data);
     void gfx2_bresenham_line(unsigned long dstoffset, unsigned short length,
-        unsigned short initerr, unsigned short axialerr,
-        unsigned short diagerr, unsigned short flags);
+                             unsigned short initerr, unsigned short axialerr,
+                             unsigned short diagerr, unsigned short flags);
     void gfx2_sync_to_vblank(void);
 
 /* ROUTINES IN GFX_VID.C */
@@ -331,29 +359,31 @@ extern "C"
     int gfx_set_video_yuv_pitch(unsigned long ypitch, unsigned long uvpitch);
     int gfx_set_video_offset(unsigned long offset);
     int gfx_set_video_yuv_offsets(unsigned long yoffset,
-        unsigned long uoffset, unsigned long voffset);
+                                  unsigned long uoffset, unsigned long voffset);
     int gfx_set_video_window(short x, short y, unsigned short w,
-        unsigned short h);
+                             unsigned short h);
     int gfx_set_video_left_crop(unsigned short x);
     int gfx_set_video_upscale(unsigned short srcw, unsigned short srch,
-        unsigned short dstw, unsigned short dsth);
+                              unsigned short dstw, unsigned short dsth);
     int gfx_set_video_scale(unsigned short srcw, unsigned short srch,
-        unsigned short dstw, unsigned short dsth);
+                            unsigned short dstw, unsigned short dsth);
     int gfx_set_video_vertical_downscale(unsigned short srch,
-        unsigned short dsth);
+                                         unsigned short dsth);
     void gfx_set_video_vertical_downscale_enable(int enable);
     int gfx_set_video_downscale_config(unsigned short type, unsigned short m);
     int gfx_set_video_color_key(unsigned long key, unsigned long mask,
-        int bluescreen);
+                                int bluescreen);
     int gfx_set_video_filter(int xfilter, int yfilter);
     int gfx_set_video_palette(unsigned long *palette);
     int gfx_set_graphics_palette(unsigned long *palette);
     int gfx_set_video_palette_bypass(int enable);
     int gfx_set_video_palette_entry(unsigned long index, unsigned long color);
     int gfx_set_graphics_palette_entry(unsigned long index,
-        unsigned long color);
+                                       unsigned long color);
     int gfx_set_video_downscale_coefficients(unsigned short coef1,
-        unsigned short coef2, unsigned short coef3, unsigned short coef4);
+                                             unsigned short coef2,
+                                             unsigned short coef3,
+                                             unsigned short coef4);
     int gfx_set_video_downscale_enable(int enable);
     int gfx_set_video_source(VideoSourceType source);
     int gfx_set_vbi_source(VbiSourceType source);
@@ -366,15 +396,15 @@ extern "C"
     int gfx_set_genlock_delay(unsigned long delay);
     int gfx_set_genlock_enable(int flags);
     int gfx_set_video_cursor(unsigned long key, unsigned long mask,
-        unsigned short select_color2, unsigned long color1,
-        unsigned long color2);
+                             unsigned short select_color2, unsigned long color1,
+                             unsigned long color2);
     int gfx_set_video_cursor_enable(int enable);
     int gfx_set_video_request(short x, short y);
 
     int gfx_select_alpha_region(int region);
     int gfx_set_alpha_enable(int enable);
     int gfx_set_alpha_window(short x, short y,
-        unsigned short width, unsigned short height);
+                             unsigned short width, unsigned short height);
     int gfx_set_alpha_value(unsigned char alpha, char delta);
     int gfx_set_alpha_priority(int priority);
     int gfx_set_alpha_color(unsigned long color);
@@ -394,24 +424,25 @@ extern "C"
     unsigned long gfx_get_video_xclip(void);
     unsigned long gfx_get_video_offset(void);
     void gfx_get_video_yuv_offsets(unsigned long *yoffset,
-        unsigned long *uoffset, unsigned long *voffset);
-    void gfx_get_video_yuv_pitch(unsigned long *ypitch,
-        unsigned long *uvpitch);
+                                   unsigned long *uoffset,
+                                   unsigned long *voffset);
+    void gfx_get_video_yuv_pitch(unsigned long *ypitch, unsigned long *uvpitch);
     unsigned long gfx_get_video_upscale(void);
     unsigned long gfx_get_video_scale(void);
     unsigned long gfx_get_video_downscale_delta(void);
     int gfx_get_video_vertical_downscale_enable(void);
-    int gfx_get_video_downscale_config(unsigned short *type,
-        unsigned short *m);
+    int gfx_get_video_downscale_config(unsigned short *type, unsigned short *m);
     void gfx_get_video_downscale_coefficients(unsigned short *coef1,
-        unsigned short *coef2, unsigned short *coef3, unsigned short *coef4);
+                                              unsigned short *coef2,
+                                              unsigned short *coef3,
+                                              unsigned short *coef4);
     void gfx_get_video_downscale_enable(int *enable);
     unsigned long gfx_get_video_dst_size(void);
     unsigned long gfx_get_video_position(void);
     unsigned long gfx_get_video_color_key(void);
     unsigned long gfx_get_video_color_key_mask(void);
     int gfx_get_video_palette_entry(unsigned long index,
-        unsigned long *palette);
+                                    unsigned long *palette);
     int gfx_get_video_color_key_src(void);
     int gfx_get_video_filter(void);
     int gfx_get_video_request(short *x, short *y);
@@ -425,18 +456,18 @@ extern "C"
     unsigned long gfx_get_genlock_delay(void);
     int gfx_get_genlock_enable(void);
     int gfx_get_video_cursor(unsigned long *key, unsigned long *mask,
-        unsigned short *select_color2, unsigned long *color1,
-        unsigned short *color2);
+                             unsigned short *select_color2,
+                             unsigned long *color1, unsigned short *color2);
     unsigned long gfx_read_crc(void);
     unsigned long gfx_read_crc32(void);
     unsigned long gfx_read_window_crc(int source, unsigned short x,
-        unsigned short y, unsigned short width, unsigned short height,
-        int crc32);
+                                      unsigned short y, unsigned short width,
+                                      unsigned short height, int crc32);
     int gfx_get_macrovision_enable(void);
 
     void gfx_get_alpha_enable(int *enable);
     void gfx_get_alpha_size(unsigned short *x, unsigned short *y,
-        unsigned short *width, unsigned short *height);
+                            unsigned short *width, unsigned short *height);
     void gfx_get_alpha_value(unsigned char *alpha, char *delta);
     void gfx_get_alpha_priority(int *priority);
     void gfx_get_alpha_color(unsigned long *color);
@@ -484,12 +515,11 @@ extern "C"
     int gfx_set_decoder_hue(char hue);
     int gfx_set_decoder_saturation(unsigned char saturation);
     int gfx_set_decoder_input_offset(unsigned short x, unsigned short y);
-    int gfx_set_decoder_input_size(unsigned short width,
-        unsigned short height);
+    int gfx_set_decoder_input_size(unsigned short width, unsigned short height);
     int gfx_set_decoder_output_size(unsigned short width,
-        unsigned short height);
+                                    unsigned short height);
     int gfx_set_decoder_scale(unsigned short srcw, unsigned short srch,
-        unsigned short dstw, unsigned short dsth);
+                              unsigned short dstw, unsigned short dsth);
     int gfx_set_decoder_vbi_format(int start, int end, int format);
     int gfx_set_decoder_vbi_enable(int enable);
     int gfx_set_decoder_vbi_upscale(void);
@@ -514,9 +544,11 @@ extern "C"
 
     int gfx_i2c_reset(unsigned char busnum, short adr, char freq);
     int gfx_i2c_write(unsigned char busnum, unsigned char chipadr,
-        unsigned char subadr, unsigned char bytes, unsigned char *data);
+                      unsigned char subadr, unsigned char bytes,
+                      unsigned char *data);
     int gfx_i2c_read(unsigned char busnum, unsigned char chipadr,
-        unsigned char subadr, unsigned char bytes, unsigned char *data);
+                     unsigned char subadr, unsigned char bytes,
+                     unsigned char *data);
     int gfx_i2c_select_gpio(int clock, int data);
     int gfx_i2c_init(void);
     void gfx_i2c_cleanup(void);
@@ -543,9 +575,12 @@ extern "C"
     int gfx_get_tv_mode_count(TVStandardType format);
     int gfx_get_tv_display_mode(int *width, int *height, int *bpp, int *hz);
     int gfx_get_tv_display_mode_frequency(unsigned short width,
-        unsigned short height, TVStandardType format, int *frequency);
+                                          unsigned short height,
+                                          TVStandardType format,
+                                          int *frequency);
     int gfx_is_tv_display_mode_supported(unsigned short width,
-        unsigned short height, TVStandardType format);
+                                         unsigned short height,
+                                         TVStandardType format);
 
     int gfx_get_tv_standard(unsigned long *p_standard);
     int gfx_get_available_tv_standards(unsigned long *p_standards);
@@ -582,8 +617,7 @@ extern "C"
     int gfx_vga_set_pci_command(unsigned char command);
     int gfx_vga_seq_reset(int reset);
     int gfx_vga_set_graphics_bits(void);
-    int gfx_vga_mode(gfx_vga_struct * vga, int xres, int yres, int bpp,
-        int hz);
+    int gfx_vga_mode(gfx_vga_struct * vga, int xres, int yres, int bpp, int hz);
     int gfx_vga_pitch(gfx_vga_struct * vga, unsigned short pitch);
     int gfx_vga_save(gfx_vga_struct * vga, int flags);
     int gfx_vga_restore(gfx_vga_struct * vga, int flags);
@@ -595,7 +629,5 @@ extern "C"
 #ifdef __cplusplus
 }
 #endif
-
-#endif                                 /* !_gfx_rtns_h */
-
+#endif                          /* !_gfx_rtns_h */
 /* END OF FILE */

@@ -43,8 +43,7 @@ CIMARRON_STATIC unsigned long init_video_base = 0x80000900;
  *---------------------------------------------------------------------------*/
 
 int
-init_detect_cpu(unsigned long *cpu_revision,
-    unsigned long *companion_revision)
+init_detect_cpu(unsigned long *cpu_revision, unsigned long *companion_revision)
 {
     unsigned long bus, device, i;
     unsigned long cpu_bus = 0, cpu_device = 0;
@@ -74,7 +73,8 @@ init_detect_cpu(unsigned long *cpu_revision,
                     *cpu_revision = CIM_CPU_GEODEGX;
                 else
                     *cpu_revision = CIM_CPU_GEODELX;
-            } else if (data == PCI_VENDOR_5535 || data == PCI_VENDOR_5536) {
+            }
+            else if (data == PCI_VENDOR_5535 || data == PCI_VENDOR_5536) {
                 sb_found = 1;
                 if (data == PCI_VENDOR_5535)
                     *companion_revision = CIM_SB_5535;
@@ -97,7 +97,7 @@ init_detect_cpu(unsigned long *cpu_revision,
     msr_init_table();
 
     if (msr_read64(MSR_DEVICE_GEODELX_GLCP, GLCP_REVID,
-            &msr_value) != CIM_STATUS_OK) {
+                   &msr_value) != CIM_STATUS_OK) {
         *cpu_revision = 0;
         return CIM_STATUS_CPUNOTFOUND;
     }
@@ -106,7 +106,7 @@ init_detect_cpu(unsigned long *cpu_revision,
         ((msr_value.low & 0x0F) << 16);
 
     if (msr_read64(MSR_DEVICE_5535_GLCP, GLCP_REVID,
-            &msr_value) != CIM_STATUS_OK) {
+                   &msr_value) != CIM_STATUS_OK) {
         *cpu_revision = 0;
         return CIM_STATUS_CPUNOTFOUND;
     }
@@ -125,7 +125,8 @@ init_detect_cpu(unsigned long *cpu_revision,
         if (data == PCI_VENDOR_DEVICE_GEODEGX_VIDEO) {
             num_bars = 4;
             break;
-        } else if (data == PCI_VENDOR_DEVICE_GEODELX_VIDEO) {
+        }
+        else if (data == PCI_VENDOR_DEVICE_GEODELX_VIDEO) {
             num_bars = 5;
             break;
         }
@@ -194,7 +195,7 @@ init_read_base_addresses(INIT_BASE_ADDRESSES * base_addresses)
     OUTW(0xAC1C, 0xFC53);
     OUTW(0xAC1C, 0x0200);
 
-    value = (unsigned long)(INW(0xAC1E)) & 0xFE;
+    value = (unsigned long) (INW(0xAC1E)) & 0xFE;
 
     base_addresses->framebuffer_size = value << 20;
 
@@ -217,7 +218,7 @@ init_read_cpu_frequency(unsigned long *cpu_frequency)
     OUTW(0xAC1C, 0xFC53);
     OUTW(0xAC1C, 0x1201);
 
-    *cpu_frequency = (unsigned long)(INW(0xAC1E));
+    *cpu_frequency = (unsigned long) (INW(0xAC1E));
 
     return CIM_STATUS_OK;
 }

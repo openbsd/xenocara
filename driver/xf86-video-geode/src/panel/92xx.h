@@ -114,8 +114,7 @@ typedef unsigned char UCHAR;
 /* GPIO Control */
 int Pnl_Rev_ID;
 
-typedef struct
-{
+typedef struct {
     /* DISPLAY MODE PARAMETERS */
     int xres;
     int yres;
@@ -140,12 +139,10 @@ typedef struct
     unsigned long frm_memory_data;
     unsigned long memory_control;
 
-}
-CS92xx_MODE;
+} CS92xx_MODE;
 
 /* VALUES USED TO SAVE AND RESTORE 9211 REGISTERS. */
-typedef struct
-{
+typedef struct {
     unsigned long panel_state;
     /* VALUES USED TO SET THE FLAT PANEL DISPLAY CONTROLLER */
     unsigned long panel_timing1;
@@ -157,8 +154,7 @@ typedef struct
     unsigned long frm_memory_index;
     unsigned long frm_memory_data;
     unsigned long memory_control;
-}
-CS92xx_REGS;
+} CS92xx_REGS;
 
 CS92xx_REGS cs9211_regs;
 
@@ -171,200 +167,200 @@ CS92xx_REGS cs9211_regs;
 CS92xx_MODE FPModeParams[] = {
 
     {640, 480, 8, PNL_SSTN, PNL_COLOR_PANEL,    /* display parameters */
-            0x01e00000, 0x00034000,    /* panel timing reg 1, panel timing */
-            /* reg 2                                                        */
-            0x01000000,                /* power management                             */
-            /* The next 5 values are prior to revision C                                        */
-            0x00000050,                /* dither and frame rate control        */
-            0x25cf3096, 0xad47b81e,    /* block select 1, block select 2       */
-            0x21446450, 0x21446450,    /* dispersion 1, dispersion 2           */
-            /* The next 5 values are for revision C                                                     */
-            0x00000050,                /* dither and frame rate control        */
-            0x00000000, 0x00000000,    /* blue LSFR, red and green LSFR        */
-            0x00000000, 0x00000000,    /* FRM memory index, FRM memory data */
-            0x00000000,                /* memory control                                       */
-        },
+     0x01e00000, 0x00034000,    /* panel timing reg 1, panel timing */
+     /* reg 2                                                        */
+     0x01000000,                /* power management                             */
+     /* The next 5 values are prior to revision C                                        */
+     0x00000050,                /* dither and frame rate control        */
+     0x25cf3096, 0xad47b81e,    /* block select 1, block select 2       */
+     0x21446450, 0x21446450,    /* dispersion 1, dispersion 2           */
+     /* The next 5 values are for revision C                                                     */
+     0x00000050,                /* dither and frame rate control        */
+     0x00000000, 0x00000000,    /* blue LSFR, red and green LSFR        */
+     0x00000000, 0x00000000,    /* FRM memory index, FRM memory data */
+     0x00000000,                /* memory control                                       */
+     },
 
     {640, 480, 12, PNL_TFT, PNL_COLOR_PANEL,    /* display parameters */
-            0x01e00000, 0x0f100000,    /* panel timing reg 1, panel timing */
-            /* reg 2                                                        */
-            0x01000000,                /* power management                             */
-            /* The next 5 values are prior to revision C                                        */
-            0x00000050,                /* dither and frame rate control        */
-            0x00000000, 0x00000000,    /* block select 1, block select 2       */
-            0x00000000, 0x00000000,    /* dispersion 1, dispersion 2           */
-            /* The next 5 values are for revision C                                             */
-            0x00000050,                /* dither and frame rate control        */
-            0x00000000, 0x00000000,    /* blue LSFR, red and green LSFR        */
-            0x00000000, 0x00000000,    /* FRM memory index, FRM memory data */
-            0x00000000,                /* memory control                                       */
-        },
+     0x01e00000, 0x0f100000,    /* panel timing reg 1, panel timing */
+     /* reg 2                                                        */
+     0x01000000,                /* power management                             */
+     /* The next 5 values are prior to revision C                                        */
+     0x00000050,                /* dither and frame rate control        */
+     0x00000000, 0x00000000,    /* block select 1, block select 2       */
+     0x00000000, 0x00000000,    /* dispersion 1, dispersion 2           */
+     /* The next 5 values are for revision C                                             */
+     0x00000050,                /* dither and frame rate control        */
+     0x00000000, 0x00000000,    /* blue LSFR, red and green LSFR        */
+     0x00000000, 0x00000000,    /* FRM memory index, FRM memory data */
+     0x00000000,                /* memory control                                       */
+     },
 
     {640, 480, 18, PNL_TFT, PNL_COLOR_PANEL,    /* display parameters */
-            0x01e00000, 0x0f100000,    /* panel timing reg 1, panel timing */
-            /* reg 2                                                        */
-            0x01000000,                /* power management                             */
-            /* The next 5 values are prior to revision C                                        */
-            0x00000050,                /* dither and frame rate control        */
-            0x00000000, 0x00000000,    /* block select 1, block select 2       */
-            0x00000000, 0x00000000,    /* dispersion 1, dispersion 2           */
-            /* The next 5 values are for revision C */
-            0x00000050,                /* dither and frame rate control        */
-            0x00000000, 0x00000000,    /* blue LSFR, red and green LSFR        */
-            0x00000000, 0x00000000,    /* FRM memory index, FRM memory data */
-            0x00000000,                /* memory control                                       */
-        },
+     0x01e00000, 0x0f100000,    /* panel timing reg 1, panel timing */
+     /* reg 2                                                        */
+     0x01000000,                /* power management                             */
+     /* The next 5 values are prior to revision C                                        */
+     0x00000050,                /* dither and frame rate control        */
+     0x00000000, 0x00000000,    /* block select 1, block select 2       */
+     0x00000000, 0x00000000,    /* dispersion 1, dispersion 2           */
+     /* The next 5 values are for revision C */
+     0x00000050,                /* dither and frame rate control        */
+     0x00000000, 0x00000000,    /* blue LSFR, red and green LSFR        */
+     0x00000000, 0x00000000,    /* FRM memory index, FRM memory data */
+     0x00000000,                /* memory control                                       */
+     },
 
     {640, 480, 16, PNL_DSTN, PNL_COLOR_PANEL,   /* display parameters */
-            0x01e00000, 0x00014000,    /* panel timing reg 1, panel timing */
-            /* reg 2                                                        */
-            0x01000000,                /* power management                             */
-            /* The next 5 values are prior to revision C */
-            0x00000050,                /* dither and frame rate control        */
-            0x048c26ae, 0x048c26ae,    /* block select 1, block select 2       */
-            0x02468ace, 0x13579bdf,    /* dispersion 1, dispersion 2           */
-            /* The next 5 values are for revision C */
-            0x0000004b,                /* dither and frame rate control        */
-            0x00000000, 0x00000000,    /* blue LSFR, red and green LSFR        */
-            0x00000000, 0x00000000,    /* FRM memory index, FRM memory data */
-            0x00000007,                /* memory control                                       */
-        },
+     0x01e00000, 0x00014000,    /* panel timing reg 1, panel timing */
+     /* reg 2                                                        */
+     0x01000000,                /* power management                             */
+     /* The next 5 values are prior to revision C */
+     0x00000050,                /* dither and frame rate control        */
+     0x048c26ae, 0x048c26ae,    /* block select 1, block select 2       */
+     0x02468ace, 0x13579bdf,    /* dispersion 1, dispersion 2           */
+     /* The next 5 values are for revision C */
+     0x0000004b,                /* dither and frame rate control        */
+     0x00000000, 0x00000000,    /* blue LSFR, red and green LSFR        */
+     0x00000000, 0x00000000,    /* FRM memory index, FRM memory data */
+     0x00000007,                /* memory control                                       */
+     },
 
     {640, 480, 8, PNL_DSTN, PNL_MONO_PANEL,     /* display parameters */
-            0x01e00000, 0x00084000,    /* panel timing reg 1, panel timing */
-            /* reg 2                                                        */
-            0x01000000,                /* power management                             */
-            /* The next 5 values are prior to revision C */
-            0x0000004b,                /* dither and frame rate control        */
-            0x25cf3096, 0xad47b81e,    /* block select 1, block select 2       */
-            0x21446450, 0x21446450,    /* dispersion 1, dispersion 2           */
-            /* The next 5 values are for revision C  */
-            0x00000050,                /* dither and frame rate control        */
-            0x00000000, 0x00000000,    /* blue LSFR, red and green LSFR        */
-            0x00000000, 0x00000000,    /* FRM memory index, FRM memory data */
-            0x00000007,                /* memory control                                       */
-        },
+     0x01e00000, 0x00084000,    /* panel timing reg 1, panel timing */
+     /* reg 2                                                        */
+     0x01000000,                /* power management                             */
+     /* The next 5 values are prior to revision C */
+     0x0000004b,                /* dither and frame rate control        */
+     0x25cf3096, 0xad47b81e,    /* block select 1, block select 2       */
+     0x21446450, 0x21446450,    /* dispersion 1, dispersion 2           */
+     /* The next 5 values are for revision C  */
+     0x00000050,                /* dither and frame rate control        */
+     0x00000000, 0x00000000,    /* blue LSFR, red and green LSFR        */
+     0x00000000, 0x00000000,    /* FRM memory index, FRM memory data */
+     0x00000007,                /* memory control                                       */
+     },
 
     {640, 480, 16, PNL_DSTN, PNL_MONO_PANEL,    /* display parameters */
-            0x01e00000, 0x00094000,    /* panel timing reg 1, panel timing */
-            /* reg 2                                                        */
-            0x01000000,                /* power management                             */
-            /* The next 5 values are prior to revision C */
-            0x00000050,                /* dither and frame rate control        */
-            0x25cf3096, 0xad47b81e,    /* block select 1, block select 2       */
-            0x81a5d470, 0x29cfb63e,    /* dispersion 1, dispersion 2           */
-            /* The next 5 values are for revision C */
-            0x00000050,                /* dither and frame rate control        */
-            0x00000000, 0x00000000,    /* blue LSFR, red and green LSFR        */
-            0x00000000, 0x00000000,    /* FRM memory index, FRM memory data */
-            0x00000007,                /* memory control                                       */
-        },
+     0x01e00000, 0x00094000,    /* panel timing reg 1, panel timing */
+     /* reg 2                                                        */
+     0x01000000,                /* power management                             */
+     /* The next 5 values are prior to revision C */
+     0x00000050,                /* dither and frame rate control        */
+     0x25cf3096, 0xad47b81e,    /* block select 1, block select 2       */
+     0x81a5d470, 0x29cfb63e,    /* dispersion 1, dispersion 2           */
+     /* The next 5 values are for revision C */
+     0x00000050,                /* dither and frame rate control        */
+     0x00000000, 0x00000000,    /* blue LSFR, red and green LSFR        */
+     0x00000000, 0x00000000,    /* FRM memory index, FRM memory data */
+     0x00000007,                /* memory control                                       */
+     },
 
     {800, 600, 12, PNL_TFT, PNL_COLOR_PANEL,    /* display parameters */
-            0x02580000, 0x0f100000,    /* panel timing reg 1, panel timing */
-            /* reg 2                                                        */
-            0x01000000,                /* power management                             */
-            /* The next 5 values are prior to revision C */
-            0x00000050,                /* dither and frame rate control        */
-            0x00000000, 0x00000000,    /* block select 1, block select 2       */
-            0x00000000, 0x00000000,    /* dispersion 1, dispersion 2           */
-            /* The next 5 values are for revision C */
-            0x00000050,                /* dither and frame rate control        */
-            0x00000000, 0x00000000,    /* blue LSFR, red and green LSFR        */
-            0x00000000, 0x00000000,    /* FRM memory index, FRM memory data */
-            0x00000000,                /* memory control                                       */
-        },
+     0x02580000, 0x0f100000,    /* panel timing reg 1, panel timing */
+     /* reg 2                                                        */
+     0x01000000,                /* power management                             */
+     /* The next 5 values are prior to revision C */
+     0x00000050,                /* dither and frame rate control        */
+     0x00000000, 0x00000000,    /* block select 1, block select 2       */
+     0x00000000, 0x00000000,    /* dispersion 1, dispersion 2           */
+     /* The next 5 values are for revision C */
+     0x00000050,                /* dither and frame rate control        */
+     0x00000000, 0x00000000,    /* blue LSFR, red and green LSFR        */
+     0x00000000, 0x00000000,    /* FRM memory index, FRM memory data */
+     0x00000000,                /* memory control                                       */
+     },
 
     {800, 600, 18, PNL_TFT, PNL_COLOR_PANEL,    /* display parameters */
-            0x02580000, 0x0f100000,    /* panel timing reg 1, panel timing */
-            /* reg 2                                                        */
-            0x01000000,                /* power management                             */
-            /* The next 5 values are prior to revision C */
-            0x00000050,                /* dither and frame rate control        */
-            0x00000000, 0x00000000,    /* block select 1, block select 2       */
-            0x00000000, 0x00000000,    /* dispersion 1, dispersion 2           */
-            /* The next 5 values are for revision C */
-            0x00000050,                /* dither and frame rate control        */
-            0x00000000, 0x00000000,    /* blue LSFR, red and green LSFR        */
-            0x00000000, 0x00000000,    /* FRM memory index, FRM memory data */
-            0x00000000,                /* memory control                                       */
-        },
+     0x02580000, 0x0f100000,    /* panel timing reg 1, panel timing */
+     /* reg 2                                                        */
+     0x01000000,                /* power management                             */
+     /* The next 5 values are prior to revision C */
+     0x00000050,                /* dither and frame rate control        */
+     0x00000000, 0x00000000,    /* block select 1, block select 2       */
+     0x00000000, 0x00000000,    /* dispersion 1, dispersion 2           */
+     /* The next 5 values are for revision C */
+     0x00000050,                /* dither and frame rate control        */
+     0x00000000, 0x00000000,    /* blue LSFR, red and green LSFR        */
+     0x00000000, 0x00000000,    /* FRM memory index, FRM memory data */
+     0x00000000,                /* memory control                                       */
+     },
 
     {800, 600, 16, PNL_DSTN, PNL_COLOR_PANEL,   /* display parameters */
-            0x02580000, 0x00014000,    /* panel timing reg 1, panel timing */
-            /* reg 2                                                        */
-            0x01000000,                /* power management                             */
-            /* The next 5 values are prior to revision C */
-            0x00000050,                /* dither and frame rate control        */
-            0x048c26ae, 0x048c26ae,    /* block select 1, block select 2       */
-            0x02468ace, 0x13579bdf,    /* dispersion 1, dispersion 2           */
-            /* The next 5 values are for revision C */
-            0x0000004b,                /* dither and frame rate control        */
-            0x00000000, 0x00000000,    /* blue LSFR, red and green LSFR        */
-            0x00000000, 0x00000000,    /* FRM memory index, FRM memory data */
-            0x00000007,                /* memory control                                       */
-        },
+     0x02580000, 0x00014000,    /* panel timing reg 1, panel timing */
+     /* reg 2                                                        */
+     0x01000000,                /* power management                             */
+     /* The next 5 values are prior to revision C */
+     0x00000050,                /* dither and frame rate control        */
+     0x048c26ae, 0x048c26ae,    /* block select 1, block select 2       */
+     0x02468ace, 0x13579bdf,    /* dispersion 1, dispersion 2           */
+     /* The next 5 values are for revision C */
+     0x0000004b,                /* dither and frame rate control        */
+     0x00000000, 0x00000000,    /* blue LSFR, red and green LSFR        */
+     0x00000000, 0x00000000,    /* FRM memory index, FRM memory data */
+     0x00000007,                /* memory control                                       */
+     },
 
     {800, 600, 8, PNL_DSTN, PNL_MONO_PANEL,     /* display parameters */
-            0x02580000, 0x00084000,    /* panel timing reg 1, panel timing */
-            /* reg 2                                                        */
-            0x01000000,                /* power management                             */
-            /* The next 5 values are prior to revision C */
-            0x00000050,                /* dither and frame rate control        */
-            0x25cf3096, 0xad47b81e,    /* block select 1, block select 2       */
-            0x21446450, 0x21446450,    /* dispersion 1, dispersion 2           */
-            /* The next 5 values are for revision C */
-            0x0000004b,                /* dither and frame rate control        */
-            0x00000000, 0x00000000,    /* blue LSFR, red and green LSFR        */
-            0x00000000, 0x00000000,    /* FRM memory index, FRM memory data */
-            0x00000007,                /* memory control                                       */
-        },
+     0x02580000, 0x00084000,    /* panel timing reg 1, panel timing */
+     /* reg 2                                                        */
+     0x01000000,                /* power management                             */
+     /* The next 5 values are prior to revision C */
+     0x00000050,                /* dither and frame rate control        */
+     0x25cf3096, 0xad47b81e,    /* block select 1, block select 2       */
+     0x21446450, 0x21446450,    /* dispersion 1, dispersion 2           */
+     /* The next 5 values are for revision C */
+     0x0000004b,                /* dither and frame rate control        */
+     0x00000000, 0x00000000,    /* blue LSFR, red and green LSFR        */
+     0x00000000, 0x00000000,    /* FRM memory index, FRM memory data */
+     0x00000007,                /* memory control                                       */
+     },
 
     {800, 600, 16, PNL_DSTN, PNL_MONO_PANEL,    /* display parameters */
-            0x02580000, 0x00094000,    /* panel timing reg 1, panel timing */
-            /* reg 2                                                        */
-            0x01000000,                /* power management                             */
-            /* The next 5 values are prior to revision C */
-            0x00000050,                /* dither and frame rate control        */
-            0x25cf3096, 0xad47b81e,    /* block select 1, block select 2       */
-            0x81a5d470, 0x29cfb63e,    /* dispersion 1, dispersion 2           */
-            /* The next 5 values are for revision C */
-            0x00000050,                /* dither and frame rate control        */
-            0x00000000, 0x00000000,    /* blue LSFR, red and green LSFR        */
-            0x00000000, 0x00000000,    /* FRM memory index, FRM memory data */
-            0x00000007,                /* memory control                                       */
-        },
+     0x02580000, 0x00094000,    /* panel timing reg 1, panel timing */
+     /* reg 2                                                        */
+     0x01000000,                /* power management                             */
+     /* The next 5 values are prior to revision C */
+     0x00000050,                /* dither and frame rate control        */
+     0x25cf3096, 0xad47b81e,    /* block select 1, block select 2       */
+     0x81a5d470, 0x29cfb63e,    /* dispersion 1, dispersion 2           */
+     /* The next 5 values are for revision C */
+     0x00000050,                /* dither and frame rate control        */
+     0x00000000, 0x00000000,    /* blue LSFR, red and green LSFR        */
+     0x00000000, 0x00000000,    /* FRM memory index, FRM memory data */
+     0x00000007,                /* memory control                                       */
+     },
 
     {1024, 768, 18, PNL_TFT, PNL_COLOR_PANEL,   /* display parameters */
-            0x03000000, 0x0f100000,    /* panel timing reg 1, panel timing */
-            /* reg 2                                                        */
-            0x01000000,                /* power management                             */
-            /*The next 5 values are prior to revision C */
-            0x00000050,                /* dither and frame rate control        */
-            0x00000000, 0x00000000,    /* block select 1, block select 2       */
-            0x00000000, 0x00000000,    /* dispersion 1, dispersion 2           */
-            /*The next 5 values are for revision C */
-            0x00000050,                /* dither and frame rate control        */
-            0x00000000, 0x00000000,    /* blue LSFR, red and green LSFR        */
-            0x00000000, 0x00000000,    /* FRM memory index, FRM memory data */
-            0x00000000,                /* memory control                                       */
-        },
+     0x03000000, 0x0f100000,    /* panel timing reg 1, panel timing */
+     /* reg 2                                                        */
+     0x01000000,                /* power management                             */
+     /*The next 5 values are prior to revision C */
+     0x00000050,                /* dither and frame rate control        */
+     0x00000000, 0x00000000,    /* block select 1, block select 2       */
+     0x00000000, 0x00000000,    /* dispersion 1, dispersion 2           */
+     /*The next 5 values are for revision C */
+     0x00000050,                /* dither and frame rate control        */
+     0x00000000, 0x00000000,    /* blue LSFR, red and green LSFR        */
+     0x00000000, 0x00000000,    /* FRM memory index, FRM memory data */
+     0x00000000,                /* memory control                                       */
+     },
 
     {1024, 768, 24, PNL_DSTN, PNL_COLOR_PANEL,  /* display parameters */
-            0x03000000, 0x80024000,    /* panel timing reg 1, panel timing reg 2 */
-            0x01000000,                /* power management                             */
-            /*The next 5 values are prior to revision C                                         */
-            0x00000050,                /* dither and frame rate control        */
-            0x048c26ae, 0x048c26ae,    /* block select 1, block select 2       */
-            0x02468ace, 0x13579bdf,    /* dispersion 1, dispersion 2           */
-            /*The next 5 values are for revision C */
-            0x0000004b,                /* dither and frame rate control        */
-            0x00000000, 0x00000000,    /* blue LSFR, red and green LSFR        */
-            0x00000000, 0x00000000,    /* FRM memory index, FRM memory data */
-            0x00000005,                /* memory control                                       */
-        }
+     0x03000000, 0x80024000,    /* panel timing reg 1, panel timing reg 2 */
+     0x01000000,                /* power management                             */
+     /*The next 5 values are prior to revision C                                         */
+     0x00000050,                /* dither and frame rate control        */
+     0x048c26ae, 0x048c26ae,    /* block select 1, block select 2       */
+     0x02468ace, 0x13579bdf,    /* dispersion 1, dispersion 2           */
+     /*The next 5 values are for revision C */
+     0x0000004b,                /* dither and frame rate control        */
+     0x00000000, 0x00000000,    /* blue LSFR, red and green LSFR        */
+     0x00000000, 0x00000000,    /* FRM memory index, FRM memory data */
+     0x00000005,                /* memory control                                       */
+     }
 };
 
-#endif /* !_92XX_h */
+#endif                          /* !_92XX_h */
 
 /* END OF FILE */

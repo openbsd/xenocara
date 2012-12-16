@@ -66,13 +66,15 @@ vip_initialize(VIPSETMODEBUFFER * buffer)
 
         if (buffer->planar_capture == VIP_420CAPTURE_EVERYLINE) {
             vip_control1 |= VIP_CONTROL1_DISABLE_DECIMATION;
-        } else if (buffer->planar_capture == VIP_420CAPTURE_ALTERNATINGFIELDS) {
+        }
+        else if (buffer->planar_capture == VIP_420CAPTURE_ALTERNATINGFIELDS) {
             if (buffer->flags & VIP_MODEFLAG_PROGRESSIVE)
                 return CIM_STATUS_INVALIDPARAMS;
 
             vip_control1 |= VIP_CONTROL1_DISABLE_DECIMATION;
             vip_control3 |= VIP_CONTROL3_DECIMATE_EVEN;
-        } else if (buffer->planar_capture != VIP_420CAPTURE_ALTERNATINGLINES)
+        }
+        else if (buffer->planar_capture != VIP_420CAPTURE_ALTERNATINGLINES)
             return CIM_STATUS_INVALIDPARAMS;
 
         /* CONFIGURE THE VIDEO FIFO THRESHOLD BASED ON THE FIFO DEPTH */
@@ -80,7 +82,8 @@ vip_initialize(VIPSETMODEBUFFER * buffer)
         vip_control2 |= VIP_CONTROL2_DEFAULT_VIDTH_420 <<
             VIP_CONTROL2_VIDTH_SHIFT;
 
-    } else {
+    }
+    else {
         vip_control2 |= VIP_CONTROL2_DEFAULT_VIDTH_422 <<
             VIP_CONTROL2_VIDTH_SHIFT;
     }
@@ -104,13 +107,13 @@ vip_initialize(VIPSETMODEBUFFER * buffer)
     }
 
     if ((buffer->operating_mode == VIP_MODE_MSG ||
-            buffer->operating_mode == VIP_MODE_DATA) &&
+         buffer->operating_mode == VIP_MODE_DATA) &&
         (buffer->flags & VIP_MODEFLAG_FLIPMESSAGEWHENFULL)) {
         vip_control1 |= VIP_CONTROL1_MSG_STRM_CTRL;
     }
 
     else if (buffer->operating_mode == VIP_MODE_VIP2_8BIT ||
-        buffer->operating_mode == VIP_MODE_VIP2_16BIT) {
+             buffer->operating_mode == VIP_MODE_VIP2_16BIT) {
         if (buffer->flags & VIP_MODEFLAG_ENABLEREPEATFLAG)
             vip_control2 |= VIP_CONTROL2_REPEAT_ENABLE;
         if (buffer->flags & VIP_MODEFLAG_INVERTTASKPOLARITY)
@@ -172,13 +175,13 @@ vip_update_601_params(VIP_601PARAMS * buffer)
     WRITE_VIP32(VIP_601_VBI_START, buffer->vbi_start);
     WRITE_VIP32(VIP_601_VBI_END, buffer->vbi_start + buffer->vbi_height - 1);
     WRITE_VIP32(VIP_601_EVEN_START_STOP,
-        buffer->vert_start_even | ((buffer->vert_start_even +
-                buffer->even_height - 1) << 16));
+                buffer->vert_start_even | ((buffer->vert_start_even +
+                                            buffer->even_height - 1) << 16));
     WRITE_VIP32(VIP_601_ODD_START_STOP,
-        buffer->vert_start_odd | ((buffer->vert_start_odd +
-                buffer->odd_height - 1) << 16));
+                buffer->vert_start_odd | ((buffer->vert_start_odd +
+                                           buffer->odd_height - 1) << 16));
     WRITE_VIP32(VIP_ODD_FIELD_DETECT,
-        buffer->odd_detect_start | (buffer->odd_detect_end << 16));
+                buffer->odd_detect_start | (buffer->odd_detect_end << 16));
 
     /* SPECIAL CASE FOR HORIZONTAL DATA
      * 601 horizontal parameters are based on the number of clocks and not
@@ -187,7 +190,7 @@ vip_update_601_params(VIP_601PARAMS * buffer)
 
     if ((vip_control1 & VIP_CONTROL1_MODE_MASK) == VIP_MODE_16BIT601)
         WRITE_VIP32(VIP_601_HORZ_END,
-            buffer->horz_start + (buffer->width << 1) + 3);
+                    buffer->horz_start + (buffer->width << 1) + 3);
     else
         WRITE_VIP32(VIP_601_HORZ_END, buffer->horz_start + buffer->width + 3);
 
@@ -225,24 +228,22 @@ vip_configure_capture_buffers(int buffer_type, VIPINPUTBUFFER * buffer)
         /* SET VIDEO PITCH */
 
         WRITE_VIP32(VIP_TASKA_VID_PITCH,
-            offsets->y_pitch | (offsets->uv_pitch << 16));
+                    offsets->y_pitch | (offsets->uv_pitch << 16));
 
         /* SET BASE OFFSETS */
 
         if (buffer->flags & VIP_INPUTFLAG_INVERTPOLARITY) {
-            WRITE_VIP32(VIP_TASKA_VID_ODD_BASE,
-                offsets->even_base[cur_buffer]);
-            WRITE_VIP32(VIP_TASKA_VID_EVEN_BASE,
-                offsets->odd_base[cur_buffer]);
+            WRITE_VIP32(VIP_TASKA_VID_ODD_BASE, offsets->even_base[cur_buffer]);
+            WRITE_VIP32(VIP_TASKA_VID_EVEN_BASE, offsets->odd_base[cur_buffer]);
             if (buffer->flags & VIP_INPUTFLAG_VBI) {
                 WRITE_VIP32(VIP_TASKA_VBI_ODD_BASE, offsets->vbi_even_base);
                 WRITE_VIP32(VIP_TASKA_VBI_EVEN_BASE, offsets->vbi_odd_base);
             }
-        } else {
-            WRITE_VIP32(VIP_TASKA_VID_ODD_BASE,
-                offsets->odd_base[cur_buffer]);
+        }
+        else {
+            WRITE_VIP32(VIP_TASKA_VID_ODD_BASE, offsets->odd_base[cur_buffer]);
             WRITE_VIP32(VIP_TASKA_VID_EVEN_BASE,
-                offsets->even_base[cur_buffer]);
+                        offsets->even_base[cur_buffer]);
             if (buffer->flags & VIP_INPUTFLAG_VBI) {
                 WRITE_VIP32(VIP_TASKA_VBI_ODD_BASE, offsets->vbi_odd_base);
                 WRITE_VIP32(VIP_TASKA_VBI_EVEN_BASE, offsets->vbi_even_base);
@@ -257,30 +258,29 @@ vip_configure_capture_buffers(int buffer_type, VIPINPUTBUFFER * buffer)
             WRITE_VIP32(VIP_TASKA_U_EVEN_OFFSET, offsets->even_uoffset);
             WRITE_VIP32(VIP_TASKA_V_EVEN_OFFSET, offsets->even_voffset);
         }
-    } else if (buffer_type == VIP_BUFFER_B) {
+    }
+    else if (buffer_type == VIP_BUFFER_B) {
         offsets = &buffer->offsets[VIP_BUFFER_TASK_B];
 
         /* SET VIDEO PITCH */
 
         WRITE_VIP32(VIP_TASKB_VID_PITCH,
-            offsets->y_pitch | (offsets->uv_pitch << 16));
+                    offsets->y_pitch | (offsets->uv_pitch << 16));
 
         /* SET BASE OFFSETS */
 
         if (buffer->flags & VIP_INPUTFLAG_INVERTPOLARITY) {
-            WRITE_VIP32(VIP_TASKB_VID_ODD_BASE,
-                offsets->even_base[cur_buffer]);
-            WRITE_VIP32(VIP_TASKB_VID_EVEN_BASE,
-                offsets->odd_base[cur_buffer]);
+            WRITE_VIP32(VIP_TASKB_VID_ODD_BASE, offsets->even_base[cur_buffer]);
+            WRITE_VIP32(VIP_TASKB_VID_EVEN_BASE, offsets->odd_base[cur_buffer]);
             if (buffer->flags & VIP_INPUTFLAG_VBI) {
                 WRITE_VIP32(VIP_TASKB_VBI_ODD_BASE, offsets->vbi_even_base);
                 WRITE_VIP32(VIP_TASKB_VBI_EVEN_BASE, offsets->vbi_odd_base);
             }
-        } else {
-            WRITE_VIP32(VIP_TASKB_VID_ODD_BASE,
-                offsets->odd_base[cur_buffer]);
+        }
+        else {
+            WRITE_VIP32(VIP_TASKB_VID_ODD_BASE, offsets->odd_base[cur_buffer]);
             WRITE_VIP32(VIP_TASKB_VID_EVEN_BASE,
-                offsets->even_base[cur_buffer]);
+                        offsets->even_base[cur_buffer]);
             if (buffer->flags & VIP_INPUTFLAG_VBI) {
                 WRITE_VIP32(VIP_TASKB_VBI_ODD_BASE, offsets->vbi_odd_base);
                 WRITE_VIP32(VIP_TASKB_VBI_EVEN_BASE, offsets->vbi_even_base);
@@ -293,11 +293,13 @@ vip_configure_capture_buffers(int buffer_type, VIPINPUTBUFFER * buffer)
             WRITE_VIP32(VIP_TASKB_U_OFFSET, offsets->odd_uoffset);
             WRITE_VIP32(VIP_TASKB_V_OFFSET, offsets->odd_voffset);
         }
-    } else if (buffer_type == VIP_BUFFER_ANC || buffer_type == VIP_BUFFER_MSG) {
+    }
+    else if (buffer_type == VIP_BUFFER_ANC || buffer_type == VIP_BUFFER_MSG) {
         WRITE_VIP32(VIP_ANC_MSG1_BASE, buffer->ancillaryData.msg1_base);
         WRITE_VIP32(VIP_ANC_MSG2_BASE, buffer->ancillaryData.msg2_base);
         WRITE_VIP32(VIP_ANC_MSG_SIZE, buffer->ancillaryData.msg_size);
-    } else {
+    }
+    else {
         return CIM_STATUS_INVALIDPARAMS;
     }
 
@@ -325,77 +327,73 @@ vip_toggle_video_offsets(int buffer_type, VIPINPUTBUFFER * buffer)
         /* SET BASE OFFSETS */
 
         if (buffer->flags & VIP_INPUTFLAG_INVERTPOLARITY) {
-            WRITE_VIP32(VIP_TASKA_VID_ODD_BASE,
-                offsets->even_base[cur_buffer]);
-            WRITE_VIP32(VIP_TASKA_VID_EVEN_BASE,
-                offsets->odd_base[cur_buffer]);
-        } else {
-            WRITE_VIP32(VIP_TASKA_VID_ODD_BASE,
-                offsets->odd_base[cur_buffer]);
-            WRITE_VIP32(VIP_TASKA_VID_EVEN_BASE,
-                offsets->even_base[cur_buffer]);
+            WRITE_VIP32(VIP_TASKA_VID_ODD_BASE, offsets->even_base[cur_buffer]);
+            WRITE_VIP32(VIP_TASKA_VID_EVEN_BASE, offsets->odd_base[cur_buffer]);
         }
-    } else if (buffer_type == VIP_BUFFER_B) {
+        else {
+            WRITE_VIP32(VIP_TASKA_VID_ODD_BASE, offsets->odd_base[cur_buffer]);
+            WRITE_VIP32(VIP_TASKA_VID_EVEN_BASE,
+                        offsets->even_base[cur_buffer]);
+        }
+    }
+    else if (buffer_type == VIP_BUFFER_B) {
         offsets = &buffer->offsets[VIP_BUFFER_TASK_B];
 
         /* SET BASE OFFSETS */
 
         if (buffer->flags & VIP_INPUTFLAG_INVERTPOLARITY) {
-            WRITE_VIP32(VIP_TASKB_VID_ODD_BASE,
-                offsets->even_base[cur_buffer]);
-            WRITE_VIP32(VIP_TASKB_VID_EVEN_BASE,
-                offsets->odd_base[cur_buffer]);
-        } else {
-            WRITE_VIP32(VIP_TASKB_VID_ODD_BASE,
-                offsets->odd_base[cur_buffer]);
-            WRITE_VIP32(VIP_TASKB_VID_EVEN_BASE,
-                offsets->even_base[cur_buffer]);
+            WRITE_VIP32(VIP_TASKB_VID_ODD_BASE, offsets->even_base[cur_buffer]);
+            WRITE_VIP32(VIP_TASKB_VID_EVEN_BASE, offsets->odd_base[cur_buffer]);
         }
-    } else if (buffer_type == VIP_BUFFER_A_ODD) {
+        else {
+            WRITE_VIP32(VIP_TASKB_VID_ODD_BASE, offsets->odd_base[cur_buffer]);
+            WRITE_VIP32(VIP_TASKB_VID_EVEN_BASE,
+                        offsets->even_base[cur_buffer]);
+        }
+    }
+    else if (buffer_type == VIP_BUFFER_A_ODD) {
         offsets = &buffer->offsets[VIP_BUFFER_TASK_A];
 
         /* SET BASE OFFSETS */
 
         if (buffer->flags & VIP_INPUTFLAG_INVERTPOLARITY)
-            WRITE_VIP32(VIP_TASKA_VID_ODD_BASE,
-                offsets->even_base[cur_buffer]);
+            WRITE_VIP32(VIP_TASKA_VID_ODD_BASE, offsets->even_base[cur_buffer]);
         else
-            WRITE_VIP32(VIP_TASKA_VID_ODD_BASE,
-                offsets->odd_base[cur_buffer]);
-    } else if (buffer_type == VIP_BUFFER_A_EVEN) {
+            WRITE_VIP32(VIP_TASKA_VID_ODD_BASE, offsets->odd_base[cur_buffer]);
+    }
+    else if (buffer_type == VIP_BUFFER_A_EVEN) {
         offsets = &buffer->offsets[VIP_BUFFER_TASK_A];
 
         /* SET BASE OFFSETS */
 
         if (buffer->flags & VIP_INPUTFLAG_INVERTPOLARITY)
-            WRITE_VIP32(VIP_TASKA_VID_EVEN_BASE,
-                offsets->odd_base[cur_buffer]);
+            WRITE_VIP32(VIP_TASKA_VID_EVEN_BASE, offsets->odd_base[cur_buffer]);
         else
             WRITE_VIP32(VIP_TASKA_VID_EVEN_BASE,
-                offsets->even_base[cur_buffer]);
-    } else if (buffer_type == VIP_BUFFER_B_ODD) {
+                        offsets->even_base[cur_buffer]);
+    }
+    else if (buffer_type == VIP_BUFFER_B_ODD) {
         offsets = &buffer->offsets[VIP_BUFFER_TASK_B];
 
         /* SET BASE OFFSETS */
 
         if (buffer->flags & VIP_INPUTFLAG_INVERTPOLARITY)
-            WRITE_VIP32(VIP_TASKB_VID_ODD_BASE,
-                offsets->even_base[cur_buffer]);
+            WRITE_VIP32(VIP_TASKB_VID_ODD_BASE, offsets->even_base[cur_buffer]);
         else
-            WRITE_VIP32(VIP_TASKB_VID_ODD_BASE,
-                offsets->odd_base[cur_buffer]);
-    } else if (buffer_type == VIP_BUFFER_B_EVEN) {
+            WRITE_VIP32(VIP_TASKB_VID_ODD_BASE, offsets->odd_base[cur_buffer]);
+    }
+    else if (buffer_type == VIP_BUFFER_B_EVEN) {
         offsets = &buffer->offsets[VIP_BUFFER_TASK_B];
 
         /* SET BASE OFFSETS */
 
         if (buffer->flags & VIP_INPUTFLAG_INVERTPOLARITY)
-            WRITE_VIP32(VIP_TASKB_VID_EVEN_BASE,
-                offsets->odd_base[cur_buffer]);
+            WRITE_VIP32(VIP_TASKB_VID_EVEN_BASE, offsets->odd_base[cur_buffer]);
         else
             WRITE_VIP32(VIP_TASKB_VID_EVEN_BASE,
-                offsets->even_base[cur_buffer]);
-    } else
+                        offsets->even_base[cur_buffer]);
+    }
+    else
         return CIM_STATUS_INVALIDPARAMS;
 
     return CIM_STATUS_OK;
@@ -450,8 +448,7 @@ vip_terminate(void)
 
     /* DISABLE AND CLEAR ALL VIP INTERRUPTS */
 
-    WRITE_VIP32(VIP_INTERRUPT, VIP_ALL_INTERRUPTS |
-        (VIP_ALL_INTERRUPTS >> 16));
+    WRITE_VIP32(VIP_INTERRUPT, VIP_ALL_INTERRUPTS | (VIP_ALL_INTERRUPTS >> 16));
 
     /* DISABLE VIP CAPTURE */
     /* We will try to let the VIP FIFO flush before shutting it down. */
@@ -575,7 +572,7 @@ vip_set_interrupt_enable(unsigned long mask, int enable)
 
 int
 vip_set_vsync_error(unsigned long vertical_count, unsigned long window_before,
-    unsigned long window_after, int enable)
+                    unsigned long window_after, int enable)
 {
     unsigned long vip_control2 = READ_VIP32(VIP_CONTROL2);
     unsigned long temp;
@@ -589,14 +586,15 @@ vip_set_vsync_error(unsigned long vertical_count, unsigned long window_before,
          */
 
         temp = ((window_before +
-                window_after) << VIP_VSYNC_ERR_WINDOW_SHIFT) &
+                 window_after) << VIP_VSYNC_ERR_WINDOW_SHIFT) &
             VIP_VSYNC_ERR_WINDOW_MASK;
         temp |= (vertical_count - window_before) & VIP_VSYNC_ERR_COUNT_MASK;
 
         vip_control2 |= VIP_CONTROL2_VERTERROR_ENABLE;
 
         WRITE_VIP32(VIP_VSYNC_ERR_COUNT, temp);
-    } else {
+    }
+    else {
         vip_control2 &= ~VIP_CONTROL2_VERTERROR_ENABLE;
     }
     WRITE_VIP32(VIP_CONTROL2, vip_control2);
@@ -624,7 +622,8 @@ vip_max_address_enable(unsigned long max_address, int enable)
         vip_control2 |= VIP_CONTROL2_ADD_ERROR_ENABLE;
 
         WRITE_VIP32(VIP_MAX_ADDRESS, max_address & VIP_MAXADDR_MASK);
-    } else {
+    }
+    else {
         /* DISABLE DETECTION */
 
         vip_control2 &= ~VIP_CONTROL2_ADD_ERROR_ENABLE;
@@ -792,12 +791,12 @@ vip_set_priority_characteristics(VIPPRIORITYBUFFER * buffer)
     q_word.low = q_word.high = 0;
 
     q_word.low |= (buffer->secondary <<
-        VIP_MSR_MCR_SECOND_PRIORITY_SHIFT) & VIP_MSR_MCR_SECOND_PRIORITY_MASK;
-    q_word.low |= (buffer->primary <<
-        VIP_MSR_MCR_PRIMARY_PRIORITY_SHIFT) &
+                   VIP_MSR_MCR_SECOND_PRIORITY_SHIFT) &
+        VIP_MSR_MCR_SECOND_PRIORITY_MASK;
+    q_word.low |=
+        (buffer->primary << VIP_MSR_MCR_PRIMARY_PRIORITY_SHIFT) &
         VIP_MSR_MCR_PRIMARY_PRIORITY_MASK;
-    q_word.low |= (buffer->pid << VIP_MSR_MCR_PID_SHIFT) &
-        VIP_MSR_MCR_PID_MASK;
+    q_word.low |= (buffer->pid << VIP_MSR_MCR_PID_SHIFT) & VIP_MSR_MCR_PID_MASK;
 
     msr_write64(MSR_DEVICE_GEODELX_VIP, MSR_GEODELINK_CONFIG, &q_word);
 
@@ -822,12 +821,10 @@ vip_set_debug_characteristics(VIPDEBUGBUFFER * buffer)
 
     q_word.high |= (buffer->bist << VIP_MSR_DIAG_BIST_SHIFT) &
         VIP_MSR_DIAG_BIST_WMASK;
-    q_word.low |= (buffer->enable_upper ?
-        VIP_MSR_DIAG_MSB_ENABLE : 0x00000000);
+    q_word.low |= (buffer->enable_upper ? VIP_MSR_DIAG_MSB_ENABLE : 0x00000000);
     q_word.low |= (buffer->select_upper << VIP_MSR_DIAG_SEL_UPPER_SHIFT) &
         VIP_MSR_DIAG_SEL_UPPER_MASK;
-    q_word.low |= (buffer->enable_lower ?
-        VIP_MSR_DIAG_LSB_ENABLE : 0x00000000);
+    q_word.low |= (buffer->enable_lower ? VIP_MSR_DIAG_LSB_ENABLE : 0x00000000);
     q_word.low |= (buffer->select_lower << VIP_MSR_DIAG_SEL_LOWER_SHIFT) &
         VIP_MSR_DIAG_SEL_LOWER_MASK;
 
@@ -871,7 +868,7 @@ int
 vip_set_interrupt_line(int line)
 {
     WRITE_VIP32(VIP_CURRENT_TARGET,
-        (line << VIP_CTARGET_TLINE_SHIFT) & VIP_CTARGET_TLINE_MASK);
+                (line << VIP_CTARGET_TLINE_SHIFT) & VIP_CTARGET_TLINE_MASK);
 
     return CIM_STATUS_OK;
 }
@@ -922,14 +919,16 @@ vip_set_subwindow_enable(VIPSUBWINDOWBUFFER * buffer)
         /* WRITE THE WINDOW VALUE */
 
         WRITE_VIP32(VIP_VERTICAL_START_STOP, ((buffer->stop <<
-                    VIP_VSTART_VERTEND_SHIFT) &
-                VIP_VSTART_VERTEND_MASK) | ((buffer->start <<
-                    VIP_VSTART_VERTSTART_SHIFT) & VIP_VSTART_VERTSTART_MASK));
+                                               VIP_VSTART_VERTEND_SHIFT) &
+                                              VIP_VSTART_VERTEND_MASK) |
+                    ((buffer->start << VIP_VSTART_VERTSTART_SHIFT) &
+                     VIP_VSTART_VERTSTART_MASK));
 
         /* ENABLE IN THE CONTROL REGISTER */
 
         vip_control2 |= VIP_CONTROL2_SWC_ENABLE;
-    } else {
+    }
+    else {
         /* DISABLE SUBWINDOW CAPTURE IN THE CONTROL REGISTER */
 
         vip_control2 &= ~VIP_CONTROL2_SWC_ENABLE;
@@ -1009,13 +1008,13 @@ vip_save_state(VIPSTATEBUFFER * save_buffer)
     /* READ ALL VIP MSRS */
 
     msr_read64(MSR_DEVICE_GEODELX_VIP, MSR_GEODELINK_CONFIG,
-        &(save_buffer->msr_config));
+               &(save_buffer->msr_config));
     msr_read64(MSR_DEVICE_GEODELX_VIP, MSR_GEODELINK_SMI,
-        &(save_buffer->msr_smi));
+               &(save_buffer->msr_smi));
     msr_read64(MSR_DEVICE_GEODELX_VIP, MSR_GEODELINK_PM,
-        &(save_buffer->msr_pm));
+               &(save_buffer->msr_pm));
     msr_read64(MSR_DEVICE_GEODELX_VIP, MSR_GEODELINK_DIAG,
-        &(save_buffer->msr_diag));
+               &(save_buffer->msr_diag));
 
     return CIM_STATUS_OK;
 }
@@ -1064,13 +1063,13 @@ vip_restore_state(VIPSTATEBUFFER * restore_buffer)
     /* RESTORE THE VIP MSRS */
 
     msr_write64(MSR_DEVICE_GEODELX_VIP, MSR_GEODELINK_CONFIG,
-        &(restore_buffer->msr_config));
+                &(restore_buffer->msr_config));
     msr_write64(MSR_DEVICE_GEODELX_VIP, MSR_GEODELINK_SMI,
-        &(restore_buffer->msr_smi));
+                &(restore_buffer->msr_smi));
     msr_write64(MSR_DEVICE_GEODELX_VIP, MSR_GEODELINK_PM,
-        &(restore_buffer->msr_pm));
+                &(restore_buffer->msr_pm));
     msr_write64(MSR_DEVICE_GEODELX_VIP, MSR_GEODELINK_DIAG,
-        &(restore_buffer->msr_diag));
+                &(restore_buffer->msr_diag));
 
     /* RESTORE THE CONTROL WORDS LAST */
 
@@ -1185,7 +1184,8 @@ vip_get_current_mode(VIPSETMODEBUFFER * buffer)
                 buffer->planar_capture = VIP_420CAPTURE_ALTERNATINGFIELDS;
             else
                 buffer->planar_capture = VIP_420CAPTURE_EVERYLINE;
-        } else
+        }
+        else
             buffer->planar_capture = VIP_420CAPTURE_ALTERNATINGLINES;
     }
 
@@ -1257,10 +1257,9 @@ vip_get_601_configuration(VIP_601PARAMS * buffer)
 
     if ((vip_control1 & VIP_CONTROL1_MODE_MASK) == VIP_MODE_16BIT601)
         buffer->width = (READ_VIP32(VIP_601_HORZ_END) -
-            buffer->horz_start - 3) >> 1;
+                         buffer->horz_start - 3) >> 1;
     else
-        buffer->width = (READ_VIP32(VIP_601_HORZ_END) -
-            buffer->horz_start - 3);
+        buffer->width = (READ_VIP32(VIP_601_HORZ_END) - buffer->horz_start - 3);
 
     return CIM_STATUS_OK;
 }
@@ -1293,20 +1292,18 @@ vip_get_buffer_configuration(int buffer_type, VIPINPUTBUFFER * buffer)
         /* READ BASE OFFSETS */
 
         if (buffer->flags & VIP_INPUTFLAG_INVERTPOLARITY) {
-            offsets->even_base[cur_buffer] =
-                READ_VIP32(VIP_TASKA_VID_ODD_BASE);
-            offsets->odd_base[cur_buffer] =
-                READ_VIP32(VIP_TASKA_VID_EVEN_BASE);
+            offsets->even_base[cur_buffer] = READ_VIP32(VIP_TASKA_VID_ODD_BASE);
+            offsets->odd_base[cur_buffer] = READ_VIP32(VIP_TASKA_VID_EVEN_BASE);
 
             if (buffer->flags & VIP_INPUTFLAG_VBI) {
                 offsets->vbi_even_base = READ_VIP32(VIP_TASKA_VBI_ODD_BASE);
                 offsets->vbi_odd_base = READ_VIP32(VIP_TASKA_VBI_EVEN_BASE);
             }
-        } else {
+        }
+        else {
             offsets->even_base[cur_buffer] =
                 READ_VIP32(VIP_TASKA_VID_EVEN_BASE);
-            offsets->odd_base[cur_buffer] =
-                READ_VIP32(VIP_TASKA_VID_ODD_BASE);
+            offsets->odd_base[cur_buffer] = READ_VIP32(VIP_TASKA_VID_ODD_BASE);
 
             if (buffer->flags & VIP_INPUTFLAG_VBI) {
                 offsets->vbi_even_base = READ_VIP32(VIP_TASKA_VBI_EVEN_BASE);
@@ -1322,7 +1319,8 @@ vip_get_buffer_configuration(int buffer_type, VIPINPUTBUFFER * buffer)
             offsets->even_uoffset = READ_VIP32(VIP_TASKA_U_EVEN_OFFSET);
             offsets->even_voffset = READ_VIP32(VIP_TASKA_V_EVEN_OFFSET);
         }
-    } else if (buffer_type == VIP_BUFFER_B) {
+    }
+    else if (buffer_type == VIP_BUFFER_B) {
         offsets = &buffer->offsets[VIP_BUFFER_TASK_B];
 
         /* READ VIDEO PITCH */
@@ -1333,20 +1331,18 @@ vip_get_buffer_configuration(int buffer_type, VIPINPUTBUFFER * buffer)
         /* READ BASE OFFSETS */
 
         if (buffer->flags & VIP_INPUTFLAG_INVERTPOLARITY) {
-            offsets->even_base[cur_buffer] =
-                READ_VIP32(VIP_TASKB_VID_ODD_BASE);
-            offsets->odd_base[cur_buffer] =
-                READ_VIP32(VIP_TASKB_VID_EVEN_BASE);
+            offsets->even_base[cur_buffer] = READ_VIP32(VIP_TASKB_VID_ODD_BASE);
+            offsets->odd_base[cur_buffer] = READ_VIP32(VIP_TASKB_VID_EVEN_BASE);
 
             if (buffer->flags & VIP_INPUTFLAG_VBI) {
                 offsets->vbi_even_base = READ_VIP32(VIP_TASKB_VBI_ODD_BASE);
                 offsets->vbi_odd_base = READ_VIP32(VIP_TASKB_VBI_EVEN_BASE);
             }
-        } else {
+        }
+        else {
             offsets->even_base[cur_buffer] =
                 READ_VIP32(VIP_TASKB_VID_EVEN_BASE);
-            offsets->odd_base[cur_buffer] =
-                READ_VIP32(VIP_TASKB_VID_ODD_BASE);
+            offsets->odd_base[cur_buffer] = READ_VIP32(VIP_TASKB_VID_ODD_BASE);
 
             if (buffer->flags & VIP_INPUTFLAG_VBI) {
                 offsets->vbi_even_base = READ_VIP32(VIP_TASKB_VBI_EVEN_BASE);
@@ -1360,11 +1356,13 @@ vip_get_buffer_configuration(int buffer_type, VIPINPUTBUFFER * buffer)
             offsets->odd_uoffset = READ_VIP32(VIP_TASKB_U_OFFSET);
             offsets->odd_voffset = READ_VIP32(VIP_TASKB_V_OFFSET);
         }
-    } else if (buffer_type == VIP_BUFFER_ANC || buffer_type == VIP_BUFFER_MSG) {
+    }
+    else if (buffer_type == VIP_BUFFER_ANC || buffer_type == VIP_BUFFER_MSG) {
         buffer->ancillaryData.msg1_base = READ_VIP32(VIP_ANC_MSG1_BASE);
         buffer->ancillaryData.msg2_base = READ_VIP32(VIP_ANC_MSG2_BASE);
         buffer->ancillaryData.msg_size = READ_VIP32(VIP_ANC_MSG_SIZE);
-    } else {
+    }
+    else {
         return CIM_STATUS_INVALIDPARAMS;
     }
 
@@ -1450,7 +1448,7 @@ unsigned long
 vip_get_capture_state(void)
 {
     return ((READ_VIP32(VIP_CONTROL1) & VIP_CONTROL1_RUNMODE_MASK) >>
-        VIP_CONTROL1_RUNMODE_SHIFT);
+            VIP_CONTROL1_RUNMODE_SHIFT);
 }
 
 /*---------------------------------------------------------------------------
@@ -1569,8 +1567,8 @@ vip_get_power_characteristics(VIPPOWERBUFFER * buffer)
 
     /* DECODE THE CLOCK GATING BITS */
 
-    buffer->glink_clock_mode = (int)(q_word.low & VIP_MSR_POWER_GLINK);
-    buffer->vip_clock_mode = (int)(q_word.low & VIP_MSR_POWER_CLOCK);
+    buffer->glink_clock_mode = (int) (q_word.low & VIP_MSR_POWER_GLINK);
+    buffer->vip_clock_mode = (int) (q_word.low & VIP_MSR_POWER_CLOCK);
 
     return CIM_STATUS_OK;
 }

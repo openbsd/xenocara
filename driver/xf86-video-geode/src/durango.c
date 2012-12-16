@@ -35,49 +35,49 @@
 #include <unistd.h>
 #include <errno.h>
 #include <compiler.h>
-#include <os.h>			       /* ErrorF() */
+#include <os.h>                 /* ErrorF() */
 
 /* Compiler options */
 
-#define GFX_DISPLAY_GU1	       0       /* 1st generation display controller */
-#define GFX_DISPLAY_GU2	       1       /* 2nd generation display controller */
+#define GFX_DISPLAY_GU1	       0        /* 1st generation display controller */
+#define GFX_DISPLAY_GU2	       1        /* 2nd generation display controller */
 
-#define GFX_INIT_DYNAMIC       0       /* runtime selection */
-#define GFX_INIT_GU1           0       /* SC1200/GX1        */
-#define GFX_INIT_GU2           1       /* GX                */
+#define GFX_INIT_DYNAMIC       0        /* runtime selection */
+#define GFX_INIT_GU1           0        /* SC1200/GX1        */
+#define GFX_INIT_GU2           1        /* GX                */
 
-#define GFX_MSR_DYNAMIC        0       /* runtime selection */
-#define GFX_MSR_REDCLOUD       1       /* GX */
+#define GFX_MSR_DYNAMIC        0        /* runtime selection */
+#define GFX_MSR_REDCLOUD       1        /* GX */
 
-#define GFX_2DACCEL_DYNAMIC    0       /* runtime selection                                */
-#define GFX_2DACCEL_GU1	       0       /* 1st generation 2D accelerator    */
-#define GFX_2DACCEL_GU2	       1       /* 2nd generation 2D accelerator    */
+#define GFX_2DACCEL_DYNAMIC    0        /* runtime selection                                */
+#define GFX_2DACCEL_GU1	       0        /* 1st generation 2D accelerator    */
+#define GFX_2DACCEL_GU2	       1        /* 2nd generation 2D accelerator    */
 
-#define GFX_VIDEO_DYNAMIC      0       /* runtime selection  */
-#define GFX_VIDEO_CS5530       0       /* support for CS5530 */
-#define GFX_VIDEO_SC1200       0       /* support for SC1200 */
-#define GFX_VIDEO_REDCLOUD     1       /* support for GX */
+#define GFX_VIDEO_DYNAMIC      0        /* runtime selection  */
+#define GFX_VIDEO_CS5530       0        /* support for CS5530 */
+#define GFX_VIDEO_SC1200       0        /* support for SC1200 */
+#define GFX_VIDEO_REDCLOUD     1        /* support for GX */
 
-#define GFX_VIP_DYNAMIC	       0       /* runtime selection  */
-#define GFX_VIP_SC1200	       0       /* support for SC1200 */
+#define GFX_VIP_DYNAMIC	       0        /* runtime selection  */
+#define GFX_VIP_SC1200	       0        /* support for SC1200 */
 
-#define GFX_DECODER_DYNAMIC    0       /* runtime selection */
-#define GFX_DECODER_SAA7114    0       /* Philips SAA7114 decoder */
+#define GFX_DECODER_DYNAMIC    0        /* runtime selection */
+#define GFX_DECODER_SAA7114    0        /* Philips SAA7114 decoder */
 
-#define GFX_TV_DYNAMIC	       0       /* runtime selection */
-#define GFX_TV_FS451	       0       /* Focus Enhancements FS450  */
-#define GFX_TV_SC1200	       0       /* SC1200 integrated TV encoder */
+#define GFX_TV_DYNAMIC	       0        /* runtime selection */
+#define GFX_TV_FS451	       0        /* Focus Enhancements FS450  */
+#define GFX_TV_SC1200	       0        /* SC1200 integrated TV encoder */
 
-#define GFX_I2C_DYNAMIC	       0       /* runtime selection  */
-#define GFX_I2C_ACCESS	       0       /* support for ACCESS.BUS  */
-#define GFX_I2C_GPIO	       0       /* support for CS5530 GPIOs */
+#define GFX_I2C_DYNAMIC	       0        /* runtime selection  */
+#define GFX_I2C_ACCESS	       0        /* support for ACCESS.BUS  */
+#define GFX_I2C_GPIO	       0        /* support for CS5530 GPIOs */
 
-#define GFX_VGA_DYNAMIC	       0       /* runtime selection */
-#define GFX_VGA_GU1	       0       /* 1st generation graphics unit */
+#define GFX_VGA_DYNAMIC	       0        /* runtime selection */
+#define GFX_VGA_GU1	       0        /* 1st generation graphics unit */
 
-#define FB4MB		       1       /* Set to use 4Mb vid ram for Pyramid */
+#define FB4MB		       1        /* Set to use 4Mb vid ram for Pyramid */
 
-#define GFX_NO_IO_IN_WAIT_MACROS    1  /* Set to remove I/O accesses in GP */
+#define GFX_NO_IO_IN_WAIT_MACROS    1   /* Set to remove I/O accesses in GP */
 #define GFX_READ_ROUTINES  1
 
 #include "gfx_rtns.h"
@@ -85,17 +85,17 @@
 #include "gfx_regs.h"
 #include "gfx_defs.h"
 
-unsigned char *gfx_virt_regptr = (unsigned char *)0x40000000;
-unsigned char *gfx_virt_fbptr = (unsigned char *)0x40800000;
-unsigned char *gfx_virt_vidptr = (unsigned char *)0x40010000;
-unsigned char *gfx_virt_vipptr = (unsigned char *)0x40015000;
-unsigned char *gfx_virt_spptr = (unsigned char *)0x40000000;
-unsigned char *gfx_virt_gpptr = (unsigned char *)0x40000000;
+unsigned char *gfx_virt_regptr = (unsigned char *) 0x40000000;
+unsigned char *gfx_virt_fbptr = (unsigned char *) 0x40800000;
+unsigned char *gfx_virt_vidptr = (unsigned char *) 0x40010000;
+unsigned char *gfx_virt_vipptr = (unsigned char *) 0x40015000;
+unsigned char *gfx_virt_spptr = (unsigned char *) 0x40000000;
+unsigned char *gfx_virt_gpptr = (unsigned char *) 0x40000000;
 
-unsigned char *gfx_phys_regptr = (unsigned char *)0x40000000;
-unsigned char *gfx_phys_fbptr = (unsigned char *)0x40800000;
-unsigned char *gfx_phys_vidptr = (unsigned char *)0x40010000;
-unsigned char *gfx_phys_vipptr = (unsigned char *)0x40015000;
+unsigned char *gfx_phys_regptr = (unsigned char *) 0x40000000;
+unsigned char *gfx_phys_fbptr = (unsigned char *) 0x40800000;
+unsigned char *gfx_phys_vidptr = (unsigned char *) 0x40010000;
+unsigned char *gfx_phys_vipptr = (unsigned char *) 0x40015000;
 
 #define INB(port) inb(port)
 #define INW(port) inw(port)
@@ -186,15 +186,15 @@ extern int GeodeReadMSR(unsigned long, unsigned long *, unsigned long *);
 
 void
 gfx_msr_asm_write(unsigned short reg, unsigned long addr,
-    unsigned long *hi, unsigned long *lo)
+                  unsigned long *hi, unsigned long *lo)
 {
     static int msr_method = 0;
 
     if (msr_method == 0) {
-	if (!GeodeWriteMSR(addr | reg, *lo, *hi))
-	    return;
+        if (!GeodeWriteMSR(addr | reg, *lo, *hi))
+            return;
 
-	msr_method = 1;
+        msr_method = 1;
     }
 
     /* This is the fallback VSA method - not preferred */
@@ -203,16 +203,16 @@ gfx_msr_asm_write(unsigned short reg, unsigned long addr,
 
 void
 gfx_msr_asm_read(unsigned short reg, unsigned long addr,
-    unsigned long *hi, unsigned long *lo)
+                 unsigned long *hi, unsigned long *lo)
 {
     static int msr_method = 0;
 
     if (msr_method == 0) {
-	if (!GeodeReadMSR(addr | reg, lo, hi))
-	    return;
+        if (!GeodeReadMSR(addr | reg, lo, hi))
+            return;
 
-	ErrorF("Unable to read the MSR - reverting to the VSA method.\n");
-	msr_method = 1;
+        ErrorF("Unable to read the MSR - reverting to the VSA method.\n");
+        msr_method = 1;
     }
 
     /* This is the fallback VSA method - not preferred */

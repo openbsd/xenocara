@@ -89,7 +89,7 @@ gp_set_limit_on_buffer_lead(unsigned long lead)
 
 void
 gp_set_command_buffer_base(unsigned long address, unsigned long start,
-    unsigned long stop)
+                           unsigned long stop)
 {
     Q_WORD msr_value;
 
@@ -262,7 +262,8 @@ gp_declare_blt(unsigned long flags)
         /* command buffer.                                               */
 
         GP3_WAIT_WRAP(temp);
-    } else {
+    }
+    else {
         gp3_cmd_header = GP3_BLT_HDR_TYPE;
 
         /* WAIT FOR AVAILABLE SPACE */
@@ -274,7 +275,7 @@ gp_declare_blt(unsigned long flags)
         while (1) {
             temp = READ_GP32(GP3_CMD_READ);
             if (((gp3_cmd_current >= temp)
-                    && ((gp3_cmd_current - temp) <= gp3_buffer_lead))
+                 && ((gp3_cmd_current - temp) <= gp3_buffer_lead))
                 || ((gp3_cmd_current < temp)
                     && ((gp3_cmd_current + (gp3_cmd_bottom - temp)) <=
                         gp3_buffer_lead))) {
@@ -330,7 +331,8 @@ gp_declare_vector(unsigned long flags)
         /* CHECK WRAP CONDITION */
 
         GP3_WAIT_WRAP(temp);
-    } else {
+    }
+    else {
         gp3_cmd_header = GP3_VEC_HDR_TYPE;
 
         /* WAIT FOR AVAILABLE SPACE */
@@ -344,7 +346,7 @@ gp_declare_vector(unsigned long flags)
         while (1) {
             temp = READ_GP32(GP3_CMD_READ);
             if (((gp3_cmd_current >= temp)
-                    && ((gp3_cmd_current - temp) <= gp3_buffer_lead))
+                 && ((gp3_cmd_current - temp) <= gp3_buffer_lead))
                 || ((gp3_cmd_current < temp)
                     && ((gp3_cmd_current + (gp3_cmd_bottom - temp)) <=
                         gp3_buffer_lead))) {
@@ -406,7 +408,7 @@ gp_set_raster_operation(unsigned char ROP)
     /* WRITE THE RASTER MODE REGISTER                                   */
     /* This register is in the same location in BLT and vector commands */
 
-    gp3_raster_mode = gp3_bpp | (unsigned long)ROP;
+    gp3_raster_mode = gp3_bpp | (unsigned long) ROP;
     WRITE_COMMAND32(GP3_BLT_RASTER_MODE, gp3_raster_mode);
 
     /* CHECK IF DESTINATION IS REQUIRED */
@@ -414,7 +416,8 @@ gp_set_raster_operation(unsigned char ROP)
     if ((ROP & 0x55) ^ ((ROP >> 1) & 0x55)) {
         gp3_blt_mode = GP3_BM_DST_REQ;
         gp3_vec_mode = GP3_VM_DST_REQ;
-    } else {
+    }
+    else {
         gp3_blt_mode = gp3_vec_mode = 0;
     }
 }
@@ -461,7 +464,7 @@ gp_set_raster_operation(unsigned char ROP)
 
 void
 gp_set_alpha_operation(int alpha_operation, int alpha_type, int channel,
-    int apply_alpha, unsigned char alpha)
+                       int apply_alpha, unsigned char alpha)
 {
     gp3_cmd_header |= GP3_BLT_HDR_RASTER_ENABLE;
 
@@ -470,25 +473,26 @@ gp_set_alpha_operation(int alpha_operation, int alpha_type, int channel,
     /* also implies that there is no mechanism to detect invalid */
     /* parameters.                                               */
 
-    gp3_raster_mode = gp3_bpp | (unsigned long)alpha |
-        ((unsigned long)apply_alpha << 22) |
-        ((unsigned long)alpha_operation << 20) |
-        ((unsigned long)alpha_type << 17) | ((unsigned long)channel << 16);
+    gp3_raster_mode = gp3_bpp | (unsigned long) alpha |
+        ((unsigned long) apply_alpha << 22) |
+        ((unsigned long) alpha_operation << 20) |
+        ((unsigned long) alpha_type << 17) | ((unsigned long) channel << 16);
 
     WRITE_COMMAND32(GP3_BLT_RASTER_MODE, gp3_raster_mode);
 
     /* CHECK IF DESTINATION IS REQUIRED */
 
     if ((alpha_operation == CIMGP_ALPHA_TIMES_A &&
-            channel == CIMGP_CHANNEL_A_SOURCE &&
-            alpha_type != CIMGP_CHANNEL_B_ALPHA &&
-            alpha_type != CIMGP_ALPHA_FROM_RGB_B) ||
+         channel == CIMGP_CHANNEL_A_SOURCE &&
+         alpha_type != CIMGP_CHANNEL_B_ALPHA &&
+         alpha_type != CIMGP_ALPHA_FROM_RGB_B) ||
         (alpha_operation == CIMGP_BETA_TIMES_B &&
-            channel == CIMGP_CHANNEL_A_DEST &&
-            alpha_type != CIMGP_CHANNEL_A_ALPHA &&
-            alpha_type != CIMGP_ALPHA_FROM_RGB_A)) {
+         channel == CIMGP_CHANNEL_A_DEST &&
+         alpha_type != CIMGP_CHANNEL_A_ALPHA &&
+         alpha_type != CIMGP_ALPHA_FROM_RGB_A)) {
         gp3_blt_mode = 0;
-    } else
+    }
+    else
         gp3_blt_mode = GP3_BM_DST_REQ;
 }
 
@@ -518,7 +522,8 @@ gp_set_solid_pattern(unsigned long color)
         gp3_cmd_header |= GP3_BLT_HDR_PAT_CLR0_ENABLE;
 
         WRITE_COMMAND32(GP3_BLT_PAT_COLOR_0, color);
-    } else {
+    }
+    else {
         gp3_cmd_header |= GP3_VEC_HDR_PAT_CLR0_ENABLE;
 
         WRITE_COMMAND32(GP3_VECTOR_PAT_COLOR_0, color);
@@ -534,7 +539,8 @@ gp_set_solid_pattern(unsigned long color)
 
 void
 gp_set_mono_pattern(unsigned long bgcolor, unsigned long fgcolor,
-    unsigned long data0, unsigned long data1, int transparent, int x, int y)
+                    unsigned long data0, unsigned long data1, int transparent,
+                    int x, int y)
 {
     /* CHANNEL 3 IS NOT NEEDED FOR MONOCHROME PATTERNS */
 
@@ -556,16 +562,17 @@ gp_set_mono_pattern(unsigned long bgcolor, unsigned long fgcolor,
     if (gp3_blt) {
         gp3_cmd_header |=
             (GP3_BLT_HDR_PAT_CLR0_ENABLE | GP3_BLT_HDR_PAT_CLR1_ENABLE |
-            GP3_BLT_HDR_PAT_DATA0_ENABLE | GP3_BLT_HDR_PAT_DATA1_ENABLE);
+             GP3_BLT_HDR_PAT_DATA0_ENABLE | GP3_BLT_HDR_PAT_DATA1_ENABLE);
 
         WRITE_COMMAND32(GP3_BLT_PAT_COLOR_0, bgcolor);
         WRITE_COMMAND32(GP3_BLT_PAT_COLOR_1, fgcolor);
         WRITE_COMMAND32(GP3_BLT_PAT_DATA_0, data0);
         WRITE_COMMAND32(GP3_BLT_PAT_DATA_1, data1);
-    } else {
+    }
+    else {
         gp3_cmd_header |=
             (GP3_VEC_HDR_PAT_CLR0_ENABLE | GP3_VEC_HDR_PAT_CLR1_ENABLE |
-            GP3_VEC_HDR_PAT_DATA0_ENABLE | GP3_VEC_HDR_PAT_DATA1_ENABLE);
+             GP3_VEC_HDR_PAT_DATA0_ENABLE | GP3_VEC_HDR_PAT_DATA1_ENABLE);
 
         WRITE_COMMAND32(GP3_VECTOR_PAT_COLOR_0, bgcolor);
         WRITE_COMMAND32(GP3_VECTOR_PAT_COLOR_1, fgcolor);
@@ -575,8 +582,8 @@ gp_set_mono_pattern(unsigned long bgcolor, unsigned long fgcolor,
 
     /* SAVE PATTERN ORIGIN */
 
-    gp3_pat_origin = ((unsigned long)y << 29) |
-        (((unsigned long)x & 7) << 26);
+    gp3_pat_origin = ((unsigned long) y << 29) |
+        (((unsigned long) x & 7) << 26);
 }
 
 /*---------------------------------------------------------------------------
@@ -592,8 +599,8 @@ gp_set_pattern_origin(int x, int y)
 {
     /* SAVE PATTERN ORIGIN */
 
-    gp3_pat_origin = ((unsigned long)y << 29) |
-        (((unsigned long)x & 7) << 26);
+    gp3_pat_origin = ((unsigned long) y << 29) |
+        (((unsigned long) x & 7) << 26);
 }
 
 /*---------------------------------------------------------------------------
@@ -620,9 +627,9 @@ gp_set_color_pattern(unsigned long *pattern, int format, int x, int y)
      * 4BPP patterns are not supported.
      */
 
-    gp3_pat_pix_shift = (unsigned long)((format >> 2) & 3);
-    gp3_pat_format = (((unsigned long)format & 0xF) << 24) |
-        (((unsigned long)format & 0x10) << 17) |
+    gp3_pat_pix_shift = (unsigned long) ((format >> 2) & 3);
+    gp3_pat_format = (((unsigned long) format & 0xF) << 24) |
+        (((unsigned long) format & 0x10) << 17) |
         GP3_CH3_COLOR_PAT_ENABLE | GP3_CH3_C3EN;
 
     size_dwords = (64 << gp3_pat_pix_shift) >> 2;
@@ -641,7 +648,8 @@ gp_set_color_pattern(unsigned long *pattern, int format, int x, int y)
         /* Same logic as BLT wrapping. */
 
         GP3_WAIT_WRAP(temp);
-    } else {
+    }
+    else {
         gp3_cmd_header = GP3_LUT_HDR_TYPE | GP3_LUT_HDR_DATA_ENABLE;
 
         /* WAIT FOR AVAILABLE SPACE */
@@ -671,8 +679,8 @@ gp_set_color_pattern(unsigned long *pattern, int format, int x, int y)
 
     /* SAVE PATTERN ORIGIN */
 
-    gp3_pat_origin = ((unsigned long)y << 29) |
-        (((unsigned long)x & 7) << 26);
+    gp3_pat_origin = ((unsigned long) y << 29) |
+        (((unsigned long) x & 7) << 26);
 }
 
 /*---------------------------------------------------------------------------
@@ -683,7 +691,7 @@ gp_set_color_pattern(unsigned long *pattern, int format, int x, int y)
 
 void
 gp_set_mono_source(unsigned long bgcolor, unsigned long fgcolor,
-    int transparent)
+                   int transparent)
 {
     /* UPDATE RASTER MODE REGISTER IF TRANSPARENT */
 
@@ -784,7 +792,8 @@ gp_program_lut(unsigned long *colors, int full_lut)
         /* Same logic as BLT wrapping. */
 
         GP3_WAIT_WRAP(temp);
-    } else {
+    }
+    else {
         gp3_cmd_header = GP3_LUT_HDR_TYPE | GP3_LUT_HDR_DATA_ENABLE;
 
         /* WAIT FOR AVAILABLE SPACE */
@@ -865,7 +874,8 @@ gp_set_vector_pattern(unsigned long pattern, unsigned long color, int length)
         /* Same logic as BLT wrapping. */
 
         GP3_WAIT_WRAP(temp);
-    } else {
+    }
+    else {
         gp3_cmd_header = GP3_LUT_HDR_TYPE | GP3_LUT_HDR_DATA_ENABLE;
 
         /* WAIT FOR AVAILABLE SPACE */
@@ -953,9 +963,9 @@ gp_set_source_format(int format)
     /* of 3 being a special case for 4BPP data.  Clever, yes?  Even more    */
     /* clever, bit 4 indicates BGR ordering.                                */
 
-    gp3_src_pix_shift = (unsigned long)((format >> 2) & 3);
-    gp3_src_format = (((unsigned long)format & 0xF) << 24) |
-        (((unsigned long)format & 0x10) << 18);
+    gp3_src_pix_shift = (unsigned long) ((format >> 2) & 3);
+    gp3_src_format = (((unsigned long) format & 0xF) << 24) |
+        (((unsigned long) format & 0x10) << 18);
 }
 
 /*---------------------------------------------------------------------------
@@ -968,7 +978,7 @@ gp_set_source_format(int format)
 
 void
 gp_pattern_fill(unsigned long dstoffset, unsigned long width,
-    unsigned long height)
+                unsigned long height)
 {
     unsigned long base_register;
 
@@ -1006,12 +1016,13 @@ gp_pattern_fill(unsigned long dstoffset, unsigned long width,
         WRITE_COMMAND32(GP3_BLT_CH3_OFFSET, gp3_pat_origin);
         WRITE_COMMAND32(GP3_BLT_DST_OFFSET, dstoffset & 0x3FFFFF);
         WRITE_COMMAND32(GP3_BLT_CH3_MODE_STR, gp3_pat_format);
-    } else {
+    }
+    else {
         /* DISABLE CHANNEL 3 AND USE NORMAL PATTERN ORIGINS */
 
         WRITE_COMMAND32(GP3_BLT_CH3_MODE_STR, 0);
         WRITE_COMMAND32(GP3_BLT_DST_OFFSET,
-            ((dstoffset & 0x3FFFFF) | gp3_pat_origin));
+                        ((dstoffset & 0x3FFFFF) | gp3_pat_origin));
     }
 
     /* START THE BLT */
@@ -1042,7 +1053,7 @@ gp_pattern_fill(unsigned long dstoffset, unsigned long width,
 
 void
 gp_screen_to_screen_blt(unsigned long dstoffset, unsigned long srcoffset,
-    unsigned long width, unsigned long height, int flags)
+                        unsigned long width, unsigned long height, int flags)
 {
     unsigned long base;
     unsigned long ch3_flags = 0;
@@ -1102,11 +1113,12 @@ gp_screen_to_screen_blt(unsigned long dstoffset, unsigned long srcoffset,
         WRITE_COMMAND32(GP3_BLT_CH3_WIDHI, size);
         WRITE_COMMAND32(GP3_BLT_BASE_OFFSET, base);
         WRITE_COMMAND32(GP3_BLT_CH3_MODE_STR,
-            GP3_CH3_C3EN | GP3_CH3_REPLACE_SOURCE |
-            gp3_ch3_bpp | gp3_src_stride | ch3_flags |
-            ((gp3_blt_flags & CIMGP_ENABLE_PREFETCH) << 17) |
-            ((gp3_blt_flags & CIMGP_BLTFLAGS_PRES_LUT) << 20));
-    } else {
+                        GP3_CH3_C3EN | GP3_CH3_REPLACE_SOURCE |
+                        gp3_ch3_bpp | gp3_src_stride | ch3_flags |
+                        ((gp3_blt_flags & CIMGP_ENABLE_PREFETCH) << 17) |
+                        ((gp3_blt_flags & CIMGP_BLTFLAGS_PRES_LUT) << 20));
+    }
+    else {
         /* CALCULATE BASE OFFSET REGISTER */
 
         base = ((gp3_fb_base << 24) + dstbase) |
@@ -1133,7 +1145,8 @@ gp_screen_to_screen_blt(unsigned long dstoffset, unsigned long srcoffset,
             WRITE_COMMAND32(GP3_BLT_DST_OFFSET, dstoffset);
             WRITE_COMMAND32(GP3_BLT_CH3_MODE_STR, gp3_pat_format | ch3_flags);
             WRITE_COMMAND32(GP3_BLT_CH3_WIDHI, size);
-        } else {
+        }
+        else {
             WRITE_COMMAND32(GP3_BLT_DST_OFFSET, dstoffset | gp3_pat_origin);
             WRITE_COMMAND32(GP3_BLT_CH3_MODE_STR, 0);
         }
@@ -1151,7 +1164,6 @@ gp_screen_to_screen_blt(unsigned long dstoffset, unsigned long srcoffset,
     gp3_cmd_current = gp3_cmd_next;
 }
 
-
 /*---------------------------------------------------------------------------
  * gp_screen_to_screen_convert
  *
@@ -1162,7 +1174,8 @@ gp_screen_to_screen_blt(unsigned long dstoffset, unsigned long srcoffset,
 
 void
 gp_screen_to_screen_convert(unsigned long dstoffset, unsigned long srcoffset,
-    unsigned long width, unsigned long height, int nibble)
+                            unsigned long width, unsigned long height,
+                            int nibble)
 {
     unsigned long size = ((width << 16) | height);
     unsigned long ch3_offset = srcoffset & 0x3FFFFF;
@@ -1195,14 +1208,15 @@ gp_screen_to_screen_convert(unsigned long dstoffset, unsigned long srcoffset,
     /* WRITE ALL BLT REGISTERS */
 
     WRITE_COMMAND32(GP3_BLT_DST_OFFSET,
-        (dstoffset & 0x3FFFFF) | gp3_pat_origin);
+                    (dstoffset & 0x3FFFFF) | gp3_pat_origin);
     WRITE_COMMAND32(GP3_BLT_WID_HEIGHT, size);
     WRITE_COMMAND32(GP3_BLT_CH3_WIDHI, ch3_size);
     WRITE_COMMAND32(GP3_BLT_CH3_OFFSET, ch3_offset);
     WRITE_COMMAND32(GP3_BLT_CH3_MODE_STR,
-        GP3_CH3_C3EN | GP3_CH3_REPLACE_SOURCE | gp3_src_format |
-        ((gp3_blt_flags & CIMGP_BLTFLAGS_PRES_LUT) << 20) |
-        ((gp3_blt_flags & CIMGP_ENABLE_PREFETCH) << 17) | gp3_src_stride);
+                    GP3_CH3_C3EN | GP3_CH3_REPLACE_SOURCE | gp3_src_format |
+                    ((gp3_blt_flags & CIMGP_BLTFLAGS_PRES_LUT) << 20) |
+                    ((gp3_blt_flags & CIMGP_ENABLE_PREFETCH) << 17) |
+                    gp3_src_stride);
     WRITE_COMMAND32(GP3_BLT_BASE_OFFSET, base);
 
     /* START THE BLT */
@@ -1223,8 +1237,8 @@ gp_screen_to_screen_convert(unsigned long dstoffset, unsigned long srcoffset,
 
 void
 gp_color_bitmap_to_screen_blt(unsigned long dstoffset, unsigned long srcx,
-    unsigned long width, unsigned long height, unsigned char *data,
-    long pitch)
+                              unsigned long width, unsigned long height,
+                              unsigned char *data, long pitch)
 {
     unsigned long indent, temp;
     unsigned long total_dwords, size_dwords;
@@ -1261,16 +1275,17 @@ gp_color_bitmap_to_screen_blt(unsigned long dstoffset, unsigned long srcx,
         WRITE_COMMAND32(GP3_BLT_DST_OFFSET, (dstoffset & 0x3FFFFF));
         WRITE_COMMAND32(GP3_BLT_CH3_MODE_STR, gp3_pat_format);
         WRITE_COMMAND32(GP3_BLT_CH3_WIDHI, size);
-    } else {
+    }
+    else {
         WRITE_COMMAND32(GP3_BLT_DST_OFFSET,
-            ((dstoffset & 0x3FFFFF) | gp3_pat_origin));
+                        ((dstoffset & 0x3FFFFF) | gp3_pat_origin));
         WRITE_COMMAND32(GP3_BLT_CH3_MODE_STR, 0);
     }
 
     WRITE_COMMAND32(GP3_BLT_SRC_OFFSET, indent);
     WRITE_COMMAND32(GP3_BLT_WID_HEIGHT, size);
     WRITE_COMMAND32(GP3_BLT_BASE_OFFSET,
-        ((gp3_fb_base << 24) + (dstoffset & 0xFFC00000)));
+                    ((gp3_fb_base << 24) + (dstoffset & 0xFFC00000)));
     WRITE_COMMAND32(GP3_BLT_MODE, gp3_blt_mode | GP3_BM_SRC_HOST);
 
     /* START THE BLT */
@@ -1304,12 +1319,13 @@ gp_color_bitmap_to_screen_blt(unsigned long dstoffset, unsigned long srcx,
 
             GP3_WAIT_WRAP(temp);
             WRITE_COMMAND32(0,
-                GP3_DATA_LOAD_HDR_TYPE | GP3_DATA_LOAD_HDR_WRAP |
-                GP3_DATA_LOAD_HDR_ENABLE);
-        } else {
+                            GP3_DATA_LOAD_HDR_TYPE | GP3_DATA_LOAD_HDR_WRAP |
+                            GP3_DATA_LOAD_HDR_ENABLE);
+        }
+        else {
             GP3_WAIT_PRIMITIVE(temp);
             WRITE_COMMAND32(0,
-                GP3_DATA_LOAD_HDR_TYPE | GP3_DATA_LOAD_HDR_ENABLE);
+                            GP3_DATA_LOAD_HDR_TYPE | GP3_DATA_LOAD_HDR_ENABLE);
         }
 
         /* WRITE DWORD COUNT */
@@ -1321,7 +1337,7 @@ gp_color_bitmap_to_screen_blt(unsigned long dstoffset, unsigned long srcx,
 
             WRITE_COMMAND_STRING32(8, data, srcoffset, dword_count);
             WRITE_COMMAND_STRING8(8 + (dword_count << 2), data,
-                srcoffset + (dword_count << 2), byte_count);
+                                  srcoffset + (dword_count << 2), byte_count);
 
             srcoffset += pitch;
             cim_cmd_ptr += total_dwords << 2;
@@ -1329,7 +1345,8 @@ gp_color_bitmap_to_screen_blt(unsigned long dstoffset, unsigned long srcx,
 
         WRITE_GP32(GP3_CMD_WRITE, gp3_cmd_next);
         gp3_cmd_current = gp3_cmd_next;
-    } else {
+    }
+    else {
         /*
          * Each line will be created as a separate command buffer entry to
          * allow line-by-line wrapping and to allow simultaneous rendering
@@ -1355,13 +1372,15 @@ gp_color_bitmap_to_screen_blt(unsigned long dstoffset, unsigned long srcx,
 
                 GP3_WAIT_WRAP(temp);
                 WRITE_COMMAND32(0, GP3_DATA_LOAD_HDR_TYPE |
-                    GP3_DATA_LOAD_HDR_WRAP | GP3_DATA_LOAD_HDR_ENABLE);
-            } else {
+                                GP3_DATA_LOAD_HDR_WRAP |
+                                GP3_DATA_LOAD_HDR_ENABLE);
+            }
+            else {
                 /* WAIT FOR AVAILABLE SPACE */
 
                 GP3_WAIT_PRIMITIVE(temp);
                 WRITE_COMMAND32(0, GP3_DATA_LOAD_HDR_TYPE |
-                    GP3_DATA_LOAD_HDR_ENABLE);
+                                GP3_DATA_LOAD_HDR_ENABLE);
             }
 
             /* WRITE DWORD COUNT */
@@ -1372,7 +1391,7 @@ gp_color_bitmap_to_screen_blt(unsigned long dstoffset, unsigned long srcx,
 
             WRITE_COMMAND_STRING32(8, data, srcoffset, dword_count);
             WRITE_COMMAND_STRING8(8 + (dword_count << 2), data,
-                srcoffset + (dword_count << 2), byte_count);
+                                  srcoffset + (dword_count << 2), byte_count);
 
             /* UPDATE POINTERS */
 
@@ -1393,8 +1412,8 @@ gp_color_bitmap_to_screen_blt(unsigned long dstoffset, unsigned long srcx,
 
 void
 gp_color_convert_blt(unsigned long dstoffset, unsigned long srcx,
-    unsigned long width, unsigned long height,
-    unsigned char *data, long pitch)
+                     unsigned long width, unsigned long height,
+                     unsigned char *data, long pitch)
 {
     unsigned long indent, temp;
     unsigned long total_dwords, size_dwords;
@@ -1427,7 +1446,8 @@ gp_color_convert_blt(unsigned long dstoffset, unsigned long srcx,
         ch3_offset = 0;
         temp = width * 3;
         ch3_size = (((temp + 3) >> 2) << 16) | height;
-    } else {
+    }
+    else {
         ch3_size = size;
 
         if (gp3_src_pix_shift == 3) {
@@ -1439,7 +1459,8 @@ gp_color_convert_blt(unsigned long dstoffset, unsigned long srcx,
             ch3_offset = indent | ((srcx & 1) << 25);
 
             temp = ((width + (srcx & 1) + 1) >> 1) + indent;
-        } else {
+        }
+        else {
             indent = (srcx << gp3_src_pix_shift);
             srcoffset = (indent & ~3L);
             indent &= 3;
@@ -1467,14 +1488,15 @@ gp_color_convert_blt(unsigned long dstoffset, unsigned long srcx,
         GP3_BLT_HDR_BASE_OFFSET_ENABLE | GP3_BLT_HDR_BLT_MODE_ENABLE;
 
     WRITE_COMMAND32(GP3_BLT_DST_OFFSET,
-        (dstoffset & 0x3FFFFF) | gp3_pat_origin);
+                    (dstoffset & 0x3FFFFF) | gp3_pat_origin);
     WRITE_COMMAND32(GP3_BLT_CH3_OFFSET, ch3_offset);
     WRITE_COMMAND32(GP3_BLT_WID_HEIGHT, size);
     WRITE_COMMAND32(GP3_BLT_CH3_WIDHI, ch3_size);
     WRITE_COMMAND32(GP3_BLT_BASE_OFFSET, base);
     WRITE_COMMAND32(GP3_BLT_CH3_MODE_STR, GP3_CH3_C3EN |
-        GP3_CH3_REPLACE_SOURCE | GP3_CH3_HST_SRC_ENABLE |
-        gp3_src_format | ((gp3_blt_flags & CIMGP_BLTFLAGS_PRES_LUT) << 20));
+                    GP3_CH3_REPLACE_SOURCE | GP3_CH3_HST_SRC_ENABLE |
+                    gp3_src_format | ((gp3_blt_flags & CIMGP_BLTFLAGS_PRES_LUT)
+                                      << 20));
     WRITE_COMMAND32(GP3_BLT_MODE, gp3_blt_mode);
 
     /* START THE BLT */
@@ -1498,24 +1520,24 @@ gp_color_convert_blt(unsigned long dstoffset, unsigned long srcx,
 
             GP3_WAIT_WRAP(temp);
             WRITE_COMMAND32(0, GP3_DATA_LOAD_HDR_TYPE |
-                GP3_DATA_LOAD_HDR_WRAP | GP3_DATA_LOAD_HDR_ENABLE);
-        } else {
+                            GP3_DATA_LOAD_HDR_WRAP | GP3_DATA_LOAD_HDR_ENABLE);
+        }
+        else {
             GP3_WAIT_PRIMITIVE(temp);
             WRITE_COMMAND32(0,
-                GP3_DATA_LOAD_HDR_TYPE | GP3_DATA_LOAD_HDR_ENABLE);
+                            GP3_DATA_LOAD_HDR_TYPE | GP3_DATA_LOAD_HDR_ENABLE);
         }
 
         /* WRITE DWORD COUNT */
 
-        WRITE_COMMAND32(4, GP3_CH3_HOST_SOURCE_TYPE |
-            (total_dwords * height));
+        WRITE_COMMAND32(4, GP3_CH3_HOST_SOURCE_TYPE | (total_dwords * height));
 
         while (height--) {
             /* WRITE DATA */
 
             WRITE_COMMAND_STRING32(8, data, srcoffset, dword_count);
             WRITE_COMMAND_STRING8(8 + (dword_count << 2), data,
-                srcoffset + (dword_count << 2), byte_count);
+                                  srcoffset + (dword_count << 2), byte_count);
 
             srcoffset += pitch;
             cim_cmd_ptr += total_dwords << 2;
@@ -1523,7 +1545,8 @@ gp_color_convert_blt(unsigned long dstoffset, unsigned long srcx,
 
         WRITE_GP32(GP3_CMD_WRITE, gp3_cmd_next);
         gp3_cmd_current = gp3_cmd_next;
-    } else {
+    }
+    else {
         /* WRITE DATA LINE BY LINE
          * Each line will be created as a separate command buffer entry to
          * allow line-by-line wrapping and to allow simultaneous rendering
@@ -1549,13 +1572,15 @@ gp_color_convert_blt(unsigned long dstoffset, unsigned long srcx,
 
                 GP3_WAIT_WRAP(temp);
                 WRITE_COMMAND32(0, GP3_DATA_LOAD_HDR_TYPE |
-                    GP3_DATA_LOAD_HDR_WRAP | GP3_DATA_LOAD_HDR_ENABLE);
-            } else {
+                                GP3_DATA_LOAD_HDR_WRAP |
+                                GP3_DATA_LOAD_HDR_ENABLE);
+            }
+            else {
                 /* WAIT FOR AVAILABLE SPACE */
 
                 GP3_WAIT_PRIMITIVE(temp);
                 WRITE_COMMAND32(0, GP3_DATA_LOAD_HDR_TYPE |
-                    GP3_DATA_LOAD_HDR_ENABLE);
+                                GP3_DATA_LOAD_HDR_ENABLE);
             }
 
             /* WRITE DWORD COUNT */
@@ -1566,7 +1591,7 @@ gp_color_convert_blt(unsigned long dstoffset, unsigned long srcx,
 
             WRITE_COMMAND_STRING32(8, data, srcoffset, dword_count);
             WRITE_COMMAND_STRING8(8 + (dword_count << 2), data,
-                srcoffset + (dword_count << 2), byte_count);
+                                  srcoffset + (dword_count << 2), byte_count);
 
             /* UPDATE POINTERS */
 
@@ -1589,8 +1614,8 @@ gp_color_convert_blt(unsigned long dstoffset, unsigned long srcx,
 
 void
 gp_custom_convert_blt(unsigned long dstoffset, unsigned long srcx,
-    unsigned long width, unsigned long height,
-    unsigned char *data, long pitch)
+                      unsigned long width, unsigned long height,
+                      unsigned char *data, long pitch)
 {
     unsigned long indent, temp;
     unsigned long total_dwords, size_dwords;
@@ -1622,7 +1647,8 @@ gp_custom_convert_blt(unsigned long dstoffset, unsigned long srcx,
         ch3_offset = 0;
         temp = width * 3;
         ch3_size = (((temp + 3) >> 2) << 16) | height;
-    } else {
+    }
+    else {
         ch3_size = size;
 
         if (gp3_src_pix_shift == 3) {
@@ -1634,7 +1660,8 @@ gp_custom_convert_blt(unsigned long dstoffset, unsigned long srcx,
             ch3_offset = indent | ((srcx & 1) << 25);
 
             temp = ((width + (srcx & 1) + 1) >> 1) + indent;
-        } else {
+        }
+        else {
             indent = (srcx << gp3_src_pix_shift);
             srcoffset = (indent & ~3L);
             indent &= 3;
@@ -1662,14 +1689,15 @@ gp_custom_convert_blt(unsigned long dstoffset, unsigned long srcx,
         GP3_BLT_HDR_BASE_OFFSET_ENABLE | GP3_BLT_HDR_BLT_MODE_ENABLE;
 
     WRITE_COMMAND32(GP3_BLT_DST_OFFSET,
-        (dstoffset & 0x3FFFFF) | gp3_pat_origin);
+                    (dstoffset & 0x3FFFFF) | gp3_pat_origin);
     WRITE_COMMAND32(GP3_BLT_CH3_OFFSET, ch3_offset);
     WRITE_COMMAND32(GP3_BLT_WID_HEIGHT, size);
     WRITE_COMMAND32(GP3_BLT_CH3_WIDHI, ch3_size);
     WRITE_COMMAND32(GP3_BLT_BASE_OFFSET, base);
     WRITE_COMMAND32(GP3_BLT_CH3_MODE_STR, GP3_CH3_C3EN |
-        GP3_CH3_REPLACE_SOURCE | GP3_CH3_HST_SRC_ENABLE |
-        gp3_src_format | ((gp3_blt_flags & CIMGP_BLTFLAGS_PRES_LUT) << 20));
+                    GP3_CH3_REPLACE_SOURCE | GP3_CH3_HST_SRC_ENABLE |
+                    gp3_src_format | ((gp3_blt_flags & CIMGP_BLTFLAGS_PRES_LUT)
+                                      << 20));
     WRITE_COMMAND32(GP3_BLT_MODE, gp3_blt_mode);
 
     /* START THE BLT */
@@ -1693,25 +1721,26 @@ gp_custom_convert_blt(unsigned long dstoffset, unsigned long srcx,
 
             GP3_WAIT_WRAP(temp);
             WRITE_COMMAND32(0,
-                GP3_DATA_LOAD_HDR_TYPE | GP3_DATA_LOAD_HDR_WRAP |
-                GP3_DATA_LOAD_HDR_ENABLE);
-        } else {
+                            GP3_DATA_LOAD_HDR_TYPE | GP3_DATA_LOAD_HDR_WRAP |
+                            GP3_DATA_LOAD_HDR_ENABLE);
+        }
+        else {
             GP3_WAIT_PRIMITIVE(temp);
             WRITE_COMMAND32(0,
-                GP3_DATA_LOAD_HDR_TYPE | GP3_DATA_LOAD_HDR_ENABLE);
+                            GP3_DATA_LOAD_HDR_TYPE | GP3_DATA_LOAD_HDR_ENABLE);
         }
 
         /* WRITE DWORD COUNT */
 
-        WRITE_COMMAND32(4,
-            GP3_CH3_HOST_SOURCE_TYPE | (total_dwords * height));
+        WRITE_COMMAND32(4, GP3_CH3_HOST_SOURCE_TYPE | (total_dwords * height));
 
         while (height--) {
             /* WRITE DATA */
 
             WRITE_CUSTOM_COMMAND_STRING32(8, data, srcoffset, dword_count);
             WRITE_CUSTOM_COMMAND_STRING8(8 + (dword_count << 2), data,
-                srcoffset + (dword_count << 2), byte_count);
+                                         srcoffset + (dword_count << 2),
+                                         byte_count);
 
             srcoffset += pitch;
             cim_cmd_ptr += total_dwords << 2;
@@ -1719,7 +1748,8 @@ gp_custom_convert_blt(unsigned long dstoffset, unsigned long srcx,
 
         WRITE_GP32(GP3_CMD_WRITE, gp3_cmd_next);
         gp3_cmd_current = gp3_cmd_next;
-    } else {
+    }
+    else {
         /* WRITE DATA LINE BY LINE
          * Each line will be created as a separate command buffer entry to
          * allow line-by-line wrapping and to allow simultaneous rendering
@@ -1745,14 +1775,16 @@ gp_custom_convert_blt(unsigned long dstoffset, unsigned long srcx,
 
                 GP3_WAIT_WRAP(temp);
                 WRITE_COMMAND32(0,
-                    GP3_DATA_LOAD_HDR_TYPE | GP3_DATA_LOAD_HDR_WRAP |
-                    GP3_DATA_LOAD_HDR_ENABLE);
-            } else {
+                                GP3_DATA_LOAD_HDR_TYPE | GP3_DATA_LOAD_HDR_WRAP
+                                | GP3_DATA_LOAD_HDR_ENABLE);
+            }
+            else {
                 /* WAIT FOR AVAILABLE SPACE */
 
                 GP3_WAIT_PRIMITIVE(temp);
                 WRITE_COMMAND32(0,
-                    GP3_DATA_LOAD_HDR_TYPE | GP3_DATA_LOAD_HDR_ENABLE);
+                                GP3_DATA_LOAD_HDR_TYPE |
+                                GP3_DATA_LOAD_HDR_ENABLE);
             }
 
             /* WRITE DWORD COUNT */
@@ -1763,7 +1795,8 @@ gp_custom_convert_blt(unsigned long dstoffset, unsigned long srcx,
 
             WRITE_CUSTOM_COMMAND_STRING32(8, data, srcoffset, dword_count);
             WRITE_CUSTOM_COMMAND_STRING8(8 + (dword_count << 2), data,
-                srcoffset + (dword_count << 2), byte_count);
+                                         srcoffset + (dword_count << 2),
+                                         byte_count);
 
             /* UPDATE POINTERS */
 
@@ -1786,7 +1819,7 @@ gp_custom_convert_blt(unsigned long dstoffset, unsigned long srcx,
 
 void
 gp_rotate_blt(unsigned long dstoffset, unsigned long srcoffset,
-    unsigned long width, unsigned long height, int degrees)
+              unsigned long width, unsigned long height, int degrees)
 {
     unsigned long sizein, sizeout;
     unsigned long ch3_flags;
@@ -1852,8 +1885,9 @@ gp_rotate_blt(unsigned long dstoffset, unsigned long srcoffset,
     WRITE_COMMAND32(GP3_BLT_CH3_WIDHI, sizein);
     WRITE_COMMAND32(GP3_BLT_CH3_OFFSET, srcoffset);
     WRITE_COMMAND32(GP3_BLT_CH3_MODE_STR, ch3_flags | gp3_src_format |
-        ((gp3_blt_flags & CIMGP_BLTFLAGS_PRES_LUT) << 20) |
-        ((gp3_blt_flags & CIMGP_ENABLE_PREFETCH) << 17) | gp3_src_stride);
+                    ((gp3_blt_flags & CIMGP_BLTFLAGS_PRES_LUT) << 20) |
+                    ((gp3_blt_flags & CIMGP_ENABLE_PREFETCH) << 17) |
+                    gp3_src_stride);
     WRITE_COMMAND32(GP3_BLT_BASE_OFFSET, base);
 
     /* START THE BLT */
@@ -1878,8 +1912,8 @@ gp_rotate_blt(unsigned long dstoffset, unsigned long srcoffset,
 
 void
 gp_mono_bitmap_to_screen_blt(unsigned long dstoffset, unsigned long srcx,
-    unsigned long width, unsigned long height,
-    unsigned char *data, long stride)
+                             unsigned long width, unsigned long height,
+                             unsigned char *data, long stride)
 {
     unsigned long indent, temp;
     unsigned long total_dwords, size_dwords;
@@ -1918,24 +1952,26 @@ gp_mono_bitmap_to_screen_blt(unsigned long dstoffset, unsigned long srcx,
         WRITE_COMMAND32(GP3_BLT_DST_OFFSET, (dstoffset & 0x3FFFFF));
         WRITE_COMMAND32(GP3_BLT_CH3_MODE_STR, gp3_pat_format);
         WRITE_COMMAND32(GP3_BLT_CH3_WIDHI, size);
-    } else {
+    }
+    else {
         WRITE_COMMAND32(GP3_BLT_DST_OFFSET,
-            ((dstoffset & 0x3FFFFF) | gp3_pat_origin));
+                        ((dstoffset & 0x3FFFFF) | gp3_pat_origin));
         WRITE_COMMAND32(GP3_BLT_CH3_MODE_STR, 0);
     }
     if (gp3_blt_flags & CIMGP_BLTFLAGS_INVERTMONO) {
         WRITE_COMMAND32(GP3_BLT_RASTER_MODE,
-            gp3_raster_mode | GP3_RM_SOURCE_INVERT);
-    } else {
+                        gp3_raster_mode | GP3_RM_SOURCE_INVERT);
+    }
+    else {
         WRITE_COMMAND32(GP3_BLT_RASTER_MODE,
-            gp3_raster_mode & ~GP3_RM_SOURCE_INVERT);
+                        gp3_raster_mode & ~GP3_RM_SOURCE_INVERT);
     }
     WRITE_COMMAND32(GP3_BLT_SRC_OFFSET, src_value);
     WRITE_COMMAND32(GP3_BLT_WID_HEIGHT, size);
     WRITE_COMMAND32(GP3_BLT_BASE_OFFSET,
-        ((gp3_fb_base << 24) + (dstoffset & 0xFFC00000)));
+                    ((gp3_fb_base << 24) + (dstoffset & 0xFFC00000)));
     WRITE_COMMAND32(GP3_BLT_MODE,
-        gp3_blt_mode | GP3_BM_SRC_HOST | GP3_BM_SRC_MONO);
+                    gp3_blt_mode | GP3_BM_SRC_HOST | GP3_BM_SRC_MONO);
 
     /* START THE BLT */
 
@@ -1971,12 +2007,13 @@ gp_mono_bitmap_to_screen_blt(unsigned long dstoffset, unsigned long srcx,
 
             GP3_WAIT_WRAP(temp);
             WRITE_COMMAND32(0,
-                GP3_DATA_LOAD_HDR_TYPE | GP3_DATA_LOAD_HDR_WRAP |
-                GP3_DATA_LOAD_HDR_ENABLE);
-        } else {
+                            GP3_DATA_LOAD_HDR_TYPE | GP3_DATA_LOAD_HDR_WRAP |
+                            GP3_DATA_LOAD_HDR_ENABLE);
+        }
+        else {
             GP3_WAIT_PRIMITIVE(temp);
             WRITE_COMMAND32(0,
-                GP3_DATA_LOAD_HDR_TYPE | GP3_DATA_LOAD_HDR_ENABLE);
+                            GP3_DATA_LOAD_HDR_TYPE | GP3_DATA_LOAD_HDR_ENABLE);
         }
 
         /* WRITE DWORD COUNT */
@@ -1988,7 +2025,7 @@ gp_mono_bitmap_to_screen_blt(unsigned long dstoffset, unsigned long srcx,
 
             WRITE_COMMAND_STRING32(8, data, srcoffset, dword_count);
             WRITE_COMMAND_STRING8(8 + (dword_count << 2), data,
-                srcoffset + (dword_count << 2), byte_count);
+                                  srcoffset + (dword_count << 2), byte_count);
 
             srcoffset += stride;
             cim_cmd_ptr += total_dwords << 2;
@@ -1996,7 +2033,8 @@ gp_mono_bitmap_to_screen_blt(unsigned long dstoffset, unsigned long srcx,
 
         WRITE_GP32(GP3_CMD_WRITE, gp3_cmd_next);
         gp3_cmd_current = gp3_cmd_next;
-    } else {
+    }
+    else {
         /* WRITE DATA LINE BY LINE
          * Each line will be created as a separate command buffer entry to
          * allow line-by-line wrapping and to allow simultaneous rendering
@@ -2022,14 +2060,16 @@ gp_mono_bitmap_to_screen_blt(unsigned long dstoffset, unsigned long srcx,
 
                 GP3_WAIT_WRAP(temp);
                 WRITE_COMMAND32(0,
-                    GP3_DATA_LOAD_HDR_TYPE | GP3_DATA_LOAD_HDR_WRAP |
-                    GP3_DATA_LOAD_HDR_ENABLE);
-            } else {
+                                GP3_DATA_LOAD_HDR_TYPE | GP3_DATA_LOAD_HDR_WRAP
+                                | GP3_DATA_LOAD_HDR_ENABLE);
+            }
+            else {
                 /* WAIT FOR AVAILABLE SPACE */
 
                 GP3_WAIT_PRIMITIVE(temp);
                 WRITE_COMMAND32(0,
-                    GP3_DATA_LOAD_HDR_TYPE | GP3_DATA_LOAD_HDR_ENABLE);
+                                GP3_DATA_LOAD_HDR_TYPE |
+                                GP3_DATA_LOAD_HDR_ENABLE);
             }
 
             /* WRITE DWORD COUNT */
@@ -2040,7 +2080,7 @@ gp_mono_bitmap_to_screen_blt(unsigned long dstoffset, unsigned long srcx,
 
             WRITE_COMMAND_STRING32(8, data, srcoffset, dword_count);
             WRITE_COMMAND_STRING8(8 + (dword_count << 2), data,
-                srcoffset + (dword_count << 2), byte_count);
+                                  srcoffset + (dword_count << 2), byte_count);
 
             /* UPDATE POINTERS */
 
@@ -2060,7 +2100,7 @@ gp_mono_bitmap_to_screen_blt(unsigned long dstoffset, unsigned long srcx,
 
 void
 gp_text_blt(unsigned long dstoffset, unsigned long width,
-    unsigned long height, unsigned char *data)
+            unsigned long height, unsigned char *data)
 {
     unsigned long temp, dwords_total;
     unsigned long dword_count, byte_count;
@@ -2087,25 +2127,27 @@ gp_text_blt(unsigned long dstoffset, unsigned long width,
         WRITE_COMMAND32(GP3_BLT_DST_OFFSET, (dstoffset & 0x3FFFFF));
         WRITE_COMMAND32(GP3_BLT_CH3_MODE_STR, gp3_pat_format);
         WRITE_COMMAND32(GP3_BLT_CH3_WIDHI, size);
-    } else {
+    }
+    else {
         WRITE_COMMAND32(GP3_BLT_DST_OFFSET,
-            ((dstoffset & 0x3FFFFF) | gp3_pat_origin));
+                        ((dstoffset & 0x3FFFFF) | gp3_pat_origin));
         WRITE_COMMAND32(GP3_BLT_CH3_MODE_STR, 0);
     }
     if (gp3_blt_flags & CIMGP_BLTFLAGS_INVERTMONO) {
         WRITE_COMMAND32(GP3_BLT_RASTER_MODE,
-            gp3_raster_mode | GP3_RM_SOURCE_INVERT);
-    } else {
+                        gp3_raster_mode | GP3_RM_SOURCE_INVERT);
+    }
+    else {
         WRITE_COMMAND32(GP3_BLT_RASTER_MODE,
-            gp3_raster_mode & ~GP3_RM_SOURCE_INVERT);
+                        gp3_raster_mode & ~GP3_RM_SOURCE_INVERT);
     }
 
     WRITE_COMMAND32(GP3_BLT_SRC_OFFSET, 0);
     WRITE_COMMAND32(GP3_BLT_WID_HEIGHT, size);
     WRITE_COMMAND32(GP3_BLT_BASE_OFFSET,
-        ((gp3_fb_base << 24) + (dstoffset & 0xFFC00000)));
+                    ((gp3_fb_base << 24) + (dstoffset & 0xFFC00000)));
     WRITE_COMMAND32(GP3_BLT_MODE,
-        gp3_blt_mode | GP3_BM_SRC_HOST | GP3_BM_SRC_BP_MONO);
+                    gp3_blt_mode | GP3_BM_SRC_HOST | GP3_BM_SRC_BP_MONO);
 
     /* START THE BLT */
 
@@ -2129,7 +2171,8 @@ gp_text_blt(unsigned long dstoffset, unsigned long width,
             byte_count = 0;
             dwords_total = 2048;
             size -= 8192;
-        } else {
+        }
+        else {
             dword_count = (size >> 2);
             byte_count = (size & 3);
             dwords_total = (size + 3) >> 2;
@@ -2146,14 +2189,15 @@ gp_text_blt(unsigned long dstoffset, unsigned long width,
 
             GP3_WAIT_WRAP(temp);
             WRITE_COMMAND32(0,
-                GP3_DATA_LOAD_HDR_TYPE | GP3_DATA_LOAD_HDR_WRAP |
-                GP3_DATA_LOAD_HDR_ENABLE);
-        } else {
+                            GP3_DATA_LOAD_HDR_TYPE | GP3_DATA_LOAD_HDR_WRAP |
+                            GP3_DATA_LOAD_HDR_ENABLE);
+        }
+        else {
             /* WAIT FOR AVAILABLE SPACE */
 
             GP3_WAIT_PRIMITIVE(temp);
             WRITE_COMMAND32(0,
-                GP3_DATA_LOAD_HDR_TYPE | GP3_DATA_LOAD_HDR_ENABLE);
+                            GP3_DATA_LOAD_HDR_TYPE | GP3_DATA_LOAD_HDR_ENABLE);
         }
 
         /* WRITE DWORD COUNT */
@@ -2164,7 +2208,7 @@ gp_text_blt(unsigned long dstoffset, unsigned long width,
 
         WRITE_COMMAND_STRING32(8, data, srcoffset, dword_count);
         WRITE_COMMAND_STRING8(8 + (dword_count << 2), data,
-            srcoffset + (dword_count << 2), byte_count);
+                              srcoffset + (dword_count << 2), byte_count);
 
         WRITE_GP32(GP3_CMD_WRITE, gp3_cmd_next);
         gp3_cmd_current = gp3_cmd_next;
@@ -2190,8 +2234,8 @@ gp_text_blt(unsigned long dstoffset, unsigned long width,
 
 void
 gp_mono_expand_blt(unsigned long dstoffset, unsigned long srcoffset,
-    unsigned long srcx, unsigned long width,
-    unsigned long height, int byte_packed)
+                   unsigned long srcx, unsigned long width,
+                   unsigned long height, int byte_packed)
 {
     unsigned long base;
     unsigned long blt_mode;
@@ -2234,22 +2278,23 @@ gp_mono_expand_blt(unsigned long dstoffset, unsigned long srcoffset,
         WRITE_COMMAND32(GP3_BLT_DST_OFFSET, (dstoffset & 0x3FFFFF));
         WRITE_COMMAND32(GP3_BLT_CH3_MODE_STR, gp3_pat_format);
         WRITE_COMMAND32(GP3_BLT_CH3_WIDHI, size);
-    } else {
+    }
+    else {
         WRITE_COMMAND32(GP3_BLT_DST_OFFSET,
-            ((dstoffset & 0x3FFFFF) | gp3_pat_origin));
+                        ((dstoffset & 0x3FFFFF) | gp3_pat_origin));
         WRITE_COMMAND32(GP3_BLT_CH3_MODE_STR, 0);
     }
     if (gp3_blt_flags & CIMGP_BLTFLAGS_INVERTMONO) {
         WRITE_COMMAND32(GP3_BLT_RASTER_MODE,
-            gp3_raster_mode | GP3_RM_SOURCE_INVERT);
-    } else {
+                        gp3_raster_mode | GP3_RM_SOURCE_INVERT);
+    }
+    else {
         WRITE_COMMAND32(GP3_BLT_RASTER_MODE,
-            gp3_raster_mode & ~GP3_RM_SOURCE_INVERT);
+                        gp3_raster_mode & ~GP3_RM_SOURCE_INVERT);
     }
 
     WRITE_COMMAND32(GP3_BLT_BASE_OFFSET, base);
-    WRITE_COMMAND32(GP3_BLT_SRC_OFFSET,
-        (srcoffset & 0x3FFFFF) | (srcx << 26));
+    WRITE_COMMAND32(GP3_BLT_SRC_OFFSET, (srcoffset & 0x3FFFFF) | (srcx << 26));
     WRITE_COMMAND32(GP3_BLT_WID_HEIGHT, size);
 
     /* WORKAROUND FOR SIBZ #3744
@@ -2271,8 +2316,7 @@ gp_mono_expand_blt(unsigned long dstoffset, unsigned long srcoffset,
         size1 = ((8 - srcx) << 16) | 1;
         size2 = ((width + srcx - 8) << 16) | 1;
         org1 = gp3_pat_origin;
-        org2 = (org1 & 0xE0000000) |
-            ((org1 + ((8 - srcx) << 26)) & 0x1C000000);
+        org2 = (org1 & 0xE0000000) | ((org1 + ((8 - srcx) << 26)) & 0x1C000000);
         dstoff1 = dstoffset & 0x3FFFFF;
         dstoff2 = (dstoff1 + 8 - srcx) << gp3_pix_shift;
 
@@ -2282,7 +2326,7 @@ gp_mono_expand_blt(unsigned long dstoffset, unsigned long srcoffset,
             WRITE_COMMAND32(GP3_BLT_WID_HEIGHT, size1);
             WRITE_COMMAND32(GP3_BLT_CH3_WIDHI, size1);
             WRITE_COMMAND32(GP3_BLT_SRC_OFFSET,
-                (srcoffset & 0x3FFFFF) | (srcx << 26));
+                            (srcoffset & 0x3FFFFF) | (srcx << 26));
             WRITE_COMMAND32(GP3_BLT_DST_OFFSET, dstoff1 | org1);
             WRITE_COMMAND32(GP3_BLT_CH3_OFFSET, org1);
             WRITE_COMMAND32(GP3_BLT_CMD_HEADER, gp3_cmd_header);
@@ -2328,12 +2372,10 @@ gp_mono_expand_blt(unsigned long dstoffset, unsigned long srcoffset,
                     GP3_BLT_HDR_WIDHI_ENABLE |
                     GP3_BLT_HDR_BLT_MODE_ENABLE |
                     GP3_BLT_HDR_CH3_OFF_ENABLE | GP3_BLT_HDR_CH3_WIDHI_ENABLE;
-                WRITE_COMMAND32(GP3_BLT_WID_HEIGHT,
-                    (width << 16) | tempheight);
-                WRITE_COMMAND32(GP3_BLT_CH3_WIDHI,
-                    (width << 16) | tempheight);
+                WRITE_COMMAND32(GP3_BLT_WID_HEIGHT, (width << 16) | tempheight);
+                WRITE_COMMAND32(GP3_BLT_CH3_WIDHI, (width << 16) | tempheight);
                 WRITE_COMMAND32(GP3_BLT_SRC_OFFSET,
-                    (srcoffset & 0x3FFFFF) | (srcx << 26));
+                                (srcoffset & 0x3FFFFF) | (srcx << 26));
                 WRITE_COMMAND32(GP3_BLT_DST_OFFSET, dstoff1 | org1);
                 WRITE_COMMAND32(GP3_BLT_CH3_OFFSET, org1);
                 WRITE_COMMAND32(GP3_BLT_CMD_HEADER, gp3_cmd_header);
@@ -2393,8 +2435,8 @@ gp_mono_expand_blt(unsigned long dstoffset, unsigned long srcoffset,
 
 void
 gp_antialiased_text(unsigned long dstoffset, unsigned long srcx,
-    unsigned long width, unsigned long height,
-    unsigned char *data, long stride, int fourbpp)
+                    unsigned long width, unsigned long height,
+                    unsigned char *data, long stride, int fourbpp)
 {
     unsigned long indent, temp;
     unsigned long total_dwords, size_dwords;
@@ -2430,7 +2472,8 @@ gp_antialiased_text(unsigned long dstoffset, unsigned long srcx,
         ch3_offset = indent | ((srcx & 1) << 25);
 
         temp = ((width + (srcx & 1) + 1) >> 1) + indent;
-    } else {
+    }
+    else {
         depth_flag = GP3_CH3_SRC_8BPP_ALPHA;
         indent = srcx;
         srcoffset = (indent & ~3L);
@@ -2452,14 +2495,17 @@ gp_antialiased_text(unsigned long dstoffset, unsigned long srcx,
 
     if (gp3_bpp == GP3_RM_BPPFMT_565) {
         WRITE_COMMAND32(GP3_BLT_RASTER_MODE,
-            gp3_bpp |
-            GP3_RM_ALPHA_TO_RGB |
-            GP3_RM_ALPHA_A_PLUS_BETA_B | GP3_RM_SELECT_ALPHA_CHAN_3);
-    } else {
+                        gp3_bpp |
+                        GP3_RM_ALPHA_TO_RGB |
+                        GP3_RM_ALPHA_A_PLUS_BETA_B |
+                        GP3_RM_SELECT_ALPHA_CHAN_3);
+    }
+    else {
         WRITE_COMMAND32(GP3_BLT_RASTER_MODE,
-            gp3_bpp |
-            GP3_RM_ALPHA_ALL |
-            GP3_RM_ALPHA_A_PLUS_BETA_B | GP3_RM_SELECT_ALPHA_CHAN_3);
+                        gp3_bpp |
+                        GP3_RM_ALPHA_ALL |
+                        GP3_RM_ALPHA_A_PLUS_BETA_B |
+                        GP3_RM_SELECT_ALPHA_CHAN_3);
     }
 
     /* WRITE ALL REMAINING REGISTERS */
@@ -2470,8 +2516,9 @@ gp_antialiased_text(unsigned long dstoffset, unsigned long srcx,
     WRITE_COMMAND32(GP3_BLT_CH3_WIDHI, size);
     WRITE_COMMAND32(GP3_BLT_BASE_OFFSET, base);
     WRITE_COMMAND32(GP3_BLT_CH3_MODE_STR, GP3_CH3_C3EN |
-        GP3_CH3_HST_SRC_ENABLE |
-        depth_flag | ((gp3_blt_flags & CIMGP_BLTFLAGS_PRES_LUT) << 20));
+                    GP3_CH3_HST_SRC_ENABLE |
+                    depth_flag | ((gp3_blt_flags & CIMGP_BLTFLAGS_PRES_LUT) <<
+                                  20));
     WRITE_COMMAND32(GP3_BLT_MODE, gp3_blt_mode | GP3_BM_DST_REQ);
 
     /* START THE BLT */
@@ -2500,25 +2547,25 @@ gp_antialiased_text(unsigned long dstoffset, unsigned long srcx,
 
             GP3_WAIT_WRAP(temp);
             WRITE_COMMAND32(0,
-                GP3_DATA_LOAD_HDR_TYPE | GP3_DATA_LOAD_HDR_WRAP |
-                GP3_DATA_LOAD_HDR_ENABLE);
-        } else {
+                            GP3_DATA_LOAD_HDR_TYPE | GP3_DATA_LOAD_HDR_WRAP |
+                            GP3_DATA_LOAD_HDR_ENABLE);
+        }
+        else {
             GP3_WAIT_PRIMITIVE(temp);
             WRITE_COMMAND32(0,
-                GP3_DATA_LOAD_HDR_TYPE | GP3_DATA_LOAD_HDR_ENABLE);
+                            GP3_DATA_LOAD_HDR_TYPE | GP3_DATA_LOAD_HDR_ENABLE);
         }
 
         /* WRITE DWORD COUNT */
 
-        WRITE_COMMAND32(4,
-            GP3_CH3_HOST_SOURCE_TYPE | (total_dwords * height));
+        WRITE_COMMAND32(4, GP3_CH3_HOST_SOURCE_TYPE | (total_dwords * height));
 
         while (height--) {
             /* WRITE DATA */
 
             WRITE_COMMAND_STRING32(8, data, srcoffset, dword_count);
             WRITE_COMMAND_STRING8(8 + (dword_count << 2), data,
-                srcoffset + (dword_count << 2), byte_count);
+                                  srcoffset + (dword_count << 2), byte_count);
 
             srcoffset += stride;
             cim_cmd_ptr += total_dwords << 2;
@@ -2526,7 +2573,8 @@ gp_antialiased_text(unsigned long dstoffset, unsigned long srcx,
 
         WRITE_GP32(GP3_CMD_WRITE, gp3_cmd_next);
         gp3_cmd_current = gp3_cmd_next;
-    } else {
+    }
+    else {
         while (height--) {
             /* UPDATE THE COMMAND POINTER
              * The WRITE_COMMANDXX macros use a pointer to the current buffer
@@ -2546,14 +2594,16 @@ gp_antialiased_text(unsigned long dstoffset, unsigned long srcx,
 
                 GP3_WAIT_WRAP(temp);
                 WRITE_COMMAND32(0,
-                    GP3_DATA_LOAD_HDR_TYPE | GP3_DATA_LOAD_HDR_WRAP |
-                    GP3_DATA_LOAD_HDR_ENABLE);
-            } else {
+                                GP3_DATA_LOAD_HDR_TYPE | GP3_DATA_LOAD_HDR_WRAP
+                                | GP3_DATA_LOAD_HDR_ENABLE);
+            }
+            else {
                 /* WAIT FOR AVAILABLE SPACE */
 
                 GP3_WAIT_PRIMITIVE(temp);
                 WRITE_COMMAND32(0,
-                    GP3_DATA_LOAD_HDR_TYPE | GP3_DATA_LOAD_HDR_ENABLE);
+                                GP3_DATA_LOAD_HDR_TYPE |
+                                GP3_DATA_LOAD_HDR_ENABLE);
             }
 
             /* WRITE DWORD COUNT */
@@ -2564,7 +2614,7 @@ gp_antialiased_text(unsigned long dstoffset, unsigned long srcx,
 
             WRITE_COMMAND_STRING32(8, data, srcoffset, dword_count);
             WRITE_COMMAND_STRING8(8 + (dword_count << 2), data,
-                srcoffset + (dword_count << 2), byte_count);
+                                  srcoffset + (dword_count << 2), byte_count);
 
             /* UPDATE POINTERS */
 
@@ -2584,9 +2634,9 @@ gp_antialiased_text(unsigned long dstoffset, unsigned long srcx,
 
 void
 gp_masked_blt(unsigned long dstoffset, unsigned long width,
-    unsigned long height, unsigned long mono_srcx,
-    unsigned long color_srcx, unsigned char *mono_mask,
-    unsigned char *color_data, long mono_pitch, long color_pitch)
+              unsigned long height, unsigned long mono_srcx,
+              unsigned long color_srcx, unsigned char *mono_mask,
+              unsigned char *color_data, long mono_pitch, long color_pitch)
 {
     unsigned long indent, temp;
     unsigned long total_dwords, size_dwords;
@@ -2627,9 +2677,9 @@ gp_masked_blt(unsigned long dstoffset, unsigned long width,
     WRITE_COMMAND32(GP3_BLT_CH3_OFFSET, 0);
     WRITE_COMMAND32(GP3_BLT_BASE_OFFSET, base);
     WRITE_COMMAND32(GP3_BLT_CH3_MODE_STR, GP3_CH3_C3EN |
-        GP3_CH3_REPLACE_SOURCE | GP3_CH3_HST_SRC_ENABLE |
-        GP3_CH3_SRC_8_8_8_8 |
-        ((gp3_blt_flags & CIMGP_BLTFLAGS_PRES_LUT) << 20));
+                    GP3_CH3_REPLACE_SOURCE | GP3_CH3_HST_SRC_ENABLE |
+                    GP3_CH3_SRC_8_8_8_8 |
+                    ((gp3_blt_flags & CIMGP_BLTFLAGS_PRES_LUT) << 20));
     WRITE_COMMAND32(GP3_BLT_MODE, 0);
     WRITE_COMMAND32(GP3_BLT_CMD_HEADER, gp3_cmd_header);
 
@@ -2657,14 +2707,15 @@ gp_masked_blt(unsigned long dstoffset, unsigned long width,
 
             GP3_WAIT_WRAP(temp);
             WRITE_COMMAND32(0,
-                GP3_DATA_LOAD_HDR_TYPE | GP3_DATA_LOAD_HDR_WRAP |
-                GP3_DATA_LOAD_HDR_ENABLE);
-        } else {
+                            GP3_DATA_LOAD_HDR_TYPE | GP3_DATA_LOAD_HDR_WRAP |
+                            GP3_DATA_LOAD_HDR_ENABLE);
+        }
+        else {
             /* WAIT FOR AVAILABLE SPACE */
 
             GP3_WAIT_PRIMITIVE(temp);
             WRITE_COMMAND32(0, GP3_DATA_LOAD_HDR_TYPE |
-                GP3_DATA_LOAD_HDR_ENABLE);
+                            GP3_DATA_LOAD_HDR_ENABLE);
         }
 
         /* WRITE DWORD COUNT */
@@ -2675,7 +2726,7 @@ gp_masked_blt(unsigned long dstoffset, unsigned long width,
 
         WRITE_COMMAND_STRING32(8, mono_mask, srcoffset, dword_count);
         WRITE_COMMAND_STRING8(8 + (dword_count << 2), mono_mask,
-            srcoffset + (dword_count << 2), byte_count);
+                              srcoffset + (dword_count << 2), byte_count);
 
         /* UPDATE POINTERS */
 
@@ -2690,8 +2741,8 @@ gp_masked_blt(unsigned long dstoffset, unsigned long width,
 
     base = ((gp3_fb_base << 24) + (dstoffset & 0xFFC00000)) |
         ((gp3_fb_base << 14) + (((gp3_scratch_base +
-                    indent) & 0xFFC00000) >> 10)) | (gp3_base_register &
-        GP3_BASE_OFFSET_CH3MASK);
+                                  indent) & 0xFFC00000) >> 10)) |
+        (gp3_base_register & GP3_BASE_OFFSET_CH3MASK);
 
     gp3_cmd_header |= GP3_BLT_HDR_RASTER_ENABLE |
         GP3_BLT_HDR_STRIDE_ENABLE | GP3_BLT_HDR_DST_OFF_ENABLE |
@@ -2707,11 +2758,12 @@ gp_masked_blt(unsigned long dstoffset, unsigned long width,
      */
 
     WRITE_COMMAND32(GP3_BLT_RASTER_MODE,
-        gp3_bpp | 0xF0 | GP3_RM_SRC_TRANS | flags);
+                    gp3_bpp | 0xF0 | GP3_RM_SRC_TRANS | flags);
     WRITE_COMMAND32(GP3_BLT_STRIDE, (total_dwords << 18) | gp3_dst_stride);
     WRITE_COMMAND32(GP3_BLT_DST_OFFSET, dstoffset & 0x3FFFFF);
     WRITE_COMMAND32(GP3_BLT_SRC_OFFSET,
-        ((gp3_scratch_base + indent) & 0x3FFFFF) | ((mono_srcx & 7) << 26));
+                    ((gp3_scratch_base +
+                      indent) & 0x3FFFFF) | ((mono_srcx & 7) << 26));
     WRITE_COMMAND32(GP3_BLT_WID_HEIGHT, (width << 16) | height);
     WRITE_COMMAND32(GP3_BLT_CH3_WIDHI, (width << 16) | height);
     WRITE_COMMAND32(GP3_BLT_BASE_OFFSET, base);
@@ -2724,9 +2776,9 @@ gp_masked_blt(unsigned long dstoffset, unsigned long width,
         ch3_offset = 0;
         size = width * 3;
 
-        WRITE_COMMAND32(GP3_BLT_CH3_WIDHI,
-            (((size + 3) >> 2) << 16) | height);
-    } else if (gp3_src_pix_shift == 3) {
+        WRITE_COMMAND32(GP3_BLT_CH3_WIDHI, (((size + 3) >> 2) << 16) | height);
+    }
+    else if (gp3_src_pix_shift == 3) {
         /* CALCULATE INDENT AND SOURCE OFFSET */
 
         indent = (color_srcx >> 1);
@@ -2735,7 +2787,8 @@ gp_masked_blt(unsigned long dstoffset, unsigned long width,
         ch3_offset = indent | ((color_srcx & 1) << 25);
 
         size = ((width + (color_srcx & 1) + 1) >> 1) + indent;
-    } else {
+    }
+    else {
         indent = (color_srcx << gp3_src_pix_shift);
         srcoffset = (indent & ~3L);
         indent &= 3;
@@ -2751,10 +2804,11 @@ gp_masked_blt(unsigned long dstoffset, unsigned long width,
 
     WRITE_COMMAND32(GP3_BLT_CH3_OFFSET, ch3_offset);
     WRITE_COMMAND32(GP3_BLT_CH3_MODE_STR, GP3_CH3_C3EN |
-        GP3_CH3_HST_SRC_ENABLE |
-        gp3_src_format | ((gp3_blt_flags & CIMGP_BLTFLAGS_PRES_LUT) << 20));
+                    GP3_CH3_HST_SRC_ENABLE |
+                    gp3_src_format | ((gp3_blt_flags & CIMGP_BLTFLAGS_PRES_LUT)
+                                      << 20));
     WRITE_COMMAND32(GP3_BLT_MODE,
-        gp3_blt_mode | GP3_BM_SRC_MONO | GP3_BM_SRC_FB);
+                    gp3_blt_mode | GP3_BM_SRC_MONO | GP3_BM_SRC_FB);
 
     /* START THE BLT */
 
@@ -2777,12 +2831,13 @@ gp_masked_blt(unsigned long dstoffset, unsigned long width,
 
             GP3_WAIT_WRAP(temp);
             WRITE_COMMAND32(0,
-                GP3_DATA_LOAD_HDR_TYPE | GP3_DATA_LOAD_HDR_WRAP |
-                GP3_DATA_LOAD_HDR_ENABLE);
-        } else {
+                            GP3_DATA_LOAD_HDR_TYPE | GP3_DATA_LOAD_HDR_WRAP |
+                            GP3_DATA_LOAD_HDR_ENABLE);
+        }
+        else {
             GP3_WAIT_PRIMITIVE(temp);
             WRITE_COMMAND32(0,
-                GP3_DATA_LOAD_HDR_TYPE | GP3_DATA_LOAD_HDR_ENABLE);
+                            GP3_DATA_LOAD_HDR_TYPE | GP3_DATA_LOAD_HDR_ENABLE);
         }
 
         /* WRITE DWORD COUNT */
@@ -2793,7 +2848,7 @@ gp_masked_blt(unsigned long dstoffset, unsigned long width,
 
         WRITE_COMMAND_STRING32(8, color_data, srcoffset, dword_count);
         WRITE_COMMAND_STRING8(8 + (dword_count << 2), color_data,
-            srcoffset + (dword_count << 2), byte_count);
+                              srcoffset + (dword_count << 2), byte_count);
 
         /* UPDATE COMMAND BUFFER POINTERS */
         /* We do this before writing the monochrome data because otherwise */
@@ -2817,8 +2872,9 @@ gp_masked_blt(unsigned long dstoffset, unsigned long width,
 
 void
 gp_screen_to_screen_masked(unsigned long dstoffset, unsigned long srcoffset,
-    unsigned long width, unsigned long height,
-    unsigned long mono_srcx, unsigned char *mono_mask, long mono_pitch)
+                           unsigned long width, unsigned long height,
+                           unsigned long mono_srcx, unsigned char *mono_mask,
+                           long mono_pitch)
 {
     unsigned long indent, temp;
     unsigned long total_dwords, size_dwords;
@@ -2859,9 +2915,9 @@ gp_screen_to_screen_masked(unsigned long dstoffset, unsigned long srcoffset,
     WRITE_COMMAND32(GP3_BLT_CH3_OFFSET, 0);
     WRITE_COMMAND32(GP3_BLT_BASE_OFFSET, base);
     WRITE_COMMAND32(GP3_BLT_CH3_MODE_STR, GP3_CH3_C3EN |
-        GP3_CH3_REPLACE_SOURCE | GP3_CH3_HST_SRC_ENABLE |
-        GP3_CH3_SRC_8_8_8_8 |
-        ((gp3_blt_flags & CIMGP_BLTFLAGS_PRES_LUT) << 20));
+                    GP3_CH3_REPLACE_SOURCE | GP3_CH3_HST_SRC_ENABLE |
+                    GP3_CH3_SRC_8_8_8_8 |
+                    ((gp3_blt_flags & CIMGP_BLTFLAGS_PRES_LUT) << 20));
     WRITE_COMMAND32(GP3_BLT_MODE, 0);
     WRITE_COMMAND32(GP3_BLT_CMD_HEADER, gp3_cmd_header);
 
@@ -2889,13 +2945,14 @@ gp_screen_to_screen_masked(unsigned long dstoffset, unsigned long srcoffset,
 
             GP3_WAIT_WRAP(temp);
             WRITE_COMMAND32(0, GP3_DATA_LOAD_HDR_TYPE |
-                GP3_DATA_LOAD_HDR_WRAP | GP3_DATA_LOAD_HDR_ENABLE);
-        } else {
+                            GP3_DATA_LOAD_HDR_WRAP | GP3_DATA_LOAD_HDR_ENABLE);
+        }
+        else {
             /* WAIT FOR AVAILABLE SPACE */
 
             GP3_WAIT_PRIMITIVE(temp);
             WRITE_COMMAND32(0, GP3_DATA_LOAD_HDR_TYPE |
-                GP3_DATA_LOAD_HDR_ENABLE);
+                            GP3_DATA_LOAD_HDR_ENABLE);
         }
 
         /* WRITE DWORD COUNT */
@@ -2906,7 +2963,7 @@ gp_screen_to_screen_masked(unsigned long dstoffset, unsigned long srcoffset,
 
         WRITE_COMMAND_STRING32(8, mono_mask, srcoff, dword_count);
         WRITE_COMMAND_STRING8(8 + (dword_count << 2), mono_mask,
-            srcoff + (dword_count << 2), byte_count);
+                              srcoff + (dword_count << 2), byte_count);
 
         /* UPDATE POINTERS */
 
@@ -2921,8 +2978,11 @@ gp_screen_to_screen_masked(unsigned long dstoffset, unsigned long srcoffset,
 
     base = ((gp3_fb_base << 24) + (dstoffset & 0xFFC00000)) |
         ((gp3_fb_base << 14) + (((gp3_scratch_base +
-                    indent) & 0xFFC00000) >> 10)) | ((gp3_fb_base << 4) +
-        ((srcoffset & 0xFFC00000) >> 20));
+                                  indent) & 0xFFC00000) >> 10)) | ((gp3_fb_base
+                                                                    << 4) +
+                                                                   ((srcoffset &
+                                                                     0xFFC00000)
+                                                                    >> 20));
 
     gp3_cmd_header |= GP3_BLT_HDR_RASTER_ENABLE |
         GP3_BLT_HDR_STRIDE_ENABLE | GP3_BLT_HDR_DST_OFF_ENABLE |
@@ -2938,11 +2998,12 @@ gp_screen_to_screen_masked(unsigned long dstoffset, unsigned long srcoffset,
      */
 
     WRITE_COMMAND32(GP3_BLT_RASTER_MODE,
-        gp3_bpp | 0xF0 | GP3_RM_SRC_TRANS | flags);
+                    gp3_bpp | 0xF0 | GP3_RM_SRC_TRANS | flags);
     WRITE_COMMAND32(GP3_BLT_STRIDE, (total_dwords << 18) | gp3_dst_stride);
     WRITE_COMMAND32(GP3_BLT_DST_OFFSET, dstoffset & 0x3FFFFF);
     WRITE_COMMAND32(GP3_BLT_SRC_OFFSET,
-        ((gp3_scratch_base + indent) & 0x3FFFFF) | ((mono_srcx & 7) << 26));
+                    ((gp3_scratch_base +
+                      indent) & 0x3FFFFF) | ((mono_srcx & 7) << 26));
     WRITE_COMMAND32(GP3_BLT_WID_HEIGHT, (width << 16) | height);
     WRITE_COMMAND32(GP3_BLT_CH3_WIDHI, (width << 16) | height);
     WRITE_COMMAND32(GP3_BLT_BASE_OFFSET, base);
@@ -2951,9 +3012,10 @@ gp_screen_to_screen_masked(unsigned long dstoffset, unsigned long srcoffset,
 
     WRITE_COMMAND32(GP3_BLT_CH3_OFFSET, srcoffset & 0x3FFFFF);
     WRITE_COMMAND32(GP3_BLT_CH3_MODE_STR, GP3_CH3_C3EN | gp3_ch3_bpp |
-        gp3_src_stride | ((gp3_blt_flags & CIMGP_BLTFLAGS_PRES_LUT) << 20));
+                    gp3_src_stride | ((gp3_blt_flags & CIMGP_BLTFLAGS_PRES_LUT)
+                                      << 20));
     WRITE_COMMAND32(GP3_BLT_MODE,
-        gp3_blt_mode | GP3_BM_SRC_MONO | GP3_BM_SRC_FB);
+                    gp3_blt_mode | GP3_BM_SRC_MONO | GP3_BM_SRC_FB);
 
     /* START THE BLT */
 
@@ -2974,8 +3036,8 @@ gp_screen_to_screen_masked(unsigned long dstoffset, unsigned long srcoffset,
 
 void
 gp_bresenham_line(unsigned long dstoffset, unsigned short length,
-    unsigned short initerr, unsigned short axialerr,
-    unsigned short diagerr, unsigned long flags)
+                  unsigned short initerr, unsigned short axialerr,
+                  unsigned short diagerr, unsigned long flags)
 {
     unsigned long base;
     long offset;
@@ -3035,9 +3097,10 @@ gp_bresenham_line(unsigned long dstoffset, unsigned short length,
     /* 4MB segment we happen to be drawing to.                     */
 
     WRITE_COMMAND32(GP3_VECTOR_VEC_ERR,
-        (((unsigned long)axialerr << 16) | (unsigned long)diagerr));
+                    (((unsigned long) axialerr << 16) | (unsigned long)
+                     diagerr));
     WRITE_COMMAND32(GP3_VECTOR_VEC_LEN,
-        (((unsigned long)length << 16) | (unsigned long)initerr));
+                    (((unsigned long) length << 16) | (unsigned long) initerr));
     WRITE_COMMAND32(GP3_VECTOR_BASE_OFFSET, base);
 
     /* CHECK VECTOR PATTERN CASE */
@@ -3059,9 +3122,10 @@ gp_bresenham_line(unsigned long dstoffset, unsigned short length,
 
         WRITE_COMMAND32(GP3_VECTOR_DST_OFFSET, dstoffset);
         WRITE_COMMAND32(GP3_VECTOR_CH3_MODE_STR,
-            GP3_CH3_C3EN | GP3_CH3_REPLACE_SOURCE |
-            GP3_CH3_COLOR_PAT_ENABLE | GP3_CH3_SRC_8_8_8_8);
-    } else {
+                        GP3_CH3_C3EN | GP3_CH3_REPLACE_SOURCE |
+                        GP3_CH3_COLOR_PAT_ENABLE | GP3_CH3_SRC_8_8_8_8);
+    }
+    else {
         /* DISABLE CHANNEL 3 AND USE NORMAL PATTERN ORIGINS */
 
         WRITE_COMMAND32(GP3_VECTOR_CH3_MODE_STR, 0);
@@ -3093,16 +3157,15 @@ gp_bresenham_line(unsigned long dstoffset, unsigned short length,
          */
 
         WRITE_COMMAND32(16, GP3_VEC_HDR_TYPE | GP3_VEC_HDR_VEC_MODE_ENABLE |
-            GP3_VEC_HDR_VEC_LEN_ENABLE);
+                        GP3_VEC_HDR_VEC_LEN_ENABLE);
         WRITE_COMMAND32(16 + GP3_VECTOR_MODE, (gp3_vec_mode | flags));
         WRITE_COMMAND32(16 + GP3_VECTOR_VEC_LEN,
-            (1 << 16) | (unsigned long)initerr);
+                        (1 << 16) | (unsigned long) initerr);
 
         WRITE_COMMAND32(16 + GP3_VECTOR_COMMAND_SIZE,
-            GP3_LUT_HDR_TYPE | GP3_LUT_HDR_DATA_ENABLE);
+                        GP3_LUT_HDR_TYPE | GP3_LUT_HDR_DATA_ENABLE);
         WRITE_COMMAND32(20 + GP3_VECTOR_COMMAND_SIZE, 0x100);
-        WRITE_COMMAND32(24 + GP3_VECTOR_COMMAND_SIZE,
-            (1 | GP3_LUT_DATA_TYPE));
+        WRITE_COMMAND32(24 + GP3_VECTOR_COMMAND_SIZE, (1 | GP3_LUT_DATA_TYPE));
         WRITE_COMMAND32(28 + GP3_VECTOR_COMMAND_SIZE, gp3_vec_pat);
 
         gp3_cmd_current += 32 + GP3_VECTOR_COMMAND_SIZE;
@@ -3118,7 +3181,8 @@ gp_bresenham_line(unsigned long dstoffset, unsigned short length,
 
 void
 gp_line_from_endpoints(unsigned long dstoffset, unsigned long x0,
-    unsigned long y0, unsigned long x1, unsigned long y1, int inclusive)
+                       unsigned long y0, unsigned long x1, unsigned long y1,
+                       int inclusive)
 {
     unsigned long base;
     unsigned long length;
@@ -3133,8 +3197,8 @@ gp_line_from_endpoints(unsigned long dstoffset, unsigned long x0,
 
     /* CALCULATE BRESENHAM TERMS */
 
-    dx = (long)x1 - (long)x0;
-    dy = (long)y1 - (long)y0;
+    dx = (long) x1 - (long) x0;
+    dy = (long) y1 - (long) y0;
     if (dx < 0)
         dx = -dx;
     if (dy < 0)
@@ -3148,7 +3212,8 @@ gp_line_from_endpoints(unsigned long dstoffset, unsigned long x0,
             flags |= CIMGP_POSMAJOR;
         if (y1 > y0)
             flags |= CIMGP_POSMINOR;
-    } else {
+    }
+    else {
         dmaj = dy;
         dmin = dx;
         flags = CIMGP_YMAJOR;
@@ -3158,9 +3223,9 @@ gp_line_from_endpoints(unsigned long dstoffset, unsigned long x0,
             flags |= CIMGP_POSMAJOR;
     }
 
-    axialerr = (unsigned short)(dmin << 1);
-    diagerr = (unsigned short)((dmin - dmaj) << 1);
-    initerr = (unsigned short)((dmin << 1) - dmaj);
+    axialerr = (unsigned short) (dmin << 1);
+    diagerr = (unsigned short) ((dmin - dmaj) << 1);
+    initerr = (unsigned short) ((dmin << 1) - dmaj);
     if (!(flags & CIMGP_POSMINOR))
         initerr--;
 
@@ -3221,9 +3286,10 @@ gp_line_from_endpoints(unsigned long dstoffset, unsigned long x0,
     /* 4MB segment we happen to be drawing to.                     */
 
     WRITE_COMMAND32(GP3_VECTOR_VEC_ERR,
-        (((unsigned long)axialerr << 16) | (unsigned long)diagerr));
+                    (((unsigned long) axialerr << 16) | (unsigned long)
+                     diagerr));
     WRITE_COMMAND32(GP3_VECTOR_VEC_LEN,
-        (((unsigned long)length << 16) | (unsigned long)initerr));
+                    (((unsigned long) length << 16) | (unsigned long) initerr));
     WRITE_COMMAND32(GP3_VECTOR_BASE_OFFSET, base);
 
     /* CHECK VECTOR PATTERN CASE */
@@ -3245,9 +3311,10 @@ gp_line_from_endpoints(unsigned long dstoffset, unsigned long x0,
 
         WRITE_COMMAND32(GP3_VECTOR_DST_OFFSET, dstoffset);
         WRITE_COMMAND32(GP3_VECTOR_CH3_MODE_STR,
-            GP3_CH3_C3EN | GP3_CH3_REPLACE_SOURCE |
-            GP3_CH3_COLOR_PAT_ENABLE | GP3_CH3_SRC_8_8_8_8);
-    } else {
+                        GP3_CH3_C3EN | GP3_CH3_REPLACE_SOURCE |
+                        GP3_CH3_COLOR_PAT_ENABLE | GP3_CH3_SRC_8_8_8_8);
+    }
+    else {
         /* DISABLE CHANNEL 3 AND USE NORMAL PATTERN ORIGINS */
 
         WRITE_COMMAND32(GP3_VECTOR_CH3_MODE_STR, 0);
@@ -3278,16 +3345,15 @@ gp_line_from_endpoints(unsigned long dstoffset, unsigned long x0,
          */
 
         WRITE_COMMAND32(16, GP3_VEC_HDR_TYPE | GP3_VEC_HDR_VEC_MODE_ENABLE |
-            GP3_VEC_HDR_VEC_LEN_ENABLE);
+                        GP3_VEC_HDR_VEC_LEN_ENABLE);
         WRITE_COMMAND32(16 + GP3_VECTOR_MODE, (gp3_vec_mode | flags));
         WRITE_COMMAND32(16 + GP3_VECTOR_VEC_LEN,
-            (1 << 16) | (unsigned long)initerr);
+                        (1 << 16) | (unsigned long) initerr);
 
         WRITE_COMMAND32(16 + GP3_VECTOR_COMMAND_SIZE,
-            GP3_LUT_HDR_TYPE | GP3_LUT_HDR_DATA_ENABLE);
+                        GP3_LUT_HDR_TYPE | GP3_LUT_HDR_DATA_ENABLE);
         WRITE_COMMAND32(20 + GP3_VECTOR_COMMAND_SIZE, 0x100);
-        WRITE_COMMAND32(24 + GP3_VECTOR_COMMAND_SIZE,
-            (1 | GP3_LUT_DATA_TYPE));
+        WRITE_COMMAND32(24 + GP3_VECTOR_COMMAND_SIZE, (1 | GP3_LUT_DATA_TYPE));
         WRITE_COMMAND32(28 + GP3_VECTOR_COMMAND_SIZE, gp3_vec_pat);
 
         gp3_cmd_current += 32 + GP3_VECTOR_COMMAND_SIZE;
@@ -3306,7 +3372,7 @@ gp_wait_until_idle(void)
     unsigned long temp;
 
     while (((temp = READ_GP32(GP3_BLT_STATUS)) & GP3_BS_BLT_BUSY) ||
-        !(temp & GP3_BS_CB_EMPTY)) {
+           !(temp & GP3_BS_CB_EMPTY)) {
         ;
     }
 }
@@ -3347,7 +3413,7 @@ gp_test_blt_pending(void)
 void
 gp_wait_blt_pending(void)
 {
-    while ((READ_GP32(GP3_BLT_STATUS)) & GP3_BS_BLT_PENDING) ;
+    while ((READ_GP32(GP3_BLT_STATUS)) & GP3_BS_BLT_PENDING);
 }
 
 /*---------------------------------------------------------------------------
@@ -3372,7 +3438,7 @@ gp_save_state(GP_SAVE_RESTORE * gp_state)
     /* RESET THE READ POINTER */
 
     gp_set_command_buffer_base(gp_state->cmd_base, gp_state->cmd_top,
-        gp_state->cmd_bottom);
+                               gp_state->cmd_bottom);
 }
 
 /*---------------------------------------------------------------------------
@@ -3389,26 +3455,25 @@ gp_restore_state(GP_SAVE_RESTORE * gp_state)
     WRITE_GP32(GP3_BASE_OFFSET, gp_state->base_offset);
 
     gp_set_command_buffer_base(gp_state->cmd_base, gp_state->cmd_top,
-        gp_state->cmd_bottom);
+                               gp_state->cmd_bottom);
 }
 
 /* This is identical to gp_antialiased_text, except we support all one
    pass alpha operations similar to gp_set_alpha_operation */
 
-
 void
 gp_blend_mask_blt(unsigned long dstoffset, unsigned long srcx,
-    unsigned long width, unsigned long height,
-    unsigned long dataoffset, long stride, int operation,
-    int fourbpp)
+                  unsigned long width, unsigned long height,
+                  unsigned long dataoffset, long stride, int operation,
+                  int fourbpp)
 {
     unsigned long indent;
     unsigned long size = ((width << 16) | height);
     unsigned long base, depth_flag;
 
     base = ((gp3_fb_base << 24) + (dstoffset & 0xFFC00000)) |
-	   ((gp3_fb_base << 4) + (dataoffset >> 20)) |
-           (gp3_base_register & GP3_BASE_OFFSET_SRCMASK);
+        ((gp3_fb_base << 4) + (dataoffset >> 20)) |
+        (gp3_base_register & GP3_BASE_OFFSET_SRCMASK);
 
     /* ENABLE ALL RELEVANT REGISTERS */
     /* We override the raster mode register to force the */
@@ -3430,7 +3495,8 @@ gp_blend_mask_blt(unsigned long dstoffset, unsigned long srcx,
         depth_flag = GP3_CH3_SRC_4BPP_ALPHA;
         indent = (srcx >> 1) & 3;
         dataoffset += indent | ((srcx & 1) << 25);
-    } else {
+    }
+    else {
         depth_flag = GP3_CH3_SRC_8BPP_ALPHA;
         indent = srcx & 3;
         dataoffset += indent;
@@ -3443,14 +3509,16 @@ gp_blend_mask_blt(unsigned long dstoffset, unsigned long srcx,
 
     if (gp3_bpp == GP3_RM_BPPFMT_565) {
         WRITE_COMMAND32(GP3_BLT_RASTER_MODE,
-            gp3_bpp |
-            GP3_RM_ALPHA_TO_RGB |
-            ((unsigned long) (operation << 20)) | GP3_RM_SELECT_ALPHA_CHAN_3);
-    } else {
+                        gp3_bpp |
+                        GP3_RM_ALPHA_TO_RGB |
+                        ((unsigned long) (operation << 20)) |
+                        GP3_RM_SELECT_ALPHA_CHAN_3);
+    }
+    else {
         WRITE_COMMAND32(GP3_BLT_RASTER_MODE,
-            gp3_bpp |
-            GP3_RM_ALPHA_ALL | ((unsigned long) (operation << 20)) |
-            GP3_RM_SELECT_ALPHA_CHAN_3);
+                        gp3_bpp |
+                        GP3_RM_ALPHA_ALL | ((unsigned long) (operation << 20)) |
+                        GP3_RM_SELECT_ALPHA_CHAN_3);
     }
 
     /* WRITE ALL REMAINING REGISTERS */
@@ -3465,7 +3533,8 @@ gp_blend_mask_blt(unsigned long dstoffset, unsigned long srcx,
     WRITE_COMMAND32(GP3_BLT_BASE_OFFSET, base);
 
     WRITE_COMMAND32(GP3_BLT_CH3_MODE_STR, GP3_CH3_C3EN | (stride & 0xFFFF) |
-		    depth_flag | ((gp3_blt_flags & CIMGP_BLTFLAGS_PRES_LUT) << 20));
+                    depth_flag | ((gp3_blt_flags & CIMGP_BLTFLAGS_PRES_LUT) <<
+                                  20));
 
     WRITE_COMMAND32(GP3_BLT_MODE, GP3_BM_DST_REQ);
 

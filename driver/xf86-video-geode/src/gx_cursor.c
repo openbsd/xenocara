@@ -45,8 +45,9 @@ static void GXSetCursorColors(ScrnInfoPtr pScrni, int bg, int fg);
 static void GXSetCursorPosition(ScrnInfoPtr pScrni, int x, int y);
 static Bool GXUseHWCursor(ScreenPtr pScrn, CursorPtr pCurs);
 extern void GXSetVideoPosition(int x, int y, int width, int height,
-    short src_w, short src_h, short drw_w,
-    short drw_h, int id, int offset, ScrnInfoPtr pScrn);
+                               short src_w, short src_h, short drw_w,
+                               short drw_h, int id, int offset,
+                               ScrnInfoPtr pScrn);
 
 /*----------------------------------------------------------------------------
  * GXHWCursorInit.
@@ -66,21 +67,21 @@ extern void GXSetVideoPosition(int x, int y, int width, int height,
 Bool
 GXHWCursorInit(ScreenPtr pScrn)
 {
-    ScrnInfoPtr pScrni = xf86Screens[pScrn->myNum];
+    ScrnInfoPtr pScrni = xf86ScreenToScrn(pScrn);
     GeodeRec *pGeode = GEODEPTR(pScrni);
     xf86CursorInfoPtr infoPtr;
 
     infoPtr = xf86CreateCursorInfoRec();
     if (!infoPtr)
-	return FALSE;
+        return FALSE;
     /* the geode structure is intiallized with the cursor infoRec */
     pGeode->CursorInfo = infoPtr;
     infoPtr->MaxWidth = 32;
     infoPtr->MaxHeight = 32;
     /* seeting up the cursor flags */
     infoPtr->Flags = HARDWARE_CURSOR_BIT_ORDER_MSBFIRST |
-	HARDWARE_CURSOR_TRUECOLOR_AT_8BPP |
-	HARDWARE_CURSOR_SOURCE_MASK_NOT_INTERLEAVED;
+        HARDWARE_CURSOR_TRUECOLOR_AT_8BPP |
+        HARDWARE_CURSOR_SOURCE_MASK_NOT_INTERLEAVED;
     /* cursor info ptr is intiallized with the values obtained from
      * * durnago calls
      */
@@ -145,27 +146,27 @@ GXSetCursorPosition(ScrnInfoPtr pScrni, int x, int y)
 
     switch (pGeode->rotation) {
     default:
-	ErrorF("%s:%d invalid rotation %d\n", __func__, __LINE__,
-	    pGeode->rotation);
+        ErrorF("%s:%d invalid rotation %d\n", __func__, __LINE__,
+               pGeode->rotation);
     case RR_Rotate_0:
-	newX = savex;
-	newY = savey;
-	break;
+        newX = savex;
+        newY = savey;
+        break;
 
     case RR_Rotate_90:
-	newX = savey;
-	newY = pScrni->pScreen->width - savex;
-	break;
+        newX = savey;
+        newY = pScrni->pScreen->width - savex;
+        break;
 
     case RR_Rotate_180:
-	newX = pScrni->pScreen->width - savex;
-	newY = pScrni->pScreen->height - savey;
-	break;
+        newX = pScrni->pScreen->width - savex;
+        newY = pScrni->pScreen->height - savey;
+        break;
 
     case RR_Rotate_270:
-	newX = pScrni->pScreen->height - savey;
-	newY = savex;
-	break;
+        newX = pScrni->pScreen->height - savey;
+        newY = savex;
+        break;
     }
 
     newX += pScrni->frameX0;
@@ -174,25 +175,25 @@ GXSetCursorPosition(ScrnInfoPtr pScrni, int x, int y)
     //ErrorF("Turned (%d,%d) into (%d,%d)\n", x,y,newX, newY);
 
     if (newX < -31)
-	newX = -31;
+        newX = -31;
     if (newY < -31)
-	newY = -31;
+        newY = -31;
 
     gfx_set_cursor_position(pGeode->CursorStartOffset, newX + 31, newY + 31,
-	31, 31);
+                            31, 31);
     gfx_set_cursor_enable(1);
 
     if ((pGeode->OverlayON) && (pGeode->Panel)) {
-	pGeode->PrevDisplayOffset = gfx_get_display_offset();
-	if (pGeode->PrevDisplayOffset != panOffset) {
-	    GXSetVideoPosition(pGeode->video_x, pGeode->video_y,
-		pGeode->video_w, pGeode->video_h,
-		pGeode->video_srcw, pGeode->video_srch,
-		pGeode->video_dstw, pGeode->video_dsth,
-		pGeode->video_id, pGeode->video_offset,
-		pGeode->video_scrnptr);
-	    panOffset = pGeode->PrevDisplayOffset;
-	}
+        pGeode->PrevDisplayOffset = gfx_get_display_offset();
+        if (pGeode->PrevDisplayOffset != panOffset) {
+            GXSetVideoPosition(pGeode->video_x, pGeode->video_y,
+                               pGeode->video_w, pGeode->video_h,
+                               pGeode->video_srcw, pGeode->video_srch,
+                               pGeode->video_dstw, pGeode->video_dsth,
+                               pGeode->video_id, pGeode->video_offset,
+                               pGeode->video_scrnptr);
+            panOffset = pGeode->PrevDisplayOffset;
+        }
     }
 }
 
@@ -221,55 +222,55 @@ GXLoadCursorImage(ScrnInfoPtr pScrni, unsigned char *src)
     unsigned char *mskp = &src[128];
 
     if (src != NULL) {
-	mskb = rowb = 0;
-	for (y = 32; --y >= 0;)
-	    andMask[y] = xorMask[y] = 0;
-	for (y = 0; y < 32; ++y) {
-	    for (x = 0; x < 32; ++x) {
-		if ((i = x & 7) == 0) {
-		    rowb = (*rowp & *mskp);
-		    mskb = ~(*mskp);
-		    ++rowp;
-		    ++mskp;
-		}
+        mskb = rowb = 0;
+        for (y = 32; --y >= 0;)
+            andMask[y] = xorMask[y] = 0;
+        for (y = 0; y < 32; ++y) {
+            for (x = 0; x < 32; ++x) {
+                if ((i = x & 7) == 0) {
+                    rowb = (*rowp & *mskp);
+                    mskb = ~(*mskp);
+                    ++rowp;
+                    ++mskp;
+                }
 
-		switch (pGeode->rotation) {
-		default:
-		    ErrorF("%s:%d invalid rotation %d\n", __func__, __LINE__,
-			pGeode->rotation);
-		case RR_Rotate_0:
-		    newX = x;
-		    newY = y;
-		    break;
-		case RR_Rotate_90:
-		    newX = y;
-		    newY = 31 - x;
-		    break;
-		case RR_Rotate_180:
-		    newX = 31 - x;
-		    newY = 31 - y;
-		    break;
-		case RR_Rotate_270:
-		    newX = 31 - y;
-		    newY = x;
-		    break;
-		}
+                switch (pGeode->rotation) {
+                default:
+                    ErrorF("%s:%d invalid rotation %d\n", __func__, __LINE__,
+                           pGeode->rotation);
+                case RR_Rotate_0:
+                    newX = x;
+                    newY = y;
+                    break;
+                case RR_Rotate_90:
+                    newX = y;
+                    newY = 31 - x;
+                    break;
+                case RR_Rotate_180:
+                    newX = 31 - x;
+                    newY = 31 - y;
+                    break;
+                case RR_Rotate_270:
+                    newX = 31 - y;
+                    newY = x;
+                    break;
+                }
 
-		i = 7 - i;
-		n = 31 - newX;
-		andMask[newY] |= (((mskb >> i) & 1) << n);
-		xorMask[newY] |= (((rowb >> i) & 1) << n);
-	    }
-	}
-    } else {
-	for (y = 32; --y >= 0;) {
-	    andMask[y] = ~0;
-	    xorMask[y] = 0;
-	}
+                i = 7 - i;
+                n = 31 - newX;
+                andMask[newY] |= (((mskb >> i) & 1) << n);
+                xorMask[newY] |= (((rowb >> i) & 1) << n);
+            }
+        }
+    }
+    else {
+        for (y = 32; --y >= 0;) {
+            andMask[y] = ~0;
+            xorMask[y] = 0;
+        }
     }
 
-    gfx_set_cursor_shape32(pGeode->CursorStartOffset, &andMask[0],
-	&xorMask[0]);
+    gfx_set_cursor_shape32(pGeode->CursorStartOffset, &andMask[0], &xorMask[0]);
 }
 
 /*----------------------------------------------------------------------------

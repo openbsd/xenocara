@@ -166,13 +166,13 @@
 /* registers of their respective blocks.                                */
 /*----------------------------------------------------------------------*/
 
-unsigned char *cim_gp_ptr = (unsigned char *)0;
-unsigned char *cim_fb_ptr = (unsigned char *)0;
-unsigned char *cim_cmd_base_ptr = (unsigned char *)0;
-unsigned char *cim_cmd_ptr = (unsigned char *)0;
-unsigned char *cim_vid_ptr = (unsigned char *)0;
-unsigned char *cim_vip_ptr = (unsigned char *)0;
-unsigned char *cim_vg_ptr = (unsigned char *)0;
+unsigned char *cim_gp_ptr = (unsigned char *) 0;
+unsigned char *cim_fb_ptr = (unsigned char *) 0;
+unsigned char *cim_cmd_base_ptr = (unsigned char *) 0;
+unsigned char *cim_cmd_ptr = (unsigned char *) 0;
+unsigned char *cim_vid_ptr = (unsigned char *) 0;
+unsigned char *cim_vip_ptr = (unsigned char *) 0;
+unsigned char *cim_vg_ptr = (unsigned char *) 0;
 
 /* Define hooks for reading and writing MSRs - this is a major hack
  * to share the MSR code with the GX code */

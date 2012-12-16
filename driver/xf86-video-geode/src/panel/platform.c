@@ -30,7 +30,6 @@
  * SubModule:       Geode FlatPanel library
  * */
 
-
 #define LINUX_ROM_SEGMENT 0x000F
 #define SEGMENT_LENGTH  0xFFFF
 #define PAGE_LENGTH     0x1000
@@ -38,12 +37,10 @@
 
 #define PLT_UNKNOWN     0xFFFF
 
-typedef struct
-{
+typedef struct {
     char sys_board_name[SYS_BOARD_NAME_LEN];
     SYS_BOARD sys_board;
-}
-SYS_BOARD_INFO;
+} SYS_BOARD_INFO;
 
 static SYS_BOARD_INFO Sys_info;
 
@@ -93,7 +90,8 @@ Strncmp(char *str1, char *str2, int len)
     for (i = 0; i < len; i++) {
         if (*(str1 + i) > *(str2 + i)) {
             return 1;
-        } else if (*(str1 + i) < *(str2 + i)) {
+        }
+        else if (*(str1 + i) < *(str2 + i)) {
             return -1;
         }
     }
@@ -110,7 +108,7 @@ Strcpy(char *dst, char *src)
     for (i = 0; src[i] != 0x0; i++) {
         dst[i] = src[i];
     }
-    dst[i] = 0x0;                      /* NULL termination */
+    dst[i] = 0x0;               /* NULL termination */
     return dst;
 }
 
@@ -121,7 +119,7 @@ Strlen(char *str)
 
     if (str == 0x0)
         return 0;
-    for (i = 0; str[i] != 0x0; i++) ;
+    for (i = 0; str[i] != 0x0; i++);
     return i;
 }
 
@@ -141,13 +139,13 @@ FindStringInSeg(unsigned int segment_address, char *string_ptr)
 {
     int string_length = Strlen(string_ptr);
     char *psegment_buf;
-    unsigned long mem_ptr = (unsigned long)segment_address << 16;
+    unsigned long mem_ptr = (unsigned long) segment_address << 16;
     unsigned int i;
 
     /* silence compiler */
-    (void)mem_ptr;
+    (void) mem_ptr;
 
-    psegment_buf = (char *)XpressROMPtr;
+    psegment_buf = (char *) XpressROMPtr;
 
     /* Now search for the first character of the string_ptr */
     for (i = 0; i < SEGMENT_LENGTH + 1; i++) {
@@ -166,7 +164,7 @@ FindStringInSeg(unsigned int segment_address, char *string_ptr)
     /* if we got this far we didn't find anything.  Return NULL. */
     return (0);
 
-}                                      /* end FindStringInSeg() */
+}                               /* end FindStringInSeg() */
 
 /**********************************************************************
 
@@ -185,7 +183,7 @@ FindStringInSeg(unsigned int segment_address, char *string_ptr)
  */
 static unsigned char
 get_sys_board_type(SYS_BOARD_INFO * sys_info,
-    SYS_BOARD_INFO * sys_board_array_base)
+                   SYS_BOARD_INFO * sys_board_array_base)
 {
     int index;
     char *xpress_rom_string_ptr = "XpressStart";
@@ -201,27 +199,28 @@ get_sys_board_type(SYS_BOARD_INFO * sys_info,
         sys_info->sys_board = PLT_UNKNOWN;
         Strcpy(sys_info->sys_board_name, "Unknown");
         return (FALSE);
-    } else {
+    }
+    else {
 
         /* we have Xpressrom, so look for a board */
         for (index = 0; index < Num_sys_board_type; index++) {
             if (!FindStringInSeg(segment, (sys_board_array_base +
-                        index)->sys_board_name)) {
+                                           index)->sys_board_name)) {
                 continue;
-            } else {
+            }
+            else {
 
                 /* a match!! */
-                sys_info->sys_board =
-                    (sys_board_array_base + index)->sys_board;
+                sys_info->sys_board = (sys_board_array_base + index)->sys_board;
                 Strcpy(sys_info->sys_board_name,
-                    (sys_board_array_base + index)->sys_board_name);
+                       (sys_board_array_base + index)->sys_board_name);
                 return (TRUE);
             }
-        }                              /* end for() */
-    }                                  /* end else */
+        }                       /* end for() */
+    }                           /* end else */
 
     /* if we are here we have failed */
     sys_info->sys_board = PLT_UNKNOWN;
     Strcpy(sys_info->sys_board_name, "Unknown");
     return (FALSE);
-}                                      /* end get_sys_board_type() */
+}                               /* end get_sys_board_type() */

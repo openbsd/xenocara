@@ -31,8 +31,7 @@
 #define __FS450_H__
 
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
 
 /*==========================================================================*/
@@ -171,8 +170,7 @@ extern "C"
 #define SOURCE_HOUSTON 0
 #define SOURCE_GCC 1
 
-    typedef struct _S_REG_INFO
-    {
+    typedef struct _S_REG_INFO {
         int source;
         unsigned int size;
         unsigned long offset;
@@ -202,5 +200,4 @@ extern "C"
 #ifdef __cplusplus
 }
 #endif
-
 #endif

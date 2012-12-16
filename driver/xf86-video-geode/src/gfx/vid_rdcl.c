@@ -76,74 +76,73 @@ unsigned long gfx_gamma_ram_redcloud[] = {
 
 /* REDCLOUD PLL TABLE  */
 
-typedef struct RCDFPLL
-{
-    long frequency;                    /* 16.16 fixed point frequency                  */
-    unsigned long post_div3;           /* MCP Frequency dividers and multipliers       */
+typedef struct RCDFPLL {
+    long frequency;             /* 16.16 fixed point frequency                  */
+    unsigned long post_div3;    /* MCP Frequency dividers and multipliers       */
     unsigned long pre_mul2;
     unsigned long pre_div2;
-    unsigned long pll_value;           /* MCP DotPLL Register Upper 32(0x0015)         */
+    unsigned long pll_value;    /* MCP DotPLL Register Upper 32(0x0015)         */
 } RCDFPLLENTRY;
 
 RCDFPLLENTRY RCDF_PLLtable[] = {
-    {0x0018EC4D, 1, 0, 0, 0x0000099E}, /*  24.9230 */
-    {0x00192CCC, 0, 0, 0, 0x00000037}, /*  25.1750 */
-    {0x001C526E, 1, 0, 0, 0x000009DA}, /*  28.3220 */
-    {0x001C8F5C, 1, 0, 0, 0x0000005E}, /*  28.5600 */
-    {0x001F8000, 1, 0, 0, 0x000002D2}, /*  31.5000 */
-    {0x00240000, 1, 0, 0, 0x000007E2}, /*  36.0000 */
-    {0x00258000, 1, 0, 0, 0x0000057A}, /*  37.5000 */
-    {0x0025E395, 1, 0, 0, 0x000007FA}, /*  37.8890 */
-    {0x00280000, 1, 0, 0, 0x0000030A}, /*  40.0000 */
-    {0x002B29BA, 0, 0, 0, 0x0000005F}, /*  43.1630 */
-    {0x002CE666, 0, 0, 0, 0x00000063}, /*  44.9000 */
-    {0x002DB851, 1, 0, 0, 0x00000BC9}, /*  45.7200 */
-    {0x00318000, 0, 0, 0, 0x0000054B}, /*  49.5000 */
-    {0x00320000, 0, 0, 0, 0x0000006F}, /*  50.0000 */
-    {0x00325999, 0, 1, 0, 0x00000037}, /*  50.3500 */
-    {0x00360000, 1, 1, 0, 0x00000B0D}, /*  54.0000 */
-    {0x00384000, 0, 0, 0, 0x000007F7}, /*  56.2500 */
-    {0x0038643F, 0, 0, 0, 0x000007F7}, /*  56.3916 */
-    {0x0038A4DD, 0, 0, 0, 0x0000057B}, /*  56.6444 */
-    {0x003B0000, 0, 1, 0, 0x00000707}, /*  59.0000 */
-    {0x003C10A3, 0, 0, 0, 0x0000030B}, /*  60.0650 */
-    {0x003F0000, 1, 1, 0, 0x00000B39}, /*  63.0000 */
-    {0x00410000, 1, 0, 0, 0x00000545}, /*  65.0000 */
-    {0x00442DD2, 1, 0, 0, 0x000002E1}, /*  68.1790 */
-    {0x00438000, 1, 1, 0, 0x00000FC1}, /*  67.5000 */
-    {0x0046CCCC, 1, 0, 0, 0x00000561}, /*  70.8000 */
-    {0x00480000, 1, 0, 0, 0x000007E1}, /*  72.0000 */
-    {0x004A7B22, 0, 1, 0, 0x00000F4A}, /*  74.4810 */
-    {0x004B0000, 1, 0, 0, 0x000007F5}, /*  75.0000 */
-    {0x004EC000, 1, 0, 0, 0x00000305}, /*  78.7500 */
-    {0x00500000, 1, 1, 0, 0x00000709}, /*  80.0000 */
-    {0x00519999, 0, 0, 0, 0x000009C6}, /*  81.6000 */
-    {0x0059CCCC, 0, 1, 0, 0x00000262}, /*  89.8000 */
-    {0x005E8000, 0, 0, 0, 0x000002D2}, /*  94.5000 */
-    {0x00618560, 0, 0, 0, 0x00000546}, /*  97.5200 */
-    {0x00630000, 0, 1, 0, 0x00000B4A}, /*  99.0000 */
-    {0x00642FDF, 0, 0, 0, 0x0000006E}, /* 100.1870 */
-    {0x00656B85, 0, 0, 0, 0x00000552}, /* 101.4200 */
-    {0x006C0000, 0, 0, 0, 0x000007E2}, /* 108.0000 */
-    {0x00708000, 0, 0, 0, 0x000007F6}, /* 112.5000 */
-    {0x00714F1A, 0, 0, 0, 0x0000057A}, /* 113.3090 */
-    {0x0077A666, 0, 0, 0, 0x0000030A}, /* 119.6500 */
-    {0x00806666, 1, 0, 0, 0x00000068}, /* 128.4000 */
-    {0x00820000, 1, 1, 0, 0x00000FB0}, /* 130.0000 */
-    {0x00821999, 1, 0, 0, 0x00000544}, /* 130.1000 */
-    {0x00858000, 1, 0, 0, 0x0000006C}, /* 133.5000 */
-    {0x00870000, 1, 0, 0, 0x00000550}, /* 135.0000 */
-    {0x00906147, 1, 0, 0, 0x000007E0}, /* 144.3800 */
-    {0x009D8000, 1, 0, 0, 0x00000304}, /* 157.5000 */
-    {0x00A20000, 0, 0, 0, 0x000002B1}, /* 162.0000 */
-    {0x00A933F7, 0, 0, 0, 0x000002B9}, /* 169.2030 */
-    {0x00ACCC49, 0, 1, 0, 0x0000002D}, /* 172.798  */
-    {0x00AF8000, 0, 0, 0, 0x000002C1}, /* 175.5000 */
-    {0x00BD0000, 0, 0, 0, 0x000002D1}, /* 189.0000 */
-    {0x00BEF5C2, 0, 0, 0, 0x0000053D}, /* 190.9600 */
-    {0x00C60000, 0, 0, 0, 0x00000549}, /* 198.0000 */
-    {0x00CA8000, 0, 0, 0, 0x00000551}, /* 202.5000 */
-    {0x00E58000, 0, 0, 0, 0x0000057D}, /* 229.5000 */
+    {0x0018EC4D, 1, 0, 0, 0x0000099E},  /*  24.9230 */
+    {0x00192CCC, 0, 0, 0, 0x00000037},  /*  25.1750 */
+    {0x001C526E, 1, 0, 0, 0x000009DA},  /*  28.3220 */
+    {0x001C8F5C, 1, 0, 0, 0x0000005E},  /*  28.5600 */
+    {0x001F8000, 1, 0, 0, 0x000002D2},  /*  31.5000 */
+    {0x00240000, 1, 0, 0, 0x000007E2},  /*  36.0000 */
+    {0x00258000, 1, 0, 0, 0x0000057A},  /*  37.5000 */
+    {0x0025E395, 1, 0, 0, 0x000007FA},  /*  37.8890 */
+    {0x00280000, 1, 0, 0, 0x0000030A},  /*  40.0000 */
+    {0x002B29BA, 0, 0, 0, 0x0000005F},  /*  43.1630 */
+    {0x002CE666, 0, 0, 0, 0x00000063},  /*  44.9000 */
+    {0x002DB851, 1, 0, 0, 0x00000BC9},  /*  45.7200 */
+    {0x00318000, 0, 0, 0, 0x0000054B},  /*  49.5000 */
+    {0x00320000, 0, 0, 0, 0x0000006F},  /*  50.0000 */
+    {0x00325999, 0, 1, 0, 0x00000037},  /*  50.3500 */
+    {0x00360000, 1, 1, 0, 0x00000B0D},  /*  54.0000 */
+    {0x00384000, 0, 0, 0, 0x000007F7},  /*  56.2500 */
+    {0x0038643F, 0, 0, 0, 0x000007F7},  /*  56.3916 */
+    {0x0038A4DD, 0, 0, 0, 0x0000057B},  /*  56.6444 */
+    {0x003B0000, 0, 1, 0, 0x00000707},  /*  59.0000 */
+    {0x003C10A3, 0, 0, 0, 0x0000030B},  /*  60.0650 */
+    {0x003F0000, 1, 1, 0, 0x00000B39},  /*  63.0000 */
+    {0x00410000, 1, 0, 0, 0x00000545},  /*  65.0000 */
+    {0x00442DD2, 1, 0, 0, 0x000002E1},  /*  68.1790 */
+    {0x00438000, 1, 1, 0, 0x00000FC1},  /*  67.5000 */
+    {0x0046CCCC, 1, 0, 0, 0x00000561},  /*  70.8000 */
+    {0x00480000, 1, 0, 0, 0x000007E1},  /*  72.0000 */
+    {0x004A7B22, 0, 1, 0, 0x00000F4A},  /*  74.4810 */
+    {0x004B0000, 1, 0, 0, 0x000007F5},  /*  75.0000 */
+    {0x004EC000, 1, 0, 0, 0x00000305},  /*  78.7500 */
+    {0x00500000, 1, 1, 0, 0x00000709},  /*  80.0000 */
+    {0x00519999, 0, 0, 0, 0x000009C6},  /*  81.6000 */
+    {0x0059CCCC, 0, 1, 0, 0x00000262},  /*  89.8000 */
+    {0x005E8000, 0, 0, 0, 0x000002D2},  /*  94.5000 */
+    {0x00618560, 0, 0, 0, 0x00000546},  /*  97.5200 */
+    {0x00630000, 0, 1, 0, 0x00000B4A},  /*  99.0000 */
+    {0x00642FDF, 0, 0, 0, 0x0000006E},  /* 100.1870 */
+    {0x00656B85, 0, 0, 0, 0x00000552},  /* 101.4200 */
+    {0x006C0000, 0, 0, 0, 0x000007E2},  /* 108.0000 */
+    {0x00708000, 0, 0, 0, 0x000007F6},  /* 112.5000 */
+    {0x00714F1A, 0, 0, 0, 0x0000057A},  /* 113.3090 */
+    {0x0077A666, 0, 0, 0, 0x0000030A},  /* 119.6500 */
+    {0x00806666, 1, 0, 0, 0x00000068},  /* 128.4000 */
+    {0x00820000, 1, 1, 0, 0x00000FB0},  /* 130.0000 */
+    {0x00821999, 1, 0, 0, 0x00000544},  /* 130.1000 */
+    {0x00858000, 1, 0, 0, 0x0000006C},  /* 133.5000 */
+    {0x00870000, 1, 0, 0, 0x00000550},  /* 135.0000 */
+    {0x00906147, 1, 0, 0, 0x000007E0},  /* 144.3800 */
+    {0x009D8000, 1, 0, 0, 0x00000304},  /* 157.5000 */
+    {0x00A20000, 0, 0, 0, 0x000002B1},  /* 162.0000 */
+    {0x00A933F7, 0, 0, 0, 0x000002B9},  /* 169.2030 */
+    {0x00ACCC49, 0, 1, 0, 0x0000002D},  /* 172.798  */
+    {0x00AF8000, 0, 0, 0, 0x000002C1},  /* 175.5000 */
+    {0x00BD0000, 0, 0, 0, 0x000002D1},  /* 189.0000 */
+    {0x00BEF5C2, 0, 0, 0, 0x0000053D},  /* 190.9600 */
+    {0x00C60000, 0, 0, 0, 0x00000549},  /* 198.0000 */
+    {0x00CA8000, 0, 0, 0, 0x00000551},  /* 202.5000 */
+    {0x00E58000, 0, 0, 0, 0x0000057D},  /* 229.5000 */
 };
 
 #define NUM_RCDF_FREQUENCIES sizeof(RCDF_PLLtable)/sizeof(RCDFPLLENTRY)
@@ -205,8 +204,8 @@ gfx_set_display_control(int sync_polarities)
 
     dcfg = READ_VID32(RCDF_DISPLAY_CONFIG);
     dcfg &= ~(RCDF_DCFG_CRT_SYNC_SKW_MASK | RCDF_DCFG_PWR_SEQ_DLY_MASK |
-        RCDF_DCFG_CRT_HSYNC_POL | RCDF_DCFG_CRT_VSYNC_POL |
-        RCDF_DCFG_FP_PWR_EN | RCDF_DCFG_FP_DATA_EN);
+              RCDF_DCFG_CRT_HSYNC_POL | RCDF_DCFG_CRT_VSYNC_POL |
+              RCDF_DCFG_FP_PWR_EN | RCDF_DCFG_FP_DATA_EN);
 
     /* Don't blindly set the PAL_BYP bit - assume that somebody along
      * the line has set up the gamma correctly before this point */
@@ -222,16 +221,16 @@ gfx_set_display_control(int sync_polarities)
     /* SET APPROPRIATE SYNC POLARITIES */
 
     if (PanelEnable) {
-	unsigned int pt2 = READ_VID32(0x408);
+        unsigned int pt2 = READ_VID32(0x408);
 
-	pt2 &= ~((1 << 22) | (1 << 23));
-	WRITE_VID32(0x408, pt2);
+        pt2 &= ~((1 << 22) | (1 << 23));
+        WRITE_VID32(0x408, pt2);
     }
 
     if (sync_polarities & 0x1)
-		dcfg |= RCDF_DCFG_CRT_HSYNC_POL;
-	if (sync_polarities & 0x2)
-		dcfg |= RCDF_DCFG_CRT_VSYNC_POL;
+        dcfg |= RCDF_DCFG_CRT_HSYNC_POL;
+    if (sync_polarities & 0x2)
+        dcfg |= RCDF_DCFG_CRT_VSYNC_POL;
 
     WRITE_VID32(RCDF_DISPLAY_CONFIG, dcfg);
 
@@ -265,11 +264,11 @@ gfx_set_clock_frequency(unsigned long frequency)
     /* Search the table for the closest frequency (16.16 format). */
 
     value = RCDF_PLLtable[0].pll_value;
-    min = (long)RCDF_PLLtable[0].frequency - frequency;
+    min = (long) RCDF_PLLtable[0].frequency - frequency;
     if (min < 0L)
         min = -min;
     for (i = 1; i < NUM_RCDF_FREQUENCIES; i++) {
-        diff = (long)RCDF_PLLtable[i].frequency - frequency;
+        diff = (long) RCDF_PLLtable[i].frequency - frequency;
         if (diff < 0L)
             diff = -diff;
         if (diff < min) {
@@ -296,9 +295,8 @@ gfx_set_clock_frequency(unsigned long frequency)
 
     if ((msr_value.low & MCP_DOTPLL_LOCK) &&
         (msr_value.high == RCDF_PLLtable[index].pll_value) &&
-        ((sys_value.
-                low & (MCP_DOTPOSTDIV3 | MCP_DOTPREDIV2 | MCP_DOTPREMULT2)) ==
-            sys_low)) {
+        ((sys_value.low & (MCP_DOTPOSTDIV3 | MCP_DOTPREDIV2 | MCP_DOTPREMULT2))
+         == sys_low)) {
         return;
     }
 
@@ -349,36 +347,36 @@ gfx_set_crt_enable(int enable)
     misc = READ_VID32(RCDF_VID_MISC);
 
     switch (enable) {
-    case CRT_DISABLE:                 /* DISABLE EVERYTHING */
+    case CRT_DISABLE:          /* DISABLE EVERYTHING */
 
         WRITE_VID32(RCDF_DISPLAY_CONFIG,
-            config & ~(RCDF_DCFG_DIS_EN | RCDF_DCFG_HSYNC_EN |
-                RCDF_DCFG_VSYNC_EN | RCDF_DCFG_DAC_BL_EN));
+                    config & ~(RCDF_DCFG_DIS_EN | RCDF_DCFG_HSYNC_EN |
+                               RCDF_DCFG_VSYNC_EN | RCDF_DCFG_DAC_BL_EN));
         WRITE_VID32(RCDF_VID_MISC, misc | RCDF_DAC_POWER_DOWN);
         break;
 
-    case CRT_ENABLE:                  /* ENABLE CRT DISPLAY, INCLUDING DISPLAY LOGIC */
+    case CRT_ENABLE:           /* ENABLE CRT DISPLAY, INCLUDING DISPLAY LOGIC */
 
         WRITE_VID32(RCDF_DISPLAY_CONFIG,
-            config | RCDF_DCFG_DIS_EN | RCDF_DCFG_HSYNC_EN |
-            RCDF_DCFG_VSYNC_EN | RCDF_DCFG_DAC_BL_EN);
+                    config | RCDF_DCFG_DIS_EN | RCDF_DCFG_HSYNC_EN |
+                    RCDF_DCFG_VSYNC_EN | RCDF_DCFG_DAC_BL_EN);
         WRITE_VID32(RCDF_VID_MISC,
-            misc & ~RCDF_DAC_POWER_DOWN & ~RCDF_ANALOG_POWER_DOWN);
+                    misc & ~RCDF_DAC_POWER_DOWN & ~RCDF_ANALOG_POWER_DOWN);
         break;
 
-    case CRT_STANDBY:                 /* HSYNC:OFF VSYNC:ON */
+    case CRT_STANDBY:          /* HSYNC:OFF VSYNC:ON */
 
         WRITE_VID32(RCDF_DISPLAY_CONFIG,
-            (config & ~(RCDF_DCFG_DIS_EN | RCDF_DCFG_HSYNC_EN |
-                    RCDF_DCFG_DAC_BL_EN)) | RCDF_DCFG_VSYNC_EN);
+                    (config & ~(RCDF_DCFG_DIS_EN | RCDF_DCFG_HSYNC_EN |
+                                RCDF_DCFG_DAC_BL_EN)) | RCDF_DCFG_VSYNC_EN);
         WRITE_VID32(RCDF_VID_MISC, misc | RCDF_DAC_POWER_DOWN);
         break;
 
-    case CRT_SUSPEND:                 /* HSYNC:ON VSYNC:OFF */
+    case CRT_SUSPEND:          /* HSYNC:ON VSYNC:OFF */
 
         WRITE_VID32(RCDF_DISPLAY_CONFIG,
-            (config & ~(RCDF_DCFG_DIS_EN | RCDF_DCFG_VSYNC_EN |
-                    RCDF_DCFG_DAC_BL_EN)) | RCDF_DCFG_HSYNC_EN);
+                    (config & ~(RCDF_DCFG_DIS_EN | RCDF_DCFG_VSYNC_EN |
+                                RCDF_DCFG_DAC_BL_EN)) | RCDF_DCFG_HSYNC_EN);
         WRITE_VID32(RCDF_VID_MISC, misc | RCDF_DAC_POWER_DOWN);
         break;
 
@@ -409,9 +407,9 @@ gfx_set_video_enable(int enable)
 
     if (gfx_test_timing_active()) {
         if (!gfx_test_vertical_active()) {
-            while (!gfx_test_vertical_active()) ;
+            while (!gfx_test_vertical_active());
         }
-        while (gfx_test_vertical_active()) ;
+        while (gfx_test_vertical_active());
     }
 
     vcfg = READ_VID32(RCDF_VIDEO_CONFIG);
@@ -425,7 +423,8 @@ gfx_set_video_enable(int enable)
 
         vcfg |= RCDF_VCFG_VID_EN;
         WRITE_VID32(RCDF_VIDEO_CONFIG, vcfg);
-    } else {
+    }
+    else {
         /* DISABLE DISPLAY FILTER VIDEO OVERLAY */
 
         vcfg &= ~RCDF_VCFG_VID_EN;
@@ -619,11 +618,11 @@ gfx_set_video_offset(unsigned long offset)
 #if GFX_VIDEO_DYNAMIC
 int
 redcloud_set_video_yuv_offsets(unsigned long yoffset, unsigned long uoffset,
-    unsigned long voffset)
+                               unsigned long voffset)
 #else
 int
 gfx_set_video_yuv_offsets(unsigned long yoffset, unsigned long uoffset,
-    unsigned long voffset)
+                          unsigned long voffset)
 #endif
 {
     /* SAVE VALUE FOR FUTURE CLIPPING OF THE TOP OF THE VIDEO WINDOW */
@@ -672,11 +671,11 @@ gfx_set_video_yuv_pitch(unsigned long ypitch, unsigned long uvpitch)
 #if GFX_VIDEO_DYNAMIC
 int
 redcloud_set_video_scale(unsigned short srcw, unsigned short srch,
-    unsigned short dstw, unsigned short dsth)
+                         unsigned short dstw, unsigned short dsth)
 #else
 int
 gfx_set_video_scale(unsigned short srcw, unsigned short srch,
-    unsigned short dstw, unsigned short dsth)
+                    unsigned short dstw, unsigned short dsth)
 #endif
 {
     unsigned long xscale, yscale;
@@ -727,7 +726,7 @@ gfx_set_video_scale(unsigned short srcw, unsigned short srch,
     /* amount of data that needs to be transferred.                   */
 
     gfx_set_video_window(gfx_vid_xpos, gfx_vid_ypos, gfx_vid_width,
-        gfx_vid_height);
+                         gfx_vid_height);
     return (0);
 }
 
@@ -741,8 +740,7 @@ gfx_set_video_scale(unsigned short srcw, unsigned short srch,
  */
 #if GFX_VIDEO_DYNAMIC
 int
-redcloud_set_video_vertical_downscale(unsigned short srch,
-    unsigned short dsth)
+redcloud_set_video_vertical_downscale(unsigned short srch, unsigned short dsth)
 #else
 int
 gfx_set_video_vertical_downscale(unsigned short srch, unsigned short dsth)
@@ -800,7 +798,7 @@ gfx_set_video_downscale_config(unsigned short type, unsigned short m)
     downscale = READ_VID32(RCDF_VIDEO_DOWNSCALER_CONTROL);
     downscale &=
         ~(RCDF_VIDEO_DOWNSCALE_FACTOR_MASK | RCDF_VIDEO_DOWNSCALE_TYPE_MASK);
-    downscale |= ((unsigned long)(m - 1) << RCDF_VIDEO_DOWNSCALE_FACTOR_POS);
+    downscale |= ((unsigned long) (m - 1) << RCDF_VIDEO_DOWNSCALE_FACTOR_POS);
     switch (type) {
     case VIDEO_DOWNSCALE_KEEP_1_OF:
         downscale |= RCDF_VIDEO_DOWNSCALE_TYPE_A;
@@ -824,21 +822,24 @@ gfx_set_video_downscale_config(unsigned short type, unsigned short m)
 #if GFX_VIDEO_DYNAMIC
 int
 redcloud_set_video_downscale_coefficients(unsigned short coef1,
-    unsigned short coef2, unsigned short coef3, unsigned short coef4)
+                                          unsigned short coef2,
+                                          unsigned short coef3,
+                                          unsigned short coef4)
 #else
 int
 gfx_set_video_downscale_coefficients(unsigned short coef1,
-    unsigned short coef2, unsigned short coef3, unsigned short coef4)
+                                     unsigned short coef2, unsigned short coef3,
+                                     unsigned short coef4)
 #endif
 {
     if ((coef1 + coef2 + coef3 + coef4) != 16)
         return GFX_STATUS_BAD_PARAMETER;
 
     WRITE_VID32(RCDF_VIDEO_DOWNSCALER_COEFFICIENTS,
-        ((unsigned long)coef1 << RCDF_VIDEO_DOWNSCALER_COEF1_POS) |
-        ((unsigned long)coef2 << RCDF_VIDEO_DOWNSCALER_COEF2_POS) |
-        ((unsigned long)coef3 << RCDF_VIDEO_DOWNSCALER_COEF3_POS) |
-        ((unsigned long)coef4 << RCDF_VIDEO_DOWNSCALER_COEF4_POS));
+                ((unsigned long) coef1 << RCDF_VIDEO_DOWNSCALER_COEF1_POS) |
+                ((unsigned long) coef2 << RCDF_VIDEO_DOWNSCALER_COEF2_POS) |
+                ((unsigned long) coef3 << RCDF_VIDEO_DOWNSCALER_COEF3_POS) |
+                ((unsigned long) coef4 << RCDF_VIDEO_DOWNSCALER_COEF4_POS));
     return (0);
 }
 
@@ -879,8 +880,7 @@ gfx_set_video_downscale_enable(int enable)
  */
 #if GFX_VIDEO_DYNAMIC
 int
-redcloud_set_video_window(short x, short y, unsigned short w,
-    unsigned short h)
+redcloud_set_video_window(short x, short y, unsigned short w, unsigned short h)
 #else
 int
 gfx_set_video_window(short x, short y, unsigned short w, unsigned short h)
@@ -906,11 +906,12 @@ gfx_set_video_window(short x, short y, unsigned short w, unsigned short h)
     /* LEFT CLIPPING */
 
     if (x < 0) {
-        gfx_set_video_left_crop((unsigned short)(-x));
+        gfx_set_video_left_crop((unsigned short) (-x));
         xstart = hadjust;
-    } else {
+    }
+    else {
         gfx_set_video_left_crop(0);
-        xstart = (unsigned long)x + hadjust;
+        xstart = (unsigned long) x + hadjust;
     }
 
     /* HORIZONTAL END */
@@ -918,24 +919,24 @@ gfx_set_video_window(short x, short y, unsigned short w, unsigned short h)
      * end) */
 
     if ((x + w) < gfx_get_hactive())
-        xend = (unsigned long)x + (unsigned long)w + hadjust;
+        xend = (unsigned long) x + (unsigned long) w + hadjust;
 
     /* RIGHT-CLIPPING */
     else
-        xend = (unsigned long)gfx_get_hactive() + hadjust;
+        xend = (unsigned long) gfx_get_hactive() + hadjust;
 
     /* VERTICAL START */
 
-    ystart = (unsigned long)y + vadjust;
+    ystart = (unsigned long) y + vadjust;
 
     /* VERTICAL END */
 
     if ((y + h) < gfx_get_vactive())
-        yend = (unsigned long)y + (unsigned long)h + vadjust;
+        yend = (unsigned long) y + (unsigned long) h + vadjust;
 
     /* BOTTOM-CLIPPING */
     else
-        yend = (unsigned long)gfx_get_vactive() + vadjust;
+        yend = (unsigned long) gfx_get_vactive() + vadjust;
 
     /* SET VIDEO POSITION */
 
@@ -976,11 +977,12 @@ gfx_set_video_left_crop(unsigned short x)
      * */
 
     if (gfx_vid_dstw) {
-        initread = (unsigned long)x *gfx_vid_srcw / gfx_vid_dstw;
+        initread = (unsigned long) x *gfx_vid_srcw / gfx_vid_dstw;
 
         if (vcfg & RCDF_VCFG_4_2_0_MODE)
             initread &= 0xFFF8;
-    } else
+    }
+    else
         initread = 0;
 
     /* SET INITIAL READ ADDRESS */
@@ -1008,7 +1010,7 @@ gfx_set_video_left_crop(unsigned short x)
 #if GFX_VIDEO_DYNAMIC
 int
 redcloud_set_video_color_key(unsigned long key, unsigned long mask,
-    int graphics)
+                             int graphics)
 #else
 int
 gfx_set_video_color_key(unsigned long key, unsigned long mask, int graphics)
@@ -1093,9 +1095,9 @@ gfx_set_video_palette(unsigned long *palette)
     WRITE_VID32(RCDF_VID_MISC, misc);
 
     if (gfx_test_timing_active()) {
-        while (!gfx_test_vertical_active()) ;
-        while (gfx_test_vertical_active()) ;
-        while (!gfx_test_vertical_active()) ;
+        while (!gfx_test_vertical_active());
+        while (gfx_test_vertical_active());
+        while (!gfx_test_vertical_active());
     }
 
     /* LOAD REDCLOUD VIDEO PALETTE */
@@ -1147,9 +1149,9 @@ gfx_set_graphics_palette(unsigned long *palette)
     WRITE_VID32(RCDF_VID_MISC, misc);
 
     if (gfx_test_timing_active()) {
-        while (!gfx_test_vertical_active()) ;
-        while (gfx_test_vertical_active()) ;
-        while (!gfx_test_vertical_active()) ;
+        while (!gfx_test_vertical_active());
+        while (gfx_test_vertical_active());
+        while (!gfx_test_vertical_active());
     }
 
     /* LOAD REDCLOUD VIDEO PALETTE */
@@ -1174,8 +1176,7 @@ gfx_set_graphics_palette(unsigned long *palette)
  */
 #if GFX_VIDEO_DYNAMIC
 int
-redcloud_set_graphics_palette_entry(unsigned long index,
-    unsigned long palette)
+redcloud_set_graphics_palette_entry(unsigned long index, unsigned long palette)
 #else
 int
 gfx_set_graphics_palette_entry(unsigned long index, unsigned long palette)
@@ -1300,8 +1301,8 @@ gfx_set_video_request(short x, short y)
         return GFX_STATUS_BAD_PARAMETER;
 
     WRITE_VID32(RCDF_VIDEO_REQUEST,
-        ((unsigned long)x << RCDF_VIDEO_X_REQUEST_POS) | ((unsigned long)y <<
-            RCDF_VIDEO_Y_REQUEST_POS));
+                ((unsigned long) x << RCDF_VIDEO_X_REQUEST_POS) |
+                ((unsigned long) y << RCDF_VIDEO_Y_REQUEST_POS));
     return (0);
 }
 
@@ -1332,18 +1333,20 @@ gfx_set_video_request(short x, short y)
 #if GFX_VIDEO_DYNAMIC
 int
 redcloud_set_video_cursor(unsigned long key, unsigned long mask,
-    unsigned short select_color2, unsigned long color1, unsigned long color2)
+                          unsigned short select_color2, unsigned long color1,
+                          unsigned long color2)
 #else
 int
 gfx_set_video_cursor(unsigned long key, unsigned long mask,
-    unsigned short select_color2, unsigned long color1, unsigned long color2)
+                     unsigned short select_color2, unsigned long color1,
+                     unsigned long color2)
 #endif
 {
     if (select_color2 > RCDF_CURSOR_COLOR_BITS)
         return GFX_STATUS_BAD_PARAMETER;
     key =
-        (key & RCDF_COLOR_MASK) | ((unsigned long)select_color2 <<
-        RCDF_CURSOR_COLOR_KEY_OFFSET_POS);
+        (key & RCDF_COLOR_MASK) | ((unsigned long) select_color2 <<
+                                   RCDF_CURSOR_COLOR_KEY_OFFSET_POS);
     WRITE_VID32(RCDF_CURSOR_COLOR_KEY, key);
     WRITE_VID32(RCDF_CURSOR_COLOR_MASK, mask);
     WRITE_VID32(RCDF_CURSOR_COLOR_1, color1);
@@ -1412,7 +1415,7 @@ gfx_set_alpha_enable(int enable)
 
     if (gfx_alpha_select > 2)
         return (GFX_STATUS_UNSUPPORTED);
-    address = RCDF_ALPHA_CONTROL_1 + ((unsigned long)gfx_alpha_select << 5);
+    address = RCDF_ALPHA_CONTROL_1 + ((unsigned long) gfx_alpha_select << 5);
     value = READ_VID32(address);
     if (enable)
         value |= RCDF_ACTRL_WIN_ENABLE;
@@ -1433,11 +1436,11 @@ gfx_set_alpha_enable(int enable)
 #if GFX_VIDEO_DYNAMIC
 int
 redcloud_set_alpha_window(short x, short y,
-    unsigned short width, unsigned short height)
+                          unsigned short width, unsigned short height)
 #else
 int
 gfx_set_alpha_window(short x, short y,
-    unsigned short width, unsigned short height)
+                     unsigned short width, unsigned short height)
 #endif
 {
     unsigned long address = 0;
@@ -1456,15 +1459,15 @@ gfx_set_alpha_window(short x, short y,
 
     if (gfx_alpha_select > 2)
         return (GFX_STATUS_UNSUPPORTED);
-    address = RCDF_ALPHA_XPOS_1 + ((unsigned long)gfx_alpha_select << 5);
+    address = RCDF_ALPHA_XPOS_1 + ((unsigned long) gfx_alpha_select << 5);
 
     /* END POSITIONS IN REGISTERS ARE NON-INCLUSIVE (ONE MORE THAN ACTUAL END)
      * */
 
-    WRITE_VID32(address, (unsigned long)x |
-        ((unsigned long)(x + width) << 16));
-    WRITE_VID32(address + 8, (unsigned long)y |
-        ((unsigned long)(y + height) << 16));
+    WRITE_VID32(address, (unsigned long) x |
+                ((unsigned long) (x + width) << 16));
+    WRITE_VID32(address + 8, (unsigned long) y |
+                ((unsigned long) (y + height) << 16));
     return (GFX_STATUS_OK);
 }
 
@@ -1487,11 +1490,11 @@ gfx_set_alpha_value(unsigned char alpha, char delta)
 
     if (gfx_alpha_select > 2)
         return (GFX_STATUS_UNSUPPORTED);
-    address = RCDF_ALPHA_CONTROL_1 + ((unsigned long)gfx_alpha_select << 5);
+    address = RCDF_ALPHA_CONTROL_1 + ((unsigned long) gfx_alpha_select << 5);
     value = READ_VID32(address);
-    value &= RCDF_ACTRL_WIN_ENABLE;    /* keep only enable bit */
-    value |= (unsigned long)alpha;
-    value |= (((unsigned long)delta) & 0xff) << 8;
+    value &= RCDF_ACTRL_WIN_ENABLE;     /* keep only enable bit */
+    value |= (unsigned long) alpha;
+    value |= (((unsigned long) delta) & 0xff) << 8;
     value |= RCDF_ACTRL_LOAD_ALPHA;
     WRITE_VID32(address, value);
     return (GFX_STATUS_OK);
@@ -1522,7 +1525,7 @@ gfx_set_alpha_priority(int priority)
     value = READ_VID32(RCDF_VID_ALPHA_CONTROL);
     pos = 16 + (gfx_alpha_select << 1);
     value &= ~(0x03l << pos);
-    value |= (unsigned long)priority << pos;
+    value |= (unsigned long) priority << pos;
     WRITE_VID32(RCDF_VID_ALPHA_CONTROL, value);
     return (GFX_STATUS_OK);
 }
@@ -1550,7 +1553,7 @@ gfx_set_alpha_color(unsigned long color)
 
     if (gfx_alpha_select > 2)
         return (GFX_STATUS_UNSUPPORTED);
-    address = RCDF_ALPHA_COLOR_1 + ((unsigned long)gfx_alpha_select << 5);
+    address = RCDF_ALPHA_COLOR_1 + ((unsigned long) gfx_alpha_select << 5);
     WRITE_VID32(address, color);
     return (GFX_STATUS_OK);
 }
@@ -1574,7 +1577,7 @@ gfx_set_alpha_color_enable(int enable)
 
     if (gfx_alpha_select > 2)
         return (GFX_STATUS_UNSUPPORTED);
-    address = RCDF_ALPHA_COLOR_1 + ((unsigned long)gfx_alpha_select << 5);
+    address = RCDF_ALPHA_COLOR_1 + ((unsigned long) gfx_alpha_select << 5);
     color = READ_VID32(address);
     if (enable)
         color |= RCDF_ALPHA_COLOR_ENABLE;
@@ -1611,8 +1614,7 @@ gfx_set_no_ck_outside_alpha(int enable)
     if (enable)
         WRITE_VID32(RCDF_VID_ALPHA_CONTROL, value | RCDF_NO_CK_OUTSIDE_ALPHA);
     else
-        WRITE_VID32(RCDF_VID_ALPHA_CONTROL,
-            value & ~RCDF_NO_CK_OUTSIDE_ALPHA);
+        WRITE_VID32(RCDF_VID_ALPHA_CONTROL, value & ~RCDF_NO_CK_OUTSIDE_ALPHA);
     return (0);
 }
 
@@ -1778,7 +1780,8 @@ gfx_get_video_format(void)
         case RCDF_VCFG_YVYU_FORMAT:
             return VIDEO_FORMAT_Y1Y2Y3Y0;
         }
-    } else {
+    }
+    else {
         switch (vcfg & RCDF_VCFG_VID_INP_FORMAT) {
         case RCDF_VCFG_UYVY_FORMAT:
             return VIDEO_FORMAT_UYVY;
@@ -1922,11 +1925,11 @@ gfx_get_video_offset(void)
 #if GFX_VIDEO_DYNAMIC
 void
 redcloud_get_video_yuv_offsets(unsigned long *yoffset, unsigned long *uoffset,
-    unsigned long *voffset)
+                               unsigned long *voffset)
 #else
 void
 gfx_get_video_yuv_offsets(unsigned long *yoffset, unsigned long *uoffset,
-    unsigned long *voffset)
+                          unsigned long *voffset)
 #endif
 {
     gfx_get_display_video_yuv_offsets(yoffset, uoffset, voffset);
@@ -2023,8 +2026,8 @@ gfx_get_video_downscale_config(unsigned short *type, unsigned short *m)
     unsigned long downscale;
 
     downscale = READ_VID32(RCDF_VIDEO_DOWNSCALER_CONTROL);
-    *m = (unsigned short)((downscale & RCDF_VIDEO_DOWNSCALE_FACTOR_MASK) >>
-        RCDF_VIDEO_DOWNSCALE_FACTOR_POS) + 1;
+    *m = (unsigned short) ((downscale & RCDF_VIDEO_DOWNSCALE_FACTOR_MASK) >>
+                           RCDF_VIDEO_DOWNSCALE_FACTOR_POS) + 1;
 
     switch (downscale & RCDF_VIDEO_DOWNSCALE_TYPE_MASK) {
     case RCDF_VIDEO_DOWNSCALE_TYPE_A:
@@ -2049,28 +2052,32 @@ gfx_get_video_downscale_config(unsigned short *type, unsigned short *m)
 #if GFX_VIDEO_DYNAMIC
 void
 redcloud_get_video_downscale_coefficients(unsigned short *coef1,
-    unsigned short *coef2, unsigned short *coef3, unsigned short *coef4)
+                                          unsigned short *coef2,
+                                          unsigned short *coef3,
+                                          unsigned short *coef4)
 #else
 void
 gfx_get_video_downscale_coefficients(unsigned short *coef1,
-    unsigned short *coef2, unsigned short *coef3, unsigned short *coef4)
+                                     unsigned short *coef2,
+                                     unsigned short *coef3,
+                                     unsigned short *coef4)
 #endif
 {
     unsigned long coef;
 
     coef = READ_VID32(RCDF_VIDEO_DOWNSCALER_COEFFICIENTS);
     *coef1 =
-        (unsigned short)((coef >> RCDF_VIDEO_DOWNSCALER_COEF1_POS) &
-        RCDF_VIDEO_DOWNSCALER_COEF_MASK);
+        (unsigned short) ((coef >> RCDF_VIDEO_DOWNSCALER_COEF1_POS) &
+                          RCDF_VIDEO_DOWNSCALER_COEF_MASK);
     *coef2 =
-        (unsigned short)((coef >> RCDF_VIDEO_DOWNSCALER_COEF2_POS) &
-        RCDF_VIDEO_DOWNSCALER_COEF_MASK);
+        (unsigned short) ((coef >> RCDF_VIDEO_DOWNSCALER_COEF2_POS) &
+                          RCDF_VIDEO_DOWNSCALER_COEF_MASK);
     *coef3 =
-        (unsigned short)((coef >> RCDF_VIDEO_DOWNSCALER_COEF3_POS) &
-        RCDF_VIDEO_DOWNSCALER_COEF_MASK);
+        (unsigned short) ((coef >> RCDF_VIDEO_DOWNSCALER_COEF3_POS) &
+                          RCDF_VIDEO_DOWNSCALER_COEF_MASK);
     *coef4 =
-        (unsigned short)((coef >> RCDF_VIDEO_DOWNSCALER_COEF4_POS) &
-        RCDF_VIDEO_DOWNSCALER_COEF_MASK);
+        (unsigned short) ((coef >> RCDF_VIDEO_DOWNSCALER_COEF4_POS) &
+                          RCDF_VIDEO_DOWNSCALER_COEF_MASK);
     return;
 }
 
@@ -2089,8 +2096,7 @@ void
 gfx_get_video_downscale_enable(int *enable)
 #endif
 {
-    if (READ_VID32(RCDF_VIDEO_DOWNSCALER_CONTROL) &
-        RCDF_VIDEO_DOWNSCALE_ENABLE)
+    if (READ_VID32(RCDF_VIDEO_DOWNSCALER_CONTROL) & RCDF_VIDEO_DOWNSCALE_ENABLE)
         *enable = 1;
     else
         *enable = 0;
@@ -2147,10 +2153,10 @@ gfx_get_video_position(void)
     /* Use routines to abstract version of display controller. */
 
     hadjust =
-        (unsigned long)gfx_get_htotal() - (unsigned long)gfx_get_hsync_end() -
+        (unsigned long) gfx_get_htotal() - (unsigned long) gfx_get_hsync_end() -
         14l;
     vadjust =
-        (unsigned long)gfx_get_vtotal() - (unsigned long)gfx_get_vsync_end() +
+        (unsigned long) gfx_get_vtotal() - (unsigned long) gfx_get_vsync_end() +
         1l;
     xpos -= hadjust;
     ypos -= vadjust;
@@ -2251,10 +2257,10 @@ gfx_get_video_request(short *x, short *y)
     unsigned long request = 0;
 
     request = (READ_VID32(RCDF_VIDEO_REQUEST));
-    *x = (short)((request >> RCDF_VIDEO_X_REQUEST_POS) &
-        RCDF_VIDEO_REQUEST_MASK);
-    *y = (short)((request >> RCDF_VIDEO_Y_REQUEST_POS) &
-        RCDF_VIDEO_REQUEST_MASK);
+    *x = (short) ((request >> RCDF_VIDEO_X_REQUEST_POS) &
+                  RCDF_VIDEO_REQUEST_MASK);
+    *y = (short) ((request >> RCDF_VIDEO_Y_REQUEST_POS) &
+                  RCDF_VIDEO_REQUEST_MASK);
 
     *x -= gfx_get_htotal() - gfx_get_hsync_end() - 2;
     *y -= gfx_get_vtotal() - gfx_get_vsync_end() + 1;
@@ -2274,23 +2280,23 @@ gfx_get_video_request(short *x, short *y)
 #if GFX_VIDEO_DYNAMIC
 int
 redcloud_get_video_cursor(unsigned long *key, unsigned long *mask,
-    unsigned short *select_color2, unsigned long *color1,
-    unsigned short *color2)
+                          unsigned short *select_color2, unsigned long *color1,
+                          unsigned short *color2)
 #else
 int
 gfx_get_video_cursor(unsigned long *key, unsigned long *mask,
-    unsigned short *select_color2, unsigned long *color1,
-    unsigned short *color2)
+                     unsigned short *select_color2, unsigned long *color1,
+                     unsigned short *color2)
 #endif
 {
     *select_color2 =
-        (unsigned short)(READ_VID32(RCDF_CURSOR_COLOR_KEY) >>
-        RCDF_CURSOR_COLOR_KEY_OFFSET_POS);
+        (unsigned short) (READ_VID32(RCDF_CURSOR_COLOR_KEY) >>
+                          RCDF_CURSOR_COLOR_KEY_OFFSET_POS);
     *key = READ_VID32(RCDF_CURSOR_COLOR_KEY) & RCDF_COLOR_MASK;
     *mask = READ_VID32(RCDF_CURSOR_COLOR_MASK) & RCDF_COLOR_MASK;
     *color1 = READ_VID32(RCDF_CURSOR_COLOR_1) & RCDF_COLOR_MASK;
     *color2 =
-        (unsigned short)(READ_VID32(RCDF_CURSOR_COLOR_2) & RCDF_COLOR_MASK);
+        (unsigned short) (READ_VID32(RCDF_CURSOR_COLOR_2) & RCDF_COLOR_MASK);
     return (0);
 }
 
@@ -2324,7 +2330,7 @@ gfx_read_crc(void)
     if (gfx_test_timing_active()) {
         /* WAIT UNTIL ACTIVE DISPLAY */
 
-        while (!gfx_test_vertical_active()) ;
+        while (!gfx_test_vertical_active());
 
         /* RESET CRC DURING ACTIVE DISPLAY */
 
@@ -2333,11 +2339,11 @@ gfx_read_crc(void)
 
         /* WAIT UNTIL NOT ACTIVE, THEN ACTIVE, NOT ACTIVE, THEN ACTIVE */
 
-        while (!gfx_test_vertical_active()) ;
-        while (gfx_test_vertical_active()) ;
-        while (!gfx_test_vertical_active()) ;
-        while (gfx_test_vertical_active()) ;
-        while (!gfx_test_vertical_active()) ;
+        while (!gfx_test_vertical_active());
+        while (gfx_test_vertical_active());
+        while (!gfx_test_vertical_active());
+        while (gfx_test_vertical_active());
+        while (!gfx_test_vertical_active());
         crc = READ_VID32(RCDF_VID_CRC) >> 8;
     }
     return (crc);
@@ -2373,7 +2379,7 @@ gfx_read_crc32(void)
     if (gfx_test_timing_active()) {
         /* WAIT UNTIL ACTIVE DISPLAY */
 
-        while (!gfx_test_vertical_active()) ;
+        while (!gfx_test_vertical_active());
 
         /* RESET CRC DURING ACTIVE DISPLAY */
 
@@ -2382,11 +2388,11 @@ gfx_read_crc32(void)
 
         /* WAIT UNTIL NOT ACTIVE, THEN ACTIVE, NOT ACTIVE, THEN ACTIVE */
 
-        while (!gfx_test_vertical_active()) ;
-        while (gfx_test_vertical_active()) ;
-        while (!gfx_test_vertical_active()) ;
-        while (gfx_test_vertical_active()) ;
-        while (!gfx_test_vertical_active()) ;
+        while (!gfx_test_vertical_active());
+        while (gfx_test_vertical_active());
+        while (!gfx_test_vertical_active());
+        while (gfx_test_vertical_active());
+        while (!gfx_test_vertical_active());
         crc = READ_VID32(RCDF_VID_CRC32);
     }
     return (crc);
@@ -2402,11 +2408,11 @@ gfx_read_crc32(void)
 #if GFX_VIDEO_DYNAMIC
 unsigned long
 redcloud_read_window_crc(int source, unsigned short x, unsigned short y,
-    unsigned short width, unsigned short height, int crc32)
+                         unsigned short width, unsigned short height, int crc32)
 #else
 unsigned long
 gfx_read_window_crc(int source, unsigned short x, unsigned short y,
-    unsigned short width, unsigned short height, int crc32)
+                    unsigned short width, unsigned short height, int crc32)
 #endif
 {
     Q_WORD msr_value;
@@ -2432,8 +2438,7 @@ gfx_read_window_crc(int source, unsigned short x, unsigned short y,
         msr_value.low &= ~(RCDF_CONFIG_FMT_MASK);
         msr_value.low |=
             ((source ==
-                CRC_SOURCE_FP_DATA) ? RCDF_CONFIG_FMT_FP :
-            RCDF_CONFIG_FMT_CRT);
+              CRC_SOURCE_FP_DATA) ? RCDF_CONFIG_FMT_FP : RCDF_CONFIG_FMT_CRT);
         gfx_msr_write(RC_ID_DF, MBD_MSR_CONFIG, &msr_value);
     }
 
@@ -2466,7 +2471,8 @@ gfx_read_window_crc(int source, unsigned short x, unsigned short y,
         sync_polarities = gfx_get_sync_polarities();
         vsync_bit = 29;
         hsync_bit = 30;
-    } else {
+    }
+    else {
         vsync_bit = 25;
         hsync_bit = 26;
     }
@@ -2474,7 +2480,8 @@ gfx_read_window_crc(int source, unsigned short x, unsigned short y,
     if (sync_polarities & 1) {
         hsync_active_base = MCP_SETM0CTL;
         hsync_active_shift = 2;
-    } else {
+    }
+    else {
         hsync_active_base = MCP_SETN0CTL;
         hsync_active_shift = 1;
     }
@@ -2483,7 +2490,8 @@ gfx_read_window_crc(int source, unsigned short x, unsigned short y,
         vsync_inactive_base = MCP_SETN0CTL;
         vsync_active_shift = 2;
         vsync_inactive_shift = 1;
-    } else {
+    }
+    else {
         vsync_active_base = MCP_SETN0CTL;
         vsync_inactive_base = MCP_SETM0CTL;
         vsync_active_shift = 1;
@@ -2498,8 +2506,8 @@ gfx_read_window_crc(int source, unsigned short x, unsigned short y,
     /*       VG VSync = Diag Bus Bit 25  */
 
     msr_value.low = 0x000000A0;
-    msr_value.high = 0x00008000 | ((unsigned long)vsync_bit << 16) |
-        ((unsigned long)vsync_bit << 21) | ((unsigned long)vsync_bit << 26);
+    msr_value.high = 0x00008000 | ((unsigned long) vsync_bit << 16) |
+        ((unsigned long) vsync_bit << 21) | ((unsigned long) vsync_bit << 26);
     gfx_msr_write(RC_ID_MCP, vsync_inactive_base, &msr_value);
 
     /* STATE 1-2 TRANSITION (SET 4)   */
@@ -2519,8 +2527,8 @@ gfx_read_window_crc(int source, unsigned short x, unsigned short y,
     /* Notes: DF HSync = Diag Bus Bit 30  */
     /*        VG HSync = Diag Bus Bit 26  */
 
-    msr_value.high = 0x00008000 | ((unsigned long)hsync_bit << 16) |
-        ((unsigned long)hsync_bit << 21) | ((unsigned long)hsync_bit << 26);
+    msr_value.high = 0x00008000 | ((unsigned long) hsync_bit << 16) |
+        ((unsigned long) hsync_bit << 21) | ((unsigned long) hsync_bit << 26);
     msr_value.low = 0x00000120;
     gfx_msr_write(RC_ID_MCP, hsync_active_base + 5, &msr_value);
 
@@ -2552,8 +2560,8 @@ gfx_read_window_crc(int source, unsigned short x, unsigned short y,
     /*      data to access the diag bus                    */
     /*   2. h_blank_pixels = HTOTAL - HSYNC_END            */
 
-    xpos = (unsigned long)x + ((unsigned long)gfx_get_htotal() -
-        (unsigned long)gfx_get_hsync_end() - 1l) - 3l;
+    xpos = (unsigned long) x + ((unsigned long) gfx_get_htotal() -
+                                (unsigned long) gfx_get_hsync_end() - 1l) - 3l;
     if (source == CRC_SOURCE_GFX_DATA)
         xpos++;
     msr_value.high = 0x00000000;
@@ -2563,7 +2571,7 @@ gfx_read_window_crc(int source, unsigned short x, unsigned short y,
     /* COMPARATOR 1                                          */
     /* Upper limit = xpos + width + (h_blank_pixels - 1) - 3 */
 
-    msr_value.low = xpos + (unsigned long)width;
+    msr_value.low = xpos + (unsigned long) width;
     gfx_msr_write(RC_ID_MCP, MCP_CMPVAL0 + 2, &msr_value);
 
     /* COMPARATOR 2                                  */
@@ -2572,15 +2580,15 @@ gfx_read_window_crc(int source, unsigned short x, unsigned short y,
     /*   1. v_blank_pixels = VTOTAL - VSYNC_END      */
 
     ypos =
-        (unsigned long)y + (unsigned long)gfx_get_vtotal() -
-        (unsigned long)gfx_get_vsync_end();
+        (unsigned long) y + (unsigned long) gfx_get_vtotal() -
+        (unsigned long) gfx_get_vsync_end();
     msr_value.low = ypos << 16;
     gfx_msr_write(RC_ID_MCP, MCP_CMPVAL0 + 4, &msr_value);
 
     /* COMPARATOR 3                                  */
     /* Upper limit = ypos + height + v_blank_pixels  */
 
-    msr_value.low = (ypos + (unsigned long)height) << 16;
+    msr_value.low = (ypos + (unsigned long) height) << 16;
     gfx_msr_write(RC_ID_MCP, MCP_CMPVAL0 + 6, &msr_value);
 
     /* SET COMPARATOR MASKS */
@@ -2612,7 +2620,7 @@ gfx_read_window_crc(int source, unsigned short x, unsigned short y,
     msr_value.high = 0x00000000;
     msr_value.low = 0xFFFF0000 |
         ((gfx_get_htotal() - (gfx_get_hsync_end() - gfx_get_hsync_start()) -
-            1) & 0xFFFF);
+          1) & 0xFFFF);
     gfx_msr_write(RC_ID_MCP, MCP_REGBVAL, &msr_value);
 
     /* PROGRAM ACTIONS */
@@ -2706,11 +2714,11 @@ gfx_read_window_crc(int source, unsigned short x, unsigned short y,
 
     /* DELAY TWO FRAMES */
 
-    while (!gfx_test_vertical_active()) ;
-    while (gfx_test_vertical_active()) ;
-    while (!gfx_test_vertical_active()) ;
-    while (gfx_test_vertical_active()) ;
-    while (!gfx_test_vertical_active()) ;
+    while (!gfx_test_vertical_active());
+    while (gfx_test_vertical_active());
+    while (!gfx_test_vertical_active());
+    while (gfx_test_vertical_active());
+    while (!gfx_test_vertical_active());
 
     /* VERIFY THAT XSTATE = 11 */
 
@@ -2767,7 +2775,7 @@ gfx_get_alpha_enable(int *enable)
     if (gfx_alpha_select <= 2) {
         value =
             READ_VID32(RCDF_ALPHA_CONTROL_1 +
-            ((unsigned long)gfx_alpha_select << 5));
+                       ((unsigned long) gfx_alpha_select << 5));
         if (value & RCDF_ACTRL_WIN_ENABLE)
             *enable = 1;
     }
@@ -2783,11 +2791,11 @@ gfx_get_alpha_enable(int *enable)
 #if GFX_VIDEO_DYNAMIC
 void
 redcloud_get_alpha_size(unsigned short *x, unsigned short *y,
-    unsigned short *width, unsigned short *height)
+                        unsigned short *width, unsigned short *height)
 #else
 void
 gfx_get_alpha_size(unsigned short *x, unsigned short *y,
-    unsigned short *width, unsigned short *height)
+                   unsigned short *width, unsigned short *height)
 #endif
 {
     unsigned long value = 0;
@@ -2799,14 +2807,14 @@ gfx_get_alpha_size(unsigned short *x, unsigned short *y,
     if (gfx_alpha_select <= 2) {
         value =
             READ_VID32(RCDF_ALPHA_XPOS_1 +
-            ((unsigned long)gfx_alpha_select << 5));
-        *x = (unsigned short)(value & 0x000007FF);
-        *width = (unsigned short)((value >> 16) & 0x000007FF) - *x;
+                       ((unsigned long) gfx_alpha_select << 5));
+        *x = (unsigned short) (value & 0x000007FF);
+        *width = (unsigned short) ((value >> 16) & 0x000007FF) - *x;
         value =
             READ_VID32(RCDF_ALPHA_YPOS_1 +
-            ((unsigned long)gfx_alpha_select << 5));
-        *y = (unsigned short)(value & 0x000007FF);
-        *height = (unsigned short)((value >> 16) & 0x000007FF) - *y;
+                       ((unsigned long) gfx_alpha_select << 5));
+        *y = (unsigned short) (value & 0x000007FF);
+        *height = (unsigned short) ((value >> 16) & 0x000007FF) - *y;
     }
     *x -= gfx_get_htotal() - gfx_get_hsync_end() - 2;
     *y -= gfx_get_vtotal() - gfx_get_vsync_end() + 1;
@@ -2835,9 +2843,9 @@ gfx_get_alpha_value(unsigned char *alpha, char *delta)
     if (gfx_alpha_select <= 2) {
         value =
             READ_VID32(RCDF_ALPHA_CONTROL_1 +
-            ((unsigned long)gfx_alpha_select << 5));
-        *alpha = (unsigned char)(value & 0x00FF);
-        *delta = (char)((value >> 8) & 0x00FF);
+                       ((unsigned long) gfx_alpha_select << 5));
+        *alpha = (unsigned char) (value & 0x00FF);
+        *delta = (char) ((value >> 8) & 0x00FF);
     }
     return;
 }
@@ -2862,7 +2870,7 @@ gfx_get_alpha_priority(int *priority)
     if (gfx_alpha_select <= 2) {
         value = READ_VID32(RCDF_VID_ALPHA_CONTROL);
         pos = 16 + (gfx_alpha_select << 1);
-        *priority = (int)((value >> pos) & 3);
+        *priority = (int) ((value >> pos) & 3);
     }
     return;
 }
@@ -2886,11 +2894,11 @@ gfx_get_alpha_color(unsigned long *color)
     if (gfx_alpha_select <= 2) {
         *color =
             READ_VID32(RCDF_ALPHA_COLOR_1 +
-            ((unsigned long)gfx_alpha_select << 5));
+                       ((unsigned long) gfx_alpha_select << 5));
     }
     return;
 }
 
-#endif /* GFX_READ_ROUTINES */
+#endif                          /* GFX_READ_ROUTINES */
 
 /* END OF FILE */

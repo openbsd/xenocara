@@ -117,513 +117,513 @@ DISPLAYMODE DisplayParams[] = {
 /* 320 x 200 */
 
     {
-            GFX_MODE_70HZ |            /* refresh rate = 60  */
-            GFX_MODE_8BPP | GFX_MODE_16BPP |    /* 8 and 16 BPP valid */
-            GFX_MODE_NEG_HSYNC |       /* negative HSYNC     */
-            GFX_MODE_PIXEL_DOUBLE |    /* Double width       */
-            GFX_MODE_LINE_DOUBLE,      /* Double height      */
-            0x140, 0x288, 0x290, 0x2F0, 0x318, 0x320,   /* horizontal timings */
-            0x0C8, 0x197, 0x19C, 0x19E, 0x1BA, 0x1C1,   /* vertical timings   */
-            0x00192CCC,                /* freq = 25.175 MHz  */
-        },
+     GFX_MODE_70HZ |            /* refresh rate = 60  */
+     GFX_MODE_8BPP | GFX_MODE_16BPP |   /* 8 and 16 BPP valid */
+     GFX_MODE_NEG_HSYNC |       /* negative HSYNC     */
+     GFX_MODE_PIXEL_DOUBLE |    /* Double width       */
+     GFX_MODE_LINE_DOUBLE,      /* Double height      */
+     0x140, 0x288, 0x290, 0x2F0, 0x318, 0x320,  /* horizontal timings */
+     0x0C8, 0x197, 0x19C, 0x19E, 0x1BA, 0x1C1,  /* vertical timings   */
+     0x00192CCC,                /* freq = 25.175 MHz  */
+     },
 
 /* 320 x 240 */
 
     {
-            GFX_MODE_75HZ |            /* refresh rate = 75  */
-            GFX_MODE_8BPP | GFX_MODE_16BPP |    /* 8 and 16 BPP valid */
-            GFX_MODE_NEG_HSYNC | GFX_MODE_NEG_VSYNC |   /* negative syncs     */
-            GFX_MODE_PIXEL_DOUBLE |    /* Double width       */
-            GFX_MODE_LINE_DOUBLE,      /* Double height      */
-            0x0140, 0x0280, 0x0290, 0x02D0, 0x0348, 0x0348,
-            /* horizontal timings */
-            0x00F0, 0x01E0, 0x01E1, 0x01E4, 0x01F4, 0x01F4,
-            /* vertical timings   */
-            0x001F8000,                /* freq = 31.5 MHz    */
-        },
+     GFX_MODE_75HZ |            /* refresh rate = 75  */
+     GFX_MODE_8BPP | GFX_MODE_16BPP |   /* 8 and 16 BPP valid */
+     GFX_MODE_NEG_HSYNC | GFX_MODE_NEG_VSYNC |  /* negative syncs     */
+     GFX_MODE_PIXEL_DOUBLE |    /* Double width       */
+     GFX_MODE_LINE_DOUBLE,      /* Double height      */
+     0x0140, 0x0280, 0x0290, 0x02D0, 0x0348, 0x0348,
+     /* horizontal timings */
+     0x00F0, 0x01E0, 0x01E1, 0x01E4, 0x01F4, 0x01F4,
+     /* vertical timings   */
+     0x001F8000,                /* freq = 31.5 MHz    */
+     },
 
 /* 400 x 300 */
 
     {
-            GFX_MODE_75HZ |            /* refresh rate = 75  */
-            GFX_MODE_8BPP | GFX_MODE_16BPP |    /* 8 and 16 BPP valid */
-            GFX_MODE_PIXEL_DOUBLE |    /* Double width       */
-            GFX_MODE_LINE_DOUBLE,      /* Double height      */
-            0x0190, 0x0320, 0x0330, 0x0380, 0x0420, 0x0420,
-            /* horizontal timings */
-            0x012C, 0x0258, 0x0259, 0x025C, 0x0271, 0x0271,
-            /* vertical timings   */
-            0x00318000,                /* freq = 49.5 MHz    */
-        },
+     GFX_MODE_75HZ |            /* refresh rate = 75  */
+     GFX_MODE_8BPP | GFX_MODE_16BPP |   /* 8 and 16 BPP valid */
+     GFX_MODE_PIXEL_DOUBLE |    /* Double width       */
+     GFX_MODE_LINE_DOUBLE,      /* Double height      */
+     0x0190, 0x0320, 0x0330, 0x0380, 0x0420, 0x0420,
+     /* horizontal timings */
+     0x012C, 0x0258, 0x0259, 0x025C, 0x0271, 0x0271,
+     /* vertical timings   */
+     0x00318000,                /* freq = 49.5 MHz    */
+     },
 
 /* 512 x 384 */
 
     {
-            GFX_MODE_75HZ |            /* refresh rate = 75  */
-            GFX_MODE_8BPP | GFX_MODE_16BPP |    /* 8 and 16 BPP valid */
-            GFX_MODE_PIXEL_DOUBLE |    /* Double width       */
-            GFX_MODE_LINE_DOUBLE,      /* Double height      */
-            0x0200, 0x0400, 0x0410, 0x0470, 0x0520, 0x0520,
-            /* horizontal timings */
-            0x0180, 0x0300, 0x0301, 0x0304, 0x0320, 0x0320,
-            /* vertical timings   */
-            0x004EC000,                /* freq = 78.75 MHz   */
-        },
+     GFX_MODE_75HZ |            /* refresh rate = 75  */
+     GFX_MODE_8BPP | GFX_MODE_16BPP |   /* 8 and 16 BPP valid */
+     GFX_MODE_PIXEL_DOUBLE |    /* Double width       */
+     GFX_MODE_LINE_DOUBLE,      /* Double height      */
+     0x0200, 0x0400, 0x0410, 0x0470, 0x0520, 0x0520,
+     /* horizontal timings */
+     0x0180, 0x0300, 0x0301, 0x0304, 0x0320, 0x0320,
+     /* vertical timings   */
+     0x004EC000,                /* freq = 78.75 MHz   */
+     },
 
 /* 640 x 400 */
 
     {
-            GFX_MODE_70HZ |            /* refresh rate = 60  */
-            GFX_MODE_8BPP | GFX_MODE_12BPP | GFX_MODE_15BPP |
-            /* all BPP valid      */
-            GFX_MODE_16BPP | GFX_MODE_24BPP | GFX_MODE_NEG_HSYNC,
-            /* negative HSYNC     */
-            0x280, 0x288, 0x290, 0x2F0, 0x318, 0x320,   /* horizontal timings */
-            0x190, 0x197, 0x19C, 0x19E, 0x1BA, 0x1C1,   /* vertical timings   */
-            0x00192CCC,                /* freq = 25.175 MHz  */
-        },
+     GFX_MODE_70HZ |            /* refresh rate = 60  */
+     GFX_MODE_8BPP | GFX_MODE_12BPP | GFX_MODE_15BPP |
+     /* all BPP valid      */
+     GFX_MODE_16BPP | GFX_MODE_24BPP | GFX_MODE_NEG_HSYNC,
+     /* negative HSYNC     */
+     0x280, 0x288, 0x290, 0x2F0, 0x318, 0x320,  /* horizontal timings */
+     0x190, 0x197, 0x19C, 0x19E, 0x1BA, 0x1C1,  /* vertical timings   */
+     0x00192CCC,                /* freq = 25.175 MHz  */
+     },
 
 /* 640x480 */
 
     {
-            GFX_MODE_60HZ |            /* refresh rate = 60  */
-            GFX_MODE_8BPP | GFX_MODE_12BPP | GFX_MODE_15BPP |
-            /* all BPP valid      */
-            GFX_MODE_16BPP | GFX_MODE_24BPP | GFX_MODE_NEG_HSYNC | GFX_MODE_NEG_VSYNC,  /* negative syncs     */
-            0x0280, 0x0288, 0x0290, 0x02E8, 0x0318, 0x0320,
-            /* horizontal timings */
-            0x01E0, 0x01E8, 0x01EA, 0x01EC, 0x0205, 0x020D,
-            /* vertical timings   */
-            0x00192CCC,                /* freq = 25.175 MHz  */
-        },
+     GFX_MODE_60HZ |            /* refresh rate = 60  */
+     GFX_MODE_8BPP | GFX_MODE_12BPP | GFX_MODE_15BPP |
+     /* all BPP valid      */
+     GFX_MODE_16BPP | GFX_MODE_24BPP | GFX_MODE_NEG_HSYNC | GFX_MODE_NEG_VSYNC, /* negative syncs     */
+     0x0280, 0x0288, 0x0290, 0x02E8, 0x0318, 0x0320,
+     /* horizontal timings */
+     0x01E0, 0x01E8, 0x01EA, 0x01EC, 0x0205, 0x020D,
+     /* vertical timings   */
+     0x00192CCC,                /* freq = 25.175 MHz  */
+     },
 
     {
-            GFX_MODE_70HZ |            /* refresh rate = 60  */
-            GFX_MODE_8BPP | GFX_MODE_12BPP | GFX_MODE_15BPP |
-            /* all BPP valid      */
-            GFX_MODE_16BPP | GFX_MODE_24BPP,
-            0x0280, 0x0280, 0x0298, 0x02D8, 0x0330, 0x0330,
-            /* horizontal timings */
-            0x01E0, 0x01E0, 0x01E2, 0x01E5, 0x01F4, 0x01F4,
-            /* vertical timings   */
-            0x001C8F5C,                /* freq = 28.560 MHz  */
-        },
+     GFX_MODE_70HZ |            /* refresh rate = 60  */
+     GFX_MODE_8BPP | GFX_MODE_12BPP | GFX_MODE_15BPP |
+     /* all BPP valid      */
+     GFX_MODE_16BPP | GFX_MODE_24BPP,
+     0x0280, 0x0280, 0x0298, 0x02D8, 0x0330, 0x0330,
+     /* horizontal timings */
+     0x01E0, 0x01E0, 0x01E2, 0x01E5, 0x01F4, 0x01F4,
+     /* vertical timings   */
+     0x001C8F5C,                /* freq = 28.560 MHz  */
+     },
 
     {
-            GFX_MODE_72HZ |            /* refresh rate = 72  */
-            GFX_MODE_8BPP | GFX_MODE_12BPP | GFX_MODE_15BPP |
-            /* all BPP valid      */
-            GFX_MODE_16BPP | GFX_MODE_24BPP | GFX_MODE_NEG_HSYNC | GFX_MODE_NEG_VSYNC,  /* negative syncs     */
-            0x0280, 0x0288, 0x0298, 0x02c0, 0x0338, 0x0340,
-            /* horizontal timings */
-            0x01e0, 0x01e8, 0x01e9, 0x01ec, 0x0200, 0x0208,
-            /* vertical timings   */
-            0x001F8000,                /* freq = 31.5 MHz    */
-        },
+     GFX_MODE_72HZ |            /* refresh rate = 72  */
+     GFX_MODE_8BPP | GFX_MODE_12BPP | GFX_MODE_15BPP |
+     /* all BPP valid      */
+     GFX_MODE_16BPP | GFX_MODE_24BPP | GFX_MODE_NEG_HSYNC | GFX_MODE_NEG_VSYNC, /* negative syncs     */
+     0x0280, 0x0288, 0x0298, 0x02c0, 0x0338, 0x0340,
+     /* horizontal timings */
+     0x01e0, 0x01e8, 0x01e9, 0x01ec, 0x0200, 0x0208,
+     /* vertical timings   */
+     0x001F8000,                /* freq = 31.5 MHz    */
+     },
 
     {
-            GFX_MODE_75HZ |            /* refresh rate = 75  */
-            GFX_MODE_8BPP | GFX_MODE_12BPP | GFX_MODE_15BPP |
-            /* all BPP valid      */
-            GFX_MODE_16BPP | GFX_MODE_24BPP | GFX_MODE_NEG_HSYNC | GFX_MODE_NEG_VSYNC,  /* negative syncs     */
-            0x0280, 0x0280, 0x0290, 0x02D0, 0x0348, 0x0348,
-            /* horizontal timings */
-            0x01E0, 0x01E0, 0x01E1, 0x01E4, 0x01F4, 0x01F4,
-            /* vertical timings   */
-            0x001F8000,                /* freq = 31.5 MHz    */
-        },
+     GFX_MODE_75HZ |            /* refresh rate = 75  */
+     GFX_MODE_8BPP | GFX_MODE_12BPP | GFX_MODE_15BPP |
+     /* all BPP valid      */
+     GFX_MODE_16BPP | GFX_MODE_24BPP | GFX_MODE_NEG_HSYNC | GFX_MODE_NEG_VSYNC, /* negative syncs     */
+     0x0280, 0x0280, 0x0290, 0x02D0, 0x0348, 0x0348,
+     /* horizontal timings */
+     0x01E0, 0x01E0, 0x01E1, 0x01E4, 0x01F4, 0x01F4,
+     /* vertical timings   */
+     0x001F8000,                /* freq = 31.5 MHz    */
+     },
 
     {
-            GFX_MODE_85HZ |            /* refresh rate = 85  */
-            GFX_MODE_8BPP | GFX_MODE_12BPP | GFX_MODE_15BPP |
-            /* all BPP valid      */
-            GFX_MODE_16BPP | GFX_MODE_24BPP | GFX_MODE_NEG_HSYNC | GFX_MODE_NEG_VSYNC,  /* negative syncs     */
-            0x0280, 0x0280, 0x02B8, 0x02F0, 0x0340, 0x0340,
-            /* horizontal timings */
-            0x01E0, 0x01E0, 0x01E1, 0x01E4, 0x01FD, 0x01FD,
-            /* vertical timings   */
-            0x00240000,                /* freq = 36.0 MHz    */
-        },
+     GFX_MODE_85HZ |            /* refresh rate = 85  */
+     GFX_MODE_8BPP | GFX_MODE_12BPP | GFX_MODE_15BPP |
+     /* all BPP valid      */
+     GFX_MODE_16BPP | GFX_MODE_24BPP | GFX_MODE_NEG_HSYNC | GFX_MODE_NEG_VSYNC, /* negative syncs     */
+     0x0280, 0x0280, 0x02B8, 0x02F0, 0x0340, 0x0340,
+     /* horizontal timings */
+     0x01E0, 0x01E0, 0x01E1, 0x01E4, 0x01FD, 0x01FD,
+     /* vertical timings   */
+     0x00240000,                /* freq = 36.0 MHz    */
+     },
 
     {
-            GFX_MODE_90HZ |            /* refresh rate = 90  */
-            GFX_MODE_8BPP | GFX_MODE_12BPP | GFX_MODE_15BPP |
-            /* all BPP valid      */
-            GFX_MODE_16BPP | GFX_MODE_24BPP,
-            0x0280, 0x0280, 0x02A0, 0x02E0, 0x0340, 0x0340,
-            /* horizontal timings */
-            0x01E0, 0x01E0, 0x01E1, 0x01E4, 0x01FA, 0x01FA,
-            /* vertical timings   */
-            0x0025E395,                /* freq = 37.889 MHz  */
-        },
+     GFX_MODE_90HZ |            /* refresh rate = 90  */
+     GFX_MODE_8BPP | GFX_MODE_12BPP | GFX_MODE_15BPP |
+     /* all BPP valid      */
+     GFX_MODE_16BPP | GFX_MODE_24BPP,
+     0x0280, 0x0280, 0x02A0, 0x02E0, 0x0340, 0x0340,
+     /* horizontal timings */
+     0x01E0, 0x01E0, 0x01E1, 0x01E4, 0x01FA, 0x01FA,
+     /* vertical timings   */
+     0x0025E395,                /* freq = 37.889 MHz  */
+     },
 
     {
-            GFX_MODE_100HZ |           /* refresh rate = 100 */
-            GFX_MODE_8BPP | GFX_MODE_12BPP | GFX_MODE_15BPP |
-            /* all BPP valid      */
-            GFX_MODE_16BPP | GFX_MODE_24BPP,
-            0x0280, 0x0280, 0x02A8, 0x02E8, 0x0350, 0x0350,
-            /* horizontal timings */
-            0x01E0, 0x01E0, 0x01E1, 0x01E4, 0x01FD, 0x01FD,
-            /* vertical timings   */
-            0x002B29BA,                /* freq = 43.163 MHz  */
-        },
+     GFX_MODE_100HZ |           /* refresh rate = 100 */
+     GFX_MODE_8BPP | GFX_MODE_12BPP | GFX_MODE_15BPP |
+     /* all BPP valid      */
+     GFX_MODE_16BPP | GFX_MODE_24BPP,
+     0x0280, 0x0280, 0x02A8, 0x02E8, 0x0350, 0x0350,
+     /* horizontal timings */
+     0x01E0, 0x01E0, 0x01E1, 0x01E4, 0x01FD, 0x01FD,
+     /* vertical timings   */
+     0x002B29BA,                /* freq = 43.163 MHz  */
+     },
 
 /* 800x600 */
 
     {
-            GFX_MODE_56HZ |            /* refresh rate = 56  */
-            GFX_MODE_8BPP | GFX_MODE_12BPP | GFX_MODE_15BPP |
-            /* all BPP valid      */
-            GFX_MODE_16BPP | GFX_MODE_24BPP,
-            0x0320, 0x0320, 0x0338, 0x0380, 0x0400, 0x0400,
-            /* horizontal timings */
-            0x0258, 0x0258, 0x0259, 0x025B, 0x0271, 0x0271,
-            /* vertical timings   */
-            0x00240000,                /* freq = 36.00 MHz   */
-        },
+     GFX_MODE_56HZ |            /* refresh rate = 56  */
+     GFX_MODE_8BPP | GFX_MODE_12BPP | GFX_MODE_15BPP |
+     /* all BPP valid      */
+     GFX_MODE_16BPP | GFX_MODE_24BPP,
+     0x0320, 0x0320, 0x0338, 0x0380, 0x0400, 0x0400,
+     /* horizontal timings */
+     0x0258, 0x0258, 0x0259, 0x025B, 0x0271, 0x0271,
+     /* vertical timings   */
+     0x00240000,                /* freq = 36.00 MHz   */
+     },
 
     {
-            GFX_MODE_60HZ |            /* refresh rate = 60  */
-            GFX_MODE_8BPP | GFX_MODE_12BPP | GFX_MODE_15BPP |
-            /* all BPP valid      */
-            GFX_MODE_16BPP | GFX_MODE_24BPP,
-            0x0320, 0x0328, 0x0348, 0x03D0, 0x0418, 0x0420,
-            /* horizontal timings */
-            0x0258, 0x0258, 0x0259, 0x025D, 0x0274, 0x0274,
-            /* vertical timings   */
-            0x00280000,                /* freq = 40.00 MHz   */
-        },
+     GFX_MODE_60HZ |            /* refresh rate = 60  */
+     GFX_MODE_8BPP | GFX_MODE_12BPP | GFX_MODE_15BPP |
+     /* all BPP valid      */
+     GFX_MODE_16BPP | GFX_MODE_24BPP,
+     0x0320, 0x0328, 0x0348, 0x03D0, 0x0418, 0x0420,
+     /* horizontal timings */
+     0x0258, 0x0258, 0x0259, 0x025D, 0x0274, 0x0274,
+     /* vertical timings   */
+     0x00280000,                /* freq = 40.00 MHz   */
+     },
 
     {
-            GFX_MODE_70HZ |            /* refresh rate = 70  */
-            GFX_MODE_8BPP | GFX_MODE_12BPP | GFX_MODE_15BPP |
-            /* all BPP valid      */
-            GFX_MODE_16BPP | GFX_MODE_24BPP,
-            0x0320, 0x0320, 0x0348, 0x0398, 0x0410, 0x0410,
-            /* horizontal timings */
-            0x0258, 0x0258, 0x025c, 0x025F, 0x0274, 0x0274,
-            /* vertical timings   */
-            0x002DB851,                /* freq = 45.72 MHz   */
-        },
+     GFX_MODE_70HZ |            /* refresh rate = 70  */
+     GFX_MODE_8BPP | GFX_MODE_12BPP | GFX_MODE_15BPP |
+     /* all BPP valid      */
+     GFX_MODE_16BPP | GFX_MODE_24BPP,
+     0x0320, 0x0320, 0x0348, 0x0398, 0x0410, 0x0410,
+     /* horizontal timings */
+     0x0258, 0x0258, 0x025c, 0x025F, 0x0274, 0x0274,
+     /* vertical timings   */
+     0x002DB851,                /* freq = 45.72 MHz   */
+     },
 
     {
-            GFX_MODE_72HZ |            /* refresh rate = 72  */
-            GFX_MODE_8BPP | GFX_MODE_12BPP | GFX_MODE_15BPP |
-            /* all BPP valid      */
-            GFX_MODE_16BPP | GFX_MODE_24BPP,
-            0x0320, 0x0320, 0x0358, 0x03D0, 0x0410, 0x0410,
-            /* horizontal timings */
-            0x0258, 0x0258, 0x027D, 0x0283, 0x029A, 0x029A,
-            /* vertical timings   */
-            0x00320000,                /* freq = 49.5 MHz    */
-        },
+     GFX_MODE_72HZ |            /* refresh rate = 72  */
+     GFX_MODE_8BPP | GFX_MODE_12BPP | GFX_MODE_15BPP |
+     /* all BPP valid      */
+     GFX_MODE_16BPP | GFX_MODE_24BPP,
+     0x0320, 0x0320, 0x0358, 0x03D0, 0x0410, 0x0410,
+     /* horizontal timings */
+     0x0258, 0x0258, 0x027D, 0x0283, 0x029A, 0x029A,
+     /* vertical timings   */
+     0x00320000,                /* freq = 49.5 MHz    */
+     },
 
     {
-            GFX_MODE_75HZ |            /* refresh rate = 75  */
-            GFX_MODE_8BPP | GFX_MODE_12BPP | GFX_MODE_15BPP |
-            /* all BPP valid      */
-            GFX_MODE_16BPP | GFX_MODE_24BPP,
-            0x0320, 0x0320, 0x0330, 0x0380, 0x0420, 0x0420,
-            /* horizontal timings */
-            0x0258, 0x0258, 0x0259, 0x025C, 0x0271, 0x0271,
-            /* vertical timings   */
-            0x00318000,                /* freq = 49.5 MHz    */
-        },
+     GFX_MODE_75HZ |            /* refresh rate = 75  */
+     GFX_MODE_8BPP | GFX_MODE_12BPP | GFX_MODE_15BPP |
+     /* all BPP valid      */
+     GFX_MODE_16BPP | GFX_MODE_24BPP,
+     0x0320, 0x0320, 0x0330, 0x0380, 0x0420, 0x0420,
+     /* horizontal timings */
+     0x0258, 0x0258, 0x0259, 0x025C, 0x0271, 0x0271,
+     /* vertical timings   */
+     0x00318000,                /* freq = 49.5 MHz    */
+     },
 
     {
-            GFX_MODE_85HZ |            /* refresh rate = 85  */
-            GFX_MODE_8BPP | GFX_MODE_12BPP | GFX_MODE_15BPP |
-            /* all BPP valid      */
-            GFX_MODE_16BPP | GFX_MODE_24BPP,
-            0x0320, 0x0320, 0x0340, 0x0380, 0x0418, 0x0418,
-            /* horizontal timings */
-            0x0258, 0x0258, 0x0259, 0x025C, 0x0277, 0x0277,
-            /* vertical timings   */
-            0x00384000,                /* freq = 56.25 MHz   */
-        },
+     GFX_MODE_85HZ |            /* refresh rate = 85  */
+     GFX_MODE_8BPP | GFX_MODE_12BPP | GFX_MODE_15BPP |
+     /* all BPP valid      */
+     GFX_MODE_16BPP | GFX_MODE_24BPP,
+     0x0320, 0x0320, 0x0340, 0x0380, 0x0418, 0x0418,
+     /* horizontal timings */
+     0x0258, 0x0258, 0x0259, 0x025C, 0x0277, 0x0277,
+     /* vertical timings   */
+     0x00384000,                /* freq = 56.25 MHz   */
+     },
 
     {
-            GFX_MODE_90HZ |            /* refresh rate = 90  */
-            GFX_MODE_8BPP | GFX_MODE_12BPP | GFX_MODE_15BPP |
-            /* all BPP valid      */
-            GFX_MODE_16BPP | GFX_MODE_24BPP,
-            0x0320, 0x0320, 0x0348, 0x03A0, 0x0420, 0x0420,
-            /* horizontal timings */
-            0x0258, 0x0258, 0x0259, 0x025C, 0x0278, 0x0278,
-            /* vertical timings   */
-            0x003C10A3,                /* freq = 60.065 MHz   */
-        },
+     GFX_MODE_90HZ |            /* refresh rate = 90  */
+     GFX_MODE_8BPP | GFX_MODE_12BPP | GFX_MODE_15BPP |
+     /* all BPP valid      */
+     GFX_MODE_16BPP | GFX_MODE_24BPP,
+     0x0320, 0x0320, 0x0348, 0x03A0, 0x0420, 0x0420,
+     /* horizontal timings */
+     0x0258, 0x0258, 0x0259, 0x025C, 0x0278, 0x0278,
+     /* vertical timings   */
+     0x003C10A3,                /* freq = 60.065 MHz   */
+     },
 
     {
-            GFX_MODE_100HZ |           /* refresh rate = 100 */
-            GFX_MODE_8BPP | GFX_MODE_12BPP | GFX_MODE_15BPP |
-            /* all BPP valid      */
-            GFX_MODE_16BPP | GFX_MODE_24BPP,
-            0x0320, 0x0320, 0x0350, 0x03A8, 0x0430, 0x0430,
-            /* horizontal timings */
-            0x0258, 0x0258, 0x0259, 0x025C, 0x0277, 0x027C,
-            /* vertical timings   */
-            0x00442DD2,                /* freq = 68.179 MHz  */
-        },
+     GFX_MODE_100HZ |           /* refresh rate = 100 */
+     GFX_MODE_8BPP | GFX_MODE_12BPP | GFX_MODE_15BPP |
+     /* all BPP valid      */
+     GFX_MODE_16BPP | GFX_MODE_24BPP,
+     0x0320, 0x0320, 0x0350, 0x03A8, 0x0430, 0x0430,
+     /* horizontal timings */
+     0x0258, 0x0258, 0x0259, 0x025C, 0x0277, 0x027C,
+     /* vertical timings   */
+     0x00442DD2,                /* freq = 68.179 MHz  */
+     },
 
 /* 1024x768 */
 
     {
-            GFX_MODE_60HZ |            /* refresh rate = 60  */
-            GFX_MODE_8BPP | GFX_MODE_12BPP | GFX_MODE_15BPP |
-            /* all BPP valid      */
-            GFX_MODE_16BPP | GFX_MODE_24BPP | GFX_MODE_NEG_HSYNC | GFX_MODE_NEG_VSYNC,  /* negative syncs     */
-            0x0400, 0x0400, 0x0418, 0x04A0, 0x0540, 0x0540,
-            /* horizontal timings */
-            0x0300, 0x0300, 0x0303, 0x0309, 0x0326, 0x0326,
-            /* vertical timings   */
-            0x00410000,                /* freq = 65.00 MHz   */
-        },
+     GFX_MODE_60HZ |            /* refresh rate = 60  */
+     GFX_MODE_8BPP | GFX_MODE_12BPP | GFX_MODE_15BPP |
+     /* all BPP valid      */
+     GFX_MODE_16BPP | GFX_MODE_24BPP | GFX_MODE_NEG_HSYNC | GFX_MODE_NEG_VSYNC, /* negative syncs     */
+     0x0400, 0x0400, 0x0418, 0x04A0, 0x0540, 0x0540,
+     /* horizontal timings */
+     0x0300, 0x0300, 0x0303, 0x0309, 0x0326, 0x0326,
+     /* vertical timings   */
+     0x00410000,                /* freq = 65.00 MHz   */
+     },
 
     {
-            GFX_MODE_70HZ |            /* refresh rate = 70  */
-            GFX_MODE_8BPP | GFX_MODE_12BPP | GFX_MODE_15BPP |
-            /* all BPP valid      */
-            GFX_MODE_16BPP | GFX_MODE_24BPP | GFX_MODE_NEG_HSYNC | GFX_MODE_NEG_VSYNC,  /* negative syncs     */
-            0x0400, 0x0400, 0x0418, 0x04A0, 0x0530, 0x0530,
-            /* horizontal timings */
-            0x0300, 0x0300, 0x0303, 0x0309, 0x0326, 0x0326,
-            /* vertical timings   */
-            0x004B0000,                /* freq = 75.00 MHz   */
-        },
+     GFX_MODE_70HZ |            /* refresh rate = 70  */
+     GFX_MODE_8BPP | GFX_MODE_12BPP | GFX_MODE_15BPP |
+     /* all BPP valid      */
+     GFX_MODE_16BPP | GFX_MODE_24BPP | GFX_MODE_NEG_HSYNC | GFX_MODE_NEG_VSYNC, /* negative syncs     */
+     0x0400, 0x0400, 0x0418, 0x04A0, 0x0530, 0x0530,
+     /* horizontal timings */
+     0x0300, 0x0300, 0x0303, 0x0309, 0x0326, 0x0326,
+     /* vertical timings   */
+     0x004B0000,                /* freq = 75.00 MHz   */
+     },
 
     {
-            GFX_MODE_72HZ |            /* refresh rate = 72  */
-            GFX_MODE_8BPP | GFX_MODE_12BPP | GFX_MODE_15BPP |
-            /* all BPP valid      */
-            GFX_MODE_16BPP | GFX_MODE_24BPP,
-            0x0400, 0x0400, 0x0438, 0x04A8, 0x0550, 0x0550,
-            /* horizontal timings */
-            0x0300, 0x0300, 0x0304, 0x0307, 0x0324, 0x0324,
-            /* vertical timings   */
-            0x004EC000,                /* freq = 78.75 MHz   */
-        },
+     GFX_MODE_72HZ |            /* refresh rate = 72  */
+     GFX_MODE_8BPP | GFX_MODE_12BPP | GFX_MODE_15BPP |
+     /* all BPP valid      */
+     GFX_MODE_16BPP | GFX_MODE_24BPP,
+     0x0400, 0x0400, 0x0438, 0x04A8, 0x0550, 0x0550,
+     /* horizontal timings */
+     0x0300, 0x0300, 0x0304, 0x0307, 0x0324, 0x0324,
+     /* vertical timings   */
+     0x004EC000,                /* freq = 78.75 MHz   */
+     },
 
     {
-            GFX_MODE_75HZ |            /* refresh rate = 75  */
-            GFX_MODE_8BPP | GFX_MODE_12BPP | GFX_MODE_15BPP |
-            /* all BPP valid      */
-            GFX_MODE_16BPP | GFX_MODE_24BPP,
-            0x0400, 0x0400, 0x0410, 0x0470, 0x0520, 0x0520,
-            /* horizontal timings */
-            0x0300, 0x0300, 0x0301, 0x0304, 0x0320, 0x0320,
-            /* vertical timings   */
-            0x004EC000,                /* freq = 78.75 MHz   */
-        },
+     GFX_MODE_75HZ |            /* refresh rate = 75  */
+     GFX_MODE_8BPP | GFX_MODE_12BPP | GFX_MODE_15BPP |
+     /* all BPP valid      */
+     GFX_MODE_16BPP | GFX_MODE_24BPP,
+     0x0400, 0x0400, 0x0410, 0x0470, 0x0520, 0x0520,
+     /* horizontal timings */
+     0x0300, 0x0300, 0x0301, 0x0304, 0x0320, 0x0320,
+     /* vertical timings   */
+     0x004EC000,                /* freq = 78.75 MHz   */
+     },
 
     {
-            GFX_MODE_85HZ |            /* refresh rate = 85  */
-            GFX_MODE_8BPP | GFX_MODE_12BPP | GFX_MODE_15BPP |
-            /* all BPP valid      */
-            GFX_MODE_16BPP | GFX_MODE_24BPP,
-            0x0400, 0x0400, 0x0430, 0x0490, 0x0560, 0x0560,
-            /* horizontal timings */
-            0x0300, 0x0300, 0x0301, 0x0304, 0x0328, 0x0328,
-            /* vertical timings   */
-            0x005E8000,                /* freq = 94.50 MHz   */
-        },
+     GFX_MODE_85HZ |            /* refresh rate = 85  */
+     GFX_MODE_8BPP | GFX_MODE_12BPP | GFX_MODE_15BPP |
+     /* all BPP valid      */
+     GFX_MODE_16BPP | GFX_MODE_24BPP,
+     0x0400, 0x0400, 0x0430, 0x0490, 0x0560, 0x0560,
+     /* horizontal timings */
+     0x0300, 0x0300, 0x0301, 0x0304, 0x0328, 0x0328,
+     /* vertical timings   */
+     0x005E8000,                /* freq = 94.50 MHz   */
+     },
 
     {
-            GFX_MODE_90HZ |            /* refresh rate = 90  */
-            GFX_MODE_8BPP | GFX_MODE_12BPP | GFX_MODE_15BPP |
-            /* all BPP valid      */
-            GFX_MODE_16BPP | GFX_MODE_24BPP,
-            0x0400, 0x0400, 0x0440, 0x04B0, 0x0560, 0x0560,
-            /* horizontal timings */
-            0x0300, 0x0300, 0x0301, 0x0304, 0x0329, 0x0329,
-            /* vertical timings   */
-            0x00642FDF,                /* freq = 100.187 MHz */
-        },
+     GFX_MODE_90HZ |            /* refresh rate = 90  */
+     GFX_MODE_8BPP | GFX_MODE_12BPP | GFX_MODE_15BPP |
+     /* all BPP valid      */
+     GFX_MODE_16BPP | GFX_MODE_24BPP,
+     0x0400, 0x0400, 0x0440, 0x04B0, 0x0560, 0x0560,
+     /* horizontal timings */
+     0x0300, 0x0300, 0x0301, 0x0304, 0x0329, 0x0329,
+     /* vertical timings   */
+     0x00642FDF,                /* freq = 100.187 MHz */
+     },
 
     {
-            GFX_MODE_100HZ |           /* refresh rate = 100 */
-            GFX_MODE_8BPP | GFX_MODE_12BPP | GFX_MODE_15BPP |
-            /* all BPP valid      */
-            GFX_MODE_16BPP | GFX_MODE_24BPP,
-            0x0400, 0x0400, 0x0448, 0x04B8, 0x0570, 0x0570,
-            /* horizontal timings */
-            0x0300, 0x0300, 0x0301, 0x0304, 0x032E, 0x032E,
-            /* vertical timings   */
-            0x00714F1A,                /* freq = 113.309 MHz */
-        },
+     GFX_MODE_100HZ |           /* refresh rate = 100 */
+     GFX_MODE_8BPP | GFX_MODE_12BPP | GFX_MODE_15BPP |
+     /* all BPP valid      */
+     GFX_MODE_16BPP | GFX_MODE_24BPP,
+     0x0400, 0x0400, 0x0448, 0x04B8, 0x0570, 0x0570,
+     /* horizontal timings */
+     0x0300, 0x0300, 0x0301, 0x0304, 0x032E, 0x032E,
+     /* vertical timings   */
+     0x00714F1A,                /* freq = 113.309 MHz */
+     },
 
 /* 1152x864 */
 
     {
-            GFX_MODE_60HZ |            /* refresh rate = 60  */
-            GFX_MODE_8BPP | GFX_MODE_12BPP | GFX_MODE_15BPP |
-            /* all BPP valid      */
-            GFX_MODE_16BPP | GFX_MODE_24BPP,
-            0x0480, 0x0480, 0x04C0, 0x0538, 0x05F0, 0x05F0,
-            /* horizontal timings */
-            0x0360, 0x0360, 0x0361, 0x0364, 0x037F, 0x037F,
-            /* vertical timings   */
-            0x00519999,                /* freq = 81.60 MHz  */
-        },
+     GFX_MODE_60HZ |            /* refresh rate = 60  */
+     GFX_MODE_8BPP | GFX_MODE_12BPP | GFX_MODE_15BPP |
+     /* all BPP valid      */
+     GFX_MODE_16BPP | GFX_MODE_24BPP,
+     0x0480, 0x0480, 0x04C0, 0x0538, 0x05F0, 0x05F0,
+     /* horizontal timings */
+     0x0360, 0x0360, 0x0361, 0x0364, 0x037F, 0x037F,
+     /* vertical timings   */
+     0x00519999,                /* freq = 81.60 MHz  */
+     },
 
     {
-            GFX_MODE_70HZ |            /* refresh rate = 70  */
-            GFX_MODE_8BPP | GFX_MODE_12BPP | GFX_MODE_15BPP |
-            /* all BPP valid      */
-            GFX_MODE_16BPP | GFX_MODE_24BPP,
-            0x0480, 0x0480, 0x04C8, 0x0540, 0x0600, 0x0600,
-            /* horizontal timings */
-            0x0360, 0x0360, 0x0368, 0x036B, 0x038B, 0x038B,
-            /* vertical timings   */
-            0x00618560,                /* freq = 97.521 MHz  */
-        },
+     GFX_MODE_70HZ |            /* refresh rate = 70  */
+     GFX_MODE_8BPP | GFX_MODE_12BPP | GFX_MODE_15BPP |
+     /* all BPP valid      */
+     GFX_MODE_16BPP | GFX_MODE_24BPP,
+     0x0480, 0x0480, 0x04C8, 0x0540, 0x0600, 0x0600,
+     /* horizontal timings */
+     0x0360, 0x0360, 0x0368, 0x036B, 0x038B, 0x038B,
+     /* vertical timings   */
+     0x00618560,                /* freq = 97.521 MHz  */
+     },
 
     {
-            GFX_MODE_72HZ |            /* refresh rate = 70  */
-            GFX_MODE_8BPP | GFX_MODE_12BPP | GFX_MODE_15BPP |
-            /* all BPP valid      */
-            GFX_MODE_16BPP | GFX_MODE_24BPP,
-            0x0480, 0x0480, 0x04C8, 0x0548, 0x0610, 0x0610,
-            /* horizontal timings */
-            0x0360, 0x0360, 0x0367, 0x036A, 0x038B, 0x038B,
-            /* vertical timings   */
-            0x00656B85,                /* freq = 101.42 MHz  */
-        },
+     GFX_MODE_72HZ |            /* refresh rate = 70  */
+     GFX_MODE_8BPP | GFX_MODE_12BPP | GFX_MODE_15BPP |
+     /* all BPP valid      */
+     GFX_MODE_16BPP | GFX_MODE_24BPP,
+     0x0480, 0x0480, 0x04C8, 0x0548, 0x0610, 0x0610,
+     /* horizontal timings */
+     0x0360, 0x0360, 0x0367, 0x036A, 0x038B, 0x038B,
+     /* vertical timings   */
+     0x00656B85,                /* freq = 101.42 MHz  */
+     },
 
     {
-            GFX_MODE_75HZ |            /* refresh rate = 75  */
-            GFX_MODE_8BPP | GFX_MODE_12BPP | GFX_MODE_15BPP |
-            /* all BPP valid      */
-            GFX_MODE_16BPP | GFX_MODE_24BPP,
-            0x0480, 0x0480, 0x04C0, 0x0540, 0x0640, 0x0640,
-            /* horizontal timings */
-            0x0360, 0x0360, 0x0361, 0x0364, 0x0384, 0x0384,
-            /* vertical timings   */
-            0x006C0000,                /* freq = 108.00 MHz  */
-        },
+     GFX_MODE_75HZ |            /* refresh rate = 75  */
+     GFX_MODE_8BPP | GFX_MODE_12BPP | GFX_MODE_15BPP |
+     /* all BPP valid      */
+     GFX_MODE_16BPP | GFX_MODE_24BPP,
+     0x0480, 0x0480, 0x04C0, 0x0540, 0x0640, 0x0640,
+     /* horizontal timings */
+     0x0360, 0x0360, 0x0361, 0x0364, 0x0384, 0x0384,
+     /* vertical timings   */
+     0x006C0000,                /* freq = 108.00 MHz  */
+     },
 
     {
-            GFX_MODE_85HZ |            /* refresh rate = 85  */
-            GFX_MODE_8BPP | GFX_MODE_12BPP | GFX_MODE_15BPP |
-            /* all BPP valid      */
-            GFX_MODE_16BPP | GFX_MODE_24BPP,
-            0x0480, 0x0480, 0x04C8, 0x0548, 0x0610, 0x0610,
-            /* horizontal timings */
-            0x0360, 0x0360, 0x0363, 0x0366, 0x038B, 0x038B,
-            /* vertical timings   */
-            0x0077A666,                /* freq = 119.65 MHz  */
-        },
+     GFX_MODE_85HZ |            /* refresh rate = 85  */
+     GFX_MODE_8BPP | GFX_MODE_12BPP | GFX_MODE_15BPP |
+     /* all BPP valid      */
+     GFX_MODE_16BPP | GFX_MODE_24BPP,
+     0x0480, 0x0480, 0x04C8, 0x0548, 0x0610, 0x0610,
+     /* horizontal timings */
+     0x0360, 0x0360, 0x0363, 0x0366, 0x038B, 0x038B,
+     /* vertical timings   */
+     0x0077A666,                /* freq = 119.65 MHz  */
+     },
 
     {
-            GFX_MODE_90HZ |            /* refresh rate = 90  */
-            GFX_MODE_8BPP | GFX_MODE_12BPP | GFX_MODE_15BPP |
-            /* all BPP valid      */
-            GFX_MODE_16BPP | GFX_MODE_24BPP,
-            0x0480, 0x0480, 0x04D0, 0x0550, 0x0620, 0x0620,
-            /* horizontal timings */
-            0x0360, 0x0360, 0x0363, 0x0366, 0x038E, 0x038E,
-            /* vertical timings   */
-            0x00806666,                /* freq = 128.40 MHz  */
-        },
+     GFX_MODE_90HZ |            /* refresh rate = 90  */
+     GFX_MODE_8BPP | GFX_MODE_12BPP | GFX_MODE_15BPP |
+     /* all BPP valid      */
+     GFX_MODE_16BPP | GFX_MODE_24BPP,
+     0x0480, 0x0480, 0x04D0, 0x0550, 0x0620, 0x0620,
+     /* horizontal timings */
+     0x0360, 0x0360, 0x0363, 0x0366, 0x038E, 0x038E,
+     /* vertical timings   */
+     0x00806666,                /* freq = 128.40 MHz  */
+     },
 
     {
-            GFX_MODE_100HZ |           /* refresh rate = 100 */
-            GFX_MODE_8BPP | GFX_MODE_12BPP | GFX_MODE_15BPP |
-            /* all BPP valid      */
-            GFX_MODE_16BPP | GFX_MODE_24BPP,
-            0x0480, 0x0480, 0x04D0, 0x0550, 0x0620, 0x0620,
-            /* horizontal timings */
-            0x0360, 0x0360, 0x0365, 0x0368, 0x0398, 0x0398,
-            /* vertical timings   */
-            0x00906147,                /* freq = 144.38 MHz  */
-        },
+     GFX_MODE_100HZ |           /* refresh rate = 100 */
+     GFX_MODE_8BPP | GFX_MODE_12BPP | GFX_MODE_15BPP |
+     /* all BPP valid      */
+     GFX_MODE_16BPP | GFX_MODE_24BPP,
+     0x0480, 0x0480, 0x04D0, 0x0550, 0x0620, 0x0620,
+     /* horizontal timings */
+     0x0360, 0x0360, 0x0365, 0x0368, 0x0398, 0x0398,
+     /* vertical timings   */
+     0x00906147,                /* freq = 144.38 MHz  */
+     },
 
 /* 1280x1024 */
 
     {
-            GFX_MODE_60HZ |            /* refresh rate = 60  */
-            GFX_MODE_8BPP | GFX_MODE_12BPP | GFX_MODE_15BPP |
-            /* all BPP valid      */
-            GFX_MODE_16BPP | GFX_MODE_24BPP,
-            0x0500, 0x0500, 0x0530, 0x05A0, 0x0698, 0x0698,
-            /* horizontal timings */
-            0x0400, 0x0400, 0x0401, 0x0404, 0x042A, 0x042A,
-            /* vertical timings   */
-            0x006C0000,                /* freq = 108.0 MHz   */
-        },
+     GFX_MODE_60HZ |            /* refresh rate = 60  */
+     GFX_MODE_8BPP | GFX_MODE_12BPP | GFX_MODE_15BPP |
+     /* all BPP valid      */
+     GFX_MODE_16BPP | GFX_MODE_24BPP,
+     0x0500, 0x0500, 0x0530, 0x05A0, 0x0698, 0x0698,
+     /* horizontal timings */
+     0x0400, 0x0400, 0x0401, 0x0404, 0x042A, 0x042A,
+     /* vertical timings   */
+     0x006C0000,                /* freq = 108.0 MHz   */
+     },
 
     {
-            GFX_MODE_70HZ |            /* refresh rate = 70  */
-            GFX_MODE_8BPP | GFX_MODE_12BPP | GFX_MODE_15BPP |
-            /* all BPP valid      */
-            GFX_MODE_16BPP | GFX_MODE_24BPP,
-            0x0500, 0x0500, 0x0558, 0x05E0, 0x06C0, 0x06C0,
-            /* horizontal timings */
-            0x0400, 0x0400, 0x040A, 0x040D, 0x0433, 0x0433,
-            /* vertical timings   */
-            0x00821999,                /* freq = 130.1 MHz   */
-        },
+     GFX_MODE_70HZ |            /* refresh rate = 70  */
+     GFX_MODE_8BPP | GFX_MODE_12BPP | GFX_MODE_15BPP |
+     /* all BPP valid      */
+     GFX_MODE_16BPP | GFX_MODE_24BPP,
+     0x0500, 0x0500, 0x0558, 0x05E0, 0x06C0, 0x06C0,
+     /* horizontal timings */
+     0x0400, 0x0400, 0x040A, 0x040D, 0x0433, 0x0433,
+     /* vertical timings   */
+     0x00821999,                /* freq = 130.1 MHz   */
+     },
 
     {
-            GFX_MODE_72HZ |            /* refresh rate = 72  */
-            GFX_MODE_8BPP | GFX_MODE_12BPP | GFX_MODE_15BPP |
-            /* all BPP valid      */
-            GFX_MODE_16BPP | GFX_MODE_24BPP,
-            0x0500, 0x0500, 0x0558, 0x05E0, 0x06C0, 0x06C0,
-            /* horizontal timings */
-            0x0400, 0x0400, 0x0407, 0x040A, 0x0431, 0x0431,
-            /* vertical timings   */
-            0x00858000,                /* freq = 133.5 MHz   */
-        },
+     GFX_MODE_72HZ |            /* refresh rate = 72  */
+     GFX_MODE_8BPP | GFX_MODE_12BPP | GFX_MODE_15BPP |
+     /* all BPP valid      */
+     GFX_MODE_16BPP | GFX_MODE_24BPP,
+     0x0500, 0x0500, 0x0558, 0x05E0, 0x06C0, 0x06C0,
+     /* horizontal timings */
+     0x0400, 0x0400, 0x0407, 0x040A, 0x0431, 0x0431,
+     /* vertical timings   */
+     0x00858000,                /* freq = 133.5 MHz   */
+     },
 
     {
-            GFX_MODE_75HZ |            /* refresh rate = 75  */
-            GFX_MODE_8BPP | GFX_MODE_12BPP | GFX_MODE_15BPP |
-            /* all BPP valid      */
-            GFX_MODE_16BPP | GFX_MODE_24BPP,
-            0x0500, 0x0500, 0x0510, 0x05A0, 0x0698, 0x0698,
-            /* horizontal timings */
-            0x0400, 0x0400, 0x0401, 0x0404, 0x042A, 0x042A,
-            /* vertical timings   */
-            0x00870000,                /* freq = 135.0 MHz   */
-        },
+     GFX_MODE_75HZ |            /* refresh rate = 75  */
+     GFX_MODE_8BPP | GFX_MODE_12BPP | GFX_MODE_15BPP |
+     /* all BPP valid      */
+     GFX_MODE_16BPP | GFX_MODE_24BPP,
+     0x0500, 0x0500, 0x0510, 0x05A0, 0x0698, 0x0698,
+     /* horizontal timings */
+     0x0400, 0x0400, 0x0401, 0x0404, 0x042A, 0x042A,
+     /* vertical timings   */
+     0x00870000,                /* freq = 135.0 MHz   */
+     },
 
     {
-            GFX_MODE_85HZ |            /* refresh rate = 85  */
-            GFX_MODE_8BPP | GFX_MODE_12BPP | GFX_MODE_15BPP |
-            /* all BPP valid      */
-            GFX_MODE_16BPP | GFX_MODE_24BPP,
-            0x0500, 0x0500, 0x0540, 0x05E0, 0x06C0, 0x06C0,
-            /* horizontal timings */
-            0x0400, 0x0400, 0x0401, 0x0404, 0x0430, 0x0430,
-            /* vertical timings   */
-            0x009D8000,                /* freq = 157.5 MHz   */
-        },
+     GFX_MODE_85HZ |            /* refresh rate = 85  */
+     GFX_MODE_8BPP | GFX_MODE_12BPP | GFX_MODE_15BPP |
+     /* all BPP valid      */
+     GFX_MODE_16BPP | GFX_MODE_24BPP,
+     0x0500, 0x0500, 0x0540, 0x05E0, 0x06C0, 0x06C0,
+     /* horizontal timings */
+     0x0400, 0x0400, 0x0401, 0x0404, 0x0430, 0x0430,
+     /* vertical timings   */
+     0x009D8000,                /* freq = 157.5 MHz   */
+     },
 
     {
-            GFX_MODE_90HZ |            /* refresh rate = 90  */
-            GFX_MODE_8BPP | GFX_MODE_12BPP | GFX_MODE_15BPP |
-            /* all BPP valid      */
-            GFX_MODE_16BPP | GFX_MODE_24BPP,
-            0x0500, 0x0500, 0x0560, 0x05E8, 0x06D0, 0x06D0,
-            /* horizontal timings */
-            0x0400, 0x0400, 0x0401, 0x0404, 0x0436, 0x0436,
-            /* vertical timings   */
-            0x00A933F7,                /* freq = 169.203 MHz */
-        },
+     GFX_MODE_90HZ |            /* refresh rate = 90  */
+     GFX_MODE_8BPP | GFX_MODE_12BPP | GFX_MODE_15BPP |
+     /* all BPP valid      */
+     GFX_MODE_16BPP | GFX_MODE_24BPP,
+     0x0500, 0x0500, 0x0560, 0x05E8, 0x06D0, 0x06D0,
+     /* horizontal timings */
+     0x0400, 0x0400, 0x0401, 0x0404, 0x0436, 0x0436,
+     /* vertical timings   */
+     0x00A933F7,                /* freq = 169.203 MHz */
+     },
 
     {
-            GFX_MODE_100HZ |           /* refresh rate = 100 */
-            GFX_MODE_8BPP | GFX_MODE_12BPP | GFX_MODE_15BPP |
-            /* all BPP valid      */
-            GFX_MODE_16BPP | GFX_MODE_24BPP,
-            0x0500, 0x0500, 0x0560, 0x05F0, 0x06E0, 0x06E0,
-            /* horizontal timings */
-            0x0400, 0x0400, 0x0401, 0x0404, 0x043D, 0x043D,
-            /* vertical timings   */
-            0x00BEF5C2,                /* freq = 190.96 MHz  */
-        },
+     GFX_MODE_100HZ |           /* refresh rate = 100 */
+     GFX_MODE_8BPP | GFX_MODE_12BPP | GFX_MODE_15BPP |
+     /* all BPP valid      */
+     GFX_MODE_16BPP | GFX_MODE_24BPP,
+     0x0500, 0x0500, 0x0560, 0x05F0, 0x06E0, 0x06E0,
+     /* horizontal timings */
+     0x0400, 0x0400, 0x0401, 0x0404, 0x043D, 0x043D,
+     /* vertical timings   */
+     0x00BEF5C2,                /* freq = 190.96 MHz  */
+     },
 
 /*********************************/
 /* BEGIN REDCLOUD-SPECIFIC MODES */
@@ -632,64 +632,64 @@ DISPLAYMODE DisplayParams[] = {
 /* 1600 x 1200 */
 
     {
-            GFX_MODE_60HZ |            /* refresh rate = 60  */
-            GFX_MODE_8BPP | GFX_MODE_12BPP | GFX_MODE_15BPP |
-            /* all BPP valid      */
-            GFX_MODE_16BPP | GFX_MODE_24BPP,
-            0x0640, 0x0640, 0x0680, 0x0740, 0x0870, 0x0870,
-            /* horizontal timings */
-            0x04B0, 0x04B0, 0x04B1, 0x04B4, 0x04E2, 0x04E2,
-            /* vertical timings   */
-            0x00A20000,                /* freq = 162.0 MHz   */
-        },
+     GFX_MODE_60HZ |            /* refresh rate = 60  */
+     GFX_MODE_8BPP | GFX_MODE_12BPP | GFX_MODE_15BPP |
+     /* all BPP valid      */
+     GFX_MODE_16BPP | GFX_MODE_24BPP,
+     0x0640, 0x0640, 0x0680, 0x0740, 0x0870, 0x0870,
+     /* horizontal timings */
+     0x04B0, 0x04B0, 0x04B1, 0x04B4, 0x04E2, 0x04E2,
+     /* vertical timings   */
+     0x00A20000,                /* freq = 162.0 MHz   */
+     },
 
     {
-            GFX_MODE_70HZ |            /* refresh rate = 70  */
-            GFX_MODE_8BPP | GFX_MODE_12BPP | GFX_MODE_15BPP |
-            /* all BPP valid      */
-            GFX_MODE_16BPP | GFX_MODE_24BPP,
-            0x0640, 0x0640, 0x0680, 0x0740, 0x0870, 0x0870,
-            /* horizontal timings */
-            0x04B0, 0x04B0, 0x04B1, 0x04B4, 0x04E2, 0x04E2,
-            /* vertical timings   */
-            0x00BD0000,                /* freq = 189.0 MHz   */
-        },
+     GFX_MODE_70HZ |            /* refresh rate = 70  */
+     GFX_MODE_8BPP | GFX_MODE_12BPP | GFX_MODE_15BPP |
+     /* all BPP valid      */
+     GFX_MODE_16BPP | GFX_MODE_24BPP,
+     0x0640, 0x0640, 0x0680, 0x0740, 0x0870, 0x0870,
+     /* horizontal timings */
+     0x04B0, 0x04B0, 0x04B1, 0x04B4, 0x04E2, 0x04E2,
+     /* vertical timings   */
+     0x00BD0000,                /* freq = 189.0 MHz   */
+     },
 
     {
-            GFX_MODE_72HZ |            /* refresh rate = 72  */
-            GFX_MODE_8BPP | GFX_MODE_12BPP | GFX_MODE_15BPP |
-            /* all BPP valid      */
-            GFX_MODE_16BPP | GFX_MODE_24BPP,
-            0x0640, 0x0640, 0x06B0, 0x0760, 0x0880, 0x0880,
-            /* horizontal timings */
-            0x04B0, 0x04B0, 0x04BD, 0x04C0, 0x04EF, 0x04EF,
-            /* vertical timings   */
-            0x00C60000,                /* freq = 198.0 MHz   */
-        },
+     GFX_MODE_72HZ |            /* refresh rate = 72  */
+     GFX_MODE_8BPP | GFX_MODE_12BPP | GFX_MODE_15BPP |
+     /* all BPP valid      */
+     GFX_MODE_16BPP | GFX_MODE_24BPP,
+     0x0640, 0x0640, 0x06B0, 0x0760, 0x0880, 0x0880,
+     /* horizontal timings */
+     0x04B0, 0x04B0, 0x04BD, 0x04C0, 0x04EF, 0x04EF,
+     /* vertical timings   */
+     0x00C60000,                /* freq = 198.0 MHz   */
+     },
 
     {
-            GFX_MODE_75HZ |            /* refresh rate = 75  */
-            GFX_MODE_8BPP | GFX_MODE_12BPP | GFX_MODE_15BPP |
-            /* all BPP valid      */
-            GFX_MODE_16BPP | GFX_MODE_24BPP,
-            0x0640, 0x0640, 0x0680, 0x0740, 0x0870, 0x0870,
-            /* horizontal timings */
-            0x04B0, 0x04B0, 0x04B1, 0x04B4, 0x04E2, 0x04E2,
-            /* vertical timings   */
-            0x00CA8000,                /* freq = 202.5 MHz   */
-        },
+     GFX_MODE_75HZ |            /* refresh rate = 75  */
+     GFX_MODE_8BPP | GFX_MODE_12BPP | GFX_MODE_15BPP |
+     /* all BPP valid      */
+     GFX_MODE_16BPP | GFX_MODE_24BPP,
+     0x0640, 0x0640, 0x0680, 0x0740, 0x0870, 0x0870,
+     /* horizontal timings */
+     0x04B0, 0x04B0, 0x04B1, 0x04B4, 0x04E2, 0x04E2,
+     /* vertical timings   */
+     0x00CA8000,                /* freq = 202.5 MHz   */
+     },
 
     {
-            GFX_MODE_85HZ |            /* refresh rate = 85  */
-            GFX_MODE_8BPP | GFX_MODE_12BPP | GFX_MODE_15BPP |
-            /* all BPP valid      */
-            GFX_MODE_16BPP | GFX_MODE_24BPP,
-            0x0640, 0x0640, 0x0680, 0x0740, 0x0870, 0x0870,
-            /* horizontal timings */
-            0x04B0, 0x04B0, 0x04B1, 0x04B4, 0x04E2, 0x04E2,
-            /* vertical timings   */
-            0x00E58000,                /* freq = 229.5 MHz   */
-        },
+     GFX_MODE_85HZ |            /* refresh rate = 85  */
+     GFX_MODE_8BPP | GFX_MODE_12BPP | GFX_MODE_15BPP |
+     /* all BPP valid      */
+     GFX_MODE_16BPP | GFX_MODE_24BPP,
+     0x0640, 0x0640, 0x0680, 0x0740, 0x0870, 0x0870,
+     /* horizontal timings */
+     0x04B0, 0x04B0, 0x04B1, 0x04B4, 0x04E2, 0x04E2,
+     /* vertical timings   */
+     0x00E58000,                /* freq = 229.5 MHz   */
+     },
 };
 
 /* UPDATE THIS VARIABLE WHENEVER NEW REDCLOUD-SPECIFIC MODES ARE ADDED */
@@ -702,145 +702,145 @@ DISPLAYMODE DisplayParams[] = {
 FIXEDTIMINGS FixedParams[] = {
 /* 640x480 Panel */
     {640, 480, 640, 480,
-            0x0280, 0x0280, 0x0290, 0x02E8, 0x0318, 0x0320,
-            0x01E0, 0x01E0, 0x01EA, 0x01EC, 0x0205, 0x020D,
-            0x00192CCC,
-        },
+     0x0280, 0x0280, 0x0290, 0x02E8, 0x0318, 0x0320,
+     0x01E0, 0x01E0, 0x01EA, 0x01EC, 0x0205, 0x020D,
+     0x00192CCC,
+     },
 
     {640, 480, 800, 600,
-            0x0280, 0x0280, 0x0290, 0x02E8, 0x0318, 0x0320,
-            0x01E0, 0x01E0, 0x01EA, 0x01EC, 0x0205, 0x020D,
-            0x00192CCC,
-        },
+     0x0280, 0x0280, 0x0290, 0x02E8, 0x0318, 0x0320,
+     0x01E0, 0x01E0, 0x01EA, 0x01EC, 0x0205, 0x020D,
+     0x00192CCC,
+     },
 
     {640, 480, 1024, 768,
-            0x0280, 0x0280, 0x0290, 0x02E8, 0x0318, 0x0320,
-            0x01E0, 0x01E0, 0x01EA, 0x01EC, 0x0205, 0x020D,
-            0x00192CCC,
-        },
+     0x0280, 0x0280, 0x0290, 0x02E8, 0x0318, 0x0320,
+     0x01E0, 0x01E0, 0x01EA, 0x01EC, 0x0205, 0x020D,
+     0x00192CCC,
+     },
 
     {640, 480, 1152, 864,
-            0x0280, 0x0280, 0x0290, 0x02E8, 0x0318, 0x0320,
-            0x01E0, 0x01E0, 0x01EA, 0x01EC, 0x0205, 0x020D,
-            0x00192CCC,
-        },
+     0x0280, 0x0280, 0x0290, 0x02E8, 0x0318, 0x0320,
+     0x01E0, 0x01E0, 0x01EA, 0x01EC, 0x0205, 0x020D,
+     0x00192CCC,
+     },
 
     {640, 480, 1280, 1024,
-            0x0280, 0x0280, 0x0290, 0x02E8, 0x0318, 0x0320,
-            0x01E0, 0x01E0, 0x01EA, 0x01EC, 0x0205, 0x020D,
-            0x00192CCC,
-        },
+     0x0280, 0x0280, 0x0290, 0x02E8, 0x0318, 0x0320,
+     0x01E0, 0x01E0, 0x01EA, 0x01EC, 0x0205, 0x020D,
+     0x00192CCC,
+     },
 
     {640, 480, 1600, 1200,
-            0x0280, 0x0280, 0x0290, 0x02E8, 0x0318, 0x0320,
-            0x01E0, 0x01E0, 0x01EA, 0x01EC, 0x0205, 0x020D,
-            0x00192CCC,
-        },
+     0x0280, 0x0280, 0x0290, 0x02E8, 0x0318, 0x0320,
+     0x01E0, 0x01E0, 0x01EA, 0x01EC, 0x0205, 0x020D,
+     0x00192CCC,
+     },
 
 /* 800x600 Panel */
     {800, 600, 640, 480,
-            0x0280, 0x2d0, 0x2f8, 0x378, 0x3d0, 0x420,
-            0x1e0, 0x21c, 0x21d, 0x221, 0x238, 0x274,
-            0x00280000,
-        },
+     0x0280, 0x2d0, 0x2f8, 0x378, 0x3d0, 0x420,
+     0x1e0, 0x21c, 0x21d, 0x221, 0x238, 0x274,
+     0x00280000,
+     },
 
     {800, 600, 800, 600,
-            0x320, 0x320, 0x348, 0x3c8, 0x420, 0x420,
-            0x258, 0x258, 0x259, 0x25d, 0x274, 0x274,
-            0x00280000,
-        },
+     0x320, 0x320, 0x348, 0x3c8, 0x420, 0x420,
+     0x258, 0x258, 0x259, 0x25d, 0x274, 0x274,
+     0x00280000,
+     },
 
     {800, 600, 1024, 768,
-            0x320, 0x320, 0x348, 0x3c8, 0x420, 0x420,
-            0x258, 0x258, 0x259, 0x25d, 0x274, 0x274,
-            0x00280000,
-        },
+     0x320, 0x320, 0x348, 0x3c8, 0x420, 0x420,
+     0x258, 0x258, 0x259, 0x25d, 0x274, 0x274,
+     0x00280000,
+     },
 
     {800, 600, 1152, 864,
-            0x320, 0x320, 0x348, 0x3c8, 0x420, 0x420,
-            0x258, 0x258, 0x259, 0x25d, 0x274, 0x274,
-            0x00280000,
-        },
+     0x320, 0x320, 0x348, 0x3c8, 0x420, 0x420,
+     0x258, 0x258, 0x259, 0x25d, 0x274, 0x274,
+     0x00280000,
+     },
 
     {800, 600, 1280, 1024,
-            0x320, 0x320, 0x348, 0x3c8, 0x420, 0x420,
-            0x258, 0x258, 0x259, 0x25d, 0x274, 0x274,
-            0x00280000,
-        },
+     0x320, 0x320, 0x348, 0x3c8, 0x420, 0x420,
+     0x258, 0x258, 0x259, 0x25d, 0x274, 0x274,
+     0x00280000,
+     },
 
     {800, 600, 1600, 1200,
-            0x320, 0x320, 0x348, 0x3c8, 0x420, 0x420,
-            0x258, 0x258, 0x259, 0x25d, 0x274, 0x274,
-            0x00280000,
-        },
+     0x320, 0x320, 0x348, 0x3c8, 0x420, 0x420,
+     0x258, 0x258, 0x259, 0x25d, 0x274, 0x274,
+     0x00280000,
+     },
 
 /* 1024x768 panel */
     {1024, 768, 640, 480,
-            0x0280, 0x340, 0x368, 0x3e8, 0x480, 0x540,
-            0x1e0, 0x270, 0x271, 0x275, 0x296, 0x326,
-            0x00410000,
-        },
+     0x0280, 0x340, 0x368, 0x3e8, 0x480, 0x540,
+     0x1e0, 0x270, 0x271, 0x275, 0x296, 0x326,
+     0x00410000,
+     },
 
     {1024, 768, 800, 600,
-            0x0320, 0x390, 0x3b8, 0x438, 0x4D0, 0x540,
-            0x258, 0x2ac, 0x2ad, 0x2b1, 0x2D2, 0x326,
-            0x00410000,
-        },
+     0x0320, 0x390, 0x3b8, 0x438, 0x4D0, 0x540,
+     0x258, 0x2ac, 0x2ad, 0x2b1, 0x2D2, 0x326,
+     0x00410000,
+     },
 
     {1024, 768, 1024, 768,
-            0x0400, 0x0400, 0x0418, 0x04A0, 0x0540, 0x0540,
-            0x0300, 0x0300, 0x0303, 0x0309, 0x0326, 0x0326,
-            0x00410000,
-        },
+     0x0400, 0x0400, 0x0418, 0x04A0, 0x0540, 0x0540,
+     0x0300, 0x0300, 0x0303, 0x0309, 0x0326, 0x0326,
+     0x00410000,
+     },
 
     {1024, 768, 1152, 864,
-            0x0400, 0x0400, 0x0418, 0x04A0, 0x0540, 0x0540,
-            0x0300, 0x0300, 0x0303, 0x0309, 0x0326, 0x0326,
-            0x00410000,
-        },
+     0x0400, 0x0400, 0x0418, 0x04A0, 0x0540, 0x0540,
+     0x0300, 0x0300, 0x0303, 0x0309, 0x0326, 0x0326,
+     0x00410000,
+     },
 
     {1024, 768, 1280, 1024,
-            0x0400, 0x0400, 0x0418, 0x04A0, 0x0540, 0x0540,
-            0x0300, 0x0300, 0x0303, 0x0309, 0x0326, 0x0326,
-            0x00410000,
-        },
+     0x0400, 0x0400, 0x0418, 0x04A0, 0x0540, 0x0540,
+     0x0300, 0x0300, 0x0303, 0x0309, 0x0326, 0x0326,
+     0x00410000,
+     },
 
     {1024, 768, 1600, 1200,
-            0x0400, 0x0400, 0x0418, 0x04A0, 0x0540, 0x0540,
-            0x0300, 0x0300, 0x0303, 0x0309, 0x0326, 0x0326,
-            0x00410000,
-        },
+     0x0400, 0x0400, 0x0418, 0x04A0, 0x0540, 0x0540,
+     0x0300, 0x0300, 0x0303, 0x0309, 0x0326, 0x0326,
+     0x00410000,
+     },
 
 /* 1280x1024 panel */
     {1280, 1024, 640, 480,
-            640, 960, 1008, 1120, 1368, 1688,
-            480, 752, 753, 756, 794, 1066,
-            0x006C0000,
-        },
+     640, 960, 1008, 1120, 1368, 1688,
+     480, 752, 753, 756, 794, 1066,
+     0x006C0000,
+     },
 
     {1280, 1024, 800, 600,
-            800, 1040, 1088, 1200, 1448, 1688,
-            600, 812, 813, 816, 854, 1066,
-            0x006C0000,
-        },
+     800, 1040, 1088, 1200, 1448, 1688,
+     600, 812, 813, 816, 854, 1066,
+     0x006C0000,
+     },
 
     {1280, 1024, 1024, 768,
-            1024, 1152, 1200, 1312, 1560, 1688,
-            768, 896, 897, 900, 938, 1066,
-            0x006C0000,
-        },
+     1024, 1152, 1200, 1312, 1560, 1688,
+     768, 896, 897, 900, 938, 1066,
+     0x006C0000,
+     },
 
     {1280, 1024, 1152, 864,
-            1152, 1216, 1264, 1376, 1624, 1688,
-            864, 944, 945, 948, 986, 1066,
-            0x006C0000,
-        },
+     1152, 1216, 1264, 1376, 1624, 1688,
+     864, 944, 945, 948, 986, 1066,
+     0x006C0000,
+     },
 
     {1280, 1024, 1280, 1024,
-            1280, 1280, 1328, 1440, 1688, 1688,
-            1024, 1024, 1025, 1028, 1066, 1066,
-            0x006C0000,
-        },
+     1280, 1280, 1328, 1440, 1688, 1688,
+     1024, 1024, 1025, 1028, 1066, 1066,
+     0x006C0000,
+     },
 
 };
 
@@ -944,28 +944,31 @@ gfx_set_display_mode(int xres, int yres, int bpp, int hz)
  */
 int
 gfx_set_display_timings(unsigned short bpp, unsigned short flags,
-    unsigned short hactive, unsigned short hblankstart,
-    unsigned short hsyncstart, unsigned short hsyncend,
-    unsigned short hblankend, unsigned short htotal,
-    unsigned short vactive, unsigned short vblankstart,
-    unsigned short vsyncstart, unsigned short vsyncend,
-    unsigned short vblankend, unsigned short vtotal, unsigned long frequency)
+                        unsigned short hactive, unsigned short hblankstart,
+                        unsigned short hsyncstart, unsigned short hsyncend,
+                        unsigned short hblankend, unsigned short htotal,
+                        unsigned short vactive, unsigned short vblankstart,
+                        unsigned short vsyncstart, unsigned short vsyncend,
+                        unsigned short vblankend, unsigned short vtotal,
+                        unsigned long frequency)
 {
     int retval = 0;
 
 #if GFX_DISPLAY_GU1
     if (gfx_display_type & GFX_DISPLAY_TYPE_GU1)
         retval = gu1_set_display_timings(bpp, flags,
-            hactive, hblankstart, hsyncstart, hsyncend, hblankend, htotal,
-            vactive, vblankstart, vsyncstart, vsyncend, vblankend, vtotal,
-            frequency);
+                                         hactive, hblankstart, hsyncstart,
+                                         hsyncend, hblankend, htotal, vactive,
+                                         vblankstart, vsyncstart, vsyncend,
+                                         vblankend, vtotal, frequency);
 #endif
 #if GFX_DISPLAY_GU2
     if (gfx_display_type & GFX_DISPLAY_TYPE_GU2)
         retval = gu2_set_display_timings(bpp, flags,
-            hactive, hblankstart, hsyncstart, hsyncend, hblankend, htotal,
-            vactive, vblankstart, vsyncstart, vsyncend, vblankend, vtotal,
-            frequency);
+                                         hactive, hblankstart, hsyncstart,
+                                         hsyncend, hblankend, htotal, vactive,
+                                         vblankstart, vsyncstart, vsyncend,
+                                         vblankend, vtotal, frequency);
 #endif
     return (retval);
 }
@@ -1084,8 +1087,8 @@ gfx_set_cursor_colors(unsigned long bkcolor, unsigned long fgcolor)
  */
 void
 gfx_set_cursor_position(unsigned long memoffset,
-    unsigned short xpos, unsigned short ypos,
-    unsigned short xhotspot, unsigned short yhotspot)
+                        unsigned short xpos, unsigned short ypos,
+                        unsigned short xhotspot, unsigned short yhotspot)
 {
 #if GFX_DISPLAY_GU1
     if (gfx_display_type & GFX_DISPLAY_TYPE_GU1)
@@ -1103,7 +1106,7 @@ gfx_set_cursor_position(unsigned long memoffset,
  */
 void
 gfx_set_cursor_shape32(unsigned long memoffset,
-    unsigned long *andmask, unsigned long *xormask)
+                       unsigned long *andmask, unsigned long *xormask)
 {
 #if GFX_DISPLAY_GU1
     if (gfx_display_type & GFX_DISPLAY_TYPE_GU1)
@@ -1121,7 +1124,7 @@ gfx_set_cursor_shape32(unsigned long memoffset,
  */
 void
 gfx_set_cursor_shape64(unsigned long memoffset,
-    unsigned long *andmask, unsigned long *xormask)
+                       unsigned long *andmask, unsigned long *xormask)
 {
 #if GFX_DISPLAY_GU2
     if (gfx_display_type & GFX_DISPLAY_TYPE_GU2)
@@ -1148,7 +1151,7 @@ gfx_set_icon_enable(int enable)
  */
 void
 gfx_set_icon_colors(unsigned long color0, unsigned long color1,
-    unsigned long color2)
+                    unsigned long color2)
 {
 #if GFX_DISPLAY_GU2
     if (gfx_display_type & GFX_DISPLAY_TYPE_GU2)
@@ -1175,7 +1178,8 @@ gfx_set_icon_position(unsigned long memoffset, unsigned short xpos)
  */
 void
 gfx_set_icon_shape64(unsigned long memoffset,
-    unsigned long *andmask, unsigned long *xormask, unsigned int lines)
+                     unsigned long *andmask, unsigned long *xormask,
+                     unsigned int lines)
 {
 #if GFX_DISPLAY_GU2
     if (gfx_display_type & GFX_DISPLAY_TYPE_GU2)
@@ -1362,7 +1366,7 @@ gfx_set_display_video_offset(unsigned long offset)
  */
 void
 gfx_set_display_video_yuv_offsets(unsigned long yoffset,
-    unsigned long uoffset, unsigned long voffset)
+                                  unsigned long uoffset, unsigned long voffset)
 {
 #if GFX_DISPLAY_GU2
     if (gfx_display_type & GFX_DISPLAY_TYPE_GU2)
@@ -1538,7 +1542,8 @@ gfx_enable_panning(int x, int y)
  */
 int
 gfx_is_panel_mode_supported(int panelResX, int panelResY,
-    unsigned short width, unsigned short height, unsigned short bpp)
+                            unsigned short width, unsigned short height,
+                            unsigned short bpp)
 {
     int status = -1;
 
@@ -1546,7 +1551,7 @@ gfx_is_panel_mode_supported(int panelResX, int panelResY,
     if (gfx_display_type & GFX_DISPLAY_TYPE_GU2)
         status =
             gu2_is_panel_mode_supported(panelResX, panelResY, width, height,
-            bpp);
+                                        bpp);
 #endif
 
     return (status);
@@ -1558,7 +1563,7 @@ gfx_is_panel_mode_supported(int panelResX, int panelResY,
  */
 int
 gfx_set_fixed_timings(int panelResX, int panelResY, unsigned short width,
-    unsigned short height, unsigned short bpp)
+                      unsigned short height, unsigned short bpp)
 {
     int status = 0;
 
@@ -1581,7 +1586,7 @@ gfx_set_fixed_timings(int panelResX, int panelResY, unsigned short width,
  */
 int
 gfx_set_panel_present(int panelResX, int panelResY, unsigned short width,
-    unsigned short height, unsigned short bpp)
+                      unsigned short height, unsigned short bpp)
 {
     int status = 0;
 
@@ -1635,7 +1640,7 @@ gfx_set_vtotal(unsigned short vtotal)
  */
 int
 gfx_mode_frequency_supported(int xres, int yres, int bpp,
-    unsigned long frequency)
+                             unsigned long frequency)
 {
     int freq = 0;
 
@@ -1656,7 +1661,7 @@ gfx_mode_frequency_supported(int xres, int yres, int bpp,
  */
 int
 gfx_get_refreshrate_from_frequency(int xres, int yres, int bpp, int *hz,
-    unsigned long frequency)
+                                   unsigned long frequency)
 {
 #if GFX_DISPLAY_GU1
     if (gfx_display_type & GFX_DISPLAY_TYPE_GU1)
@@ -1676,7 +1681,7 @@ gfx_get_refreshrate_from_frequency(int xres, int yres, int bpp, int *hz,
  */
 int
 gfx_get_refreshrate_from_mode(int xres, int yres, int bpp, int *hz,
-    unsigned long frequency)
+                              unsigned long frequency)
 {
 #if GFX_DISPLAY_GU1
     if (gfx_display_type & GFX_DISPLAY_TYPE_GU1)
@@ -1696,21 +1701,19 @@ gfx_get_refreshrate_from_mode(int xres, int yres, int bpp, int *hz,
  */
 int
 gfx_get_frequency_from_refreshrate(int xres, int yres, int bpp, int hz,
-    int *frequency)
+                                   int *frequency)
 {
     int retval = -1;
 
 #if GFX_DISPLAY_GU1
     if (gfx_display_type & GFX_DISPLAY_TYPE_GU1)
         retval =
-            gu1_get_frequency_from_refreshrate(xres, yres, bpp, hz,
-            frequency);
+            gu1_get_frequency_from_refreshrate(xres, yres, bpp, hz, frequency);
 #endif
 #if GFX_DISPLAY_GU2
     if (gfx_display_type & GFX_DISPLAY_TYPE_GU2)
         retval =
-            gu2_get_frequency_from_refreshrate(xres, yres, bpp, hz,
-            frequency);
+            gu2_get_frequency_from_refreshrate(xres, yres, bpp, hz, frequency);
 #endif
 
     return retval;
@@ -2475,6 +2478,7 @@ unsigned long
 gfx_get_display_video_color_key(void)
 {
     unsigned long value = 0;
+
     return (value);
 }
 
@@ -2504,7 +2508,8 @@ gfx_get_display_video_offset(void)
  */
 void
 gfx_get_display_video_yuv_offsets(unsigned long *yoffset,
-    unsigned long *uoffset, unsigned long *voffset)
+                                  unsigned long *uoffset,
+                                  unsigned long *voffset)
 {
 #if GFX_DISPLAY_GU2
     if (gfx_display_type & GFX_DISPLAY_TYPE_GU2)
@@ -2587,9 +2592,10 @@ unsigned long
 gfx_get_display_video_color_key_mask(void)
 {
     unsigned long mask = 0;
+
     return (mask);
 }
 
-#endif /* GFX_READ_ROUTINES */
+#endif                          /* GFX_READ_ROUTINES */
 
-#endif /* GFX_DISPLAY_DYNAMIC */
+#endif                          /* GFX_DISPLAY_DYNAMIC */

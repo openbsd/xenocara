@@ -140,8 +140,7 @@ gfx_msr_read(unsigned int device, unsigned int msrRegister, Q_WORD * msrValue)
  *----------------------------------------------------------------------------
  */
 DEV_STATUS
-gfx_msr_write(unsigned int device, unsigned int msrRegister,
-    Q_WORD * msrValue)
+gfx_msr_write(unsigned int device, unsigned int msrRegister, Q_WORD * msrValue)
 {
     DEV_STATUS ret_value = NOT_KNOWN;
 

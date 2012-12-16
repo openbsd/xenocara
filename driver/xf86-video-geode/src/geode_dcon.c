@@ -45,7 +45,7 @@ dcon_present(void)
     static int _dval = -1;
 
     if (_dval == -1)
-	_dval = (access("/sys/class/power_supply/olpc-ac", F_OK) == 0);
+        _dval = (access("/sys/class/power_supply/olpc-ac", F_OK) == 0);
 
     return (Bool) _dval;
 }
@@ -59,10 +59,10 @@ DCONDPMSSet(ScrnInfoPtr pScrni, int mode)
     char value[1];
 
     if (failed == -1)
-	failed = !dcon_present();
+        failed = !dcon_present();
 
     if (failed)
-	return 0;
+        return 0;
 
     /* If the DCON is frozen, don't power it down, it was probably frozen
      * for a reason and powering it down would corrupt the display.
@@ -72,41 +72,41 @@ DCONDPMSSet(ScrnInfoPtr pScrni, int mode)
      * that no mode change is needed and the display power is untouched. */
     fd = open(DCON_FREEZE_FILE, O_RDONLY);
     if (fd < 0) {
-	failed = 1;
-	return 0;
+        failed = 1;
+        return 0;
     }
 
     ret = read(fd, value, 1);
     close(fd);
     if (ret == 1) {
-	if (value[0] == '1')
-	    return 0;
+        if (value[0] == '1')
+            return 0;
     }
 
     fd = open(DCON_SLEEP_FILE, O_WRONLY);
 
     if (fd < 0) {
-	failed = 1;
-	return 0;
+        failed = 1;
+        return 0;
     }
 
     switch (mode) {
     case DPMSModeOn:
-	value[0] = '0';
-	break;
+        value[0] = '0';
+        break;
     case DPMSModeStandby:
     case DPMSModeSuspend:
     case DPMSModeOff:
-	value[0] = '1';
-	break;
+        value[0] = '1';
+        break;
     }
 
     ret = write(fd, value, sizeof(value));
     close(fd);
 
     if (ret < 0) {
-	failed = 1;
-	return 0;
+        failed = 1;
+        return 0;
     }
 
     return 1;
@@ -121,17 +121,17 @@ dcon_init(ScrnInfoPtr pScrni)
     pGeode->mm_height = 0;
 
     if (!dcon_present()) {
-	xf86DrvMsg(pScrni->scrnIndex, X_DEFAULT, "No DCON is present\n");
-	return FALSE;
+        xf86DrvMsg(pScrni->scrnIndex, X_DEFAULT, "No DCON is present\n");
+        return FALSE;
     }
 
     pGeode->panelMode = xnfcalloc(1, sizeof(DisplayModeRec));
     if (pGeode->panelMode == NULL)
-	return FALSE;
+        return FALSE;
 
     /* Set up the panel mode structure automagically */
 
-    pGeode->panelMode->type = M_T_DRIVER|M_T_PREFERRED;
+    pGeode->panelMode->type = M_T_DRIVER | M_T_PREFERRED;
     pGeode->panelMode->Clock = 57275;
     pGeode->panelMode->HDisplay = 1200;
     pGeode->panelMode->HSyncStart = 1208;

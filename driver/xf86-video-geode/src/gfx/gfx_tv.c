@@ -50,42 +50,42 @@ DISPLAYMODE TVTimings[] = {
 
 /* NTSC resolution */
 
-    {0x3 |                             /* negative syncs       */
-            GFX_MODE_TV_NTSC,          /* NTSC format          */
-            640, 640, 656, 744, 792, 792,       /* horizontal timings   */
-            480, 480, 490, 492, 517, 525,       /* vertical timings     */
-            0x0018EC4D,                /* freq = 24.923052 MHz */
-        }
+    {0x3 |                      /* negative syncs       */
+     GFX_MODE_TV_NTSC,          /* NTSC format          */
+     640, 640, 656, 744, 792, 792,      /* horizontal timings   */
+     480, 480, 490, 492, 517, 525,      /* vertical timings     */
+     0x0018EC4D,                /* freq = 24.923052 MHz */
+     }
     ,
 
 /* PAL resolution */
 
-    {0x3 |                             /* negative syncs       */
-            GFX_MODE_TV_PAL,           /* PAL format           */
-            768, 768, 800, 848, 864, 864,       /* horizontal timings   */
-            576, 576, 586, 588, 625, 625,       /* vertical timings     */
-            0x001B0000,                /* freq = 27.00 MHz     */
-        }
+    {0x3 |                      /* negative syncs       */
+     GFX_MODE_TV_PAL,           /* PAL format           */
+     768, 768, 800, 848, 864, 864,      /* horizontal timings   */
+     576, 576, 586, 588, 625, 625,      /* vertical timings     */
+     0x001B0000,                /* freq = 27.00 MHz     */
+     }
     ,
 
 /* NTSC resolution non-square pixels */
 
-    {0x3 |                             /* negative syncs       */
-            GFX_MODE_TV_NTSC,          /* NTSC format          */
-            720, 720, 736, 752, 792, 792,       /* horizontal timings   */
-            480, 480, 490, 492, 517, 525,       /* vertical timings     */
-            0x0018EC4D,                /* freq = 24.923052 MHz */
-        }
+    {0x3 |                      /* negative syncs       */
+     GFX_MODE_TV_NTSC,          /* NTSC format          */
+     720, 720, 736, 752, 792, 792,      /* horizontal timings   */
+     480, 480, 490, 492, 517, 525,      /* vertical timings     */
+     0x0018EC4D,                /* freq = 24.923052 MHz */
+     }
     ,
 
 /* PAL resolution non-square pixels */
 
-    {0x3 |                             /* negative syncs       */
-            GFX_MODE_TV_PAL,           /* PAL format           */
-            720, 720, 752, 816, 864, 864,       /* horizontal timings   */
-            576, 576, 586, 588, 625, 625,       /* vertical timings     */
-            0x001B0000,                /* freq = 27.00 MHz     */
-        }
+    {0x3 |                      /* negative syncs       */
+     GFX_MODE_TV_PAL,           /* PAL format           */
+     720, 720, 752, 816, 864, 864,      /* horizontal timings   */
+     576, 576, 586, 588, 625, 625,      /* vertical timings     */
+     0x001B0000,                /* freq = 27.00 MHz     */
+     }
 };
 
 #define NUM_TV_MODES sizeof(TVTimings)/sizeof(DISPLAYMODE)
@@ -438,7 +438,7 @@ gfx_get_tv_display_mode(int *width, int *height, int *bpp, int *hz)
  */
 int
 gfx_get_tv_display_mode_frequency(unsigned short width, unsigned short height,
-    TVStandardType format, int *frequency)
+                                  TVStandardType format, int *frequency)
 {
     int retval = -1;
 
@@ -446,7 +446,7 @@ gfx_get_tv_display_mode_frequency(unsigned short width, unsigned short height,
     if (gfx_tv_type & GFX_TV_TYPE_SC1200)
         retval =
             sc1200_get_tv_display_mode_frequency(width, height, format,
-            frequency);
+                                                 frequency);
 #endif
     return (retval);
 }
@@ -457,7 +457,7 @@ gfx_get_tv_display_mode_frequency(unsigned short width, unsigned short height,
  */
 int
 gfx_is_tv_display_mode_supported(unsigned short width, unsigned short height,
-    TVStandardType format)
+                                 TVStandardType format)
 {
     int retval = -1;
 
@@ -831,6 +831,6 @@ gfx_set_aps_trigger_bits(unsigned int trigger_bits)
     return (retval);
 }
 
-#endif /* GFX_TV_DYNAMIC */
+#endif                          /* GFX_TV_DYNAMIC */
 
 /* END OF FILE */

@@ -31,50 +31,49 @@
  * CS5530 PLL TABLE
  *----------------------------------------------------------------------------
  */
-typedef struct tagCS5530PLLENTRY
-{
-    long frequency;                    /* 16.16 fixed point frequency */
-    unsigned long pll_value;           /* associated register value */
+typedef struct tagCS5530PLLENTRY {
+    long frequency;             /* 16.16 fixed point frequency */
+    unsigned long pll_value;    /* associated register value */
 } CS5530PLLENTRY;
 
 CS5530PLLENTRY CS5530_PLLtable[] = {
-    {0x00192CCC, 0x31C45801,},         /*  25.1750 */
-    {0x001C526E, 0x20E36802,},         /*  28.3220 */
-    {0x001F8000, 0x33915801,},         /*  31.5000 */
-    {0x00240000, 0x31EC4801,},         /*  36.0000 */
-    {0x00258000, 0x21E22801,},         /*  37.5000 */
-    {0x00280000, 0x33088801,},         /*  40.0000 */
-    {0x002CE666, 0x33E22801,},         /*  44.9000 */
-    {0x00318000, 0x336C4801,},         /*  49.5000 */
-    {0x00320000, 0x23088801,},         /*  50.0000 */
-    {0x00325999, 0x23088801,},         /*  50.3500 */
-    {0x00360000, 0x3708A801,},         /*  54.0000 */
-    {0x00384000, 0x23E36802,},         /*  56.2500 */
-    {0x0038643F, 0x23E36802,},         /*  56.3916 */
-    {0x0038A4DD, 0x23E36802,},         /*  56.6444 */
-    {0x003B0000, 0x37C45801,},         /*  59.0000 */
-    {0x003F0000, 0x23EC4801,},         /*  63.0000 */
-    {0x00410000, 0x37911801,},         /*  65.0000 */
-    {0x00438000, 0x37963803,},         /*  67.5000 */
-    {0x0046CCCC, 0x37058803,},         /*  70.8000 */
-    {0x00480000, 0x3710C805,},         /*  72.0000 */
-    {0x004B0000, 0x37E22801,},         /*  75.0000 */
-    {0x004EC000, 0x27915801,},         /*  78.7500 */
-    {0x00500000, 0x37D8D802,},         /*  80.0000 */
-    {0x0059CCCC, 0x27588802,},         /*  89.8000 */
-    {0x005E8000, 0x27EC4802,},         /*  94.5000 */
-    {0x00630000, 0x27AC6803,},         /*  99.0000 */
-    {0x00640000, 0x27088801,},         /* 100.0000 */
-    {0x006C0000, 0x2710C805,},         /* 108.0000 */
-    {0x00708000, 0x27E36802,},         /* 112.5000 */
-    {0x00820000, 0x27C58803,},         /* 130.0000 */
-    {0x00870000, 0x27316803,},         /* 135.0000 */
-    {0x009D8000, 0x2F915801,},         /* 157.5000 */
-    {0x00A20000, 0x2F08A801,},         /* 162.0000 */
-    {0x00AF0000, 0x2FB11802,},         /* 175.0000 */
-    {0x00BD0000, 0x2FEC4802,},         /* 189.0000 */
-    {0x00CA0000, 0x2F963803,},         /* 202.0000 */
-    {0x00E80000, 0x2FB1B802,},         /* 232.0000 */
+    {0x00192CCC, 0x31C45801,},  /*  25.1750 */
+    {0x001C526E, 0x20E36802,},  /*  28.3220 */
+    {0x001F8000, 0x33915801,},  /*  31.5000 */
+    {0x00240000, 0x31EC4801,},  /*  36.0000 */
+    {0x00258000, 0x21E22801,},  /*  37.5000 */
+    {0x00280000, 0x33088801,},  /*  40.0000 */
+    {0x002CE666, 0x33E22801,},  /*  44.9000 */
+    {0x00318000, 0x336C4801,},  /*  49.5000 */
+    {0x00320000, 0x23088801,},  /*  50.0000 */
+    {0x00325999, 0x23088801,},  /*  50.3500 */
+    {0x00360000, 0x3708A801,},  /*  54.0000 */
+    {0x00384000, 0x23E36802,},  /*  56.2500 */
+    {0x0038643F, 0x23E36802,},  /*  56.3916 */
+    {0x0038A4DD, 0x23E36802,},  /*  56.6444 */
+    {0x003B0000, 0x37C45801,},  /*  59.0000 */
+    {0x003F0000, 0x23EC4801,},  /*  63.0000 */
+    {0x00410000, 0x37911801,},  /*  65.0000 */
+    {0x00438000, 0x37963803,},  /*  67.5000 */
+    {0x0046CCCC, 0x37058803,},  /*  70.8000 */
+    {0x00480000, 0x3710C805,},  /*  72.0000 */
+    {0x004B0000, 0x37E22801,},  /*  75.0000 */
+    {0x004EC000, 0x27915801,},  /*  78.7500 */
+    {0x00500000, 0x37D8D802,},  /*  80.0000 */
+    {0x0059CCCC, 0x27588802,},  /*  89.8000 */
+    {0x005E8000, 0x27EC4802,},  /*  94.5000 */
+    {0x00630000, 0x27AC6803,},  /*  99.0000 */
+    {0x00640000, 0x27088801,},  /* 100.0000 */
+    {0x006C0000, 0x2710C805,},  /* 108.0000 */
+    {0x00708000, 0x27E36802,},  /* 112.5000 */
+    {0x00820000, 0x27C58803,},  /* 130.0000 */
+    {0x00870000, 0x27316803,},  /* 135.0000 */
+    {0x009D8000, 0x2F915801,},  /* 157.5000 */
+    {0x00A20000, 0x2F08A801,},  /* 162.0000 */
+    {0x00AF0000, 0x2FB11802,},  /* 175.0000 */
+    {0x00BD0000, 0x2FEC4802,},  /* 189.0000 */
+    {0x00CA0000, 0x2F963803,},  /* 202.0000 */
+    {0x00E80000, 0x2FB1B802,},  /* 232.0000 */
 };
 
 #define NUM_CS5530_FREQUENCIES sizeof(CS5530_PLLtable)/sizeof(CS5530PLLENTRY)
@@ -98,36 +97,36 @@ gfx_set_crt_enable(int enable)
     config = READ_VID32(CS5530_DISPLAY_CONFIG);
 
     switch (enable) {
-    case CRT_DISABLE:                 /* Disable everything */
+    case CRT_DISABLE:          /* Disable everything */
 
         WRITE_VID32(CS5530_DISPLAY_CONFIG,
-            config & ~(CS5530_DCFG_DIS_EN | CS5530_DCFG_HSYNC_EN |
-                CS5530_DCFG_VSYNC_EN | CS5530_DCFG_DAC_BL_EN |
-                CS5530_DCFG_DAC_PWDNX));
+                    config & ~(CS5530_DCFG_DIS_EN | CS5530_DCFG_HSYNC_EN |
+                               CS5530_DCFG_VSYNC_EN | CS5530_DCFG_DAC_BL_EN |
+                               CS5530_DCFG_DAC_PWDNX));
         break;
 
-    case CRT_ENABLE:                  /* Enable CRT display, including display logic */
+    case CRT_ENABLE:           /* Enable CRT display, including display logic */
 
         WRITE_VID32(CS5530_DISPLAY_CONFIG,
-            config | CS5530_DCFG_DIS_EN | CS5530_DCFG_HSYNC_EN |
-            CS5530_DCFG_VSYNC_EN | CS5530_DCFG_DAC_BL_EN |
-            CS5530_DCFG_DAC_PWDNX);
+                    config | CS5530_DCFG_DIS_EN | CS5530_DCFG_HSYNC_EN |
+                    CS5530_DCFG_VSYNC_EN | CS5530_DCFG_DAC_BL_EN |
+                    CS5530_DCFG_DAC_PWDNX);
         break;
 
-    case CRT_STANDBY:                 /* HSync:Off VSync:On */
+    case CRT_STANDBY:          /* HSync:Off VSync:On */
 
         WRITE_VID32(CS5530_DISPLAY_CONFIG,
-            (config & ~(CS5530_DCFG_DIS_EN | CS5530_DCFG_HSYNC_EN |
-                    CS5530_DCFG_DAC_BL_EN | CS5530_DCFG_DAC_PWDNX))
-            | CS5530_DCFG_VSYNC_EN);
+                    (config & ~(CS5530_DCFG_DIS_EN | CS5530_DCFG_HSYNC_EN |
+                                CS5530_DCFG_DAC_BL_EN | CS5530_DCFG_DAC_PWDNX))
+                    | CS5530_DCFG_VSYNC_EN);
         break;
 
-    case CRT_SUSPEND:                 /* HSync:On VSync:Off */
+    case CRT_SUSPEND:          /* HSync:On VSync:Off */
 
         WRITE_VID32(CS5530_DISPLAY_CONFIG,
-            (config & ~(CS5530_DCFG_DIS_EN | CS5530_DCFG_VSYNC_EN |
-                    CS5530_DCFG_DAC_BL_EN | CS5530_DCFG_DAC_PWDNX))
-            | CS5530_DCFG_HSYNC_EN);
+                    (config & ~(CS5530_DCFG_DIS_EN | CS5530_DCFG_VSYNC_EN |
+                                CS5530_DCFG_DAC_BL_EN | CS5530_DCFG_DAC_PWDNX))
+                    | CS5530_DCFG_HSYNC_EN);
         break;
 
     default:
@@ -161,10 +160,10 @@ gfx_reset_video(void)
     gfx_set_display_video_size(0, 0);
 
     if (gfx_test_timing_active()) {
-        while (!gfx_test_vertical_active()) ;
-        while (gfx_test_vertical_active()) ;
-        while (!gfx_test_vertical_active()) ;
-        while (gfx_test_vertical_active()) ;
+        while (!gfx_test_vertical_active());
+        while (gfx_test_vertical_active());
+        while (!gfx_test_vertical_active());
+        while (gfx_test_vertical_active());
     }
 }
 
@@ -200,13 +199,13 @@ gfx_set_display_control(int sync_polarities)
     /* CLEAR RELEVANT FIELDS */
 
     dcfg &= ~(CS5530_DCFG_CRT_SYNC_SKW_MASK | CS5530_DCFG_PWR_SEQ_DLY_MASK |
-        CS5530_DCFG_CRT_HSYNC_POL | CS5530_DCFG_CRT_VSYNC_POL |
-        CS5530_DCFG_FP_PWR_EN | CS5530_DCFG_FP_DATA_EN);
+              CS5530_DCFG_CRT_HSYNC_POL | CS5530_DCFG_CRT_VSYNC_POL |
+              CS5530_DCFG_FP_PWR_EN | CS5530_DCFG_FP_DATA_EN);
 
     /* INITIALIZATION */
 
     dcfg |= (CS5530_DCFG_CRT_SYNC_SKW_INIT |
-        CS5530_DCFG_PWR_SEQ_DLY_INIT | CS5530_DCFG_GV_PAL_BYP);
+             CS5530_DCFG_PWR_SEQ_DLY_INIT | CS5530_DCFG_GV_PAL_BYP);
 
     if (PanelEnable) {
         dcfg |= CS5530_DCFG_FP_PWR_EN;
@@ -248,11 +247,11 @@ gfx_set_clock_frequency(unsigned long frequency)
     /* Search the table for the closest frequency (16.16 format). */
 
     value = CS5530_PLLtable[0].pll_value;
-    min = (long)CS5530_PLLtable[0].frequency - frequency;
+    min = (long) CS5530_PLLtable[0].frequency - frequency;
     if (min < 0L)
         min = -min;
     for (index = 1; index < NUM_CS5530_FREQUENCIES; index++) {
-        diff = (long)CS5530_PLLtable[index].frequency - frequency;
+        diff = (long) CS5530_PLLtable[index].frequency - frequency;
         if (diff < 0L)
             diff = -diff;
         if (diff < min) {
@@ -266,7 +265,7 @@ gfx_set_clock_frequency(unsigned long frequency)
     WRITE_VID32(CS5530_DOT_CLK_CONFIG, value);
     WRITE_VID32(CS5530_DOT_CLK_CONFIG, value | 0x80000100);
     /* set reset/bypass             */
-    gfx_delay_milliseconds(1);         /* wait for PLL to settle       */
+    gfx_delay_milliseconds(1);  /* wait for PLL to settle       */
     WRITE_VID32(CS5530_DOT_CLK_CONFIG, value & 0x7FFFFFFF);
     /* clear reset                          */
     WRITE_VID32(CS5530_DOT_CLK_CONFIG, value & 0x7FFFFEFF);
@@ -295,9 +294,9 @@ gfx_set_video_enable(int enable)
 
     if (gfx_test_timing_active()) {
         if (!gfx_test_vertical_active()) {
-            while (!gfx_test_vertical_active()) ;
+            while (!gfx_test_vertical_active());
         }
-        while (gfx_test_vertical_active()) ;
+        while (gfx_test_vertical_active());
     }
     vcfg = READ_VID32(CS5530_VIDEO_CONFIG);
     if (enable) {
@@ -311,7 +310,8 @@ gfx_set_video_enable(int enable)
 
         vcfg |= CS5530_VCFG_VID_EN;
         WRITE_VID32(CS5530_VIDEO_CONFIG, vcfg);
-    } else {
+    }
+    else {
         /* DISABLE CS5530 VIDEO OVERLAY */
 
         vcfg &= ~CS5530_VCFG_VID_EN;
@@ -431,11 +431,11 @@ gfx_set_video_offset(unsigned long offset)
 #if GFX_VIDEO_DYNAMIC
 int
 cs5530_set_video_scale(unsigned short srcw, unsigned short srch,
-    unsigned short dstw, unsigned short dsth)
+                       unsigned short dstw, unsigned short dsth)
 #else
 int
 gfx_set_video_scale(unsigned short srcw, unsigned short srch,
-    unsigned short dstw, unsigned short dsth)
+                    unsigned short dstw, unsigned short dsth)
 #endif
 {
     unsigned long xscale, yscale;
@@ -471,7 +471,7 @@ gfx_set_video_scale(unsigned short srcw, unsigned short srch,
     /* amount of data that needs to be transferred. */
 
     gfx_set_video_window(gfx_vid_xpos, gfx_vid_ypos, gfx_vid_width,
-        gfx_vid_height);
+                         gfx_vid_height);
     return (0);
 }
 
@@ -514,11 +514,12 @@ gfx_set_video_window(short x, short y, unsigned short w, unsigned short h)
     /* LEFT CLIPPING */
 
     if (x < 0) {
-        gfx_set_video_left_crop((unsigned short)(-x));
+        gfx_set_video_left_crop((unsigned short) (-x));
         xstart = hadjust;
-    } else {
+    }
+    else {
         gfx_set_video_left_crop(0);
-        xstart = (unsigned long)x + hadjust;
+        xstart = (unsigned long) x + hadjust;
     }
 
     /* CLIPPING ON RIGHT */
@@ -533,7 +534,8 @@ gfx_set_video_window(short x, short y, unsigned short w, unsigned short h)
     offset = gfx_vid_offset;
     if (y >= 0) {
         ystart = y + vadjust;
-    } else {
+    }
+    else {
         ystart = vadjust;
         line_size = (READ_VID32(CS5530_VIDEO_CONFIG) >> 7) & 0x000001FE;
         if (READ_VID32(CS5530_VIDEO_CONFIG) & CS5530_VCFG_LINE_SIZE_UPPER)
@@ -595,7 +597,7 @@ gfx_set_video_left_crop(unsigned short x)
     /* Adjust initial read for scale, checking for divide by zero */
 
     if (gfx_vid_dstw)
-        initread = (unsigned long)x *gfx_vid_srcw / gfx_vid_dstw;
+        initread = (unsigned long) x *gfx_vid_srcw / gfx_vid_dstw;
 
     else
         initread = 0;
@@ -626,8 +628,7 @@ gfx_set_video_left_crop(unsigned short x)
  */
 #if GFX_VIDEO_DYNAMIC
 int
-cs5530_set_video_color_key(unsigned long key, unsigned long mask,
-    int graphics)
+cs5530_set_video_color_key(unsigned long key, unsigned long mask, int graphics)
 #else
 int
 gfx_set_video_color_key(unsigned long key, unsigned long mask, int graphics)
@@ -1057,7 +1058,7 @@ gfx_get_video_format(void)
     if (vcfg & CS5530_VCFG_4_2_0_MODE)
         return (VIDEO_FORMAT_Y0Y1Y2Y3);
 
-    return ((int)((vcfg >> 2) & 3));
+    return ((int) ((vcfg >> 2) & 3));
 }
 
 /*----------------------------------------------------------------------------
@@ -1331,7 +1332,7 @@ gfx_read_crc(void)
     if (gfx_test_timing_active()) {
         /* WAIT UNTIL ACTIVE DISPLAY */
 
-        while (!gfx_test_vertical_active()) ;
+        while (!gfx_test_vertical_active());
 
         /* RESET CRC DURING ACTIVE DISPLAY */
 
@@ -1340,15 +1341,15 @@ gfx_read_crc(void)
 
         /* WAIT UNTIL NOT ACTIVE, THEN ACTIVE, NOT ACTIVE, THEN ACTIVE */
 
-        while (gfx_test_vertical_active()) ;
-        while (!gfx_test_vertical_active()) ;
-        while (gfx_test_vertical_active()) ;
-        while (!gfx_test_vertical_active()) ;
+        while (gfx_test_vertical_active());
+        while (!gfx_test_vertical_active());
+        while (gfx_test_vertical_active());
+        while (!gfx_test_vertical_active());
         crc = READ_VID32(CS5530_CRCSIG_TFT_TV) >> 8;
     }
     return (crc);
 }
 
-#endif /* GFX_READ_ROUTINES */
+#endif                          /* GFX_READ_ROUTINES */
 
 /* END OF FILE */

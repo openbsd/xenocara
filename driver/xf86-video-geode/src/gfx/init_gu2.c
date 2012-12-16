@@ -50,7 +50,7 @@ gfx_get_core_freq(void)
     OUTW(0xAC1C, 0xFC53);
     OUTW(0xAC1C, 0x1201);
 
-    value = (unsigned long)(INW(0xAC1E));
+    value = (unsigned long) (INW(0xAC1E));
 
     return (value);
 }
@@ -129,7 +129,7 @@ gfx_get_frame_buffer_size(void)
     OUTW(0xAC1C, 0xFC53);
     OUTW(0xAC1C, 0x0200);
 
-    value = (unsigned long)(INW(0xAC1E)) & 0xFFl;
+    value = (unsigned long) (INW(0xAC1E)) & 0xFFl;
 
     return (value << 19);
 }

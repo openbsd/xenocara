@@ -73,11 +73,12 @@ vop_set_vbi_window(VOPVBIWINDOWBUFFER * buffer)
             return CIM_STATUS_INVALIDPARAMS;
 
         hstart = buffer->horz_start + hsyncstart;
-    } else {
+    }
+    else {
         /* VERIFY THAT THE INPUT IS VALID */
 
-        if (buffer->horz_start < ((long)hsyncstart - (long)htotal) ||
-            buffer->horz_start > (long)hsyncstart ||
+        if (buffer->horz_start < ((long) hsyncstart - (long) htotal) ||
+            buffer->horz_start > (long) hsyncstart ||
             buffer->vbi_width > htotal) {
             return CIM_STATUS_INVALIDPARAMS;
         }
@@ -93,17 +94,20 @@ vop_set_vbi_window(VOPVBIWINDOWBUFFER * buffer)
     hstart--;
     hstop--;
     WRITE_REG32(DC3_VBI_HOR, ((hstop << DC3_VBI_HOR_END_SHIFT) &
-            DC3_VBI_HOR_END_MASK) | (hstart & DC3_VBI_HOR_START_MASK));
+                              DC3_VBI_HOR_END_MASK) | (hstart &
+                                                       DC3_VBI_HOR_START_MASK));
 
     /* WRITE LINE CAPTURE MASKS */
 
     WRITE_REG32(DC3_VBI_LN_ODD, ((buffer->odd_line_offset <<
-                DC3_VBI_ODD_LINE_SHIFT) & DC3_VBI_ODD_LINE_MASK) |
-        (buffer->odd_line_capture_mask & DC3_VBI_ODD_ENABLE_MASK));
+                                  DC3_VBI_ODD_LINE_SHIFT) &
+                                 DC3_VBI_ODD_LINE_MASK) |
+                (buffer->odd_line_capture_mask & DC3_VBI_ODD_ENABLE_MASK));
 
     WRITE_REG32(DC3_VBI_LN_EVEN, ((buffer->even_line_offset <<
-                DC3_VBI_EVEN_LINE_SHIFT) & DC3_VBI_EVEN_LINE_MASK) |
-        (buffer->even_line_capture_mask & DC3_VBI_EVEN_ENABLE_MASK));
+                                   DC3_VBI_EVEN_LINE_SHIFT) &
+                                  DC3_VBI_EVEN_LINE_MASK) |
+                (buffer->even_line_capture_mask & DC3_VBI_EVEN_ENABLE_MASK));
 
     /* PROGRAM SOURCE OFFSETS
      * Start with the even offsets.  Note that we always enable 16-bit VBI,
@@ -115,18 +119,18 @@ vop_set_vbi_window(VOPVBIWINDOWBUFFER * buffer)
     if (buffer->enable_upscale)
         temp |= DC3_VBI_EVEN_CTL_UPSCALE;
     WRITE_REG32(DC3_VBI_EVEN_CTL, temp |
-        (buffer->even_address_offset & DC3_VBI_EVEN_CTL_OFFSET_MASK));
+                (buffer->even_address_offset & DC3_VBI_EVEN_CTL_OFFSET_MASK));
 
     /* ODD OFFSET */
 
     temp = READ_REG32(DC3_VBI_ODD_CTL) & ~DC3_VBI_ODD_CTL_OFFSET_MASK;
     WRITE_REG32(DC3_VBI_ODD_CTL, temp |
-        (buffer->odd_address_offset & DC3_VBI_ODD_CTL_OFFSET_MASK));
+                (buffer->odd_address_offset & DC3_VBI_ODD_CTL_OFFSET_MASK));
 
     /* PITCH */
 
     temp = ((buffer->data_size >> 3) << 16) | ((buffer->data_pitch >> 3) &
-        0x0000FFFF);
+                                               0x0000FFFF);
     WRITE_REG32(DC3_VBI_PITCH, temp);
 
     WRITE_REG32(DC3_UNLOCK, unlock);
@@ -221,10 +225,11 @@ vop_set_configuration(VOPCONFIGURATIONBUFFER * config)
 
         if (config->vop601.vsync_shift == VOP_VSYNC_LATER_BY_X) {
             delta |= (config->vop601.vsync_shift_count &
-                DC3_601_VSYNC_SHIFT_MASK);
+                      DC3_601_VSYNC_SHIFT_MASK);
             delta |= DC3_601_VSYNC_SHIFT_ENABLE;
         }
-    } else {
+    }
+    else {
         if (config->flags & VOP_FLAG_VBI)
             vop_config |= VOP_CONFIG_VBI;
         if (config->flags & VOP_FLAG_TASK)
@@ -275,7 +280,8 @@ vop_set_configuration(VOPCONFIGURATIONBUFFER * config)
             alpha |= DF_CSC_VOP_RGB_TO_YUV;
         else
             alpha &= ~DF_CSC_VOP_RGB_TO_YUV;
-    } else {
+    }
+    else {
         /* YUV OUTPUT FROM THE MIXER */
         /* As there is no YUV->RGB VOP conversion, we simply disable the */
         /* VOP CSC and trust that the user is competent.                 */
@@ -384,14 +390,14 @@ vop_get_current_mode(VOPCONFIGURATIONBUFFER * config)
     /* READ 601 SETTINGS */
 
     config->vop601.flags = vop_config & (VOP_CONFIG_INVERT_DISPE |
-        VOP_CONFIG_INVERT_HSYNC | VOP_CONFIG_INVERT_VSYNC);
+                                         VOP_CONFIG_INVERT_HSYNC |
+                                         VOP_CONFIG_INVERT_VSYNC);
 
     config->vop601.vsync_shift = vop_config & VOP_CONFIG_VSYNC_MASK;
     config->vop601.vsync_shift_count =
         READ_REG32(DC3_VID_DS_DELTA) & DC3_601_VSYNC_SHIFT_MASK;
 
-    if ((alpha & DF_CSC_GRAPHICS_RGB_TO_YUV) ||
-        (alpha & DF_CSC_VOP_RGB_TO_YUV)) {
+    if ((alpha & DF_CSC_GRAPHICS_RGB_TO_YUV) || (alpha & DF_CSC_VOP_RGB_TO_YUV)) {
         /* YUV OUTPUT */
 
         if (vop_config & VOP_CONFIG_DISABLE_DECIMATE)
@@ -400,7 +406,8 @@ vop_get_current_mode(VOPCONFIGURATIONBUFFER * config)
             config->vop601.output_mode = VOP_601_YUV_16BIT;
         else
             config->vop601.output_mode = VOP_601_YUV_8BIT;
-    } else {
+    }
+    else {
         config->vop601.output_mode = VOP_601_RGB_8_8_8;
     }
 
@@ -455,11 +462,12 @@ vop_get_vbi_configuration(VOPVBIWINDOWBUFFER * buffer)
     hstop = ((temp & DC3_VBI_HOR_END_MASK) >> DC3_VBI_HOR_END_SHIFT) + 1;
     if (buffer->horz_from_hsync) {
         buffer->horz_start = hstart + htotal - hsyncstart;
-        if (buffer->horz_start >= (long)htotal)
+        if (buffer->horz_start >= (long) htotal)
             buffer->horz_start -= htotal;
-    } else {
+    }
+    else {
         if (hstart > hsyncstart)
-            buffer->horz_start = (long)hstart - (long)htotal;
+            buffer->horz_start = (long) hstart - (long) htotal;
         else
             buffer->horz_start = hstart;
     }
@@ -547,7 +555,7 @@ vop_get_crc(void)
 
     /* WAIT UNTIL NOT ACTIVE, THEN ACTIVE, NOT ACTIVE, THEN ACTIVE */
 
-    while (!(READ_VOP32(VOP_CONFIGURATION) & VOP_CONFIG_SIGVAL)) ;
+    while (!(READ_VOP32(VOP_CONFIGURATION) & VOP_CONFIG_SIGVAL));
 
     crc = READ_VOP32(VOP_SIGNATURE);
 
@@ -586,7 +594,7 @@ vop_read_vbi_crc(void)
 
     /* WAIT FOR THE CRC TO BE COMPLETED */
 
-    while (!(READ_REG32(DC3_LINE_CNT_STATUS) & DC3_LNCNT_SIGC)) ;
+    while (!(READ_REG32(DC3_LINE_CNT_STATUS) & DC3_LNCNT_SIGC));
 
     /* READ THE COMPLETED CRC */
 
