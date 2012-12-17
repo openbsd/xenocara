@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: kbfunc.c,v 1.69 2012/12/17 14:32:39 okan Exp $
+ * $OpenBSD: kbfunc.c,v 1.70 2012/12/17 23:03:41 okan Exp $
  */
 
 #include <sys/param.h>
@@ -324,16 +324,13 @@ kbfunc_ssh(struct client_ctx *cc, union arg *arg)
 	struct menu		*mi;
 	struct menu_q		 menuq;
 	FILE			*fp;
-	char			*buf, *lbuf, *p, *home;
+	char			*buf, *lbuf, *p;
 	char			 hostbuf[MAXHOSTNAMELEN], filename[MAXPATHLEN];
 	char			 cmd[256];
 	int			 l;
 	size_t			 len;
 
-	if ((home = getenv("HOME")) == NULL)
-		return;
-
-	l = snprintf(filename, sizeof(filename), "%s/%s", home, KNOWN_HOSTS);
+	l = snprintf(filename, sizeof(filename), "%s/%s", homedir, KNOWN_HOSTS);
 	if (l == -1 || l >= sizeof(filename))
 		return;
 

@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: conf.c,v 1.112 2012/12/17 02:53:29 okan Exp $
+ * $OpenBSD: conf.c,v 1.113 2012/12/17 23:03:41 okan Exp $
  */
 
 #include <sys/param.h>
@@ -243,18 +243,14 @@ void
 conf_setup(struct conf *c, const char *conf_file)
 {
 	char		 conf_path[MAXPATHLEN];
-	char		*home;
 	struct stat	 sb;
 	int		 parse = 0;
 
 	conf_init(c);
 
 	if (conf_file == NULL) {
-		if ((home = getenv("HOME")) == NULL)
-			errx(1, "No HOME directory.");
-
 		(void)snprintf(conf_path, sizeof(conf_path), "%s/%s",
-		    home, CONFFILE);
+		    homedir, CONFFILE);
 
 		if (stat(conf_path, &sb) == 0 && (sb.st_mode & S_IFREG))
 			parse = 1;

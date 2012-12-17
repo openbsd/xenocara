@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: calmwm.h,v 1.171 2012/12/17 18:35:26 okan Exp $
+ * $OpenBSD: calmwm.h,v 1.172 2012/12/17 23:03:41 okan Exp $
  */
 
 #ifndef _CALMWM_H_
@@ -519,6 +519,7 @@ extern Cursor				 Cursor_resize;
 extern struct screen_ctx_q		 Screenq;
 extern struct client_ctx_q		 Clientq;
 extern struct conf			 Conf;
+extern char				*homedir;
 
 extern int				 HasRandr, Randr_ev;
 
