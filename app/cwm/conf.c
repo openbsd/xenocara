@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: conf.c,v 1.111 2012/12/17 02:28:45 okan Exp $
+ * $OpenBSD: conf.c,v 1.112 2012/12/17 02:53:29 okan Exp $
  */
 
 #include <sys/param.h>
@@ -62,14 +62,14 @@ conf_gap(struct conf *c, struct screen_ctx *sc)
 void
 conf_font(struct conf *c, struct screen_ctx *sc)
 {
-	font_init(sc, c->font, (const char**)c->menucolor);
+	font_init(sc, c->font, (const char **)c->menucolor);
 }
 
 static char *menu_color_binds[CWM_COLOR_MENU_MAX] = {
-	"black",  /* CWM_COLOR_MENU_FG */
-	"white",  /* CWM_COLOR_MENU_BG */
-	"black",  /* CWM_COLOR_MENU_FONT */
-	"",  	  /* CWM_COLOR_MENU_FONT_SEL */
+	"black", /* CWM_COLOR_MENU_FG */
+	"white", /* CWM_COLOR_MENU_BG */
+	"black", /* CWM_COLOR_MENU_FONT */
+	"",  	 /* CWM_COLOR_MENU_FONT_SEL */
 };
 
 static struct color color_binds[CWM_COLOR_MAX] = {

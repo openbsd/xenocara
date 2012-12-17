@@ -16,7 +16,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: menu.c,v 1.46 2012/12/17 02:28:45 okan Exp $
+ * $OpenBSD: menu.c,v 1.47 2012/12/17 02:53:29 okan Exp $
  */
 
 #include <sys/param.h>
@@ -473,17 +473,16 @@ menu_draw_entry(struct screen_ctx *sc, struct menu_ctx *mc,
 	TAILQ_FOREACH(mi, resultq, resultentry)
 		if (entry == i++)
 			break;
-
 	if (mi == NULL)
 		return;
+
 	color = active ? CWM_COLOR_MENU_FG : CWM_COLOR_MENU_BG;
-	text = mi->print[0] != '\0' ?
-		    mi->print : mi->text;
+	text = mi->print[0] != '\0' ?  mi->print : mi->text;
 	XftDrawRect(sc->xftdraw, &sc->xftcolor[color], 0,
-			font_height(sc) * entry, mc->width,
-			font_height(sc) + font_descent(sc));
+	    font_height(sc) * entry, mc->width,
+	    font_height(sc) + font_descent(sc));
 	font_draw(sc, text, strlen(text), sc->menuwin, active,
-			0, font_height(sc) * entry + font_ascent(sc) + 1);
+	    0, font_height(sc) * entry + font_ascent(sc) + 1);
 }
 
 static void
@@ -503,6 +502,7 @@ menu_handle_move(XEvent *e, struct menu_ctx *mc, struct screen_ctx *sc,
 		menu_draw_entry(sc, mc, resultq, mc->entry, 1);
 	} else
 		(void)xu_ptr_regrab(MENUGRABMASK, Cursor_default);
+
 	if (mc->hasprompt)
 		menu_draw_entry(sc, mc, resultq, 1, 1);
 }
