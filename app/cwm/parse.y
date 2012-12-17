@@ -1,4 +1,4 @@
-/*	$OpenBSD: parse.y,v 1.34 2012/10/31 22:06:24 okan Exp $ */
+/*	$OpenBSD: parse.y,v 1.35 2012/12/17 02:28:45 okan Exp $ */
 
 /*
  * Copyright (c) 2002, 2003, 2004 Henning Brauer <henning@openbsd.org>
@@ -73,7 +73,8 @@ typedef struct {
 %token	COLOR SNAPDIST
 %token	ACTIVEBORDER INACTIVEBORDER
 %token	GROUPBORDER UNGROUPBORDER
-%token	MENUBG MENUFG FONTCOLOR
+%token	MENUBG MENUFG
+%token	FONTCOLOR FONTSELCOLOR
 %token	ERROR
 %token	<v.string>		STRING
 %token	<v.number>		NUMBER
@@ -186,16 +187,20 @@ colors		: ACTIVEBORDER STRING {
 			conf->color[CWM_COLOR_BORDER_UNGROUP].name = $2;
 		}
 		| MENUBG STRING {
-			free(conf->color[CWM_COLOR_BG_MENU].name);
-			conf->color[CWM_COLOR_BG_MENU].name = $2;
+			free(conf->menucolor[CWM_COLOR_MENU_BG]);
+			conf->menucolor[CWM_COLOR_MENU_BG] = $2;
 		}
 		| MENUFG STRING {
-			free(conf->color[CWM_COLOR_FG_MENU].name);
-			conf->color[CWM_COLOR_FG_MENU].name = $2;
+			free(conf->menucolor[CWM_COLOR_MENU_FG]);
+			conf->menucolor[CWM_COLOR_MENU_FG] = $2;
 		}
 		| FONTCOLOR STRING {
-			free(conf->color[CWM_COLOR_FONT].name);
-			conf->color[CWM_COLOR_FONT].name = $2;
+			free(conf->menucolor[CWM_COLOR_MENU_FONT]);
+			conf->menucolor[CWM_COLOR_MENU_FONT] = $2;
+		}
+		| FONTSELCOLOR STRING {
+			free(conf->menucolor[CWM_COLOR_MENU_FONT_SEL]);
+			conf->menucolor[CWM_COLOR_MENU_FONT_SEL] = $2;
 		}
 		;
 %%
@@ -247,6 +252,7 @@ lookup(char *s)
 		{ "mousebind",		MOUSEBIND},
 		{ "moveamount",		MOVEAMOUNT},
 		{ "no",			NO},
+		{ "selfont", 		FONTSELCOLOR},
 		{ "snapdist",		SNAPDIST},
 		{ "sticky",		STICKY},
 		{ "ungroupborder",	UNGROUPBORDER},
@@ -574,6 +580,9 @@ parse_config(const char *filename, struct conf *xconf)
 
 		for (i = 0; i < CWM_COLOR_MAX; i++)
 			xconf->color[i].name = conf->color[i].name;
+
+		for (i = 0; i < CWM_COLOR_MENU_MAX; i++)
+			xconf->menucolor[i]= conf->menucolor[i];
 
 		xconf->font = conf->font;
 	}

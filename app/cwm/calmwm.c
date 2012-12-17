@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: calmwm.c,v 1.69 2012/11/29 16:50:03 okan Exp $
+ * $OpenBSD: calmwm.c,v 1.70 2012/12/17 02:28:45 okan Exp $
  */
 
 #include <sys/param.h>
@@ -147,11 +147,6 @@ x_setup(void)
 static void
 x_teardown(void)
 {
-	struct screen_ctx	*sc;
-
-	TAILQ_FOREACH(sc, &Screenq, entry)
-		XFreeGC(X_Dpy, sc->gc);
-
 	XCloseDisplay(X_Dpy);
 }
 
