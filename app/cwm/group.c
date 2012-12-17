@@ -16,7 +16,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: group.c,v 1.64 2012/11/29 04:25:49 okan Exp $
+ * $OpenBSD: group.c,v 1.65 2012/12/17 14:32:39 okan Exp $
  */
 
 #include <sys/param.h>
@@ -385,10 +385,7 @@ group_menu(XButtonEvent *e)
 	(gc->hidden) ? group_show(sc, gc) : group_hide(sc, gc);
 
 cleanup:
-	while ((mi = TAILQ_FIRST(&menuq)) != NULL) {
-		TAILQ_REMOVE(&menuq, mi, entry);
-		free(mi);
-	}
+	menuq_clear(&menuq);
 }
 
 void
