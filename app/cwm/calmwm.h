@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: calmwm.h,v 1.168 2012/12/17 14:58:46 okan Exp $
+ * $OpenBSD: calmwm.h,v 1.169 2012/12/17 17:48:57 okan Exp $
  */
 
 #ifndef _CALMWM_H_
@@ -159,16 +159,16 @@ struct client_ctx {
 #define CLIENT_VMAXIMIZED		0x0004
 #define CLIENT_HMAXIMIZED		0x0008
 #define CLIENT_FREEZE			0x0010
+#define CLIENT_GROUP			0x0020
+#define CLIENT_UNGROUP			0x0040
 
+#define CLIENT_HIGHLIGHT		(CLIENT_GROUP | CLIENT_UNGROUP)
 #define CLIENT_MAXFLAGS			(CLIENT_VMAXIMIZED | CLIENT_HMAXIMIZED)
 #define CLIENT_MAXIMIZED		(CLIENT_VMAXIMIZED | CLIENT_HMAXIMIZED)
 	int			 flags;
 	int			 state;
 	int			 active;
 	int			 stackingorder;
-#define CLIENT_HIGHLIGHT_GROUP		0x0001
-#define CLIENT_HIGHLIGHT_UNGROUP	0x0002
-	int			 highlight;
 	struct winname_q	 nameq;
 #define CLIENT_MAXNAMEQLEN		5
 	int			 nameqlen;
