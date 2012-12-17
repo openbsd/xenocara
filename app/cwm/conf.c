@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: conf.c,v 1.113 2012/12/17 23:03:41 okan Exp $
+ * $OpenBSD: conf.c,v 1.114 2012/12/17 23:54:57 okan Exp $
  */
 
 #include <sys/param.h>
@@ -192,6 +192,9 @@ conf_init(struct conf *c)
 	/* Default term/lock */
 	(void)strlcpy(c->termpath, "xterm", sizeof(c->termpath));
 	(void)strlcpy(c->lockpath, "xlock", sizeof(c->lockpath));
+
+	(void)snprintf(c->known_hosts, sizeof(c->known_hosts), "%s/%s",
+	    homedir, ".ssh/known_hosts");
 
 	c->font = xstrdup(CONF_FONT);
 }

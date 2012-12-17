@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: kbfunc.c,v 1.70 2012/12/17 23:03:41 okan Exp $
+ * $OpenBSD: kbfunc.c,v 1.71 2012/12/17 23:54:57 okan Exp $
  */
 
 #include <sys/param.h>
@@ -33,7 +33,6 @@
 
 #include "calmwm.h"
 
-#define KNOWN_HOSTS	".ssh/known_hosts"
 #define HASH_MARKER	"|1|"
 
 extern char		**cwm_argv;
@@ -325,17 +324,15 @@ kbfunc_ssh(struct client_ctx *cc, union arg *arg)
 	struct menu_q		 menuq;
 	FILE			*fp;
 	char			*buf, *lbuf, *p;
-	char			 hostbuf[MAXHOSTNAMELEN], filename[MAXPATHLEN];
+	char			 hostbuf[MAXHOSTNAMELEN];
 	char			 cmd[256];
 	int			 l;
 	size_t			 len;
 
-	l = snprintf(filename, sizeof(filename), "%s/%s", homedir, KNOWN_HOSTS);
-	if (l == -1 || l >= sizeof(filename))
+	if ((fp = fopen(Conf.known_hosts, "r")) == NULL) {
+		warn("kbfunc_ssh: %s", Conf.known_hosts);
 		return;
-
-	if ((fp = fopen(filename, "r")) == NULL)
-		return;
+	}
 
 	TAILQ_INIT(&menuq);
 	lbuf = NULL;
