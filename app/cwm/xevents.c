@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: xevents.c,v 1.69 2012/11/09 03:52:02 okan Exp $
+ * $OpenBSD: xevents.c,v 1.70 2012/12/18 17:37:39 okan Exp $
  */
 
 /*
@@ -241,8 +241,7 @@ xev_handle_buttonpress(XEvent *ee)
 	sc = screen_fromroot(e->root);
 	cc = client_find(e->window);
 
-	/* Ignore caps lock and numlock */
-	e->state &= ~(Mod2Mask | LockMask);
+	e->state &= ~IGNOREMODMASK;
 
 	TAILQ_FOREACH(mb, &Conf.mousebindingq, entry) {
 		if (e->button == mb->button && e->state == mb->modmask)
@@ -283,8 +282,7 @@ xev_handle_keypress(XEvent *ee)
 	keysym = XkbKeycodeToKeysym(X_Dpy, e->keycode, 0, 0);
 	skeysym = XkbKeycodeToKeysym(X_Dpy, e->keycode, 0, 1);
 
-	/* we don't care about caps lock and numlock here */
-	e->state &= ~(LockMask | Mod2Mask);
+	e->state &= ~IGNOREMODMASK;
 
 	TAILQ_FOREACH(kb, &Conf.keybindingq, entry) {
 		if (keysym != kb->keysym && skeysym == kb->keysym)
