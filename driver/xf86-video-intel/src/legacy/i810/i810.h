@@ -40,10 +40,11 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 #include <stdint.h>
 #include "compiler.h"
-#include "xf86PciInfo.h"
 #include "xf86Pci.h"
 #include "i810_reg.h"
+#ifdef HAVE_XAA_H
 #include "xaa.h"
+#endif
 #include "xf86Cursor.h"
 #include "xf86xv.h"
 #include "vbe.h"
@@ -53,7 +54,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include <pciaccess.h>
 
 #include "compat-api.h"
-#ifdef XF86DRI
+#ifdef HAVE_DRI1
 #include "xf86drm.h"
 #include "sarea.h"
 #define _XF86DRI_SERVER_
@@ -74,14 +75,6 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 /* Globals */
 
 typedef struct _I810Rec *I810Ptr;
-
-typedef void (*I810WriteIndexedByteFunc)(I810Ptr pI810, IOADDRESS addr,
-					 uint8_t index, uint8_t value);
-typedef uint8_t(*I810ReadIndexedByteFunc)(I810Ptr pI810, IOADDRESS addr,
-					  uint8_t index);
-typedef void (*I810WriteByteFunc)(I810Ptr pI810, IOADDRESS addr,
-				  uint8_t value);
-typedef uint8_t(*I810ReadByteFunc)(I810Ptr pI810, IOADDRESS addr);
 
 extern void I810SetTiledMemory(ScrnInfoPtr pScrn, int nr, unsigned start,
 			       unsigned pitch, unsigned size);
@@ -179,7 +172,6 @@ typedef struct _I810Rec {
    int Chipset;
    unsigned long LinearAddr;
    unsigned long MMIOAddr;
-   IOADDRESS ioBase;
    EntityInfoPtr pEnt;
    struct pci_device *PciInfo;
 
@@ -212,20 +204,17 @@ typedef struct _I810Rec {
    I810RegRec SavedReg;
    I810RegRec ModeReg;
 
+#ifdef HAVE_XAA_H
    XAAInfoRecPtr AccelInfoRec;
+#endif
    xf86CursorInfoPtr CursorInfoRec;
    CloseScreenProcPtr CloseScreen;
    ScreenBlockHandlerProcPtr BlockHandler;
 
-   I810WriteIndexedByteFunc writeControl;
-   I810ReadIndexedByteFunc readControl;
-   I810WriteByteFunc writeStandard;
-   I810ReadByteFunc readStandard;
-
    Bool directRenderingDisabled;        /* DRI disabled in PreInit */
    Bool directRenderingEnabled;		/* false if XF86DRI not defined. */
 
-#ifdef XF86DRI
+#ifdef HAVE_DRI1
    int LockHeld;
    DRIInfoPtr pDRIInfo;
    int drmSubFD;
@@ -264,7 +253,7 @@ typedef struct _I810Rec {
 #define I810_SELECT_BACK	1
 #define I810_SELECT_DEPTH	2
 
-#ifdef XF86DRI
+#ifdef HAVE_DRI1
 extern Bool I810DRIScreenInit(ScreenPtr pScreen);
 extern void I810DRICloseScreen(ScreenPtr pScreen);
 extern Bool I810DRIFinishScreenInit(ScreenPtr pScreen);
@@ -278,7 +267,11 @@ extern Bool I810CleanupDma(ScrnInfoPtr pScrn);
 #define I810REGPTR(p) (&(I810PTR(p)->ModeReg))
 
 extern Bool I810CursorInit(ScreenPtr pScreen);
+#ifdef HAVE_XAA_H
 extern Bool I810AccelInit(ScreenPtr pScreen);
+#else
+static inline  Bool I810AccelInit(ScreenPtr pScreen) { return TRUE; }
+#endif
 extern void I810SetPIOAccess(I810Ptr pI810);
 extern void I810SetMMIOAccess(I810Ptr pI810);
 extern unsigned int I810CalcWatermark(ScrnInfoPtr pScrn, double freq,
@@ -321,7 +314,6 @@ extern void I810SelectBuffer(ScrnInfoPtr pScrn, int buffer);
 
 extern void I810RefreshRing(ScrnInfoPtr pScrn);
 extern void I810EmitFlush(ScrnInfoPtr pScrn);
-extern void I810EmitInvarientState(ScrnInfoPtr pScrn);
 
 extern Bool I810DGAInit(ScreenPtr pScreen);
 
@@ -329,5 +321,8 @@ extern void I810InitVideo(ScreenPtr pScreen);
 extern void I810InitMC(ScreenPtr pScreen);
 
 extern const OptionInfoRec *I810AvailableOptions(int chipid, int busid);
+
+extern const int I810CopyROP[16];
+const int I810PatternROP[16];
 
 #endif /* _I810_H_ */

@@ -5,8 +5,11 @@
 /* Enable XvMC support */
 #undef ENABLE_XVMC
 
-/* Define to 1 if you have the <dlfcn.h> header file. */
-#undef HAVE_DLFCN_H
+/* Define to 1 if you have the <dgaproc.h> header file. */
+#undef HAVE_DGAPROC_H
+
+/* Enable DRI1 driver support */
+#undef HAVE_DRI1
 
 /* Define to 1 if you have the <inttypes.h> header file. */
 #undef HAVE_INTTYPES_H
@@ -35,12 +38,11 @@
 /* Define to 1 if you have the <unistd.h> header file. */
 #undef HAVE_UNISTD_H
 
+/* Define to 1 if you have the <xaa.h> header file. */
+#undef HAVE_XAA_H
+
 /* Assume KMS support */
 #undef KMS_ONLY
-
-/* Define to the sub-directory in which libtool stores uninstalled libraries.
-   */
-#undef LT_OBJDIR
 
 /* Disable internal debugging */
 #undef NDEBUG

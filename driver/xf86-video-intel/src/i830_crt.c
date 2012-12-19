@@ -482,10 +482,10 @@ i830_crt_detect(xf86OutputPtr output)
     /*
      * DDC is next best, no flicker
      */
+#if 0
     crtc = i830GetLoadDetectPipe (output, NULL, &dpms_mode);
     if (!crtc)
 	return XF86OutputStatusUnknown;
-
     if (i830_crt_detect_ddc(output)) {
 	status = XF86OutputStatusConnected;
 	goto out_release_pipe;
@@ -500,7 +500,9 @@ i830_crt_detect(xf86OutputPtr output)
 
 out_release_pipe:
     i830ReleaseLoadDetectPipe (output, dpms_mode);
-
+#else
+    status = XF86OutputStatusUnknown;
+#endif
 done:
     return status;
 }

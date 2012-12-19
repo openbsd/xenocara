@@ -293,8 +293,7 @@ static Bool intel_pci_probe(DriverPtr		driver,
 		case PCI_CHIP_I810_DC100:
 		case PCI_CHIP_I810_E:
 		case PCI_CHIP_I815:
-			lg_i810_init(scrn);
-			break;
+			return lg_i810_init(scrn);
 
 		default:
 			intel_init_scrn(scrn);

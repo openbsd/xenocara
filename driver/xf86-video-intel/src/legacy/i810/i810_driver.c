@@ -68,10 +68,11 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include "xf86xv.h"
 #include <X11/extensions/Xv.h>
 #include "vbe.h"
+#include "xf86fbman.h"
 
 #include "i810.h"
 
-#ifdef XF86DRI
+#ifdef HAVE_DRI1
 #include "dri.h"
 #endif
 
@@ -131,7 +132,7 @@ int I810_DEBUG = (0
       );
 #endif
 
-#ifdef XF86DRI
+#ifdef HAVE_DRI1
 static int i810_pitches[] = {
    512,
    1024,
@@ -141,8 +142,6 @@ static int i810_pitches[] = {
 };
 #endif
 
-int I830EntityIndex = -1;
-
 /*
  * I810GetRec and I810FreeRec --
  *
@@ -151,24 +150,24 @@ int I830EntityIndex = -1;
  *
  */
 static Bool
-I810GetRec(ScrnInfoPtr pScrn)
+I810GetRec(ScrnInfoPtr scrn)
 {
-   if (pScrn->driverPrivate)
+   if (((uintptr_t)scrn->driverPrivate & 1) == 0)
       return TRUE;
 
-   pScrn->driverPrivate = xnfcalloc(sizeof(I810Rec), 1);
+   scrn->driverPrivate = xnfcalloc(sizeof(I810Rec), 1);
    return TRUE;
 }
 
 static void
-I810FreeRec(ScrnInfoPtr pScrn)
+I810FreeRec(ScrnInfoPtr scrn)
 {
-   if (!pScrn)
+   if (!scrn)
       return;
-   if (!pScrn->driverPrivate)
+   if (!scrn->driverPrivate)
       return;
-   free(pScrn->driverPrivate);
-   pScrn->driverPrivate = NULL;
+   free(scrn->driverPrivate);
+   scrn->driverPrivate = NULL;
 }
 
 struct pci_device *
@@ -187,36 +186,36 @@ intel_host_bridge (void)
 }
 
 static void
-I810ProbeDDC(ScrnInfoPtr pScrn, int ScrnIndex)
+I810ProbeDDC(ScrnInfoPtr scrn, int index)
 {
    vbeInfoPtr pVbe;
 
-   if (xf86LoadSubModule(pScrn, "vbe")) {
-      pVbe = VBEInit(NULL, ScrnIndex);
+   if (xf86LoadSubModule(scrn, "vbe")) {
+      pVbe = VBEInit(NULL, index);
       ConfiguredMonitor = vbeDoEDID(pVbe, NULL);
       vbeFree(pVbe);
    }
 }
 
 static xf86MonPtr
-I810DoDDC(ScrnInfoPtr pScrn, int ScrnIndex)
+I810DoDDC(ScrnInfoPtr scrn, int index)
 {
    vbeInfoPtr pVbe;
    xf86MonPtr MonInfo = NULL;
-   I810Ptr pI810 = I810PTR(pScrn);
+   I810Ptr pI810 = I810PTR(scrn);
 
    /* Honour Option "noDDC" */
    if (xf86ReturnOptValBool(pI810->Options, OPTION_NO_DDC, FALSE)) {
       return MonInfo;
    }
 
-   if (xf86LoadSubModule(pScrn, "vbe") && (pVbe = VBEInit(NULL, ScrnIndex))) {
+   if (xf86LoadSubModule(scrn, "vbe") && (pVbe = VBEInit(NULL, index))) {
       MonInfo = vbeDoEDID(pVbe, NULL);
       xf86PrintEDID(MonInfo);
-      xf86SetDDCproperties(pScrn, MonInfo);
+      xf86SetDDCproperties(scrn, MonInfo);
       vbeFree(pVbe);
    } else {
-      xf86DrvMsg(pScrn->scrnIndex, X_INFO,
+      xf86DrvMsg(scrn->scrnIndex, X_INFO,
 		 "this driver cannot do DDC without VBE\n");
    }
 
@@ -231,9 +230,8 @@ I810DoDDC(ScrnInfoPtr pScrn, int ScrnIndex)
  *
  */
 static Bool
-I810PreInit(ScrnInfoPtr pScrn, int flags)
+I810PreInit(ScrnInfoPtr scrn, int flags)
 {
-   vgaHWPtr hwp;
    I810Ptr pI810;
    ClockRangePtr clockRanges;
    int i;
@@ -242,93 +240,90 @@ I810PreInit(ScrnInfoPtr pScrn, int flags)
    rgb defaultWeight = { 0, 0, 0 };
    int mem;
    Bool enable;
-   struct intel_chipset chipset;
 
-   if (pScrn->numEntities != 1)
+   if (scrn->numEntities != 1)
       return FALSE;
 
    /* Allocate driverPrivate */
-   if (!I810GetRec(pScrn))
+   if (!I810GetRec(scrn))
       return FALSE;
 
-   pI810 = I810PTR(pScrn);
+   pI810 = I810PTR(scrn);
 
-   pI810->pEnt = xf86GetEntityInfo(pScrn->entityList[0]);
-   if (pI810->pEnt->location.type != BUS_PCI)
+   pI810->pEnt = xf86GetEntityInfo(scrn->entityList[0]);
+   if (pI810->pEnt == NULL || pI810->pEnt->location.type != BUS_PCI)
       return FALSE;
 
    if (flags & PROBE_DETECT) {
-      I810ProbeDDC(pScrn, pI810->pEnt->index);
+      I810ProbeDDC(scrn, pI810->pEnt->index);
       return TRUE;
    }
 
    /* The vgahw module should be loaded here when needed */
-   if (!xf86LoadSubModule(pScrn, "vgahw"))
+   if (!xf86LoadSubModule(scrn, "vgahw"))
       return FALSE;
 
    /* Allocate a vgaHWRec */
-   if (!vgaHWGetHWRec(pScrn))
+   if (!vgaHWGetHWRec(scrn))
       return FALSE;
-   hwp = VGAHWPTR(pScrn);
-   vgaHWSetStdFuncs(hwp);
 
    pI810->PciInfo = xf86GetPciInfoForEntity(pI810->pEnt->index);
 
-   /* Set pScrn->monitor */
-   pScrn->monitor = pScrn->confScreen->monitor;
+   /* Set scrn->monitor */
+   scrn->monitor = scrn->confScreen->monitor;
 
    flags24 = Support24bppFb | PreferConvert32to24 | SupportConvert32to24;
-   if (!xf86SetDepthBpp(pScrn, 16, 0, 16, flags24)) {
+   if (!xf86SetDepthBpp(scrn, 16, 0, 16, flags24)) {
       return FALSE;
    } else {
-      switch (pScrn->depth) {
+      switch (scrn->depth) {
       case 8:
       case 15:
       case 16:
       case 24:
 	 break;
       default:
-	 xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
+	 xf86DrvMsg(scrn->scrnIndex, X_ERROR,
 		    "Given depth (%d) is not supported by i810 driver\n",
-		    pScrn->depth);
+		    scrn->depth);
 	 return FALSE;
       }
    }
-   xf86PrintDepthBpp(pScrn);
+   xf86PrintDepthBpp(scrn);
 
-   switch (pScrn->bitsPerPixel) {
+   switch (scrn->bitsPerPixel) {
    case 8:
    case 16:
    case 24:
       break;
    default:
-      xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
+      xf86DrvMsg(scrn->scrnIndex, X_ERROR,
 		 "Given bpp (%d) is not supported by i810 driver\n",
-		 pScrn->bitsPerPixel);
+		 scrn->bitsPerPixel);
       return FALSE;
    }
 
-   if (!xf86SetWeight(pScrn, defaultWeight, defaultWeight))
+   if (!xf86SetWeight(scrn, defaultWeight, defaultWeight))
       return FALSE;
 
-   if (!xf86SetDefaultVisual(pScrn, -1))
+   if (!xf86SetDefaultVisual(scrn, -1))
       return FALSE;
 
    /* We use a programmable clock */
-   pScrn->progClock = TRUE;
+   scrn->progClock = TRUE;
 
-   pI810->cpp = pScrn->bitsPerPixel / 8;
+   pI810->cpp = scrn->bitsPerPixel / 8;
 
    /* Process the options */
-   xf86CollectOptions(pScrn, NULL);
+   xf86CollectOptions(scrn, NULL);
    if (!(pI810->Options = malloc(sizeof(I810Options))))
       return FALSE;
    memcpy(pI810->Options, I810Options, sizeof(I810Options));
-   xf86ProcessOptions(pScrn->scrnIndex, pScrn->options, pI810->Options);
+   xf86ProcessOptions(scrn->scrnIndex, scrn->options, pI810->Options);
 
-   pScrn->rgbBits = 8;
+   scrn->rgbBits = 8;
    if (xf86ReturnOptValBool(pI810->Options, OPTION_DAC_6BIT, FALSE))
-      pScrn->rgbBits = 6;
+      scrn->rgbBits = 6;
 
    if (xf86ReturnOptValBool(pI810->Options, OPTION_SHOW_CACHE, FALSE))
      pI810->showCache = TRUE;
@@ -337,7 +332,7 @@ I810PreInit(ScrnInfoPtr pScrn, int flags)
 
    /* 6-BIT dac isn't reasonable for modes with > 8bpp */
    if (xf86ReturnOptValBool(pI810->Options, OPTION_DAC_6BIT, FALSE) &&
-       pScrn->bitsPerPixel > 8) {
+       scrn->bitsPerPixel > 8) {
       OptionInfoPtr ptr;
 
       ptr = xf86TokenToOptinfo(pI810->Options, OPTION_DAC_6BIT);
@@ -347,24 +342,16 @@ I810PreInit(ScrnInfoPtr pScrn, int flags)
    if (xf86ReturnOptValBool(pI810->Options, OPTION_NOACCEL, FALSE))
       pI810->noAccel = TRUE;
 
-   if (!pI810->noAccel) {
-      if (!xf86LoadSubModule(pScrn, "xaa")) {
-	 I810FreeRec(pScrn);
-	 return FALSE;
-      }
-   }
+   if (!pI810->noAccel && !xf86LoadSubModule(scrn, "xaa"))
+      pI810->noAccel = TRUE;
    
-#ifdef XF86DRI
+#ifdef HAVE_DRI1
    pI810->directRenderingDisabled =
      !xf86ReturnOptValBool(pI810->Options, OPTION_DRI, TRUE);
 
    if (!pI810->directRenderingDisabled) {
-     if (pI810->noAccel) {
-       xf86DrvMsg(pScrn->scrnIndex, X_WARNING, "DRI is disabled because it "
-		  "needs 2D acceleration.\n");
-       pI810->directRenderingDisabled=TRUE;
-     } else if (pScrn->depth!=16) {
-       xf86DrvMsg(pScrn->scrnIndex, X_WARNING, "DRI is disabled because it "
+     if (scrn->depth!=16) {
+       xf86DrvMsg(scrn->scrnIndex, X_WARNING, "DRI is disabled because it "
 		  "runs only at 16-bit depth.\n");
        pI810->directRenderingDisabled=TRUE;
      }
@@ -375,52 +362,23 @@ I810PreInit(ScrnInfoPtr pScrn, int flags)
    /* after xf86ProcessOptions,
     * because it is controlled by options [no]vbe and [no]ddc
     */
-   I810DoDDC(pScrn, pI810->pEnt->index);
+   I810DoDDC(scrn, pI810->pEnt->index);
 
-   /* We have to use PIO to probe, because we haven't mapped yet */
-   I810SetPIOAccess(pI810);
-
-   intel_detect_chipset(pScrn, pI810->PciInfo, &chipset);
-
-   /*
-    * Set the Chipset and ChipRev, allowing config file entries to
-    * override.
-    */
-   if (pI810->pEnt->device->chipset && *pI810->pEnt->device->chipset) {
-      pScrn->chipset = pI810->pEnt->device->chipset;
-      from = X_CONFIG;
-   } else if (pI810->pEnt->device->chipID >= 0) {
-      pScrn->chipset = (char *)xf86TokenToString(intel_chipsets,
-						 pI810->pEnt->device->chipID);
-      from = X_CONFIG;
-      xf86DrvMsg(pScrn->scrnIndex, X_CONFIG, "ChipID override: 0x%04X\n",
-		 pI810->pEnt->device->chipID);
-   } else {
-      from = X_PROBED;
-      pScrn->chipset = (char *)xf86TokenToString(intel_chipsets,
-						 DEVICE_ID(pI810->PciInfo));
-   }
-   if (pI810->pEnt->device->chipRev >= 0) {
-      xf86DrvMsg(pScrn->scrnIndex, X_CONFIG, "ChipRev override: %d\n",
-		 pI810->pEnt->device->chipRev);
-   }
-
-   xf86DrvMsg(pScrn->scrnIndex, from, "Chipset: \"%s\"\n",
-	      (pScrn->chipset != NULL) ? pScrn->chipset : "Unknown i810");
+   intel_detect_chipset(scrn, pI810->pEnt, pI810->PciInfo);
 
    pI810->LinearAddr = pI810->PciInfo->regions[0].base_addr;
-   xf86DrvMsg(pScrn->scrnIndex, from, "Linear framebuffer at 0x%lX\n",
+   xf86DrvMsg(scrn->scrnIndex, X_PROBED, "Linear framebuffer at 0x%lX\n",
 	      (unsigned long)pI810->LinearAddr);
 
    pI810->MMIOAddr = pI810->PciInfo->regions[1].base_addr;
-   xf86DrvMsg(pScrn->scrnIndex, from, "IO registers at addr 0x%lX\n",
+   xf86DrvMsg(scrn->scrnIndex, X_PROBED, "IO registers at addr 0x%lX\n",
 	      (unsigned long)pI810->MMIOAddr);
 
    /* AGP GART support is required.  Don't proceed any further if it isn't
     * present.
     */
    if (!xf86AgpGARTSupported()) {
-      xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
+      xf86DrvMsg(scrn->scrnIndex, X_ERROR,
 		 "AGP GART support is not available.  Make sure your kernel has\n"
 		 "\tagpgart support or that the agpgart kernel module is loaded.\n");
       return FALSE;
@@ -447,40 +405,40 @@ I810PreInit(ScrnInfoPtr pScrn, int flags)
     *
     *  Changed to 8 Meg so we can have acceleration by default (Mark).
     */
-   mem = I810CheckAvailableMemory(pScrn);
+   mem = I810CheckAvailableMemory(scrn);
    if (pI810->directRenderingDisabled || mem < 131072)  /* < 128 MB */
-       pScrn->videoRam = 8192;
+       scrn->videoRam = 8192;
    else if (mem < 196608)
-       pScrn->videoRam = 16384;  /* < 192 MB */
+       scrn->videoRam = 16384;  /* < 192 MB */
    else
-       pScrn->videoRam = 24576;
+       scrn->videoRam = 24576;
    
    from = X_DEFAULT;
    
    if (pI810->pEnt->device->videoRam) {
-      pScrn->videoRam = pI810->pEnt->device->videoRam;
+      scrn->videoRam = pI810->pEnt->device->videoRam;
       from = X_CONFIG;
    }
 
-   if (mem > 0 && mem < pScrn->videoRam) {
-      xf86DrvMsg(pScrn->scrnIndex, X_WARNING, "%dk of memory was requested,"
+   if (mem > 0 && mem < scrn->videoRam) {
+      xf86DrvMsg(scrn->scrnIndex, X_WARNING, "%dk of memory was requested,"
 		 " but the\n\t maximum AGP memory available is %dk.\n",
-		 pScrn->videoRam, mem);
+		 scrn->videoRam, mem);
       from = X_PROBED;
       if (mem > (6 * 1024)) {
-	 xf86DrvMsg(pScrn->scrnIndex, X_INFO,
+	 xf86DrvMsg(scrn->scrnIndex, X_INFO,
 		    "Reducing video memory to 4MB\n");
-	 pScrn->videoRam = 4096;
+	 scrn->videoRam = 4096;
       } else {
-	 xf86DrvMsg(pScrn->scrnIndex, X_ERROR, "Less than 6MB of AGP memory"
+	 xf86DrvMsg(scrn->scrnIndex, X_ERROR, "Less than 6MB of AGP memory"
 		    " is available. Cannot proceed.\n");
-	 I810FreeRec(pScrn);
+	 I810FreeRec(scrn);
 	 return FALSE;
       }
    }
 
-   xf86DrvMsg(pScrn->scrnIndex, from,
-	      "Will alloc AGP framebuffer: %d kByte\n", pScrn->videoRam);
+   xf86DrvMsg(scrn->scrnIndex, from,
+	      "Will alloc AGP framebuffer: %d kByte\n", scrn->videoRam);
 
    /* Calculate Fixed Offsets depending on graphics aperture size */
    {
@@ -507,14 +465,14 @@ I810PreInit(ScrnInfoPtr pScrn, int flags)
    {
       Gamma zeros = { 0.0, 0.0, 0.0 };
 
-      if (!xf86SetGamma(pScrn, zeros)) {
+      if (!xf86SetGamma(scrn, zeros)) {
 	 return FALSE;
       }
    }
 
    pI810->MaxClock = 0;
    if (pI810->pEnt->device->dacSpeeds[0]) {
-      switch (pScrn->bitsPerPixel) {
+      switch (scrn->bitsPerPixel) {
       case 8:
 	 pI810->MaxClock = pI810->pEnt->device->dacSpeeds[DAC_BPP8];
 	 break;
@@ -530,9 +488,8 @@ I810PreInit(ScrnInfoPtr pScrn, int flags)
       }
       if (!pI810->MaxClock)
 	 pI810->MaxClock = pI810->pEnt->device->dacSpeeds[0];
-      from = X_CONFIG;
    } else {
-      switch (pScrn->bitsPerPixel) {
+      switch (scrn->bitsPerPixel) {
       case 8:
 	 pI810->MaxClock = 203000;
 	 break;
@@ -555,77 +512,77 @@ I810PreInit(ScrnInfoPtr pScrn, int flags)
    clockRanges->interlaceAllowed = TRUE;
    clockRanges->doubleScanAllowed = FALSE;
 
-   i = xf86ValidateModes(pScrn, pScrn->monitor->Modes,
-			 pScrn->display->modes, clockRanges,
-#ifndef XF86DRI
-			 0, 320, 1600, 64 * pScrn->bitsPerPixel,
+   i = xf86ValidateModes(scrn, scrn->monitor->Modes,
+			 scrn->display->modes, clockRanges,
+#ifndef HAVE_DRI1
+			 0, 320, 1600, 64 * scrn->bitsPerPixel,
 #else
-			 i810_pitches, 0, 0, 64 * pScrn->bitsPerPixel,
+			 i810_pitches, 0, 0, 64 * scrn->bitsPerPixel,
 #endif
 			 200, 1200,
-			 pScrn->display->virtualX, pScrn->display->virtualY,
-			 pScrn->videoRam * 1024, LOOKUP_BEST_REFRESH);
+			 scrn->display->virtualX, scrn->display->virtualY,
+			 scrn->videoRam * 1024, LOOKUP_BEST_REFRESH);
 
    if (i == -1) {
-      I810FreeRec(pScrn);
+      I810FreeRec(scrn);
       return FALSE;
    }
 
-   xf86PruneDriverModes(pScrn);
+   xf86PruneDriverModes(scrn);
 
-   if (!i || !pScrn->modes) {
-      xf86DrvMsg(pScrn->scrnIndex, X_ERROR, "No valid modes found\n");
-      I810FreeRec(pScrn);
+   if (!i || !scrn->modes) {
+      xf86DrvMsg(scrn->scrnIndex, X_ERROR, "No valid modes found\n");
+      I810FreeRec(scrn);
       return FALSE;
    }
 
-   xf86SetCrtcForModes(pScrn, INTERLACE_HALVE_V);
+   xf86SetCrtcForModes(scrn, INTERLACE_HALVE_V);
 
-   pScrn->currentMode = pScrn->modes;
+   scrn->currentMode = scrn->modes;
 
-   xf86PrintModes(pScrn);
+   xf86PrintModes(scrn);
 
-   xf86SetDpi(pScrn, 0, 0);
+   xf86SetDpi(scrn, 0, 0);
 
-   if (!xf86LoadSubModule(pScrn, "fb")) {
-      I810FreeRec(pScrn);
+   if (!xf86LoadSubModule(scrn, "fb")) {
+      I810FreeRec(scrn);
       return FALSE;
    }
 
    if (!xf86ReturnOptValBool(pI810->Options, OPTION_SW_CURSOR, FALSE)) {
-      if (!xf86LoadSubModule(pScrn, "ramdac")) {
-	 I810FreeRec(pScrn);
+      if (!xf86LoadSubModule(scrn, "ramdac")) {
+	 I810FreeRec(scrn);
 	 return FALSE;
       }
    }
 
    if (xf86GetOptValInteger
        (pI810->Options, OPTION_COLOR_KEY, &(pI810->colorKey))) {
-      xf86DrvMsg(pScrn->scrnIndex, X_CONFIG,
+      xf86DrvMsg(scrn->scrnIndex, X_CONFIG,
 		 "video overlay key set to 0x%x\n", pI810->colorKey);
    } else {
-      pI810->colorKey = (1 << pScrn->offset.red) |
-	    (1 << pScrn->offset.green) |
-	    (((pScrn->mask.blue >> pScrn->offset.blue) -
-	      1) << pScrn->offset.blue);
+      pI810->colorKey = (1 << scrn->offset.red) |
+	    (1 << scrn->offset.green) |
+	    (((scrn->mask.blue >> scrn->offset.blue) -
+	      1) << scrn->offset.blue);
    }
 
    pI810->allowPageFlip=FALSE;
    enable = xf86ReturnOptValBool(pI810->Options, OPTION_PAGEFLIP, FALSE);   
 
-#ifdef XF86DRI
+#ifdef HAVE_DRI1
    if (!pI810->directRenderingDisabled) {
      pI810->allowPageFlip = enable;
      if (pI810->allowPageFlip == TRUE)
      {
-       if (!xf86LoadSubModule(pScrn, "shadowfb")) {
+       if (!xf86LoadSubModule(scrn, "shadowfb")) {
 	 pI810->allowPageFlip = 0;
-	 xf86DrvMsg(pScrn->scrnIndex, X_ERROR, 
+	 xf86DrvMsg(scrn->scrnIndex, X_ERROR, 
 		    "Couldn't load shadowfb module:\n");
        }
      }
      
-     xf86DrvMsg(pScrn->scrnIndex, X_CONFIG, "page flipping %s\n",
+     xf86DrvMsg(scrn->scrnIndex, X_CONFIG, "page flipping %s\n",
 		enable ? "enabled" : "disabled");
      
    }
@@ -633,49 +590,40 @@ I810PreInit(ScrnInfoPtr pScrn, int flags)
 
    if (xf86GetOptValInteger(pI810->Options, OPTION_XVMC_SURFACES,
 			    &(pI810->numSurfaces))) {
-      xf86DrvMsg(pScrn->scrnIndex, X_CONFIG, "%d XvMC Surfaces Requested.\n",
+      xf86DrvMsg(scrn->scrnIndex, X_CONFIG, "%d XvMC Surfaces Requested.\n",
 		 pI810->numSurfaces);
       if (pI810->numSurfaces > 7) {
-	 xf86DrvMsg(pScrn->scrnIndex, X_PROBED,
+	 xf86DrvMsg(scrn->scrnIndex, X_PROBED,
 		    "Using 7 XvMC Surfaces (Maximum Allowed).\n");
 	 pI810->numSurfaces = 7;
       }
       if (pI810->numSurfaces < 6) {
-	 xf86DrvMsg(pScrn->scrnIndex, X_PROBED,
+	 xf86DrvMsg(scrn->scrnIndex, X_PROBED,
 		    "Using 6 XvMC Surfaces (Minimum Allowed).\n");
 	 pI810->numSurfaces = 6;
       }
    } else {
-      xf86DrvMsg(pScrn->scrnIndex, X_INFO,
+      xf86DrvMsg(scrn->scrnIndex, X_INFO,
 		 "XvMC is Disabled: use XvMCSurfaces config option to enable.\n");
       pI810->numSurfaces = 0;
    }
 
-#ifdef XF86DRI
+#ifdef HAVE_DRI1
    /* Load the dri module if requested. */
    if (xf86ReturnOptValBool(pI810->Options, OPTION_DRI, FALSE)) {
-      xf86LoadSubModule(pScrn, "dri");
+      xf86LoadSubModule(scrn, "dri");
    }
 #endif
 
-   /*  We won't be using the VGA access after the probe */
-   I810SetMMIOAccess(pI810);
    return TRUE;
 }
 
 static Bool
-I810MapMMIO(ScrnInfoPtr pScrn)
+I810MapMMIO(ScrnInfoPtr scrn)
 {
-   int mmioFlags;
-   I810Ptr pI810 = I810PTR(pScrn);
+   I810Ptr pI810 = I810PTR(scrn);
    struct pci_device *const device = pI810->PciInfo;
    int err;
-
-#if !defined(__alpha__)
-   mmioFlags = VIDMEM_MMIO | VIDMEM_READSIDEEFFECT;
-#else
-   mmioFlags = VIDMEM_MMIO | VIDMEM_READSIDEEFFECT | VIDMEM_SPARSE;
-#endif
 
    err = pci_device_map_range (device,
 			       pI810->MMIOAddr,
@@ -684,7 +632,7 @@ I810MapMMIO(ScrnInfoPtr pScrn)
 			       (void **) &pI810->MMIOBase);
    if (err) 
    {
-      xf86DrvMsg (pScrn->scrnIndex, X_ERROR,
+      xf86DrvMsg (scrn->scrnIndex, X_ERROR,
 		  "Unable to map mmio BAR. %s (%d)\n",
 		  strerror (err), err);
       return FALSE;
@@ -693,13 +641,13 @@ I810MapMMIO(ScrnInfoPtr pScrn)
 }
 
 static Bool
-I810MapMem(ScrnInfoPtr pScrn)
+I810MapMem(ScrnInfoPtr scrn)
 {
-   I810Ptr pI810 = I810PTR(pScrn);
+   I810Ptr pI810 = I810PTR(scrn);
    struct pci_device *const device = pI810->PciInfo;
    int err;
 
-   if (!I810MapMMIO(pScrn))
+   if (!I810MapMMIO(scrn))
       return FALSE;
 
    err = pci_device_map_range (device,
@@ -709,7 +657,7 @@ I810MapMem(ScrnInfoPtr pScrn)
 			       (void **) &pI810->FbBase);
    if (err) 
    {
-      xf86DrvMsg (pScrn->scrnIndex, X_ERROR,
+      xf86DrvMsg (scrn->scrnIndex, X_ERROR,
 		  "Unable to map frame buffer BAR. %s (%d)\n",
 		  strerror (err), err);
       return FALSE;
@@ -721,31 +669,31 @@ I810MapMem(ScrnInfoPtr pScrn)
 }
 
 static void
-I810UnmapMMIO(ScrnInfoPtr pScrn)
+I810UnmapMMIO(ScrnInfoPtr scrn)
 {
-   I810Ptr pI810 = I810PTR(pScrn);
+   I810Ptr pI810 = I810PTR(scrn);
 
    pci_device_unmap_range (pI810->PciInfo, pI810->MMIOBase, I810_REG_SIZE);
    pI810->MMIOBase = NULL;
 }
 
 static Bool
-I810UnmapMem(ScrnInfoPtr pScrn)
+I810UnmapMem(ScrnInfoPtr scrn)
 {
-   I810Ptr pI810 = I810PTR(pScrn);
+   I810Ptr pI810 = I810PTR(scrn);
 
    pci_device_unmap_range (pI810->PciInfo, pI810->FbBase, pI810->FbMapSize);
    pI810->FbBase = NULL;
-   I810UnmapMMIO(pScrn);
+   I810UnmapMMIO(scrn);
    return TRUE;
 }
 
 /* Famous last words
  */
 void
-I810PrintErrorState(ScrnInfoPtr pScrn)
+I810PrintErrorState(ScrnInfoPtr scrn)
 {
-   I810Ptr pI810 = I810PTR(pScrn);
+   I810Ptr pI810 = I810PTR(scrn);
 
    ErrorF("pgetbl_ctl: 0x%lx pgetbl_err: 0x%lx\n",
 	  (unsigned long) INREG(PGETBL_CTL), (unsigned long) INREG(PGE_ERR));
@@ -779,31 +727,31 @@ I810PrintErrorState(ScrnInfoPtr pScrn)
  * mask out bits here - just read the registers.
  */
 static void
-DoSave(ScrnInfoPtr pScrn, vgaRegPtr vgaReg, I810RegPtr i810Reg,
+DoSave(ScrnInfoPtr scrn, vgaRegPtr vgaReg, I810RegPtr i810Reg,
        Bool saveFonts)
 {
    I810Ptr pI810;
    vgaHWPtr hwp;
    int i;
 
-   pI810 = I810PTR(pScrn);
-   hwp = VGAHWPTR(pScrn);
+   pI810 = I810PTR(scrn);
+   hwp = VGAHWPTR(scrn);
 
    /*
     * This function will handle creating the data structure and filling
     * in the generic VGA portion.
     */
    if (saveFonts)
-      vgaHWSave(pScrn, vgaReg, VGA_SR_MODE | VGA_SR_FONTS | VGA_SR_CMAP);
+      vgaHWSave(scrn, vgaReg, VGA_SR_MODE | VGA_SR_FONTS | VGA_SR_CMAP);
    else
-      vgaHWSave(pScrn, vgaReg, VGA_SR_MODE | VGA_SR_CMAP);
+      vgaHWSave(scrn, vgaReg, VGA_SR_MODE | VGA_SR_CMAP);
 
    /*
     * The port I/O code necessary to read in the extended registers
     * into the fields of the vgaI810Rec structure goes here.
     */
    i810Reg->IOControl = hwp->readCrtc(hwp, IO_CTNL);
-   i810Reg->AddressMapping = pI810->readControl(pI810, GRX, ADDRESS_MAPPING);
+   i810Reg->AddressMapping = hwp->readGr(hwp, ADDRESS_MAPPING);
    i810Reg->BitBLTControl = INREG8(BITBLT_CNTL);
    i810Reg->VideoClk2_M = INREG16(VCLK2_VCO_M);
    i810Reg->VideoClk2_N = INREG16(VCLK2_VCO_N);
@@ -834,21 +782,21 @@ DoSave(ScrnInfoPtr pScrn, vgaRegPtr vgaReg, I810RegPtr i810Reg,
 
    if ((i810Reg->LprbTail & TAIL_ADDR) != (i810Reg->LprbHead & HEAD_ADDR) &&
        i810Reg->LprbLen & RING_VALID) {
-      I810PrintErrorState(pScrn);
+      I810PrintErrorState(scrn);
       FatalError("Active ring not flushed\n");
    }
 }
 
 static void
-I810Save(ScrnInfoPtr pScrn)
+I810Save(ScrnInfoPtr scrn)
 {
    vgaHWPtr hwp;
    I810Ptr pI810;
    uint32_t temp;
 
-   hwp = VGAHWPTR(pScrn);
-   pI810 = I810PTR(pScrn);
-   DoSave(pScrn, &hwp->SavedReg, &pI810->SavedReg, TRUE);
+   hwp = VGAHWPTR(scrn);
+   pI810 = I810PTR(scrn);
+   DoSave(scrn, &hwp->SavedReg, &pI810->SavedReg, TRUE);
 
    temp = INREG(MEMMODE);
    temp |= 4;
@@ -920,7 +868,7 @@ i810PrintMode(vgaRegPtr vgaReg, I810RegPtr mode)
 }
 
 static void
-DoRestore(ScrnInfoPtr pScrn, vgaRegPtr vgaReg, I810RegPtr i810Reg,
+DoRestore(ScrnInfoPtr scrn, vgaRegPtr vgaReg, I810RegPtr i810Reg,
 	  Bool restoreFonts)
 {
    I810Ptr pI810;
@@ -929,15 +877,15 @@ DoRestore(ScrnInfoPtr pScrn, vgaRegPtr vgaReg, I810RegPtr i810Reg,
    unsigned int itemp;
    int i;
 
-   pI810 = I810PTR(pScrn);
-   hwp = VGAHWPTR(pScrn);
+   pI810 = I810PTR(scrn);
+   hwp = VGAHWPTR(scrn);
 
    if (I810_DEBUG & DEBUG_VERBOSE_VGA) {
       ErrorF("Setting mode in I810Restore:\n");
       i810PrintMode(vgaReg, i810Reg);
    }
 
-   vgaHWProtect(pScrn, TRUE);
+   vgaHWProtect(scrn, TRUE);
 
    usleep(50000);
 
@@ -981,9 +929,9 @@ DoRestore(ScrnInfoPtr pScrn, vgaRegPtr vgaReg, I810RegPtr i810Reg,
     *           restore clock-select bits.
     */
    if (restoreFonts)
-      vgaHWRestore(pScrn, vgaReg, VGA_SR_FONTS | VGA_SR_MODE | VGA_SR_CMAP);
+      vgaHWRestore(scrn, vgaReg, VGA_SR_FONTS | VGA_SR_MODE | VGA_SR_CMAP);
    else
-      vgaHWRestore(pScrn, vgaReg, VGA_SR_MODE | VGA_SR_CMAP);
+      vgaHWRestore(scrn, vgaReg, VGA_SR_MODE | VGA_SR_CMAP);
 
    hwp->writeCrtc(hwp, EXT_VERT_TOTAL, i810Reg->ExtVertTotal);
    hwp->writeCrtc(hwp, EXT_VERT_DISPLAY, i810Reg->ExtVertDispEnd);
@@ -998,17 +946,17 @@ DoRestore(ScrnInfoPtr pScrn, vgaRegPtr vgaReg, I810RegPtr i810Reg,
    temp |= i810Reg->InterlaceControl;
    hwp->writeCrtc(hwp, INTERLACE_CNTL, temp);
 
-   temp = pI810->readControl(pI810, GRX, ADDRESS_MAPPING);
+   temp = hwp->readGr(hwp, ADDRESS_MAPPING);
    temp &= 0xE0;			/* Save reserved bits 7:5 */
    temp |= i810Reg->AddressMapping;
-   pI810->writeControl(pI810, GRX, ADDRESS_MAPPING, temp);
+   hwp->writeGr(hwp, ADDRESS_MAPPING, temp);
 
    /* Setting the OVRACT Register for video overlay */
    {
        uint32_t LCD_TV_Control = INREG(LCD_TV_C);
        uint32_t TV_HTotal = INREG(LCD_TV_HTOTAL);
        uint32_t ActiveStart, ActiveEnd;
-       
+
        if((LCD_TV_Control & LCD_TV_ENABLE)
 	  && !(LCD_TV_Control & LCD_TV_VGAMOD)
 	   && TV_HTotal) {
@@ -1021,7 +969,7 @@ DoRestore(ScrnInfoPtr pScrn, vgaRegPtr vgaReg, I810RegPtr i810Reg,
        OUTREG(LCD_TV_OVRACT,
 	      (ActiveEnd << 16) | ActiveStart);
    }
-   
+
    /* Turn on DRAM Refresh */
    temp = INREG8(DRAM_ROW_CNTL_HI);
    temp &= ~DRAM_REFRESH_RATE;
@@ -1096,13 +1044,13 @@ DoRestore(ScrnInfoPtr pScrn, vgaRegPtr vgaReg, I810RegPtr i810Reg,
    if (!(vgaReg->Attribute[0x10] & 0x1)) {
       usleep(50000);
       if (restoreFonts)
-	 vgaHWRestore(pScrn, vgaReg,
+	 vgaHWRestore(scrn, vgaReg,
 		      VGA_SR_FONTS | VGA_SR_MODE | VGA_SR_CMAP);
       else
-	 vgaHWRestore(pScrn, vgaReg, VGA_SR_MODE | VGA_SR_CMAP);
+	 vgaHWRestore(scrn, vgaReg, VGA_SR_MODE | VGA_SR_CMAP);
    }
 
-   vgaHWProtect(pScrn, FALSE);
+   vgaHWProtect(scrn, FALSE);
 
    temp = hwp->readCrtc(hwp, IO_CTNL);
    temp &= ~(EXTENDED_ATTR_CNTL | EXTENDED_CRTC_CNTL);
@@ -1111,10 +1059,10 @@ DoRestore(ScrnInfoPtr pScrn, vgaRegPtr vgaReg, I810RegPtr i810Reg,
 }
 
 static void
-I810SetRingRegs(ScrnInfoPtr pScrn)
+I810SetRingRegs(ScrnInfoPtr scrn)
 {
    unsigned int itemp;
-   I810Ptr pI810 = I810PTR(pScrn);
+   I810Ptr pI810 = I810PTR(scrn);
 
    OUTREG(LP_RING + RING_TAIL, 0);
    OUTREG(LP_RING + RING_HEAD, 0);
@@ -1131,15 +1079,15 @@ I810SetRingRegs(ScrnInfoPtr pScrn)
 }
 
 static void
-I810Restore(ScrnInfoPtr pScrn)
+I810Restore(ScrnInfoPtr scrn)
 {
    vgaHWPtr hwp;
    I810Ptr pI810;
 
-   hwp = VGAHWPTR(pScrn);
-   pI810 = I810PTR(pScrn);
+   hwp = VGAHWPTR(scrn);
+   pI810 = I810PTR(scrn);
 
-   DoRestore(pScrn, &hwp->SavedReg, &pI810->SavedReg, TRUE);
+   DoRestore(scrn, &hwp->SavedReg, &pI810->SavedReg, TRUE);
 }
 
 /*
@@ -1156,12 +1104,12 @@ I810Restore(ScrnInfoPtr pScrn)
     (double)m / ((double)n * (1 << p)) * 4 * REF_FREQ
 
 static void
-I810CalcVCLK(ScrnInfoPtr pScrn, double freq)
+I810CalcVCLK(ScrnInfoPtr scrn, double freq)
 {
-   I810Ptr pI810 = I810PTR(pScrn);
+   I810Ptr pI810 = I810PTR(scrn);
    I810RegPtr i810Reg = &pI810->ModeReg;
    int m, n, p;
-   double f_out, f_best;
+   double f_out;
    double f_err;
    double f_vco;
    int m_best = 0, n_best = 0, p_best = 0;
@@ -1189,7 +1137,6 @@ I810CalcVCLK(ScrnInfoPtr pScrn, double freq)
       if (fabs(f_err) < err_max) {
 	 m_best = m;
 	 n_best = n;
-	 f_best = f_out;
 	 err_best = f_err;
       }
    } while ((fabs(f_err) >= err_target) &&
@@ -1204,7 +1151,7 @@ I810CalcVCLK(ScrnInfoPtr pScrn, double freq)
    i810Reg->VideoClk2_N = (n_best - 2) & 0x3FF;
    i810Reg->VideoClk2_DivisorSel = (p_best << 4);
 
-   xf86DrvMsgVerb(pScrn->scrnIndex, X_INFO, 3,
+   xf86DrvMsgVerb(scrn->scrnIndex, X_INFO, 3,
 		  "Setting dot clock to %.1f MHz " "[ 0x%x 0x%x 0x%x ] "
 		  "[ %d %d %d ]\n", CALC_VCLK(m_best, n_best, p_best),
 		  i810Reg->VideoClk2_M, i810Reg->VideoClk2_N,
@@ -1212,36 +1159,36 @@ I810CalcVCLK(ScrnInfoPtr pScrn, double freq)
 }
 
 static Bool
-I810SetMode(ScrnInfoPtr pScrn, DisplayModePtr mode)
+I810SetMode(ScrnInfoPtr scrn, DisplayModePtr mode)
 {
-   I810Ptr pI810 = I810PTR(pScrn);
+   I810Ptr pI810 = I810PTR(scrn);
    I810RegPtr i810Reg = &pI810->ModeReg;
-   vgaRegPtr pVga = &VGAHWPTR(pScrn)->ModeReg;
+   vgaRegPtr pVga = &VGAHWPTR(scrn)->ModeReg;
    double dclk = mode->Clock / 1000.0;
 
-   switch (pScrn->bitsPerPixel) {
+   switch (scrn->bitsPerPixel) {
    case 8:
-      pVga->CRTC[0x13] = pScrn->displayWidth >> 3;
-      i810Reg->ExtOffset = pScrn->displayWidth >> 11;
+      pVga->CRTC[0x13] = scrn->displayWidth >> 3;
+      i810Reg->ExtOffset = scrn->displayWidth >> 11;
       i810Reg->PixelPipeCfg1 = DISPLAY_8BPP_MODE;
       i810Reg->BitBLTControl = COLEXP_8BPP;
       break;
    case 16:
-      if (pScrn->weight.green == 5) {
+      if (scrn->weight.green == 5) {
 	 i810Reg->PixelPipeCfg1 = DISPLAY_15BPP_MODE;
       } else {
 	 i810Reg->PixelPipeCfg1 = DISPLAY_16BPP_MODE;
       }
-      pVga->CRTC[0x13] = pScrn->displayWidth >> 2;
-      i810Reg->ExtOffset = pScrn->displayWidth >> 10;
+      pVga->CRTC[0x13] = scrn->displayWidth >> 2;
+      i810Reg->ExtOffset = scrn->displayWidth >> 10;
       i810Reg->BitBLTControl = COLEXP_16BPP;
 
       /* Enable Palette Programming for Direct Color visuals. -jens */
       i810Reg->PixelPipeCfg2 = DISPLAY_GAMMA_ENABLE;
       break;
    case 24:
-      pVga->CRTC[0x13] = (pScrn->displayWidth * 3) >> 3;
-      i810Reg->ExtOffset = (pScrn->displayWidth * 3) >> 11;
+      pVga->CRTC[0x13] = (scrn->displayWidth * 3) >> 3;
+      i810Reg->ExtOffset = (scrn->displayWidth * 3) >> 11;
 
       i810Reg->PixelPipeCfg1 = DISPLAY_24BPP_MODE;
       i810Reg->BitBLTControl = COLEXP_24BPP;
@@ -1326,13 +1273,13 @@ I810SetMode(ScrnInfoPtr pScrn, DisplayModePtr mode)
     * Calculate the VCLK that most closely matches the requested dot
     * clock.
     */
-   I810CalcVCLK(pScrn, dclk);
+   I810CalcVCLK(scrn, dclk);
 
    /* Since we program the clocks ourselves, always use VCLK2. */
    pVga->MiscOutReg |= 0x0C;
 
    /* Calculate the FIFO Watermark and Burst Length. */
-   i810Reg->LMI_FIFO_Watermark = I810CalcWatermark(pScrn, dclk, FALSE);
+   i810Reg->LMI_FIFO_Watermark = I810CalcWatermark(scrn, dclk, FALSE);
 
    /* Setup the ring buffer */
    i810Reg->LprbTail = 0;
@@ -1349,36 +1296,36 @@ I810SetMode(ScrnInfoPtr pScrn, DisplayModePtr mode)
 }
 
 static Bool
-I810ModeInit(ScrnInfoPtr pScrn, DisplayModePtr mode)
+I810ModeInit(ScrnInfoPtr scrn, DisplayModePtr mode)
 {
    vgaHWPtr hwp;
    I810Ptr pI810;
 
-   hwp = VGAHWPTR(pScrn);
-   pI810 = I810PTR(pScrn);
+   hwp = VGAHWPTR(scrn);
+   pI810 = I810PTR(scrn);
 
    vgaHWUnlock(hwp);
 
-   if (!vgaHWInit(pScrn, mode))
+   if (!vgaHWInit(scrn, mode))
       return FALSE;
 
-   pScrn->vtSema = TRUE;
+   scrn->vtSema = TRUE;
 
-   if (!I810SetMode(pScrn, mode))
+   if (!I810SetMode(scrn, mode))
       return FALSE;
 
-#ifdef XF86DRI
+#ifdef HAVE_DRI1
    if (pI810->directRenderingEnabled) {
-      DRILock(screenInfo.screens[pScrn->scrnIndex], 0);
+      DRILock(xf86ScrnToScreen(scrn), 0);
       pI810->LockHeld = 1;
    }
 #endif
 
-   DoRestore(pScrn, &hwp->ModeReg, &pI810->ModeReg, FALSE);
+   DoRestore(scrn, &hwp->ModeReg, &pI810->ModeReg, FALSE);
 
-#ifdef XF86DRI
+#ifdef HAVE_DRI1
    if (pI810->directRenderingEnabled) {
-      DRIUnlock(screenInfo.screens[pScrn->scrnIndex]);
+      DRIUnlock(xf86ScrnToScreen(scrn));
       pI810->LockHeld = 0;
    }
 #endif
@@ -1387,24 +1334,22 @@ I810ModeInit(ScrnInfoPtr pScrn, DisplayModePtr mode)
 }
 
 static void
-I810LoadPalette15(ScrnInfoPtr pScrn, int numColors, int *indices,
+I810LoadPalette15(ScrnInfoPtr scrn, int numColors, int *indices,
 		  LOCO * colors, VisualPtr pVisual)
 {
-   I810Ptr pI810;
    vgaHWPtr hwp;
-   int i, j, idx;
+   int i, j, index;
    unsigned char r, g, b;
 
-   pI810 = I810PTR(pScrn);
-   hwp = VGAHWPTR(pScrn);
+   hwp = VGAHWPTR(scrn);
 
    for (i = 0; i < numColors; i++) {
-      idx = indices[i];
-      r = colors[idx].red;
-      g = colors[idx].green;
-      b = colors[idx].blue;
+      index = indices[i];
+      r = colors[index].red;
+      g = colors[index].green;
+      b = colors[index].blue;
       for (j = 0; j < 8; j++) {
-	 hwp->writeDacWriteAddr(hwp, (idx << 3) + j);
+	 hwp->writeDacWriteAddr(hwp, (index << 3) + j);
 	 hwp->writeDacData(hwp, r);
 	 hwp->writeDacData(hwp, g);
 	 hwp->writeDacData(hwp, b);
@@ -1413,65 +1358,63 @@ I810LoadPalette15(ScrnInfoPtr pScrn, int numColors, int *indices,
 }
 
 static void
-I810LoadPalette16(ScrnInfoPtr pScrn, int numColors, int *indices,
+I810LoadPalette16(ScrnInfoPtr scrn, int numColors, int *indices,
 		  LOCO * colors, VisualPtr pVisual)
 {
-   I810Ptr pI810;
    vgaHWPtr hwp;
-   int i, idx;
+   int i, index;
    unsigned char r, g, b;
 
-   pI810 = I810PTR(pScrn);
-   hwp = VGAHWPTR(pScrn);
+   hwp = VGAHWPTR(scrn);
 
    /* Load all four entries in each of the 64 color ranges.  -jens */
    for (i = 0; i < numColors; i++) {
-      idx = indices[i / 2];
-      r = colors[idx].red;
-      b = colors[idx].blue;
-      idx = indices[i];
-      g = colors[idx].green;
+      index = indices[i / 2];
+      r = colors[index].red;
+      b = colors[index].blue;
+      index = indices[i];
+      g = colors[index].green;
 
-      hwp->writeDacWriteAddr(hwp, idx << 2);
+      hwp->writeDacWriteAddr(hwp, index << 2);
       hwp->writeDacData(hwp, r);
       hwp->writeDacData(hwp, g);
       hwp->writeDacData(hwp, b);
 
-      hwp->writeDacWriteAddr(hwp, (idx << 2) + 1);
+      hwp->writeDacWriteAddr(hwp, (index << 2) + 1);
       hwp->writeDacData(hwp, r);
       hwp->writeDacData(hwp, g);
       hwp->writeDacData(hwp, b);
 
-      hwp->writeDacWriteAddr(hwp, (idx << 2) + 2);
+      hwp->writeDacWriteAddr(hwp, (index << 2) + 2);
       hwp->writeDacData(hwp, r);
       hwp->writeDacData(hwp, g);
       hwp->writeDacData(hwp, b);
 
-      hwp->writeDacWriteAddr(hwp, (idx << 2) + 3);
+      hwp->writeDacWriteAddr(hwp, (index << 2) + 3);
       hwp->writeDacData(hwp, r);
       hwp->writeDacData(hwp, g);
       hwp->writeDacData(hwp, b);
 
       i++;
-      idx = indices[i];
-      g = colors[idx].green;
+      index = indices[i];
+      g = colors[index].green;
 
-      hwp->writeDacWriteAddr(hwp, idx << 2);
+      hwp->writeDacWriteAddr(hwp, index << 2);
       hwp->writeDacData(hwp, r);
       hwp->writeDacData(hwp, g);
       hwp->writeDacData(hwp, b);
 
-      hwp->writeDacWriteAddr(hwp, (idx << 2) + 1);
+      hwp->writeDacWriteAddr(hwp, (index << 2) + 1);
       hwp->writeDacData(hwp, r);
       hwp->writeDacData(hwp, g);
       hwp->writeDacData(hwp, b);
 
-      hwp->writeDacWriteAddr(hwp, (idx << 2) + 2);
+      hwp->writeDacWriteAddr(hwp, (index << 2) + 2);
       hwp->writeDacData(hwp, r);
       hwp->writeDacData(hwp, g);
       hwp->writeDacData(hwp, b);
 
-      hwp->writeDacWriteAddr(hwp, (idx << 2) + 3);
+      hwp->writeDacWriteAddr(hwp, (index << 2) + 3);
       hwp->writeDacData(hwp, r);
       hwp->writeDacData(hwp, g);
       hwp->writeDacData(hwp, b);
@@ -1479,23 +1422,21 @@ I810LoadPalette16(ScrnInfoPtr pScrn, int numColors, int *indices,
 }
 
 static void
-I810LoadPalette24(ScrnInfoPtr pScrn, int numColors, int *indices,
+I810LoadPalette24(ScrnInfoPtr scrn, int numColors, int *indices,
 		  LOCO * colors, VisualPtr pVisual)
 {
-   I810Ptr pI810;
    vgaHWPtr hwp;
-   int i, idx;
+   int i, index;
    unsigned char r, g, b;
 
-   pI810 = I810PTR(pScrn);
-   hwp = VGAHWPTR(pScrn);
+   hwp = VGAHWPTR(scrn);
 
    for (i = 0; i < numColors; i++) {
-      idx = indices[i];
-      r = colors[idx].red;
-      g = colors[idx].green;
-      b = colors[idx].blue;
-      hwp->writeDacWriteAddr(hwp, idx);
+      index = indices[i];
+      r = colors[index].red;
+      g = colors[index].green;
+      b = colors[index].blue;
+      hwp->writeDacWriteAddr(hwp, index);
       hwp->writeDacData(hwp, r);
       hwp->writeDacData(hwp, g);
       hwp->writeDacData(hwp, b);
@@ -1503,9 +1444,9 @@ I810LoadPalette24(ScrnInfoPtr pScrn, int numColors, int *indices,
 }
 
 Bool
-I810AllocateFront(ScrnInfoPtr pScrn)
+I810AllocateFront(ScrnInfoPtr scrn)
 {
-   I810Ptr pI810 = I810PTR(pScrn);
+   I810Ptr pI810 = I810PTR(scrn);
    int cache_lines = -1;
 
    if (pI810->DoneFrontAlloc)
@@ -1514,16 +1455,16 @@ I810AllocateFront(ScrnInfoPtr pScrn)
    memset(&(pI810->FbMemBox), 0, sizeof(BoxRec));
    /* Alloc FrontBuffer/Ring/Accel memory */
    pI810->FbMemBox.x1 = 0;
-   pI810->FbMemBox.x2 = pScrn->displayWidth;
+   pI810->FbMemBox.x2 = scrn->displayWidth;
    pI810->FbMemBox.y1 = 0;
-   pI810->FbMemBox.y2 = pScrn->virtualY;
+   pI810->FbMemBox.y2 = scrn->virtualY;
 
    xf86GetOptValInteger(pI810->Options, OPTION_CACHE_LINES, &cache_lines);
 
    if (cache_lines < 0) {
       /* make sure there is enough for two DVD sized YUV buffers */
-      cache_lines = (pScrn->depth == 24) ? 256 : 384;
-      if (pScrn->displayWidth <= 1024)
+      cache_lines = (scrn->depth == 24) ? 256 : 384;
+      if (scrn->displayWidth <= 1024)
 	 cache_lines *= 2;
    }
    /* Make sure there's enough space for cache_lines.
@@ -1539,9 +1480,9 @@ I810AllocateFront(ScrnInfoPtr pScrn)
    {
       int maxCacheLines;
 
-      maxCacheLines = (pScrn->videoRam * 1024 /
-		       (pScrn->bitsPerPixel / 8) /
-		       pScrn->displayWidth) - pScrn->virtualY;
+      maxCacheLines = (scrn->videoRam * 1024 /
+		       (scrn->bitsPerPixel / 8) /
+		       scrn->displayWidth) - scrn->virtualY;
       if (maxCacheLines < 0)
 	 maxCacheLines = 0;
       if (cache_lines > maxCacheLines)
@@ -1549,7 +1490,7 @@ I810AllocateFront(ScrnInfoPtr pScrn)
    }
    pI810->FbMemBox.y2 += cache_lines;
 
-   xf86DrvMsg(pScrn->scrnIndex, X_INFO,
+   xf86DrvMsg(scrn->scrnIndex, X_INFO,
 	      "Adding %i scanlines for pixmap caching\n", cache_lines);
 
    /* Reserve room for the framebuffer and pixcache.  Put at the top
@@ -1560,7 +1501,7 @@ I810AllocateFront(ScrnInfoPtr pScrn)
    if (!I810AllocLow(&(pI810->FrontBuffer),
 		     &(pI810->SysMem),
 		     ALIGN((pI810->FbMemBox.x2 * pI810->FbMemBox.y2 * pI810->cpp), 4096))) {
-      xf86DrvMsg(pScrn->scrnIndex,
+      xf86DrvMsg(scrn->scrnIndex,
 		 X_WARNING, "Framebuffer allocation failed\n");
       return FALSE;
    }
@@ -1573,16 +1514,16 @@ I810AllocateFront(ScrnInfoPtr pScrn)
       pI810->LpRing->tail = 0;
       pI810->LpRing->space = 0;
    } else {
-      xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
+      xf86DrvMsg(scrn->scrnIndex, X_ERROR,
 		 "Ring buffer allocation failed\n");
       return (FALSE);
    }
 
    if (I810AllocLow(&pI810->Scratch, &(pI810->SysMem), 64 * 1024) ||
        I810AllocLow(&pI810->Scratch, &(pI810->SysMem), 16 * 1024)) {
-      xf86DrvMsg(pScrn->scrnIndex, X_INFO, "Allocated Scratch Memory\n");
+      xf86DrvMsg(scrn->scrnIndex, X_INFO, "Allocated Scratch Memory\n");
    } else {
-      xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
+      xf86DrvMsg(scrn->scrnIndex, X_ERROR,
 		 "Scratch memory allocation failed\n");
       return (FALSE);
    }
@@ -1594,28 +1535,27 @@ I810AllocateFront(ScrnInfoPtr pScrn)
 static Bool
 I810ScreenInit(SCREEN_INIT_ARGS_DECL)
 {
-   ScrnInfoPtr pScrn;
+   ScrnInfoPtr scrn;
    vgaHWPtr hwp;
    I810Ptr pI810;
    VisualPtr visual;
-   MessageType driFrom = X_DEFAULT;
 
-   pScrn = xf86ScreenToScrn(screen);
-   pI810 = I810PTR(pScrn);
-   hwp = VGAHWPTR(pScrn);
+   scrn = xf86ScreenToScrn(screen);
+   pI810 = I810PTR(scrn);
+   hwp = VGAHWPTR(scrn);
 
    pI810->LpRing = calloc(sizeof(I810RingBuffer),1);
    if (!pI810->LpRing) {
-     xf86DrvMsg(pScrn->scrnIndex, X_ERROR, 
+     xf86DrvMsg(scrn->scrnIndex, X_ERROR,
 		"Could not allocate lpring data structure.\n");
      return FALSE;
    }
-   
+
    miClearVisualTypes();
 
    /* Re-implemented Direct Color support, -jens */
-   if (!miSetVisualTypes(pScrn->depth, miGetDefaultVisualMask(pScrn->depth),
-			 pScrn->rgbBits, pScrn->defaultVisual))
+   if (!miSetVisualTypes(scrn->depth, miGetDefaultVisualMask(scrn->depth),
+			 scrn->rgbBits, scrn->defaultVisual))
       return FALSE;
 
    if (!miSetPixmapDepths())
@@ -1633,7 +1573,7 @@ I810ScreenInit(SCREEN_INIT_ARGS_DECL)
     * memory.  Wonder if this is going to be a problem...
     */
 
-#ifdef XF86DRI
+#ifdef HAVE_DRI1
    /*
     * Setup DRI after visuals have been established, but before fbScreenInit
     * is called.   fbScreenInit will eventually call into the drivers
@@ -1644,55 +1584,53 @@ I810ScreenInit(SCREEN_INIT_ARGS_DECL)
     * pI810->directRenderingEnabled based on it each generation.
     */
    pI810->directRenderingEnabled = !pI810->directRenderingDisabled;
-   
+
    if (pI810->directRenderingEnabled==TRUE)
      pI810->directRenderingEnabled = I810DRIScreenInit(screen);
-   else
-     driFrom = X_CONFIG;
 
 #else
    pI810->directRenderingEnabled = FALSE;
-   if (!I810AllocateGARTMemory(pScrn))
+   if (!I810AllocateGARTMemory(scrn))
       return FALSE;
-   if (!I810AllocateFront(pScrn))
+   if (!I810AllocateFront(scrn))
       return FALSE;
 #endif
 
-   if (!I810MapMem(pScrn))
+   if (!I810MapMem(scrn))
       return FALSE;
 
-   pScrn->memPhysBase = (unsigned long)pI810->LinearAddr;
-   pScrn->fbOffset = 0;
+   scrn->memPhysBase = (unsigned long)pI810->LinearAddr;
+   scrn->fbOffset = 0;
 
    vgaHWSetMmioFuncs(hwp, pI810->MMIOBase, 0);
    vgaHWGetIOBase(hwp);
-   if (!vgaHWMapMem(pScrn))
+   if (!vgaHWMapMem(scrn))
       return FALSE;
 
-   I810Save(pScrn);
-   if (!I810ModeInit(pScrn, pScrn->currentMode))
+   I810Save(scrn);
+   if (!I810ModeInit(scrn, scrn->currentMode))
       return FALSE;
 
    I810SaveScreen(screen, FALSE);
-   I810AdjustFrame(ADJUST_FRAME_ARGS(pScrn, pScrn->frameX0, pScrn->frameY0));
+   I810AdjustFrame(ADJUST_FRAME_ARGS(scrn, scrn->frameX0, scrn->frameY0));
 
-   if (!fbScreenInit(screen, pI810->FbBase + pScrn->fbOffset,
-		     pScrn->virtualX, pScrn->virtualY,
-		     pScrn->xDpi, pScrn->yDpi,
-		     pScrn->displayWidth, pScrn->bitsPerPixel))
+   if (!fbScreenInit(screen, pI810->FbBase + scrn->fbOffset,
+		     scrn->virtualX, scrn->virtualY,
+		     scrn->xDpi, scrn->yDpi,
+		     scrn->displayWidth, scrn->bitsPerPixel))
       return FALSE;
 
-   if (pScrn->bitsPerPixel > 8) {
+   if (scrn->bitsPerPixel > 8) {
       /* Fixup RGB ordering */
       visual = screen->visuals + screen->numVisuals;
       while (--visual >= screen->visuals) {
 	 if ((visual->class | DynamicClass) == DirectColor) {
-	    visual->offsetRed = pScrn->offset.red;
-	    visual->offsetGreen = pScrn->offset.green;
-	    visual->offsetBlue = pScrn->offset.blue;
-	    visual->redMask = pScrn->mask.red;
-	    visual->greenMask = pScrn->mask.green;
-	    visual->blueMask = pScrn->mask.blue;
+	    visual->offsetRed = scrn->offset.red;
+	    visual->offsetGreen = scrn->offset.green;
+	    visual->offsetBlue = scrn->offset.blue;
+	    visual->redMask = scrn->mask.red;
+	    visual->greenMask = scrn->mask.green;
+	    visual->blueMask = scrn->mask.blue;
 	 }
       }
    }
@@ -1701,42 +1639,40 @@ I810ScreenInit(SCREEN_INIT_ARGS_DECL)
 
    xf86SetBlackWhitePixels(screen);
 
-#ifdef XF86DRI
+#ifdef HAVE_DRI1
    if (pI810->LpRing->mem.Start == 0 && pI810->directRenderingEnabled) {
       pI810->directRenderingEnabled = FALSE;
-      driFrom = X_PROBED;
       I810DRICloseScreen(screen);
    }
 
    if (!pI810->directRenderingEnabled) {
       pI810->DoneFrontAlloc = FALSE;
-      if (!I810AllocateGARTMemory(pScrn))
+      if (!I810AllocateGARTMemory(scrn))
 	 return FALSE;
-      if (!I810AllocateFront(pScrn))
+      if (!I810AllocateFront(scrn))
 	 return FALSE;
    }
 #endif
 
-#ifdef XFreeXDGA
+#ifdef HAVE_DGAPROC_H
    I810DGAInit(screen);
 #endif
 
    if (!xf86InitFBManager(screen, &(pI810->FbMemBox))) {
-      xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
+      xf86DrvMsg(scrn->scrnIndex, X_ERROR,
 		 "Failed to init memory manager\n");
       return FALSE;
    }
 
-   if (!xf86ReturnOptValBool(pI810->Options, OPTION_NOACCEL, FALSE)) {
-      if (pI810->LpRing->mem.Size != 0) {
-	 I810SetRingRegs(pScrn);
+   if (pI810->LpRing->mem.Size != 0) {
+      I810SetRingRegs(scrn);
 
-	 if (!I810AccelInit(screen)) {
-	    xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
-		       "Hardware acceleration initialization failed\n");
-	 }  else /* PK added 16.02.2004 */
-	     I810EmitFlush(pScrn);
+      if (!pI810->noAccel && !I810AccelInit(screen)) {
+	 xf86DrvMsg(scrn->scrnIndex, X_ERROR,
+		    "Hardware acceleration initialization failed\n");
       }
+
+      I810EmitFlush(scrn);
    }
 
    miInitializeBackingStore(screen);
@@ -1747,7 +1683,7 @@ I810ScreenInit(SCREEN_INIT_ARGS_DECL)
 
    if (!xf86ReturnOptValBool(pI810->Options, OPTION_SW_CURSOR, FALSE)) {
       if (!I810CursorInit(screen)) {
-	 xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
+	 xf86DrvMsg(scrn->scrnIndex, X_ERROR,
 		    "Hardware cursor initialization failed\n");
       }
    }
@@ -1756,8 +1692,8 @@ I810ScreenInit(SCREEN_INIT_ARGS_DECL)
       return FALSE;
 
    /* Use driver specific palette load routines for Direct Color support. -jens */
-   if (pScrn->bitsPerPixel == 16) {
-      if (pScrn->depth == 15) {
+   if (scrn->bitsPerPixel == 16) {
+      if (scrn->depth == 15) {
 	 if (!xf86HandleColormaps(screen, 256, 8, I810LoadPalette15, NULL,
 				  CMAP_PALETTED_TRUECOLOR |
 				  CMAP_RELOAD_ON_MODE_SWITCH))
@@ -1779,7 +1715,7 @@ I810ScreenInit(SCREEN_INIT_ARGS_DECL)
 
    I810InitVideo(screen);
 
-#ifdef XF86DRI
+#ifdef HAVE_DRI1
    if (pI810->directRenderingEnabled) {
       /* Now that mi, fb, drm and others have done their thing,
        * complete the DRI setup.
@@ -1795,9 +1731,9 @@ I810ScreenInit(SCREEN_INIT_ARGS_DECL)
 #endif
 
    if (pI810->directRenderingEnabled) {
-      xf86DrvMsg(pScrn->scrnIndex, X_INFO, "Direct rendering enabled\n");
+      xf86DrvMsg(scrn->scrnIndex, X_INFO, "Direct rendering enabled\n");
    } else {
-      xf86DrvMsg(pScrn->scrnIndex, X_WARNING, "Direct rendering disabled\n");
+      xf86DrvMsg(scrn->scrnIndex, X_WARNING, "Direct rendering disabled\n");
    }
 
    screen->SaveScreen = I810SaveScreen;
@@ -1805,7 +1741,7 @@ I810ScreenInit(SCREEN_INIT_ARGS_DECL)
    screen->CloseScreen = I810CloseScreen;
 
    if (serverGeneration == 1)
-      xf86ShowUnusedOptions(pScrn->scrnIndex, pScrn->options);
+      xf86ShowUnusedOptions(scrn->scrnIndex, scrn->options);
 
    return TRUE;
 }
@@ -1813,7 +1749,7 @@ I810ScreenInit(SCREEN_INIT_ARGS_DECL)
 Bool
 I810SwitchMode(SWITCH_MODE_ARGS_DECL)
 {
-    SCRN_INFO_PTR(arg);
+   SCRN_INFO_PTR(arg);
 #if 0
    I810Ptr pI810 = I810PTR(scrn);
 #endif
@@ -1829,7 +1765,7 @@ I810SwitchMode(SWITCH_MODE_ARGS_DECL)
  * If lockups on mode switch are still seen revisit this code. (EE)
  */
 
-# ifdef XF86DRI
+# ifdef HAVE_DRI1
    if (pI810->directRenderingEnabled) {
       if (I810_DEBUG & DEBUG_VERBOSE_DRI)
 	 ErrorF("calling dri lock\n");
@@ -1844,7 +1780,7 @@ I810SwitchMode(SWITCH_MODE_ARGS_DECL)
    }
    I810Restore(scrn);
 
-# ifdef XF86DRI
+# ifdef HAVE_DRI1
    if (pI810->directRenderingEnabled) {
        if (!I810DRILeave(scrn))
 	   return FALSE;
@@ -1917,7 +1853,8 @@ static Bool
 I810EnterVT(VT_FUNC_ARGS_DECL)
 {
    SCRN_INFO_PTR(arg);
-#ifdef XF86DRI
+
+#ifdef HAVE_DRI1
    I810Ptr pI810 = I810PTR(scrn);
 #endif
 
@@ -1927,7 +1864,7 @@ I810EnterVT(VT_FUNC_ARGS_DECL)
    if (!I810BindGARTMemory(scrn)) {
       return FALSE;
    }
-#ifdef XF86DRI
+#ifdef HAVE_DRI1
    if (!I810DRIEnter(scrn)) {
       return FALSE;
    }
@@ -1955,7 +1892,7 @@ I810LeaveVT(VT_FUNC_ARGS_DECL)
    if (I810_DEBUG & DEBUG_VERBOSE_DRI)
       ErrorF("\n\n\nLeave VT\n");
 
-#ifdef XF86DRI
+#ifdef HAVE_DRI1
    if (pI810->directRenderingEnabled) {
       if (I810_DEBUG & DEBUG_VERBOSE_DRI)
 	 ErrorF("calling dri lock\n");
@@ -1964,16 +1901,18 @@ I810LeaveVT(VT_FUNC_ARGS_DECL)
    }
 #endif
 
+#ifdef HAVE_XAA_H
    if (pI810->AccelInfoRec != NULL) {
       I810RefreshRing(scrn);
       I810Sync(scrn);
       pI810->AccelInfoRec->NeedToSync = FALSE;
    }
+#endif
    I810Restore(scrn);
 
    if (!I810UnbindGARTMemory(scrn))
       return;
-#ifdef XF86DRI
+#ifdef HAVE_DRI1
    if (!I810DRILeave(scrn))
       return;
 #endif
@@ -1984,47 +1923,53 @@ I810LeaveVT(VT_FUNC_ARGS_DECL)
 static Bool
 I810CloseScreen(CLOSE_SCREEN_ARGS_DECL)
 {
-   ScrnInfoPtr pScrn = xf86ScreenToScrn(screen);
-   vgaHWPtr hwp = VGAHWPTR(pScrn);
-   I810Ptr pI810 = I810PTR(pScrn);
+   ScrnInfoPtr scrn = xf86ScreenToScrn(screen);
+   vgaHWPtr hwp = VGAHWPTR(scrn);
+   I810Ptr pI810 = I810PTR(scrn);
+#ifdef HAVE_XAA_H
    XAAInfoRecPtr infoPtr = pI810->AccelInfoRec;
+#endif
 
-   if (pScrn->vtSema == TRUE) {
+   if (scrn->vtSema == TRUE) {
+#ifdef HAVE_XAA_H
       if (pI810->AccelInfoRec != NULL) {
-	 I810RefreshRing(pScrn);
-	 I810Sync(pScrn);
+	 I810RefreshRing(scrn);
+	 I810Sync(scrn);
 	 pI810->AccelInfoRec->NeedToSync = FALSE;
       }
-      I810Restore(pScrn);
+#endif
+      I810Restore(scrn);
       vgaHWLock(hwp);
    }
-#ifdef XF86DRI
+#ifdef HAVE_DRI1
    if (pI810->directRenderingEnabled) {
       I810DRICloseScreen(screen);
       pI810->directRenderingEnabled = FALSE;
    }
 #endif
 
-   if (pScrn->vtSema == TRUE) {
-      I810UnbindGARTMemory(pScrn);
-      I810Restore(pScrn);
+   if (scrn->vtSema == TRUE) {
+      I810UnbindGARTMemory(scrn);
+      I810Restore(scrn);
       vgaHWLock(hwp);
    }
 
-   I810UnmapMem(pScrn);
-   vgaHWUnmapMem(pScrn);
+   I810UnmapMem(scrn);
+   vgaHWUnmapMem(scrn);
 
    if (pI810->ScanlineColorExpandBuffers) {
       free(pI810->ScanlineColorExpandBuffers);
       pI810->ScanlineColorExpandBuffers = NULL;
    }
 
+#ifdef HAVE_XAA_H
    if (infoPtr) {
       if (infoPtr->ScanlineColorExpandBuffers)
 	 free(infoPtr->ScanlineColorExpandBuffers);
       XAADestroyInfoRec(infoPtr);
       pI810->AccelInfoRec = NULL;
    }
+#endif
 
    if (pI810->CursorInfoRec) {
       xf86DestroyCursorInfoRec(pI810->CursorInfoRec);
@@ -2040,12 +1985,12 @@ I810CloseScreen(CLOSE_SCREEN_ARGS_DECL)
    /* Need to actually close the gart fd, or the unbound memory will just sit
     * around.  Will prevent the Xserver from recycling.
     */
-   xf86GARTCloseScreen(pScrn->scrnIndex);
+   xf86GARTCloseScreen(scrn->scrnIndex);
 
    free(pI810->LpRing);
    pI810->LpRing = NULL;
 
-   pScrn->vtSema = FALSE;
+   scrn->vtSema = FALSE;
    screen->CloseScreen = pI810->CloseScreen;
    return (*screen->CloseScreen) (CLOSE_SCREEN_ARGS);
 }
@@ -2056,7 +2001,7 @@ I810FreeScreen(FREE_SCREEN_ARGS_DECL)
    SCRN_INFO_PTR(arg);
    I810FreeRec(scrn);
    if (xf86LoaderCheckSymbol("vgaHWFreeHWRec"))
-      vgaHWFreeHWRec(scrn);
+     vgaHWFreeHWRec(scrn);
 }
 
 static ModeStatus
@@ -2074,20 +2019,21 @@ I810ValidMode(SCRN_ARG_TYPE arg, DisplayModePtr mode, Bool verbose, int flags)
 }
 
 static Bool
-I810SaveScreen(ScreenPtr pScreen, Bool unblack)
+I810SaveScreen(ScreenPtr screen, Bool unblack)
 {
-   return vgaHWSaveScreen(pScreen, unblack);
+   return vgaHWSaveScreen(screen, unblack);
 }
 
 static void
-I810DisplayPowerManagementSet(ScrnInfoPtr pScrn, int PowerManagementMode,
+I810DisplayPowerManagementSet(ScrnInfoPtr scrn, int PowerManagementMode,
 			      int flags)
 {
    I810Ptr pI810;
    unsigned char SEQ01 = 0;
    int DPMSSyncSelect = 0;
+   vgaHWPtr hwp;
 
-   pI810 = I810PTR(pScrn);
+   pI810 = I810PTR(scrn);
    switch (PowerManagementMode) {
    case DPMSModeOn:
       /* Screen: On; HSync: On, VSync: On */
@@ -2111,9 +2057,11 @@ I810DisplayPowerManagementSet(ScrnInfoPtr pScrn, int PowerManagementMode,
       break;
    }
 
+   hwp = VGAHWPTR(scrn);
+
    /* Turn the screen on/off */
-   SEQ01 |= pI810->readControl(pI810, SRX, 0x01) & ~0x20;
-   pI810->writeControl(pI810, SRX, 0x01, SEQ01);
+   SEQ01 |= hwp->readSeq(hwp, 0x01) & ~0x20;
+   hwp->writeSeq(hwp, 0x01, SEQ01);
 
    /* Set the DPMS mode */
    OUTREG8(DPMS_SYNC_SELECT, DPMSSyncSelect);
@@ -2126,7 +2074,7 @@ lg_i810_available_options(int chipid, int busid)
 }
 
 
-void lg_i810_init(ScrnInfoPtr scrn)
+Bool lg_i810_init(ScrnInfoPtr scrn)
 {
     scrn->PreInit = I810PreInit;
     scrn->ScreenInit = I810ScreenInit;
@@ -2136,4 +2084,5 @@ void lg_i810_init(ScrnInfoPtr scrn)
     scrn->LeaveVT = I810LeaveVT;
     scrn->FreeScreen = I810FreeScreen;
     scrn->ValidMode = I810ValidMode;
+    return TRUE;
 }

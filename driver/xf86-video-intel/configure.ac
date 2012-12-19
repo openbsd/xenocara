@@ -71,6 +71,37 @@ AC_ARG_ENABLE(kms-only, AS_HELP_STRING([--enable-kms-only],
               [KMS_ONLY="$enableval"],
               [KMS_ONLY=no])
 
+AC_ARG_ENABLE(xaa,
+	     AS_HELP_STRING([--enable-xaa],
+			    [Enable legacy X Acceleration Architecture (XAA) [default=auto]]),
+	     [XAA="$enableval"],
+	     [XAA=auto])
+if test "x$XAA" != xno; then
+	save_CFLAGS=$CFLAGS
+	CFLAGS=$XORG_CFLAGS
+	AC_CHECK_HEADERS([xaa.h], XAA=yes, XAA=no)
+	CFLAGS=$save_CFLAGS
+fi
+AC_MSG_CHECKING([whether to include XAA support])
+AM_CONDITIONAL(XAA, test "x$XAA" = xyes)
+AC_MSG_RESULT([$XAA])
+
+AC_ARG_ENABLE(dga,
+	     AS_HELP_STRING([--enable-dga],
+			    [Enable legacy Direct Graphics Access (DGA) [default=auto]]),
+	     [DGA="$enableval"],
+	     [DGA=auto])
+if test "x$DGA" != xno; then
+	save_CFLAGS=$CFLAGS
+	CFLAGS=$XORG_CFLAGS
+	AC_CHECK_HEADERS([dgaproc.h], DGA=yes, DGA=no, [#include <dixstruct.h>])
+	CFLAGS=$save_CFLAGS
+fi
+AC_MSG_CHECKING([whether to include DGA support])
+AM_CONDITIONAL(DGA, test "x$DGA" = xyes)
+AC_MSG_RESULT([$DGA])
+
+
 AC_ARG_ENABLE(debug,
 	      AS_HELP_STRING([--enable-debug],
 			     [Enables internal debugging [[default=yes]]]),
@@ -119,6 +150,7 @@ AM_CONDITIONAL(DRI, test x$DRI = xyes)
 if test "$DRI" = yes; then
         PKG_CHECK_MODULES(DRI, [xf86driproto])
         AC_DEFINE(XF86DRI,1,[Enable DRI driver support])
+        AC_DEFINE(HAVE_DRI1,1,[Enable DRI1 driver support])
         AC_DEFINE(XF86DRI_DEVEL,1,[Enable developmental DRI driver support])
 fi
 

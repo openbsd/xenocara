@@ -63,7 +63,7 @@ I810CursorInit(ScreenPtr pScreen)
    I810Ptr pI810;
    xf86CursorInfoPtr infoPtr;
 
-   pScrn = xf86Screens[pScreen->myNum];
+   pScrn = xf86ScreenToScrn(pScreen);
    pI810 = I810PTR(pScrn);
    pI810->CursorInfoRec = infoPtr = xf86CreateCursorInfoRec();
    if (!infoPtr)
@@ -101,7 +101,7 @@ I810CursorInit(ScreenPtr pScreen)
 
 static Bool I810UseHWCursorARGB (ScreenPtr pScreen, CursorPtr pCurs)
 {
-   ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+   ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
    I810Ptr pI810 = I810PTR(pScrn);
 
    if (!pI810->CursorARGBPhysical)
@@ -144,7 +144,7 @@ static void I810LoadCursorARGB (ScrnInfoPtr pScrn, CursorPtr pCurs)
 static Bool
 I810UseHWCursor(ScreenPtr pScreen, CursorPtr pCurs)
 {
-   ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+   ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
    I810Ptr pI810 = I810PTR(pScrn);
 
    if (!pI810->CursorPhysical)
@@ -239,26 +239,29 @@ I810SetCursorColors(ScrnInfoPtr pScrn, int bg, int fg)
 {
    int tmp;
    I810Ptr pI810 = I810PTR(pScrn);
+   vgaHWPtr hwp;
 
 #ifdef ARGB_CURSOR
    if (pI810->CursorIsARGB)
       return;
 #endif
 
+   hwp = VGAHWPTR(pScrn);
+
    tmp = INREG8(PIXPIPE_CONFIG_0);
    tmp |= EXTENDED_PALETTE;
    OUTREG8(PIXPIPE_CONFIG_0, tmp);
 
-   pI810->writeStandard(pI810, DACMASK, 0xFF);
-   pI810->writeStandard(pI810, DACWX, 0x04);
+   hwp->writeDacMask(hwp, 0xFF);
+   hwp->writeDacWriteAddr(hwp, 0x04);
 
-   pI810->writeStandard(pI810, DACDATA, (bg & 0x00FF0000) >> 16);
-   pI810->writeStandard(pI810, DACDATA, (bg & 0x0000FF00) >> 8);
-   pI810->writeStandard(pI810, DACDATA, (bg & 0x000000FF));
+   hwp->writeDacData(hwp, (bg & 0x00FF0000) >> 16);
+   hwp->writeDacData(hwp, (bg & 0x0000FF00) >> 8);
+   hwp->writeDacData(hwp, (bg & 0x000000FF));
 
-   pI810->writeStandard(pI810, DACDATA, (fg & 0x00FF0000) >> 16);
-   pI810->writeStandard(pI810, DACDATA, (fg & 0x0000FF00) >> 8);
-   pI810->writeStandard(pI810, DACDATA, (fg & 0x000000FF));
+   hwp->writeDacData(hwp, (fg & 0x00FF0000) >> 16);
+   hwp->writeDacData(hwp, (fg & 0x0000FF00) >> 8);
+   hwp->writeDacData(hwp, (fg & 0x000000FF));
 
    tmp = INREG8(PIXPIPE_CONFIG_0);
    tmp &= ~EXTENDED_PALETTE;

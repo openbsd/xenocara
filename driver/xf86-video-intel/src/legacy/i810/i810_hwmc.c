@@ -42,7 +42,6 @@ THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include "xf86.h"
 #include "xf86_OSproc.h"
 #include "compiler.h"
-#include "xf86PciInfo.h"
 #include "xf86Pci.h"
 #include "xf86fbman.h"
 #include "regionstr.h"
@@ -54,8 +53,6 @@ THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include "xf86xvmc.h"
 #include <X11/extensions/Xv.h>
 #include <X11/extensions/XvMC.h>
-#include "xaa.h"
-#include "xaalocal.h"
 #include "dixstruct.h"
 #include "fourcc.h"
 
@@ -198,7 +195,7 @@ static XF86MCAdaptorPtr ppAdapt[1] =
  **************************************************************************/
 void I810InitMC(ScreenPtr pScreen)
 {
-  ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+  ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
   I810Ptr pI810 = I810PTR(pScrn);
   int i;
 
