@@ -12,6 +12,7 @@ char rcsId_vmwarecurs[] =
 #endif
 
 #include "vmware.h"
+#include "vmware_common.h"
 #include "bits2pixels.h"
 
 static void VMWAREGetImage(DrawablePtr src, int x, int y, int w, int h,
@@ -110,7 +111,7 @@ vmwareSetCursorColors(ScrnInfoPtr pScrn, int bg, int fg)
 static Bool
 vmwareUseHWCursor(ScreenPtr pScreen, CursorPtr pCurs)
 {
-    ScrnInfoPtr pScrn = infoFromScreen(pScreen);
+    ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
     VMWAREPtr pVMWARE = VMWAREPTR(pScrn);
     VmwareLog(("UseHWCursor new cursor %p refcnt %i old cursor %p refcnt %i\n",
               pCurs, pCurs->refcnt, pVMWARE->oldCurs, pVMWARE->oldCurs ? pVMWARE->oldCurs->refcnt : 0));
@@ -145,7 +146,7 @@ vmwareLoadCursorImage(ScrnInfoPtr pScrn, unsigned char *src )
 static Bool
 vmwareUseHWCursorARGB(ScreenPtr pScreen, CursorPtr pCurs)
 {
-    ScrnInfoPtr pScrn = infoFromScreen(pScreen);
+    ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
     VMWAREPtr pVMWARE = VMWAREPTR(pScrn);
     VmwareLog(("UseHWCursorARGB new cursor %p refcnt %i old cursor %p refcnt %i\n",
               pCurs, pCurs->refcnt, pVMWARE->oldCurs, pVMWARE->oldCurs ? pVMWARE->oldCurs->refcnt : 0));
@@ -283,7 +284,7 @@ Bool
 vmwareCursorInit(ScreenPtr pScreen)
 {
     xf86CursorInfoPtr infoPtr;
-    VMWAREPtr pVMWARE = VMWAREPTR(infoFromScreen(pScreen));
+    VMWAREPtr pVMWARE = VMWAREPTR(xf86ScreenToScrn(pScreen));
     Bool ret;
 
     TRACEPOINT
@@ -330,7 +331,7 @@ vmwareCursorInit(ScreenPtr pScreen)
 void
 vmwareCursorCloseScreen(ScreenPtr pScreen)
 {
-    ScrnInfoPtr pScrn = infoFromScreen(pScreen);
+    ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
     VMWAREPtr pVMWARE = VMWAREPTR(pScrn);
 #ifdef RENDER
     PictureScreenPtr ps = GetPictureScreenIfSet(pScreen);
@@ -356,7 +357,7 @@ vmwareCursorCloseScreen(ScreenPtr pScreen)
 void
 vmwareCursorHookWrappers(ScreenPtr pScreen)
 {
-    VMWAREPtr pVMWARE = VMWAREPTR(infoFromScreen(pScreen));
+    VMWAREPtr pVMWARE = VMWAREPTR(xf86ScreenToScrn(pScreen));
 #ifdef RENDER
     PictureScreenPtr ps = GetPictureScreenIfSet(pScreen);
 #endif
@@ -382,7 +383,7 @@ VMWAREGetImage(DrawablePtr src, int x, int y, int w, int h,
                unsigned int format, unsigned long planeMask, char *pBinImage)
 {
     ScreenPtr pScreen = src->pScreen;
-    VMWAREPtr pVMWARE = VMWAREPTR(infoFromScreen(src->pScreen));
+    VMWAREPtr pVMWARE = VMWAREPTR(xf86ScreenToScrn(src->pScreen));
     BoxRec box;
     Bool hidden = FALSE;
     
@@ -412,7 +413,7 @@ static void
 VMWARECopyWindow(WindowPtr pWin, DDXPointRec ptOldOrg, RegionPtr prgnSrc)
 {
     ScreenPtr pScreen = pWin->drawable.pScreen;
-    VMWAREPtr pVMWARE = VMWAREPTR(infoFromScreen(pWin->drawable.pScreen));
+    VMWAREPtr pVMWARE = VMWAREPTR(xf86ScreenToScrn(pWin->drawable.pScreen));
     BoxPtr pBB;
     Bool hidden = FALSE;
     
@@ -448,7 +449,7 @@ VMWAREComposite(CARD8 op, PicturePtr pSrc, PicturePtr pMask,
 		CARD16 width, CARD16 height)
 {
     ScreenPtr pScreen = pDst->pDrawable->pScreen;
-    VMWAREPtr pVMWARE = VMWAREPTR(infoFromScreen(pScreen));
+    VMWAREPtr pVMWARE = VMWAREPTR(xf86ScreenToScrn(pScreen));
     PictureScreenPtr ps = GetPictureScreen(pScreen);
     BoxRec box;
     Bool hidden = FALSE;

@@ -148,7 +148,7 @@ vmwgfx_hw_composite_dst_stage(PixmapPtr pixmap,
 
     vpix->staging_format = format;
     vpix->staging_remove_flags = 0;
-    vpix->staging_add_flags = XA_FLAG_RENDER_TARGET;
+    vpix->staging_add_flags = XA_FLAG_RENDER_TARGET | XA_FLAG_SHARED;
 
     return TRUE;
 }

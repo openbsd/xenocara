@@ -32,6 +32,8 @@
 #include <X11/extensions/panoramiXproto.h>
 #include <xf86.h>
 
+#include "compat-api.h"
+
 xXineramaScreenInfo *
 VMWAREParseTopologyString(ScrnInfoPtr pScrn,
                           const char *topology,

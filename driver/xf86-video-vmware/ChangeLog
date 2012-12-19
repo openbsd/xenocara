@@ -1,3 +1,84 @@
+commit adf375f3d400e51b1e445e89de6bd82be0bb4ef3
+Author: Zack Rusin <zackr@vmware.com>
+Date:   Thu Dec 6 16:40:13 2012 -0500
+
+    xf86-video-vmware 12.0.99.901
+    
+    Internal release for a round of QE testing
+    
+    Signed-off-by: Zack Rusin <zackr@vmware.com>
+
+commit 007bed30270ca9548dfe6e359972b56cbb8e2f13
+Author: Jakob Bornecrantz <jakob@vmware.com>
+Date:   Tue May 29 23:01:14 2012 +0200
+
+    vmwgfx: Guard against null rotate pixmap in shadow destroy
+    
+    Reviewed-by: Thomas Hellström <thellstrom@vmware.com>
+    Signed-off-by: Jakob Bornecrantz <jakob@vmware.com>
+
+commit e5ac80d8f72963313358e31cfb1ab98583e26f23
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Tue Jul 3 13:50:30 2012 +0100
+
+    vmware: avoid warnings about shadowing 'i'
+    
+    Signed-off-by: Dave Airlie <airlied@redhat.com>
+
+commit 46c0862d205eefa985e36a74391ca392640cb898
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Sat Jun 16 14:43:52 2012 +0100
+
+    vmware: drop infoFromScreen inline in favour of new interface
+    
+    This also should fix the build regression introduced with the fix
+    for this macro.
+    
+    Signed-off-by: Dave Airlie <airlied@redhat.com>
+
+commit 50c01998c7800bc02fd6656cc14efa715bf63e08
+Author: Robert Hooker <sarvatt@ubuntu.com>
+Date:   Fri Jun 15 11:56:59 2012 -0400
+
+    vmware: Fix up some warnings after new compat API change.
+    
+    Fixes multiple instances of these warnings on x86_64:
+    ../../src/vmware.h:180:5: warning: implicit declaration of function 'xf86ScreenToScrn' [-Wimplicit-function-declaration]
+    ../../src/vmware.h:180:5: warning: nested extern declaration of 'xf86ScreenToScrn' [-Wnested-externs]
+    ../../src/vmware.h:180:5: warning: return makes pointer from integer without a cast [enabled by default]
+    Function `xf86ScreenToScrn' implicitly converted to pointer at ../../src/vmware.h:180
+    
+    Reviewed-by: Jakob Bornecrantz <jakob@vmware.com>
+    Signed-off-by: Robert Hooker <sarvatt@ubuntu.com>
+    Signed-off-by: Jakob Bornecrantz <jakob@vmware.com>
+
+commit 61df95a86f4997e342d50d7779b00aba2e8849a6
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Wed Jun 6 09:58:01 2012 +0100
+
+    vmware: port vmware driver to new compat API
+    
+    This is a port of the vmware driver to the new compat API.
+    
+    Tested-by: Jakob Bornecrantz <jakob@vmware.com>
+    Reviewed-by: Jakob Bornecrantz <jakob@vmware.com>
+    Signed-off-by: Dave Airlie <airlied@redhat.com>
+    Signed-off-by: Jakob Bornecrantz <jakob@vmware.com>
+
+commit 46cdf0ed0ad9df66f36f95e27b209d454f67d526
+Author: Brian Paul <brianp@vmware.com>
+Date:   Fri Apr 20 14:24:26 2012 -0600
+
+    vmwgfx: set the XA_FLAG_SHARED flag for composite dest surfaces
+    
+    This fixes a failed assertion in the gallium/svga driver in the
+    svga_texture_get_handle() function.  The texture resource wasn't
+    getting created with the PIPE_BIND_SHARED flag so the !cachable
+    assertion would fail and the X session would abort.  This didn't
+    happen with release builds.
+    
+    Reviewed-by: Jakob Bornecrantz <jakob@vmware.com>
+
 commit 4d76cfe5e8e5d594ec357b0ef3339f56eeca9c64
 Author: Jakob Bornecrantz <jakob@vmware.com>
 Date:   Tue Mar 20 22:05:30 2012 +0100

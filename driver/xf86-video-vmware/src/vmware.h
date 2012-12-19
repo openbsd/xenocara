@@ -18,7 +18,6 @@
 #include "xf86.h"
 #include "xf86_OSproc.h"
 
-
 #include <X11/extensions/panoramiXproto.h>
 
 #ifdef XSERVER_LIBPCIACCESS
@@ -175,10 +174,6 @@ typedef struct {
 } VMWARERec, *VMWAREPtr;
 
 #define VMWAREPTR(p) ((VMWAREPtr)((p)->driverPrivate))
-
-static __inline ScrnInfoPtr infoFromScreen(ScreenPtr s) {
-    return xf86Screens[s->myNum];
-}
 
 #define MIN(a,b) ((a)<(b)?(a):(b))
 #define MAX(a,b) ((a)>(b)?(a):(b))

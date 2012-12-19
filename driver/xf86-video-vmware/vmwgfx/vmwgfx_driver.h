@@ -46,6 +46,7 @@
 #include <xa_tracker.h>
 #include <xf86Module.h>
 
+#include "../src/compat-api.h"
 #ifdef DRI2
 #include <dri2.h>
 #if (!defined(DRI2INFOREC_VERSION) || (DRI2INFOREC_VERSION < 3))
@@ -118,9 +119,9 @@ typedef struct _modesettingRec
     ScreenBlockHandlerProcPtr saved_BlockHandler;
     CreateScreenResourcesProcPtr saved_CreateScreenResources;
     CloseScreenProcPtr saved_CloseScreen;
-    Bool (*saved_EnterVT)(int, int);
-    void (*saved_LeaveVT)(int, int);
-    void (*saved_AdjustFrame)(int, int, int, int);
+    Bool (*saved_EnterVT)(VT_FUNC_ARGS_DECL);
+    void (*saved_LeaveVT)(VT_FUNC_ARGS_DECL);
+    void (*saved_AdjustFrame)(ADJUST_FRAME_ARGS_DECL);
     Bool (*saved_UseHWCursor)(ScreenPtr, CursorPtr);
     Bool (*saved_UseHWCursorARGB)(ScreenPtr, CursorPtr);
 

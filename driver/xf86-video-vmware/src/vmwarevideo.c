@@ -39,6 +39,7 @@
 #endif
 
 #include "vmware.h"
+#include "vmware_common.h"
 #include "xf86xv.h"
 #include "fourcc.h"
 #include "svga_escape.h"
@@ -435,7 +436,7 @@ vmwareVideoEnabled(VMWAREPtr pVMWARE)
 Bool
 vmwareVideoInit(ScreenPtr pScreen)
 {
-    ScrnInfoPtr pScrn = infoFromScreen(pScreen);
+    ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
     XF86VideoAdaptorPtr *overlayAdaptors, *newAdaptors = NULL;
     XF86VideoAdaptorPtr newAdaptor = NULL;
     int numAdaptors;
@@ -504,7 +505,7 @@ vmwareVideoInit(ScreenPtr pScreen)
 void
 vmwareVideoEnd(ScreenPtr pScreen)
 {
-    ScrnInfoPtr pScrn = infoFromScreen(pScreen);
+    ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
     VMWAREPtr pVMWARE = VMWAREPTR(pScrn);
     VMWAREVideoPtr pVid;
     int i;

@@ -594,7 +594,7 @@ saa_set_fallback_debug(ScreenPtr screen, Bool enable)
  * screen private, before calling down to the next CloseScreen.
  */
 Bool
-saa_close_screen(int i, ScreenPtr pScreen)
+saa_close_screen(CLOSE_SCREEN_ARGS_DECL)
 {
     struct saa_screen_priv *sscreen = saa_screen(pScreen);
     struct saa_driver *driver = sscreen->driver;
@@ -624,7 +624,7 @@ saa_close_screen(int i, ScreenPtr pScreen)
 
     free(sscreen);
 
-    return (*pScreen->CloseScreen) (i, pScreen);
+    return (*pScreen->CloseScreen) (CLOSE_SCREEN_ARGS);
 }
 
 struct saa_driver *

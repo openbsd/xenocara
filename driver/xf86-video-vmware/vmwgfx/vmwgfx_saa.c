@@ -460,7 +460,7 @@ vmwgfx_flush_dri2(ScreenPtr pScreen)
     struct vmwgfx_saa *vsaa =
 	to_vmwgfx_saa(saa_get_driver(pScreen));
     struct _WsbmListHead *list, *next;
-    ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+    ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
 
     if (!pScrn->vtSema)
 	return;
@@ -1199,7 +1199,7 @@ vmwgfx_operation_complete(struct saa_driver *driver,
     struct vmwgfx_saa *vsaa = to_vmwgfx_saa(driver);
     struct saa_pixmap *spix = saa_get_saa_pixmap(pixmap);
     struct vmwgfx_saa_pixmap *vpix = to_vmwgfx_saa_pixmap(spix);
-    ScrnInfoPtr pScrn = xf86Screens[vsaa->pScreen->myNum];
+    ScrnInfoPtr pScrn = xf86ScreenToScrn(vsaa->pScreen);
 
     /*
      * Make dri2 drawables up to date, or add them to the flush list

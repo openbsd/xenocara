@@ -37,6 +37,7 @@ endif
 vmware_drv_la_SOURCES = \
 	bits2pixels.c \
 	bits2pixels.h \
+	compat-api.h \
 	guest_os.h \
 	includeCheck.h \
 	svga_escape.h \

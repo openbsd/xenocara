@@ -83,7 +83,7 @@ static Bool
 dri2_do_create_buffer(DrawablePtr pDraw, DRI2Buffer2Ptr buffer, unsigned int format)
 {
     ScreenPtr pScreen = pDraw->pScreen;
-    ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+    ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
     modesettingPtr ms = modesettingPTR(pScrn);
     BufferPrivatePtr private = buffer->driverPrivate;
     PixmapPtr pPixmap;
@@ -371,7 +371,7 @@ dri2_copy_region(DrawablePtr pDraw, RegionPtr pRegion,
 Bool
 xorg_dri2_init(ScreenPtr pScreen)
 {
-    ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+    ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
     modesettingPtr ms = modesettingPTR(pScrn);
     DRI2InfoRec dri2info;
     int major, minor;
