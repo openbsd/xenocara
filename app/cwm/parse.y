@@ -1,4 +1,4 @@
-/*	$OpenBSD: parse.y,v 1.36 2012/12/17 02:53:29 okan Exp $ */
+/*	$OpenBSD: parse.y,v 1.37 2012/12/19 15:21:34 okan Exp $ */
 
 /*
  * Copyright (c) 2002, 2003, 2004 Henning Brauer <henning@openbsd.org>
@@ -126,7 +126,7 @@ main		: FONTNAME STRING		{
 			conf->snapdist = $2;
 		}
 		| COMMAND STRING string		{
-			conf_cmd_add(conf, $3, $2, 0);
+			conf_cmd_add(conf, $3, $2);
 			free($2);
 			free($3);
 		}
