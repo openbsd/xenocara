@@ -1,4 +1,4 @@
-# $OpenBSD: MODULES,v 1.240 2012/12/16 23:05:35 matthieu Exp $
+# $OpenBSD: MODULES,v 1.241 2012/12/19 22:43:29 matthieu Exp $
 #
 # X.Org maintained modules
 #
@@ -128,7 +128,7 @@ driver/xf86-video-tdfx		1.4.5	7.7+
 driver/xf86-video-trident	1.3.6	7.7+
 driver/xf86-video-tseng		1.2.5
 driver/xf86-video-vesa		2.3.2	7.7+
-driver/xf86-video-vmware	12.0.2	7.7
+driver/xf86-video-vmware	12.1RC1	7.7+
 driver/xf86-video-voodoo	1.2.5	7.7+
 driver/xf86-video-wsfb		0.4.0	7.7
 
