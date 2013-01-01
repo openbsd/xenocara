@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: calmwm.h,v 1.179 2012/12/19 15:21:34 okan Exp $
+ * $OpenBSD: calmwm.h,v 1.180 2013/01/01 14:19:56 okan Exp $
  */
 
 #ifndef _CALMWM_H_
@@ -73,8 +73,6 @@
 /* menu */
 #define CWM_MENU_DUMMY		0x0001
 #define CWM_MENU_FILE		0x0002
-
-#define KBTOGROUP(X) ((X) - 1)
 
 union arg {
 	char	*c;
@@ -222,7 +220,7 @@ struct screen_ctx {
 	XftFont			*xftfont;
 	int			 xinerama_no;
 	XineramaScreenInfo	*xinerama;
-#define CALMWM_NGROUPS		 9
+#define CALMWM_NGROUPS		 10
 	struct group_ctx	 groups[CALMWM_NGROUPS];
 	struct group_ctx_q	 groupq;
 	int			 group_hideall;
