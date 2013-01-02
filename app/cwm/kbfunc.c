@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: kbfunc.c,v 1.73 2013/01/02 21:37:21 okan Exp $
+ * $OpenBSD: kbfunc.c,v 1.74 2013/01/02 21:41:14 okan Exp $
  */
 
 #include <sys/param.h>
@@ -102,10 +102,10 @@ kbfunc_moveresize(struct client_ctx *cc, union arg *arg)
 
 		cc->geom.x += client_snapcalc(cc->geom.x,
 		    cc->geom.x + cc->geom.w + (cc->bwidth * 2),
-		    sc->view.x, sc->view.w, Conf.snapdist);
+		    sc->work.x, sc->work.w, Conf.snapdist);
 		cc->geom.y += client_snapcalc(cc->geom.y,
 		    cc->geom.y + cc->geom.h + (cc->bwidth * 2),
-		    sc->view.y, sc->view.h, Conf.snapdist);
+		    sc->work.y, sc->work.h, Conf.snapdist);
 
 		client_move(cc);
 		xu_ptr_getpos(cc->win, &x, &y);
