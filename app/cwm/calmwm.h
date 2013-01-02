@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: calmwm.h,v 1.181 2013/01/01 14:33:52 okan Exp $
+ * $OpenBSD: calmwm.h,v 1.182 2013/01/02 16:26:34 okan Exp $
  */
 
 #ifndef _CALMWM_H_
@@ -372,7 +372,7 @@ void			 search_match_text(struct menu_q *, struct menu_q *,
 			     char *);
 void			 search_print_client(struct menu *, int);
 
-XineramaScreenInfo	*screen_find_xinerama(struct screen_ctx *, int, int);
+struct geom		 screen_find_xinerama(struct screen_ctx *, int, int);
 struct screen_ctx	*screen_fromroot(Window);
 void			 screen_init(struct screen_ctx *, u_int);
 void			 screen_update_geometry(struct screen_ctx *);
