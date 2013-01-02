@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: screen.c,v 1.41 2013/01/02 16:26:34 okan Exp $
+ * $OpenBSD: screen.c,v 1.42 2013/01/02 18:11:23 okan Exp $
  */
 
 #include <sys/param.h>
@@ -29,8 +29,6 @@
 #include <unistd.h>
 
 #include "calmwm.h"
-
-static void	 screen_init_xinerama(struct screen_ctx *);
 
 void
 screen_init(struct screen_ctx *sc, u_int which)
@@ -125,25 +123,6 @@ screen_updatestackingorder(struct screen_ctx *sc)
 }
 
 /*
- * If we're using RandR then we'll redo this whenever the screen
- * changes since a CTRC may have been added or removed
- */
-void
-screen_init_xinerama(struct screen_ctx *sc)
-{
-	XineramaScreenInfo	*info = NULL;
-	int			 no = 0;
-
-	if (XineramaIsActive(X_Dpy))
-		info = XineramaQueryScreens(X_Dpy, &no);
-
-	if (sc->xinerama != NULL)
-		XFree(sc->xinerama);
-	sc->xinerama = info;
-	sc->xinerama_no = no;
-}
-
-/*
  * Find which xinerama screen the coordinates (x,y) is on.
  */
 struct geom
@@ -175,6 +154,9 @@ screen_find_xinerama(struct screen_ctx *sc, int x, int y)
 void
 screen_update_geometry(struct screen_ctx *sc)
 {
+	XineramaScreenInfo	*info = NULL;
+	int			 info_no = 0;
+
 	sc->view.x = 0;
 	sc->view.y = 0;
 	sc->view.w = DisplayWidth(X_Dpy, sc->which);
@@ -185,7 +167,13 @@ screen_update_geometry(struct screen_ctx *sc)
 	sc->work.w = sc->view.w - (sc->gap.left + sc->gap.right);
 	sc->work.h = sc->view.h - (sc->gap.top + sc->gap.bottom);
 
-	screen_init_xinerama(sc);
+	/* RandR event may have a CTRC added or removed. */
+	if (XineramaIsActive(X_Dpy))
+		info = XineramaQueryScreens(X_Dpy, &info_no);
+	if (sc->xinerama != NULL)
+		XFree(sc->xinerama);
+	sc->xinerama = info;
+	sc->xinerama_no = info_no;
 
 	xu_ewmh_net_desktop_geometry(sc);
 	xu_ewmh_net_workarea(sc);
