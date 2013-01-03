@@ -8,6 +8,9 @@
 /* Define to 1 if you have the <dgaproc.h> header file. */
 #undef HAVE_DGAPROC_H
 
+/* Define to 1 if you have the <dlfcn.h> header file. */
+#undef HAVE_DLFCN_H
+
 /* Enable DRI1 driver support */
 #undef HAVE_DRI1
 
@@ -43,6 +46,10 @@
 
 /* Assume KMS support */
 #undef KMS_ONLY
+
+/* Define to the sub-directory in which libtool stores uninstalled libraries.
+   */
+#undef LT_OBJDIR
 
 /* Disable internal debugging */
 #undef NDEBUG
