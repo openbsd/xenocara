@@ -1,4 +1,4 @@
-/*	$OpenBSD: parse.y,v 1.38 2013/01/04 16:23:04 okan Exp $ */
+/*	$OpenBSD: parse.y,v 1.39 2013/01/04 16:27:58 okan Exp $ */
 
 /*
  * Copyright (c) 2002, 2003, 2004 Henning Brauer <henning@openbsd.org>
@@ -578,7 +578,7 @@ parse_config(const char *filename, struct conf *xconf)
 		(void)strlcpy(xconf->lockpath, conf->lockpath,
 		    sizeof(xconf->lockpath));
 
-		for (i = 0; i < CWM_COLOR_MAX; i++)
+		for (i = 0; i < CWM_COLOR_BORDER_MAX; i++)
 			xconf->color[i] = conf->color[i];
 
 		for (i = 0; i < CWM_COLOR_MENU_MAX; i++)
