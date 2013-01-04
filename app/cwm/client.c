@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: client.c,v 1.113 2013/01/02 21:37:21 okan Exp $
+ * $OpenBSD: client.c,v 1.114 2013/01/04 16:23:04 okan Exp $
  */
 
 #include <sys/param.h>
@@ -475,17 +475,17 @@ client_draw_border(struct client_ctx *cc)
 	if (cc->active)
 		switch (cc->flags & CLIENT_HIGHLIGHT) {
 		case CLIENT_GROUP:
-			pixel = sc->color[CWM_COLOR_BORDER_GROUP].pixel;
+			pixel = sc->color[CWM_COLOR_BORDER_GROUP];
 			break;
 		case CLIENT_UNGROUP:
-			pixel = sc->color[CWM_COLOR_BORDER_UNGROUP].pixel;
+			pixel = sc->color[CWM_COLOR_BORDER_UNGROUP];
 			break;
 		default:
-			pixel = sc->color[CWM_COLOR_BORDER_ACTIVE].pixel;
+			pixel = sc->color[CWM_COLOR_BORDER_ACTIVE];
 			break;
 		}
 	else
-		pixel = sc->color[CWM_COLOR_BORDER_INACTIVE].pixel;
+		pixel = sc->color[CWM_COLOR_BORDER_INACTIVE];
 
 	XSetWindowBorderWidth(X_Dpy, cc->win, cc->bwidth);
 	XSetWindowBorder(X_Dpy, cc->win, pixel);
