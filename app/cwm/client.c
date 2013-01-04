@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: client.c,v 1.114 2013/01/04 16:23:04 okan Exp $
+ * $OpenBSD: client.c,v 1.115 2013/01/04 16:30:03 okan Exp $
  */
 
 #include <sys/param.h>
@@ -298,7 +298,7 @@ resize:
 }
 
 void
-client_vertmaximize(struct client_ctx *cc)
+client_vmaximize(struct client_ctx *cc)
 {
 	struct screen_ctx	*sc = cc->sc;
 	struct geom		 xine;
@@ -339,7 +339,7 @@ resize:
 }
 
 void
-client_horizmaximize(struct client_ctx *cc)
+client_hmaximize(struct client_ctx *cc)
 {
 	struct screen_ctx	*sc = cc->sc;
 	struct geom		 xine;
