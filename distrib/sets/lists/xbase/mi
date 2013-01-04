@@ -321,6 +321,7 @@
 ./usr/X11R6/share/X11
 ./usr/X11R6/share/xcb
 ./usr/X11R6/share/xcb/xcb.xsd
+./usr/X11R6/share/xcb/xkb.xml
 ./var
 ./var/cache
 ./var/cache/fontconfig

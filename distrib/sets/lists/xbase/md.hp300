@@ -139,7 +139,6 @@
 ./usr/X11R6/man/man1/glxinfo.1
 ./usr/X11R6/man/man1/xfs.1
 ./usr/X11R6/share/doc/dri2proto/dri2proto.txt
-./usr/X11R6/share/xcb/xkb.xml
 ./var/cache/fontconfig/0fe0af1d5898cfe43064332244d1dc15-be32.cache-3
 ./var/cache/fontconfig/1bd20f0f0c9d7d1d5fd55b69fcc2b3a3-be32.cache-3
 ./var/cache/fontconfig/2cee944125173ffd13126fb55c9a0dc1-be32.cache-3
