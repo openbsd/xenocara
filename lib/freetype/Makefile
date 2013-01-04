@@ -1,9 +1,9 @@
-#	$OpenBSD: Makefile,v 1.28 2012/10/29 20:15:29 matthieu Exp $
+#	$OpenBSD: Makefile,v 1.29 2013/01/04 16:51:55 matthieu Exp $
 
 FREETYPESRC=	${.CURDIR}/src
 
 # Get it from builds/unix/configure.ac
-FT_VERSION_INFO= 15.0.9
+FT_VERSION_INFO= 16.0.10
 INSTALL_PROGRAM = ${INSTALL} ${INSTALL_COPY} -m 755 -o $(BINOWN) -g $(BINGRP)
 
 .ifmake includes
