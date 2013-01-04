@@ -1,7 +1,7 @@
-/* $XTermId: VTPrsTbl.c,v 1.66 2012/04/26 09:04:37 tom Exp $ */
+/* $XTermId: VTPrsTbl.c,v 1.69 2012/09/10 23:28:14 tom Exp $ */
 
 /*
- * Copyright 1999-2010,2011 by Thomas E. Dickey
+ * Copyright 1999-2011,2012 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -481,7 +481,7 @@ CASE_ESC_DIGIT,
 /*	8		9		:		;	*/
 CASE_ESC_DIGIT,
 CASE_ESC_DIGIT,
-CASE_CSI_IGNORE,
+CASE_ESC_COLON,
 CASE_ESC_SEMI,
 /*	<		=		>		?	*/
 CASE_CSI_IGNORE,
@@ -552,10 +552,10 @@ CASE_GROUND_STATE,
 CASE_GROUND_STATE,
 CASE_DECLL,
 CASE_DECSTBM,
-CASE_DECSC,
+CASE_ANSI_SC,
 /*	t		u		v		w	*/
 CASE_XTERM_WINOPS,
-CASE_DECRC,
+CASE_ANSI_RC,
 CASE_GROUND_STATE,
 CASE_GROUND_STATE,
 /*	x		y		z		{	*/
@@ -641,7 +641,7 @@ CASE_ESC_DIGIT,
 /*      cedilla         onesuperior     masculine       guillemotright  */
 CASE_ESC_DIGIT,
 CASE_ESC_DIGIT,
-CASE_CSI_IGNORE,
+CASE_ESC_COLON,
 CASE_ESC_SEMI,
 /*      onequarter      onehalf         threequarters   questiondown    */
 CASE_CSI_IGNORE,
@@ -712,10 +712,10 @@ CASE_GROUND_STATE,
 CASE_GROUND_STATE,
 CASE_DECLL,
 CASE_DECSTBM,
-CASE_DECSC,
+CASE_ANSI_SC,
 /*      ocircumflex     otilde          odiaeresis      division        */
 CASE_XTERM_WINOPS,
-CASE_DECRC,
+CASE_ANSI_RC,
 CASE_GROUND_STATE,
 CASE_GROUND_STATE,
 /*      oslash          ugrave          uacute          ucircumflex     */
@@ -805,7 +805,7 @@ CASE_ESC_DIGIT,
 /*	8		9		:		;	*/
 CASE_ESC_DIGIT,
 CASE_ESC_DIGIT,
-CASE_CSI_IGNORE,
+CASE_ESC_COLON,
 CASE_ESC_SEMI,
 /*	<		=		>		?	*/
 CASE_CSI_IGNORE,
@@ -876,10 +876,10 @@ CASE_GROUND_STATE,
 CASE_GROUND_STATE,
 CASE_DECLL,
 CASE_DECSTBM,
-CASE_DECSC,
+CASE_ANSI_SC,
 /*	t		u		v		w	*/
 CASE_XTERM_WINOPS,
-CASE_DECRC,
+CASE_ANSI_RC,
 CASE_GROUND_STATE,
 CASE_GROUND_STATE,
 /*	x		y		z		{	*/
@@ -965,7 +965,7 @@ CASE_ESC_DIGIT,
 /*      cedilla         onesuperior     masculine       guillemotright  */
 CASE_ESC_DIGIT,
 CASE_ESC_DIGIT,
-CASE_CSI_IGNORE,
+CASE_ESC_COLON,
 CASE_ESC_SEMI,
 /*      onequarter      onehalf         threequarters   questiondown    */
 CASE_CSI_IGNORE,
@@ -1036,10 +1036,10 @@ CASE_GROUND_STATE,
 CASE_GROUND_STATE,
 CASE_DECLL,
 CASE_DECSTBM,
-CASE_DECSC,
+CASE_ANSI_SC,
 /*      ocircumflex     otilde          odiaeresis      division        */
 CASE_XTERM_WINOPS,
-CASE_DECRC,
+CASE_ANSI_RC,
 CASE_GROUND_STATE,
 CASE_GROUND_STATE,
 /*      oslash          ugrave          uacute          ucircumflex     */
@@ -3079,7 +3079,7 @@ CASE_ESC_DIGIT,
 /*	8		9		:		;	*/
 CASE_ESC_DIGIT,
 CASE_ESC_DIGIT,
-CASE_CSI_IGNORE,
+CASE_ESC_COLON,
 CASE_ESC_SEMI,
 /*	<		=		>		?	*/
 CASE_CSI_IGNORE,
@@ -3239,7 +3239,7 @@ CASE_ESC_DIGIT,
 /*      cedilla         onesuperior     masculine       guillemotright  */
 CASE_ESC_DIGIT,
 CASE_ESC_DIGIT,
-CASE_CSI_IGNORE,
+CASE_ESC_COLON,
 CASE_ESC_SEMI,
 /*      onequarter      onehalf         threequarters   questiondown    */
 CASE_CSI_IGNORE,
@@ -3729,7 +3729,7 @@ CASE_ESC_DIGIT,
 /*	8		9		:		;	*/
 CASE_ESC_DIGIT,
 CASE_ESC_DIGIT,
-CASE_CSI_IGNORE,
+CASE_ESC_COLON,
 CASE_ESC_SEMI,
 /*	<		=		>		?	*/
 CASE_CSI_IGNORE,
@@ -3889,7 +3889,7 @@ CASE_ESC_DIGIT,
 /*      cedilla         onesuperior     masculine       guillemotright  */
 CASE_ESC_DIGIT,
 CASE_ESC_DIGIT,
-CASE_CSI_IGNORE,
+CASE_ESC_COLON,
 CASE_ESC_SEMI,
 /*      onequarter      onehalf         threequarters   questiondown    */
 CASE_CSI_IGNORE,
@@ -4053,7 +4053,7 @@ CASE_ESC_DIGIT,
 /*	8		9		:		;	*/
 CASE_ESC_DIGIT,
 CASE_ESC_DIGIT,
-CASE_CSI_IGNORE,
+CASE_ESC_COLON,
 CASE_ESC_SEMI,
 /*	<		=		>		?	*/
 CASE_CSI_IGNORE,
@@ -4213,7 +4213,7 @@ CASE_ESC_DIGIT,
 /*      cedilla         onesuperior     masculine       guillemotright  */
 CASE_ESC_DIGIT,
 CASE_ESC_DIGIT,
-CASE_CSI_IGNORE,
+CASE_ESC_COLON,
 CASE_ESC_SEMI,
 /*      onequarter      onehalf         threequarters   questiondown    */
 CASE_CSI_IGNORE,

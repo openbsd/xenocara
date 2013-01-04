@@ -1,4 +1,4 @@
-.\" $XTermId: resize.man,v 1.20 2011/09/11 19:28:54 tom Exp $
+.\" $XTermId: resize.man,v 1.21 2012/10/23 23:26:20 tom Exp $
 .\"
 .\" updated by Thomas E. Dickey for XFree86, 1998-2006.
 .\"
@@ -9,7 +9,7 @@
 .el       .ds `` ``
 .ie \n(.g .ds '' \(rq
 .el       .ds '' ''
-.TH RESIZE 1 __vendorversion__
+.TH RESIZE 1 "__app_date__" "__app_version__" "X Window System"
 .SH NAME
 resize \- set environment and terminal settings to current xterm window size
 .SH SYNOPSIS

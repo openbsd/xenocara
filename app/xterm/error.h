@@ -1,4 +1,4 @@
-/* $XTermId: error.h,v 1.24 2011/04/17 16:09:20 tom Exp $ */
+/* $XTermId: error.h,v 1.25 2012/10/05 00:17:51 tom Exp $ */
 
 /*
  * Copyright 1987 by Digital Equipment Corporation, Maynard, Massachusetts.
@@ -75,6 +75,3 @@
 #define	ERROR_SCALLOC	90	/* Alloc: calloc() failed on base */
 #define	ERROR_SCALLOC2	91	/* Alloc: calloc() failed on rows */
 #define	ERROR_SAVE_PTR	102	/* ScrnPointers: malloc/realloc() failed */
-
-/* util.c */
-#define	ERROR_MMALLOC   121     /* my_memmove: malloc/realloc failed */

@@ -7,7 +7,7 @@
 
 
 
-                        Xterm Control Sequences
+                        XTerm Control Sequences
 
 
                                Edward Moy
@@ -21,6 +21,7 @@
                              Thomas Dickey
                       XFree86 Project (1996-2006)
                     invisible-island.net (2006-2012)
+               updated for XTerm Patch #287 (2012/11/25)
 
 
 
@@ -160,8 +161,8 @@ ESC 6     Back Index (DECBI), VT420 and up.
 ESC 7     Save Cursor (DECSC).
 ESC 8     Restore Cursor (DECRC).
 ESC 9     Forward Index (DECFI), VT420 and up.
-ESC =     Application Keypad (DECPAM).
-ESC >     Normal Keypad (DECPNM).
+ESC =     Application Keypad (DECKPAM).
+ESC >     Normal Keypad (DECKPNM).
 ESC F     Cursor to lower left corner of screen.  This is enabled by the
           hpLowerleftBugCompat resource.
 ESC c     Full Reset (RIS).
@@ -296,6 +297,8 @@ CSI Ps c  Send Device Attributes (Primary DA).
             Ps = 8  -> User-defined keys.
             Ps = 9  -> National replacement character sets.
             Ps = 1 5  -> Technical characters.
+            Ps = 1 8  -> User windows.
+            Ps = 2 1  -> Horizontal scrolling.
             Ps = 2 2  -> ANSI color, e.g., VT525.
             Ps = 2 9  -> ANSI text locator (i.e., DEC Locator mode).
 CSI > Ps c
@@ -308,6 +311,14 @@ CSI > Ps c
           where Pp denotes the terminal type
             Pp = 0  -> ``VT100''.
             Pp = 1  -> ``VT220''.
+            Pp = 2  -> ``VT240''.
+            Pp = 1 8 -> ``VT330''.
+            Pp = 1 9 -> ``VT340''.
+            Pp = 2 4 -> ``VT320''.
+            Pp = 4 1 -> ``VT420''.
+            Pp = 6 1 -> ``VT510''.
+            Pp = 6 4 -> ``VT520''.
+            Pp = 6 5 -> ``VT525''.
           and Pv is the firmware version (for xterm, this was originally
           the XFree86 patch number, starting with 95).  In a DEC termi-
           nal, Pc indicates the ROM cartridge registration number and is
@@ -371,6 +382,7 @@ CSI ? Pm h
             Ps = 1 0 0 4  -> Send FocusIn/FocusOut events.
             Ps = 1 0 0 5  -> Enable UTF-8 Mouse Mode.
             Ps = 1 0 0 6  -> Enable SGR Mouse Mode.
+            Ps = 1 0 0 7  -> Enable Alternate Scroll Mode.
             Ps = 1 0 1 0  -> Scroll to bottom on tty output (rxvt).
             Ps = 1 0 1 5  -> Enable urxvt Mouse Mode.
             Ps = 1 0 1 1  -> Scroll to bottom on key press (rxvt).
@@ -466,6 +478,7 @@ CSI ? Pm l
             Ps = 1 0 0 4  -> Don't send FocusIn/FocusOut events.
             Ps = 1 0 0 5  -> Disable UTF-8 Mouse Mode.
             Ps = 1 0 0 6  -> Disable SGR Mouse Mode.
+            Ps = 1 0 0 7  -> Disable Alternate Scroll Mode.
             Ps = 1 0 1 0  -> Don't scroll to bottom on tty output
           (rxvt).
             Ps = 1 0 1 5  -> Disable urxvt Mouse Mode.
@@ -563,9 +576,22 @@ CSI Pm m  Character Attributes (SGR).
             Ps = 1 0 0  -> Set foreground and background color to
           default.
 
-          If 88- or 256-color support is compiled, the following apply.
+          Xterm maintains a color palette whose entries are identified
+          by an index beginning with zero.  If 88- or 256-color support
+          is compiled, the following apply:
+          o   All parameters are decimal integers.
+          o   RGB values range from zero (0) to 255.
+          o   ISO-8613-3 can be interpreted in more than one way; xterm
+              allows the semicolons in this control to be replaced by
+              colons (but after the first colon, colons must be used).
+
+          These ISO-8613-3 controls are supported:
+            Ps = 3 8  ; 2  ; Pr ; Pg ; Pb -> Set foreground color to the
+          closest match in xterm's palette for the given RGB Pr/Pg/Pb.
             Ps = 3 8  ; 5  ; Ps -> Set foreground color to the second
           Ps.
+            Ps = 4 8  ; 2  ; Pr ; Pg ; Pb -> Set background color to the
+          closest match in xterm's palette for the given RGB Pr/Pg/Pb.
             Ps = 4 8  ; 5  ; Ps -> Set background color to the second
           Ps.
 
@@ -576,6 +602,7 @@ CSI > Ps; Ps m
           tifies the resource to set/reset.  The second parameter is the
           value to assign to the resource.  If the second parameter is
           omitted, the resource is reset to its initial value.
+            Ps = 0  -> modifyKeyboard.
             Ps = 1  -> modifyCursorKeys.
             Ps = 2  -> modifyFunctionKeys.
             Ps = 4  -> modifyOtherKeys.
@@ -592,6 +619,7 @@ CSI > Ps n
           sequence.  This corresponds to a resource value of "-1", which
           cannot be set with the other sequence.  The parameter identi-
           fies the resource to be disabled:
+            Ps = 0  -> modifyKeyboard.
             Ps = 1  -> modifyCursorKeys.
             Ps = 2  -> modifyFunctionKeys.
             Ps = 4  -> modifyOtherKeys.
@@ -630,8 +658,11 @@ CSI > Ps p
           Valid values for the parameter:
             Ps = 0  -> never hide the pointer.
             Ps = 1  -> hide if the mouse tracking mode is not enabled.
-            Ps = 2  -> always hide the pointer.  If no parameter is
-          given, xterm uses the default, which is 1 .
+            Ps = 2  -> always hide the pointer, except when leaving the
+          window.
+            Ps = 3  -> always hide the pointer, even if leaving/entering
+          the window.  If no parameter is given, xterm uses the default,
+          which is 1 .
 CSI ! p   Soft terminal reset (DECSTR).
 CSI Ps $ p
           Request ANSI mode (DECRQM).  For VT300 and up, reply is
@@ -673,6 +704,8 @@ CSI Ps SP q
             Ps = 2  -> steady block.
             Ps = 3  -> blinking underline.
             Ps = 4  -> steady underline.
+            Ps = 5  -> blinking bar (xterm).
+            Ps = 6  -> steady bar (xterm).
 CSI Ps " q
           Select character protection attribute (DECSCA).  Valid values
           for the parameter:
@@ -721,8 +754,11 @@ CSI Ps ; Ps ; Ps t
             Ps = 9  ;  0  -> Restore maximized window.
             Ps = 9  ;  1  -> Maximize window (i.e., resize to screen
           size).
+            Ps = 9  ;  2  -> Maximize window vertically.
+            Ps = 9  ;  3  -> Maximize window horizontally.
             Ps = 1 0  ;  0  -> Undo full-screen mode.
             Ps = 1 0  ;  1  -> Change to full-screen.
+            Ps = 1 0  ;  2  -> Toggle full-screen.
             Ps = 1 1  -> Report xterm window state.  If the xterm window
           is open (non-iconified), it returns CSI 1 t .  If the xterm
           window is iconified, it returns CSI 2 t .
@@ -1108,7 +1144,7 @@ also controlled by the DECCKM escape sequence:
 
 
 The application keypad transmits the following escape sequences depend-
-ing on the mode specified via the DECPNM and DECPAM escape sequences.
+ing on the mode specified via the DECKPNM and DECKPAM escape sequences.
 Use the NumLock key to override the application mode.
 
 Not all keys are present on the Sun/PC keypad (e.g., PF1, Tab), but are
@@ -1234,7 +1270,7 @@ pad:
                   --------------------------------------
 
 The VT220 provides a 6-key editing keypad, which is analogous to that on
-the PC keyboard.  It is not affected by DECCKM or DECPNM/DECPAM:
+the PC keyboard.  It is not affected by DECCKM or DECKPNM/DECKPAM:
 
                      Key       Normal    Application
                    ----------------------------------
@@ -1412,6 +1448,8 @@ as follows:
                 #define SET_SGR_EXT_MODE_MOUSE      1006
                 #define SET_URXVT_EXT_MODE_MOUSE    1015
 
+                #define SET_ALTERNATE_SCROLL        1007
+
 The motion reporting modes are strictly xterm extensions, and are not
 part of any standard, though they are analogous to the DEC VT200 DECELR
 locator reports.
@@ -1450,7 +1488,12 @@ o   Cx and Cy are the x and y coordinates of the mouse event, encoded as
 Wheel mice may return buttons 4 and 5.  Those buttons are represented by
 the same event codes as buttons 1 and 2 respectively, except that 64 is
 added to the event code.  Release events for the wheel buttons are not
-reported.
+reported.  By default, the wheel mouse events are translated to scroll-
+back and scroll-forw actions.  Those actions normally scroll the whole
+window, as if the scrollbar was used.  However if Alternate Scroll mode
+is set, then cursor up/down controls are sent when the terminal is dis-
+playing the alternate screen.  The initial state of Alternate Scroll
+mode is set using the alternateScroll resource.
 
 Mouse highlight tracking notifies a program of a button press, receives
 a range of lines from the program, highlights the region covered by the

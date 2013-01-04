@@ -1,4 +1,4 @@
-/* $XTermId: Tekproc.c,v 1.191 2011/12/27 10:19:51 tom Exp $ */
+/* $XTermId: Tekproc.c,v 1.193 2012/09/07 09:08:44 tom Exp $ */
 
 /*
  * Copyright 2001-2010,2011 by Thomas E. Dickey
@@ -891,6 +891,9 @@ TekClear(TekWidget tw)
 {
     TekScreen *tekscr = TekScreenOf(tw);
 
+    TRACE(("TekClear\n"));
+    nplot = 0;
+    line_pt = Tline;
     if (TWindow(tekscr))
 	XClearWindow(XtDisplay(tw), TWindow(tekscr));
 }
@@ -907,6 +910,7 @@ TekConfigure(Widget w)
 	int border = 2 * screen->border;
 	double d;
 
+	TRACE(("TekConfigure\n"));
 	TekClear(tw);
 	TWidth(tekscr) = w->core.width - border;
 	THeight(tekscr) = w->core.height - border;
@@ -995,6 +999,7 @@ TekPage(TekWidget tw)
     TekScreen *tekscr = TekScreenOf(tw);
     TekLink *tek;
 
+    TRACE(("TekPage\n"));
     TekClear(tw);
     tekscr->cur_X = 0;
     tekscr->cur_Y = TEKHOME;

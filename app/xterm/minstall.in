@@ -1,9 +1,9 @@
 #!/bin/sh
-# $XTermId: minstall.in,v 1.5 2011/08/16 09:50:03 tom Exp $
+# $XTermId: minstall.in,v 1.15 2012/10/29 09:23:22 tom Exp $
 # -----------------------------------------------------------------------------
 # this file is part of xterm
 #
-# Copyright 2001-2010,2011 by Thomas E. Dickey
+# Copyright 2001-2011,2012 by Thomas E. Dickey
 #
 #                         All Rights Reserved
 #
@@ -41,6 +41,8 @@
 #	$3 = final installed-path
 #	$4 = app-defaults directory
 #	$5 = app-defaults class
+#	$6 = application name, normally "xterm"
+#	$7 = pixmap directory
 #
 # Other values correspond to definitions in xtermcfg.h, and cannot be directly
 # modified using "make".  They are substituted directly into this script.
@@ -69,6 +71,8 @@ OLD_FILE="$2"
 END_FILE="$3"
 APPS_DIR="$4"
 APP_TYPE="$5"
+APP_name="$6"
+XPMS_DIR="$7"
 
 suffix=`echo "$END_FILE" | sed -e 's%^.*\.%%'`
 NEW_FILE=temp$$
@@ -114,13 +118,32 @@ WTMP_PATH=$WTMP_PATH/$WTMP_NAME
 X_MANSECT=`man X 2>&1 | tr '\012' '\020' | sed -e 's/^[^0123456789]*\([^) ][^) ]*\).*/\1/'`
 test -z "$X_MANSECT" && X_MANSECT=$suffix
 
+VERSION_H=`echo "$OLD_FILE" | sed -e 's,/[^/]*$,/version.h,' -e s',^[^/]*$,version.h,'`
+PATCH_NUM=`fgrep XTERM_PATCH $VERSION_H|sed -e 's/[^0-9]*//g'`
+PATCH_YMD=`fgrep XTERM_DATE  $VERSION_H|sed -e 's,[^0-9/.-]*,,g'`
+
+# Provide for renaming in test-builds:
+APP_Name=`echo "$APP_name" | sed -e s/xterm/Xterm/`
+APP_NAME=`echo "$APP_name" | tr '[a-z]' '[A-Z]'`
+
 sed	-e 's%__vendorversion__%"X Window System"%' \
+	-e 's%__app_version__%Patch\ \#'$PATCH_NUM% \
+	-e 's%__app_date__%'$PATCH_YMD% \
+	-e "s%^\.TH [^ ][^ ]*%.TH $APP_NAME%" \
+	-e "s%^\.ds N Xterm%.ds N $APP_Name%" \
+	-e "s%^\.ds n xterm%.ds n $APP_name%" \
 	-e s%__default_termname__%@default_TERM@% \
 	-e s%__default_termid__%@default_termid@% \
+	-e s%__alt_sends_esc__%@alt_sends_esc@% \
+	-e s%__meta_sends_esc__%@meta_sends_esc@% \
+	-e s%__backarrow_key_is_del__%@backarrow_is_del@% \
+	-e s%__backarrow_key_erase__%@backarrow_is_erase@% \
+	-e s%__delete_is_del__%@delete_is_del@% \
 	-e s%__default_class__%$APP_TYPE% \
 	-e s%__apploaddir__%$APPS_DIR% \
 	-e s%__mansuffix__%$MY_MANSECT%g \
 	-e s%__miscmansuffix__%$X_MANSECT%g \
+	-e s%__pixmapsdir__%$XPMS_DIR% \
 	-e s%fIutmp'\\%fI'$UTMP_NAME'\\%g' \
 	-e s%/etc/utmp%$UTMP_PATH%g \
 	-e s%fIwtmp'\\%fI'$WTMP_NAME'\\%g' \

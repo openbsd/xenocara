@@ -1,3 +1,55 @@
+xterm-dev (287) unstable; urgency=low
+
+  * Miscellaneous fixes.
+  * Redhat #874327, #875305.
+
+ -- Thomas E. Dickey <dickey@invisible-island.net>  Mon, 19 Nov 2012 04:53:39 -0500
+
+xterm-dev (286) unstable; urgency=low
+
+  * Redhat #869959
+
+ -- Thomas E. Dickey <dickey@invisible-island.net>  Thu, 25 Oct 2012 06:56:35 -0400
+
+xterm-dev (285) unstable; urgency=low
+
+  * Miscellaneous fixes.
+
+ -- Thomas E. Dickey <dickey@invisible-island.net>  Mon, 15 Oct 2012 06:57:38 -0400
+
+xterm-dev (284) unstable; urgency=low
+
+  * fix documentation errata
+  * fix regression in --enable-regex
+
+ -- Thomas E. Dickey <dickey@invisible-island.net>  Wed, 10 Oct 2012 18:17:35 -0400
+
+xterm-dev (283) unstable; urgency=low
+
+  * Miscellaneous fixes.
+
+ -- Thomas E. Dickey <dickey@invisible-island.net>  Mon, 01 Oct 2012 20:45:50 -0400
+
+xterm-dev (282) unstable; urgency=low
+
+  * Miscellaneous fixes.
+
+ -- Thomas E. Dickey <dickey@invisible-island.net>  Mon, 20 Aug 2012 17:55:32 -0400
+
+xterm-dev (281) unstable; urgency=low
+
+  * fix regression in keyboard configuration.
+
+ -- Thomas E. Dickey <dickey@invisible-island.net>  Tue, 26 Jun 2012 04:36:36 -0400
+
+xterm-dev (280) unstable; urgency=low
+
+  * Add Debian menu-file.
+  * modify to support icon-theme
+  * Miscellaneous fixes.
+
+ -- Thomas E. Dickey <dickey@invisible-island.net>  Fri, 25 May 2012 05:36:50 -0400
+
 xterm-dev (279) unstable; urgency=low
 
   * Miscellaneous fixes.

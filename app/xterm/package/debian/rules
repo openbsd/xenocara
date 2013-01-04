@@ -77,11 +77,14 @@ configure-stamp:
 		--enable-wide-chars \
 		--enable-xmc-glitch \
 		--with-app-defaults=$(PKG_APPDEFAULTS) \
-		--with-icondir=\$${prefix}/share/pixmaps \
+		--with-icondir=\$${prefix}/share/icons \
+		--with-pixmapdir=\$${prefix}/share/pixmaps \
 		--with-own-terminfo=\$${prefix}/share/terminfo \
+		--with-icon-theme \
 		--with-terminal-type=xterm-new \
 		--with-utempter \
-		${DEBOP}
+		--with-icon-name=mini.xterm \
+		--with-xpm ${DEBOP}
 
 	touch configure-stamp
 
@@ -160,6 +163,8 @@ binary-indep: build install
 	  	test -n "$(PKG_SUFFIX)" && mv $$p `basename $$p .desktop`$(PKG_SUFFIX).desktop; \
 		done' ; \
 	  exit 0 )
+
+	dh_icons
 
 # Build architecture-dependent files here.
 binary-arch: build install

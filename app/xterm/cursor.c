@@ -1,4 +1,4 @@
-/* $XTermId: cursor.c,v 1.66 2012/05/02 13:36:51 tom Exp $ */
+/* $XTermId: cursor.c,v 1.67 2012/06/03 19:57:47 tom Exp $ */
 
 /*
  * Copyright 2002-2010,2012 by Thomas E. Dickey
@@ -86,7 +86,7 @@ CursorSet(TScreen * screen, int row, int col, unsigned flags)
     use_row = (use_row < 0 ? 0 : use_row);
     set_cur_row(screen, (use_row <= max_row ? use_row : max_row));
 
-    screen->do_wrap = False;
+    ResetWrap(screen);
 
     TRACE(("CursorSet(%d,%d) margins V[%d..%d] H[%d..%d] -> %d,%d %s\n",
 	   row, col,
@@ -135,7 +135,7 @@ CursorBack(XtermWidget xw, int n)
 	    set_cur_col(screen, left);
 	}
     }
-    screen->do_wrap = False;
+    ResetWrap(screen);
 }
 
 /*
@@ -163,7 +163,7 @@ CursorForward(XtermWidget xw, int n)
 	next = max;
 
     set_cur_col(screen, next);
-    screen->do_wrap = False;
+    ResetWrap(screen);
 }
 
 /*
@@ -184,7 +184,7 @@ CursorDown(TScreen * screen, int n)
 	next = screen->max_row;
 
     set_cur_row(screen, next);
-    screen->do_wrap = False;
+    ResetWrap(screen);
 }
 
 /*
@@ -206,7 +206,7 @@ CursorUp(TScreen * screen, int n)
 	next = 0;
 
     set_cur_row(screen, next);
-    screen->do_wrap = False;
+    ResetWrap(screen);
 }
 
 /*
@@ -283,7 +283,7 @@ CarriageReturn(XtermWidget xw)
     }
 
     set_cur_col(screen, col);
-    screen->do_wrap = False;
+    ResetWrap(screen);
     do_xevents();
 }
 

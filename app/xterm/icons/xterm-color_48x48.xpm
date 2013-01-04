@@ -1,8 +1,8 @@
 /* XPM */
 static char * xterm_color_48x48_xpm[] = {
 "48 48 10 1",
-" 	c None",
-".	c #555500",
+".	c None",
+" 	c #555500",
 "+	c #000000",
 "@	c #FFFFFF",
 "#	c #FF0000",

@@ -1,4 +1,4 @@
-dnl $XTermId: configure.in,v 1.286 2012/03/15 00:01:30 tom Exp $
+dnl $XTermId: configure.in,v 1.306 2012/10/10 23:32:47 tom Exp $
 dnl
 dnl -----------------------------------------------------------------------------
 dnl this file is part of xterm
@@ -33,7 +33,7 @@ dnl authorization.
 dnl ---------------------------------------------------------------------------
 dnl Process this file with autoconf to produce a configure script.
 dnl
-AC_PREREQ(2.13.20030927)
+AC_PREREQ(2.52.20030208)
 AC_INIT(charproc.c)
 AC_CONFIG_HEADER(xtermcfg.h:xtermcfg.hin)
 CF_CHECK_CACHE
@@ -51,7 +51,7 @@ darwin*)
 		: ${LDFLAGS}="${LDFLAGS} -Wl,-bind_at_load";;
 esac
 
-AC_PROG_CC
+CF_PROG_CC
 AC_PROG_CPP
 AC_PROG_GCC_TRADITIONAL
 AC_PROG_AWK
@@ -60,14 +60,7 @@ AC_PROG_LN_S
 AC_ARG_PROGRAM
 AC_CHECK_PROGS(LINT, tdlint lint alint)
 
-###	checks for UNIX variants that set C preprocessor variables
-AC_AIX
-AC_ISC_POSIX
-
 ###	checks for compiler characteristics
-CF_ANSI_CC_CHECK
-AC_C_CONST
-CF_PROG_EXT
 CF_XOPEN_SOURCE
 CF_SIGWINCH
 
@@ -87,7 +80,6 @@ AM_LANGINFO_CODESET
 
 ###	checks for typedefs
 CF_SIG_ATOMIC_T
-CF_SIZE_T
 AC_CHECK_TYPE(time_t, long)
 CF_TYPE_CC_T
 AC_TYPE_MODE_T
@@ -97,21 +89,17 @@ AC_TYPE_OFF_T
 
 ###	checks for library functions
 AC_CHECK_FUNCS( \
-	bcopy \
 	gethostname \
 	getlogin \
-	memmove \
 	putenv \
 	unsetenv \
 	sched_yield \
 	setpgid \
-	strerror \
 	strftime \
 	tcgetattr \
 	waitpid \
 	wcswidth \
 	wcwidth )
-CF_FUNC_MEMMOVE
 CF_UTMP
 CF_STRUCT_LASTLOG
 CF_POSIX_SAVED_IDS
@@ -121,7 +109,8 @@ CF_FUNC_TGETENT
 
 CF_WITH_APP_CLASS(XTerm)
 CF_WITH_APP_DEFAULTS
-CF_WITH_ICONDIR
+CF_WITH_ICON_NAME(xterm-color)
+CF_WITH_ICON_THEME([icons/$ICON_NAME icons/${ICON_NAME}_48x48],,,icons/${ICON_NAME}_48x48)
 CF_DISABLE_DESKTOP(xterm)
 CF_WITH_DESKTOP_CATEGORY(xterm,[*rxvt*|konsole|*-terminal],[System|TerminalEmulator|Utility|*])
 
@@ -205,7 +194,7 @@ if test "$use_utmp_setgid" != no ; then
 	if test "$cf_cv_posix_saved_ids" != yes ; then
 		AC_MSG_ERROR(Your system does not support POSIX saved-ids)
 	fi
-	AC_DEFINE(USE_UTMP_SETGID)
+	AC_DEFINE(USE_UTMP_SETGID,1,[Define to 1 if we should use setgid to access utmp/utmpx])
 	SINSTALL_OPTS="$SINSTALL_OPTS g+s -g $cf_cv_utmp_group"
 fi
 
@@ -254,6 +243,7 @@ AC_CHECK_HEADERS( \
 	X11/extensions/XKB.h \
 	)
 
+CF_WITH_XPM
 CF_X_ATHENA
 CF_TYPE_FD_MASK
 CF_TERMIO_C_ISPEED
@@ -261,8 +251,8 @@ CF_TERMIO_C_ISPEED
 LIBS="$LIBS $X_EXTRA_LIBS"
 
 CF_FUNC_GRANTPT
-AC_CHECK_FUNCS(XkbQueryExtension)
-
+CF_XKB_QUERY_EXTENSION
+CF_XKB_KEYCODE_TO_KEYSYM
 CF_XKB_BELL_EXT
 
 AC_CHECK_FUNCS(Xutf8LookupString, [],[
@@ -291,13 +281,13 @@ AC_MSG_CHECKING(for default terminal-id)
 AC_ARG_WITH(terminal-id,
 	[  --with-terminal-id=V    set default decTerminalID (default: vt100)],
 	[default_termid=$withval],
-	[default_termid=vt100])
+	[default_termid=vt420])
 AC_MSG_RESULT($default_termid)
 case $default_termid in
 vt*)	default_termid=`echo $default_termid | sed -e 's/^..//'`
 	;;
 esac
-AC_DEFINE_UNQUOTED(DFT_DECID,"$default_termid")
+AC_DEFINE_UNQUOTED(DFT_DECID,"$default_termid",[default terminal-id])
 AC_SUBST(default_termid)
 
 AC_MSG_CHECKING(for default terminal-type)
@@ -306,9 +296,46 @@ AC_ARG_WITH(terminal-type,
 	[default_TERM=$withval],
 	[default_TERM=xterm])
 AC_MSG_RESULT($default_TERM)
-AC_DEFINE_UNQUOTED(DFT_TERMTYPE,"$default_TERM")
+AC_DEFINE_UNQUOTED(DFT_TERMTYPE,"$default_TERM",[default terminal-type])
 AC_SUBST(default_TERM)
 
+###############################################################################
+AC_MSG_CHECKING(if backarrow-key should be DEL)
+CF_ARG_DISABLE(backarrow-key,
+	[  --enable-backarrow-key  set default backarrowKey resource (default: true)],
+	[backarrow_is_del=$enableval],
+	[backarrow_is_del=yes])
+CF_XBOOL_RESULT(DEF_BACKARO_DEL,backarrow_is_del,[Define to 1 if backarrow-key should be DEL])
+
+AC_MSG_CHECKING(if backarrow-key should be treated as erase)
+CF_ARG_ENABLE(backarrow-is-erase,
+	[  --enable-backarrow-is-erase set default backarrowKeyIsErase resource (default: false)],
+	[backarrow_is_erase=$enableval],
+	[backarrow_is_erase=no])
+CF_XBOOL_RESULT(DEF_BACKARO_ERASE,backarrow_is_erase,[Define to 1 if backarrow-key should be treated as erase])
+
+AC_MSG_CHECKING(for default backspace/DEL setting)
+AC_ARG_ENABLE(delete-is-del,
+	[  --enable-delete-is-del  set default deleteIsDEL resource (default: maybe)],
+	[delete_is_del=$enableval],
+	[delete_is_del=maybe])
+CF_XBOOL_RESULT(DEFDELETE_DEL,delete_is_del,[Define to 1 if default backspace/DEL setting is DEL])
+
+AC_MSG_CHECKING(if alt should send ESC)
+CF_ARG_ENABLE(alt-sends-esc,
+	[  --enable-alt-sends-esc  set default altSendsEscape resource (default: no)],
+	[alt_sends_esc=$enableval],
+	[alt_sends_esc=no])
+CF_XBOOL_RESULT(DEF_ALT_SENDS_ESC,alt_sends_esc,[Define to 1 if alt should send ESC])
+
+AC_MSG_CHECKING(if meta should send ESC)
+CF_ARG_ENABLE(meta-sends-esc,
+	[  --enable-meta-sends-esc set default metaSendsEscape resource (default: no)],
+	[meta_sends_esc=$enableval],
+	[meta_sends_esc=no])
+CF_XBOOL_RESULT(DEF_META_SENDS_ESC,meta_sends_esc,[Define to 1 if meta should send ESC])
+
+###############################################################################
 AC_CHECK_PROG(cf_tic_prog,tic,yes,no)
 if test "$cf_tic_prog" = yes ; then
 	AC_MSG_CHECKING(for private terminfo-directory)
@@ -321,7 +348,7 @@ if test "$cf_tic_prog" = yes ; then
 		AC_MSG_WARN(no value given)
 	elif test "$TERMINFO_DIR" != none ; then
 		if test -d $TERMINFO_DIR ; then
-			AC_DEFINE_UNQUOTED(OWN_TERMINFO_DIR,"$TERMINFO_DIR")
+			AC_DEFINE_UNQUOTED(OWN_TERMINFO_DIR,"$TERMINFO_DIR",[Define to override default TERMINFO value])
 		else
 			AC_MSG_WARN(not a directory)
 		fi
@@ -357,7 +384,7 @@ CF_ARG_DISABLE(active-icon,
 	[enable_active_icon=yes])
 AC_MSG_RESULT($enable_active_icon)
 if test "$enable_active_icon" = no ; then
-	AC_DEFINE(NO_ACTIVE_ICON)
+	AC_DEFINE(NO_ACTIVE_ICON,1,[Define to 1 to disable X11R6.3 active-icon feature])
 fi
 
 AC_MSG_CHECKING(if you want ANSI color)
@@ -366,7 +393,7 @@ CF_ARG_DISABLE(ansi-color,
 	[enable_ansi_color=no],
 	[enable_ansi_color=yes])
 AC_MSG_RESULT($enable_ansi_color)
-test "$enable_ansi_color" = no && AC_DEFINE(OPT_ISO_COLORS,0)
+test "$enable_ansi_color" = no && AC_DEFINE(OPT_ISO_COLORS,0,[Define to 0 to disable ANSI color])
 
 if test "$enable_ansi_color" = yes ; then
 
@@ -376,7 +403,7 @@ if test "$enable_ansi_color" = yes ; then
 		[enable_16_color=no],
 		[enable_16_color=yes])
 	AC_MSG_RESULT($enable_16_color)
-	test "$enable_16_color" = no && AC_DEFINE(OPT_AIX_COLORS,0)
+	test "$enable_16_color" = no && AC_DEFINE(OPT_AIX_COLORS,0,[Define to 0 to disable 16-color support])
 
 	AC_MSG_CHECKING(if you want 256 colors)
 	CF_ARG_ENABLE(256-color,
@@ -387,7 +414,7 @@ if test "$enable_ansi_color" = yes ; then
 	if test "$enable_256_color" = yes ; then
 		CHARPROC_DEPS="$CHARPROC_DEPS 256colres.h"
 		EXTRAHDRS="$EXTRAHDRS 256colres.h"
-		AC_DEFINE(OPT_256_COLORS,1)
+		AC_DEFINE(OPT_256_COLORS,1,[Define to 1 to enable 256-color support])
 	else
 	AC_MSG_CHECKING(if you want 88 colors)
 	CF_ARG_ENABLE(88-color,
@@ -398,7 +425,7 @@ if test "$enable_ansi_color" = yes ; then
 	if test "$enable_88_color" = yes ; then
 		CHARPROC_DEPS="$CHARPROC_DEPS 88colres.h"
 		EXTRAHDRS="$EXTRAHDRS 88colres.h"
-		AC_DEFINE(OPT_88_COLORS,1)
+		AC_DEFINE(OPT_88_COLORS,1,[Define to 1 to enable 88-color support])
 	fi
 	fi
 
@@ -410,7 +437,7 @@ CF_ARG_DISABLE(blink-cursor,
 	[enable_blink_curs=no],
 	[enable_blink_curs=yes])
 AC_MSG_RESULT($enable_blink_curs)
-test "$enable_blink_curs" = no && AC_DEFINE(OPT_BLINK_CURS,0)
+test "$enable_blink_curs" = no && AC_DEFINE(OPT_BLINK_CURS,0,[Define to 0 to disable support for blinking cursor])
 
 AC_MSG_CHECKING(if you want to ignore Linux's broken palette-strings)
 
@@ -428,9 +455,9 @@ CF_ARG_OPTION(broken-osc,
 	[$assume_broken_osc])
 AC_MSG_RESULT($enable_broken_osc)
 if test "$enable_broken_osc" = yes ; then
-	AC_DEFINE(OPT_BROKEN_OSC,1)
+	AC_DEFINE(OPT_BROKEN_OSC,1,[Define to 1 to allow broken Linux OSC-strings])
 else
-	AC_DEFINE(OPT_BROKEN_OSC,0)
+	AC_DEFINE(OPT_BROKEN_OSC,0,[Define to 0 to allow broken Linux OSC-strings])
 fi
 
 AC_MSG_CHECKING(if you want to allow broken string-terminators)
@@ -439,7 +466,7 @@ CF_ARG_ENABLE(broken-st,
 	[enable_broken_st=no],
 	[enable_broken_st=yes])
 AC_MSG_RESULT($enable_broken_st)
-test "$enable_broken_st" = no && AC_DEFINE(OPT_BROKEN_ST,0)
+test "$enable_broken_st" = no && AC_DEFINE(OPT_BROKEN_ST,0,[Define to 0 to disallow broken string-terminators])
 
 AC_MSG_CHECKING(if you want printable 128-159)
 CF_ARG_DISABLE(c1-print,
@@ -447,7 +474,7 @@ CF_ARG_DISABLE(c1-print,
 	[enable_c1_print=no],
 	[enable_c1_print=yes])
 AC_MSG_RESULT($enable_c1_print)
-test "$enable_c1_print" = no && AC_DEFINE(OPT_C1_PRINT,0)
+test "$enable_c1_print" = no && AC_DEFINE(OPT_C1_PRINT,0,[Define to 0 to disallow -k8 option for printable 128-159])
 
 if test "$enable_ansi_color" = yes ; then
 
@@ -457,7 +484,7 @@ if test "$enable_ansi_color" = yes ; then
 		[enable_pc_color=no],
 		[enable_pc_color=yes])
 	AC_MSG_RESULT($enable_pc_color)
-	test "$enable_pc_color" = no && AC_DEFINE(OPT_PC_COLORS,0)
+	test "$enable_pc_color" = no && AC_DEFINE(OPT_PC_COLORS,0,[Define to 0 to disable PC-style mapping of bold colors])
 
 	AC_MSG_CHECKING(if you want separate color-classes)
 	CF_ARG_DISABLE(color-class,
@@ -465,7 +492,7 @@ if test "$enable_ansi_color" = yes ; then
 		[enable_color_class=no],
 		[enable_color_class=yes])
 	AC_MSG_RESULT($enable_color_class)
-	test "$enable_color_class" = no && AC_DEFINE(OPT_COLOR_CLASS,FALSE)
+	test "$enable_color_class" = no && AC_DEFINE(OPT_COLOR_CLASS,0,[Define to 0 to disable separate color class resources])
 
 	AC_MSG_CHECKING(if you want color-mode enabled by default)
 	CF_ARG_DISABLE(color-mode,
@@ -473,7 +500,7 @@ if test "$enable_ansi_color" = yes ; then
 		[default_colormode=no],
 		[default_colormode=yes])
 	AC_MSG_RESULT($default_colormode)
-	test "$default_colormode" = no && AC_DEFINE(DFT_COLORMODE,FALSE)
+	test "$default_colormode" = no && AC_DEFINE(DFT_COLORMODE,0,[Define to 0 if you want color-mode enabled by default])
 
 fi
 
@@ -483,7 +510,7 @@ CF_ARG_DISABLE(highlighting,
 	[default_highlight=no],
 	[default_highlight=yes])
 AC_MSG_RESULT($default_highlight)
-test "$default_highlight" = no && AC_DEFINE(OPT_HIGHLIGHT_COLOR,0)
+test "$default_highlight" = no && AC_DEFINE(OPT_HIGHLIGHT_COLOR,0,[Define to 1 if you want support for color highlighting])
 
 AC_MSG_CHECKING(if you want support for doublesize characters)
 CF_ARG_DISABLE(doublechars,
@@ -491,7 +518,7 @@ CF_ARG_DISABLE(doublechars,
 	[enable_doublechars=no],
 	[enable_doublechars=yes])
 AC_MSG_RESULT($enable_doublechars)
-test "$enable_doublechars" = no && AC_DEFINE(OPT_DEC_CHRSET,0)
+test "$enable_doublechars" = no && AC_DEFINE(OPT_DEC_CHRSET,0,[Define to 0 to disable support for double-size chars])
 
 AC_MSG_CHECKING(if you want fallback-support for box characters)
 CF_ARG_DISABLE(boxchars,
@@ -499,7 +526,7 @@ CF_ARG_DISABLE(boxchars,
 	[enable_boxchars=no],
 	[enable_boxchars=yes])
 AC_MSG_RESULT($enable_boxchars)
-test "$enable_boxchars" = no && AC_DEFINE(OPT_BOX_CHARS,0)
+test "$enable_boxchars" = no && AC_DEFINE(OPT_BOX_CHARS,0,[Define to 0 to disable fallback-support for box chars])
 
 AC_MSG_CHECKING(if you want to allow spawning new xterms)
 CF_ARG_ENABLE(exec-xterm,
@@ -512,9 +539,26 @@ if test "$enable_exec_xterm" = yes ; then
 	if test "$cf_cv_procfs_cwd" = no ; then
 		AC_MSG_WARN(no suitable proc filesystem found)
 	else
-		AC_DEFINE_UNQUOTED(PROCFS_ROOT,"$cf_cv_procfs_cwd")
-		AC_DEFINE(OPT_EXEC_XTERM)
+		AC_DEFINE_UNQUOTED(PROCFS_ROOT,"$cf_cv_procfs_cwd",[This is defined via the --enable-exec-xterm option])
+		AC_DEFINE(OPT_EXEC_XTERM,1,[Define to 1 to enable "spawn-new-terminal" action])
 	fi
+fi
+
+AC_MSG_CHECKING(if you want to use double-buffering)
+CF_ARG_ENABLE(double-buffer,
+	[  --enable-double-buffer  enable double-buffering],
+	[enable_double_bfr=yes],
+	[enable_double_bfr=no])
+AC_MSG_RESULT($enable_double_bfr)
+if test "$enable_double_bfr" = yes ; then
+	case "x$LIBS" in
+	*Xext*)
+		;;
+	*)
+		CF_X_EXT 
+		;;
+	esac
+	AC_DEFINE(OPT_DOUBLE_BUFFER,1,[Define to 1 to enable double-buffering])
 fi
 
 AC_MSG_CHECKING(if you want to use FreeType library)
@@ -536,7 +580,7 @@ CF_ARG_ENABLE(hp-fkeys,
 	[enable_hp_fkeys=no])
 AC_MSG_RESULT($enable_hp_fkeys)
 if test "$enable_hp_fkeys" = yes ; then
-	AC_DEFINE(OPT_HP_FUNC_KEYS,1)
+	AC_DEFINE(OPT_HP_FUNC_KEYS,1,[Define to 1 to enable support for HP-style function keys])
 fi
 
 AC_MSG_CHECKING(if you want support for SCO-style function keys)
@@ -546,7 +590,7 @@ CF_ARG_ENABLE(sco-fkeys,
 	[enable_sco_fkeys=no])
 AC_MSG_RESULT($enable_sco_fkeys)
 if test "$enable_sco_fkeys" = yes ; then
-	AC_DEFINE(OPT_SCO_FUNC_KEYS,1)
+	AC_DEFINE(OPT_SCO_FUNC_KEYS,1,[Define to 1 to enable support for SCO-style function keys])
 fi
 
 AC_MSG_CHECKING(if you want support for Sun-style function keys)
@@ -556,7 +600,7 @@ CF_ARG_DISABLE(sun-fkeys,
 	[enable_sun_fkeys=yes])
 AC_MSG_RESULT($enable_sun_fkeys)
 if test "$enable_sun_fkeys" = no ; then
-	AC_DEFINE(OPT_SUN_FUNC_KEYS,0)
+	AC_DEFINE(OPT_SUN_FUNC_KEYS,0,[Define to 0 to disable support for Sun-style function keys])
 fi
 
 AC_MSG_CHECKING(if you want saved-lines stored as a FIFO)
@@ -566,7 +610,7 @@ CF_ARG_DISABLE(fifo-lines,
 	[enable_fifo_lines=yes])
 AC_MSG_RESULT($enable_fifo_lines)
 if test "$enable_fifo_lines" = yes ; then
-	AC_DEFINE(OPT_FIFO_LINES,1)
+	AC_DEFINE(OPT_FIFO_LINES,1,[Define to 1 to disable FIFO-storage for saved-lines])
 fi
 
 AC_MSG_CHECKING(if you want support for internationalization)
@@ -576,7 +620,7 @@ CF_ARG_DISABLE(i18n,
 	[enable_i18n=yes])
 AC_MSG_RESULT($enable_i18n)
 if test "$enable_i18n" = no ; then
-	AC_DEFINE(OPT_I18N_SUPPORT,0)
+	AC_DEFINE(OPT_I18N_SUPPORT,0,[Define to 0 to disable internationalization])
 fi
 
 AC_MSG_CHECKING(if you want support for initial-erase setup)
@@ -586,7 +630,7 @@ CF_ARG_DISABLE(initial-erase,
 	[enable_ie=yes])
 AC_MSG_RESULT($enable_ie)
 if test "$enable_ie" = no ; then
-	AC_DEFINE(OPT_INITIAL_ERASE,0)
+	AC_DEFINE(OPT_INITIAL_ERASE,0,[Define to 0 to disable setup for stty erase])
 fi
 
 AC_MSG_CHECKING(if you want support for input-method)
@@ -598,7 +642,7 @@ AC_MSG_RESULT($enable_ximp)
 CF_INPUT_METHOD
 test "$cf_cv_input_method" = no && enable_ximp=no
 if test "$enable_ximp" = no ; then
-	AC_DEFINE(OPT_INPUT_METHOD,0)
+	AC_DEFINE(OPT_INPUT_METHOD,0,[Define to 0 to disable input-method])
 fi
 
 AC_MSG_CHECKING(if you want support for load-vt-fonts)
@@ -608,7 +652,7 @@ CF_ARG_ENABLE(load-vt-fonts,
 	[enable_load_vt_fonts=no])
 AC_MSG_RESULT($enable_load_vt_fonts)
 if test "$enable_load_vt_fonts" = yes ; then
-	AC_DEFINE(OPT_LOAD_VTFONTS,1)
+	AC_DEFINE(OPT_LOAD_VTFONTS,1,[Define to 1 to enable load-vt-fonts() action])
 fi
 
 AC_MSG_CHECKING(if you want support for logging)
@@ -618,7 +662,7 @@ CF_ARG_ENABLE(logging,
 	[enable_logging=no])
 AC_MSG_RESULT($enable_logging)
 if test "$enable_logging" = yes ; then
-	AC_DEFINE(ALLOWLOGGING)
+	AC_DEFINE(ALLOWLOGGING,1,[if you want support for logging])
 	AC_MSG_CHECKING(if you want to allow logging via a pipe)
 	CF_ARG_ENABLE(logfile-exec,
 		[  --enable-logfile-exec   enable exec'd logfile filter],
@@ -626,7 +670,7 @@ if test "$enable_logging" = yes ; then
 		[enable_log_exec=no])
 	AC_MSG_RESULT($enable_log_exec)
 	if test "$enable_log_exec" = yes ; then
-		AC_DEFINE(ALLOWLOGFILEEXEC)
+		AC_DEFINE(ALLOWLOGFILEEXEC,1,[if you want to allow logging via a pipe])
 	fi
 fi
 
@@ -636,7 +680,7 @@ CF_ARG_DISABLE(maximize,
 	[enable_maximize=no],
 	[enable_maximize=yes])
 AC_MSG_RESULT($enable_maximize)
-test "$enable_maximize" = no && AC_DEFINE(OPT_MAXIMIZE,0)
+test "$enable_maximize" = no && AC_DEFINE(OPT_MAXIMIZE,0,[Define to 0 to disable actions for iconify/deiconify/maximize/restore])
 
 AC_MSG_CHECKING(if you want NumLock to override keyboard tables)
 CF_ARG_DISABLE(num-lock,
@@ -644,7 +688,7 @@ CF_ARG_DISABLE(num-lock,
 	[enable_numlock=no],
 	[enable_numlock=yes])
 AC_MSG_RESULT($enable_numlock)
-test "$enable_numlock" = no && AC_DEFINE(OPT_NUM_LOCK,0)
+test "$enable_numlock" = no && AC_DEFINE(OPT_NUM_LOCK,0,[Define to 0 to disable NumLock keypad support])
 
 AC_MSG_CHECKING(if you want support for get/set of base64 selection data)
 
@@ -654,9 +698,9 @@ CF_ARG_DISABLE(paste64,
 	[enable_paste64=yes])
 AC_MSG_RESULT($enable_paste64)
 if test "$enable_paste64" = yes ; then
-	AC_DEFINE(OPT_PASTE64,1)
+	AC_DEFINE(OPT_PASTE64,1,[Define to 1 to disable get/set base64 selection data])
 else
-	AC_DEFINE(OPT_PASTE64,0)
+	AC_DEFINE(OPT_PASTE64,0,[Define to 0 to disable get/set base64 selection data])
 fi
 
 AC_MSG_CHECKING(if you want support for pty-handshaking)
@@ -667,9 +711,9 @@ CF_ARG_DISABLE(pty-handshake,
 	[enable_pty_handshake=yes])
 AC_MSG_RESULT($enable_pty_handshake)
 if test "$enable_pty_handshake" = yes ; then
-	AC_DEFINE(OPT_PTY_HANDSHAKE,1)
+	AC_DEFINE(OPT_PTY_HANDSHAKE,1,[Define to 1 to disable pty-handshake support])
 else
-	AC_DEFINE(OPT_PTY_HANDSHAKE,0)
+	AC_DEFINE(OPT_PTY_HANDSHAKE,0,[Define to 0 to disable pty-handshake support])
 fi
 
 AC_MSG_CHECKING(if you want support for mouse in readline applications)
@@ -679,7 +723,7 @@ CF_ARG_ENABLE(readline-mouse,
 	[enable_readline_mouse=no])
 AC_MSG_RESULT($enable_readline_mouse)
 if test "$enable_readline_mouse" = yes ; then
-	AC_DEFINE(OPT_READLINE,1)
+	AC_DEFINE(OPT_READLINE,1,[Define to 1 to enable support for mouse in readline applications])
 fi
 
 AC_MSG_CHECKING(if you want support for regular-expression selections)
@@ -696,7 +740,7 @@ if test "$enable_regex" = yes ; then
 			AC_MSG_ERROR(Only POSIX or PCRE regular expressions are supported)
 		fi
 	fi
-	AC_DEFINE(OPT_SELECT_REGEX)
+	AC_DEFINE(OPT_SELECT_REGEX,1,[Define to 1 to enable regular-expression selections])
 fi
 
 AC_MSG_CHECKING(if you want support for right-scrollbar)
@@ -706,7 +750,7 @@ CF_ARG_DISABLE(rightbar,
 	[enable_rightbar=yes])
 AC_MSG_RESULT($enable_rightbar)
 if test "$enable_rightbar" = yes ; then
-	AC_DEFINE(SCROLLBAR_RIGHT)
+	AC_DEFINE(SCROLLBAR_RIGHT,1,[Define to 1 to enable right-scrollbar support])
 fi
 
 AC_MSG_CHECKING(if you want check for redundant name-change)
@@ -715,7 +759,7 @@ CF_ARG_DISABLE(samename,
 	[enable_samename=no],
 	[enable_samename=yes])
 AC_MSG_RESULT($enable_samename)
-test "$enable_samename" = no && AC_DEFINE(OPT_SAME_NAME,0)
+test "$enable_samename" = no && AC_DEFINE(OPT_SAME_NAME,0,[Define to 0 to disable check for redundant name-change])
 
 AC_MSG_CHECKING(if you want support for selection-actions)
 CF_ARG_DISABLE(selection-ops,
@@ -723,7 +767,7 @@ CF_ARG_DISABLE(selection-ops,
 	[enable_selection_ops=no],
 	[enable_selection_ops=yes])
 AC_MSG_RESULT($enable_selection_ops)
-test "$enable_selection_ops" = no && AC_DEFINE(OPT_SELECTION_OPS,0)
+test "$enable_selection_ops" = no && AC_DEFINE(OPT_SELECTION_OPS,0,[Define to 0 disable selection-action operations])
 
 AC_MSG_CHECKING(if you want support for session management)
 CF_ARG_DISABLE(session-mgt,
@@ -731,7 +775,7 @@ CF_ARG_DISABLE(session-mgt,
 	[enable_session_mgt=no],
 	[enable_session_mgt=yes])
 AC_MSG_RESULT($enable_session_mgt)
-test "$enable_session_mgt" = no && AC_DEFINE(OPT_SESSION_MGT,0)
+test "$enable_session_mgt" = no && AC_DEFINE(OPT_SESSION_MGT,0,[Define to 0 to disable support for session management])
 
 AC_MSG_CHECKING(if you want to use termcap function-keys)
 CF_ARG_DISABLE(tcap-fkeys,
@@ -739,7 +783,7 @@ CF_ARG_DISABLE(tcap-fkeys,
 	[enable_tcap_fkeys=no],
 	[enable_tcap_fkeys=yes])
 AC_MSG_RESULT($enable_tcap_fkeys)
-test "$enable_tcap_fkeys" = yes && AC_DEFINE(OPT_TCAP_FKEYS,1)
+test "$enable_tcap_fkeys" = yes && AC_DEFINE(OPT_TCAP_FKEYS,1,[Define to 1 to disable termcap function-keys support])
 
 AC_MSG_CHECKING(if you want to use termcap-query/report)
 CF_ARG_DISABLE(tcap-query,
@@ -747,7 +791,7 @@ CF_ARG_DISABLE(tcap-query,
 	[enable_tcap_query=no],
 	[enable_tcap_query=yes])
 AC_MSG_RESULT($enable_tcap_query)
-test "$enable_tcap_query" = yes && AC_DEFINE(OPT_TCAP_QUERY,1)
+test "$enable_tcap_query" = yes && AC_DEFINE(OPT_TCAP_QUERY,1,[Define to 1 to disable compiled-in termcap-query support])
 
 AC_MSG_CHECKING(if you want support for tek4014)
 CF_ARG_DISABLE(tek4014,
@@ -756,7 +800,7 @@ CF_ARG_DISABLE(tek4014,
 	[enable_tek4014=yes])
 AC_MSG_RESULT($enable_tek4014)
 if test "$enable_tek4014" = no ; then
-	AC_DEFINE(OPT_TEK4014,0)
+	AC_DEFINE(OPT_TEK4014,0,[Define to 0 to disable tek4014 emulation])
 else
 	EXTRAHDRS="$EXTRAHDRS Tekparse.h"
 	EXTRASRCS="$EXTRASRCS TekPrsTbl.c Tekproc.c"
@@ -770,7 +814,7 @@ CF_ARG_ENABLE(toolbar,
 	[enable_toolbar=no])
 AC_MSG_RESULT($enable_toolbar)
 if test "$enable_toolbar" = yes ; then
-	AC_DEFINE(OPT_TOOLBAR,1)
+	AC_DEFINE(OPT_TOOLBAR,1,[Define to 1 to compile-in toolbar for pulldown menus])
 fi
 
 AC_MSG_CHECKING(if you want VT52 emulation)
@@ -779,7 +823,7 @@ CF_ARG_DISABLE(vt52,
 	[enable_vt52=no],
 	[enable_vt52=yes])
 AC_MSG_RESULT($enable_vt52)
-test "$enable_vt52" = no && AC_DEFINE(OPT_VT52_MODE,0)
+test "$enable_vt52" = no && AC_DEFINE(OPT_VT52_MODE,0,[Define to 0 to disable VT52 emulation])
 
 AC_MSG_CHECKING(if you want to use mini-luit/Latin9 built-in support)
 CF_ARG_ENABLE(mini-luit,
@@ -788,7 +832,7 @@ CF_ARG_ENABLE(mini-luit,
 	[enable_mini_luit=no])
 AC_MSG_RESULT($enable_mini_luit)
 if test "$enable_mini_luit" = yes ; then
-	AC_DEFINE(OPT_MINI_LUIT,1)
+	AC_DEFINE(OPT_MINI_LUIT,1,[Define to 1 to enable mini-luit (built-in Latin9 support)])
 fi
 
 AC_MSG_CHECKING(if you want to use luit)
@@ -798,7 +842,7 @@ CF_ARG_ENABLE(luit,
 	[enable_luit=$enable_mini_luit])
 AC_MSG_RESULT($enable_luit)
 if test "$enable_luit" = yes ; then
-	AC_DEFINE(OPT_LUIT_PROG,1)
+	AC_DEFINE(OPT_LUIT_PROG,1,[Define to 1 to enable luit filter (Unicode translation)])
 	CF_PATH_PROG(LUIT,xterm-filter,bluit luit)
 fi
 
@@ -818,12 +862,12 @@ CF_ARG_ENABLE(16bit-chars,
 AC_MSG_RESULT($enable_16bit_chars)
 
 if test "$enable_16bit_chars" = yes ; then
-	AC_DEFINE(OPT_WIDER_ICHAR,0)
+	AC_DEFINE(OPT_WIDER_ICHAR,0,[Define to 0 to enable 16-bit character support])
 	enable_wchar=yes
 fi
 
 if test "$enable_wchar" = yes ; then
-	AC_DEFINE(OPT_WIDE_CHARS,1)
+	AC_DEFINE(OPT_WIDE_CHARS,1,[Define to 1 to enable wide-character support])
 	EXTRAHDRS="$EXTRAHDRS charclass.h precompose.h wcwidth.h"
 	EXTRASRCS="$EXTRASRCS charclass.c precompose.c wcwidth.c"
 	EXTRAOBJS="$EXTRAOBJS charclass.o precompose.o wcwidth.o"
@@ -836,7 +880,7 @@ CF_ARG_ENABLE(dabbrev,
 	[enable_dabbrev=no])
 AC_MSG_RESULT($enable_dabbrev)
 if test "$enable_dabbrev" = yes ; then
-	AC_DEFINE(OPT_DABBREV,1)
+	AC_DEFINE(OPT_DABBREV,1,[Define to 1 to enable dynamic-abbreviation support])
 fi
 
 AC_MSG_CHECKING(if you want DECterm Locator support)
@@ -846,7 +890,7 @@ CF_ARG_ENABLE(dec-locator,
 	[enable_dec_locator=no])
 AC_MSG_RESULT($enable_dec_locator)
 if test "$enable_dec_locator" = yes ; then
-	AC_DEFINE(OPT_DEC_LOCATOR,1)
+	AC_DEFINE(OPT_DEC_LOCATOR,1,[Define to 1 to enable DECterm Locator support])
 fi
 
 AC_MSG_CHECKING(if you want VT420 rectangle support)
@@ -856,7 +900,7 @@ CF_ARG_DISABLE(rectangles,
 	[enable_rectangles=yes])
 AC_MSG_RESULT($enable_rectangles)
 if test "$enable_rectangles" = yes ; then
-	AC_DEFINE(OPT_DEC_RECTOPS,1)
+	AC_DEFINE(OPT_DEC_RECTOPS,1,[Define to 1 to disable VT420 rectangle support])
 fi
 
 AC_MSG_CHECKING(if you want -ziconbeep option)
@@ -865,7 +909,7 @@ CF_ARG_DISABLE(ziconbeep,
 	[enable_ziconbeep=no],
 	[enable_ziconbeep=yes])
 AC_MSG_RESULT($enable_ziconbeep)
-test "$enable_ziconbeep" = no && AC_DEFINE(OPT_ZICONBEEP,0)
+test "$enable_ziconbeep" = no && AC_DEFINE(OPT_ZICONBEEP,0,[Define to 0 to disable -ziconbeep option])
 
 ###############################################################################
 CF_HELP_MESSAGE(Testing/development Options:)
@@ -877,7 +921,7 @@ CF_ARG_ENABLE(trace,
 	[enable_trace=no])
 AC_MSG_RESULT($enable_trace)
 if test "$enable_trace" = yes ; then
-	AC_DEFINE(OPT_TRACE)
+	AC_DEFINE(OPT_TRACE,1,[Define to 1 to enable debugging traces])
 	EXTRASRCS="$EXTRASRCS trace.c"
 	EXTRAOBJS="$EXTRAOBJS trace.o"
 fi
@@ -889,7 +933,7 @@ CF_ARG_DISABLE(leaks,
 	[disable_leaks=no])
 AC_MSG_RESULT($disable_leaks)
 if test "$disable_leaks" = yes ; then
-	AC_DEFINE(NO_LEAKS)
+	AC_DEFINE(NO_LEAKS,1,[Define to 1 to test memory leaks])
 fi
 
 CF_DISABLE_ECHO
@@ -901,7 +945,7 @@ CF_ARG_ENABLE(xmc-glitch,
 	[enable_xmc=no])
 AC_MSG_RESULT($enable_xmc)
 if test "$enable_xmc" = yes ; then
-	AC_DEFINE(OPT_XMC_GLITCH,1)
+	AC_DEFINE(OPT_XMC_GLITCH,1,[Define to 1 to enable xmc magic-cookie emulation])
 	EXTRASRCS="$EXTRASRCS testxmc.c"
 	EXTRAOBJS="$EXTRAOBJS testxmc.o"
 fi
@@ -934,8 +978,8 @@ AC_SUBST(EXTRAHDRS)
 AC_SUBST(EXTRASRCS)
 AC_SUBST(EXTRAOBJS)
 
-test "$disable_setuid" = yes && AC_DEFINE(DISABLE_SETUID)
-test "$disable_setgid" = yes && AC_DEFINE(DISABLE_SETGID)
+test "$disable_setuid" = yes && AC_DEFINE(DISABLE_SETUID,1,[Define to 1 if you want to disable setuid])
+test "$disable_setgid" = yes && AC_DEFINE(DISABLE_SETGID,1,[Define to 1 if you want to disable setgid])
 
 if test $disable_setuid = yes ; then
 	MAY_SETUID="#"

@@ -1,11 +1,11 @@
-# $XTermId: termcap,v 1.79 2011/08/16 23:24:17 tom Exp $
+# $XTermId: termcap,v 1.80 2012/06/10 14:30:37 tom Exp $
 #
 # These are termcap entries that correspond to xterm's terminfo file.
 # The file is formatted using ncurses' "tic -CNx", but is not mechanically
 # derived from the terminfo.
 #
 #------------------------------------------------------------------------------
-# Copyright 1996-2009,2010 by Thomas E. Dickey
+# Copyright 1996-2011,2012 by Thomas E. Dickey
 #
 #                         All Rights Reserved
 #
@@ -52,9 +52,9 @@
 xf|xterm-new|modern xterm:\
 	:*6=\EOF:@7=\EOF:F1=\E[23~:F2=\E[24~:K2=\EOE:Km=\E[M:\
 	:k1=\EOP:k2=\EOQ:k3=\EOR:k4=\EOS:k5=\E[15~:k6=\E[17~:\
-	:k7=\E[18~:k8=\E[19~:k9=\E[20~:k;=\E[21~:kH=\EOF:kI=\E[2~:\
-	:kN=\E[6~:kP=\E[5~:kd=\EOB:kh=\EOH:kl=\EOD:kr=\EOC:ku=\EOA:\
-	:tc=xterm-basic:
+	:k7=\E[18~:k8=\E[19~:k9=\E[20~:k;=\E[21~:kB=\E[Z:kH=\EOF:\
+	:kI=\E[2~:kN=\E[6~:kP=\E[5~:kd=\EOB:kh=\EOH:kl=\EOD:\
+	:kr=\EOC:ku=\EOA:tc=xterm-basic:
 #
 # This chunk is used for building the VT220/Sun/PC keyboard variants.
 xb|xterm-basic|modern xterm common:\
@@ -82,8 +82,8 @@ xb|xterm-basic|modern xterm common:\
 #	+ uses DEC-style control sequences for the application keypad.
 #
 vt|xterm-vt220|xterm emulating vt220:\
-	:*6=\E[4~:@7=\E[4~:K2=\EOu:Km=\E[M:kH=\E[4~:kh=\E[1~:\
-	:tc=xterm-basic:
+	:*6=\E[4~:@7=\E[4~:K2=\EOu:Km=\E[M:kB=\E[Z:kH=\E[4~:\
+	:kh=\E[1~:tc=xterm-basic:
 
 v1|xterm-24|xterms|vs100|24x80 xterm:\
 	:li#24:tc=xterm-old:

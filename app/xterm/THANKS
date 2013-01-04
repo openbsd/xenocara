@@ -1,4 +1,4 @@
--- $XTermId: THANKS,v 1.5 2011/08/21 00:52:56 tom Exp $
+-- $XTermId: THANKS,v 1.8 2012/11/21 23:47:03 tom Exp $
 -- vile:txtmode fk=8bit
 There's no AUTHORS file in this distribution; it would be redundant since
 I (Thomas E. Dickey) have done more than 80% of the work on xterm since 1996.
@@ -12,6 +12,7 @@ Here's a list from xterm.log.html of people who have contributed changes.
 
 Adam M Costello
 Adam Sulmicki
+Ailin Nemui
 Alan Coopersmith
 Alex Hornung
 Alexander Pohoyda
@@ -21,7 +22,9 @@ Andreas Jaeger
 Andreas Schwab
 Andrew Sumner
 Andrew Tipton
+Andries E Brouwer
 Anton Kovalenko
+Balazs Kezes
 Ben Yoshino
 Bernhard R Link
 Bernhard Rosenkraenzer
@@ -39,6 +42,7 @@ Christian Weisgerber
 Chuck Blake
 D Roland Walker
 Daniel Colascione
+Daniel Drake
 Daniel Jacobowitz
 Dave Simmons
 David Dawes
@@ -46,6 +50,7 @@ David Krause
 David Madore
 David Martínez Moreno
 David Mathog
+David Wolfskill
 David Wood
 David Yeo
 Denis Zaitsev
@@ -57,6 +62,7 @@ Ed Schouten
 Eddy De Greef
 Edward S Arthur
 Egbert Eich
+Egmont Koblinger
 Emanuele Giaquinta
 Eugene Konev
 Fabrice Bellard
@@ -96,6 +102,7 @@ Kean Johnston
 Keith Packard
 Ken Martin
 Kevin Buhr
+Kevin Ryde
 Kevin Schoedel
 Kiyokazu Suto
 Larry Riedel
@@ -126,9 +133,11 @@ Nelson Beebe
 Németh Márton
 Nicolas George
 Ovidiu Gheorghioiu
+Paul Bolle
 Paul Gilmartin
 Paul Giordano
 Paul Lampert
+Paul Maier
 Paul Vojta
 Paul Williams
 Pavel Roskin
@@ -159,6 +168,7 @@ Thomas Wolff
 Tim Adye
 Tim Pope
 Tobias Stoeckmann
+Todd Eigenschink
 Todd Larason
 Todd Miller
 Tomas Vanhala

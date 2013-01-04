@@ -1,4 +1,4 @@
-.\" $XTermId: koi8rxterm.man,v 1.4 2011/08/16 09:44:32 tom Exp $
+.\" $XTermId: koi8rxterm.man,v 1.5 2012/10/23 23:27:24 tom Exp $
 .\"
 .\" Copyright 2004 Branden Robinson
 .\"
@@ -19,7 +19,7 @@
 .\" OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
 .\" ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 .\" DEALINGS IN THE SOFTWARE.
-.TH koi8rxterm 1 "2004-12-19" "Debian Project"
+.TH KOI8RXTERM 1 "__app_date__" "__app_version__" "X Window System"
 .SH NAME
 koi8rxterm \- X terminal emulator for KOI8-R environments
 .SH SYNOPSIS

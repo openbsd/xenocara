@@ -1,9 +1,9 @@
 #!/usr/bin/perl
-# $XTermId: 88colors2.pl,v 1.7 2009/10/10 14:57:12 tom Exp $
+# $XTermId: 88colors2.pl,v 1.11 2012/09/19 23:31:56 tom Exp $
 # -----------------------------------------------------------------------------
 # this file is part of xterm
 #
-# Copyright 1999-2007,2009 by Thomas E. Dickey
+# Copyright 1999-2009,2012 by Thomas E. Dickey
 # Copyright 1999 by Steve Wall
 # 
 #                         All Rights Reserved
@@ -42,19 +42,28 @@
 use strict;
 
 use Getopt::Std;
+use Encode 'encode_utf8';
 
-our ($opt_h, $opt_q, $opt_r);
-&getopts('hqr') || die("Usage: $0 [-q] [-r]");
+our ($opt_8, $opt_c, $opt_d, $opt_h, $opt_q, $opt_r, $opt_u);
+&getopts('8cdhqru') || die("Usage: $0 [options]");
 die("Usage: $0 [options]\n
 Options:
+  -8  use 8-bit controls
+  -c  use colons for separating parameter values in SGR 38/48
+  -d  use rgb values rather than palette index
   -h  display this message
   -q  quieter output by merging all palette initialization
   -r  display the reverse of the usual palette
+  -u  use UTF-8 when emitting 8-bit controls
 ") if ( $opt_h);
 
+our $cube = 4;
 our (@steps);
 our ($red, $green, $blue);
 our ($gray, $level, $color);
+our ($csi, $osc, $sep, $st);
+
+our @rgb;
 
 sub map_cube($) {
 	my $value = $_[0];
@@ -68,19 +77,61 @@ sub map_gray($) {
 	return $value;
 }
 
+sub define_color($$$$) {
+	my $index = $_[0];
+	my $r = $_[1];
+	my $g = $_[2];
+	my $b = $_[3];
+
+	printf("%s4", $osc) unless ($opt_q);
+	printf(";%d;rgb:%2.2x/%2.2x/%2.2x", $index, $r, $g, $b);
+	printf("%s", $st) unless ($opt_q);
+
+	$rgb[$index] = sprintf "%d%s%d%s%d", $r, $sep, $g, $sep, $b;
+}
+
+sub select_color($) {
+	my $index = $_[0];
+	if ( $opt_d and defined($rgb[$index]) ) {
+		printf "%s48;2%s%sm  ", $csi, $sep, $rgb[$index];
+	} else {
+		printf "%s48;5%s%sm  ", $csi, $sep, $index;
+	}
+}
+
+if ( $opt_8 ) {
+	$csi = "\x9b";
+	$osc = "\x9d";
+	$st = "\x9c";
+} else {
+	$csi = "\x1b[";
+	$osc = "\x1b]";
+	$st = "\x1b\\";
+}
+
+if ( $opt_c ) {
+	$sep = ":";
+} else {
+	$sep = ";";
+}
+
+if ( $opt_8 and $opt_u ) {
+	my $lc_ctype=`locale 2>/dev/null | fgrep LC_CTYPE | sed -e 's/^.*=//'`;
+	if ( $lc_ctype =~ /utf.?8/i ) {
+		binmode(STDOUT, ":utf8");
+	}
+}
 # colors 16-79 are a 4x4x4 color cube
 @steps=(0,139,205,255);
-printf("\x1b]4") if ($opt_q);
-for ($red = 0; $red < 4; $red++) {
-    for ($green = 0; $green < 4; $green++) {
-	for ($blue = 0; $blue < 4; $blue++) {
-	    printf("\x1b]4") unless ($opt_q);
-	    printf(";%d;rgb:%2.2x/%2.2x/%2.2x",
-		   16 + (map_cube($red) * 16) + (map_cube($green) * 4) + map_cube($blue),
+printf("%s4", $osc) if ($opt_q);
+for ($red = 0; $red < $cube; $red++) {
+    for ($green = 0; $green < $cube; $green++) {
+	for ($blue = 0; $blue < $cube; $blue++) {
+	    &define_color(
+		   16 + (map_cube($red) * $cube * $cube) + (map_cube($green) * $cube) + map_cube($blue),
 		   int (@steps[$red]),
 		   int (@steps[$green]),
 		   int (@steps[$blue]));
-	    printf("\x1b\\") unless ($opt_q);
 	}
     }
 }
@@ -90,12 +141,9 @@ for ($red = 0; $red < 4; $red++) {
 for ($gray = 0; $gray < 8; $gray++) {
     $level = (map_gray($gray) * 23.18181818) + 46.36363636;
     if( $gray > 0 ) { $level += 23.18181818; }
-    printf("\x1b]4") unless ($opt_q);
-    printf(";%d;rgb:%2.2x/%2.2x/%2.2x",
-	   80 + $gray, int($level), int($level), int($level));
-    printf("\x1b\\") unless ($opt_q);
+    &define_color(80 + $gray, int($level), int($level), int($level));
 }
-printf("\x1b\\") if ($opt_q);
+printf("%s", $st) if ($opt_q);
 
 
 # display the colors
@@ -103,23 +151,23 @@ printf("\x1b\\") if ($opt_q);
 # first the system ones:
 print "System colors:\n";
 for ($color = 0; $color < 8; $color++) {
-    print "\x1b[48;5;${color}m  ";
+    &select_color($color);
 }
-print "\x1b[0m\n";
+printf "%s0m\n", $csi;
 for ($color = 8; $color < 16; $color++) {
-    print "\x1b[48;5;${color}m  ";
+    &select_color($color);
 }
-print "\x1b[0m\n\n";
+printf "%s0m\n\n", $csi;
 
 # now the color cube
-print "Color cube, 4x4x4:\n";
-for ($green = 0; $green < 4; $green++) {
-    for ($red = 0; $red < 4; $red++) {
-	for ($blue = 0; $blue < 4; $blue++) {
-	    $color = 16 + ($red * 16) + ($green * 4) + $blue;
-	    print "\x1b[48;5;${color}m  ";
+print "Color cube, ${cube}x${cube}x${cube}:\n";
+for ($green = 0; $green < $cube; $green++) {
+    for ($red = 0; $red < $cube; $red++) {
+	for ($blue = 0; $blue < $cube; $blue++) {
+	    $color = 16 + ($red * $cube * $cube) + ($green * $cube) + $blue;
+	    &select_color($color);
 	}
-	print "\x1b[0m ";
+	printf "%s0m ", $csi;
     }
     print "\n";
 }
@@ -128,6 +176,6 @@ for ($green = 0; $green < 4; $green++) {
 # now the grayscale ramp
 print "Grayscale ramp:\n";
 for ($color = 80; $color < 88; $color++) {
-    print "\x1b[48;5;${color}m  ";
+    &select_color($color);
 }
-print "\x1b[0m\n";
+printf "%s0m\n", $csi;

@@ -1,4 +1,4 @@
-/* $XTermId: data.h,v 1.120 2012/03/26 21:48:09 tom Exp $ */
+/* $XTermId: data.h,v 1.121 2012/10/14 18:51:30 tom Exp $ */
 
 /*
  * Copyright 2002-2011,2012 by Thomas E. Dickey
@@ -144,6 +144,7 @@ extern int mapstate;
 typedef struct XTERM_RESOURCE {
     char *icon_geometry;
     char *title;
+    char *icon_hint;
     char *icon_name;
     char *term_name;
     char *tty_modes;

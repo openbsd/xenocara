@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.684 2012/05/07 23:30:42 tom Exp $ */
+/* $XTermId: main.c,v 1.689 2012/11/19 10:33:33 tom Exp $ */
 
 /*
  * Copyright 2002-2011,2012 by Thomas E. Dickey
@@ -832,6 +832,7 @@ static XtResource application_resources[] =
 {
     Sres("iconGeometry", "IconGeometry", icon_geometry, NULL),
     Sres(XtNtitle, XtCTitle, title, NULL),
+    Sres(XtNiconHint, XtCIconHint, icon_hint, NULL),
     Sres(XtNiconName, XtCIconName, icon_name, NULL),
     Sres("termName", "TermName", term_name, NULL),
     Sres("ttyModes", "TtyModes", tty_modes, NULL),
@@ -868,13 +869,8 @@ static XtResource application_resources[] =
     Bres("tcapFunctionKeys", "TcapFunctionKeys", termcapKeys, False),
 #endif
 #if OPT_INITIAL_ERASE
-#ifndef __OpenBSD__
     Bres("ptyInitialErase", "PtyInitialErase", ptyInitialErase, DEF_INITIAL_ERASE),
     Bres("backarrowKeyIsErase", "BackarrowKeyIsErase", backarrow_is_erase, DEF_BACKARO_ERASE),
-#else
-    Bres("ptyInitialErase", "PtyInitialErase", ptyInitialErase, DEF_INITIAL_ERASE),
-    Bres("backarrowKeyIsErase", "BackarrowKeyIsErase", backarrow_is_erase, DEF_BACKARO_ERASE),
-#endif
 #endif
     Bres("useInsertMode", "UseInsertMode", useInsertMode, False),
 #if OPT_ZICONBEEP
@@ -1525,26 +1521,31 @@ parseArg(int *num, char **argv, char **valuep)
 
     *valuep = 0;
     if (atbest >= 0) {
-	if (!exact && ambiguous1 >= 0 && ambiguous2 >= 0) {
-	    xtermWarning(
-			    "ambiguous option \"%s\" vs \"%s\"\n",
-			    ITEM(ambiguous1)->option,
-			    ITEM(ambiguous2)->option);
-	}
 	result = ITEM(atbest);
-	TRACE(("...result %s\n", result->option));
-	/* expand abbreviations */
-	if (result->argKind != XrmoptionStickyArg
-	    && strcmp(argv[*num], x_strdup(result->option))) {
-	    argv[*num] = x_strdup(result->option);
+	if (!exact) {
+	    if (ambiguous1 >= 0 && ambiguous2 >= 0) {
+		xtermWarning("ambiguous option \"%s\" vs \"%s\"\n",
+			     ITEM(ambiguous1)->option,
+			     ITEM(ambiguous2)->option);
+	    } else if (strlen(option) > strlen(result->option)) {
+		result = 0;
+	    }
 	}
+	if (result != 0) {
+	    TRACE(("...result %s\n", result->option));
+	    /* expand abbreviations */
+	    if (result->argKind != XrmoptionStickyArg
+		&& strcmp(argv[*num], x_strdup(result->option))) {
+		argv[*num] = x_strdup(result->option);
+	    }
 
-	/* adjust (*num) to skip option value */
-	(*num) += countArg(result);
-	TRACE(("...next %s\n", NonNull(argv[*num])));
-	if (result->argKind == XrmoptionSkipArg) {
-	    *valuep = argv[*num];
-	    TRACE(("...parameter %s\n", NonNull(*valuep)));
+	    /* adjust (*num) to skip option value */
+	    (*num) += countArg(result);
+	    TRACE(("...next %s\n", NonNull(argv[*num])));
+	    if (result->argKind == XrmoptionSkipArg) {
+		*valuep = argv[*num];
+		TRACE(("...parameter %s\n", NonNull(*valuep)));
+	    }
 	}
     }
 #undef ITEM
@@ -1853,7 +1854,7 @@ posix_signal(int signo, sigfunc func)
     return (oact.sa_handler);
 }
 
-#endif /* linux && _POSIX_SOURCE */
+#endif /* USE_POSIX_SIGNALS */
 
 #if defined(DISABLE_SETUID) || defined(USE_UTMP_SETGID)
 static void
@@ -2387,9 +2388,10 @@ main(int argc, char *argv[]ENVP_ARG)
 	XtSetArg(args[0], XtNtitle, resource.title);
 	XtSetArg(args[1], XtNiconName, resource.icon_name);
 
-	TRACE(("setting:\n\ttitle \"%s\"\n\ticon \"%s\"\n\tbased on command \"%s\"\n",
+	TRACE(("setting:\n\ttitle \"%s\"\n\ticon \"%s\"\n\thint \"%s\"\n\tbased on command \"%s\"\n",
 	       resource.title,
 	       resource.icon_name,
+	       NonNull(resource.icon_hint),
 	       *command_to_exec));
 
 	XtSetValues(toplevel, args, 2);
@@ -4041,6 +4043,14 @@ spawnXTerm(XtermWidget xw)
 
 	    xtermCopyEnv(environ);
 
+	    /*
+	     * standards.freedesktop.org/startup-notification-spec/
+	     * notes that this variable is used when a "reliable" mechanism is
+	     * not available; in practice it must be unset to avoid confusing
+	     * GTK applications.
+	     */
+	    xtermUnsetenv("DESKTOP_STARTUP_ID");
+
 	    xtermSetenv("TERM", resource.term_name);
 	    if (!resource.term_name)
 		*get_tcap_buffer(xw) = 0;
@@ -5026,7 +5036,9 @@ remove_termcap_entry(char *buf, const char *str)
 		if (*buf != 0)
 		    buf++;
 	    }
-	    while ((*first++ = *buf++) != 0) ;
+	    while ((*first++ = *buf++) != 0) {
+		;
+	    }
 	    TRACE(("...removed_termcap_entry('%s', '%s')\n", str, base));
 	    return;
 	} else if (*buf == '\\') {

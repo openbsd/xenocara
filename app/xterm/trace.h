@@ -1,7 +1,7 @@
-/* $XTermId: trace.h,v 1.65 2012/04/18 23:29:10 tom Exp $ */
+/* $XTermId: trace.h,v 1.67 2012/11/22 20:22:15 tom Exp $ */
 
 /*
- * Copyright 1997-2010,2011 by Thomas E. Dickey
+ * Copyright 1997-2011,2012 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -61,6 +61,7 @@ extern	char *	visibleIChars (IChar * /* buf */, unsigned /* len */);
 extern	const char * visibleChrsetName(unsigned /* chrset */);
 extern	const char * visibleEventType (int);
 extern	const char * visibleNotifyDetail(int /* code */);
+extern	const char * visibleNotifyMode (int /* code */);
 extern	const char * visibleSelectionTarget(Display * /* d */, Atom /* a */);
 extern	const char * visibleXError (int /* code */);
 
@@ -168,4 +169,4 @@ extern void TraceScreen(XtermWidget /* xw */, int /* whichBuf */);
 
 /* *INDENT-ON* */
 
-#endif	/* included_trace_h */
+#endif /* included_trace_h */

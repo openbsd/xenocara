@@ -1,7 +1,7 @@
-/* $XTermId: fontutils.c,v 1.380 2011/12/27 10:20:50 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.383 2012/09/22 00:15:55 tom Exp $ */
 
 /*
- * Copyright 1998-2010,2011 by Thomas E. Dickey
+ * Copyright 1998-2011,2012 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -173,7 +173,7 @@ setupPackedFonts(XtermWidget xw)
 
 #if OPT_RENDERFONT
 #define MIXED(name) screen->name[fontnum].map.mixed
-    if (xw->misc.render_font == True) {
+    if (xw->work.render_font == True) {
 	int fontnum = screen->menu_font_number;
 
 	screen->allow_packing = (Boolean) (MIXED(renderFontNorm)
@@ -1581,12 +1581,13 @@ xtermSetCursorBox(TScreen * screen)
     XPoint *vp;
     int fw = FontWidth(screen) - 1;
     int fh = FontHeight(screen) - 1;
-    int hh = screen->cursor_underline ? 1 : fh;
+    int ww = isCursorBar(screen) ? 1 : fw;
+    int hh = isCursorUnderline(screen) ? 1 : fh;
 
     vp = &VTbox[1];
-    (vp++)->x = (short) fw;
+    (vp++)->x = (short) ww;
     (vp++)->y = (short) hh;
-    (vp++)->x = (short) -fw;
+    (vp++)->x = (short) -ww;
     vp->y = (short) -hh;
 
     screen->box = VTbox;
@@ -2073,7 +2074,7 @@ xtermComputeFontInfo(XtermWidget xw,
 	}
 	if (norm == 0) {
 	    TRACE(("...no TrueType font found for number %d, disable menu entry\n", fontnum));
-	    xw->misc.render_font = False;
+	    xw->work.render_font = False;
 	    update_font_renderfont();
 	    /* now we will fall through into the bitmap fonts */
 	} else {
@@ -2482,7 +2483,7 @@ xtermDrawBoxChar(XtermWidget xw,
     gc2 = getCgsGC(xw, cgsWin, cgsId);
 
     if (!(flags & NOBACKGROUND)) {
-	XFillRectangle(screen->display, VWindow(screen), gc2, x, y,
+	XFillRectangle(screen->display, VDrawable(screen), gc2, x, y,
 		       font_width,
 		       font_height);
     }
@@ -2531,7 +2532,7 @@ xtermDrawBoxChar(XtermWidget xw,
 	}
 
 	XFillPolygon(screen->display,
-		     VWindow(screen), gc2,
+		     VDrawable(screen), gc2,
 		     points, npoints,
 		     Convex, CoordModeOrigin);
     } else if (ch == 7) {	/* degrees */
@@ -2544,7 +2545,7 @@ xtermDrawBoxChar(XtermWidget xw,
 	width = (unsigned) SCALED_X(width);
 
 	XDrawArc(screen->display,
-		 VWindow(screen), gc2,
+		 VDrawable(screen), gc2,
 		 x + x_coord, y + y_coord, width, width,
 		 0,
 		 360 * 64);
@@ -2558,7 +2559,7 @@ xtermDrawBoxChar(XtermWidget xw,
 	width = (unsigned) SCALED_X(width);
 
 	XDrawArc(screen->display,
-		 VWindow(screen), gc2,
+		 VDrawable(screen), gc2,
 		 x + x_coord, y + y_coord, width, width,
 		 0,
 		 360 * 64);
@@ -2574,7 +2575,7 @@ xtermDrawBoxChar(XtermWidget xw,
 		SCALE_X(coord[2]);
 		SCALE_Y(coord[3]);
 		XDrawLine(screen->display,
-			  VWindow(screen), gc2,
+			  VDrawable(screen), gc2,
 			  x + coord[0], y + coord[1],
 			  x + coord[2], y + coord[3]);
 		n = 0;
@@ -2582,7 +2583,7 @@ xtermDrawBoxChar(XtermWidget xw,
 	}
     } else if (screen->force_all_chars) {
 	/* bounding rectangle, for debugging */
-	XDrawRectangle(screen->display, VWindow(screen), gc2, x, y,
+	XDrawRectangle(screen->display, VDrawable(screen), gc2, x, y,
 		       font_width - 1,
 		       font_height - 1);
     }

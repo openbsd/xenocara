@@ -1,4 +1,4 @@
-/* $XTermId: xtermcfg.hin,v 1.190 2012/05/07 23:28:24 tom Exp $ */
+/* $XTermId: xtermcfg.hin,v 1.196 2012/10/05 00:27:29 tom Exp $ */
 
 /*
  * Copyright 1997-2011,2012 by Thomas E. Dickey
@@ -40,6 +40,11 @@
 #undef CC_HAS_PROTOS		/* CF_ANSI_CC */
 #undef CSRG_BASED		/* CF_TYPE_FD_MASK */
 #undef DECL_ERRNO		/* CF_ERRNO */
+#undef DEFDELETE_DEL		/* AC_ARG_ENABLE(delete-is-del) */
+#undef DEF_ALT_SENDS_ESC	/* CF_ARG_ENABLE(alt-sends-esc) */
+#undef DEF_BACKARO_DEL		/* CF_ARG_DISABLE(backarrow-is-del) */
+#undef DEF_BACKARO_ERASE	/* CF_ARG_ENABLE(backarrow-is-erase) */
+#undef DEF_META_SENDS_ESC	/* CF_ARG_ENABLE(meta-sends-esc) */
 #undef DFT_COLORMODE		/* AC_ARG_WITH(default-color-mode) */
 #undef DFT_DECID		/* AC_ARG_WITH(default-terminal-id) */
 #undef DFT_TERMTYPE		/* AC_ARG_WITH(default-term-type) */
@@ -51,6 +56,7 @@
 #undef HAVE_GRANTPT_PTY_ISATTY	/* CF_FUNC_GRANTPT */
 #undef HAVE_LANGINFO_CODESET	/* AM_LANGINFO_CODESET */
 #undef HAVE_LASTLOG_H		/* CF_LASTLOG */
+#undef HAVE_LIBXPM		/* CF_WITH_XPM */
 #undef HAVE_LIB_NEXTAW		/* CF_X_ATHENA(--with-neXtaw) */
 #undef HAVE_LIB_PCRE		/* CF_WITH_PCRE */
 #undef HAVE_LIB_XAW		/* CF_X_ATHENA */
@@ -67,7 +73,6 @@
 #undef HAVE_SCHED_YIELD		/* AC_CHECK_FUNCS(sched_yield) */
 #undef HAVE_SETPGID		/* AC_CHECK_FUNCS(setpgid) */
 #undef HAVE_STDLIB_H		/* AC_CHECK_HEADERS(stdlib.h) */
-#undef HAVE_STRERROR		/* AC_CHECK_FUNCS(strerror) */
 #undef HAVE_STRFTIME		/* AC_CHECK_FUNCS(strftime) */
 #undef HAVE_SYS_TIME_H		/* AC_HEADER_TIME */
 #undef HAVE_SYS_TTYDEFAULTS_H	/* AC_CHECK_HEADERS(sys/ttydefaults.h) */
@@ -99,6 +104,7 @@
 #undef HAVE_X11_XPOLL_H		/* AC_CHECK_HEADERS(X11/Xpoll.h) */
 #undef HAVE_XFTDRAWSETCLIP	/* CF_X_FREETYPE */
 #undef HAVE_XFTDRAWSETCLIPRECTANGLES /* CF_X_FREETYPE */
+#undef HAVE_XKBKEYCODETOKEYSYM	/* AC_CHECK_FUNCS(XkbKeycodeToKeysym) */
 #undef HAVE_XKBQUERYEXTENSION	/* AC_CHECK_FUNCS(XkbQueryExtension) */
 #undef HAVE_XKB_BELL_EXT	/* CF_XKB_BELL_EXT */
 #undef LUIT_PATH		/* CF_ARG_ENABLE(luit) */
@@ -117,6 +123,7 @@
 #undef OPT_DABBREV		/* CF_ARG_ENABLE(dabbrev) */
 #undef OPT_DEC_CHRSET		/* CF_ARG_DISABLE(doublechars) */
 #undef OPT_DEC_LOCATOR		/* CF_ARG_ENABLE(dec-locator) */
+#undef OPT_DOUBLE_BUFFER	/* CF_ARG_ENABLE(double-buffer) */
 #undef OPT_DEC_RECTOPS		/* CF_ARG_ENABLE(rectangles) */
 #undef OPT_EXEC_XTERM		/* CF_ARG_ENABLE(exec-xterm) */
 #undef OPT_FIFO_LINES		/* CF_ARG_ENABLE(fifo-lines) */
@@ -159,8 +166,6 @@
 #undef TIME_WITH_SYS_TIME	/* AC_HEADER_TIME */
 #undef TTY_GROUP_NAME		/* CF_TTY_GROUP */
 #undef USE_LASTLOG		/* CF_LASTLOG */
-#undef USE_MY_MEMMOVE		/* CF_FUNC_MEMMOVE */
-#undef USE_OK_BCOPY		/* CF_FUNC_MEMMOVE */
 #undef USE_POSIX_WAIT		/* CF_POSIX_WAIT */
 #undef USE_STRUCT_LASTLOG	/* CF_STRUCT_LASTLOG */
 #undef USE_SYSV_UTMP		/* CF_UTMP */
@@ -172,12 +177,10 @@
 #undef USE_UTMP_SETGID		/* AC_ARG_WITH(utmp-setgid) */
 #undef UTMPX_FOR_UTMP		/* CF_UTMP */
 #undef XRENDERFONT		/* CF_X_FREETYPE */
-#undef const			/* AC_CONST */
 #undef gid_t			/* AC_TYPE_UID_T */
 #undef mode_t			/* AC_TYPE_MODE_T */
 #undef off_t			/* AC_TYPE_OFF_T */
 #undef pid_t			/* AC_TYPE_PID_T */
-#undef size_t			/* AC_TYPE_SIZE_T */
 #undef time_t			/* AC_CHECK_TYPE(time_t, long) */
 #undef uid_t			/* AC_TYPE_UID_T */
 #undef ut_name			/* CF_UTMP */
@@ -199,20 +202,6 @@
 #undef GCC_PRINTF
 #undef GCC_PRINTFLIKE
 #undef GCC_UNUSED
-#endif
-
-#ifdef USE_OK_BCOPY
-#define memmove(d,s,n) bcopy(s,d,n)
-#endif
-
-#ifdef USE_MY_MEMMOVE
-#define memmove(d,s,n) my_memmove(d,s,n)
-extern void * my_memmove(void * s1, void * s2, size_t n);
-#endif
-
-#ifndef HAVE_STRERROR
-#define strerror(n) my_strerror(n)
-extern char *my_strerror(int n);
 #endif
 
 #ifndef HAVE_X11_XPOLL_H

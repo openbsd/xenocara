@@ -1,4 +1,4 @@
-/* $XTermId: os2main.c,v 1.276 2012/03/27 23:09:20 tom Exp $ */
+/* $XTermId: os2main.c,v 1.277 2012/10/14 18:55:18 tom Exp $ */
 
 /* removed all foreign stuff to get the code more clear (hv)
  * and did some rewrite for the obscure OS/2 environment
@@ -264,6 +264,7 @@ static XtResource application_resources[] =
 {
     Sres("iconGeometry", "IconGeometry", icon_geometry, NULL),
     Sres(XtNtitle, XtCTitle, title, NULL),
+    Sres(XtNiconHint, XtCIconHint, icon_hint, NULL),
     Sres(XtNiconName, XtCIconName, icon_name, NULL),
     Sres("termName", "TermName", term_name, NULL),
     Sres("ttyModes", "TtyModes", tty_modes, NULL),
@@ -1243,9 +1244,10 @@ main(int argc, char **argv ENVP_ARG)
 	XtSetArg(args[0], XtNtitle, resource.title);
 	XtSetArg(args[1], XtNiconName, resource.icon_name);
 
-	TRACE(("setting:\n\ttitle \"%s\"\n\ticon \"%s\"\n\tbased on command \"%s\"\n",
+	TRACE(("setting:\n\ttitle \"%s\"\n\ticon \"%s\"\n\thint \"%s\"\n\tbased on command \"%s\"\n",
 	       resource.title,
 	       resource.icon_name,
+	       NonNull(resource.icon_hint),
 	       *command_to_exec));
 
 	XtSetValues(toplevel, args, 2);

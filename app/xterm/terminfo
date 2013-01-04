@@ -1,12 +1,10 @@
-# $XTermId: terminfo,v 1.158 2011/08/16 22:27:46 tom Exp $
-#
-# $XFree86: xc/programs/xterm/terminfo,v 3.59 2006/02/13 01:14:59 dickey Exp $
+# $XTermId: terminfo,v 1.161 2012/09/05 00:24:08 tom Exp $
 #
 # Updates/notes/new entries (e.g., xterm-8bit, xterm-16color, xterm-256color)
 # - Thomas E. Dickey
 #
 #------------------------------------------------------------------------------
-# Copyright 1996-2007,2011 by Thomas E. Dickey
+# Copyright 1996-2011,2012 by Thomas E. Dickey
 #
 #                         All Rights Reserved
 #
@@ -895,6 +893,7 @@ xterm-basic|modern xterm terminal emulator - common,
 	msgr,
 	xenl,
 	AX,
+	XT,
 	colors#8,
 	cols#80,
 	it#8,
@@ -980,6 +979,7 @@ xterm-basic|modern xterm terminal emulator - common,
 	u8=\E[?1;2c,
 	u9=\E[c,
 	vpa=\E[%i%p1%dd,
+	E3=\E[3;J,
 	use=xterm+kbs,
 #
 # The xterm-new description has all of the features, but is not completely
@@ -1252,6 +1252,7 @@ xterm-65|xterm with tall window 65x80 (X Window System),
 	lines#65,
 	use=xterm-old,
 xterm-bold|xterm with bold instead of underline (X Window System),
+	sgr=%?%p9%t\016%e\017%;B\E[0%?%p6%t;1%;%?%p2%t;1%;%?%p1%p3%|%t;7%;m,
 	smso=\E[7m,
 	smul=\E[1m,
 	use=xterm-old,
@@ -1597,6 +1598,7 @@ xterm-xf86-v44|xterm terminal emulator (XFree86 4.4 Window System),
 	npc,
 	xenl,
 	AX,
+	XT,
 	colors#8,
 	cols#80,
 	it#8,
@@ -1766,7 +1768,7 @@ xterm-xfree86|xterm terminal emulator (XFree86 4.4 Window System),
 #	+ added u6, u7, u8, u9 strings for Daniel Weaver's tack program.
 #	+ added kmous string for ncurses.
 #	+ added khome/kend strings (which conflict with kfnd/kslt, see note).
-xterm-r6|xterm-old|xterm X11R6 version,
+xterm-r6|xterm X11R6 version,
 	OTbs,
 	am,
 	km,
@@ -1858,6 +1860,8 @@ xterm-r6|xterm-old|xterm X11R6 version,
 	u9=\E[c,
 	use=xterm+kbs,
 	use=xterm+decedit,
+xterm-old|antique xterm version,
+	use=xterm-r6,
 #
 # Compatible with the R5 xterm, with the following changes:
 #	+ changed 'blink=@', to 'blink@' (the former meant that "@" would start

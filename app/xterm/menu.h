@@ -1,4 +1,4 @@
-/* $XTermId: menu.h,v 1.126 2011/08/28 21:15:40 tom Exp $ */
+/* $XTermId: menu.h,v 1.128 2012/09/21 10:39:10 tom Exp $ */
 
 /*
  * Copyright 1999-2010,2011 by Thomas E. Dickey
@@ -339,6 +339,15 @@ typedef enum {
  */
 
 extern void SetItemSensitivity(Widget mi, Bool val);
+
+typedef enum {
+    toggleErr = -2,
+    toggleAll = -1,
+    toggleOff = 0,
+    toggleOn = 1
+} ToggleEnum;
+
+extern int decodeToggle(XtermWidget /* xw */, String * /* params */, Cardinal /* nparams */);
 
 /*
  * there should be one of each of the following for each checkable item

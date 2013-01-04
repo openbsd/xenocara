@@ -1,7 +1,7 @@
-/* $XTermId: print.c,v 1.139 2011/09/11 14:59:36 tom Exp $ */
+/* $XTermId: print.c,v 1.147 2012/10/29 10:41:53 tom Exp $ */
 
 /*
- * Copyright 1997-2010,2011 by Thomas E. Dickey
+ * Copyright 1997-2011,2012 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -74,7 +74,7 @@ static void send_SGR(XtermWidget /* xw */ ,
 static void stringToPrinter(XtermWidget /* xw */ ,
 			    const char * /*str */ );
 
-void
+static void
 closePrinter(XtermWidget xw GCC_UNUSED)
 {
     if (xtermHasPrinter(xw) != 0) {
@@ -87,16 +87,15 @@ closePrinter(XtermWidget xw GCC_UNUSED)
 #endif
 
 	if (SPS.fp != 0) {
-	    fclose(SPS.fp);
+	    pclose(SPS.fp);
 	    TRACE(("closed printer, waiting...\n"));
 #ifdef VMS			/* This is a quick hack, really should use
 				   spawn and check status or system services
 				   and go straight to the queue */
 	    (void) system(pcommand);
 #else /* VMS */
-	    while (nonblocking_wait() > 0)
+	    while (nonblocking_wait() > 0) ;
 #endif /* VMS */
-		;
 	    SPS.fp = 0;
 	    SPS.isOpen = False;
 	    TRACE(("closed printer\n"));
@@ -438,6 +437,7 @@ charToPrinter(XtermWidget xw, unsigned chr)
 
 		if (my_pid == 0) {
 		    TRACE_CLOSE();
+		    (void) signal(SIGCHLD, SIG_DFL);	/* no reapchild! */
 		    close(my_pipe[1]);	/* printer is silent */
 		    close(screen->respond);
 
@@ -454,13 +454,18 @@ charToPrinter(XtermWidget xw, unsigned chr)
 			exit(1);
 
 		    SPS.fp = popen(SPS.printer_command, "w");
-		    input = fdopen(my_pipe[0], "r");
-		    while ((c = fgetc(input)) != EOF) {
-			fputc(c, SPS.fp);
-			if (isForm(c))
-			    fflush(SPS.fp);
+		    if (SPS.fp != 0) {
+			input = fdopen(my_pipe[0], "r");
+			clearerr(input);
+			while (!ferror(input) && !feof(input)) {
+			    if ((c = fgetc(input)) == EOF)
+				break;
+			    fputc(c, SPS.fp);
+			    if (isForm(c))
+				fflush(SPS.fp);
+			}
+			pclose(SPS.fp);
 		    }
-		    pclose(SPS.fp);
 		    exit(0);
 		} else {
 		    close(my_pipe[0]);	/* won't read from printer */
@@ -641,13 +646,32 @@ xtermPrinterControl(XtermWidget xw, int chr)
 
 /*
  * If there is no printer command, we will ignore printer controls.
+ *
+ * If we do have a printer command, we still have to verify that it will
+ * (perhaps) work if we pass it to popen().  At a minimum, the program
+ * must exist and be executable.  If not, warn and disable the feature.
  */
 Bool
 xtermHasPrinter(XtermWidget xw)
 {
     TScreen *screen = TScreenOf(xw);
+    Bool result = SPS.printer_checked;
 
-    return (strlen(SPS.printer_command) != 0);
+    if (strlen(SPS.printer_command) != 0 && !result) {
+	char **argv = x_splitargs(SPS.printer_command);
+	if (argv && argv[0]) {
+	    if (xtermFindShell(argv[0], False) == 0) {
+		xtermWarning("No program found for printerCommand: %s\n", SPS.printer_command);
+		SPS.printer_command = x_strdup("");
+	    } else {
+		SPS.printer_checked = True;
+		result = True;
+	    }
+	}
+	TRACE(("xtermHasPrinter:%d\n", result));
+    }
+
+    return result;
 }
 
 #define showPrinterControlMode(mode) \

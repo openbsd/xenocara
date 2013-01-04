@@ -1,4 +1,4 @@
-/* $XTermId: xtermcfg.hin,v 1.182 2010/11/11 01:14:49 tom Exp $ */
+/* $XTermId: xtermcfg.hin,v 1.196 2012/10/05 00:27:29 tom Exp $ */
 
 /************************************************************
 
@@ -42,6 +42,11 @@ authorization.
 #define CC_HAS_PROTOS 1		/* CF_ANSI_CC */
 /* #undef CSRG_BASED */		/* CF_TYPE_FD_MASK */
 /* #undef DECL_ERRNO */		/* CF_ERRNO */
+#define DEFDELETE_DEL 1		/* AC_ARG_ENABLE(delete-is-del) */
+/* #undef DEF_ALT_SENDS_ESC */	/* CF_ARG_ENABLE(alt-sends-esc) */
+/* #undef DEF_BACKARO_DEL */		/* CF_ARG_DISABLE(backarrow-is-del) */
+#define DEF_BACKARO_ERASE 1	/* CF_ARG_ENABLE(backarrow-is-erase) */
+/* #undef DEF_META_SENDS_ESC */	/* CF_ARG_ENABLE(meta-sends-esc) */
 /* #undef DFT_COLORMODE */		/* AC_ARG_WITH(default-color-mode) */
 #define DFT_DECID "100"		/* AC_ARG_WITH(default-terminal-id) */
 #define DFT_TERMTYPE "xterm"		/* AC_ARG_WITH(default-term-type) */
@@ -52,6 +57,7 @@ authorization.
 /* #undef HAVE_GRANTPT		/* CF_FUNC_GRANTPT */
 #define HAVE_LANGINFO_CODESET 1	/* AM_LANGINFO_CODESET */
 /* #undef HAVE_LASTLOG_H */		/* CF_LASTLOG */
+#define HAVE_LIBXPM		/* CF_WITH_XPM */
 /* #undef HAVE_LIB_NEXTAW */		/* CF_X_ATHENA(--with-neXtaw) */
 /* #undef HAVE_LIB_PCRE */		/* CF_WITH_PCRE */
 #define HAVE_LIB_XAW 1		/* CF_X_ATHENA */
@@ -68,7 +74,6 @@ authorization.
 #define HAVE_SCHED_YIELD 1		/* AC_CHECK_FUNCS(sched_yield) */
 #define HAVE_SETPGID		/* AC_CHECK_FUNCS(setpgid) */
 #define HAVE_STDLIB_H 1		/* AC_CHECK_HEADERS(stdlib.h) */
-#define HAVE_STRERROR 1		/* AC_CHECK_FUNCS(strerror) */
 #define HAVE_STRFTIME 1		/* AC_CHECK_FUNCS(strftime) */
 /* #undef HAVE_SYS_TIME_H */		/* AC_HEADER_TIME */
 #define HAVE_SYS_TTYDEFAULTS_H 1	/* AC_CHECK_HEADERS(sys/ttydefaults.h) */
@@ -100,6 +105,7 @@ authorization.
 #define HAVE_X11_XPOLL_H 1		/* AC_CHECK_HEADERS(X11/Xpoll.h) */
 #define HAVE_XFTDRAWSETCLIP 1	/* CF_X_FREETYPE */
 #define HAVE_XFTDRAWSETCLIPRECTANGLES 1 /* CF_X_FREETYPE */
+#define HAVE_XKBKEYCODETOKEYSYM	/* AC_CHECK_FUNCS(XkbKeycodeToKeysym) */
 #define HAVE_XKBQUERYEXTENSION	/* AC_CHECK_FUNCS(XkbQueryExtension) */
 #define HAVE_XKB_BELL_EXT 1	/* CF_XKB_BELL_EXT */
 #define LUIT_PATH "/usr/X11R6/bin/luit"		/* CF_ARG_ENABLE(luit) */
@@ -118,13 +124,14 @@ authorization.
 /* #undef OPT_DABBREV */		/* CF_ARG_ENABLE(dabbrev) */
 /* #undef OPT_DEC_CHRSET */		/* CF_ARG_DISABLE(doublechars) */
 /* #undef OPT_DEC_LOCATOR */		/* CF_ARG_ENABLE(dec-locator) */
+/* #undef OPT_DOUBLE_BUFFER */	/* CF_ARG_ENABLE(double-buffer) */
 #define OPT_DEC_RECTOPS 1		/* CF_ARG_ENABLE(rectangles) */
 /* #undef OPT_EXEC_XTERM */		/* CF_ARG_ENABLE(exec-xterm) */
 /* #undef OPT_FIFO_LINES */		/* CF_ARG_ENABLE(fifo-lines) */
 /* #undef OPT_HIGHLIGHT_COLOR */	/* CF_ARG_DISABLE(highlighting) */
 /* #undef OPT_HP_FUNC_KEYS */		/* CF_ARG_ENABLE(hp-fkeys) */
 /* #undef OPT_I18N_SUPPORT */		/* CF_ARG_DISABLE(i18n) */
-/* #undef OPT_INITIAL_ERASE */	/* CF_ARG_DISABLE(initial-erase) */
+#define OPT_INITIAL_ERASE 1	/* CF_ARG_DISABLE(initial-erase) */
 /* #undef OPT_INPUT_METHOD */		/* CF_ARG_DISABLE(input-method) */
 /* #undef OPT_ISO_COLORS */		/* CF_ARG_DISABLE(ansi-color) */
 /* #undef OPT_LOAD_VTFONTS */		/* CF_ARG_ENABLE(load-vt-fonts) */
@@ -160,8 +167,6 @@ authorization.
 #define TIME_WITH_SYS_TIME 1	/* AC_HEADER_TIME */
 #define TTY_GROUP_NAME "tty"		/* CF_TTY_GROUP */
 /* #undef USE_LASTLOG */		/* CF_LASTLOG */
-/* #undef USE_MY_MEMMOVE */		/* CF_FUNC_MEMMOVE */
-/* #undef USE_OK_BCOPY */		/* CF_FUNC_MEMMOVE */
 #define USE_POSIX_WAIT 1		/* CF_POSIX_WAIT */
 /* #undef USE_STRUCT_LASTLOG */	/* CF_STRUCT_LASTLOG */
 /* #undef USE_SYSV_UTMP */		/* CF_UTMP */
@@ -173,12 +178,10 @@ authorization.
 #define USE_UTMP_SETGID 1		/* AC_ARG_WITH(utmp-setgid) */
 /* #undef UTMPX_FOR_UTMP */		/* CF_UTMP */
 #define XRENDERFONT 1		/* CF_X_FREETYPE */
-/* #undef const */			/* AC_CONST */
 /* #undef gid_t */			/* AC_TYPE_UID_T */
 /* #undef mode_t */			/* AC_TYPE_MODE_T */
 /* #undef off_t */			/* AC_TYPE_OFF_T */
 /* #undef pid_t */			/* AC_TYPE_PID_T */
-/* #undef size_t */			/* AC_TYPE_SIZE_T */
 /* #undef time_t */			/* AC_CHECK_TYPE(time_t, long) */
 /* #undef uid_t */			/* AC_TYPE_UID_T */
 /* #undef ut_name */			/* CF_UTMP */
@@ -200,20 +203,6 @@ authorization.
 /* #undef GCC_PRINTF */
 /* #undef GCC_PRINTFLIKE */
 /* #undef GCC_UNUSED */
-#endif
-
-#ifdef USE_OK_BCOPY
-#define memmove(d,s,n) bcopy(s,d,n)
-#endif
-
-#ifdef USE_MY_MEMMOVE
-#define memmove(d,s,n) my_memmove(d,s,n)
-extern void * my_memmove(void * s1, void * s2, size_t n);
-#endif
-
-#ifndef HAVE_STRERROR
-#define strerror(n) my_strerror(n)
-extern char *my_strerror(int n);
 #endif
 
 #ifndef HAVE_X11_XPOLL_H

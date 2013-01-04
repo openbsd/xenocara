@@ -1,4 +1,4 @@
-MANIFEST for xterm-279, version xterm-279
+MANIFEST for xterm-287, version xterm-287
 --------------------------------------------------------------------------------
 MANIFEST                        this file
 256colres.h                     resource-definitions for 256-color mode
@@ -108,13 +108,35 @@ xtermcfg.hin                    configure script: template for xtermcfg.h
 xutf8.c                         JC's cleanup of UTF8
 xutf8.h                         JC's cleanup of UTF8
 icons                           subdirectory
-icons/xterm-color_32x32.xcf     gimp file for editing 32x32 icon
+icons/filled-xterm.png          filled-xterm variants
+icons/filled-xterm.svg          filled-xterm variants
+icons/filled-xterm.xpms         filled-xterm variants
+icons/filled-xterm_16x16.xpm    filled-xterm variants
+icons/filled-xterm_32x32.xpm    filled-xterm variants
+icons/filled-xterm_48x48.xpm    filled-xterm variants
+icons/make-xpms                 script to make combined xpm-icons
+icons/mini.xterm.svg            svg format for mini-icon
+icons/mini.xterm.xpms           collection of mini-icons
+icons/mini.xterm_16x16.png      mini-icon 16x16 png
+icons/mini.xterm_16x16.xpm      mini-icon 16x16 pixmap
+icons/mini.xterm_256x256.png    mini-icon 256x256 png
+icons/mini.xterm_32x32.png      mini-icon 32x32 png
+icons/mini.xterm_32x32.xpm      mini-icon 32x32 pixmap
+icons/mini.xterm_48x48.png      mini-icon 48x48 png
+icons/mini.xterm_48x48.xpm      mini-icon 48x48 pixmap
+icons/terminal_48x48.svg        svg-format of "terminal"
+icons/terminal_48x48.xpm        xpm-format of "terminal"
+icons/xterm-color.png           xterm-color 48x48, in png-format
+icons/xterm-color.svg           xterm-color icon
+icons/xterm-color.xpms          collection of color icons
+icons/xterm-color_16x16.xpm     16x16 color icon
 icons/xterm-color_32x32.xpm     32x32 color icon
-icons/xterm-color_48x48.xcf     gimp file for editing 48x48 icon
 icons/xterm-color_48x48.xpm     48x48 color icon
-icons/xterm_32x32.xcf           gimp file, for editing 32x32 icon
+icons/xterm.png                 xterm 48x48, in png-format
+icons/xterm.svg                 xterm icon
+icons/xterm.xpms                collection of icons
+icons/xterm_16x16.xpm           normal icon 16x16 pixmap
 icons/xterm_32x32.xpm           32x32 monochrome icon
-icons/xterm_48x48.xcf           gimp file, for editing 48x48 icon
 icons/xterm_48x48.xpm           48x48 monochrome icon
 package/debian                  subdirectory
 package/debian/changelog        build-script
@@ -128,7 +150,13 @@ package/debian/source/format    build-script
 package/debian                  subdirectory
 package/debian/watch            build-script
 package/debian/xterm-dev.docs   build-script
+package/debian/xterm-dev.menu   Debian menu-file for xterm-dev package.
 package/debian/xterm-xres.sed   build-script
+package/freebsd                 subdirectory
+package/freebsd/Makefile        build-script
+package/freebsd/pkg-descr       build-script
+package/freebsd/pkg-message     build-script
+package/freebsd/pkg-plist       build-script
 package                         subdirectory
 package/xterm.spec              build-script
 tektests                        subdirectory
@@ -160,6 +188,7 @@ vttests/dynamic.sh              script to illustrate the dynamic colors control 
 vttests/dynamic2.sh             complete example of dynamic colors
 vttests/fonts.sh                script to demonstrate font-switching sequences
 vttests/paste64.pl              script to test base64-selection option
+vttests/query-color.pl          demonstrate OSC 4
 vttests/query-fonts.pl          script to demo/test font-querying
 vttests/resize.pl               translated resize.sh to perl since it is easy to test, and I needed
 vttests/resize.sh               script to demonstrate resizing

@@ -1,7 +1,7 @@
-/* $XTermId: tabs.c,v 1.41 2012/05/02 14:14:36 tom Exp $ */
+/* $XTermId: tabs.c,v 1.43 2012/06/10 16:53:59 tom Exp $ */
 
 /*
- * Copyright 2000-2010,2011 by Thomas E. Dickey
+ * Copyright 2000-2011,2012 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -114,7 +114,7 @@ TabNext(XtermWidget xw, Tabs tabs, int col)
 	xtermIndex(xw, 1);
 	set_cur_col(screen, 0);
 	col = 0;
-	screen->do_wrap = False;
+	ResetWrap(screen);
     }
     for (++col; col < MAX_TABS; ++col)
 	if (TST_TAB(tabs, col))

@@ -1,6 +1,6 @@
--- $XTermId: INSTALL,v 1.127 2011/12/22 01:59:16 tom Exp $
+-- $XTermId: INSTALL,v 1.139 2012/10/10 23:33:29 tom Exp $
 -------------------------------------------------------------------------------
--- Copyright 1997-2010,2011 by Thomas E. Dickey
+-- Copyright 1997-2011,2012 by Thomas E. Dickey
 --
 --                         All Rights Reserved
 --
@@ -355,6 +355,18 @@ The options (in alphabetic order):
 
 	Compile-in code that interprets SGR 38 and 48 for 88-colors.
 
+  --enable-alt-sends-esc  set default altSendsEscape resource (default: no)
+
+	This sets the default resource value, which is shown in the manpage.
+
+  --enable-backarrow-key  set default backarrowKey resource (default: true)
+
+	This sets the default resource value, which is shown in the manpage.
+
+  --enable-backarrow-is-erase set default backarrowKeyIsErase resource (default: false)
+
+	This sets the default resource value, which is shown in the manpage.
+
   --enable-broken-osc     allow broken Linux OSC-strings],
 
 	Compile-in code to accommodate scripts that write Linux's malformed
@@ -377,6 +389,18 @@ The options (in alphabetic order):
 
 	This allows the xterm mouse to be used with applications that use the
 	DEC Locator sequences, such as VAX Tpu, or SMG$ based applications.
+
+  --enable-delete-is-del  set default deleteIsDEL resource (default: maybe)
+
+	This sets the default resource value, which is shown in the manpage.
+
+  --enable-double-buffer  enable double-buffering
+
+	Use experimental double-buffering for display to reduce flicker.
+
+	This option was introduced in patch #282; at that point it needs
+	further work because colors used for clearing the screen do not
+	match the expected behavior (see vttest for instance).
 
   --enable-exec-xterm     enable "spawn-new-terminal" action
 
@@ -414,6 +438,10 @@ The options (in alphabetic order):
 	into the locale's encoding.
 
 	This sets "--enable-wide-chars" as a side-effect.
+
+  --enable-meta-sends-esc set default metaSendsEscape resource (default: no)
+
+	This sets the default resource value, which is shown in the manpage.
 
   --enable-mini-luit      enable support for poor man's luit filter (Latin-9)
 
@@ -531,6 +559,9 @@ The options (in alphabetic order):
 	/usr/local, you should use this option to customize the location to
 	match your system configuration.
 
+	Use --with-app-defaults=auto to ask the configure script to look in
+	a list of well-known locations for an existing directory.
+
 	Use --without-app-defaults or --with-app-defaults=no to disable the
 	feature.
 
@@ -567,7 +598,18 @@ The options (in alphabetic order):
 
 	Override options provided by xft-config or freetype-config.
 
-  --with-icondir=DIR directory in which to install icon files (default: EPREFIX/share/pixmaps)
+  --with-icon-name=NAME override icon name (default: xterm-color)
+
+	xterm comes with a choice of icons:
+
+	xterm-color: depicts a conventional terminal image, and is the default
+		icon used for icon-themes.
+
+	mini.xterm: a more iconic choice which is readily identifiable at
+		small sizes.  This is used for window decoration, e.g., the
+		icon at the upper left corner in many window managers.
+
+  --with-icondir=DIR directory in which to install icon files (default: no)
 
 	The X libraries may automatically search these locations:
 
@@ -575,10 +617,25 @@ The options (in alphabetic order):
 	$XDG_DATA_DIRS/icons
 	/usr/share/pixmaps
 
+	Alternatively, the last may be actually
+	/usr/X11R6/share/pixmaps
+
+	Use --with-icondir=auto to tell the configure script to search for
+	an existing directory from its list of well-known system locations.
+
 	See also
 	http://standards.freedesktop.org/icon-theme-spec/icon-theme-spec-latest.html
+	http://www.freedesktop.org/software/icon-theme/
 
-	Use --without-icondir or --with-icondir=no to disable the feature.
+	By default, the option is disabled; it is useful only for the
+	--with-icon-theme option.
+
+  --with-icon-theme=XXX   install icons into desktop theme (hicolor)
+
+	Install png and svg icons into the given desktop theme and customize
+	the .desktop files to use that theme.  If no theme name is given,
+	the default is "hicolor".  If this option is not given, the desktop
+	file will use the pixmap files.
 
   --with-neXtaw           link with neXT Athena library
 
@@ -646,6 +703,13 @@ The options (in alphabetic order):
 
 	If xterm is not installed setuid'd to root, this option is not needed,
 	since it cannot change the tty device's ownership.
+
+  --with-xpm=DIR          use Xpm library for colored icon, may specify path
+
+ 	Use Xpm library to show colored icon in window decoration, e.g.,
+	title area.
+
+	Use --without-xpm to suppress this feature.
 
   --with-xterm-symlink=XXX  make symbolic link to installed xterm
 

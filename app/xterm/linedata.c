@@ -1,4 +1,4 @@
-/* $XTermId: linedata.c,v 1.80 2011/09/11 14:59:39 tom Exp $ */
+/* $XTermId: linedata.c,v 1.81 2012/09/21 20:40:21 tom Exp $ */
 
 /*
  * Copyright 2009-2010,2011 by Thomas E. Dickey
@@ -64,7 +64,6 @@ getLineData(TScreen * screen, int row)
 	result = (LineData *) scrnHeadAddr(screen, buffer, (unsigned) row);
 	if (result != 0) {
 #if 1				/* FIXME - these should be done in setupLineData, etc. */
-	    result->lineSize = (Dimension) MaxCols(screen);
 #if OPT_WIDE_CHARS
 	    if (screen->wide_chars) {
 		result->combSize = (Char) screen->max_combining;

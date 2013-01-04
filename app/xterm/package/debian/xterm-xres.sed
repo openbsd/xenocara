@@ -4,5 +4,4 @@
 *backarrowKeyIsErase: true\
 *ptyInitialErase: true
 /!*allowWindowOps: false/a\
-*allowWindowOps: true\
-*activeIcon: true
+*allowWindowOps: true
