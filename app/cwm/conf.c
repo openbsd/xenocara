@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: conf.c,v 1.118 2013/01/04 16:23:04 okan Exp $
+ * $OpenBSD: conf.c,v 1.119 2013/01/04 16:23:51 okan Exp $
  */
 
 #include <sys/param.h>
@@ -65,17 +65,17 @@ conf_font(struct conf *c, struct screen_ctx *sc)
 }
 
 static char *menu_color_binds[CWM_COLOR_MENU_MAX] = {
-	"black", /* CWM_COLOR_MENU_FG */
-	"white", /* CWM_COLOR_MENU_BG */
-	"black", /* CWM_COLOR_MENU_FONT */
-	"",  	 /* CWM_COLOR_MENU_FONT_SEL */
+	"black",	/* CWM_COLOR_MENU_FG */
+	"white",	/* CWM_COLOR_MENU_BG */
+	"black",	/* CWM_COLOR_MENU_FONT */
+	"",		/* CWM_COLOR_MENU_FONT_SEL */
 };
 
 static char *color_binds[CWM_COLOR_MAX] = {
-	"#CCCCCC", /* CWM_COLOR_BORDER_ACTIVE */
-	"#666666", /* CWM_COLOR_BORDER_INACTIVE */
-	"blue",	   /* CWM_COLOR_BORDER_GROUP */
-	"red",	   /* CWM_COLOR_BORDER_UNGROUP */
+	"#CCCCCC",	/* CWM_COLOR_BORDER_ACTIVE */
+	"#666666",	/* CWM_COLOR_BORDER_INACTIVE */
+	"blue",		/* CWM_COLOR_BORDER_GROUP */
+	"red",		/* CWM_COLOR_BORDER_UNGROUP */
 };
 
 void
