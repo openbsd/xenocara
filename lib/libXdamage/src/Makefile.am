@@ -12,4 +12,4 @@ INCLUDES = -I$(top_srcdir)/include/X11/extensions
 libXdamage_la_LDFLAGS = -version-number 1:1:0 -no-undefined
 
 libXdamageincludedir = $(includedir)/X11/extensions
-libXdamageinclude_HEADERS = $(top_srcdir)/include/X11/extensions/Xdamage.h 
+libXdamageinclude_HEADERS = $(top_srcdir)/include/X11/extensions/Xdamage.h

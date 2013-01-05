@@ -32,7 +32,7 @@ const char XDamageExtensionName[] = DAMAGE_NAME;
 
 static int
 XDamageCloseDisplay (Display *dpy, XExtCodes *codes);
-    
+
 static Bool
 XDamageWireToEvent(Display *dpy, XEvent *event, xEvent *wire);
 
@@ -58,13 +58,13 @@ XDamageExtAddDisplay (XDamageExtInfo	*extinfo,
     info->codes = XInitExtension (dpy, ext_name);
 
     /*
-     * if the server has the extension, then we can initialize the 
+     * if the server has the extension, then we can initialize the
      * appropriate function vectors
      */
     if (info->codes) {
 	xDamageQueryVersionReply	rep;
 	xDamageQueryVersionReq	*req;
-        XESetCloseDisplay (dpy, info->codes->extension, 
+        XESetCloseDisplay (dpy, info->codes->extension,
                            XDamageCloseDisplay);
 	for (ev = info->codes->first_event;
 	     ev < info->codes->first_event + XDamageNumberEvents;
@@ -82,7 +82,7 @@ XDamageExtAddDisplay (XDamageExtInfo	*extinfo,
 	req->damageReqType = X_DamageQueryVersion;
 	req->majorVersion = DAMAGE_MAJOR;
 	req->minorVersion = DAMAGE_MINOR;
-	if (!_XReply (dpy, (xReply *) &rep, 0, xTrue)) 
+	if (!_XReply (dpy, (xReply *) &rep, 0, xTrue))
 	{
 	    UnlockDisplay (dpy);
 	    SyncHandle ();
@@ -124,7 +124,7 @@ XDamageExtAddDisplay (XDamageExtInfo	*extinfo,
  * XDamageExtRemoveDisplay - remove the indicated display from the
  * extension object. (Replaces XextRemoveDisplay.)
  */
-static int 
+static int
 XDamageExtRemoveDisplay (XDamageExtInfo *extinfo, Display *dpy)
 {
     XDamageExtDisplayInfo *info, *prev;
@@ -165,7 +165,7 @@ XDamageExtRemoveDisplay (XDamageExtInfo *extinfo, Display *dpy)
  * XextFindDisplay.)
  */
 static XDamageExtDisplayInfo *
-XDamageExtFindDisplay (XDamageExtInfo *extinfo, 
+XDamageExtFindDisplay (XDamageExtInfo *extinfo,
 		      Display	    *dpy)
 {
     XDamageExtDisplayInfo *info;
@@ -173,7 +173,7 @@ XDamageExtFindDisplay (XDamageExtInfo *extinfo,
     /*
      * see if this was the most recently accessed display
      */
-    if ((info = extinfo->cur) && info->display == dpy) 
+    if ((info = extinfo->cur) && info->display == dpy)
 	return info;
 
     /*
@@ -199,11 +199,11 @@ XDamageFindDisplay (Display *dpy)
 
     info = XDamageExtFindDisplay (&XDamageExtensionInfo, dpy);
     if (!info)
-	info = XDamageExtAddDisplay (&XDamageExtensionInfo, dpy, 
+	info = XDamageExtAddDisplay (&XDamageExtensionInfo, dpy,
 				    XDamageExtensionName);
     return info;
 }
-    
+
 static int
 XDamageCloseDisplay (Display *dpy, XExtCodes *codes)
 {
@@ -280,24 +280,24 @@ XDamageEventToWire(Display *dpy, XEvent *event, xEvent *wire)
     return False;
 }
 
-Bool 
+Bool
 XDamageQueryExtension (Display *dpy,
 			int *event_base_return,
 			int *error_base_return)
 {
     XDamageExtDisplayInfo *info = XDamageFindDisplay (dpy);
 
-    if (XDamageHasExtension(info)) 
+    if (XDamageHasExtension(info))
     {
 	*event_base_return = info->codes->first_event;
 	*error_base_return = info->codes->first_error;
 	return True;
-    } 
+    }
     else
 	return False;
 }
 
-Status 
+Status
 XDamageQueryVersion (Display *dpy,
 		    int	    *major_version_return,
 		    int	    *minor_version_return)
@@ -348,7 +348,7 @@ XDamageDestroy (Display *dpy, Damage damage)
 }
 
 void
-XDamageSubtract (Display *dpy, Damage damage, 
+XDamageSubtract (Display *dpy, Damage damage,
 		 XserverRegion repair, XserverRegion parts)
 {
     XDamageExtDisplayInfo	*info = XDamageFindDisplay (dpy);

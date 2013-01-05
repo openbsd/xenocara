@@ -62,7 +62,7 @@ void
 XDamageDestroy (Display *dpy, Damage damage);
 
 void
-XDamageSubtract (Display *dpy, Damage damage, 
+XDamageSubtract (Display *dpy, Damage damage,
 		 XserverRegion repair, XserverRegion parts);
 
 void
