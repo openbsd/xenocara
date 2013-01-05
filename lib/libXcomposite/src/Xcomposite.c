@@ -1,5 +1,5 @@
 /*
- * $Id: Xcomposite.c,v 1.3 2010/07/17 15:07:18 matthieu Exp $
+ * $Id: Xcomposite.c,v 1.4 2013/01/05 14:59:39 matthieu Exp $
  *
  * Copyright © 2006 Sun Microsystems
  *
@@ -52,7 +52,7 @@ const char XCompositeExtensionName[] = COMPOSITE_NAME;
  * XCompositeExtRemoveDisplay - remove the indicated display from the
  * extension object. (Replaces XextRemoveDisplay.)
  */
-static int 
+static int
 XCompositeExtRemoveDisplay (XCompositeExtInfo *extinfo, Display *dpy)
 {
     XCompositeExtDisplayInfo *info, *prev;
@@ -111,13 +111,13 @@ XCompositeExtAddDisplay (XCompositeExtInfo	*extinfo,
     info->codes = XInitExtension (dpy, ext_name);
 
     /*
-     * if the server has the extension, then we can initialize the 
+     * if the server has the extension, then we can initialize the
      * appropriate function vectors
      */
     if (info->codes) {
 	xCompositeQueryVersionReply	rep;
 	xCompositeQueryVersionReq	*req;
-        XESetCloseDisplay (dpy, info->codes->extension, 
+        XESetCloseDisplay (dpy, info->codes->extension,
                            XCompositeCloseDisplay);
 	/*
 	 * Get the version info
@@ -128,7 +128,7 @@ XCompositeExtAddDisplay (XCompositeExtInfo	*extinfo,
 	req->compositeReqType = X_CompositeQueryVersion;
 	req->majorVersion = COMPOSITE_MAJOR;
 	req->minorVersion = COMPOSITE_MINOR;
-	if (!_XReply (dpy, (xReply *) &rep, 0, xTrue)) 
+	if (!_XReply (dpy, (xReply *) &rep, 0, xTrue))
 	{
 	    UnlockDisplay (dpy);
 	    SyncHandle ();
@@ -171,7 +171,7 @@ XCompositeExtAddDisplay (XCompositeExtInfo	*extinfo,
  * XextFindDisplay.)
  */
 static XCompositeExtDisplayInfo *
-XCompositeExtFindDisplay (XCompositeExtInfo *extinfo, 
+XCompositeExtFindDisplay (XCompositeExtInfo *extinfo,
 		      Display	    *dpy)
 {
     XCompositeExtDisplayInfo *info;
@@ -179,7 +179,7 @@ XCompositeExtFindDisplay (XCompositeExtInfo *extinfo,
     /*
      * see if this was the most recently accessed display
      */
-    if ((info = extinfo->cur) && info->display == dpy) 
+    if ((info = extinfo->cur) && info->display == dpy)
 	return info;
 
     /*
@@ -205,30 +205,30 @@ XCompositeFindDisplay (Display *dpy)
 
     info = XCompositeExtFindDisplay (&XCompositeExtensionInfo, dpy);
     if (!info)
-	info = XCompositeExtAddDisplay (&XCompositeExtensionInfo, dpy, 
+	info = XCompositeExtAddDisplay (&XCompositeExtensionInfo, dpy,
 				    XCompositeExtensionName);
     return info;
 }
-    
 
-Bool 
+
+Bool
 XCompositeQueryExtension (Display *dpy,
 			  int *event_base_return,
 			  int *error_base_return)
 {
     XCompositeExtDisplayInfo *info = XCompositeFindDisplay (dpy);
 
-    if (XCompositeHasExtension(info)) 
+    if (XCompositeHasExtension(info))
     {
 	*event_base_return = info->codes->first_event;
 	*error_base_return = info->codes->first_error;
 	return True;
-    } 
+    }
     else
 	return False;
 }
 
-Status 
+Status
 XCompositeQueryVersion (Display *dpy,
 		    int	    *major_version_return,
 		    int	    *minor_version_return)
@@ -372,7 +372,7 @@ XCompositeGetOverlayWindow (Display *dpy, Window window)
 	SyncHandle ();
 	return 0;
     }
-   
+
     UnlockDisplay (dpy);
     SyncHandle ();
 

@@ -1,8 +1,8 @@
 # 
 #  $Xorg: Makefile.am,v 1.1.1.1 2006/11/25 16:58:22 matthieu Exp $
-# 
+#
 #  Copyright © 2003 Keith Packard, Noah Levitt
-# 
+#
 #  Permission to use, copy, modify, distribute, and sell this software and its
 #  documentation for any purpose is hereby granted without fee, provided that
 #  the above copyright notice appear in all copies and that both that
@@ -12,7 +12,7 @@
 #  specific, written prior permission.  Keith Packard makes no
 #  representations about the suitability of this software for any purpose.  It
 #  is provided "as is" without express or implied warranty.
-# 
+#
 #  KEITH PACKARD DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE,
 #  INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS, IN NO
 #  EVENT SHALL KEITH PACKARD BE LIABLE FOR ANY SPECIAL, INDIRECT OR
@@ -35,4 +35,4 @@ libXcomposite_la_LIBADD = $(XCOMPOSITE_LIBS)
 libXcomposite_la_LDFLAGS = -version-number 1:0:0 -no-undefined
 
 libXcompositeincludedir = $(includedir)/X11/extensions
-libXcompositeinclude_HEADERS = $(top_srcdir)/include/X11/extensions/Xcomposite.h 
+libXcompositeinclude_HEADERS = $(top_srcdir)/include/X11/extensions/Xcomposite.h

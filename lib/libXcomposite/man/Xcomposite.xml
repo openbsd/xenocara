@@ -192,7 +192,7 @@ contents of all descendants.
   <varlistentry>
    <term><parameter>display</parameter></term>
    <listitem><para>
-    Pointer to the <type>Display</type> structure returned from 
+    Pointer to the <type>Display</type> structure returned from
     <function>XOpenDisplay</function> for the connection to the X server.
    </para></listitem>
   </varlistentry>
@@ -246,11 +246,11 @@ contents of all descendants.
   <varlistentry>
    <term><function>XCompositeQueryExtension</function></term>
    <listitem><para>
-    <function>XCompositeQueryExtension</function> determines if the 
-    Composite Extension is available on the given display.   It returns 
-    <constant>True</constant> if the extension is supported, otherwise 
-    <constant>False</constant>.   If the extension is present, the base 
-    values for events and errors are returned, and can be used to 
+    <function>XCompositeQueryExtension</function> determines if the
+    Composite Extension is available on the given display.   It returns
+    <constant>True</constant> if the extension is supported, otherwise
+    <constant>False</constant>.   If the extension is present, the base
+    values for events and errors are returned, and can be used to
     decode incoming event and error values.
    </para></listitem>
   </varlistentry>
@@ -258,12 +258,12 @@ contents of all descendants.
    <term><function>XCompositeQueryVersion</function></term>
    <listitem><para>
     <function>XCompositeQueryVersion</function> determines if the X Server
-    supports a version of the X Composite Extension which is compatible 
+    supports a version of the X Composite Extension which is compatible
     with the client library. A non-zero Status is returned if a compatible
     version of the extension is supported, otherwise a zero Status is returned.
-    If the extension is supported, the major and minor version numbers are 
+    If the extension is supported, the major and minor version numbers are
     returned to indicate the level of Composite Extension support.
-    No other XComposite functions (except XCompositeQueryExtension) may be 
+    No other XComposite functions (except XCompositeQueryExtension) may be
     called before this function.  If a client violates this  rule, the
     effects of all subsequent XComposite calls that it makes are undefined.
    </para></listitem>
@@ -271,7 +271,7 @@ contents of all descendants.
   <varlistentry>
    <term><function>XCompositeVersion</function></term>
    <listitem><para>
-    <function>XCompositeVersion</function> returns the version of the 
+    <function>XCompositeVersion</function> returns the version of the
     X Composite library.   The version number is encoded as:
     <blockquote><para><code language="C">
      (major * 10000) + (minor * 100) + revision
@@ -284,18 +284,18 @@ contents of all descendants.
   <varlistentry>
    <term><function>XCompositeRedirectWindow</function></term>
    <listitem><para>
-	<function>XCompositeRedirectWindow</function> requests the X server 
-	to direct the hierarchy starting at <parameter>window</parameter> to 
-	off-screen storage. 
-        The <parameter>update</parameter> argument specifies whether 
+	<function>XCompositeRedirectWindow</function> requests the X server
+	to direct the hierarchy starting at <parameter>window</parameter> to
+	off-screen storage.
+        The <parameter>update</parameter> argument specifies whether
         the contents are mirrored to the parent window automatically or not.
-        Only one client at a time may specify an update type of 
-	<constant>CompositeRedirectManual</constant>, another attempt will 
-	result in a <errorname>BadAccess</errorname> error.  When all clients 
+        Only one client at a time may specify an update type of
+	<constant>CompositeRedirectManual</constant>, another attempt will
+	result in a <errorname>BadAccess</errorname> error.  When all clients
         enabling redirection terminate, the redirection will automatically be
         disabled.
    </para><para>
-	The root window may not be redirected. Doing so results in a 
+	The root window may not be redirected. Doing so results in a
 	<errorname>BadMatch</errorname>	error.  Specifying an invalid
         window id will result in a <errorname>BadWindow</errorname> error.
    </para></listitem>
@@ -303,20 +303,20 @@ contents of all descendants.
   <varlistentry>
    <term><function>XCompositeRedirectSubwindows</function></term>
    <listitem><para>
-	<function>XCompositeRedirectSubwindows</function> requests the X 
-	server to redirect hierarchies starting at all current and future 
-	children of <parameter>window</parameter> as in 
-	<function>XCompositeRedirectWindow</function>. 
-	If <parameter>update</parameter> is 
-	<constant>CompositeRedirectManual</constant>, then painting of the 
-	window background during window manipulation and ClearArea requests 
+	<function>XCompositeRedirectSubwindows</function> requests the X
+	server to redirect hierarchies starting at all current and future
+	children of <parameter>window</parameter> as in
+	<function>XCompositeRedirectWindow</function>.
+	If <parameter>update</parameter> is
+	<constant>CompositeRedirectManual</constant>, then painting of the
+	window background during window manipulation and ClearArea requests
 	is inhibited.
    </para></listitem>
   </varlistentry>
   <varlistentry>
    <term><function>XCompositeUnredirectWindow</function></term>
    <listitem><para>
-	<function>XCompositeUnredirectWindow</function> requests the X 
+	<function>XCompositeUnredirectWindow</function> requests the X
 	server to terminate redirection of <parameter>window</parameter>.
 	If the specified window was not selected for redirection by the
 	current client, a <errorname>BadValue</errorname> error results.
@@ -325,7 +325,7 @@ contents of all descendants.
   <varlistentry>
    <term><function>XCompositeUnredirectSubwindows</function></term>
    <listitem><para>
-	<function>XCompositeUnredirectWindow</function> requests the X 
+	<function>XCompositeUnredirectWindow</function> requests the X
 	server to terminate redirection of all children of
 	<parameter>window</parameter>.
 	If the specified window was not selected for sub-redirection by the
@@ -349,12 +349,12 @@ contents of all descendants.
    <listitem><para>
 	<function>XCompositeNameWindowPixmap</function> creates and returns
 	a pixmap id that serves as a reference to the off-screen storage for
-	<parameter>window</parameter>. This pixmap will remain allocated 
-	until freed, even if the window is unmapped, reconfigured or 
-	destroyed. However, the window will get a new pixmap allocated each 
-	time it is mapped or resized, so this function will need to be 
+	<parameter>window</parameter>. This pixmap will remain allocated
+	until freed, even if the window is unmapped, reconfigured or
+	destroyed. However, the window will get a new pixmap allocated each
+	time it is mapped or resized, so this function will need to be
 	reinvoked for the client to continue to refer to the storage holding
-	the current window contents. Generates a 
+	the current window contents. Generates a
 	<errorname>BadMatch</errorname>	error if <parameter>window</parameter>
 	is not redirected or is not visible.
    </para><para>
@@ -366,15 +366,15 @@ contents of all descendants.
    <term><function>XCompositeGetOverlayWindow</function></term>
    <listitem><para>
     <function>XCompositeGetOverlayWindow</function> returns the window ID
-    of the Composite Overlay Window for 
-    the screen specified by the argument <parameter>window</parameter>. 
-    This function notifies the X server that the client wishes to use 
-    the Composite Overlay Window of this screen. If this 
-    Composite Overlay Window has not yet been mapped, it is mapped by this 
+    of the Composite Overlay Window for
+    the screen specified by the argument <parameter>window</parameter>.
+    This function notifies the X server that the client wishes to use
+    the Composite Overlay Window of this screen. If this
+    Composite Overlay Window has not yet been mapped, it is mapped by this
     request.
    </para><para>
-    The Composite Overlay Window for a particular screen will be 
-    unmapped when all clients who have called this function have 
+    The Composite Overlay Window for a particular screen will be
+    unmapped when all clients who have called this function have
     either called <function>XCompositeReleaseOverlayWindow</function>
     for that screen, or terminated their connection to the X server.
    </para><para>
@@ -385,9 +385,9 @@ contents of all descendants.
   <varlistentry>
    <term><function>XCompositeReleaseOverlayWindow</function></term>
    <listitem><para>
-    This request specifies that the client is no longer using the 
-    Composite Overlay Window on the screen specified by the 
-    argument <parameter>window</parameter>. A screen&apos;s Composite 
+    This request specifies that the client is no longer using the
+    Composite Overlay Window on the screen specified by the
+    argument <parameter>window</parameter>. A screen&apos;s Composite
     Overlay Window is unmapped when there are no longer any clients using it.
    </para><para>
     The X server must support at least version 0.3 of the Composite
