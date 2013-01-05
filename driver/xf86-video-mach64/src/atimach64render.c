@@ -209,22 +209,7 @@ Mach64PixelARGB(PixmapPtr pPixmap, CARD32 format, CARD32 *argb)
     CARD8  comp;
     int    bits, shift;
 
-    /* Ensure that texture drawing has completed. */
-    exaWaitSync(pPixmap->drawable.pScreen);
-
-    /* exaGetPixmapFirstPixel() */
-
-    switch (pPixmap->drawable.bitsPerPixel) {
-    case 32:
-        pixel = *(CARD32 *)(pPixmap->devPrivate.ptr);
-        break;
-    case 16:
-        pixel = *(CARD16 *)(pPixmap->devPrivate.ptr);
-        break;
-    default:
-        pixel = *(CARD8 *)(pPixmap->devPrivate.ptr);
-        break;
-    }
+    pixel = exaGetPixmapFirstPixel(pPixmap);
 
     /* exaGetRGBAFromPixel()/viaPixelARGB8888() */
 

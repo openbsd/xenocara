@@ -51,6 +51,7 @@
 
 #endif /* TV_OUT */
 
+#include "picturestr.h"
 #ifdef USE_EXA
 #include "exa.h"
 #endif

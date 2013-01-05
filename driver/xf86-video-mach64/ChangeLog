@@ -1,3 +1,101 @@
+commit 0d8639f3cd4128ae856ae27f3787c1da224bb564
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Dec 19 22:14:08 2012 -0800
+
+    xf86-video-mach64 6.9.4
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit f694490b3cec78d7b17eeb0a9c4daadd1028776a
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Dec 18 15:42:30 2012 -0800
+
+    Remove call to obsolete miInitializeBackingStore()
+    
+    Definition was deleted from Xorg during 1.14 merge window, but has
+    been a no-op since 1.10 merge window.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Alex Deucher <alexander.deucher@amd.com>
+
+commit ece8d3557eb1ffb27104bffb7841503aae4dcd6f
+Author: Connor Behan <connor.behan@gmail.com>
+Date:   Fri Dec 7 13:53:38 2012 -0800
+
+    Remove dummy UTS / DFS hooks
+    
+    When EXA was added to mach64, it included UploadToScreen and
+    DownloadFromScreen hooks that did the same thing that EXA would do in a
+    software fallback. Now they are out of date and cause crashes. The
+    slight benefit of reimplementing those hooks (if there is any) is not
+    worth the maintenance burden of having to rewrite them every time there
+    is a change to the way EXA handles pixmaps.
+    Fixes: https://bugs.freedesktop.org/show_bug.cgi?id=51137
+    
+    Signed-off-by: Connor Behan <connor.behan@gmail.com>
+    Tested-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit f0d44c18d71e7450b99189c1221a2f89c7817ab6
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Dec 6 16:49:12 2012 -0800
+
+    Mach64PixelARGB should use exaGetPixmapFirstPixel
+    
+    Fixes crash attempting to read a pixel from a NULL pPixmap->devPrivate.ptr
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Michel Dänzer <michel@daenzer.net>
+
+commit 42c4e423eec789606eec9703be23a9fd4483a14a
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Tue Oct 2 10:19:47 2012 -0400
+
+    Fix build with neither XAA nor EXA against xserver 1.13.0
+    
+    Pull in picturestr.h to get GLYPH_HAS_GLYPH_PICTURE_ACCESSOR defined
+    before compat-api.h is parsed, otherwise you fail with:
+    
+    In file included from /usr/include/xorg/picturestr.h:28:0,
+                     from /usr/include/xorg/exa.h:38,
+                     from atimach64accel.h:31,
+                     from atiscreen.c:46:
+    /usr/include/xorg/glyphstr.h:138:2: error: expected ')' before '*' token
+    /usr/include/xorg/glyphstr.h:138:2: error: expected ')' before '(' token
+    /usr/include/xorg/glyphstr.h:140:2: error: expected ')' before '*' token
+    /usr/include/xorg/glyphstr.h:140:2: error: expected ')' before '(' token
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit 104e3e067a7dcac143cb672fe42d56396ba6087b
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Wed Sep 26 16:21:25 2012 -0400
+
+    Don't gratuitously disable Render when ShadowFBing
+    
+    There's no reason to do this, and I am at a loss to explain why that was
+    ever done.  The first instance of this logic comes from xfree86 (over 11
+    years ago!):
+    
+    http://cvsweb.xfree86.org/cvsweb/xc/programs/Xserver/hw/xfree86/drivers/ati/atiscreen.c.diff?r1=1.15&r2=1.16
+    
+    Now, cfb never had Render support, so that might make some sense if
+    there was an intermediate uncommitted state where the driver used fb for
+    direct but cfb for shadowed.  But that's really the only plausible
+    explanation I can think of.
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit 5eb7fec958bc6ba8a1a2b0be4916cac818866e1c
+Author: Dave Airlie <airlied@gmail.com>
+Date:   Wed Jul 18 18:46:49 2012 +1000
+
+    mach64: fix build on 32-bit.
+    
+    tvout code only builds on 32-bit, fix build.
+    
+    Signed-off-by: Dave Airlie <airlied@redhat.com>
+
 commit 2776fc9cd69f18ba6f09f39ca747f3a9333bf9e4
 Author: Dave Airlie <airlied@redhat.com>
 Date:   Tue Jul 17 16:05:09 2012 +1000

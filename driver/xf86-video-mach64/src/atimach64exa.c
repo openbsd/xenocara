@@ -387,60 +387,6 @@ Mach64Solid
 
 static void Mach64DoneSolid(PixmapPtr pPixmap) { }
 
-/*
- * Memcpy-based UTS.
- */
-static Bool
-Mach64UploadToScreen(PixmapPtr pDst, int x, int y, int w, int h,
-    char *src, int src_pitch)
-{
-    char  *dst        = pDst->devPrivate.ptr;
-    int    dst_pitch  = exaGetPixmapPitch(pDst);
-
-    int bpp    = pDst->drawable.bitsPerPixel;
-    int cpp    = (bpp + 7) / 8;
-    int wBytes = w * cpp;
-
-    exaWaitSync(pDst->drawable.pScreen);
-
-    dst += (x * cpp) + (y * dst_pitch);
-
-    while (h--) {
-        memcpy(dst, src, wBytes);
-        src += src_pitch;
-        dst += dst_pitch;
-    }
-
-    return TRUE;
-}
-
-/*
- * Memcpy-based DFS.
- */
-static Bool
-Mach64DownloadFromScreen(PixmapPtr pSrc, int x, int y, int w, int h,
-    char *dst, int dst_pitch)
-{
-    char  *src        = pSrc->devPrivate.ptr;
-    int    src_pitch  = exaGetPixmapPitch(pSrc);
-
-    int bpp    = pSrc->drawable.bitsPerPixel;
-    int cpp    = (bpp + 7) / 8;
-    int wBytes = w * cpp;
-
-    exaWaitSync(pSrc->drawable.pScreen);
-
-    src += (x * cpp) + (y * src_pitch);
-
-    while (h--) {
-        memcpy(dst, src, wBytes);
-        src += src_pitch;
-        dst += dst_pitch;
-    }
-
-    return TRUE;
-}
-
 #include "atimach64render.c"
 
 /* Compute log base 2 of val. */
@@ -658,12 +604,6 @@ Bool ATIMach64ExaInit(ScreenPtr pScreen)
     pExa->PrepareCopy = Mach64PrepareCopy;
     pExa->Copy = Mach64Copy;
     pExa->DoneCopy = Mach64DoneCopy;
-
-    /* EXA hits more optimized paths when it does not have to fallback because
-     * of missing UTS/DFS, hook memcpy-based UTS/DFS.
-     */
-    pExa->UploadToScreen = Mach64UploadToScreen;
-    pExa->DownloadFromScreen = Mach64DownloadFromScreen;
 
     if (pATI->RenderAccelEnabled) {
 	if (pATI->Chip >= ATI_CHIP_264GTPRO) {
