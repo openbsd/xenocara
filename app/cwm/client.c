@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: client.c,v 1.115 2013/01/04 16:30:03 okan Exp $
+ * $OpenBSD: client.c,v 1.116 2013/01/06 01:01:26 okan Exp $
  */
 
 #include <sys/param.h>
@@ -321,7 +321,7 @@ client_vmaximize(struct client_ctx *cc)
 
 	/* if this will make us fully maximized then remove boundary */
 	if ((cc->flags & CLIENT_MAXFLAGS) == CLIENT_HMAXIMIZED) {
-		cc->geom.w += Conf.bwidth * 2;
+		cc->geom.w += cc->bwidth * 2;
 		cc->bwidth = 0;
 	}
 
