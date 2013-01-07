@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: client.c,v 1.116 2013/01/06 01:01:26 okan Exp $
+ * $OpenBSD: client.c,v 1.117 2013/01/07 21:53:23 okan Exp $
  */
 
 #include <sys/param.h>
@@ -660,6 +660,8 @@ client_placecalc(struct client_ctx *cc)
 
 		xu_ptr_getpos(sc->rootwin, &xmouse, &ymouse);
 		xine = screen_find_xinerama(sc, xmouse, ymouse);
+		xine.w += xine.x;
+		xine.h += xine.y;
 		xmouse = MAX(xmouse, xine.x) - cc->geom.w / 2;
 		ymouse = MAX(ymouse, xine.y) - cc->geom.h / 2;
 
