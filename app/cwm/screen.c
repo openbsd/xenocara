@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: screen.c,v 1.42 2013/01/02 18:11:23 okan Exp $
+ * $OpenBSD: screen.c,v 1.43 2013/01/07 20:32:19 okan Exp $
  */
 
 #include <sys/param.h>
@@ -143,8 +143,8 @@ screen_find_xinerama(struct screen_ctx *sc, int x, int y)
 		    y >= info->y_org && y < info->y_org + info->height) {
 			geom.x = info->x_org;
 			geom.y = info->y_org;
-			geom.w = info->width;
-			geom.h = info->height;
+			geom.w = info->x_org + info->width;
+			geom.h = info->y_org + info->height;
 			break;
 		}
 	}
