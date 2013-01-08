@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: conf.c,v 1.120 2013/01/04 16:27:58 okan Exp $
+ * $OpenBSD: conf.c,v 1.121 2013/01/08 15:16:05 okan Exp $
  */
 
 #include <sys/param.h>
@@ -375,6 +375,10 @@ static struct {
 	    {.i = (CWM_LEFT|CWM_PTRMOVE|CWM_BIGMOVE)} },
 	{ "bigptrmoveright", kbfunc_moveresize, 0,
 	    {.i = (CWM_RIGHT|CWM_PTRMOVE|CWM_BIGMOVE)} },
+	{ "htile", kbfunc_tile, KBFLAG_NEEDCLIENT,
+	    {.i = CWM_TILE_HORIZ } },
+	{ "vtile", kbfunc_tile, KBFLAG_NEEDCLIENT,
+	    {.i = CWM_TILE_VERT } },
 };
 
 /*

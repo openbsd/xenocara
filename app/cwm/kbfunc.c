@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: kbfunc.c,v 1.75 2013/01/04 16:30:03 okan Exp $
+ * $OpenBSD: kbfunc.c,v 1.76 2013/01/08 15:16:05 okan Exp $
  */
 
 #include <sys/param.h>
@@ -478,4 +478,17 @@ kbfunc_restart(struct client_ctx *cc, union arg *arg)
 {
 	(void)setsid();
 	(void)execvp(cwm_argv[0], cwm_argv);
+}
+
+void
+kbfunc_tile(struct client_ctx *cc, union arg *arg)
+{
+	switch (arg->i) {
+		case CWM_TILE_HORIZ:
+			client_htile(cc);
+			break;
+		case CWM_TILE_VERT:
+			client_vtile(cc);
+			break;
+	}
 }
