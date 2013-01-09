@@ -819,7 +819,6 @@ drmVersionPtr drmGetLibVersion(int fd)
 
 int drmGetCap(int fd, uint64_t capability, uint64_t *value)
 {
-#ifndef __OpenBSD__
 	struct drm_get_cap cap = { capability, 0 };
 	int ret;
 
@@ -828,7 +827,6 @@ int drmGetCap(int fd, uint64_t capability, uint64_t *value)
 		return ret;
 
 	*value = cap.value;
-#endif
 	return 0;
 }
 

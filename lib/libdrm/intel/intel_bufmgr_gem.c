@@ -1328,7 +1328,6 @@ drm_intel_gem_bo_subdata(drm_intel_bo *bo, unsigned long offset,
 static int
 drm_intel_gem_get_pipe_from_crtc_id(drm_intel_bufmgr *bufmgr, int crtc_id)
 {
-#ifndef __OpenBSD__
 	drm_intel_bufmgr_gem *bufmgr_gem = (drm_intel_bufmgr_gem *) bufmgr;
 	struct drm_i915_get_pipe_from_crtc_id get_pipe_from_crtc_id;
 	int ret;
@@ -1348,9 +1347,6 @@ drm_intel_gem_get_pipe_from_crtc_id(drm_intel_bufmgr *bufmgr, int crtc_id)
 	}
 
 	return get_pipe_from_crtc_id.pipe;
-#endif
-	/* only needed for KMS */
-	return -1;
 }
 
 static int

@@ -259,7 +259,6 @@ int drmModeAddFB(int fd, uint32_t width, uint32_t height, uint8_t depth,
 	return 0;
 }
 
-#ifndef __OpenBSD__
 int drmModeAddFB2(int fd, uint32_t width, uint32_t height,
 		  uint32_t pixel_format, uint32_t bo_handles[4],
 		  uint32_t pitches[4], uint32_t offsets[4],
@@ -282,7 +281,6 @@ int drmModeAddFB2(int fd, uint32_t width, uint32_t height,
 	*buf_id = f.fb_id;
 	return 0;
 }
-#endif
 
 int drmModeRmFB(int fd, uint32_t bufferId)
 {
@@ -315,7 +313,6 @@ drmModeFBPtr drmModeGetFB(int fd, uint32_t buf)
 	return r;
 }
 
-#ifndef __OpenBSD__
 int drmModeDirtyFB(int fd, uint32_t bufferId,
 		   drmModeClipPtr clips, uint32_t num_clips)
 {
@@ -327,7 +324,6 @@ int drmModeDirtyFB(int fd, uint32_t bufferId,
 
 	return DRM_IOCTL(fd, DRM_IOCTL_MODE_DIRTYFB, &dirty);
 }
-#endif
 
 
 /*
@@ -741,8 +737,25 @@ int drmCheckModesettingSupported(const char *busid)
 	if (found)
 		return 0;
 #endif
-	return -ENOSYS;
+#ifdef __OpenBSD__
+	int	fd;
+	struct drm_mode_card_res res;
+	drmModeResPtr r = 0;
 
+	if ((fd = drmOpen(NULL, busid)) < 0)
+		return -EINVAL;
+
+	memset(&res, 0, sizeof(struct drm_mode_card_res));
+
+	if (drmIoctl(fd, DRM_IOCTL_MODE_GETRESOURCES, &res)) {
+		drmClose(fd);
+		return -errno;
+	}
+
+	drmClose(fd);
+	return 0;
+#endif
+	return -ENOSYS;
 }
 
 int drmModeCrtcGetGamma(int fd, uint32_t crtc_id, uint32_t size,
@@ -824,7 +837,6 @@ int drmHandleEvent(int fd, drmEventContextPtr evctx)
 	return 0;
 }
 
-#ifndef __OpenBSD__
 int drmModePageFlip(int fd, uint32_t crtc_id, uint32_t fb_id,
 		    uint32_t flags, void *user_data)
 {
@@ -979,4 +991,3 @@ void drmModeFreePlaneResources(drmModePlaneResPtr ptr)
 	drmFree(ptr->planes);
 	drmFree(ptr);
 }
-#endif
