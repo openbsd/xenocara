@@ -16,7 +16,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: group.c,v 1.68 2013/01/01 14:50:01 okan Exp $
+ * $OpenBSD: group.c,v 1.69 2013/01/10 15:28:11 okan Exp $
  */
 
 #include <sys/param.h>
@@ -160,7 +160,7 @@ group_init(struct screen_ctx *sc)
 	xu_ewmh_net_showing_desktop(sc);
 	xu_ewmh_net_virtual_roots(sc);
 
-	group_setactive(sc, 0);
+	group_setactive(sc, 1);
 }
 
 void
