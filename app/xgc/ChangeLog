@@ -1,3 +1,90 @@
+commit bb714a16b2e79bc391184bafce6046a897baf293
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jan 12 18:18:15 2013 -0800
+
+    xgc 1.0.4
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit c6b6d11bc2bb2cfc877124fe931073f8cebc440a
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jan 12 18:16:38 2013 -0800
+
+    config: Add missing AC_CONFIG_SRCDIR
+    
+    Regroup AC statements under the Autoconf initialization section.
+    Regroup AM statements under the Automake initialization section.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 17734f0b7b2d5240c0adb14f7ce03763603fd99c
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Dec 28 20:36:26 2011 -0800
+
+    Bounds check value passed to WriteText
+    
+    Read outside array bounds (CWE 125): In array dereference of names[type] with index 'type'
+        Array size is 4 elements (of 8 bytes each), index >= 0 and index <= 2147483647
+          at line 155 of text.c in function 'WriteText'.
+    
+    [ This bug was found by the Parfait 0.4.2 bug checking tool.
+      For more information see http://labs.oracle.com/projects/parfait/ ]
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 84e7552c98096930cef9ed2d1d91f3d8abceeb4e
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Mar 8 07:36:55 2011 -0500
+
+    config: let Automake handle Lex and Yacc dist and cleaning
+    
+    MAINTAINERCLEANFILES are not needed for lex and yacc.
+    Only gram.h needs to be specified as built source.
+    
+    Automake generates all the rules to handle building,
+    distribution and cleaning.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 1a25a116e87e8cde709cf1b810ac2371ac485280
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jan 19 10:06:56 2011 -0500
+
+    config: move man pages into their own directory
+    
+    Use services provided by XORG_MANPAGE_SECTIONS.
+    Use standard Makefile for man pages.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 75d2575ad02fdff4085df16f1e160be718d7b299
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jan 12 16:28:02 2011 -0500
+
+    config: replace deprecated AM_CONFIG_HEADER with AC_CONFIG_HEADERS
+    
+    This silences an Autoconf warning
+
+commit 6adff4c81ca7eef354e54e0fc71645849023bbc3
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jan 12 15:29:50 2011 -0500
+
+    config: replace deprecated AC_HELP_STRING with AS_HELP_STRING
+    
+    This silences an Automake warning.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit ff668395fc408f540604bd534e323b483f52a4ea
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Nov 1 13:19:23 2010 -0400
+
+    config: replace AC_CHECK_FILE with test -f
+    
+    * AC_CHECK_FILE doesn't work for cross compilation
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
 commit 76ba19a5b0f1ec9515ac802c3c3efaad87f3079f
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Sat Oct 30 16:09:30 2010 -0700

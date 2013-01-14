@@ -21,6 +21,7 @@
 
 AM_YFLAGS = -d
 
+SUBDIRS = man
 bin_PROGRAMS = xgc
 
 AM_CFLAGS = $(CWARNFLAGS) $(XGC_CFLAGS) -D_BSD_SOURCE
@@ -42,14 +43,8 @@ xgc_SOURCES =	\
         text.c \
         xgc.h
 
-appman_PRE = \
-        xgc.man
-
-BUILT_SOURCES = gram.h gram.c lex.c
+BUILT_SOURCES = gram.h
 MAINTAINERCLEANFILES = ChangeLog INSTALL
-MAINTAINERCLEANFILES += $(BUILT_SOURCES) 
-
-gram.h: gram.c
 
 # App default files
 
@@ -69,21 +64,6 @@ EXTRA_DIST = tile Bugs	\
 	Written/Notes2							\
 	Written/Outline							\
 	Written/Widget
-
-
-appmandir = $(APP_MAN_DIR)
-
-appman_DATA = $(appman_PRE:man=@APP_MAN_SUFFIX@)
-
-EXTRA_DIST += $(appman_PRE)
-CLEANFILES = $(appman_DATA)
-
-SUFFIXES = .$(APP_MAN_SUFFIX) .man
-
-# String replacements in MAN_SUBSTS now come from xorg-macros.m4 via configure
-.man.$(APP_MAN_SUFFIX):
-	$(AM_V_GEN)$(SED) $(MAN_SUBSTS) < $< > $@
-
 
 .PHONY: ChangeLog INSTALL
 

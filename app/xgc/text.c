@@ -147,6 +147,10 @@ WriteText(Widget w, XEvent *event, String *params, Cardinal *num_params)
   int type;			/* which string # to send */
 
   type = atoi(params[0]);
+  if (type < 0 || type >= NUMTEXTWIDGETS) {
+      fprintf(stderr, "Invalid value %s in WriteText()\n", params[0]);
+      return;
+  }
   if (strcmp(textstrings[type],oldtextstrings[type])) {
     strcpy(oldtextstrings[type],textstrings[type]);
     snprintf(mbuf,sizeof mbuf,"%s%s\n", 
