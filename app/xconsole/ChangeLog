@@ -1,3 +1,152 @@
+commit cc0cf84461cfe2c31ddce34863c6433183e8a55d
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jan 12 16:24:44 2013 -0800
+
+    xconsole 1.0.5
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 98f941d218108a314f979332b19c612f51ace08d
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Jan 4 18:21:23 2013 -0800
+
+    Fix implicit conversion from size_t to int warnings in Deiconified()
+    
+    xconsole.c:423:14: warning: implicit conversion loses integer precision: 'size_t' (aka 'unsigned long') to 'int' [-Wshorten-64-to-32]
+        oldlen = strlen (oldName);
+               ~ ^~~~~~~~~~~~~~~~
+    
+    xconsole.c:426:27: warning: implicit conversion changes signedness: 'int' to 'size_t' (aka 'unsigned long') [-Wsign-conversion]
+            newName = malloc (oldlen - 1);
+                      ~~~~~~  ~~~~~~~^~~
+    
+    xconsole.c:429:36: warning: implicit conversion changes signedness: 'int' to 'size_t' (aka 'unsigned long') [-Wsign-conversion]
+            strncpy (newName, oldName, oldlen - 2);
+            ~~~~~~~                    ~~~~~~~^~~
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 60d4a9dc01c9a1bf7a29c4a64ad52a6e27307682
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Jan 4 18:17:18 2013 -0800
+
+    unifdef -U__UNIXOS2__
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit a7a54829dc89b38bbad7fcd6e70cf001d2274c26
+Author: Arvind Umrao <arvind.umrao@oracle.com>
+Date:   Fri Aug 24 09:44:23 2012 +0530
+
+    Open /dev/console with NOCTTY and O_NONBLOCK flags
+    
+    In some cases, for SPARC servers, special files like fifo need
+    to open in nonblocking mode otherwise whole xconsole GUI freezes.
+    Also /dev/console is often a terminal device.  So I am opening
+    /dev/console with NOCTTY and O_NONBLOCK flags.
+    
+    Signed-off-by: Arvind Umrao <arvind.umrao@oracle.com>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 2e2ccc86fd4e778268ee44897a56535ce37b25e3
+Author: Eric S. Raymond <esr@thyrsus.com>
+Date:   Thu Aug 23 06:19:16 2012 -0400
+
+    Don't rely on being able to set tab stops.
+    
+    Signed-off-by: Eric S. Raymond <esr@thyrsus.com>
+
+commit 1dad4492bf1a6668de2b6ef56fd16ef4fc0e380d
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Jun 5 18:25:30 2012 -0700
+
+    unifdef CRAY
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit ada6e8761138d3e7af42726de15e88204bed1686
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Jun 5 18:22:40 2012 -0700
+
+    unifdef umips
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit f9b34c2eae4c3abe40904e4274c5d82cd16fc7af
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Jun 5 18:20:49 2012 -0700
+
+    Mark functions _X_NORETURN that gcc warnings suggest
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit a12b6b391ab96241aa14f918e36a2fbd92734c7d
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Jun 5 18:16:59 2012 -0700
+
+    Remove old Xorg & XFree86 CVS version tags
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit f7bcc00522e06e33ddb1ff4974c3b15a44d1005f
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Sep 28 20:30:46 2011 -0700
+
+    Strip trailing whitespace
+    
+    Performed with: find * -type f | xargs perl -i -p -e 's{[ \t]+$}{}'
+    git diff -w & git diff -b show no diffs from this change
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit a03d98d49cd2f2ef6aa6d2ecaf611cccfad7a919
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Sun Sep 25 00:55:20 2011 -0700
+
+    Require xt >= 1.0 for appdefaultdir
+    
+    https://bugs.freedesktop.org/show_bug.cgi?id=7237
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit 2f34a30d5b4fed4936fa41bb25bc0953d6882ece
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jan 19 10:06:55 2011 -0500
+
+    config: move man pages into their own directory
+    
+    Use services provided by XORG_MANPAGE_SECTIONS.
+    Use standard Makefile for man pages.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 037e30485b3d6e22216a8c44e78fdb6fb57b238b
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Jan 13 17:15:36 2011 -0500
+
+    man: replace hard coded man page section with substitution strings
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit e076a7cc5441e51b1083aba11f5b743156514fc1
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jan 12 16:28:02 2011 -0500
+
+    config: replace deprecated AM_CONFIG_HEADER with AC_CONFIG_HEADERS
+    
+    This silences an Autoconf warning
+
+commit 2f6ff82050e8a535d633f9b59bb2ec94528d3634
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jan 12 15:29:50 2011 -0500
+
+    config: replace deprecated AC_HELP_STRING with AS_HELP_STRING
+    
+    This silences an Automake warning.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
 commit d71b95d96588e1ca020fa15db6ceb3050d41bbdc
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Thu Sep 23 19:31:52 2010 -0700
@@ -198,7 +347,7 @@ Date:   Thu Mar 27 20:07:41 2008 -0700
     Build fix for file systems that are not case sensitive
 
 commit 2f9d3842be3d5d58270e54821552735cdb098075
-Merge: d5ffc49... cda9968...
+Merge: d5ffc49 cda9968
 Author: James Cloos <cloos@jhcloos.com>
 Date:   Mon Sep 3 05:59:57 2007 -0400
 

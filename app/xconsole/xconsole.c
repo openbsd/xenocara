@@ -1,5 +1,4 @@
 /*
- * $Xorg: xconsole.c,v 1.5 2001/02/09 02:05:40 xorgcvs Exp $
  *
 Copyright 1990, 1998  The Open Group
 
@@ -26,11 +25,12 @@ in this Software without prior written authorization from The Open Group.
  * Author:  Keith Packard, MIT X Consortium
  */
 
-/* $XFree86: xc/programs/xconsole/xconsole.c,v 3.31tsi Exp $ */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
+
+#include <X11/Xfuncproto.h>
 
 #include <X11/Intrinsic.h>
 #include <X11/StringDefs.h>
@@ -157,13 +157,6 @@ static XrmOptionDescRec options[] = {
 #define FILE_NAME "/dev/xcons"
 #endif
 
-#ifdef __UNIXOS2__
-#define USE_FILE
-#define FILE_NAME "/dev/console$"
-#define INCL_DOSFILEMGR
-#define INCL_DOSDEVIOCTL
-#include <os2.h>
-#endif
 
 #ifdef linux
 #define USE_FILE
@@ -174,7 +167,7 @@ static XrmOptionDescRec options[] = {
  * devpts. This is the fallback if open file FILE_NAME fails.
  * <werner@suse.de>
  */
-#  define USE_PTS 
+#  define USE_PTS
 # endif
 #endif
 
@@ -222,11 +215,7 @@ static int child_pid;
 #ifdef __hpux
 #define PTYCHAR1        "zyxwvutsrqp"
 #else   /* !__hpux */
-#ifdef __UNIXOS2__
-#define PTYCHAR1        "pq"
-#else
 #define PTYCHAR1        "pqrstuvwxyzPQRSTUVWXYZ"
-#endif  /* !__UNIXOS2__ */
 #endif  /* !__hpux */
 #endif  /* !PTYCHAR1 */
 
@@ -261,7 +250,7 @@ OpenConsole(void)
 	if (!strcmp (app_resources.file, "console"))
 	{
 	    /* must be owner and have read/write permission */
-#if !defined(__NetBSD__) && !defined(__OpenBSD__) && !defined(Lynx) && !defined(__UNIXOS2__)
+#if !defined(__NetBSD__) && !defined(__OpenBSD__) && !defined(Lynx)
 	    struct stat sbuf;
 # if !defined (linux)
 	    if (!stat("/dev/console", &sbuf) &&
@@ -274,23 +263,9 @@ OpenConsole(void)
 # ifdef linux
 		if (!stat(FILE_NAME, &sbuf))
 # endif
-		input = fopen (FILE_NAME, "r");
-# ifdef __UNIXOS2__
-		if (input)
-		{
-		    ULONG arg = 1,arglen;
-		    APIRET rc;
-		    if ((rc=DosDevIOCtl(fileno(input), 0x76,0x4d,
-			&arg, sizeof(arg), &arglen,
-			NULL, 0, NULL)) != 0)
-		    {
-			fclose(input);
-			input = 0;
-		    }
-		}
-# endif
+		    input = fopen (FILE_NAME, "r");
 #endif
-		
+
 #ifdef USE_PTY
 		if (!input && get_pty (&pty_fd, &tty_fd, ttydev, ptydev) == 0)
 		{
@@ -346,7 +321,11 @@ OpenConsole(void)
 	    regularFile = FALSE;
 	    if (access(app_resources.file, R_OK) == 0)
 	    {
-		input = fopen (app_resources.file, "r");
+		int fd  = open (app_resources.file,
+				O_RDONLY | O_NONBLOCK | O_NOCTTY);
+		if (fd != -1)
+		    input = fdopen (fd, "r");
+
 		if (input)
 		    if (!stat(app_resources.file, &sbuf) &&
 			S_ISREG( sbuf.st_mode ) )
@@ -396,7 +375,7 @@ KillChild(int sig)
 #endif
 
 /*ARGSUSED*/
-static void
+static void _X_NORETURN
 Quit(Widget widget, XEvent *event, String *params, Cardinal *num_params)
 {
 #ifdef USE_OSM
@@ -446,7 +425,7 @@ Deiconified(Widget widget, XEvent *event, String *params, Cardinal *num_params)
     Arg	    arglist[1];
     char    *oldName;
     char    *newName;
-    int	    oldlen;
+    size_t  oldlen;
 
     iconified = False;
     if (!app_resources.notify || !notified)
@@ -550,7 +529,7 @@ inputReady(XtPointer w, int *source, XtInputId *id)
 	    stripNonprint (buffer);
 	    n = strlen (buffer);
 	}
-	
+
 	TextAppend ((Widget) text, buffer, n);
     }
 }
@@ -648,7 +627,7 @@ ConvertSelection(Widget w, Atom *selection, Atom *target, Atom *type,
     return False;
 }
 
-static void
+static void _X_NORETURN
 LoseSelection(Widget w, Atom *selection)
 {
     Quit (w, (XEvent*)NULL, (String*)NULL, (Cardinal*)NULL);
@@ -904,42 +883,6 @@ get_pty(int *pty, int *tty, char *ttydev, char *ptydev)
 #else
 	static int devindex, letter = 0;
 
-#if defined(umips) && defined (SYSTYPE_SYSV)
-	struct stat fstat_buf;
-
-	*pty = open ("/dev/ptc", O_RDWR);
-	if (*pty < 0 || (fstat (*pty, &fstat_buf)) < 0)
-	{
-	  return(1);
-	}
-	sprintf (ttydev, "/dev/ttyq%d", minor(fstat_buf.st_rdev));
-	sprintf (ptydev, "/dev/ptyq%d", minor(fstat_buf.st_rdev));
-	if ((*tty = open (ttydev, O_RDWR)) >= 0)
-	{
-	    /* got one! */
-	    return(0);
-	}
-	close (*pty);
-#else /* not (umips && SYSTYPE_SYSV) */
-#ifdef CRAY
-	for (; devindex < 256; devindex++) {
-	    sprintf (ttydev, "/dev/ttyp%03d", devindex);
-	    sprintf (ptydev, "/dev/pty/%03d", devindex);
-
-	    if ((*pty = open (ptydev, O_RDWR)) >= 0 &&
-		(*tty = open (ttydev, O_RDWR)) >= 0)
-	    {
-		/*
-		 * We need to set things up for our next entry
-		 * into this function!
-		 */
-		(void) devindex++;
-		return(0);
-	    }
-	    if (*pty >= 0)
-		close (*pty);
-	}
-#else /* !CRAY */
 #ifdef sgi
 	{
 	    char *slave;
@@ -975,8 +918,6 @@ get_pty(int *pty, int *tty, char *ttydev, char *ptydev)
 	    (void) letter++;
 	}
 #endif /* sgi else not sgi */
-#endif /* CRAY else not CRAY */
-#endif /* umips && SYSTYPE_SYSV */
 #endif /* USE_GET_PSEUDOTTY */
 #endif /* SVR4 */
 	/*
@@ -1020,7 +961,7 @@ osm_pipe(void)
 	return NULL;
 #if defined (_AIX)
     if ((tty = open("/dev/ptc", O_RDWR)) < 0)
-#else	    
+#else
     if ((tty = open("/dev/ptmx", O_RDWR)) < 0)
 #endif
 	return NULL;
