@@ -19,6 +19,7 @@
 #  TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 #  PERFORMANCE OF THIS SOFTWARE.
 
+SUBDIRS = man
 bin_PROGRAMS = viewres
 
 AM_CFLAGS = $(VIEWRES_CFLAGS) $(CWARNFLAGS)
@@ -26,9 +27,6 @@ viewres_LDADD = $(VIEWRES_LIBS)
 
 viewres_SOURCES =	\
         viewres.c
-
-appman_PRE = \
-        viewres.man
 
 # App default files
 DISTCHECK_CONFIGURE_FLAGS = --with-appdefaultdir=\$${datadir}/X11/app-defaults
@@ -39,20 +37,7 @@ dist_appdefault_DATA = \
         app-defaults/Viewres \
         app-defaults/Viewres-color
 
-appmandir = $(APP_MAN_DIR)
-
-appman_DATA = $(appman_PRE:man=@APP_MAN_SUFFIX@)
-
-EXTRA_DIST = $(appman_PRE)
 MAINTAINERCLEANFILES = ChangeLog INSTALL
-CLEANFILES = $(appman_DATA)
-
-SUFFIXES = .$(APP_MAN_SUFFIX) .man
-
-# String replacements in MAN_SUBSTS now come from xorg-macros.m4 via configure
-.man.$(APP_MAN_SUFFIX):
-	$(AM_V_GEN)$(SED) $(MAN_SUBSTS) < $< > $@
-
 
 .PHONY: ChangeLog INSTALL
 

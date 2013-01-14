@@ -1,6 +1,6 @@
 .\" $XConsortium: viewres.man,v 1.8 94/04/17 20:43:25 gildea Exp $
 .\" Copyright (c) 1994  X Consortium
-.\" 
+.\"
 .\" Permission is hereby granted, free of charge, to any person obtaining
 .\" a copy of this software and associated documentation files (the
 .\" "Software"), to deal in the Software without restriction, including
@@ -8,10 +8,10 @@
 .\" distribute, sublicense, and/or sell copies of the Software, and to
 .\" permit persons to whom the Software is furnished to do so, subject to
 .\" the following conditions:
-.\" 
+.\"
 .\" The above copyright notice and this permission notice shall be included
 .\" in all copies or substantial portions of the Software.
-.\" 
+.\"
 .\" THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
 .\" OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
 .\" MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
@@ -19,7 +19,7 @@
 .\" OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
 .\" ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 .\" OTHER DEALINGS IN THE SOFTWARE.
-.\" 
+.\"
 .\" Except as contained in this notice, the name of the X Consortium shall
 .\" not be used in advertising or otherwise to promote the sale, use or
 .\" other dealings in this Software without prior written authorization
@@ -45,12 +45,12 @@ examine the structure and inherited resources for the Athena Widget Set.
 well as the following:
 .TP 8
 .B \-top \fIname\fP
-This option specifies the name of the highest widget in the hierarchy to 
+This option specifies the name of the highest widget in the hierarchy to
 display.  This is typically used to limit the display to a subset of the
 tree.  The default is \fIObject\fP.
 .TP 8
 .B \-variable
-This option indicates that the widget variable names (as declared in 
+This option indicates that the widget variable names (as declared in
 header files) should be displayed in the nodes rather than the widget
 class name.  This is sometimes useful to distinguish widget classes that
 share the same name (such as \fIText\fP).
@@ -59,12 +59,12 @@ share the same name (such as \fIText\fP).
 This option indicates that the tree should be displayed top to bottom
 rather left to right.
 .SH "VIEW MENU"
-The way in which the tree is displayed may be changed through the 
+The way in which the tree is displayed may be changed through the
 entries in the \fBView\fP menu:
 .TP 8
 .B "Show Variable Names"
 This entry causes the node labels to be set to the variable names used
-to declare the corresponding widget class.  This operation may also be 
+to declare the corresponding widget class.  This operation may also be
 performed with the \fBSetLabelType(variable)\fP translation.
 .TP 8
 .B "Show Class Names"
@@ -81,7 +81,7 @@ This entry causes the tree to be laid out from top to bottom.  This operation
 may also be performed with the \fISetOrientation(North)\fP translation.
 .TP 8
 .B "Show Resource Boxes"
-This entry expands the selected nodes (see next section) to show the 
+This entry expands the selected nodes (see next section) to show the
 new widget and constraint resources.  This operation
 may also be performed with the \fIResources(on)\fP translation.
 .TP 8
@@ -118,15 +118,15 @@ This entry selects the immediate parents of all selected nodes.  This operation
 may also be performed with the \fISelect(parent)\fP translation.
 .TP 8
 .B "Select Ancestors"
-This entry recursively selects all parents of all selected nodes.  This 
+This entry recursively selects all parents of all selected nodes.  This
 operation may also be performed with the \fISelect(ancestors)\fP translation.
 .TP 8
 .B "Select Children"
-This entry selects the immediate children of all selected nodes.  This 
+This entry selects the immediate children of all selected nodes.  This
 operation may also be performed with the \fISelect(children)\fP translation.
 .TP 8
 .B "Select Descendants"
-This entry recursively selects all children of all selected nodes.  This 
+This entry recursively selects all children of all selected nodes.  This
 operation may also be performed with the \fISelect(descendants)\fP translation.
 .TP 8
 .B "Select Has Resources"
@@ -136,7 +136,7 @@ may also be performed with the \fISelect(resources)\fP translation.
 .TP 8
 .B "Select Shown Resource Boxes"
 This entry selects all nodes whose resource boxes are currently expanded
-(usually so that they can be closed with \fBHide Resource Boxes\fP).  This 
+(usually so that they can be closed with \fBHide Resource Boxes\fP).  This
 operation may also be performed with the \fISelect(shown)\fP translation.
 .SH "ACTIONS"
 The following application actions are provided:
@@ -146,7 +146,7 @@ The following application actions are provided:
 This action causes \fIviewres\fP to exit.
 .TP 8
 .B "SetLabelType(\fItype\fP)"
-This action sets the node labels to display the widget \fIvariable\fP or 
+This action sets the node labels to display the widget \fIvariable\fP or
 \fIclass\fP names, according to the argument \fItype\fP.
 .TP 8
 .B "SetOrientation(\fIdirection\fP)"
@@ -156,7 +156,7 @@ the window:  \fIWest\fP, \fINorth\fP, \fIEast\fP, or \fISouth\fP.
 .B "Select(\fIwhat\fP)"
 This action selects the indicated nodes, as described in the \fBVIEW MENU\fP
 section: \fInothing\fP (unselects all nodes), \fIinvert\fP, \fIparent\fP,
-\fIancestors\fP, \fIchildren\fP, \fIdescendants\fP, \fIresources\fP, 
+\fIancestors\fP, \fIchildren\fP, \fIdescendants\fP, \fIresources\fP,
 \fIshown\fP.
 .TP 8
 .B "Resources(\fIop\fP)"
@@ -167,47 +167,48 @@ only that node is used.
 .SH "WIDGET HIERARCHY"
 Resources may be specified for the following widgets:
 .sp
+.ft CW
 .nf
-.ta .5i 1.0i 1.5i 2.0i 2.5i 3.0i 3.5i 4.0i 4.5i 5.0i 5.5i 6.0i 6.5i 7.0i
 Viewres viewres
-	Paned pane
-		Box buttonbox
-			Command quit
-			MenuButton view
-				SimpleMenu viewMenu
-					SmeBSB layoutHorizontal
-					SmeBSB layoutVertical
-					SmeLine line1
-					SmeBSB namesVariable
-					SmeBSB namesClass
-					SmeLine line2
-					SmeBSB viewResources
-					SmeBSB viewNoResources
-			MenuButton select
-				SimpleMenu selectMenu
-					SmeBSB unselect
-					SmeBSB selectAll
-					SmeBSB selectInvert
-					SmeLine line1
-					SmeBSB selectParent
-					SmeBSB selectAncestors
-					SmeBSB selectChildren
-					SmeBSB selectDescendants
-					SmeLine line2
-					SmeBSB selectHasResources
-					SmeBSB selectShownResources
-		Form treeform
-			Porthole porthole
-				Tree tree
-					Box \fIvariable-name\fP
-						Toggle \fIvariable-name\fP
-						List \fIvariable-name\fP
-			Panner panner
+        Paned pane
+                Box buttonbox
+                        Command quit
+                        MenuButton view
+                                SimpleMenu viewMenu
+                                        SmeBSB layoutHorizontal
+                                        SmeBSB layoutVertical
+                                        SmeLine line1
+                                        SmeBSB namesVariable
+                                        SmeBSB namesClass
+                                        SmeLine line2
+                                        SmeBSB viewResources
+                                        SmeBSB viewNoResources
+                        MenuButton select
+                                SimpleMenu selectMenu
+                                        SmeBSB unselect
+                                        SmeBSB selectAll
+                                        SmeBSB selectInvert
+                                        SmeLine line1
+                                        SmeBSB selectParent
+                                        SmeBSB selectAncestors
+                                        SmeBSB selectChildren
+                                        SmeBSB selectDescendants
+                                        SmeLine line2
+                                        SmeBSB selectHasResources
+                                        SmeBSB selectShownResources
+                Form treeform
+                        Porthole porthole
+                                Tree tree
+                                        Box \fIvariable-name\fP
+                                                Toggle \fIvariable-name\fP
+                                                List \fIvariable-name\fP
+                        Panner panner
 .fi
+.ft
 .sp
 where \fIvariable-name\fP is the widget variable name of each node.
 .SH "SEE ALSO"
-X(__miscmansuffix__), xrdb(1), listres(1), editres(1), appres(1), appropriate widget documents
+X(__miscmansuffix__), xrdb(__appmansuffix__), listres(__appmansuffix__), editres(__appmansuffix__), appres(__appmansuffix__), appropriate widget documents
 .SH COPYRIGHT
 Copyright 1994 X Consortium
 .br
