@@ -1,16 +1,15 @@
 '\" t
-.\" $Xorg: editres.man,v 1.4 2001/02/09 02:05:29 xorgcvs Exp $
 .\" Copyright 1993, 1994, 1998  The Open Group
-.\" 
+.\"
 .\" Permission to use, copy, modify, distribute, and sell this software and its
 .\" documentation for any purpose is hereby granted without fee, provided that
 .\" the above copyright notice appear in all copies and that both that
 .\" copyright notice and this permission notice appear in supporting
 .\" documentation.
-.\" 
+.\"
 .\" The above copyright notice and this permission notice shall be included
 .\" in all copies or substantial portions of the Software.
-.\" 
+.\"
 .\" THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
 .\" OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
 .\" MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
@@ -18,13 +17,12 @@
 .\" OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
 .\" ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 .\" OTHER DEALINGS IN THE SOFTWARE.
-.\" 
+.\"
 .\" Except as contained in this notice, the name of The Open Group shall
 .\" not be used in advertising or otherwise to promote the sale, use or
 .\" other dealings in this Software without prior written authorization
 .\" from The Open Group.
 .\"
-.\" $XFree86: xc/programs/editres/editres.man,v 1.8 2001/12/14 20:00:42 dawes Exp $
 .\"
 .TH EDITRES 1 __xorgversion__
 .SH NAME
@@ -49,10 +47,10 @@ string to the user's X Resources file.
 provides a window consisting of the following four areas:
 .IP "Menu Bar" 25
 A set of popup menus that allow you full access to editres's features.
-.IP "Panner" 
+.IP "Panner"
 The panner allows a more intuitive way to scroll the application tree display.
 .IP "Message Area"
-Displays information to the user about the action that editres expects 
+Displays information to the user about the action that editres expects
 of her.
 .IP "Application Widget Tree" 25
 This area will be used to display the selected application's widget tree.
@@ -67,12 +65,12 @@ the application does not understand the editres protocol editres will
 inform you of this fact in the message area after a few seconds delay.
 .LP
 Once you have a widget tree you may now select any of the other menu
-options. The effect of each of these is described below.  
+options. The effect of each of these is described below.
 .SH COMMANDS
 .IP "Get Widget Tree" 8
 Allows the user to click on any application that speaks the editres
 protocol and receive its widget tree.
-.IP "Refresh Current Widget Tree" 
+.IP "Refresh Current Widget Tree"
 Editres only knows about the widgets that exist at the present time.
 Many applications create and destroy widgets on the fly.  Selecting
 this menu item will cause editres to ask the application to resend its
@@ -82,7 +80,7 @@ For example,
 xman only creates the widgets for its \fItopbox\fP when it
 starts up.  None of the widgets for the manual page window are created
 until the user actually clicks on the \fIManual Page\fP button.  If
-you retrieved 
+you retrieved
 xman's widget tree before the the manual page is active, you may
 wish to refresh the widget tree after the manual page has been
 displayed.  This will allow you to also edit the manual page's resources.
@@ -121,9 +119,9 @@ wish to have displayed.  Since some widgets are fully obscured by
 their children, it is not possible to get to every widget this way,
 but this mechanism does give very useful feedback between the elements
 in the widget tree and those in the actual application.
-.IP "Select All" 
+.IP "Select All"
 .IP "Unselect All"
-.IP "Invert All" 
+.IP "Invert All"
 These functions allow the user to select, unselect, or invert all
 widgets in the widget tree.
 .IP "Select Children"
@@ -144,11 +142,11 @@ cause the label of \fBall\fP widgets in the tree to be changed to show the
 class name, IDs, or window associated with each widget in the application.
 The widget IDs, and windows are shown as hex numbers.
 .LP
-In addition there are keyboard accelerators for each of the 
+In addition there are keyboard accelerators for each of the
 Tree operations.  If the input focus is over an individual widget in
 the tree, then that operation will only effect that widget.  If the
-input focus is in the Tree background it will have 
-exactly the same effect as the corresponding menu item.  
+input focus is in the Tree background it will have
+exactly the same effect as the corresponding menu item.
 .LP
 The translation
 entries shown may be applied to any widget in the application.  If
@@ -197,10 +195,10 @@ name exactly as it would appear if you were to save it to a file or
 apply it.
 .IP "The Widget Names and Classes"
 This area allows you to select exactly which widgets this resource will
-apply to.  The area contains four lines, the first contains the 
+apply to.  The area contains four lines, the first contains the
 name of the selected widget and all its ancestors, and the more restrictive
 dot (\fB.\fP) separator.  The second line contains less specific the
-Class names 
+Class names
 of each widget, and well as the less restrictive star (\fB*\fP) separator.
 The third line contains a set of special buttons called \fBAny Widget\fP
 which will generalize this level to match any widget.
@@ -211,7 +209,7 @@ matches zero or more levels.
 The initial state of this area is the most restrictive, using the
 resource names and the dot separator.  By selecting the other buttons
 in this area you can ease the restrictions to allow more and more widgets
-to match the specification.  The extreme case is to select all the 
+to match the specification.  The extreme case is to select all the
 \fBAny Widget Chain\fP buttons, which will match every widget in the
 application.   As you select different buttons the tree display will update
 to show you exactly which widgets will be effected by the current
@@ -285,12 +283,12 @@ about its internals, or to disable the \fBSetValues\fP part of the protocol.
 .TP 8
 .B editresBlock (\fPClass\fB EditresBlock)
 Specifies which type of blocking this application wishes to impose on the
-editres protocol.  
+editres protocol.
 .LP
 The accepted values are:
 .IP all 15
 Block all requests.
-.IP setValues 
+.IP setValues
 Block all SetValues requests.  As this is the only editres request that
 actually modifies the application, this is in effect stating that the
 application is read-only.
@@ -413,7 +411,7 @@ stored in the RESOURCE_MANAGER property.
 .I __apploaddir__/Editres
 specifies required resources
 .SH SEE ALSO
-X(__miscmansuffix__), xrdb(1), Athena Widget Set
+X(__miscmansuffix__), xrdb(__appmansuffix__), Athena Widget Set
 .SH RESTRICTIONS
 This is a prototype, there are lots of nifty features I would love to add,
 but I hope this will give you some ideas about what a resource editor

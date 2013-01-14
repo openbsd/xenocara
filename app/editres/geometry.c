@@ -1,5 +1,4 @@
 /*
- * $Xorg: geometry.c,v 1.4 2001/02/09 02:05:29 xorgcvs Exp $
  *
 Copyright 1989, 1998  The Open Group
 
@@ -25,7 +24,6 @@ in this Software without prior written authorization from The Open Group.
  *
  * Author:  Chris D. Peterson, MIT X Consortium
  */
-/* $XFree86: xc/programs/editres/geometry.c,v 1.4 2001/01/17 23:44:52 dawes Exp $ */
 
 #include <X11/Intrinsic.h>
 #include <X11/StringDefs.h>

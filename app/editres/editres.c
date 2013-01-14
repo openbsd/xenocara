@@ -1,5 +1,4 @@
 /*
- * $Xorg: editres.c,v 1.4 2001/02/09 02:05:29 xorgcvs Exp $
  *
 Copyright 1989, 1998  The Open Group
 
@@ -23,7 +22,6 @@ Except as contained in this notice, the name of The Open Group shall not be
 used in advertising or otherwise to promote the sale, use or other dealings
 in this Software without prior written authorization from The Open Group.
  */
-/* $XFree86: xc/programs/editres/editres.c,v 1.6 2001/04/01 14:00:17 tsi Exp $ */
 
 #include <stdio.h>
 #include <stdlib.h>

@@ -1,4 +1,3 @@
-/* $Xorg: comm.c,v 1.5 2001/02/09 02:05:29 xorgcvs Exp $ */
 /*
 
 Copyright 1990, 1998  The Open Group
@@ -26,7 +25,6 @@ other dealings in this Software without prior written authorization
 from The Open Group.
 
 */
-/* $XFree86: xc/programs/editres/comm.c,v 1.4 2001/01/17 23:44:52 dawes Exp $ */
 
 
 /*
