@@ -1,3 +1,138 @@
+commit 2cc2b4bf7f370c5c804f4e75228677b2c58f1d7f
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jan 12 22:21:57 2013 -0800
+
+    xmessage 1.0.4
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 36d79fb080723a019e18e166c36ccaf2127d199d
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jan 12 22:21:05 2013 -0800
+
+    config: Add missing AC_CONFIG_SRCDIR
+    
+    Regroup AC statements under the Autoconf initialization section.
+    Regroup AM statements under the Automake initialization section.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 2e23c3cf3352eb66b2f9ee78c529d49a195ae0de
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jan 19 10:06:56 2011 -0500
+
+    config: move man pages into their own directory
+    
+    Use services provided by XORG_MANPAGE_SECTIONS.
+    Use standard Makefile for man pages.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit f84771abead3a89fd77db59d26ca194458e0bf22
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Jan 13 17:15:36 2011 -0500
+
+    man: replace hard coded man page section with substitution strings
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit ee508e69c1160abdf339d8e32b575fb5da2598ec
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Jan 13 11:15:47 2011 -0500
+
+    man: remove trailing spaces and tabs
+    
+    Using s/[ \t]*$//
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 402f6abee4b14c123a58065cb228277ab5c3cae7
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jan 12 16:28:02 2011 -0500
+
+    config: replace deprecated AM_CONFIG_HEADER with AC_CONFIG_HEADERS
+    
+    This silences an Autoconf warning
+
+commit 48ac5420e3efa494ff8a528ffdf02c94af7f22bb
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jan 12 15:29:50 2011 -0500
+
+    config: replace deprecated AC_HELP_STRING with AS_HELP_STRING
+    
+    This silences an Automake warning.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 40c220b0515dbd0c8d619deed93c8e43d792b8ee
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jan 12 13:10:21 2011 -0500
+
+    config: remove AC_PROG_CC as it overrides AC_PROG_C_C99
+    
+    XORG_STRICT_OPTION from XORG_DEFAULT_OPTIONS calls
+    AC_PROG_C_C99. This sets gcc with -std=gnu99.
+    If AC_PROG_CC macro is called afterwards, it resets CC to gcc.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 8a534984a4215dd3282efad81f784dc2abc56a51
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jan 12 11:54:40 2011 -0500
+
+    config: use AC_PROG_INSTALL now supplied by XORG_DEFAULT_OPTIONS
+    
+    It depends on util-macros 1.8 or later
+    The existing statement can now be removed from the configuration file.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 08996e6dafa255b40264c0ce11e01d501a9f7ab9
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jan 12 11:23:52 2011 -0500
+
+    config: upgrade to util-macros 1.8 for additional man page support
+    
+    Use MAN_SUBST now supplied in XORG_MANPAGE_SECTIONS
+    The value of MAN_SUBST is the same for all X.Org packages.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 5c896e0f10fe6f87443f1656cff8cf5466822cf0
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jan 12 10:21:24 2011 -0500
+
+    config: update AC_PREREQ statement to 2.60
+    
+    Unrelated to the previous patches, the new value simply reflects
+    the reality that the minimum level for autoconf to configure
+    all x.org modules in one pass is 2.60 dated June 2006.
+    
+    A version later than 2.60 can be used, but no new features from such
+    a later version can be used in configure.ac.
+    
+    Although the code in this module can be configured with a version earlier
+    than 2.60, most of code is now contained in macros from util-macros
+    which use features of version 2.60, at the present or in the future.
+    
+    ftp://ftp.gnu.org/gnu/autoconf/autoconf-2.60.tar.gz
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 4bebccd8fde390d347df168415204dd296d09e9e
+Author: Julien Cristau <jcristau@debian.org>
+Date:   Mon Nov 8 17:20:29 2010 +0100
+
+    man: point to the X manpage for more command line options
+    
+    It was already listed in 'SEE ALSO', but adding a reference in the
+    'OPTIONS' section is probably easier to find.
+    
+    Reported-by: Ivan Vilata i Balaguer <ivan@selidor.net>
+    Cc: 505891@bugs.debian.org
+    Signed-off-by: Julien Cristau <jcristau@debian.org>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+
 commit ad5f249bf731ee06958e0948f0898ac3f3e26352
 Author: Alan Coopersmith <alan.coopersmith@sun.com>
 Date:   Fri Jan 29 23:14:56 2010 -0800

@@ -28,7 +28,7 @@ xmessage \- display a message or query in a window (X-based /bin/echo)
 .I message
 \&.\|.\|.
 .SH DESCRIPTION
-The 
+The
 .I xmessage
 program
 displays a window containing a message from the command line, a file,
@@ -48,7 +48,9 @@ sizes itself to fit the message, up to a maximum size.
 If the message is too big for the window, \fIxmessage\fP will display
 scroll bars.
 .SH OPTIONS
-These are the command line options that \fIxmessage\fP understands.
+These are the command line options that \fIxmessage\fP understands, in addition
+to the standard ones listed in
+.BR X (__miscmansuffix__).
 .TP 8
 .B \-buttons \fIbutton,button,.\|.\|.\fP
 This option will cause \fIxmessage\fP to create one button for each
@@ -56,7 +58,7 @@ comma-separated \fIbutton\fP argument.
 The corresponding resource is \fBbuttons\fP.
 Each \fIbutton\fP consists of a label optionally followed by a colon
 and an exit value.
-The label is the name of the Command button widget created and will be the 
+The label is the name of the Command button widget created and will be the
 default text displayed to the user.  Since this is the name of the widget
 it may be used to change any of the resources associated with that button.
 The exit value will be returned by \fIxmessage\fP
@@ -116,7 +118,7 @@ Xmessage (xmessage)
 .fi
 .SH RESOURCES
 The program has a few top-level application resources that allow
-customizations that are specific to \fIxmessage\fP. 
+customizations that are specific to \fIxmessage\fP.
 .TP 8
 .B file
 A String specifying the file to display.
@@ -129,7 +131,7 @@ See the \fB\-buttons\fP command-line option.
 A String specifying a default button by label.
 .TP 8
 .B printValue
-A Boolean value specifying whether the label of the 
+A Boolean value specifying whether the label of the
 button pressed to exit the program is written to standard output.
 The default is FALSE.
 .TP 8
@@ -169,10 +171,10 @@ If it detects an error, \fIxmessage\fP returns 1, so this value should
 not be used with a button.
 .SH "SEE ALSO"
 .IR X (__miscmansuffix__),
-.IR echo (1),
-.IR cat (1)
+.IR echo (__appmansuffix__),
+.IR cat (__appmansuffix__)
 .br
 .SH AUTHORS
-Chris Peterson, MIT Project Athena 
+Chris Peterson, MIT Project Athena
 .br
 Stephen Gildea, X Consortium
