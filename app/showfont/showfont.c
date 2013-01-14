@@ -80,7 +80,7 @@ static Bool	   extents_only = False; /* -extents_only */
 static FSServer	  *svr;
 
 /* set from bitmap_pad to ImageRectMin, ImageMaxWidth, or ImageMax */
-static int	   bitmap_format;	
+static int	   bitmap_format;
 
 static FSBitmapFormat
 make_format(void)
@@ -356,7 +356,7 @@ usage(void)
 int
 main(int argc, char **argv)
 {
-    char *servername = "localhost:7100"; /* -server: font server name */
+    const char *servername = "localhost:7100"; /* -server: font server name */
     char *fontname = NULL; /* -fn: font name */
     int         i;
     Font        fid,
