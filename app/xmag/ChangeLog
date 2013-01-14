@@ -1,3 +1,74 @@
+commit 8c4b91ea40088bc80de9cc2695f77a27ce78b0d9
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jan 12 22:16:24 2013 -0800
+
+    xmag 1.0.5
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 50ed4f69a5f5e535128c5e2d1abc252b093dff06
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Dec 20 20:40:06 2011 -0800
+
+    Use lrint() from math library if available
+    
+    Moves -lm from being hardcoded in Makefile.am to being added via
+    AC_SEARCH_LIBS in configure.ac setting it in $(LIBS)
+    
+    Using lrint() [returns long int] instead of rint() [returns double]
+    clears a bunch of gcc warnings of the form:
+    "cast from function call of type ‘double’ to non-matching type ‘short int’"
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: James Cloos <cloos@jhcloos.com>
+
+commit 43ffa427238cdfb132205375624a25c5c28e9f86
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Feb 18 00:26:59 2011 -0800
+
+    Remove obsolete ISC support
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit e81168403132afe71b38e41cd368d0d9869bd320
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jan 19 10:06:56 2011 -0500
+
+    config: move man pages into their own directory
+    
+    Use services provided by XORG_MANPAGE_SECTIONS.
+    Use standard Makefile for man pages.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 857e73cfd8d79c8f81712fae8b4fa2d7e8565796
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Jan 13 11:15:47 2011 -0500
+
+    man: remove trailing spaces and tabs
+    
+    Using s/[ \t]*$//
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 4c3bfeaa40aaf817bffcf7b4e4adaab45ec0ca13
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jan 12 16:28:02 2011 -0500
+
+    config: replace deprecated AM_CONFIG_HEADER with AC_CONFIG_HEADERS
+    
+    This silences an Autoconf warning
+
+commit 4c741b8945c886ce1cfaaeb57c3ce726b77b6ae1
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jan 12 15:29:50 2011 -0500
+
+    config: replace deprecated AC_HELP_STRING with AS_HELP_STRING
+    
+    This silences an Automake warning.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
 commit 63cee7f38dc37fda89dc5aa689634bd8aeffabda
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Sat Oct 30 17:22:41 2010 -0700

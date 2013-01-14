@@ -30,13 +30,12 @@ from The Open Group.
  * Author:  Davor Matic, MIT X Consortium
  */
 
+#include "config.h"
+
 #include <stdio.h>
 #include <ctype.h>
 #include <math.h>
 #include <stdlib.h>
-#if defined(ISC) && __STDC__ && !defined(ISC30)
-extern double atof(char *);
-#endif
 
 #include <X11/IntrinsicP.h>
 #include <X11/StringDefs.h>
@@ -46,7 +45,11 @@ extern double atof(char *);
 #include "CutPaste.h"
 #include "ScaleP.h"
 
+#ifdef HAVE_LRINT
+#define myrint(x) lrint(x)
+#else
 #define myrint(x) floor(x + 0.5)
+#endif
 
 #define streq(a,b) (strcmp( (a), (b) ) == 0)
 #ifndef min
@@ -54,9 +57,6 @@ extern double atof(char *);
 #endif
 #ifndef max
 #define max(x, y) ((x) < (y) ? (y) : (x))
-#endif
-#if defined(ISC) && __STDC__ && !defined(ISC30)
-extern double atof(char *);
 #endif
 
 #define DefaultBufferSize 1024

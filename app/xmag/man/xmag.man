@@ -1,14 +1,14 @@
 .\" Copyright 1991, 1994, 1998  The Open Group
-.\" 
+.\"
 .\" Permission to use, copy, modify, distribute, and sell this software and its
 .\" documentation for any purpose is hereby granted without fee, provided that
 .\" the above copyright notice appear in all copies and that both that
 .\" copyright notice and this permission notice appear in supporting
 .\" documentation.
-.\" 
+.\"
 .\" The above copyright notice and this permission notice shall be included
 .\" in all copies or substantial portions of the Software.
-.\" 
+.\"
 .\" THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
 .\" OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
 .\" MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
@@ -16,7 +16,7 @@
 .\" OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
 .\" ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 .\" OTHER DEALINGS IN THE SOFTWARE.
-.\" 
+.\"
 .\" Except as contained in this notice, the name of The Open Group shall
 .\" not be used in advertising or otherwise to promote the sale, use or
 .\" other dealings in this Software without prior written authorization
@@ -38,15 +38,15 @@ xmag \- magnify parts of the screen
 .I \-toolkitoption
 \&.\|.\|. ]
 .SH DESCRIPTION
-The \fIxmag\fP program allows you to magnify portions of an X screen.  If no 
-explicit region is specified, a square with the pointer in the upper left 
-corner is displayed indicating the area to be enlarged.  The area can be 
-dragged out to the desired size by pressing Button 2.  Once a region has 
-been selected, a window is popped up showing a blown up version of the region 
-in which each pixel in the source image is represented by a small square of 
-the same color.  Pressing Button1 in the enlargement window 
+The \fIxmag\fP program allows you to magnify portions of an X screen.  If no
+explicit region is specified, a square with the pointer in the upper left
+corner is displayed indicating the area to be enlarged.  The area can be
+dragged out to the desired size by pressing Button 2.  Once a region has
+been selected, a window is popped up showing a blown up version of the region
+in which each pixel in the source image is represented by a small square of
+the same color.  Pressing Button1 in the enlargement window
 shows the position and RGB value
-of the pixel under the pointer until the button is released.  Typing ``Q'' 
+of the pixel under the pointer until the button is released.  Typing ``Q''
 or ``^C'' in the enlargement window exits the program.  The application has
 5 buttons across its top.
 \fIClose\fP deletes this particular magnification instance.
@@ -62,7 +62,7 @@ program.  Resizing \fIxmag\fP resizes the magnification area.
 the colormap, visual, and window depth of the source.
 .SH WIDGETS
 \fIxmag\fP uses the X Toolkit and the Athena Widget Set.
-The magnified image is displayed in the Scale widget.  
+The magnified image is displayed in the Scale widget.
 For more information, see the Athena Widget Set documentation.
 Below is the widget structure of the \fIxmag\fP application.
 Indentation indicates hierarchical  structure.  The widget class
@@ -82,15 +82,15 @@ name is given first, followed by the widget instance name.
 					Label xmag label
 				Paned pane2
 					Scale scale
-		OverrideShell pixShell 
+		OverrideShell pixShell
 			Label pixLabel
-		
+
 .fi
 .SH OPTIONS
 .TP 15
 .B \-source\fI geom\fP
-This option specifies the size and/or location of the source region 
-on the screen.  By default, a 64x64 square is provided for the user to select 
+This option specifies the size and/or location of the source region
+on the screen.  By default, a 64x64 square is provided for the user to select
 an area of the screen.
 .TP 15
 .B \-mag\fI integer\fP

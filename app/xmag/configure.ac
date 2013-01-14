@@ -22,7 +22,7 @@ dnl
 dnl Process this file with autoconf to create configure.
 
 AC_PREREQ([2.60])
-AC_INIT([xmag], [1.0.4],
+AC_INIT([xmag], [1.0.5],
         [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg], [xmag])
 AM_INIT_AUTOMAKE([foreign dist-bzip2])
 AM_MAINTAINER_MODE
@@ -33,19 +33,30 @@ m4_ifndef([XORG_MACROS_VERSION],
 XORG_MACROS_VERSION(1.8)
 XORG_DEFAULT_OPTIONS
 
-AM_CONFIG_HEADER(config.h)
+AC_CONFIG_HEADERS([config.h])
 
 AC_CHECK_FUNCS([nanosleep poll select])
+
+# Math libraries & functions
+# - some compilers use builtin inlines for floor
+# - lrint() is a C99 addition not found on some older systems
+# - must do the libm check first so that the lrint check will have it in $LIBS
+AC_SEARCH_LIBS([floor], [m])
+AC_SEARCH_LIBS([lrint], [m])
+AC_CHECK_FUNCS([lrint])
 
 # Checks for pkg-config packages
 PKG_CHECK_MODULES(XMAG, xaw7 xmu xt x11)
 
 xt_appdefaultdir=`$PKG_CONFIG --variable=appdefaultdir xt`
 AC_ARG_WITH(appdefaultdir,
-	AC_HELP_STRING([--with-appdefaultdir=<pathname>],
+	AS_HELP_STRING([--with-appdefaultdir=<pathname>],
 	  [specify directory for app-defaults files (default is autodetected)]),
 	[appdefaultdir="$withval"], [appdefaultdir="${xt_appdefaultdir}"])
 AC_SUBST(appdefaultdir)
 
 
-AC_OUTPUT([Makefile])
+AC_CONFIG_FILES([
+	Makefile
+	man/Makefile])
+AC_OUTPUT
