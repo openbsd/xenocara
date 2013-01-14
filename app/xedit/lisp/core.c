@@ -4308,6 +4308,11 @@ Lisp_Pushnew(LispBuiltin *builtin)
     return (result);
 }
 
+#ifdef __SUNPRO_C
+/* prevent "Function has no return statement" error for Lisp_Quit */
+#pragma does_not_return(exit)
+#endif
+
 LispObj *
 Lisp_Quit(LispBuiltin *builtin)
 /*

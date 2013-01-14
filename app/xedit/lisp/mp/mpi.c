@@ -318,7 +318,7 @@ mpi_setstr(mpi *rop, char *str, int base)
 	if (islower(value))
 	    value = toupper(value);
 	value = value > '9' ? value - 'A' + 10 : value - '0';
-	value += rop->digs[0] * base;
+	value += (BNI)rop->digs[0] * base;
 	carry = value >> BNSBITS;
 	rop->digs[0] = (BNS)value;
 	for (i = 1; i < size; i++) {
@@ -642,10 +642,10 @@ mpi_divqr(mpi *qrop, mpi *rrop, mpi *num, mpi *den)
 	if (ndigs[npos] == ddigs[dpos])
 	    qest = (BNS)SMASK;
 	else
-	    qest = (BNS)((((BNI)(ndigs[npos]) << 16) + ndigs[npos - 1]) /
+	    qest = (BNS)((((BNI)(ndigs[npos]) << BNSBITS) + ndigs[npos - 1]) /
 			 ddigs[dpos]);
 
-	while ((value = ((BNI)(ndigs[npos]) << 16) + ndigs[npos - 1] -
+	while ((value = ((BNI)(ndigs[npos]) << BNSBITS) + ndigs[npos - 1] -
 	        qest * (BNI)(ddigs[dpos])) < CARRY &&
 		ddigs[dpos - 1] * (BNI)qest >
 		(value << BNSBITS) + ndigs[npos - 2])
@@ -1603,7 +1603,7 @@ mpi_getstr(char *str, mpi *op, int base)
 
     /* make copy of op data and adjust digs */
     xdigs = mp_malloc(size * sizeof(BNS));
-    memcpy(xdigs, op->digs, size * sizeof(unsigned short));
+    memcpy(xdigs, op->digs, size * sizeof(BNS));
     digs = xdigs + size - 1;
 
     /* convert to string */

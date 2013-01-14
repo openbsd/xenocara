@@ -5044,7 +5044,7 @@ LispSignal(int signum)
 	    errstr = buffer;
 	    break;
     }
-    LispDestroy(errstr);
+    LispDestroy("%s", errstr);
 }
 
 void

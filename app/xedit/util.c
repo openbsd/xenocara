@@ -522,7 +522,7 @@ ResolveName(char *filename)
 	    int	length = strlen(result);
 
 	    XmuSnprintf(result + length, BUFSIZ - length, "%s%s",
-			dir[length - 1] == '/' ? "" : "/", file);
+			result[length - 1] == '/' ? "" : "/", file);
 	}
 
 	XtFree(tmp);

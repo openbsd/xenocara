@@ -1474,9 +1474,7 @@ LispParseNumber(char *str, int radix, LispObj *read__stream, int read__line)
     integer = strtol(str, NULL, radix);
 
     /* if does not fit in a long */
-    if (errno == ERANGE &&
-	((*str == '-' && integer == LONG_MIN) ||
-	 (*str != '-' && integer == LONG_MAX))) {
+    if (errno == ERANGE) {
 	bignum = LispMalloc(sizeof(mpi));
 	mpi_init(bignum);
 	mpi_setstr(bignum, str, radix);

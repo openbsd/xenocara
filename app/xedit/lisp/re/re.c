@@ -31,7 +31,7 @@
 
 #include <stdio.h>
 #include "rep.h"
-#define DEBUG
+
 /*
  * Types
  */

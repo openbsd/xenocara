@@ -39,15 +39,6 @@
 #define CONST			/**/
 #endif
 
-/* mask for checking overflow on long operations */
-#ifdef LONG64
-#define FI_MASK			0x4000000000000000L
-#define LONGSBITS		63
-#else
-#define FI_MASK			0x40000000L
-#define LONGSBITS		31
-#endif
-
 #define N_FIXNUM		1
 #define N_BIGNUM		2
 #define N_FLONUM		3
@@ -469,7 +460,7 @@ static char *fatal_object_error_strings[] = {
 static void
 fatal_error(int num)
 {
-    LispDestroy(fatal_error_strings[num]);
+    LispDestroy("%s", fatal_error_strings[num]);
 }
 
 static void
@@ -2738,7 +2729,7 @@ fi_fi_add_overflow(long op1, long op2)
 {
     long op = op1 + op2;
 
-    return (op1 > 0 ? op2 > op : op2 < op);
+    return (op2 >= 0 ? op < op1 : op > op1);
 }
 
 /*
@@ -2749,7 +2740,7 @@ fi_fi_sub_overflow(long op1, long op2)
 {
     long op = op1 - op2;
 
-    return (((op1 < 0) ^ (op2 < 0)) && ((op < 0) ^ (op1 < 0)));
+    return (op2 >= 0 ? op > op1 : op < op1);
 }
 
 /*
@@ -2758,35 +2749,15 @@ fi_fi_sub_overflow(long op1, long op2)
 static INLINE int
 fi_fi_mul_overflow(long op1, long op2)
 {
-#ifndef LONG64
-    double op = (double)op1 * (double)op2;
-
-    return (op > 2147483647.0 || op < -2147483648.0);
-#else
-    int shift;
-    long mask;
-
     if (op1 == 0 || op1 == 1 || op2 == 0 || op2 == 1)
 	return (0);
-
     if (op1 == MINSLONG || op2 == MINSLONG)
 	return (1);
-
     if (op1 < 0)
 	op1 = -op1;
     if (op2 < 0)
 	op2 = -op2;
-
-    for (shift = 0, mask = FI_MASK; shift < LONGSBITS; shift++, mask >>= 1)
-	if (op1 & mask)
-	    break;
-    ++shift;
-    for (mask = FI_MASK; shift < LONGSBITS; shift++, mask >>= 1)
-	if (op2 & mask)
-	    break;
-
-    return (shift < LONGSBITS);
-#endif
+    return (op1 > MAXSLONG / op2);
 }
 
 

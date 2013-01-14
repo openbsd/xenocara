@@ -76,6 +76,7 @@
 # define BNI		unsigned long
 # define BNS		unsigned int
 # define MINSLONG	0x8000000000000000UL
+# define MAXSLONG	0x7fffffffffffffffUL
 # define CARRY		0x100000000
 # define LMASK		0xffffffff00000000UL
 # define SMASK		0x00000000ffffffffUL
@@ -89,6 +90,7 @@
 # define BNI		unsigned long
 # define BNS		unsigned short
 # define MINSLONG	0x80000000UL
+# define MAXSLONG	0x7fffffffUL
 # define CARRY		0x10000
 # define LMASK		0xffff0000UL
 # define SMASK		0x0000ffffUL

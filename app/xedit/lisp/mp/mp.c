@@ -190,19 +190,19 @@ mp_add(BNS *rop, BNS *op1, BNS *op2, BNI len1, BNI len2)
 	MP_SWAP(op1, op2, len1, len2);
 
     /* unroll start of loop */
-    value = op1[0] + op2[0];
+    value = (BNI)op1[0] + op2[0];
     rop[0] = value;
     carry = value >> BNSBITS;
 
     /* add op1 and op2 */
     for (size = 1; size < len2; size++) {
-	value = op1[size] + op2[size] + carry;
+	value = (BNI)op1[size] + op2[size] + carry;
 	rop[size] = value;
 	carry = value >> BNSBITS;
     }
     if (rop != op1) {
 	for (; size < len1; size++) {
-	    value = op1[size] + carry;
+	    value = (BNI)op1[size] + carry;
 	    rop[size] = value;
 	    carry = value >> BNSBITS;
 	}
@@ -210,7 +210,7 @@ mp_add(BNS *rop, BNS *op1, BNS *op2, BNI len1, BNI len2)
     else {
 	/* if rop == op1, than just adjust carry */
 	for (; carry && size < len1; size++) {
-	    value = op1[size] + carry;
+	    value = (BNI)op1[size] + carry;
 	    rop[size] = value;
 	    carry = value >> BNSBITS;
 	}
@@ -237,7 +237,7 @@ mp_sub(BNS *rop, BNS *op1, BNS *op2, BNI len1, BNI len2)
     }
 
     /* unroll start of loop */
-    svalue = op1[0] - op2[0];
+    svalue = (long)op1[0] - op2[0];
     rop[0] = svalue;
     carry = svalue < 0;
 
@@ -257,7 +257,7 @@ mp_sub(BNS *rop, BNS *op1, BNS *op2, BNI len1, BNI len2)
     else {
 	/* if rop == op1, than just adjust carry */
 	for (; carry && size < len1; size++) {
-	    svalue = op1[size] - carry;
+	    svalue = (long)op1[size] - carry;
 	    rop[size] = svalue;
 	    carry = svalue < 0;
 	}

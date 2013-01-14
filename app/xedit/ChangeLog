@@ -1,3 +1,167 @@
+commit bde5fc6b3c493365139eb4451cd1829bf48f7ac2
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jan 12 17:01:02 2013 -0800
+
+    xedit 1.2.1
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit c13aa758f31596fbe3f99ce0f54f00493118e729
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jan 12 16:59:00 2013 -0800
+
+    Remove lisp/env.c from EXTRA_DIST to fix make_distcheck
+    
+    commit c110109f171 replaced it with getenv.c & setenv.c
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit df082b1133659d1e3b420c18efa6c2a4562add6c
+Author: Eric S. Raymond <esr@thyrsus.com>
+Date:   Thu Aug 23 11:57:03 2012 -0400
+
+    Eliminate use of tab stops. Use real TBL markup.
+    
+    These changes help structural lifting to DocBook.
+    
+    Signed-off-by: Eric S. Raymond <esr@thyrsus.com>
+
+commit ce36f7be03ff0df79247baeda24d2c0a3b1ee0f7
+Author: Thomas Klausner <wiz@NetBSD.org>
+Date:   Wed Jul 11 13:30:56 2012 +0200
+
+    Do not unconditionally define DEBUG.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 33dacadbfb9adcb36c9b7ccd4f64d12e7995fd33
+Author: pcpa <paulo.cesar.pereira.de.andrade@gmail.com>
+Date:   Thu May 24 15:33:14 2012 -0300
+
+    Avoid problems with builds with -Werror=format-security.
+    
+    Signed-off-by: pcpa <paulo.cesar.pereira.de.andrade@gmail.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 04ca5cd8abfe9851f0987b4739f9795e924024cf
+Author: pcpa <paulo.cesar.pereira.de.andrade@gmail.com>
+Date:   Thu May 24 15:29:01 2012 -0300
+
+    Use proper pointer when computing "realpath" of a new file.
+    
+      In some special conditions it previously could omit a slash, and
+    instead of creating foo/bar/baz would create foo/barbaz.
+    
+    Signed-off-by: pcpa <paulo.cesar.pereira.de.andrade@gmail.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 63c70c830c79f0b4cfc0f7393662a9cb1169973e
+Author: pcpa <paulo.cesar.pereira.de.andrade@gmail.com>
+Date:   Thu May 24 15:26:50 2012 -0300
+
+    Correct 64 bit overflow check and bignum code.
+    
+    Signed-off-by: pcpa <paulo.cesar.pereira.de.andrade@gmail.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit c110109f1710758d7c87c05720bdff4df316fc7d
+Author: pcpa <paulo.cesar.pereira.de.andrade@gmail.com>
+Date:   Thu May 24 14:40:35 2012 -0300
+
+    Update fallback implementation of missing libc functions
+    
+      This commit updates realpath.c from
+    http://www.openbsd.org/cgi-bin/cvsweb/src/lib/libc/stdlib/realpath.c?rev=1.14;content-type=text/plain
+    and lisp/env.c from
+    http://www.openbsd.org/cgi-bin/cvsweb/src/lib/libc/stdlib/getenv.c?rev=1.10;content-type=text/plain
+    and
+    http://www.openbsd.org/cgi-bin/cvsweb/src/lib/libc/stdlib/setenv.c?rev=1.13;content-type=text/plain
+    
+      The update reason is to replace files under "4 clause BSD", that
+    is considered problematic or require special documentation notation
+    or conditions when redistributing free software.
+    
+    Signed-off-by: pcpa <paulo.cesar.pereira.de.andrade@gmail.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit b6927e08121d5ccd9ef061ec0c393a7e23220114
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Dec 4 09:01:28 2011 -0800
+
+    Fix builds of lisp/core.c with Solaris Studio compilers
+    
+    Required in order to build with Studio cc now that xorg-macros is
+    setting -errwarn=E_FUNC_HAS_NO_RETURN_STMT since a bug in the Solaris
+    system headers causes the noreturn attribute to not be correctly
+    applied to the exit() prototype in <stdlib.h> when building with
+    Studio instead of gcc.
+    
+    Otherwise compiler exits with error:
+    "lisp/core.c", line 4329: Function has no return statement : Lisp_Quit
+    
+    Uses Studio-specific pragma instead of adding another exit() prototype
+    with a noreturn attribute to avoid causing gcc to warn about having
+    a redundant prototype for the exit() function.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit f5c245c4b24b25103fc6d8d3a77121a94689a5c0
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Sun Sep 25 00:57:14 2011 -0700
+
+    Require xt >= 1.0 for appdefaultdir
+    
+    https://bugs.freedesktop.org/show_bug.cgi?id=7237
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit 5a9cffc3f443030ac93d890611316d0994f0cc13
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jan 19 10:06:56 2011 -0500
+
+    config: move man pages into their own directory
+    
+    Use services provided by XORG_MANPAGE_SECTIONS.
+    Use standard Makefile for man pages.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit e72e2768a573bc4d073ce2d56ab4e28678b559b2
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Jan 13 17:15:36 2011 -0500
+
+    man: replace hard coded man page section with substitution strings
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 5fb277811c7dde95aadb878542bb93672c0e8284
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Jan 13 11:15:47 2011 -0500
+
+    man: remove trailing spaces and tabs
+    
+    Using s/[ \t]*$//
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit ab47a794352c16a00109bba2563b5dda53603225
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jan 12 16:28:02 2011 -0500
+
+    config: replace deprecated AM_CONFIG_HEADER with AC_CONFIG_HEADERS
+    
+    This silences an Autoconf warning
+
+commit a1dbd197be7bb13ed2f31ad8b55b2b762dbf70b6
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jan 12 15:29:50 2011 -0500
+
+    config: replace deprecated AC_HELP_STRING with AS_HELP_STRING
+    
+    This silences an Automake warning.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
 commit 3fc23c464e814cad0fcf318dfa06afb90006917c
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Sat Oct 30 15:29:20 2010 -0700

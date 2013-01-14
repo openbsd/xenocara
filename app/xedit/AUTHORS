@@ -135,7 +135,7 @@ Files required for systems that don't have the required calls in the
 standard libraries:
 
 (Based on Copyright notice)
-Jan-Simon Pendry
+Constantin S. Svintsoff
 realpath.c
 
 (No author information, using CVS tag)
