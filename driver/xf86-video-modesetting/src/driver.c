@@ -240,7 +240,7 @@ static Bool probe_hw_pci(char *dev, struct pci_device *pdev)
 	return FALSE;
 
     sv.drm_di_major = 1;
-    sv.drm_di_minor = 4;
+    sv.drm_di_minor = 2;
     sv.drm_dd_major = -1;
     sv.drm_dd_minor = -1;
     if (drmSetInterfaceVersion(fd, &sv)) {
