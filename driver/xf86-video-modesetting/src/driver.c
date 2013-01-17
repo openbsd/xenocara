@@ -62,6 +62,12 @@
 #include "compat-api.h"
 #include "driver.h"
 
+#ifdef X_PRIVSEP
+extern int priv_open_device(const char *);
+#else
+#define priv_open_device(n)    open(n,O_RDWR|O_NONBLOCK|O_EXCL)
+#endif
+
 static void AdjustFrame(ADJUST_FRAME_ARGS_DECL);
 static Bool CloseScreen(CLOSE_SCREEN_ARGS_DECL);
 static Bool EnterVT(VT_FUNC_ARGS_DECL);
@@ -187,12 +193,12 @@ static int open_hw(char *dev)
 {
     int fd;
     if (dev)
-	fd = open(dev, O_RDWR, 0);
+	fd = priv_open_device(dev);
     else {
 	dev = getenv("KMSDEVICE");
-	if ((NULL == dev) || ((fd = open(dev, O_RDWR, 0)) == -1)) {
-	    dev = "/dev/dri/card0";
-	    fd = open(dev,O_RDWR, 0);
+	if ((NULL == dev) || ((fd = priv_open_device(dev)) == -1)) {
+	    dev = "/dev/drm0";
+	    fd = priv_open_device(dev);
 	}
     }
     if (fd == -1)
