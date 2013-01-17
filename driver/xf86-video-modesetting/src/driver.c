@@ -65,7 +65,7 @@
 #ifdef X_PRIVSEP
 extern int priv_open_device(const char *);
 #else
-#define priv_open_device(n)    open(n,O_RDWR|O_NONBLOCK|O_EXCL)
+#define priv_open_device(n)    open(n, O_RDWR, 0)
 #endif
 
 static void AdjustFrame(ADJUST_FRAME_ARGS_DECL);
