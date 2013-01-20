@@ -5840,7 +5840,14 @@ static void RADEONRestore(ScrnInfoPtr pScrn)
 
     RADEONBlank(pScrn);
 
-    if (IS_DCE4_VARIANT) {
+    if (IS_DCE41_VARIANT) {
+	/* 
+	 * XXX Don't restore text mode. The driver is unable to do so,
+	 * and furthermore it makes switching back to X is impossible.
+	 * Requires KMS or equivalent UMS code for proper operation.
+	 */
+    	return;
+    } else if (IS_DCE4_VARIANT) {
 	RADEONRestoreMemMapRegisters(pScrn, restore);
 	dce4_restore(pScrn, restore);
 	//XXX
