@@ -499,6 +499,7 @@ builtin laptop screen, both running at 1024x768.
 .B "EndSection"
 
 .B "Section \*qDevice\*q"
+.BI "  Identifier \*qIntel Multihead\*q"
 .BI "  Driver \*qintel\*q"
 .BI "  Option \*qmonitor-LVDS\*q \*qLaptop FooBar Internal Display\*q"
 .BI "  Option \*qmonitor-VGA\*q \*qSome Random CRT\*q"
