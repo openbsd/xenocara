@@ -1535,16 +1535,6 @@ static void ivb_manual_fdi_link_train(xf86CrtcPtr crtc)
 	INREG(fdi_rx_reg);
 
 	usleep(150);
-
-	if (HAS_PCH_CPT(intel)) {
-		temp = INREG(SOUTH_CHICKEN1);
-		temp |= FDI_PHASE_SYNC_OVR(pipe);
-		OUTREG(SOUTH_CHICKEN1, temp); /* once to unlock... */
-		temp |= FDI_PHASE_SYNC_EN(pipe);
-		OUTREG(SOUTH_CHICKEN1, temp); /* then again to enable */
-		INREG(SOUTH_CHICKEN1);
-		usleep(150);
-	}
 		
 	for (i = 0; i < 4; i++) {
 		temp = INREG(fdi_tx_reg);
@@ -1862,11 +1852,6 @@ ironlake_crtc_disable(xf86CrtcPtr crtc)
 	OUTREG(pf_win_size, 0);
 	INREG(pf_win_size);
 
-	ErrorF("FDI TX disable\n");
-	temp = INREG(fdi_tx_reg);
-	OUTREG(fdi_tx_reg, temp & ~FDI_TX_ENABLE);
-	INREG(fdi_tx_reg);
-
 	ErrorF("FDI RX disable\n");
 	temp = INREG(fdi_rx_reg);
 	temp &= ~(0x07 << 16);
@@ -1876,13 +1861,12 @@ ironlake_crtc_disable(xf86CrtcPtr crtc)
 
 	usleep(100);
 
-	ErrorF("FDI TX train 1 preload\n");
-	/* still set train pattern 1 */
+	ErrorF("FDI TX disable\n");
 	temp = INREG(fdi_tx_reg);
-	temp &= ~FDI_LINK_TRAIN_NONE;
-	temp |= FDI_LINK_TRAIN_PATTERN_1;
-	OUTREG(fdi_tx_reg, temp);
+	OUTREG(fdi_tx_reg, temp & ~FDI_TX_ENABLE);
 	INREG(fdi_tx_reg);
+
+	usleep(100);
 
 	ErrorF("FDI RX train 1 preload\n");
 	temp = INREG(fdi_rx_reg);
@@ -1895,6 +1879,16 @@ ironlake_crtc_disable(xf86CrtcPtr crtc)
 	}
 	OUTREG(fdi_rx_reg, temp);
 	INREG(fdi_rx_reg);
+
+	usleep(100);
+
+	ErrorF("FDI TX train 1 preload\n");
+	/* still set train pattern 1 */
+	temp = INREG(fdi_tx_reg);
+	temp &= ~FDI_LINK_TRAIN_NONE;
+	temp |= FDI_LINK_TRAIN_PATTERN_1;
+	OUTREG(fdi_tx_reg, temp);
+	INREG(fdi_tx_reg);
 
 	usleep(100);
 
@@ -1933,6 +1927,25 @@ ironlake_crtc_disable(xf86CrtcPtr crtc)
 	OUTREG(transconf_reg, temp);
 	INREG(transconf_reg);
 	usleep(100);
+
+	if (HAS_PCH_CPT(intel)) {
+		/* disable DPLL_SEL */
+		temp = INREG(PCH_DPLL_SEL);
+		switch (pipe) {
+		case 0:
+			temp &= ~(TRANSA_DPLL_ENABLE | TRANSA_DPLLB_SEL);
+			break;
+		case 1:
+			temp &= ~(TRANSB_DPLL_ENABLE | TRANSB_DPLLB_SEL);
+			break;
+		case 2:
+			/* C shares PLL A or B */
+			temp &= ~(TRANSC_DPLL_ENABLE | TRANSC_DPLLB_SEL);
+			break;
+		}
+		OUTREG(PCH_DPLL_SEL, temp);
+		INREG(PCH_DPLL_SEL);
+	}
 
 	ErrorF("PCH DPLL disable\n");
 	/* disable PCH DPLL */
