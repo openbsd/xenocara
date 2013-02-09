@@ -1,7 +1,7 @@
-# $OpenBSD: bsd.xconf.mk,v 1.21 2012/03/08 07:29:29 matthieu Exp $
+# $OpenBSD: bsd.xconf.mk,v 1.22 2013/02/09 21:48:07 brad Exp $
 
 # Shared libs?
-.if ${MACHINE_ARCH} == "m88k" || ${MACHINE} == "vax"
+.if ${MACHINE} == "vax"
 XENOCARA_HAVE_SHARED_LIBS?=no
 .else
 XENOCARA_HAVE_SHARED_LIBS?=yes
