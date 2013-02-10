@@ -361,8 +361,6 @@ allocatePty(int *pty_return, char **line_return)
 	goto bsd;
     }
 
-    fix_pty_perms(line);
-
     *pty_return = pty;
     *line_return = line;
     return 0;
@@ -382,8 +380,6 @@ allocatePty(int *pty_return, char **line_return)
 	close(pty);
 	goto bsd;
     }
-
-    fix_pty_perms(line);
 
     *pty_return = pty;
     *line_return = line;
