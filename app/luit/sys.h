@@ -1,4 +1,3 @@
-/* $XFree86$ */
 /*
 Copyright (c) 2001 by Juliusz Chroboczek
 
@@ -21,10 +20,21 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
+#ifndef LUIT_SYS_H
+#define LUIT_SYS_H 1
+
+#if defined(__GNUC__) && defined(_FORTIFY_SOURCE)
+#define USE_IGNORE_RC
+extern int ignore_unused;
+#define IGNORE_RC(func) ignore_unused = (int) func
+#else
+#define IGNORE_RC(func) (void) func
+#endif /* gcc workarounds */
+
 int waitForOutput(int fd);
 int waitForInput(int fd1, int fd2);
 int setWindowSize(int sfd, int dfd);
-int installHandler(int signum, void (*handler)(int));
+int installHandler(int signum, void (*handler) (int));
 int copyTermios(int sfd, int dfd);
 int saveTermios(void);
 int restoreTermios(void);
@@ -33,3 +43,15 @@ char *my_basename(char *path);
 int allocatePty(int *pty_return, char **line_return);
 int openTty(char *line);
 int droppriv(void);
+char *strmalloc(const char *value);
+
+#ifdef NO_LEAKS
+void luit_leaks(void);
+void charset_leaks(void);
+void iso2022_leaks(void);
+void ExitProgram(int code);
+#else
+#define ExitProgram(code) exit(code)
+#endif
+
+#endif /* LUIT_SYS_H */

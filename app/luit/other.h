@@ -19,7 +19,19 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
-/* $XFree86: xc/programs/luit/other.h,v 1.1 2002/10/17 01:06:09 dawes Exp $ */
+
+#ifndef LUIT_OTHER_H
+#define LUIT_OTHER_H 1
+
+#include "config.h"		/* include this, for self-contained headers */
+
+#ifndef GCC_UNUSED
+#define GCC_UNUSED		/* ARGSUSED */
+#endif
+
+#include <X11/fonts/fontenc.h>
+
+#define UChar(n) ((unsigned char)(n))
 
 typedef struct {
     FontMapPtr mapping;
@@ -47,15 +59,15 @@ typedef struct {
 } aux_hkscs;
 
 typedef struct {
-    FontMapPtr          cs0_mapping;    /* gb18030.2000-0 */
-    FontMapReversePtr   cs0_reverse;
+    FontMapPtr cs0_mapping;	/* gb18030.2000-0 */
+    FontMapReversePtr cs0_reverse;
 
-    FontMapPtr          cs1_mapping;    /* gb18030.2000-1 */
-    FontMapReversePtr   cs1_reverse;
+    FontMapPtr cs1_mapping;	/* gb18030.2000-1 */
+    FontMapReversePtr cs1_reverse;
 
-    int     linear;     /* set to '1' if stack_gb18030 linearized a 4bytes seq */
-    int     buf[3];
-    int     buf_ptr;
+    int linear;			/* set to '1' if stack_gb18030 linearized a 4bytes seq */
+    int buf[3];
+    int buf_ptr;
 } aux_gb18030;
 
 typedef union {
@@ -69,25 +81,26 @@ typedef union {
 int init_gbk(OtherStatePtr);
 unsigned int mapping_gbk(unsigned int, OtherStatePtr);
 unsigned int reverse_gbk(unsigned int, OtherStatePtr);
-int stack_gbk(unsigned char, OtherStatePtr);
+int stack_gbk(unsigned, OtherStatePtr);
 
 int init_utf8(OtherStatePtr);
 unsigned int mapping_utf8(unsigned int, OtherStatePtr);
 unsigned int reverse_utf8(unsigned int, OtherStatePtr);
-int stack_utf8(unsigned char, OtherStatePtr);
+int stack_utf8(unsigned, OtherStatePtr);
 
 int init_sjis(OtherStatePtr);
 unsigned int mapping_sjis(unsigned int, OtherStatePtr);
 unsigned int reverse_sjis(unsigned int, OtherStatePtr);
-int stack_sjis(unsigned char, OtherStatePtr);
+int stack_sjis(unsigned, OtherStatePtr);
 
 int init_hkscs(OtherStatePtr);
 unsigned int mapping_hkscs(unsigned int, OtherStatePtr);
 unsigned int reverse_hkscs(unsigned int, OtherStatePtr);
-int stack_hkscs(unsigned char, OtherStatePtr);
+int stack_hkscs(unsigned, OtherStatePtr);
 
 int init_gb18030(OtherStatePtr);
 unsigned int mapping_gb18030(unsigned int, OtherStatePtr);
 unsigned int reverse_gb18030(unsigned int, OtherStatePtr);
-int stack_gb18030(unsigned char, OtherStatePtr);
+int stack_gb18030(unsigned, OtherStatePtr);
 
+#endif /* LUIT_OTHER_H */

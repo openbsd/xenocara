@@ -19,7 +19,11 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
-/* $XFree86: xc/programs/luit/charset.h,v 1.3 2002/07/01 02:25:59 tsi Exp $ */
+
+#ifndef LUIT_CHARSET_H
+#define LUIT_CHARSET_H 1
+
+#include "other.h"
 
 #define T_FAILED 0
 #define T_94 1
@@ -36,16 +40,16 @@ THE SOFTWARE.
 #define CHARSET_REGULAR(c) ((c)->type != T_128)
 
 typedef struct _Charset {
-    char *name;
+    const char *name;
     int type;
     unsigned char final;
-    unsigned int (*recode)(unsigned int, struct _Charset *self);
-    int (*reverse)(unsigned int, struct _Charset *self);
-    void *data;
-    int (*other_stack)(unsigned char c, OtherStatePtr aux);
+    unsigned int (*recode) (unsigned int, const struct _Charset * self);
+    int (*reverse) (unsigned int, const struct _Charset * self);
+    const void *data;
+    int (*other_stack) (unsigned c, OtherStatePtr aux);
     OtherState *other_aux;
-    unsigned int (*other_recode)(unsigned int c, OtherStatePtr aux);
-    unsigned int (*other_reverse)(unsigned int c, OtherStatePtr aux);
+    unsigned int (*other_recode) (unsigned int c, OtherStatePtr aux);
+    unsigned int (*other_reverse) (unsigned int c, OtherStatePtr aux);
     struct _Charset *next;
 } CharsetRec, *CharsetPtr;
 
@@ -60,12 +64,16 @@ typedef struct _LocaleCharset {
     const char *other;
 } LocaleCharsetRec, *LocaleCharsetPtr;
 
-CharsetPtr getUnknownCharset(int);
-CharsetPtr getCharset(unsigned char, int);
-CharsetPtr getCharsetByName(const char*);
+const CharsetRec *getUnknownCharset(int);
+const CharsetRec *getCharset(unsigned, int);
+const CharsetRec *getCharsetByName(const char *);
 void reportCharsets(void);
-int getLocaleState(const char *locale, char *charset,
-                   int *gl_return, int *gr_return,
-                   CharsetPtr *g0_return, CharsetPtr *g1_return,
-                   CharsetPtr *g2_return, CharsetPtr *g3_return,
-                   CharsetPtr *other_return);
+int getLocaleState(const char *locale, const char *charset,
+		   int *gl_return, int *gr_return,
+		   const CharsetRec * *g0_return,
+		   const CharsetRec * *g1_return,
+		   const CharsetRec * *g2_return,
+		   const CharsetRec * *g3_return,
+		   const CharsetRec * *other_return);
+
+#endif /* LUIT_CHARSET_H */

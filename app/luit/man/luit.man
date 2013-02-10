@@ -1,4 +1,12 @@
-.\" $XFree86: xc/programs/luit/luit.man,v 1.7 2003/02/24 01:10:25 dawes Exp $
+.\"
+.\"
+.\" Escape single quotes in literal strings from groff's Unicode transform.
+.ie \n(.g .ds AQ \(aq
+.el       .ds AQ '
+.ie \n(.g .ds `` \(lq
+.el       .ds `` ``
+.ie \n(.g .ds '' \(rq
+.el       .ds '' ''
 .TH LUIT 1 __vendorversion__
 .SH NAME
 luit \- Locale and ISO\ 2022 support for Unicode terminals
@@ -9,7 +17,7 @@ luit \- Locale and ISO\ 2022 support for Unicode terminals
 ] [
 .B \-\-
 ] [
-.I program 
+.I program
 [
 .I args
 ] ]
@@ -38,11 +46,18 @@ Display some summary help and quit.
 .B \-list
 List the supported charsets and encodings, then quit.
 .TP
+.B \-V
+Print luit's version and quit.
+.TP
 .B \-v
 Be verbose.
 .TP
 .B \-c
 Function as a simple converter from standard input to standard output.
+.TP
+.B \-p
+In startup, establish a handshake between parent and child processes.
+This is needed for some systems, e.g., FreeBSD.
 .TP
 .B \-x
 Exit as soon as the child dies.  This may cause
@@ -100,7 +115,7 @@ The default depends on the locale, but is usually
 .TP
 .BI \-gr " gk"
 Set the initial assignment of GR.  The default depends on the locale,
-and is usually 
+and is usually
 .B g2
 except for EUC locales, where it is
 .BR g1 .
@@ -132,6 +147,11 @@ Log into
 .I filename
 all the bytes sent to the terminal emulator.
 .TP
+.BI \-alias " filename"
+the locale alias file
+.br
+(default: __locale_alias__).
+.TP
 .B \-\-
 End of options.
 .SH EXAMPLES
@@ -139,7 +159,7 @@ The most typical use of
 .B luit
 is to adapt an instance of
 .B XTerm
-to the locale's encoding.  Current versions of 
+to the locale's encoding.  Current versions of
 .B XTerm
 invoke
 .B luit
@@ -177,18 +197,15 @@ M-x set-terminal-coding-system RET iso-2022-8bit-ss2 RET
 .PP
 .SH FILES
 .TP
-.B __projectroot__/lib/X11/fonts/encodings/encodings.dir
-The system-wide encodings directory.
-.TP
-.B __localealiasfile__
+.B __locale_alias__
 The file mapping locales to locale encodings.
 .SH SECURITY
-On systems with SVR4 (``Unix-98'') ptys (Linux version 2.2 and later,
+On systems with SVR4 (\*(``Unix-98\*('') ptys (Linux version 2.2 and later,
 SVR4),
 .B luit
 should be run as the invoking user.
 
-On systems without SVR4 (``Unix-98'') ptys (notably BSD variants),
+On systems without SVR4 (\*(``Unix-98\*('') ptys (notably BSD variants),
 running
 .B luit
 as an ordinary user will leave the tty world-writable; this is a
@@ -213,12 +230,17 @@ Charsets with a non-trivial intermediary byte are not yet supported.
 Selecting alternate sets of control characters is not supported and
 will never be.
 .SH SEE ALSO
-xterm(1), unicode(7), utf-8(7), charsets(7).
-.I Character Code Structure and Extension Techniques (ISO\ 2022, ECMA-35).
-.I Control Functions for Coded Character Sets (ISO\ 6429, ECMA-48).
+xterm(__appmansuffix__), unicode(__miscmansuffix__), utf-8(__miscmansuffix__), charsets(__miscmansuffix__).
+.nf
+.br
+\fICharacter Code Structure and Extension Techniques (ISO\ 2022, ECMA-35)\fR.
+.br
+\fIControl Functions for Coded Character Sets (ISO\ 6429, ECMA-48)\fR.
+.fi
 .SH AUTHOR
 The version of
 .B Luit
 included in this X.Org Foundation release
 was originally written by Juliusz Chroboczek <jch@freedesktop.org>
-for the XFree86 Project.
+for the XFree86 Project and includes additional contributions from
+Thomas E. Dickey required for newer releases of xterm(__appmansuffix__).
