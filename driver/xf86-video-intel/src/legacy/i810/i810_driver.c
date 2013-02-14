@@ -152,7 +152,7 @@ static int i810_pitches[] = {
 static Bool
 I810GetRec(ScrnInfoPtr scrn)
 {
-   if (((uintptr_t)scrn->driverPrivate & 1) == 0)
+   if (scrn->driverPrivate != NULL)
       return TRUE;
 
    scrn->driverPrivate = xnfcalloc(sizeof(I810Rec), 1);
@@ -232,6 +232,7 @@ I810DoDDC(ScrnInfoPtr scrn, int index)
 static Bool
 I810PreInit(ScrnInfoPtr scrn, int flags)
 {
+   vgaHWPtr hwp;
    I810Ptr pI810;
    ClockRangePtr clockRanges;
    int i;
@@ -240,6 +241,7 @@ I810PreInit(ScrnInfoPtr scrn, int flags)
    rgb defaultWeight = { 0, 0, 0 };
    int mem;
    Bool enable;
+   struct intel_chipset chipset;
 
    if (scrn->numEntities != 1)
       return FALSE;
@@ -266,6 +268,9 @@ I810PreInit(ScrnInfoPtr scrn, int flags)
    /* Allocate a vgaHWRec */
    if (!vgaHWGetHWRec(scrn))
       return FALSE;
+
+   hwp = VGAHWPTR(scrn);
+   vgaHWSetStdFuncs(hwp);
 
    pI810->PciInfo = xf86GetPciInfoForEntity(pI810->pEnt->index);
 
@@ -364,8 +369,34 @@ I810PreInit(ScrnInfoPtr scrn, int flags)
     */
    I810DoDDC(scrn, pI810->pEnt->index);
 
-   intel_detect_chipset(scrn, pI810->pEnt, pI810->PciInfo);
+   intel_detect_chipset(scrn, pI810->PciInfo, &chipset);
 
+   /*
+    * Set the Chipset and ChipRev, allowing config file entries to
+    * override.
+    */
+   if (pI810->pEnt->device->chipset && *pI810->pEnt->device->chipset) {
+      scrn->chipset = pI810->pEnt->device->chipset;
+      from = X_CONFIG;
+   } else if (pI810->pEnt->device->chipID >= 0) {
+      scrn->chipset = (char *)xf86TokenToString(intel_chipsets,
+						 pI810->pEnt->device->chipID);
+      from = X_CONFIG;
+      xf86DrvMsg(scrn->scrnIndex, X_CONFIG, "ChipID override: 0x%04X\n",
+		 pI810->pEnt->device->chipID);
+   } else {
+      from = X_PROBED;
+      scrn->chipset = (char *)xf86TokenToString(intel_chipsets,
+						 DEVICE_ID(pI810->PciInfo));
+   }
+   if (pI810->pEnt->device->chipRev >= 0) {
+      xf86DrvMsg(scrn->scrnIndex, X_CONFIG, "ChipRev override: %d\n",
+		 pI810->pEnt->device->chipRev);
+   }
+
+   xf86DrvMsg(scrn->scrnIndex, from, "Chipset: \"%s\"\n",
+	      (scrn->chipset != NULL) ? scrn->chipset : "Unknown i810");
+   
    pI810->LinearAddr = pI810->PciInfo->regions[0].base_addr;
    xf86DrvMsg(scrn->scrnIndex, X_PROBED, "Linear framebuffer at 0x%lX\n",
 	      (unsigned long)pI810->LinearAddr);
