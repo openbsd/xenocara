@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.50 2012/12/01 21:10:42 miod Exp $
+# $OpenBSD: Makefile,v 1.51 2013/02/21 17:45:32 todd Exp $
 .include <bsd.own.mk>
 .include <bsd.xconf.mk>
 
@@ -8,7 +8,7 @@ REALAPPD=/etc/X11/app-defaults
 XCONFIG=${XSRCDIR}/etc/X11.${MACHINE}/xorg.conf
 RM?=rm
 
-.if ${MACHINE_ARCH} != "sh" && ${MACHINE_ARCH} != "vax"
+.if ${MACHINE_ARCH} != "vax"
 XSERVER= xserver
 .endif
 
