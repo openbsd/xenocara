@@ -32,6 +32,9 @@ from the X Consortium.
  * Author:  Jim Fulton, MIT X Consortium
  */
 
+#ifdef HAVE_CONFIG_H
+# include "config.h"
+#endif
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
@@ -74,6 +77,12 @@ Atom wm_protocols;
 
 Bool have_rr;
 int rr_event_base, rr_error_base;
+
+enum EventMaskIndex {
+    EVENT_MASK_INDEX_CORE,
+    EVENT_MASK_INDEX_RANDR,
+    NUM_EVENT_MASKS
+};
 
 static void usage (void) _X_NORETURN;
 
@@ -878,6 +887,12 @@ usage (void)
 "    -s                                  set save-unders attribute",
 "    -name string                        window name",
 "    -rv                                 reverse video",
+"    -event event_mask                   select 'event_mask' events",
+"           Supported event masks: keyboard mouse expose visibility structure",
+"                                  substructure focus property colormap",
+"                                  owner_grab_button randr",
+"           This option can be specified multiple times to select multiple",
+"           event masks.",
 "",
 NULL};
     const char **cpp;
@@ -894,19 +909,73 @@ NULL};
 static int
 parse_backing_store (char *s)
 {
-    int len = strlen (s);
-    char *cp;
+    size_t len = strlen (s);
 
-    for (cp = s; *cp; cp++) {
-	if (isascii (*cp) && isupper (*cp))
-	    *cp = tolower (*cp);
-    }
-
-    if (strncmp (s, "notuseful", len) == 0) return (NotUseful);
-    if (strncmp (s, "whenmapped", len) == 0) return (WhenMapped);
-    if (strncmp (s, "always", len) == 0) return (Always);
+    if (strncasecmp (s, "NotUseful", len) == 0) return (NotUseful);
+    if (strncasecmp (s, "WhenMapped", len) == 0) return (WhenMapped);
+    if (strncasecmp (s, "Always", len) == 0) return (Always);
 
     usage ();
+}
+
+static Bool
+parse_event_mask (const char *s, long event_masks[])
+{
+    const struct {
+        const char *name;
+        enum EventMaskIndex mask_index;
+        long mask;
+    } events[] = {
+        { "keyboard",
+          EVENT_MASK_INDEX_CORE,
+          KeyPressMask | KeyReleaseMask | KeymapStateMask },
+        { "mouse",
+          EVENT_MASK_INDEX_CORE,
+          ButtonPressMask | ButtonReleaseMask | EnterWindowMask |
+          LeaveWindowMask | PointerMotionMask | Button1MotionMask |
+          Button2MotionMask | Button3MotionMask | Button4MotionMask |
+          Button5MotionMask | ButtonMotionMask },
+        { "expose",
+          EVENT_MASK_INDEX_CORE,
+          ExposureMask },
+        { "visibility",
+          EVENT_MASK_INDEX_CORE,
+          VisibilityChangeMask },
+        { "structure",
+          EVENT_MASK_INDEX_CORE,
+          StructureNotifyMask },
+        { "substructure",
+          EVENT_MASK_INDEX_CORE,
+          SubstructureNotifyMask | SubstructureRedirectMask },
+        { "focus",
+          EVENT_MASK_INDEX_CORE,
+          FocusChangeMask },
+        { "property",
+          EVENT_MASK_INDEX_CORE,
+          PropertyChangeMask },
+        { "colormap",
+          EVENT_MASK_INDEX_CORE,
+          ColormapChangeMask },
+        { "owner_grab_button",
+          EVENT_MASK_INDEX_CORE,
+          OwnerGrabButtonMask },
+        { "randr",
+          EVENT_MASK_INDEX_RANDR,
+          RRScreenChangeNotifyMask | RRCrtcChangeNotifyMask |
+          RROutputChangeNotifyMask | RROutputPropertyNotifyMask },
+        { NULL, 0, 0 }
+    };
+    int i;
+
+    for (i = 0; events[i].name; i++) {
+        if (!s || !strcmp(s, events[i].name)) {
+            event_masks[events[i].mask_index] |= events[i].mask;
+            if (s)
+                return True;
+        }
+    }
+
+    return False;
 }
 
 int
@@ -931,6 +1000,8 @@ main (int argc, char **argv)
     XIMStyle xim_style = 0;
     char *modifiers;
     char *imvalret;
+    long event_masks[NUM_EVENT_MASKS];
+    Bool event_mask_specified = False;
 
     ProgramName = argv[0];
 
@@ -938,6 +1009,8 @@ main (int argc, char **argv)
 	fprintf(stderr, "%s: warning: could not set default locale\n",
 		ProgramName);
     }
+
+    memset(event_masks, 0, sizeof(event_masks));
 
     w = 0;
     for (i = 1; i < argc; i++) {
@@ -995,12 +1068,22 @@ main (int argc, char **argv)
 		attr.save_under = True;
 		mask |= CWSaveUnder;
 		continue;
+	      case 'e':			/* -event */
+		if (++i >= argc) usage ();
+		if (!parse_event_mask (argv[i], event_masks))
+		    usage ();
+		event_mask_specified = True;
+		continue;
 	      default:
 		usage ();
 	    }				/* end switch on - */
 	} else
 	  usage ();
     }					/* end for over argc */
+
+    /* if no -event options were specified, pretend all of them were */
+    if (!event_mask_specified)
+        parse_event_mask (NULL, event_masks);
 
     dpy = XOpenDisplay (displayname);
     if (!dpy) {
@@ -1046,19 +1129,7 @@ main (int argc, char **argv)
 
     screen = DefaultScreen (dpy);
 
-    /* select for all events */
-    attr.event_mask = KeyPressMask | KeyReleaseMask | ButtonPressMask |
-			   ButtonReleaseMask | EnterWindowMask |
-			   LeaveWindowMask | PointerMotionMask |
-			   Button1MotionMask |
-			   Button2MotionMask | Button3MotionMask |
-			   Button4MotionMask | Button5MotionMask |
-			   ButtonMotionMask | KeymapStateMask |
-			   ExposureMask | VisibilityChangeMask |
-			   StructureNotifyMask | /* ResizeRedirectMask | */
-			   SubstructureNotifyMask | SubstructureRedirectMask |
-			   FocusChangeMask | PropertyChangeMask |
-			   ColormapChangeMask | OwnerGrabButtonMask;
+    attr.event_mask = event_masks[EVENT_MASK_INDEX_CORE];
 
     if (use_root)
 	w = RootWindow(dpy, screen);
@@ -1126,12 +1197,14 @@ main (int argc, char **argv)
         int rr_major, rr_minor;
 
         if (XRRQueryVersion (dpy, &rr_major, &rr_minor)) {
-            int rr_mask = RRScreenChangeNotifyMask;
+            int rr_mask = event_masks[EVENT_MASK_INDEX_RANDR];
 
-            if (rr_major > 1
-                || (rr_major == 1 && rr_minor >= 2))
-                rr_mask |= RRCrtcChangeNotifyMask | RROutputChangeNotifyMask |
-                           RROutputPropertyNotifyMask;
+            if (rr_major == 1 && rr_minor <= 1) {
+                rr_mask &= ~(RRCrtcChangeNotifyMask |
+                             RROutputChangeNotifyMask |
+                             RROutputPropertyNotifyMask);
+            }
+
             XRRSelectInput (dpy, w, rr_mask);
         }
     }

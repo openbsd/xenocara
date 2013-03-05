@@ -1,3 +1,59 @@
+commit ea6c49b7635e21ab97c5ee41963d5024466e0106
+Author: Aaron Plattner <aplattner@nvidia.com>
+Date:   Tue Jan 29 13:42:40 2013 -0800
+
+    xev 1.2.1
+    
+    Signed-off-by: Aaron Plattner <aplattner@nvidia.com>
+
+commit f02bf10367271b6713cdf231771e5320474fcc15
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Jan 14 23:28:22 2013 -0800
+
+    Use strncasecmp instead of a tolower loop & strncmp
+    
+    v2: Since strncasecmp is in Unix98, assume it is always available,
+    and drop fallback code for systems without it.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 6731b622587e83572452c96423195528579fd98d
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Jan 14 23:21:43 2013 -0800
+
+    Fix clang warnings about converting size_t to int and back again
+    
+    xev.c:909:15: warning: implicit conversion loses integer precision: 'size_t' (aka 'unsigned long') to 'int' [-Wshorten-64-to-32]
+        int len = strlen (s);
+            ~~~   ^~~~~~~~~~
+    xev.c:917:34: warning: implicit conversion changes signedness: 'int' to 'size_t' (aka 'unsigned long') [-Wsign-conversion]
+        if (strncmp (s, "notuseful", len) == 0) return (NotUseful);
+            ~~~~~~~                  ^~~
+    xev.c:918:35: warning: implicit conversion changes signedness: 'int' to 'size_t' (aka 'unsigned long') [-Wsign-conversion]
+        if (strncmp (s, "whenmapped", len) == 0) return (WhenMapped);
+            ~~~~~~~                   ^~~
+    xev.c:919:31: warning: implicit conversion changes signedness: 'int' to 'size_t' (aka 'unsigned long') [-Wsign-conversion]
+        if (strncmp (s, "always", len) == 0) return (Always);
+            ~~~~~~~               ^~~
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit d33b2c81bd931d581e5ce4b36f99ee60a76e740d
+Author: Aaron Plattner <aplattner@nvidia.com>
+Date:   Mon Jun 25 15:36:23 2012 -0700
+
+    Add a -event parameter to control the event mask
+    
+    It's annoying to have to sift through a lot of unrelated events if all you care
+    about is one specific class of events (e.g. RandR events).  Add a -event
+    parameter that can be used to tune which events to select.  When not specified,
+    all events are selected.
+    
+    Signed-off-by: Aaron Plattner <aplattner@nvidia.com>
+    Reviewed-by: Andy Ritger <aritger@nvidia.com>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
 commit 96b24e2c353bb4c9b7a0e2fff4f13d015fdb25b9
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Tue Feb 21 20:51:23 2012 -0800

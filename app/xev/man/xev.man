@@ -52,6 +52,15 @@ This option specifies the name to assign to the created window.
 .TP 8
 .B \-rv
 This option specifies that the window should be in reverse video.
+.TP 8
+.B \-event \fIevent_mask\fP
+Select which events to display.
+The
+.B \-event
+option can be specified multiple times to select multiple types of events.
+When not specified, all events are selected.
+Available event masks: keyboard mouse expose visibility structure substructure
+focus property colormap owner_grab_button randr
 .SH "SEE ALSO"
 X(__miscmansuffix__), xwininfo(__appmansuffix__), xdpyinfo(__appmansuffix__), Xlib Programmers Manual, X Protocol
 Specification
