@@ -49,12 +49,12 @@ in this Software without prior written authorization from The Open Group.
 #include <X11/Xfuncs.h>
 
 static char *ProgramName;
-static void dumprgb(char *filename);
+static void dumprgb(const char *filename);
 
 int
 main (int argc, char *argv[])
 {
-    char *dbname = RGB_DB;
+    const char *dbname = RGB_DB;
 
     ProgramName = argv[0];
     if (argc == 2)
@@ -66,7 +66,7 @@ main (int argc, char *argv[])
 
 #ifndef USE_RGB_TXT
 static void
-dumprgb (char *filename)
+dumprgb (const char *filename)
 {
 #ifdef NDBM
     DBM *rgb_dbm;
@@ -115,7 +115,7 @@ dumprgb (char *filename)
 
 #else /* USE_RGB_TXT */
 static void
-dumprgb (char *filename)
+dumprgb (const char *filename)
 {
     FILE *rgb;
     char *path;
@@ -124,16 +124,9 @@ dumprgb (char *filename)
     int lineno = 0;
     int red, green, blue;
 
-#ifdef __UNIXOS2__
-    char *root = (char*)getenv("X11ROOT");
-    sprintf(line,"%s%s.txt",root,filename);
-    path = (char *)malloc(strlen(line) + 1);
-    strcpy(path,line);
-#else
     path = (char *)malloc(strlen(filename) + 5);
     strcpy(path, filename);
     strcat(path, ".txt");
-#endif
 
     if (!(rgb = fopen(path, "r"))) {
 	fprintf (stderr, "%s:  unable to open rgb database \"%s\"\n",
@@ -144,11 +137,7 @@ dumprgb (char *filename)
 
     while(fgets(line, sizeof(line), rgb)) {
 	lineno++;
-#ifndef __UNIXOS2__
 	if (sscanf(line, "%d %d %d %[^\n]\n", &red, &green, &blue, name) == 4) {
-#else
-	if (sscanf(line, "%d %d %d %[^\n\r]\n", &red, &green, &blue, name) == 4) {
-#endif
 	    if (red >= 0 && red <= 0xff &&
 		green >= 0 && green <= 0xff &&
 		blue >= 0 && blue <= 0xff) {

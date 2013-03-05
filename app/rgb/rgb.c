@@ -80,8 +80,7 @@ main(int argc, char **argv)
     else
 	dbname = RGB_DB;
 
-    strcpy (name, dbname);
-    strcat (name, ".dir");
+    snprintf (name, sizeof(name), "%s.dir", dbname);
     fd = open (name, O_WRONLY|O_CREAT, 0666);
     if (fd < 0) {
 	fprintf (stderr, 
@@ -91,8 +90,7 @@ main(int argc, char **argv)
     }
     (void) close (fd);
 
-    strcpy (name, dbname);
-    strcat (name, ".pag");
+    snprintf (name, sizeof(name), "%s.pag", dbname);
     fd = open (name, O_WRONLY|O_CREAT, 0666);
     if (fd < 0) {
 	fprintf (stderr, 

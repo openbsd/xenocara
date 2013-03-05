@@ -81,5 +81,5 @@ Maps color names to RGB color values.
 __RGB_DB_TYPE__ files containing color name to RGB mapping.
 .PD
 .SH SEE ALSO
-.BR cat (1),
-.BR __RGB_DB_TYPE__ (3)
+.BR cat (__appmansuffix__),
+.BR __RGB_DB_TYPE__ (__libmansuffix__)

@@ -21,12 +21,16 @@ dnl DEALINGS IN THE SOFTWARE.
 dnl
 dnl Process this file with autoconf to create configure.
 
+# Initialize Autoconf
 AC_PREREQ([2.60])
-AC_INIT([rgb], [1.0.4],
+AC_INIT([rgb], [1.0.5],
 	[https://bugs.freedesktop.org/enter_bug.cgi?product=xorg], [rgb])
+AC_CONFIG_SRCDIR([Makefile.am])
+AC_CONFIG_HEADERS([config.h])
+
+# Initialize Automake
 AM_INIT_AUTOMAKE([foreign dist-bzip2])
 AM_MAINTAINER_MODE
-AM_CONFIG_HEADER(config.h)
 
 # Require X.Org macros 1.8 or later for MAN_SUBSTS set by XORG_MANPAGE_SECTIONS
 m4_ifndef([XORG_MACROS_VERSION],
@@ -38,7 +42,7 @@ PKG_CHECK_MODULES(RGB, xproto)
 
 AC_MSG_CHECKING([for rgb database location])
 AC_ARG_WITH([rgb-db-dir],
-	AC_HELP_STRING([--with-rgb-db-dir=<path>],
+	AS_HELP_STRING([--with-rgb-db-dir=<path>],
 		[rgb database location (default is ${datadir}/X11/rgb)]),
 	[db_path=$withval], [db_path=${datadir}/X11/rgb])
 AC_MSG_RESULT([$db_path])
@@ -50,7 +54,7 @@ AC_SUBST([db_dir])
 
 AC_MSG_CHECKING([for rgb database format])
 AC_ARG_WITH([rgb-db-type],
-	AC_HELP_STRING([--with-rgb-db-type=(text|dbm|ndbm)],
+	AS_HELP_STRING([--with-rgb-db-type=(text|dbm|ndbm)],
 		[rgb database type (default is text)]),
 	[db_type=$withval], [db_type="text"])
 AC_MSG_RESULT([$db_type])
@@ -92,7 +96,6 @@ fi
 AC_SUBST([RGB_DB_TYPE])
 AC_SUBST([RGB_DB_FILES])
 AM_CONDITIONAL(RGB_DB, [test x$db_type != xtext])
-AC_SUBST(RGB_CFLAGS)
 
 AC_CONFIG_FILES([Makefile
                  man/Makefile])
