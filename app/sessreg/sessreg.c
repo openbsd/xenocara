@@ -90,7 +90,6 @@ static void set_utmpx (struct utmpx *u, const char *line, const char *user,
 
 static int wflag, uflag, lflag;
 static const char *wtmp_file, *utmp_file;
-static char *line;
 #ifdef USE_UTMPX
 #ifdef HAVE_UPDWTMPX
 static const char *wtmpx_file = NULL;
@@ -99,6 +98,7 @@ static const char *wtmpx_file = NULL;
 static const char *utmpx_file = NULL;
 #endif
 #endif
+
 static int utmp_none, wtmp_none;
 /*
  * BSD specific variables.  To make life much easier for Xstartup/Xreset
@@ -130,13 +130,15 @@ static int
 usage (int x)
 {
 	if (x) {
-		fprintf (stderr, "%s: usage %s {-a -d} [-w wtmp-file] [-u utmp-file]", program_name, program_name);
+		fprintf (stderr,
+                         "%s: usage %s {-a -d} [-w wtmp-file] [-u utmp-file]"
 #ifdef USE_LASTLOG
-		fprintf (stderr, " [-L lastlog-file]");
+                         " [-L lastlog-file]"
 #endif
-		fprintf (stderr, "\n");
-		fprintf (stderr, "             [-t ttys-file] [-l line-name] [-h host-name]\n");
-		fprintf (stderr, "             [-s slot-number] [-x servers-file] user-name\n");
+                         "\n"
+                         "             [-t ttys-file] [-l line-name] [-h host-name] [-V]\n"
+                         "             [-s slot-number] [-x servers-file] user-name\n",
+                         program_name, program_name);
 		exit (1);
 	}
 	return x;
@@ -194,6 +196,7 @@ main (int argc, char **argv)
 #ifdef USE_UTMPX
 	struct utmpx	utmpx_entry;
 #endif
+	char *		line = NULL;
 
 	program_name = argv[0];
 	while (*++argv && **argv == '-') {
@@ -238,6 +241,9 @@ main (int argc, char **argv)
 		case 'd':
 			dflag++;
 			break;
+		case 'V':
+			printf("%s\n", PACKAGE_STRING);
+			exit (0);
 		default:
 			usage (1);
 		}
@@ -257,16 +263,12 @@ main (int argc, char **argv)
 		wtmpx_file = WTMPX_FILE;
 #endif
 	}
-#ifndef NO_UTMP
 	if (!uflag) {
 		utmp_file = UTMP_FILE;
 #if defined(USE_UTMPX) && defined(HAVE_UTMPXNAME)
 		utmpx_file = UTMPX_FILE;
 #endif
 	}
-#else
-	utmp_none = 1;
-#endif
 #ifdef USE_LASTLOG
 	if (!Lflag)
 		llog_file = LLOG_FILE;
@@ -360,7 +362,7 @@ main (int argc, char **argv)
 		if (llog != -1) {
 			struct lastlog ll;
 
-			sysnerr (lseek(llog, (long) pwd->pw_uid*sizeof(ll), 0)
+			sysnerr (lseek(llog, (long) (pwd->pw_uid*sizeof(ll)), 0)
 					!= -1, "seeking lastlog entry");
 			memset(&ll, 0, sizeof(ll));
 			ll.ll_time = current_time;
@@ -397,7 +399,7 @@ set_utmp (struct utmp *u, char *line, char *user, char *host, time_t date, int a
 		memset (u->ut_name, 0, sizeof (u->ut_name));
 #ifdef HAVE_STRUCT_UTMP_UT_ID
 	if (line) {
-		int	i;
+		size_t	i;
 		/*
 		 * this is a bit crufty, but
 		 * follows the apparent conventions in
@@ -486,7 +488,7 @@ set_utmpx (struct utmpx *u, const char *line, const char *user,
 		memset (u->ut_user, 0, sizeof (u->ut_user));
 
 	if (line) {
-		int	i;
+		size_t	i;
 		/*
 		 * this is a bit crufty, but
 		 * follows the apparent conventions in

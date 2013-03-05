@@ -30,19 +30,19 @@
 /* Define to 1 if the system has the type `struct lastlog'. */
 #undef HAVE_STRUCT_LASTLOG
 
-/* Define to 1 if `ut_syslen' is member of `struct utmpx'. */
+/* Define to 1 if `ut_syslen' is a member of `struct utmpx'. */
 #undef HAVE_STRUCT_UTMPX_UT_SYSLEN
 
-/* Define to 1 if `ut_host' is member of `struct utmp'. */
+/* Define to 1 if `ut_host' is a member of `struct utmp'. */
 #undef HAVE_STRUCT_UTMP_UT_HOST
 
-/* Define to 1 if `ut_id' is member of `struct utmp'. */
+/* Define to 1 if `ut_id' is a member of `struct utmp'. */
 #undef HAVE_STRUCT_UTMP_UT_ID
 
-/* Define to 1 if `ut_pid' is member of `struct utmp'. */
+/* Define to 1 if `ut_pid' is a member of `struct utmp'. */
 #undef HAVE_STRUCT_UTMP_UT_PID
 
-/* Define to 1 if `ut_type' is member of `struct utmp'. */
+/* Define to 1 if `ut_type' is a member of `struct utmp'. */
 #undef HAVE_STRUCT_UTMP_UT_TYPE
 
 /* Define to 1 if you have the <sys/param.h> header file. */
@@ -84,6 +84,9 @@
 /* Define to the one symbol short name of this package. */
 #undef PACKAGE_TARNAME
 
+/* Define to the home page for this package. */
+#undef PACKAGE_URL
+
 /* Define to the version of this package. */
 #undef PACKAGE_VERSION
 
@@ -98,25 +101,6 @@
 
 /* Define to 1 if you have the ANSI C header files. */
 #undef STDC_HEADERS
-
-/* Version number of package */
-#undef VERSION
-
-/* Number of bits in a file offset, on hosts where this is settable. */
-#undef _FILE_OFFSET_BITS
-
-/* Define for large files, on AIX-style hosts. */
-#undef _LARGE_FILES
-
-/* Define to 1 if on MINIX. */
-#undef _MINIX
-
-/* Define to 2 if the system does not provide POSIX.1 features except with
-   this defined. */
-#undef _POSIX_1_SOURCE
-
-/* Define to 1 if you need to in order for `stat' and other things to work. */
-#undef _POSIX_SOURCE
 
 /* Enable extensions on AIX 3, Interix.  */
 #ifndef _ALL_SOURCE
@@ -139,3 +123,27 @@
 # undef __EXTENSIONS__
 #endif
 
+
+/* Version number of package */
+#undef VERSION
+
+/* Enable large inode numbers on Mac OS X 10.5.  */
+#ifndef _DARWIN_USE_64_BIT_INODE
+# define _DARWIN_USE_64_BIT_INODE 1
+#endif
+
+/* Number of bits in a file offset, on hosts where this is settable. */
+#undef _FILE_OFFSET_BITS
+
+/* Define for large files, on AIX-style hosts. */
+#undef _LARGE_FILES
+
+/* Define to 1 if on MINIX. */
+#undef _MINIX
+
+/* Define to 2 if the system does not provide POSIX.1 features except with
+   this defined. */
+#undef _POSIX_1_SOURCE
+
+/* Define to 1 if you need to in order for `stat' and other things to work. */
+#undef _POSIX_SOURCE

@@ -75,13 +75,6 @@
 # define USE_LASTLOG
 #endif
 
-#ifdef CSRG_BASED
-#if !defined(__FreeBSD__) && !defined(__OpenBSD__)
-/* *BSD doesn't like a ':0' type entry in utmp */
-#define NO_UTMP
-#endif
-#endif
-
 #ifndef WTMP_FILE
 # ifdef _PATH_WTMP
 #  define WTMP_FILE	_PATH_WTMP
@@ -105,4 +98,13 @@
 #endif
 #ifndef TTYS_FILE
 # define TTYS_FILE	"/etc/ttys"
+#endif
+
+#ifdef USE_UTMPX
+#ifndef WTMPX_FILE
+# define WTMPX_FILE	_PATH_WTMPX
+#endif
+#ifndef UTMPX_FILE
+# define UTMPX_FILE	_PATH_UTMPX
+#endif
 #endif

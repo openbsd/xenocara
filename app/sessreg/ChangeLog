@@ -1,3 +1,116 @@
+commit 1d9c8df5bea05c2c4923fd985ce274104b42efeb
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Feb 10 18:43:41 2013 -0800
+
+    sessreg 1.0.8
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit ec158dea0bdc8bf4767fe048056178a823a2033b
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jan 19 16:37:00 2013 -0800
+
+    Add -V option to print version number
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 64db372b4988e4862acb328492b7bbe14851ebe0
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jan 19 16:32:15 2013 -0800
+
+    Combine usage message into a single string
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 64e773800f70a4e9ebc0e606150beaff9b839fd9
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Dec 16 12:46:50 2012 -0800
+
+    Fix some clang warnings about implicit conversions
+    
+    sessreg.c:360:43: warning: implicit conversion changes signedness:
+          'unsigned long' to 'off_t' (aka 'long') [-Wsign-conversion]
+                            sysnerr (lseek(llog, (long) pwd->pw_uid*sizeof(ll), 0)
+                                     ~~~~~       ~~~~~~~~~~~~~~~~~~^~~~~~~~~~~
+    sessreg.c:360:25: warning: implicit conversion changes signedness: 'long' to
+          'unsigned long' [-Wsign-conversion]
+                            sysnerr (lseek(llog, (long) pwd->pw_uid*sizeof(ll), 0)
+                                                 ^~~~~~~~~~~~~~~~~~~
+    
+    sessreg.c:405:7: warning: implicit conversion loses integer precision: 'size_t'
+          (aka 'unsigned long') to 'int' [-Wshorten-64-to-32]
+                    i = strlen (line);
+                      ~ ^~~~~~~~~~~~~
+    sessreg.c:406:9: warning: comparison of integers of different signs: 'int' and
+          'unsigned long' [-Wsign-compare]
+                    if (i >= sizeof (u->ut_id))
+                        ~ ^  ~~~~~~~~~~~~~~~~~
+    
+    sessreg.c:494:7: warning: implicit conversion loses integer precision: 'size_t'
+          (aka 'unsigned long') to 'int' [-Wshorten-64-to-32]
+                    i = strlen (line);
+                      ~ ^~~~~~~~~~~~~
+    sessreg.c:495:9: warning: comparison of integers of different signs: 'int' and
+          'unsigned long' [-Wsign-compare]
+                    if (i >= sizeof (u->ut_id))
+                        ~ ^  ~~~~~~~~~~~~~~~~~
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 88bf1500095d7aaea9689a6d0367d6ff5c868292
+Author: Ed Schouten <ed@80386.nl>
+Date:   Sat Sep 15 20:27:57 2012 +0200
+
+    Remove dubious code.
+    
+    The NO_UTMP definition is set on non-FreeBSD, non-OpenBSD, BSD-based
+    systems. When looking at the commonly used BSD-based operating systems,
+    they either use utmpx, or I can't think of a reason why the utmp code
+    wouldn't work.
+    
+    If it turns out some obscure operating system breaks because of this
+    change, we should replace this by something more accurate, such as an
+    Autoconf check or an #ifdef specific to that operating system.
+    
+    Signed-off-by: Ed Schouten <ed@80386.nl>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit d6570f5188ac8b223a2ae8d1ef596f313938acca
+Author: Ed Schouten <ed@80386.nl>
+Date:   Sat Sep 15 20:26:57 2012 +0200
+
+    Make the `line' variable local to main().
+    
+    It is only used within main(). This prevents a compilation failure when
+    building with -Wshadow.
+    
+    Signed-off-by: Ed Schouten <ed@80386.nl>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 8963bc3df6d3e9627c82171c3c931616f27fd528
+Author: Ed Schouten <ed@80386.nl>
+Date:   Sat Sep 15 20:11:20 2012 +0200
+
+    Place NetBSD specific #defines in the proper place.
+    
+    For all the other databases (utmp, wtmp, lastlog) we already do it in
+    sessreg.h. There's no reason why we should place the utmpx specific ones
+    in sessreg.c.
+    
+    Signed-off-by: Ed Schouten <ed@80386.nl>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 1d609a5daa3fa1553111076561a1f800e462156d
+Author: Thomas Klausner <tk@giga.or.at>
+Date:   Fri Jun 15 11:36:07 2012 +0200
+
+    Fix compilation on NetBSD - undefined *TMPX paths
+    
+    Make sure file name defines exist on NetBSD.
+    https://bugs.freedesktop.org/show_bug.cgi?id=50940
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit 7ac51a652bfb8423604bb1a120568d44516c9de9
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Fri Oct 21 21:09:43 2011 -0700

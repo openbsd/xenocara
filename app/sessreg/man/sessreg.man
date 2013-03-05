@@ -38,6 +38,7 @@ sessreg \- manage utmp/wtmp entries for non-init clients
 [-s \fIslot-number\fP]
 [-x \fIXservers-file\fP]
 [-t \fIttys-file\fP]
+[-V]
 [-a]
 [-d]
 \fIuser-name\fP
@@ -123,6 +124,8 @@ is found.
 .IP "\fB-t\fP \fIttys-file\fP"
 This specifies an alternate file which the \fI-x\fP option will use to count
 the number of terminal sessions on a host.
+.IP "\fB-V\fP"
+This option causes the command to print its version and exit.
 .IP "\fB-a\fP"
 This session should be added to utmp/wtmp.
 .IP "\fB-d\fP"
