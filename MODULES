@@ -1,4 +1,4 @@
-# $OpenBSD: MODULES,v 1.246 2013/02/16 21:48:24 matthieu Exp $
+# $OpenBSD: MODULES,v 1.247 2013/03/05 21:11:07 matthieu Exp $
 #
 # X.Org maintained modules
 #
@@ -19,9 +19,9 @@ app/mkcomposecache	1.2.1		needs-import
 app/mkfontdir		1.0.7	7.7
 app/mkfontscale		1.1.0	7.7
 app/oclock		1.0.3
-app/rgb			1.0.5		needs-update
+app/rgb			1.0.5
 app/scripts		1.0.1
-app/sessreg		1.0.8	7.7+	needs-update
+app/sessreg		1.0.8	7.7+
 app/setxkbmap		1.3.0	7.7
 app/showfont		1.0.4
 app/smproxy		1.0.5	7.7
@@ -41,7 +41,7 @@ app/xdm			1.1.11
 app/xdpyinfo		1.3.0	7.7
 app/xdriinfo		1.0.4	7.7
 app/xedit		1.2.1
-app/xev			1.2.1	7.7+	needs-update
+app/xev			1.2.1	7.7+
 app/xeyes		1.1.1
 app/xf86dga		1.0.3
 app/xfd			1.1.1
@@ -209,7 +209,7 @@ lib/libxcb			1.9	7.7+
 lib/libxkbfile			1.0.8	7.7
 lib/libxkbui			1.0.2
 lib/libxtrans			1.2.7	7.7
-lib/pixman			0.28.2		needa-update
+lib/pixman			0.28.2		needs-update
 lib/xcb-util			0.3.9		needs-update
 lib/xcb-util-image		0.3.9		needs-import
 lib/xcb-util-keysyms		0.3.9		needs-import
