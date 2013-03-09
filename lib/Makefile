@@ -1,9 +1,8 @@
-# $OpenBSD: Makefile,v 1.21 2011/03/08 20:48:59 matthieu Exp $
+# $OpenBSD: Makefile,v 1.22 2013/03/09 14:31:36 matthieu Exp $
 
 .include <bsd.xconf.mk>
 
 XCB_LIBS= \
-	libpthread-stubs \
 	libxcb/libxcb \
 	libxcb/libxcb-composite \
 	libxcb/libxcb-damage \
@@ -36,7 +35,8 @@ XCB_LIBS= \
 	xcb-util/renderutil \
 	xcb-util/reply
 
-SUBDIR= freetype fontconfig libxtrans libXau libXdmcp ${XCB_LIBS}\
+SUBDIR= libpthread-stubs \
+	freetype fontconfig libxtrans libXau libXdmcp ${XCB_LIBS}\
 	libX11  libXext  libXrender libXft libdmx libfontenc \
 	libFS libICE libSM libXt \
 	libXmu libXpm libXaw libXfixes libXcomposite \
