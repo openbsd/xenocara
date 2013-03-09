@@ -21,22 +21,27 @@ dnl  PERFORMANCE OF THIS SOFTWARE.
 dnl
 dnl Process this file with autoconf to create configure.
 
-AC_PREREQ([2.57])
-AC_INIT(xstdcmap,[1.0.1], [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],xstdcmap)
-AM_INIT_AUTOMAKE([dist-bzip2])
+# Initialize Autoconf
+AC_PREREQ([2.60])
+AC_INIT([xstdcmap], [1.0.3],
+	[https://bugs.freedesktop.org/enter_bug.cgi?product=xorg], [xstdcmap])
+AC_CONFIG_SRCDIR([Makefile.am])
+AC_CONFIG_HEADERS([config.h])
+
+# Initialize Automake
+AM_INIT_AUTOMAKE([foreign dist-bzip2])
 AM_MAINTAINER_MODE
 
-AM_CONFIG_HEADER(config.h)
-
-AC_PROG_CC
-AC_PROG_INSTALL
+# Require X.Org macros 1.8 or later for MAN_SUBSTS set by XORG_MANPAGE_SECTIONS
+m4_ifndef([XORG_MACROS_VERSION],
+          [m4_fatal([must install xorg-macros 1.8 or later before running autoconf/autogen])])
+XORG_MACROS_VERSION(1.8)
+XORG_DEFAULT_OPTIONS
 
 # Checks for pkg-config packages
-PKG_CHECK_MODULES(XSTDCMAP, xmu x11)
-AC_SUBST(XSTDCMAP_CFLAGS)
-AC_SUBST(XSTDCMAP_LIBS)
+PKG_CHECK_MODULES(XSTDCMAP, [xmu x11 xproto >= 7.0.17])
 
-XORG_MANPAGE_SECTIONS
-XORG_RELEASE_VERSION
-
-AC_OUTPUT([Makefile])
+AC_CONFIG_FILES([
+	Makefile
+	man/Makefile])
+AC_OUTPUT

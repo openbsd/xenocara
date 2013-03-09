@@ -28,6 +28,10 @@ in this Software without prior written authorization from The Open Group.
  */
 /* $XFree86: xc/programs/xstdcmap/xstdcmap.c,v 1.8tsi Exp $ */
 
+#ifdef HAVE_CONFIG_H
+# include "config.h"
+#endif
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <X11/Xos.h>
@@ -47,6 +51,7 @@ static char		*program_name = NULL;
 static Bool		all = 0;
 static Bool		help = 0;
 static Bool 		verbose = 0;
+static Bool 		version = 0;
 static Display		*dpy = NULL;
 
 typedef struct
@@ -54,8 +59,8 @@ typedef struct
     Bool	create;
     Bool	delete;
     Atom	property;
-    char	*name;
-    char	*nickname;
+    const char	*name;
+    const char	*nickname;
 } colormap_property;
 
 static colormap_property propertyTable[]=
@@ -76,20 +81,18 @@ static colormap_property propertyTable[]=
 #define GREEN	4
 #define BLUE	5
 
-static char	*usage_message[]=
-{
-"    -all               make all standard colormaps for the display",
-"    -best              make the RGB_BEST_MAP",
-"    -blue              make the RGB_BLUE_MAP",
-"    -default           make the RGB_DEFAULT_MAP",
-"    -delete name       remove a standard colormap",
-"    -display dpy       X server to use",
-"    -gray              make the RGB_GRAY_MAP",
-"    -green             make the RGB_GREEN_MAP",
-"    -red               make the RGB_RED_MAP",
-"    -verbose           turn on logging",
-"",
-NULL };
+static const char	*usage_message =
+    "    -all               make all standard colormaps for the display\n"
+    "    -best              make the RGB_BEST_MAP\n"
+    "    -blue              make the RGB_BLUE_MAP\n"
+    "    -default           make the RGB_DEFAULT_MAP\n"
+    "    -delete name       remove a standard colormap\n"
+    "    -display dpy       X server to use\n"
+    "    -gray              make the RGB_GRAY_MAP\n"
+    "    -green             make the RGB_GREEN_MAP\n"
+    "    -red               make the RGB_RED_MAP\n"
+    "    -verbose           turn on logging\n"
+    "    -version           print version info\n";
 
 static XrmOptionDescRec optionTable[]=
 {
@@ -104,6 +107,7 @@ static XrmOptionDescRec optionTable[]=
 {"-help",	".help",        XrmoptionNoArg,		(caddr_t) "on"},
 {"-red",	".red",		XrmoptionNoArg,		(caddr_t) "on"},
 {"-verbose",	".verbose",	XrmoptionNoArg,		(caddr_t) "on"},
+{"-version",	".version",	XrmoptionNoArg,		(caddr_t) "on"},
 };
 #define NOPTIONS (sizeof optionTable / sizeof optionTable[0])
 
@@ -126,23 +130,23 @@ parse(int argc, char **argv)
     if (--argc)
 	usage(1);
 
-    (void) sprintf(option, "%s%s", program_name, ".all");
+    snprintf(option, sizeof(option), "%s%s", program_name, ".all");
     if (XrmGetResource(database, option, (char *) NULL, &type, &value))
     	all++;
 
-    (void) sprintf(option, "%s%s", program_name, ".best");
+    snprintf(option, sizeof(option), "%s%s", program_name, ".best");
     if (XrmGetResource(database, option, (char *) NULL, &type, &value))
     	propertyTable[BEST].create++;
 
-    (void) sprintf(option, "%s%s", program_name, ".blue");
+    snprintf(option, sizeof(option), "%s%s", program_name, ".blue");
     if (XrmGetResource(database, option, (char *) NULL, &type, &value))
 	propertyTable[BLUE].create++;
 
-    (void) sprintf(option, "%s%s", program_name, ".default");
+    snprintf(option, sizeof(option), "%s%s", program_name, ".default");
     if (XrmGetResource(database, option, (char *) NULL, &type, &value))
 	propertyTable[DEFAULT].create++;
 
-    (void) sprintf(option, "%s%s", program_name, ".delete");
+    snprintf(option, sizeof(option), "%s%s", program_name, ".delete");
     if (XrmGetResource(database, option, (char *) NULL, &type, &value)) {
 	register int i;
 	for (i=0; i < NPROPERTIES; i++) {
@@ -155,32 +159,36 @@ parse(int argc, char **argv)
 	}
     }
 		
-    (void) sprintf(option, "%s%s", program_name, ".display");
+    snprintf(option, sizeof(option), "%s%s", program_name, ".display");
     if (XrmGetResource(database, option, (char *) NULL, &type, &value))
 	display_name = value.addr;
 
-    (void) sprintf(option, "%s%s", program_name, ".gray");
+    snprintf(option, sizeof(option), "%s%s", program_name, ".gray");
     if (XrmGetResource(database, option, (char *) NULL, &type, &value))
 	propertyTable[GRAY].create++;
 
-    (void) sprintf(option, "%s%s", program_name, ".green");
+    snprintf(option, sizeof(option), "%s%s", program_name, ".green");
     if (XrmGetResource(database, option, (char *) NULL, &type, &value))
 	propertyTable[GREEN].create++;
 
-    (void) sprintf(option, "%s%s", program_name, ".help");
+    snprintf(option, sizeof(option), "%s%s", program_name, ".help");
     if (XrmGetResource(database, option, (char *) NULL, &type, &value))
 	help++;
 
-    (void) sprintf(option, "%s%s", program_name, ".red");
+    snprintf(option, sizeof(option), "%s%s", program_name, ".red");
     if (XrmGetResource(database, option, (char *) NULL, &type, &value))
 	propertyTable[RED].create++;
 
-    (void) sprintf(option, "%s%s", program_name, ".verbose");
+    snprintf(option, sizeof(option), "%s%s", program_name, ".verbose");
     if (XrmGetResource(database, option, (char *) NULL, &type, &value))
 	verbose++;
+
+    snprintf(option, sizeof(option), "%s%s", program_name, ".version");
+    if (XrmGetResource(database, option, (char *) NULL, &type, &value))
+	version++;
 }
 
-static void
+static void _X_NORETURN
 Exit(Status status)
 {
     if (dpy)
@@ -188,14 +196,11 @@ Exit(Status status)
     exit(status);
 }
 
-static void
+static void  _X_NORETURN
 usage(Status status)
 {
-    register char	**i;
     (void) fprintf(stderr, "usage:  %s [-options]\n\n", program_name);
-    (void) fprintf(stderr, "where options include:\n");
-    for (i = usage_message; *i != NULL; i++)
-	(void) fprintf(stderr, "%s\n", *i);
+    (void) fprintf(stderr, "where options include:\n%s\n", usage_message);
     Exit(status);
 }
 
@@ -254,7 +259,7 @@ getBestVisual(Atom property,	/* specifies the standard colormap */
 
 }
 
-static char *
+static const char *
 visualStringFromClass(int class)
 {
     switch (class) {
@@ -339,18 +344,19 @@ main(int argc, char *argv[])
 
     parse(argc, argv);
 
+    if (help) {
+	usage(0);
+    }
+
+    if (version) {
+        printf("%s\n", PACKAGE_STRING);
+        exit(0);
+    }
+
     if ((dpy = XOpenDisplay(display_name)) == NULL) {
 	(void) fprintf(stderr, "%s: cannot open display \"%s\".\n",
 		       program_name, XDisplayName(display_name));
 	exit(1);
-    }
-
-    if (help) {
-	usage(0);
-	Exit(0);
-
-	/* Muffle gcc */
-	return 0;
     }
 
     if (all) {
@@ -370,6 +376,4 @@ main(int argc, char *argv[])
 		    "Not all new colormap definitions will be retained.\n");
     }
     Exit((status == 0) ? 1 : 0);
-    /* Muffle compiler */
-    return 0;
 }
