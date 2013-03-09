@@ -3,12 +3,12 @@
 xvinfo - Print out X-Video extension adaptor information
 .SH SYNOPSIS
 .B "xvinfo"
-[-display \fIdisplayname\fP] 
+[-display \fIdisplayname\fP]
 .SH DESCRIPTION
 .PP
 .B xvinfo
 prints out the capabilities of any video adaptors associated
-with the display that are accessible through the X-Video extension. 
+with the display that are accessible through the X-Video extension.
 .SH OPTIONS
 .PP
 .TP 8
@@ -17,6 +17,9 @@ This argument allows you to specify the server to query; see \fIX(__miscmansuffi
 .TP 8
 .B "-short"
 Output less details, to reduce the amount of text.
+.TP 8
+.B "-version"
+Output program version, then exit.
 .SH ENVIRONMENT
 .PP
 .TP 8

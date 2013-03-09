@@ -1,3 +1,90 @@
+commit 6114ecae7d7aa0bed41d01d360b193f27a500942
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Feb 10 16:44:06 2013 -0800
+
+    xvinfo 1.1.2
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 4f5b605fc1339a9f0a12dca89863cb553e8af6cc
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jan 13 14:46:23 2013 -0800
+
+    Add -version option
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit a7db7b1385ece9c10ad1d7c13d9c842b52a39002
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jan 13 14:39:54 2013 -0800
+
+    add explicit braces to clarify which if the else goes with
+    
+    Suggested by clang:
+    
+    xvinfo.c:125:25: warning: add explicit braces to avoid dangling else
+          [-Wdangling-else]
+                            else
+                            ^
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 8afa791dd265d64f425ff7f3c32a16c291e3bb7b
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jan 13 14:32:30 2013 -0800
+
+    Convert from haphazard indenting to X.Org common style
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 68e388a32b1be09b73eee18c8720efd1c08fdfe8
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jan 13 14:29:28 2013 -0800
+
+    Add _X_NORETURN to PrintUsage to clear gcc/clang warnings
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 34828bc984579fd77136d5d0a559d1a887bac420
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jan 13 14:26:50 2013 -0800
+
+    config: Add missing AC_CONFIG_SRCDIR
+    
+    Regroup AC statements under the Autoconf initialization section.
+    Regroup AM statements under the Automake initialization section.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit c472d2d7f72113ebf6fc9bbb756e77c9394021c6
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jan 19 10:06:57 2011 -0500
+
+    config: move man pages into their own directory
+    
+    Use services provided by XORG_MANPAGE_SECTIONS.
+    Use standard Makefile for man pages.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 50774db732019e6b9e706e9ce5a0f16bbbe9a772
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Jan 13 11:15:48 2011 -0500
+
+    man: remove trailing spaces and tabs
+    
+    Using s/[ \t]*$//
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 0567372fc6c55a4151131c41c4ba719aa0170e26
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jan 12 16:28:02 2011 -0500
+
+    config: replace deprecated AM_CONFIG_HEADER with AC_CONFIG_HEADERS
+    
+    This silences an Autoconf warning
+
 commit 2abf1e4cbff8b67f836dd4102dcc0a179d98a142
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Sat Nov 6 08:59:31 2010 -0700
