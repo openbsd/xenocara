@@ -22,7 +22,7 @@ dnl
 dnl Process this file with autoconf to create configure.
 
 AC_PREREQ([2.60])
-AC_INIT([ico], [1.0.3],
+AC_INIT([ico], [1.0.4],
         [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg], [ico])
 AM_INIT_AUTOMAKE([foreign dist-bzip2])
 AM_MAINTAINER_MODE
@@ -33,13 +33,16 @@ m4_ifndef([XORG_MACROS_VERSION],
 XORG_MACROS_VERSION(1.8)
 XORG_DEFAULT_OPTIONS
 
-AM_CONFIG_HEADER(config.h)
+AC_CONFIG_HEADERS([config.h])
 
 # Checks for pkg-config packages
-PKG_CHECK_MODULES(ICO, x11 >= 0.99.1)
+PKG_CHECK_MODULES(ICO, [x11 >= 0.99.1 xproto >= 7.0.22])
 
 XTHREADLIB=`$PKG_CONFIG --variable=xthreadlib x11`
 AC_SUBST(XTHREADLIB)
 
 
-AC_OUTPUT([Makefile])
+AC_CONFIG_FILES([
+	Makefile
+	man/Makefile])
+AC_OUTPUT

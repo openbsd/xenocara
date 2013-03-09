@@ -174,7 +174,7 @@ static Atom wm_delete_window;
  * any additional threads are created
  */
 
-static char *Primaries[] = {
+static const char *Primaries[] = {
     "red", "green", "blue", "yellow", "cyan", "magenta"
 };
 #define NumberPrimaries 6
@@ -219,7 +219,7 @@ static const char *ProgramName;	/* argv[0] */
 static const char *geom = NULL;	/* -geometry: window geometry */
 static int useRoot = 0;		/* -r */
 static int dash = 0;		/* -d: dashed line pattern */
-static char **colornames;	/* -colors (points into argv) */
+static const char **colornames;	/* -colors (points into argv) */
 #ifdef MULTIBUFFER
 static int update_action = MultibufferUpdateActionBackground;
 #endif
@@ -254,11 +254,10 @@ static xcondition_rec count_cond;/* Xthreads doesn't define an equivalent to
  *	Error handling
  *****************************************************************************/
 
-#if defined(__GNUC__) && \
-    ((__GNUC__ > 2) || ((__GNUC__ == 2) && (__GNUC_MINOR__ >= 7)))
-void icoFatal (const char *fmt, const char *a0) __attribute__((__noreturn__));
-#endif
-void
+
+static void icoFatal (const char *fmt, const char *a0) _X_NORETURN;
+
+static void
 icoFatal(const char *fmt, const char *a0)
 {
 	fprintf(stderr, "%s: ", ProgramName);
@@ -434,7 +433,7 @@ PartialNonHomTransform(int n, Transform3D m, const Point3D *in, Point3D *out)
  */
 
 static Bool
-predicate(Display *display, XEvent *event, XPointer args)
+predicate(_X_UNUSED Display *display, XEvent *event, XPointer args)
 {
     Window w = (Window) args;
     return event->xany.window == w;
@@ -509,7 +508,11 @@ setDrawBuf (struct closure *closure, int n)
 }
 
 static void
-setDisplayBuf(struct closure *closure, int n, int firsttime)
+setDisplayBuf(struct closure *closure, int n,
+#ifndef MULTIBUFFER
+              _X_UNUSED
+#endif
+              int firsttime)
 {
 #ifdef MULTIBUFFER
 	if (multibufext && dblbuf) {
@@ -717,7 +720,8 @@ drawPoly(struct closure *closure, Polyinfo *poly, GC gc,
 }
 
 static void
-initDBufs(struct closure *closure, int fg, int bg, int planesperbuf)
+initDBufs(struct closure *closure, unsigned long fg, unsigned long bg,
+          int planesperbuf)
 {
 	int i,j,jj,j0,j1,k,m,t;
 	DBufInfo *b;
@@ -799,7 +803,7 @@ initDBufs(struct closure *closure, int fg, int bg, int planesperbuf)
 }
 
 static void
-setBufColname(struct closure *closure, int n, char *colname)
+setBufColname(struct closure *closure, int n, const char *colname)
 {
 	int t;
 	XColor dcolor, color;
@@ -816,7 +820,7 @@ setBufColname(struct closure *closure, int n, char *colname)
 static void *
 do_ico_window(void *ptr)
 {
-	int fg, bg;
+	unsigned long fg, bg;
 	XSetWindowAttributes xswa;
 	XWindowAttributes xwa;
 	XEvent xev;
@@ -1148,7 +1152,7 @@ findpoly(const char *name)
 	icoFatal("can't find object %s", name);
 }
 
-int main(int argc, char **argv)
+int main(int argc, const char **argv)
 {
 	const char *display = NULL;
 #ifdef MULTIBUFFER

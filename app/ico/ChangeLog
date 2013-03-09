@@ -1,3 +1,91 @@
+commit 0c5f08dee87e0453e3263f8aa5ca545a0a03353e
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Jan 15 18:19:49 2013 -0800
+
+    ico 1.0.4
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit d065113b4fadbb674e6e6f2a7681105f4f0212d3
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Jan 3 20:06:17 2013 -0800
+
+    Fix some 64-bit vs. 32-bit conversion errors
+    
+    ico.c:851:7: warning: implicit conversion loses integer precision: 'unsigned long' to 'int' [-Wshorten-64-to-32]
+            fg = WhitePixel(dpy, DefaultScreen(dpy));
+               ~ ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    
+    ico.c:852:7: warning: implicit conversion loses integer precision: 'unsigned long' to 'int' [-Wshorten-64-to-32]
+            bg = BlackPixel(dpy, DefaultScreen(dpy));
+               ~ ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    
+    ico.c:858:18: warning: implicit conversion loses integer precision: 'unsigned long' to 'int' [-Wshorten-64-to-32]
+                  bg = cdef.pixel;
+                     ~ ~~~~~^~~~~
+    
+    ico.c:866:18: warning: implicit conversion loses integer precision: 'unsigned long' to 'int' [-Wshorten-64-to-32]
+                  fg = cdef.pixel;
+                     ~ ~~~~~^~~~~
+    
+    ico.c:874:11: warning: implicit conversion loses integer precision: 'unsigned long' to 'int' [-Wshorten-64-to-32]
+                bg = tmp;
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 99ca5c8deb4a3ebd4b2a7e64bd64ca9a91b6680c
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Jan 3 19:51:06 2013 -0800
+
+    Mark a couple parameters as unused to silence compiler warnings
+    
+    ico.c:436:20: warning: unused parameter 'display' [-Wunused-parameter]
+    predicate(Display *display, XEvent *event, XPointer args)
+    
+    ico.c:511:51: warning: unused parameter 'firsttime' [-Wunused-parameter]
+    setDisplayBuf(struct closure *closure, int n, int firsttime)
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 94c5e76c2d1043a835b0872f78902ebdfc3c5492
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Jun 5 17:50:45 2012 -0700
+
+    Add const qualifiers to fix gcc -Wwrite-strings warnings
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 83a7600ae9dbe8b2ca0f9199222245792fb8c0d6
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Jun 7 23:59:41 2011 -0700
+
+    Replace local checks for gcc with _X_NORETURN from xproto 7.0.17
+    
+    Also declare icoFatal as static since it's only used in this one file.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Mark Kettenis <kettenis@openbsd.org>
+    Reviewed-by: Cyril Brulebois <kibi@debian.org>
+
+commit 7abead5688c1958822e3084a5c9854eb52ac58ec
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jan 19 10:06:55 2011 -0500
+
+    config: move man pages into their own directory
+    
+    Use services provided by XORG_MANPAGE_SECTIONS.
+    Use standard Makefile for man pages.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 9d266c12261d32d2e3ceb167b16f6867e9ccc5fa
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jan 12 16:28:02 2011 -0500
+
+    config: replace deprecated AM_CONFIG_HEADER with AC_CONFIG_HEADERS
+    
+    This silences an Autoconf warning
+
 commit 849d04b09a12e51fb4e17269e2e3a61ce205a014
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Sat Oct 30 13:11:36 2010 -0700
