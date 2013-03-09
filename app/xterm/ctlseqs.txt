@@ -21,7 +21,7 @@
                              Thomas Dickey
                       XFree86 Project (1996-2006)
                     invisible-island.net (2006-2012)
-               updated for XTerm Patch #287 (2012/11/25)
+               updated for XTerm Patch #289 (2013/02/06)
 
 
 
@@ -921,9 +921,9 @@ CSI Ps ' |
           mal.
           The ``page'' parameter is not used by xterm, and will be omit-
           ted.
-CSI Pm SP }
+CSI Pm ' }
           Insert Ps Column(s) (default = 1) (DECIC), VT420 and up.
-CSI Pm SP ~
+CSI Pm ' ~
           Delete Ps Column(s) (default = 1) (DECDC), VT420 and up.
 
 Operating System Controls
@@ -1089,24 +1089,24 @@ This assumes altIsNotMeta is set:
 
        -----------------------------------------------------------
        key          altSendsEscape   metaSendsEscape   result
-       -----------------------------------------------------------
-       x            off              off               x
-       Meta-x       off              off               shift
-       Alt-x        off              off               shift
-       Alt+Meta-x   off              off               shift
-       x            ON               off               x
-       Meta-x       ON               off               shift
-       Alt-x        ON               off               ESC  x
-       Alt+Meta-x   ON               off               ESC  shift
-       x            off              ON                x
-       Meta-x       off              ON                ESC  x
-       Alt-x        off              ON                shift
-       Alt+Meta-x   off              ON                ESC  shift
-       x            ON               ON                x
-       Meta-x       ON               ON                ESC  x
-       Alt-x        ON               ON                ESC  x
-       Alt+Meta-x   ON               ON                ESC  x
-       -----------------------------------------------------------
+       -----------+----------------+-----------------+------------
+       x          | off            | off             | x
+       Meta-x     | off            | off             | shift
+       Alt-x      | off            | off             | shift
+       Alt+Meta-x | off            | off             | shift
+       x          | ON             | off             | x
+       Meta-x     | ON             | off             | shift
+       Alt-x      | ON             | off             | ESC  x
+       Alt+Meta-x | ON             | off             | ESC  shift
+       x          | off            | ON              | x
+       Meta-x     | off            | ON              | ESC  x
+       Alt-x      | off            | ON              | shift
+       Alt+Meta-x | off            | ON              | ESC  shift
+       x          | ON             | ON              | x
+       Meta-x     | ON             | ON              | ESC  x
+       Alt-x      | ON             | ON              | ESC  x
+       Alt+Meta-x | ON             | ON              | ESC  x
+       -----------+----------------+-----------------+------------
 
 
 PC-Style Function Keys
@@ -1124,23 +1124,23 @@ recognized as modifiers when enabled by the numLock resource, or by the
 The cursor keys transmit the following escape sequences depending on the
 mode specified via the DECCKM escape sequence.
 
-                      Key         Normal    Application
-                  --------------------------------------
-                  Cursor Up      CSI A      SS3 A
-                  Cursor Down    CSI B      SS3 B
-                  Cursor Right   CSI C      SS3 C
-                  Cursor Left    CSI D      SS3 D
-                  --------------------------------------
+                  Key            Normal     Application
+                  -------------+----------+-------------
+                  Cursor Up    | CSI A    | SS3 A
+                  Cursor Down  | CSI B    | SS3 B
+                  Cursor Right | CSI C    | SS3 C
+                  Cursor Left  | CSI D    | SS3 D
+                  -------------+----------+-------------
 
 The home- and end-keys (unlike PageUp and other keys also on the 6-key
 editing keypad) are considered "cursor keys" by xterm.  Their mode is
 also controlled by the DECCKM escape sequence:
 
-                      Key       Normal    Application
-                    ----------------------------------
-                    Home       CSI H      SS3 H
-                    End        CSI F      SS3 F
-                    ----------------------------------
+                    Key        Normal     Application
+                    ---------+----------+-------------
+                    Home     | CSI H    | SS3 H
+                    End      | CSI F    | SS3 F
+                    ---------+----------+-------------
 
 
 The application keypad transmits the following escape sequences depend-
@@ -1150,52 +1150,52 @@ Use the NumLock key to override the application mode.
 Not all keys are present on the Sun/PC keypad (e.g., PF1, Tab), but are
 supported by the program.
 
-           Key         Numeric    Application   Terminfo   Termcap
-      --------------------------------------------------------------
-      Space            SP         SS3 SP        -          -
-      Tab              TAB        SS3 I         -          -
-      Enter            CR         SS3 M         kent       @8
-      PF1              SS3 P      SS3 P         kf1        k1
-      PF2              SS3 Q      SS3 Q         kf2        k2
-      PF3              SS3 R      SS3 R         kf3        k3
-      PF4              SS3 S      SS3 S         kf4        k4
-      * (multiply)     *          SS3 j         -          -
-      + (add)          +          SS3 k         -          -
-      , (comma)        ,          SS3 l         -          -
-      - (minus)        -          SS3 m         -          -
-      . (Delete)       .          CSI 3 ~       -          -
-      / (divide)       /          SS3 o         -          -
-      0 (Insert)       0          CSI 2 ~       -          -
-      1 (End)          1          SS3 F         kc1        K4
-      2 (DownArrow)    2          CSI B         -          -
-      3 (PageDown)     3          CSI 6 ~       kc3        K5
-      4 (LeftArrow)    4          CSI D         -          -
-      5 (Begin)        5          CSI E         kb2        K2
-      6 (RightArrow)   6          CSI C         -          -
-      7 (Home)         7          SS3 H         ka1        K1
-      8 (UpArrow)      8          CSI A         -          -
-      9 (PageUp)       9          CSI 5 ~       ka3        K3
-      = (equal)        =          SS3 X         -          -
-      --------------------------------------------------------------
+      Key              Numeric    Application   Terminfo   Termcap
+      ---------------+----------+-------------+----------+----------
+      Space          | SP       | SS3 SP      | -        | -
+      Tab            | TAB      | SS3 I       | -        | -
+      Enter          | CR       | SS3 M       | kent     | @8
+      PF1            | SS3 P    | SS3 P       | kf1      | k1
+      PF2            | SS3 Q    | SS3 Q       | kf2      | k2
+      PF3            | SS3 R    | SS3 R       | kf3      | k3
+      PF4            | SS3 S    | SS3 S       | kf4      | k4
+      * (multiply)   | *        | SS3 j       | -        | -
+      + (add)        | +        | SS3 k       | -        | -
+      , (comma)      | ,        | SS3 l       | -        | -
+      - (minus)      | -        | SS3 m       | -        | -
+      . (Delete)     | .        | CSI 3 ~     | -        | -
+      / (divide)     | /        | SS3 o       | -        | -
+      0 (Insert)     | 0        | CSI 2 ~     | -        | -
+      1 (End)        | 1        | SS3 F       | kc1      | K4
+      2 (DownArrow)  | 2        | CSI B       | -        | -
+      3 (PageDown)   | 3        | CSI 6 ~     | kc3      | K5
+      4 (LeftArrow)  | 4        | CSI D       | -        | -
+      5 (Begin)      | 5        | CSI E       | kb2      | K2
+      6 (RightArrow) | 6        | CSI C       | -        | -
+      7 (Home)       | 7        | SS3 H       | ka1      | K1
+      8 (UpArrow)    | 8        | CSI A       | -        | -
+      9 (PageUp)     | 9        | CSI 5 ~     | ka3      | K3
+      = (equal)      | =        | SS3 X       | -        | -
+      ---------------+----------+-------------+----------+----------
 
 They also provide 12 function keys, as well as a few other special-pur-
 pose keys:
 
-                         Key      Escape Sequence
-                       ---------------------------
-                       F1         SS3 P
-                       F2         SS3 Q
-                       F3         SS3 R
-                       F4         SS3 S
-                       F5         CSI 1 5 ~
-                       F6         CSI 1 7 ~
-                       F7         CSI 1 8 ~
-                       F8         CSI 1 9 ~
-                       F9         CSI 2 0 ~
-                       F10        CSI 2 1 ~
-                       F11        CSI 2 3 ~
-                       F12        CSI 2 4 ~
-                       ---------------------------
+                       Key        Escape Sequence
+                       ---------+-----------------
+                       F1       | SS3 P
+                       F2       | SS3 Q
+                       F3       | SS3 R
+                       F4       | SS3 S
+                       F5       | CSI 1 5 ~
+                       F6       | CSI 1 7 ~
+                       F7       | CSI 1 8 ~
+                       F8       | CSI 1 9 ~
+                       F9       | CSI 2 0 ~
+                       F10      | CSI 2 1 ~
+                       F11      | CSI 2 3 ~
+                       F12      | CSI 2 4 ~
+                       ---------+-----------------
 
 
 Older versions of xterm implement different escape sequences for F1
@@ -1204,28 +1204,28 @@ resource.  However, since they do not correspond to any hardware termi-
 nal, they have been deprecated.  (The DEC VT220 reserves F1 through F5
 for local functions such as Setup).
 
-                         Key      Escape Sequence
-                       ---------------------------
-                       F1         CSI 1 1 ~
-                       F2         CSI 1 2 ~
-                       F3         CSI 1 3 ~
-                       F4         CSI 1 4 ~
-                       ---------------------------
+                       Key        Escape Sequence
+                       ---------+-----------------
+                       F1       | CSI 1 1 ~
+                       F2       | CSI 1 2 ~
+                       F3       | CSI 1 3 ~
+                       F4       | CSI 1 4 ~
+                       ---------+-----------------
 
 In normal mode, i.e., a Sun/PC keyboard when the sunKeyboard resource is
 false, xterm recognizes function key modifiers which are parameters
 appended before the final character of the control sequence.
 
                       Code     Modifiers
-                    ---------------------------------
-                       2       Shift
-                       3       Alt
-                       4       Shift + Alt
-                       5       Control
-                       6       Shift + Control
-                       7       Alt + Control
-                       8       Shift + Alt + Control
-                    ---------------------------------
+                    ---------+-----------------------
+                    2        | Shift
+                    3        | Alt
+                    4        | Shift + Alt
+                    5        | Control
+                    6        | Shift + Control
+                    7        | Alt + Control
+                    8        | Shift + Alt + Control
+                    ---------+-----------------------
 
 For example, shift-F5 would be sent as CSI 1 5 ; 2 ~
 
@@ -1241,61 +1241,61 @@ The VT102/VT220 application keypad transmits unique escape sequences in
 application mode, which are distinct from the cursor and scrolling key-
 pad:
 
-                      Key        Numeric    Application
-                  --------------------------------------
-                  Space          SP         SS3 SP
-                  Tab            TAB        SS3 I
-                  Enter          CR         SS3 M
-                  PF1            SS3 P      SS3 P
-                  PF2            SS3 Q      SS3 Q
-                  PF3            SS3 R      SS3 R
-                  PF4            SS3 S      SS3 S
-                  * (multiply)   *          SS3 j
-                  + (add)        +          SS3 k
-                  , (comma)      ,          SS3 l
-                  - (minus)      -          SS3 m
-                  . (period)     .          SS3 n
-                  / (divide)     /          SS3 o
-                  0              0          SS3 p
-                  1              1          SS3 q
-                  2              2          SS3 r
-                  3              3          SS3 s
-                  4              4          SS3 t
-                  5              5          SS3 u
-                  6              6          SS3 v
-                  7              7          SS3 w
-                  8              8          SS3 x
-                  9              9          SS3 y
-                  = (equal)      =          SS3 X
-                  --------------------------------------
+                  Key            Numeric    Application
+                  -------------+----------+-------------
+                  Space        | SP       | SS3 SP
+                  Tab          | TAB      | SS3 I
+                  Enter        | CR       | SS3 M
+                  PF1          | SS3 P    | SS3 P
+                  PF2          | SS3 Q    | SS3 Q
+                  PF3          | SS3 R    | SS3 R
+                  PF4          | SS3 S    | SS3 S
+                  * (multiply) | *        | SS3 j
+                  + (add)      | +        | SS3 k
+                  , (comma)    | ,        | SS3 l
+                  - (minus)    | -        | SS3 m
+                  . (period)   | .        | SS3 n
+                  / (divide)   | /        | SS3 o
+                  0            | 0        | SS3 p
+                  1            | 1        | SS3 q
+                  2            | 2        | SS3 r
+                  3            | 3        | SS3 s
+                  4            | 4        | SS3 t
+                  5            | 5        | SS3 u
+                  6            | 6        | SS3 v
+                  7            | 7        | SS3 w
+                  8            | 8        | SS3 x
+                  9            | 9        | SS3 y
+                  = (equal)    | =        | SS3 X
+                  -------------+----------+-------------
 
 The VT220 provides a 6-key editing keypad, which is analogous to that on
 the PC keyboard.  It is not affected by DECCKM or DECKPNM/DECKPAM:
 
-                     Key       Normal    Application
-                   ----------------------------------
-                   Insert     CSI 2 ~    CSI 2 ~
-                   Delete     CSI 3 ~    CSI 3 ~
-                   Home       CSI 1 ~    CSI 1 ~
-                   End        CSI 4 ~    CSI 4 ~
-                   PageUp     CSI 5 ~    CSI 5 ~
-                   PageDown   CSI 6 ~    CSI 6 ~
-                   ----------------------------------
+                   Key        Normal     Application
+                   ---------+----------+-------------
+                   Insert   | CSI 2 ~  | CSI 2 ~
+                   Delete   | CSI 3 ~  | CSI 3 ~
+                   Home     | CSI 1 ~  | CSI 1 ~
+                   End      | CSI 4 ~  | CSI 4 ~
+                   PageUp   | CSI 5 ~  | CSI 5 ~
+                   PageDown | CSI 6 ~  | CSI 6 ~
+                   ---------+----------+-------------
 
 The VT220 provides 8 additional function keys.  With a Sun/PC keyboard,
 access these keys by Control/F1 for F13, etc.
 
-                         Key      Escape Sequence
-                       ---------------------------
-                       F13        CSI 2 5 ~
-                       F14        CSI 2 6 ~
-                       F15        CSI 2 8 ~
-                       F16        CSI 2 9 ~
-                       F17        CSI 3 1 ~
-                       F18        CSI 3 2 ~
-                       F19        CSI 3 3 ~
-                       F20        CSI 3 4 ~
-                       ---------------------------
+                       Key        Escape Sequence
+                       ---------+-----------------
+                       F13      | CSI 2 5 ~
+                       F14      | CSI 2 6 ~
+                       F15      | CSI 2 8 ~
+                       F16      | CSI 2 9 ~
+                       F17      | CSI 3 1 ~
+                       F18      | CSI 3 2 ~
+                       F19      | CSI 3 3 ~
+                       F20      | CSI 3 4 ~
+                       ---------+-----------------
 
 
 VT52-Style Function Keys
@@ -1303,43 +1303,43 @@ A VT52 does not have function keys, but it does have a numeric keypad
 and cursor keys.  They differ from the other emulations by the prefix.
 Also, the cursor keys do not change:
 
-                       Key        Normal/Application
-                   ----------------------------------
-                   Cursor Up      ESC A
-                   Cursor Down    ESC B
-                   Cursor Right   ESC C
-                   Cursor Left    ESC D
-                   ----------------------------------
+                   Key            Normal/Application
+                   -------------+--------------------
+                   Cursor Up    | ESC A
+                   Cursor Down  | ESC B
+                   Cursor Right | ESC C
+                   Cursor Left  | ESC D
+                   -------------+--------------------
 
 The keypad is similar:
 
-                      Key        Numeric    Application
-                  --------------------------------------
-                  Space          SP         ESC ? SP
-                  Tab            TAB        ESC ? I
-                  Enter          CR         ESC ? M
-                  PF1            ESC P      ESC P
-                  PF2            ESC Q      ESC Q
-                  PF3            ESC R      ESC R
-                  PF4            ESC S      ESC S
-                  * (multiply)   *          ESC ? j
-                  + (add)        +          ESC ? k
-                  , (comma)      ,          ESC ? l
-                  - (minus)      -          ESC ? m
-                  . (period)     .          ESC ? n
-                  / (divide)     /          ESC ? o
-                  0              0          ESC ? p
-                  1              1          ESC ? q
-                  2              2          ESC ? r
-                  3              3          ESC ? s
-                  4              4          ESC ? t
-                  5              5          ESC ? u
-                  6              6          ESC ? v
-                  7              7          ESC ? w
-                  8              8          ESC ? x
-                  9              9          ESC ? y
-                  = (equal)      =          ESC ? X
-                  --------------------------------------
+                  Key            Numeric    Application
+                  -------------+----------+-------------
+                  Space        | SP       | ESC ? SP
+                  Tab          | TAB      | ESC ? I
+                  Enter        | CR       | ESC ? M
+                  PF1          | ESC P    | ESC P
+                  PF2          | ESC Q    | ESC Q
+                  PF3          | ESC R    | ESC R
+                  PF4          | ESC S    | ESC S
+                  * (multiply) | *        | ESC ? j
+                  + (add)      | +        | ESC ? k
+                  , (comma)    | ,        | ESC ? l
+                  - (minus)    | -        | ESC ? m
+                  . (period)   | .        | ESC ? n
+                  / (divide)   | /        | ESC ? o
+                  0            | 0        | ESC ? p
+                  1            | 1        | ESC ? q
+                  2            | 2        | ESC ? r
+                  3            | 3        | ESC ? s
+                  4            | 4        | ESC ? t
+                  5            | 5        | ESC ? u
+                  6            | 6        | ESC ? v
+                  7            | 7        | ESC ? w
+                  8            | 8        | ESC ? x
+                  9            | 9        | ESC ? y
+                  = (equal)    | =        | ESC ? X
+                  -------------+----------+-------------
 
 
 Sun-Style Function Keys
@@ -1460,6 +1460,7 @@ parameters in a single character as value+32.  For example, !  specifies
 the value 1.  The upper left character position on the terminal is
 denoted as 1,1.  This scheme dates back to X10, though the normal mouse-
 tracking (from X11) is more elaborate.
+X10 compatbility mode
 
 X10 compatibility mode sends an escape sequence only on button press,
 encoding the location and the mouse button pressed.  It is enabled by
@@ -1468,6 +1469,7 @@ CbCxCy (6 characters).
 o   Cb is button-1.
 o   Cx and Cy are the x and y coordinates of the mouse when the button
     was pressed.
+Normal tracking mode
 
 Normal tracking mode sends an escape sequence on both button press and
 release.  Modifier key (shift, ctrl, meta) information is also sent.  It
@@ -1484,6 +1486,7 @@ o   The next three bits encode the modifiers which were down when the
     the mod1 mask, and is not necessarily the "Meta" key (see xmodmap).
 o   Cx and Cy are the x and y coordinates of the mouse event, encoded as
     in X10 mode.
+Wheel mice
 
 Wheel mice may return buttons 4 and 5.  Those buttons are represented by
 the same event codes as buttons 1 and 2 respectively, except that 64 is
@@ -1494,6 +1497,7 @@ window, as if the scrollbar was used.  However if Alternate Scroll mode
 is set, then cursor up/down controls are sent when the terminal is dis-
 playing the alternate screen.  The initial state of Alternate Scroll
 mode is set using the alternateScroll resource.
+Highlight tracking
 
 Mouse highlight tracking notifies a program of a button press, receives
 a range of lines from the program, highlights the region covered by the
@@ -1525,6 +1529,7 @@ o   otherwise:
          character positions of the region.
     -    mousex and mousey give the location of the mouse at button up,
          which may not be over a character.
+Button-event tracking
 
 Button-event tracking is essentially the same as normal tracking, but
 xterm also reports button-motion events.  Motion events are reported
@@ -1539,14 +1544,17 @@ o   The other bits of the event code specify button and modifier keys as
     (motion indicator) ).  Similarly, motion with button 3 down is
     reported as CSI M B CxCy.  ( B  = 32 + 2 (button 3) + 32 (motion
     indicator) ).
+Any-event tracking
 
 Any-event mode is the same as button-event mode, except that all motion
 events are reported, even if no mouse button is down.  It is enabled by
 specifying 1003 to DECSET.
+FocusIn/FocusOut
 
 FocusIn/FocusOut can be combined with any of the mouse events since it
 uses a different protocol.  When set, it causes xterm to send CSI I
 when the terminal gains focus, and CSI O  when it loses focus.
+Extended coordinates
 
 The original X10 mouse protocol limits the Cx and Cy ordinates to 223
 (=255 - 32).  Xterm supports more than one scheme for extending this
@@ -1573,12 +1581,14 @@ SGR (1006)
           semicolon-separated encoded button value, the Cx and Cy ordi-
           nates and a final character which is M  for button press and m
           for button release.
-          The encoded button value in this case does not add 32 since
-          that was useful only in the X10 scheme for ensuring that the
-          byte containing the button value is a printable code.  The
-          modifiers are encoded in the same way.  A different final
-          character is used for button release to resolve the X10 ambi-
-          guity regarding which button was released.
+          o   The encoded button value in this case does not add 32
+              since that was useful only in the X10 scheme for ensuring
+              that the byte containing the button value is a printable
+              code.
+          o   The modifiers are encoded in the same way.
+          o   A different final character is used for button release to
+              resolve the X10 ambiguity regarding which button was
+              released.
           The highlight tracking responses are also modified to an SGR-
           like format, using the same SGR-style scheme and button-encod-
           ings.

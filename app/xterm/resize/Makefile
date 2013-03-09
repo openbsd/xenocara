@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.5 2011/06/23 22:48:59 naddy Exp $
+# $OpenBSD: Makefile,v 1.6 2013/03/09 14:45:39 matthieu Exp $
 
 PROG=	resize
 MAN=	resize.1
@@ -13,7 +13,7 @@ CPPFLAGS+=	-I${.CURDIR}/.. -I${X11BASE}/include \
 X11BASE?=	/usr/X11R6
 MANDIR=		${X11BASE}/man/man
 
-SRCS=		resize.c xstrings.c
+SRCS=		resize.c version.c xstrings.c
 
 resize.1: resize.man
 	sed -e 's#__vendorversion__#"X Window System"#g' \

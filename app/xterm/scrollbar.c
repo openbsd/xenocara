@@ -707,7 +707,9 @@ AlternateScroll(Widget w, long amount)
 
 	amount /= FontHeight(screen);
 	memset(&reply, 0, sizeof(reply));
-	reply.a_type = ANSI_CSI;
+	reply.a_type = ((xw->keyboard.flags & MODE_DECCKM)
+			? ANSI_SS3
+			: ANSI_CSI);
 	if (amount > 0) {
 	    reply.a_final = 'B';
 	} else {

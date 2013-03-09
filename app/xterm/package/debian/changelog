@@ -1,3 +1,28 @@
+xterm-dev (291) unstable; urgency=low
+
+  * Fix a different #282 change (Redhat #874327).
+
+ -- Thomas E. Dickey <dickey@invisible-island.net>  Tue, 26 Feb 2013 19:09:32 -0500
+
+xterm-dev (290) unstable; urgency=low
+
+  * Fix incomplete revert of #282 change.
+
+ -- Thomas E. Dickey <dickey@invisible-island.net>  Tue, 12 Feb 2013 19:48:21 -0500
+
+xterm-dev (289) unstable; urgency=low
+
+  * Miscellaneous fixes.
+  * Fix regression with XTERM_SHELL feature.
+
+ -- Thomas E. Dickey <dickey@invisible-island.net>  Sun, 03 Feb 2013 13:59:20 -0500
+
+xterm-dev (288) unstable; urgency=low
+
+  * Miscellaneous fixes.
+
+ -- Thomas E. Dickey <dickey@invisible-island.net>  Mon, 26 Nov 2012 20:53:23 -0500
+
 xterm-dev (287) unstable; urgency=low
 
   * Miscellaneous fixes.

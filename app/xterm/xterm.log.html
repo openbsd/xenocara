@@ -3,7 +3,7 @@
  *****************************************************************************
  * this file is part of xterm                                                *
  *                                                                           *
- * Copyright 1997-2011,2012 by Thomas E. Dickey                              *
+ * Copyright 1997-2012,2013 by Thomas E. Dickey                              *
  *                                                                           *
  * All Rights Reserved                                                       *
  *                                                                           *
@@ -31,7 +31,7 @@
  * sale, use or other dealings in this Software without prior written        *
  * authorization.                                                            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.1282 2012/11/26 00:52:40 tom Exp $
+  $XTermId: xterm.log.html,v 1.1319 2013/02/27 00:19:22 tom Exp $
   -->
 
 <html>
@@ -52,7 +52,7 @@
   <a href=
   "http://invisible-island.net/">http://invisible-island.net/</a><a href="http://invisible-island.net/xterm/">xterm/</a><br>
 
-  Copyright &copy; 1997-2011,2012 by <a href=
+  Copyright &copy; 1997-2012,2013 by <a href=
   "mailto:dickey@invisible-island.net">Thomas E. Dickey</a>
   <hr>
 
@@ -70,6 +70,14 @@
   the latest version of this file.</p>
 
   <ul>
+    <li><a href="#xterm_291">Patch #291 - 2013/02/26</a></li>
+
+    <li><a href="#xterm_290">Patch #290 - 2013/02/12</a></li>
+
+    <li><a href="#xterm_289">Patch #289 - 2013/02/08</a></li>
+
+    <li><a href="#xterm_288">Patch #288 - 2013/01/09</a></li>
+
     <li><a href="#xterm_287">Patch #287 - 2012/11/25</a></li>
 
     <li><a href="#xterm_286">Patch #286 - 2012/10/29</a></li>
@@ -855,6 +863,164 @@
     <li><a href="#xterm_02">Patch #2 - 1996/1/7</a></li>
 
     <li><a href="#xterm_01">Patch #1 - 1996/1/6</a></li>
+  </ul>
+
+  <h1><a name="xterm_291" id="xterm_291">Patch #291 -
+  2013/02/26</a></h1>
+
+  <ul>
+    <li>add validity check for xterm widget parameter to
+    <code>AlternateScroll</code> function, needed to handle wheel
+    mouse events in the scrollbar area since <a href=
+    "#xterm_282">patch #282</a> changes which introduced
+    <code>alternateScroll</code> feature (Redhat #874327).</li>
+  </ul>
+
+  <h1><a name="xterm_290" id="xterm_290">Patch #290 -
+  2013/02/12</a></h1>
+
+  <ul>
+    <li>revert of <a href="#xterm_282">patch #282</a> change was
+    incomplete (report by Jim Reisert).</li>
+
+    <li>fix typo in manpage (report by Vincent Lefevre).</li>
+  </ul>
+
+  <h1><a name="xterm_289" id="xterm_289">Patch #289 -
+  2013/02/08</a></h1>
+
+  <ul>
+    <li>revert the <a href="#xterm_282">patch #282</a> change which
+    restored "lost" text after shrinking/growing the screen size.
+    If the screen was updated between the two resizing operations,
+    unexpected text might be shown at the end (report/testcase by
+    Joe Peterson).</li>
+
+    <li>reverse the arrow-keys sent for
+    <code>alternateScroll</code> to match the usage in browsers
+    (suggested by Dieter Roelants).</li>
+
+    <li>modify mouse reports to consistently indicate motion events
+    whether or not a button is pressed. Old behavior (since
+    <a href="#xterm_127">patch #127</a> modified encoding for wheel
+    mouse) showed only that the button was released if no button
+    had been pressed (report by Andy Koppe).</li>
+
+    <li>correct and improve behavior for SGR 1006 mouse protocol on
+    button release in any-event mode. Initial implementation in
+    <a href="#xterm_277">patch #277</a> left internal state showing
+    the last button pressed when reporting motion events. It now
+    keeps track of all buttons which have been pressed and
+    released, showing the lowest remaining button by number in the
+    response (reports by Hayaki Saito, Andy Koppe).</li>
+
+    <li>fix inconsistency between <code>TermColors</code> and
+    <code>OscTextColors</code> enums which interchanged values for
+    tektronix cursor color and highlight foreground in control
+    sequences in <a href="#xterm_225">patch #225</a> (report/patch
+    by Peder Stray).</li>
+
+    <li>fix inconsistent use of noreturn-attribute in
+    <code>Exit</code> function which interfered with analysis by
+    clang.</li>
+
+    <li>remove incorrect <code>free</code> used in computation of
+    <code>XTERM_SHELL</code> variable, from Coverity fixes in
+    <a href="#xterm_288">patch #288</a> (FreeBSD #175782).</li>
+
+    <li>add <code>--with-valgrind</code> option to configure script
+    for consistency with my other programs.</li>
+
+    <li>update table of ambiguous width characters in wcwidth.c
+    based on Unicode 6.2.0</li>
+
+    <li>update table of combining characters in wcwidth.c based on
+    Unicode 6.2.0</li>
+
+    <li>update precompose.c based on Unicode 6.2.0</li>
+  </ul>
+
+  <h1><a name="xterm_288" id="xterm_288">Patch #288 -
+  2013/01/09</a></h1>
+
+  <ul>
+    <li>fix a special case in <code>ShowCursor</code> where the
+    foreground and background colors of the current position are
+    the same. In that case, choose the further of the window's
+    foreground and background colors for the cursor color.</li>
+
+    <li>modify <code>alternateScroll</code> feature added in
+    <a href="#xterm_282">patch #282</a> to use either
+    <code>CSI</code> or <code>SS3</code> according to the cursor
+    keys application mode setting, to simplify using it in vi, etc.
+    (suggested by Dietar Roelants).</li>
+
+    <li>revise manpage for <code>resize</code> to clarify the
+    changes which <code>resize</code> may make to the terminal
+    settings as well as to the terminal itself.</li>
+
+    <li>remove code such as <code>struct ttysize</code>, used for
+    SunOS 3 and 4.</li>
+
+    <li>modify configure script and makefile to check for
+    <code>groff</code> and suppress groff-specific rules if groff
+    is not found.</li>
+
+    <li>modify ctlseqs.ms and makefile to work around bugs in
+    <code>grohtml</code> which cause ".png" files to be truncated
+    when producing html documentation.</li>
+
+    <li>modify suffix rules for "make docs" to make the names of
+    the generated ".png" files predictable, helping to work around
+    longstanding problems with this feature of groff&mdash;none of
+    its releases work for <em>all</em> of xterm's tables..</li>
+
+    <li>correct typo in ctlseqs.ms for DECIC and DECDC; the
+    character preceding the final "<code>~</code>" is an ASCII
+    single-quote "<code>'</code>" rather than a space (report by
+    Paul LeoNerd Evans).</li>
+
+    <li>update CF_GCC_VERSION macro, handling both Debian and
+    Darwin.</li>
+
+    <li>improve configure script checks for the
+    <code>--with-desktop-category</code> option. After <a href=
+    "#xterm_280">patch #280</a> changes, if no value was given for
+    this option, and no existing desktop files found for
+    comparison, the incorrect "auto" value was passed into the
+    generated desktop file (report by Julien Cristau).</li>
+
+    <li>modify sample build-scripts to disable check for
+    <code>imake</code> due to code-rot in Xorg.</li>
+
+    <li>add <code>-v</code> command-line option to
+    <code>resize</code>, reporting the same version string as
+    <code>xterm</code> and the two shell-wrappers.</li>
+
+    <li>make name-transformation apply to other occurrences of
+    <code>resize</code>, other manpages.</li>
+
+    <li>special-case the name-transformation in xterm's manpage in
+    the NAME section so that the result works with
+    <code>makewhatis</code> (report by Julien Cristau).</li>
+
+    <li>modify install-rules for manpages to put each program's
+    respective transformed name into the header rather than
+    xterm's.</li>
+
+    <li>remove deprecated files: proto.h, os2main.c</li>
+
+    <li>minor fixes based on Coverity scan, including:
+
+      <ul>
+        <li>correct caching of Atom value for the font menu's
+        "Selection" entry.</li>
+
+        <li>ensure that utmp/utmpx calls do not depend upon
+        trailing nulls in the <code>ut_id</code> and
+        <code>ut_line</code> values.</li>
+      </ul>
+    </li>
   </ul>
 
   <h1><a name="xterm_287" id="xterm_287">Patch #287 -

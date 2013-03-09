@@ -1,7 +1,7 @@
-/* $XTermId: button.c,v 1.435 2012/11/20 01:15:57 tom Exp $ */
+/* $XTermId: button.c,v 1.451 2013/02/06 09:56:15 tom Exp $ */
 
 /*
- * Copyright 1999-2011,2012 by Thomas E. Dickey
+ * Copyright 1999-2012,2013 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -1320,10 +1320,11 @@ xtermUtf8ToTextList(XtermWidget xw,
 	    for (i = 0; i < (*text_list_count); ++i) {
 		data = (Char *) (*text_list)[i];
 		size = strlen((*text_list)[i]) + 1;
-		data = UTF8toLatin1(screen, data, size, &size);
-		memcpy(tmp, data, size + 1);
-		new_text_list[i] = tmp;
-		tmp += size + 1;
+		if ((data = UTF8toLatin1(screen, data, size, &size)) != 0) {
+		    memcpy(tmp, data, size + 1);
+		    new_text_list[i] = tmp;
+		    tmp += size + 1;
+		}
 	    }
 	    XFreeStringList((*text_list));
 	    *text_list = new_text_list;
@@ -1345,7 +1346,6 @@ parseItem(char *value, char *nextc)
     }
     *nextc = *nextp;
     *nextp = '\0';
-    x_strtrim(value);
 
     return nextp;
 }
@@ -1404,30 +1404,32 @@ overrideTargets(Widget w, String value, Atom ** resultp)
 		    count = 0;
 		    do {
 			char *nextp = parseItem(listp, &nextc);
-			size_t len = strlen(listp);
+			char *item = x_strtrim(listp);
+			size_t len = (item ? strlen(item) : 0);
 
 			if (len == 0) {
 			    /* EMPTY */ ;
 			}
 #if OPT_WIDE_CHARS
-			else if (sameItem(listp, "UTF8")) {
+			else if (sameItem(item, "UTF8")) {
 			    result[count++] = XA_UTF8_STRING(XtDisplay(w));
 			}
 #endif
-			else if (sameItem(listp, "I18N")) {
+			else if (sameItem(item, "I18N")) {
 			    if (screen->i18nSelections) {
 				result[count++] = XA_TEXT(XtDisplay(w));
 				result[count++] = XA_COMPOUND_TEXT(XtDisplay(w));
 			    }
-			} else if (sameItem(listp, "TEXT")) {
+			} else if (sameItem(item, "TEXT")) {
 			    result[count++] = XA_TEXT(XtDisplay(w));
-			} else if (sameItem(listp, "COMPOUND_TEXT")) {
+			} else if (sameItem(item, "COMPOUND_TEXT")) {
 			    result[count++] = XA_COMPOUND_TEXT(XtDisplay(w));
-			} else if (sameItem(listp, "STRING")) {
+			} else if (sameItem(item, "STRING")) {
 			    result[count++] = XA_STRING;
 			}
 			*nextp++ = nextc;
 			listp = nextp;
+			free(item);
 		    } while (nextc != '\0');
 		    if (count) {
 			result[count] = None;
@@ -1437,6 +1439,7 @@ overrideTargets(Widget w, String value, Atom ** resultp)
 			XtFree((char *) result);
 		    }
 		}
+		free(copied);
 	    } else {
 		TRACE(("Couldn't allocate copy of selection types\n"));
 	    }
@@ -1597,6 +1600,10 @@ MapSelections(XtermWidget xw, String * params, Cardinal num_params)
 					  : params[j]));
 		    if (result[j] == 0) {
 			UnmapSelections(xw);
+			while (j != 0) {
+			    free((void *) result[--j]);
+			}
+			free(result);
 			result = 0;
 			break;
 		    }
@@ -3771,8 +3778,10 @@ ConvertSelection(Widget w,
 
 	    *value = (XtPointer) targetP;
 
-	    while (*my_targets != None) {
-		*targetP++ = *my_targets++;
+	    if (my_targets != 0) {
+		while (*my_targets != None) {
+		    *targetP++ = *my_targets++;
+		}
 	    }
 	    *targetP++ = XA_LENGTH(dpy);
 	    *targetP++ = XA_LIST_LENGTH(dpy);
@@ -4180,15 +4189,21 @@ BtnCode(XButtonEvent * event, int button)
 {
     int result = (int) (32 + (KeyState(event->state) << 2));
 
+    if (event->type == MotionNotify)
+	result += 32;
+
     if (button < 0 || button > 5) {
 	result += 3;
     } else {
 	if (button > 3)
 	    result += (64 - 4);
-	if (event->type == MotionNotify)
-	    result += 32;
 	result += button;
     }
+    TRACE(("BtnCode button %d, %s state " FMT_MODIFIER_NAMES " ->%#x\n",
+	   button,
+	   visibleEventType(event->type),
+	   ARG_MODIFIER_NAMES(event->state),
+	   result));
     return result;
 }
 
@@ -4228,6 +4243,22 @@ EmitButtonCode(TScreen * screen,
     }
     return count;
 }
+
+static int
+FirstBitN(int bits)
+{
+    int result = -1;
+    if (bits > 0) {
+	result = 0;
+	while (!(bits & 1)) {
+	    bits /= 2;
+	    ++result;
+	}
+    }
+    return result;
+}
+
+#define ButtonBit(button) ((button >= 0) ? (1 << (button)) : 0)
 
 #define EMIT_BUTTON(button) EmitButtonCode(screen, line, count, event, button)
 
@@ -4305,7 +4336,7 @@ EditorButton(XtermWidget xw, XButtonEvent * event)
 	/* Button-Motion events */
 	switch (event->type) {
 	case ButtonPress:
-	    screen->mouse_button = button;
+	    screen->mouse_button |= ButtonBit(button);
 	    count = EMIT_BUTTON(button);
 	    break;
 	case ButtonRelease:
@@ -4315,6 +4346,7 @@ EditorButton(XtermWidget xw, XButtonEvent * event)
 	     * release for buttons 1..3 to a -1, which will be later mapped
 	     * into a "0" (some button was released).
 	     */
+	    screen->mouse_button &= ~ButtonBit(button);
 	    if (button < 3) {
 		switch (screen->extend_coords) {
 		case SET_SGR_EXT_MODE_MOUSE:
@@ -4325,7 +4357,6 @@ EditorButton(XtermWidget xw, XButtonEvent * event)
 		    break;
 		}
 	    }
-	    screen->mouse_button = button;
 	    count = EMIT_BUTTON(button);
 	    break;
 	case MotionNotify:
@@ -4336,7 +4367,7 @@ EditorButton(XtermWidget xw, XButtonEvent * event)
 		&& (col == screen->mouse_col)) {
 		changed = False;
 	    } else {
-		count = EMIT_BUTTON(screen->mouse_button);
+		count = EMIT_BUTTON(FirstBitN(screen->mouse_button));
 	    }
 	    break;
 	default:
@@ -4502,6 +4533,7 @@ getDataFromScreen(XtermWidget xw, String method, CELL * start, CELL * finish)
     lookupSelectUnit(xw, 0, method);
     screen->selectUnit = screen->selectMap[0];
 
+    memset(start, 0, sizeof(*start));
     start->row = screen->cur_row;
     start->col = screen->cur_col;
     *finish = *start;
@@ -4617,6 +4649,7 @@ tokenizeFormat(String format)
 	    if (!pass) {
 		result = TypeCallocN(char *, argc + 1);
 		if (result == 0) {
+		    free(blob);
 		    break;
 		}
 	    }
@@ -4805,9 +4838,11 @@ expandFormat(XtermWidget xw,
 static void
 executeCommand(char **argv)
 {
-    if (fork() == 0) {
-	execvp(argv[0], argv);
-	exit(EXIT_FAILURE);
+    if (argv != 0 && argv[0] != 0) {
+	if (fork() == 0) {
+	    execvp(argv[0], argv);
+	    exit(EXIT_FAILURE);
+	}
     }
 }
 
@@ -4846,13 +4881,14 @@ HandleExecFormatted(Widget w,
 
 	    data = getSelectionString(xw, w, event, params, num_params,
 				      &start, &finish);
-	    argv = tokenizeFormat(params[0]);
-	    blob = argv[0];
-	    for (argc = 0; argv[argc] != 0; ++argc) {
-		argv[argc] = expandFormat(xw, argv[argc], data, &start, &finish);
+	    if ((argv = tokenizeFormat(params[0])) != 0) {
+		blob = argv[0];
+		for (argc = 0; argv[argc] != 0; ++argc) {
+		    argv[argc] = expandFormat(xw, argv[argc], data, &start, &finish);
+		}
+		executeCommand(argv);
+		freeArgv(blob, argv);
 	    }
-	    executeCommand(argv);
-	    freeArgv(blob, argv);
 	}
     }
 }
@@ -4876,14 +4912,18 @@ HandleExecSelectable(Widget w,
 	    int argc;
 
 	    data = getDataFromScreen(xw, params[1], &start, &finish);
-	    argv = tokenizeFormat(params[0]);
-	    blob = argv[0];
-	    for (argc = 0; argv[argc] != 0; ++argc) {
-		argv[argc] = expandFormat(xw, argv[argc], data, &start, &finish);
+	    if (data != 0) {
+		if ((argv = tokenizeFormat(params[0])) != 0) {
+		    blob = argv[0];
+		    for (argc = 0; argv[argc] != 0; ++argc) {
+			argv[argc] = expandFormat(xw, argv[argc], data,
+						  &start, &finish);
+		    }
+		    executeCommand(argv);
+		    freeArgv(blob, argv);
+		    free(data);
+		}
 	    }
-	    executeCommand(argv);
-	    freeArgv(blob, argv);
-	    free(data);
 	}
     }
 }
@@ -4903,11 +4943,14 @@ HandleInsertFormatted(Widget w,
 	    CELL start, finish;
 	    char *data;
 	    char *temp = x_strdup(params[0]);
+	    char *exps;
 
 	    data = getSelectionString(xw, w, event, params, num_params,
 				      &start, &finish);
-	    temp = expandFormat(xw, temp, data, &start, &finish);
-	    unparseputs(xw, temp);
+	    if ((exps = expandFormat(xw, temp, data, &start, &finish)) != 0) {
+		unparseputs(xw, exps);
+		free(exps);
+	    }
 	    free(data);
 	    free(temp);
 	}
@@ -4929,11 +4972,17 @@ HandleInsertSelectable(Widget w,
 	    CELL start, finish;
 	    char *data;
 	    char *temp = x_strdup(params[0]);
+	    char *exps;
 
 	    data = getDataFromScreen(xw, params[1], &start, &finish);
-	    temp = expandFormat(xw, temp, data, &start, &finish);
-	    unparseputs(xw, temp);
-	    free(data);
+	    if (data != 0) {
+		exps = expandFormat(xw, temp, data, &start, &finish);
+		if (exps != 0) {
+		    unparseputs(xw, exps);
+		    free(exps);
+		}
+		free(data);
+	    }
 	    free(temp);
 	}
     }

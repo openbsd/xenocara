@@ -1,9 +1,9 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "Xterm Control Sequences" document
-.\" $XTermId: ctlseqs.ms,v 1.276 2012/11/25 16:23:14 tom Exp $
+.\" $XTermId: ctlseqs.ms,v 1.285 2013/02/07 01:59:09 tom Exp $
 .\"
 .\"
-.\" Copyright 1996-2011,2012 by Thomas E. Dickey
+.\" Copyright 1996-2012,2013 by Thomas E. Dickey
 .\"
 .\"                         All Rights Reserved
 .\"
@@ -69,8 +69,8 @@
 .\"
 .ds XT XTerm
 .ds xt xterm
-.ds LF Patch #287
-.ds RF 2012/11/25
+.ds LF Patch #289
+.ds RF 2013/02/06
 .\"
 .if n .pl 9999v		\" no page breaks in nroff
 .ND
@@ -111,6 +111,8 @@
 .de Ss
 .LP
 .B
+\\$*
+.br
 ..
 .ds CH \" as nothing
 .ds LH \*(XT Control Sequences
@@ -409,8 +411,7 @@ discussion of character sets.
 .
 .St
 .\"
-.Ss
-Single-character functions
+.Ss Single-character functions
 .\"
 .IP \\*(Be
 Bell (Ctrl-G).
@@ -453,8 +454,7 @@ Vertical Tab (Ctrl-K).  This is treated the same as LF.
 .\"
 .\"
 .St
-.Ss
-Controls beginning with \*(Es
+.Ss Controls beginning with \*(Es
 .LP
 This excludes controls where \*(Es is part of a 7-bit equivalent to 8-bit C1 controls, ordered by the final character(s).
 .\"
@@ -598,16 +598,14 @@ Invoke the G1 Character Set as GR (LS1R).
 .Ed
 .
 .St
-.Ss
-Application Program-Control functions
+.Ss Application Program-Control functions
 .IP \\*(AP\\*(Pt\\*s\\*(ST
 None.  \fIxterm\fP implements no \*(AP functions; \*(Pt is ignored.
 \*(Pt need not be printable characters.
 .Ed
 .
 .St
-.Ss
-Device-Control functions
+.Ss Device-Control functions
 .IP \\*(Dc\\*(Ps\\*;\\*(Ps\\*|\\*(Pt\\*s\\*(ST
 User-Defined Keys (DECUDK).
 The first parameter:
@@ -670,8 +668,7 @@ The strings are encoded in hexadecimal (2 digits per character).
 .Ed
 .\"
 .St
-.Ss
-Functions using \*(Cs, ordered by the final character(s)
+.Ss Functions using \*(Cs, ordered by the final character(s)
 .IP \\*(Cs\\*(Ps\\*s\\*@
 Insert \*(Ps (Blank) Character(s) (default = 1) (ICH).
 .
@@ -1478,17 +1475,16 @@ position in the \*(xt window, encoded as ASCII decimal.
 .br
 The ``page'' parameter is not used by \*(xt, and will be omitted.
 .
-.IP \\*(Cs\\*(Pm\\*s\\*(Sp\\*}
+.IP \\*(Cs\\*(Pm\\*s\\*(qu\\*}
 Insert \*(Ps Column(s) (default = 1) (DECIC), VT420 and up.
 .
-.IP \\*(Cs\\*(Pm\\*s\\*(Sp\\*~
+.IP \\*(Cs\\*(Pm\\*s\\*(qu\\*~
 Delete \*(Ps Column(s) (default = 1) (DECDC), VT420 and up.
 .
 .Ed
 .
 .St
-.Ss
-Operating System Controls
+.Ss Operating System Controls
 .
 .IP \\*(Os\\*(Ps\\*s\\*;\\*(Pt\\*s\\*(ST
 .IP \\*(Os\\*(Ps\\*s\\*;\\*(Pt\\*s\\*(Be
@@ -1639,8 +1635,7 @@ The \fIdynamic colors\fR can also be reset to their default (resource) values:
   \*(Ps = \*1\*1\*8 \(-> Reset Tektronix cursor color.
 .
 .St
-.Ss
-Privacy Message
+.Ss Privacy Message
 .IP \\*(PM\\*(Pt\\*s\\*(ST
 \fIxterm\fP implements no \*(PM functions; \*(Pt is ignored.
 \*(Pt need not be printable characters.
@@ -1679,12 +1674,15 @@ shift the key from codes 0-127 to 128-255 by adding 128.
 The table shows the result for a given character "x" with modifiers
 according to the default translations with the resources set on or off.
 This assumes \fBaltIsNotMeta\fP is set:
-.ne 23
-.TS
+.\" page-eject to work around grohtml bugs
+.if t .bp
+.TS H
 center;
-lf3	lf3	lf3	lf3
 lf3w(2c)	lf3w(2c)	lf3w(2c)	lf3w(2c) .
 _
+.TH
+.T&
+l | l | l | l .
 key	altSendsEscape	metaSendsEscape	result
 _
 x	off	off	x
@@ -1721,13 +1719,14 @@ or by the "DECSET \*1\*0\*3\*5" control sequence.
 .lP
 The cursor keys transmit the following escape sequences depending on the
 mode specified via the \fBDECCKM\fP escape sequence.
-.ne 10
-.TS
+.TS H
 center;
-cf3	cf3	cf3
 lf3w(2c)	lf3w(2c)	lf3w(2c) .
 Key	Normal	Application
 _
+.TH
+.T&
+l | l | l .
 Cursor Up	\*(Cs\*A	\*(S3\*A
 Cursor Down	\*(Cs\*(cB	\*(S3\*(cB
 Cursor Right	\*(Cs\*C	\*(S3\*C
@@ -1738,13 +1737,14 @@ The home- and end-keys
 (unlike PageUp and other keys also on the 6-key editing keypad)
 are considered "cursor keys" by \fIxterm\fP.
 Their mode is also controlled by the \fBDECCKM\fP escape sequence:
-.ne 8
-.TS
+.TS H
 center;
-cf3	cf3	cf3
 lf3w(2c)	lf3w(2c)	lf3w(2c) .
 Key	Normal	Application
 _
+.TH
+.T&
+l | l | l .
 Home	\*(Cs\*H	\*(S3\*H
 End	\*(Cs\*F	\*(S3\*F
 _
@@ -1756,13 +1756,14 @@ Use the NumLock key to override the application mode.
 .lP
 Not all keys are present on the Sun/PC keypad (e.g., PF1, Tab), but are supported by
 the program.
-.ne 30
-.TS
+.TS H
 center;
-cf3	cf3	cf3	cf3	cf3
 lf3w(2c)	lf3w(2c)	lf3w(2c)	lf3w(2c)	lf3w(2c) .
 Key	Numeric	Application	Terminfo	Termcap
 _
+.TH
+.T&
+l | l | l | l | l .
 Space	\*(Sp	\*(S3\*(Sp	-	-
 Tab	\*(Ta	\*(S3\*I	-	-
 Enter	\*(Cr	\*(S3\*M	kent	@8
@@ -1791,13 +1792,14 @@ _
 .TE
 .br
 They also provide 12 function keys, as well as a few other special-purpose keys:
-.ne 18
-.TS
+.TS H
 center;
-cf3	cf3
 lf3w(2c)	lf3w(2c) .
 Key	Escape Sequence
 _
+.TH
+.T&
+l | l .
 F1	\*(S3\*P
 F2	\*(S3\*Q
 F3	\*(S3\*R
@@ -1817,13 +1819,14 @@ Older versions of \fIxterm\fP implement different escape sequences for F1 throug
 These can be activated by setting the \fBoldXtermFKeys\fP resource.
 However, since they do not correspond to any hardware terminal, they have been deprecated.
 (The DEC VT220 reserves F1 through F5 for local functions such as \fBSetup\fP).
-.ne 10
-.TS
+.TS H
 center;
-cf3	cf3
 lf3w(2c)	lf3w(2c) .
 Key	Escape Sequence
 _
+.TH
+.T&
+l | l .
 F1	\*(Cs\*1\*1\*(c~
 F2	\*(Cs\*1\*2\*(c~
 F3	\*(Cs\*1\*3\*(c~
@@ -1835,13 +1838,14 @@ when the \fBsunKeyboard\fP resource is false,
 \fIxterm\fP recognizes function key modifiers
 which are parameters appended before the final character
 of the control sequence.
-.ne 13
-.TS
+.TS H
 center;
-cf3	lf3
 cf3w(2c)	lf3w(2c) .
 Code	Modifiers
 _
+.TH
+.T&
+l | l .
 2	Shift
 3	Alt
 4	Shift + Alt
@@ -1864,13 +1868,14 @@ to act like a VT220 keyboard.
 .lP
 The VT102/VT220 application keypad transmits unique escape sequences in
 application mode, which are distinct from the cursor and scrolling keypad:
-.ne 32
-.TS
+.TS H
 center;
-cf3	cf3	cf3
 lf3w(2c)	lf3w(2c)	lf3w(2c) .
 Key	Numeric	Application
 _
+.TH
+.T&
+l | l | l .
 Space	\*(Sp	\*(S3\*(Sp
 Tab	\*(Ta	\*(S3\*I
 Enter	\*(Cr	\*(S3\*M
@@ -1900,13 +1905,14 @@ _
 The VT220 provides a 6-key editing keypad,
 which is analogous to that on the PC keyboard.
 It is not affected by \fBDECCKM\fP or \fBDECKPNM\fP/\fBDECKPAM\fP:
-.ne 12
-.TS
+.TS H
 center;
-cf3	cf3	cf3
 lf3w(2c)	lf3w(2c)	lf3w(2c) .
 Key	Normal	Application
 _
+.TH
+.T&
+l | l | l .
 \f1Insert\fP	\*(Cs\*2\*(c~	\*(Cs\*2\*(c~
 \f1Delete\fP	\*(Cs\*3\*(c~	\*(Cs\*3\*(c~
 \f1Home\fP	\*(Cs\*1\*(c~	\*(Cs\*1\*(c~
@@ -1918,13 +1924,14 @@ _
 .LP
 The VT220 provides 8 additional function keys.
 With a Sun/PC keyboard, access these keys by Control/F1 for F13, etc.
-.ne 16
-.TS
+.TS H
 center;
-cf3	cf3
 lf3w(2c)	lf3w(2c) .
 Key	Escape Sequence
 _
+.TH
+.T&
+l | l .
 F13	\*(Cs\*2\*5\*(c~
 F14	\*(Cs\*2\*6\*(c~
 F15	\*(Cs\*2\*8\*(c~
@@ -1940,13 +1947,14 @@ _
 A VT52 does not have function keys, but it does have a numeric keypad and cursor keys.
 They differ from the other emulations by the prefix.
 Also, the cursor keys do not change:
-.ne 13
-.TS
+.TS H
 center;
-cf3	cf3
 lf3w(2c)	lf3w(2c) .
 Key	Normal/Application
 _
+.TH
+.T&
+l | l .
 Cursor Up	\*(Es\*A
 Cursor Down	\*(Es\*(cB
 Cursor Right	\*(Es\*C
@@ -1954,13 +1962,14 @@ Cursor Left	\*(Es\*D
 _
 .TE
 The keypad is similar:
-.ne 33
-.TS
+.TS H
 center;
-cf3	cf3	cf3
 lf3w(2c)	lf3w(2c)	lf3w(2c) .
 Key	Numeric	Application
 _
+.TH
+.T&
+l | l | l .
 Space	\*(Sp	\*(Es\*?\*(Sp
 Tab	\*(Ta	\*(Es\*?\*I
 Enter	\*(Cr	\*(Es\*?\*M
@@ -2140,6 +2149,7 @@ For example, \*! specifies the value 1.
 The upper left character position on the terminal is denoted as 1,1.
 This scheme dates back to X10,
 though the normal mouse-tracking (from X11) is more elaborate.
+.Ss X10 compatbility mode
 .lP
 X10 compatibility mode sends an escape sequence only on button press,
 encoding the location and the mouse button pressed.
@@ -2151,6 +2161,7 @@ On button press, \fIxterm\fP sends
 .bP
 \*(Cx and \*(Cy are the x and y coordinates of the mouse when the
 button was pressed.
+.Ss Normal tracking mode
 .lP
 Normal tracking mode sends an escape sequence on both button press and
 release.
@@ -2172,6 +2183,7 @@ and is not necessarily the "Meta" key (see \fIxmodmap\fP).
 .bP
 \*(Cx and \*(Cy are the x and y coordinates of the mouse event, encoded as
 in X10 mode.
+.Ss Wheel mice
 .lP
 Wheel mice may return buttons 4 and 5.
 Those buttons are represented by the same event codes
@@ -2188,6 +2200,7 @@ then cursor up/down controls are sent when the terminal is displaying
 the alternate screen.
 The initial state of Alternate Scroll mode is set
 using the \fBalternateScroll\fP resource.
+.Ss Highlight tracking
 .lP
 Mouse highlight tracking notifies a program of a button press, receives a
 range of lines from the program, highlights the region covered by
@@ -2235,6 +2248,7 @@ ending character positions of the region.
 give the location of the mouse at button up, which may not be over a
 character.
 .RE
+.Ss Button-event tracking
 .lP
 Button-event tracking is essentially the same as normal tracking, but
 \fIxterm\fP also reports button-motion events.
@@ -2255,16 +2269,19 @@ down is reported as \*(Cs\*M\*@\*(Cx\*(Cy.
 Similarly, motion with button 3
 down is reported as \*(Cs\*M\*(cB\*(Cx\*(Cy.
 (\ \*(cB = 32 + 2 (button 3) + 32 (motion indicator)\ ).
+.Ss Any-event tracking
 .lP
 Any-event mode is the same as button-event mode, except that all motion
 events are reported, even if no mouse button is down.
 It is enabled by specifying 1003 to DECSET.
+.Ss FocusIn/FocusOut
 .lP
 FocusIn/FocusOut can be combined with any of the mouse events since
 it uses a different protocol.
 When set, it causes \fIxterm\fP to send
 \*(Cs\*I when the terminal gains focus, and
 \*(Cs\*O when it loses focus.
+.Ss Extended coordinates
 .lP
 The original X10 mouse protocol limits the \*(Cx and \*(Cy ordinates
 to 223 (=255\ -\ 32).
@@ -2295,13 +2312,17 @@ encoded button value,
 the \*(Cx and \*(Cy ordinates and a final character which
 is \*M for button press
 and \*m for button release.
-.IP
+.RS
+.bP
 The encoded button value in this case does not add 32 since
 that was useful only in the X10 scheme for ensuring that the 
 byte containing the button value is a printable code.
+.bP
 The modifiers are encoded in the same way.
+.bP
 A different final character is used for button release
 to resolve the X10 ambiguity regarding which button was released.
+.RE
 .IP
 The highlight tracking responses are also modified to an SGR-like format,
 using the same SGR-style scheme and button-encodings.

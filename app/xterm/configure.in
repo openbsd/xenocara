@@ -1,9 +1,9 @@
-dnl $XTermId: configure.in,v 1.306 2012/10/10 23:32:47 tom Exp $
+dnl $XTermId: configure.in,v 1.312 2013/02/03 19:30:48 tom Exp $
 dnl
 dnl -----------------------------------------------------------------------------
 dnl this file is part of xterm
 dnl
-dnl Copyright 1997-2011,2012 by Thomas E. Dickey
+dnl Copyright 1997-2012,2013 by Thomas E. Dickey
 dnl 
 dnl                         All Rights Reserved
 dnl 
@@ -53,8 +53,8 @@ esac
 
 CF_PROG_CC
 AC_PROG_CPP
-AC_PROG_GCC_TRADITIONAL
 AC_PROG_AWK
+CF_PROG_GROFF
 AC_PROG_INSTALL
 AC_PROG_LN_S
 AC_ARG_PROGRAM
@@ -112,7 +112,9 @@ CF_WITH_APP_DEFAULTS
 CF_WITH_ICON_NAME(xterm-color)
 CF_WITH_ICON_THEME([icons/$ICON_NAME icons/${ICON_NAME}_48x48],,,icons/${ICON_NAME}_48x48)
 CF_DISABLE_DESKTOP(xterm)
-CF_WITH_DESKTOP_CATEGORY(xterm,[*rxvt*|konsole|*-terminal],[System|TerminalEmulator|Utility|*])
+CF_WITH_DESKTOP_CATEGORY(xterm,
+	[*rxvt*|konsole|*-terminal],
+	[System|TerminalEmulator|Utility|*])
 
 AC_MSG_CHECKING(for install-permissions reference)
 AC_ARG_WITH(reference,
@@ -926,16 +928,7 @@ if test "$enable_trace" = yes ; then
 	EXTRAOBJS="$EXTRAOBJS trace.o"
 fi
 
-AC_MSG_CHECKING(if you want to test memory leaks)
-CF_ARG_DISABLE(leaks,
-	[  --disable-leaks         test: set to test memory leaks],
-	[disable_leaks=yes],
-	[disable_leaks=no])
-AC_MSG_RESULT($disable_leaks)
-if test "$disable_leaks" = yes ; then
-	AC_DEFINE(NO_LEAKS,1,[Define to 1 to test memory leaks])
-fi
-
+CF_DISABLE_LEAKS
 CF_DISABLE_ECHO
 
 AC_MSG_CHECKING(if you want magic cookie emulation)

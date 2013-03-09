@@ -1,4 +1,4 @@
-/* $XTermId: input.c,v 1.344 2012/11/23 18:43:35 tom Exp $ */
+/* $XTermId: input.c,v 1.345 2013/02/06 09:51:33 tom Exp $ */
 
 /*
  * Copyright 1999-2011,2012 by Thomas E. Dickey
@@ -142,42 +142,6 @@ static int decfuncvalue(KEY_DATA *);
 static void sunfuncvalue(ANSI *, KEY_DATA *);
 static void hpfuncvalue(ANSI *, KEY_DATA *);
 static void scofuncvalue(ANSI *, KEY_DATA *);
-
-#if OPT_TRACE
-static const char *
-ModifierName(unsigned modifier)
-{
-    const char *s = "";
-    if (modifier & ShiftMask)
-	s = " Shift";
-    else if (modifier & LockMask)
-	s = " Lock";
-    else if (modifier & ControlMask)
-	s = " Control";
-    else if (modifier & Mod1Mask)
-	s = " Mod1";
-    else if (modifier & Mod2Mask)
-	s = " Mod2";
-    else if (modifier & Mod3Mask)
-	s = " Mod3";
-    else if (modifier & Mod4Mask)
-	s = " Mod4";
-    else if (modifier & Mod5Mask)
-	s = " Mod5";
-    return s;
-}
-
-#define FMT_MODIFIER_NAMES "%s%s%s%s%s%s%s%s"
-#define ARG_MODIFIER_NAMES(state) \
-	   ModifierName(state & ShiftMask), \
-	   ModifierName(state & LockMask), \
-	   ModifierName(state & ControlMask), \
-	   ModifierName(state & Mod1Mask), \
-	   ModifierName(state & Mod2Mask), \
-	   ModifierName(state & Mod3Mask), \
-	   ModifierName(state & Mod4Mask), \
-	   ModifierName(state & Mod5Mask)
-#endif
 
 static void
 AdjustAfterInput(XtermWidget xw)

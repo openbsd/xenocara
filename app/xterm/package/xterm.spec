@@ -1,7 +1,7 @@
-# $XTermId: xterm.spec,v 1.40 2012/11/19 09:53:15 tom Exp $
+# $XTermId: xterm.spec,v 1.45 2013/02/27 00:09:35 tom Exp $
 Summary: X terminal emulator (development version)
 Name: xterm-dev
-Version: 287
+Version: 291
 Release: 1
 License: X11
 Group: User Interface/X
@@ -79,6 +79,7 @@ CPPFLAGS="-DMISC_EXP -DEXP_HTTP_HEADERS" \
 	--with-icondir=%{_iconsdir} \
 %endif
 	--with-app-class=%{my_class} \
+	--disable-imake \
 	--enable-256-color \
 	--enable-88-color \
 	--enable-dabbrev \

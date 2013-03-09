@@ -1,12 +1,10 @@
+/* $XTermId: version.c,v 1.1 2013/01/01 12:10:44 tom Exp $ */
+
 /*
- * $XTermId: proto.h,v 1.10 2003/10/27 01:07:57 tom Exp $
- * ----------------------------------------------------------------------------
- * this file is part of xterm
+ * Copyright 2013 by Thomas E. Dickey
  *
- * Copyright 1996-2008,2003 by Thomas E. Dickey
- * 
  *                         All Rights Reserved
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the
  * "Software"), to deal in the Software without restriction, including
@@ -14,10 +12,10 @@
  * distribute, sublicense, and/or sell copies of the Software, and to
  * permit persons to whom the Software is furnished to do so, subject to
  * the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included
  * in all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
  * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
  * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
@@ -25,38 +23,52 @@
  * CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
  * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- * 
+ *
  * Except as contained in this notice, the name(s) of the above copyright
  * holders shall not be used in advertising or otherwise to promote the
  * sale, use or other dealings in this Software without prior written
  * authorization.
- * ----------------------------------------------------------------------------
  */
 
-#ifndef included_proto_h
-#define included_proto_h
+#include <ctype.h>
+#include <xterm.h>
+#include <version.h>
 
-#define PROTO_XT_ACTIONS_ARGS \
-	(Widget w, XEvent *event, String *params, Cardinal *num_params)
+/*
+ * Returns the version-string used in the "-v' message as well as a few other
+ * places.  It is derived (when possible) from the __vendorversion__ symbol
+ * that some newer imake configurations define.
+ */
+char *
+xtermVersion(void)
+{
+    static char vendor_version[] = __vendorversion__;
+    static char *result;
 
-#define PROTO_XT_CALLBACK_ARGS \
-	(Widget gw, XtPointer closure, XtPointer data)
+    if (result == 0) {
+	char *vendor = vendor_version;
+	char first[BUFSIZ];
+	char second[BUFSIZ];
 
-#define PROTO_XT_CVT_SELECT_ARGS \
-	(Widget w, Atom *selection, Atom *target, Atom *type, XtPointer *value, unsigned long *length, int *format)
-
-#define PROTO_XT_EV_HANDLER_ARGS \
-	(Widget w, XtPointer closure, XEvent *event, Boolean *cont)
-
-#define PROTO_XT_SEL_CB_ARGS \
-	(Widget w, XtPointer client_data, Atom *selection, Atom *type, XtPointer value, unsigned long *length, int *format)
-
-#ifdef SIGNALRETURNSINT
-#define SIGNAL_T int
-#define SIGNAL_RETURN return 0
-#else
-#define SIGNAL_T void
-#define SIGNAL_RETURN return
-#endif
-
-#endif/*included_proto_h*/
+	result = CastMallocN(char, strlen(vendor) + 9);
+	if (result == 0)
+	    result = vendor;
+	else {
+	    /* some vendors leave trash in this string */
+	    for (;;) {
+		if (!strncmp(vendor, "Version ", (size_t) 8))
+		    vendor += 8;
+		else if (isspace(CharOf(*vendor)))
+		    ++vendor;
+		else
+		    break;
+	    }
+	    if (strlen(vendor) < BUFSIZ &&
+		sscanf(vendor, "%[0-9.] %[A-Za-z_0-9.]", first, second) == 2)
+		sprintf(result, "%s %s(%d)", second, first, XTERM_PATCH);
+	    else
+		sprintf(result, "%s(%d)", vendor, XTERM_PATCH);
+	}
+    }
+    return result;
+}

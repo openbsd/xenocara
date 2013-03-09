@@ -1,4 +1,4 @@
-MANIFEST for xterm-287, version xterm-287
+MANIFEST for xterm-291, version xterm-291
 --------------------------------------------------------------------------------
 MANIFEST                        this file
 256colres.h                     resource-definitions for 256-color mode
@@ -62,12 +62,10 @@ menu.c                          popup/pulldown menus for 'xterm'
 menu.h                          interface of menu.c
 minstall.in                     script for installing manpages
 misc.c                          miscellaneous utility functions for 'xterm'
-os2main.c                       main program for OS/2 EMX port of 'xterm'
 plink.sh                        script to prune unneeded libraries from link
 precompose.c                    table of precompose sequences
 precompose.h                    interface of precompose.c
 print.c                         VT100+ print support functions
-proto.h                         macros to simplify function prototypes
 ptydata.c                       functions to manipulate data read from pty
 ptyx.h                          structure-definitions for 'xterm'
 resize.c                        program to compute/modify xterm's window size
@@ -87,6 +85,7 @@ util.c                          miscellaneous utility functions for 'xterm'
 uxterm                          wrapper script to make unicode-xterm
 uxterm.desktop                  sample desktop file for uxterm
 uxterm.man                      manpage for uxterm, from Debian
+version.c                       xterm package version, used also in resize
 version.h                       version of xterm
 vms.c                           VMS version of xterm's spawn(), etc.
 vms.h                           system headers and definitions for vms.c

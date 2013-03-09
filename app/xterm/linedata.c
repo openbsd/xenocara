@@ -1,7 +1,7 @@
-/* $XTermId: linedata.c,v 1.81 2012/09/21 20:40:21 tom Exp $ */
+/* $XTermId: linedata.c,v 1.82 2013/02/08 00:11:16 tom Exp $ */
 
 /*
- * Copyright 2009-2010,2011 by Thomas E. Dickey
+ * Copyright 2009-2012,2013 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -31,7 +31,6 @@
  */
 
 #include <xterm.h>
-#include <data.h>		/* FIXME - needed for 'term' */
 
 #include <assert.h>
 
@@ -64,6 +63,7 @@ getLineData(TScreen * screen, int row)
 	result = (LineData *) scrnHeadAddr(screen, buffer, (unsigned) row);
 	if (result != 0) {
 #if 1				/* FIXME - these should be done in setupLineData, etc. */
+	    result->lineSize = (Dimension) MaxCols(screen);
 #if OPT_WIDE_CHARS
 	    if (screen->wide_chars) {
 		result->combSize = (Char) screen->max_combining;

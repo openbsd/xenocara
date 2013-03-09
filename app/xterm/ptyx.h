@@ -1,7 +1,7 @@
-/* $XTermId: ptyx.h,v 1.759 2012/11/25 16:05:51 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.762 2013/02/13 00:42:21 tom Exp $ */
 
 /*
- * Copyright 1999-2011,2012 by Thomas E. Dickey
+ * Copyright 1999-2012,2013 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -231,11 +231,7 @@
 #ifdef __hpux
 #define PTYCHAR1	"zyxwvutsrqp"
 #else	/* !__hpux */
-#ifdef __UNIXOS2__
-#define PTYCHAR1	"pq"
-#else
 #define	PTYCHAR1	"pqrstuvwxyzPQRSTUVWXYZ"
-#endif  /* !__UNIXOS2__ */
 #endif	/* !__hpux */
 #endif	/* !PTYCHAR1 */
 
@@ -866,13 +862,17 @@ typedef enum {
     , MOUSE_FG			/* mouse foreground */
     , MOUSE_BG			/* mouse background */
 #if OPT_TEK4014
-    , TEK_FG			/* tektronix foreground */
+    , TEK_FG = 5		/* tektronix foreground */
     , TEK_BG			/* tektronix background */
-    , TEK_CURSOR		/* tektronix cursor */
 #endif
 #if OPT_HIGHLIGHT_COLOR
-    , HIGHLIGHT_BG		/* highlight background */
-    , HIGHLIGHT_FG		/* highlight foreground */
+    , HIGHLIGHT_BG = 7		/* highlight background */
+#endif
+#if OPT_TEK4014
+    , TEK_CURSOR = 8		/* tektronix cursor */
+#endif
+#if OPT_HIGHLIGHT_COLOR
+    , HIGHLIGHT_FG = 9		/* highlight foreground */
 #endif
     , NCOLORS			/* total number of colors */
 } TermColors;
@@ -1897,7 +1897,6 @@ typedef struct {
 	 * Working variables for getLineData().
 	 */
 	size_t		lineExtra;	/* extra space for combining chars */
-	Dimension	widestLine;	/* length of longest LineData	*/
 	/*
 	 * Pointer to the current visible buffer.
 	 */

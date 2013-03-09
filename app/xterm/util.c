@@ -1,7 +1,7 @@
-/* $XTermId: util.c,v 1.598 2012/10/05 00:26:28 tom Exp $ */
+/* $XTermId: util.c,v 1.600 2013/02/04 00:46:58 tom Exp $ */
 
 /*
- * Copyright 1999-2011,2012 by Thomas E. Dickey
+ * Copyright 1999-2012,2013 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -3541,24 +3541,17 @@ drawXtermText(XtermWidget xw,
 				      (unsigned) (last - first), on_wide);
 		}
 #if OPT_WIDE_CHARS
-		if (ucs_workaround(xw, ch, flags, gc,
-				   x, y,
-				   chrset, on_wide)) {
-		    /*
-		     * if true, we drew at least one cell whether or not it is
-		     * printable
-		     */
-		    if (ch_width <= 0)
-			ch_width = 1;
-		} else
-#endif
-		{
-		    if (ch_width <= 0)
-			ch_width = 1;
-		    xtermDrawBoxChar(xw, ch, flags, gc,
-				     x, y,
-				     ch_width);
+		/*
+		 * One way or another, we will draw at least one cell.
+		 */
+		if (ch_width <= 0)
+		    ch_width = 1;
+		if (!ucs_workaround(xw, ch, flags, gc, x, y, chrset, on_wide)) {
+		    xtermDrawBoxChar(xw, ch, flags, gc, x, y, ch_width);
 		}
+#else
+		xtermDrawBoxChar(xw, ch, flags, gc, x, y, ch_width);
+#endif
 		x += (ch_width * FontWidth(screen));
 		first = last + 1;
 		drewBoxes = True;

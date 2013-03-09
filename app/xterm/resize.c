@@ -1,7 +1,7 @@
-/* $XTermId: resize.c,v 1.118 2011/09/11 20:19:19 tom Exp $ */
+/* $XTermId: resize.c,v 1.129 2013/01/06 19:42:20 tom Exp $ */
 
 /*
- * Copyright 2003-2010,2011 by Thomas E. Dickey
+ * Copyright 2003-2012,2013 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -54,16 +54,14 @@
 
 /* resize.c */
 
-#include <xterm.h>
 #include <stdio.h>
 #include <ctype.h>
+
+#include <xterm.h>
+#include <version.h>
 #include <xstrings.h>
 #include <xtermcap.h>
 #include <xterm_io.h>
-
-#ifdef APOLLO_SR9
-#define CANT_OPEN_DEV_TTY
-#endif
 
 #ifndef USE_TERMINFO		/* avoid conflict with configure script */
 #if defined(__QNX__) || defined(__SCO__) || defined(linux) || defined(__OpenBSD__) || defined(__UNIXWARE__)
@@ -140,14 +138,13 @@ static const char *getsize[EMULATIONS] =
     ESCAPE("7") ESCAPE("[r") ESCAPE("[999;999H") ESCAPE("[6n"),
     ESCAPE("[18t"),
 };
-#if defined(USE_STRUCT_TTYSIZE)
-#elif defined(USE_STRUCT_WINSIZE)
+#if defined(USE_STRUCT_WINSIZE)
 static const char *getwsize[EMULATIONS] =
 {				/* size in pixels */
     0,
     ESCAPE("[14t"),
 };
-#endif /* USE_STRUCT_{TTYSIZE|WINSIZE} */
+#endif /* USE_STRUCT_WINSIZE */
 static const char *restore[EMULATIONS] =
 {
     ESCAPE("8"),
@@ -177,20 +174,54 @@ static char sunname[] = "sunsize";
 static int tty;
 static FILE *ttyfp;
 
-#if defined(USE_STRUCT_TTYSIZE)
-#elif defined(USE_STRUCT_WINSIZE)
+#if defined(USE_STRUCT_WINSIZE)
 static const char *wsize[EMULATIONS] =
 {
     0,
     ESCAPE("[4;%hd;%hdt"),
 };
-#endif /* USE_STRUCT_{TTYSIZE|WINSIZE} */
+#endif /* USE_STRUCT_WINSIZE */
 
-static SIGNAL_T onintr(int sig);
-static SIGNAL_T resize_timeout(int sig);
-static int checkdigits(char *str);
-static void Usage(void);
-static void readstring(FILE *fp, char *buf, const char *str);
+static void
+failed(const char *s)
+{
+    int save = errno;
+    IGNORE_RC(write(2, myname, strlen(myname)));
+    IGNORE_RC(write(2, ": ", (size_t) 2));
+    errno = save;
+    perror(s);
+    exit(EXIT_FAILURE);
+}
+
+/* ARGSUSED */
+static void
+onintr(int sig GCC_UNUSED)
+{
+#ifdef USE_ANY_SYSV_TERMIO
+    (void) ioctl(tty, TCSETAW, &tioorig);
+#elif defined(USE_TERMIOS)
+    (void) tcsetattr(tty, TCSADRAIN, &tioorig);
+#else /* not USE_TERMIOS */
+    (void) ioctl(tty, TIOCSETP, &sgorig);
+#endif /* USE_ANY_SYSV_TERMIO/USE_TERMIOS */
+    exit(EXIT_FAILURE);
+}
+
+static void
+resize_timeout(int sig)
+{
+    fprintf(stderr, "\n%s: Time out occurred\r\n", myname);
+    onintr(sig);
+}
+
+static void
+Usage(void)
+{
+    fprintf(stderr, strcmp(myname, sunname) == 0 ?
+	    "Usage: %s [rows cols]\n" :
+	    "Usage: %s [-v] [-u] [-c] [-s [rows cols]]\n", myname);
+    exit(EXIT_FAILURE);
+}
 
 #ifdef USE_TERMCAP
 static void
@@ -218,6 +249,58 @@ print_termcap(const char *termcap)
 }
 #endif /* USE_TERMCAP */
 
+static int
+checkdigits(char *str)
+{
+    while (*str) {
+	if (!isdigit(CharOf(*str)))
+	    return (0);
+	str++;
+    }
+    return (1);
+}
+
+static void
+readstring(FILE *fp, char *buf, const char *str)
+{
+    int last, c;
+#if !defined(USG)
+    /* What is the advantage of setitimer() over alarm()? */
+    struct itimerval it;
+#endif
+
+    signal(SIGALRM, resize_timeout);
+#if defined(USG)
+    alarm(TIMEOUT);
+#else
+    memset((char *) &it, 0, sizeof(struct itimerval));
+    it.it_value.tv_sec = TIMEOUT;
+    setitimer(ITIMER_REAL, &it, (struct itimerval *) NULL);
+#endif
+    if ((c = getc(fp)) == 0233) {	/* meta-escape, CSI */
+	c = ESCAPE("")[0];
+	*buf++ = (char) c;
+	*buf++ = '[';
+    } else {
+	*buf++ = (char) c;
+    }
+    if (c != *str) {
+	fprintf(stderr, "%s: unknown character, exiting.\r\n", myname);
+	onintr(0);
+    }
+    last = str[strlen(str) - 1];
+    while ((*buf++ = (char) getc(fp)) != last) {
+	;
+    }
+#if defined(USG)
+    alarm(0);
+#else
+    memset((char *) &it, 0, sizeof(struct itimerval));
+    setitimer(ITIMER_REAL, &it, (struct itimerval *) NULL);
+#endif
+    *buf = 0;
+}
+
 /*
    resets termcap string to reflect current screen size
  */
@@ -231,6 +314,7 @@ main(int argc, char **argv ENVP_ARG)
     int emu = VT100;
     char *shell;
     int i;
+    int rc;
     int rows, cols;
 #ifdef USE_ANY_SYSV_TERMIO
     struct termio tio;
@@ -269,6 +353,9 @@ main(int argc, char **argv ENVP_ARG)
 	case 'c':		/* C shell */
 	    shell_type = SHELL_C;
 	    break;
+	case 'v':
+	    printf("%s\n", xtermVersion());
+	    exit(EXIT_SUCCESS);
 	default:
 	    Usage();		/* Never returns */
 	}
@@ -295,9 +382,11 @@ main(int argc, char **argv ENVP_ARG)
 	shell = x_basename(ptr);
 
 	/* now that we know, what kind is it? */
-	for (i = 0; shell_list[i].name; i++)
-	    if (!strcmp(shell_list[i].name, shell))
+	for (i = 0; shell_list[i].name; i++) {
+	    if (!strcmp(shell_list[i].name, shell)) {
 		break;
+	    }
+	}
 	shell_type = shell_list[i].type;
     }
 
@@ -306,13 +395,14 @@ main(int argc, char **argv ENVP_ARG)
 	    fprintf(stderr,
 		    "%s: Can't set window size under %s emulation\n",
 		    myname, emuname[emu]);
-	    exit(1);
+	    exit(EXIT_FAILURE);
 	}
-	if (!checkdigits(argv[0]) || !checkdigits(argv[1]))
+	if (!checkdigits(argv[0]) || !checkdigits(argv[1])) {
 	    Usage();		/* Never returns */
-    } else if (argc != 0)
+	}
+    } else if (argc != 0) {
 	Usage();		/* Never returns */
-
+    }
 #ifdef CANT_OPEN_DEV_TTY
     if ((name_of_tty = ttyname(fileno(stderr))) == NULL)
 #endif
@@ -321,32 +411,35 @@ main(int argc, char **argv ENVP_ARG)
     if ((ttyfp = fopen(name_of_tty, "r+")) == NULL) {
 	fprintf(stderr, "%s:  can't open terminal %s\n",
 		myname, name_of_tty);
-	exit(1);
+	exit(EXIT_FAILURE);
     }
     tty = fileno(ttyfp);
 #ifdef USE_TERMCAP
     if ((env = x_getenv("TERM")) == 0) {
 	env = DFT_TERMTYPE;
-	if (SHELL_BOURNE == shell_type)
+	if (SHELL_BOURNE == shell_type) {
 	    setname = "TERM=" DFT_TERMTYPE ";\nexport TERM;\n";
-	else
+	} else {
 	    setname = "setenv TERM " DFT_TERMTYPE ";\n";
+	}
     }
     termcap[0] = 0;		/* ...just in case we've accidentally gotten terminfo */
-    if (tgetent(termcap, env) <= 0 || termcap[0] == 0)
+    if (tgetent(termcap, env) <= 0 || termcap[0] == 0) {
 	ok_tcap = 0;
+    }
 #endif /* USE_TERMCAP */
 #ifdef USE_TERMINFO
     if (x_getenv("TERM") == 0) {
-	if (SHELL_BOURNE == shell_type)
+	if (SHELL_BOURNE == shell_type) {
 	    setname = "TERM=" DFT_TERMTYPE ";\nexport TERM;\n";
-	else
+	} else {
 	    setname = "setenv TERM " DFT_TERMTYPE ";\n";
+	}
     }
 #endif /* USE_TERMINFO */
 
 #ifdef USE_ANY_SYSV_TERMIO
-    ioctl(tty, TCGETA, &tioorig);
+    rc = ioctl(tty, TCGETA, &tioorig);
     tio = tioorig;
     UIntClr(tio.c_iflag, (ICRNL | IUCLC));
     UIntClr(tio.c_lflag, (ICANON | ECHO));
@@ -354,7 +447,7 @@ main(int argc, char **argv ENVP_ARG)
     tio.c_cc[VMIN] = 6;
     tio.c_cc[VTIME] = 1;
 #elif defined(USE_TERMIOS)
-    tcgetattr(tty, &tioorig);
+    rc = tcgetattr(tty, &tioorig);
     tio = tioorig;
     UIntClr(tio.c_iflag, ICRNL);
     UIntClr(tio.c_lflag, (ICANON | ECHO));
@@ -362,23 +455,29 @@ main(int argc, char **argv ENVP_ARG)
     tio.c_cc[VMIN] = 6;
     tio.c_cc[VTIME] = 1;
 #else /* not USE_TERMIOS */
-    ioctl(tty, TIOCGETP, &sgorig);
+    rc = ioctl(tty, TIOCGETP, &sgorig);
     sg = sgorig;
     sg.sg_flags |= RAW;
     UIntClr(sg.sg_flags, ECHO);
 #endif /* USE_ANY_SYSV_TERMIO/USE_TERMIOS */
+    if (rc != 0)
+	failed("get tty settings");
+
     signal(SIGINT, onintr);
     signal(SIGQUIT, onintr);
     signal(SIGTERM, onintr);
-#ifdef USE_ANY_SYSV_TERMIO
-    ioctl(tty, TCSETAW, &tio);
-#elif defined(USE_TERMIOS)
-    tcsetattr(tty, TCSADRAIN, &tio);
-#else /* not USE_TERMIOS */
-    ioctl(tty, TIOCSETP, &sg);
-#endif /* USE_ANY_SYSV_TERMIO/USE_TERMIOS */
 
-    if (argc == 2) {
+#ifdef USE_ANY_SYSV_TERMIO
+    rc = ioctl(tty, TCSETAW, &tio);
+#elif defined(USE_TERMIOS)
+    rc = tcsetattr(tty, TCSADRAIN, &tio);
+#else /* not USE_TERMIOS */
+    rc = ioctl(tty, TIOCSETP, &sg);
+#endif /* USE_ANY_SYSV_TERMIO/USE_TERMIOS */
+    if (rc != 0)
+	failed("set tty settings");
+
+    if (argc == 2) {		/* look for optional parameters of "-s" */
 	char *tmpbuf = TypeMallocN(char,
 				   strlen(setsize[emu]) +
 				   strlen(argv[0]) +
@@ -401,14 +500,7 @@ main(int argc, char **argv ENVP_ARG)
     }
     if (restore[emu])
 	IGNORE_RC(write(tty, restore[emu], strlen(restore[emu])));
-#if defined(USE_STRUCT_TTYSIZE)
-    /* finally, set the tty's window size */
-    if (ioctl(tty, TIOCGSIZE, &ts) != -1) {
-	TTYSIZE_ROWS(ts) = rows;
-	TTYSIZE_COLS(ts) = cols;
-	SET_TTYSIZE(tty, ts);
-    }
-#elif defined(USE_STRUCT_WINSIZE)
+#if defined(USE_STRUCT_WINSIZE)
     /* finally, set the tty's window size */
     if (getwsize[emu]) {
 	/* get the window size in pixels */
@@ -434,15 +526,18 @@ main(int argc, char **argv ENVP_ARG)
 	TTYSIZE_COLS(ts) = (ttySize_t) cols;
 	SET_TTYSIZE(tty, ts);
     }
-#endif /* USE_STRUCT_{TTYSIZE|WINSIZE} */
+#endif /* USE_STRUCT_WINSIZE */
 
 #ifdef USE_ANY_SYSV_TERMIO
-    ioctl(tty, TCSETAW, &tioorig);
+    rc = ioctl(tty, TCSETAW, &tioorig);
 #elif defined(USE_TERMIOS)
-    tcsetattr(tty, TCSADRAIN, &tioorig);
+    rc = tcsetattr(tty, TCSADRAIN, &tioorig);
 #else /* not USE_TERMIOS */
-    ioctl(tty, TIOCSETP, &sgorig);
+    rc = ioctl(tty, TIOCSETP, &sgorig);
 #endif /* USE_ANY_SYSV_TERMIO/USE_TERMIOS */
+    if (rc != 0)
+	failed("set tty settings");
+
     signal(SIGINT, SIG_DFL);
     signal(SIGQUIT, SIG_DFL);
     signal(SIGTERM, SIG_DFL);
@@ -453,7 +548,7 @@ main(int argc, char **argv ENVP_ARG)
 	/* first do columns */
 	if ((ptr = x_strindex(termcap, "co#")) == NULL) {
 	    fprintf(stderr, "%s: No `co#'\n", myname);
-	    exit(1);
+	    exit(EXIT_FAILURE);
 	}
 
 	i = ptr - termcap + 3;
@@ -465,7 +560,7 @@ main(int argc, char **argv ENVP_ARG)
 	/* now do lines */
 	if ((ptr = x_strindex(newtc, "li#")) == NULL) {
 	    fprintf(stderr, "%s: No `li#'\n", myname);
-	    exit(1);
+	    exit(EXIT_FAILURE);
 	}
 
 	i = ptr - newtc + 3;
@@ -504,87 +599,5 @@ main(int argc, char **argv ENVP_ARG)
 	       setname, cols, rows);
 #endif /* USE_TERMINFO */
     }
-    exit(0);
-}
-
-static int
-checkdigits(char *str)
-{
-    while (*str) {
-	if (!isdigit(CharOf(*str)))
-	    return (0);
-	str++;
-    }
-    return (1);
-}
-
-static void
-readstring(FILE *fp, char *buf, const char *str)
-{
-    int last, c;
-#if !defined(USG) && !defined(__UNIXOS2__)
-    /* What is the advantage of setitimer() over alarm()? */
-    struct itimerval it;
-#endif
-
-    signal(SIGALRM, resize_timeout);
-#if defined(USG) || defined(__UNIXOS2__)
-    alarm(TIMEOUT);
-#else
-    memset((char *) &it, 0, sizeof(struct itimerval));
-    it.it_value.tv_sec = TIMEOUT;
-    setitimer(ITIMER_REAL, &it, (struct itimerval *) NULL);
-#endif
-    if ((c = getc(fp)) == 0233) {	/* meta-escape, CSI */
-	c = ESCAPE("")[0];
-	*buf++ = (char) c;
-	*buf++ = '[';
-    } else {
-	*buf++ = (char) c;
-    }
-    if (c != *str) {
-	fprintf(stderr, "%s: unknown character, exiting.\r\n", myname);
-	onintr(0);
-    }
-    last = str[strlen(str) - 1];
-    while ((*buf++ = (char) getc(fp)) != last) {
-	;
-    }
-#if defined(USG) || defined(__UNIXOS2__)
-    alarm(0);
-#else
-    memset((char *) &it, 0, sizeof(struct itimerval));
-    setitimer(ITIMER_REAL, &it, (struct itimerval *) NULL);
-#endif
-    *buf = 0;
-}
-
-static void
-Usage(void)
-{
-    fprintf(stderr, strcmp(myname, sunname) == 0 ?
-	    "Usage: %s [rows cols]\n" :
-	    "Usage: %s [-u] [-c] [-s [rows cols]]\n", myname);
-    exit(1);
-}
-
-static SIGNAL_T
-resize_timeout(int sig)
-{
-    fprintf(stderr, "\n%s: Time out occurred\r\n", myname);
-    onintr(sig);
-}
-
-/* ARGSUSED */
-static SIGNAL_T
-onintr(int sig GCC_UNUSED)
-{
-#ifdef USE_ANY_SYSV_TERMIO
-    ioctl(tty, TCSETAW, &tioorig);
-#elif defined(USE_TERMIOS)
-    tcsetattr(tty, TCSADRAIN, &tioorig);
-#else /* not USE_TERMIOS */
-    ioctl(tty, TIOCSETP, &sgorig);
-#endif /* USE_ANY_SYSV_TERMIO/USE_TERMIOS */
-    exit(1);
+    exit(EXIT_SUCCESS);
 }

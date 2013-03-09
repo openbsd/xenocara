@@ -1,4 +1,4 @@
-XCOMM $XTermId: Imakefile,v 1.105 2011/11/29 10:19:20 Thorsten.Glaser Exp $
+XCOMM $XTermId: Imakefile,v 1.107 2013/01/01 12:16:40 tom Exp $
 XCOMM
 XCOMM                         Attention xterm porters
 XCOMM
@@ -126,19 +126,6 @@ module.o: ; $(CC) -c defines $(CFLAGS) module.c
   LOCAL_LDFLAGS = -Wl,-bind_at_load
 #endif
 
-#ifdef OS2Architecture
-/*
- * Only used in os2main.c, see ptyx.h for OPT_I18N_SUPPORT
- * <werner@suse.de>
- */
-#if XtermWithI18N
-        I18NDEF = -DI18N
-      FEATURE_DEFINES = -DDEBUG -DALLOWLOGGING $(I18NDEF)
-#else
-      FEATURE_DEFINES = -DDEBUG -DALLOWLOGGING
-#endif
-#endif
-
  OSMAJORVERSION = OSMajorVersion
  OSMINORVERSION = OSMinorVersion
 
@@ -190,13 +177,8 @@ TERMCAPDEFINES=-DUSE_TERMINFO -DHAVE_TIGETSTR
         DEFINES = $(XKB_DEFINES) $(TERMCAPDEFINES) $(FEATURE_DEFINES) $(SCROLLBAR_RIGHT) $(UTF8_OPTION) $(XRFDEF) $(PATH_DEFINES) $(PUTENVDEF) $(IMAKEDEFINES) $(TRACEDEF)
        INCLUDES = -I. $(XRFINCLUDES)
 
-#ifdef OS2Architecture
-        MAINSRC = os2main.c
-        MAINOBJ = os2main.o
-#else
         MAINSRC = main.c
         MAINOBJ = main.o
-#endif
 #ifdef TraceXTerm
        TRACESRC = trace.c
        TRACEOBJ = trace.o
@@ -204,17 +186,17 @@ TERMCAPDEFINES=-DUSE_TERMINFO -DHAVE_TIGETSTR
           SRCS1 = button.c cachedGCs.c charproc.c charsets.c cursor.c \
 		  data.c doublechr.c fontutils.c input.c \
 		  linedata.c menu.c misc.c print.c ptydata.c scrollback.c \
-		  screen.c scrollbar.c tabs.c util.c xstrings.c xtermcap.c \
-		  TekPrsTbl.c Tekproc.c VTPrsTbl.c \
+		  screen.c scrollbar.c tabs.c util.c version.c xstrings.c \
+		  xtermcap.c TekPrsTbl.c Tekproc.c VTPrsTbl.c \
 		  $(MAINSRC) $(EXTRASRC) $(UTF8SRC) $(TRACESRC)
           OBJS1 = button.o cachedGCs.o charproc.o charsets.o cursor.o \
 		  data.o doublechr.o fontutils.o input.o \
 		  linedata.o menu.o misc.o print.o ptydata.o scrollback.o \
-		  screen.o scrollbar.o tabs.o util.o xstrings.o xtermcap.o \
-		  TekPrsTbl.o Tekproc.o VTPrsTbl.o \
+		  screen.o scrollbar.o tabs.o util.o version.o xstrings.o \
+		  xtermcap.o TekPrsTbl.o Tekproc.o VTPrsTbl.o \
 		  $(MAINOBJ) $(EXTRAOBJ) $(UTF8OBJ) $(TRACEOBJ)
-          SRCS2 = resize.c xstrings.c
-          OBJS2 = resize.o xstrings.o
+          SRCS2 = resize.c version.c xstrings.c
+          OBJS2 = resize.o version.o xstrings.o
            SRCS = $(SRCS1) $(SRCS2)
            OBJS = $(OBJS1) $(OBJS2)
        PROGRAMS = ProgramTargetName(resize) ProgramTargetName(xterm)

@@ -58,6 +58,7 @@ configure-stamp:
 		--libdir=/etc/$(PACKAGE) \
 		--with-app-class=$(PKG_CLASS) \
 		--without-xterm-symlink \
+		--disable-imake \
 		--enable-256-color \
 		--enable-88-color \
 		--enable-dabbrev \

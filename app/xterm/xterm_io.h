@@ -1,7 +1,7 @@
-/* $XTermId: xterm_io.h,v 1.54 2012/03/16 09:48:56 tom Exp $ */
+/* $XTermId: xterm_io.h,v 1.56 2013/01/06 15:20:45 tom Exp $ */
 
 /*
- * Copyright 2000-2011,2012 by Thomas E. Dickey
+ * Copyright 2000-2012,2013 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -49,10 +49,6 @@
 #define ATT
 #define SVR4
 #define SYSV
-#define USE_SYSV_TERMIO
-#endif
-
-#ifdef __UNIXOS2__
 #define USE_SYSV_TERMIO
 #endif
 
@@ -171,11 +167,6 @@
 #include <sys/ptem.h>			/* get struct winsize */
 #endif
 #endif /* USE_USG_PTYS */
-#elif defined(sun) && !defined(SVR4)
-#include <sys/ttycom.h>
-#ifdef TIOCSWINSZ
-#undef TIOCSSIZE
-#endif
 #endif /* SYSV */
 
 /*
@@ -185,56 +176,6 @@
 #include <termios.h>
 #define TIOCSPGRP (_IOW('t', 118, pid_t))
 #endif
-
-#ifdef __UNIXOS2__
-
-#define XFREE86_PTY	0x76
-
-#define XTY_TIOCSETA	0x48
-#define XTY_TIOCSETAW	0x49
-#define XTY_TIOCSETAF	0x4a
-#define XTY_TIOCCONS	0x4d
-#define XTY_TIOCSWINSZ	0x53
-#define XTY_ENADUP	0x5a
-#define XTY_TRACE	0x5b
-#define XTY_TIOCGETA	0x65
-#define XTY_TIOCGWINSZ	0x66
-#define PTMS_GETPTY	0x64
-#define PTMS_BUFSZ	14
-
-#ifndef NCCS
-#define NCCS 11
-#endif
-
-#define TIOCCONS	108
-#define TIOCSWINSZ	113
-#define TIOCGWINSZ	117
-
-struct pt_termios
-{
-        unsigned short  c_iflag;
-        unsigned short  c_oflag;
-        unsigned short  c_cflag;
-        unsigned short  c_lflag;
-        unsigned char   c_cc[NCCS];
-        long            _reserved_[4];
-};
-
-struct winsize {
-	unsigned short	ws_row;		/* rows, in characters */
-	unsigned short	ws_col;		/* columns, in characters */
-	unsigned short	ws_xpixel;	/* horizontal size, pixels */
-	unsigned short	ws_ypixel;	/* vertical size, pixels */
-};
-#define TTYSIZE_STRUCT struct winsize
-#define USE_STRUCT_WINSIZE 1
-
-#ifdef XTERM_MAIN
-extern int ptioctl(int fd, int func, void* data);
-#define ioctl ptioctl
-#endif
-
-#endif /* __UNIXOS2__ */
 
 #ifdef __hpux
 #include <sys/bsdtty.h>		/* defines TIOCSLTC */
@@ -283,32 +224,19 @@ extern int ptioctl(int fd, int func, void* data);
 #endif
 
 #if !defined(TTYSIZE_STRUCT)
-#if defined(TIOCSSIZE) && (defined(sun) && !defined(SVR4))
-#define USE_STRUCT_TTYSIZE 1
-#define TTYSIZE_STRUCT struct ttysize
-#elif defined(TIOCSWINSZ)
+#if defined(TIOCSWINSZ)
 #define USE_STRUCT_WINSIZE 1
-#define TTYSIZE_STRUCT struct winsize
-#endif /* sun vs TIOCSWINSZ */
-#endif /* TTYSIZE_STRUCT */
-
-#if defined(USE_STRUCT_TTYSIZE)
-
-#define TTYSIZE_STRUCT struct ttysize
-#define GET_TTYSIZE(fd, data) ioctl(fd, TIOCGSIZE, &data)
-#define SET_TTYSIZE(fd, data) ioctl(fd, TIOCSSIZE, &data)
-#define TTYSIZE_COLS(data) data.ts_cols
-#define TTYSIZE_ROWS(data) data.ts_lines
-
-#elif defined(USE_STRUCT_WINSIZE)
-
 #define TTYSIZE_STRUCT struct winsize
 #define GET_TTYSIZE(fd, data) ioctl(fd, TIOCGWINSZ, (char *) &data)
 #define SET_TTYSIZE(fd, data) ioctl(fd, TIOCSWINSZ, (char *) &data)
 #define TTYSIZE_COLS(data) data.ws_col
 #define TTYSIZE_ROWS(data) data.ws_row
+#endif /* TIOCSWINSZ */
+#endif /* TTYSIZE_STRUCT */
 
-#endif /* (USE_STRUCT_TTYSIZE) */
+#ifndef USE_STRUCT_WINSIZE
+#error "There is a configuration error with struct winsize ifdef"
+#endif
 
 #if OPT_TRACE
 #define TRACE_TTYSIZE(fd, id) { \

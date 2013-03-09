@@ -1,7 +1,7 @@
-/* $XTermId: charproc.c,v 1.1270 2012/11/25 19:25:10 Balazs.Kezes Exp $ */
+/* $XTermId: charproc.c,v 1.1283 2013/02/05 01:47:58 tom Exp $ */
 
 /*
- * Copyright 1999-2011,2012 by Thomas E. Dickey
+ * Copyright 1999-2012,2013 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -1768,7 +1768,7 @@ doparsing(XtermWidget xw, unsigned c, struct ParseState *sp)
 	 */
 #if OPT_VT52_MODE
 	if (sp->vt52_cup) {
-	    if (nparam < NPARAM) {
+	    if (nparam < NPARAM - 1) {
 		SetParam(nparam++, (int) (c & 0x7f) - 32);
 		parms.is_sub[nparam] = 0;
 	    }
@@ -3932,11 +3932,16 @@ v_write(int f, const Char * data, unsigned len)
     int riten;
 
     TRACE2(("v_write(%d:%s)\n", len, visibleChars(data, len)));
-    if (v_bufstr == NULL && len > 0) {
-	v_buffer = (Char *) XtMalloc((Cardinal) len);
-	v_bufstr = v_buffer;
-	v_bufptr = v_buffer;
-	v_bufend = v_buffer + len;
+    if (v_bufstr == NULL) {
+	if (len > 0) {
+	    v_buffer = (Char *) XtMalloc((Cardinal) len);
+	    v_bufstr = v_buffer;
+	    v_bufptr = v_buffer;
+	    v_bufend = v_buffer + len;
+	}
+	if (v_bufstr == NULL) {
+	    return;
+	}
     }
 #ifdef DEBUG
     if (debug) {
@@ -4347,7 +4352,7 @@ in_put(XtermWidget xw)
 #endif
 	}
 	if (need_cleanup)
-	    Cleanup(0);
+	    NormalExit();
 #if OPT_DOUBLE_BUFFER
 	if (screen->needSwap) {
 	    XdbeSwapInfo swap;
@@ -5937,6 +5942,7 @@ window_ops(XtermWidget xw)
     unsigned root_height;
 #endif
     int code = zero_if_default(0);
+    char *label;
 
     TRACE(("window_ops %d\n", code));
     switch (code) {
@@ -6106,14 +6112,16 @@ window_ops(XtermWidget xw)
     case ewGetIconTitle:	/* Report the icon's label */
 	if (AllowWindowOps(xw, ewGetIconTitle)) {
 	    TRACE(("...get icon's label\n"));
-	    report_win_label(xw, 'L', get_icon_label(xw));
+	    report_win_label(xw, 'L', label = get_icon_label(xw));
+	    free(label);
 	}
 	break;
 
     case ewGetWinTitle:	/* Report the window's title */
 	if (AllowWindowOps(xw, ewGetWinTitle)) {
 	    TRACE(("...get window's label\n"));
-	    report_win_label(xw, 'l', get_window_label(xw));
+	    report_win_label(xw, 'l', label = get_window_label(xw));
+	    free(label);
 	}
 	break;
 
@@ -6309,7 +6317,7 @@ unparseputc(XtermWidget xw, int c)
     IChar *buf = screen->unparse_bfr;
     unsigned len;
 
-    if ((screen->unparse_len + 2) >= sizeof(screen->unparse_bfr))
+    if ((screen->unparse_len + 2) >= sizeof(screen->unparse_bfr) / sizeof(IChar))
 	unparse_end(xw);
 
     len = screen->unparse_len;
@@ -7021,7 +7029,7 @@ set_flags_from_list(char *target,
     Cardinal n;
     int value = -1;
 
-    while (*source != '\0') {
+    while (!IsEmpty(source)) {
 	char *next = ParseList(&source);
 	Boolean found = False;
 
@@ -7253,7 +7261,7 @@ VTInitialize(Widget wrequest,
     TRACE(("   Actual  foreground 0x%06lx\n", wnew->old_foreground));
     TRACE(("   Actual  background 0x%06lx\n", wnew->old_background));
 
-    TScreenOf(wnew)->mouse_button = -1;
+    TScreenOf(wnew)->mouse_button = 0;
     TScreenOf(wnew)->mouse_row = -1;
     TScreenOf(wnew)->mouse_col = -1;
 
@@ -7963,8 +7971,8 @@ releaseWindowGCs(XtermWidget xw, VTwin * win)
 
 #define TRACE_FREE_LEAK(name) \
 	if (name) { \
-	    free((void *) name); \
 	    TRACE(("freed " #name ": %p\n", (const void *) name)); \
+	    free((void *) name); \
 	    name = 0; \
 	}
 
@@ -9228,7 +9236,7 @@ ShowCursor(void)
      * If the cursor happens to be on blanks, and the foreground color is set
      * but not the background, do not treat it as a colored cell.
      */
-    if ((flags & TERM_COLOR_FLAGS(xw)) == BG_COLOR
+    if ((flags & TERM_COLOR_FLAGS(xw)) == FG_COLOR
 	&& base == ' ') {
 	flags &= ~TERM_COLOR_FLAGS(xw);
     }
@@ -9245,6 +9253,24 @@ ShowCursor(void)
 
     fg_pix = getXtermForeground(xw, flags, extract_fg(xw, fg_bg, flags));
     bg_pix = getXtermBackground(xw, flags, extract_bg(xw, fg_bg, flags));
+
+    /*
+     * If we happen to have the same foreground/background colors, choose
+     * a workable foreground color from which we can obtain a visible cursor.
+     */
+    if (fg_pix == bg_pix) {
+	long bg_diff = (long) (bg_pix - T_COLOR(TScreenOf(xw), TEXT_BG));
+	long fg_diff = (long) (bg_pix - T_COLOR(TScreenOf(xw), TEXT_FG));
+	if (bg_diff < 0)
+	    bg_diff = -bg_diff;
+	if (fg_diff < 0)
+	    fg_diff = -fg_diff;
+	if (bg_diff < fg_diff) {
+	    fg_pix = T_COLOR(TScreenOf(xw), TEXT_FG);
+	} else {
+	    fg_pix = T_COLOR(TScreenOf(xw), TEXT_BG);
+	}
+    }
 
     if (OutsideSelection(screen, screen->cur_row, screen->cur_col))
 	in_selection = False;
@@ -10095,7 +10121,9 @@ DoSetSelectedFont(Widget w,
 {
     XtermWidget xw = getXtermWidget(w);
 
-    if ((xw == 0) || *type != XA_STRING || *format != 8) {
+    if (xw == 0) {
+	xtermWarning("unexpected widget in DoSetSelectedFont\n");
+    } else if (*type != XA_STRING || *format != 8) {
 	Bell(xw, XkbBI_MinorError, 0);
     } else {
 	Boolean failed = False;
@@ -10127,6 +10155,7 @@ DoSetSelectedFont(Widget w,
 	       XLFD allows up to 255 characters and no control characters;
 	       we are a little more liberal here. */
 	    if (len < 1000
+		&& used != 0
 		&& !strchr(used, '\n')
 		&& (test = x_strdup(used)) != 0) {
 		TScreenOf(xw)->MenuFontName(fontMenu_fontsel) = test;
@@ -10159,7 +10188,7 @@ FindFontSelection(XtermWidget xw, const char *atom_name, Bool justprobe)
 {
     TScreen *screen = TScreenOf(xw);
     static AtomPtr *atoms;
-    unsigned int atomCount = 0;
+    static unsigned int atomCount = 0;
     AtomPtr *pAtom;
     unsigned a;
     Atom target;
@@ -10171,12 +10200,16 @@ FindFontSelection(XtermWidget xw, const char *atom_name, Bool justprobe)
     TRACE(("FindFontSelection(%s)\n", atom_name));
 
     for (pAtom = atoms, a = atomCount; a; a--, pAtom++) {
-	if (strcmp(atom_name, XmuNameOfAtom(*pAtom)) == 0)
+	if (strcmp(atom_name, XmuNameOfAtom(*pAtom)) == 0) {
+	    TRACE(("...found atom %d:%s\n", a + 1, atom_name));
 	    break;
+	}
     }
     if (!a) {
 	atoms = TypeXtReallocN(AtomPtr, atoms, atomCount + 1);
 	*(pAtom = &atoms[atomCount]) = XmuMakeAtom(atom_name);
+	++atomCount;
+	TRACE(("...added atom %d:%s\n", atomCount, atom_name));
     }
 
     target = XmuInternAtom(XtDisplay(xw), *pAtom);

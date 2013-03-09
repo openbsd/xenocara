@@ -1,7 +1,7 @@
-/* $XTermId: xterm.h,v 1.710 2012/10/25 23:18:58 tom Exp $ */
+/* $XTermId: xterm.h,v 1.716 2013/02/03 23:21:00 tom Exp $ */
 
 /*
- * Copyright 1999-2011,2012 by Thomas E. Dickey
+ * Copyright 1999-2012,2013 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -123,7 +123,7 @@
 #define HAVE_TCGETATTR 1
 #endif
 
-#if defined(__UNIXOS2__) || defined(__SCO__) || defined(__UNIXWARE__)
+#if defined(__SCO__) || defined(__UNIXWARE__)
 #define USE_TERMCAP 1
 #endif
 
@@ -286,7 +286,21 @@ extern int errno;
 
 /***====================================================================***/
 
-#include <proto.h>
+#define PROTO_XT_ACTIONS_ARGS \
+	(Widget w, XEvent *event, String *params, Cardinal *num_params)
+
+#define PROTO_XT_CALLBACK_ARGS \
+	(Widget gw, XtPointer closure, XtPointer data)
+
+#define PROTO_XT_CVT_SELECT_ARGS \
+	(Widget w, Atom *selection, Atom *target, Atom *type, XtPointer *value, unsigned long *length, int *format)
+
+#define PROTO_XT_EV_HANDLER_ARGS \
+	(Widget w, XtPointer closure, XEvent *event, Boolean *cont)
+
+#define PROTO_XT_SEL_CB_ARGS \
+	(Widget w, XtPointer client_data, Atom *selection, Atom *type, XtPointer value, unsigned long *length, int *format)
+
 #include <ptyx.h>
 
 #if (XtSpecificationRelease >= 6) && !defined(NO_XPOLL_H) && !defined(sun)
@@ -326,10 +340,6 @@ extern int errno;
 #endif /* USE_SYS_SELECT_H */
 
 #include <setjmp.h>
-
-#if defined(__UNIXOS2__) && !defined(XTERM_MAIN)
-#define environ gblenvp		/* circumvent a bug */
-#endif
 
 #if !defined(VMS) && !(defined(linux) && defined(__USE_GNU)) && !defined(__hpux) && !defined(_ALL_SOURCE) && !defined(__osf__)
 extern char **environ;
@@ -936,11 +946,7 @@ extern void saveCellData(TScreen * /* screen */, CellData * /* data */, Cardinal
 extern void restoreCellData(TScreen * /* screen */, CellData * /* data */, Cardinal /* cell */, LineData * /* ld */, int /* column */);
 
 /* main.c */
-#ifndef __UNIXOS2__
 #define ENVP_ARG /**/
-#else
-#define ENVP_ARG , char ** /* envp */
-#endif
 
 extern int main (int  /* argc */, char ** /* argv */ ENVP_ARG);
 extern int GetBytesAvailable (int  /* fd */);
@@ -953,9 +959,7 @@ extern void first_map_occurred (void);
 #define first_map_occurred() /* nothing */
 #endif
 
-#ifdef SIGNAL_T
-extern SIGNAL_T Exit (int  /* n */) GCC_NORETURN;
-#endif
+extern void Exit (int  /* n */) GCC_NORETURN;
 
 #ifndef SIG_ATOMIC_T
 #define SIG_ATOMIC_T int
@@ -989,7 +993,6 @@ extern XtermWidget getXtermWidget (Widget /* w */);
 extern char *udk_lookup (int /* keycode */, int * /* len */);
 extern char *xtermEnvEncoding (void);
 extern char *xtermFindShell (char * /* leaf */, Bool  /* warning */);
-extern char *xtermVersion (void);
 extern const char *SysErrorMsg (int /* n */);
 extern const char *SysReasonMsg (int /* n */);
 extern int ResetAnsiColorRequest (XtermWidget, char *, int);
@@ -1006,7 +1009,7 @@ extern void ChangeGroup(XtermWidget /* xw */, const char * /* attribute */, char
 extern void ChangeIconName (XtermWidget /* xw */, char * /* name */);
 extern void ChangeTitle (XtermWidget /* xw */, char * /* name */);
 extern void ChangeXprop (char * /* name */);
-extern void Cleanup (int  /* code */);
+extern void Cleanup (int /* code */) GCC_NORETURN;
 extern void HandleBellPropertyChange   PROTO_XT_EV_HANDLER_ARGS;
 extern void HandleEightBitKeyPressed   PROTO_XT_ACTIONS_ARGS;
 extern void HandleEnterWindow          PROTO_XT_EV_HANDLER_ARGS;
@@ -1016,6 +1019,7 @@ extern void HandleKeyPressed           PROTO_XT_ACTIONS_ARGS;
 extern void HandleLeaveWindow          PROTO_XT_EV_HANDLER_ARGS;
 extern void HandleSpawnTerminal        PROTO_XT_ACTIONS_ARGS;
 extern void HandleStringEvent          PROTO_XT_ACTIONS_ARGS;
+extern void NormalExit (void);
 extern void Panic (const char * /* s */, int  /* a */);
 extern void Redraw (void);
 extern void ReverseOldColors (void);

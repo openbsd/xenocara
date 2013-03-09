@@ -1,7 +1,7 @@
-/* $XTermId: menu.c,v 1.310 2012/09/22 14:53:45 tom Exp $ */
+/* $XTermId: menu.c,v 1.313 2013/02/03 21:53:58 tom Exp $ */
 
 /*
- * Copyright 1999-2011,2012 by Thomas E. Dickey
+ * Copyright 1999-2012,2013 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -842,7 +842,7 @@ domenu(Widget w,
 	FindFontSelection(xw, NULL, True);
 	SetItemSensitivity(
 			      fontMenuEntries[fontMenu_fontsel].widget,
-			      (screen->menu_font_names[fontMenu_fontsel]
+			      (screen->menu_font_names[fontMenu_fontsel][fNorm]
 			       ? True : False));
 	break;
 
@@ -1639,6 +1639,7 @@ do_vtfont(Widget gw GCC_UNUSED,
     char *entryname = (char *) closure;
     int i;
 
+    TRACE(("do_vtfont(%s)\n", entryname));
     for (i = 0; i < NMENUFONTS; i++) {
 	if (strcmp(entryname, fontMenuEntries[i].name) == 0) {
 	    SetVTFont(xw, i, True, NULL);

@@ -1,7 +1,7 @@
-/* $XTermId: main.c,v 1.689 2012/11/19 10:33:33 tom Exp $ */
+/* $XTermId: main.c,v 1.716 2013/02/03 23:10:05 tom Exp $ */
 
 /*
- * Copyright 2002-2011,2012 by Thomas E. Dickey
+ * Copyright 2002-2012,2013 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -90,6 +90,7 @@
 #define RES_OFFSET(field)	XtOffsetOf(XTERM_RESOURCE, field)
 
 #include <xterm.h>
+#include <version.h>
 
 #include <X11/cursorfont.h>
 #include <X11/Xlocale.h>
@@ -445,7 +446,7 @@ extern char *ptsname(int);
 #endif
 
 #ifndef VMS
-static SIGNAL_T reapchild(int /* n */ );
+static void reapchild(int /* n */ );
 static int spawnXTerm(XtermWidget /* xw */ );
 static void remove_termcap_entry(char *, const char *);
 #ifdef USE_PTY_SEARCH
@@ -1534,9 +1535,10 @@ parseArg(int *num, char **argv, char **valuep)
 	if (result != 0) {
 	    TRACE(("...result %s\n", result->option));
 	    /* expand abbreviations */
-	    if (result->argKind != XrmoptionStickyArg
-		&& strcmp(argv[*num], x_strdup(result->option))) {
-		argv[*num] = x_strdup(result->option);
+	    if (result->argKind != XrmoptionStickyArg) {
+		if (strcmp(argv[*num], result->option)) {
+		    argv[*num] = x_strdup(result->option);
+		}
 	    }
 
 	    /* adjust (*num) to skip option value */
@@ -1998,7 +2000,9 @@ main(int argc, char *argv[]ENVP_ARG)
 
 	for (n = 1; n < argc; n++) {
 	    if ((option_ptr = parseArg(&n, argv, &option_value)) == 0) {
-		if (isOption(argv[n])) {
+		if (argv[n] == 0) {
+		    break;
+		} else if (isOption(argv[n])) {
 		    Syntax(argv[n]);
 		} else if (explicit_shname != 0) {
 		    xtermWarning("Explicit shell already was %s\n", explicit_shname);
@@ -2178,7 +2182,7 @@ main(int argc, char *argv[]ENVP_ARG)
 					my_class,
 					optionDescList,
 					XtNumber(optionDescList),
-					&argc, argv,
+					&argc, (String *) argv,
 					fallback_resources,
 					sessionShellWidgetClass,
 					NULL, 0);
@@ -2889,11 +2893,10 @@ static const char *vtterm[] =
 };
 
 /* ARGSUSED */
-static SIGNAL_T
+static void
 hungtty(int i GCC_UNUSED)
 {
     siglongjmp(env, 1);
-    SIGNAL_RETURN;
 }
 
 #if OPT_PTY_HANDSHAKE
@@ -2983,7 +2986,7 @@ HsSysError(int error)
     handshake.status = PTY_FATALERROR;
     handshake.error = errno;
     handshake.fatal_error = error;
-    strcpy(handshake.buffer, ttydev);
+    strncpy(handshake.buffer, ttydev, sizeof(handshake.buffer));
 
     if (resource.ptyHandshake && (cp_pipe[1] >= 0)) {
 	TRACE(("HsSysError errno=%d, error=%d device \"%s\"\n",
@@ -3101,18 +3104,26 @@ static struct UTMP_STR *
 find_utmp(struct UTMP_STR *tofind)
 {
     struct UTMP_STR *result;
+    struct UTMP_STR limited;
     struct UTMP_STR working;
 
     for (;;) {
 	memset(&working, 0, sizeof(working));
 	working.ut_type = tofind->ut_type;
-	memcpy(working.ut_id, tofind->ut_id, sizeof(tofind->ut_id));
+	strncpy(working.ut_id, tofind->ut_id, sizeof(tofind->ut_id));
 #if defined(__digital__) && defined(__unix__) && (defined(OSMAJORVERSION) && OSMAJORVERSION < 5)
 	working.ut_type = 0;
 #endif
 	if ((result = call_getutid(&working)) == 0)
 	    break;
-	if (!strcmp(result->ut_line, tofind->ut_line))
+	/*
+	 * ut_line may not be null-terminated, but if it is, there may be
+	 * garbage after the null.  Use strncpy to ensure that the value
+	 * we check is null-terminated (if there is enough space in the
+	 * buffer), and that unused space is nulled.
+	 */
+	strncpy(limited.ut_line, result->ut_line, sizeof(result->ut_line));
+	if (!memcmp(limited.ut_line, tofind->ut_line, sizeof(limited.ut_line)))
 	    break;
 	/*
 	 * Solaris, IRIX64 and HPUX manpages say to fill the static area
@@ -3181,6 +3192,7 @@ spawnXTerm(XtermWidget xw)
 #endif /* sony */
 #endif /* TERMIO_STRUCT */
 
+    char *shell_path = 0;
     char *ptr, *shname, *shname_minus;
     int i;
 #if USE_NO_DEV_TTY
@@ -3447,7 +3459,7 @@ spawnXTerm(XtermWidget xw)
 		if (get_termcap(xw, next)) {
 		    free(TermName);
 		    TermName = next;
-		    ok_termcap = True;
+		    ok_termcap = True + 1;
 		    break;
 		} else {
 		    free(next);
@@ -3743,7 +3755,7 @@ spawnXTerm(XtermWidget xw)
 		    /* let our master know that the open failed */
 		    handshake.status = PTY_BAD;
 		    handshake.error = errno;
-		    strcpy(handshake.buffer, ttydev);
+		    strncpy(handshake.buffer, ttydev, sizeof(handshake.buffer));
 		    TRACE_HANDSHAKE("writing", &handshake);
 		    IGNORE_RC(write(cp_pipe[1],
 				    (const char *) &handshake,
@@ -3763,6 +3775,8 @@ spawnXTerm(XtermWidget xw)
 		    }
 
 		    /* We have a new pty to try */
+		    if (ttyfd >= 0)
+			close(ttyfd);
 		    free(ttydev);
 		    ttydev = x_strdup(handshake.buffer);
 		}
@@ -4175,9 +4189,10 @@ spawnXTerm(XtermWidget xw)
 	    if (!utret)
 		TRACE(("getutid: NULL\n"));
 	    else
-		TRACE(("getutid: pid=%d type=%d user=%s line=%s id=%s\n",
+		TRACE(("getutid: pid=%d type=%d user=%s line=%.*s id=%.*s\n",
 		       (int) utret->ut_pid, utret->ut_type, utret->ut_user,
-		       utret->ut_line, utret->ut_id));
+		       (int) sizeof(utret->ut_line), utret->ut_line,
+		       (int) sizeof(utret->ut_id), utret->ut_id));
 #endif
 
 	    /* set up the new entry */
@@ -4219,9 +4234,9 @@ spawnXTerm(XtermWidget xw)
 	    if (!resource.utmpInhibit) {
 		errno = 0;
 		call_pututline(&utmp);
-		TRACE(("pututline: id %s, line %s, pid %ld, errno %d %s\n",
-		       utmp.ut_id,
-		       utmp.ut_line,
+		TRACE(("pututline: id %.*s, line %.*s, pid %ld, errno %d %s\n",
+		       (int) sizeof(utmp.ut_id), utmp.ut_id,
+		       (int) sizeof(utmp.ut_line), utmp.ut_line,
 		       (long) utmp.ut_pid,
 		       errno, (errno != 0) ? strerror(errno) : ""));
 	    }
@@ -4343,7 +4358,7 @@ spawnXTerm(XtermWidget xw)
 	    if (resource.ptyHandshake) {
 		handshake.status = UTMP_ADDED;
 		handshake.error = 0;
-		strcpy(handshake.buffer, ttydev);
+		strncpy(handshake.buffer, ttydev, sizeof(handshake.buffer));
 		TRACE_HANDSHAKE("writing", &handshake);
 		IGNORE_RC(write(cp_pipe[1], (char *) &handshake, sizeof(handshake)));
 	    }
@@ -4368,8 +4383,8 @@ spawnXTerm(XtermWidget xw)
 #if OPT_PTY_HANDSHAKE
 	    if (resource.ptyHandshake) {
 		/* mark the pipes as close on exec */
-		fcntl(cp_pipe[1], F_SETFD, 1);
-		fcntl(pc_pipe[0], F_SETFD, 1);
+		(void) fcntl(cp_pipe[1], F_SETFD, 1);
+		(void) fcntl(pc_pipe[0], F_SETFD, 1);
 
 		/* We are at the point where we are going to
 		 * exec our shell (or whatever).  Let our parent
@@ -4377,7 +4392,7 @@ spawnXTerm(XtermWidget xw)
 		 */
 		handshake.status = PTY_GOOD;
 		handshake.error = 0;
-		(void) strcpy(handshake.buffer, ttydev);
+		(void) strncpy(handshake.buffer, ttydev, sizeof(handshake.buffer));
 		TRACE_HANDSHAKE("writing", &handshake);
 		IGNORE_RC(write(cp_pipe[1],
 				(const char *) &handshake,
@@ -4491,22 +4506,29 @@ spawnXTerm(XtermWidget xw)
 	     * Incidentally, our setting of $SHELL tells luit to use that
 	     * program rather than choosing between $SHELL and "/bin/sh".
 	     */
-	    if ((ptr = explicit_shname) == NULL) {
-		if ((ptr = x_getenv("SHELL")) == NULL) {
+	    if ((shell_path = explicit_shname) == NULL) {
+		if ((shell_path = x_getenv("SHELL")) == NULL) {
 		    if ((!OkPasswd(&pw) && !x_getpwuid(screen->uid, &pw))
-			|| *(ptr = pw.pw_shell) == 0) {
-			ptr = x_strdup("/bin/sh");
-		    } else if (ptr != 0) {
-			xtermSetenv("SHELL", ptr);
+			|| *(shell_path = x_strdup(pw.pw_shell)) == 0) {
+			if (shell_path)
+			    free(shell_path);
+			shell_path = x_strdup("/bin/sh");
+		    } else if (shell_path != 0) {
+			xtermSetenv("SHELL", shell_path);
 		    }
 		}
 	    } else {
 		xtermSetenv("SHELL", explicit_shname);
 	    }
-	    xtermSetenv("XTERM_SHELL", ptr);
+	    if (access(shell_path, X_OK) != 0) {
+		xtermPerror("Cannot use '%s' as shell", shell_path);
+		free(shell_path);
+		shell_path = x_strdup("/bin/sh");
+	    }
+	    xtermSetenv("XTERM_SHELL", shell_path);
 
-	    shname = x_basename(ptr);
-	    TRACE(("shell path '%s' leaf '%s'\n", ptr, shname));
+	    shname = x_basename(shell_path);
+	    TRACE(("shell path '%s' leaf '%s'\n", shell_path, shname));
 
 #if OPT_LUIT_PROG
 	    /*
@@ -4515,8 +4537,9 @@ spawnXTerm(XtermWidget xw)
 	     * to command that the user gave anyway.
 	     */
 	    if (command_to_exec_with_luit && command_to_exec) {
-		xtermSetenv("XTERM_SHELL",
-			    xtermFindShell(*command_to_exec_with_luit, False));
+		char *myShell = xtermFindShell(*command_to_exec_with_luit, False);
+		xtermSetenv("XTERM_SHELL", myShell);
+		free(myShell);
 		TRACE_ARGV("spawning luit command", command_to_exec_with_luit);
 		execvp(*command_to_exec_with_luit, command_to_exec_with_luit);
 		xtermPerror("Can't execvp %s", *command_to_exec_with_luit);
@@ -4524,12 +4547,14 @@ spawnXTerm(XtermWidget xw)
 	    }
 #endif
 	    if (command_to_exec) {
-		xtermSetenv("XTERM_SHELL",
-			    xtermFindShell(*command_to_exec, False));
+		char *myShell = xtermFindShell(*command_to_exec, False);
+		xtermSetenv("XTERM_SHELL", myShell);
+		free(myShell);
 		TRACE_ARGV("spawning command", command_to_exec);
 		execvp(*command_to_exec, command_to_exec);
 		if (command_to_exec[1] == 0)
-		    execlp(ptr, shname, "-c", command_to_exec[0], (void *) 0);
+		    execlp(shell_path, shname, "-c", command_to_exec[0],
+			   (void *) 0);
 		xtermPerror("Can't execvp %s", *command_to_exec);
 	    }
 #ifdef USE_SYSV_SIGHUP
@@ -4569,13 +4594,14 @@ spawnXTerm(XtermWidget xw)
 		xtermPerror("Can't execvp %s", *command_to_exec_with_luit);
 	    }
 #endif
-	    execlp(ptr,
+	    execlp(shell_path,
 		   (xw->misc.login_shell ? shname_minus : shname),
 		   (void *) 0);
 
 	    /* Exec failed. */
-	    xtermPerror("Could not exec %s", ptr);
+	    xtermPerror("Could not exec %s", shell_path);
 	    IGNORE_RC(sleep(5));
+	    free(shell_path);
 	    exit(ERROR_EXEC);
 	}
 	/* end if in child after fork */
@@ -4625,7 +4651,7 @@ spawnXTerm(XtermWidget xw)
 			exit(ERROR_PTYS);
 		    }
 		    handshake.status = PTY_NEW;
-		    (void) strcpy(handshake.buffer, ttydev);
+		    (void) strncpy(handshake.buffer, ttydev, sizeof(handshake.buffer));
 		    TRACE_HANDSHAKE("writing", &handshake);
 		    IGNORE_RC(write(pc_pipe[1],
 				    (const char *) &handshake,
@@ -4717,11 +4743,15 @@ spawnXTerm(XtermWidget xw)
     signal(SIGTERM, Exit);
     signal(SIGPIPE, Exit);
 #endif /* USE_SYSV_SIGNALS and not SIGTSTP */
+#ifdef NO_LEAKS
+    if (ok_termcap != True)
+	free(TermName);
+#endif
 
     return 0;
 }				/* end spawnXTerm */
 
-SIGNAL_T
+void
 Exit(int n)
 {
     XtermWidget xw = term;
@@ -4738,8 +4768,9 @@ Exit(int n)
     struct UTMP_STR *utptr;
 
     /* don't do this more than once */
-    if (xterm_exiting)
-	SIGNAL_RETURN;
+    if (xterm_exiting) {
+	exit(n);
+    }
     xterm_exiting = True;
 
 #ifdef PUCC_PTYD
@@ -4871,32 +4902,31 @@ Exit(int n)
 
 #ifdef NO_LEAKS
     if (n == 0) {
-	TRACE(("Freeing memory leaks\n"));
-	if (xw != 0) {
-	    Display *dpy = TScreenOf(xw)->display;
+	Display *dpy = TScreenOf(xw)->display;
 
-	    if (toplevel) {
-		XtDestroyWidget(toplevel);
-		TRACE(("destroyed top-level widget\n"));
-	    }
-	    sortedOpts(0, 0, 0);
-	    noleaks_charproc();
-	    noleaks_ptydata();
-#if OPT_WIDE_CHARS
-	    noleaks_CharacterClass();
-#endif
-	    /* XrmSetDatabase(dpy, 0); increases leaks ;-) */
-	    XtCloseDisplay(dpy);
-	    XtDestroyApplicationContext(app_con);
-	    xtermCloseSession();
-	    TRACE(("closed display\n"));
+	TRACE(("Freeing memory leaks\n"));
+
+	if (toplevel) {
+	    XtDestroyWidget(toplevel);
+	    TRACE(("destroyed top-level widget\n"));
 	}
+	sortedOpts(0, 0, 0);
+	noleaks_charproc();
+	noleaks_ptydata();
+#if OPT_WIDE_CHARS
+	noleaks_CharacterClass();
+#endif
+	/* XrmSetDatabase(dpy, 0); increases leaks ;-) */
+	XtCloseDisplay(dpy);
+	XtDestroyApplicationContext(app_con);
+	xtermCloseSession();
+	TRACE(("closed display\n"));
+
 	TRACE_CLOSE();
     }
 #endif
 
     exit(n);
-    SIGNAL_RETURN;
 }
 
 /* ARGSUSED */
@@ -4938,14 +4968,16 @@ resize_termcap(XtermWidget xw)
 			     ? MaxRows(screen)
 			     : MaxCols(screen)));
 	temp += strlen(temp);
-	ptr1 = strchr(ptr1, ':');
-	strncpy(temp, ptr1, i = (size_t) (ptr2 - ptr1));
-	temp += i;
-	sprintf(temp, "%d", (li_first
-			     ? MaxCols(screen)
-			     : MaxRows(screen)));
-	ptr2 = strchr(ptr2, ':');
-	strcat(temp, ptr2);
+	if ((ptr1 = strchr(ptr1, ':')) != 0 && (ptr1 < ptr2)) {
+	    strncpy(temp, ptr1, i = (size_t) (ptr2 - ptr1));
+	    temp += i;
+	    sprintf(temp, "%d", (li_first
+				 ? MaxCols(screen)
+				 : MaxRows(screen)));
+	    if ((ptr2 = strchr(ptr2, ':')) != 0) {
+		strcat(temp, ptr2);
+	    }
+	}
 	TRACE(("   ==> %s\n", newtc));
 	TRACE(("   new size %dx%d\n", MaxRows(screen), MaxCols(screen)));
     }
@@ -4985,7 +5017,7 @@ nonblocking_wait(void)
 #ifndef VMS
 
 /* ARGSUSED */
-static SIGNAL_T
+static void
 reapchild(int n GCC_UNUSED)
 {
     int olderrno = errno;
@@ -5012,7 +5044,6 @@ reapchild(int n GCC_UNUSED)
     } while ((pid = nonblocking_wait()) > 0);
 
     errno = olderrno;
-    SIGNAL_RETURN;
 }
 #endif /* !VMS */
 

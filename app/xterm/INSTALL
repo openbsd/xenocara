@@ -1,6 +1,6 @@
--- $XTermId: INSTALL,v 1.139 2012/10/10 23:33:29 tom Exp $
+-- $XTermId: INSTALL,v 1.142 2013/02/03 19:36:47 tom Exp $
 -------------------------------------------------------------------------------
--- Copyright 1997-2011,2012 by Thomas E. Dickey
+-- Copyright 1997-2012,2013 by Thomas E. Dickey
 --
 --                         All Rights Reserved
 --
@@ -215,7 +215,7 @@ The options (in alphabetic order):
 	type.  If you do not need input method (and are troubled by the
 	warning messages), it is safe to disable this option.
 
-  --disable-leaks         test: set to test memory leaks
+  --disable-leaks         test: free permanent memory, analyze leaks
 
   	Compile-in code which frees memory which might confuse a leak-testing
 	tool.  Normally these chunks of memory are retained as long as xterm
@@ -565,13 +565,23 @@ The options (in alphabetic order):
 	Use --without-app-defaults or --with-app-defaults=no to disable the
 	feature.
 
+  --with-dmalloc          test: use Gray Watson's dmalloc library
+
+	Check for and link with dmalloc.
+
+  --with-dbmalloc         test: use Conor Cahill's dbmalloc library
+
+	Check for and link with dbmalloc.
+
   --with-desktop-category=XXX  one or more desktop catgories or auto
 	This is a list of names.  The configure script maps blanks and commas
 	to semicolons (";") which are used by the desktop utils as a separator.
 
 	The default value "auto" tells the configure script to look
 	at existing ".desktop" files for xterm and common terminal
-	emulators, to use those.
+	emulators, to use those.  If none are found, the script uses this
+	default:
+		System;TerminalEmulator;Utility;
 
   --with-freetype-config  configure script to use for FreeType
 
@@ -703,6 +713,11 @@ The options (in alphabetic order):
 
 	If xterm is not installed setuid'd to root, this option is not needed,
 	since it cannot change the tty device's ownership.
+
+  --with-valgrind         test: use valgrind
+
+	Activate the --disable-leaks option, and ensure that "-g" is added to
+	CFLAGS.
 
   --with-xpm=DIR          use Xpm library for colored icon, may specify path
 

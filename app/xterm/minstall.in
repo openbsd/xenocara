@@ -1,5 +1,5 @@
 #!/bin/sh
-# $XTermId: minstall.in,v 1.15 2012/10/29 09:23:22 tom Exp $
+# $XTermId: minstall.in,v 1.18 2013/01/01 01:18:24 tom Exp $
 # -----------------------------------------------------------------------------
 # this file is part of xterm
 #
@@ -42,7 +42,8 @@
 #	$4 = app-defaults directory
 #	$5 = app-defaults class
 #	$6 = application name, normally "xterm"
-#	$7 = pixmap directory
+#	$7 = application name transformed
+#	$8 = pixmap directory
 #
 # Other values correspond to definitions in xtermcfg.h, and cannot be directly
 # modified using "make".  They are substituted directly into this script.
@@ -72,7 +73,8 @@ END_FILE="$3"
 APPS_DIR="$4"
 APP_TYPE="$5"
 APP_name="$6"
-XPMS_DIR="$7"
+USE_name="$7"
+XPMS_DIR="$8"
 
 suffix=`echo "$END_FILE" | sed -e 's%^.*\.%%'`
 NEW_FILE=temp$$
@@ -122,16 +124,25 @@ VERSION_H=`echo "$OLD_FILE" | sed -e 's,/[^/]*$,/version.h,' -e s',^[^/]*$,versi
 PATCH_NUM=`fgrep XTERM_PATCH $VERSION_H|sed -e 's/[^0-9]*//g'`
 PATCH_YMD=`fgrep XTERM_DATE  $VERSION_H|sed -e 's,[^0-9/.-]*,,g'`
 
-# Provide for renaming in test-builds:
-APP_Name=`echo "$APP_name" | sed -e s/xterm/Xterm/`
+# Make capitalization variants
+APP_chr0=`echo "$APP_name" | sed -e 's/^\(.\).*/\1/' | tr '[a-z]' '[A-Z]'`
+APP_chr1=`echo "$APP_name" | sed -e 's/^.//'`
+APP_Name=${APP_chr0}${APP_chr1}
 APP_NAME=`echo "$APP_name" | tr '[a-z]' '[A-Z]'`
+
+# Provide for renaming in test-builds:
+USE_chr0=`echo "$USE_name" | sed -e 's/^\(.\).*/\1/' | tr '[a-z]' '[A-Z]'`
+USE_chr1=`echo "$USE_name" | sed -e 's/^.//'`
+USE_Name=${USE_chr0}${USE_chr1}
+USE_NAME=`echo "$USE_name" | tr '[a-z]' '[A-Z]'`
 
 sed	-e 's%__vendorversion__%"X Window System"%' \
 	-e 's%__app_version__%Patch\ \#'$PATCH_NUM% \
 	-e 's%__app_date__%'$PATCH_YMD% \
-	-e "s%^\.TH [^ ][^ ]*%.TH $APP_NAME%" \
-	-e "s%^\.ds N Xterm%.ds N $APP_Name%" \
-	-e "s%^\.ds n xterm%.ds n $APP_name%" \
+	-e "s%^\.TH [^ ][^ ]*%.TH $USE_NAME%" \
+	-e "s%^\.ds N $APP_Name%.ds N $USE_Name%" \
+	-e "s%^\.ds n $APP_name%.ds n $USE_name%" \
+	-e 's%^'"$APP_name"' \\- %'"$USE_name"' \- %' \
 	-e s%__default_termname__%@default_TERM@% \
 	-e s%__default_termid__%@default_termid@% \
 	-e s%__alt_sends_esc__%@alt_sends_esc@% \
@@ -149,6 +160,7 @@ sed	-e 's%__vendorversion__%"X Window System"%' \
 	-e s%fIwtmp'\\%fI'$WTMP_NAME'\\%g' \
 	-e s%/etc/wtmp%$WTMP_PATH%g \
 	$OLD_FILE >$NEW_FILE
+# diff -u $OLD_FILE $NEW_FILE
 
 echo "$MINSTALL $OLD_FILE $END_FILE"
 eval "$MINSTALL $NEW_FILE $END_FILE"

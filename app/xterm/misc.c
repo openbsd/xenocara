@@ -1,7 +1,7 @@
-/* $XTermId: misc.c,v 1.631 2012/11/25 16:05:51 tom Exp $ */
+/* $XTermId: misc.c,v 1.658 2013/02/03 23:18:38 tom Exp $ */
 
 /*
- * Copyright 1999-2011,2012 by Thomas E. Dickey
+ * Copyright 1999-2012,2013 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -125,6 +125,8 @@
 
 static Boolean xtermAllocColor(XtermWidget, XColor *, const char *);
 static Cursor make_hidden_cursor(XtermWidget);
+
+static char emptyString[] = "";
 
 #if OPT_EXEC_XTERM
 /* Like readlink(2), but returns a malloc()ed buffer, or NULL on
@@ -551,7 +553,7 @@ xevents(void)
     XtInputMask input_mask;
 
     if (need_cleanup)
-	Cleanup(0);
+	NormalExit();
 
     if (screen->scroll_amt)
 	FlushScroll(xw);
@@ -844,13 +846,12 @@ HandleSpawnTerminal(Widget w GCC_UNUSED,
 	    xtermWarning("exec of '%s': %s\n", child_exe, SysErrorMsg(errno));
 	}
 	_exit(0);
-    } else {
-	/* We are the parent; clean up */
-	if (child_cwd)
-	    free(child_cwd);
-	if (child_exe)
-	    free(child_exe);
     }
+
+    /* We are the parent; clean up */
+    if (child_cwd)
+	free(child_cwd);
+    free(child_exe);
 }
 #endif /* OPT_EXEC_XTERM */
 
@@ -1563,6 +1564,7 @@ RequestMaximize(XtermWidget xw, int maximize)
 	success = True;
     } else if (screen->restore_data) {
 	success = True;
+	maximize = 0;
     }
 
     if (success) {
@@ -1764,7 +1766,7 @@ creat_as(uid_t uid, gid_t gid, Bool append, char *pathname, unsigned mode)
     int childstat = 0;
 #ifndef HAVE_WAITPID
     int waited;
-    SIGNAL_T(*chldfunc) (int);
+    void (*chldfunc) (int);
 
     chldfunc = signal(SIGCHLD, SIG_DFL);
 #endif /* HAVE_WAITPID */
@@ -1830,7 +1832,7 @@ creat_as(uid_t uid, gid_t gid, Bool append, char *pathname, unsigned mode)
 	 */
 	do
 	    if (waited == TScreenOf(term)->pid)
-		Cleanup(0);
+		NormalExit();
 	while ((waited = nonblocking_wait()) > 0) ;
 #endif /* HAVE_WAITPID */
 #ifndef WIFEXITED
@@ -1866,7 +1868,7 @@ xtermResetIds(TScreen * screen)
  */
 
 #ifdef ALLOWLOGFILEEXEC
-static SIGNAL_T
+static void
 logpipe(int sig GCC_UNUSED)
 {
     XtermWidget xw = term;
@@ -1945,8 +1947,34 @@ StartLog(XtermWidget xw)
 	static char *shell;
 	struct passwd pw;
 
-	if (pipe(p) < 0 || (pid = fork()) < 0)
+	if ((shell = x_getenv("SHELL")) == NULL) {
+
+	    if (x_getpwuid(screen->uid, &pw)) {
+		char *name = x_getlogin(screen->uid, &pw);
+		if (*(pw.pw_shell)) {
+		    shell = pw.pw_shell;
+		}
+		free(name);
+	    }
+	}
+
+	if (shell == 0) {
+	    static char dummy[] = "/bin/sh";
+	    shell = dummy;
+	}
+
+	if (access(shell, X_OK) != 0) {
+	    xtermPerror("Can't execute `%s'\n", shell);
 	    return;
+	}
+
+	if (pipe(p) < 0) {
+	    xtermPerror("Can't make a pipe connection\n");
+	    return;
+	} else if ((pid = fork()) < 0) {
+	    xtermPerror("Can't fork...\n");
+	    return;
+	}
 	if (pid == 0) {		/* child */
 	    /*
 	     * Close our output (we won't be talking back to the
@@ -1963,21 +1991,6 @@ StartLog(XtermWidget xw)
 	    close(ConnectionNumber(screen->display));
 	    close(screen->respond);
 
-	    if ((shell = x_getenv("SHELL")) == NULL) {
-
-		if (x_getpwuid(screen->uid, &pw)) {
-		    x_getlogin(screen->uid, &pw);
-		    if (*(pw.pw_shell)) {
-			shell = pw.pw_shell;
-		    }
-		}
-	    }
-
-	    if (shell == 0) {
-		static char dummy[] = "/bin/sh";
-		shell = dummy;
-	    }
-
 	    signal(SIGHUP, SIG_DFL);
 	    signal(SIGCHLD, SIG_DFL);
 
@@ -1985,9 +1998,12 @@ StartLog(XtermWidget xw)
 	    if (xtermResetIds(screen) < 0)
 		exit(ERROR_SETUID);
 
-	    execl(shell, shell, "-c", &screen->logfile[1], (void *) 0);
-
-	    xtermWarning("Can't exec `%s'\n", &screen->logfile[1]);
+	    if (access(shell, X_OK) == 0) {
+		execl(shell, shell, "-c", &screen->logfile[1], (void *) 0);
+		xtermWarning("Can't exec `%s'\n", &screen->logfile[1]);
+	    } else {
+		xtermWarning("Can't execute `%s'\n", shell);
+	    }
 	    exit(ERROR_LOGEXEC);
 	}
 	close(p[0]);
@@ -2701,9 +2717,9 @@ ManipulateSelectionData(XtermWidget xw, TScreen * screen, char *buf, int final)
     };
 
     const char *base = buf;
-    char *used = x_strdup(base);
+    char *used;
     Cardinal j, n = 0;
-    String *select_args = 0;
+    String *select_args;
 
     TRACE(("Manipulate selection data\n"));
 
@@ -2716,46 +2732,54 @@ ManipulateSelectionData(XtermWidget xw, TScreen * screen, char *buf, int final)
 
 	if (*base == '\0')
 	    base = "s0";
-	if ((select_args = TypeCallocN(String, 1 + strlen(base))) == 0)
-	    return;
-	while (*base != '\0') {
-	    for (j = 0; j < XtNumber(table); ++j) {
-		if (*base == table[j].given) {
-		    used[n] = *base;
-		    select_args[n++] = table[j].result;
-		    TRACE(("atom[%d] %s\n", n, table[j].result));
-		    break;
+
+	if ((used = x_strdup(base)) != 0) {
+	    if ((select_args = TypeCallocN(String, 2 + strlen(base))) != 0) {
+		while (*base != '\0') {
+		    for (j = 0; j < XtNumber(table); ++j) {
+			if (*base == table[j].given) {
+			    used[n] = *base;
+			    select_args[n++] = table[j].result;
+			    TRACE(("atom[%d] %s\n", n, table[j].result));
+			    break;
+			}
+		    }
+		    ++base;
 		}
+		used[n] = 0;
+
+		if (!strcmp(buf, "?")) {
+		    if (AllowWindowOps(xw, ewGetSelection)) {
+			TRACE(("Getting selection\n"));
+			unparseputc1(xw, ANSI_OSC);
+			unparseputs(xw, "52");
+			unparseputc(xw, ';');
+
+			unparseputs(xw, used);
+			unparseputc(xw, ';');
+
+			/* Tell xtermGetSelection data is base64 encoded */
+			screen->base64_paste = n;
+			screen->base64_final = final;
+
+			/* terminator will be written in this call */
+			xtermGetSelection((Widget) xw,
+					  (Time) 0,
+					  select_args, n,
+					  NULL);
+		    }
+		} else {
+		    if (AllowWindowOps(xw, ewSetSelection)) {
+			TRACE(("Setting selection with %s\n", buf));
+			ClearSelectionBuffer(screen);
+			while (*buf != '\0')
+			    AppendToSelectionBuffer(screen, CharOf(*buf++));
+			CompleteSelection(xw, select_args, n);
+		    }
+		}
+		free(select_args);
 	    }
-	    ++base;
-	}
-	used[n] = 0;
-
-	if (!strcmp(buf, "?")) {
-	    if (AllowWindowOps(xw, ewGetSelection)) {
-		TRACE(("Getting selection\n"));
-		unparseputc1(xw, ANSI_OSC);
-		unparseputs(xw, "52");
-		unparseputc(xw, ';');
-
-		unparseputs(xw, used);
-		unparseputc(xw, ';');
-
-		/* Tell xtermGetSelection data is base64 encoded */
-		screen->base64_paste = n;
-		screen->base64_final = final;
-
-		/* terminator will be written in this call */
-		xtermGetSelection((Widget) xw, (Time) 0, select_args, n, NULL);
-	    }
-	} else {
-	    if (AllowWindowOps(xw, ewSetSelection)) {
-		TRACE(("Setting selection with %s\n", buf));
-		ClearSelectionBuffer(screen);
-		while (*buf != '\0')
-		    AppendToSelectionBuffer(screen, CharOf(*buf++));
-		CompleteSelection(xw, select_args, n);
-	    }
+	    free(used);
 	}
     }
 }
@@ -3569,7 +3593,7 @@ parse_decudk(const char *cp)
 {
     while (*cp) {
 	const char *base = cp;
-	char *str = CastMallocN(char, strlen(cp) + 1);
+	char *str = CastMallocN(char, strlen(cp) + 2);
 	unsigned key = 0;
 	int lo, hi;
 	int len = 0;
@@ -3584,6 +3608,7 @@ parse_decudk(const char *cp)
 	    }
 	}
 	if (len > 0 && key < MAX_UDK) {
+	    str[len] = '\0';
 	    if (user_keys[key].str != 0)
 		free(user_keys[key].str);
 	    user_keys[key].str = str;
@@ -3623,7 +3648,7 @@ parse_decdld(ANSI * params, const char *string)
 			? Pcmw
 			: (Pcmw + 3)));
     int char_high = ((Pcmh == 0)
-		     ? ((Pcmw >= 2 || Pcmw <= 4)
+		     ? ((Pcmw >= 2 && Pcmw <= 4)
 			? 10
 			: 20)
 		     : Pcmh);
@@ -3869,7 +3894,7 @@ do_dcs(XtermWidget xw, Char * dcsbuf, size_t dcslen)
 
 	    if (okay) {
 		unparseputc1(xw, ANSI_DCS);
-		unparseputc(xw, okay ? '1' : '0');
+		unparseputc(xw, '1');
 		unparseputc(xw, '$');
 		unparseputc(xw, 'r');
 		cp = reply;
@@ -4538,7 +4563,6 @@ ChangeGroup(XtermWidget xw, const char *attribute, char *value)
 #if OPT_WIDE_CHARS
     static Char *converted;	/* NO_LEAKS */
 #endif
-    static char empty[1];
 
     Arg args[1];
     Boolean changed = True;
@@ -4555,14 +4579,16 @@ ChangeGroup(XtermWidget xw, const char *attribute, char *value)
 	return;
 
     if (value == 0)
-	value = empty;
+	value = emptyString;
     if (IsTitleMode(xw, tmSetBase16)) {
 	const char *temp;
 	char *test;
 
 	value = x_decode_hex(value, &temp);
-	if (*temp != '\0')
+	if (*temp != '\0') {
+	    free(value);
 	    return;
+	}
 	for (test = value; *test != '\0'; ++test) {
 	    if (CharOf(*test) < 32) {
 		*test = '\0';
@@ -4668,13 +4694,12 @@ ChangeGroup(XtermWidget xw, const char *attribute, char *value)
 	    }
 #endif
 	}
-
-	free(my_attr);
-
-	if (IsTitleMode(xw, tmSetBase16))
-	    free(value);
-
     }
+    if (IsTitleMode(xw, tmSetBase16)) {
+	free(value);
+    }
+    free(my_attr);
+
     return;
 }
 
@@ -4682,8 +4707,7 @@ void
 ChangeIconName(XtermWidget xw, char *name)
 {
     if (name == 0) {
-	static char dummy[] = "";
-	name = dummy;
+	name = emptyString;
     }
     if (!showZIconBeep(xw, name))
 	ChangeGroup(xw, XtNiconName, name);
@@ -4895,44 +4919,48 @@ SysError(int code)
     Cleanup(code);
 }
 
+void
+NormalExit(void)
+{
+    static Bool cleaning;
+
+    /*
+     * Process "-hold" and session cleanup only for a normal exit.
+     */
+    if (cleaning) {
+	hold_screen = 0;
+	return;
+    }
+
+    cleaning = True;
+    need_cleanup = False;
+
+    if (hold_screen) {
+	hold_screen = 2;
+	while (hold_screen) {
+	    xevents();
+	    Sleep(10);
+	}
+    }
+#if OPT_SESSION_MGT
+    if (resource.sessionMgt) {
+	XtVaSetValues(toplevel,
+		      XtNjoinSession, False,
+		      (void *) 0);
+    }
+#endif
+    Cleanup(0);
+}
+
 /*
  * cleanup by sending SIGHUP to client processes
  */
 void
 Cleanup(int code)
 {
-    static Bool cleaning;
     TScreen *screen = TScreenOf(term);
 
-    /*
-     * Process "-hold" and session cleanup only for a normal exit.
-     */
-    if (code == 0) {
-	if (cleaning) {
-	    hold_screen = 0;
-	    return;
-	}
-
-	cleaning = True;
-	need_cleanup = False;
-
-	TRACE(("Cleanup %d\n", code));
-
-	if (hold_screen) {
-	    hold_screen = 2;
-	    while (hold_screen) {
-		xevents();
-		Sleep(10);
-	    }
-	}
-#if OPT_SESSION_MGT
-	if (resource.sessionMgt) {
-	    XtVaSetValues(toplevel,
-			  XtNjoinSession, False,
-			  (void *) 0);
-	}
-#endif
-    }
+    TRACE(("Cleanup %d\n", code));
 
     if (screen->pid > 1) {
 	(void) kill_process_group(screen->pid, SIGHUP);
@@ -4947,10 +4975,12 @@ Cleanup(int code)
 char *
 xtermFindShell(char *leaf, Bool warning)
 {
+    char *s0;
     char *s;
     char *d;
     char *tmp;
     char *result = leaf;
+    Bool allocated = False;
 
     TRACE(("xtermFindShell(%s)\n", leaf));
 
@@ -4963,13 +4993,14 @@ xtermFindShell(char *leaf, Bool warning)
 	    if (getcwd(buffer, need) != 0) {
 		sprintf(buffer + strlen(buffer), "/%s", result);
 		result = buffer;
+		allocated = True;
 	    } else {
 		free(buffer);
 	    }
 	}
     } else if (*result != '\0' && strchr("+/-", *result) == 0) {
 	/* find it in $PATH */
-	if ((s = x_getenv("PATH")) != 0) {
+	if ((s = s0 = x_getenv("PATH")) != 0) {
 	    if ((tmp = TypeMallocN(char, strlen(leaf) + strlen(s) + 2)) != 0) {
 		Bool found = False;
 		while (*s != '\0') {
@@ -4987,17 +5018,17 @@ xtermFindShell(char *leaf, Bool warning)
 				&& access(tmp, X_OK) == 0) {
 				result = x_strdup(tmp);
 				found = True;
+				allocated = True;
 			    }
 			    break;
 			}
-			if (found)
-			    break;
 		    }
 		    if (found)
 			break;
 		}
 		free(tmp);
 	    }
+	    free(s0);
 	}
     }
     TRACE(("...xtermFindShell(%s)\n", result));
@@ -5006,8 +5037,13 @@ xtermFindShell(char *leaf, Bool warning)
 	|| access(result, X_OK) != 0) {
 	if (warning)
 	    xtermWarning("No absolute path found for shell: %s\n", result);
+	if (allocated)
+	    free(result);
 	result = 0;
     }
+    /* be consistent, so that caller can always free the result */
+    if (result != 0 && !allocated)
+	result = x_strdup(result);
     return result;
 }
 #endif /* VMS */
@@ -5468,7 +5504,9 @@ sortedOpts(OptionHelp * options, XrmOptionDescRec * descs, Cardinal numDescs)
 		    } else {
 			code = 0;
 		    }
-		    strcpy(temp, opt_array[j].desc);
+		    sprintf(temp, "%.*s",
+			    (int) sizeof(temp) - 2,
+			    opt_array[j].desc);
 		    if (x_strindex(temp, "inhibit") != 0)
 			code = -code;
 		    if (code != 0
@@ -5577,45 +5615,6 @@ xtermEnvUTF8(void)
 #endif /* OPT_WIDE_CHARS */
 
 /*
- * Returns the version-string used in the "-v' message as well as a few other
- * places.  It is derived (when possible) from the __vendorversion__ symbol
- * that some newer imake configurations define.
- */
-char *
-xtermVersion(void)
-{
-    static char vendor_version[] = __vendorversion__;
-    static char *result;
-
-    if (result == 0) {
-	char *vendor = vendor_version;
-	char first[BUFSIZ];
-	char second[BUFSIZ];
-
-	result = CastMallocN(char, strlen(vendor) + 9);
-	if (result == 0)
-	    result = vendor;
-	else {
-	    /* some vendors leave trash in this string */
-	    for (;;) {
-		if (!strncmp(vendor, "Version ", (size_t) 8))
-		    vendor += 8;
-		else if (isspace(CharOf(*vendor)))
-		    ++vendor;
-		else
-		    break;
-	    }
-	    if (strlen(vendor) < BUFSIZ &&
-		sscanf(vendor, "%[0-9.] %[A-Za-z_0-9.]", first, second) == 2)
-		sprintf(result, "%s %s(%d)", second, first, XTERM_PATCH);
-	    else
-		sprintf(result, "%s(%d)", vendor, XTERM_PATCH);
-	}
-    }
-    return result;
-}
-
-/*
  * Check if the current widget, or any parent, is the VT100 "xterm" widget.
  */
 XtermWidget
@@ -5643,7 +5642,7 @@ die_callback(Widget w GCC_UNUSED,
 	     XtPointer client_data GCC_UNUSED,
 	     XtPointer call_data GCC_UNUSED)
 {
-    Cleanup(0);
+    NormalExit();
 }
 
 static void

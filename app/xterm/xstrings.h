@@ -1,4 +1,4 @@
-/* $XTermId: xstrings.h,v 1.27 2012/03/25 23:31:52 tom Exp $ */
+/* $XTermId: xstrings.h,v 1.28 2012/11/26 21:55:10 tom Exp $ */
 
 /*
  * Copyright 2000-2011,2012 by Thomas E. Dickey
@@ -59,6 +59,7 @@ extern int x_strcasecmp(const char * /* s1 */, const char * /* s2 */);
 extern int x_strncasecmp(const char * /* s1 */, const char * /* s2 */, unsigned  /* n */);
 extern unsigned x_countargv(char ** /* argv */);
 extern void x_appendargv(char ** /* target */, char ** /* source */);
+extern void x_freeargs(char ** /* argv */);
 
 /* *INDENT-ON* */
 

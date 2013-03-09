@@ -1,4 +1,4 @@
-/* $XTermId: trace.h,v 1.67 2012/11/22 20:22:15 tom Exp $ */
+/* $XTermId: trace.h,v 1.68 2013/02/06 09:52:14 tom Exp $ */
 
 /*
  * Copyright 1997-2011,2012 by Thomas E. Dickey
@@ -115,6 +115,18 @@ extern	XtGeometryResult TraceResizeRequest(const char * /* fn */, int  /* ln */,
 	TraceResizeRequest(__FILE__, __LINE__, w, \
 			   (reqwide), (reqhigh), \
 			   (gotwide), (gothigh))
+
+extern const char * ModifierName(unsigned /* modifier */);
+#define FMT_MODIFIER_NAMES "%s%s%s%s%s%s%s%s"
+#define ARG_MODIFIER_NAMES(state) \
+	   ModifierName(state & ShiftMask), \
+	   ModifierName(state & LockMask), \
+	   ModifierName(state & ControlMask), \
+	   ModifierName(state & Mod1Mask), \
+	   ModifierName(state & Mod2Mask), \
+	   ModifierName(state & Mod3Mask), \
+	   ModifierName(state & Mod4Mask), \
+	   ModifierName(state & Mod5Mask)
 
 #else
 

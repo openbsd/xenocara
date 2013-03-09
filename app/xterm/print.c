@@ -1,4 +1,4 @@
-/* $XTermId: print.c,v 1.147 2012/10/29 10:41:53 tom Exp $ */
+/* $XTermId: print.c,v 1.149 2012/12/31 13:58:16 tom Exp $ */
 
 /*
  * Copyright 1997-2011,2012 by Thomas E. Dickey
@@ -659,14 +659,19 @@ xtermHasPrinter(XtermWidget xw)
 
     if (strlen(SPS.printer_command) != 0 && !result) {
 	char **argv = x_splitargs(SPS.printer_command);
-	if (argv && argv[0]) {
-	    if (xtermFindShell(argv[0], False) == 0) {
-		xtermWarning("No program found for printerCommand: %s\n", SPS.printer_command);
-		SPS.printer_command = x_strdup("");
-	    } else {
-		SPS.printer_checked = True;
-		result = True;
+	if (argv) {
+	    if (argv[0]) {
+		char *myShell = xtermFindShell(argv[0], False);
+		if (myShell == 0) {
+		    xtermWarning("No program found for printerCommand: %s\n", SPS.printer_command);
+		    SPS.printer_command = x_strdup("");
+		} else {
+		    free(myShell);
+		    SPS.printer_checked = True;
+		    result = True;
+		}
 	    }
+	    x_freeargs(argv);
 	}
 	TRACE(("xtermHasPrinter:%d\n", result));
     }

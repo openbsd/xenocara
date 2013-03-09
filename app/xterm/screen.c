@@ -1,7 +1,7 @@
-/* $XTermId: screen.c,v 1.469 2012/10/25 23:12:20 tom Exp $ */
+/* $XTermId: screen.c,v 1.475 2013/02/13 00:42:30 tom Exp $ */
 
 /*
- * Copyright 1999-2011,2012 by Thomas E. Dickey
+ * Copyright 1999-2012,2013 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -71,6 +71,10 @@
 
 #include <assert.h>
 #include <signal.h>
+
+#ifndef _Xconst
+#define _Xconst const		/* Solaris 7 workaround */
+#endif /* _Xconst */
 
 #define inSaveBuf(screen, buf, inx) \
 	((buf) == (screen)->saveBuf_index && \
@@ -323,8 +327,9 @@ allocScrnData(TScreen * screen, unsigned nrow, unsigned ncol)
     size_t length;
 
     AlignValue(ncol);
-    length = (nrow * sizeofScrnRow(screen, ncol));
-    if ((result = (Char *) calloc(length, sizeof(Char))) == 0)
+    length = ((nrow + 1) * sizeofScrnRow(screen, ncol));
+    if (length == 0
+	|| (result = (Char *) calloc(length, sizeof(Char))) == 0)
 	SysError(ERROR_SCALLOC2);
 
     TRACE(("allocScrnData %ux%u -> %lu -> %p..%p\n",
@@ -442,10 +447,6 @@ Reallocate(XtermWidget xw,
 	return 0;
     }
 
-    if (screen->widestLine < ncol)
-	screen->widestLine = (Dimension) ncol;
-    ncol = screen->widestLine;
-
     oldBufData = *sbufaddr;
 
     TRACE(("Reallocate %dx%d -> %dx%d\n", oldrow, MaxCols(screen), nrow, ncol));
@@ -544,10 +545,6 @@ ReallocateBufOffsets(XtermWidget xw,
 
     assert(nrow != 0);
     assert(ncol != 0);
-
-    if (screen->widestLine < ncol)
-	screen->widestLine = (Dimension) ncol;
-    ncol = screen->widestLine;
 
     oldBufData = *sbufaddr;
     oldBufHead = *sbuf;
@@ -1865,7 +1862,9 @@ ScreenResize(XtermWidget xw,
 
     /* update buffers if the screen has changed size */
     if (MaxRows(screen) != rows || MaxCols(screen) != cols) {
+#if !OPT_SAVE_LINES
 	int whichBuf = 0;
+#endif
 	int delta_rows = rows - MaxRows(screen);
 #if OPT_TRACE
 	int delta_cols = cols - MaxCols(screen);
@@ -2124,8 +2123,10 @@ ScreenResize(XtermWidget xw,
 		screen->cursorp.row += move_down_by;
 		ScrollSelection(screen, move_down_by, True);
 
+#if !OPT_SAVE_LINES
 		if (whichBuf)
 		    SwitchBufPtrs(screen, whichBuf);	/* put the pointers back */
+#endif
 	    }
 	}
 
@@ -2881,7 +2882,7 @@ FullScreen(XtermWidget xw, int new_ewmh_mode)
 
     TRACE(("FullScreen %d:%s\n", new_ewmh_mode, BtoS(new_ewmh_mode)));
 
-    if (new_ewmh_mode < 0 || new_ewmh_mode > MAX_EWMH_MODE) {
+    if (new_ewmh_mode < 0 || new_ewmh_mode >= MAX_EWMH_MODE) {
 	TRACE(("BUG: FullScreen %d\n", new_ewmh_mode));
 	return;
     } else if (new_ewmh_mode == 0) {
