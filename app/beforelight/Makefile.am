@@ -1,4 +1,4 @@
-# $Id: Makefile.am,v 1.5 2010/10/31 17:37:08 matthieu Exp $
+# $Id: Makefile.am,v 1.6 2013/03/09 14:59:44 matthieu Exp $
 # 
 #  Copyright 2005  Red Hat, Inc.
 # 
@@ -20,16 +20,14 @@
 #  TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 #  PERFORMANCE OF THIS SOFTWARE.
 
+SUBDIRS = man
 bin_PROGRAMS = beforelight
 
-AM_CFLAGS = $(BEFORELIGHT_CFLAGS) $(XAW_CFLAGS) $(CWARNFLAGS)
+AM_CFLAGS = $(BEFORELIGHT_CFLAGS) $(CWARNFLAGS)
 beforelight_LDADD = $(BEFORELIGHT_LIBS)
 
 beforelight_SOURCES =	\
         b4light.c
-
-appman_PRE = \
-        beforelight.man
 
 # App default files
 
@@ -40,20 +38,7 @@ appdefaultdir = @appdefaultdir@
 dist_appdefault_DATA = \
         app-defaults/Beforelight
 
-appmandir = $(APP_MAN_DIR)
-
-appman_DATA = $(appman_PRE:man=@APP_MAN_SUFFIX@)
-
-EXTRA_DIST = $(appman_PRE)
 MAINTAINERCLEANFILES = ChangeLog INSTALL
-CLEANFILES = $(appman_DATA)
-
-SUFFIXES = .$(APP_MAN_SUFFIX) .man
-
-# String replacements in MAN_SUBSTS now come from xorg-macros.m4 via configure
-.man.$(APP_MAN_SUFFIX):
-	$(AM_V_GEN)$(SED) $(MAN_SUBSTS) < $< > $@
-
 
 .PHONY: ChangeLog INSTALL
 

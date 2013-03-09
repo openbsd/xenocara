@@ -34,12 +34,16 @@ in this Software without prior written authorization from the X Consortium.
 #include <X11/Shell.h>
 #ifdef NOTDEF
 #include <X11/Xaw/Label.h>
-#endif
 #include <X11/Xaw/Cardinals.h>
+#endif
 #include <X11/extensions/scrnsaver.h>
 #include <X11/Xcms.h>
 #include <stdlib.h>
 #include <time.h>
+
+#ifndef ZERO
+# define ZERO ((Cardinal)0)
+#endif
 
 #ifdef NOTDEF
 static void quit (Widget w, XEvent *event, 

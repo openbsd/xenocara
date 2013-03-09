@@ -1,3 +1,83 @@
+commit 86bbd2205a3372c7803bb803723a72ff9a62f3f4
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Jan 14 21:21:59 2013 -0800
+
+    beforelight 1.0.5
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 924b1b832a81d80bc9c3e6470b221c30cbee8652
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Jan 14 21:21:23 2013 -0800
+
+    Remove Xaw mention from README
+    
+    Dependency was removed by commit 3c9e50cb0bf42f42f
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 4cf3c0b07014e540a3508b570c6fc5556d4e2a3a
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Jan 14 21:19:47 2013 -0800
+
+    config: Add missing AC_CONFIG_SRCDIR
+    
+    Regroup AC statements under the Autoconf initialization section.
+    Regroup AM statements under the Automake initialization section.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 3c9e50cb0bf42f42f0be460e89045257c7efc480
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Jan 24 22:55:18 2011 -0800
+
+    Remove dependency on libXaw
+    
+    The only thing from libXaw that isn't in #ifdef NOTDEF is a reference
+    to the ZERO #define, which is trivially replaced - no point requiring
+    an entire library for a single constant #define.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit cff32361b4a901a131b23c01f7592779358f4141
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jan 19 10:06:55 2011 -0500
+
+    config: move man pages into their own directory
+    
+    Use services provided by XORG_MANPAGE_SECTIONS.
+    Use standard Makefile for man pages.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 77c2eaa749deacd6d4296267c099758d2d5cdba9
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Jan 13 11:15:00 2011 -0500
+
+    man: remove trailing spaces and tabs
+    
+    Using s/[ \t]*$//
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 7bcdfdc93d0f1cdde484240ddc5ec147bba5f80c
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jan 12 16:28:01 2011 -0500
+
+    config: replace deprecated AM_CONFIG_HEADER with AC_CONFIG_HEADERS
+    
+    This silences an Autoconf warning
+
+commit 6f581e0ce065ee09ddec79c3d346e3642128e721
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jan 12 15:29:49 2011 -0500
+
+    config: replace deprecated AC_HELP_STRING with AS_HELP_STRING
+    
+    This silences an Automake warning.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
 commit bbbf430d5a41fcecfe245a5d82f026afb0696f87
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Sat Oct 30 12:12:39 2010 -0700
