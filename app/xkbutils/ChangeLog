@@ -1,3 +1,206 @@
+commit 34efe0c4ec0d0e93e044448baabbdaa6d46e7415
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Feb 10 15:46:54 2013 -0800
+
+    xkbutils 1.0.4
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit ff8ee7eeee694476140fe51fc0a47f9c694c5541
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jan 12 22:06:03 2013 -0800
+
+    Declare bit to shift as unsigned to clear compiler warning
+    
+    "xkbvleds.c", line 343: warning: integer overflow detected: op "<<"
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 10105c373b973ef73b8ab19ee62fc152b7230da2
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jan 12 22:00:30 2013 -0800
+
+    Add -version flags to all three commands
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 5a4bb361aa2247c552f807f162a9fd0e60305ec4
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jan 12 21:33:23 2013 -0800
+
+    Combine usage message strings/calls
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 7a588b73582cb178acdb6c6b578d87f98cebfec9
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jan 12 21:11:08 2013 -0800
+
+    Delete more unused macros from utils.h
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 9fbe47e349fb261a3845c3c74f8832dbadfdbe8d
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jan 12 21:02:39 2013 -0800
+
+    Remove unused u*alloc functions from utils.c
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit c968ddd21a83f64c5bbe26b1b3adbfcfd3d04ff7
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jan 12 20:45:14 2013 -0800
+
+    Remove unused uStringDup function
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit eeb4cc1251c01fe9d8097224a780c18a3b35b5d0
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jan 12 20:41:30 2013 -0800
+
+    Make configure actually check for strcasecmp
+    
+    utils.h & utils.c had #ifdefs to check for it, and only define their
+    fallback if HAVE_STRCASECMP was not defined, but we never defined it.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 2c4d682b6afcfbddb70690efd7536afb98f9a97e
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jan 12 19:42:23 2013 -0800
+
+    Remove unused debug & function tracing infrastructure from utils.c
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 4c516e1b0ad66586e3f770d988de775481482e1a
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jan 12 19:36:43 2013 -0800
+
+    Mark uFatalError as _X_NORETURN
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit b33ad85fe9190d2ddbddb3422cc06a5a36c0cde6
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jan 12 19:33:36 2013 -0800
+
+    Add printf attributes to utils.c printing functions
+    
+    Doesn't find any problems, but clears -Wmissing-format-attribute warnings
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit b93888eb689485d9899cbf7c224b20d68968e857
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jan 12 19:28:11 2013 -0800
+
+    Declare utils.c functions as taking const char * arguments
+    
+    Clears dozens of const string warnings from gcc.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 0ba7294e8e5ca61b03ef7c76da7d381e93eaf937
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jan 12 19:13:28 2013 -0800
+
+    config: Add missing AC_CONFIG_SRCDIR
+    
+    Regroup AC statements under the Autoconf initialization section.
+    Regroup AM statements under the Automake initialization section.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 50a779c50b1303baa6bcea91d00da176a77431f5
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jan 12 19:11:25 2013 -0800
+
+    unifdef CRAY
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 1c18ce20a45f5cf66ace8d0ade1fa76c032c0f9f
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jan 12 19:06:49 2013 -0800
+
+    Remove unused streq() macro
+    
+    LED.c:37:9: warning: macro is not used [-Wunused-macros]
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 4b3f2f1b71188344fe2e313de6a53a702ab37bb1
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jan 12 18:56:20 2013 -0800
+
+    Remove unused #ifdef notyet typedef
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 8d68ee228a0031f367cd3edef9d6f9dace984cc6
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jan 12 18:55:16 2013 -0800
+
+    Remove CVS version tags
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit fdbff6587f29048c85772f21d3647797f96d527f
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jan 12 18:53:47 2013 -0800
+
+    Convert to X.Org standard coding style
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit e3092ad9d9742630aa34044c7a37802ccfc6ee61
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Sat May 7 21:41:13 2011 -0700
+
+    Fix typo in SetValues which could fail to detect a change if only width/height changed
+    
+    LED.c:249:25: warning: Both operands to '!=' always have the same value
+            || curlw->core.height           != curlw->core.height) {
+               ~~~~~~~~~~~~~~~~~~           ^  ~~~~~~~~~~~~~~~~~~
+    LED.c:248:24: warning: Both operands to '!=' always have the same value
+            || curlw->core.width            != curlw->core.width
+               ~~~~~~~~~~~~~~~~~            ^  ~~~~~~~~~~~~~~~~~
+    
+    Found-by: clang static analyzer
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit 01ee88f0c5e66bde5fed99c520e3bdc679740b96
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jan 19 10:06:56 2011 -0500
+
+    config: move man pages into their own directory
+    
+    Use services provided by XORG_MANPAGE_SECTIONS.
+    Use standard Makefile for man pages.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 3e4ab9da78e921bcad36ca2e96cffaafa0866472
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Jan 13 11:15:47 2011 -0500
+
+    man: remove trailing spaces and tabs
+    
+    Using s/[ \t]*$//
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit a178a34f95c5ce7986a129df48a698f5545c6d01
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jan 12 16:28:02 2011 -0500
+
+    config: replace deprecated AM_CONFIG_HEADER with AC_CONFIG_HEADERS
+    
+    This silences an Autoconf warning
+
 commit 820d9be7cf4e501c931c4e31b38ddd2d55209ce2
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Sat Oct 30 10:14:38 2010 -0700

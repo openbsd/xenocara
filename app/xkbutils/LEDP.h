@@ -1,4 +1,3 @@
-/* $Xorg: LEDP.h,v 1.3 2000/08/17 19:54:51 cpqbld Exp $ */
 /************************************************************
  Copyright (c) 1995 by Silicon Graphics Computer Systems, Inc.
 
@@ -32,13 +31,15 @@
 
 /* New fields for the Label widget class record */
 
-typedef struct {int foo;} LEDClassPart;
+typedef struct {
+    int foo;
+} LEDClassPart;
 
 /* Full class record declaration */
 typedef struct _LEDClassRec {
-    CoreClassPart	core_class;
-    SimpleClassPart	simple_class;
-    LEDClassPart	led_class;
+    CoreClassPart       core_class;
+    SimpleClassPart     simple_class;
+    LEDClassPart        led_class;
 } LEDClassRec;
 
 extern LEDClassRec ledClassRec;
@@ -46,18 +47,18 @@ extern LEDClassRec ledClassRec;
 /* New fields for the LED widget record */
 typedef struct {
     /* resources */
-    Pixel	foreground;
-    Pixel	on_color;
-    Pixel	off_color;
-    Pixel	top_color;
-    Pixel	bottom_color;
-    Dimension	bevel;
-    Dimension	led_width;
-    Dimension	led_height;
-    Boolean	on;
+    Pixel       foreground;
+    Pixel       on_color;
+    Pixel       off_color;
+    Pixel       top_color;
+    Pixel       bottom_color;
+    Dimension   bevel;
+    Dimension   led_width;
+    Dimension   led_height;
+    Boolean     on;
 
     /* private state */
-    Pixmap	on_pixmap;
+    Pixmap      on_pixmap;
     Pixmap      off_pixmap;
 } LEDPart;
 
@@ -68,9 +69,9 @@ typedef struct {
  ****************************************************************/
 
 typedef struct _LEDRec {
-    CorePart	core;
-    SimplePart	simple;
-    LEDPart	led;
+    CorePart    core;
+    SimplePart  simple;
+    LEDPart     led;
 } LEDRec;
 
-#endif /* _XawLEDP_h */
+#endif                          /* _XawLEDP_h */

@@ -23,19 +23,19 @@
 xkbvleds \- XKB extension user utility
 .SH SYNOPSIS
 .B xkbvleds
-[\-indpy <name>]   
-[\-watch <leds>]   
-[[\-+]automatic]    
-[[\-+]explicit]     
-[[\-+]name]         
-[[\-+]real]         
-[[\-+]virtual]      
-[\-intersection]   
-[\-union]          
+[\-indpy <name>]
+[\-watch <leds>]
+[[\-+]automatic]
+[[\-+]explicit]
+[[\-+]name]
+[[\-+]real]
+[[\-+]virtual]
+[\-intersection]
+[\-union]
 .SH DESCRIPTION
 This program is used to display the state of LEDs on an XKB keyboard.
-It reports the changes in the fundamental components of the XKB state 
-which includes the effective compatibility state. The default set of LEDs 
+It reports the changes in the fundamental components of the XKB state
+which includes the effective compatibility state. The default set of LEDs
 is \-union +name +automatic +real.
 .SH OPTIONS
 .PP
@@ -63,7 +63,7 @@ turn on synchronization
 (Don't) watch real LEDs
 .PP
 .TP 8
-.B \[-+]virtual 
+.B \[-+]virtual
 (Don't) watch virtual LEDs
 .PP
 .TP 8
@@ -73,5 +73,11 @@ Watch only LEDs in all desired sets
 .TP 8
 .B \-union
 Watch LEDs in any desired sets
-
-
+.PP
+.TP 8
+.B \-help
+print list of options and exit
+.PP
+.TP 8
+.B \-version
+print program version and exit

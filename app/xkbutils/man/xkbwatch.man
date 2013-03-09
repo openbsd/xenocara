@@ -18,58 +18,19 @@
 .\" LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 .\" FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 .\" DEALINGS IN THE SOFTWARE.
-.TH xkbbell  __appmansuffix__ __xorgversion__
+.TH xkbwatch __appmansuffix__ __xorgversion__
 .SH NAME
-xkbbell - XKB extension user utility
-.SH SYNOPSIS
-.B xkbbell
-[-display <dpy>]
-[-synch]
-[-dev <id>]
-[-force]
-[-nobeep]
-[-bf <id>]
-[-kf <id>]
-[-v <volume>]
-[-w <id>]
+xkbwatch - XKB extension user utility
 .SH DESCRIPTION
-user utility
+This program reports changes in the fundamental components of the XKB keyboard
+state plus the effective compatibility state.
 .SH OPTIONS
-.PP
+.I Xkbwatch
+accepts all of the standard X Toolkit command line options along with the
+additional options listed below:
 .TP 8
-.B \-display <dpy>
-specifies which display to use
-.TP 8
-.B \-synch
-turns on synchronization
-.PP
-.TP 8
-.B \-dev <id>
-specifies which device to use
-.PP
-.TP 8
-.B \-force
-force audible bell
-.PP
-.TP 8
-.B \-nobeep
-suppress server bell, event only
-.PP
-.TP 8
-.B \-bf <id>
-specifies which bell feedback to use
-.PP
-.TP 8
-.B \-kf <id> 
-specifies which keyboard feedback to use
-.PP
-.TP 8
-.B \-v <volume>
-specifies which volume to use
-.PP
-.TP 8
-.B \-w <id>
-specifies which  window to use
-.PP
-If neither device nor feedback are specified, xkbbell uses the default values 
-for the core keyboard device.
+.B \-version
+This option indicates that the program version should be printed, after
+which the program exits.
+.SH "SEE ALSO"
+X(__miscmansuffix__)

@@ -19,6 +19,7 @@
 #  TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 #  PERFORMANCE OF THIS SOFTWARE.
 
+SUBDIRS = man
 bin_PROGRAMS = xkbvleds xkbwatch xkbbell
 
 AM_CFLAGS = $(CWARNFLAGS)
@@ -43,22 +44,7 @@ xkbwatch_SOURCES = xkbwatch.c LED.c LED.h LEDP.h utils.c utils.h
 xkbwatch_CFLAGS = $(XKBWATCH_CFLAGS) $(AM_CFLAGS)
 xkbwatch_LDADD = $(XKBWATCH_LIBS)
 
-# Man pages
-appman_PRE = xkbbell.man xkbvleds.man xkbwatch.man  
-
-appmandir = $(APP_MAN_DIR)
-
-appman_DATA = $(appman_PRE:man=@APP_MAN_SUFFIX@)
-
-EXTRA_DIST = $(appman_PRE) 
 MAINTAINERCLEANFILES = ChangeLog INSTALL
-CLEANFILES = $(appman_DATA)
-
-SUFFIXES = .$(APP_MAN_SUFFIX) .man
-
-# String replacements in MAN_SUBSTS now come from xorg-macros.m4 via configure
-.man.$(APP_MAN_SUFFIX):
-	$(AM_V_GEN)$(SED) $(MAN_SUBSTS) < $< > $@
 
 .PHONY: ChangeLog INSTALL
 

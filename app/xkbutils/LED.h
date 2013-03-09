@@ -1,4 +1,3 @@
-/* $Xorg: LED.h,v 1.3 2000/08/17 19:54:51 cpqbld Exp $ */
 /************************************************************
  Copyright (c) 1995 by Silicon Graphics Computer Systems, Inc.
 
@@ -92,6 +91,7 @@
 extern WidgetClass ledWidgetClass;
 
 typedef struct _LEDClassRec *LEDWidgetClass;
-typedef struct _LEDRec      *LEDWidget;
 
-#endif /* _XawLED_h */
+typedef struct _LEDRec *LEDWidget;
+
+#endif                          /* _XawLED_h */
