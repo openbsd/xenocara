@@ -269,9 +269,9 @@ DoSave(int saveType, int interactStyle, Bool fast)
 {
     ClientRec	*client;
     List	*cl;
-    char	*_saveType;
-    char	*_shutdown;
-    char	*_interactStyle;
+    const char	*_saveType;
+    const char	*_shutdown;
+    const char	*_interactStyle;
 
     if (saveType == SmSaveLocal)
 	_saveType = "Local";
@@ -420,7 +420,7 @@ SaveOkXtProc(Widget w, XtPointer client_data, XtPointer callData)
 	    {
 		name_locked = False;
 
-		sprintf (label, "Another session by the name '%s' already exists.\nWould you like to overwrite it?", name);
+		snprintf (label, sizeof(label), "Another session by the name '%s' already exists.\nWould you like to overwrite it?", name);
 
 		XtManageChild (nameInUseOverwriteButton);
 
@@ -1314,9 +1314,6 @@ PopupBadSave(void)
 	extra1 = maxlen1 - strlen (progName) + 5;
 	extra2 = maxlen2 - strlen (hostname);
 
-	clientInfo = (String) XtMalloc (strlen (progName) +
-	    extra1 + extra2 + 3 + strlen (hostname) + 1);
-
 	for (k = 0; k < extra1; k++)
 	    extraBuf1[k] = ' ';
 	extraBuf1[extra1] = '\0';
@@ -1325,7 +1322,7 @@ PopupBadSave(void)
 	    extraBuf2[k] = ' ';
 	extraBuf2[extra2] = '\0';
 
-	sprintf (clientInfo, "%s%s (%s%s)", progName, extraBuf1,
+	XtAsprintf (&clientInfo, "%s%s (%s%s)", progName, extraBuf1,
 	    hostname, extraBuf2);
 
 	failedNames[i++] = clientInfo;

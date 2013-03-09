@@ -28,7 +28,7 @@ in this Software without prior written authorization from The Open Group.
 #include "xsm.h"
 
 
-#ifdef NOPUTENV
+#ifndef HAVE_PUTENV
 /*
  * define our own putenv() if the system doesn't have one.
  * putenv(s): place s (a string of the form "NAME=value") in
@@ -95,7 +95,7 @@ putenv(char *s)
 
 
 int
-strbw(char *a, char *b)
+strbw(const char *a, const char *b)
 {
     return !strncmp (a, b, strlen (b));
 }
@@ -111,7 +111,7 @@ System(char *s)
     int pid, status;
     if ((pid = fork ()) == 0) {
 	(void) setpgrp();
-	execl ("/bin/sh", "sh", "-c", s, 0);
+	execl ("/bin/sh", "sh", "-c", s, NULL);
     } else
 	waitpid (pid, &status, 0);
     return status;

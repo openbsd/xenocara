@@ -30,7 +30,7 @@ in this Software without prior written authorization from The Open Group.
 #include <X11/ICE/ICEutil.h>
 #include "auth.h"
 
-#ifdef HAS_MKSTEMP
+#ifdef HAVE_MKSTEMP
 #include <unistd.h>
 #endif
 #include <sys/types.h>
@@ -80,15 +80,15 @@ write_iceauth(FILE *addfp, FILE *removefp, IceAuthDataEntry *entry)
 
 
 
-#ifndef HAS_MKSTEMP
+#ifndef HAVE_MKSTEMP
 static char *
-unique_filename(char *path, char *prefix)
+unique_filename(const char *path, const char *prefix)
 #else
 static char *
-unique_filename(char *path, char *prefix, int *pFd)
+unique_filename(const char *path, const char *prefix, int *pFd)
 #endif
 {
-#ifndef HAS_MKSTEMP
+#ifndef HAVE_MKSTEMP
 #ifndef X_NOT_POSIX
     return ((char *) tempnam (path, prefix));
 #else
@@ -133,24 +133,24 @@ SetAuthentication(int count, IceListenObj *listenObjs,
 {
     FILE	*addfp = NULL;
     FILE	*removefp = NULL;
-    char	*path;
-    int		original_umask;
+    const char	*path;
+    mode_t	original_umask;
     char	command[256];
     int		i;
-#ifdef HAS_MKSTEMP
+#ifdef HAVE_MKSTEMP
     int         fd;
 #endif
 
     original_umask = umask (0077);	/* disallow non-owner access */
 
-    path = (char *) getenv ("SM_SAVE_DIR");
+    path = getenv ("SM_SAVE_DIR");
     if (!path)
     {
-	path = (char *) getenv ("HOME");
+	path = getenv ("HOME");
 	if (!path)
 	    path = ".";
     }
-#ifndef HAS_MKSTEMP
+#ifndef HAVE_MKSTEMP
     if ((addAuthFile = unique_filename (path, ".xsm")) == NULL)
 	goto bad;
 

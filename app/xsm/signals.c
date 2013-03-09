@@ -88,7 +88,7 @@ in this Software without prior written authorization from The Open Group.
 #define USE_SYSV_SIGNALS
 #endif
 
-#if defined(SCO) || defined(ISC)
+#if defined(SCO)
 #undef SIGTSTP			/* defined, but not the BSD way */
 #endif
 

@@ -145,7 +145,7 @@ Restart(int flag)
     List 	*cl, *pl, *vl;
     PendingClient *c;
     Prop 	*prop;
-    char	*cwd;
+    const char	*cwd;
     char	*program;
     char	**args;
     char	**env;
@@ -338,7 +338,7 @@ Restart(int flag)
 void
 Clone(ClientRec *client, Bool useSavedState)
 {
-    char	*cwd;
+    const char	*cwd;
     char	*program;
     char	**args;
     char	**env;
@@ -518,14 +518,15 @@ void
 StartDefaultApps (void)
 {
     FILE *f;
-    char *buf, *p, *home, filename[128];
+    char *buf, *p, filename[128];
+    const char *home;
     int buflen, len;
 
     /*
      * First try ~/.xsmstartup, then system.xsm
      */
 
-    home = (char *) getenv ("HOME");
+    home = getenv ("HOME");
     if (!home)
 	home = ".";
     snprintf (filename, sizeof(filename), "%s/.xsmstartup", home);

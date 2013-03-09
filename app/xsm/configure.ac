@@ -21,13 +21,16 @@ dnl  PERFORMANCE OF THIS SOFTWARE.
 dnl
 dnl Process this file with autoconf to create configure.
 
+# Initialize Autoconf
 AC_PREREQ([2.60])
-AC_INIT([xsm], [1.0.2],
+AC_INIT([xsm], [1.0.3],
 	[https://bugs.freedesktop.org/enter_bug.cgi?product=xorg], [xsm])
+AC_CONFIG_SRCDIR([Makefile.am])
+AC_CONFIG_HEADERS([config.h])
+
+# Initialize Automake
 AM_INIT_AUTOMAKE([foreign dist-bzip2])
 AM_MAINTAINER_MODE
-
-AM_CONFIG_HEADER(config.h)
 
 # Require X.Org macros 1.8 or later for MAN_SUBSTS set by XORG_MANPAGE_SECTIONS
 m4_ifndef([XORG_MACROS_VERSION],
@@ -42,20 +45,20 @@ AC_ARG_WITH(rsh, AS_HELP_STRING([--with-rsh=PATH],
 RSH=$rsh
 AC_SUBST(RSH)
 
-AC_CHECK_FUNC([mkstemp], 
-   AC_DEFINE(HAS_MKSTEMP,1,[Define to 1 if you have the 'mkstemp' function.]))
-AC_CHECK_FUNC([putenv], [],
-   AC_DEFINE(NOPUTENV,1,[Define to 1 if you DO NOT have the 'putenv' function.]))
+AC_CHECK_FUNCS([mkstemp putenv])
 
 # Checks for pkg-config packages
-PKG_CHECK_MODULES(XSM, x11 xt ice sm xaw7)
+PKG_CHECK_MODULES(XSM, [x11 xt > 1.0.99 ice sm xaw7])
 
 xt_appdefaultdir=`$PKG_CONFIG --variable=appdefaultdir xt`
 AC_ARG_WITH(appdefaultdir,
-	AC_HELP_STRING([--with-appdefaultdir=<pathname>],
+	AS_HELP_STRING([--with-appdefaultdir=<pathname>],
 	  [specify directory for app-defaults files (default is autodetected)]),
 	[appdefaultdir="$withval"], [appdefaultdir="${xt_appdefaultdir}"])
 AC_SUBST(appdefaultdir)
 
 
-AC_OUTPUT([Makefile])
+AC_CONFIG_FILES([
+	Makefile
+	man/Makefile])
+AC_OUTPUT

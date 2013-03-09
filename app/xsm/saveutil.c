@@ -34,14 +34,14 @@ static char 		 session_save_file[PATH_MAX];
 
 
 void
-set_session_save_file_name(char *session_name)
+set_session_save_file_name(const char *session_name)
 {
-    char *p;
+    const char *p;
 
-    p = (char *) getenv ("SM_SAVE_DIR");
+    p = getenv ("SM_SAVE_DIR");
     if (!p)
     {
-	p = (char *) getenv ("HOME");
+	p = getenv ("HOME");
 	if (!p)
 	    p = ".";
     }
@@ -53,7 +53,7 @@ set_session_save_file_name(char *session_name)
 
 
 int
-ReadSave(char *session_name, char **sm_id)
+ReadSave(const char *session_name, char **sm_id)
 {
     char		*buf;
     int			buflen;
@@ -297,7 +297,7 @@ SaveClient(FILE *f, ClientRec *client)
 
 
 void
-WriteSave(char *sm_id)
+WriteSave(const char *sm_id)
 {
     ClientRec *client;
     FILE *f;
@@ -405,21 +405,22 @@ WriteSave(char *sm_id)
 
 
 Status
-DeleteSession(char *session_name)
+DeleteSession(const char *session_name)
 {
     char	*buf;
     int		buflen;
-    char	*p, *dir;
+    char	*p;
+    const char	*dir;
     FILE	*f;
     int		state;
     int		foundDiscard;
     char	filename[256];
     int		version_number;
 
-    dir = (char *) getenv ("SM_SAVE_DIR");
+    dir = getenv ("SM_SAVE_DIR");
     if (!dir)
     {
-	dir = (char *) getenv ("HOME");
+	dir = getenv ("HOME");
 	if (!dir)
 	    dir = ".";
     }

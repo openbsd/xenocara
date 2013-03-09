@@ -257,9 +257,7 @@ main(int argc, char *argv[])
 
     /* the sizeof includes the \0, so we don't need to count the '=' */
     networkIds = IceComposeNetworkIdList (numTransports, listenObjs);
-    p = (char *) XtMalloc((sizeof environment_name) + strlen(networkIds) + 1);
-    if(!p) nomem();
-    sprintf(p, "%s=%s", environment_name, networkIds);
+    XtAsprintf(&p, "%s=%s", environment_name, networkIds);
     putenv(p);
 
     if (cmd_line_display)
@@ -270,8 +268,7 @@ main(int argc, char *argv[])
 	 * the session manager will run on the specified display.
 	 */
 
-	p = (char *) XtMalloc(8 + strlen(cmd_line_display) + 1);
-	sprintf(p, "DISPLAY=%s", cmd_line_display);
+	XtAsprintf(&p, "DISPLAY=%s", cmd_line_display);
 	putenv(p);
     }
 
@@ -402,7 +399,7 @@ PropertyChangeXtHandler(Widget w, XtPointer closure, XEvent *event,
 
 
 void
-SetWM_DELETE_WINDOW(Widget widget, String delAction)
+SetWM_DELETE_WINDOW(Widget widget, const _XtString delAction)
 {
     char translation[64];
 
@@ -428,9 +425,7 @@ GetEnvironment(void)
 
     display_env = NULL;
     if((p = cmd_line_display) || (p = (char *) getenv(envDISPLAY))) {
-	display_env = (char *) XtMalloc(strlen(envDISPLAY)+1+strlen(p)+1);
-	if(!display_env) nomem();
-	sprintf(display_env, "%s=%s", envDISPLAY, p);
+	XtAsprintf(&display_env, "%s=%s", envDISPLAY, p);
 
 	/*
 	 * When we restart a remote client, we have to make sure the
@@ -457,21 +452,14 @@ GetEnvironment(void)
 	    char hostnamebuf[256];
 
 	    gethostname (hostnamebuf, sizeof hostnamebuf);
-	    non_local_display_env = (char *) XtMalloc (
-		strlen (envDISPLAY) + 1 +
-		strlen (hostnamebuf) + strlen (temp) + 1);
-	    if (!non_local_display_env) nomem();
-	    sprintf(non_local_display_env, "%s=%s%s",
+	    XtAsprintf(&non_local_display_env, "%s=%s%s",
 		envDISPLAY, hostnamebuf, temp);
 	}
     }
 
     session_env = NULL;
     if((p = (char *) getenv(envSESSION_MANAGER))) {
-	session_env = (char *) XtMalloc(
-	    strlen(envSESSION_MANAGER)+1+strlen(p)+1);
-	if(!session_env) nomem();
-	sprintf(session_env, "%s=%s", envSESSION_MANAGER, p);
+	XtAsprintf(&session_env, "%s=%s", envSESSION_MANAGER, p);
 
 	/*
 	 * When we restart a remote client, we have to make sure the
@@ -507,9 +495,7 @@ GetEnvironment(void)
 
     audio_env = NULL;
     if((p = (char *) getenv(envAUDIOSERVER))) {
-	audio_env = (char *) XtMalloc(strlen(envAUDIOSERVER)+1+strlen(p)+1);
-	if(!audio_env) nomem();
-	sprintf(audio_env, "%s=%s", envAUDIOSERVER, p);
+	XtAsprintf(&audio_env, "%s=%s", envAUDIOSERVER, p);
     }
 }
 
@@ -1204,7 +1190,7 @@ NewClientProc(SmsConn smsConn, SmPointer managerData, unsigned long *maskRet,
 
     if (!newClient)
     {
-	char *str = "Memory allocation failed";
+	const char *str = "Memory allocation failed";
 
 	if ((*failureReasonRet = (char *) XtMalloc (strlen (str) + 1)) != NULL)
 	    strcpy (*failureReasonRet, str);

@@ -36,6 +36,6 @@ from The Open Group.
 
 extern void PopupPopup(Widget parent, Widget popup, Bool transient, 
 		       Bool first_time, int offset_x, int offset_y, 
-		       String delAction);
+		       const _XtString delAction);
 
 #endif

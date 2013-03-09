@@ -36,7 +36,7 @@ from The Open Group.
 
 void
 PopupPopup(Widget parent, Widget popup, Bool transient, Bool first_time,
-    int offset_x, int offset_y, String delAction)
+    int offset_x, int offset_y, const _XtString delAction)
 {
     if (!transient && !first_time)
     {

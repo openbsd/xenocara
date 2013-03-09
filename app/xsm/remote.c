@@ -36,9 +36,10 @@ static char 		*format_rstart_env(char *str);
 
 
 void
-remote_start(char *restart_protocol, char *restart_machine, char *program, 
-	     char **args, char *cwd, char **env,
-	     char *non_local_display_env, char *non_local_session_env)
+remote_start(const char *restart_protocol, const char *restart_machine,
+	     const char *program, char **args, const char *cwd,
+	     char **env, const char *non_local_display_env,
+	     const char *non_local_session_env)
 {
     FILE *fp;
     int	 pipefd[2];

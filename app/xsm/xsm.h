@@ -195,34 +195,31 @@ extern XtSignalId	sig_term_id, sig_usr1_id;
 extern void fprintfhex(FILE *fp, unsigned int len, char *cp);
 extern Status StartSession(char *name, Bool use_default);
 extern void EndSession(int status);
-extern void SetWM_DELETE_WINDOW(Widget widget, String delAction);
+extern void SetWM_DELETE_WINDOW(Widget widget, const _XtString delAction);
 extern void SetAllSensitive(Bool on);
 extern void FreeClient(ClientRec *client, Bool freeProps);
 extern void CloseDownClient(ClientRec *client);
 
 
 /* misc.c */
-extern int strbw(char *a, char *b);
+extern int strbw(const char *a, const char *b);
 extern void nomem(void);
 
 
 #define Strstr strstr
 
-/* Fix ISC brain damage.  When using gcc fdopen isn't declared in <stdio.h>. */
-#if defined(ISC) && __STDC__
-extern FILE *fdopen(int, char const *);
-#endif
-
 #if defined(sun) && defined(SVR4)
-extern int System();
+extern int System(char *s);
 #define system(s) System(s)
 #endif
 
 /* remote.c */
-extern void remote_start(char *restart_protocol, char *restart_machine, 
-			 char *program, char **args, char *cwd, char **env, 
-			 char *non_local_display_env, 
-			 char *non_local_session_env );
+extern void remote_start(const char *restart_protocol,
+			 const char *restart_machine,
+			 const char *program, char **args,
+			 const char *cwd, char **env,
+			 const char *non_local_display_env,
+			 const char *non_local_session_env );
 
 /* signals.c */
 extern void sig_child_handler(int sig);

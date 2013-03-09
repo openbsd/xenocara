@@ -30,10 +30,10 @@ in this Software without prior written authorization from The Open Group.
 
 #include <stdio.h>
 
-extern void set_session_save_file_name(char *session_name);
-extern int ReadSave(char *session_name, char **sm_id);
-extern void WriteSave(char *sm_id);
-extern Status DeleteSession(char *session_name);
+extern void set_session_save_file_name(const char *session_name);
+extern int ReadSave(const char *session_name, char **sm_id);
+extern void WriteSave(const char *sm_id);
+extern Status DeleteSession(const char *session_name);
 extern Bool getnextline(char **pbuf, int *plen, FILE *f);
 
 #endif

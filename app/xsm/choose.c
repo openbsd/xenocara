@@ -78,13 +78,13 @@ GetSessionNames(int *count_ret, String **short_names_ret,
 {
     DIR *dir;
     struct dirent *entry;
-    char *path;
+    const char *path;
     int count;
 
-    path = (char *) getenv ("SM_SAVE_DIR");
+    path = getenv ("SM_SAVE_DIR");
     if (!path)
     {
-	path = (char *) getenv ("HOME");
+	path = getenv ("HOME");
 	if (!path)
 	    path = ".";
     }
@@ -145,6 +145,7 @@ GetSessionNames(int *count_ret, String **short_names_ret,
 		{
 		    char *host = ((char *) strchr (id, '/')) + 1;
 		    char *colon = (char *) strrchr (host, ':');
+		    char *lockmsg;
 
 		    /* backtrack over previous colon if there are 2 (DECnet),
 		       but not three (IPv6) */
@@ -153,11 +154,8 @@ GetSessionNames(int *count_ret, String **short_names_ret,
 
 		    *colon = '\0';
 
-		    (*long_names_ret)[*count_ret] =
-		        XtMalloc (strlen (name) + strlen (host) + 14);
-
-		    sprintf ((*long_names_ret)[*count_ret],
-		        "%s (locked at %s)", name, host);
+		    XtAsprintf (&lockmsg, "%s (locked at %s)", name, host);
+		    (*long_names_ret)[*count_ret] = lockmsg;
 		    *colon = ':';
 
 		    XtFree (id);

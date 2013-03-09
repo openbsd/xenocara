@@ -26,7 +26,7 @@ in this Software without prior written authorization from The Open Group.
 
 #include "xsm.h"
 
-static char *hex_table[] = {		/* for printing hex digits */
+static const char *hex_table[] = {		/* for printing hex digits */
     "00", "01", "02", "03", "04", "05", "06", "07", 
     "08", "09", "0a", "0b", "0c", "0d", "0e", "0f", 
     "10", "11", "12", "13", "14", "15", "16", "17", 
@@ -69,7 +69,7 @@ fprintfhex(register FILE *fp, unsigned int len, char *cp)
 
     for (; len > 0; len--, ucp++)
     {
-	register char *s = hex_table[*ucp];
+	register const char *s = hex_table[*ucp];
 	putc (s[0], fp);
 	putc (s[1], fp);
     }
