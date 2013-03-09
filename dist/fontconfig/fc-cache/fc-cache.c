@@ -65,6 +65,7 @@
 #define _GNU_SOURCE
 #include <getopt.h>
 const struct option longopts[] = {
+    {"chroot", 0, 0, 'c'},
     {"force", 0, 0, 'f'},
     {"really-force", 0, 0, 'r'},
     {"system-only", 0, 0, 's'},
@@ -273,16 +274,20 @@ main (int argc, char **argv)
     int		i;
     int		changed;
     int		ret;
+    char        *destdir = NULL;
 #if HAVE_GETOPT_LONG || HAVE_GETOPT
     int		c;
 
 #if HAVE_GETOPT_LONG
-    while ((c = getopt_long (argc, argv, "frsVvh", longopts, NULL)) != -1)
+    while ((c = getopt_long (argc, argv, "c:frsVvh", longopts, NULL)) != -1)
 #else
-    while ((c = getopt (argc, argv, "frsVvh")) != -1)
+    while ((c = getopt (argc, argv, "c:frsVvh")) != -1)
 #endif
     {
 	switch (c) {
+	case 'c':
+	    destdir = optarg;
+	    break;
 	case 'r':
 	    really_force = FcTrue;
 	    /* fall through */
@@ -309,7 +314,14 @@ main (int argc, char **argv)
 #else
     i = 1;
 #endif
-
+    if (destdir) {
+	if (chroot(destdir) == -1) {
+	    fprintf(stderr, "%s: Can't chroot to %s: %s\n", argv[0], destdir,
+		    strerror(errno));
+	    return 1;
+	}
+	systemOnly = FcTrue;
+    }
     if (systemOnly)
 	FcConfigEnableHome (FcFalse);
     config = FcInitLoadConfig ();
