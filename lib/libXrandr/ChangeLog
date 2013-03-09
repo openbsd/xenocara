@@ -1,3 +1,48 @@
+commit 39976a7d1cc9e737e662695ae5326af805c50a27
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Thu Jul 26 14:15:18 2012 +1000
+
+    libXrandr: bump to 1.4.0 for release
+    
+    This adds support for the provider queries and events.
+    
+    Signed-off-by: Dave Airlie <airlied@redhat.com>
+
+commit 5d2edde0bf8460aab250dd83743aedb5c66a243e
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Fri Jan 20 17:40:10 2012 +0000
+
+    libXrandr: add support for provider objects.
+    
+    This adds the client side libXrandr support for randr 1.4,
+    and provider objects.
+    
+    Signed-off-by: Dave Airlie <airlied@redhat.com>
+
+commit a9457b44539420c0b7a082ef6ecc5fd3391e8801
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Tue Jul 27 17:47:12 2010 +0100
+
+    Fill in nameLen in XRROutputInfo
+    
+    Even though it probably makes more sense to just strlen() the name, for
+    some reason there's a nameLen field in XRROutputInfo, so might as well
+    actually fill it in.
+    
+    Signed-off-by: Daniel Stone <daniel@fooishbar.org>
+    Reported-by: Leif Middelschulte <leif.middelschulte@gmail.com>
+
+commit a0e20c08bbe18b41ea54c319bd83874b5a7f9788
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Sep 16 22:50:38 2011 -0700
+
+    Strip trailing whitespace
+    
+    Performed with: find * -type f | xargs perl -i -p -e 's{[ \t]+$}{}'
+    git diff -w & git diff -b show no diffs from this change
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit 754b492ddf490682c5fff2518a36d0afb5655a36
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Wed Jun 29 21:50:39 2011 -0700

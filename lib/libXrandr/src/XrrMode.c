@@ -62,9 +62,9 @@ XRRCreateMode (Display *dpy, Window window, XRRModeInfo *mode_info)
     req->reqType = info->codes->major_opcode;
     req->randrReqType = X_RRCreateMode;
     req->length += (mode_info->nameLength + 3) >> 2;
-    
+
     req->window = window;
-    
+
     req->modeInfo.id = 0;
     req->modeInfo.width = mode_info->width;
     req->modeInfo.height = mode_info->height;
@@ -78,7 +78,7 @@ XRRCreateMode (Display *dpy, Window window, XRRModeInfo *mode_info)
     req->modeInfo.vTotal = mode_info->vTotal;
     req->modeInfo.nameLength = mode_info->nameLength;
     req->modeInfo.modeFlags = mode_info->modeFlags;
-    
+
     Data (dpy, mode_info->name, mode_info->nameLength);
     if (!_XReply (dpy, (xReply *) &rep, 0, xFalse))
     {
@@ -86,7 +86,7 @@ XRRCreateMode (Display *dpy, Window window, XRRModeInfo *mode_info)
 	SyncHandle ();
 	return None;
     }
-    
+
     UnlockDisplay (dpy);
     SyncHandle ();
     return rep.mode;

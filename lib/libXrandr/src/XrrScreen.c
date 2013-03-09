@@ -66,7 +66,7 @@ doGetScreenResources (Display *dpy, Window window, int poll)
 	vreq->randrReqType = X_RRQueryVersion;
 	vreq->majorVersion = RANDR_MAJOR;
 	vreq->minorVersion = RANDR_MINOR;
-    
+
 	async_state.version_seq = dpy->request;
 	async_state.error = False;
 	async.next = dpy->async_handlers;
@@ -112,8 +112,8 @@ doGetScreenResources (Display *dpy, Window window, int poll)
 			 rep.nModes * SIZEOF (xRRModeInfo) +
 			 ((rep.nbytesNames + 3) & ~3));
 
-    /* 
-     * first we must compute how much space to allocate for 
+    /*
+     * first we must compute how much space to allocate for
      * randr library's use; we'll allocate the structures in a single
      * allocation, on cleanlyness grounds.
      */
@@ -147,10 +147,10 @@ doGetScreenResources (Display *dpy, Window window, int poll)
 
     _XRead32 (dpy, xrsr->crtcs, rep.nCrtcs << 2);
     _XRead32 (dpy, xrsr->outputs, rep.nOutputs << 2);
-    
+
     for (i = 0; i < rep.nModes; i++)  {
 	xRRModeInfo modeInfo;
-	
+
 	_XReadPad (dpy, (char *) &modeInfo, SIZEOF (xRRModeInfo));
 	xrsr->modes[i].id = modeInfo.id;
 	xrsr->modes[i].width = modeInfo.width;
@@ -180,13 +180,13 @@ doGetScreenResources (Display *dpy, Window window, int poll)
 	wire_name += xrsr->modes[i].nameLength;
     }
     Xfree (wire_names);
-    
+
     /*
      * Skip any extra data
      */
     if (nbytes > nbytesRead)
 	_XEatData (dpy, (unsigned long) (nbytes - nbytesRead));
-    
+
     UnlockDisplay (dpy);
     SyncHandle();
     return (XRRScreenResources *) xrsr;

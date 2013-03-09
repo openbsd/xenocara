@@ -82,7 +82,7 @@ Time XRRConfigTimes (XRRScreenConfiguration *config, Time *config_timestamp)
 }
 
 
-SizeID XRRConfigCurrentConfiguration (XRRScreenConfiguration *config, 
+SizeID XRRConfigCurrentConfiguration (XRRScreenConfiguration *config,
 			      Rotation *rotation)
 {
     *rotation = (Rotation) config->current_rotation;
@@ -94,11 +94,11 @@ short XRRConfigCurrentRate (XRRScreenConfiguration *config)
     return config->current_rate;
 }
 
-/* 
- * Go get the screen configuration data and salt it away for future use; 
+/*
+ * Go get the screen configuration data and salt it away for future use;
  * returns NULL if extension not supported
  */
-static XRRScreenConfiguration *_XRRValidateCache (Display *dpy, 
+static XRRScreenConfiguration *_XRRValidateCache (Display *dpy,
 						  XExtDisplayInfo *info,
 						  int screen)
 {
@@ -140,7 +140,7 @@ Rotation XRRRotations(Display *dpy, int screen, Rotation *current_rotation)
 /* given a screen, return the information from the (possibly) cached data */
 XRRScreenSize *XRRSizes(Display *dpy, int screen, int *nsizes)
 {
-  XRRScreenConfiguration *config; 
+  XRRScreenConfiguration *config;
   XExtDisplayInfo *info = XRRFindDisplay(dpy);
   XRRScreenSize *sizes;
 
@@ -155,12 +155,12 @@ XRRScreenSize *XRRSizes(Display *dpy, int screen, int *nsizes)
     UnlockDisplay(dpy);
     *nsizes = 0;
     return NULL;
-  }  
+  }
 }
 
 short *XRRRates (Display *dpy, int screen, int sizeID, int *nrates)
 {
-  XRRScreenConfiguration *config; 
+  XRRScreenConfiguration *config;
   XExtDisplayInfo *info = XRRFindDisplay(dpy);
   short *rates;
 
@@ -174,13 +174,13 @@ short *XRRRates (Display *dpy, int screen, int sizeID, int *nrates)
     UnlockDisplay(dpy);
     *nrates = 0;
     return NULL;
-  }  
+  }
 }
 
 /* given a screen, return the information from the (possibly) cached data */
 Time XRRTimes (Display *dpy, int screen, Time *config_timestamp)
 {
-  XRRScreenConfiguration *config; 
+  XRRScreenConfiguration *config;
   XExtDisplayInfo *info = XRRFindDisplay(dpy);
   Time ts;
 
@@ -227,7 +227,7 @@ static XRRScreenConfiguration *_XRRGetScreenInfo (Display *dpy,
 	vreq->randrReqType = X_RRQueryVersion;
 	vreq->majorVersion = RANDR_MAJOR;
 	vreq->minorVersion = RANDR_MINOR;
-    
+
 	async_state.version_seq = dpy->request;
 	async_state.error = False;
 	async.next = dpy->async_handlers;
@@ -272,14 +272,14 @@ static XRRScreenConfiguration *_XRRGetScreenInfo (Display *dpy,
 	rep.rate = 0;
 	rep.nrateEnts = 0;
     }
-    
+
     nbytes = (long) rep.length << 2;
 
     nbytesRead = (long) (rep.nSizes * SIZEOF (xScreenSizes) +
 			 ((rep.nrateEnts + 1)& ~1) * 2 /* SIZEOF (CARD16) */);
-    
-    /* 
-     * first we must compute how much space to allocate for 
+
+    /*
+     * first we must compute how much space to allocate for
      * randr library's use; we'll allocate the structures in a single
      * allocation, on cleanlyness grounds.
      */
@@ -299,7 +299,7 @@ static XRRScreenConfiguration *_XRRGetScreenInfo (Display *dpy,
     rates = (short *) (ssp + rep.nSizes);
 
     /* set up the screen configuration structure */
-    scp->screen = 
+    scp->screen =
       ScreenOfDisplay (dpy, XRRRootToScreen(dpy, rep.root));
 
     scp->sizes = ssp;
@@ -322,7 +322,7 @@ static XRRScreenConfiguration *_XRRGetScreenInfo (Display *dpy,
      */
     for (i = 0; i < rep.nSizes; i++)  {
 	_XReadPad (dpy, (char *) &size, SIZEOF (xScreenSizes));
-	
+
         ssp[i].width = size.widthInPixels;
 	ssp[i].height = size.heightInPixels;
 	ssp[i].mwidth = size.widthInMillimeters;
@@ -332,13 +332,13 @@ static XRRScreenConfiguration *_XRRGetScreenInfo (Display *dpy,
      * And the rates
      */
     _XRead16Pad (dpy, rates, 2 /* SIZEOF (CARD16) */ * rep.nrateEnts);
-    
+
     /*
      * Skip any extra data
      */
     if (nbytes > nbytesRead)
 	_XEatData (dpy, (unsigned long) (nbytes - nbytesRead));
-    
+
     return (XRRScreenConfiguration *)(scp);
 }
 
@@ -354,7 +354,7 @@ XRRScreenConfiguration *XRRGetScreenInfo (Display *dpy, Window window)
     return config;
 }
 
-    
+
 void XRRFreeScreenConfigInfo (XRRScreenConfiguration *config)
 {
     Xfree (config);
@@ -364,7 +364,7 @@ Status XRRSetScreenConfigAndRate (Display *dpy,
 				  XRRScreenConfiguration *config,
 				  Drawable draw,
 				  int size_index,
-				  Rotation rotation, 
+				  Rotation rotation,
 				  short rate,
 				  Time timestamp)
 {
@@ -378,7 +378,7 @@ Status XRRSetScreenConfigAndRate (Display *dpy,
     /* Make sure has_rates is set */
     if (!XRRQueryVersion (dpy, &major, &minor))
 	return 0;
-    
+
     LockDisplay (dpy);
     xrri = (XRandRInfo *) info->data;
     if (xrri->has_rates)
@@ -406,7 +406,7 @@ Status XRRSetScreenConfigAndRate (Display *dpy,
 	req->timestamp = timestamp;
 	req->configTimestamp = config->config_timestamp;
     }
-    
+
     (void) _XReply (dpy, (xReply *) &rep, 0, xTrue);
 
     /* actually .errorCode in struct xError */
