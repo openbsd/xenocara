@@ -1,4 +1,4 @@
-# $OpenBSD: 3RDPARTY,v 1.147 2013/03/05 21:11:08 matthieu Exp $
+# $OpenBSD: 3RDPARTY,v 1.148 2013/03/09 14:50:14 matthieu Exp $
 #
 
 Package: 	Freetype
@@ -8,14 +8,14 @@ Maintainer:	Freetype.org
 Archive Site:	http://download.savannah.gnu.org/releases/freetype/
 
 Package:	xterm
-Version:	287
+Version:	291
 Current Vers:	291
 Maintainer:	Thomas E. Dickey
 Archive Site:	http://invisible-island.net/xterm/xterm.html
 
 Package:	Mesa
 Version		7.11.2
-Current Vers:	9.1
+Current Vers:	9.0.3
 Maintainer:	Brian Paul
 Archive Site:	http://www.mesa3d.org/
 
@@ -26,8 +26,8 @@ Maintainer:	Eric Anholt
 Archive Site:	http://dri.freedesktop.org/
 
 Package:	fontconfig
-Version:	2.8.0
-Current Vers:	2.10.1
+Version:	2.10.91
+Current Vers:	2.10.91
 Maintainer:	Akira TAGOH
 Archive Site:	http://www.fontconfig.org/
 
@@ -39,7 +39,7 @@ Archive Site:	http://dejavu-fonts.org/
 
 Package:	xlockmore
 Version:	5.22
-Current Vers:	5.41
+Current Vers:	5.42
 Maintainer:	bagleyd@tux.org
 Archive Site:	http://www.tux.org/~bagleyd/latest/
 
