@@ -1,3 +1,81 @@
+commit 4c717e41a5d894ef833815396b0de057b53213aa
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Feb 10 15:39:31 2013 -0800
+
+    xfsinfo 1.0.4
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 57d7eb7506cef9ffeda231c8896fc2c90be34b60
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jan 12 18:02:58 2013 -0800
+
+    Print normalized version for X.Org servers, the way xdpyinfo does
+    
+    Results in output like:
+    vendor string:    X.Org Foundation
+    vendor release number:  10102000
+    X.Org xfs version: 1.1.2
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Julien Cristau <jcristau@debian.org>
+
+commit e249bb674751f9a9a50a47d89eefdb8b783a8de4
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jan 12 17:53:32 2013 -0800
+
+    Remove CVS/RCS id tags
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 899c9a296a8a086e7a61a2690b5446fb7cffe5b5
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jan 12 17:47:47 2013 -0800
+
+    Mark usage() as _X_NORETURN
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 82222e014e7c75e88811cdb7b8e39389b8f49b6a
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jan 12 17:43:28 2013 -0800
+
+    config: Add missing AC_CONFIG_SRCDIR
+    
+    Regroup AC statements under the Autoconf initialization section.
+    Regroup AM statements under the Automake initialization section.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 05b05bfaa88ded7422d058d42aedae3e32e670bd
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jan 19 10:06:56 2011 -0500
+
+    config: move man pages into their own directory
+    
+    Use services provided by XORG_MANPAGE_SECTIONS.
+    Use standard Makefile for man pages.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 56ad6e59105b29469ed324f80c5a442556df03dc
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Jan 13 11:15:47 2011 -0500
+
+    man: remove trailing spaces and tabs
+    
+    Using s/[ \t]*$//
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit b9d54b21ce24c16b9fb01357ea3168c19cbca46a
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jan 12 16:28:02 2011 -0500
+
+    config: replace deprecated AM_CONFIG_HEADER with AC_CONFIG_HEADERS
+    
+    This silences an Autoconf warning
+
 commit 42adfc3d4fda8dfd3aac1329e86af9201dca7c03
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Sat Oct 30 15:52:02 2010 -0700

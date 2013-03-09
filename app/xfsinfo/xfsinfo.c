@@ -2,7 +2,6 @@
  * xfsinfo -- report info about a font server
  */
 
-/* $TOG: fsinfo.c /main/7 1998/02/09 13:43:08 kaleb $ */
 /*
 
 Portions Copyright 1987, 1998  The Open Group
@@ -30,7 +29,6 @@ other dealings in this Software without prior written authorization
 from The Open Group.
 
 */
-/* $XFree86: xc/programs/xfsinfo/xfsinfo.c,v 1.3 2001/08/27 17:41:02 dawes Exp $ */
 
 /*
  * Copyright 1990 Network Computing Devices;
@@ -70,7 +68,7 @@ static void print_alternate_info(FSServer *svr);
 
 static char *progname;
 
-static void
+static void _X_NORETURN
 usage(void)
 {
     fprintf(stderr, "usage:  %s [-server server_name]\n", progname);
@@ -123,6 +121,17 @@ print_server_info(FSServer *svr)
     printf("version number:	%d\n", FSProtocolVersion(svr));
     printf("vendor string:	%s\n", FSServerVendor(svr));
     printf("vendor release number:	%d\n", FSVendorRelease(svr));
+    if (strstr(FSServerVendor(svr), "X.Org")) {
+	int vendrel = FSVendorRelease(svr);
+
+	printf("X.Org xfs version: ");
+	printf("%d.%d.%d", vendrel / 10000000,
+	       (vendrel /   100000) % 100,
+	       (vendrel /     1000) % 100);
+	if (vendrel % 1000)
+	    printf(".%d", vendrel % 1000);
+	printf("\n");
+    }
     printf("maximum request size:	%ld longwords (%ld bytes)\n",
 	   FSMaxRequestSize(svr), FSMaxRequestSize(svr) * sizeof(long));
     print_catalogue_info(svr);
