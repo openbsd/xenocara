@@ -32,6 +32,10 @@ in this Software without prior written authorization from The Open Group.
  *		11-Jun-87
  */
 
+#ifdef HAVE_CONFIG_H
+# include "config.h"
+#endif
+
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 #include <X11/Xatom.h>
@@ -55,7 +59,7 @@ static int save_colors = 0;
 static int unsave_past = 0;
 static Pixmap save_pixmap = (Pixmap)None;
 
-static void usage(void);
+static void usage(void) _X_NORETURN;
 static void FixupState(void);
 static void SetBackgroundToBitmap(Pixmap bitmap, 
 				  unsigned int width, unsigned int height);
@@ -69,22 +73,24 @@ static Pixmap ReadBitmapFile(char *filename, unsigned int *width, unsigned int *
 static void
 usage(void)
 {
-    fprintf(stderr, "usage: %s [options]\n", program_name);
-    fprintf(stderr, "  where options are:\n");
-    fprintf(stderr, "  -display <display>   or   -d <display>\n");
-    fprintf(stderr, "  -fg <color>   or   -foreground <color>\n");
-    fprintf(stderr, "  -bg <color>   or   -background <color>\n");
-    fprintf(stderr, "  -rv   or   -reverse\n");
-    fprintf(stderr, "  -help\n");
-    fprintf(stderr, "  -def   or   -default\n");
-    fprintf(stderr, "  -name <string>\n");
-    fprintf(stderr, "  -cursor <cursor file> <mask file>\n");
-    fprintf(stderr, "  -cursor_name <cursor-font name>\n");
-    fprintf(stderr, "  -xcf <ARGB cursor file> <cursor size>\n");
-    fprintf(stderr, "  -solid <color>\n");
-    fprintf(stderr, "  -gray   or   -grey\n");
-    fprintf(stderr, "  -bitmap <filename>\n");
-    fprintf(stderr, "  -mod <x> <y>\n");
+    fprintf(stderr, "usage: %s [options]\n%s\n", program_name,
+            "  where options are:\n"
+            "  -display <display>   or   -d <display>\n"
+            "  -fg <color>   or   -foreground <color>\n"
+            "  -bg <color>   or   -background <color>\n"
+            "  -rv   or   -reverse\n"
+            "  -def   or   -default\n"
+            "  -name <string>\n"
+            "  -cursor <cursor file> <mask file>\n"
+            "  -cursor_name <cursor-font name>\n"
+            "  -xcf <ARGB cursor file> <cursor size>\n"
+            "  -solid <color>\n"
+            "  -gray   or   -grey\n"
+            "  -bitmap <filename>\n"
+            "  -mod <x> <y>\n"
+            "  -help\n"
+            "  -version\n"
+            );
     exit(1);
     /*NOTREACHED*/
 }
@@ -123,6 +129,10 @@ main(int argc, char *argv[])
 	}
 	if (!strcmp("-help", argv[i])) {
 	    usage();
+	}
+	if (!strcmp("-version", argv[i])) {
+            printf("%s\n", PACKAGE_STRING);
+            exit(0);
 	}
 	if (!strcmp("-def", argv[i]) || !strcmp("-default", argv[i])) {
 	    restore_defaults = 1;

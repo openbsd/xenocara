@@ -1,14 +1,14 @@
 .\" Copyright 1988, 1998  The Open Group
-.\" 
+.\"
 .\" Permission to use, copy, modify, distribute, and sell this software and its
 .\" documentation for any purpose is hereby granted without fee, provided that
 .\" the above copyright notice appear in all copies and that both that
 .\" copyright notice and this permission notice appear in supporting
 .\" documentation.
-.\" 
+.\"
 .\" The above copyright notice and this permission notice shall be included
 .\" in all copies or substantial portions of the Software.
-.\" 
+.\"
 .\" THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
 .\" OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
 .\" MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
@@ -16,7 +16,7 @@
 .\" OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
 .\" ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 .\" OTHER DEALINGS IN THE SOFTWARE.
-.\" 
+.\"
 .\" Except as contained in this notice, the name of The Open Group shall
 .\" not be used in advertising or otherwise to promote the sale, use or
 .\" other dealings in this Software without prior written authorization
@@ -27,7 +27,7 @@
 xsetroot \- root window parameter setting utility for X
 .SH SYNOPSIS
 .B xsetroot
-[-help] [-def] [-display \fIdisplay\fP]
+[-help] [-version] [-def] [-display \fIdisplay\fP]
 [-cursor \fIcursorfile maskfile\fP]
 [-cursor_name \fIcursorname\fP]
 [-xcf \fIcursorfile\fP \fIcursorsize\fP]
@@ -35,7 +35,7 @@ xsetroot \- root window parameter setting utility for X
 [-mod \fIx y\fP] [-gray] [-grey] [-fg \fIcolor\fP] [-bg \fIcolor\fP] [-rv]
 [-solid \fIcolor\fP] [-name \fIstring\fP]
 .SH DESCRIPTION
-The 
+The
 .I xsetroot
 program
 allows you to tailor the appearance of the background ("root")
@@ -51,13 +51,15 @@ is specified, the window is reset to its default state.  The
 option can be specified along with other options and only the non-specified
 characteristics will be reset to the default state.
 .PP
-Only one of the background color/tiling changing options 
+Only one of the background color/tiling changing options
 (-solid, -gray, -grey, -bitmap, and -mod) may be specified at a time.
 .SH OPTIONS
 .PP
 The various options are as follows:
 .IP \fB-help\fP
 Print a usage message and exit.
+.IP \fB-verson\fP
+Print a version message and exit.
 .IP \fB-def\fP
 Reset unspecified attributes to the default values.  (Restores the background
 to the familiar gray mesh and the cursor to the hollow x shape.)
@@ -65,7 +67,7 @@ to the familiar gray mesh and the cursor to the hollow x shape.)
 This lets you change the pointer cursor to whatever
 you want when the pointer cursor is outside of any window.
 Cursor and mask files are bitmaps (little pictures), and can be made with the
-.I bitmap(1)
+.I bitmap(__appmansuffix__)
 program.  You probably want the mask file to be all black until you
 get used to the way masks work.
 .IP "\fB-cursor_name\fP \fIcursorname\fP
@@ -78,7 +80,7 @@ as defined by libXcursor, at the specified size.
 .IP "\fB-bitmap\fP \fIfilename\fP"
 Use the bitmap specified in the file to set the window pattern.  You can
 make your own bitmap files (little pictures) using the
-.I bitmap(1)
+.I bitmap(__appmansuffix__)
 program.  The entire background will be made up of repeated "tiles" of
 the bitmap.
 .IP "\fB-mod\fP \fIx\fP \fIy\fP"
@@ -93,7 +95,7 @@ Make the entire background grey.
 Use ``color'' as the foreground color.  Foreground and background colors
 are meaningful only in combination with -cursor, -bitmap, or -mod.
 .IP "\fB-bg\fP \fIcolor\fP"
-Use ``color'' as the background color.  
+Use ``color'' as the background color.
 .IP \fB-rv\fP
 This exchanges the foreground and background colors.  Normally the foreground
 color is black and the background color is white.
@@ -108,6 +110,6 @@ This option is unused since you can't iconify the background.
 .IP "\fB-display\fP \fIdisplay\fP"
 Specifies the server to connect to; see \fIX(__miscmansuffix__)\fP.
 .SH "SEE ALSO"
-X(__miscmansuffix__), xset(1), xrdb(1), Xcursor(__libmansuffix__)
+X(__miscmansuffix__), xset(__appmansuffix__), xrdb(__appmansuffix__), Xcursor(__libmansuffix__)
 .SH AUTHOR
 Mark Lillibridge, MIT Project Athena
