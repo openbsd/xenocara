@@ -37,7 +37,7 @@ extend namespace Nichrome {
 	    rgba_color_t    corner_color;
 	    bool	    down;
 	    bool	    started;
-	    int		    active;
+	    int		    active_corner;
 	    void(&quad_t)   callback;
 	} quad_t;
 
@@ -47,6 +47,10 @@ extend namespace Nichrome {
 		     quad.corner_diameter / 2, 0, 2 * pi);
 		close_path (cr);
 	    }
+	}
+
+	protected void natural (cairo_t cr, &quad_t quad) {
+	    rectangle (cr, 0, 0, 256, 256);
 	}
 
 	void text_at (cairo_t cr, point_t p, string text) {
@@ -102,7 +106,7 @@ extend namespace Nichrome {
 	    enum switch (event.type) {
 	    case press:
 		quad.down = true;
-		quad.active = nearest (&quad, event);
+		quad.active_corner = nearest (&quad, event);
 		break;
 	    case release:
 		quad.down = false;
@@ -116,8 +120,8 @@ extend namespace Nichrome {
 	    if (quad.down) {
 		motion.x = max (0, min (quad.geometry.width, motion.x));
 		motion.y = max (0, min (quad.geometry.height, motion.y));
-		quad.p[quad.active].x = motion.x;
-		quad.p[quad.active].y = motion.y;
+		quad.p[quad.active_corner].x = motion.x;
+		quad.p[quad.active_corner].y = motion.y;
 		quad.callback (&quad);
 		Widget::reoutline (&quad);
 		Widget::redraw (&quad);
@@ -149,6 +153,7 @@ extend namespace Nichrome {
 	    quad.button = button;
 	    quad.motion = motion;
 	    quad.configure = configure;
+	    quad.natural = natural;
 	    quad.p = (point_t[4]) {
 		{ x = 0, y = 0 } ...
 	    };
@@ -161,7 +166,7 @@ extend namespace Nichrome {
 	    };
 	    quad.corner_diameter = 20;
 	    quad.down = false;
-	    quad.active = -1;
+	    quad.active_corner = -1;
 	    quad.callback = callback;
 	    quad.started = false;
 	}
@@ -538,15 +543,14 @@ void main ()
     &box_t	hbox = Box::new (Box::dir_t.horizontal,
 				 Box::widget_item (&doit, 0),
 				 Box::widget_item (&show, 0),
-				 
 				 Box::widget_item (&quit, 0),
 				 Box::glue_item (1));
     &box_t	box = Box::new (Box::dir_t.vertical,
 				Box::box_item (&hbox),
-				Box::widget_item (label[0], 0),
-				Box::widget_item (label[1], 0),
-				Box::widget_item (label[2], 0),
-				Box::widget_item (&space, 0),
+				Box::widget_item (label[0], 1, 0),
+				Box::widget_item (label[1], 1, 0),
+				Box::widget_item (label[2], 1, 0),
+				Box::widget_item (&space, 1, 0),
 				Box::widget_item (&quad, 1));
     Nichrome::set_box (&nichrome, &box);
     Nichrome::main_loop (&nichrome);

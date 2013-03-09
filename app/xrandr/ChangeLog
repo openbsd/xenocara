@@ -1,3 +1,494 @@
+commit 222f245fb3a00308cb3ff491f5c84ac9c69c3253
+Author: Aaron Plattner <aplattner@nvidia.com>
+Date:   Tue Feb 12 13:24:38 2013 -0800
+
+    xrandr 1.4.0
+    
+    Signed-off-by: Aaron Plattner <aplattner@nvidia.com>
+
+commit 3e5f160c4198a5160be5e9a3f21ba3f4130d4318
+Merge: dac72db bd16618
+Author: Aaron Plattner <aplattner@nvidia.com>
+Date:   Tue Feb 12 12:30:20 2013 -0800
+
+    Merge branch 'fixes'
+    
+    Conflicts:
+    	xrandr.c
+
+commit bd166184f6c1973ae2f5f99d040733db3e9e82cf
+Author: Aaron Plattner <aplattner@nvidia.com>
+Date:   Wed Feb 6 14:21:57 2013 -0800
+
+    Cast XID to unsigned int to suppress a printf warning
+    
+    Sorry I forgot about this in commit 138b6252c0cae6599b6c8a25ffa22ffe70f227c2.
+    That change introduced a warning:
+    
+      xrandr.c|645 col 5| warning: format ‘%x’ expects argument of type ‘unsigned int’, but argument 2 has type ‘XID’ [-Wformat]
+    
+    Fix that by just casting the XID to unsigned int.
+    
+    Signed-off-by: Aaron Plattner <aplattner@nvidia.com>
+    Reviewed-by: Daniel Dadap <ddadap@nvidia.com>
+
+commit 7fd4f18b649f22fad4dbf9fc64b69b3e7f172207
+Author: Aaron Plattner <aplattner@nvidia.com>
+Date:   Wed Feb 6 11:13:06 2013 -0800
+
+    Bug #37043: adjust refresh rates for doublescan and interlace
+    
+    These two flags halve and double, respectively, the effective refresh rate of a
+    mode.
+    
+    Signed-off-by: Aaron Plattner <aplattner@nvidia.com>
+    Reviewed-by: Daniel Dadap <ddadap@nvidia.com>
+
+commit d752d524027fbc20d9fdee06fed173e454f15370
+Author: Aaron Plattner <aplattner@nvidia.com>
+Date:   Wed Feb 6 10:10:03 2013 -0800
+
+    Bug #29603: document that there might be multiple preferred modes
+    
+    The X server sorts the mode list for an output with preferred modes first, and
+    specifies how many preferred modes there are by setting the npreferred field in
+    the XRRModeInfo structure.
+    
+    Update the man page to refer to preferred modes in the plural, and mention that
+    --auto and --preferred use the *first* preferred mode.
+    
+    Signed-off-by: Aaron Plattner <aplattner@nvidia.com>
+    Reviewed-by: Daniel Dadap <ddadap@nvidia.com>
+
+commit b2f0bd198b1116e45389a6628b657b722b4102a4
+Author: Aaron Plattner <aplattner@nvidia.com>
+Date:   Wed Feb 6 14:11:23 2013 -0800
+
+    Bug #14118: print usage() to stdout, proper errors for bad arguments
+    
+    Print the usage() text to stdout instead of stderr, and then only if -help is
+    specified.  Also allow --help for consistency.
+    
+    For other command line syntax errors, introduce a new helper function argerr()
+    that prints errors of the form
+    
+      xrandr: %s
+      Try './xrandr --help' for more information.
+    
+    and exits.  Use that to print proper error messages.
+    
+    Signed-off-by: Aaron Plattner <aplattner@nvidia.com>
+    Reviewed-by: Daniel Dadap <ddadap@nvidia.com>
+
+commit 0a26e076e10a3c7461d59c830cdc10688d66824f
+Author: Aaron Plattner <aplattner@nvidia.com>
+Date:   Wed Feb 6 13:08:58 2013 -0800
+
+    Bug #11397: check that numeric --orientation arguments are in range
+    
+    The only valid parameters to -o (--orientation) are 0, 1, 2, 3, normal, left,
+    inverted, and right.  xrandr converts the strings to numbers and then checks
+    that they're within range, but doesn't validate them if it was numeric to begin
+    with.
+    
+    Move the range check outside of the if statement so that out-of-range numeric
+    values are rejected properly.
+    
+    Signed-off-by: Aaron Plattner <aplattner@nvidia.com>
+    Reviewed-by: Daniel Dadap <ddadap@nvidia.com>
+
+commit dac72dbbc7501483eccec71bbf0db05a56756109
+Author: Aaron Plattner <aplattner@nvidia.com>
+Date:   Fri Aug 24 21:43:13 2012 -0700
+
+    xrandr: Fix variable declaration warnings
+    
+    There are piles of places in the code where a variable shadows either another
+    variable or a global function:
+    
+      xrandr.c:545:35: warning: declaration of ‘index’ shadows a global declaration [-Wshadow]
+      xrandr.c:574:9: warning: declaration of ‘index’ shadows a global declaration [-Wshadow]
+      xrandr.c:967:19: warning: declaration of ‘gamma’ shadows a global declaration [-Wshadow]
+      xrandr.c:1329:16: warning: declaration of ‘gamma’ shadows a global declaration [-Wshadow]
+      xrandr.c:2055:28: warning: declaration of ‘outputs’ shadows a global declaration [-Wshadow]
+      xrandr.c:2068:29: warning: declaration of ‘outputs’ shadows a global declaration [-Wshadow]
+      xrandr.c:2928:16: warning: declaration of ‘output’ shadows a previous local [-Wshadow]
+      xrandr.c:2995:15: warning: declaration of ‘output’ shadows a previous local [-Wshadow]
+      xrandr.c:3016:15: warning: declaration of ‘j’ shadows a previous local [-Wshadow]
+      xrandr.c:3018:19: warning: declaration of ‘rotations’ shadows a previous local [-Wshadow]
+      xrandr.c:3116:15: warning: declaration of ‘crtc’ shadows a previous local [-Wshadow]
+      xrandr.c:3170:8: warning: declaration of ‘k’ shadows a previous local [-Wshadow]
+      xrandr.c:3243:20: warning: declaration of ‘mode’ shadows a previous local [-Wshadow]
+    
+    'index' and 'gamma' are C library functions:
+    
+      index (3)            - locate character in string
+      gamma (3)            - (logarithm of the) gamma function
+    
+    The rest of these are either variables or function parameters.
+    
+    When possible, move the declaration of a variable into the block where it is
+    used, including in cases where the same variable is used in multiple blocks but
+    the later block doesn't depend on the value from the earlier block.
+    
+    In a few cases, rename the variable in the outer scope to be more specific (e.g.
+    output -> config_output) so the more generic variable in the inner scope (e.g.
+    the 'output' variable used to iterate over all outputs) doesn't have to change.
+    
+    Signed-off-by: Aaron Plattner <aplattner@nvidia.com>
+    Reviewed-by: Andy Ritger <aritger@nvidia.com>
+
+commit 138b6252c0cae6599b6c8a25ffa22ffe70f227c2
+Author: Aaron Plattner <aplattner@nvidia.com>
+Date:   Mon Feb 4 16:17:24 2013 -0800
+
+    xrandr: look for providers by name or xid
+    
+    Use the name_t infrastructure to allow specifying providers by name, index, or
+    XID.  This means that numbers without a "0x" prefix will now be interpreted as a
+    indices rather than XIDs.  To match that, print provider XIDs in hexadecimal.
+    
+    Print an error if a provider-related option is specified and RandR 1.4 isn't
+    supported.
+    
+    Make get_screen robust against being called multiple times.
+    
+    Signed-off-by: Aaron Plattner <aplattner@nvidia.com>
+    Reviewed-by: Dave Airlie <airlied@redhat.com>
+
+commit a93b77b15fa2463c7fd06c6898b9c9f737c3ae8a
+Author: Aaron Plattner <aplattner@nvidia.com>
+Date:   Mon Feb 4 16:05:11 2013 -0800
+
+    xrandr: make providers a first-class citizen
+    
+    Create a struct _provider to match the existing output, crtc, etc. objects.
+    Build that from a new get_providers() function.  Use that to populate the list
+    when querying the providers.
+    
+    Signed-off-by: Aaron Plattner <aplattner@nvidia.com>
+    Reviewed-by: Dave Airlie <airlied@redhat.com>
+
+commit 8ce9d1fa48a7556e9aee090e5d72566dbb9a32f8
+Author: Aaron Plattner <aplattner@nvidia.com>
+Date:   Mon Feb 4 15:20:21 2013 -0800
+
+    man: document provider options
+    
+    I hope I got the --setprovideroffloadsink parameters the right way around.
+    
+    Signed-off-by: Aaron Plattner <aplattner@nvidia.com>
+    Reviewed-by: Dave Airlie <airlied@redhat.com>
+
+commit d07ef58f0cb6920dedc00c1e39cc6a5d0f31775e
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jan 20 12:32:15 2013 -0800
+
+    Fix -Wformat warnings about passing longs where ints were expected
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit ee548dde0f5bcc6503ad2f74af5261fbf022dada
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jan 20 12:28:04 2013 -0800
+
+    Mark fatal() and warning() as taking printf-style arguments
+    
+    Silences -Wformat-nonliteral warnings about them passing through
+    unknown format arguments to vfprintf.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 77b03188b14cdef4523184a73b25fb2703d52685
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jan 20 12:24:24 2013 -0800
+
+    config: Add missing AC_CONFIG_SRCDIR
+    
+    Regroup AC statements under the Autoconf initialization section.
+    Regroup AM statements under the Automake initialization section.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit a9a92e85b2f8ea54855a3b45eb0882d7da50c1a8
+Author: Colin Walters <walters@verbum.org>
+Date:   Wed Jan 16 13:02:57 2013 -0500
+
+    autogen.sh: Honor NOCONFIGURE=1
+    
+    See http://people.gnome.org/~walters/docs/build-api.txt
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit 4a15ed3b1edd22d67307620f2265faf365700519
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Wed Jan 16 13:03:39 2013 -0500
+
+    configure: Drop AM_MAINTAINER_MODE
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit 094b40e89707828df2bb7b204a97eed256a3c3fd
+Author: Pierre-Loup A. Griffais <pgriffais@nvidia.com>
+Date:   Wed Dec 19 12:32:03 2012 -0800
+
+    xrandr: print primary output
+    
+    Sample output:
+    
+    LVDS-0 connected primary 1920x1080+1920+120 [...]
+    
+    Signed-off-by: Pierre-Loup A. Griffais <pgriffais@nvidia.com>
+    Reviewed-by: Aaron Plattner <aplattner@nvidia.com>
+    Tested-by: Aaron Plattner <aplattner@nvidia.com>
+    Signed-off-by: Aaron Plattner <aplattner@nvidia.com>
+
+commit b26fd532b3dab222956ea27eef4e41345978b5b2
+Author: Andy Ritger <aritger@nvidia.com>
+Date:   Fri Sep 7 17:58:46 2012 -0700
+
+    xrandr: generalize output property printing
+    
+    Signed-off-by: Andy Ritger <aritger@nvidia.com>
+    Reviewed-by: Aaron Plattner <aplattner@nvidia.com>
+
+commit 7a22279cadf7d1a2064cf985acc015401407d71c
+Author: Andy Ritger <aritger@nvidia.com>
+Date:   Fri Sep 7 17:58:45 2012 -0700
+
+    xrandr: extend '--set' syntax to allow a comma-separated list of values
+    
+    Signed-off-by: Andy Ritger <aritger@nvidia.com>
+    Reviewed-by: Aaron Plattner <aplattner@nvidia.com>
+
+commit 7cb20881991c8bcf7e8fa0af6ad0f85682f98e1f
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Fri Jan 20 17:40:41 2012 +0000
+
+    xrandr: add provider interfaces
+    
+    This adds an initial interface to list and configure offload and output
+    providers.
+    
+    Signed-off-by: Dave Airlie <airlied@redhat.com>
+
+commit a36e6d38ffd9831188758658ff36a0b88e43ba67
+Author: Aaron Plattner <aplattner@nvidia.com>
+Date:   Fri Aug 24 21:02:26 2012 -0700
+
+    xrandr: Fix string constness bugs
+    
+    Sufficiently new versions of GCC treat string literals as "const char *" by
+    default.  This means that several places that assign, return, or initialize
+    char* from a string literal generates a warning:
+    
+      xrandr.c:54:5: warning: initialization discards ‘const’ qualifier from pointer target type [enabled by default]
+      xrandr.c:55:5: warning: initialization discards ‘const’ qualifier from pointer target type [enabled by default]
+      xrandr.c:56:5: warning: initialization discards ‘const’ qualifier from pointer target type [enabled by default]
+      xrandr.c:57:5: warning: initialization discards ‘const’ qualifier from pointer target type [enabled by default]
+      xrandr.c:58:5: warning: initialization discards ‘const’ qualifier from pointer target type [enabled by default]
+      xrandr.c:61:5: warning: initialization discards ‘const’ qualifier from pointer target type [enabled by default]
+      xrandr.c:62:5: warning: initialization discards ‘const’ qualifier from pointer target type [enabled by default]
+      xrandr.c:63:5: warning: initialization discards ‘const’ qualifier from pointer target type [enabled by default]
+      xrandr.c:64:5: warning: initialization discards ‘const’ qualifier from pointer target type [enabled by default]
+      xrandr.c:65:5: warning: initialization discards ‘const’ qualifier from pointer target type [enabled by default]
+      xrandr.c:69:5: warning: initialization discards ‘const’ qualifier from pointer target type [enabled by default]
+      xrandr.c:70:5: warning: initialization discards ‘const’ qualifier from pointer target type [enabled by default]
+      xrandr.c:71:5: warning: initialization discards ‘const’ qualifier from pointer target type [enabled by default]
+      xrandr.c:72:5: warning: initialization discards ‘const’ qualifier from pointer target type [enabled by default]
+      xrandr.c:73:5: warning: initialization discards ‘const’ qualifier from pointer target type [enabled by default]
+      xrandr.c:74:5: warning: initialization discards ‘const’ qualifier from pointer target type [enabled by default]
+      xrandr.c:80:5: warning: initialization discards ‘const’ qualifier from pointer target type [enabled by default]
+      xrandr.c:81:5: warning: initialization discards ‘const’ qualifier from pointer target type [enabled by default]
+      xrandr.c:82:5: warning: initialization discards ‘const’ qualifier from pointer target type [enabled by default]
+      xrandr.c:83:5: warning: initialization discards ‘const’ qualifier from pointer target type [enabled by default]
+      xrandr.c:84:5: warning: initialization discards ‘const’ qualifier from pointer target type [enabled by default]
+      xrandr.c:85:5: warning: initialization discards ‘const’ qualifier from pointer target type [enabled by default]
+      xrandr.c:86:5: warning: initialization discards ‘const’ qualifier from pointer target type [enabled by default]
+      xrandr.c:87:5: warning: initialization discards ‘const’ qualifier from pointer target type [enabled by default]
+      xrandr.c:88:5: warning: initialization discards ‘const’ qualifier from pointer target type [enabled by default]
+      xrandr.c:189:2: warning: return discards ‘const’ qualifier from pointer target type [enabled by default]
+      xrandr.c:193:5: warning: return discards ‘const’ qualifier from pointer target type [enabled by default]
+      xrandr.c:202:2: warning: return discards ‘const’ qualifier from pointer target type [enabled by default]
+      xrandr.c:204:2: warning: return discards ‘const’ qualifier from pointer target type [enabled by default]
+      xrandr.c:206:2: warning: return discards ‘const’ qualifier from pointer target type [enabled by default]
+      xrandr.c:208:2: warning: return discards ‘const’ qualifier from pointer target type [enabled by default]
+      xrandr.c:210:5: warning: return discards ‘const’ qualifier from pointer target type [enabled by default]
+      xrandr.c:359:5: warning: initialization discards ‘const’ qualifier from pointer target type [enabled by default]
+      xrandr.c:360:5: warning: initialization discards ‘const’ qualifier from pointer target type [enabled by default]
+      xrandr.c:361:5: warning: initialization discards ‘const’ qualifier from pointer target type [enabled by default]
+      xrandr.c:593:23: warning: assignment discards ‘const’ qualifier from pointer target type [enabled by default]
+      xrandr.c:1189:28: warning: assignment discards ‘const’ qualifier from pointer target type [enabled by default]
+      xrandr.c:1191:28: warning: assignment discards ‘const’ qualifier from pointer target type [enabled by default]
+      xrandr.c:1587:39: warning: assignment discards ‘const’ qualifier from pointer target type [enabled by default]
+      xrandr.c:1588:30: warning: assignment discards ‘const’ qualifier from pointer target type [enabled by default]
+      xrandr.c:1589:38: warning: assignment discards ‘const’ qualifier from pointer target type [enabled by default]
+      xrandr.c:1590:48: warning: assignment discards ‘const’ qualifier from pointer target type [enabled by default]
+      xrandr.c:1591:42: warning: assignment discards ‘const’ qualifier from pointer target type [enabled by default]
+      xrandr.c:1592:25: warning: assignment discards ‘const’ qualifier from pointer target type [enabled by default]
+      xrandr.c:2544:28: warning: assignment discards ‘const’ qualifier from pointer target type [enabled by default]
+      xrandr.c:2546:28: warning: assignment discards ‘const’ qualifier from pointer target type [enabled by default]
+      xrandr.c:2585:28: warning: assignment discards ‘const’ qualifier from pointer target type [enabled by default]
+      xrandr.c:3228:17: warning: initialization discards ‘const’ qualifier from pointer target type [enabled by default]
+    
+    Fix as many of these as possible.  This introduces one problem:
+    XRRSetCrtcTransform takes a non-const char* filter parameter even though it
+    doesn't actually modify the string.  Instead of trying to work around that, just
+    live with the warning for now:
+    
+      xrandr.c:1459:9: warning: passing argument 4 of ‘XRRSetCrtcTransform’ discards ‘const’ qualifier from pointer target type [enabled by default]
+      /X/include/X11/extensions/Xrandr.h:383:1: note: expected ‘char *’ but argument is of type ‘const char *’
+    
+    Signed-off-by: Aaron Plattner <aplattner@nvidia.com>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit b501dd3adfac13e15e619898d4447d83b8301dd3
+Author: Andy Ritger <aritger@nvidia.com>
+Date:   Fri Aug 24 15:53:09 2012 -0700
+
+    xrandr: compute gamma-correction in [0,2^sigbits)
+    
+    The gamma-correction lookup table values are 16:16:16 X Colors, where the
+    MSBs are programmed into the hardware lookup table.  Rather than compute
+    values over the entire range [0,65536) (where values below 2^(16 - sigbits)
+    will receive the same hardware value), compute values over the range
+    [0,2^sigbits) and left shift by (16 - sigbits) into the MSBs.
+    
+    Signed-off-by: Andy Ritger <aritger@nvidia.com>
+    Reviewed-by: Aaron Plattner <aplattner@nvidia.com>
+    Signed-off-by: Aaron Plattner <aplattner@nvidia.com>
+
+commit 90afd01788be7bf19e441a59dca0d8057c5267b1
+Author: Andy Ritger <aritger@nvidia.com>
+Date:   Fri Aug 24 15:53:08 2012 -0700
+
+    xrandr: fix gamma == 1.0 && sigbits != 8
+    
+    The gamma-correction lookup table managed through XRR[GS]etCrtcGamma is
+    2^n in size, where 'n' is the number of significant bits in the X Color.
+    Each element in the gamma-correction lookup table is a 16:16:16 X Color
+    (i.e., in the range [0,65536) ).  The significant bits of each component
+    of each element in the lookup table are programmed into the hardware
+    lookup table.  Meaningful values in the gamma-correction lookup table
+    are thus in the range [0,2^sigbits), where all values are shifted into
+    the MSBs (i.e., left shifted by (16 - sigificant bits)).
+    
+    Signed-off-by: Andy Ritger <aritger@nvidia.com>
+    Reviewed-by: Aaron Plattner <aplattner@nvidia.com>
+    Signed-off-by: Aaron Plattner <aplattner@nvidia.com>
+
+commit 6bf48ae8d8db58ab74182383e54332f120f024c2
+Author: Andy Ritger <aritger@nvidia.com>
+Date:   Fri Aug 24 15:53:07 2012 -0700
+
+    xrandr: use 1/gamma to compute gamma-correction
+    
+    To compute a gamma *correction* lookup table, use the specified gamma
+    value as the divisor in (1.0/gamma).  This matches the semantics of
+    xgamma(1) and the "gamma-value" and "{red,green,blue}-gamma" xorg.conf(5)
+    options.
+    
+    For more details, see:
+    http://www.poynton.com/PDFs/TIDV/Gamma.pdf (Gamma in computer graphics, page 17)
+    http://cgit.freedesktop.org/xorg/xserver/tree/hw/xfree86/common/xf86cmap.c:ComputeGamma()
+    
+    Signed-off-by: Andy Ritger <aritger@nvidia.com>
+    Reviewed-by: Aaron Plattner <aplattner@nvidia.com>
+    Signed-off-by: Aaron Plattner <aplattner@nvidia.com>
+
+commit 755234bd2ce0f3acde6507aba94b1e53a5a72f9b
+Author: Eric S. Raymond <esr@thyrsus.com>
+Date:   Thu Aug 23 12:26:57 2012 -0400
+
+    Running text interspersed with options prevents DocBook translation; remove.
+    
+    The information the text conveys is not really needed at that point,
+    either. It's duplicated later in the manual page.
+    
+    Signed-off-by: Eric S. Raymond <esr@thyrsus.com>
+
+commit b9d260a49961b5e311e77e8600e7e5a8f2e8d475
+Author: Keith Packard <keithp@keithp.com>
+Date:   Tue May 1 21:53:02 2012 -0700
+
+    keystone.5c: cairo-5 box semantics changed default layout
+    
+    cairo-5c version 1.6 includes a new 2D box layout widget that
+    needs widget stretch defined in both dimensions to create
+    the desired layout.
+    
+    Signed-off-by: Keith Packard <keithp@keithp.com>
+
+commit 1e5a973ad2da9aaf3c025656db4ba83ff9e6c207
+Author: Aaron Plattner <aplattner@nvidia.com>
+Date:   Mon Apr 23 12:41:15 2012 -0700
+
+    Add a --scale-from option
+    
+    A typical case for wanting to specify a scale on an output is making your
+    framebuffer be one size and scaling it to fill an output of a different size.
+    Instead of making the user calculate the scaling factors to be specified by
+    --scale, add a new option, --scale-from, that lets the user specify the
+    framebuffer size directly.  Compute the appropriate transform to achieve the
+    desired target size.
+    
+    Signed-off-by: Aaron Plattner <aplattner@nvidia.com>
+    Reviewed-by: Andy Ritger <aritger@nvidia.com>
+
+commit 45b21c41ef3abd73de11d1adc6f5475105e1a5b7
+Author: Pierre-Loup A. Griffais <pgriffais@nvidia.com>
+Date:   Tue Mar 20 16:46:22 2012 -0700
+
+    xrandr: move transform limit checking after scaling
+    
+    This would trigger for legit scaled matrices, resulting in the wrong
+    extents getting computed.
+    
+    Signed-off-by: Pierre-Loup A. Griffais <pgriffais@nvidia.com>
+    Reviewed-by: Keith Packard <keithp@keithp.com>
+    Signed-off-by: Aaron Plattner <aplattner@nvidia.com>
+
+commit 8ca08e32ee7daae75992cbf1f554ca9a389e5420
+Author: Keith Packard <keithp@keithp.com>
+Date:   Wed Feb 29 16:26:25 2012 +1300
+
+    Update keystone program to run with new nichrome bits
+    
+    Will also work with old nichrome bits.
+    
+    Signed-off-by: Keith Packard <keithp@keithp.com>
+
+commit 5161ba39a3c13caa5cab953a17f509a6a5b09e7b
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Fri Nov 11 11:34:38 2011 -0800
+
+    Include strings.h for strcasecmp
+    
+    Our minimum requirement for X11 is currently Unix98.  Unix98 provides
+    strcasecmp in <strings.h>.  This commit fixes implicit declarations
+    of this function on systems that closely adhere to the standard.
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit e68059e9ecc4225360a522138aedcedad7fe117f
+Author: Keith Packard <keithp@keithp.com>
+Date:   Sat Aug 6 19:06:42 2011 -0700
+
+    xrandr: Preserve current mode when switching crtcs
+    
+    When switching output crtcs, preserve any current mode in preference
+    to selecting whatever mode is currently in use on that crtc.
+    
+    Signed-off-by: Keith Packard <keithp@keithp.com>
+
+commit 5185a18a016d9ccbfea3a3cdb314041268222708
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Wed Jul 20 14:34:19 2011 -0400
+
+    Document the rarer --newmode flags in --help output
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
 commit 9e7a1f88de66c65cca1eb732278f76dab125f30e
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Wed Jun 29 21:18:23 2011 -0700

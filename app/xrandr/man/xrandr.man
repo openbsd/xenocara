@@ -31,21 +31,13 @@ xrandr \- primitive command line interface to RandR extension
 [\-\-screen \fIsnum\fP]
 [\-\-q1]
 [\-\-q12]
-.br
-.B RandR version 1.3 options
-.br
 [\-\-current]
 [\-\-noprimary]
-.br
-.B Per-output options
-.br
 [\-\-panning \fIwidth\fPx\fIheight\fP[+\fIx\fP+\fIy\fP[/\fItrack_width\fPx\fItrack_height\fP+\fItrack_x\fP+\fItrack_y\fP[/\fIborder_left\fP/\fIborder_top\fP/\fIborder_right\fP/\fIborder_bottom\fP]]]]
 [\-\-scale \fIx\fPx\fIy\fP]
+[\-\-scale-from \fIw\fPx\fIh\fP]
 [\-\-transform \fIa\fP,\fIb\fP,\fIc\fP,\fId\fP,\fIe\fP,\fIf\fP,\fIg\fP,\fIh\fP,\fIi\fP]
 [\-\-primary]
-.br
-.B RandR version 1.2 options
-.br
 [\-\-prop]
 [\-\-fb \fIwidth\fPx\fIheight\fP]
 [\-\-fbmm \fIwidth\fPx\fIheight\fP]
@@ -54,9 +46,6 @@ xrandr \- primitive command line interface to RandR extension
 [\-\-rmmode \fIname\fP]
 [\-\-addmode \fIoutput\fP \fIname\fP]
 [\-\-delmode \fIoutput\fP \fIname\fP]
-.br
-.B Per-output options
-.br
 [\-\-output \fIoutput\fP]
 [\-\-auto]
 [\-\-mode \fImode\fP]
@@ -75,14 +64,13 @@ xrandr \- primitive command line interface to RandR extension
 [\-\-crtc \fIcrtc\fP]
 [\-\-gamma \fIred\fP:\fIgreen\fP:\fIblue\fP]
 [\-\-brightness \fIbrightness\fP]
-
-.br
-.B RandR version 1.0 and version 1.1 options
-.br
 [\-o \fIorientation\fP]
 [\-s \fIsize\fP]
 [\-r \fIrate\fP]
 [\-x] [\-y]
+[\-\-listproviders]
+[\-\-setprovideroutputsource \fIprovider\fP \fIsource\fP]
+[\-\-setprovideroffloadsink \fIprovider\fP \fIsink\fP]
 .SH DESCRIPTION
 .I Xrandr
 is used to set the size, orientation and/or reflection of the outputs for a
@@ -90,7 +78,7 @@ screen. It can also set the screen size.
 
 If invoked without any option, it will dump the state of the outputs,
 showing the existing modes for each of them, with a '+' after the preferred
-mode and a '*' after the current mode.
+modes and a '*' after the current mode.
 
 There are a few global options. Other options modify the last output that is
 specified in earlier parameters in the command line. Multiple outputs may
@@ -128,6 +116,20 @@ is available.
 .IP \-\-q12
 Forces the usage of the RandR version 1.2 protocol, even if the display does
 not report it as supported or a higher version is available.
+.PP
+.SH "RandR version 1.4 options"
+.PP
+Options for RandR 1.4 are used as a superset of the options for RandR 1.3.
+.IP \-\-listproviders
+Report information about the providers available.
+.IP "\-\-setprovideroutputsource \fIprovider\fP \fIsource\fP"
+Set \fIsource\fP as the source of display output images for \fIprovider\fP.
+This is only possible if \fIsource\fP and \fIprovider\fP have the \fBSource
+Output\fR and \fBSink Output\fR capabilities, respectively.
+.IP "\-\-setprovideroffloadsink \fIprovider\fP \fIsink\fP"
+Set \fIprovider\fP as a render offload device for \fIsink\fP.
+This is only possible if \fIprovider\fP and \fIsink\fP have the \fBSource
+Offload\fR and \fBSink Offload\fR capabilities, respectively.
 .PP
 .SH "RandR version 1.3 options"
 .PP
@@ -199,6 +201,10 @@ Changes the dimensions of the output picture. Values superior to 1 will lead to
 a compressed screen (screen dimension bigger than the dimension of the output
 mode), and values below 1 leads to a zoom in on the output. This option is
 actually a shortcut version of the \fI\-\-transform\fP option.
+.IP "\-\-scale-from \fIw\fPx\fIh\fP"
+Specifies the size in pixels of the area of the framebuffer to be displayed on
+this output.
+This option is actually a shortcut version of the \fI\-\-transform\fP option.
 .IP \-\-primary
 Set the output as primary.
 It will be sorted first in Xinerama and RANDR geometry requests.
@@ -243,7 +249,7 @@ Selects an output to reconfigure. Use either the name of the output or the
 XID.
 .IP \-\-auto
 For connected but disabled outputs, this will enable them using their
-preferred mode (or, something close to 96dpi if they have no preferred
+first preferred mode (or, something close to 96dpi if they have no preferred
 mode). For disconnected but enabled outputs, this will disable them.
 .IP "\-\-mode \fImode\fP"
 This selects a mode. Use either the name or the XID for \fImode\fP
@@ -273,9 +279,9 @@ output, so it is not valid to say \-\-output a \-\-left\-of b \-\-output
 b \-\-left\-of a.
 .IP "\-\-set \fIproperty\fP \fIvalue\fP"
 Sets an output property. Integer properties may be specified as a valid
-(see \-\-prop) decimal or hexadecimal (with a leading 0x) value. Atom properties
-may be set to any of the valid atoms (see \-\-prop). String properties may be
-set to any value.
+(see \-\-prop) comma-separated list of decimal or hexadecimal (with a leading 0x) values.
+Atom properties may be set to any of the valid atoms (see \-\-prop).
+String properties may be set to any value.
 .IP "\-\-off"
 Disables the output.
 .IP "\-\-crtc \fIcrtc\fP"
