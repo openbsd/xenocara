@@ -1,4 +1,4 @@
-# $Id: Makefile.am,v 1.3 2010/03/28 12:53:20 matthieu Exp $
+# $Id: Makefile.am,v 1.4 2013/03/09 15:24:46 matthieu Exp $
 #  Copyright 2005  Red Hat, Inc.
 # 
 #  Permission to use, copy, modify, distribute, and sell this software and its
@@ -19,6 +19,7 @@
 #  TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 #  PERFORMANCE OF THIS SOFTWARE.
 
+SUBDIRS = man
 bin_PROGRAMS = xvidtune
 
 AM_CFLAGS = $(CWARNFLAGS) $(XVIDTUNE_CFLAGS)
@@ -27,36 +28,6 @@ xvidtune_LDADD = $(XVIDTUNE_LIBS)
 xvidtune_SOURCES =	\
         xvidtune.c
 
-# Man page
-
-appmandir = $(APP_MAN_DIR)
-appman_PRE = xvidtune.man
-appman_DATA = $(appman_PRE:man=@APP_MAN_SUFFIX@)
-
-SED = sed
-
-# Strings to replace in man pages
-XORGRELSTRING = @PACKAGE_STRING@
-  XORGMANNAME = X Version 11
-
-MAN_SUBSTS = \
-	-e 's|__vendorversion__|"$(XORGRELSTRING)" "$(XORGMANNAME)"|' \
-	-e 's|__xorgversion__|"$(XORGRELSTRING)" "$(XORGMANNAME)"|' \
-	-e 's|__xservername__|Xorg|g' \
-	-e 's|__xconfigfile__|xorg.conf|g' \
-	-e 's|__projectroot__|$(prefix)|g' \
-	-e 's|__apploaddir__|$(appdefaultdir)|' \
-	-e 's|__appmansuffix__|$(APP_MAN_SUFFIX)|g' \
-	-e 's|__libmansuffix__|$(LIB_MAN_SUFFIX)|g' \
-	-e 's|__adminmansuffix__|$(ADMIN_MAN_SUFFIX)|g' \
-	-e 's|__miscmansuffix__|$(MISC_MAN_SUFFIX)|g' \
-	-e 's|__filemansuffix__|$(FILE_MAN_SUFFIX)|g'
-
-SUFFIXES = .$(APP_MAN_SUFFIX) .man
-
-.man.$(APP_MAN_SUFFIX):
-	$(AM_V_GEN)$(SED) $(MAN_SUBSTS) < $< > $@
-
 # App default files
 DISTCHECK_CONFIGURE_FLAGS = --with-appdefaultdir=\$${datadir}/X11/app-defaults
 
@@ -64,12 +35,7 @@ appdefaultdir = @appdefaultdir@
 
 dist_appdefault_DATA = app-defaults/Xvidtune
 
-EXTRA_DIST = $(appman_PRE)
-
 MAINTAINERCLEANFILES = ChangeLog INSTALL
-CLEANFILES = Xvidtune $(appman_DATA)
-
-
 
 .PHONY: ChangeLog INSTALL
 

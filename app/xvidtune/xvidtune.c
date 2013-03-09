@@ -1278,7 +1278,6 @@ CreateHierarchy(Widget top)
     XtManageChildren (forms, 14);
 
     if (S3Specials) {
-	char buf[2] = "0";
 	s3form = XtCreateWidget ("S3-form", formWidgetClass, 
 		form, NULL, 0);
 	wids[0] = XtVaCreateWidget("InvertVclk-toggle", toggleWidgetClass,
