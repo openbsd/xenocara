@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.1 2013/03/09 14:34:46 matthieu Exp $
+#	$OpenBSD: Makefile,v 1.2 2013/03/12 06:26:25 matthieu Exp $
 
 FONTCONFIG=	${.CURDIR}/../../../dist/fontconfig
 
@@ -64,6 +64,12 @@ fcobjshash.h: fcobjshash.gperf
 .endif
 
 beforedepend: fcalias.h fcftalias.h fcobjshash.h
+
+beforeinstall:
+	@if [ -f ${DESTDIR}${LIBDIR}/libfontconfig.la ]; then  \
+		echo "rm -f ${DESTDIR}${LIBDIR}/libfontconfig.la" ; \
+		rm -f ${DESTDIR}${LIBDIR}/libfontconfig.la ; \
+	fi
 
 obj:_xenocara_obj
 
