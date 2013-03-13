@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.2 2013/03/12 06:26:25 matthieu Exp $
+#	$OpenBSD: Makefile,v 1.3 2013/03/13 23:56:54 matthieu Exp $
 
 FONTCONFIG=	${.CURDIR}/../../../dist/fontconfig
 
@@ -63,17 +63,20 @@ fcobjshash.h: fcobjshash.gperf
 	mv -f $@.tmp $@ || ( $(RM) $@.tmp && false )
 .endif
 
-beforedepend: fcalias.h fcftalias.h fcobjshash.h
+beforedepend: fcalias.h fcftalias.h fcobjshash.h lib${LIB}.la
 
-beforeinstall:
-	@if [ -f ${DESTDIR}${LIBDIR}/libfontconfig.la ]; then  \
-		echo "rm -f ${DESTDIR}${LIBDIR}/libfontconfig.la" ; \
-		rm -f ${DESTDIR}${LIBDIR}/libfontconfig.la ; \
-	fi
+lib${LIB}.la: ${.CURDIR}/lib${LIB}.la.in
+	@sed -e 's#@libdir@#${LIBDIR}#g' \
+	     -e 's#@major@#${SHLIB_MAJOR}#g' \
+	     -e 's#@minor@#${SHLIB_MINOR}#g' \
+	< $? > $@
+
+afterinstall:
+	${INSTALL_DATA} lib${LIB}.la ${DESTDIR}${LIBDIR}
 
 obj:_xenocara_obj
 
-CLEANFILES = fcalias.h fcaliastail.h fcftalias.h fcftaliastail.h 
+CLEANFILES = fcalias.h fcaliastail.h fcftalias.h fcftaliastail.h lib${LIB}.la
 
 .PATH: ${FONTCONFIG}/src
 
