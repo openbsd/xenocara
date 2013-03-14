@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.52 2012/08/11 09:56:55 matthieu Exp $
+# $OpenBSD: Makefile,v 1.53 2013/03/14 20:49:52 miod Exp $
 
 INPUT_DRV_DEFAULT= \
 	xf86-input-keyboard \
@@ -16,7 +16,7 @@ INPUT_DRV_alpha=
 
 INPUT_DRV_amd64= ${INPUT_DRV_COMMON} xf86-input-synaptics xf86-input-vmmouse
 
-INPUT_DRV_hp300=
+INPUT_DRV_hp300= ${INPUT_DRV_DEFAULT}
 
 INPUT_DRV_hppa= ${INPUT_DRV_DEFAULT}
 
@@ -62,7 +62,8 @@ VIDEO_DRV_amd64= \
 VIDEO_DRV_armish= \
 	xf86-video-wsfb	xf86-video-wsudl
 
-VIDEO_DRV_hp300=
+VIDEO_DRV_hp300= \
+	xf86-video-wsfb
 
 VIDEO_DRV_hppa= \
 	xf86-video-wsfb \
