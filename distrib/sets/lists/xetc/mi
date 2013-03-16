@@ -53,12 +53,15 @@
 ./etc/fonts/conf.avail
 ./etc/fonts/conf.avail/10-autohint.conf
 ./etc/fonts/conf.avail/10-no-sub-pixel.conf
+./etc/fonts/conf.avail/10-scale-bitmap-fonts.conf
 ./etc/fonts/conf.avail/10-sub-pixel-bgr.conf
 ./etc/fonts/conf.avail/10-sub-pixel-rgb.conf
 ./etc/fonts/conf.avail/10-sub-pixel-vbgr.conf
 ./etc/fonts/conf.avail/10-sub-pixel-vrgb.conf
 ./etc/fonts/conf.avail/10-unhinted.conf
-./etc/fonts/conf.avail/20-fix-globaladvance.conf
+./etc/fonts/conf.avail/11-lcdfilter-default.conf
+./etc/fonts/conf.avail/11-lcdfilter-legacy.conf
+./etc/fonts/conf.avail/11-lcdfilter-light.conf
 ./etc/fonts/conf.avail/20-unhint-small-dejavu-sans-mono.conf
 ./etc/fonts/conf.avail/20-unhint-small-dejavu-sans.conf
 ./etc/fonts/conf.avail/20-unhint-small-dejavu-serif.conf
@@ -84,7 +87,7 @@
 ./etc/fonts/conf.avail/80-delicious.conf
 ./etc/fonts/conf.avail/90-synthetic.conf
 ./etc/fonts/conf.d/10-autohint.conf
-./etc/fonts/conf.d/20-fix-globaladvance.conf
+./etc/fonts/conf.d/10-scale-bitmap-fonts.conf
 ./etc/fonts/conf.d/20-unhint-small-dejavu-sans-mono.conf
 ./etc/fonts/conf.d/20-unhint-small-dejavu-sans.conf
 ./etc/fonts/conf.d/20-unhint-small-dejavu-serif.conf

@@ -98,7 +98,7 @@
 ./usr/X11R6/lib/libXmu.so.10.0
 ./usr/X11R6/lib/libXmuu.so.5.0
 ./usr/X11R6/lib/libXpm.so.8.0
-./usr/X11R6/lib/libXrandr.so.6.1
+./usr/X11R6/lib/libXrandr.so.6.2
 ./usr/X11R6/lib/libXrender.so.5.0
 ./usr/X11R6/lib/libXss.so.5.0
 ./usr/X11R6/lib/libXt.so.10.1
@@ -114,7 +114,7 @@
 ./usr/X11R6/lib/libdrm.so.3.1
 ./usr/X11R6/lib/libdrm_intel.a
 ./usr/X11R6/lib/libdrm_intel.so.2.0
-./usr/X11R6/lib/libfontconfig.so.7.0
+./usr/X11R6/lib/libfontconfig.so.8.0
 ./usr/X11R6/lib/libfontenc.so.3.0
 ./usr/X11R6/lib/libfreetype.so.19.0
 ./usr/X11R6/lib/libpciaccess.so.1.1
