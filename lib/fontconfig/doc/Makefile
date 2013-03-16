@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.2 2013/03/16 14:29:45 matthieu Exp $
+#	$OpenBSD: Makefile,v 1.3 2013/03/16 14:57:18 matthieu Exp $
 
 FONTCONFIG =	${.CURDIR}/../../../dist/fontconfig
 
@@ -186,7 +186,8 @@ MAN = FcAtomicCreate.3 \
 	FcValueDestroy.3 \
 	FcValueEqual.3 \
 	FcValuePrint.3 \
-	FcValueSave.3
+	FcValueSave.3 \
+	fonts-conf.5
 
 PDF_FILES = fontconfig-devel.pdf fontconfig-user.pdf
 TXT_FILES = fontconfig-devel.txt fontconfig-user.txt
