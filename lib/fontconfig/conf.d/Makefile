@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.3 2013/03/16 11:26:42 matthieu Exp $
+#	$OpenBSD: Makefile,v 1.4 2013/03/16 14:30:18 matthieu Exp $
 
 FONTCONFIG =	${.CURDIR}/../../../dist/fontconfig
 CONFIGDIR =	/etc/fonts/conf.d
@@ -60,7 +60,7 @@ AVAIL_FILES =				\
 	80-delicious.conf		\
 	90-synthetic.conf
 
-all:
+all cleandir:
 
 install:
 	@for i in $(AVAIL_FILES); do				\
@@ -76,7 +76,6 @@ install:
 	  done)
 
 NOOBJ=
-
 
 .include <bsd.own.mk>
 .include <bsd.xorg.mk>
