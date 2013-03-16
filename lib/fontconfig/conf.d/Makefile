@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.4 2013/03/16 14:30:18 matthieu Exp $
+#	$OpenBSD: Makefile,v 1.5 2013/03/16 14:56:53 matthieu Exp $
 
 FONTCONFIG =	${.CURDIR}/../../../dist/fontconfig
 CONFIGDIR =	/etc/fonts/conf.d
@@ -28,6 +28,7 @@ CONF_LINKS = \
 	90-synthetic.conf
 
 AVAIL_FILES =				\
+	README				\
 	10-autohint.conf		\
 	10-no-sub-pixel.conf		\
 	10-scale-bitmap-fonts.conf	\
