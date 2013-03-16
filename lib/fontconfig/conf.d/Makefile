@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.5 2013/03/16 14:56:53 matthieu Exp $
+#	$OpenBSD: Makefile,v 1.6 2013/03/16 15:09:38 matthieu Exp $
 
 FONTCONFIG =	${.CURDIR}/../../../dist/fontconfig
 CONFIGDIR =	/etc/fonts/conf.d
@@ -28,7 +28,6 @@ CONF_LINKS = \
 	90-synthetic.conf
 
 AVAIL_FILES =				\
-	README				\
 	10-autohint.conf		\
 	10-no-sub-pixel.conf		\
 	10-scale-bitmap-fonts.conf	\
@@ -64,16 +63,17 @@ AVAIL_FILES =				\
 all cleandir:
 
 install:
-	@for i in $(AVAIL_FILES); do				\
-	   echo ${INSTALL_DATA} $$i $(DESTDIR)${CONFAVAILDIR}; \
-	   ${INSTALL_DATA} ${FONTCONFIG}/conf.d/$$i $(DESTDIR)${CONFAVAILDIR};	\
+	@for i in ${AVAIL_FILES}; do				\
+	   echo ${INSTALL_DATA} $$i ${DESTDIR}${CONFAVAILDIR}; \
+	   ${INSTALL_DATA} ${FONTCONFIG}/conf.d/$$i ${DESTDIR}${CONFAVAILDIR};	\
 	done
-	@(echo cd $(DESTDIR)$(CONFIGDIR);			\
-	  cd $(DESTDIR)$(CONFIGDIR);				\
-	  for i in $(CONF_LINKS); do				\
-	    echo rm $$i";" ln -s $(CONFAVAILDIR)/$$i .;	\
+	${INSTALL_DATA} ${FONTCONFIG}/conf.d/README ${DESTDIR}/${CONFIGDIR}
+	@(echo cd ${DESTDIR}${CONFIGDIR};			\
+	  cd ${DESTDIR}${CONFIGDIR};				\
+	  for i in ${CONF_LINKS}; do				\
+	    echo rm $$i";" ln -s ${CONFAVAILDIR}/$$i .;	\
 	    rm -f $$i;						\
-	    ln -s $(CONFAVAILDIR)/$$i .;			\
+	    ln -s ${CONFAVAILDIR}/$$i .;			\
 	  done)
 
 NOOBJ=
