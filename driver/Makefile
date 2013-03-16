@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.53 2013/03/14 20:49:52 miod Exp $
+# $OpenBSD: Makefile,v 1.54 2013/03/16 01:24:43 aoyama Exp $
 
 INPUT_DRV_DEFAULT= \
 	xf86-input-keyboard \
@@ -25,6 +25,8 @@ INPUT_DRV_i386= ${INPUT_DRV_COMMON} xf86-input-synaptics xf86-input-vmmouse
 INPUT_DRV_landisk=
 
 INPUT_DRV_loongson= ${INPUT_DRV_DEFAULT}
+
+INPUT_DRV_luna88k=
 
 INPUT_DRV_macppc= ${INPUT_DRV_COMMON}
 
@@ -79,6 +81,8 @@ VIDEO_DRV_landisk=
 
 VIDEO_DRV_loongson= \
 	xf86-video-wsfb
+
+VIDEO_DRV_luna88k=
 
 VIDEO_DRV_macppc= \
 	xf86-video-ati xf86-video-mach64 xf86-video-nv xf86-video-r128 \

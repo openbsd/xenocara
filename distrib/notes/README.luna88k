@@ -1,0 +1,8 @@
+Post-installation instructions for X.Org on OpenBSD/luna88k
+-----------------------------------------------------------
+
+There is no X server for luna88k.  Only userland X.
+
+problem_blurb
+
+$OpenBSD: README.luna88k,v 1.1 2013/03/16 01:24:43 aoyama Exp $
