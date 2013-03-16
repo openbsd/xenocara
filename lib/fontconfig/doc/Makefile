@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.1 2013/03/09 14:34:42 matthieu Exp $
+#	$OpenBSD: Makefile,v 1.2 2013/03/16 14:29:45 matthieu Exp $
 
 FONTCONFIG =	${.CURDIR}/../../../dist/fontconfig
 
@@ -386,7 +386,7 @@ afterinstall:
 	@for f in ${PDF_FILES} ${TXT_FILES} ${HTML_USER_FILES}; do \
 		echo "installing $$f" ; \
 		${INSTALL_DATA} ${FONTCONFIG}/doc/$$f \
-		  ${DESDIR}${X11BASE}/share/doc/fontconfig ; \
+		  ${DESTDIR}${X11BASE}/share/doc/fontconfig ; \
 	done
 	@for f in ${HTML_DEVEL_FILES}; do \
 		echo "installing $$f" ; \
