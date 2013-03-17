@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.3 2013/03/13 23:56:54 matthieu Exp $
+#	$OpenBSD: Makefile,v 1.4 2013/03/17 20:46:47 matthieu Exp $
 
 FONTCONFIG=	${.CURDIR}/../../../dist/fontconfig
 
@@ -31,7 +31,7 @@ SRCS = \
 	fcxml.c \
 	ftglue.c
 
-CFLAGS =	-DFC_CACHEDIR='"$(FC_CACHEDIR)"' \
+CFLAGS +=	-DFC_CACHEDIR='"$(FC_CACHEDIR)"' \
 		-DFONTCONFIG_PATH='"$(BASECONFIGDIR)"' \
 		-I.
 
