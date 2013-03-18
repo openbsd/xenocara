@@ -46,10 +46,13 @@
 #define SCREEN_ARG_TYPE int
 #define SCREEN_PTR(arg1) ScreenPtr screen = screenInfo.screens[(arg1)]
 
-#define SCREEN_INIT_ARGS_DECL int i, ScreenPtr screen, int argc, char **argv
+#define SCREEN_INIT_ARGS_DECL int scrnIndex, ScreenPtr screen, int argc, char **argv
 
-#define BLOCKHANDLER_ARGS_DECL int arg, pointer blockData, pointer pTimeout, pointer pReadmask
-#define BLOCKHANDLER_ARGS arg, blockData, pTimeout, pReadmask
+#define BLOCKHANDLER_ARGS_DECL int arg, pointer blockData, pointer timeout, pointer read_mask
+#define BLOCKHANDLER_ARGS arg, blockData, timeout, read_mask
+
+#define WAKEUPHANDLER_ARGS_DECL int arg, pointer wakeupData, unsigned long result, pointer read_mask
+#define WAKEUPHANDLER_ARGS arg, wakeupData, result, read_mask
 
 #define CLOSE_SCREEN_ARGS_DECL int scrnIndex, ScreenPtr screen
 #define CLOSE_SCREEN_ARGS scrnIndex, screen
@@ -63,9 +66,10 @@
 #define FREE_SCREEN_ARGS_DECL int arg, int flags
 
 #define VT_FUNC_ARGS_DECL int arg, int flags
-#define VT_FUNC_ARGS scrn->scrnIndex, 0
+#define VT_FUNC_ARGS(flags) scrn->scrnIndex, (flags)
 
-#define SCRN_OR_INDEX_ARG(x) ((x)->scrnIndex)
+#define XF86_ENABLEDISABLEFB_ARG(x) ((x)->scrnIndex)
+
 #else
 #define SCRN_ARG_TYPE ScrnInfoPtr
 #define SCRN_INFO_PTR(arg1) ScrnInfoPtr scrn = (arg1)
@@ -75,8 +79,11 @@
 
 #define SCREEN_INIT_ARGS_DECL ScreenPtr screen, int argc, char **argv
 
-#define BLOCKHANDLER_ARGS_DECL ScreenPtr arg, pointer pTimeout, pointer pReadmask
-#define BLOCKHANDLER_ARGS arg, pTimeout, pReadmask
+#define BLOCKHANDLER_ARGS_DECL ScreenPtr arg, pointer timeout, pointer read_mask
+#define BLOCKHANDLER_ARGS arg, timeout, read_mask
+
+#define WAKEUPHANDLER_ARGS_DECL ScreenPtr arg, unsigned long result, pointer read_mask
+#define WAKEUPHANDLER_ARGS arg, result, read_mask
 
 #define CLOSE_SCREEN_ARGS_DECL ScreenPtr screen
 #define CLOSE_SCREEN_ARGS screen
@@ -86,12 +93,13 @@
 
 #define SWITCH_MODE_ARGS_DECL ScrnInfoPtr arg, DisplayModePtr mode
 #define SWITCH_MODE_ARGS(arg, m) arg, m
+
 #define FREE_SCREEN_ARGS_DECL ScrnInfoPtr arg
 
 #define VT_FUNC_ARGS_DECL ScrnInfoPtr arg
-#define VT_FUNC_ARGS scrn
+#define VT_FUNC_ARGS(flags) scrn
 
-#define SCRN_OR_INDEX_ARG(x) (x)
+#define XF86_ENABLEDISABLEFB_ARG(x) (x)
 
 #endif
 

@@ -62,7 +62,7 @@ if HAVE_GEN4ASM
 
 SUFFIXES = .g4a .g4b
 .g4a.g4b:
-	m4 $*.g4a > $*.g4m && intel-gen4asm -o $@ $*.g4m && intel-gen4asm -g 5 -o $@.gen5 $*.g4m && rm $*.g4m
+	m4 $*.g4a > $*.g4m && @INTEL_GEN4ASM@ -o $@ $*.g4m && @INTEL_GEN4ASM@ -g 5 -o $@.gen5 $*.g4m && rm $*.g4m
 
 $(INTEL_G4B): $(INTEL_G4I)
 

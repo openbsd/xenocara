@@ -219,7 +219,9 @@
 # define GEN7_PS_FLOATING_POINT_MODE_ALT                (1 << 16)
 /* DW3: scratch space */
 /* DW4 */
-# define GEN7_PS_MAX_THREADS_SHIFT                      24
+# define GEN7_PS_MAX_THREADS_SHIFT_IVB                  24
+# define GEN7_PS_MAX_THREADS_SHIFT_HSW                  23
+# define GEN7_PS_SAMPLE_MASK_SHIFT_HSW			12
 # define GEN7_PS_PUSH_CONSTANT_ENABLE                   (1 << 11)
 # define GEN7_PS_ATTRIBUTE_ENABLE                       (1 << 10)
 # define GEN7_PS_OMASK_TO_RENDER_TARGET                 (1 << 9)
@@ -294,6 +296,7 @@
 #define BRW_CLIP_ENABLE		       1
 
 /* for BRW_PIPE_CONTROL */
+#define BRW_PIPE_CONTROL_CS_STALL      (1 << 20)
 #define BRW_PIPE_CONTROL_NOWRITE       (0 << 14)
 #define BRW_PIPE_CONTROL_WRITE_QWORD   (1 << 14)
 #define BRW_PIPE_CONTROL_WRITE_DEPTH   (2 << 14)
@@ -305,6 +308,7 @@
 #define BRW_PIPE_CONTROL_NOTIFY_ENABLE (1 << 8)
 #define BRW_PIPE_CONTROL_GLOBAL_GTT    (1 << 2)
 #define BRW_PIPE_CONTROL_LOCAL_PGTT    (0 << 2)
+#define BRW_PIPE_CONTROL_STALL_AT_SCOREBOARD    (1 << 1)
 #define BRW_PIPE_CONTROL_DEPTH_CACHE_FLUSH	(1 << 0)
 
 /* VERTEX_BUFFER_STATE Structure */

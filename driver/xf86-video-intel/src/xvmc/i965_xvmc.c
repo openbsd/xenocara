@@ -244,7 +244,7 @@ static Status destroy_context(Display * display, XvMCContext * context)
 {
 	struct intel_xvmc_context *intel_ctx;
 	intel_ctx = context->privData;
-	Xfree(intel_ctx->hw);
+	free(intel_ctx->hw);
 	free(intel_ctx);
 	return Success;
 }

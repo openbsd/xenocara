@@ -38,6 +38,7 @@
 #include <X11/fonts/fontstruct.h>
 #include "dixfontstr.h"
 #include "uxa.h"
+#include "uxa-glamor.h"
 
 #if HAS_DEVPRIVATEKEYREC
 DevPrivateKeyRec uxa_screen_index;
@@ -160,7 +161,7 @@ Bool uxa_prepare_access(DrawablePtr pDrawable, uxa_access_t access)
  *
  * It deals with calling the driver's finish_access() only if necessary.
  */
-void uxa_finish_access(DrawablePtr pDrawable)
+void uxa_finish_access(DrawablePtr pDrawable, uxa_access_t access)
 {
 	ScreenPtr pScreen = pDrawable->pScreen;
 	uxa_screen_t *uxa_screen = uxa_get_screen(pScreen);
@@ -173,7 +174,7 @@ void uxa_finish_access(DrawablePtr pDrawable)
 	if (!uxa_pixmap_is_offscreen(pPixmap))
 		return;
 
-	(*uxa_screen->info->finish_access) (pPixmap);
+	(*uxa_screen->info->finish_access) (pPixmap, access);
 }
 
 /**
@@ -183,11 +184,21 @@ void uxa_finish_access(DrawablePtr pDrawable)
 static void
 uxa_validate_gc(GCPtr pGC, unsigned long changes, DrawablePtr pDrawable)
 {
+	uxa_screen_t *uxa_screen = uxa_get_screen(pGC->pScreen);
 	/* fbValidateGC will do direct access to pixmaps if the tiling has
 	 * changed.
 	 * Preempt fbValidateGC by doing its work and masking the change out, so
 	 * that we can do the Prepare/finish_access.
 	 */
+
+	/* If we are using GLAMOR, then the tile or stipple pixmap
+	 * may be pure GLAMOR pixmap, then we should let the glamor
+	 * to do the validation.
+	 */
+	if (uxa_screen->info->flags & UXA_USE_GLAMOR) {
+		glamor_validate_gc(pGC, changes, pDrawable);
+		goto set_ops;
+	}
 #ifdef FB_24_32BIT
 	if ((changes & GCTile) && fbGetRotatedPixmap(pGC)) {
 		(*pGC->pScreen->DestroyPixmap) (fbGetRotatedPixmap(pGC));
@@ -217,7 +228,7 @@ uxa_validate_gc(GCPtr pGC, unsigned long changes, DrawablePtr pDrawable)
 					    fb24_32ReformatTile(pOldTile,
 								pDrawable->
 								bitsPerPixel);
-					uxa_finish_access(&pOldTile->drawable);
+					uxa_finish_access(&pOldTile->drawable, UXA_ACCESS_RO);
 				}
 			}
 			if (pNewTile) {
@@ -235,7 +246,7 @@ uxa_validate_gc(GCPtr pGC, unsigned long changes, DrawablePtr pDrawable)
 			if (uxa_prepare_access
 			    (&pGC->tile.pixmap->drawable, UXA_ACCESS_RW)) {
 				fbPadPixmap(pGC->tile.pixmap);
-				uxa_finish_access(&pGC->tile.pixmap->drawable);
+				uxa_finish_access(&pGC->tile.pixmap->drawable, UXA_ACCESS_RW);
 			}
 		}
 		/* Mask out the GCTile change notification, now that we've
@@ -250,12 +261,13 @@ uxa_validate_gc(GCPtr pGC, unsigned long changes, DrawablePtr pDrawable)
 		 */
 		if (uxa_prepare_access(&pGC->stipple->drawable, UXA_ACCESS_RW)) {
 			fbValidateGC(pGC, changes, pDrawable);
-			uxa_finish_access(&pGC->stipple->drawable);
+			uxa_finish_access(&pGC->stipple->drawable, UXA_ACCESS_RW);
 		}
 	} else {
 		fbValidateGC(pGC, changes, pDrawable);
 	}
 
+set_ops:
 	pGC->ops = (GCOps *) & uxa_ops;
 }
 
@@ -296,7 +308,7 @@ Bool uxa_prepare_access_window(WindowPtr pWin)
 		    (&pWin->border.pixmap->drawable, UXA_ACCESS_RO)) {
 			if (pWin->backgroundState == BackgroundPixmap)
 				uxa_finish_access(&pWin->background.pixmap->
-						  drawable);
+						  drawable, UXA_ACCESS_RO);
 			return FALSE;
 		}
 	}
@@ -306,10 +318,10 @@ Bool uxa_prepare_access_window(WindowPtr pWin)
 void uxa_finish_access_window(WindowPtr pWin)
 {
 	if (pWin->backgroundState == BackgroundPixmap)
-		uxa_finish_access(&pWin->background.pixmap->drawable);
+		uxa_finish_access(&pWin->background.pixmap->drawable, UXA_ACCESS_RO);
 
 	if (pWin->borderIsPixel == FALSE)
-		uxa_finish_access(&pWin->border.pixmap->drawable);
+		uxa_finish_access(&pWin->border.pixmap->drawable, UXA_ACCESS_RO);
 }
 
 static Bool uxa_change_window_attributes(WindowPtr pWin, unsigned long mask)
@@ -329,23 +341,8 @@ static RegionPtr uxa_bitmap_to_region(PixmapPtr pPix)
 	if (!uxa_prepare_access(&pPix->drawable, UXA_ACCESS_RO))
 		return NULL;
 	ret = fbPixmapToRegion(pPix);
-	uxa_finish_access(&pPix->drawable);
+	uxa_finish_access(&pPix->drawable, UXA_ACCESS_RO);
 	return ret;
-}
-
-static void uxa_xorg_enable_disable_fb_access(SCRN_ARG_TYPE arg, Bool enable)
-{
-	SCRN_INFO_PTR(arg);
-	uxa_screen_t *uxa_screen = uxa_get_screen(scrn->pScreen);
-
-	if (!enable && uxa_screen->disableFbCount++ == 0)
-		uxa_screen->swappedOut = TRUE;
-
-	if (enable && --uxa_screen->disableFbCount == 0)
-		uxa_screen->swappedOut = FALSE;
-
-	if (uxa_screen->SavedEnableDisableFBAccess)
-		uxa_screen->SavedEnableDisableFBAccess(arg, enable);
 }
 
 void uxa_set_fallback_debug(ScreenPtr screen, Bool enable)
@@ -369,7 +366,6 @@ void uxa_set_force_fallback(ScreenPtr screen, Bool value)
 static Bool uxa_close_screen(CLOSE_SCREEN_ARGS_DECL)
 {
 	uxa_screen_t *uxa_screen = uxa_get_screen(screen);
-	ScrnInfoPtr scrn = xf86ScreenToScrn(screen);
 #ifdef RENDER
 	PictureScreenPtr ps = GetPictureScreenIfSet(screen);
 #endif
@@ -406,11 +402,9 @@ static Bool uxa_close_screen(CLOSE_SCREEN_ARGS_DECL)
 	screen->ChangeWindowAttributes =
 	    uxa_screen->SavedChangeWindowAttributes;
 	screen->BitmapToRegion = uxa_screen->SavedBitmapToRegion;
-	scrn->EnableDisableFBAccess = uxa_screen->SavedEnableDisableFBAccess;
 #ifdef RENDER
 	if (ps) {
 		ps->Composite = uxa_screen->SavedComposite;
-		ps->CompositeRects = uxa_screen->SavedCompositeRects;
 		ps->Glyphs = uxa_screen->SavedGlyphs;
 		ps->Trapezoids = uxa_screen->SavedTrapezoids;
 		ps->AddTraps = uxa_screen->SavedAddTraps;
@@ -441,7 +435,7 @@ uxa_driver_t *uxa_driver_alloc(void)
 }
 
 /**
- * @param pScreen screen being initialized
+ * @param screen screen being initialized
  * @param pScreenInfo UXA driver record
  *
  * uxa_driver_init sets up UXA given a driver record filled in by the driver.
@@ -453,7 +447,6 @@ uxa_driver_t *uxa_driver_alloc(void)
 Bool uxa_driver_init(ScreenPtr screen, uxa_driver_t * uxa_driver)
 {
 	uxa_screen_t *uxa_screen;
-	ScrnInfoPtr scrn = xf86Screens[screen->myNum];
 
 	if (!uxa_driver)
 		return FALSE;
@@ -521,7 +514,7 @@ Bool uxa_driver_init(ScreenPtr screen, uxa_driver_t * uxa_driver)
 	screen->GetImage = uxa_get_image;
 
 	uxa_screen->SavedGetSpans = screen->GetSpans;
-	screen->GetSpans = uxa_check_get_spans;
+	screen->GetSpans = uxa_get_spans;
 
 	uxa_screen->SavedCopyWindow = screen->CopyWindow;
 	screen->CopyWindow = uxa_copy_window;
@@ -533,18 +526,12 @@ Bool uxa_driver_init(ScreenPtr screen, uxa_driver_t * uxa_driver)
 	uxa_screen->SavedBitmapToRegion = screen->BitmapToRegion;
 	screen->BitmapToRegion = uxa_bitmap_to_region;
 
-	uxa_screen->SavedEnableDisableFBAccess = scrn->EnableDisableFBAccess;
-	scrn->EnableDisableFBAccess = uxa_xorg_enable_disable_fb_access;
-
 #ifdef RENDER
 	{
 		PictureScreenPtr ps = GetPictureScreenIfSet(screen);
 		if (ps) {
 			uxa_screen->SavedComposite = ps->Composite;
 			ps->Composite = uxa_composite;
-
-			uxa_screen->SavedCompositeRects = ps->CompositeRects;
-			ps->CompositeRects = uxa_solid_rects;
 
 			uxa_screen->SavedGlyphs = ps->Glyphs;
 			ps->Glyphs = uxa_glyphs;
@@ -559,7 +546,7 @@ Bool uxa_driver_init(ScreenPtr screen, uxa_driver_t * uxa_driver)
 			ps->Trapezoids = uxa_trapezoids;
 
 			uxa_screen->SavedAddTraps = ps->AddTraps;
-			ps->AddTraps = uxa_check_add_traps;
+			ps->AddTraps = uxa_add_traps;
 		}
 	}
 #endif

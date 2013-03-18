@@ -36,7 +36,6 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 void intel_batch_init(ScrnInfoPtr scrn);
 void intel_batch_teardown(ScrnInfoPtr scrn);
 void intel_batch_emit_flush(ScrnInfoPtr scrn);
-void intel_batch_do_flush(ScrnInfoPtr scrn);
 void intel_batch_submit(ScrnInfoPtr scrn);
 
 static inline int intel_batch_space(intel_screen_private *intel)
@@ -132,13 +131,11 @@ intel_batch_mark_pixmap_domains(intel_screen_private *intel,
 
 	if (list_is_empty(&priv->batch))
 		list_add(&priv->batch, &intel->batch_pixmaps);
-	if (write_domain && list_is_empty(&priv->flush))
-		list_add(&priv->flush, &intel->flush_pixmaps);
 
-	priv->batch_write |= write_domain != 0;
+	priv->dirty |= write_domain != 0;
 	priv->busy = 1;
- 
- 	intel->needs_flush |= write_domain != 0;
+
+	intel->needs_flush |= write_domain != 0;
 }
 
 static inline void
@@ -148,10 +145,11 @@ intel_batch_emit_reloc_pixmap(intel_screen_private *intel, PixmapPtr pixmap,
 {
 	struct intel_pixmap *priv = intel_get_pixmap_private(pixmap);
 
-	intel_batch_mark_pixmap_domains(intel, priv, read_domains,
-	    write_domain);
-	intel_batch_emit_reloc(intel, priv->bo, read_domains,
-	    write_domain, delta, needs_fence);
+	intel_batch_mark_pixmap_domains(intel, priv, read_domains, write_domain);
+
+	intel_batch_emit_reloc(intel, priv->bo,
+			       read_domains, write_domain,
+			       delta, needs_fence);
 }
 
 #define ALIGN_BATCH(align) intel_batch_align(intel, align);

@@ -120,7 +120,7 @@ static uint32_t field_f_b_kernel[][4] = {
 #include "shader/vld/field_f_b.g4b"
 };
 
-/* on IGDNG */
+/* on Ironlake */
 static uint32_t lib_kernel_gen5[][4] = {
 #include "shader/vld/lib.g4b.gen5"
 };
@@ -186,7 +186,7 @@ static uint32_t field_f_b_kernel_idct[][4] = {
 #include "shader/mc/field_f_b_igd.g4b"
 };
 
-/* on IGDNG */
+/* on Ironlake */
 static uint32_t lib_kernel_idct_gen5[][4] = {
 #include "shader/mc/lib_igd.g4b.gen5"
 };
@@ -622,7 +622,7 @@ static Status destroy_context(Display * display, XvMCContext * context)
 {
 	struct intel_xvmc_context *intel_ctx;
 	intel_ctx = context->privData;
-	Xfree(intel_ctx->hw);
+	free(intel_ctx->hw);
 	free(intel_ctx);
 	return Success;
 }

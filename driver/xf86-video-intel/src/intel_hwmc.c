@@ -75,11 +75,11 @@ static int create_context(ScrnInfoPtr scrn, XvMCContextPtr pContext,
 		contextRec->type = XVMC_I915_MPEG2_MC;
 		contextRec->i915.use_phys_addr = 0;
 	} else {
-		if (INTEL_INFO(intel)->gen >= 45)
+		if (INTEL_INFO(intel)->gen >= 045)
 			contextRec->type = XVMC_I965_MPEG2_VLD;
 		else
 			contextRec->type = XVMC_I965_MPEG2_MC;
-		contextRec->i965.is_g4x = INTEL_INFO(intel)->gen == 45;
+		contextRec->i965.is_g4x = INTEL_INFO(intel)->gen == 045;
 		contextRec->i965.is_965_q = IS_965_Q(intel);
 		contextRec->i965.is_igdng = IS_GEN5(intel);
 	}
@@ -189,7 +189,7 @@ static XF86MCSurfaceInfoPtr surface_info_vld[] = {
 /* check chip type and load xvmc driver */
 Bool intel_xvmc_adaptor_init(ScreenPtr pScreen)
 {
-	ScrnInfoPtr scrn = xf86Screens[pScreen->myNum];
+	ScrnInfoPtr scrn = xf86ScreenToScrn(pScreen);
 	intel_screen_private *intel = intel_get_screen_private(scrn);
 	static XF86MCAdaptorRec *pAdapt;
 	char *name;
@@ -227,7 +227,7 @@ Bool intel_xvmc_adaptor_init(ScreenPtr pScreen)
 		name = "i915_xvmc",
 		pAdapt->num_surfaces = ARRAY_SIZE(surface_info_i915);
 		pAdapt->surfaces = surface_info_i915;
-	} else if (INTEL_INFO(intel)->gen >= 45) {
+	} else if (INTEL_INFO(intel)->gen >= 045) {
 		name = "xvmc_vld",
 		pAdapt->num_surfaces = ARRAY_SIZE(surface_info_vld);
 		pAdapt->surfaces = surface_info_vld;

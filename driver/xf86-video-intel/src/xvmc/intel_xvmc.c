@@ -972,7 +972,7 @@ _X_EXPORT Status XvMCGetSubpictureStatus(Display * display,
  * Function: XvMCQueryAttributes
  * Description: An array of XvAttributes of size "number" is returned by
  *   this function. If there are no attributes, NULL is returned and number
- *   is set to 0. The array may be freed with xfree().
+ *   is set to 0. The array may be freed with free().
  *
  * Arguments:
  *   display - Connection to the X server.

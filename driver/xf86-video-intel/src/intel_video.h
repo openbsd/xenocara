@@ -35,7 +35,6 @@ typedef struct {
 	int brightness;
 	int contrast;
 	int saturation;
-	xf86CrtcPtr current_crtc;
 	xf86CrtcPtr desired_crtc;
 
 	RegionRec clip;
@@ -52,14 +51,10 @@ typedef struct {
 	uint32_t videoStatus;
 	Time offTime;
 	Time freeTime;
-   /** YUV data buffers */
-	drm_intel_bo *buf;	/* current buffer to draw into */
-	drm_intel_bo *oldBuf;	/* old buffer, may be in use by the overlay hw */
-	Bool oldBuf_pinned;	/* only actually pinned when in use by the overlay hw */
+	/** YUV data buffers */
+	drm_intel_bo *buf, *old_buf[2];
+	Bool reusable;
 
-	Bool overlayOK;
-	int oneLineMode;
-	int scaleRatio;
 	Bool textured;
 	Rotation rotation;	/* should remove intel->rotation later */
 
@@ -97,4 +92,4 @@ void i965_free_video(ScrnInfoPtr scrn);
 
 int is_planar_fourcc(int id);
 
-void intel_video_block_handler(ScrnInfoPtr scrn);
+void intel_video_block_handler(intel_screen_private *intel);

@@ -40,6 +40,8 @@
 #include "i915_drm.h"
 #include "i965_reg.h"
 
+#include "uxa.h"
+
 #define DUMP_BATCHBUFFERS NULL // "/tmp/i915-batchbuffers.dump"
 
 static void intel_end_vertex(intel_screen_private *intel)
@@ -65,17 +67,26 @@ void intel_next_vertex(intel_screen_private *intel)
 		dri_bo_alloc(intel->bufmgr, "vertex", sizeof (intel->vertex_ptr), 4096);
 }
 
-static void intel_next_batch(ScrnInfoPtr scrn)
+static dri_bo *bo_alloc(ScrnInfoPtr scrn)
 {
 	intel_screen_private *intel = intel_get_screen_private(scrn);
-
+	int size = 4 * 4096;
 	/* The 865 has issues with larger-than-page-sized batch buffers. */
 	if (IS_I865G(intel))
-		intel->batch_bo =
-		    dri_bo_alloc(intel->bufmgr, "batch", 4096, 4096);
-	else
-		intel->batch_bo =
-		    dri_bo_alloc(intel->bufmgr, "batch", 4096 * 4, 4096);
+		size = 4096;
+	return dri_bo_alloc(intel->bufmgr, "batch", size, 4096);
+}
+
+static void intel_next_batch(ScrnInfoPtr scrn, int mode)
+{
+	intel_screen_private *intel = intel_get_screen_private(scrn);
+	dri_bo *tmp;
+
+	drm_intel_gem_bo_clear_relocs(intel->batch_bo, 0);
+
+	tmp = intel->last_batch_bo[mode];
+	intel->last_batch_bo[mode] = intel->batch_bo;
+	intel->batch_bo = tmp;
 
 	intel->batch_used = 0;
 
@@ -93,12 +104,25 @@ void intel_batch_init(ScrnInfoPtr scrn)
 	intel->batch_emitting = 0;
 	intel->vertex_id = 0;
 
-	intel_next_batch(scrn);
+	intel->last_batch_bo[0] = bo_alloc(scrn);
+	intel->last_batch_bo[1] = bo_alloc(scrn);
+
+	intel->batch_bo = bo_alloc(scrn);
+	intel->batch_used = 0;
+	intel->last_3d = LAST_3D_OTHER;
 }
 
 void intel_batch_teardown(ScrnInfoPtr scrn)
 {
 	intel_screen_private *intel = intel_get_screen_private(scrn);
+	int i;
+
+	for (i = 0; i < ARRAY_SIZE(intel->last_batch_bo); i++) {
+		if (intel->last_batch_bo[i] != NULL) {
+			dri_bo_unreference(intel->last_batch_bo[i]);
+			intel->last_batch_bo[i] = NULL;
+		}
+	}
 
 	if (intel->batch_bo != NULL) {
 		dri_bo_unreference(intel->batch_bo);
@@ -112,29 +136,44 @@ void intel_batch_teardown(ScrnInfoPtr scrn)
 
 	while (!list_is_empty(&intel->batch_pixmaps))
 		list_del(intel->batch_pixmaps.next);
-
-	while (!list_is_empty(&intel->flush_pixmaps))
-		list_del(intel->flush_pixmaps.next);
-
-	while (!list_is_empty(&intel->in_flight)) {
-		struct intel_pixmap *entry;
-
-		entry = list_first_entry(&intel->in_flight,
-					 struct intel_pixmap,
-					 in_flight);
-
-		dri_bo_unreference(entry->bo);
-		list_del(&entry->in_flight);
-		free(entry);
-	}
 }
 
-void intel_batch_do_flush(ScrnInfoPtr scrn)
+static void intel_batch_do_flush(ScrnInfoPtr scrn)
+{
+	intel_screen_private *intel = intel_get_screen_private(scrn);
+	struct intel_pixmap *priv;
+
+	list_for_each_entry(priv, &intel->batch_pixmaps, batch)
+		priv->dirty = 0;
+}
+
+static void intel_emit_post_sync_nonzero_flush(ScrnInfoPtr scrn)
 {
 	intel_screen_private *intel = intel_get_screen_private(scrn);
 
-	while (!list_is_empty(&intel->flush_pixmaps))
-		list_del(intel->flush_pixmaps.next);
+	/* keep this entire sequence of 3 PIPE_CONTROL cmds in one batch to
+	 * avoid upsetting the gpu. */
+	BEGIN_BATCH(3*4);
+	OUT_BATCH(BRW_PIPE_CONTROL | (4 - 2));
+	OUT_BATCH(BRW_PIPE_CONTROL_CS_STALL |
+		  BRW_PIPE_CONTROL_STALL_AT_SCOREBOARD);
+	OUT_BATCH(0); /* address */
+	OUT_BATCH(0); /* write data */
+
+	OUT_BATCH(BRW_PIPE_CONTROL | (4 - 2));
+	OUT_BATCH(BRW_PIPE_CONTROL_WRITE_QWORD);
+	OUT_RELOC(intel->wa_scratch_bo,
+		  I915_GEM_DOMAIN_INSTRUCTION, I915_GEM_DOMAIN_INSTRUCTION, 0);
+	OUT_BATCH(0); /* write data */
+
+	/* now finally the _real flush */
+	OUT_BATCH(BRW_PIPE_CONTROL | (4 - 2));
+	OUT_BATCH(BRW_PIPE_CONTROL_WC_FLUSH |
+		  BRW_PIPE_CONTROL_TC_FLUSH |
+		  BRW_PIPE_CONTROL_NOWRITE);
+	OUT_BATCH(0); /* write address */
+	OUT_BATCH(0); /* write data */
+	ADVANCE_BATCH();
 }
 
 void intel_batch_emit_flush(ScrnInfoPtr scrn)
@@ -145,7 +184,7 @@ void intel_batch_emit_flush(ScrnInfoPtr scrn)
 	assert (!intel->in_batch_atomic);
 
 	/* Big hammer, look to the pipelined flushes in future. */
-	if ((INTEL_INFO(intel)->gen >= 60)) {
+	if ((INTEL_INFO(intel)->gen >= 060)) {
 		if (intel->current_batch == BLT_BATCH) {
 			BEGIN_BATCH_BLT(4);
 			OUT_BATCH(MI_FLUSH_DW | 2);
@@ -154,18 +193,23 @@ void intel_batch_emit_flush(ScrnInfoPtr scrn)
 			OUT_BATCH(0);
 			ADVANCE_BATCH();
 		} else  {
-			BEGIN_BATCH(4);
-			OUT_BATCH(BRW_PIPE_CONTROL | (4 - 2));
-			OUT_BATCH(BRW_PIPE_CONTROL_WC_FLUSH |
-				  BRW_PIPE_CONTROL_TC_FLUSH |
-				  BRW_PIPE_CONTROL_NOWRITE);
-			OUT_BATCH(0); /* write address */
-			OUT_BATCH(0); /* write data */
-			ADVANCE_BATCH();
+			if ((INTEL_INFO(intel)->gen == 060)) {
+				/* HW-Workaround for Sandybdrige */
+				intel_emit_post_sync_nonzero_flush(scrn);
+			} else {
+				BEGIN_BATCH(4);
+				OUT_BATCH(BRW_PIPE_CONTROL | (4 - 2));
+				OUT_BATCH(BRW_PIPE_CONTROL_WC_FLUSH |
+					  BRW_PIPE_CONTROL_TC_FLUSH |
+					  BRW_PIPE_CONTROL_NOWRITE);
+				OUT_BATCH(0); /* write address */
+				OUT_BATCH(0); /* write data */
+				ADVANCE_BATCH();
+			}
 		}
 	} else {
 		flags = MI_WRITE_DIRTY_STATE | MI_INVALIDATE_MAP_CACHE;
-		if (INTEL_INFO(intel)->gen >= 40)
+		if (INTEL_INFO(intel)->gen >= 040)
 			flags = 0;
 
 		BEGIN_BATCH(1);
@@ -173,13 +217,6 @@ void intel_batch_emit_flush(ScrnInfoPtr scrn)
 		ADVANCE_BATCH();
 	}
 	intel_batch_do_flush(scrn);
-}
-
-static Bool intel_batch_needs_flush(intel_screen_private *intel)
-{
-	ScreenPtr screen = intel->scrn->pScreen;
-	PixmapPtr pixmap = screen->GetScreenPixmap(screen);
-	return intel_get_pixmap_private(pixmap)->batch_write;
 }
 
 void intel_batch_submit(ScrnInfoPtr scrn)
@@ -230,7 +267,8 @@ void intel_batch_submit(ScrnInfoPtr scrn)
 			/* The GPU has hung and unlikely to recover by this point. */
 			if (!once) {
 				xf86DrvMsg(scrn->scrnIndex, X_ERROR, "Detected a hung GPU, disabling acceleration.\n");
-				uxa_set_force_fallback(screenInfo.screens[scrn->scrnIndex], TRUE);
+				xf86DrvMsg(scrn->scrnIndex, X_ERROR, "When reporting this, please include i915_error_state from debugfs and the full dmesg.\n");
+				uxa_set_force_fallback(xf86ScrnToScreen(scrn), TRUE);
 				intel->force_fallback = TRUE;
 				once = 1;
 			}
@@ -242,8 +280,6 @@ void intel_batch_submit(ScrnInfoPtr scrn)
 		}
 	}
 
-	intel->needs_flush |= intel_batch_needs_flush(intel);
-
 	while (!list_is_empty(&intel->batch_pixmaps)) {
 		struct intel_pixmap *entry;
 
@@ -252,30 +288,14 @@ void intel_batch_submit(ScrnInfoPtr scrn)
 					 batch);
 
 		entry->busy = -1;
-		entry->batch_write = 0;
+		entry->dirty = 0;
 		list_del(&entry->batch);
-	}
-
-	while (!list_is_empty(&intel->flush_pixmaps))
-		list_del(intel->flush_pixmaps.next);
-
-	while (!list_is_empty(&intel->in_flight)) {
-		struct intel_pixmap *entry;
-
-		entry = list_first_entry(&intel->in_flight,
-					 struct intel_pixmap,
-					 in_flight);
-
-		dri_bo_unreference(entry->bo);
-		list_del(&entry->in_flight);
-		free(entry);
 	}
 
 	if (intel->debug_flush & DEBUG_FLUSH_WAIT)
 		drm_intel_bo_wait_rendering(intel->batch_bo);
 
-	dri_bo_unreference(intel->batch_bo);
-	intel_next_batch(scrn);
+	intel_next_batch(scrn, intel->current_batch == I915_EXEC_BLT);
 
 	if (intel->batch_commit_notify)
 		intel->batch_commit_notify(intel);
@@ -292,21 +312,4 @@ void intel_debug_flush(ScrnInfoPtr scrn)
 
 	if (intel->debug_flush & DEBUG_FLUSH_BATCHES)
 		intel_batch_submit(scrn);
-}
-
-void intel_sync(ScrnInfoPtr scrn)
-{
-	intel_screen_private *intel = intel_get_screen_private(scrn);
-	int had;
-
-	if (!scrn->vtSema || !intel->batch_bo || !intel->batch_ptr)
-		return;
-
-	
-	/* XXX hack while we still need this for ums */
-	had = intel->debug_flush & DEBUG_FLUSH_WAIT;
-	intel->debug_flush |= DEBUG_FLUSH_WAIT;
-	intel_batch_submit(scrn);
-	if (!had)
-		intel->debug_flush &= ~DEBUG_FLUSH_WAIT;
 }

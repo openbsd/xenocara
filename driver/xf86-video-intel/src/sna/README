@@ -1,0 +1,30 @@
+SandyBridge's New Acceleration
+------------------------------
+
+The guiding principle behind the design is to avoid GPU context switches.
+On SandyBridge (and beyond), these are especially pernicious because the
+RENDER and BLT engine are now on different rings and require
+synchronisation of the various execution units when switching contexts.
+They were not cheap on early generation, but with the increasing
+complexity of the GPU, avoiding such serialisations is important.
+
+Furthermore, we try very hard to avoid migrating between the CPU and GPU.
+Every pixmap (apart from temporary "scratch" surfaces which we intend to
+use on the GPU) is created in system memory. All operations are then done
+upon this shadow copy until we are forced to move it onto the GPU. Such
+migration can only be first triggered by: setting the pixmap as the
+scanout (we obviously need a GPU buffer here), using the pixmap as a DRI
+buffer (the client expects to perform hardware acceleration and we do not
+want to disappoint) and lastly using the pixmap as a RENDER target. This
+last is chosen because when we know we are going to perform hardware
+acceleration and will continue to do so without fallbacks, using the GPU
+is much, much faster than the CPU. The heuristic I chose therefore was
+that if the application uses RENDER, i.e. cairo, then it will only be
+using those paths and not intermixing core drawing operations and so
+unlikely to trigger a fallback.
+
+The complicating case is front-buffer rendering. So in order to accommodate
+using RENDER on an application whilst running xterm without a composite
+manager redirecting all the pixmaps to backing surfaces, we have to
+perform damage tracking to avoid excess migration of portions of the
+buffer.

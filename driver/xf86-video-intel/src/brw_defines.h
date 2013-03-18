@@ -469,6 +469,13 @@
 #define BRW_BORDER_COLOR_MODE_DEFAULT	0
 #define BRW_BORDER_COLOR_MODE_LEGACY	1
 
+#define HSW_SCS_ZERO					0
+#define HSW_SCS_ONE						1
+#define HSW_SCS_RED						4
+#define HSW_SCS_GREEN					5
+#define HSW_SCS_BLUE					6
+#define HSW_SCS_ALPHA					7
+
 #define BRW_TEXCOORDMODE_WRAP            0
 #define BRW_TEXCOORDMODE_MIRROR          1
 #define BRW_TEXCOORDMODE_CLAMP           2

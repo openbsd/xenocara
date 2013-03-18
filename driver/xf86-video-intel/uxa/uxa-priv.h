@@ -44,7 +44,6 @@
 #include "pixmapstr.h"
 #include "windowstr.h"
 #include "servermd.h"
-#include "mibstore.h"
 #include "colormapst.h"
 #include "gcstruct.h"
 #include "input.h"
@@ -111,7 +110,7 @@ typedef struct {
 
 #define UXA_NUM_SOLID_CACHE 16
 
-typedef void (*EnableDisableFBAccessProcPtr) (SCRN_ARG_TYPE, Bool);
+typedef void (*EnableDisableFBAccessProcPtr) (int, Bool);
 typedef struct {
 	uxa_driver_t *info;
 	CreateGCProcPtr SavedCreateGC;
@@ -125,20 +124,15 @@ typedef struct {
 	BitmapToRegionProcPtr SavedBitmapToRegion;
 #ifdef RENDER
 	CompositeProcPtr SavedComposite;
-	CompositeRectsProcPtr SavedCompositeRects;
 	TrianglesProcPtr SavedTriangles;
 	GlyphsProcPtr SavedGlyphs;
 	TrapezoidsProcPtr SavedTrapezoids;
 	AddTrapsProcPtr SavedAddTraps;
 	UnrealizeGlyphProcPtr SavedUnrealizeGlyph;
 #endif
-	EnableDisableFBAccessProcPtr SavedEnableDisableFBAccess;
 
 	Bool force_fallback;
 	Bool fallback_debug;
-	Bool swappedOut;
-	unsigned disableFbCount;
-	unsigned offScreenCounter;
 
 	uxa_glyph_cache_t glyphCaches[UXA_NUM_GLYPH_CACHE_FORMATS];
 	Bool glyph_cache_initialized;
@@ -294,6 +288,14 @@ void
 uxa_get_image(DrawablePtr pDrawable, int x, int y, int w, int h,
 	      unsigned int format, unsigned long planeMask, char *d);
 
+void
+uxa_get_spans(DrawablePtr pDrawable, int wMax, DDXPointPtr ppt,
+	      int *pwidth, int nspans, char *pdstStart);
+
+void
+uxa_add_traps(PicturePtr pPicture,
+	      INT16 x_off, INT16 y_off, int ntrap, xTrap * traps);
+
 extern const GCOps uxa_ops;
 
 #ifdef RENDER
@@ -327,10 +329,10 @@ uxa_check_composite(CARD8 op,
 
 /* uxa.c */
 Bool uxa_prepare_access(DrawablePtr pDrawable, uxa_access_t access);
-void uxa_finish_access(DrawablePtr pDrawable);
+void uxa_finish_access(DrawablePtr pDrawable, uxa_access_t access);
 
 Bool uxa_picture_prepare_access(PicturePtr picture, int mode);
-void uxa_picture_finish_access(PicturePtr picture);
+void uxa_picture_finish_access(PicturePtr picture, int mode);
 
 void
 uxa_get_drawable_deltas(DrawablePtr pDrawable, PixmapPtr pPixmap,

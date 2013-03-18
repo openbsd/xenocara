@@ -1,0 +1,53 @@
+/*
+ * Copyright © 2006 Intel Corporation
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a
+ * copy of this software and associated documentation files (the "Software"),
+ * to deal in the Software without restriction, including without limitation
+ * the rights to use, copy, modify, merge, publish, distribute, sublicense,
+ * and/or sell copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice (including the next
+ * paragraph) shall be included in all copies or substantial portions of the
+ * Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
+ * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+ * IN THE SOFTWARE.
+ *
+ * Authors:
+ *    Wang Zhenyu <zhenyu.z.wang@intel.com>
+ *    Keith Packard <keithp@keithp.com>
+ */
+
+include(`exa_wm.g4i')
+
+define(`du_dx',	`mask_du_dx')
+define(`du_dy',	`mask_du_dy')
+define(`uo',	`mask_uo')
+
+define(`dv_dx',	`mask_dv_dx')
+define(`dv_dy',	`mask_dv_dy')
+define(`vo',	`mask_vo')
+
+define(`dw_dx',	`mask_dw_dx')
+define(`dw_dy',	`mask_dw_dy')
+define(`wo',	`mask_wo')
+
+define(`u',	`mask_u')
+define(`v',	`mask_v')
+define(`w',	`mask_w')
+
+define(`u_0',	`mask_u_0')
+define(`v_0',	`mask_v_0')
+define(`u_1',	`mask_u_1')
+define(`v_1',	`mask_v_1')
+define(`w_0',	`mask_w_0')
+define(`w_1',	`mask_w_1')
+
+include(`exa_wm_projective.g4i')

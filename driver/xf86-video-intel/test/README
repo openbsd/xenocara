@@ -1,0 +1,3 @@
+These are no substitute for xts, rendercheck and cairo-test-suite. They
+are intended to exercise corner cases in the batch management of long
+drawing commands and more explicit checking of the acceleration paths.

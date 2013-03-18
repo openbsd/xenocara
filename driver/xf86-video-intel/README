@@ -13,6 +13,8 @@ Intel graphics chipsets including:
 	915G/GM,945G/GM/GME,946GZ
 	G/GM/GME/Q965,
 	G/Q33,G/Q35,G41,G/Q43,G/GM/Q45
+	PineView-M (Atom N400 series)
+	PineView-D (Atom D400/D500 series)
 
 Where to get more information about the driver
 ----------------------------------------------

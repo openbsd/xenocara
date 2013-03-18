@@ -35,7 +35,7 @@
 void
 gen6_upload_invariant_states(intel_screen_private *intel)
 {
-	Bool ivb = INTEL_INFO(intel)->gen >= 70;
+	Bool ivb = INTEL_INFO(intel)->gen >= 070;
 
 	OUT_BATCH(BRW_PIPE_CONTROL | (4 - 2));
 	OUT_BATCH(BRW_PIPE_CONTROL_IS_FLUSH |
@@ -104,12 +104,17 @@ gen6_upload_urb(intel_screen_private *intel)
 void
 gen7_upload_urb(intel_screen_private *intel)
 {
+	unsigned int num_urb_entries = 32;
+
+	if (IS_HSW(intel))
+		num_urb_entries = 64;
+
 	OUT_BATCH(GEN7_3DSTATE_PUSH_CONSTANT_ALLOC_PS | (2 - 2));
 	OUT_BATCH(8); /* in 1KBs */
 
 	OUT_BATCH(GEN7_3DSTATE_URB_VS | (2 - 2));
 	OUT_BATCH(
-		(32 << GEN7_URB_ENTRY_NUMBER_SHIFT) | /* at least 32 */
+		(num_urb_entries << GEN7_URB_ENTRY_NUMBER_SHIFT) |
 		(2 - 1) << GEN7_URB_ENTRY_SIZE_SHIFT |
 		(1 << GEN7_URB_STARTING_ADDRESS_SHIFT));
 
@@ -275,7 +280,7 @@ gen7_upload_bypass_states(intel_screen_private *intel)
 void
 gen6_upload_vs_state(intel_screen_private *intel)
 {
-	Bool ivb = INTEL_INFO(intel)->gen >= 70;
+	Bool ivb = INTEL_INFO(intel)->gen >= 070;
 	/* disable VS constant buffer */
 	OUT_BATCH(GEN6_3DSTATE_CONSTANT_VS | ((ivb ? 7 : 5) - 2));
 	OUT_BATCH(0);

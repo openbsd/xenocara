@@ -1,25 +1,1359 @@
-Release 2.9.1 (2009-10-26)
-==========================
-We are pleased to announce a maintenance release (2.9.1) of the
-xf86-video-intel driver. This release comes one month after 2.9.0 and
-consists only of a few, hand-picked bug fixes since that release.
+Release 2.20.19 (2013-01-20)
+============================
+A quick release as the last broke USB DisplayLink slave outputs badly. The
+performance of those displays was unusable due to a inadvertent change that
+caused us to flush the entire scanout over the USB for every drawing
+operation.
 
-Complete list of fixes in 2.9.1 compared to 2.9.0
+ * Implement the GNOME Build API. A couple of minor changes to make
+   integrators and distributors lives a little easier, or at least more
+   consistent.
+
+ * Correctly offset inplace trapezoids for subwindows, such as the GTK+
+   close button after it has a background image uploaded.
+
+ * Explicitly prevent ring-switching for synchronized rendering to
+   scanouts (for vsync).
+
+ * Clip dirty region to slave pixmaps (otherwise UDL is nigh unusuable)
+   https://bugs.freedesktop.org/show_bug.cgi?id=59539
+
+
+Release 2.20.18 (2013-01-16)
+============================
+A bunch of miscellaneous fixes for assertion failures and various
+performance regressions when mixing new methods for offloads, along with
+a couple of improvements for rendering with gen4.
+
+ * Remove use of packed unnormalized texture coordinates on gen4/5 as
+   these GPUs do not support unnormalized coordinates in the sampler.
+
+ * Remove dependency upon x86 asm for cross-building to unsupported
+   architectures.
+   https://bugs.gentoo.org/show_bug.cgi?id=448570
+
+ * Apply damage around PRIME updates in the correct order.
+
+ * Correctly read the initial backlight level for when the user
+   overrides UXA's choice of backlight controller.
+
+ * Throttle UXA and prevent it queuing work much faster than the GPU can
+   complete it. This realised itself in impossible performance figures and
+   the entire display freezing for several seconds whlist the GPU caught
+   up. One side effect is that it also caused the DDX to consume more
+   memory than was required as it could not recycle buffers quick
+   enough, and in some cases this produces a marked improvement in
+   performance. Also note on gen2/3 this requires a new libdrm [2.4.41]
+   in order to prevent a bug causing the DDX to fallback to swrast.
+
+Release 2.20.17 (2012-12-26)
+============================
+A minor update to prepare for co-operating with the kernel over managing
+stability on 830gm/845g. On this pair of chipsets, the kernel will perform
+an extra copy of the batchbuffer into reserved memory, which prevents them
+from randomly dying. However, that extra copy does have a noticeable
+impact upon throughput, so we also have a mechanism for userspace to
+opt-out of the kernel workaround and take responsibility for ensuring its
+batches are coherent.
+
+ * Build fixes against xorg-1.14
+   https://bugs.freedesktop.org/show_bug.cgi?id=58552
+   https://bugs.freedesktop.org/show_bug.cgi?id=58406
+
+ * Fixed the origin of cropped (textured) video windows (Xv and XvMC)
+   https://bugs.freedesktop.org/show_bug.cgi?id=23033
+
+ * Fix potential corruption when using images larger than ~1GiB
+
+
+Release 2.20.16 (2012-12-15)
+============================
+Rejoice! We have found a trick to make 830gm/845g stable at long last.
+Ever since the switch to GEM and dynamic video memory, those early
+second generation chipsets have been plagued by instability. The lack of
+flushing cachelines from the CPU to GMCH was eventually solved by using
+an undocmented bit, but 830/845 were still hanging under memory pressure.
+These deaths were all due to garbage finding its way into the command
+streamer, and they go away if we take a leaf out of the original driver
+and never reuse those pages for anything else. So for the first time
+ever, I have been able to complete running the test suite on an 845g,
+even whilst thrashing the page and buffer caches!
+
+ * Run the SF stage as single-threaded on gen4 to workaround a few issues
+   https://bugs.freedesktop.org/show_bug.cgi?id=57410
+
+ * Keep the scanout SURFACE_STATE separate to avoid overriding its
+   memory access control on gen6/7 (i.e. writes to the scanout need to
+   be kept out of the render cache)
+
+ * Tune batch flushing after an operation to an exported surface under a
+   compositor.
+
+ * Make sure the source is on the CPU for inplace composition of trapezoids
+   using the CPU
+   https://bugs.freedesktop.org/show_bug.cgi?id=56825
+
+ * Immediately flush in the block hander after a split batch to reduce
+   latency between the two halves of an operation.
+   https://bugs.freedesktop.org/show_bug.cgi?id=51718
+
+ * Install a fallback config if we fail to install the desired config
+   at VT switch (i.e. booting, after resume with 3 incompatible pipes on
+   Ivybridge)
+
+ * Pin batches to avoid CS incoherence on 830/845
+   https://bugs.freedesktop.org/show_bug.cgi?id=26345
+
+
+Release 2.20.15 (2012-12-03)
+============================
+And lo, enabling more of the common acceleration paths for gen4 revealed
+another lurking bug - something is wrong with how we prepare Y-tiling
+surfaces for rendering. For the time being, we can surreptiously disable
+them for gen4 and avoid hitting GPU hangs.
+
+ * Avoid clobbering the render state after failing to convert the
+   operation to use the blitter.
+   https://bugs.freedesktop.org/show_bug.cgi?id=57601
+
+ * Disable shadow tracking upon server regeneration, and so fix a crash
+   if you restart the server whilst a RandR transform (e.g. rotation) is
+   in effect.
+   https://bugs.freedesktop.org/show_bug.cgi?id=52255
+   https://bugs.freedesktop.org/show_bug.cgi?id=56608
+
+
+Release 2.20.14 (2012-11-26)
+============================
+The highlight of this release is gen4, from 965g to gm45. Quite an old
+bug surfaced in the shader assembly, sparking a chance to review a few
+design choices within that backend and experiment on fresh ways to
+workaround the remaining issues.
+
+ * Avoid using inplace XOR'ed uploads for very large buffers
+   https://bugs.freedesktop.org/show_bug.cgi?id=57031
+
+ * Fix the gen4/5 opacity shader
+   https://bugs.freedesktop.org/show_bug.cgi?id=57054
+
+ * Queue a pending vblank request after flip completion
+   https://bugs.freedesktop.org/show_bug.cgi?id=56423
+
+ * Avoid migrating an uninitialised pixmap for use as a render source
+   https://bugs.freedesktop.org/show_bug.cgi?id=47597
+
+ * Improve handing of texture fallbacks for 830/845.
+   https://bugs.freedesktop.org/show_bug.cgi?id=57392
+
+
+Release 2.20.13 (2012-11-11)
+============================
+Nothing but bug fixes. Many thanks to everyone who took the time to
+report their issues, and for their help in improving the driver.
+
+ * Sanity check the platform probe points to our expected i915 device
+   https://bugs.launchpad.net/ubuntu/+source/xserver-xorg-video-intel/+bug/1069031
+
+ * Prevent 16-bit overflow for computing the sample area to upload of
+   sources for render operations
+   https://bugs.freedesktop.org/show_bug.cgi?id=56324
+
+ * Clamp the drawable box for migration to prevent 16-bit overflow
+   https://bugs.freedesktop.org/show_bug.cgi?id=56591
+
+ * Disable RandR hotplug events if Xinerama is enabled and thereby prevent
+   a crash upon hotplug
+   https://bugs.freedesktop.org/show_bug.cgi?id=55260
+
+ * Call ValidatePicture before attempting to flatten the alphamaps
+   https://bugs.freedesktop.org/show_bug.cgi?id=56367
+
+ * Clip the trapezoid correctly if it ends on the boundary pixel
+   https://bugs.freedesktop.org/show_bug.cgi?id=56395
+
+ * Make sure the pipeline choice is propagated to the scanline wait
+   across a batch flush
+   https://bugs.freedesktop.org/show_bug.cgi?id=47597
+
+ * Set the valid drawable box when choosing placement of BLT composite ops
+   https://bugs.freedesktop.org/show_bug.cgi?id=47597
+
+ * Prevent use-after-free when promoting a partial-GPU bo to a full-GPU bo
+   https://bugs.freedesktop.org/show_bug.cgi?id=56591
+
+ * gen4 opacity spans require the per-rectangle workaround
+   https://bugs.freedesktop.org/show_bug.cgi?id=55500
+
+ * Prevent use of invalid damage pointers when redirecting rendering
+   https://bugs.freedesktop.org/show_bug.cgi?id=56785
+
+
+Release 2.20.12 (2012-10-20)
+============================
+More bug reports, more bug fixes! Perhaps the headline feature is
+that with a secure batches, coming to a 3.8 kernel near you, we may
+finally have the ability to perform updates to the scanout synchronized
+to the refresh rate on later SandyBridge and IvyBridge chipsets. It comes
+at quite a power cost as we need to keep the GPU out of its power saving
+modes, but it should allow legacy vsync to function at last. But this
+should allow us to address a longstanding issue with tearing on
+SandyBridge+.
+
+ * Fix component-alpha rendering on IvyBridge, for example subpixel
+   antialiased glyphs.
+   https://bugs.freedesktop.org/show_bug.cgi?id=56037
+
+ * Flush before some "pipelined" state changes on gen4. The evidence is
+   that the same flushes as required on gen5+ are also required for gen4.
+   https://bugs.freedesktop.org/show_bug.cgi?id=55627
+
+ * Prevent a potential crash when forcing a stall on a busy CPU bo
+   https://bugs.freedesktop.org/show_bug.cgi?id=56180
+
+[Release 2.20.11 contained a typo causing UXA to fail immediately.]
+
+Release 2.20.10 (2012-10-14)
+============================
+The last couple of weeks have been fairly retrospective, a dive into
+prehistory tidying up the earlier generations which lay languishing as
+the core progressed and lead to a number of annoying core bugs being
+fixed.
+
+ * Release DRM master earlier during shutdown so switching between
+   multiple X servers works automatically.
+   https://bugs.freedesktop.org/show_bug.cgi?id=55446
+
+ * Suppress error propagation from DRI2GetMSC and behave as if the pipe
+   was simply off to avoid unexpected errors in the clients
+   https://bugs.freedesktop.org/show_bug.cgi?id=55395
+
+ * A few fixes to i8xx batch emission, ensuring that the GPU is always
+   in a valid state.
+   https://bugs.freedesktop.org/show_bug.cgi?id=55455
+
+ * Prevent a use-after-free during UXA shutdown due to inspecting
+   the glamor flags after the glamor interface had been freed.
+
+ * Prevent a crash combining TearFree and rotations.
+   https://bugs.freedesktop.org/show_bug.cgi?id=55527
+
+ * Correct a missing damage upload along PutImage after using the CPU bo
+   as a source for the GPU.
+   https://bugs.freedesktop.org/show_bug.cgi?id=55508
+
+ * Fix compilation for older glibc without O_CLOEXEC
+   https://bugs.freedesktop.org/show_bug.cgi?id=55577
+
+ * Fix out-of-tree builds failing to recompile the gen4 assemblies
+   https://bugs.freedesktop.org/show_bug.cgi?id=55645
+
+ * Fix non-standard build host configuration handling for intel-gen4asm
+   https://bugs.freedesktop.org/show_bug.cgi?id=55646
+
+ * Fix a potential batch buffer overflow when replacing the last BLT fill
+   operation with a copy
+   https://bugs.freedesktop.org/show_bug.cgi?id=55700
+
+ * Flush the render pipeline more frequently on Ironlake as not all
+   pipelined state changes are.
+   https://bugs.freedesktop.org/show_bug.cgi?id=51422
+
+ * Detect when we need to read the destination for the background raster
+   op during fallbacks.
+   https://bugs.freedesktop.org/show_bug.cgi?id=55810
+
+ * Avoid a potential deference of an invalid CPU mmap after doing an
+   inplace tiled upload.
+   https://bugs.freedesktop.org/show_bug.cgi?id=55812
+
+ * Prevent sign extension when packing the upload data for CopyPlane
+   https://bugs.freedesktop.org/show_bug.cgi?id=55823
+
+ * Fix some render corruption with a UDL slave output and pageflipping
+
+
+Release 2.20.9 (2012-09-29)
+===========================
+And so it came to pass that a critical bug was uncovered in UXA. The
+kernel does not like to pageflip when the pipe is off, yet due to the
+delayed nature of a pageflip and the relaxed checking performed by UXA,
+we could request a pageflip after turning off the display (DPMS). The
+kernel rejected that pageflip and the error handling path failed to
+restore sanity, and when the screen came back it was stuck on the image
+seen before it went to sleep. (Note that there are also some related
+kernel bugs, but this update should prevent the most conspicious of the
+freezes.) Many thanks to Timo Aaltonen for his efforts in tracking down
+the issue.
+
+In other news:
+
+  * Prepare for xorg-1.14, the api is being tweaked again.
+
+  * Handle early FreeScreen in UXA.
+    https://bugs.freedesktop.org/show_bug.cgi?id=55346
+
+  * Reenable XvMC support
+
+  * Do not replace the GPU bo when uploading into the shadow/CPU copy
+    https://bugs.freedesktop.org/show_bug.cgi?id=54978
+
+  * Fix use of an uninitialised GC when drawing glyphs to a depth=1 pixmap
+
+
+Release 2.20.8 (2012-09-16)
+===========================
+Another new small feature, another new release. And a few more bugs
+fixed as well! But what is this new feature, do I hear you ask? Why, it
+is nothing less than enabling the ValleyView SDV! The lucky person to
+have their hands on one will now be able to enjoy X in full TechniColor.
+
+For the rest of us, a few more bugs were fixed with interesting
+combinations of software and rendering patterns.
+
+ * Add an extra layer of defence against trying to use a non-GEM device
+   with UXA. This should already be taken care of with the new probe,
+   but the extra sanity check already existed in the code but was doing
+   nothing.
+   https://bugs.launchpad.net/ubuntu/+source/xserver-xorg-video-intel/+bug/962892
+
+ * Fix computation of valid CRTCs bitmask for ZaphodHead
+   Some systems can only handle certain outputs on certain pipes
+   (Screens), and this information was not being propagated through to X
+   and randr correctly, breaking valid configurations and not detecting
+   invalid configurations correctly.
+
+ * Disable global glyph caching with ZaphodHeads.
+   The glyph privates need to be Screen private, but at the moment are
+   global leading to conflicts and invalid rendering with multiple heads.
+   https://bugs.freedesktop.org/show_bug.cgi?id=54707
+
+ * Prevent direct read back of unmappable buffers
+   https://bugs.freedesktop.org/show_bug.cgi?id=54808
+
+ * Tile large uploads whilst replacing the alpha channel
+   https://bugs.freedesktop.org/show_bug.cgi?id=54808
+
+ * Correct the source offset when converting a RENDER composite
+   operation into a BLT composite operation.
+   https://bugs.freedesktop.org/show_bug.cgi?id=54868
+
+ * Correct a minor typo in flattening alphamaps which caused the
+   replacement pixmap to often end up with a height of zero.
+   https://bugs.gentoo.org/show_bug.cgi?id=434860
+
+ * Don't discard the CPU damage if only part of is being replaced.
+   This is most evident when combining software renders like Opera with
+   accelerated rendering.
+   https://bugs.freedesktop.org/show_bug.cgi?id=54937
+
+Release 2.20.7 (2012-09-08)
+===========================
+Continuing the flurry of releases, this week saw the release of
+xorg-1.13 bringing with it the first steps towards hotpluggable gpu
+support and the ability to offload DRI rendering onto other GPUs. In
+light of that advance, this release includes the support code by Dave
+Airlie to integrate PRIME into xf86-video-intel and make those new
+features available.
+
+Aside from landing PRIME, a few other bugs were fixed since 2.20.6:
+
+ * Fix framebuffer leak on server regeneration
+
+ * Fix texture cache flushing on IvyBridge and Kwin with plastique
+   https://bugs.freedesktop.org/show_bug.cgi?id=54488
+
+ * Redirect large solid fills on SandyBridge+. By large I mean greater
+   than 8192 or 16384 pixels on SandyBridge and IvyBridge respectively.
+   https://bugs.freedesktop.org/show_bug.cgi?id=54134
+
+ * Fix up backlight option handling in the manpage and uxa.
+   https://bugs.freedesktop.org/show_bug.cgi?id=54397
+
+ * Unbreak ZaphodHeads.
+   https://bugs.freedesktop.org/show_bug.cgi?id=52438
+
+Release 2.20.6 (2012-09-02)
+===========================
+A serious bug that caused a crash on SandyBridge and IvyBridge when
+mixing CPU and GPU operations on the same buffer, and an annoyance from
+bad scheduling of windowed swapbuffer updates causing low framerates and
+jitter. Plus the usual smattering of assertion fixes and a long standing
+issue with incoherent page access to a streaming buffer.
+
+ * Low frame rates in Blobby Valley when "fullscreen"
+   https://bugs.freedesktop.org/show_bug.cgi?id=54274
+
+ * Incoherent concurrent access with the CPU and GPU
+   https://bugs.freedesktop.org/show_bug.cgi?id=51422
+   https://bugs.freedesktop.org/show_bug.cgi?id=52299
+
+ * Add Option "Backlight" to override automatic selection of the
+   backlight interface.
+
+ * Avoid overwriting the composite operation info when testing if we
+   can transfer the operation to the BLT.
+
+Release 2.20.5 (2012-08-26)
+===========================
+Another silly bug found, another small bugfix release. The goal was for
+the driver to bind to all Intel devices supported by the kernel.
+Unfortunately we were too successful and started claiming Pouslbo,
+Medfield and Cedarview devices which are still encumbered by propietary
+IP and not supported by this driver.
+
+Bugs fixed since 2.20.4:
+
+ * Only bind to Intel devices using the i915 kernel module
+
+ * Regression in the bitmap-to-region code, e.g. icewm window buttons
+   https://bugs.freedesktop.org/show_bug.cgi?id=53699
+
+Release 2.20.4 (2012-08-18)
+===========================
+Continuing the small bugfix releases, the only real feature is initial
+enabling for Haswell for the purpose of rendering verification and
+validation - by no means is it complete!
+
+Bugs fixed since 2.20.3:
+
+  * Some potential errors along failure paths found by a static analyser
+  with the help of Zdenek Kablac.
+
+  * Eliminate zero-sized rectangles from PolyFillRectangles as the code
+  assumes that they did not exist and so caused corruption.
+
+  * Remove the UXA warning for failing to tile the front buffer if it is
+  disallowed by hardware, and so expected.
+
+  * Fix the validation of the XV pipe parameter.
+
+  * Fix 8x8 tiled pattern fills
+  https://bugs.freedesktop.org/show_bug.cgi?id=53353
+
+  * Fix compile failure when using --with-builderstring
+
+  * Restore w/a flush for gen4 fill/copy/video, fortunately rare
+  operations as at least for fill/copy we prefer to use the BLT.
+  https://bugs.freedesktop.org/show_bug.cgi?id=53119
+
+  * Restore preferred use of the RENDER ring for SNB+ DRI copies.
+
+Release 2.20.3 (2012-08-04)
+===========================
+Just a minor bugfix for gen4 chipsets (965gm, gm45 and friends) that
+crept into 2.20.2. As an added bonus, the pessimistic workaround for a
+GPU hang on gen4 has been relaxed and the shaders have been overhauled
+which should pave the way to eliminating the last of the uncommon CPU
+operations, along with immediately realising a small perforamnce
+improvement.
+
+Bugs fixed since 2.20.2:
+
+ * Update DPMS bookkeeping after modeset
+   https://bugs.freedesktop.org/show_bug.cgi?id=52142
+
+ * Avoid overlapping gpu/cpu damage after ignoring cpu damage in the
+   consideration of placement for the operation.
+
+ * Enable acceleration by default on 830gm/845g. The GMCH on this pair
+   of chipsets is notoriously incoherent, so the GPU is almost certainly
+   going to hang at some point, though unlikely to hang the system and
+   should automatically disable acceleration (and thence behave
+   identically as if the acceleration was disabled from the start).
+   Option "NoAccel" can be used to disable all 2D acceleration and
+   Option "DRI" can be used to disable all 3D acceleration.
+   https://bugs.freedesktop.org/show_bug.cgi?id=52624
+
+ * Fix vertex bookkeeping for gen4 that was causing corruption in the
+   command stream.
+
+Release 2.20.2 (2012-07-27)
+===========================
+For the last 9 months, since 2.16.901, we have been shipping a driver that
+does not work on IvyBridge GT1 systems (HD2500 graphics); we were telling
+the GPU to use an invalid number of threads for the pixel shader and this
+in turned caused the GPU to hang.
+
+Also fixed since the last release just a few days ago:
+
+* Support for the gmux backlight controller on Apple laptops
+  https://bugs.freedesktop.org/show_bug.cgi?id=52423
+
+* Fix X -configure not to list this driver as matching any Intel device,
+  just the VGA class devices will do!
+
+* A crash in SNA when repeatedly switching xrandr rotations
+
+* Corruption in SNA observed in kwin on IvyBridge
+  https://bugs.freedesktop.org/show_bug.cgi?id=52473
+
+Release 2.20.1 (2012-07-22)
+===========================
+A week in, grab the brown paper bags, for it is time to reveal a couple
+of critical bugs that spoilt the 2.20.0 release.
+
+Firstly we have the restoration of DRI for i810. I am sure that the
+solitary user will be overjoyed in a couple of years when a new xserver
+is forced upon him. That enjoyment will be short-lived when as no actual
+acceleration remains, not even shadow, for the chipset.
+
+Perhaps a little more wildly felt, I hope!, will be that the SNA
+fallbacks were broken on 64-bit machines if they required clipping. One
+little misplaced cast of a pointer, and the screen is filled with
+corruption.
+
+Among the other tweaks this week:
+
+* A bug affecting gen4 handling of trapezoids was fixed, and CPU
+  overhead reduced.
+  https://bugs.freedesktop.org/show_bug.cgi?id=52158
+
+* A fix for a bug causing corruption of a DRI2 unredirected client
+  window that was resized whilst under a compositor.
+
+* Support for snoopable buffers on non-LLC architectures, coming to
+  a future kernel. The aim to accelerate transfers between the CPU
+  and the GPU, in particular to dramatically improve readback
+  performance, and to further minimise clflushes.
+
+* Improvement to the composite performance on GT2 SandyBridge and
+  IvyBridge devices, in particular the render copy is significantly
+  improved.
+
+* Improved handling for when acceleration is disabled, including
+  permitting DRI2 to remain supported even if the X server believes
+  the GPU wedged.
+
+* Shadow support was dropped from UXA as it was neither complete nor
+  correct, use SNA instead.
+
+Release 2.20.0 (2012-07-15)
+===========================
+First the big news, a new acceleration method that aims to be faster and
+consume far less CPU than UXA is now available for selection at runtime.
+This snazzy new architecture can be selected through use of
+  Option "AccelMethod" "sna"
+in your xorg.conf. Whilst it has been under development for some time, it
+has not yet had the same degree of widespread testing of UXA, so tread
+lightly. Try it and if you spot anything that can be improved, please do
+report a bug.
+
+Otherwise we have the usual smattering of bug fixes for UXA:
+
+ * Use a white source whilst adding glyphs to the glyph mask
+   (This fixes blank glyphs if using a font that mixes ARGB and A glyphs.)
+
+ * Avoid fallbacks for glyph-to-dst in e.g. gnome-terminal
+   https://bugs.freedesktop.org/show_bug.cgi?id=50508
+
+ * Force unused outputs off when VT switching
+   https://bugs.freedesktop.org/show_bug.cgi?id=50772
+
+ * Copy the fbcon across to the Screen pixmap at startup.
+   (This patch has been kicking around in the distributions for years.)
+
+ * Many missed malloc failures checks and forgotten frees found by a static
+   analyzer. Thanks Zdenek Kabelac!
+
+ * Leak of the back buffer when terminating an application after pageflipping
+   https://bugs.freedesktop.org/show_bug.cgi?id=50670
+
+ * Double check that the pipe is on before emitting a WAIT_ON_EVENT.
+   In conjunction with an uptodate kernel, this should eliminate any
+   hangs when changing resolutions or adding/removing displays.
+   https://bugs.freedesktop.org/show_bug.cgi?id=50668
+
+ * Update to new Xorg APIs. Future proofing for the next generation of
+   hotplug Xorg display servers.
+
+Many thanks to everyone who has reported a bug and otherwise helped to
+improve the driver.
+
+Release 2.19.0 (2012-04-29)
+===========================
+More stability fixes for UXA and support for another variant of IvyBridge.
+Given the severity of the stability fixes, I strongly recommend everybody
+to upgrade to 2.19.0.
+
+* Prevent waiting on scanlines whilst not in control of the VT and therefore
+  whilst referencing foreign CRTC configurations.
+
+* Pixmap (and bo leak) during fallback glyph composition
+
+* Remove broken acceleration for rendering glyphs directly upon the
+  destination pixmap, exposed by cairo-1.12.0 (and coincidentally fix
+  another Pixmap leak upon fallback handling).
+
+* Add support for Ivy Bridge GT2 Server chipset [PCI id 0x016a]
+
+* Remove broken damage flushing with CompositeRectangles
+  https://bugs.freedesktop.org/show_bug.cgi?id=32547
+
+* Fix crash upon server start with multiple monitors
+  https://bugs.freedesktop.org/show_bug.cgi?id=47395
+
+* Fix composition issues resulting from overly aggressive Pixmap reuse
+  https://bugs.freedesktop.org/show_bug.cgi?id=47345
+
+Release 2.18.0 (2012-02-24)
+===========================
+Time passes, a few more bugs have crept out of the woodwork that are a
+compelling reason to update.
+
+Bugs fixed in this release (compared to 2.17.0)
+-----------------------------------------------
+
+* Limit maximum object size so that all of the source, mask and
+  destination can be mapped into the aperture simultaneously by basing the
+  limit on the mappable aperture size rather than the size of the total
+  GATT.
+
+* Incorrect clipping of polygons
+  https://bugs.freedesktop.org/show_bug.cgi?id=43649
+  Regression from 2.15.901
+
+* Limit number of VMA cached to avoid hitting the per-process VMA limit
+  There still is a residual bug in that we seem to have so many objects
+  floating around in the first place and that still leads to exhaustion
+  of system limits.
+  https://bugs.freedesktop.org/show_bug.cgi?id=43075
+  https://bugs.freedesktop.org/show_bug.cgi?id=40066
+
+* Latency in processing user-input during continuous rendering
+
+Release 2.17.0 (2011-11-16)
+==============================
+A few months have passed, and we have accumulated a surprising number of
+bug fixes. Oops! We would strongly encourage everyone to upgrade.
+
+Bugs fixed in this snapshot (compared to 2.16.902)
+--------------------------------------------------
+
+* Video clobbering composite batch state
+  http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=635953
+
+Snapshot 2.16.902 (2011-11-13)
+==============================
+This is the second release candidate in preparation for the upcoming
+2.17.0 release. We will appreciate any feedback we can get from
+testing of this snapshot, and thanks to everyone who tested and reported
+upon issues in the last snapshot.
+
+A very old bug demonstrating that nobody has ever used alpha maps, and a
+couple of more recent mistakes were found.
+
+Bugs fixed in this snapshot (compared to 2.16.901)
+--------------------------------------------------
+
+ * Incorrect reuse of surface bindings within a batch for multiple formats
+   https://bugs.freedesktop.org/show_bug.cgi?id=40926
+
+ * Nothing was rendered for text with procedural sources
+   https://bugs.freedesktop.org/show_bug.cgi?id=31819
+
+ * Handle fallbacks involving alpha maps
+
+Snapshot 2.16.901 (2011-10-30)
+==============================
+This is the first release candidate in preparation for the upcoming
+2.17.0 release. We will appreciate any feedback we can get from
+testing of this snapshot.
+
+The basis of this release are to push out a couple of critical stability
+fixes for SandyBridge and IvyBridge. There is very little else to see
+here. Those 200+ other commits do not exist...
+
+Bugs fixed in this snapshot (compared to 2.16.0)
+--------------------------------------------------
+
+ * Workaround blitter hang on SandyBridge and IvyBridge
+   https://bugzilla.kernel.org/show_bug.cgi?id=27892
+   https://bugs.freedesktop.org/show_bug.cgi
+
+ * Workaround pipe control issues on SandyBridge
+
+ * Use correct maximum PS thread count on IvyBridge
+
+ * Protect against failed pixmap allocation for XV
+   https://bugs.freedesktop.org/show_bug.cgi?id=40439
+
+Release 2.16.0 (2011-08-09)
+==============================
+A new quarter, a new release! The key feature of this release, looking past
+the bug fixes, is the enabling of IvyBridge acceleration. We have also fixed
+many bugs and graphical glitches and would encourage everyone to upgrade.
+
+Bugs fixed in this snapshot (compared to 2.15.901)
+--------------------------------------------------
+
+* Build fix for xserver-1.7.7
+
+Snapshot 2.15.901 (2011-07-30)
+==============================
+This is the first release candidate in preparation for the upcoming
+2.16.0 release. We will appreciate any feedback we can get from
+testing of this snapshot.
+
+The highlight of this snapshot is the full enabling of IvyBridge with
+acceleration for Render and Xv, along with handling of the shared render
+buffer allocations required for Mesa. Also of note is that deep-color
+support is enabled (for all chipsets), which allows you to drive your
+30-bit monitor at its native colour depth.
+
+Bugs fixed in this snapshot (compared to 2.15.0)
+--------------------------------------------------
+
+* Misuse of the Resource database causing crashes after DRI clients close
+  https://bugs.freedesktop.org/show_bug.cgi?id=37700
+
+* Crash on large strings
+  https://bugs.freedesktop.org/show_bug.cgi?id=36860
+
+* Incorrect rendering for some core drawing operations
+  http://bugs.freedesktop.org/show_bug.cgi?id=28768
+  http://bugs.freedesktop.org/show_bug.cgi?id=28798
+  http://bugs.freedesktop.org/show_bug.cgi?id=28908
+  http://bugs.freedesktop.org/show_bug.cgi?id=29401
+
+* Crash in Xv due to insufficient checks on batch space
+  https://bugs.freedesktop.org/show_bug.cgi?id=36319
+
+Release 2.15.0 (2011-04-14)
+==============================
+We are pleased to announce this major release of the xf86-video-intel
+driver, roughly on schedule at 3 months since 2.14.0. With the many bug
+fixes in this release, we encourage everyone to upgrade to 2.15.
+
+The priority for this quarter has been simply to be unexciting and stabilise
+the driver further, seeking to capitalise upon the improvements elsewhere
+in the stack.
+
+Bugs fixed in this snapshot (compared to 2.14.903)
+--------------------------------------------------
+
+* Turn off relaxed fencing by default for older chipsets
+  This was continuing to destabilize those system, so for the release
+  we disabled the feature. If you wish to help us debug this, you can
+  re-enable the optimisation with Option "RelaxedFencing" "True".
+  Bugzilla: https://bugs.freedesktop.org/show_bug.cgi?id=36147
+
+* Build fix for xserver-1.7.7
+
+* KDE glitches on SNB
+  [Technically fixed in the previous snapshot, but I'm really pleased
+   that this got fixed in time for the release!]
+  https://bugs.freedesktop.org/show_bug.cgi?id=35808
+
+
+Snapshot 2.14.903 (2011-04-11)
+==============================
+This is the third release candidate in preparation for the upcoming
+2.15.0 release. We will appreciate any feedback we can get from
+testing of this snapshot.
+
+There was a bit of churn since 2.14.902 as a potential fix for a
+performance regression was tried but had to reverted when it was found to
+cause glitches running Compiz on SandyBridge. Otherwise, there were just a
+couple of fixes for building against old xservers and running on an
+obscure chipset.
+
+Bugs fixed in this snapshot (compared to 2.14.902)
+--------------------------------------------------
+
+* Prevent issuing an invalid scanline wait command
+  https://bugs.freedesktop.org/show_bug.cgi?id=35576
+
+* The 946GZ in not a 945, but a 965.
+  https://bugs.freedesktop.org/show_bug.cgi?id=35854
+
+* Fix tile sizes for gen2 (finally).
+
+* Allow building of recent dri2 changes against old xservers.
+
+
+Snapshot 2.14.902 (2011-03-29)
+==============================
+This is the second release candidate in preparation for the upcoming
+2.15.0 release. We will appreciate any feedback we can get from
+testing of this snapshot.
+
+As befits testing of release candidates, no major regression was found and
+a couple more bugs have been fixed.
+
+Bugs fixed in this snapshot (compared to 2.14.901)
+--------------------------------------------------
+
+* Clients disappearing with pending swaps
+
+* Incorrect clipping of Xv output on i915 across extended desktops
+  https://bugs.freedesktop.org/show_bug.cgi?id=35346
+
+* Introduction of a LinearFramebuffer option. (Defaults to tiled for
+  performance and power saving.)
+
+
+Snapshot 2.14.901 (2011-03-02)
+==============================
+This is the first release candidate in preparation for the upcoming
+2.15.0 release. We will appreciate any feedback we can get from
+testing of this snapshot.
+
+Still no further along my grandiose plans to improve Render performance,
+aside from the performance tuning lower in the stack, instead we have had
+a steady stream of bug fixes.
+
+Bugs fixed in this snapshot (compared to 2.14.0)
+------------------------------------------------
+
+* Green pixels within partially off-screen video playback
+  https://bugs.freedesktop.org/show_bug.cgi?id=24767
+
+* Defer creation of the glyph cache to generation startup
+  https://bugs.freedesktop.org/show_bug.cgi?id=33412
+
+* Incorrect maximum addresses for video decoder state
+  https://bugs.freedesktop.org/show_bug.cgi?id=34017
+
+* Failure to handle oversized temporary surfaces
+  https://bugs.freedesktop.org/show_bug.cgi?id=34399
+
+* Relaxed tiling corruption on gen2
+
+* Crash when destroying a foreign DRI drawable
+  https://bugs.freedesktop.org/show_bug.cgi?id=34787
+
+
+Release 2.14.0 (2011-01-07)
+===========================
+We are pleased to announce this major release of the xf86-video-intel
+driver, on schedule at 3 months since 2.13.0. With the many bug fixes
+in this release, we encourage everyone to upgrade to 2.14.
+
+The most notable feature of this release is the inclusion of acceleration
+support, both RENDER and XVIDEO, for Sandy Bridge; note that this requires
+a 2.6.37 kernel. In improving the acceleration code paths to support Sandy
+Bridge, we were also able to improve the performance of the general i965+
+RENDER acceleration. For example on i3, glyph (aa10 and rgb10) performance
+is about 3x faster, as is performing small copies between windows, with the
+improvement becoming negligible once you hit around 100 pixels square.
+
+
+Snapshot 2.13.903 (2010-01-04)
+==============================
+This is the second release candidate in preparation for the upcoming
+2.14.0 release, and if no showstoppers turn up in wider testing will
+become the next release. Besides the usual bug fixes, we've included
+patches by Mario Kleiner to improve vblank handing which both improve the
+timing accuracy and remove a few potential races -- provided you also
+have the corresponding fixes in the kernel.
+
+Bug fixes
+---------
+
+ * Crash on hot-unpluging with an active fullscreen GL application, e.g. a
+   compositing WM or video player
+   https://bugs.freedesktop.org/show_bug.cgi?id=32770
+
+ * Freeze upon maximising client-side software renderers, e.g. flash.
+   https://bugs.freedesktop.org/show_bug.cgi?id=31367
+
+ * Fix confusion over G35 generation
+   https://bugs.freedesktop.org/show_bug.cgi?id=32478
+
+
+Snapshot 2.13.902 (2010-12-10)
+==============================
+This is the first release candidate in preparation for the upcoming
+2.14.0 release. Sandybridge support should be now be ready for use,
+and we will appreciate any feedback we can get from this snapshot.
+Improving the code base for Sandybridge should also have had knock
+on effects for earlier chips as well, in particular Ironlake and to
+a lesser extent i965.
+
+New requirements compared to 2.13
+---------------------------------
+ * Librdrm >= 2.4.23
+
+Bug fixes
+---------
+
+ * Crash after failing to allocate memory
+   https://bugs.freedesktop.org/show_bug.cgi?id=31487
+
+ * EFAULT during pwrite
+   https://bugs.freedesktop.org/show_bug.cgi?id=29752
+
+ * Mark outputs as on and restore backlight after mode-set
+
+ * A hang with i965+ with newer kernels.
+
+
+Snapshot 2.13.901 (2010-11-05)
+==============================
+This is an intermediate snapshot of ongoing driver development. The
+primary purpose of this snapshot is to capture some recent
+improvements, (particularly in Sandybridge support), for further
+testing.
+
+Release 2.13.0 (2010-09-30)
+===========================
+We are pleased to announce this major release of the xf86-video-intel
+driver, on schedule at 3 months since 2.12.0. With the many bug fixes
+in this release, we encourage everyone using 2.12 to upgrade to 2.13.
+
+[This release is functionally identical to the earlier 2.12.902
+release candidate.]
+
+New requirements compared to 2.12
+---------------------------------
+ * Librdrm >= 2.4.22
+
+Bug fixes
+---------
+ * Attempt to fix infinite MI_WAIT_FOR_EVENT while watching video
+   https://bugs.freedesktop.org/show_bug.cgi?id=28964
+
+   [Various new checks have been added to the video code here, but the
+   bug fix hasn't yet been verified by the original reporter.]
+
+ * Fix buffer-object leak
+   https://bugs.freedesktop.org/show_bug.cgi?id=26946
+
+ * Fix memory leak on server reset
+
+ * Fix crash due to unchecked pixmap allocation
+   https://bugs.freedesktop.org/show_bug.cgi?id=29187
+
+ * Fix for video artifacts when using dualscreen
+   https://bugs.freedesktop.org/show_bug.cgi?id=29213
+
+ * Fix for incorrect characters in gnome-terminal when using compiz
+   https://bugs.freedesktop.org/show_bug.cgi?id=28438
+
+ * Fix for hanging, full-screen applications, (flash, compiz, etc.)
+   https://bugs.freedesktop.org/show_bug.cgi?id=29584
+
+ * Fix selection of backlight device on multi-GPU systems
+   https://bugs.freedesktop.org/show_bug.cgi?id=29273
+
+ * Fix to avoid crash with extremely large glyphs
+   https://bugs.freedesktop.org/show_bug.cgi?id=29430
+
+ * Fix for eDP panels incorrectly being given only a single, valid mode
+   https://bugs.freedesktop.org/show_bug.cgi?id=30069
+
+ * Fix GPU hang involving clipped SRC copies
+   https://bugs.freedesktop.org/show_bug.cgi?id=30120
+
+ * Fix to compile for 1.6 series X server.
+
+ * Fix to retry framebuffer allocation after an initial failure.
+
+ * Fix to disable dri2 after fallbacks are forced on.
+
+Snapshot 2.12.902 (2010-09-28)
+==============================
+This is the second release candidate in preparation for the upcoming
+2.13.0 release. The comes exactly one week after 2.12.902 and includes
+only a handful of changes.
+
+One significant change is that the drive now requires libdrm 2.4.22
+(or newer), as several people reported compilation failures of
+xf86-video-intel 2.12.901 with libdrm 2.4.21.
+
+Other changes include a fix to compile for the 1.6 series X server, a
+fix to retry framebuffer allocation after an initial failure, and a
+fix to disable dri2 after fallbacks are forced on.
+
+Snapshot 2.12.901 (2010-09-21)
+==============================
+This is the first release candidate in preparation for the upcoming
+2.13.0 release. We will appreciate any feedback we can get from
+testing of this snapshot.
+
+Bugs fixed in this snapshot (compared to 2.12.0)
+------------------------------------------------
+ * Attempt to fix infinite MI_WAIT_FOR_EVENT while watching video
+   https://bugs.freedesktop.org/show_bug.cgi?id=28964
+
+   [Various new checks have been added to the video code here, but the
+   bug fix hasn't yet been verified by the original reporter.]
+
+ * Fix buffer-object leak
+   https://bugs.freedesktop.org/show_bug.cgi?id=26946
+
+ * Fix memory leak on server reset
+
+ * Fix crash due to unchecked pixmap allocation
+   https://bugs.freedesktop.org/show_bug.cgi?id=29187
+
+ * Fix for video artifacts when using dualscreen
+   https://bugs.freedesktop.org/show_bug.cgi?id=29213
+
+ * Fix for incorrect characters in gnome-terminal when using compiz
+   https://bugs.freedesktop.org/show_bug.cgi?id=28438
+
+ * Fix for hanging, full-screen applications, (flash, compiz, etc.)
+   https://bugs.freedesktop.org/show_bug.cgi?id=29584
+
+ * Fix selection of backlight device on multi-GPU systems
+   https://bugs.freedesktop.org/show_bug.cgi?id=29273
+
+ * Fix to avoid crash with extremely large glyphs
+   https://bugs.freedesktop.org/show_bug.cgi?id=29430
+
+ * Fix for eDP panels incorrectly being given only a single, valid mode
+   https://bugs.freedesktop.org/show_bug.cgi?id=30069
+
+ * Fix GPU hang involving clipped SRC copies
+   https://bugs.freedesktop.org/show_bug.cgi?id=30120
+
+Release 2.12.0 (2010-06-24)
+===========================
+We are pleased to announce this major release of the xf86-video-intel
+2D driver. It contains many correctness and performance improvements
+compared to the 2.11 releases. We encourage everyone using 2.11 to
+upgrade to 2.12.
+
+[This release contains several bug fixes since the earlier 2.11.901
+release candidate---see below for details.]
+
+New requirements compared to 2.11
+---------------------------------
+ * Libdrm >= 2.4.21
+
+Major performance improvements
+------------------------------
+There have been many performance improvements targeting the
+915G/945G/Pineview graphics chipsets (thank to Chris Wilson!). Areas
+improved include:
+
+ * Major improvements to glyph rendering
+
+ * Avoid software fallback when using extended desktops, (for example,
+   video playback)
+
+ * Better performance when using large windows, (for example with
+   firefox scrolling)
+
+ * Avoiding migration ping-pong with gigantic drawing
+
+The following speedups (measured with cairo-perf-trace/cairo-traces)
+capture some of the improvements. These were measured on a Pineview
+system with X server 1.8.1. This compares how this 2.12 release
+improves performance compared to 2.11.0:
+
+	Trace			Speedup
+	-----			-------
+	ocitysmap		5.41x speedup
+	firefox-talos-gfx       2.41x speedup
+	gnome-terminal-vim      2.15x speedup
+	poppler                 1.86x speedup
+	firefox-planet-gnome	1.43x speedup
+	midori-zoomed		1.39x speedup
+	swfdec-giant-steps      1.36x speedup
+	xfce4-terminal-a1	1.17x speedup
+	evolution		1.09x speedup
+	swfdec-youtube		1.06x speedup
+
+Other improvements
+------------------
+Daniel Vetter improved Xvmc and overlay, adding GEM support.
+
+Bug fixes
+---------
+There have been many conformance improvements targeting the
+915G/945G/Pineview graphics chipsets. The rendercheck test suite
+passes once again and there has been a significant reduction in the
+number of errors detected by the cairo test suite (notably center
+sampling and EXTEND_NONE behaviors are fixed).
+
+Other notable bug fixes include:
+
+ * Fix for bug 28446 Garbled fonts with Mathematica
+   https://bugs.freedesktop.org/show_bug.cgi?id=28446
+
+ * Fixes for page-flipping and other DRI2-handling bugs, (Thanks Jesse
+   Barnes, and Kristian Høgsberg)
+
+ * Avoid corruption when using extended desktops, (for example, video
+   playback)
+
+(The bug fixes below are new since the 2.11.901 release candidate)
+
+ * Fix corrupted output when screen rotated
+   https://bugs.freedesktop.org/show_bug.cgi?id=28461
+
+ * Fix corrupted rendering in KDE due to missing flush.
+
+ * Fixes i830_uxa_put_image for the following issues:
+
+      Bug 28569 - [i965] IGN's flash-based video player crashes X
+      https://bugs.freedesktop.org/show_bug.cgi?id=28569
+    
+      Bug 28573 - [i965] Fullscreen flash and windowed SDL games fail to
+                  update the screen
+      https://bugs.freedesktop.org/show_bug.cgi?id=28573
+
+ * Fix visual corruption of scrollbar in Chromium
+
+ * Fix tiling limits to resolve this issue:
+
+      Bug 28497 - Graphics corruption after opening a specific website
+      https://bugs.freedesktop.org/show_bug.cgi?id=28497
+
+Snapshot 2.11.901 (2010-06-14)
+==============================
+This is the first release candidate in preparation for the upcoming
+2.12.0 release. We will appreciate any feedback we can get from
+testing of this snapshot to improve the 2.12.0 release.
+
+New requirements compared to 2.10
+---------------------------------
+ * Libdrm >= 2.4.19
+
+Major performance improvements
+------------------------------
+There have been many performance improvements targeting the
+915G/945G/Pineview graphics chipsets (thank to Chris Wilson!). Areas
+improved include:
+
+ * Major improvements to glyph rendering
+
+ * Avoid software fallback when using extended desktops, (for example,
+   video playback)
+
+ * Better performance when using large windows, (for example with
+   firefox scrolling)
+
+ * Avoiding migration ping-pong with gigantic drawing
+
+The following speedups (measured with cairo-perf-trace/cairo-traces)
+capture some of the improvements. These were measured on a Pineview
+system with a very recent X server, (from git just before 1.8.1). This
+compares how this 2.12 release candidate improves performance compared
+to 2.11.0:
+
+	Trace			Speedup
+	-----			-------
+	ocitysmap		5.41x speedup
+	firefox-talos-gfx       2.41x speedup
+	gnome-terminal-vim      2.15x speedup
+	poppler                 1.86x speedup
+	firefox-planet-gnome	1.43x speedup
+	midori-zoomed		1.39x speedup
+	swfdec-giant-steps      1.36x speedup
+	xfce4-terminal-a1	1.17x speedup
+	evolution		1.09x speedup
+	swfdec-youtube		1.06x speedup
+
+Other improvements
+------------------
+Daniel Vetter improved Xvmc and overlay, adding GEM support.
+
+Bug fixes
+---------
+There have been many conformance improvements targeting the
+915G/945G/Pineview graphics chipsets. The rendercheck test suite
+passes once again and there has been a significant reduction in the
+number of errors detected by the cairo test suite (notably center
+sampling and EXTEND_NONE behaviors are fixed).
+
+Other notable bug fixes include:
+
+ * Fix for bug 28446 Garbled fonts with Mathematica
+   https://bugs.freedesktop.org/show_bug.cgi?id=28446
+
+ * Fixes for page-flipping and other DRI2-handling bugs, (Thanks Jesse
+   Barnes, and Kristian Høgsberg)
+
+ * Avoid corruption when using extended desktops, (for example, video
+   playback)
+
+Release 2.11.0 (2010-03-29)
+===========================
+New in 2.11: DRI2 and page flipping
+-----------------------------------
+The most significant new feature of this release is support for new
+DRI2 APIs, allowing page flipping to occur for swaps that are
+full-screen and not rotated.
+
+Performance improvements in 2.11 compared to 2.10
 -------------------------------------------------
- * Fix corruption and artifacts due to wrong colors in the colormap
-   with X server 1.7
+Dramatically improved performance of large pixmaps on
+memory-constrained hardware, (such as 945), by using tiling.
+Note that this fix is new since the most recent release
+candidate for this release (2.10.903).
 
- * Fix incorrect rendering, such as missing scrollbar arrows in some
-   themes (http://bugs.freedesktop.org/show_bug.cgi?id=24459)
+    https://bugs.freedesktop.org/show_bug.cgi?id=25375
 
- * Fix black screen when X server is reset
-   (https://bugs.freedesktop.org/show_bug.cgi?id=24383)
+Elimination of software fallback with alpha-only pixmap (a fix which
+eliminated a full second from the Moblin boot time):
 
- * Fix regressions detecting DVI monitors
+    https://bugs.freedesktop.org/show_bug.cgi?id=26189
 
-   http://bugs.freedesktop.org/show_bug.cgi?id=24255
-   http://bugs.freedesktop.org/show_bug.cgi?id=24282
-   http://bugs.freedesktop.org/show_bug.cgi?id=24458
+Notable bug fixes in 2.11 compared to 2.10
+------------------------------------------
+Fix for undesired black borders on some images, (caued several
+problems with firefox):
+
+    http://bugs.freedesktop.org/show_bug.cgi?id=17933
+
+And other fixes to provide more conformance with existing
+software-rendering, (as measures by the cairo test suite), such as the
+sampling location for nearest-neighbor sampling.
+
+Other changes
+-------------
+Eric Anholt and Daniel Vetter both removed large piles of old and
+useless code now that the driver requires kernel modesetting
+(KMS). This continues to reduce the mainteance burden of the driver,
+making it easier to isolate and fix bugs.
+
+Snapshot 2.10.903 (2010-03-22)
+==============================
+Some notable bug fixes
+----------------------
+* Fix unpredictable results in page-flipping code due to access of an
+  uninitialized variable.
+
+* Two fixes that address a number of long-outstanding failures in the
+  cairo test suite:
+
+    Remove coord-adjust for nearest centre-sampling.
+
+    Fill alpha on xrgb images. Closes:
+
+	Bug 17933 - x8r8g8b8 doesn't sample alpha=0 outside surface bounds
+	http://bugs.freedesktop.org/show_bug.cgi?id=17933
+
+* Fix a regression introduced in 2.10.902:
+
+    Fatal server error:
+    i915_emit_composite_setup: ADVANCE_BATCH:
+    under-used allocation 100/104
+
+	Bug 21723 [i915 bisected] rendering makes X crash
+	http://bugs.freedesktop.org/show_bug.cgi?id=27123
+
+Other minor fixes (avoid trying to print an error message with a freed
+string, set a variable to NULL after freeing), and documentation
+updates are also included.
+
+Snapshot 2.10.902 (2010-03-15)
+==============================
+Some significant bug fixes
+--------------------------
+Fix video color problems due to YUV plane ordering issue. This fixed a
+regression that showed up recently (only in these release candidates).
+
+Fix recent regression leading to corruption under compiz:
+
+  https://bugs.freedesktop.org/show_bug.cgi?id=26814
+
+Further DRI2 improvements/fixes from Mario Kleiner and Jesse Barnes,
+(including support for SwapBuffers request with divisor != 0).
+
+Fix build against X server 1.6 branch.
+
+Avoid flooding logs after an error occurs.
+
+And dramatic code cleanups
+--------------------------
+Eric Anholt removed several cases of old, useless code, (conditions
+that could not occur now that we require KMS, etc.).
+
+Daniel Vetter eliminated piles of code by modernizing the XvMC
+memory-management and completely removing the old i830_memory
+allocator (i830_allocate_memory, i830_free_memory), etc.
+
+Snapshot 2.10.901 (2010-02-26)
+==============================
+The most significant new feature of this release is support for new
+DRI2 APIs, allowing page flipping to occur for swaps that are
+full-screen and not rotated.
+
+Some significant bug fixes
+--------------------------
+* Avoid fallback due to failing to extract pixel value from an
+  alpha-only solid, (this fix eliminated 1 second from Mobilin boot
+  time).
+
+  https://bugs.freedesktop.org/show_bug.cgi?id=26189
+
+* Handle full-height blits without tearing in CopyRegion
+
+  https://bugs.freedesktop.org/show_bug.cgi?id=22475
+
+Several other fixes and cleanups are included as well, (including the
+removal of stale utility code that is now maintained in the separate
+intel-gpu-tools module).
+
+Release 2.10.0 (2010-01-04)
+===========================
+New requirements of 2.10 compared to 2.9
+----------------------------------------
+ * Linux kernel with kernel-modesetting (KMS)
+
+   All user-modesetting code has now been removed from the driver.
+   We highly recommend kernel version 2.6.32 or later.
+
+ * Libdrm >= 2.4.16
+
+New features in 2.10 compared to 2.9
+------------------------------------
+ * New driver debugging options available in xorg.conf
+   (DebugFlushBatches, DebugFlushCaches, DebugWait). See "man intel"
+   for more details.
+
+ * Video overlay support with KMS. This currently requires Linux
+   2.6.33, but a backport to 2.6.32 is available here:
+
+   http://gitorious.org/daniel-s-linux-stuff/linux-kernel/commits/intel-kms-overlay-for-2.6.32
+
+Notable fixes in 2.10 compared to 2.9
+-----------------------------------
+ * Fix crash when XRenderComposite is called with a -1 value for
+   width/height, (crash at login when using compiz).
+
+   http://bugs.freedesktop.org/show_bug.cgi?id=24724
+
+ * Fix to support larger extended desktops, (such as a 2560x1600 plus a
+   1920x1200 monitor).
+
+
+ * Fix glyph corruption due to insufficient cache flushing:
+
+   https://bugs.freedesktop.org/show_bug.cgi?id=24315
+
+Several other correctness and performance fixes are also included.
+
+Note: The driver code of the 2.10.0 release is identical to that of
+the 2.9.99.901 release candidate. The only changes in 2.10.0 compared
+to 2.9.99.902 are a minor change to the configure script, and some
+small updates to the documentation.
+
+Snapshot 2.9.99.902 (2009-12-10)
+================================
+This is the second release candidate in preparation for the upcoming
+2.10.0 release. We will appreciate any feedback we can get from
+testing of this snapshot to improve the 2.10.0 release.
+
+Compared to the previous snapshot, this snapshot now correctly
+verifies that libdrm 2.4.16 (or newer) is available. The previous
+snapshot also required libdrm 2.4.16 for correct functionality, but
+neglected to notify the user of this at configure, compile, or install
+time and would instead simply fail to run.
+
+Snapshot 2.9.99.901 (2009-11-30)
+================================
+This is the first release candidate in preparation for the upcoming
+2.10.0 release. We will appreciate any feedback we can get from
+testing of this snapshot to improve the 2.10.0 release.
+
+With this snapshot, the xf86-video-intel driver requires kernel
+modesetting (KMS) as all of the user modesetting (UMS) support has
+been removed from the driver.
 
 Release 2.9.0 (2009-09-28)
 ==========================
