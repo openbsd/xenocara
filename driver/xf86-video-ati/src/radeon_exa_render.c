@@ -649,7 +649,7 @@ static Bool FUNC_NAME(R100PrepareComposite)(int op,
     CHECK_OFFSET(pDst, 0x0f, "destination");
 
     if (!pSrc) {
-	pSrc = RADEONSolidPixmap(pScreen, pSrcPicture->pSourcePict->solidFill.color);
+	pSrc = RADEONSolidPixmap(pScreen, cpu_to_le32(pSrcPicture->pSourcePict->solidFill.color));
 	if (!pSrc)
 	    RADEON_FALLBACK("Failed to create solid scratch pixmap\n");
     }
@@ -661,7 +661,7 @@ static Bool FUNC_NAME(R100PrepareComposite)(int op,
 	return FALSE;
 
     if (pMaskPicture && !pMask) {
-	pMask = RADEONSolidPixmap(pScreen, pMaskPicture->pSourcePict->solidFill.color);
+	pMask = RADEONSolidPixmap(pScreen, cpu_to_le32(pMaskPicture->pSourcePict->solidFill.color));
 	if (!pMask) {
 	    if (!pSrcPicture->pDrawable)
 		pScreen->DestroyPixmap(pSrc);
@@ -1025,7 +1025,7 @@ static Bool FUNC_NAME(R200PrepareComposite)(int op, PicturePtr pSrcPicture,
 	RADEON_FALLBACK(("Bad destination pitch 0x%x\n", (int)dst_pitch));
 
     if (!pSrc) {
-	pSrc = RADEONSolidPixmap(pScreen, pSrcPicture->pSourcePict->solidFill.color);
+	pSrc = RADEONSolidPixmap(pScreen, cpu_to_le32(pSrcPicture->pSourcePict->solidFill.color));
 	if (!pSrc)
 	    RADEON_FALLBACK("Failed to create solid scratch pixmap\n");
     }
@@ -1034,7 +1034,7 @@ static Bool FUNC_NAME(R200PrepareComposite)(int op, PicturePtr pSrcPicture,
 	return FALSE;
 
     if (pMaskPicture && !pMask) {
-	pMask = RADEONSolidPixmap(pScreen, pMaskPicture->pSourcePict->solidFill.color);
+	pMask = RADEONSolidPixmap(pScreen, cpu_to_le32(pMaskPicture->pSourcePict->solidFill.color));
 	if (!pMask) {
 	    if (!pSrcPicture->pDrawable)
 		pScreen->DestroyPixmap(pSrc);
@@ -1533,7 +1533,7 @@ static Bool FUNC_NAME(R300PrepareComposite)(int op, PicturePtr pSrcPicture,
 	RADEON_FALLBACK(("Bad destination pitch 0x%x\n", (int)dst_pitch));
 
     if (!pSrc) {
-	pSrc = RADEONSolidPixmap(pScreen, pSrcPicture->pSourcePict->solidFill.color);
+	pSrc = RADEONSolidPixmap(pScreen, cpu_to_le32(pSrcPicture->pSourcePict->solidFill.color));
 	if (!pSrc)
 	    RADEON_FALLBACK("Failed to create solid scratch pixmap\n");
     }
@@ -1542,7 +1542,7 @@ static Bool FUNC_NAME(R300PrepareComposite)(int op, PicturePtr pSrcPicture,
 	return FALSE;
 
     if (pMaskPicture && !pMask) {
-	pMask = RADEONSolidPixmap(pScreen, pMaskPicture->pSourcePict->solidFill.color);
+	pMask = RADEONSolidPixmap(pScreen, cpu_to_le32(pMaskPicture->pSourcePict->solidFill.color));
 	if (!pMask) {
 	    if (!pSrcPicture->pDrawable)
 		pScreen->DestroyPixmap(pSrc);

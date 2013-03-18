@@ -40,6 +40,7 @@
 #endif
 #include "radeon_macros.h"
 #include "radeon_probe.h"
+#include "radeon_reg.h"
 #include "radeon_version.h"
 #include "radeon_vbo.h"
 
@@ -159,6 +160,17 @@ PixmapPtr RADEONSolidPixmap(ScreenPtr pScreen, uint32_t solid)
 
     /* XXX: Big hammer... */
     info->accel_state->exa->WaitMarker(pScreen, info->accel_state->exaSyncMarker);
+
+#if X_BYTE_ORDER == X_BIG_ENDIAN
+    if (pScrn->bitsPerPixel == 32)
+	RADEONCopySwap(info->FB + exaGetPixmapOffset(pPix), (uint8_t*)&solid, 4,
+		       RADEON_HOST_DATA_SWAP_32BIT);
+    else if (pScrn->bitsPerPixel == 16)
+	RADEONCopySwap(info->FB + exaGetPixmapOffset(pPix), (uint8_t*)&solid, 4,
+		       RADEON_HOST_DATA_SWAP_16BIT);
+    else
+	/* Fall through for 8 bpp */
+#endif
     memcpy(info->FB + exaGetPixmapOffset(pPix), &solid, 4);
 
     return pPix;
