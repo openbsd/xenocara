@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile.inc,v 1.1 2013/03/09 14:34:40 matthieu Exp $
+#	$OpenBSD: Makefile.inc,v 1.2 2013/03/19 17:53:11 matthieu Exp $
 
 X11BASE ?=	/usr/X11R6
 
@@ -15,5 +15,11 @@ CFLAGS +=	-I${FONTCONFIG} \
 		-I${.CURDIR}/../src -I${FONTCONFIG}/src \
 		-I${.CURDIR}/../common \
 		-I${.CURDIR}
+
+.if ${MACHINE_ARCH} == "alpha" || ${MACHINE_ARCH} == "amd64" || \
+    ${MACHINE_ARCH} == "i386" || ${MACHINE_ARCH} == "powerpc" || \
+    ${MACHINE_ARCH} == "sparc64"
+CFLAGS +=	-DHAVE_INTEL_ATOMIC_PRIMITIVES=1
+.endif
 
 NOPROFILE =
