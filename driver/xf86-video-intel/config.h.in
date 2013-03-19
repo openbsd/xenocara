@@ -29,6 +29,9 @@
 /* Define to 1 if you have the <dgaproc.h> header file. */
 #undef HAVE_DGAPROC_H
 
+/* Define to 1 if you have the <dlfcn.h> header file. */
+#undef HAVE_DLFCN_H
+
 /* Are we in a git checkout? */
 #undef HAVE_DOT_GIT
 
@@ -88,6 +91,10 @@
 
 /* Assume KMS support */
 #undef KMS_ONLY
+
+/* Define to the sub-directory in which libtool stores uninstalled libraries.
+   */
+#undef LT_OBJDIR
 
 /* Disable internal debugging */
 #undef NDEBUG
