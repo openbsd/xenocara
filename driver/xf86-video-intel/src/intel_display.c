@@ -53,6 +53,11 @@
 
 #include "intel_glamor.h"
 
+#ifdef __OpenBSD__
+#include <dev/wscons/wsconsio.h>
+#include "xf86Priv.h"
+#endif
+
 #define KNOWN_MODE_FLAGS ((1<<14)-1)
 
 struct intel_mode {
@@ -127,6 +132,69 @@ intel_output_dpms(xf86OutputPtr output, int mode);
 static void
 intel_output_dpms_backlight(xf86OutputPtr output, int oldmode, int mode);
 
+static inline int
+crtc_id(struct intel_crtc *crtc)
+{
+	return crtc->mode_crtc->crtc_id;
+}
+
+#ifdef __OpenBSD__
+
+static void
+intel_output_backlight_set(xf86OutputPtr output, int level)
+{
+	struct intel_output *intel_output = output->driver_private;
+	struct wsdisplay_param param;
+
+	if (level > intel_output->backlight_max)
+		level = intel_output->backlight_max;
+	if (! intel_output->backlight_iface || level < 0)
+		return;
+
+	param.param = WSDISPLAYIO_PARAM_BRIGHTNESS;
+	param.curval = level;
+	if (ioctl(xf86Info.consoleFd, WSDISPLAYIO_SETPARAM, &param) == -1) {
+		xf86DrvMsg(output->scrn->scrnIndex, X_ERROR,
+			   "Failed to set backlight level: %s\n",
+			   strerror(errno));
+	}
+}
+
+static int
+intel_output_backlight_get(xf86OutputPtr output)
+{
+	struct wsdisplay_param param;
+
+	param.param = WSDISPLAYIO_PARAM_BRIGHTNESS;
+	if (ioctl(xf86Info.consoleFd, WSDISPLAYIO_GETPARAM, &param) == -1) {
+		xf86DrvMsg(output->scrn->scrnIndex, X_ERROR,
+			   "Failed to get backlight level: %s\n",
+			   strerror(errno));
+		return -1;
+	}
+
+	return param.curval;
+}
+
+static void
+intel_output_backlight_init(xf86OutputPtr output)
+{
+	struct intel_output *intel_output = output->driver_private;
+	struct wsdisplay_param param;
+
+	param.param = WSDISPLAYIO_PARAM_BRIGHTNESS;
+	if (ioctl(xf86Info.consoleFd, WSDISPLAYIO_GETPARAM, &param) == -1) {
+		intel_output->backlight_iface = NULL;
+		return;
+	}
+
+	intel_output->backlight_iface = "wscons";
+	intel_output->backlight_max = param.max;
+	intel_output->backlight_active_level = param.curval;
+}
+
+#else
+
 #define BACKLIGHT_CLASS "/sys/class/backlight"
 
 /*
@@ -154,12 +222,6 @@ static const char *backlight_interfaces[] = {
 #define BACKLIGHT_PATH_LEN 80
 /* Enough for 10 digits of backlight + '\n' + '\0' */
 #define BACKLIGHT_VALUE_LEN 12
-
-static inline int
-crtc_id(struct intel_crtc *crtc)
-{
-	return crtc->mode_crtc->crtc_id;
-}
 
 static void
 intel_output_backlight_set(xf86OutputPtr output, int level)
@@ -297,6 +359,7 @@ intel_output_backlight_init(xf86OutputPtr output)
 	intel_output->backlight_iface = NULL;
 }
 
+#endif
 
 static void
 mode_from_kmode(ScrnInfoPtr scrn,
