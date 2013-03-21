@@ -60,6 +60,9 @@ typedef struct _xf86RandR12Info {
      * See https://bugs.freedesktop.org/show_bug.cgi?id=21554
      */
     xf86EnterVTProc *orig_EnterVT;
+
+    Bool                         panning;
+    ConstrainCursorHarderProcPtr orig_ConstrainCursorHarder;
 } XF86RandRInfoRec, *XF86RandRInfoPtr;
 
 #ifdef RANDR_12_INTERFACE
@@ -665,6 +668,10 @@ xf86RandR12SetConfig(ScreenPtr pScreen,
     return TRUE;
 }
 
+#define PANNING_ENABLED(crtc)                                           \
+    ((crtc)->panningTotalArea.x2 > (crtc)->panningTotalArea.x1 ||       \
+     (crtc)->panningTotalArea.y2 > (crtc)->panningTotalArea.y1)
+
 static Bool
 xf86RandR12ScreenSetSize(ScreenPtr pScreen,
                          CARD16 width,
@@ -676,6 +683,7 @@ xf86RandR12ScreenSetSize(ScreenPtr pScreen,
     WindowPtr pRoot = pScreen->root;
     PixmapPtr pScrnPix;
     Bool ret = FALSE;
+    Bool panning = FALSE;
     int c;
 
     if (xf86RandR12Key) {
@@ -696,8 +704,7 @@ xf86RandR12ScreenSetSize(ScreenPtr pScreen,
     for (c = 0; c < config->num_crtc; c++) {
         xf86CrtcPtr crtc = config->crtc[c];
 
-        if (crtc->panningTotalArea.x2 > crtc->panningTotalArea.x1 ||
-            crtc->panningTotalArea.y2 > crtc->panningTotalArea.y1) {
+	if (PANNING_ENABLED (crtc)) {
             if (crtc->panningTotalArea.x2 > crtc->panningTrackingArea.x1)
                 crtc->panningTotalArea.x2 += width - pScreen->width;
             if (crtc->panningTotalArea.y2 > crtc->panningTrackingArea.y1)
@@ -708,6 +715,7 @@ xf86RandR12ScreenSetSize(ScreenPtr pScreen,
                 crtc->panningTrackingArea.y2 += height - pScreen->height;
             xf86RandR13VerifyPanningArea(crtc, width, height);
             xf86RandR13Pan(crtc, randrp->pointerX, randrp->pointerY);
+	    panning = TRUE;
         }
     }
 
@@ -904,6 +912,7 @@ xf86RandR12CloseScreen(ScreenPtr pScreen)
     randrp = XF86RANDRINFO(pScreen);
 #if RANDR_12_INTERFACE
     xf86Screens[pScreen->myNum]->EnterVT = randrp->orig_EnterVT;
+    pScreen->ConstrainCursorHarder = randrp->orig_ConstrainCursorHarder;
 #endif
 
     free(randrp);
@@ -1214,6 +1223,7 @@ xf86RandR12CrtcSet(ScreenPtr pScreen,
             }
             xf86RandR13VerifyPanningArea(crtc, pScreen->width, pScreen->height);
             xf86RandR13Pan(crtc, randrp->pointerX, randrp->pointerY);
+            randrp->panning = PANNING_ENABLED (crtc);
             /*
              * Save the last successful setting for EnterVT
              */
@@ -1640,6 +1650,7 @@ xf86RandR13SetPanning(ScreenPtr pScreen,
     BoxRec oldTotalArea;
     BoxRec oldTrackingArea;
     INT16 oldBorder[4];
+    Bool oldPanning = randrp->panning;
 
     if (crtc->version < 2)
         return FALSE;
@@ -1657,6 +1668,7 @@ xf86RandR13SetPanning(ScreenPtr pScreen,
 
     if (xf86RandR13VerifyPanningArea(crtc, pScreen->width, pScreen->height)) {
         xf86RandR13Pan(crtc, randrp->pointerX, randrp->pointerY);
+        randrp->panning = PANNING_ENABLED (crtc);
         return TRUE;
     }
     else {
@@ -1664,6 +1676,7 @@ xf86RandR13SetPanning(ScreenPtr pScreen,
         memcpy(&crtc->panningTotalArea, &oldTotalArea, sizeof(BoxRec));
         memcpy(&crtc->panningTrackingArea, &oldTrackingArea, sizeof(BoxRec));
         memcpy(crtc->panningBorder, oldBorder, 4 * sizeof(INT16));
+        randrp->panning = oldPanning;
         return FALSE;
     }
 }
@@ -1749,6 +1762,21 @@ xf86RandR12EnterVT(int screen_index, int flags)
     return RRGetInfo(pScreen, TRUE);    /* force a re-probe of outputs and notify clients about changes */
 }
 
+static void
+xf86RandR13ConstrainCursorHarder(DeviceIntPtr dev, ScreenPtr screen, int mode, int *x, int *y)
+{
+    XF86RandRInfoPtr randrp = XF86RANDRINFO(screen);
+
+    if (randrp->panning)
+        return;
+
+    if (randrp->orig_ConstrainCursorHarder) {
+        screen->ConstrainCursorHarder = randrp->orig_ConstrainCursorHarder;
+        screen->ConstrainCursorHarder(dev, screen, mode, x, y);
+        screen->ConstrainCursorHarder = xf86RandR13ConstrainCursorHarder;
+    }
+}
+
 static Bool
 xf86RandR12Init12(ScreenPtr pScreen)
 {
@@ -1776,6 +1804,10 @@ xf86RandR12Init12(ScreenPtr pScreen)
 
     randrp->orig_EnterVT = pScrn->EnterVT;
     pScrn->EnterVT = xf86RandR12EnterVT;
+
+    randrp->panning = FALSE;
+    randrp->orig_ConstrainCursorHarder = pScreen->ConstrainCursorHarder;
+    pScreen->ConstrainCursorHarder = xf86RandR13ConstrainCursorHarder;
 
     if (!xf86RandR12CreateObjects12(pScreen))
         return FALSE;
