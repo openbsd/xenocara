@@ -66,7 +66,7 @@
 ./usr/X11R6/lib/libXxf86vm.so.5.0
 ./usr/X11R6/lib/libdmx.so.1.0
 ./usr/X11R6/lib/libdrm.a
-./usr/X11R6/lib/libdrm.so.3.1
+./usr/X11R6/lib/libdrm.so.3.2
 ./usr/X11R6/lib/libfontconfig.so.8.0
 ./usr/X11R6/lib/libfontenc.so.3.0
 ./usr/X11R6/lib/libfreetype.so.19.0
