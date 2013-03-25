@@ -33,6 +33,9 @@
  *
  */
 
+#ifndef _XF86DRMMODE_H_
+#define _XF86DRMMODE_H_
+
 #if defined(__cplusplus) || defined(c_plusplus)
 extern "C" {
 #endif
@@ -278,6 +281,12 @@ typedef struct _drmModeConnector {
 	uint32_t *encoders; /**< List of encoder ids */
 } drmModeConnector, *drmModeConnectorPtr;
 
+typedef struct _drmModeObjectProperties {
+	uint32_t count_props;
+	uint32_t *props;
+	uint64_t *prop_values;
+} drmModeObjectProperties, *drmModeObjectPropertiesPtr;
+
 typedef struct _drmModePlane {
 	uint32_t count_formats;
 	uint32_t *formats;
@@ -425,6 +434,16 @@ extern int drmModeSetPlane(int fd, uint32_t plane_id, uint32_t crtc_id,
 			   uint32_t src_x, uint32_t src_y,
 			   uint32_t src_w, uint32_t src_h);
 
+extern drmModeObjectPropertiesPtr drmModeObjectGetProperties(int fd,
+							uint32_t object_id,
+							uint32_t object_type);
+extern void drmModeFreeObjectProperties(drmModeObjectPropertiesPtr ptr);
+extern int drmModeObjectSetProperty(int fd, uint32_t object_id,
+				    uint32_t object_type, uint32_t property_id,
+				    uint64_t value);
+
 #if defined(__cplusplus) || defined(c_plusplus)
 }
+#endif
+
 #endif

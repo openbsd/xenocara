@@ -68,6 +68,11 @@ enum radeon_family {
     CHIP_TURKS,
     CHIP_CAICOS,
     CHIP_CAYMAN,
+    CHIP_ARUBA,
+    CHIP_TAHITI,
+    CHIP_PITCAIRN,
+    CHIP_VERDE,
+    CHIP_OLAND,
     CHIP_LAST,
 };
 
@@ -140,31 +145,32 @@ static unsigned mip_minify(unsigned size, unsigned level)
 }
 
 static void surf_minify(struct radeon_surface *surf,
-                        unsigned level,
+                        struct radeon_surface_level *surflevel,
+                        unsigned bpe, unsigned level,
                         uint32_t xalign, uint32_t yalign, uint32_t zalign,
                         unsigned offset)
 {
-    surf->level[level].npix_x = mip_minify(surf->npix_x, level);
-    surf->level[level].npix_y = mip_minify(surf->npix_y, level);
-    surf->level[level].npix_z = mip_minify(surf->npix_z, level);
-    surf->level[level].nblk_x = (surf->level[level].npix_x + surf->blk_w - 1) / surf->blk_w;
-    surf->level[level].nblk_y = (surf->level[level].npix_y + surf->blk_h - 1) / surf->blk_h;
-    surf->level[level].nblk_z = (surf->level[level].npix_z + surf->blk_d - 1) / surf->blk_d;
-    if (surf->level[level].mode == RADEON_SURF_MODE_2D) {
-        if (surf->level[level].nblk_x < xalign || surf->level[level].nblk_y < yalign) {
-            surf->level[level].mode = RADEON_SURF_MODE_1D;
+    surflevel->npix_x = mip_minify(surf->npix_x, level);
+    surflevel->npix_y = mip_minify(surf->npix_y, level);
+    surflevel->npix_z = mip_minify(surf->npix_z, level);
+    surflevel->nblk_x = (surflevel->npix_x + surf->blk_w - 1) / surf->blk_w;
+    surflevel->nblk_y = (surflevel->npix_y + surf->blk_h - 1) / surf->blk_h;
+    surflevel->nblk_z = (surflevel->npix_z + surf->blk_d - 1) / surf->blk_d;
+    if (surf->nsamples == 1 && surflevel->mode == RADEON_SURF_MODE_2D) {
+        if (surflevel->nblk_x < xalign || surflevel->nblk_y < yalign) {
+            surflevel->mode = RADEON_SURF_MODE_1D;
             return;
         }
     }
-    surf->level[level].nblk_x  = ALIGN(surf->level[level].nblk_x, xalign);
-    surf->level[level].nblk_y  = ALIGN(surf->level[level].nblk_y, yalign);
-    surf->level[level].nblk_z  = ALIGN(surf->level[level].nblk_z, zalign);
+    surflevel->nblk_x  = ALIGN(surflevel->nblk_x, xalign);
+    surflevel->nblk_y  = ALIGN(surflevel->nblk_y, yalign);
+    surflevel->nblk_z  = ALIGN(surflevel->nblk_z, zalign);
 
-    surf->level[level].offset = offset;
-    surf->level[level].pitch_bytes = surf->level[level].nblk_x * surf->bpe;
-    surf->level[level].slice_size = surf->level[level].pitch_bytes * surf->level[level].nblk_y;
+    surflevel->offset = offset;
+    surflevel->pitch_bytes = surflevel->nblk_x * bpe * surf->nsamples;
+    surflevel->slice_size = surflevel->pitch_bytes * surflevel->nblk_y;
 
-    surf->bo_size = offset + surf->level[level].slice_size * surf->level[level].nblk_z * surf->array_size;
+    surf->bo_size = offset + surflevel->slice_size * surflevel->nblk_z * surf->array_size;
 }
 
 /* ===========================================================================
@@ -187,6 +193,7 @@ static int r6_init_hw_info(struct radeon_surface_manager *surf_man)
     if (version && version->version_minor >= 14) {
         surf_man->hw_info.allow_2d = 1;
     }
+    drmFreeVersion(version);
 
     switch ((tiling_config & 0xe) >> 1) {
     case 0:
@@ -202,7 +209,9 @@ static int r6_init_hw_info(struct radeon_surface_manager *surf_man)
         surf_man->hw_info.num_pipes = 8;
         break;
     default:
-        return -EINVAL;
+        surf_man->hw_info.num_pipes = 8;
+        surf_man->hw_info.allow_2d = 0;
+        break;
     }
 
     switch ((tiling_config & 0x30) >> 4) {
@@ -213,7 +222,9 @@ static int r6_init_hw_info(struct radeon_surface_manager *surf_man)
         surf_man->hw_info.num_banks = 8;
         break;
     default:
-        return -EINVAL;
+        surf_man->hw_info.num_banks = 8;
+        surf_man->hw_info.allow_2d = 0;
+        break;
     }
 
     switch ((tiling_config & 0xc0) >> 6) {
@@ -224,7 +235,9 @@ static int r6_init_hw_info(struct radeon_surface_manager *surf_man)
         surf_man->hw_info.group_bytes = 512;
         break;
     default:
-        return -EINVAL;
+        surf_man->hw_info.group_bytes = 256;
+        surf_man->hw_info.allow_2d = 0;
+        break;
     }
     return 0;
 }
@@ -243,14 +256,17 @@ static int r6_surface_init_linear(struct radeon_surface_manager *surf_man,
     /* the 32 alignment is for scanout, cb or db but to allow texture to be
      * easily bound as such we force this alignment to all surface
      */
-    xalign = MAX2(32, surf_man->hw_info.group_bytes / surf->bpe);
+    xalign = MAX2(1, surf_man->hw_info.group_bytes / surf->bpe);
     yalign = 1;
     zalign = 1;
+    if (surf->flags & RADEON_SURF_SCANOUT) {
+        xalign = MAX2((surf->bpe == 1) ? 64 : 32, xalign);
+    }
 
     /* build mipmap tree */
     for (i = start_level; i <= surf->last_level; i++) {
         surf->level[i].mode = RADEON_SURF_MODE_LINEAR;
-        surf_minify(surf, i, xalign, yalign, zalign, offset);
+        surf_minify(surf, surf->level+i, surf->bpe, i, xalign, yalign, zalign, offset);
         /* level0 and first mipmap need to have alignment */
         offset = surf->bo_size;
         if ((i == 0)) {
@@ -278,7 +294,7 @@ static int r6_surface_init_linear_aligned(struct radeon_surface_manager *surf_ma
     /* build mipmap tree */
     for (i = start_level; i <= surf->last_level; i++) {
         surf->level[i].mode = RADEON_SURF_MODE_LINEAR_ALIGNED;
-        surf_minify(surf, i, xalign, yalign, zalign, offset);
+        surf_minify(surf, surf->level+i, surf->bpe, i, xalign, yalign, zalign, offset);
         /* level0 and first mipmap need to have alignment */
         offset = surf->bo_size;
         if ((i == 0)) {
@@ -301,6 +317,9 @@ static int r6_surface_init_1d(struct radeon_surface_manager *surf_man,
     xalign = MAX2(tilew, xalign);
     yalign = tilew;
     zalign = 1;
+    if (surf->flags & RADEON_SURF_SCANOUT) {
+        xalign = MAX2((surf->bpe == 1) ? 64 : 32, xalign);
+    }
     if (!start_level) {
         surf->bo_alignment = MAX2(256, surf_man->hw_info.group_bytes);
     }
@@ -308,7 +327,7 @@ static int r6_surface_init_1d(struct radeon_surface_manager *surf_man,
     /* build mipmap tree */
     for (i = start_level; i <= surf->last_level; i++) {
         surf->level[i].mode = RADEON_SURF_MODE_1D;
-        surf_minify(surf, i, xalign, yalign, zalign, offset);
+        surf_minify(surf, surf->level+i, surf->bpe, i, xalign, yalign, zalign, offset);
         /* level0 and first mipmap need to have alignment */
         offset = surf->bo_size;
         if ((i == 0)) {
@@ -332,18 +351,21 @@ static int r6_surface_init_2d(struct radeon_surface_manager *surf_man,
              (tilew * surf->bpe * surf->nsamples);
     xalign = MAX2(tilew * surf_man->hw_info.num_banks, xalign);
     yalign = tilew * surf_man->hw_info.num_pipes;
+    if (surf->flags & RADEON_SURF_SCANOUT) {
+        xalign = MAX2((surf->bpe == 1) ? 64 : 32, xalign);
+    }
     if (!start_level) {
         surf->bo_alignment =
             MAX2(surf_man->hw_info.num_pipes *
                  surf_man->hw_info.num_banks *
-                 surf->bpe * 64,
+                 surf->nsamples * surf->bpe * 64,
                  xalign * yalign * surf->nsamples * surf->bpe);
     }
 
     /* build mipmap tree */
     for (i = start_level; i <= surf->last_level; i++) {
         surf->level[i].mode = RADEON_SURF_MODE_2D;
-        surf_minify(surf, i, xalign, yalign, zalign, offset);
+        surf_minify(surf, surf->level+i, surf->bpe, i, xalign, yalign, zalign, offset);
         if (surf->level[i].mode == RADEON_SURF_MODE_1D) {
             return r6_surface_init_1d(surf_man, surf, offset, i);
         }
@@ -362,11 +384,35 @@ static int r6_surface_init(struct radeon_surface_manager *surf_man,
     unsigned mode;
     int r;
 
+    /* MSAA surfaces support the 2D mode only. */
+    if (surf->nsamples > 1) {
+        surf->flags = RADEON_SURF_CLR(surf->flags, MODE);
+        surf->flags |= RADEON_SURF_SET(RADEON_SURF_MODE_2D, MODE);
+    }
+
     /* tiling mode */
     mode = (surf->flags >> RADEON_SURF_MODE_SHIFT) & RADEON_SURF_MODE_MASK;
 
+    if (surf->flags & (RADEON_SURF_ZBUFFER | RADEON_SURF_SBUFFER)) {
+        /* zbuffer only support 1D or 2D tiled surface */
+        switch (mode) {
+        case RADEON_SURF_MODE_1D:
+        case RADEON_SURF_MODE_2D:
+            break;
+        default:
+            mode = RADEON_SURF_MODE_1D;
+            surf->flags = RADEON_SURF_CLR(surf->flags, MODE);
+            surf->flags |= RADEON_SURF_SET(RADEON_SURF_MODE_1D, MODE);
+            break;
+        }
+    }
+
     /* force 1d on kernel that can't do 2d */
     if (!surf_man->hw_info.allow_2d && mode > RADEON_SURF_MODE_1D) {
+        if (surf->nsamples > 1) {
+            fprintf(stderr, "radeon: Cannot use 2D tiling for an MSAA surface (%i).\n", __LINE__);
+            return -EFAULT;
+        }
         mode = RADEON_SURF_MODE_1D;
         surf->flags = RADEON_SURF_CLR(surf->flags, MODE);
         surf->flags |= RADEON_SURF_SET(mode, MODE);
@@ -427,9 +473,10 @@ static int eg_init_hw_info(struct radeon_surface_manager *surf_man)
 
     surf_man->hw_info.allow_2d = 0;
     version = drmGetVersion(surf_man->fd);
-    if (version && version->version_minor >= 14) {
+    if (version && version->version_minor >= 16) {
         surf_man->hw_info.allow_2d = 1;
     }
+    drmFreeVersion(version);
 
     switch (tiling_config & 0xf) {
     case 0:
@@ -445,7 +492,9 @@ static int eg_init_hw_info(struct radeon_surface_manager *surf_man)
         surf_man->hw_info.num_pipes = 8;
         break;
     default:
-        return -EINVAL;
+        surf_man->hw_info.num_pipes = 8;
+        surf_man->hw_info.allow_2d = 0;
+        break;
     }
 
     switch ((tiling_config & 0xf0) >> 4) {
@@ -459,7 +508,9 @@ static int eg_init_hw_info(struct radeon_surface_manager *surf_man)
         surf_man->hw_info.num_banks = 16;
         break;
     default:
-        return -EINVAL;
+        surf_man->hw_info.num_banks = 8;
+        surf_man->hw_info.allow_2d = 0;
+        break;
     }
 
     switch ((tiling_config & 0xf00) >> 8) {
@@ -470,7 +521,9 @@ static int eg_init_hw_info(struct radeon_surface_manager *surf_man)
         surf_man->hw_info.group_bytes = 512;
         break;
     default:
-        return -EINVAL;
+        surf_man->hw_info.group_bytes = 256;
+        surf_man->hw_info.allow_2d = 0;
+        break;
     }
 
     switch ((tiling_config & 0xf000) >> 12) {
@@ -484,12 +537,16 @@ static int eg_init_hw_info(struct radeon_surface_manager *surf_man)
         surf_man->hw_info.row_size = 4096;
         break;
     default:
-        return -EINVAL;
+        surf_man->hw_info.row_size = 4096;
+        surf_man->hw_info.allow_2d = 0;
+        break;
     }
     return 0;
 }
 
 static void eg_surf_minify(struct radeon_surface *surf,
+                           struct radeon_surface_level *surflevel,
+                           unsigned bpe,
                            unsigned level,
                            unsigned slice_pt,
                            unsigned mtilew,
@@ -499,36 +556,38 @@ static void eg_surf_minify(struct radeon_surface *surf,
 {
     unsigned mtile_pr, mtile_ps;
 
-    surf->level[level].npix_x = mip_minify(surf->npix_x, level);
-    surf->level[level].npix_y = mip_minify(surf->npix_y, level);
-    surf->level[level].npix_z = mip_minify(surf->npix_z, level);
-    surf->level[level].nblk_x = (surf->level[level].npix_x + surf->blk_w - 1) / surf->blk_w;
-    surf->level[level].nblk_y = (surf->level[level].npix_y + surf->blk_h - 1) / surf->blk_h;
-    surf->level[level].nblk_z = (surf->level[level].npix_z + surf->blk_d - 1) / surf->blk_d;
-    if (surf->level[level].mode == RADEON_SURF_MODE_2D) {
-        if (surf->level[level].nblk_x < mtilew || surf->level[level].nblk_y < mtileh) {
-            surf->level[level].mode = RADEON_SURF_MODE_1D;
+    surflevel->npix_x = mip_minify(surf->npix_x, level);
+    surflevel->npix_y = mip_minify(surf->npix_y, level);
+    surflevel->npix_z = mip_minify(surf->npix_z, level);
+    surflevel->nblk_x = (surflevel->npix_x + surf->blk_w - 1) / surf->blk_w;
+    surflevel->nblk_y = (surflevel->npix_y + surf->blk_h - 1) / surf->blk_h;
+    surflevel->nblk_z = (surflevel->npix_z + surf->blk_d - 1) / surf->blk_d;
+    if (surf->nsamples == 1 && surflevel->mode == RADEON_SURF_MODE_2D) {
+        if (surflevel->nblk_x < mtilew || surflevel->nblk_y < mtileh) {
+            surflevel->mode = RADEON_SURF_MODE_1D;
             return;
         }
     }
-    surf->level[level].nblk_x  = ALIGN(surf->level[level].nblk_x, mtilew);
-    surf->level[level].nblk_y  = ALIGN(surf->level[level].nblk_y, mtileh);
-    surf->level[level].nblk_z  = ALIGN(surf->level[level].nblk_z, 1);
+    surflevel->nblk_x  = ALIGN(surflevel->nblk_x, mtilew);
+    surflevel->nblk_y  = ALIGN(surflevel->nblk_y, mtileh);
+    surflevel->nblk_z  = ALIGN(surflevel->nblk_z, 1);
 
     /* macro tile per row */
-    mtile_pr = surf->level[level].nblk_x / mtilew;
+    mtile_pr = surflevel->nblk_x / mtilew;
     /* macro tile per slice */
-    mtile_ps = (mtile_pr * surf->level[level].nblk_y) / mtileh;
+    mtile_ps = (mtile_pr * surflevel->nblk_y) / mtileh;
 
-    surf->level[level].offset = offset;
-    surf->level[level].pitch_bytes = surf->level[level].nblk_x * surf->bpe * slice_pt;
-    surf->level[level].slice_size = mtile_ps * mtileb * slice_pt;
+    surflevel->offset = offset;
+    surflevel->pitch_bytes = surflevel->nblk_x * bpe * slice_pt;
+    surflevel->slice_size = mtile_ps * mtileb * slice_pt;
 
-    surf->bo_size = offset + surf->level[level].slice_size * surf->level[level].nblk_z * surf->array_size;
+    surf->bo_size = offset + surflevel->slice_size * surflevel->nblk_z * surf->array_size;
 }
 
 static int eg_surface_init_1d(struct radeon_surface_manager *surf_man,
                               struct radeon_surface *surf,
+                              struct radeon_surface_level *level,
+                              unsigned bpe,
                               uint64_t offset, unsigned start_level)
 {
     uint32_t xalign, yalign, zalign, tilew;
@@ -536,40 +595,40 @@ static int eg_surface_init_1d(struct radeon_surface_manager *surf_man,
 
     /* compute alignment */
     tilew = 8;
-    xalign = surf_man->hw_info.group_bytes / (tilew * surf->bpe * surf->nsamples);
-    if (surf->flags & RADEON_SURF_SBUFFER) {
-        surf->stencil_offset = 0;
-        surf->stencil_tile_split = 0;
-        xalign = surf_man->hw_info.group_bytes / (tilew * surf->nsamples);
-    }
+    xalign = surf_man->hw_info.group_bytes / (tilew * bpe * surf->nsamples);
     xalign = MAX2(tilew, xalign);
     yalign = tilew;
     zalign = 1;
+    if (surf->flags & RADEON_SURF_SCANOUT) {
+        xalign = MAX2((bpe == 1) ? 64 : 32, xalign);
+    }
+
     if (!start_level) {
-        surf->bo_alignment = MAX2(256, surf_man->hw_info.group_bytes);
+        unsigned alignment = MAX2(256, surf_man->hw_info.group_bytes);
+        surf->bo_alignment = MAX2(surf->bo_alignment, alignment);
+
+        if (offset) {
+            offset = ALIGN(offset, alignment);
+        }
     }
 
     /* build mipmap tree */
     for (i = start_level; i <= surf->last_level; i++) {
-        surf->level[i].mode = RADEON_SURF_MODE_1D;
-        surf_minify(surf, i, xalign, yalign, zalign, offset);
+        level[i].mode = RADEON_SURF_MODE_1D;
+        surf_minify(surf, level+i, bpe, i, xalign, yalign, zalign, offset);
         /* level0 and first mipmap need to have alignment */
         offset = surf->bo_size;
         if ((i == 0)) {
             offset = ALIGN(offset, surf->bo_alignment);
         }
     }
-
-    if (surf->flags & RADEON_SURF_SBUFFER) {
-        surf->stencil_offset = ALIGN(surf->bo_size, surf->bo_alignment);
-        surf->bo_size = surf->stencil_offset + surf->bo_size / 4;
-    }
-
     return 0;
 }
 
 static int eg_surface_init_2d(struct radeon_surface_manager *surf_man,
                               struct radeon_surface *surf,
+                              struct radeon_surface_level *level,
+                              unsigned bpe, unsigned tile_split,
                               uint64_t offset, unsigned start_level)
 {
     unsigned tilew, tileh, tileb;
@@ -577,15 +636,14 @@ static int eg_surface_init_2d(struct radeon_surface_manager *surf_man,
     unsigned slice_pt;
     unsigned i;
 
-    surf->stencil_offset = 0;
     /* compute tile values */
     tilew = 8;
     tileh = 8;
-    tileb = tilew * tileh * surf->bpe * surf->nsamples;
+    tileb = tilew * tileh * bpe * surf->nsamples;
     /* slices per tile */
     slice_pt = 1;
-    if (tileb > surf->tile_split) {
-        slice_pt = tileb / surf->tile_split;
+    if (tileb > tile_split) {
+        slice_pt = tileb / tile_split;
     }
     tileb = tileb / slice_pt;
 
@@ -596,15 +654,20 @@ static int eg_surface_init_2d(struct radeon_surface_manager *surf_man,
     mtileb = (mtilew / tilew) * (mtileh / tileh) * tileb;
 
     if (!start_level) {
-        surf->bo_alignment = MAX2(256, mtileb);
+        unsigned alignment = MAX2(256, mtileb);
+        surf->bo_alignment = MAX2(surf->bo_alignment, alignment);
+
+        if (offset) {
+            offset = ALIGN(offset, alignment);
+        }
     }
 
     /* build mipmap tree */
     for (i = start_level; i <= surf->last_level; i++) {
-        surf->level[i].mode = RADEON_SURF_MODE_2D;
-        eg_surf_minify(surf, i, slice_pt, mtilew, mtileh, mtileb, offset);
-        if (surf->level[i].mode == RADEON_SURF_MODE_1D) {
-            return eg_surface_init_1d(surf_man, surf, offset, i);
+        level[i].mode = RADEON_SURF_MODE_2D;
+        eg_surf_minify(surf, level+i, bpe, i, slice_pt, mtilew, mtileh, mtileb, offset);
+        if (level[i].mode == RADEON_SURF_MODE_1D) {
+            return eg_surface_init_1d(surf_man, surf, level, bpe, offset, i);
         }
         /* level0 and first mipmap need to have alignment */
         offset = surf->bo_size;
@@ -612,12 +675,6 @@ static int eg_surface_init_2d(struct radeon_surface_manager *surf_man,
             offset = ALIGN(offset, surf->bo_alignment);
         }
     }
-
-    if (surf->flags & RADEON_SURF_SBUFFER) {
-        surf->stencil_offset = ALIGN(surf->bo_size, surf->bo_alignment);
-        surf->bo_size = surf->stencil_offset + surf->bo_size / 4;
-    }
-
     return 0;
 }
 
@@ -639,6 +696,10 @@ static int eg_surface_sanity(struct radeon_surface_manager *surf_man,
 
     /* force 1d on kernel that can't do 2d */
     if (!surf_man->hw_info.allow_2d && mode > RADEON_SURF_MODE_1D) {
+        if (surf->nsamples > 1) {
+            fprintf(stderr, "radeon: Cannot use 2D tiling for an MSAA surface (%i).\n", __LINE__);
+            return -EFAULT;
+        }
         mode = RADEON_SURF_MODE_1D;
         surf->flags = RADEON_SURF_CLR(surf->flags, MODE);
         surf->flags |= RADEON_SURF_SET(mode, MODE);
@@ -700,24 +761,87 @@ static int eg_surface_sanity(struct radeon_surface_manager *surf_man,
     return 0;
 }
 
+static int eg_surface_init_1d_miptrees(struct radeon_surface_manager *surf_man,
+                                       struct radeon_surface *surf)
+{
+    unsigned zs_flags = RADEON_SURF_ZBUFFER | RADEON_SURF_SBUFFER;
+    int r, is_depth_stencil = (surf->flags & zs_flags) == zs_flags;
+    /* Old libdrm headers didn't have stencil_level in it. This prevents crashes. */
+    struct radeon_surface_level tmp[RADEON_SURF_MAX_LEVEL];
+    struct radeon_surface_level *stencil_level =
+        (surf->flags & RADEON_SURF_HAS_SBUFFER_MIPTREE) ? surf->stencil_level : tmp;
+
+    r = eg_surface_init_1d(surf_man, surf, surf->level, surf->bpe, 0, 0);
+    if (r)
+        return r;
+
+    if (is_depth_stencil) {
+        r = eg_surface_init_1d(surf_man, surf, stencil_level, 1,
+                               surf->bo_size, 0);
+        surf->stencil_offset = stencil_level[0].offset;
+    }
+    return r;
+}
+
+static int eg_surface_init_2d_miptrees(struct radeon_surface_manager *surf_man,
+                                       struct radeon_surface *surf)
+{
+    unsigned zs_flags = RADEON_SURF_ZBUFFER | RADEON_SURF_SBUFFER;
+    int r, is_depth_stencil = (surf->flags & zs_flags) == zs_flags;
+    /* Old libdrm headers didn't have stencil_level in it. This prevents crashes. */
+    struct radeon_surface_level tmp[RADEON_SURF_MAX_LEVEL];
+    struct radeon_surface_level *stencil_level =
+        (surf->flags & RADEON_SURF_HAS_SBUFFER_MIPTREE) ? surf->stencil_level : tmp;
+
+    r = eg_surface_init_2d(surf_man, surf, surf->level, surf->bpe,
+                           surf->tile_split, 0, 0);
+    if (r)
+        return r;
+
+    if (is_depth_stencil) {
+        r = eg_surface_init_2d(surf_man, surf, stencil_level, 1,
+                               surf->stencil_tile_split, surf->bo_size, 0);
+        surf->stencil_offset = stencil_level[0].offset;
+    }
+    return r;
+}
+
 static int eg_surface_init(struct radeon_surface_manager *surf_man,
                            struct radeon_surface *surf)
 {
     unsigned mode;
     int r;
 
+    /* MSAA surfaces support the 2D mode only. */
+    if (surf->nsamples > 1) {
+        surf->flags = RADEON_SURF_CLR(surf->flags, MODE);
+        surf->flags |= RADEON_SURF_SET(RADEON_SURF_MODE_2D, MODE);
+    }
+
     /* tiling mode */
     mode = (surf->flags >> RADEON_SURF_MODE_SHIFT) & RADEON_SURF_MODE_MASK;
 
-    /* for some reason eg need to have room for stencil right after depth */
-    if (surf->flags & RADEON_SURF_ZBUFFER) {
-        surf->flags |= RADEON_SURF_SBUFFER;
+    if (surf->flags & (RADEON_SURF_ZBUFFER | RADEON_SURF_SBUFFER)) {
+        /* zbuffer only support 1D or 2D tiled surface */
+        switch (mode) {
+        case RADEON_SURF_MODE_1D:
+        case RADEON_SURF_MODE_2D:
+            break;
+        default:
+            mode = RADEON_SURF_MODE_1D;
+            surf->flags = RADEON_SURF_CLR(surf->flags, MODE);
+            surf->flags |= RADEON_SURF_SET(RADEON_SURF_MODE_1D, MODE);
+            break;
+        }
     }
 
     r = eg_surface_sanity(surf_man, surf, mode);
     if (r) {
         return r;
     }
+
+    surf->stencil_offset = 0;
+    surf->bo_alignment = 0;
 
     /* check tiling mode */
     switch (mode) {
@@ -728,10 +852,10 @@ static int eg_surface_init(struct radeon_surface_manager *surf_man,
         r = r6_surface_init_linear_aligned(surf_man, surf, 0, 0);
         break;
     case RADEON_SURF_MODE_1D:
-        r = eg_surface_init_1d(surf_man, surf, 0, 0);
+        r = eg_surface_init_1d_miptrees(surf_man, surf);
         break;
     case RADEON_SURF_MODE_2D:
-        r = eg_surface_init_2d(surf_man, surf, 0, 0);
+        r = eg_surface_init_2d_miptrees(surf_man, surf);
         break;
     default:
         return -EINVAL;
@@ -766,11 +890,6 @@ static int eg_surface_best(struct radeon_surface_manager *surf_man,
     /* tiling mode */
     mode = (surf->flags >> RADEON_SURF_MODE_SHIFT) & RADEON_SURF_MODE_MASK;
 
-    /* for some reason eg need to have room for stencil right after depth */
-    if (surf->flags & RADEON_SURF_ZBUFFER) {
-        surf->flags |= RADEON_SURF_SBUFFER;
-    }
-
     /* set some default value to avoid sanity check choking on them */
     surf->tile_split = 1024;
     surf->bankw = 1;
@@ -796,12 +915,39 @@ static int eg_surface_best(struct radeon_surface_manager *surf_man,
         return 0;
     }
 
-    /* set tile split to row size, optimize latter for multi-sample surface
-     * tile split >= 256 for render buffer surface. Also depth surface want
-     * smaller value for optimal performances.
-     */
-    surf->tile_split = surf_man->hw_info.row_size;
-    surf->stencil_tile_split = surf_man->hw_info.row_size / 2;
+    /* Tweak TILE_SPLIT for performance here. */
+    if (surf->nsamples > 1) {
+        if (surf->flags & (RADEON_SURF_ZBUFFER | RADEON_SURF_SBUFFER)) {
+            switch (surf->nsamples) {
+            case 2:
+                surf->tile_split = 128;
+                break;
+            case 4:
+                surf->tile_split = 128;
+                break;
+            case 8:
+                surf->tile_split = 256;
+                break;
+            case 16: /* cayman only */
+                surf->tile_split = 512;
+                break;
+            default:
+                fprintf(stderr, "radeon: Wrong number of samples %i (%i)\n",
+                        surf->nsamples, __LINE__);
+                return -EINVAL;
+            }
+            surf->stencil_tile_split = 64;
+        } else {
+            /* tile split must be >= 256 for colorbuffer surfaces */
+            surf->tile_split = MAX2(surf->nsamples * surf->bpe * 64, 256);
+            if (surf->tile_split > 4096)
+                surf->tile_split = 4096;
+        }
+    } else {
+        /* set tile split to row size */
+        surf->tile_split = surf_man->hw_info.row_size;
+        surf->stencil_tile_split = surf_man->hw_info.row_size / 2;
+    }
 
     /* bankw or bankh greater than 1 increase alignment requirement, not
      * sure if it's worth using smaller bankw & bankh to stick with 2D
@@ -811,7 +957,7 @@ static int eg_surface_best(struct radeon_surface_manager *surf_man,
      * fmask buffer has different optimal value figure them out once we
      * use it.
      */
-    if (surf->flags & (RADEON_SURF_ZBUFFER | RADEON_SURF_SBUFFER)) {
+    if (surf->flags & RADEON_SURF_SBUFFER) {
         /* assume 1 bytes for stencil, we optimize for stencil as stencil
          * and depth shares surface values
          */
@@ -852,6 +998,201 @@ static int eg_surface_best(struct radeon_surface_manager *surf_man,
 
 
 /* ===========================================================================
+ * Southern Islands family
+ */
+
+static void si_surf_minify(struct radeon_surface *surf,
+			   struct radeon_surface_level *surflevel,
+			   unsigned bpe, unsigned level,
+			   uint32_t xalign, uint32_t yalign, uint32_t zalign, uint32_t slice_align,
+			   unsigned offset)
+{
+    surflevel->npix_x = mip_minify(surf->npix_x, level);
+    surflevel->npix_y = mip_minify(surf->npix_y, level);
+    surflevel->npix_z = mip_minify(surf->npix_z, level);
+
+    if (level == 0 && surf->last_level > 0) {
+        surflevel->nblk_x = (next_power_of_two(surflevel->npix_x) + surf->blk_w - 1) / surf->blk_w;
+        surflevel->nblk_y = (next_power_of_two(surflevel->npix_y) + surf->blk_h - 1) / surf->blk_h;
+        surflevel->nblk_z = (next_power_of_two(surflevel->npix_z) + surf->blk_d - 1) / surf->blk_d;
+    } else {
+        surflevel->nblk_x = (surflevel->npix_x + surf->blk_w - 1) / surf->blk_w;
+        surflevel->nblk_y = (surflevel->npix_y + surf->blk_h - 1) / surf->blk_h;
+        surflevel->nblk_z = (surflevel->npix_z + surf->blk_d - 1) / surf->blk_d;
+    }
+
+    surflevel->nblk_y  = ALIGN(surflevel->nblk_y, yalign);
+
+    /* XXX: Texture sampling uses unexpectedly large pitches in some cases,
+     * these are just guesses for the rules behind those
+     */
+    if (level == 0 && surf->last_level == 0)
+        /* Non-mipmap pitch padded to slice alignment */
+        xalign = MAX2(xalign, slice_align / surf->bpe);
+    else
+        /* Small rows evenly distributed across slice */
+        xalign = MAX2(xalign, slice_align / surf->bpe / surflevel->nblk_y);
+
+    surflevel->nblk_x  = ALIGN(surflevel->nblk_x, xalign);
+    surflevel->nblk_z  = ALIGN(surflevel->nblk_z, zalign);
+
+    surflevel->offset = offset;
+    surflevel->pitch_bytes = surflevel->nblk_x * surf->bpe * surf->nsamples;
+    surflevel->slice_size = ALIGN(surflevel->pitch_bytes * surflevel->nblk_y, slice_align);
+
+    surf->bo_size = offset + surflevel->slice_size * surflevel->nblk_z * surf->array_size;
+}
+
+static int si_surface_init_linear_aligned(struct radeon_surface_manager *surf_man,
+                                          struct radeon_surface *surf,
+                                          uint64_t offset, unsigned start_level)
+{
+    uint32_t xalign, yalign, zalign, slice_align;
+    unsigned i;
+
+    /* compute alignment */
+    if (!start_level) {
+        surf->bo_alignment = MAX2(256, surf_man->hw_info.group_bytes);
+    }
+    xalign = MAX2(8, 64 / surf->bpe);
+    yalign = 1;
+    zalign = 1;
+    slice_align = MAX2(64 * surf->bpe, surf_man->hw_info.group_bytes);
+
+    /* build mipmap tree */
+    for (i = start_level; i <= surf->last_level; i++) {
+        surf->level[i].mode = RADEON_SURF_MODE_LINEAR_ALIGNED;
+        si_surf_minify(surf, surf->level+i, surf->bpe, i, xalign, yalign,
+		       zalign, slice_align, offset);
+        /* level0 and first mipmap need to have alignment */
+        offset = surf->bo_size;
+        if ((i == 0)) {
+            offset = ALIGN(offset, surf->bo_alignment);
+        }
+    }
+    return 0;
+}
+
+static int si_surface_init_1d(struct radeon_surface_manager *surf_man,
+                              struct radeon_surface *surf,
+                              struct radeon_surface_level *level,
+                              unsigned bpe,
+                              uint64_t offset, unsigned start_level)
+{
+    uint32_t xalign, yalign, zalign, slice_align;
+    unsigned i;
+
+    /* compute alignment */
+    xalign = 8;
+    yalign = 8;
+    zalign = 1;
+    slice_align = surf_man->hw_info.group_bytes;
+    if (surf->flags & RADEON_SURF_SCANOUT) {
+        xalign = MAX2((bpe == 1) ? 64 : 32, xalign);
+    }
+
+    if (!start_level) {
+        unsigned alignment = MAX2(256, surf_man->hw_info.group_bytes);
+        surf->bo_alignment = MAX2(surf->bo_alignment, alignment);
+
+        if (offset) {
+            offset = ALIGN(offset, alignment);
+        }
+    }
+
+    /* build mipmap tree */
+    for (i = start_level; i <= surf->last_level; i++) {
+        level[i].mode = RADEON_SURF_MODE_1D;
+        si_surf_minify(surf, level+i, bpe, i, xalign, yalign, zalign, slice_align, offset);
+        /* level0 and first mipmap need to have alignment */
+        offset = surf->bo_size;
+        if ((i == 0)) {
+            offset = ALIGN(offset, surf->bo_alignment);
+        }
+    }
+    return 0;
+}
+
+static int si_surface_init_1d_miptrees(struct radeon_surface_manager *surf_man,
+                                       struct radeon_surface *surf)
+{
+    unsigned zs_flags = RADEON_SURF_ZBUFFER | RADEON_SURF_SBUFFER;
+    int r, is_depth_stencil = (surf->flags & zs_flags) == zs_flags;
+    /* Old libdrm headers didn't have stencil_level in it. This prevents crashes. */
+    struct radeon_surface_level tmp[RADEON_SURF_MAX_LEVEL];
+    struct radeon_surface_level *stencil_level =
+        (surf->flags & RADEON_SURF_HAS_SBUFFER_MIPTREE) ? surf->stencil_level : tmp;
+
+    r = si_surface_init_1d(surf_man, surf, surf->level, surf->bpe, 0, 0);
+    if (r)
+        return r;
+
+    if (is_depth_stencil) {
+        r = si_surface_init_1d(surf_man, surf, stencil_level, 1,
+                               surf->bo_size, 0);
+        surf->stencil_offset = stencil_level[0].offset;
+    }
+    return r;
+}
+
+static int si_surface_init(struct radeon_surface_manager *surf_man,
+                           struct radeon_surface *surf)
+{
+    unsigned mode;
+    int r;
+
+    /* MSAA surfaces support the 2D mode only. */
+    if (surf->nsamples > 1) {
+        surf->flags = RADEON_SURF_CLR(surf->flags, MODE);
+        surf->flags |= RADEON_SURF_SET(RADEON_SURF_MODE_2D, MODE);
+    }
+
+    /* tiling mode */
+    mode = (surf->flags >> RADEON_SURF_MODE_SHIFT) & RADEON_SURF_MODE_MASK;
+
+    if (surf->flags & (RADEON_SURF_ZBUFFER | RADEON_SURF_SBUFFER)) {
+        /* zbuffer only support 1D or 2D tiled surface */
+        switch (mode) {
+        case RADEON_SURF_MODE_1D:
+        case RADEON_SURF_MODE_2D:
+            break;
+        default:
+            mode = RADEON_SURF_MODE_1D;
+            surf->flags = RADEON_SURF_CLR(surf->flags, MODE);
+            surf->flags |= RADEON_SURF_SET(RADEON_SURF_MODE_1D, MODE);
+            break;
+        }
+    }
+
+    r = eg_surface_sanity(surf_man, surf, mode);
+    if (r) {
+        return r;
+    }
+
+    surf->stencil_offset = 0;
+    surf->bo_alignment = 0;
+
+    /* check tiling mode */
+    switch (mode) {
+    case RADEON_SURF_MODE_LINEAR:
+        r = r6_surface_init_linear(surf_man, surf, 0, 0);
+        break;
+    case RADEON_SURF_MODE_LINEAR_ALIGNED:
+        r = si_surface_init_linear_aligned(surf_man, surf, 0, 0);
+        break;
+    case RADEON_SURF_MODE_1D:
+        r = si_surface_init_1d_miptrees(surf_man, surf);
+        break;
+    case RADEON_SURF_MODE_2D:
+        r = eg_surface_init_2d_miptrees(surf_man, surf);
+        break;
+    default:
+        return -EINVAL;
+    }
+    return r;
+}
+
+/* ===========================================================================
  * public API
  */
 struct radeon_surface_manager *radeon_surface_manager_new(int fd)
@@ -880,7 +1221,11 @@ struct radeon_surface_manager *radeon_surface_manager_new(int fd)
         if (eg_init_hw_info(surf_man)) {
             goto out_err;
         }
-        surf_man->surface_init = &eg_surface_init;
+        if (surf_man->family <= CHIP_ARUBA) {
+            surf_man->surface_init = &eg_surface_init;
+        } else {
+            surf_man->surface_init = &si_surface_init;
+        }
         surf_man->surface_best = &eg_surface_best;
     }
 

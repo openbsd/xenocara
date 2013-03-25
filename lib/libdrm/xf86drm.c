@@ -2567,3 +2567,34 @@ _priv_open_device(const char *path)
 int priv_open_device(const char *)
 	__attribute__((weak, alias ("_priv_open_device")));
 #endif
+
+int drmPrimeHandleToFD(int fd, uint32_t handle, uint32_t flags, int *prime_fd)
+{
+	struct drm_prime_handle args;
+	int ret;
+
+	args.handle = handle;
+	args.flags = flags;
+	ret = drmIoctl(fd, DRM_IOCTL_PRIME_HANDLE_TO_FD, &args);
+	if (ret)
+		return ret;
+
+	*prime_fd = args.fd;
+	return 0;
+}
+
+int drmPrimeFDToHandle(int fd, int prime_fd, uint32_t *handle)
+{
+	struct drm_prime_handle args;
+	int ret;
+
+	args.fd = prime_fd;
+	args.flags = 0;
+	ret = drmIoctl(fd, DRM_IOCTL_PRIME_FD_TO_HANDLE, &args);
+	if (ret)
+		return ret;
+
+	*handle = args.handle;
+	return 0;
+}
+

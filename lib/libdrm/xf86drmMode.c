@@ -351,8 +351,11 @@ drmModeCrtcPtr drmModeGetCrtc(int fd, uint32_t crtcId)
 	r->x               = crtc.x;
 	r->y               = crtc.y;
 	r->mode_valid      = crtc.mode_valid;
-	if (r->mode_valid)
+	if (r->mode_valid) {
 		memcpy(&r->mode, &crtc.mode, sizeof(struct drm_mode_modeinfo));
+		r->width = crtc.mode.hdisplay;
+		r->height = crtc.mode.vdisplay;
+	}
 	r->buffer_id       = crtc.fb_id;
 	r->gamma_size      = crtc.gamma_size;
 	return r;
@@ -575,7 +578,7 @@ drmModePropertyPtr drmModeGetProperty(int fd, uint32_t property_id)
 	if (prop.count_values)
 		prop.values_ptr = VOID2U64(drmMalloc(prop.count_values * sizeof(uint64_t)));
 
-	if (prop.count_enum_blobs && (prop.flags & DRM_MODE_PROP_ENUM))
+	if (prop.count_enum_blobs && (prop.flags & (DRM_MODE_PROP_ENUM | DRM_MODE_PROP_BITMASK)))
 		prop.enum_blob_ptr = VOID2U64(drmMalloc(prop.count_enum_blobs * sizeof(struct drm_mode_property_enum)));
 
 	if (prop.count_enum_blobs && (prop.flags & DRM_MODE_PROP_BLOB)) {
@@ -597,7 +600,7 @@ drmModePropertyPtr drmModeGetProperty(int fd, uint32_t property_id)
 	r->flags = prop.flags;
 	if (prop.count_values)
 		r->values = drmAllocCpy(U642VOID(prop.values_ptr), prop.count_values, sizeof(uint64_t));
-	if (prop.flags & DRM_MODE_PROP_ENUM) {
+	if (prop.flags & (DRM_MODE_PROP_ENUM | DRM_MODE_PROP_BITMASK)) {
 		r->count_enums = prop.count_enum_blobs;
 		r->enums = drmAllocCpy(U642VOID(prop.enum_blob_ptr), prop.count_enum_blobs, sizeof(struct drm_mode_property_enum));
 	} else if (prop.flags & DRM_MODE_PROP_BLOB) {
@@ -990,4 +993,87 @@ void drmModeFreePlaneResources(drmModePlaneResPtr ptr)
 
 	drmFree(ptr->planes);
 	drmFree(ptr);
+}
+
+drmModeObjectPropertiesPtr drmModeObjectGetProperties(int fd,
+						      uint32_t object_id,
+						      uint32_t object_type)
+{
+	struct drm_mode_obj_get_properties properties;
+	drmModeObjectPropertiesPtr ret = NULL;
+	uint32_t count;
+
+retry:
+	memset(&properties, 0, sizeof(struct drm_mode_obj_get_properties));
+	properties.obj_id = object_id;
+	properties.obj_type = object_type;
+
+	if (drmIoctl(fd, DRM_IOCTL_MODE_OBJ_GETPROPERTIES, &properties))
+		return 0;
+
+	count = properties.count_props;
+
+	if (count) {
+		properties.props_ptr = VOID2U64(drmMalloc(count *
+							  sizeof(uint32_t)));
+		if (!properties.props_ptr)
+			goto err_allocs;
+		properties.prop_values_ptr = VOID2U64(drmMalloc(count *
+						      sizeof(uint64_t)));
+		if (!properties.prop_values_ptr)
+			goto err_allocs;
+	}
+
+	if (drmIoctl(fd, DRM_IOCTL_MODE_OBJ_GETPROPERTIES, &properties))
+		goto err_allocs;
+
+	if (count < properties.count_props) {
+		drmFree(U642VOID(properties.props_ptr));
+		drmFree(U642VOID(properties.prop_values_ptr));
+		goto retry;
+	}
+	count = properties.count_props;
+
+	ret = drmMalloc(sizeof(*ret));
+	if (!ret)
+		goto err_allocs;
+
+	ret->count_props = count;
+	ret->props = drmAllocCpy(U642VOID(properties.props_ptr),
+				 count, sizeof(uint32_t));
+	ret->prop_values = drmAllocCpy(U642VOID(properties.prop_values_ptr),
+				       count, sizeof(uint64_t));
+	if (ret->count_props && (!ret->props || !ret->prop_values)) {
+		drmFree(ret->props);
+		drmFree(ret->prop_values);
+		drmFree(ret);
+		ret = NULL;
+	}
+
+err_allocs:
+	drmFree(U642VOID(properties.props_ptr));
+	drmFree(U642VOID(properties.prop_values_ptr));
+	return ret;
+}
+
+void drmModeFreeObjectProperties(drmModeObjectPropertiesPtr ptr)
+{
+	if (!ptr)
+		return;
+	drmFree(ptr->props);
+	drmFree(ptr->prop_values);
+	drmFree(ptr);
+}
+
+int drmModeObjectSetProperty(int fd, uint32_t object_id, uint32_t object_type,
+			     uint32_t property_id, uint64_t value)
+{
+	struct drm_mode_obj_set_property prop;
+
+	prop.value = value;
+	prop.prop_id = property_id;
+	prop.obj_id = object_id;
+	prop.obj_type = object_type;
+
+	return DRM_IOCTL(fd, DRM_IOCTL_MODE_OBJ_SETPROPERTY, &prop);
 }

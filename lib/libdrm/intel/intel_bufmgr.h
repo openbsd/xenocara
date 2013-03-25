@@ -1,5 +1,5 @@
 /*
- * Copyright © 2008 Intel Corporation
+ * Copyright © 2008-2012 Intel Corporation
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -36,10 +36,12 @@
 
 #include <stdio.h>
 #include <stdint.h>
+#include <stdio.h>
 
 struct drm_clip_rect;
 
 typedef struct _drm_intel_bufmgr drm_intel_bufmgr;
+typedef struct _drm_intel_context drm_intel_context;
 typedef struct _drm_intel_bo drm_intel_bo;
 
 struct _drm_intel_bo {
@@ -83,6 +85,19 @@ struct _drm_intel_bo {
 	 */
 	int handle;
 };
+
+enum aub_dump_bmp_format {
+	AUB_DUMP_BMP_FORMAT_8BIT = 1,
+	AUB_DUMP_BMP_FORMAT_ARGB_4444 = 4,
+	AUB_DUMP_BMP_FORMAT_ARGB_0888 = 6,
+	AUB_DUMP_BMP_FORMAT_ARGB_8888 = 7,
+};
+
+typedef struct _drm_intel_aub_annotation {
+	uint32_t type;
+	uint32_t subtype;
+	uint32_t ending_offset;
+} drm_intel_aub_annotation;
 
 #define BO_ALLOC_FOR_RENDER (1<<0)
 
@@ -148,15 +163,38 @@ void drm_intel_bufmgr_gem_enable_reuse(drm_intel_bufmgr *bufmgr);
 void drm_intel_bufmgr_gem_enable_fenced_relocs(drm_intel_bufmgr *bufmgr);
 void drm_intel_bufmgr_gem_set_vma_cache_size(drm_intel_bufmgr *bufmgr,
 					     int limit);
+int drm_intel_gem_bo_map_unsynchronized(drm_intel_bo *bo);
 int drm_intel_gem_bo_map_gtt(drm_intel_bo *bo);
 int drm_intel_gem_bo_unmap_gtt(drm_intel_bo *bo);
+
 int drm_intel_gem_bo_get_reloc_count(drm_intel_bo *bo);
 void drm_intel_gem_bo_clear_relocs(drm_intel_bo *bo, int start);
 void drm_intel_gem_bo_start_gtt_access(drm_intel_bo *bo, int write_enable);
 
+void drm_intel_bufmgr_gem_set_aub_dump(drm_intel_bufmgr *bufmgr, int enable);
+void drm_intel_gem_bo_aub_dump_bmp(drm_intel_bo *bo,
+				   int x1, int y1, int width, int height,
+				   enum aub_dump_bmp_format format,
+				   int pitch, int offset);
+void
+drm_intel_bufmgr_gem_set_aub_annotations(drm_intel_bo *bo,
+					 drm_intel_aub_annotation *annotations,
+					 unsigned count);
+
 int drm_intel_get_pipe_from_crtc_id(drm_intel_bufmgr *bufmgr, int crtc_id);
 
 int drm_intel_get_aperture_sizes(int fd, size_t *mappable, size_t *total);
+int drm_intel_bufmgr_gem_get_devid(drm_intel_bufmgr *bufmgr);
+int drm_intel_gem_bo_wait(drm_intel_bo *bo, int64_t timeout_ns);
+
+drm_intel_context *drm_intel_gem_context_create(drm_intel_bufmgr *bufmgr);
+void drm_intel_gem_context_destroy(drm_intel_context *ctx);
+int drm_intel_gem_bo_context_exec(drm_intel_bo *bo, drm_intel_context *ctx,
+				  int used, unsigned int flags);
+
+int drm_intel_bo_gem_export_to_prime(drm_intel_bo *bo, int *prime_fd);
+drm_intel_bo *drm_intel_bo_gem_create_from_prime(drm_intel_bufmgr *bufmgr,
+						int prime_fd, int size);
 
 /* drm_intel_bufmgr_fake.c */
 drm_intel_bufmgr *drm_intel_bufmgr_fake_init(int fd,
@@ -203,6 +241,9 @@ void drm_intel_decode_set_head_tail(struct drm_intel_decode *ctx,
 void drm_intel_decode_set_output_file(struct drm_intel_decode *ctx, FILE *out);
 void drm_intel_decode(struct drm_intel_decode *ctx);
 
+int drm_intel_reg_read(drm_intel_bufmgr *bufmgr,
+		       uint32_t offset,
+		       uint64_t *result);
 
 /** @{ Compatibility defines to keep old code building despite the symbol rename
  * from dri_* to drm_intel_*

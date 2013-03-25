@@ -31,7 +31,7 @@
 
 
 #ifdef HAVE_CONFIG_H
-# include "config.h"
+#include "config.h"
 #endif
 #include <errno.h>
 #include <stdio.h>
@@ -70,7 +70,7 @@ linux_name_from_sysfs(int fd, char **out)
 
 	ret = fstat(fd, &buffer);
 	if (ret)
-		return ret;
+		return -EINVAL;
 
 	if (!S_ISCHR(buffer.st_mode))
 		return -EINVAL;
