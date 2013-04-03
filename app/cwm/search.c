@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: search.c,v 1.27 2013/03/09 21:55:56 okan Exp $
+ * $OpenBSD: search.c,v 1.28 2013/04/03 19:28:00 okan Exp $
  */
 
 #include <sys/param.h>
@@ -217,6 +217,7 @@ void
 search_match_exec(struct menu_q *menuq, struct menu_q *resultq, char *search)
 {
 	struct menu	*mi, *mj;
+	int		 r;
 
 	TAILQ_INIT(resultq);
 
@@ -225,10 +226,11 @@ search_match_exec(struct menu_q *menuq, struct menu_q *resultq, char *search)
 		    fnmatch(search, mi->text, 0) == FNM_NOMATCH)
 			continue;
 		TAILQ_FOREACH(mj, resultq, resultentry) {
-			if (strcasecmp(mi->text, mj->text) < 0) {
+			r = strcasecmp(mi->text, mj->text);
+			if (r < 0)
 				TAILQ_INSERT_BEFORE(mj, mi, resultentry);
+			if (r <= 0)
 				break;
-			}
 		}
 		if (mj == NULL)
 			TAILQ_INSERT_TAIL(resultq, mi, resultentry);
