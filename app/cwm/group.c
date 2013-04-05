@@ -16,7 +16,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: group.c,v 1.70 2013/01/13 13:55:12 okan Exp $
+ * $OpenBSD: group.c,v 1.71 2013/04/05 17:07:25 okan Exp $
  */
 
 #include <sys/param.h>
@@ -142,7 +142,7 @@ group_init(struct screen_ctx *sc)
 
 	TAILQ_INIT(&sc->groupq);
 	sc->group_hideall = 0;
-	/* 
+	/*
 	 * See if any group names have already been set and update the
 	 * property with ours if they'll have changed.
 	 */

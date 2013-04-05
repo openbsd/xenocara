@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: client.c,v 1.121 2013/04/03 20:22:55 okan Exp $
+ * $OpenBSD: client.c,v 1.122 2013/04/05 17:07:25 okan Exp $
  */
 
 #include <sys/param.h>
@@ -574,7 +574,7 @@ client_cycle(struct screen_ctx *sc, int flags)
 		return;
 
 	if (oldcc == NULL)
-		oldcc = (flags & CWM_RCYCLE ? 
+		oldcc = (flags & CWM_RCYCLE ?
 		    TAILQ_LAST(&sc->mruq, cycle_entry_q) :
 		    TAILQ_FIRST(&sc->mruq));
 
@@ -606,7 +606,7 @@ client_cycle(struct screen_ctx *sc, int flags)
 }
 
 void
-client_cycle_leave(struct screen_ctx *sc, struct client_ctx *cc) 
+client_cycle_leave(struct screen_ctx *sc, struct client_ctx *cc)
 {
 	sc->cycling = 0;
 

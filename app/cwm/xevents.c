@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: xevents.c,v 1.70 2012/12/18 17:37:39 okan Exp $
+ * $OpenBSD: xevents.c,v 1.71 2013/04/05 17:07:25 okan Exp $
  */
 
 /*
@@ -203,7 +203,7 @@ xev_handle_propertynotify(XEvent *ee)
 			break;
 		}
 	} else {
-		TAILQ_FOREACH(sc, &Screenq, entry) 
+		TAILQ_FOREACH(sc, &Screenq, entry)
 			if (sc->rootwin == e->window)
 				goto test;
 		return;
