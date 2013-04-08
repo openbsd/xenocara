@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: kbfunc.c,v 1.76 2013/01/08 15:16:05 okan Exp $
+ * $OpenBSD: kbfunc.c,v 1.77 2013/04/08 13:02:31 okan Exp $
  */
 
 #include <sys/param.h>
@@ -335,6 +335,7 @@ kbfunc_ssh(struct client_ctx *cc, union arg *arg)
 	}
 
 	TAILQ_INIT(&menuq);
+
 	lbuf = NULL;
 	while ((buf = fgetln(fp, &len))) {
 		if (buf[len - 1] == '\n')

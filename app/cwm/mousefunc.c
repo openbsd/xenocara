@@ -16,7 +16,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: mousefunc.c,v 1.44 2013/01/02 21:41:14 okan Exp $
+ * $OpenBSD: mousefunc.c,v 1.45 2013/04/08 13:02:31 okan Exp $
  */
 
 #include <sys/param.h>
@@ -227,6 +227,7 @@ mousefunc_menu_unhide(struct client_ctx *cc, void *arg)
 	old_cc = client_current();
 
 	TAILQ_INIT(&menuq);
+
 	TAILQ_FOREACH(cc, &Clientq, entry)
 		if (cc->flags & CLIENT_HIDDEN) {
 			wname = (cc->label) ? cc->label : cc->name;
@@ -263,6 +264,7 @@ mousefunc_menu_cmd(struct client_ctx *cc, void *arg)
 	struct cmd		*cmd;
 
 	TAILQ_INIT(&menuq);
+
 	TAILQ_FOREACH(cmd, &Conf.cmdq, entry) {
 		mi = xcalloc(1, sizeof(*mi));
 		(void)strlcpy(mi->text, cmd->label, sizeof(mi->text));
