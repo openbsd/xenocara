@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: xutil.c,v 1.52 2013/01/01 14:19:56 okan Exp $
+ * $OpenBSD: xutil.c,v 1.53 2013/04/10 19:08:09 okan Exp $
  */
 
 #include <sys/param.h>
@@ -292,7 +292,7 @@ xu_ewmh_net_supported_wm_check(struct screen_ctx *sc)
 	XChangeProperty(X_Dpy, w, ewmh[_NET_SUPPORTING_WM_CHECK].atom,
 	    XA_WINDOW, 32, PropModeReplace, (unsigned char *)&w, 1);
 	XChangeProperty(X_Dpy, w, ewmh[_NET_WM_NAME].atom,
-	    XA_WM_NAME, 8, PropModeReplace, (unsigned char *)WMNAME,
+	    cwmh[UTF8_STRING].atom, 8, PropModeReplace, (unsigned char *)WMNAME,
 	    strlen(WMNAME));
 }
 
