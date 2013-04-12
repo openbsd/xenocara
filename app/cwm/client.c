@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: client.c,v 1.122 2013/04/05 17:07:25 okan Exp $
+ * $OpenBSD: client.c,v 1.123 2013/04/12 20:45:57 okan Exp $
  */
 
 #include <sys/param.h>
@@ -125,7 +125,6 @@ client_new(Window win, struct screen_ctx *sc, int mapped)
 	xu_configure(cc);
 
 	(state == IconicState) ? client_hide(cc) : client_unhide(cc);
-	xu_setstate(cc, cc->state);
 
 	TAILQ_INSERT_TAIL(&sc->mruq, cc, mru_entry);
 	TAILQ_INSERT_TAIL(&Clientq, cc, entry);
