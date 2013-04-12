@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: calmwm.c,v 1.73 2013/04/12 14:46:30 okan Exp $
+ * $OpenBSD: calmwm.c,v 1.74 2013/04/12 14:49:16 okan Exp $
  */
 
 #include <sys/param.h>
@@ -128,8 +128,6 @@ static void
 dpy_init(const char *dpyname)
 {
 	int	i;
-
-	XSetErrorHandler(x_errorhandler);
 
 	if ((X_Dpy = XOpenDisplay(dpyname)) == NULL)
 		errx(1, "unable to open display \"%s\"",
