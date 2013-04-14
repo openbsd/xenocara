@@ -1,4 +1,4 @@
-# $OpenBSD: bsd.xorg.mk,v 1.47 2012/11/03 15:19:02 espie Exp $ -*- makefile  -*-
+# $OpenBSD: bsd.xorg.mk,v 1.48 2013/04/14 19:57:40 matthieu Exp $ -*- makefile  -*-
 #
 # Copyright © 2006,2012 Matthieu Herrb
 #
@@ -193,7 +193,7 @@ afterinstall:
 .  endif
 .  if !target(realinstall)
 realinstall:
-	exec ${MAKE} ${_lt_libs} install
+	exec ${MAKE} ${MAKE_FLAGS} ${_lt_libs} install
 .endif
 install: maninstall
 maninstall: afterinstall
@@ -206,10 +206,10 @@ realinstall: beforeinstall
 _wrapper = -f Makefile.bsd-wrapper
 .endif
 build:
-	cd ${.CURDIR} && exec ${MAKE} ${_wrapper} cleandir
-	cd ${.CURDIR} && exec ${MAKE} ${_wrapper} depend
-	cd ${.CURDIR} && exec ${MAKE} ${_wrapper} all
-	cd ${.CURDIR} && exec ${SUDO} ${MAKE} ${_wrapper} install
+	cd ${.CURDIR} && exec ${MAKE} ${MAKE_FLAGS} ${_wrapper} cleandir
+	cd ${.CURDIR} && exec ${MAKE} ${MAKE_FLAGS} ${_wrapper} depend
+	cd ${.CURDIR} && exec ${MAKE} ${MAKE_FLAGS} ${_wrapper} all
+	cd ${.CURDIR} && exec ${SUDO} ${MAKE} ${MAKE_FLAGS} ${_wrapper} install
 .endif
 
 .if !target(clean) && ${MAKEFILE:T} != "Makefile"
