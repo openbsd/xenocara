@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.7 2012/12/04 14:06:32 mpi Exp $
+#	$OpenBSD: Makefile,v 1.8 2013/04/14 10:23:04 mpi Exp $
 
 LIB=	swrastg_dri.so
 
@@ -10,14 +10,10 @@ CPPFLAGS= \
 	-I${GALLIUM}/state_trackers/dri/common \
 	-DHAVE_POSIX_MEMALIGN
 
-DRIVER_LIBS= \
+SWRAST_DRIVERS= \
 	../../gallium/drivers/trace/libtrace_pic.a \
 	../../gallium/drivers/rbug/librbug_pic.a \
 	../../gallium/drivers/softpipe/libsoftpipe_pic.a
-
-.ifdef XENOCARA_HAVE_LLVM
-DRIVER_LIBS+=	../../gallium/drivers/llvmpipe/libllvmpipe_pic.a
-.endif
 
 DRIVER_DEFINES = \
 	-D__NOT_HAVE_DRM_H \
@@ -50,7 +46,7 @@ SRCS = \
 
 LDADD=	../../mesa/libmesagallium/libmesagallium_pic.a \
 	../../glsl/libglsl/libglsl_pic.a \
-	${DRIVER_LIBS} \
+	${SWRAST_DRIVERS} \
 	../../gallium/libgallium/libgallium_pic.a \
 	-L${X11BASE}/lib -lexpat -lm -lstdc++ -lc
 DPADD=	../../mesa/libmesagallium/libmesagallium_pic.a

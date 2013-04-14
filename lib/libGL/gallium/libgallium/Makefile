@@ -1,4 +1,5 @@
-# $OpenBSD: Makefile,v 1.2 2012/08/17 13:58:00 mpi Exp $
+# $OpenBSD: Makefile,v 1.3 2013/04/14 10:23:04 mpi Exp $
+.include <bsd.xconf.mk>
 
 LIB=	gallium
 
@@ -193,7 +194,7 @@ GALLIVM_CPP_SOURCES = \
 
 SRCS=	${C_SOURCES}
 
-.ifdef XENOCARA_HAVE_LLVM
+.if ${XENOCARA_BUILD_GALLIUM} == "llvm"
 SRCS+=	${GALLIVM_SOURCES} \
 	${GALLIVM_CPP_SOURCES}
 .endif

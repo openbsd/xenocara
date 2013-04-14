@@ -1,8 +1,9 @@
-# $OpenBSD: Makefile,v 1.1.1.1 2012/07/13 12:43:34 mpi Exp $
+# $OpenBSD: Makefile,v 1.2 2013/04/14 10:23:04 mpi Exp $
+.include <bsd.xconf.mk>
 
 SUBDIR= rbug softpipe trace
 
-.ifdef XENOCARA_HAVE_LLVM
+.if ${XENOCARA_BUILD_GALLIUM} == "llvm"
 SUBDIR+= llvmpipe
 .endif
 

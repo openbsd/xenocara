@@ -1,4 +1,5 @@
-# $OpenBSD: Makefile.inc,v 1.2 2012/11/11 12:09:09 mpi Exp $
+# $OpenBSD: Makefile.inc,v 1.3 2013/04/14 10:23:04 mpi Exp $
+.include <bsd.xconf.mk>
 
 CPP=	cpp -notraditional
 
@@ -25,7 +26,9 @@ lib${LIB}_pic.a: ${OBJS} ${DPADD}
 	${RANLIB} lib${LIB}_pic.a
 
 
-.ifdef XENOCARA_HAVE_LLVM
+.if ${XENOCARA_BUILD_GALLIUM} == "llvm"
+
+# Remember to keep in sync with LLVM port's version.
 LLVM_VERSION=	0x301	# 3.1 
 LLVM_CONFIG?=	/usr/local/bin/llvm-config
 
@@ -41,6 +44,8 @@ LDADD+=		-L${LLVM_LIBDIR} ${LLVM_LIBS}
 CPPFLAGS+= \
 	-DGALLIUM_LLVMPIPE \
 	-DHAVE_LLVM=${LLVM_VERSION}
+
+SWRAST_DRIVERS+= ../../gallium/drivers/llvmpipe/libllvmpipe_pic.a
 .endif
 
 
