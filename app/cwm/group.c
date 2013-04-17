@@ -16,7 +16,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: group.c,v 1.73 2013/04/08 13:05:27 okan Exp $
+ * $OpenBSD: group.c,v 1.74 2013/04/17 13:30:38 okan Exp $
  */
 
 #include <sys/param.h>
@@ -161,27 +161,6 @@ group_init(struct screen_ctx *sc)
 	xu_ewmh_net_virtual_roots(sc);
 
 	group_setactive(sc, 1);
-}
-
-void
-group_make_autogroup(struct conf *conf, char *val, int no)
-{
-	struct autogroupwin	*aw;
-	char			*p;
-
-	aw = xcalloc(1, sizeof(*aw));
-
-	if ((p = strchr(val, ',')) == NULL) {
-		aw->name = NULL;
-		aw->class = xstrdup(val);
-	} else {
-		*(p++) = '\0';
-		aw->name = xstrdup(val);
-		aw->class = xstrdup(p);
-	}
-	aw->num = no;
-
-	TAILQ_INSERT_TAIL(&conf->autogroupq, aw, entry);
 }
 
 static void
