@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: conf.c,v 1.122 2013/04/17 13:30:38 okan Exp $
+ * $OpenBSD: conf.c,v 1.123 2013/04/17 13:31:47 okan Exp $
  */
 
 #include <sys/param.h>
@@ -39,7 +39,6 @@ void
 conf_cmd_add(struct conf *c, char *image, char *label)
 {
 	/* "term" and "lock" have special meanings. */
-
 	if (strcmp(label, "term") == 0)
 		(void)strlcpy(c->termpath, image, sizeof(c->termpath));
 	else if (strcmp(label, "lock") == 0)
