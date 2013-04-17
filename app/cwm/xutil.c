@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: xutil.c,v 1.54 2013/04/14 16:13:17 okan Exp $
+ * $OpenBSD: xutil.c,v 1.55 2013/04/17 13:52:20 okan Exp $
  */
 
 #include <sys/param.h>
@@ -218,15 +218,14 @@ xu_getstate(Window win, int *state)
 }
 
 void
-xu_setstate(struct client_ctx *cc, int state)
+xu_setstate(Window win, int state)
 {
 	long	 dat[2];
 
 	dat[0] = state;
 	dat[1] = None;
 
-	cc->state = state;
-	XChangeProperty(X_Dpy, cc->win,
+	XChangeProperty(X_Dpy, win,
 	    cwmh[WM_STATE].atom, cwmh[WM_STATE].atom, 32,
 	    PropModeReplace, (unsigned char *)dat, 2);
 }
