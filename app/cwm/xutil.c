@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: xutil.c,v 1.55 2013/04/17 13:52:20 okan Exp $
+ * $OpenBSD: xutil.c,v 1.56 2013/04/17 13:57:06 okan Exp $
  */
 
 #include <sys/param.h>
@@ -203,7 +203,7 @@ xu_getstrprop(Window win, Atom atm, char **text) {
 }
 
 int
-xu_getstate(Window win, int *state)
+xu_get_wm_state(Window win, int *state)
 {
 	long	*p = NULL;
 
@@ -218,7 +218,7 @@ xu_getstate(Window win, int *state)
 }
 
 void
-xu_setstate(Window win, int state)
+xu_set_wm_state(Window win, int state)
 {
 	long	 dat[2];
 
