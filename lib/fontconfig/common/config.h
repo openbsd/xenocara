@@ -26,7 +26,11 @@
    (struct s)' as it overestimates the size. Use 'offsetof (struct s, d)'
    instead. Don't use 'offsetof (struct s, d[0])', as this doesn't work with
    MSVC and with C++ compilers. */
+#if defined(__GNUC__) && __GNUC__ == 2 /*  __vax__ */
+#define FLEXIBLE_ARRAY_MEMBER 1
+#else
 #define FLEXIBLE_ARRAY_MEMBER /**/
+#endif
 
 /* Define to 1 if you have the `chsize' function. */
 /* #undef HAVE_CHSIZE */
