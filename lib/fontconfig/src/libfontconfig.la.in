@@ -5,10 +5,10 @@
 # It is necessary for linking the library.
 
 # The name that we can dlopen(3).
-dlname='libfontconfig.so.@major@.@minor@'
+dlname='@sharedlibfontconfig@'
 
 # Names of this library.
-library_names='libfontconfig.so.@major@.@minor@'
+library_names='@sharedlibfontconfig@'
 
 # The name of the static archive.
 old_library='libfontconfig.a'
