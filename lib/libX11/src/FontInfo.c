@@ -29,7 +29,7 @@ in this Software without prior written authorization from The Open Group.
 #endif
 #include "Xlibint.h"
 
-#if defined(XF86BIGFONT) && !defined(MUSTCOPY)
+#if defined(XF86BIGFONT)
 #define USE_XF86BIGFONT
 #endif
 #ifdef USE_XF86BIGFONT
@@ -90,6 +90,11 @@ XFontStruct **info)	/* RETURN */
 		    Xrealloc ((char *) flist,
 			      (unsigned) (sizeof(char *) * (size+1)));
 
+		if (tmp_finfo)
+		    finfo = tmp_finfo;
+		if (tmp_flist)
+		    flist = tmp_flist;
+
 		if ((! tmp_finfo) || (! tmp_flist)) {
 		    /* free all the memory that we allocated */
 		    for (j=(i-1); (j >= 0); j--) {
@@ -97,14 +102,10 @@ XFontStruct **info)	/* RETURN */
 			if (finfo[j].properties)
 			    Xfree((char *) finfo[j].properties);
 		    }
-		    if (tmp_flist) Xfree((char *) tmp_flist);
-		    else Xfree((char *) flist);
-		    if (tmp_finfo) Xfree((char *) tmp_finfo);
-		    else Xfree((char *) finfo);
+		    Xfree((char *) flist);
+		    Xfree((char *) finfo);
 		    goto clearwire;
 		}
-		finfo = tmp_finfo;
-		flist = tmp_flist;
 	    }
 	    else {
 		if (! (finfo = (XFontStruct *)
@@ -132,31 +133,9 @@ XFontStruct **info)	/* RETURN */
 	fs->ascent 		= cvtINT16toInt (reply.fontAscent);
 	fs->descent 		= cvtINT16toInt (reply.fontDescent);
 
-#ifdef MUSTCOPY
-	{
-	    xCharInfo *xcip;
-
-	    xcip = (xCharInfo *) &reply.minBounds;
-	    fs->min_bounds.lbearing = xcip->leftSideBearing;
-	    fs->min_bounds.rbearing = xcip->rightSideBearing;
-	    fs->min_bounds.width = xcip->characterWidth;
-	    fs->min_bounds.ascent = xcip->ascent;
-	    fs->min_bounds.descent = xcip->descent;
-	    fs->min_bounds.attributes = xcip->attributes;
-
-	    xcip = (xCharInfo *) &reply.maxBounds;
-	    fs->max_bounds.lbearing = xcip->leftSideBearing;
-	    fs->max_bounds.rbearing = xcip->rightSideBearing;
-	    fs->max_bounds.width = xcip->characterWidth;
-	    fs->max_bounds.ascent = xcip->ascent;
-	    fs->max_bounds.descent = xcip->descent;
-	    fs->max_bounds.attributes = xcip->attributes;
-	}
-#else
 	/* XXX the next two statements won't work if short isn't 16 bits */
 	fs->min_bounds = * (XCharStruct *) &reply.minBounds;
 	fs->max_bounds = * (XCharStruct *) &reply.maxBounds;
-#endif /* MUSTCOPY */
 
 	fs->n_properties = reply.nFontProps;
 	if (fs->n_properties > 0) {

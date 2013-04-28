@@ -53,7 +53,7 @@ static Status LoadColornameDB(void);
  *		#define declarations local to this package.
  */
 #ifndef XCMSDB
-#define XCMSDB  "/usr/lib/X11/Xcms.txt"
+#define XCMSDB  XCMSDIR "/Xcms.txt"
 #endif
 
 #ifndef isgraph
@@ -254,7 +254,7 @@ FirstCmp(const void *p1, const void *p2)
  *
  */
 {
-    return(strcmp(((XcmsPair *)p1)->first, ((XcmsPair *)p2)->first));
+    return(strcmp(((const XcmsPair *)p1)->first, ((const XcmsPair *)p2)->first));
 }
 
 

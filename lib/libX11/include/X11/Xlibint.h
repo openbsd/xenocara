@@ -42,6 +42,14 @@ from The Open Group.
 #include <X11/Xproto.h>		/* to declare xEvent */
 #include <X11/XlibConf.h>	/* for configured options like XTHREADS */
 
+/* The Xlib structs are full of implicit padding to properly align members.
+   We can't clean that up without breaking ABI, so tell clang not to bother
+   complaining about it. */
+#ifdef __clang__
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wpadded"
+#endif
+
 #ifdef WIN32
 #define _XFlush _XFlushIt
 #endif
@@ -200,13 +208,6 @@ struct _XDisplay
 };
 
 #define XAllocIDs(dpy,ids,n) (*(dpy)->idlist_alloc)(dpy,ids,n)
-
-/*
- * define the following if you want the Data macro to be a procedure instead
- */
-#ifdef CRAY
-#define DataRoutineIsProcedure
-#endif /* CRAY */
 
 #ifndef _XEVENT_
 /*
@@ -400,25 +401,8 @@ extern LockInfoPtr _Xglobal_lock;
  * X Protocol packetizing macros.
  */
 
-/*   Need to start requests on 64 bit word boundaries
- *   on a CRAY computer so add a NoOp (127) if needed.
- *   A character pointer on a CRAY computer will be non-zero
- *   after shifting right 61 bits of it is not pointing to
- *   a word boundary.
- */
-#ifdef WORD64
-#define WORD64ALIGN if ((long)dpy->bufptr >> 61) {\
-           dpy->last_req = dpy->bufptr;\
-           *(dpy->bufptr)   = X_NoOperation;\
-           *(dpy->bufptr+1) =  0;\
-           *(dpy->bufptr+2) =  0;\
-           *(dpy->bufptr+3) =  1;\
-             dpy->request++;\
-             dpy->bufptr += 4;\
-         }
-#else /* else does not require alignment on 64-bit boundaries */
+/* Leftover from CRAY support - was defined empty on all non-Cray systems */
 #define WORD64ALIGN
-#endif /* WORD64 */
 
 /**
  * Return a len-sized request buffer for the request type. This function may
@@ -502,18 +486,14 @@ extern void *_XGetRequest(Display *dpy, CARD8 type, size_t len);
 	req = (xReq *) _XGetRequest(dpy, X_/**/name, SIZEOF(xReq))
 #endif
 
-#ifdef WORD64
-#define MakeBigReq(req,n) \
-    { \
-    char _BRdat[4]; \
-    unsigned long _BRlen = req->length - 1; \
-    req->length = 0; \
-    memcpy(_BRdat, ((char *)req) + (_BRlen << 2), 4); \
-    memmove(((char *)req) + 8, ((char *)req) + 4, _BRlen << 2); \
-    memcpy(((char *)req) + 4, _BRdat, 4); \
-    Data32(dpy, (long *)&_BRdat, 4); \
-    }
-#else
+/*
+ * MakeBigReq sets the CARD16 "req->length" to 0 and inserts a new CARD32
+ * length, after req->length, before the data in the request.  The new length
+ * includes the "n" extra 32-bit words.
+ *
+ * Do not use MakeBigReq if there is no data already in the request.
+ * req->length must already be >= 2.
+ */
 #ifdef LONG64
 #define MakeBigReq(req,n) \
     { \
@@ -521,7 +501,7 @@ extern void *_XGetRequest(Display *dpy, CARD8 type, size_t len);
     CARD32 _BRlen = req->length - 1; \
     req->length = 0; \
     _BRdat = ((CARD32 *)req)[_BRlen]; \
-    memmove(((char *)req) + 8, ((char *)req) + 4, _BRlen << 2); \
+    memmove(((char *)req) + 8, ((char *)req) + 4, (_BRlen - 1) << 2); \
     ((CARD32 *)req)[1] = _BRlen + n + 2; \
     Data32(dpy, &_BRdat, 4); \
     }
@@ -532,13 +512,19 @@ extern void *_XGetRequest(Display *dpy, CARD8 type, size_t len);
     CARD32 _BRlen = req->length - 1; \
     req->length = 0; \
     _BRdat = ((CARD32 *)req)[_BRlen]; \
-    memmove(((char *)req) + 8, ((char *)req) + 4, _BRlen << 2); \
+    memmove(((char *)req) + 8, ((char *)req) + 4, (_BRlen - 1) << 2); \
     ((CARD32 *)req)[1] = _BRlen + n + 2; \
     Data32(dpy, &_BRdat, 4); \
     }
 #endif
-#endif
 
+/*
+ * SetReqLen increases the count of 32-bit words in the request by "n",
+ * or by "badlen" if "n" is too large.
+ *
+ * Do not use SetReqLen if "req" does not already have data after the
+ * xReq header.  req->length must already be >= 2.
+ */
 #ifndef __clang_analyzer__
 #define SetReqLen(req,n,badlen) \
     if ((req->length + n) > (unsigned)65535) { \
@@ -566,7 +552,7 @@ extern void _XFlushGCCache(Display *dpy, GC gc);
  * 32 bit word alignment.  Transmit if the buffer fills.
  *
  * "dpy" is a pointer to a Display.
- * "data" is a pinter to a data buffer.
+ * "data" is a pointer to a data buffer.
  * "len" is the length of the data buffer.
  */
 #ifndef DataRoutineIsProcedure
@@ -576,7 +562,7 @@ extern void _XFlushGCCache(Display *dpy, GC gc);
 		dpy->bufptr += ((len) + 3) & ~3;\
 	} else\
 		_XSend(dpy, data, len);\
-	}
+}
 #endif /* DataRoutineIsProcedure */
 
 
@@ -601,18 +587,14 @@ extern void _XFlushGCCache(Display *dpy, GC gc);
     memset(ptr, '\0', n); \
     dpy->bufptr += (n);
 
-#ifdef WORD64
-#define Data16(dpy, data, len) _XData16(dpy, (short *)data, len)
-#define Data32(dpy, data, len) _XData32(dpy, (long *)data, len)
-#else
-#define Data16(dpy, data, len) Data((dpy), (char *)(data), (len))
+#define Data16(dpy, data, len) Data((dpy), (_Xconst char *)(data), (len))
 #define _XRead16Pad(dpy, data, len) _XReadPad((dpy), (char *)(data), (len))
 #define _XRead16(dpy, data, len) _XRead((dpy), (char *)(data), (len))
 #ifdef LONG64
-#define Data32(dpy, data, len) _XData32(dpy, (long *)data, len)
+#define Data32(dpy, data, len) _XData32(dpy, (_Xconst long *)data, len)
 extern int _XData32(
 	     Display *dpy,
-	     register long *data,
+	     register _Xconst long *data,
 	     unsigned len
 );
 extern void _XRead32(
@@ -621,10 +603,9 @@ extern void _XRead32(
 	     long len
 );
 #else
-#define Data32(dpy, data, len) Data((dpy), (char *)(data), (len))
+#define Data32(dpy, data, len) Data((dpy), (_Xconst char *)(data), (len))
 #define _XRead32(dpy, data, len) _XRead((dpy), (char *)(data), (len))
 #endif
-#endif /* not WORD64 */
 
 #define PackData16(dpy,data,len) Data16 (dpy, data, len)
 #define PackData32(dpy,data,len) Data32 (dpy, data, len)
@@ -693,19 +674,10 @@ extern void _XRead32(
 }
 
 
-#ifdef MUSTCOPY
-
-/* for when 32-bit alignment is not good enough */
-#define OneDataCard32(dpy,dstaddr,srcvar) \
-  { dpy->bufptr -= 4; Data32 (dpy, (char *) &(srcvar), 4); }
-
-#else
-
 /* srcvar must be a variable for large architecture version */
 #define OneDataCard32(dpy,dstaddr,srcvar) \
   { *(CARD32 *)(dstaddr) = (srcvar); }
 
-#endif /* MUSTCOPY */
 
 typedef struct _XInternalAsync {
     struct _XInternalAsync *next;
@@ -1363,6 +1335,10 @@ extern void xlocaledir(
     char *buf,
     int buf_len
 );
+
+#ifdef __clang__
+#pragma clang diagnostic pop
+#endif
 
 _XFUNCPROTOEND
 

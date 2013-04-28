@@ -1,3 +1,729 @@
+commit 3996543c1b2919e97d61a5d70fe1ebd7cd76fc83
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Mar 9 19:16:03 2013 -0800
+
+    libX11 1.5.99.901 (1.6 RC1)
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit f9cd175a471116a616e681fb0ca1a61b3d84a6a0
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Mar 8 22:33:28 2013 -0800
+
+    Fix very weird indenting in src/GetFProp.c
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit e9bd757630368afb374c5d1bcc5d4d85ad3c6c4c
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Mar 8 15:37:33 2013 -0800
+
+    XAllocClassHint: Assume calloc sets pointers in allocated memory to NULL
+    
+    While the C standard technically allows for the compiler to translate
+    pointer = 0 or pointer = NULL into something other than filling the
+    pointer address with 0 bytes, the rest of the Xlib code already assumes
+    that calloc initializes any pointers in the struct to NULL, and there
+    are no known systems supported by X.Org where this is not true.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 39547d600a13713e15429f49768e54c3173c828d
+Author: Karl Tomlinson <xmail@karlt.net>
+Date:   Mon Feb 18 01:25:34 2013 +0000
+
+    MakeBigReq: don't move the last word, already handled by Data32
+    
+    MakeBigReq inserts a length field after the first 4 bytes of the request
+    (after req->length), pushing everything else back by 4 bytes.
+    
+    The current memmove moves everything but the first 4 bytes back.
+    If a request aligns to the end of the buffer pointer when MakeBigReq is
+    invoked for that request, this runs over the buffer.
+    Instead, we need to memmove minus the first 4 bytes (which aren't moved),
+    minus the last 4 bytes (so we still align to the previous tail).
+    
+    The 4 bytes that fell out are already handled with Data32, which will
+    handle the buffermax correctly.
+    
+    The case where req->length = 1 was already not functional.
+    
+    Reported by Abhishek Arya <inferno@chromium.org>.
+    
+    https://bugzilla.mozilla.org/show_bug.cgi?id=803762
+    
+    Reviewed-by: Jeff Muizelaar <jmuizelaar@mozilla.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 3cdb6c3a1646f670afa03d424ec12ac418181d1e
+Author: Quentin Glidic <sardemff7+git@sardemff7.net>
+Date:   Tue Jan 15 21:07:17 2013 +0000
+
+    nls/Makefile.am: Use LOG_COMPILER
+    
+    TESTS_ENVIRONMENT is deprecated
+    
+    Signed-off-by: Quentin Glidic <sardemff7+git@sardemff7.net>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit df66d7a98e2bc7f44fb5583b645df87d525f07f1
+Author: Quentin Glidic <sardemff7+git@sardemff7.net>
+Date:   Tue Jan 15 21:07:16 2013 +0000
+
+    nls/Makefile.am: Remove unneeded $(srcdir)
+    
+    Signed-off-by: Quentin Glidic <sardemff7+git@sardemff7.net>
+    Reviewed-by: Gaetan Nadon <memsize@videotron.ca>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 3facbe5c0df1b5597571b7b00d5f7bdbc92fb278
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Mar 2 12:01:39 2013 -0800
+
+    Add <X11/Xresource.h> hint to all Xrm* man pages
+    
+    Help users figure out which header file they need to #include
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 466404007f2c8f7166e4faddfea1454c5bfe1e9a
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Mar 8 17:13:09 2013 -0800
+
+    _xudc_code_to_glyph: check for NULL pointer *before* writing to it, not after
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 47d2eff64d167b3245d346d7f38ca703be645e26
+Author: Ken Moffat <ken@linuxfromscratch.org>
+Date:   Thu Mar 7 18:27:54 2013 -0500
+
+    dead_double_grave and dead_inverted_breve should only have one underscore.
+    
+    Correct instances of dead_double_grave and dead_inverted_breve to
+    dead_doublegrave and dead_invertedbreve.
+    
+    Signed-off-by: Ken Moffat <ken@linuxfromscratch.org>
+    Signed-off-by: James Cloos <cloos@jhcloos.com>
+
+commit c23d61d1b84dca3740bf4786978c7908d0065fb9
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Mar 1 18:10:27 2013 -0800
+
+    Assume size_t is always available, since it was defined in C89
+    
+    Don't provide a fallback definition #ifdef X_NOT_POSIX anymore.
+    We already use size_t throughout the rest of Xlib, just had this
+    one instance left in XKBGAlloc.c of a fallback definition.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 9bcfd84aa1410387bc8cf002a5f90f44705aa0d1
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Mar 1 18:09:07 2013 -0800
+
+    unifdef XKB_IN_SERVER
+    
+    Leftovers from XKB files that were previously shared between the client
+    and server code, but aren't any more.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 769a0efa2298040fe8316a89fc9e75fb61e288e5
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Feb 28 20:04:25 2013 -0800
+
+    unifdef CRAY & _CRAY
+    
+    (mostly performed with unifdef, followed by some manual cleanup of
+     the remaining code)
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit ca106eb03e5f5468df8033300c5caae3d3c6936b
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Feb 28 20:04:25 2013 -0800
+
+    unifdef WORD64
+    
+    WORD64 seems to have only been defined in <X11/Xmd.h> when building for
+    CRAY, to handle int being a 64-bit value (ILP64, not LP64) and having
+    64-bit alignment requirements.
+    
+    It hadn't been fully supported even before autotooling, as can be
+    seen by removed code such as:
+    
+     #ifdef WORD64
+     _XkbWriteCopyData32 Not Implemented Yet for sizeof(int)==8
+     #endif
+    
+    (mostly performed with unifdef, followed by some manual cleanup of
+     the remaining code)
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 9399caf2c12cbe1ed56f4f6b368c5811cb5d0458
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Feb 28 20:04:25 2013 -0800
+
+    unifdef MUSTCOPY
+    
+    MUSTCOPY seems to have only been defined in <X11/Xmd.h> when building for
+    CRAY, to handle missing some sizes of integer type.
+    
+    (mostly performed with unifdef, followed by some manual cleanup of
+     spacing/indenting in the remaining code)
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit b687440c28c7da6ee0ae44514d20248db5161606
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Feb 16 10:42:23 2013 -0800
+
+    Convert more sprintf calls to snprintf
+    
+    You could analyze most of these and quickly recognize that there was no
+    chance of buffer overflow already, but why make everyone spend time doing
+    that when we can just make it obviously safe?
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit b092dabbd712d7b656abcf572d253b9b206c0237
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Feb 15 23:43:12 2013 -0800
+
+    XKeysymToString: move variable declarations to the scope of their usage
+    
+    Makes it easier for readers to understand scope of variable usage, and
+    clears up gcc warning:
+    
+    KeysymStr.c: In function 'XKeysymToString':
+    KeysymStr.c:128:13: warning: declaration of 'i' shadows a previous local [-Wshadow]
+    KeysymStr.c:73:18: warning: shadowed declaration is here [-Wshadow]
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit f0b171c8ea7b055ba520272ea9a2604e18841ac7
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Feb 15 23:34:40 2013 -0800
+
+    Preserve constness in casting arguments through the Data*() routines
+    
+    Casts were annoying gcc by dropping constness when changing types,
+    when routines simply either copy data into the request buffer or
+    send it directly to the X server, and never modify the input.
+    
+    Fixes gcc warnings including:
+    ChProp.c: In function 'XChangeProperty':
+    ChProp.c:65:6: warning: cast discards '__attribute__((const))' qualifier from pointer target type [-Wcast-qual]
+    ChProp.c:65:6: warning: cast discards '__attribute__((const))' qualifier from pointer target type [-Wcast-qual]
+    ChProp.c:74:6: warning: cast discards '__attribute__((const))' qualifier from pointer target type [-Wcast-qual]
+    ChProp.c:74:6: warning: cast discards '__attribute__((const))' qualifier from pointer target type [-Wcast-qual]
+    ChProp.c:83:6: warning: cast discards '__attribute__((const))' qualifier from pointer target type [-Wcast-qual]
+    SetHints.c: In function 'XSetStandardProperties':
+    SetHints.c:262:20: warning: cast discards '__attribute__((const))' qualifier from pointer target type [-Wcast-qual]
+    SetPntMap.c: In function 'XSetPointerMapping':
+    SetPntMap.c:46:5: warning: cast discards '__attribute__((const))' qualifier from pointer target type [-Wcast-qual]
+    SetPntMap.c:46:5: warning: cast discards '__attribute__((const))' qualifier from pointer target type [-Wcast-qual]
+    StBytes.c: In function 'XStoreBuffer':
+    StBytes.c:97:33: warning: cast discards '__attribute__((const))' qualifier from pointer target type [-Wcast-qual]
+    StName.c: In function 'XStoreName':
+    StName.c:40:27: warning: cast discards '__attribute__((const))' qualifier from pointer target type [-Wcast-qual]
+    StName.c: In function 'XSetIconName':
+    StName.c:51:27: warning: cast discards '__attribute__((const))' qualifier from pointer target type [-Wcast-qual]
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 6c558ee357292dd9dfc6d9006f4525f625327c52
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Feb 15 22:58:54 2013 -0800
+
+    Fix comment typo & confusing indentation levels in Data() macro definition
+    
+    The final } matches the one on the #define line, not one that doesn't
+    appear after the else statement it was lined up with
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit afd6593da90e51234d59f8921c411317f91ab48b
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Feb 15 23:25:38 2013 -0800
+
+    XStringToKeysym: preserve constness when casting off unsignedness for strcmp
+    
+    Fixes gcc warning:
+    StrKeysym.c:97:17: warning: cast discards '__attribute__((const))' qualifier from pointer target type [-Wcast-qual]
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 7e3bf4dd83fec22bd568146de75e6d59eff74e21
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Feb 15 23:14:40 2013 -0800
+
+    XRebindKeysym: Drop unnecessary const-removing cast
+    
+    C89 defines memcpy as taking a const void *, so casting from
+    const unsigned char * to char * simply angers gcc for no benefit:
+    
+    KeyBind.c:1017:24: warning: cast discards '__attribute__((const))' qualifier from pointer target type [-Wcast-qual]
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 54527eab93d46055cf11eb6c18abb353a03ae544
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Feb 15 22:45:19 2013 -0800
+
+    cmsColNm.c: maintain constness of arguments to qsort helper function
+    
+    Fixes gcc warning:
+    
+    cmsColNm.c: In function 'FirstCmp':
+    cmsColNm.c:257:20: warning: cast discards '__attribute__((const))' qualifier from pointer target type [-Wcast-qual]
+    cmsColNm.c:257:45: warning: cast discards '__attribute__((const))' qualifier from pointer target type [-Wcast-qual]
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit deedeada53676ee529d700bf96fde0b29a3a1def
+Author: Nickolai Zeldovich <nickolai@csail.mit.edu>
+Date:   Tue Jan 22 10:03:00 2013 -0500
+
+    XListFontsWithInfo: avoid accessing realloc'ed memory
+    
+    If exactly one of the two reallocs in XListFontsWithInfo() fails, the
+    subsequent code accesses memory freed by the other realloc.
+    
+    Signed-off-by: Nickolai Zeldovich <nickolai@csail.mit.edu>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit f57fd760cba92ad846917f21e94e73e9c846185f
+Author: Colin Walters <walters@verbum.org>
+Date:   Wed Jan 4 17:37:06 2012 -0500
+
+    autogen.sh: Implement GNOME Build API
+    
+    http://people.gnome.org/~walters/docs/build-api.txt
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit 51c102d39e855cf1704d9eb3afba76a2e73c6b81
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Tue Jan 15 14:28:48 2013 -0500
+
+    configure: Remove AM_MAINTAINER_MODE
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit 3cd974b1d4d1fa6389d3695fa9fcc0c22a51d50c
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Dec 26 22:57:39 2012 -0800
+
+    Remove unused DECnet ("DNETCONN") code from Xlib
+    
+    Has never been converted to build in modular builds, so has been unusable
+    since X11R7.0 release in 2005.  DNETCONN support was removed from xtrans
+    back in 2008.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit a6e5b36a3e6d4a7a9fb4bad905ed127e67b1957e
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Dec 26 22:56:38 2012 -0800
+
+    Remove unused TLI ("STREAMSCONN") code from Xlib
+    
+    Has never been converted to build in modular builds, so has been unusable
+    since X11R7.0 release in 2005.  All known platforms with TLI/XTI support
+    that X11R7 & later releases run on also have (and mostly prefer) BSD
+    socket support for their networking API.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 59c9ee8cd58857c5769b643611cbe526005a9e45
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Dec 16 17:44:42 2012 -0800
+
+    Tell clang not to report -Wpadded warnings on public headers we can't fix
+    
+    Better to silence the compiler warning than break ABI.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 0b148750027fd0557c5ed93afda861ddf4b92e0f
+Author: Jon TURNEY <jon.turney@dronecode.org.uk>
+Date:   Mon Nov 12 17:27:52 2012 +0000
+
+    Fix config check for loadable modules
+    
+    The config check of the results of testing for dlfcn.h or dl.h just tests the
+    value of the ac_cv_ variables, which will be 'yes' or 'no', rather than checking
+    it is 'yes', so loadable module support would always be detected.
+    
+    This is necessary for successful compilation for the MinGW target without the
+    optional dlfcn-win32 library.
+    
+    v2: Also, fixed typoed name of ac_cv_header_dlfcn_h, so check still works
+    correctly when dlfcn.h is available
+    
+    Signed-off-by: Jon TURNEY <jon.turney@dronecode.org.uk>
+    Reviewed-by: Dan Nicholson <dbn.lists@gmail.com>
+
+commit cd25cab4b5b957641183ce72dd1ae0424aff1663
+Author: Egbert Eich <eich@freedesktop.org>
+Date:   Fri May 20 18:27:02 2011 +0200
+
+    Install Xcms.txt in $(datadir) rather than $(libdir).
+    
+    This file is an architecture independent data and should be where
+    other databases are.
+    This is the Xlib provided sample file, applications are free to
+    use a different one specifying its location in the XCMSDB env
+    variable.
+    
+    Signed-off-by: Egbert Eich <eich@freedesktop.org>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 51fef7e273b5c6256e4c9604e3e1afe5dc8f6a1a
+Author: Egbert Eich <eich@freedesktop.org>
+Date:   Fri May 20 18:25:24 2011 +0200
+
+    Don't hard code path to Xcms.txt file.
+    
+    The path to this file is configurable at build time. The source
+    however contains a hard coded path.
+    
+    Signed-off-by: Egbert Eich <eich@freedesktop.org>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 9833489e6c3829a1e835bc0a11f028fc180809e4
+Author: Colin Walters <walters@verbum.org>
+Date:   Fri Dec 7 08:51:21 2012 -0500
+
+    Fix build after dropping locales
+    
+    They also needed to be removed from configure.ac
+    
+    Signed-off-by: Colin Walters <walters@verbum.org>
+    Signed-off-by: Julien Cristau <jcristau@debian.org>
+
+commit 0a740a574aaf0c0eec78859b773a532cff3b74c3
+Author: Egbert Eich <eich@freedesktop.org>
+Date:   Fri May 20 13:04:11 2011 +0200
+
+    i18n: Uppercased all occurances if 'iso8859' in the full locale name.
+    
+    Making all occurances of iso8859 upper case in the full local name
+    makes the alias entries more consistent and match the entries on
+    locale.dir.
+    
+    Signed-off-by: Egbert Eich <eich@freedesktop.org>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 5e7d589697755a70fb22d85c6a1ae82b39843e53
+Author: Egbert Eich <eich@freedesktop.org>
+Date:   Fri May 20 17:55:49 2011 +0200
+
+    i18n: Remove ja.S90 and ja.U90 locales.
+    
+    Both locales carry a copyright notice and a prorietary statement:
+    
+    Copyright 1995 by FUJITSU LIMITED
+    This is source code modified by FUJITSU LIMITED under the Joint
+    Development Agreement for the CDEnext PST.
+    This is unpublished proprietary source code of FUJITSU LIMITED
+    
+    Signed-off-by: Egbert Eich <eich@freedesktop.org>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 99eae3dcb7bf6764e3b243d2a2934a4d1ecce90e
+Author: Egbert Eich <eich@freedesktop.org>
+Date:   Fri May 20 16:46:15 2011 +0200
+
+    i18n: Bring locale.dir and compose.dir in sync.
+    
+    Some entries for locale/encoding combinations were missing from
+    either file or just misspelled, some entries were wrong or just
+    aliases.
+    
+    Signed-off-by: Egbert Eich <eich@freedesktop.org>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit d1e6baa4e290b758e430077cb74e7c03ad850771
+Author: Egbert Eich <eich@freedesktop.org>
+Date:   Fri May 20 14:02:39 2011 +0200
+
+    i18n: Treat 'a3_AZ' as an alias for 'az_AZ'.
+    
+    locale.alias contains a comment:
+    XCOMM a3 is not an ISO 639 language code, but in Cyrillic, "Z" looks like "3".
+    Thus lets treat 'a3' as an alias for 'az'.
+    
+    Signed-off-by: Egbert Eich <eich@freedesktop.org>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Magnus Kessler <Magnus.Kessler@gmx.net>
+
+commit fa2aab0bea18efa26a56977d3166277582ab7b07
+Author: Egbert Eich <eich@freedesktop.org>
+Date:   Fri May 20 13:09:38 2011 +0200
+
+    i18n: Fixed typos in full locale names.
+    
+    Fixing those typos those names actually match entries in
+    locale.dir.
+    
+    Signed-off-by: Egbert Eich <eich@freedesktop.org>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit b88dd95005dce4c40f9b4d5f938f945e7955fd04
+Author: Egbert Eich <eich@freedesktop.org>
+Date:   Sat May 21 07:29:38 2011 +0200
+
+    i18n: Remove duplicates and aliases to oneself.
+    
+    Aliases to itself don't make much sense.
+    This changes occurances of:
+    xy_UV.UTF-8:			xy_UV.UTF-8
+    to
+    xy_UV:			xy_UV.UTF-8
+    where applicable.
+    
+    Signed-off-by: Egbert Eich <eich@freedesktop.org>
+    Reviewed-by: James Cloos <cloos@jhcloos.com>
+
+commit f198c6aa98f88ff285d903175a3c4c0fd33a4575
+Author: Jens Herden <jens.herden@email.de>
+Date:   Fri May 20 17:29:03 2011 +0200
+
+    i18n: Add support for Khmer locale and compose table.
+    
+    Signed-off-by: Egbert Eich <eich@freedesktop.org>
+    Reviewed-by: James Cloos <cloos@jhcloos.com>
+
+commit 40761898692e5063957bfa2518cca3d35b2e354a
+Author: Kalman Kemenczy <kkemenczy@novell.com>
+Date:   Fri May 20 17:03:24 2011 +0200
+
+    i18n: Add support for Serbian specific compose table entries.
+    
+    Signed-off-by: Egbert Eich <eich@freedesktop.org>
+    Reviewed-by: James Cloos <cloos@jhcloos.com>
+
+commit 7c14aacc9f01d7a975f8d9d033b9b13cbd777a61
+Author: Egbert Eich <eich@freedesktop.org>
+Date:   Fri May 20 14:00:35 2011 +0200
+
+    i18n: Adding and removing comments.
+    
+    Signed-off-by: Egbert Eich <eich@freedesktop.org>
+    Reviewed-by: James Cloos <cloos@jhcloos.com>
+
+commit 7754d68976106183751243c2c35a84134be17b34
+Author: Egbert Eich <eich@freedesktop.org>
+Date:   Fri May 20 13:45:31 2011 +0200
+
+    i18n: Add missing locales which existed in locale.alias.
+    
+    Signed-off-by: Egbert Eich <eich@freedesktop.org>
+    Reviewed-by: James Cloos <cloos@jhcloos.com>
+
+commit 952eccd0d25ba66023acfd31873eee2e71c38c42
+Author: Egbert Eich <eich@freedesktop.org>
+Date:   Fri May 20 10:57:57 2011 +0200
+
+    i18n: Consolidate compose handling for locales with UTF-8 encoding.
+    
+    - add an entry to include the default en_US compose file
+      for the ja_JP, ko_KR, th_TH, zh_CN, zh_HK and zh_TW locales.
+    - add missing entries for zh_CN. and zh_HK and am_ET.
+    - change entries for the UTF-8 encoding for ru_RU, ja_JP,
+      ko_KR, th_TH and zh_TW to point to their native directory
+      entries.
+    
+    Signed-off-by: Egbert Eich <eich@freedesktop.org>
+    Reviewed-by: James Cloos <cloos@jhcloos.com>
+
+commit d14b6a250f004fa405179db7020f6953001d17b9
+Author: Yaakov Selkowitz <yselkowitz@users.sourceforge.net>
+Date:   Mon Oct 22 13:54:11 2012 -0500
+
+    XIM: remove Private and Public macros
+    
+    Private is a struct member name in mingw-w64 <winioctl.h>, causing this
+    useless define in a private header to break the build.
+    
+    Signed-off-by: Yaakov Selkowitz <yselkowitz@users.sourceforge.net>
+    Reviewed-by: Jon TURNEY <jon.turney@dronecode.org.uk>
+
+commit f2a8def423a46d52e834cf7ea49fa0079427663a
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Wed Oct 17 14:40:43 2012 -0400
+
+    XErrorDB: Add GLXBadProfileARB
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit d45b3fc19fbe95c41afc4e51d768df6d42332010
+Author: Ross Burton <ross.burton@intel.com>
+Date:   Wed Sep 12 14:39:40 2012 +0100
+
+    Allow overriding location of keysymdef.h
+    
+    Currently keysymdef.h is found by using the includedir of xproto.  This doesn't
+    work when cross-compiling with a sysroot as that ends up being /usr/include/X11,
+    not a path into the cross-build environment.
+    
+    So, add an option to allow explicitly specifying the location of keysymdef.h,
+    and verify that the specified or found path exists.
+    
+    (original patch by Martin Jansa <martin.jansa@gmail.com>, revised by myself)
+    
+    Signed-off-by: Ross Burton <ross.burton@intel.com>
+    Reviewed-by: Dan Nicholson <dbn.lists@gmail.com>
+    Reviewed-by: Daniel Stone <daniel@fooishbar.org>
+
+commit 44cdc0dc2c68d67654023ec707b807145d3a38c0
+Author: Eric S. Raymond <esr@thyrsus.com>
+Date:   Thu Aug 23 19:15:07 2012 -0400
+
+    Renove some unnecessary low-level markup.
+    
+    Also, SYNTAX -> SYNOPSIS so function prototypes get parsed by doclifter.
+    This appears to have been somebody's thinko, it's only in a few of the files.
+    
+    Signed-off-by: Eric S. Raymond <esr@thyrsus.com>
+
+commit b686600ab5ca93b5750f827786e79c329ab2db4d
+Author: Eric S. Raymond <esr@thyrsus.com>
+Date:   Thu Aug 23 10:53:33 2012 -0400
+
+    The .NT/.NE macro pair is no longer used.  Remove it.
+    
+    Signed-off-by: Eric S. Raymond <esr@thyrsus.com>
+
+commit b83f2898528c5dd683acd2a2143879a760a8dad5
+Author: Eric S. Raymond <esr@thyrsus.com>
+Date:   Thu Aug 23 10:42:46 2012 -0400
+
+    Remove the one and only use of the .NT/.NE pair.
+    
+    The problem with these macros is that they rely on being able to
+    center the note label.  That doesn't play well with modern HTML,
+    not anyway without coomplications like CSS.  This use was just a cute
+    trick, not adding enough value to be kept.
+
+commit e9509fa6745d25eee01ec6f1c34edf8a806d66b3
+Author: Eric S. Raymond <esr@thyrsus.com>
+Date:   Thu Aug 23 10:23:45 2012 -0400
+
+    The .C{ and .C} macros are never used.  Remove them.
+    
+    Signed-off-by: Eric S. Raymond <esr@thyrsus.com>
+
+commit 6b2f7ddeea6c87dbec4ddfc19b1fed33f1bb8575
+Author: Eric S. Raymond <esr@thyrsus.com>
+Date:   Thu Aug 23 10:08:08 2012 -0400
+
+    The .FN macro, paired with .FD, is also never used. Remove it.
+    
+    Signed-off-by: Eric S. Raymond <esr@thyrsus.com>
+
+commit cac6572701c976542da562b2b277b07ffb892a6f
+Author: Eric S. Raymond <esr@thyrsus.com>
+Date:   Thu Aug 23 10:03:00 2012 -0400
+
+    The ".FD" macro is never used.  Remove it.
+    
+    It was a temptation to presentation-level klugery and is best gone.
+    
+    Signed-off-by: Eric S. Raymond <esr@thyrsus.com>
+
+commit 6e27a828f39f7028bc7f4a8736e7262fca250632
+Author: Eric S. Raymond <esr@thyrsus.com>
+Date:   Thu Aug 23 09:54:25 2012 -0400
+
+    Clean up, my last commit missed four cases.
+    
+    Signed-off-by: Eric S. Raymond <esr@thyrsus.com>
+
+commit a7fb575957ff4d9dd3671994a005ac3be8bb10fe
+Author: Eric S. Raymond <esr@thyrsus.com>
+Date:   Thu Aug 23 08:24:17 2012 -0400
+
+    Eliminate all uses of tab stops in the libX11 man pages.
+    
+    Two steps: First, expand tabs to 8 spaces in code and structure
+    listings.  Second, make the .Ds used to wrap code listings switch to
+    constant-width font (CW) rather than numeric font position 1, which
+    maps to R on most systems.
+    
+    It is possible some archaic systems won't know what CW is, but the
+    only risk is that code listings won't look quite right on troff
+    devices; the PostScript and DVI drivers definitely grok it, so those
+    important cases are OK.
+    
+    The purpose of these changes is to get rid of presentation-level
+    markup so these pages will lift clean to DocBook.
+    
+    Signed-off-by: Eric S. Raymond <esr@thyrsus.com>
+
+commit 8042f88ace33573f9d0dfaa21ed54ac7cef266d5
+Author: Will Thompson <will@willthompson.co.uk>
+Date:   Mon Jul 9 18:00:27 2012 +0100
+
+    Add compose sequences for "therefore" and "because".
+    
+    These sequences look sensible to me. I added them to the APL-related
+    section of Mathematical Operators—they're in that section of Unicode
+    anyway.
+    
+    https://bugs.freedesktop.org/show_bug.cgi?id=51922
+    
+    Signed-off-by: Will Thompson <will@willthompson.co.uk>
+    Reviewed-by: Daniel Stone <daniel@fooishbar.org>
+
+commit 65358ea5079236b2508f787ac2fb2024a477e36d
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Jun 29 23:08:04 2012 -0700
+
+    Convert XCreate{Pix,Bit}map...Data to use C99 designated initializers
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 0dc93f7e43deb102b1f8fb7c4c4844cdce7ffd1e
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Jun 29 22:57:13 2012 -0700
+
+    XCreate{Pix,Bit}map...Data: Free pixmap in error path if XCreateGC fails
+    
+    Fixes leaks in error paths found by Parfait 1.0.0:
+    
+    Error: X Resource Leak
+       Leaked X Resource pix
+            at line 62 of CrBFData.c in function 'XCreateBitmapFromData'.
+              pix initialized at line 60 with XCreatePixmap
+    Error: X Resource Leak
+       Leaked X Resource pix
+            at line 70 of CrPFBData.c in function 'XCreatePixmapFromBitmapData'.
+              pix initialized at line 66 with XCreatePixmap
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Aaron Plattner <aplattner@nvidia.com>
+
+commit dce84b8c39ad5a8908c29bb6de25b6c3004c1ab7
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Jun 6 13:31:16 2012 -0700
+
+    libX11 spec: Correct prototype for XConvertSelection
+    
+    selection & target parameters were accidentally run together
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit 6c5cb2a90a6479f56855e5167039c37c234cdfe7
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Fri Jun 1 23:37:09 2012 -0700
