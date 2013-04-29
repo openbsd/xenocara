@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: screen.c,v 1.46 2013/04/12 14:46:30 okan Exp $
+ * $OpenBSD: screen.c,v 1.47 2013/04/29 00:56:48 okan Exp $
  */
 
 #include <sys/param.h>
@@ -31,7 +31,7 @@
 #include "calmwm.h"
 
 void
-screen_init(u_int which)
+screen_init(int which)
 {
 	struct screen_ctx	*sc;
 	Window			*wins, w0, w1;
