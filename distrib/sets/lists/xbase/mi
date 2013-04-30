@@ -140,7 +140,6 @@
 ./usr/X11R6/include/xcb
 ./usr/X11R6/lib
 ./usr/X11R6/lib/X11
-./usr/X11R6/lib/X11/Xcms.txt
 ./usr/X11R6/lib/X11/app-defaults
 ./usr/X11R6/lib/X11/fvwm
 ./usr/X11R6/lib/X11/fvwm/.fvwmrc
@@ -324,6 +323,7 @@
 ./usr/X11R6/man/whatis.db
 ./usr/X11R6/share
 ./usr/X11R6/share/X11
+./usr/X11R6/share/X11/Xcms.txt
 ./usr/X11R6/share/xcb
 ./usr/X11R6/share/xcb/xcb.xsd
 ./usr/X11R6/share/xcb/xkb.xml
