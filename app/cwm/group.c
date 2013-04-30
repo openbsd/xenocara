@@ -16,7 +16,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: group.c,v 1.74 2013/04/17 13:30:38 okan Exp $
+ * $OpenBSD: group.c,v 1.75 2013/04/30 21:10:23 okan Exp $
  */
 
 #include <sys/param.h>
@@ -98,8 +98,7 @@ group_show(struct screen_ctx *sc, struct group_ctx *gc)
 {
 	struct client_ctx	*cc;
 	Window			*winlist;
-	u_int			 i;
-	int			 lastempty = -1;
+	int			 i, lastempty = -1;
 
 	gc->highstack = 0;
 	TAILQ_FOREACH(cc, &gc->clients, group_entry) {
