@@ -16,7 +16,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: menu.c,v 1.55 2013/05/02 17:25:15 okan Exp $
+ * $OpenBSD: menu.c,v 1.56 2013/05/02 19:41:52 okan Exp $
  */
 
 #include <sys/param.h>
@@ -165,7 +165,6 @@ menu_filter(struct screen_ctx *sc, struct menu_q *menuq, char *prompt,
 				goto out;
 			/* FALLTHROUGH */
 		case Expose:
-			fprintf(stderr, "expose\n");
 			menu_draw(sc, &mc, menuq, &resultq);
 			break;
 		case MotionNotify:
