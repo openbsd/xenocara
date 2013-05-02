@@ -106,7 +106,7 @@ XFixesGetCursorImage (Display *dpy)
     /* bytes of actual data in the reply */
     nread = (npixels << 2) + nbytes_name;
     /* size of data returned to application */
-    rlength = (sizeof (XFixesCursorImage) + 
+    rlength = (sizeof (XFixesCursorImage) +
 	       npixels * sizeof (unsigned long) +
 	       nbytes_name + 1);
 
