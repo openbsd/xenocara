@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: font.c,v 1.24 2012/12/17 18:34:06 okan Exp $
+ * $OpenBSD: font.c,v 1.25 2013/05/02 17:25:15 okan Exp $
  */
 
 #include <sys/param.h>
@@ -29,24 +29,6 @@
 #include <unistd.h>
 
 #include "calmwm.h"
-
-int
-font_ascent(struct screen_ctx *sc)
-{
-	return (sc->xftfont->ascent);
-}
-
-int
-font_descent(struct screen_ctx *sc)
-{
-	return (sc->xftfont->descent);
-}
-
-u_int
-font_height(struct screen_ctx *sc)
-{
-	return (sc->xftfont->height + 1);
-}
 
 void
 font_init(struct screen_ctx *sc, const char *name, const char **color)
@@ -82,11 +64,11 @@ font_init(struct screen_ctx *sc, const char *name, const char **color)
 }
 
 int
-font_width(struct screen_ctx *sc, const char *text, int len)
+font_width(XftFont *xftfont, const char *text, int len)
 {
 	XGlyphInfo	 extents;
 
-	XftTextExtentsUtf8(X_Dpy, sc->xftfont, (const FcChar8*)text,
+	XftTextExtentsUtf8(X_Dpy, xftfont, (const FcChar8*)text,
 	    len, &extents);
 
 	return (extents.xOff);
