@@ -410,9 +410,9 @@ PostKbdEvent(InputInfoPtr pInfo, unsigned int scanCode, Bool down)
   int state;
 
 #ifdef DEBUG
-  ErrorF("kbd driver rec scancode: 0x02%x %s\n", scanCode, down?"down":"up");
+  LogMessageVerbSigSafe(X_INFO, -1, "kbd driver rec scancode: 0x%x %s\n", scanCode, down ? "down" : "up");
 #endif
-	  
+
   /*
    * First do some special scancode remapping ...
    */

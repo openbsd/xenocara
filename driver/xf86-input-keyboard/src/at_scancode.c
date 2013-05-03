@@ -112,8 +112,8 @@ ATScancode(InputInfoPtr pInfo, int *scanCode)
             case 0x36:
 	         return TRUE;
             default:
-                 xf86MsgVerb(X_INFO, 4, "Unreported Prefix0 scancode: 0x%02x\n",
-		             *scanCode);
+                 LogMessageVerbSigSafe(X_INFO, 4, "Unreported Prefix0 scancode: 0x%x\n",
+                                       *scanCode);
                  *scanCode += 0x78;
           }
        break;

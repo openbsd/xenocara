@@ -459,20 +459,22 @@ ReadInput(InputInfoPtr pInfo)
 		case EINTR:  /* Interrupted, try again */
 		    break;
 		case ENODEV: /* May happen when USB kbd is unplugged */
-		    /* We use X_NONE here because it doesn't alloc since we
-		       may be called from SIGIO handler */
-		    xf86MsgVerb(X_NONE, 0,
-				"%s: Device no longer present - removing.\n",
-				pInfo->name);
+		    /* We use X_NONE here because it didn't alloc since we
+		       may be called from SIGIO handler. No longer true for
+		       sigsafe logging, but matters for older servers  */
+		    LogMessageVerbSigSafe(X_NONE, 0,
+					  "%s: Device no longer present - removing.\n",
+					  pInfo->name);
 		    xf86RemoveEnabledDevice(pInfo);
 		    priv->remove_timer = TimerSet(priv->remove_timer, 0, 1,
 						  RemoveKeyboard, pInfo);
 		    return;
 		default:     /* All other errors */
-		    /* We use X_NONE here because it doesn't alloc since we
-		       may be called from SIGIO handler */
-		    xf86MsgVerb(X_NONE, 0, "%s: Read error: %s\n", pInfo->name,
-				strerror(errno));
+		    /* We use X_NONE here because it didn't alloc since we
+		       may be called from SIGIO handler. No longer true for
+		       sigsafe logging, but matters for older servers  */
+		    LogMessageVerbSigSafe(X_NONE, 0, "%s: Read error: %s\n", pInfo->name,
+					  strerror(errno));
 		    return;
 	    }
 	} else { /* nBytes == 0, so nothing more to read */

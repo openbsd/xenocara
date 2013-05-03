@@ -1,3 +1,40 @@
+commit ec3ccb22d4e7348ac537100fcb1b7ddc07df57b8
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Wed Mar 27 11:13:18 2013 +1000
+
+    keyboard 1.7.0
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit ad2a1dd1aa19999eb777f330242d46254b29b9cb
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri Aug 17 14:07:12 2012 +1000
+
+    Use sigsafe logging for keyboard debug messages
+    
+    This changes the log format to simple hex display, the server's signal-safe
+    printf implementation doesn't handle %2.2x.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 4a954bc6a8fbc4aa50dfcabec011274252713204
+Author: Colin Walters <walters@verbum.org>
+Date:   Wed Jan 4 17:37:06 2012 -0500
+
+    autogen.sh: Implement GNOME Build API
+    
+    http://people.gnome.org/~walters/docs/build-api.txt
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit 9522f28a8f90680942e42902678c963c6981b0d1
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Wed Jan 16 13:11:11 2013 -0500
+
+    configure: Drop AM_MAINTAINER_MODE
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
 commit 6e51df6dd4255cbe311ec98e21a1cc94975271a1
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Mon Jul 23 22:04:45 2012 -0700
