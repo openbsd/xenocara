@@ -447,8 +447,9 @@ wsconsReadInput(InputInfoPtr pInfo)
             break;
 #endif
         default:
-            xf86Msg(X_WARNING, "%s: bad wsmouse event type=%d\n", pInfo->name,
-                    event->type);
+            LogMessageVerbSigSafe(X_WARNING, -1,
+                                  "%s: bad wsmouse event type=%d\n", pInfo->name,
+                                  event->type);
             ++event;
             continue;
         }
@@ -596,8 +597,9 @@ usbReadInput(InputInfoPtr pInfo)
     if (n == 0)
         return;
     if (n != pUsbMse->packetSize) {
-        xf86Msg(X_WARNING, "%s: incomplete packet, size %d\n", pInfo->name,
-                n);
+        LogMessageVerbSigSafe(X_WARNING, -1,
+                              "%s: incomplete packet, size %d\n",
+                              pInfo->name, n);
     }
     /* discard packets with an id that don't match the mouse */
     /* XXX this is probably not the right thing */

@@ -1167,7 +1167,7 @@ MouseReadInput(InputInfoPtr pInfo)
         u = (unsigned char)c;
 
 #if defined (EXTMOUSEDEBUG) || defined (MOUSEDATADEBUG)
-        ErrorF("mouse byte: %2.2x\n",u);
+        LogMessageVerbSigSafe(X_INFO, -1, "mouse byte: %x\n",u);
 #endif
 
         /* if we do autoprobing collect the data */
@@ -1225,7 +1225,7 @@ MouseReadInput(InputInfoPtr pInfo)
                  * preceeding the byte.
                  */
 #ifdef EXTMOUSEDEBUG
-                ErrorF("mouse 4th byte %02x\n",u);
+                LogMessageVerbSigSafe(X_INFO, -1, "mouse 4th byte %x\n",u);
 #endif
                 dx = dy = dz = dw = 0;
                 buttons = 0;
@@ -1275,10 +1275,10 @@ MouseReadInput(InputInfoPtr pInfo)
 #ifdef EXTMOUSEDEBUG2
         {
             int i;
-            ErrorF("received %d bytes",pBufP);
+            LogMessageVerbSigSafe(X_INFO, -1, "received %d bytes",pBufP);
             for ( i=0; i < pBufP; i++)
-                ErrorF(" %02x",pBuf[i]);
-            ErrorF("\n");
+                LogMessageVerbSigSafe(X_INFO, -1, " %x",pBuf[i]);
+            LogMessageVerbSigSafe(X_INFO, -1, "\n");
         }
 #endif
 
@@ -1353,11 +1353,11 @@ MouseReadInput(InputInfoPtr pInfo)
         if ((pBuf[0] & pMse->protoPara[0]) != pMse->protoPara[1] || baddata) {
             if (pMse->inSync) {
 #ifdef EXTMOUSEDEBUG
-                ErrorF("mouse driver lost sync\n");
+                LogMessageVerbSigSafe(X_INFO, -1, "mouse driver lost sync\n");
 #endif
             }
 #ifdef EXTMOUSEDEBUG
-            ErrorF("skipping byte %02x\n",*pBuf);
+            LogMessageVerbSigSafe(X_INFO, -1, "skipping byte %x\n",*pBuf);
 #endif
             /* Tell auto probe that we are out of sync */
             if (pMse->autoProbeMouse && pMse->autoProbe)
@@ -1374,7 +1374,7 @@ MouseReadInput(InputInfoPtr pInfo)
 
         if (!pMse->inSync) {
 #ifdef EXTMOUSEDEBUG
-            ErrorF("mouse driver back in sync\n");
+            LogMessageVerbSigSafe(X_INFO, -1, "mouse driver back in sync\n");
 #endif
             pMse->inSync = 1;
         }
@@ -1616,20 +1616,20 @@ MouseReadInput(InputInfoPtr pInfo)
 
         default: /* There's a table error */
 #ifdef EXTMOUSEDEBUG
-            ErrorF("mouse table error\n");
+            LogMessageVerbSigSafe(X_INFO, -1, "mouse table error\n");
 #endif
             continue;
         }
 #ifdef EXTMOUSEDEBUG
-        ErrorF("packet");
+        LogMessageVerbSigSafe(X_INFO, -1, "packet");
         for ( j=0; j < pBufP; j++)
-            ErrorF(" %02x",pBuf[j]);
-        ErrorF("\n");
+            LogMessageVerbSigSafe(X_INFO, -1, " %x",pBuf[j]);
+        LogMessageVerbSigSafe(X_INFO, -1, "\n");
 #endif
 
 post_event:
 #ifdef EXTMOUSEDEBUG
-        ErrorF("dx=%i dy=%i dz=%i dw=%i buttons=%x\n",dx,dy,dz,dw,buttons);
+        LogMessageVerbSigSafe(X_INFO, -1, "dx=%i dy=%i dz=%i dw=%i buttons=%x\n",dx,dy,dz,dw,buttons);
 #endif
         /* When auto-probing check if data makes sense */
         if (pMse->checkMovements && pMse->autoProbe)
@@ -1723,8 +1723,7 @@ MouseProc(DeviceIntPtr device, int what)
         xf86InitValuatorDefaults(device, 1);
 
 #ifdef EXTMOUSEDEBUG
-        ErrorF("assigning %p atom=%d name=%s\n", device, pInfo->atom,
-                pInfo->name);
+        ErrorF("assigning %p name=%s\n", device, pInfo->name);
 #endif
         MouseInitProperties(device);
         break;
@@ -2006,7 +2005,7 @@ buttonTimer(InputInfoPtr pInfo)
         xf86PostButtonEvent(pInfo->dev, 0, abs(id), (id >= 0), 0, 0);
         pMse->emulateState = stateTab[pMse->emulateState][4][2];
     } else {
-        ErrorF("Got unexpected buttonTimer in state %d\n", pMse->emulateState);
+        LogMessageVerbSigSafe(X_WARNING, -1, "Got unexpected buttonTimer in state %d\n", pMse->emulateState);
     }
 
     xf86UnblockSIGIO (sigstate);
@@ -2047,7 +2046,7 @@ Emulate3ButtonsSoft(InputInfoPtr pInfo)
     if (!pMse->emulate3ButtonsSoft)
         return TRUE;
 
-    xf86Msg(X_INFO,"3rd Button detected: disabling emulate3Button\n");
+    LogMessageVerbSigSafe(X_INFO, 4, "mouse: 3rd Button detected: disabling emulate3Button\n");
 
     Emulate3ButtonsSetEnabled(pInfo, FALSE);
 
@@ -3004,7 +3003,7 @@ mouseReset(InputInfoPtr pInfo, unsigned char val)
     mousepriv->lastEvent = GetTimeInMillis();
 
 #ifdef EXTMOUSEDEBUG
-    ErrorF("byte: 0x%x time: %li\n",val,mousepriv->lastEvent);
+    LogMessageVerbSigSafe(X_INFO, -1, "byte: 0x%x time: %li\n",val,mousepriv->lastEvent);
 #endif
     /*
      * We believe that the following is true:
@@ -3032,7 +3031,7 @@ mouseReset(InputInfoPtr pInfo, unsigned char val)
         mousepriv->inReset = FALSE;
 
 #ifdef EXTMOUSEDEBUG
-    ErrorF("Mouse Current: %i 0x%x\n",mousepriv->current, val);
+    LogMessageVerbSigSafe(X_INFO, -1, "Mouse Current: %i 0x%x\n",mousepriv->current, val);
 #endif
 
     /* here we put the mouse specific reset detection */
@@ -3055,7 +3054,7 @@ mouseReset(InputInfoPtr pInfo, unsigned char val)
             mousepriv->expires = GetTimeInMillis() + 1000;
 
 #ifdef EXTMOUSEDEBUG
-            ErrorF("Found PS/2 Reset string\n");
+            LogMessageVerbSigSafe(X_INFO, -1, "Found PS/2 Reset string\n");
 #endif
             RegisterBlockAndWakeupHandlers (ps2BlockHandler,
                                             ps2WakeupHandler, (pointer) pInfo);

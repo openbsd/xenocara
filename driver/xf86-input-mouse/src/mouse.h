@@ -38,6 +38,9 @@
 #define COLLECT_INPUT_OPTIONS(pInfo, options) xf86CollectInputOptions((pInfo), (options))
 #endif
 
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) < 18
+#define LogMessageVerbSigSafe LogMessageVerb
+#endif
 
 /* Mouse interface classes */
 #define MSE_NONE        0x00

@@ -1,3 +1,49 @@
+commit 35cae8f4352002c8dce85dbc86cebb50e915a478
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Wed Mar 27 10:59:05 2013 +1000
+
+    mouse 1.9.0
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 585f4030d77accf2a4ba115729ca08da82217863
+Author: Colin Walters <walters@verbum.org>
+Date:   Wed Jan 4 17:37:06 2012 -0500
+
+    autogen.sh: Implement GNOME Build API
+    
+    http://people.gnome.org/~walters/docs/build-api.txt
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit 8e74b1db7b32a2a2bb668a8edc6757cc5b77157a
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Wed Jan 16 13:11:11 2013 -0500
+
+    configure: Drop AM_MAINTAINER_MODE
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit 3b199a175da8485c216ccccb68df4cf539899619
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Wed Aug 15 14:38:28 2012 +1000
+
+    Use signal-safe logging if available
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Chase Douglas <chase.douglas@ubuntu.com>
+
+commit cb1f60930bdc8121e5d7b9210f9491d1116d6aef
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Wed Aug 15 14:43:14 2012 +1000
+
+    Fix compilation error with EXTMOUSEDEBUG on
+    
+    pInfo->atom was removed in xorg-server-1.9.0-26-g9802cca
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit 29dbd85c4617a062d2003e0673806b92f8397492
 Author: Peter Hutterer <peter.hutterer@who-t.net>
 Date:   Tue Jul 31 09:39:38 2012 +1000

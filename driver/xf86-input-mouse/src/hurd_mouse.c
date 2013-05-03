@@ -122,7 +122,7 @@ OsMouseReadInput(InputInfoPtr pInfo)
             dy = - event->value.mmotion.mm_deltaY;
             break;
         default:
-            ErrorF("Bad mouse event (%d)\n",event->type);
+            LogMessageVerbSigSafe(X_ERROR, -1, "Bad mouse event (%d)\n",event->type);
             continue;
         }
         pMse->PostEvent(pInfo, buttons, dx, dy, 0, 0);

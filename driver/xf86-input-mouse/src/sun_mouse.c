@@ -303,21 +303,23 @@ vuidReadInput(InputInfoPtr pInfo)
                 case EINTR:  /* Interrupted, try again */
                     continue;
                 case ENODEV: /* May happen when USB mouse is unplugged */
-                    /* We use X_NONE here because it doesn't alloc since we
-                       may be called from SIGIO handler */
-                    xf86MsgVerb(X_NONE, 0,
-                                "%s: Device no longer present - removing.\n",
-                                pInfo->name);
+                    /* We use X_NONE here because it didn't alloc since we
+                       may be called from SIGIO handler. No longer true for
+                       sigsafe logging, but matters for older servers  */
+                    LogMessageVerbSigSafe(X_NONE, 0,
+                                          "%s: Device no longer present - removing.\n",
+                                          pInfo->name);
                     xf86RemoveEnabledDevice(pInfo);
                     pVuidMse->remove_timer =
                         TimerSet(pVuidMse->remove_timer, 0, 1,
                                  vuidRemoveMouse, pInfo);
                     return;
                 default:     /* All other errors */
-                    /* We use X_NONE here because it doesn't alloc since we
-                       may be called from SIGIO handler */
-                    xf86MsgVerb(X_NONE, 0, "%s: Read error: %s\n", pInfo->name,
-                                strerror(errno));
+                    /* We use X_NONE here because it didn't alloc since we
+                       may be called from SIGIO handler. No longer true for
+                       sigsafe logging, but matters for older servers  */
+                    LogMessageVerbSigSafe(X_NONE, 0, "%s: Read error: %s\n",
+                                          pInfo->name, strerror(errno));
                     return;
             }
         } else if (n != sizeof(Firm_event)) {
@@ -326,8 +328,8 @@ vuidReadInput(InputInfoPtr pInfo)
         }
 
 #ifdef DEBUG
-        ErrorF("vuidReadInput: event type: %3d value: %5d\n",
-               pVuidMse->event.id, pVuidMse->event.value);
+        LogMessageVerbSigSafe("vuidReadInput: event type: %d value: %d\n",
+                              pVuidMse->event.id, pVuidMse->event.value);
 #endif
 
         if (pVuidMse->event.id >= BUT_FIRST && pVuidMse->event.id <= BUT_LAST) {
@@ -417,15 +419,16 @@ static void vuidMouseSendScreenSize(ScreenPtr pScreen, VuidMsePtr pVuidMse)
         } while ( (result != 0) && (errno == EINTR) );
 
         if (result != 0) {
-            xf86Msg(X_WARNING,
-                    "%s: couldn't set absolute mouse scaling resolution: %s\n",
-                    pInfo->name, strerror(errno));
+            LogMessageVerbSigSafe(X_WARNING, -1,
+                                  "%s: couldn't set absolute mouse scaling resolution: %s\n",
+                                  pInfo->name, strerror(errno));
 #ifdef DEBUG
         } else {
-            xf86Msg(X_INFO,
-                    "%s: absolute mouse scaling resolution set to %d x %d\n",
-                    pInfo->name,
-                    pVuidMse->absres.width, pVuidMse->absres.height);
+            LogMessageVerbSigSafe(X_INFO,
+                                  "%s: absolute mouse scaling resolution set to %d x %d\n",
+                                  pInfo->name,
+                                  pVuidMse->absres.width,
+                                  pVuidMse->absres.height);
 #endif
         }
     }
