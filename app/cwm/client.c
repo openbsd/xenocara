@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: client.c,v 1.127 2013/04/17 13:57:06 okan Exp $
+ * $OpenBSD: client.c,v 1.128 2013/05/06 16:03:11 okan Exp $
  */
 
 #include <sys/param.h>
@@ -149,13 +149,10 @@ client_delete(struct client_ctx *cc)
 	struct screen_ctx	*sc = cc->sc;
 	struct winname		*wn;
 
-	group_client_delete(cc);
-
 	XGrabServer(X_Dpy);
 	cc->state = WithdrawnState;
 	xu_set_wm_state(cc->win, cc->state);
 	XRemoveFromSaveSet(X_Dpy, cc->win);
-
 	XSync(X_Dpy, False);
 	XUngrabServer(X_Dpy);
 
@@ -163,6 +160,9 @@ client_delete(struct client_ctx *cc)
 	TAILQ_REMOVE(&Clientq, cc, entry);
 
 	xu_ewmh_net_client_list(sc);
+
+	if (cc->group != NULL)
+		TAILQ_REMOVE(&cc->group->clients, cc, group_entry);
 
 	if (cc == client_current())
 		client_none(sc);
