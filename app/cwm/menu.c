@@ -16,7 +16,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: menu.c,v 1.59 2013/05/07 01:35:41 okan Exp $
+ * $OpenBSD: menu.c,v 1.60 2013/05/10 16:10:40 okan Exp $
  */
 
 #include <sys/param.h>
@@ -197,7 +197,7 @@ menu_complete_path(struct menu_ctx *mc)
 {
 	struct menu		*mi, *mr;
 	struct menu_q		 menuq;
-	char *path = NULL;
+	char			*path = NULL;
 
 	path = xcalloc(1, sizeof(mr->text));
 	mr = xcalloc(1, sizeof(*mr));
