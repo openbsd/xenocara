@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: conf.c,v 1.124 2013/05/10 16:05:34 okan Exp $
+ * $OpenBSD: conf.c,v 1.125 2013/05/10 16:32:48 okan Exp $
  */
 
 #include <sys/param.h>
@@ -627,7 +627,7 @@ void
 conf_grab_mouse(struct client_ctx *cc)
 {
 	struct mousebinding	*mb;
-	int			 button;
+	u_int			 button;
 
 	TAILQ_FOREACH(mb, &Conf.mousebindingq, entry) {
 		if (mb->context != MOUSEBIND_CTX_WIN)
