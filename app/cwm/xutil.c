@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: xutil.c,v 1.56 2013/04/17 13:57:06 okan Exp $
+ * $OpenBSD: xutil.c,v 1.57 2013/05/10 15:44:43 okan Exp $
  */
 
 #include <sys/param.h>
@@ -88,7 +88,7 @@ xu_ptr_setpos(Window win, int x, int y)
 }
 
 void
-xu_key_grab(Window win, int mask, int keysym)
+xu_key_grab(Window win, int mask, KeySym keysym)
 {
 	KeyCode	 code;
 	int	 i;
@@ -104,7 +104,7 @@ xu_key_grab(Window win, int mask, int keysym)
 }
 
 void
-xu_key_ungrab(Window win, int mask, int keysym)
+xu_key_ungrab(Window win, int mask, KeySym keysym)
 {
 	KeyCode	 code;
 	int	 i;
