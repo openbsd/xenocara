@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: screen.c,v 1.49 2013/05/11 21:46:27 okan Exp $
+ * $OpenBSD: screen.c,v 1.50 2013/05/11 22:01:07 okan Exp $
  */
 
 #include <sys/param.h>
@@ -74,7 +74,7 @@ screen_init(int which)
 		if (winattr.override_redirect ||
 		    winattr.map_state != IsViewable)
 			continue;
-		(void)client_new(wins[i], sc, winattr.map_state != IsUnmapped);
+		(void)client_init(wins[i], sc, winattr.map_state != IsUnmapped);
 	}
 	XFree(wins);
 

@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: client.c,v 1.128 2013/05/06 16:03:11 okan Exp $
+ * $OpenBSD: client.c,v 1.129 2013/05/11 22:01:07 okan Exp $
  */
 
 #include <sys/param.h>
@@ -55,7 +55,7 @@ client_find(Window win)
 }
 
 struct client_ctx *
-client_new(Window win, struct screen_ctx *sc, int mapped)
+client_init(Window win, struct screen_ctx *sc, int mapped)
 {
 	struct client_ctx	*cc;
 	XClassHint		 xch;

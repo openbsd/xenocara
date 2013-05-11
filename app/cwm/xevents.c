@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: xevents.c,v 1.75 2013/05/10 16:32:48 okan Exp $
+ * $OpenBSD: xevents.c,v 1.76 2013/05/11 22:01:07 okan Exp $
  */
 
 /*
@@ -86,7 +86,7 @@ xev_handle_maprequest(XEvent *ee)
 
 	if ((cc = client_find(e->window)) == NULL) {
 		XGetWindowAttributes(X_Dpy, e->window, &xattr);
-		cc = client_new(e->window, screen_fromroot(xattr.root), 1);
+		cc = client_init(e->window, screen_fromroot(xattr.root), 1);
 	}
 
 	if ((cc->flags & CLIENT_IGNORE) == 0)
