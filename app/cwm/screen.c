@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: screen.c,v 1.48 2013/04/30 21:12:20 okan Exp $
+ * $OpenBSD: screen.c,v 1.49 2013/05/11 21:46:27 okan Exp $
  */
 
 #include <sys/param.h>
@@ -49,9 +49,7 @@ screen_init(int which)
 	xu_ewmh_net_supported(sc);
 	xu_ewmh_net_supported_wm_check(sc);
 
-	conf_gap(&Conf, sc);
-	conf_color(&Conf, sc);
-	conf_font(&Conf, sc);
+	conf_screen(sc);
 
 	screen_update_geometry(sc);
 
