@@ -1,4 +1,4 @@
-/*	$OpenBSD: wsudl_driver.c,v 1.9 2012/09/09 11:42:57 matthieu Exp $ */
+/*	$OpenBSD: wsudl_driver.c,v 1.10 2013/05/12 13:06:25 matthieu Exp $ */
 
 /*
  * Copyright (c) 2009 Marcus Glocker <mglocker@openbsd.org>
@@ -70,7 +70,6 @@
 #include "xf86_OSproc.h"
 
 #include "mipointer.h"
-#include "mibstore.h"
 #include "micmap.h"
 #include "colormapst.h"
 #include "xf86cmap.h"
@@ -645,7 +644,6 @@ WsudlScreenInit(SCREEN_INIT_ARGS_DECL)
 	}
 
 	xf86SetBlackWhitePixels(pScreen);
-	miInitializeBackingStore(pScreen);
 	xf86SetBackingStore(pScreen);
 
 	/* software cursor */

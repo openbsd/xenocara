@@ -1168,7 +1168,6 @@ RivaScreenInit(SCREEN_INIT_ARGS_DECL)
     if (!pRiva->NoAccel)
 	RivaAccelInit(pScreen);
     
-    miInitializeBackingStore(pScreen);
     xf86SetBackingStore(pScreen);
     xf86SetSilkenMouse(pScreen);
 

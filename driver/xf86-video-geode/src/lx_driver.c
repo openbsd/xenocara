@@ -932,7 +932,6 @@ LXScreenInit(SCREEN_INIT_ARGS_DECL)
     if (!pGeode->NoAccel)
         pGeode->NoAccel = LXExaInit(pScrn) ? FALSE : TRUE;
 
-    miInitializeBackingStore(pScrn);
     xf86SetBackingStore(pScrn);
 
     /* Set up the soft cursor */

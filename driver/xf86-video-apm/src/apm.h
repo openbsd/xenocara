@@ -33,9 +33,6 @@
 /* All drivers initialising the SW cursor need this */
 #include "mipointer.h"
 
-/* All drivers implementing backing store need this */
-#include "mibstore.h"
-
 /* I2C support */
 #include "xf86i2c.h"
 

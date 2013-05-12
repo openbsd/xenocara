@@ -680,7 +680,6 @@ VoodooScreenInit(SCREEN_INIT_ARGS_DECL)
   if(pVoo->Accel)
   	Voodoo2XAAInit(pScreen);
 
-  miInitializeBackingStore(pScreen);
   xf86SetBackingStore(pScreen);
   
 

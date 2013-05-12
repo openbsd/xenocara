@@ -2701,7 +2701,6 @@ Bool R128ScreenInit(SCREEN_INIT_ARGS_DECL)
     R128DGAInit(pScreen);
 
 				/* Backing store setup */
-    miInitializeBackingStore(pScreen);
     xf86SetBackingStore(pScreen);
 
 				/* Set Silken Mouse */

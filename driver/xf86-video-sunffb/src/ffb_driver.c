@@ -30,7 +30,6 @@
 #include "xf86.h"
 #include "xf86_OSproc.h"
 #include "mipointer.h"
-#include "mibstore.h"
 #include "micmap.h"
 #include "fb.h"
 
@@ -761,8 +760,6 @@ FFBScreenInit(int scrnIndex, ScreenPtr pScreen, int argc, char **argv)
 	xf86Msg(X_INFO, "%s: Using acceleration\n", pFfb->psdp->device);
     }
 
-
-    miInitializeBackingStore(pScreen);
     xf86SetBackingStore(pScreen);
     xf86SetSilkenMouse(pScreen);
 

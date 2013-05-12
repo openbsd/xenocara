@@ -1350,7 +1350,6 @@ GXScreenInit(SCREEN_INIT_ARGS_DECL)
     if (!pGeode->NoAccel)
         GXAccelInit(pScrn);
 
-    miInitializeBackingStore(pScrn);
     xf86SetBackingStore(pScrn);
 
     /* Set up the soft cursor */

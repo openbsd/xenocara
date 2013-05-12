@@ -49,9 +49,6 @@
 /* All drivers initialising the SW cursor need this */
 #include "mipointer.h"
 
-/* All drivers implementing backing store need this */
-#include "mibstore.h"
-
 /* Colormap handling */
 #include "micmap.h"
 #include "xf86cmap.h"
@@ -1083,7 +1080,6 @@ VESAScreenInit(SCREEN_INIT_ARGS_DECL)
     VESADGAInit(pScrn, pScreen);
 
     xf86SetBlackWhitePixels(pScreen);
-    miInitializeBackingStore(pScreen);
     xf86SetBackingStore(pScreen);
 
     /* software cursor */

@@ -1784,7 +1784,6 @@ ApmScreenInit(SCREEN_INIT_ARGS_DECL)
     }
 #endif
 
-    miInitializeBackingStore(pScreen);
     xf86SetBackingStore(pScreen);
     xf86SetSilkenMouse(pScreen);
 

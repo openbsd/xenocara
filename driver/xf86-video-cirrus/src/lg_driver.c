@@ -46,9 +46,6 @@
 /* need this for inputInfo */
 #include "inputstr.h"
 
-/* All drivers implementing backing store need this */
-#include "mibstore.h"
-
 #include "micmap.h"
 
 /* Needed by the Shadow Framebuffer */
@@ -1372,8 +1369,6 @@ LgScreenInit(SCREEN_INIT_ARGS_DECL)
 	/* must be after RGB ordering fixed */
 
 	fbPictureInit(pScreen, 0, 0);
-
-	miInitializeBackingStore(pScreen);
 
 	/*
 	 * Set initial black & white colourmap indices.

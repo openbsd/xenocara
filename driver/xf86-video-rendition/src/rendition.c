@@ -1173,7 +1173,6 @@ renditionScreenInit(SCREEN_INIT_ARGS_DECL)
     fbPictureInit (pScreen, 0, 0);
 
     xf86SetBlackWhitePixels(pScreen);
-    miInitializeBackingStore(pScreen);
    
     /*********************************************************/
     /* The actual setup of the driver-specific code          */

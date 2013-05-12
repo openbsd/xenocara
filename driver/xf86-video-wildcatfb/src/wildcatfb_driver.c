@@ -1,4 +1,4 @@
-/*	$OpenBSD: wildcatfb_driver.c,v 1.10 2012/09/09 12:33:12 matthieu Exp $	*/
+/*	$OpenBSD: wildcatfb_driver.c,v 1.11 2013/05/12 13:06:25 matthieu Exp $	*/
 
 /*
  * Copyright (c) 2009 Miodrag Vallat.
@@ -95,7 +95,6 @@
 #include "xf86_OSproc.h"
 
 #include "mipointer.h"
-#include "mibstore.h"
 #include "micmap.h"
 #include "colormapst.h"
 #include "xf86cmap.h"
@@ -700,7 +699,6 @@ WildcatFBScreenInit(SCREEN_INIT_ARGS_DECL)
 	}
 
 	xf86SetBlackWhitePixels(pScreen);
-	miInitializeBackingStore(pScreen);
 	xf86SetBackingStore(pScreen);
 
 	/* Software cursor. */

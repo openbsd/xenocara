@@ -3408,7 +3408,6 @@ static Bool SavageScreenInit(SCREEN_INIT_ARGS_DECL)
 	SavageInitAccel(pScreen);
     }
 
-    miInitializeBackingStore(pScreen);
     xf86SetBackingStore(pScreen);
 
     if( !psav->shadowFB && !psav->useEXA )

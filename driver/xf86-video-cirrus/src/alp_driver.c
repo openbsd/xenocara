@@ -39,9 +39,6 @@
 /* All drivers initialising the SW cursor need this */
 #include "mipointer.h"
 
-/* All drivers implementing backing store need this */
-#include "mibstore.h"
-
 #include "micmap.h"
 
 /* Needed by the Shadow Framebuffer */
@@ -1617,8 +1614,6 @@ AlpScreenInit(SCREEN_INIT_ARGS_DECL)
 	if (init_picture)
 		fbPictureInit (pScreen, 0, 0);
     
-	miInitializeBackingStore(pScreen);
-
 	/*
 	 * Set initial black & white colourmap indices.
 	 */

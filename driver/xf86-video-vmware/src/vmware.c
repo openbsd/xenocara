@@ -23,7 +23,6 @@ char rcsId_vmware[] =
 #include "xf86Pci.h"		/* pci */
 
 #include "mipointer.h"		/* sw cursor */
-#include "mibstore.h"		/* backing store */
 #include "micmap.h"		/* mi color map */
 #include "vgaHW.h"		/* VGA hardware */
 #include "fb.h"
@@ -1483,7 +1482,6 @@ VMWAREScreenInit(SCREEN_INIT_ARGS_DECL)
      * If backing store is to be supported (as is usually the case),
      * initialise it.
      */
-    miInitializeBackingStore(pScreen);
     xf86SetBackingStore(pScreen);
     xf86SetSilkenMouse(pScreen);
 

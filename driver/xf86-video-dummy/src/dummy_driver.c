@@ -14,9 +14,6 @@
 /* All drivers initialising the SW cursor need this */
 #include "mipointer.h"
 
-/* All drivers implementing backing store need this */
-#include "mibstore.h"
-
 /* All drivers using the mi colormap manipulation need this */
 #include "micmap.h"
 
@@ -617,7 +614,6 @@ DUMMYScreenInit(SCREEN_INIT_ARGS_DECL)
 		   , lines - pScrn->virtualY);
     }
 
-    miInitializeBackingStore(pScreen);
     xf86SetBackingStore(pScreen);
     xf86SetSilkenMouse(pScreen);
 	

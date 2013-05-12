@@ -3759,7 +3759,6 @@ Bool RADEONScreenInit(SCREEN_INIT_ARGS_DECL)
     /* Backing store setup */
     xf86DrvMsgVerb(pScrn->scrnIndex, X_INFO, RADEON_LOGLEVEL_DEBUG,
 		   "Initializing backing store\n");
-    miInitializeBackingStore(pScreen);
     xf86SetBackingStore(pScreen);
 
     /* DRI finalisation */

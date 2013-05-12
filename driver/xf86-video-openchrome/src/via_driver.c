@@ -2858,7 +2858,6 @@ VIAScreenInit(SCREEN_INIT_ARGS_DECL)
         viaInitAccel(pScreen);
     }
 
-    miInitializeBackingStore(pScreen);
     xf86SetBackingStore(pScreen);
 #if 0
     xf86SetSilkenMouse(pScreen);
