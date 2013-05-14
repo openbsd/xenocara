@@ -136,6 +136,7 @@ alternative to the default Mesa software rasterizer. For that, use
 the following command in the libGL build directory (the default is 
 /usr/xenocara/lib/libGL):
 
+ env XENOCARA_BUILD_GALLIUM=Yes make obj
  env XENOCARA_BUILD_GALLIUM=Yes make build
 
 This software rasertizer can also benefit from the LLVM infrastructure
@@ -143,6 +144,7 @@ and use a special pipe if it is built with LLVM support. You will need
 to have the llvm package installed and use the following command in the
 libGL build directory:
 
+ env XENOCARA_BUILD_GALLIUM=llvm make obj
  env XENOCARA_BUILD_GALLIUM=llvm make build
 
 Alternatively, you can also set XENOCARA_BUILD_GALLIUM in /etc/mk.conf
@@ -222,4 +224,4 @@ The core dump will be in /var/crash.
 See also <http://xorg.freedesktop.org/wiki/Development/Documentation/ServerDebugging>
 
 -- 
-$OpenBSD: README,v 1.32 2013/04/14 10:23:04 mpi Exp $
+$OpenBSD: README,v 1.33 2013/05/14 07:55:46 ajacoutot Exp $
