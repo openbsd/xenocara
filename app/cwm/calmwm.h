@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: calmwm.h,v 1.198 2013/05/11 22:01:07 okan Exp $
+ * $OpenBSD: calmwm.h,v 1.199 2013/05/14 12:35:56 okan Exp $
  */
 
 #ifndef _CALMWM_H_
@@ -447,7 +447,7 @@ void			 conf_mousebind(struct conf *, char *, char *);
 void			 conf_screen(struct screen_ctx *);
 void			 conf_ungrab(struct conf *, struct keybinding *);
 
-void			 font_draw(struct screen_ctx *, const char *, int,
+void			 font_draw(struct screen_ctx *, const char *,
 			     Drawable, int, int, int);
 void			 font_init(struct screen_ctx *, const char *,
 			     const char **);

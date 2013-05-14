@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: font.c,v 1.25 2013/05/02 17:25:15 okan Exp $
+ * $OpenBSD: font.c,v 1.26 2013/05/14 12:35:56 okan Exp $
  */
 
 #include <sys/param.h>
@@ -75,13 +75,10 @@ font_width(XftFont *xftfont, const char *text, int len)
 }
 
 void
-font_draw(struct screen_ctx *sc, const char *text, int len,
-    Drawable d, int active, int x, int y)
+font_draw(struct screen_ctx *sc, const char *text,
+    Drawable d, int color, int x, int y)
 {
-	int	 color;
-
-	color = active ? CWM_COLOR_MENU_FONT_SEL : CWM_COLOR_MENU_FONT;
 	XftDrawChange(sc->xftdraw, d);
 	XftDrawStringUtf8(sc->xftdraw, &sc->xftcolor[color], sc->xftfont, x, y,
-	    (const FcChar8*)text, len);
+	    (const FcChar8*)text, strlen(text));
 }
