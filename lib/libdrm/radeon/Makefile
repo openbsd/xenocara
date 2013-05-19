@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.2 2012/11/27 14:37:08 mpi Exp $
+# $OpenBSD: Makefile,v 1.3 2013/05/19 14:09:56 jsg Exp $
 .include <bsd.xconf.mk>
 
 LIB=		drm_radeon
@@ -16,7 +16,8 @@ INCS=		radeon_bo.h	\
 		radeon_cs_gem.h	\
 		radeon_bo_int.h	\
 		radeon_cs_int.h \
-		r600_pci_ids.h
+		r600_pci_ids.h \
+		radeon_surface.h
 
 SRCS=		radeon_bo_gem.c		\
 		radeon_cs_gem.c		\
