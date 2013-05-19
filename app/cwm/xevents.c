@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: xevents.c,v 1.77 2013/05/19 17:01:29 okan Exp $
+ * $OpenBSD: xevents.c,v 1.78 2013/05/19 17:03:55 okan Exp $
  */
 
 /*
@@ -340,16 +340,13 @@ static void
 xev_handle_clientmessage(XEvent *ee)
 {
 	XClientMessageEvent	*e = &ee->xclient;
-	Atom			 xa_wm_change_state;
 	struct client_ctx	*cc;
-
-	xa_wm_change_state = XInternAtom(X_Dpy, "WM_CHANGE_STATE", False);
 
 	if ((cc = client_find(e->window)) == NULL)
 		return;
 
-	if (e->message_type == xa_wm_change_state && e->format == 32 &&
-	    e->data.l[0] == IconicState)
+	if (e->message_type == cwmh[WM_CHANGE_STATE].atom &&
+	    e->format == 32 && e->data.l[0] == IconicState)
 		client_hide(cc);
 }
 

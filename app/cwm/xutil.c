@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: xutil.c,v 1.59 2013/05/10 16:32:48 okan Exp $
+ * $OpenBSD: xutil.c,v 1.60 2013/05/19 17:03:55 okan Exp $
  */
 
 #include <sys/param.h>
@@ -239,6 +239,7 @@ struct atom_ctx cwmh[CWMH_NITEMS] = {
 	{"WM_PROTOCOLS",		None},
 	{"_MOTIF_WM_HINTS",		None},
 	{"UTF8_STRING",			None},
+	{"WM_CHANGE_STATE",		None},
 };
 struct atom_ctx ewmh[EWMH_NITEMS] = {
 	{"_NET_SUPPORTED",		None},
