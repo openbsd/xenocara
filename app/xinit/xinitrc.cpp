@@ -1,5 +1,5 @@
 XCOMM!SHELL_CMD
-XCOMM $OpenBSD: xinitrc.cpp,v 1.9 2013/05/03 05:57:05 ajacoutot Exp $
+XCOMM $OpenBSD: xinitrc.cpp,v 1.10 2013/05/19 07:22:53 ajacoutot Exp $
 
 userresources=$HOME/.Xresources
 usermodmap=$HOME/.Xmodmap
@@ -45,10 +45,13 @@ id1=$HOME/.ssh/identity
 id2=$HOME/.ssh/id_dsa
 id3=$HOME/.ssh/id_rsa
 id4=$HOME/.ssh/id_ecdsa
-if [ -x /usr/bin/ssh-agent ] && [ -f $id1 -o -f $id2 -o -f $id3 -o -f $id4 ];
+if [ -z "$SSH_AGENT_PID" ];
 then
-	eval `ssh-agent -s`
-	ssh-add < /dev/null
+	if [ -x /usr/bin/ssh-agent ] && [ -f $id1 -o -f $id2 -o -f $id3 -o -f $id4 ];
+	then
+		eval `ssh-agent -s`
+		ssh-add < /dev/null
+	fi
 fi
 
 XCOMM if dbus is installed, start its daemon
