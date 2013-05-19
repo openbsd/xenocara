@@ -180,8 +180,14 @@ ProcXISelectEvents(ClientPtr client)
                     if (CLIENT_ID(iclient->resource) == client->index)
                         continue;
 
-                    dixLookupDevice(&dummy, evmask->deviceid, serverClient,
-                                    DixReadAccess);
+                    if (evmask->deviceid == XIAllDevices)
+                        dummy = inputInfo.all_devices;
+                    else if (evmask->deviceid == XIAllMasterDevices)
+                        dummy = inputInfo.all_master_devices;
+                    else
+                        dixLookupDevice(&dummy, evmask->deviceid, serverClient,
+                                        DixReadAccess);
+
                     if (!dummy)
                         return BadImplementation;       /* this shouldn't happen */
 
