@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: font.c,v 1.27 2013/05/19 23:09:59 okan Exp $
+ * $OpenBSD: font.c,v 1.28 2013/05/19 23:16:29 okan Exp $
  */
 
 #include <sys/param.h>
@@ -29,19 +29,6 @@
 #include <unistd.h>
 
 #include "calmwm.h"
-
-void
-font_init(struct screen_ctx *sc, const char *name)
-{
-	sc->xftdraw = XftDrawCreate(X_Dpy, sc->rootwin,
-	    sc->visual, sc->colormap);
-	if (sc->xftdraw == NULL)
-		errx(1, "XftDrawCreate");
-
-	sc->xftfont = XftFontOpenName(X_Dpy, sc->which, name);
-	if (sc->xftfont == NULL)
-		errx(1, "XftFontOpenName");
-}
 
 int
 font_width(XftFont *xftfont, const char *text, int len)
