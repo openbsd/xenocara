@@ -1,4 +1,4 @@
-/*	$OpenBSD: parse.y,v 1.41 2013/05/06 19:09:19 okan Exp $ */
+/*	$OpenBSD: parse.y,v 1.42 2013/05/19 23:09:59 okan Exp $ */
 
 /*
  * Copyright (c) 2002, 2003, 2004 Henning Brauer <henning@openbsd.org>
@@ -198,20 +198,20 @@ colors		: ACTIVEBORDER STRING {
 			conf->color[CWM_COLOR_BORDER_UNGROUP] = $2;
 		}
 		| MENUBG STRING {
-			free(conf->menucolor[CWM_COLOR_MENU_BG]);
-			conf->menucolor[CWM_COLOR_MENU_BG] = $2;
+			free(conf->color[CWM_COLOR_MENU_BG]);
+			conf->color[CWM_COLOR_MENU_BG] = $2;
 		}
 		| MENUFG STRING {
-			free(conf->menucolor[CWM_COLOR_MENU_FG]);
-			conf->menucolor[CWM_COLOR_MENU_FG] = $2;
+			free(conf->color[CWM_COLOR_MENU_FG]);
+			conf->color[CWM_COLOR_MENU_FG] = $2;
 		}
 		| FONTCOLOR STRING {
-			free(conf->menucolor[CWM_COLOR_MENU_FONT]);
-			conf->menucolor[CWM_COLOR_MENU_FONT] = $2;
+			free(conf->color[CWM_COLOR_MENU_FONT]);
+			conf->color[CWM_COLOR_MENU_FONT] = $2;
 		}
 		| FONTSELCOLOR STRING {
-			free(conf->menucolor[CWM_COLOR_MENU_FONT_SEL]);
-			conf->menucolor[CWM_COLOR_MENU_FONT_SEL] = $2;
+			free(conf->color[CWM_COLOR_MENU_FONT_SEL]);
+			conf->color[CWM_COLOR_MENU_FONT_SEL] = $2;
 		}
 		;
 %%
@@ -589,11 +589,8 @@ parse_config(const char *filename, struct conf *xconf)
 		(void)strlcpy(xconf->lockpath, conf->lockpath,
 		    sizeof(xconf->lockpath));
 
-		for (i = 0; i < CWM_COLOR_BORDER_MAX; i++)
+		for (i = 0; i < CWM_COLOR_MAX; i++)
 			xconf->color[i] = conf->color[i];
-
-		for (i = 0; i < CWM_COLOR_MENU_MAX; i++)
-			xconf->menucolor[i] = conf->menucolor[i];
 
 		xconf->font = conf->font;
 	}
