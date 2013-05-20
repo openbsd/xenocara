@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: calmwm.h,v 1.206 2013/05/20 20:21:04 okan Exp $
+ * $OpenBSD: calmwm.h,v 1.207 2013/05/20 21:13:58 okan Exp $
  */
 
 #ifndef _CALMWM_H_
@@ -481,6 +481,9 @@ void			 xu_ewmh_net_desktop_names(struct screen_ctx *, char *,
 			     int);
 
 void			 xu_ewmh_net_wm_desktop(struct client_ctx *);
+Atom 			*xu_ewmh_get_net_wm_state(struct client_ctx *, int *);
+void 			 xu_ewmh_set_net_wm_state(struct client_ctx *);
+void 			 xu_ewmh_restore_net_wm_state(struct client_ctx *);
 
 void			 u_exec(char *);
 void			 u_spawn(char *);
@@ -534,6 +537,10 @@ enum {
 	_NET_WM_NAME,
 	_NET_WM_DESKTOP,
 	_NET_CLOSE_WINDOW,
+	_NET_WM_STATE,
+#define	_NET_WM_STATES_NITEMS	2
+	_NET_WM_STATE_MAXIMIZED_VERT,
+	_NET_WM_STATE_MAXIMIZED_HORZ,
 	EWMH_NITEMS
 };
 struct atom_ctx {
