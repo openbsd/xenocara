@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: screen.c,v 1.50 2013/05/11 22:01:07 okan Exp $
+ * $OpenBSD: screen.c,v 1.51 2013/05/20 20:21:04 okan Exp $
  */
 
 #include <sys/param.h>
@@ -56,7 +56,6 @@ screen_init(int which)
 	TAILQ_INIT(&sc->mruq);
 
 	group_init(sc);
-	menu_init(sc);
 
 	rootattr.cursor = Cursor_normal;
 	rootattr.event_mask = SubstructureRedirectMask|SubstructureNotifyMask|

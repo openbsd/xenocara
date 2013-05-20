@@ -16,7 +16,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: mousefunc.c,v 1.51 2013/05/19 23:38:21 okan Exp $
+ * $OpenBSD: mousefunc.c,v 1.52 2013/05/20 20:21:04 okan Exp $
  */
 
 #include <sys/param.h>
@@ -63,7 +63,7 @@ mousefunc_sweep_draw(struct client_ctx *cc)
 	XMapWindow(X_Dpy, sc->menuwin);
 	XClearWindow(X_Dpy, sc->menuwin);
 
-	xu_xft_draw(sc, asize, sc->menuwin, CWM_COLOR_MENU_FONT,
+	xu_xft_draw(sc, asize, CWM_COLOR_MENU_FONT,
 	    0, sc->xftfont->ascent + 1);
 }
 

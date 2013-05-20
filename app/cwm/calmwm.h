@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: calmwm.h,v 1.205 2013/05/19 23:38:21 okan Exp $
+ * $OpenBSD: calmwm.h,v 1.206 2013/05/20 20:21:04 okan Exp $
  */
 
 #ifndef _CALMWM_H_
@@ -426,7 +426,6 @@ struct menu  		*menu_filter(struct screen_ctx *, struct menu_q *,
 			     char *, char *, int,
 			     void (*)(struct menu_q *, struct menu_q *, char *),
 			     void (*)(struct menu *, int));
-void			 menu_init(struct screen_ctx *);
 void			 menuq_clear(struct menu_q *);
 
 int			 parse_config(const char *, struct conf *);
@@ -463,7 +462,7 @@ void			 xu_ptr_ungrab(void);
 void			 xu_sendmsg(Window, Atom, long);
 void			 xu_set_wm_state(Window win, int);
 void			 xu_xft_draw(struct screen_ctx *, const char *,
-			     Drawable, int, int, int);
+			     int, int, int);
 int			 xu_xft_width(XftFont *, const char *, int);
 void 			 xu_xorcolor(XftColor, XftColor, XftColor *);
 
