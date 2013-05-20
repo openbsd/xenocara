@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: xevents.c,v 1.79 2013/05/19 17:05:52 okan Exp $
+ * $OpenBSD: xevents.c,v 1.80 2013/05/20 21:19:15 okan Exp $
  */
 
 /*
@@ -340,7 +340,7 @@ static void
 xev_handle_clientmessage(XEvent *ee)
 {
 	XClientMessageEvent	*e = &ee->xclient;
-	struct client_ctx	*cc;
+	struct client_ctx	*cc, *old_cc;
 
 	if ((cc = client_find(e->window)) == NULL)
 		return;
@@ -351,6 +351,14 @@ xev_handle_clientmessage(XEvent *ee)
 
 	if (e->message_type == ewmh[_NET_CLOSE_WINDOW].atom)
 		client_send_delete(cc);
+
+	if (e->message_type == ewmh[_NET_ACTIVE_WINDOW].atom &&
+	    e->format == 32) {                                                
+		old_cc = client_current();
+		if (old_cc)
+			client_ptrsave(old_cc);
+		client_ptrwarp(cc);
+	}                              
 }
 
 static void
