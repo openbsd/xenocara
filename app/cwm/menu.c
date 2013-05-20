@@ -16,7 +16,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: menu.c,v 1.64 2013/05/20 20:21:04 okan Exp $
+ * $OpenBSD: menu.c,v 1.65 2013/05/20 21:32:00 okan Exp $
  */
 
 #include <sys/param.h>
@@ -451,7 +451,7 @@ menu_draw_entry(struct menu_ctx *mc, struct menu_q *resultq,
 		return;
 
 	color = active ? CWM_COLOR_MENU_FG : CWM_COLOR_MENU_BG;
-	text = mi->print[0] != '\0' ?  mi->print : mi->text;
+	text = mi->print[0] != '\0' ? mi->print : mi->text;
 	XftDrawRect(sc->xftdraw, &sc->xftcolor[color], 0,
 	    (sc->xftfont->height + 1) * entry, mc->width,
 	    (sc->xftfont->height + 1) + sc->xftfont->descent);
