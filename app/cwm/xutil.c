@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: xutil.c,v 1.65 2013/05/20 21:13:58 okan Exp $
+ * $OpenBSD: xutil.c,v 1.66 2013/05/21 00:29:20 okan Exp $
  */
 
 #include <sys/param.h>
@@ -437,6 +437,43 @@ xu_ewmh_get_net_wm_state(struct client_ctx *cc, int *n)
 	XFree((char *)p);
 
 	return (state);
+}
+
+void
+xu_ewmh_handle_net_wm_state_msg(struct client_ctx *cc, int action,
+    Atom first, Atom second)
+{
+	int i;
+	static struct handlers {
+		int atom;
+		int property;
+		void (*toggle)(struct client_ctx *);
+	} handlers[] = {
+		{ _NET_WM_STATE_MAXIMIZED_VERT,
+			CLIENT_VMAXIMIZED,
+			client_vmaximize },
+		{ _NET_WM_STATE_MAXIMIZED_HORZ,
+			CLIENT_HMAXIMIZED,
+			client_hmaximize },
+	};
+
+	for (i = 0; i < nitems(handlers); i++) {
+		if (first != ewmh[handlers[i].atom].atom &&
+		    second != ewmh[handlers[i].atom].atom)
+			continue;
+		switch (action) {
+		case _NET_WM_STATE_ADD:
+			if ((cc->flags & handlers[i].property) == 0)
+				handlers[i].toggle(cc);
+			break;
+		case _NET_WM_STATE_REMOVE:
+			if (cc->flags & handlers[i].property)
+				handlers[i].toggle(cc);
+			break;
+		case _NET_WM_STATE_TOGGLE:
+			handlers[i].toggle(cc);
+		}
+	}
 }
 
 void
