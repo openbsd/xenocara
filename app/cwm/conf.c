@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: conf.c,v 1.131 2013/05/22 16:54:09 okan Exp $
+ * $OpenBSD: conf.c,v 1.132 2013/05/22 20:23:21 okan Exp $
  */
 
 #include <sys/param.h>
@@ -530,7 +530,6 @@ conf_bindname(struct conf *c, char *name, char *binding)
 		current_binding->flags = name_to_kbfunc[i].flags;
 		current_binding->argument = name_to_kbfunc[i].argument;
 		current_binding->argtype |= ARG_INT;
-		conf_grab(c, current_binding);
 		TAILQ_INSERT_TAIL(&c->keybindingq, current_binding, entry);
 		return;
 	}
@@ -539,7 +538,6 @@ conf_bindname(struct conf *c, char *name, char *binding)
 	current_binding->flags = 0;
 	current_binding->argument.c = xstrdup(binding);
 	current_binding->argtype |= ARG_CHAR;
-	conf_grab(c, current_binding);
 	TAILQ_INSERT_TAIL(&c->keybindingq, current_binding, entry);
 }
 
@@ -555,7 +553,6 @@ conf_unbind(struct conf *c, struct keybinding *unbind)
 		if ((key->keycode != 0 && key->keysym == NoSymbol &&
 		    key->keycode == unbind->keycode) ||
 		    key->keysym == unbind->keysym) {
-			conf_ungrab(c, key);
 			TAILQ_REMOVE(&c->keybindingq, key, entry);
 			if (key->argtype & ARG_CHAR)
 				free(key->argument.c);
