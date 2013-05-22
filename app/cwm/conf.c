@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: conf.c,v 1.130 2013/05/22 16:32:15 okan Exp $
+ * $OpenBSD: conf.c,v 1.131 2013/05/22 16:54:09 okan Exp $
  */
 
 #include <sys/param.h>
@@ -98,8 +98,9 @@ static char *color_binds[CWM_COLOR_MAX] = {
 void
 conf_screen(struct screen_ctx *sc)
 {
-	int		 i;
-	XftColor	 xc;
+	struct keybinding	*kb;
+	int			 i;
+	XftColor		 xc;
 
 	sc->gap = Conf.gap;
 
@@ -139,6 +140,9 @@ conf_screen(struct screen_ctx *sc)
 	    sc->visual, sc->colormap);
 	if (sc->xftdraw == NULL)
 		errx(1, "XftDrawCreate");
+
+	TAILQ_FOREACH(kb, &Conf.keybindingq, entry)
+		xu_key_grab(sc->rootwin, kb->modmask, kb->keysym);
 }
 
 static struct {

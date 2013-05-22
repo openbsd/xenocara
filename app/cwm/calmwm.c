@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: calmwm.c,v 1.75 2013/05/14 13:39:53 okan Exp $
+ * $OpenBSD: calmwm.c,v 1.76 2013/05/22 16:54:09 okan Exp $
  */
 
 #include <sys/param.h>
@@ -144,7 +144,6 @@ dpy_init(const char *dpyname)
 static void
 x_setup(void)
 {
-	struct keybinding	*kb;
 	int			 i;
 
 	Cursor_default = XCreateFontCursor(X_Dpy, XC_X_cursor);
@@ -155,13 +154,6 @@ x_setup(void)
 
 	for (i = 0; i < ScreenCount(X_Dpy); i++)
 		screen_init(i);
-
-	/*
-	 * XXX key grabs weren't done before, since Screenq was empty,
-	 * do them here for now (this needs changing).
-	 */
-	TAILQ_FOREACH(kb, &Conf.keybindingq, entry)
-		conf_grab(&Conf, kb);
 }
 
 static void
