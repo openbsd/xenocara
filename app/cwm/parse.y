@@ -1,4 +1,4 @@
-/*	$OpenBSD: parse.y,v 1.43 2013/05/22 13:02:14 okan Exp $ */
+/*	$OpenBSD: parse.y,v 1.44 2013/05/22 16:32:15 okan Exp $ */
 
 /*
  * Copyright (c) 2002, 2003, 2004 Henning Brauer <henning@openbsd.org>
@@ -171,7 +171,12 @@ main		: FONTNAME STRING		{
 			conf->gap.right = $5;
 		}
 		| MOUSEBIND STRING string	{
-			conf_mousebind(conf, $2, $3);
+			if (!conf_mousebind(conf, $2, $3)) {
+				yyerror("invalid mousebind: %s %s", $2, $3);
+				free($2);
+				free($3);
+				YYERROR;
+			}
 			free($2);
 			free($3);
 		}
