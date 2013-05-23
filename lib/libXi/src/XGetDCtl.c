@@ -61,6 +61,7 @@ SOFTWARE.
 #include <X11/extensions/XInput.h>
 #include <X11/extensions/extutil.h>
 #include "XIint.h"
+#include <limits.h>
 
 XDeviceControl *
 XGetDeviceControl(
@@ -68,8 +69,6 @@ XGetDeviceControl(
     XDevice		*dev,
     int			 control)
 {
-    int size = 0;
-    int nbytes, i;
     XDeviceControl *Device = NULL;
     XDeviceControl *Sav = NULL;
     xDeviceState *d = NULL;
@@ -92,10 +91,14 @@ XGetDeviceControl(
 	goto out;
 
     if (rep.length > 0) {
-	nbytes = (long)rep.length << 2;
-	d = (xDeviceState *) Xmalloc((unsigned)nbytes);
+	unsigned long nbytes;
+	size_t size = 0;
+	if (rep.length < (INT_MAX >> 2)) {
+	    nbytes = (unsigned long) rep.length << 2;
+	    d = Xmalloc(nbytes);
+	}
 	if (!d) {
-	    _XEatData(dpy, (unsigned long)nbytes);
+	    _XEatDataWords(dpy, rep.length);
 	    goto out;
 	}
 	sav = d;
@@ -111,33 +114,46 @@ XGetDeviceControl(
 	case DEVICE_RESOLUTION:
 	{
 	    xDeviceResolutionState *r;
+	    size_t val_size;
 
 	    r = (xDeviceResolutionState *) d;
-	    size += sizeof(XDeviceResolutionState) +
-		(3 * sizeof(int) * r->num_valuators);
+	    if (r->num_valuators >= (INT_MAX / (3 * sizeof(int))))
+		goto out;
+	    val_size = 3 * sizeof(int) * r->num_valuators;
+	    if ((sizeof(xDeviceResolutionState) + val_size) > nbytes)
+		goto out;
+	    size += sizeof(XDeviceResolutionState) + val_size;
 	    break;
 	}
         case DEVICE_ABS_CALIB:
         {
+            if (sizeof(xDeviceAbsCalibState) > nbytes)
+                goto out;
             size += sizeof(XDeviceAbsCalibState);
             break;
         }
         case DEVICE_ABS_AREA:
         {
+            if (sizeof(xDeviceAbsAreaState) > nbytes)
+                goto out;
             size += sizeof(XDeviceAbsAreaState);
             break;
         }
         case DEVICE_CORE:
         {
+            if (sizeof(xDeviceCoreState) > nbytes)
+                goto out;
             size += sizeof(XDeviceCoreState);
             break;
         }
 	default:
+	    if (d->length > nbytes)
+		goto out;
 	    size += d->length;
 	    break;
 	}
 
-	Device = (XDeviceControl *) Xmalloc((unsigned)size);
+	Device = Xmalloc(size);
 	if (!Device)
 	    goto out;
 
@@ -150,6 +166,7 @@ XGetDeviceControl(
 	    int *iptr, *iptr2;
 	    xDeviceResolutionState *r;
 	    XDeviceResolutionState *R;
+	    unsigned int i;
 
 	    r = (xDeviceResolutionState *) d;
 	    R = (XDeviceResolutionState *) Device;

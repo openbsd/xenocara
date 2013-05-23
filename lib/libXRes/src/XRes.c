@@ -12,7 +12,18 @@
 #include <X11/extensions/extutil.h>
 #include <X11/extensions/XResproto.h>
 #include <X11/extensions/XRes.h>
+#include <limits.h>
 
+#ifndef HAVE__XEATDATAWORDS
+static inline void _XEatDataWords(Display *dpy, unsigned long n)
+{
+# ifndef LONG64
+    if (n >= (ULONG_MAX >> 2))
+        _XIOError(dpy);
+# endif
+    _XEatData (dpy, n << 2);
+}
+#endif
 
 static XExtensionInfo _xres_ext_info_data;
 static XExtensionInfo *xres_ext_info = &_xres_ext_info_data;
@@ -118,7 +129,12 @@ Status XResQueryClients (
     }
 
     if(rep.num_clients) {
-        if((clnts = Xmalloc(sizeof(XResClient) * rep.num_clients))) {
+        if (rep.num_clients < (INT_MAX / sizeof(XResClient)))
+            clnts = Xmalloc(sizeof(XResClient) * rep.num_clients);
+        else
+            clnts = NULL;
+
+        if (clnts != NULL) {
             xXResClient scratch;
             int i;
 
@@ -131,7 +147,7 @@ Status XResQueryClients (
             *num_clients = rep.num_clients;
             result = 1;
         } else {
-            _XEatData(dpy, rep.length << 2);
+            _XEatDataWords(dpy, rep.length);
         }
     }
 
@@ -170,7 +186,12 @@ Status XResQueryClientResources (
     }
 
     if(rep.num_types) {
-        if((typs = Xmalloc(sizeof(XResType) * rep.num_types))) {
+        if (rep.num_types < (INT_MAX / sizeof(XResType)))
+            typs = Xmalloc(sizeof(XResType) * rep.num_types);
+        else
+            typs = NULL;
+
+        if (typs != NULL) {
             xXResType scratch;
             int i;
 
@@ -183,7 +204,7 @@ Status XResQueryClientResources (
             *num_types = rep.num_types;
             result = 1;
         } else {
-            _XEatData(dpy, rep.length << 2);
+            _XEatDataWords(dpy, rep.length);
         }
     }
 

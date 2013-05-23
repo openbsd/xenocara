@@ -74,7 +74,7 @@ XRRGetCrtcInfo (Display *dpy, XRRScreenResources *resources, RRCrtc crtc)
 
     xci = (XRRCrtcInfo *) Xmalloc(rbytes);
     if (xci == NULL) {
-	_XEatData (dpy, (unsigned long) nbytes);
+	_XEatDataWords (dpy, rep.length);
 	UnlockDisplay (dpy);
 	SyncHandle ();
 	return NULL;
@@ -203,7 +203,7 @@ XRRGetCrtcGamma (Display *dpy, RRCrtc crtc)
 
     if (!crtc_gamma)
     {
-	_XEatData (dpy, (unsigned long) nbytes);
+	_XEatDataWords (dpy, rep.length);
 	goto out;
     }
     _XRead16 (dpy, crtc_gamma->red, rep.size * 2);
@@ -397,7 +397,7 @@ XRRGetCrtcTransform (Display	*dpy,
 	    int extraBytes = rep.length * 4 - CrtcTransformExtra;
 	    extra = Xmalloc (extraBytes);
 	    if (!extra) {
-		_XEatData (dpy, extraBytes);
+		_XEatDataWords (dpy, rep.length - (CrtcTransformExtra >> 2));
 		UnlockDisplay (dpy);
 		SyncHandle ();
 		return False;

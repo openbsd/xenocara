@@ -101,7 +101,7 @@ XOpenDevice(
 	if (rlen - dlen > 0)
 	    _XEatData(dpy, (unsigned long)rlen - dlen);
     } else
-	_XEatData(dpy, (unsigned long)rlen);
+	_XEatDataWords(dpy, rep.length);
 
     UnlockDisplay(dpy);
     SyncHandle();

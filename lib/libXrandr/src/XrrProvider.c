@@ -67,7 +67,7 @@ XRRGetProviderResources(Display *dpy, Window window)
     xrpr = (XRRProviderResources *) Xmalloc(rbytes);
 
     if (xrpr == NULL) {
-       _XEatData (dpy, (unsigned long) nbytes);
+       _XEatDataWords (dpy, rep.length);
        UnlockDisplay (dpy);
        SyncHandle ();
        return NULL;
@@ -136,7 +136,7 @@ XRRGetProviderInfo(Display *dpy, XRRScreenResources *resources, RRProvider provi
 
     xpi = (XRRProviderInfo *)Xmalloc(rbytes);
     if (xpi == NULL) {
-	_XEatData (dpy, (unsigned long) nbytes);
+	_XEatDataWords (dpy, rep.length - (ProviderInfoExtra >> 2));
 	UnlockDisplay (dpy);
 	SyncHandle ();
 	return NULL;

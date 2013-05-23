@@ -1,5 +1,5 @@
 dnl 
-dnl  $Id: configure.ac,v 1.5 2013/03/09 16:34:37 matthieu Exp $
+dnl  $Id: configure.ac,v 1.6 2013/05/23 22:42:10 matthieu Exp $
 #
 #  Copyright © 2003 Keith Packard, Noah Levitt
 #
@@ -57,6 +57,12 @@ AC_SUBST(RANDR_VERSION)
 
 # Obtain compiler/linker options for depedencies
 PKG_CHECK_MODULES(RANDR, x11 randrproto >= $RANDR_VERSION xext xextproto xrender renderproto)
+
+# Check for _XEatDataWords function that may be patched into older Xlib release
+SAVE_LIBS="$LIBS"
+LIBS="$RANDR_LIBS"
+AC_CHECK_FUNCS([_XEatDataWords])
+LIBS="$SAVE_LIBS"
 
 AC_CONFIG_FILES([Makefile
 		src/Makefile

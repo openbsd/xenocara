@@ -145,12 +145,12 @@ am__libX11_la_SOURCES_DIST = AllCells.c AllowEv.c AllPlanes.c \
 	LookupCol.c LowerWin.c Macros.c MapRaised.c MapSubs.c \
 	MapWindow.c MaskEvent.c Misc.c ModMap.c MoveWin.c NextEvent.c \
 	OCWrap.c OMWrap.c OpenDis.c ParseCmd.c ParseCol.c ParseGeom.c \
-	PeekEvent.c PeekIfEv.c Pending.c PixFormats.c PmapBgnd.c \
-	PmapBord.c poly.h PolyReg.c PolyTxt16.c PolyTxt.c PropAlloc.c \
-	PutBEvent.c PutImage.c Quarks.c QuBest.c QuColor.c QuColors.c \
-	QuCurShp.c QuExt.c QuKeybd.c QuPntr.c QuStipShp.c QuTextE16.c \
-	QuTextExt.c QuTileShp.c QuTree.c RaiseWin.c RdBitF.c \
-	RecolorC.c ReconfWin.c ReconfWM.c Region.c RegstFlt.c \
+	pathmax.h PeekEvent.c PeekIfEv.c Pending.c PixFormats.c \
+	PmapBgnd.c PmapBord.c poly.h PolyReg.c PolyTxt16.c PolyTxt.c \
+	PropAlloc.c PutBEvent.c PutImage.c Quarks.c QuBest.c QuColor.c \
+	QuColors.c QuCurShp.c QuExt.c QuKeybd.c QuPntr.c QuStipShp.c \
+	QuTextE16.c QuTextExt.c QuTileShp.c QuTree.c RaiseWin.c \
+	RdBitF.c RecolorC.c ReconfWin.c ReconfWM.c Region.c RegstFlt.c \
 	RepWindow.c RestackWs.c RotProp.c ScrResStr.c SelInput.c \
 	SendEvent.c SetBack.c SetClMask.c SetClOrig.c SetCRects.c \
 	SetDashes.c SetFont.c SetFore.c SetFPath.c SetFunc.c \
@@ -566,12 +566,12 @@ libX11_la_SOURCES = AllCells.c AllowEv.c AllPlanes.c AutoRep.c \
 	LookupCol.c LowerWin.c Macros.c MapRaised.c MapSubs.c \
 	MapWindow.c MaskEvent.c Misc.c ModMap.c MoveWin.c NextEvent.c \
 	OCWrap.c OMWrap.c OpenDis.c ParseCmd.c ParseCol.c ParseGeom.c \
-	PeekEvent.c PeekIfEv.c Pending.c PixFormats.c PmapBgnd.c \
-	PmapBord.c poly.h PolyReg.c PolyTxt16.c PolyTxt.c PropAlloc.c \
-	PutBEvent.c PutImage.c Quarks.c QuBest.c QuColor.c QuColors.c \
-	QuCurShp.c QuExt.c QuKeybd.c QuPntr.c QuStipShp.c QuTextE16.c \
-	QuTextExt.c QuTileShp.c QuTree.c RaiseWin.c RdBitF.c \
-	RecolorC.c ReconfWin.c ReconfWM.c Region.c RegstFlt.c \
+	pathmax.h PeekEvent.c PeekIfEv.c Pending.c PixFormats.c \
+	PmapBgnd.c PmapBord.c poly.h PolyReg.c PolyTxt16.c PolyTxt.c \
+	PropAlloc.c PutBEvent.c PutImage.c Quarks.c QuBest.c QuColor.c \
+	QuColors.c QuCurShp.c QuExt.c QuKeybd.c QuPntr.c QuStipShp.c \
+	QuTextE16.c QuTextExt.c QuTileShp.c QuTree.c RaiseWin.c \
+	RdBitF.c RecolorC.c ReconfWin.c ReconfWM.c Region.c RegstFlt.c \
 	RepWindow.c RestackWs.c RotProp.c ScrResStr.c SelInput.c \
 	SendEvent.c SetBack.c SetClMask.c SetClOrig.c SetCRects.c \
 	SetDashes.c SetFont.c SetFore.c SetFPath.c SetFunc.c \

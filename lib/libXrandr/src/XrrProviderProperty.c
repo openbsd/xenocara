@@ -31,6 +31,7 @@
 #include <X11/extensions/render.h>
 #include <X11/extensions/Xrender.h>
 #include "Xrandrint.h"
+#include <limits.h>
 
 Atom *
 XRRListProviderProperties (Display *dpy, RRProvider provider, int *nprop)
@@ -62,7 +63,7 @@ XRRListProviderProperties (Display *dpy, RRProvider provider, int *nprop)
 
 	props = (Atom *) Xmalloc (rbytes);
 	if (props == NULL) {
-	    _XEatData (dpy, nbytes);
+	    _XEatDataWords (dpy, rep.length);
 	    UnlockDisplay (dpy);
 	    SyncHandle ();
 	    *nprop = 0;
@@ -84,7 +85,7 @@ XRRQueryProviderProperty (Display *dpy, RRProvider provider, Atom property)
     XExtDisplayInfo		*info = XRRFindDisplay(dpy);
     xRRQueryProviderPropertyReply rep;
     xRRQueryProviderPropertyReq	*req;
-    int				rbytes, nbytes;
+    unsigned int		rbytes, nbytes;
     XRRPropertyInfo		*prop_info;
 
     RRCheckExtension (dpy, info, NULL);
@@ -102,12 +103,16 @@ XRRQueryProviderProperty (Display *dpy, RRProvider provider, Atom property)
 	return NULL;
     }
 
-    rbytes = sizeof (XRRPropertyInfo) + rep.length * sizeof (long);
-    nbytes = rep.length << 2;
+    if (rep.length < ((INT_MAX / sizeof(long)) - sizeof (XRRPropertyInfo))) {
+        rbytes = sizeof (XRRPropertyInfo) + (rep.length * sizeof (long));
+        nbytes = rep.length << 2;
 
-    prop_info = (XRRPropertyInfo *) Xmalloc (rbytes);
+        prop_info = Xmalloc (rbytes);
+    } else
+        prop_info = NULL;
+
     if (prop_info == NULL) {
-	_XEatData (dpy, nbytes);
+	_XEatDataWords (dpy, rep.length);
 	UnlockDisplay (dpy);
 	SyncHandle ();
 	return NULL;
@@ -252,7 +257,14 @@ XRRGetProviderProperty (Display *dpy, RRProvider provider,
     XExtDisplayInfo		*info = XRRFindDisplay(dpy);
     xRRGetProviderPropertyReply	rep;
     xRRGetProviderPropertyReq	*req;
-    long    			nbytes, rbytes;
+    unsigned long		nbytes, rbytes;
+
+    /* Always initialize return values, in case callers fail to initialize
+       them and fail to check the return code for an error. */
+    *actual_type = None;
+    *actual_format = 0;
+    *nitems = *bytes_after = 0L;
+    *prop = (unsigned char *) NULL;
 
     RRCheckExtension (dpy, info, 1);
 
@@ -275,36 +287,41 @@ XRRGetProviderProperty (Display *dpy, RRProvider provider,
 	return ((xError *)&rep)->errorCode;
     }
 
-    *prop = (unsigned char *) NULL;
     if (rep.propertyType != None) {
+	int format = rep.format;
+
+	/*
+	 * Protect against both integer overflow and just plain oversized
+	 * memory allocation - no server should ever return this many props.
+	 */
+	if (rep.nItems >= (INT_MAX >> 4))
+	    format = -1;        /* fall through to default error case */
+
 	/*
 	 * One extra byte is malloced than is needed to contain the property
 	 * data, but this last byte is null terminated and convenient for
 	 * returning string properties, so the client doesn't then have to
 	 * recopy the string to make it null terminated.
 	 */
-	switch (rep.format) {
+	switch (format) {
 	case 8:
 	    nbytes = rep.nItems;
 	    rbytes = rep.nItems + 1;
-	    if (rbytes > 0 &&
-		(*prop = (unsigned char *) Xmalloc ((unsigned)rbytes)))
+	    if (rbytes > 0 && (*prop = Xmalloc (rbytes)))
 		_XReadPad (dpy, (char *) *prop, nbytes);
 	    break;
 
 	case 16:
 	    nbytes = rep.nItems << 1;
 	    rbytes = rep.nItems * sizeof (short) + 1;
-	    if (rbytes > 0 &&
-		(*prop = (unsigned char *) Xmalloc ((unsigned)rbytes)))
+	    if (rbytes > 0 && (*prop = Xmalloc (rbytes)))
 		_XRead16Pad (dpy, (short *) *prop, nbytes);
 	    break;
 
 	case 32:
 	    nbytes = rep.nItems << 2;
 	    rbytes = rep.nItems * sizeof (long) + 1;
-	    if (rbytes > 0 &&
-		(*prop = (unsigned char *) Xmalloc ((unsigned)rbytes)))
+	    if (rbytes > 0 && (*prop = Xmalloc (rbytes)))
 		_XRead32 (dpy, (long *) *prop, nbytes);
 	    break;
 
@@ -313,14 +330,13 @@ XRRGetProviderProperty (Display *dpy, RRProvider provider,
 	     * This part of the code should never be reached.  If it is,
 	     * the server sent back a property with an invalid format.
 	     */
-	    nbytes = rep.length << 2;
-	    _XEatData(dpy, (unsigned long) nbytes);
+	    _XEatDataWords(dpy, rep.length);
 	    UnlockDisplay(dpy);
 	    SyncHandle();
 	    return(BadImplementation);
 	}
 	if (! *prop) {
-	    _XEatData(dpy, (unsigned long) nbytes);
+	    _XEatDataWords(dpy, rep.length);
 	    UnlockDisplay(dpy);
 	    SyncHandle();
 	    return(BadAlloc);

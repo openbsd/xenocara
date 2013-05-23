@@ -129,7 +129,7 @@ doGetScreenResources (Display *dpy, Window window, int poll)
     if (xrsr == NULL || wire_names == NULL) {
 	if (xrsr) Xfree (xrsr);
 	if (wire_names) Xfree (wire_names);
-	_XEatData (dpy, (unsigned long) nbytes);
+	_XEatDataWords (dpy, rep.length);
 	UnlockDisplay (dpy);
 	SyncHandle ();
 	return NULL;

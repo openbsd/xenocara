@@ -60,6 +60,7 @@ SOFTWARE.
 #include <X11/extensions/XInput.h>
 #include <X11/extensions/extutil.h>
 #include "XIint.h"
+#include <limits.h>
 
 /* Calculate length field to a multiples of sizeof(XID). XIDs are typedefs
  * to ulong and thus may be 8 bytes on some platforms. This can trigger a
@@ -72,7 +73,7 @@ static int pad_to_xid(int base_size)
     return ((base_size + padsize - 1)/padsize) * padsize;
 }
 
-static int
+static size_t
 SizeClassInfo(xAnyClassPtr *any, int num_classes)
 {
     int size = 0;
@@ -168,7 +169,7 @@ XListInputDevices(
     register Display	*dpy,
     int			*ndevices)
 {
-    int size;
+    size_t size;
     xListInputDevicesReq *req;
     xListInputDevicesReply rep;
     xDeviceInfo *list, *slist = NULL;
@@ -176,9 +177,9 @@ XListInputDevices(
     XDeviceInfo *clist = NULL;
     xAnyClassPtr any, sav_any;
     XAnyClassPtr Any;
-    char *nptr, *Nptr;
+    unsigned char *nptr, *Nptr;
     int i;
-    long rlen;
+    unsigned long rlen;
     XExtDisplayInfo *info = XInput_find_display(dpy);
 
     LockDisplay(dpy);
@@ -197,11 +198,12 @@ XListInputDevices(
 
     if ((*ndevices = rep.ndevices)) {	/* at least 1 input device */
 	size = *ndevices * sizeof(XDeviceInfo);
-	rlen = rep.length << 2;	/* multiply length by 4    */
-	list = (xDeviceInfo *) Xmalloc(rlen);
-	slist = list;
+	if (rep.length < (INT_MAX >> 2)) {
+	    rlen = rep.length << 2;	/* multiply length by 4    */
+	    slist = list = Xmalloc(rlen);
+	}
 	if (!slist) {
-	    _XEatData(dpy, (unsigned long)rlen);
+	    _XEatDataWords(dpy, rep.length);
 	    UnlockDisplay(dpy);
 	    SyncHandle();
 	    return (XDeviceInfo *) NULL;
@@ -214,9 +216,12 @@ XListInputDevices(
             size += SizeClassInfo(&any, (int)list->num_classes);
 	}
 
-	for (i = 0, nptr = (char *)any; i < *ndevices; i++) {
+	Nptr = ((unsigned char *)list) + rlen + 1;
+	for (i = 0, nptr = (unsigned char *)any; i < *ndevices; i++) {
 	    size += *nptr + 1;
 	    nptr += (*nptr + 1);
+	    if (nptr > Nptr)
+		goto out;
 	}
 
 	clist = (XDeviceInfoPtr) Xmalloc(size);
@@ -242,8 +247,8 @@ XListInputDevices(
 	}
 
 	clist = sclist;
-	nptr = (char *)any;
-	Nptr = (char *)Any;
+	nptr = (unsigned char *)any;
+	Nptr = (unsigned char *)Any;
 	for (i = 0; i < *ndevices; i++, clist++) {
 	    clist->name = (char *)Nptr;
 	    memcpy(Nptr, nptr + 1, *nptr);
@@ -253,6 +258,7 @@ XListInputDevices(
 	}
     }
 
+  out:
     XFree((char *)slist);
     UnlockDisplay(dpy);
     SyncHandle();

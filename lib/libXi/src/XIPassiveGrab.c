@@ -88,7 +88,7 @@ _XIPassiveGrabDevice(Display* dpy, int deviceid, int grabtype, int detail,
         return -1;
     _XRead(dpy, (char*)failed_mods, reply.num_modifiers * sizeof(xXIGrabModifierInfo));
 
-    for (i = 0; i < reply.num_modifiers; i++)
+    for (i = 0; i < reply.num_modifiers && i < num_modifiers; i++)
     {
         modifiers_inout[i].status = failed_mods[i].status;
         modifiers_inout[i].modifiers = failed_mods[i].modifiers;

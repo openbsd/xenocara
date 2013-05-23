@@ -59,6 +59,12 @@ AC_SUBST(RENDER_VERSION)
 # Obtain compiler/linker options for depedencies
 PKG_CHECK_MODULES(RENDER, x11 renderproto >= $RENDER_VERSION)
 
+# Check for _XEatDataWords function that may be patched into older Xlib release
+SAVE_LIBS="$LIBS"
+LIBS="$RENDER_LIBS"
+AC_CHECK_FUNCS([_XEatDataWords])
+LIBS="$SAVE_LIBS"
+
 AC_CONFIG_FILES([Makefile
 		src/Makefile
 		xrender.pc])

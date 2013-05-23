@@ -99,7 +99,7 @@ XGetDeviceKeyMapping(register Display * dpy, XDevice * dev,
 	if (mapping)
 	    _XRead(dpy, (char *)mapping, nbytes);
 	else
-	    _XEatData(dpy, (unsigned long)nbytes);
+	    _XEatDataWords(dpy, rep.length);
     }
 
     UnlockDisplay(dpy);

@@ -205,7 +205,7 @@ _XcursorFileHeaderDestroy (XcursorFileHeader *fileHeader)
 }
 
 static XcursorFileHeader *
-_XcursorFileHeaderCreate (int ntoc)
+_XcursorFileHeaderCreate (XcursorUInt ntoc)
 {
     XcursorFileHeader	*fileHeader;
 

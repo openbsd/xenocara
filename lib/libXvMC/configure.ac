@@ -43,6 +43,12 @@ XORG_CHECK_MALLOC_ZERO
 # Obtain compiler/linker options for depedencies
 PKG_CHECK_MODULES(XVMC, x11 xext xv xextproto videoproto)
 
+# Check for _XEatDataWords function that may be patched into older Xlib release
+SAVE_LIBS="$LIBS"
+LIBS="$XVMC_LIBS"
+AC_CHECK_FUNCS([_XEatDataWords])
+LIBS="$SAVE_LIBS"
+
 # Checks for library functions.
 AC_CHECK_FUNCS([shmat])
 

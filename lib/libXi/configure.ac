@@ -30,6 +30,12 @@ XORG_CHECK_MALLOC_ZERO
 # Obtain compiler/linker options for dependencies
 PKG_CHECK_MODULES(XI, [xproto >= 7.0.13] [x11 >= 1.4.99.1] [xextproto >= 7.0.3] [xext >= 1.0.99.1] [inputproto >= 2.1.99.6])
 
+# Check for _XEatDataWords function that may be patched into older Xlib releases
+SAVE_LIBS="$LIBS"
+LIBS="$XI_LIBS"
+AC_CHECK_FUNCS([_XEatDataWords])
+LIBS="$SAVE_LIBS"
+
 # Check for xmlto and asciidoc for man page conversion
 # (only needed by people building tarballs)
 if test "$have_xmlto" = yes && test "$have_asciidoc" = yes; then

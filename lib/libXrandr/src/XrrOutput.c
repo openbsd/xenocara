@@ -81,7 +81,7 @@ XRRGetOutputInfo (Display *dpy, XRRScreenResources *resources, RROutput output)
 
     xoi = (XRROutputInfo *) Xmalloc(rbytes);
     if (xoi == NULL) {
-	_XEatData (dpy, (unsigned long) nbytes);
+	_XEatDataWords (dpy, rep.length - (OutputInfoExtra >> 2));
 	UnlockDisplay (dpy);
 	SyncHandle ();
 	return NULL;

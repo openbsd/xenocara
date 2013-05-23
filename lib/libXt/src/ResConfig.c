@@ -971,26 +971,37 @@ _XtResourceConfigurationEH (
 	 *      resource and value fields.
 	 */
 		if (data) {
+			char *data_end = data + nitems;
+			char *data_value;
+
 			resource_len = Strtoul ((void *)data, &data_ptr, 10);
-			data_ptr++;
 
-			data_ptr[resource_len] = '\0';
+			if (data_ptr != (char *) data) {
+				data_ptr++;
+				data_value = data_ptr + resource_len;
+			} else /* strtoul failed to convert a number */
+				data_ptr = data_value = NULL;
 
-			resource = XtNewString (data_ptr);
-			value = XtNewString (&data_ptr[resource_len + 1]);
+			if (data_value > data_ptr && data_value < data_end) {
+				*data_value++ = '\0';
+
+				resource = XtNewString (data_ptr);
+				value = XtNewString (data_value);
 #ifdef DEBUG
-			fprintf (stderr, "resource_len=%d\n",resource_len);
-			fprintf (stderr, "resource = %s\t value = %s\n",
-					resource, value);
+				fprintf (stderr, "resource_len=%d\n"
+					 resource_len);
+				fprintf (stderr, "resource = %s\t value = %s\n",
+					 resource, value);
 #endif
-			/*
-			 * descend the application widget tree and
-			 * apply the value to the appropriate widgets
-			 */
-			_search_widget_tree (w, resource, value);
+				/*
+				 * descend the application widget tree and
+				 * apply the value to the appropriate widgets
+				 */
+				_search_widget_tree (w, resource, value);
 
-			XtFree (resource);
-			XtFree (value);
+				XtFree (resource);
+				XtFree (value);
+			}
 		}
 	}
 

@@ -42,6 +42,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include <X11/extensions/Xext.h>
 #include <X11/extensions/extutil.h>
 #include "xf86dristr.h"
+#include <limits.h>
 
 static XExtensionInfo _xf86dri_info_data;
 static XExtensionInfo *xf86dri_info = &_xf86dri_info_data;
@@ -203,7 +204,11 @@ uniDRIOpenConnection(dpy, screen, hSAREA, busIdString)
     }
 #endif
     if (rep.length) {
-	if (!(*busIdString = (char *)Xcalloc(rep.busIdStringLength + 1, 1))) {
+	if (rep.busIdStringLength < INT_MAX)
+	    *busIdString = Xcalloc(rep.busIdStringLength + 1, 1);
+	else
+	    *busIdString = NULL;
+	if (*busIdString == NULL) {
 	    _XEatData(dpy, ((rep.busIdStringLength + 3) & ~3));
 	    UnlockDisplay(dpy);
 	    SyncHandle();
@@ -309,8 +314,11 @@ uniDRIGetClientDriverName(dpy, screen, ddxDriverMajorVersion,
     *ddxDriverPatchVersion = rep.ddxDriverPatchVersion;
 
     if (rep.length) {
-	if (!(*clientDriverName =
-		(char *)Xcalloc(rep.clientDriverNameLength + 1, 1))) {
+	if (rep.clientDriverNameLength < INT_MAX)
+	    *clientDriverName = Xcalloc(rep.clientDriverNameLength + 1, 1);
+	else
+	    *clientDriverName = NULL;
+	if (*clientDriverName == NULL) {
 	    _XEatData(dpy, ((rep.clientDriverNameLength + 3) & ~3));
 	    UnlockDisplay(dpy);
 	    SyncHandle();

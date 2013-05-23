@@ -92,7 +92,7 @@ XGetDeviceModifierMapping(
 	if (res->modifiermap)
 	    _XReadPad(dpy, (char *)res->modifiermap, nbytes);
 	else
-	    _XEatData(dpy, (unsigned long)nbytes);
+	    _XEatDataWords(dpy, rep.length);
 	res->max_keypermod = rep.numKeyPerModifier;
     }
 

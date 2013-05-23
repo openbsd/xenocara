@@ -58,6 +58,13 @@ AC_SUBST(FIXESEXT_VERSION)
 # Obtain compiler/linker options for depedencies
 PKG_CHECK_MODULES(FIXESEXT, xproto [fixesproto >= $FIXESEXT_VERSION] xextproto x11)
 
+# Check for _XEatDataWords function that may be patched into older Xlib releases
+SAVE_LIBS="$LIBS"
+LIBS="$FIXESEXT_LIBS"
+AC_CHECK_FUNCS([_XEatDataWords])
+LIBS="$SAVE_LIBS"
+
+
 AC_CONFIG_FILES([Makefile
 		src/Makefile
 		man/Makefile

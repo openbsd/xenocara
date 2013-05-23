@@ -65,7 +65,7 @@ XListDeviceProperties(Display* dpy, XDevice* dev, int *nprops_return)
         props = (Atom*)Xmalloc(rep.nAtoms * sizeof(Atom));
         if (!props)
         {
-            _XEatData(dpy, rep.nAtoms << 2);
+            _XEatDataWords(dpy, rep.length);
             goto cleanup;
         }
 

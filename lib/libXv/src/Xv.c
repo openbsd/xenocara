@@ -49,11 +49,27 @@ SOFTWARE.
 **
 */
 
+#ifdef HAVE_CONFIG_H
+# include "config.h"
+#endif
+
 #include <stdio.h>
 #include "Xvlibint.h"
 #include <X11/extensions/Xext.h>
 #include <X11/extensions/extutil.h>
 #include <X11/extensions/XShm.h>
+#include <limits.h>
+
+#ifndef HAVE__XEATDATAWORDS
+static inline void _XEatDataWords(Display *dpy, unsigned long n)
+{
+# ifndef LONG64
+    if (n >= (ULONG_MAX >> 2))
+        _XIOError(dpy);
+# endif
+    _XEatData (dpy, n << 2);
+}
+#endif
 
 static XExtensionInfo _xv_info_data;
 static XExtensionInfo *xv_info = &_xv_info_data;
@@ -835,12 +851,21 @@ XvQueryPortAttributes(Display *dpy, XvPortID port, int *num)
   }
 
   if(rep.num_attributes) {
-      int size = (rep.num_attributes * sizeof(XvAttribute)) + rep.text_size;
+      unsigned long size;
+      /* limit each part to no more than one half the max size */
+      if ((rep.num_attributes < ((INT_MAX / 2) / sizeof(XvAttribute))) &&
+	  (rep.text_size < (INT_MAX / 2))) {
+	  size = (rep.num_attributes * sizeof(XvAttribute)) + rep.text_size;
+	  ret = Xmalloc(size);
+      }
 
-      if((ret = Xmalloc(size))) {
+      if (ret != NULL) {
 	  char* marker = (char*)(&ret[rep.num_attributes]);
 	  xvAttributeInfo Info;
 	  int i;
+
+	  /* keep track of remaining room for text strings */
+	  size = rep.text_size;
 
 	  for(i = 0; i < rep.num_attributes; i++) {
              _XRead(dpy, (char*)(&Info), sz_xvAttributeInfo);
@@ -848,12 +873,15 @@ XvQueryPortAttributes(Display *dpy, XvPortID port, int *num)
 	      ret[i].min_value = Info.min;
 	      ret[i].max_value = Info.max;
 	      ret[i].name = marker;
-	      _XRead(dpy, marker, Info.size);
-	      marker += Info.size;
+	      if (Info.size <= size) {
+		  _XRead(dpy, marker, Info.size);
+		  marker += Info.size;
+		  size -= Info.size;
+	      }
 	      (*num)++;
 	  }
       } else
-	_XEatData(dpy, rep.length << 2);
+	  _XEatDataWords(dpy, rep.length);
   }
 
   UnlockDisplay(dpy);
@@ -890,9 +918,10 @@ XvImageFormatValues * XvListImageFormats (
   }
 
   if(rep.num_formats) {
-      int size = (rep.num_formats * sizeof(XvImageFormatValues));
+      if (rep.num_formats < (INT_MAX / sizeof(XvImageFormatValues)))
+	  ret = Xmalloc(rep.num_formats * sizeof(XvImageFormatValues));
 
-      if((ret = Xmalloc(size))) {
+      if (ret != NULL) {
 	  xvImageFormatInfo Info;
 	  int i;
 
@@ -923,7 +952,7 @@ XvImageFormatValues * XvListImageFormats (
 	      (*num)++;
 	  }
       } else
-	_XEatData(dpy, rep.length << 2);
+	  _XEatDataWords(dpy, rep.length);
   }
 
   UnlockDisplay(dpy);
@@ -963,7 +992,10 @@ XvImage * XvCreateImage (
       return NULL;
    }
 
-   if((ret = (XvImage*)Xmalloc(sizeof(XvImage) + (rep.num_planes << 3)))) {
+   if (rep.num_planes < ((INT_MAX >> 3) - sizeof(XvImage)))
+       ret = Xmalloc(sizeof(XvImage) + (rep.num_planes << 3));
+
+   if (ret != NULL) {
 	ret->id = id;
 	ret->width = rep.width;
 	ret->height = rep.height;
@@ -976,7 +1008,7 @@ XvImage * XvCreateImage (
   	_XRead(dpy, (char*)(ret->pitches), rep.num_planes << 2);
 	_XRead(dpy, (char*)(ret->offsets), rep.num_planes << 2);
    } else
-	_XEatData(dpy, rep.length << 2);
+       _XEatDataWords(dpy, rep.length);
 
    UnlockDisplay(dpy);
    SyncHandle();
