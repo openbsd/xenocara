@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: xutil.c,v 1.67 2013/05/23 16:52:39 okan Exp $
+ * $OpenBSD: xutil.c,v 1.68 2013/05/27 23:20:45 okan Exp $
  */
 
 #include <sys/param.h>
@@ -125,19 +125,19 @@ xu_configure(struct client_ctx *cc)
 }
 
 void
-xu_sendmsg(Window win, Atom atm, long val)
+xu_sendmsg(Window win, Atom type, Atom atm)
 {
-	XEvent	 e;
+	XClientMessageEvent	 e;
 
-	(void)memset(&e, 0, sizeof(e));
-	e.xclient.type = ClientMessage;
-	e.xclient.window = win;
-	e.xclient.message_type = atm;
-	e.xclient.format = 32;
-	e.xclient.data.l[0] = val;
-	e.xclient.data.l[1] = CurrentTime;
+	bzero(&e, sizeof(e));
+	e.type = ClientMessage;
+	e.window = win;
+	e.message_type = type;
+	e.format = 32;
+	e.data.l[0] = atm;
+	e.data.l[1] = CurrentTime;
 
-	XSendEvent(X_Dpy, win, False, 0, &e);
+	XSendEvent(X_Dpy, win, False, 0L, (XEvent *)&e);
 }
 
 int
