@@ -9353,7 +9353,11 @@ SISMergedPointerMoved(SCRN_ARG_TYPE arg, int x, int y)
 #if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 15
         {
             double dx = x, dy = y;
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 19
+            miPointerSetPosition(inputInfo.pointer, Absolute, &dx, &dy, 0, NULL);
+#else
             miPointerSetPosition(inputInfo.pointer, Absolute, &dx, &dy);
+#endif
             x = (int)dx;
             y = (int)dy;
         }
