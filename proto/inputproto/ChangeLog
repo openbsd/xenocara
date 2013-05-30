@@ -1,3 +1,155 @@
+commit f33a329026c9f2eaa5fa436543e4feb0e54b685d
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Thu Mar 7 10:42:39 2013 +1000
+
+    inputproto 2.3
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit f8428123019e7357891bbfc0aef21dbb4d0db10f
+Author: Colin Walters <walters@verbum.org>
+Date:   Wed Jan 4 17:37:06 2012 -0500
+
+    autogen.sh: Implement GNOME Build API
+    
+    http://people.gnome.org/~walters/docs/build-api.txt
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit 8cad031f9f583089dd33bae41dfa8a7e0d8a71f4
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Tue Jan 15 14:01:10 2013 -0500
+
+    configure: Remove AM_MAINTAINER_MODE
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit 4832c94775ee4a02cfaf53ba427d7cf677f70932
+Merge: 48e3209 e93e9d0
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Mon Dec 17 14:24:59 2012 +1000
+
+    Merge branch 'barriers'
+
+commit e93e9d004c11a59cab56139c0c04ea2b5c6a926b
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Mon Dec 17 14:18:07 2012 +1000
+
+    specs: removing a device results in a BarrierLeave event
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit bc009eb4dadf2138212291da05b514854923ae85
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri Dec 7 14:41:03 2012 +1000
+
+    inputproto 2.2.99.1
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 5f9d3b8584d88f49fa7533c429e32199a06ed215
+Author: Jasper St. Pierre <jstpierre@mecheye.net>
+Date:   Fri Dec 7 14:42:17 2012 +1000
+
+    Add support for pointer barrier events
+    
+    Signed-off-by: Jasper St. Pierre <jstpierre@mecheye.net>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 0b88ca65bdaab4c60f945fe64c48982bc89e5d1f
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri Dec 7 14:41:54 2012 +1000
+
+    Claim support for XI 2.3
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 48e32091c5a3220a464caad49fd7dd013c429eda
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri Dec 7 12:55:24 2012 +1000
+
+    Fix typo in comment
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 377efaaa9828b4004741744ae172a193b5483a34
+Author: Daniel Martin <consume.noise@gmail.com>
+Date:   Wed Nov 7 12:41:49 2012 +0100
+
+    specs: XI2: Fix mods in XIPassive(Un)GrabDevice
+    
+    XIPassiveGrabDevice and XIPassiveUngrabDevice are using lists of
+    modifier masks. This one corrects these types.
+    
+    MODIFIERMASK was introduced, because a SETofMODIFIERMASK differs from a
+    SETofKEYMASK: AnyModifier=(1<<15) vs. GrabAnyModifier=(1U<<31).
+    
+    Signed-off-by: Daniel Martin <consume.noise@gmail.com>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit eb38fd9af846afe39287d5cf281b0274f42e8558
+Author: Daniel Martin <consume.noise@gmail.com>
+Date:   Wed Nov 7 12:41:48 2012 +0100
+
+    specs: XI2: Rename AxisClass to ValuatorClass
+    
+    ValuatorClass is the XI2 term for AxisClass.
+    
+    Signed-off-by: Daniel Martin <consume.noise@gmail.com>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit b30e7221b8888b674e6889beeada9b5b9dfc2f34
+Author: Daniel Martin <consume.noise@gmail.com>
+Date:   Wed Nov 7 12:41:47 2012 +0100
+
+    specs: XI2: Fix typos
+    
+    Signed-off-by: Daniel Martin <consume.noise@gmail.com>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 743cb2cf1567cf685dfe5444621eb56447768c7c
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri Nov 2 15:37:28 2012 +1000
+
+    XI2proto: spec formatting fix
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit a06905c8efc053e8ffcd0fc93736c0e45b715c38
+Author: Ran Benita <ran234@gmail.com>
+Date:   Sat Oct 27 14:56:49 2012 +0200
+
+    specs: XI2: add titles to requests/events and show them in TOC
+    
+    You often want to quickly jump to the specification of a specific
+    request/event, so add them to the table of contents to allow for that.
+    This also provides the reader with a quick glance at what the protocol
+    looks like.
+    
+    Signed-off-by: Ran Benita <ran234@gmail.com>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 74098071768a4b25670cf5582bc68433403deefe
+Author: Ran Benita <ran234@gmail.com>
+Date:   Sat Oct 27 14:56:48 2012 +0200
+
+    specs: XI2: make event/request name formatting consistent
+    
+    None of the other have ':' there.
+    
+    Signed-off-by: Ran Benita <ran234@gmail.com>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 3ed8aed32199edaa8621ccea571a04883e050cb5
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Thu Jun 14 08:56:55 2012 +1000
+
+    Fix two typos in spec/comments
+    
+    The ButtonClass provides the number of buttons, not the lentgh of the mask.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
 commit e752e92dbdcf01b1cd46a3853f582ff765d19e90
 Author: Peter Hutterer <peter.hutterer@who-t.net>
 Date:   Fri Mar 2 12:58:18 2012 +1000
