@@ -77,7 +77,7 @@ FSListFonts(
     _FSSend(svr, pattern, nbytes);
     if (!_FSReply(svr, (fsReply *) & rep,
 	  (SIZEOF(fsListFontsReply) - SIZEOF(fsGenericReply)) >> 2, fsFalse))
-	return (char **) 0;
+	return (char **) NULL;
 
     if (rep.nFonts
 #if (SIZE_MAX >> 2) <= UINT_MAX
@@ -85,13 +85,13 @@ FSListFonts(
 	&& rep.length <= (SIZE_MAX >> 2)
 #endif
 	) {
-	flist = (char **) FSmalloc((unsigned) rep.nFonts * sizeof(char *));
+	flist = FSmalloc(rep.nFonts * sizeof(char *));
 	rlen = (rep.length << 2) - SIZEOF(fsListFontsReply);
-	c = (char *) FSmalloc((unsigned) (rlen + 1));
+	c = FSmalloc(rlen + 1);
 
 	if ((!flist) || (!c)) {
 	    if (flist)
-		FSfree((char *) flist);
+		FSfree(flist);
 	    if (c)
 		FSfree(c);
 	    _FSEatData(svr, (unsigned long) rlen);
@@ -122,7 +122,7 @@ int FSFreeFontNames(char **list)
 {
     if (list) {
 	FSfree(list[0] - 1);
-	FSfree((char *) list);
+	FSfree(list);
     }
     return 1;
 }

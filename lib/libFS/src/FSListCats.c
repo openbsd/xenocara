@@ -77,7 +77,7 @@ FSListCatalogues(
     _FSSend(svr, pattern, nbytes);
     if (!_FSReply(svr, (fsReply *) & rep,
     (SIZEOF(fsListCataloguesReply) - SIZEOF(fsGenericReply)) >> 2, fsFalse))
-	return (char **) 0;
+	return (char **) NULL;
 
     if (rep.num_catalogues
 #if (SIZE_MAX >> 2) <= UINT_MAX
@@ -85,14 +85,13 @@ FSListCatalogues(
 	&& rep.length <= (SIZE_MAX>>2)
 #endif
 	) {
-	clist = (char **)
-	    FSmalloc((unsigned) rep.num_catalogues * sizeof(char *));
+	clist = FSmalloc(rep.num_catalogues * sizeof(char *));
 	rlen = (rep.length << 2) - SIZEOF(fsListCataloguesReply);
-	c = (char *) FSmalloc((unsigned) (rlen + 1));
+	c = FSmalloc(rlen + 1);
 
 	if ((!clist) || (!c)) {
 	    if (clist)
-		FSfree((char *) clist);
+		FSfree(clist);
 	    if (c)
 		FSfree(c);
 	    _FSEatData(svr, (unsigned long) rlen);
@@ -123,7 +122,7 @@ int FSFreeCatalogues(char **list)
 {
     if (list) {
 	FSfree(list[0] - 1);
-	FSfree((char *) list);
+	FSfree(list);
     }
     return 1;
 }

@@ -79,12 +79,12 @@ FSListExtensions(
 	&& rep.length <= (SIZE_MAX>>2)
 #endif
 	) {
-	list = (char **) FSmalloc((unsigned)(rep.nExtensions * sizeof(char *)));
+	list = FSmalloc(rep.nExtensions * sizeof(char *));
 	rlen = (rep.length << 2) - SIZEOF(fsListExtensionsReply);
-	c = (char *) FSmalloc((unsigned) rlen + 1);
+	c = FSmalloc(rlen + 1);
 	if ((!list) || (!c)) {
 	    if (list)
-		FSfree((char *) list);
+		FSfree(list);
 	    if (c)
 		FSfree(c);
 	    _FSEatData(svr, (unsigned long) rlen);
@@ -115,7 +115,7 @@ int FSFreeExtensionList(char **list)
 {
     if (list != NULL) {
 	FSfree(list[0] - 1);
-	FSfree((char *) list);
+	FSfree(list);
     }
     return 1;
 }

@@ -1,3 +1,155 @@
+commit 9d1458e02fe8dcac68b32917c9b10fa49d7161e7
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue May 28 17:17:40 2013 -0700
+
+    libFS 1.0.5
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 26dc23446c2e7818fdebfb46e101bac4883df07e
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Apr 14 09:07:32 2013 -0700
+
+    Sign extension issue and integer overflow in FSOpenServer() [CVE-2013-1996]
+    
+    >       altlen = (int) *ad++; <-- if char is 0xff, will sign extend to int (0xffffffff == -1)
+    >       alts[i].name = (char *) FSmalloc(altlen + 1); <-- -1 + 1 == 0
+    > ...
+    >       memmove(alts[i].name, ad, altlen); <-- memory corruption
+    
+    Reported-by: Ilja Van Sprundel <ivansprundel@ioactive.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit f6030dd569094fb29720a4bf54aec784b1edcac5
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Apr 10 21:43:40 2013 -0700
+
+    Get rid of more duplication in error cleanup code in FSListFontsWithXInfo
+    
+    Also get rely on free() to handle null pointers in cleanup code instead
+    of checking each one ourselves.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 1f260bfdcb8d83d6c21db70ad6ed0fa94e5f5abf
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Apr 10 20:55:36 2013 -0700
+
+    Avoid accessing freed memory on realloc failure in FSListFontsWithXInfo
+    
+    Since we realloc 5 things in a row, and then check for failure, it's
+    quite possible one of our old pointers is now pointing to something
+    completely different, so instead update the pointers as we successfully
+    realloc them and then jump to the normal error processing cleanup if
+    one fails.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 3022dfdcdac08a4950695ded9f372e845f2be008
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Apr 10 19:04:22 2013 -0700
+
+    Avoid reading outside bounds when _FSReply receives an Error response
+    
+    Upon receiving a response, _FSReply copies the first 8 bytes into *rep
+    and then looks at them to determine what type of response.   If it's an
+    error packet, it then converts to an error struct and reads the rest,
+    but it was copying 16 bytes out of *rep to begin with, due to sloppy
+    casting.   Since we immediately overwrite the second 8 bytes with the
+    data coming off the wire, this isn't horrible, but it really freaks out
+    static analysis and memory debugging tools.
+    
+    Fixes parfait 1.1 warning:
+    
+    Error: Buffer overrun
+       Read Outside Array Bounds in STD C function: Read outside array bounds in call to llvm.memcpy.p0i8.p0i8.i64. Buffer ((char*)((union fsError*)rep)) of size ??? is read at an offset of 16
+          size(((char*)((union fsError*)rep))) is 8, 16 is 16
+            at line 751 of src/FSlibInt.c in function '_FSReply'.
+            called at line 67 of src/FSSync.c in function 'FSSync' with rep = ((union fsReply*)&rep).
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 932131874109931bb6d50acc47ac94e51a2353de
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Apr 10 18:54:35 2013 -0700
+
+    Use NULL instead of 0 for null pointers
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 90b9754da977cb6804da4c38711ff33db772a9ca
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Apr 10 18:30:24 2013 -0700
+
+    Get rid of unnecessary casts in FSfree calls
+    
+    No need to cast all other pointers to char *, since C89 free takes
+    any type of pointer.   Casting all of them just hides errors if you
+    try to free something that's not really a pointer.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 2cf3ed903048758ee696d410aba6afefd1582dec
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Apr 10 18:26:22 2013 -0700
+
+    Get rid of unnecessary casts in FS*alloc calls
+    
+    Stop taking 64-bit size_t, truncating to 32-bit unsigned int, and then
+    putting into a 64-bit size_t argument to underlying *alloc call.
+    
+    Also stop casting results, since in C, that just hides missing prototype
+    errors that can cause memory corruption when taking an implicit 32-bit
+    int return value and trying to make a 64-bit pointer out of it.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 0ef550010ad1cb08297951b385c0034010e89a9a
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Jan 18 23:18:47 2013 -0800
+
+    Replace deprecated Automake INCLUDES variable with AM_CPPFLAGS
+    
+    Excerpt https://lists.gnu.org/archive/html/automake/2012-12/msg00038.html
+    
+      - Support for the long-deprecated INCLUDES variable will be removed
+        altogether in Automake 1.14.  The AM_CPPFLAGS variable should be
+        used instead.
+    
+    This variable was deprecated in Automake releases prior to 1.10, which is
+    the current minimum level required to build X.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 464fb353a406cbb4c478fae89952979cb5c8775c
+Author: Colin Walters <walters@verbum.org>
+Date:   Wed Jan 4 17:37:06 2012 -0500
+
+    autogen.sh: Implement GNOME Build API
+    
+    http://people.gnome.org/~walters/docs/build-api.txt
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit 0e0109c5d035c9f803b52d2189151f600de59866
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Tue Jan 15 14:28:48 2013 -0500
+
+    configure: Remove AM_MAINTAINER_MODE
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit 56c83935a873fa7c6bb0c8c7d9f755ee08439aa5
+Author: Thomas Klausner <wiz@NetBSD.org>
+Date:   Thu Jul 12 14:39:26 2012 +0200
+
+    Fix a prototype error
+    
+    Per NetBSD PR 41899 from Henning Petersen.
+    
+    Signed-off-by: Thomas Klausner <wiz@NetBSD.org>
+    Signed-off-by: Julien Cristau <jcristau@debian.org>
+
 commit 589eea0713cacb7b6889d15e4dbcd2914684db9b
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Fri Mar 2 19:47:42 2012 -0800

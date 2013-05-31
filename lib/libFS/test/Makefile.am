@@ -24,7 +24,7 @@
 noinst_PROGRAMS = FSGetErrorText
 
 AM_CFLAGS = $(CWARNFLAGS) $(FS_CFLAGS)
-INCLUDES = -I$(top_srcdir)/include
+AM_CPPFLAGS = -I$(top_srcdir)/include
 
 FSGetErrorText_SOURCES		= FSGetErrorText.c
 FSGetErrorText_LDADD		= ../src/libFS.la

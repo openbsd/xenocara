@@ -79,13 +79,12 @@ FSGetCatalogues(
 	&& rep.length <= (SIZE_MAX >> 2)
 #endif
 	) {
-	list = (char **)
-	       FSmalloc((unsigned) (rep.num_catalogues * sizeof(char *)));
+	list = FSmalloc(rep.num_catalogues * sizeof(char *));
 	rlen = (rep.length << 2) - SIZEOF(fsGetCataloguesReply);
-	c = (char *) FSmalloc((unsigned) rlen + 1);
+	c = FSmalloc(rlen + 1);
 	if ((!list) || (!c)) {
 	    if (list)
-		FSfree((char *) list);
+		FSfree(list);
 	    if (c)
 		FSfree(c);
 	    _FSEatData(svr, (unsigned long) rlen);

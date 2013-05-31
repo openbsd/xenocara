@@ -748,7 +748,8 @@ _FSReply(
 		unsigned long serial;
 		long        err_data;
 
-		err = *(fsError *) rep;
+		/* copy in the part we already read off the wire */
+		memcpy(&err, rep, SIZEOF(fsReply));
 		/* read the rest of the error */
 		_FSRead(svr, (char *) &err + SIZEOF(fsReply),
 			(long) (SIZEOF(fsError) - SIZEOF(fsReply)));
@@ -846,8 +847,7 @@ _FSEnq(
     if ((qelt = _FSqfree) != NULL) {
 	/* If _FSqfree is non-NULL do this, else malloc a new one. */
 	_FSqfree = qelt->next;
-    } else if ((qelt =
-	     (_FSQEvent *) FSmalloc((unsigned) sizeof(_FSQEvent))) == NULL) {
+    } else if ((qelt = FSmalloc(sizeof(_FSQEvent))) == NULL) {
 	/* Malloc call failed! */
 	ESET(ENOMEM);
 	(*_FSIOErrorFunction) (svr);
@@ -1105,7 +1105,7 @@ _FSAllocScratch(
 	if (svr->scratch_buffer != NULL)
 	    FSfree(svr->scratch_buffer);
 	return (svr->scratch_length = nbytes,
-		svr->scratch_buffer = FSmalloc((unsigned) nbytes));
+		svr->scratch_buffer = FSmalloc(nbytes));
     }
     return (svr->scratch_buffer);
 }
@@ -1194,7 +1194,7 @@ doData16(
 }
 
 void
-Data16(svr, data, len)
+Data16(
     FSServer	*svr,
     short	*data,
     unsigned	 len)

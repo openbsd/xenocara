@@ -36,9 +36,9 @@ AM_CFLAGS = 			\
 	-DFS_t 			\
 	-DTRANS_CLIENT
 
-libFS_la_LIBADD = $(FS_LIBS)
+AM_CPPFLAGS = -I$(top_srcdir)/include/X11/fonts
 
-INCLUDES = -I$(top_srcdir)/include/X11/fonts
+libFS_la_LIBADD = $(FS_LIBS)
 
 libFS_la_LDFLAGS = -export-symbols-regex '^FS.*' -version-number 6:0:0 -no-undefined
 
