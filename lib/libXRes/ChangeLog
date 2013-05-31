@@ -1,3 +1,65 @@
+commit b51a7b0ccf0d5ccb53fbd5d34ed8fe57603d2604
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu May 30 17:51:12 2013 -0700
+
+    libXres 1.0.7
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit ad156a716a324ee60362c8ba66a5ed8c835c219b
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Apr 12 23:36:13 2013 -0700
+
+    integer overflow in XResQueryClientResources() [CVE-2013-1988 2/2]
+    
+    The CARD32 rep.num_types needs to be bounds checked before multiplying
+    by sizeof(XResType) to avoid integer overflow leading to underallocation
+    and writing data from the network past the end of the allocated buffer.
+    
+    Reported-by: Ilja Van Sprundel <ivansprundel@ioactive.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 3ec2db9eeb9ba8fb561802b0c4b8bf79e321b7a2
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Apr 12 23:36:13 2013 -0700
+
+    integer overflow in XResQueryClients() [CVE-2013-1988 1/2]
+    
+    The CARD32 rep.num_clients needs to be bounds checked before multiplying
+    by sizeof(XResClient) to avoid integer overflow leading to underallocation
+    and writing data from the network past the end of the allocated buffer.
+    
+    Reported-by: Ilja Van Sprundel <ivansprundel@ioactive.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 95b352b0f4a1ab1bc254e78adbc73cd65223ded4
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Apr 13 10:34:22 2013 -0700
+
+    Use _XEatDataWords to avoid overflow of rep.length shifting
+    
+    rep.length is a CARD32, so rep.length << 2 could overflow in 32-bit builds
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit d54acff47096cf52a9b8e018a26f7165e1092eb5
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Jan 18 23:06:20 2013 -0800
+
+    Replace deprecated Automake INCLUDES variable with AM_CPPFLAGS
+    
+    Excerpt https://lists.gnu.org/archive/html/automake/2012-12/msg00038.html
+    
+      - Support for the long-deprecated INCLUDES variable will be removed
+        altogether in Automake 1.14.  The AM_CPPFLAGS variable should be
+        used instead.
+    
+    This variable was deprecated in Automake releases prior to 1.10, which is
+    the current minimum level required to build X.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    (cherry picked from commit 83e7693515369d57dcd11c2bb1f03563f51bc500)
+
 commit e6e0e02e4bf764fa58798540793bdeb44a60cc7f
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Wed Mar 7 20:53:56 2012 -0800

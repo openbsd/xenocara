@@ -10,7 +10,7 @@ AM_CFLAGS = \
 	$(XRES_CFLAGS) \
 	$(MALLOC_ZERO_CFLAGS)
 
-INCLUDES = -I$(top_srcdir)/include
+AM_CPPFLAGS = -I$(top_srcdir)/include
 
 libXRes_la_LDFLAGS = -version-number 1:0:0 -no-undefined
 

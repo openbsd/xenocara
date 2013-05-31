@@ -1,5 +1,5 @@
 dnl 
-dnl  $Id: configure.ac,v 1.5 2013/05/23 22:42:11 matthieu Exp $
+dnl  $Id: configure.ac,v 1.6 2013/05/31 15:23:23 matthieu Exp $
 #
 #  Copyright © 2003 Keith Packard, Noah Levitt
 #
@@ -31,7 +31,7 @@ AC_PREREQ([2.60])
 # digit in the version number to track changes which don't affect the
 # protocol, so XRes version l.n.m corresponds to protocol version l.n
 #
-AC_INIT([libXres], [1.0.6],
+AC_INIT([libXres], [1.0.7],
         [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg], [libXres])
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_HEADERS([config.h])
@@ -56,6 +56,12 @@ RES_VERSION=[`echo $VERSION | sed 's/^\([0-9][0-9]*\.[0-9][0-9]*\).*$/\1/'`]
 
 # Obtain compiler/linker options for depedencies
 PKG_CHECK_MODULES(XRES, x11 xext xextproto [resourceproto >= $RES_VERSION])
+
+# Check for _XEatDataWords function that may be patched into older Xlib release
+SAVE_LIBS="$LIBS"
+LIBS="$XRES_LIBS"
+AC_CHECK_FUNCS([_XEatDataWords])
+LIBS="$SAVE_LIBS"
 
 # Check for _XEatDataWords function that may be patched into older Xlib release
 SAVE_LIBS="$LIBS"
