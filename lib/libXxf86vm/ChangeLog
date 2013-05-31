@@ -1,3 +1,132 @@
+commit 4ca5d221d35ed6981247caa5d5069f083e83b7fb
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu May 30 18:43:11 2013 -0700
+
+    libXxf86vm 1.1.3
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 4c4123441e40da97acd10f58911193ad3dcef5cd
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Apr 13 14:43:48 2013 -0700
+
+    avoid integer overflow in XF86VidModeGetModeLine()
+    
+    rep.privsize is a CARD32 and needs to be bounds checked before multiplying
+    by sizeof(INT32) to come up with the total size to allocate & read to avoid
+    integer overflow, though it would not result in buffer overflow as the same
+    calculation was used for both allocation & reading from the network.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 47bb28ac0e6e49d3b6eb90c7c215f2fcf54f1a95
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Apr 13 14:33:32 2013 -0700
+
+    memory corruption in XF86VidModeGetGammaRamp() [CVE-2013-2001]
+    
+    We trusted the server not to return more data than the client said it had
+    allocated room for, and would overflow the provided buffers if it did.
+    
+    Reported-by: Ilja Van Sprundel <ivansprundel@ioactive.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 284a88e21fc05a63466115b33efa411c60d988c9
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Apr 13 14:24:12 2013 -0700
+
+    Use _XEatDataWords to avoid overflow of length calculations
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit d0355b28dd53fba6fb29c350e090ed4a73d4c480
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Apr 13 17:58:28 2013 -0700
+
+    Unlock display before returning alloc error in XF86VidModeGetDotClocks()
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 6c82906f25abcb0f8ec92bcdaf1872bd8b63ca5d
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Apr 13 17:54:45 2013 -0700
+
+    Unlock display before returning alloc error in XF86VidModeGetAllModeLines()
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 8ed00bd0a7c44c7fece687e2566d920ea74ef809
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Apr 13 17:52:12 2013 -0700
+
+    Unlock display before returning alloc error in XF86VidModeGetModeLine()
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit a89b1ad3377bfef9bab52f15f98b00f6540d531a
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Apr 13 17:40:24 2013 -0700
+
+    Improve error handling in XF86VidModeGetMonitor()
+    
+    Ensure that when we return an error we unlock the display first, and
+    NULL out any pointers we freed in error cleanup.
+    
+    Instead of adding these fixes to every error check, instead combine
+    the error handling cleanup into a single copy.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit ef95f1c3737d9efc7d97fb1784f80ef3540a846b
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Apr 13 15:13:06 2013 -0700
+
+    When Xcalloc() returns NULL, you don't need to Xfree() it
+    
+    I have no words to explain how this ever happened.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 6772336755c6eb5b46c471dd5ae2ac89101ed179
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Jan 18 23:15:31 2013 -0800
+
+    Replace deprecated Automake INCLUDES variable with AM_CPPFLAGS
+    
+    Excerpt https://lists.gnu.org/archive/html/automake/2012-12/msg00038.html
+    
+      - Support for the long-deprecated INCLUDES variable will be removed
+        altogether in Automake 1.14.  The AM_CPPFLAGS variable should be
+        used instead.
+    
+    This variable was deprecated in Automake releases prior to 1.10, which is
+    the current minimum level required to build X.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 9f56d200d3675fe3e178001112c563d548376b7a
+Author: Colin Walters <walters@verbum.org>
+Date:   Tue Jan 15 14:39:40 2013 -0500
+
+    autogen.sh: Honor NOCONFIGURE environment variable
+    
+    http://people.gnome.org/~walters/docs/build-api.txt
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit 6528ae139506212644dc68a0696580c848e3f8de
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Tue Jan 15 14:28:48 2013 -0500
+
+    configure: Remove AM_MAINTAINER_MODE
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
 commit a0bd361fe688590b7d62ffb3ad1c1648a22096d4
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Wed Mar 7 21:39:46 2012 -0800

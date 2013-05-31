@@ -1,14 +1,13 @@
 
 # Initialize Autoconf
 AC_PREREQ([2.60])
-AC_INIT([libXxf86vm], [1.1.2],
+AC_INIT([libXxf86vm], [1.1.3],
         [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg], [libXxf86vm])
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_HEADERS(src/config.h)
 
 # Initialize Automake
 AM_INIT_AUTOMAKE([foreign dist-bzip2])
-AM_MAINTAINER_MODE
 
 # Initialize libtool
 AC_PROG_LIBTOOL
@@ -22,6 +21,12 @@ XORG_CHECK_MALLOC_ZERO
 
 # Obtain compiler/linker options for depedencies
 PKG_CHECK_MODULES(XXF86VM, xproto x11 xextproto xext [xf86vidmodeproto >= 2.2.99.1])
+
+# Check for _XEatDataWords function that may be patched into older Xlib release
+SAVE_LIBS="$LIBS"
+LIBS="$XXF86VM_LIBS"
+AC_CHECK_FUNCS([_XEatDataWords])
+LIBS="$SAVE_LIBS"
 
 # Check for _XEatDataWords function that may be patched into older Xlib release
 SAVE_LIBS="$LIBS"
