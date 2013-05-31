@@ -50,31 +50,38 @@ SOFTWARE.
  * screen.
  */
 
+#ifdef HAVE_CONFIG_H
+# include "config.h"
+#endif
+
 #include <stdio.h>
 #include <errno.h>
 #include <X11/Xos.h>
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
-#include <ctype.h>
 #include <stdlib.h>
+
+#ifndef HAVE_STRCASECMP
+# include <ctype.h>
+#endif
 
 static Window win;
 
 static char *ProgramName;
 
-static void 
+static void _X_NORETURN
 Syntax(void)
 {
-    fprintf (stderr, "usage:  %s [-options] [geometry] [display]\n\n", 
-    	     ProgramName);
-    fprintf (stderr, "where the available options are:\n");
-    fprintf (stderr, "    -display host:dpy       or -d\n");
-    fprintf (stderr, "    -geometry WxH+X+Y       or -g spec\n");
-    fprintf (stderr, "    -black                  use BlackPixel\n");
-    fprintf (stderr, "    -white                  use WhitePixel\n");
-    fprintf (stderr, "    -solid colorname        use the color indicated\n");
-    fprintf (stderr, "    -root                   use the root background\n");
-    fprintf (stderr, "    -none                   no background in window\n");
+    fprintf (stderr, "usage:  %s [-options] [geometry] [display]\n\n%s",
+	     ProgramName,
+	     "where the available options are:\n"
+	     "    -display host:dpy       or -d\n"
+	     "    -geometry WxH+X+Y       or -g spec\n"
+	     "    -black                  use BlackPixel\n"
+	     "    -white                  use WhitePixel\n"
+	     "    -solid colorname        use the color indicated\n"
+	     "    -root                   use the root background\n"
+	     "    -none                   no background in window\n");
     fprintf (stderr, "\nThe default is:  %s -none\n\n", ProgramName);
     exit (1);
 }
@@ -87,22 +94,29 @@ Syntax(void)
 static int 
 parse_boolean_option(char *option)
 {
-    static struct _booltable {
-        char *name;
+    static const struct _booltable {
+        const char *name;
         int value;
     } booltable[] = {
         { "off", 0 }, { "n", 0 }, { "no", 0 }, { "false", 0 },
         { "on", 1 }, { "y", 1 }, { "yes", 1 }, { "true", 1 },
         { NULL, -1 }};
-    register struct _booltable *t;
+    register const struct _booltable *t;
+
+#ifndef HAVE_STRCASECMP
     register char *cp;
 
     for (cp = option; *cp; cp++) {
         if (isascii (*cp) && isupper (*cp)) *cp = tolower (*cp);
     }
+#endif
 
     for (t = booltable; t->name; t++) {
+#ifdef HAVE_STRCASECMP
+        if (strcasecmp (option, t->name) == 0) return (t->value);
+#else
         if (strcmp (option, t->name) == 0) return (t->value);
+#endif
     }
     return (-1);
 }
@@ -114,10 +128,10 @@ parse_boolean_option(char *option)
  */
 
 static Bool 
-isabbreviation(char *arg, char *s, int minslen)
+isabbreviation(const char *arg, char *s, size_t minslen)
 {
-    int arglen;
-    int slen;
+    size_t arglen;
+    size_t slen;
 
     /* exact match */
     if (strcmp (arg, s) == 0) return (True);
@@ -138,8 +152,8 @@ isabbreviation(char *arg, char *s, int minslen)
 
 enum e_action {doDefault, doBlack, doWhite, doSolid, doNone, doRoot};
 
-static struct s_pair {
-	char *resource_name;
+static const struct s_pair {
+	const char *resource_name;
 	enum e_action action;
 } pair_table[] = {
 	{ "Black", doBlack },
@@ -225,7 +239,7 @@ main(int argc, char *argv[])
 	    }
 	    action = doSolid;
 	} else {
-	    struct s_pair *pp;
+	    const struct s_pair *pp;
 
 	    for (pp = pair_table; pp->resource_name != NULL; pp++) {
 		def = XGetDefault (dpy, ProgramName, pp->resource_name);
@@ -316,7 +330,8 @@ main(int argc, char *argv[])
 	    } else {
 		fprintf (stderr,"%s:  unable to allocate color '%s'.\n",
 			 ProgramName, solidcolor);
-		action = doNone;
+		xswa.background_pixmap = None;
+		mask |= CWBackPixmap;
 	    }
 	    break;
 	case doDefault:
@@ -342,7 +357,7 @@ main(int argc, char *argv[])
      * backing store;  or do a ClearArea generating exposures on all windows
      */
     XMapWindow (dpy, win);
-    /* the following will free the color that we might have allocateded */
+    /* the following will free the color that we might have allocated */
     XCloseDisplay (dpy);
     exit (0);
 }

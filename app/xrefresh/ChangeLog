@@ -1,3 +1,114 @@
+commit 2c08f5dee8b3f2d2da9db8e3c1d4593a66db401e
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri May 17 18:20:13 2013 -0700
+
+    xrefresh 1.0.5
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 1a26cd81c08c008f8252ca03211705ce4951bab2
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jan 13 09:09:19 2013 -0800
+
+    Use strcasecmp if available, instead of downcasing string before strcmp
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 865c7c3da3a827cff080a763613d02729e9d4e33
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jan 13 08:37:49 2013 -0800
+
+    Fix implicit sign conversion & integer size truncation warnings
+    
+    xrefresh.c:125:14: warning: implicit conversion loses integer precision:
+          'size_t' (aka 'unsigned long') to 'int' [-Wshorten-64-to-32]
+        arglen = strlen (arg);
+               ~ ^~~~~~~~~~~~
+    xrefresh.c:126:12: warning: implicit conversion loses integer precision:
+          'size_t' (aka 'unsigned long') to 'int' [-Wshorten-64-to-32]
+        slen = strlen (s);
+             ~ ^~~~~~~~~~
+    xrefresh.c:132:26: warning: implicit conversion changes signedness: 'int' to
+          'size_t' (aka 'unsigned long') [-Wsign-conversion]
+        if (strncmp (arg, s, slen) == 0) return (True);
+            ~~~~~~~          ^~~~
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 4fa0dd48d6c9fcd54276a66c221fdafda2395c02
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Apr 16 17:22:16 2012 -0700
+
+    Combine usage message strings
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit c0b077a85fb2e624ec87fb8bec906ce30bc473e4
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Apr 16 17:18:35 2012 -0700
+
+    Mark Syntax() with _X_NORETURN to silence gcc warning
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit d944df52b7b2c5c9e6789b0ff7bb390108613c6c
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Apr 16 17:10:23 2012 -0700
+
+    Add const qualifiers to structs for mapping strings to values
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 71c97a091a511d403fdb8587d0e1240ec3913820
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Apr 16 17:04:35 2012 -0700
+
+    Add const qualifiers to fix gcc -Wwrite-strings warnings
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit cde30320d98b95f7c0cec5bed906b7107124f8fa
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Sun May 8 16:52:55 2011 -0700
+
+    Properly fallback on CWBackPixmap = None when failing to parse or allocate a solid color
+    
+    xrefresh.c:319:3: warning: Value stored to 'action' is never read
+                    action = doNone;
+                    ^        ~~~~~~
+    
+    Found-by: clang static analyzer
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit 289e8d27a8417ca94fd2063a44b84338ff499a3e
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Jan 28 20:53:06 2011 -0800
+
+    Fix allocateded typo in comment
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 18f7dcdd9fb30b784b3d99cb91d9f5c80cc19f44
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jan 19 10:06:57 2011 -0500
+
+    config: move man pages into their own directory
+    
+    Use services provided by XORG_MANPAGE_SECTIONS.
+    Use standard Makefile for man pages.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit d604128cf39507dc80a46449a15050f2a066d50f
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Jan 13 11:15:48 2011 -0500
+
+    man: remove trailing spaces and tabs
+    
+    Using s/[ \t]*$//
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
 commit 631be2568befbd4aee98a3cd4849403554db79d7
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Wed Nov 10 19:46:37 2010 -0800
