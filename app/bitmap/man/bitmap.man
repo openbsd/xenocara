@@ -174,13 +174,13 @@ may be used in creating cursors, icons, and tiles.
 .SH EDITING
 To edit a bitmap image simply click on one of the buttons with drawing
 commands (\fBPoint, Curve, Line, Rectangle,\fP etc.) and move the
-pointer into the bitmap grid  window.  Press one of the buttons on your
+pointer into the bitmap grid window.  Press one of the buttons on your
 mouse and the appropriate action will take place.  You can either set,
 clear or invert the gird squares.  Setting a grid square corresponds
 to setting a bit in the bitmap image to 1.  Clearing a grid square
 corresponds to setting a bit in the bitmap image to 0.  Inverting a
 grid square corresponds to changing a bit in the bitmap image from 0 to
-1 or 1 to 0, depending what its previous state was. The
+1 or 1 to 0, depending what its previous state was.  The
 default behavior of mouse buttons is as specified below.
 .sp
 .nf
@@ -406,7 +406,7 @@ filename.  It should be used if you want to change the filename.
 This command is used to resize the editing area to the new number of
 pixels.  The size should be entered in the WIDTHxHEIGHT format.  The
 information in the image being edited will not be lost unless the new
-size is smaller that the current image size. The editor was not
+size is smaller that the current image size.  The editor was not
 designed to edit huge files.
 .TP 4
 .B Rescale
@@ -425,7 +425,7 @@ This command is used to change the basename, if a different one from
 the specified filename is desired.
 .TP 4
 .B Quit
-\This command will terminate the bitmap application.  If the file was
+This command will terminate the bitmap application.  If the file was
 not saved, user will be prompted and asked whether to save the image
 or not.  This command is preferred over killing the process.
 .SH EDIT MENU

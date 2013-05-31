@@ -1,3 +1,75 @@
+commit 10584a7e5f476c5adb5ec6de9f0b519380abd6df
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri May 17 21:12:44 2013 -0700
+
+    bitmap 1.0.7
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit d028190d036f25472dba587863322a8fe03dda95
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Apr 21 15:02:52 2013 -0700
+
+    Mark usage() functions as noreturn, as suggested by gcc
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit f36566239cc9119882a36273c3eefb90962d6ee5
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Apr 21 14:52:01 2013 -0700
+
+    Simplify & unify error path between mktemp & mkstemp versions
+    
+    This also now catches errors when fopen() or fdopen() fail, before
+    we try to fwrite() to a null FILE pointer.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 249695649bb25f500d1525f655ca317428ea6044
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Apr 21 14:46:24 2013 -0700
+
+    Fix genererate typo in bmtoa error messages
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 7b5ba88d06ca88e11a8127d12f3d7685a473684e
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jan 20 23:16:46 2013 -0800
+
+    Combine usage messages into a single string
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 0d42abaefc427f7c354f4cff3d098775df5c9cb4
+Author: Bjarni Ingi Gislason <bjarniig@rhi.hi.is>
+Date:   Sat Sep 22 19:46:01 2012 -0400
+
+    bitmap.man:  Fix some typos.
+    
+    Remove stray backslash.
+    (Added sometime between X11R4 and X11R5; 21+ years old.)
+    
+    Use two spaces between sentences, not one or two or three.
+    
+    Signed-off-by: Bjarni Ingi Gislason <bjarniig@rhi.hi.is>
+    Signed-off-by: James Cloos <cloos@jhcloos.com>
+
+commit 53d99608451ade88d59d8baae6fc543d6922fb0a
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue May 29 23:22:35 2012 -0700
+
+    Fix pixmap leak in error paths of BWGetUnzoomedPixmap
+    
+    Found by Parfait 0.5.0.1 bug checking tool:
+       Leaked X Resource pix
+            at line 393 of Bitmap.c in function 'BWGetUnzoomedPixmap'.
+              pix initialized at line 388 with XCreatePixmap(...).
+            at line 414 of Bitmap.c in function 'BWGetUnzoomedPixmap'.
+              pix initialized at line 409 with XCreatePixmap(...).
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit a7909448b89f42ad0bb4834e347e6d3ecb20d7da
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Thu Mar 8 21:40:10 2012 -0800

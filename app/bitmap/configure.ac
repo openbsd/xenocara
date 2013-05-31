@@ -23,7 +23,7 @@ dnl Process this file with autoconf to create configure.
 
 # Initialize Autoconf
 AC_PREREQ([2.60])
-AC_INIT([bitmap], [1.0.6],
+AC_INIT([bitmap], [1.0.7],
 	[https://bugs.freedesktop.org/enter_bug.cgi?product=xorg], [bitmap])
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_HEADERS([config.h])
@@ -55,8 +55,8 @@ LIBS="$save_LIBS"
 AC_SUBST([MATH_LIBS])
 
 # Obtain compiler/linker options from dependencies
-PKG_CHECK_MODULES(BMTOA, x11 xmu)
-PKG_CHECK_MODULES(ATOBM, xproto)
+PKG_CHECK_MODULES(BMTOA, [x11 xmu xproto >= 7.0.17])
+PKG_CHECK_MODULES(ATOBM, [xproto >= 7.0.17])
 PKG_CHECK_MODULES(BITMAP, xbitmaps xaw7 xmu)
 
 PKG_CHECK_MODULES(APPDEFS, xt)

@@ -389,8 +389,10 @@ BWGetUnzoomedPixmap(Widget w)
 			    BW->bitmap.zoom.image->width,
 			    BW->bitmap.zoom.image->height, 1);
 	if (!(gc = XCreateGC(XtDisplay(w), pix,
-			     (unsigned long) 0, (XGCValues *) 0)))
+			     (unsigned long) 0, (XGCValues *) 0))) {
+	    XFreePixmap(XtDisplay(w), pix);
 	    return (Pixmap) None;
+	}
 
 	XPutImage(XtDisplay(w), pix, gc,
 		  BW->bitmap.zoom.image,
@@ -410,8 +412,10 @@ BWGetUnzoomedPixmap(Widget w)
 			    BW->bitmap.image->width,
 			    BW->bitmap.image->height, 1);
 	if (! (gc = XCreateGC(XtDisplay(w), pix,
-			      (unsigned long) 0, (XGCValues *) 0)))
+			      (unsigned long) 0, (XGCValues *) 0))){
+	    XFreePixmap(XtDisplay(w), pix);
 	    return (Pixmap) None;
+	}
 
 	XPutImage(XtDisplay(w), pix, gc,
 		  BW->bitmap.image,
