@@ -109,8 +109,8 @@ static /* const */ SyncVersionInfo supported_versions[] = {
 };
 
 #define NUM_VERSIONS (sizeof(supported_versions)/sizeof(supported_versions[0]))
-#define GET_VERSION(info) ((info) ? (const SyncVersionInfo*)(info)->data : NULL)
-#define IS_VERSION_SUPPORTED(info) (!!GET_VERSION(info))
+#define GET_VERSION(info) ((const SyncVersionInfo*)(info)->data)
+#define IS_VERSION_SUPPORTED(info) (!!(info))
 
 static
 const SyncVersionInfo* GetVersionInfo(Display *dpy)

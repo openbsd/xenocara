@@ -1,3 +1,357 @@
+commit d8366afbb0d2e4fbb1e419b1187f490522270bea
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri May 31 14:34:58 2013 -0700
+
+    libXext 1.3.2
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit dfe6e1f3b8ede3d0bab7a5fa57f73513a09ec649
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Mar 9 14:40:33 2013 -0800
+
+    integer overflow in XSyncListSystemCounters() [CVE-2013-1982 6/6]
+    
+    If the number of counters or amount of data reported by the server is
+    large enough that it overflows when multiplied by the size of the
+    appropriate struct, then memory corruption can occur when more bytes
+    are read from the X server than the size of the buffers we allocated
+    to hold them.
+    
+    V2: Make sure we don't walk past the end of the reply when converting
+    data from wire format to the structures returned to the caller.
+    
+    Reported-by: Ilja Van Sprundel <ivansprundel@ioactive.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 6ecd96e8be3c33e2ffad6631cea4aa0a030d93c2
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Mar 9 14:40:33 2013 -0800
+
+    integer overflow in XShapeGetRectangles() [CVE-2013-1982 5/6]
+    
+    If the number of rectangles reported by the server is large enough that
+    it overflows when multiplied by the size of the appropriate struct, then
+    memory corruption can occur when more bytes are read from the X server
+    than the size of the buffer we allocated to hold them.
+    
+    Reported-by: Ilja Van Sprundel <ivansprundel@ioactive.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 67ecdcf7e29de9fa78b421122620525ed2c7db88
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Mar 9 14:40:33 2013 -0800
+
+    integer overflow in XeviGetVisualInfo() [CVE-2013-1982 4/6]
+    
+    If the number of visuals or conflicts reported by the server is large
+    enough that it overflows when multiplied by the size of the appropriate
+    struct, then memory corruption can occur when more bytes are read from
+    the X server than the size of the buffer we allocated to hold them.
+    
+    Reported-by: Ilja Van Sprundel <ivansprundel@ioactive.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 96d1da55a08c4cd52b763cb07bdce5cdcbec4da8
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Mar 9 14:40:33 2013 -0800
+
+    several integer overflows in XdbeGetVisualInfo() [CVE-2013-1982 3/6]
+    
+    If the number of screens or visuals reported by the server is large enough
+    that it overflows when multiplied by the size of the appropriate struct,
+    then memory corruption can occur when more bytes are read from the X server
+    than the size of the buffer we allocated to hold them.
+    
+    Reported-by: Ilja Van Sprundel <ivansprundel@ioactive.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 082d70b19848059ba78c9d1c315114fb07e8c0ef
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Mar 9 14:40:33 2013 -0800
+
+    integer overflow in XcupStoreColors() [CVE-2013-1982 2/6]
+    
+    If the computed number of entries is large enough that it overflows when
+    multiplied by the size of a xColorItem struct, or is treated as negative
+    when compared to the size of the stack allocated buffer, then memory
+    corruption can occur when more bytes are read from the X server than the
+    size of the buffer we allocated to hold them.
+    
+    The requirement to match the number of colors specified by the caller makes
+    this much harder to hit than the one in XcupGetReservedColormapEntries()
+    
+    Reported-by: Ilja Van Sprundel <ivansprundel@ioactive.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit d05f27a6f74cb419ad5a437f2e4690b17e7faee5
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Mar 9 14:40:33 2013 -0800
+
+    integer overflow in XcupGetReservedColormapEntries() [CVE-2013-1982 1/6]
+    
+    If the computed number of entries is large enough that it overflows when
+    multiplied by the size of a xColorItem struct, or is treated as negative
+    when compared to the size of the stack allocated buffer, then memory
+    corruption can occur when more bytes are read from the X server than the
+    size of the buffer we allocated to hold them.
+    
+    Reported-by: Ilja Van Sprundel <ivansprundel@ioactive.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit ca84a813716f9de691dc3f60390d83af4b5ae534
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Apr 13 09:32:12 2013 -0700
+
+    Use _XEatDataWords to avoid overflow of rep.length bit shifting
+    
+    rep.length is a CARD32, so rep.length << 2 could overflow in 32-bit builds
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 8eee1236041d46a21faba32e0d27c26985267d89
+Author: Colin Walters <walters@verbum.org>
+Date:   Wed Jan 4 17:37:06 2012 -0500
+
+    autogen.sh: Implement GNOME Build API
+    
+    http://people.gnome.org/~walters/docs/build-api.txt
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit dbf4b9ec4a8aa97b0c47d58ee158dd3aa8832af5
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Tue Jan 15 14:28:48 2013 -0500
+
+    configure: Remove AM_MAINTAINER_MODE
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit 7081afc98643e3ef8a3ed711183c8fc8fef30cfa
+Author: Eric S. Raymond <esr@thyrsus.com>
+Date:   Thu Aug 23 13:34:16 2012 -0400
+
+    Replace presentationm-level requests with .RS/RE.
+    
+    This will assist translation to DocBook.
+    
+    Signed-off-by: Eric S. Raymond <esr@thyrsus.com>
+
+commit d618eac132fc9e13bbfb9e58e3375f015db2a179
+Author: Eric S. Raymond <esr@thyrsus.com>
+Date:   Thu Aug 23 13:25:27 2012 -0400
+
+    Replace various unsafe presentation-level requests with .RS/.RE and .EX/EE.
+    
+    These can be translated structurally into DocBook.
+
+commit e78e51359fd22b69e646167bc9d3f9b28a5c755f
+Author: Thomas Klausner <wiz@NetBSD.org>
+Date:   Wed Jul 18 23:40:18 2012 +0200
+
+    Avoid having macros expand code to be: ((f) ? (f)->m1 : NULL)->m2
+    
+    From Matthew R. Green <mrg@NetBSD.org>
+    
+    Signed-off-by: Thomas Klausner <wiz@NetBSD.org>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit ed8d50ba3a6f837d213ed7c39c2b63d33fc75a38
+Author: Chase Douglas <chase.douglas@canonical.com>
+Date:   Fri Apr 20 15:08:08 2012 -0700
+
+    Destroy generic event extension after last display is removed
+    
+    The extension record is currently leaked and never freed.
+    
+    Signed-off-by: Chase Douglas <chase.douglas@canonical.com>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit c6fc799a81334a223cf0e924cd9e7e94ba147835
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Mon Apr 23 14:59:51 2012 +1000
+
+    sync: fix copy/paste error in comment
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit d8366afbb0d2e4fbb1e419b1187f490522270bea
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri May 31 14:34:58 2013 -0700
+
+    libXext 1.3.2
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit dfe6e1f3b8ede3d0bab7a5fa57f73513a09ec649
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Mar 9 14:40:33 2013 -0800
+
+    integer overflow in XSyncListSystemCounters() [CVE-2013-1982 6/6]
+    
+    If the number of counters or amount of data reported by the server is
+    large enough that it overflows when multiplied by the size of the
+    appropriate struct, then memory corruption can occur when more bytes
+    are read from the X server than the size of the buffers we allocated
+    to hold them.
+    
+    V2: Make sure we don't walk past the end of the reply when converting
+    data from wire format to the structures returned to the caller.
+    
+    Reported-by: Ilja Van Sprundel <ivansprundel@ioactive.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 6ecd96e8be3c33e2ffad6631cea4aa0a030d93c2
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Mar 9 14:40:33 2013 -0800
+
+    integer overflow in XShapeGetRectangles() [CVE-2013-1982 5/6]
+    
+    If the number of rectangles reported by the server is large enough that
+    it overflows when multiplied by the size of the appropriate struct, then
+    memory corruption can occur when more bytes are read from the X server
+    than the size of the buffer we allocated to hold them.
+    
+    Reported-by: Ilja Van Sprundel <ivansprundel@ioactive.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 67ecdcf7e29de9fa78b421122620525ed2c7db88
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Mar 9 14:40:33 2013 -0800
+
+    integer overflow in XeviGetVisualInfo() [CVE-2013-1982 4/6]
+    
+    If the number of visuals or conflicts reported by the server is large
+    enough that it overflows when multiplied by the size of the appropriate
+    struct, then memory corruption can occur when more bytes are read from
+    the X server than the size of the buffer we allocated to hold them.
+    
+    Reported-by: Ilja Van Sprundel <ivansprundel@ioactive.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 96d1da55a08c4cd52b763cb07bdce5cdcbec4da8
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Mar 9 14:40:33 2013 -0800
+
+    several integer overflows in XdbeGetVisualInfo() [CVE-2013-1982 3/6]
+    
+    If the number of screens or visuals reported by the server is large enough
+    that it overflows when multiplied by the size of the appropriate struct,
+    then memory corruption can occur when more bytes are read from the X server
+    than the size of the buffer we allocated to hold them.
+    
+    Reported-by: Ilja Van Sprundel <ivansprundel@ioactive.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 082d70b19848059ba78c9d1c315114fb07e8c0ef
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Mar 9 14:40:33 2013 -0800
+
+    integer overflow in XcupStoreColors() [CVE-2013-1982 2/6]
+    
+    If the computed number of entries is large enough that it overflows when
+    multiplied by the size of a xColorItem struct, or is treated as negative
+    when compared to the size of the stack allocated buffer, then memory
+    corruption can occur when more bytes are read from the X server than the
+    size of the buffer we allocated to hold them.
+    
+    The requirement to match the number of colors specified by the caller makes
+    this much harder to hit than the one in XcupGetReservedColormapEntries()
+    
+    Reported-by: Ilja Van Sprundel <ivansprundel@ioactive.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit d05f27a6f74cb419ad5a437f2e4690b17e7faee5
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Mar 9 14:40:33 2013 -0800
+
+    integer overflow in XcupGetReservedColormapEntries() [CVE-2013-1982 1/6]
+    
+    If the computed number of entries is large enough that it overflows when
+    multiplied by the size of a xColorItem struct, or is treated as negative
+    when compared to the size of the stack allocated buffer, then memory
+    corruption can occur when more bytes are read from the X server than the
+    size of the buffer we allocated to hold them.
+    
+    Reported-by: Ilja Van Sprundel <ivansprundel@ioactive.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit ca84a813716f9de691dc3f60390d83af4b5ae534
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Apr 13 09:32:12 2013 -0700
+
+    Use _XEatDataWords to avoid overflow of rep.length bit shifting
+    
+    rep.length is a CARD32, so rep.length << 2 could overflow in 32-bit builds
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 8eee1236041d46a21faba32e0d27c26985267d89
+Author: Colin Walters <walters@verbum.org>
+Date:   Wed Jan 4 17:37:06 2012 -0500
+
+    autogen.sh: Implement GNOME Build API
+    
+    http://people.gnome.org/~walters/docs/build-api.txt
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit dbf4b9ec4a8aa97b0c47d58ee158dd3aa8832af5
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Tue Jan 15 14:28:48 2013 -0500
+
+    configure: Remove AM_MAINTAINER_MODE
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit 7081afc98643e3ef8a3ed711183c8fc8fef30cfa
+Author: Eric S. Raymond <esr@thyrsus.com>
+Date:   Thu Aug 23 13:34:16 2012 -0400
+
+    Replace presentationm-level requests with .RS/RE.
+    
+    This will assist translation to DocBook.
+    
+    Signed-off-by: Eric S. Raymond <esr@thyrsus.com>
+
+commit d618eac132fc9e13bbfb9e58e3375f015db2a179
+Author: Eric S. Raymond <esr@thyrsus.com>
+Date:   Thu Aug 23 13:25:27 2012 -0400
+
+    Replace various unsafe presentation-level requests with .RS/.RE and .EX/EE.
+    
+    These can be translated structurally into DocBook.
+
+commit e78e51359fd22b69e646167bc9d3f9b28a5c755f
+Author: Thomas Klausner <wiz@NetBSD.org>
+Date:   Wed Jul 18 23:40:18 2012 +0200
+
+    Avoid having macros expand code to be: ((f) ? (f)->m1 : NULL)->m2
+    
+    From Matthew R. Green <mrg@NetBSD.org>
+    
+    Signed-off-by: Thomas Klausner <wiz@NetBSD.org>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit ed8d50ba3a6f837d213ed7c39c2b63d33fc75a38
+Author: Chase Douglas <chase.douglas@canonical.com>
+Date:   Fri Apr 20 15:08:08 2012 -0700
+
+    Destroy generic event extension after last display is removed
+    
+    The extension record is currently leaked and never freed.
+    
+    Signed-off-by: Chase Douglas <chase.douglas@canonical.com>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit c6fc799a81334a223cf0e924cd9e7e94ba147835
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Mon Apr 23 14:59:51 2012 +1000
+
+    sync: fix copy/paste error in comment
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
 commit e9c1e346c90e697d5d8f0e756ef8b6e3ed339e29
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Wed Mar 7 19:54:50 2012 -0800
