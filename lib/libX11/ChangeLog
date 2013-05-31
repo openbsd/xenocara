@@ -1,3 +1,625 @@
+commit 95a388158c9d73df7d24016d6a3d61506d7d53a4
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu May 23 19:43:35 2013 -0700
+
+    libX11 1.5.99.902 (1.6 RC2)
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit a3bdd2b090915fe0163b062f0e6576fe05dd332e
+Author: Julien Cristau <jcristau@debian.org>
+Date:   Thu May 23 20:39:46 2013 +0200
+
+    xkb: fix off-by-one in _XkbReadGetNamesReply and _XkbReadVirtualModMap
+    
+    The size of the arrays is max_key_code + 1.  This makes these functions
+    consistent with the other checks added for CVE-2013-1997.
+    
+    Also check the XkbGetNames reply when names->keys was just allocated.
+    
+    Signed-off-by: Julien Cristau <jcristau@debian.org>
+    Tested-by: Colin Walters <walters@verbum.org>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 7e30056e78e4b7979ff47f102e00327617266019
+Author: Niveditha Rau <Niveditha.Rau@Oracle.COM>
+Date:   Fri May 17 15:26:21 2013 -0700
+
+    Make sure internal headers include required headers
+    
+    Fixes builds with Solaris Studio 12.3 when lint is enabled, since it no
+    longer ignores *.h files, but complains when they reference undefined
+    typedefs or macros.
+    
+    Signed-off-by: Niveditha Rau <Niveditha.Rau@Oracle.COM>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 2820100bf8ba130b94253f415e7fa5ac28bb2037
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu May 16 23:05:36 2013 -0700
+
+    Free fs->properties in _XF86BigfontQueryFont overflow error path
+    
+    Fixes small memory leak introduced in commit 5669a22081
+    
+    Reported-by: Julien Cristau <jcristau@debian.org>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 3131740513133a9ff7cb12123d29ceb18584fc38
+Author: Matthieu Herrb <matthieu.herrb@laas.fr>
+Date:   Wed May 8 19:33:09 2013 +0200
+
+    XListFontsWithInfo: Re-decrement flist[0] before calling free() on it.
+    
+    Freeing a pointer that wasn't returned by malloc() is undefined
+    behavior and produces an error with OpenBSD's implementation.
+    
+    Signed-off-by: Matthieu Herrb <matthieu.herrb@laas.fr>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 3fe4bea086149f06a142a8f1d575f627ec1e22c7
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Apr 19 14:30:40 2013 -0700
+
+    Give GNU & Solaris Studio compilers hints about XEatData branches
+    
+    Try to offset the cost of all the recent checks we've added by giving
+    the compiler a hint that the branches that involve us eating data
+    are less likely to be used than the ones that process it.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit e1b457beb8d4e831ef44279dada6c475cb955738
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Mar 31 12:22:35 2013 -0700
+
+    _XkbReadGetMapReply: reject maxKeyCodes smaller than the minKeyCode
+    
+    Various other bounds checks in the code assume this is true, so
+    enforce it when we first get the data from the X server.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 12ad4c6432496897ff000eb7cfecd0fb4b290331
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Mar 16 10:03:13 2013 -0700
+
+    Use calloc in XOpenDisplay to initialize structs containing pointers
+    
+    Prevents trying to free uninitialized pointers if we have to bail out
+    partway through setup, such as if we receive a corrupted or incomplete
+    connection setup block from the server.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit d38527e25f8b6e2f1174ecc21260c5c5416f972e
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Mar 7 23:46:05 2013 -0800
+
+    Remove more unnecessary casts from Xmalloc/calloc calls
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit b2c86b582c58f50c7b14da01cf7ebd20ef12a6b2
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Mar 2 16:56:16 2013 -0800
+
+    Convert more _XEatData callers to _XEatDataWords
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Matthieu Herrb <matthieu.herrb@laas.fr>
+
+commit 192bbb9e2fc45df4e17b35b6d14ea0eb418dbd39
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Mar 9 11:04:37 2013 -0800
+
+    Make XGetWindowProperty() always initialize returned values
+    
+    Avoids memory corruption and other errors when callers access them
+    without checking to see if XGetWindowProperty() returned an error value.
+    
+    Callers are still required to check for errors, this just reduces the
+    damage when they don't.
+    
+    Reported-by: Ilja Van Sprundel <ivansprundel@ioactive.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Matthieu Herrb <matthieu.herrb@laas.fr>
+
+commit db1b1c871da29aa0545182bf888df81627f165a5
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Mar 2 15:08:21 2013 -0800
+
+    Avoid overflows in XListExtensions() [CVE-2013-1997 15/15]
+    
+    Ensure that when breaking the returned list into individual strings,
+    we don't walk past the end of allocated memory to write the '\0' bytes
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Matthieu Herrb <matthieu.herrb@laas.fr>
+
+commit 8d5936594993921acdfec778dd8f41b555e2543a
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Mar 2 15:08:21 2013 -0800
+
+    Avoid overflows in XGetFontPath() [CVE-2013-1997 14/15]
+    
+    Ensure that when breaking the returned list into individual strings,
+    we don't walk past the end of allocated memory to write the '\0' bytes
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Matthieu Herrb <matthieu.herrb@laas.fr>
+
+commit 0c404db6a92dc2c198328bf586c02d8abbe02013
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Mar 2 15:08:21 2013 -0800
+
+    Avoid overflows in XListFonts() [CVE-2013-1997 13/15]
+    
+    Ensure that when breaking the returned list into individual strings,
+    we don't walk past the end of allocated memory to write the '\0' bytes
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Matthieu Herrb <matthieu.herrb@laas.fr>
+
+commit 0b0f5d4358c3de7563d6af03f0d2ce454702a06a
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Mar 2 15:08:21 2013 -0800
+
+    integer overflow in XGetModifierMapping() [CVE-2013-1981 13/13]
+    
+    Ensure that we don't underallocate when the server claims a very large reply
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Matthieu Herrb <matthieu.herrb@laas.fr>
+
+commit a351b8103b2ba78882e1c309e85893ca3abe2073
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Mar 2 15:08:21 2013 -0800
+
+    integer overflow in XGetPointerMapping() & XGetKeyboardMapping() [CVE-2013-1981 12/13]
+    
+    Ensure that we don't underallocate when the server claims a very large reply
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Matthieu Herrb <matthieu.herrb@laas.fr>
+
+commit 833f6b70bc789d33607f6dbfee9e0a4178ec4b59
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Mar 2 15:08:21 2013 -0800
+
+    integer overflow in XGetImage() [CVE-2013-1981 11/13]
+    
+    Ensure that we don't underallocate when the server claims to have sent a
+    very large reply.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Matthieu Herrb <matthieu.herrb@laas.fr>
+
+commit 79d8dc08eb98842173ce239b9dd60df0e9e9ae72
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Mar 8 22:25:35 2013 -0800
+
+    integer overflow in XGetWindowProperty() [CVE-2013-1981 10/13]
+    
+    If the reported number of properties is too large, the calculations
+    to allocate memory for them may overflow, leaving us returning less
+    memory to the caller than implied by the value written to *nitems.
+    
+    Reported-by: Ilja Van Sprundel <ivansprundel@ioactive.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Matthieu Herrb <matthieu.herrb@laas.fr>
+
+commit 164bf4dfe839b1cc75cdeee378a243d04a8200e4
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Mar 2 13:18:48 2013 -0800
+
+    integer overflows in TransFileName() [CVE-2013-1981 9/13]
+    
+    When trying to process file paths the tokens %H, %L, & %S are expanded
+    to $HOME, the standard compose file path & the xlocaledir path.
+    If enough of these tokens are repeated and values like $HOME are set to
+    very large values, the calculation of the total string size required to
+    hold the expanded path can overflow, resulting in allocating a smaller
+    string than the amount of data we'll write to it.
+    
+    Simply restrict all of these values, and the total path size to PATH_MAX,
+    because really, that's all you should need for a filename path.
+    
+    Reported-by: Ilja Van Sprundel <ivansprundel@ioactive.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Matthieu Herrb <matthieu.herrb@laas.fr>
+
+commit 460e8a223b87d4fa0ea1e97823e998a770e0f2a2
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Mar 1 18:37:37 2013 -0800
+
+    integer truncation in _XimParseStringFile() [CVE-2013-1981 8/13]
+    
+    Called from _XimCreateDefaultTree() which uses getenv("XCOMPOSEFILE")
+    to specify filename.
+    
+    If the size of off_t is larger than the size of unsigned long (as in
+    32-bit builds with large file flags), a file larger than 4 gigs could
+    have its size truncated, leading to data from that file being written
+    past the end of the undersized buffer allocated for it.
+    
+    While configure.ac does not use AC_SYS_LARGEFILE to set large file mode,
+    builders may have added the large file compilation flags to CFLAGS on
+    their own.
+    
+    size is left limited to an int, because if your Xim file is
+    larger than 2gb, you're doing it wrong.
+    
+    Reported-by: Ilja Van Sprundel <ivansprundel@ioactive.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Matthieu Herrb <matthieu.herrb@laas.fr>
+
+commit 226622349a4b1e16064649d4444a34fb4be4f464
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Mar 2 12:39:58 2013 -0800
+
+    Unbounded recursion in _XimParseStringFile() when parsing include files [CVE-2013-2004 2/2]
+    
+    parseline() can call _XimParseStringFile() which can call parseline()
+    which can call _XimParseStringFile() which can call parseline() ....
+    eventually causing recursive stack overflow and crash.
+    
+    Limit is set to a include depth of 100 files, which should be enough
+    for all known use cases, but could be adjusted later if necessary.
+    
+    Reported-by: Ilja Van Sprundel <ivansprundel@ioactive.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Matthieu Herrb <matthieu.herrb@laas.fr>
+
+commit 236b603d235dc264d1c6250dca09c745458a9088
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Mar 2 12:01:39 2013 -0800
+
+    Unbounded recursion in GetDatabase() when parsing include files [CVE-2013-2004 1/2]
+    
+    GetIncludeFile() can call GetDatabase() which can call GetIncludeFile()
+    which can call GetDatabase() which can call GetIncludeFile() ....
+    eventually causing recursive stack overflow and crash.
+    
+    Easily reproduced with a resource file that #includes itself.
+    
+    Limit is set to a include depth of 100 files, which should be enough
+    for all known use cases, but could be adjusted later if necessary.
+    
+    Reported-by: Ilja Van Sprundel <ivansprundel@ioactive.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Matthieu Herrb <matthieu.herrb@laas.fr>
+
+commit 076428918e6c35f66b9b55c3fa097ff06496d155
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Mar 1 18:37:37 2013 -0800
+
+    integer overflow in ReadInFile() in Xrm.c [CVE-2013-1981 7/13]
+    
+    Called from XrmGetFileDatabase() which gets called from InitDefaults()
+    which gets the filename from getenv ("XENVIRONMENT")
+    
+    If file is exactly 0xffffffff bytes long (or longer and truncates to
+    0xffffffff, on implementations where off_t is larger than an int),
+    then size may be set to a value which overflows causing less memory
+    to be allocated than is written to by the following read() call.
+    
+    size is left limited to an int, because if your Xresources file is
+    larger than 2gb, you're very definitely doing it wrong.
+    
+    Reported-by: Ilja Van Sprundel <ivansprundel@ioactive.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Matthieu Herrb <matthieu.herrb@laas.fr>
+
+commit 90fd5abac2faca86f9f100353a3c9c7b89f31484
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Mar 2 11:44:19 2013 -0800
+
+    Integer overflows in stringSectionSize() cause buffer overflow in ReadColornameDB() [CVE-2013-1981 6/13]
+    
+    LoadColornameDB() calls stringSectionSize() to do a first pass over the
+    file (which may be provided by the user via XCMSDB environment variable)
+    to determine how much memory needs to be allocated to read in the file,
+    then allocates the returned sizes and calls ReadColornameDB() to load the
+    data from the file into that newly allocated memory.
+    
+    If stringSectionSize() overflows the signed ints used to calculate the
+    file size (say if you have an xcmsdb with ~4 billion lines in or a
+    combined string length of ~4 gig - which while it may have been
+    inconceivable when Xlib was written, is quite possible today), then
+    LoadColornameDB() may allocate a memory buffer much smaller than the
+    amount of data ReadColornameDB() will write to it.
+    
+    The total size is left limited to an int, because if your xcmsdb file
+    is larger than 2gb, you're doing it wrong.
+    
+    Reported-by: Ilja Van Sprundel <ivansprundel@ioactive.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Matthieu Herrb <matthieu.herrb@laas.fr>
+
+commit b9ba832401734e1cbd30a930c0d11d850293f3f9
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Mar 2 11:25:25 2013 -0800
+
+    unvalidated length in _XimXGetReadData() [CVE-2013-1997 12/15]
+    
+    Check the provided buffer size against the amount of data we're going to
+    write into it, not against the reported length from the ClientMessage.
+    
+    Reported-by: Ilja Van Sprundel <ivansprundel@ioactive.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Matthieu Herrb <matthieu.herrb@laas.fr>
+
+commit de2e6c322c4aca22856b380f67f8e488e7510015
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Mar 2 11:11:08 2013 -0800
+
+    unvalidated index/length in _XkbReadGetNamesReply() [CVE-2013-1997 11/15]
+    
+    If the X server returns key name indexes outside the range of the number
+    of keys it told us to allocate, out of bounds memory writes could occur.
+    
+    Reported-by: Ilja Van Sprundel <ivansprundel@ioactive.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Matthieu Herrb <matthieu.herrb@laas.fr>
+
+commit 2df882eeb3a70256170127a746a9ba26376599a1
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Mar 2 11:01:04 2013 -0800
+
+    unvalidated index in _XkbReadVirtualModMap() [CVE-2013-1997 10/15]
+    
+    If the X server returns modifier map indexes outside the range of the number
+    of keys it told us to allocate, out of bounds memory writes could occur.
+    
+    Reported-by: Ilja Van Sprundel <ivansprundel@ioactive.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Matthieu Herrb <matthieu.herrb@laas.fr>
+
+commit 4d7c422a37eb9617fb22f8e37527c2b34b105665
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Mar 2 11:04:44 2013 -0800
+
+    unvalidated index in _XkbReadExplicitComponents() [CVE-2013-1997 9/15]
+    
+    If the X server returns key indexes outside the range of the number of
+    keys it told us to allocate, out of bounds memory writes could occur.
+    
+    Reported-by: Ilja Van Sprundel <ivansprundel@ioactive.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Matthieu Herrb <matthieu.herrb@laas.fr>
+
+commit e56a2ada719c5cfac5ed61a52a80ade86c0f5957
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Mar 2 10:51:51 2013 -0800
+
+    unvalidated index in _XkbReadModifierMap() [CVE-2013-1997 8/15]
+    
+    If the X server returns modifier map indexes outside the range of the number
+    of keys it told us to allocate, out of bounds memory writes could occur.
+    
+    Reported-by: Ilja Van Sprundel <ivansprundel@ioactive.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Matthieu Herrb <matthieu.herrb@laas.fr>
+
+commit 06c086e8a1d8374ea9a95ff989f053c96bb1bdca
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Mar 2 10:39:21 2013 -0800
+
+    unvalidated index in _XkbReadKeyBehaviors() [CVE-2013-1997 7/15]
+    
+    If the X server returns key behavior indexes outside the range of the number
+    of keys it told us to allocate, out of bounds memory writes could occur.
+    
+    Reported-by: Ilja Van Sprundel <ivansprundel@ioactive.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Matthieu Herrb <matthieu.herrb@laas.fr>
+
+commit 00626c3830b869259098985afa38933d77ccec72
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Mar 2 09:40:22 2013 -0800
+
+    unvalidated index in _XkbReadKeyActions() [CVE-2013-1997 6/15]
+    
+    If the X server returns key action indexes outside the range of the number
+    of keys it told us to allocate, out of bounds memory access could occur.
+    
+    Reported-by: Ilja Van Sprundel <ivansprundel@ioactive.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Matthieu Herrb <matthieu.herrb@laas.fr>
+
+commit fd7d4956bc7a1c4b5c38661b12777ebee4d685d9
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Mar 2 09:28:33 2013 -0800
+
+    unvalidated index in _XkbReadKeySyms() [CVE-2013-1997 5/15]
+    
+    If the X server returns keymap indexes outside the range of the number of
+    keys it told us to allocate, out of bounds memory access could occur.
+    
+    Reported-by: Ilja Van Sprundel <ivansprundel@ioactive.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Matthieu Herrb <matthieu.herrb@laas.fr>
+
+commit 59ae16a00d18588e98af57d26e442af8ea42b7aa
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Mar 2 09:18:26 2013 -0800
+
+    unvalidated indexes in _XkbReadGetGeometryReply() [CVE-2013-1997 4/15]
+    
+    If the X server returns color indexes outside the range of the number of
+    colors it told us to allocate, out of bounds memory access could occur.
+    
+    Reported-by: Ilja Van Sprundel <ivansprundel@ioactive.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Matthieu Herrb <matthieu.herrb@laas.fr>
+
+commit bff938b9fe1629cbacb726509edfa2a3840b7207
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Mar 2 09:12:47 2013 -0800
+
+    unvalidated indexes in _XkbReadGeomShapes() [CVE-2013-1997 3/15]
+    
+    If the X server returns shape indexes outside the range of the number
+    of shapes it told us to allocate, out of bounds memory access could occur.
+    
+    Reported-by: Ilja Van Sprundel <ivansprundel@ioactive.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Matthieu Herrb <matthieu.herrb@laas.fr>
+
+commit f293659d5a4024bda386305bb7ebeb4647c40934
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Mar 1 22:49:01 2013 -0800
+
+    unvalidated index in _XkbReadGetDeviceInfoReply() [CVE-2013-1997 2/15]
+    
+    If the X server returns more buttons than are allocated in the XKB
+    device info structures, out of bounds writes could occur.
+    
+    Reported-by: Ilja Van Sprundel <ivansprundel@ioactive.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Matthieu Herrb <matthieu.herrb@laas.fr>
+
+commit cddc4e7e3cb4b9b7ad25f8591971a86901c249f2
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Mar 1 19:30:09 2013 -0800
+
+    unvalidated lengths in XAllocColorCells() [CVE-2013-1997 1/15]
+    
+    If a broken server returned larger than requested values for nPixels or
+    nMasks, XAllocColorCells would happily overflow the buffers provided by
+    the caller to write the results into.
+    
+    Reported-by: Ilja Van Sprundel <ivansprundel@ioactive.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Matthieu Herrb <matthieu.herrb@laas.fr>
+
+commit 2cd62b5eb99ffbb2fce99f3c459455e630b35bf7
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Mar 1 22:49:01 2013 -0800
+
+    integer overflow in XListHosts() [CVE-2013-1981 5/13]
+    
+    If the reported number of host entries is too large, the calculations
+    to allocate memory for them may overflow, leaving us writing beyond the
+    bounds of the allocation.
+    
+    Reported-by: Ilja Van Sprundel <ivansprundel@ioactive.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Matthieu Herrb <matthieu.herrb@laas.fr>
+
+commit 1f6a3dbf699b85c0ea715ef21de7e7095a714e12
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Mar 1 22:49:01 2013 -0800
+
+    integer overflow in XGetMotionEvents() [CVE-2013-1981 4/13]
+    
+    If the reported number of motion events is too large, the calculations
+    to allocate memory for them may overflow, leaving us writing beyond the
+    bounds of the allocation.
+    
+    v2: Ensure nEvents is set to 0 when returning NULL events pointer
+    
+    Reported-by: Ilja Van Sprundel <ivansprundel@ioactive.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 39515b7c3ba8cae9021bf6695e378ae19487082f
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Mar 1 22:49:01 2013 -0800
+
+    integer overflow in XListFontsWithInfo() [CVE-2013-1981 3/13]
+    
+    If the reported number of remaining fonts is too large, the calculations
+    to allocate memory for them may overflow, leaving us writing beyond the
+    bounds of the allocation.
+    
+    v2: Fix reply_left calculations, check calculated sizes fit in reply_left
+    v3: On error cases, also set values to be returned in pointer args to 0/NULL
+    
+    Reported-by: Ilja Van Sprundel <ivansprundel@ioactive.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 5669a220816b7d58fcaf0c302ead16fbe5c87817
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Mar 1 21:05:27 2013 -0800
+
+    integer overflow in _XF86BigfontQueryFont() [CVE-2013-1981 2/13]
+    
+    Similar to _XQueryFont, but with more ways to go wrong and overflow.
+    Only compiled if libX11 is built with XF86BigFont support.
+    
+    v2: Fix reply_left calculations, check calculated sizes fit in reply_left
+    
+    Reported-by: Ilja Van Sprundel <ivansprundel@ioactive.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 6df8a63d34b7514077188e2062a13774f920c085
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Mar 1 21:05:27 2013 -0800
+
+    integer overflow in _XQueryFont() on 32-bit platforms [CVE-2013-1981 1/13]
+    
+    If the CARD32 reply.nCharInfos * sizeof(XCharStruct) overflows an
+    unsigned long, then too small of a buffer will be allocated for the
+    data copied in from the reply.
+    
+    v2: Fix reply_left calculations, check calculated sizes fit in reply_left
+    
+    Reported-by: Ilja Van Sprundel <ivansprundel@ioactive.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 9f5d83706543696fc944c1835a403938c06f2cc5
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Mar 1 20:54:24 2013 -0800
+
+    Add _XEatDataWords to discard a given number of 32-bit words of reply data
+    
+    Matches the units of the length field in X protocol replies, and provides
+    a single implementation of overflow checking to avoid having to replicate
+    those checks in every caller.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Matthieu Herrb <matthieu.herrb@laas.fr>
+
+commit d7f04c340ade3834e603c23d543132e1ee4e0c63
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Mar 2 13:03:55 2013 -0800
+
+    Move repeated #ifdef magic to find PATH_MAX into a common header
+    
+    Lets stop duplicating the mess all over
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Matthieu Herrb <matthieu.herrb@laas.fr>
+
+commit f3a553a4e4a55d9d19deda1ea01883e1d5d682b1
+Author: Pander <pander@users.sourceforge.net>
+Date:   Tue May 7 18:38:14 2013 -0400
+
+    Add compose sequences for J́ and j́.
+    
+    The resulting sequences are:
+    
+      U+004A LATIN CAPITAL LETTER J  U+0301 COMBINING ACUTE ACCENT
+      U+006A LATIN SMALL LETTER J    U+0301 COMBINING ACUTE ACCENT
+    
+    Used in Dutch, per:
+    
+      http://lists.x.org/archives/xorg-devel/2013-February/035514.html
+      https://nl.wikipedia.org/wiki/Accenttekens_in_de_Nederlandse_spelling
+    
+    Signed-off-by: Pander <pander@users.sourceforge.net>
+    Signed-off-by: James Cloos <cloos@jhcloos.com>
+
+commit f49bb2dd6d4ea45c55bd21acc0efe2b764441020
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Mar 16 18:30:56 2013 -0700
+
+    Move big request comment in XOpenDisplay to the right place
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit 3996543c1b2919e97d61a5d70fe1ebd7cd76fc83
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Sat Mar 9 19:16:03 2013 -0800
