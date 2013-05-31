@@ -25,6 +25,10 @@ in this Software without prior written authorization from The Open Group.
  * Author:  Jim Fulton, MIT X Consortium
  */
 
+#ifdef HAVE_CONFIG_H
+# include "config.h"
+#endif
+
 #include <X11/Intrinsic.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -35,16 +39,15 @@ static char *ProgramName;
 
 static XrmQuark XrmQString;
 
-static void 
+static void _X_NORETURN
 usage (void)
 {
     fprintf (stderr,
-	     "usage:  %s  [class [instance]] [-1] [toolkitoptions]\n",
+	     "usage:  %s  [class [instance]] [-1] [-V] [toolkitoptions]\n"
+	     "-1      list resources only at the specified level\n"
+	     "-V      print command version and exit\n"
+             "The number of class and instance elements must be equal.\n",
 	     ProgramName);
-    fprintf (stderr,
-	     "-1      list resources only at the specified level\n");
-    fprintf (stderr,
-	     "The number of class and instance elements must be equal.\n");
     exit (1);
 }
 
@@ -149,6 +152,10 @@ main (int argc, char *argv[])
     for (i = 1; i < argc; i++) {
 	if (!strcmp(argv[i], "-1"))
 	    mode = XrmEnumOneLevel;
+	else if (!strcmp(argv[i], "-V")) {
+	    printf("%s\n", PACKAGE_STRING);
+	    exit(0);
+	}
 	else if (argv[i][0] == '-')
 	    usage();
 	else if (!cname)

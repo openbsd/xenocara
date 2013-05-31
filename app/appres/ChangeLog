@@ -1,3 +1,82 @@
+commit f189c64e3576956816da9f46909437f5523ded3b
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri May 17 17:39:13 2013 -0700
+
+    appres 1.0.4
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 849880e1cca492665a7c8581e5591065299ab718
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jan 19 11:33:48 2013 -0800
+
+    Add -V option to print command version
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 590aa5f17cd4b8d710662e6af701c166392d0235
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jan 19 11:21:29 2013 -0800
+
+    Combine usage message into a single string
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 766a467795cd9e58cd9ea0266dd6a5b54403aac8
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jan 19 11:18:33 2013 -0800
+
+    Mark usage() as _X_NORETURN to satisfy -Wmissing-noreturn warning
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 5fe00fdffe8ec04f8ad04617a2b26ff282049a4c
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Jun 13 13:48:00 2011 -0400
+
+    .gitignore: fix typo
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 0497e70e490eb30c6062555cce16c87e81523b0b
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Jun 13 13:41:27 2011 -0400
+
+    .gitignore: the original copy was somewhat broken
+    
+    Only comments, nothing functional
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 3450c1498afe0fc8beabf70f864d241f54e7a3a4
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jan 19 10:06:55 2011 -0500
+
+    config: move man pages into their own directory
+    
+    Use services provided by XORG_MANPAGE_SECTIONS.
+    Use standard Makefile for man pages.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 38d38caed7d7c7a359dc9ff5517a72f3b25c4277
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Jan 13 17:15:36 2011 -0500
+
+    man: replace hard coded man page section with substitution strings
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit eb5186583f9b99b8ae71db14835319270db5cba2
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Jan 13 11:15:00 2011 -0500
+
+    man: remove trailing spaces and tabs
+    
+    Using s/[ \t]*$//
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
 commit 65538c8269ac6d29affa47ef54fa7f606174257a
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Sun Oct 31 11:50:55 2010 -0700
