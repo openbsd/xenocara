@@ -6,9 +6,11 @@ libXtst_la_SOURCES = \
 
 libXtst_la_LIBADD = @XTST_LIBS@
 
-AM_CFLAGS = \
+AM_CPPFLAGS = \
 	-I$(top_srcdir)/include \
-	-I$(top_srcdir)/include/X11/extensions \
+	-I$(top_srcdir)/include/X11/extensions
+
+AM_CFLAGS = \
 	$(XTST_CFLAGS) \
 	$(CWARNFLAGS)
 

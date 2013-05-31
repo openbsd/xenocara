@@ -1,3 +1,89 @@
+commit cdc04f06325e55916e0c95b61db626d22b76e2ff
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu May 30 19:09:42 2013 -0700
+
+    libXtst 1.2.2
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit e7e04b7be3f018ad636aba3a36bfc1cd80b9906d
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Apr 13 11:27:26 2013 -0700
+
+    integer overflow in XRecordGetContext() [CVE-2013-2063]
+    
+    The nclients and nranges members of the reply are both CARD32 and need
+    to be bounds checked before multiplying by the size of the structs to
+    avoid integer overflow leading to underallocation and writing data from
+    the network past the end of the allocated buffer.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 46ed6283034b5b7d14584009453f5d974cfacf1e
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Apr 13 11:05:27 2013 -0700
+
+    Use _XEatDataWords to eat data in error cases
+    
+    Avoids having to do calculcations based on response contents
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 2aafac9474a0a0a0c39797862f823255918cf368
+Author: Colin Walters <walters@verbum.org>
+Date:   Wed Jan 4 17:37:06 2012 -0500
+
+    autogen.sh: Implement GNOME Build API
+    
+    http://people.gnome.org/~walters/docs/build-api.txt
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit 34cfa2d2b76640f672170dfbd8b5dd4a06d95b4d
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Tue Jan 15 14:28:48 2013 -0500
+
+    configure: Remove AM_MAINTAINER_MODE
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit 6394218aae6599b28ced3d30074e154ba4218d07
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Apr 23 22:02:20 2012 -0700
+
+    Add xextproto & xi to Requires.private
+    
+    Only headers are needed, not libraries to link with.   Required for
+    includes of xtestconst.h (xextproto) and XInput.h (xi) in XTest.h
+    public header.
+    
+    Fixes https://bugs.freedesktop.org/attachment.cgi?id=59835
+    (originally reported as https://bugzilla.novell.com/show_bug.cgi?id=748808 )
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 023d494822fea9c3840e75964451fd9d5213ae06
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Apr 23 22:01:16 2012 -0700
+
+    Move -I flags from AM_CFLAGS to AM_CPPFLAGS
+    
+    Ensures local copy of headers takes precedence over any -I flags the
+    builder may have passed in CPPFLAGS.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 30506c32f69ea476f3b068ec3bf9b1c2a24991b8
+Author: Julien Cristau <jcristau@debian.org>
+Date:   Tue Apr 24 21:04:06 2012 +0200
+
+    COPYING: add copyright notices and licenses from the manpages and specs
+    
+    Reported-by: Ansgar Burchardt
+    Signed-off-by: Julien Cristau <jcristau@debian.org>
+
 commit eb177d24ffb459af6205d2658c3a158449660caf
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Wed Mar 7 21:11:34 2012 -0800

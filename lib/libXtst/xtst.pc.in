@@ -7,6 +7,6 @@ Name: Xtst
 Description: The Xtst Library
 Version: @PACKAGE_VERSION@
 Requires: recordproto
-Requires.private: x11 xext
+Requires.private: x11 xext xextproto xi
 Cflags: -I${includedir}
 Libs: -L${libdir} -lXtst
