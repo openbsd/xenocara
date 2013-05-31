@@ -26,7 +26,7 @@ AC_PREREQ([2.60])
 # This is the package version number, not the shared library
 # version.  This version number will be substituted into Xcursor.h
 #
-AC_INIT([libXcursor], [1.1.13],
+AC_INIT([libXcursor], [1.1.14],
         [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],[libXcursor])
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_HEADERS([config.h include/X11/Xcursor/Xcursor.h])

@@ -12,7 +12,7 @@ AM_CFLAGS = \
 	-DICONDIR=\"$(ICONDIR)\" \
 	-DXCURSORPATH=\"$(XCURSORPATH)\"
 
-INCLUDES = -I$(top_srcdir)/include/X11/Xcursor
+AM_CPPFLAGS = -I$(top_srcdir)/include/X11/Xcursor
 
 #
 # Shared library version info.  This is not the same as the package version
