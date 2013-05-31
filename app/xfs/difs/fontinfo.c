@@ -74,21 +74,6 @@ in this Software without prior written authorization from The Open Group.
 # endif
 #endif
 
-void
-CopyCharInfo(
-    CharInfoPtr ci,
-    fsXCharInfo *dst)
-{
-    xCharInfo  *src = &ci->metrics;
-
-    dst->ascent = src->ascent;
-    dst->descent = src->descent;
-    dst->left = src->leftSideBearing;
-    dst->right = src->rightSideBearing;
-    dst->width = src->characterWidth;
-    dst->attributes = src->attributes;
-}
-
 
 int
 convert_props(
@@ -279,10 +264,8 @@ static Bool
 do_query_extents(ClientPtr client, pointer data)
 {
     int         err;
-    unsigned long lendata,
-                num_extents;
+    unsigned long num_extents;
     fsXCharInfo *extents;
-    fsQueryXExtents8Reply reply;
 
     err = GetExtents (pPtr->client, pPtr->pfont,
 		     pPtr->flags, pPtr->nranges, pPtr->range, &num_extents, &extents);
@@ -296,19 +279,21 @@ do_query_extents(ClientPtr client, pointer data)
     }
     if (err != Successful) {
 	SendErrToClient(pPtr->client, FontToFSError(err), (pointer) 0);
-	goto finish;
     }
-    reply.type = FS_Reply;
-    reply.sequenceNumber = pPtr->client->sequence;
-    reply.num_extents = num_extents;
-    lendata = SIZEOF(fsXCharInfo) * num_extents;
-    reply.length = (SIZEOF(fsQueryXExtents8Reply) + lendata) >> 2;
-    if (client->swapped)
-	SwapExtents(extents, num_extents);
-    WriteReplyToClient(pPtr->client, SIZEOF(fsQueryXExtents8Reply), &reply);
-    (void) WriteToClient(pPtr->client, lendata, (char *) extents);
-    fsfree((char *) extents);
-finish:
+    else {
+	unsigned long lendata = SIZEOF(fsXCharInfo) * num_extents;
+	fsQueryXExtents8Reply reply = {
+	    .type = FS_Reply,
+	    .sequenceNumber = pPtr->client->sequence,
+	    .num_extents = num_extents,
+	    .length = (SIZEOF(fsQueryXExtents8Reply) + lendata) >> 2
+	};
+	if (client->swapped)
+	    SwapExtents(extents, num_extents);
+	WriteReplyToClient(pPtr->client, SIZEOF(fsQueryXExtents8Reply), &reply);
+	WriteToClient(pPtr->client, lendata, (char *) extents);
+	fsfree((char *) extents);
+    }
     if (pPtr->slept)
 	ClientWakeup(pPtr->client);
     if (pPtr->pfont->unload_glyphs)  /* For rasterizers that want to save memory */
@@ -367,7 +352,6 @@ do_query_bitmaps(ClientPtr client, pointer data)
     int data_size;
     fsOffset32   *offsets;
     pointer     glyph_data;
-    fsQueryXBitmaps8Reply reply;
     int		freedata;
 
     err = GetBitmaps (pPtr->client, pPtr->pfont, pPtr->format,
@@ -384,26 +368,28 @@ do_query_bitmaps(ClientPtr client, pointer data)
     }
     if (err != Successful) {
 	SendErrToClient(pPtr->client, FontToFSError(err), (pointer) 0);
-	goto finish;
     }
-    reply.type = FS_Reply;
-    reply.sequenceNumber = pPtr->client->sequence;
-    reply.replies_hint = 0;
-    reply.num_chars = num_glyphs;
-    reply.nbytes = data_size;
-    reply.length = (SIZEOF(fsQueryXBitmaps8Reply) + data_size +
-		    (SIZEOF(fsOffset32) * num_glyphs) + 3) >> 2;
+    else {
+	fsQueryXBitmaps8Reply reply = {
+	    .type = FS_Reply,
+	    .sequenceNumber = pPtr->client->sequence,
+	    .length = (SIZEOF(fsQueryXBitmaps8Reply) + data_size +
+		       (SIZEOF(fsOffset32) * num_glyphs) + 3) >> 2,
+	    .replies_hint = 0,
+	    .num_chars = num_glyphs,
+	    .nbytes = data_size
+	};
 
-    WriteReplyToClient(pPtr->client, SIZEOF(fsQueryXBitmaps8Reply), &reply);
-    if (client->swapped)
-	SwapLongs((long *)offsets, num_glyphs * 2);
-    (void) WriteToClient(pPtr->client, (num_glyphs * SIZEOF(fsOffset32)),
-			 (char *) offsets);
-    (void) WriteToClient(pPtr->client, data_size, (char *) glyph_data);
-    fsfree((char *) offsets);
-    if (freedata)
-	fsfree((char *) glyph_data);
-finish:
+	WriteReplyToClient(pPtr->client, SIZEOF(fsQueryXBitmaps8Reply), &reply);
+	if (client->swapped)
+	    SwapLongs((long *)offsets, num_glyphs * 2);
+	WriteToClient(pPtr->client, (num_glyphs * SIZEOF(fsOffset32)),
+		      (char *) offsets);
+	WriteToClient(pPtr->client, data_size, (char *) glyph_data);
+	fsfree((char *) offsets);
+	if (freedata)
+	    fsfree((char *) glyph_data);
+    }
     if (pPtr->slept)
 	ClientWakeup(pPtr->client);
     if (pPtr->pfont->unload_glyphs)  /* For rasterizers that want to save memory */

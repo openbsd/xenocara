@@ -95,14 +95,13 @@ FontToFSError(int err)
     }
 }
 
-/* XXX -- these two funcs may want to be broken into macros */
-void
+static inline void
 UseFPE(FontPathElementPtr fpe)
 {
     fpe->refcount++;
 }
 
-void
+static inline void
 FreeFPE(FontPathElementPtr fpe)
 {
     fpe->refcount--;
@@ -122,7 +121,7 @@ FreeFPE(FontPathElementPtr fpe)
  * init_fpe() and free_fpe(), there shouldn't be any problem in using
  * freed data.
  */
-void
+static void
 QueueFontWakeup(FontPathElementPtr fpe)
 {
     int         i;
@@ -151,7 +150,7 @@ QueueFontWakeup(FontPathElementPtr fpe)
     num_slept_fpes++;
 }
 
-void
+static void
 RemoveFontWakeup(FontPathElementPtr fpe)
 {
     int         i,
@@ -169,7 +168,7 @@ RemoveFontWakeup(FontPathElementPtr fpe)
 }
 
 /* ARGSUSED */
-void
+static void
 FontWakeup(pointer data, int count, unsigned long *LastSelectMask)
 {
     int         i;
@@ -277,7 +276,6 @@ do_open_font(ClientPtr client, pointer data)
                *newname;
     int         newlen;
     ClientFontPtr cfp;
-    fsOpenBitmapFontReply rep;
     Font        orig;
     FontIDListPtr *idlist,
                 ids;
@@ -386,25 +384,26 @@ do_open_font(ClientPtr client, pointer data)
 	err = AllocError;
 	goto dropout;
     }
-    add_id_to_list(ids, cPtr->fontid);
-    /* send the reply */
-    rep.type = FS_Reply;
-    rep.otherid = orig;
-    if (orig)
-	rep.otherid_valid = TRUE;
-    else
-	rep.otherid_valid = FALSE;
-    rep.cachable = pfont->info.cachable;
-    rep.sequenceNumber = client->sequence;
-    rep.length = SIZEOF(fsOpenBitmapFontReply) >> 2;
-    WriteReplyToClient(client,
-		       SIZEOF(fsOpenBitmapFontReply), &rep);
-    if (pfont->refcnt == 0) {
-	if (!pfont->fpe)
-	    pfont->fpe = fpe;
-	UseFPE(pfont->fpe);
+    else {
+        /* send the reply */
+	fsOpenBitmapFontReply rep = {
+	    .type = FS_Reply,
+	    .otherid_valid = orig ? TRUE : FALSE,
+	    .sequenceNumber = client->sequence,
+	    .length = SIZEOF(fsOpenBitmapFontReply) >> 2,
+	    .otherid = orig,
+	    .cachable = pfont->info.cachable
+	};
+	WriteReplyToClient(client,
+			   SIZEOF(fsOpenBitmapFontReply), &rep);
+	add_id_to_list(ids, cPtr->fontid);
+	if (pfont->refcnt == 0) {
+	    if (!pfont->fpe)
+		pfont->fpe = fpe;
+	    UseFPE(pfont->fpe);
+	}
+	pfont->refcnt++;
     }
-    pfont->refcnt++;
 dropout:
     if (err != Successful) {
 	SendErrToClient(cPtr->client, FontToFSError(err), (pointer) &(cPtr->fontid));
@@ -430,7 +429,6 @@ OpenFont(
     char       *name)
 {
     FontPtr     pfont = (FontPtr)0;
-    fsOpenBitmapFontReply rep;
     OFclosurePtr c;
     FontIDListPtr *idlist,
                 ids;
@@ -488,24 +486,20 @@ OpenFont(
 	if (!add_id_to_list(ids, fid)) {
 	    goto lowmem;
 	}
-	pfont->refcnt++;
-	rep.type = FS_Reply;
-	if (ids->num > 1)
-	{
-	    rep.otherid = ids->client_list[0];
-	    rep.otherid_valid = TRUE;
+	else {
+	    fsOpenBitmapFontReply rep = {
+		.type = FS_Reply,
+		.otherid_valid = (ids->num > 1) ? TRUE : FALSE,
+		.sequenceNumber = client->sequence,
+		.length = SIZEOF(fsOpenBitmapFontReply) >> 2,
+		.otherid = (ids->num > 1) ? ids->client_list[0] : 0,
+		.cachable = TRUE	/* XXX */
+	    };
+	    WriteReplyToClient(client,
+			       SIZEOF(fsOpenBitmapFontReply), &rep);
+	    pfont->refcnt++;
+	    return FSSuccess;
 	}
-	else
-	{
-	    rep.otherid = 0;
-	    rep.otherid_valid = FALSE;
-	}
-	rep.cachable = TRUE;	/* XXX */
-	rep.sequenceNumber = client->sequence;
-	rep.length = SIZEOF(fsOpenBitmapFontReply) >> 2;
-	WriteReplyToClient(client,
-			   SIZEOF(fsOpenBitmapFontReply), &rep);
-	return FSSuccess;
     }
     c = (OFclosurePtr) fsalloc(sizeof(OFclosureRec));
     if (!c)
@@ -997,11 +991,13 @@ finish:
     for (i = 0; i < nnames; i++)
 	stringLens += (names->length[i] <= 255) ? names->length[i] : 0;
 
-    reply.type = FS_Reply;
-    reply.length = (SIZEOF(fsListFontsReply) + stringLens + nnames + 3) >> 2;
-    reply.following = 0;
-    reply.nFonts = nnames;
-    reply.sequenceNumber = client->sequence;
+    reply = (fsListFontsReply) {
+	.type = FS_Reply,
+	.sequenceNumber = client->sequence,
+	.length = (SIZEOF(fsListFontsReply) + stringLens + nnames + 3) >> 2,
+	.following = 0,
+	.nFonts = nnames
+    };
 
     bufptr = bufferStart = (char *) ALLOCATE_LOCAL(reply.length << 2);
 
@@ -1457,10 +1453,6 @@ RegisterFPEFunctions(
     return num_fpe_types++;
 }
 
-void
-FreeFonts(void)
-{
-}
 
 /* convenience functions for FS interface */
 

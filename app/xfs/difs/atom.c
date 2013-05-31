@@ -89,7 +89,7 @@ MakeAtom(const char *string, unsigned int len, Bool makeit)
 	else if (fp > (*np)->fingerPrint)
 	    np = &((*np)->right);
 	else {			/* now start testing the strings */
-	    comp = strncmp(string, (*np)->string, (int) len);
+	    comp = strncmp(string, (*np)->string, len);
 	    if ((comp < 0) || ((comp == 0) && (len < strlen((*np)->string))))
 		np = &((*np)->left);
 	    else if (comp > 0)
@@ -115,7 +115,7 @@ MakeAtom(const char *string, unsigned int len, Bool makeit)
 		fsfree(nd);
 		return BAD_RESOURCE;
 	    }
-	    strncpy(nd->string, string, (int) len);
+	    strncpy(nd->string, string, len);
 	    nd->string[len] = 0;
 	}
 	if ((lastAtom + 1) >= tableLength) {

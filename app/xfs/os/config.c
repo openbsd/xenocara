@@ -300,25 +300,6 @@ SetConfigValues(void)
     font_catalogue = NULL;
 }
 
-#ifdef __UNIXOS2__
-char *__XFSRedirRoot(char *fname)
-{
-    static char redirname[300]; /* enough for long filenames */
-    char *root;
-
-    /* if name does not start with /, assume it is not root-based */
-    if (fname==0 || !(fname[0]=='/' || fname[0]=='\\'))
-	return fname;
-
-    root = (char*)getenv("X11ROOT");
-    if (root==0 ||
-	(fname[1]==':' && isalpha(fname[0])) ||
-	((strlen(fname)+strlen(root)+2) > 300))
-	return fname;
-    sprintf(redirname,"%s%s",root,fname);
-    return redirname;
-}
-#endif
 
 /* If argument is NULL, uses first file found from default_config_files */
 int
@@ -336,9 +317,6 @@ ReadConfigFile(const char *filename)
 	return FSBadAlloc;
     }
     if (filename != NULL) {
-#ifdef __UNIXOS2__
-	filename = __XFSRedirRoot(filename);
-#endif
 	fp = fopen(filename, "r");
 	if (fp == NULL) {
 	    ErrorF(CONFIG_ERR_OPEN, filename);
@@ -346,9 +324,6 @@ ReadConfigFile(const char *filename)
     } else {
 	for (i = 0; default_config_files[i] != NULL; i++) {
 	    filename = default_config_files[i];
-#ifdef __UNIXOS2__
-	    filename = __XFSRedirRoot(filename);
-#endif	    
 	    if ((fp = fopen(filename, "r")) != NULL) {
 		if (configfilename == NULL) {
 		    configfilename = strdup(filename); /* save for clones */
@@ -537,11 +512,7 @@ config_set_file(
     t = *val;
     *val = '\0';
     if (!strcmp(parm->parm_name, "error-file")) {
-#ifndef __UNIXOS2__
 	memmove( ErrorFile, start, val - start + 1);
-#else
-	strcpy( ErrorFile, __XFSRedirRoot(start));
-#endif
     }
     *val = t;
     return val;

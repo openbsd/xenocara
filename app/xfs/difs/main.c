@@ -58,7 +58,6 @@ in this Software without prior written authorization from The Open Group.
 #include	"misc.h"
 #include	"globals.h"
 #include	"servermd.h"
-#include	"cache.h"
 #include	"site.h"
 #include	"dispatch.h"
 #include	"extentst.h"
@@ -66,10 +65,6 @@ in this Software without prior written authorization from The Open Group.
 
 char       *ConnectionInfo;
 int         ConnInfoLen;
-
-Cache       serverCache;
-
-#define	SERVER_CACHE_SIZE	10000	/* for random server cacheables */
 
 static Bool create_connection_block(void);
 
@@ -109,7 +104,6 @@ main(int argc, char *argv[])
 	OsInit();
 	if (serverGeneration == 1) {
 	    /* do first time init */
-	    serverCache = CacheInit(SERVER_CACHE_SIZE);
 	    CreateSockets(OldListenCount, OldListen);
 	    InitProcVectors();
 	    clients = (ClientPtr *) fsalloc(MAXCLIENTS * sizeof(ClientPtr));
@@ -152,7 +146,6 @@ main(int argc, char *argv[])
 #endif
 
 	/* clean up per-cycle stuff */
-	CacheReset();
 	CloseDownExtensions();
 	if ((dispatchException & DE_TERMINATE) || drone_server)
 	    break;

@@ -1,3 +1,132 @@
+commit a52114915c0fadfbbdd81049d5e940720868f44e
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Apr 12 18:45:28 2013 -0700
+
+    xfs 1.1.3
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit b736a278a574a0f5f24c207478974351573427bc
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jan 19 22:50:11 2013 -0800
+
+    Remove unused server cache functionality
+    
+    We initialized the cache & reset the cache, but never put anything in it.
+    (Unlike the FontPatternCache provided by libXfont.)
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 21e479609b3529ce24e6139d1208dfe4f9040891
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jan 19 22:30:49 2013 -0800
+
+    Convert Reply initialization to use C99 struct initializers
+    
+    Much like we did for the X server, lets the compiler handle filling
+    in the entire struct, including zeroing out padding bytes.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit e77aa8b02f3f95a312a755bead400e1dd6e7fc45
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jan 19 22:27:02 2013 -0800
+
+    Delete unused/empty FreeFonts() function
+    
+    Had no body and no callers
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 43dd1a904a17d6cbcef6d6728b192eae858b642f
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jan 19 22:22:09 2013 -0800
+
+    Make FontWakeup functions be static to fonts.c
+    
+    Only called from other functions in fonts.c
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit b6404f5855b7a38ad567c51b916646c3a085b419
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jan 19 21:52:38 2013 -0800
+
+    Convert UseFPE & FreeFPE into static inline functions
+    
+    Comment suggests making them a macro, but since they're only used in this
+    file, might as well let the compiler choose how best to optimize them.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit d7558028f93ba8d068ca9f0c5638268f2063c944
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jan 19 21:38:40 2013 -0800
+
+    Delete unused function CopyCharInfo
+    
+    Can find no record of this being used in current git repo (back to X11R6.6)
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit e46193d3bb4b7bd52f4dfbccaf5efd4525d97103
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jan 19 19:28:06 2013 -0800
+
+    MakeAtom: get rid of unnecessary casts
+    
+    strncmp & strncpy expect an unsigned (size_t) argument, so don't take our
+    unsigned len and cast it back to a signed int, because that makes clang sad:
+    
+    difs/atom.c:92:44: warning: implicit conversion changes signedness: 'int' to 'size_t' (aka 'unsigned long') [-Wsign-conversion]
+                comp = strncmp(string, (*np)->string, (int) len);
+                       ~~~~~~~                        ^~~~~~~~~
+    difs/atom.c:118:34: warning: implicit conversion changes signedness: 'int' to 'size_t' (aka 'unsigned long') [-Wsign-conversion]
+                strncpy(nd->string, string, (int) len);
+                ~~~~~~~                     ^~~~~~~~~
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 5ac8e2b0aabd61639acee43ac0b9794a65f09594
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Jan 4 18:33:54 2013 -0800
+
+    unifdef -U__UNIXOS2__
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit ed5cdb85b307ca1844b337b50fb49108d9d4b6e1
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Jan 4 18:32:06 2013 -0800
+
+    Remove old OS2 linker file, xfs.def
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit d27fea63c95f98b09f8242db71423f959a1665ba
+Author: Arvind Umrao <arvind.umrao@oracle.com>
+Date:   Thu Aug 23 16:55:18 2012 +0530
+
+    Revert of ac59cccf8bc1ae3d41e0608f131b5eb888f9362b
+    
+    xfs service will go to maintenance status after running fsinfo.
+    NULL is passed to socket layer causing crash.  It was missed that
+    it also gets passed to ReopenCOTSServer which attempts to strdup
+    the port string without checking if it's null.
+    
+    Signed-off-by: Arvind Umrao <arvind.umrao@oracle.com>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit ef3f230bc13a15c2cca2cb974de12d6d861aebdf
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Mar 2 10:19:15 2012 -0800
+
+    Require libXfont >= 1.4.5 to avoid prototype mismatch errors for MakeAtom
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Jeremy Huddleston <jeremyhu@apple.com>
+
 commit 7ec5d8d1a7adfd9b844fa750c319189a426466d5
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Tue Feb 28 22:33:44 2012 -0800

@@ -59,9 +59,6 @@ in this Software without prior written authorization from The Open Group.
 #include <stdlib.h>
 #define  XK_LATIN1
 #include <X11/keysymdef.h>
-#ifdef __UNIXOS2__
-#define _NFILE 256
-#endif
 #include "globals.h"
 #include "osdep.h"
 
@@ -288,10 +285,6 @@ CloneMyself(void)
     if (!CloneSelf)
 	return -1;
 
-#ifdef __UNIXOS2__
-    NoticeF("cloning of font server not supported under OS/2!\n");
-    return(-1);
-#endif
 
     old_listen_arg[0] = '\0';
 

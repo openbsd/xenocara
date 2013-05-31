@@ -1,5 +1,5 @@
 /*
- * $Id: xfstrans.c,v 1.4 2012/03/04 18:36:21 matthieu Exp $
+ * $Id: xfstrans.c,v 1.5 2013/05/31 21:26:58 matthieu Exp $
  *
  * Copyright © 2003 Keith Packard
  *
@@ -37,7 +37,7 @@
 OldListenRec *
 TRANS(GetInetdListenInfo) (int fd)
 {
-    char *port = NULL;
+    char *port = "0";
     XtransConnInfo inetdCI;
     OldListenRec *old_listen;
     int portnum;

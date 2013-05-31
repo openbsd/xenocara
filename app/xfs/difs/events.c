@@ -93,15 +93,15 @@ ProcSetEventMask(ClientPtr client)
 int
 ProcGetEventMask(ClientPtr client)
 {
-    fsGetEventMaskReply rep;
+    fsGetEventMaskReply rep = {
+        .type = FS_Reply,
+        .sequenceNumber = client->sequence,
+        .length = SIZEOF(fsGetEventMaskReply) >> 2,
+        .event_mask = client->eventmask
+    };
 
     REQUEST(fsGetEventMaskReq);
     REQUEST_AT_LEAST_SIZE(fsGetEventMaskReq);
-
-    rep.type = FS_Reply;
-    rep.sequenceNumber = client->sequence;
-    rep.length = SIZEOF(fsGetEventMaskReply) >> 2;
-    rep.event_mask = client->eventmask;
 
     WriteReplyToClient(client, SIZEOF(fsGetEventMaskReply), &rep);
     return client->noClientException;
@@ -110,13 +110,13 @@ ProcGetEventMask(ClientPtr client)
 void
 SendKeepAliveEvent(ClientPtr client)
 {
-    fsKeepAliveEvent ev;
-
-    ev.type = FS_Event;
-    ev.event_code = KeepAlive;
-    ev.sequenceNumber = client->sequence;
-    ev.length = SIZEOF(fsKeepAliveEvent) >> 2;
-    ev.timestamp = GetTimeInMillis();
+    fsKeepAliveEvent ev = {
+        .type = FS_Event,
+        .event_code = KeepAlive,
+        .sequenceNumber = client->sequence,
+        .length = SIZEOF(fsKeepAliveEvent) >> 2,
+        .timestamp = GetTimeInMillis()
+    };
 
 #ifdef DEBUG
     fprintf(stderr, "client #%d is getting a KeepAlive\n", client->index);

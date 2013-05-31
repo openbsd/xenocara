@@ -62,9 +62,6 @@ in this Software without prior written authorization from The Open Group.
 #include	"osdep.h"
 #include	"os.h"
 
-#ifdef __UNIXOS2__
-#define select(n,r,w,x,t) os2PseudoSelect(n,r,w,x,t)
-#endif
 
 long        LastReapTime;
 int         xfd_ffs(fd_mask);

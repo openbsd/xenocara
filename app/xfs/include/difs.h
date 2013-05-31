@@ -56,11 +56,6 @@ extern void InitFonts ( void );
 
 /* difs/fonts.c */
 extern int FontToFSError ( int err );
-extern void UseFPE ( FontPathElementPtr fpe );
-extern void FreeFPE ( FontPathElementPtr fpe );
-extern void QueueFontWakeup ( FontPathElementPtr fpe );
-extern void RemoveFontWakeup ( FontPathElementPtr fpe );
-extern void FontWakeup ( pointer data, int count, unsigned long *LastSelectMask );
 extern int OpenFont ( ClientPtr client, Font fid, fsBitmapFormat format, fsBitmapFormatMask format_mask, int namelen, char *name );
 extern int CloseClientFont ( ClientFontPtr cfp, FSID fid );
 extern int SetFontCatalogue ( char *str, int *badpath );
@@ -69,12 +64,10 @@ extern int ListFonts ( ClientPtr client, int length, unsigned char *pattern, int
 extern int StartListFontsWithInfo ( ClientPtr client, int length, unsigned char *pattern, int maxNames );
 #endif
 extern int LoadGlyphRanges ( ClientPtr client, FontPtr pfont, Bool range_flag, int num_ranges, int item_size, fsChar2b *data );
-extern void FreeFonts ( void );
 extern FontPtr find_old_font ( FSID id );
 extern void DeleteClientFontStuff ( ClientPtr client );
 
 /* difs/fontinfo.c */
-extern void CopyCharInfo ( CharInfoPtr ci, fsXCharInfo *dst );
 extern int convert_props ( FontInfoPtr pinfo, fsPropInfo **props );
 extern int QueryExtents ( ClientPtr client, ClientFontPtr cfp, int item_size, int nranges, Bool range_flag, pointer range_data );
 extern int QueryBitmaps ( ClientPtr client, ClientFontPtr cfp, int item_size, fsBitmapFormat format, int nranges, Bool range_flag, pointer range_data );

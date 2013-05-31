@@ -201,18 +201,18 @@ InitExtensions(void)
 int
 ProcQueryExtension(ClientPtr client)
 {
-    fsQueryExtensionReply reply;
+    fsQueryExtensionReply reply = {
+        .type = FS_Reply,
+        .sequenceNumber = client->sequence,
+        .length = SIZEOF(fsQueryExtensionReply) >> 2,
+        .major_opcode = 0
+    };
     int         i,
                 j;
 
     REQUEST(fsQueryExtensionReq);
 
     REQUEST_AT_LEAST_SIZE(fsQueryExtensionReq);
-
-    reply.type = FS_Reply;
-    reply.length = SIZEOF(fsQueryExtensionReply) >> 2;
-    reply.major_opcode = 0;
-    reply.sequenceNumber = client->sequence;
 
     if (!NumExtensions) {
 	reply.present = fsFalse;
@@ -248,19 +248,18 @@ ProcQueryExtension(ClientPtr client)
 int
 ProcListExtensions(ClientPtr client)
 {
-    fsListExtensionsReply reply;
+    fsListExtensionsReply reply = {
+        .type = FS_Reply,
+        .nExtensions = NumExtensions,
+        .sequenceNumber = client->sequence,
+        .length = SIZEOF(fsListExtensionsReply) >> 2
+    };
     char       *bufptr,
-               *buffer;
+               *buffer = NULL;
     int         total_length = 0;
 
     REQUEST(fsListExtensionsReq);
     REQUEST_SIZE_MATCH(fsListExtensionsReq);
-
-    reply.type = FS_Reply;
-    reply.nExtensions = NumExtensions;
-    reply.length = SIZEOF(fsListExtensionsReply) >> 2;
-    reply.sequenceNumber = client->sequence;
-    buffer = NULL;
 
     if (NumExtensions) {
 	int         i,

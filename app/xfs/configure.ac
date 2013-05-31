@@ -23,7 +23,7 @@ dnl Process this file with autoconf to create configure.
 # Initialize Autoconf
 AC_PREREQ([2.60])
 AC_INIT([xfs],
-        [1.1.2],
+        [1.1.3],
         [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],
         [xfs])
 # Set common system defines for POSIX extensions, such as _GNU_SOURCE
@@ -130,7 +130,8 @@ AC_CHECK_FUNCS([daemon])
 
 # Checks for pkg-config packages
 #  - xproto >= 7.0.17 required for _X_NORETURN in <X11/Xfuncproto.h>
-PKG_CHECK_MODULES(XFS, xproto >= 7.0.17 xfont xtrans)
+#  - xfont >= 1.4.5 required for matching MakeAtom prototypes in fontmisc.h
+PKG_CHECK_MODULES(XFS, xproto >= 7.0.17 xfont >= 1.4.5 xtrans)
 
 # Transport selection macro from xtrans.m4
 XTRANS_CONNECTION_FLAGS

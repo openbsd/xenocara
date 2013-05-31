@@ -78,9 +78,7 @@ in this Software without prior written authorization from The Open Group.
 #include	<X11/Xos.h>
 #include	<sys/param.h>
 #include	<sys/socket.h>
-#ifndef __UNIXOS2__
 #include	<sys/uio.h>
-#endif
 #include	<signal.h>
 
 #include	<X11/fonts/FS.h>
@@ -94,10 +92,6 @@ in this Software without prior written authorization from The Open Group.
 #include	"dispatch.h"
 #include	"fsevents.h"
 
-#ifdef __UNIXOS2__
-#define _NFILE OPEN_MAX
-#define select(n,r,w,x,t) os2PseudoSelect(n,r,w,x,t)
-#endif
 
 
 int         ListenPort = DEFAULT_FS_PORT;   /* port to listen on */

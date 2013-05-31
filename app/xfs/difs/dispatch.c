@@ -65,7 +65,6 @@ in this Software without prior written authorization from The Open Group.
 #include	<X11/fonts/fontstruct.h>
 #include	"site.h"
 #include	"fsevents.h"
-#include	"cache.h"
 #include	"globals.h"
 #include	"difs.h"
 #include	"access.h"
@@ -168,7 +167,6 @@ Dispatch(void)
 	    /* flush all the caches */
 	    if (dispatchException & DE_FLUSH) {
 		NoticeF("flushing all caches\n");
-		CacheReset();
 		dispatchException &= ~DE_FLUSH;
 	    }
 	    /* reset */
@@ -225,7 +223,6 @@ int
 ProcEstablishConnection(ClientPtr client)
 {
     fsConnClientPrefix *prefix;
-    fsConnSetup csp;
     int         ret;
     pointer     auth_data;
     char       *ad;
@@ -334,21 +331,23 @@ ProcEstablishConnection(ClientPtr client)
 	SendErrToClient(client, FSBadAlloc, (pointer) 0);
 	return FSBadAlloc;
     }
-    csp.status = auth_accept;
-    if (client->major_version == 1)
-	/* we implement backwards compatibility for version 1.0 */
-	csp.major_version = client->major_version;
-    else
-	csp.major_version = FS_PROTOCOL;
-    csp.minor_version = FS_PROTOCOL_MINOR;
-    csp.num_alternates = num_alts;
-    csp.alternate_len = altlen;
-    csp.auth_len = auth_len >> 2;
-    csp.auth_index = auth_index;
-    if (client->swapped) {
-	WriteSConnSetup(client, &csp);
-    } else {
-	(void) WriteToClient(client, SIZEOF(fsConnSetup), (char *) &csp);
+    else {
+	fsConnSetup csp = {
+	    .status = auth_accept,
+	    /* we implement backwards compatibility for version 1.0 */
+	    .major_version = (client->major_version == 1) ?
+	        client->major_version : FS_PROTOCOL,
+	    .minor_version = FS_PROTOCOL_MINOR,
+	    .num_alternates = num_alts,
+	    .alternate_len = altlen,
+	    .auth_len = auth_len >> 2,
+	    .auth_index = auth_index
+	};
+	if (client->swapped) {
+	    WriteSConnSetup(client, &csp);
+	} else {
+	    (void) WriteToClient(client, SIZEOF(fsConnSetup), (char *) &csp);
+	}
     }
 
     /* send the alternates info */
@@ -393,7 +392,14 @@ DoSendErrToClient(
     int         error,
     pointer     data)		/* resource id, format, resolution, etc */
 {
-    fsError     rep;
+    fsError     rep = {
+	.type = FS_Error,
+	.request = error,
+	.sequenceNumber = client->sequence,
+	.timestamp = GetTimeInMillis(),
+	.major_opcode = ((fsReq *) client->requestBuffer)->reqType,
+	.minor_opcode = MinorOpcodeOfRequest(client)
+    };
     int         extralen = 0;
 
     switch (error) {
@@ -435,12 +441,6 @@ DoSendErrToClient(
 	break;
     }
 
-    rep.type = FS_Error;
-    rep.sequenceNumber = client->sequence;
-    rep.request = error;
-    rep.major_opcode = ((fsReq *) client->requestBuffer)->reqType;
-    rep.minor_opcode = MinorOpcodeOfRequest(client),
-	rep.timestamp = GetTimeInMillis();
     rep.length = (SIZEOF(fsError) + extralen) >> 2;
 
     WriteErrorToClient(client, &rep);
@@ -472,7 +472,11 @@ ProcListCatalogues(ClientPtr client)
     int         len,
                 num;
     char       *catalogues;
-    fsListCataloguesReply rep;
+    fsListCataloguesReply rep = {
+	.type = FS_Reply,
+	.sequenceNumber = client->sequence,
+	.num_replies = 0
+    };
 
     REQUEST(fsListCataloguesReq);
     REQUEST_AT_LEAST_SIZE(fsListCataloguesReq);
@@ -480,10 +484,7 @@ ProcListCatalogues(ClientPtr client)
     num = ListCatalogues((char *)stuff + SIZEOF(fsListCataloguesReq),
 			 stuff->nbytes, stuff->maxNames,
 			 &catalogues, &len);
-    rep.type = FS_Reply;
-    rep.num_replies = 0;
     rep.num_catalogues = num;
-    rep.sequenceNumber = client->sequence;
     rep.length = (SIZEOF(fsListCataloguesReply) + len + 3) >> 2;
 
     WriteReplyToClient(client, SIZEOF(fsListCataloguesReply), &rep);
@@ -534,7 +535,6 @@ ProcGetCatalogues(ClientPtr client)
                 i,
                 size;
     char       *cp;
-    fsGetCataloguesReply rep;
 
     REQUEST(fsGetCataloguesReq);
     REQUEST_AT_LEAST_SIZE(fsGetCataloguesReq);
@@ -546,12 +546,16 @@ ProcGetCatalogues(ClientPtr client)
 	cp += size;
     }
 
-    rep.type = FS_Reply;
-    rep.num_catalogues = client->num_catalogues;
-    rep.sequenceNumber = client->sequence;
-    rep.length = (SIZEOF(fsGetCataloguesReply) + len + 3) >> 2;
+    {
+        fsGetCataloguesReply rep = {
+	    .type = FS_Reply,
+	    .num_catalogues = client->num_catalogues,
+	    .sequenceNumber = client->sequence,
+	    .length = (SIZEOF(fsGetCataloguesReply) + len + 3) >> 2
+	};
 
-    WriteReplyToClient(client, SIZEOF(fsGetCataloguesReply), &rep);
+	WriteReplyToClient(client, SIZEOF(fsGetCataloguesReply), &rep);
+    }
     (void) WriteToClient(client, len, client->catalogues);
 
     return client->noClientException;
@@ -560,7 +564,6 @@ ProcGetCatalogues(ClientPtr client)
 int
 ProcCreateAC(ClientPtr client)
 {
-    fsCreateACReply rep;
     AuthPtr     acp;
     AuthContextPtr authp;
     int         accept,
@@ -661,13 +664,17 @@ alloc_failure:
 	return FSBadAlloc;
     }
     DEALLOCATE_LOCAL(acp);
-    rep.type = FS_Reply;
-    rep.status = accept;
-    rep.auth_index = index;
-    rep.sequenceNumber = client->sequence;
-    rep.length = (SIZEOF(fsCreateACReply) + size) >> 2;
+    {
+        fsCreateACReply rep = {
+	    .type = FS_Reply,
+	    .auth_index = index,
+	    .sequenceNumber = client->sequence,
+	    .status = accept,
+	    .length = (SIZEOF(fsCreateACReply) + size) >> 2
+	};
 
-    WriteReplyToClient(client, SIZEOF(fsCreateACReply), &rep);
+	WriteReplyToClient(client, SIZEOF(fsCreateACReply), &rep);
+    }
     if (size)
 	(void) WriteToClient(client, size, auth_data);
 
@@ -759,8 +766,6 @@ ProcSetResolution(ClientPtr client)
 int
 ProcGetResolution(ClientPtr client)
 {
-    fsGetResolutionReply reply;
-
     REQUEST(fsReq);
     REQUEST_AT_LEAST_SIZE(fsReq);
 
@@ -771,13 +776,17 @@ ProcGetResolution(ClientPtr client)
 	SendErrToClient(client, FSBadLength, &lengthword);
 	return FSBadLength;
     }
-    reply.type = FS_Reply;
-    reply.num_resolutions = client->num_resolutions;
-    reply.sequenceNumber = client->sequence;
-    reply.length = (SIZEOF(fsGetResolutionReply) +
-		    client->num_resolutions * SIZEOF(fsResolution)) >> 2;
+    else {
+	fsGetResolutionReply reply = {
+	    .type = FS_Reply,
+	    .num_resolutions = client->num_resolutions,
+	    .sequenceNumber = client->sequence,
+	    .length = (SIZEOF(fsGetResolutionReply) +
+		       client->num_resolutions * SIZEOF(fsResolution)) >> 2
+	};
 
-    WriteReplyToClient(client, SIZEOF(fsGetResolutionReply), &reply);
+	WriteReplyToClient(client, SIZEOF(fsGetResolutionReply), &reply);
+    }
     if (client->swapped)
 	client->pSwapReplyFunc = CopySwap16Write;
 
@@ -855,7 +864,10 @@ ProcQueryXInfo(ClientPtr client)
     ClientFontPtr cfp;
     int         err,
                 lendata;
-    fsQueryXInfoReply reply;
+    fsQueryXInfoReply reply = {
+	.type = FS_Reply,
+	.sequenceNumber = client->sequence
+    };
     fsPropInfo *prop_info;
 
     REQUEST(fsQueryXInfoReq);
@@ -868,8 +880,6 @@ ProcQueryXInfo(ClientPtr client)
 	SendErrToClient(client, FSBadFont, (pointer) &aligned_id);
 	return FSBadFont;
     }
-    reply.type = FS_Reply;
-    reply.sequenceNumber = client->sequence;
 
     /* get the header */
     fsPack_XFontInfoHeader(&cfp->font->info, &reply, client->major_version);
