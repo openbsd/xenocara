@@ -1,3 +1,60 @@
+commit 76e841968ceb69095eb0efcd435fc47440e86d2c
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue May 28 16:45:02 2013 -0700
+
+    libdmx 1.1.3
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 5074d9d64192bd04519a438062b7d5bf216d06ee
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Mar 9 13:48:28 2013 -0800
+
+    integer overflow in DMXGetInputAttributes() [CVE-2013-1992 3/3]
+    
+    If the server provided nameLength causes integer overflow
+    when padding length is added, a smaller buffer would be allocated
+    than the amount of data written to it.
+    
+    Reported-by: Ilja Van Sprundel <ivansprundel@ioactive.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit b6fe1a7af34ea620e002fc453f9c5eacf7db3969
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Mar 9 13:48:28 2013 -0800
+
+    integer overflow in DMXGetWindowAttributes() [CVE-2013-1992 2/3]
+    
+    If the server provided screenCount causes integer overflow when
+    multiplied by the size of each array element, a smaller buffer
+    would be allocated than the amount of data written to it.
+    
+    Reported-by: Ilja Van Sprundel <ivansprundel@ioactive.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 78e11efe70d00063c830475eaaaa42f19380755d
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Mar 9 13:48:28 2013 -0800
+
+    integer overflow in DMXGetScreenAttributes() [CVE-2013-1992 1/3]
+    
+    If the server provided displayNameLength causes integer overflow
+    when padding length is added, a smaller buffer would be allocated
+    than the amount of data written to it.
+    
+    Reported-by: Ilja Van Sprundel <ivansprundel@ioactive.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit f34f6f64698c3b957aadba7315bb13726e3d79b0
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri May 3 23:10:47 2013 -0700
+
+    Use _XEatDataWords to avoid overflow of rep.length bit shifting
+    
+    rep.length is a CARD32, so rep.length << 2 could overflow in 32-bit builds
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit 9f470c92bc2d194c8abb9154f42864e6c82f43ef
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Wed Mar 7 21:43:10 2012 -0800
