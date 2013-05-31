@@ -35,7 +35,7 @@ in this Software without prior written authorization from The Open Group.
 #include "CreateI.h"
 
 
-#if defined(AIXSHLIB) || defined(__UNIXOS2__)
+#if defined(AIXSHLIB)
 WidgetClass vendorShellWidgetClass = (WidgetClass) &vendorShellClassRec;
 
 static void _XtVendorInitialize()

@@ -1,3 +1,173 @@
+commit e83d6d66ea28b0aaa7e574dd2471121a5250b934
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu May 30 18:13:27 2013 -0700
+
+    libXt 1.1.4
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 1f4802b745aa172d375cb79403cb1e013e6aa4c0
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Mar 9 13:33:20 2013 -0800
+
+    Remove old strtoul workaround for SunOS 4
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 9264a21b688891dbdcee630ff72cf39aa75fc4e1
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Mar 9 11:44:14 2013 -0800
+
+    unvalidated length in _XtResourceConfigurationEH [CVE-2013-2002]
+    
+    The RCM_DATA property is expected to be in the format:
+        resource_length, resource, value
+    
+    If the property contains a resource_length thats results in a pointer
+    outside the property string, memory corruption can occur.
+    
+    Reported-by: Ilja Van Sprundel <ivansprundel@ioactive.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit eae57493feec958bcf733ad0d334715107029f8b
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Mar 9 11:29:21 2013 -0800
+
+    Unchecked return values of XGetWindowProperty [CVE-2013-2005]
+    
+    Multiple functions in Selection.c assumed that XGetWindowProperty() would
+    always set the pointer to the property, but before libX11 1.6, it could
+    fail to do so in some cases, leading to libXt freeing or operating on an
+    uninitialized pointer value, so libXt should always initialize the pointers
+    and check for failure itself.
+    
+    Reported-by: Ilja Van Sprundel <ivansprundel@ioactive.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit ead50a9a274aa96bef94e57c4625be8e9288af4e
+Author: Colin Walters <walters@verbum.org>
+Date:   Wed Jan 4 17:37:06 2012 -0500
+
+    autogen.sh: Implement GNOME Build API
+    
+    http://people.gnome.org/~walters/docs/build-api.txt
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit 8f5f3f7a3c36088d6faf0f13da4416596257bc58
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Tue Jan 15 14:28:48 2013 -0500
+
+    configure: Remove AM_MAINTAINER_MODE
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit 6731c2c7e3c16ad17425acfb5024fa1501e94411
+Author: Thierry Reding <thierry.reding@avionic-design.de>
+Date:   Thu Jan 3 10:16:56 2013 +0100
+
+    Use AM_CPPFLAGS instead of INCLUDES
+    
+    Recent versions of automake deprecate the INCLUDES variable. The same
+    effect can be achieved by using AM_CPPFLAGS instead, which is also
+    automake's recommendation.
+    
+    Signed-off-by: Thierry Reding <thierry.reding@avionic-design.de>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 97034e393cfa63a55e9cec2d795ac41e5872f5b5
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Jan 4 19:52:59 2013 -0800
+
+    unifdef -U__UNIXOS2__
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 0033d063894d003b1cb6edb14107d6ef7e0f3fec
+Author: Egbert Eich <eich@freedesktop.org>
+Date:   Thu Sep 8 16:40:27 2011 +0200
+
+    Add XtErrorDB directory to pkg-config file.
+    
+    Should anyone ever desire to supply this file externally
+    it's location is specified in the pkg-config file.
+    
+    Signed-off-by: Egbert Eich <eich@freedesktop.org>
+    Reviewed-by: Gaetan Nadon <memsize@videotron.ca>
+    Tested-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 15d7f9cf9e089f5968a20f80529096e9a1d3551f
+Author: Egbert Eich <eich@freedesktop.org>
+Date:   Thu May 19 18:18:52 2011 +0200
+
+    Install ErrorDB into a $datarootdir-path, not $libdir.
+    
+    This lets Xt search for it's ErrorDB in the same location
+    as Xlib. These error databases are architecture independent
+    data files.
+    
+    The XtErrorDB file neither exists in libXt nor has it ever
+    been supplied by any '3rd party' (at least Google didn't
+    turn up any results).
+    Therefore changing the location of this file (again) should
+    have no side effects on backward compatibility.
+    
+    Signed-off-by: Egbert Eich <eich@freedesktop.org>
+    Reviewed-by: Gaetan Nadon <memsize@videotron.ca>
+    Tested-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 690d6587e7e0ba29b70d2b1d6c5c6a128c5547a2
+Author: Eric S. Raymond <esr@thyrsus.com>
+Date:   Thu Aug 23 11:43:42 2012 -0400
+
+    Remove unused macros that are temptations to presentation-level klugery.
+    
+    Also, change .Ds/.De to use CW font, as what they're wrapping is code displays.
+    This may not be recognized on archaic Unixes, but .ft 1 isn't any too safe
+    either. The PostScript and DVI drivers both grok CW.
+    
+    Signed-off-by: Eric S. Raymond <esr@thyrsus.com>
+
+commit 356b3e6235be4cdb51f13249cb68c581c0fc50c7
+Author: Eric S. Raymond <esr@thyrsus.com>
+Date:   Thu Aug 23 11:30:47 2012 -0400
+
+    Eliminate use of tab stops.
+    
+    Signed-off-by: Eric S. Raymond <esr@thyrsus.com>
+
+commit 1e5e04a80b391ea6827bb3c537be47533c6afe1e
+Author: Thomas Klausner <wiz@NetBSD.org>
+Date:   Wed Jul 18 16:45:19 2012 +0200
+
+    Fix DEBUG build (TMparse.c:376:1: error: overflow in implicit constant conversion)
+    
+    Signed-off-by: Thomas Klausner <wiz@NetBSD.org>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 1ab3a0dd5140489bc80edcfd940609fefaec81f1
+Author: Thomas Klausner <wiz@NetBSD.org>
+Date:   Wed Jul 18 16:45:18 2012 +0200
+
+    Avoid referencing something that isn't defined. Bring in the definition from another manual page.
+    
+    Signed-off-by: Thomas Klausner <wiz@NetBSD.org>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 6adb4655a15276973f5e74fd79f5c99d3d4b77a0
+Author: Julien Cristau <jcristau@debian.org>
+Date:   Mon Apr 23 20:08:34 2012 +0200
+
+    Add copyright notice and license from the X Consortium to COPYING
+    
+    These appear in the Xt manpages.
+    
+    Reported-by: Ansgar Burchardt
+    Signed-off-by: Julien Cristau <jcristau@debian.org>
+
 commit 2d689ac861085d1d74bcbd05d1595bac0bf67d20
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Thu Mar 15 22:51:45 2012 -0700

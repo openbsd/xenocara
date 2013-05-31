@@ -22,7 +22,7 @@
 
 # Initialize Autoconf
 AC_PREREQ([2.60])
-AC_INIT([libXt], [1.1.3],
+AC_INIT([libXt], [1.1.4],
         [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg], [libXt])
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_HEADERS([config.h])
@@ -30,7 +30,6 @@ AC_CONFIG_MACRO_DIR([m4])
 
 # Initialize Automake
 AM_INIT_AUTOMAKE([foreign dist-bzip2])
-AM_MAINTAINER_MODE
 
 # Initialize libtool
 AC_PROG_LIBTOOL
@@ -161,6 +160,9 @@ case $host_os in
 		;;
 esac
 AC_SUBST(STRINGSABIOPTIONS)
+
+ERRORDBDIR=${datadir}/X11
+AC_SUBST(ERRORDBDIR)
 
 case $host_os in
     darwin*)

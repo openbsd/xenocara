@@ -72,13 +72,6 @@ static void _search_child(Widget, char *, char *, char *, char *, char, char *);
 static void _set_and_search(Widget, char *, char *, char *, char *, char , char *);
 static int _locate_children(Widget, Widget **);
 
-#if defined(sun) && !defined(SVR4)
-# define Strtoul(a,b,c) (unsigned long)strtol(a,b,c)
-#else
-# define Strtoul(a,b,c) strtoul(a,b,c)
-#endif
-
-
 /*
  * NAME: _set_resource_values
  *
@@ -974,7 +967,7 @@ _XtResourceConfigurationEH (
 			char *data_end = data + nitems;
 			char *data_value;
 
-			resource_len = Strtoul ((void *)data, &data_ptr, 10);
+			resource_len = strtoul (data, &data_ptr, 10);
 
 			if (data_ptr != (char *) data) {
 				data_ptr++;
