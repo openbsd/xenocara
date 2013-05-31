@@ -303,8 +303,8 @@ XFixesFetchRegion (Display *dpy, XserverRegion region, int *nrectanglesRet)
 }
 
 XRectangle *
-XFixesFetchRegionAndBounds (Display	    *dpy, 
-			    XserverRegion   region, 
+XFixesFetchRegionAndBounds (Display	    *dpy,
+			    XserverRegion   region,
 			    int		    *nrectanglesRet,
 			    XRectangle	    *bounds)
 {
@@ -335,7 +335,6 @@ XFixesFetchRegionAndBounds (Display	    *dpy,
     bounds->height = rep.height;
     nbytes = (long) rep.length << 2;
     nrects = rep.length >> 1;
-    nread = nrects << 3;
     rects = Xmalloc (nrects * sizeof (XRectangle));
     if (!rects)
     {
@@ -344,7 +343,8 @@ XFixesFetchRegionAndBounds (Display	    *dpy,
 	SyncHandle ();
 	return NULL;
     }
-    _XRead16 (dpy, (short *) rects, nrects << 3);
+    nread = nrects << 3;
+    _XRead16 (dpy, (short *) rects, nread);
     /* skip any padding */
     if(nbytes > nread)
     {
@@ -357,7 +357,7 @@ XFixesFetchRegionAndBounds (Display	    *dpy,
 }
 
 void
-XFixesSetGCClipRegion (Display *dpy, GC gc, 
+XFixesSetGCClipRegion (Display *dpy, GC gc,
 		       int clip_x_origin, int clip_y_origin,
 		       XserverRegion region)
 {
