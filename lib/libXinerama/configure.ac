@@ -48,12 +48,6 @@ LIBS="$XINERAMA_LIBS"
 AC_CHECK_FUNCS([_XEatDataWords])
 LIBS="$SAVE_LIBS"
 
-# Check for _XEatDataWords function that may be patched into older Xlib releases
-SAVE_LIBS="$LIBS"
-LIBS="$XINERAMA_LIBS"
-AC_CHECK_FUNCS([_XEatDataWords])
-LIBS="$SAVE_LIBS"
-
 # Allow checking code with lint, sparse, etc.
 XORG_WITH_LINT
 LINT_FLAGS="${LINT_FLAGS} ${XINERAMA_CFLAGS}"

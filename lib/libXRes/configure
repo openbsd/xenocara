@@ -17640,22 +17640,6 @@ done
 
 LIBS="$SAVE_LIBS"
 
-# Check for _XEatDataWords function that may be patched into older Xlib release
-SAVE_LIBS="$LIBS"
-LIBS="$XRES_LIBS"
-for ac_func in _XEatDataWords
-do :
-  ac_fn_c_check_func "$LINENO" "_XEatDataWords" "ac_cv_func__XEatDataWords"
-if test "x$ac_cv_func__XEatDataWords" = xyes; then :
-  cat >>confdefs.h <<_ACEOF
-#define HAVE__XEATDATAWORDS 1
-_ACEOF
-
-fi
-done
-
-LIBS="$SAVE_LIBS"
-
 ac_config_files="$ac_config_files Makefile src/Makefile man/Makefile xres.pc"
 
 cat >confcache <<\_ACEOF

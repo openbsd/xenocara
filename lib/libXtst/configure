@@ -18142,22 +18142,6 @@ done
 
 LIBS="$SAVE_LIBS"
 
-# Check for _XEatDataWords function that may be patched into older Xlib release
-SAVE_LIBS="$LIBS"
-LIBS="$XTST_LIBS"
-for ac_func in _XEatDataWords
-do :
-  ac_fn_c_check_func "$LINENO" "_XEatDataWords" "ac_cv_func__XEatDataWords"
-if test "x$ac_cv_func__XEatDataWords" = xyes; then :
-  cat >>confdefs.h <<_ACEOF
-#define HAVE__XEATDATAWORDS 1
-_ACEOF
-
-fi
-done
-
-LIBS="$SAVE_LIBS"
-
 # Determine if the source for man pages is available
 # It may already be present (tarball) or can be generated using xmlto
  if test -f "$srcdir/man/XTestQueryExtension.man" || test "x$have_xmlto" = xyes; then

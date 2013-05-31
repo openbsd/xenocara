@@ -50,13 +50,6 @@ AC_CHECK_FUNCS([_XEatDataWords])
 LIBS="$SAVE_LIBS"
 
 
-# Check for _XEatDataWords function that may be patched into older Xlib releases
-SAVE_LIBS="$LIBS"
-LIBS="$DMX_LIBS"
-AC_CHECK_FUNCS([_XEatDataWords])
-LIBS="$SAVE_LIBS"
-
-
 AC_CONFIG_FILES([Makefile
 		src/Makefile
 		man/Makefile

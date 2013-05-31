@@ -17619,22 +17619,6 @@ done
 
 LIBS="$SAVE_LIBS"
 
-# Check for _XEatDataWords function that may be patched into older Xlib releases
-SAVE_LIBS="$LIBS"
-LIBS="$XINERAMA_LIBS"
-for ac_func in _XEatDataWords
-do :
-  ac_fn_c_check_func "$LINENO" "_XEatDataWords" "ac_cv_func__XEatDataWords"
-if test "x$ac_cv_func__XEatDataWords" = xyes; then :
-  cat >>confdefs.h <<_ACEOF
-#define HAVE__XEATDATAWORDS 1
-_ACEOF
-
-fi
-done
-
-LIBS="$SAVE_LIBS"
-
 # Allow checking code with lint, sparse, etc.
 
 

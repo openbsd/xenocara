@@ -1,5 +1,5 @@
 dnl 
-dnl  $Id: configure.ac,v 1.6 2013/05/31 15:23:23 matthieu Exp $
+dnl  $Id: configure.ac,v 1.7 2013/05/31 18:38:27 matthieu Exp $
 #
 #  Copyright © 2003 Keith Packard, Noah Levitt
 #
@@ -56,12 +56,6 @@ RES_VERSION=[`echo $VERSION | sed 's/^\([0-9][0-9]*\.[0-9][0-9]*\).*$/\1/'`]
 
 # Obtain compiler/linker options for depedencies
 PKG_CHECK_MODULES(XRES, x11 xext xextproto [resourceproto >= $RES_VERSION])
-
-# Check for _XEatDataWords function that may be patched into older Xlib release
-SAVE_LIBS="$LIBS"
-LIBS="$XRES_LIBS"
-AC_CHECK_FUNCS([_XEatDataWords])
-LIBS="$SAVE_LIBS"
 
 # Check for _XEatDataWords function that may be patched into older Xlib release
 SAVE_LIBS="$LIBS"

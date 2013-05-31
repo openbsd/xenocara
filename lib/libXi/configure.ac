@@ -36,12 +36,6 @@ LIBS="$XI_LIBS"
 AC_CHECK_FUNCS([_XEatDataWords])
 LIBS="$SAVE_LIBS"
 
-# Check for _XEatDataWords function that may be patched into older Xlib releases
-SAVE_LIBS="$LIBS"
-LIBS="$XI_LIBS"
-AC_CHECK_FUNCS([_XEatDataWords])
-LIBS="$SAVE_LIBS"
-
 # Check for xmlto and asciidoc for man page conversion
 # (only needed by people building tarballs)
 if test "$have_xmlto" = yes && test "$have_asciidoc" = yes; then

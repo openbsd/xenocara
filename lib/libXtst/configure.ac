@@ -53,12 +53,6 @@ LIBS="$XTST_LIBS"
 AC_CHECK_FUNCS([_XEatDataWords])
 LIBS="$SAVE_LIBS"
 
-# Check for _XEatDataWords function that may be patched into older Xlib release
-SAVE_LIBS="$LIBS"
-LIBS="$XTST_LIBS"
-AC_CHECK_FUNCS([_XEatDataWords])
-LIBS="$SAVE_LIBS"
-
 # Determine if the source for man pages is available
 # It may already be present (tarball) or can be generated using xmlto
 AM_CONDITIONAL([INSTALL_MANPAGES],
