@@ -1,3 +1,209 @@
+commit ba0d1b0da21d2dbdd81098ed5778f3792b472e13
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri May 17 21:04:26 2013 -0700
+
+    xwininfo 1.1.3
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 3e60a26559221e561770710a8c4ed0b8ebc31afb
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jan 12 13:52:08 2013 -0800
+
+    Quiet some clang warnings about implicit int <-> size_t conversions
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit f7b55bdf674fc790e879a2e25ef83925dd8379d6
+Author: Pierre-Loup A. Griffais <pgriffais@nvidia.com>
+Date:   Tue Oct 9 20:33:10 2012 -0700
+
+    xwininfo: report the Visual class of the selected Window
+    
+    Not of the root window.
+    
+    Signed-off-by: Pierre-Loup A. Griffais <pgriffais@nvidia.com>
+    Signed-off-by: Julien Cristau <jcristau@debian.org>
+
+commit aedc2ecc4de61211f5f6b8f27bd8681d0ab744dc
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Aug 25 14:05:18 2012 -0700
+
+    Print more detailed error messages when xcb_connect fails
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Jeremy Huddleston Sequoia <jeremyhu@apple.com>
+
+commit 4176bffd0261d7734617dc73ae6013e86dbb841d
+Author: David Venz <david.venz@gmail.com>
+Date:   Sat Aug 25 12:06:22 2012 -0700
+
+    Bug 53242 - xwininfo segfaults on invalid screen
+    
+    Check number of screen entries before iterating past the end of the list
+    
+    Reviewed-by: Jeremy Huddleston Sequoia <jeremyhu@apple.com>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 53564df46e7f8e443c46b00080ea46c878c34263
+Author: Thomas Klausner <wiz@NetBSD.org>
+Date:   Sun Aug 26 00:07:52 2012 +0200
+
+    Get rid of a number of warnings.
+    
+    Signed-off-by: Thomas Klausner <wiz@NetBSD.org>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 1279ed652f9f3408211c78b7bf8a0aef6b8488df
+Author: Jeremy Huddleston Sequoia <jeremyhu@apple.com>
+Date:   Sat Aug 25 12:16:29 2012 -0700
+
+    Remove dead code (size_t is always >= 0)
+    
+    xwininfo.c:1886:15: warning: comparison of unsigned expression < 0 is always false [-Wtautological-compare]
+        if (inlen < 0) {
+            ~~~~~ ^ ~
+    
+    Signed-off-by: Jeremy Huddleston Sequoia <jeremyhu@apple.com>
+
+commit fa40ecdfb5cd068ba531b4439df5bbf660469d3a
+Author: Jeremy Huddleston Sequoia <jeremyhu@apple.com>
+Date:   Sat Aug 25 12:15:02 2012 -0700
+
+    Declare usage() as _X_NORETURN
+    
+    Signed-off-by: Jeremy Huddleston Sequoia <jeremyhu@apple.com>
+
+commit 5037f79e8f6a36d3c524a2dd8150cf96c31b7106
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jan 25 09:48:54 2012 -0500
+
+    configure.ac: regroup statements and comment
+    
+    Add missing AC_CONFIG_SRCDIR([Makefile.am])
+    
+    Move AC_USE_SYSTEM_EXTENSIONS higher up in Autoconf init section
+    which must come before XORG_DEFAULT_OPTIONS
+    
+    Move XORG_DEFAULT_OPTIONS to its usual place with X.Org macros
+    Note that AC_FUNC_STRNLEN calls AC_REQUIRE(AC_USE_SYSTEM_EXTENSIONS)
+    
+    Comment the strnlen function replacement.
+    http://pubs.opengroup.org/onlinepubs/9699919799/functions/strlen.html
+    
+    No functional changes. Following the layout in
+    http://www.x.org/wiki/NewModuleGuidelines
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 19a7184f76ee3c17586ad65a8424966dde5b91c3
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Fri Jan 20 20:14:05 2012 -0500
+
+    Revert "make: remove $(LIBOBJS) dead code"
+    
+    AC_FUNC_STRLEN is one of the functions that call AC_LIBOBJ
+    which sets $LIBOBJ.
+    
+    This reverts commit 3f3606b0e8de8f38f467126f07277e33a9285e53.
+
+commit 3f3606b0e8de8f38f467126f07277e33a9285e53
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Fri Jan 20 15:10:15 2012 -0500
+
+    make: remove $(LIBOBJS) dead code
+    
+    Starting at Autoconf 2.53, the use of LIBOBJS is an error.
+    http://www.gnu.org/software/autoconf/manual/autoconf.html#
+    AC_005fLIBOBJ-vs-LIBOBJS
+    
+    There are no system functions to override in this module.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 42d2c1e32167a33c0f2de04cea0c7bb8001dbe43
+Author: Guillem Jover <guillem@hadrons.org>
+Date:   Tue Oct 4 07:04:38 2011 +0200
+
+    Use format string literals instead of variables to print atom names
+    
+    This allows the compiler to check the format against the argument types.
+    
+    Signed-off-by: Guillem Jover <guillem@hadrons.org>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 8ce8a54e75248164e17626c0866adbd636e42a7b
+Author: Guillem Jover <guillem@hadrons.org>
+Date:   Tue Oct 4 07:03:30 2011 +0200
+
+    Refactor atom name printing into a new Display_Atom_Name function
+    
+    Signed-off-by: Guillem Jover <guillem@hadrons.org>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit c1b6da1bc7e5ba715bbea52a24449cc91c26dfb3
+Author: Guillem Jover <guillem@hadrons.org>
+Date:   Tue Oct 4 07:04:38 2011 +0200
+
+    Use format string literals instead of variables to print window ids
+    
+    This allows the compiler to check the format against the argument types.
+    
+    Signed-off-by: Guillem Jover <guillem@hadrons.org>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit d11e467728a7c7cb7b5b7a8e07cd543172c20aa1
+Author: Guillem Jover <guillem@hadrons.org>
+Date:   Tue Oct 4 05:40:45 2011 +0200
+
+    Move leading ": " out from buffer to the error string printer
+    
+    Besides slightly reducing the binary size, this will be helpful when/if
+    i18n support is added to translate the strings.
+    
+    Signed-off-by: Guillem Jover <guillem@hadrons.org>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 73bb1135d599d8a55e883bd61619707ede658717
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Sep 28 21:16:52 2011 -0700
+
+    Add const attributes to fix gcc -Wwrite-strings warnings
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 23fc2d9c1cc91ac902ebf05dcbaa6062ff8f0dcc
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Sep 28 21:14:37 2011 -0700
+
+    Strip trailing whitespace
+    
+    Performed with: find * -type f | xargs perl -i -p -e 's{[ \t]+$}{}'
+    git diff -w & git diff -b show no diffs from this change
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 1410b0f0a9d50973ebfdcc696994ccbd91cea3ae
+Author: Yaakov Selkowitz <yselkowitz@users.sourceforge.net>
+Date:   Wed Aug 24 23:08:58 2011 -0500
+
+    Use AM_ICONV
+    
+    AC_SEARCH_LIBS does not detect GNU libiconv because its symbols are
+    exported in the "libiconv" namespace instead of "iconv".  The AM_ICONV
+    macro correctly detects both glibc and GNU libiconv, defines HAVE_ICONV,
+    ICONV_CONST, and LIBICONV depending on the system.  The config.rpath
+    file is required by this macro.
+    
+    This adds a dependency on the aclocal macros from gettext (gettext-devel
+    in some distros) when building from git, but not when building from a
+    tarball.
+    
+    Signed-off-by: Yaakov Selkowitz <yselkowitz@users.sourceforge.net>
+    Reviewed-by: Gaetan Nadon <memsize@videotron.ca>
+
 commit 1c58b461a84a8e75c53ce863470a5c8d8201261b
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Wed Jun 29 21:25:38 2011 -0700

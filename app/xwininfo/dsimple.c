@@ -75,7 +75,7 @@ from The Open Group.
 
 
 /* This stuff is defined in the calling program by dsimple.h */
-char    *program_name = "unknown_program";
+const char    *program_name = "unknown_program";
 
 /*
  * Get_Display_Name (argc, argv) - return string representing display name
@@ -108,19 +108,38 @@ void Setup_Display_And_Screen (
     xcb_connection_t **dpy,	/* MODIFIED */
     xcb_screen_t **screen)	/* MODIFIED */
 {
-    int screen_number, i;
+    int screen_number, i, err;
 
     /* Open Display */
     *dpy = xcb_connect (display_name, &screen_number);
-    if (xcb_connection_has_error (*dpy)) {
-	Fatal_Error ("unable to open display \"%s\"",
-		     Get_Display_Name(display_name) );
+    if ((err = xcb_connection_has_error (*dpy)) != 0) {
+        switch (err) {
+        case XCB_CONN_CLOSED_MEM_INSUFFICIENT:
+            Fatal_Error ("Failed to allocate memory in xcb_connect");
+        case XCB_CONN_CLOSED_PARSE_ERR:
+            Fatal_Error ("unable to parse display name \"%s\"",
+                         Get_Display_Name(display_name) );
+#ifdef XCB_CONN_CLOSED_INVALID_SCREEN
+        case XCB_CONN_CLOSED_INVALID_SCREEN:
+            Fatal_Error ("invalid screen %d in display \"%s\"",
+                         screen_number, Get_Display_Name(display_name));
+#endif
+        default:
+            Fatal_Error ("unable to open display \"%s\"",
+                         Get_Display_Name(display_name) );
+        }
     }
 
     if (screen) {
 	/* find our screen */
 	const xcb_setup_t *setup = xcb_get_setup(*dpy);
 	xcb_screen_iterator_t screen_iter = xcb_setup_roots_iterator(setup);
+	int screen_count = xcb_setup_roots_length(setup);
+	if (screen_count <= screen_number)
+	{
+	    Fatal_Error ("unable to access screen %d, max is %d",
+			 screen_number, screen_count-1 );
+	}
 
 	for (i = 0; i < screen_number; i++)
 	    xcb_screen_next(&screen_iter);
@@ -403,7 +422,7 @@ Window_With_Name (
 /*
  * Standard fatal error routine - call like printf
  */
-void Fatal_Error (char *msg, ...)
+void Fatal_Error (const char *msg, ...)
 {
     va_list args;
     fflush (stdout);
@@ -441,92 +460,92 @@ Print_X_Error (
 	switch (err->error_code)
 	{
 	    case XCB_REQUEST:
-		snprintf (buffer, sizeof(buffer), ": Bad Request");
+		snprintf (buffer, sizeof(buffer), "Bad Request");
 		break;
 
 	    case XCB_VALUE:
 		snprintf (buffer, sizeof(buffer),
-			  ": Bad Value: 0x%x", err->resource_id);
+			  "Bad Value: 0x%x", err->resource_id);
 		break;
 
 	    case XCB_WINDOW:
 		snprintf (buffer, sizeof(buffer),
-			  ": Bad Window: 0x%x", err->resource_id);
+			  "Bad Window: 0x%x", err->resource_id);
 		break;
 
 	    case XCB_PIXMAP:
 		snprintf (buffer, sizeof(buffer),
-			  ": Bad Pixmap: 0x%x", err->resource_id);
+			  "Bad Pixmap: 0x%x", err->resource_id);
 		break;
 
 	    case XCB_ATOM:
 		snprintf (buffer, sizeof(buffer),
-			  ": Bad Atom: 0x%x", err->resource_id);
+			  "Bad Atom: 0x%x", err->resource_id);
 		break;
 
 	    case XCB_CURSOR:
 		snprintf (buffer, sizeof(buffer),
-			  ": Bad Cursor: 0x%x", err->resource_id);
+			  "Bad Cursor: 0x%x", err->resource_id);
 		break;
 
 	    case XCB_FONT:
 		snprintf (buffer, sizeof(buffer),
-			  ": Bad Font: 0x%x", err->resource_id);
+			  "Bad Font: 0x%x", err->resource_id);
 		break;
 
 	    case XCB_MATCH:
-		snprintf (buffer, sizeof(buffer), ": Bad Match");
+		snprintf (buffer, sizeof(buffer), "Bad Match");
 		break;
 
 	    case XCB_DRAWABLE:
 		snprintf (buffer, sizeof(buffer),
-			  ": Bad Drawable: 0x%x", err->resource_id);
+			  "Bad Drawable: 0x%x", err->resource_id);
 		break;
 
 	    case XCB_ACCESS:
-		snprintf (buffer, sizeof(buffer), ": Access Denied");
+		snprintf (buffer, sizeof(buffer), "Access Denied");
 		break;
 
 	    case XCB_ALLOC:
 		snprintf (buffer, sizeof(buffer),
-			  ": Server Memory Allocation Failure");
+			  "Server Memory Allocation Failure");
 		break;
 
 	    case XCB_COLORMAP:
 		snprintf (buffer, sizeof(buffer),
-			  ": Bad Color: 0x%x", err->resource_id);
+			  "Bad Color: 0x%x", err->resource_id);
 		break;
 
 	    case XCB_G_CONTEXT:
 		snprintf (buffer, sizeof(buffer),
-			  ": Bad GC: 0x%x", err->resource_id);
+			  "Bad GC: 0x%x", err->resource_id);
 		break;
 
 	    case XCB_ID_CHOICE:
 		snprintf (buffer, sizeof(buffer),
-			  ": Bad XID: 0x%x", err->resource_id);
+			  "Bad XID: 0x%x", err->resource_id);
 		break;
 
 	    case XCB_NAME:
 		snprintf (buffer, sizeof(buffer),
-			  ": Bad Name");
+			  "Bad Name");
 		break;
 
 	    case XCB_LENGTH:
 		snprintf (buffer, sizeof(buffer),
-			  ": Bad Request Length");
+			  "Bad Request Length");
 		break;
 
 	    case XCB_IMPLEMENTATION:
 		snprintf (buffer, sizeof(buffer),
-			  ": Server Implementation Failure");
+			  "Server Implementation Failure");
 		break;
 
 	    default:
-		snprintf (buffer, sizeof(buffer), ": Unknown error");
+		snprintf (buffer, sizeof(buffer), "Unknown error");
 		break;
 	}
-	fprintf (stderr, "X Error: %d%s\n", err->error_code, buffer);
+	fprintf (stderr, "X Error: %d: %s\n", err->error_code, buffer);
     }
 
     fprintf (stderr, "  Request Major code: %d\n", err->major_code);

@@ -245,14 +245,14 @@ static void Display_Window_Shape (xcb_window_t);
 static void Display_WM_Info (struct wininfo *);
 static void wininfo_wipe (struct wininfo *);
 
-static const char *window_id_format = "0x%lx";
+static Bool window_id_format_dec = False;
 
 #ifdef HAVE_ICONV
 static iconv_t iconv_from_utf8;
 #endif
 static const char *user_encoding;
-static void print_utf8 (const char *, char *, size_t, const char *);
-static void print_friendly_name (const char *, const char *, const char *);
+static void print_utf8 (const char *, const char *, size_t, const char *);
+static char *get_friendly_name (const char *, const char *);
 
 static xcb_connection_t *dpy;
 static xcb_screen_t *screen;
@@ -278,6 +278,7 @@ static size_t strlcat (char *dst, const char *src, size_t dstsize)
 /*
  * Report the syntax for calling xwininfo:
  */
+_X_NORETURN
 static void
 usage (void)
 {
@@ -324,12 +325,12 @@ static int bp = 0, bmm = 0;
 static int english = 0, metric = 0;
 
 static void
-scale_init (xcb_screen_t *screen)
+scale_init (xcb_screen_t *scale_screen)
 {
-    xp = screen->width_in_pixels;
-    yp = screen->height_in_pixels;
-    xmm = screen->width_in_millimeters;
-    ymm = screen->height_in_millimeters;
+    xp = scale_screen->width_in_pixels;
+    yp = scale_screen->height_in_pixels;
+    xmm = scale_screen->width_in_millimeters;
+    ymm = scale_screen->height_in_millimeters;
     bp  = xp  + yp;
     bmm = xmm + ymm;
 }
@@ -420,6 +421,19 @@ bscale (int b)
     return (nscale (b, bp, bmm, bbuf, sizeof(bbuf)));
 }
 
+static const char *
+window_id_str (xcb_window_t id)
+{
+    static char str[20];
+
+    if (window_id_format_dec)
+	snprintf (str, sizeof(str), "%u", id);
+    else
+	snprintf (str, sizeof(str), "0x%x", id);
+
+    return str;
+}
+
 /* end of pixel to inch, metric converter */
 
 int
@@ -472,7 +486,7 @@ main (int argc, char **argv)
 	    continue;
 	}
 	if (!strcmp (argv[i], "-int")) {
-	    window_id_format = "%ld";
+	    window_id_format_dec = True;
 	    continue;
 	}
 	if (!strcmp (argv[i], "-children")) {
@@ -576,13 +590,10 @@ main (int argc, char **argv)
 	w->geometry = xcb_get_geometry_reply(dpy, gg_cookie, &err);
 
 	if (!w->geometry) {
-	    char badid[20];
-
 	    if (err)
 		Print_X_Error (dpy, err);
 
-	    snprintf (badid, sizeof(badid), window_id_format, window);
-	    Fatal_Error ("No such window with id %s.", badid);
+	    Fatal_Error ("No such window with id %s.", window_id_str (window));
 	}
     }
 
@@ -694,10 +705,10 @@ fetch_win_attributes (struct wininfo *w)
 
 #ifndef USE_XCB_ICCCM
 static Bool
-wm_size_hints_reply (xcb_connection_t *dpy, xcb_get_property_cookie_t cookie,
-		     wm_size_hints_t *hints_return, xcb_generic_error_t **err)
+wm_size_hints_reply (xcb_connection_t *wshr_dpy, xcb_get_property_cookie_t cookie,
+		     wm_size_hints_t *hints_return, xcb_generic_error_t **wshr_err)
 {
-    xcb_get_property_reply_t *prop = xcb_get_property_reply (dpy, cookie, err);
+    xcb_get_property_reply_t *prop = xcb_get_property_reply (wshr_dpy, cookie, wshr_err);
     int length;
 
     if (!prop || (prop->type != XCB_ATOM_WM_SIZE_HINTS) ||
@@ -794,7 +805,7 @@ Display_Window_Id (struct wininfo *w, Bool newline_wanted)
     unsigned int wm_name_len = 0;
     xcb_atom_t wm_name_encoding = XCB_NONE;
 
-    printf (window_id_format, w->window);      /* print id # in hex/dec */
+    printf ("%s", window_id_str (w->window));
 
     if (!w->window) {
 	printf (" (none)");
@@ -832,7 +843,7 @@ Display_Window_Id (struct wininfo *w, Bool newline_wanted)
 	    if (wm_name_encoding == XCB_ATOM_STRING) {
 		printf (" \"%.*s\"", wm_name_len, wm_name);
 	    } else if (wm_name_encoding == atom_utf8_string) {
-		print_utf8 (" \"", (char *) wm_name, wm_name_len,  "\"");
+		print_utf8 (" \"", wm_name, wm_name_len,  "\"");
 	    } else {
 		/* Encodings we don't support, including COMPOUND_TEXT */
 		const char *enc_name = Get_Atom_Name (dpy, wm_name_encoding);
@@ -970,7 +981,7 @@ Display_Stats_Info (struct wininfo *w)
 
 	    visual_iter = xcb_depth_visuals_iterator (depth_iter.data);
 	    for (; visual_iter.rem; xcb_visualtype_next (&visual_iter)) {
-		if (screen->root_visual == visual_iter.data->visual_id) {
+		if (win_attributes->visual == visual_iter.data->visual_id) {
 		    visual_type = visual_iter.data;
 		    break;
 		}
@@ -1598,10 +1609,10 @@ static const binding _state_hints[] = {
 
 #ifndef USE_XCB_ICCCM
 static Bool
-wm_hints_reply (xcb_connection_t *dpy, xcb_get_property_cookie_t cookie,
-		wm_hints_t *hints_return, xcb_generic_error_t **err)
+wm_hints_reply (xcb_connection_t *whr_dpy, xcb_get_property_cookie_t cookie,
+		wm_hints_t *hints_return, xcb_generic_error_t **whr_err)
 {
-    xcb_get_property_reply_t *prop = xcb_get_property_reply (dpy, cookie, err);
+    xcb_get_property_reply_t *prop = xcb_get_property_reply (whr_dpy, cookie, whr_err);
     int length;
 
     if (!prop || (prop->type != XCB_ATOM_WM_HINTS) || (prop->format != 32)) {
@@ -1622,6 +1633,20 @@ wm_hints_reply (xcb_connection_t *dpy, xcb_get_property_cookie_t cookie,
 
 #define xcb_icccm_get_wm_hints_reply wm_hints_reply
 #endif
+
+static void
+Display_Atom_Name (xcb_atom_t atom, const char *prefix)
+{
+    const char *atom_name = Get_Atom_Name (dpy, atom);
+
+    if (atom_name) {
+	char *friendly_name = get_friendly_name (atom_name, prefix);
+	printf ("          %s\n", friendly_name);
+	free (friendly_name);
+    } else {
+	printf ("          (unresolvable ATOM 0x%x)\n", atom);
+    }
+}
 
 static void
 Display_WM_Info (struct wininfo *w)
@@ -1687,17 +1712,8 @@ Display_WM_Info (struct wininfo *w)
 
 	    if (atom_count > 0) {
 		printf ("      Window type:\n");
-		for (i = 0; i < atom_count; i++) {
-		    const char *atom_name = Get_Atom_Name (dpy, atoms[i]);
-
-		    if (atom_name) {
-			print_friendly_name ("          %s\n", atom_name,
-					     "_NET_WM_WINDOW_TYPE_");
-		    } else {
-			printf ("          (unresolvable ATOM 0x%x)\n",
-				atoms[i]);
-		    }
-		}
+		for (i = 0; i < atom_count; i++)
+		    Display_Atom_Name (atoms[i], "_NET_WM_WINDOW_TYPE_");
 	    }
 	}
 	free (prop);
@@ -1711,17 +1727,8 @@ Display_WM_Info (struct wininfo *w)
 
 	    if (atom_count > 0) {
 		printf ("      Window state:\n");
-		for (i = 0; i < atom_count; i++) {
-		    const char *atom_name = Get_Atom_Name (dpy, atoms[i]);
-
-		    if (atom_name) {
-			print_friendly_name ("          %s\n", atom_name,
-					     "_NET_WM_STATE_");
-		    } else {
-			printf ("          (unresolvable ATOM 0x%x)\n",
-				atoms[i]);
-		    }
-		}
+		for (i = 0; i < atom_count; i++)
+		    Display_Atom_Name (atoms[i], "_NET_WM_STATE_");
 	    }
 	}
 	free (prop);
@@ -1772,16 +1779,16 @@ wininfo_wipe (struct wininfo *w)
 
 /* Gets UTF-8 encoded EMWH property _NET_WM_NAME for a window */
 static xcb_get_property_cookie_t
-get_net_wm_name (xcb_connection_t *dpy, xcb_window_t win)
+get_net_wm_name (xcb_connection_t *gnwn_dpy, xcb_window_t win)
 {
     if (!atom_net_wm_name)
-	atom_net_wm_name = Get_Atom (dpy, "_NET_WM_NAME");
+	atom_net_wm_name = Get_Atom (gnwn_dpy, "_NET_WM_NAME");
 
     if (!atom_utf8_string)
-	atom_utf8_string = Get_Atom (dpy, "UTF8_STRING");
+	atom_utf8_string = Get_Atom (gnwn_dpy, "UTF8_STRING");
 
     if (atom_net_wm_name && atom_utf8_string)
-	return xcb_get_property (dpy, False, win, atom_net_wm_name,
+	return xcb_get_property (gnwn_dpy, False, win, atom_net_wm_name,
 				 atom_utf8_string, 0, BUFSIZ);
     else {
 	xcb_get_property_cookie_t dummy = { 0 };
@@ -1819,7 +1826,7 @@ get_net_wm_name (xcb_connection_t *dpy, xcb_window_t win)
 #define UTF8_SHORT_TAIL 3
 #define UTF8_LONG_TAIL 4
 static int
-is_valid_utf8 (const char *string, int len)
+is_valid_utf8 (const char *string, size_t len)
 {
     unsigned long codepoint;
     int rem, i;
@@ -1872,13 +1879,9 @@ is_valid_utf8 (const char *string, int len)
  * Length of the string is specified in bytes, or -1 for going until '\0'
  */
 static void
-print_utf8 (const char *prefix, char *u8str, size_t length, const char *suffix)
+print_utf8 (const char *prefix, const char *u8str, size_t length, const char *suffix)
 {
     size_t inlen = length;
-
-    if (inlen < 0) {
-	inlen = strlen (u8str);
-    }
 
     if (is_valid_utf8 (u8str, inlen) != UTF8_VALID) {
 	printf (" (invalid UTF8_STRING)");
@@ -1900,7 +1903,7 @@ print_utf8 (const char *prefix, char *u8str, size_t length, const char *suffix)
 
     if (iconv_from_utf8 != (iconv_t) -1) {
 	Bool done = True;
-	char *inp = u8str;
+	ICONV_CONST char *inp = u8str;
 	char convbuf[BUFSIZ];
 	int convres;
 
@@ -1936,37 +1939,34 @@ print_utf8 (const char *prefix, char *u8str, size_t length, const char *suffix)
 /*
  * Takes a string such as an atom name, strips the prefix, converts
  * underscores to spaces, lowercases all but the first letter of each word,
- * and prints it.
+ * and returns it. The returned string should be freed by the caller.
  */
-static void
-print_friendly_name (const char *format, const char *string,
-		     const char *prefix)
+static char *
+get_friendly_name (const char *string, const char *prefix)
 {
     const char *name_start = string;
     char *lowered_name, *n;
-    int prefix_len = strlen (prefix);
+    Bool first = True;
+    size_t prefix_len = strlen (prefix);
 
     if (strncmp (name_start, prefix, prefix_len) == 0) {
 	name_start += prefix_len;
     }
 
     lowered_name = strdup (name_start);
-    if (lowered_name) {
-	Bool first = True;
+    if (lowered_name == NULL)
+	Fatal_Error ("Failed to allocate memory in get_friendly_name");
 
-	for (n = lowered_name ; *n != 0 ; n++) {
-	    if (*n == '_') {
-		*n = ' ';
-		first = True;
-	    } else if (first) {
-		first = False;
-	    } else {
-		*n = tolower(*n);
-	    }
+    for (n = lowered_name ; *n != 0 ; n++) {
+	if (*n == '_') {
+	    *n = ' ';
+	    first = True;
+	} else if (first) {
+	    first = False;
+	} else {
+	    *n = tolower((unsigned char)*n);
 	}
-	name_start = lowered_name;
     }
 
-    printf (format, name_start);
-    free (lowered_name);
+    return lowered_name;
 }
