@@ -78,6 +78,10 @@ in this Software without prior written authorization from The Open Group.
 
 #endif
 
+#ifdef WIN32
+#include <X11/Xwindows.h>
+#endif
+
 #include <X11/Xlib-xcb.h>
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
@@ -332,7 +336,8 @@ print_display_info(Display *dpy)
       case LSBFirst:    cp = "LSBFirst"; break;
       case MSBFirst:    cp = "MSBFirst"; break;
       default:
-	sprintf (dummybuf, "unknown order %d", BitmapBitOrder (dpy));
+	snprintf (dummybuf, sizeof(dummybuf),
+                  "unknown order %d", BitmapBitOrder (dpy));
 	cp = dummybuf;
 	break;
     }
@@ -343,7 +348,8 @@ print_display_info(Display *dpy)
       case LSBFirst:    cp = "LSBFirst"; break;
       case MSBFirst:    cp = "MSBFirst"; break;
       default:
-	sprintf (dummybuf, "unknown order %d", ImageByteOrder (dpy));
+	snprintf (dummybuf, sizeof(dummybuf),
+                  "unknown order %d", ImageByteOrder (dpy));
 	cp = dummybuf;
 	break;
     }
@@ -417,7 +423,7 @@ print_visual_info(XVisualInfo *vip)
       case TrueColor:    class = "TrueColor"; break;
       case DirectColor:    class = "DirectColor"; break;
       default:
-	sprintf (errorbuf, "unknown class %d", vip->class);
+	snprintf (errorbuf, sizeof(errorbuf), "unknown class %d", vip->class);
 	class = errorbuf;
 	break;
     }
@@ -1275,15 +1281,15 @@ static int print_dmx_info(Display *dpy, const char *extname)
                         if (ext
                             && ext != (XExtensionVersion *)NoSuchExtension) {
 
-                            int         count, i;
+                            int         dcount, d;
                             XDeviceInfo *devInfo = XListInputDevices(backend,
-                                                                     &count);
+                                                                     &dcount);
                             if (devInfo) {
-                                for (i = 0; i < count; i++) {
+                                for (d = 0; d < dcount; d++) {
                                     if ((unsigned)iinfo.physicalId
-                                        == devInfo[i].id
-                                        && devInfo[i].name) {
-                                        backendname = strdup(devInfo[i].name);
+                                        == devInfo[d].id
+                                        && devInfo[d].name) {
+                                        backendname = strdup(devInfo[d].name);
                                         break;
                                     }
                                 }
@@ -1369,7 +1375,7 @@ static ExtensionPrintInfo known_extensions[] =
     /* add new extensions here */
 };
 
-static int num_known_extensions = sizeof known_extensions / sizeof known_extensions[0];
+static const int num_known_extensions = sizeof known_extensions / sizeof known_extensions[0];
 
 static void
 print_known_extensions(FILE *f)
@@ -1432,14 +1438,15 @@ print_marked_extensions(Display *dpy)
     }
 }
 
-static void
+static void _X_NORETURN
 usage(void)
 {
-    fprintf (stderr, "usage:  %s [options]\n", ProgramName);
-    fprintf (stderr, "-display displayname\tserver to query\n");
-    fprintf (stderr, "-queryExtensions\tprint info returned by XQueryExtension\n");
-    fprintf (stderr, "-ext all\t\tprint detailed info for all supported extensions\n");
-    fprintf (stderr, "-ext extension-name\tprint detailed info for extension-name if one of:\n     ");
+    fprintf (stderr, "usage:  %s [options]\n%s", ProgramName,
+             "-display displayname\tserver to query\n"
+             "-version\t\tprint program version and exit\n"
+             "-queryExtensions\tprint info returned by XQueryExtension\n"
+             "-ext all\t\tprint detailed info for all supported extensions\n"
+             "-ext extension-name\tprint detailed info for extension-name if one of:\n     ");
     print_known_extensions(stderr);
     fprintf (stderr, "\n");
     exit (1);
@@ -1456,7 +1463,7 @@ main(int argc, char *argv[])
 
     for (i = 1; i < argc; i++) {
 	char *arg = argv[i];
-	int len = strlen(arg);
+	size_t len = strlen(arg);
 
 	if (!strncmp("-display", arg, len)) {
 	    if (++i >= argc) usage ();
@@ -1466,6 +1473,9 @@ main(int argc, char *argv[])
 	} else if (!strncmp("-ext", arg, len)) {
 	    if (++i >= argc) usage ();
 	    mark_extension_for_printing(argv[i]);
+        } else if (!strncmp("-version", arg, len)) {
+            printf("%s\n", PACKAGE_STRING);
+            exit (0);
 	} else
 	    usage ();
     }
