@@ -4,8 +4,7 @@ XIGRABBUTTON(libmansuffix)
 NAME
 ----
 
-   XIGrabButton, XIUngrabButton, XIGrabKeycode, XIUngrabKeycode -
-   grab/ungrab buttons or keys
+   XIGrabButton, XIUngrabButton, XIGrabKeycode, XIUngrabKeycode, XIGrabTouchBegin, XIUngrabTouchBegin - grab/ungrab buttons or keys
 
 SYNOPSIS
 --------

@@ -1,3 +1,458 @@
+commit 661c45ca17c434dbd342a46fd3fb813852ae0ca9
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue May 21 12:23:05 2013 +1000
+
+    Don't overwrite the cookies serial number
+    
+    serial != sequenceNumber, see _XSetLastRequestRead()
+    
+    cookie->serial is already set at this point, setting it again directly from
+    the sequenceNumber of the event causes a bunch of weird issues such as
+    scrollbars and text drag-n-drop breaking.
+    
+    https://bugzilla.redhat.com/show_bug.cgi?id=965347
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 81b4df8ac6aa1520c41c3526961014a6f115cc46
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Mar 10 00:16:22 2013 -0800
+
+    sign extension issue in XListInputDevices() [CVE-2013-1995]
+    
+    nptr is (signed) char, which can be negative, and will sign extend
+    when added to the int size, which means size can be subtracted from,
+    leading to allocating too small a buffer to hold the data being copied
+    from the X server's reply.
+    
+    v2: check that string size fits inside the data read from the server,
+        so that we don't read out of bounds either
+    
+    Reported-by: Ilja Van Sprundel <ivansprundel@ioactive.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit ef82512288d8ca36ac0beeb289f158195b0a8cae
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Mar 10 00:22:14 2013 -0800
+
+    Avoid integer overflow in XListInputDevices() [CVE-2013-1984 8/8]
+    
+    If the length of the reply as reported by the Xserver is too long, it
+    could overflow the calculation for the size of the buffer to copy the
+    reply into, causing memory corruption.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 17071c1c608247800b2ca03a35b1fcc9c4cabe6c
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Mar 10 13:30:55 2013 -0700
+
+    Avoid integer overflow in XGetDeviceProperties() [CVE-2013-1984 7/8]
+    
+    If the number of items as reported by the Xserver is too large, it
+    could overflow the calculation for the size of the buffer to copy the
+    reply into, causing memory corruption.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 528419b9ef437e7eeafb41bf45e8ff7d818bd845
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Mar 9 22:55:23 2013 -0800
+
+    integer overflow in XIGetSelectedEvents() [CVE-2013-1984 6/8]
+    
+    If the number of events or masks reported by the server is large enough
+    that it overflows when multiplied by the size of the appropriate struct,
+    or the sizes overflow as they are totaled up, then memory corruption can
+    occur when more bytes are copied from the X server reply than the size
+    of the buffer we allocated to hold them.
+    
+    v2: check that reply size fits inside the data read from the server,
+        so that we don't read out of bounds either
+    
+    Reported-by: Ilja Van Sprundel <ivansprundel@ioactive.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 242f92b490a695fbab244af5bad11b71f897c732
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Mar 9 22:55:23 2013 -0800
+
+    integer overflow in XIGetProperty() [CVE-2013-1984 5/8]
+    
+    If the number of items reported by the server is large enough that
+    it overflows when multiplied by the size of the appropriate item type,
+    then memory corruption can occur when more bytes are copied from the
+    X server reply than the size of the buffer we allocated to hold them.
+    
+    Reported-by: Ilja Van Sprundel <ivansprundel@ioactive.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit bb922ed4253b35590f0369f32a917ff89ade0830
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Mar 9 22:55:23 2013 -0800
+
+    integer overflow in XGetDeviceMotionEvents() [CVE-2013-1984 4/8]
+    
+    If the number of events or axes reported by the server is large enough
+    that it overflows when multiplied by the size of the appropriate struct,
+    then memory corruption can occur when more bytes are copied from the
+    X server reply than the size of the buffer we allocated to hold them.
+    
+    Reported-by: Ilja Van Sprundel <ivansprundel@ioactive.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 6dd6dc51a2935c72774be81e5cc2ba2c30e9feff
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Mar 9 22:55:23 2013 -0800
+
+    integer overflow in XGetDeviceDontPropagateList() [CVE-2013-1984 3/8]
+    
+    If the number of event classes reported by the server is large enough
+    that it overflows when multiplied by the size of the appropriate struct,
+    then memory corruption can occur when more bytes are copied from the
+    X server reply than the size of the buffer we allocated to hold them.
+    
+    V2: EatData if count is 0 but length is > 0 to avoid XIOErrors
+    
+    Reported-by: Ilja Van Sprundel <ivansprundel@ioactive.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 322ee3576789380222d4403366e4fd12fb24cb6a
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Mar 9 22:55:23 2013 -0800
+
+    integer overflow in XGetFeedbackControl() [CVE-2013-1984 2/8]
+    
+    If the number of feedbacks reported by the server is large enough that
+    it overflows when multiplied by the size of the appropriate struct, or
+    if the total size of all the feedback structures overflows when added
+    together, then memory corruption can occur when more bytes are copied from
+    the X server reply than the size of the buffer we allocated to hold them.
+    
+    v2: check that reply size fits inside the data read from the server, so
+        we don't read out of bounds either
+    
+    Reported-by: Ilja Van Sprundel <ivansprundel@ioactive.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit b0b13c12a8079a5a0e7f43b2b8983699057b2cec
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Mar 9 22:55:23 2013 -0800
+
+    integer overflow in XGetDeviceControl() [CVE-2013-1984 1/8]
+    
+    If the number of valuators reported by the server is large enough that
+    it overflows when multiplied by the size of the appropriate struct, then
+    memory corruption can occur when more bytes are copied from the X server
+    reply than the size of the buffer we allocated to hold them.
+    
+    v2: check that reply size fits inside the data read from the server, so
+    we don't read out of bounds either
+    
+    Reported-by: Ilja Van Sprundel <ivansprundel@ioactive.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 5398ac0797f7516f2c9b8f2869a6c6d071437352
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Apr 26 22:48:36 2013 -0700
+
+    unvalidated lengths in XQueryDeviceState() [CVE-2013-1998 3/3]
+    
+    If the lengths given for each class state in the reply add up to more
+    than the rep.length, we could read past the end of the buffer allocated
+    to hold the data read from the server.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 91434737f592e8f5cc1762383882a582b55fc03a
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Mar 9 23:37:23 2013 -0800
+
+    memory corruption in _XIPassiveGrabDevice() [CVE-2013-1998 2/3]
+    
+    If the server returned more modifiers than the caller asked for,
+    we'd just keep copying past the end of the array provided by the
+    caller, writing over who-knows-what happened to be there.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit f3e08e4fbe40016484ba795feecf1a742170ffc1
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Mar 9 22:26:52 2013 -0800
+
+    Stack buffer overflow in XGetDeviceButtonMapping() [CVE-2013-1998 1/3]
+    
+    We copy the entire reply sent by the server into the fixed size
+    mapping[] array on the stack, even if the server says it's a larger
+    size than the mapping array can hold.  HULK SMASH STACK!
+    
+    Reported-by: Ilja Van Sprundel <ivansprundel@ioactive.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 59b8e1388a687f871831ac5a9e0ac11de75e2516
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed May 1 23:58:39 2013 -0700
+
+    Use _XEatDataWords to avoid overflow of rep.length bit shifting
+    
+    rep.length is a CARD32, so rep.length << 2 could overflow in 32-bit builds
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 5d43d4914dcabb6de69859567061e99300e56ef4
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri May 17 09:07:44 2013 +1000
+
+    Copy the sequence number into the target event too (#64687)
+    
+    X.Org Bug 64687 <http://bugs.freedesktop.org/show_bug.cgi?id=64687>
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Jasper St. Pierre <jstpierre@mecheye.net>
+
+commit bb82c72a1d69eaf60b7586570faf797df967f661
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Apr 29 18:39:34 2013 -0700
+
+    Expand comment on the memory vs. reply ordering in XIGetSelectedEvents()
+    
+    Unpacking from the wire involves un-interleaving the structs & masks,
+    which wasn't obvious to me the first time I read it, so make notes
+    before I forget again.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 26cb4573cbb8808ce9d5c75c16bd613b2f03a368
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri Apr 5 09:34:48 2013 +1000
+
+    libXi 1.7.1
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 0358bb20384b759d6d41dc44f3aed30583689d53
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Mar 26 14:46:06 2013 +1000
+
+    Require XFixes for PointerBarrier, remove duplicate typedef
+    
+    The PointerBarrier typedef is duplicate if a client includes both Xfixes.h
+    and XInput2.h.
+    
+    gcc 4.6 won't complain about that, but earlier versions do:
+    http://gcc.gnu.org/git/?p=gcc.git;a=commitdiff;h=ce3765bf44e49ef0568a1ad4a0b7f807591d6412
+    
+    gcc 4.6 with -pedantic-errors shows:
+    /opt/xorg/include/X11/extensions/XInput2.h:172:13: error: redefinition of
+    typedef ‘PointerBarrier’ [-pedantic]
+    In file included from test.c:1:0:
+    /opt/xorg/include/X11/extensions/Xfixes.h:255:13: note: previous declaration
+    of ‘PointerBarrier’ was here
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Julien Cristau <jcristau@debian.org>
+
+commit 081e06492c0ffd003d4a0c34418c882332e58ac3
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Thu Mar 7 11:16:02 2013 +1000
+
+    libXi 1.7
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 9b26b81477cf3486e5aa0ef8d81af68a0f04df1b
+Author: Colin Walters <walters@verbum.org>
+Date:   Wed Jan 4 17:37:06 2012 -0500
+
+    autogen.sh: Implement GNOME Build API
+    
+    http://people.gnome.org/~walters/docs/build-api.txt
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit fb67e7c99b8e95fa667b90837d312a98fa0a8a64
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Tue Jan 15 14:28:48 2013 -0500
+
+    configure: Remove AM_MAINTAINER_MODE
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit 236be512c81b76dad711bec481e2139584006c4c
+Author: Benjamin Tissoires <benjamin.tissoires@gmail.com>
+Date:   Mon Jan 14 18:32:05 2013 +0100
+
+    Add missing XI_RawTouch* in XInputCopyCookie
+    
+    Looks like XI_RawTouch* events are missing in the big switch in this function.
+    When running XIT tests for multitouch devices, several following errors appears:
+    XInputCopyCookie: Failed to copy evtype 22
+    XInputCopyCookie: Failed to copy evtype 23
+    XInputCopyCookie: Failed to copy evtype 24
+    
+    Signed-off-by: Benjamin Tissoires <benjamin.tissoires@gmail.com>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit db3b9ba3404f6d128e7826aa489a34fd206b20ea
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Wed Dec 26 15:29:43 2012 +1000
+
+    libXi 1.6.99.1
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit af9f26510d87eee71f1cd688d7dcfbf173c13943
+Merge: 31c6cf9 9e8a55d
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Mon Dec 17 14:34:53 2012 +1000
+
+    Merge branch 'barriers'
+
+commit 9e8a55dfcb3dc2b42cd7e08e8e6e65ea1dd54251
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri Dec 7 15:47:41 2012 +1000
+
+    man: add man-page for XIBarrierReleasePointer
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 60d7386a1b98cc7760d55d6df1f90e6259d122fa
+Author: Jasper St. Pierre <jstpierre@mecheye.net>
+Date:   Thu Nov 1 17:00:19 2012 -0400
+
+    Add support for pointer barrier events
+    
+    Signed-off-by: Jasper St. Pierre <jstpierre@mecheye.net>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit f694bd3fcf38213ae787a3ebe4e8b2df8b2dcdc7
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri Dec 7 14:39:50 2012 +1000
+
+    Bump to 1.6.99
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 31c6cf9f6fbcc7e90e3d6b7927664cbe54e27edf
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Thu Dec 6 10:38:16 2012 +1000
+
+    Fix const compiler warnings
+    
+    XExtInt.c:80:38: warning: initialization discards 'const' qualifier from
+    pointer target type [enabled by default]
+    XExtInt.c:150:5: warning: initialization discards 'const' qualifier from
+    pointer target type [enabled by default]
+    XExtInt.c:151:5: warning: initialization discards 'const' qualifier from
+    pointer target type [enabled by default]
+    XExtInt.c:152:5: warning: initialization discards 'const' qualifier from
+    pointer target type [enabled by default]
+    XExtInt.c:153:5: warning: initialization discards 'const' qualifier from
+    pointer target type [enabled by default]
+    XExtInt.c:154:5: warning: initialization discards 'const' qualifier from
+    pointer target type [enabled by default]
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Dan Nicholson <dbn.lists@gmail.com>
+
+commit b4e07e7acc84f68ed2d37557d64d5655cc262ed5
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Thu Dec 6 10:27:35 2012 +1000
+
+    Fix compiler warnings
+    
+    XIQueryVersion.c: In function '_xiQueryVersion':
+    XIQueryVersion.c:63:26: warning: declaration of 'info' shadows a parameter
+    [-Wshadow]
+    XIQueryVersion.c:53:73: warning: shadowed declaration is here [-Wshadow]
+    
+    XExtInt.c: In function 'XInputWireToEvent':
+    XExtInt.c:823:25: warning: declaration of 'i' shadows a previous local
+    [-Wshadow]
+    XExtInt.c:502:18: warning: shadowed declaration is here [-Wshadow]
+    XExtInt.c:850:25: warning: declaration of 'i' shadows a previous local
+    [-Wshadow]
+    XExtInt.c:502:18: warning: shadowed declaration is here [-Wshadow]
+    
+    In file included from XExtInt.c:64:0:
+    ../include/X11/extensions/XInput.h:166:17: note: previous declaration of
+    '_xidevicebusy' was here
+    XExtInt.c:101:12: warning: redundant redeclaration of
+    '_XiGetDevicePresenceNotifyEvent' [-Wredundant-decls]
+    
+    XExtInt.c:76:13: warning: redundant redeclaration of '_xibaddevice'
+    [-Wredundant-decls]
+    In file included from XExtInt.c:64:0:
+    ../include/X11/extensions/XInput.h:162:17: note: previous declaration of
+    '_xibaddevice' was here
+    XExtInt.c:81:13: warning: redundant redeclaration of '_xibadclass'
+    [-Wredundant-decls]
+    In file included from XExtInt.c:64:0:
+    ../include/X11/extensions/XInput.h:163:17: note: previous declaration of
+    '_xibadclass' was here
+    XExtInt.c:86:13: warning: redundant redeclaration of '_xibadevent'
+    [-Wredundant-decls]
+    In file included from XExtInt.c:64:0:
+    ../include/X11/extensions/XInput.h:164:17: note: previous declaration of
+    '_xibadevent' was here
+    XExtInt.c:91:13: warning: redundant redeclaration of '_xibadmode'
+    [-Wredundant-decls]
+    In file included from XExtInt.c:64:0:
+    ../include/X11/extensions/XInput.h:165:17: note: previous declaration of
+    '_xibadmode' was here
+    XExtInt.c:96:13: warning: redundant redeclaration of '_xidevicebusy'
+    [-Wredundant-decls]
+    In file included from XExtInt.c:64:0:
+    ../include/X11/extensions/XInput.h:166:17: note: previous declaration of
+    '_xidevicebusy' was here
+    
+    XListDev.c: In function 'ParseClassInfo':
+    XListDev.c:116:33: warning: declaration of 'k' shadows a previous local
+    [-Wshadow]
+    XListDev.c:109:12: warning: shadowed declaration is here [-Wshadow]
+    
+    XGetFCtl.c: In function 'XGetFeedbackControl':
+    XGetFCtl.c:184:26: warning: declaration of 'i' shadows a previous local
+    [-Wshadow]
+    XGetFCtl.c:72:17: warning: shadowed declaration is here [-Wshadow]
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Dan Nicholson <dbn.lists@gmail.com>
+
+commit 845550471fcd95d77e8d738ab8798d8e6e568b4a
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Wed Nov 7 08:51:23 2012 +1000
+
+    man: add generation of missing man pages for XIGrabTouchBegin
+    
+    The man page itself already contained the description, but it was missing
+    from NAME so the shadow man pages were not generated.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Chase Douglas <chase.douglas@ubuntu.com>
+
+commit 8c0eb1b6b4017b1e886981dc32cea90f2d4b9b64
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Thu Oct 11 13:33:45 2012 +1000
+
+    man: fix formatting issues in XGetDeviceControl(3)
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
 commit ae163b6202d844a46541928d00049b29cbdf930f
 Author: Peter Hutterer <peter.hutterer@who-t.net>
 Date:   Thu May 3 16:01:35 2012 +1000

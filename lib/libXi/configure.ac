@@ -1,7 +1,7 @@
 
 # Initialize Autoconf
 AC_PREREQ([2.60])
-AC_INIT([libXi], [1.6.1],
+AC_INIT([libXi], [1.6.2.901],
 	[https://bugs.freedesktop.org/enter_bug.cgi?product=xorg], [libXi])
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_HEADERS([src/config.h])
@@ -29,6 +29,12 @@ XORG_CHECK_MALLOC_ZERO
 
 # Obtain compiler/linker options for dependencies
 PKG_CHECK_MODULES(XI, [xproto >= 7.0.13] [x11 >= 1.4.99.1] [xextproto >= 7.0.3] [xext >= 1.0.99.1] [inputproto >= 2.1.99.6])
+
+# Check for _XEatDataWords function that may be patched into older Xlib releases
+SAVE_LIBS="$LIBS"
+LIBS="$XI_LIBS"
+AC_CHECK_FUNCS([_XEatDataWords])
+LIBS="$SAVE_LIBS"
 
 # Check for _XEatDataWords function that may be patched into older Xlib releases
 SAVE_LIBS="$LIBS"

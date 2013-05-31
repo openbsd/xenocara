@@ -89,7 +89,9 @@ XI2_shadows = 					\
 	XIGetSelectedEvents.man			\
 	XIDeleteProperty.man			\
 	XIGetProperty.man			\
-	XIFreeDeviceInfo.man
+	XIFreeDeviceInfo.man			\
+	XIGrabTouchBegin.man			\
+	XIUngrabTouchBegin.man
 
 libman_shadows =				\
 	XGetDeviceDontPropagateList.man		\
@@ -142,7 +144,7 @@ XDeleteDeviceProperty.man: XGetDeviceProperty.man
 
 # Dependencies for X Input v2 shadow pages
 XIUndefineCursor.man: XIDefineCursor.man
-XIUngrabButton.man XIGrabKeycode.man XIUngrabKeycode.man: XIGrabButton.man
+XIUngrabButton.man XIGrabKeycode.man XIUngrabKeycode.man XIGrabTouchBegin.man XIUngrabTouchBegin.man: XIGrabButton.man
 XIGetClientPointer.man: XISetClientPointer.man
 XIGetFocus.man: XISetFocus.man
 XIUngrabDevice.man: XIGrabDevice.man
