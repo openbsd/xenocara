@@ -1,14 +1,13 @@
 
 # Initialize Autoconf
 AC_PREREQ([2.60])
-AC_INIT([libXxf86dga], [1.1.3],
+AC_INIT([libXxf86dga], [1.1.4],
         [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg], [libXxf86dga])
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_HEADERS(src/config.h)
 
 # Initialize Automake
 AM_INIT_AUTOMAKE([foreign dist-bzip2])
-AM_MAINTAINER_MODE
 
 # Initialize libtool
 AC_PROG_LIBTOOL
@@ -22,6 +21,12 @@ XORG_CHECK_MALLOC_ZERO
 
 # Obtain compiler/linker options for depedencies
 PKG_CHECK_MODULES(XXF86DGA, xproto x11 xextproto xext [xf86dgaproto >= 2.0.99.2])
+
+# Check for _XEatDataWords function that may be patched into older Xlib release
+SAVE_LIBS="$LIBS"
+LIBS="$XXF86DGA_LIBS"
+AC_CHECK_FUNCS([_XEatDataWords])
+LIBS="$SAVE_LIBS"
 
 # Check for _XEatDataWords function that may be patched into older Xlib release
 SAVE_LIBS="$LIBS"

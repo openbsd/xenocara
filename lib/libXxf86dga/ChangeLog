@@ -1,3 +1,128 @@
+commit 0f2e21d7e8310cf7bc02bba56884be0e52c061ae
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu May 30 18:36:19 2013 -0700
+
+    libXxf86dga 1.1.4
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit a8dc6be3213bc91dec5e25535ef4bad5a9456af0
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Apr 13 12:53:49 2013 -0700
+
+    integer overflow in XDGAOpenFramebuffer()
+    
+    rep.length is a CARD32 and should be bounds checked before left shifting
+    to come up with the size to allocate and read from the network, though
+    since both functions take the same size, there should be no way for the
+    buffer to be overflowed in this case.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit b69d6d51a82b1d1e8c68a233360acb742c879375
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Apr 13 12:45:41 2013 -0700
+
+    buffer overflow in XDGASetMode() [CVE-2013-2000 2/2]
+    
+    When reading the name strings for the mode off the network, we never
+    checked to make sure the length of the name strings didn't overflow
+    the size of the buffer we'd allocated based on the reported rep.length
+    for the total reply size.
+    
+    Reported-by: Ilja Van Sprundel <ivansprundel@ioactive.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit f89cf306a60facdf102696840bc05acebd7d1772
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Apr 13 12:38:25 2013 -0700
+
+    integer overflow & underflow in XDGASetMode() [CVE-2013-1991 2/2]
+    
+    rep.length is a CARD32 and needs to be bounds checked before bit shifting
+    and subtracting sz_xXDGAModeInfo to come up with the total size to allocate,
+    to avoid integer overflow or underflow leading to underallocation and
+    writing data from the network past the end of the allocated buffer.
+    
+    Reported-by: Ilja Van Sprundel <ivansprundel@ioactive.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 5dcfa6a8cf2df39828da733e5945e730518c27b3
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Apr 13 12:27:10 2013 -0700
+
+    buffer overflow in XDGAQueryModes() [CVE-2013-2000 1/2]
+    
+    When reading the name strings for the modes off the network, we never
+    checked to make sure the length of the individual name strings didn't
+    overflow the size of the buffer we'd allocated based on the reported
+    rep.length for the total reply size.
+    
+    Reported-by: Ilja Van Sprundel <ivansprundel@ioactive.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit f4a8dd63af518640468d82948f450aad4b2b1e6a
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Apr 13 12:18:57 2013 -0700
+
+    integer overflow in XDGAQueryModes() [CVE-2013-1991 1/2]
+    
+    number is a CARD32 and needs to be bounds checked before multiplying by
+    sizeof(XDGAmode) to come up with the total size to allocate, to avoid
+    integer overflow leading to underallocation and writing data from the
+    network past the end of the allocated buffer.
+    
+    Reported-by: Ilja Van Sprundel <ivansprundel@ioactive.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 6fa471be7a005bde97bcb5ca5a17662ea8d32587
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Apr 13 12:05:25 2013 -0700
+
+    Use _XEatDataWords to avoid overflow of rep.length shifting
+    
+    rep.length is a CARD32, so rep.length << 2 could overflow in 32-bit builds
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 1e454b8da70e3f125dd512baa5e66f948878f9f5
+Author: Colin Walters <walters@verbum.org>
+Date:   Wed Jan 4 17:37:06 2012 -0500
+
+    autogen.sh: Implement GNOME Build API
+    
+    http://people.gnome.org/~walters/docs/build-api.txt
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit 968295ede4d96fd40483d97bc4d25ae32d86a9fa
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Tue Jan 15 14:28:48 2013 -0500
+
+    configure: Remove AM_MAINTAINER_MODE
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit d4f89f7f42484963575b4c7d2fa694051e111e76
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Fri Mar 9 02:48:14 2012 -0800
+
+    Include <stdint.h> for uintptr_t
+    
+    Found-by: Tinderbox
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit 56b5a5887349e9d0e1d28da157fe6441ca691f56
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Thu Mar 8 11:49:36 2012 -0800
+
+    Build fix when sizeof(off_t) > sizeof(void *)
+    
+    https://trac.macports.org/ticket/33532
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+
 commit 3dad5d7c34c5787f0466b9ff50d7c26cd18e37bd
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Wed Mar 7 21:34:06 2012 -0800
