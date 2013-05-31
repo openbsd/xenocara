@@ -130,6 +130,11 @@ if defaults read $X11_PREFS_DOMAIN dpi > /dev/null 2>&1 ; then
     defaultserverargs="$defaultserverargs -dpi `defaults read $X11_PREFS_DOMAIN dpi`"
 fi
 
+#else
+enable_xauth=1
+#endif
+
+XCOMM Automatically determine an unused $DISPLAY
 d=0
 while true ; do
     [ -e /tmp/.X$d-lock ] || break
@@ -137,10 +142,6 @@ while true ; do
 done
 defaultdisplay=":$d"
 unset d
-
-#else
-enable_xauth=1
-#endif
 
 #if defined(__SCO__) || defined(__UNIXWARE__)
 
@@ -200,7 +201,7 @@ XCOMM process client arguments
 if [ x"$client" = x ]; then
     client=$defaultclient
 
-    XCOMM if no client arguments either, use rc file instead
+    XCOMM For compatibility reasons, only use startxrc if there were no client command line arguments
     if [ x"$clientargs" = x ]; then
         if [ -f "$userclientrc" ]; then
             client=$userclientrc
@@ -213,27 +214,36 @@ if [ x"$client" = x ]; then
             client=$scosysclientrc
 #endif
         fi
-
-        clientargs=$defaultclientargs
     fi
+fi
+
+XCOMM if no client arguments, use defaults
+if [ x"$clientargs" = x ]; then
+    clientargs=$defaultclientargs
 fi
 
 XCOMM process server arguments
 if [ x"$server" = x ]; then
     server=$defaultserver
 
-    XCOMM if no server arguments or display either, use defaults
+    XCOMM For compatibility reasons, only use xserverrc if there were no server command line arguments
     if [ x"$serverargs" = x -a x"$display" = x ]; then
-	XCOMM For compatibility reasons, only use xserverrc if there were no server command line arguments
 	if [ -f "$userserverrc" ]; then
 	    server=$userserverrc
 	elif [ -f "$sysserverrc" ]; then
 	    server=$sysserverrc
 	fi
-
-	serverargs=$defaultserverargs
-	display=$defaultdisplay
     fi
+fi
+
+XCOMM if no server arguments, use defaults
+if [ x"$serverargs" = x ]; then
+    serverargs=$defaultserverargs
+fi
+
+XCOMM if no display, use default
+if [ x"$display" = x ]; then
+    display=$defaultdisplay
 fi
 
 if [ x"$enable_xauth" = x1 ] ; then

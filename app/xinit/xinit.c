@@ -49,10 +49,8 @@ in this Software without prior written authorization from The Open Group.
 #endif
 
 /* For PRIO_PROCESS and setpriority() */
-#if defined(__DragonFly__) || defined(__OpenBSD__)
 #include <sys/time.h>
 #include <sys/resource.h>
-#endif /* __DragonFly__ || __OpenBSD__ */
 
 #include <stdlib.h>
 

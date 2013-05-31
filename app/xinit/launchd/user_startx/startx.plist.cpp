@@ -8,6 +8,10 @@
 		<array>
 			<string>__xinitrcdir__/launchd_startx</string>
 			<string>__bindir__/startx</string>
+#ifdef LAUNCHAGENT_XSERVER_PATH
+			<string>--</string>
+			<string>LAUNCHAGENT_XSERVER_PATH</string>
+#endif
 		</array>
 	<key>Sockets</key>
 		<dict>

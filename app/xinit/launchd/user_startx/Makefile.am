@@ -36,6 +36,10 @@ CPP_FILES_FLAGS = \
 	-D__bindir__="$(bindir)" \
 	-DBUNDLE_ID_PREFIX="$(bundleidprefix)"
 
+if LAUNCHAGENT_XSERVER
+CPP_FILES_FLAGS += -DLAUNCHAGENT_XSERVER_PATH="$(launchagentxserver)"
+endif
+
 $(bundleidprefix).startx.plist.cpp: startx.plist.cpp
 	cp $< $@
 
