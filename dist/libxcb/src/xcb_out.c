@@ -272,7 +272,7 @@ int xcb_take_socket(xcb_connection_t *c, void (*return_socket)(void *closure), v
      * write requests, so keep flushing until we're done
      */
     do
-	    ret = _xcb_out_flush_to(c, c->out.request);
+        ret = _xcb_out_flush_to(c, c->out.request);
     while (ret && c->out.request != c->out.request_written);
     if(ret)
     {

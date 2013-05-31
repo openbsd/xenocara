@@ -1,3 +1,9 @@
+Release 1.9.1 (2013-05-30)
+==========================
+
+* Fix python code to work with python-3
+* Security fix for integer overflow in read_packet() [CVE-2013-2064]
+
 Release 1.9 (2012-10-05)
 ========================
 
