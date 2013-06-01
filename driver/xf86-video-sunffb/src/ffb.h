@@ -24,7 +24,6 @@
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  *
  */
-/* $XFree86: xc/programs/Xserver/hw/xfree86/drivers/sunffb/ffb.h,v 1.7tsi Exp $ */
 
 #ifndef FFB_H
 #define FFB_H
@@ -32,7 +31,9 @@
 #include "xf86.h"
 #include "xf86_OSproc.h"
 #include "xf86RamDac.h"
+#ifdef HAVE_XAA_H
 #include "xaa.h"
+#endif
 #include <X11/Xmd.h>
 #include "gcstruct.h"
 #include "windowstr.h"
@@ -48,7 +49,7 @@
 #include <X11/extensions/dpms.h>
 #endif
 
-
+#include "compat-api.h"
 /* Various offsets in virtual (ie. mmap()) spaces Linux and Solaris support. */
 /* Note: do not mmap FFB_DFB8R_VOFF and following mappings using one mmap together
    with any previous SFB mapping, otherwise the OS won't be able to use 4M pages
@@ -175,7 +176,9 @@ typedef struct {
 	unsigned char has_double_buffer;
 
 	/* XAA related info */
+#ifdef HAVE_XAA_H
 	XAAInfoRecPtr pXAAInfo;
+#endif
 	unsigned int xaa_fbc;
 	unsigned int xaa_wid;
 	unsigned int xaa_planemask;

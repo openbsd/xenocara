@@ -24,7 +24,6 @@
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  *
  */
-/* $XFree86: xc/programs/Xserver/hw/xfree86/drivers/sunffb/ffb_accel.c,v 1.6tsi Exp $ */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -36,13 +35,17 @@
 #include	"mistruct.h"
 #include	"miline.h"
 #include	"fb.h"
-#include	"xaa.h"
 
 #include	"ffb.h"
 #include	"ffb_fifo.h"
 #include	"ffb_rcache.h"
 #include	"ffb_loops.h"
 #include	"ffb_regs.h"
+
+#ifdef HAVE_XAA_H
+/* VISmoveImage.s */
+extern void VISmoveImageRL(unsigned char *src, unsigned char *dst, long w, long h, long skind, long dkind);
+extern void VISmoveImageLR(unsigned char *src, unsigned char *dst, long w, long h, long skind, long dkind);
 
 /* Indexed by ffb resolution enum. */
 struct fastfill_parms ffb_fastfill_parms[] = {
@@ -56,7 +59,7 @@ struct fastfill_parms ffb_fastfill_parms[] = {
 void
 CreatorVtChange (ScreenPtr pScreen, int enter)
 {
-	ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+	ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
 	FFBPtr pFfb = GET_FFB_FROM_SCRN (pScrn);
 	ffb_fbcPtr ffb = pFfb->regs;
 
@@ -838,8 +841,11 @@ static void CreatorAlignTabInit(FFBPtr pFfb)
 	}
 }
 
+#endif
+
 Bool FFBAccelInit(ScreenPtr pScreen, FFBPtr pFfb)
 {
+#ifdef HAVE_XAA_H
 	XAAInfoRecPtr infoRec;
 	ffb_fbcPtr ffb = pFfb->regs;
 
@@ -859,15 +865,15 @@ Bool FFBAccelInit(ScreenPtr pScreen, FFBPtr pFfb)
 		return FALSE;
 	}
 
-	pFfb->xaa_scanline_buffers[0] = xalloc(2048 * 4);
+	pFfb->xaa_scanline_buffers[0] = malloc(2048 * 4);
 	if (!pFfb->xaa_scanline_buffers[0]) {
 		XAADestroyInfoRec(infoRec);
 		return FALSE;
 	}
 
-	pFfb->xaa_scanline_buffers[1] = xalloc(2048 * 4);
+	pFfb->xaa_scanline_buffers[1] = malloc(2048 * 4);
 	if (!pFfb->xaa_scanline_buffers[1]) {
-		xfree(pFfb->xaa_scanline_buffers[0]);
+		free(pFfb->xaa_scanline_buffers[0]);
 		XAADestroyInfoRec(infoRec);
 		return FALSE;
 	}
@@ -1085,8 +1091,8 @@ Bool FFBAccelInit(ScreenPtr pScreen, FFBPtr pFfb)
 
 	if (!XAAInit(pScreen, infoRec)) {
 		XAADestroyInfoRec(infoRec);
-		xfree(pFfb->xaa_scanline_buffers[0]);
-		xfree(pFfb->xaa_scanline_buffers[1]);
+		free(pFfb->xaa_scanline_buffers[0]);
+		free(pFfb->xaa_scanline_buffers[1]);
 		pFfb->pXAAInfo = NULL;
 		FFBWidFree(pFfb, pFfb->xaa_wid);
 		return FALSE;
@@ -1094,4 +1100,7 @@ Bool FFBAccelInit(ScreenPtr pScreen, FFBPtr pFfb)
 
 	/* Success */
 	return TRUE;
+#else
+	return FALSE;
+#endif
 }

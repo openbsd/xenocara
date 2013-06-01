@@ -22,7 +22,6 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS 
  * IN THE SOFTWARE.
  */
-/* $XFree86: xc/programs/Xserver/hw/xfree86/drivers/sunffb/ffb_attr.c,v 1.1 2000/05/18 23:21:35 dawes Exp $ */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"

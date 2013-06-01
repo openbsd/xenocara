@@ -24,7 +24,6 @@
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  *
  */
-/* $XFree86$ */
 
 #ifndef FFBREGS_H
 #define FFBREGS_H
