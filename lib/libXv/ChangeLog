@@ -1,3 +1,106 @@
+commit 179ed259e75a62e74532e36f52f3838deb2aac92
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri May 31 17:49:24 2013 -0700
+
+    libXv 1.0.8
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 50fc4cb18069cb9450a02c13f80223ef23511409
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Apr 13 00:03:03 2013 -0700
+
+    integer overflow in XvCreateImage() [CVE-2013-1989 3/3]
+    
+    num_planes is a CARD32 and needs to be bounds checked before bit shifting
+    and adding to sizeof(XvImage) to come up with the total size to allocate,
+    to avoid integer overflow leading to underallocation and writing data from
+    the network past the end of the allocated buffer.
+    
+    Reported-by: Ilja Van Sprundel <ivansprundel@ioactive.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 59301c1b5095f7dc6359d5b396dbbcdee7038270
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Apr 13 00:03:03 2013 -0700
+
+    integer overflow in XvListImageFormats() [CVE-2013-1989 2/3]
+    
+    num_formats is a CARD32 and needs to be bounds checked before multiplying
+    by sizeof(XvImageFormatValues) to come up with the total size to allocate,
+    to avoid integer overflow leading to underallocation and writing data from
+    the network past the end of the allocated buffer.
+    
+    Reported-by: Ilja Van Sprundel <ivansprundel@ioactive.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 15ab7dec17d686c38f2c82ac23a17cac5622322a
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Apr 13 00:16:14 2013 -0700
+
+    buffer overflow in XvQueryPortAttributes() [CVE-2013-2066]
+    
+    Each attribute returned in the reply includes the number of bytes
+    to read for its marker.  We had been always trusting it, and never
+    validating that it wouldn't cause us to write past the end of the
+    buffer we allocated based on the reported text_size.
+    
+    Reported-by: Ilja Van Sprundel <ivansprundel@ioactive.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 6e1b743a276651195be3cd68dff41e38426bf3ab
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Apr 13 00:03:03 2013 -0700
+
+    integer overflow in XvQueryPortAttributes() [CVE-2013-1989 1/3]
+    
+    The num_attributes & text_size members of the reply are both CARD32s
+    and need to be bounds checked before multiplying & adding them together
+    to come up with the total size to allocate, to avoid integer overflow
+    leading to underallocation and writing data from the network past the
+    end of the allocated buffer.
+    
+    Reported-by: Ilja Van Sprundel <ivansprundel@ioactive.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 79362c764a6df7e7fbe5247756bdbf60f3a58baf
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Apr 13 00:28:34 2013 -0700
+
+    Use _XEatDataWords to avoid overflow of rep.length shifting
+    
+    rep.length is a CARD32, so rep.length << 2 could overflow in 32-bit builds
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit ed13edeac5adc2e6afcd87f63b5ae1ff9ad47958
+Author: Colin Walters <walters@verbum.org>
+Date:   Wed Jan 4 17:37:06 2012 -0500
+
+    autogen.sh: Implement GNOME Build API
+    
+    http://people.gnome.org/~walters/docs/build-api.txt
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit 1006d44b8674b5d9c5d7e893878776fbd34dbed2
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Tue Jan 15 14:28:48 2013 -0500
+
+    configure: Remove AM_MAINTAINER_MODE
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit ddec3b412e1d857d1a2daa75df61de377e1de9bd
+Author: Thomas Klausner <wiz@NetBSD.org>
+Date:   Tue Jul 17 21:56:28 2012 +0200
+
+    Uppercase SH arguments.
+    
+    Signed-off-by: Thomas Klausner <wiz@NetBSD.org>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit 0f4fa1820041394e879517abb49c0391ecc796f7
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Wed Mar 7 21:25:38 2012 -0800

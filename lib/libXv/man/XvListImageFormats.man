@@ -1,15 +1,15 @@
 .TH XvListImageFormats __libmansuffix__ __vendorversion__ "libXv Functions"
-.SH Name
+.SH NAME
 XvListImageFormats \- return list of image formats supported by a video port
 .\"
-.SH Syntax
+.SH SYNTAX
 .B #include <X11/extensions/Xvlib.h>
 .sp
 .nf
 .BI "XvImageFormatValues * XvListImageFormats (Display *" dpy ","
 .BI "                 XvPortID " port ",  int *" p_num_formats ");"
 .fi
-.SH Arguments
+.SH ARGUMENTS
 .\"
 .IP \fIdpy\fR 8
 Specifies the connection to the X server.
@@ -18,12 +18,12 @@ Specifies the port whose adaptor is to be queried for its list of attributes.
 .IP \fIp_num_formats\fR 8
 A pointer to where the number of formats returned in the array is written.
 .\"
-.SH Description
+.SH DESCRIPTION
 .BR XvListImageFormats (__libmansuffix__)
 returns the XvImageFormatValues supported by the specified port. This list
 should be freed with
 .BR XFree (__libmansuffix__).
-.SH Returned Values
+.SH RETURN VALUES
 XvImageFormatValues has the following structure:
 .EX
 
@@ -93,15 +93,15 @@ For planar formats this represents the ordering of the planes.
 .IP \fIscanline_order\fR 8
 XvTopToBottom or XvBottomToTop.
 .\"
-.SH Notes
+.SH NOTES
 Since some formats (particularly some planar YUV formats) may not be
 completely defined by the parameters above, the guid, when available,
 should provide the most accurate description of the format.
 .\"
-.SH Diagnostics
+.SH DIAGNOSTICS
 .IP [XvBadPort] 8
 Generated if the requested port does not exist.
 .\"
-.SH See Also
+.SH SEE ALSO
 .BR XvCreateImage (__libmansuffix__),
 .BR XvCreateShmImage (__libmansuffix__)
