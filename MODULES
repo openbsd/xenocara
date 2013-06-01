@@ -1,12 +1,12 @@
-# $OpenBSD: MODULES,v 1.253 2013/05/30 12:41:33 matthieu Exp $
+# $OpenBSD: MODULES,v 1.254 2013/06/01 00:58:37 matthieu Exp $
 #
 # X.Org maintained modules
 #
 
-app/appres		1.0.3
+app/appres		1.0.4
 app/bdftopcf		1.0.4	7.7+
 app/beforelight		1.0.5
-app/bitmap		1.0.6
+app/bitmap		1.0.7
 app/editres		1.0.6
 app/fonttosfnt		1.0.4
 app/fslsfonts		1.0.4
@@ -38,21 +38,21 @@ app/xcmsdb		1.0.4	7.7
 app/xcompmgr		1.1.6
 app/xconsole		1.0.5
 app/xdm			1.1.11
-app/xdpyinfo		1.3.0	7.7
+app/xdpyinfo		1.3.1	7.7+
 app/xdriinfo		1.0.4	7.7
 app/xedit		1.2.1
 app/xev			1.2.1	7.7+
 app/xeyes		1.1.1
 app/xf86dga		1.0.3
 app/xfd			1.1.1
-app/xfontsel		1.0.4
-app/xfs			1.1.3		needs-update
+app/xfontsel		1.0.5		needs-update
+app/xfs			1.1.3
 app/xfsinfo		1.0.4
 app/xfwp		1.0.2
 app/xgamma		1.0.5	7.7
 app/xgc			1.0.4
 app/xhost		1.0.5	7.7
-app/xinit		1.3.2		needs-update
+app/xinit		1.3.2
 app/xinput		1.6.0	7.7
 app/xkbcomp		1.2.4	7.7
 app/xkbevd		1.1.3	7.7
@@ -71,9 +71,9 @@ app/xmodmap		1.0.7	7.7
 app/xmore		1.0.2
 app/xpr			1.0.4	7.7
 app/xprop		1.2.1	7.7
-app/xrandr		1.4.0	7.7+	needs-update
+app/xrandr		1.4.0	7.7+
 app/xrdb		1.0.9	7.7
-app/xrefresh		1.0.4	7.7
+app/xrefresh		1.0.5	7.7+
 app/xset		1.2.2	7.7
 app/xsetroot		1.1.1	7.7+
 app/xsm			1.0.3
@@ -81,7 +81,7 @@ app/xstdcmap		1.0.3
 app/xvidtune		1.0.3
 app/xvinfo		1.1.2	7.7+
 app/xwd			1.0.5	7.6
-app/xwininfo		1.1.2	7.7
+app/xwininfo		1.1.3	7.7+
 app/xwud		1.0.4	7.7
 
 data/bitmaps		1.1.1	7.7
@@ -171,41 +171,41 @@ font/util			1.3.0
 font/winitzki-cyrillic		1.0.2
 font/xfree86-type1		1.0.3
 
-lib/libFS			1.0.5	7.7+	needs-update
+lib/libFS			1.0.5	7.7+
 lib/libICE			1.0.8	7.7
 lib/libSM			1.2.1	7.7
-lib/libX11			1.6rc2	7.7+	needs-update
+lib/libX11			1.6rc2	7.7+
 lib/libXScrnSaver		1.2.2	7.7
-lib/libXau			1.0.8	7.7+	needs-update
+lib/libXau			1.0.8	7.7+
 lib/libXaw			1.0.11	7.7
 lib/libXcomposite		0.4.4	7.7+
-lib/libXcursor			1.1.14	7.7+	needs-update
+lib/libXcursor			1.1.14	7.7+
 lib/libXdamage			1.1.4	7.7+
 lib/libXdmcp			1.1.1	7.7
-lib/libXext			1.3.1	7.7
-lib/libXfixes			5.0.1	7.7+	needs-udpate
+lib/libXext			1.3.2	7.7+
+lib/libXfixes			5.0.1	7.7+
 lib/libXfont			1.4.5	7.7
 lib/libXfontcache		1.0.5
 lib/libXft			2.3.1	7.7
 lib/libXi			1.7.1	7.7+	needs-update
-lib/libXinerama			1.1.2	7.7
+lib/libXinerama			1.1.3	7.7+
 lib/libXmu			1.1.1	7.7
 lib/libXpm			3.5.10	7.7
-lib/libXrandr			1.4.0	7.7+
+lib/libXrandr			1.4.1	7.7+	needs-update
 lib/libXrender			0.9.7	7.7
-lib/libXres			1.0.6	7.7
-lib/libXt			1.1.3	7.7
-lib/libXtst			1.2.1	7.7
-lib/libXv			1.0.7	7.7
+lib/libXres			1.0.7	7.7+
+lib/libXt			1.1.4	7.7+
+lib/libXtst			1.2.2	7.7+
+lib/libXv			1.0.8	7.7+	needs-update
 lib/libXvMC			1.0.7	7.7
-lib/libXxf86dga			1.1.3	7.7
+lib/libXxf86dga			1.1.4	7.7+
 lib/libXxf86misc		1.0.2
-lib/libXxf86vm			1.1.2	7.7
-lib/libdmx			1.1.3	7.7+	needs-update
-lib/libfontenc			1.1.2	7.7+	needs-update
+lib/libXxf86vm			1.1.3	7.7+
+lib/libdmx			1.1.3	7.7+
+lib/libfontenc			1.1.2	7.7+
 lib/libpciaccess		0.13.1	7.7
 lib/libpthread-stubs		0.3	7.7
-lib/libxcb			1.9	7.7+
+lib/libxcb			1.9.1	7.7+
 lib/libxkbfile			1.0.8	7.7
 lib/libxkbui			1.0.2
 lib/libxtrans			1.2.7	7.7
@@ -225,7 +225,7 @@ proto/fixesproto		5.0	7.7
 proto/fontcacheproto		0.1.3
 proto/fontsproto		2.1.2	7.7
 proto/glproto			1.4.16	7.7
-proto/inputproto		2.3	7.7+	needs-update
+proto/inputproto		2.3	7.7+
 proto/kbproto			1.0.6	7.7
 proto/pmproto			1.0.3		deprecated
 proto/randrproto		1.4.0	7.7+
