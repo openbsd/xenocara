@@ -341,7 +341,7 @@ XRRGetOutputProperty (Display *dpy, RROutput output,
 		      unsigned char **prop);
 
 XRRModeInfo *
-XRRAllocModeInfo (char *name, int nameLength);
+XRRAllocModeInfo (_Xconst char *name, int nameLength);
 
 RRMode
 XRRCreateMode (Display *dpy, Window window, XRRModeInfo *modeInfo);
@@ -419,7 +419,7 @@ void
 XRRSetCrtcTransform (Display	*dpy,
 		     RRCrtc	crtc,
 		     XTransform	*transform,
-		     char	*filter,
+		     _Xconst char *filter,
 		     XFixed	*params,
 		     int	nparams);
 

@@ -19,7 +19,7 @@ AM_CFLAGS = \
 	$(MALLOC_ZERO_CFLAGS) \
 	$(CWARNFLAGS)
 
-INCLUDES = -I$(top_srcdir)/include/X11/extensions
+AM_CPPFLAGS = -I$(top_srcdir)/include/X11/extensions
 
 libXrandr_la_LDFLAGS = -version-number 2:2:0 -no-undefined
 

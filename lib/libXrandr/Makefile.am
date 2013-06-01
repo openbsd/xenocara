@@ -1,5 +1,3 @@
-# 
-#  $Xorg: Makefile.am,v 1.1.1.1 2006/11/25 17:37:51 matthieu Exp $
 #
 #  Copyright © 2003 Keith Packard, Noah Levitt
 #

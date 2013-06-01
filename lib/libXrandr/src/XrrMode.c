@@ -33,7 +33,7 @@
 #include "Xrandrint.h"
 
 XRRModeInfo *
-XRRAllocModeInfo (char *name, int nameLength)
+XRRAllocModeInfo (_Xconst char *name, int nameLength)
 {
     XRRModeInfo	*mode_info;
 

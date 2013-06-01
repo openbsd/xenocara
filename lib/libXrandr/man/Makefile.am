@@ -1,4 +1,3 @@
-# $Xorg: Makefile.am,v 1.1.1.1 2006/11/25 17:37:52 matthieu Exp $
 #
 # Copyright (c) 2005, Oracle and/or its affiliates. All rights reserved.
 #

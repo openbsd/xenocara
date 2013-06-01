@@ -306,7 +306,7 @@ void
 XRRSetCrtcTransform (Display	*dpy,
 		     RRCrtc	crtc,
 		     XTransform	*transform,
-		     char	*filter,
+		     _Xconst char *filter,
 		     XFixed	*params,
 		     int	nparams)
 {
