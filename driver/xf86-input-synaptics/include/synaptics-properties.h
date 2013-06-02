@@ -35,7 +35,7 @@
 /* 32 bit, 4 values, left, right, top, bottom */
 #define SYNAPTICS_PROP_EDGES "Synaptics Edges"
 
-/* 32 bit, 3 values, low, high, press */
+/* 32 bit, 3 values, low, high, <deprecated> */
 #define SYNAPTICS_PROP_FINGER "Synaptics Finger"
 
 /* 32 bit */
@@ -72,17 +72,8 @@
 /* 8 bit (BOOL), 2 values, vertical, horizontal */
 #define SYNAPTICS_PROP_SCROLL_TWOFINGER "Synaptics Two-Finger Scrolling"
 
-/* FLOAT, 4 values, min, max, accel, trackstick */
+/* FLOAT, 4 values, min, max, accel, <deprecated> */
 #define SYNAPTICS_PROP_SPEED "Synaptics Move Speed"
-
-/* 32 bit, 2 values, min, max */
-#define SYNAPTICS_PROP_EDGEMOTION_PRESSURE "Synaptics Edge Motion Pressure"
-
-/* 32 bit, 2 values, min, max */
-#define SYNAPTICS_PROP_EDGEMOTION_SPEED "Synaptics Edge Motion Speed"
-
-/* 8 bit (BOOL) */
-#define SYNAPTICS_PROP_EDGEMOTION "Synaptics Edge Motion Always"
 
 /* 8 bit (BOOL), 2 values, updown, leftright */
 #define SYNAPTICS_PROP_BUTTONSCROLLING "Synaptics Button Scrolling"
@@ -123,9 +114,6 @@
  * order: any edge, top, top + right, right, right + bottom, bottom, bottom +
  * left, left, left  + top */
 #define SYNAPTICS_PROP_CIRCULAR_SCROLLING_TRIGGER "Synaptics Circular Scrolling Trigger"
-
-/* 8 bit (BOOL) */
-#define SYNAPTICS_PROP_CIRCULAR_PAD "Synaptics Circular Pad"
 
 /* 8 bit (BOOL) */
 #define SYNAPTICS_PROP_PALM_DETECT "Synaptics Palm Detection"

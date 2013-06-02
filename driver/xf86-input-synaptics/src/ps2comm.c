@@ -38,7 +38,6 @@
 
 #include <xorg-server.h>
 #include "synproto.h"
-#include "synaptics.h"
 #include "synapticsstr.h"
 #include "ps2comm.h"
 #include <xf86.h>
@@ -77,9 +76,9 @@
 #define PS2_RES_SAMPLE_RATE(r)	((r) & 0xff)
 
 #ifdef DEBUG
-#define PS2DBG(x) (x)
+#define PS2DBG(...) ErrorF(__VA_ARGS__)
 #else
-#define PS2DBG(x)
+#define PS2DBG(...)
 #endif
 
 /*****************************************************************************
@@ -95,13 +94,13 @@ ps2_getbyte(int fd, byte * b)
 {
     if (xf86WaitForInput(fd, 50000) > 0) {
         if (xf86ReadSerial(fd, b, 1) != 1) {
-            PS2DBG(ErrorF("ps2_getbyte: No byte read\n"));
+            PS2DBG("ps2_getbyte: No byte read\n");
             return FALSE;
         }
-        PS2DBG(ErrorF("ps2_getbyte: byte %02X read\n", *b));
+        PS2DBG("ps2_getbyte: byte %02X read\n", *b);
         return TRUE;
     }
-    PS2DBG(ErrorF("ps2_getbyte: timeout xf86WaitForInput\n"));
+    PS2DBG("ps2_getbyte: timeout xf86WaitForInput\n");
     return FALSE;
 }
 
@@ -114,16 +113,16 @@ ps2_putbyte(int fd, byte b)
     byte ack;
 
     if (xf86WriteSerial(fd, &b, 1) != 1) {
-        PS2DBG(ErrorF("ps2_putbyte: error xf86WriteSerial\n"));
+        PS2DBG("ps2_putbyte: error xf86WriteSerial\n");
         return FALSE;
     }
-    PS2DBG(ErrorF("ps2_putbyte: byte %02X send\n", b));
+    PS2DBG("ps2_putbyte: byte %02X send\n", b);
     /* wait for an ACK */
     if (!ps2_getbyte(fd, &ack)) {
         return FALSE;
     }
     if (ack != PS2_ACK) {
-        PS2DBG(ErrorF("ps2_putbyte: wrong acknowledge 0x%02x\n", ack));
+        PS2DBG("ps2_putbyte: wrong acknowledge 0x%02x\n", ack);
         return FALSE;
     }
     return TRUE;
@@ -160,7 +159,7 @@ ps2_special_cmd(int fd, byte cmd)
 static Bool
 ps2_send_cmd(int fd, byte c)
 {
-    PS2DBG(ErrorF("send command: 0x%02X\n", c));
+    PS2DBG("send command: 0x%02X\n", c);
     return (ps2_special_cmd(fd, c) && ps2_putbyte(fd, PS2_CMD_STATUS_REQUEST));
 }
 
@@ -174,7 +173,7 @@ ps2_send_cmd(int fd, byte c)
 static Bool
 ps2_synaptics_set_mode(int fd, byte mode)
 {
-    PS2DBG(ErrorF("set mode byte to: 0x%02X\n", mode));
+    PS2DBG("set mode byte to: 0x%02X\n", mode);
     return (ps2_special_cmd(fd, mode) &&
             ps2_putbyte(fd, PS2_CMD_SET_SAMPLE_RATE) && ps2_putbyte(fd, 0x14));
 }
@@ -188,24 +187,23 @@ ps2_synaptics_reset(int fd)
     byte r[2];
 
     xf86FlushInput(fd);
-    PS2DBG(ErrorF("Reset the Touchpad...\n"));
+    PS2DBG("Reset the Touchpad...\n");
     if (!ps2_putbyte(fd, PS2_CMD_RESET)) {
-        PS2DBG(ErrorF("...failed\n"));
+        PS2DBG("...failed\n");
         return FALSE;
     }
     xf86WaitForInput(fd, 4000000);
     if (ps2_getbyte(fd, &r[0]) && ps2_getbyte(fd, &r[1])) {
         if (r[0] == 0xAA && r[1] == 0x00) {
-            PS2DBG(ErrorF("...done\n"));
+            PS2DBG("...done\n");
             return TRUE;
         }
         else {
-            PS2DBG(ErrorF
-                   ("...failed. Wrong reset ack 0x%02x, 0x%02x\n", r[0], r[1]));
+            PS2DBG("...failed. Wrong reset ack 0x%02x, 0x%02x\n", r[0], r[1]);
             return FALSE;
         }
     }
-    PS2DBG(ErrorF("...failed\n"));
+    PS2DBG("...failed\n");
     return FALSE;
 }
 
@@ -218,18 +216,18 @@ ps2_synaptics_model_id(int fd, struct PS2SynapticsHwInfo *synhw)
 {
     byte mi[3];
 
-    PS2DBG(ErrorF("Read mode id...\n"));
+    PS2DBG("Read mode id...\n");
 
     synhw->model_id = 0;
     if (ps2_send_cmd(fd, SYN_QUE_MODEL) &&
         ps2_getbyte(fd, &mi[0]) &&
         ps2_getbyte(fd, &mi[1]) && ps2_getbyte(fd, &mi[2])) {
         synhw->model_id = (mi[0] << 16) | (mi[1] << 8) | mi[2];
-        PS2DBG(ErrorF("model-id %06X\n", synhw->model_id));
-        PS2DBG(ErrorF("...done.\n"));
+        PS2DBG("model-id %06X\n", synhw->model_id);
+        PS2DBG("...done.\n");
         return TRUE;
     }
-    PS2DBG(ErrorF("...failed.\n"));
+    PS2DBG("...failed.\n");
     return FALSE;
 }
 
@@ -242,7 +240,7 @@ ps2_synaptics_capability(int fd, struct PS2SynapticsHwInfo *synhw)
 {
     byte cap[3];
 
-    PS2DBG(ErrorF("Read capabilites...\n"));
+    PS2DBG("Read capabilites...\n");
 
     synhw->capabilities = 0;
     synhw->ext_cap = 0;
@@ -250,26 +248,25 @@ ps2_synaptics_capability(int fd, struct PS2SynapticsHwInfo *synhw)
         ps2_getbyte(fd, &cap[0]) &&
         ps2_getbyte(fd, &cap[1]) && ps2_getbyte(fd, &cap[2])) {
         synhw->capabilities = (cap[0] << 16) | (cap[1] << 8) | cap[2];
-        PS2DBG(ErrorF("capabilities %06X\n", synhw->capabilities));
+        PS2DBG("capabilities %06X\n", synhw->capabilities);
         if (SYN_CAP_VALID(synhw)) {
             if (SYN_EXT_CAP_REQUESTS(synhw)) {
                 if (ps2_send_cmd(fd, SYN_QUE_EXT_CAPAB) &&
                     ps2_getbyte(fd, &cap[0]) &&
                     ps2_getbyte(fd, &cap[1]) && ps2_getbyte(fd, &cap[2])) {
                     synhw->ext_cap = (cap[0] << 16) | (cap[1] << 8) | cap[2];
-                    PS2DBG(ErrorF("ext-capability %06X\n", synhw->ext_cap));
+                    PS2DBG("ext-capability %06X\n", synhw->ext_cap);
                 }
                 else {
-                    PS2DBG(ErrorF
-                           ("synaptics says, that it has extended-capabilities, "
-                            "but I cannot read them."));
+                    PS2DBG("synaptics says, that it has extended-capabilities, "
+                           "but I cannot read them.");
                 }
             }
-            PS2DBG(ErrorF("...done.\n"));
+            PS2DBG("...done.\n");
             return TRUE;
         }
     }
-    PS2DBG(ErrorF("...failed.\n"));
+    PS2DBG("...failed.\n");
     return FALSE;
 }
 
@@ -282,20 +279,20 @@ ps2_synaptics_identify(int fd, struct PS2SynapticsHwInfo *synhw)
 {
     byte id[3];
 
-    PS2DBG(ErrorF("Identify Touchpad...\n"));
+    PS2DBG("Identify Touchpad...\n");
 
     synhw->identity = 0;
     if (ps2_send_cmd(fd, SYN_QUE_IDENTIFY) &&
         ps2_getbyte(fd, &id[0]) &&
         ps2_getbyte(fd, &id[1]) && ps2_getbyte(fd, &id[2])) {
         synhw->identity = (id[0] << 16) | (id[1] << 8) | id[2];
-        PS2DBG(ErrorF("ident %06X\n", synhw->identity));
+        PS2DBG("ident %06X\n", synhw->identity);
         if (SYN_ID_IS_SYNAPTICS(synhw)) {
-            PS2DBG(ErrorF("...done.\n"));
+            PS2DBG("...done.\n");
             return TRUE;
         }
     }
-    PS2DBG(ErrorF("...failed.\n"));
+    PS2DBG("...failed.\n");
     return FALSE;
 }
 
@@ -436,22 +433,22 @@ ps2_packet_ok(struct PS2SynapticsHwInfo *synhw, struct CommData *comm)
     int newabs = SYN_MODEL_NEWABS(synhw);
 
     if (newabs ? ((buf[0] & 0xC0) != 0x80) : ((buf[0] & 0xC0) != 0xC0)) {
-        DBG(4, "Synaptics driver lost sync at 1st byte\n");
+        PS2DBG("Synaptics driver lost sync at 1st byte\n");
         return FALSE;
     }
 
     if (!newabs && ((buf[1] & 0x60) != 0x00)) {
-        DBG(4, "Synaptics driver lost sync at 2nd byte\n");
+        PS2DBG("Synaptics driver lost sync at 2nd byte\n");
         return FALSE;
     }
 
     if ((newabs ? ((buf[3] & 0xC0) != 0xC0) : ((buf[3] & 0xC0) != 0x80))) {
-        DBG(4, "Synaptics driver lost sync at 4th byte\n");
+        PS2DBG("Synaptics driver lost sync at 4th byte\n");
         return FALSE;
     }
 
     if (!newabs && ((buf[4] & 0x60) != 0x00)) {
-        DBG(4, "Synaptics driver lost sync at 5th byte\n");
+        PS2DBG("Synaptics driver lost sync at 5th byte\n");
         return FALSE;
     }
 
@@ -473,18 +470,18 @@ ps2_synaptics_get_packet(InputInfoPtr pInfo, struct PS2SynapticsHwInfo *synhw,
         /* test if there is a reset sequence received */
         if ((c == 0x00) && (comm->lastByte == 0xAA)) {
             if (xf86WaitForInput(pInfo->fd, 50000) == 0) {
-                DBG(7, "Reset received\n");
+                PS2DBG("Reset received\n");
                 proto_ops->QueryHardware(pInfo);
             }
             else
-                DBG(3, "faked reset received\n");
+                PS2DBG("faked reset received\n");
         }
         comm->lastByte = u;
 
         /* to avoid endless loops */
         if (count++ > 30) {
-            xf86IDrvMsg(pInfo, X_ERROR,
-                        "Synaptics driver lost sync... got gigantic packet!\n");
+            LogMessageVerbSigSafe(X_ERROR, 0,
+                                  "Synaptics driver lost sync... got gigantic packet!\n");
             return FALSE;
         }
 
@@ -502,8 +499,7 @@ ps2_synaptics_get_packet(InputInfoPtr pInfo, struct PS2SynapticsHwInfo *synhw,
                 comm->outOfSync++;
                 if (comm->outOfSync > MAX_UNSYNC_PACKETS) {
                     comm->outOfSync = 0;
-                    DBG(3,
-                        "Synaptics synchronization lost too long -> reset touchpad.\n");
+                    PS2DBG("Synaptics synchronization lost too long -> reset touchpad.\n");
                     proto_ops->QueryHardware(pInfo);    /* including a reset */
                     continue;
                 }
@@ -513,7 +509,7 @@ ps2_synaptics_get_packet(InputInfoPtr pInfo, struct PS2SynapticsHwInfo *synhw,
         if (comm->protoBufTail >= 6) {  /* Full packet received */
             if (comm->outOfSync > 0) {
                 comm->outOfSync = 0;
-                DBG(4, "Synaptics driver resynced.\n");
+                PS2DBG("Synaptics driver resynced.\n");
             }
             comm->protoBufTail = 0;
             return TRUE;
@@ -538,8 +534,8 @@ PS2ReadHwStateProto(InputInfoPtr pInfo,
 
     synhw = (struct PS2SynapticsHwInfo *) priv->proto_data;
     if (!synhw) {
-        xf86IDrvMsg(pInfo, X_ERROR,
-                    "PS2ReadHwState, synhw is NULL. This is a bug.\n");
+        LogMessageVerbSigSafe(X_ERROR, 0,
+                              "PS2ReadHwState, synhw is NULL. This is a bug.\n");
         return FALSE;
     }
 
@@ -555,7 +551,7 @@ PS2ReadHwStateProto(InputInfoPtr pInfo,
         hw->multi[i] = FALSE;
 
     if (newabs) {               /* newer protos... */
-        DBG(7, "using new protocols\n");
+        PS2DBG("using new protocols\n");
         hw->x = (((buf[3] & 0x10) << 8) | ((buf[1] & 0x0f) << 8) | buf[4]);
         hw->y = (((buf[3] & 0x20) << 7) | ((buf[1] & 0xf0) << 4) | buf[5]);
 
@@ -601,7 +597,7 @@ PS2ReadHwStateProto(InputInfoPtr pInfo,
         }
     }
     else {                      /* old proto... */
-        DBG(7, "using old protocol\n");
+        PS2DBG("using old protocol\n");
         hw->x = (((buf[1] & 0x1F) << 8) | buf[2]);
         hw->y = (((buf[4] & 0x1F) << 8) | buf[5]);
 

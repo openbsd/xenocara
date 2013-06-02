@@ -22,10 +22,8 @@
  */
 
 #include "synproto.h"
-#include "synaptics.h"
 #include "synapticsstr.h"
 
-#ifdef HAVE_MULTITOUCH
 static int
 HwStateAllocTouch(struct SynapticsHwState *hw, SynapticsPrivate * priv)
 {
@@ -60,7 +58,6 @@ HwStateAllocTouch(struct SynapticsHwState *hw, SynapticsPrivate * priv)
     hw->mt_mask = NULL;
     return BadAlloc;
 }
-#endif
 
 struct SynapticsHwState *
 SynapticsHwStateAlloc(SynapticsPrivate * priv)
@@ -71,12 +68,10 @@ SynapticsHwStateAlloc(SynapticsPrivate * priv)
     if (!hw)
         return NULL;
 
-#ifdef HAVE_MULTITOUCH
     if (HwStateAllocTouch(hw, priv) != Success) {
         free(hw);
         return NULL;
     }
-#endif
 
     return hw;
 }
@@ -84,7 +79,6 @@ SynapticsHwStateAlloc(SynapticsPrivate * priv)
 void
 SynapticsHwStateFree(struct SynapticsHwState **hw)
 {
-#ifdef HAVE_MULTITOUCH
     int i;
 
     if (!*hw)
@@ -94,7 +88,6 @@ SynapticsHwStateFree(struct SynapticsHwState **hw)
     for (i = 0; i < (*hw)->num_mt_mask; i++)
         valuator_mask_free(&(*hw)->mt_mask[i]);
     free((*hw)->mt_mask);
-#endif
 
     free(*hw);
     *hw = NULL;
@@ -104,9 +97,7 @@ void
 SynapticsCopyHwState(struct SynapticsHwState *dst,
                      const struct SynapticsHwState *src)
 {
-#ifdef HAVE_MULTITOUCH
     int i;
-#endif
 
     dst->millis = src->millis;
     dst->x = src->x;
@@ -122,12 +113,10 @@ SynapticsCopyHwState(struct SynapticsHwState *dst,
     dst->down = src->down;
     memcpy(dst->multi, src->multi, sizeof(dst->multi));
     dst->middle = src->middle & BTN_EMULATED_FLAG ? 0 : src->middle;
-#ifdef HAVE_MULTITOUCH
     for (i = 0; i < dst->num_mt_mask && i < src->num_mt_mask; i++)
         valuator_mask_copy(dst->mt_mask[i], src->mt_mask[i]);
     memcpy(dst->slot_state, src->slot_state,
            dst->num_mt_mask * sizeof(enum SynapticsSlotState));
-#endif
 }
 
 void
@@ -156,7 +145,6 @@ SynapticsResetHwState(struct SynapticsHwState *hw)
 void
 SynapticsResetTouchHwState(struct SynapticsHwState *hw, Bool set_slot_empty)
 {
-#ifdef HAVE_MULTITOUCH
     int i;
 
     for (i = 0; i < hw->num_mt_mask; i++) {
@@ -179,5 +167,4 @@ SynapticsResetTouchHwState(struct SynapticsHwState *hw, Bool set_slot_empty)
             break;
         }
     }
-#endif
 }

@@ -23,7 +23,7 @@
 # Initialize Autoconf
 AC_PREREQ([2.60])
 AC_INIT([xf86-input-synaptics],
-        [1.6.2],
+        [1.7.1],
         [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],
         [xf86-input-synaptics])
 AC_CONFIG_SRCDIR([Makefile.am])
@@ -54,20 +54,12 @@ m4_ifndef([XORG_DRIVER_CHECK_EXT],
 XORG_DRIVER_CHECK_EXT(RANDR, randrproto)
 
 # Obtain compiler/linker options for the Synaptics driver dependencies
-PKG_CHECK_MODULES(XORG, [xorg-server >= 1.7] xproto inputproto $REQUIRED_MODULES)
+PKG_CHECK_MODULES(XORG, [inputproto >= 2.1.99.3] [xorg-server >= 1.12] xproto inputproto $REQUIRED_MODULES)
 
 # X Server SDK location is required to install Synaptics header files
 # This location is also relayed in the xorg-synaptics.pc file
 sdkdir=`$PKG_CONFIG --variable=sdkdir xorg-server`
 AC_SUBST([sdkdir])
-
-DRIVER_NAME=synaptics
-AC_SUBST([DRIVER_NAME])
-
-PKG_CHECK_MODULES(XI22, [inputproto >= 2.1.99.3] [xorg-server >= 1.11.99.901], HAVE_XI22="yes", HAVE_XI22="no")
-if test "x$HAVE_XI22" = xyes; then
-    AC_DEFINE(HAVE_MULTITOUCH, 1, [XI2.2 available])
-fi
 
 # -----------------------------------------------------------------------------
 #			Configuration options
@@ -115,7 +107,7 @@ case "${host}" in
 	BUILD_PS2COMM="yes"
 	BUILD_PSMCOMM="yes"
 	;;
-*solaris*)
+*solaris* | *gnu*)
 	AC_MSG_RESULT([ps2comm alpscomm])
 	BUILD_PS2COMM="yes"
 	;;
@@ -130,10 +122,8 @@ esac
 if test "x$BUILD_EVENTCOMM" = xyes; then
     AC_DEFINE(BUILD_EVENTCOMM, 1, [Optional backend eventcomm enabled])
 
-    if test "x$HAVE_XI22" = xyes; then
-        # Obtain compiler/linker options for mtdev
-        PKG_CHECK_MODULES(MTDEV, mtdev)
-    fi
+    # Obtain compiler/linker options for mtdev
+    PKG_CHECK_MODULES(MTDEV, mtdev)
 fi
 if test "x$BUILD_PSMCOMM" = xyes; then
     AC_DEFINE(BUILD_PSMCOMM, 1, [Optional backend psmcomm enabled])

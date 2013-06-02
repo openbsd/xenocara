@@ -1,7 +1,6 @@
 #include "fake-symbols.h"
 
-_X_EXPORT
-    int
+_X_EXPORT int
 xf86ReadSerial(int fd, void *buf, int count)
 {
     return 0;
@@ -26,7 +25,7 @@ xf86WaitForInput(int fd, int timeout)
 }
 
 _X_EXPORT int
-xf86OpenSerial(OPTTYPE options)
+xf86OpenSerial(XF86OptionPtr options)
 {
     return 0;
 }
@@ -37,44 +36,44 @@ xf86SetSerialSpeed(int fd, int speed)
     return 0;
 }
 
-_X_EXPORT OPTTYPE
-xf86ReplaceIntOption(OPTTYPE optlist, const char *name, const int val)
+_X_EXPORT XF86OptionPtr
+xf86ReplaceIntOption(XF86OptionPtr optlist, const char *name, const int val)
 {
     return NULL;
 }
 
 _X_EXPORT char *
-xf86SetStrOption(OPTTYPE optlist, const char *name, CONST char *deflt)
+xf86SetStrOption(XF86OptionPtr optlist, const char *name, const char *deflt)
 {
     return NULL;
 }
 
 _X_EXPORT int
-xf86SetBoolOption(OPTTYPE optlist, const char *name, int deflt)
+xf86SetBoolOption(XF86OptionPtr optlist, const char *name, int deflt)
 {
     return 0;
 }
 
-_X_EXPORT OPTTYPE
-xf86AddNewOption(OPTTYPE head, const char *name, const char *val)
+_X_EXPORT XF86OptionPtr
+xf86AddNewOption(XF86OptionPtr head, const char *name, const char *val)
 {
     return NULL;
 }
 
-_X_EXPORT CONST char *
-xf86FindOptionValue(OPTTYPE options, const char *name)
-{
-    return NULL;
-}
-
-_X_EXPORT char *
-xf86OptionName(OPTTYPE opt)
+_X_EXPORT const char *
+xf86FindOptionValue(XF86OptionPtr options, const char *name)
 {
     return NULL;
 }
 
 _X_EXPORT char *
-xf86OptionValue(OPTTYPE opt)
+xf86OptionName(XF86OptionPtr opt)
+{
+    return NULL;
+}
+
+_X_EXPORT char *
+xf86OptionValue(XF86OptionPtr opt)
 {
     return NULL;
 }
@@ -83,12 +82,6 @@ _X_EXPORT int
 xf86NameCmp(const char *s1, const char *s2)
 {
     return 0;
-}
-
-_X_EXPORT char *
-xf86CheckStrOption(OPTTYPE optlist, const char *name, char *deflt)
-{
-    return NULL;
 }
 
 _X_EXPORT void
@@ -144,13 +137,11 @@ DeleteInputDeviceRequest(DeviceIntPtr pDev)
     return;
 }
 
-#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 11
 _X_EXPORT void
 FreeInputAttributes(InputAttributes * attrs)
 {
     return;
 }
-#endif
 
 _X_EXPORT void
 xf86PostButtonEvent(DeviceIntPtr device,
@@ -185,8 +176,8 @@ xf86DeleteInput(InputInfoPtr pInp, int flags)
     return;
 }
 
-_X_EXPORT OPTTYPE
-xf86OptionListDuplicate(OPTTYPE options)
+_X_EXPORT XF86OptionPtr
+xf86OptionListDuplicate(XF86OptionPtr options)
 {
     return NULL;
 }
@@ -213,7 +204,7 @@ xf86PostKeyboardEvent(DeviceIntPtr device, unsigned int key_code, int is_down)
 }
 
 _X_EXPORT int
-xf86SetIntOption(OPTTYPE optlist, const char *name, int deflt)
+xf86SetIntOption(XF86OptionPtr optlist, const char *name, int deflt)
 {
     return 0;
 }
@@ -223,10 +214,7 @@ xf86PostButtonEventP(DeviceIntPtr device,
                      int is_absolute,
                      int button,
                      int is_down, int first_valuator, int num_valuators,
-#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 12
-                     const
-#endif
-                     int *valuators)
+                     const int *valuators)
 {
     return;
 }
@@ -240,7 +228,7 @@ InitPtrFeedbackClassDeviceStruct(DeviceIntPtr dev, PtrCtrlProcPtr controlProc)
 _X_EXPORT int
 XIChangeDeviceProperty(DeviceIntPtr dev, Atom property, Atom type,
                        int format, int mode, unsigned long len,
-                       OPTTYPE value, Bool sendevent)
+                       XF86OptionPtr value, Bool sendevent)
 {
     return 0;
 }
@@ -253,9 +241,7 @@ GetTimeInMillis(void)
 
 _X_EXPORT int
 NewInputDeviceRequest(InputOption *options,
-#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 11
                       InputAttributes * attrs,
-#endif
                       DeviceIntPtr *pdev)
 {
     return 0;
@@ -267,13 +253,11 @@ InitLedFeedbackClassDeviceStruct(DeviceIntPtr dev, LedCtrlProcPtr controlProc)
     return FALSE;
 }
 
-#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 11
 _X_EXPORT InputAttributes *
 DuplicateInputAttributes(InputAttributes * attrs)
 {
     return NULL;
 }
-#endif
 
 _X_EXPORT int
 ValidAtom(Atom atom)
@@ -327,12 +311,15 @@ xf86IDrvMsg(InputInfoPtr dev, MessageType type, const char *format, ...)
 }
 
 _X_EXPORT void
+LogMessageVerbSigSafe(MessageType type, int verb, const char *format, ...)
+{
+    return;
+}
+
+_X_EXPORT void
 xf86PostMotionEventP(DeviceIntPtr device,
                      int is_absolute, int first_valuator, int num_valuators,
-#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 12
-                     const
-#endif
-                     int *valuators)
+                     const int *valuators)
 {
     return;
 }
@@ -344,14 +331,14 @@ InitValuatorClassDeviceStruct(DeviceIntPtr dev, int numAxes, Atom *labels,
     return FALSE;
 }
 
-_X_EXPORT OPTTYPE
-xf86ReplaceStrOption(OPTTYPE optlist, const char *name, const char *val)
+_X_EXPORT XF86OptionPtr
+xf86ReplaceStrOption(XF86OptionPtr optlist, const char *name, const char *val)
 {
     return NULL;
 }
 
-_X_EXPORT OPTTYPE
-xf86NextOption(OPTTYPE list)
+_X_EXPORT XF86OptionPtr
+xf86NextOption(XF86OptionPtr list)
 {
     return NULL;
 }
@@ -377,10 +364,7 @@ GetMotionHistorySize(void)
 _X_EXPORT void
 xf86PostProximityEventP(DeviceIntPtr device,
                         int is_in, int first_valuator, int num_valuators,
-#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 12
-                        const
-#endif
-                        int *valuators)
+                        const int *valuators)
 {
     return;
 }
@@ -391,25 +375,22 @@ InitFocusClassDeviceStruct(DeviceIntPtr dev)
     return FALSE;
 }
 
-#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) < 12
 void
-xf86ProcessCommonOptions(InputInfoPtr pInfo, OPTTYPE list)
+xf86ProcessCommonOptions(InputInfoPtr pInfo, XF86OptionPtr list)
 {
 }
 
 void
 xf86CollectInputOptions(InputInfoPtr pInfo,
-                        const char **defaultOpts, OPTTYPE extraOpts)
+                        const char **defaultOpts)
 {
 }
 
 InputInfoPtr
-xf86AllocateInput(InputDriverPtr drv, int flags)
+xf86AllocateInput(void)
 {
     return NULL;
 }
-
-#endif
 
 ClientPtr serverClient;
 
@@ -421,7 +402,6 @@ QueueWorkProc(Bool (*function)
     return FALSE;
 }
 
-#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 12
 _X_EXPORT ValuatorMask *
 valuator_mask_new(int num_valuators)
 {
@@ -464,12 +444,9 @@ _X_EXPORT void
 valuator_mask_copy(ValuatorMask *dest, const ValuatorMask *src)
 {
 }
-#endif
 
-#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 16
 _X_EXPORT void
 xf86PostTouchEvent(DeviceIntPtr dev, uint32_t touchid,
                    uint16_t type, uint32_t flags, const ValuatorMask *mask)
 {
 }
-#endif

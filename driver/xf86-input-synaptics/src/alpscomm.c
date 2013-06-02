@@ -34,7 +34,6 @@
 
 #include <xorg-server.h>
 #include "synproto.h"
-#include "synaptics.h"
 #include "synapticsstr.h"
 #include "ps2comm.h"
 #include <xf86.h>

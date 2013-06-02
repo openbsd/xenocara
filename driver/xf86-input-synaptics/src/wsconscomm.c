@@ -24,7 +24,6 @@
 #include <errno.h>
 #include <string.h>
 #include "synproto.h"
-#include "synaptics.h"
 #include "synapticsstr.h"
 #include <xf86.h>
 
@@ -195,13 +194,13 @@ WSConsReadHwState(InputInfoPtr pInfo,
             hw->z = event.value;
             break;
         case WSCONS_EVENT_MOUSE_ABSOLUTE_W:
-	    if (priv->model == MODEL_ELANTECH) {
-		/* Elantech touchpads report number of fingers directly. */
-		hw->fingerWidth = 5;
-		hw->numFingers = event.value;
-	    	break;
-	    }
-	    /* XXX magic number mapping which is mirrored in pms driver */
+            if (priv->model == MODEL_ELANTECH) {
+                /* Elantech touchpads report number of fingers directly. */
+                hw->fingerWidth = 5;
+                hw->numFingers = event.value;
+                break;
+            }
+            /* XXX magic number mapping which is mirrored in pms driver */
             switch (event.value) {
             case 0:
                 hw->fingerWidth = 5;

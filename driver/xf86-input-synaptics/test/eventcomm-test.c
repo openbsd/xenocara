@@ -31,7 +31,6 @@
 #include <stdio.h>
 #include <assert.h>
 
-#include "synaptics.h"
 #include "synapticsstr.h"
 #include "eventcomm.h"
 

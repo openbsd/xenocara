@@ -61,6 +61,10 @@ Like \-k but also ignore Modifier+Key combos.
 \fB\-R\fP
 Use the XRecord extension for detecting keyboard activity instead of polling
 the keyboard state.
+.LP
+.TP
+\fB\-?\fP
+Show the help message.
 .SH "ENVIRONMENT VARIABLES"
 .LP
 .TP

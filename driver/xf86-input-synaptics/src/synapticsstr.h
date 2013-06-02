@@ -23,7 +23,10 @@
 #define _SYNAPTICSSTR_H_
 
 #include "synproto.h"
-#include <xserver-properties.h>
+
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) < 18
+#define LogMessageVerbSigSafe xf86MsgVerb
+#endif
 
 #ifdef DBG
 #undef DBG
@@ -36,20 +39,38 @@
 #define DBG(verb, msg, ...)     /* */
 #endif
 
-#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) < 12
-#define xf86IDrvMsg(pInfo, type, ...) xf86Msg(type, __VA_ARGS__)
-#endif
-
-#ifdef AXIS_LABEL_PROP_REL_VSCROLL
-#define HAVE_SMOOTH_SCROLL
-#endif
-
 /******************************************************************************
  *		Definitions
  *					structs, typedefs, #defines, enums
  *****************************************************************************/
 #define SYNAPTICS_MOVE_HISTORY	5
 #define SYNAPTICS_MAX_TOUCHES	10
+#define SYN_MAX_BUTTONS 12      /* Max number of mouse buttons */
+
+enum OffState {
+    TOUCHPAD_ON = 0,
+    TOUCHPAD_OFF = 1,
+    TOUCHPAD_TAP_OFF = 2,
+};
+
+enum TapEvent {
+    RT_TAP = 0,                 /* Right top corner */
+    RB_TAP,                     /* Right bottom corner */
+    LT_TAP,                     /* Left top corner */
+    LB_TAP,                     /* Left bottom corner */
+    F1_TAP,                     /* Non-corner tap, one finger */
+    F2_TAP,                     /* Non-corner tap, two fingers */
+    F3_TAP,                     /* Non-corner tap, three fingers */
+    MAX_TAP
+};
+
+enum ClickFingerEvent {
+    F1_CLICK1 = 0,              /* Click left, one finger */
+    F2_CLICK1,                  /* Click left, two fingers */
+    F3_CLICK1,                  /* Click left, three fingers */
+    MAX_CLICK
+};
+
 
 typedef struct _SynapticsMoveHist {
     int x, y;
@@ -73,7 +94,6 @@ enum FingerState {              /* Note! The order matters. Compared with < oper
 enum MovingState {
     MS_FALSE,
     MS_TOUCHPAD_RELATIVE,
-    MS_TRACKSTICK               /* trackstick is always relative */
 };
 
 enum MidButtonEmulation {
@@ -113,7 +133,8 @@ enum TouchpadModel {
     MODEL_SYNAPTICS,
     MODEL_ALPS,
     MODEL_APPLETOUCH,
-    MODEL_ELANTECH
+    MODEL_ELANTECH,
+    MODEL_UNIBODY_MACBOOK
 };
 
 typedef struct _SynapticsParameters {
@@ -126,7 +147,6 @@ typedef struct _SynapticsParameters {
     int tap_time_2;             /* max. tapping time for double taps */
     int click_time;             /* The duration of a single click */
     Bool clickpad;              /* Device is a has integrated buttons */
-    Bool fast_taps;             /* Faster reaction to single taps */
     int emulate_mid_button_time;        /* Max time between left and right button presses to
                                            emulate a middle button press. */
     int emulate_twofinger_z;    /* pressure threshold to emulate two finger touch (for Alps) */
@@ -139,19 +159,7 @@ typedef struct _SynapticsParameters {
     Bool scroll_twofinger_vert; /* Enable/disable vertical two-finger scrolling */
     Bool scroll_twofinger_horiz;        /* Enable/disable horizontal two-finger scrolling */
     double min_speed, max_speed, accl;  /* movement parameters */
-    double trackstick_speed;    /* trackstick mode speed */
-    int edge_motion_min_z;      /* finger pressure at which minimum edge motion speed is set */
-    int edge_motion_max_z;      /* finger pressure at which maximum edge motion speed is set */
-    int edge_motion_min_speed;  /* slowest setting for edge motion speed */
-    int edge_motion_max_speed;  /* fastest setting for edge motion speed */
-    Bool edge_motion_use_always;        /* If false, edge motion is used only when dragging */
 
-    Bool updown_button_scrolling;       /* Up/Down-Button scrolling or middle/double-click */
-    Bool leftright_button_scrolling;    /* Left/right-button scrolling, or two lots of middle button */
-    Bool updown_button_repeat;  /* If up/down button being used to scroll, auto-repeat? */
-    Bool leftright_button_repeat;       /* If left/right button being used to scroll, auto-repeat? */
-    int scroll_button_repeat;   /* time, in milliseconds, between scroll events being
-                                 * sent when holding down scroll buttons */
     int touchpad_off;           /* Switches the touchpad off
                                  * 0 : Not off
                                  * 1 : Off
@@ -164,7 +172,6 @@ typedef struct _SynapticsParameters {
     Bool circular_scrolling;    /* Enable circular scrolling */
     double scroll_dist_circ;    /* Scrolling angle radians */
     int circular_trigger;       /* Trigger area for circular scrolling */
-    Bool circular_pad;          /* Edge has an oval or circular shape */
     Bool palm_detect;           /* Enable Palm Detection */
     int palm_min_width;         /* Palm detection width */
     int palm_min_z;             /* Palm detection depth */
@@ -186,8 +193,6 @@ typedef struct _SynapticsParameters {
 struct _SynapticsPrivateRec {
     SynapticsParameters synpara;        /* Default parameter settings, read from
                                            the X config file */
-    SynapticsSHM *synshm;       /* Current parameter settings. Will point to
-                                   shared memory if shm_config is true */
     struct SynapticsProtocolOperations *proto_ops;
     void *proto_data;           /* protocol-specific data */
 
@@ -195,16 +200,13 @@ struct _SynapticsPrivateRec {
     struct SynapticsHwState *old_hw_state;      /* previous logical hw state */
 
     const char *device;         /* device node */
-    Bool shm_config;            /* True when shared memory area allocated */
-
     CARD32 timer_time;          /* when timer last fired */
-    OsTimerPtr timer;           /* for up/down-button repeat, tap processing, etc */
+    OsTimerPtr timer;           /* for tap processing, etc */
 
     struct CommData comm;
 
     struct SynapticsHwState *local_hw_state;    /* used in place of local hw state variables */
 
-    Bool absolute_events;       /* post absolute motion events instead of relative */
     SynapticsMoveHistRec move_hist[SYNAPTICS_MOVE_HISTORY];     /* movement history */
     int hist_index;             /* Last added entry in move_hist[] */
     int hyst_center_x;          /* center x of hysteresis */
@@ -242,12 +244,8 @@ struct _SynapticsPrivateRec {
     Bool circ_scroll_on;        /* Keeps track of currently active scroll modes */
     Bool circ_scroll_vert;      /* True: Generate vertical scroll events
                                    False: Generate horizontal events */
-    int trackstick_neutral_x;   /* neutral x position for trackstick mode */
-    int trackstick_neutral_y;   /* neutral y position for trackstick mode */
     double frac_x, frac_y;      /* absolute -> relative fraction */
     enum MidButtonEmulation mid_emu_state;      /* emulated 3rd button */
-    int repeatButtons;          /* buttons for repeat */
-    int nextRepeat;             /* Time when to trigger next auto repeat event */
     int lastButtons;            /* last state of the buttons */
     int prev_z;                 /* previous z value, for palm detection */
     int prevFingers;            /* previous numFingers, for transition detection */
@@ -272,13 +270,10 @@ struct _SynapticsPrivateRec {
     unsigned short id_vendor;   /* vendor id */
     unsigned short id_product;  /* product id */
 
-#ifdef HAVE_SMOOTH_SCROLL
     int scroll_axis_horiz;      /* Horizontal smooth-scrolling axis */
     int scroll_axis_vert;       /* Vertical smooth-scrolling axis */
     ValuatorMask *scroll_events_mask;   /* ValuatorMask for smooth-scrolling */
-#endif
 
-#ifdef HAVE_MULTITOUCH
     Bool has_touch;             /* Device has multitouch capabilities */
     int max_touches;            /* Number of touches supported */
     int num_mt_axes;            /* Number of multitouch axes other than X, Y */
@@ -286,7 +281,6 @@ struct _SynapticsPrivateRec {
     int num_slots;              /* Number of touch slots allocated */
     int *open_slots;            /* Array of currently open touch slots */
     int num_active_touches;     /* Number of active touches on device */
-#endif
 };
 
 #endif                          /* _SYNAPTICSSTR_H_ */

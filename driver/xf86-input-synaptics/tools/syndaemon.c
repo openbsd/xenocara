@@ -45,14 +45,13 @@
 #include <sys/time.h>
 #include <sys/stat.h>
 
-#include "synaptics.h"
 #include "synaptics-properties.h"
 
-typedef enum {
+enum TouchpadState {
     TouchpadOn = 0,
     TouchpadOff = 1,
     TappingOff = 2
-} TouchpadState;
+};
 
 static Bool pad_disabled
     /* internal flag, this does not correspond to device state */ ;
@@ -63,8 +62,8 @@ static const char *pid_file;
 static Display *display;
 static XDevice *dev;
 static Atom touchpad_off_prop;
-static TouchpadState previous_state;
-static TouchpadState disable_state = TouchpadOff;
+static enum TouchpadState previous_state;
+static enum TouchpadState disable_state = TouchpadOff;
 static int verbose;
 
 #define KEYMAP_SIZE 32
@@ -89,6 +88,7 @@ usage(void)
     fprintf(stderr, "  -K Like -k but also ignore Modifier+Key combos.\n");
     fprintf(stderr, "  -R Use the XRecord extension.\n");
     fprintf(stderr, "  -v Print diagnostic messages.\n");
+    fprintf(stderr, "  -? Show this help message.\n");
     exit(1);
 }
 
@@ -577,6 +577,7 @@ main(int argc, char *argv[])
         case 'v':
             verbose = 1;
             break;
+        case '?':
         default:
             usage();
             break;
