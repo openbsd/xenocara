@@ -1,7 +1,7 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.556 2013/02/13 00:47:18 tom Exp $
+.\" $XTermId: xterm.man,v 1.564 2013/05/16 09:57:06 tom Exp $
 .\"
-.\" Copyright 1996-2011,2012 by Thomas E. Dickey
+.\" Copyright 1996-2012,2013 by Thomas E. Dickey
 .\"
 .\"                         All Rights Reserved
 .\"
@@ -1247,7 +1247,7 @@ Tie the VTxxx \fBbackarrowKey\fP and \fBptyInitialErase\fP resources
 together by setting the DECBKM state according to whether the initial value of
 \fIstty\fP erase is a backspace (8) or delete (127) character.
 A \*(``false\*('' value disables this feature.
-The default is \*(``__backarrow_key_erase__\*(''.
+The default is \*(``__backarrow_is_erase__\*(''.
 .TP 8
 .B "fullscreen (\fPclass\fB Fullscreen)"
 Specifies whether or not \fI\*n\fP should ask the window manager to
@@ -1708,6 +1708,15 @@ The default is \*(``true\*(''.
 .B "allowFontOps (\fPclass\fB AllowFontOps)"
 Specifies whether control sequences that set/query the font should be allowed.
 The default is \*(``true\*(''.
+.TP 5
+.B "allowPasteControls (\fPclass\fB AllowPasteControls)"
+If true, allow control characters such as BEL and CAN to be pasted.
+Formatting characters (tab, newline) are always allowed.
+Other C0 control characters are suppressed unless this resource is enabled.
+The exact set of control characters (C0 and C1)
+depends upon whether UTF-8 encoding is used,
+as well as the \fBallowC1Printable\fP resource.
+The default is \*(``false\*(''.
 .TP 8
 .B "allowScrollLock (\fPclass\fB AllowScrollLock)"
 Specifies whether control sequences that set/query
@@ -1903,7 +1912,7 @@ a backspace (8)
 or delete (127) character.
 This corresponds to the DECBKM control sequence.
 A \*(``true\*('' value specifies backspace.
-The default is \*(``__backarrow_key_is_del__\*(''.
+The default is \*(``__backarrow_is_bs__\*(''.
 Pressing the control key toggles this behavior.
 .TP 8
 .B "background (\fPclass\fB Background)"
@@ -2728,22 +2737,28 @@ the contents off-screen.
 For instance, \fIcat\fP'ing a large file to the screen does this.
 .TP 8
 .B "font1 (\fPclass\fB Font1)"
-Specifies the name of the first alternative font.
+Specifies the name of the first alternative font,
+corresponding to \*(``Unreadable\*('' in the standard menu.
 .TP 8
 .B "font2 (\fPclass\fB Font2)"
-Specifies the name of the second alternative font.
+Specifies the name of the second alternative font,
+corresponding to \*(``Tiny\*('' in the standard menu.
 .TP 8
 .B "font3 (\fPclass\fB Font3)"
-Specifies the name of the third alternative font.
+Specifies the name of the third alternative font,
+corresponding to \*(``Small\*('' in the standard menu.
 .TP 8
 .B "font4 (\fPclass\fB Font4)"
-Specifies the name of the fourth alternative font.
+Specifies the name of the fourth alternative font,
+corresponding to \*(``Medium\*('' in the standard menu.
 .TP 8
 .B "font5 (\fPclass\fB Font5)"
-Specifies the name of the fifth alternative font.
+Specifies the name of the fifth alternative font,
+corresponding to \*(``Large\*('' in the standard menu.
 .TP 8
 .B "font6 (\fPclass\fB Font6)"
-Specifies the name of the sixth alternative font.
+Specifies the name of the sixth alternative font,
+corresponding to \*(``Huge\*('' in the standard menu.
 .TP 8
 .B "fontDoublesize (\fPclass\fB FontDoublesize)"
 Specifies whether \fI\*n\fP should attempt to use font scaling to draw
@@ -3073,6 +3088,11 @@ you can add those after the command, e.g.,
 Alternatively,
 you may put those parameter within a shell script to execute the converter,
 and set this resource to point to the shell script.
+.IP
+When using a locale-filter, e.g., with the \fI\-e\fP option, or the shell,
+\fI\*n\fP first tries passing control via that filter.
+If it fails, \fI\*n\fP will retry without the locale-filter.
+\fI\*N\fP warns about the failure before retrying.
 .TP 8
 .B "loginShell (\fPclass\fB LoginShell)"
 Specifies whether or not the shell to be run in the window should be started
@@ -4044,13 +4064,16 @@ Specifies the width of the Tektronix window in pixels.
 .PP
 The resources that may be specified for the various menus are described in
 the documentation for the Athena \fBSimpleMenu\fP widget.
-The name and classes
-of the entries in each of the menus are listed below.
+The name and classes of the entries in each of the menus are listed below.
 Resources named \*(``\fBline\fR\fIN\fR\*('' where \fIN\fR is a number
 are separators with class \fBSmeLine\fR.
+.PP
+As with all X resource-based widgets,
+the labels mentioned are customary defaults for the application.
 .
 .PP
-The \fImainMenu\fP has the following entries:
+The \fIMain Options\fP menu (widget name \fImainMenu\fP)
+has the following entries:
 .TP 8
 .B "toolbar (\fPclass\fB SmeBSB)"
 This entry invokes the \fBset-toolbar(toggle)\fP action.
@@ -4136,7 +4159,8 @@ This entry invokes the \fBsend-signal(kill)\fP action.
 This entry invokes the \fBquit()\fP action.
 .
 .PP
-The \fIvtMenu\fP has the following entries:
+The \fIVT Options\fP menu (widget name \fIvtMenu\fP)
+has the following entries:
 .TP 8
 .B "scrollbar (\fPclass\fB SmeBSB)"
 This entry invokes the \fBset-scrollbar(toggle)\fP action.
@@ -4218,28 +4242,43 @@ This entry invokes the \fBset-visibility(vt,off)\fP action.
 This entry invokes the \fBset-altscreen(toggle)\fP action.
 .
 .PP
-The \fIfontMenu\fP has the following entries:
+The \fIVT Fonts\fP menu (widget name \fIfontMenu\fP)
+has the following entries:
 .TP 8
 .B "fontdefault (\fPclass\fB SmeBSB)"
-This entry invokes the \fBset-vt-font(d)\fP action.
+This entry invokes the \fBset-vt-font(d)\fP action,
+setting the font using the \fBfont\fP (default) resource,
+e.g., \*(``Default\*('' in the menu.
 .TP 8
 .B "font1 (\fPclass\fB SmeBSB)"
-This entry invokes the \fBset-vt-font(1)\fP action.
+This entry invokes the \fBset-vt-font(1)\fP action,
+setting the font using the \fBfont1\fP resource,
+e.g., \*(``Unreadable\*('' in the menu.
 .TP 8
 .B "font2 (\fPclass\fB SmeBSB)"
-This entry invokes the \fBset-vt-font(2)\fP action.
+This entry invokes the \fBset-vt-font(2)\fP action,
+setting the font using the \fBfont2\fP resource,
+e.g., \*(``Tiny\*('' in the menu.
 .TP 8
 .B "font3 (\fPclass\fB SmeBSB)"
-This entry invokes the \fBset-vt-font(3)\fP action.
+This entry invokes the \fBset-vt-font(3)\fP action,
+setting the font using the \fBfont3\fP resource,
+e.g., \*(``Small\*('' in the menu.
 .TP 8
 .B "font4 (\fPclass\fB SmeBSB)"
-This entry invokes the \fBset-vt-font(4)\fP action.
+This entry invokes the \fBset-vt-font(4)\fP action,
+letting the font using the \fBfont4\fP resource,
+e.g., \*(``Medium\*('' in the menu.
 .TP 8
 .B "font5 (\fPclass\fB SmeBSB)"
-This entry invokes the \fBset-vt-font(5)\fP action.
+This entry invokes the \fBset-vt-font(5)\fP action,
+letting the font using the \fBfont5\fP resource,
+e.g., \*(``Large\*('' in the menu.
 .TP 8
 .B "font6 (\fPclass\fB SmeBSB)"
-This entry invokes the \fBset-vt-font(6)\fP action.
+This entry invokes the \fBset-vt-font(6)\fP action,
+letting the font using the \fBfont6\fP resource,
+e.g., \*(``Huge\*('' in the menu.
 .TP 8
 .B "fontescape (\fPclass\fB SmeBSB)"
 This entry invokes the \fBset-vt-font(e)\fP action.
@@ -4266,7 +4305,8 @@ This entry invokes the \fBset-utf8-mode(s)\fP action.
 This entry invokes the \fBset-utf8-title(s)\fP action.
 .
 .PP
-The \fItekMenu\fP has the following entries:
+The \fITEK Options\fP menu (widget name \fItekMenu\fP)
+has the following entries:
 .TP 8
 .B "tektextlarge (\fPclass\fB SmeBSB)"
 This entry invokes the \fBset-tek-text(large)\fP action.
@@ -5884,11 +5924,24 @@ This action sets, unsets or toggles the \fBsunKeyboard\fP resource.
 It is also invoked by the \fBsunKeyboard\fP entry in \fImainMenu\fP.
 .TP 8
 .B "set-tek-text(\fIlarge/2/3/small\fP)"
-This action sets font used in the Tektronix window to the value of the
-resources \fBtektextlarge\fP, \fBtektext2\fP, \fBtektext3\fP, and
-\fBtektextsmall\fP according to the argument.
-It is also invoked by the entries
-of the same names as the resources in \fItekMenu\fP.
+This action sets the font used in the Tektronix window to the value of the
+selected resource according to the argument.
+The argument can be either a keyword or single-letter alias,
+as shown in parentheses:
+.RS
+.TP 5
+large (l)
+Use resource \fBfontLarge\fP, same as menu entry \fBtektextlarge\fP.
+.TP 5
+two (2)
+Use resource \fBfont2\fP, same as menu entry \fBtektext2\fP.
+.TP 5
+three (3)
+Use resource \fBfont3\fP, same as menu entry \fBtektext3\fP.
+.TP 5
+small (s)
+Use resource \fBfontSmall\fP, same as menu entry \fBtektextsmall\fP.
+.RE
 .TP 8
 .B "set-terminal-type(\fItype\fP)"
 This action directs output to either the \fIvt\fP or \fItek\fP windows,
@@ -5935,7 +5988,7 @@ used when
 \fI\*n\fP was started),
 .HP
 \fI1\fP through \fI6\fP indicate the fonts
-specified by the \fIfont1\fP through \fIfont6\fP resources,
+specified by the \fBfont1\fP through \fBfont6\fP resources,
 .HP
 \fIe\fP or \fIE\fP
 indicate the normal and bold fonts that have been set through escape codes
@@ -6181,6 +6234,10 @@ a reference.
 .TP 5
 WINDOWID
 is set to the X window id number of the \fI\*n\fP window.
+.TP 5
+XTERM_FILTER
+is set if a locale-filter is used.
+The value is the pathname of the filter.
 .TP 5
 XTERM_LOCALE
 shows the locale which was used by \fI\*n\fP on startup.

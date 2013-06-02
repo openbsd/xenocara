@@ -1,5 +1,5 @@
 #!/bin/sh
-# $XTermId: minstall.in,v 1.18 2013/01/01 01:18:24 tom Exp $
+# $XTermId: minstall.in,v 1.19 2013/04/21 18:58:54 Andres.Perera Exp $
 # -----------------------------------------------------------------------------
 # this file is part of xterm
 #
@@ -147,8 +147,8 @@ sed	-e 's%__vendorversion__%"X Window System"%' \
 	-e s%__default_termid__%@default_termid@% \
 	-e s%__alt_sends_esc__%@alt_sends_esc@% \
 	-e s%__meta_sends_esc__%@meta_sends_esc@% \
-	-e s%__backarrow_key_is_del__%@backarrow_is_del@% \
-	-e s%__backarrow_key_erase__%@backarrow_is_erase@% \
+	-e s%__backarrow_is_bs__%@backarrow_is_bs@% \
+	-e s%__backarrow_is_erase__%@backarrow_is_erase@% \
 	-e s%__delete_is_del__%@delete_is_del@% \
 	-e s%__default_class__%$APP_TYPE% \
 	-e s%__apploaddir__%$APPS_DIR% \

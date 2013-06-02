@@ -1,4 +1,3 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <!--
  *****************************************************************************
  * this file is part of xterm                                                *
@@ -31,8 +30,9 @@
  * sale, use or other dealings in this Software without prior written        *
  * authorization.                                                            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.1319 2013/02/27 00:19:22 tom Exp $
+  $XTermId: xterm.log.html,v 1.1351 2013/05/28 00:01:55 tom Exp $
   -->
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
 
 <html>
 <head>
@@ -43,33 +43,36 @@
   <link rev="MADE" href="mailto:dickey@invisible-island.net">
   <meta http-equiv="Content-Type" content=
   "text/html; charset=us-ascii">
-  <link rel="SHORTCUT ICON" href="images/mini.xterm_48.ico" type=
+  <link rel="SHORTCUT ICON" href="/img/icons/xterm.ico" type=
   "image/x-icon">
 </head>
 
 <body>
   <hr>
-  <a href=
-  "http://invisible-island.net/">http://invisible-island.net/</a><a href="http://invisible-island.net/xterm/">xterm/</a><br>
 
-  Copyright &copy; 1997-2012,2013 by <a href=
-  "mailto:dickey@invisible-island.net">Thomas E. Dickey</a>
+  <p>Copyright &copy; 1997-2012,2013 by <a href=
+  "mailto:dickey@invisible-island.net">Thomas E. Dickey</a></p>
   <hr>
 
   <h1>Contents</h1>
 
-  <p>This file contains a list of the changes that I have made for
-  xterm, from the notes that I add when submitting a patch.</p>
-
-  <p>You should note that other changes have been made as well, by
-  other people, to fix bugs and correct ifdef's for portability.
-  Until mid-2006, most of these were summarized in the XFree86
-  CHANGELOG (found in the unbundled tree,
-  xc/programs/Xserver/hw/xfree86). <a href=
+  <p><a href=
   "http://invisible-island.net/xterm/xterm.log.html">Here</a> is
   the latest version of this file.</p>
 
+  <p>It began as a list of the changes that I made for xterm, using
+  the notes that I added when submitting a patch. You should note
+  that other changes were made as well, by other people, to fix
+  bugs and correct ifdef's for portability. Until mid-2006, most of
+  these were summarized in the XFree86 <a href=
+  "http://cvsweb.xfree86.org/cvsweb/xc/programs/Xserver/hw/xfree86/CHANGELOG">
+  CHANGELOG</a>).</p>
+
   <ul>
+    <li><a href="#xterm_293">Patch #293 - 2013/05/27</a></li>
+
+    <li><a href="#xterm_292">Patch #292 - 2013/04/25</a></li>
+
     <li><a href="#xterm_291">Patch #291 - 2013/02/26</a></li>
 
     <li><a href="#xterm_290">Patch #290 - 2013/02/12</a></li>
@@ -865,6 +868,83 @@
     <li><a href="#xterm_01">Patch #1 - 1996/1/6</a></li>
   </ul>
 
+  <h1><a name="xterm_293" id="xterm_293">Patch #293 -
+  2013/05/27</a></h1>
+
+  <ul>
+    <li>modify sample xterm.spec to use newer icon</li>
+
+    <li>add configure option <code>--with-icon-symlink</code> to
+    work around systems which map icon requests for to a single
+    "xterm" icon, but neglect to install the icon needed for window
+    decorations (report by H Merijn Brand).</li>
+
+    <li>improve parameterizing of sample xterm.spec</li>
+
+    <li>amend fix for printer from <a href="#xterm_280">patch
+    #280</a>, removing a reset of the signal handler for
+    <code>SIGCHLD</code> (report by Joe Julian).</li>
+
+    <li>set environment variable <code>XTERM_FILTER</code> if a
+    locale-filter is used.</li>
+
+    <li>enable <code>DEBUG</code> logic when
+    <code>--enable-trace</code> configure option is given.</li>
+
+    <li>improve description of <code>initialFont</code>,
+    <code>set-vt-font</code> and <code>set-tex-text</code> in
+    manpage (Debian #707899).</li>
+
+    <li>fix regression from <a href="#xterm_292">patch #292</a>;
+    selecting a word that ended at the right margin without
+    wrapping would not select the last cell (report by Christian
+    Weisgerber).</li>
+  </ul>
+
+  <h1><a name="xterm_292" id="xterm_292">Patch #292 -
+  2013/04/25</a></h1>
+
+  <ul>
+    <li>add limit-check when double-click selects a word; if the
+    saved-lines were scrolled back and the word selected wrapped at
+    the screen's lower right corner, an assertion was triggered
+    (patch by Taketo Kabe).</li>
+
+    <li>correct limit-check in <code>unsaveEditBufLines</code>,
+    fixing a case where enlarging the terminal size could show a
+    blank line where there actually is available text (patch by
+    Bertram Felgenhauer).</li>
+
+    <li>add <code>PasteControls</code> feature to
+    <code>allowWindowOps</code> which by default disallows pasting
+    control characters other than formatting such as carriage
+    return (discussion with Hayaki Saito).</li>
+
+    <li>fix typo in ctlseqs.ms for DECRQM response (patch by
+    Emanuele Giaquinta).</li>
+
+    <li>update default shown in configure <code>--help</code>
+    message for <code>--with-terminal-id</code> option (patch by
+    Andres Perera).</li>
+
+    <li>rename script/preprocessor variables used for substituting
+    the <code>backarrowKey</code> default value for consistency
+    (patch by Andres Perera).</li>
+
+    <li>set umask to 077 before creating debugging-trace
+    files.</li>
+
+    <li>add configure option <code>--disable-openpty</code> to
+    control whether openpty() may be used in preference to
+    posix_openpt().</li>
+
+    <li>improve workaround from <a href="#xterm_279">patch #279</a>
+    for BSD systems which do not complete initialization until both
+    sides of the pseudoterminal are opened, by preferring openpty()
+    function over posix_openpt() when available (report by
+    Christian Weisgerber).</li>
+  </ul>
+
   <h1><a name="xterm_291" id="xterm_291">Patch #291 -
   2013/02/26</a></h1>
 
@@ -1371,7 +1451,8 @@
 
     <li>add configure option <code>--with-icon-theme</code> to tell
     xterm whether to install into an icon theme, defaulting to
-    "hicolor" (Redhat #755206, #799614 and #804279).</li>
+    "hicolor" (Redhat #755206, Redhat #799614 and Redhat
+    #804279).</li>
 
     <li>change <code>--with-icondir</code> to look for "icons"
     directory rather than "pixmaps" by default. Add new option
@@ -2940,7 +3021,8 @@
     used the wrong amount for copying to FIFO-lines, and then used
     this amount to adjust the current row on the screen. That was
     both a visible defect (Debian #541109) as well as a potential
-    addressing error (Debian #541132, #541160, and #541236).</li>
+    addressing error (Debian #541132, Debian #541160, and Debian
+    #541236).</li>
 
     <li>add clarification in xterm manual about the various
     <code>allow<em>XXX</em>Ops</code> resources, which are disabled
@@ -4498,7 +4580,7 @@
     <li>add <code>utf8Title</code> resource and menu entry,
     allowing the user to control whether title strings are
     interpreted as ISO-8859-1 or UTF-8 encoding (Novell #52655,
-    #113206).</li>
+    Novell #113206).</li>
 
     <li>change order of ifdef's for utempter versus platforms in
     <code>Imakefile</code> to ensure a proper value for
@@ -4917,8 +4999,7 @@
     icon.</li>
 
     <li>fixes to make <code>-geom</code> option work properly with
-    the toolbar configuration (Gentoo Bugzilla #90717,
-    #91967).</li>
+    the toolbar configuration (Gentoo #90717, Gentoo #91967).</li>
 
     <li>minor improvements to scrollbar layout: ensure that the
     scrollbar border is zero if the vt100 border is zero.</li>
@@ -5365,10 +5446,10 @@
     with Interix (Windows Services for UNIX) 3.5 using the xlibs
     libraries from freedesktop.org (patch by Min Sik Kim).</li>
 
-    <li>amend solution for Debian #252873, #260471 from <a href=
-    "#xterm_194">patch #194</a> by making the cursor not explicitly
-    colored if only the foreground color is set, and the cursor is
-    on a blank space (Debian #275473).</li>
+    <li>amend solution for Debian #252873, Debian #260471 from
+    <a href="#xterm_194">patch #194</a> by making the cursor not
+    explicitly colored if only the foreground color is set, and the
+    cursor is on a blank space (Debian #275473).</li>
 
     <li>correct logic for send/receive mode (SRM) with regard to
     control characters.</li>
@@ -5419,7 +5500,7 @@
     <li>change clearing operations so foreground color attribute is
     not set. Usually this is benign, but in some cases when the
     cursor color is not set explicitly, the cursor would show this
-    color (Debian #252873, #260471).</li>
+    color (Debian #252873, Debian #260471).</li>
 
     <li>add extra state (cursor-moved) to guard against deciding
     that the cursor did not require repainting after an indexing
@@ -6470,7 +6551,7 @@ Klanderman).
         (void*)0 isn't true for all platforms (Egbert Eich).</li>
 
         <li>initialise ProgramName in xterm's main before
-        referencing it (#5473, Peter Valchev).</li>
+        referencing it (XFree86 #5473, Peter Valchev).</li>
 
         <li>some cleanup of Imakefile ifdef's (Marc La
         France).</li>
@@ -6690,7 +6771,7 @@ Klanderman).
     version (Egbert Eich).</li>
   </ul>
 
-  <h1><a name="xterm_166" id="xterm_166">Patch #166 - 2002/03/25 -
+  <h1><a name="xterm_166" id="xterm_166">Patch #166 - 2002/3/25 -
   XFree86 4.2.0</a></h1>
 
   <ul>
@@ -6764,7 +6845,7 @@ Klanderman).
     </li>
   </ul>
 
-  <h1><a name="xterm_165" id="xterm_165">Patch #165 - 2002/01/05 -
+  <h1><a name="xterm_165" id="xterm_165">Patch #165 - 2002/1/5 -
   XFree86 4.1.0</a></h1>
 
   <ul>
@@ -7435,7 +7516,9 @@ Klanderman).
     resize.c</li>
 
     <li>correct manpage typo introduced by X11R6.5 resync.</li>
-  </ul>Changes from XFree86 4.0.2:
+  </ul>
+
+  <p>Changes from XFree86 4.0.2:</p>
 
   <ul>
     <li>add definition of <code>_POSIX_C_SOURCE</code> for Solaris
@@ -8619,12 +8702,12 @@ Klanderman).
     Wall).</li>
 
     <li>work around problem observed in XFree86 3.3.5 (patch by
-    Alexander V Lukyanov, Mozilla #5419). From the problem report:
+    Alexander V Lukyanov, Redhat #5419). From the problem report:
 
       <blockquote>
-        xterm consumes cpu when selecting text with mouse (holding
-        down left mouse button) and when a program working under
-        the xterm outputs something to stdout.
+        <p>xterm consumes cpu when selecting text with mouse
+        (holding down left mouse button) and when a program working
+        under the xterm outputs something to stdout.</p>
 
         <p>Easy way to reproduce:<br>
         <code>while :; do echo aaa; sleep 1; done</code><br>
@@ -8665,15 +8748,15 @@ Klanderman).
     <li>add support for DEC Locator control sequences for xterm
     (integrated patch by Steve Wall):
       <pre>
-
                 DECEFR, "Enable Filter Rectangle"
                 DECELR, "Enable Locator Reports"
                 DECSLE, "Select Locator Events"
                 DECRQLP, "Request Locator Position"
-          
-</pre>This allows the xterm mouse to be used with applications that
-use the DEC Locator sequences, such as VAX Tpu, or SMG$ based
-applications.
+</pre>
+
+      <p>This allows the xterm mouse to be used with applications
+      that use the DEC Locator sequences, such as VAX Tpu, or SMG$
+      based applications.</p>
     </li>
 
     <li>improve print action (patch by Matthias Baake). From his
@@ -9012,9 +9095,9 @@ applications.
     <li>Two changes from Stephen P Wall. From his description:
 
       <blockquote>
-        The first change is simple - I added ESC[3J to erase the
+        <p>The first change is simple - I added ESC[3J to erase the
         stored lines above the screen. That's what the changes to
-        util.c and ctlseqs.ms are.
+        util.c and ctlseqs.ms are.</p>
 
         <p>The second change is to get the blinking cursor working.
         I took out the cursorBlinkTime resource, and put in
@@ -9028,17 +9111,20 @@ applications.
     From his description:
 
       <blockquote>
-        With this patch, selection conversion works properly:
+        <p>With this patch, selection conversion works
+        properly:</p>
         <pre>
         ISO 8859-1 xterm -&gt; ISO 8859-1 xterm (transferred as STRING);
         ISO 8859-1 xterm -&gt; UTF-8 xterm (transferred as STRING);
         UTF-8 xterm -&gt; ISO 8859-1 xterm (transferred as STRING);
         UTF-8 xterm -&gt; UTF-8 xterm (transferred as UTF-8).
-</pre>It will not work properly if one xterm is in, say, ISO
-8859-2. Actually, for this case xterm breaks the ICCCM routinely
-(sending ISO 8859-2 data as STRING), so I wouldn't worry too much
-about it. I have not changed the behaviour in eight-bit mode in any
-way.
+</pre>
+
+        <p>It will not work properly if one xterm is in, say, ISO
+        8859-2. Actually, for this case xterm breaks the ICCCM
+        routinely (sending ISO 8859-2 data as STRING), so I
+        wouldn't worry too much about it. I have not changed the
+        behaviour in eight-bit mode in any way.</p>
       </blockquote>
     </li>
   </ul>
@@ -9749,13 +9835,17 @@ way.
     suppressed printing the script for $LINES and $COLUMNS.
     Solaris' resize utility does this; suppressing the behavior is
     unnecessary.</li>
-  </ul>I tested the double-sized characters using vttest and the
-  xfsft patch. These fonts worked reasonably well:
+  </ul>
+
+  <p>I tested the double-sized characters using vttest and the
+  xfsft patch. These fonts worked reasonably well:</p>
   <pre>
         -bitstream-courier-medium-r-normal--0-0-0-0-m-0-iso8859-1
         9x15
-</pre>The iso8859 font does not include box characters, of course,
-but looks good.
+</pre>
+
+  <p>The iso8859 font does not include box characters, of course,
+  but looks good.</p>
 
   <h1><a name="xterm_88" id="xterm_88">Patch #88 - 1998/10/31 -
   XFree86 3.9Nk and 3.3.2h</a></h1>
@@ -9815,7 +9905,7 @@ but looks good.
   </ul>
 
   <h1><a name="xterm_84" id="xterm_84">Patch #84 - 1998/10/9 -
-  XFree86 3.9Ni</a> and 3.3.2e</h1>
+  XFree86 3.9Ni and 3.3.2e</a></h1>
 
   <p>Several small fixes and enhancements, including a patch from
   Bjorn Helgaas:</p>
@@ -9833,7 +9923,9 @@ but looks good.
     <li>make word and line selections work even when lines are
     wrapped by xterm. Previously, selections were limited to one
     screen line.</li>
-  </ul>as well as
+  </ul>
+
+  <p>as well as</p>
 
   <ul>
     <li>modify logic for line-wrapping to reset the associated flag
@@ -9895,7 +9987,9 @@ but looks good.
 
     <li>limit the row and column values used to report mouse
     position.</li>
-  </ul>From resync with XFree86 3.9Nb:
+  </ul>
+
+  <p>From resync with XFree86 3.9Nb:</p>
 
   <ul>
     <li>add support for the VSTATUS control character (patch by
@@ -9936,7 +10030,9 @@ but looks good.
 
     <li>minor fixes for compiler warnings, including a syntax error
     in the AMOEBA ifdef's.</li>
-  </ul>From resync with XFree86 3.9Aj:
+  </ul>
+
+  <p>From resync with XFree86 3.9Aj:</p>
 
   <ul>
     <li>correction to patch #73, supply missing #else for fallback
@@ -10276,7 +10372,7 @@ but looks good.
   <p>From his description:</p>
 
   <blockquote>
-    This set of patches is the latest incarnation of patches
+    <p>This set of patches is the latest incarnation of patches
     originally written by Ian! D Allen, then of the University of
     Waterloo and now of who knows where; I have been carrying them
     forward from xterm to xterm ever since about X11R4. What they
@@ -10284,7 +10380,7 @@ but looks good.
     output it prepends '*** ' to its icon title and (optionally)
     beeps the bell; deiconifying the xterm removes the '*** '. Over
     the years I've found this to be incredibly convenient for
-    monitoring all sorts of low-activity things.
+    monitoring all sorts of low-activity things.</p>
   </blockquote>
 
   <h1><a name="xterm_71" id="xterm_71">Patch #71 - 1998/4/12 -
@@ -10369,17 +10465,19 @@ but looks good.
   highlightColor resource. As reported by David Dawes:</p>
 
   <blockquote>
-    I've just noticed a problem with with the "inverse" control
+    <p>I've just noticed a problem with with the "inverse" control
     sequence (ESC[7m) with the 3.3.2 xterm. What it does is sets
     the background black, and the text the usual foreground colour
-    rather than simply swapping the foreground/background.
-  </blockquote>This appears to be because when I added logic to
-  check that the highlightColor was distinct from foreground and
-  background colors, I did not add a further check to see that it
-  was not black (I would make an explicit check for the resource
-  not being set, but see nothing definite in the headers that would
-  let me reference an explicitly-undefined Pixel value, though
-  there are some implications in xpm.h). But this should work.
+    rather than simply swapping the foreground/background.</p>
+  </blockquote>
+
+  <p>This appears to be because when I added logic to check that
+  the highlightColor was distinct from foreground and background
+  colors, I did not add a further check to see that it was not
+  black (I would make an explicit check for the resource not being
+  set, but see nothing definite in the headers that would let me
+  reference an explicitly-undefined Pixel value, though there are
+  some implications in xpm.h). But this should work.</p>
 
   <h1><a name="xterm_67" id="xterm_67">Patch #67 - 1998/2/23 -
   XFree86 3.9Ad and 3.3.1e</a></h1>
@@ -10509,12 +10607,14 @@ but looks good.
     if they were in the compiler's default include directories,
     even if `--x-includes=DIR' had been used or AC_PATH_XTRA had
     found them elsewhere.</li>
-  </ul>The problem on HP-UX was that we were linking with -lcurses
+  </ul>
+
+  <p>The problem on HP-UX was that we were linking with -lcurses
   rather than -ltermcap due to the second bullet above, and
   apparently something in HP-UX curses is broken. This seems very
   strange, because the only thing used is tgetent, which should
   affect any tty/pty configuration, but I lost interest in tracking
-  down the exact problem.
+  down the exact problem.</p>
 
   <h1><a name="xterm_62" id="xterm_62">Patch #62 - 1998/1/23 -
   XFree86 3.9Ac</a></h1>
@@ -10692,29 +10792,32 @@ but looks good.
   &lt;arfst@luxor.IN-Berlin.DE&gt;, who reported:</p>
 
   <blockquote>
-    Setting the following resources xterm (all current versions)
+    <p>Setting the following resources xterm (all current versions)
     receives a segmentation fault on &lt;Btn2Up&gt; after
-    scrolling:
+    scrolling:</p>
     <pre>
-
           *XTerm*VT100*translations:    #override \
               ~Shift~Ctrl&lt;Btn2Up&gt;: insert-selection(PRIMARY, CUT_BUFFER0)\n\
               Shift~Ctrl&lt;Btn2Up&gt;:  insert-selection(CLIPBOARD, CUT_BUFFER1)\n\
               ~Shift&lt;BtnUp&gt;:       select-end(PRIMARY, CUT_BUFFER0)\n\
               Shift&lt;BtnUp&gt;:        select-end(CLIPBOARD, CUT_BUFFER1)
-</pre>(The above resources intention is to be able to paste the
-latest selection even if the xterm was cleared.)
+</pre>
+
+    <p>(The above resources intention is to be able to paste the
+    latest selection even if the xterm was cleared.)</p>
 
     <p>And here is how it works (and a fix!): The widget given to
     the action handler as first argument is not guaranteed to be a
     XtermWidget (it can be the ScrollbarWidget). Instead of
     accessing the widget's member directly XtDisplay gives the
     required pointer in a safe way.</p>
-  </blockquote>I noticed that this was not the only instance (by
-  reading the code, and testing with his example), and extended the
-  solution to check the widget-class to ensure that it is indeed
-  xterm's widget class before attempting to use it in the context
-  of translations.
+  </blockquote>
+
+  <p>I noticed that this was not the only instance (by reading the
+  code, and testing with his example), and extended the solution to
+  check the widget-class to ensure that it is indeed xterm's widget
+  class before attempting to use it in the context of
+  translations.</p>
 
   <h1><a name="xterm_55" id="xterm_55">Patch #55 - 1997/11/25 -
   XFree86 3.9x</a></h1>
@@ -10785,8 +10888,10 @@ latest selection even if the xterm was cleared.)
     &lt;Michael.Schroeder@informatik.uni-erlangen.de&gt;,</li>
 
     <li>Pablo Ariel Kohan &lt;pablo@memco.co.il&gt;</li>
-  </ul>Some of the changes are interrelated (it was an unusually
-  busy week).
+  </ul>
+
+  <p>Some of the changes are interrelated (it was an unusually busy
+  week).</p>
 
   <ul>
     <li>change the default resource value for colorMode to true,
@@ -10864,9 +10969,11 @@ latest selection even if the xterm was cleared.)
 
     <li>correct several instances of unsigned/signed mixed
     expressions.</li>
-  </ul>I've tested the configure script on Linux, SunOS 4.1.3,
+  </ul>
+
+  <p>I've tested the configure script on Linux, SunOS 4.1.3,
   Solaris 2.5.1, IRIX 5.2 and 6.2, AIX 3.2.5 and CLIX 3.1 (all but
-  the last run properly as well).
+  the last run properly as well).</p>
 
   <h1><a name="xterm_50" id="xterm_50">Patch #50 - 1997/8/22 -
   XFree86 3.9m</a></h1>
@@ -11095,7 +11202,9 @@ latest selection even if the xterm was cleared.)
 
     <li>minor fixes/clarification of tgetent in terminfo vs termcap
     to 'resize'</li>
-  </ul>(both changes also modify the configure script)
+  </ul>
+
+  <p>(both changes also modify the configure script)</p>
 
   <h1><a name="xterm_38" id="xterm_38">Patch #38 - 1997/5/22 -
   XFree86 3.2Xh</a></h1>
@@ -11111,10 +11220,12 @@ latest selection even if the xterm was cleared.)
 
     <li>enables/disables the configuration ifdef's for ANSI color
     and VT52 emulation.</li>
-  </ul>It does not make tests for the things that imake does
-  (that's another project), instead it uses a hybrid of the
-  autoconf tests for libraries and adds imake's compiler options
-  (which are necessary in some cases to get main.c to compile).
+  </ul>
+
+  <p>It does not make tests for the things that imake does (that's
+  another project), instead it uses a hybrid of the autoconf tests
+  for libraries and adds imake's compiler options (which are
+  necessary in some cases to get main.c to compile).</p>
 
   <h1><a name="xterm_37" id="xterm_37">Patch #37 - 1997/5/7 -
   XFree86 3.9a</a></h1>
@@ -11171,9 +11282,11 @@ latest selection even if the xterm was cleared.)
     <li>some minor tidying up (e.g., signed/unsigned use bitcpy,
     MODE_DECCKM, resetColor, resetCharsets). More is done in patch
     #35.</li>
-  </ul>I got the description of DECSTR from a vt420 user's manual.
+  </ul>
+
+  <p>I got the description of DECSTR from a vt420 user's manual.
   I'll do some testing with vttest to ensure that there's nothing
-  else to do than what was documented.
+  else to do than what was documented.</p>
 
   <h1><a name="xterm_33" id="xterm_33">Patch #33 - 1996/11/24 -
   XFree86 3.2</a></h1>
@@ -11227,7 +11340,9 @@ latest selection even if the xterm was cleared.)
     <li>change valid-response code in DECRQSS from 0 to 1 (the
     manual says 0, but the VT420 terminal I've been testing on says
     1).</li>
-  </ul>All of these changes are based on vttest 2.6
+  </ul>
+
+  <p>All of these changes are based on vttest 2.6</p>
 
   <p>(Most of the volume in the patch is to add 2 more state tables
   for parsing the 2nd/3rd device-attribute controls).</p>
@@ -11245,12 +11360,16 @@ latest selection even if the xterm was cleared.)
 
     <li>a typo in the termcap (missing '['), from 3.1.2Dj (my
     error)</li>
-  </ul>Roland also complained that he couldn't use box characters
-  with
+  </ul>
+
+  <p>Roland also complained that he couldn't use box characters
+  with</p>
   <pre>
         -adobe-courier-bold-r-normal--12-120-75-75-m-70-iso8859-1
-</pre>but that's a known xterm limitation (the box characters must
-be part of the font, in the first 32 locations).
+</pre>
+
+  <p>but that's a known xterm limitation (the box characters must
+  be part of the font, in the first 32 locations).</p>
 
   <h1><a name="xterm_27" id="xterm_27">Patch #27 - 1996/8/21 -
   XFree86 3.1.2Ek</a></h1>
@@ -11996,9 +12115,11 @@ be part of the font, in the first 32 locations).
   options</p>
   <pre>
         -Wall -Wstrict-prototypes -Wmissing-prototypes -Wshadow -Wnested-externs
-</pre>(I also compiled with -Wshadow, but while that found some
-things that I wanted to find, there's far too many warnings from
-the X headers to be usable in this context).
+</pre>
+
+  <p>(I also compiled with -Wshadow, but while that found some
+  things that I wanted to find, there's far too many warnings from
+  the X headers to be usable in this context).</p>
 
   <p>The changes:</p>
 
@@ -12196,8 +12317,10 @@ the X headers to be usable in this context).
   <pre>
         proto.h
         xterm.h
-</pre>I expect this to be the biggest patch by far. However
-(barring a misplaced prototype), it shouldn't break anything, since
-the intent of the patch is to provide missing declarations.
+</pre>
+
+  <p>I expect this to be the biggest patch by far. However (barring
+  a misplaced prototype), it shouldn't break anything, since the
+  intent of the patch is to provide missing declarations.</p>
 </body>
 </html>

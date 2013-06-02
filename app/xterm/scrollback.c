@@ -1,7 +1,7 @@
-/* $XTermId: scrollback.c,v 1.15 2011/09/11 14:59:40 tom Exp $ */
+/* $XTermId: scrollback.c,v 1.16 2013/04/23 09:57:05 Bertram.Felgenhauer Exp $ */
 
 /*
- * Copyright 2009-2010,2011 by Thomas E. Dickey
+ * Copyright 2009-2011,2013 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -32,7 +32,7 @@
 
 #include <xterm.h>
 
-#define REAL_ROW(screen, row) ((row) + 1 + (screen)->saved_fifo)
+#define REAL_ROW(screen, row) ((row) + (screen)->saved_fifo)
 #define ROW2FIFO(screen, row) \
 	(unsigned) (REAL_ROW(screen, row) % (screen)->savelines)
 
@@ -70,7 +70,6 @@ addScrollback(TScreen * screen)
     Char *block;
 
     if (screen->saveBuf_index != 0) {
-	screen->saved_fifo++;
 	TRACE(("addScrollback %lu\n", screen->saved_fifo));
 
 	/* first, see which index we'll use */
@@ -90,6 +89,9 @@ addScrollback(TScreen * screen)
 		free(prior->attribs);
 		prior->attribs = 0;
 	    }
+	    if (screen->saved_fifo > 2 * screen->savelines) {
+		screen->saved_fifo -= screen->savelines;
+	    }
 	}
 
 	/* allocate the new data */
@@ -101,14 +103,15 @@ addScrollback(TScreen * screen)
 	TRACE(("...storing new FIFO data in slot %d: %p->%p\n",
 	       which, (void *) where, block));
 
+	screen->saved_fifo++;
     }
     return (LineData *) where;
 }
 
 void
-deleteScrollback(TScreen * screen, int row)
+deleteScrollback(TScreen * screen)
 {
-    unsigned which = ROW2FIFO(screen, row);
+    unsigned which = ROW2FIFO(screen, -1);
     ScrnBuf where = scrnHeadAddr(screen, screen->saveBuf_index, which);
     LineData *prior = (LineData *) where;
     /*
@@ -121,4 +124,5 @@ deleteScrollback(TScreen * screen, int row)
 	free(prior->attribs);
 	prior->attribs = 0;
     }
+    screen->saved_fifo--;
 }

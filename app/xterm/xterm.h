@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.716 2013/02/03 23:21:00 tom Exp $ */
+/* $XTermId: xterm.h,v 1.718 2013/04/24 08:55:50 tom Exp $ */
 
 /*
  * Copyright 1999-2012,2013 by Thomas E. Dickey
@@ -355,6 +355,7 @@ extern char **environ;
 #define XtNallowC1Printable	"allowC1Printable"
 #define XtNallowColorOps	"allowColorOps"
 #define XtNallowFontOps		"allowFontOps"
+#define XtNallowPasteControls	"allowPasteControls"
 #define XtNallowScrollLock	"allowScrollLock"
 #define XtNallowSendEvents	"allowSendEvents"
 #define XtNallowTcapOps		"allowTcapOps"
@@ -540,6 +541,7 @@ extern char **environ;
 #define XtCAllowC1Printable	"AllowC1Printable"
 #define XtCAllowColorOps	"AllowColorOps"
 #define XtCAllowFontOps		"AllowFontOps"
+#define XtCAllowPasteControls	"AllowPasteControls"
 #define XtCAllowScrollLock	"AllowScrollLock"
 #define XtCAllowSendEvents	"AllowSendEvents"
 #define XtCAllowTcapOps		"AllowTcapOps"
@@ -1263,7 +1265,7 @@ extern void ChangeToWide(XtermWidget /* xw */);
 /* scrollback.c */
 extern LineData *getScrollback (TScreen * /* screen */, int /* row */);
 extern LineData *addScrollback (TScreen * /* screen */);
-extern void deleteScrollback (TScreen * /* screen */, int /* row */);
+extern void deleteScrollback (TScreen * /* screen */);
 
 /* scrollbar.c */
 extern void DoResizeScreen (XtermWidget /* xw */);

@@ -1,4 +1,4 @@
-/* $XTermId: screen.c,v 1.475 2013/02/13 00:42:30 tom Exp $ */
+/* $XTermId: screen.c,v 1.477 2013/04/23 09:50:23 Bertram.Felgenhauer Exp $ */
 
 /*
  * Copyright 1999-2012,2013 by Thomas E. Dickey
@@ -407,7 +407,7 @@ unsaveEditBufLines(TScreen * screen, ScrnBuf sb, unsigned n)
 #if OPT_FIFO_LINES
 	LineData *src;
 
-	if ((screen->saved_fifo - extra) <= 0) {
+	if (extra > screen->saved_fifo || extra > screen->savelines) {
 	    TRACE(("...FIXME: must clear text!\n"));
 	    continue;
 	}
@@ -2034,8 +2034,7 @@ ScreenResize(XtermWidget xw,
 
 		    /* free up storage in fifo from the copied lines */
 		    while (unsave_fifo-- > 0) {
-			deleteScrollback(screen, -1);
-			screen->saved_fifo--;
+			deleteScrollback(screen);
 		    }
 #else
 		    amount = (screen->savelines - (int) move_down);

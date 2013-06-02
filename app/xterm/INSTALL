@@ -1,4 +1,4 @@
--- $XTermId: INSTALL,v 1.142 2013/02/03 19:36:47 tom Exp $
+-- $XTermId: INSTALL,v 1.147 2013/05/27 22:19:09 tom Exp $
 -------------------------------------------------------------------------------
 -- Copyright 1997-2012,2013 by Thomas E. Dickey
 --
@@ -239,6 +239,12 @@ The options (in alphabetic order):
 	disable this feature if you must customize xterm in some other way.
 
 	(The same ifdef controls the metaSendsEscape support).
+
+  --disable-openpty       disable openpty, prefer other interfaces
+
+	Do not check for, or use openpty().  Instead, use other interfaces such
+	as posix_openpt().  Modern (sic) BSD systems should have a workable
+	openpty() interface.  Older systems may not.
 
   --disable-paste64       disable support for bracketed paste mode
 
@@ -618,6 +624,19 @@ The options (in alphabetic order):
 	mini.xterm: a more iconic choice which is readily identifiable at
 		small sizes.  This is used for window decoration, e.g., the
 		icon at the upper left corner in many window managers.
+
+  --with-icon-symlink=NAME create symbolic links to icon name (default: NONE)
+
+	This is a workaround for certain systems which translate icon names
+	containing "xterm", e.g., "xterm-color" into the single icon "xterm".
+	The option should also be harmless on a properly configured system.
+
+	If the option is used, its default value is "xterm".  For each icon,
+	the makefile will strip the suffix (e.g., ".png"), as well as the part
+	of the filename which denotes the size (e.g., "_32x32" in an xpm file),
+	and constructs a link with that name to the icon.
+
+	If the option is unused, its default value is "NONE" (no link is made).
 
   --with-icondir=DIR directory in which to install icon files (default: no)
 

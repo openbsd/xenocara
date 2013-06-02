@@ -1,4 +1,4 @@
-/* $XTermId: util.c,v 1.600 2013/02/04 00:46:58 tom Exp $ */
+/* $XTermId: util.c,v 1.601 2013/05/09 01:00:59 tom Exp $ */
 
 /*
  * Copyright 1999-2012,2013 by Thomas E. Dickey
@@ -4117,7 +4117,6 @@ getXtermCell(TScreen * screen, int row, int col)
 {
     LineData *ld = getLineData(screen, row);
 
-    assert(ld && (col < (int) ld->lineSize));
     return ((ld && (col < (int) ld->lineSize))
 	    ? ld->charData[col]
 	    : (unsigned) ' ');
@@ -4131,7 +4130,6 @@ putXtermCell(TScreen * screen, int row, int col, int ch)
 {
     LineData *ld = getLineData(screen, row);
 
-    assert(ld && (col < (int) ld->lineSize));
     if (ld && (col < (int) ld->lineSize)) {
 	ld->charData[col] = (CharData) ch;
 	if_OPT_WIDE_CHARS(screen, {

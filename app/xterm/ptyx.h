@@ -1,4 +1,4 @@
-/* $XTermId: ptyx.h,v 1.762 2013/02/13 00:42:21 tom Exp $ */
+/* $XTermId: ptyx.h,v 1.767 2013/05/27 22:21:32 tom Exp $ */
 
 /*
  * Copyright 1999-2012,2013 by Thomas E. Dickey
@@ -1770,6 +1770,7 @@ typedef struct {
 	Boolean		visualbell;	/* visual bell mode		*/
 	Boolean		poponbell;	/* pop on bell mode		*/
 
+	Boolean		allowPasteControls; /* PasteControls mode	*/
 	Boolean		allowColorOps;	/* ColorOps mode		*/
 	Boolean		allowFontOps;	/* FontOps mode			*/
 	Boolean		allowSendEvents;/* SendEvent mode		*/
@@ -2727,8 +2728,9 @@ typedef struct _TekWidgetRec {
 
 #define AllowTitleOps(w)	AllowXtermOps(w, allowTitleOps)
 
+#define SpecialWindowOps(w,name) (!TScreenOf(w)->disallow_win_ops[name])
 #define AllowWindowOps(w,name)	(AllowXtermOps(w, allowWindowOps) || \
-				 !TScreenOf(w)->disallow_win_ops[name])
+				 SpecialWindowOps(w,name))
 
 #if OPT_TOOLBAR
 #define ToolbarHeight(w)	((resource.toolBar) \
@@ -2830,6 +2832,18 @@ typedef struct Tek_Link
 #ifndef TRACE2
 #define TRACE2(p) /*nothing*/
 #endif
+
+#if OPT_TRACE && !defined(DEBUG)
+#define DEBUG 1
+#endif
+
+#ifdef DEBUG
+#define if_DEBUG(code) if(debug) code
+#else
+#define if_DEBUG(code) /*nothing*/
+#endif
+
+#define DEBUG_MSG(text) if_DEBUG({ IGNORE_RC(write(2, text, sizeof(text) - 1)); })
 
 /* *INDENT-ON* */
 

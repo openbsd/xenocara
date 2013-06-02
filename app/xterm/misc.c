@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.658 2013/02/03 23:18:38 tom Exp $ */
+/* $XTermId: misc.c,v 1.660 2013/05/26 21:16:20 tom Exp $ */
 
 /*
  * Copyright 1999-2012,2013 by Thomas E. Dickey
@@ -1874,6 +1874,7 @@ logpipe(int sig GCC_UNUSED)
     XtermWidget xw = term;
     TScreen *screen = TScreenOf(xw);
 
+    DEBUG_MSG("handle:logpipe\n");
 #ifdef SYSV
     (void) signal(SIGPIPE, SIG_IGN);
 #endif /* SYSV */
@@ -4831,11 +4832,9 @@ AllocateTermColor(XtermWidget xw,
 void
 Panic(const char *s GCC_UNUSED, int a GCC_UNUSED)
 {
-#ifdef DEBUG
-    if (debug) {
+    if_DEBUG({
 	xtermWarning(s, a);
-    }
-#endif /* DEBUG */
+    });
 }
 
 const char *

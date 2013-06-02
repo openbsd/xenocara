@@ -1,4 +1,4 @@
-/* $XTermId: xtermcfg.hin,v 1.196 2012/10/05 00:27:29 tom Exp $ */
+/* $XTermId: xtermcfg.hin,v 1.199 2013/05/27 21:05:23 tom Exp $ */
 
 /************************************************************
 
@@ -44,7 +44,7 @@ authorization.
 /* #undef DECL_ERRNO */		/* CF_ERRNO */
 #define DEFDELETE_DEL 1		/* AC_ARG_ENABLE(delete-is-del) */
 /* #undef DEF_ALT_SENDS_ESC */	/* CF_ARG_ENABLE(alt-sends-esc) */
-/* #undef DEF_BACKARO_DEL */		/* CF_ARG_DISABLE(backarrow-is-del) */
+/* #undef DEF_BACKARO_BS */		/* CF_ARG_DISABLE(backarrow-key) */
 #define DEF_BACKARO_ERASE 1	/* CF_ARG_ENABLE(backarrow-is-erase) */
 /* #undef DEF_META_SENDS_ESC */	/* CF_ARG_ENABLE(meta-sends-esc) */
 /* #undef DFT_COLORMODE */		/* AC_ARG_WITH(default-color-mode) */
@@ -178,6 +178,7 @@ authorization.
 #define USE_UTMP_SETGID 1		/* AC_ARG_WITH(utmp-setgid) */
 /* #undef UTMPX_FOR_UTMP */		/* CF_UTMP */
 #define XRENDERFONT 1		/* CF_X_FREETYPE */
+/* #undef cc_t                    /* CF_TYPE_CC_T */
 /* #undef gid_t */			/* AC_TYPE_UID_T */
 /* #undef mode_t */			/* AC_TYPE_MODE_T */
 /* #undef off_t */			/* AC_TYPE_OFF_T */

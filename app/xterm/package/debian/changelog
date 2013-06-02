@@ -1,3 +1,15 @@
+xterm-dev (293) unstable; urgency=low
+
+  * Miscellaneous fixes.
+
+ -- Thomas E. Dickey <dickey@invisible-island.net>  Wed, 08 May 2013 18:29:21 -0400
+
+xterm-dev (292) unstable; urgency=low
+
+  * Miscellaneous fixes.
+
+ -- Thomas E. Dickey <dickey@invisible-island.net>  Tue, 26 Mar 2013 19:11:17 -0400
+
 xterm-dev (291) unstable; urgency=low
 
   * Fix a different #282 change (Redhat #874327).

@@ -21,7 +21,7 @@
                              Thomas Dickey
                       XFree86 Project (1996-2006)
                     invisible-island.net (2006-2012)
-               updated for XTerm Patch #289 (2013/02/06)
+               updated for XTerm Patch #292 (2013/04/24)
 
 
 
@@ -676,7 +676,7 @@ CSI Ps $ p
             4 - permanently reset
 CSI ? Ps$ p
           Request DEC private mode (DECRQM).  For VT300 and up, reply is
-            CSI ? Ps; Pm$ p
+            CSI ? Ps; Pm$ y
           where Ps is the mode number as in DECSET, Pm is the mode value
           as in the ANSI DECRQM.
 CSI Ps ; Ps " p

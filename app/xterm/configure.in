@@ -1,4 +1,4 @@
-dnl $XTermId: configure.in,v 1.312 2013/02/03 19:30:48 tom Exp $
+dnl $XTermId: configure.in,v 1.316 2013/05/27 13:46:02 tom Exp $
 dnl
 dnl -----------------------------------------------------------------------------
 dnl this file is part of xterm
@@ -110,6 +110,7 @@ CF_FUNC_TGETENT
 CF_WITH_APP_CLASS(XTerm)
 CF_WITH_APP_DEFAULTS
 CF_WITH_ICON_NAME(xterm-color)
+CF_WITH_ICON_SYMLINK(xterm)
 CF_WITH_ICON_THEME([icons/$ICON_NAME icons/${ICON_NAME}_48x48],,,icons/${ICON_NAME}_48x48)
 CF_DISABLE_DESKTOP(xterm)
 CF_WITH_DESKTOP_CATEGORY(xterm,
@@ -146,6 +147,14 @@ test -n "$with_symlink" && \
 	test "$with_symlink" != $cf_name && \
 	XTERM_SYMLINK="$with_symlink"
 fi
+
+AC_MSG_CHECKING(if you want to disable openpty)
+CF_ARG_DISABLE(openpty,
+	[  --disable-openpty       disable openpty, prefer other interfaces],
+	[disable_openpty=yes],
+	[disable_openpty=no],
+	no)
+AC_MSG_RESULT($disable_openpty)
 
 AC_MSG_CHECKING(if you want to disable setuid)
 CF_ARG_DISABLE(setuid,
@@ -281,7 +290,7 @@ CF_HELP_MESSAGE(Terminal Configuration:)
 
 AC_MSG_CHECKING(for default terminal-id)
 AC_ARG_WITH(terminal-id,
-	[  --with-terminal-id=V    set default decTerminalID (default: vt100)],
+	[  --with-terminal-id=V    set default decTerminalID (default: vt420)],
 	[default_termid=$withval],
 	[default_termid=vt420])
 AC_MSG_RESULT($default_termid)
@@ -302,12 +311,12 @@ AC_DEFINE_UNQUOTED(DFT_TERMTYPE,"$default_TERM",[default terminal-type])
 AC_SUBST(default_TERM)
 
 ###############################################################################
-AC_MSG_CHECKING(if backarrow-key should be DEL)
+AC_MSG_CHECKING(if backarrow-key should be BS)
 CF_ARG_DISABLE(backarrow-key,
 	[  --enable-backarrow-key  set default backarrowKey resource (default: true)],
-	[backarrow_is_del=$enableval],
-	[backarrow_is_del=yes])
-CF_XBOOL_RESULT(DEF_BACKARO_DEL,backarrow_is_del,[Define to 1 if backarrow-key should be DEL])
+	[backarrow_is_bs=$enableval],
+	[backarrow_is_bs=yes])
+CF_XBOOL_RESULT(DEF_BACKARO_BS,backarrow_is_bs,[Define to 1 if backarrow-key should be BS])
 
 AC_MSG_CHECKING(if backarrow-key should be treated as erase)
 CF_ARG_ENABLE(backarrow-is-erase,

@@ -1,7 +1,7 @@
-/* $XTermId: print.c,v 1.149 2012/12/31 13:58:16 tom Exp $ */
+/* $XTermId: print.c,v 1.150 2013/05/27 00:55:47 tom Exp $ */
 
 /*
- * Copyright 1997-2011,2012 by Thomas E. Dickey
+ * Copyright 1997-2012,2013 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -87,6 +87,7 @@ closePrinter(XtermWidget xw GCC_UNUSED)
 #endif
 
 	if (SPS.fp != 0) {
+	    DEBUG_MSG("closePrinter\n");
 	    pclose(SPS.fp);
 	    TRACE(("closed printer, waiting...\n"));
 #ifdef VMS			/* This is a quick hack, really should use
@@ -94,11 +95,14 @@ closePrinter(XtermWidget xw GCC_UNUSED)
 				   and go straight to the queue */
 	    (void) system(pcommand);
 #else /* VMS */
-	    while (nonblocking_wait() > 0) ;
+	    while (nonblocking_wait() > 0) {
+		;
+	    }
 #endif /* VMS */
 	    SPS.fp = 0;
 	    SPS.isOpen = False;
 	    TRACE(("closed printer\n"));
+	    DEBUG_MSG("...closePrinter (done)\n");
 	}
     }
 }
@@ -300,6 +304,7 @@ xtermPrintEverything(XtermWidget xw, PrinterFlags * p)
     int save_which = screen->whichBuf;
     int done_which = 0;
 
+    DEBUG_MSG("xtermPrintEverything\n");
     if (p->print_everything) {
 	if (p->print_everything & 8) {
 	    printLines(xw, -screen->savedlines, -(screen->topline + 1), p);
@@ -436,8 +441,8 @@ charToPrinter(XtermWidget xw, unsigned chr)
 		    SysError(ERROR_FORK);
 
 		if (my_pid == 0) {
+		    DEBUG_MSG("charToPrinter: subprocess for printer\n");
 		    TRACE_CLOSE();
-		    (void) signal(SIGCHLD, SIG_DFL);	/* no reapchild! */
 		    close(my_pipe[1]);	/* printer is silent */
 		    close(screen->respond);
 
@@ -455,23 +460,38 @@ charToPrinter(XtermWidget xw, unsigned chr)
 
 		    SPS.fp = popen(SPS.printer_command, "w");
 		    if (SPS.fp != 0) {
+			DEBUG_MSG("charToPrinter: opened pipe to printer\n");
 			input = fdopen(my_pipe[0], "r");
 			clearerr(input);
-			while (!ferror(input) && !feof(input)) {
-			    if ((c = fgetc(input)) == EOF)
+			for (;;) {
+			    if (ferror(input)) {
+				DEBUG_MSG("charToPrinter: break on ferror\n");
 				break;
+			    } else if (feof(input)) {
+				DEBUG_MSG("charToPrinter: break on feof\n");
+				break;
+			    } else if ((c = fgetc(input)) == EOF) {
+				DEBUG_MSG("charToPrinter: break on EOF\n");
+				break;
+			    }
 			    fputc(c, SPS.fp);
 			    if (isForm(c))
 				fflush(SPS.fp);
 			}
+			DEBUG_MSG("charToPrinter: calling pclose\n");
 			pclose(SPS.fp);
 		    }
 		    exit(0);
 		} else {
 		    close(my_pipe[0]);	/* won't read from printer */
-		    SPS.fp = fdopen(my_pipe[1], "w");
-		    TRACE(("opened printer from pid %d/%d\n",
-			   (int) getpid(), (int) my_pid));
+		    if ((SPS.fp = fdopen(my_pipe[1], "w")) != 0) {
+			DEBUG_MSG("charToPrinter: opened printer in parent\n");
+			TRACE(("opened printer from pid %d/%d\n",
+			       (int) getpid(), (int) my_pid));
+		    } else {
+			TRACE(("failed to open printer:%s\n", strerror(errno)));
+			DEBUG_MSG("charToPrinter: could not open in parent\n");
+		    }
 		}
 	    }
 #endif

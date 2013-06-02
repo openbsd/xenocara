@@ -1,4 +1,4 @@
-/* $XTermId: trace.c,v 1.145 2013/02/06 09:51:17 tom Exp $ */
+/* $XTermId: trace.c,v 1.146 2013/04/21 00:37:00 tom Exp $ */
 
 /*
  * Copyright 1997-2012,2013 by Thomas E. Dickey
@@ -86,6 +86,7 @@ Trace(const char *fmt,...)
     trace_out = trace_who;
 
     if (!trace_fp) {
+	unsigned oldmask = umask(077);
 	char name[BUFSIZ];
 #if 0				/* usually I do not want unique names */
 	int unique;
@@ -111,6 +112,7 @@ Trace(const char *fmt,...)
 	    xtermWarning("Cannot open \"%s\"\n", name);
 	    exit(EXIT_FAILURE);
 	}
+	(void) umask(oldmask);
     }
 
     va_start(ap, fmt);

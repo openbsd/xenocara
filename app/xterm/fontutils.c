@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.c,v 1.386 2012/12/31 20:51:54 tom Exp $ */
+/* $XTermId: fontutils.c,v 1.387 2013/05/15 00:31:56 tom Exp $ */
 
 /*
  * Copyright 1998-2011,2012 by Thomas E. Dickey
@@ -1862,7 +1862,7 @@ xtermCloseXft(TScreen * screen, XTermXftFonts * pub)
 
 /*
  * Get the faceName/faceDoublesize resource setting.  Strip off "xft:", which
- * is not recognized by XftParseName().
+ * is not recognized by XftNameParse().
  */
 String
 getFaceName(XtermWidget xw, Bool wideName GCC_UNUSED)
