@@ -23,8 +23,6 @@
 ./usr/X11R6/include/pixman-1/pixman.h
 ./usr/X11R6/include/xf86drm.h
 ./usr/X11R6/include/xf86drmMode.h
-./usr/X11R6/include/xorg/optionstr.h
-./usr/X11R6/include/xorg/xf86Optionstr.h
 ./usr/X11R6/lib/libFS.so.9.0
 ./usr/X11R6/lib/libGL.a
 ./usr/X11R6/lib/libGL.so.13.0
