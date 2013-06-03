@@ -1,4 +1,4 @@
-/*	$OpenBSD: parse.y,v 1.44 2013/05/22 16:32:15 okan Exp $ */
+/*	$OpenBSD: parse.y,v 1.45 2013/06/03 20:33:17 sthen Exp $ */
 
 /*
  * Copyright (c) 2002, 2003, 2004 Henning Brauer <henning@openbsd.org>
@@ -465,13 +465,13 @@ nodigits:
 		}
 	}
 
+/* Similar to other parse.y copies, but also allows '/' in strings */
 #define allowed_in_string(x) \
 	(isalnum(x) || (ispunct(x) && x != '(' && x != ')' && \
 	x != '{' && x != '}' && x != '<' && x != '>' && \
-	x != '!' && x != '=' && x != '/' && x != '#' && \
-	x != ','))
+	x != '!' && x != '=' && x != '#' && x != ','))
 
-	if (isalnum(c) || c == ':' || c == '_' || c == '*') {
+	if (isalnum(c) || c == ':' || c == '_' || c == '*' || c == '/') {
 		do {
 			*p++ = c;
 			if ((unsigned)(p-buf) >= sizeof(buf)) {
