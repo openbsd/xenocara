@@ -1,4 +1,4 @@
-# $OpenBSD: 3RDPARTY,v 1.154 2013/06/02 01:40:03 matthieu Exp $
+# $OpenBSD: 3RDPARTY,v 1.155 2013/06/03 22:39:27 matthieu Exp $
 #
 
 Package: 	Freetype
@@ -8,7 +8,7 @@ Maintainer:	Freetype.org
 Archive Site:	http://download.savannah.gnu.org/releases/freetype/
 
 Package:	xterm
-Version:	291
+Version:	293
 Current Vers:	293
 Maintainer:	Thomas E. Dickey
 Archive Site:	http://invisible-island.net/xterm/xterm.html
@@ -21,7 +21,7 @@ Archive Site:	http://www.mesa3d.org/
 
 Package:	libdrm
 Version:	2.4.42
-Current Vers:	2.4.44
+Current Vers:	2.4.45
 Maintainer:	Eric Anholt
 Archive Site:	http://dri.freedesktop.org/
 
