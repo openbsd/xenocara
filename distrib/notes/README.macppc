@@ -29,9 +29,6 @@ The wsfb driver uses whatever graphics mode the console is set to
 You should be able to use 'startx' or xdm to start X without further
 configuration.
 
-To use xdm from rc.conf, it is necessary to disable /dev/ttyC0 in
-/etc/ttys, change the 'status' of /dev/ttyC0 to 'off'.
-
 Mousekeys (Or how to deal with a One Button Mouse)
 --------------------------------------------------
 
@@ -83,4 +80,4 @@ button 2 and mouse button 3 respectively.
 
 problem_blurb
 
-$OpenBSD: README.macppc,v 1.9 2012/02/07 20:12:12 matthieu Exp $
+$OpenBSD: README.macppc,v 1.10 2013/06/04 02:31:56 mpi Exp $
