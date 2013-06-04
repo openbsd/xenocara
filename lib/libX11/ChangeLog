@@ -1,3 +1,30 @@
+commit 655d631e86c95b14888758b27ed2836ca3e3ce86
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Jun 3 19:21:06 2013 -0700
+
+    libX11 1.6.0
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 4a89b7ea908554628f374537a79931c8006a2de3
+Author: Thomas Klausner <wiz@NetBSD.org>
+Date:   Sun Jun 2 11:49:54 2013 -0700
+
+    cmsMath.c: Add missing stdio header for printf(3) in DEBUG build.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 96dcf747f13b26b8e4d17b1bc8605d933c3e1dc6
+Author: Thomas Klausner <wiz@NetBSD.org>
+Date:   Sun Jun 2 20:49:48 2013 +0200
+
+    XCreateGC man page: Avoid .TS H and .TH macros
+    
+    Avoid .TS H and .TH for now as it doesn't alter the output in this case,
+    and improve the output with mandoc(1).
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit 95a388158c9d73df7d24016d6a3d61506d7d53a4
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Thu May 23 19:43:35 2013 -0700
