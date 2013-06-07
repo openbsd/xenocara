@@ -1,5 +1,5 @@
 /*
- * Copyright © 2009 Nokia Corporation
+ * Copyright Â© 2009 Nokia Corporation
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -385,7 +385,7 @@
  * execute simultaneously with NEON and be completely shadowed by it. Thus
  * we get no performance overhead at all (*). This looks like a very nice
  * feature of Cortex-A8, if used wisely. We don't have a hardware prefetcher,
- * but still can implement some rather advanced prefetch logic in sofware
+ * but still can implement some rather advanced prefetch logic in software
  * for almost zero cost!
  *
  * (*) The overhead of the prefetcher is visible when running some trivial

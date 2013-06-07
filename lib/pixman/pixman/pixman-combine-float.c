@@ -201,56 +201,56 @@ get_factor (combine_factor_t factor, float sa, float da)
 	break;
 
     case SA_OVER_DA:
-	if (da == 0.0f)
+	if (FLOAT_IS_ZERO (da))
 	    f = 1.0f;
 	else
 	    f = CLAMP (sa / da);
 	break;
 
     case DA_OVER_SA:
-	if (sa == 0.0f)
+	if (FLOAT_IS_ZERO (sa))
 	    f = 1.0f;
 	else
 	    f = CLAMP (da / sa);
 	break;
 
     case INV_SA_OVER_DA:
-	if (da == 0.0f)
+	if (FLOAT_IS_ZERO (da))
 	    f = 1.0f;
 	else
 	    f = CLAMP ((1.0f - sa) / da);
 	break;
 
     case INV_DA_OVER_SA:
-	if (sa == 0.0f)
+	if (FLOAT_IS_ZERO (sa))
 	    f = 1.0f;
 	else
 	    f = CLAMP ((1.0f - da) / sa);
 	break;
 
     case ONE_MINUS_SA_OVER_DA:
-	if (da == 0.0f)
+	if (FLOAT_IS_ZERO (da))
 	    f = 0.0f;
 	else
 	    f = CLAMP (1.0f - sa / da);
 	break;
 
     case ONE_MINUS_DA_OVER_SA:
-	if (sa == 0.0f)
+	if (FLOAT_IS_ZERO (sa))
 	    f = 0.0f;
 	else
 	    f = CLAMP (1.0f - da / sa);
 	break;
 
     case ONE_MINUS_INV_DA_OVER_SA:
-	if (sa == 0.0f)
+	if (FLOAT_IS_ZERO (sa))
 	    f = 0.0f;
 	else
 	    f = CLAMP (1.0f - (1.0f - da) / sa);
 	break;
 
     case ONE_MINUS_INV_SA_OVER_DA:
-	if (da == 0.0f)
+	if (FLOAT_IS_ZERO (da))
 	    f = 0.0f;
 	else
 	    f = CLAMP (1.0f - (1.0f - sa) / da);
@@ -403,11 +403,11 @@ blend_lighten (float sa, float s, float da, float d)
 static force_inline float
 blend_color_dodge (float sa, float s, float da, float d)
 {
-    if (d == 0.0f)
+    if (FLOAT_IS_ZERO (d))
 	return 0.0f;
     else if (d * sa >= sa * da - s * da)
 	return sa * da;
-    else if (sa - s == 0.0f)
+    else if (FLOAT_IS_ZERO (sa - s))
 	return sa * da;
     else
 	return sa * sa * d / (sa - s);
@@ -420,7 +420,7 @@ blend_color_burn (float sa, float s, float da, float d)
 	return sa * da;
     else if (sa * (da - d) >= s * da)
 	return 0.0f;
-    else if (s == 0.0f)
+    else if (FLOAT_IS_ZERO (s))
 	return 0.0f;
     else
 	return sa * (da - sa * (da - d) / s);
@@ -440,14 +440,14 @@ blend_soft_light (float sa, float s, float da, float d)
 {
     if (2 * s < sa)
     {
-	if (da == 0.0f)
+	if (FLOAT_IS_ZERO (da))
 	    return d * sa;
 	else
 	    return d * sa - d * (da - d) * (sa - 2 * s) / da;
     }
     else
     {
-	if (da == 0.0f)
+	if (FLOAT_IS_ZERO (da))
 	{
 	    return 0.0f;
 	}
@@ -651,10 +651,12 @@ clip_color (rgb_t *color, float a)
     float l = get_lum (color);
     float n = channel_min (color);
     float x = channel_max (color);
+    float t;
 
     if (n < 0.0f)
     {
-	if ((l - n) < 4 * FLT_EPSILON)
+	t = l - n;
+	if (FLOAT_IS_ZERO (t))
 	{
 	    color->r = 0.0f;
 	    color->g = 0.0f;
@@ -662,14 +664,15 @@ clip_color (rgb_t *color, float a)
 	}
 	else
 	{
-	    color->r = l + (((color->r - l) * l) / (l - n));
-	    color->g = l + (((color->g - l) * l) / (l - n));
-	    color->b = l + (((color->b - l) * l) / (l - n));
+	    color->r = l + (((color->r - l) * l) / t);
+	    color->g = l + (((color->g - l) * l) / t);
+	    color->b = l + (((color->b - l) * l) / t);
 	}
     }
     if (x > a)
     {
-	if ((x - l) < 4 * FLT_EPSILON)
+	t = x - l;
+	if (FLOAT_IS_ZERO (t))
 	{
 	    color->r = a;
 	    color->g = a;
@@ -677,9 +680,9 @@ clip_color (rgb_t *color, float a)
 	}
 	else
 	{
-	    color->r = l + (((color->r - l) * (a - l) / (x - l)));
-	    color->g = l + (((color->g - l) * (a - l) / (x - l)));
-	    color->b = l + (((color->b - l) * (a - l) / (x - l)));
+	    color->r = l + (((color->r - l) * (a - l) / t));
+	    color->g = l + (((color->g - l) * (a - l) / t));
+	    color->b = l + (((color->b - l) * (a - l) / t));
 	}
     }
 }
@@ -700,6 +703,7 @@ static void
 set_sat (rgb_t *src, float sat)
 {
     float *max, *mid, *min;
+    float t;
 
     if (src->r > src->g)
     {
@@ -750,14 +754,16 @@ set_sat (rgb_t *src, float sat)
 	}
     }
 
-    if (*max > *min)
+    t = *max - *min;
+
+    if (FLOAT_IS_ZERO (t))
     {
-	*mid = (((*mid - *min) * sat) / (*max - *min));
-	*max = sat;
+	*mid = *max = 0.0f;
     }
     else
     {
-	*mid = *max = 0.0f;
+	*mid = ((*mid - *min) * sat) / t;
+	*max = sat;
     }
 
     *min = 0.0f;

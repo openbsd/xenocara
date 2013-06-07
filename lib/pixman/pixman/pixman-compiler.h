@@ -19,6 +19,12 @@
 #endif
 
 #if defined (__GNUC__)
+#  define unlikely(expr) __builtin_expect ((expr), 0)
+#else
+#  define unlikely(expr)  (expr)
+#endif
+
+#if defined (__GNUC__)
 #  define MAYBE_UNUSED  __attribute__((unused))
 #else
 #  define MAYBE_UNUSED
@@ -54,6 +60,10 @@
 
 #ifndef INT64_MAX
 # define INT64_MAX              (9223372036854775807)
+#endif
+
+#ifndef SIZE_MAX
+# define SIZE_MAX               ((size_t)-1)
 #endif
 
 
