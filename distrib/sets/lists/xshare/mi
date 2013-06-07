@@ -615,12 +615,14 @@
 ./usr/X11R6/include/freetype2/freetype/ftbitmap.h
 ./usr/X11R6/include/freetype2/freetype/ftbzip2.h
 ./usr/X11R6/include/freetype2/freetype/ftcache.h
+./usr/X11R6/include/freetype2/freetype/ftcffdrv.h
 ./usr/X11R6/include/freetype2/freetype/ftchapters.h
 ./usr/X11R6/include/freetype2/freetype/ftcid.h
 ./usr/X11R6/include/freetype2/freetype/fterrdef.h
 ./usr/X11R6/include/freetype2/freetype/fterrors.h
 ./usr/X11R6/include/freetype2/freetype/ftgasp.h
 ./usr/X11R6/include/freetype2/freetype/ftglyph.h
+./usr/X11R6/include/freetype2/freetype/ftgxval.h
 ./usr/X11R6/include/freetype2/freetype/ftgzip.h
 ./usr/X11R6/include/freetype2/freetype/ftimage.h
 ./usr/X11R6/include/freetype2/freetype/ftincrem.h
@@ -631,6 +633,7 @@
 ./usr/X11R6/include/freetype2/freetype/ftmm.h
 ./usr/X11R6/include/freetype2/freetype/ftmodapi.h
 ./usr/X11R6/include/freetype2/freetype/ftmoderr.h
+./usr/X11R6/include/freetype2/freetype/ftotval.h
 ./usr/X11R6/include/freetype2/freetype/ftoutln.h
 ./usr/X11R6/include/freetype2/freetype/ftpfr.h
 ./usr/X11R6/include/freetype2/freetype/ftrender.h
@@ -1500,6 +1503,7 @@
 ./usr/X11R6/man/man3/XIGrabEnter.3
 ./usr/X11R6/man/man3/XIGrabFocusIn.3
 ./usr/X11R6/man/man3/XIGrabKeycode.3
+./usr/X11R6/man/man3/XIGrabTouchBegin.3
 ./usr/X11R6/man/man3/XIListProperties.3
 ./usr/X11R6/man/man3/XIMOfIC.3
 ./usr/X11R6/man/man3/XIQueryDevice.3
@@ -1514,6 +1518,7 @@
 ./usr/X11R6/man/man3/XIUngrabEnter.3
 ./usr/X11R6/man/man3/XIUngrabFocusIn.3
 ./usr/X11R6/man/man3/XIUngrabKeycode.3
+./usr/X11R6/man/man3/XIUngrabTouchBegin.3
 ./usr/X11R6/man/man3/XIWarpPointer.3
 ./usr/X11R6/man/man3/XIconSize.3
 ./usr/X11R6/man/man3/XIconifyWindow.3
