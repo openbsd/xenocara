@@ -243,7 +243,7 @@
         <tt>metrics.horiAdvance</tt> that is returned in the glyph slot is
         normally rounded to integer pixel coordinates (i.e., it will be a
         multiple of&nbsp;64) by the font driver used to load the glyph
-        image.  <tt>linearHoriAdvance</tt> is a 16.16 fixed float number
+        image.  <tt>linearHoriAdvance</tt> is a 16.16 fixed-point number
         that gives the value of the original glyph advance width in
         1/65536th of pixels.  It can be use to perform pseudo
         device-independent text layouts.</p>
@@ -348,7 +348,7 @@
       <tt>FT_Done_Glyph</tt></a>.</p>
 
       <p>The glyph object contains exactly one glyph image and a 2D vector
-      representing the glyph's advance in 16.16 fixed float coordinates.
+      representing the glyph's advance in 16.16 fixed-point coordinates.
       The latter can be accessed directly as <tt>glyph-&gt;advance</tt></p>
 
       <p><font color="red">Note that unlike other FreeType objects, the
@@ -1077,6 +1077,7 @@
   void  compute_string_bbox( FT_BBox  *abbox )
   {
     FT_BBox  bbox;
+    FT_BBox  glyph_bbox;
 
 
     <span class="comment">/* initialize string bbox to "empty" values */</span>
@@ -1087,9 +1088,6 @@
     <span class="comment">/* translate it, and grow the string bbox          */</span>
     for ( n = 0; n &lt; num_glyphs; n++ )
     {
-      FT_BBox  glyph_bbox;
-
-
       FT_Glyph_Get_CBox( glyphs[n], ft_glyph_bbox_pixels,
                          &amp;glyph_bbox );
 
@@ -1121,7 +1119,7 @@
     }
 
     <span class="comment">/* return string bbox */</span>
-        *abbox = bbox;
+    *abbox = bbox;
   }
       </div>
 
@@ -1314,7 +1312,8 @@
       FT_BBox  glyph_bbox;
 
 
-      FT_Glyph_Get_CBox( glyphs[n], &amp;glyph_bbox );
+      FT_Glyph_Get_CBox( glyphs[n], ft_glyph_bbox_pixels,
+                         &amp;glyph_bbox );
 
       if (glyph_bbox.xMin &lt; bbox.xMin)
         bbox.xMin = glyph_bbox.xMin;
@@ -1374,7 +1373,11 @@
 
       <div class="pre">
   FT_Vector  start;
-  FT_Matrix  transform;
+  FT_Matrix  matrix;
+
+  FT_Glyph   image;
+  FT_Vector  pen;
+  FT_BBox    bbox;
 
 
   <span class="comment">/* get bbox of original glyph sequence */</span>
@@ -1394,19 +1397,17 @@
   matrix.yx = (FT_Fixed)( sin( angle ) * 0x10000L );
   matrix.yy = (FT_Fixed)( cos( angle ) * 0x10000L );
 
+  pen = start;
+
   for ( n = 0; n &lt; num_glyphs; n++ )
   {
-    FT_Glyph  image;
-    FT_Vector pen;
-    FT_BBox   bbox;
-
     <span class="comment">/* create a copy of the original glyph */</span>
     error = FT_Glyph_Copy( glyphs[n].image, &amp;image );
     if ( error ) continue;
 
     <span class="comment">/* transform copy (this will also translate it to the */</span>
     <span class="comment">/* correct position                                   */</span>
-    FT_Glyph_Transform( image, &amp;matrix, &amp;start );
+    FT_Glyph_Transform( image, &amp;matrix, &amp;pen );
 
     <span class="comment">/* check bounding box; if the transformed glyph image      */</span>
     <span class="comment">/* is not in our target surface, we can avoid rendering it */</span>
@@ -1426,9 +1427,16 @@
       FT_BitmapGlyph  bit = (FT_BitmapGlyph)image;
 
 
-      my_draw_bitmap( bitmap-&gt;bitmap,
-                      bitmap-&gt;left,
-                      my_target_height - bitmap-&gt;top );
+      my_draw_bitmap( bit-&gt;bitmap,
+                      bit-&gt;left,
+                      my_target_height - bit-&gt;top );
+
+      <span class="comment">/* increment pen position --                       */</span>
+      <span class="comment">/* we don't have access to a slot structure,       */</span>
+      <span class="comment">/* so we have to use advances from glyph structure */</span>
+      <span class="comment">/* (which are in 16.16 fixed float format)         */</span>
+      pen.x += image.advance.x >> 10;
+      pen.y += image.advance.y >> 10;
 
       FT_Done_Glyph( image );
     }
@@ -1452,7 +1460,7 @@
         <li>
           <p>We always destroy the copy when calling
           <tt>FT_Glyph_To_Bitmap</tt> in order to get rid of the transformed
-          scalable image.  Note that the image is destroyed even when the
+          scalable image.  Note that the image is not destroyed if the
           function returns an error code (which is why
           <tt>FT_Done_Glyph</tt> is only called within the compound
           statement.</p>
@@ -1580,7 +1588,7 @@
           <tt>x_scale</tt>
         </td>
         <td>
-          <p>This is a 16.16 fixed float scale that is used to directly
+          <p>This is a 16.16 fixed-point scale that is used to directly
           scale horizontal distances from design space to 1/64th of device
           pixels.</p>
         </td>
@@ -1590,7 +1598,7 @@
           <tt>y_scale</tt>
         </td>
         <td>
-          <p>This is a 16.16 fixed float scale that is used to directly
+          <p>This is a 16.16 fixed-point scale that is used to directly
           scale vertical distances from design space to 1/64th of device
           pixels.</p>
         </td>
@@ -1676,7 +1684,7 @@
   <a href="step3.html">FreeType&nbsp;2 Tutorial Step&nbsp;3</a>
 </h3>
 
-<p><font size=-3>Last update: 19-Nov-2009</font></p>
+<p><font size=-3>Last update: 10-Apr-2013</font></p>
 
 </body>
 </html>

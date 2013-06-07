@@ -1,9 +1,9 @@
-#	$OpenBSD: Makefile,v 1.29 2013/01/04 16:51:55 matthieu Exp $
+#	$OpenBSD: Makefile,v 1.30 2013/06/07 17:21:07 matthieu Exp $
 
 FREETYPESRC=	${.CURDIR}/src
 
 # Get it from builds/unix/configure.ac
-FT_VERSION_INFO= 16.0.10
+FT_VERSION_INFO= 16.1.10
 INSTALL_PROGRAM = ${INSTALL} ${INSTALL_COPY} -m 755 -o $(BINOWN) -g $(BINGRP)
 
 .ifmake includes
@@ -57,21 +57,22 @@ install-config: freetype-config
 	${INSTALL_PROGRAM} freetype-config ${DESTDIR}${X11BASE}/bin
 
 freetype2.pc: freetype2.in Makefile
-	sed -e s%@prefix@%${X11BASE}% -e s%@exec_prefix@%${X11BASE}% \
-		-e s%@ft_version@%${FT_VERSION_INFO}% \
-		-e s%@includedir@%${INCSDIR}% -e s%@libdir@%${LIBDIR}% \
-		-e s%@LIBZ@%-lz% -e s%@FT2_EXTRA_LIBS@%% \
-		-e s%@LIBBZ2@%% \
+	sed -e s,%prefix%,${X11BASE}, -e s,%exec_prefix%,${X11BASE}, \
+		-e s,%ft_version%,${FT_VERSION_INFO}, \
+		-e s,%includedir%,${INCSDIR}, -e s,%libdir%,${LIBDIR}, \
+		-e s,%LIBZ%,-lz, -e s,%FT2_EXTRA_LIBS%,, \
+		-e s,%LIBBZ2%,, \
 		< ${.CURDIR}/builds/unix/freetype2.in > freetype2.pc
 
 freetype-config: freetype-config.in
-	sed -e s%@prefix@%${X11BASE}% -e s%@exec_prefix@%${X11BASE}% \
-		-e s%@includedir@%${INCSDIR}% -e s%@libdir@%${LIBDIR}% \
-		-e s%@LIBZ@%-lz% -e s%@FT2_EXTRA_LIBS@%% \
-		-e s%@LIBBZ2@%% \
-		-e s%@enable_shared@%yes% \
-		-e 's%@hardcode_libdir_flag_spec@%%' \
-		-e 's%@ft_version@%${FT_VERSION_INFO}%' -e 's%@wl@%%' \
+	sed -e s,%prefix%,${X11BASE}, -e s,%exec_prefix%,${X11BASE}, \
+		-e s,%includedir%,${INCSDIR}, -e s,%libdir%,${LIBDIR}, \
+		-e s,%LIBZ%,-lz, -e s,%FT2_EXTRA_LIBS%,, \
+		-e s,%LIBBZ2%,, \
+		-e s,%enable_shared%,yes, \
+		-e 's,%hardcode_libdir_flag_spec%,,' \
+		-e 's,%ft_version%,${FT_VERSION_INFO},' -e 's,%wl%,,' \
+		-e 's,%build_libtool_libs%,yes,' \
 		< ${.CURDIR}/builds/unix/freetype-config.in \
 		> freetype-config
 

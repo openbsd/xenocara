@@ -787,17 +787,17 @@
 
       <p>Note that the matrix pointer can be set to NULL, in which case the
       identity transform will be used.  Coefficients of the matrix are
-      otherwise in 16.16 fixed float units.</p>
+      otherwise in 16.16 fixed-point units.</p>
 
       <p>The vector pointer can also be set to NULL (in which case a delta
       of (0,0) will be used).  The vector coordinates are expressed in
-      1/64th of a pixel (also known as 26.6 fixed floats).</p>
+      1/64th of a pixel (also known as 26.6 fixed-point numbers).</p>
 
       <p><font color="red">NOTE: The transformation is applied to every
       glyph that is loaded through <tt>FT_Load_Glyph</tt> and is
       <em>completely independent of any hinting process</em>.  This means
       that you won't get the same results if you load a glyph at the size of
-      24&nbsp;pixels, or a glyph at the size at 12&nbsp;pixels scaled
+      24&nbsp;pixels, or a glyph at the size of 12&nbsp;pixels scaled
       by&nbsp;2 through a transform, because the hints will have been
       computed differently (except you have disabled hints).</font></p>
 
@@ -807,6 +807,8 @@
       compute a new character pixel size, then the other one to call
       <tt>FT_Set_Transform</tt>.  This is explained in details in a later
       section of this tutorial.</p>
+
+      <p><font color="red">NOTE2: Rotation usually disables hinting.</font></p>
 
       <p>Loading a glyph bitmap with a non-identity transformation works;
       the transformation is ignored in this case.</p>
@@ -953,7 +955,7 @@
           <p>We use the function <tt>FT_Load_Char</tt> instead of
           <tt>FT_Load_Glyph</tt>.  As you probably imagine, it is equivalent
           to calling <tt>FT_Get_Char_Index</tt> then
-          <tt>FT_Get_Load_Glyph</tt>.</p>
+          <tt>FT_Load_Glyph</tt>.</p>
         </li>
 
         <li>
@@ -1098,7 +1100,7 @@
   <a href="step2.html">FreeType&nbsp;2 Tutorial Step&nbsp;2</a>
 </h3>
 
-<p><font size=-3>Last update: 16-May-2010</font></p>
+<p><font size=-3>Last update: 10-Apr-2013</font></p>
 
 </body>
 </html>

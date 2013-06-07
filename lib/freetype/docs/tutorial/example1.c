@@ -98,7 +98,7 @@ main( int     argc,
   error = FT_Init_FreeType( &library );              /* initialize library */
   /* error handling omitted */
 
-  error = FT_New_Face( library, argv[1], 0, &face ); /* create face object */
+  error = FT_New_Face( library, filename, 0, &face );/* create face object */
   /* error handling omitted */
 
   /* use 50pt at 100dpi */

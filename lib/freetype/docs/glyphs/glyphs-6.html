@@ -26,7 +26,7 @@
 <h3 align=center>
   Copyright&nbsp;1998-2000 David Turner (<a
   href="mailto:david@freetype.org">david@freetype.org</a>)<br>
-  Copyright&nbsp;2000, 2006 The FreeType Development Team (<a
+  Copyright&nbsp;2000, 2006, 2011 The FreeType Development Team (<a
   href="mailto:devel@freetype.org">devel@freetype.org</a>)
 </h3>
 
@@ -155,12 +155,26 @@
           example).
         </li>
         <li>
-          Finally, two successive conic "off" points forces the rasterizer
-          to create (during the scan-line conversion process exclusively) a
-          virtual "on" point amidst them, at their exact middle.  This
-          greatly facilitates the definition of successive conic
-          B&eacute;zier arcs.  Moreover, it is the way outlines are
-          described in the TrueType specification.
+          Two successive conic "off" points forces the rasterizer to create
+          (during the scan-line conversion process exclusively) a virtual
+          "on" point amidst them, at their exact middle.  This greatly
+          facilitates the definition of successive conic B&eacute;zier arcs. 
+          Moreover, it is the way outlines are described in the TrueType
+          specification.
+        </li>
+        <li>
+          The last point in a contour uses the first as an end point to
+          create a closed contour.  For example, if the last two points of a
+          contour were an "on" point followed by a conic "off" point, the
+          first point in the contour would be used as final point to create
+          an "on" &ndash; "off" &ndash; "on" sequence as described above. 
+        </li>
+        <li>
+          The first point in a contour can be a conic "off" point itself; in
+          that case, use the last point of the contour as the contour's
+          starting point.  If the last point is a conic "off" point itself,
+          start the contour with the virtual "on" point between the last and
+          first point of the contour.
         </li>
       </ul>
 
@@ -257,13 +271,14 @@
       <p>Here, <tt>points</tt> is a pointer to an array of
       <tt>FT_Vector</tt> records, used to store the vectorial coordinates of
       each outline point.  These are expressed in 1/64th of a pixel, which
-      is also known as the <em>26.6&nbsp;fixed float format</em>.</p>
+      is also known as the <em>26.6&nbsp;fixed-point format</em>.</p>
 
       <p><tt>contours</tt> is an array of point indices used to delimit
       contours in the outline.  For example, the first contour always starts
       at point&nbsp;0, and ends at point <tt>contours[0]</tt>.  The second
       contour starts at point <tt>contours[0]+1</tt> and ends at
-      <tt>contours[1]</tt>, etc.</p>
+      <tt>contours[1]</tt>, etc.  To traverse these points in a callback
+      based manner, use <tt>FT_Outline_Decompose()</tt>.</p>
 
       <p>Note that each contour is closed, and that <tt>n_points</tt> should
       be equal to <tt>contours[n_contours-1]+1</tt> for a valid outline.</p>
@@ -431,7 +446,7 @@
 </table>
 </center>
 
-<font size=-1>Last update: 31-Aug-2006</font>
+<font size=-1>Last update: 06-Mar-2011</font>
 
 </body>
 </html>
