@@ -21,6 +21,15 @@
 
 #include "servermd.h"
 
+static CARD32
+xf86ReverseBitOrder(CARD32 v)
+{
+    return (((0x01010101 & v) << 7) | ((0x02020202 & v) << 5) |
+            ((0x04040404 & v) << 3) | ((0x08080808 & v) << 1) |
+            ((0x10101010 & v) >> 1) | ((0x20202020 & v) >> 3) |
+            ((0x40404040 & v) >> 5) | ((0x80808080 & v) >> 7));
+}
+
 #if BITMAP_SCANLINE_PAD == 64
 
 #if 1
@@ -105,7 +114,7 @@ xf86InitHardwareCursor(ScreenPtr pScreen, xf86CursorInfoPtr infoPtr)
         infoPtr->RealizeCursor = RealizeCursorInterleave0;
     }
 
-    infoPtr->pScrn = xf86Screens[pScreen->myNum];
+    infoPtr->pScrn = xf86ScreenToScrn(pScreen);
 
     return TRUE;
 }

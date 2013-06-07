@@ -73,7 +73,7 @@ typedef int DRIWindowRequests;
 #define DRI_ALL_WINDOWS      2
 
 typedef void (*ClipNotifyPtr) (WindowPtr, int, int);
-typedef void (*AdjustFramePtr) (int scrnIndex, int x, int y, int flags);
+typedef void (*AdjustFramePtr) (ScrnInfoPtr pScrn, int x, int y);
 
 /*
  * These functions can be wrapped by the DRI.  Each of these have
@@ -197,7 +197,7 @@ extern _X_EXPORT Bool DRIScreenInit(ScreenPtr pScreen,
 
 extern _X_EXPORT void DRICloseScreen(ScreenPtr pScreen);
 
-extern _X_EXPORT Bool DRIExtensionInit(void);
+extern Bool DRIExtensionInit(void);
 
 extern _X_EXPORT void DRIReset(void);
 
@@ -271,13 +271,11 @@ extern _X_EXPORT void DRIWakeupHandler(pointer wakeupData,
 extern _X_EXPORT void DRIBlockHandler(pointer blockData,
                                       OSTimePtr pTimeout, pointer pReadmask);
 
-extern _X_EXPORT void DRIDoWakeupHandler(int screenNum,
-                                         pointer wakeupData,
+extern _X_EXPORT void DRIDoWakeupHandler(ScreenPtr pScreen,
                                          unsigned long result,
                                          pointer pReadmask);
 
-extern _X_EXPORT void DRIDoBlockHandler(int screenNum,
-                                        pointer blockData,
+extern _X_EXPORT void DRIDoBlockHandler(ScreenPtr pScreen,
                                         pointer pTimeout, pointer pReadmask);
 
 extern _X_EXPORT void DRISwapContext(int drmFD, void *oldctx, void *newctx);
@@ -334,7 +332,7 @@ extern _X_EXPORT drm_context_t DRIGetContext(ScreenPtr pScreen);
 extern _X_EXPORT void DRIQueryVersion(int *majorVersion,
                                       int *minorVersion, int *patchVersion);
 
-extern _X_EXPORT void DRIAdjustFrame(int scrnIndex, int x, int y, int flags);
+extern _X_EXPORT void DRIAdjustFrame(ScrnInfoPtr pScrn, int x, int y);
 
 extern _X_EXPORT void DRIMoveBuffersHelper(ScreenPtr pScreen,
                                            int dx,
@@ -343,9 +341,11 @@ extern _X_EXPORT void DRIMoveBuffersHelper(ScreenPtr pScreen,
 
 extern _X_EXPORT char *DRICreatePCIBusID(const struct pci_device *PciInfo);
 
+#if 0
 extern _X_EXPORT int drmInstallSIGIOHandler(int fd,
                                             void (*f) (int, void *, void *));
 extern _X_EXPORT int drmRemoveSIGIOHandler(int fd);
+#endif
 extern _X_EXPORT int DRIMasterFD(ScrnInfoPtr pScrn);
 
 extern _X_EXPORT void *DRIMasterSareaPointer(ScrnInfoPtr pScrn);

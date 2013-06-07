@@ -51,6 +51,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include "misc.h"
 #include "dixstruct.h"
 #include "extnsionst.h"
+#include "extinit.h"
 #include "colormapst.h"
 #include "cursorstr.h"
 #include "scrnintstr.h"
@@ -68,6 +69,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include "xf86_OSproc.h"
 #include "inputstr.h"
 #include "xf86VGAarbiter.h"
+#include "xf86Extensions.h"
 
 static int DRIEntPrivIndex = -1;
 static DevPrivateKeyRec DRIScreenPrivKeyRec;
@@ -315,9 +317,10 @@ DRIScreenInit(ScreenPtr pScreen, DRIInfoPtr pDRIInfo, int *pDRMFD)
     int reserved_count;
     int i;
     DRIEntPrivPtr pDRIEntPriv;
-    ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+    ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
     DRIContextFlags flags = 0;
     DRIContextPrivPtr pDRIContextPriv;
+    static Bool drm_server_inited;
 
     /* If the DRI extension is disabled, do not initialize the DRI */
     if (noXFree86DRIExtension) {
@@ -343,6 +346,10 @@ DRIScreenInit(ScreenPtr pScreen, DRIInfoPtr pDRIInfo, int *pDRMFD)
         return FALSE;
     }
 #endif
+    if (drm_server_inited == FALSE) {
+        drmSetServerInfo(&DRIDRMServerInfo);
+        drm_server_inited = TRUE;
+    }
 
     if (!DRIOpenDRMMaster(pScrn, pDRIInfo->SAREASize,
                           pDRIInfo->busIdString, pDRIInfo->drmDriverName))
@@ -597,7 +604,7 @@ DRIFinishScreenInit(ScreenPtr pScreen)
         pScreen->ClipNotify = pDRIInfo->wrap.ClipNotify;
     }
     if (pDRIInfo->wrap.AdjustFrame) {
-        ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+        ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
 
         pDRIPriv->wrap.AdjustFrame = pScrn->AdjustFrame;
         pScrn->AdjustFrame = pDRIInfo->wrap.AdjustFrame;
@@ -616,7 +623,7 @@ DRICloseScreen(ScreenPtr pScreen)
     DRIInfoPtr pDRIInfo;
     drm_context_t *reserved;
     int reserved_count;
-    ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+    ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
     DRIEntPrivPtr pDRIEntPriv = DRI_ENT_PRIV(pScrn);
     Bool closeMaster;
 
@@ -654,7 +661,7 @@ DRICloseScreen(ScreenPtr pScreen)
                 pDRIPriv->wrap.ClipNotify = NULL;
             }
             if (pDRIInfo->wrap.AdjustFrame) {
-                ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+                ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
 
                 pScrn->AdjustFrame = pDRIPriv->wrap.AdjustFrame;
                 pDRIPriv->wrap.AdjustFrame = NULL;
@@ -1593,7 +1600,7 @@ DRIWakeupHandler(pointer wakeupData, int result, pointer pReadmask)
         DRIScreenPrivPtr pDRIPriv = DRI_SCREEN_PRIV(pScreen);
 
         if (pDRIPriv && pDRIPriv->pDriverInfo->wrap.WakeupHandler)
-            (*pDRIPriv->pDriverInfo->wrap.WakeupHandler) (i, wakeupData,
+            (*pDRIPriv->pDriverInfo->wrap.WakeupHandler) (pScreen,
                                                           result, pReadmask);
     }
 }
@@ -1608,16 +1615,15 @@ DRIBlockHandler(pointer blockData, OSTimePtr pTimeout, pointer pReadmask)
         DRIScreenPrivPtr pDRIPriv = DRI_SCREEN_PRIV(pScreen);
 
         if (pDRIPriv && pDRIPriv->pDriverInfo->wrap.BlockHandler)
-            (*pDRIPriv->pDriverInfo->wrap.BlockHandler) (i, blockData,
+            (*pDRIPriv->pDriverInfo->wrap.BlockHandler) (pScreen,
                                                          pTimeout, pReadmask);
     }
 }
 
 void
-DRIDoWakeupHandler(int screenNum, pointer wakeupData,
+DRIDoWakeupHandler(ScreenPtr pScreen,
                    unsigned long result, pointer pReadmask)
 {
-    ScreenPtr pScreen = screenInfo.screens[screenNum];
     DRIScreenPrivPtr pDRIPriv = DRI_SCREEN_PRIV(pScreen);
 
     DRILock(pScreen, 0);
@@ -1633,10 +1639,9 @@ DRIDoWakeupHandler(int screenNum, pointer wakeupData,
 }
 
 void
-DRIDoBlockHandler(int screenNum, pointer blockData,
+DRIDoBlockHandler(ScreenPtr pScreen,
                   pointer pTimeout, pointer pReadmask)
 {
-    ScreenPtr pScreen = screenInfo.screens[screenNum];
     DRIScreenPrivPtr pDRIPriv = DRI_SCREEN_PRIV(pScreen);
 
     if (pDRIPriv->pDriverInfo->driverSwapMethod == DRI_HIDE_X_CONTEXT) {
@@ -2282,15 +2287,14 @@ _DRIAdjustFrame(ScrnInfoPtr pScrn, DRIScreenPrivPtr pDRIPriv, int x, int y)
 }
 
 void
-DRIAdjustFrame(int scrnIndex, int x, int y, int flags)
+DRIAdjustFrame(ScrnInfoPtr pScrn, int x, int y)
 {
-    ScreenPtr pScreen = screenInfo.screens[scrnIndex];
+    ScreenPtr pScreen = xf86ScrnToScreen(pScrn);
     DRIScreenPrivPtr pDRIPriv = DRI_SCREEN_PRIV(pScreen);
-    ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
     int px, py;
 
     if (!pDRIPriv || !pDRIPriv->pSAREA) {
-        DRIDrvMsg(scrnIndex, X_ERROR, "[DRI] No SAREA (%p %p)\n",
+        DRIDrvMsg(pScrn->scrnIndex, X_ERROR, "[DRI] No SAREA (%p %p)\n",
                   pDRIPriv, pDRIPriv ? pDRIPriv->pSAREA : NULL);
         return;
     }
@@ -2322,7 +2326,7 @@ DRIAdjustFrame(int scrnIndex, int x, int y, int flags)
         /* unwrap */
         pScrn->AdjustFrame = pDRIPriv->wrap.AdjustFrame;
         /* call lower layers */
-        (*pScrn->AdjustFrame) (scrnIndex, x, y, flags);
+        (*pScrn->AdjustFrame) (pScrn, x, y);
         /* rewrap */
         pDRIPriv->wrap.AdjustFrame = pScrn->AdjustFrame;
         pScrn->AdjustFrame = DRIAdjustFrame;

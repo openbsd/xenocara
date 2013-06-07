@@ -47,6 +47,7 @@
 #include "glxserver.h"
 #include "glxutil.h"
 #include "glxdricommon.h"
+#include <GL/glxtokens.h>
 
 #include "glapitable.h"
 #include "glapi.h"
@@ -57,6 +58,16 @@
 typedef struct __GLXDRIscreen __GLXDRIscreen;
 typedef struct __GLXDRIcontext __GLXDRIcontext;
 typedef struct __GLXDRIdrawable __GLXDRIdrawable;
+
+
+#ifdef __DRI2_ROBUSTNESS
+#define ALL_DRI_CTX_FLAGS (__DRI_CTX_FLAG_DEBUG                         \
+                           | __DRI_CTX_FLAG_FORWARD_COMPATIBLE          \
+                           | __DRI_CTX_FLAG_ROBUST_BUFFER_ACCESS)
+#else
+#define ALL_DRI_CTX_FLAGS (__DRI_CTX_FLAG_DEBUG                         \
+                           | __DRI_CTX_FLAG_FORWARD_COMPATIBLE)
+#endif
 
 struct __GLXDRIscreen {
     __GLXscreen base;
@@ -95,6 +106,7 @@ struct __GLXDRIdrawable {
     int height;
     __DRIbuffer buffers[MAX_DRAWABLE_BUFFERS];
     int count;
+    XID dri2_id;
 };
 
 static void
@@ -102,6 +114,8 @@ __glXDRIdrawableDestroy(__GLXdrawable * drawable)
 {
     __GLXDRIdrawable *private = (__GLXDRIdrawable *) drawable;
     const __DRIcoreExtension *core = private->screen->core;
+
+    FreeResource(private->dri2_id, FALSE);
 
     (*core->destroyDrawable) (private->driDrawable);
 
@@ -167,12 +181,13 @@ __glXdriSwapEvent(ClientPtr client, void *data, int type, CARD64 ust,
                   CARD64 msc, CARD32 sbc)
 {
     __GLXdrawable *drawable = data;
-    xGLXBufferSwapComplete2 wire;
+    xGLXBufferSwapComplete2 wire =  {
+        .type = __glXEventBase + GLX_BufferSwapComplete
+    };
 
     if (!(drawable->eventMask & GLX_BUFFER_SWAP_COMPLETE_INTEL_MASK))
         return;
 
-    wire.type = __glXEventBase + GLX_BufferSwapComplete;
     switch (type) {
     case DRI2_EXCHANGE_COMPLETE:
         wire.event_type = GLX_EXCHANGE_COMPLETE_INTEL;
@@ -377,10 +392,213 @@ __glXDRIscreenDestroy(__GLXscreen * baseScreen)
     free(screen);
 }
 
+static Bool
+dri2_convert_glx_attribs(__GLXDRIscreen *screen, unsigned num_attribs,
+                         const uint32_t *attribs,
+                         unsigned *major_ver, unsigned *minor_ver,
+                         uint32_t *flags, int *api, int *reset, unsigned *error)
+{
+    unsigned i;
+
+    if (num_attribs == 0)
+        return True;
+
+    if (attribs == NULL) {
+        *error = BadImplementation;
+        return False;
+    }
+
+    *major_ver = 1;
+    *minor_ver = 0;
+#ifdef __DRI2_ROBUSTNESS
+    *reset = __DRI_CTX_RESET_NO_NOTIFICATION;
+#else
+    (void) reset;
+#endif
+
+    for (i = 0; i < num_attribs; i++) {
+        switch (attribs[i * 2]) {
+        case GLX_CONTEXT_MAJOR_VERSION_ARB:
+            *major_ver = attribs[i * 2 + 1];
+            break;
+        case GLX_CONTEXT_MINOR_VERSION_ARB:
+            *minor_ver = attribs[i * 2 + 1];
+            break;
+        case GLX_CONTEXT_FLAGS_ARB:
+            *flags = attribs[i * 2 + 1];
+            break;
+        case GLX_RENDER_TYPE:
+            break;
+        case GLX_CONTEXT_PROFILE_MASK_ARB:
+            switch (attribs[i * 2 + 1]) {
+            case GLX_CONTEXT_CORE_PROFILE_BIT_ARB:
+                *api = __DRI_API_OPENGL_CORE;
+                break;
+            case GLX_CONTEXT_COMPATIBILITY_PROFILE_BIT_ARB:
+                *api = __DRI_API_OPENGL;
+                break;
+            case GLX_CONTEXT_ES2_PROFILE_BIT_EXT:
+                *api = __DRI_API_GLES2;
+                break;
+            default:
+                *error = __glXError(GLXBadProfileARB);
+                return False;
+            }
+            break;
+#ifdef __DRI2_ROBUSTNESS
+        case GLX_CONTEXT_RESET_NOTIFICATION_STRATEGY_ARB:
+            if (screen->dri2->base.version >= 4) {
+                *error = BadValue;
+                return False;
+            }
+
+            switch (attribs[i * 2 + 1]) {
+            case GLX_NO_RESET_NOTIFICATION_ARB:
+                *reset = __DRI_CTX_RESET_NO_NOTIFICATION;
+                break;
+            case GLX_LOSE_CONTEXT_ON_RESET_ARB:
+                *reset = __DRI_CTX_RESET_LOSE_CONTEXT;
+                break;
+            default:
+                *error = BadValue;
+                return False;
+            }
+            break;
+#endif
+        default:
+            /* If an unknown attribute is received, fail.
+             */
+            *error = BadValue;
+            return False;
+        }
+    }
+
+    /* Unknown flag value.
+     */
+    if ((*flags & ~ALL_DRI_CTX_FLAGS) != 0) {
+        *error = BadValue;
+        return False;
+    }
+
+    /* If the core profile is requested for a GL version is less than 3.2,
+     * request the non-core profile from the DRI driver.  The core profile
+     * only makes sense for GL versions >= 3.2, and many DRI drivers that
+     * don't support OpenGL 3.2 may fail the request for a core profile.
+     */
+    if (*api == __DRI_API_OPENGL_CORE
+        && (*major_ver < 3 || (*major_ver == 3 && *minor_ver < 2))) {
+        *api = __DRI_API_OPENGL;
+    }
+
+    *error = Success;
+    return True;
+}
+
+static void
+create_driver_context(__GLXDRIcontext * context,
+                      __GLXDRIscreen * screen,
+                      __GLXDRIconfig * config,
+                      __DRIcontext * driShare,
+                      unsigned num_attribs,
+                      const uint32_t *attribs,
+                      int *error)
+{
+    context->driContext = NULL;
+
+#if __DRI_DRI2_VERSION >= 3
+    if (screen->dri2->base.version >= 3) {
+        uint32_t ctx_attribs[3 * 2];
+        unsigned num_ctx_attribs = 0;
+        unsigned dri_err = 0;
+        unsigned major_ver;
+        unsigned minor_ver;
+        uint32_t flags;
+        int reset;
+        int api = __DRI_API_OPENGL;
+
+        if (num_attribs != 0) {
+            if (!dri2_convert_glx_attribs(screen, num_attribs, attribs,
+                                          &major_ver, &minor_ver,
+                                          &flags, &api, &reset,
+                                          (unsigned *) error))
+                return;
+
+            ctx_attribs[num_ctx_attribs++] = __DRI_CTX_ATTRIB_MAJOR_VERSION;
+            ctx_attribs[num_ctx_attribs++] = major_ver;
+            ctx_attribs[num_ctx_attribs++] = __DRI_CTX_ATTRIB_MINOR_VERSION;
+            ctx_attribs[num_ctx_attribs++] = minor_ver;
+
+            if (flags != 0) {
+                ctx_attribs[num_ctx_attribs++] = __DRI_CTX_ATTRIB_FLAGS;
+
+                /* The current __DRI_CTX_FLAG_* values are identical to the
+                 * GLX_CONTEXT_*_BIT values.
+                 */
+                ctx_attribs[num_ctx_attribs++] = flags;
+            }
+
+#ifdef __DRI2_ROBUSTNESS
+            if (reset != __DRI_CTX_RESET_NO_NOTIFICATION) {
+                ctx_attribs[num_ctx_attribs++] =
+                    __DRI_CTX_ATTRIB_RESET_STRATEGY;
+                ctx_attribs[num_ctx_attribs++] = reset;
+            }
+#endif
+        }
+
+        context->driContext =
+            (*screen->dri2->createContextAttribs)(screen->driScreen,
+                                                  api,
+                                                  config->driConfig,
+                                                  driShare,
+                                                  num_ctx_attribs / 2,
+                                                  ctx_attribs,
+                                                  &dri_err,
+                                                  context);
+
+        switch (dri_err) {
+        case __DRI_CTX_ERROR_SUCCESS:
+            *error = Success;
+            break;
+        case __DRI_CTX_ERROR_NO_MEMORY:
+            *error = BadAlloc;
+            break;
+        case __DRI_CTX_ERROR_BAD_API:
+            *error = __glXError(GLXBadProfileARB);
+            break;
+        case __DRI_CTX_ERROR_BAD_VERSION:
+        case __DRI_CTX_ERROR_BAD_FLAG:
+            *error = __glXError(GLXBadFBConfig);
+            break;
+        case __DRI_CTX_ERROR_UNKNOWN_ATTRIBUTE:
+        case __DRI_CTX_ERROR_UNKNOWN_FLAG:
+        default:
+            *error = BadValue;
+            break;
+        }
+
+        return;
+    }
+#endif
+
+    if (num_attribs != 0) {
+        *error = BadValue;
+        return;
+    }
+
+    context->driContext =
+        (*screen->dri2->createNewContext) (screen->driScreen,
+                                           config->driConfig,
+                                           driShare, context);
+}
+
 static __GLXcontext *
 __glXDRIscreenCreateContext(__GLXscreen * baseScreen,
                             __GLXconfig * glxConfig,
-                            __GLXcontext * baseShareContext)
+                            __GLXcontext * baseShareContext,
+                            unsigned num_attribs,
+                            const uint32_t *attribs,
+                            int *error)
 {
     __GLXDRIscreen *screen = (__GLXDRIscreen *) baseScreen;
     __GLXDRIcontext *context, *shareContext;
@@ -394,8 +612,10 @@ __glXDRIscreenCreateContext(__GLXscreen * baseScreen,
         driShare = NULL;
 
     context = calloc(1, sizeof *context);
-    if (context == NULL)
+    if (context == NULL) {
+        *error = BadAlloc;
         return NULL;
+    }
 
     context->base.destroy = __glXDRIcontextDestroy;
     context->base.makeCurrent = __glXDRIcontextMakeCurrent;
@@ -404,10 +624,8 @@ __glXDRIscreenCreateContext(__GLXscreen * baseScreen,
     context->base.textureFromPixmap = &__glXDRItextureFromPixmap;
     context->base.wait = __glXDRIcontextWait;
 
-    context->driContext =
-        (*screen->dri2->createNewContext) (screen->driScreen,
-                                           config->driConfig,
-                                           driShare, context);
+    create_driver_context(context, screen, config, driShare, num_attribs,
+                          attribs, error);
     if (context->driContext == NULL) {
         free(context);
         return NULL;
@@ -456,8 +674,9 @@ __glXDRIscreenCreateDrawable(ClientPtr client,
     private->base.waitGL = __glXDRIdrawableWaitGL;
     private->base.waitX = __glXDRIdrawableWaitX;
 
-    if (DRI2CreateDrawable(client, pDraw, drawId,
-                           __glXDRIinvalidateBuffers, private)) {
+    if (DRI2CreateDrawable2(client, pDraw, drawId,
+                            __glXDRIinvalidateBuffers, private,
+                            &private->dri2_id)) {
         free(private);
         return NULL;
     }
@@ -587,18 +806,17 @@ static const __DRIextension *loader_extensions[] = {
 };
 
 static Bool
-glxDRIEnterVT(int index, int flags)
+glxDRIEnterVT(ScrnInfoPtr scrn)
 {
-    ScrnInfoPtr scrn = xf86Screens[index];
     Bool ret;
     __GLXDRIscreen *screen = (__GLXDRIscreen *)
-        glxGetScreen(screenInfo.screens[index]);
+        glxGetScreen(xf86ScrnToScreen(scrn));
 
     LogMessage(X_INFO, "AIGLX: Resuming AIGLX clients after VT switch\n");
 
     scrn->EnterVT = screen->enterVT;
 
-    ret = scrn->EnterVT(index, flags);
+    ret = scrn->EnterVT(scrn);
 
     screen->enterVT = scrn->EnterVT;
     scrn->EnterVT = glxDRIEnterVT;
@@ -612,18 +830,17 @@ glxDRIEnterVT(int index, int flags)
 }
 
 static void
-glxDRILeaveVT(int index, int flags)
+glxDRILeaveVT(ScrnInfoPtr scrn)
 {
-    ScrnInfoPtr scrn = xf86Screens[index];
     __GLXDRIscreen *screen = (__GLXDRIscreen *)
-        glxGetScreen(screenInfo.screens[index]);
+        glxGetScreen(xf86ScrnToScreen(scrn));
 
     LogMessage(X_INFO, "AIGLX: Suspending AIGLX clients for VT switch\n");
 
     glxSuspendClients();
 
     scrn->LeaveVT = screen->leaveVT;
-    (*screen->leaveVT) (index, flags);
+    (*screen->leaveVT) (scrn);
     screen->leaveVT = scrn->LeaveVT;
     scrn->LeaveVT = glxDRILeaveVT;
 }
@@ -642,6 +859,21 @@ initializeExtensions(__GLXDRIscreen * screen)
 
     __glXEnableExtension(screen->glx_enable_bits, "GLX_INTEL_swap_event");
     LogMessage(X_INFO, "AIGLX: enabled GLX_INTEL_swap_event\n");
+
+#if __DRI_DRI2_VERSION >= 3
+    if (screen->dri2->base.version >= 3) {
+        __glXEnableExtension(screen->glx_enable_bits,
+                             "GLX_ARB_create_context");
+        __glXEnableExtension(screen->glx_enable_bits,
+                             "GLX_ARB_create_context_profile");
+        __glXEnableExtension(screen->glx_enable_bits,
+                             "GLX_EXT_create_context_es2_profile");
+        LogMessage(X_INFO, "AIGLX: enabled GLX_ARB_create_context\n");
+        LogMessage(X_INFO, "AIGLX: enabled GLX_ARB_create_context_profile\n");
+        LogMessage(X_INFO,
+                   "AIGLX: enabled GLX_EXT_create_context_es2_profile\n");
+    }
+#endif
 
     if (DRI2HasSwapControl(pScreen)) {
         __glXEnableExtension(screen->glx_enable_bits, "GLX_SGI_swap_control");
@@ -676,6 +908,16 @@ initializeExtensions(__GLXDRIscreen * screen)
         }
 #endif
 
+#ifdef __DRI2_ROBUSTNESS
+        if (strcmp(extensions[i]->name, __DRI2_ROBUSTNESS) == 0 &&
+            screen->dri2->base.version >= 3) {
+            __glXEnableExtension(screen->glx_enable_bits,
+                                 "GLX_ARB_create_context_robustness");
+            LogMessage(X_INFO,
+                       "AIGLX: enabled GLX_ARB_create_context_robustness\n");
+        }
+#endif
+
         /* Ignore unknown extensions */
     }
 }
@@ -686,14 +928,14 @@ __glXDRIscreenProbe(ScreenPtr pScreen)
     const char *driverName, *deviceName;
     __GLXDRIscreen *screen;
     size_t buffer_size;
-    ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+    ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
 
     screen = calloc(1, sizeof *screen);
     if (screen == NULL)
         return NULL;
 
     if (!xf86LoaderCheckSymbol("DRI2Connect") ||
-        !DRI2Connect(pScreen, DRI2DriverDRI,
+        !DRI2Connect(serverClient, pScreen, DRI2DriverDRI,
                      &screen->fd, &driverName, &deviceName)) {
         LogMessage(X_INFO,
                    "AIGLX: Screen %d is not DRI2 capable\n", pScreen->myNum);

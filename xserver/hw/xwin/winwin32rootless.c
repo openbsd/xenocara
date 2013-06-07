@@ -231,7 +231,7 @@ winMWExtWMCreateFrame(RootlessWindowPtr pFrame, ScreenPtr pScreen,
     // Store the implementation private frame ID
     pFrame->wid = (RootlessFrameID) pRLWinPriv;
 
-    winSelectIcons(pFrame->win, &hIcon, &hIconSmall);
+    winSelectIcons(&hIcon, &hIconSmall);
 
     /* Set standard class name prefix so we can identify window easily */
     strncpy(pszClass, WINDOW_CLASS_X, sizeof(pszClass));
@@ -263,7 +263,7 @@ winMWExtWMCreateFrame(RootlessWindowPtr pFrame, ScreenPtr pScreen,
     strcat(pszClass, pszWindowID);
 
 #if CYGMULTIWINDOW_DEBUG
-    winDebug("winCreateWindowsWindow - Creating class: %s\n", pszClass);
+    winDebug("winMWExtWMCreateFrame - Creating class: %s\n", pszClass);
 #endif
 
     /* Setup our window class */
@@ -634,7 +634,7 @@ winMWExtWMReshapeFrame(RootlessFrameID wid, RegionPtr pShape)
     /* Create region for non-client area */
     GetWindowRect(pRLWinPriv->hWnd, &rcWindow);
     GetClientRect(pRLWinPriv->hWnd, &rcClient);
-    MapWindowPoints(pRLWinPriv->hWnd, HWND_DESKTOP, (LPPOINT) & rcClient, 2);
+    MapWindowPoints(pRLWinPriv->hWnd, HWND_DESKTOP, (LPPOINT) &rcClient, 2);
     OffsetRgn(hRgn, rcClient.left - rcWindow.left, rcClient.top - rcWindow.top);
     OffsetRect(&rcClient, -rcWindow.left, -rcWindow.top);
     OffsetRect(&rcWindow, -rcWindow.left, -rcWindow.top);
@@ -725,7 +725,7 @@ winMWExtWMStartDrawing(RootlessFrameID wid, char **pixelData, int *bytesPerRow)
             hbmpNew = CreateDIBSection(pRLWinPriv->hdcScreen,
                                        (BITMAPINFO *) pRLWinPriv->pbmihShadow,
                                        DIB_RGB_COLORS,
-                                       (VOID **) & pRLWinPriv->pfb, NULL, 0);
+                                       (VOID **) &pRLWinPriv->pfb, NULL, 0);
             if (hbmpNew == NULL || pRLWinPriv->pfb == NULL) {
                 ErrorF("winMWExtWMStartDrawing - CreateDIBSection failed\n");
                 //return FALSE;
@@ -883,7 +883,7 @@ winMWExtWMUpdateRegion(RootlessFrameID wid, RegionPtr pDamage)
                       NULL,
                       GetLastError(),
                       MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-                      (LPTSTR) & lpMsgBuf, 0, NULL);
+                      (LPTSTR) &lpMsgBuf, 0, NULL);
 
         ErrorF("winMWExtWMUpdateRegion - UpdateLayeredWindow failed: %s\n",
                (LPSTR) lpMsgBuf);

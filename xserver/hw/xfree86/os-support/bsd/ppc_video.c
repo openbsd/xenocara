@@ -56,24 +56,25 @@ void
 xf86OSInitVidMem(VidMemInfoPtr pVidMem)
 {
     xf86OpenConsole();
-
+    
     pVidMem->linearSupported = TRUE;
     pVidMem->mapMem = ppcMapVidMem;
     pVidMem->unmapMem = ppcUnmapVidMem;
     pVidMem->initialised = TRUE;
-
+    
     pci_system_init_dev_mem(xf86Info.consoleFd);
     xf86EnableIO();
 }
 
 
-_X_EXPORT volatile unsigned char *ioBase = MAP_FAILED;
+volatile unsigned char *ioBase = MAP_FAILED;
 
 static pointer
 ppcMapVidMem(int ScreenNum, unsigned long Base, unsigned long Size, int flags)
 {
     int fd = xf86Info.consoleFd;
     pointer base;
+
 #ifdef DEBUG
     xf86MsgVerb(X_INFO, 3, "mapVidMem %lx, %lx, fd = %d",
                 Base, Size, fd);
@@ -103,7 +104,7 @@ xf86ReadBIOS(unsigned long Base, unsigned long Offset, unsigned char *Buf,
              int Len)
 {
     int rv;
-
+    
     if (Base < 0x80000000) {
         xf86Msg(X_WARNING, "No VGA Base=%#lx\n", Base);
         return 0;
@@ -117,17 +118,14 @@ xf86ReadBIOS(unsigned long Base, unsigned long Offset, unsigned char *Buf,
     }
 
 #ifdef DEBUG
-    xf86MsgVerb(X_INFO, 3, "xf86ReadBIOS() %lx %lx, %x\n",
-                Base, Offset, Len);
+    xf86MsgVerb(X_INFO, 3, "xf86ReadBIOS() %lx %lx, %x\n", Base, Offset, Len);
 #endif
-
 
     lseek(kmem, Base + Offset, 0);
     rv = read(kmem, Buf, Len);
 
     return rv;
 }
-
 
 #ifdef X_PRIVSEP
 /*
@@ -155,7 +153,7 @@ Bool xf86EnableIO()
 
     xf86MsgVerb(X_WARNING, 3, "xf86EnableIO %d\n", fd);
     if (ioBase == MAP_FAILED) {
-        ioBase = mmap(NULL, 0x10000, PROT_READ|PROT_WRITE, MAP_SHARED, fd,
+        ioBase = mmap(NULL, 0x10000, PROT_READ | PROT_WRITE, MAP_SHARED, fd,
                       0xf2000000);
         xf86MsgVerb(X_INFO, 3, "xf86EnableIO: %08x\n", ioBase);
         if (ioBase == MAP_FAILED) {
@@ -166,7 +164,8 @@ Bool xf86EnableIO()
     return TRUE;
 }
 
-void xf86DisableIO()
+void
+xf86DisableIO()
 {
 
     if (ioBase != MAP_FAILED) {

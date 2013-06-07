@@ -138,9 +138,9 @@ SendSwappedReply(ClientPtr client,
 
     }
 
-    WriteToClient(client, sizeof(xGLXVendorPrivReply), (char *) reply);
+    WriteToClient(client, sizeof(xGLXVendorPrivReply), reply);
     if (buf_size > 0)
-        WriteToClient(client, buf_size, (char *) buf);
+        WriteToClient(client, buf_size, buf);
 
 }
 
@@ -237,7 +237,7 @@ __glXVForwardPipe0WithReply(__GLXclientState * cl, GLbyte * pc)
     /*
      * get the reply from the back-end server
      */
-    _XReply(dpy, (xReply *) & be_reply, 0, False);
+    _XReply(dpy, (xReply *) &be_reply, 0, False);
     be_buf_size = be_reply.length << 2;
     if (be_buf_size > 0) {
         be_buf = (char *) malloc(be_buf_size);
@@ -265,9 +265,9 @@ __glXVForwardPipe0WithReply(__GLXclientState * cl, GLbyte * pc)
         SendSwappedReply(client, &reply, be_buf, be_buf_size);
     }
     else {
-        WriteToClient(client, sizeof(xGLXVendorPrivReply), (char *) &reply);
+        WriteToClient(client, sizeof(xGLXVendorPrivReply), &reply);
         if (be_buf_size > 0)
-            WriteToClient(client, be_buf_size, (char *) be_buf);
+            WriteToClient(client, be_buf_size, be_buf);
     }
 
     if (be_buf_size > 0)
@@ -331,7 +331,7 @@ __glXVForwardAllWithReply(__GLXclientState * cl, GLbyte * pc)
         /*
          * get the reply from the back-end server
          */
-        _XReply(dpy, (xReply *) & be_reply, 0, False);
+        _XReply(dpy, (xReply *) &be_reply, 0, False);
         be_buf_size = be_reply.length << 2;
         if (be_buf_size > 0) {
             be_buf = (char *) malloc(be_buf_size);
@@ -364,9 +364,9 @@ __glXVForwardAllWithReply(__GLXclientState * cl, GLbyte * pc)
         SendSwappedReply(client, &reply, be_buf, be_buf_size);
     }
     else {
-        WriteToClient(client, sizeof(xGLXVendorPrivReply), (char *) &reply);
+        WriteToClient(client, sizeof(xGLXVendorPrivReply), &reply);
         if (be_buf_size > 0)
-            WriteToClient(client, be_buf_size, (char *) be_buf);
+            WriteToClient(client, be_buf_size, be_buf);
     }
 
     if (be_buf_size > 0)

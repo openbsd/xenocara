@@ -30,7 +30,6 @@
  * Authors:	Harold L Hunt II
  */
 
-#define NONAMELESSUNION
 #define DIRECTDRAW_VERSION	0x0300
 #ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN
@@ -42,7 +41,11 @@
 #include <X11/Xwindows.h>
 #include <windowsx.h>
 
+#pragma push_macro("Status")
+#undef Status
+#define Status wStatus
 #include "ddraw.h"
+#pragma pop_macro("Status")
 
 #undef CreateWindow
 

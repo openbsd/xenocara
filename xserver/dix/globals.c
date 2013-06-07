@@ -126,12 +126,13 @@ Bool party_like_its_1989 = TRUE;
 Bool whiteRoot = FALSE;
 
 TimeStamp currentTime;
-TimeStamp lastDeviceEventTime;
+TimeStamp lastDeviceEventTime[MAXDEVICES];
 
 int defaultColorVisualClass = -1;
 int monitorResolution = 0;
 
 char *display;
+int displayfd;
 char *ConnectionInfo;
 
 CARD32 TimeOutValue = DEFAULT_TIMEOUT * MILLI_PER_SECOND;

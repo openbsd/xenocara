@@ -6,19 +6,19 @@
  * documentation for any purpose is hereby granted without fee, provided that
  * the above copyright notice appear in all copies and that both that
  * copyright notice and this permission notice appear in supporting
- * documentation, and that the names of Rich Murphey and David Wexelblat
- * not be used in advertising or publicity pertaining to distribution of
+ * documentation, and that the names of Rich Murphey and David Wexelblat 
+ * not be used in advertising or publicity pertaining to distribution of 
  * the software without specific, written prior permission.  Rich Murphey and
- * David Wexelblat make no representations about the suitability of this
- * software for any purpose.  It is provided "as is" without express or
+ * David Wexelblat make no representations about the suitability of this 
+ * software for any purpose.  It is provided "as is" without express or 
  * implied warranty.
  *
- * RICH MURPHEY AND DAVID WEXELBLAT DISCLAIM ALL WARRANTIES WITH REGARD TO
- * THIS SOFTWARE, INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND
- * FITNESS, IN NO EVENT SHALL RICH MURPHEY OR DAVID WEXELBLAT BE LIABLE FOR
- * ANY SPECIAL, INDIRECT OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER
- * RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF
- * CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
+ * RICH MURPHEY AND DAVID WEXELBLAT DISCLAIM ALL WARRANTIES WITH REGARD TO 
+ * THIS SOFTWARE, INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND 
+ * FITNESS, IN NO EVENT SHALL RICH MURPHEY OR DAVID WEXELBLAT BE LIABLE FOR 
+ * ANY SPECIAL, INDIRECT OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER 
+ * RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF 
+ * CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN 
  * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
  */
@@ -61,14 +61,12 @@ sparc64MapVidMem(int ScreenNum, unsigned long Base, unsigned long Size,
     pointer base;
 
 #ifdef DEBUG
-    xf86MsgVerb(X_INFO, 3, "mapVidMem %lx, %lx, fd = %d",
-                Base, Size, fd);
+    xf86MsgVerb(X_INFO, 3, "mapVidMem %lx, %lx, fd = %d", Base, Size, fd);
 #endif
 
     base = mmap(0, Size,
                 (flags & VIDMEM_READONLY) ?
-                PROT_READ : (PROT_READ | PROT_WRITE),
-                MAP_SHARED, fd, Base);
+                PROT_READ : (PROT_READ | PROT_WRITE), MAP_SHARED, fd, Base);
     if (base == MAP_FAILED)
         FatalError("%s: could not mmap screen [s=%x,a=%x] (%s)",
                    "xf86MapVidMem", Size, Base, strerror(errno));
@@ -91,13 +89,13 @@ xf86ReadBIOS(unsigned long Base, unsigned long Offset, unsigned char *Buf,
 
 #ifdef X_PRIVSEP
 /*
- * Do all things that need root privileges early
- * and revoke those privileges
+ * Do all things that need root privileges early 
+ * and revoke those privileges 
  */
 _X_EXPORT void
 xf86PrivilegedInit(void)
 {
-    pci_system_init();
-    xf86OpenConsole();
+	pci_system_init();
+	xf86OpenConsole();
 }
 #endif

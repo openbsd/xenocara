@@ -180,6 +180,7 @@ xf86ProcessActionEvent(ActionEvent action, void *arg)
     switch (action) {
     case ACTION_TERMINATE:
         if (!xf86Info.dontZap) {
+            xf86Msg(X_INFO, "Server zapped. Shutting down.\n");
 #ifdef XFreeXDGA
             DGAShutdown();
 #endif
@@ -254,7 +255,7 @@ xf86Wakeup(pointer blockData, int err, pointer pReadmask)
             while (pInfo) {
                 if (pInfo->read_input && pInfo->fd >= 0 &&
                     (FD_ISSET(pInfo->fd, &devicesWithInput) != 0)) {
-                    int sigstate = xf86BlockSIGIO();
+                    OsBlockSIGIO();
 
                     /*
                      * Remove the descriptior from the set because more than one
@@ -263,7 +264,7 @@ xf86Wakeup(pointer blockData, int err, pointer pReadmask)
                     FD_CLR(pInfo->fd, &devicesWithInput);
 
                     pInfo->read_input(pInfo);
-                    xf86UnblockSIGIO(sigstate);
+                    OsReleaseSIGIO();
                 }
                 pInfo = pInfo->next;
             }
@@ -271,9 +272,9 @@ xf86Wakeup(pointer blockData, int err, pointer pReadmask)
     }
 
     if (err >= 0) {             /* we don't want the handlers called if select() */
-        IHPtr ih;               /* returned with an error condition, do we?      */
+        IHPtr ih, ih_tmp;       /* returned with an error condition, do we?      */
 
-        for (ih = InputHandlers; ih; ih = ih->next) {
+        nt_list_for_each_entry_safe(ih, ih_tmp, InputHandlers, next) {
             if (ih->enabled && ih->fd >= 0 && ih->ihproc &&
                 (FD_ISSET(ih->fd, ((fd_set *) pReadmask)) != 0)) {
                 ih->ihproc(ih->fd, ih->data);
@@ -376,7 +377,7 @@ static void
 xf86ReleaseKeys(DeviceIntPtr pDev)
 {
     KeyClassPtr keyc;
-    int i, sigstate;
+    int i;
 
     if (!pDev || !pDev->key)
         return;
@@ -397,9 +398,9 @@ xf86ReleaseKeys(DeviceIntPtr pDev)
     for (i = keyc->xkbInfo->desc->min_key_code;
          i < keyc->xkbInfo->desc->max_key_code; i++) {
         if (key_is_down(pDev, i, KEY_POSTED)) {
-            sigstate = xf86BlockSIGIO();
+            OsBlockSIGIO();
             QueueKeyboardEvents(pDev, KeyRelease, i, NULL);
-            xf86UnblockSIGIO(sigstate);
+            OsReleaseSIGIO();
         }
     }
 }
@@ -438,7 +439,7 @@ xf86VTSwitch(void)
         for (i = 0; i < xf86NumScreens; i++) {
             if (!(dispatchException & DE_TERMINATE))
                 if (xf86Screens[i]->EnableDisableFBAccess)
-                    (*xf86Screens[i]->EnableDisableFBAccess) (i, FALSE);
+                    (*xf86Screens[i]->EnableDisableFBAccess) (xf86Screens[i], FALSE);
         }
 
         /*
@@ -449,15 +450,19 @@ xf86VTSwitch(void)
             xf86DisableInputHandler(ih);
         for (pInfo = xf86InputDevs; pInfo; pInfo = pInfo->next) {
             if (pInfo->dev) {
+                if (!pInfo->dev->enabled)
+                    pInfo->flags |= XI86_DEVICE_DISABLED;
                 xf86ReleaseKeys(pInfo->dev);
                 ProcessInputEvents();
                 DisableDevice(pInfo->dev, TRUE);
             }
         }
 
-        prevSIGIO = xf86BlockSIGIO();
+        OsBlockSIGIO();
         for (i = 0; i < xf86NumScreens; i++)
-            xf86Screens[i]->LeaveVT(i, 0);
+            xf86Screens[i]->LeaveVT(xf86Screens[i]);
+        for (i = 0; i < xf86NumGPUScreens; i++)
+            xf86GPUScreens[i]->LeaveVT(xf86GPUScreens[i]);
 
         xf86AccessLeave();      /* We need this here, otherwise */
 
@@ -469,27 +474,32 @@ xf86VTSwitch(void)
             DebugF("xf86VTSwitch: Leave failed\n");
             xf86AccessEnter();
             for (i = 0; i < xf86NumScreens; i++) {
-                if (!xf86Screens[i]->EnterVT(i, 0))
+                if (!xf86Screens[i]->EnterVT(xf86Screens[i]))
                     FatalError("EnterVT failed for screen %d\n", i);
+            }
+            for (i = 0; i < xf86NumGPUScreens; i++) {
+                if (!xf86GPUScreens[i]->EnterVT(xf86GPUScreens[i]))
+                    FatalError("EnterVT failed for gpu screen %d\n", i);
             }
             if (!(dispatchException & DE_TERMINATE)) {
                 for (i = 0; i < xf86NumScreens; i++) {
                     if (xf86Screens[i]->EnableDisableFBAccess)
-                        (*xf86Screens[i]->EnableDisableFBAccess) (i, TRUE);
+                        (*xf86Screens[i]->EnableDisableFBAccess) (xf86Screens[i], TRUE);
                 }
             }
             dixSaveScreens(serverClient, SCREEN_SAVER_FORCER, ScreenSaverReset);
 
             pInfo = xf86InputDevs;
             while (pInfo) {
-                if (pInfo->dev)
+                if (pInfo->dev && (pInfo->flags & XI86_DEVICE_DISABLED) == 0)
                     EnableDevice(pInfo->dev, TRUE);
+                pInfo->flags &= ~XI86_DEVICE_DISABLED;
                 pInfo = pInfo->next;
             }
             for (ih = InputHandlers; ih; ih = ih->next)
                 xf86EnableInputHandler(ih);
 
-            xf86UnblockSIGIO(prevSIGIO);
+            OsReleaseSIGIO();
 
         }
         else {
@@ -524,12 +534,17 @@ xf86VTSwitch(void)
         xf86AccessEnter();
         for (i = 0; i < xf86NumScreens; i++) {
             xf86Screens[i]->vtSema = TRUE;
-            if (!xf86Screens[i]->EnterVT(i, 0))
+            if (!xf86Screens[i]->EnterVT(xf86Screens[i]))
                 FatalError("EnterVT failed for screen %d\n", i);
+        }
+        for (i = 0; i < xf86NumGPUScreens; i++) {
+            xf86GPUScreens[i]->vtSema = TRUE;
+            if (!xf86GPUScreens[i]->EnterVT(xf86GPUScreens[i]))
+                FatalError("EnterVT failed for gpu screen %d\n", i);
         }
         for (i = 0; i < xf86NumScreens; i++) {
             if (xf86Screens[i]->EnableDisableFBAccess)
-                (*xf86Screens[i]->EnableDisableFBAccess) (i, TRUE);
+                (*xf86Screens[i]->EnableDisableFBAccess) (xf86Screens[i], TRUE);
         }
 
         /* Turn screen saver off when switching back */
@@ -537,15 +552,16 @@ xf86VTSwitch(void)
 
         pInfo = xf86InputDevs;
         while (pInfo) {
-            if (pInfo->dev)
+            if (pInfo->dev && (pInfo->flags & XI86_DEVICE_DISABLED) == 0)
                 EnableDevice(pInfo->dev, TRUE);
+            pInfo->flags &= ~XI86_DEVICE_DISABLED;
             pInfo = pInfo->next;
         }
 
         for (ih = InputHandlers; ih; ih = ih->next)
             xf86EnableInputHandler(ih);
 
-        xf86UnblockSIGIO(prevSIGIO);
+        OsReleaseSIGIO();
     }
 }
 
@@ -603,14 +619,16 @@ InputHandlerProc
 xf86SetConsoleHandler(InputHandlerProc proc, pointer data)
 {
     static IHPtr handler = NULL;
-    IHPtr old_handler = handler;
+    InputHandlerProc old_proc = NULL;
 
-    if (old_handler)
-        xf86RemoveGeneralHandler(old_handler);
+    if (handler) {
+        old_proc = handler->ihproc;
+        xf86RemoveGeneralHandler(handler);
+    }
 
     handler = xf86AddGeneralHandler(xf86Info.consoleFd, proc, data);
 
-    return (old_handler) ? old_handler->ihproc : NULL;
+    return old_proc;
 }
 
 static void

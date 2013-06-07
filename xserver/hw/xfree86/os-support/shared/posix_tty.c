@@ -62,8 +62,8 @@
 #include "xf86_OSlib.h"
 
 
-static int
-GetBaud(int baudrate)
+static int 
+GetBaud (int baudrate)
 {
 #ifdef B300
     if (baudrate == 300)
@@ -119,63 +119,62 @@ xf86OpenSerial(XF86OptionPtr options)
     int fd, i;
     char *dev;
 
-    dev = xf86SetStrOption(options, "Device", NULL);
+    dev = xf86SetStrOption (options, "Device", NULL);
     if (!dev) {
-        xf86Msg(X_ERROR, "xf86OpenSerial: No Device specified.\n");
+        xf86Msg (X_ERROR, "xf86OpenSerial: No Device specified.\n");
         return -1;
     }
-
 #ifndef X_PRIVSEP
-    SYSCALL(fd = open(dev, O_RDWR | O_NONBLOCK));
+    SYSCALL (fd = open (dev, O_RDWR | O_NONBLOCK));
 #else
     fd = priv_open_device (dev);
 #endif
     if (fd == -1) {
-        xf86Msg(X_ERROR,
-                "xf86OpenSerial: Cannot open device %s\n\t%s.\n",
-                dev, strerror(errno));
+        xf86Msg (X_ERROR,
+                 "xf86OpenSerial: Cannot open device %s\n\t%s.\n",
+                 dev, strerror (errno));
         free(dev);
         return -1;
     }
 
-    if (!isatty(fd)) {
+    if (!isatty (fd)) {
         /* Allow non-tty devices to be opened. */
         free(dev);
         return fd;
     }
 
     /* set up default port parameters */
-    SYSCALL(tcgetattr(fd, &t));
-    t.c_iflag &= ~(IGNBRK | BRKINT | PARMRK | ISTRIP | INLCR
-                   | IGNCR | ICRNL | IXON);
+    SYSCALL (tcgetattr (fd, &t));
+    t.c_iflag &= ~(IGNBRK|BRKINT|PARMRK|ISTRIP|INLCR
+                   |IGNCR|ICRNL|IXON);
     t.c_oflag &= ~OPOST;
-    t.c_lflag &= ~(ECHO | ECHONL | ICANON | ISIG | IEXTEN);
-    t.c_cflag &= ~(CSIZE | PARENB);
-    t.c_cflag |= CS8 | CLOCAL;
-
-    cfsetispeed(&t, B9600);
-    cfsetospeed(&t, B9600);
+    t.c_lflag &= ~(ECHO|ECHONL|ICANON|ISIG|IEXTEN);
+    t.c_cflag &= ~(CSIZE|PARENB);
+    t.c_cflag |= CS8|CLOCAL;
+    
+    cfsetispeed (&t, B9600);
+    cfsetospeed (&t, B9600);
     t.c_cc[VMIN] = 1;
     t.c_cc[VTIME] = 0;
 
-    SYSCALL(tcsetattr(fd, TCSANOW, &t));
+    SYSCALL (tcsetattr (fd, TCSANOW, &t));
 
-    if (xf86SetSerial(fd, options) == -1) {
-        SYSCALL(close(fd));
+    if (xf86SetSerial (fd, options) == -1) {
+        SYSCALL (close (fd));
         free(dev);
         return -1;
     }
 
-    SYSCALL(i = fcntl(fd, F_GETFL, 0));
+    SYSCALL (i = fcntl (fd, F_GETFL, 0));
     if (i == -1) {
-        SYSCALL(close(fd));
+        SYSCALL (close (fd));
         free(dev);
         return -1;
     }
     i &= ~O_NONBLOCK;
-    SYSCALL(i = fcntl(fd, F_SETFL, i));
+    SYSCALL (i = fcntl (fd, F_SETFL, i));
     if (i == -1) {
-        SYSCALL(close(fd));
+        SYSCALL (close (fd));
         free(dev);
         return -1;
     }
@@ -426,7 +425,8 @@ xf86FlushInput(int fd)
 {
     fd_set fds;
     struct timeval timeout;
-    char c[4];
+    /* this needs to be big enough to flush an evdev event. */
+    char c[256];
 
     DebugF("FlushingSerial\n");
     if (tcflush(fd, TCIFLUSH) == 0)

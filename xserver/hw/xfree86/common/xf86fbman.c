@@ -1149,7 +1149,7 @@ static FBManagerFuncs xf86FBManFuncs = {
 };
 
 static Bool
-xf86FBCloseScreen(int i, ScreenPtr pScreen)
+xf86FBCloseScreen(ScreenPtr pScreen)
 {
     FBLinkPtr pLink, tmp;
     FBLinearLinkPtr pLinearLink, tmp2;
@@ -1180,13 +1180,13 @@ xf86FBCloseScreen(int i, ScreenPtr pScreen)
     free(offman);
     dixSetPrivate(&pScreen->devPrivates, xf86FBScreenKey, NULL);
 
-    return (*pScreen->CloseScreen) (i, pScreen);
+    return (*pScreen->CloseScreen) (pScreen);
 }
 
 Bool
 xf86InitFBManager(ScreenPtr pScreen, BoxPtr FullBox)
 {
-    ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+    ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
     RegionRec ScreenRegion;
     RegionRec FullRegion;
     BoxRec ScreenBox;
@@ -1223,7 +1223,7 @@ xf86InitFBManager(ScreenPtr pScreen, BoxPtr FullBox)
 Bool
 xf86InitFBManagerArea(ScreenPtr pScreen, int PixelArea, int Verbosity)
 {
-    ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+    ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
     xRectangle Rect[3];
     RegionPtr pRegion, pScreenRegion;
     int nRect;

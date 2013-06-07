@@ -50,6 +50,14 @@ RESTYPE PictFormatType;
 RESTYPE GlyphSetType;
 int PictureCmapPolicy = PictureCmapPolicyDefault;
 
+PictFormatPtr
+PictureWindowFormat(WindowPtr pWindow)
+{
+    ScreenPtr pScreen = pWindow->drawable.pScreen;
+    return PictureMatchVisual(pScreen, pWindow->drawable.depth,
+                              WindowGetVisual(pWindow));
+}
+
 Bool
 PictureDestroyWindow(WindowPtr pWindow)
 {
@@ -72,14 +80,14 @@ PictureDestroyWindow(WindowPtr pWindow)
 }
 
 Bool
-PictureCloseScreen(int index, ScreenPtr pScreen)
+PictureCloseScreen(ScreenPtr pScreen)
 {
     PictureScreenPtr ps = GetPictureScreen(pScreen);
     Bool ret;
     int n;
 
     pScreen->CloseScreen = ps->CloseScreen;
-    ret = (*pScreen->CloseScreen) (index, pScreen);
+    ret = (*pScreen->CloseScreen) (pScreen);
     PictureResetFilters(pScreen);
     for (n = 0; n < ps->nformats; n++)
         if (ps->formats[n].type == PictTypeIndexed)
@@ -591,6 +599,29 @@ PictureParseCmapPolicy(const char *name)
         return PictureCmapPolicyInvalid;
 }
 
+/** @see GetDefaultBytes */
+static void
+GetPictureBytes(pointer value, XID id, ResourceSizePtr size)
+{
+    PicturePtr picture = value;
+
+    /* Currently only pixmap bytes are reported to clients. */
+    size->resourceSize = 0;
+
+    size->refCnt = picture->refcnt;
+
+    /* Calculate pixmap reference sizes. */
+    size->pixmapRefSize = 0;
+    if (picture->pDrawable && (picture->pDrawable->type == DRAWABLE_PIXMAP))
+    {
+        SizeType pixmapSizeFunc = GetResourceTypeSizeFunc(RT_PIXMAP);
+        ResourceSizeRec pixmapSize = { 0, 0, 0 };
+        PixmapPtr pixmap = (PixmapPtr)picture->pDrawable;
+        pixmapSizeFunc(pixmap, pixmap->drawable.id, &pixmapSize);
+        size->pixmapRefSize += pixmapSize.pixmapRefSize;
+    }
+}
+
 Bool
 PictureInit(ScreenPtr pScreen, PictFormatPtr formats, int nformats)
 {
@@ -602,6 +633,7 @@ PictureInit(ScreenPtr pScreen, PictFormatPtr formats, int nformats)
         PictureType = CreateNewResourceType(FreePicture, "PICTURE");
         if (!PictureType)
             return FALSE;
+        SetResourceTypeSizeFunc(PictureType, GetPictureBytes);
         PictFormatType = CreateNewResourceType(FreePictFormat, "PICTFORMAT");
         if (!PictFormatType)
             return FALSE;
@@ -731,7 +763,8 @@ CreatePicture(Picture pid,
     PicturePtr pPicture;
     PictureScreenPtr ps = GetPictureScreen(pDrawable->pScreen);
 
-    pPicture = dixAllocateObjectWithPrivates(PictureRec, PRIVATE_PICTURE);
+    pPicture = dixAllocateScreenObjectWithPrivates(pDrawable->pScreen,
+                                                   PictureRec, PRIVATE_PICTURE);
     if (!pPicture) {
         *error = BadAlloc;
         return 0;
@@ -821,7 +854,7 @@ createSourcePicture(void)
 {
     PicturePtr pPicture;
 
-    pPicture = dixAllocateObjectWithPrivates(PictureRec, PRIVATE_PICTURE);
+    pPicture = dixAllocateScreenObjectWithPrivates(NULL, PictureRec, PRIVATE_PICTURE);
     pPicture->pDrawable = 0;
     pPicture->pFormat = 0;
     pPicture->pNext = 0;

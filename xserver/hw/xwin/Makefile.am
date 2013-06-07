@@ -5,7 +5,6 @@ SRCS_CLIPBOARD = \
 	winclipboardinit.c \
 	winclipboardtextconv.c \
 	winclipboardthread.c \
-	winclipboardunicode.c \
 	winclipboardwndproc.c \
 	winclipboardwrappers.c \
 	winclipboardxevents.c
@@ -24,8 +23,11 @@ SRCS_MULTIWINDOW = \
 	winmultiwindowshape.c \
 	winmultiwindowwindow.c \
 	winmultiwindowwm.c \
-	winmultiwindowwndproc.c
+	winmultiwindowwndproc.c \
+	propertystore.h \
+	winSetAppUserModelID.c
 DEFS_MULTIWINDOW = -DXWIN_MULTIWINDOW
+MULTIWINDOW_LIBS = -lshlwapi -lole32
 endif
 
 if XWIN_MULTIWINDOWEXTWM
@@ -96,11 +98,11 @@ SRCS =	InitInput.c \
 	winprefsyacc.y \
 	winprefslex.l \
 	winprocarg.c \
-	winregistry.c \
 	winscrinit.c \
 	winshaddd.c \
 	winshadddnl.c \
 	winshadgdi.c \
+	wintaskbar.c \
 	wintrayicon.c \
 	winvalargs.c \
 	winwakeup.c \
@@ -110,13 +112,16 @@ SRCS =	InitInput.c \
 	winclipboard.h \
 	winconfig.h \
 	win.h \
+	winglobals.h \
 	winkeybd.h \
 	winkeynames.h \
 	winlayouts.h \
 	winmessages.h \
+	winmonitors.h \
 	winmsg.h \
 	winms.h \
 	winmultiwindowclass.h \
+	winmultiwindowicons.h \
 	winprefs.h \
 	winresource.h \
 	winwindow.h \
@@ -146,8 +151,10 @@ XWin_SOURCES = $(SRCS)
 
 INCLUDES = -I$(top_srcdir)/miext/rootless
 
+XWIN_SYS_LIBS += -ldxguid
+
 XWin_DEPENDENCIES = $(MULTIWINDOWEXTWM_LIBS) $(XWIN_GLX_LIBS) $(XWIN_LIBS) $(MAIN_LIB) $(XSERVER_LIBS)
-XWin_LDADD = $(MULTIWINDOWEXTWM_LIBS) $(XWIN_GLX_LIBS) $(XWIN_GLX_LINK_FLAGS) $(XWIN_LIBS) $(MAIN_LIB) $(XSERVER_LIBS) $(XSERVER_SYS_LIBS) $(XWIN_SYS_LIBS)
+XWin_LDADD = $(MULTIWINDOW_LIBS) $(MULTIWINDOWEXTWM_LIBS) $(XWIN_GLX_LIBS) $(XWIN_GLX_LINK_FLAGS) $(XWIN_LIBS) $(MAIN_LIB) $(XSERVER_LIBS) $(XSERVER_SYS_LIBS) $(XWIN_SYS_LIBS)
 XWin_LDFLAGS = -mwindows -static
 
 .rc.o:

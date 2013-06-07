@@ -81,9 +81,9 @@ static Bool
  */
 
 Bool
-winScreenInit(int index, ScreenPtr pScreen, int argc, char **argv)
+winScreenInit(ScreenPtr pScreen, int argc, char **argv)
 {
-    winScreenInfoPtr pScreenInfo = &g_ScreenInfo[index];
+    winScreenInfoPtr pScreenInfo = &g_ScreenInfo[pScreen->myNum];
     winPrivScreenPtr pScreenPriv;
     HDC hdc;
     DWORD dwInitialBPP;
@@ -202,11 +202,11 @@ winScreenInit(int index, ScreenPtr pScreen, int argc, char **argv)
     miClearVisualTypes();
 
     /* Call the engine dependent screen initialization procedure */
-    if (!((*pScreenPriv->pwinFinishScreenInit) (index, pScreen, argc, argv))) {
+    if (!((*pScreenPriv->pwinFinishScreenInit) (pScreen->myNum, pScreen, argc, argv))) {
         ErrorF("winScreenInit - winFinishScreenInit () failed\n");
 
         /* call the engine dependent screen close procedure to clean up from a failure */
-        pScreenPriv->pwinCloseScreen(index, pScreen);
+        pScreenPriv->pwinCloseScreen(pScreen);
 
         return FALSE;
     }
@@ -224,7 +224,7 @@ winScreenInit(int index, ScreenPtr pScreen, int argc, char **argv)
     pScreen->y = pScreenInfo->dwInitialY - GetSystemMetrics(SM_YVIRTUALSCREEN);
 
     ErrorF("Screen %d added at virtual desktop coordinate (%d,%d).\n",
-           index, pScreen->x, pScreen->y);
+           pScreen->myNum, pScreen->x, pScreen->y);
 
 #if CYGDEBUG || YES
     winDebug("winScreenInit - returning\n");
@@ -254,7 +254,7 @@ winCreateScreenResources(ScreenPtr pScreen)
 
 /* See Porting Layer Definition - p. 20 */
 Bool
-winFinishScreenInitFB(int index, ScreenPtr pScreen, int argc, char **argv)
+winFinishScreenInitFB(int i, ScreenPtr pScreen, int argc, char **argv)
 {
     winScreenPriv(pScreen);
     winScreenInfo *pScreenInfo = pScreenPriv->pScreenInfo;
@@ -355,8 +355,6 @@ winFinishScreenInitFB(int index, ScreenPtr pScreen, int argc, char **argv)
      */
     pScreen->BlockHandler = winBlockHandler;
     pScreen->WakeupHandler = winWakeupHandler;
-    pScreen->blockData = pScreen;
-    pScreen->wakeupData = pScreen;
 
     /* Render extension initialization, calls miPictureInit */
     if (!fbPictureInit(pScreen, NULL, 0)) {
@@ -434,7 +432,7 @@ winFinishScreenInitFB(int index, ScreenPtr pScreen, int argc, char **argv)
     if (pScreen->a) { \
         pScreenPriv->a = pScreen->a; \
     } else { \
-        ErrorF("null screen fn " #a "\n"); \
+        winDebug("winScreenInit - null screen fn " #a "\n"); \
         pScreenPriv->a = NULL; \
     }
 
@@ -468,7 +466,7 @@ winFinishScreenInitFB(int index, ScreenPtr pScreen, int argc, char **argv)
     if (pScreen->a) { \
         pScreenPriv->a = pScreen->a; \
     } else { \
-        ErrorF("null screen fn " #a "\n"); \
+        winDebug("null screen fn " #a "\n"); \
         pScreenPriv->a = NULL; \
     }
 
@@ -552,7 +550,7 @@ winFinishScreenInitFB(int index, ScreenPtr pScreen, int argc, char **argv)
                        &pScreenPriv->ptWMProc,
                        &pScreenPriv->ptXMsgProc,
                        &pScreenPriv->pmServerStarted,
-                       pScreenInfo->dwScreen, (HWND) & pScreenPriv->hwndScreen,
+                       pScreenInfo->dwScreen, (HWND) &pScreenPriv->hwndScreen,
 #ifdef XWIN_MULTIWINDOWEXTWM
                        pScreenInfo->fInternalWM ||
 #endif
@@ -580,11 +578,11 @@ winFinishScreenInitFB(int index, ScreenPtr pScreen, int argc, char **argv)
 /* See Porting Layer Definition - p. 20 */
 
 Bool
-winFinishScreenInitNativeGDI(int index,
+winFinishScreenInitNativeGDI(int i,
                              ScreenPtr pScreen, int argc, char **argv)
 {
     winScreenPriv(pScreen);
-    winScreenInfoPtr pScreenInfo = &g_ScreenInfo[index];
+    winScreenInfoPtr pScreenInfo = &g_ScreenInfo[i];
     VisualPtr pVisuals = NULL;
     DepthPtr pDepths = NULL;
     VisualID rootVisual = 0;
@@ -636,8 +634,6 @@ winFinishScreenInitNativeGDI(int index,
      */
     pScreen->BlockHandler = winBlockHandler;
     pScreen->WakeupHandler = winWakeupHandler;
-    pScreen->blockData = pScreen;
-    pScreen->wakeupData = pScreen;
 
     /* Place our save screen function */
     pScreen->SaveScreen = winSaveScreen;

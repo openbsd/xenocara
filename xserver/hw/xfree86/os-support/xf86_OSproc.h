@@ -215,11 +215,15 @@ extern _X_EXPORT int xf86ProcessArgument(int, char **, int);
 extern _X_EXPORT void xf86UseMsg(void);
 extern _X_EXPORT PMClose xf86OSPMOpen(void);
 
-extern _X_EXPORT _X_DEPRECATED void xf86MakeNewMapping(int, int, unsigned long,
-                                                       unsigned long, pointer);
 extern _X_EXPORT void xf86InitVidMem(void);
 
 #endif                          /* XF86_OS_PRIVS */
+
+#ifdef XSERVER_PLATFORM_BUS
+#include "hotplug.h"
+void
+xf86PlatformDeviceProbe(struct OdevAttributes *attribs);
+#endif
 
 _XFUNCPROTOEND
 #endif                          /* NO_OSLIB_PROTOTYPES */

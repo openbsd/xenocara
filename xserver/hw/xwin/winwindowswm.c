@@ -82,7 +82,6 @@ static int
 ProcWindowsWMQueryVersion(ClientPtr client)
 {
     xWindowsWMQueryVersionReply rep;
-    int n;
 
     REQUEST_SIZE_MATCH(xWindowsWMQueryVersionReq);
     rep.type = X_Reply;
@@ -95,7 +94,7 @@ ProcWindowsWMQueryVersion(ClientPtr client)
         swaps(&rep.sequenceNumber);
         swapl(&rep.length);
     }
-    WriteToClient(client, sizeof(xWindowsWMQueryVersionReply), (char *) &rep);
+    WriteToClient(client, sizeof(xWindowsWMQueryVersionReply), &rep);
     return Success;
 }
 
@@ -366,7 +365,7 @@ ProcWindowsWMFrameGetRect(ClientPtr client)
            rep.x, rep.y, rep.w, rep.h);
 #endif
 
-    WriteToClient(client, sizeof(xWindowsWMFrameGetRectReply), (char *) &rep);
+    WriteToClient(client, sizeof(xWindowsWMFrameGetRectReply), &rep);
     return Success;
 }
 
@@ -439,8 +438,6 @@ ProcWindowsWMFrameDraw(ClientPtr client)
 
     ShowWindow(pRLWinPriv->hWnd, nCmdShow);
 
-    winMWExtWMUpdateIcon(pWin->drawable.id);
-
     if (wBoundingShape(pWin) != NULL) {
         /* wBoundingShape is relative to *inner* origin of window.
            Translate by borderWidth to get the outside-relative position. */
@@ -493,7 +490,7 @@ ProcWindowsWMFrameSetTitle(ClientPtr client)
 #endif
 
     title_bytes = malloc(title_length + 1);
-    strncpy(title_bytes, (unsigned char *) &stuff[1], title_length);
+    strncpy(title_bytes, (char *) &stuff[1], title_length);
     title_bytes[title_length] = '\0';
 
     pRLWinPriv = (win32RootlessWindowPtr) RootlessFrameForWindow(pWin, FALSE);
@@ -527,7 +524,7 @@ ProcWindowsWMDispatch(ClientPtr client)
         return ProcWindowsWMQueryVersion(client);
     }
 
-    if (!LocalClient(client))
+    if (!client->local)
         return WMErrorBase + WindowsWMClientNotLocal;
 
     switch (stuff->data) {
@@ -564,8 +561,6 @@ SNotifyEvent(xWindowsWMNotifyEvent * from, xWindowsWMNotifyEvent * to)
 static int
 SProcWindowsWMQueryVersion(ClientPtr client)
 {
-    int n;
-
     REQUEST(xWindowsWMQueryVersionReq);
     swaps(&stuff->length);
     return ProcWindowsWMQueryVersion(client);
@@ -577,7 +572,7 @@ SProcWindowsWMDispatch(ClientPtr client)
     REQUEST(xReq);
 
     /* It is bound to be non-local when there is byte swapping */
-    if (!LocalClient(client))
+    if (!client->local)
         return WMErrorBase + WindowsWMClientNotLocal;
 
     /* only local clients are allowed WM access */

@@ -51,6 +51,7 @@ PERFORMANCE OF THIS SOFTWARE.
 #ifndef _SYNCSRV_H_
 #define _SYNCSRV_H_
 
+#include "list.h"
 #include "misync.h"
 #include "misyncstr.h"
 
@@ -65,19 +66,25 @@ typedef enum {
     XSyncCounterUnrestricted
 } SyncCounterType;
 
+typedef void (*SyncSystemCounterQueryValue)(pointer counter,
+                                            CARD64 *value_return
+    );
+typedef void (*SyncSystemCounterBracketValues)(pointer counter,
+                                               CARD64 *pbracket_less,
+                                               CARD64 *pbracket_greater
+    );
+
 typedef struct _SysCounterInfo {
-    const char *name;
+    SyncCounter *pCounter;
+    char *name;
     CARD64 resolution;
     CARD64 bracket_greater;
     CARD64 bracket_less;
     SyncCounterType counterType;        /* how can this counter change */
-    void (*QueryValue) (pointer /*pCounter */ ,
-                        CARD64 *        /*freshvalue */
-        );
-    void (*BracketValues) (pointer /*pCounter */ ,
-                           CARD64 * /*lessthan */ ,
-                           CARD64 *     /*greaterthan */
-        );
+    SyncSystemCounterQueryValue QueryValue;
+    SyncSystemCounterBracketValues BracketValues;
+    void *private;
+    struct xorg_list entry;
 } SysCounterInfo;
 
 typedef struct _SyncAlarmClientList {
@@ -113,33 +120,20 @@ typedef union {
     SyncAwait await;
 } SyncAwaitUnion;
 
-extern pointer SyncCreateSystemCounter(const char * /* name */ ,
-                                       CARD64 /* inital_value */ ,
-                                       CARD64 /* resolution */ ,
-                                       SyncCounterType
-                                       /* change characterization */ ,
-                                       void (* /*QueryValue */ )(
-                                                                    pointer
-                                                                    /* pCounter */
-                                                                    ,
-                                                                    CARD64 * /* pValue_return */ ),     /* XXX prototype */
-                                       void (* /*BracketValues */ )(
-                                                                       pointer
-                                                                       /* pCounter */
-                                                                       ,
-                                                                       CARD64 *
-                                                                       /* pbracket_less */
-                                                                       ,
-                                                                       CARD64 *
-                                                                       /* pbracket_greater */
-                                                                       )
+extern SyncCounter* SyncCreateSystemCounter(const char *name,
+                                            CARD64 initial_value,
+                                            CARD64 resolution,
+                                            SyncCounterType counterType,
+                                            SyncSystemCounterQueryValue QueryValue,
+                                            SyncSystemCounterBracketValues BracketValues
     );
 
-extern void SyncChangeCounter(SyncCounter * /* pCounter */ ,
-                              CARD64    /* new_value */
+extern void SyncChangeCounter(SyncCounter *pCounter,
+                              CARD64 new_value
     );
 
 extern void SyncDestroySystemCounter(pointer pCounter);
 
-extern void SyncExtensionInit(void);
+extern SyncCounter *SyncInitDeviceIdleTime(DeviceIntPtr dev);
+extern void SyncRemoveDeviceIdleTime(SyncCounter *counter);
 #endif                          /* _SYNCSRV_H_ */

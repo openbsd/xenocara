@@ -311,6 +311,7 @@ struct _SymTabRec;
 struct _PciChipsets;
 
 struct pci_device;
+struct xf86_platform_device;
 
 typedef struct _DriverRec {
     int driverVersion;
@@ -325,7 +326,14 @@ typedef struct _DriverRec {
     const struct pci_id_match *supported_devices;
     Bool (*PciProbe) (struct _DriverRec * drv, int entity_num,
                       struct pci_device * dev, intptr_t match_data);
+    Bool (*platformProbe) (struct _DriverRec * drv, int entity_num, int flags,
+                           struct xf86_platform_device * dev, intptr_t match_data);
 } DriverRec, *DriverPtr;
+
+/*
+ * platform probe flags
+ */
+#define PLATFORM_PROBE_GPU_SCREEN 1
 
 /*
  *  AddDriver flags
@@ -339,10 +347,11 @@ typedef struct _DriverRec {
  */
 
 /* Tolerate prior #include <linux/input.h> */
-#if defined(linux) && defined(_INPUT_H)
+#if defined(linux)
 #undef BUS_NONE
 #undef BUS_PCI
 #undef BUS_SBUS
+#undef BUS_PLATFORM
 #undef BUS_last
 #endif
 
@@ -350,6 +359,7 @@ typedef enum {
     BUS_NONE,
     BUS_PCI,
     BUS_SBUS,
+    BUS_PLATFORM,
     BUS_last                    /* Keep last */
 } BusType;
 
@@ -362,6 +372,7 @@ typedef struct _bus {
     union {
         struct pci_device *pci;
         SbusBusId sbus;
+        struct xf86_platform_device *plat;
     } id;
 } BusRec, *BusPtr;
 
@@ -630,18 +641,18 @@ typedef struct {
 
 typedef Bool xf86ProbeProc(DriverPtr, int);
 typedef Bool xf86PreInitProc(ScrnInfoPtr, int);
-typedef Bool xf86ScreenInitProc(int, ScreenPtr, int, char **);
-typedef Bool xf86SwitchModeProc(int, DisplayModePtr, int);
-typedef void xf86AdjustFrameProc(int, int, int, int);
-typedef Bool xf86EnterVTProc(int, int);
-typedef void xf86LeaveVTProc(int, int);
-typedef void xf86FreeScreenProc(int, int);
-typedef ModeStatus xf86ValidModeProc(int, DisplayModePtr, Bool, int);
-typedef void xf86EnableDisableFBAccessProc(int, Bool);
-typedef int xf86SetDGAModeProc(int, int, DGADevicePtr);
-typedef int xf86ChangeGammaProc(int, Gamma);
-typedef void xf86PointerMovedProc(int, int, int);
-typedef Bool xf86PMEventProc(int, pmEvent, Bool);
+typedef Bool xf86ScreenInitProc(ScreenPtr, int, char **);
+typedef Bool xf86SwitchModeProc(ScrnInfoPtr, DisplayModePtr);
+typedef void xf86AdjustFrameProc(ScrnInfoPtr, int, int);
+typedef Bool xf86EnterVTProc(ScrnInfoPtr);
+typedef void xf86LeaveVTProc(ScrnInfoPtr);
+typedef void xf86FreeScreenProc(ScrnInfoPtr);
+typedef ModeStatus xf86ValidModeProc(ScrnInfoPtr, DisplayModePtr, Bool, int);
+typedef void xf86EnableDisableFBAccessProc(ScrnInfoPtr, Bool);
+typedef int xf86SetDGAModeProc(ScrnInfoPtr, int, DGADevicePtr);
+typedef int xf86ChangeGammaProc(ScrnInfoPtr, Gamma);
+typedef void xf86PointerMovedProc(ScrnInfoPtr, int, int);
+typedef Bool xf86PMEventProc(ScrnInfoPtr, pmEvent, Bool);
 typedef void xf86DPMSSetProc(ScrnInfoPtr, int, int);
 typedef void xf86LoadPaletteProc(ScrnInfoPtr, int, int *, LOCO *, VisualPtr);
 typedef void xf86SetOverscanProc(ScrnInfoPtr, int);
@@ -802,6 +813,8 @@ typedef struct _ScrnInfoRec {
      */
     funcPointer reservedFuncs[NUM_RESERVED_FUNCS];
 
+    Bool is_gpu;
+    uint32_t capabilities;
 } ScrnInfoRec;
 
 typedef struct {

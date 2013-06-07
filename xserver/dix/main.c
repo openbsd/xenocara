@@ -104,6 +104,7 @@ Equipment Corporation.
 #include "privates.h"
 #include "registry.h"
 #include "client.h"
+#include "exevents.h"
 #ifdef PANORAMIX
 #include "panoramiXsrv.h"
 #else
@@ -206,10 +207,16 @@ main(int argc, char *argv[], char *envp[])
             FatalError("no screens found");
         InitExtensions(argc, argv);
 
+        for (i = 0; i < screenInfo.numGPUScreens; i++) {
+            ScreenPtr pScreen = screenInfo.gpuscreens[i];
+            if (!CreateScratchPixmapsForScreen(pScreen))
+                FatalError("failed to create scratch pixmaps");
+        }
+
         for (i = 0; i < screenInfo.numScreens; i++) {
             ScreenPtr pScreen = screenInfo.screens[i];
 
-            if (!CreateScratchPixmapsForScreen(i))
+            if (!CreateScratchPixmapsForScreen(pScreen))
                 FatalError("failed to create scratch pixmaps");
             if (pScreen->CreateScreenResources &&
                 !(*pScreen->CreateScreenResources) (pScreen))
@@ -295,6 +302,7 @@ main(int argc, char *argv[], char *envp[])
 #endif
 
         UndisplayDevices();
+        DisableAllDevices();
 
         /* Now free up whatever must be freed */
         if (screenIsSaved == SCREEN_SAVER_ON)
@@ -318,14 +326,26 @@ main(int argc, char *argv[], char *envp[])
 
         for (i = 0; i < screenInfo.numScreens; i++)
             screenInfo.screens[i]->root = NullWindow;
+
         CloseDownDevices();
+
         CloseDownEvents();
 
+        for (i = screenInfo.numGPUScreens - 1; i >= 0; i--) {
+            ScreenPtr pScreen = screenInfo.gpuscreens[i];
+            FreeScratchPixmapsForScreen(pScreen);
+            (*pScreen->CloseScreen) (pScreen);
+            dixFreePrivates(pScreen->devPrivates, PRIVATE_SCREEN);
+            free(pScreen);
+            screenInfo.numGPUScreens = i;
+        }
+
         for (i = screenInfo.numScreens - 1; i >= 0; i--) {
-            FreeScratchPixmapsForScreen(i);
+            FreeScratchPixmapsForScreen(screenInfo.screens[i]);
             FreeGCperDepth(i);
             FreeDefaultStipple(i);
-            (*screenInfo.screens[i]->CloseScreen) (i, screenInfo.screens[i]);
+            dixFreeScreenSpecificPrivates(screenInfo.screens[i]);
+            (*screenInfo.screens[i]->CloseScreen) (screenInfo.screens[i]);
             dixFreePrivates(screenInfo.screens[i]->devPrivates, PRIVATE_SCREEN);
             free(screenInfo.screens[i]);
             screenInfo.numScreens = i;

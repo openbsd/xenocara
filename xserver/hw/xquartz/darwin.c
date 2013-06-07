@@ -38,7 +38,6 @@
 #include "servermd.h"
 #include "inputstr.h"
 #include "scrnintstr.h"
-#include "mibstore.h"           // mi backing store implementation
 #include "mipointer.h"          // mi software cursor
 #include "micmap.h"             // mi colormap code
 #include "fb.h"                 // fb framebuffer code
@@ -77,6 +76,8 @@
 #include "darwinEvents.h"
 #include "quartzKeyboard.h"
 #include "quartz.h"
+
+#include "X11Application.h"
 
 aslclient aslc;
 
@@ -191,7 +192,7 @@ DarwinSaveScreen(ScreenPtr pScreen, int on)
  *  Initialize the screen and communicate information about it back to dix.
  */
 static Bool
-DarwinScreenInit(int index, ScreenPtr pScreen, int argc, char **argv)
+DarwinScreenInit(ScreenPtr pScreen, int argc, char **argv)
 {
     int dpi;
     static int foundIndex = 0;
@@ -202,7 +203,7 @@ DarwinScreenInit(int index, ScreenPtr pScreen, int argc, char **argv)
         return FALSE;
 
     // reset index of found screens for each server generation
-    if (index == 0) {
+    if (pScreen->myNum == 0) {
         foundIndex = 0;
 
         // reset the visual list
@@ -229,13 +230,15 @@ DarwinScreenInit(int index, ScreenPtr pScreen, int argc, char **argv)
     }
 
     // TODO: Make PseudoColor visuals not suck in TrueColor mode
-    //    if(dfb->depth > 8)
-    //        miSetVisualTypesAndMasks(8, PseudoColorMask, 8, PseudoColor, 0, 0, 0);
-    if (dfb->depth > 15)
-        miSetVisualTypesAndMasks(15, TrueColorMask, 5, TrueColor,
-                                 RM_ARGB(0, 5, 5, 5), GM_ARGB(0, 5, 5,
-                                                              5),
-                                 BM_ARGB(0, 5, 5, 5));
+    // if(dfb->depth > 8)
+    //    miSetVisualTypesAndMasks(8, PseudoColorMask, 8, PseudoColor, 0, 0, 0);
+    //
+    // TODO: Re-add support for 15bit
+    // if (dfb->depth > 15)
+    //    miSetVisualTypesAndMasks(15, TrueColorMask, 5, TrueColor,
+    //                             RM_ARGB(0, 5, 5, 5), GM_ARGB(0, 5, 5,
+    //                                                          5),
+    //                             BM_ARGB(0, 5, 5, 5));
     if (dfb->depth > 24)
         miSetVisualTypesAndMasks(24, TrueColorMask, 8, TrueColor,
                                  RM_ARGB(0, 8, 8, 8), GM_ARGB(0, 8, 8,
@@ -273,7 +276,7 @@ DarwinScreenInit(int index, ScreenPtr pScreen, int argc, char **argv)
     pScreen->SaveScreen = DarwinSaveScreen;
 
     // finish mode dependent screen setup including cursor support
-    if (!QuartzSetupScreen(index, pScreen)) {
+    if (!QuartzSetupScreen(pScreen->myNum, pScreen)) {
         return FALSE;
     }
 
@@ -670,9 +673,9 @@ InitOutput(ScreenInfo *pScreenInfo, int argc, char **argv)
  * OsVendorFatalError
  */
 void
-OsVendorFatalError(void)
+OsVendorFatalError(const char *f, va_list args)
 {
-    ErrorF("   OsVendorFatalError\n");
+    X11ApplicationFatalError(f, args);
 }
 
 /*

@@ -160,10 +160,16 @@ LoaderSymbol(const char *name)
     return NULL;
 }
 
+void *
+LoaderSymbolFromModule(void *handle, const char *name)
+{
+    return dlsym(handle, name);
+}
+
 void
 LoaderUnload(const char *name, void *handle)
 {
-    xf86Msg(X_INFO, "Unloading %s\n", name);
+    LogMessageVerbSigSafe(X_INFO, 1, "Unloading %s\n", name);
     if (handle)
         dlclose(handle);
 }
@@ -189,13 +195,12 @@ LoaderGetABIVersion(const char *abiclass)
         const char *name;
         int version;
     } classes[] = {
-        {
-        ABI_CLASS_ANSIC, LoaderVersionInfo.ansicVersion}, {
-        ABI_CLASS_VIDEODRV, LoaderVersionInfo.videodrvVersion}, {
-        ABI_CLASS_XINPUT, LoaderVersionInfo.xinputVersion}, {
-        ABI_CLASS_EXTENSION, LoaderVersionInfo.extensionVersion}, {
-        ABI_CLASS_FONT, LoaderVersionInfo.fontVersion}, {
-        NULL, 0}
+        {ABI_CLASS_ANSIC, LoaderVersionInfo.ansicVersion},
+        {ABI_CLASS_VIDEODRV, LoaderVersionInfo.videodrvVersion},
+        {ABI_CLASS_XINPUT, LoaderVersionInfo.xinputVersion},
+        {ABI_CLASS_EXTENSION, LoaderVersionInfo.extensionVersion},
+        {ABI_CLASS_FONT, LoaderVersionInfo.fontVersion},
+        {NULL, 0}
     };
     int i;
 

@@ -83,10 +83,14 @@ OF THIS SOFTWARE.
 #ifndef MAXSCREENS
 #define MAXSCREENS	16
 #endif
+#ifndef MAXGPUSCREENS
+#define MAXGPUSCREENS	16
+#endif
 #define MAXCLIENTS	256
 #define MAXEXTENSIONS   128
 #define MAXFORMATS	8
 #define MAXDEVICES	40      /* input devices */
+#define GPU_SCREEN_OFFSET 256
 
 /* 128 event opcodes for core + extension events, excluding GE */
 #define MAXEVENTS       128
@@ -228,7 +232,25 @@ pad_to_int32(const int bytes)
     return (((bytes) + 3) & ~3);
 }
 
+/**
+ * Calculate padding needed to bring the number of bytes to an even
+ * multiple of 4.
+ * @param bytes The minimum number of bytes needed.
+ * @return The bytes of padding needed to arrive at the closest multiple of 4
+ * that is equal or higher than bytes.
+ */
+static inline int
+padding_for_int32(const int bytes)
+{
+    return ((-bytes) & 3);
+}
+
+
 extern char **xstrtokenize(const char *str, const char *separators);
+extern void FormatInt64(int64_t num, char *string);
+extern void FormatUInt64(uint64_t num, char *string);
+extern void FormatUInt64Hex(uint64_t num, char *string);
+extern void FormatDouble(double dbl, char *string);
 
 /**
  * Compare the two version numbers comprising of major.minor.
@@ -369,10 +391,10 @@ extern _X_EXPORT unsigned long serverGeneration;
 /* Don't use this directly, use BUG_WARN or BUG_WARN_MSG instead */
 #define __BUG_WARN_MSG(cond, with_msg, ...)                                \
           do { if (cond) {                                                \
-              ErrorF("BUG: triggered 'if (" #cond ")'\n");                \
-              ErrorF("BUG: %s:%d in %s()\n",                              \
-                      __FILE__, __LINE__, __func__);                      \
-              if (with_msg) ErrorF(__VA_ARGS__);                          \
+              ErrorFSigSafe("BUG: triggered 'if (" #cond ")'\n");          \
+              ErrorFSigSafe("BUG: %s:%u in %s()\n",                        \
+                           __FILE__, __LINE__, __func__);                 \
+              if (with_msg) ErrorFSigSafe(__VA_ARGS__);                    \
               xorg_backtrace();                                           \
           } } while(0)
 
@@ -380,5 +402,17 @@ extern _X_EXPORT unsigned long serverGeneration;
           __BUG_WARN_MSG(cond, 1, __VA_ARGS__)
 
 #define BUG_WARN(cond)  __BUG_WARN_MSG(cond, 0, NULL)
+
+#define BUG_RETURN(cond) \
+        do { if (cond) { __BUG_WARN_MSG(cond, 0, NULL); return; } } while(0)
+
+#define BUG_RETURN_MSG(cond, ...) \
+        do { if (cond) { __BUG_WARN_MSG(cond, 1, __VA_ARGS__); return; } } while(0)
+
+#define BUG_RETURN_VAL(cond, val) \
+        do { if (cond) { __BUG_WARN_MSG(cond, 0, NULL); return (val); } } while(0)
+
+#define BUG_RETURN_VAL_MSG(cond, val, ...) \
+        do { if (cond) { __BUG_WARN_MSG(cond, 1, __VA_ARGS__); return (val); } } while(0)
 
 #endif                          /* MISC_H */

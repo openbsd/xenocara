@@ -82,6 +82,23 @@ SOFTWARE.
 CallbackListPtr ReplyCallback;
 CallbackListPtr FlushCallback;
 
+typedef struct _connectionInput {
+    struct _connectionInput *next;
+    char *buffer;               /* contains current client input */
+    char *bufptr;               /* pointer to current start of data */
+    int bufcnt;                 /* count of bytes in buffer */
+    int lenLastReq;
+    int size;
+    unsigned int ignoreBytes;   /* bytes to ignore before the next request */
+} ConnectionInput;
+
+typedef struct _connectionOutput {
+    struct _connectionOutput *next;
+    unsigned char *buf;
+    int size;
+    int count;
+} ConnectionOutput;
+
 static ConnectionInputPtr AllocateInputBuffer(void);
 static ConnectionOutputPtr AllocateOutputBuffer(void);
 
@@ -578,8 +595,6 @@ ResetCurrentRequest(ClientPtr client)
     }
 }
 
-static const int padlength[4] = { 0, 3, 2, 1 };
-
  /********************
  * FlushAllOutput()
  *    Flush all clients with output.  However, if some client still
@@ -757,7 +772,7 @@ WriteToClient(ClientPtr who, int count, const void *__buf)
         oc->output = oco;
     }
 
-    padBytes = padlength[count & 3];
+    padBytes = padding_for_int32(count);
 
     if (ReplyCallback) {
         ReplyInfoRec replyinfo;
@@ -815,7 +830,11 @@ WriteToClient(ClientPtr who, int count, const void *__buf)
     NewOutputPending = TRUE;
     FD_SET(oc->fd, &OutputPending);
     memmove((char *) oco->buf + oco->count, buf, count);
-    oco->count += count + padBytes;
+    oco->count += count;
+    if (padBytes) {
+        memset(oco->buf + oco->count, '\0', padBytes);
+        oco->count += padBytes;
+    }
     return count;
 }
 
@@ -844,10 +863,13 @@ FlushClient(ClientPtr who, OsCommPtr oc, const void *__extraBuf, int extraCount)
     long todo;
 
     if (!oco)
-        return 0;
+	return 0;
     written = 0;
-    padsize = padlength[extraCount & 3];
+    padsize = padding_for_int32(extraCount);
     notWritten = oco->count + extraCount + padsize;
+    if (!notWritten)
+        return 0;
+
     todo = notWritten;
     while (notWritten) {
         long before = written;  /* amount of whole thing written */

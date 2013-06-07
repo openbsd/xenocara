@@ -37,12 +37,6 @@
 #include "misc.h"
 
 /*
- * References to external symbols
- */
-
-extern Bool g_fUnicodeSupport;
-
-/*
  * Process any pending X events
  */
 
@@ -163,13 +157,31 @@ winClipboardFlushXEvents(HWND hwnd,
                  */
                 iReturn = XSendEvent(pDisplay,
                                      eventSelection.requestor,
-                                     False, 0L, (XEvent *) & eventSelection);
+                                     False, 0L, (XEvent *) &eventSelection);
                 if (iReturn == BadValue || iReturn == BadWindow) {
                     ErrorF("winClipboardFlushXEvents - SelectionRequest - "
                            "XSendEvent () failed\n");
                 }
                 break;
             }
+
+            /* Close clipboard if we have it open already */
+            if (GetOpenClipboardWindow() == hwnd) {
+                CloseClipboard();
+            }
+
+            /* Access the clipboard */
+            if (!OpenClipboard(hwnd)) {
+                ErrorF("winClipboardFlushXEvents - SelectionRequest - "
+                       "OpenClipboard () failed: %08lx\n", GetLastError());
+
+                /* Abort */
+                fAbort = TRUE;
+                goto winClipboardFlushXEvents_SelectionRequest_Done;
+            }
+
+            /* Indicate that clipboard was opened */
+            fCloseClipboard = TRUE;
 
             /* Check that clipboard format is available */
             if (fUseUnicode && !IsClipboardFormatAvailable(CF_UNICODETEXT)) {
@@ -198,24 +210,6 @@ winClipboardFlushXEvents(HWND hwnd,
                 goto winClipboardFlushXEvents_SelectionRequest_Done;
             }
 
-            /* Close clipboard if we have it open already */
-            if (GetOpenClipboardWindow() == hwnd) {
-                CloseClipboard();
-            }
-
-            /* Access the clipboard */
-            if (!OpenClipboard(hwnd)) {
-                ErrorF("winClipboardFlushXEvents - SelectionRequest - "
-                       "OpenClipboard () failed: %08lx\n", GetLastError());
-
-                /* Abort */
-                fAbort = TRUE;
-                goto winClipboardFlushXEvents_SelectionRequest_Done;
-            }
-
-            /* Indicate that clipboard was opened */
-            fCloseClipboard = TRUE;
-
             /* Setup the string style */
             if (event.xselectionrequest.target == XA_STRING)
                 xiccesStyle = XStringStyle;
@@ -227,10 +221,6 @@ winClipboardFlushXEvents(HWND hwnd,
                 xiccesStyle = XCompoundTextStyle;
             else
                 xiccesStyle = XStringStyle;
-
-            /*
-             * FIXME: Can't pass CF_UNICODETEXT on Windows 95/98/Me
-             */
 
             /* Get a pointer to the clipboard text, in desired format */
             if (fUseUnicode) {
@@ -351,7 +341,7 @@ winClipboardFlushXEvents(HWND hwnd,
             /* Notify the requesting window that the operation has completed */
             iReturn = XSendEvent(pDisplay,
                                  eventSelection.requestor,
-                                 False, 0L, (XEvent *) & eventSelection);
+                                 False, 0L, (XEvent *) &eventSelection);
             if (iReturn == BadValue || iReturn == BadWindow) {
                 ErrorF("winClipboardFlushXEvents - SelectionRequest - "
                        "XSendEvent () failed\n");
@@ -390,7 +380,7 @@ winClipboardFlushXEvents(HWND hwnd,
                 /* Notify the requesting window that the operation is complete */
                 iReturn = XSendEvent(pDisplay,
                                      eventSelection.requestor,
-                                     False, 0L, (XEvent *) & eventSelection);
+                                     False, 0L, (XEvent *) &eventSelection);
                 if (iReturn == BadValue || iReturn == BadWindow) {
                     /*
                      * Should not be a problem if XSendEvent fails because
@@ -687,10 +677,10 @@ winClipboardFlushXEvents(HWND hwnd,
             free(pwszUnicodeStr);
             if (hGlobal && pszGlobalData)
                 GlobalUnlock(hGlobal);
-            if (fSetClipboardData && g_fUnicodeSupport)
+            if (fSetClipboardData) {
                 SetClipboardData(CF_UNICODETEXT, NULL);
-            if (fSetClipboardData)
                 SetClipboardData(CF_TEXT, NULL);
+            }
             return WIN_XEVENTS_NOTIFY;
 
         case SelectionClear:

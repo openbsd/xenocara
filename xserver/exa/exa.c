@@ -38,8 +38,6 @@
 #include "exa.h"
 
 DevPrivateKeyRec exaScreenPrivateKeyRec;
-DevPrivateKeyRec exaPixmapPrivateKeyRec;
-DevPrivateKeyRec exaGCPrivateKeyRec;
 
 #ifdef MITSHM
 static ShmFuncs exaShmFuncs = { NULL, NULL };
@@ -483,9 +481,6 @@ static void
  exaCopyClip(GCPtr pGCDst, GCPtr pGCSrc);
 
 static void
- exaCopyClip(GCPtr pGCDst, GCPtr pGCSrc);
-
-static void
  exaDestroyClip(GCPtr pGC);
 
 const GCFuncs exaGCFuncs = {
@@ -625,8 +620,8 @@ exaCreateGC(GCPtr pGC)
 
     swap(pExaScr, pScreen, CreateGC);
     if ((ret = (*pScreen->CreateGC) (pGC))) {
-        wrap(pExaGC, pGC, funcs, (GCFuncs *) & exaGCFuncs);
-        wrap(pExaGC, pGC, ops, (GCOps *) & exaOps);
+        wrap(pExaGC, pGC, funcs, (GCFuncs *) &exaGCFuncs);
+        wrap(pExaGC, pGC, ops, (GCOps *) &exaOps);
     }
     swap(pExaScr, pScreen, CreateGC);
 
@@ -707,11 +702,9 @@ exaCreateScreenResources(ScreenPtr pScreen)
 }
 
 static void
-ExaBlockHandler(int screenNum, pointer blockData, pointer pTimeout,
+ExaBlockHandler(ScreenPtr pScreen, pointer pTimeout,
                 pointer pReadmask)
 {
-    ScreenPtr pScreen = screenInfo.screens[screenNum];
-
     ExaScreenPriv(pScreen);
 
     /* Move any deferred results from a software fallback to the driver pixmap */
@@ -719,7 +712,7 @@ ExaBlockHandler(int screenNum, pointer blockData, pointer pTimeout,
         exaMoveInPixmap_mixed(pExaScr->deferred_mixed_pixmap);
 
     unwrap(pExaScr, pScreen, BlockHandler);
-    (*pScreen->BlockHandler) (screenNum, blockData, pTimeout, pReadmask);
+    (*pScreen->BlockHandler) (pScreen, pTimeout, pReadmask);
     wrap(pExaScr, pScreen, BlockHandler, ExaBlockHandler);
 
     /* The rest only applies to classic EXA */
@@ -739,15 +732,13 @@ ExaBlockHandler(int screenNum, pointer blockData, pointer pTimeout,
 }
 
 static void
-ExaWakeupHandler(int screenNum, pointer wakeupData, unsigned long result,
+ExaWakeupHandler(ScreenPtr pScreen, unsigned long result,
                  pointer pReadmask)
 {
-    ScreenPtr pScreen = screenInfo.screens[screenNum];
-
     ExaScreenPriv(pScreen);
 
     unwrap(pExaScr, pScreen, WakeupHandler);
-    (*pScreen->WakeupHandler) (screenNum, wakeupData, result, pReadmask);
+    (*pScreen->WakeupHandler) (pScreen, result, pReadmask);
     wrap(pExaScr, pScreen, WakeupHandler, ExaWakeupHandler);
 
     if (result == 0 && pExaScr->numOffscreenAvailable > 1) {
@@ -765,7 +756,7 @@ ExaWakeupHandler(int screenNum, pointer wakeupData, unsigned long result,
  * screen private, before calling down to the next CloseSccreen.
  */
 static Bool
-exaCloseScreen(int i, ScreenPtr pScreen)
+exaCloseScreen(ScreenPtr pScreen)
 {
     ExaScreenPriv(pScreen);
     PictureScreenPtr ps = GetPictureScreenIfSet(pScreen);
@@ -791,6 +782,10 @@ exaCloseScreen(int i, ScreenPtr pScreen)
     unwrap(pExaScr, pScreen, ChangeWindowAttributes);
     unwrap(pExaScr, pScreen, BitmapToRegion);
     unwrap(pExaScr, pScreen, CreateScreenResources);
+    if (pExaScr->SavedSharePixmapBacking)
+        unwrap(pExaScr, pScreen, SharePixmapBacking);
+    if (pExaScr->SavedSetSharedPixmapBacking)
+        unwrap(pExaScr, pScreen, SetSharedPixmapBacking);
     unwrap(pExaScr, ps, Composite);
     if (pExaScr->SavedGlyphs)
         unwrap(pExaScr, ps, Glyphs);
@@ -800,7 +795,7 @@ exaCloseScreen(int i, ScreenPtr pScreen)
 
     free(pExaScr);
 
-    return (*pScreen->CloseScreen) (i, pScreen);
+    return (*pScreen->CloseScreen) (pScreen);
 }
 
 /**
@@ -922,8 +917,8 @@ exaDriverInit(ScreenPtr pScreen, ExaDriverPtr pScreenInfo)
 
     exaDDXDriverInit(pScreen);
 
-    if (!dixRegisterPrivateKey
-        (&exaGCPrivateKeyRec, PRIVATE_GC, sizeof(ExaGCPrivRec))) {
+    if (!dixRegisterScreenSpecificPrivateKey
+        (pScreen, &pExaScr->gcPrivateKeyRec, PRIVATE_GC, sizeof(ExaGCPrivRec))) {
         LogMessage(X_WARNING, "EXA(%d): Failed to allocate GC private\n",
                    pScreen->myNum);
         return FALSE;
@@ -971,8 +966,8 @@ exaDriverInit(ScreenPtr pScreen, ExaDriverPtr pScreenInfo)
      * Hookup offscreen pixmaps
      */
     if (pExaScr->info->flags & EXA_OFFSCREEN_PIXMAPS) {
-        if (!dixRegisterPrivateKey
-            (&exaPixmapPrivateKeyRec, PRIVATE_PIXMAP,
+        if (!dixRegisterScreenSpecificPrivateKey
+            (pScreen, &pExaScr->pixmapPrivateKeyRec, PRIVATE_PIXMAP,
              sizeof(ExaPixmapPrivRec))) {
             LogMessage(X_WARNING,
                        "EXA(%d): Failed to allocate pixmap private\n",
@@ -985,6 +980,9 @@ exaDriverInit(ScreenPtr pScreen, ExaDriverPtr pScreenInfo)
                 wrap(pExaScr, pScreen, DestroyPixmap, exaDestroyPixmap_mixed);
                 wrap(pExaScr, pScreen, ModifyPixmapHeader,
                      exaModifyPixmapHeader_mixed);
+                wrap(pExaScr, pScreen, SharePixmapBacking, exaSharePixmapBacking_mixed);
+                wrap(pExaScr, pScreen, SetSharedPixmapBacking, exaSetSharedPixmapBacking_mixed);
+
                 pExaScr->do_migration = exaDoMigration_mixed;
                 pExaScr->pixmap_has_gpu_copy = exaPixmapHasGpuCopy_mixed;
                 pExaScr->do_move_in_pixmap = exaMoveInPixmap_mixed;

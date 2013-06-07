@@ -65,14 +65,14 @@ RRDestroyOutputProperty(RRPropertyPtr prop)
 static void
 RRDeleteProperty(RROutputRec * output, RRPropertyRec * prop)
 {
-    xRROutputPropertyNotifyEvent event;
-
-    event.type = RREventBase + RRNotify;
-    event.subCode = RRNotify_OutputProperty;
-    event.output = output->id;
-    event.state = PropertyDelete;
-    event.atom = prop->propertyName;
-    event.timestamp = currentTime.milliseconds;
+    xRROutputPropertyNotifyEvent event = {
+        .type = RREventBase + RRNotify,
+        .subCode = RRNotify_OutputProperty,
+        .output = output->id,
+        .state = PropertyDelete,
+        .atom = prop->propertyName,
+        .timestamp = currentTime.milliseconds
+    };
 
     RRDeliverPropertyEvent(output->pScreen, (xEvent *) &event);
 
@@ -138,7 +138,6 @@ RRChangeOutputProperty(RROutputPtr output, Atom property, Atom type,
                        pointer value, Bool sendevent, Bool pending)
 {
     RRPropertyPtr prop;
-    xRROutputPropertyNotifyEvent event;
     rrScrPrivPtr pScrPriv = rrGetScrPriv(output->pScreen);
     int size_in_bytes;
     int total_size;
@@ -218,6 +217,8 @@ RRChangeOutputProperty(RROutputPtr output, Atom property, Atom type,
             !pScrPriv->rrOutputSetProperty(output->pScreen, output,
                                            prop->propertyName, &new_value)) {
             free(new_value.data);
+            if (add)
+                RRDestroyOutputProperty(prop);
             return BadValue;
         }
         free(prop_value->data);
@@ -237,12 +238,14 @@ RRChangeOutputProperty(RROutputPtr output, Atom property, Atom type,
         output->pendingProperties = TRUE;
 
     if (sendevent) {
-        event.type = RREventBase + RRNotify;
-        event.subCode = RRNotify_OutputProperty;
-        event.output = output->id;
-        event.state = PropertyNewValue;
-        event.atom = prop->propertyName;
-        event.timestamp = currentTime.milliseconds;
+        xRROutputPropertyNotifyEvent event = {
+            .type = RREventBase + RRNotify,
+            .subCode = RRNotify_OutputProperty,
+            .output = output->id,
+            .state = PropertyNewValue,
+            .atom = prop->propertyName,
+            .timestamp = currentTime.milliseconds
+        };
         RRDeliverPropertyEvent(output->pScreen, (xEvent *) &event);
     }
     return Success;
@@ -341,12 +344,18 @@ RRConfigureOutputProperty(RROutputPtr output, Atom property,
     /*
      * ranges must have even number of values
      */
-    if (range && (num_values & 1))
+    if (range && (num_values & 1)) {
+        if (add)
+            RRDestroyOutputProperty(prop);
         return BadMatch;
+    }
 
     new_values = malloc(num_values * sizeof(INT32));
-    if (!new_values && num_values)
+    if (!new_values && num_values) {
+        if (add)
+            RRDestroyOutputProperty(prop);
         return BadAlloc;
+    }
     if (num_values)
         memcpy(new_values, values, num_values * sizeof(INT32));
 
@@ -378,7 +387,7 @@ int
 ProcRRListOutputProperties(ClientPtr client)
 {
     REQUEST(xRRListOutputPropertiesReq);
-    Atom *pAtoms = NULL, *temppAtoms;
+    Atom *pAtoms = NULL;
     xRRListOutputPropertiesReply rep;
     int numProps = 0;
     RROutputPtr output;
@@ -394,21 +403,25 @@ ProcRRListOutputProperties(ClientPtr client)
         if (!(pAtoms = (Atom *) malloc(numProps * sizeof(Atom))))
             return BadAlloc;
 
-    rep.type = X_Reply;
-    rep.length = bytes_to_int32(numProps * sizeof(Atom));
-    rep.sequenceNumber = client->sequence;
-    rep.nAtoms = numProps;
+    rep = (xRRListOutputPropertiesReply) {
+        .type = X_Reply,
+        .sequenceNumber = client->sequence,
+        .length = bytes_to_int32(numProps * sizeof(Atom)),
+        .nAtoms = numProps
+    };
     if (client->swapped) {
         swaps(&rep.sequenceNumber);
         swapl(&rep.length);
         swaps(&rep.nAtoms);
     }
-    temppAtoms = pAtoms;
-    for (prop = output->properties; prop; prop = prop->next)
-        *temppAtoms++ = prop->propertyName;
+    WriteToClient(client, sizeof(xRRListOutputPropertiesReply), &rep);
 
-    WriteToClient(client, sizeof(xRRListOutputPropertiesReply), (char *) &rep);
     if (numProps) {
+        /* Copy property name atoms to reply buffer */
+        Atom *temppAtoms = pAtoms;
+        for (prop = output->properties; prop; prop = prop->next)
+            *temppAtoms++ = prop->propertyName;
+
         client->pSwapReplyFunc = (ReplySwapPtr) Swap32Write;
         WriteSwappedDataToClient(client, numProps * sizeof(Atom), pAtoms);
         free(pAtoms);
@@ -438,17 +451,21 @@ ProcRRQueryOutputProperty(ClientPtr client)
         if (!extra)
             return BadAlloc;
     }
-    rep.type = X_Reply;
-    rep.length = prop->num_valid;
-    rep.sequenceNumber = client->sequence;
-    rep.pending = prop->is_pending;
-    rep.range = prop->range;
-    rep.immutable = prop->immutable;
+
+    rep = (xRRQueryOutputPropertyReply) {
+        .type = X_Reply,
+        .sequenceNumber = client->sequence,
+        .length = prop->num_valid,
+        .pending = prop->is_pending,
+        .range = prop->range,
+        .immutable = prop->immutable
+    };
+
     if (client->swapped) {
         swaps(&rep.sequenceNumber);
         swapl(&rep.length);
     }
-    WriteToClient(client, sizeof(xRRQueryOutputPropertyReply), (char *) &rep);
+    WriteToClient(client, sizeof(xRRQueryOutputPropertyReply), &rep);
     if (prop->num_valid) {
         memcpy(extra, prop->valid_values, prop->num_valid * sizeof(INT32));
         client->pSwapReplyFunc = (ReplySwapPtr) Swap32Write;
@@ -594,8 +611,10 @@ ProcRRGetOutputProperty(ClientPtr client)
         if (prop->propertyName == stuff->property)
             break;
 
-    reply.type = X_Reply;
-    reply.sequenceNumber = client->sequence;
+    reply = (xRRGetOutputPropertyReply) {
+        .type = X_Reply,
+        .sequenceNumber = client->sequence
+    };
     if (!prop) {
         reply.nItems = 0;
         reply.length = 0;
@@ -672,14 +691,14 @@ ProcRRGetOutputProperty(ClientPtr client)
     reply.propertyType = prop_value->type;
 
     if (stuff->delete && (reply.bytesAfter == 0)) {
-        xRROutputPropertyNotifyEvent event;
-
-        event.type = RREventBase + RRNotify;
-        event.subCode = RRNotify_OutputProperty;
-        event.output = output->id;
-        event.state = PropertyDelete;
-        event.atom = prop->propertyName;
-        event.timestamp = currentTime.milliseconds;
+        xRROutputPropertyNotifyEvent event = {
+            .type = RREventBase + RRNotify,
+            .subCode = RRNotify_OutputProperty,
+            .output = output->id,
+            .state = PropertyDelete,
+            .atom = prop->propertyName,
+            .timestamp = currentTime.milliseconds
+        };
         RRDeliverPropertyEvent(output->pScreen, (xEvent *) &event);
     }
 

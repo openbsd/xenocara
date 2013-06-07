@@ -21,7 +21,6 @@ is" without express or implied warranty.
 #include "scrnintstr.h"
 #include "dix.h"
 #include "mi.h"
-#include "mibstore.h"
 #include "micmap.h"
 #include "colormapst.h"
 #include "resource.h"
@@ -129,7 +128,7 @@ static miPointerSpriteFuncRec xnestPointerSpriteFuncs = {
 };
 
 Bool
-xnestOpenScreen(int index, ScreenPtr pScreen, int argc, char *argv[])
+xnestOpenScreen(ScreenPtr pScreen, int argc, char *argv[])
 {
     VisualPtr visuals;
     DepthPtr depths;
@@ -309,8 +308,6 @@ xnestOpenScreen(int index, ScreenPtr pScreen, int argc, char *argv[])
 
     pScreen->BlockHandler = (ScreenBlockHandlerProcPtr) NoopDDA;
     pScreen->WakeupHandler = (ScreenWakeupHandlerProcPtr) NoopDDA;
-    pScreen->blockData = NULL;
-    pScreen->wakeupData = NULL;
 
     miDCInitialize(pScreen, &xnestPointerCursorFuncs);  /* init SW rendering */
     PointPriv = dixLookupPrivate(&pScreen->devPrivates, miPointerScreenKey);
@@ -409,7 +406,7 @@ xnestOpenScreen(int index, ScreenPtr pScreen, int argc, char *argv[])
 }
 
 Bool
-xnestCloseScreen(int index, ScreenPtr pScreen)
+xnestCloseScreen(ScreenPtr pScreen)
 {
     int i;
 

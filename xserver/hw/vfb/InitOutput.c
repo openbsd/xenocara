@@ -41,7 +41,6 @@ from The Open Group.
 #include "servermd.h"
 #define PSZ 8
 #include "fb.h"
-#include "mibstore.h"
 #include "colormapst.h"
 #include "gcstruct.h"
 #include "input.h"
@@ -66,6 +65,7 @@ from The Open Group.
 #endif                          /* HAS_SHM */
 #include "dix.h"
 #include "miline.h"
+#include "glx_extinit.h"
 
 #define VFB_DEFAULT_WIDTH      1280
 #define VFB_DEFAULT_HEIGHT     1024
@@ -219,7 +219,7 @@ OsVendorInit(void)
 }
 
 void
-OsVendorFatalError(void)
+OsVendorFatalError(const char *f, va_list args)
 {
 }
 
@@ -760,9 +760,9 @@ static miPointerScreenFuncRec vfbPointerCursorFuncs = {
 };
 
 static Bool
-vfbCloseScreen(int index, ScreenPtr pScreen)
+vfbCloseScreen(ScreenPtr pScreen)
 {
-    vfbScreenInfoPtr pvfb = &vfbScreens[index];
+    vfbScreenInfoPtr pvfb = &vfbScreens[pScreen->myNum];
     int i;
 
     pScreen->CloseScreen = pvfb->closeScreen;
@@ -774,13 +774,20 @@ vfbCloseScreen(int index, ScreenPtr pScreen)
     for (i = 0; i < screenInfo.numScreens; i++)
         SetInstalledColormap(screenInfo.screens[i], NULL);
 
-    return pScreen->CloseScreen(index, pScreen);
+    /*
+     * fb overwrites miCloseScreen, so do this here
+     */
+    if (pScreen->devPrivate)
+        (*pScreen->DestroyPixmap) (pScreen->devPrivate);
+    pScreen->devPrivate = NULL;
+
+    return pScreen->CloseScreen(pScreen);
 }
 
 static Bool
-vfbScreenInit(int index, ScreenPtr pScreen, int argc, char **argv)
+vfbScreenInit(ScreenPtr pScreen, int argc, char **argv)
 {
-    vfbScreenInfoPtr pvfb = &vfbScreens[index];
+    vfbScreenInfoPtr pvfb = &vfbScreens[pScreen->myNum];
     int dpix = monitorResolution, dpiy = monitorResolution;
     int ret;
     char *pbits;
@@ -878,11 +885,29 @@ vfbScreenInit(int index, ScreenPtr pScreen, int argc, char **argv)
 
 }                               /* end vfbScreenInit */
 
+static const ExtensionModule vfbExtensions[] = {
+#ifdef GLXEXT
+    { GlxExtensionInit, "GLX", &noGlxExtension },
+#endif
+};
+
+static
+void vfbExtensionInit(void)
+{
+    int i;
+
+    for (i = 0; i < ARRAY_SIZE(vfbExtensions); i++)
+        LoadExtension(&vfbExtensions[i], TRUE);
+}
+
 void
 InitOutput(ScreenInfo * screenInfo, int argc, char **argv)
 {
     int i;
     int NumFormats = 0;
+
+    if (serverGeneration == 1)
+        vfbExtensionInit();
 
     /* initialize pixmap formats */
 

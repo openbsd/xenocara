@@ -71,6 +71,7 @@
 #include "damageextint.h"
 #include "xfixes.h"
 #include <X11/extensions/compositeproto.h>
+#include "compositeext.h"
 #include <assert.h>
 
 /*
@@ -182,7 +183,6 @@ extern DevPrivateKeyRec CompSubwindowsPrivateKeyRec;
 #define GetCompSubwindows(w) ((CompSubwindowsPtr) \
     dixLookupPrivate(&(w)->devPrivates, CompSubwindowsPrivateKey))
 
-extern RESTYPE CompositeClientWindowType;
 extern RESTYPE CompositeClientSubwindowsType;
 extern RESTYPE CompositeClientOverlayType;
 
@@ -229,13 +229,6 @@ compReallocPixmap(WindowPtr pWin, int x, int y,
                   unsigned int w, unsigned int h, int bw);
 
 /*
- * compext.c
- */
-
-void
- CompositeExtensionInit(void);
-
-/*
  * compinit.c
  */
 
@@ -271,8 +264,6 @@ void
 #else
 #define compCheckTree(s)
 #endif
-
-PictFormatPtr compWindowFormat(WindowPtr pWin);
 
 void
  compSetPixmap(WindowPtr pWin, PixmapPtr pPixmap);

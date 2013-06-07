@@ -102,6 +102,7 @@ OsRegisterSigWrapper(OsSigWrapperPtr newSigWrapper)
  * OsSigHandler --
  *    Catch unexpected signals and exit or continue cleanly.
  */
+#if !defined(WIN32) || defined(__CYGWIN__)
 static void
 #ifdef SA_SIGINFO
 OsSigHandler(int signo, siginfo_t * sip, void *unused)
@@ -113,7 +114,7 @@ OsSigHandler(int signo)
     const char *dlerr = dlerror();
 
     if (dlerr) {
-        LogMessage(X_ERROR, "Dynamic loader error: %s\n", dlerr);
+        LogMessageVerbSigSafe(X_ERROR, 1, "Dynamic loader error: %s\n", dlerr);
     }
 #endif                          /* RTLD_DI_SETSIGNAL */
 
@@ -129,8 +130,8 @@ OsSigHandler(int signo)
 
 #ifdef SA_SIGINFO
     if (sip->si_code == SI_USER) {
-        ErrorF("Recieved signal %d sent by process %ld, uid %ld\n",
-               signo, (long) sip->si_pid, (long) sip->si_uid);
+        ErrorFSigSafe("Received signal %u sent by process %u, uid %u\n", signo,
+                     sip->si_pid, sip->si_uid);
     }
     else {
         switch (signo) {
@@ -138,7 +139,7 @@ OsSigHandler(int signo)
         case SIGBUS:
         case SIGILL:
         case SIGFPE:
-            ErrorF("%s at address %p\n", strsignal(signo), sip->si_addr);
+            ErrorFSigSafe("%s at address %p\n", strsignal(signo), sip->si_addr);
         }
     }
 #endif
@@ -146,6 +147,7 @@ OsSigHandler(int signo)
     FatalError("Caught signal %d (%s). Server aborting\n",
                signo, strsignal(signo));
 }
+#endif /* !WIN32 || __CYGWIN__ */
 
 void
 OsInit(void)
@@ -155,6 +157,7 @@ OsInit(void)
     char fname[PATH_MAX];
 
     if (!been_here) {
+#if !defined(WIN32) || defined(__CYGWIN__)
         struct sigaction act, oact;
         int i;
 
@@ -181,6 +184,8 @@ OsInit(void)
                        siglist[i], strerror(errno));
             }
         }
+#endif /* !WIN32 || __CYGWIN__ */
+
 #ifdef HAVE_BACKTRACE
         /*
          * initialize the backtracer, since the ctor calls dlopen(), which
@@ -207,29 +212,29 @@ OsInit(void)
         fclose(stdin);
         fclose(stdout);
 #endif
-        /* 
-         * If a write of zero bytes to stderr returns non-zero, i.e. -1, 
-         * then writing to stderr failed, and we'll write somewhere else 
-         * instead. (Apparently this never happens in the Real World.)
-         */
-        if (write(2, fname, 0) == -1) {
-            FILE *err;
-
-            if (strlen(display) + strlen(ADMPATH) + 1 < sizeof fname)
-                snprintf(fname, sizeof(fname), ADMPATH, display);
-            else
-                strlcpy(fname, devnull, sizeof(fname));
-            /*
-             * uses stdio to avoid os dependencies here,
-             * a real os would use
-             *  open (fname, O_WRONLY|O_APPEND|O_CREAT, 0666)
-             */
-            if (!(err = fopen(fname, "a+")))
-                err = fopen(devnull, "w");
-            if (err && (fileno(err) != 2)) {
-                dup2(fileno(err), 2);
-                fclose(err);
-            }
+	/* 
+	 * If a write of zero bytes to stderr returns non-zero, i.e. -1, 
+	 * then writing to stderr failed, and we'll write somewhere else 
+	 * instead. (Apparently this never happens in the Real World.)
+	 */
+	if (write (2, fname, 0) == -1) {
+	    FILE *err;
+            
+	    if (strlen (display) + strlen (ADMPATH) + 1 < sizeof fname)
+		snprintf (fname, sizeof(fname), ADMPATH, display);
+	    else
+		strlcpy (fname, devnull, sizeof(fname));
+	    /*
+	     * uses stdio to avoid os dependencies here,
+	     * a real os would use
+ 	     *  open (fname, O_WRONLY|O_APPEND|O_CREAT, 0666)
+	     */
+	    if (!(err = fopen (fname, "a+")))
+		err = fopen (devnull, "w");
+	    if (err && (fileno(err) != 2)) {
+		dup2 (fileno (err), 2);
+		fclose (err);
+	    }
 #if defined(SYSV) || defined(SVR4) || defined(WIN32) || defined(__CYGWIN__)
             {
                 static char buf[BUFSIZ];
@@ -241,8 +246,10 @@ OsInit(void)
 #endif
         }
 
+#if !defined(WIN32) || defined(__CYGWIN__)
         if (getpgrp() == 0)
             setpgid(0, 0);
+#endif
 
 #ifdef RLIMIT_DATA
         if (limitDataSpace >= 0) {
@@ -288,6 +295,7 @@ OsInit(void)
     }
     TimerInit();
     OsVendorInit();
+    OsResetSignals();
     /*
      * No log file by default.  OsVendorInit() should call LogInit() with the
      * log file name if logging to a file is desired.

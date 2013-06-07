@@ -42,19 +42,21 @@
 #define WSCONS_MOUSE_PREFIX "/dev/wsmouse"
 
 #define KB_OVRENC \
-	{ KB_UK,	"gb" }, \
-	{ KB_SV,	"se" }, \
-	{ KB_SG,	"ch" }, \
-	{ KB_SF,	"ch" }, \
-	{ KB_LA,	"latam" }, \
-	{ KB_CF,	"ca" }
+        { KB_UK,        "gb" }, \
+        { KB_SV,        "se" }, \
+        { KB_SG,        "ch" }, \
+        { KB_SF,        "ch" }, \
+        { KB_LA,        "latam" }, \
+        { KB_CF,        "ca" }
 
 struct nameint {
     int val;
     char *name;
 } kbdenc[] = {
-    KB_OVRENC, KB_ENCTAB, {
-0}};
+    KB_OVRENC,
+    KB_ENCTAB,
+    {0}
+};
 
 struct nameint kbdvar[] = {
     {KB_NODEAD | KB_SG, "de_nodeadkeys"},

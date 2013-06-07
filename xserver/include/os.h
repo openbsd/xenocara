@@ -49,6 +49,7 @@ SOFTWARE.
 
 #include "misc.h"
 #include <stdarg.h>
+#include <stdint.h>
 #include <string.h>
 
 #define SCREEN_SAVER_ON   0
@@ -87,7 +88,9 @@ extern void ddxBeforeReset(void);
 #endif
 
 #ifdef DDXOSVERRORF
-extern _X_EXPORT void (*OsVendorVErrorFProc) (const char *, va_list args);
+extern _X_EXPORT void (*OsVendorVErrorFProc) (const char *,
+                                              va_list args)
+_X_ATTRIBUTE_PRINTF(1, 0);
 #endif
 
 extern _X_EXPORT int WaitForSomething(int *     /*pClientsReady */
@@ -328,7 +331,8 @@ extern _X_EXPORT void
 OsCleanup(Bool);
 
 extern _X_EXPORT void
-OsVendorFatalError(void);
+OsVendorFatalError(const char *f, va_list args)
+_X_ATTRIBUTE_PRINTF(1, 0);
 
 extern _X_EXPORT void
 OsVendorInit(void);
@@ -338,6 +342,15 @@ OsBlockSignals(void);
 
 extern _X_EXPORT void
 OsReleaseSignals(void);
+
+extern _X_EXPORT int
+OsBlockSIGIO(void);
+
+extern _X_EXPORT void
+OsReleaseSIGIO(void);
+
+extern void
+OsResetSignals(void);
 
 extern _X_EXPORT void
 OsAbort(void)
@@ -355,9 +368,13 @@ Fopen(const char *, const char *);
 extern _X_EXPORT int
 Fclose(pointer);
 #else
-#define System(a) system(a)
-#define Popen(a,b) popen(a,b)
-#define Pclose(a) pclose(a)
+
+extern const char *
+Win32TempDir(void);
+
+extern int
+System(const char *cmdline);
+
 #define Fopen(a,b) fopen(a,b)
 #define Fclose(a) fclose(a)
 #endif
@@ -397,9 +414,6 @@ typedef struct sockaddr *sockaddrPtr;
 
 extern _X_EXPORT int
 InvalidHost(sockaddrPtr /*saddr */ , int /*len */ , ClientPtr client);
-
-extern _X_EXPORT int
-LocalClient(ClientPtr /* client */ );
 
 extern _X_EXPORT int
 LocalClientCred(ClientPtr, int *, int *);
@@ -585,6 +599,7 @@ typedef enum {
     X_INFO,                     /* Informational message */
     X_NONE,                     /* No prefix */
     X_NOT_IMPLEMENTED,          /* Not implemented */
+    X_DEBUG,                    /* Debug message */
     X_UNKNOWN = -1              /* unknown -- this must always be last */
 } MessageType;
 
@@ -609,6 +624,12 @@ _X_ATTRIBUTE_PRINTF(3, 4);
 extern _X_EXPORT void
 LogMessage(MessageType type, const char *format, ...)
 _X_ATTRIBUTE_PRINTF(2, 3);
+extern _X_EXPORT void
+LogMessageVerbSigSafe(MessageType type, int verb, const char *format, ...)
+_X_ATTRIBUTE_PRINTF(3, 4);
+extern _X_EXPORT void
+LogVMessageVerbSigSafe(MessageType type, int verb, const char *format, va_list args)
+_X_ATTRIBUTE_PRINTF(3, 0);
 
 extern _X_EXPORT void
 LogVHdrMessageVerb(MessageType type, int verb,
@@ -652,6 +673,12 @@ VErrorF(const char *f, va_list args)
 _X_ATTRIBUTE_PRINTF(1, 0);
 extern _X_EXPORT void
 ErrorF(const char *f, ...)
+_X_ATTRIBUTE_PRINTF(1, 2);
+extern _X_EXPORT void
+VErrorFSigSafe(const char *f, va_list args)
+_X_ATTRIBUTE_PRINTF(1, 0);
+extern _X_EXPORT void
+ErrorFSigSafe(const char *f, ...)
 _X_ATTRIBUTE_PRINTF(1, 2);
 extern _X_EXPORT void
 LogPrintMarkers(void);

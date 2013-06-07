@@ -62,6 +62,7 @@ SOFTWARE.
 #define DEVICE_ON	1
 #define DEVICE_OFF	2
 #define DEVICE_CLOSE	3
+#define DEVICE_ABORT	4
 
 #define POINTER_RELATIVE	(1 << 1)
 #define POINTER_ABSOLUTE	(1 << 2)
@@ -69,6 +70,7 @@ SOFTWARE.
 #define POINTER_SCREEN		(1 << 4)        /* Data in screen coordinates */
 #define POINTER_NORAW		(1 << 5)        /* Don't generate RawEvents */
 #define POINTER_EMULATED	(1 << 6)        /* Event was emulated from another event */
+#define POINTER_DESKTOP		(1 << 7)        /* Data in desktop coordinates */
 
 /* GetTouchEvent flags */
 #define TOUCH_ACCEPT            (1 << 0)
@@ -264,10 +266,11 @@ extern _X_EXPORT Bool ActivateDevice(DeviceIntPtr /*device */ ,
 
 extern _X_EXPORT Bool DisableDevice(DeviceIntPtr /*device */ ,
                                     BOOL /* sendevent */ );
-
+extern void DisableAllDevices(void);
 extern int InitAndStartDevices(void);
 
 extern void CloseDownDevices(void);
+extern void AbortDevices(void);
 
 extern void UndisplayDevices(void);
 
@@ -465,6 +468,11 @@ extern int GetTouchOwnershipEvents(InternalEvent *events,
                                    TouchPointInfoPtr ti,
                                    uint8_t mode, XID resource, uint32_t flags);
 
+extern void GetDixTouchEnd(InternalEvent *ievent,
+                           DeviceIntPtr dev,
+                           TouchPointInfoPtr ti,
+                           uint32_t flags);
+
 extern _X_EXPORT int GetProximityEvents(InternalEvent *events,
                                         DeviceIntPtr pDev,
                                         int type, const ValuatorMask *mask);
@@ -472,6 +480,9 @@ extern _X_EXPORT int GetProximityEvents(InternalEvent *events,
 extern _X_EXPORT void QueueProximityEvents(DeviceIntPtr pDev,
                                            int type, const ValuatorMask *mask);
 
+#ifdef PANORAMIX
+_X_EXPORT
+#endif
 extern void PostSyntheticMotion(DeviceIntPtr pDev,
                                 int x, int y, int screen, unsigned long time);
 
@@ -557,9 +568,9 @@ extern void TouchEventHistoryPush(TouchPointInfoPtr ti, const DeviceEvent *ev);
 extern void TouchEventHistoryReplay(TouchPointInfoPtr ti, DeviceIntPtr dev,
                                     XID resource);
 extern Bool TouchResourceIsOwner(TouchPointInfoPtr ti, XID resource);
-extern void TouchAddListener(TouchPointInfoPtr ti, XID resource,
+extern void TouchAddListener(TouchPointInfoPtr ti, XID resource, int resource_type,
                              enum InputLevel level, enum TouchListenerType type,
-                             enum TouchListenerState state, WindowPtr window);
+                             enum TouchListenerState state, WindowPtr window, GrabPtr grab);
 extern Bool TouchRemoveListener(TouchPointInfoPtr ti, XID resource);
 extern void TouchSetupListeners(DeviceIntPtr dev, TouchPointInfoPtr ti,
                                 InternalEvent *ev);
@@ -576,6 +587,9 @@ extern int TouchListenerAcceptReject(DeviceIntPtr dev, TouchPointInfoPtr ti,
                                      int listener, int mode);
 extern int TouchAcceptReject(ClientPtr client, DeviceIntPtr dev, int mode,
                              uint32_t touchid, Window grab_window, XID *error);
+extern void TouchEndPhysicallyActiveTouches(DeviceIntPtr dev);
+extern void TouchDeliverDeviceClassesChangedEvent(TouchPointInfoPtr ti,
+                                                  Time time, XID resource);
 
 /* misc event helpers */
 extern Mask GetEventMask(DeviceIntPtr dev, xEvent *ev, InputClientsPtr clients);
@@ -666,5 +680,11 @@ extern _X_EXPORT void input_option_set_value(InputOption *opt,
 
 extern _X_HIDDEN Bool point_on_screen(ScreenPtr pScreen, int x, int y);
 extern _X_HIDDEN void update_desktop_dimensions(void);
+
+extern _X_HIDDEN void input_constrain_cursor(DeviceIntPtr pDev, ScreenPtr screen,
+                                             int current_x, int current_y,
+                                             int dest_x, int dest_y,
+                                             int *out_x, int *out_y,
+                                             int *nevents, InternalEvent* events);
 
 #endif                          /* INPUT_H */

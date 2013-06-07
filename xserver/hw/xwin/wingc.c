@@ -33,11 +33,6 @@
 #endif
 #include "win.h"
 
-void
-
-winPushPixels(GCPtr pGC, PixmapPtr pBitMap, DrawablePtr pDrawable, int dx,
-              int dy, int xOrg, int yOrg);
-
 /*
  * Local prototypes
  */
@@ -135,8 +130,8 @@ winCreateGCNativeGDI(GCPtr pGC)
     ErrorF("winCreateGCNativeGDI - depth: %d\n", pGC->depth);
 #endif
 
-    pGC->ops = (GCOps *) & winGCOps;
-    pGC->funcs = (GCFuncs *) & winGCFuncs;
+    pGC->ops = (GCOps *) &winGCOps;
+    pGC->funcs = (GCFuncs *) &winGCFuncs;
 
     /* We want all coordinates passed to spans functions to be screen relative */
     pGC->miTranslate = TRUE;

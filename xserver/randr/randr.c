@@ -30,6 +30,7 @@
 #endif
 
 #include "randrstr.h"
+#include "extinit.h"
 
 /* From render.h */
 #ifndef SubPixelUnknown
@@ -83,7 +84,7 @@ RRClientCallback(CallbackListPtr *list, pointer closure, pointer data)
 }
 
 static Bool
-RRCloseScreen(int i, ScreenPtr pScreen)
+RRCloseScreen(ScreenPtr pScreen)
 {
     rrScrPriv(pScreen);
     int j;
@@ -94,11 +95,14 @@ RRCloseScreen(int i, ScreenPtr pScreen)
     for (j = pScrPriv->numOutputs - 1; j >= 0; j--)
         RROutputDestroy(pScrPriv->outputs[j]);
 
+    if (pScrPriv->provider)
+        RRProviderDestroy(pScrPriv->provider);
+
     free(pScrPriv->crtcs);
     free(pScrPriv->outputs);
     free(pScrPriv);
     RRNScreens -= 1;            /* ok, one fewer screen with RandR running */
-    return (*pScreen->CloseScreen) (i, pScreen);
+    return (*pScreen->CloseScreen) (pScreen);
 }
 
 static void
@@ -176,6 +180,47 @@ SRROutputPropertyNotifyEvent(xRROutputPropertyNotifyEvent * from,
 }
 
 static void
+SRRProviderChangeNotifyEvent(xRRProviderChangeNotifyEvent * from,
+                         xRRProviderChangeNotifyEvent * to)
+{
+    to->type = from->type;
+    to->subCode = from->subCode;
+    cpswaps(from->sequenceNumber, to->sequenceNumber);
+    cpswapl(from->timestamp, to->timestamp);
+    cpswapl(from->window, to->window);
+    cpswapl(from->provider, to->provider);
+}
+
+static void
+SRRProviderPropertyNotifyEvent(xRRProviderPropertyNotifyEvent * from,
+                               xRRProviderPropertyNotifyEvent * to)
+{
+    to->type = from->type;
+    to->subCode = from->subCode;
+    cpswaps(from->sequenceNumber, to->sequenceNumber);
+    cpswapl(from->window, to->window);
+    cpswapl(from->provider, to->provider);
+    cpswapl(from->atom, to->atom);
+    cpswapl(from->timestamp, to->timestamp);
+    to->state = from->state;
+    /* pad1 */
+    /* pad2 */
+    /* pad3 */
+    /* pad4 */
+}
+
+static void
+SRRResourceChangeNotifyEvent(xRRResourceChangeNotifyEvent * from,
+                             xRRResourceChangeNotifyEvent * to)
+{
+    to->type = from->type;
+    to->subCode = from->subCode;
+    cpswaps(from->sequenceNumber, to->sequenceNumber);
+    cpswapl(from->timestamp, to->timestamp);
+    cpswapl(from->window, to->window);
+}
+
+static void
 SRRNotifyEvent(xEvent *from, xEvent *to)
 {
     switch (from->u.u.detail) {
@@ -191,6 +236,17 @@ SRRNotifyEvent(xEvent *from, xEvent *to)
         SRROutputPropertyNotifyEvent((xRROutputPropertyNotifyEvent *) from,
                                      (xRROutputPropertyNotifyEvent *) to);
         break;
+    case RRNotify_ProviderChange:
+        SRRProviderChangeNotifyEvent((xRRProviderChangeNotifyEvent *) from,
+                                   (xRRProviderChangeNotifyEvent *) to);
+        break;
+    case RRNotify_ProviderProperty:
+        SRRProviderPropertyNotifyEvent((xRRProviderPropertyNotifyEvent *) from,
+                                       (xRRProviderPropertyNotifyEvent *) to);
+        break;
+    case RRNotify_ResourceChange:
+        SRRResourceChangeNotifyEvent((xRRResourceChangeNotifyEvent *) from,
+                                   (xRRResourceChangeNotifyEvent *) to);
     default:
         break;
     }
@@ -207,6 +263,8 @@ RRInit(void)
         if (!RRCrtcInit())
             return FALSE;
         if (!RROutputInit())
+            return FALSE;
+        if (!RRProviderInit())
             return FALSE;
         RRGeneration = serverGeneration;
     }
@@ -269,7 +327,7 @@ RRScreenInit(ScreenPtr pScreen)
     wrap(pScrPriv, pScreen, CloseScreen, RRCloseScreen);
 
     pScreen->ConstrainCursorHarder = RRConstrainCursorHarder;
-
+    pScreen->ReplaceScanoutPixmap = RRReplaceScanoutPixmap;
     pScrPriv->numOutputs = 0;
     pScrPriv->outputs = NULL;
     pScrPriv->numCrtcs = 0;
@@ -356,7 +414,7 @@ RRExtensionInit(void)
     RRModeInitErrorValue();
     RRCrtcInitErrorValue();
     RROutputInitErrorValue();
-
+    RRProviderInitErrorValue();
 #ifdef PANORAMIX
     RRXineramaExtensionInit();
 #endif
@@ -412,25 +470,37 @@ TellChanged(WindowPtr pWin, pointer value)
 void
 RRTellChanged(ScreenPtr pScreen)
 {
+    ScreenPtr master;
     rrScrPriv(pScreen);
+    rrScrPrivPtr mastersp;
     int i;
+
+    if (pScreen->isGPU) {
+        master = pScreen->current_master;
+        mastersp = rrGetScrPriv(master);
+    }
+    else {
+        master = pScreen;
+        mastersp = pScrPriv;
+    }
 
     if (pScrPriv->changed) {
         UpdateCurrentTimeIf();
-        if (pScrPriv->configChanged) {
-            pScrPriv->lastConfigTime = currentTime;
-            pScrPriv->configChanged = FALSE;
+        if (mastersp->configChanged) {
+            mastersp->lastConfigTime = currentTime;
+            mastersp->configChanged = FALSE;
         }
         pScrPriv->changed = FALSE;
-        WalkTree(pScreen, TellChanged, (pointer) pScreen);
+        mastersp->changed = FALSE;
+        WalkTree(master, TellChanged, (pointer) master);
         for (i = 0; i < pScrPriv->numOutputs; i++)
             pScrPriv->outputs[i]->changed = FALSE;
         for (i = 0; i < pScrPriv->numCrtcs; i++)
             pScrPriv->crtcs[i]->changed = FALSE;
-        if (pScrPriv->layoutChanged) {
+        if (mastersp->layoutChanged) {
             pScrPriv->layoutChanged = FALSE;
-            RRPointerScreenConfigured(pScreen);
-            RRSendConfigNotify(pScreen);
+            RRPointerScreenConfigured(master);
+            RRSendConfigNotify(master);
         }
     }
 }
@@ -445,6 +515,9 @@ RRFirstOutput(ScreenPtr pScreen)
     rrScrPriv(pScreen);
     RROutputPtr output;
     int i, j;
+
+    if (!pScrPriv)
+        return NULL;
 
     if (pScrPriv->primaryOutput && pScrPriv->primaryOutput->crtc)
         return pScrPriv->primaryOutput;

@@ -214,19 +214,15 @@ extern _X_EXPORT void ResizeChildrenWinSize(WindowPtr /*pWin */ ,
                                             int /*dw */ ,
                                             int /*dh */ );
 
-extern _X_EXPORT void ShapeExtensionInit(void);
-
 extern _X_EXPORT void SendShapeNotify(WindowPtr /* pWin */ ,
-                                      int /* which */ );
+                                      int /* which */);
 
 extern _X_EXPORT RegionPtr CreateBoundingShape(WindowPtr /* pWin */ );
 
 extern _X_EXPORT RegionPtr CreateClipShape(WindowPtr /* pWin */ );
 
-extern _X_EXPORT void DisableMapUnmapEvents(WindowPtr /* pWin */ );
-extern _X_EXPORT void EnableMapUnmapEvents(WindowPtr /* pWin */ );
-
 extern _X_EXPORT void SetRootClip(ScreenPtr pScreen, Bool enable);
 extern _X_EXPORT void PrintWindowTree(void);
 
+extern _X_EXPORT VisualPtr WindowGetVisual(WindowPtr /*pWin*/);
 #endif                          /* WINDOW_H */

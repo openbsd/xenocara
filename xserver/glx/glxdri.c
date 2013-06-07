@@ -599,7 +599,10 @@ __glXDRIscreenDestroy(__GLXscreen * baseScreen)
 static __GLXcontext *
 __glXDRIscreenCreateContext(__GLXscreen * baseScreen,
                             __GLXconfig * glxConfig,
-                            __GLXcontext * baseShareContext)
+                            __GLXcontext * baseShareContext,
+                            unsigned num_attribs,
+                            const uint32_t *attribs,
+                            int *error)
 {
     __GLXDRIscreen *screen = (__GLXDRIscreen *) baseScreen;
     __GLXDRIcontext *context, *shareContext;
@@ -610,6 +613,13 @@ __glXDRIscreenCreateContext(__GLXscreen * baseScreen,
     __DRIcontext *driShare;
     drm_context_t hwContext;
     ScreenPtr pScreen = baseScreen->pScreen;
+
+    /* DRI1 cannot support createContextAttribs, so these parameters will
+     * never be used.
+     */
+    (void) num_attribs;
+    (void) attribs;
+    (void) error;
 
     shareContext = (__GLXDRIcontext *) baseShareContext;
     if (shareContext)
@@ -846,18 +856,17 @@ static const __DRIextension *loader_extensions[] = {
 };
 
 static Bool
-glxDRIEnterVT(int index, int flags)
+glxDRIEnterVT(ScrnInfoPtr scrn)
 {
-    ScrnInfoPtr scrn = xf86Screens[index];
     Bool ret;
     __GLXDRIscreen *screen = (__GLXDRIscreen *)
-        glxGetScreen(screenInfo.screens[index]);
+        glxGetScreen(xf86ScrnToScreen(scrn));
 
     LogMessage(X_INFO, "AIGLX: Resuming AIGLX clients after VT switch\n");
 
     scrn->EnterVT = screen->enterVT;
 
-    ret = scrn->EnterVT(index, flags);
+    ret = scrn->EnterVT(scrn);
 
     screen->enterVT = scrn->EnterVT;
     scrn->EnterVT = glxDRIEnterVT;
@@ -871,18 +880,17 @@ glxDRIEnterVT(int index, int flags)
 }
 
 static void
-glxDRILeaveVT(int index, int flags)
+glxDRILeaveVT(ScrnInfoPtr scrn)
 {
-    ScrnInfoPtr scrn = xf86Screens[index];
     __GLXDRIscreen *screen = (__GLXDRIscreen *)
-        glxGetScreen(screenInfo.screens[index]);
+        glxGetScreen(xf86ScrnToScreen(scrn));
 
     LogMessage(X_INFO, "AIGLX: Suspending AIGLX clients for VT switch\n");
 
     glxSuspendClients();
 
     scrn->LeaveVT = screen->leaveVT;
-    (*screen->leaveVT) (index, flags);
+    (*screen->leaveVT) (scrn);
     screen->leaveVT = scrn->LeaveVT;
     scrn->LeaveVT = glxDRILeaveVT;
 }
@@ -961,7 +969,7 @@ __glXDRIscreenProbe(ScreenPtr pScreen)
     __GLXDRIscreen *screen;
     Bool isCapable;
     size_t buffer_size;
-    ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+    ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
 
     if (!xf86LoaderCheckSymbol("DRIQueryDirectRenderingCapable") ||
         !DRIQueryDirectRenderingCapable(pScreen, &isCapable) || !isCapable) {
@@ -1061,7 +1069,7 @@ __glXDRIscreenProbe(ScreenPtr pScreen)
 
     /* Map the framebuffer region. */
     status = drmMap(fd, hFB, framebuffer.size,
-                    (drmAddressPtr) & framebuffer.base);
+                    (drmAddressPtr) &framebuffer.base);
     if (status != 0) {
         LogMessage(X_ERROR, "AIGLX error: drmMap of framebuffer failed (%s)\n",
                    strerror(-status));

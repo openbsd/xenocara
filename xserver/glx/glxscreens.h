@@ -117,7 +117,10 @@ struct __GLXscreen {
 
     __GLXcontext *(*createContext) (__GLXscreen * screen,
                                     __GLXconfig * modes,
-                                    __GLXcontext * shareContext);
+                                    __GLXcontext * shareContext,
+                                    unsigned num_attribs,
+                                    const uint32_t *attribs,
+                                    int *error);
 
     __GLXdrawable *(*createDrawable) (ClientPtr client,
                                       __GLXscreen * context,
@@ -153,7 +156,7 @@ struct __GLXscreen {
     unsigned GLXminor;
     /*@} */
 
-    Bool (*CloseScreen) (int index, ScreenPtr pScreen);
+    Bool (*CloseScreen) (ScreenPtr pScreen);
 };
 
 void __glXScreenInit(__GLXscreen * screen, ScreenPtr pScreen);

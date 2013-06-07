@@ -39,7 +39,7 @@
 #include "fb.h"
 
 #define EXA_VERSION_MAJOR   2
-#define EXA_VERSION_MINOR   5
+#define EXA_VERSION_MINOR   6
 #define EXA_VERSION_RELEASE 0
 
 typedef struct _ExaOffscreenArea ExaOffscreenArea;
@@ -694,6 +694,10 @@ typedef struct _ExaDriver {
                             int depth, int usage_hint, int bitsPerPixel,
                             int *new_fb_pitch);
     /** @} */
+    Bool (*SharePixmapBacking)(PixmapPtr pPixmap, ScreenPtr slave, void **handle_p);
+
+    Bool (*SetSharedPixmapBacking)(PixmapPtr pPixmap, void *handle);
+
 } ExaDriverRec, *ExaDriverPtr;
 
 /** @name EXA driver flags
@@ -789,7 +793,7 @@ extern _X_EXPORT void
  ExaOffscreenMarkUsed(PixmapPtr pPixmap);
 
 extern _X_EXPORT void
- exaEnableDisableFBAccess(int index, Bool enable);
+ exaEnableDisableFBAccess(ScreenPtr pScreen, Bool enable);
 
 extern _X_EXPORT Bool
  exaDrawableIsOffscreen(DrawablePtr pDrawable);

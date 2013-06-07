@@ -171,6 +171,7 @@ typedef struct _XkbSrvInfo {
     KeyCode mouseKey;
     KeyCode inactiveKey;
     KeyCode slowKey;
+    KeyCode slowKeyEnableKey;
     KeyCode repeatKey;
     CARD8 krgTimerActive;
     CARD8 beepType;
@@ -301,12 +302,14 @@ extern _X_EXPORT const char *XkbBinDirectory;
 extern _X_EXPORT CARD32 xkbDebugFlags;
 
 #define	_XkbLibError(c,l,d)     /* Epoch fail */
+
+/* "a" is a "unique" numeric identifier that just defines which error
+ * code statement it is. _XkbErrCode2(4, foo) means "this is the 4th error
+ * statement in this function". lovely.
+ */
 #define	_XkbErrCode2(a,b) ((XID)((((unsigned int)(a))<<24)|((b)&0xffffff)))
 #define	_XkbErrCode3(a,b,c)	_XkbErrCode2(a,(((unsigned int)(b))<<16)|(c))
 #define	_XkbErrCode4(a,b,c,d) _XkbErrCode3(a,b,((((unsigned int)(c))<<8)|(d)))
-
-extern _X_EXPORT int DeviceKeyPress, DeviceKeyRelease, DeviceMotionNotify;
-extern _X_EXPORT int DeviceButtonPress, DeviceButtonRelease;
 
 #define	Status		int
 
@@ -832,23 +835,6 @@ extern void XkbFakeDeviceButton(DeviceIntPtr /* dev */ ,
 #define	_XkbListSymbols		3
 #define	_XkbListGeometry	4
 #define	_XkbListNumComponents	5
-
-typedef struct _XkbSrvListInfo {
-    int szPool;
-    int nPool;
-    char *pool;
-
-    int maxRtrn;
-    int nTotal;
-
-    char *pattern[_XkbListNumComponents];
-    int nFound[_XkbListNumComponents];
-} XkbSrvListInfoRec, *XkbSrvListInfoPtr;
-
-extern _X_EXPORT Status XkbDDXList(DeviceIntPtr /* dev */ ,
-                                   XkbSrvListInfoPtr /* listing */ ,
-                                   ClientPtr    /* client */
-    );
 
 extern _X_EXPORT unsigned int XkbDDXLoadKeymapByNames(DeviceIntPtr /* keybd */ ,
                                                       XkbComponentNamesPtr

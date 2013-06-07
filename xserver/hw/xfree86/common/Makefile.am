@@ -15,16 +15,22 @@ XVSDKINCS = xf86xv.h xf86xvmc.h xf86xvpriv.h
 endif
 
 if XF86VIDMODE
+XF86VMODESOURCES = xf86vmode.c
 XF86VMODE_SDK = vidmodeproc.h
 endif
 
 if DGA
 DGASOURCES = xf86DGA.c
+DGA_SDK = dgaproc.h
+endif
+
+if XORG_BUS_PLATFORM
+PLATSOURCES = xf86platformBus.c
 endif
 
 RANDRSOURCES = xf86RandR.c
 
-BUSSOURCES = xf86fbBus.c xf86noBus.c $(PCI_SOURCES) $(SBUS_SOURCES)
+BUSSOURCES = xf86fbBus.c xf86noBus.c $(PCI_SOURCES) $(SBUS_SOURCES) $(PLATSOURCES)
 
 MODEDEFSOURCES = $(srcdir)/vesamodes $(srcdir)/extramodes
 
@@ -41,7 +47,8 @@ libcommon_la_SOURCES = xf86Configure.c xf86Bus.c xf86Config.c \
                       xf86Option.c xf86Init.c \
                       xf86VidMode.c xf86fbman.c xf86cmap.c \
                       xf86Helper.c xf86PM.c xf86Xinput.c xisb.c \
-                      xf86Mode.c xorgHelper.c \
+                      xf86Mode.c xorgHelper.c xf86Extensions.h \
+		      xf86Extensions.c $(XF86VMODESOURCES) \
                       $(XVSOURCES) $(BUSSOURCES) $(RANDRSOURCES)
 nodist_libcommon_la_SOURCES = xf86DefModeSet.c xf86Build.h
 libcommon_la_LIBADD = $(top_builddir)/config/libconfig.la
@@ -50,13 +57,14 @@ INCLUDES = $(XORG_INCS) -I$(srcdir)/../ddc -I$(srcdir)/../i2c \
 	   -I$(srcdir)/../loader -I$(srcdir)/../parser \
            -I$(srcdir)/../vbe -I$(srcdir)/../int10 \
 	   -I$(srcdir)/../vgahw -I$(srcdir)/../dixmods/extmod \
-	   -I$(srcdir)/../modes -I$(srcdir)/../ramdac
+	   -I$(srcdir)/../modes -I$(srcdir)/../ramdac -I$(srcdir)/../dri2
 
 sdk_HEADERS = compiler.h fourcc.h xf86.h xf86Module.h xf86Opt.h \
               xf86PciInfo.h xf86Priv.h xf86Privstr.h \
               xf86cmap.h xf86fbman.h xf86str.h xf86Xinput.h xisb.h \
-              $(XVSDKINCS) $(XF86VMODE_SDK) xorgVersion.h \
-              xf86sbusBus.h xf86VGAarbiter.h xf86Optionstr.h
+              $(XVSDKINCS) $(XF86VMODE_SDK) $(DGA_SDK) xorgVersion.h \
+              xf86sbusBus.h xf86VGAarbiter.h xf86Optionstr.h xf86platformBus.h \
+	      xaarop.h
 
 DISTCLEANFILES = xf86Build.h
 CLEANFILES = $(BUILT_SOURCES)
@@ -88,7 +96,8 @@ EXTRA_DIST = \
 	modeline2c.awk \
 	xf86VGAarbiter.h \
 	xf86VGAarbiterPriv.h \
-        $(DISTKBDSOURCES)
+        $(DISTKBDSOURCES) \
+	xaarop.h
 
 if LNXACPI
 XORG_CFLAGS += -DHAVE_ACPI

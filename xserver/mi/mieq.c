@@ -276,23 +276,22 @@ mieqEnqueue(DeviceIntPtr pDev, InternalEvent *e)
          */
         miEventQueue.dropped++;
         if (miEventQueue.dropped == 1) {
-            ErrorF
-                ("[mi] EQ overflowing.  Additional events will be discarded until existing events are processed.\n");
+            ErrorFSigSafe("[mi] EQ overflowing.  Additional events will be "
+                         "discarded until existing events are processed.\n");
             xorg_backtrace();
-            ErrorF
-                ("[mi] These backtraces from mieqEnqueue may point to a culprit higher up the stack.\n");
-            ErrorF("[mi] mieq is *NOT* the cause.  It is a victim.\n");
+            ErrorFSigSafe("[mi] These backtraces from mieqEnqueue may point to "
+                         "a culprit higher up the stack.\n");
+            ErrorFSigSafe("[mi] mieq is *NOT* the cause.  It is a victim.\n");
         }
         else if (miEventQueue.dropped % QUEUE_DROP_BACKTRACE_FREQUENCY == 0 &&
                  miEventQueue.dropped / QUEUE_DROP_BACKTRACE_FREQUENCY <=
                  QUEUE_DROP_BACKTRACE_MAX) {
-            ErrorF
-                ("[mi] EQ overflow continuing.  %lu events have been dropped.\n",
-                 miEventQueue.dropped);
+            ErrorFSigSafe("[mi] EQ overflow continuing.  %u events have been "
+                         "dropped.\n", miEventQueue.dropped);
             if (miEventQueue.dropped / QUEUE_DROP_BACKTRACE_FREQUENCY ==
                 QUEUE_DROP_BACKTRACE_MAX) {
-                ErrorF
-                    ("[mi] No further overflow reports will be reported until the clog is cleared.\n");
+                ErrorFSigSafe("[mi] No further overflow reports will be "
+                             "reported until the clog is cleared.\n");
             }
             xorg_backtrace();
         }
@@ -407,6 +406,10 @@ ChangeDeviceID(DeviceIntPtr dev, InternalEvent *event)
     case ET_RawTouchEnd:
     case ET_RawTouchUpdate:
         event->raw_event.deviceid = dev->id;
+        break;
+    case ET_BarrierHit:
+    case ET_BarrierLeave:
+        event->barrier_event.deviceid = dev->id;
         break;
     default:
         ErrorF("[mi] Unknown event type (%d), cannot change id.\n",
@@ -624,7 +627,11 @@ mieqProcessInputEvents(void)
         mieqProcessDeviceEvent(dev, &event, screen);
 
         /* Update the sprite now. Next event may be from different device. */
-        if (event.any.type == ET_Motion && master)
+        if (master &&
+            (event.any.type == ET_Motion ||
+             ((event.any.type == ET_TouchBegin ||
+               event.any.type == ET_TouchUpdate) &&
+              event.device_event.flags & TOUCH_POINTER_EMULATED)))
             miPointerUpdateSprite(dev);
 
 #ifdef XQUARTZ

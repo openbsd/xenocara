@@ -606,7 +606,7 @@ KdCreateScreenResources(ScreenPtr pScreen)
 }
 
 Bool
-KdCloseScreen(int index, ScreenPtr pScreen)
+KdCloseScreen(ScreenPtr pScreen)
 {
     KdScreenPriv(pScreen);
     KdScreenInfo *screen = pScreenPriv->screen;
@@ -616,7 +616,7 @@ KdCloseScreen(int index, ScreenPtr pScreen)
     pScreenPriv->closed = TRUE;
     pScreen->CloseScreen = pScreenPriv->CloseScreen;
     if (pScreen->CloseScreen)
-        ret = (*pScreen->CloseScreen) (index, pScreen);
+        ret = (*pScreen->CloseScreen) (pScreen);
     else
         ret = TRUE;
 
@@ -730,22 +730,22 @@ KdSetSubpixelOrder(ScreenPtr pScreen, Rotation randr)
         int subpixel_order;
         Rotation direction;
     } orders[] = {
-        {
-        SubPixelHorizontalRGB, RR_Rotate_0}, {
-        SubPixelHorizontalBGR, RR_Rotate_180}, {
-        SubPixelVerticalRGB, RR_Rotate_270}, {
-    SubPixelVerticalBGR, RR_Rotate_90},};
+        {SubPixelHorizontalRGB, RR_Rotate_0},
+        {SubPixelHorizontalBGR, RR_Rotate_180},
+        {SubPixelVerticalRGB, RR_Rotate_270},
+        {SubPixelVerticalBGR, RR_Rotate_90},
+    };
 
     static struct {
         int bit;
         int normal;
         int reflect;
     } reflects[] = {
-        {
-        RR_Reflect_X, SubPixelHorizontalRGB, SubPixelHorizontalBGR}, {
-        RR_Reflect_X, SubPixelHorizontalBGR, SubPixelHorizontalRGB}, {
-        RR_Reflect_Y, SubPixelVerticalRGB, SubPixelVerticalBGR}, {
-    RR_Reflect_Y, SubPixelVerticalRGB, SubPixelVerticalRGB},};
+        {RR_Reflect_X, SubPixelHorizontalRGB, SubPixelHorizontalBGR},
+        {RR_Reflect_X, SubPixelHorizontalBGR, SubPixelHorizontalRGB},
+        {RR_Reflect_Y, SubPixelVerticalRGB, SubPixelVerticalBGR},
+        {RR_Reflect_Y, SubPixelVerticalRGB, SubPixelVerticalRGB},
+    };
 
     /* map subpixel to direction */
     for (i = 0; i < 4; i++)
@@ -776,7 +776,7 @@ KdSetSubpixelOrder(ScreenPtr pScreen, Rotation randr)
 static KdScreenInfo *kdCurrentScreen;
 
 Bool
-KdScreenInit(int index, ScreenPtr pScreen, int argc, char **argv)
+KdScreenInit(ScreenPtr pScreen, int argc, char **argv)
 {
     KdScreenInfo *screen = kdCurrentScreen;
     KdCardInfo *card = screen->card;
@@ -1104,7 +1104,7 @@ KdInitOutput(ScreenInfo * pScreenInfo, int argc, char **argv)
 }
 
 void
-OsVendorFatalError(void)
+OsVendorFatalError(const char *f, va_list args)
 {
 }
 

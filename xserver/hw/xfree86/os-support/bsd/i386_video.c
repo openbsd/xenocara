@@ -65,12 +65,12 @@
 
 #ifdef __OpenBSD__
 #define SYSCTL_MSG "\tCheck that you have set 'machdep.allowaperture=1'\n"\
-                   "\tin /etc/sysctl.conf and reboot your machine\n" \
-                   "\trefer to xf86(4) for details\n"
+		   "\tin /etc/sysctl.conf and reboot your machine\n" \
+		   "\trefer to xf86(4) for details\n"
 #define SYSCTL_MSG2 \
-                "Check that you have set 'machdep.allowaperture=2'\n" \
-                "\tin /etc/sysctl.conf and reboot your machine\n" \
-                "\trefer to xf86(4) for details\n"
+		"Check that you have set 'machdep.allowaperture=2'\n" \
+		"\tin /etc/sysctl.conf and reboot your machine\n" \
+		"\trefer to xf86(4) for details\n"
 #endif
 
 /***************************************************************************/
@@ -78,7 +78,7 @@
 /***************************************************************************/
 
 static Bool useDevMem = FALSE;
-static int  devMemFd = -1;
+static int devMemFd = -1;
 
 #ifdef HAS_APERTURE_DRV
 #define DEV_APERTURE "/dev/xf86"
@@ -108,18 +108,18 @@ checkDevMem(Bool warn)
     static Bool devMemChecked = FALSE;
     int fd;
     pointer base;
-
+    
     if (devMemChecked)
         return;
     devMemChecked = TRUE;
-
+    
 #ifdef HAS_APERTURE_DRV
     /* Try the aperture driver first */
     if ((fd = open(DEV_APERTURE, O_RDWR)) >= 0) {
         /* Try to map a page at the VGA address */
         base = mmap((caddr_t)0, 4096, PROT_READ | PROT_WRITE,
                     MAP_FLAGS, fd, (off_t)0xA0000);
-
+        
         if (base != MAP_FAILED) {
             munmap((caddr_t)base, 4096);
             devMemFd = fd;
@@ -140,7 +140,7 @@ checkDevMem(Bool warn)
         /* Try to map a page at the VGA address */
         base = mmap((caddr_t)0, 4096, PROT_READ | PROT_WRITE,
                     MAP_FLAGS, fd, (off_t)0xA0000);
-
+        
         if (base != MAP_FAILED) {
             munmap((caddr_t)base, 4096);
             devMemFd = fd;
@@ -162,13 +162,13 @@ checkDevMem(Bool warn)
 #else
 #ifndef __OpenBSD__
         xf86Msg(X_WARNING, "checkDevMem: failed to open %s and %s\n"
-                "\t(%s)\n", DEV_APERTURE, DEV_MEM, strerror(errno));
+		"\t(%s)\n", DEV_APERTURE, DEV_MEM, strerror(errno));
 #else /* __OpenBSD__ */
         xf86Msg(X_WARNING, "checkDevMem: failed to open %s and %s\n"
                 "\t(%s)\n%s", DEV_APERTURE, DEV_MEM, strerror(errno),
                 SYSCTL_MSG);
 #endif /* __OpenBSD__ */
-
+        
         xf86ErrorF("\tlinear framebuffer access unavailable\n");
     }
     useDevMem = FALSE;
@@ -206,9 +206,9 @@ static pointer
 mapVidMem(int ScreenNum, unsigned long Base, unsigned long Size, int flags)
 {
     pointer base;
-
+    
     checkDevMem(FALSE);
-
+    
     if (useDevMem) {
         if (devMemFd < 0) {
             FatalError("xf86MapVidMem: failed to open %s (%s)",
@@ -246,7 +246,7 @@ mapVidMem(int ScreenNum, unsigned long Base, unsigned long Size, int flags)
 static void
 unmapVidMem(int ScreenNum, pointer Base, unsigned long Size)
 {
-    munmap((caddr_t)Base, Size);
+    munmap((caddr_t) Base, Size);
 }
 
 /*
@@ -260,12 +260,12 @@ xf86ReadBIOS(unsigned long Base, unsigned long Offset, unsigned char *Buf,
     unsigned char *ptr;
     int psize;
     int mlen;
-
+    
     checkDevMem(TRUE);
     if (devMemFd == -1) {
         return -1;
     }
-
+    
     psize = getpagesize();
     Offset += Base & (psize - 1);
     Base &= ~(psize - 1);
@@ -287,8 +287,8 @@ xf86ReadBIOS(unsigned long Base, unsigned long Offset, unsigned char *Buf,
     ErrorF("xf86ReadBIOS: BIOS at 0x%08x has signature 0x%04x\n",
            Base, ptr[0] | (ptr[1] << 8));
 #endif
-    (void)memcpy(Buf, (void *)(ptr + Offset), Len);
-    (void)munmap((caddr_t)ptr, mlen);
+    (void) memcpy(Buf, (void *) (ptr + Offset), Len);
+    (void) munmap((caddr_t) ptr, mlen);
 #ifdef DEBUG
     xf86MsgVerb(X_INFO, 3, "xf86ReadBIOS(%x, %x, Buf, %x)"
                 "-> %02x %02x %02x %02x...\n",
@@ -310,13 +310,12 @@ xf86EnableIO()
     if (ExtendedEnabled)
         return TRUE;
 
-    if (i386_iopl(TRUE) < 0)
-    {
+    if (i386_iopl(TRUE) < 0) {
 #ifndef __OpenBSD__
-        xf86Msg(X_WARNING,"%s: Failed to set IOPL for extended I/O",
+        xf86Msg(X_WARNING, "%s: Failed to set IOPL for extended I/O",
                 "xf86EnableIO");
 #else
-        xf86Msg(X_WARNING,"%s: Failed to set IOPL for extended I/O\n%s",
+        xf86Msg(X_WARNING, "%s: Failed to set IOPL for extended I/O\n%s",
                 "xf86EnableIO", SYSCTL_MSG);
 #endif
         return FALSE;
@@ -337,11 +336,10 @@ xf86DisableIO()
     }
     /* Otherwise, the X server has revoqued its root uid,
        and thus cannot give up IO privileges any more */
-
     return;
 }
 
-#endif /* USE_I386_IOPL */
+#endif                          /* USE_I386_IOPL */
 
 #ifdef USE_AMD64_IOPL
 /***************************************************************************/
@@ -358,10 +356,10 @@ xf86EnableIO()
 
     if (amd64_iopl(TRUE) < 0) {
 #ifndef __OpenBSD__
-        xf86Msg(X_WARNING,"%s: Failed to set IOPL for extended I/O",
+        xf86Msg(X_WARNING, "%s: Failed to set IOPL for extended I/O",
                 "xf86EnableIO");
 #else
-        xf86Msg(X_WARNING,"%s: Failed to set IOPL for extended I/O\n%s",
+        xf86Msg(X_WARNING, "%s: Failed to set IOPL for extended I/O\n%s",
                 "xf86EnableIO", SYSCTL_MSG);
 #endif
         return FALSE;
@@ -376,17 +374,17 @@ xf86DisableIO()
 {
     if (!ExtendedEnabled)
         return;
-
+    
     if (amd64_iopl(FALSE) == 0) {
         ExtendedEnabled = FALSE;
     }
     /* Otherwise, the X server has revoqued its root uid,
        and thus cannot give up IO privileges any more */
-
+    
     return;
 }
 
-#endif /* USE_AMD64_IOPL */
+#endif                          /* USE_AMD64_IOPL */
 
 #ifdef USE_DEV_IO
 static int IoFd = -1;
@@ -398,7 +396,7 @@ xf86EnableIO()
         return TRUE;
 
     if ((IoFd = open("/dev/io", O_RDWR)) == -1) {
-        xf86Msg(X_WARNING,"xf86EnableIO: "
+        xf86Msg(X_WARNING, "xf86EnableIO: "
                 "Failed to open /dev/io for extended I/O");
         return FALSE;
     }
@@ -427,17 +425,18 @@ xf86SetTVOut(int mode)
 {
     switch (xf86Info.consType) {
 #ifdef PCCONS_SUPPORT
-    case PCCONS:{
-        if (ioctl (xf86Info.consoleFd, CONSOLE_X_TV_ON, &mode) < 0) {
-            xf86Msg(X_WARNING,
-                    "xf86SetTVOut: Could not set console to TV output, %s\n",
-                    strerror(errno));
-        }
-    }
-    break;
+      case PCCONS:{
+          
+          if (ioctl (xf86Info.consoleFd, CONSOLE_X_TV_ON, &mode) < 0) {
+              xf86Msg(X_WARNING,
+                      "xf86SetTVOut: Could not set console to TV output, %s\n",
+                      strerror(errno));
+          }
+      }
+	break;
 #endif /* PCCONS_SUPPORT */
 
-    default:
+      default:
         FatalError("Xf86SetTVOut: Unsupported console");
         break;
     }
@@ -449,17 +448,18 @@ xf86SetRGBOut()
 {
     switch (xf86Info.consType) {
 #ifdef PCCONS_SUPPORT
-    case PCCONS:{
-        if (ioctl (xf86Info.consoleFd, CONSOLE_X_TV_OFF, 0) < 0) {
-            xf86Msg(X_WARNING,
-                    "xf86SetTVOut: Could not set console to RGB output, %s\n",
-                    strerror(errno));
-        }
-    }
-    break;
+      case PCCONS:{
+          
+          if (ioctl (xf86Info.consoleFd, CONSOLE_X_TV_OFF, 0) < 0) {
+              xf86Msg(X_WARNING,
+                      "xf86SetTVOut: Could not set console to RGB output, %s\n",
+                      strerror(errno));
+          }
+      }
+	break;
 #endif /* PCCONS_SUPPORT */
 
-    default:
+      default:
         FatalError("Xf86SetTVOut: Unsupported console");
         break;
     }
@@ -528,8 +528,8 @@ cleanMTRR()
             (mrd[i].mr_flags & MDF_ACTIVE)) {
 #ifdef DEBUG
             ErrorF("Clean for (0x%lx,0x%lx)\n",
-                   (unsigned long)mrd[i].mr_base,
-                   (unsigned long)mrd[i].mr_len);
+                   (unsigned long) mrd[i].mr_base,
+                   (unsigned long) mrd[i].mr_len);
 #endif
             if (mrd[i].mr_flags & MDF_FIXACTIVE) {
                 mro.mo_arg[0] = MEMRANGE_SET_UPDATE;
@@ -624,15 +624,16 @@ sortRangeList(RangePtr list)
  */
 
 static void
-findRanges(unsigned long base, unsigned long size, RangePtr *ucp, RangePtr *wcp)
+findRanges(unsigned long base, unsigned long size, RangePtr * ucp,
+           RangePtr * wcp)
 {
     struct mem_range_desc *mrd;
     int nmr, i;
     RangePtr rp, *p;
-
+    
     if (!(mrd = getAllRanges(&nmr)))
         return;
-
+    
     for (i = 0; i < nmr; i++) {
         if ((mrd[i].mr_flags & MDF_ACTIVE) &&
             mrd[i].mr_base < base + size &&
@@ -691,17 +692,17 @@ addWC(int screenNum, unsigned long base, unsigned long size, MessageType from)
     RangePtr uc = NULL, wc = NULL, retlist = NULL;
     struct mem_range_desc mrd;
     struct mem_range_op mro;
-
+    
     findRanges(base, size, &uc, &wc);
-
+    
     /* See of the full range is already WC */
     if (!uc && fullCoverage(base, size, wc)) {
         xf86DrvMsg(screenNum, from,
-                   "Write-combining range (0x%lx,0x%lx) was already set\n",
+		   "Write-combining range (0x%lx,0x%lx) was already set\n",
                    base, size);
         return NULL;
     }
-
+    
     /* Otherwise, try to add the new range */
     mrd.mr_base = base;
     mrd.mr_len = size;
@@ -732,20 +733,20 @@ delWC(int screenNum, unsigned long base, unsigned long size, MessageType from)
     RangePtr uc = NULL, wc = NULL, retlist = NULL;
     struct mem_range_desc mrd;
     struct mem_range_op mro;
-
+    
     findRanges(base, size, &uc, &wc);
-
+    
     /*
      * See of the full range is already not WC, or if there is full
      * coverage from UC ranges.
      */
     if (!wc || fullCoverage(base, size, uc)) {
         xf86DrvMsg(screenNum, from,
-                   "Write-combining range (0x%lx,0x%lx) was already clear\n",
+		   "Write-combining range (0x%lx,0x%lx) was already clear\n",
                    base, size);
         return NULL;
     }
-
+    
     /* Otherwise, try to add the new range */
     mrd.mr_base = base;
     mrd.mr_len = size;
@@ -793,8 +794,8 @@ undoWC(int screenNum, pointer list)
     while (rp) {
 #ifdef DEBUG
         ErrorF("Undo for (0x%lx,0x%lx), %d\n",
-               (unsigned long)rp->mrd.mr_base,
-               (unsigned long)rp->mrd.mr_len, rp->wasWC);
+               (unsigned long) rp->mrd.mr_base,
+               (unsigned long) rp->mrd.mr_len, rp->wasWC);
 #endif
         failed = FALSE;
         if (rp->wasWC) {
@@ -821,15 +822,14 @@ undoWC(int screenNum, pointer list)
         if (failed) {
             xf86DrvMsg(screenNum, X_WARNING,
                        "Failed to restore MTRR range (0x%lx,0x%lx)\n",
-                       (unsigned long)rp->mrd.mr_base,
-                       (unsigned long)rp->mrd.mr_len);
+                       (unsigned long) rp->mrd.mr_base,
+                       (unsigned long) rp->mrd.mr_len);
         }
         rp = rp->next;
     }
 }
 
-#endif /* HAS_MTRR_SUPPORT */
-
+#endif                          /* HAS_MTRR_SUPPORT */
 
 #if defined(HAS_MTRR_BUILTIN) && defined(__NetBSD__)
 static pointer
@@ -843,7 +843,7 @@ NetBSDsetWC(int screenNum, unsigned long base, unsigned long size, Bool enable,
                "%s MTRR %lx - %lx\n", enable ? "set" : "remove",
                base, (base + size));
 
-    mtrrp = xnfalloc(sizeof (struct mtrr));
+    mtrrp = xnfalloc(sizeof(struct mtrr));
     mtrrp->base = base;
     mtrrp->len = size;
     mtrrp->type = MTRR_TYPE_WC;
@@ -870,7 +870,7 @@ NetBSDsetWC(int screenNum, unsigned long base, unsigned long size, Bool enable,
 static void
 NetBSDundoWC(int screenNum, pointer list)
 {
-    struct mtrr *mtrrp = (struct mtrr *)list;
+    struct mtrr *mtrrp = (struct mtrr *) list;
     int n;
 
     if (mtrrp == NULL)

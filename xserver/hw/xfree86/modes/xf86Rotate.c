@@ -46,28 +46,6 @@
 
 /* borrowed from composite extension, move to Render and publish? */
 
-static VisualPtr
-compGetWindowVisual(WindowPtr pWin)
-{
-    ScreenPtr pScreen = pWin->drawable.pScreen;
-    VisualID vid = wVisual(pWin);
-    int i;
-
-    for (i = 0; i < pScreen->numVisuals; i++)
-        if (pScreen->visuals[i].vid == vid)
-            return &pScreen->visuals[i];
-    return 0;
-}
-
-static PictFormatPtr
-compWindowFormat(WindowPtr pWin)
-{
-    ScreenPtr pScreen = pWin->drawable.pScreen;
-
-    return PictureMatchVisual(pScreen, pWin->drawable.depth,
-                              compGetWindowVisual(pWin));
-}
-
 #define F(x)	IntToxFixed(x)
 
 #define toF(x)	((float) (x) / 65536.0f)
@@ -79,7 +57,7 @@ xf86RotateCrtcRedisplay(xf86CrtcPtr crtc, RegionPtr region)
     ScreenPtr screen = scrn->pScreen;
     WindowPtr root = screen->root;
     PixmapPtr dst_pixmap = crtc->rotatedPixmap;
-    PictFormatPtr format = compWindowFormat(screen->root);
+    PictFormatPtr format = PictureWindowFormat(screen->root);
     int error;
     PicturePtr src, dst;
     int n = RegionNumRects(region);
@@ -144,7 +122,7 @@ xf86CrtcDamageShadow(xf86CrtcPtr crtc)
     ScrnInfoPtr pScrn = crtc->scrn;
     BoxRec damage_box;
     RegionRec damage_region;
-    ScreenPtr pScreen = pScrn->pScreen;
+    ScreenPtr pScreen = xf86ScrnToScreen(pScrn);
 
     damage_box.x1 = 0;
     damage_box.x2 = crtc->mode.HDisplay;
@@ -174,7 +152,7 @@ xf86CrtcDamageShadow(xf86CrtcPtr crtc)
 static void
 xf86RotatePrepare(ScreenPtr pScreen)
 {
-    ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+    ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
     xf86CrtcConfigPtr xf86_config = XF86_CRTC_CONFIG_PTR(pScrn);
     int c;
 
@@ -204,7 +182,7 @@ xf86RotatePrepare(ScreenPtr pScreen)
 static Bool
 xf86RotateRedisplay(ScreenPtr pScreen)
 {
-    ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+    ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
     xf86CrtcConfigPtr xf86_config = XF86_CRTC_CONFIG_PTR(pScrn);
     DamagePtr damage = xf86_config->rotation_damage;
     RegionPtr region;
@@ -250,17 +228,16 @@ xf86RotateRedisplay(ScreenPtr pScreen)
 }
 
 static void
-xf86RotateBlockHandler(int screenNum, pointer blockData,
+xf86RotateBlockHandler(ScreenPtr pScreen,
                        pointer pTimeout, pointer pReadmask)
 {
-    ScreenPtr pScreen = screenInfo.screens[screenNum];
-    ScrnInfoPtr pScrn = xf86Screens[screenNum];
+    ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
     xf86CrtcConfigPtr xf86_config = XF86_CRTC_CONFIG_PTR(pScrn);
     Bool rotation_active;
 
     rotation_active = xf86RotateRedisplay(pScreen);
     pScreen->BlockHandler = xf86_config->BlockHandler;
-    (*pScreen->BlockHandler) (screenNum, blockData, pTimeout, pReadmask);
+    (*pScreen->BlockHandler) (pScreen, pTimeout, pReadmask);
     /* cannot avoid re-wrapping until all wrapping is audited */
     xf86_config->BlockHandler = pScreen->BlockHandler;
     pScreen->BlockHandler = xf86RotateBlockHandler;
@@ -270,7 +247,7 @@ void
 xf86RotateDestroy(xf86CrtcPtr crtc)
 {
     ScrnInfoPtr pScrn = crtc->scrn;
-    ScreenPtr pScreen = pScrn->pScreen;
+    ScreenPtr pScreen = xf86ScrnToScreen(pScrn);
     xf86CrtcConfigPtr xf86_config = XF86_CRTC_CONFIG_PTR(pScrn);
     int c;
 
@@ -328,7 +305,7 @@ xf86RotateFreeShadow(ScrnInfoPtr pScrn)
 void
 xf86RotateCloseScreen(ScreenPtr screen)
 {
-    ScrnInfoPtr scrn = xf86Screens[screen->myNum];
+    ScrnInfoPtr scrn = xf86ScreenToScrn(screen);
     xf86CrtcConfigPtr xf86_config = XF86_CRTC_CONFIG_PTR(scrn);
     int c;
 
@@ -345,6 +322,12 @@ xf86CrtcFitsScreen(xf86CrtcPtr crtc, struct pict_f_transform *crtc_to_fb)
     /* When called before PreInit, the driver is
      * presumably doing load detect
      */
+    if (pScrn->is_gpu) {
+	ScreenPtr pScreen = xf86ScrnToScreen(pScrn);
+	if (pScreen->current_master)
+	    pScrn = xf86ScreenToScrn(pScreen->current_master);
+    }
+
     if (pScrn->virtualX == 0 || pScrn->virtualY == 0)
         return TRUE;
 
@@ -370,9 +353,7 @@ xf86CrtcRotate(xf86CrtcPtr crtc)
 {
     ScrnInfoPtr pScrn = crtc->scrn;
     xf86CrtcConfigPtr xf86_config = XF86_CRTC_CONFIG_PTR(pScrn);
-
-    /* if this is called during ScreenInit() we don't have pScrn->pScreen yet */
-    ScreenPtr pScreen = screenInfo.screens[pScrn->scrnIndex];
+    ScreenPtr pScreen = xf86ScrnToScreen(pScrn);
     PictTransform crtc_to_fb;
     struct pict_f_transform f_crtc_to_fb, f_fb_to_crtc;
     xFixed *new_params = NULL;

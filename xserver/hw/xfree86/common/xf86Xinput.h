@@ -61,18 +61,21 @@
 #define XI86_ALWAYS_CORE	0x04    /* device always controls the pointer */
 /* the device sends Xinput and core pointer events */
 #define XI86_SEND_CORE_EVENTS	XI86_ALWAYS_CORE
+/* 0x08 is reserved for legacy XI86_SEND_DRAG_EVENTS, do not use for now */
+/* server-internal only */
+#define XI86_DEVICE_DISABLED    0x10    /* device was disabled before vt switch */
 
 /* This holds the input driver entry and module information. */
 typedef struct _InputDriverRec {
     int driverVersion;
-    char *driverName;
+    const char *driverName;
     void (*Identify) (int flags);
     int (*PreInit) (struct _InputDriverRec * drv,
                     struct _InputInfoRec * pInfo, int flags);
     void (*UnInit) (struct _InputDriverRec * drv,
                     struct _InputInfoRec * pInfo, int flags);
     pointer module;
-    char **default_options;
+    const char **default_options;
 } InputDriverRec, *InputDriverPtr;
 
 /* This is to input devices what the ScrnInfoRec is to screens. */
@@ -95,7 +98,7 @@ typedef struct _InputInfoRec {
     int fd;
     DeviceIntPtr dev;
     pointer private;
-    char *type_name;
+    const char *type_name;
     InputDriverPtr drv;
     pointer module;
     XF86OptionPtr options;

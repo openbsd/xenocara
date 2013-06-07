@@ -1,4 +1,4 @@
-/* $OpenBSD: openbsd.c,v 1.8 2012/06/10 13:21:23 matthieu Exp $ */
+/* $OpenBSD: openbsd.c,v 1.9 2013/06/07 17:28:48 matthieu Exp $ */
 /*
  * Copyright (c) 2007 Matthieu Herrb <matthieu@openbsd.org>
  *

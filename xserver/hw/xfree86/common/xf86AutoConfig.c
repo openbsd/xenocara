@@ -39,6 +39,7 @@
 #include "xf86Config.h"
 #include "xf86Priv.h"
 #include "xf86_OSlib.h"
+#include "xf86platformBus.h"
 #include "xf86pciBus.h"
 #if defined(__sparc__)
 #include "xf86sbusBus.h"
@@ -198,10 +199,13 @@ listPossibleVideoDrivers(char *matches[], int nmatches)
     }
     i = 0;
 
+#ifdef XSERVER_PLATFORM_BUS
+    i = xf86PlatformMatchDriver(matches, nmatches);
+#endif
 #ifdef sun
     /* Check for driver type based on /dev/fb type and if valid, use
        it instead of PCI bus probe results */
-    if (xf86Info.consoleFd >= 0) {
+    if (xf86Info.consoleFd >= 0 && (i < (nmatches - 1))) {
         struct vis_identifier visid;
         const char *cp;
         extern char xf86SolarisFbDev[PATH_MAX];
@@ -250,7 +254,8 @@ listPossibleVideoDrivers(char *matches[], int nmatches)
         }
     }
 #endif
-#if defined(__sparc__)
+#ifdef __sparc__
+    if (i < (nmatches - 1))
     {
         char *sbusDriver = sparcDriverName();
 
@@ -259,7 +264,8 @@ listPossibleVideoDrivers(char *matches[], int nmatches)
     }
 #endif
 #ifdef XSERVER_LIBPCIACCESS
-    i = xf86PciMatchDriver(matches, nmatches);
+    if (i < (nmatches - 1))
+        i = xf86PciMatchDriver(matches, nmatches);
 #endif
     /* Fallback to platform default hardware */
     if (i < (nmatches - 1)) {
@@ -269,6 +275,10 @@ listPossibleVideoDrivers(char *matches[], int nmatches)
         matches[i++] = xnfstrdup("sunffb");
 #endif
     }
+
+#if defined(__linux__)
+    matches[i++] = xnfstrdup("modesetting");
+#endif
 
 #if !defined(sun)
     /* Fallback to platform default frame buffer driver */

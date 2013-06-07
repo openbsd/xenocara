@@ -56,8 +56,7 @@ ReplyNotSwappd(ClientPtr /* pClient */ ,
                void * /* pbuf */ ) _X_NORETURN;
 
 typedef enum { ClientStateInitial,
-    /* 1 is unused now, was ClientStateAuthenticating */
-    ClientStateRunning = 2,
+    ClientStateRunning,
     ClientStateRetained,
     ClientStateGone
 } ClientState;
@@ -86,26 +85,29 @@ typedef struct _Window *SaveSetElt;
 #endif
 
 typedef struct _Client {
-    int index;
-    Mask clientAsMask;
     pointer requestBuffer;
     pointer osPrivate;          /* for OS layer, including scheduler */
-    Bool swapped;
+    Mask clientAsMask;
+    short index;
+    unsigned char majorOp, minorOp;
+    unsigned int swapped:1;
+    unsigned int local:1;
+    unsigned int big_requests:1; /* supports large requests */
+    unsigned int clientGone:1;
+    unsigned int closeDownMode:2;
+    unsigned int clientState:2;
+    signed char smart_priority;
+    short noClientException;      /* this client died or needs to be killed */
+    int priority;
     ReplySwapPtr pSwapReplyFunc;
     XID errorValue;
     int sequence;
-    int closeDownMode;
-    int clientGone;
-    int noClientException;      /* this client died or needs to be
-                                 * killed */
     int ignoreCount;            /* count for Attend/IgnoreClient */
-    SaveSetElt *saveSet;
     int numSaved;
+    SaveSetElt *saveSet;
     int (**requestVector) (ClientPtr /* pClient */ );
     CARD32 req_len;             /* length of current request */
-    Bool big_requests;          /* supports large requests */
-    int priority;
-    ClientState clientState;
+    unsigned int replyBytesRemaining;
     PrivateRec *devPrivates;
     unsigned short xkbClientFlags;
     unsigned short mapNotifyMask;
@@ -113,15 +115,12 @@ typedef struct _Client {
     unsigned short vMajor, vMinor;
     KeyCode minKC, maxKC;
 
-    unsigned long replyBytesRemaining;
-    int smart_priority;
-    long smart_start_tick;
-    long smart_stop_tick;
-    long smart_check_tick;
+    int smart_start_tick;
+    int smart_stop_tick;
+    int smart_check_tick;
 
     DeviceIntPtr clientPtr;
     ClientIdPtr clientIds;
-    unsigned short majorOp, minorOp;
 } ClientRec;
 
 /*
@@ -156,7 +155,7 @@ typedef struct _WorkQueue {
 } WorkQueueRec;
 
 extern _X_EXPORT TimeStamp currentTime;
-extern _X_EXPORT TimeStamp lastDeviceEventTime;
+extern _X_EXPORT TimeStamp lastDeviceEventTime[MAXDEVICES];
 
 extern _X_EXPORT int
 CompareTimeStamps(TimeStamp /*a */ ,

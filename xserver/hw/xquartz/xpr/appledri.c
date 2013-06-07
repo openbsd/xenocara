@@ -105,7 +105,7 @@ ProcAppleDRIQueryVersion(register ClientPtr client)
         swaps(&rep.minorVersion);
         swapl(&rep.patchVersion);
     }
-    WriteToClient(client, sizeof(xAppleDRIQueryVersionReply), (char *)&rep);
+    WriteToClient(client, sizeof(xAppleDRIQueryVersionReply), &rep);
     return Success;
 }
 
@@ -129,7 +129,7 @@ ProcAppleDRIQueryDirectRenderingCapable(register ClientPtr client)
     }
     rep.isCapable = isCapable;
 
-    if (!LocalClient(client))
+    if (!client->local)
         rep.isCapable = 0;
 
     if (client->swapped) {
@@ -139,7 +139,7 @@ ProcAppleDRIQueryDirectRenderingCapable(register ClientPtr client)
 
     WriteToClient(client,
                   sizeof(xAppleDRIQueryDirectRenderingCapableReply),
-                  (char *)&rep);
+                  &rep);
     return Success;
 }
 
@@ -168,7 +168,7 @@ ProcAppleDRIAuthConnection(register ClientPtr client)
         swapl(&rep.authenticated); /* Yes, this is a CARD32 ... sigh */
     }
 
-    WriteToClient(client, sizeof(xAppleDRIAuthConnectionReply), (char *)&rep);
+    WriteToClient(client, sizeof(xAppleDRIAuthConnectionReply), &rep);
     return Success;
 }
 
@@ -232,7 +232,7 @@ ProcAppleDRICreateSurface(ClientPtr client)
         swapl(&rep.uid);
     }
 
-    WriteToClient(client, sizeof(xAppleDRICreateSurfaceReply), (char *)&rep);
+    WriteToClient(client, sizeof(xAppleDRICreateSurfaceReply), &rep);
     return Success;
 }
 
@@ -354,7 +354,7 @@ ProcAppleDRIDispatch(register ClientPtr client)
         return ProcAppleDRIQueryDirectRenderingCapable(client);
     }
 
-    if (!LocalClient(client))
+    if (!client->local)
         return DRIErrorBase + AppleDRIClientNotLocal;
 
     switch (stuff->data) {
@@ -469,7 +469,7 @@ SProcAppleDRIDispatch(register ClientPtr client)
         return SProcAppleDRIQueryDirectRenderingCapable(client);
     }
 
-    if (!LocalClient(client))
+    if (!client->local)
         return DRIErrorBase + AppleDRIClientNotLocal;
 
     switch (stuff->data) {

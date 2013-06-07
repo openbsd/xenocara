@@ -64,6 +64,8 @@ SOFTWARE.
 #define REQUEST(type) \
 	type *stuff = (type *)client->requestBuffer
 
+#define ARRAY_SIZE(a)  (sizeof((a)) / sizeof((a)[0]))
+
 #define REQUEST_SIZE_MATCH(req)\
     if ((sizeof(req) >> 2) != client->req_len)\
          return(BadLength)
@@ -86,12 +88,12 @@ SOFTWARE.
 
 #define VALIDATE_DRAWABLE_AND_GC(drawID, pDraw, mode)\
     {\
-	int rc = dixLookupDrawable(&(pDraw), drawID, client, M_ANY, mode);\
-	if (rc != Success)\
-	    return rc;\
-	rc = dixLookupGC(&(pGC), stuff->gc, client, DixUseAccess);\
-	if (rc != Success)\
-	    return rc;\
+	int tmprc = dixLookupDrawable(&(pDraw), drawID, client, M_ANY, mode);\
+	if (tmprc != Success)\
+	    return tmprc;\
+	tmprc = dixLookupGC(&(pGC), stuff->gc, client, DixUseAccess);\
+	if (tmprc != Success)\
+	    return tmprc;\
 	if ((pGC->depth != pDraw->depth) || (pGC->pScreen != pDraw->pScreen))\
 	    return BadMatch;\
     }\
@@ -102,12 +104,12 @@ SOFTWARE.
    if ((pClient)->swapped) \
       (*ReplySwapVector[((xReq *)(pClient)->requestBuffer)->reqType]) \
            (pClient, (int)(size), pReply); \
-      else (void) WriteToClient(pClient, (int)(size), (char *)(pReply)); }
+   else WriteToClient(pClient, (int)(size), (pReply)); }
 
 #define WriteSwappedDataToClient(pClient, size, pbuf) \
    if ((pClient)->swapped) \
       (*(pClient)->pSwapReplyFunc)(pClient, (int)(size), pbuf); \
-   else (void) WriteToClient (pClient, (int)(size), (char *)(pbuf));
+   else WriteToClient(pClient, (int)(size), (pbuf));
 
 typedef struct _TimeStamp *TimeStampPtr;
 
@@ -313,7 +315,8 @@ extern _X_EXPORT WindowPtr
 GetSpriteWindow(DeviceIntPtr pDev);
 
 extern _X_EXPORT void
-NoticeEventTime(InternalEvent *ev);
+NoticeEventTime(InternalEvent *ev,
+                DeviceIntPtr dev);
 
 extern void
 EnqueueEvent(InternalEvent * /* ev */ ,
@@ -394,6 +397,8 @@ DeliverTouchEvents(DeviceIntPtr /* dev */ ,
 extern void
 InitializeSprite(DeviceIntPtr /* pDev */ ,
                  WindowPtr /* pWin */ );
+extern void
+FreeSprite(DeviceIntPtr pDev);
 
 extern void
 UpdateSpriteForScreen(DeviceIntPtr /* pDev */ ,

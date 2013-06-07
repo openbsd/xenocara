@@ -133,6 +133,8 @@
 
 #define WIN_MAX_KEYS_PER_KEY	4
 
+#define NONAMELESSUNION
+
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <stdio.h>
@@ -169,7 +171,6 @@
 #include "micmap.h"
 #include "mifillarc.h"
 #include "mifpoly.h"
-#include "mibstore.h"
 #include "input.h"
 #include "mipointer.h"
 #include "X11/keysym.h"
@@ -249,9 +250,6 @@ if (++PROFPT##point % thresh == 0)\
 ErrorF (#point ": PROFILEPOINT hit %u times\n", PROFPT##point);\
 }
 
-/* We use xor this macro for detecting toggle key state changes */
-#define WIN_XOR(a,b) ((!(a) && (b)) || ((a) && !(b)))
-
 #define DEFINE_ATOM_HELPER(func,atom_name)			\
 static Atom func (void) {					\
     static int generation;					\
@@ -275,7 +273,7 @@ typedef void (*winShadowUpdateProcPtr) (ScreenPtr, shadowBufPtr);
 
 typedef Bool (*winInitScreenProcPtr) (ScreenPtr);
 
-typedef Bool (*winCloseScreenProcPtr) (int, ScreenPtr);
+typedef Bool (*winCloseScreenProcPtr) (ScreenPtr);
 
 typedef Bool (*winInitVisualsProcPtr) (ScreenPtr);
 
@@ -388,6 +386,7 @@ typedef struct {
     DWORD dwScreen;
 
     int iMonitor;
+    HMONITOR hMonitor;
     DWORD dwUserWidth;
     DWORD dwUserHeight;
     DWORD dwWidth;
@@ -578,7 +577,6 @@ typedef struct _winPrivScreenRec {
     UnrealizeWindowProcPtr UnrealizeWindow;
     ValidateTreeProcPtr ValidateTree;
     PostValidateTreeProcPtr PostValidateTree;
-    WindowExposuresProcPtr WindowExposures;
     CopyWindowProcPtr CopyWindow;
     ClearToBackgroundProcPtr ClearToBackground;
     ClipNotifyProcPtr ClipNotify;
@@ -779,8 +777,8 @@ void winSetAuthorization(void);
 
 void
 
-winBlockHandler(int nScreen,
-                pointer pBlockData, pointer pTimeout, pointer pReadMask);
+winBlockHandler(ScreenPtr pScreen,
+                pointer pTimeout, pointer pReadMask);
 
 #ifdef XWIN_NATIVEGDI
 /*
@@ -858,11 +856,13 @@ void
 
 #ifdef DDXOSVERRORF
 void
- OSVenderVErrorF(const char *pszFormat, va_list va_args);
+OsVendorVErrorF(const char *pszFormat, va_list va_args)
+_X_ATTRIBUTE_PRINTF(1, 0);
 #endif
 
 void
- winMessageBoxF(const char *pszError, UINT uType, ...);
+winMessageBoxF(const char *pszError, UINT uType, ...)
+_X_ATTRIBUTE_PRINTF(1, 3);
 
 #ifdef XWIN_NATIVEGDI
 /*
@@ -1053,24 +1053,12 @@ void
 winPolyLineNativeGDI(DrawablePtr pDrawable,
                      GCPtr pGC, int mode, int npt, DDXPointPtr ppt);
 #endif
-
-#ifdef XWIN_NATIVEGDI
-/*
- * winpushpxl.c
- */
-
-void
-
-winPushPixels(GCPtr pGC, PixmapPtr pBitMap, DrawablePtr pDrawable,
-              int dx, int dy, int xOrg, int yOrg);
-#endif
-
 /*
  * winscrinit.c
  */
 
 Bool
- winScreenInit(int index, ScreenPtr pScreen, int argc, char **argv);
+ winScreenInit(ScreenPtr pScreen, int argc, char **argv);
 
 Bool
  winFinishScreenInitFB(int index, ScreenPtr pScreen, int argc, char **argv);
@@ -1122,8 +1110,7 @@ Bool
 
 void
 
-winWakeupHandler(int nScreen,
-                 pointer pWakeupData,
+winWakeupHandler(ScreenPtr pScreen,
                  unsigned long ulResult, pointer pReadmask);
 
 /*
@@ -1174,15 +1161,6 @@ Bool
 
 void
  winSetShapeRootless(WindowPtr pWindow, int kind);
-
-/*
- * winmultiwindowicons.c - Used by both multi-window and Win32Rootless
- */
-
-HICON winXIconToHICON(WindowPtr pWin, int iconSize);
-
-void
- winSelectIcons(WindowPtr pWin, HICON * pIcon, HICON * pSmallIcon);
 
 #ifdef XWIN_MULTIWINDOW
 /*

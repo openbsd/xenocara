@@ -174,10 +174,10 @@ static char GLXServerExtensions[] =
     "GLX_SGIS_multisample "
 #endif
     "GLX_SGIX_fbconfig "
-    "GLX_SGIX_pbuffer " "GLX_MESA_copy_sub_buffer " "GLX_INTEL_swap_event";
+    "GLX_SGIX_pbuffer " "GLX_MESA_copy_sub_buffer ";
 
 static Bool
-glxCloseScreen(int index, ScreenPtr pScreen)
+glxCloseScreen(ScreenPtr pScreen)
 {
     __GLXscreen *pGlxScreen = glxGetScreen(pScreen);
 
@@ -185,7 +185,7 @@ glxCloseScreen(int index, ScreenPtr pScreen)
 
     pGlxScreen->destroy(pGlxScreen);
 
-    return pScreen->CloseScreen(index, pScreen);
+    return pScreen->CloseScreen(pScreen);
 }
 
 __GLXscreen *
@@ -287,6 +287,9 @@ pickFBConfig(__GLXscreen * pGlxScreen, VisualPtr visual)
             config->blueMask != visual->blueMask)
             continue;
         if (config->visualRating != GLX_NONE)
+            continue;
+        /* Ignore multisampled configs */
+        if (config->sampleBuffers)
             continue;
         if (glxConvertToXVisualType(config->visualType) != visual->class)
             continue;

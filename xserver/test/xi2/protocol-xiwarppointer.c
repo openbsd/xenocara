@@ -37,6 +37,7 @@
 #include "scrnintstr.h"
 #include "xiwarppointer.h"
 #include "exevents.h"
+#include "exglobals.h"
 
 #include "protocol-common.h"
 
@@ -67,7 +68,7 @@ __wrap_dixLookupWindow(WindowPtr *win, XID id, ClientPtr client, Mask access)
  * This function overrides the one in the screen rec.
  */
 static Bool
-ScreenSetCursorPosition(DeviceIntPtr dev, ScreenPtr screen,
+ScreenSetCursorPosition(DeviceIntPtr dev, ScreenPtr scr,
                         int x, int y, Bool generateEvent)
 {
     assert(x == expected_x);

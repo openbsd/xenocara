@@ -89,8 +89,10 @@ RRModeCreate(xRRModeInfo * modeInfo, const char *name, ScreenPtr userScreen)
     }
 
     mode->mode.id = FakeClientID(0);
-    if (!AddResource(mode->mode.id, RRModeType, (pointer) mode))
+    if (!AddResource(mode->mode.id, RRModeType, (pointer) mode)) {
+        free(newModes);
         return NULL;
+    }
     modes = newModes;
     modes[num_modes++] = mode;
 
@@ -173,7 +175,7 @@ RRModesForScreen(ScreenPtr pScreen, int *num_ret)
      */
     for (o = 0; o < pScrPriv->numOutputs; o++) {
         RROutputPtr output = pScrPriv->outputs[o];
-        int m, n;
+        int n;
 
         for (m = 0; m < output->numModes + output->numUserModes; m++) {
             RRModePtr mode = (m < output->numModes ?
@@ -282,10 +284,9 @@ int
 ProcRRCreateMode(ClientPtr client)
 {
     REQUEST(xRRCreateModeReq);
-    xRRCreateModeReply rep = { 0 };
+    xRRCreateModeReply rep;
     WindowPtr pWin;
     ScreenPtr pScreen;
-    rrScrPrivPtr pScrPriv;
     xRRModeInfo *modeInfo;
     long units_after;
     char *name;
@@ -298,7 +299,6 @@ ProcRRCreateMode(ClientPtr client)
         return rc;
 
     pScreen = pWin->drawable.pScreen;
-    pScrPriv = rrGetScrPriv(pScreen);
 
     modeInfo = &stuff->modeInfo;
     name = (char *) (stuff + 1);
@@ -312,17 +312,18 @@ ProcRRCreateMode(ClientPtr client)
     if (!mode)
         return error;
 
-    rep.type = X_Reply;
-    rep.pad0 = 0;
-    rep.sequenceNumber = client->sequence;
-    rep.length = 0;
-    rep.mode = mode->mode.id;
+    rep = (xRRCreateModeReply) {
+        .type = X_Reply,
+        .sequenceNumber = client->sequence,
+        .length = 0,
+        .mode = mode->mode.id
+	};
     if (client->swapped) {
         swaps(&rep.sequenceNumber);
         swapl(&rep.length);
         swapl(&rep.mode);
     }
-    WriteToClient(client, sizeof(xRRCreateModeReply), (char *) &rep);
+    WriteToClient(client, sizeof(xRRCreateModeReply), &rep);
     /* Drop out reference to this mode */
     RRModeDestroy(mode);
     return Success;

@@ -44,16 +44,8 @@
 #include "glxvisuals.h"
 #include "micmap.h"
 #include "glxswap.h"
-
-/*
-** Stubs to satisfy miinitext.c references.
-*/
-typedef int __GLXprovider;
-__GLXprovider __glXDRISWRastProvider;
-void
-GlxPushProvider(__GLXprovider * provider)
-{
-}
+#include "extinit.h"
+#include "glx_extinit.h"
 
 /*
 ** Forward declarations.

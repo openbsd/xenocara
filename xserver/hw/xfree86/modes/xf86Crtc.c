@@ -44,7 +44,9 @@
 #include "X11/Xatom.h"
 #include "picturestr.h"
 
+#ifdef XV
 #include "xf86xv.h"
+#endif
 
 #define NO_OUTPUT_DEFAULT_WIDTH 1024
 #define NO_OUTPUT_DEFAULT_HEIGHT 768
@@ -64,6 +66,7 @@ xf86CrtcConfigInit(ScrnInfoPtr scrn, const xf86CrtcConfigFuncsRec * funcs)
     config = xnfcalloc(1, sizeof(xf86CrtcConfigRec));
 
     config->funcs = funcs;
+    config->compat_output = -1;
 
     scrn->privates[xf86CrtcConfigPrivateIndex].ptr = config;
 }
@@ -180,7 +183,7 @@ xf86CrtcSetScreenSubpixelOrder(ScreenPtr pScreen)
 {
     int subpixel_order = SubPixelUnknown;
     Bool has_none = FALSE;
-    ScrnInfoPtr scrn = xf86Screens[pScreen->myNum];
+    ScrnInfoPtr scrn = xf86ScreenToScrn(pScreen);
     xf86CrtcConfigPtr xf86_config = XF86_CRTC_CONFIG_PTR(scrn);
     int c, o;
 
@@ -696,7 +699,7 @@ xf86OutputDestroy(xf86OutputPtr output)
 static Bool
 xf86CrtcCreateScreenResources(ScreenPtr screen)
 {
-    ScrnInfoPtr scrn = xf86Screens[screen->myNum];
+    ScrnInfoPtr scrn = xf86ScreenToScrn(screen);
     xf86CrtcConfigPtr config = XF86_CRTC_CONFIG_PTR(scrn);
 
     screen->CreateScreenResources = config->CreateScreenResources;
@@ -714,15 +717,19 @@ xf86CrtcCreateScreenResources(ScreenPtr screen)
  * Clean up config on server reset
  */
 static Bool
-xf86CrtcCloseScreen(int index, ScreenPtr screen)
+xf86CrtcCloseScreen(ScreenPtr screen)
 {
-    ScrnInfoPtr scrn = xf86Screens[screen->myNum];
+    ScrnInfoPtr scrn = xf86ScreenToScrn(screen);
     xf86CrtcConfigPtr config = XF86_CRTC_CONFIG_PTR(scrn);
     int o, c;
 
     screen->CloseScreen = config->CloseScreen;
 
     xf86RotateCloseScreen(screen);
+
+    xf86RandR12CloseScreen(screen);
+
+    screen->CloseScreen(screen);
 
     for (o = 0; o < config->num_output; o++) {
         xf86OutputPtr output = config->output[o];
@@ -734,9 +741,12 @@ xf86CrtcCloseScreen(int index, ScreenPtr screen)
 
         crtc->randr_crtc = NULL;
     }
-    xf86RandR12CloseScreen(screen);
-
-    return screen->CloseScreen(index, screen);
+    /* detach any providers */
+    if (config->randr_provider) {
+        RRProviderDestroy(config->randr_provider);
+        config->randr_provider = NULL;
+    }
+    return TRUE;
 }
 
 /*
@@ -749,7 +759,7 @@ Bool
 #endif
 xf86CrtcScreenInit(ScreenPtr screen)
 {
-    ScrnInfoPtr scrn = xf86Screens[screen->myNum];
+    ScrnInfoPtr scrn = xf86ScreenToScrn(screen);
     xf86CrtcConfigPtr config = XF86_CRTC_CONFIG_PTR(scrn);
     int c;
 
@@ -1824,8 +1834,14 @@ SetCompatOutput(xf86CrtcConfigPtr config)
     if (compat >= 0) {
         config->compat_output = compat;
     }
-    else {
+    else if (config->compat_output >= 0 && config->compat_output < config->num_output) {
         /* Don't change the compat output when no valid outputs found */
+        output = config->output[config->compat_output];
+    }
+
+    /* All outputs are disconnected, select one to fake */
+    if (!output && config->num_output) {
+        config->compat_output = 0;
         output = config->output[config->compat_output];
     }
 
@@ -2054,12 +2070,13 @@ xf86TargetPreferred(ScrnInfoPtr scrn, xf86CrtcConfigPtr config,
 
     /*
      * If there's no preferred mode, but only one monitor, pick the
-     * biggest mode for its aspect ratio, assuming one exists.
+     * biggest mode for its aspect ratio or 4:3, assuming one exists.
      */
     if (!ret)
         do {
             int i = 0;
             float aspect = 0.0;
+            DisplayModePtr a = NULL, b = NULL;
 
             /* count the number of enabled outputs */
             for (i = 0, p = -1; nextEnabledOutput(config, enabled, &p); i++);
@@ -2073,8 +2090,11 @@ xf86TargetPreferred(ScrnInfoPtr scrn, xf86CrtcConfigPtr config,
                 aspect = (float) config->output[p]->mm_width /
                     (float) config->output[p]->mm_height;
 
+            a = bestModeForAspect(config, enabled, 4.0/3.0);
             if (aspect)
-                preferred_match[p] = bestModeForAspect(config, enabled, aspect);
+                b = bestModeForAspect(config, enabled, aspect);
+
+            preferred_match[p] = biggestMode(a, b);
 
             if (preferred_match[p])
                 ret = TRUE;
@@ -2434,7 +2454,7 @@ xf86InitialConfiguration(ScrnInfoPtr scrn, Bool canGrow)
         xf86CrtcPtr crtc = crtcs[o];
 
         if (mode && crtc) {
-            crtc->desiredMode = *mode;
+            xf86SaveModeContents(&crtc->desiredMode, mode);
             crtc->desiredRotation = output->initial_rotation;
             crtc->desiredX = output->initial_x;
             crtc->desiredY = output->initial_y;
@@ -2579,6 +2599,7 @@ xf86SetDesiredModes(ScrnInfoPtr scrn)
     xf86CrtcConfigPtr config = XF86_CRTC_CONFIG_PTR(scrn);
     xf86CrtcPtr crtc = config->crtc[0];
     int c;
+    int enabled = 0;
 
     /* A driver with this hook will take care of this */
     if (!crtc->funcs->set_mode_major) {
@@ -2618,7 +2639,7 @@ xf86SetDesiredModes(ScrnInfoPtr scrn)
 
             if (!mode)
                 return FALSE;
-            crtc->desiredMode = *mode;
+            xf86SaveModeContents(&crtc->desiredMode, mode);
             crtc->desiredRotation = RR_Rotate_0;
             crtc->desiredTransformPresent = FALSE;
             crtc->desiredX = 0;
@@ -2629,14 +2650,20 @@ xf86SetDesiredModes(ScrnInfoPtr scrn)
             transform = &crtc->desiredTransform;
         else
             transform = NULL;
-        if (!xf86CrtcSetModeTransform
+        if (xf86CrtcSetModeTransform
             (crtc, &crtc->desiredMode, crtc->desiredRotation, transform,
-             crtc->desiredX, crtc->desiredY))
-            return FALSE;
+             crtc->desiredX, crtc->desiredY)) {
+            ++enabled;
+        } else {
+            for (o = 0; o < config->num_output; o++)
+                if (config->output[o]->crtc == crtc)
+                    config->output[o]->crtc = NULL;
+            crtc->enabled = FALSE;
+	}
     }
 
     xf86DisableUnusedFunctions(scrn);
-    return TRUE;
+    return enabled != 0;
 }
 
 /**
@@ -2757,7 +2784,7 @@ xf86SetSingleMode(ScrnInfoPtr pScrn, DisplayModePtr desired, Rotation rotation)
         if (!xf86CrtcSetModeTransform(crtc, crtc_mode, rotation, NULL, 0, 0))
             ok = FALSE;
         else {
-            crtc->desiredMode = *crtc_mode;
+            xf86SaveModeContents(&crtc->desiredMode, crtc_mode);
             crtc->desiredRotation = rotation;
             crtc->desiredTransformPresent = FALSE;
             crtc->desiredX = 0;
@@ -2821,7 +2848,7 @@ xf86DPMSSet(ScrnInfoPtr scrn, int mode, int flags)
 Bool
 xf86SaveScreen(ScreenPtr pScreen, int mode)
 {
-    ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+    ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
 
     if (xf86IsUnblank(mode))
         xf86DPMSSet(pScrn, DPMSModeOn, 0);
@@ -3007,7 +3034,7 @@ xf86OutputGetEDID(xf86OutputPtr output, I2CBusPtr pDDCBus)
     ScrnInfoPtr scrn = output->scrn;
     xf86MonPtr mon;
 
-    mon = xf86DoEEDID(scrn->scrnIndex, pDDCBus, TRUE);
+    mon = xf86DoEEDID(scrn, pDDCBus, TRUE);
     if (mon)
         xf86DDCApplyQuirks(scrn->scrnIndex, mon);
 
@@ -3149,7 +3176,7 @@ xf86_crtc_notify_proc_ptr
 xf86_wrap_crtc_notify(ScreenPtr screen, xf86_crtc_notify_proc_ptr new)
 {
     if (xf86CrtcConfigPrivateIndex != -1) {
-        ScrnInfoPtr scrn = xf86Screens[screen->myNum];
+        ScrnInfoPtr scrn = xf86ScreenToScrn(screen);
         xf86CrtcConfigPtr config = XF86_CRTC_CONFIG_PTR(scrn);
         xf86_crtc_notify_proc_ptr old;
 
@@ -3164,7 +3191,7 @@ void
 xf86_unwrap_crtc_notify(ScreenPtr screen, xf86_crtc_notify_proc_ptr old)
 {
     if (xf86CrtcConfigPrivateIndex != -1) {
-        ScrnInfoPtr scrn = xf86Screens[screen->myNum];
+        ScrnInfoPtr scrn = xf86ScreenToScrn(screen);
         xf86CrtcConfigPtr config = XF86_CRTC_CONFIG_PTR(scrn);
 
         config->xf86_crtc_notify = old;
@@ -3174,7 +3201,7 @@ xf86_unwrap_crtc_notify(ScreenPtr screen, xf86_crtc_notify_proc_ptr old)
 void
 xf86_crtc_notify(ScreenPtr screen)
 {
-    ScrnInfoPtr scrn = xf86Screens[screen->myNum];
+    ScrnInfoPtr scrn = xf86ScreenToScrn(screen);
     xf86CrtcConfigPtr config = XF86_CRTC_CONFIG_PTR(scrn);
 
     if (config->xf86_crtc_notify)
@@ -3199,4 +3226,41 @@ xf86_crtc_supports_gamma(ScrnInfoPtr pScrn)
     }
 
     return FALSE;
+}
+
+void
+xf86ProviderSetup(ScrnInfoPtr scrn,
+                  const xf86ProviderFuncsRec *funcs, const char *name)
+{
+    xf86CrtcConfigPtr xf86_config = XF86_CRTC_CONFIG_PTR(scrn);
+
+    assert(!xf86_config->name);
+    assert(name);
+
+    xf86_config->name = strdup(name);
+    xf86_config->provider_funcs = funcs;
+#ifdef RANDR_12_INTERFACE
+    xf86_config->randr_provider = NULL;
+#endif
+}
+
+void
+xf86DetachAllCrtc(ScrnInfoPtr scrn)
+{
+        xf86CrtcConfigPtr xf86_config = XF86_CRTC_CONFIG_PTR(scrn);
+        int i;
+
+        for (i = 0; i < xf86_config->num_crtc; i++) {
+            xf86CrtcPtr crtc = xf86_config->crtc[i];
+
+            if (crtc->randr_crtc)
+                RRCrtcDetachScanoutPixmap(crtc->randr_crtc);
+
+            /* dpms off */
+            (*crtc->funcs->dpms) (crtc, DPMSModeOff);
+            /* force a reset the next time its used */
+            crtc->randr_crtc->mode = NULL;
+            crtc->mode.HDisplay = 0;
+            crtc->x = crtc->y = 0;
+        }
 }

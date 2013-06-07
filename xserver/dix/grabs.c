@@ -179,7 +179,7 @@ UngrabAllDevices(Bool kill_client)
             continue;
         PrintDeviceGrabInfo(dev);
         client = clients[CLIENT_ID(dev->deviceGrab.grab->resource)];
-        if (!client || client->clientGone)
+        if (!kill_client || !client || client->clientGone)
             dev->deviceGrab.DeactivateGrab(dev);
         if (kill_client)
             CloseDownClient(client);
@@ -205,7 +205,10 @@ AllocGrab(void)
 }
 
 GrabPtr
-CreateGrab(int client, DeviceIntPtr device, DeviceIntPtr modDevice, WindowPtr window, enum InputLevel grabtype, GrabMask *mask, GrabParameters *param, int type, KeyCode keybut,        /* key or button */
+CreateGrab(int client, DeviceIntPtr device, DeviceIntPtr modDevice,
+           WindowPtr window, enum InputLevel grabtype, GrabMask *mask,
+           GrabParameters *param, int type,
+           KeyCode keybut,        /* key or button */
            WindowPtr confineTo, CursorPtr cursor)
 {
     GrabPtr grab;
@@ -216,7 +219,10 @@ CreateGrab(int client, DeviceIntPtr device, DeviceIntPtr modDevice, WindowPtr wi
     grab->resource = FakeClientID(client);
     grab->device = device;
     grab->window = window;
-    grab->eventMask = mask->core;       /* same for XI */
+    if (grabtype == CORE || grabtype == XI)
+        grab->eventMask = mask->core;       /* same for XI */
+    else
+        grab->eventMask = 0;
     grab->deviceMask = 0;
     grab->ownerEvents = param->ownerEvents;
     grab->keyboardMode = param->this_device_mode;

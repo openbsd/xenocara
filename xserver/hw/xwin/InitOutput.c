@@ -55,6 +55,7 @@ typedef WINAPI HRESULT(*SHGETFOLDERPATHPROC) (HWND hwndOwner,
                                               DWORD dwFlags, LPTSTR pszPath);
 #endif
 
+#include "glx_extinit.h"
 /*
  * References to external symbols
  */
@@ -74,11 +75,6 @@ extern Bool g_fClipboard;
 #ifdef XWIN_CLIPBOARD
 static void
  winClipboardShutdown(void);
-#endif
-
-#if defined(DDXOSVERRORF)
-void
- OsVendorVErrorF(const char *pszFormat, va_list va_args);
 #endif
 
 static Bool
@@ -147,15 +143,30 @@ winClipboardShutdown(void)
 }
 #endif
 
-void
-ddxPushProviders(void)
+static const ExtensionModule xwinExtensions[] = {
+#ifdef GLXEXT
+  { GlxExtensionInit, "GLX", &noGlxExtension },
+#endif
+};
+
+/*
+ * XwinExtensionInit
+ * Initialises Xwin-specific extensions.
+ */
+static
+void XwinExtensionInit(void)
 {
+    int i;
+
 #ifdef XWIN_GLX_WINDOWS
     if (g_fNativeGl) {
         /* install the native GL provider */
         glxWinPushNativeProvider();
     }
 #endif
+
+    for (i = 0; i < ARRAY_SIZE(xwinExtensions); i++)
+        LoadExtension(&xwinExtensions[i], TRUE);
 }
 
 #if defined(DDXBEFORERESET)
@@ -193,6 +204,9 @@ ddxGiveUp(enum ExitCode error)
     }
 
 #ifdef XWIN_MULTIWINDOW
+    /* Unload libraries for taskbar grouping */
+    winPropertyStoreDestroy();
+
     /* Notify the worker threads we're exiting */
     winDeinitMultiWindowWM();
 #endif
@@ -283,11 +297,11 @@ winCheckMount(void)
     }
 
     while ((ent = getmntent(mnt)) != NULL) {
-        BOOL system = (winCheckMntOpt(ent, "user") != NULL);
+        BOOL sys = (winCheckMntOpt(ent, "user") != NULL);
         BOOL root = (strcmp(ent->mnt_dir, "/") == 0);
         BOOL tmp = (strcmp(ent->mnt_dir, "/tmp") == 0);
 
-        if (system) {
+        if (sys) {
             if (root)
                 curlevel = sys_root;
             else if (tmp)
@@ -793,7 +807,7 @@ winUseMsg(void)
     ErrorF("-resize=none|scrollbars|randr"
            "\tIn windowed mode, [don't] allow resizing of the window. 'scrollbars'\n"
            "\tmode gives the window scrollbars as needed, 'randr' mode uses the RANR\n"
-           "\textension to resize the X screen.\n");
+           "\textension to resize the X screen.  'randr' is the default.\n");
 
     ErrorF("-rootless\n" "\tRun the server in rootless mode.\n");
 
@@ -826,7 +840,7 @@ winUseMsg(void)
 
 #ifdef XWIN_GLX_WINDOWS
     ErrorF("-[no]wgl\n"
-           "\tEnable the GLX extension to use the native Windows WGL interface for accelerated OpenGL\n");
+           "\tEnable the GLX extension to use the native Windows WGL interface for hardware-accelerated OpenGL\n");
 #endif
 
     ErrorF("-[no]winkill\n" "\tAlt+F4 exits the X Server.\n");
@@ -881,9 +895,12 @@ ddxUseMsg(void)
  */
 
 void
-InitOutput(ScreenInfo * screenInfo, int argc, char *argv[])
+InitOutput(ScreenInfo * pScreenInfo, int argc, char *argv[])
 {
     int i;
+
+    if (serverGeneration == 1)
+        XwinExtensionInit();
 
     /* Log the command line */
     winLogCommandLine(argc, argv);
@@ -921,15 +938,15 @@ InitOutput(ScreenInfo * screenInfo, int argc, char *argv[])
     LoadPreferences();
 
     /* Setup global screen info parameters */
-    screenInfo->imageByteOrder = IMAGE_BYTE_ORDER;
-    screenInfo->bitmapScanlinePad = BITMAP_SCANLINE_PAD;
-    screenInfo->bitmapScanlineUnit = BITMAP_SCANLINE_UNIT;
-    screenInfo->bitmapBitOrder = BITMAP_BIT_ORDER;
-    screenInfo->numPixmapFormats = NUMFORMATS;
+    pScreenInfo->imageByteOrder = IMAGE_BYTE_ORDER;
+    pScreenInfo->bitmapScanlinePad = BITMAP_SCANLINE_PAD;
+    pScreenInfo->bitmapScanlineUnit = BITMAP_SCANLINE_UNIT;
+    pScreenInfo->bitmapBitOrder = BITMAP_BIT_ORDER;
+    pScreenInfo->numPixmapFormats = NUMFORMATS;
 
     /* Describe how we want common pixmap formats padded */
     for (i = 0; i < NUMFORMATS; i++) {
-        screenInfo->formats[i] = g_PixmapFormats[i];
+        pScreenInfo->formats[i] = g_PixmapFormats[i];
     }
 
     /* Load pointers to DirectDraw functions */
@@ -937,6 +954,10 @@ InitOutput(ScreenInfo * screenInfo, int argc, char *argv[])
 
     /* Detect supported engines */
     winDetectSupportedEngines();
+#ifdef XWIN_MULTIWINDOW
+    /* Load libraries for taskbar grouping */
+    winPropertyStoreInit();
+#endif
 
     /* Store the instance handle */
     g_hInstance = GetModuleHandle(NULL);
@@ -1021,7 +1042,7 @@ winCheckDisplayNumber(void)
                       NULL,
                       GetLastError(),
                       MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-                      (LPTSTR) & lpMsgBuf, 0, NULL);
+                      (LPTSTR) &lpMsgBuf, 0, NULL);
         ErrorF("winCheckDisplayNumber - CreateMutex failed: %s\n",
                (LPSTR) lpMsgBuf);
         LocalFree(lpMsgBuf);

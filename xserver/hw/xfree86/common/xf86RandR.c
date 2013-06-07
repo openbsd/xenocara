@@ -66,7 +66,7 @@ static Bool
 xf86RandRGetInfo(ScreenPtr pScreen, Rotation * rotations)
 {
     RRScreenSizePtr pSize;
-    ScrnInfoPtr scrp = XF86SCRNINFO(pScreen);
+    ScrnInfoPtr scrp = xf86ScreenToScrn(pScreen);
     XF86RandRInfoPtr randrp = XF86RANDRINFO(pScreen);
     DisplayModePtr mode;
     int refresh0 = 60;
@@ -147,7 +147,7 @@ xf86RandRSetMode(ScreenPtr pScreen,
                  DisplayModePtr mode,
                  Bool useVirtual, int mmWidth, int mmHeight)
 {
-    ScrnInfoPtr scrp = XF86SCRNINFO(pScreen);
+    ScrnInfoPtr scrp = xf86ScreenToScrn(pScreen);
     XF86RandRInfoPtr randrp = XF86RANDRINFO(pScreen);
     int oldWidth = pScreen->width;
     int oldHeight = pScreen->height;
@@ -159,7 +159,7 @@ xf86RandRSetMode(ScreenPtr pScreen,
     Bool ret = TRUE;
 
     if (pRoot && scrp->vtSema)
-        (*scrp->EnableDisableFBAccess) (pScreen->myNum, FALSE);
+        (*scrp->EnableDisableFBAccess) (scrp, FALSE);
     if (useVirtual) {
         scrp->virtualX = randrp->virtualX;
         scrp->virtualY = randrp->virtualY;
@@ -220,7 +220,7 @@ xf86RandRSetMode(ScreenPtr pScreen,
     xf86SetViewport(pScreen, pScreen->width, pScreen->height);
     xf86SetViewport(pScreen, 0, 0);
     if (pRoot && scrp->vtSema)
-        (*scrp->EnableDisableFBAccess) (pScreen->myNum, TRUE);
+        (*scrp->EnableDisableFBAccess) (scrp, TRUE);
     return ret;
 }
 
@@ -228,7 +228,7 @@ static Bool
 xf86RandRSetConfig(ScreenPtr pScreen,
                    Rotation rotation, int rate, RRScreenSizePtr pSize)
 {
-    ScrnInfoPtr scrp = XF86SCRNINFO(pScreen);
+    ScrnInfoPtr scrp = xf86ScreenToScrn(pScreen);
     XF86RandRInfoPtr randrp = XF86RANDRINFO(pScreen);
     DisplayModePtr mode;
     int pos[MAXDEVICES][2];
@@ -344,7 +344,7 @@ xf86RandRCreateScreenResources(ScreenPtr pScreen)
     XF86RandRInfoPtr randrp = XF86RANDRINFO(pScreen);
 
 #if 0
-    ScrnInfoPtr scrp = XF86SCRNINFO(pScreen);
+    ScrnInfoPtr scrp = xf86ScreenToScrn(pScreen);
     DisplayModePtr mode;
 #endif
 
@@ -365,9 +365,9 @@ xf86RandRCreateScreenResources(ScreenPtr pScreen)
  * Reset size back to original
  */
 static Bool
-xf86RandRCloseScreen(int index, ScreenPtr pScreen)
+xf86RandRCloseScreen(ScreenPtr pScreen)
 {
-    ScrnInfoPtr scrp = XF86SCRNINFO(pScreen);
+    ScrnInfoPtr scrp = xf86ScreenToScrn(pScreen);
     XF86RandRInfoPtr randrp = XF86RANDRINFO(pScreen);
 
     scrp->virtualX = pScreen->width = randrp->virtualX;
@@ -376,7 +376,7 @@ xf86RandRCloseScreen(int index, ScreenPtr pScreen)
     pScreen->CloseScreen = randrp->CloseScreen;
     free(randrp);
     dixSetPrivate(&pScreen->devPrivates, xf86RandRKey, NULL);
-    return (*pScreen->CloseScreen) (index, pScreen);
+    return (*pScreen->CloseScreen) (pScreen);
 }
 
 Rotation
@@ -417,8 +417,9 @@ xf86RandRSetNewVirtualAndDimensions(ScreenPtr pScreen,
 
     /* This is only for during server start */
     if (resetMode) {
+	ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
         return (xf86RandRSetMode(pScreen,
-                                 XF86SCRNINFO(pScreen)->currentMode,
+                                 pScrn->currentMode,
                                  TRUE, pScreen->mmWidth, pScreen->mmHeight));
     }
 
@@ -430,7 +431,7 @@ xf86RandRInit(ScreenPtr pScreen)
 {
     rrScrPrivPtr rp;
     XF86RandRInfoPtr randrp;
-    ScrnInfoPtr scrp = XF86SCRNINFO(pScreen);
+    ScrnInfoPtr scrp = xf86ScreenToScrn(pScreen);
 
 #ifdef PANORAMIX
     /* XXX disable RandR when using Xinerama */

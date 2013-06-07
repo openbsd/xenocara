@@ -276,7 +276,7 @@ xf86CheckRealOption(XF86OptionPtr optlist, const char *name, double deflt)
 }
 
 char *
-xf86CheckStrOption(XF86OptionPtr optlist, const char *name, char *deflt)
+xf86CheckStrOption(XF86OptionPtr optlist, const char *name, const char *deflt)
 {
     return LookupStrOption(optlist, name, deflt, FALSE);
 }
@@ -515,7 +515,7 @@ ParseOptionValue(int scrnIndex, XF86OptionPtr options, OptionInfoPtr p,
             if (*s == '\0') {
                 if (markUsed) {
                     xf86DrvMsg(scrnIndex, X_WARNING,
-                               "Option \"%s\" requires an string value\n",
+                               "Option \"%s\" requires a string value\n",
                                p->name);
                 }
                 p->found = FALSE;

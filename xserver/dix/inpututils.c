@@ -71,14 +71,13 @@ static void
 do_butmap_change(DeviceIntPtr dev, CARD8 *map, int len, ClientPtr client)
 {
     int i;
-    xEvent core_mn;
+    xEvent core_mn = { .u.u.type = MappingNotify };
     deviceMappingNotify xi_mn;
 
     /* The map in ButtonClassRec refers to button numbers, whereas the
      * protocol is zero-indexed.  Sigh. */
     memcpy(&(dev->button->map[1]), map, len);
 
-    core_mn.u.u.type = MappingNotify;
     core_mn.u.mappingNotify.request = MappingPointer;
 
     /* 0 is the server client. */
@@ -93,10 +92,12 @@ do_butmap_change(DeviceIntPtr dev, CARD8 *map, int len, ClientPtr client)
         WriteEventsToClient(clients[i], 1, &core_mn);
     }
 
-    xi_mn.type = DeviceMappingNotify;
-    xi_mn.request = MappingPointer;
-    xi_mn.deviceid = dev->id;
-    xi_mn.time = GetTimeInMillis();
+    xi_mn = (deviceMappingNotify) {
+        .type = DeviceMappingNotify,
+        .request = MappingPointer,
+        .deviceid = dev->id,
+        .time = GetTimeInMillis()
+    };
 
     SendEventToAllWindows(dev, DeviceMappingNotifyMask, (xEvent *) &xi_mn, 1);
 }
@@ -909,11 +910,7 @@ input_option_set_value(InputOption *opt, const char *value)
 double
 fp1616_to_double(FP1616 in)
 {
-    double ret;
-
-    ret = (double) (in >> 16);
-    ret += (double) (in & 0xffff) * (1.0 / (1UL << 16));        /* Optimized: ldexp((double)(in & 0xffff), -16); */
-    return ret;
+    return pixman_fixed_to_double(in);
 }
 
 double
@@ -929,20 +926,7 @@ fp3232_to_double(FP3232 in)
 FP1616
 double_to_fp1616(double in)
 {
-    FP1616 ret;
-    int32_t integral;
-    double tmp;
-    uint32_t frac_d;
-
-    tmp = floor(in);
-    integral = (int32_t) tmp;
-
-    tmp = (in - integral) * (1UL << 16);        /* Optimized: ldexp(in - integral, 16) */
-    frac_d = (uint16_t) tmp;
-
-    ret = integral << 16;
-    ret |= frac_d & 0xffff;
-    return ret;
+    return pixman_double_to_fixed(in);
 }
 
 FP3232
@@ -1032,6 +1016,21 @@ xi2mask_free(XI2Mask **mask)
 }
 
 /**
+ * Test if the bit for event type is set for this device only.
+ *
+ * @return TRUE if the bit is set, FALSE otherwise
+ */
+Bool
+xi2mask_isset_for_device(XI2Mask *mask, const DeviceIntPtr dev, int event_type)
+{
+    BUG_WARN(dev->id < 0);
+    BUG_WARN(dev->id >= mask->nmasks);
+    BUG_WARN(bits_to_bytes(event_type + 1) > mask->mask_size);
+
+    return BitIsOn(mask->masks[dev->id], event_type);
+}
+
+/**
  * Test if the bit for event type is set for this device, or the
  * XIAllDevices/XIAllMasterDevices (if applicable) is set.
  *
@@ -1042,15 +1041,12 @@ xi2mask_isset(XI2Mask *mask, const DeviceIntPtr dev, int event_type)
 {
     int set = 0;
 
-    BUG_WARN(dev->id < 0);
-    BUG_WARN(dev->id >= mask->nmasks);
-    BUG_WARN(bits_to_bytes(event_type + 1) > mask->mask_size);
-
-    set = ! !BitIsOn(mask->masks[XIAllDevices], event_type);
-    if (!set)
-        set = ! !BitIsOn(mask->masks[dev->id], event_type);
-    if (!set && IsMaster(dev))
-        set = ! !BitIsOn(mask->masks[XIAllMasterDevices], event_type);
+    if (xi2mask_isset_for_device(mask, inputInfo.all_devices, event_type))
+        set = 1;
+    else if (xi2mask_isset_for_device(mask, dev, event_type))
+        set = 1;
+    else if (IsMaster(dev) && xi2mask_isset_for_device(mask, inputInfo.all_master_devices, event_type))
+        set = 1;
 
     return set;
 }

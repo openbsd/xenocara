@@ -109,21 +109,13 @@
 #endif
 
 static ModuleDefault ModuleDefaults[] = {
-    {.name = "extmod",.toLoad = TRUE,.load_opt = NULL},
-#ifdef DBE
-    {.name = "dbe",.toLoad = TRUE,.load_opt = NULL},
-#endif
 #ifdef GLXEXT
     {.name = "glx",.toLoad = TRUE,.load_opt = NULL},
 #endif
-#ifdef XRECORD
-    {.name = "record",.toLoad = TRUE,.load_opt = NULL},
-#endif
-#ifdef XF86DRI
-    {.name = "dri",.toLoad = TRUE,.load_opt = NULL},
-#endif
-#ifdef DRI2
-    {.name = "dri2",.toLoad = TRUE,.load_opt = NULL},
+#ifdef __CYGWIN__
+    /* load DIX modules used by drivers first */
+    {.name = "fb",.toLoad = TRUE,.load_opt = NULL},
+    {.name = "shadow",.toLoad = TRUE,.load_opt = NULL},
 #endif
     {.name = NULL,.toLoad = FALSE,.load_opt = NULL}
 };
@@ -717,7 +709,8 @@ typedef enum {
     FLAG_AUTO_ENABLE_DEVICES,
     FLAG_GLX_VISUALS,
     FLAG_DRI2,
-    FLAG_USE_SIGIO
+    FLAG_USE_SIGIO,
+    FLAG_AUTO_ADD_GPU,
 } FlagValues;
 
 /**
@@ -774,6 +767,8 @@ static OptionInfoRec FlagOptions[] = {
     {FLAG_DRI2, "DRI2", OPTV_BOOLEAN,
      {0}, FALSE},
     {FLAG_USE_SIGIO, "UseSIGIO", OPTV_BOOLEAN,
+     {0}, FALSE},
+    {FLAG_AUTO_ADD_GPU, "AutoAddGPU", OPTV_BOOLEAN,
      {0}, FALSE},
     {-1, NULL, OPTV_NONE,
      {0}, FALSE},
@@ -867,6 +862,16 @@ configServerFlags(XF86ConfFlagsPtr flagsconf, XF86OptionPtr layoutopts)
     xf86Msg(from, "%sutomatically enabling devices\n",
             xf86Info.autoEnableDevices ? "A" : "Not a");
 
+    if (xf86IsOptionSet(FlagOptions, FLAG_AUTO_ADD_GPU)) {
+        xf86GetOptValBool(FlagOptions, FLAG_AUTO_ADD_GPU,
+                          &xf86Info.autoAddGPU);
+        from = X_CONFIG;
+    }
+    else {
+        from = X_DEFAULT;
+    }
+    xf86Msg(from, "%sutomatically adding GPU devices\n",
+            xf86Info.autoAddGPU ? "A" : "Not a");
     /*
      * Set things up based on the config file information.  Some of these
      * settings may be overridden later when the command line options are

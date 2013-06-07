@@ -36,24 +36,6 @@
 #endif
 #include "win.h"
 
-/*
- * FIXME: Headers are broken, DEFINE_GUID doesn't work correctly,
- * so we have to redefine it here.
- */
-#ifdef DEFINE_GUID
-#undef DEFINE_GUID
-#define DEFINE_GUID(n,l,w1,w2,b1,b2,b3,b4,b5,b6,b7,b8) const GUID n GUID_SECT = {l,w1,w2,{b1,b2,b3,b4,b5,b6,b7,b8}}
-#endif                          /* DEFINE_GUID */
-
-/*
- * FIXME: Headers are broken, IID_IDirectDraw4 has to be defined
- * here manually.  Should be handled by ddraw.h
- */
-#ifndef IID_IDirectDraw4
-DEFINE_GUID(IID_IDirectDraw4, 0x9c59509a, 0x39bd, 0x11d1, 0x8c, 0x4a, 0x00,
-            0xc0, 0x4f, 0xd9, 0x30, 0xc5);
-#endif                          /* IID_IDirectDraw4 */
-
 #define FAIL_MSG_MAX_BLT	10
 
 /*
@@ -67,7 +49,7 @@ static void
  winShadowUpdateDDNL(ScreenPtr pScreen, shadowBufPtr pBuf);
 
 static Bool
- winCloseScreenShadowDDNL(int nIndex, ScreenPtr pScreen);
+ winCloseScreenShadowDDNL(ScreenPtr pScreen);
 
 static Bool
  winInitVisualsShadowDDNL(ScreenPtr pScreen);
@@ -267,7 +249,7 @@ winAllocateFBShadowDDNL(ScreenPtr pScreen)
 
     /* Create a DirectDraw object, store the address at lpdd */
     ddrval = (*g_fpDirectDrawCreate) (NULL,
-                                      (LPDIRECTDRAW *) & pScreenPriv->pdd,
+                                      (LPDIRECTDRAW *) &pScreenPriv->pdd,
                                       NULL);
     if (FAILED(ddrval)) {
         ErrorF("winAllocateFBShadowDDNL - Could not start "
@@ -282,7 +264,7 @@ winAllocateFBShadowDDNL(ScreenPtr pScreen)
     /* Get a DirectDraw4 interface pointer */
     ddrval = IDirectDraw_QueryInterface(pScreenPriv->pdd,
                                         &IID_IDirectDraw4,
-                                        (LPVOID *) & pScreenPriv->pdd4);
+                                        (LPVOID *) &pScreenPriv->pdd4);
     if (FAILED(ddrval)) {
         ErrorF("winAllocateFBShadowDDNL - Failed DD4 query: %08x\n",
                (unsigned int) ddrval);
@@ -526,50 +508,6 @@ winFreeFBShadowDDNL(ScreenPtr pScreen)
     pScreenInfo->pfb = NULL;
 }
 
-#if defined(XWIN_MULTIWINDOW) || defined(XWIN_MULTIWINDOWEXTWM)
-/*
- * Create a DirectDraw surface for the new multi-window window
- */
-
-static
-    Bool
-winFinishCreateWindowsWindowDDNL(WindowPtr pWin)
-{
-    winWindowPriv(pWin);
-    winPrivScreenPtr pScreenPriv = pWinPriv->pScreenPriv;
-    HRESULT ddrval = DD_OK;
-    DDSURFACEDESC2 ddsd;
-    int iWidth, iHeight;
-    int iX, iY;
-
-    winDebug("winFinishCreateWindowsWindowDDNL!\n\n");
-
-    iX = pWin->drawable.x + GetSystemMetrics(SM_XVIRTUALSCREEN);
-    iY = pWin->drawable.y + GetSystemMetrics(SM_YVIRTUALSCREEN);
-
-    iWidth = pWin->drawable.width;
-    iHeight = pWin->drawable.height;
-
-    /* Describe the primary surface */
-    ZeroMemory(&ddsd, sizeof(ddsd));
-    ddsd.dwSize = sizeof(ddsd);
-    ddsd.dwFlags = DDSD_CAPS | DDSD_WIDTH | DDSD_HEIGHT;
-    ddsd.ddsCaps.dwCaps = DDSCAPS_PRIMARYSURFACE;
-    ddsd.dwHeight = iHeight;
-    ddsd.dwWidth = iWidth;
-
-    /* Create the primary surface */
-    ddrval = IDirectDraw4_CreateSurface(pScreenPriv->pdd4,
-                                        &ddsd, &pWinPriv->pddsPrimary4, NULL);
-    if (FAILED(ddrval)) {
-        ErrorF("winFinishCreateWindowsWindowDDNL - Could not create primary "
-               "surface: %08x\n", (unsigned int) ddrval);
-        return FALSE;
-    }
-    return TRUE;
-}
-#endif
-
 /*
  * Transfer the damaged regions of the shadow framebuffer to the display.
  */
@@ -585,7 +523,7 @@ winShadowUpdateDDNL(ScreenPtr pScreen, shadowBufPtr pBuf)
     POINT ptOrigin;
     DWORD dwBox = RegionNumRects(damage);
     BoxPtr pBox = RegionRects(damage);
-    HRGN hrgnTemp = NULL, hrgnCombined = NULL;
+    HRGN hrgnCombined = NULL;
 
     /*
      * Return immediately if the app is not active
@@ -603,7 +541,7 @@ winShadowUpdateDDNL(ScreenPtr pScreen, shadowBufPtr pBuf)
     ptOrigin.x = pScreenInfo->dwXOffset;
     ptOrigin.y = pScreenInfo->dwYOffset;
     MapWindowPoints(pScreenPriv->hwndScreen,
-                    HWND_DESKTOP, (LPPOINT) & ptOrigin, 1);
+                    HWND_DESKTOP, (LPPOINT) &ptOrigin, 1);
 
     /*
      * Handle small regions with multiple blits,
@@ -657,15 +595,9 @@ winShadowUpdateDDNL(ScreenPtr pScreen, shadowBufPtr pBuf)
         BoxPtr pBoxExtents = RegionExtents(damage);
 
         /* Compute a GDI region from the damaged region */
-        hrgnCombined = CreateRectRgn(pBox->x1, pBox->y1, pBox->x2, pBox->y2);
-        dwBox--;
-        pBox++;
-        while (dwBox--) {
-            hrgnTemp = CreateRectRgn(pBox->x1, pBox->y1, pBox->x2, pBox->y2);
-            CombineRgn(hrgnCombined, hrgnCombined, hrgnTemp, RGN_OR);
-            DeleteObject(hrgnTemp);
-            pBox++;
-        }
+        hrgnCombined =
+            CreateRectRgn(pBoxExtents->x1, pBoxExtents->y1, pBoxExtents->x2,
+                          pBoxExtents->y2);
 
         /* Install the GDI region as a clipping region */
         SelectClipRgn(pScreenPriv->hdcScreen, hrgnCombined);
@@ -719,7 +651,7 @@ winInitScreenShadowDDNL(ScreenPtr pScreen)
  */
 
 static Bool
-winCloseScreenShadowDDNL(int nIndex, ScreenPtr pScreen)
+winCloseScreenShadowDDNL(ScreenPtr pScreen)
 {
     winScreenPriv(pScreen);
     winScreenInfo *pScreenInfo = pScreenPriv->pScreenInfo;
@@ -736,7 +668,7 @@ winCloseScreenShadowDDNL(int nIndex, ScreenPtr pScreen)
     /* Call the wrapped CloseScreen procedure */
     WIN_UNWRAP(CloseScreen);
     if (pScreen->CloseScreen)
-        fReturn = (*pScreen->CloseScreen) (nIndex, pScreen);
+        fReturn = (*pScreen->CloseScreen) (pScreen);
 
     winFreeFBShadowDDNL(pScreen);
 
@@ -948,7 +880,7 @@ winBltExposedRegionsShadowDDNL(ScreenPtr pScreen)
     ptOrigin.y = pScreenInfo->dwYOffset;
 
     MapWindowPoints(pScreenPriv->hwndScreen,
-                    HWND_DESKTOP, (LPPOINT) & ptOrigin, 1);
+                    HWND_DESKTOP, (LPPOINT) &ptOrigin, 1);
     rcDest.left = ptOrigin.x;
     rcDest.right = ptOrigin.x + pScreenInfo->dwWidth;
     rcDest.top = ptOrigin.y;
@@ -1058,7 +990,7 @@ winRedrawScreenShadowDDNL(ScreenPtr pScreen)
     ptOrigin.x = pScreenInfo->dwXOffset;
     ptOrigin.y = pScreenInfo->dwYOffset;
     MapWindowPoints(pScreenPriv->hwndScreen,
-                    HWND_DESKTOP, (LPPOINT) & ptOrigin, 1);
+                    HWND_DESKTOP, (LPPOINT) &ptOrigin, 1);
     rcDest.left = ptOrigin.x;
     rcDest.right = ptOrigin.x + pScreenInfo->dwWidth;
     rcDest.top = ptOrigin.y;
@@ -1278,7 +1210,7 @@ winSetEngineFunctionsShadowDDNL(ScreenPtr pScreen)
     pScreenPriv->pwinReleasePrimarySurface = winReleasePrimarySurfaceShadowDDNL;
 #ifdef XWIN_MULTIWINDOW
     pScreenPriv->pwinFinishCreateWindowsWindow
-        = winFinishCreateWindowsWindowDDNL;
+        = (winFinishCreateWindowsWindowProcPtr) (void (*)(void)) NoopDDA;
 #endif
 
     return TRUE;

@@ -66,7 +66,7 @@ static Bool xf86CursorOffScreen(ScreenPtr *pScreen, int *x, int *y);
 static void xf86CrossScreen(ScreenPtr pScreen, Bool entering);
 static void xf86WarpCursor(DeviceIntPtr pDev, ScreenPtr pScreen, int x, int y);
 
-static void xf86PointerMoved(int scrnIndex, int x, int y);
+static void xf86PointerMoved(ScrnInfoPtr pScrn, int x, int y);
 
 static miPointerScreenFuncRec xf86PointerScreenFuncs = {
     xf86CursorOffScreen,
@@ -133,16 +133,15 @@ xf86InitViewport(ScrnInfoPtr pScr)
 void
 xf86SetViewport(ScreenPtr pScreen, int x, int y)
 {
-    ScrnInfoPtr pScr = XF86SCRNINFO(pScreen);
+    ScrnInfoPtr pScr = xf86ScreenToScrn(pScreen);
 
-    (*pScr->PointerMoved) (pScreen->myNum, x, y);
+    (*pScr->PointerMoved) (pScr, x, y);
 }
 
 static void
-xf86PointerMoved(int scrnIndex, int x, int y)
+xf86PointerMoved(ScrnInfoPtr pScr, int x, int y)
 {
     Bool frameChanged = FALSE;
-    ScrnInfoPtr pScr = xf86Screens[scrnIndex];
 
     /*
      * check wether (x,y) belongs to the visual part of the screen
@@ -173,7 +172,7 @@ xf86PointerMoved(int scrnIndex, int x, int y)
     }
 
     if (frameChanged && pScr->AdjustFrame != NULL)
-        pScr->AdjustFrame(pScr->scrnIndex, pScr->frameX0, pScr->frameY0, 0);
+        pScr->AdjustFrame(pScr, pScr->frameX0, pScr->frameY0);
 }
 
 /*
@@ -184,7 +183,8 @@ xf86PointerMoved(int scrnIndex, int x, int y)
 void
 xf86LockZoom(ScreenPtr pScreen, Bool lock)
 {
-    XF86SCRNINFO(pScreen)->zoomLocked = lock;
+    ScrnInfoPtr pScr = xf86ScreenToScrn(pScreen);
+    pScr->zoomLocked = lock;
 }
 
 /*
@@ -196,10 +196,10 @@ xf86LockZoom(ScreenPtr pScreen, Bool lock)
 Bool
 xf86SwitchMode(ScreenPtr pScreen, DisplayModePtr mode)
 {
-    ScrnInfoPtr pScr = XF86SCRNINFO(pScreen);
+    ScrnInfoPtr pScr = xf86ScreenToScrn(pScreen);
     ScreenPtr pCursorScreen;
     Bool Switched;
-    int px, py, was_blocked;
+    int px, py;
     DeviceIntPtr dev, it;
 
     if (!pScr->vtSema || !mode || !pScr->SwitchMode)
@@ -228,8 +228,8 @@ xf86SwitchMode(ScreenPtr pScreen, DisplayModePtr mode)
     if (pScreen == pCursorScreen)
         miPointerGetPosition(dev, &px, &py);
 
-    was_blocked = xf86BlockSIGIO();
-    Switched = (*pScr->SwitchMode) (pScr->scrnIndex, mode, 0);
+    OsBlockSIGIO();
+    Switched = (*pScr->SwitchMode) (pScr, mode);
     if (Switched) {
         pScr->currentMode = mode;
 
@@ -267,10 +267,10 @@ xf86SwitchMode(ScreenPtr pScreen, DisplayModePtr mode)
             pScr->frameY1 = pScr->virtualY - 1;
         }
     }
-    xf86UnblockSIGIO(was_blocked);
+    OsReleaseSIGIO();
 
     if (pScr->AdjustFrame)
-        (*pScr->AdjustFrame) (pScr->scrnIndex, pScr->frameX0, pScr->frameY0, 0);
+        (*pScr->AdjustFrame) (pScr, pScr->frameX0, pScr->frameY0);
 
     /* The original code centered the frame around the cursor if possible.
      * Since this is hard to achieve with multiple cursors, we do the following:
@@ -316,7 +316,7 @@ xf86SwitchMode(ScreenPtr pScreen, DisplayModePtr mode)
 void
 xf86ZoomViewport(ScreenPtr pScreen, int zoom)
 {
-    ScrnInfoPtr pScr = XF86SCRNINFO(pScreen);
+    ScrnInfoPtr pScr = xf86ScreenToScrn(pScreen);
     DisplayModePtr mode;
 
     if (pScr->zoomLocked || !(mode = pScr->currentMode))
@@ -469,13 +469,11 @@ xf86CrossScreen(ScreenPtr pScreen, Bool entering)
 static void
 xf86WarpCursor(DeviceIntPtr pDev, ScreenPtr pScreen, int x, int y)
 {
-    int sigstate;
-
-    sigstate = xf86BlockSIGIO();
+    OsBlockSIGIO();
     miPointerWarpCursor(pDev, pScreen, x, y);
 
     xf86Info.currentScreen = pScreen;
-    xf86UnblockSIGIO(sigstate);
+    OsReleaseSIGIO();
 }
 
 void *

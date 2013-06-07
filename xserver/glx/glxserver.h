@@ -46,7 +46,6 @@
 #include <resource.h>
 #include <scrnintstr.h>
 
-#define GL_GLEXT_PROTOTYPES     /* we want prototypes */
 #include <GL/gl.h>
 #include <GL/glxproto.h>
 
@@ -77,8 +76,6 @@ extern __GLXclientState *glxGetClient(ClientPtr pClient);
 
 /************************************************************************/
 
-void GlxExtensionInit(void);
-
 void GlxSetVisualConfigs(int nconfigs, void *configs, void **privates);
 
 void __glXScreenInitVisuals(__GLXscreen * screen);
@@ -100,6 +97,7 @@ struct __GLXprovider {
     const char *name;
     __GLXprovider *next;
 };
+extern __GLXprovider __glXDRISWRastProvider;
 
 void GlxPushProvider(__GLXprovider * provider);
 
@@ -145,8 +143,6 @@ struct __GLXclientStateRec {
     /* Back pointer to X client record */
     ClientPtr client;
 
-    int GLClientmajorVersion;
-    int GLClientminorVersion;
     char *GLClientextensions;
 };
 

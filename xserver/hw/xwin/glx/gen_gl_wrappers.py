@@ -67,7 +67,7 @@ if dispatchheader :
         fh = open(dispatchheader)
         dispatchh = fh.readlines()
 
-        dispatch_regex = re.compile(r'#define\sSET_(\S*)\(')
+        dispatch_regex = re.compile(r'^SET_(\S*)\(')
 
         for line in dispatchh :
                 line = line.strip()
@@ -146,9 +146,8 @@ for line in glspec :
                         arglist_use = m1.group(2)
                         wrappers[function] = {}
 
-                        # near and far might be reserved words or macros so can't be used as formal parameter names
-                        arglist_use = arglist_use.replace('near','zNear')
-                        arglist_use = arglist_use.replace('far','zFar')
+                        # ensure formal parameter names don't collide with reserved names or shadow global declarations
+                        arglist_use = ',' .join([i.rstrip() + '_' for i in arglist_use.split(",")])
 
                         wrappers[function]['arglist_use'] = arglist_use
                         param_count = 0
@@ -217,9 +216,8 @@ for w in sorted(wrappers.keys()) :
                 if k.startswith('param') :
                         l = wrappers[w][k].split()
 
-                        # near and far might be reserved words or macros so can't be used as formal parameter names
-                        l[0] = l[0].replace('near','zNear')
-                        l[0] = l[0].replace('far','zFar')
+                        # ensure formal parameter names don't collide with reserved names or shadow global declarations
+                        l[0] = l[0] + '_'
 
                         if l[2] == 'in' :
                                 if l[3] == 'array' :
@@ -308,12 +306,20 @@ for w in sorted(wrappers.keys()) :
 if dispatchheader :
         print 'void glWinSetupDispatchTable(void)'
         print '{'
-        print '  struct _glapi_table *disp = _glapi_get_dispatch();'
+        print '  static struct _glapi_table *disp = NULL;'
+        print ''
+        print '  if (!disp)'
+        print '    {'
+        print '      disp = calloc(sizeof(void *), _glapi_get_dispatch_table_size());'
+        print '      assert(disp);'
 
         for d in sorted(dispatch.keys()) :
                 if wrappers.has_key(d) :
-                        print '  SET_'+ d + '(disp, (void *)' + prefix + d + 'Wrapper);'
+                        print '      SET_'+ d + '(disp, (void *)' + prefix + d + 'Wrapper);'
                 else :
                         print '#warning  No wrapper for ' + prefix + d + ' !'
 
+        print '    }'
+        print ''
+        print '  _glapi_set_dispatch(disp);'
         print '}'

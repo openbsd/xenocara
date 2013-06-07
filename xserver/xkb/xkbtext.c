@@ -6,19 +6,19 @@
  fee is hereby granted, provided that the above copyright
  notice appear in all copies and that both that copyright
  notice and this permission notice appear in supporting
- documentation, and that the name of Silicon Graphics not be 
- used in advertising or publicity pertaining to distribution 
+ documentation, and that the name of Silicon Graphics not be
+ used in advertising or publicity pertaining to distribution
  of the software without specific prior written permission.
- Silicon Graphics makes no representation about the suitability 
+ Silicon Graphics makes no representation about the suitability
  of this software for any purpose. It is provided "as is"
  without any express or implied warranty.
- 
- SILICON GRAPHICS DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS 
- SOFTWARE, INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY 
+
+ SILICON GRAPHICS DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS
+ SOFTWARE, INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY
  AND FITNESS FOR A PARTICULAR PURPOSE. IN NO EVENT SHALL SILICON
- GRAPHICS BE LIABLE FOR ANY SPECIAL, INDIRECT OR CONSEQUENTIAL 
- DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, 
- DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE 
+ GRAPHICS BE LIABLE FOR ANY SPECIAL, INDIRECT OR CONSEQUENTIAL
+ DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE,
+ DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE
  OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION  WITH
  THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
@@ -144,18 +144,18 @@ char *
 XkbVModMaskText(XkbDescPtr xkb,
                 unsigned modMask, unsigned mask, unsigned format)
 {
-    register int i, bit;
-    int len;
-    char *mm, *rtrn;
-    char *str, buf[BUFFER_SIZE];
+register int i,bit;
+int	 len;
+char *mm,*rtrn;
+char *str,buf[BUFFER_SIZE];
 
-    if ((modMask == 0) && (mask == 0)) {
-        rtrn = tbGetBuffer(5);
-        if (format == XkbCFile)
-            sprintf(rtrn, "0");
-        else
-            sprintf(rtrn, "none");
-        return rtrn;
+if ((modMask == 0) && (mask == 0)) {
+    rtrn = tbGetBuffer(5);
+    if (format == XkbCFile)
+        snprintf(rtrn, 5, "0");
+    else
+        snprintf(rtrn, 5, "none");
+    return rtrn;
     }
     if (modMask != 0)
         mm = XkbModMaskText(modMask, format);
@@ -165,38 +165,36 @@ XkbVModMaskText(XkbDescPtr xkb,
     str = buf;
     buf[0] = '\0';
     if (mask) {
-        char *tmp;
-
-        for (i = 0, bit = 1; i < XkbNumVirtualMods; i++, bit <<= 1) {
-            if (mask & bit) {
-                tmp = XkbVModIndexText(xkb, i, format);
-                len = strlen(tmp) + 1 + (str == buf ? 0 : 1);
-                if (format == XkbCFile)
-                    len += 4;
-                if ((str - (buf + len)) <= BUFFER_SIZE) {
-                    if (str != buf) {
-                        if (format == XkbCFile)
+	char *tmp;
+	for (i = 0, bit = 1; i < XkbNumVirtualMods; i++, bit <<= 1) {
+	    if (mask&bit) {
+		tmp = XkbVModIndexText(xkb, i, format);
+		len = strlen(tmp) + 1 + (str == buf ? 0 : 1);
+		if (format == XkbCFile)
+		    len += 4;
+		if ((str - (buf + len)) <= BUFFER_SIZE) {
+		    if (str != buf) {
+			if (format == XkbCFile)
                             *str++ = '|';
-                        else
+			else
                             *str++ = '+';
-                        len--;
-                    }
-                }
-                if (format == XkbCFile)
-                    sprintf(str, "%sMask", tmp);
-                else
+			len--;
+		    }
+		}
+		if (format == XkbCFile)
+		    snprintf(str, BUFFER_SIZE - len, "%sMask", tmp);
+		else
                     strcpy(str, tmp);
-                str = &str[len - 1];
-            }
-        }
-        str = buf;
+		str = &str[len-1];
+	    }
+	}
+	str = buf;
     }
-    else
-        str = NULL;
+    else str = NULL;
     if (mm)
-        len = strlen(mm);
+	len = strlen(mm);
     else
-        len = 0;
+	len= 0;
     if (str)
         len += strlen(str) + (mm == NULL ? 0 : 1);
     if (len >= BUFFER_SIZE)
@@ -1266,7 +1264,6 @@ XkbBehaviorText(XkbDescPtr xkb, XkbBehavior * behavior, unsigned format)
         }
         else if (type == XkbKB_RadioGroup) {
             int g;
-            char *tmp;
 
             g = ((behavior->data) & (~XkbKB_RGAllowNone)) + 1;
             if (XkbKB_RGAllowNone & behavior->data) {

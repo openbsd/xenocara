@@ -26,11 +26,11 @@ dnl
 dnl Process this file with autoconf to create configure.
 
 AC_PREREQ(2.60)
-AC_INIT([xorg-server], 1.12.3, [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg], xorg-server)
-RELEASE_DATE="2012-07-09"
+AC_INIT([xorg-server], 1.14.1, [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg], xorg-server)
+RELEASE_DATE="2013-04-17"
+RELEASE_NAME="Act Normal"
 AC_CONFIG_SRCDIR([Makefile.am])
 AM_INIT_AUTOMAKE([foreign dist-bzip2])
-AM_MAINTAINER_MODE
 
 # Require xorg-macros minimum of 1.14 for XORG_COMPILER_BRAND in XORG_DEFAULT_OPTIONS
 m4_ifndef([XORG_MACROS_VERSION],
@@ -136,6 +136,7 @@ AC_CHECK_HEADERS([fcntl.h stdlib.h string.h unistd.h dlfcn.h stropts.h fnmatch.h
 
 dnl Checks for typedefs, structures, and compiler characteristics.
 AC_C_CONST
+AC_C_TYPEOF
 AC_C_BIGENDIAN([ENDIAN="X_BIG_ENDIAN"], [ENDIAN="X_LITTLE_ENDIAN"])
 
 AC_CHECK_SIZEOF([unsigned long])
@@ -271,10 +272,11 @@ AC_CACHE_CHECK([for SYSV IPC],
 #include <sys/types.h>
 #include <sys/ipc.h>
 #include <sys/shm.h>
+#include <sys/stat.h>
 ],[
 { 
     int id;
-    id = shmget(IPC_PRIVATE, 512, SHM_W | SHM_R);
+    id = shmget(IPC_PRIVATE, 512, S_IRUSR | S_IWUSR);
     if (id < 0) return -1;
     return shmctl(id, IPC_RMID, 0);
 }],
@@ -441,7 +443,7 @@ case $host_os in
   darwin*)
 	AC_DEFINE(CSRG_BASED, 1, [System is BSD-like])
 	;;
-  cygwin*)
+  cygwin*|mingw*)
 	CFLAGS="$CFLAGS -DFD_SETSIZE=256"
 	;;
 esac
@@ -625,7 +627,7 @@ AM_CONDITIONAL(X_PRIVSEP, [test x$ENABLE_PRIVSEP = xyes])
 dnl Extensions.
 AC_ARG_ENABLE(registry,       AS_HELP_STRING([--disable-registry], [Build string registry module (default: enabled)]), [XREGISTRY=$enableval], [XREGISTRY=yes])
 AC_ARG_ENABLE(composite,      AS_HELP_STRING([--disable-composite], [Build Composite extension (default: enabled)]), [COMPOSITE=$enableval], [COMPOSITE=yes])
-AC_ARG_ENABLE(mitshm,         AS_HELP_STRING([--disable-mitshm], [Build SHM extension (default: enabled)]), [MITSHM=$enableval], [MITSHM=yes])
+AC_ARG_ENABLE(mitshm,         AS_HELP_STRING([--disable-mitshm], [Build SHM extension (default: auto)]), [MITSHM=$enableval], [MITSHM=auto])
 AC_ARG_ENABLE(xres,           AS_HELP_STRING([--disable-xres], [Build XRes extension (default: enabled)]), [RES=$enableval], [RES=yes])
 AC_ARG_ENABLE(record,         AS_HELP_STRING([--disable-record], [Build Record extension (default: enabled)]), [RECORD=$enableval], [RECORD=yes])
 AC_ARG_ENABLE(xv,             AS_HELP_STRING([--disable-xv], [Build Xv extension (default: enabled)]), [XV=$enableval], [XV=yes])
@@ -647,11 +649,11 @@ AC_ARG_ENABLE(dbe,            AS_HELP_STRING([--disable-dbe], [Build DBE extensi
 AC_ARG_ENABLE(xf86bigfont,    AS_HELP_STRING([--enable-xf86bigfont], [Build XF86 Big Font extension (default: disabled)]), [XF86BIGFONT=$enableval], [XF86BIGFONT=no])
 AC_ARG_ENABLE(dpms,           AS_HELP_STRING([--disable-dpms], [Build DPMS extension (default: enabled)]), [DPMSExtension=$enableval], [DPMSExtension=yes])
 AC_ARG_ENABLE(config-udev,    AS_HELP_STRING([--enable-config-udev], [Build udev support (default: auto)]), [CONFIG_UDEV=$enableval], [CONFIG_UDEV=auto])
+AC_ARG_ENABLE(config-udev-kms,    AS_HELP_STRING([--enable-config-udev-kms], [Build udev kms support (default: auto)]), [CONFIG_UDEV_KMS=$enableval], [CONFIG_UDEV_KMS=auto])
 AC_ARG_ENABLE(config-dbus,    AS_HELP_STRING([--enable-config-dbus], [Build D-BUS API support (default: no)]), [CONFIG_DBUS_API=$enableval], [CONFIG_DBUS_API=no])
 AC_ARG_ENABLE(config-hal,     AS_HELP_STRING([--disable-config-hal], [Build HAL support (default: auto)]), [CONFIG_HAL=$enableval], [CONFIG_HAL=auto])
 AC_ARG_ENABLE(config-wscons,  AS_HELP_STRING([--enable-config-wscons], [Build wscons config support (default: auto)]), [CONFIG_WSCONS=$enableval], [CONFIG_WSCONS=auto])
 AC_ARG_ENABLE(xfree86-utils,     AS_HELP_STRING([--enable-xfree86-utils], [Build xfree86 DDX utilities (default: enabled)]), [XF86UTILS=$enableval], [XF86UTILS=yes])
-AC_ARG_ENABLE(xaa,               AS_HELP_STRING([--enable-xaa], [Build XAA (default: enabled)]), [XAA=$enableval], [XAA=yes])
 AC_ARG_ENABLE(vgahw,          AS_HELP_STRING([--enable-vgahw], [Build Xorg with vga access (default: enabled)]), [VGAHW=$enableval], [VGAHW=yes])
 AC_ARG_ENABLE(vbe,            AS_HELP_STRING([--enable-vbe], [Build Xorg with VBE module (default: enabled)]), [VBE=$enableval], [VBE=yes])
 AC_ARG_ENABLE(int10-module,     AS_HELP_STRING([--enable-int10-module], [Build Xorg with int10 module (default: enabled)]), [INT10MODULE=$enableval], [INT10MODULE=yes])
@@ -689,6 +691,7 @@ AC_MSG_CHECKING([to see if we can install the Xorg server as root])
 if test "x$SETUID" = "xauto" ; then
 	case $host_os in
 	    cygwin*)		SETUID="no"  ;;
+	    mingw*)		SETUID="no"  ;;
 	    darwin*)		SETUID="no"  ;;
 	    *)
 	   	case $host_cpu in
@@ -731,12 +734,22 @@ AM_CONDITIONAL(INSTALL_LIBXF86CONFIG, [test "x$INSTALL_LIBXF86CONFIG" = xyes])
 dnl DDX Detection... Yes, it's ugly to have it here... but we need to
 dnl handle this early on so that we don't require unsupported extensions
 case $host_os in
-	cygwin*)
+	cygwin* | mingw*)
+		CONFIG_DBUS_API=no
+		CONFIG_HAL=no
+		CONFIG_UDEV=no
+		CONFIG_UDEV_KMS=no
 		DGA=no
 		DRI2=no
+		INT10MODULE=no
+		PCI=no
+		VGAHW=no
+		VBE=no
+		XF86UTILS=no
 		XF86VIDMODE=no
 		XSELINUX=no
 		XV=no
+		SYMBOL_VISIBILITY=no
 		;;
 	darwin*)
 		PCI=no
@@ -785,20 +798,19 @@ dnl Extension section
 dnl ---------------------------------------------------------------------------
 XEXT_INC='-I$(top_srcdir)/Xext'
 XEXT_LIB='$(top_builddir)/Xext/libXext.la'
-XEXTXORG_LIB='$(top_builddir)/Xext/libXextbuiltin.la'
 
 dnl Optional modules
 VIDEOPROTO="videoproto"
 COMPOSITEPROTO="compositeproto >= 0.4"
 RECORDPROTO="recordproto >= 1.13.99.1"
 SCRNSAVERPROTO="scrnsaverproto >= 1.1"
-RESOURCEPROTO="resourceproto"
+RESOURCEPROTO="resourceproto >= 1.2.0"
 DRIPROTO="xf86driproto >= 2.1.0"
-DRI2PROTO="dri2proto >= 2.6"
+DRI2PROTO="dri2proto >= 2.8"
 XINERAMAPROTO="xineramaproto"
 BIGFONTPROTO="xf86bigfontproto >= 1.2.0"
 DGAPROTO="xf86dgaproto >= 2.0.99.1"
-GLPROTO="glproto >= 1.4.14"
+GLPROTO="glproto >= 1.4.16"
 DMXPROTO="dmxproto >= 2.2.99.1"
 VIDMODEPROTO="xf86vidmodeproto >= 2.2.99.1"
 WINDOWSWMPROTO="windowswmproto"
@@ -806,10 +818,10 @@ APPLEWMPROTO="applewmproto >= 1.4"
 
 dnl Required modules
 XPROTO="xproto >= 7.0.22"
-RANDRPROTO="randrproto >= 1.2.99.3"
+RANDRPROTO="randrproto >= 1.4.0"
 RENDERPROTO="renderproto >= 0.11"
 XEXTPROTO="xextproto >= 7.1.99"
-INPUTPROTO="inputproto >= 2.1.99.6"
+INPUTPROTO="inputproto >= 2.3"
 KBPROTO="kbproto >= 1.0.3"
 FONTSPROTO="fontsproto"
 FIXESPROTO="fixesproto >= 5.0"
@@ -832,7 +844,7 @@ LIBPCIACCESS="pciaccess >= 0.12.901"
 LIBUDEV="libudev >= 143"
 LIBSELINUX="libselinux >= 2.0.86"
 LIBDBUS="dbus-1 >= 1.0"
-LIBPIXMAN="pixman-1 >= 0.21.8"
+LIBPIXMAN="pixman-1 >= 0.27.2"
 
 dnl Pixman is always required, but we separate it out so we can link
 dnl specific modules against it
@@ -859,11 +871,16 @@ AM_CONDITIONAL(CONFIG_UDEV, [test "x$CONFIG_UDEV" = xyes])
 if test "x$CONFIG_UDEV" = xyes; then
 	CONFIG_DBUS_API=no
 	CONFIG_HAL=no
+	if test "x$CONFIG_UDEV_KMS" = xauto; then
+		CONFIG_UDEV_KMS="$HAVE_LIBUDEV"
+	fi
 	if ! test "x$HAVE_LIBUDEV" = xyes; then
 		AC_MSG_ERROR([udev configuration API requested, but libudev is not installed])
 	fi
 	AC_DEFINE(CONFIG_UDEV, 1, [Use libudev for input hotplug])
-
+	if test "x$CONFIG_UDEV_KMS" = xyes; then
+		AC_DEFINE(CONFIG_UDEV_KMS, 1, [Use libudev for kms enumeration])
+	fi
 	SAVE_LIBS=$LIBS
 	SAVE_CFLAGS=$CFLAGS
 	CFLAGS=$UDEV_CFLAGS
@@ -873,6 +890,7 @@ if test "x$CONFIG_UDEV" = xyes; then
 	LIBS=$SAVE_LIBS
 	CFLAGS=$SAVE_CFLAGS
 fi
+AM_CONDITIONAL(CONFIG_UDEV_KMS, [test "x$CONFIG_UDEV_KMS" = xyes])
 
 dnl HAVE_DBUS is true if we actually have the D-Bus library, whereas
 dnl CONFIG_DBUS_API is true if we want to enable the D-Bus config
@@ -1023,6 +1041,9 @@ if test "x$COMPOSITE" = xyes; then
 	COMPOSITE_INC='-I$(top_srcdir)/composite'
 fi
 
+if test "x$MITSHM" = xauto; then
+	MITSHM="$ac_cv_sysv_ipc"
+fi
 AM_CONDITIONAL(MITSHM, [test "x$MITSHM" = xyes])
 if test "x$MITSHM" = xyes; then
 	AC_DEFINE(MITSHM, 1, [Support MIT-SHM extension])
@@ -1093,13 +1114,13 @@ if test "x$GLX_USE_TLS" = xyes ; then
 	GLX_SYS_LIBS="$GLX_SYS_LIBS -lpthread"
 fi
 AC_SUBST([GLX_DEFINES])
+AC_SUBST([GLX_SYS_LIBS])
 
 AM_CONDITIONAL(DRI, test "x$DRI" = xyes)
 if test "x$DRI" = xyes; then
 	AC_DEFINE(XF86DRI, 1, [Build DRI extension])
-	PKG_CHECK_MODULES([DRIPROTO], [$DRIPROTO])
-	PKG_CHECK_MODULES([DRI], $GLPROTO $LIBDRI)
-	AC_SUBST(DRIPROTO_CFLAGS)
+	REQUIRED_MODULES="$REQUIRED_MODULES $DRIPROTO $GLPROTO $LIBDRI"
+	SDK_REQUIRED_MODULES="$SDK_REQUIRED_MODULES $DRIPROTO $GLPROTO $LIBDRI"
 fi
 
 PKG_CHECK_MODULES([DRI2PROTO], $DRI2PROTO,
@@ -1116,7 +1137,7 @@ case "$DRI2,$HAVE_DRI2PROTO" in
 esac
 AM_CONDITIONAL(DRI2, test "x$DRI2" = xyes)
 
-if test "x$DRI" = xyes || test "x$DRI2" = xyes; then
+if test "x$DRI" = xyes || test "x$DRI2" = xyes || test "x$CONFIG_UDEV_KMS" = xyes; then
 	if test "x$DRM" = xyes; then
 		AC_DEFINE(WITH_LIBDRM, 1, [Building with libdrm support])
 		PKG_CHECK_MODULES([LIBDRM], $LIBDRM)
@@ -1148,8 +1169,8 @@ AM_CONDITIONAL(DRI2_AIGLX, test "x$DRI2_AIGLX" = xyes)
 if test "x$DRI2" = xyes; then
 	case $host_os in
 	openbsd*)
-		XORG_SYS_LIBS="-lpthread"
-		;;
+        	XORG_SYS_LIBS="-lpthread"
+        	;;
 	esac
 fi
 
@@ -1190,6 +1211,7 @@ AM_CONDITIONAL(DBE, [test "x$DBE" = xyes])
 if test "x$DBE" = xyes; then
 	AC_DEFINE(DBE, 1, [Support DBE extension])
 	DBE_LIB='$(top_builddir)/dbe/libdbe.la'
+	DBE_INC='-I$(top_srcdir)/dbe'
 fi
 
 AM_CONDITIONAL(XF86BIGFONT, [test "x$XF86BIGFONT" = xyes])
@@ -1227,7 +1249,6 @@ XI_LIB='$(top_builddir)/Xi/libXi.la'
 XI_INC='-I$(top_srcdir)/Xi'
 
 AM_CONDITIONAL(XF86UTILS, test "x$XF86UTILS" = xyes)
-AM_CONDITIONAL(XAA, test "x$XAA" = xyes)
 AM_CONDITIONAL(VGAHW, test "x$VGAHW" = xyes)
 AM_CONDITIONAL(VBE, test "x$VBE" = xyes)
 AM_CONDITIONAL(INT10MODULE, test "x$INT10MODULE" = xyes)
@@ -1380,7 +1401,7 @@ CORE_INCS='-I$(top_srcdir)/include -I$(top_builddir)/include'
 
 # SHA1 hashing
 AC_ARG_WITH([sha1],
-            [AS_HELP_STRING([--with-sha1=libc|libmd|libgcrypt|libcrypto|libsha1|CommonCrypto],
+            [AS_HELP_STRING([--with-sha1=libc|libmd|libnettle|libgcrypt|libcrypto|libsha1|CommonCrypto|CryptoAPI],
                             [choose SHA1 implementation])])
 AC_CHECK_FUNC([SHA1Init], [HAVE_SHA1_IN_LIBC=yes])
 if test "x$with_sha1" = x && test "x$HAVE_SHA1_IN_LIBC" = xyes; then
@@ -1406,6 +1427,19 @@ if test "x$with_sha1" = xCommonCrypto; then
 		[Use CommonCrypto SHA1 functions])
 	SHA1_LIBS=""
 fi
+dnl stdcall functions cannot be tested with AC_CHECK_LIB
+AC_CHECK_HEADER([wincrypt.h], [HAVE_SHA1_IN_CRYPTOAPI=yes], [], [#include <windows.h>])
+if test "x$with_sha1" = x && test "x$HAVE_SHA1_IN_CRYPTOAPI" = xyes; then
+	with_sha1=CryptoAPI
+fi
+if test "x$with_sha1" = xCryptoAPI && test "x$HAVE_SHA1_IN_CRYPTOAPI" != xyes; then
+	AC_MSG_ERROR([CryptoAPI requested but not found])
+fi
+if test "x$with_sha1" = xCryptoAPI; then
+	AC_DEFINE([HAVE_SHA1_IN_CRYPTOAPI], [1],
+		[Use CryptoAPI SHA1 functions])
+	SHA1_LIBS=""
+fi
 AC_CHECK_LIB([md], [SHA1Init], [HAVE_LIBMD=yes])
 if test "x$with_sha1" = x && test "x$HAVE_LIBMD" = xyes; then
 	with_sha1=libmd
@@ -1429,6 +1463,18 @@ if test "x$with_sha1" = xlibsha1; then
 	AC_DEFINE([HAVE_SHA1_IN_LIBSHA1], [1],
 	          [Use libsha1 for SHA1])
 	SHA1_LIBS=-lsha1
+fi
+AC_CHECK_LIB([nettle], [nettle_sha1_init], [HAVE_LIBNETTLE=yes])
+if test "x$with_sha1" = x && test "x$HAVE_LIBNETTLE" = xyes; then
+	with_sha1=libnettle
+fi
+if test "x$with_sha1" = xlibnettle && test "x$HAVE_LIBNETTLE" != xyes; then
+	AC_MSG_ERROR([libnettle requested but not found])
+fi
+if test "x$with_sha1" = xlibnettle; then
+	AC_DEFINE([HAVE_SHA1_IN_LIBNETTLE], [1],
+	          [Use libnettle SHA1 functions])
+	SHA1_LIBS=-lnettle
 fi
 AC_CHECK_LIB([gcrypt], [gcry_md_open], [HAVE_LIBGCRYPT=yes])
 if test "x$with_sha1" = x && test "x$HAVE_LIBGCRYPT" = xyes; then
@@ -1514,7 +1560,41 @@ case $host_os in
 		esac
        ;;
 esac
+LD_NO_UNDEFINED_FLAG=
+XORG_DRIVER_LIBS=
+case "$host_os" in
+    cygwin*)
+	LD_EXPORT_SYMBOLS_FLAG="-Wl,--export-all,--out-implib,lib\$@.a"
+	LD_NO_UNDEFINED_FLAG="-no-undefined -Wl,\$(top_builddir)/hw/xfree86/libXorg.exe.a"
+	XORG_DRIVER_LIBS="-lXorg.exe -L\${moduledir} -lshadow -lfb -no-undefined"
+	CYGWIN=yes
+	;;
+    solaris*)
+	# We use AC_LINK_IFELSE to generate a temporary program conftest$EXEEXT
+	# that we can link against for testing if the system linker is new
+	# enough to support -z parent=<program> for verifying loadable modules
+	# are only calling functions defined in either the loading program or
+	# the libraries they're linked with.
+	AC_LINK_IFELSE(
+	    [AC_LANG_SOURCE([int main(int argc, char **argv) { return 0; }])],
+	    [mv conftest$EXEEXT conftest.parent
+	     XORG_CHECK_LINKER_FLAGS([-Wl,-z,parent=conftest.parent -G],
+		[LD_NO_UNDEFINED_FLAG="-Wl,-z,defs -Wl,-z,parent=\$(top_builddir)/hw/xfree86/Xorg"
+# Not set yet, since this gets exported in xorg-server.pc to all the drivers,
+# and they're not all fixed to build correctly with it yet.
+#		 XORG_DRIVER_LIBS="-Wl,-z,defs -Wl,-z,parent=${bindir}/Xorg"
+         ],[],
+		[AC_LANG_SOURCE([extern int main(int argc, char **argv);
+			int call_main(void) { return main(0, NULL); }])])
+	     rm -f conftest.parent
+	    ])
+	;;
+esac
 AC_SUBST([LD_EXPORT_SYMBOLS_FLAG])
+AC_SUBST([LD_NO_UNDEFINED_FLAG])
+AC_SUBST([XORG_DRIVER_LIBS])
+AM_CONDITIONAL([CYGWIN], [test x"$CYGWIN" = xyes])
+AM_CONDITIONAL([NO_UNDEFINED], [test x"$LD_NO_UNDEFINED_FLAG" != x])
 
 dnl Imake defines SVR4 on SVR4 systems, and many files check for it, so
 dnl we need to replicate that here until those can all be fixed
@@ -1527,7 +1607,7 @@ AC_EGREP_CPP([I_AM_SVR4],[
 AC_DEFINE([SVR4],1,[Define to 1 on systems derived from System V Release 4])
 AC_MSG_RESULT([yes])], AC_MSG_RESULT([no]))
 
-XSERVER_CFLAGS="$XSERVER_CFLAGS $CORE_INCS $XEXT_INC $COMPOSITE_INC $DAMAGE_INC $FIXES_INC $XI_INC $MI_INC $MIEXT_SYNC_INC $MIEXT_SHADOW_INC $MIEXT_LAYER_INC $MIEXT_DAMAGE_INC $RENDER_INC $RANDR_INC $FB_INC"
+XSERVER_CFLAGS="$XSERVER_CFLAGS $CORE_INCS $XEXT_INC $COMPOSITE_INC $DAMAGE_INC $FIXES_INC $XI_INC $MI_INC $MIEXT_SYNC_INC $MIEXT_SHADOW_INC $MIEXT_LAYER_INC $MIEXT_DAMAGE_INC $RENDER_INC $RANDR_INC $FB_INC $DBE_INC"
 
 dnl ---------------------------------------------------------------------------
 dnl DDX section.
@@ -1575,6 +1655,7 @@ if test "x$XORG" = xauto; then
 	XORG="yes"
 	case $host_os in
 		cygwin*) XORG="no" ;;
+		mingw*)  XORG="no" ;;
 		darwin*) XORG="no" ;;
 	esac
 fi
@@ -1585,7 +1666,7 @@ if test "x$XORG" = xyes; then
 	XORG_OSINCS='-I$(top_srcdir)/hw/xfree86/os-support -I$(top_srcdir)/hw/xfree86/os-support/bus -I$(top_srcdir)/os'
 	XORG_INCS="$XORG_DDXINCS $XORG_OSINCS"
 	XORG_CFLAGS="$XORGSERVER_CFLAGS -DHAVE_XORG_CONFIG_H"
-	XORG_LIBS="$COMPOSITE_LIB $FIXES_LIB $XEXTXORG_LIB $GLX_LIBS $RANDR_LIB $RENDER_LIB $DAMAGE_LIB $MIEXT_SYNC_LIB $MIEXT_DAMAGE_LIB $XI_LIB $XKB_LIB"
+	XORG_LIBS="$COMPOSITE_LIB $FIXES_LIB $XEXT_LIB $DBE_LIB $RECORD_LIB $RANDR_LIB $RENDER_LIB $DAMAGE_LIB $MIEXT_SYNC_LIB $MIEXT_DAMAGE_LIB $XI_LIB $XKB_LIB"
 
 	dnl ==================================================================
 	dnl symbol visibility
@@ -1639,8 +1720,8 @@ if test "x$XORG" = xyes; then
 
 	PKG_CHECK_MODULES([PCIACCESS], $LIBPCIACCESS)
 	SDK_REQUIRED_MODULES="$SDK_REQUIRED_MODULES $LIBPCIACCESS"
-	XORG_SYS_LIBS="$XORG_SYS_LIBS $PCIACCESS_LIBS $GLX_SYS_LIBS"
-	XORG_CFLAGS="$XORG_CFLAGS $PCIACCESS_CFLAGS"
+	XORG_SYS_LIBS="$XORG_SYS_LIBS $PCIACCESS_LIBS $GLX_SYS_LIBS $LIBDRM_LIBS"
+	XORG_CFLAGS="$XORG_CFLAGS $PCIACCESS_CFLAGS $LIBDRM_CFLAGS"
 
 	AC_DEFINE(XSERVER_LIBPCIACCESS, 1, [Use libpciaccess for all pci manipulation])
 	AC_DEFINE_DIR(PCI_TXT_IDS_PATH, PCI_TXT_IDS_DIR, [Default PCI text file ID path])
@@ -1664,6 +1745,10 @@ if test "x$XORG" = xyes; then
 	fi
 	AC_MSG_RESULT([$PCI])
 
+	if test "x$CONFIG_UDEV_KMS" = xyes; then
+		AC_DEFINE(XSERVER_PLATFORM_BUS, 1, [X server supports platform device enumeration])
+	fi
+	AC_MSG_RESULT([$XSERVER_PLATFORM_BUS])
 	dnl ===================================================================
 	dnl ==================== end of PCI configuration =====================
 	dnl ===================================================================
@@ -1797,7 +1882,6 @@ if test "x$XORG" = xyes; then
 	AC_DEFINE(XORG_SERVER, 1, [Building Xorg server])
 	AC_DEFINE(XORGSERVER, 1, [Building Xorg server])
 	AC_DEFINE(XFree86Server, 1, [Building XFree86 server])
-	AC_DEFINE(XFree86LOADER, 1, [Building loadable XFree86 server])
 	AC_DEFINE_UNQUOTED(XORG_VERSION_CURRENT, [$VENDOR_RELEASE], [Current Xorg version])
 	AC_DEFINE(NEED_XF86_TYPES, 1, [Need XFree86 typedefs])
 	AC_DEFINE(NEED_XF86_PROTOTYPES, 1, [Need XFree86 helper functions])
@@ -1847,7 +1931,7 @@ AM_CONDITIONAL([SOLARIS_ASM_INLINE], [test "x$solaris_asm_inline" = xyes])
 AM_CONDITIONAL([SOLARIS_VT], [test "x$solaris_vt" = xyes])
 AM_CONDITIONAL([DGA], [test "x$DGA" = xyes])
 AM_CONDITIONAL([XF86VIDMODE], [test "x$XF86VIDMODE" = xyes])
-
+AM_CONDITIONAL([XORG_BUS_PLATFORM], [test "x$CONFIG_UDEV_KMS" = xyes])
 dnl XWin DDX
 
 AC_MSG_CHECKING([whether to build XWin DDX])
@@ -1887,11 +1971,12 @@ if test "x$XWIN" = xyes; then
 			XWIN_SERVER_NAME=Xming
 			AC_DEFINE(RELOCATE_PROJECTROOT,1,[Make PROJECT_ROOT relative to the xserver location])
 			AC_DEFINE(HAS_WINSOCK,1,[Use Windows sockets])
-			XWIN_SYS_LIBS=-lwinsock2
+			XWIN_SYS_LIBS="-lpthread -lws2_32"
 			;;
 	esac
+
 	XWIN_LIBS="$FB_LIB $MI_LIB $FIXES_LIB $XEXT_LIB $RANDR_LIB $RENDER_LIB $DBE_LIB $RECORD_LIB $GLX_LIBS $XKB_LIB $XKB_STUB_LIB $COMPOSITE_LIB $DAMAGE_LIB $MIEXT_SYNC_LIB $MIEXT_DAMAGE_LIB $MIEXT_SHADOW_LIB $XI_LIB $OS_LIB"
-	XWIN_SYS_LIBS="$XWIN_SYS_LIBS $XWINMODULES_LIBS"
+	XWIN_SYS_LIBS="$XWIN_SYS_LIBS $XWINMODULES_LIBS $GLX_SYS_LIBS"
 	AC_SUBST(XWIN_LIBS)
 	AC_SUBST(XWIN_SERVER_NAME)
 	AC_SUBST(XWIN_SYS_LIBS)
@@ -1978,6 +2063,7 @@ if test "x$DMX" = xauto; then
 	DMX="$have_dmx"
 	case $host_os in
 		cygwin*) DMX="no" ;;
+		mingw*)  DMX="no" ;;
 		darwin*) DMX="no" ;;
 	esac
 fi
@@ -2219,7 +2305,6 @@ miext/Makefile
 miext/sync/Makefile
 miext/damage/Makefile
 miext/shadow/Makefile
-miext/cw/Makefile
 miext/rootless/Makefile
 os/Makefile
 randr/Makefile
@@ -2235,7 +2320,6 @@ hw/xfree86/common/Makefile
 hw/xfree86/common/xf86Build.h
 hw/xfree86/ddc/Makefile
 hw/xfree86/dixmods/Makefile
-hw/xfree86/dixmods/extmod/Makefile
 hw/xfree86/doc/Makefile
 hw/xfree86/dri/Makefile
 hw/xfree86/dri2/Makefile
@@ -2262,7 +2346,6 @@ hw/xfree86/shadowfb/Makefile
 hw/xfree86/vbe/Makefile
 hw/xfree86/vgahw/Makefile
 hw/xfree86/x86emu/Makefile
-hw/xfree86/xaa/Makefile
 hw/xfree86/utils/Makefile
 hw/xfree86/utils/man/Makefile
 hw/xfree86/utils/cvt/Makefile

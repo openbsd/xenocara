@@ -5,7 +5,7 @@ if XORG
 # Tests that require at least some DDX functions in order to fully link
 # For now, requires xf86 ddx, could be adjusted to use another
 SUBDIRS += xi2
-noinst_PROGRAMS += xkb input xtest misc fixes xfree86
+noinst_PROGRAMS += xkb input xtest misc fixes xfree86 hashtabletest os signal-logging
 endif
 check_LTLIBRARIES = libxservertest.la
 
@@ -18,14 +18,13 @@ if XORG
 INCLUDES += -I$(top_srcdir)/hw/xfree86/parser \
 	-I$(top_srcdir)/hw/xfree86/ddc \
 	-I$(top_srcdir)/hw/xfree86/i2c -I$(top_srcdir)/hw/xfree86/modes \
-	-I$(top_srcdir)/hw/xfree86/ramdac
+	-I$(top_srcdir)/hw/xfree86/ramdac -I$(top_srcdir)/hw/xfree86/dri \
+	-I$(top_srcdir)/hw/xfree86/dri2
 endif
-TEST_LDADD=libxservertest.la $(XORG_SYS_LIBS) $(XSERVER_SYS_LIBS)
+TEST_LDADD=libxservertest.la $(XORG_SYS_LIBS) $(XSERVER_SYS_LIBS) $(GLX_SYS_LIBS)
 
-if XORG
 if SPECIAL_DTRACE_OBJECTS
 TEST_LDADD += $(OS_LIB) $(DIX_LIB)
-endif
 endif
 
 xkb_LDADD=$(TEST_LDADD)
@@ -36,9 +35,13 @@ misc_LDADD=$(TEST_LDADD)
 fixes_LDADD=$(TEST_LDADD)
 xfree86_LDADD=$(TEST_LDADD)
 touch_LDADD=$(TEST_LDADD)
+signal_logging_LDADD=$(TEST_LDADD)
+hashtabletest_LDADD=$(TEST_LDADD) $(top_srcdir)/Xext/hashtable.c
+os_LDADD=$(TEST_LDADD)
 
 libxservertest_la_LIBADD = $(XSERVER_LIBS)
 if XORG
+
 nodist_libxservertest_la_SOURCES = $(top_builddir)/hw/xfree86/sdksyms.c
 libxservertest_la_LIBADD += \
             $(top_builddir)/hw/xfree86/loader/libloader.la \
@@ -52,6 +55,14 @@ libxservertest_la_LIBADD += \
             $(top_builddir)/hw/xfree86/i2c/libi2c.la \
             $(top_builddir)/hw/xfree86/dixmods/libxorgxkb.la \
             @XORG_LIBS@
+
+if DRI
+libxservertest_la_LIBADD += $(top_builddir)/hw/xfree86/dri/libdri.la
+endif
+
+if DRI2
+libxservertest_la_LIBADD += $(top_builddir)/hw/xfree86/dri2/libdri2.la
+endif
 
 else
 nodist_libxservertest_la_SOURCES = \

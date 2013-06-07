@@ -55,6 +55,7 @@
 extern _X_EXPORT int xf86DoConfigure;
 extern _X_EXPORT int xf86DoShowOptions;
 extern _X_EXPORT Bool xf86DoConfigurePass1;
+extern _X_EXPORT Bool xorgHWAccess;
 
 extern _X_EXPORT DevPrivateKeyRec xf86ScreenKeyRec;
 
@@ -71,13 +72,18 @@ extern _X_EXPORT Bool fbSlotClaimed;
 #if (defined(__sparc__) || defined(__sparc)) && !defined(__OpenBSD__)
 extern _X_EXPORT Bool sbusSlotClaimed;
 #endif
+
+#if defined(XSERVER_PLATFORM_BUS)
+extern _X_EXPORT int platformSlotClaimed;
+#endif
+
 extern _X_EXPORT confDRIRec xf86ConfigDRI;
 extern _X_EXPORT Bool xf86DRI2Enabled(void);
 
 extern _X_EXPORT Bool VTSwitchEnabled;  /* kbd driver */
 
-#define XF86SCRNINFO(p) ((ScrnInfoPtr)dixLookupPrivate(&(p)->devPrivates, \
-						       xf86ScreenKey))
+#define XF86SCRNINFO(p) xf86ScreenToScrn(p)
+
 #define XF86FLIP_PIXELS() \
 	do { \
 	    if (xf86GetFlipPixels()) { \
@@ -97,12 +103,12 @@ extern _X_EXPORT Bool VTSwitchEnabled;  /* kbd driver */
 /* PCI related */
 #ifdef XSERVER_LIBPCIACCESS
 #include <pciaccess.h>
-extern _X_EXPORT Bool pciSlotClaimed;
+extern _X_EXPORT int pciSlotClaimed;
 
 extern _X_EXPORT Bool xf86CheckPciSlot(const struct pci_device *);
 extern _X_EXPORT int xf86ClaimPciSlot(struct pci_device *, DriverPtr drvp,
                                       int chipset, GDevPtr dev, Bool active);
-extern _X_EXPORT void xf86UnclaimPciSlot(struct pci_device *);
+extern _X_EXPORT void xf86UnclaimPciSlot(struct pci_device *, GDevPtr dev);
 extern _X_EXPORT Bool xf86ParsePciBusString(const char *busID, int *bus,
                                             int *device, int *func);
 extern _X_EXPORT Bool xf86ComparePciBusString(const char *busID, int bus,
@@ -244,7 +250,7 @@ extern _X_EXPORT void xf86AddDriver(DriverPtr driver, pointer module,
                                     int flags);
 extern _X_EXPORT void xf86DeleteDriver(int drvIndex);
 extern _X_EXPORT ScrnInfoPtr xf86AllocateScreen(DriverPtr drv, int flags);
-extern _X_EXPORT void xf86DeleteScreen(int scrnIndex, int flags);
+extern _X_EXPORT void xf86DeleteScreen(ScrnInfoPtr pScrn);
 extern _X_EXPORT int xf86AllocateScrnInfoPrivateIndex(void);
 extern _X_EXPORT Bool xf86AddPixFormat(ScrnInfoPtr pScrn, int depth, int bpp,
                                        int pad);
@@ -256,7 +262,7 @@ extern _X_EXPORT Bool xf86SetDefaultVisual(ScrnInfoPtr scrp, int visual);
 extern _X_EXPORT Bool xf86SetGamma(ScrnInfoPtr scrp, Gamma newGamma);
 extern _X_EXPORT void xf86SetDpi(ScrnInfoPtr pScrn, int x, int y);
 extern _X_EXPORT void xf86SetBlackWhitePixels(ScreenPtr pScreen);
-extern _X_EXPORT void xf86EnableDisableFBAccess(int scrnIndex, Bool enable);
+extern _X_EXPORT void xf86EnableDisableFBAccess(ScrnInfoPtr pScrn, Bool enable);
 extern _X_EXPORT void
 xf86VDrvMsgVerb(int scrnIndex, MessageType type, int verb,
                 const char *format, va_list args)
@@ -347,7 +353,7 @@ xf86SetBackingStore(ScreenPtr pScreen);
 extern _X_EXPORT void
 xf86SetSilkenMouse(ScreenPtr pScreen);
 extern _X_EXPORT pointer
-xf86FindXvOptions(int scrnIndex, int adapt_index, char *port_name,
+xf86FindXvOptions(ScrnInfoPtr pScrn, int adapt_index, char *port_name,
                   char **adaptor_name, pointer *adaptor_options);
 extern _X_EXPORT void
 xf86GetOS(const char **name, int *major, int *minor, int *teeny);
@@ -357,7 +363,7 @@ xf86ConfigFbEntity(ScrnInfoPtr pScrn, int scrnFlag,
                    EntityProc enter, EntityProc leave, pointer private);
 
 extern _X_EXPORT Bool
-xf86IsScreenPrimary(int scrnIndex);
+xf86IsScreenPrimary(ScrnInfoPtr pScrn);
 extern _X_EXPORT int
 xf86RegisterRootWindowProperty(int ScrnIndex, Atom property, Atom type,
                                int format, unsigned long len, pointer value);
@@ -417,6 +423,8 @@ extern _X_EXPORT void
 xf86SetModeCrtc(DisplayModePtr p, int adjustFlags);
 extern _X_EXPORT DisplayModePtr
 xf86DuplicateMode(const DisplayModeRec * pMode);
+extern _X_EXPORT void
+xf86SaveModeContents(DisplayModePtr intern, const DisplayModeRec * pMode);
 extern _X_EXPORT DisplayModePtr
 xf86DuplicateModes(ScrnInfoPtr pScrn, DisplayModePtr modeList);
 extern _X_EXPORT Bool
@@ -444,11 +452,25 @@ xf86RandRSetNewVirtualAndDimensions(ScreenPtr pScreen,
                                     Bool resetMode);
 #endif
 
-/* xf86VidModeExtentionInit.c */
+/* xf86Extensions.c */
+extern void xf86ExtensionInit(void);
 
-extern _X_EXPORT Bool
-VidModeExtensionInit(ScreenPtr pScreen);
+/* convert ScreenPtr to ScrnInfoPtr */
+extern _X_EXPORT ScrnInfoPtr xf86ScreenToScrn(ScreenPtr pScreen);
+/* convert ScrnInfoPtr to ScreenPtr */
+extern _X_EXPORT ScreenPtr xf86ScrnToScreen(ScrnInfoPtr pScrn);
 
 #endif                          /* _NO_XF86_PROTOTYPES */
+
+#define XF86_HAS_SCRN_CONV 1 /* define for drivers to use in api compat */
+
+#define XF86_SCRN_INTERFACE 1 /* define for drivers to use in api compat */
+
+/* flags passed to xf86 allocate screen */
+#define XF86_ALLOCATE_GPU_SCREEN 1
+
+/* Update the internal total dimensions of all ScreenRecs together */
+extern _X_EXPORT void
+xf86UpdateDesktopDimensions(void);
 
 #endif                          /* _XF86_H */

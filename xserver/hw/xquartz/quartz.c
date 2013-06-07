@@ -42,6 +42,8 @@
 #include "darwin.h"
 #include "darwinEvents.h"
 #include "pseudoramiX.h"
+#include "extension.h"
+#include "glx_extinit.h"
 #define _APPLEWM_SERVER_
 #include "applewmExt.h"
 
@@ -143,6 +145,28 @@ QuartzSetupScreen(int index,
     return TRUE;
 }
 
+static const ExtensionModule quartzExtensions[] = {
+    /* PseudoramiX needs to be done before RandR, so
+     * it is in miinitext.c until it can be reordered.
+     * { PseudoramiXExtensionInit, "PseudoramiX", &noPseudoramiXExtension },
+     */
+#ifdef GLXEXT
+    {GlxExtensionInit, "GLX", &noGlxExtension},
+#endif
+};
+
+/*
+ * QuartzExtensionInit
+ * Initialises XQuartz-specific extensions.
+ */
+static void QuartzExtensionInit(void)
+{
+    int i;
+
+    for (i = 0; i < ARRAY_SIZE(quartzExtensions); i++)
+        LoadExtension(&quartzExtensions[i], TRUE);
+}
+
 /*
  * QuartzInitOutput
  *  Quartz display initialization.
@@ -182,6 +206,8 @@ QuartzInitOutput(int argc,
 
     // Do display mode specific initialization
     quartzProcs->DisplayInit();
+
+    QuartzExtensionInit();
 }
 
 /*

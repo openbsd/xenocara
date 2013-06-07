@@ -44,7 +44,7 @@ static Bool
  winAllocateFBPrimaryDD(ScreenPtr pScreen);
 
 static Bool
- winCloseScreenPrimaryDD(int nIndex, ScreenPtr pScreen);
+ winCloseScreenPrimaryDD(ScreenPtr pScreen);
 
 static Bool
  winInitVisualsPrimaryDD(ScreenPtr pScreen);
@@ -78,7 +78,7 @@ winAllocateFBPrimaryDD(ScreenPtr pScreen)
     /* Get client area location in screen coords */
     GetClientRect(pScreenPriv->hwndScreen, &rcClient);
     MapWindowPoints(pScreenPriv->hwndScreen,
-                    HWND_DESKTOP, (LPPOINT) & rcClient, 2);
+                    HWND_DESKTOP, (LPPOINT) &rcClient, 2);
 
     /* Create a DirectDraw object, store the address at lpdd */
     ddrval = (*g_fpDirectDrawCreate) (NULL, &pScreenPriv->pdd, NULL);
@@ -88,7 +88,7 @@ winAllocateFBPrimaryDD(ScreenPtr pScreen)
     /* Get a DirectDraw2 interface pointer */
     ddrval = IDirectDraw_QueryInterface(pScreenPriv->pdd,
                                         &IID_IDirectDraw2,
-                                        (LPVOID *) & pScreenPriv->pdd2);
+                                        (LPVOID *) &pScreenPriv->pdd2);
     if (FAILED(ddrval)) {
         ErrorF("winAllocateFBShadowDD - Failed DD2 query: %08x\n",
                (unsigned int) ddrval);
@@ -264,7 +264,7 @@ winInitScreenPrimaryDD(ScreenPtr pScreen)
  */
 
 static Bool
-winCloseScreenPrimaryDD(int nIndex, ScreenPtr pScreen)
+winCloseScreenPrimaryDD(ScreenPtr pScreen)
 {
     winScreenPriv(pScreen);
     winScreenInfo *pScreenInfo = pScreenPriv->pScreenInfo;
@@ -279,7 +279,7 @@ winCloseScreenPrimaryDD(int nIndex, ScreenPtr pScreen)
     /* Call the wrapped CloseScreen procedure */
     WIN_UNWRAP(CloseScreen);
     if (pScreen->CloseScreen)
-        fReturn = (*pScreen->CloseScreen) (nIndex, pScreen);
+        fReturn = (*pScreen->CloseScreen) (pScreen);
 
     /* Delete the window property */
     RemoveProp(pScreenPriv->hwndScreen, WIN_SCR_PROP);
@@ -465,7 +465,7 @@ winActivateAppPrimaryDD(ScreenPtr pScreen)
     /* Get client area in screen coords */
     GetClientRect(pScreenPriv->hwndScreen, &rcClient);
     MapWindowPoints(pScreenPriv->hwndScreen,
-                    HWND_DESKTOP, (LPPOINT) & rcClient, 2);
+                    HWND_DESKTOP, (LPPOINT) &rcClient, 2);
 
     /* Setup a source rectangle */
     rcSrc.left = 0;
@@ -530,7 +530,7 @@ winHotKeyAltTabPrimaryDD(ScreenPtr pScreen)
     /* Get client area in screen coords */
     GetClientRect(pScreenPriv->hwndScreen, &rcClient);
     MapWindowPoints(pScreenPriv->hwndScreen,
-                    HWND_DESKTOP, (LPPOINT) & rcClient, 2);
+                    HWND_DESKTOP, (LPPOINT) &rcClient, 2);
 
     /* Did we loose the primary surface? */
     ddrval = IDirectDrawSurface2_IsLost(pScreenPriv->pddsPrimary);

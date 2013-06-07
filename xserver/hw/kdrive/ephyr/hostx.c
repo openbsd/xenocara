@@ -345,7 +345,11 @@ hostx_init(void)
     attr.event_mask =
         ButtonPressMask
         | ButtonReleaseMask
-        | PointerMotionMask | KeyPressMask | KeyReleaseMask | ExposureMask;
+        | PointerMotionMask
+        | KeyPressMask
+        | KeyReleaseMask
+        | ExposureMask
+        | StructureNotifyMask;
 
     EPHYR_DBG("mark");
 
@@ -693,12 +697,14 @@ hostx_screen_init(EphyrScreenInfo screen,
     XResizeWindow(HostX.dpy, host_screen->win, width, height);
 
     /* Ask the WM to keep our size static */
-    size_hints = XAllocSizeHints();
-    size_hints->max_width = size_hints->min_width = width;
-    size_hints->max_height = size_hints->min_height = height;
-    size_hints->flags = PMinSize | PMaxSize;
-    XSetWMNormalHints(HostX.dpy, host_screen->win, size_hints);
-    XFree(size_hints);
+    if (host_screen->win_pre_existing == None) {
+        size_hints = XAllocSizeHints();
+        size_hints->max_width = size_hints->min_width = width;
+        size_hints->max_height = size_hints->min_height = height;
+        size_hints->flags = PMinSize | PMaxSize;
+        XSetWMNormalHints(HostX.dpy, host_screen->win, size_hints);
+        XFree(size_hints);
+    }
 
     XMapWindow(HostX.dpy, host_screen->win);
 
@@ -875,7 +881,9 @@ host_screen_from_window(Window w)
     struct EphyrHostScreen *result = NULL;
 
     for (index = 0; index < HostX.n_screens; index++) {
-        if (HostX.screens[index].win == w || HostX.screens[index].peer_win == w) {
+        if (HostX.screens[index].win == w
+            || HostX.screens[index].peer_win == w
+            || HostX.screens[index].win_pre_existing == w) {
             result = &HostX.screens[index];
             goto out;
         }
@@ -1001,6 +1009,22 @@ hostx_get_event(EphyrHostXEvent * ev)
             ev->data.key_up.scancode = xev.xkey.keycode;
             return 1;
 
+        case ConfigureNotify:
+        {
+            struct EphyrHostScreen *host_screen =
+                host_screen_from_window(xev.xconfigure.window);
+
+            if (host_screen && host_screen->win_pre_existing != None) {
+                ev->type = EPHYR_EV_CONFIGURE;
+                ev->data.configure.width = xev.xconfigure.width;
+                ev->data.configure.height = xev.xconfigure.height;
+                ev->data.configure.window = xev.xconfigure.window;
+                ev->data.configure.screen = host_screen->mynum;
+                return 1;
+            }
+
+            return 0;
+        }
         default:
             break;
 

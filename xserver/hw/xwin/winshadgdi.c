@@ -50,7 +50,7 @@ static void
  winShadowUpdateGDI(ScreenPtr pScreen, shadowBufPtr pBuf);
 
 static Bool
- winCloseScreenShadowGDI(int nIndex, ScreenPtr pScreen);
+ winCloseScreenShadowGDI(ScreenPtr pScreen);
 
 static Bool
  winInitVisualsShadowGDI(ScreenPtr pScreen);
@@ -337,7 +337,7 @@ winAllocateFBShadowGDI(ScreenPtr pScreen)
     pScreenPriv->hbmpShadow = CreateDIBSection(pScreenPriv->hdcScreen,
                                                (BITMAPINFO *) pScreenPriv->
                                                pbmih, DIB_RGB_COLORS,
-                                               (VOID **) & pScreenInfo->pfb,
+                                               (VOID **) &pScreenInfo->pfb,
                                                NULL, 0);
     if (pScreenPriv->hbmpShadow == NULL || pScreenInfo->pfb == NULL) {
         winW32Error(2, "winAllocateFBShadowGDI - CreateDIBSection failed:");
@@ -439,7 +439,7 @@ winShadowUpdateGDI(ScreenPtr pScreen, shadowBufPtr pBuf)
     DWORD dwBox = RegionNumRects(damage);
     BoxPtr pBox = RegionRects(damage);
     int x, y, w, h;
-    HRGN hrgnTemp = NULL, hrgnCombined = NULL;
+    HRGN hrgnCombined = NULL;
 
 #ifdef XWIN_UPDATESTATS
     static DWORD s_dwNonUnitRegions = 0;
@@ -500,16 +500,11 @@ winShadowUpdateGDI(ScreenPtr pScreen, shadowBufPtr pBuf)
         }
     }
     else if (!pScreenInfo->fMultiWindow) {
+
         /* Compute a GDI region from the damaged region */
-        hrgnCombined = CreateRectRgn(pBox->x1, pBox->y1, pBox->x2, pBox->y2);
-        dwBox--;
-        pBox++;
-        while (dwBox--) {
-            hrgnTemp = CreateRectRgn(pBox->x1, pBox->y1, pBox->x2, pBox->y2);
-            CombineRgn(hrgnCombined, hrgnCombined, hrgnTemp, RGN_OR);
-            DeleteObject(hrgnTemp);
-            pBox++;
-        }
+        hrgnCombined =
+            CreateRectRgn(pBoxExtents->x1, pBoxExtents->y1, pBoxExtents->x2,
+                          pBoxExtents->y2);
 
         /* Install the GDI region as a clipping region */
         SelectClipRgn(pScreenPriv->hdcScreen, hrgnCombined);
@@ -579,7 +574,7 @@ winInitScreenShadowGDI(ScreenPtr pScreen)
  */
 
 static Bool
-winCloseScreenShadowGDI(int nIndex, ScreenPtr pScreen)
+winCloseScreenShadowGDI(ScreenPtr pScreen)
 {
     winScreenPriv(pScreen);
     winScreenInfo *pScreenInfo = pScreenPriv->pScreenInfo;
@@ -596,7 +591,7 @@ winCloseScreenShadowGDI(int nIndex, ScreenPtr pScreen)
     /* Call the wrapped CloseScreen procedure */
     WIN_UNWRAP(CloseScreen);
     if (pScreen->CloseScreen)
-        fReturn = (*pScreen->CloseScreen) (nIndex, pScreen);
+        fReturn = (*pScreen->CloseScreen) (pScreen);
 
     /* Delete the window property */
     RemoveProp(pScreenPriv->hwndScreen, WIN_SCR_PROP);

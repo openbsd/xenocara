@@ -46,6 +46,7 @@ in this Software without prior written authorization from the X Consortium.
 #include "cursorstr.h"
 #include "colormapst.h"
 #include "xace.h"
+#include "inputstr.h"
 #ifdef PANORAMIX
 #include "panoramiX.h"
 #include "panoramiXsrv.h"
@@ -57,7 +58,7 @@ in this Software without prior written authorization from the X Consortium.
 
 #include <stdio.h>
 
-#include "modinit.h"
+#include "extinit.h"
 
 static int ScreenSaverEventBase = 0;
 
@@ -388,8 +389,12 @@ ScreenSaverFreeSuspend(pointer value, XID id)
         if (screenIsSaved != SCREEN_SAVER_ON)
 #endif
         {
+            DeviceIntPtr dev;
             UpdateCurrentTimeIf();
-            lastDeviceEventTime = currentTime;
+            nt_list_for_each_entry(dev, inputInfo.devices, next)
+                lastDeviceEventTime[dev->id] = currentTime;
+            lastDeviceEventTime[XIAllDevices] = currentTime;
+            lastDeviceEventTime[XIAllMasterDevices] = currentTime;
             SetScreenSaverTimer();
         }
     }
@@ -403,7 +408,6 @@ SendScreenSaverNotify(ScreenPtr pScreen, int state, Bool forced)
     ScreenSaverScreenPrivatePtr pPriv;
     ScreenSaverEventPtr pEv;
     unsigned long mask;
-    xScreenSaverNotifyEvent ev;
     int kind;
 
     UpdateCurrentTimeIf();
@@ -421,16 +425,18 @@ SendScreenSaverNotify(ScreenPtr pScreen, int state, Bool forced)
     else
         kind = ScreenSaverInternal;
     for (pEv = pPriv->events; pEv; pEv = pEv->next) {
-        if (!(pEv->mask & mask))
-            continue;
-        ev.type = ScreenSaverNotify + ScreenSaverEventBase;
-        ev.state = state;
-        ev.timestamp = currentTime.milliseconds;
-        ev.root = pScreen->root->drawable.id;
-        ev.window = pScreen->screensaver.wid;
-        ev.kind = kind;
-        ev.forced = forced;
-        WriteEventsToClient(pEv->client, 1, (xEvent *) &ev);
+        if (pEv->mask & mask) {
+            xScreenSaverNotifyEvent ev = {
+                .type = ScreenSaverNotify + ScreenSaverEventBase,
+                .state = state,
+                .timestamp = currentTime.milliseconds,
+                .root = pScreen->root->drawable.id,
+                .window = pScreen->screensaver.wid,
+                .kind = kind,
+                .forced = forced
+            };
+            WriteEventsToClient(pEv->client, 1, (xEvent *) &ev);
+        }
     }
 }
 
@@ -631,19 +637,21 @@ ScreenSaverHandle(ScreenPtr pScreen, int xstate, Bool force)
 static int
 ProcScreenSaverQueryVersion(ClientPtr client)
 {
-    xScreenSaverQueryVersionReply rep;
+    xScreenSaverQueryVersionReply rep = {
+        .type = X_Reply,
+        .sequenceNumber = client->sequence,
+        .length = 0,
+        .majorVersion = SERVER_SAVER_MAJOR_VERSION,
+        .minorVersion = SERVER_SAVER_MINOR_VERSION
+    };
 
     REQUEST_SIZE_MATCH(xScreenSaverQueryVersionReq);
-    rep.type = X_Reply;
-    rep.length = 0;
-    rep.sequenceNumber = client->sequence;
-    rep.majorVersion = SERVER_SAVER_MAJOR_VERSION;
-    rep.minorVersion = SERVER_SAVER_MINOR_VERSION;
+
     if (client->swapped) {
         swaps(&rep.sequenceNumber);
         swapl(&rep.length);
     }
-    WriteToClient(client, sizeof(xScreenSaverQueryVersionReply), (char *) &rep);
+    WriteToClient(client, sizeof(xScreenSaverQueryVersionReply), &rep);
     return Success;
 }
 
@@ -672,12 +680,14 @@ ProcScreenSaverQueryInfo(ClientPtr client)
     pPriv = GetScreenPrivate(pDraw->pScreen);
 
     UpdateCurrentTime();
-    lastInput = GetTimeInMillis() - lastDeviceEventTime.milliseconds;
+    lastInput = GetTimeInMillis() - lastDeviceEventTime[XIAllDevices].milliseconds;
 
-    rep.type = X_Reply;
-    rep.length = 0;
-    rep.sequenceNumber = client->sequence;
-    rep.window = pSaver->wid;
+    rep = (xScreenSaverQueryInfoReply) {
+        .type = X_Reply,
+        .sequenceNumber = client->sequence,
+        .length = 0,
+        .window = pSaver->wid
+    };
     if (screenIsSaved != SCREEN_SAVER_OFF) {
         rep.state = ScreenSaverOn;
         if (ScreenSaverTime)
@@ -714,7 +724,7 @@ ProcScreenSaverQueryInfo(ClientPtr client)
         swapl(&rep.idle);
         swapl(&rep.eventMask);
     }
-    WriteToClient(client, sizeof(xScreenSaverQueryInfoReply), (char *) &rep);
+    WriteToClient(client, sizeof(xScreenSaverQueryInfoReply), &rep);
     return Success;
 }
 
@@ -827,7 +837,7 @@ ScreenSaverSetAttributes(ClientPtr client)
     if ((visual != ancwopt->visual) || (depth != pParent->drawable.depth)) {
         fOK = FALSE;
         for (idepth = 0; idepth < pScreen->numDepths; idepth++) {
-            pDepth = (DepthPtr) & pScreen->allowedDepths[idepth];
+            pDepth = (DepthPtr) &pScreen->allowedDepths[idepth];
             if ((depth == pDepth->depth) || (depth == 0)) {
                 for (ivisual = 0; ivisual < pDepth->numVids; ivisual++) {
                     if (visual == pDepth->vids[ivisual]) {
@@ -1381,7 +1391,7 @@ SProcScreenSaverDispatch(ClientPtr client)
 }
 
 void
-ScreenSaverExtensionInit(INITARGS)
+ScreenSaverExtensionInit(void)
 {
     ExtensionEntry *extEntry;
     int i;

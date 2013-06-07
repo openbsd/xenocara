@@ -49,132 +49,134 @@ static struct dev_properties {
     Atom type;
     const char *name;
 } dev_properties[] = {
-    {
-    0, XI_PROP_ENABLED}, {
-    0, XI_PROP_XTEST_DEVICE}, {
-    0, XATOM_FLOAT}, {
-    0, ACCEL_PROP_PROFILE_NUMBER}, {
-    0, ACCEL_PROP_CONSTANT_DECELERATION}, {
-    0, ACCEL_PROP_ADAPTIVE_DECELERATION}, {
-    0, ACCEL_PROP_VELOCITY_SCALING}, {
-    0, AXIS_LABEL_PROP}, {
-    0, AXIS_LABEL_PROP_REL_X}, {
-    0, AXIS_LABEL_PROP_REL_Y}, {
-    0, AXIS_LABEL_PROP_REL_Z}, {
-    0, AXIS_LABEL_PROP_REL_RX}, {
-    0, AXIS_LABEL_PROP_REL_RY}, {
-    0, AXIS_LABEL_PROP_REL_RZ}, {
-    0, AXIS_LABEL_PROP_REL_HWHEEL}, {
-    0, AXIS_LABEL_PROP_REL_DIAL}, {
-    0, AXIS_LABEL_PROP_REL_WHEEL}, {
-    0, AXIS_LABEL_PROP_REL_MISC}, {
-    0, AXIS_LABEL_PROP_REL_VSCROLL}, {
-    0, AXIS_LABEL_PROP_REL_HSCROLL}, {
-    0, AXIS_LABEL_PROP_ABS_X}, {
-    0, AXIS_LABEL_PROP_ABS_Y}, {
-    0, AXIS_LABEL_PROP_ABS_Z}, {
-    0, AXIS_LABEL_PROP_ABS_RX}, {
-    0, AXIS_LABEL_PROP_ABS_RY}, {
-    0, AXIS_LABEL_PROP_ABS_RZ}, {
-    0, AXIS_LABEL_PROP_ABS_THROTTLE}, {
-    0, AXIS_LABEL_PROP_ABS_RUDDER}, {
-    0, AXIS_LABEL_PROP_ABS_WHEEL}, {
-    0, AXIS_LABEL_PROP_ABS_GAS}, {
-    0, AXIS_LABEL_PROP_ABS_BRAKE}, {
-    0, AXIS_LABEL_PROP_ABS_HAT0X}, {
-    0, AXIS_LABEL_PROP_ABS_HAT0Y}, {
-    0, AXIS_LABEL_PROP_ABS_HAT1X}, {
-    0, AXIS_LABEL_PROP_ABS_HAT1Y}, {
-    0, AXIS_LABEL_PROP_ABS_HAT2X}, {
-    0, AXIS_LABEL_PROP_ABS_HAT2Y}, {
-    0, AXIS_LABEL_PROP_ABS_HAT3X}, {
-    0, AXIS_LABEL_PROP_ABS_HAT3Y}, {
-    0, AXIS_LABEL_PROP_ABS_PRESSURE}, {
-    0, AXIS_LABEL_PROP_ABS_DISTANCE}, {
-    0, AXIS_LABEL_PROP_ABS_TILT_X}, {
-    0, AXIS_LABEL_PROP_ABS_TILT_Y}, {
-    0, AXIS_LABEL_PROP_ABS_TOOL_WIDTH}, {
-    0, AXIS_LABEL_PROP_ABS_VOLUME}, {
-    0, AXIS_LABEL_PROP_ABS_MT_TOUCH_MAJOR}, {
-    0, AXIS_LABEL_PROP_ABS_MT_TOUCH_MINOR}, {
-    0, AXIS_LABEL_PROP_ABS_MT_WIDTH_MAJOR}, {
-    0, AXIS_LABEL_PROP_ABS_MT_WIDTH_MINOR}, {
-    0, AXIS_LABEL_PROP_ABS_MT_ORIENTATION}, {
-    0, AXIS_LABEL_PROP_ABS_MT_POSITION_X}, {
-    0, AXIS_LABEL_PROP_ABS_MT_POSITION_Y}, {
-    0, AXIS_LABEL_PROP_ABS_MT_TOOL_TYPE}, {
-    0, AXIS_LABEL_PROP_ABS_MT_BLOB_ID}, {
-    0, AXIS_LABEL_PROP_ABS_MT_TRACKING_ID}, {
-    0, AXIS_LABEL_PROP_ABS_MT_PRESSURE}, {
-    0, AXIS_LABEL_PROP_ABS_MISC}, {
-    0, BTN_LABEL_PROP}, {
-    0, BTN_LABEL_PROP_BTN_UNKNOWN}, {
-    0, BTN_LABEL_PROP_BTN_WHEEL_UP}, {
-    0, BTN_LABEL_PROP_BTN_WHEEL_DOWN}, {
-    0, BTN_LABEL_PROP_BTN_HWHEEL_LEFT}, {
-    0, BTN_LABEL_PROP_BTN_HWHEEL_RIGHT}, {
-    0, BTN_LABEL_PROP_BTN_0}, {
-    0, BTN_LABEL_PROP_BTN_1}, {
-    0, BTN_LABEL_PROP_BTN_2}, {
-    0, BTN_LABEL_PROP_BTN_3}, {
-    0, BTN_LABEL_PROP_BTN_4}, {
-    0, BTN_LABEL_PROP_BTN_5}, {
-    0, BTN_LABEL_PROP_BTN_6}, {
-    0, BTN_LABEL_PROP_BTN_7}, {
-    0, BTN_LABEL_PROP_BTN_8}, {
-    0, BTN_LABEL_PROP_BTN_9}, {
-    0, BTN_LABEL_PROP_BTN_LEFT}, {
-    0, BTN_LABEL_PROP_BTN_RIGHT}, {
-    0, BTN_LABEL_PROP_BTN_MIDDLE}, {
-    0, BTN_LABEL_PROP_BTN_SIDE}, {
-    0, BTN_LABEL_PROP_BTN_EXTRA}, {
-    0, BTN_LABEL_PROP_BTN_FORWARD}, {
-    0, BTN_LABEL_PROP_BTN_BACK}, {
-    0, BTN_LABEL_PROP_BTN_TASK}, {
-    0, BTN_LABEL_PROP_BTN_TRIGGER}, {
-    0, BTN_LABEL_PROP_BTN_THUMB}, {
-    0, BTN_LABEL_PROP_BTN_THUMB2}, {
-    0, BTN_LABEL_PROP_BTN_TOP}, {
-    0, BTN_LABEL_PROP_BTN_TOP2}, {
-    0, BTN_LABEL_PROP_BTN_PINKIE}, {
-    0, BTN_LABEL_PROP_BTN_BASE}, {
-    0, BTN_LABEL_PROP_BTN_BASE2}, {
-    0, BTN_LABEL_PROP_BTN_BASE3}, {
-    0, BTN_LABEL_PROP_BTN_BASE4}, {
-    0, BTN_LABEL_PROP_BTN_BASE5}, {
-    0, BTN_LABEL_PROP_BTN_BASE6}, {
-    0, BTN_LABEL_PROP_BTN_DEAD}, {
-    0, BTN_LABEL_PROP_BTN_A}, {
-    0, BTN_LABEL_PROP_BTN_B}, {
-    0, BTN_LABEL_PROP_BTN_C}, {
-    0, BTN_LABEL_PROP_BTN_X}, {
-    0, BTN_LABEL_PROP_BTN_Y}, {
-    0, BTN_LABEL_PROP_BTN_Z}, {
-    0, BTN_LABEL_PROP_BTN_TL}, {
-    0, BTN_LABEL_PROP_BTN_TR}, {
-    0, BTN_LABEL_PROP_BTN_TL2}, {
-    0, BTN_LABEL_PROP_BTN_TR2}, {
-    0, BTN_LABEL_PROP_BTN_SELECT}, {
-    0, BTN_LABEL_PROP_BTN_START}, {
-    0, BTN_LABEL_PROP_BTN_MODE}, {
-    0, BTN_LABEL_PROP_BTN_THUMBL}, {
-    0, BTN_LABEL_PROP_BTN_THUMBR}, {
-    0, BTN_LABEL_PROP_BTN_TOOL_PEN}, {
-    0, BTN_LABEL_PROP_BTN_TOOL_RUBBER}, {
-    0, BTN_LABEL_PROP_BTN_TOOL_BRUSH}, {
-    0, BTN_LABEL_PROP_BTN_TOOL_PENCIL}, {
-    0, BTN_LABEL_PROP_BTN_TOOL_AIRBRUSH}, {
-    0, BTN_LABEL_PROP_BTN_TOOL_FINGER}, {
-    0, BTN_LABEL_PROP_BTN_TOOL_MOUSE}, {
-    0, BTN_LABEL_PROP_BTN_TOOL_LENS}, {
-    0, BTN_LABEL_PROP_BTN_TOUCH}, {
-    0, BTN_LABEL_PROP_BTN_STYLUS}, {
-    0, BTN_LABEL_PROP_BTN_STYLUS2}, {
-    0, BTN_LABEL_PROP_BTN_TOOL_DOUBLETAP}, {
-    0, BTN_LABEL_PROP_BTN_TOOL_TRIPLETAP}, {
-    0, BTN_LABEL_PROP_BTN_GEAR_DOWN}, {
-    0, BTN_LABEL_PROP_BTN_GEAR_UP}, {
-    0, XI_PROP_TRANSFORM}
+    {0, XI_PROP_ENABLED},
+    {0, XI_PROP_XTEST_DEVICE},
+    {0, XATOM_FLOAT},
+    {0, ACCEL_PROP_PROFILE_NUMBER},
+    {0, ACCEL_PROP_CONSTANT_DECELERATION},
+    {0, ACCEL_PROP_ADAPTIVE_DECELERATION},
+    {0, ACCEL_PROP_VELOCITY_SCALING},
+    {0, AXIS_LABEL_PROP},
+    {0, AXIS_LABEL_PROP_REL_X},
+    {0, AXIS_LABEL_PROP_REL_Y},
+    {0, AXIS_LABEL_PROP_REL_Z},
+    {0, AXIS_LABEL_PROP_REL_RX},
+    {0, AXIS_LABEL_PROP_REL_RY},
+    {0, AXIS_LABEL_PROP_REL_RZ},
+    {0, AXIS_LABEL_PROP_REL_HWHEEL},
+    {0, AXIS_LABEL_PROP_REL_DIAL},
+    {0, AXIS_LABEL_PROP_REL_WHEEL},
+    {0, AXIS_LABEL_PROP_REL_MISC},
+    {0, AXIS_LABEL_PROP_REL_VSCROLL},
+    {0, AXIS_LABEL_PROP_REL_HSCROLL},
+    {0, AXIS_LABEL_PROP_ABS_X},
+    {0, AXIS_LABEL_PROP_ABS_Y},
+    {0, AXIS_LABEL_PROP_ABS_Z},
+    {0, AXIS_LABEL_PROP_ABS_RX},
+    {0, AXIS_LABEL_PROP_ABS_RY},
+    {0, AXIS_LABEL_PROP_ABS_RZ},
+    {0, AXIS_LABEL_PROP_ABS_THROTTLE},
+    {0, AXIS_LABEL_PROP_ABS_RUDDER},
+    {0, AXIS_LABEL_PROP_ABS_WHEEL},
+    {0, AXIS_LABEL_PROP_ABS_GAS},
+    {0, AXIS_LABEL_PROP_ABS_BRAKE},
+    {0, AXIS_LABEL_PROP_ABS_HAT0X},
+    {0, AXIS_LABEL_PROP_ABS_HAT0Y},
+    {0, AXIS_LABEL_PROP_ABS_HAT1X},
+    {0, AXIS_LABEL_PROP_ABS_HAT1Y},
+    {0, AXIS_LABEL_PROP_ABS_HAT2X},
+    {0, AXIS_LABEL_PROP_ABS_HAT2Y},
+    {0, AXIS_LABEL_PROP_ABS_HAT3X},
+    {0, AXIS_LABEL_PROP_ABS_HAT3Y},
+    {0, AXIS_LABEL_PROP_ABS_PRESSURE},
+    {0, AXIS_LABEL_PROP_ABS_DISTANCE},
+    {0, AXIS_LABEL_PROP_ABS_TILT_X},
+    {0, AXIS_LABEL_PROP_ABS_TILT_Y},
+    {0, AXIS_LABEL_PROP_ABS_TOOL_WIDTH},
+    {0, AXIS_LABEL_PROP_ABS_VOLUME},
+    {0, AXIS_LABEL_PROP_ABS_MT_TOUCH_MAJOR},
+    {0, AXIS_LABEL_PROP_ABS_MT_TOUCH_MINOR},
+    {0, AXIS_LABEL_PROP_ABS_MT_WIDTH_MAJOR},
+    {0, AXIS_LABEL_PROP_ABS_MT_WIDTH_MINOR},
+    {0, AXIS_LABEL_PROP_ABS_MT_ORIENTATION},
+    {0, AXIS_LABEL_PROP_ABS_MT_POSITION_X},
+    {0, AXIS_LABEL_PROP_ABS_MT_POSITION_Y},
+    {0, AXIS_LABEL_PROP_ABS_MT_TOOL_TYPE},
+    {0, AXIS_LABEL_PROP_ABS_MT_BLOB_ID},
+    {0, AXIS_LABEL_PROP_ABS_MT_TRACKING_ID},
+    {0, AXIS_LABEL_PROP_ABS_MT_PRESSURE},
+    {0, AXIS_LABEL_PROP_ABS_MT_DISTANCE},
+    {0, AXIS_LABEL_PROP_ABS_MT_TOOL_X},
+    {0, AXIS_LABEL_PROP_ABS_MT_TOOL_Y},
+    {0, AXIS_LABEL_PROP_ABS_MISC},
+    {0, BTN_LABEL_PROP},
+    {0, BTN_LABEL_PROP_BTN_UNKNOWN},
+    {0, BTN_LABEL_PROP_BTN_WHEEL_UP},
+    {0, BTN_LABEL_PROP_BTN_WHEEL_DOWN},
+    {0, BTN_LABEL_PROP_BTN_HWHEEL_LEFT},
+    {0, BTN_LABEL_PROP_BTN_HWHEEL_RIGHT},
+    {0, BTN_LABEL_PROP_BTN_0},
+    {0, BTN_LABEL_PROP_BTN_1},
+    {0, BTN_LABEL_PROP_BTN_2},
+    {0, BTN_LABEL_PROP_BTN_3},
+    {0, BTN_LABEL_PROP_BTN_4},
+    {0, BTN_LABEL_PROP_BTN_5},
+    {0, BTN_LABEL_PROP_BTN_6},
+    {0, BTN_LABEL_PROP_BTN_7},
+    {0, BTN_LABEL_PROP_BTN_8},
+    {0, BTN_LABEL_PROP_BTN_9},
+    {0, BTN_LABEL_PROP_BTN_LEFT},
+    {0, BTN_LABEL_PROP_BTN_RIGHT},
+    {0, BTN_LABEL_PROP_BTN_MIDDLE},
+    {0, BTN_LABEL_PROP_BTN_SIDE},
+    {0, BTN_LABEL_PROP_BTN_EXTRA},
+    {0, BTN_LABEL_PROP_BTN_FORWARD},
+    {0, BTN_LABEL_PROP_BTN_BACK},
+    {0, BTN_LABEL_PROP_BTN_TASK},
+    {0, BTN_LABEL_PROP_BTN_TRIGGER},
+    {0, BTN_LABEL_PROP_BTN_THUMB},
+    {0, BTN_LABEL_PROP_BTN_THUMB2},
+    {0, BTN_LABEL_PROP_BTN_TOP},
+    {0, BTN_LABEL_PROP_BTN_TOP2},
+    {0, BTN_LABEL_PROP_BTN_PINKIE},
+    {0, BTN_LABEL_PROP_BTN_BASE},
+    {0, BTN_LABEL_PROP_BTN_BASE2},
+    {0, BTN_LABEL_PROP_BTN_BASE3},
+    {0, BTN_LABEL_PROP_BTN_BASE4},
+    {0, BTN_LABEL_PROP_BTN_BASE5},
+    {0, BTN_LABEL_PROP_BTN_BASE6},
+    {0, BTN_LABEL_PROP_BTN_DEAD},
+    {0, BTN_LABEL_PROP_BTN_A},
+    {0, BTN_LABEL_PROP_BTN_B},
+    {0, BTN_LABEL_PROP_BTN_C},
+    {0, BTN_LABEL_PROP_BTN_X},
+    {0, BTN_LABEL_PROP_BTN_Y},
+    {0, BTN_LABEL_PROP_BTN_Z},
+    {0, BTN_LABEL_PROP_BTN_TL},
+    {0, BTN_LABEL_PROP_BTN_TR},
+    {0, BTN_LABEL_PROP_BTN_TL2},
+    {0, BTN_LABEL_PROP_BTN_TR2},
+    {0, BTN_LABEL_PROP_BTN_SELECT},
+    {0, BTN_LABEL_PROP_BTN_START},
+    {0, BTN_LABEL_PROP_BTN_MODE},
+    {0, BTN_LABEL_PROP_BTN_THUMBL},
+    {0, BTN_LABEL_PROP_BTN_THUMBR},
+    {0, BTN_LABEL_PROP_BTN_TOOL_PEN},
+    {0, BTN_LABEL_PROP_BTN_TOOL_RUBBER},
+    {0, BTN_LABEL_PROP_BTN_TOOL_BRUSH},
+    {0, BTN_LABEL_PROP_BTN_TOOL_PENCIL},
+    {0, BTN_LABEL_PROP_BTN_TOOL_AIRBRUSH},
+    {0, BTN_LABEL_PROP_BTN_TOOL_FINGER},
+    {0, BTN_LABEL_PROP_BTN_TOOL_MOUSE},
+    {0, BTN_LABEL_PROP_BTN_TOOL_LENS},
+    {0, BTN_LABEL_PROP_BTN_TOUCH},
+    {0, BTN_LABEL_PROP_BTN_STYLUS},
+    {0, BTN_LABEL_PROP_BTN_STYLUS2},
+    {0, BTN_LABEL_PROP_BTN_TOOL_DOUBLETAP},
+    {0, BTN_LABEL_PROP_BTN_TOOL_TRIPLETAP},
+    {0, BTN_LABEL_PROP_BTN_GEAR_DOWN},
+    {0, BTN_LABEL_PROP_BTN_GEAR_UP},
+    {0, XI_PROP_TRANSFORM}
 };
 
 static long XIPropHandlerID = 1;
@@ -182,30 +184,27 @@ static long XIPropHandlerID = 1;
 static void
 send_property_event(DeviceIntPtr dev, Atom property, int what)
 {
-    devicePropertyNotify event;
-    xXIPropertyEvent xi2;
-    int state;
+    int state = (what == XIPropertyDeleted) ? PropertyDelete : PropertyNewValue;
+    devicePropertyNotify event = {
+        .type = DevicePropertyNotify,
+        .deviceid = dev->id,
+        .state = state,
+        .atom = property,
+        .time = currentTime.milliseconds
+    };
+    xXIPropertyEvent xi2 = {
+        .type = GenericEvent,
+        .extension = IReqCode,
+        .length = 0,
+        .evtype = XI_PropertyEvent,
+        .deviceid = dev->id,
+        .time = currentTime.milliseconds,
+        .property = property,
+        .what = what
+    };
 
-    if (what == XIPropertyDeleted)
-        state = PropertyDelete;
-    else
-        state = PropertyNewValue;
-
-    event.type = DevicePropertyNotify;
-    event.deviceid = dev->id;
-    event.state = state;
-    event.atom = property;
-    event.time = currentTime.milliseconds;
     SendEventToAllWindows(dev, DevicePropertyNotifyMask, (xEvent *) &event, 1);
 
-    xi2.type = GenericEvent;
-    xi2.extension = IReqCode;
-    xi2.length = 0;
-    xi2.evtype = XI_PropertyEvent;
-    xi2.deviceid = dev->id;
-    xi2.time = currentTime.milliseconds;
-    xi2.property = property;
-    xi2.what = what;
     SendEventToAllWindows(dev, GetEventFilter(dev, (xEvent *) &xi2),
                           (xEvent *) &xi2, 1);
 }
@@ -754,7 +753,7 @@ XIChangeDeviceProperty(DeviceIntPtr dev, Atom property, Atom type,
             break;
         }
         if (new_data)
-            memcpy((char *) new_data, (char *) value, len * size_in_bytes);
+            memcpy((char *) new_data, value, len * size_in_bytes);
         if (old_data)
             memcpy((char *) old_data, (char *) prop_value->data,
                    prop_value->size * size_in_bytes);
@@ -774,6 +773,8 @@ XIChangeDeviceProperty(DeviceIntPtr dev, Atom property, Atom type,
                                                   &new_value, checkonly);
                         if (checkonly && rc != Success) {
                             free(new_value.data);
+                            if (add)
+                                XIDestroyDeviceProperty(prop);
                             return rc;
                         }
                     }
@@ -864,11 +865,13 @@ ProcXListDeviceProperties(ClientPtr client)
     if (rc != Success)
         return rc;
 
-    rep.repType = X_Reply;
-    rep.RepType = X_ListDeviceProperties;
-    rep.length = natoms;
-    rep.sequenceNumber = client->sequence;
-    rep.nAtoms = natoms;
+    rep = (xListDevicePropertiesReply) {
+        .repType = X_Reply,
+        .RepType = X_ListDeviceProperties,
+        .sequenceNumber = client->sequence,
+        .length = natoms,
+        .nAtoms = natoms
+    };
 
     WriteReplyToClient(client, sizeof(xListDevicePropertiesReply), &rep);
     if (natoms) {
@@ -958,15 +961,17 @@ ProcXGetDeviceProperty(ClientPtr client)
     if (rc != Success)
         return rc;
 
-    reply.repType = X_Reply;
-    reply.RepType = X_GetDeviceProperty;
-    reply.sequenceNumber = client->sequence;
-    reply.deviceid = dev->id;
-    reply.nItems = nitems;
-    reply.format = format;
-    reply.bytesAfter = bytes_after;
-    reply.propertyType = type;
-    reply.length = bytes_to_int32(length);
+    reply = (xGetDevicePropertyReply) {
+        .repType = X_Reply,
+        .RepType = X_GetDeviceProperty,
+        .sequenceNumber = client->sequence,
+        .length = bytes_to_int32(length),
+        .propertyType = type,
+        .bytesAfter = bytes_after,
+        .nItems = nitems,
+        .format = format,
+        .deviceid = dev->id
+    };
 
     if (stuff->delete && (reply.bytesAfter == 0))
         send_property_event(dev, stuff->property, XIPropertyDeleted);
@@ -1063,7 +1068,7 @@ SRepXListDeviceProperties(ClientPtr client, int size,
     swapl(&rep->length);
     swaps(&rep->nAtoms);
     /* properties will be swapped later, see ProcXListDeviceProperties */
-    WriteToClient(client, size, (char *) rep);
+    WriteToClient(client, size, rep);
 }
 
 void
@@ -1076,7 +1081,7 @@ SRepXGetDeviceProperty(ClientPtr client, int size,
     swapl(&rep->bytesAfter);
     swapl(&rep->nItems);
     /* data will be swapped, see ProcXGetDeviceProperty */
-    WriteToClient(client, size, (char *) rep);
+    WriteToClient(client, size, rep);
 }
 
 /* XI2 Request/reply handling */
@@ -1100,11 +1105,13 @@ ProcXIListProperties(ClientPtr client)
     if (rc != Success)
         return rc;
 
-    rep.repType = X_Reply;
-    rep.RepType = X_XIListProperties;
-    rep.length = natoms;
-    rep.sequenceNumber = client->sequence;
-    rep.num_properties = natoms;
+    rep = (xXIListPropertiesReply) {
+        .repType = X_Reply,
+        .RepType = X_XIListProperties,
+        .sequenceNumber = client->sequence,
+        .length = natoms,
+        .num_properties = natoms
+    };
 
     WriteReplyToClient(client, sizeof(xXIListPropertiesReply), &rep);
     if (natoms) {
@@ -1194,14 +1201,16 @@ ProcXIGetProperty(ClientPtr client)
     if (rc != Success)
         return rc;
 
-    reply.repType = X_Reply;
-    reply.RepType = X_XIGetProperty;
-    reply.sequenceNumber = client->sequence;
-    reply.num_items = nitems;
-    reply.format = format;
-    reply.bytes_after = bytes_after;
-    reply.type = type;
-    reply.length = bytes_to_int32(length);
+    reply = (xXIGetPropertyReply) {
+        .repType = X_Reply,
+        .RepType = X_XIGetProperty,
+        .sequenceNumber = client->sequence,
+        .length = bytes_to_int32(length),
+        .type = type,
+        .bytes_after = bytes_after,
+        .num_items = nitems,
+        .format = format
+    };
 
     if (length && stuff->delete && (reply.bytes_after == 0))
         send_property_event(dev, stuff->property, XIPropertyDeleted);
@@ -1300,7 +1309,7 @@ SRepXIListProperties(ClientPtr client, int size, xXIListPropertiesReply * rep)
     swapl(&rep->length);
     swaps(&rep->num_properties);
     /* properties will be swapped later, see ProcXIListProperties */
-    WriteToClient(client, size, (char *) rep);
+    WriteToClient(client, size, rep);
 }
 
 void
@@ -1312,5 +1321,5 @@ SRepXIGetProperty(ClientPtr client, int size, xXIGetPropertyReply * rep)
     swapl(&rep->bytes_after);
     swapl(&rep->num_items);
     /* data will be swapped, see ProcXIGetProperty */
-    WriteToClient(client, size, (char *) rep);
+    WriteToClient(client, size, rep);
 }

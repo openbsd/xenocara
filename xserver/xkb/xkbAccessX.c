@@ -281,29 +281,30 @@ AccessXStickyKeysTurnOff(DeviceIntPtr dev, xkbControlsNotify * pCN)
 static CARD32
 AccessXKRGExpire(OsTimerPtr timer, CARD32 now, pointer arg)
 {
-    XkbSrvInfoPtr xkbi = ((DeviceIntPtr) arg)->key->xkbInfo;
     xkbControlsNotify cn;
+    DeviceIntPtr dev = arg;
+    XkbSrvInfoPtr xkbi = dev->key->xkbInfo;
 
     if (xkbi->krgTimerActive == _KRG_WARN_TIMER) {
-        XkbDDXAccessXBeep((DeviceIntPtr) arg, _BEEP_SLOW_WARN,
-                          XkbStickyKeysMask);
+        XkbDDXAccessXBeep(dev, _BEEP_SLOW_WARN, XkbStickyKeysMask);
         xkbi->krgTimerActive = _KRG_TIMER;
         return 4000;
     }
     xkbi->krgTimerActive = _OFF_TIMER;
-    cn.keycode = 0;
-    cn.eventType = 0;
+    cn.keycode = xkbi->slowKeyEnableKey;
+    cn.eventType = KeyPress;
     cn.requestMajor = 0;
     cn.requestMinor = 0;
     if (xkbi->desc->ctrls->enabled_ctrls & XkbSlowKeysMask) {
-        AccessXKRGTurnOff((DeviceIntPtr) arg, &cn);
+        AccessXKRGTurnOff(dev, &cn);
         LogMessage(X_INFO, "XKB SlowKeys are disabled.\n");
     }
     else {
-        AccessXKRGTurnOn((DeviceIntPtr) arg, XkbSlowKeysMask, &cn);
+        AccessXKRGTurnOn(dev, XkbSlowKeysMask, &cn);
         LogMessage(X_INFO, "XKB SlowKeys are now enabled. Hold shift to disable.\n");
     }
 
+    xkbi->slowKeyEnableKey = 0;
     return 0;
 }
 
@@ -462,6 +463,7 @@ AccessXFilterPressEvent(DeviceEvent *event, DeviceIntPtr keybd)
     if (ctrls->enabled_ctrls & XkbAccessXKeysMask) {
         /* check for magic sequences */
         if ((sym[0] == XK_Shift_R) || (sym[0] == XK_Shift_L)) {
+            xkbi->slowKeyEnableKey = key;
             if (XkbAX_NeedFeedback(ctrls, XkbAX_SlowWarnFBMask)) {
                 xkbi->krgTimerActive = _KRG_WARN_TIMER;
                 xkbi->krgTimer = TimerSet(xkbi->krgTimer, 0, 4000,
@@ -699,7 +701,6 @@ AccessXFilterReleaseEvent(DeviceEvent *event, DeviceIntPtr keybd)
 /*									*/
 /************************************************************************/
 extern int xkbDevicePrivateIndex;
-extern void xkbUnwrapProc(DeviceIntPtr, DeviceHandleProc, pointer);
 void
 ProcessPointerEvent(InternalEvent *ev, DeviceIntPtr mouse)
 {
@@ -710,7 +711,7 @@ ProcessPointerEvent(InternalEvent *ev, DeviceIntPtr mouse)
     xkbDeviceInfoPtr xkbPrivPtr = XKBDEVICEINFO(mouse);
     DeviceEvent *event = &ev->device_event;
 
-    dev = IsFloating(mouse) ? mouse : GetMaster(mouse, MASTER_KEYBOARD);
+    dev = (IsMaster(mouse) || IsFloating(mouse)) ? mouse : GetMaster(mouse, MASTER_KEYBOARD);
 
     if (dev && dev->key) {
         xkbi = dev->key->xkbInfo;
@@ -722,22 +723,26 @@ ProcessPointerEvent(InternalEvent *ev, DeviceIntPtr mouse)
         changed |= XkbPointerButtonMask;
     }
     else if (event->type == ET_ButtonRelease) {
-        if (xkbi) {
-            xkbi->lockedPtrButtons &= ~(1 << (event->detail.key & 0x7));
+        if (IsMaster(dev)) {
+            DeviceIntPtr source;
+            int rc;
 
-            if (IsMaster(dev)) {
-                DeviceIntPtr source;
-                int rc;
+            rc = dixLookupDevice(&source, event->sourceid, serverClient,
+                    DixWriteAccess);
+            if (rc != Success)
+                ErrorF("[xkb] bad sourceid '%d' on button release event.\n",
+                        event->sourceid);
+            else if (!IsXTestDevice(source, GetMaster(dev, MASTER_POINTER))) {
+                DeviceIntPtr xtest_device;
 
-                rc = dixLookupDevice(&source, event->sourceid, serverClient,
-                                     DixWriteAccess);
-                if (rc != Success)
-                    ErrorF("[xkb] bad sourceid '%d' on button release event.\n",
-                           event->sourceid);
-                else if (!IsXTestDevice(source, GetMaster(dev, MASTER_POINTER)))
+                xtest_device = GetXTestDevice(GetMaster(dev, MASTER_POINTER));
+                if (button_is_down(xtest_device, ev->device_event.detail.button, BUTTON_PROCESSED))
                     XkbFakeDeviceButton(dev, FALSE, event->detail.key);
             }
         }
+
+        if (xkbi)
+            xkbi->lockedPtrButtons &= ~(1 << (event->detail.key & 0x7));
 
         changed |= XkbPointerButtonMask;
     }

@@ -56,10 +56,6 @@ void
 void
  winLogVersionInfo(void);
 
-#ifdef DDXOSVERRORF
-void OsVendorVErrorF(const char *pszFormat, va_list va_args);
-#endif
-
 /*
  * Process arguments on the command line
  */
@@ -101,20 +97,22 @@ winInitializeScreenDefaults(void)
             int dpiY = GetDeviceCaps(hdc, LOGPIXELSY);
 
             winErrorFVerb(2,
-                          "winInitializeDefaultScreens - native DPI x %d y %d\n",
+                          "winInitializeScreenDefaults - native DPI x %d y %d\n",
                           dpiX, dpiY);
+
             monitorResolution = dpiY;
             ReleaseDC(NULL, hdc);
         }
         else {
             winErrorFVerb(1,
-                          "winInitializeDefaultScreens - Failed to retrieve native DPI, falling back to default of %d DPI\n",
+                          "winInitializeScreenDefaults - Failed to retrieve native DPI, falling back to default of %d DPI\n",
                           WIN_DEFAULT_DPI);
             monitorResolution = WIN_DEFAULT_DPI;
         }
     }
 
     defaultScreenInfo.iMonitor = 1;
+    defaultScreenInfo.hMonitor = MonitorFromWindow(NULL, MONITOR_DEFAULTTOPRIMARY);
     defaultScreenInfo.dwWidth = dwWidth;
     defaultScreenInfo.dwHeight = dwHeight;
     defaultScreenInfo.dwUserWidth = dwWidth;
@@ -144,7 +142,7 @@ winInitializeScreenDefaults(void)
 #endif
     defaultScreenInfo.fMultipleMonitors = FALSE;
     defaultScreenInfo.fLessPointer = FALSE;
-    defaultScreenInfo.iResizeMode = notAllowed;
+    defaultScreenInfo.iResizeMode = resizeWithRandr;
     defaultScreenInfo.fNoTrayIcon = FALSE;
     defaultScreenInfo.iE3BTimeout = WIN_E3B_DEFAULT;
     defaultScreenInfo.fUseWinKillKey = WIN_DEFAULT_WIN_KILL;
@@ -159,7 +157,7 @@ winInitializeScreenDefaults(void)
 static void
 winInitializeScreen(int i)
 {
-    winErrorFVerb(2, "winInitializeScreen - %d\n", i);
+    winErrorFVerb(3, "winInitializeScreen - %d\n", i);
 
     /* Initialize default screen values, if needed */
     winInitializeScreenDefaults();
@@ -176,7 +174,7 @@ winInitializeScreens(int maxscreens)
 {
     int i;
 
-    winErrorFVerb(2, "winInitializeScreens - %i\n", maxscreens);
+    winErrorFVerb(3, "winInitializeScreens - %i\n", maxscreens);
 
     if (maxscreens > g_iNumScreens) {
         /* Reallocate the memory for DDX-specific screen info */
@@ -333,6 +331,7 @@ ddxProcessArgument(int argc, char *argv[], int i)
                 g_ScreenInfo[nScreenNum].fUserGaveHeightAndWidth = FALSE;
                 g_ScreenInfo[nScreenNum].fUserGavePosition = TRUE;
                 g_ScreenInfo[nScreenNum].iMonitor = iMonitor;
+                g_ScreenInfo[nScreenNum].hMonitor = data.monitorHandle;
                 g_ScreenInfo[nScreenNum].dwWidth = data.monitorWidth;
                 g_ScreenInfo[nScreenNum].dwHeight = data.monitorHeight;
                 g_ScreenInfo[nScreenNum].dwUserWidth = data.monitorWidth;
@@ -383,6 +382,7 @@ ddxProcessArgument(int argc, char *argv[], int i)
                     }
                     else if (data.bMonitorSpecifiedExists == TRUE) {
                         g_ScreenInfo[nScreenNum].iMonitor = iMonitor;
+                        g_ScreenInfo[nScreenNum].hMonitor = data.monitorHandle;
                         g_ScreenInfo[nScreenNum].dwInitialX +=
                             data.monitorOffsetX;
                         g_ScreenInfo[nScreenNum].dwInitialY +=
@@ -415,6 +415,7 @@ ddxProcessArgument(int argc, char *argv[], int i)
                                   iMonitor);
                     g_ScreenInfo[nScreenNum].fUserGavePosition = TRUE;
                     g_ScreenInfo[nScreenNum].iMonitor = iMonitor;
+                    g_ScreenInfo[nScreenNum].hMonitor = data.monitorHandle;
                     g_ScreenInfo[nScreenNum].dwInitialX = data.monitorOffsetX;
                     g_ScreenInfo[nScreenNum].dwInitialY = data.monitorOffsetY;
                 }
@@ -1158,9 +1159,10 @@ winLogVersionInfo(void)
 
     ErrorF("Welcome to the XWin X Server\n");
     ErrorF("Vendor: %s\n", XVENDORNAME);
-    ErrorF("Release: %d.%d.%d.%d (%d)\n", XORG_VERSION_MAJOR,
-           XORG_VERSION_MINOR, XORG_VERSION_PATCH, XORG_VERSION_SNAP,
-           XORG_VERSION_CURRENT);
-    ErrorF("%s\n\n", BUILDERSTRING);
+    ErrorF("Release: %d.%d.%d.%d\n", XORG_VERSION_MAJOR,
+           XORG_VERSION_MINOR, XORG_VERSION_PATCH, XORG_VERSION_SNAP);
+    if (strlen(BUILDERSTRING))
+        ErrorF("%s\n", BUILDERSTRING);
     ErrorF("Contact: %s\n", BUILDERADDR);
+    ErrorF("\n");
 }

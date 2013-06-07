@@ -428,6 +428,13 @@ winWindowProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
     }
         return 0;
 
+    case WM_SYSCOMMAND:
+        if (s_pScreenInfo->iResizeMode == resizeWithRandr &&
+            ((wParam & 0xfff0) == SC_MAXIMIZE ||
+             (wParam & 0xfff0) == SC_RESTORE))
+            PostMessage(hwnd, WM_EXITSIZEMOVE, 0, 0);
+        break;
+
     case WM_ENTERSIZEMOVE:
         ErrorF("winWindowProc - WM_ENTERSIZEMOVE\n");
         break;
@@ -923,6 +930,7 @@ winWindowProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 
         case WIN_POLLING_MOUSE_TIMER_ID:
         {
+            static POINT last_point;
             POINT point;
             WPARAM wL, wM, wR, wShift, wCtrl;
             LPARAM lPos;
@@ -934,8 +942,12 @@ winWindowProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
             point.x -= GetSystemMetrics(SM_XVIRTUALSCREEN);
             point.y -= GetSystemMetrics(SM_YVIRTUALSCREEN);
 
-            /* Deliver absolute cursor position to X Server */
-            winEnqueueMotion(point.x, point.y);
+            /* If the mouse pointer has moved, deliver absolute cursor position to X Server */
+            if (last_point.x != point.x || last_point.y != point.y) {
+                winEnqueueMotion(point.x, point.y);
+                last_point.x = point.x;
+                last_point.y = point.y;
+            }
 
             /* Check if a button was released but we didn't see it */
             GetCursorPos(&point);

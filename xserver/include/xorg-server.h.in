@@ -197,13 +197,16 @@
 #undef WSCONS_SUPPORT
 
 /* Loadable XFree86 server awesomeness */
-#undef XFree86LOADER
+#define XFree86LOADER
 
 /* Use libpciaccess */
 #undef XSERVER_LIBPCIACCESS
 
 /* X Access Control Extension */
 #undef XACE
+
+/* Have X server platform bus support */
+#undef XSERVER_PLATFORM_BUS
 
 /* Use X server privilege separation */
 #undef X_PRIVSEP

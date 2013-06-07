@@ -49,7 +49,7 @@
 #ifdef DPMSExtension
 static DevPrivateKeyRec DPMSKeyRec;
 static DevPrivateKey DPMSKey;
-static Bool DPMSClose(int i, ScreenPtr pScreen);
+static Bool DPMSClose(ScreenPtr pScreen);
 static int DPMSCount = 0;
 #endif
 
@@ -57,7 +57,7 @@ Bool
 xf86DPMSInit(ScreenPtr pScreen, DPMSSetProcPtr set, int flags)
 {
 #ifdef DPMSExtension
-    ScrnInfoPtr pScrn = xf86Screens[pScreen->myNum];
+    ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
     DPMSPtr pDPMS;
     pointer DPMSOpt;
     MessageType enabled_from;
@@ -99,10 +99,10 @@ xf86DPMSInit(ScreenPtr pScreen, DPMSSetProcPtr set, int flags)
 #ifdef DPMSExtension
 
 static Bool
-DPMSClose(int i, ScreenPtr pScreen)
+DPMSClose(ScreenPtr pScreen)
 {
     DPMSPtr pDPMS;
-
+    ScrnInfoPtr pScrn;
     /* This shouldn't happen */
     if (DPMSKey == NULL)
         return FALSE;
@@ -114,20 +114,33 @@ DPMSClose(int i, ScreenPtr pScreen)
         return FALSE;
 
     pScreen->CloseScreen = pDPMS->CloseScreen;
-
+    pScrn = xf86ScreenToScrn(pScreen);
     /*
      * Turn on DPMS when shutting down. If this function can be used
      * depends on the order the driver wraps things. If this is called
      * after the driver has shut down everything the driver will have
      * to deal with this internally.
      */
-    if (xf86Screens[i]->vtSema && xf86Screens[i]->DPMSSet) {
-        xf86Screens[i]->DPMSSet(xf86Screens[i], DPMSModeOn, 0);
+    if (pScrn->vtSema && pScrn->DPMSSet) {
+        pScrn->DPMSSet(pScrn, DPMSModeOn, 0);
     }
 
     if (--DPMSCount == 0)
         DPMSKey = NULL;
-    return pScreen->CloseScreen(i, pScreen);
+    return pScreen->CloseScreen(pScreen);
+}
+
+static void
+DPMSSetScreen(ScrnInfoPtr pScrn, int level)
+{
+    ScreenPtr pScreen = xf86ScrnToScreen(pScrn);
+    DPMSPtr pDPMS = dixLookupPrivate(&pScreen->devPrivates, DPMSKey);
+
+    if (pDPMS && pScrn->DPMSSet && pDPMS->Enabled && pScrn->vtSema) {
+        xf86VGAarbiterLock(pScrn);
+        pScrn->DPMSSet(pScrn, level, 0);
+        xf86VGAarbiterUnlock(pScrn);
+    }
 }
 
 /*
@@ -139,8 +152,6 @@ int
 DPMSSet(ClientPtr client, int level)
 {
     int rc, i;
-    DPMSPtr pDPMS;
-    ScrnInfoPtr pScrn;
 
     DPMSPowerLevel = level;
 
@@ -155,15 +166,21 @@ DPMSSet(ClientPtr client, int level)
 
     /* For each screen, set the DPMS level */
     for (i = 0; i < xf86NumScreens; i++) {
-        pScrn = xf86Screens[i];
-        pDPMS = dixLookupPrivate(&screenInfo.screens[i]->devPrivates, DPMSKey);
-        if (pDPMS && pScrn->DPMSSet && pDPMS->Enabled && pScrn->vtSema) {
-            xf86VGAarbiterLock(pScrn);
-            pScrn->DPMSSet(pScrn, level, 0);
-            xf86VGAarbiterUnlock(pScrn);
-        }
+        DPMSSetScreen(xf86Screens[i], level);
+    }
+    for (i = 0; i < xf86NumGPUScreens; i++) {
+        DPMSSetScreen(xf86GPUScreens[i], level);
     }
     return Success;
+}
+
+static Bool
+DPMSSupportedOnScreen(ScrnInfoPtr pScrn)
+{
+    ScreenPtr pScreen = xf86ScrnToScreen(pScrn);
+    DPMSPtr pDPMS = dixLookupPrivate(&pScreen->devPrivates, DPMSKey);
+
+    return pDPMS && pScrn->DPMSSet;
 }
 
 /*
@@ -174,8 +191,6 @@ Bool
 DPMSSupported(void)
 {
     int i;
-    DPMSPtr pDPMS;
-    ScrnInfoPtr pScrn;
 
     if (DPMSKey == NULL) {
         return FALSE;
@@ -183,9 +198,11 @@ DPMSSupported(void)
 
     /* For each screen, check if DPMS is supported */
     for (i = 0; i < xf86NumScreens; i++) {
-        pScrn = xf86Screens[i];
-        pDPMS = dixLookupPrivate(&screenInfo.screens[i]->devPrivates, DPMSKey);
-        if (pDPMS && pScrn->DPMSSet)
+        if (DPMSSupportedOnScreen(xf86Screens[i]))
+            return TRUE;
+    }
+    for (i = 0; i < xf86NumGPUScreens; i++) {
+        if (DPMSSupportedOnScreen(xf86GPUScreens[i]))
             return TRUE;
     }
     return FALSE;

@@ -58,7 +58,7 @@ of the copyright holder.
 
 /* XvScreenRec fields */
 
-static Bool KdXVCloseScreen(int, ScreenPtr);
+static Bool KdXVCloseScreen(ScreenPtr);
 static int KdXVQueryAdaptors(ScreenPtr, XvAdaptorPtr *, int *);
 
 /* XvAdaptorRec fields */
@@ -106,10 +106,6 @@ static DevPrivateKeyRec KdXVWindowKeyRec;
 static DevPrivateKey KdXvScreenKey;
 static unsigned long KdXVGeneration = 0;
 static unsigned long PortResource = 0;
-
-DevPrivateKey (*XvGetScreenKeyProc) (void) = XvGetScreenKey;
-unsigned long (*XvGetRTPortProc) (void) = XvGetRTPort;
-int (*XvScreenInitProc) (ScreenPtr) = XvScreenInit;
 
 #define GET_XV_SCREEN(pScreen) ((XvScreenPtr) \
     dixLookupPrivate(&(pScreen)->devPrivates, KdXvScreenKey))
@@ -186,17 +182,17 @@ KdXVScreenInit(ScreenPtr pScreen, KdVideoAdaptorPtr * adaptors, int num)
     if (KdXVGeneration != serverGeneration)
         KdXVGeneration = serverGeneration;
 
-    if (!XvGetScreenKeyProc || !XvGetRTPortProc || !XvScreenInitProc)
+    if (noXvExtension)
         return FALSE;
 
     if (!dixRegisterPrivateKey(&KdXVWindowKeyRec, PRIVATE_WINDOW, 0))
         return FALSE;
 
-    if (Success != (*XvScreenInitProc) (pScreen))
+    if (Success != XvScreenInit(pScreen))
         return FALSE;
 
-    KdXvScreenKey = (*XvGetScreenKeyProc) ();
-    PortResource = (*XvGetRTPortProc) ();
+    KdXvScreenKey = XvGetScreenKey();
+    PortResource = XvGetRTPort();
 
     pxvs = GET_XV_SCREEN(pScreen);
 
@@ -1118,7 +1114,7 @@ KdXVClipNotify(WindowPtr pWin, int dx, int dy)
 /**** Required XvScreenRec fields ****/
 
 static Bool
-KdXVCloseScreen(int i, ScreenPtr pScreen)
+KdXVCloseScreen(ScreenPtr pScreen)
 {
     XvScreenPtr pxvs = GET_XV_SCREEN(pScreen);
     KdXVScreenPtr ScreenPriv = GET_KDXV_SCREEN(pScreen);

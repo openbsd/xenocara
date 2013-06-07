@@ -36,6 +36,7 @@
 #define HAS_WINSOCK 1
 #endif
 #include <sys/types.h>
+#include <signal.h>
 #include "winclipboard.h"
 #ifdef __CYGWIN__
 #include <errno.h>
@@ -47,7 +48,6 @@
  */
 
 extern Bool g_fUnicodeClipboard;
-extern unsigned long serverGeneration;
 extern Bool g_fClipboardStarted;
 extern Bool g_fClipboardLaunched;
 extern Bool g_fClipboard;
@@ -64,7 +64,6 @@ static int clipboardRestarts = 0;
 static XIOErrorHandler g_winClipboardOldIOErrorHandler;
 static pthread_t g_winClipboardProcThread;
 
-Bool g_fUnicodeSupport = FALSE;
 Bool g_fUseUnicode = FALSE;
 
 /*
@@ -103,14 +102,11 @@ winClipboardProc(void *pvNotUsed)
     char szDisplay[512];
     int iSelectError;
 
-    ErrorF("winClipboardProc - Hello\n");
+    winDebug("winClipboardProc - Hello\n");
     ++clipboardRestarts;
 
-    /* Do we have Unicode support? */
-    g_fUnicodeSupport = winClipboardDetectUnicodeSupport();
-
     /* Do we use Unicode clipboard? */
-    fUseUnicode = g_fUnicodeClipboard && g_fUnicodeSupport;
+    fUseUnicode = g_fUnicodeClipboard;
 
     /* Save the Unicode support flag in a global */
     g_fUseUnicode = fUseUnicode;
@@ -417,7 +413,7 @@ winClipboardProc(void *pvNotUsed)
             ("winClipboardProc - the clipboard thread has restarted %d times and seems to be unstable, disabling clipboard integration\n",
              clipboardRestarts);
         g_fClipboard = FALSE;
-        return;
+        return NULL;
     }
 
     if (g_fClipboard) {
@@ -426,7 +422,7 @@ winClipboardProc(void *pvNotUsed)
         /* Create the clipboard client thread */
         if (!winInitClipboard()) {
             ErrorF("winClipboardProc - winClipboardInit failed.\n");
-            return;
+            return NULL;
         }
 
         winDebug("winClipboardProc - winInitClipboard returned.\n");
@@ -436,7 +432,7 @@ winClipboardProc(void *pvNotUsed)
     else {
         ErrorF("winClipboardProc - Clipboard disabled  - Exit from server \n");
         /* clipboard thread has exited, stop server as well */
-        kill(getpid(), SIGTERM);
+        raise(SIGTERM);
     }
 
     return NULL;

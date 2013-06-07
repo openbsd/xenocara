@@ -55,14 +55,13 @@ compScreenUpdate(ScreenPtr pScreen)
 }
 
 static void
-compBlockHandler(int i, pointer blockData, pointer pTimeout, pointer pReadmask)
+compBlockHandler(ScreenPtr pScreen, pointer pTimeout, pointer pReadmask)
 {
-    ScreenPtr pScreen = screenInfo.screens[i];
     CompScreenPtr cs = GetCompScreen(pScreen);
 
     pScreen->BlockHandler = cs->BlockHandler;
     compScreenUpdate(pScreen);
-    (*pScreen->BlockHandler) (i, blockData, pTimeout, pReadmask);
+    (*pScreen->BlockHandler) (pScreen, pTimeout, pReadmask);
 
     /* Next damage will restore the block handler */
     cs->BlockHandler = NULL;
@@ -561,8 +560,8 @@ compNewPixmap(WindowPtr pWin, int x, int y, int w, int h)
         }
     }
     else {
-        PictFormatPtr pSrcFormat = compWindowFormat(pParent);
-        PictFormatPtr pDstFormat = compWindowFormat(pWin);
+        PictFormatPtr pSrcFormat = PictureWindowFormat(pParent);
+        PictFormatPtr pDstFormat = PictureWindowFormat(pWin);
         XID inferiors = IncludeInferiors;
         int error;
 

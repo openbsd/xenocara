@@ -67,6 +67,7 @@ SOFTWARE.
  * GLYPHPADBYTES is used.
  */
 
+
 #ifdef __avr32__
 
 #define IMAGE_BYTE_ORDER        MSBFirst
@@ -77,10 +78,10 @@ SOFTWARE.
 
 #if defined(vax) || defined(__vax__)
 
-#define IMAGE_BYTE_ORDER       LSBFirst        /* Values for the VAX only */
-#define BITMAP_BIT_ORDER       LSBFirst
-#define GLYPHPADBYTES          4       /* to make fb work */
-#define GETLEFTBITS_ALIGNMENT  1
+#define IMAGE_BYTE_ORDER	LSBFirst        /* Values for the VAX only */
+#define BITMAP_BIT_ORDER	LSBFirst
+#define GLYPHPADBYTES		4	/* to make fb work */
+#define GETLEFTBITS_ALIGNMENT	1
 #define FAST_UNALIGNED_READS
 
 #endif /* vax */ 
@@ -291,7 +292,7 @@ SOFTWARE.
 
 #endif                          /* linux/m68k */
 
-#if defined (OpenBSD) && defined (__mc68020__)
+#if defined (__OpenBSD__) && defined (__mc68020__)
 
 #define IMAGE_BYTE_ORDER       MSBFirst
 #define BITMAP_BIT_ORDER       MSBFirst
@@ -303,10 +304,10 @@ SOFTWARE.
 
 #ifdef sgi
 
-#define IMAGE_BYTE_ORDER       MSBFirst
-#define BITMAP_BIT_ORDER       MSBFirst
-#define GLYPHPADBYTES          4
-#define GETLEFTBITS_ALIGNMENT  1
+#define IMAGE_BYTE_ORDER	MSBFirst
+#define BITMAP_BIT_ORDER	MSBFirst
+#define GLYPHPADBYTES		4
+#define GETLEFTBITS_ALIGNMENT	1
 #define AVOID_MEMORY_READ
 #define FAST_CONSTANT_OFFSET_MODE
 #define LARGE_INSTRUCTION_CACHE

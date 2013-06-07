@@ -45,6 +45,9 @@
 /* Use libudev for input hotplug */
 #undef CONFIG_UDEV
 
+/* Use libudev for kms enumeration */
+#undef CONFIG_UDEV_KMS
+
 /* Use wscons for input auto configuration */
 #undef CONFIG_WSCONS
 
@@ -247,6 +250,9 @@
 /* Use CommonCrypto SHA1 functions */
 #undef HAVE_SHA1_IN_COMMONCRYPTO
 
+/* Use CryptoAPI SHA1 functions */
+#undef HAVE_SHA1_IN_CRYPTOAPI
+
 /* Use libc SHA1 functions */
 #undef HAVE_SHA1_IN_LIBC
 
@@ -255,6 +261,9 @@
 
 /* Use libmd SHA1 functions */
 #undef HAVE_SHA1_IN_LIBMD
+
+/* Use libnettle SHA1 functions */
+#undef HAVE_SHA1_IN_LIBNETTLE
 
 /* Use libsha1 for SHA1 */
 #undef HAVE_SHA1_IN_LIBSHA1
@@ -335,6 +344,9 @@
 
 /* Define to 1 if you have the <sys/vt.h> header file. */
 #undef HAVE_SYS_VT_H
+
+/* Define to 1 if typeof works with your compiler. */
+#undef HAVE_TYPEOF
 
 /* Define to 1 if you have the `udev_enumerate_add_match_tag' function. */
 #undef HAVE_UDEV_ENUMERATE_ADD_MATCH_TAG
@@ -591,9 +603,6 @@
 /* Support XFixes extension */
 #undef XFIXES
 
-/* Building loadable XFree86 server */
-#undef XFree86LOADER
-
 /* Building XFree86 server */
 #undef XFree86Server
 
@@ -666,6 +675,9 @@
 /* Use libpciaccess for all pci manipulation */
 #undef XSERVER_LIBPCIACCESS
 
+/* X server supports platform device enumeration */
+#undef XSERVER_PLATFORM_BUS
+
 /* Support XSync extension */
 #undef XSYNC
 
@@ -737,3 +749,6 @@
 
 /* Define to `int' if <sys/types.h> does not define. */
 #undef pid_t
+
+/* Define to __typeof__ if your compiler spells it that way. */
+#undef typeof

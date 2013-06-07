@@ -157,7 +157,7 @@ ProcAppleWMQueryVersion(register ClientPtr client)
         swaps(&rep.sequenceNumber);
         swapl(&rep.length);
     }
-    WriteToClient(client, sizeof(xAppleWMQueryVersionReply), (char *)&rep);
+    WriteToClient(client, sizeof(xAppleWMQueryVersionReply),&rep);
     return Success;
 }
 
@@ -533,7 +533,7 @@ ProcAppleWMFrameGetRect(register ClientPtr client)
     rep.w = rr.x2 - rr.x1;
     rep.h = rr.y2 - rr.y1;
 
-    WriteToClient(client, sizeof(xAppleWMFrameGetRectReply), (char *)&rep);
+    WriteToClient(client, sizeof(xAppleWMFrameGetRectReply),&rep);
     return Success;
 }
 
@@ -560,7 +560,7 @@ ProcAppleWMFrameHitTest(register ClientPtr client)
 
     rep.ret = ret;
 
-    WriteToClient(client, sizeof(xAppleWMFrameHitTestReply), (char *)&rep);
+    WriteToClient(client, sizeof(xAppleWMFrameHitTestReply),&rep);
     return Success;
 }
 
@@ -612,7 +612,7 @@ ProcAppleWMDispatch(register ClientPtr client)
         return ProcAppleWMQueryVersion(client);
     }
 
-    if (!LocalClient(client))
+    if (!client->local)
         return WMErrorBase + AppleWMClientNotLocal;
 
     switch (stuff->data) {
@@ -684,7 +684,7 @@ SProcAppleWMDispatch(register ClientPtr client)
     REQUEST(xReq);
 
     /* It is bound to be non-local when there is byte swapping */
-    if (!LocalClient(client))
+    if (!client->local)
         return WMErrorBase + AppleWMClientNotLocal;
 
     /* only local clients are allowed WM access */

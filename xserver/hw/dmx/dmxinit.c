@@ -68,9 +68,12 @@
 #include <GL/glx.h>
 #include <GL/glxint.h>
 #include "dmx_glxvisuals.h"
+#include "glx_extinit.h"
 #include <X11/extensions/Xext.h>
 #include <X11/extensions/extutil.h>
 #endif                          /* GLXEXT */
+
+#include <X11/extensions/dmxproto.h>
 
 /* Global variables available to all Xserver/hw/dmx routines. */
 int dmxNumScreens;
@@ -586,6 +589,20 @@ dmxExecHost(void)
     return buffer;
 }
 
+static void dmxAddExtensions(Bool glxSupported)
+{
+    const ExtensionModule dmxExtensions[] = {
+        { DMXExtensionInit, DMX_EXTENSION_NAME, NULL },
+#ifdef GLXEXT
+        { GlxExtensionInit, "GLX", &glxSupported },
+#endif
+    };
+    int i;
+
+    for (i = 0; i < ARRAY_SIZE(dmxExtensions); i++)
+        LoadExtension(&dmxExtensions[i], TRUE);
+}
+
 /** This routine is called in Xserver/dix/main.c from \a main(). */
 void
 InitOutput(ScreenInfo * pScreenInfo, int argc, char *argv[])
@@ -594,7 +611,7 @@ InitOutput(ScreenInfo * pScreenInfo, int argc, char *argv[])
     static unsigned long dmxGeneration = 0;
 
 #ifdef GLXEXT
-    Bool glxSupported = TRUE;
+    static Bool glxSupported = TRUE;
 #endif
 
     if (dmxGeneration != serverGeneration) {
@@ -723,6 +740,9 @@ InitOutput(ScreenInfo * pScreenInfo, int argc, char *argv[])
     /* Check if GLX extension exists on all back-end servers */
     for (i = 0; i < dmxNumScreens; i++)
         glxSupported &= (dmxScreens[i].glxMajorOpcode > 0);
+
+    if (serverGeneration == 1)
+        dmxAddExtensions(glxSupported);
 #endif
 
     /* Tell dix layer about the backend displays */
@@ -905,7 +925,7 @@ OsVendorInit(void)
  * two routines mentioned here, as well as by others) to use the
  * referenced routine instead of \a vfprintf().) */
 void
-OsVendorFatalError(void)
+OsVendorFatalError(const char *f, va_list args)
 {
 }
 

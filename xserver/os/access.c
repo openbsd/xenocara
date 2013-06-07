@@ -471,7 +471,7 @@ in6_fillscopeid(struct sockaddr_in6 *sin6)
 #if defined(__KAME__)
     if (IN6_IS_ADDR_LINKLOCAL(&sin6->sin6_addr)) {
         sin6->sin6_scope_id =
-            ntohs(*(u_int16_t *) & sin6->sin6_addr.s6_addr[2]);
+            ntohs(*(u_int16_t *) &sin6->sin6_addr.s6_addr[2]);
         sin6->sin6_addr.s6_addr[2] = sin6->sin6_addr.s6_addr[3] = 0;
     }
 #endif
@@ -1007,14 +1007,6 @@ ComputeLocalClient(ClientPtr client)
     return FALSE;
 }
 
-Bool
-LocalClient(ClientPtr client)
-{
-    if (!client->osPrivate)
-        return FALSE;
-    return ((OsCommPtr) client->osPrivate)->local_client;
-}
-
 /*
  * Return the uid and gid of a connected local client
  * 
@@ -1176,7 +1168,7 @@ AuthorizedClient(ClientPtr client)
     if (rc != Success)
         return rc;
 
-    return LocalClient(client) ? Success : BadAccess;
+    return client->local ? Success : BadAccess;
 }
 
 /* Add a host to the access control list.  This is the external interface

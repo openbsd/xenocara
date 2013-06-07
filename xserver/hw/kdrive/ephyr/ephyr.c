@@ -42,10 +42,6 @@
 
 extern int KdTsPhyScreen;
 
-#ifdef GLXEXT
-extern Bool noGlxVisualInit;
-#endif
-
 KdKeyboardInfo *ephyrKbd;
 KdPointerInfo *ephyrMouse;
 EphyrKeySyms ephyrKeySyms;
@@ -419,23 +415,22 @@ ephyrRandRGetInfo(ScreenPtr pScreen, Rotation * rotations)
     struct {
         int width, height;
     } sizes[] = {
-        {
-        1600, 1200}, {
-        1400, 1050}, {
-        1280, 960}, {
-        1280, 1024}, {
-        1152, 864}, {
-        1024, 768}, {
-        832, 624}, {
-        800, 600}, {
-        720, 400}, {
-        480, 640}, {
-        640, 480}, {
-        640, 400}, {
-        320, 240}, {
-        240, 320}, {
-        160, 160}, {
-        0, 0}
+        {1600, 1200},
+        {1400, 1050},
+        {1280, 960},
+        {1280, 1024},
+        {1152, 864},
+        {1024, 768},
+        {832, 624},
+        {800, 600},
+        {720, 400},
+        {480, 640},
+        {640, 480},
+        {640, 400},
+        {320, 240},
+        {240, 320},
+        {160, 160},
+        {0, 0}
     };
 
     EPHYR_LOG("mark");
@@ -562,6 +557,8 @@ ephyrRandRSetConfig(ScreenPtr pScreen,
     if (wasEnabled)
         KdEnableScreen(pScreen);
 
+    RRScreenSizeNotify(pScreen);
+
     return TRUE;
 
  bail4:
@@ -594,6 +591,43 @@ ephyrRandRInit(ScreenPtr pScreen)
     pScrPriv->rrSetConfig = ephyrRandRSetConfig;
     return TRUE;
 }
+
+static Bool
+ephyrResizeScreen (ScreenPtr           pScreen,
+                  int                  newwidth,
+                  int                  newheight)
+{
+    KdScreenPriv(pScreen);
+    KdScreenInfo *screen = pScreenPriv->screen;
+    RRScreenSize size = {0};
+    Bool ret;
+    int t;
+
+    if (screen->randr & (RR_Rotate_90|RR_Rotate_270)) {
+        t = newwidth;
+        newwidth = newheight;
+        newheight = t;
+    }
+
+    if (newwidth == screen->width && newheight == screen->height) {
+        return FALSE;
+    }
+
+    size.width = newwidth;
+    size.height = newheight;
+
+    ret = ephyrRandRSetConfig (pScreen, screen->randr, 0, &size);
+    if (ret) {
+        RROutputPtr output;
+
+        output = RRFirstOutput(pScreen);
+        if (!output)
+            return FALSE;
+        RROutputSetModes(output, NULL, 0, 0);
+    }
+
+    return ret;
+}
 #endif
 
 Bool
@@ -624,22 +658,13 @@ ephyrInitScreen(ScreenPtr pScreen)
     }
 #endif /*XV*/
 #ifdef XF86DRI
-        if (!ephyrNoDRI && !hostx_has_dri()) {
+    if (!ephyrNoDRI && !hostx_has_dri()) {
         EPHYR_LOG("host x does not support DRI. Disabling DRI forwarding\n");
         ephyrNoDRI = TRUE;
-#ifdef GLXEXT
-        noGlxVisualInit = FALSE;
-#endif
     }
     if (!ephyrNoDRI) {
         ephyrDRIExtensionInit(pScreen);
         ephyrHijackGLXExtension();
-    }
-#endif
-
-#ifdef GLXEXT
-    if (ephyrNoDRI) {
-        noGlxVisualInit = FALSE;
     }
 #endif
 
@@ -772,26 +797,6 @@ ephyrUpdateModifierState(unsigned int state)
     }
 }
 
-static void
-ephyrBlockSigio(void)
-{
-    sigset_t set;
-
-    sigemptyset(&set);
-    sigaddset(&set, SIGIO);
-    sigprocmask(SIG_BLOCK, &set, 0);
-}
-
-static void
-ephyrUnblockSigio(void)
-{
-    sigset_t set;
-
-    sigemptyset(&set);
-    sigaddset(&set, SIGIO);
-    sigprocmask(SIG_UNBLOCK, &set, 0);
-}
-
 static Bool
 ephyrCursorOffScreen(ScreenPtr *ppScreen, int *x, int *y)
 {
@@ -808,11 +813,11 @@ int ephyrCurScreen;             /*current event screen */
 static void
 ephyrWarpCursor(DeviceIntPtr pDev, ScreenPtr pScreen, int x, int y)
 {
-    ephyrBlockSigio();
+    OsBlockSIGIO();
     ephyrCurScreen = pScreen->myNum;
     miPointerWarpCursor(inputInfo.pointer, pScreen, x, y);
 
-    ephyrUnblockSigio();
+    OsReleaseSIGIO();
 }
 
 miPointerScreenFuncRec ephyrPointerScreenFuncs = {
@@ -962,6 +967,14 @@ ephyrPoll(void)
             ephyrExposePairedWindow(ev.data.expose.window);
             break;
 #endif                          /* XF86DRI */
+
+#ifdef RANDR
+        case EPHYR_EV_CONFIGURE:
+            ephyrResizeScreen(screenInfo.screens[ev.data.configure.screen],
+                              ev.data.configure.width,
+                              ev.data.configure.height);
+            break;
+#endif /* RANDR */
 
         default:
             break;

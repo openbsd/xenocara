@@ -49,10 +49,6 @@
  * Local function prototypes
  */
 
-int winProcEstablishConnection(ClientPtr /* client */ );
-int winProcQueryTree(ClientPtr /* client */ );
-int winProcSetSelectionOwner(ClientPtr /* client */ );
-
 DISPATCH_PROC(winProcEstablishConnection);
 DISPATCH_PROC(winProcSetSelectionOwner);
 
@@ -60,11 +56,8 @@ DISPATCH_PROC(winProcSetSelectionOwner);
  * References to external symbols
  */
 
-extern Bool g_fUnicodeSupport;
-extern int g_iNumScreens;
 extern unsigned int g_uiAuthDataLen;
 extern char *g_pAuthData;
-extern Bool g_fXdmcpEnabled;
 extern Bool g_fClipboardLaunched;
 extern Bool g_fClipboardStarted;
 extern Bool g_fClipboard;
@@ -72,9 +65,6 @@ extern Window g_iClipboardWindow;
 extern Atom g_atomLastOwnedSelection;
 extern HWND g_hwndClipboard;
 
-extern winDispatchProcPtr winProcEstablishConnectionOrig;
-extern winDispatchProcPtr winProcQueryTreeOrig;
-extern winDispatchProcPtr winProcSetSelectionOwnerOrig;
 
 /*
  * Wrapper for internal EstablishConnection function.
@@ -90,7 +80,7 @@ winProcEstablishConnection(ClientPtr client)
     static unsigned long s_ulServerGeneration = 0;
 
     if (s_iCallCount == 0)
-        ErrorF("winProcEstablishConnection - Hello\n");
+        winDebug("winProcEstablishConnection - Hello\n");
 
     /* Do nothing if clipboard is not enabled */
     if (!g_fClipboard) {
@@ -362,11 +352,8 @@ winProcSetSelectionOwner(ClientPtr client)
         goto winProcSetSelectionOwner_Done;
     }
 
-    /* Advertise Unicode if we support it */
-    if (g_fUnicodeSupport)
-        SetClipboardData(CF_UNICODETEXT, NULL);
-
-    /* Always advertise regular text */
+    /* Advertise regular text and unicode */
+    SetClipboardData(CF_UNICODETEXT, NULL);
     SetClipboardData(CF_TEXT, NULL);
 
     /* Save handle to last owned selection */

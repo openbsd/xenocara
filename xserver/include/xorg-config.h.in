@@ -136,6 +136,9 @@
 /* Have getresuid */
 #undef HAVE_GETRESUID
 
+/* Have X server platform bus support */
+#undef XSERVER_PLATFORM_BUS
+
 /* Use X server privilege separation */
 #undef X_PRIVSEP
 

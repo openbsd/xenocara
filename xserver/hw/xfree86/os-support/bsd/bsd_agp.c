@@ -1,4 +1,4 @@
-/*	$OpenBSD: bsd_agp.c,v 1.5 2012/06/10 13:21:25 matthieu Exp $ */
+/*	$OpenBSD: bsd_agp.c,v 1.6 2013/06/07 17:28:52 matthieu Exp $ */
 /*
  * Abstraction of the AGP GART interface.
  *

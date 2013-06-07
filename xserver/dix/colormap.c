@@ -450,15 +450,15 @@ FreeColormap(pointer value, XID mid)
 static int
 TellNoMap(WindowPtr pwin, Colormap * pmid)
 {
-    xEvent xE;
-
     if (wColormap(pwin) == *pmid) {
         /* This should be call to DeliverEvent */
+        xEvent xE = {
+            .u.colormap.window = pwin->drawable.id,
+            .u.colormap.colormap = None,
+            .u.colormap.new = TRUE,
+            .u.colormap.state = ColormapUninstalled
+        };
         xE.u.u.type = ColormapNotify;
-        xE.u.colormap.window = pwin->drawable.id;
-        xE.u.colormap.colormap = None;
-        xE.u.colormap.new = TRUE;
-        xE.u.colormap.state = ColormapUninstalled;
 #ifdef PANORAMIX
         if (noPanoramiXExtension || !pwin->drawable.pScreen->myNum)
 #endif
@@ -477,7 +477,6 @@ int
 TellLostMap(WindowPtr pwin, pointer value)
 {
     Colormap *pmid = (Colormap *) value;
-    xEvent xE;
 
 #ifdef PANORAMIX
     if (!noPanoramiXExtension && pwin->drawable.pScreen->myNum)
@@ -485,11 +484,13 @@ TellLostMap(WindowPtr pwin, pointer value)
 #endif
     if (wColormap(pwin) == *pmid) {
         /* This should be call to DeliverEvent */
+        xEvent xE = {
+            .u.colormap.window = pwin->drawable.id,
+            .u.colormap.colormap = *pmid,
+            .u.colormap.new = FALSE,
+            .u.colormap.state = ColormapUninstalled
+        };
         xE.u.u.type = ColormapNotify;
-        xE.u.colormap.window = pwin->drawable.id;
-        xE.u.colormap.colormap = *pmid;
-        xE.u.colormap.new = FALSE;
-        xE.u.colormap.state = ColormapUninstalled;
         DeliverEvents(pwin, &xE, 1, (WindowPtr) NULL);
     }
 
@@ -501,7 +502,6 @@ int
 TellGainedMap(WindowPtr pwin, pointer value)
 {
     Colormap *pmid = (Colormap *) value;
-    xEvent xE;
 
 #ifdef PANORAMIX
     if (!noPanoramiXExtension && pwin->drawable.pScreen->myNum)
@@ -509,11 +509,13 @@ TellGainedMap(WindowPtr pwin, pointer value)
 #endif
     if (wColormap(pwin) == *pmid) {
         /* This should be call to DeliverEvent */
+        xEvent xE = {
+            .u.colormap.window = pwin->drawable.id,
+            .u.colormap.colormap = *pmid,
+            .u.colormap.new = FALSE,
+            .u.colormap.state = ColormapInstalled
+        };
         xE.u.u.type = ColormapNotify;
-        xE.u.colormap.window = pwin->drawable.id;
-        xE.u.colormap.colormap = *pmid;
-        xE.u.colormap.new = FALSE;
-        xE.u.colormap.state = ColormapInstalled;
         DeliverEvents(pwin, &xE, 1, (WindowPtr) NULL);
     }
 
@@ -576,7 +578,7 @@ CopyFree(int channel, int client, ColormapPtr pmapSrc, ColormapPtr pmapDst)
     int nalloc;
 
     switch (channel) {
-    default:                   /* so compiler can see that everything gets initialized */
+    default:         /* so compiler can see that everything gets initialized */
     case REDMAP:
         ppix = (pmapSrc->clientPixelsRed)[client];
         npix = (pmapSrc->numPixelsRed)[client];
@@ -653,18 +655,18 @@ FreeCell(ColormapPtr pmap, Pixel i, int channel)
     int *pCount;
 
     switch (channel) {
-    default:                   /* so compiler can see that everything gets initialized */
+    default:         /* so compiler can see that everything gets initialized */
     case PSEUDOMAP:
     case REDMAP:
-        pent = (EntryPtr) & pmap->red[i];
+        pent = (EntryPtr) &pmap->red[i];
         pCount = &pmap->freeRed;
         break;
     case GREENMAP:
-        pent = (EntryPtr) & pmap->green[i];
+        pent = (EntryPtr) &pmap->green[i];
         pCount = &pmap->freeGreen;
         break;
     case BLUEMAP:
-        pent = (EntryPtr) & pmap->blue[i];
+        pent = (EntryPtr) &pmap->blue[i];
         pCount = &pmap->freeBlue;
         break;
     }
@@ -1398,7 +1400,7 @@ QueryColors(ColormapPtr pmap, int count, Pixel * ppixIn, xrgb * prgbList,
                 errVal = BadValue;
             }
             else {
-                pent = (EntryPtr) & pmap->red[pixel];
+                pent = (EntryPtr) &pmap->red[pixel];
                 if (pent->fShared) {
                     prgb->red = pent->co.shco.red->color;
                     prgb->green = pent->co.shco.green->color;
@@ -2146,7 +2148,7 @@ FreeCo(ColormapPtr pmap, int client, int color, int npixIn, Pixel * ppixIn,
         ppixClient = pmap->clientPixelsBlue[client];
         npixClient = pmap->numPixelsBlue[client];
         break;
-    default:                   /* so compiler can see that everything gets initialized */
+    default:        /* so compiler can see that everything gets initialized */
     case PSEUDOMAP:
         cmask = ~((Pixel) 0);
         rgbbad = 0;
