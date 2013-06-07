@@ -1135,13 +1135,6 @@ static void drm_intel_gem_bo_unreference(drm_intel_bo *bo)
 	}
 }
 
-/*
- * OpenBSD only supports GTT mapping of the backing memory, not a choice of
- * faulted gtt memory, or the backing pages. This is due to cache coherency
- * issues.
- *
- * Therefore, bo_map_gtt calls bo_map.
- */
 static int drm_intel_gem_bo_map(drm_intel_bo *bo, int write_enable)
 {
 	drm_intel_bufmgr_gem *bufmgr_gem = (drm_intel_bufmgr_gem *) bo->bufmgr;
@@ -1186,9 +1179,9 @@ static int drm_intel_gem_bo_map(drm_intel_bo *bo, int write_enable)
 
 	VG_CLEAR(set_domain);
 	set_domain.handle = bo_gem->gem_handle;
-	set_domain.read_domains = I915_GEM_DOMAIN_GTT /* XXX _CPU */;
+	set_domain.read_domains = I915_GEM_DOMAIN_CPU;
 	if (write_enable)
-		set_domain.write_domain = I915_GEM_DOMAIN_GTT /* XXX _CPU */;
+		set_domain.write_domain = I915_GEM_DOMAIN_CPU;
 	else
 		set_domain.write_domain = 0;
 	ret = drmIoctl(bufmgr_gem->fd,
@@ -1272,8 +1265,6 @@ map_gtt(drm_intel_bo *bo)
 
 int drm_intel_gem_bo_map_gtt(drm_intel_bo *bo)
 {
-	return drm_intel_gem_bo_map(bo, 1);
-#ifndef __OpenBSD__
 	drm_intel_bufmgr_gem *bufmgr_gem = (drm_intel_bufmgr_gem *) bo->bufmgr;
 	drm_intel_bo_gem *bo_gem = (drm_intel_bo_gem *) bo;
 	struct drm_i915_gem_set_domain set_domain;
@@ -1314,7 +1305,6 @@ int drm_intel_gem_bo_map_gtt(drm_intel_bo *bo)
 	pthread_mutex_unlock(&bufmgr_gem->lock);
 
 	return 0;
-#endif
 }
 
 /**
@@ -1389,6 +1379,7 @@ static int drm_intel_gem_bo_unmap(drm_intel_bo *bo)
 			       DRM_IOCTL_I915_GEM_SW_FINISH,
 			       &sw_finish);
 		ret = ret == -1 ? -errno : 0;
+
 		bo_gem->mapped_cpu_write = false;
 	}
 
