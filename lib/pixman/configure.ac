@@ -616,7 +616,7 @@ AC_ARG_ENABLE(arm-iwmmxt2,
 if test "x$IWMMXT_CFLAGS" = "x" ; then
    IWMMXT_CFLAGS="-flax-vector-conversions -Winline -march=iwmmxt"
    if test $enable_iwmmxt2 != no ; then
-      IWMMXT_CFLAGS+="2"
+      IWMMXT_CFLAGS="${IWMMXT_CFLAGS}2"
    fi
 fi
 
