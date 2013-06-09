@@ -97,7 +97,7 @@ static void radeon_bo_wait(struct pb_buffer *_buf)
     }
 
     args.handle = bo->handle;
-    while (drmCommandWriteRead(bo->rws->fd, DRM_RADEON_GEM_WAIT_IDLE,
+    while (drmCommandWrite(bo->rws->fd, DRM_RADEON_GEM_WAIT_IDLE,
                                &args, sizeof(args)) == -EBUSY);
 
     bo->busy_for_write = FALSE;
