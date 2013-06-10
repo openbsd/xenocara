@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: xevents.c,v 1.84 2013/06/10 20:11:43 okan Exp $
+ * $OpenBSD: xevents.c,v 1.85 2013/06/10 21:37:30 okan Exp $
  */
 
 /*
@@ -169,7 +169,7 @@ xev_handle_configurerequest(XEvent *ee)
 		wc.border_width = cc->bwidth;
 
 		XConfigureWindow(X_Dpy, cc->win, e->value_mask, &wc);
-		xu_configure(cc);
+		client_config(cc);
 	} else {
 		/* let it do what it wants, it'll be ours when we map it. */
 		wc.x = e->x;

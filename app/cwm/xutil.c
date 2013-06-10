@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: xutil.c,v 1.68 2013/05/27 23:20:45 okan Exp $
+ * $OpenBSD: xutil.c,v 1.69 2013/06/10 21:37:30 okan Exp $
  */
 
 #include <sys/param.h>
@@ -103,41 +103,6 @@ xu_key_grab(Window win, u_int mask, KeySym keysym)
 	for (i = 0; i < nitems(ign_mods); i++)
 		XGrabKey(X_Dpy, code, (mask | ign_mods[i]), win,
 		    True, GrabModeAsync, GrabModeAsync);
-}
-
-void
-xu_configure(struct client_ctx *cc)
-{
-	XConfigureEvent	 ce;
-
-	ce.type = ConfigureNotify;
-	ce.event = cc->win;
-	ce.window = cc->win;
-	ce.x = cc->geom.x;
-	ce.y = cc->geom.y;
-	ce.width = cc->geom.w;
-	ce.height = cc->geom.h;
-	ce.border_width = cc->bwidth;
-	ce.above = None;
-	ce.override_redirect = 0;
-
-	XSendEvent(X_Dpy, cc->win, False, StructureNotifyMask, (XEvent *)&ce);
-}
-
-void
-xu_sendmsg(Window win, Atom type, Atom atm)
-{
-	XClientMessageEvent	 e;
-
-	bzero(&e, sizeof(e));
-	e.type = ClientMessage;
-	e.window = win;
-	e.message_type = type;
-	e.format = 32;
-	e.data.l[0] = atm;
-	e.data.l[1] = CurrentTime;
-
-	XSendEvent(X_Dpy, win, False, 0L, (XEvent *)&e);
 }
 
 int
