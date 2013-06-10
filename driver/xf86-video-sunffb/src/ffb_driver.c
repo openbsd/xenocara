@@ -413,9 +413,12 @@ FFBPreInit(ScrnInfoPtr pScrn, int flags)
 	return FALSE;
     }
 
-    if (xf86LoadSubModule(pScrn, "xaa") == NULL) {
-	FFBFreeRec(pScrn);
-	return FALSE;
+    if (!pFfb->NoAccel) {
+        if (xf86LoadSubModule(pScrn, "xaa") == NULL) {
+            xf86DrvMsg(pScrn->scrnIndex, X_INFO,
+                       "Loading XAA failed, acceleration disabled\n");
+            pFfb->NoAccel = TRUE;
+        }
     }
 
     if (pFfb->HWCursor && xf86LoadSubModule(pScrn, "ramdac") == NULL) {
