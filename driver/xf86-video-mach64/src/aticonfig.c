@@ -368,7 +368,7 @@ ATIProcessOptions
     Blend = PanelDisplay = TRUE;
 
 #ifdef USE_EXA
-    RenderAccel = TRUE;
+    RenderAccel = FALSE;
 #endif
 
 #ifdef XF86DRI_DEVEL
