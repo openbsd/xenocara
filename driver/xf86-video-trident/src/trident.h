@@ -180,6 +180,7 @@ typedef struct {
     int                 OverrideRskew;
     OptionInfoPtr	Options;
     Bool		shadowNew;
+    CreateScreenResourcesProcPtr CreateScreenResources;
     int			displaySize;
     int			dspOverride;
     Bool		GammaBrightnessOn;
