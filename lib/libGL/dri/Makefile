@@ -1,4 +1,5 @@
-#	$OpenBSD: Makefile,v 1.14 2012/12/07 17:13:41 matthieu Exp $
+#	$OpenBSD: Makefile,v 1.15 2013/06/13 10:39:28 jsg Exp $
+.include <bsd.xconf.mk>
 
 SUBDIR= swrast
 
@@ -6,6 +7,13 @@ SUBDIR= swrast
 SUBDIR+= i810 i915 i965 radeon r200 r300 r600
 .elif ${MACHINE} == macppc
 SUBDIR+= radeon r200 r300
+.endif
+
+.if ${XENOCARA_BUILD_GALLIUM:L} == "yes" || ${XENOCARA_BUILD_GALLIUM} == "llvm"
+SUBDIR+=swrastg
+.if ${MACHINE} == i386 || ${MACHINE} == amd64 || ${MACHINE} == macppc
+SUBDIR+= r300g
+.endif
 .endif
 
 build depend all install clean cleandir: _SUBDIRUSE

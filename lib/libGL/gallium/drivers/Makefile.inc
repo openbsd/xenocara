@@ -1,6 +1,7 @@
-# $OpenBSD: Makefile.inc,v 1.1.1.1 2012/07/13 12:43:34 mpi Exp $
+# $OpenBSD: Makefile.inc,v 1.2 2013/06/13 10:39:28 jsg Exp $
 
 GALLIUM=	${.CURDIR}/../../../../../dist/Mesa/src/gallium
+MESA=		${.CURDIR}/../../../../../dist/Mesa/src/mesa
 
 CPPFLAGS+= \
 	-I${GALLIUM}/auxiliary \

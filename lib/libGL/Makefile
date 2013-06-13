@@ -1,13 +1,13 @@
-# $OpenBSD: Makefile,v 1.35 2013/04/14 19:59:03 matthieu Exp $
+# $OpenBSD: Makefile,v 1.36 2013/06/13 10:39:28 jsg Exp $
 .include <bsd.xconf.mk>
 
-.if ${XENOCARA_BUILD_DRI:L} == "yes"
-SUBDIR=glsl mesa dri
+.if ${XENOCARA_BUILD_GALLIUM:L} == "yes" || ${XENOCARA_BUILD_GALLIUM} == "llvm"
+SUBDIR+=gallium
+MAKE_FLAGS+= XENOCARA_BUILD_GALLIUM=${XENOCARA_BUILD_GALLIUM}
 .endif
 
-.if ${XENOCARA_BUILD_GALLIUM:L} == "yes" || ${XENOCARA_BUILD_GALLIUM} == "llvm"
-SUBDIR+=gallium dri/swrastg
-MAKE_FLAGS+= XENOCARA_BUILD_GALLIUM=${XENOCARA_BUILD_GALLIUM}
+.if ${XENOCARA_BUILD_DRI:L} == "yes"
+SUBDIR+=glsl mesa dri
 .endif
 
 LIB=	GL
