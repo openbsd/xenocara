@@ -1404,6 +1404,44 @@ NEOLoadPalette(
    } 
 }
 
+static Bool
+NEOCreateScreenResources(ScreenPtr pScreen)
+{
+	ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
+	NEOPtr pNeo = NEOPTR(pScrn);
+	PixmapPtr pPixmap;
+	Bool ret;
+
+	pScreen->CreateScreenResources = pNeo->CreateScreenResources;
+	ret = pScreen->CreateScreenResources(pScreen);
+	pScreen->CreateScreenResources = NEOCreateScreenResources;
+
+	if (!ret)
+		return FALSE;
+
+	pPixmap = pScreen->GetScreenPixmap(pScreen);
+
+	if (!shadowAdd(pScreen, pPixmap, neoShadowUpdate,
+		NULL, 0, NULL)) {
+		return FALSE;
+	}
+	return TRUE;
+}
+
+static Bool
+NEOShadowInit(ScreenPtr pScreen)
+{
+	ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
+	NEOPtr pNeo = NEOPTR(pScrn);
+
+	if (!shadowSetup(pScreen))
+		return FALSE;
+	pNeo->CreateScreenResources = pScreen->CreateScreenResources;
+	pScreen->CreateScreenResources = NEOCreateScreenResources;
+
+	return TRUE;
+}
+
 /* Mandatory */
 static Bool
 NEOScreenInit(SCREEN_INIT_ARGS_DECL)
@@ -1654,7 +1692,7 @@ NEOScreenInit(SCREEN_INIT_ARGS_DECL)
 #if 0
 	ShadowFBInit(pScreen, nPtr->refreshArea);
 #else
-	shadowInit (pScreen, neoShadowUpdate, 0);
+	NEOShadowInit (pScreen);
 #endif
     }
     

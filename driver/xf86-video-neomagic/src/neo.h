@@ -261,6 +261,7 @@ typedef struct neoRec
     vbeInfoPtr          pVbe;
     unsigned char * ShadowPtr;
     int ShadowPitch;
+    CreateScreenResourcesProcPtr CreateScreenResources;
     RefreshAreaFuncPtr refreshArea;
     void	(*PointerMoved)(SCRN_ARG_TYPE arg, int x, int y);
     int rotate;
