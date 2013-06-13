@@ -37,10 +37,10 @@
 static Bool TRIDENT_OpenFramebuffer(ScrnInfoPtr, char **, unsigned char **, 
 					int *, int *, int *);
 static Bool TRIDENT_SetMode(ScrnInfoPtr, DGAModePtr);
-static void TRIDENT_Sync(ScrnInfoPtr);
 static int  TRIDENT_GetViewport(ScrnInfoPtr);
 static void TRIDENT_SetViewport(ScrnInfoPtr, int, int, int);
 #ifdef HAVE_XAA_H
+static void TRIDENT_Sync(ScrnInfoPtr);
 static void TRIDENT_FillRect(ScrnInfoPtr, int, int, int, int, unsigned long);
 static void TRIDENT_BlitRect(ScrnInfoPtr, int, int, int, int, int, int);
 #if 0
@@ -56,8 +56,8 @@ DGAFunctionRec TRIDENTDGAFuncs = {
    TRIDENT_SetMode,
    TRIDENT_SetViewport,
    TRIDENT_GetViewport,
-   TRIDENT_Sync,
 #ifdef HAVE_XAA_H
+   TRIDENT_Sync,
    TRIDENT_FillRect,
    TRIDENT_BlitRect,
 #if 0
@@ -66,7 +66,7 @@ DGAFunctionRec TRIDENTDGAFuncs = {
    NULL
 #endif
 #else
-   NULL, NULL, NULL
+   NULL, NULL, NULL, NULL
 #endif
 };
 

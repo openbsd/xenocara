@@ -41,10 +41,10 @@
 
 static Bool I740_OpenFramebuffer(ScrnInfoPtr, char **, unsigned char **, int *, int *, int *);
 static Bool I740_SetMode(ScrnInfoPtr, DGAModePtr);
-static void I740_Sync(ScrnInfoPtr);
 static int  I740_GetViewport(ScrnInfoPtr);
 static void I740_SetViewport(ScrnInfoPtr, int, int, int);
 #ifdef HAVE_XAA_H
+static void I740_Sync(ScrnInfoPtr);
 static void I740_FillRect(ScrnInfoPtr, int, int, int, int, unsigned long);
 static void I740_BlitRect(ScrnInfoPtr, int, int, int, int, int, int);
 #if 0
@@ -57,8 +57,8 @@ static DGAFunctionRec I740DGAFuncs = {
    I740_SetMode,
    I740_SetViewport,
    I740_GetViewport,
-   I740_Sync,
 #ifdef HAVE_XAA_H
+   I740_Sync,
    I740_FillRect,
    I740_BlitRect,
 #if 0
@@ -67,7 +67,7 @@ static DGAFunctionRec I740DGAFuncs = {
    NULL
 #endif
 #else
-   NULL, NULL, NULL
+   NULL, NULL, NULL, NULL
 #endif
 };
 
