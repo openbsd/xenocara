@@ -886,6 +886,7 @@ mgaExaInit(ScreenPtr pScreen)
     pExa->Copy = mgaCopy;
     pExa->DoneCopy = mgaNoopDone;
 
+#if 0
     if (pMga->Chipset == PCI_CHIP_MGAG400 ||
         pMga->Chipset == PCI_CHIP_MGAG550) {
         pExa->CheckComposite = mgaCheckComposite;
@@ -896,6 +897,7 @@ mgaExaInit(ScreenPtr pScreen)
 
     pExa->UploadToScreen = mgaUploadToScreen;
     pExa->DownloadFromScreen = mgaDownloadFromScreen;
+#endif
 
 #ifdef MGADRI
     if (pMga->directRenderingEnabled)
