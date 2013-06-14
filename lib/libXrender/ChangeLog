@@ -1,3 +1,83 @@
+commit 61236e831f8cc0761b26b49e37a4df9c187aa0ba
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Jun 13 22:41:00 2013 -0700
+
+    libXrender 0.9.8
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 786f78fd8df6d165ccbc81f306fd9f22b5c1551c
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Apr 12 23:02:11 2013 -0700
+
+    integer overflow in XRenderQueryPictIndexValues() [CVE-2013-1987 3/3]
+    
+    The length and numIndexValues members of the reply are both CARD32 and
+    need to be bounds checked before multiplying by sizeof (XIndexValue) to
+    avoid integer overflow leading to underallocation and writing data from
+    the network past the end of the allocated buffer.
+    
+    Reported-by: Ilja Van Sprundel <ivansprundel@ioactive.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 9e577d40322b9e3d8bdefec0eefa44d8ead451a4
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Apr 12 23:02:11 2013 -0700
+
+    integer overflow in XRenderQueryFormats() [CVE-2013-1987 2/3]
+    
+    The length, numFormats, numScreens, numDepths, and numVisuals members of
+    the reply are all CARD32 and need to be bounds checked before multiplying
+    and adding them together to come up with the total size to allocate, to
+    avoid integer overflow leading to underallocation and writing data from
+    the network past the end of the allocated buffer.
+    
+    Reported-by: Ilja Van Sprundel <ivansprundel@ioactive.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit e52853974664289fe42a92909667ed77cfa1cec5
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Apr 12 22:45:20 2013 -0700
+
+    integer overflow in XRenderQueryFilters() [CVE-2013-1987 1/3]
+    
+    The length, numFilters & numAliases members of the reply are all CARD32
+    and need to be bounds checked before multiplying & adding them together
+    to come up with the total size to allocate, to avoid integer overflow
+    leading to underallocation and writing data from the network past the
+    end of the allocated buffer.
+    
+    Reported-by: Ilja Van Sprundel <ivansprundel@ioactive.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 73e77eb21d649edc1ce1746739f9358e337b2935
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri May 3 22:48:11 2013 -0700
+
+    Use _XEatDataWords to avoid overflow of rep.length bit shifting
+    
+    rep.length is a CARD32, so rep.length << 2 could overflow in 32-bit builds
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 1af52cb334377611233d7dc156bc1e6f7923756d
+Author: Colin Walters <walters@verbum.org>
+Date:   Wed Jan 4 17:37:06 2012 -0500
+
+    autogen.sh: Implement GNOME Build API
+    
+    http://people.gnome.org/~walters/docs/build-api.txt
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit a4265cd7a69349f1697f81e18303a77358e27f33
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Tue Jan 15 14:28:48 2013 -0500
+
+    configure: Remove AM_MAINTAINER_MODE
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
 commit bf1aa4e05997ab97be4413ccdb6d0d1eb45aeefe
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Wed Mar 7 20:46:50 2012 -0800
