@@ -2004,12 +2004,14 @@ MGAPreInit(ScrnInfoPtr pScrn, int flags)
 	char *s = xf86GetOptValString(pMga->Options, OPTION_ACCELMETHOD);
 #endif
 	pMga->NoAccel = FALSE;
-	pMga->Exa = FALSE;
 #ifdef USE_EXA
-	if (!xf86NameCmp(s, "EXA")) {
-	    pMga->Exa = TRUE;
+	pMga->Exa = TRUE;
+	if (!xf86NameCmp(s, "XAA")) {
+	    pMga->Exa = FALSE;
 	    from = X_CONFIG;
 	}
+#else
+	pMga->Exa = FALSE;
 #endif
 	xf86DrvMsg(pScrn->scrnIndex, from, "Using %s acceleration\n",
 		   pMga->Exa ? "EXA" : "XAA");
