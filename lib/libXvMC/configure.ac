@@ -21,14 +21,13 @@
 
 # Initialize Autoconf
 AC_PREREQ([2.60])
-AC_INIT([libXvMC], [1.0.7],
+AC_INIT([libXvMC], [1.0.8],
 	[https://bugs.freedesktop.org/enter_bug.cgi?product=xorg], [libXvMC])
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_HEADERS([config.h])
 
 # Initialize Automake
 AM_INIT_AUTOMAKE([foreign dist-bzip2])
-AM_MAINTAINER_MODE
 
 # Initialize libtool
 AC_PROG_LIBTOOL

@@ -1,3 +1,125 @@
+commit 1fb06ecf88155452ece93ac309435106f9569d54
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Jun 13 22:57:03 2013 -0700
+
+    libXvMC 1.0.8
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 554200b59e880a1cf36dd244eeb5f330d93499b6
+Author: Julien Cristau <jcristau@debian.org>
+Date:   Sat Jun 1 11:26:15 2013 +0200
+
+    avoid overflowing by making nameLen and busIDLen addition overflow
+    
+    Al Viro pointed this out on lwn: if nameLen + busIDLen overflows, we end
+    up copying data from outside tmpBuf.
+    
+    Reported-by: Al Viro <viro@zeniv.linux.org.uk>
+    Signed-off-by: Julien Cristau <jcristau@debian.org>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 8c164524d229adb6141fdac8336b3823e7fe1a5d
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Fri May 24 14:47:30 2013 +1000
+
+    Multiple unvalidated patches in CVE-2013-1999
+    
+    Al Viro pointed out that Debian started segfaulting in Xine for him,
+    
+    Reported-by: Al Viro
+    Signed-off-by: Dave Airlie <airlied@redhat.com>
+
+commit e9415ddef2ac81d4139bd32d5e9cda9394a60051
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Apr 13 01:20:08 2013 -0700
+
+    Multiple unvalidated assumptions in XvMCGetDRInfo() [CVE-2013-1999]
+    
+    The individual string sizes is assumed to not be more than the amount of
+    data read from the network, and could cause buffer overflow if they are.
+    
+    The strings returned from the X server are assumed to be null terminated,
+    and could cause callers to read past the end of the buffer if they are not.
+    
+    Also be sure to set the returned pointers to NULL, so callers don't try
+    accessing bad pointers on failure cases.
+    
+    Reported-by: Ilja Van Sprundel <ivansprundel@ioactive.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 5fd871e5f878810f8f8837725d548e07e89577ab
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Apr 13 00:50:02 2013 -0700
+
+    integer overflow in _xvmc_create_*()
+    
+    rep.length is a CARD32 and should be bounds checked before left-shifting
+    by 2 bits to come up with the total size to allocate, though in these
+    cases, no buffer overflow should occur here, since the XRead call is passed
+    the same rep.length << 2 length argument, but the *priv_count returned to
+    the caller could be interpreted or used to calculate a larger buffer size
+    than was actually allocated, leading them to go out of bounds.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 478d4e5873eeee2ebdce6673e4e3469816ab63b8
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Apr 13 00:50:02 2013 -0700
+
+    integer overflow in XvMCListSubpictureTypes() [CVE-2013-1990 2/2]
+    
+    rep.num is a CARD32 and needs to be bounds checked before multiplying by
+    sizeof(XvImageFormatValues) to come up with the total size to allocate,
+    to avoid integer overflow leading to underallocation and writing data from
+    the network past the end of the allocated buffer.
+    
+    Reported-by: Ilja Van Sprundel <ivansprundel@ioactive.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 2712383813b26475dc6713888414d842be57f8ca
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Apr 13 00:50:02 2013 -0700
+
+    integer overflow in XvMCListSurfaceTypes() [CVE-2013-1990 1/2]
+    
+    rep.num is a CARD32 and needs to be bounds checked before multiplying
+    by sizeof(XvMCSurfaceInfo) to come up with the total size to allocate,
+    to avoid integer overflow leading to underallocation and writing data from
+    the network past the end of the allocated buffer.
+    
+    Reported-by: Ilja Van Sprundel <ivansprundel@ioactive.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit cf1a1dc1b9ca34a29d0471da9389f8eae70ddbd9
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Apr 13 00:47:57 2013 -0700
+
+    Use _XEatDataWords to avoid overflow of rep.length shifting
+    
+    rep.length is a CARD32, so rep.length << 2 could overflow in 32-bit builds
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 2fb49b59ff530ea3d0288b1b1ab5ccd046a1213b
+Author: Colin Walters <walters@verbum.org>
+Date:   Wed Jan 4 17:37:06 2012 -0500
+
+    autogen.sh: Implement GNOME Build API
+    
+    http://people.gnome.org/~walters/docs/build-api.txt
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit f2db5efdba40d84493a95a2ffb9bc734b83d8503
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Tue Jan 15 14:28:48 2013 -0500
+
+    configure: Remove AM_MAINTAINER_MODE
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
 commit bcc4c4f3b7ad3c880e97f27951c97cb7ba856658
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Wed Mar 7 21:31:11 2012 -0800
