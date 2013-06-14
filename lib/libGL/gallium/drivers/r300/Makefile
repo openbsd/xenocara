@@ -1,4 +1,4 @@
-# $OpenBSD $
+# $OpenBSD: Makefile,v 1.2 2013/06/14 05:14:22 jsg Exp $
 
 LIB = r300
 
