@@ -214,16 +214,16 @@ xkb_symbols "left_funkeys" {
     //key <CUT>  { [ L10,       L10, SunCut     ]       };
 
     // OpenBSD variant
-    key <STOP>	{ [ Cancel 	],	[ F11	]	};
-    key <AGAI>	{ [ Redo	],	[ F12	]	};
-    key <PROP>	{ [ SunProps	],	[ F13	]	};
-    key <UNDO>	{ [ Undo	],	[ F14	]	};
-    key <FRNT>	{ [ SunFront	],	[ F15	]	};
-    key <COPY>	{ [ SunCopy	],	[ F16	]	};
-    key <OPEN>	{ [ SunOpen	],	[ F17	]	};
-    key <PAST>	{ [ SunPaste	],	[ F18	]	};
-    key <FIND>	{ [ Find	],	[ F19	]	};
-    key <CUT>	{ [ SunCut	],	[ F20	]	};
+    key <STOP>	{ [ Cancel,     Cancel,   F11	]	};
+    key <AGAI>	{ [ Redo,       Redo,     F12	]	};
+    key <PROP>	{ [ SunProps,   SunProps, F13	]	};
+    key <UNDO>	{ [ Undo,       Undo,     F14	]	};
+    key <FRNT>	{ [ SunFront,   SunFront, F15	]	};
+    key <COPY>	{ [ SunCopy,    SunCopy,  F16	]	};
+    key <OPEN>	{ [ SunOpen,    SunOpen,  F17	]	};
+    key <PAST>	{ [ SunPaste,   SunPaste, F18	]	};
+    key <FIND>	{ [ Find,       Find,     F19	]	};
+    key <CUT>	{ [ SunCut,     SunCut,   F20	]	};
 };
 
 hidden
