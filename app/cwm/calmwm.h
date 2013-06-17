@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: calmwm.h,v 1.212 2013/06/10 21:37:30 okan Exp $
+ * $OpenBSD: calmwm.h,v 1.213 2013/06/17 17:11:10 okan Exp $
  */
 
 #ifndef _CALMWM_H_
@@ -83,6 +83,15 @@
 union arg {
 	char	*c;
 	int	 i;
+};
+
+enum cursor_font {
+	CF_DEFAULT,
+	CF_MOVE,
+	CF_NORMAL,
+	CF_QUESTION,
+	CF_RESIZE,
+	CF_NITEMS
 };
 
 enum color {
@@ -294,6 +303,7 @@ struct conf {
 	char			 known_hosts[MAXPATHLEN];
 #define	CONF_FONT			"sans-serif:pixelsize=14:bold"
 	char			*font;
+	Cursor			 cursor[CF_NITEMS];
 };
 
 /* MWM hints */
@@ -437,6 +447,7 @@ void			 conf_bindname(struct conf *, char *, char *);
 void			 conf_clear(struct conf *);
 void			 conf_client(struct client_ctx *);
 void			 conf_cmd_add(struct conf *, char *, char *);
+void			 conf_cursor(struct conf *);
 void			 conf_grab_kbd(Window);
 void			 conf_grab_mouse(Window);
 void			 conf_init(struct conf *);
@@ -497,12 +508,6 @@ int			 xasprintf(char **, const char *, ...)
 
 /* Externs */
 extern Display				*X_Dpy;
-
-extern Cursor				 Cursor_default;
-extern Cursor				 Cursor_move;
-extern Cursor				 Cursor_normal;
-extern Cursor				 Cursor_question;
-extern Cursor				 Cursor_resize;
 
 extern struct screen_ctx_q		 Screenq;
 extern struct client_ctx_q		 Clientq;

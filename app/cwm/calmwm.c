@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: calmwm.c,v 1.77 2013/06/17 14:08:51 okan Exp $
+ * $OpenBSD: calmwm.c,v 1.78 2013/06/17 17:11:10 okan Exp $
  */
 
 #include <sys/param.h>
@@ -37,12 +37,6 @@
 
 char				**cwm_argv;
 Display				*X_Dpy;
-
-Cursor				 Cursor_default;
-Cursor				 Cursor_move;
-Cursor				 Cursor_normal;
-Cursor				 Cursor_question;
-Cursor				 Cursor_resize;
 
 struct screen_ctx_q		 Screenq = TAILQ_HEAD_INITIALIZER(Screenq);
 struct client_ctx_q		 Clientq = TAILQ_HEAD_INITIALIZER(Clientq);
@@ -139,11 +133,7 @@ x_init(const char *dpyname)
 
 	xu_getatoms();
 
-	Cursor_default = XCreateFontCursor(X_Dpy, XC_X_cursor);
-	Cursor_move = XCreateFontCursor(X_Dpy, XC_fleur);
-	Cursor_normal = XCreateFontCursor(X_Dpy, XC_left_ptr);
-	Cursor_question = XCreateFontCursor(X_Dpy, XC_question_arrow);
-	Cursor_resize = XCreateFontCursor(X_Dpy, XC_bottom_right_corner);
+	conf_cursor(&Conf);
 
 	for (i = 0; i < ScreenCount(X_Dpy); i++)
 		screen_init(i);

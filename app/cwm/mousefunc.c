@@ -16,7 +16,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: mousefunc.c,v 1.52 2013/05/20 20:21:04 okan Exp $
+ * $OpenBSD: mousefunc.c,v 1.53 2013/06/17 17:11:10 okan Exp $
  */
 
 #include <sys/param.h>
@@ -81,7 +81,7 @@ mousefunc_window_resize(struct client_ctx *cc, void *arg)
 	client_raise(cc);
 	client_ptrsave(cc);
 
-	if (xu_ptr_grab(cc->win, MOUSEMASK, Cursor_resize) < 0)
+	if (xu_ptr_grab(cc->win, MOUSEMASK, Conf.cursor[CF_RESIZE]) < 0)
 		return;
 
 	xu_ptr_setpos(cc->win, cc->geom.w, cc->geom.h);
@@ -137,7 +137,7 @@ mousefunc_window_move(struct client_ctx *cc, void *arg)
 	if (cc->flags & CLIENT_FREEZE)
 		return;
 
-	if (xu_ptr_grab(cc->win, MOUSEMASK, Cursor_move) < 0)
+	if (xu_ptr_grab(cc->win, MOUSEMASK, Conf.cursor[CF_MOVE]) < 0)
 		return;
 
 	xu_ptr_getpos(cc->win, &px, &py);
