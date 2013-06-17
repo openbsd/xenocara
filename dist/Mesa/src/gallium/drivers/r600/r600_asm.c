@@ -22,9 +22,9 @@
  */
 #include <stdio.h>
 #include <errno.h>
-#include <byteswap.h>
 #include "util/u_format.h"
 #include "util/u_memory.h"
+#include "util/u_math.h"
 #include "pipe/p_shader_tokens.h"
 #include "r600_pipe.h"
 #include "r600_sq.h"
@@ -2288,7 +2288,7 @@ int r600_vertex_elements_build_fetch_shader(struct r600_pipe_context *rctx, stru
 
 	if (R600_BIG_ENDIAN) {
 		for (i = 0; i < ve->fs_size / 4; ++i) {
-			bytecode[i] = bswap_32(bc.bytecode[i]);
+			bytecode[i] = util_bswap32(bc.bytecode[i]);
 		}
 	} else {
 		memcpy(bytecode, bc.bytecode, ve->fs_size);

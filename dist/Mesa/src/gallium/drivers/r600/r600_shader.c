@@ -26,6 +26,7 @@
 #include "tgsi/tgsi_scan.h"
 #include "tgsi/tgsi_dump.h"
 #include "util/u_format.h"
+#include "util/u_math.h"
 #include "r600_pipe.h"
 #include "r600_asm.h"
 #include "r600_sq.h"
@@ -34,7 +35,6 @@
 #include "r600d.h"
 #include <stdio.h>
 #include <errno.h>
-#include <byteswap.h>
 
 /* CAYMAN notes 
 Why CAYMAN got loops for lots of instructions is explained here.
@@ -89,7 +89,7 @@ static int r600_pipe_shader(struct pipe_context *ctx, struct r600_pipe_shader *s
 		ptr = (uint32_t*)r600_bo_map(rctx->radeon, shader->bo, 0, NULL);
 		if (R600_BIG_ENDIAN) {
 			for (i = 0; i < rshader->bc.ndw; ++i) {
-				ptr[i] = bswap_32(rshader->bc.bytecode[i]);
+				ptr[i] = util_bswap32(rshader->bc.bytecode[i]);
 			}
 		} else {
 			memcpy(ptr, rshader->bc.bytecode, rshader->bc.ndw * sizeof(*ptr));
