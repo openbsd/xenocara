@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.15 2013/06/13 10:39:28 jsg Exp $
+#	$OpenBSD: Makefile,v 1.16 2013/06/17 23:30:25 jsg Exp $
 .include <bsd.xconf.mk>
 
 SUBDIR= swrast
@@ -12,7 +12,7 @@ SUBDIR+= radeon r200 r300
 .if ${XENOCARA_BUILD_GALLIUM:L} == "yes" || ${XENOCARA_BUILD_GALLIUM} == "llvm"
 SUBDIR+=swrastg
 .if ${MACHINE} == i386 || ${MACHINE} == amd64 || ${MACHINE} == macppc
-SUBDIR+= r300g
+SUBDIR+= r300g r600g
 .endif
 .endif
 
