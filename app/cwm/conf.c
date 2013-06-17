@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: conf.c,v 1.133 2013/05/23 16:52:39 okan Exp $
+ * $OpenBSD: conf.c,v 1.134 2013/06/17 00:57:47 okan Exp $
  */
 
 #include <sys/param.h>
@@ -545,7 +545,9 @@ static struct {
 	{ "menu_cmd", mousefunc_menu_cmd, MOUSEBIND_CTX_ROOT },
 };
 
-static unsigned int mouse_btns[] = { Button1, Button2, Button3 };
+static unsigned int mouse_btns[] = {
+	Button1, Button2, Button3, Button4, Button5
+};
 
 int
 conf_mousebind(struct conf *c, char *name, char *binding)
@@ -571,7 +573,7 @@ conf_mousebind(struct conf *c, char *name, char *binding)
 	} else
 		substring = name;
 
-	button = strtonum(substring, 1, 3, &errstr);
+	button = strtonum(substring, 1, 5, &errstr);
 	if (errstr)
 		warnx("button number is %s: %s", errstr, substring);
 
