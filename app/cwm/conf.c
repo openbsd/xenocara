@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: conf.c,v 1.136 2013/06/20 02:33:57 okan Exp $
+ * $OpenBSD: conf.c,v 1.137 2013/06/23 17:57:50 okan Exp $
  */
 
 #include <sys/param.h>
@@ -84,7 +84,7 @@ conf_ignore(struct conf *c, char *val)
 	TAILQ_INSERT_TAIL(&c->ignoreq, wm, entry);
 }
 
-static char *color_binds[CWM_COLOR_MAX] = {
+static char *color_binds[] = {
 	"#CCCCCC",	/* CWM_COLOR_BORDER_ACTIVE */
 	"#666666",	/* CWM_COLOR_BORDER_INACTIVE */
 	"blue",		/* CWM_COLOR_BORDER_GROUP */
@@ -107,9 +107,16 @@ conf_screen(struct screen_ctx *sc)
 	if (sc->xftfont == NULL)
 		errx(1, "XftFontOpenName");
 
-	for (i = 0; i < CWM_COLOR_MAX; i++) {
-		if (*Conf.color[i] == '\0')
+	for (i = 0; i < nitems(color_binds); i++) {
+		if (i == CWM_COLOR_MENU_FONT_SEL && *Conf.color[i] == '\0') {
+			xu_xorcolor(sc->xftcolor[CWM_COLOR_MENU_BG],
+			    sc->xftcolor[CWM_COLOR_MENU_FG], &xc);
+			xu_xorcolor(sc->xftcolor[CWM_COLOR_MENU_FONT], xc, &xc);
+			if (!XftColorAllocValue(X_Dpy, sc->visual, sc->colormap,
+			    &xc.color, &sc->xftcolor[CWM_COLOR_MENU_FONT_SEL]))
+				warnx("XftColorAllocValue: '%s'", Conf.color[i]);
 			break;
+		}
 		if (XftColorAllocName(X_Dpy, sc->visual, sc->colormap,
 		    Conf.color[i], &xc)) {
 			sc->xftcolor[i] = xc;
@@ -120,16 +127,7 @@ conf_screen(struct screen_ctx *sc)
 			    color_binds[i], &sc->xftcolor[i]);
 		}
 	}
-	if (i == CWM_COLOR_MAX)
-		goto out;
 
-	xu_xorcolor(sc->xftcolor[CWM_COLOR_MENU_BG],
-		    sc->xftcolor[CWM_COLOR_MENU_FG], &xc);
-	xu_xorcolor(sc->xftcolor[CWM_COLOR_MENU_FONT], xc, &xc);
-	if (!XftColorAllocValue(X_Dpy, sc->visual, sc->colormap,
-	    &xc.color, &sc->xftcolor[CWM_COLOR_MENU_FONT_SEL]))
-		warnx("XftColorAllocValue: '%s'", Conf.color[i]);
-out:
 	sc->menuwin = XCreateSimpleWindow(X_Dpy, sc->rootwin, 0, 0, 1, 1,
 	    Conf.bwidth,
 	    sc->xftcolor[CWM_COLOR_MENU_FG].pixel,
