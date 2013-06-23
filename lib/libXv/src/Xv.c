@@ -850,12 +850,23 @@ XvQueryPortAttributes(Display *dpy, XvPortID port, int *num)
       return ret;
   }
 
+  /*
+   * X server sends data packed as:
+   *   attribute1, name1, attribute2, name2, ...
+   * We allocate a single buffer large enough to hold them all and
+   * then de-interleave the data so we return it to clients as:
+   *   attribute1, attribute2, ..., name1, name2, ...
+   * so that clients may refer to attributes as a simple array of
+   * structs:  attributes[0], attributes[1], ...
+   * and free it as a single/simple buffer.
+   */
+
   if(rep.num_attributes) {
       unsigned long size;
       /* limit each part to no more than one half the max size */
       if ((rep.num_attributes < ((INT_MAX / 2) / sizeof(XvAttribute))) &&
-	  (rep.text_size < (INT_MAX / 2))) {
-	  size = (rep.num_attributes * sizeof(XvAttribute)) + rep.text_size;
+	  (rep.text_size < (INT_MAX / 2)-1)) {
+	  size = (rep.num_attributes * sizeof(XvAttribute)) + rep.text_size + 1;
 	  ret = Xmalloc(size);
       }
 
@@ -880,6 +891,10 @@ XvQueryPortAttributes(Display *dpy, XvPortID port, int *num)
 	      }
 	      (*num)++;
 	  }
+
+	  /* ensure final string is nil-terminated to avoid exposure of
+             uninitialized memory */
+	  *marker = '\0';
       } else
 	  _XEatDataWords(dpy, rep.length);
   }

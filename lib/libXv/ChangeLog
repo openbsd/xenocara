@@ -1,3 +1,32 @@
+commit d58f74ebfd0c56ffeb8e288c65592228af197a2e
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jun 22 19:06:09 2013 -0700
+
+    libXv 1.0.9
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 22cc0c897a28a41d49fe68277bb3c002f54bbb48
+Author: Daphne Pfister <daphnediane@mac.com>
+Date:   Sat Jun 1 22:27:23 2013 -0400
+
+    Bug 65252: Ensure final name is nil-terminated & none point to uninitialized memory.
+    
+    This patch attempts to fix this bug by ensuring that there is at least one
+    nil byte at the end of all the name strings. This should prevent reading
+    past the end of the allocation as well as exposing uninitialized memory.
+    
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit edfb6fc397686c1892603d0f86a9aadf14dbc12e
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jun 1 17:26:11 2013 -0700
+
+    XvQueryPortAttributes: add a comment explaining memory strategy
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit 179ed259e75a62e74532e36f52f3838deb2aac92
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Fri May 31 17:49:24 2013 -0700
