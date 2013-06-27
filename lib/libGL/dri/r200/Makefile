@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.4 2011/11/23 21:07:12 oga Exp $
+# $OpenBSD: Makefile,v 1.5 2013/06/27 14:53:50 jsg Exp $
 
 LIB=	r200_dri.so
 
@@ -48,6 +48,7 @@ DRIVER_SOURCES = r200_context.c \
 SRCS = $(COMMON_SOURCES) $(DRIVER_SOURCES)
 
 DRIVER_DEFINES = -DRADEON_R200 \
+	-DHAVE_LIBDRM_RADEON \
 	-DRADEON_COMMON=1 -DRADEON_COMMON_FOR_R200 \
 	-I$(MESA)/drivers/dri/r200 \
 	-I$(MESA)/drivers/dri/r200/server \

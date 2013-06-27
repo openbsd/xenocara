@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.4 2012/08/17 13:58:00 mpi Exp $
+#	$OpenBSD: Makefile,v 1.5 2013/06/27 14:53:50 jsg Exp $
 
 LIB=	r600_dri.so
 
@@ -67,6 +67,7 @@ DRIVER_SOURCES = \
 SRCS = $(COMMON_SOURCES) $(DRIVER_SOURCES)
 
 DRIVER_DEFINES = -DRADEON_R600 \
+	-DHAVE_LIBDRM_RADEON \
 	-I$(MESA)/drivers/dri/r600 \
 	-I$(MESA)/drivers/dri/r600/server \
 	-I$(MESA)/drivers/dri/radeon \

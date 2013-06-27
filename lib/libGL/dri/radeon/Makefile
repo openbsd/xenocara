@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.4 2012/01/27 07:07:43 matthieu Exp $
+#	$OpenBSD: Makefile,v 1.5 2013/06/27 14:53:50 jsg Exp $
 
 LIB=	radeon_dri.so
 
@@ -47,6 +47,7 @@ SRCS = \
 	$(CS_SOURCES)
 
 DRIVER_DEFINES = -DRADEON_R100 -DRADEON_COMMON=0 \
+	-DHAVE_LIBDRM_RADEON \
 	-I$(MESA)/drivers/dri/radeon/server \
 	-I$(MESA)/drivers/dri/radeon
 
