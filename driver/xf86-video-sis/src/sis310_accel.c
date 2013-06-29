@@ -1878,6 +1878,9 @@ SiSUploadToScreen(PixmapPtr pDst, int x, int y, int w, int h, char *src, int src
 	int dst_pitch = exaGetPixmapPitch(pDst);
 
 	(pSiS->SyncAccel)(pScrn);
+	
+	if (dst == NULL)
+	    return FALSE;
 
 	if(pDst->drawable.bitsPerPixel < 8)
 	   return FALSE;
