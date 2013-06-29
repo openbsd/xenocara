@@ -1441,7 +1441,6 @@ drmmode_vblank_handler(int fd, unsigned int frame, unsigned int tv_sec,
 	radeon_dri2_frame_event_handler(frame, tv_sec, tv_usec, event_data);
 }
 
-#ifdef __linux__
 static void
 drmmode_flip_handler(int fd, unsigned int frame, unsigned int tv_sec,
 		     unsigned int tv_usec, void *event_data)
@@ -1476,7 +1475,6 @@ drmmode_flip_handler(int fd, unsigned int frame, unsigned int tv_sec,
 
 	free(flipdata);
 }
-#endif
 
 
 static void
@@ -1519,9 +1517,7 @@ Bool drmmode_pre_init(ScrnInfoPtr pScrn, drmmode_ptr drmmode, int cpp)
 
 	drmmode->event_context.version = DRM_EVENT_CONTEXT_VERSION;
 	drmmode->event_context.vblank_handler = drmmode_vblank_handler;
-#ifdef __linux__
 	drmmode->event_context.page_flip_handler = drmmode_flip_handler;
-#endif
 
 	return TRUE;
 }
@@ -1770,7 +1766,6 @@ void drmmode_uevent_fini(ScrnInfoPtr scrn, drmmode_ptr drmmode)
 #endif
 }
 
-#ifdef __linux__
 Bool radeon_do_pageflip(ScrnInfoPtr scrn, struct radeon_bo *new_front, void *data, int ref_crtc_hw_id)
 {
 	RADEONInfoPtr info = RADEONPTR(scrn);
@@ -1873,5 +1868,4 @@ error_out:
 	return FALSE;
 }
 
-#endif
 #endif
