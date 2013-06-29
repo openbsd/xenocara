@@ -1,11 +1,9 @@
-# $OpenBSD: Makefile.bsd-wrapper,v 1.6 2012/12/08 23:23:27 matthieu Exp $
+# $OpenBSD: Makefile.bsd-wrapper,v 1.7 2013/06/29 11:13:35 jsg Exp $
 
 .include <bsd.xconf.mk>
 
-CONFIGURE_ARGS+= --disable-kms
-
 .if ${XENOCARA_BUILD_DRI:L} != "yes"
-CONFIGURE_ARGS+= --disable-dri
+CONFIGURE_ARGS+= --disable-dri --disable-kms
 .endif
 
 .include <bsd.xorg.mk>
