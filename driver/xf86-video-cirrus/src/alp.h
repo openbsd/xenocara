@@ -44,6 +44,10 @@ extern Bool AlpHWCursorInit(ScreenPtr pScreen, int size);
 extern Bool AlpXAAInit(ScreenPtr pScreen);
 extern Bool AlpXAAInitMMIO(ScreenPtr pScreen);
 #endif
+#ifdef USE_EXA
+extern Bool AlpEXAInit(ScreenPtr);
+#endif
+
 extern Bool AlpDGAInit(ScreenPtr pScreen);
 extern Bool AlpI2CInit(ScrnInfoPtr pScrn);
 

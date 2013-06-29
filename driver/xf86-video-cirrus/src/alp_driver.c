@@ -223,7 +223,6 @@ AlpProbe(int entity)
     return pScrn;
 }
 
-
 static Bool
 AlpGetRec(ScrnInfoPtr pScrn)
 {
@@ -237,7 +236,7 @@ AlpGetRec(ScrnInfoPtr pScrn)
 	((CirPtr)pScrn->driverPrivate)->chip.alp = xnfcalloc(sizeof(AlpRec),1);
 
 #ifdef ALP_DEBUG
-	ErrorF("AlpGetRec 0x%x\n", CIRPTR(pScrn));
+	ErrorF("AlpGetRec 0x%lx\n", (intptr_t)CIRPTR(pScrn));
 #endif
 	return TRUE;
 }
@@ -1085,10 +1084,22 @@ AlpPreInit(ScrnInfoPtr pScrn, int flags)
 
 	/* Load XAA if needed */
 	if (!pCir->NoAccel) {
+#ifdef USE_EXA
+	    xf86DrvMsg(pScrn->scrnIndex, X_INFO, "Loading EXA module...\n");
+	    if (xf86LoadSubModule(pScrn, "exa")) {
+		pCir->ExaDriver = exaDriverAlloc();
+		if (!pCir->ExaDriver) {
+		    xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
+			       "Could no allocate EXA_DRIVER.\n");
+		    pCir->UseEXA = FALSE;
+		}
+		pCir->UseEXA = TRUE;
+	    }
+#endif
 #ifdef HAVE_XAA_H
 		if (!xf86LoadSubModule(pScrn, "xaa"))
 #else
-		if (1)
+		if (!pCir->UseEXA)
 #endif
                 {
 			xf86DrvMsg(pScrn->scrnIndex, X_INFO,
@@ -1468,10 +1479,9 @@ AlpScreenInit(SCREEN_INIT_ARGS_DECL)
 #ifdef ALP_DEBUG
 	ErrorF("AlpScreenInit\n");
 #endif
-
 	hwp = VGAHWPTR(pScrn);
 	pCir = CIRPTR(pScrn);
-	
+
 	/* Map the VGA memory when the primary video */
 	if (!vgaHWMapMem(pScrn))
 	    return FALSE;
@@ -1657,6 +1667,20 @@ AlpScreenInit(SCREEN_INIT_ARGS_DECL)
 	      xf86DrvMsg(pScrn->scrnIndex, X_ERROR, 
 			 "Could not initialize XAA\n");
 #endif
+#ifdef USE_EXA
+	    xf86DrvMsg(pScrn->scrnIndex, X_INFO,
+		       "Filling in EXA memory info\n");
+	    pCir->ExaDriver->offScreenBase = pCir->offscreen_offset;
+	    pCir->ExaDriver->memorySize = pCir->FbMapSize;
+	    if (AlpEXAInit(pScreen))
+		xf86DrvMsg(pScrn->scrnIndex, X_INFO,
+			   "EXA Acceleration enabled\n");
+	    else {
+		xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
+			   "EXA Acceleration Init failed\n");
+		pCir->NoAccel = TRUE;
+	    }
+#endif
 	}
 
 #if 1
@@ -1764,7 +1788,7 @@ AlpAdjustFrame(ADJUST_FRAME_ARGS_DECL)
 		Base *= (pScrn->bitsPerPixel/4);
 
 #ifdef ALP_DEBUG
-	ErrorF("AlpAdjustFrame %d %d 0x%x %d %x\n", x, y, flags, Base, Base);
+	ErrorF("AlpAdjustFrame %d %d %d %x\n", x, y, Base, Base);
 #endif
 
 	if ((Base & ~0x000FFFFF) != 0) {

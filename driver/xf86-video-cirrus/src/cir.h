@@ -7,6 +7,9 @@
 #ifdef HAVE_XAA_H
 #include "xaa.h"
 #endif
+#ifdef USE_EXA
+#include "exa.h"
+#endif
 #include "xf86i2c.h"
 #include <string.h>
 #include <stdlib.h>
@@ -46,8 +49,12 @@ typedef struct {
 	Bool			NoAccel;
 	Bool			HWCursor;
 	Bool			UseMMIO;
+	Bool			UseEXA;
 #ifdef HAVE_XAA_H
 	XAAInfoRecPtr		AccelInfoRec;
+#endif
+#ifdef USE_EXA
+	ExaDriverPtr		ExaDriver;
 #endif
 	xf86CursorInfoPtr	CursorInfoRec;
 	int			DGAnumModes;
