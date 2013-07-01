@@ -1334,9 +1334,7 @@ int drm_intel_gem_bo_map_unsynchronized(drm_intel_bo *bo)
 	 * we would potentially corrupt the buffer even when the user
 	 * does reasonable things.
 	 */
-#ifndef __OpenBSD__
 	if (!bufmgr_gem->has_llc)
-#endif
 		return drm_intel_gem_bo_map_gtt(bo);
 
 	pthread_mutex_lock(&bufmgr_gem->lock);
