@@ -130,6 +130,7 @@ typedef struct _drm_intel_bufmgr_gem {
 	unsigned int has_vebox : 1;
 	bool fenced_relocs;
 
+	char *aub_filename;
 	FILE *aub_file;
 	uint32_t aub_offset;
 } drm_intel_bufmgr_gem;
@@ -1580,6 +1581,7 @@ drm_intel_bufmgr_gem_destroy(drm_intel_bufmgr *bufmgr)
 	free(bufmgr_gem->exec_objects);
 #endif
 	free(bufmgr_gem->exec_bos);
+	free(bufmgr_gem->aub_filename);
 
 	pthread_mutex_destroy(&bufmgr_gem->lock);
 
@@ -2879,6 +2881,23 @@ drm_intel_bufmgr_gem_get_devid(drm_intel_bufmgr *bufmgr)
 }
 
 /**
+ * Sets the AUB filename.
+ *
+ * This function has to be called before drm_intel_bufmgr_gem_set_aub_dump()
+ * for it to have any effect.
+ */
+void
+drm_intel_bufmgr_gem_set_aub_filename(drm_intel_bufmgr *bufmgr,
+				      const char *filename)
+{
+	drm_intel_bufmgr_gem *bufmgr_gem = (drm_intel_bufmgr_gem *)bufmgr;
+
+	free(bufmgr_gem->aub_filename);
+	if (filename)
+		bufmgr_gem->aub_filename = strdup(filename);
+}
+
+/**
  * Sets up AUB dumping.
  *
  * This is a trace file format that can be used with the simulator.
@@ -2893,18 +2912,24 @@ drm_intel_bufmgr_gem_set_aub_dump(drm_intel_bufmgr *bufmgr, int enable)
 	int entry = 0x200003;
 	int i;
 	int gtt_size = 0x10000;
+	const char *filename;
 
 	if (!enable) {
 		if (bufmgr_gem->aub_file) {
 			fclose(bufmgr_gem->aub_file);
 			bufmgr_gem->aub_file = NULL;
 		}
+		return;
 	}
 
 	if (geteuid() != getuid())
 		return;
 
-	bufmgr_gem->aub_file = fopen("intel.aub", "w+");
+	if (bufmgr_gem->aub_filename)
+		filename = bufmgr_gem->aub_filename;
+	else
+		filename = "intel.aub";
+	bufmgr_gem->aub_file = fopen(filename, "w+");
 	if (!bufmgr_gem->aub_file)
 		return;
 
