@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: conf.c,v 1.140 2013/07/08 18:19:22 okan Exp $
+ * $OpenBSD: conf.c,v 1.141 2013/07/08 18:39:20 okan Exp $
  */
 
 #include <sys/param.h>
@@ -550,6 +550,8 @@ static struct {
 	{ "window_lower", mousefunc_client_lower, MOUSEBIND_CTX_WIN },
 	{ "window_raise", mousefunc_client_raise, MOUSEBIND_CTX_WIN },
 	{ "window_hide", mousefunc_client_hide, MOUSEBIND_CTX_WIN },
+	{ "cyclegroup", mousefunc_client_cyclegroup, MOUSEBIND_CTX_ROOT },
+	{ "rcyclegroup", mousefunc_client_rcyclegroup, MOUSEBIND_CTX_ROOT },
 	{ "menu_group", mousefunc_menu_group, MOUSEBIND_CTX_ROOT },
 	{ "menu_unhide", mousefunc_menu_unhide, MOUSEBIND_CTX_ROOT },
 	{ "menu_cmd", mousefunc_menu_cmd, MOUSEBIND_CTX_ROOT },

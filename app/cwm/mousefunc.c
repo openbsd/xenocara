@@ -16,7 +16,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: mousefunc.c,v 1.54 2013/07/08 18:19:22 okan Exp $
+ * $OpenBSD: mousefunc.c,v 1.55 2013/07/08 18:39:20 okan Exp $
  */
 
 #include <sys/param.h>
@@ -199,6 +199,18 @@ void
 mousefunc_client_hide(struct client_ctx *cc, void *arg)
 {
 	client_hide(cc);
+}
+
+void
+mousefunc_client_cyclegroup(struct client_ctx *cc, void *arg)
+{
+	group_cycle(cc->sc, CWM_CYCLE);
+}
+
+void
+mousefunc_client_rcyclegroup(struct client_ctx *cc, void *arg)
+{
+	group_cycle(cc->sc, CWM_RCYCLE);
 }
 
 void
