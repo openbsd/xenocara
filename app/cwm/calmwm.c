@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: calmwm.c,v 1.78 2013/06/17 17:11:10 okan Exp $
+ * $OpenBSD: calmwm.c,v 1.79 2013/07/08 15:46:16 okan Exp $
  */
 
 #include <sys/param.h>
@@ -102,7 +102,6 @@ main(int argc, char **argv)
 		conf_path = NULL;
 	}
 
-
 	conf_init(&Conf);
 	if (conf_path && (parse_config(conf_path, &Conf) == -1))
 		warnx("config file %s has errors, not loading", conf_path);
@@ -121,8 +120,7 @@ x_init(const char *dpyname)
 	int	i;
 
 	if ((X_Dpy = XOpenDisplay(dpyname)) == NULL)
-		errx(1, "unable to open display \"%s\"",
-		    XDisplayName(dpyname));
+		errx(1, "unable to open display \"%s\"", XDisplayName(dpyname));
 
 	XSetErrorHandler(x_wmerrorhandler);
 	XSelectInput(X_Dpy, DefaultRootWindow(X_Dpy), SubstructureRedirectMask);
