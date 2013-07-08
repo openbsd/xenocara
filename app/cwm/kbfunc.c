@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: kbfunc.c,v 1.78 2013/05/11 22:03:17 okan Exp $
+ * $OpenBSD: kbfunc.c,v 1.79 2013/07/08 18:19:22 okan Exp $
  */
 
 #include <sys/param.h>
@@ -53,7 +53,7 @@ kbfunc_client_raise(struct client_ctx *cc, union arg *arg)
 #define TYPEMASK	(CWM_MOVE | CWM_RESIZE | CWM_PTRMOVE)
 #define MOVEMASK	(CWM_UP | CWM_DOWN | CWM_LEFT | CWM_RIGHT)
 void
-kbfunc_moveresize(struct client_ctx *cc, union arg *arg)
+kbfunc_client_moveresize(struct client_ctx *cc, union arg *arg)
 {
 	struct screen_ctx	*sc = cc->sc;
 	int			 x, y, flags, amt;
