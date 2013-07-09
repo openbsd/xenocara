@@ -16,7 +16,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: group.c,v 1.77 2013/07/08 15:48:16 okan Exp $
+ * $OpenBSD: group.c,v 1.78 2013/07/09 01:24:49 okan Exp $
  */
 
 #include <sys/param.h>
@@ -309,15 +309,12 @@ group_cycle(struct screen_ctx *sc, int flags)
 }
 
 void
-group_menu(XButtonEvent *e)
+group_menu(struct screen_ctx *sc)
 {
-	struct screen_ctx	*sc;
 	struct group_ctx	*gc;
 	struct menu		*mi;
 	struct menu_q		 menuq;
 	int			 i;
-
-	sc = screen_fromroot(e->root);
 
 	TAILQ_INIT(&menuq);
 
