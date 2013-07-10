@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: conf.c,v 1.141 2013/07/08 18:39:20 okan Exp $
+ * $OpenBSD: conf.c,v 1.142 2013/07/10 14:11:42 okan Exp $
  */
 
 #include <sys/param.h>
@@ -99,8 +99,8 @@ static char *color_binds[] = {
 void
 conf_screen(struct screen_ctx *sc)
 {
-	int			 i;
-	XftColor		 xc;
+	u_int		 i;
+	XftColor	 xc;
 
 	sc->gap = Conf.gap;
 

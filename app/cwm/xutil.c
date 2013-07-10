@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: xutil.c,v 1.70 2013/07/08 15:48:16 okan Exp $
+ * $OpenBSD: xutil.c,v 1.71 2013/07/10 14:11:42 okan Exp $
  */
 
 #include <sys/param.h>
@@ -393,7 +393,7 @@ void
 xu_ewmh_handle_net_wm_state_msg(struct client_ctx *cc, int action,
     Atom first, Atom second)
 {
-	int i;
+	u_int i;
 	static struct handlers {
 		int atom;
 		int property;
