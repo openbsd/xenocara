@@ -336,6 +336,7 @@ allocatePty(int *pty_return, char **line_return)
     int rc;
 
 #ifdef HAVE_POSIX_OPENPT
+    #error bug
     pty = posix_openpt(O_RDWR);
 #else
     pty = open("/dev/ptmx", O_RDWR);

@@ -38,7 +38,15 @@ AC_CANONICAL_HOST
 
 
 AC_CHECK_HEADERS([pty.h stropts.h sys/param.h sys/select.h])
-AC_CHECK_FUNCS([select grantpt posix_openpt])
+# grantpt support is broken on OpenBSD
+case $host_os in
+     openbsd*)
+	AC_CHECK_FUNCS([select])
+	;;
+    *)
+	AC_CHECK_FUNCS([select grantpt posix_openpt])
+	;;
+esac
 
 AC_ARG_WITH(localealiasfile,
         AS_HELP_STRING([--with-localealiasfile=<path>],
@@ -73,7 +81,7 @@ esac
 AC_SUBST(OS_CFLAGS)
 
 AC_CHECK_HEADERS([pty.h stropts.h sys/ioctl.h sys/param.h sys/poll.h sys/select.h sys/time.h termios.h]) 
-AC_CHECK_FUNCS([grantpt putenv select strdup])
+AC_CHECK_FUNCS([putenv select strdup])
 
 if test "x$ac_cv_func_grantpt" != "xyes" ; then
         AC_CHECK_LIB(util, openpty, [cf_have_openpty=yes],[cf_have_openpty=no])
