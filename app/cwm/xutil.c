@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: xutil.c,v 1.72 2013/07/15 14:50:44 okan Exp $
+ * $OpenBSD: xutil.c,v 1.73 2013/07/15 23:51:59 okan Exp $
  */
 
 #include <sys/param.h>
@@ -177,8 +177,7 @@ xu_set_wm_state(Window win, int state)
 	dat[0] = state;
 	dat[1] = None;
 
-	XChangeProperty(X_Dpy, win,
-	    cwmh[WM_STATE], cwmh[WM_STATE], 32,
+	XChangeProperty(X_Dpy, win, cwmh[WM_STATE], cwmh[WM_STATE], 32,
 	    PropModeReplace, (unsigned char *)dat, 2);
 }
 
