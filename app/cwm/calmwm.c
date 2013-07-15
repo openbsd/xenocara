@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: calmwm.c,v 1.79 2013/07/08 15:46:16 okan Exp $
+ * $OpenBSD: calmwm.c,v 1.80 2013/07/15 14:50:44 okan Exp $
  */
 
 #include <sys/param.h>
@@ -37,6 +37,8 @@
 
 char				**cwm_argv;
 Display				*X_Dpy;
+Atom				 cwmh[CWMH_NITEMS];
+Atom				 ewmh[EWMH_NITEMS];
 
 struct screen_ctx_q		 Screenq = TAILQ_HEAD_INITIALIZER(Screenq);
 struct client_ctx_q		 Clientq = TAILQ_HEAD_INITIALIZER(Clientq);
@@ -129,7 +131,7 @@ x_init(const char *dpyname)
 
 	HasRandr = XRRQueryExtension(X_Dpy, &Randr_ev, &i);
 
-	xu_getatoms();
+	conf_atoms();
 
 	conf_cursor(&Conf);
 

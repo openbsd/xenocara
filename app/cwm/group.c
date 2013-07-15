@@ -16,7 +16,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: group.c,v 1.78 2013/07/09 01:24:49 okan Exp $
+ * $OpenBSD: group.c,v 1.79 2013/07/15 14:50:44 okan Exp $
  */
 
 #include <sys/param.h>
@@ -374,7 +374,7 @@ group_autogroup(struct client_ctx *cc)
 	if (cc->app_class == NULL || cc->app_name == NULL)
 		return;
 
-	if (xu_getprop(cc->win, ewmh[_NET_WM_DESKTOP].atom,
+	if (xu_getprop(cc->win, ewmh[_NET_WM_DESKTOP],
 	    XA_CARDINAL, 1, (unsigned char **)&grpno) > 0) {
 		if (*grpno == 0xffffffff)
 			no = 0;
@@ -418,8 +418,8 @@ group_update_names(struct screen_ctx *sc)
 	unsigned char	*prop_ret;
 	int		 i = 0, j = 0, nstrings = 0, n = 0, setnames = 0;
 
-	if ((j = xu_getprop(sc->rootwin, ewmh[_NET_DESKTOP_NAMES].atom,
-	    cwmh[UTF8_STRING].atom, 0xffffff, (u_char **)&prop_ret)) > 0) {
+	if ((j = xu_getprop(sc->rootwin, ewmh[_NET_DESKTOP_NAMES],
+	    cwmh[UTF8_STRING], 0xffffff, (u_char **)&prop_ret)) > 0) {
 		prop_ret[j - 1] = '\0'; /* paranoia */
 		while (i < j) {
 			if (prop_ret[i++] == '\0')
