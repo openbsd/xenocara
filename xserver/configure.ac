@@ -352,6 +352,10 @@ case $host_cpu in
 	HP300_VIDEO=yes
 	BSD_ARCH_SOURCES="hp300_video.c ioperm_noop.c"
 	;;
+  m88k)
+	LUNA88K_VIDEO=yes
+	BSD_ARCH_SOURCES="luna88k_video.c ioperm_noop.c"
+	;;
   mips*)
 	SGI_VIDEO=yes
 	BSD_ARCH_SOURCES="sgi_video.c ioperm_noop.c"
@@ -396,6 +400,7 @@ AM_CONDITIONAL(ARM_VIDEO, [test "x$ARM_VIDEO" = xyes])
 AM_CONDITIONAL(HP300_VIDEO, [test "x$HP300_VIDEO" = xyes])
 AM_CONDITIONAL(HPPA_VIDEO, [test "x$HPPA_VIDEO" = xyes])
 AM_CONDITIONAL(I386_VIDEO, [test "x$I386_VIDEO" = xyes])
+AM_CONDITIONAL(LUNA88K_VIDEO, [test "x$LUNA88K_VIDEO" = xyes])
 AM_CONDITIONAL(PPC_VIDEO, [test "x$PPC_VIDEO" = xyes])
 AM_CONDITIONAL(SGI_VIDEO, [test "x$SGI_VIDEO" = xyes])
 AM_CONDITIONAL(SPARC64_VIDEO, [test "x$SPARC64_VIDEO" = xyes])

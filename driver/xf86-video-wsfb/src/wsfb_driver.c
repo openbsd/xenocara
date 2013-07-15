@@ -1,4 +1,4 @@
-/* $OpenBSD: wsfb_driver.c,v 1.29 2013/05/12 13:06:25 matthieu Exp $ */
+/* $OpenBSD: wsfb_driver.c,v 1.30 2013/07/15 13:23:17 aoyama Exp $ */
 /*
  * Copyright © 2001-2012 Matthieu Herrb
  * All rights reserved.
@@ -235,6 +235,7 @@ typedef struct {
 	int			fd; /* File descriptor of open device. */
 	struct wsdisplay_fbinfo info; /* Frame buffer characteristics. */
 	int			linebytes; /* Number of bytes per row. */
+	int			wstype; /* wsdisplay type. */ 
 	unsigned char*		fbstart;
 	unsigned char*		fbmem;
 	size_t			fbmem_len;
@@ -397,7 +398,7 @@ static Bool
 WsfbPreInit(ScrnInfoPtr pScrn, int flags)
 {
 	WsfbPtr fPtr;
-	int defaultDepth, depths, flags24, wstype;
+	int defaultDepth, depths, flags24;
 	const char *dev;
 	char *mod = NULL, *s;
 	const char *reqSym = NULL;
@@ -427,7 +428,7 @@ WsfbPreInit(ScrnInfoPtr pScrn, int flags)
 	if (fPtr->fd == -1) {
 		return FALSE;
 	}
-	if (ioctl(fPtr->fd, WSDISPLAYIO_GTYPE, &wstype) == -1) {
+	if (ioctl(fPtr->fd, WSDISPLAYIO_GTYPE, &(fPtr->wstype)) == -1) {
 		xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
 			   "ioctl WSDISPLAY_GTYPE: %s\n",
 			   strerror(errno));
@@ -495,7 +496,7 @@ WsfbPreInit(ScrnInfoPtr pScrn, int flags)
 		fPtr->info.depth, flags24))
 		return FALSE;
 
-	if (wstype == WSDISPLAY_TYPE_PCIVGA) {
+	if (fPtr->wstype == WSDISPLAY_TYPE_PCIVGA) {
 		/* Set specified mode. */
 		if (pScrn->display->modes != NULL &&
 		    pScrn->display->modes[0] != NULL) {
@@ -579,7 +580,7 @@ WsfbPreInit(ScrnInfoPtr pScrn, int flags)
 	if (pScrn->depth > 8) {
 		rgb zeros = { 0, 0, 0 }, masks;
 
-		switch (wstype) {
+		switch (fPtr->wstype) {
 		case WSDISPLAY_TYPE_SUN24:
 		case WSDISPLAY_TYPE_SUNCG12:
 		case WSDISPLAY_TYPE_SUNCG14:
@@ -735,6 +736,10 @@ WsfbPreInit(ScrnInfoPtr pScrn, int flags)
 	pScrn->virtualX = fPtr->info.width;
 	pScrn->virtualY = fPtr->info.height;
 	pScrn->displayWidth = pScrn->virtualX;
+
+	/* Quirk for LUNA's framebuffer */
+	if (fPtr->wstype == WSDISPLAY_TYPE_LUNA)
+		pScrn->displayWidth = fPtr->linebytes * 8;
 
 	/* Set the display resolution. */
 	xf86SetDpi(pScrn, 0, 0);
@@ -914,6 +919,14 @@ WsfbScreenInit(SCREEN_INIT_ARGS_DECL)
 	}
 
 	fPtr->fbstart = fPtr->fbmem;
+
+	/*
+	 * LUNA's framebuffer seems to have 64 dot (8 byte) offset.
+	 * This might be able to be changed in kernel lunafb driver,
+	 * but current setting was pulled from 4.4BSD-Lite2/luna68k.
+	 */
+	if (fPtr->wstype == WSDISPLAY_TYPE_LUNA)
+		fPtr->fbstart += 8;
 
 	if (fPtr->shadowFB) {
 		fPtr->shadow = calloc(1, pScrn->virtualX * pScrn->virtualY *

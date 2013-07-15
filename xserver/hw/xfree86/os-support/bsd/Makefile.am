@@ -51,6 +51,11 @@ if I386_VIDEO
 ARCH_SOURCES = i386_video.c
 endif
 
+if LUNA88K_VIDEO
+ARCH_SOURCES = luna88k_video.c \
+	$(srcdir)/../shared/ioperm_noop.c
+endif 
+
 if PPC_VIDEO
 ARCH_SOURCES = ppc_video.c \
 	$(srcdir)/../shared/ioperm_noop.c
