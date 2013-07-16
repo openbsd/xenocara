@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: xutil.c,v 1.73 2013/07/15 23:51:59 okan Exp $
+ * $OpenBSD: xutil.c,v 1.74 2013/07/16 14:30:48 okan Exp $
  */
 
 #include <sys/param.h>
@@ -185,14 +185,8 @@ xu_set_wm_state(Window win, int state)
 void
 xu_ewmh_net_supported(struct screen_ctx *sc)
 {
-	Atom	 atom[EWMH_NITEMS];
-	u_int	 i;
-
-	for (i = 0; i < nitems(ewmh); i++)
-		atom[i] = ewmh[i];
-
 	XChangeProperty(X_Dpy, sc->rootwin, ewmh[_NET_SUPPORTED],
-	    XA_ATOM, 32, PropModeReplace, (unsigned char *)atom, EWMH_NITEMS);
+	    XA_ATOM, 32, PropModeReplace, (unsigned char *)ewmh, EWMH_NITEMS);
 }
 
 void
