@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: conf.c,v 1.144 2013/07/16 14:04:44 okan Exp $
+ * $OpenBSD: conf.c,v 1.145 2013/07/16 14:22:25 okan Exp $
  */
 
 #include <sys/param.h>
@@ -624,7 +624,7 @@ conf_unbind_mouse(struct conf *c, struct mousebinding *unbind)
 	}
 }
 
-static int cursor_binds[CF_NITEMS] = {
+static int cursor_binds[] = {
 	XC_X_cursor,		/* CF_DEFAULT */
 	XC_fleur,		/* CF_MOVE */
 	XC_left_ptr,		/* CF_NORMAL */
