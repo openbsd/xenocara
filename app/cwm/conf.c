@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: conf.c,v 1.143 2013/07/15 14:50:44 okan Exp $
+ * $OpenBSD: conf.c,v 1.144 2013/07/16 14:04:44 okan Exp $
  */
 
 #include <sys/param.h>
@@ -288,7 +288,7 @@ conf_clear(struct conf *c)
 		free(mb);
 	}
 
-	for (i = 0; i < CWM_COLOR_MAX; i++)
+	for (i = 0; i < CWM_COLOR_NITEMS; i++)
 		free(c->color[i]);
 
 	free(c->font);
