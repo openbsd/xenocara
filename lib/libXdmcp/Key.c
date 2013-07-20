@@ -59,6 +59,7 @@ getbits (long data, unsigned char *dst)
 void
 XdmcpGenerateKey (XdmAuthKeyPtr key)
 {
+#ifndef HAVE_ARC4RANDOM_BUF
     long    lowbits, highbits;
 
     srandom ((int)getpid() ^ time((Time_t *)0));
@@ -66,6 +67,9 @@ XdmcpGenerateKey (XdmAuthKeyPtr key)
     highbits = random ();
     getbits (lowbits, key->data);
     getbits (highbits, key->data + 4);
+#else
+    arc4random_buf(key->data, 8);
+#endif
 }
 
 int

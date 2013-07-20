@@ -53,7 +53,7 @@ AC_PROG_LN_S
 AC_SEARCH_LIBS([recvfrom],[socket])
 
 # Checks for library functions.
-AC_CHECK_FUNCS([srand48 lrand48])
+AC_CHECK_FUNCS([srand48 lrand48 arc4random_buf])
 
 # Obtain compiler/linker options for depedencies
 PKG_CHECK_MODULES(XDMCP, xproto)
