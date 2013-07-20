@@ -13,7 +13,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
-/* $OpenBSD: ws.c,v 1.57 2012/07/08 14:22:03 shadchin Exp $ */
+/* $OpenBSD: ws.c,v 1.58 2013/07/20 13:24:50 matthieu Exp $ */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -474,7 +474,7 @@ wsReadInput(InputInfoPtr pInfo)
 {
 	WSDevicePtr priv = (WSDevicePtr)pInfo->private;
 	static struct wscons_event eventList[NUMEVENTS];
-	int n, c;
+	int n, c, dx, dy;
 	struct wscons_event *event = eventList;
 	unsigned char *pBuf;
 
@@ -488,10 +488,11 @@ wsReadInput(InputInfoPtr pInfo)
 	if (n == 0)
 		return;
 
+	dx = dy = 0;
 	n /= sizeof(struct wscons_event);
 	while (n--) {
 		int buttons = priv->lastButtons;
-		int dx = 0, dy = 0, dz = 0, dw = 0, ax = 0, ay = 0;
+		int newdx = 0, newdy = 0, dz = 0, dw = 0, ax = 0, ay = 0;
 		int zbutton = 0, wbutton = 0;
 
 		switch (event->type) {
@@ -506,11 +507,17 @@ wsReadInput(InputInfoPtr pInfo)
 			    buttons));
 			break;
 		case WSCONS_EVENT_MOUSE_DELTA_X:
-			dx = event->value;
+			if (!dx)
+				dx = event->value;
+			else
+				newdx = event->value;
 			DBG(4, ErrorF("Relative X %d\n", event->value));
 			break;
 		case WSCONS_EVENT_MOUSE_DELTA_Y:
-			dy = -event->value;
+			if (!dy)
+				dy = -event->value;
+			else
+				newdy = -event->value;
 			DBG(4, ErrorF("Relative Y %d\n", event->value));
 			break;
 		case WSCONS_EVENT_MOUSE_ABSOLUTE_X:
@@ -548,14 +555,20 @@ wsReadInput(InputInfoPtr pInfo)
 		}
 		++event;
 
-		if (dx || dy) {
-			if (wsWheelEmuFilterMotion(pInfo, dx, dy))
+		if ((newdx || newdy) || ((dx || dy) &&
+		    event->type != WSCONS_EVENT_MOUSE_DELTA_X &&
+		    event->type != WSCONS_EVENT_MOUSE_DELTA_Y)) {
+			int tmpx = dx, tmpy = dy;
+			dx = newdx;
+			dy = newdy;
+
+			if (wsWheelEmuFilterMotion(pInfo, tmpx, tmpy))
 				continue;
 
 			/* relative motion event */
 			DBG(3, ErrorF("postMotionEvent dX %d dY %d\n",
-			    dx, dy));
-			xf86PostMotionEvent(pInfo->dev, 0, 0, 2, dx, dy);
+			    tmpx, tmpy));
+			xf86PostMotionEvent(pInfo->dev, 0, 0, 2, tmpx, tmpy);
 		}
 		if (dz && priv->Z.negative != WS_NOMAP
 		    && priv->Z.positive != WS_NOMAP) {
@@ -583,9 +596,9 @@ wsReadInput(InputInfoPtr pInfo)
 			ay = tmp;
 		}
 		if (ax) {
-			dx = ax - priv->old_ax;
+			int xdelta = ax - priv->old_ax;
 			priv->old_ax = ax;
-			if (wsWheelEmuFilterMotion(pInfo, dx, 0))
+			if (wsWheelEmuFilterMotion(pInfo, xdelta, 0))
 				continue;
 
 			/* absolute position event */
@@ -593,15 +606,24 @@ wsReadInput(InputInfoPtr pInfo)
 			xf86PostMotionEvent(pInfo->dev, 1, 0, 1, ax);
 		}
 		if (ay) {
-			dy = ay - priv->old_ay;
+			int ydelta = ay - priv->old_ay;
 			priv->old_ay = ay;
-			if (wsWheelEmuFilterMotion(pInfo, 0, dy))
+			if (wsWheelEmuFilterMotion(pInfo, 0, ydelta))
 				continue;
 
 			/* absolute position event */
 			DBG(3, ErrorF("postMotionEvent y %d\n", ay));
 			xf86PostMotionEvent(pInfo->dev, 1, 1, 1, ay);
 		}
+	}
+	if (dx || dy) {
+		if (wsWheelEmuFilterMotion(pInfo, dx, dy))
+			return;
+
+		/* relative motion event */
+		DBG(3, ErrorF("postMotionEvent dX %d dY %d\n",
+		    dx, dy));
+		xf86PostMotionEvent(pInfo->dev, 0, 0, 2, dx, dy);
 	}
 	return;
 }
