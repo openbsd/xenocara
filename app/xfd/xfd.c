@@ -1,5 +1,4 @@
 /*
- * $Xorg: xfd.c,v 1.4 2001/02/09 02:05:42 xorgcvs Exp $
  *
  *
 Copyright 1989, 1998  The Open Group
@@ -26,7 +25,6 @@ in this Software without prior written authorization from The Open Group.
  * *
  * Author:  Jim Fulton, MIT X Consortium
  */
-/* $XFree86: xc/programs/xfd/xfd.c,v 1.8 2003/02/20 02:56:40 dawes Exp $ */
 
 #ifdef HAVE_CONFIG_H
 # include "config.h"
@@ -74,7 +72,7 @@ static XrmOptionDescRec xfd_options[] = {
 static void usage(void);
 static void SelectChar(Widget w, XtPointer closure, XtPointer data);
 static void do_quit(Widget w, XEvent *event, String *params,
-		    Cardinal *num_params);
+		    Cardinal *num_params) _X_NORETURN;
 static void change_page(int page);
 static void set_button_state(void);
 static void do_prev(Widget w, XEvent *event, String *params,
@@ -318,11 +316,11 @@ main(int argc, char *argv[])
 
     minn = GridFirstChar (fontGrid);
     maxn = GridLastChar (fontGrid);
-    sprintf (buf, xfd_resources.range_format,
-	     minn >> 8, minn & 0xff,
-	     minn >> 8, minn & 0xff,
-	     maxn >> 8, maxn & 0xff,
-	     maxn >> 8, maxn & 0xff);
+    snprintf (buf, sizeof(buf), xfd_resources.range_format,
+	      minn >> 8, minn & 0xff,
+	      minn >> 8, minn & 0xff,
+	      maxn >> 8, maxn & 0xff,
+	      maxn >> 8, maxn & 0xff);
 
     i = 0;
     XtSetArg (av[i], XtNlabel, buf); i++;
@@ -366,11 +364,11 @@ SelectChar(Widget w, XtPointer closure, XtPointer data)
 	{
 	    XGlyphInfo	extents;
 	    XftTextExtents32 (XtDisplay (w), xft, &c, 1, &extents);
-	    sprintf (buf, xfd_resources.metrics_format,
-		     extents.xOff, - extents.x,
-		     extents.xOff - extents.width + extents.x,
-		     extents.y, extents.height - extents.y,
-		     xft->ascent, xft->descent);
+	    snprintf (buf, sizeof(buf), xfd_resources.metrics_format,
+		      extents.xOff, - extents.x,
+		      extents.xOff - extents.width + extents.x,
+		      extents.y, extents.height - extents.y,
+		      xft->ascent, xft->descent);
 	}
     }
     else
@@ -391,26 +389,26 @@ SelectChar(Widget w, XtPointer closure, XtPointer data)
 	    char2b.byte2 = p->thechar & 0xff;
 	    XTextExtents16 (fs, &char2b, 1, &direction, &fontascent, &fontdescent,
 			    &metrics);
-	    sprintf (buf, xfd_resources.metrics_format,
-		     metrics.width, metrics.lbearing, metrics.rbearing,
-		     metrics.ascent, metrics.descent, fontascent, fontdescent);
+	    snprintf (buf, sizeof(buf), xfd_resources.metrics_format,
+		      metrics.width, metrics.lbearing, metrics.rbearing,
+		      metrics.ascent, metrics.descent, fontascent, fontdescent);
 	}
     }
     XtSetValues (metricsLabel, &arg, ONE);
 
     if (has_char)
     {
-	sprintf (buf, xfd_resources.select_format,
-		 n >> 8, n & 0xff,
-		 n >> 8, n & 0xff,
-		 n >> 8, n & 0xff);
+	snprintf (buf, sizeof(buf), xfd_resources.select_format,
+		  n >> 8, n & 0xff,
+		  n >> 8, n & 0xff,
+		  n >> 8, n & 0xff);
     }
     else
     {
-	    sprintf (buf, xfd_resources.nochar_format,
-		     n >> 8, n & 0xff,
-		     n >> 8, n & 0xff,
-		     n >> 8, n & 0xff);
+	snprintf (buf, sizeof(buf), xfd_resources.nochar_format,
+		  n >> 8, n & 0xff,
+		  n >> 8, n & 0xff,
+		  n >> 8, n & 0xff);
     }
     XtSetValues (selectLabel, &arg, ONE);
 
@@ -454,7 +452,8 @@ change_page(int page)
 	unsigned int col = (unsigned int) (newstart & 0xff);
 
 	XtSetArg (arg, XtNlabel, buf);
-	sprintf (buf, xfd_resources.start_format, newstart, row, col);
+	snprintf (buf, sizeof(buf), xfd_resources.start_format,
+		  newstart, row, col);
 	XtSetValues (startLabel, &arg, ONE);
     }
 

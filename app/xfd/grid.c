@@ -1,7 +1,4 @@
 /*
- * $XdotOrg: grid.c,v 1.4 2001/02/09 02:05:41 xorgcvs Exp $
- * $Xorg: grid.c,v 1.4 2001/02/09 02:05:41 xorgcvs Exp $
- *
  *
 Copyright 1989, 1998  The Open Group
 
@@ -24,11 +21,9 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 Except as contained in this notice, the name of The Open Group shall not be
 used in advertising or otherwise to promote the sale, use or other dealings
 in this Software without prior written authorization from The Open Group.
- * *
+ *
  * Author:  Jim Fulton, MIT X Consortium
  */
-/* $XFree86: xc/programs/xfd/grid.c,v 1.9 2002/07/06 00:46:42 keithp Exp $ */
-
 
 #include <X11/IntrinsicP.h>
 #include <X11/StringDefs.h>
@@ -542,10 +537,7 @@ XmuCvtStringToXftFont(Display *dpy,
 				XScreenNumberOfScreen (screen),
 				name);
 	if (!font)
-	{
 	    XtDisplayStringConversionWarning(dpy, (char *) fromVal->addr, XtRXftFont);
-	    return False;
-	}
     }
     donestr (XftFont *, font, XtRXftFont);
 }

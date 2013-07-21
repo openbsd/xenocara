@@ -1,4 +1,3 @@
-/* $Xorg: gridP.h,v 1.4 2001/02/09 02:05:41 xorgcvs Exp $ */
 /*
 
 Copyright 1993, 1998  The Open Group
@@ -26,7 +25,6 @@ other dealings in this Software without prior written authorization
 from The Open Group.
 
 */
-/* $XFree86$ */
 
 #ifndef _FontGridP_h_
 #define _FontGridP_h_

@@ -1,3 +1,68 @@
+commit ef0068345c2b82347e7b5ed319266c11c38f690e
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Jul 16 23:02:08 2013 -0700
+
+    xfd 1.1.2
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit ba7102831c6bda987a9e945a727599fa2c11892e
+Author: Eric S. Raymond <esr@thyrsus.com>
+Date:   Fri Jun 7 07:36:42 2013 -0400
+
+    Suppress a spurious warning.
+
+commit 7e5c3cdddeee730dff2b464de558954344d55892
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Feb 17 10:25:18 2013 -0800
+
+    Mark do_quit as noreturn, as suggested by gcc & clang
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 78ee6607ca35319c4785c5c48f7eed618e56d7d0
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Feb 17 09:56:53 2013 -0800
+
+    convert sprintf calls to snprintf
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 1992efbe9ae74d6edf679fd9e7f1f3072c834743
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Jan 16 22:50:34 2013 -0800
+
+    Drop old CVS version tags
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 7b872a918f8c1d7c33003869d25d2e9ece762d17
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Jan 16 22:44:44 2013 -0800
+
+    config: Add missing AC_CONFIG_SRCDIR
+    
+    Regroup AC statements under the Autoconf initialization section.
+    Regroup AM statements under the Automake initialization section.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit b55ff4853d4b46e3dba980fd802fdc11cd01469d
+Author: Andreas Schwab <schwab@suse.de>
+Date:   Thu May 19 10:01:59 2011 +0200
+
+    Fix SEGV when XftFontOpenName() returns NULL.
+    
+    The semantics of a callback set with XtSetTypeConverter() is to return
+    False only if there is no conversion at all.
+    In this case the converstion string is copied verbatim to the target.
+    Since the 'from' and 'to' types differ this doesn't make sense here at all.
+    Instead the target value needs to be set to NULL and the return needs
+    to be True.
+    
+    Signed-off-by: Andreas Schwab <schwab@suse.de>
+    Reviewed-by: Egbert Eich <eich@freedesktop.org>
+
 commit 7f743669076189b615c862d0ec6b6c45d855d9b6
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Wed Feb 15 16:15:40 2012 -0800
