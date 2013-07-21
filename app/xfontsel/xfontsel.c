@@ -148,27 +148,18 @@ static XrmOptionDescRec options[] = {
 {"-scaled",	"scaledFonts",	XrmoptionNoArg,		"True"},
 };
 
-static void Syntax(char *call)
+static void Syntax(const char *call)
 {
-    fprintf (stderr, "usage:  %s [-options ...] -fn font\n\n", call);
-    fprintf (stderr, "where options include:\n");
-    fprintf (stderr,
-	"    -display dpy           X server to contact\n");
-    fprintf (stderr,
-	"    -geometry geom         size and location of window\n");
-    fprintf (stderr,
-	"    -pattern fontspec      font name pattern to match against\n");
-    fprintf (stderr,
-	"    -print                 print selected font name on exit\n");
-    fprintf (stderr,
-	"    -sample string         sample text to use for 1-byte fonts\n");
-    fprintf (stderr,
-	"    -sample16 string       sample text to use for 2-byte fonts\n");
-    fprintf (stderr,
-	"    -sampleUCS string      sample text to use for ISO10646 fonts\n");
-    fprintf (stderr,
+    fprintf (stderr, "usage:  %s [-options ...] -fn font\n\n%s\n", call,
+	"where options include:\n"
+	"    -display dpy           X server to contact\n"
+	"    -geometry geom         size and location of window\n"
+	"    -pattern fontspec      font name pattern to match against\n"
+	"    -print                 print selected font name on exit\n"
+	"    -sample string         sample text to use for 1-byte fonts\n"
+	"    -sample16 string       sample text to use for 2-byte fonts\n"
+	"    -sampleUCS string      sample text to use for ISO10646 fonts\n"
 	"    -scaled                use scaled instances of fonts\n");
-    fprintf (stderr, "\n");
     exit (1);
 }
 
@@ -341,10 +332,8 @@ see 'xfontsel' manual page."
 
 	viewPort =
 	    XtCreateManagedWidget("viewPort",viewportWidgetClass,pane,NZ);
-	{
-	    sampleText =
-		XtCreateManagedWidget("sampleText",ucsLabelWidgetClass,viewPort,NZ);
-	}
+	sampleText =
+	    XtCreateManagedWidget("sampleText",ucsLabelWidgetClass,viewPort,NZ);
     }
 
     XtRealizeWidget(topLevel);
@@ -453,14 +442,13 @@ struct ParseRec {
 void GetFontNames(XtPointer closure)
 {
     Display *dpy = (Display*)closure;
-    ParseRec *parseRec = XtNew(ParseRec);
+    ParseRec *parseRec;
     int f, field, count;
     String *fontNames;
     Boolean *b;
     int work_priority = 0;
 
-    fontNames = parseRec->fontNames =
-	XListFonts(dpy, AppRes.pattern, 32767, &numFonts);
+    fontNames = XListFonts(dpy, AppRes.pattern, 32767, &numFonts);
 
     fonts = (FontValues*)XtMalloc( numFonts*sizeof(FontValues) );
     fontInSet = (Boolean*)XtMalloc( numFonts*sizeof(Boolean) );
@@ -474,11 +462,16 @@ void GetFontNames(XtPointer closure)
 	SetNoFonts();
 	return;
     }
+    count = matchingFontCount = numFonts;
     numBadFonts = 0;
-    parseRec->fonts = fonts;
-    parseRec->num_fonts = count = matchingFontCount = numFonts;
-    parseRec->fieldValues = fieldValues;
-    parseRec->start = 0;
+    parseRec = XtNew(ParseRec);
+    *parseRec = (ParseRec) {
+        .fontNames = fontNames,
+        .num_fonts = count,
+        .start = 0,
+        .fonts = fonts,
+        .fieldValues = fieldValues
+    };
     /* this is bogus; the task should be responsible for quantizing...*/
     while (count > PARSE_QUANTUM) {
 	ParseRec *prevRec = parseRec;
@@ -1122,7 +1115,7 @@ void SetCurrentFont(XtPointer closure)
 	XFontStruct *font = XLoadQueryFont(dpy, currentFontNameString);
 	String sample_text;
 	if (font == NULL)
-	    XtUnmapWidget(mapWidget);
+	    XtSetSensitive(mapWidget, False);
 	else {
 	    int nargs = 1;
 	    Arg args[3];
@@ -1147,6 +1140,7 @@ void SetCurrentFont(XtPointer closure)
 		nargs = 3;
 	    }
 	    XtSetValues( sampleText, args, nargs );
+	    XtSetSensitive(mapWidget, True);
 	    XtMapWidget(mapWidget);
 	    if (sampleFont) XFreeFont( dpy, sampleFont );
 	    sampleFont = font;

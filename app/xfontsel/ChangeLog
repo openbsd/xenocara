@@ -1,3 +1,64 @@
+commit f8aaa4ffae00fd97a393d2589f9c9579b5bac5ad
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri May 17 18:00:41 2013 -0700
+
+    xfontsel 1.0.5
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 8de6cf335b27e89866d9b443f7f44f33ace8fad9
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Jan 25 13:42:28 2013 -0800
+
+    Use C99 struct initializer for parseRec in GetFontNames()
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit afc3ec190b28caa4b470ca6617db7d9f009f586e
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jan 19 18:24:21 2013 -0800
+
+    When font fails to load, grey out text instead of unmapping text widget
+    
+    Before if you selected a pattern that couldn't load, such as a strange
+    encoding, the text widget would simply stop updating, giving the user
+    no feedback that they weren't seeing the selected font, and leaving
+    repaint turds from menus in the text area.   Now we are more clear that
+    something is wrong, and clean up when menus overlap the text.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 1c6e89d9dda4d41709abfed4522fd801799bfd30
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jan 19 17:13:28 2013 -0800
+
+    Remove extraneous braces left from commit 1d6970a838d4ed42a
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit bc51dd4cdf617ba44ed1231d411eb8d63616e371
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat May 26 22:58:14 2012 -0700
+
+    Prevent memory leak in GetFontNames if no fonts are matched
+    
+    Defer creating ParseRec until after we check for numFonts = 0 and return.
+    
+    Fixes error found by Parfait 0.5.0.2 bug checking tool:
+       Memory leak of pointer '<unknown>' allocated with XtMalloc(40)
+            at line 466 of app/xfontsel/xfontsel.c in function 'GetFontNames'.
+              pointer allocated at line 447 with XtMalloc(40).
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 4faa8afa1856a015a63efb12a466b5fd060c1af5
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Apr 14 01:08:43 2012 -0700
+
+    Combine usage message strings
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit 67309809fee4ea1b7b4334d6245788ddea626dcf
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Thu Mar 22 22:30:31 2012 -0700
