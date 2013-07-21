@@ -1,3 +1,80 @@
+commit f4ba22c10b9b1bd175fa39d25118bf904ba82eec
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Jul 18 21:24:07 2013 -0700
+
+    xconsole 1.0.6
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit ba74b1a1dfa5d3411817e0c436b378945c410ec7
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Apr 21 14:01:12 2013 -0700
+
+    Use fstat() on the fd from open(), instead of stat() on the same pathname
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 73be08929d1d418370ae235e5261e64f72054cbf
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Apr 21 13:56:23 2013 -0700
+
+    Fix file leak if fdopen() fails
+    
+    Reported by parfait 1.1:
+       File Descriptor Leak: Leaked File Descriptor fd
+            at line 313 of xconsole.c in function 'OpenConsole'.
+              fd initialized at line 285 with open
+              fd leaks when fd != -1 at line 287.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 22a09b77093970423e721ebd8004a593d5f88a21
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Feb 24 08:14:32 2013 -0800
+
+    unifdef -ULynx
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 676edb80c54ac5ace45e641a3dde17751a3ab224
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Feb 24 08:13:14 2013 -0800
+
+    unifdef -UISC
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 9567b4e2b70552963189ac90a3ff91c351cd482a
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Feb 24 08:12:31 2013 -0800
+
+    unifdef -Uultrix
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 78492fd74051af9d717ec07503a7173858793528
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Feb 24 08:07:47 2013 -0800
+
+    config: Add missing AC_CONFIG_SRCDIR
+    
+    Regroup AC statements under the Autoconf initialization section.
+    Regroup AM statements under the Automake initialization section.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 2831823f608c1906211d5c55a098f48c8fad1a37
+Author: Niclas Zeising <zeising@daemonic.se>
+Date:   Wed Jan 16 01:30:20 2013 +0100
+
+    Fix build on FreeBSD
+    
+    libutil.h is needed on FreeBSD to get the definition of openpty(), add a
+    configure check for this include, and include it in xconsole.c if it
+    exists.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit cc0cf84461cfe2c31ddce34863c6433183e8a55d
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Sat Jan 12 16:24:44 2013 -0800

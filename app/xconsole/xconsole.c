@@ -69,6 +69,9 @@ extern char *_XawTextGetSTRING(TextWidget ctx, XawTextPosition left,
 # ifdef HAVE_UTIL_H
 #  include <util.h>
 # endif
+# ifdef HAVE_LIBUTIL_H
+#  include <libutil.h>
+# endif
 # ifdef HAVE_PTY_H
 #  include <pty.h>
 # endif
@@ -79,11 +82,6 @@ extern char *_XawTextGetSTRING(TextWidget ctx, XawTextPosition left,
 extern int priv_init(uid_t, gid_t);
 extern int priv_openpty(int *, int *);
 extern int priv_set_console(int);
-#endif
-
-/* Fix ISC brain damage.  When using gcc fdopen isn't declared in <stdio.h>. */
-#if defined(ISC) && __STDC__ && !defined(ISC30)
-extern FILE *fdopen(int, char const *);
 #endif
 
 static void inputReady(XtPointer w, int *source, XtInputId *id);
@@ -152,11 +150,6 @@ static XrmOptionDescRec options[] = {
     {"-saveLines",	"*saveLines",		XrmoptionSepArg,	NULL},
 };
 
-#ifdef ultrix
-#define USE_FILE
-#define FILE_NAME "/dev/xcons"
-#endif
-
 
 #ifdef linux
 #define USE_FILE
@@ -189,7 +182,7 @@ static XrmOptionDescRec options[] = {
 #   include <sys/strredir.h>
 #  endif
 # endif
-# if defined(TIOCCONS) || defined(SRIOCSREDIR) || defined(Lynx)
+# if defined(TIOCCONS) || defined(SRIOCSREDIR)
 #  define USE_PTY
 static int  tty_fd, pty_fd;
 static char ttydev[64], ptydev[64];
@@ -231,16 +224,6 @@ static int child_pid;
 #endif  /* !__hpux */
 #endif  /* !PTYCHAR2 */
 
-#ifdef Lynx
-static void
-RestoreConsole(void)
-{
-    int fd;
-    if ((fd = open("/dev/con", O_RDONLY)) >= 0)
-	newconsole(fd);
-}
-#endif
-
 static void
 OpenConsole(void)
 {
@@ -250,7 +233,7 @@ OpenConsole(void)
 	if (!strcmp (app_resources.file, "console"))
 	{
 	    /* must be owner and have read/write permission */
-#if !defined(__NetBSD__) && !defined(__OpenBSD__) && !defined(Lynx)
+#if !defined(__NetBSD__) && !defined(__OpenBSD__)
 	    struct stat sbuf;
 # if !defined (linux)
 	    if (!stat("/dev/console", &sbuf) &&
@@ -279,7 +262,6 @@ OpenConsole(void)
 			input = fdopen (pty_fd, "r");
 #  endif
 # else
-#  ifndef Lynx
 		    int consfd = open("/dev/console", O_RDONLY);
 		    if (consfd >= 0)
 		    {
@@ -287,15 +269,6 @@ OpenConsole(void)
 			    input = fdopen (pty_fd, "r");
 			close(consfd);
 		    }
-#  else
-		    if (newconsole(tty_fd) < 0)
-			perror("newconsole");
-		    else
-		    {
-			input = fdopen (pty_fd, "r");
-			atexit(RestoreConsole);
-		    }
-#  endif
 # endif
 		}
 #endif /* USE_PTY */
@@ -316,20 +289,23 @@ OpenConsole(void)
 	}
 	else
 	{
-	    struct stat sbuf;
-
 	    regularFile = FALSE;
 	    if (access(app_resources.file, R_OK) == 0)
 	    {
 		int fd  = open (app_resources.file,
 				O_RDONLY | O_NONBLOCK | O_NOCTTY);
-		if (fd != -1)
+		if (fd != -1) {
 		    input = fdopen (fd, "r");
 
-		if (input)
-		    if (!stat(app_resources.file, &sbuf) &&
-			S_ISREG( sbuf.st_mode ) )
-			regularFile = TRUE;
+		    if (input) {
+			struct stat sbuf;
+
+			if ((fstat(fd, &sbuf) == 0) && S_ISREG(sbuf.st_mode))
+			    regularFile = TRUE;
+		    }
+		    else
+			close(fd);
+		}
 	    }
 	}
 	if (!input)
@@ -945,10 +921,6 @@ get_pty(int *pty, int *tty, char *ttydev, char *ptydev)
 #else
 #define	OSM_DEVICE	"/dev/osm"
 #endif
-#endif
-
-#ifdef ISC
-#define NO_READAHEAD
 #endif
 
 static FILE *
