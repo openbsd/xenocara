@@ -41,7 +41,9 @@
 #include <stdarg.h>
 #include <math.h>
 
+#ifdef HAVE_CONFIG_H
 #include "config.h"
+#endif
 
 static char	*program_name;
 static Display	*dpy;
@@ -95,62 +97,62 @@ static const struct {
 static void
 usage(void)
 {
-    printf("usage: %s [options]\n", program_name);
-    printf("  where options are:\n");
-    printf("  -display <display> or -d <display>\n");
-    printf("  --help\n");
-    printf("  -o <normal,inverted,left,right,0,1,2,3>\n");
-    printf("            or --orientation <normal,inverted,left,right,0,1,2,3>\n");
-    printf("  -q        or --query\n");
-    printf("  -s <size>/<width>x<height> or --size <size>/<width>x<height>\n");
-    printf("  -r <rate> or --rate <rate> or --refresh <rate>\n");
-    printf("  -v        or --version\n");
-    printf("  -x        (reflect in x)\n");
-    printf("  -y        (reflect in y)\n");
-    printf("  --screen <screen>\n");
-    printf("  --verbose\n");
-    printf("  --current\n");
-    printf("  --dryrun\n");
-    printf("  --nograb\n");
-    printf("  --prop or --properties\n");
-    printf("  --fb <width>x<height>\n");
-    printf("  --fbmm <width>x<height>\n");
-    printf("  --dpi <dpi>/<output>\n");
-    printf("  --output <output>\n");
-    printf("      --auto\n");
-    printf("      --mode <mode>\n");
-    printf("      --preferred\n");
-    printf("      --pos <x>x<y>\n");
-    printf("      --rate <rate> or --refresh <rate>\n");
-    printf("      --reflect normal,x,y,xy\n");
-    printf("      --rotate normal,inverted,left,right\n");
-    printf("      --left-of <output>\n");
-    printf("      --right-of <output>\n");
-    printf("      --above <output>\n");
-    printf("      --below <output>\n");
-    printf("      --same-as <output>\n");
-    printf("      --set <property> <value>\n");
-    printf("      --scale <x>x<y>\n");
-    printf("      --scale-from <w>x<h>\n");
-    printf("      --transform <a>,<b>,<c>,<d>,<e>,<f>,<g>,<h>,<i>\n");
-    printf("      --off\n");
-    printf("      --crtc <crtc>\n");
-    printf("      --panning <w>x<h>[+<x>+<y>[/<track:w>x<h>+<x>+<y>[/<border:l>/<t>/<r>/<b>]]]\n");
-    printf("      --gamma <r>:<g>:<b>\n");
-    printf("      --primary\n");
-    printf("  --noprimary\n");
-    printf("  --newmode <name> <clock MHz>\n");
-    printf("            <hdisp> <hsync-start> <hsync-end> <htotal>\n");
-    printf("            <vdisp> <vsync-start> <vsync-end> <vtotal>\n");
-    printf("            [flags...]\n");
-    printf("            Valid flags: +HSync -HSync +VSync -VSync\n");
-    printf("                         +CSync -CSync CSync Interlace DoubleScan\n");
-    printf("  --rmmode <name>\n");
-    printf("  --addmode <output> <name>\n");
-    printf("  --delmode <output> <name>\n");
-    printf("  --listproviders\n");
-    printf("  --setprovideroutputsource <prov-xid> <source-xid>\n");
-    printf("  --setprovideroffloadsink <prov-xid> <sink-xid>\n");
+    printf("usage: %s [options]\n%s", program_name,
+           "  where options are:\n"
+           "  --display <display> or -d <display>\n"
+           "  --help\n"
+           "  -o <normal,inverted,left,right,0,1,2,3>\n"
+           "            or --orientation <normal,inverted,left,right,0,1,2,3>\n"
+           "  -q        or --query\n"
+           "  -s <size>/<width>x<height> or --size <size>/<width>x<height>\n"
+           "  -r <rate> or --rate <rate> or --refresh <rate>\n"
+           "  -v        or --version\n"
+           "  -x        (reflect in x)\n"
+           "  -y        (reflect in y)\n"
+           "  --screen <screen>\n"
+           "  --verbose\n"
+           "  --current\n"
+           "  --dryrun\n"
+           "  --nograb\n"
+           "  --prop or --properties\n"
+           "  --fb <width>x<height>\n"
+           "  --fbmm <width>x<height>\n"
+           "  --dpi <dpi>/<output>\n"
+           "  --output <output>\n"
+           "      --auto\n"
+           "      --mode <mode>\n"
+           "      --preferred\n"
+           "      --pos <x>x<y>\n"
+           "      --rate <rate> or --refresh <rate>\n"
+           "      --reflect normal,x,y,xy\n"
+           "      --rotate normal,inverted,left,right\n"
+           "      --left-of <output>\n"
+           "      --right-of <output>\n"
+           "      --above <output>\n"
+           "      --below <output>\n"
+           "      --same-as <output>\n"
+           "      --set <property> <value>\n"
+           "      --scale <x>x<y>\n"
+           "      --scale-from <w>x<h>\n"
+           "      --transform <a>,<b>,<c>,<d>,<e>,<f>,<g>,<h>,<i>\n"
+           "      --off\n"
+           "      --crtc <crtc>\n"
+           "      --panning <w>x<h>[+<x>+<y>[/<track:w>x<h>+<x>+<y>[/<border:l>/<t>/<r>/<b>]]]\n"
+           "      --gamma <r>:<g>:<b>\n"
+           "      --primary\n"
+           "  --noprimary\n"
+           "  --newmode <name> <clock MHz>\n"
+           "            <hdisp> <hsync-start> <hsync-end> <htotal>\n"
+           "            <vdisp> <vsync-start> <vsync-end> <vtotal>\n"
+           "            [flags...]\n"
+           "            Valid flags: +HSync -HSync +VSync -VSync\n"
+           "                         +CSync -CSync CSync Interlace DoubleScan\n"
+           "  --rmmode <name>\n"
+           "  --addmode <output> <name>\n"
+           "  --delmode <output> <name>\n"
+           "  --listproviders\n"
+           "  --setprovideroutputsource <prov-xid> <source-xid>\n"
+           "  --setprovideroffloadsink <prov-xid> <sink-xid>\n");
 }
 
 static void _X_NORETURN _X_ATTRIBUTE_PRINTF(1,2)
@@ -227,7 +229,7 @@ reflection_name (Rotation rotation)
     return "invalid reflection";
 }
 
-static char *
+static const char *
 capability_name (int cap_bit)
 {
     switch (cap_bit) {
@@ -2508,7 +2510,8 @@ main (int argc, char **argv)
 
     program_name = argv[0];
     for (i = 1; i < argc; i++) {
-	if (!strcmp ("-display", argv[i]) || !strcmp ("-d", argv[i])) {
+	if (!strcmp ("-display", argv[i]) || !strcmp ("--display", argv[i]) ||
+	    !strcmp ("-d", argv[i])) {
 	    if (++i >= argc) argerr ("%s requires an argument\n", argv[i-1]);
 	    display_name = argv[i];
 	    continue;
@@ -2924,7 +2927,7 @@ main (int argc, char **argv)
 	}
 	if (!strcmp ("--newmode", argv[i]))
 	{
-	    umode_t  *m = malloc (sizeof (umode_t));
+	    umode_t  *m = calloc (1, sizeof (umode_t));
 	    double    clock;
 	    
 	    ++i;
@@ -2966,7 +2969,7 @@ main (int argc, char **argv)
 	}
 	if (!strcmp ("--rmmode", argv[i]))
 	{
-	    umode_t  *m = malloc (sizeof (umode_t));
+	    umode_t  *m = calloc (1, sizeof (umode_t));
 
 	    if (++i >= argc) argerr ("%s requires an argument\n", argv[i-1]);
 	    set_name (&m->name, argv[i], name_string|name_xid);
@@ -2979,7 +2982,7 @@ main (int argc, char **argv)
 	}
 	if (!strcmp ("--addmode", argv[i]))
 	{
-	    umode_t  *m = malloc (sizeof (umode_t));
+	    umode_t  *m = calloc (1, sizeof (umode_t));
 
 	    if (i+2 >= argc) argerr ("%s requires two arguments\n", argv[i]);
 	    set_name (&m->output, argv[++i], name_string|name_xid);
@@ -2993,7 +2996,7 @@ main (int argc, char **argv)
 	}
 	if (!strcmp ("--delmode", argv[i]))
 	{
-	    umode_t  *m = malloc (sizeof (umode_t));
+	    umode_t  *m = calloc (1, sizeof (umode_t));
 
 	    if (i+2 >= argc) argerr ("%s requires two arguments\n", argv[i]);
 	    set_name (&m->output, argv[++i], name_string|name_xid);
@@ -3560,6 +3563,8 @@ main (int argc, char **argv)
 			    print_output_property_value (False, 32, actual_type,
 							 (unsigned char *) &(propinfo->values[k * 2 + 1]));
 			    printf (")");
+			    if (k < propinfo->num_values / 2 - 1)
+				printf (", ");
 			}
 			printf ("\n");
 		    }
@@ -3570,6 +3575,8 @@ main (int argc, char **argv)
 			{
 			    print_output_property_value (False, 32, actual_type,
 							 (unsigned char *) &(propinfo->values[k]));
+			    if (k < propinfo->num_values - 1)
+				printf (", ");
 			}
 			printf ("\n");
 		    }

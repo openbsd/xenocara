@@ -1,3 +1,100 @@
+commit c5334bb4137d6ea7b8c8b10d51131b9450d1106b
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Jul 16 23:30:27 2013 -0700
+
+    xrandr 1.4.1
+
+commit 0e0b47341a45c138082d9f8047dcbdb91b90155d
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jul 13 00:11:41 2013 -0700
+
+    Combine usage message strings
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 38772ec3b5a7216a88676f95b5edc764dd0a23d6
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jul 13 00:07:26 2013 -0700
+
+    Declare capability_name() as returning const char *
+    
+    Only used as an argument to printf.   Clears gcc warnings:
+    xrandr.c: In function ‘capability_name’:
+    xrandr.c:237:2: warning: return discards ‘const’ qualifier from pointer target type [enabled by default]
+    xrandr.c:239:2: warning: return discards ‘const’ qualifier from pointer target type [enabled by default]
+    xrandr.c:241:2: warning: return discards ‘const’ qualifier from pointer target type [enabled by default]
+    xrandr.c:243:2: warning: return discards ‘const’ qualifier from pointer target type [enabled by default]
+    xrandr.c:245:5: warning: return discards ‘const’ qualifier from pointer target type [enabled by default]
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit f53d8511d26a26e9bd6b1bc665f6283f1efd98d9
+Author: Thomas <fischer@unix-ag.uni-kl.de>
+Date:   Fri Nov 9 14:33:08 2012 +0000
+
+    Bug 56923 - Make command line options consistent (single vs double dash)
+    
+    Most of xrandr's command line options follow the system of single
+    dashes for single character options (e.g. "-v") and double dashes for
+    long options ("--version").  The only exceptions are "-display" and
+    "-help", most likely for historical reasons.  To make the behavior
+    consistent across all options, the following patch adds "--display"
+    and "--help" as alternatives to the current inconsistency.  The man
+    page got updated as well, recommending double-dash variants for both
+    options. The old behavior is still supported, so the patch should not
+    break any existing usage/script.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit bd1502f50f0c230798bdce99dec6efc76791c024
+Author: Thomas Klausner <wiz@NetBSD.org>
+Date:   Sun Jun 2 21:30:39 2013 +0200
+
+    Protect config.h like usual.
+    
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit ace5e2b21b2a204f94c6452fa0d8f36699aec249
+Author: Andy Ritger <aritger@nvidia.com>
+Date:   Thu May 2 01:20:27 2013 -0700
+
+    xrandr: calloc XRRModeInfo's passed to libXrandr.
+    
+    The "--newmode" commandline option initializes an XRRModeInfo and passes
+    it into XRRCreateMode().  calloc(3) it to avoid uninitialized fields.
+    For consistency, calloc(3) all the places where umode_t's (the wrapper
+    structure for XRRModeInfo) are allocated.
+    
+    Signed-off-by: Andy Ritger <aritger@nvidia.com>
+    Tested-by: Nikhil Mahale <nmahale@nvidia.com>
+    Signed-off-by: Aaron Plattner <aplattner@nvidia.com>
+
+commit eb17ad8adc9400f6ed252872f13ccf5551f9e2e9
+Author: Aaron Plattner <aplattner@nvidia.com>
+Date:   Thu Feb 28 12:01:53 2013 -0800
+
+    Print spaces between XA_ATOM property values
+    
+    Commit b26fd532b3dab222956ea27eef4e41345978b5b2 redid how xrandr prints
+    properties.  It neglected to put spaces between the values of XA_ATOM
+    properties, so they all run together.  For example,
+    
+        audio: auto
+            supported: force-dvioffautoon
+    
+    Fix this by putting a space after each atom name.  In addition, some drivers
+    create property values with spaces in them, so put commas between entries to
+    disambiguate.  For example,
+    
+        Broadcast RGB: Automatic
+            supported: Automatic, Full, Limited 16:235
+    
+    Do the same for properties with multiple valid ranges.
+    
+    Signed-off-by: Aaron Plattner <aplattner@nvidia.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+
 commit 222f245fb3a00308cb3ff491f5c84ac9c69c3253
 Author: Aaron Plattner <aplattner@nvidia.com>
 Date:   Tue Feb 12 13:24:38 2013 -0800
