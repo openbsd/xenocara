@@ -1,3 +1,83 @@
+commit f48de13423c7300f4da9f61993b624426b38ddc0
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Jul 16 22:50:54 2013 -0700
+
+    mkfontscale 1.1.1
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit f731c5c36f28ddd0f25f474d2991c96f9a7a915c
+Author: Thomas Klausner <wiz@NetBSD.org>
+Date:   Sun Jun 2 21:16:54 2013 +0200
+
+    Protect config.h inclusion like usual.
+    
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 19e2cb7c6a3ec2c5b1bc0d24866fa685eef0ee13
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue May 21 15:50:19 2013 +1000
+
+    Document -u/-U options in man page
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit b3af8de8d25128f565c2ed2f7c63b6e4099eb84e
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jan 19 12:05:06 2013 -0800
+
+    Replace malloc(strlen);strcpy() calls with strdup
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 547517571e695728278a264eedbac47b6e1f43bc
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jan 19 11:51:39 2013 -0800
+
+    Since hash() returns unsigned int, store results in unsigned ints
+    
+    Clears clang warnings:
+    hash.c:82:13: warning: implicit conversion changes signedness: 'unsigned int' to 'int' [-Wsign-conversion]
+        int i = hash(key);
+            ~   ^~~~~~~~~
+    hash.c:94:13: warning: implicit conversion changes signedness: 'unsigned int' to 'int' [-Wsign-conversion]
+        int i = hash(key);
+            ~   ^~~~~~~~~
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 1157b3039551b552b483f05f6a411e57941a87c0
+Author: Egbert Eich <eich@freedesktop.org>
+Date:   Fri Jan 11 12:04:16 2013 -0500
+
+    Fix compilation for MinGW
+    
+    Fix compilation for MinGW since 9cbe3256bc932b82f2435b23cda0931f4f5f5ba2
+    Unfortunately, MinGW doesn't define S_ISLNK, so check for that as well.
+    
+    Signed-off-by: Egbert Eich <eich@freedesktop.org>
+    Reviewed-by: Colin Harrison <colin.harrison at virgin.net>
+
+commit 9cbe3256bc932b82f2435b23cda0931f4f5f5ba2
+Author: Egbert Eich <eich@freedesktop.org>
+Date:   Thu May 19 10:38:44 2011 +0200
+
+    Prefer original file over symlink (v2)
+    
+    If a symlink to a fontfile in the same directory exists the file
+    that got picked depends on the order in which readdir() picked
+    entries.
+    This patch gives the file a higher preference than the symlink to
+    it so it will be preferred if the xlfd entries match.
+    
+    v2: Followed a suggestion by Julien Cristau <jcristau@debian.org>
+        to check for DT_LNK being defined instead of _BSD_SOURCE
+        and fall back to lstat() if d_type is DT_UNKNOWN.
+    
+    Signed-off-by: Egbert Eich <eich@freedesktop.org>
+
 commit 4c3f72f9e3385d9c855416b6498ced067a97c712
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Fri Feb 10 20:19:37 2012 -0800

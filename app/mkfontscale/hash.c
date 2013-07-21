@@ -20,6 +20,8 @@
   THE SOFTWARE.
 */
 
+#include "config.h"
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -41,14 +43,11 @@ hash(const char *string)
 }
 
 static void
-strcpy_lwr(char *dst, const char *src)
+str_tolower(char *s)
 {
-    while(1) {
-        *dst = tolower(*src);
-        if(*src == '\0')
-            break;
-        src++;
-        dst++;
+    while(*s != '\0') {
+        *s = tolower(*s);
+        s++;
     }
 }
 
@@ -79,7 +78,7 @@ destroyHashTable(HashTablePtr table)
 char *
 getHash(HashTablePtr table, const char *key)
 {
-    int i = hash(key);
+    unsigned int i = hash(key);
     HashBucketPtr bp;
     for(bp = table[i]; bp; bp = bp->next) {
         if(strcasecmp(bp->key, key) == 0)
@@ -91,18 +90,17 @@ getHash(HashTablePtr table, const char *key)
 int
 putHash(HashTablePtr table, char *key, char *value, int prio)
 {
-    int i = hash(key);
+    unsigned int i = hash(key);
     char *keycopy = NULL, *valuecopy = NULL;
     HashBucketPtr bp;
     for(bp = table[i]; bp; bp = bp->next) {
         if(strcasecmp(bp->key, key) == 0) {
             if(prio > bp->prio) {
-                keycopy = malloc(strlen(key) + 1);
+                keycopy = strdup(key);
                 if(keycopy == NULL) goto fail;
-                strcpy_lwr(keycopy, key);
-                valuecopy = malloc(strlen(value) + 1);
+                str_tolower(keycopy);
+                valuecopy = strdup(value);
                 if(valuecopy == NULL) goto fail;
-                strcpy(valuecopy, value);
                 free(bp->key);
                 free(bp->value);
                 bp->key = keycopy;
@@ -111,14 +109,13 @@ putHash(HashTablePtr table, char *key, char *value, int prio)
             return 1;
         }
     }
-    keycopy = malloc(strlen(key) + 1);
+    keycopy = strdup(key);
     if(keycopy == NULL)
         goto fail;
-    strcpy_lwr(keycopy, key);
-    valuecopy = malloc(strlen(value) + 1);
+    str_tolower(keycopy);
+    valuecopy = strdup(value);
     if(valuecopy == NULL)
         goto fail;
-    strcpy(valuecopy, value);
     bp = malloc(sizeof(HashBucketRec));
     if(bp == NULL)
         goto fail;

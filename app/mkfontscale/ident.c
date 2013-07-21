@@ -47,7 +47,9 @@
    and 0 if it should be processed normally.  identifyBitmap is
    much faster than parsing the whole font. */
 
+#ifdef HAVE_CONFIG_H
 #include "config.h"
+#endif
 
 #include <stdlib.h>
 #include <string.h>
@@ -315,10 +317,9 @@ pcfIdentify(fontFile *f, char **name)
     if(i >= nprops)
         goto fail;
 
-    s = malloc(strlen(strings + props[i].value) + 1);
+    s = strdup(strings + props[i].value);
     if(s == NULL)
         goto fail;
-    strcpy(s, strings + props[i].value);
     *name = s;
     free(strings);
     free(props);
