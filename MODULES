@@ -1,4 +1,4 @@
-# $OpenBSD: MODULES,v 1.261 2013/07/21 14:02:33 matthieu Exp $
+# $OpenBSD: MODULES,v 1.262 2013/08/04 15:52:52 matthieu Exp $
 #
 # X.Org maintained modules
 #
@@ -11,7 +11,7 @@ app/editres		1.0.6
 app/fonttosfnt		1.0.4
 app/fslsfonts		1.0.4
 app/fstobdf		1.0.5
-app/iceauth		1.0.5	7.7
+app/iceauth		1.0.6	7.7+	needs-update
 app/ico			1.0.4
 app/listres		1.0.3
 app/luit		1.1.1	7.7
@@ -44,11 +44,11 @@ app/xedit		1.2.1
 app/xev			1.2.1	7.7+
 app/xeyes		1.1.1
 app/xf86dga		1.0.3
-app/xfd			1.2.0
+app/xfd			1.1.2
 app/xfontsel		1.0.5
 app/xfs			1.1.3
 app/xfsinfo		1.0.4
-app/xfwp		1.0.2
+app/xfwp		1.0.3		needs-update
 app/xgamma		1.0.5	7.7
 app/xgc			1.0.4
 app/xhost		1.0.6	7.7+
@@ -59,7 +59,7 @@ app/xkbevd		1.1.3	7.7
 app/xkbprint		1.0.3
 app/xkbutils		1.0.4	7.7+
 app/xkill		1.0.3	7.7
-app/xload		1.1.1
+app/xload		1.1.2		needs-update
 app/xlogo		1.0.4
 app/xlsatoms		1.1.1	7.7
 app/xlsclients		1.1.2	7.7
@@ -110,7 +110,7 @@ driver/xf86-video-geode		2.11.14	7.7+
 driver/xf86-video-glint		1.2.8	7.7+
 driver/xf86-video-i128		1.3.6	7.7+
 driver/xf86-video-i740		1.3.4
-driver/xf86-video-intel		2.21.12	7.7+	needs-update
+driver/xf86-video-intel		2.21.14	7.7+	needs-update
 driver/xf86-video-mach64	6.9.4	7.7+
 driver/xf86-video-mga		1.6.2	7.7+
 driver/xf86-video-modesetting	0.8.0		needs-update
@@ -174,7 +174,7 @@ font/xfree86-type1		1.0.3
 lib/libFS			1.0.5	7.7+
 lib/libICE			1.0.8	7.7
 lib/libSM			1.2.1	7.7
-lib/libX11			1.6.0	7.7+
+lib/libX11			1.6.1	7.7+	needs-update
 lib/libXScrnSaver		1.2.2	7.7
 lib/libXau			1.0.8	7.7+
 lib/libXaw			1.0.11	7.7
@@ -184,7 +184,7 @@ lib/libXdamage			1.1.4	7.7+
 lib/libXdmcp			1.1.1	7.7
 lib/libXext			1.3.2	7.7+
 lib/libXfixes			5.0.1	7.7+
-lib/libXfont			1.4.5	7.7
+lib/libXfont			1.4.6	7.7+	needs-update
 lib/libXfontcache		1.0.5
 lib/libXft			2.3.1	7.7
 lib/libXi			1.7.2	7.7+	needs-update
@@ -233,7 +233,7 @@ proto/recordproto		1.14.2	7.7
 proto/renderproto		0.11.1	7.7
 proto/resourceproto		1.2.0	7.7
 proto/scrnsaverproto		1.2.2	7.7
-proto/videoproto		2.3.1	7.7
+proto/videoproto		2.3.3	7.7+	needs-update
 proto/x11proto			7.0.24	7.7+
 proto/xcb-proto			1.7.1	7.7
 proto/xcmiscproto		1.2.2	7.7
@@ -247,6 +247,6 @@ proto/xineramaproto		1.2.1	7.7
 
 util/cf				1.0.4
 util/gccmakedep			1.0.2
-util/makedepend			1.0.4	7.7
+util/makedepend			1.0.5	7.7+	needs-update
 
 xserver				1.14.1	7.7+
