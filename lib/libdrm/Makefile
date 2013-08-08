@@ -1,10 +1,10 @@
-# $OpenBSD: Makefile,v 1.9 2012/11/28 21:13:16 matthieu Exp $
+# $OpenBSD: Makefile,v 1.10 2013/08/08 10:52:48 jsg Exp $
 .include <bsd.xconf.mk>
 .include "${.CURDIR}/Makefile.inc"
 
 .if ${MACHINE_ARCH} == "i386" || ${MACHINE_ARCH} == "amd64"
 SUBDIR=intel radeon
-.elif ${MACHINE} == "macppc"
+.elif ${MACHINE} == "macppc" || ${MACHINE_ARCH} == "sparc64"
 SUBDIR=radeon
 .endif
 
