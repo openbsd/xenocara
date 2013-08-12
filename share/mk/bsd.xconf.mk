@@ -1,4 +1,4 @@
-# $OpenBSD: bsd.xconf.mk,v 1.24 2013/04/14 10:23:04 mpi Exp $
+# $OpenBSD: bsd.xconf.mk,v 1.25 2013/08/12 04:16:52 jsg Exp $
 
 # Shared libs?
 .if ${MACHINE} == "vax"
@@ -10,7 +10,7 @@ XENOCARA_HAVE_SHARED_LIBS?=yes
 # Build GL libs and apps?
 XENOCARA_BUILD_GL?=${XENOCARA_HAVE_SHARED_LIBS:L}
 XENOCARA_BUILD_DRI?=${XENOCARA_HAVE_SHARED_LIBS:L}
-XENOCARA_BUILD_GALLIUM?=no
+XENOCARA_BUILD_GALLIUM?=${XENOCARA_HAVE_SHARED_LIBS:L}
 
 # Build pixman?
 .if ${MACHINE} == "vax"

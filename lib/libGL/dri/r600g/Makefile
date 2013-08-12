@@ -1,6 +1,6 @@
-#	$OpenBSD: Makefile,v 1.1 2013/06/17 23:30:25 jsg Exp $
+#	$OpenBSD: Makefile,v 1.2 2013/08/12 04:16:52 jsg Exp $
 
-LIB=	r600g_dri.so
+LIB=	r600_dri.so
 
 CPPFLAGS= \
 	-I${GALLIUM}/include \

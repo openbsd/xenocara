@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.4 2013/06/17 23:30:25 jsg Exp $
+# $OpenBSD: Makefile,v 1.5 2013/08/12 04:16:52 jsg Exp $
 .include <bsd.xconf.mk>
 
 SUBDIR= rbug softpipe trace
@@ -8,7 +8,7 @@ SUBDIR+= llvmpipe
 .endif
 
 .if ${XENOCARA_BUILD_GALLIUM:L} == "yes" || ${XENOCARA_BUILD_GALLIUM} == "llvm" &&
-    (${MACHINE} == i386 || ${MACHINE} == amd64 || ${MACHINE} == macppc)
+    (${MACHINE} == i386 || ${MACHINE} == amd64 || ${MACHINE} == macppc || ${MACHINE} == sparc64)
 SUBDIR+= r300 r600
 .endif
 

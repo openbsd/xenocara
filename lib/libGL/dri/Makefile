@@ -1,17 +1,20 @@
-#	$OpenBSD: Makefile,v 1.16 2013/06/17 23:30:25 jsg Exp $
+#	$OpenBSD: Makefile,v 1.17 2013/08/12 04:16:52 jsg Exp $
 .include <bsd.xconf.mk>
 
 SUBDIR= swrast
 
 .if ${MACHINE} == i386 || ${MACHINE} == amd64
-SUBDIR+= i810 i915 i965 radeon r200 r300 r600
-.elif ${MACHINE} == macppc
-SUBDIR+= radeon r200 r300
+SUBDIR+= i810 i915 i965 radeon r200
+.elif ${MACHINE} == macppc || ${MACHINE} == sparc64
+SUBDIR+= radeon r200
+.endif
+
+.if ${XENOCARA_BUILD_GALLIUM} == "llvm"
+SUBDIR+=swrastg
 .endif
 
 .if ${XENOCARA_BUILD_GALLIUM:L} == "yes" || ${XENOCARA_BUILD_GALLIUM} == "llvm"
-SUBDIR+=swrastg
-.if ${MACHINE} == i386 || ${MACHINE} == amd64 || ${MACHINE} == macppc
+.if ${MACHINE} == i386 || ${MACHINE} == amd64 || ${MACHINE} == macppc || ${MACHINE} == sparc64
 SUBDIR+= r300g r600g
 .endif
 .endif
