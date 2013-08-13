@@ -1,3 +1,101 @@
+commit c07d443d43e53cfe21b53a9a0eafcd6189432867
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Jul 23 23:15:01 2013 -0700
+
+    iceauth 1.0.6
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 3e9250a5bc0c5e525c231eca1f241c545ac412ac
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Jul 17 22:34:37 2013 -0700
+
+    Constify some more string pointers to fix gcc warnings
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit aa38bef15c15c90e6ec831a202e6e147b889b6a6
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Jul 17 22:27:28 2013 -0700
+
+    Use void * instead of char * for generic pointer arg to DoFunc functions
+    
+    Quiets clang warnings of:
+    process.c:754:29: warning: cast from 'char *' to 'struct _list_data *'
+     increases required alignment from 1 to 8 [-Wcast-align]
+        struct _list_data *ld = (struct _list_data *) data;
+                                ^~~~~~~~~~~~~~~~~~~~~~~~~~
+    process.c:787:32: warning: cast from 'char *' to 'struct _extract_data *'
+     increases required alignment from 1 to 8 [-Wcast-align]
+        struct _extract_data *ed = (struct _extract_data *) data;
+                                   ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    process.c:988:22: warning: cast from 'char *' to 'int *'
+     increases required alignment from 1 to 4 [-Wcast-align]
+        int *nremovedp = (int *) data;
+                         ^~~~~~~~~~~~
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit a79de96226321f79f471574830d64080559a1557
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Jul 17 22:22:15 2013 -0700
+
+    Mark unused arguments in callback functions to quiet clang warnings
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 9c2e2d401d32ed3f6a4e4e775581321eada9c734
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Jul 17 22:17:11 2013 -0700
+
+    Fix some sign/size conversion warnings from clang
+    
+    process.c:410:22: warning: implicit conversion changes signedness:
+      'int' to 'size_t' (aka 'unsigned long') [-Wsign-conversion]
+        retval = malloc (len);
+                 ~~~~~~  ^~~
+    process.c:454:30: warning: implicit conversion changes signedness:
+      'int' to 'size_t' (aka 'unsigned long') [-Wsign-conversion]
+                strncmp (cmd, ct->name, n) == 0) {
+                ~~~~~~~                 ^
+    process.c:450:9: warning: implicit conversion loses integer precision:
+      'size_t' (aka 'unsigned long') to 'int' [-Wshorten-64-to-32]
+        n = strlen (cmd);
+          ~ ^~~~~~~~~~~~
+    process.c:1028:34: warning: implicit conversion changes signedness:
+      'int' to 'size_t' (aka 'unsigned long') [-Wsign-conversion]
+                if (strncmp (cmd, ct->name, len) == 0) {
+                    ~~~~~~~                 ^~~
+    process.c:1026:12: warning: implicit conversion loses integer precision:
+      'size_t' (aka 'unsigned long') to 'int' [-Wshorten-64-to-32]
+            int len = strlen (cmd);
+                ~~~   ^~~~~~~~~~~~
+    process.c:1560:8: warning: implicit conversion loses integer precision:
+      'size_t' (aka 'unsigned long') to 'int' [-Wshorten-64-to-32]
+            len = strlen (buf);
+                ~ ^~~~~~~~~~~~
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 21e6ddc42acc7864fb260c101060dee5cebf07c1
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Feb 23 10:07:03 2013 -0800
+
+    Add _X_NORETURN attributes suggested by gcc
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit ef04ccaac0e501612367c098410129f89e1d109a
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Feb 23 10:02:50 2013 -0800
+
+    Assume signal handlers return void, as C89 requires
+    
+    Drops use of autoconf's obsolete AC_TYPE_SIGNAL and Imake's even more
+    obsolete SIGNALRETURNSINT.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit 27846ea3e133dbb45a4e67500eba15bf5d6c796c
 Author: Jeremy Huddleston <jeremyhu@apple.com>
 Date:   Mon May 23 19:39:04 2011 -0700
