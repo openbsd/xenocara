@@ -1,7 +1,7 @@
 /* $Xorg: pm.c,v 1.4 2001/02/09 02:05:45 xorgcvs Exp $ */
 /*
 
-Copyright "1986-1997, 1998  The Open Group 
+Copyright "1986-1997, 1998  The Open Group
 
 Permission to use, copy, modify, distribute, and sell this software and its
 documentation for any purpose is hereby granted without fee, provided that
@@ -68,14 +68,14 @@ X Window System is a trademark of The Open Group.
 #include "misc.h"
 
 void FWPprocessMessages(
-    IceConn iceConn, 
+    IceConn iceConn,
     IcePointer * client_data,
     int opcode,
     unsigned long length,
     Bool swap)
 {
   switch (opcode)
-  { 
+  {
     /*
      * this is really the only opcode we care about -- the one
      * which indicates an XFindProxy request for a connection
@@ -89,7 +89,7 @@ void FWPprocessMessages(
       char                      *hostAddress = NULL, *startOptions = NULL;
       char                      *authName = NULL, *authData = NULL;
       int                       authLen;
-      struct clientDataStruct * program_data; 
+      struct clientDataStruct * program_data;
       char *			listen_port_string;
       int			pm_send_msg_len;
       pmGetProxyAddrReplyMsg *	pReply;
@@ -98,7 +98,7 @@ void FWPprocessMessages(
       struct sockaddr_in	server_sockaddr_in;
       struct sockaddr_in	dummy_sockaddr_in;
       char *			server_name_base;
-      char *			config_failure = "unrecognized server or permission denied";
+      const char *		config_failure = "unrecognized server or permission denied";
       char *			tmp_str;
       int			rule_number = -1;
       char *			colon;
@@ -113,7 +113,7 @@ void FWPprocessMessages(
 #if 0 /* No-op */
       /*
        * initial check on expected message size
-       */ 
+       */
       CHECK_AT_LEAST_SIZE (iceConn, global_data.major_opcode, opcode,
           length, SIZEOF (pmGetProxyAddrMsg), IceFatalToProtocol);
 #endif
@@ -159,21 +159,21 @@ void FWPprocessMessages(
       if (authLen > 0)
       {
         EXTRACT_STRING (pData, swap, authName);
-        authData = (char *) malloc (authLen);
+        authData = malloc (authLen);
         memcpy (authData, pData, authLen);
       }
 #ifdef DEBUG
-      (void) fprintf (stderr, 
+      (void) fprintf (stderr,
 		      "Got GetProxyAddr, serviceName = %s, serverAddr = %s\n",
               	      serviceName, serverAddress);
-      (void) fprintf (stderr, 
+      (void) fprintf (stderr,
 		      "\thostAddr = %s, options = %s, authLen = %d\n",
               	      hostAddress, startOptions, authLen);
       if (authLen > 0)
           (void) fprintf (stderr, "\tauthName = %s\n", authName);
 #endif
       /*
-       * need to copy the host port string because strtok() changes it   
+       * need to copy the host port string because strtok() changes it
        */
       if ((tmp_str = strdup (serverAddress)) == NULL)
       {
@@ -183,7 +183,7 @@ void FWPprocessMessages(
 
       /*
        * before proceeding we want to verify that we are allowed to
-       * accept connections from the host who called xfindproxy(); 
+       * accept connections from the host who called xfindproxy();
        * the thing is, we don't get that host name from Proxy Manager
        * even if the "-host <hostname>" command-line option was present
        * in xfindproxy (and even if it was we shouldn't rely on it --
@@ -200,37 +200,37 @@ void FWPprocessMessages(
 	goto sendFailure;
       }
       memset(&server_sockaddr_in, 0, sizeof(server_sockaddr_in));
-      memset(&dummy_sockaddr_in, 0, sizeof(dummy_sockaddr_in)); 
-      memcpy((char *) &server_sockaddr_in.sin_addr, 
+      memset(&dummy_sockaddr_in, 0, sizeof(dummy_sockaddr_in));
+      memcpy(&server_sockaddr_in.sin_addr,
 	     hostptr->h_addr,
 	     hostptr->h_length);
 
       /*
        * need to initialize dummy to something, but doesn't matter
-       * what (should eventually be the true host address); 
+       * what (should eventually be the true host address);
        * NOTE:  source configuration will always match (see XFWP man
-       * page) unless sysadmin explicitly chooses to deny 
+       * page) unless sysadmin explicitly chooses to deny
        */
-      memcpy((char *) &dummy_sockaddr_in.sin_addr, 
+      memcpy(&dummy_sockaddr_in.sin_addr,
 	     hostptr->h_addr,
 	     hostptr->h_length);
 
-      if ((doConfigCheck(&dummy_sockaddr_in, 
+      if ((doConfigCheck(&dummy_sockaddr_in,
   			 &server_sockaddr_in,
 			 global_data.config_info,
 			 FINDPROXY,
 			 &rule_number)) == FAILURE)
-      { 
+      {
         (void) fprintf(stderr, "xfindproxy failed config check\n");
       sendFailure:
         /*
          * report failure back to the ProxyMgr
-         * 
+         *
          */
         pm_send_msg_len = STRING_BYTES(config_failure)
 	      		+ STRING_BYTES("");
-        IceGetHeaderExtra(iceConn, 
-	      	        program_data->major_opcode, 
+        IceGetHeaderExtra(iceConn,
+	      	        program_data->major_opcode,
 	      		PM_GetProxyAddrReply,
 	       		SIZEOF(pmGetProxyAddrReplyMsg),
 	       		WORD64COUNT (pm_send_msg_len),
@@ -242,20 +242,20 @@ void FWPprocessMessages(
         STORE_STRING(pReplyData, config_failure);
         IceFlush(iceConn);
 	free(tmp_str);
-        return; 
+        return;
       }
 
-      /* 
+      /*
        * okay, you got what you need from the PM to proceed,
        * so extract the fd of the selected connection and use
-       * it to set up the remote client listen port and add 
+       * it to set up the remote client listen port and add
        * the name of the X server to your list of server connections
        */
 
       /*
        * Before checking to see if you already have a PM connection
        * request for this server, make serverAddress a
-       * FQDN so that synonomous names like oregon:0 and oregon.com:0
+       * FQDN so that synonymous names like oregon:0 and oregon.com:0
        * will be recognized as the same Xserver.  If this server
        * already exists, don't allocate another listen port for it -
        * use the already allocated one
@@ -270,14 +270,14 @@ void FWPprocessMessages(
 	  *colon = ':';
 
 	  if (hostent && hostent->h_name) {
-	      tmpAddress = (char *) malloc (strlen (hostent->h_name) + 
+	      tmpAddress = malloc (strlen (hostent->h_name) +
 					    strlen (colon) + 1);
 	      (void) sprintf (tmpAddress, "%s%s", hostent->h_name, colon);
 	      serverAddress = tmpAddress;
 	  }
       }
 
-      if ((doCheckServerList(serverAddress, 
+      if ((doCheckServerList(serverAddress,
 			    &listen_port_string,
 			    program_data->config_info->num_servers)) == FAILURE)
       {
@@ -298,15 +298,15 @@ void FWPprocessMessages(
 
       /*
        * the PM-sent server address *was* in your list, so send back
-       * the rem client listen port you had already associated with 
+       * the rem client listen port you had already associated with
        * that server (it will presumably be forwarded to the remote
        * client through some other channel)
-       * use IceGetHeaderExtra() and the 
+       * use IceGetHeaderExtra() and the
        */
       pm_send_msg_len = STRING_BYTES(listen_port_string)
 			+ STRING_BYTES("");
-      IceGetHeaderExtra(iceConn, 
-		        program_data->major_opcode, 
+      IceGetHeaderExtra(iceConn,
+		        program_data->major_opcode,
 			PM_GetProxyAddrReply,
 			SIZEOF(pmGetProxyAddrReplyMsg),
 			WORD64COUNT (pm_send_msg_len),
@@ -333,7 +333,7 @@ void FWPprocessMessages(
 	iceErrorMsg *pMsg;
 	char *pStart;
 
-	CHECK_AT_LEAST_SIZE (iceConn, global_data.major_opcode, ICE_Error, 
+	CHECK_AT_LEAST_SIZE (iceConn, global_data.major_opcode, ICE_Error,
 			     length, sizeof(iceErrorMsg), IceFatalToProtocol);
 
 	IceReadCompleteMessage (iceConn, SIZEOF (iceErrorMsg),
@@ -376,11 +376,11 @@ FWPHostBasedAuthProc (
   /*
    * don't worry about config for now
    *
-   * this routine gets called *after* IceAcceptConnection 
+   * this routine gets called *after* IceAcceptConnection
    * is called but *before* that routine returns its status;
-   * it is therefore the logical place to check configuration 
+   * it is therefore the logical place to check configuration
    * data on which PM connections (from which hosts) will be
-   * accepted; so do it and return either 0 to terminate 
+   * accepted; so do it and return either 0 to terminate
    * connection (automatically informing PM) or 1 to proceed
    *
    * the PM host is not allowed; terminate connection and inform
@@ -411,8 +411,7 @@ FWPprotocolSetupProc(
    * IceProcessMessages()
    */
   struct clientDataStruct * 	client_data;
-  if ((client_data = (struct clientDataStruct *) 
-		     malloc (sizeof (struct clientDataStruct))) == NULL)
+  if ((client_data = malloc (sizeof (struct clientDataStruct))) == NULL)
   {
     (void) fprintf(stderr, "malloc - client data object\n");
     return (0);
@@ -421,7 +420,7 @@ FWPprotocolSetupProc(
    * setup the client data struct; we need this object in order to
    * avoid making these variables global so they can be accessed in the
    * ICE FWPprocessMessages() callback; now you see that our global_data
-   * struct was the only way of getting program data into the 
+   * struct was the only way of getting program data into the
    * protocolReply setup routine!
    */
   client_data->config_info = global_data.config_info;
@@ -434,7 +433,7 @@ FWPprotocolSetupProc(
   return (1);
 }
 
-int 
+int
 doSetupPMListen(
     char 		*  pm_port,
     int			* size_pm_listen_array,
@@ -450,22 +449,22 @@ doSetupPMListen(
 
   /*
    * establish PM listeners
-   */  
-  if (!IceListenForWellKnownConnections(pm_port, 
+   */
+  if (!IceListenForWellKnownConnections(pm_port,
 					&num_fds_returned,
 					listen_objects,
 					256,
 					errormsg))
   {
-    (void) fprintf(stderr, "IceListenForWellKnowConnections error: %s\n", 
-		   errormsg); 
+    (void) fprintf(stderr, "IceListenForWellKnownConnections error: %s\n",
+		   errormsg);
     return 0;
   }
 
   /*
    * Create space for pm_listen_array
    */
-  *pm_listen_array = (int *) malloc (num_fds_returned * sizeof (int *));
+  *pm_listen_array = malloc (num_fds_returned * sizeof (int *));
   if (!pm_listen_array)
   {
     (void) fprintf (stderr, "malloc - pm_listen_array\n");
@@ -474,23 +473,23 @@ doSetupPMListen(
   *size_pm_listen_array = num_fds_returned;
 
   /*
-   * obtain the PM listen fd's for the connection objects 
+   * obtain the PM listen fd's for the connection objects
    */
   for (fd_counter = 0; fd_counter < num_fds_returned; fd_counter++)
   {
     /*
      * get fd(s) for PM listen (could be more than one if different
-     * transport mechanisms) 
-     */ 
+     * transport mechanisms)
+     */
     temp_obj = *listen_objects;
     IceSetHostBasedAuthProc(temp_obj[fd_counter], FWPHostBasedAuthProc);
-    (*pm_listen_array)[fd_counter] = 
+    (*pm_listen_array)[fd_counter] =
      		IceGetListenConnectionNumber(temp_obj[fd_counter]);
 
     /*
-     * set all read mask bits on which we are going to select(); 
+     * set all read mask bits on which we are going to select();
      * [NOTE:  We don't care about write bits here because we don't
-     * use select() to manage writing to the PM] 
+     * use select() to manage writing to the PM]
      */
     FD_SET((*pm_listen_array)[fd_counter], rinit);
 
@@ -532,7 +531,7 @@ MyIoErrorHandler (
         (*prev_handler) (ice_conn);
 }
 
-void 
+void
 doInstallIOErrorHandler (void)
 {
     IceIOErrorHandler default_handler;

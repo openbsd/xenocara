@@ -1,7 +1,7 @@
 /* $Xorg: transport.c,v 1.4 2001/02/09 02:05:45 xorgcvs Exp $ */
 /*
 
-Copyright "1986-1997, 1998  The Open Group 
+Copyright "1986-1997, 1998  The Open Group
 
 Permission to use, copy, modify, distribute, and sell this software and its
 documentation for any purpose is hereby granted without fee, provided that
@@ -46,7 +46,7 @@ X Window System is a trademark of The Open Group.
 #include "xfwp.h"
 #include "transport.h"
 
-int 
+int
 doSetupRemClientListen(
     char ** listen_port_string,
     struct clientDataStruct * program_data,
@@ -61,7 +61,7 @@ doSetupRemClientListen(
   struct timezone	time_zone;
   int			num_servers = program_data->config_info->num_servers;
 
-  /* 
+  /*
    * ugh.  This really shouldn't be kept as a sparse list but no time...
    */
   for (this_server = 0;
@@ -69,15 +69,15 @@ doSetupRemClientListen(
        this_server++);
   if (this_server == num_servers)
   {
-      (void) fprintf(stderr, 
+      (void) fprintf(stderr,
 		 "Maximum number of server connections has been reached (%d)\n",
 		 program_data->config_info->num_servers);
       return FAILURE;
   }
 
   /*
-   * offset listen port into the X protocol range; 
-   * must be > X_SERVER_PORT_BASE < 65535 
+   * offset listen port into the X protocol range;
+   * must be > X_SERVER_PORT_BASE < 65535
    */
   listen_port = this_server + X_SERVER_PORT_BASE + 1;
 
@@ -86,15 +86,14 @@ doSetupRemClientListen(
    * can't use the PM connection fd as an index into this array, since
    * there could be multiple servers per PM connection
    */
-  if ((server_array[this_server] =
-      (struct server_list *) malloc(sizeof(struct server_list))) == NULL)
+  if ((server_array[this_server] = malloc(sizeof(struct server_list))) == NULL)
   {
     (void) fprintf(stderr,"malloc - server_array\n");
     return FAILURE;
   }
 
-  if ((server_array[this_server]->client_listen_fd = 
-	socket(AF_INET, SOCK_STREAM, 0)) < 0) 
+  if ((server_array[this_server]->client_listen_fd =
+	socket(AF_INET, SOCK_STREAM, 0)) < 0)
   {
       (void) fprintf(stderr,"socket call failed\n");
       free(server_array[this_server]);
@@ -103,12 +102,12 @@ doSetupRemClientListen(
   }
 
   /*
-   * this is where we initialize the current time and timeout on this 
+   * this is where we initialize the current time and timeout on this
    * client_listen object
    */
   gettimeofday(&time_val, &time_zone);
-  server_array[this_server]->creation_time = time_val.tv_sec; 
-  server_array[this_server]->time_to_close = 
+  server_array[this_server]->creation_time = time_val.tv_sec;
+  server_array[this_server]->time_to_close =
       global_data.config_info->client_listen_timeout;
 
   /*
@@ -123,7 +122,7 @@ doSetupRemClientListen(
 #ifdef SO_REUSEADDR
   if (setsockopt(server_array[this_server]->client_listen_fd,
 		 SOL_SOCKET, SO_REUSEADDR,
-                 (char *) &one, sizeof(int)) < 0) 
+                 (char *) &one, sizeof(int)) < 0)
   {
       (void) fprintf(stderr, "setsockopt(SO_REUSEADDR) failed\n");
   returnFailure:
@@ -136,8 +135,8 @@ doSetupRemClientListen(
 
   while (True) {
       rem_sockaddr_in.sin_port = htons(listen_port);
-      if (bind(server_array[this_server]->client_listen_fd, 
-	       (struct sockaddr *)&rem_sockaddr_in, 
+      if (bind(server_array[this_server]->client_listen_fd,
+	       (struct sockaddr *)&rem_sockaddr_in,
 	       sizeof(rem_sockaddr_in)) == 0)
 	  break;
       if (errno != EADDRINUSE)
@@ -148,8 +147,8 @@ doSetupRemClientListen(
       listen_port++;
 
       /*
-       * Cann't keep going forever.  
-       * 
+       * Can't keep going forever.
+       *
        * Why 65535 - it's the same value used by the LBXProxy.
        */
       if (listen_port > 65535)
@@ -163,7 +162,7 @@ doSetupRemClientListen(
   (void) fprintf (stderr, "Client connect port: %d\n", listen_port);
 #endif
 
-  if (listen(server_array[this_server]->client_listen_fd, SOMAXCONN) < 0) 
+  if (listen(server_array[this_server]->client_listen_fd, SOMAXCONN) < 0)
   {
       (void) fprintf(stderr, "listen call failed\n");
       goto returnFailure;
@@ -172,7 +171,7 @@ doSetupRemClientListen(
   /*
    *  update the nfds
    */
-  *(program_data->nfds) = max(*(program_data->nfds), 
+  *(program_data->nfds) = max(*(program_data->nfds),
 	  server_array[this_server]->client_listen_fd + 1);
 
   /*
@@ -186,16 +185,15 @@ doSetupRemClientListen(
 
   /*
    * allocate and convert the listen_port string for return to PM;
-   * string equals address of host on which FWP is running 
+   * string equals address of host on which FWP is running
    * plus ":<listen_port - X_SERVER_PORT_BASE> (up to xxx)"
    */
-  if (((*listen_port_string) = 
-	(char *) malloc (strlen(hostname) + 10)) == NULL)
+  if (((*listen_port_string) = malloc (strlen(hostname) + 10)) == NULL)
   {
     (void) fprintf(stderr, "malloc - proxy address\n");
     goto returnFailure;
   }
-  (void) sprintf (*listen_port_string, "%s:%d", hostname, 
+  (void) sprintf (*listen_port_string, "%s:%d", hostname,
 		  listen_port - X_SERVER_PORT_BASE);
 
   /*
@@ -233,18 +231,18 @@ doSetupRemClientListen(
   return SUCCESS;
 }
 
-void 
-doSelect(struct 
+void
+doSelect(struct
     config * config_info,
-    int * nfds, 
-    int * nready, 
-    fd_set * readable, 
+    int * nfds,
+    int * nready,
+    fd_set * readable,
     fd_set * writable)
 {
-  if ((*nready = select(*nfds, 
-			readable, 
-			writable, 
-			NULL, 
+  if ((*nready = select(*nfds,
+			readable,
+			writable,
+			NULL,
 			&config_info->select_timeout)) == -1)
   {
     if (errno == EINTR)
@@ -255,7 +253,7 @@ doSelect(struct
   }
 }
 
-int 
+int
 doServerConnectSetup(
     char * x_server_hostport,
     int * server_connect_fd,
@@ -270,7 +268,7 @@ doServerConnectSetup(
   char *		tmp_hostport_str;
 
   /*
-   * need to copy the host port string because strtok() changes it   
+   * need to copy the host port string because strtok() changes it
    */
   if ((tmp_hostport_str = strdup (x_server_hostport)) == NULL)
   {
@@ -284,7 +282,7 @@ doServerConnectSetup(
   tmp_str++;
   strcpy(server_port_base, tmp_str);
   server_name_base = strtok(tmp_hostport_str,":");
-  server_port = atoi(server_port_base) + X_SERVER_PORT_BASE; 
+  server_port = atoi(server_port_base) + X_SERVER_PORT_BASE;
   hostptr = gethostbyname(server_name_base);
   free(tmp_hostport_str);
 
@@ -296,8 +294,8 @@ doServerConnectSetup(
 
   if ((*server_connect_fd = socket(AF_INET, SOCK_STREAM, 0)) < 0)
   {
-    (void) fprintf(stderr, "socket call for server failed: %s\n", 
-		   strerror(errno)); 
+    (void) fprintf(stderr, "socket call for server failed: %s\n",
+		   strerror(errno));
     return FAILURE;
   }
 
@@ -306,7 +304,7 @@ doServerConnectSetup(
 #ifdef BSD44SOCKETS
   server_sockaddr_in->sin_len = sizeof server_sockaddr_in;
 #endif
-  memcpy((char *) &server_sockaddr_in->sin_addr, 
+  memcpy((char *) &server_sockaddr_in->sin_addr,
 	 hostptr->h_addr,
 	 hostptr->h_length);
   server_sockaddr_in->sin_port = htons(server_port);
@@ -314,7 +312,7 @@ doServerConnectSetup(
   return SUCCESS;
 }
 
-int 
+int
 doServerConnect(
     int * server_connect_fd,
     struct sockaddr_in * server_sockaddr_in)
@@ -322,8 +320,8 @@ doServerConnect(
   if(connect(*server_connect_fd, (struct sockaddr * )server_sockaddr_in,
 	     sizeof(*server_sockaddr_in)) < 0)
   {
-    (void) fprintf(stderr, "connect call to server failed: %s\n", 
-	    	   strerror(errno)); 
+    (void) fprintf(stderr, "connect call to server failed: %s\n",
+	    	   strerror(errno));
     return FAILURE;
   }
   return SUCCESS;

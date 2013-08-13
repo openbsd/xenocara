@@ -28,7 +28,7 @@ from The Open Group.
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <X11/Xos.h>		
+#include <X11/Xos.h>
 #include <netinet/in.h>
 
 #include <X11/ICE/ICElib.h>
@@ -52,15 +52,15 @@ char **SitePolicies    = NULL;	/* list of site security policy strings */
 
 int    SitePolicyCount = 0;	/* count of elements in SitePolicies */
 
-Bool   SitePolicyPermit = 0;	/* True  := permit iff server supports 
+Bool   SitePolicyPermit = 0;	/* True  := permit iff server supports
 				 *      at least one listed policy,
-			         *  False := deny if server has any of 
+			         *  False := deny if server has any of
 				 *      the listed policies.
 			         */
 
-int 
+int
 main (
-    int 			argc, 
+    int 			argc,
     char 			* argv[])
 {
     int 			* pm_listen_array;
@@ -73,11 +73,15 @@ main (
 
     /*
      * setup the global client data struct; we need to do this in order
-     * to access program data in the ICE FWPprocessMessages() callback 
+     * to access program data in the ICE FWPprocessMessages() callback
      * without making everything global!  See FWPprotocolSetupProc() for
      * the rest of what we are doing
      */
-    config_info = (struct config *) Malloc(sizeof(struct config));
+    if ((config_info = malloc(sizeof(struct config))) == NULL)
+    {
+	fprintf(stderr, "Memory allocation failed, exiting\n");
+	exit(1);
+    }
 
     global_data.config_info = config_info;
     global_data.nfds =  &nfds;
@@ -92,7 +96,7 @@ main (
     if ((doHandleConfigFile(config_info)) == FAILURE)
 	exit(1);
 
-    if ((doInitDataStructs(config_info, 
+    if ((doInitDataStructs(config_info,
 			   &pm_conn_setup)) == FAILURE)
 	exit(1);
 
@@ -112,11 +116,11 @@ main (
     /*
      * create listener socket(s) for PM connections
      */
-    if (!doSetupPMListen(config_info->pm_listen_port, 
+    if (!doSetupPMListen(config_info->pm_listen_port,
 			 &config_info->num_pm_listen_ports,
-			 &pm_listen_array, 
-			 &listen_objects, 
-			 &nfds, 
+			 &pm_listen_array,
+			 &listen_objects,
+			 &nfds,
 			 &rinit))
 	exit(1);
 
@@ -125,27 +129,27 @@ main (
 	readable = rinit;
 	writable = winit;
 
-	doSelect (config_info, 
-		  &nfds, 
-		  &nready, 
-		  &readable, 
+	doSelect (config_info,
+		  &nfds,
+		  &nready,
+		  &readable,
 		  &writable);
 
-	doCheckTimeouts (config_info, 
-			 &nready, 
-			 &rinit, 
-			 &winit, 
-			 &readable, 
+	doCheckTimeouts (config_info,
+			 &nready,
+			 &rinit,
+			 &winit,
+			 &readable,
 			 &writable);
 
-	doProcessSelect (&nfds, 
-			 &nready, 
-			 &readable, 
-			 &writable, 
-			 &rinit, 
-			 &winit, 
-			 pm_listen_array, 
-			 config_info, 
+	doProcessSelect (&nfds,
+			 &nready,
+			 &readable,
+			 &writable,
+			 &rinit,
+			 &winit,
+			 pm_listen_array,
+			 config_info,
 			 &listen_objects);
-    } 
+    }
 }

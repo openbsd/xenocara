@@ -51,37 +51,37 @@ from The Open Group.
 #define	RWBUFFER_SIZE			2048
 
 enum CLIENT_CONN_STATE {
-    CLIENT_WAITING, 
-    SERVER_WAITING, 
+    CLIENT_WAITING,
+    SERVER_WAITING,
     SERVER_REPLY,
     CONNECTION_READY
 };
 
 enum PM_CONN_STATE {
-    START, 
-    WAIT_SERVER_INFO, 
-    SENT_PORT_INFO, 
+    START,
+    WAIT_SERVER_INFO,
+    SENT_PORT_INFO,
     PM_EXCHANGE_DONE
 };
 
 enum CONFIG_CHECK {
-    FAILURE, 
+    FAILURE,
     SUCCESS
 };
 
 enum CONFIG_TYPE {
-    PM, 
+    PM,
     REM_CLIENT
 };
 
 enum LISTEN_STATE {
-    AVAILABLE, 
+    AVAILABLE,
     IN_USE
 };
 
 enum SERVICE_ID_TYPES {
-    CLIENT, 
-    PMGR, 
+    CLIENT,
+    PMGR,
     FINDPROXY
 };
 
@@ -98,7 +98,7 @@ typedef Bool fp2();
 
 struct ICE_setup_info
 {
-        
+
  int       opcode;
  int       versionCount;
  IcePaVersionRec PMVersions[1];
@@ -116,7 +116,7 @@ struct client_conn_buf
   int 			wbytes;
   int 			conn_to;
   int 			wclose;
-  int    		state;  
+  int    		state;
   int			time_to_close;
   int			creation_time;
   int			fd;
@@ -128,7 +128,7 @@ struct pm_conn_buf
 {
   char 			readbuf[RWBUFFER_SIZE];
   int 			rbytes;
-  int    		state;  
+  int    		state;
   int			fd;
   IceConn  		ice_conn;
   int			creation_time;
@@ -164,7 +164,7 @@ struct server_list
   int			done_accept;
   int			creation_time;
   int			time_to_close;
-};	
+};
 
 struct clientDataStruct
 {
@@ -286,7 +286,7 @@ extern int SitePolicyPermit;
 { \
     CARD16 _len; \
     EXTRACT_CARD16 (_pBuf, _swap, _len); \
-    _string = (char *) malloc (_len + 1); \
+    _string = malloc (_len + 1); \
     memcpy (_string, _pBuf, _len); \
     _string[_len] = '\0'; \
     _pBuf += _len; \

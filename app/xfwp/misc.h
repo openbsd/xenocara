@@ -1,7 +1,7 @@
 /* $Xorg: misc.h,v 1.4 2001/02/09 02:05:45 xorgcvs Exp $ */
 /*
 
-Copyright "1986-1997, 1998  The Open Group 
+Copyright "1986-1997, 1998  The Open Group
 
 Permission to use, copy, modify, distribute, and sell this software and its
 documentation for any purpose is hereby granted without fee, provided that
@@ -51,19 +51,15 @@ X Window System is a trademark of The Open Group.
 #define SEPARATOR2			'.'
 
 
-extern char* 
-Malloc(
-    int s);
-
-extern int 
+extern int
 doConfigCheck(
     struct sockaddr_in * source_sockaddr_in,
     struct sockaddr_in * dest_sockaddr_in,
     struct config * config_info,
     int context,
     int * rule_number);
- 
-extern void 
+
+extern void
 doCheckTimeouts(
     struct config * config_info,
     int * nfds_ready,
@@ -76,7 +72,7 @@ extern int
 doHandleConfigFile (
     struct config * config_info);
 
-extern void 
+extern void
 doWriteLogEntry(
     char                * source,
     char                * destination,
@@ -91,21 +87,21 @@ doCopyFromTo(
     fd_set * rinit,
     fd_set * winit);
 
-extern int 
+extern int
 doCheckServerList(
     char * server_address,
     char ** listen_port_string,
     int num_servers);
 
-extern void 
+extern void
 doProcessInputArgs(
-    struct config * config_info, 
-    int argc, 
+    struct config * config_info,
+    int argc,
     char * argv[]);
 
-extern int 
+extern int
 doInitDataStructs(
-    struct config * config_info, 
+    struct config * config_info,
     struct ICE_setup_info * PM_conn_setup);
 
 #endif /* _MISC_H */

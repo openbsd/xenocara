@@ -1,3 +1,82 @@
+commit 495b4c6d30caac171ca992a6e4c355feb2232009
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Aug 2 23:37:19 2013 -0700
+
+    xfwp 1.0.3
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 77511a82b1efe2ecde013b3f20ff71605aa61971
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Nov 19 00:55:38 2011 -0800
+
+    Remove Malloc wrapper and its MallocFailed helper
+    
+    Only two calls left, one of which was already checking for failure.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 3570de4c260cf45d202e3577d13385d722d043d1
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Nov 19 00:49:52 2011 -0800
+
+    Replace many malloc(strlen)+strcpy calls with strdup calls
+    
+    Some used local Malloc wrapper that checked for a NULL return and
+    exited, so had to add matching checks for strdup returning NULL.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit c6b02069954ef83f8766d6a157b0a95939523d32
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Nov 19 00:30:44 2011 -0800
+
+    Remove unnecessary Realloc wrapper
+    
+    The one caller already checks for and handles failure, so having a
+    wrapper that just adds another check for allocation failure isn't
+    useful.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit c44cb256ce8660c9d529374b7596531dad1a5376
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Nov 19 00:08:18 2011 -0800
+
+    Remove a bunch of unnecessary casts with malloc, free & memcpy calls
+    
+    With modern compilers and headers, they cause more problems than they
+    solve and just hide real issues.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 42a2a79b3e1f5c9cbb076743965eba8268733989
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Oct 6 22:57:24 2011 -0700
+
+    Fix typos
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit c24ac15bfa150aeed51d9ec5cb9f2a5054e6f91d
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Oct 6 22:50:27 2011 -0700
+
+    Add const attributes to fix gcc -Wwrite-strings warnings
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 063daed4b43090a3e37f29e9796ffce0861573f1
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Oct 6 22:47:25 2011 -0700
+
+    Strip trailing whitespace
+    
+    Performed with: find * -type f | xargs perl -i -p -e 's{[ \t]+$}{}'
+    git diff -w & git diff -b show no diffs from this change
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit e266d1015912d5e9458351e6deed548d2755eedb
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Fri Jan 7 18:52:54 2011 -0800

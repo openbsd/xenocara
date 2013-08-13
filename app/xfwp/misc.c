@@ -50,9 +50,9 @@ static Bool HaveSitePolicy = 0;
 
 
 /*ARGSUSED*/
-static void 
+static void
 BadSyntax(
-    char *msg, 
+    const char *msg,
     int line)
 {
 #ifdef DEBUG
@@ -60,50 +60,27 @@ BadSyntax(
 #endif
 }
 
-static void 
+static void
 Usage(void)
 {
-    (void) fprintf (stderr, "Usage:  xfwp [-pdt <#secs>] [-clt <#secs>] \\\n"); 
-    (void) fprintf (stderr, 
+    (void) fprintf (stderr, "Usage:  xfwp [-pdt <#secs>] [-clt <#secs>] \\\n");
+    (void) fprintf (stderr,
 		    "\t[-cdt <#secs>] [-pmport <port#>] [-config <path>]\\\n");
-    (void) fprintf (stderr, 
+    (void) fprintf (stderr,
 		    "\t[-logfile <path>] [-loglevel <0|1>] [-verify]\n");
     exit (0);
 }
 
-static void 
-MallocFailed(void)
-{
-    (void) fprintf(stderr, "Memory allocation failed, exiting\n");
-    exit(1);
-}
-
-static char* 
-Realloc(
-    char *p, 
-    int s)
-{
-    if (!p)
-	p = malloc(s);
-    else
-	p = realloc(p, s);
-
-    if (!p)
-	MallocFailed();
-
-    return p;
-}
-
-static void 
+static void
 BadMalloc(
     int line)
 {
-    (void) fprintf(stderr, "Error: memory exhaused at line %d\n", line);
+    (void) fprintf(stderr, "Error: memory exhausted at line %d\n", line);
 }
 
-static void 
+static void
 doPrintEval(
-    struct config * config_info, 
+    struct config * config_info,
     int line_counter)
 {
     struct config_line *ruleP = config_info->config_file_data[line_counter];
@@ -113,9 +90,9 @@ doPrintEval(
 
     (void) fprintf(stderr,"matched: %s %s %s %s %s %s %s\n",
 	    	   (ruleP->permit_deny)     ? ruleP->permit_deny     : "",
-	    	   (ruleP->source_hostname) ? ruleP->source_hostname : "", 
+	    	   (ruleP->source_hostname) ? ruleP->source_hostname : "",
 	    	   (ruleP->source_netmask)  ? ruleP->source_netmask  : "",
-	    	   (ruleP->dest_hostname)   ? ruleP->dest_hostname   : "", 
+	    	   (ruleP->dest_hostname)   ? ruleP->dest_hostname   : "",
 	    	   (ruleP->dest_netmask)    ? ruleP->dest_netmask    : "",
 	    	   (ruleP->operator)        ? ruleP->operator        : "",
 	    	   (ruleP->service)         ? ruleP->service         : "");
@@ -123,7 +100,7 @@ doPrintEval(
 
 static Bool
 doConfigRequireDisallow(
-    int line, 
+    int line,
     char* result)
 {
   Bool	permit = (strcmp("require", result) == 0);
@@ -162,7 +139,7 @@ doConfigRequireDisallow(
       return 1;
   }
 
-  SitePolicies[SitePolicyCount] = malloc(strlen(result) + 1);
+  SitePolicies[SitePolicyCount] = strdup(result);
 
   if (!SitePolicies[SitePolicyCount])
   {
@@ -170,7 +147,7 @@ doConfigRequireDisallow(
       return 1;
   }
 
-  strcpy(SitePolicies[SitePolicyCount++], result);
+  SitePolicyCount++;
 
 #ifdef DEBUG
   (void) fprintf(stderr, "%s %s", permit ? "requiring" : "disallowing", result);
@@ -179,7 +156,7 @@ doConfigRequireDisallow(
   return False;
 }
 
-static int 
+static int
 doVerifyHostMaskToken(
     char token[])
 {
@@ -200,12 +177,12 @@ doVerifyHostMaskToken(
       token = result;
   }
   if ((delimiter_count < 3) || (delimiter_count > 3))
-    return 0; 
+    return 0;
   else
     return 1;
 }
 
-static int 
+static int
 doInitNewRule(
     struct config 	*config_info)
 {
@@ -215,17 +192,16 @@ doInitNewRule(
   if (rule_number == config_info->lines_allocated)
   {
       if ((config_info->config_file_data = (struct config_line**)
-	       Realloc((char*)config_info->config_file_data,
+	       realloc((char*)config_info->config_file_data,
 	    	       (config_info->lines_allocated += ADD_LINES) *
-		       sizeof(struct config_line *))) == NULL) 
+		       sizeof(struct config_line *))) == NULL)
       {
         (void) fprintf (stderr, "realloc - config_file_data\n");
         return -1;
       }
   }
-	
-  if ((config_lineP = (struct config_line *) 
-	  Malloc (sizeof(struct config_line))) == NULL)
+
+  if ((config_lineP = malloc (sizeof(struct config_line))) == NULL)
   {
     (void) fprintf (stderr, "malloc - config_lineP\n");
     return -1;
@@ -241,7 +217,7 @@ doInitNewRule(
   config_lineP->dest_netmask = NULL;
   config_lineP->dest_net = 0;
   config_lineP->operator = NULL;
-  config_lineP->service = NULL; 
+  config_lineP->service = NULL;
 
   config_info->config_file_data[rule_number] = config_lineP;
 
@@ -250,32 +226,30 @@ doInitNewRule(
 
 static int
 doConfigPermitDeny(
-    struct config *config_info, 
+    struct config *config_info,
     char *result)
 {
   struct config_line ** config_file_data;
   int		line_number;
   int		bad_token = 0;
 
-  /* 
-   * caution; config_info->config_file_data can move in doInitNewRule 
+  /*
+   * caution; config_info->config_file_data can move in doInitNewRule
    */
   if ((line_number = doInitNewRule(config_info)) == -1)
     return 1;
 
   config_file_data = config_info->config_file_data;
 
-  if ((config_file_data[line_number]->permit_deny = 
-       (char *) malloc (strlen(result) + 1)) == NULL)
+  if ((config_file_data[line_number]->permit_deny = strdup(result)) == NULL)
   {
     (void) fprintf(stderr, "malloc - config rule (permit/deny keyword)\n");
     return 0;
   }
-  strcpy(config_file_data[line_number]->permit_deny, result);
 
 #ifdef DEBUG
-  (void) fprintf(stderr, 
-		 "first token = %s\n", 
+  (void) fprintf(stderr,
+		 "first token = %s\n",
 		 config_file_data[line_number]->permit_deny);
 #endif
 
@@ -289,22 +263,21 @@ doConfigPermitDeny(
 
     if (doVerifyHostMaskToken(token))
     {
-      if ((config_file_data[line_number]->source_hostname = 
-	      (char *) malloc (strlen(result) + 1)) == NULL)
+      if ((config_file_data[line_number]->source_hostname = strdup(result))
+	  == NULL)
       {
 	(void) fprintf(stderr, "malloc - config rule (source host)\n");
 	return 0;
       }
-      strcpy(config_file_data[line_number]->source_hostname, result);
 #ifdef DEBUG
-      (void) fprintf(stderr, 
-	   	     "second token = %s\n", 
+      (void) fprintf(stderr,
+	   	     "second token = %s\n",
 	    	     config_file_data[line_number]->source_hostname);
 #endif
       /*
        * generate network address format
        */
-      config_file_data[line_number]->source_host = 
+      config_file_data[line_number]->source_host =
 	      inet_addr(config_file_data[line_number]->source_hostname);
     } else
       bad_token = 1;
@@ -320,19 +293,18 @@ doConfigPermitDeny(
 
     if (doVerifyHostMaskToken(token))
     {
-      if ((config_file_data[line_number]->source_netmask = 
-		(char *) malloc (strlen(result) + 1)) == NULL)
+      if ((config_file_data[line_number]->source_netmask = strdup(result))
+	  == NULL)
       {
 	(void) fprintf(stderr, "malloc - config rule (source netmask)\n");
 	return 0;
       }
-      strcpy(config_file_data[line_number]->source_netmask, result);
 #ifdef DEBUG
-      (void) fprintf(stderr, 
-	   	     "third token = %s\n", 
+      (void) fprintf(stderr,
+	   	     "third token = %s\n",
 	    	     config_file_data[line_number]->source_netmask);
 #endif
-      config_file_data[line_number]->source_net = 
+      config_file_data[line_number]->source_net =
 	      inet_addr(config_file_data[line_number]->source_netmask);
     } else
       bad_token = 1;
@@ -348,19 +320,18 @@ doConfigPermitDeny(
 
     if (doVerifyHostMaskToken(token))
     {
-      if ((config_file_data[line_number]->dest_hostname = 
-		(char *) malloc (strlen(result) + 1)) == NULL)
+      if ((config_file_data[line_number]->dest_hostname = strdup(result))
+	  == NULL)
       {
 	(void) fprintf(stderr, "malloc - config rule (destination host)\n");
 	return 0;
       }
-      strcpy(config_file_data[line_number]->dest_hostname, result);
 #ifdef DEBUG
-      (void) fprintf(stderr, 
-	   	     "fourth token = %s\n", 
+      (void) fprintf(stderr,
+	   	     "fourth token = %s\n",
 	    	     config_file_data[line_number]->dest_hostname);
 #endif
-      config_file_data[line_number]->dest_host = 
+      config_file_data[line_number]->dest_host =
 	      inet_addr(config_file_data[line_number]->dest_hostname);
     } else
       bad_token = 1;
@@ -376,19 +347,18 @@ doConfigPermitDeny(
 
     if (doVerifyHostMaskToken(token))
     {
-      if ((config_file_data[line_number]->dest_netmask = 
-		(char *) malloc (strlen(result) + 1)) == NULL)
+      if ((config_file_data[line_number]->dest_netmask = strdup(result))
+	  == NULL)
       {
 	(void) fprintf(stderr, "malloc - config rule (destination mask)\n");
 	return 0;
       }
-      strcpy(config_file_data[line_number]->dest_netmask, result);
 #ifdef DEBUG
-      (void) fprintf(stderr, 
-	   	     "fifth token = %s\n", 
+      (void) fprintf(stderr,
+	   	     "fifth token = %s\n",
 	    	     config_file_data[line_number]->dest_netmask);
 #endif
-      config_file_data[line_number]->dest_net = 
+      config_file_data[line_number]->dest_net =
 	      inet_addr(config_file_data[line_number]->dest_netmask);
     } else
       bad_token = 1;
@@ -401,16 +371,14 @@ doConfigPermitDeny(
   {
     if (!strcmp("eq", result))
     {
-      if ((config_file_data[line_number]->operator = 
-		(char *) malloc (strlen(result) + 1)) == NULL)
+      if ((config_file_data[line_number]->operator = strdup(result)) == NULL)
       {
 	(void) fprintf(stderr, "malloc - config rule (op)\n");
 	return 0;
       }
-      strcpy(config_file_data[line_number]->operator, result);
 #ifdef DEBUG
-      (void) fprintf(stderr, 
-	      	     "sixth token = %s\n", 
+      (void) fprintf(stderr,
+	      	     "sixth token = %s\n",
 	      	     config_file_data[line_number]->operator);
 #endif
     } else
@@ -422,20 +390,18 @@ doConfigPermitDeny(
    */
   if ((result = strtok(NULL, SEPARATOR1)) != NULL)
   {
-    if (!(strncmp("pm", result, 2)) || 
+    if (!(strncmp("pm", result, 2)) ||
         (!strncmp("fp", result, 2)) ||
-        (!strncmp("cd", result, 2)))	
+        (!strncmp("cd", result, 2)))
     {
-      if ((config_file_data[line_number]->service = 
-		(char *) malloc (strlen(result) + 1)) == NULL)
+      if ((config_file_data[line_number]->service = strdup(result)) == NULL)
       {
 	(void) fprintf(stderr, "malloc - config rule (service)\n");
 	return 0;
       }
-      strcpy(config_file_data[line_number]->service, result);
 #ifdef DEBUG
-      (void) fprintf(stderr, 
-	      	     "seventh token = %s\n", 
+      (void) fprintf(stderr,
+	      	     "seventh token = %s\n",
 	      	     config_file_data[line_number]->service);
 #endif
       /*
@@ -445,7 +411,7 @@ doConfigPermitDeny(
 	config_file_data[line_number]->service_id = PMGR;
       else if (!strncmp(config_file_data[line_number]->service, "fp", 2))
 	config_file_data[line_number]->service_id = FINDPROXY;
-      else 
+      else
 	if (!strncmp(config_file_data[line_number]->service, "cd", 2))
 	  config_file_data[line_number]->service_id = CLIENT;
     } else
@@ -457,13 +423,13 @@ doConfigPermitDeny(
    */
   if (bad_token ||
       (config_file_data[line_number]->permit_deny == NULL) ||
-      ((config_file_data[line_number]->permit_deny != NULL) && 
+      ((config_file_data[line_number]->permit_deny != NULL) &&
        (config_file_data[line_number]->source_hostname == NULL)) ||
-      ((config_file_data[line_number]->source_hostname != NULL) && 
-       (config_file_data[line_number]->source_netmask == NULL)) || 
-      ((config_file_data[line_number]->dest_hostname != NULL) && 
-       (config_file_data[line_number]->dest_netmask == NULL)) || 
-      ((config_file_data[line_number]->operator != NULL) && 
+      ((config_file_data[line_number]->source_hostname != NULL) &&
+       (config_file_data[line_number]->source_netmask == NULL)) ||
+      ((config_file_data[line_number]->dest_hostname != NULL) &&
+       (config_file_data[line_number]->dest_netmask == NULL)) ||
+      ((config_file_data[line_number]->operator != NULL) &&
        (config_file_data[line_number]->service == NULL)))
       return 1;
 
@@ -471,7 +437,7 @@ doConfigPermitDeny(
   return 0;
 }
 
-static int 
+static int
 doProcessLine(
     char *line,
     struct config *config_info,
@@ -506,19 +472,8 @@ doProcessLine(
 /*
  * Public functions
  */
-char* 
-Malloc(
-    int s)
-{
-    char *p = malloc(s);
 
-    if (!p)
-	MallocFailed();
-
-    return p;	
-}
-
-int 
+int
 doConfigCheck(
     struct sockaddr_in 	* source_sockaddr_in,
     struct sockaddr_in 	* dest_sockaddr_in,
@@ -531,12 +486,12 @@ doConfigCheck(
   /*
    * look through the config file parse tree for a source IP address
    * that matches this request
-   */ 
+   */
   for (line_counter = 0; line_counter < config_info->rule_count; line_counter++)
   {
     if (config_info->config_file_data[line_counter] != NULL)
     {
-      if ((source_sockaddr_in->sin_addr.s_addr & 
+      if ((source_sockaddr_in->sin_addr.s_addr &
 	  (~(config_info->config_file_data[line_counter]->source_net))) ==
 	  config_info->config_file_data[line_counter]->source_host)
       {
@@ -556,12 +511,12 @@ doConfigCheck(
 	    /*
              * compute destination info restrictions
              */
-            if ((dest_sockaddr_in->sin_addr.s_addr & 
+            if ((dest_sockaddr_in->sin_addr.s_addr &
 	        (~(config_info->config_file_data[line_counter]->dest_net))) ==
 	        config_info->config_file_data[line_counter]->dest_host)
 	    {
 	      /*
-	       * you got a match on the destination, so look at 
+	       * you got a match on the destination, so look at
                * the operator and service fields to see if the "permit"
                * might be specific to one particular connection-type only
                */
@@ -571,24 +526,24 @@ doConfigCheck(
                  * there *is* a service id; see if it matches our current
                  * config check request
                  */
-		if (config_info->config_file_data[line_counter]->service_id == 
+		if (config_info->config_file_data[line_counter]->service_id ==
 			context)
 		{
-		  doPrintEval(config_info, line_counter);  
+		  doPrintEval(config_info, line_counter);
                   /*
-                   * if you are permitting, there's no rule match to log 
+                   * if you are permitting, there's no rule match to log
                    */
                   *rule_number = line_counter + 1;
 		  return 1;
 		} else
 		  /*
-	           * we didn't get a match on context; this "permit" doesn't 
-		   * apply to the current request; so keep trying 
+	           * we didn't get a match on context; this "permit" doesn't
+		   * apply to the current request; so keep trying
 		   */
 		  continue;
-	      } else	
+	      } else
 		/*
-		 * there's no service qualifier; permit the connection 
+		 * there's no service qualifier; permit the connection
 		 */
 		doPrintEval(config_info, line_counter);
                 *rule_number = line_counter + 1;
@@ -601,7 +556,7 @@ doConfigCheck(
 	  } else if ((config_info->
 			config_file_data[line_counter]->dest_hostname) &&
 	      		(context == PMGR))
-            { 
+            {
 	      /*
                * skip the destination address check and test for
                * the operator and service_id
@@ -610,9 +565,9 @@ doConfigCheck(
 	      {
 		/*
                  * there *is* a service id; see if it matches our current
-                 * config check context 
+                 * config check context
                  */
-		if (config_info->config_file_data[line_counter]->service_id 
+		if (config_info->config_file_data[line_counter]->service_id
 								== context)
 		{
 		  doPrintEval(config_info, line_counter);
@@ -623,13 +578,13 @@ doConfigCheck(
 		} else
 		  /*
 	           * we didn't get a match on context; this "permit" doesn't
-		   * apply to the current client request; so keep trying 
+		   * apply to the current client request; so keep trying
 		   */
 		  continue;
-	      } else	
-              {		
+	      } else
+              {
 		/*
-		 * there's no service qualifier; permit the connection 
+		 * there's no service qualifier; permit the connection
 		 */
 		doPrintEval(config_info, line_counter);
                 *rule_number = line_counter + 1;
@@ -657,7 +612,7 @@ doConfigCheck(
 	    /*
              * compute destination info restrictions
              */
-            if ((dest_sockaddr_in->sin_addr.s_addr & 
+            if ((dest_sockaddr_in->sin_addr.s_addr &
 	        (~(config_info->config_file_data[line_counter]->dest_net))) ==
 	        config_info->config_file_data[line_counter]->dest_host)
 	    {
@@ -672,15 +627,15 @@ doConfigCheck(
                  * there *is* a service id; see if it matches our current
                  * config check request
                  */
-		if (config_info->config_file_data[line_counter]->service_id == 
+		if (config_info->config_file_data[line_counter]->service_id ==
 			context)
 		{
 		  /*
                    * the match signifies an explicit denial of permission
 	           */
-		  doPrintEval(config_info, line_counter);  
+		  doPrintEval(config_info, line_counter);
                   /*
-                   * save the rule match number before returning 
+                   * save the rule match number before returning
                    */
                   *rule_number = line_counter + 1;
 		  return 0;
@@ -688,30 +643,30 @@ doConfigCheck(
 		  /*
 		   * we didn't get a match on the service id; the "deny"
 	           * operation doesn't apply to this connection, so keep
-                   * trying 
+                   * trying
 		   */
 		  continue;
-	      } else	
+	      } else
 	      {
 		/*
-		 * there's no service qualifier; deny the connection 
+		 * there's no service qualifier; deny the connection
 		 */
-		doPrintEval(config_info, line_counter);  
+		doPrintEval(config_info, line_counter);
                 /*
-                 * save the rule match number before returning 
+                 * save the rule match number before returning
                  */
                 *rule_number = line_counter + 1;
                 return 0;
-	      }	
+	      }
             } else
               /*
-               * the destination field doesn't match; keep trying 
+               * the destination field doesn't match; keep trying
                */
 	      continue;
 	  } else if ((config_info->
 			config_file_data[line_counter]->dest_hostname) &&
 	      		(context == PMGR))
-            { 
+            {
 	      /*
                * skip the destination address check and test for
                * the operator and service_id
@@ -720,15 +675,15 @@ doConfigCheck(
 	      {
 		/*
                  * there *is* a service id; see if it matches our current
-                 * config check context 
+                 * config check context
                  */
-		if (config_info->config_file_data[line_counter]->service_id == 
+		if (config_info->config_file_data[line_counter]->service_id ==
 			context)
 		{
 		  /*
                    * this is a request to explicitly deny service, so do it
 		   */
-		  doPrintEval(config_info, line_counter);  
+		  doPrintEval(config_info, line_counter);
                   /*
                    * not logging PM events, but if we were, save rule match here
                    */
@@ -736,15 +691,15 @@ doConfigCheck(
 		} else
 		  /*
 	           * we didn't get a match on context; this "deny" doesn't
-		   * apply to the current client request; so keep trying 
+		   * apply to the current client request; so keep trying
 		   */
 		  continue;
-	      } else	
+	      } else
 	      {
 		/*
-		 * there's no service qualifier; deny the connection 
+		 * there's no service qualifier; deny the connection
 		 */
-		doPrintEval(config_info, line_counter);  
+		doPrintEval(config_info, line_counter);
                 /*
                  * if we were logging PM events ...
                  */
@@ -755,12 +710,12 @@ doConfigCheck(
 	      /*
 	       * there's no destination specified; deny the connection
 	       */
-	      doPrintEval(config_info, line_counter);  
+	      doPrintEval(config_info, line_counter);
               /*
                * save rule match
                */
               *rule_number = line_counter + 1;
-              return 0;	
+              return 0;
 	    }
 	  } /* end else deny */
       } /* end if match on source */
@@ -774,7 +729,7 @@ doConfigCheck(
   if (config_info->config_file_path == NULL)
   {
     if (printConfigVerify)
-	(void) fprintf(stderr, 
+	(void) fprintf(stderr,
 		       "matched default permit 0.0.0.0 255.255.255.255\n");
     /*
      * there's no rule match to save
@@ -801,14 +756,14 @@ doConfigCheck(
       (void) fprintf(stderr, "matched default deny 0.0.0.0 255.255.255.255\n");
 
   /*
-   * not in this case either 
+   * not in this case either
    */
   *rule_number = -1;
   return 0;
 }
 
 
-void 
+void
 doCheckTimeouts(
     struct config * config_info,
     int * nfds_ready,
@@ -820,20 +775,20 @@ doCheckTimeouts(
   int			client_data_counter;
   int			client_listen_counter;
   int			pm_conn_counter;
-  struct timeval 	current_time;	
+  struct timeval 	current_time;
   struct timezone 	current_zone;
 
   /*
    * get current time
    */
-  gettimeofday(&current_time, &current_zone); 
+  gettimeofday(&current_time, &current_zone);
 
   /*
-   * start with the clients; we have to do them all, because a 
+   * start with the clients; we have to do them all, because a
    * timeout may occur even if the object's fd is not currently
    * readable or writable
    */
-  for (client_data_counter = 0; 
+  for (client_data_counter = 0;
        client_data_counter < config_info->num_client_conns;
        client_data_counter++)
   {
@@ -842,21 +797,21 @@ doCheckTimeouts(
       /*
        * do the shutdown time computation
        */
-      if ((current_time.tv_sec 
-	  - client_conn_array[client_data_counter]->creation_time) 
+      if ((current_time.tv_sec
+	  - client_conn_array[client_data_counter]->creation_time)
 	  > client_conn_array[client_data_counter]->time_to_close)
       {
 	/*
          * time to shut this client conn down; we're not going to be graceful
-         * about it, either; we're just going to clear the select() masks for 
+         * about it, either; we're just going to clear the select() masks for
          * the relevant file descriptors, close these fd's and deallocate
-         * the connection objects (for both client and server), and finally 
+         * the connection objects (for both client and server), and finally
          * adjust the select() return params as necessary
          */
 	FD_CLR(client_conn_array[client_data_counter]->fd, rinit);
 	FD_CLR(client_conn_array[client_data_counter]->fd, winit);
         FD_CLR(client_conn_array[client_data_counter]->conn_to, rinit);
-        FD_CLR(client_conn_array[client_data_counter]->conn_to, winit); 
+        FD_CLR(client_conn_array[client_data_counter]->conn_to, winit);
  	close(client_conn_array[client_data_counter]->fd);
  	close(client_conn_array[client_data_counter]->conn_to);
         free(client_conn_array[client_conn_array[client_data_counter]->conn_to]);
@@ -865,12 +820,12 @@ doCheckTimeouts(
         if (client_conn_array[client_data_counter]->destination)
 	    free(client_conn_array[client_data_counter]->destination);
         free(client_conn_array[client_data_counter]);
-        client_conn_array[client_conn_array[client_data_counter]->conn_to] = 
+        client_conn_array[client_conn_array[client_data_counter]->conn_to] =
 		NULL;
-        client_conn_array[client_data_counter] = NULL; 
+        client_conn_array[client_data_counter] = NULL;
 	/*
 	 * the nfds_ready value is tricky, because we're not sure if we got
-         * a readable or writable on the associated connection for this 
+         * a readable or writable on the associated connection for this
          * iteration through select(); we'll decrement it one instead of two,
          * but it really doesn't matter either way given the logic of the
          * process readables and writables code
@@ -880,48 +835,48 @@ doCheckTimeouts(
 	 * if you just shut this connection object down, you don't want
          * to reset its creation date to now, so go to the next one
          */
- 	continue;	
+ 	continue;
       }
       /*
        * recompute select() timeout to maximize blocking time without
        * preventing timeout checking
        */
-      config_info->select_timeout.tv_sec = 
+      config_info->select_timeout.tv_sec =
 			min(config_info->select_timeout.tv_sec,
 			client_conn_array[client_data_counter]->time_to_close -
-			(current_time.tv_sec  - 
+			(current_time.tv_sec  -
 			client_conn_array[client_data_counter]->creation_time));
       /*
        * this wasn't a shutdown case, so check to see if there's activity
-       * on the fd; if so, then reset the creation time field to now 
+       * on the fd; if so, then reset the creation time field to now
        */
       if (FD_ISSET(client_conn_array[client_data_counter]->fd, readable) ||
-	  FD_ISSET(client_conn_array[client_data_counter]->fd, writable)) 
-	client_conn_array[client_data_counter]->creation_time = 
+	  FD_ISSET(client_conn_array[client_data_counter]->fd, writable))
+	client_conn_array[client_data_counter]->creation_time =
 		current_time.tv_sec;
       /*
        * do the same thing with the conn_to connections, but only
        * if they haven't already been marked for closing
        */
       if ((client_conn_array[client_data_counter]->conn_to) > 0)
-      { 
-      
-        if ((FD_ISSET(client_conn_array[client_data_counter]->conn_to, 
-								readable)) || 
-	    (FD_ISSET(client_conn_array[client_data_counter]->conn_to, 
+      {
+
+        if ((FD_ISSET(client_conn_array[client_data_counter]->conn_to,
+								readable)) ||
+	    (FD_ISSET(client_conn_array[client_data_counter]->conn_to,
 								writable)))
-	  client_conn_array[client_data_counter]->creation_time = 
+	  client_conn_array[client_data_counter]->creation_time =
 							current_time.tv_sec;
       }
     }
-  } 
+  }
 
   /*
-   * now do the client listen fds; as with the client data objects, 
+   * now do the client listen fds; as with the client data objects,
    * we have to do them all, because a timeout may occur even if the
    * object's fd is not currently readable or writable
    */
-  for (client_listen_counter = 0; 
+  for (client_listen_counter = 0;
        client_listen_counter < config_info->num_servers;
        client_listen_counter++)
   {
@@ -930,8 +885,8 @@ doCheckTimeouts(
       /*
        * do the shutdown time computation
        */
-      if ((current_time.tv_sec 
-	  - server_array[client_listen_counter]->creation_time) 
+      if ((current_time.tv_sec
+	  - server_array[client_listen_counter]->creation_time)
 	  > server_array[client_listen_counter]->time_to_close)
       {
 	/*
@@ -945,40 +900,40 @@ doCheckTimeouts(
 	FD_CLR(server_array[client_listen_counter]->client_listen_fd, winit);
  	close(server_array[client_listen_counter]->client_listen_fd);
         free(server_array[client_listen_counter]);
-        server_array[client_listen_counter] = NULL; 
+        server_array[client_listen_counter] = NULL;
 	(*nfds_ready)--;	/* XXX */
 	/*
 	 * if you just shut this connection object down, you don't want
          * to reset its creation date to now, so go to the next one
          */
- 	continue;	
+ 	continue;
       }
       /*
        * recompute select() timeout to maximize blocking time without
        * preventing timeout checking
        */
-      config_info->select_timeout.tv_sec = 
+      config_info->select_timeout.tv_sec =
 			min(config_info->select_timeout.tv_sec,
 			server_array[client_listen_counter]->time_to_close -
-			(current_time.tv_sec  - 
+			(current_time.tv_sec  -
 			server_array[client_listen_counter]->creation_time));
       /*
        * this wasn't a shutdown case, so check to see if there's activity
-       * on the fd; if so, then reset the creation time field to now 
+       * on the fd; if so, then reset the creation time field to now
        */
-      if (FD_ISSET(server_array[client_listen_counter]->client_listen_fd, 
+      if (FD_ISSET(server_array[client_listen_counter]->client_listen_fd,
 	           readable) ||
-	  FD_ISSET(server_array[client_listen_counter]->client_listen_fd, 
+	  FD_ISSET(server_array[client_listen_counter]->client_listen_fd,
 		   writable))
-	server_array[client_listen_counter]->creation_time = 
+	server_array[client_listen_counter]->creation_time =
 		current_time.tv_sec;
     }
-  } 
+  }
 
   /*
    * last of all the pm connection fds
    */
-  for (pm_conn_counter = 0; 
+  for (pm_conn_counter = 0;
        pm_conn_counter < config_info->num_pm_conns;
        pm_conn_counter++)
   {
@@ -987,12 +942,12 @@ doCheckTimeouts(
       /*
        * do the shutdown time computation
        */
-      if ((current_time.tv_sec 
-	  - pm_conn_array[pm_conn_counter]->creation_time) 
+      if ((current_time.tv_sec
+	  - pm_conn_array[pm_conn_counter]->creation_time)
 	  > pm_conn_array[pm_conn_counter]->time_to_close)
       {
 	/*
-         * shut this connection down just like the others 
+         * shut this connection down just like the others
          */
 	FD_CLR(pm_conn_array[pm_conn_counter]->fd, rinit);
 	FD_CLR(pm_conn_array[pm_conn_counter]->fd, winit);
@@ -1004,23 +959,23 @@ doCheckTimeouts(
 	 * if you just shut this connection object down, you don't want
          * to reset its creation date to now, so go to the next one
          */
- 	continue;	
+ 	continue;
       }
       /*
        * recompute select() timeout to maximize blocking time without
        * preventing timeout checking
        */
-      config_info->select_timeout.tv_sec = 
+      config_info->select_timeout.tv_sec =
 			min(config_info->select_timeout.tv_sec,
 			pm_conn_array[pm_conn_counter]->time_to_close -
-			(current_time.tv_sec  - 
+			(current_time.tv_sec  -
 			pm_conn_array[pm_conn_counter]->creation_time));
       /*
        * this wasn't a shutdown case, so check to see if there's activity
-       * on the fd; if so, then reset the creation time field to now 
+       * on the fd; if so, then reset the creation time field to now
        */
-      if (FD_ISSET(pm_conn_array[pm_conn_counter]->fd, readable) || 
-	  FD_ISSET(pm_conn_array[pm_conn_counter]->fd, writable)) 
+      if (FD_ISSET(pm_conn_array[pm_conn_counter]->fd, readable) ||
+	  FD_ISSET(pm_conn_array[pm_conn_counter]->fd, writable))
 	pm_conn_array[pm_conn_counter]->creation_time = current_time.tv_sec;
     }
   }
@@ -1045,9 +1000,9 @@ doHandleConfigFile (
     return 0;
   }
 
-  while (1) 
-  { 
-    if ((fgets(line, num_chars, stream)) == NULL) 
+  while (1)
+  {
+    if ((fgets(line, num_chars, stream)) == NULL)
     {
 #ifdef DEBUG
       (void) fprintf(stderr, "Reading config file - got 0 bytes\n");
@@ -1068,7 +1023,7 @@ doHandleConfigFile (
       (void) fclose(stream);
       return 0;
     }
-  } 
+  }
 
   if (!feof(stream))
   {
@@ -1084,7 +1039,7 @@ doHandleConfigFile (
   return 1;
 }
 
-void 
+void
 doWriteLogEntry(
     char 		* source,
     char		* destination,
@@ -1094,7 +1049,7 @@ doWriteLogEntry(
 {
   FILE 			* stream;
   struct timezone 	current_zone;
-  struct timeval 	current_time;	
+  struct timeval 	current_time;
   char			* time_stamp;
   int			time_length;
 
@@ -1114,7 +1069,7 @@ doWriteLogEntry(
 
   if ((stream = fopen(config_info->log_file_path, "a")) == NULL)
   {
-    (void) fprintf(stderr, 
+    (void) fprintf(stderr,
 		   "Failed to open log file '%s'\n",
 	    	   config_info->log_file_path);
     return;
@@ -1122,9 +1077,9 @@ doWriteLogEntry(
 
   /*
    * generate time stamp for this event
-   */ 
-  gettimeofday(&current_time, &current_zone); 
-  time_stamp = ctime((time_t *) &current_time.tv_sec); 
+   */
+  gettimeofday(&current_time, &current_zone);
+  time_stamp = ctime((time_t *) &current_time.tv_sec);
   time_length = strlen(time_stamp);
 
   /*
@@ -1138,35 +1093,35 @@ doWriteLogEntry(
 		  (source)      ? source      : "",
 		  (destination) ? destination : "",
 		  rule_number);
- 
-  (void) fclose(stream); 
+
+  (void) fclose(stream);
 }
 
 
-void 
+void
 doCopyFromTo(
-    int fd_from, 
-    int fd_to, 
+    int fd_from,
+    int fd_to,
     fd_set * rinit,
     fd_set * winit)
 {
   int ncopy;
-	
+
   if (client_conn_array[fd_from]->wbytes < RWBUFFER_SIZE)
   {
     /*
      * choose to write either how much you have (from->rbytes),
      * or how much you can hold (to->wbytes), whichever is
-     * smaller 
+     * smaller
      */
     ncopy = min(client_conn_array[fd_from]->rbytes,
 	        RWBUFFER_SIZE - client_conn_array[fd_to]->wbytes);
     /*
      * index into existing number bytes into the write buffer
-     * to get the start point for copying 
+     * to get the start point for copying
      */
     bcopy(client_conn_array[fd_from]->readbuf,
-	  client_conn_array[fd_to]->writebuf + 
+	  client_conn_array[fd_to]->writebuf +
 	  client_conn_array[fd_to]->wbytes, ncopy);
     /*
      * Then up the to->wbytes counter
@@ -1175,7 +1130,7 @@ doCopyFromTo(
     /*
      * something has to be done here with the select mask!!
      */
-    FD_SET(fd_to, winit); 
+    FD_SET(fd_to, winit);
     if (ncopy == client_conn_array[fd_from]->rbytes)
       client_conn_array[fd_from]->rbytes = 0;
     else
@@ -1191,7 +1146,7 @@ doCopyFromTo(
     FD_SET(fd_to, rinit);
   }
   /*
-   * If there's no room in the fd_to write buffer, do nothing 
+   * If there's no room in the fd_to write buffer, do nothing
    * this iteration (keep iterating on select() until something
    * gets written from this fd)
    */
@@ -1199,9 +1154,9 @@ doCopyFromTo(
 }
 
 
-int 
+int
 doCheckServerList(
-    char 		* server_address, 
+    char 		* server_address,
     char 		** listen_port_string,
     int 		num_servers)
 {
@@ -1209,8 +1164,8 @@ doCheckServerList(
    * this routine checks the server_address (provided by XFindProxy
    * and forwarded through the PM to the FWP) against the list of
    * servers to which connections have already been established;
-   * it does no format type checking or conversions! (i.e., network-id 
-   * vs. hostname representations); if the string received is not an 
+   * it does no format type checking or conversions! (i.e., network-id
+   * vs. hostname representations); if the string received is not an
    * exact match to one in the list, FWP will open a new connection
    * to the specified server, even though one may already exist under
    * a different name-format; all this is in a separate routine in
@@ -1221,23 +1176,20 @@ doCheckServerList(
   for (list_counter = 0; list_counter < num_servers; list_counter++)
   {
     if (server_array[list_counter] != NULL)
-    { 
-      if (!strcmp(server_array[list_counter]->x_server_hostport, 
+    {
+      if (!strcmp(server_array[list_counter]->x_server_hostport,
 	          server_address))
       {
 	/*
-	 * allocate and return the listen_port_string 
+	 * allocate and return the listen_port_string
 	 */
-	if ((*listen_port_string = (char *) malloc
-	    (strlen(server_array[list_counter]->listen_port_string) + 1)) 
-		== NULL)
+	if ((*listen_port_string =
+	     strdup(server_array[list_counter]->listen_port_string)) == NULL)
 	{
     	  (void) fprintf(stderr, "malloc - listen_port_string\n");
 	  return FAILURE;
 	}
-        strcpy(*listen_port_string, 
-	       server_array[list_counter]->listen_port_string);
-        return SUCCESS; 
+        return SUCCESS;
       }
     }
   }
@@ -1245,10 +1197,10 @@ doCheckServerList(
 }
 
 
-void 
+void
 doProcessInputArgs (
-    struct config 	* config_info, 
-    int 		argc, 
+    struct config 	* config_info,
+    int 		argc,
     char 		* argv[])
 {
   int 			arg_counter;
@@ -1265,10 +1217,10 @@ doProcessInputArgs (
   config_info->config_file_data = NULL;
   config_info->config_file_path = NULL;
   config_info->log_file_path = NULL;
-  
+
   /*
-   * initialize timeout for three port types; if a timeout for a 
-   * particular port type (pmdata, clientlisten, clientdata) is 
+   * initialize timeout for three port types; if a timeout for a
+   * particular port type (pmdata, clientlisten, clientdata) is
    * not specified explicitly, then it assumes the hard-coded
    * default value; initialize other command line options here
    * as well
@@ -1281,7 +1233,7 @@ doProcessInputArgs (
       {
         if (arg_counter + 1 == argc)
 	{
-          break_flag = 1; 
+          break_flag = 1;
 	  break;
         }
 	config_info->pm_data_timeout = atoi(argv[arg_counter + 1]);
@@ -1291,7 +1243,7 @@ doProcessInputArgs (
         if (arg_counter + 1 == argc)
         {
 	  break_flag = 1;
-          break; 
+          break;
         }
 	config_info->client_listen_timeout = atoi(argv[arg_counter + 1]);
       }
@@ -1300,7 +1252,7 @@ doProcessInputArgs (
         if (arg_counter + 1 == argc)
         {
           break_flag = 1;
-          break; 
+          break;
         }
 	config_info->client_data_timeout = atoi(argv[arg_counter + 1]);
       }
@@ -1308,22 +1260,25 @@ doProcessInputArgs (
       {
         if (arg_counter + 1 == argc)
         {
-          break_flag = 1; 
+          break_flag = 1;
           break;
         }
 	if (atoi(argv[arg_counter + 1]) > 65536)
         {
           break_flag = 1;
-	  break;     
+	  break;
         }
-	config_info->pm_listen_port = Malloc(strlen(argv[arg_counter+1])+1);
-	strcpy(config_info->pm_listen_port, argv[arg_counter + 1]);
+	if ((config_info->pm_listen_port = strdup(argv[arg_counter+1])) == NULL)
+	{
+	  fprintf(stderr, "malloc - argument -pmport\n");
+	  exit(1);
+	}
       }
       else if (!strcmp("-max_pm_conns", argv[arg_counter]))
       {
         if (arg_counter + 1 == argc)
         {
-          break_flag = 1; 
+          break_flag = 1;
           break;
         }
 	config_info->num_pm_conns = atoi(argv[arg_counter + 1]);
@@ -1332,7 +1287,7 @@ doProcessInputArgs (
       {
         if (arg_counter + 1 == argc)
         {
-          break_flag = 1; 
+          break_flag = 1;
           break;
         }
 	config_info->num_servers = atoi(argv[arg_counter + 1]);
@@ -1342,10 +1297,14 @@ doProcessInputArgs (
         if (arg_counter + 1 == argc)
         {
           break_flag = 1;
-          break; 
+          break;
         }
-        config_info->config_file_path = Malloc(strlen(argv[arg_counter+1])+1);
-	strcpy(config_info->config_file_path, argv[arg_counter + 1]);
+        if ((config_info->config_file_path = strdup(argv[arg_counter+1]))
+	    == NULL)
+	{
+	  fprintf(stderr, "malloc - argument -config\n");
+	  exit(1);
+	}
       }
       else if (!strcmp("-verify", argv[arg_counter]))
       {
@@ -1358,15 +1317,18 @@ doProcessInputArgs (
           break_flag = 1;
           break;
         }
-        config_info->log_file_path = Malloc(strlen(argv[arg_counter+1])+1);
-        strcpy(config_info->log_file_path, argv[arg_counter + 1]);
+        if ((config_info->log_file_path = strdup(argv[arg_counter+1])) == NULL)
+	{
+	  fprintf(stderr, "malloc - argument -logfile\n");
+	  exit(1);
+	}
       }
       else if (!strcmp("-loglevel", argv[arg_counter]))
       {
         if ((arg_counter + 1 == argc) || (atoi(argv[arg_counter + 1]) > 1))
         {
           break_flag = 1;
-          break; 
+          break;
         }
 	config_info->log_level = atoi(argv[arg_counter + 1]);
       }
@@ -1376,7 +1338,7 @@ doProcessInputArgs (
 	Usage();
       }
     }
-  } 
+  }
   if (break_flag)
       Usage();
 
@@ -1396,7 +1358,7 @@ doProcessInputArgs (
 #endif
 #endif
 
-  client_conn_array = (struct client_conn_buf **) 
+  client_conn_array =
      malloc (config_info->num_client_conns * sizeof (struct client_conn_buf *));
   if (!client_conn_array)
   {
@@ -1406,9 +1368,9 @@ doProcessInputArgs (
 
   if (!config_info->num_pm_conns)
     config_info->num_pm_conns = MAX_PM_CONNS;
-  pm_conn_array = (struct pm_conn_buf **) 
+  pm_conn_array =
      malloc (config_info->num_client_conns * sizeof (struct pm_conn_buf *));
-  if (!pm_conn_array) 
+  if (!pm_conn_array)
   {
     (void) fprintf (stderr, "malloc - PM connection array\n");
     exit (1);
@@ -1435,15 +1397,19 @@ doProcessInputArgs (
     config_info->client_data_timeout = CLIENT_DATA_TIMEOUT_DEFAULT;
   if (config_info->pm_listen_port == NULL)
   {
-    config_info->pm_listen_port = Malloc(strlen(PM_LISTEN_PORT) + 1);
-    strcpy(config_info->pm_listen_port, PM_LISTEN_PORT);
+    config_info->pm_listen_port = strdup(PM_LISTEN_PORT);
+    if (!config_info->pm_listen_port)
+    {
+      (void) fprintf (stderr, "malloc - PM listen port\n");
+      exit (1);
+    }
   }
 }
 
 
 int
 doInitDataStructs(
-    struct config * config_info, 
+    struct config * config_info,
     struct ICE_setup_info * pm_conn_setup)
 {
   int i;
@@ -1457,7 +1423,7 @@ doInitDataStructs(
    * them
    */
   config_info->select_timeout.tv_usec = 0;
-  config_info->select_timeout.tv_sec = 180000; 
+  config_info->select_timeout.tv_sec = 180000;
 
   /*
    * NULL the connection arrays
@@ -1476,7 +1442,7 @@ doInitDataStructs(
   pm_conn_setup->versionCount = 1;
   pm_conn_setup->PMVersions->major_version = 1;
   pm_conn_setup->PMVersions->minor_version = 0;
-  pm_conn_setup->PMVersions->process_msg_proc = 
+  pm_conn_setup->PMVersions->process_msg_proc =
 			(IcePaProcessMsgProc) FWPprocessMessages;
   /*
    * Register for protocol setup

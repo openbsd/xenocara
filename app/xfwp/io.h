@@ -1,7 +1,7 @@
 /* $Xorg: io.h,v 1.4 2001/02/09 02:05:45 xorgcvs Exp $ */
 /*
 
-Copyright "1986-1997, 1998  The Open Group 
+Copyright "1986-1997, 1998  The Open Group
 
 Permission to use, copy, modify, distribute, and sell this software and its
 documentation for any purpose is hereby granted without fee, provided that
