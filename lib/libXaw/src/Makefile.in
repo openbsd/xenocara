@@ -398,7 +398,7 @@ COMMON_CPPFLAGS = \
 #if PLATFORM_DARWIN
 #	-rm -f $(DESTDIR)$(libdir)/libXaw.7.@LIBEXT@
 #else
-#	-rm -f $(DESTDIR)$(libdir)/libXaw.@LIBEXT@.14.0
+#	-rm -f $(DESTDIR)$(libdir)/libXaw.@LIBEXT@.15.0
 #endif
 EXTRA_DIST = sharedlib.c
 all: all-am
@@ -1393,8 +1393,8 @@ uninstall-am: uninstall-info-am uninstall-libLTLIBRARIES \
 @BUILD_XAW7_TRUE@@PLATFORM_WIN32_FALSE@@SHARED_LIBS_TRUE@install-exec-hook::
 @BUILD_XAW7_TRUE@@PLATFORM_DARWIN_TRUE@@PLATFORM_WIN32_FALSE@@SHARED_LIBS_TRUE@	-rm -f $(DESTDIR)$(libdir)/libXaw.7.@LIBEXT@
 @BUILD_XAW7_TRUE@@PLATFORM_DARWIN_TRUE@@PLATFORM_WIN32_FALSE@@SHARED_LIBS_TRUE@	(cd $(DESTDIR)$(libdir) && ln -s libXaw7.7.@LIBEXT@ libXaw.7.@LIBEXT@)
-@BUILD_XAW7_TRUE@@PLATFORM_DARWIN_FALSE@@PLATFORM_WIN32_FALSE@@SHARED_LIBS_TRUE@	-rm -f $(DESTDIR)$(libdir)/libXaw.@LIBEXT@.14.0
-@BUILD_XAW7_TRUE@@PLATFORM_DARWIN_FALSE@@PLATFORM_WIN32_FALSE@@SHARED_LIBS_TRUE@	(cd $(DESTDIR)$(libdir) && ln -s libXaw7.@LIBEXT@.14.0 libXaw.@LIBEXT@.14.0)
+@BUILD_XAW7_TRUE@@PLATFORM_DARWIN_FALSE@@PLATFORM_WIN32_FALSE@@SHARED_LIBS_TRUE@	-rm -f $(DESTDIR)$(libdir)/libXaw.@LIBEXT@.15.0
+@BUILD_XAW7_TRUE@@PLATFORM_DARWIN_FALSE@@PLATFORM_WIN32_FALSE@@SHARED_LIBS_TRUE@	(cd $(DESTDIR)$(libdir) && ln -s libXaw7.@LIBEXT@.15.0 libXaw.@LIBEXT@.15.0)
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:
