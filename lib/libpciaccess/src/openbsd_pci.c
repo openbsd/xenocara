@@ -395,6 +395,30 @@ pci_device_openbsd_probe(struct pci_device *device)
 	return 0;
 }
 
+static int
+pci_device_openbsd_boot_vga(struct pci_device *dev)
+{
+	struct pci_vga pv;
+	int err;
+
+	if (dev->domain != 0)
+		return 0;
+
+	pv.pv_sel.pc_bus = 0;
+	pv.pv_sel.pc_dev = 0;
+	pv.pv_sel.pc_func = 0;
+	err = ioctl(pcifd[0], PCIOCGETVGA, &pv);
+	if (err)
+		return 0;
+
+	if (dev->bus == pv.pv_sel.pc_bus &&
+	    dev->dev == pv.pv_sel.pc_dev &&
+	    dev->func == pv.pv_sel.pc_func)
+		return 1;
+
+	return 0;
+}
+
 #if defined(__i386__) || defined(__amd64__)
 #include <machine/sysarch.h>
 #include <machine/pio.h>
@@ -546,7 +570,7 @@ static const struct pci_system_methods openbsd_pci_methods = {
 	pci_device_openbsd_write,
 	pci_fill_capabilities_generic,
 	NULL,
-	NULL,
+	pci_device_openbsd_boot_vga,
 	NULL,
 	NULL,
 	pci_device_openbsd_open_legacy_io,
@@ -660,10 +684,6 @@ pci_system_openbsd_create(void)
 					device->base.subvendor_id = PCI_VENDOR(reg);
 					device->base.subdevice_id = PCI_PRODUCT(reg);
 
-					device->base.vgaarb_rsrc =
-					    VGA_ARB_RSRC_LEGACY_IO |
-					    VGA_ARB_RSRC_LEGACY_MEM;
-
 					device++;
 				}
 			}
@@ -708,8 +728,18 @@ pci_device_vgaarb_init(void)
 		return -1;
 	pci_sys->vga_count = 0;
 	while ((dev = pci_device_next(iter)) != NULL) {
-		if (dev->domain == 0)
+		if (dev->domain == 0) {
 			pci_sys->vga_count++;
+			pv.pv_sel.pc_bus = dev->bus;
+			pv.pv_sel.pc_dev = dev->dev;
+			pv.pv_sel.pc_func = dev->func;
+			if (ioctl(pcifd[0], PCIOCGETVGA, &pv))
+				continue;
+			if (pv.pv_decode)
+				dev->vgaarb_rsrc = 
+				    VGA_ARB_RSRC_LEGACY_IO |
+				    VGA_ARB_RSRC_LEGACY_MEM;
+		}
 	}
 	pci_iterator_destroy(iter);
 
@@ -751,13 +781,8 @@ pci_device_vgaarb_lock(void)
 	if (dev == NULL)
 		return -1;
 
-#if 0
 	if (dev->vgaarb_rsrc == 0 || pci_sys->vga_count == 1)
 		return 0;
-#else
-	if (pci_sys->vga_count == 1)
-		return 0;
-#endif
 
 	pv.pv_sel.pc_bus = dev->bus;
 	pv.pv_sel.pc_dev = dev->dev;
@@ -775,13 +800,8 @@ pci_device_vgaarb_unlock(void)
 	if (dev == NULL)
 		return -1;
 
-#if 0
 	if (dev->vgaarb_rsrc == 0 || pci_sys->vga_count == 1)
 		return 0;
-#else
-	if (pci_sys->vga_count == 1)
-		return 0;
-#endif
 
 	pv.pv_sel.pc_bus = dev->bus;
 	pv.pv_sel.pc_dev = dev->dev;
