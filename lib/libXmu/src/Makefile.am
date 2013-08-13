@@ -10,7 +10,7 @@ AM_CPPFLAGS = \
 AM_CFLAGS = $(CWARNFLAGS) $(XMU_CFLAGS)
 
 libXmu_la_LDFLAGS = -version-number 6:2:0 -no-undefined
-libXmuu_la_LDFLAGS = -version-number 6:0:0 -no-undefined
+libXmuu_la_LDFLAGS = -version-number 1:0:0 -no-undefined
 
 libXmu_la_LIBADD = $(XMU_LIBS)
 libXmuu_la_LIBADD = $(XMUU_LIBS)

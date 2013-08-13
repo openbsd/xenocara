@@ -11,7 +11,7 @@ AM_CFLAGS = $(CWARNFLAGS) $(XVMC_CFLAGS)
 
 libXvMCW_la_SOURCES = XvMCWrapper.c
 libXvMCW_la_LIBADD = $(XVMC_LIBS)
-libXvMCW_la_LDFLAGS = -version-number 2:0:0 -no-undefined
+libXvMCW_la_LDFLAGS = -version-number 1:0:0 -no-undefined
 
 if LINT
 ALL_LINT_FLAGS=$(LINT_FLAGS) $(DEFS) $(DEFAULT_INCLUDES) \

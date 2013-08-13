@@ -1,9 +1,11 @@
-# $OpenBSD: Makefile.bsd-wrapper,v 1.5 2008/03/25 23:41:50 matthieu Exp $
+# $OpenBSD: Makefile.bsd-wrapper,v 1.6 2013/08/13 18:52:13 matthieu Exp $
 
 .include <bsd.xconf.mk>
 
 .if ${XENOCARA_BUILD_DRI:L} != "yes"
 CONFIGURE_ARGS+= --disable-dri
 .endif
+
+SHARED_LIBS= IntelXvMC 2,0
 
 .include <bsd.xorg.mk>
