@@ -5,7 +5,7 @@ AM_CFLAGS = $(CWARNFLAGS) $(XVMC_CFLAGS)
 
 libXvMC_la_SOURCES = XvMC.c XvMClibint.h
 libXvMC_la_LIBADD = $(XVMC_LIBS)
-libXvMC_la_LDFLAGS = -version-number 1:0:0 -no-undefined
+libXvMC_la_LDFLAGS = -version-number 2:0:0 -no-undefined
 
 if LINT
 ALL_LINT_FLAGS=$(LINT_FLAGS) $(DEFS) $(DEFAULT_INCLUDES) \
