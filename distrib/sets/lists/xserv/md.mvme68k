@@ -2,7 +2,7 @@
 ./usr/X11R6/bin/Xnest
 ./usr/X11R6/bin/Xvfb
 ./usr/X11R6/include/xorg
-./usr/X11R6/lib/libxkbui.so.4.0
+./usr/X11R6/lib/libxkbui.so.5.0
 ./usr/X11R6/man/man1/Xephyr.1
 ./usr/X11R6/man/man1/Xnest.1
 ./usr/X11R6/man/man1/Xserver.1
