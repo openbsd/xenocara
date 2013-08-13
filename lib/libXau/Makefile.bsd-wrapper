@@ -1,5 +1,5 @@
-# $OpenBSD: Makefile.bsd-wrapper,v 1.1 2006/11/26 12:07:34 matthieu Exp $
+# $OpenBSD: Makefile.bsd-wrapper,v 1.2 2013/08/13 07:07:13 guenther Exp $
 
-SHARED_LIBS= Xau 9.0
+SHARED_LIBS=	Xau 10.0
 
 .include <bsd.xorg.mk>

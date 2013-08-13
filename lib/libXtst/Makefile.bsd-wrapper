@@ -1,6 +1,6 @@
-# $OpenBSD: Makefile.bsd-wrapper,v 1.5 2012/03/10 16:54:54 matthieu Exp $
+# $OpenBSD: Makefile.bsd-wrapper,v 1.6 2013/08/13 07:07:18 guenther Exp $
 
-SHARED_LIBS=	Xtst 10.0
+SHARED_LIBS=	Xtst 11.0
 
 CONFIGURE_ARGS=	--without-xsltproc --without-xmlto --without-fop
 

@@ -1,5 +1,5 @@
-# $OpenBSD: Makefile.bsd-wrapper,v 1.4 2011/04/17 15:16:24 matthieu Exp $
+# $OpenBSD: Makefile.bsd-wrapper,v 1.5 2013/08/13 07:07:15 guenther Exp $
 
-SHARED_LIBS=	Xfixes 5.1
+SHARED_LIBS=	Xfixes 6.0
 
 .include <bsd.xorg.mk>

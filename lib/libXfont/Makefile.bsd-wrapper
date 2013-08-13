@@ -1,7 +1,7 @@
-# $OpenBSD: Makefile.bsd-wrapper,v 1.10 2010/01/17 20:48:49 matthieu Exp $
+# $OpenBSD: Makefile.bsd-wrapper,v 1.11 2013/08/13 07:07:15 guenther Exp $
 .include <bsd.xconf.mk>
 
-SHARED_LIBS=	Xfont 9.0
+SHARED_LIBS=	Xfont 10.0
 
 CONFIGURE_ARGS+= --with-xmlto=no
 

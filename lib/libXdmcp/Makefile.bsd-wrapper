@@ -1,6 +1,6 @@
-# $OpenBSD: Makefile.bsd-wrapper,v 1.3 2012/03/10 18:35:56 matthieu Exp $
+# $OpenBSD: Makefile.bsd-wrapper,v 1.4 2013/08/13 07:07:14 guenther Exp $
 
-SHARED_LIBS=	Xdmcp 10.0
+SHARED_LIBS=	Xdmcp 11.0
 
 CONFIGURE_ARGS += --without-fop --without-xmlto --without-xsltproc
 

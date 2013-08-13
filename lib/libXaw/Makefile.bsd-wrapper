@@ -1,6 +1,6 @@
-# $OpenBSD: Makefile.bsd-wrapper,v 1.10 2011/06/02 13:40:13 matthieu Exp $
+# $OpenBSD: Makefile.bsd-wrapper,v 1.11 2013/08/13 07:07:13 guenther Exp $
 
-SHARED_LIBS= Xaw7 14.0
+SHARED_LIBS=	Xaw7 15.0
 
 CONFIGURE_ARGS= --disable-xaw6 --without-fop --without-xmlto
 

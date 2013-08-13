@@ -1,5 +1,5 @@
-# $OpenBSD: Makefile.bsd-wrapper,v 1.2 2007/03/15 23:00:48 matthieu Exp $
+# $OpenBSD: Makefile.bsd-wrapper,v 1.3 2013/08/13 07:07:17 guenther Exp $
 
-SHARED_LIBS=	Xpm 8.0
+SHARED_LIBS=	Xpm 9.0
 
 .include <bsd.xorg.mk>
