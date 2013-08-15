@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile.bsd-wrapper,v 1.6 2013/08/13 18:52:13 matthieu Exp $
+# $OpenBSD: Makefile.bsd-wrapper,v 1.7 2013/08/15 03:34:19 guenther Exp $
 
 .include <bsd.xconf.mk>
 
@@ -6,6 +6,6 @@
 CONFIGURE_ARGS+= --disable-dri
 .endif
 
-SHARED_LIBS= IntelXvMC 2,0
+SHARED_LIBS= IntelXvMC 2.0 I810XvMC 2.0
 
 .include <bsd.xorg.mk>
