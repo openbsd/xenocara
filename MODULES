@@ -1,4 +1,4 @@
-# $OpenBSD: MODULES,v 1.263 2013/08/13 19:40:56 matthieu Exp $
+# $OpenBSD: MODULES,v 1.264 2013/08/16 17:44:41 matthieu Exp $
 #
 # X.Org maintained modules
 #
@@ -102,7 +102,7 @@ driver/xf86-input-vmmouse	13.0.0	7.7+	needs-update
 driver/xf86-input-void		1.4.0	7.7
 driver/xf86-video-apm		1.2.5
 driver/xf86-video-ark		0.7.5	7.7+
-driver/xf86-video-ati		7.2.0	7.7+	needs-update
+driver/xf86-video-ati		7.2.0	7.7+
 driver/xf86-video-chips		1.2.5
 driver/xf86-video-cirrus	1.5.1	7.7+
 driver/xf86-video-dummy		0.3.6	7.7+
