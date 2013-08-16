@@ -27,24 +27,64 @@
 #ifndef RADEON_DRI2_H
 #define RADEON_DRI2_H
 
+#include <xorg-server.h>
+
 struct radeon_dri2 {
+    drmVersionPtr     pKernelDRMVersion;
     int         drm_fd;
+    Bool        available;
     Bool        enabled;
     char	*device_name;
 };
 
-#ifdef RADEON_DRI2
+#ifdef DRI2
+
 #include "dri2.h"
 Bool radeon_dri2_screen_init(ScreenPtr pScreen);
 void radeon_dri2_close_screen(ScreenPtr pScreen);
-#endif
 
 int drmmode_get_crtc_id(xf86CrtcPtr crtc);
-xf86CrtcPtr radeon_covering_crtc(ScrnInfoPtr pScrn, BoxPtr box,
-                                 xf86CrtcPtr desired, BoxPtr crtc_box_ret);
 void radeon_dri2_frame_event_handler(unsigned int frame, unsigned int tv_sec,
                                      unsigned int tv_usec, void *event_data);
 void radeon_dri2_flip_event_handler(unsigned int frame, unsigned int tv_sec,
 				    unsigned int tv_usec, void *event_data);
 
+#else
+
+static inline Bool radeon_dri2_screen_init(ScreenPtr pScreen) { return FALSE; }
+static inline void radeon_dri2_close_screen(ScreenPtr pScreen) {}
+
+static inline void
+radeon_dri2_dummy_event_handler(unsigned int frame, unsigned int tv_sec,
+				unsigned int tv_usec, void *event_data,
+				const char *name)
+{
+	static Bool warned;
+
+	if (!warned) {
+		ErrorF("%s called but DRI2 disabled at build time\n", name);
+		warned = TRUE;
+	}
+
+	free(event_data);
+}
+
+static inline void
+radeon_dri2_frame_event_handler(unsigned int frame, unsigned int tv_sec,
+				unsigned int tv_usec, void *event_data)
+{
+	radeon_dri2_dummy_event_handler(frame, tv_sec, tv_usec, event_data,
+					__func__);
+}
+
+static inline void
+radeon_dri2_flip_event_handler(unsigned int frame, unsigned int tv_sec,
+			       unsigned int tv_usec, void *event_data)
+{
+	radeon_dri2_dummy_event_handler(frame, tv_sec, tv_usec, event_data,
+					__func__);
+}
+
 #endif
+
+#endif /* RADEON_DRI2_H */

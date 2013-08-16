@@ -2,20 +2,11 @@
 
 #include "xorg-server.h"
 
-/* Use Damage extension */
-#undef DAMAGE
-
-/* Use linux pragma pack */
-#undef FGL_LINUX
-
 /* Define to 1 if you have the <byteswap.h> header file. */
 #undef HAVE_BYTESWAP_H
 
 /* Define to 1 if you have the <dlfcn.h> header file. */
 #undef HAVE_DLFCN_H
-
-/* have new FreeShadow API */
-#undef HAVE_FREE_SHADOW
 
 /* Define to 1 if you have the <inttypes.h> header file. */
 #undef HAVE_INTTYPES_H
@@ -28,9 +19,6 @@
 
 /* Define to 1 if you have the <memory.h> header file. */
 #undef HAVE_MEMORY_H
-
-/* Have pci_device_enable prototype */
-#undef HAVE_PCI_DEVICE_ENABLE
 
 /* Define to 1 if you have the <stdint.h> header file. */
 #undef HAVE_STDINT_H
@@ -53,23 +41,11 @@
 /* Define to 1 if you have the <unistd.h> header file. */
 #undef HAVE_UNISTD_H
 
-/* Define to 1 if you have the <xaa.h> header file. */
-#undef HAVE_XAA_H
-
 /* xextproto 7.1 available */
 #undef HAVE_XEXTPROTO_71
 
-/* Have xf86_crtc_clip_video_helper prototype */
-#undef HAVE_XF86CRTCCLIPVIDEOHELPER
-
-/* Have xf86ModeBandwidth prototype */
-#undef HAVE_XF86MODEBANDWIDTH
-
 /* Have xorg_list API */
 #undef HAVE_XORG_LIST
-
-/* Have xf86XVFillKeyHelperDrawable prototype */
-#undef HAVE_XV_DRAWABLE_HELPER
 
 /* Define to the sub-directory in which libtool stores uninstalled libraries.
    */
@@ -108,32 +84,17 @@
 /* Patch version of this package */
 #undef PACKAGE_VERSION_PATCHLEVEL
 
-/* Enable DRI2 code */
-#undef RADEON_DRI2
-
 /* Define to 1 if you have the ANSI C header files. */
 #undef STDC_HEADERS
 
-/* Build support for Exa */
-#undef USE_EXA
+/* Enable glamor acceleration */
+#undef USE_GLAMOR
 
 /* Define to use byteswap macros from <sys/endian.h> */
 #undef USE_SYS_ENDIAN_H
 
-/* Build support for XAA */
-#undef USE_XAA
-
 /* Version number of package */
 #undef VERSION
-
-/* Enable DRI driver support */
-#undef XF86DRI
-
-/* Enable developmental DRI driver support */
-#undef XF86DRI_DEVEL
-
-/* DRM kernel modesetting */
-#undef XF86DRM_MODE
 
 /* Enable large inode numbers on Mac OS X 10.5.  */
 #ifndef _DARWIN_USE_64_BIT_INODE

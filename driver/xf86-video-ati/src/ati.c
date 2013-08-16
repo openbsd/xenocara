@@ -57,9 +57,7 @@
 #include "config.h"
 #endif
 
-#ifdef XSERVER_LIBPCIACCESS
 #include <pciaccess.h>
-#endif
 #include "atipcirename.h"
 
 #include "ati.h"
@@ -81,8 +79,6 @@ enum
 
 static int ATIChipID(const uint16_t);
 
-#ifdef XSERVER_LIBPCIACCESS
-
 /* domain defines (stolen from xserver) */
 #if (defined(__alpha__) || defined(__ia64__)) && defined (linux)
 # define PCI_DOM_MASK 0x01fful
@@ -102,6 +98,7 @@ ati_device_get_from_busid(int bus, int dev, int func)
                                    func);
 }
 
+#ifndef XSERVER_PLATFORM_BUS
 static struct pci_device*
 ati_device_get_primary(void)
 {
@@ -119,51 +116,26 @@ ati_device_get_primary(void)
 
     return device;
 }
-
-#else /* XSERVER_LIBPCIACCESS */
-
-static pciVideoPtr
-ati_device_get_from_busid(int bus, int dev, int func)
+#else
+static struct pci_device *
+ati_device_get_indexed(int index)
 {
-    pciVideoPtr  pVideo = NULL;
-    pciVideoPtr *xf86PciVideoInfo;
+    struct pci_device *device = NULL;
+    struct pci_device_iterator *device_iter;
+    int count = 0;
 
-    xf86PciVideoInfo = xf86GetPciVideoInfo();
+    device_iter = pci_slot_match_iterator_create(NULL);
 
-    if (xf86PciVideoInfo == NULL)
-        return NULL;
-
-    while ((pVideo = *xf86PciVideoInfo++) != NULL)
-    {
-        if ((pVideo->bus == bus) && (pVideo->device == dev) &&
-            (pVideo->func == func))
-            break;
+    while ((device = pci_device_next(device_iter)) != NULL) {
+        if (device->vendor_id == PCI_VENDOR_ATI) {
+            if (count == index)
+                return device;
+            count++;
+        }
     }
-
-    return pVideo;
+    return NULL;
 }
-
-static pciVideoPtr
-ati_device_get_primary()
-{
-    pciVideoPtr  pVideo = NULL;
-    pciVideoPtr *xf86PciVideoInfo;
-
-    xf86PciVideoInfo = xf86GetPciVideoInfo();
-
-    if (xf86PciVideoInfo == NULL)
-        return NULL;
-
-    while ((pVideo = *xf86PciVideoInfo++) != NULL)
-    {
-        if (xf86IsPrimaryPci(pVideo))
-            break;
-    }
-
-    return pVideo;
-}
-
-#endif /* XSERVER_LIBPCIACCESS */
+#endif
 
 void
 ati_gdev_subdriver(pointer options)
@@ -197,9 +169,14 @@ ati_gdev_subdriver(pointer options)
 
             device = ati_device_get_from_busid(bus, dev, func);
         }
+#ifdef XSERVER_PLATFORM_BUS
+        else
+            device = ati_device_get_indexed(i);
+#else
         else {
             device = ati_device_get_primary();
         }
+#endif
 
         if (!device)
             continue;

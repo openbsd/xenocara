@@ -27,8 +27,6 @@
 #include "config.h"
 #endif
 
-#ifdef XF86DRM_MODE
-
 #include "xf86.h"
 
 #include <errno.h>
@@ -209,7 +207,6 @@ evergreen_set_render_target(ScrnInfoPtr pScrn, cb_config_t *cb_conf, uint32_t do
     uint32_t tile_split, macro_aspect, bankw, bankh;
     RADEONInfoPtr info = RADEONPTR(pScrn);
 
-#if defined(XF86DRM_MODE)
     if (cb_conf->surface) {
 	switch (cb_conf->surface->level[0].mode) {
 	case RADEON_SURF_MODE_1D:
@@ -234,9 +231,7 @@ evergreen_set_render_target(ScrnInfoPtr pScrn, cb_config_t *cb_conf, uint32_t do
 	macro_aspect = eg_macro_tile_aspect(macro_aspect);
 	bankw = eg_bank_wh(bankw);
 	bankh = eg_bank_wh(bankh);
-    } else
-#endif
-    {
+    } else {
 	pitch = (cb_conf->w / 8) - 1;
 	h = RADEON_ALIGN(cb_conf->h, 8);
 	slice = ((cb_conf->w * h) / 64) - 1;
@@ -340,7 +335,19 @@ evergreen_set_render_target(ScrnInfoPtr pScrn, cb_config_t *cb_conf, uint32_t do
 					       (CB_NORMAL << CB_COLOR_CONTROL__MODE_shift)));
     EREG(CB_BLEND0_CONTROL,                   cb_conf->blendcntl);
     END_BATCH();
+}
 
+void evergreen_set_blend_color(ScrnInfoPtr pScrn, float *color)
+{
+    RADEONInfoPtr info = RADEONPTR(pScrn);
+
+    BEGIN_BATCH(2 + 4);
+    PACK0(CB_BLEND_RED, 4);
+    EFLOAT(color[0]); /* R */
+    EFLOAT(color[1]); /* G */
+    EFLOAT(color[2]); /* B */
+    EFLOAT(color[3]); /* A */
+    END_BATCH();
 }
 
 static void
@@ -371,7 +378,6 @@ void evergreen_cp_wait_vline_sync(ScrnInfoPtr pScrn, PixmapPtr pPix,
 {
     RADEONInfoPtr  info = RADEONPTR(pScrn);
     drmmode_crtc_private_ptr drmmode_crtc;
-    uint32_t offset;
 
     if (!crtc)
         return;
@@ -381,21 +387,8 @@ void evergreen_cp_wait_vline_sync(ScrnInfoPtr pScrn, PixmapPtr pPix,
     if (!crtc->enabled)
         return;
 
-    if (info->cs) {
-        if (pPix != pScrn->pScreen->GetScreenPixmap(pScrn->pScreen))
-	    return;
-    } else {
-#ifdef USE_EXA
-	if (info->useEXA)
-	    offset = exaGetPixmapOffset(pPix);
-	else
-#endif
-	    offset = pPix->devPrivate.ptr - info->FB;
-
-	/* if drawing to front buffer */
-	if (offset != 0)
-	    return;
-    }
+    if (pPix != pScrn->pScreen->GetScreenPixmap(pScrn->pScreen))
+        return;
 
     start = max(start, crtc->y);
     stop = min(stop, crtc->y + crtc->mode.VDisplay);
@@ -664,12 +657,12 @@ evergreen_set_vtx_resource(ScrnInfoPtr pScrn, vtx_resource_t *res, uint32_t doma
 	(info->ChipFamily == CHIP_FAMILY_CAYMAN) ||
 	(info->ChipFamily == CHIP_FAMILY_ARUBA))
 	evergreen_cp_set_surface_sync(pScrn, TC_ACTION_ENA_bit,
-				      accel_state->vbo.vb_offset, accel_state->vbo.vb_mc_addr,
+				      accel_state->vbo.vb_offset, 0,
 				      res->bo,
 				      domain, 0);
     else
 	evergreen_cp_set_surface_sync(pScrn, VC_ACTION_ENA_bit,
-				      accel_state->vbo.vb_offset, accel_state->vbo.vb_mc_addr,
+				      accel_state->vbo.vb_offset, 0,
 				      res->bo,
 				      domain, 0);
 
@@ -698,7 +691,6 @@ evergreen_set_tex_resource(ScrnInfoPtr pScrn, tex_resource_t *tex_res, uint32_t 
     uint32_t sq_tex_resource_word5, sq_tex_resource_word6, sq_tex_resource_word7;
     uint32_t array_mode, pitch, tile_split, macro_aspect, bankw, bankh, nbanks;
 
-#if defined(XF86DRM_MODE)
     if (tex_res->surface) {
 	switch (tex_res->surface->level[0].mode) {
 	case RADEON_SURF_MODE_1D:
@@ -720,9 +712,7 @@ evergreen_set_tex_resource(ScrnInfoPtr pScrn, tex_resource_t *tex_res, uint32_t 
 	macro_aspect = eg_macro_tile_aspect(macro_aspect);
 	bankw = eg_bank_wh(bankw);
 	bankh = eg_bank_wh(bankh);
-    } else
-#endif
-    {
+    } else {
 	array_mode = tex_res->array_mode;
 	pitch = (tex_res->pitch + 7) >> 3;
 	tile_split = 4;
@@ -1472,7 +1462,7 @@ void evergreen_finish_op(ScrnInfoPtr pScrn, int vtx_size)
     vtx_res.id              = SQ_FETCH_RESOURCE_vs;
     vtx_res.vtx_size_dw     = vtx_size / 4;
     vtx_res.vtx_num_entries = accel_state->vbo.vb_size / 4;
-    vtx_res.vb_addr         = accel_state->vbo.vb_mc_addr + accel_state->vbo.vb_start_op;
+    vtx_res.vb_addr         = accel_state->vbo.vb_start_op;
     vtx_res.bo              = accel_state->vbo.vb_bo;
     vtx_res.dst_sel_x       = SQ_SEL_X;
     vtx_res.dst_sel_y       = SQ_SEL_Y;
@@ -1494,7 +1484,7 @@ void evergreen_finish_op(ScrnInfoPtr pScrn, int vtx_size)
 
     /* sync dst surface */
     evergreen_cp_set_surface_sync(pScrn, (CB_ACTION_ENA_bit | CB0_DEST_BASE_ENA_bit),
-				  accel_state->dst_size, accel_state->dst_obj.offset,
+				  accel_state->dst_size, 0,
 				  accel_state->dst_obj.bo, 0, accel_state->dst_obj.domain);
 
     accel_state->vbo.vb_start_op = -1;
@@ -1503,4 +1493,3 @@ void evergreen_finish_op(ScrnInfoPtr pScrn, int vtx_size)
 
 }
 
-#endif

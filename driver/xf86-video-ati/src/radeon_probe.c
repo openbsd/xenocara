@@ -46,49 +46,19 @@
 #include "atipcirename.h"
 
 #include "xf86.h"
-#if GET_ABI_MAJOR(ABI_VIDEODRV_VERSION) < 6
-#include "xf86Resources.h"
-#endif
 
-#ifdef XF86DRM_MODE
 #include "xf86drmMode.h"
 #include "dri.h"
+
+#ifdef XSERVER_PLATFORM_BUS
+#include <xf86platformBus.h>
 #endif
 
 #include "radeon_chipset_gen.h"
 
 #include "radeon_pci_chipset_gen.h"
 
-#include "radeon_chipinfo_gen.h"
-
-#ifdef XSERVER_LIBPCIACCESS
 #include "radeon_pci_device_match_gen.h"
-
-static Bool radeon_ums_supported(ScrnInfoPtr pScrn, struct pci_device *pci_dev)
-{
-    unsigned family = 0, i;
-
-    for (i = 0; i < sizeof(RADEONCards) / sizeof(RADEONCardInfo); i++) {
-        if (pci_dev->device_id == RADEONCards[i].pci_device_id) {
-            family = RADEONCards[i].chip_family;
-            break;
-        }
-    }
-
-    if (family >= CHIP_FAMILY_SUMO) {
-        xf86DrvMsgVerb(pScrn->scrnIndex, X_INFO, 0,
-                       "GPU only supported with KMS, using vesa instead.\n");
-        return FALSE;
-    }
-    return TRUE;
-}
-#else
-#define radeon_ums_supported(x, y) TRUE
-#endif
-
-#ifndef XSERVER_LIBPCIACCESS
-static Bool RADEONProbe(DriverPtr drv, int flags);
-#endif
 
 _X_EXPORT int gRADEONEntityIndex = -1;
 
@@ -109,7 +79,6 @@ RADEONIdentify(int flags)
 }
 
 
-#ifdef XF86DRM_MODE
 static Bool radeon_kernel_mode_enabled(ScrnInfoPtr pScrn, struct pci_device *pci_dev)
 {
     char *busIdString;
@@ -134,16 +103,12 @@ static Bool radeon_kernel_mode_enabled(ScrnInfoPtr pScrn, struct pci_device *pci
 		   "[KMS] Kernel modesetting enabled.\n");
     return TRUE;
 }
-#else
-#define radeon_kernel_mode_enabled(x, y) FALSE
-#endif
 
 static Bool
 radeon_get_scrninfo(int entity_num, void *pci_dev)
 {
     ScrnInfoPtr   pScrn = NULL;
     EntityInfoPtr pEnt;
-    int kms = 0;
 
     pScrn = xf86ConfigPciEntity(pScrn, 0, entity_num, RADEONPciChipsets,
                                 NULL,
@@ -153,46 +118,24 @@ radeon_get_scrninfo(int entity_num, void *pci_dev)
         return FALSE;
 
     if (pci_dev) {
-      if (radeon_kernel_mode_enabled(pScrn, pci_dev)) {
-	kms = 1;
-      } else {
-        if (!radeon_ums_supported(pScrn, pci_dev)) {
-          return FALSE;
-        }
+      if (!radeon_kernel_mode_enabled(pScrn, pci_dev)) {
+	return FALSE;
       }
     }
 
     pScrn->driverVersion = RADEON_VERSION_CURRENT;
     pScrn->driverName    = RADEON_DRIVER_NAME;
     pScrn->name          = RADEON_NAME;
-#ifdef XSERVER_LIBPCIACCESS
     pScrn->Probe         = NULL;
-#else
-    pScrn->Probe         = RADEONProbe;
-#endif
 
-#ifdef XF86DRM_MODE
-    if (kms == 1) {
-      pScrn->PreInit       = RADEONPreInit_KMS;
-      pScrn->ScreenInit    = RADEONScreenInit_KMS;
-      pScrn->SwitchMode    = RADEONSwitchMode_KMS;
-      pScrn->AdjustFrame   = RADEONAdjustFrame_KMS;
-      pScrn->EnterVT       = RADEONEnterVT_KMS;
-      pScrn->LeaveVT       = RADEONLeaveVT_KMS;
-      pScrn->FreeScreen    = RADEONFreeScreen_KMS;
-      pScrn->ValidMode     = RADEONValidMode;
-    } else 
-#endif 
-    {
-      pScrn->PreInit       = RADEONPreInit;
-      pScrn->ScreenInit    = RADEONScreenInit;
-      pScrn->SwitchMode    = RADEONSwitchMode;
-      pScrn->AdjustFrame   = RADEONAdjustFrame;
-      pScrn->EnterVT       = RADEONEnterVT;
-      pScrn->LeaveVT       = RADEONLeaveVT;
-      pScrn->FreeScreen    = RADEONFreeScreen;
-      pScrn->ValidMode     = RADEONValidMode;
-    }
+    pScrn->PreInit       = RADEONPreInit_KMS;
+    pScrn->ScreenInit    = RADEONScreenInit_KMS;
+    pScrn->SwitchMode    = RADEONSwitchMode_KMS;
+    pScrn->AdjustFrame   = RADEONAdjustFrame_KMS;
+    pScrn->EnterVT       = RADEONEnterVT_KMS;
+    pScrn->LeaveVT       = RADEONLeaveVT_KMS;
+    pScrn->FreeScreen    = RADEONFreeScreen_KMS;
+    pScrn->ValidMode     = RADEONValidMode;
 
     pEnt = xf86GetEntityInfo(entity_num);
 
@@ -228,53 +171,6 @@ radeon_get_scrninfo(int entity_num, void *pci_dev)
     return TRUE;
 }
 
-#ifndef XSERVER_LIBPCIACCESS
-
-/* Return TRUE if chipset is present; FALSE otherwise. */
-static Bool
-RADEONProbe(DriverPtr drv, int flags)
-{
-    int      numUsed;
-    int      numDevSections;
-    int     *usedChips;
-    GDevPtr *devSections;
-    Bool     foundScreen = FALSE;
-    int      i;
-
-    if (!xf86GetPciVideoInfo()) return FALSE;
-
-    numDevSections = xf86MatchDevice(RADEON_NAME, &devSections);
-
-    if (!numDevSections) return FALSE;
-
-    numUsed = xf86MatchPciInstances(RADEON_NAME,
-				    PCI_VENDOR_ATI,
-				    RADEONChipsets,
-				    RADEONPciChipsets,
-				    devSections,
-				    numDevSections,
-				    drv,
-				    &usedChips);
-
-    if (numUsed <= 0) return FALSE;
-
-    if (flags & PROBE_DETECT) {
-	foundScreen = TRUE;
-    } else {
-	for (i = 0; i < numUsed; i++) {
-	    if (radeon_get_scrninfo(usedChips[i], NULL))
-		foundScreen = TRUE;
-	}
-    }
-
-    free(usedChips);
-    free(devSections);
-
-    return foundScreen;
-}
-
-#else /* XSERVER_LIBPCIACCESS */
-
 static Bool
 radeon_pci_probe(
     DriverPtr          pDriver,
@@ -286,24 +182,107 @@ radeon_pci_probe(
     return radeon_get_scrninfo(entity_num, (void *)device);
 }
 
-#endif /* XSERVER_LIBPCIACCESS */
+static Bool
+RADEONDriverFunc(ScrnInfoPtr scrn, xorgDriverFuncOp op, void *data)
+{
+    xorgHWFlags *flag;
+
+    switch (op) {
+	case GET_REQUIRED_HW_INTERFACES:
+	    flag = (CARD32 *)data;
+	    (*flag) = 0;
+	    return TRUE;
+	default:
+	    return FALSE;
+    }
+}
+
+#ifdef XSERVER_PLATFORM_BUS
+static Bool
+radeon_platform_probe(DriverPtr pDriver,
+		      int entity_num, int flags,
+		      struct xf86_platform_device *dev,
+		      intptr_t match_data)
+{
+    ScrnInfoPtr pScrn;
+    int scr_flags = 0;
+    EntityInfoPtr pEnt;
+
+    if (!dev->pdev)
+	return FALSE;
+
+    if (flags & PLATFORM_PROBE_GPU_SCREEN)
+	scr_flags = XF86_ALLOCATE_GPU_SCREEN;
+
+    pScrn = xf86AllocateScreen(pDriver, scr_flags);
+    if (xf86IsEntitySharable(entity_num))
+	xf86SetEntityShared(entity_num);
+    xf86AddEntityToScreen(pScrn, entity_num);
+
+    if (!radeon_kernel_mode_enabled(pScrn, dev->pdev))
+	return FALSE;
+
+    pScrn->driverVersion = RADEON_VERSION_CURRENT;
+    pScrn->driverName    = RADEON_DRIVER_NAME;
+    pScrn->name          = RADEON_NAME;
+    pScrn->Probe         = NULL;
+    pScrn->PreInit       = RADEONPreInit_KMS;
+    pScrn->ScreenInit    = RADEONScreenInit_KMS;
+    pScrn->SwitchMode    = RADEONSwitchMode_KMS;
+    pScrn->AdjustFrame   = RADEONAdjustFrame_KMS;
+    pScrn->EnterVT       = RADEONEnterVT_KMS;
+    pScrn->LeaveVT       = RADEONLeaveVT_KMS;
+    pScrn->FreeScreen    = RADEONFreeScreen_KMS;
+    pScrn->ValidMode     = RADEONValidMode;
+
+    pEnt = xf86GetEntityInfo(entity_num);
+
+    /* Create a RADEONEntity for all chips, even with old single head
+     * Radeon, need to use pRADEONEnt for new monitor detection routines.
+     */
+    {
+        DevUnion    *pPriv;
+        RADEONEntPtr pRADEONEnt;
+
+        xf86SetEntitySharable(entity_num);
+
+        if (gRADEONEntityIndex == -1)
+            gRADEONEntityIndex = xf86AllocateEntityPrivateIndex();
+
+        pPriv = xf86GetEntityPrivate(pEnt->index,
+                                     gRADEONEntityIndex);
+
+	xf86SetEntityInstanceForScreen(pScrn, pEnt->index, xf86GetNumEntityInstances(pEnt->index) - 1);
+
+        if (!pPriv->ptr) {
+            pPriv->ptr = xnfcalloc(sizeof(RADEONEntRec), 1);
+            pRADEONEnt = pPriv->ptr;
+            pRADEONEnt->HasSecondary = FALSE;
+        } else {
+            pRADEONEnt = pPriv->ptr;
+            pRADEONEnt->HasSecondary = TRUE;
+        }
+    }
+
+    free(pEnt);
+
+    return TRUE;
+}
+#endif
 
 _X_EXPORT DriverRec RADEON =
 {
     RADEON_VERSION_CURRENT,
     RADEON_DRIVER_NAME,
     RADEONIdentify,
-#ifdef XSERVER_LIBPCIACCESS
     NULL,
-#else
-    RADEONProbe,
-#endif
     RADEONAvailableOptions,
     NULL,
     0,
-    NULL,
-#ifdef XSERVER_LIBPCIACCESS
+    RADEONDriverFunc,
     radeon_device_match,
-    radeon_pci_probe
+    radeon_pci_probe,
+#ifdef XSERVER_PLATFORM_BUS
+    radeon_platform_probe
 #endif
 };

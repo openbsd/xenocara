@@ -56,9 +56,7 @@ typedef struct {
     int blend_enable;
     uint32_t blendcntl;
     struct radeon_bo *bo;
-#ifdef XF86DRM_MODE
     struct radeon_surface *surface;
-#endif
 } cb_config_t;
 
 /* Depth buffer */
@@ -145,9 +143,7 @@ typedef struct {
     int interlaced;
     struct radeon_bo *bo;
     struct radeon_bo *mip_bo;
-#ifdef XF86DRM_MODE
     struct radeon_surface *surface;
-#endif
 } tex_resource_t;
 
 /* Texture sampler */
@@ -189,144 +185,122 @@ typedef struct {
     uint32_t num_indices;
 } draw_config_t;
 
-#if defined(XF86DRM_MODE)
 #define BEGIN_BATCH(n)				\
 do {					\
-    if (info->cs)			\
-	radeon_ddx_cs_start(pScrn, (n), __FILE__, __func__, __LINE__);	\
+    radeon_ddx_cs_start(pScrn, (n), __FILE__, __func__, __LINE__);	\
 } while(0)
 #define END_BATCH()				\
 do {					\
-    if (info->cs)			\
-	radeon_cs_end(info->cs, __FILE__, __func__, __LINE__);	\
+    radeon_cs_end(info->cs, __FILE__, __func__, __LINE__);	\
 } while(0)
 #define RELOC_BATCH(bo, rd, wd)					\
 do {							\
-    if (info->cs) {							\
-	int _ret;							\
-	_ret = radeon_cs_write_reloc(info->cs, (bo), (rd), (wd), 0);	\
-	if (_ret) ErrorF("reloc emit failure %d (%s %d)\n", _ret, __func__, __LINE__); \
-    }									\
+    int _ret;								\
+    _ret = radeon_cs_write_reloc(info->cs, (bo), (rd), (wd), 0);	\
+    if (_ret) ErrorF("reloc emit failure %d (%s %d)\n", _ret, __func__, __LINE__); \
 } while(0)
-#define E32(ib, dword)                                                  \
+#define E32(dword)                                                  \
 do {                                                                    \
-    if (info->cs)							\
-	radeon_cs_write_dword(info->cs, (dword));			\
-    else {								\
-	uint32_t *ib_head = (pointer)(char*)(ib)->address;		\
-	ib_head[(ib)->used >> 2] = (dword);				\
-	(ib)->used += 4;						\
-    }									\
+    radeon_cs_write_dword(info->cs, (dword));			\
 } while (0)
-#else
-#define BEGIN_BATCH(n) do {(void)info;} while(0)
-#define END_BATCH() do {} while(0)
-#define RELOC_BATCH(bo, wd, rd) do {} while(0)
-#define E32(ib, dword)                                                  \
-do {                                                                    \
-    uint32_t *ib_head = (pointer)(char*)(ib)->address;			\
-    ib_head[(ib)->used >> 2] = (dword);					\
-    (ib)->used += 4;							\
-} while (0)
-#endif
 
-#define EFLOAT(ib, val)							\
+#define EFLOAT(val)							\
 do {								        \
     union { float f; uint32_t d; } a;                                   \
     a.f = (val);								\
-    E32((ib), a.d);							\
+    E32(a.d);							\
 } while (0)
 
-#define PACK3(ib, cmd, num)	       					\
+#define PACK3(cmd, num)	       					\
 do {                                                                    \
-    E32((ib), RADEON_CP_PACKET3 | ((cmd) << 8) | ((((num) - 1) & 0x3fff) << 16)); \
+    E32(RADEON_CP_PACKET3 | ((cmd) << 8) | ((((num) - 1) & 0x3fff) << 16)); \
 } while (0)
 
 /* write num registers, start at reg */
 /* If register falls in a special area, special commands are issued */
-#define PACK0(ib, reg, num)                                             \
+#define PACK0(reg, num)                                             \
 do {                                                                    \
     if ((reg) >= SET_CONFIG_REG_offset && (reg) < SET_CONFIG_REG_end) {	\
-	PACK3((ib), IT_SET_CONFIG_REG, (num) + 1);			\
-	E32((ib), ((reg) - SET_CONFIG_REG_offset) >> 2);		\
+	PACK3(IT_SET_CONFIG_REG, (num) + 1);			\
+	E32(((reg) - SET_CONFIG_REG_offset) >> 2);		\
     } else if ((reg) >= SET_CONTEXT_REG_offset && (reg) < SET_CONTEXT_REG_end) { \
-	PACK3((ib), IT_SET_CONTEXT_REG, (num) + 1);			\
-	E32((ib), ((reg) - SET_CONTEXT_REG_offset) >> 2);		\
+	PACK3(IT_SET_CONTEXT_REG, (num) + 1);			\
+	E32(((reg) - SET_CONTEXT_REG_offset) >> 2);		\
     } else if ((reg) >= SET_ALU_CONST_offset && (reg) < SET_ALU_CONST_end) { \
-	PACK3((ib), IT_SET_ALU_CONST, (num) + 1);			\
-	E32((ib), ((reg) - SET_ALU_CONST_offset) >> 2);			\
+	PACK3(IT_SET_ALU_CONST, (num) + 1);			\
+	E32(((reg) - SET_ALU_CONST_offset) >> 2);			\
     } else if ((reg) >= SET_RESOURCE_offset && (reg) < SET_RESOURCE_end) { \
-	PACK3((ib), IT_SET_RESOURCE, num + 1);				\
-	E32((ib), ((reg) - SET_RESOURCE_offset) >> 2);			\
+	PACK3(IT_SET_RESOURCE, num + 1);				\
+	E32(((reg) - SET_RESOURCE_offset) >> 2);			\
     } else if ((reg) >= SET_SAMPLER_offset && (reg) < SET_SAMPLER_end) { \
-	PACK3((ib), IT_SET_SAMPLER, (num) + 1);				\
-	E32((ib), (reg - SET_SAMPLER_offset) >> 2);			\
+	PACK3(IT_SET_SAMPLER, (num) + 1);				\
+	E32((reg - SET_SAMPLER_offset) >> 2);			\
     } else if ((reg) >= SET_CTL_CONST_offset && (reg) < SET_CTL_CONST_end) { \
-	PACK3((ib), IT_SET_CTL_CONST, (num) + 1);			\
-	E32((ib), ((reg) - SET_CTL_CONST_offset) >> 2);		\
+	PACK3(IT_SET_CTL_CONST, (num) + 1);			\
+	E32(((reg) - SET_CTL_CONST_offset) >> 2);		\
     } else if ((reg) >= SET_LOOP_CONST_offset && (reg) < SET_LOOP_CONST_end) { \
-	PACK3((ib), IT_SET_LOOP_CONST, (num) + 1);			\
-	E32((ib), ((reg) - SET_LOOP_CONST_offset) >> 2);		\
+	PACK3(IT_SET_LOOP_CONST, (num) + 1);			\
+	E32(((reg) - SET_LOOP_CONST_offset) >> 2);		\
     } else if ((reg) >= SET_BOOL_CONST_offset && (reg) < SET_BOOL_CONST_end) { \
-	PACK3((ib), IT_SET_BOOL_CONST, (num) + 1);			\
-	E32((ib), ((reg) - SET_BOOL_CONST_offset) >> 2);		\
+	PACK3(IT_SET_BOOL_CONST, (num) + 1);			\
+	E32(((reg) - SET_BOOL_CONST_offset) >> 2);		\
     } else {								\
-	E32((ib), CP_PACKET0 ((reg), (num) - 1));			\
+	E32(CP_PACKET0 ((reg), (num) - 1));			\
     }									\
 } while (0)
 
 /* write a single register */
-#define EREG(ib, reg, val)                                              \
+#define EREG(reg, val)							\
 do {								        \
-    PACK0((ib), (reg), 1);						\
-    E32((ib), (val));							\
+    PACK0((reg), 1);						\
+    E32((val));							\
 } while (0)
 
-void R600CPFlushIndirect(ScrnInfoPtr pScrn, drmBufPtr ib);
-void R600IBDiscard(ScrnInfoPtr pScrn, drmBufPtr ib);
+void R600CPFlushIndirect(ScrnInfoPtr pScrn);
+void R600IBDiscard(ScrnInfoPtr pScrn);
 
 void
-r600_wait_3d_idle_clean(ScrnInfoPtr pScrn, drmBufPtr ib);
+r600_wait_3d_idle_clean(ScrnInfoPtr pScrn);
 void
-r600_wait_3d_idle(ScrnInfoPtr pScrn, drmBufPtr ib);
+r600_wait_3d_idle(ScrnInfoPtr pScrn);
 void
-r600_start_3d(ScrnInfoPtr pScrn, drmBufPtr ib);
+r600_start_3d(ScrnInfoPtr pScrn);
 void
-r600_set_render_target(ScrnInfoPtr pScrn, drmBufPtr ib, cb_config_t *cb_conf, uint32_t domain);
+r600_set_render_target(ScrnInfoPtr pScrn, cb_config_t *cb_conf, uint32_t domain);
 void
-r600_cp_wait_vline_sync(ScrnInfoPtr pScrn, drmBufPtr ib, PixmapPtr pPix, xf86CrtcPtr crtc, int start, int stop);
+r600_cp_wait_vline_sync(ScrnInfoPtr pScrn, PixmapPtr pPix, xf86CrtcPtr crtc, int start, int stop);
 void
-r600_set_spi(ScrnInfoPtr pScrn, drmBufPtr ib, int vs_export_count, int num_interp);
+r600_set_spi(ScrnInfoPtr pScrn, int vs_export_count, int num_interp);
 void
-r600_fs_setup(ScrnInfoPtr pScrn, drmBufPtr ib, shader_config_t *fs_conf, uint32_t domain);
+r600_fs_setup(ScrnInfoPtr pScrn, shader_config_t *fs_conf, uint32_t domain);
 void
-r600_vs_setup(ScrnInfoPtr pScrn, drmBufPtr ib, shader_config_t *vs_conf, uint32_t domain);
+r600_vs_setup(ScrnInfoPtr pScrn, shader_config_t *vs_conf, uint32_t domain);
 void
-r600_ps_setup(ScrnInfoPtr pScrn, drmBufPtr ib, shader_config_t *ps_conf, uint32_t domain);
+r600_ps_setup(ScrnInfoPtr pScrn, shader_config_t *ps_conf, uint32_t domain);
 void
-r600_set_alu_consts(ScrnInfoPtr pScrn, drmBufPtr ib, int offset, int count, float *const_buf);
+r600_set_alu_consts(ScrnInfoPtr pScrn, int offset, int count, float *const_buf);
 void
-r600_set_bool_consts(ScrnInfoPtr pScrn, drmBufPtr ib, int offset, uint32_t val);
+r600_set_bool_consts(ScrnInfoPtr pScrn, int offset, uint32_t val);
 void
-r600_set_tex_resource(ScrnInfoPtr pScrn, drmBufPtr ib, tex_resource_t *tex_res, uint32_t domain);
+r600_set_tex_resource(ScrnInfoPtr pScrn, tex_resource_t *tex_res, uint32_t domain);
 void
-r600_set_tex_sampler (ScrnInfoPtr pScrn, drmBufPtr ib, tex_sampler_t *s);
+r600_set_tex_sampler (ScrnInfoPtr pScrn, tex_sampler_t *s);
 void
-r600_set_screen_scissor(ScrnInfoPtr pScrn, drmBufPtr ib, int x1, int y1, int x2, int y2);
+r600_set_screen_scissor(ScrnInfoPtr pScrn, int x1, int y1, int x2, int y2);
 void
-r600_set_vport_scissor(ScrnInfoPtr pScrn, drmBufPtr ib, int id, int x1, int y1, int x2, int y2);
+r600_set_vport_scissor(ScrnInfoPtr pScrn, int id, int x1, int y1, int x2, int y2);
 void
-r600_set_generic_scissor(ScrnInfoPtr pScrn, drmBufPtr ib, int x1, int y1, int x2, int y2);
+r600_set_generic_scissor(ScrnInfoPtr pScrn, int x1, int y1, int x2, int y2);
 void
-r600_set_window_scissor(ScrnInfoPtr pScrn, drmBufPtr ib, int x1, int y1, int x2, int y2);
+r600_set_window_scissor(ScrnInfoPtr pScrn, int x1, int y1, int x2, int y2);
 void
-r600_set_clip_rect(ScrnInfoPtr pScrn, drmBufPtr ib, int id, int x1, int y1, int x2, int y2);
+r600_set_clip_rect(ScrnInfoPtr pScrn, int id, int x1, int y1, int x2, int y2);
 void
-r600_set_default_state(ScrnInfoPtr pScrn, drmBufPtr ib);
+r600_set_default_state(ScrnInfoPtr pScrn);
 void
-r600_draw_immd(ScrnInfoPtr pScrn, drmBufPtr ib, draw_config_t *draw_conf, uint32_t *indices);
+r600_draw_immd(ScrnInfoPtr pScrn, draw_config_t *draw_conf, uint32_t *indices);
 void
-r600_draw_auto(ScrnInfoPtr pScrn, drmBufPtr ib, draw_config_t *draw_conf);
+r600_draw_auto(ScrnInfoPtr pScrn, draw_config_t *draw_conf);
 
 void r600_finish_op(ScrnInfoPtr pScrn, int vtx_size);
 
@@ -347,6 +321,6 @@ extern void *RADEONEXACreatePixmap2(ScreenPtr pScreen, int width, int height,
 extern void RADEONEXADestroyPixmap(ScreenPtr pScreen, void *driverPriv);
 extern struct radeon_bo *radeon_get_pixmap_bo(PixmapPtr pPix);
 extern Bool RADEONEXAPixmapIsOffscreen(PixmapPtr pPix);
-
-
+extern Bool RADEONEXASharePixmapBacking(PixmapPtr ppix, ScreenPtr slave, void **handle_p);
+extern Bool RADEONEXASetSharedPixmapBacking(PixmapPtr ppix, void *handle);
 #endif

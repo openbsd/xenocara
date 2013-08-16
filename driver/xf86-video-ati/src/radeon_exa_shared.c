@@ -35,12 +35,7 @@
 #endif
 
 #include "radeon.h"
-#ifdef XF86DRI
-#include "radeon_drm.h"
-#endif
-#include "radeon_macros.h"
 #include "radeon_probe.h"
-#include "radeon_reg.h"
 #include "radeon_version.h"
 #include "radeon_vbo.h"
 
@@ -68,7 +63,8 @@ void RADEONVlineHelperSet(ScrnInfoPtr pScrn, int x1, int y1, int x2, int y2)
     RADEONInfoPtr info = RADEONPTR(pScrn);
     struct radeon_accel_state *accel_state = info->accel_state;
 
-    accel_state->vline_crtc = radeon_pick_best_crtc(pScrn, x1, x2, y1, y2);
+    accel_state->vline_crtc =
+	radeon_pick_best_crtc(pScrn, FALSE, x1, x2, y1, y2);
     if (accel_state->vline_y1 == -1)
 	accel_state->vline_y1 = y1;
     if (y1 < accel_state->vline_y1)
@@ -129,66 +125,21 @@ Bool RADEONCheckBPP(int bpp)
 
 PixmapPtr RADEONSolidPixmap(ScreenPtr pScreen, uint32_t solid)
 {
-    ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
-    RADEONInfoPtr info = RADEONPTR(pScrn);
     PixmapPtr pPix = pScreen->CreatePixmap(pScreen, 1, 1, 32, 0);
-
+    struct radeon_bo *bo;
     exaMoveInPixmap(pPix);
 
-#if defined(XF86DRM_MODE)
-    if (info->cs) {
-	struct radeon_bo *bo;
+    bo = radeon_get_pixmap_bo(pPix);
 
-	bo = radeon_get_pixmap_bo(pPix);
-
-	if (radeon_bo_map(bo, 1)) {
-	    pScreen->DestroyPixmap(pPix);
-	    return NULL;
-	}
-
-	memcpy(bo->ptr, &solid, 4);
-	radeon_bo_unmap(bo);
-
-	return pPix;
-    }
-#endif
-
-    if (!exaDrawableIsOffscreen(&pPix->drawable)) {
+    if (radeon_bo_map(bo, 1)) {
 	pScreen->DestroyPixmap(pPix);
 	return NULL;
     }
 
-    /* XXX: Big hammer... */
-    info->accel_state->exa->WaitMarker(pScreen, info->accel_state->exaSyncMarker);
-
-#if X_BYTE_ORDER == X_BIG_ENDIAN
-    if (pScrn->bitsPerPixel == 32)
-	RADEONCopySwap(info->FB + exaGetPixmapOffset(pPix), (uint8_t*)&solid, 4,
-		       RADEON_HOST_DATA_SWAP_32BIT);
-    else if (pScrn->bitsPerPixel == 16)
-	RADEONCopySwap(info->FB + exaGetPixmapOffset(pPix), (uint8_t*)&solid, 4,
-		       RADEON_HOST_DATA_SWAP_16BIT);
-    else
-	/* Fall through for 8 bpp */
-#endif
-    memcpy(info->FB + exaGetPixmapOffset(pPix), &solid, 4);
+    memcpy(bo->ptr, &solid, 4);
+    radeon_bo_unmap(bo);
 
     return pPix;
-}
-
-static Bool radeon_vb_get(ScrnInfoPtr pScrn)
-{
-    RADEONInfoPtr info = RADEONPTR(pScrn);
-    struct radeon_accel_state *accel_state = info->accel_state;
-
-    accel_state->vbo.vb_mc_addr = info->gartLocation + info->dri->bufStart +
-	(accel_state->ib->idx*accel_state->ib->total)+
-	(accel_state->ib->total / 2);
-    accel_state->vbo.vb_total = (accel_state->ib->total / 2);
-    accel_state->vbo.vb_ptr = (pointer)((char*)accel_state->ib->address +
-				    (accel_state->ib->total / 2));
-    accel_state->vbo.vb_offset = 0;
-    return TRUE;
 }
 
 int radeon_cp_start(ScrnInfoPtr pScrn)
@@ -196,20 +147,10 @@ int radeon_cp_start(ScrnInfoPtr pScrn)
     RADEONInfoPtr info = RADEONPTR(pScrn);
     struct radeon_accel_state *accel_state = info->accel_state;
 
-#if defined(XF86DRM_MODE)
-    if (info->cs) {
-	if (CS_FULL(info->cs)) {
-	    radeon_cs_flush_indirect(pScrn);
-	}
-	accel_state->ib_reset_op = info->cs->cdw;
-    } else
-#endif
-    {
-	accel_state->ib = RADEONCPGetBuffer(pScrn);
-	if (!radeon_vb_get(pScrn)) {
-	    return -1;
-	}
+    if (CS_FULL(info->cs)) {
+        radeon_cs_flush_indirect(pScrn);
     }
+    accel_state->ib_reset_op = info->cs->cdw;
     accel_state->vbo.vb_start_op = accel_state->vbo.vb_offset;
     accel_state->cbuf.vb_start_op = accel_state->cbuf.vb_offset;
     return 0;
@@ -222,30 +163,20 @@ void radeon_vb_no_space(ScrnInfoPtr pScrn,
     RADEONInfoPtr info = RADEONPTR(pScrn);
     struct radeon_accel_state *accel_state = info->accel_state;
 
-#if defined(XF86DRM_MODE)
-    if (info->cs) {
-	if (vbo->vb_bo) {
-	    if (vbo->vb_start_op != vbo->vb_offset) {
-		accel_state->finish_op(pScrn, vert_size);
-		accel_state->ib_reset_op = info->cs->cdw;
-	    }
-
-	    /* release the current VBO */
-	    radeon_vbo_put(pScrn, vbo);
+    if (vbo->vb_bo) {
+	if (vbo->vb_start_op != vbo->vb_offset) {
+	    accel_state->finish_op(pScrn, vert_size);
+	    accel_state->ib_reset_op = info->cs->cdw;
 	}
-	/* get a new one */
-	radeon_vbo_get(pScrn, vbo);
-	return;
+
+	/* release the current VBO */
+	radeon_vbo_put(pScrn, vbo);
     }
-#endif
-    if (vbo->vb_start_op != -1) {
-        accel_state->finish_op(pScrn, vert_size);
-        radeon_cp_start(pScrn);
-    }
+    /* get a new one */
+    radeon_vbo_get(pScrn, vbo);
     return;
 }
 
-#if defined(XF86DRM_MODE)
 void radeon_ib_discard(ScrnInfoPtr pScrn)
 {
     RADEONInfoPtr info = RADEONPTR(pScrn);
@@ -289,4 +220,3 @@ void radeon_ib_discard(ScrnInfoPtr pScrn)
     }
 
 }
-#endif

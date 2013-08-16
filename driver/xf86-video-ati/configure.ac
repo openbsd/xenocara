@@ -23,18 +23,12 @@
 # Initialize Autoconf
 AC_PREREQ([2.60])
 AC_INIT([xf86-video-ati],
-        [6.14.6],
+        [7.2.0],
         [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],
         [xf86-video-ati])
 
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_HEADERS([config.h])
-
-# Require X.Org macros 1.8 or later for MAN_SUBSTS set by XORG_MANPAGE_SECTIONS
-m4_ifndef([XORG_MACROS_VERSION],
-          [m4_fatal([must install xorg-macros 1.8 or later before running autoconf/autogen])])
-XORG_MACROS_VERSION(1.8)
-XORG_DEFAULT_OPTIONS
 
 AC_CONFIG_AUX_DIR(.)
 
@@ -43,6 +37,12 @@ AM_INIT_AUTOMAKE([foreign dist-bzip2])
 AC_SYS_LARGEFILE
 
 AM_MAINTAINER_MODE
+
+# Require X.Org macros 1.8 or later for MAN_SUBSTS set by XORG_MANPAGE_SECTIONS
+m4_ifndef([XORG_MACROS_VERSION],
+          [m4_fatal([must install xorg-macros 1.8 or later before running autoconf/autogen])])
+XORG_MACROS_VERSION(1.8)
+XORG_DEFAULT_OPTIONS
 
 # Initialize libtool
 AC_DISABLE_STATIC
@@ -64,172 +64,53 @@ AC_ARG_WITH(xorg-module-dir,
             [moduledir="$withval"],
             [moduledir="$libdir/xorg/modules"])
 
-AC_ARG_ENABLE(dri, AS_HELP_STRING([--disable-dri],
-                                  [Disable DRI support [[default=auto]]]),
-              [DRI="$enableval"],
-              [DRI=auto])
-
-AC_ARG_ENABLE(exa,
-              AS_HELP_STRING([--disable-exa],
-                             [Disable EXA support [[default=enabled]]]),
-              [EXA="$enableval"],
-              [EXA=yes])
-
-AC_ARG_ENABLE(kms,
-              AS_HELP_STRING([--disable-kms],
-                             [Disable KMS support [[default=enabled]]]),
-              [DRM_MODE="$enableval"],
-              [DRM_MODE=yes])
-
 # Store the list of server defined optional extensions in REQUIRED_MODULES
 XORG_DRIVER_CHECK_EXT(RANDR, randrproto)
 XORG_DRIVER_CHECK_EXT(RENDER, renderproto)
 XORG_DRIVER_CHECK_EXT(XV, videoproto)
 XORG_DRIVER_CHECK_EXT(DPMSExtension, xextproto)
 
+# Checks for libraries.
+PKG_CHECK_MODULES(LIBDRM, [libdrm >= 2.4.46])
+PKG_CHECK_MODULES(LIBDRM_RADEON, [libdrm_radeon])
+
 # Obtain compiler/linker options for the driver dependencies
-PKG_CHECK_MODULES(XORG, [xorg-server >= 1.3 xproto fontsproto $REQUIRED_MODULES])
+PKG_CHECK_MODULES(XORG, [xorg-server >= 1.7 xproto fontsproto xf86driproto $REQUIRED_MODULES])
 PKG_CHECK_MODULES(XEXT, [xextproto >= 7.0.99.1],
                   HAVE_XEXTPROTO_71="yes"; AC_DEFINE(HAVE_XEXTPROTO_71, 1, [xextproto 7.1 available]),
                   HAVE_XEXTPROTO_71="no")
 AM_CONDITIONAL(HAVE_XEXTPROTO_71, [ test "$HAVE_XEXTPROTO_71" = "yes" ])
 
-# Checks for libraries.
-
-
-if test "$DRI" != no; then
-	PKG_CHECK_MODULES(DRI, [libdrm >= 2.2 xf86driproto])
-	save_CPPFLAGS="$CPPFLAGS"
-	CPPFLAGS="$XORG_CFLAGS $DRI_CFLAGS"
-	AC_CHECK_HEADER([dri.h],
-                      [have_dri_h="yes"], [have_dri_h="no"],[-])
-	AC_CHECK_HEADER([sarea.h],
-                      [have_sarea_h="yes"], [have_sarea_h="no"],[-])
-	AC_PREPROC_IFELSE([AC_LANG_PROGRAM([[
-#include <xorg-server.h>
-#include <dristruct.h>
-                      ]])],
-                      [have_dristruct_h="yes"], [have_dristruct_h="no"],[-])
-	AC_CHECK_HEADER([damage.h],
-                      [have_damage_h="yes"], [have_damage_h="no"],[-])
-	CPPFLAGS="$save_CPPFLAGS"
-fi
-
-AC_MSG_CHECKING([whether to include DRI support])
-if test x$DRI = xauto; then
-	if test "$have_dri_h" = yes -a \
-                "$have_sarea_h" = yes -a \
-                "$have_dristruct_h" = yes; then
-		DRI="yes"
-	else
-		DRI="no"
+AC_ARG_ENABLE([udev],
+		AS_HELP_STRING([--disable-udev], [Disable libudev support [default=auto]]),
+		[enable_udev="$enableval"],
+		[enable_udev=auto])
+if test "x$enable_udev" != "xno"; then
+	PKG_CHECK_MODULES(LIBUDEV, [libudev], [LIBUDEV=yes], [LIBUDEV=no])
+	if test "x$LIBUDEV" = xyes; then
+		AC_DEFINE(HAVE_LIBUDEV, 1,[libudev support])
+	elif test "x$enable_udev" != "xauto"; then
+		AC_MSG_ERROR([Building with udev requested but libudev not found])
 	fi
 fi
-AC_MSG_RESULT([$DRI])
-
-AM_CONDITIONAL(DRI, test x$DRI = xyes)
-if test "$DRI" = yes; then
-        AC_DEFINE(XF86DRI,1,[Enable DRI driver support])
-        AC_DEFINE(XF86DRI_DEVEL,1,[Enable developmental DRI driver support])
-	if test "$have_damage_h" = yes; then
-		AC_DEFINE(DAMAGE,1,[Use Damage extension])
-	fi
-
-        save_CFLAGS="$CFLAGS"
-        CFLAGS="$XORG_CFLAGS $DRI_CFLAGS $CFLAGS"
-	if test "$DRM_MODE" = yes; then
-	   	AC_CHECK_HEADER(xf86drmMode.h,[DRM_MODE=yes],[DRM_MODE=no],[#include <stdint.h>
-#include <stdlib.h>])
-		if test "x$DRM_MODE" = xyes; then
-			PKG_CHECK_MODULES(LIBDRM_RADEON, [xorg-server >= 1.6.2 libdrm >= 2.4.36 libdrm_radeon],
-			[LIBDRM_RADEON=yes], [LIBDRM_RADEON=no])
-
-			if test "x$LIBDRM_RADEON" = xyes; then
-			   	AC_DEFINE(XF86DRM_MODE,1,[DRM kernel modesetting])
-				AC_DEFINE(RADEON_DRI2, 1,[Enable DRI2 code])
-                        else
-                                DRM_MODE=no
-			fi
-			PKG_CHECK_MODULES(LIBUDEV, [libudev], [LIBUDEV=yes], [LIBUDEV=no])
-			if test "x$LIBUDEV" = xyes; then
-			       AC_DEFINE(HAVE_LIBUDEV, 1,[libudev support])
-			fi
-        	fi
-	fi
-	CFLAGS="$save_CFLAGS"
-else
-	DRM_MODE=no
-fi
-AM_CONDITIONAL(DRM_MODE, test x$DRM_MODE = xyes)
 AM_CONDITIONAL(LIBUDEV, test x$LIBUDEV = xyes)
-
-# Properly handle EXA.
-AC_MSG_CHECKING([whether to enable EXA support])
-if test "x$EXA" = xyes; then
-        AC_MSG_RESULT(yes)
-
-        SAVE_CPPFLAGS="$CPPFLAGS"
-        CPPFLAGS="$CPPFLAGS $XORG_CFLAGS"
-        AC_CHECK_HEADER(exa.h,
-                       [have_exa_h="yes"], [have_exa_h="no"])
-        CPPFLAGS="$SAVE_CPPFLAGS"
-else
-        AC_MSG_RESULT(no)
-fi 
 
 SAVE_CPPFLAGS="$CPPFLAGS"
 CPPFLAGS="$CPPFLAGS $XORG_CFLAGS"
-if test "x$have_exa_h" = xyes; then
-        AC_MSG_CHECKING([whether EXA version is at least 2.0.0])
-        AC_PREPROC_IFELSE([AC_LANG_PROGRAM([[
-#include "exa.h"
-#if EXA_VERSION_MAJOR < 2
-#error OLD EXA!
-#endif
-                          ]])],
-                          [USE_EXA=yes],
-                          [USE_EXA=no])
-        AC_MSG_RESULT($USE_EXA)
 
-        if test "x$USE_EXA" = xyes; then
-                AC_DEFINE(USE_EXA, 1, [Build support for Exa])
-        fi
+AC_MSG_CHECKING([whether to include GLAMOR support])
+AC_ARG_ENABLE(glamor,
+	      AS_HELP_STRING([--enable-glamor],
+			     [Enable glamor, a new GL-based acceleration [default=no]]),
+	      [GLAMOR="$enableval"],
+	      [GLAMOR=no])
+AC_MSG_RESULT([$GLAMOR])
+AM_CONDITIONAL(GLAMOR, test x$GLAMOR != xno)
+if test "x$GLAMOR" != "xno"; then
+	PKG_CHECK_MODULES(LIBGLAMOR, [glamor >= 0.3.1])
+	PKG_CHECK_MODULES(LIBGLAMOR_EGL, [glamor-egl])
+	AC_DEFINE(USE_GLAMOR, 1, [Enable glamor acceleration])
 fi
-
-AC_CHECK_DECL(xf86XVFillKeyHelperDrawable,
-	      [AC_DEFINE(HAVE_XV_DRAWABLE_HELPER, 1, [Have xf86XVFillKeyHelperDrawable prototype])],
-	      [],
-	      [#include <xf86xv.h>])
-
-AC_CHECK_DECL(xf86ModeBandwidth,
-	      [AC_DEFINE(HAVE_XF86MODEBANDWIDTH, 1, [Have xf86ModeBandwidth prototype])],
-	      [],
-	      [#include "xorg-server.h"
-	       #include "xf86Modes.h"])
-
-AC_CHECK_DECL(xf86_crtc_clip_video_helper,
-	      [AC_DEFINE(HAVE_XF86CRTCCLIPVIDEOHELPER, 1, [Have xf86_crtc_clip_video_helper prototype])],
-	      [],
-	      [#include <X11/Xmd.h>
-	       #include "xorg-server.h"
-	       #include "xf86i2c.h"
-	       #include "xf86Crtc.h"])
-
-AC_CHECK_DECL(xf86RotateFreeShadow,
-	      [AC_DEFINE(HAVE_FREE_SHADOW, 1, [have new FreeShadow API])],
-	      [],
-	      [#include <xorg-server.h>
-               #include <windowstr.h>
-	       #include <xf86Crtc.h>])
-
-AC_CHECK_DECL(pci_device_enable,
-	      [AC_DEFINE(HAVE_PCI_DEVICE_ENABLE, 1, [Have pci_device_enable prototype])],
-	      [],
-	      [#include <pciaccess.h>])
-
-AC_CHECK_DECL(XSERVER_LIBPCIACCESS,
-	      [XSERVER_LIBPCIACCESS=yes],[XSERVER_LIBPCIACCESS=no],
-	      [#include "xorg-server.h"])
 
 AC_CHECK_HEADERS([list.h],
 		 [have_list_h="yes"], [have_list_h="no"],
@@ -244,38 +125,10 @@ if test "x$have_list_h" = xyes; then
 		   #include "list.h"])
 fi
 
-AC_ARG_ENABLE(xaa,
-              AS_HELP_STRING([--enable-xaa],
-                             [Enable legacy X Acceleration Architecture (XAA) [default=auto]]),
-              [XAA="$enableval"],
-              [XAA=auto])
-if test "x$XAA" != xno; then
-        save_CFLAGS=$CFLAGS
-        save_CPPFLAGS=$CPPFLAGS
-        CFLAGS=$XORG_CFLAGS
-        CPPFLAGS="$XORG_CFLAGS"
-        AC_CHECK_HEADERS([xaa.h], XAA=yes, XAA=no)
-        CFLAGS=$save_CFLAGS
-        CPPFLAGS=$save_CPPFLAGS
-fi
-AC_MSG_CHECKING([whether to include XAA support])
-AM_CONDITIONAL(XAA, test "x$XAA" = xyes)
-if test "x$XAA" = xyes; then
-        AC_DEFINE(USE_XAA, test "x$XAA" = xyes, [Build support for XAA])
-fi
-AC_MSG_RESULT([$XAA])
-
 CPPFLAGS="$SAVE_CPPFLAGS"
 
-AM_CONDITIONAL(USE_EXA, test "x$USE_EXA" = xyes)
-
-AM_CONDITIONAL(XF86DRM_MODE, test "x$LIBDRM_RADEON" = xyes)
-
-if test "x$XSERVER_LIBPCIACCESS" = xyes; then
-    PKG_CHECK_MODULES([PCIACCESS], [pciaccess >= 0.8.0])
-    XORG_CFLAGS="$XORG_CFLAGS $PCIACCESS_CFLAGS"
-fi
-AM_CONDITIONAL(XSERVER_LIBPCIACCESS, test "x$XSERVER_LIBPCIACCESS" = xyes)
+PKG_CHECK_MODULES([PCIACCESS], [pciaccess >= 0.8.0])
+XORG_CFLAGS="$XORG_CFLAGS $PCIACCESS_CFLAGS"
 
 # Checks for headers/macros for byte swapping
 # Known variants:
@@ -337,11 +190,6 @@ b = bswap16(a);
 	fi
 fi
 
-case $host_os in
-  *linux*)
-  AC_DEFINE(FGL_LINUX, 1, [Use linux pragma pack]) ;;
-esac
-
 AC_SUBST([moduledir])
 
 DRIVER_NAME=ati
@@ -374,10 +222,6 @@ echo "        prefix:              $prefix"
 echo "        exec_prefix:         $exec_prefix"
 echo "        libdir:              $libdir"
 echo "        includedir:          $includedir"
-
-
-echo ""
-echo "        Kernel modesetting:  $DRM_MODE"
 
 echo ""
 echo "        CFLAGS:              $CFLAGS"

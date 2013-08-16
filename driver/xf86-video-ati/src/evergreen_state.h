@@ -93,9 +93,7 @@ typedef struct {
     int blend_enable;
     uint32_t blendcntl;
     struct radeon_bo *bo;
-#ifdef XF86DRM_MODE
     struct radeon_surface *surface;
-#endif
 } cb_config_t;
 
 /* Shader */
@@ -182,9 +180,7 @@ typedef struct {
     int min_lod;
     struct radeon_bo *bo;
     struct radeon_bo *mip_bo;
-#ifdef XF86DRM_MODE
     struct radeon_surface *surface;
-#endif
 } tex_resource_t;
 
 /* Texture sampler */
@@ -301,6 +297,8 @@ evergreen_start_3d(ScrnInfoPtr pScrn);
 void
 evergreen_set_render_target(ScrnInfoPtr pScrn, cb_config_t *cb_conf, uint32_t domain);
 void
+evergreen_set_blend_color(ScrnInfoPtr pScrn, float *color);
+void
 evergreen_cp_wait_vline_sync(ScrnInfoPtr pScrn, PixmapPtr pPix, xf86CrtcPtr crtc, int start, int stop);
 void
 evergreen_set_spi(ScrnInfoPtr pScrn, int vs_export_count, int num_interp);
@@ -354,5 +352,7 @@ extern void *RADEONEXACreatePixmap2(ScreenPtr pScreen, int width, int height,
 extern void RADEONEXADestroyPixmap(ScreenPtr pScreen, void *driverPriv);
 extern struct radeon_bo *radeon_get_pixmap_bo(PixmapPtr pPix);
 extern Bool RADEONEXAPixmapIsOffscreen(PixmapPtr pPix);
+extern Bool RADEONEXASharePixmapBacking(PixmapPtr ppix, ScreenPtr slave, void **handle_p);
+extern Bool RADEONEXASetSharedPixmapBacking(PixmapPtr ppix, void *handle);
 
 #endif

@@ -34,51 +34,6 @@ enum region_type {
     REGION_IO 
 };
 
-#ifndef XSERVER_LIBPCIACCESS
-
-/* pciVideoPtr */
-#define PCI_DEV_VENDOR_ID(_pcidev) ((_pcidev)->vendor)
-#define PCI_DEV_DEVICE_ID(_pcidev) ((_pcidev)->chipType)
-#define PCI_DEV_REVISION(_pcidev)  ((_pcidev)->chipRev)
-
-#define PCI_SUB_VENDOR_ID(_pcidev) ((_pcidev)->subsysVendor)
-#define PCI_SUB_DEVICE_ID(_pcidev) ((_pcidev)->subsysCard)
-
-#define PCI_DEV_TAG(_pcidev) pciTag((_pcidev)->bus,    \
-                                    (_pcidev)->device, \
-                                    (_pcidev)->func)
-#define PCI_DEV_BUS(_pcidev)       ((_pcidev)->bus)
-#define PCI_DEV_DEV(_pcidev)       ((_pcidev)->device)
-#define PCI_DEV_FUNC(_pcidev)      ((_pcidev)->func)
-
-/* pciConfigPtr */
-#define PCI_CFG_TAG(_pcidev)  (((pciConfigPtr)(_pcidev)->thisCard)->tag)
-#define PCI_CFG_BUS(_pcidev)  (((pciConfigPtr)(_pcidev)->thisCard)->busnum)
-#define PCI_CFG_DEV(_pcidev)  (((pciConfigPtr)(_pcidev)->thisCard)->devnum)
-#define PCI_CFG_FUNC(_pcidev) (((pciConfigPtr)(_pcidev)->thisCard)->funcnum)
-
-/* region addr: xfree86 uses different fields for memory regions and I/O ports */
-#define PCI_REGION_BASE(_pcidev, _b, _type)             \
-    (((_type) == REGION_MEM) ? (_pcidev)->memBase[(_b)] \
-                             : (_pcidev)->ioBase[(_b)])
-
-/* region size: xfree86 uses the log2 of the region size,
- * but with zero meaning no region, not size of one XXX */
-#define PCI_REGION_SIZE(_pcidev, _b) \
-    (((_pcidev)->size[(_b)] > 0) ? (1 << (_pcidev)->size[(_b)]) : 0)
-
-/* read/write PCI configuration space */
-#define PCI_READ_BYTE(_pcidev, _value_ptr, _offset) \
-    *(_value_ptr) = pciReadByte(PCI_CFG_TAG(_pcidev), (_offset))
-
-#define PCI_READ_LONG(_pcidev, _value_ptr, _offset) \
-    *(_value_ptr) = pciReadLong(PCI_CFG_TAG(_pcidev), (_offset))
-
-#define PCI_WRITE_LONG(_pcidev, _value, _offset) \
-    pciWriteLong(PCI_CFG_TAG(_pcidev), (_offset), (_value))
-
-#else /* XSERVER_LIBPCIACCESS */
-
 typedef struct pci_device *pciVideoPtr;
 
 #define PCI_DEV_VENDOR_ID(_pcidev) ((_pcidev)->vendor_id)
@@ -119,7 +74,5 @@ typedef struct pci_device *pciVideoPtr;
 
 #define ATI_DEVICE_MATCH(d, i) \
     { PCI_VENDOR_ATI, (d), PCI_MATCH_ANY, PCI_MATCH_ANY, 0, 0, (i) }
-
-#endif /* XSERVER_LIBPCIACCESS */
 
 #endif /* ATIPCIRENAME_H */

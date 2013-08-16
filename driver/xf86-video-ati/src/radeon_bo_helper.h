@@ -1,8 +1,5 @@
 /*
- * Copyright 2007  Luc Verhaegen <lverhaegen@novell.com>
- * Copyright 2007  Matthias Hopf <mhopf@novell.com>
- * Copyright 2007  Egbert Eich   <eich@novell.com>
- * Copyright 2007  Advanced Micro Devices, Inc.
+ * Copyright 2012  Advanced Micro Devices, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -22,10 +19,20 @@
  * ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
  * OTHER DEALINGS IN THE SOFTWARE.
  */
-#ifndef RHD_ATOMWRAPPER_H_
-# define RHD_ATOMWRAPPER_H_
 
-extern int ParseTableWrapper(void *pspace, int index, void *CAIL,
-			      void *BIOSBase, char **msg_return);
+#ifndef RADEON_BO_HELPER_H
+#define RADEON_BO_HELPER_H 1
 
-#endif /* RHD_ATOMWRAPPER_H_ */
+extern struct radeon_bo*
+radeon_alloc_pixmap_bo(ScrnInfoPtr pScrn, int width, int height, int depth,
+		       int usage_hint, int bitsPerPixel, int *new_pitch,
+		       struct radeon_surface *new_surface, uint32_t *new_tiling);
+
+extern Bool
+radeon_share_pixmap_backing(struct radeon_bo *bo, void **handle_p);
+
+extern Bool
+radeon_set_shared_pixmap_backing(PixmapPtr ppix, void *fd_handle,
+				 struct radeon_surface *surface);
+
+#endif /* RADEON_BO_HELPER_H */

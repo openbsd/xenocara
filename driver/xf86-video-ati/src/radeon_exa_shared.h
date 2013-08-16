@@ -62,7 +62,6 @@ do {					\
 #define TRACE
 #endif
 
-#ifdef XF86DRM_MODE
 static inline void radeon_add_pixmap(struct radeon_cs *cs, PixmapPtr pPix, int read_domains, int write_domain)
 {
     struct radeon_exa_pixmap_priv *driver_priv = exaGetPixmapDriverPrivate(pPix);
@@ -71,7 +70,6 @@ static inline void radeon_add_pixmap(struct radeon_cs *cs, PixmapPtr pPix, int r
 }
 
 extern void radeon_ib_discard(ScrnInfoPtr pScrn);
-#endif /* XF86DRM_MODE */
 
 extern int radeon_cp_start(ScrnInfoPtr pScrn);
 extern void radeon_vb_no_space(ScrnInfoPtr pScrn, struct radeon_vbo_object *vbo, int vert_size);
