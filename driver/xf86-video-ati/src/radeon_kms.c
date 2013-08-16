@@ -869,8 +869,13 @@ Bool RADEONPreInit_KMS(ScrnInfoPtr pScrn, int flags)
 
 	/* 2D color tiling */
 	if (info->ChipFamily >= CHIP_FAMILY_R600) {
+#if 0
+		/* requires mesa >= 9.x */
 		info->allowColorTiling2D = xf86ReturnOptValBool(info->Options, OPTION_COLOR_TILING_2D,
                                                                 info->ChipFamily <= CHIP_FAMILY_ARUBA);
+#else
+		info->allowColorTiling2D = FALSE;
+#endif
 	}
 
 	if (info->ChipFamily >= CHIP_FAMILY_R600) {
