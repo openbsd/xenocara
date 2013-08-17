@@ -54,7 +54,7 @@ from The Open Group.
 
 
 /* This stuff is defined in the calling program by just_display.h */
-char    *program_name = "unknown_program";
+const char *program_name = "unknown_program";
 Display *dpy = NULL;
 int      screen = 0;
 
@@ -333,7 +333,7 @@ Window Window_With_Name(
  * Standard fatal error routine - call like printf but maximum of 7 arguments.
  * Does not require dpy or screen defined.
  */
-void Fatal_Error(char *msg, ...)
+void Fatal_Error(const char *msg, ...)
 {
 	va_list args;
 	fflush(stdout);

@@ -49,7 +49,7 @@ from The Open Group.
 
     /* Global variables used by routines in just_display.c */
 
-extern char *program_name;                   /* Name of this program */
+extern const char *program_name;             /* Name of this program */
 extern Display *dpy;                         /* The current display */
 extern int screen;                           /* The current screen */
 
@@ -64,7 +64,7 @@ void Setup_Display_And_Screen(int *, char **);
 void Close_Display(void);
 XFontStruct *Open_Font(const char *);
 Window Select_Window_Args(int *, char **);
-void usage(void);
+void usage(void) _X_NORETURN;
 
 #define X_USAGE "[host:display]"              /* X arguments handled by
 						 Get_Display_Name */
@@ -80,4 +80,4 @@ void usage(void);
 Window Select_Window(Display *, int descend);
 Window Window_With_Name(Display *, Window, const char *);
 
-void Fatal_Error(char *, ...) _X_NORETURN;
+void Fatal_Error(const char *, ...) _X_NORETURN _X_ATTRIBUTE_PRINTF(1,2);

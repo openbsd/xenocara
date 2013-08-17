@@ -1,4 +1,5 @@
-xprop displays window and font properties of an X server.
+xprop is a command line tool to display and/or set window and font
+properties of an X server.
 
 All questions regarding this software should be directed at the
 Xorg mailing list:

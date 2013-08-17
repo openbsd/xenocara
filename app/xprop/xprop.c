@@ -537,7 +537,8 @@ static void
 Read_Mappings (FILE *stream)
 {
     char format_buffer[100];
-    char name[1000], *dformat, *format;
+    char name[1000];
+    const char *dformat, *format;
     int count, c;
     Atom atom;
 
@@ -724,7 +725,7 @@ Format_String (const char *string, int unicode)
 }
 
 static const char *
-Format_Len_String (const char *string, int len)
+Format_Len_String (const char *string, int len, int unicode)
 {
     char *data;
     const char *result;
@@ -736,7 +737,7 @@ Format_Len_String (const char *string, int len)
     memcpy(data, string, len);
     data[len] = '\0';
 
-    result = Format_String(data, 0);
+    result = Format_String(data, unicode);
     free(data);
 
     return result;
@@ -901,7 +902,7 @@ Format_Len_Text (const char *string, int len, Atom encoding)
 	*_buf_ptr++ = '\0';
 	return _formatting_buffer;
     } else
-	return Format_Len_String(string, len);
+	return Format_Len_String(string, len, 0);
 }
 
 /*
@@ -985,7 +986,6 @@ Format_Len_Unicode (const char *string, int len)
 {
     char *data;
     const char *result, *error;
-    int len2;
 
     int validity = is_valid_utf8(string, len);
 
@@ -1003,12 +1003,12 @@ Format_Len_Unicode (const char *string, int len)
 	    error = "<Invalid UTF-8 string: Unknown error>"; break;
 	}
 
-	result = Format_Len_String(string, len);
-	len2 = strlen(result);
-	data = malloc(len2+1);
+	result = Format_Len_String(string, len, 0);
+	/* result is stored in _formatting_buffer, so make a temporary
+	   copy before we overwrite _formatting_buffer with error */
+	data = strdup(result);
 	if (!data)
 	    Fatal_Error("Out of memory!");
-	memcpy(data, result, len2+1);
 
 	memcpy(_formatting_buffer, error, strlen(error)+1);
 	strcat(_formatting_buffer, data);
@@ -1017,20 +1017,7 @@ Format_Len_Unicode (const char *string, int len)
 	return _formatting_buffer;
     }
 
-    if (!is_utf8_locale())
-	return Format_Len_String(string, len);
-
-    data = malloc(len+1);
-    if (!data)
-	Fatal_Error("Out of memory!");
-
-    memcpy(data, string, len);
-    data[len] = '\0';
-
-    result = Format_String(data, 1);
-    free(data);
-
-    return result;
+    return Format_Len_String(string, len, is_utf8_locale());
 }
 
 /*
@@ -1084,7 +1071,7 @@ Format_Thunk (thunk t, char format_char)
 
     switch (format_char) {
       case 's':
-	return Format_Len_String(t.extra_value, (int)t.value);
+	return Format_Len_String(t.extra_value, (int)t.value, 0);
       case 'u':
 	return Format_Len_Unicode(t.extra_value, (int)t.value);
       case 't':
@@ -1608,7 +1595,7 @@ Set_Property (Display *dpy, Window w, const char *propname, const char *value)
     int size;
     char format_char;
     Atom type = 0;
-    unsigned char *data = NULL;
+    const unsigned char *data = NULL;
     int nelements = 0;
 
     atom = Parse_Atom(propname, False);
@@ -1626,7 +1613,14 @@ Set_Property (Display *dpy, Window w, const char *propname, const char *value)
 	if (size != 8)
 	    Fatal_Error("can't use format character 's' with any size except 8.");
 	type = XA_STRING;
-	data = (unsigned char *) value;
+	data = (const unsigned char *) value;
+	nelements = strlen(value);
+	break;
+      case 'u':
+	if (size != 8)
+	    Fatal_Error("can't use format character 'u' with any size except 8.");
+	type = XInternAtom(dpy, "UTF8_STRING", False);
+	data = (const unsigned char *) value;
 	nelements = strlen(value);
 	break;
       case 't': {
@@ -1655,11 +1649,11 @@ Set_Property (Display *dpy, Window w, const char *propname, const char *value)
 	intvalue = strtoul(tmp, NULL, 0);
 	switch(size) {
 	    case 8:
-	        data8[0] = intvalue; data = (unsigned char *) data8; break;
+	        data8[0] = intvalue; data = (const unsigned char *) data8; break;
 	    case 16:    
-	        data16[0] = intvalue; data = (unsigned char *) data16; break;
+	        data16[0] = intvalue; data = (const unsigned char *) data16; break;
 	    case 32:    
-	        data32[0] = intvalue; data = (unsigned char *) data32; break;
+	        data32[0] = intvalue; data = (const unsigned char *) data32; break;
 	}
 	tmp = strtok(NULL,",");
 	while(tmp != NULL){
@@ -1695,11 +1689,11 @@ Set_Property (Display *dpy, Window w, const char *propname, const char *value)
 	intvalue = strtoul(tmp, NULL, 0);
 	switch(size) {
 	    case 8:
-	        data8[0] = intvalue; data = (unsigned char *) data8; break;
+	        data8[0] = intvalue; data = (const unsigned char *) data8; break;
 	    case 16:    
-	        data16[0] = intvalue; data = (unsigned char *) data16; break;
+	        data16[0] = intvalue; data = (const unsigned char *) data16; break;
 	    case 32:    
-	        data32[0] = intvalue; data = (unsigned char *) data32; break;
+	        data32[0] = intvalue; data = (const unsigned char *) data32; break;
 	}
 	tmp = strtok(NULL,",");
 	while(tmp != NULL){
@@ -1740,11 +1734,11 @@ Set_Property (Display *dpy, Window w, const char *propname, const char *value)
 	type = XA_INTEGER;
 	switch (size) {
 	  case 8:
-	    data8 = boolvalue; data = (unsigned char *) &data8; break;
+	    data8 = boolvalue; data = (const unsigned char *) &data8; break;
 	  case 16:
-	    data16 = boolvalue; data = (unsigned char *) &data16; break;
+	    data16 = boolvalue; data = (const unsigned char *) &data16; break;
 	  case 32: default:
-	    data32 = boolvalue; data = (unsigned char *) &data32; break;
+	    data32 = boolvalue; data = (const unsigned char *) &data32; break;
 	}
 	nelements = 1;
 	break;
@@ -1753,7 +1747,7 @@ Set_Property (Display *dpy, Window w, const char *propname, const char *value)
 	static Atom avalue;
 	avalue = Parse_Atom(value, False);
 	type = XA_ATOM;
-	data = (unsigned char *) &avalue;
+	data = (const unsigned char *) &avalue;
 	nelements = 1;
 	break;
       }
