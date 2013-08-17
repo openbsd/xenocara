@@ -325,8 +325,7 @@ main(int argc, char *argv[])
 			    usage("low-mark must be greater than 0");
 			}
 			if (himark <= lowmark) {
-			    usage("hi-mark must be greater than low-mark",
-				  NULL);
+			    usage("hi-mark must be greater than low-mark");
 			}
 			if (i >= argc) {
 			    set_font_cache(dpy, himark, lowmark, balance);
