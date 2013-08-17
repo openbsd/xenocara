@@ -1,3 +1,161 @@
+commit 0705cf954e2d92b379493accd1f0f984d87ec575
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Aug 3 21:42:59 2013 -0700
+
+    xload 1.1.2
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 51fd2af788ddf81b301f50050cf04e9bcba0f8e3
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Jul 18 23:37:36 2013 -0700
+
+    Add noreturn attribute to usage() as suggested by -Wmissing-noreturn
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 2f6ff61d2edbffdd2949a0546a7df67603462fca
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Mar 30 08:44:33 2013 -0700
+
+    Use C99 struct initializers for XKeyboardControl values
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 0f8ad26dc4baed4c1807e23c1560907b0c145073
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Feb 24 17:48:39 2013 -0800
+
+    Use 'imdent' to make the deeply nested #ifdef levels easier to follow
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 84e1b2ef03315927cb8a927bcecca73778e5f6c1
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Feb 24 17:47:45 2013 -0800
+
+    Cleanup trailing whitespace
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit d436ab2166c03a54e58f6f4b48e876ba1c147d13
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Feb 24 13:05:45 2013 -0800
+
+    Make getloadavg() the first choice on Unix systems that have it
+    
+    Only fall back to complex, platform specific code if the simpler,
+    more portable option isn't found by configure.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit b0613198f87af22be989fa54e785c64e147debb6
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Feb 24 12:53:08 2013 -0800
+
+    unifdef -UX_NOT_POSIX
+    
+    This just provided a declaration for lseek() for some of the ancient
+    Unix variants that were missing it in system headers.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit da4390ce2dbc08292833ba141a4a98ac3da9f0d5
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Feb 24 12:49:56 2013 -0800
+
+    unifdef -U__UNIXOS2__
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 0e3449e7ac9fecfe9fbc51e0c132ebb32691ec66
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Feb 24 12:48:49 2013 -0800
+
+    unifdef -Usequent
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit d496979565669a5590280eca717998470ab4ab9b
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Feb 24 12:45:59 2013 -0800
+
+    unifdef -Uhcx
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 0e301928d923d5ad875118e23ec6fdb4ae45f5d5
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Feb 24 08:46:35 2013 -0800
+
+    unifdef -UUTEK
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 85cf38eafaae6da715699e0209dbc4281b8c7453
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Feb 24 08:45:18 2013 -0800
+
+    unifdef -Ualliant
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 6f106ec95c47e6e36aaa24fa5ebfbfabc4203435
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Feb 24 08:38:54 2013 -0800
+
+    unifdef -Usony
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 8bc6852a27343737d662f64c0523648f6fe14e43
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Feb 24 08:37:02 2013 -0800
+
+    unifdef -Uumips
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit a9c3d8ae9af214435eaf7741df0555e24f8dae45
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Feb 24 08:32:56 2013 -0800
+
+    unifdef -UMOTOROLA
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 0a7b2ab5abfbf557dc7f59bc3db15f3f580cbe1f
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Feb 24 08:30:13 2013 -0800
+
+    unifdef -UAIXV3
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit b7ac64d925d89d117ccf3c7165f3325be59264ca
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Feb 24 08:29:03 2013 -0800
+
+    unifdef -UCRAY
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 8aa0329166dcb3ed4981ef0a782a475ced27f166
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Feb 20 20:43:52 2013 -0800
+
+    Combine usage message strings
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit a370e2ede4cff90f233a0249a0c34bef18f57907
+Author: Eric S. Raymond <esr@thyrsus.com>
+Date:   Thu Aug 23 12:10:16 2012 -0400
+
+    Eliminate use of tab stops.  Helps with translation to DocBook.
+    
+    Signed-off-by: Eric S. Raymond <esr@thyrsus.com>
+
 commit 632b2054421d43ad8cc63203412d4ee0209f27e3
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Thu Mar 22 22:43:58 2012 -0700
