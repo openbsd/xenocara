@@ -1,3 +1,116 @@
+commit bee5b8e13837a02b5f2ac09e0c2b90fa5616e0fb
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Aug 8 20:43:18 2013 -0700
+
+    xset 1.2.3
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit e44841fdd4552cde3aca28471a59ad64c5a05547
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Jul 19 22:58:47 2013 -0700
+
+    Pass buf size to on_or_off instead of just assuming it is big enough
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 86fda0478065488dfc423b67ea1747817106335f
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Jul 19 22:47:38 2013 -0700
+
+    Add -version flag
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 8d49ad3f03c858222863fa986de850d5a554d69f
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Jul 19 22:32:38 2013 -0700
+
+    Fix integer sign/size conversion warnings from clang
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 72296976365e6f91129f25468771fa864b20e862
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Jul 19 22:05:07 2013 -0700
+
+    Add printf attribute to usage function and fix warnings it causes
+    
+    gcc suggested it:
+     xset.c: In function ‘usage’:
+     xset.c:1577:2: warning: function might be possible candidate for ‘gnu_printf’
+      format attribute [-Wmissing-format-attribute]
+    
+    But adding it unveiled many complaints about extra trailing NULL args
+    from before usage took a variable number of arguments:
+    
+    xset.c:186:3: warning: too many arguments for format [-Wformat-extra-args]
+    xset.c:193:2: warning: too many arguments for format [-Wformat-extra-args]
+    xset.c:362:3: warning: too many arguments for format [-Wformat-extra-args]
+    xset.c:370:3: warning: too many arguments for format [-Wformat-extra-args]
+    xset.c:376:3: warning: too many arguments for format [-Wformat-extra-args]
+    xset.c:382:3: warning: too many arguments for format [-Wformat-extra-args]
+    xset.c:388:3: warning: too many arguments for format [-Wformat-extra-args]
+    xset.c:402:7: warning: too many arguments for format [-Wformat-extra-args]
+    xset.c:425:7: warning: too many arguments for format [-Wformat-extra-args]
+    xset.c:542:4: warning: too many arguments for format [-Wformat-extra-args]
+    xset.c:735:3: warning: too many arguments for format [-Wformat-extra-args]
+    
+    so those were deleted.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit d3f87090b92b0c77a75027ba660351d18a733c8b
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Jul 19 22:00:51 2013 -0700
+
+    Fix gcc warnings about discarded const qualifiers
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit c42515672b2552b2ce604fe523cf133593ab88ec
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Feb 20 19:43:46 2013 -0800
+
+    Combine error message strings
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 5e3ab67c50ddfda53a0e8366bc854562cf297442
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Feb 20 19:41:38 2013 -0800
+
+    Combine usage message strings
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 50c8bd6121e5a4c679fb7c9762cf2dc591f0c3ef
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Jan 4 18:56:01 2013 -0800
+
+    Drop usleep fallbacks for ancient OS versions
+    
+    Unix 98 requires usleep() so assume most supported non-Win32 platforms
+    have it and don't need old workarounds any more.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit ab917f59ba5d1d10db1bf45b632b61e64a2b31c4
+Author: Jon TURNEY <jon.turney@dronecode.org.uk>
+Date:   Wed Jan 4 19:08:16 2012 +0000
+
+    Remove unneeded include of windows.h on WIN32
+    
+    Remove unneeded include of windows.h on WIN32, along with an attempt
+    at the needed wrapping, which is all done properly by Xwindows.h
+    
+    (This include was also under a DPMSExtension define, for some strange
+    reason)
+    
+    Signed-off-by: Jon TURNEY <jon.turney@dronecode.org.uk>
+    Reviewed-by: Yaakov Selkowitz <yselkowitz@users.sourceforge.net>
+
 commit 1e3ae11d125f5146dd6821161e17522bae702e71
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Thu Jul 28 21:10:22 2011 -0700

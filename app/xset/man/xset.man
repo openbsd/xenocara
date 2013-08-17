@@ -64,6 +64,8 @@ xset - user preference utility for X
 [s {expose|noexpose}] [s {on|off}] [s default] [s activate] [s reset]
 .br
 [q]
+.br
+[-version]
 .SH DESCRIPTION
 This program is used to set various user preference options of the display.
 .SH OPTIONS
@@ -281,6 +283,11 @@ If only one numerical parameter is given, it will be used for the length.
 .TP 8
 .B q
 The \fBq\fP option gives you information on the current settings.
+.PP
+.TP 8
+.B -version
+The \fB-version\fP option prints the program version and exits without
+doing anything else.
 .PP
 These settings will be reset to default values when you log out.
 .PP

@@ -65,19 +65,6 @@ in this Software without prior written authorization from The Open Group.
 #endif
 #ifdef DPMSExtension
 # include <X11/extensions/dpms.h>
-# ifdef WIN32
-#  define BOOL wBOOL
-#  ifdef Status
-#   undef Status
-#   define Status wStatus
-#  endif
-#  include <windows.h>
-#  ifdef Status
-#   undef Status
-#   define Status int
-#  endif
-#  undef BOOL
-# endif
 #endif /* DPMSExtension */
 
 #ifdef XF86MISC
@@ -128,12 +115,12 @@ static char *progName;
 
 static int error_status = 0;
 
-static int is_number(char *arg, int maximum);
+static int is_number(const char *arg, int maximum);
 static void set_click(Display *dpy, int percent);
 static void set_bell_vol(Display *dpy, int percent);
 static void set_bell_pitch(Display *dpy, int pitch);
 static void set_bell_dur(Display *dpy, int duration);
-static void set_font_path(Display *dpy, char *path, int special,
+static void set_font_path(Display *dpy, const char *path, int special,
 			  int before, int after);
 static void set_led(Display *dpy, int led, int led_mode);
 static void xkbset_led(Display *dpy, const char *led, int led_mode);
@@ -143,11 +130,12 @@ static void set_repeat(Display *dpy, int key, int auto_repeat_mode);
 static void set_pixels(Display *dpy, unsigned long *pixels, caddr_t *colors,
 		       int numpixels);
 static void set_lock(Display *dpy, Bool onoff);
-static char *on_or_off(int val, int onval, char *onstr,
-		       int offval, char *offstr, char buf[]);
+static const char *on_or_off(int val, int onval, const char *onstr,
+                             int offval, const char *offstr,
+                             char buf[], size_t bufsize);
 static void query(Display *dpy);
-static void usage(char *fmt, ...) _X_NORETURN;
-static void error(char *message) _X_NORETURN;
+static void usage(const char *fmt, ...) _X_NORETURN _X_ATTRIBUTE_PRINTF(1,2);
+static void error(const char *message) _X_NORETURN;
 static int local_xerror(Display *dpy, XErrorEvent *rep);
 
 #ifdef XF86MISC
@@ -160,7 +148,7 @@ static void xkbset_repeatrate(Display *dpy, int delay, int rate);
 int
 main(int argc, char *argv[])
 {
-    register char *arg;
+    const char *arg;
     register int i;
     int percent;
     int acc_num, acc_denom, threshold;
@@ -196,14 +184,17 @@ main(int argc, char *argv[])
 	arg = argv[i];
 	if (strcmp(arg, "-display") == 0 || strcmp(arg, "-d") == 0) {
 	    if (++i >= argc)
-		usage("missing argument to -display", NULL);
+		usage("missing argument to -display");
 	    disp = argv[i];
+	} else if (strcmp(arg, "-version") == 0) {
+	    puts(PACKAGE_STRING);
+	    exit(EXIT_SUCCESS);
 	} else {
 	    hasargs = True;
 	}
     }
     if (!hasargs) {
-	usage(NULL, NULL);	       /* replace with window interface */
+	usage(NULL);		       /* replace with window interface */
     }
 
     dpy = XOpenDisplay(disp);    /*  Open display and check for success */
@@ -319,7 +310,7 @@ main(int argc, char *argv[])
 		    himark = atoi(arg);
 		    i++;
 		    if (himark <= 0) {
-			usage("hi-mark must be greater than 0", NULL);
+			usage("hi-mark must be greater than 0");
 		    }
 		    if (i >= argc) {
 			lowmark = (himark * 70) / 100;
@@ -331,7 +322,7 @@ main(int argc, char *argv[])
 			lowmark = atoi(arg);
 			i++;
 			if (lowmark <= 0) {
-			    usage("low-mark must be greater than 0", NULL);
+			    usage("low-mark must be greater than 0");
 			}
 			if (himark <= lowmark) {
 			    usage("hi-mark must be greater than low-mark",
@@ -372,7 +363,7 @@ main(int argc, char *argv[])
 	    i++;
 	} else if (strcmp(arg, "fp=") == 0) {	/* unconditionally set */
 	    if (i >= argc) {
-		usage("missing fp= argument", NULL);
+		usage("missing fp= argument");
 	    } else {
 		arg = nextarg(i, argv);
 	    }
@@ -380,25 +371,25 @@ main(int argc, char *argv[])
 	    i++;
 	} else if (strcmp(arg, "+fp") == 0) {	/* set font path */
 	    if (i >= argc)
-		usage("missing +fp argument", NULL);
+		usage("missing +fp argument");
 	    arg = nextarg(i, argv);
 	    set_font_path(dpy, arg, 0, 1, 0);	/* not special, prepend */
 	    i++;
 	} else if (strcmp(arg, "fp+") == 0) {	/* set font path */
 	    if (i >= argc)
-		usage("missing fp+ argument", NULL);
+		usage("missing fp+ argument");
 	    arg = nextarg(i, argv);
 	    set_font_path(dpy, arg, 0, 0, 1);	/* not special, append */
 	    i++;
 	} else if (strcmp(arg, "-fp") == 0) {	/* set font path */
 	    if (i >= argc)
-		usage("missing -fp argument", NULL);
+		usage("missing -fp argument");
 	    arg = nextarg(i, argv);
 	    set_font_path(dpy, arg, 0, -1, 0);	/* not special, preremove */
 	    i++;
 	} else if (strcmp(arg, "fp-") == 0) {	/* set font path */
 	    if (i >= argc)
-		usage("missing fp- argument", NULL);
+		usage("missing fp- argument");
 	    arg = nextarg(i, argv);
 	    set_font_path(dpy, arg, 0, 0, -1);	/* not special, postremove */
 	    i++;
@@ -412,7 +403,7 @@ main(int argc, char *argv[])
 	    arg = nextarg(i, argv);
 	    if (strcmp(arg, "named") == 0) {
 		if (++i >= argc) {
-		    usage("missing argument to led named", NULL);
+		    usage("missing argument to led named");
 		} else {
 		    arg = nextarg(i, argv);
 		    xkbset_led(dpy, arg, values.led_mode);
@@ -435,7 +426,7 @@ main(int argc, char *argv[])
 	    arg = nextarg(i, argv);
 	    if (strcmp(arg, "named") == 0) {
 		if (++i >= argc) {
-		    usage("missing argument to -led named", NULL);
+		    usage("missing argument to -led named");
 		} else {
 		    arg = nextarg(i, argv);
 		    xkbset_led(dpy, arg, values.led_mode);
@@ -552,7 +543,7 @@ main(int argc, char *argv[])
 			off_timeout);
 		} else if (strcmp(arg, "force") == 0) {
 		    if (++i >= argc)
-			usage("missing argument to dpms force", NULL);
+			usage("missing argument to dpms force");
 		    arg = argv[i];
 		    /*
 		     * The calls to usleep below are necessary to
@@ -562,35 +553,14 @@ main(int argc, char *argv[])
 		     * which case the Up transition may immediately
 		     * turn the display back on.
 		     *
-		     * On OS/2, use _sleep2()
 		     */
 
 #ifdef HAVE_USLEEP
 # define Usleep(us) usleep((us))
-#else
-#ifdef SVR4
-# ifdef sgi
-#  define Usleep(us) sginap((us) / 1000)
-# endif
-#endif
-#ifdef hpux
-# ifdef _XPG4_EXTENDED
-#  define Usleep(us) usleep((us))
-# endif
-#endif
-#ifdef __UNIXOS2__
-# define Usleep(us) _sleep2((us / 1000 > 0) ? us / 1000 : 1)
-#endif
-#ifdef WIN32
+#elif defined(WIN32)
 # define Usleep(us) Sleep(us)
-#endif
-#ifndef Usleep
-# if defined(SYSV) || defined(SVR4)
-#  define Usleep(us) sleep((us / 1000000 > 0) ? us / 1000000 : 1)
-# else
-#  define Usleep(us) usleep((us))
-# endif
-#endif
+#else
+# define Usleep(us) sleep((us / 1000000 > 0) ? us / 1000000 : 1)
 #endif /* HAVE_USLEEP */
 
 		    if (strcmp(arg, "on") == 0) {
@@ -766,12 +736,12 @@ main(int argc, char *argv[])
 	    set_repeat(dpy, key, auto_repeat_mode);
 	} else if (strcmp(arg, "p") == 0) {
 	    if (i + 1 >= argc)
-		usage("missing argument to p", NULL);
+		usage("missing argument to p");
 	    arg = argv[i];
 	    if (numpixels >= MAX_PIXEL_COUNT)
 		usage("more than %d pixels specified", MAX_PIXEL_COUNT);
 	    if (*arg >= '0' && *arg <= '9')
-		pixels[numpixels] = atoi(arg);
+		pixels[numpixels] = strtoul(arg, NULL, 10);
 	    else
 		usage("invalid pixel number %s", arg);
 	    i++;
@@ -797,9 +767,9 @@ main(int argc, char *argv[])
 }
 
 static int
-is_number(char *arg, int maximum)
+is_number(const char *arg, int maximum)
 {
-    register char *p;
+    const char *p;
 
     if (arg[0] == '-' && arg[1] == '1' && arg[2] == '\0')
 	return (1);
@@ -883,12 +853,13 @@ set_bell_dur(Display *dpy, int duration)
  *	   0      1	FontPath := current + path
  */
 static void
-set_font_path(Display *dpy, char *path, int special, int before, int after)
+set_font_path(Display *dpy, const char *path, int special, int before, int after)
 {
+    char *directories = NULL;
     char **directoryList = NULL;
-    int ndirs = 0;
+    unsigned int ndirs = 0;
     char **currentList = NULL;
-    int ncurrent = 0;
+    unsigned int ncurrent = 0;
 
     if (special) {
 	if (strcmp(path, "default") == 0) {
@@ -896,13 +867,13 @@ set_font_path(Display *dpy, char *path, int special, int before, int after)
 	    return;
 	}
 	if (strcmp(path, "rehash") == 0) {
-	    currentList = XGetFontPath(dpy, &ncurrent);
+	    currentList = XGetFontPath(dpy, (int *) &ncurrent);
 	    if (!currentList) {
 		fprintf(stderr, "%s:  unable to get current font path.\n",
 			progName);
 		return;
 	    }
-	    XSetFontPath(dpy, currentList, ncurrent);
+	    XSetFontPath(dpy, currentList, (int) ncurrent);
 	    XFreeFontPath(currentList);
 	    return;
 	}
@@ -918,7 +889,7 @@ set_font_path(Display *dpy, char *path, int special, int before, int after)
      */
 
     if (before != 0 || after != 0) {
-	currentList = XGetFontPath(dpy, &ncurrent);
+	currentList = XGetFontPath(dpy, (int *) &ncurrent);
 	if (!currentList) {
 	    fprintf(stderr, "%s:  unable to get old font path.\n", progName);
 	    before = after = 0;
@@ -927,7 +898,7 @@ set_font_path(Display *dpy, char *path, int special, int before, int after)
 
     {
 	/* count the number of directories in path */
-	register char *cp = path;
+	const char *cp = path;
 
 	ndirs = 1;
 	while ((cp = strchr(cp, ',')) != NULL) {
@@ -940,10 +911,14 @@ set_font_path(Display *dpy, char *path, int special, int before, int after)
     if (!directoryList)
 	error("out of memory for font path directory list");
 
+    directories = strdup(path);
+    if (!directories)
+        error("out of memory for font path directory string");
+    else
     {
 	/* mung the path and set directoryList pointers */
-	int i = 0;
-	char *cp = path;
+	unsigned int i = 0;
+	char *cp = directories;
 
 	directoryList[i++] = cp;
 	while ((cp = strchr(cp, ',')) != NULL) {
@@ -963,36 +938,36 @@ set_font_path(Display *dpy, char *path, int special, int before, int after)
      */
 
     if (before == 0 && after == 0) {
-	XSetFontPath(dpy, directoryList, ndirs);
+	XSetFontPath(dpy, directoryList, (int) ndirs);
     }
 
     /* if adding to list, build a superset */
     if (before > 0 || after > 0) {
-	int nnew = ndirs + ncurrent;
+	unsigned int nnew = ndirs + ncurrent;
 	char **newList = (char **)malloc(nnew * sizeof(char *));
 
 	if (!newList)
 	    error("out of memory");
 	if (before > 0) {	       /* new + current */
 	    memmove((char *)newList, (char *)directoryList,
-		    (unsigned)(ndirs * sizeof(char *)));
+                    (ndirs * sizeof(char *)));
 	    memmove((char *)(newList + ndirs), (char *)currentList,
-		    (unsigned)(ncurrent * sizeof(char *)));
-	    XSetFontPath(dpy, newList, nnew);
+		    (ncurrent * sizeof(char *)));
+	    XSetFontPath(dpy, newList, (int) nnew);
 	} else if (after > 0) {
 	    memmove((char *)newList, (char *)currentList,
-		    (unsigned)(ncurrent * sizeof(char *)));
+		    (ncurrent * sizeof(char *)));
 	    memmove((char *)(newList + ncurrent), (char *)directoryList,
-		    (unsigned)(ndirs * sizeof(char *)));
-	    XSetFontPath(dpy, newList, nnew);
+		    (ndirs * sizeof(char *)));
+	    XSetFontPath(dpy, newList,(int) nnew);
 	}
 	free((char *)newList);
     }
 
     /* if deleting from list, build one the same size */
     if (before < 0 || after < 0) {
-	int i, j;
-	int nnew = 0;
+	unsigned int i, j;
+	unsigned int nnew = 0;
 	char **newList = (char **)malloc(ncurrent * sizeof(char *));
 
 	if (!newList)
@@ -1011,10 +986,11 @@ set_font_path(Display *dpy, char *path, int special, int before, int after)
 		    "%s:  warning, no entries deleted from font path.\n",
 		    progName);
 	}
-	XSetFontPath(dpy, newList, nnew);
+	XSetFontPath(dpy, newList, (int) nnew);
 	free((char *)newList);
     }
 
+    free(directories);
     if (directoryList)
 	free((char *)directoryList);
     if (currentList)
@@ -1171,10 +1147,10 @@ set_pixels(Display *dpy, unsigned long *pixels, caddr_t * colors,
     int scr = DefaultScreen(dpy);
     Visual *visual = DefaultVisual(dpy, scr);
     Colormap cmap = DefaultColormap(dpy, scr);
-    unsigned long max_cells = DisplayCells(dpy, scr);
+    unsigned long max_cells = (unsigned long) DisplayCells(dpy, scr);
     XVisualInfo viproto, *vip;
     int nvisuals = 0;
-    char *visual_type = NULL;
+    const char *visual_type = NULL;
     int i;
 
     viproto.visualid = XVisualIDFromVisual(visual);
@@ -1269,9 +1245,9 @@ set_font_cache(Display *dpy, long himark, long lowmark, long balance)
 }
 #endif
 
-static char *
-on_or_off(int val, int onval, char *onstr,
-    int offval, char *offstr, char buf[])
+static const char *
+on_or_off(int val, int onval, const char *onstr,
+    int offval, const char *offstr, char buf[], size_t bufsize)
 {
     if (val == onval)
 	return onstr;
@@ -1279,7 +1255,7 @@ on_or_off(int val, int onval, char *onstr,
 	return offstr;
 
     buf[0] = '\0';
-    sprintf(buf, "<%d>", val);
+    snprintf(buf, bufsize, "<%d>", val);
     return buf;
 }
 
@@ -1315,9 +1291,9 @@ query(Display *dpy)
     printf("Keyboard Control:\n");
     printf
 	("  auto repeat:  %s    key click percent:  %d    LED mask:  %08lx\n",
-	on_or_off(values.global_auto_repeat, AutoRepeatModeOn, "on",
-	    AutoRepeatModeOff, "off", buf), values.key_click_percent,
-	values.led_mask);
+	 on_or_off(values.global_auto_repeat, AutoRepeatModeOn, "on",
+		   AutoRepeatModeOff, "off", buf, sizeof(buf)),
+	 values.key_click_percent, values.led_mask);
 #ifdef XKB
     if (XkbQueryExtension(dpy, &xkbopcode, &xkbevent, &xkberror, &xkbmajor,
 			  &xkbminor)
@@ -1344,7 +1320,7 @@ query(Display *dpy)
 		for (i = 0; i < j; i++) {
 		    if (XkbGetNamedIndicator(dpy, iatoms[i], &inds[i],
 					     &istates[i], NULL, NULL)) {
-			int namelen = strlen(iatomnames[i]);
+			int namelen = (int) strlen(iatomnames[i]);
 			if (namelen > maxnamelen) {
 			    maxnamelen = namelen;
 			}
@@ -1370,7 +1346,7 @@ query(Display *dpy)
 		for (i = 0, linewidth = 0; i < activecount ; i++) {
 		    if (inds[i] != -1) {
 			int spaces = columnwidth - XKB_IND_FORMAT_CHARS
-			    - strlen(iatomnames[i]);
+			    - (int) strlen(iatomnames[i]);
 
 			if (spaces < 0)
 			    spaces = 0;
@@ -1380,7 +1356,8 @@ query(Display *dpy)
 					    spaces + 3,
 					    on_or_off(istates[i],
 						      True,  "on ",
-						      False, "off", buf));
+						      False, "off",
+						      buf, sizeof(buf)));
 		    }
 		    if (linewidth > (MAX_LINE_WIDTH - columnwidth)) {
 			printf("\n");
@@ -1431,10 +1408,10 @@ query(Display *dpy)
     printf("Screen Saver:\n");
     printf("  prefer blanking:  %s    ",
 	   on_or_off(prefer_blank, PreferBlanking, "yes",
-		     DontPreferBlanking, "no", buf));
+		     DontPreferBlanking, "no", buf, sizeof(buf)));
     printf("allow exposures:  %s\n",
 	   on_or_off(allow_exp, AllowExposures, "yes",
-		     DontAllowExposures, "no", buf));
+		     DontAllowExposures, "no", buf, sizeof(buf)));
     printf("  timeout:  %d    cycle:  %d\n", timeout, interval);
 
     printf("Colors:\n");
@@ -1596,7 +1573,7 @@ query_cache_status(Display *dpy)
 /*  This is the usage function */
 
 static void
-usage(char *fmt, ...)
+usage(const char *fmt, ...)
 {
     va_list ap;
 
@@ -1609,79 +1586,81 @@ usage(char *fmt, ...)
 
     }
 
-    fprintf(stderr, "usage:  %s [-display host:dpy] option ...\n", progName);
-    fprintf(stderr, "    To turn bell off:\n");
-    fprintf(stderr, "\t-b                b off               b 0\n");
-    fprintf(stderr, "    To set bell volume, pitch and duration:\n");
-    fprintf(stderr, "\t b [vol [pitch [dur]]]          b on\n");
+    fprintf(stderr, "usage:  %s [-display host:dpy] option ...\n%s", progName,
+            "    To turn bell off:\n"
+            "\t-b                b off               b 0\n"
+            "    To set bell volume, pitch and duration:\n"
+            "\t b [vol [pitch [dur]]]          b on\n"
 #ifdef MITMISC
-    fprintf(stderr, "    To disable bug compatibility mode:\n");
-    fprintf(stderr, "\t-bc\n");
-    fprintf(stderr, "    To enable bug compatibility mode:\n");
-    fprintf(stderr, "\tbc\n");
+            "    To disable bug compatibility mode:\n"
+            "\t-bc\n"
+            "    To enable bug compatibility mode:\n"
+            "\tbc\n"
 #endif
-    fprintf(stderr, "    To turn keyclick off:\n");
-    fprintf(stderr, "\t-c                c off               c 0\n");
-    fprintf(stderr, "    To set keyclick volume:\n");
-    fprintf(stderr, "\t c [0-100]        c on\n");
+            "    To turn keyclick off:\n"
+            "\t-c                c off               c 0\n"
+            "    To set keyclick volume:\n"
+            "\t c [0-100]        c on\n"
 #ifdef DPMSExtension
-    fprintf(stderr, "    To control Energy Star (DPMS) features:\n");
-    fprintf(stderr, "\t-dpms      Energy Star features off\n");
-    fprintf(stderr, "\t+dpms      Energy Star features on\n");
-    fprintf(stderr, "\t dpms [standby [suspend [off]]]     \n");
-    fprintf(stderr, "\t      force standby \n");
-    fprintf(stderr, "\t      force suspend \n");
-    fprintf(stderr, "\t      force off \n");
-    fprintf(stderr, "\t      force on \n");
-    fprintf(stderr, "\t      (also implicitly enables DPMS features) \n");
-    fprintf(stderr, "\t      a timeout value of zero disables the mode \n");
+            "    To control Energy Star (DPMS) features:\n"
+            "\t-dpms      Energy Star features off\n"
+            "\t+dpms      Energy Star features on\n"
+            "\t dpms [standby [suspend [off]]]     \n"
+            "\t      force standby \n"
+            "\t      force suspend \n"
+            "\t      force off \n"
+            "\t      force on \n"
+            "\t      (also implicitly enables DPMS features) \n"
+            "\t      a timeout value of zero disables the mode \n"
 #endif
 #ifdef FONTCACHE
-    fprintf(stderr, "    To control font cache:\n");
-    fprintf(stderr, "\t fc [hi-mark [low-mark [balance]]]\n");
-    fprintf(stderr, "\t    both mark values specified in KB\n");
-    fprintf(stderr, "\t    balance value specified in percent (10 - 90)\n");
-    fprintf(stderr, "    Show font cache statistics:\n");
-    fprintf(stderr, "\t fc s\n");
+            "    To control font cache:\n"
+            "\t fc [hi-mark [low-mark [balance]]]\n"
+            "\t    both mark values specified in KB\n"
+            "\t    balance value specified in percent (10 - 90)\n"
+            "    Show font cache statistics:\n"
+            "\t fc s\n"
 #endif
-    fprintf(stderr, "    To set the font path:\n");
-    fprintf(stderr, "\t fp= path[,path...]\n");
-    fprintf(stderr, "    To restore the default font path:\n");
-    fprintf(stderr, "\t fp default\n");
-    fprintf(stderr, "    To have the server reread font databases:\n");
-    fprintf(stderr, "\t fp rehash\n");
-    fprintf(stderr, "    To remove elements from font path:\n");
-    fprintf(stderr, "\t-fp path[,path...]  fp- path[,path...]\n");
-    fprintf(stderr, "    To prepend or append elements to font path:\n");
-    fprintf(stderr, "\t+fp path[,path...]  fp+ path[,path...]\n");
-    fprintf(stderr, "    To set LED states off or on:\n");
-    fprintf(stderr, "\t-led [1-32]         led off\n");
-    fprintf(stderr, "\t led [1-32]         led on\n");
+            "    To set the font path:\n"
+            "\t fp= path[,path...]\n"
+            "    To restore the default font path:\n"
+            "\t fp default\n"
+            "    To have the server reread font databases:\n"
+            "\t fp rehash\n"
+            "    To remove elements from font path:\n"
+            "\t-fp path[,path...]  fp- path[,path...]\n"
+            "    To prepend or append elements to font path:\n"
+            "\t+fp path[,path...]  fp+ path[,path...]\n"
+            "    To set LED states off or on:\n"
+            "\t-led [1-32]         led off\n"
+            "\t led [1-32]         led on\n"
 #ifdef XKB
-    fprintf(stderr, "\t-led named 'name'   led off\n");
-    fprintf(stderr, "\t led named 'name'   led on\n");
+            "\t-led named 'name'   led off\n"
+            "\t led named 'name'   led on\n"
 #endif
-    fprintf(stderr, "    To set mouse acceleration and threshold:\n");
-    fprintf(stderr, "\t m [acc_mult[/acc_div] [thr]]    m default\n");
-    fprintf(stderr, "    To set pixel colors:\n");
-    fprintf(stderr, "\t p pixel_value color_name\n");
-    fprintf(stderr, "    To turn auto-repeat off or on:\n");
-    fprintf(stderr, "\t-r [keycode]        r off\n");
-    fprintf(stderr, "\t r [keycode]        r on\n");
+            "    To set mouse acceleration and threshold:\n"
+            "\t m [acc_mult[/acc_div] [thr]]    m default\n"
+            "    To set pixel colors:\n"
+            "\t p pixel_value color_name\n"
+            "    To turn auto-repeat off or on:\n"
+            "\t-r [keycode]        r off\n"
+            "\t r [keycode]        r on\n"
 #if defined(XF86MISC) || defined(XKB)
-    fprintf(stderr, "\t r rate [delay [rate]]\n");
+            "\t r rate [delay [rate]]\n"
 #endif
-    fprintf(stderr, "    For screen-saver control:\n");
-    fprintf(stderr, "\t s [timeout [cycle]]  s default    s on\n");
-    fprintf(stderr, "\t s blank              s noblank    s off\n");
-    fprintf(stderr, "\t s expose             s noexpose\n");
-    fprintf(stderr, "\t s activate           s reset\n");
-    fprintf(stderr, "    For status information:  q\n");
+            "    For screen-saver control:\n"
+            "\t s [timeout [cycle]]  s default    s on\n"
+            "\t s blank              s noblank    s off\n"
+            "\t s expose             s noexpose\n"
+            "\t s activate           s reset\n"
+            "    For status information:  q\n"
+            "    To print version: -version\n"
+        );
     exit(EXIT_SUCCESS);
 }
 
 static void
-error(char *message)
+error(const char *message)
 {
     fprintf(stderr, "%s: %s\n", progName, message);
     exit(EXIT_FAILURE);
@@ -1695,9 +1674,9 @@ local_xerror(Display *dpy, XErrorEvent *rep)
 		"%s:  bad font path element (#%ld), possible causes are:\n",
 		progName, rep->resourceid);
 	fprintf(stderr,
-		"    Directory does not exist or has wrong permissions\n");
-	fprintf(stderr, "    Directory missing fonts.dir\n");
-	fprintf(stderr, "    Incorrect font server address or syntax\n");
+                "    Directory does not exist or has wrong permissions\n"
+                "    Directory missing fonts.dir\n"
+                "    Incorrect font server address or syntax\n");
     } else if (rep->request_code == X_StoreColors) {
 	switch (rep->error_code) {
 	  case BadAccess:
