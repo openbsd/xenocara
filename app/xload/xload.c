@@ -60,7 +60,7 @@ from the X Consortium.
 #endif
 
 #include <errno.h>
-#include <stdio.h> 
+#include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <X11/Intrinsic.h>
@@ -93,7 +93,7 @@ static void SetLights(XtPointer data, XtIntervalId *timer);
 
 /*
  * Command line options table.  Only resources are entered here...there is a
- * pass over the remaining options after XtParseCommand is let loose. 
+ * pass over the remaining options after XtParseCommand is let loose.
  */
 
 static XrmOptionDescRec options[] = {
@@ -139,35 +139,25 @@ static int light_update = 10 * 1000;
  * Exit with message describing command line format.
  */
 
-static void usage(void)
+static void _X_NORETURN
+usage(void)
 {
-    fprintf (stderr, gettext("usage:  %s [-options ...]\n\n"), ProgramName);
-    fprintf (stderr, gettext("where options include:\n"));
-    fprintf (stderr, "    -display %s",
-             gettext("display        X server on which to display\n"));
-    fprintf (stderr, "    -geometry %s",
-             gettext("geometry      size and location of window\n"));
-    fprintf (stderr, "    -fn %s",
-             gettext("font                font to use in label\n"));
-    fprintf (stderr, "    -scale %s",
-             gettext("number           minimum number of scale lines\n"));
-    fprintf (stderr, "    -update %s",
-             gettext("seconds         interval between updates\n"));
-    fprintf (stderr, "    -label %s",
-             gettext("string           annotation text\n"));
-    fprintf (stderr, "    -bg %s",
-             gettext("color               background color\n"));
-    fprintf (stderr, "    -fg %s",
-             gettext("color               graph color\n"));
-    fprintf (stderr, "    -hl %s",
-             gettext("color               scale and text color\n"));
-    fprintf (stderr, "    -nolabel                %s",
-             gettext("removes the label from above the chart.\n"));
-    fprintf (stderr, "    -jumpscroll %s",
-             gettext("value       number of pixels to scroll on overflow\n"));
-    fprintf (stderr, "    -lights                 %s",
-             gettext("use keyboard leds to display current load\n"));
-    fprintf (stderr, "\n");
+    fprintf (stderr, gettext("usage:  %s [-options ...]\n\n%s\n"),
+             ProgramName, gettext(
+      "where options include:\n"
+      "    -display <display>      X server on which to display\n"
+      "    -geometry <geometry>    size and location of window\n"
+      "    -fn <font>              font to use in label\n"
+      "    -scale <number>         minimum number of scale lines\n"
+      "    -update <seconds>       interval between updates\n"
+      "    -label <string>         annotation text\n"
+      "    -bg <color>             background color\n"
+      "    -fg <color>             graph color\n"
+      "    -hl <color>             scale and text color\n"
+      "    -nolabel                removes the label from above the chart.\n"
+      "    -jumpscroll <value>     number of pixels to scroll on overflow\n"
+      "    -lights                 use keyboard leds to display current load\n"
+                 ));
     exit(1);
 }
 
@@ -216,10 +206,10 @@ main(int argc, char **argv)
 
     if (argc != 1) usage();
 
-    XtGetApplicationResources( toplevel, (XtPointer) &resources, 
+    XtGetApplicationResources( toplevel, (XtPointer) &resources,
 			      my_resources, XtNumber(my_resources),
 			      NULL, (Cardinal) 0);
-    
+
     if (resources.use_lights)
     {
 	char	    name[1024];
@@ -251,47 +241,47 @@ main(int argc, char **argv)
     	XtAppAddActions (app_con, xload_actions, XtNumber(xload_actions));
     	XtOverrideTranslations(toplevel,
 		    	XtParseTranslationTable ("<Message>WM_PROTOCOLS: quit()"));
-    
+
     	XtSetArg (args[0], XtNiconPixmap, &icon_pixmap);
     	XtGetValues(toplevel, args, ONE);
     	if (icon_pixmap == None) {
-	    XtSetArg(args[0], XtNiconPixmap, 
+	    XtSetArg(args[0], XtNiconPixmap,
 		     XCreateBitmapFromData(XtDisplay(toplevel),
 				       	   XtScreen(toplevel)->root,
 				       	   (char *)xload_bits,
 				       	   xload_width, xload_height));
 	    XtSetValues (toplevel, args, ONE);
     	}
-    
+
     	if (resources.show_label) {
       	  pane = XtCreateManagedWidget ("paned", panedWidgetClass,
 				    	toplevel, NULL, ZERO);
-    
+
       	  label_wid = XtCreateManagedWidget ("label", labelWidgetClass,
 					     pane, NULL, ZERO);
-      	  
+
       	  XtSetArg (args[0], XtNlabel, &label);
       	  XtGetValues(label_wid, args, ONE);
-      	  
+
       	  if ( strcmp("label", label) == 0 ) {
 	    (void) XmuGetHostname (host, 255);
 	    XtSetArg (args[0], XtNlabel, host);
 	    XtSetValues (label_wid, args, ONE);
       	  }
-    
+
       	  load_parent = pane;
     	}
     	else
       	  load_parent = toplevel;
-    
+
     	load = XtCreateManagedWidget ("load", stripChartWidgetClass,
-				      load_parent, NULL, ZERO);    
-    
+				      load_parent, NULL, ZERO);
+
     	if (resources.remote)
 	  XtAddCallback(load, XtNgetValue, GetRLoadPoint, NULL);
-	else 
+	else
 	  XtAddCallback(load, XtNgetValue, GetLoadPoint, NULL);
-	
+
     	XtRealizeWidget (toplevel);
     	wm_delete_window = XInternAtom (XtDisplay(toplevel), "WM_DELETE_WINDOW",
 				    	False);
@@ -308,9 +298,9 @@ static unsigned long	current_leds;
 static void
 ClearLights (Display *dpy)
 {
-    XKeyboardControl	cntrl;
-
-    cntrl.led_mode = LedModeOff;
+    XKeyboardControl	cntrl = {
+	.led_mode = LedModeOff
+    };
     XChangeKeyboardControl (dpy, KBLedMode, &cntrl);
     current_leds = 0;
 }
@@ -323,11 +313,10 @@ SetLights (XtPointer data, XtIntervalId *timer)
     double		value;
     unsigned long	new_leds, change, bit;
     int			i;
-    XKeyboardControl	cntrl;
 
     toplevel = (Widget) data;
     dpy = XtDisplay (toplevel);
-    if (resources.remote) 
+    if (resources.remote)
       GetRLoadPoint (toplevel, (XtPointer) 0, (XtPointer) &value);
     else
       GetLoadPoint (toplevel, (XtPointer) 0, (XtPointer) &value);
@@ -339,8 +328,10 @@ SetLights (XtPointer data, XtIntervalId *timer)
     {
 	if (change & bit)
 	{
-	    cntrl.led = i;
-	    cntrl.led_mode = new_leds & bit ? LedModeOn : LedModeOff;
+	    XKeyboardControl	cntrl = {
+		.led = i,
+		.led_mode = new_leds & bit ? LedModeOn : LedModeOff
+	    };
 	    XChangeKeyboardControl (dpy, KBLed|KBLedMode, &cntrl);
 	    current_leds ^= bit;
 	}

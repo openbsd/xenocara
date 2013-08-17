@@ -49,8 +49,8 @@ from the X Consortium.
 #include "xload.h"
 
 #if defined(__CYGWIN__)
-#define WIN32_LEAN_AND_MEAN
-#include <windows.h>
+# define WIN32_LEAN_AND_MEAN
+# include <windows.h>
 typedef struct {
   DWORD stat;
   union {
@@ -67,7 +67,7 @@ static long (__stdcall *pdhopen)(LPCSTR, DWORD, HANDLE);
 static long (__stdcall *pdhaddcounter)(HANDLE, LPCSTR, DWORD, HANDLE*);
 static long (__stdcall *pdhcollectquerydata)(HANDLE);
 static long (__stdcall *pdhgetformattedcountervalue)(HANDLE, DWORD, LPDWORD, COUNTER*);
-#define CYGWIN_PERF 
+# define CYGWIN_PERF
 void InitLoadPoint(void)
 {
   long ret;
@@ -84,7 +84,7 @@ void InitLoadPoint(void)
   ret = pdhopen( NULL , 0, &query );
   if (ret!=0) exit(-1);
   ret = pdhaddcounter(query, "\\Processor(_Total)\\% Processor Time", 0, &counter);
-  if (ret!=0) exit(-1);  
+  if (ret!=0) exit(-1);
 }
 void GetLoadPoint(
      Widget  w,              /* unused */
@@ -101,110 +101,85 @@ void GetLoadPoint(
   if (ret!=0) return;
   *loadavg = (fmtvalue.u.vDouble-0.01)/100.0;
 }
-#else
+#else /* not CYGWIN */
 
+static void xload_error(const char *, const char *) _X_NORETURN;
 
-#if defined(att) || defined(QNX4)
-#define LOADSTUB
-#endif
+# ifdef HAVE_GETLOADAVG
+#  include <stdlib.h>
+#  ifdef HAVE_SYS_LOADAVG_H
+#   include <sys/loadavg.h>	/* Solaris definition of getloadavg */
+#  endif
 
-#ifndef LOADSTUB
-#if !defined(linux) && !defined(__UNIXOS2__) && !defined(__GLIBC__)
-#include <nlist.h>
-#endif /* !linux && ... */
-#endif /* LOADSTUB */
+void InitLoadPoint(void)
+{
+}
 
-#if defined(MOTOROLA) && defined(SYSV)
-#include <sys/sysinfo.h>
-#endif
+void GetLoadPoint(
+    Widget w,            /* unused */
+    XtPointer closure,   /* unused */
+    XtPointer call_data) /* ptr to (double) return value */
+{
+    double *loadavg = (double *)call_data;
 
-#ifdef CSRG_BASED
-#include <sys/param.h>
-#endif
+    if (getloadavg(loadavg, 1) < 0)
+        xload_error("couldn't obtain load average", "");
+}
 
-#if defined(umips) || (defined(ultrix) && defined(mips))
-#include <sys/fixpoint.h>
-#endif
+# else /* not HAVE_GETLOADAVG */
 
-#if  defined(CRAY) || defined(AIXV3)
-#include <sys/param.h>
-#define word word_t
-#include <sys/sysinfo.h>
-#undef word
-#undef n_type
-#define n_type n_value
-#endif	/* CRAY */
+#  if defined(att) || defined(QNX4)
+#   define LOADSTUB
+#  endif
 
-#ifdef sequent
-#include <sys/vm.h>
-#endif /* sequent */
+#  ifndef LOADSTUB
+#   if !defined(linux) && !defined(__GLIBC__)
+#    include <nlist.h>
+#   endif /* !linux && ... */
+#  endif /* LOADSTUB */
 
+#  ifdef CSRG_BASED
+#   include <sys/param.h>
+#  endif
 
-#ifdef hcx
-#include <sys/param.h>
-#endif /* hcx */
+#  ifdef sgi
+#   define FSCALE	1024.0
+#  endif
 
-#if defined(UTEK) || defined(alliant) || (defined(MOTOROLA) && defined(SVR4))
-#define FSCALE	100.0
-#endif
-
-#ifdef sequent
-#define FSCALE	1000.0
-#endif
-
-#ifdef sgi
-#define FSCALE	1024.0
-#endif
-
-#if defined(sony) && OSMAJORVERSION == 4
-#ifdef mips
-#include <sys/fixpoint.h>
-#else
-#include <sys/param.h>
-#endif
-#endif
-
-#ifdef __osf__
+#  ifdef __osf__
 /*
  * Use the table(2) interface; it doesn't require setuid root.
  *
  * Select 0, 1, or 2 for 5, 30, or 60 second load averages.
  */
-#ifndef WHICH_AVG
-#define WHICH_AVG 1
-#endif
-#include <sys/table.h>
-#endif
+#   ifndef WHICH_AVG
+#    define WHICH_AVG 1
+#   endif
+#   include <sys/table.h>
+#  endif
 
-#ifdef SVR4
-#ifndef FSCALE
-#define FSCALE	(1 << 8)
-#endif
-#endif
+#  ifdef SVR4
+#   ifndef FSCALE
+#    define FSCALE	(1 << 8)
+#   endif
+#  endif
 
-#ifdef X_NOT_POSIX
-extern long lseek();
-#endif
-
-static void xload_error(const char *, const char *) _X_NORETURN;
-
-
-#if defined(SYSV) && defined(i386)
+#  if defined(SYSV) && defined(i386)
 /*
  * inspired by 'avgload' by John F. Haugh II
  */
-#include <sys/param.h>
-#include <sys/buf.h>
-#include <sys/immu.h>
-#include <sys/region.h>
-#include <sys/var.h>
-#include <sys/proc.h>
-#define KERNEL_FILE "/unix"
-#define KMEM_FILE "/dev/kmem"
-#define VAR_NAME "v"
-#define PROC_NAME "proc"
-#define BUF_NAME "buf"
-#define DECAY 0.8
+#   include <sys/param.h>
+#   include <sys/buf.h>
+#   include <sys/immu.h>
+#   include <sys/region.h>
+#   include <sys/var.h>
+#   include <sys/proc.h>
+#   define KERNEL_FILE "/unix"
+#   define KMEM_FILE "/dev/kmem"
+#   define VAR_NAME "v"
+#   define PROC_NAME "proc"
+#   define BUF_NAME "buf"
+#   define DECAY 0.8
 struct nlist namelist[] = {
   {VAR_NAME},
   {PROC_NAME},
@@ -223,7 +198,7 @@ void InitLoadPoint()				/* SYSV386 version */
 
     nlist( KERNEL_FILE, namelist);
 
-    for (i=0; namelist[i].n_name; i++) 
+    for (i=0; namelist[i].n_name; i++)
 	if (namelist[i].n_value == 0)
 	    xload_error("cannot get name list from", KERNEL_FILE);
 
@@ -238,11 +213,11 @@ void InitLoadPoint()				/* SYSV386 version */
 
     if ((p=(struct proc *)malloc(v.v_proc*sizeof(*p))) == NULL)
 	xload_error("cannot allocat space for", PROC_NAME);
-	  
+
     first_buf = (XtPointer) namelist[2].n_value;
     last_buf  = (char *)first_buf + v.v_buf * sizeof(struct buf);
 }
-	
+
 /* ARGSUSED */
 void GetLoadPoint( w, closure, call_data )	/* SYSV386 version */
 Widget	w;		/* unused */
@@ -252,7 +227,7 @@ XtPointer	call_data;	/* pointer to (double) return value */
     double *loadavg = (double *)call_data;
     static double avenrun = 0.0;
     int i, nproc, size;
-	
+
     (void) lseek(kmem, namelist[0].n_value, 0);
     (void) read(kmem, &v, sizeof(v));
 
@@ -261,7 +236,7 @@ XtPointer	call_data;	/* pointer to (double) return value */
     (void) lseek(kmem, namelist[1].n_value, 0);
     (void) read(kmem, p, size * sizeof(struct proc));
 
-    for (nproc = 0, i=0; i<size; i++) 
+    for (nproc = 0, i=0; i<size; i++)
 	  if ((p[i].p_stat == SRUN) ||
 	      (p[i].p_stat == SIDL) ||
 	      (p[i].p_stat == SXBRK) ||
@@ -275,9 +250,9 @@ XtPointer	call_data;	/* pointer to (double) return value */
 
     return;
 }
-#else /* not (SYSV && i386) */
+#  else /* not (SYSV && i386) */
 
-#if defined(linux) || (defined(__FreeBSD_kernel__) && defined(__GLIBC__))
+#   if defined(linux) || (defined(__FreeBSD_kernel__) && defined(__GLIBC__))
 
 void InitLoadPoint(void)
 {
@@ -292,10 +267,10 @@ void GetLoadPoint(
       static int fd = -1;
       int n;
       char buf[10] = {0, };
-#ifndef X_LOCALE
+#    ifndef X_LOCALE
       char *dp;
       static char ldp = 0;
-#endif
+#    endif
 
 
       if (fd < 0)
@@ -307,36 +282,36 @@ void GetLoadPoint(
                       *(double *)call_data = 0.0;
                       return;
               }
-#ifndef X_LOCALE
+#    ifndef X_LOCALE
 	      ldp = *localeconv()->decimal_point;
-#endif
+#    endif
       }
       else
               lseek(fd, 0, 0);
 
       if ((n = read(fd, buf, sizeof(buf)-1)) > 0) {
-#ifndef X_LOCALE
+#    ifndef X_LOCALE
 	  if (ldp != '.')
 	      while ((dp = memchr(buf,'.',sizeof(buf)-1)) != NULL) {
 		  *(char *)dp = ldp;
 	      }
-	  
-#endif
+
+#    endif
 	  if (sscanf(buf, "%lf", (double *)call_data) == 1)
 	      return;
       }
-      
+
 
       *(double *)call_data = 0.0;     /* temporary hiccup */
 
       return;
 }
 
-#else /* linux */
+#   else /* linux */
 
-#ifdef __GNU__
+#    ifdef __GNU__
 
-#include <mach.h>
+#     include <mach.h>
 
 static processor_set_t default_set;
 
@@ -370,11 +345,11 @@ void GetLoadPoint(
   return;
 }
 
-#else /* __GNU__ */
+#    else /* __GNU__ */
 
-#ifdef __APPLE__
+#     ifdef __APPLE__
 
-#include <mach/mach.h>
+#      include <mach/mach.h>
 
 static mach_port_t host_priv_port;
 
@@ -404,9 +379,9 @@ void GetLoadPoint(
     return;
 }
 
-#else /* __APPLE__ */
+#     else /* __APPLE__ */
 
-#ifdef LOADSTUB
+#      ifdef LOADSTUB
 
 void InitLoadPoint()
 {
@@ -421,9 +396,9 @@ void GetLoadPoint( w, closure, call_data )
 	*(double *)call_data = 1.0;
 }
 
-#else /* not LOADSTUB */
+#      else /* not LOADSTUB */
 
-#ifdef __osf__
+#       ifdef __osf__
 
 void InitLoadPoint()
 {
@@ -445,11 +420,11 @@ void GetLoadPoint( w, closure, call_data )
 	load_data.tl_avenrun.l[WHICH_AVG] / (double)load_data.tl_lscale;
 }
 
-#else /* not __osf__ */
+#       else /* not __osf__ */
 
-#ifdef __QNXNTO__
-#include <time.h>
-#include <sys/neutrino.h>
+#        ifdef __QNXNTO__
+#         include <time.h>
+#         include <sys/neutrino.h>
 static _Uint64t          nto_idle = 0, nto_idle_last = 0;
 static  int       nto_idle_id;
 static  struct timespec nto_now, nto_last;
@@ -482,16 +457,16 @@ GetLoadPoint(			/* QNX NTO version */
     nto_idle_last = nto_idle;
     nto_last = nto_now;
 }
-#else /* not __QNXNTO__ */
+#        else /* not __QNXNTO__ */
 
-#ifdef __bsdi__
-#include <kvm.h>
+#         ifdef __bsdi__
+#          include <kvm.h>
 
 static struct nlist nl[] = {
   { "_averunnable" },
-#define X_AVERUNNABLE 0
+#          define X_AVERUNNABLE 0
   { "_fscale" },
-#define X_FSCALE      1
+#          define X_FSCALE      1
   { "" },
 };
 static kvm_t *kd;
@@ -535,187 +510,90 @@ void GetLoadPoint(
   return;
 }
 
-#else /* not __bsdi__ */
-#if defined(HAVE_GETLOADAVG)
-#include <stdlib.h>
-#ifdef HAVE_SYS_LOADAVG_H
-#include <sys/loadavg.h>	/* Solaris definition of getloadavg */
-#endif
+#         else /* not __bsdi__ */
+#          ifndef KMEM_FILE
+#           define KMEM_FILE "/dev/kmem"
+#          endif
 
-void InitLoadPoint()
-{
-}
+#          ifndef KERNEL_FILE
 
-void GetLoadPoint(w, closure, call_data)
-     Widget w;          /* unused */
-     XtPointer closure;   /* unused */
-     XtPointer call_data; /* ptr to (double) return value */
-{
-  double *loadavg = (double *)call_data;
+#           ifdef hpux
+#            define KERNEL_FILE "/hp-ux"
+#           endif /* hpux */
 
-  if (getloadavg(loadavg, 1) < 0) 
-    xload_error("couldn't obtain load average", "");
-}
-
-#else /* not HAVE_GETLOADAVG */
-
-#ifndef KMEM_FILE
-#define KMEM_FILE "/dev/kmem"
-#endif
-
-#ifndef KERNEL_FILE
-
-#ifdef alliant
-#define KERNEL_FILE "/vmunix"
-#endif /* alliant */
-
-#ifdef CRAY
-#define KERNEL_FILE "/unicos"
-#endif /* CRAY */
-
-#ifdef hpux
-#define KERNEL_FILE "/hp-ux"
-#endif /* hpux */
-
-
-#ifdef umips
-# ifdef SYSTYPE_SYSV
-# define KERNEL_FILE "/unix"
-# else
-# define KERNEL_FILE "/vmunix"
-# endif /* SYSTYPE_SYSV */
-#endif /* umips */
-
-#ifdef sequent
-#define KERNEL_FILE "/dynix"
-#endif /* sequent */
-
-#ifdef hcx
-#define KERNEL_FILE "/unix"
-#endif /* hcx */
-
-#ifdef MOTOROLA
-#if defined(SYSV) && defined(m68k)
-#define KERNEL_FILE "/sysV68"
-#endif
-#if defined(SYSV) && defined(m88k)
-#define KERNEL_FILE "/unix"
-#endif
-#ifdef SVR4
-#define KERNEL_FILE "/unix"
-#endif
-#endif /* MOTOROLA */
-
-#ifdef sgi
-#if (OSMAJORVERSION > 4)
-#define KERNEL_FILE "/unix"
-#endif
-#endif
+#           ifdef sgi
+#            if (OSMAJORVERSION > 4)
+#             define KERNEL_FILE "/unix"
+#            endif
+#           endif
 
 /*
  * provide default for everyone else
  */
-#ifndef KERNEL_FILE
-#ifdef SVR4
-#define KERNEL_FILE "/stand/unix"
-#else
-#ifdef SYSV
-#define KERNEL_FILE "/unix"
-#else
+#           ifndef KERNEL_FILE
+#            ifdef SVR4
+#             define KERNEL_FILE "/stand/unix"
+#            else
+#             ifdef SYSV
+#              define KERNEL_FILE "/unix"
+#             else
 /* If a BSD system, check in <paths.h> */
-#   ifdef BSD
-#    include <paths.h>
-#    ifdef _PATH_UNIX
-#     define KERNEL_FILE _PATH_UNIX
-#    else
-#     ifdef _PATH_KERNEL
-#      define KERNEL_FILE _PATH_KERNEL
-#     else
-#      define KERNEL_FILE "/vmunix"
-#     endif
-#    endif
-#   else /* BSD */
-#    define KERNEL_FILE "/vmunix"
-#   endif /* BSD */
-#endif /* SYSV */
-#endif /* SVR4 */
-#endif /* KERNEL_FILE */
-#endif /* KERNEL_FILE */
+#              ifdef BSD
+#               include <paths.h>
+#               ifdef _PATH_UNIX
+#                define KERNEL_FILE _PATH_UNIX
+#               else
+#                ifdef _PATH_KERNEL
+#                 define KERNEL_FILE _PATH_KERNEL
+#                else
+#                 define KERNEL_FILE "/vmunix"
+#                endif
+#               endif
+#              else /* BSD */
+#               define KERNEL_FILE "/vmunix"
+#              endif /* BSD */
+#             endif /* SYSV */
+#            endif /* SVR4 */
+#           endif /* KERNEL_FILE */
+#          endif /* KERNEL_FILE */
 
 
-#ifndef KERNEL_LOAD_VARIABLE
-#    if defined(BSD) && (BSD >= 199103)
-#        define KERNEL_LOAD_VARIABLE "_averunnable"
-#    endif /* BSD >= 199103 */
+#          ifndef KERNEL_LOAD_VARIABLE
+#           if defined(BSD) && (BSD >= 199103)
+#            define KERNEL_LOAD_VARIABLE "_averunnable"
+#           endif /* BSD >= 199103 */
 
-#    ifdef alliant
-#        define KERNEL_LOAD_VARIABLE "_Loadavg"
-#    endif /* alliant */
+#           ifdef hpux
+#            ifdef __hp9000s800
+#             define KERNEL_LOAD_VARIABLE "avenrun"
+#            endif /* hp9000s800 */
+#           endif /* hpux */
 
-#    ifdef CRAY
-#        if defined(CRAY2) && OSMAJORVERSION == 4
-#            define KERNEL_LOAD_VARIABLE "avenrun"
-#        else
+#           ifdef sgi
+#	 define KERNEL_LOAD_VARIABLE "avenrun"
+#           endif /* sgi */
+
+#          endif /* KERNEL_LOAD_VARIABLE */
+
+/*
+ * provide default for everyone else
+ */
+
+#          ifndef KERNEL_LOAD_VARIABLE
+#           ifdef USG
 #            define KERNEL_LOAD_VARIABLE "sysinfo"
 #            define SYSINFO
-#        endif /* defined(CRAY2) && OSMAJORVERSION == 4 */
-#    endif /* CRAY */
-
-#    ifdef hpux
-#        ifdef __hp9000s800
-#            define KERNEL_LOAD_VARIABLE "avenrun"
-#        endif /* hp9000s800 */
-#    endif /* hpux */
-
-#    ifdef umips
-#        ifdef SYSTYPE_SYSV
-#            define KERNEL_LOAD_VARIABLE "avenrun"
-#        else
-#            define KERNEL_LOAD_VARIABLE "_avenrun"
-#        endif /* SYSTYPE_SYSV */
-#    endif /* umips */
-
-#    ifdef sgi
-#	 define KERNEL_LOAD_VARIABLE "avenrun"
-#    endif /* sgi */
-
-#    ifdef AIXV3
-#        define KERNEL_LOAD_VARIABLE "sysinfo"
-#    endif /* AIXV3 */
-
-#    ifdef MOTOROLA
-#        if defined(SYSV) && defined(m68k)
-#            define KERNEL_LOAD_VARIABLE "sysinfo"
-#        endif
-#        if defined(SYSV) && defined(m88k)
-#            define KERNEL_LOAD_VARIABLE "_sysinfo"
-#        endif
-#        ifdef SVR4
-#            define KERNEL_LOAD_VARIABLE "avenrun"
-#        endif
-#    endif /* MOTOROLA */
-
-#endif /* KERNEL_LOAD_VARIABLE */
-
-/*
- * provide default for everyone else
- */
-
-#ifndef KERNEL_LOAD_VARIABLE
-#    ifdef USG
-#        define KERNEL_LOAD_VARIABLE "sysinfo"
-#        define SYSINFO
-#    else
-#    ifdef SVR4
-#        define KERNEL_LOAD_VARIABLE "avenrun"
-#    else
-#        define KERNEL_LOAD_VARIABLE "_avenrun"
-#    endif
-#    endif
-#endif /* KERNEL_LOAD_VARIABLE */
+#           else
+#            ifdef SVR4
+#             define KERNEL_LOAD_VARIABLE "avenrun"
+#            else
+#             define KERNEL_LOAD_VARIABLE "_avenrun"
+#            endif
+#           endif
+#          endif /* KERNEL_LOAD_VARIABLE */
 
 static struct nlist namelist[] = {	    /* namelist for vmunix grubbing */
-#define LOADAV 0
+#          define LOADAV 0
     {KERNEL_LOAD_VARIABLE},
     {0}
 };
@@ -725,38 +603,23 @@ static long loadavg_seek;
 
 void InitLoadPoint()
 {
-#if !defined(SVR4) && !defined(sgi) && !defined(MOTOROLA) && !defined(AIXV5) && !(BSD >= 199103) && !defined(__APPLE__)
+#          if !defined(SVR4) && !defined(sgi) && !defined(AIXV5) && !(BSD >= 199103) && !defined(__APPLE__)
     extern void nlist();
-#endif
+#          endif
 
-#ifdef AIXV3
-    knlist( namelist, 1, sizeof(struct nlist));
-#else	
     nlist( KERNEL_FILE, namelist);
-#endif
     /*
      * Some systems appear to set only one of these to Zero if the entry could
      * not be found, I hope no_one returns Zero as a good value, or bad things
      * will happen to you.  (I have a hard time believing the value will
      * ever really be zero anyway).   CDP 5/17/89.
      */
-#ifdef hcx
-    if (namelist[LOADAV].n_type == 0 &&
-#else
     if (namelist[LOADAV].n_type == 0 ||
-#endif /* hcx */
 	namelist[LOADAV].n_value == 0) {
 	xload_error("cannot get name list from", KERNEL_FILE);
 	exit(-1);
     }
     loadavg_seek = namelist[LOADAV].n_value;
-#if defined(umips) && defined(SYSTYPE_SYSV)
-    loadavg_seek &= 0x7fffffff;
-#endif /* umips && SYSTYPE_SYSV */
-#if (defined(CRAY) && defined(SYSINFO))
-    loadavg_seek += ((char *) (((struct sysinfo *)NULL)->avenrun)) -
-	((char *) NULL);
-#endif /* CRAY && SYSINFO */
     kmem = open(KMEM_FILE, O_RDONLY);
     if (kmem < 0) xload_error("cannot open", KMEM_FILE);
 }
@@ -771,163 +634,34 @@ void GetLoadPoint( w, closure, call_data )
 
 	(void) lseek(kmem, loadavg_seek, 0);
 
-#if defined (UTEK) || defined(sequent) || defined(alliant) || defined(SVR4) || defined(sgi) || defined(hcx) || (BSD >= 199103)
+#          if defined(SVR4) || defined(sgi) || (BSD >= 199103)
 	{
 		long temp;
 		(void) read(kmem, (char *)&temp, sizeof(long));
 		*loadavg = (double)temp/FSCALE;
 	}
-#else /* else not UTEK or sequent or alliant or SVR4 or sgi or hcx */
-#  if defined(umips) || (defined(ultrix) && defined(mips))
-	{
-		fix temp;
-		(void) read(kmem, (char *)&temp, sizeof(fix));
-		*loadavg = FIX_TO_DBL(temp);
-	}
-#  else /* not umips or ultrix risc */
-#    ifdef AIXV3
-        {
-          struct sysinfo sysinfo_now;
-          struct sysinfo sysinfo_last;
-          static firsttime = TRUE;
-          static double runavg = 0.0, swpavg = 0.0;
-
-          (void) lseek(kmem, loadavg_seek, 0);
-          (void) read(kmem, (char *)&sysinfo_last, sizeof(struct sysinfo));
-          if (firsttime)
-            {
-              *loadavg = 0.0;
-              firsttime = FALSE;
-            }
-          else
-            {
-              sleep(1);
-              (void) lseek(kmem, loadavg_seek, 0);
-              (void) read(kmem, (char *)&sysinfo_now, sizeof(struct sysinfo));
-              runavg *= 0.8; swpavg *= 0.8;
-              if (sysinfo_now.runocc != sysinfo_last.runocc)
-                runavg += 0.2*((sysinfo_now.runque - sysinfo_last.runque - 1)
-                          /(double)(sysinfo_now.runocc - sysinfo_last.runocc));
-              if (sysinfo_now.swpocc != sysinfo_last.swpocc)
-                swpavg += 0.2*((sysinfo_now.swpque - sysinfo_last.swpque)
-                          /(double)(sysinfo_now.swpocc - sysinfo_last.swpocc));
-              *loadavg = runavg + swpavg;
-              sysinfo_last = sysinfo_now;
-            }
-          /* otherwise we leave load alone. */
-        }
-#    else /* not AIXV3 */
-#      if defined(MOTOROLA) && defined(SYSV)
-	{
-        static int init = 0;
-        static kmem;
-        static long loadavg_seek;
-
-#define CEXP    0.25            /* Constant used for load averaging */
-
-        struct sysinfo sysinfod;
-        static double oldloadavg;
-        static double cexp = CEXP;
-        static long sv_rq, sv_oc;   /* save old values */
-        double rq, oc;              /* amount values have changed */
-
-        if (!init)
-        {
-            if (nlist(KERNEL_FILE,namelist) == -1)
-            {
-                perror("xload: nlist()");
-                xload_error("cannot get name list from", KERNEL_FILE);
-            }
-            loadavg_seek = namelist[0].n_value;
-
-            kmem = open(KMEM_FILE, O_RDONLY);
-            if (kmem < 0)
-            {
-                perror("xload: open()");
-                xload_error("cannot open", KMEM_FILE);
-            }
-        }
-
-        lseek(kmem, loadavg_seek, 0);
-        if (read(kmem, &sysinfod, (int) sizeof (struct sysinfo)) == -1)
-        {
-             perror("xload: read() SYSINFONL");
-             xload_error("read failed from", KMEM_FILE);
-        }
-
-        if (!init)
-        {
-            init = 1;
-            sv_rq = sysinfod.runque;
-            sv_oc = sysinfod.runocc;
-            oldloadavg = *loadavg = 0.0;
-            return;
-        }
-        /*
-         * calculate the amount the values have
-         * changed since last update
-         */
-        rq = (double) sysinfod.runque - sv_rq;
-        oc = (double) sysinfod.runocc - sv_oc;
-
-        /*
-         * save old values for next time
-         */
-        sv_rq = sysinfod.runque;
-        sv_oc = sysinfod.runocc;
-
-        if (oc == 0.0)          /* avoid divide by zero  */
-        {
-                *loadavg = (1.0 - cexp) * oldloadavg;
-
-        }
-        else
-        {
-                *loadavg = ((1.0 - cexp) * oldloadavg) + ((rq / oc) * cexp);
-        }
-        oldloadavg = *loadavg;
-	}
-#      else /* not MOTOROLA */
-#     if defined(sony) && OSMAJORVERSION == 4
-#      ifdef mips
-	{
-		fix temp;
-		(void) read(kmem, (char *)&temp, sizeof(fix));
-		*loadavg = FIX_TO_DBL(temp);
-	}
-#      else /* not mips */
-	{
-		long temp;
-		(void) read(kmem, (char *)&temp, sizeof(long));
-		*loadavg = (double)temp/FSCALE;
-	}
-#      endif /* mips */
-#     else /* not sony NEWSOS4 */
+#          else /* else not SVR4 or sgi or BSD */
 	(void) read(kmem, (char *)loadavg, sizeof(double));
-#      endif /* sony NEWOS4 */
-#     endif /* MOTOROLA else */
-#    endif /* AIXV3 else */
-#  endif /* umips else */
-#endif /* SVR4 or ... else */
+#          endif /* SVR4 or ... else */
 	return;
 }
-#endif /* HAVE_GETLOADAVG else */
-#endif /* __bsdi__ else */
-#endif /* __QNXNTO__ else */
-#endif /* __osf__ else */
-#endif /* LOADSTUB else */
-#endif /* __APPLE__ else */
-#endif /* __GNU__ else */
-#endif /* linux else */
-#endif /* SYSV && i386 else */
+#         endif /* __bsdi__ else */
+#        endif /* __QNXNTO__ else */
+#       endif /* __osf__ else */
+#      endif /* LOADSTUB else */
+#     endif /* __APPLE__ else */
+#    endif /* __GNU__ else */
+#   endif /* linux else */
+#  endif /* SYSV && i386 else */
+# endif /* HAVE_GETLOADAVG else */
 
 static void xload_error(const char *str1, const char *str2)
 {
     (void) fprintf(stderr,"xload: %s %s\n", str1, str2);
-#ifdef __bsdi__
+# ifdef __bsdi__
     if (kd)
 	kvm_close(kd);
-#endif
+# endif
     exit(-1);
 }
 

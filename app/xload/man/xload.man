@@ -3,10 +3,9 @@
 .SH NAME
 xload \- system load average display for X
 .SH SYNOPSIS
-.ta 6n
 \fBxload\fP	[-\fItoolkitoption\fP ...] [-scale \fIinteger\fP] [-update \fIseconds\fP] [-hl \fIcolor\fP] [-highlight \fIcolor\fP]  [-remote \fIhost\fP]
 .br
-	[-jumpscroll \fIpixels\fP] [-label \fIstring\fP] [-nolabel] [-lights]
+        [-jumpscroll \fIpixels\fP] [-label \fIstring\fP] [-nolabel] [-lights]
 .SH DESCRIPTION
 The
 .I xload
@@ -68,11 +67,10 @@ indentation indicates hierarchical structure.  The widget class name
 is given first, followed by the widget instance name.
 .sp
 .nf
-.ta .5i 1.0i 1.5i 2.0i
 XLoad  xload
-	Paned  paned
-		Label  label
-		StripChart  load
+        Paned  paned
+                Label  label
+                StripChart  load
 .fi
 .sp
 .SH ENVIRONMENT
