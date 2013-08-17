@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.55 2013/07/15 13:23:17 aoyama Exp $
+# $OpenBSD: Makefile,v 1.56 2013/08/17 17:01:23 bcallah Exp $
 
 INPUT_DRV_DEFAULT= \
 	xf86-input-keyboard \
@@ -32,6 +32,8 @@ INPUT_DRV_macppc= ${INPUT_DRV_COMMON}
 
 INPUT_DRV_mvme68k=
 INPUT_DRV_mvme88k=
+
+INPUT_DRV_octeon=
 
 INPUT_DRV_sgi= ${INPUT_DRV_DEFAULT}
 
@@ -91,6 +93,8 @@ VIDEO_DRV_macppc= \
 
 VIDEO_DRV_mvme68k=
 VIDEO_DRV_mvme88k=
+
+VIDEO_DRV_octeon=
 
 VIDEO_DRV_sgi= xf86-video-wsfb
 
