@@ -1,4 +1,4 @@
-# $OpenBSD: bsd.xconf.mk,v 1.25 2013/08/12 04:16:52 jsg Exp $
+# $OpenBSD: bsd.xconf.mk,v 1.26 2013/08/17 17:05:43 bcallah Exp $
 
 # Shared libs?
 .if ${MACHINE} == "vax"
@@ -8,8 +8,13 @@ XENOCARA_HAVE_SHARED_LIBS?=yes
 .endif
 
 # Build GL libs and apps?
+.if ${MACHINE} == "octeon"
+XENOCARA_BUILD_GL?=no
+XENOCARA_BUILD_DRI?=no
+.else
 XENOCARA_BUILD_GL?=${XENOCARA_HAVE_SHARED_LIBS:L}
 XENOCARA_BUILD_DRI?=${XENOCARA_HAVE_SHARED_LIBS:L}
+.endif
 XENOCARA_BUILD_GALLIUM?=${XENOCARA_HAVE_SHARED_LIBS:L}
 
 # Build pixman?
