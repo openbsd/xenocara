@@ -117,7 +117,7 @@ Find_Client_In_Children(Display * dpy, Window win)
  * Find virtual roots (_NET_VIRTUAL_ROOTS)
  */
 static unsigned long *
-Find_Roots(Display * dpy, Window root, unsigned int *num)
+Find_Roots(Display * dpy, Window root, unsigned long *num)
 {
     Atom type_ret;
     int format_ret;
@@ -179,7 +179,7 @@ Window
 Find_Client(Display * dpy, Window root, Window subwin)
 {
     unsigned long *roots;
-    unsigned int i, n_roots;
+    unsigned long i, n_roots;
     Window win;
 
     /* Check if subwin is a virtual root */

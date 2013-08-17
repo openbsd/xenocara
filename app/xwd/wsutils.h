@@ -41,6 +41,8 @@ from The Open Group.
  *
  ******************************************************************************/
 
+typedef unsigned long Pixel;
+
 /* This is the actual structure returned by the X server describing the
  * SERVER_OVERLAY_VISUAL property.
  */

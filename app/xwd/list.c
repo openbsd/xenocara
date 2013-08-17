@@ -74,7 +74,7 @@ int add_to_list(list_ptr lp, void *item)
 
 
 /** ------------------------------------------------------------------------
-	Creates a new list and sets its pointers to NULL.  
+	Creates a new list and sets its pointers to NULL.
 	Returns a pointer to the new list.
     -------------------------------------------------------------------- **/
 list_ptr new_list (void)
@@ -101,16 +101,16 @@ list_ptr new_list (void)
     -------------------------------------------------------------------- **/
 list_ptr dup_list_head(list_ptr lp, int start_at_curr)
 {
-    list_ptr new_list;
+    list_ptr new_listp;
 
-    if ((new_list = (list_ptr) malloc( sizeof( list_item))) == NULL) {
+    if ((new_listp = (list_ptr) malloc( sizeof( list_item))) == NULL) {
 
         return (list_ptr)NULL;
     }
-    new_list->next = start_at_curr ? lp->ptr.curr : lp->next;
-    new_list->ptr.curr = lp->ptr.curr;
+    new_listp->next = start_at_curr ? lp->ptr.curr : lp->next;
+    new_listp->ptr.curr = lp->ptr.curr;
 
-    return new_list;
+    return new_listp;
 }
 
 
@@ -161,7 +161,7 @@ void *delete_from_list(list_ptr lp, void *item)
 /** ------------------------------------------------------------------------
 	Deletes each node in the list *except the head*.  This allows
 	the deletion of lists where the head is not malloced or created
-	with new_list().  If free_items is true, each item pointed to 
+	with new_list().  If free_items is true, each item pointed to
 	from the node is freed, in addition to the node itself.
     -------------------------------------------------------------------- **/
 void delete_list(list_ptr lp, int free_items)

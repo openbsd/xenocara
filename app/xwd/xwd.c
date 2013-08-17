@@ -27,22 +27,22 @@ in this Software without prior written authorization from The Open Group.
 /*
  * xwd.c MIT Project Athena, X Window system window raster image dumper.
  *
- * This program will dump a raster image of the contents of a window into a 
+ * This program will dump a raster image of the contents of a window into a
  * file for output on graphics printers or for other uses.
  *
  *  Author:	Tony Della Fera, DEC
  *		17-Jun-85
- * 
+ *
  *  Modification history:
  *
  *  11/14/86 Bill Wyatt, Smithsonian Astrophysical Observatory
- *    - Removed Z format option, changing it to an XY option. Monochrome 
+ *    - Removed Z format option, changing it to an XY option. Monochrome
  *      windows will always dump in XY format. Color windows will dump
  *      in Z format by default, but can be dumped in XY format with the
  *      -xy option.
  *
  *  11/18/86 Bill Wyatt
- *    - VERSION 6 is same as version 5 for monchrome. For colors, the 
+ *    - VERSION 6 is same as version 5 for monchrome. For colors, the
  *      appropriate number of Color structs are dumped after the header,
  *      which has the number of colors (=0 for monochrome) in place of the
  *      V5 padding at the end. Up to 16-bit displays are supported. I
@@ -63,6 +63,10 @@ in this Software without prior written authorization from The Open Group.
  *%  color can be supported.
 %*/
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include <stdio.h>
 #include <errno.h>
 #include <X11/Xos.h>
@@ -71,7 +75,6 @@ in this Software without prior written authorization from The Open Group.
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 
-typedef unsigned long Pixel;
 #include "X11/XWDFile.h"
 
 #define FEEP_VOLUME 0
@@ -199,7 +202,7 @@ main(int argc, char **argv)
     if (standard_out)
 	_setmode(fileno(out_file), _O_BINARY);
 #endif
-    
+
     /*
      * Let the user select the target window.
      */
@@ -248,10 +251,11 @@ Window_Dump(Window window, FILE *out)
     unsigned long swaptest = 1;
     XColor *colors;
     unsigned buffer_size;
-    int win_name_size;
-    int header_size;
+    size_t win_name_size;
+    CARD32 header_size;
     int ncolors, i;
     char *win_name;
+    char default_win_name[] = "xwdump";
     Bool got_win_name;
     XWindowAttributes win_info;
     XImage *image;
@@ -261,7 +265,7 @@ Window_Dump(Window window, FILE *out)
     Window dummywin;
     XWDFileHeader header;
     XWDColor xwdcolor;
-    
+
     int                 transparentOverlays , multiVis;
     int                 numVisuals;
     XVisualInfo         *pVisuals;
@@ -290,13 +294,13 @@ Window_Dump(Window window, FILE *out)
      * Get the parameters of the window being dumped.
      */
     if (debug) outl("xwd: Getting target window information.\n");
-    if(!XGetWindowAttributes(dpy, window, &win_info)) 
+    if(!XGetWindowAttributes(dpy, window, &win_info))
       Fatal_Error("Can't get target window attributes.");
 
     /* handle any frame window */
     if (!XTranslateCoordinates (dpy, window, RootWindow (dpy, screen), 0, 0,
 				&absx, &absy, &dummywin)) {
-	fprintf (stderr, 
+	fprintf (stderr,
 		 "%s:  unable to translate window coordinates (%d,%d)\n",
 		 program_name, absx, absy);
 	exit (1);
@@ -324,7 +328,7 @@ Window_Dump(Window window, FILE *out)
 
     XFetchName(dpy, window, &win_name);
     if (!win_name || !win_name[0]) {
-	win_name = "xwdump";
+	win_name = default_win_name;
 	got_win_name = False;
     } else {
 	got_win_name = True;
@@ -340,18 +344,18 @@ Window_Dump(Window window, FILE *out)
     x = absx - win_info.x;
     y = absy - win_info.y;
 
-    multiVis = GetMultiVisualRegions(dpy,RootWindow(dpy, screen), 
-               absx, absy, 
+    multiVis = GetMultiVisualRegions(dpy,RootWindow(dpy, screen),
+               absx, absy,
 	       width, height,&transparentOverlays,&numVisuals, &pVisuals,
                &numOverlayVisuals,&pOverlayVisuals,&numImageVisuals,
                &pImageVisuals,&vis_regions,&vis_image_regions,&allImage) ;
     if (on_root || multiVis)
     {
 	if(!multiVis)
-	    image = XGetImage (dpy, RootWindow(dpy, screen), absx, absy, 
+	    image = XGetImage (dpy, RootWindow(dpy, screen), absx, absy,
                     width, height, AllPlanes, format);
 	else
-	    image = ReadAreaToImage(dpy, RootWindow(dpy, screen), absx, absy, 
+	    image = ReadAreaToImage(dpy, RootWindow(dpy, screen), absx, absy,
                 width, height,
     		numVisuals,pVisuals,numOverlayVisuals,pOverlayVisuals,
                 numImageVisuals, pImageVisuals,vis_regions,
@@ -403,7 +407,7 @@ Window_Dump(Window window, FILE *out)
      * Calculate header size.
      */
     if (debug) outl("xwd: Calculating header size.\n");
-    header_size = SIZEOF(XWDheader) + win_name_size;
+    header_size = SIZEOF(XWDheader) + (CARD32) win_name_size;
 
     /*
      * Write out header information.
@@ -577,7 +581,7 @@ ReadColors(Visual *vis, Colormap cmap, XColor **colors)
     }
 
     XQueryColors(dpy, cmap, *colors, ncolors);
-    
+
     return(ncolors);
 }
 

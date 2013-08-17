@@ -1,6 +1,6 @@
 /** ------------------------------------------------------------------------
 	This file contains functions to create a list of regions which
-	tile a specified window.  Each region contains all visible 
+	tile a specified window.  Each region contains all visible
 	portions of the window which are drawn with the same visual.
 	If the window consists of subwindows of two different visual types,
 	there will be two regions in the list.  The list can be traversed
@@ -38,7 +38,6 @@ from The Open Group.
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 #include <X11/X.h>
-#include <X11/Intrinsic.h>
 #include <stdio.h>
 #include "list.h"
 #include "wsutils.h"
@@ -69,7 +68,7 @@ typedef struct {
     Window parent;		/* id of parent (for debugging) */
 } image_win_type;
 
-/*  Items in short list of regions that tile the grabbed area.  May have 
+/*  Items in short list of regions that tile the grabbed area.  May have
     multiple windows in the region.
 */
 typedef struct {
@@ -84,7 +83,7 @@ typedef struct {
 } image_region_type;
 
 /** ------------------------------------------------------------------------
-	Returns TRUE if the two structs pointed to have the same "vis" & 
+	Returns TRUE if the two structs pointed to have the same "vis" &
 	"cmap" fields and s2 lies completely within s1.  s1 and s2 can
 	point to structs of image_win_type or image_region_type.
     ------------------------------------------------------------------------ **/
@@ -117,46 +116,46 @@ extern unsigned int list_length();
 */
 
 /* Prototype Declarations for Static Functions */
-static int QueryColorMap(
-           Display *, Colormap , Visual *, 
+static void QueryColorMap(
+           Display *, Colormap , Visual *,
            XColor **, int *, int *, int *
 	   );
 static void TransferImage(
            Display *, XImage *,int, int , image_region_type*,
-           XImage *,int ,int 
+           XImage *,int ,int
 	   );
 static XImage * ReadRegionsInList(
-           Display *, Visual *, int ,int ,int ,
-           int , XRectangle, list_ptr 
+           Display *, Visual *, int, int, unsigned int,
+           unsigned int, XRectangle, list_ptr
            );
 
-static list_ptr make_region_list( 
+static list_ptr make_region_list(
                   Display*, Window, XRectangle*,
                   int*, int, XVisualInfo**, int	*
          );
 
-static void destroy_region_list( 
-            list_ptr 
+static void destroy_region_list(
+            list_ptr
             ) ;
-static void subtr_rect_from_image_region( 
-           image_region_type *, int , int , int , int 
+static void subtr_rect_from_image_region(
+           image_region_type *, int , int , int , int
      );
-static void add_rect_to_image_region( 
+static void add_rect_to_image_region(
            image_region_type *,
-           int , int , int , int 
+           int , int , int , int
      );
-static int src_in_region_list( 
-    image_win_type *, list_ptr 
+static int src_in_region_list(
+    image_win_type *, list_ptr
     );
 static void add_window_to_list(
     list_ptr, Window, int, int ,
     int	, int , int , int, int,
     Visual*, Colormap, Window
     );
-static int src_in_image( 
+static int src_in_image(
     image_win_type 	*, int	, XVisualInfo**
     );
-static int src_in_overlay( 
+static int src_in_overlay(
     image_region_type *, int, OverlayInfo *, int*, int*
     );
 static void make_src_list(
@@ -180,16 +179,16 @@ void initFakeVisual(Visual *Vis)
     Vis->bits_per_rgb = 8 ;
 }
 
-static int
+static void
 QueryColorMap(Display *disp, Colormap src_cmap, Visual *src_vis,
 	      XColor **src_colors, int *rShift, int *gShift, int *bShift)
 {
-     int ncolors,i ;
+     unsigned int ncolors,i ;
      unsigned long       redMask, greenMask, blueMask;
      int                 redShift, greenShift, blueShift;
      XColor *colors ;
 
-     ncolors = src_vis->map_entries ;
+     ncolors = (unsigned) src_vis->map_entries ;
      *src_colors = colors = (XColor *)malloc(ncolors * sizeof(XColor) ) ;
 
      if(src_vis->class != TrueColor && src_vis->class != DirectColor)
@@ -234,9 +233,7 @@ QueryColorMap(Display *disp, Colormap src_cmap, Visual *src_vis,
         }
       }
 
-
-      XQueryColors(disp, src_cmap, colors, ncolors);
-      return ncolors ;
+      XQueryColors(disp, src_cmap, colors, (int) ncolors);
 }
 
 int
@@ -273,9 +270,9 @@ GetMultiVisualRegions(Display *disp,
     *vis_regions = *vis_image_regions = NULL ;
     if ((*vis_regions = make_region_list( disp, srcRootWinid, &bbox,
                                          &hasNonDefault, *numImageVisuals,
-                                         *pImageVisuals, allImage)) == NULL) 
+                                         *pImageVisuals, allImage)) == NULL)
     	return 0 ;
-   
+
     if (*transparentOverlays)
     {
         *allImage = 1; /* until proven otherwise,
@@ -287,7 +284,7 @@ GetMultiVisualRegions(Display *disp,
 
     /* if there is a second region in any of the two lists return 1 **/
     if ( ( *vis_regions && (*vis_regions)->next && (*vis_regions)->next->next ) ||
-         ( *vis_image_regions && (*vis_image_regions)->next && 
+         ( *vis_image_regions && (*vis_image_regions)->next &&
            (*vis_image_regions)->next->next ) ) return 1 ;
     else return 0 ;
 
@@ -300,13 +297,13 @@ static void TransferImage(Display *disp, XImage *reg_image,
 {
     int i,j,old_pixel,new_pixel,red_ind,green_ind,blue_ind ;
     XColor *colors;
-    int rShift,gShift,bShift;
+    int rShift = 0, gShift = 0, bShift = 0;
 
-    (void) QueryColorMap(disp,reg->cmap,reg->vis,&colors,
+    QueryColorMap(disp,reg->cmap,reg->vis,&colors,
 	 &rShift,&gShift,&bShift) ;
 
     switch (reg->vis->class) {
-    case TrueColor : 
+    case TrueColor :
        for(i=0 ; i < srch ; i++)
        {
          for(j=0 ; j < srcw ;  j++)
@@ -314,43 +311,43 @@ static void TransferImage(Display *disp, XImage *reg_image,
 	   old_pixel = XGetPixel(reg_image,j,i) ;
 
            if( reg->vis->map_entries == 16) {
-	
+
                  red_ind = (old_pixel & reg->vis->red_mask) >> rShift ;
 	         green_ind = (old_pixel & reg->vis->green_mask) >> gShift ;
 	         blue_ind = (old_pixel & reg->vis->blue_mask) >> bShift ;
 
-	         new_pixel = ( 
+	         new_pixel = (
 			      ((colors[red_ind].red >> 8) << RED_SHIFT)
 			      |((colors[green_ind].green >> 8) << GREEN_SHIFT)
 			      |((colors[blue_ind].blue >> 8) << BLUE_SHIFT)
                              );
            }
-	   else  
+	   else
 		new_pixel = old_pixel;
 
            XPutPixel(target_image,dst_x+j, dst_y+i,new_pixel);
-	   
+
          }
        }
        break;
     case DirectColor :
        for(i=0 ; i < srch ; i++)
        {
-	 
+
          for(j=0 ; j < srcw ;  j++)
          {
 	   old_pixel = XGetPixel(reg_image,j,i) ;
            red_ind = (old_pixel & reg->vis->red_mask) >> rShift ;
 	   green_ind = (old_pixel & reg->vis->green_mask) >> gShift ;
 	   blue_ind = (old_pixel & reg->vis->blue_mask) >> bShift ;
-	
-	   new_pixel = ( 
+
+	   new_pixel = (
 			 ((colors[red_ind].red >> 8) << RED_SHIFT)
 			|((colors[green_ind].green >> 8) << GREEN_SHIFT)
 			|((colors[blue_ind].blue >> 8) << BLUE_SHIFT)
                        );
            XPutPixel(target_image,dst_x+j, dst_y+i,new_pixel);
-	   
+
          }
        }
        break;
@@ -360,14 +357,14 @@ static void TransferImage(Display *disp, XImage *reg_image,
          for(j=0 ; j < srcw ;  j++)
          {
 	    old_pixel = XGetPixel(reg_image,j,i) ;
-	
-	   new_pixel = ( 
+
+	   new_pixel = (
 			 ((colors[old_pixel].red >> 8) << RED_SHIFT)
 			|((colors[old_pixel].green >> 8) << GREEN_SHIFT)
 			|((colors[old_pixel].blue >> 8) << BLUE_SHIFT)
                        );
            XPutPixel(target_image,dst_x+j, dst_y+i,new_pixel);
-	  
+
          }
        }
        break;
@@ -376,7 +373,7 @@ static void TransferImage(Display *disp, XImage *reg_image,
 
 static XImage *
 ReadRegionsInList(Display *disp, Visual *fakeVis, int depth, int format,
-		  int width,int height,
+		  unsigned int width, unsigned int height,
 		  XRectangle bbox,	/* bounding box of grabbed area */
 		  list_ptr regions)	/* list of regions to read from */
 {
@@ -386,11 +383,8 @@ ReadRegionsInList(Display *disp, Visual *fakeVis, int depth, int format,
 
     XImage		*reg_image,*ximage ;
     int			srcRect_x,srcRect_y,srcRect_width,srcRect_height ;
-    int                 bytes_per_line;   
-    int                 bitmap_unit; 
-    
-    bitmap_unit = sizeof (long);
-   
+    int                 bytes_per_line;
+
     ximage = XCreateImage(disp,fakeVis,depth,format,0,NULL,width,height,
 	         8,0) ;
     bytes_per_line = ximage->bytes_per_line;
@@ -401,26 +395,26 @@ ReadRegionsInList(Display *disp, Visual *fakeVis, int depth, int format,
         ximage->data = malloc(height*bytes_per_line*depth);
 
     ximage->bits_per_pixel = depth; /** Valid only if format is ZPixmap ***/
-    
+
     for (reg = (image_region_type *) first_in_list( regions); reg;
-	 reg = (image_region_type *) next_in_list( regions)) 
+	 reg = (image_region_type *) next_in_list( regions))
     {
 		int rect;
 		struct my_XRegion *vis_reg;
 		vis_reg = (struct my_XRegion *)(reg->visible_region);
-		for (rect = 0; 
+		for (rect = 0;
 		     rect < vis_reg->numRects;
 		     rect++)
 		{
 		/** ------------------------------------------------------------------------
-			Intersect bbox with visible part of region giving src rect & output 
+			Intersect bbox with visible part of region giving src rect & output
 			location.  Width is the min right side minus the max left side.
 			Similar for height.  Offset src rect so x,y are relative to
 			origin of win, not the root-relative visible rect of win.
 		    ------------------------------------------------------------------------ **/
-		    srcRect_width  = MIN( vis_reg->rects[rect].x2, bbox.width + bbox.x) - 
+		    srcRect_width  = MIN( vis_reg->rects[rect].x2, bbox.width + bbox.x) -
 				     MAX( vis_reg->rects[rect].x1, bbox.x);
-		    srcRect_height = MIN( vis_reg->rects[rect].y2, bbox.height + bbox.y) - 
+		    srcRect_height = MIN( vis_reg->rects[rect].y2, bbox.height + bbox.y) -
 				     MAX( vis_reg->rects[rect].y1, bbox.y);
 		    diff = bbox.x - vis_reg->rects[rect].x1;
 		    srcRect_x = MAX( 0, diff)  + (vis_reg->rects[rect].x1 - reg->x_rootrel - reg->border);
@@ -447,7 +441,7 @@ XImage *ReadAreaToImage(Display *disp,
 			/* root rel UL corner of bounding box of grab */
 			int x, int y,
 			/* size of bounding box of grab */
-			unsigned int width, unsigned int height, 
+			unsigned int width, unsigned int height,
 			int numVisuals, XVisualInfo *pVisuals,
 			int numOverlayVisuals, OverlayInfo *pOverlayVisuals,
 			int numImageVisuals, XVisualInfo **pImageVisuals,
@@ -510,7 +504,7 @@ XImage *ReadAreaToImage(Display *disp,
 	int test = 0 ;
 	     srcRect_width  = MIN( reg->width + reg->x_vis, bbox.width + bbox.x)
 				 - MAX( reg->x_vis, bbox.x);
-	     srcRect_height = MIN( reg->height + reg->y_vis, bbox.height 
+	     srcRect_height = MIN( reg->height + reg->y_vis, bbox.height
 				 + bbox.y) - MAX( reg->y_vis, bbox.y);
              diff = bbox.x - reg->x_vis;
              srcRect_x = MAX( 0, diff)  + (reg->x_vis - reg->x_rootrel - reg->border);
@@ -519,7 +513,7 @@ XImage *ReadAreaToImage(Display *disp,
 	     srcRect_y = MAX( 0, diff)  + (reg->y_vis - reg->y_rootrel - reg->border);
 	     dst_y     = MAX( 0, -diff) ;
 	/* let's test some pixels for transparency */
-             image = XGetImage(disp, reg->win, srcRect_x, srcRect_y, 
+             image = XGetImage(disp, reg->win, srcRect_x, srcRect_y,
 		 srcRect_width, srcRect_height, 0xffffffff, ZPixmap);
 
         /* let's assume byte per pixel for overlay image for now */
@@ -541,7 +535,7 @@ XImage *ReadAreaToImage(Display *disp,
 #endif
 	                pixel = XGetPixel(ximage_ipm,dst_x+x1,dst_y+y1) ;
                         XPutPixel(ximage,dst_x+x1, dst_y+y1,pixel);
-			    
+
 			if(!test){
 			   test = 1 ;
 			}
@@ -656,13 +650,13 @@ static void make_src_list(Display *disp, list_ptr image_wins,
 
 	XQueryTree( disp, curr, &root, &parent, &child, &nchild );
 	save_child_list = child;      /* so we can free list when we're done */
-	add_window_to_list( image_wins, curr, x_rootrel, y_rootrel, 
-			    pclip->x, pclip->y, 
-			    pclip->width, pclip->height, 
-			    curr_attrs->border_width,curr_attrs->visual, 
+	add_window_to_list( image_wins, curr, x_rootrel, y_rootrel,
+			    pclip->x, pclip->y,
+			    pclip->width, pclip->height,
+			    curr_attrs->border_width,curr_attrs->visual,
 			    curr_attrs->colormap, parent);
 
-	
+
 /** ------------------------------------------------------------------------
 	set RR coords of right (Rt), left (X), bottom (Bt) and top (Y)
 	of rect we clip all children by.  This is our own clip rect (pclip)
@@ -673,10 +667,10 @@ static void make_src_list(Display *disp, list_ptr image_wins,
 	curr_clipX = MAX( pclip->x, x_rootrel + (int) curr_attrs->border_width);
 	curr_clipY = MAX( pclip->y, y_rootrel + (int) curr_attrs->border_width);
 	curr_clipRt = MIN( pclip->x + (int) pclip->width,
-			   x_rootrel + (int) curr_attrs->width + 
+			   x_rootrel + (int) curr_attrs->width +
 			   2 * (int) curr_attrs->border_width);
 	curr_clipBt = MIN( pclip->y + (int) pclip->height,
-			   y_rootrel + (int) curr_attrs->height + 
+			   y_rootrel + (int) curr_attrs->height +
 			   2 * (int) curr_attrs->border_width);
 
 	while (nchild--) {
@@ -694,17 +688,17 @@ static void make_src_list(Display *disp, list_ptr image_wins,
 	    if (new_width >= 0) {
 		child_clip.width = new_width;
 
-		child_yrr = y_rootrel + child_attrs.y + 
+		child_yrr = y_rootrel + child_attrs.y +
 			    curr_attrs->border_width;
 		child_clip.y = MAX( curr_clipY, child_yrr);
-		new_height = MIN( curr_clipBt, 
-				  child_yrr + (int) child_attrs.height + 
-				      2 * child_attrs.border_width) 
+		new_height = MIN( curr_clipBt,
+				  child_yrr + (int) child_attrs.height +
+				      2 * child_attrs.border_width)
 			     - child_clip.y;
 		if (new_height >= 0) {
 		    child_clip.height = new_height;
-		    make_src_list( disp, image_wins, bbox, *child, 
-				   child_xrr, child_yrr, 
+		    make_src_list( disp, image_wins, bbox, *child,
+				   child_xrr, child_yrr,
 				   &child_attrs, &child_clip);
 		}
 	    }
@@ -720,7 +714,7 @@ static void make_src_list(Display *disp, list_ptr image_wins,
 	window.  Each region contains all visible portions of the window
 	which are drawn with the same visual.  For example, if the
 	window consists of subwindows of two different visual types,
-	there will be two regions in the list.  
+	there will be two regions in the list.
 	Returns a pointer to the list.
     ------------------------------------------------------------------------ **/
 static list_ptr make_region_list(Display *disp, Window win, XRectangle *bbox,
@@ -737,8 +731,8 @@ static list_ptr make_region_list(Display *disp, Window win, XRectangle *bbox,
     XRectangle		clip;
     int			image_only;
 
-    int                 count=0 ; 
-    
+    int                 count=0 ;
+
     *hasNonDefault = False;
     XUnionRectWithRegion( bbox, bbox_region, bbox_region);
     XGetWindowAttributes( disp, win, &win_attrs);
@@ -748,14 +742,14 @@ static list_ptr make_region_list(Display *disp, Window win, XRectangle *bbox,
     clip.y = 0;
     clip.width  = win_attrs.width;
     clip.height = win_attrs.height;
-    make_src_list( disp, &image_wins, bbox, win, 
+    make_src_list( disp, &image_wins, bbox, win,
 		   0 /* x_rootrel */, 0 /* y_rootrel */, &win_attrs, &clip);
 
     image_regions = new_list();
-    image_only = (*allImage) ? True:False; 
+    image_only = (*allImage) ? True:False;
 
     for (base_src = (image_win_type *) first_in_list( &image_wins); base_src;
-	 base_src = (image_win_type *) next_in_list( &image_wins)) 
+	 base_src = (image_win_type *) next_in_list( &image_wins))
     {
 	/* test for image visual */
 	if (!image_only || src_in_image(base_src, numImageVisuals, pImageVisuals))
@@ -763,12 +757,12 @@ static list_ptr make_region_list(Display *disp, Window win, XRectangle *bbox,
 	    /* find a window whose visual hasn't been put in list yet */
 	    if (!src_in_region_list( base_src, image_regions))
 	    {
-		if (! (new_reg = (image_region_type *) 
+		if (! (new_reg = (image_region_type *)
 					malloc( sizeof( image_region_type)))) {
 		    return (list_ptr) NULL;
 		}
-		count++;  
-		
+		count++;
+
 		new_reg->visible_region = XCreateRegion();
 		new_reg->win		= base_src->win;
 		new_reg->vis		= base_src->vis;
@@ -780,28 +774,28 @@ static list_ptr make_region_list(Display *disp, Window win, XRectangle *bbox,
 		new_reg->width		= base_src->width;
 		new_reg->height		= base_src->height;
 		new_reg->border		= base_src->border_width;
-		
+
 		srcs_left = (list_ptr) dup_list_head( &image_wins, START_AT_CURR);
 		for (src = (image_win_type *) first_in_list( srcs_left); src;
 		     src = (image_win_type *) next_in_list( srcs_left)) {
 		    if (SAME_REGIONS( base_src, src)) {
-			add_rect_to_image_region( new_reg, src->x_vis, src->y_vis, 
+			add_rect_to_image_region( new_reg, src->x_vis, src->y_vis,
 						  src->width, src->height);
 		    }
 		    else {
 			if (!image_only || src_in_image(src, numImageVisuals, pImageVisuals))
-			{ 
+			{
 			    subtr_rect_from_image_region( new_reg, src->x_vis,
 					  src->y_vis, src->width, src->height);
-			} 
+			}
 		    }
 		}
-		XIntersectRegion( bbox_region, new_reg->visible_region, 
+		XIntersectRegion( bbox_region, new_reg->visible_region,
 				  new_reg->visible_region);
 		if (! XEmptyRegion( new_reg->visible_region)) {
 		    add_to_list( image_regions, new_reg);
 		    if (new_reg->vis != DefaultVisualOfScreen( win_attrs.screen) ||
-			new_reg->cmap != DefaultColormapOfScreen( 
+			new_reg->cmap != DefaultColormapOfScreen(
 							    win_attrs.screen)) {
 			*hasNonDefault = True;
 		    }
@@ -853,7 +847,7 @@ static void subtr_rect_from_image_region(image_region_type *image_region,
     rect.width = width;
     rect.height = height;
     XUnionRectWithRegion( &rect, rect_region, rect_region);
-    XSubtractRegion( image_region->visible_region, rect_region, 
+    XSubtractRegion( image_region->visible_region, rect_region,
 		     image_region->visible_region);
     XDestroyRegion( rect_region);
 }
@@ -871,7 +865,7 @@ static void add_rect_to_image_region(image_region_type *image_region,
     rect.y = y;
     rect.width = width;
     rect.height = height;
-    XUnionRectWithRegion( &rect, image_region->visible_region, 
+    XUnionRectWithRegion( &rect, image_region->visible_region,
 			  image_region->visible_region);
 }
 
@@ -900,7 +894,7 @@ static int src_in_region_list(image_win_type *src, list_ptr image_regions)
 	Makes a new entry in image_wins with the given fields filled in.
     ------------------------------------------------------------------------ **/
 static void add_window_to_list(list_ptr image_wins, Window w,
-			       int xrr, int yrr, int x_vis, int y_vis, 
+			       int xrr, int yrr, int x_vis, int y_vis,
 			       int width, int height, int border_width,
 			       Visual *vis, Colormap cmap, Window parent)
 {
@@ -947,7 +941,7 @@ static int src_in_image(image_win_type *src, int numImageVisuals,
 	and transparency is possible, FALSE otherwise.
     ------------------------------------------------------------------------ **/
 static int src_in_overlay(image_region_type *src, int numOverlayVisuals,
-			  OverlayInfo *pOverlayVisuals, 
+			  OverlayInfo *pOverlayVisuals,
 			  int *transparentColor, int *transparentType)
 {
     int 		i;
@@ -961,10 +955,10 @@ static int src_in_overlay(image_region_type *src, int numOverlayVisuals,
 	    *transparentType = pOverlayVisuals[i].transparentType;
 	    return 1;
 	}
-	
+
 	else {
 	}
-	
+
     }
     return 0;
 }
@@ -1047,14 +1041,14 @@ int GetXVisualInfo(/* Which X server (aka "display"). */
     Atom	overlayVisualsAtom;	/* Parameters for XGetWindowProperty */
     Atom	actualType;
     unsigned long numLongs, bytesAfter;
-    int		actualFormat; 
+    int		actualFormat;
     int		nImageVisualsAlloced;	/* Values to process the XVisualInfo */
     int		imageVisual;		/* array */
 
 
     /* First, get the list of visuals for this screen. */
     getVisInfo.screen = screen;
-    mask = VisualScreenMask; 
+    mask = VisualScreenMask;
 
     *pVisuals = XGetVisualInfo(display, mask, &getVisInfo, numVisuals);
     if ((nVisuals = *numVisuals) <= 0)

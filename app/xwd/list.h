@@ -56,8 +56,8 @@ typedef void (*DESTRUCT_FUNC_PTR)(
 void *
 );
 
-void zero_list( 
-          list_ptr 
+void zero_list(
+          list_ptr
     );
 int add_to_list (
           list_ptr , void *
@@ -66,28 +66,28 @@ list_ptr new_list (
           void
     );
 list_ptr dup_list_head (
-          list_ptr , int 
+          list_ptr , int
     );
-unsigned int list_length( 
-          list_ptr 
+unsigned int list_length(
+          list_ptr
     );
 void *delete_from_list (
           list_ptr , void *
     );
-void delete_list( 
-          list_ptr , int 
+void delete_list(
+          list_ptr , int
     );
 void delete_list_destroying (
           list_ptr , DESTRUCT_FUNC_PTR
     );
 void *first_in_list (
-          list_ptr 
+          list_ptr
     );
 void *next_in_list (
-          list_ptr 
+          list_ptr
     );
 int list_is_empty (
-          list_ptr 
+          list_ptr
     );
 
 #endif

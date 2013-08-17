@@ -54,7 +54,7 @@ from The Open Group.
 
 
 /* This stuff is defined in the calling program by just_display.h */
-char    *program_name = "unknown_program";
+const char *program_name = "unknown_program";
 Display *dpy = NULL;
 int      screen = 0;
 
@@ -139,7 +139,7 @@ void Close_Display(void)
 {
     if (dpy == NULL)
       return;
-      
+
     XCloseDisplay(dpy);
     dpy = NULL;
 }
@@ -215,7 +215,7 @@ Window Select_Window_Args(
 		COPYOPT;
 	}
 	ARGC = nargc;
-	
+
 	return(w);
 }
 
@@ -265,7 +265,7 @@ Window Select_Window(Display *disp, int descend)
 	buttons--;
        break;
     }
-  } 
+  }
 
   XUngrabPointer(disp, CurrentTime);      /* Done with pointer */
 
@@ -292,7 +292,7 @@ Window Window_With_Name(
 {
 	Window *children, dummy;
 	unsigned int nchildren;
-	int i;
+	unsigned int i;
 	Window w=0;
 	char *window_name;
 
@@ -314,11 +314,10 @@ Window Window_With_Name(
 /*
  * outl: a debugging routine.  Flushes stdout then prints a message on stderr
  *       and flushes stderr.  Used to print messages when past certain points
- *       in code so we can tell where we are.  Outl may be invoked like
- *       printf with up to 7 arguments.
+ *       in code so we can tell where we are.  Outl may be invoked like printf.
  */
 void
-outl(char *msg, ...)
+outl(const char *msg, ...)
 {
 	va_list args;
 	fflush(stdout);
@@ -331,10 +330,10 @@ outl(char *msg, ...)
 
 
 /*
- * Standard fatal error routine - call like printf but maximum of 7 arguments.
+ * Standard fatal error routine - call like printf.
  * Does not require dpy or screen defined.
  */
-void Fatal_Error(char *msg, ...)
+void Fatal_Error(const char *msg, ...)
 {
 	va_list args;
 	fflush(stdout);

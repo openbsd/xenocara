@@ -39,7 +39,7 @@ extern int GetMultiVisualRegions(
     unsigned int, int *, int *, XVisualInfo **, int *,
     OverlayInfo  **, int *, XVisualInfo ***, list_ptr *,
     list_ptr *, int *
-); 
+);
 
 extern XImage *ReadAreaToImage(
     Display *, Window, int, int, unsigned int,

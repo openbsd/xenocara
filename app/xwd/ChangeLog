@@ -1,3 +1,105 @@
+commit b71cda30549b7259e337bd05d499c5921ed34f19
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Aug 8 21:12:15 2013 -0700
+
+    xwd 1.0.6
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 02d3b987ad0007b2b6627d97056d0d77fb607039
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jul 20 00:08:51 2013 -0700
+
+    Strip trailing whitespace
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit cc51f7fce1cefb7a2318c624a2e1ebc124775ec8
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jul 20 00:07:30 2013 -0700
+
+    Fix some clang warnings about integer size/sign conversions
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit e89c0797e8b21b543a228fb56957ba3a1e91c38e
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Jul 19 23:45:05 2013 -0700
+
+    Quiet gcc warnings about potentially uninitialized variables
+    
+    It should have been impossible for these to be used without being
+    initialized, but following the logic to prove that was trickier
+    than the compiler was willing to unravel.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 2bc7b34f2868f7d340c36c20a715d9c36495f236
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Jul 19 23:41:56 2013 -0700
+
+    Remove unused bitmap_unit variable from ReadRegionsInList()
+    
+    multiVis.c: In function ‘ReadRegionsInList’:
+    multiVis.c:389:25: warning: variable ‘bitmap_unit’ set but not used [-Wunused-but-set-variable]
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit ad99aa119875151b182c6e3d463d3c297ae3d56b
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Jul 19 23:40:37 2013 -0700
+
+    Rename new_list variable to not shadow new_list function
+    
+    Silences gcc warning:
+    list.c: In function ‘dup_list_head’:
+    list.c:104:14: warning: declaration of ‘new_list’ shadows a global
+     declaration [-Wshadow]
+    list.c:80:10: warning: shadowed declaration is here [-Wshadow]
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 94731abadcd06995c28f140aaffde456a7750807
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Jul 19 23:38:46 2013 -0700
+
+    Add printf attributes as suggested by gcc -Wmissing-format-attribute
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 9c9ae7363d216933394e6ccd2ba6e0196845a6c6
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Jul 19 23:33:19 2013 -0700
+
+    Fix gcc warnings about discarding const qualifiers
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit c22c121262efcaca5f58774072ac84e1006e43aa
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Mar 19 13:16:20 2012 -0700
+
+    Optionally enable existing code to call XkbStdBell from libxkbfile
+    
+    Copied from similar check in oclock/configure.ac
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit 091e5f0fc73d7cdda2dcb72fbe198a0103476d77
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Mar 19 13:09:52 2012 -0700
+
+    Move Pixel typedef from xwd.c to wsutils.h
+    
+    Removes need for including <X11/Intrinsic.h> in multiVis.c just to get
+    the Pixel typedef, which resolves
+    https://bugs.freedesktop.org/show_bug.cgi?id=47462 without adding a
+    dependency on libXt.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Jeremy Huddleston <jeremyhu@apple.com>
+
 commit 431918bd9644dd5db2216e8ab61959e9a4b74bc0
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Wed Feb 22 20:19:03 2012 -0800
@@ -228,15 +330,68 @@ Date:   Wed Oct 21 12:47:22 2009 -0700
     
     Signed-off-by: Jeremy Huddleston <jeremyhu@freedesktop.org>
 
+commit 5ba93bf07a4ffb84d86f6d4fad419e81a57358c6
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Fri Oct 16 19:59:20 2009 -0700
+
+    xwd 1.0.3
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit 06525a61829053f5aed23efb61046b1a1efb5b79
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Fri Oct 16 19:58:59 2009 -0700
+
+    Migrate to xorg macros 1.3 & XORG_DEFAULT_OPTIONS
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit ff06ff5f6eadfa1a6b4c25198b8965e38a260e63
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Fri Oct 16 19:58:08 2009 -0700
+
+    Fill in COPYING file with copyright/license notices from code & docs
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit b744604c550dadb04fd773e207626db4fbe6a460
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Thu Oct 1 14:54:32 2009 -0700
+
+    Add README with pointers to mailing lists, bugzilla, & git
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit 5d82f32cac19af013c48d01b66aa9f14add30f42
+Author: Paulo Cesar Pereira de Andrade <pcpa@mandriva.com.br>
+Date:   Thu Jan 15 15:43:08 2009 -0200
+
+    Ansification and compile warning fixes.
+    
+      This also uses XORG_CHANGELOG and XORG_CWARNFLAGS, corrects
+    make distcheck and most gcc 4.3 and sparse warnings.
+
+commit a27df6ee496a1b2df678242cf514490924f44027
+Author: Branden Robinson <branden@debian.org>
+Date:   Fri Feb 11 02:14:27 2005 -0500
+
+    Do not spew usage on connection error
+    
+    General philosophy:
+    
+    The user should only be shown a usage message when:
+      * it is asked for with a --help option or the like.
+      * the command line is syntactically invalid.
+
 commit 37401df6799722d16bc02c52b241cf2ef5070b7d
 Author: James Cloos <cloos@jhcloos.com>
-Date:   Sun Jun 29 10:46:59 2008 -0400
+Date:   Sun Jun 29 10:47:22 2008 -0400
 
     xwd 1.0.2
 
 commit f9725928e875035bd2a96621aa8f861160e85dd7
 Author: Kim Woelders <kim@woelders.dk>
-Date:   Sun Jun 22 01:16:49 2008 -0400
+Date:   Sun Jun 22 01:17:12 2008 -0400
 
     Remove unused code, ANSIfy, add const.
     
@@ -244,7 +399,7 @@ Date:   Sun Jun 22 01:16:49 2008 -0400
 
 commit 3dcc66bbbc74c41c2b4509a785c3688fd75387a1
 Author: Kim Woelders <kim@woelders.dk>
-Date:   Sun Jun 22 01:16:08 2008 -0400
+Date:   Sun Jun 22 01:16:31 2008 -0400
 
     Fix window selection by pointer.
     
@@ -254,119 +409,119 @@ Date:   Sun Jun 22 01:16:08 2008 -0400
 
 commit 23b60f871f76878572b2acec59dd6c47e3acd0e0
 Author: Jeremy Huddleston <jeremyhu@freedesktop.org>
-Date:   Sun Apr 13 22:30:21 2008 -0700
+Date:   Sun Apr 13 22:30:44 2008 -0700
 
     Added missing AM_PROG_CC_C_O
 
 commit f686dfebf0816630664d5fe024fae3710ac8c103
 Author: Niveditha Rau <niveditha.rau@sun.com>
-Date:   Fri Feb 15 16:41:10 2008 -0800
+Date:   Fri Feb 15 16:41:33 2008 -0800
 
     Add -silent to options in man page synopsis
 
 commit 2e522aa858ded39209036ebb956c9ea3257d3668
 Author: James Cloos <cloos@jhcloos.com>
-Date:   Thu Dec 6 16:37:11 2007 -0500
+Date:   Thu Dec 6 16:37:34 2007 -0500
 
     Replace static ChangeLog with dist-hook to generate from git log
 
 commit e5d381ba7a3d06090c5352bd5c39601ec1abcfbe
 Author: James Cloos <cloos@jhcloos.com>
-Date:   Mon Sep 3 05:51:34 2007 -0400
+Date:   Mon Sep 3 05:51:57 2007 -0400
 
     Add *~ to .gitignore to skip patch/emacs droppings
 
 commit a905f2d72bc3b09a4a2eb3046771dc4331b920c9
 Author: James Cloos <cloos@jhcloos.com>
-Date:   Thu Aug 23 19:24:53 2007 -0400
+Date:   Thu Aug 23 19:25:16 2007 -0400
 
     Rename .cvsignore to .gitignore
 
 commit 1a6550aebfd3c675c0d75c8a23aaa94baca6761a
 Author: Kevin E Martin <kem@kem.org>
-Date:   Wed Dec 21 02:29:32 2005 +0000
+Date:   Wed Dec 21 02:29:54 2005 +0000
 
     Update package version for X11R7 release.
 
 commit b840d879c0e514728da5f6aad94723c87e17f294
 Author: Adam Jackson <ajax@nwnk.net>
-Date:   Mon Dec 19 16:22:25 2005 +0000
+Date:   Mon Dec 19 16:22:47 2005 +0000
 
     Stub COPYING files
 
 commit 9023b24530ccaf71c2375dc1031baf743f1610c2
 Author: Kevin E Martin <kem@kem.org>
-Date:   Thu Dec 15 00:23:50 2005 +0000
+Date:   Thu Dec 15 00:24:12 2005 +0000
 
     Update package version number for final X11R7 release candidate.
 
 commit 7e0ff968e8dab09792ff802b1433c68d4e3f6d2d
 Author: Kevin E Martin <kem@kem.org>
-Date:   Tue Dec 6 22:48:05 2005 +0000
+Date:   Tue Dec 6 22:48:27 2005 +0000
 
     Change *man_SOURCES ==> *man_PRE to fix autotools warnings.
 
 commit e63fca21475fc1a99937388883868f3d61edfc9d
 Author: Kevin E Martin <kem@kem.org>
-Date:   Sat Dec 3 05:49:07 2005 +0000
+Date:   Sat Dec 3 05:49:29 2005 +0000
 
     Update package version number for X11R7 RC3 release.
 
 commit 750b3f6469c060a3c2826530714183667992d61f
 Author: Alan Coopersmith <Alan.Coopersmith@sun.com>
-Date:   Mon Nov 28 22:01:26 2005 +0000
+Date:   Mon Nov 28 22:01:48 2005 +0000
 
     Change *mandir targets to use new *_MAN_DIR variables set by xorg-macros.m4
         update to fix bug #5167 (Linux prefers *.1x man pages in man1 subdir)
 
 commit 31f96dce7b65f6879f9cac3302352b45f8b17b56
 Author: Eric Anholt <anholt@freebsd.org>
-Date:   Mon Nov 21 10:34:47 2005 +0000
+Date:   Mon Nov 21 10:35:09 2005 +0000
 
     Another pass at .cvsignores for apps.
 
 commit e1ce2fee75109d460db19ea9bc259c993306ffba
 Author: Alan Coopersmith <Alan.Coopersmith@sun.com>
-Date:   Mon Nov 21 03:13:55 2005 +0000
+Date:   Mon Nov 21 03:14:17 2005 +0000
 
     Change dependency from xmu to xmuu since the full xmu (with all its baggage
         like Xt) is not needed here.
 
 commit f2872124b38058973d90a9e00490a16ab855eb74
 Author: Eric Anholt <anholt@freebsd.org>
-Date:   Sun Nov 20 22:08:34 2005 +0000
+Date:   Sun Nov 20 22:08:56 2005 +0000
 
     Add/improve .cvsignore files for apps.
 
 commit 70f962e49566a2f5187ce94150ced0dcadcee517
 Author: Kevin E Martin <kem@kem.org>
-Date:   Wed Oct 19 02:47:36 2005 +0000
+Date:   Wed Oct 19 02:47:58 2005 +0000
 
     Update package version number for RC1 release.
 
 commit a1be690262901ca063d1bbfbdedfd15e8a434b85
 Author: Alan Coopersmith <Alan.Coopersmith@sun.com>
-Date:   Mon Oct 17 23:56:03 2005 +0000
+Date:   Mon Oct 17 23:56:25 2005 +0000
 
     Use @APP_MAN_SUFFIX@ instead of $(APP_MAN_SUFFIX) in macro substitutions to
         work better with BSD make
 
 commit ca2bc3fb574ad4ac5a3de6d591b5046a2548d257
 Author: Alan Coopersmith <Alan.Coopersmith@sun.com>
-Date:   Fri Oct 14 00:25:26 2005 +0000
+Date:   Fri Oct 14 00:25:48 2005 +0000
 
     Use sed to fill in variables in man page
 
 commit 9f14a8229938ddb5d78adb84f1c73eaa2d399e61
 Author: Alan Coopersmith <Alan.Coopersmith@sun.com>
-Date:   Mon Aug 1 20:25:11 2005 +0000
+Date:   Mon Aug 1 20:25:33 2005 +0000
 
     Install man pages to section 1 instead of section m (Patch from Donnie
         Berkholz)
 
 commit 1ddc8445cc15cd5202de51bdf89b6f9072b44a5c
 Author: Kevin E Martin <kem@kem.org>
-Date:   Fri Jul 29 21:22:16 2005 +0000
+Date:   Fri Jul 29 21:22:38 2005 +0000
 
     Various changes preparing packages for RC0:
     - Verify and update package version numbers as needed
@@ -380,20 +535,20 @@ Date:   Fri Jul 29 21:22:16 2005 +0000
 
 commit 754d3311ce2773c4eda374fd97f8f326d845a3ca
 Author: Adam Jackson <ajax@nwnk.net>
-Date:   Wed Jul 20 19:31:43 2005 +0000
+Date:   Wed Jul 20 19:32:05 2005 +0000
 
     Use a unique token for PKG_CHECK_MODULES. Otherwise, if you use a global
         configure cache, you cache it, and the cached value is probably wrong.
 
 commit 504daf4567c93ac5ec425ab122cd88f29089ea7d
 Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
-Date:   Fri Jul 8 20:58:54 2005 +0000
+Date:   Fri Jul 8 20:59:16 2005 +0000
 
     Add build system for xwd
 
 commit a26e8f8a7974255f834535976f45de85050845ba
 Author: Roland Mainz <roland.mainz@nrubsig.org>
-Date:   Wed Oct 6 19:29:37 2004 +0000
+Date:   Wed Oct 6 19:29:59 2004 +0000
 
     Fix for https://freedesktop.org/bugzilla/show_bug.cgi?id=1518 - Add filter
         support to "xlsfonts" that it can filter builtin-, glyph- and/or other
@@ -402,48 +557,48 @@ Date:   Wed Oct 6 19:29:37 2004 +0000
 
 commit 9d55223b5ae27e8745bec57385a72126ecb8f8f2
 Author: Egbert Eich <eich@suse.de>
-Date:   Fri Apr 23 19:54:47 2004 +0000
+Date:   Fri Apr 23 19:55:09 2004 +0000
 
     Merging XORG-CURRENT into trunk
 
 commit 965e88073aa8c5c4affc0ba934d70f75866aafd8
 Author: Egbert Eich <eich@suse.de>
-Date:   Sun Mar 14 08:35:32 2004 +0000
+Date:   Sun Mar 14 08:35:54 2004 +0000
 
     Importing vendor version xf86-4_4_99_1 on Sun Mar 14 00:26:39 PST 2004
 
 commit 04bed4e3e41764a41016fa7a3d1dd6189e4ebd4d
 Author: Egbert Eich <eich@suse.de>
-Date:   Wed Mar 3 12:12:58 2004 +0000
+Date:   Wed Mar 3 12:13:20 2004 +0000
 
     Importing vendor version xf86-4_4_0 on Wed Mar 3 04:09:24 PST 2004
 
 commit 7fb18f8136d988a305b3a55a584701b8a5d2d620
 Author: Egbert Eich <eich@suse.de>
-Date:   Thu Feb 26 13:36:10 2004 +0000
+Date:   Thu Feb 26 13:36:32 2004 +0000
 
     readding XFree86's cvs IDs
 
 commit f6983fb7f571b827ad5ea1e3e81ee24c65547e1b
 Author: Egbert Eich <eich@suse.de>
-Date:   Thu Feb 26 09:23:56 2004 +0000
+Date:   Thu Feb 26 09:24:18 2004 +0000
 
     Importing vendor version xf86-4_3_99_903 on Wed Feb 26 01:21:00 PST 2004
 
 commit f8547075b021b392855041018de02fdbf84b252c
 Author: Kaleb Keithley <kaleb@freedesktop.org>
-Date:   Tue Nov 25 19:29:01 2003 +0000
+Date:   Tue Nov 25 19:29:23 2003 +0000
 
     XFree86 4.3.99.16 Bring the tree up to date for the Cygwin folks
 
 commit 5c3c7501aceec68da15fda13ab4efb0c5f82ef99
 Author: Kaleb Keithley <kaleb@freedesktop.org>
-Date:   Fri Nov 14 16:49:02 2003 +0000
+Date:   Fri Nov 14 16:49:24 2003 +0000
 
     XFree86 4.3.0.1
 
 commit f7cb26f3488672da827d30962b940f3e11e49b4a
 Author: Kaleb Keithley <kaleb@freedesktop.org>
-Date:   Fri Nov 14 15:54:33 2003 +0000
+Date:   Fri Nov 14 15:54:55 2003 +0000
 
     R6.6 is the Xorg base-line
