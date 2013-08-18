@@ -1590,6 +1590,9 @@ static Bool radeon_setup_kernel_mem(ScreenPtr pScreen)
 	    tiling_flags |= RADEON_TILING_SWAP_16BIT;
 	    break;
 	}
+	if (info->ChipFamily < CHIP_FAMILY_R600 &&
+	    info->r600_shadow_fb && tiling_flags)
+	    tiling_flags |= RADEON_TILING_SURFACE;
 #endif
 	if (tiling_flags)
             radeon_bo_set_tiling(info->front_bo, tiling_flags, pitch);
