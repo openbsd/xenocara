@@ -536,7 +536,8 @@ WaitForChild (void)
 		  time(&now);
 		  crash = d->lastReserv &&
 		    ((now - d->lastReserv) < XDM_BROKEN_INTERVAL);
-		  Debug("time %li %li try %i of %i%s\n", now, d->lastReserv,
+		  Debug("time %lli %lli try %i of %i%s\n", 
+			(long long)now, (long long)d->lastReserv,
 			d->reservTries, d->reservAttempts,
 			crash ? " crash" : "");
 
