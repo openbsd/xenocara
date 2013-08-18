@@ -27,6 +27,8 @@
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif
+
+#ifdef HAVE_READLINK
 #include <X11/fonts/fntfilst.h>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -190,7 +192,7 @@ CatalogueRescan (FontPathElementPtr fpe, Bool forceScan)
 	subfpe->type = fpe->type;
 	subfpe->name_length = len;
 	subfpe->name = malloc (len + 1);
-	if (subfpe == NULL)
+	if (subfpe->name == NULL)
 	{
 	    free(subfpe);
 	    continue;
@@ -474,3 +476,5 @@ CatalogueRegisterLocalFpeFunctions (void)
 			 CatalogueListNextFontOrAlias,
 			 FontFileEmptyBitmapSource);
 }
+
+#endif /* HAVE_READLINK */
