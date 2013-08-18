@@ -153,8 +153,8 @@ BuiltinReadDirectory (char *directory, FontDirectoryPtr *pdir)
     FontDirectoryPtr	dir;
     int			i;
 
-    static BuiltinDirPtr saved_builtin_dir ;
-    static BuiltinAliasPtr saved_builtin_alias ;
+    static BuiltinDirPtr saved_builtin_dir;
+    static BuiltinAliasPtr saved_builtin_alias;
 
     dir = FontFileMakeDir ("", builtin_dir_count);
 
