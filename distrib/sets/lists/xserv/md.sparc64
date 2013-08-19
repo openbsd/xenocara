@@ -5,6 +5,14 @@
 ./usr/X11R6/bin/Xvfb
 ./usr/X11R6/bin/cvt
 ./usr/X11R6/bin/gtf
+./usr/X11R6/include/r600_pci_ids.h
+./usr/X11R6/include/radeon_bo.h
+./usr/X11R6/include/radeon_bo_gem.h
+./usr/X11R6/include/radeon_bo_int.h
+./usr/X11R6/include/radeon_cs.h
+./usr/X11R6/include/radeon_cs_gem.h
+./usr/X11R6/include/radeon_cs_int.h
+./usr/X11R6/include/radeon_surface.h
 ./usr/X11R6/include/xorg
 ./usr/X11R6/include/xorg/BT.h
 ./usr/X11R6/include/xorg/IBM.h
@@ -135,6 +143,12 @@
 ./usr/X11R6/include/xorg/xorgVersion.h
 ./usr/X11R6/include/xorg/xvdix.h
 ./usr/X11R6/include/xorg/xvmcext.h
+./usr/X11R6/lib/libdrm_radeon.a
+./usr/X11R6/lib/libdrm_radeon.so.3.0
+./usr/X11R6/lib/modules/dri/r200_dri.so
+./usr/X11R6/lib/modules/dri/r300_dri.so
+./usr/X11R6/lib/modules/dri/r600_dri.so
+./usr/X11R6/lib/modules/dri/radeon_dri.so
 ./usr/X11R6/lib/modules/dri/swrast_dri.so
 ./usr/X11R6/lib/modules/drivers/ati_drv.la
 ./usr/X11R6/lib/modules/drivers/ati_drv.so
@@ -212,6 +226,7 @@
 ./usr/X11R6/lib/modules/multimedia/tda9885_drv.so
 ./usr/X11R6/lib/modules/multimedia/uda1380_drv.la
 ./usr/X11R6/lib/modules/multimedia/uda1380_drv.so
+./usr/X11R6/lib/pkgconfig/libdrm_radeon.pc
 ./usr/X11R6/lib/pkgconfig/xorg-mouse.pc
 ./usr/X11R6/lib/pkgconfig/xorg-server.pc
 ./usr/X11R6/man/man1/Xephyr.1
