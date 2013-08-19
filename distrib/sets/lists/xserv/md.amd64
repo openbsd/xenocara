@@ -276,12 +276,6 @@
 ./usr/X11R6/lib/modules/multimedia/tda9850_drv.so
 ./usr/X11R6/lib/modules/multimedia/tda9885_drv.la
 ./usr/X11R6/lib/modules/multimedia/tda9885_drv.so
-./usr/X11R6/lib/modules/multimedia/theatre200_drv.la
-./usr/X11R6/lib/modules/multimedia/theatre200_drv.so
-./usr/X11R6/lib/modules/multimedia/theatre_detect_drv.la
-./usr/X11R6/lib/modules/multimedia/theatre_detect_drv.so
-./usr/X11R6/lib/modules/multimedia/theatre_drv.la
-./usr/X11R6/lib/modules/multimedia/theatre_drv.so
 ./usr/X11R6/lib/modules/multimedia/uda1380_drv.la
 ./usr/X11R6/lib/modules/multimedia/uda1380_drv.so
 ./usr/X11R6/lib/modules/v10002d.uc
