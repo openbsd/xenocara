@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.17 2012/08/17 15:16:44 mpi Exp $
+# $OpenBSD: Makefile,v 1.18 2013/08/22 18:48:46 miod Exp $
 
 .include <bsd.own.mk>
 DEBUG?=
@@ -124,9 +124,7 @@ CPPFLAGS+=	-I${DIST}/include \
 		-I${GLU}/libnurbs/nurbtess \
 		-DLIBRARYBUILD -D_EXTENSIONS_
 
-.if ${COMPILER_VERSION:L:Mgcc[34]*}
 LDADD+=	-lsupc++
-.endif
 
 NOPROFILE=
 

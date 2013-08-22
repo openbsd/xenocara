@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile.inc,v 1.16 2012/11/28 13:53:16 mpi Exp $
+# $OpenBSD: Makefile.inc,v 1.17 2013/08/22 18:48:46 miod Exp $
 .include <bsd.xconf.mk>
 
 TOP=		${.CURDIR}/../../../../dist/Mesa
@@ -18,12 +18,8 @@ COMMON_SOURCES = $(COMMON_GALLIUM_SOURCES) \
 	texmem.c \
 	drirenderbuffer.c
 
-CFLAGS+= -g -DIN_DRI_DRIVER -DGLX_DIRECT_RENDERING -DPTHREADS \
+CFLAGS+= -std=c99 -g -DIN_DRI_DRIVER -DGLX_DIRECT_RENDERING -DPTHREADS \
 	 $(INCLUDES) $(DRIVER_DEFINES)
-
-.if (${COMPILER_VERSION:L:Mgcc[34]*} != "")
-CFLAGS += -std=c99
-.endif
 
 INCLUDES = \
 	-I$(TOP)/src/mesa/drivers/dri/common \
