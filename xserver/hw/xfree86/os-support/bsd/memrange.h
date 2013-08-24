@@ -24,7 +24,6 @@
 #define MDF_ACTIVE		(1<<27) /* currently active */
 #define MDF_BOGUS		(1<<28) /* we don't like it */
 #define MDF_FIXACTIVE		(1<<29) /* can't be turned off */
-#define MDF_BUSY		(1<<30) /* range is in use */
 
 struct mem_range_desc {
     u_int64_t mr_base;
