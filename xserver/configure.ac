@@ -26,9 +26,9 @@ dnl
 dnl Process this file with autoconf to create configure.
 
 AC_PREREQ(2.60)
-AC_INIT([xorg-server], 1.14.1, [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg], xorg-server)
-RELEASE_DATE="2013-04-17"
-RELEASE_NAME="Act Normal"
+AC_INIT([xorg-server], 1.14.2, [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg], xorg-server)
+RELEASE_DATE="2013-06-25"
+RELEASE_NAME="Act Abnormal"
 AC_CONFIG_SRCDIR([Makefile.am])
 AM_INIT_AUTOMAKE([foreign dist-bzip2])
 
@@ -2290,6 +2290,14 @@ AC_SUBST([exec_prefix])
 AC_SUBST([prefix])
 
 AC_CONFIG_COMMANDS([sdksyms], [touch hw/xfree86/sdksyms.dep])
+
+if test "x$CONFIG_HAL" = xno && test "x$CONFIG_UDEV" = xno; then
+    AC_WARN([
+             ***********************************************
+             Neither HAL nor udev backend will be enabled.
+             Input device hotplugging will not be available!
+             ***********************************************])
+fi
 
 AC_OUTPUT([
 Makefile

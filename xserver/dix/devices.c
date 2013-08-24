@@ -112,8 +112,8 @@ DeviceSetTransform(DeviceIntPtr dev, float *transform_data)
      *  Transform is the user supplied (affine) transform
      *  InvScale scales coordinates back up into their native range
      */
-    sx = dev->valuator->axes[0].max_value - dev->valuator->axes[0].min_value;
-    sy = dev->valuator->axes[1].max_value - dev->valuator->axes[1].min_value;
+    sx = dev->valuator->axes[0].max_value - dev->valuator->axes[0].min_value + 1;
+    sy = dev->valuator->axes[1].max_value - dev->valuator->axes[1].min_value + 1;
 
     /* invscale */
     pixman_f_transform_init_scale(&scale, sx, sy);
@@ -795,6 +795,7 @@ FreeDeviceClass(int type, pointer *class)
             free((*t)->touches[i].valuators);
         }
 
+        free((*t)->touches);
         free((*t));
         break;
     }
@@ -1365,7 +1366,7 @@ InitValuatorClassDeviceStruct(DeviceIntPtr dev, int numAxes, Atom *labels,
     valc->numMotionEvents = numMotionEvents;
     valc->motionHintWindow = NullWindow;
 
-    if (mode & OutOfProximity)
+    if ((mode & OutOfProximity) && !dev->proximity)
         InitProximityClassDeviceStruct(dev);
 
     dev->valuator = valc;
