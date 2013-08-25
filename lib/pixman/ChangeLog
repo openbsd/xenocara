@@ -1,3 +1,98 @@
+commit f8a0812b1c4d5a4e24939da5ad6229f5adcafb34
+Author: Søren Sandmann Pedersen <ssp@redhat.com>
+Date:   Wed Aug 7 10:07:35 2013 -0400
+
+    Pre-release version bump to 0.30.2
+
+commit b5167b8a5439d30bde8a178568cb3fe1c95b509a
+Author: Siarhei Siamashka <siarhei.siamashka@gmail.com>
+Date:   Sat Jul 27 19:25:32 2013 +0300
+
+    test: fix matrix-test on big endian systems
+
+commit a82b95a26487344023623ead34f26af235dfd24e
+Author: Andrea Canciani <ranma42@gmail.com>
+Date:   Tue Jul 17 16:14:20 2012 +0200
+
+    test: Fix build on MSVC
+    
+    The MSVC compiler is very strict about variable declarations after
+    statements.
+    
+    Move all the declarations of each block before any statement in the
+    same block to fix multiple instances of:
+    
+    alpha-loop.c(XX) : error C2275: 'pixman_image_t' : illegal use of this
+    type as an expression
+
+commit 4c04a86c684d929ff734170eff8be8fea74b4c51
+Author: Søren Sandmann Pedersen <ssp@redhat.com>
+Date:   Thu Aug 1 07:19:21 2013 -0400
+
+    Version bump to 0.30.1
+
+commit 63004529526db1ba1ba5a95a93522fa0cf385ec5
+Author: Alexander Troosh <trush@yandex.ru>
+Date:   Tue Jun 11 15:55:34 2013 +0400
+
+    Require GTK+ version >= 2.16
+    
+    I'm got bug in my system:
+    
+    lcc: "scale.c", line 374: warning: function "gtk_scale_add_mark" declared
+              implicitly [-Wimplicit-function-declaration]
+          gtk_scale_add_mark (GTK_SCALE (widget), 0.0, GTK_POS_LEFT, NULL);
+          ^
+    
+      CCLD   scale
+    scale.o: In function `app_new':
+    (.text+0x23e4): undefined reference to `gtk_scale_add_mark'
+    scale.o: In function `app_new':
+    (.text+0x250c): undefined reference to `gtk_scale_add_mark'
+    scale.o: In function `app_new':
+    (.text+0x2634): undefined reference to `gtk_scale_add_mark'
+    make[2]: *** [scale] Error 1
+    make[2]: Target `all' not remade because of errors.
+    
+    $ pkg-config --modversion gtk+-2.0
+    2.12.1
+    
+    The demos/scale.c use call to gtk_scale_add_mark() function from 2.16+
+    version of GTK+. Need do support old GTK+ (rewrite scale.c) or simple
+    demand of high version of GTK+, like this:
+
+commit 02869a1229833a3272355f3d9e1206936b430fa1
+Author: Matthieu Herrb <matthieu.herrb@laas.fr>
+Date:   Sat Jun 8 18:07:20 2013 +0200
+
+    configure.ac: Don't use '+=' since it's not POSIX
+    
+    Reviewed-by: Matt Turner <mattst88@gmail.com>
+    Signed-off-by: Matthieu Herrb <matthieu.herrb@laas.fr>
+
+commit 35da06c828049d90975c08655bb9b77184cdab68
+Author: Markos Chandras <markos.chandras@imgtec.com>
+Date:   Wed May 15 09:51:20 2013 -0700
+
+    Use AC_LINK_IFELSE to check if the Loongson MMI code can link
+    
+    The Loongson code is compiled with -march=loongson2f to enable the MMI
+    instructions, but binutils refuses to link object code compiled with
+    different -march settings, leading to link failures later in the
+    compile. This avoids that problem by checking if we can link code
+    compiled for Loongson.
+    
+    Reviewed-by: Matt Turner <mattst88@gmail.com>
+    Signed-off-by: Markos Chandras <markos.chandras@imgtec.com>
+
+commit e14f5a739f3ea1a3a6cff9bd5681677f05962314
+Author: ingmar@irsoft.de <ingmar@irsoft.de>
+Date:   Sat May 11 11:55:04 2013 +0200
+
+    Fix broken build when HAVE_CONFIG_H is undefined, e.g. on Win32.
+    
+    Build fix for platforms without a generated config.h, for example Win32.
+
 commit 41daf50aaeca71e70bc27aa4bf27ae4812c6eecf
 Author: Søren Sandmann Pedersen <ssp@redhat.com>
 Date:   Wed May 8 19:31:22 2013 -0400
@@ -19850,7 +19945,7 @@ commit 9a0639650e276c4c0da5dfe37a8d3ba5a6b81712
 Author: Vladimir Vukicevic <vladimir@pobox.com>
 Date:   Tue Nov 6 16:15:01 2007 -0800
 
-    Remove last CVS $Id: ChangeLog,v 1.6 2013/06/07 17:18:00 matthieu Exp $ tags
+    Remove last CVS $Id: ChangeLog,v 1.7 2013/08/25 17:42:39 matthieu Exp $ tags
 
 commit df964790e893a8b511e9322e7161087d8ba182cc
 Author: Søren Sandmann <sandmann@redhat.com>
