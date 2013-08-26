@@ -1,4 +1,4 @@
-/*	$OpenBSD: xvctl.c,v 1.2 2009/05/02 19:18:13 oga Exp $	*/
+/*	$OpenBSD: xvctl.c,v 1.3 2013/08/26 19:25:10 espie Exp $	*/
 /*
  * Copyright (c) 2001 Marc Espie.
  *
@@ -38,7 +38,7 @@ usage()
 {
 	fprintf(stderr,  "usage:\t%s\n\t%s\n\t%s\n",
 	    "xvctl [-n] [-d display] [-s screen] [-A adaptor] variable ...",
-	    "xvctl [-n] [-d display] [-s screen] [-A adaptor] -w variable=value ...",
+	    "xvctl [-n] [-d display] [-s screen] [-A adaptor] variable=value ...",
 	    "xvctl [-n] [-d display] [-s screen] [-A adaptor] -a");
 	exit(1);
 }
@@ -85,7 +85,7 @@ printattribute(Display *dpy, XvPortID id, int nflag, XvAttribute *a)
 	if (atom != None)
 		if (Success == XvGetPortAttribute(dpy, id, atom, &v)) {
 			if (!nflag)
-				printf("%s = ", reformat(a->name));
+				printf("%s=", reformat(a->name));
 			printf("%d\n", v);
 		}
 }
@@ -144,7 +144,7 @@ showvar(Display *dpy, XvPortID id, int nflag, XvAttribute table[], int nattr,
 }
 
 void
-parse(Display *dpy, XvPortID id, int nflag, int wflag, XvAttribute table[],
+parse(Display *dpy, XvPortID id, int nflag, XvAttribute table[],
     int nattr, const char *s)
 {
 	char buf[BUFSIZ];
@@ -158,8 +158,6 @@ parse(Display *dpy, XvPortID id, int nflag, int wflag, XvAttribute table[],
 		char *end;
 		char *tail;
 
-		if (!wflag)
-			errx(2, "Can't set variables without -w");
 		tail = cp;
 		while (tail > buf && isspace(tail[-1]))
 			tail--;
@@ -189,7 +187,6 @@ main(int argc, char *argv[])
 	int ch;
 	int aflag = 0;
 	int nflag = 0;
-	int wflag = 0;
 	char *display = NULL;
 	int screen = -1;
 	int nscreens;
@@ -219,7 +216,7 @@ main(int argc, char *argv[])
 			nflag = 1;
 			break;
 		case 'w':
-			wflag = 1;
+			/* flag no longer needed */
 			break;
 		default:
 			usage();
@@ -236,7 +233,7 @@ main(int argc, char *argv[])
 	    	errx(1, "No X-Video extension on %s", displayname(display));
 
 	if (!nflag)
-		printf("X-Video extension version %i.%i on %s\n", ver, rev,
+		printf("# X-Video extension version %i.%i on %s\n", ver, rev,
 		    displayname(display));
 
 	nscreens = ScreenCount(dpy);
@@ -258,12 +255,10 @@ main(int argc, char *argv[])
 
 
 	if (argc == 0) {
-		if (!aflag)
-			usage();
 		showall(dpy, ainfo[adaptor].base_id, nflag, table, nattr);
 	}
 	for (; *argv != NULL; ++argv)
-		parse(dpy, ainfo[adaptor].base_id, nflag, wflag, table,
+		parse(dpy, ainfo[adaptor].base_id, nflag, table,
 		    nattr, *argv);
 	XFree(table);
 	exit(0);

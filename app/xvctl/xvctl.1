@@ -1,4 +1,4 @@
-.\"	$OpenBSD: xvctl.1,v 1.2 2010/03/20 20:13:27 schwarze Exp $
+.\"	$OpenBSD: xvctl.1,v 1.3 2013/08/26 19:25:10 espie Exp $
 .\"
 .\" Copyright (c) 2001 Marc Espie
 .\"
@@ -75,12 +75,10 @@ affect adaptor #
 By default, the first display adaptor will be chosen.
 .It Fl a 
 list all the currently available gettable attributes.
+This is the default, if no parameters are givne.
 .It Fl n
 suppress printing of the field name, only output the field value.
 Useful for setting shell variables.
-.It Fl w
-required to set a variable. The name should be followed
-by an equal sign and the new value.
 .El
 .Sh SEE ALSO
 .Xr xvinfo 1 ,
