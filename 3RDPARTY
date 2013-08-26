@@ -1,4 +1,4 @@
-# $OpenBSD: 3RDPARTY,v 1.164 2013/08/26 19:38:15 naddy Exp $
+# $OpenBSD: 3RDPARTY,v 1.165 2013/08/26 20:09:49 matthieu Exp $
 #
 
 Package: 	Freetype
@@ -8,7 +8,7 @@ Maintainer:	Freetype.org
 Archive Site:	http://download.savannah.gnu.org/releases/freetype/
 
 Package:	xterm
-Version:	293
+Version:	296
 Current Vers:	296
 Maintainer:	Thomas E. Dickey
 Archive Site:	http://invisible-island.net/xterm/xterm.html
