@@ -1,3 +1,275 @@
+commit 44f84223f5e2dd46883fcbd352af2798bfa9aeb6
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Jul 29 21:29:49 2013 -0700
+
+    libX11 1.6.1
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit d19cfaca15826943d3c637ef7fa5db0a23d5feed
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jul 27 12:19:00 2013 -0700
+
+    Fix undefined XCMSDIR error when building lint library
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 3083cd43d7dcd59da587975e7cadda681cd8a103
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jul 27 00:36:08 2013 -0700
+
+    Add ku_TR.UTF-8 (Kurdish language, Turkey region) to compose/locale.dir
+    
+    Upstreaming from changes originally integrated into OpenSolaris
+    under Sun bug id 6882572.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Thomas Klausner <wiz@NetBSD.org>
+
+commit 208e586c808e88a2ee819e4450dc27f557afc2bf
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jul 27 01:03:18 2013 -0700
+
+    omGeneric: remove space between struct name & member name
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 7db74514e454d3fc4ff70aa08ddac66bfffda4dd
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Jul 23 22:18:46 2013 -0700
+
+    Refactor common code from XAddHost & XRemoveHost into single function
+    
+    On the Xlib side, the only real difference is the mode flag we send
+    to the server with the address, so just make that an argument to the
+    function with the common code for packing the address into the request.
+    
+    (Aside from labels, gcc 4.7.2 generates identical code before & after
+     this change due to inlining, verified via diff of gcc -S output.)
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 3292195a64a9ce4f0d27134cd544651ec647e728
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Jul 23 22:11:34 2013 -0700
+
+    XSetModifierMapping: Use Data instead of GetReqExtra
+    
+    Handle arbitrary length data in the same fashion as other calls,
+    avoiding need to ensure it fits all in the request buffer.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit feb131b18aee31c2c125dc3275b0260940245882
+Author: Kees Cook <kees@outflux.net>
+Date:   Sun Jun 9 11:13:43 2013 -0700
+
+    libX11: check "req" when calling GetReqExtra
+    
+    This fixes the two callers of GetReqExtra to check that "req" is non-NULL
+    to avoid crashing now that GetReqExtra does internal bounds-checking on
+    the resulting buffer sizes.
+    
+    Additionally updates comment describing return values to use names
+    instead of only literal values.
+    
+    Signed-off-by: Kees Cook <kees@outflux.net>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 54540d7cba0c2bfe9176221c7bca910058d304df
+Author: Kees Cook <kees@outflux.net>
+Date:   Sun Jun 9 11:13:42 2013 -0700
+
+    libX11: check size of GetReqExtra after XFlush
+    
+    Two users of GetReqExtra pass arbitrarily sized allocations from the
+    caller (ModMap and Host). Adjust _XGetRequest() (called by the GetReqExtra
+    macro) to double-check the requested length and invalidate "req" when
+    this happens. Users of GetReqExtra passing lengths greater than the Xlib
+    buffer size (normally 16K) must check "req" and fail gracefully instead
+    of crashing.
+    
+    Any callers of GetReqExtra that do not check "req" for NULL
+    will experience this change, in the pathological case, as a NULL
+    dereference instead of a buffer overflow. This is an improvement, but
+    the documentation for GetReqExtra has been updated to reflect the need
+    to check the value of "req" after the call.
+    
+    Bug that manifested the problem:
+    https://bugs.launchpad.net/ubuntu/+source/x11-xserver-utils/+bug/792628
+    
+    Signed-off-by: Kees Cook <kees@outflux.net>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 24d3ee0d08f24e23c91d55702f010f73d7b908e5
+Author: Thomas Klausner <wiz@NetBSD.org>
+Date:   Tue Jun 25 22:35:29 2013 +0200
+
+    Tighten out-of-range comparisons.
+    
+    [For all of these, LONG_MAX was the correct value to prevent overflows
+     for the recent CVEs.   Lowering to INT_MAX catches buggy replies from
+     the server that 32-bit clients would reject but 64-bit would accept,
+     so we catch bugs sooner, and really, no sane & working server should
+     ever report more than 2gb of extension names, font path entries,
+     key modifier maps, etc.  -alan- ]
+    
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 6d926088d80a08e13e6d6c4ff207b81ad52e667f
+Author: Thomas Klausner <wiz@NetBSD.org>
+Date:   Tue Jun 25 18:34:32 2013 +0200
+
+    Fix out-of-range comparison in _XF86BigfontQueryFont
+    
+    clang complained (correctly):
+    warning: comparison of constant 768614336404564650 with expression
+    of type 'CARD32' (aka 'unsigned int') is always true
+    [-Wtautological-constant-out-of-range-compare]
+    
+    [While LONG_MAX is correct, since it's used in size_t math, the
+     numbers have to be limited to 32-bit range to be usable by 32-bit
+     clients, and values beyond that range are far more likely to be
+     bugs in the data from the server than valid numbers of characters
+     in a font.   -alan- ]
+    
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 383e2b0d029482a0f4c39fe00e15397538576fc1
+Author: Thomas Klausner <wiz@NetBSD.org>
+Date:   Tue Jun 25 18:33:56 2013 +0200
+
+    Check for symbol existence with #ifdef, not #if
+    
+    Reviewed-by: Jamey Sharp <jamey@minilop.net>
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 9955d1c8de994a90fe7f2e3187e7362611d7d265
+Author: Thomas Klausner <wiz@NetBSD.org>
+Date:   Tue Jun 25 18:33:07 2013 +0200
+
+    Use newer callback-based API for XIM.
+    
+    Let libX11 load and make available the newer (X11R6) callback-based
+    API for XIM (expected by emacs).
+    
+    This patch updates the files to match the other nls/ files.
+    
+    Patch from Ian D. Leroux <idleroux@fastmail.fm> on pkgsrc-users@NetBSD.org
+    following a hint by Nhat Minh Lê <nhat.minh.le@gmail.com>.
+    
+    Reviewed-by: James Cloos <cloos@jhcloos.com>
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit a17ceb7100bd36c2db210473ee701deb5d515731
+Author: Thomas Klausner <wiz@NetBSD.org>
+Date:   Tue Jun 25 18:31:32 2013 +0200
+
+    Stop truncating source to destination length if it is larger.
+    
+    It seems useless to do that since the code tests for both source
+    length and destination to be non-zero. This fixes a cut'n'paste
+    problem in xterm where the paste length was limited to 1024 (BUFSIZ)
+    in button.c.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit a336db9a0add3ae0783dda6e52459236622a12af
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Jun 24 23:02:05 2013 -0700
+
+    Require ANSI C89 pre-processor, drop pre-C89 token pasting support
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 9dfb0f3c0a761590bcdc1f3396b1e064da4e18e8
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Jun 7 11:30:11 2013 -0700
+
+    troff macro expansion in specs/libX11
+    
+    Many of the custom nroff macros (.ds <macro> <contents>) were left
+    unsubstituted in the nroff->docbook conversion.   This substitution
+    is now performed, via the following perl script:
+    
+    #! /usr/bin/perl -w -i
+    
+    use Text::Wrap;
+    
+    while ($_ = <>) {
+        while ($_ =~ m/\((\w+)\b/g) {
+            my $m = $1;
+            if (exists $macro{$m}) {
+                $_ =~ s/\($m/$macro{$m}/;
+                $_ = wrap('', '', $_);
+                $_ =~ s/[ \t]+$//;
+            }
+        }
+    
+        if ($_ =~ /\<!-- .ds (\w+) (.*) -->/) {
+            my ($m, $s) = ($1, $2);
+            $macro{$m} = $s;
+            while ($macro{$m} =~ /\\\s*$/) {
+                $macro{$m} =~ s/\\\s*$//ms;
+                $macro{$m} .= <>;
+                chomp($macro{$m});
+            }
+            $macro{$m} =~ s/\\ / /g;
+        } else {
+            print $_;
+        }
+    }
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 20c17bd9ebf767a24643279e45866dddcb57b5ce
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Jun 7 09:27:26 2013 -0700
+
+    specs/libX11: correct prototype for XListPixmapFormats/XImageByteOrder
+    
+    The XListPixmapFormats arguments was being shown with XImageByteOrder's
+    name and return types.   Appears to have been a glitch in the nroff ->
+    docbook conversion.
+    
+    Reported-by: ZHANG Zhaolong <zhangzl2013@126.com>
+    Reviewed-by: Jamey Sharp <jamey@minilop.net>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit ed3d830243c8a0eefaf24e15b11823272ffe5049
+Author: Thomas Klausner <wiz@NetBSD.org>
+Date:   Sun Jun 2 20:49:55 2013 +0200
+
+    Deal with the limited range of VAX floating point numbers when compiling for VAX.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 0a48235d63639fb917c44d27c86e928e79fbac66
+Author: Eric S. Raymond <esr@thyrsus.com>
+Date:   Thu Jun 6 16:43:56 2013 -0400
+
+    Remove call to undefined macro.
+
+commit 9e4719b9b719f2f8d255f6778e2e8c1809e32599
+Author: Eric S. Raymond <esr@thyrsus.com>
+Date:   Thu Jun 6 16:42:20 2013 -0400
+
+    Remove call to undefined macro.
+
+commit 8496122eb00ce6cd5d2308ee54f64b68c378e455
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Jun 3 20:06:43 2013 -0700
+
+    Update README to reflect where to find the Xlib specs now
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit 655d631e86c95b14888758b27ed2836ca3e3ce86
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Mon Jun 3 19:21:06 2013 -0700

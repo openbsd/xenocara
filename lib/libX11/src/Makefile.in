@@ -617,9 +617,9 @@ libX11_la_LIBADD = \
 
 
 # Check source code with tools like lint & sparse
-@LINT_TRUE@ALL_LINT_FLAGS = $(LINT_FLAGS) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
-@LINT_TRUE@		$(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS)
-
+@LINT_TRUE@ALL_LINT_FLAGS = $(LINT_FLAGS) $(DEFS) $(DEFAULT_INCLUDES) \
+@LINT_TRUE@	$(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) \
+@LINT_TRUE@	-DXCMSDIR=\"$(X11dir)\"
 @MAKE_LINT_LIB_TRUE@lintlibdir = $(libdir)
 @MAKE_LINT_LIB_TRUE@lintlib_DATA = $(LINTLIB)
 @MAKE_LINT_LIB_TRUE@lintlib_src = $(libX11_la_SOURCES) xcms/*.c xkb/*.c

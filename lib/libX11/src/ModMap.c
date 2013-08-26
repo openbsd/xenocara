@@ -42,7 +42,7 @@ XGetModifierMapping(register Display *dpy)
     GetEmptyReq(GetModifierMapping, req);
     (void) _XReply (dpy, (xReply *)&rep, 0, xFalse);
 
-    if (rep.length < (LONG_MAX >> 2)) {
+    if (rep.length < (INT_MAX >> 2)) {
 	nbytes = (unsigned long)rep.length << 2;
 	res = Xmalloc(sizeof (XModifierKeymap));
 	if (res)
@@ -65,9 +65,9 @@ XGetModifierMapping(register Display *dpy)
 
 /*
  *	Returns:
- *	0	Success
- *	1	Busy - one or more old or new modifiers are down
- *	2	Failed - one or more new modifiers unacceptable
+ *	MappingSuccess (0)	Success
+ *	MappingBusy (1) 	Busy - one or more old or new modifiers are down
+ *	MappingFailed (2)	Failed - one or more new modifiers unacceptable
  */
 int
 XSetModifierMapping(
@@ -79,13 +79,11 @@ XSetModifierMapping(
     int         mapSize = modifier_map->max_keypermod << 3;	/* 8 modifiers */
 
     LockDisplay(dpy);
-    GetReqExtra(SetModifierMapping, mapSize, req);
-
+    GetReq(SetModifierMapping, req);
+    req->length += mapSize >> 2;
     req->numKeyPerModifier = modifier_map->max_keypermod;
 
-    memcpy((char *) NEXTPTR(req,xSetModifierMappingReq),
-	   (char *) modifier_map->modifiermap,
-	   mapSize);
+    Data(dpy, modifier_map->modifiermap, mapSize);
 
     (void) _XReply(dpy, (xReply *) & rep,
 	(SIZEOF(xSetModifierMappingReply) - SIZEOF(xReply)) >> 2, xTrue);
