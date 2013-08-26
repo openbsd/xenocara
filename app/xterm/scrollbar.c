@@ -1,4 +1,4 @@
-/* $XTermId: scrollbar.c,v 1.196 2013/02/26 23:36:05 tom Exp $ */
+/* $XTermId: scrollbar.c,v 1.197 2013/06/23 21:55:39 tom Exp $ */
 
 /*
  * Copyright 2000-2012,2013 by Thomas E. Dickey
@@ -74,7 +74,6 @@
 #include <data.h>
 #include <error.h>
 #include <menu.h>
-#include <xcharmouse.h>
 #include <xstrings.h>
 
 /*

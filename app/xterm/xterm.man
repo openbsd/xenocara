@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.564 2013/05/16 09:57:06 tom Exp $
+.\" $XTermId: xterm.man,v 1.569 2013/07/05 20:35:30 tom Exp $
 .\"
 .\" Copyright 1996-2012,2013 by Thomas E. Dickey
 .\"
@@ -971,7 +971,7 @@ Specify the name used by \fI\*n\fP to select the
 correct response to terminal ID queries.
 It also specifies the emulation level,
 used to determine the type of response to a DA control sequence.
-Valid values include vt52, vt100, vt101, vt102, and vt220
+Valid values include vt52, vt100, vt101, vt102, vt220, and vt240
 (the \*(``vt\*('' is optional).
 The default is \*(``vt__default_termid__\*(''.
 The term_id argument specifies the terminal ID to use.
@@ -3540,6 +3540,13 @@ Controls whether a newline is sent to the printer at the end of a print
 page function.
 The default is \*(``true\*(''.
 .TP 8
+.B "privateColorRegisters (\fPclass\fB privateColorRegisters)"
+If true, allocate separate color registers for each sixel
+device control string, e.g., for DECGCI.
+If not true, color registers are allocated only once,
+when the terminal is reset.
+The default is \*(``true\*(''.
+.TP 8
 .B "quietGrab (\fPclass\fB QuietGrab)"
 Controls whether the cursor is repainted
 when \fINotifyGrab\fP and \fINotifyUngrab\fP
@@ -3741,6 +3748,11 @@ The mark shows which lines have the flag set.
 .B "signalInhibit (\fPclass\fB SignalInhibit)"
 Specifies whether or not the entries in the \*(``Main Options\*('' menu for sending
 signals to \fI\*n\fP should be disallowed.
+The default is \*(``false\*(''.
+.TP 8
+.B "sixelScrolling (\fPclass\fB SixelScrolling)"
+If true, graphics scroll up one line at a time when sixels would be written
+past the bottom line on the window.
 The default is \*(``false\*(''.
 .TP 8
 .B "tekGeometry (\fPclass\fB Geometry)"
@@ -4240,6 +4252,9 @@ This entry invokes the \fBset-visibility(vt,off)\fP action.
 .TP 8
 .B "altscreen (\fPclass\fB SmeBSB)"
 This entry invokes the \fBset-altscreen(toggle)\fP action.
+.TP 8
+.B "sixelScrolling (\fPclass\fB SmeBSB)"
+This entry invokes the \fBset-sixel-scrolling(toggle)\fP action.
 .
 .PP
 The \fIVT Fonts\fP menu (widget name \fIfontMenu\fP)
@@ -4908,6 +4923,34 @@ This corresponds to the
 option and the
 .B activeIcon
 resource.
+.
+.TP
+Sixel Scrolling (sixelScrolling)
+When enabled,
+sixel graphics are positioned at the current text cursor location, scroll
+the image vertically if larger than the screen, and leave the text cursor
+after the image when returning to text mode.
+When disabled,
+sixel graphics are positioned at the upper left of the screen, are
+cropped to fit the screen, and do not affect the text cursor location
+(this is the default).
+This corresponds to the
+.B sixelScrolling
+resource.
+There is no corresponding command-line option.
+.
+.TP
+Private Color Registers (privateColorRegisters)
+When enabled,
+each graphic image uses a separate set of color registers, so that it
+essentially has a private palette (this is the default).  If it is not set,
+all graphics images share a common set of registers which is how sixel and
+ReGIS graphics worked on actual hardware.  The default is likely a more
+useful mode on modern TrueColor hardware.
+This corresponds to the
+.B privateColorRegisters
+resource.
+There is no corresponding command-line option.
 .RE
 .
 .TP
@@ -5883,6 +5926,9 @@ This action toggles the state of the \fBnumLock\fP resource.
 This action sets, unsets or toggles the \fBpopOnBell\fP resource.
 It is also invoked by the \fBpoponbell\fP entry in \fIvtMenu\fP.
 .TP 8
+.B "set-private-colors(\fIon/off/toggle\fP)"
+This action sets, unsets or toggles the \fBprivateColorRegisters\fP resource.
+.TP 8
 .B "set-render-font(\fIon/off/toggle\fP)"
 This action sets, unsets or toggles the \fBrenderFont\fP resource.
 It is also invoked by the \fBrender-font\fP entry in \fIfontMenu\fP.
@@ -5907,13 +5953,18 @@ It is also invoked from the \fBscrollttyoutput\fP entry in \fIvtMenu\fP.
 This action sets, unsets or toggles the \fBscrollbar\fP resource.
 It is also invoked by the \fBscrollbar\fP entry in \fIvtMenu\fP.
 .TP 8
+.B "set-sco-function-keys(\fIon/off/toggle\fP)"
+This action sets, unsets or toggles the \fBscoFunctionKeys\fP resource.
+It is also invoked by the \fBscoFunctionKeys\fP entry in \fImainMenu\fP.
+.TP 8
 .B "set-select(\fIon/off/toggle\fP)"
 This action sets, unsets or toggles the \fBselectToClipboard\fP resource.
 It is also invoked by the \fBselectToClipboard\fP entry in \fIvtMenu\fP.
 .TP 8
-.B "set-sco-function-keys(\fIon/off/toggle\fP)"
-This action sets, unsets or toggles the \fBscoFunctionKeys\fP resource.
-It is also invoked by the \fBscoFunctionKeys\fP entry in \fImainMenu\fP.
+.B "set-sixel-scrolling(\fIon/off/toggle\fP)"
+This action toggles between inline (sixel scrolling) and absolute positioning.
+It can also be controlled via DEC private mode 80 (DECSDM) or from
+the \fBsixelScrolling\fP entry in the \fIbtMenu\fP.
 .TP 8
 .B "set-sun-function-keys(\fIon/off/toggle\fP)"
 This action sets, unsets or toggles the \fBsunFunctionKeys\fP resource.
@@ -6089,7 +6140,6 @@ This action sends the indicated graphics input code.
 The default bindings in the VT102 window use the SELECT token,
 which is set by the \fBselectToClipboard\fP resource:
 .NS
-.ta 2.5i
           Shift <KeyPress> Prior:scroll-back(1,halfpage) \\n\\\&
            Shift <KeyPress> Next:scroll-forw(1,halfpage) \\n\\\&
          Shift <KeyPress> Select:select-cursor-start() \\\&
@@ -6138,7 +6188,6 @@ which is set by the \fBselectToClipboard\fP resource:
 The default bindings for the scrollbar widget
 are separate from the VT100 widget:
 .NS
-.ta 2.5i
                       <Btn5Down>: StartScroll(Forward) \\n\\\&
                       <Btn1Down>: StartScroll(Forward) \\n\\\&
                       <Btn2Down>: StartScroll(Continuous) MoveThumb() NotifyThumb() \\n\\\&
@@ -6150,7 +6199,6 @@ are separate from the VT100 widget:
 .PP
 The default bindings in the Tektronix window are:
 .NS
-.ta 2.5i
                  ~Meta<KeyPress>: insert-seven-bit() \\n\\\&
                   Meta<KeyPress>: insert-eight-bit() \\n\\\&
                 !Ctrl <Btn1Down>: popup-menu(mainMenu) \\n\\\&
@@ -6180,7 +6228,6 @@ While \fI\*n\fP owns the selection, it highlights it.
 When it loses the selection, it removes the corresponding highlight.
 But you can still paste from the corresponding cut buffer.
 .NS
-.ta .5i 1.5i
 *VT100*translations:    #override \\n\\\&
     ~Shift~Ctrl<Btn2Up>: insert-selection(PRIMARY, CUT_BUFFER0) \\n\\\&
     Shift~Ctrl<Btn2Up>:  insert-selection(CLIPBOARD, CUT_BUFFER1) \\n\\\&
@@ -6191,7 +6238,6 @@ But you can still paste from the corresponding cut buffer.
 Below is a sample of how the \fBkeymap()\fP action is used to add special
 keys for entering commonly-typed works:
 .NS
-.ta .5i 1.5i
 *VT100.Translations: #override <Key>F13: keymap(dbx)
 *VT100.dbxKeymap.translations: \\\&
 	<Key>F14:	keymap(None) \\n\\\&
@@ -6205,7 +6251,6 @@ Some people prefer using the left pointer button
 for dragging the scrollbar thumb.
 That can be setup by altering the translations resource, e.g.,
 .NS
-.ta .5i 1.5i
 *VT100.scrollbar.translations:	#override \\n\\\&
 	<Btn5Down>:	StartScroll(Forward) \\n\\\&
 	<Btn1Down>:	StartScroll(Continuous) MoveThumb() NotifyThumb() \\n\\\&

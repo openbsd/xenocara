@@ -1,4 +1,4 @@
-/* $XTermId: xtermcap.h,v 1.18 2011/09/11 14:59:33 tom Exp $ */
+/* $XTermId: xtermcap.h,v 1.19 2013/06/23 15:34:37 tom Exp $ */
 
 /*
  * Copyright 2007-2010,2011 by Thomas E. Dickey
@@ -35,6 +35,7 @@
  */
 #ifndef included_xtermcap_h
 #define included_xtermcap_h
+/* *INDENT-OFF* */
 
 #include <xterm.h>
 
@@ -115,4 +116,5 @@ extern int xtermcapKeycode(XtermWidget /* xw */, const char ** /* params */, uns
 	}
 #endif
 
+/* *INDENT-ON* */
 #endif	/* included_xtermcap_h */

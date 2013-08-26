@@ -1,3 +1,21 @@
+xterm-dev (296) unstable; urgency=low
+
+  * Build-fix for #295 changes
+
+ -- Thomas E. Dickey <dickey@invisible-island.net>  Tue, 09 Jul 2013 21:20:04 -0400
+
+xterm-dev (295) unstable; urgency=low
+
+  * Workaround for problem with ld --as-needed option
+
+ -- Thomas E. Dickey <dickey@invisible-island.net>  Sat, 06 Jul 2013 21:20:33 -0400
+
+xterm-dev (294) unstable; urgency=low
+
+  * Add experimental support for sixel graphics
+
+ -- Thomas E. Dickey <dickey@invisible-island.net>  Sun, 23 Jun 2013 10:36:52 -0400
+
 xterm-dev (293) unstable; urgency=low
 
   * Miscellaneous fixes.

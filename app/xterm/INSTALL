@@ -1,4 +1,4 @@
--- $XTermId: INSTALL,v 1.147 2013/05/27 22:19:09 tom Exp $
+-- $XTermId: INSTALL,v 1.148 2013/06/23 20:22:46 tom Exp $
 -------------------------------------------------------------------------------
 -- Copyright 1997-2012,2013 by Thomas E. Dickey
 --
@@ -486,6 +486,10 @@ The options (in alphabetic order):
   --enable-sco-fkeys      enable support for SCO-style function keys
 
   	Compile-in code to support SCO-style function keys.
+
+  --enable-sixel-graphics enable support for sixel-graphics
+
+  	Compile-in code to support experimental sixel-graphics
 
   --enable-sun-fkeys      enable support for Sun-style function keys
 

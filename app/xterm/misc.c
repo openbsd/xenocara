@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.660 2013/05/26 21:16:20 tom Exp $ */
+/* $XTermId: misc.c,v 1.670 2013/06/23 22:11:54 tom Exp $ */
 
 /*
  * Copyright 1999-2012,2013 by Thomas E. Dickey
@@ -91,10 +91,10 @@
 #include <error.h>
 #include <menu.h>
 #include <fontutils.h>
-#include <xcharmouse.h>
 #include <xstrings.h>
 #include <xtermcap.h>
 #include <VTparse.h>
+#include <graphics.h>
 
 #include <assert.h>
 
@@ -534,8 +534,10 @@ xtermAppPending(void)
     while (result && XtAppPeekEvent(app_con, &this_event)) {
 	if (this_event.type == Expose) {
 	    result = mergeExposeEvents(&this_event);
+	    TRACE(("got merged expose events\n"));
 	} else if (this_event.type == ConfigureNotify) {
 	    result = mergeConfigureEvents(&this_event);
+	    TRACE(("got merged configure notify events\n"));
 	} else {
 	    TRACE(("pending %s\n", visibleEventType(this_event.type)));
 	    break;
@@ -2624,6 +2626,14 @@ ResetAnsiColorRequest(XtermWidget xw, char *buf, int start)
 #define allocateExactRGB(xw, cmap, def) XAllocColor(TScreenOf(xw)->display, cmap, def)
 #endif /* OPT_ISO_COLORS */
 
+Boolean
+allocateBestRGB(XtermWidget xw, XColor * def)
+{
+    Colormap cmap = xw->core.colormap;
+
+    return allocateExactRGB(xw, cmap, def) || allocateClosestRGB(xw, cmap, def);
+}
+
 static Boolean
 xtermAllocColor(XtermWidget xw, XColor * def, const char *spec)
 {
@@ -2632,8 +2642,7 @@ xtermAllocColor(XtermWidget xw, XColor * def, const char *spec)
     Colormap cmap = xw->core.colormap;
 
     if (XParseColor(screen->display, cmap, spec, def)
-	&& (allocateExactRGB(xw, cmap, def)
-	    || allocateClosestRGB(xw, cmap, def))) {
+	&& allocateBestRGB(xw, def)) {
 	TRACE(("xtermAllocColor -> %x/%x/%x\n",
 	       def->red, def->green, def->blue));
 	result = True;
@@ -3624,6 +3633,49 @@ parse_decudk(const char *cp)
     }
 }
 
+/*
+ * Parse numeric parameters.  Normally we use a state machine to simplify
+ * interspersing with control characters, but have the string already.
+ */
+static void
+parse_ansi_params(ANSI * params, const char **string)
+{
+    const char *cp = *string;
+    ParmType nparam = 0;
+    int last_empty = 1;
+
+    memset(params, 0, sizeof(*params));
+    while (*cp != '\0') {
+	Char ch = CharOf(*cp++);
+
+	if (isdigit(ch)) {
+	    last_empty = 0;
+	    if (nparam < NPARAM) {
+		params->a_param[nparam] =
+		    (ParmType) ((params->a_param[nparam] * 10)
+				+ (ch - '0'));
+	    }
+	} else if (ch == ';') {
+	    last_empty = 1;
+	    nparam++;
+	} else if (ch < 32) {
+	    /* EMPTY */ ;
+	} else {
+	    /* should be 0x30 to 0x7e */
+	    params->a_final = ch;
+	    break;
+	}
+    }
+
+    *string = cp;
+    if (!last_empty)
+	nparam++;
+    if (nparam > NPARAM)
+	params->a_nparam = NPARAM;
+    else
+	params->a_nparam = nparam;
+}
+
 #if OPT_TRACE
 #define SOFT_WIDE 10
 #define SOFT_HIGH 20
@@ -3737,40 +3789,6 @@ parse_decdld(ANSI * params, const char *string)
 #else
 #define parse_decdld(p,q)	/* nothing */
 #endif
-
-/*
- * Parse numeric parameters.  Normally we use a state machine to simplify
- * interspersing with control characters, but have the string already.
- */
-static void
-parse_ansi_params(ANSI * params, const char **string)
-{
-    const char *cp = *string;
-    ParmType nparam = 0;
-
-    memset(params, 0, sizeof(*params));
-    while (*cp != '\0') {
-	Char ch = CharOf(*cp++);
-
-	if (isdigit(ch)) {
-	    if (nparam < NPARAM) {
-		params->a_param[nparam] =
-		    (ParmType) ((params->a_param[nparam] * 10)
-				+ (ch - '0'));
-	    }
-	} else if (ch == ';') {
-	    if (++nparam < NPARAM)
-		params->a_nparam = nparam;
-	} else if (ch < 32) {
-	    /* EMPTY */ ;
-	} else {
-	    /* should be 0x30 to 0x7e */
-	    params->a_final = ch;
-	    break;
-	}
-    }
-    *string = cp;
-}
 
 void
 do_dcs(XtermWidget xw, Char * dcsbuf, size_t dcslen)
@@ -3978,9 +3996,30 @@ do_dcs(XtermWidget xw, Char * dcsbuf, size_t dcslen)
 	break;
 #endif
     default:
-	if (screen->vtXX_level >= 2) {	/* VT220 */
+	if (screen->terminal_id == 125 ||
+	    screen->vtXX_level >= 2) {	/* VT220 */
 	    parse_ansi_params(&params, &cp);
 	    switch (params.a_final) {
+#if OPT_SIXEL_GRAPHICS
+	    case 'p':
+		if (screen->terminal_id == 125 ||
+		    screen->terminal_id == 240 ||
+		    screen->terminal_id == 241 ||
+		    screen->terminal_id == 330 ||
+		    screen->terminal_id == 340) {
+		    parse_regis(xw, &params, cp);
+		}
+		break;
+	    case 'q':
+		if (screen->terminal_id == 125 ||
+		    screen->terminal_id == 240 ||
+		    screen->terminal_id == 241 ||
+		    screen->terminal_id == 330 ||
+		    screen->terminal_id == 340) {
+		    parse_sixel(xw, &params, cp);
+		}
+		break;
+#endif
 	    case '|':		/* DECUDK */
 		if (params.a_param[0] == 0)
 		    reset_decudk();
@@ -4085,222 +4124,227 @@ do_decrpm(XtermWidget xw, int nparams, int *params)
 	TScreen *screen = TScreenOf(xw);
 
 	switch (params[0]) {
-	case 1:		/* DECCKM                       */
+	case srm_DECCKM:
 	    result = MdFlag(xw->keyboard.flags, MODE_DECCKM);
 	    break;
-	case 2:		/* DECANM - ANSI/VT52 mode      */
+	case srm_DECANM:	/* ANSI/VT52 mode      */
 #if OPT_VT52_MODE
 	    result = MdBool(screen->vtXX_level >= 1);
 #else
 	    result = mdMaybeSet;
 #endif
 	    break;
-	case 3:		/* DECCOLM                      */
+	case srm_DECCOLM:
 	    result = MdFlag(xw->flags, IN132COLUMNS);
 	    break;
-	case 4:		/* DECSCLM (slow scroll)        */
+	case srm_DECSCLM:	/* (slow scroll)        */
 	    result = MdFlag(xw->flags, SMOOTHSCROLL);
 	    break;
-	case 5:		/* DECSCNM                      */
+	case srm_DECSCNM:
 	    result = MdFlag(xw->flags, REVERSE_VIDEO);
 	    break;
-	case 6:		/* DECOM                        */
+	case srm_DECOM:
 	    result = MdFlag(xw->flags, ORIGIN);
 	    break;
-	case 7:		/* DECAWM                       */
+	case srm_DECAWM:
 	    result = MdFlag(xw->flags, WRAPAROUND);
 	    break;
-	case 8:		/* DECARM                       */
+	case srm_DECARM:
 	    result = mdAlwaysReset;
 	    break;
-	case SET_X10_MOUSE:	/* X10 mouse                    */
+	case srm_X10_MOUSE:	/* X10 mouse                    */
 	    result = MdBool(screen->send_mouse_pos == X10_MOUSE);
 	    break;
 #if OPT_TOOLBAR
-	case 10:		/* rxvt */
+	case srm_RXVT_TOOLBAR:
 	    result = MdBool(resource.toolBar);
 	    break;
 #endif
 #if OPT_BLINK_CURS
-	case 12:		/* att610: Start/stop blinking cursor */
+	case srm_ATT610_BLINK:	/* att610: Start/stop blinking cursor */
 	    result = MdBool(screen->cursor_blink_res);
 	    break;
 #endif
-	case 18:		/* DECPFF: print form feed */
+	case srm_DECPFF:	/* print form feed */
 	    result = MdBool(PrinterOf(screen).printer_formfeed);
 	    break;
-	case 19:		/* DECPEX: print extent */
+	case srm_DECPEX:	/* print extent */
 	    result = MdBool(PrinterOf(screen).printer_extent);
 	    break;
-	case 25:		/* DECTCEM: Show/hide cursor (VT200) */
+	case srm_DECTCEM:	/* Show/hide cursor (VT200) */
 	    result = MdBool(screen->cursor_set);
 	    break;
-	case 30:		/* rxvt */
+	case srm_RXVT_SCROLLBAR:
 	    result = MdBool(screen->fullVwin.sb_info.width != OFF);
 	    break;
 #if OPT_SHIFT_FONTS
-	case 35:		/* rxvt */
+	case srm_RXVT_FONTSIZE:
 	    result = MdBool(xw->misc.shift_fonts);
 	    break;
 #endif
 #if OPT_TEK4014
-	case 38:		/* DECTEK                       */
+	case srm_DECTEK:
 	    result = MdBool(TEK4014_ACTIVE(xw));
 	    break;
 #endif
-	case 40:		/* 132 column mode              */
+	case srm_132COLS:
 	    result = MdBool(screen->c132);
 	    break;
-	case 41:		/* curses hack                  */
+	case srm_CURSES_HACK:
 	    result = MdBool(screen->curses);
 	    break;
-	case 42:		/* DECNRCM national charset (VT220) */
+	case srm_DECNRCM:	/* national charset (VT220) */
 	    result = MdFlag(xw->flags, NATIONAL);
 	    break;
-	case 44:		/* margin bell                  */
+	case srm_MARGIN_BELL:	/* margin bell                  */
 	    result = MdBool(screen->marginbell);
 	    break;
-	case 45:		/* reverse wraparound   */
+	case srm_REVERSEWRAP:	/* reverse wraparound   */
 	    result = MdFlag(xw->flags, REVERSEWRAP);
 	    break;
 #ifdef ALLOWLOGGING
-	case 46:		/* logging              */
+	case srm_ALLOWLOGGING:	/* logging              */
 #ifdef ALLOWLOGFILEONOFF
 	    result = MdBool(screen->logging);
 #endif /* ALLOWLOGFILEONOFF */
 	    break;
 #endif
-	case 1049:		/* alternate buffer & cursor */
+	case srm_OPT_ALTBUF_CURSOR:	/* alternate buffer & cursor */
 	    /* FALLTHRU */
-	case 1047:
+	case srm_OPT_ALTBUF:
 	    /* FALLTHRU */
-	case 47:		/* alternate buffer */
+	case srm_ALTBUF:
 	    result = MdBool(screen->whichBuf);
 	    break;
-	case 66:		/* DECNKM */
+	case srm_DECNKM:
 	    result = MdFlag(xw->keyboard.flags, MODE_DECKPAM);
 	    break;
-	case 67:		/* DECBKM */
+	case srm_DECBKM:
 	    result = MdFlag(xw->keyboard.flags, MODE_DECBKM);
 	    break;
-	case 69:		/* DECLRMM */
+	case srm_DECLRMM:
 	    result = MdFlag(xw->flags, LEFT_RIGHT);
 	    break;
-	case 95:		/* DECNCSM */
+#if OPT_SIXEL_GRAPHICS
+	case srm_DECSDM:
+	    result = MdFlag(xw->keyboard.flags, MODE_DECSDM);
+	    break;
+#endif
+	case srm_DECNCSM:
 	    result = MdFlag(xw->flags, NOCLEAR_COLM);
 	    break;
-	case SET_VT200_MOUSE:	/* xterm bogus sequence         */
+	case srm_VT200_MOUSE:	/* xterm bogus sequence         */
 	    result = MdBool(screen->send_mouse_pos == VT200_MOUSE);
 	    break;
-	case SET_VT200_HIGHLIGHT_MOUSE:	/* xterm sequence w/hilite tracking */
+	case srm_VT200_HIGHLIGHT_MOUSE:	/* xterm sequence w/hilite tracking */
 	    result = MdBool(screen->send_mouse_pos == VT200_HIGHLIGHT_MOUSE);
 	    break;
-	case SET_BTN_EVENT_MOUSE:
+	case srm_BTN_EVENT_MOUSE:
 	    result = MdBool(screen->send_mouse_pos == BTN_EVENT_MOUSE);
 	    break;
-	case SET_ANY_EVENT_MOUSE:
+	case srm_ANY_EVENT_MOUSE:
 	    result = MdBool(screen->send_mouse_pos == ANY_EVENT_MOUSE);
 	    break;
 #if OPT_FOCUS_EVENT
-	case SET_FOCUS_EVENT_MOUSE:
+	case srm_FOCUS_EVENT_MOUSE:
 	    result = MdBool(screen->send_focus_pos);
 	    break;
 #endif
-	case SET_EXT_MODE_MOUSE:
+	case srm_EXT_MODE_MOUSE:
 	    /* FALLTHRU */
-	case SET_SGR_EXT_MODE_MOUSE:
+	case srm_SGR_EXT_MODE_MOUSE:
 	    /* FALLTHRU */
-	case SET_URXVT_EXT_MODE_MOUSE:
+	case srm_URXVT_EXT_MODE_MOUSE:
 	    result = MdBool(screen->extend_coords == params[0]);
 	    break;
-	case SET_ALTERNATE_SCROLL:
+	case srm_ALTERNATE_SCROLL:
 	    result = MdBool(screen->alternateScroll);
 	    break;
-	case 1010:		/* rxvt */
+	case srm_RXVT_SCROLL_TTY_OUTPUT:
 	    result = MdBool(screen->scrollttyoutput);
 	    break;
-	case 1011:		/* rxvt */
+	case srm_RXVT_SCROLL_TTY_KEYPRESS:
 	    result = MdBool(screen->scrollkey);
 	    break;
-	case 1034:
+	case srm_EIGHT_BIT_META:
 	    result = MdBool(screen->eight_bit_meta);
 	    break;
 #if OPT_NUM_LOCK
-	case 1035:
+	case srm_REAL_NUMLOCK:
 	    result = MdBool(xw->misc.real_NumLock);
 	    break;
-	case 1036:
+	case srm_META_SENDS_ESC:
 	    result = MdBool(screen->meta_sends_esc);
 	    break;
 #endif
-	case 1037:
+	case srm_DELETE_IS_DEL:
 	    result = MdBool(screen->delete_is_del);
 	    break;
 #if OPT_NUM_LOCK
-	case 1039:
+	case srm_ALT_SENDS_ESC:
 	    result = MdBool(screen->alt_sends_esc);
 	    break;
 #endif
-	case 1040:
+	case srm_KEEP_SELECTION:
 	    result = MdBool(screen->keepSelection);
 	    break;
-	case 1041:
+	case srm_SELECT_TO_CLIPBOARD:
 	    result = MdBool(screen->selectToClipboard);
 	    break;
-	case 1042:
+	case srm_BELL_IS_URGENT:
 	    result = MdBool(screen->bellIsUrgent);
 	    break;
-	case 1043:
+	case srm_POP_ON_BELL:
 	    result = MdBool(screen->poponbell);
 	    break;
-	case 1048:
+	case srm_TITE_INHIBIT:
 	    result = MdBool(screen->sc[screen->whichBuf].saved);
 	    break;
 #if OPT_TCAP_FKEYS
-	case 1050:
+	case srm_TCAP_FKEYS:
 	    result = MdBool(xw->keyboard.type == keyboardIsTermcap);
 	    break;
 #endif
 #if OPT_SUN_FUNC_KEYS
-	case 1051:
+	case srm_SUN_FKEYS:
 	    result = MdBool(xw->keyboard.type == keyboardIsSun);
 	    break;
 #endif
 #if OPT_HP_FUNC_KEYS
-	case 1052:
+	case srm_HP_FKEYS:
 	    result = MdBool(xw->keyboard.type == keyboardIsHP);
 	    break;
 #endif
 #if OPT_SCO_FUNC_KEYS
-	case 1053:
+	case srm_SCO_FKEYS:
 	    result = MdBool(xw->keyboard.type == keyboardIsSCO);
 	    break;
 #endif
-	case 1060:
+	case srm_LEGACY_FKEYS:
 	    result = MdBool(xw->keyboard.type == keyboardIsLegacy);
 	    break;
 #if OPT_SUNPC_KBD
-	case 1061:
+	case srm_VT220_FKEYS:
 	    result = MdBool(xw->keyboard.type == keyboardIsVT220);
 	    break;
 #endif
 #if OPT_READLINE
-	case SET_BUTTON1_MOVE_POINT:
+	case srm_BUTTON1_MOVE_POINT:
 	    result = MdBool(screen->click1_moves);
 	    break;
-	case SET_BUTTON2_MOVE_POINT:
+	case srm_BUTTON2_MOVE_POINT:
 	    result = MdBool(screen->paste_moves);
 	    break;
-	case SET_DBUTTON3_DELETE:
+	case srm_DBUTTON3_DELETE:
 	    result = MdBool(screen->dclick3_deletes);
 	    break;
-	case SET_PASTE_IN_BRACKET:
+	case srm_PASTE_IN_BRACKET:
 	    result = MdBool(screen->paste_brackets);
 	    break;
-	case SET_PASTE_QUOTE:
+	case srm_PASTE_QUOTE:
 	    result = MdBool(screen->paste_quotes);
 	    break;
-	case SET_PASTE_LITERAL_NL:
+	case srm_PASTE_LITERAL_NL:
 	    result = MdBool(screen->paste_literal_nl);
 	    break;
 #endif /* OPT_READLINE */

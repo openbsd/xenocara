@@ -1,4 +1,4 @@
-/* $XTermId: screen.c,v 1.477 2013/04/23 09:50:23 Bertram.Felgenhauer Exp $ */
+/* $XTermId: screen.c,v 1.485 2013/07/10 22:52:16 tom Exp $ */
 
 /*
  * Copyright 1999-2012,2013 by Thomas E. Dickey
@@ -58,7 +58,6 @@
 #include <xterm.h>
 #include <error.h>
 #include <data.h>
-#include <xcharmouse.h>
 #include <xterm_io.h>
 
 #include <X11/Xatom.h>
@@ -75,6 +74,8 @@
 #ifndef _Xconst
 #define _Xconst const		/* Solaris 7 workaround */
 #endif /* _Xconst */
+
+#include <graphics.h>
 
 #define inSaveBuf(screen, buf, inx) \
 	((buf) == (screen)->saveBuf_index && \
@@ -135,7 +136,7 @@
 
 #if OPT_TRACE > 1
 static void
-traceScrnBuf(const char *tag, TScreen * screen, ScrnBuf sb, unsigned len)
+traceScrnBuf(const char *tag, TScreen *screen, ScrnBuf sb, unsigned len)
 {
     unsigned j;
 
@@ -155,7 +156,7 @@ traceScrnBuf(const char *tag, TScreen * screen, ScrnBuf sb, unsigned len)
 #endif
 
 static unsigned
-scrnHeadSize(TScreen * screen, unsigned count)
+scrnHeadSize(TScreen *screen, unsigned count)
 {
     unsigned result = SizeOfLineData;
 
@@ -172,7 +173,7 @@ scrnHeadSize(TScreen * screen, unsigned count)
 }
 
 ScrnBuf
-scrnHeadAddr(TScreen * screen, ScrnBuf base, unsigned offset)
+scrnHeadAddr(TScreen *screen, ScrnBuf base, unsigned offset)
 {
     unsigned size = scrnHeadSize(screen, offset);
     ScrnBuf result = ScrnBufAddr(base, size);
@@ -186,7 +187,7 @@ scrnHeadAddr(TScreen * screen, ScrnBuf base, unsigned offset)
  * Given a block of data, build index to it in the 'base' parameter.
  */
 void
-setupLineData(TScreen * screen, ScrnBuf base, Char * data, unsigned nrow, unsigned ncol)
+setupLineData(TScreen *screen, ScrnBuf base, Char *data, unsigned nrow, unsigned ncol)
 {
     unsigned i;
     unsigned offset = 0;
@@ -248,7 +249,7 @@ setupLineData(TScreen * screen, ScrnBuf base, Char * data, unsigned nrow, unsign
  * new copy of the screen buffer.
  */
 static void
-extractScrnData(TScreen * screen,
+extractScrnData(TScreen *screen,
 		ScrnBuf dstPtrs,
 		ScrnBuf srcPtrs,
 		unsigned nrows,
@@ -269,7 +270,7 @@ extractScrnData(TScreen * screen,
 }
 
 static ScrnPtr *
-allocScrnHead(TScreen * screen, unsigned nrow)
+allocScrnHead(TScreen *screen, unsigned nrow)
 {
     ScrnPtr *result;
     unsigned size = scrnHeadSize(screen, 1);
@@ -288,7 +289,7 @@ allocScrnHead(TScreen * screen, unsigned nrow)
  * Return the size of a line's data.
  */
 static unsigned
-sizeofScrnRow(TScreen * screen, unsigned ncol)
+sizeofScrnRow(TScreen *screen, unsigned ncol)
 {
     unsigned result;
     unsigned sizeAttribs;
@@ -321,7 +322,7 @@ sizeofScrnRow(TScreen * screen, unsigned ncol)
 }
 
 Char *
-allocScrnData(TScreen * screen, unsigned nrow, unsigned ncol)
+allocScrnData(TScreen *screen, unsigned nrow, unsigned ncol)
 {
     Char *result;
     size_t length;
@@ -330,7 +331,7 @@ allocScrnData(TScreen * screen, unsigned nrow, unsigned ncol)
     length = ((nrow + 1) * sizeofScrnRow(screen, ncol));
     if (length == 0
 	|| (result = (Char *) calloc(length, sizeof(Char))) == 0)
-	SysError(ERROR_SCALLOC2);
+	  SysError(ERROR_SCALLOC2);
 
     TRACE(("allocScrnData %ux%u -> %lu -> %p..%p\n",
 	   nrow, ncol, (unsigned long) length, result, result + length - 1));
@@ -351,7 +352,7 @@ allocScrnData(TScreen * screen, unsigned nrow, unsigned ncol)
  * We store it all as pointers, because of alignment considerations.
  */
 ScrnBuf
-allocScrnBuf(XtermWidget xw, unsigned nrow, unsigned ncol, Char ** addr)
+allocScrnBuf(XtermWidget xw, unsigned nrow, unsigned ncol, Char **addr)
 {
     TScreen *screen = TScreenOf(xw);
     ScrnBuf base = 0;
@@ -372,7 +373,7 @@ allocScrnBuf(XtermWidget xw, unsigned nrow, unsigned ncol, Char ** addr)
  * Copy line-data from the visible (edit) buffer to the save-lines buffer.
  */
 static void
-saveEditBufLines(TScreen * screen, ScrnBuf sb, unsigned n)
+saveEditBufLines(TScreen *screen, ScrnBuf sb, unsigned n)
 {
     unsigned j;
 
@@ -396,7 +397,7 @@ saveEditBufLines(TScreen * screen, ScrnBuf sb, unsigned n)
  * Copy line-data from the save-lines buffer to the visible (edit) buffer.
  */
 static void
-unsaveEditBufLines(TScreen * screen, ScrnBuf sb, unsigned n)
+unsaveEditBufLines(TScreen *screen, ScrnBuf sb, unsigned n)
 {
     unsigned j;
 
@@ -429,8 +430,8 @@ unsaveEditBufLines(TScreen * screen, ScrnBuf sb, unsigned n)
  */
 static int
 Reallocate(XtermWidget xw,
-	   ScrnBuf * sbuf,
-	   Char ** sbufaddr,
+	   ScrnBuf *sbuf,
+	   Char **sbufaddr,
 	   unsigned nrow,
 	   unsigned ncol,
 	   unsigned oldrow)
@@ -523,8 +524,8 @@ Reallocate(XtermWidget xw,
  */
 static void
 ReallocateBufOffsets(XtermWidget xw,
-		     ScrnBuf * sbuf,
-		     Char ** sbufaddr,
+		     ScrnBuf *sbuf,
+		     Char **sbufaddr,
 		     unsigned nrow,
 		     unsigned ncol)
 {
@@ -708,10 +709,10 @@ ChangeToWide(XtermWidget xw)
 #endif
 
 /*
- * Clear cells, no side-effects.
+ * Copy cells, no side-effects.
  */
 void
-CopyCells(TScreen * screen, LineData * src, LineData * dst, int col, int len)
+CopyCells(TScreen *screen, LineData *src, LineData *dst, int col, int len)
 {
     if (len > 0) {
 	int n;
@@ -819,7 +820,7 @@ ScrnDisownSelection(XtermWidget xw)
  */
 void
 ScrnWriteText(XtermWidget xw,
-	      IChar * str,
+	      IChar *str,
 	      unsigned flags,
 	      unsigned cur_fg_bg,
 	      unsigned length)
@@ -835,7 +836,7 @@ ScrnWriteText(XtermWidget xw,
     unsigned n;
     unsigned real_width = visual_width(str, length);
 
-    (void) cur_fg_bg;
+    (void) cur_fg_bg;		/* quiet compiler warnings when unused */
 
     if (real_width + (unsigned) screen->cur_col > (unsigned) MaxCols(screen)) {
 	real_width = (unsigned) (MaxCols(screen) - screen->cur_col);
@@ -937,6 +938,15 @@ ScrnWriteText(XtermWidget xw,
     screen->last_written_row = screen->cur_row;
 #endif
 
+    TRACE(("text erasing cur_col=%d cur_row=%d real_width=%d\n",
+	   screen->cur_col,
+	   screen->cur_row,
+	   real_width));
+    chararea_clear_displayed_graphics(screen,
+				      screen->cur_col,
+				      screen->cur_row,
+				      (int) real_width, 1);
+
     if_OPT_XMC_GLITCH(screen, {
 	Resolve_XMC(xw);
     });
@@ -1007,6 +1017,17 @@ ScrnClearLines(XtermWidget xw, ScrnBuf sb, int where, unsigned n, unsigned size)
 #endif
 	base = ScrnBufAddr(base, jump);
     }
+
+    TRACE(("clear lines erasing where=%d screen->savelines=%d n=%d screen->max_col=%d\n",
+	   where,
+	   screen->savelines,
+	   n,
+	   screen->max_col));
+    chararea_clear_displayed_graphics(screen,
+				      where + screen->savelines,
+				      0,
+				      screen->max_col + 1,
+				      (int) n);
 }
 
 /*
@@ -1064,7 +1085,7 @@ ScrnAllocBuf(XtermWidget xw)
 }
 
 size_t
-ScrnPointers(TScreen * screen, size_t len)
+ScrnPointers(TScreen *screen, size_t len)
 {
     size_t result = scrnHeadSize(screen, (unsigned) len);
 
@@ -1337,7 +1358,7 @@ ScrnDeleteChar(XtermWidget xw, unsigned n)
  * its line-wrapping state.
  */
 void
-ShowWrapMarks(XtermWidget xw, int row, LineData * ld)
+ShowWrapMarks(XtermWidget xw, int row, LineData *ld)
 {
     TScreen *screen = TScreenOf(xw);
     Boolean set = (Boolean) LineTstWrapped(ld);
@@ -1698,6 +1719,12 @@ ScrnRefresh(XtermWidget xw,
 
 	resetXtermGC(xw, flags, hilite);
     }
+
+    refresh_displayed_graphics(screen,
+			       leftcol,
+			       toprow + screen->topline,
+			       ncols,
+			       nrows);
 
     /*
      * If we're in color mode, reset the various GC's to the current
@@ -2142,6 +2169,7 @@ ScreenResize(XtermWidget xw,
 	screen->fullVwin.height = height - border;
 	screen->fullVwin.width = width - border - screen->fullVwin.sb_info.width;
 
+	scroll_displayed_graphics(-move_down_by);
     } else if (FullHeight(screen) == height && FullWidth(screen) == width)
 	return (0);		/* nothing has changed at all */
 
@@ -2211,7 +2239,7 @@ ScreenResize(XtermWidget xw,
  * nonnull.
  */
 Bool
-non_blank_line(TScreen * screen,
+non_blank_line(TScreen *screen,
 	       int row,
 	       int col,
 	       int len)
@@ -2768,7 +2796,7 @@ unset_resize_increments(XtermWidget xw)
 }
 
 static void
-set_ewmh_hint(Display * dpy, Window window, int operation, _Xconst char *prop)
+set_ewmh_hint(Display *dpy, Window window, int operation, _Xconst char *prop)
 {
     XEvent e;
     Atom atom_fullscreen = XInternAtom(dpy, prop, False);
@@ -2799,7 +2827,7 @@ set_ewmh_hint(Display * dpy, Window window, int operation, _Xconst char *prop)
  * window.
  */
 static Boolean
-probe_netwm(Display * dpy, _Xconst char *propname)
+probe_netwm(Display *dpy, _Xconst char *propname)
 {
     Atom atom_fullscreen = XInternAtom(dpy, propname, False);
     Atom atom_supported = XInternAtom(dpy, "_NET_SUPPORTED", False);

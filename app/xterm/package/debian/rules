@@ -72,6 +72,7 @@ configure-stamp:
 		--enable-paste64 \
 		--enable-rectangles \
 		--enable-sco-fkeys \
+		--enable-sixel-graphics \
 		--enable-tcap-fkeys \
 		--enable-tcap-query \
 		--enable-toolbar \

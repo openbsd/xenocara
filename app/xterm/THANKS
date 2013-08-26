@@ -1,4 +1,4 @@
--- $XTermId: THANKS,v 1.8 2012/11/21 23:47:03 tom Exp $
+-- $XTermId: THANKS,v 1.9 2013/07/04 23:04:24 tom Exp $
 -- vile:txtmode fk=8bit
 There's no AUTHORS file in this distribution; it would be redundant since
 I (Thomas E. Dickey) have done more than 80% of the work on xterm since 1996.
@@ -20,6 +20,7 @@ Alexander V Lukyanov
 Andrea Odetti
 Andreas Jaeger
 Andreas Schwab
+Andres Perera
 Andrew Sumner
 Andrew Tipton
 Andries E Brouwer
@@ -28,6 +29,7 @@ Balazs Kezes
 Ben Yoshino
 Bernhard R Link
 Bernhard Rosenkraenzer
+Bertram Felgenhauer
 Bill Nottingham
 Bob Maynard
 Bradd W Szonye
@@ -141,6 +143,7 @@ Paul Maier
 Paul Vojta
 Paul Williams
 Pavel Roskin
+Peder Stray
 Per Hedeland
 Peter Berg Larsen
 Pierre Lombard
@@ -150,6 +153,7 @@ Rob Braun
 Robert Brady
 Robert Earl
 Robin Cutshaw
+Ross Combs
 Ross Paterson
 Ryan Johnson
 Scott Sewall
@@ -161,6 +165,7 @@ Stefan Dirsch
 Steve Wall
 Stuart Lissaman
 Sven Verdoolaege
+Taketo Kabe
 Taneli Huuskonen
 Ted Phelps
 Thierry Reding

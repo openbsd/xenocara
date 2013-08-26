@@ -1,11 +1,11 @@
-# $XTermId: xterm.spec,v 1.50 2013/05/27 15:17:47 tom Exp $
+# $XTermId: xterm.spec,v 1.54 2013/07/10 01:19:30 tom Exp $
 Summary: X terminal emulator (development version)
 %global my_middle xterm
 %global my_suffix -dev
 %global fullname %{my_middle}%{my_suffix}
 %global my_class XTermDev
 Name: %{fullname}
-Version: 293
+Version: 296
 Release: 1
 License: X11
 Group: User Interface/X
@@ -95,6 +95,7 @@ CPPFLAGS="-DMISC_EXP -DEXP_HTTP_HEADERS" \
 	--enable-mini-luit \
 	--enable-paste64 \
 	--enable-sco-fkeys \
+	--enable-sixel-graphics \
 	--enable-tcap-fkeys \
 	--enable-tcap-query \
 	--enable-toolbar \

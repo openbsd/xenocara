@@ -1,4 +1,4 @@
-dnl $XTermId: configure.in,v 1.316 2013/05/27 13:46:02 tom Exp $
+dnl $XTermId: configure.in,v 1.318 2013/06/23 21:39:24 tom Exp $
 dnl
 dnl -----------------------------------------------------------------------------
 dnl this file is part of xterm
@@ -902,6 +902,19 @@ CF_ARG_ENABLE(dec-locator,
 AC_MSG_RESULT($enable_dec_locator)
 if test "$enable_dec_locator" = yes ; then
 	AC_DEFINE(OPT_DEC_LOCATOR,1,[Define to 1 to enable DECterm Locator support])
+fi
+
+AC_MSG_CHECKING(if you want sixel graphics support)
+CF_ARG_ENABLE(sixel-graphics,
+	[  --enable-sixel-graphics enable sixel graphics support],
+	[enable_sixel_graphics=yes],
+	[enable_sixel_graphics=no])
+AC_MSG_RESULT($enable_sixel_graphics)
+if test "$enable_sixel_graphics" = yes ; then
+	AC_DEFINE(OPT_SIXEL_GRAPHICS,1,[Define to 1 to enable sixel graphics support])
+	EXTRAHDRS="$EXTRAHDRS graphics.h"
+	EXTRASRCS="$EXTRASRCS graphics.c"
+	EXTRAOBJS="$EXTRAOBJS graphics.o"
 fi
 
 AC_MSG_CHECKING(if you want VT420 rectangle support)

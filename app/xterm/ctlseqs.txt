@@ -20,8 +20,8 @@
 
                              Thomas Dickey
                       XFree86 Project (1996-2006)
-                    invisible-island.net (2006-2012)
-               updated for XTerm Patch #292 (2013/04/24)
+                    invisible-island.net (2006-2013)
+               updated for XTerm Patch #294 (2013/07/05)
 
 
 
@@ -89,12 +89,15 @@ Most of these control sequences are standard VT102 control sequences,
 but there is support for later DEC VT terminals (i.e., VT220, VT320,
 VT420, VT510), as well as ISO 6429 and aixterm color controls.  The only
 VT102 feature not supported is auto-repeat, since the only way X pro-
-vides for this will affect all windows.  There are additional control
-sequences to provide xterm-dependent functions, such as the scrollbar or
-window size.  Where the function is specified by DEC or ISO 6429, the
-code assigned to it is given in parentheses.  The escape codes to desig-
-nate and invoke character sets are specified by ISO 2022; see that docu-
-ment for a discussion of character sets.
+vides for this will affect all windows.
+There are additional control sequences to provide xterm-dependent func-
+tions, such as the scrollbar or window size.  Where the function is
+specified by DEC or ISO 6429, the code assigned to it is given in paren-
+theses.
+The escape codes to designate and invoke character sets are specified by
+ISO 2022; see that document for a discussion of character sets.
+Many of the features are optional; xterm can be configured and built
+without support for them.
 
 Single-character functions
 BEL       Bell (Ctrl-G).
@@ -579,11 +582,11 @@ CSI Pm m  Character Attributes (SGR).
           Xterm maintains a color palette whose entries are identified
           by an index beginning with zero.  If 88- or 256-color support
           is compiled, the following apply:
-          o   All parameters are decimal integers.
-          o   RGB values range from zero (0) to 255.
-          o   ISO-8613-3 can be interpreted in more than one way; xterm
-              allows the semicolons in this control to be replaced by
-              colons (but after the first colon, colons must be used).
+          o All parameters are decimal integers.
+          o RGB values range from zero (0) to 255.
+          o ISO-8613-3 can be interpreted in more than one way; xterm
+            allows the semicolons in this control to be replaced by
+            colons (but after the first colon, colons must be used).
 
           These ISO-8613-3 controls are supported:
             Ps = 3 8  ; 2  ; Pr ; Pg ; Pb -> Set foreground color to the
@@ -614,6 +617,20 @@ CSI Ps n  Device Status Report (DSR).
             Ps = 6  -> Report Cursor Position (CPR) [row;column].
           Result is
           CSI r ; c R
+
+          Note: it is possible for this sequence to be sent by a func-
+          tion key.  For example, with the default keyboard configura-
+          tion the shifted F1 key may send (with shift-, control-, alt-
+          modifiers)
+            CSI 1  ; 2  R , or
+            CSI 1  ; 5  R , or
+            CSI 1  ; 6  R , etc.
+          The second parameter encodes the modifiers; values range from
+          2 to 16.  See the section PC-Style Function Keys for the
+          codes.  The modifyFunctionKeys and modifyKeyboard resources
+          can change the form of the string sent from the modified F1
+          key.
+
 CSI > Ps n
           Disable modifiers which may be enabled via the CSI > Ps; Ps m
           sequence.  This corresponds to a resource value of "-1", which
@@ -642,6 +659,10 @@ CSI ? Ps n
           board ready and LK01 respectively.
             Ps = 5 3  -> Report Locator status as CSI ? 5 3 n  Locator
           available, if compiled-in, or CSI ? 5 0 n  No Locator, if not.
+            Ps = 5 5  -> Report Locator status as CSI ? 5 3 n  Locator
+          available, if compiled-in, or CSI ? 5 0 n  No Locator, if not.
+            Ps = 5 6  -> Report Locator type as CSI ? 5 7 ; 1 n  Mouse,
+          if compiled-in, or CSI ? 5 7 ; 0 n  Cannot identify, if not.
             Ps = 6 2  -> Report macro space (DECMSR) as CSI Pn \* {
             Ps = 6 3  -> Report memory checksum (DECCKSR) as DCS Pt ! x
           x x x ST
@@ -1068,13 +1089,13 @@ keyboard configurations assign the Meta modifier to an "Alt" key.  By
 using xmodmap one may have the modifier assigned to a different key, and
 have "real" alt and meta keys.  Here is an example:
 
-             ! put meta on mod3 to distinguish it from alt
-             keycode 64 = Alt_L
-             clear mod1
-             add mod1 = Alt_L
-             keycode 115 = Meta_L
-             clear mod3
-             add mod3 = Meta_L
+     ! put meta on mod3 to distinguish it from alt
+     keycode 64 = Alt_L
+     clear mod1
+     add mod1 = Alt_L
+     keycode 115 = Meta_L
+     clear mod3
+     add mod3 = Meta_L
 
 
 The metaSendsEscape resource (and altSendsEscape if altIsNotMeta is set)
@@ -1216,16 +1237,24 @@ In normal mode, i.e., a Sun/PC keyboard when the sunKeyboard resource is
 false, xterm recognizes function key modifiers which are parameters
 appended before the final character of the control sequence.
 
-                      Code     Modifiers
-                    ---------+-----------------------
-                    2        | Shift
-                    3        | Alt
-                    4        | Shift + Alt
-                    5        | Control
-                    6        | Shift + Control
-                    7        | Alt + Control
-                    8        | Shift + Alt + Control
-                    ---------+-----------------------
+                     Code     Modifiers
+                   ---------+--------------------------
+                      2     | Shift
+                      3     | Alt
+                      4     | Shift + Alt
+                      5     | Control
+                      6     | Shift + Control
+                      7     | Alt + Control
+                      8     | Shift + Alt + Control
+                      9     | Meta
+                      10    | Meta + Shift
+                      11    | Meta + Alt
+                      12    | Meta + Alt + Shift
+                      13    | Meta + Ctrl
+                      14    | Meta + Ctrl + Shift
+                      15    | Meta + Ctrl + Alt
+                      16    | Meta + Ctrl +Alt + Shift
+                   ---------+--------------------------
 
 For example, shift-F5 would be sent as CSI 1 5 ; 2 ~
 
@@ -1424,8 +1453,8 @@ tion on button presses.  These modes are typically used by editors and
 other full-screen applications that want to make use of the mouse.
 
 There are two sets of mutually exclusive modes:
-o   mouse protocol
-o   protocol encoding
+o mouse protocol
+o protocol encoding
 
 The mouse protocols include DEC Locator mode, enabled by the DECELR CSI
 Ps ; Ps  '  z control sequence, and is not described here (control
@@ -1436,19 +1465,19 @@ protocols are each enabled (or disabled) by a different parameter in the
 Manifest constants for the parameter values are defined in xcharmouse.h
 as follows:
 
-                #define SET_X10_MOUSE               9
-                #define SET_VT200_MOUSE             1000
-                #define SET_VT200_HIGHLIGHT_MOUSE   1001
-                #define SET_BTN_EVENT_MOUSE         1002
-                #define SET_ANY_EVENT_MOUSE         1003
+     #define SET_X10_MOUSE               9
+     #define SET_VT200_MOUSE             1000
+     #define SET_VT200_HIGHLIGHT_MOUSE   1001
+     #define SET_BTN_EVENT_MOUSE         1002
+     #define SET_ANY_EVENT_MOUSE         1003
 
-                #define SET_FOCUS_EVENT_MOUSE       1004
+     #define SET_FOCUS_EVENT_MOUSE       1004
 
-                #define SET_EXT_MODE_MOUSE          1005
-                #define SET_SGR_EXT_MODE_MOUSE      1006
-                #define SET_URXVT_EXT_MODE_MOUSE    1015
+     #define SET_EXT_MODE_MOUSE          1005
+     #define SET_SGR_EXT_MODE_MOUSE      1006
+     #define SET_URXVT_EXT_MODE_MOUSE    1015
 
-                #define SET_ALTERNATE_SCROLL        1007
+     #define SET_ALTERNATE_SCROLL        1007
 
 The motion reporting modes are strictly xterm extensions, and are not
 part of any standard, though they are analogous to the DEC VT200 DECELR
@@ -1466,26 +1495,26 @@ X10 compatibility mode sends an escape sequence only on button press,
 encoding the location and the mouse button pressed.  It is enabled by
 specifying parameter 9 to DECSET.  On button press, xterm sends CSI M
 CbCxCy (6 characters).
-o   Cb is button-1.
-o   Cx and Cy are the x and y coordinates of the mouse when the button
-    was pressed.
+o Cb is button-1.
+o Cx and Cy are the x and y coordinates of the mouse when the button was
+  pressed.
 Normal tracking mode
 
 Normal tracking mode sends an escape sequence on both button press and
 release.  Modifier key (shift, ctrl, meta) information is also sent.  It
 is enabled by specifying parameter 1000 to DECSET.  On button press or
 release, xterm sends CSI M CbCxCy.
-o   The low two bits of Cb encode button information: 0=MB1 pressed,
-    1=MB2 pressed, 2=MB3 pressed, 3=release.
-o   The next three bits encode the modifiers which were down when the
-    button was pressed and are added together:  4=Shift, 8=Meta, 16=Con-
-    trol.  Note however that the shift and control bits are normally
-    unavailable because xterm uses the control modifier with mouse for
-    popup menus, and the shift modifier is used in the default transla-
-    tions for button events.  The Meta modifier recognized by xterm is
-    the mod1 mask, and is not necessarily the "Meta" key (see xmodmap).
-o   Cx and Cy are the x and y coordinates of the mouse event, encoded as
-    in X10 mode.
+o The low two bits of Cb encode button information: 0=MB1 pressed, 1=MB2
+  pressed, 2=MB3 pressed, 3=release.
+o The next three bits encode the modifiers which were down when the but-
+  ton was pressed and are added together:  4=Shift, 8=Meta, 16=Control.
+  Note however that the shift and control bits are normally unavailable
+  because xterm uses the control modifier with mouse for popup menus,
+  and the shift modifier is used in the default translations for button
+  events.  The Meta modifier recognized by xterm is the mod1 mask, and
+  is not necessarily the "Meta" key (see xmodmap).
+o Cx and Cy are the x and y coordinates of the mouse event, encoded as
+  in X10 mode.
 Wheel mice
 
 Wheel mice may return buttons 4 and 5.  Those buttons are represented by
@@ -1520,15 +1549,15 @@ location tracks the mouse, but will never be above row firstrow and will
 always be above row lastrow.  (The top of the screen is row 1.)  When
 the button is released, xterm reports the ending position one of two
 ways:
-o   if the start and end coordinates are the same locations:
-    CSI t CxCy.
-o   otherwise:
-    CSI T CxCyCxCyCxCy.
-    The parameters are startx, starty, endx, endy, mousex, and mousey.
-    -    startx, starty, endx, and endy give the starting and ending
-         character positions of the region.
-    -    mousex and mousey give the location of the mouse at button up,
-         which may not be over a character.
+o if the start and end coordinates are the same locations:
+  CSI t CxCy.
+o otherwise:
+  CSI T CxCyCxCyCxCy.
+  The parameters are startx, starty, endx, endy, mousex, and mousey.
+  - startx, starty, endx, and endy give the starting and ending charac-
+    ter positions of the region.
+  - mousex and mousey give the location of the mouse at button up, which
+    may not be over a character.
 Button-event tracking
 
 Button-event tracking is essentially the same as normal tracking, but
@@ -1536,14 +1565,13 @@ xterm also reports button-motion events.  Motion events are reported
 only if the mouse pointer has moved to a different character cell.  It
 is enabled by specifying parameter 1002 to DECSET.  On button press or
 release, xterm sends the same codes used by normal tracking mode.
-o   On button-motion events, xterm adds 32 to the event code (the third
-    character, Cb).
-o   The other bits of the event code specify button and modifier keys as
-    in normal mode.  For example, motion into cell x,y with button 1
-    down is reported as CSI M @ CxCy.  ( @  = 32 + 0 (button 1) + 32
-    (motion indicator) ).  Similarly, motion with button 3 down is
-    reported as CSI M B CxCy.  ( B  = 32 + 2 (button 3) + 32 (motion
-    indicator) ).
+o On button-motion events, xterm adds 32 to the event code (the third
+  character, Cb).
+o The other bits of the event code specify button and modifier keys as
+  in normal mode.  For example, motion into cell x,y with button 1 down
+  is reported as CSI M @ CxCy.  ( @  = 32 + 0 (button 1) + 32 (motion
+  indicator) ).  Similarly, motion with button 3 down is reported as CSI
+  M B CxCy.  ( B  = 32 + 2 (button 3) + 32 (motion indicator) ).
 Any-event tracking
 
 Any-event mode is the same as button-event mode, except that all motion
@@ -1581,14 +1609,13 @@ SGR (1006)
           semicolon-separated encoded button value, the Cx and Cy ordi-
           nates and a final character which is M  for button press and m
           for button release.
-          o   The encoded button value in this case does not add 32
-              since that was useful only in the X10 scheme for ensuring
-              that the byte containing the button value is a printable
-              code.
-          o   The modifiers are encoded in the same way.
-          o   A different final character is used for button release to
-              resolve the X10 ambiguity regarding which button was
-              released.
+          o The encoded button value in this case does not add 32 since
+            that was useful only in the X10 scheme for ensuring that the
+            byte containing the button value is a printable code.
+          o The modifiers are encoded in the same way.
+          o A different final character is used for button release to
+            resolve the X10 ambiguity regarding which button was
+            released.
           The highlight tracking responses are also modified to an SGR-
           like format, using the same SGR-style scheme and button-encod-
           ings.
@@ -1603,6 +1630,32 @@ URXVT (1015)
           down), and the Window manipulation controls.  For these rea-
           sons, the 1015 control is not recommended; it is not an
           improvement over 1005.
+
+Sixel Graphics
+If xterm is configured as VT240, VT241, VT330 or VT340 using the decTer-
+minalID resource, it supports Sixel Graphics controls, a subset of ReGIS
+graphics.
+
+CSI Ps c  xterm responds to Send Device Attributes (Primary DA) with
+          these additional codes:
+            Ps = 3  -> ReGIS graphics.
+            Ps = 4  -> SIXEL graphics.
+CSI ? Pm h
+          xterm has these additional private Set Mode values:
+            Ps = 8 0  -> SIXEL scrolling.
+            Ps = 1 0 7 0  -> use private color registers for each
+          graphic.
+DCS Pa; Pb; Ph q  Ps..PsST
+          See
+
+               http://vt100.net/docs/vt3xx-gp/chapter14.html
+
+          The sixel data device control string has three positional
+          parameters, following the q  with sixel data.
+            Pa -> pixel aspect ratio
+            Pb -> background color option
+            Ph -> horizontal grid size (ignored).
+            Ps -> sixel data
 
 Tektronix 4014 Mode
 Most of these sequences are standard Tektronix 4014 control sequences.

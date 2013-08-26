@@ -1,4 +1,4 @@
-/* $XTermId: xtermcfg.hin,v 1.199 2013/05/27 21:05:23 tom Exp $ */
+/* $XTermId: xtermcfg.hin,v 1.200 2013/06/23 19:20:22 tom Exp $ */
 
 /*
  * Copyright 1997-2012,2013 by Thomas E. Dickey
@@ -147,6 +147,7 @@
 #undef OPT_SELECTION_OPS	/* CF_ARG_DISABLE(selection-ops) */
 #undef OPT_SELECT_REGEX		/* CF_ARG_DISABLE(regex) */
 #undef OPT_SESSION_MGT		/* CF_ARG_DISABLE(session-mgt) */
+#undef OPT_SIXEL_GRAPHICS	/* CF_ARG_ENABLE(sixel-graphics) */
 #undef OPT_SUN_FUNC_KEYS	/* CF_ARG_ENABLE(sun-fkeys) */
 #undef OPT_TCAP_FKEYS		/* CF_ARG_ENABLE(tcap-fkeys) */
 #undef OPT_TCAP_QUERY		/* CF_ARG_ENABLE(tcap-query) */
