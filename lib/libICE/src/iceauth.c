@@ -58,6 +58,9 @@ IceGenerateMagicCookie (
     if ((auth = (char *) malloc (len + 1)) == NULL)
 	return (NULL);
 
+#ifdef HAVE_ARC4RANDOM_BUF
+    arc4random_buf(auth, len);
+#else
 #ifdef ITIMER_REAL
     {
 	struct timeval  now;
@@ -81,8 +84,8 @@ IceGenerateMagicCookie (
 	value = rand ();
 	auth[i] = value & 0xff;
     }
+#endif
     auth[len] = '\0';
-
     return (auth);
 }
 

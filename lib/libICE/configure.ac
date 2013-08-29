@@ -38,7 +38,7 @@ XTRANS_CONNECTION_FLAGS
 AC_DEFINE(ICE_t, 1, [Xtrans transport type])
 
 # Checks for library functions.
-AC_CHECK_FUNCS([asprintf])
+AC_CHECK_FUNCS([asprintf arc4random_buf])
 
 # Allow checking code with lint, sparse, etc.
 XORG_WITH_LINT
