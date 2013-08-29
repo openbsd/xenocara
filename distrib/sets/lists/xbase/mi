@@ -132,8 +132,13 @@
 ./usr/X11R6/bin/xwininfo
 ./usr/X11R6/bin/xwud
 ./usr/X11R6/include
+./usr/X11R6/include/EGL
 ./usr/X11R6/include/GL
 ./usr/X11R6/include/GL/internal
+./usr/X11R6/include/GLES
+./usr/X11R6/include/GLES2
+./usr/X11R6/include/GLES3
+./usr/X11R6/include/KHR
 ./usr/X11R6/include/X11
 ./usr/X11R6/include/X11/dri
 ./usr/X11R6/include/pixman-1
