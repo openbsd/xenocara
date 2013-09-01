@@ -32,6 +32,9 @@
 #define FLEXIBLE_ARRAY_MEMBER /**/
 #endif
 
+/* Define to 1 if you have the `arc4random' function. */
+#define HAVE_ARC4RANDOM 1
+
 /* Define to 1 if you have the `chsize' function. */
 /* #undef HAVE_CHSIZE */
 
