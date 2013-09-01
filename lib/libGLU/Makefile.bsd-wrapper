@@ -1,0 +1,5 @@
+# $OpenBSD: Makefile.bsd-wrapper,v 1.1 2013/09/01 03:51:12 jsg Exp $
+
+SHARED_LIBS=	GLU 9.0
+
+.include <bsd.xorg.mk>
